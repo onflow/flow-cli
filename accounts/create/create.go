@@ -14,6 +14,7 @@ import (
 	"github.com/dapperlabs/flow-go/model/flow"
 	"github.com/dapperlabs/flow-go/sdk/client"
 	"github.com/dapperlabs/flow-go/sdk/emulator/constants"
+	"github.com/dapperlabs/flow-go/sdk/keys"
 	"github.com/dapperlabs/flow-go/sdk/templates"
 )
 
@@ -73,10 +74,12 @@ var Cmd = &cobra.Command{
 			PayerAccount: signer.Address,
 		}
 
-		err = tx.AddSignature(signer.Address, signer.PrivateKey)
+		sig, err := keys.SignTransaction(tx, signer.PrivateKey)
 		if err != nil {
 			utils.Exit(1, "Failed to sign transaction")
 		}
+
+		tx.AddSignature(signer.Address, sig)
 
 		client, err := client.New("localhost:5000")
 		if err != nil {
