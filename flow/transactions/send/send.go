@@ -2,14 +2,13 @@ package send
 
 import (
 	"context"
+	"github.com/dapperlabs/flow-go/cli"
 	"io/ioutil"
 	"log"
 
 	"github.com/psiemens/sconfig"
 	"github.com/spf13/cobra"
 
-	"github.com/dapperlabs/flow-go/cli/project"
-	"github.com/dapperlabs/flow-go/cli/utils"
 	"github.com/dapperlabs/flow-go/model/flow"
 	"github.com/dapperlabs/flow-go/sdk/client"
 	"github.com/dapperlabs/flow-go/sdk/keys"
@@ -27,7 +26,7 @@ var Cmd = &cobra.Command{
 	Use:   "send",
 	Short: "Send a transaction",
 	Run: func(cmd *cobra.Command, args []string) {
-		projectConf := project.LoadConfig()
+		projectConf := cli.LoadConfig()
 
 		signer := projectConf.Accounts[conf.Signer]
 
@@ -39,7 +38,7 @@ var Cmd = &cobra.Command{
 		if conf.Code != "" {
 			code, err = ioutil.ReadFile(conf.Code)
 			if err != nil {
-				utils.Exitf(1, "Failed to load BPL code from %s", conf.Code)
+				cli.Exitf(1, "Failed to load BPL code from %s", conf.Code)
 			}
 		}
 
@@ -53,19 +52,19 @@ var Cmd = &cobra.Command{
 
 		sig, err := keys.SignTransaction(tx, signer.PrivateKey)
 		if err != nil {
-			utils.Exit(1, "Failed to sign transaction")
+			cli.Exit(1, "Failed to sign transaction")
 		}
 
 		tx.AddSignature(signer.Address, sig)
 
 		client, err := client.New("localhost:5000")
 		if err != nil {
-			utils.Exit(1, "Failed to connect to emulator")
+			cli.Exit(1, "Failed to connect to emulator")
 		}
 
 		err = client.SendTransaction(context.Background(), tx)
 		if err != nil {
-			utils.Exitf(1, "Failed to send transaction: %v", err)
+			cli.Exitf(1, "Failed to send transaction: %v", err)
 		}
 	},
 }
@@ -76,6 +75,7 @@ func init() {
 
 func initConfig() {
 	err := sconfig.New(&conf).
+		FromEnvironment(cli.EnvPrefix).
 		BindFlags(Cmd.PersistentFlags()).
 		Parse()
 	if err != nil {
