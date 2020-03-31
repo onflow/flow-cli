@@ -1,17 +1,17 @@
-// Package flow implements the entrypoint for the Flow CLI.
-package cli
+// Package main implements the entry point for the Flow CLI.
+package main
 
 import (
-	"github.com/dapperlabs/flow-go-sdk/cli"
 	"github.com/spf13/cobra"
 
-	"github.com/dapperlabs/flow-go-sdk/cli/flow/accounts"
-	"github.com/dapperlabs/flow-go-sdk/cli/flow/cadence"
-	"github.com/dapperlabs/flow-go-sdk/cli/flow/emulator"
-	"github.com/dapperlabs/flow-go-sdk/cli/flow/initialize"
-	"github.com/dapperlabs/flow-go-sdk/cli/flow/keys"
-	"github.com/dapperlabs/flow-go-sdk/cli/flow/transactions"
-	"github.com/dapperlabs/flow-go-sdk/cli/flow/version"
+	cli "github.com/dapperlabs/flow-cli/flow"
+	"github.com/dapperlabs/flow-cli/flow/accounts"
+	"github.com/dapperlabs/flow-cli/flow/cadence"
+	"github.com/dapperlabs/flow-cli/flow/emulator"
+	"github.com/dapperlabs/flow-cli/flow/initialize"
+	"github.com/dapperlabs/flow-cli/flow/keys"
+	"github.com/dapperlabs/flow-cli/flow/transactions"
+	"github.com/dapperlabs/flow-cli/flow/version"
 )
 
 var cmd = &cobra.Command{
@@ -30,7 +30,7 @@ func init() {
 	cmd.PersistentFlags().StringVarP(&cli.ConfigPath, "config-path", "f", cli.ConfigPath, "Path to flow configuration file")
 }
 
-func Execute() {
+func main() {
 	if err := cmd.Execute(); err != nil {
 		cli.Exit(1, err.Error())
 	}

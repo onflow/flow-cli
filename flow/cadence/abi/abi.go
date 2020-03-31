@@ -1,13 +1,13 @@
 package abi
 
 import (
-    "log"
+	"log"
 
+	"github.com/dapperlabs/flow-go-sdk/language/abi"
 	"github.com/psiemens/sconfig"
 	"github.com/spf13/cobra"
 
-	"github.com/dapperlabs/flow-go-sdk/cli"
-	"github.com/dapperlabs/flow-go-sdk/language/abi"
+	cli "github.com/dapperlabs/flow-cli/flow"
 )
 
 type Config struct {

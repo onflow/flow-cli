@@ -1,19 +1,19 @@
 package start
 
 import (
-    "fmt"
+	"fmt"
 	"os"
 	"time"
 
+	"github.com/dapperlabs/flow-emulator/server"
+	"github.com/dapperlabs/flow-go-sdk"
+	"github.com/dapperlabs/flow-go-sdk/keys"
 	"github.com/psiemens/sconfig"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 
-	"github.com/dapperlabs/flow-go-sdk"
-	"github.com/dapperlabs/flow-go-sdk/cli"
-	"github.com/dapperlabs/flow-go-sdk/cli/flow/initialize"
-	"github.com/dapperlabs/flow-go-sdk/emulator/server"
-	"github.com/dapperlabs/flow-go-sdk/keys"
+	cli "github.com/dapperlabs/flow-cli/flow"
+	"github.com/dapperlabs/flow-cli/flow/initialize"
 )
 
 type Config struct {
