@@ -54,7 +54,7 @@ ci: install-tools generate test coverage
 
 .PHONY: docker-build-emulator
 docker-build-emulator:
-	docker build --ssh default -f cmd/Dockerfile -t gcr.io/dl-flow/emulator:latest -t "gcr.io/dl-flow/emulator:$(SHORT_COMMIT)" .
+	docker build --ssh default -f cmd/emulator/Dockerfile -t gcr.io/dl-flow/emulator:latest -t "gcr.io/dl-flow/emulator:$(SHORT_COMMIT)" .
 ifneq (${VERSION},)
 	docker tag gcr.io/dl-flow/emulator:latest gcr.io/dl-flow/emulator:${VERSION}
 endif

@@ -85,6 +85,8 @@ github.com/dapperlabs/flow-go-sdk v0.4.1 h1:IFlgkVgMMRSEwq/q/0BGIh3Xgr8dOg1yfBcO
 github.com/dapperlabs/flow-go-sdk v0.4.1/go.mod h1:2NeDYyrlvtxJyxlMAvCg9A9+kTqbVz/KN19poy8ibgc=
 github.com/dapperlabs/flow-go-sdk v0.5.0 h1:OobwQ/JGXVII0kHf/8dOWu7vvS47nxK+7i2gLKeTsGY=
 github.com/dapperlabs/flow-go-sdk v0.5.0/go.mod h1:2VU4XARtugo2Jdqlvosp8beg5i1wbJAw7qvOt/KgnG4=
+github.com/dapperlabs/flow-go-sdk v0.5.1-0.20200331204254-106080334b97 h1:ujztQNuwVqXZk/0zvsXuMJ2cB0Tl0XHVZ/tmCq0Uoug=
+github.com/dapperlabs/flow-go-sdk v0.5.1-0.20200331204254-106080334b97/go.mod h1:pGECXvBL/xqFux60jnMhnrCqANvcph/1xIO6duneumk=
 github.com/dapperlabs/flow-go/crypto v0.3.1 h1:sct0sh5aDbyqy0v/2xCvBAY9fsxlbkfHAK3abeK163g=
 github.com/dapperlabs/flow-go/crypto v0.3.1/go.mod h1:39e5FqQZ5x0BsezUUC1uATH58hzSDfB+LLi0Gm6wfU8=
 github.com/dapperlabs/flow-go/crypto v0.3.2-0.20200225001519-9a07bfb642cb h1:zjK0C/oGQouPY0YeQ2/4cNqOd9PPQDIKSnHE1EyXtdo=
