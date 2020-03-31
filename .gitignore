@@ -10,8 +10,8 @@ cover.json
 cover-summary
 index.html
 
-# Since we have tooling that uses node
-node_modules
+# Binaries
+/cmd/flow/flow*
 
 .DS_Store
 
