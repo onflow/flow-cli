@@ -1,7 +1,7 @@
 package vscode
 
 import (
-	"fmt"
+    "fmt"
 	"io/ioutil"
 	"os"
 	"os/exec"

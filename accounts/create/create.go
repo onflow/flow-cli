@@ -1,7 +1,7 @@
-package send
+package create
 
 import (
-	"context"
+    "context"
 	"io/ioutil"
 	"log"
 
@@ -12,24 +12,32 @@ import (
 	"github.com/dapperlabs/flow-go-sdk/cli"
 	"github.com/dapperlabs/flow-go-sdk/client"
 	"github.com/dapperlabs/flow-go-sdk/keys"
+	"github.com/dapperlabs/flow-go-sdk/templates"
 )
 
 type Config struct {
-	Signer string `default:"root" flag:"signer,s"`
-	Code   string `flag:"code,c"`
-	Nonce  uint64 `flag:"nonce,n"`
-	Host   string `default:"127.0.0.1:3569" flag:"host" info:"Flow Observation API host address"`
+	Signer string   `default:"root" flag:"signer,s"`
+	Keys   []string `flag:"key,k"`
+	Code   string   `flag:"code,c" info:"path to a file containing code for the account"`
+	Host   string   `default:"127.0.0.1:3569" flag:"host" info:"Flow Observation API host address"`
 }
 
 var conf Config
 
 var Cmd = &cobra.Command{
-	Use:   "send",
-	Short: "Send a transaction",
+	Use:   "create",
+	Short: "Create a new account",
 	Run: func(cmd *cobra.Command, args []string) {
 		projectConf := cli.LoadConfig()
 
 		signer := projectConf.Accounts[conf.Signer]
+
+		accountKeys := make([]flow.AccountPublicKey, len(conf.Keys))
+
+		for i, privateKeyHex := range conf.Keys {
+			privateKey := cli.MustDecodeAccountPrivateKeyHex(privateKeyHex)
+			accountKeys[i] = privateKey.PublicKey(keys.PublicKeyWeightThreshold)
+		}
 
 		var (
 			code []byte
@@ -39,16 +47,20 @@ var Cmd = &cobra.Command{
 		if conf.Code != "" {
 			code, err = ioutil.ReadFile(conf.Code)
 			if err != nil {
-				cli.Exitf(1, "Failed to load BPL code from %s", conf.Code)
+				cli.Exitf(1, "Failed to parse Cadence code from %s", conf.Code)
 			}
 		}
 
+		script, err := templates.CreateAccount(accountKeys, code)
+		if err != nil {
+			cli.Exit(1, "Failed to generate transaction script")
+		}
+
 		tx := flow.Transaction{
-			Script:         code,
-			Nonce:          conf.Nonce,
-			ComputeLimit:   10,
-			PayerAccount:   signer.Address,
-			ScriptAccounts: []flow.Address{signer.Address},
+			Script:       script,
+			Nonce:        1,
+			ComputeLimit: 10,
+			PayerAccount: signer.Address,
 		}
 
 		sig, err := keys.SignTransaction(tx, signer.PrivateKey)
@@ -65,7 +77,7 @@ var Cmd = &cobra.Command{
 
 		err = client.SendTransaction(context.Background(), tx)
 		if err != nil {
-			cli.Exitf(1, "Failed to send transaction: %v", err)
+			cli.Exit(1, "Failed to send account creation transaction")
 		}
 	},
 }

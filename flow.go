@@ -1,10 +1,10 @@
 // Package flow implements the entrypoint for the Flow CLI.
-package flow
+package cli
 
 import (
+	"github.com/dapperlabs/flow-go-sdk/cli"
 	"github.com/spf13/cobra"
 
-	"github.com/dapperlabs/flow-go-sdk/cli"
 	"github.com/dapperlabs/flow-go-sdk/cli/flow/accounts"
 	"github.com/dapperlabs/flow-go-sdk/cli/flow/cadence"
 	"github.com/dapperlabs/flow-go-sdk/cli/flow/emulator"

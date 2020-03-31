@@ -1,7 +1,7 @@
 package initialize
 
 import (
-	"fmt"
+    "fmt"
 	"log"
 
 	"github.com/dapperlabs/flow-go/crypto"
