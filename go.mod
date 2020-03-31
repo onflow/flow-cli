@@ -15,5 +15,3 @@ require (
 replace github.com/dapperlabs/flow-go-sdk => ../flow-go-sdk
 
 replace github.com/dapperlabs/flow-emulator => ../flow-emulator
-
-replace github.com/dapperlabs/cadence => ../cadence
