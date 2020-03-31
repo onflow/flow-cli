@@ -1,5 +1,4 @@
-// Package cli defines constants, configurations, and utilities that are used
-// across the Flow CLI.
+// Package cli defines constants, configurations, and utilities that are used across the Flow CLI.
 package cli
 
 import (
@@ -12,13 +11,9 @@ import (
 	"github.com/dapperlabs/flow-go-sdk/keys"
 )
 
-const (
-	EnvPrefix = "FLOW"
-)
+const EnvPrefix = "FLOW"
 
-var (
-	ConfigPath = "flow.json"
-)
+var ConfigPath = "flow.json"
 
 func Exit(code int, msg string) {
 	fmt.Println(msg)

@@ -1,11 +1,11 @@
 package version
 
 import (
-    "fmt"
+	"fmt"
 
 	"github.com/spf13/cobra"
 
-	"github.com/dapperlabs/flow-go-sdk/utils/build"
+	"github.com/dapperlabs/flow-cli/build"
 )
 
 var Cmd = &cobra.Command{
