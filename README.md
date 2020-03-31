@@ -38,5 +38,5 @@ sh -ci "$(curl -fsSL https://storage.googleapis.com/flow-cli/install.sh)"
 _This installation method works on any system with Go >1.13 installed._
 
 ```shell script
-GO111MODULE=on go get github.com/dapperlabs/flow-go-sdk/cmd/flow
+GO111MODULE=on go get github.com/dapperlabs/flow-cli/cmd/flow
 ```
