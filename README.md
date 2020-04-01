@@ -17,7 +17,7 @@ brew install flow-cli
 
 ### From a pre-built binary
 
-## Linux and macOS
+#### Linux and macOS
 
 _This installation method only works on MacOS/x86-64 and Linux/x86-64 architectures._
 
@@ -27,7 +27,7 @@ This script downloads the appropriate binary for your system and moves it to `/u
 sh -ci "$(curl -fsSL https://storage.googleapis.com/flow-cli/install.sh)"
 ```
 
-## Windows
+#### Windows
 
 _This installation method only works on x86-64._
 
