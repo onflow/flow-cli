@@ -27,6 +27,9 @@ param (
 
 Set-StrictMode -Version 3.0
 
+# Enable support for ANSI escape sequences
+Set-ItemProperty HKCU:\Console VirtualTerminalLevel -Type DWORD 1
+
 $ErrorActionPreference = "Stop"
 
 $baseURL = "https://storage.googleapis.com/flow-cli"
