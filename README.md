@@ -29,11 +29,14 @@ sh -ci "$(curl -fsSL https://storage.googleapis.com/flow-cli/install.sh)"
 
 #### Windows
 
-_This installation method only works on x86-64._
+_This installation method only works on Windows 10 and 8.1, x86-64._
 
-```powershell
-iex "& { $(irm 'https://storage.googleapis.com/flow-cli/install.ps1') }"
-```
+1. Open PowerShell ([Instructions](https://docs.microsoft.com/en-us/powershell/scripting/install/installing-windows-powershell?view=powershell-7#finding-powershell-in-windows-10-81-80-and-7))
+2. In PowerShell, run:
+
+    ```powershell
+    iex "& { $(irm 'https://storage.googleapis.com/flow-cli/install.ps1') }"
+    ```
 
 #### Upgrading an existing installation?
 
