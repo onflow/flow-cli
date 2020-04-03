@@ -19,7 +19,7 @@ brew install flow-cli
 
 #### Linux and macOS
 
-_This installation method only works on MacOS/x86-64 and Linux/x86-64 architectures._
+_This installation method only works on macOS/x86-64 and Linux/x86-64 architectures._
 
 This script downloads the appropriate binary for your system and moves it to `/usr/local/bin`:
 
