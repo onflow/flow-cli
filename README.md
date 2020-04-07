@@ -38,13 +38,9 @@ _This installation method only works on Windows 10 and 8.1, x86-64._
     iex "& { $(irm 'https://storage.googleapis.com/flow-cli/install.ps1') }"
     ```
 
-#### Upgrading an existing installation?
+#### Upgrading an existing installation
 
-```shell script
-rm /usr/local/bin/flow
-
-sh -ci "$(curl -fsSL https://storage.googleapis.com/flow-cli/install.sh)"
-```
+Simply re-run the installation commands above.
 
 ### From source
 
