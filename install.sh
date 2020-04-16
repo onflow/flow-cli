@@ -1,5 +1,8 @@
 #!/bin/sh
 
+# Exit as soon as any command fails
+set -e
+
 BASE_URL="https://storage.googleapis.com/flow-cli"
 # The version to download, set by get_version (defaults to args[1])
 VERSION="$1"
