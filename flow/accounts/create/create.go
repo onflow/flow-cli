@@ -1,17 +1,13 @@
 package create
 
 import (
-    "context"
 	"io/ioutil"
 	"log"
 
+	"github.com/dapperlabs/flow-go-sdk"
+	"github.com/dapperlabs/flow-go-sdk/templates"
 	"github.com/psiemens/sconfig"
 	"github.com/spf13/cobra"
-
-	"github.com/dapperlabs/flow-go-sdk"
-	"github.com/dapperlabs/flow-go-sdk/client"
-	"github.com/dapperlabs/flow-go-sdk/keys"
-	"github.com/dapperlabs/flow-go-sdk/templates"
 
 	cli "github.com/dapperlabs/flow-cli/flow"
 )
@@ -31,13 +27,13 @@ var Cmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		projectConf := cli.LoadConfig()
 
-		signer := projectConf.Accounts[conf.Signer]
+		signerAccount := projectConf.Accounts[conf.Signer]
 
-		accountKeys := make([]flow.AccountPublicKey, len(conf.Keys))
+		accountKeys := make([]flow.AccountKey, len(conf.Keys))
 
 		for i, privateKeyHex := range conf.Keys {
 			privateKey := cli.MustDecodeAccountPrivateKeyHex(privateKeyHex)
-			accountKeys[i] = privateKey.PublicKey(keys.PublicKeyWeightThreshold)
+			accountKeys[i] = privateKey.ToAccountKey()
 		}
 
 		var (
@@ -48,7 +44,7 @@ var Cmd = &cobra.Command{
 		if conf.Code != "" {
 			code, err = ioutil.ReadFile(conf.Code)
 			if err != nil {
-				cli.Exitf(1, "Failed to parse Cadence code from %s", conf.Code)
+				cli.Exitf(1, "Failed to read Cadence code from %s", conf.Code)
 			}
 		}
 
@@ -57,29 +53,7 @@ var Cmd = &cobra.Command{
 			cli.Exit(1, "Failed to generate transaction script")
 		}
 
-		tx := flow.Transaction{
-			Script:       script,
-			Nonce:        1,
-			ComputeLimit: 10,
-			PayerAccount: signer.Address,
-		}
-
-		sig, err := keys.SignTransaction(tx, signer.PrivateKey)
-		if err != nil {
-			cli.Exit(1, "Failed to sign transaction")
-		}
-
-		tx.AddSignature(signer.Address, sig)
-
-		client, err := client.New(conf.Host)
-		if err != nil {
-			cli.Exit(1, "Failed to connect to emulator")
-		}
-
-		err = client.SendTransaction(context.Background(), tx)
-		if err != nil {
-			cli.Exit(1, "Failed to send account creation transaction")
-		}
+		cli.SendTransaction(conf.Host, signerAccount, script)
 	},
 }
 
