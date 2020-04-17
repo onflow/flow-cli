@@ -128,6 +128,9 @@ type ImportProgramHandlerFunc func(
 	location ast.Location,
 ) *ast.Program
 
+// UUIDHandlerFunc is a function that handles the generation of UUIDs.
+type UUIDHandlerFunc func() uint64
+
 // compositeTypeCode contains the the "prepared" / "callable" "code"
 // for the functions and the destructor of a composite
 // (contract, struct, resource, event).
@@ -181,6 +184,7 @@ type Interpreter struct {
 	injectedCompositeFieldsHandler InjectedCompositeFieldsHandlerFunc
 	contractValueHandler           ContractValueHandlerFunc
 	importProgramHandler           ImportProgramHandlerFunc
+	uuidHandler                    UUIDHandlerFunc
 }
 
 type Option func(*Interpreter) error
@@ -289,6 +293,16 @@ func WithContractValueHandler(handler ContractValueHandlerFunc) Option {
 func WithImportProgramHandler(handler ImportProgramHandlerFunc) Option {
 	return func(interpreter *Interpreter) error {
 		interpreter.SetImportProgramHandler(handler)
+		return nil
+	}
+}
+
+// WithUUIDHandler returns an interpreter option which sets the given function
+// as the function that is used to generate UUIDs.
+//
+func WithUUIDHandler(handler UUIDHandlerFunc) Option {
+	return func(interpreter *Interpreter) error {
+		interpreter.SetUUIDHandler(handler)
 		return nil
 	}
 }
@@ -404,6 +418,12 @@ func (interpreter *Interpreter) SetContractValueHandler(function ContractValueHa
 //
 func (interpreter *Interpreter) SetImportProgramHandler(function ImportProgramHandlerFunc) {
 	interpreter.importProgramHandler = function
+}
+
+// SetUUIDHandler sets the function that is used to handle the generation of UUIDs.
+//
+func (interpreter *Interpreter) SetUUIDHandler(function UUIDHandlerFunc) {
+	interpreter.uuidHandler = function
 }
 
 // SetAllInterpreters sets the given map of interpreters as the map of all interpreters.
@@ -545,9 +565,11 @@ func (interpreter *Interpreter) prepareInterpretation() {
 	for _, declaration := range program.InterfaceDeclarations() {
 		interpreter.declareVariable(declaration.Identifier.Identifier, nil)
 	}
+
 	for _, declaration := range program.CompositeDeclarations() {
 		interpreter.declareVariable(declaration.Identifier.Identifier, nil)
 	}
+
 	for _, declaration := range program.FunctionDeclarations() {
 		interpreter.declareVariable(declaration.Identifier.Identifier, nil)
 	}
@@ -1068,6 +1090,58 @@ func (interpreter *Interpreter) VisitWhileStatement(statement *ast.WhileStatemen
 		})
 }
 
+func (interpreter *Interpreter) VisitForStatement(statement *ast.ForStatement) ast.Repr {
+	interpreter.activations.PushCurrent()
+
+	variable := interpreter.declareVariable(
+		statement.Identifier.Identifier,
+		nil,
+	)
+
+	var loop func(i, count int, values []Value) Trampoline
+	loop = func(i, count int, values []Value) Trampoline {
+
+		if i == count {
+			return Done{}
+		}
+
+		variable.Value = values[i]
+
+		return statement.Block.Accept(interpreter).(Trampoline).
+			FlatMap(func(value interface{}) Trampoline {
+
+				switch value.(type) {
+				case loopBreak:
+					return Done{}
+
+				case loopContinue:
+					// NO-OP
+
+				case functionReturn:
+					return Done{Result: value}
+				}
+
+				// recurse
+				if i == count {
+					return Done{}
+				}
+				return loop(i+1, count, values)
+			})
+	}
+
+	return statement.Value.Accept(interpreter).(Trampoline).
+		FlatMap(func(result interface{}) Trampoline {
+
+			values := result.(*ArrayValue).Values[:]
+			count := len(values)
+
+			return loop(0, count, values)
+		}).
+		Then(func(_ interface{}) {
+			interpreter.activations.Pop()
+		})
+}
+
 func (interpreter *Interpreter) visitPotentialStorageRemoval(expression ast.Expression) Trampoline {
 	movingStorageIndexExpression := interpreter.movingStorageIndexExpression(expression)
 	if movingStorageIndexExpression == nil {
@@ -1264,65 +1338,22 @@ func (interpreter *Interpreter) identifierExpressionGetterSetter(identifierExpre
 func (interpreter *Interpreter) indexExpressionGetterSetter(indexExpression *ast.IndexExpression) Trampoline {
 	return indexExpression.TargetExpression.Accept(interpreter).(Trampoline).
 		FlatMap(func(result interface{}) Trampoline {
-			switch typedResult := result.(type) {
-			case ValueIndexableValue:
-				return indexExpression.IndexingExpression.Accept(interpreter).(Trampoline).
-					FlatMap(func(result interface{}) Trampoline {
-						indexingValue := result.(Value)
-						locationRange := interpreter.locationRange(indexExpression)
-						return Done{
-							Result: getterSetter{
-								get: func() Value {
-									return typedResult.Get(interpreter, locationRange, indexingValue)
-								},
-								set: func(value Value) {
-									typedResult.Set(interpreter, locationRange, indexingValue, value)
-								},
+			typedResult := result.(ValueIndexableValue)
+			return indexExpression.IndexingExpression.Accept(interpreter).(Trampoline).
+				FlatMap(func(result interface{}) Trampoline {
+					indexingValue := result.(Value)
+					locationRange := interpreter.locationRange(indexExpression)
+					return Done{
+						Result: getterSetter{
+							get: func() Value {
+								return typedResult.Get(interpreter, locationRange, indexingValue)
 							},
-						}
-					})
-
-			case StorageValue:
-				return interpreter.visitStorageIndexExpression(indexExpression, typedResult.Address, AccessLevelPrivate)
-
-			case PublishedValue:
-				return interpreter.visitStorageIndexExpression(indexExpression, typedResult.Address, AccessLevelPublic)
-
-			default:
-				panic(errors.NewUnreachableError())
-			}
-		})
-}
-
-func (interpreter *Interpreter) visitStorageIndexExpression(
-	indexExpression *ast.IndexExpression,
-	storageAddress common.Address,
-	accessLevel AccessLevel,
-) Trampoline {
-	indexingType := interpreter.Checker.Elaboration.IndexExpressionIndexingTypes[indexExpression]
-	rawKey := interpreter.storageKeyHandler(interpreter, storageAddress, indexingType)
-	key := PrefixedStorageKey(rawKey, accessLevel)
-	return Done{
-		Result: getterSetter{
-			get: func() Value {
-				return interpreter.readStored(storageAddress, key)
-			},
-			set: func(value Value) {
-				interpreter.writeStored(storageAddress, key, value.(OptionalValue))
-			},
-		},
-	}
-}
-
-func (interpreter *Interpreter) visitReadStorageIndexExpression(
-	expression *ast.IndexExpression,
-	storageAddress common.Address,
-	accessLevel AccessLevel,
-) Trampoline {
-	return interpreter.visitStorageIndexExpression(expression, storageAddress, accessLevel).
-		Map(func(result interface{}) interface{} {
-			getterSetter := result.(getterSetter)
-			return getterSetter.get()
+							set: func(value Value) {
+								typedResult.Set(interpreter, locationRange, indexingValue, value)
+							},
+						},
+					}
+				})
 		})
 }
 
@@ -1779,45 +1810,17 @@ func (interpreter *Interpreter) VisitMemberExpression(expression *ast.MemberExpr
 		})
 }
 
-// PrefixedStorageKey returns the storage identifier with the proper prefix
-// based on the given access level.
-//
-// \x1F = Information Separator One
-//
-func PrefixedStorageKey(key string, accessLevel AccessLevel) string {
-	return fmt.Sprintf("%s\x1F%s", accessLevel.Prefix(), key)
-}
-
 func (interpreter *Interpreter) VisitIndexExpression(expression *ast.IndexExpression) ast.Repr {
 	return expression.TargetExpression.Accept(interpreter).(Trampoline).
 		FlatMap(func(result interface{}) Trampoline {
-			switch typedResult := result.(type) {
-			case ValueIndexableValue:
-				return expression.IndexingExpression.Accept(interpreter).(Trampoline).
-					FlatMap(func(result interface{}) Trampoline {
-						indexingValue := result.(Value)
-						locationRange := interpreter.locationRange(expression)
-						value := typedResult.Get(interpreter, locationRange, indexingValue)
-						return Done{Result: value}
-					})
-
-			case StorageValue:
-				return interpreter.visitReadStorageIndexExpression(
-					expression,
-					typedResult.Address,
-					AccessLevelPrivate,
-				)
-
-			case PublishedValue:
-				return interpreter.visitReadStorageIndexExpression(
-					expression,
-					typedResult.Address,
-					AccessLevelPublic,
-				)
-
-			default:
-				panic(errors.NewUnreachableError())
-			}
+			typedResult := result.(ValueIndexableValue)
+			return expression.IndexingExpression.Accept(interpreter).(Trampoline).
+				FlatMap(func(result interface{}) Trampoline {
+					indexingValue := result.(Value)
+					locationRange := interpreter.locationRange(expression)
+					value := typedResult.Get(interpreter, locationRange, indexingValue)
+					return Done{Result: value}
+				})
 		})
 }
 
@@ -1898,7 +1901,7 @@ func (interpreter *Interpreter) VisitInvocationExpression(invocationExpression *
 					}
 
 					return invocation.Map(func(result interface{}) interface{} {
-						return &SomeValue{Value: result.(Value)}
+						return NewSomeValueOwningNonCopying(result.(Value))
 					})
 				})
 		})
@@ -2138,6 +2141,8 @@ func (interpreter *Interpreter) VisitCompositeDeclaration(declaration *ast.Compo
 	return Done{}
 }
 
+const ResourceUUIDMemberName = "uuid"
+
 // declareCompositeValue creates and declares the value for
 // the composite declaration.
 //
@@ -2177,6 +2182,23 @@ func (interpreter *Interpreter) declareCompositeValue(
 	(func() {
 		interpreter.activations.PushCurrent()
 		defer interpreter.activations.Pop()
+
+		// Pre-declare empty variables for all interfaces, composites, and function declarations
+		predeclare := func(identifier ast.Identifier) {
+			name := identifier.Identifier
+			lexicalScope = lexicalScope.Insert(
+				common.StringEntry(name),
+				interpreter.declareVariable(name, nil),
+			)
+		}
+
+		for _, nestedInterfaceDeclaration := range declaration.InterfaceDeclarations {
+			predeclare(nestedInterfaceDeclaration.Identifier)
+		}
+
+		for _, nestedCompositeDeclaration := range declaration.CompositeDeclarations {
+			predeclare(nestedCompositeDeclaration.Identifier)
+		}
 
 		for _, nestedInterfaceDeclaration := range declaration.InterfaceDeclarations {
 			interpreter.declareInterface(nestedInterfaceDeclaration, lexicalScope)
@@ -2295,11 +2317,18 @@ func (interpreter *Interpreter) declareCompositeValue(
 				)
 			}
 
+			fields := map[string]Value{}
+
+			if declaration.CompositeKind == common.CompositeKindResource {
+				uuid := interpreter.uuidHandler()
+				fields[ResourceUUIDMemberName] = UInt64Value(uuid)
+			}
+
 			value := &CompositeValue{
 				Location:       location,
 				TypeID:         typeID,
 				Kind:           declaration.CompositeKind,
-				Fields:         map[string]Value{},
+				Fields:         fields,
 				InjectedFields: injectedFields,
 				Functions:      functions,
 				Destructor:     destructorFunction,
@@ -2902,6 +2931,7 @@ func (interpreter *Interpreter) ensureLoaded(location ast.Location, loadProgram 
 		WithInjectedCompositeFieldsHandler(interpreter.injectedCompositeFieldsHandler),
 		WithContractValueHandler(interpreter.contractValueHandler),
 		WithImportProgramHandler(interpreter.importProgramHandler),
+		WithUUIDHandler(interpreter.uuidHandler),
 		WithAllInterpreters(interpreter.allInterpreters),
 		WithAllCheckers(interpreter.allCheckers),
 		withTypeCodes(interpreter.typeCodes),
@@ -3152,34 +3182,13 @@ func (interpreter *Interpreter) VisitReferenceExpression(referenceExpression *as
 
 	authorized := referenceExpression.Type.(*ast.ReferenceType).Authorized
 
-	if interpreter.Checker.Elaboration.IsReferenceIntoStorage[referenceExpression] {
-		indexExpression := referenceExpression.Expression.(*ast.IndexExpression)
-		return indexExpression.TargetExpression.Accept(interpreter).(Trampoline).
-			FlatMap(func(result interface{}) Trampoline {
-				storage := result.(StorageValue)
-
-				indexingType := interpreter.Checker.Elaboration.IndexExpressionIndexingTypes[indexExpression]
-				key := interpreter.storageKeyHandler(interpreter, storage.Address, indexingType)
-
-				referenceValue := &StorageReferenceValue{
-					Authorized:           authorized,
-					TargetStorageAddress: storage.Address,
-					TargetKey:            key,
-					// NOTE: new value has no owner
-					Owner: nil,
-				}
-
-				return Done{Result: referenceValue}
-			})
-	} else {
-		return referenceExpression.Expression.Accept(interpreter).(Trampoline).
-			Map(func(result interface{}) interface{} {
-				return &EphemeralReferenceValue{
-					Authorized: authorized,
-					Value:      result.(Value),
-				}
-			})
-	}
+	return referenceExpression.Expression.Accept(interpreter).(Trampoline).
+		Map(func(result interface{}) interface{} {
+			return &EphemeralReferenceValue{
+				Authorized: authorized,
+				Value:      result.(Value),
+			}
+		})
 }
 
 func (interpreter *Interpreter) VisitForceExpression(expression *ast.ForceExpression) ast.Repr {
@@ -3290,12 +3299,10 @@ func (interpreter *Interpreter) newConverterFunction(converter ValueConverter) F
 // - Account
 // - PublicAccount
 // - Block
-// - Storage
-// - References
 
 func (interpreter *Interpreter) IsSubType(subType DynamicType, superType sema.Type) bool {
 	switch typedSubType := subType.(type) {
-	case VoidType:
+	case VoidDynamicType:
 		switch superType.(type) {
 		case *sema.VoidType, *sema.AnyStructType:
 			return true
@@ -3304,7 +3311,7 @@ func (interpreter *Interpreter) IsSubType(subType DynamicType, superType sema.Ty
 			return false
 		}
 
-	case StringType:
+	case StringDynamicType:
 		switch superType.(type) {
 		case *sema.StringType, *sema.AnyStructType:
 			return true
@@ -3313,7 +3320,7 @@ func (interpreter *Interpreter) IsSubType(subType DynamicType, superType sema.Ty
 			return false
 		}
 
-	case BoolType:
+	case BoolDynamicType:
 		switch superType.(type) {
 		case *sema.BoolType, *sema.AnyStructType:
 			return true
@@ -3322,7 +3329,7 @@ func (interpreter *Interpreter) IsSubType(subType DynamicType, superType sema.Ty
 			return false
 		}
 
-	case AddressType:
+	case AddressDynamicType:
 		switch superType.(type) {
 		case *sema.AddressType, *sema.AnyStructType:
 			return true
@@ -3331,13 +3338,13 @@ func (interpreter *Interpreter) IsSubType(subType DynamicType, superType sema.Ty
 			return false
 		}
 
-	case NumberType:
+	case NumberDynamicType:
 		return sema.IsSubType(typedSubType.StaticType, superType)
 
-	case CompositeType:
+	case CompositeDynamicType:
 		return sema.IsSubType(typedSubType.StaticType, superType)
 
-	case ArrayType:
+	case ArrayDynamicType:
 		var superTypeElementType sema.Type
 
 		switch typedSuperType := superType.(type) {
@@ -3362,7 +3369,7 @@ func (interpreter *Interpreter) IsSubType(subType DynamicType, superType sema.Ty
 
 		return true
 
-	case DictionaryType:
+	case DictionaryDynamicType:
 
 		switch typedSuperType := superType.(type) {
 		case *sema.DictionaryType:
@@ -3383,7 +3390,7 @@ func (interpreter *Interpreter) IsSubType(subType DynamicType, superType sema.Ty
 			return false
 		}
 
-	case NilType:
+	case NilDynamicType:
 		switch superType.(type) {
 		case *sema.OptionalType, *sema.AnyStructType, *sema.AnyResourceType:
 			return true
@@ -3392,7 +3399,7 @@ func (interpreter *Interpreter) IsSubType(subType DynamicType, superType sema.Ty
 			return false
 		}
 
-	case SomeType:
+	case SomeDynamicType:
 		switch typedSuperType := superType.(type) {
 		case *sema.OptionalType:
 			return interpreter.IsSubType(typedSubType.InnerType, typedSuperType.Type)
@@ -3404,16 +3411,7 @@ func (interpreter *Interpreter) IsSubType(subType DynamicType, superType sema.Ty
 			return false
 		}
 
-	case StorageType:
-		switch superType.(type) {
-		case *sema.StorageType, *sema.AnyStructType:
-			return true
-
-		default:
-			return false
-		}
-
-	case ReferenceType:
+	case ReferenceDynamicType:
 		switch typedSuperType := superType.(type) {
 		case *sema.AnyStructType:
 			return true
@@ -3444,26 +3442,34 @@ func storageKey(path PathValue) string {
 	return fmt.Sprintf("%s\x1F%s", path.Domain.Identifier(), path.Identifier)
 }
 
-func (interpreter *Interpreter) checkPathDomain(
+func mustPathDomain(
 	path PathValue,
 	locationRange LocationRange,
 	expectedDomains ...common.PathDomain,
 ) {
-	actualDomain := path.Domain
-
-	for _, expectedDomain := range expectedDomains {
-		if actualDomain == expectedDomain {
-			return
-		}
+	if checkPathDomain(path, expectedDomains...) {
+		return
 	}
 
 	panic(
 		&InvalidPathDomainError{
-			ActualDomain:    actualDomain,
+			ActualDomain:    path.Domain,
 			ExpectedDomains: expectedDomains,
 			LocationRange:   locationRange,
 		},
 	)
+}
+
+func checkPathDomain(path PathValue, expectedDomains ...common.PathDomain) bool {
+	actualDomain := path.Domain
+
+	for _, expectedDomain := range expectedDomains {
+		if actualDomain == expectedDomain {
+			return true
+		}
+	}
+
+	return false
 }
 
 func (interpreter *Interpreter) authAccountSaveFunction(addressValue AddressValue) HostFunctionValue {
@@ -3477,7 +3483,7 @@ func (interpreter *Interpreter) authAccountSaveFunction(addressValue AddressValu
 
 		// Ensure the path has a `storage` domain
 
-		interpreter.checkPathDomain(
+		mustPathDomain(
 			path,
 			invocation.LocationRange,
 			common.PathDomainStorage,
@@ -3488,7 +3494,7 @@ func (interpreter *Interpreter) authAccountSaveFunction(addressValue AddressValu
 		if interpreter.storedValueExists(address, key) {
 			panic(
 				&OverwriteError{
-					Address:       address,
+					Address:       addressValue,
 					Path:          path,
 					LocationRange: invocation.LocationRange,
 				},
@@ -3500,7 +3506,7 @@ func (interpreter *Interpreter) authAccountSaveFunction(addressValue AddressValu
 		interpreter.writeStored(
 			address,
 			key,
-			&SomeValue{Value: value},
+			NewSomeValueOwningNonCopying(value),
 		)
 
 		return Done{Result: VoidValue{}}
@@ -3508,6 +3514,15 @@ func (interpreter *Interpreter) authAccountSaveFunction(addressValue AddressValu
 }
 
 func (interpreter *Interpreter) authAccountLoadFunction(addressValue AddressValue) HostFunctionValue {
+	return interpreter.authAccountReadFunction(addressValue, true)
+}
+
+func (interpreter *Interpreter) authAccountCopyFunction(addressValue AddressValue) HostFunctionValue {
+	return interpreter.authAccountReadFunction(addressValue, false)
+}
+
+func (interpreter *Interpreter) authAccountReadFunction(addressValue AddressValue, clear bool) HostFunctionValue {
+
 	return NewHostFunctionValue(func(invocation Invocation) Trampoline {
 
 		address := addressValue.ToAddress()
@@ -3517,7 +3532,7 @@ func (interpreter *Interpreter) authAccountLoadFunction(addressValue AddressValu
 
 		// Ensure the path has a `storage` domain
 
-		interpreter.checkPathDomain(
+		mustPathDomain(
 			path,
 			invocation.LocationRange,
 			common.PathDomainStorage,
@@ -3534,6 +3549,9 @@ func (interpreter *Interpreter) authAccountLoadFunction(addressValue AddressValu
 			// If there is value stored for the given path,
 			// check that it satisfies the type given as the type argument.
 
+			// `Invocation.TypeParameterTypes` is a map, so get the first
+			// element / type by iterating over the values of the map.
+
 			var ty sema.Type
 			for _, ty = range invocation.TypeParameterTypes {
 				break
@@ -3544,10 +3562,12 @@ func (interpreter *Interpreter) authAccountLoadFunction(addressValue AddressValu
 				return Done{Result: NilValue{}}
 			}
 
-			// Remove the value from storage,
-			// but only if the type check succeeded.
+			if clear {
+				// Remove the value from storage,
+				// but only if the type check succeeded.
 
-			interpreter.writeStored(address, key, NilValue{})
+				interpreter.writeStored(address, key, NilValue{})
+			}
 
 			return Done{Result: value}
 
@@ -3567,7 +3587,7 @@ func (interpreter *Interpreter) authAccountBorrowFunction(addressValue AddressVa
 
 		// Ensure the path has a `storage` domain
 
-		interpreter.checkPathDomain(
+		mustPathDomain(
 			path,
 			invocation.LocationRange,
 			common.PathDomainStorage,
@@ -3583,6 +3603,9 @@ func (interpreter *Interpreter) authAccountBorrowFunction(addressValue AddressVa
 
 			// If there is value stored for the given path,
 			// check that it satisfies the type given as the type argument.
+
+			// `Invocation.TypeParameterTypes` is a map, so get the first
+			// element / type by iterating over the values of the map.
 
 			var ty sema.Type
 			for _, ty = range invocation.TypeParameterTypes {
@@ -3604,7 +3627,7 @@ func (interpreter *Interpreter) authAccountBorrowFunction(addressValue AddressVa
 				Owner: nil,
 			}
 
-			return Done{Result: &SomeValue{Value: reference}}
+			return Done{Result: NewSomeValueOwningNonCopying(reference)}
 
 		default:
 			panic(errors.NewUnreachableError())
@@ -3617,6 +3640,19 @@ func (interpreter *Interpreter) authAccountLinkFunction(addressValue AddressValu
 
 		address := addressValue.ToAddress()
 
+		// `Invocation.TypeParameterTypes` is a map, so get the first
+		// element / type by iterating over the values of the map.
+
+		var referenceType *sema.ReferenceType
+		for _, ty := range invocation.TypeParameterTypes {
+			referenceType = ty.(*sema.ReferenceType)
+			break
+		}
+
+		if referenceType == nil {
+			panic(errors.NewUnreachableError())
+		}
+
 		newCapabilityPath := invocation.Arguments[0].(PathValue)
 		targetPath := invocation.Arguments[1].(PathValue)
 
@@ -3624,7 +3660,7 @@ func (interpreter *Interpreter) authAccountLinkFunction(addressValue AddressValu
 
 		// Ensure the path has a `private` or `public` domain
 
-		interpreter.checkPathDomain(
+		mustPathDomain(
 			newCapabilityPath,
 			invocation.LocationRange,
 			common.PathDomainPrivate,
@@ -3637,19 +3673,248 @@ func (interpreter *Interpreter) authAccountLinkFunction(addressValue AddressValu
 
 		// Write new value
 
-		value := NewSomeValueOwningNonCopying(
-			CapabilityValue{
-				Address: addressValue,
-				Path:    targetPath,
+		storedValue := NewSomeValueOwningNonCopying(
+			LinkValue{
+				TargetPath: targetPath,
+				Type:       ConvertSemaToStaticType(referenceType),
 			},
 		)
 
 		interpreter.writeStored(
 			address,
 			newCapabilityKey,
-			value,
+			storedValue,
 		)
 
-		return Done{Result: value}
+		returnValue := NewSomeValueOwningNonCopying(
+			CapabilityValue{
+				Address: addressValue,
+				Path:    targetPath,
+			},
+		)
+
+		return Done{Result: returnValue}
 	})
+}
+
+func (interpreter *Interpreter) authAccountGetLinkTargetFunction(addressValue AddressValue) HostFunctionValue {
+	return NewHostFunctionValue(func(invocation Invocation) Trampoline {
+
+		address := addressValue.ToAddress()
+
+		capabilityPath := invocation.Arguments[0].(PathValue)
+
+		capabilityKey := storageKey(capabilityPath)
+
+		// Ensure the path has a `private` or `public` domain
+
+		mustPathDomain(
+			capabilityPath,
+			invocation.LocationRange,
+			common.PathDomainPrivate,
+			common.PathDomainPublic,
+		)
+
+		value := interpreter.readStored(address, capabilityKey)
+
+		switch value := value.(type) {
+		case NilValue:
+			return Done{Result: value}
+
+		case *SomeValue:
+
+			link, ok := value.Value.(LinkValue)
+			if !ok {
+				return Done{Result: NilValue{}}
+			}
+
+			returnValue := NewSomeValueOwningNonCopying(link.TargetPath)
+
+			return Done{Result: returnValue}
+
+		default:
+			panic(errors.NewUnreachableError())
+		}
+	})
+}
+
+func (interpreter *Interpreter) authAccountUnlinkFunction(addressValue AddressValue) HostFunctionValue {
+	return NewHostFunctionValue(func(invocation Invocation) Trampoline {
+
+		address := addressValue.ToAddress()
+
+		capabilityPath := invocation.Arguments[0].(PathValue)
+		capabilityKey := storageKey(capabilityPath)
+
+		// Ensure the path has a `private` or `public` domain
+
+		mustPathDomain(
+			capabilityPath,
+			invocation.LocationRange,
+			common.PathDomainPrivate,
+			common.PathDomainPublic,
+		)
+
+		// Write new value
+
+		interpreter.writeStored(
+			address,
+			capabilityKey,
+			NilValue{},
+		)
+
+		return Done{Result: VoidValue{}}
+	})
+}
+
+func (interpreter *Interpreter) capabilityBorrowFunction(addressValue AddressValue, pathValue PathValue) HostFunctionValue {
+	return NewHostFunctionValue(func(invocation Invocation) Trampoline {
+
+		targetStorageKey, authorized :=
+			interpreter.getCapabilityFinalTargetStorageKey(
+				addressValue,
+				pathValue,
+				invocation,
+			)
+
+		if targetStorageKey == "" {
+			return Done{Result: NilValue{}}
+		}
+
+		address := addressValue.ToAddress()
+
+		reference := &StorageReferenceValue{
+			Authorized:           authorized,
+			TargetStorageAddress: address,
+			TargetKey:            targetStorageKey,
+			// NOTE: new value has no owner
+			Owner: nil,
+		}
+
+		return Done{Result: NewSomeValueOwningNonCopying(reference)}
+	})
+}
+
+func (interpreter *Interpreter) capabilityCheckFunction(addressValue AddressValue, pathValue PathValue) HostFunctionValue {
+	return NewHostFunctionValue(func(invocation Invocation) Trampoline {
+
+		targetStorageKey, _ :=
+			interpreter.getCapabilityFinalTargetStorageKey(
+				addressValue,
+				pathValue,
+				invocation,
+			)
+
+		isValid := targetStorageKey != ""
+
+		return Done{Result: BoolValue(isValid)}
+	})
+}
+
+func (interpreter *Interpreter) getCapabilityFinalTargetStorageKey(
+	addressValue AddressValue,
+	path PathValue,
+	invocation Invocation,
+) (
+	finalStorageKey string,
+	authorized bool,
+) {
+	address := addressValue.ToAddress()
+
+	key := storageKey(path)
+
+	// `Invocation.TypeParameterTypes` is a map, so get the first
+	// element / type by iterating over the values of the map.
+
+	var wantedType sema.Type
+	for _, wantedType = range invocation.TypeParameterTypes {
+		break
+	}
+
+	if wantedType == nil {
+		panic(errors.NewUnreachableError())
+	}
+
+	wantedReferenceType := wantedType.(*sema.ReferenceType)
+
+	seenKeys := map[string]struct{}{}
+	paths := []PathValue{path}
+
+	for {
+		// Detect cyclic links
+
+		if _, ok := seenKeys[key]; ok {
+			panic(&CyclicLinkError{
+				Address:       addressValue,
+				Paths:         paths,
+				LocationRange: invocation.LocationRange,
+			})
+		} else {
+			seenKeys[key] = struct{}{}
+		}
+
+		value := interpreter.readStored(address, key)
+
+		switch value := value.(type) {
+		case NilValue:
+			return "", false
+
+		case *SomeValue:
+
+			if link, ok := value.Value.(LinkValue); ok {
+
+				allowedType := interpreter.convertStaticToSemaType(link.Type)
+
+				if !sema.IsSubType(allowedType, wantedType) {
+					return "", false
+				}
+
+				targetPath := link.TargetPath
+				paths = append(paths, targetPath)
+				key = storageKey(targetPath)
+
+			} else {
+				return key, wantedReferenceType.Authorized
+			}
+
+		default:
+			panic(errors.NewUnreachableError())
+		}
+	}
+}
+
+func (interpreter *Interpreter) convertStaticToSemaType(staticType StaticType) sema.Type {
+	return ConvertStaticToSemaType(
+		staticType,
+		func(location ast.Location, typeID sema.TypeID) *sema.InterfaceType {
+			return interpreter.getInterfaceType(location, typeID)
+		},
+		func(location ast.Location, typeID sema.TypeID) *sema.CompositeType {
+			return interpreter.getCompositeType(location, typeID)
+		},
+	)
+}
+
+func (interpreter *Interpreter) getElaboration(location ast.Location) *sema.Elaboration {
+
+	// Ensure the program for this location is loaded,
+	// so its checker is available
+
+	inter := interpreter.ensureLoaded(location, func() *ast.Program {
+		return interpreter.importProgramHandler(interpreter, location)
+	})
+
+	locationID := location.ID()
+
+	return inter.allCheckers[locationID].Elaboration
+}
+
+func (interpreter *Interpreter) getCompositeType(location ast.Location, typeID sema.TypeID) *sema.CompositeType {
+	elaboration := interpreter.getElaboration(location)
+	return elaboration.CompositeTypes[typeID]
+}
+
+func (interpreter *Interpreter) getInterfaceType(location ast.Location, typeID sema.TypeID) *sema.InterfaceType {
+	elaboration := interpreter.getElaboration(location)
+	return elaboration.InterfaceTypes[typeID]
 }

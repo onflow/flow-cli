@@ -2,7 +2,6 @@ package sema
 
 import (
 	"github.com/dapperlabs/cadence/runtime/ast"
-	"github.com/dapperlabs/cadence/runtime/common"
 	"github.com/dapperlabs/cadence/runtime/errors"
 )
 
@@ -73,7 +72,7 @@ func (checker *Checker) VisitCastingExpression(expression *ast.CastingExpression
 				}
 			}
 
-			if !FailableCanSucceed(leftHandType, rightHandType) {
+			if !FailableCastCanSucceed(leftHandType, rightHandType) {
 
 				checker.report(
 					&TypeMismatchError{
@@ -112,11 +111,12 @@ func (checker *Checker) VisitCastingExpression(expression *ast.CastingExpression
 	}
 }
 
-// FailableCanSucceed checks a failable (dynamic) cast, i.e. a cast that might succeed at run-time.
+// FailableCastCanSucceed checks a failable (dynamic) cast, i.e. a cast that might succeed at run-time.
 // It returns true if the cast from subType to superType could potentially succeed at run-time,
 // and returns false if the cast will definitely always fail.
 //
-func FailableCanSucceed(subType, superType Type) bool {
+func FailableCastCanSucceed(subType, superType Type) bool {
+
 	// TODO: report impossible casts, e.g.
 	//   - primitive/composite T -> composite U where T != U
 	//   - array/dictionary where key or value cast is impossible
@@ -132,7 +132,7 @@ func FailableCanSucceed(subType, superType Type) bool {
 			// if `T` is a subtype of `U`
 
 			if typedSubType.Authorized {
-				return FailableCanSucceed(typedSubType.Type, typedSuperType.Type)
+				return FailableCastCanSucceed(typedSubType.Type, typedSuperType.Type)
 			}
 
 			// An unauthorized reference type is not a subtype of an authorized reference type.
@@ -151,124 +151,198 @@ func FailableCanSucceed(subType, superType Type) bool {
 			return IsSubType(subType, superType)
 		}
 
-	case *RestrictedResourceType:
+	case *RestrictedType:
 
 		switch typedSubType := subType.(type) {
-		case *RestrictedResourceType:
+		case *RestrictedType:
 
-			if _, ok := typedSuperType.Type.(*AnyResourceType); ok {
+			switch restrictedSuperType := typedSuperType.Type.(type) {
 
-				// A restricted resource type `T{Us}`
-				// is a subtype of a restricted resource type `AnyResource{Vs}`:
+			case *AnyResourceType:
+				// A restricted type `T{Us}`
+				// is a subtype of a restricted type `AnyResource{Vs}`:
 				//
-				// When `T == AnyResource`: if the run-time type conforms to `Vs`
+				// When `T == AnyResource || T == Any`:
+				// if the run-time type conforms to `Vs`
 				//
-				// When `T != AnyResource`: if `T` conforms to `Vs`.
+				// When `T != AnyResource && T != Any`:
+				// if `T` conforms to `Vs`.
 				// `Us` and `Vs` do *not* have to be subsets.
 
-				if _, ok := typedSubType.Type.(*AnyResourceType); ok {
+				switch typedSubType.Type.(type) {
+				case *AnyResourceType, *AnyType:
 					return true
-				} else {
+				default:
 					if typedInnerSubType, ok := typedSubType.Type.(*CompositeType); ok {
 
-						return typedSuperType.RestrictionSet().
-							IsSubsetOf(typedInnerSubType.ConformanceSet())
+						return IsSubType(typedInnerSubType, restrictedSuperType) &&
+							typedSuperType.RestrictionSet().
+								IsSubsetOf(typedInnerSubType.ConformanceSet())
 					}
 				}
 
-			} else {
+			case *AnyStructType:
+				// A restricted type `T{Us}`
+				// is a subtype of a restricted type `AnyStruct{Vs}`:
+				//
+				// When `T == AnyStruct || T == Any`: if the run-time type conforms to `Vs`
+				//
+				// When `T != AnyStruct && T != Any`: if `T` conforms to `Vs`.
+				// `Us` and `Vs` do *not* have to be subsets.
 
-				// A restricted resource type `T{Us}`
-				// is a subtype of a restricted resource type `V{Ws}`:
-				//
-				// When `T == AnyResource`: if the run-time type is `V`.
-				//
-				// When `T != AnyResource`: if `T == V`.
-				// `Us` and `Ws` do *not* have to be subsets:
-				// The owner of the resource may freely restrict and unrestrict the resource.
-				//
-
-				if _, ok := typedSubType.Type.(*AnyResourceType); ok {
+				switch typedSubType.Type.(type) {
+				case *AnyStructType, *AnyType:
 					return true
-				} else {
+				default:
+					if typedInnerSubType, ok := typedSubType.Type.(*CompositeType); ok {
+
+						return IsSubType(typedInnerSubType, restrictedSuperType) &&
+							typedSuperType.RestrictionSet().
+								IsSubsetOf(typedInnerSubType.ConformanceSet())
+					}
+				}
+
+			case *AnyType:
+				// A restricted type `T{Us}`
+				// is a subtype of a restricted type `Any{Vs}`:
+				//
+				// When `T == AnyResource || T == AnyStruct || T == Any`:
+				// if the run-time type conforms to `Vs`
+				//
+				// When `T != AnyResource && T != AnyStruct && T != Any`:
+				// if `T` conforms to `Vs`.
+				// `Us` and `Vs` do *not* have to be subsets.
+
+				switch typedSubType.Type.(type) {
+				case *AnyResourceType, *AnyStructType, *AnyType:
+					return true
+				default:
+					if typedInnerSubType, ok := typedSubType.Type.(*CompositeType); ok {
+
+						return IsSubType(typedInnerSubType, restrictedSuperType) &&
+							typedSuperType.RestrictionSet().
+								IsSubsetOf(typedInnerSubType.ConformanceSet())
+					}
+				}
+
+			default:
+
+				// A restricted type `T{Us}`
+				// is a subtype of a restricted type `V{Ws}`:
+				//
+				// When `T == AnyResource || T == AnyStruct || T == Any`:
+				// if the run-time type is `V`.
+				//
+				// When `T != AnyResource && T != AnyStruct && T != Any`:
+				// if `T == V`.
+				// `Us` and `Ws` do *not* have to be subsets:
+				// The owner may freely restrict and unrestrict.
+
+				switch typedSubType.Type.(type) {
+				case *AnyResourceType, *AnyStructType, *AnyType:
+					return true
+				default:
 					return typedSubType.Type.Equal(typedSuperType.Type)
 				}
 			}
 
 		case *CompositeType:
-			if typedSubType.Kind == common.CompositeKindResource {
 
-				if _, ok := typedSuperType.Type.(*AnyResourceType); ok {
+			switch typedSuperType.Type.(type) {
+			case *AnyResourceType, *AnyStructType, *AnyType:
 
-					// An unrestricted resource type `T`
-					// is a subtype of a restricted resource type `AnyResource{Us}`:
-					//
-					// When `T != AnyResource`: if `T` conforms to `Us`.
+				// An unrestricted type `T`
+				// is a subtype of a restricted type `AnyResource{Us}` / `AnyStruct{Us}` / `Any{Us}`:
+				//
+				// When `T != AnyResource && T != AnyStruct && T != Any`:
+				// if `T` is a subtype of the restricted supertype,
+				// and `T` conforms to `Us`.
 
-					return typedSuperType.RestrictionSet().
+				return IsSubType(typedSubType, typedSuperType.Type) &&
+					typedSuperType.RestrictionSet().
 						IsSubsetOf(typedSubType.ConformanceSet())
 
-				} else {
+			default:
 
-					// An unrestricted resource type `T`
-					// is a subtype of a restricted resource type `U{Vs}`:
-					//
-					// When `T != AnyResource`: if `T == U`.
+				// An unrestricted type `T`
+				// is a subtype of a restricted type `U{Vs}`:
+				//
+				// When `T != AnyResource && T != AnyStruct && T != Any`:
+				// if `T == U`.
 
-					return typedSubType.Equal(typedSuperType.Type)
-				}
+				return typedSubType.Equal(typedSuperType.Type)
 			}
 
-		case *AnyResourceType:
-			// Commented out because the result is true in both cases,
-			// so avoid unnecessary checks.
+		case *AnyResourceType, *AnyStructType, *AnyType:
 
-			//if _, ok := typedSuperType.Type.(*AnyResourceType); ok {
-			//
-			//	// An unrestricted resource type `T`
-			//	// is a subtype of a restricted resource type `AnyResource{Us}`:
-			//	//
-			//	// When `T == AnyResource`: if the run-time type conforms to `Vs`
-			//
-			//	return true
-			//
-			//} else {
-			//
-			//	// An unrestricted resource type `T`
-			//	// is a subtype of a restricted resource type `U{Vs}`:
-			//	//
-			//	// When `T == AnyResource`: if the run-time type is U.
-			//
-			//	return true
-			//}
+			switch typedSuperType.Type.(type) {
+			case *AnyResourceType, *AnyStructType, *AnyType:
+
+				// An unrestricted type `T`
+				// is a subtype of a restricted type `AnyResource{Us}` / `AnyStruct{Us}` / `Any{Us}`:
+				//
+				// When `T == AnyResource || T == AnyStruct` || T == Any`:
+				// if the run-time type conforms to `Vs`
+
+				return true
+
+			default:
+
+				// An unrestricted type `T`
+				// is a subtype of a restricted type `U{Vs}`:
+				//
+				// When `T == AnyResource || T == AnyStruct || T == Any`:
+				// if the run-time type is U.
+
+				// NOTE: inverse!
+
+				return IsSubType(typedSuperType.Type, typedSubType)
+			}
 		}
 
 	case *CompositeType:
-		if typedSuperType.Kind == common.CompositeKindResource {
 
-			switch typedSubType := subType.(type) {
-			case *RestrictedResourceType:
+		switch typedSubType := subType.(type) {
+		case *RestrictedType:
 
-				// A restricted resource type `T{Us}`
-				// is a subtype of an unrestricted resource type `V`:
-				//
-				// When `T != AnyResource`: if `T == V`.
-				// The owner of the resource may freely unrestrict the resource.
-				//
-				// When `T == AnyResource`: if the run-time type is V.
+			// A restricted type `T{Us}`
+			// is a subtype of an unrestricted type `V`:
+			//
+			// When `T == AnyResource || T == AnyStruct || T == Any`:
+			// if the run-time type is V.
+			//
+			// When `T != AnyResource && T != AnyStruct && T != Any`:
+			// if `T == V`.
+			// The owner may freely unrestrict.
 
-				if _, ok := typedSubType.Type.(*AnyResourceType); !ok {
-					return typedSubType.Type.Equal(typedSuperType)
-				}
+			switch typedSubType.Type.(type) {
+			case *AnyResourceType, *AnyStructType, *AnyType:
+				return true
+
+			default:
+				return typedSubType.Type.Equal(typedSuperType)
 			}
 		}
 
-	case *AnyResourceType:
+	case *AnyResourceType, *AnyStructType:
 
-		// A restricted resource type `T{Us}`
-		// or unrestricted resource type `T`
-		// is a subtype of the type `AnyResource`: always.
+		// A restricted type `T{Us}`
+		// or unrestricted type `T`
+		// is a subtype of the type `AnyResource` / `AnyStruct`:
+		// if `T` is `AnyType`, or `T` is a subtype of `AnyResource` / `AnyStruct`.
 
+		innerSubtype := subType
+		if restrictedSubType, ok := subType.(*RestrictedType); ok {
+			innerSubtype = restrictedSubType.Type
+		}
+
+		if _, ok := innerSubtype.(*AnyType); ok {
+			return true
+		}
+
+		return IsSubType(innerSubtype, superType)
+
+	case *AnyType:
 		return true
 	}
 

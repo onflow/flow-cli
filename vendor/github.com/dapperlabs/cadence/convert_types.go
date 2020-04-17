@@ -72,6 +72,8 @@ func ConvertType(typ runtime.Type) Type {
 		return convertDictionaryType(t)
 	case *sema.FunctionType:
 		return convertFunctionType(t)
+	case *sema.AddressType:
+		return AddressType{}
 	}
 
 	panic(fmt.Sprintf("cannot convert type of type %T", typ))
@@ -104,7 +106,7 @@ func convertCompositeType(t *sema.CompositeType) Type {
 	// TODO: do not sort fields before export, store in order declared
 	fieldNames := make([]string, 0, len(t.Members))
 	for identifier, member := range t.Members {
-		if member.Predeclared {
+		if member.IgnoreInSerialization {
 			continue
 		}
 		fieldNames = append(fieldNames, identifier)

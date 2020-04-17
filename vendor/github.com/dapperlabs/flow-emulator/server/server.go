@@ -4,16 +4,15 @@ import (
 	"encoding/hex"
 	"time"
 
-	"github.com/dapperlabs/flow-go-sdk"
-	"github.com/dapperlabs/flow-go-sdk/keys"
 	"github.com/pkg/errors"
 	"github.com/psiemens/graceland"
 	"github.com/sirupsen/logrus"
 
-	"github.com/dapperlabs/flow-emulator"
+	emulator "github.com/dapperlabs/flow-emulator"
 	"github.com/dapperlabs/flow-emulator/storage"
 	"github.com/dapperlabs/flow-emulator/storage/badger"
 	"github.com/dapperlabs/flow-emulator/storage/memstore"
+	"github.com/dapperlabs/flow-go-sdk"
 )
 
 // EmulatorServer is a local server that runs a Flow Emulator instance.
@@ -110,16 +109,17 @@ func NewEmulatorServer(logger *logrus.Logger, conf *Config) *EmulatorServer {
 	// only create blocks ticker if block time > 0
 	if conf.BlockTime > 0 {
 		server.blocksTicker = NewBlocksTicker(backend, conf.BlockTime)
-
 	}
 
 	address := blockchain.RootAccountAddress()
 	prKey := blockchain.RootKey()
-	prKeyBytes, _ := keys.EncodePrivateKey(prKey)
+	prKeyBytes, _ := prKey.PrivateKey.PrivateKey.Encode()
 
 	logger.WithFields(logrus.Fields{
-		"address": address.Hex(),
-		"prKey":   hex.EncodeToString(prKeyBytes),
+		"address":       address.Hex(),
+		"prKey":         hex.EncodeToString(prKeyBytes),
+		"prKeySigAlgo":  prKey.AccountKey().SignAlgo.String(),
+		"prKeyHashAlgo": prKey.AccountKey().HashAlgo.String(),
 	}).Infof("⚙️   Using root account 0x%s", address.Hex())
 
 	return server

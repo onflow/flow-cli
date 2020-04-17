@@ -129,6 +129,61 @@ void _G2scalarGenMult(ep2_st* res, const bn_st *expo) {
     g2_mul_gen(res, (bn_st*)expo);
 }
 
+// checks an input scalar is less than the groups order (r)
+int checkMembership_Zr(const bn_st* a){
+    bn_t r;
+    bn_new(r); 
+    g2_get_ord(r);
+    int res = bn_cmp(a,r);
+    if (res == RLC_LT) return VALID;
+    return INVALID;
+}
+
+
+// checks if input point s is on the curve E1 
+// and is in the subgroup G1
+static int checkMembership_G1(const ep_t p){
+    // check p is on curve
+    if (!ep_is_valid(p))
+        return INVALID;
+    // check p is in G1
+    ep_st inf;
+    ep_new(&inf);
+    // check p^order == infinity
+    // use basic double & add as lwnaf reduces the expo modulo r
+    // TODO : write a simple lwnaf without reduction
+    ep_mul_basic(&inf, p, &core_get()->ep_r);
+    if (!ep_is_infty(&inf)){
+        ep_free(&inf);
+        return INVALID;
+    }
+    ep_free(&inf);
+    return VALID;
+}
+
+// checks if input point s is on the curve E2 
+// and is in the subgroup G2
+int checkMembership_G2(const ep2_st* p){
+#if MEMBERSHIP_CHECK
+    // check p is on curve
+    if (!ep2_is_valid((ep2_st*)p))
+        return INVALID;
+    // check p is in G2
+    ep2_st inf;
+    ep2_new(&inf);
+    // check p^order == infinity
+    // use basic double & add as lwnaf reduces the expo modulo r
+    // TODO : write a simple lwnaf without reduction
+    ep2_mul_basic(&inf, (ep2_st*)p, &core_get()->ep_r);
+    if (!ep2_is_infty(&inf)){
+        ep2_free(&inf);
+        return INVALID;
+    }
+    ep2_free(&inf);
+#endif
+    return VALID;
+}
+
 
 // Computes BLS signature
 void _blsSign(byte* s, const bn_st *sk, const byte* data, const int len) {
@@ -151,25 +206,13 @@ int _blsVerify(const ep2_st *pk, const byte* sig, const byte* data, const int le
 
     // elemsG1[0] = s
     ep_new(elemsG1[0]);
-    _ep_read_bin_compact(elemsG1[0], sig, SIGNATURE_LEN);
+    if (ep_read_bin_compact(elemsG1[0], sig, SIGNATURE_LEN) != RLC_OK) 
+        return INVALID;
 
  #if MEMBERSHIP_CHECK
-    // check s is on curve
-	// check s is in G1
-    if (!ep_is_valid(elemsG1[0]))
-        return SIG_INVALID;
-    // check s is in G1
-    ep_st inf;
-    ep_new(&inf);
-    // check s^order == infinity
-    // use basic double & add as lwnaf reduces the expo modulo r
-    // TODO : write a simple lwnaf without reduction
-    ep_mul_basic(&inf, elemsG1[0], &core_get()->ep_r);
-    if (!ep_is_infty(&inf)){
-        ep_free(&inf);
-        return SIG_INVALID;
-    }
-    ep_free(&inf);
+    // check s is on curve and in G1
+    if (checkMembership_G1(elemsG1[0]) != VALID)
+        return INVALID;
  #endif
 
     // elemsG1[1] = h
@@ -209,8 +252,7 @@ int _blsVerify(const ep2_st *pk, const byte* sig, const byte* data, const int le
     ep2_free(elemsG2[1]);
     
     if (res == RLC_EQ && core_get()->code == RLC_OK) 
-        return SIG_VALID;
+        return VALID;
     else 
-        return SIG_INVALID;
+        return INVALID;
 }
-

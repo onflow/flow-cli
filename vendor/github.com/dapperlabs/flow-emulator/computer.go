@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/dapperlabs/cadence"
-	encoding "github.com/dapperlabs/cadence/encoding/xdr"
 	"github.com/dapperlabs/cadence/runtime"
 	"github.com/dapperlabs/flow-go-sdk"
 	"github.com/dapperlabs/flow-go/crypto"
@@ -17,7 +16,7 @@ import (
 // A computer uses a runtime instance to execute transactions and scripts.
 type computer struct {
 	runtime        runtime.Runtime
-	onEventEmitted func(event flow.Event, blockNumber uint64, txHash crypto.Hash)
+	onEventEmitted func(event flow.Event, blockHeight uint64, txID flow.Identifier)
 }
 
 // newComputer returns a new computer initialized with a runtime.
@@ -35,107 +34,136 @@ func newComputer(
 // the accounts that authorized the transaction.
 //
 // An error is returned if the transaction script cannot be parsed or reverts during execution.
-func (c *computer) ExecuteTransaction(ledger *types.LedgerView, tx flow.Transaction) (TransactionResult, error) {
+func (c *computer) ExecuteTransaction(ledger *types.LedgerView, tx flow.Transaction) (*TransactionResult, error) {
 	runtimeContext := execution.NewRuntimeContext(ledger)
+
+	if tx.ProposalKey == (flow.ProposalKey{}) {
+		// TODO: add dedicated error type
+		return nil, fmt.Errorf("missing sequence number")
+	}
+
+	valid, updatedSeqNum, err := runtimeContext.CheckAndIncrementSequenceNumber(
+		tx.ProposalKey.Address,
+		tx.ProposalKey.KeyID,
+		tx.ProposalKey.SequenceNumber,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	if !valid {
+		return &TransactionResult{
+			TransactionID: tx.ID(),
+			// TODO: add dedicated error type
+			Error: fmt.Errorf(
+				"invalid sequence number: expected %d, got %d",
+				updatedSeqNum,
+				tx.ProposalKey.SequenceNumber,
+			),
+			Logs:   nil,
+			Events: nil,
+		}, nil
+	}
 
 	runtimeContext.SetChecker(func(code []byte, location runtime.Location) error {
 		return c.runtime.ParseAndCheckProgram(code, runtimeContext, location)
 	})
-	runtimeContext.SetSigningAccounts(tx.ScriptAccounts)
 
-	location := runtime.TransactionLocation(tx.Hash())
+	signers := make([]flow.Address, len(tx.Authorizers))
+	for i, addr := range tx.Authorizers {
+		signers[i] = addr
+	}
+
+	runtimeContext.SetSigningAccounts(signers)
+
+	location := runtime.TransactionLocation(tx.ID().Bytes())
 
 	executionErr := c.runtime.ExecuteTransaction(tx.Script, runtimeContext, location)
 
-	convertedEvents, err := convertEvents(runtimeContext.Events(), tx.Hash())
+	convertedEvents, err := convertEvents(runtimeContext.Events(), tx.ID())
 	if err != nil {
-		return TransactionResult{}, err
+		return nil, err
 	}
 
 	if executionErr != nil {
 		if errors.As(executionErr, &runtime.Error{}) {
 			// runtime errors occur when the execution reverts
-			return TransactionResult{
-				TransactionHash: tx.Hash(),
-				Error:           executionErr,
-				Logs:            runtimeContext.Logs(),
-				Events:          convertedEvents,
+			return &TransactionResult{
+				TransactionID: tx.ID(),
+				Error:         executionErr,
+				Logs:          runtimeContext.Logs(),
+				Events:        convertedEvents,
 			}, nil
 		}
 
 		// other errors are unexpected and should be treated as fatal
-		return TransactionResult{}, executionErr
+		return nil, executionErr
 	}
 
-	return TransactionResult{
-		TransactionHash: tx.Hash(),
-		Error:           nil,
-		Logs:            runtimeContext.Logs(),
-		Events:          convertedEvents,
+	return &TransactionResult{
+		TransactionID: tx.ID(),
+		Error:         nil,
+		Logs:          runtimeContext.Logs(),
+		Events:        convertedEvents,
 	}, nil
 }
 
 // ExecuteScript executes a plain script in the runtime.
 //
 // This function initializes a new runtime context using the provided registers view.
-func (c *computer) ExecuteScript(view *types.LedgerView, script []byte) (ScriptResult, error) {
+func (c *computer) ExecuteScript(view *types.LedgerView, script []byte) (*ScriptResult, error) {
 	runtimeContext := execution.NewRuntimeContext(view)
 
 	hasher := crypto.NewSHA3_256()
-	scriptHash := hasher.ComputeHash(script)
+	scriptID := flow.HashToID(hasher.ComputeHash(script))
 
-	location := runtime.ScriptLocation(scriptHash)
+	location := runtime.ScriptLocation(scriptID.Bytes())
 
 	value, executionErr := c.runtime.ExecuteScript(script, runtimeContext, location)
 
-	convertedEvents, err := convertEvents(runtimeContext.Events(), nil)
+	convertedEvents, err := convertEvents(runtimeContext.Events(), flow.ZeroID)
 	if err != nil {
-		return ScriptResult{}, err
+		return nil, err
 	}
 
 	if executionErr != nil {
 		if errors.As(executionErr, &runtime.Error{}) {
 			// runtime errors occur when the execution reverts
-			return ScriptResult{
-				ScriptHash: scriptHash,
-				Value:      nil,
-				Error:      executionErr,
-				Logs:       runtimeContext.Logs(),
-				Events:     convertedEvents,
+			return &ScriptResult{
+				ScriptID: scriptID,
+				Value:    nil,
+				Error:    executionErr,
+				Logs:     runtimeContext.Logs(),
+				Events:   convertedEvents,
 			}, nil
 		}
 
 		// other errors are unexpected and should be treated as fatal
-		return ScriptResult{}, executionErr
+		return nil, executionErr
 	}
 
 	convertedValue := cadence.ConvertValue(value)
 
-	return ScriptResult{
-		ScriptHash: scriptHash,
-		Value:      convertedValue,
-		Error:      nil,
-		Logs:       runtimeContext.Logs(),
-		Events:     convertedEvents,
+	return &ScriptResult{
+		ScriptID: scriptID,
+		Value:    convertedValue,
+		Error:    nil,
+		Logs:     runtimeContext.Logs(),
+		Events:   convertedEvents,
 	}, nil
 }
 
-func convertEvents(rtEvents []runtime.Event, txHash crypto.Hash) ([]flow.Event, error) {
-	flowEvents := make([]flow.Event, len(rtEvents))
+func convertEvents(events []runtime.Event, txID flow.Identifier) ([]flow.Event, error) {
+	flowEvents := make([]flow.Event, len(events))
 
-	for i, event := range rtEvents {
-		eventValue := cadence.ConvertEvent(event)
-
-		payload, err := encoding.Encode(eventValue)
-		if err != nil {
-			return nil, fmt.Errorf("failed to encode event: %w", err)
-		}
-
+	for i, event := range events {
 		flowEvents[i] = flow.Event{
-			Type:    string(event.Type.ID()),
-			TxHash:  txHash,
-			Index:   uint(i),
-			Payload: payload,
+			Type:          string(event.Type.ID()),
+			TransactionID: txID,
+			// TODO: include transaction index field
+			// TransactionIndex: txIndex,
+			EventIndex: i,
+			Value:      cadence.ConvertEvent(event),
 		}
 	}
 

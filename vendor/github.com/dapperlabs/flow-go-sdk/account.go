@@ -2,6 +2,8 @@ package flow
 
 import (
 	"github.com/dapperlabs/flow-go/crypto"
+
+	sdkcrypto "github.com/dapperlabs/flow-go-sdk/crypto"
 )
 
 // Account represents an account on the Flow network.
@@ -11,38 +13,38 @@ type Account struct {
 	Address Address
 	Balance uint64
 	Code    []byte
-	Keys    []AccountPublicKey
+	Keys    []AccountKey
 }
 
-// AccountPublicKey is a public key associated with an account.
-//
-// An account public key contains the public key, signing and hashing algorithms, and a key weight.
-type AccountPublicKey struct {
-	PublicKey crypto.PublicKey
-	SignAlgo  crypto.SigningAlgorithm
-	HashAlgo  crypto.HashingAlgorithm
-	Weight    int
+// An AccountKey is a public key associated with an account.
+type AccountKey struct {
+	ID             int
+	PublicKey      crypto.PublicKey
+	SignAlgo       crypto.SigningAlgorithm
+	HashAlgo       crypto.HashingAlgorithm
+	Weight         int
+	SequenceNumber uint64
 }
 
-// AccountPrivateKey is a private key associated with an account.
 type AccountPrivateKey struct {
 	PrivateKey crypto.PrivateKey
 	SignAlgo   crypto.SigningAlgorithm
 	HashAlgo   crypto.HashingAlgorithm
 }
 
-// PublicKey returns a weighted public key.
-func (a AccountPrivateKey) PublicKey(weight int) AccountPublicKey {
-	return AccountPublicKey{
-		PublicKey: a.PrivateKey.PublicKey(),
-		SignAlgo:  a.SignAlgo,
-		HashAlgo:  a.HashAlgo,
-		Weight:    weight,
+func (pk AccountPrivateKey) PublicKey() crypto.PublicKey {
+	return pk.PrivateKey.PublicKey()
+}
+
+func (pk AccountPrivateKey) ToAccountKey() AccountKey {
+	return AccountKey{
+		PublicKey: pk.PublicKey(),
+		SignAlgo:  pk.SignAlgo,
+		HashAlgo:  pk.HashAlgo,
+		Weight:    0,
 	}
 }
 
-// AccountSignature is a signature associated with an account.
-type AccountSignature struct {
-	Account   Address
-	Signature []byte
+func (pk AccountPrivateKey) Signer() sdkcrypto.NaiveSigner {
+	return sdkcrypto.NewNaiveSigner(pk.PrivateKey, pk.HashAlgo)
 }

@@ -3,15 +3,14 @@ package emulator
 import (
 	"github.com/dapperlabs/cadence"
 	"github.com/dapperlabs/flow-go-sdk"
-	"github.com/dapperlabs/flow-go/crypto"
 )
 
 // A TransactionResult is the result of executing a transaction.
 type TransactionResult struct {
-	TransactionHash crypto.Hash
-	Error           error
-	Logs            []string
-	Events          []flow.Event
+	TransactionID flow.Identifier
+	Error         error
+	Logs          []string
+	Events        []flow.Event
 }
 
 // Succeeded returns true if the transaction executed without errors.
@@ -26,11 +25,11 @@ func (r TransactionResult) Reverted() bool {
 
 // A ScriptResult is the result of executing a script.
 type ScriptResult struct {
-	ScriptHash crypto.Hash
-	Value      cadence.Value
-	Error      error
-	Logs       []string
-	Events     []flow.Event
+	ScriptID flow.Identifier
+	Value    cadence.Value
+	Error    error
+	Logs     []string
+	Events   []flow.Event
 }
 
 // Succeeded returns true if the script executed without errors.
