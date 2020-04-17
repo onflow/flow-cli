@@ -7,11 +7,12 @@ import (
 	"github.com/dapperlabs/flow-go-sdk"
 	"github.com/dapperlabs/flow-go-sdk/client"
 	"github.com/dapperlabs/flow-go-sdk/crypto"
+	"google.golang.org/grpc"
 )
 
 func SendTransaction(host string, signerAccount *Account, script []byte) {
 
-	flowClient, err := client.New(host)
+	flowClient, err := client.New(host, grpc.WithInsecure())
 	if err != nil {
 		Exitf(1, "Failed to connect to host: %s", err)
 	}
