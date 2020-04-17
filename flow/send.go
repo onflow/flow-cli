@@ -18,11 +18,11 @@ func SendTransaction(host string, signerAccount *Account, script []byte) {
 
 	signerAddress := signerAccount.Address
 
-	fmt.Printf("Getting information for account with address %s ...", signerAddress.Short())
+	fmt.Printf("Getting information for account with address 0x%s ...\n", signerAddress.Short())
 
 	account, err := flowClient.GetAccount(context.Background(), signerAddress)
 	if err != nil {
-		Exitf(1, "Failed to get account with address %s: %s", signerAddress.Short(), err)
+		Exitf(1, "Failed to get account with address %s: 0x%s", signerAddress.Short(), err)
 	}
 
 	signer := crypto.NewNaiveSigner(
@@ -44,11 +44,11 @@ func SendTransaction(host string, signerAccount *Account, script []byte) {
 		Exitf(1, "Failed to sign transaction: %s", err)
 	}
 
-	fmt.Printf("Submitting transaction with ID %d ...", tx.ID())
+	fmt.Printf("Submitting transaction with ID %s ...\n", tx.ID())
 
 	err = flowClient.SendTransaction(context.Background(), *tx)
 	if err == nil {
-		fmt.Printf("Successfully submitted transaction with ID %s", tx.ID())
+		fmt.Printf("Successfully submitted transaction with ID %s\n", tx.ID())
 	} else {
 		Exitf(1, "Failed to submit transaction: %s", err)
 	}
