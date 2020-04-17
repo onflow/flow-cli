@@ -36,7 +36,7 @@ type Store interface {
 		block *types.Block,
 		collections []*model.LightCollection,
 		transactions map[flow.Identifier]*flow.Transaction,
-		transactionResults map[flow.Identifier]*flow.TransactionResult,
+		transactionResults map[flow.Identifier]*types.StorableTransactionResult,
 		delta types.LedgerDelta,
 		events []flow.Event,
 	) error
@@ -48,7 +48,7 @@ type Store interface {
 	TransactionByID(flow.Identifier) (flow.Transaction, error)
 
 	// TransactionResultByID gets the transaction result with the given ID.
-	TransactionResultByID(flow.Identifier) (flow.TransactionResult, error)
+	TransactionResultByID(flow.Identifier) (types.StorableTransactionResult, error)
 
 	// LedgerViewByHeight returns a view into the ledger state at a given block.
 	LedgerViewByHeight(blockHeight uint64) *types.LedgerView

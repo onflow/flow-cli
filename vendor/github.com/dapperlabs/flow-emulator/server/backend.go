@@ -2,7 +2,6 @@ package server
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	"github.com/logrusorgru/aurora"
@@ -55,11 +54,11 @@ func (b *Backend) SendTransaction(ctx context.Context, req *access.SendTransacti
 	err = b.blockchain.AddTransaction(tx)
 	if err != nil {
 		switch err.(type) {
-		case *emulator.ErrDuplicateTransaction:
+		case *emulator.DuplicateTransactionError:
 			return nil, status.Error(codes.InvalidArgument, err.Error())
-		case *emulator.ErrInvalidSignaturePublicKey:
+		case *emulator.InvalidSignaturePublicKeyError:
 			return nil, status.Error(codes.InvalidArgument, err.Error())
-		case *emulator.ErrInvalidSignatureAccount:
+		case *emulator.InvalidSignatureAccountError:
 			return nil, status.Error(codes.InvalidArgument, err.Error())
 		default:
 			return nil, status.Error(codes.Internal, err.Error())
@@ -181,12 +180,12 @@ func (b *Backend) GetCollectionByID(ctx context.Context, req *access.GetCollecti
 
 	col, err := b.blockchain.GetCollection(id)
 	if err != nil {
-		var notFoundErr emulator.ErrNotFound
-		if errors.As(err, &notFoundErr) {
+		switch err.(type) {
+		case emulator.NotFoundError:
 			return nil, status.Error(codes.NotFound, err.Error())
+		default:
+			return nil, status.Error(codes.Internal, err.Error())
 		}
-
-		return nil, status.Error(codes.Internal, err.Error())
 	}
 
 	b.logger.
@@ -204,12 +203,12 @@ func (b *Backend) GetTransaction(ctx context.Context, req *access.GetTransaction
 
 	tx, err := b.blockchain.GetTransaction(id)
 	if err != nil {
-		var notFoundErr emulator.ErrNotFound
-		if errors.As(err, &notFoundErr) {
+		switch err.(type) {
+		case emulator.NotFoundError:
 			return nil, status.Error(codes.NotFound, err.Error())
+		default:
+			return nil, status.Error(codes.Internal, err.Error())
 		}
-
-		return nil, status.Error(codes.Internal, err.Error())
 	}
 
 	b.logger.
@@ -247,12 +246,12 @@ func (b *Backend) GetAccount(ctx context.Context, req *access.GetAccountRequest)
 	address := flow.BytesToAddress(req.GetAddress())
 	account, err := b.blockchain.GetAccount(address)
 	if err != nil {
-		var notFoundErr emulator.ErrNotFound
-		if errors.As(err, &notFoundErr) {
+		switch err.(type) {
+		case emulator.NotFoundError:
 			return nil, status.Error(codes.NotFound, err.Error())
+		default:
+			return nil, status.Error(codes.Internal, err.Error())
 		}
-
-		return nil, status.Error(codes.Internal, err.Error())
 	}
 
 	b.logger.
@@ -303,12 +302,14 @@ func (b *Backend) GetEventsForHeightRange(ctx context.Context, req *access.GetEv
 	startHeight := req.GetStartHeight()
 	endHeight := req.GetEndHeight()
 
-	if endHeight == 0 {
-		latestBlock, err := b.blockchain.GetLatestBlock()
-		if err != nil {
-			return nil, status.Error(codes.Internal, err.Error())
-		}
+	latestBlock, err := b.blockchain.GetLatestBlock()
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
 
+	// if end height is not set, use latest block height
+	// if end height is higher than latest, use latest
+	if endHeight == 0 || endHeight > latestBlock.Height {
 		endHeight = latestBlock.Height
 	}
 
@@ -325,12 +326,12 @@ func (b *Backend) GetEventsForHeightRange(ctx context.Context, req *access.GetEv
 	for height := startHeight; height <= endHeight; height++ {
 		block, err := b.blockchain.GetBlockByHeight(height)
 		if err != nil {
-			var notFoundErr emulator.ErrNotFound
-			if errors.As(err, &notFoundErr) {
-				break
+			switch err.(type) {
+			case emulator.NotFoundError:
+				return nil, status.Error(codes.NotFound, err.Error())
+			default:
+				return nil, status.Error(codes.Internal, err.Error())
 			}
-
-			return nil, status.Error(codes.Internal, err.Error())
 		}
 
 		events, err := b.blockchain.GetEventsByHeight(height, eventType)
@@ -371,13 +372,12 @@ func (b *Backend) GetEventsForBlockIDs(ctx context.Context, req *access.GetEvent
 	for _, blockID := range req.GetBlockIds() {
 		block, err := b.blockchain.GetBlockByID(flow.HashToID(blockID))
 		if err != nil {
-			var notFoundErr emulator.ErrNotFound
-			if errors.As(err, &notFoundErr) {
-				// bail out early if block cannot be found
+			switch err.(type) {
+			case emulator.NotFoundError:
 				return nil, status.Error(codes.NotFound, err.Error())
+			default:
+				return nil, status.Error(codes.Internal, err.Error())
 			}
-
-			return nil, status.Error(codes.Internal, err.Error())
 		}
 
 		events, err := b.blockchain.GetEventsByHeight(block.Height, eventType)

@@ -3,7 +3,7 @@ module github.com/dapperlabs/flow-emulator
 go 1.13
 
 require (
-	github.com/dapperlabs/cadence v0.0.0-20200401151421-7c78a2da20a6
+	github.com/dapperlabs/cadence v0.0.0-20200417143348-f3cda29ff0fd
 	github.com/dapperlabs/flow-go v0.3.2-0.20200331201607-7630da6300eb
 	github.com/dapperlabs/flow-go-sdk v1.0.0-alpha.1.0.20200414023813-690d1e1b3908
 	github.com/dapperlabs/flow-go/crypto v0.3.2-0.20200331201607-7630da6300eb

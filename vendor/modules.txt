@@ -32,7 +32,7 @@ github.com/dapperlabs/cadence/languageserver/config
 github.com/dapperlabs/cadence/languageserver/jsonrpc2
 github.com/dapperlabs/cadence/languageserver/protocol
 github.com/dapperlabs/cadence/languageserver/server
-# github.com/dapperlabs/flow-emulator v1.0.0-alpha.3
+# github.com/dapperlabs/flow-emulator v1.0.0-alpha.3.0.20200417175520-b177b0b740d0
 github.com/dapperlabs/flow-emulator
 github.com/dapperlabs/flow-emulator/execution
 github.com/dapperlabs/flow-emulator/server

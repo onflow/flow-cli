@@ -87,6 +87,14 @@ github.com/dapperlabs/cadence v0.0.0-20200401151421-7c78a2da20a6 h1:DEGjcmLodBrP
 github.com/dapperlabs/cadence v0.0.0-20200401151421-7c78a2da20a6/go.mod h1:WgzAWRd7gcxi6dfJmEdeTArtQVGOr48oLxLW4adsztk=
 github.com/dapperlabs/cadence v0.0.0-20200408001230-4f75a3e44403 h1:ApXvkQcN/jWBwrlAKp1Ybp2dxagOfUGejDRuXY681bE=
 github.com/dapperlabs/cadence v0.0.0-20200413201657-ed5a4196a6a0 h1:fWByaIEpawWAF2oDts+hvTEC9p1eidmFn8exQkqFV6E=
+github.com/dapperlabs/cadence v0.0.0-20200415220719-726a7f67220a h1:nCgmMKmHkF67dBa/owtHWnZYldm94SgSrNwbTiPUWFM=
+github.com/dapperlabs/cadence v0.0.0-20200415220719-726a7f67220a/go.mod h1:WgzAWRd7gcxi6dfJmEdeTArtQVGOr48oLxLW4adsztk=
+github.com/dapperlabs/cadence v0.0.0-20200416211027-2d6799eff291 h1:Z7SqijY1ZJg+ji6ro1waBYLh5+XlJlHb1Y4RaUfOOX4=
+github.com/dapperlabs/cadence v0.0.0-20200416211027-2d6799eff291/go.mod h1:WgzAWRd7gcxi6dfJmEdeTArtQVGOr48oLxLW4adsztk=
+github.com/dapperlabs/cadence v0.0.0-20200416212514-0fb6bcd7c0b0 h1:lUItz2DyKH1VRfClkqbmXZBUuJL1Y9aFRerONwStxGE=
+github.com/dapperlabs/cadence v0.0.0-20200416212514-0fb6bcd7c0b0/go.mod h1:WgzAWRd7gcxi6dfJmEdeTArtQVGOr48oLxLW4adsztk=
+github.com/dapperlabs/cadence v0.0.0-20200417143348-f3cda29ff0fd h1:omm5/YfglRsgfLTrs5eEJQOEHNJY1Oib4QxXfJ1nRPk=
+github.com/dapperlabs/cadence v0.0.0-20200417143348-f3cda29ff0fd/go.mod h1:WgzAWRd7gcxi6dfJmEdeTArtQVGOr48oLxLW4adsztk=
 github.com/dapperlabs/flow v0.0.0-20200403223221-0685a2afc8af h1:4ei4rzHa0BY+4+ZLN9d58sqyLK9lwdiRosGv26KmKOc=
 github.com/dapperlabs/flow v0.0.0-20200404014555-6e780d96b5ed h1:Z3nae1GIOVAXe3dbJHthqbGikWtxkTLGhioyQFcSKOU=
 github.com/dapperlabs/flow v0.0.0-20200405035006-e82d5bf52630 h1:N00Tiw9BCG38wJvFPDSOgeeK5uVyq4Wl7fxYqFFwR/M=

@@ -6,7 +6,6 @@ import (
 
 	"github.com/dapperlabs/cadence"
 	"github.com/dapperlabs/flow-go-sdk"
-	vm "github.com/dapperlabs/flow-go/engine/execution/computation/virtualmachine"
 	model "github.com/dapperlabs/flow-go/model/flow"
 
 	"github.com/dapperlabs/flow-emulator/types"
@@ -129,7 +128,7 @@ func decodeTransaction(tx *flow.Transaction, from []byte) error {
 	return gob.NewDecoder(bytes.NewBuffer(from)).Decode(tx)
 }
 
-func encodeTransactionResult(result flow.TransactionResult) ([]byte, error) {
+func encodeTransactionResult(result types.StorableTransactionResult) ([]byte, error) {
 	var buf bytes.Buffer
 	if err := gob.NewEncoder(&buf).Encode(&result); err != nil {
 		return nil, err
@@ -137,7 +136,7 @@ func encodeTransactionResult(result flow.TransactionResult) ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-func decodeTransactionResult(result *flow.TransactionResult, from []byte) error {
+func decodeTransactionResult(result *types.StorableTransactionResult, from []byte) error {
 	return gob.NewDecoder(bytes.NewBuffer(from)).Decode(result)
 }
 
@@ -151,18 +150,6 @@ func encodeUint64(v uint64) ([]byte, error) {
 
 func decodeUint64(v *uint64, from []byte) error {
 	return gob.NewDecoder(bytes.NewBuffer(from)).Decode(v)
-}
-
-func encodeLedger(ledger vm.MapLedger) ([]byte, error) {
-	var buf bytes.Buffer
-	if err := gob.NewEncoder(&buf).Encode(&ledger); err != nil {
-		return nil, err
-	}
-	return buf.Bytes(), nil
-}
-
-func decodeLedger(ledger *vm.MapLedger, from []byte) error {
-	return gob.NewDecoder(bytes.NewBuffer(from)).Decode(ledger)
 }
 
 func encodeEvent(event flow.Event) ([]byte, error) {

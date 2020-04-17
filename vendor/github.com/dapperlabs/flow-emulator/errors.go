@@ -8,167 +8,178 @@ import (
 	"github.com/dapperlabs/flow-go/crypto"
 )
 
-type ErrNotFound interface {
+// A NotFoundError indicates that an entity could not be found.
+type NotFoundError interface {
 	isNotFoundError()
 }
 
-type ErrBlockNotFound interface {
+// A BlockNotFoundError indicates that a block could not be found.
+type BlockNotFoundError interface {
 	isBlockNotFoundError()
 }
 
-// ErrBlockNotFoundByHeight indicates that a block could not be found at the specified height.
-type ErrBlockNotFoundByHeight struct {
+// A BlockNotFoundByHeightError indicates that a block could not be found at the specified height.
+type BlockNotFoundByHeightError struct {
 	Height uint64
 }
 
-func (e *ErrBlockNotFoundByHeight) isNotFoundError()      {}
-func (e *ErrBlockNotFoundByHeight) isBlockNotFoundError() {}
+func (e *BlockNotFoundByHeightError) isNotFoundError()      {}
+func (e *BlockNotFoundByHeightError) isBlockNotFoundError() {}
 
-func (e *ErrBlockNotFoundByHeight) Error() string {
+func (e *BlockNotFoundByHeightError) Error() string {
 	return fmt.Sprintf("could not find block at height %d", e.Height)
 }
 
-// ErrBlockNotFoundByID indicates that a block with the specified ID could not be found.
-type ErrBlockNotFoundByID struct {
+// A BlockNotFoundByIDError indicates that a block with the specified ID could not be found.
+type BlockNotFoundByIDError struct {
 	ID flow.Identifier
 }
 
-func (e *ErrBlockNotFoundByID) isNotFoundError()      {}
-func (e *ErrBlockNotFoundByID) isBlockNotFoundError() {}
+func (e *BlockNotFoundByIDError) isNotFoundError()      {}
+func (e *BlockNotFoundByIDError) isBlockNotFoundError() {}
 
-func (e *ErrBlockNotFoundByID) Error() string {
+func (e *BlockNotFoundByIDError) Error() string {
 	return fmt.Sprintf("could not find block with ID %s", e.ID)
 }
 
-// ErrCollectionNotFound indicates that a collection could not be found.
-type ErrCollectionNotFound struct {
+// A CollectionNotFoundError indicates that a collection could not be found.
+type CollectionNotFoundError struct {
 	ID flow.Identifier
 }
 
-func (e *ErrCollectionNotFound) isNotFoundError() {}
+func (e *CollectionNotFoundError) isNotFoundError() {}
 
-func (e *ErrCollectionNotFound) Error() string {
+func (e *CollectionNotFoundError) Error() string {
 	return fmt.Sprintf("could not find collection with ID %s", e.ID)
 }
 
-// ErrTransactionNotFound indicates that a transaction could not be found.
-type ErrTransactionNotFound struct {
+// A TransactionNotFoundError indicates that a transaction could not be found.
+type TransactionNotFoundError struct {
 	ID flow.Identifier
 }
 
-func (e *ErrTransactionNotFound) isNotFoundError() {}
+func (e *TransactionNotFoundError) isNotFoundError() {}
 
-func (e *ErrTransactionNotFound) Error() string {
+func (e *TransactionNotFoundError) Error() string {
 	return fmt.Sprintf("could not find transaction with ID %s", e.ID)
 }
 
-// ErrAccountNotFound indicates that an account could not be found.
-type ErrAccountNotFound struct {
+// An AccountNotFoundError indicates that an account could not be found.
+type AccountNotFoundError struct {
 	Address flow.Address
 }
 
-func (e *ErrAccountNotFound) isNotFoundError() {}
+func (e *AccountNotFoundError) isNotFoundError() {}
 
-func (e *ErrAccountNotFound) Error() string {
+func (e *AccountNotFoundError) Error() string {
 	return fmt.Sprintf("could not find account with address %s", e.Address)
 }
 
-// ErrDuplicateTransaction indicates that a transaction has already been submitted.
-type ErrDuplicateTransaction struct {
+// A DuplicateTransactionError indicates that a transaction has already been submitted.
+type DuplicateTransactionError struct {
 	TxID flow.Identifier
 }
 
-func (e *ErrDuplicateTransaction) Error() string {
-	return fmt.Sprintf("Transaction with ID %s has already been submitted", e.TxID)
+func (e *DuplicateTransactionError) Error() string {
+	return fmt.Sprintf("transaction with ID %s has already been submitted", e.TxID)
 }
 
-// ErrMissingSignature indicates that a transaction is missing a required signature.
-type ErrMissingSignature struct {
-	Account flow.Address
-}
-
-func (e *ErrMissingSignature) Error() string {
-	return fmt.Sprintf("Account %s does not have sufficient signatures", e.Account)
-}
-
-// ErrInvalidSignaturePublicKey indicates that signature uses an invalid public key.
-type ErrInvalidSignaturePublicKey struct {
-	Account flow.Address
-	KeyID   int
-}
-
-func (e *ErrInvalidSignaturePublicKey) Error() string {
-	return fmt.Sprintf("invalid signature for key %d on account %s", e.KeyID, e.Account)
-}
-
-// ErrInvalidSignatureAccount indicates that a signature references a nonexistent account.
-type ErrInvalidSignatureAccount struct {
+// A MissingSignatureError indicates that a transaction is missing a required signature.
+type MissingSignatureError struct {
 	Address flow.Address
 }
 
-func (e *ErrInvalidSignatureAccount) Error() string {
-	return fmt.Sprintf("Account with address %s does not exist", e.Address)
+func (e *MissingSignatureError) Error() string {
+	return fmt.Sprintf("account %s does not have sufficient signatures", e.Address)
 }
 
-// ErrInvalidTransaction indicates that a submitted transaction is invalid (missing required fields).
-type ErrInvalidTransaction struct {
+// An InvalidSignaturePublicKeyError indicates that signature uses an invalid public key.
+type InvalidSignaturePublicKeyError struct {
+	Address flow.Address
+	KeyID   int
+}
+
+func (e *InvalidSignaturePublicKeyError) Error() string {
+	return fmt.Sprintf("invalid signature for key %d on account %s", e.KeyID, e.Address)
+}
+
+// An InvalidSignatureAccountError indicates that a signature references a nonexistent account.
+type InvalidSignatureAccountError struct {
+	Address flow.Address
+}
+
+func (e *InvalidSignatureAccountError) Error() string {
+	return fmt.Sprintf("account with address %s does not exist", e.Address)
+}
+
+// An InvalidTransactionError indicates that a submitted transaction is invalid (missing required fields).
+type InvalidTransactionError struct {
 	TxID          flow.Identifier
 	MissingFields []string
 }
 
-func (e *ErrInvalidTransaction) Error() string {
-	return fmt.Sprintf(
-		"Transaction with ID %s is invalid (missing required fields): %s",
+func (e *InvalidTransactionError) Error() string {
+	return fmt.Sprintf("transaction with ID %s is invalid (missing required fields): %s",
 		e.TxID,
 		strings.Join(e.MissingFields, ", "),
 	)
 }
 
-// ErrInvalidStateVersion indicates that a state version hash provided is invalid.
-type ErrInvalidStateVersion struct {
+// An InvalidStateVersionError indicates that a state version hash provided is invalid.
+type InvalidStateVersionError struct {
 	Version crypto.Hash
 }
 
-func (e *ErrInvalidStateVersion) Error() string {
-	return fmt.Sprintf("Execution state with version hash %x is invalid", e.Version)
+func (e *InvalidStateVersionError) Error() string {
+	return fmt.Sprintf("execution state with version hash %x is invalid", e.Version)
 }
 
-// ErrPendingBlockCommitBeforeExecution indicates that the current pending block has not been executed (cannot commit).
-type ErrPendingBlockCommitBeforeExecution struct {
+// A PendingBlockCommitBeforeExecutionError indicates that the current pending block has not been executed (cannot commit).
+type PendingBlockCommitBeforeExecutionError struct {
 	BlockID flow.Identifier
 }
 
-func (e *ErrPendingBlockCommitBeforeExecution) Error() string {
-	return fmt.Sprintf("Pending block with ID %s cannot be commited before execution", e.BlockID)
+func (e *PendingBlockCommitBeforeExecutionError) Error() string {
+	return fmt.Sprintf("pending block with ID %s cannot be commited before execution", e.BlockID)
 }
 
-// ErrPendingBlockMidExecution indicates that the current pending block is mid-execution.
-type ErrPendingBlockMidExecution struct {
+// A PendingBlockMidExecutionError indicates that the current pending block is mid-execution.
+type PendingBlockMidExecutionError struct {
 	BlockID flow.Identifier
 }
 
-func (e *ErrPendingBlockMidExecution) Error() string {
-	return fmt.Sprintf("Pending block with ID %s is currently being executed", e.BlockID)
+func (e *PendingBlockMidExecutionError) Error() string {
+	return fmt.Sprintf("pending block with ID %s is currently being executed", e.BlockID)
 }
 
-// ErrPendingBlockTransactionsExhausted indicates that the current pending block has finished executing (no more transactions to execute).
-type ErrPendingBlockTransactionsExhausted struct {
+// A PendingBlockTransactionsExhaustedError indicates that the current pending block has finished executing (no more transactions to execute).
+type PendingBlockTransactionsExhaustedError struct {
 	BlockID flow.Identifier
 }
 
-func (e *ErrPendingBlockTransactionsExhausted) Error() string {
-	return fmt.Sprintf("Pending block with ID %s contains no more transactions to execute", e.BlockID)
+func (e *PendingBlockTransactionsExhaustedError) Error() string {
+	return fmt.Sprintf("pending block with ID %s contains no more transactions to execute", e.BlockID)
 }
 
-// ErrStorage indicates that an error occurred in the storage provider.
-type ErrStorage struct {
+// A StorageError indicates that an error occurred in the storage provider.
+type StorageError struct {
 	inner error
 }
 
-func (e *ErrStorage) Error() string {
+func (e *StorageError) Error() string {
 	return fmt.Sprintf("storage failure: %v", e.inner)
 }
 
-func (e *ErrStorage) Unwrap() error {
+func (e *StorageError) Unwrap() error {
 	return e.inner
+}
+
+// An ExecutionError occurs when a transaction fails to execute.
+type ExecutionError struct {
+	Code    int
+	Message string
+}
+
+func (e *ExecutionError) Error() string {
+	return fmt.Sprintf("execution error code %d: %s", e.Code, e.Message)
 }

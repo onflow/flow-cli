@@ -6,7 +6,7 @@
 // When used as a library, this package provides tools to write programmatic tests for
 // Flow applications.
 //
-// When used as a standalone application, this package implements the Flow Observation API
+// When used as a standalone application, this package implements the Flow Access API
 // and is fully-compatible with Flow gRPC client libraries.
 package emulator
 
@@ -224,7 +224,7 @@ func (b *Blockchain) PendingBlockID() flow.Identifier {
 func (b *Blockchain) GetLatestBlock() (*types.Block, error) {
 	block, err := b.storage.LatestBlock()
 	if err != nil {
-		return nil, &ErrStorage{err}
+		return nil, &StorageError{err}
 	}
 	return &block, nil
 }
@@ -234,9 +234,9 @@ func (b *Blockchain) GetBlockByID(id flow.Identifier) (*types.Block, error) {
 	block, err := b.storage.BlockByID(id)
 	if err != nil {
 		if errors.Is(err, storage.ErrNotFound) {
-			return nil, &ErrBlockNotFoundByID{ID: id}
+			return nil, &BlockNotFoundByIDError{ID: id}
 		}
-		return nil, &ErrStorage{err}
+		return nil, &StorageError{err}
 	}
 
 	return &block, nil
@@ -247,7 +247,7 @@ func (b *Blockchain) GetBlockByHeight(height uint64) (*types.Block, error) {
 	block, err := b.storage.BlockByHeight(height)
 	if err != nil {
 		if errors.Is(err, storage.ErrNotFound) {
-			return nil, &ErrBlockNotFoundByHeight{Height: height}
+			return nil, &BlockNotFoundByHeightError{Height: height}
 		}
 		return nil, err
 	}
@@ -262,9 +262,9 @@ func (b *Blockchain) GetCollection(colID flow.Identifier) (*model.LightCollectio
 	col, err := b.storage.CollectionByID(colID)
 	if err != nil {
 		if errors.Is(err, storage.ErrNotFound) {
-			return nil, &ErrCollectionNotFound{ID: colID}
+			return nil, &CollectionNotFoundError{ID: colID}
 		}
-		return nil, &ErrStorage{err}
+		return nil, &StorageError{err}
 	}
 
 	return &col, nil
@@ -285,9 +285,9 @@ func (b *Blockchain) GetTransaction(txID flow.Identifier) (*flow.Transaction, er
 	tx, err := b.storage.TransactionByID(txID)
 	if err != nil {
 		if errors.Is(err, storage.ErrNotFound) {
-			return nil, &ErrTransactionNotFound{ID: txID}
+			return nil, &TransactionNotFoundError{ID: txID}
 		}
-		return nil, &ErrStorage{err}
+		return nil, &StorageError{err}
 	}
 
 	return &tx, nil
@@ -303,14 +303,29 @@ func (b *Blockchain) GetTransactionResult(txID flow.Identifier) (*flow.Transacti
 		}, nil
 	}
 
-	result, err := b.storage.TransactionResultByID(txID)
+	storedResult, err := b.storage.TransactionResultByID(txID)
 	if err != nil {
 		if errors.Is(err, storage.ErrNotFound) {
 			return &flow.TransactionResult{
 				Status: flow.TransactionStatusUnknown,
 			}, nil
 		}
-		return nil, &ErrStorage{err}
+		return nil, &StorageError{err}
+	}
+
+	var errResult error
+
+	if storedResult.ErrorCode != 0 {
+		errResult = &ExecutionError{
+			Code:    storedResult.ErrorCode,
+			Message: storedResult.ErrorMessage,
+		}
+	}
+
+	result := flow.TransactionResult{
+		Status: flow.TransactionStatusSealed,
+		Error:  errResult,
+		Events: storedResult.Events,
 	}
 
 	return &result, nil
@@ -335,7 +350,7 @@ func (b *Blockchain) getAccount(address flow.Address) (*flow.Account, error) {
 
 	acct := getAccount(latestLedgerView, address)
 	if acct == nil {
-		return nil, &ErrAccountNotFound{Address: address}
+		return nil, &AccountNotFoundError{Address: address}
 	}
 
 	return acct, nil
@@ -363,24 +378,24 @@ func (b *Blockchain) AddTransaction(tx flow.Transaction) error {
 
 	// If Index > 0, pending block has begun execution (cannot add anymore txs)
 	if b.pendingBlock.ExecutionStarted() {
-		return &ErrPendingBlockMidExecution{BlockID: b.pendingBlock.ID()}
+		return &PendingBlockMidExecutionError{BlockID: b.pendingBlock.ID()}
 	}
 
 	if b.pendingBlock.ContainsTransaction(tx.ID()) {
-		return &ErrDuplicateTransaction{TxID: tx.ID()}
+		return &DuplicateTransactionError{TxID: tx.ID()}
 	}
 
 	_, err := b.storage.TransactionByID(tx.ID())
 	if err == nil {
 		// Found the transaction, this is a dupe
-		return &ErrDuplicateTransaction{TxID: tx.ID()}
+		return &DuplicateTransactionError{TxID: tx.ID()}
 	} else if !errors.Is(err, storage.ErrNotFound) {
 		// Error in the storage provider
 		return fmt.Errorf("failed to check storage for transaction %w", err)
 	}
 
 	if tx.ProposalKey == (flow.ProposalKey{}) {
-		return &ErrInvalidTransaction{TxID: tx.ID(), MissingFields: []string{"proposal_key"}}
+		return &InvalidTransactionError{TxID: tx.ID(), MissingFields: []string{"proposal_key"}}
 	}
 
 	if err := b.verifySignatures(tx); err != nil {
@@ -411,7 +426,7 @@ func (b *Blockchain) executeBlock() ([]*TransactionResult, error) {
 
 	// cannot execute a block that has already executed
 	if b.pendingBlock.ExecutionComplete() {
-		return results, &ErrPendingBlockTransactionsExhausted{
+		return results, &PendingBlockTransactionsExhaustedError{
 			BlockID: b.pendingBlock.ID(),
 		}
 	}
@@ -442,7 +457,7 @@ func (b *Blockchain) ExecuteNextTransaction() (*TransactionResult, error) {
 func (b *Blockchain) executeNextTransaction() (*TransactionResult, error) {
 	// check if there are remaining txs to be executed
 	if b.pendingBlock.ExecutionComplete() {
-		return nil, &ErrPendingBlockTransactionsExhausted{
+		return nil, &PendingBlockTransactionsExhaustedError{
 			BlockID: b.pendingBlock.ID(),
 		}
 	}
@@ -477,12 +492,12 @@ func (b *Blockchain) CommitBlock() (*types.Block, error) {
 func (b *Blockchain) commitBlock() (*types.Block, error) {
 	// pending block cannot be committed before execution starts (unless empty)
 	if !b.pendingBlock.ExecutionStarted() && !b.pendingBlock.Empty() {
-		return nil, &ErrPendingBlockCommitBeforeExecution{BlockID: b.pendingBlock.ID()}
+		return nil, &PendingBlockCommitBeforeExecutionError{BlockID: b.pendingBlock.ID()}
 	}
 
 	// pending block cannot be committed before execution completes
 	if b.pendingBlock.ExecutionStarted() && !b.pendingBlock.ExecutionComplete() {
-		return nil, &ErrPendingBlockMidExecution{BlockID: b.pendingBlock.ID()}
+		return nil, &PendingBlockMidExecutionError{BlockID: b.pendingBlock.ID()}
 	}
 
 	block := b.pendingBlock.Block()
@@ -636,12 +651,12 @@ func (b *Blockchain) verifySignatures(tx flow.Transaction) error {
 		}
 
 		if !hasSufficientKeyWeight(payloadWeights, addr) {
-			return &ErrMissingSignature{addr}
+			return &MissingSignatureError{addr}
 		}
 	}
 
 	if !hasSufficientKeyWeight(envelopeWeights, tx.Payer) {
-		return &ErrMissingSignature{tx.Payer}
+		return &MissingSignatureError{tx.Payer}
 	}
 
 	return nil
@@ -731,13 +746,13 @@ func (b *Blockchain) verifyAccountSignature(
 ) (accountKey flow.AccountKey, err error) {
 	account, err := b.getAccount(txSig.Address)
 	if err != nil {
-		return accountKey, &ErrInvalidSignatureAccount{Address: txSig.Address}
+		return accountKey, &InvalidSignatureAccountError{Address: txSig.Address}
 	}
 
 	signature := crypto.Signature(txSig.Signature)
 
 	if txSig.KeyID < 0 || txSig.KeyID >= len(account.Keys) {
-		return accountKey, &ErrInvalidSignatureAccount{Address: txSig.Address}
+		return accountKey, &InvalidSignatureAccountError{Address: txSig.Address}
 	}
 
 	accountKey = account.Keys[txSig.KeyID]
@@ -753,7 +768,7 @@ func (b *Blockchain) verifyAccountSignature(
 	}
 
 	if !valid {
-		return accountKey, &ErrInvalidSignaturePublicKey{Account: txSig.Address, KeyID: txSig.KeyID}
+		return accountKey, &InvalidSignaturePublicKeyError{Address: txSig.Address, KeyID: txSig.KeyID}
 	}
 
 	return accountKey, nil
@@ -805,16 +820,13 @@ func hasSufficientKeyWeight(weights map[flow.Address]int, address flow.Address) 
 
 func convertToSealedResults(
 	results map[flow.Identifier]*TransactionResult,
-) map[flow.Identifier]*flow.TransactionResult {
+) map[flow.Identifier]*types.StorableTransactionResult {
 
-	output := make(map[flow.Identifier]*flow.TransactionResult)
+	output := make(map[flow.Identifier]*types.StorableTransactionResult)
 
 	for id, result := range results {
-		output[id] = &flow.TransactionResult{
-			Status: flow.TransactionStatusSealed,
-			Error:  result.Error,
-			Events: result.Events,
-		}
+		temp := result.ToStorableResult()
+		output[id] = &temp
 	}
 
 	return output

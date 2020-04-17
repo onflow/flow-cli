@@ -173,7 +173,7 @@ func (s *Store) CommitBlock(
 	block *types.Block,
 	collections []*model.LightCollection,
 	transactions map[flow.Identifier]*flow.Transaction,
-	transactionResults map[flow.Identifier]*flow.TransactionResult,
+	transactionResults map[flow.Identifier]*types.StorableTransactionResult,
 	delta types.LedgerDelta,
 	events []flow.Event,
 ) (err error) {
@@ -282,7 +282,7 @@ func insertTransaction(txID flow.Identifier, tx flow.Transaction) func(txn *badg
 	}
 }
 
-func (s *Store) TransactionResultByID(txID flow.Identifier) (result flow.TransactionResult, err error) {
+func (s *Store) TransactionResultByID(txID flow.Identifier) (result types.StorableTransactionResult, err error) {
 	err = s.db.View(func(txn *badger.Txn) error {
 		encResult, err := getTx(txn)(transactionResultKey(txID))
 		if err != nil {
@@ -293,11 +293,11 @@ func (s *Store) TransactionResultByID(txID flow.Identifier) (result flow.Transac
 	return
 }
 
-func (s *Store) InsertTransactionResult(txID flow.Identifier, result flow.TransactionResult) error {
+func (s *Store) InsertTransactionResult(txID flow.Identifier, result types.StorableTransactionResult) error {
 	return s.db.Update(insertTransactionResult(txID, result))
 }
 
-func insertTransactionResult(txID flow.Identifier, result flow.TransactionResult) func(txn *badger.Txn) error {
+func insertTransactionResult(txID flow.Identifier, result types.StorableTransactionResult) func(txn *badger.Txn) error {
 	return func(txn *badger.Txn) error {
 		encResult, err := encodeTransactionResult(result)
 		if err != nil {

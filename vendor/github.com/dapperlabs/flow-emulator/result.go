@@ -3,6 +3,8 @@ package emulator
 import (
 	"github.com/dapperlabs/cadence"
 	"github.com/dapperlabs/flow-go-sdk"
+
+	"github.com/dapperlabs/flow-emulator/types"
 )
 
 // A TransactionResult is the result of executing a transaction.
@@ -21,6 +23,23 @@ func (r TransactionResult) Succeeded() bool {
 // Reverted returns true if the transaction executed with errors.
 func (r TransactionResult) Reverted() bool {
 	return !r.Succeeded()
+}
+
+func (r TransactionResult) ToStorableResult() types.StorableTransactionResult {
+	var errorCode int
+	var errorMessage string
+
+	if r.Error != nil {
+		errorCode = 1
+		errorMessage = r.Error.Error()
+	}
+
+	return types.StorableTransactionResult{
+		ErrorCode:    errorCode,
+		ErrorMessage: errorMessage,
+		Logs:         r.Logs,
+		Events:       r.Events,
+	}
 }
 
 // A ScriptResult is the result of executing a script.

@@ -24,7 +24,7 @@ type Store struct {
 	// transactions by ID
 	transactions map[flow.Identifier]flow.Transaction
 	// transaction results by ID
-	transactionResults map[flow.Identifier]flow.TransactionResult
+	transactionResults map[flow.Identifier]types.StorableTransactionResult
 	// ledger states by block height
 	ledger map[uint64]vm.MapLedger
 	// events by block height
@@ -41,7 +41,7 @@ func New() *Store {
 		blocks:              make(map[uint64]types.Block),
 		collections:         make(map[model.Identifier]model.LightCollection),
 		transactions:        make(map[flow.Identifier]flow.Transaction),
-		transactionResults:  make(map[flow.Identifier]flow.TransactionResult),
+		transactionResults:  make(map[flow.Identifier]types.StorableTransactionResult),
 		ledger:              make(map[uint64]vm.MapLedger),
 		eventsByBlockHeight: make(map[uint64][]flow.Event),
 	}
@@ -96,7 +96,7 @@ func (s *Store) CommitBlock(
 	block *types.Block,
 	collections []*model.LightCollection,
 	transactions map[flow.Identifier]*flow.Transaction,
-	transactionResults map[flow.Identifier]*flow.TransactionResult,
+	transactionResults map[flow.Identifier]*types.StorableTransactionResult,
 	delta types.LedgerDelta,
 	events []flow.Event,
 ) error {
@@ -182,18 +182,18 @@ func (s *Store) insertTransaction(txID flow.Identifier, tx flow.Transaction) err
 	return nil
 }
 
-func (s *Store) TransactionResultByID(txID flow.Identifier) (flow.TransactionResult, error) {
+func (s *Store) TransactionResultByID(txID flow.Identifier) (types.StorableTransactionResult, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
 	result, ok := s.transactionResults[txID]
 	if !ok {
-		return flow.TransactionResult{}, storage.ErrNotFound
+		return types.StorableTransactionResult{}, storage.ErrNotFound
 	}
 	return result, nil
 }
 
-func (s *Store) insertTransactionResult(txID flow.Identifier, result flow.TransactionResult) error {
+func (s *Store) insertTransactionResult(txID flow.Identifier, result types.StorableTransactionResult) error {
 	s.transactionResults[txID] = result
 	return nil
 }
