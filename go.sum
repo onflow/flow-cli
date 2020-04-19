@@ -90,6 +90,8 @@ github.com/dapperlabs/cadence/languageserver v0.0.0-20200416212514-0fb6bcd7c0b0 
 github.com/dapperlabs/cadence/languageserver v0.0.0-20200416212514-0fb6bcd7c0b0/go.mod h1:6fn98SViA5Cn/4oZcQWZtxSeNt+8Nn4fVR/DBqg97lA=
 github.com/dapperlabs/cadence/languageserver v0.0.0-20200417143348-f3cda29ff0fd h1:UPfKKVo3QcRdpCb0ekMyahHkzzQBsJsayhBWqWdWGu8=
 github.com/dapperlabs/cadence/languageserver v0.0.0-20200417143348-f3cda29ff0fd/go.mod h1:6fn98SViA5Cn/4oZcQWZtxSeNt+8Nn4fVR/DBqg97lA=
+github.com/dapperlabs/cadence/languageserver v0.0.0-20200419232315-b690646ae182 h1:fVIBaA+VU3FmV/7JqgzDjXvWWiijBVGcGOkOYuRa0Jw=
+github.com/dapperlabs/cadence/languageserver v0.0.0-20200419232315-b690646ae182/go.mod h1:6fn98SViA5Cn/4oZcQWZtxSeNt+8Nn4fVR/DBqg97lA=
 github.com/dapperlabs/flow-emulator v0.0.0-20200331212130-68035323e6e5 h1:47oOpwyuLtfdhjD1Nr4EMicBOMywCZv3KjCLg0dzk2g=
 github.com/dapperlabs/flow-emulator v0.0.0-20200331212130-68035323e6e5/go.mod h1:zPXZf7J54wIgTi0UrkM8fQbN5SkcUX6WzlE19m7l1MY=
 github.com/dapperlabs/flow-emulator v1.0.0-alpha.1/go.mod h1:vRGWXtB07hL1rdgkUpgnwlBmEKFPlhlWe+o96PndW7k=
