@@ -95,6 +95,8 @@ github.com/dapperlabs/cadence v0.0.0-20200416212514-0fb6bcd7c0b0 h1:lUItz2DyKH1V
 github.com/dapperlabs/cadence v0.0.0-20200416212514-0fb6bcd7c0b0/go.mod h1:WgzAWRd7gcxi6dfJmEdeTArtQVGOr48oLxLW4adsztk=
 github.com/dapperlabs/cadence v0.0.0-20200417143348-f3cda29ff0fd h1:omm5/YfglRsgfLTrs5eEJQOEHNJY1Oib4QxXfJ1nRPk=
 github.com/dapperlabs/cadence v0.0.0-20200417143348-f3cda29ff0fd/go.mod h1:WgzAWRd7gcxi6dfJmEdeTArtQVGOr48oLxLW4adsztk=
+github.com/dapperlabs/cadence v0.0.0-20200419232315-b690646ae182 h1:fHLDmfesr10LBY9hfbd6U5A0JDaaHaP/IwSpuBNJu98=
+github.com/dapperlabs/cadence v0.0.0-20200419232315-b690646ae182/go.mod h1:WgzAWRd7gcxi6dfJmEdeTArtQVGOr48oLxLW4adsztk=
 github.com/dapperlabs/flow v0.0.0-20200403223221-0685a2afc8af h1:4ei4rzHa0BY+4+ZLN9d58sqyLK9lwdiRosGv26KmKOc=
 github.com/dapperlabs/flow v0.0.0-20200404014555-6e780d96b5ed h1:Z3nae1GIOVAXe3dbJHthqbGikWtxkTLGhioyQFcSKOU=
 github.com/dapperlabs/flow v0.0.0-20200405035006-e82d5bf52630 h1:N00Tiw9BCG38wJvFPDSOgeeK5uVyq4Wl7fxYqFFwR/M=

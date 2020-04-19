@@ -27,6 +27,7 @@ type EmulatorServer struct {
 	blocksTicker   *BlocksTicker
 	livenessTicker *LivenessTicker
 	onCleanup      func()
+	group          *graceland.Group
 }
 
 const (
@@ -129,7 +130,9 @@ func NewEmulatorServer(logger *logrus.Logger, conf *Config) *EmulatorServer {
 func (s *EmulatorServer) Start() {
 	defer s.cleanup()
 
-	g := graceland.NewGroup()
+	s.Stop()
+
+	s.group = graceland.NewGroup()
 
 	s.logger.
 		WithField("port", s.config.GRPCPort).
@@ -139,19 +142,29 @@ func (s *EmulatorServer) Start() {
 		WithField("port", s.config.HTTPPort).
 		Infof("🌱  Starting HTTP server on port %d...", s.config.HTTPPort)
 
-	g.Add(s.grpcServer)
-	g.Add(s.httpServer)
-	g.Add(s.livenessTicker)
+	s.group.Add(s.grpcServer)
+	s.group.Add(s.httpServer)
+	s.group.Add(s.livenessTicker)
 
 	// only start blocks ticker if it exists
 	if s.blocksTicker != nil {
-		g.Add(s.blocksTicker)
+		s.group.Add(s.blocksTicker)
 	}
 
-	err := g.Start()
+	err := s.group.Start()
 	if err != nil {
 		s.logger.WithError(err).Error("❗  Server error")
 	}
+
+	s.Stop()
+}
+
+func (s *EmulatorServer) Stop() {
+	if s.group == nil {
+		return
+	}
+
+	s.group.Stop()
 
 	s.logger.Info("🛑  Server stopped")
 }

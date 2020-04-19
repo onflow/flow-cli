@@ -10,7 +10,7 @@ github.com/c-bata/go-prompt
 github.com/cespare/xxhash
 # github.com/cespare/xxhash/v2 v2.1.1
 github.com/cespare/xxhash/v2
-# github.com/dapperlabs/cadence v0.0.0-20200417143348-f3cda29ff0fd
+# github.com/dapperlabs/cadence v0.0.0-20200419232315-b690646ae182
 github.com/dapperlabs/cadence
 github.com/dapperlabs/cadence/encoding/json
 github.com/dapperlabs/cadence/runtime
@@ -32,7 +32,7 @@ github.com/dapperlabs/cadence/languageserver/config
 github.com/dapperlabs/cadence/languageserver/jsonrpc2
 github.com/dapperlabs/cadence/languageserver/protocol
 github.com/dapperlabs/cadence/languageserver/server
-# github.com/dapperlabs/flow-emulator v1.0.0-alpha.3.0.20200417175520-b177b0b740d0
+# github.com/dapperlabs/flow-emulator v1.0.0-alpha.5.0.20200419233041-e908445327a6
 github.com/dapperlabs/flow-emulator
 github.com/dapperlabs/flow-emulator/execution
 github.com/dapperlabs/flow-emulator/server
