@@ -27,7 +27,7 @@ github.com/dapperlabs/cadence/runtime/parser
 github.com/dapperlabs/cadence/runtime/sema
 github.com/dapperlabs/cadence/runtime/stdlib
 github.com/dapperlabs/cadence/runtime/trampoline
-# github.com/dapperlabs/cadence/languageserver v0.0.0-20200417143348-f3cda29ff0fd
+# github.com/dapperlabs/cadence/languageserver v0.0.0-20200419232315-b690646ae182
 github.com/dapperlabs/cadence/languageserver/config
 github.com/dapperlabs/cadence/languageserver/jsonrpc2
 github.com/dapperlabs/cadence/languageserver/protocol
