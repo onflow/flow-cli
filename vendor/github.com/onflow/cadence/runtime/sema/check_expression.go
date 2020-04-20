@@ -1,0 +1,231 @@
+package sema
+
+import (
+	"github.com/onflow/cadence/runtime/ast"
+	"github.com/onflow/cadence/runtime/common"
+)
+
+func (checker *Checker) VisitIdentifierExpression(expression *ast.IdentifierExpression) ast.Repr {
+	identifier := expression.Identifier
+	variable := checker.findAndCheckVariable(identifier, true)
+	if variable == nil {
+		return &InvalidType{}
+	}
+
+	if variable.Type.IsResourceType() {
+		checker.checkResourceVariableCapturingInFunction(variable, expression.Identifier)
+		checker.checkResourceUseAfterInvalidation(variable, expression.Identifier)
+		checker.resources.AddUse(variable, expression.Pos)
+	}
+
+	checker.checkSelfVariableUseInInitializer(variable, expression.Pos)
+
+	return variable.Type
+}
+
+// checkSelfVariableUseInInitializer checks uses of `self` in the initializer
+// and ensures it is properly initialized
+//
+func (checker *Checker) checkSelfVariableUseInInitializer(variable *Variable, position ast.Position) {
+
+	// Is this a use of `self`?
+
+	if variable.DeclarationKind != common.DeclarationKindSelf {
+		return
+	}
+
+	// Is this use of `self` in an initializer?
+
+	initializationInfo := checker.functionActivations.Current().InitializationInfo
+	if initializationInfo == nil {
+		return
+	}
+
+	// The use of `self` is inside the initializer
+
+	checkInitializationComplete := func() {
+		if initializationInfo.InitializationComplete() {
+			return
+		}
+
+		checker.report(
+			&UninitializedUseError{
+				Name: variable.Identifier,
+				Pos:  position,
+			},
+		)
+	}
+
+	if checker.currentMemberExpression != nil {
+
+		// The use of `self` is inside a member access
+
+		// If the member expression refers to a field that must be initialized,
+		// it must be initialized. This check is handled in `VisitMemberExpression`
+
+		accessedSelfMember := checker.accessedSelfMember(checker.currentMemberExpression)
+
+		// If the member access is to a predeclared field, it can be considered
+		// initialized and its use is valid
+
+		if accessedSelfMember == nil || !accessedSelfMember.Predeclared {
+
+			// If the member access is to a non-field, e.g. a function,
+			// *all* fields must have been initialized
+
+			field := initializationInfo.FieldMembers[accessedSelfMember]
+			if field == nil {
+				checkInitializationComplete()
+			}
+		}
+
+	} else {
+		// The use of `self` is *not* inside a member access, i.e. `self` is used
+		// as a standalone expression, e.g. to pass it as an argument to a function.
+		// Ensure that *all* fields were initialized
+
+		checkInitializationComplete()
+	}
+}
+
+// checkResourceVariableCapturingInFunction checks if a resource variable is captured in a function
+//
+func (checker *Checker) checkResourceVariableCapturingInFunction(variable *Variable, useIdentifier ast.Identifier) {
+	currentFunctionDepth := -1
+	currentFunctionActivation := checker.functionActivations.Current()
+	if currentFunctionActivation != nil {
+		currentFunctionDepth = currentFunctionActivation.ValueActivationDepth
+	}
+
+	if currentFunctionDepth == -1 ||
+		variable.Depth > currentFunctionDepth {
+
+		return
+	}
+
+	checker.report(
+		&ResourceCapturingError{
+			Name: useIdentifier.Identifier,
+			Pos:  useIdentifier.Pos,
+		},
+	)
+}
+
+func (checker *Checker) VisitExpressionStatement(statement *ast.ExpressionStatement) ast.Repr {
+	result := statement.Expression.Accept(checker)
+
+	if ty, ok := result.(Type); ok &&
+		ty.IsResourceType() {
+
+		checker.report(
+			&ResourceLossError{
+				Range: ast.NewRangeFromPositioned(statement.Expression),
+			},
+		)
+	}
+
+	return nil
+}
+
+func (checker *Checker) VisitBoolExpression(_ *ast.BoolExpression) ast.Repr {
+	return &BoolType{}
+}
+
+func (checker *Checker) VisitNilExpression(_ *ast.NilExpression) ast.Repr {
+	// TODO: verify
+	return &OptionalType{
+		Type: &NeverType{},
+	}
+}
+
+func (checker *Checker) VisitIntegerExpression(_ *ast.IntegerExpression) ast.Repr {
+	return &IntType{}
+}
+
+func (checker *Checker) VisitFixedPointExpression(_ *ast.FixedPointExpression) ast.Repr {
+	// TODO: adjust once/if we support more fixed point types
+	return &Fix64Type{}
+}
+
+func (checker *Checker) VisitStringExpression(_ *ast.StringExpression) ast.Repr {
+	return &StringType{}
+}
+
+func (checker *Checker) VisitIndexExpression(expression *ast.IndexExpression) ast.Repr {
+	return checker.visitIndexExpression(expression, false)
+}
+
+// visitIndexExpression checks if the indexed expression is indexable,
+// checks if the indexing expression can be used to index into the indexed expression,
+// and returns the expected element type
+//
+func (checker *Checker) visitIndexExpression(
+	indexExpression *ast.IndexExpression,
+	isAssignment bool,
+) Type {
+
+	targetExpression := indexExpression.TargetExpression
+	targetType := targetExpression.Accept(checker).(Type)
+
+	// NOTE: check indexed type first for UX reasons
+
+	// check indexed expression's type is indexable
+	// by getting the expected element
+
+	if targetType.IsInvalidType() {
+		return &InvalidType{}
+	}
+
+	// Check if the type instance is actually indexable. For most types (e.g. arrays and dictionaries)
+	// this is known statically (in the sense of this host language (Go), not the implemented language),
+	// i.e. a Go type switch would be sufficient.
+	// However, for some types (e.g. reference types) this depends on what type is referenced
+
+	indexedType, ok := targetType.(ValueIndexableType)
+	if !ok || !indexedType.isValueIndexableType() {
+		checker.report(
+			&NotIndexableTypeError{
+				Type:  targetType,
+				Range: ast.NewRangeFromPositioned(targetExpression),
+			},
+		)
+
+		return &InvalidType{}
+	}
+
+	elementType := checker.visitValueIndexingExpression(
+		indexedType,
+		indexExpression.IndexingExpression,
+		isAssignment,
+	)
+
+	checker.checkAccessResourceLoss(elementType, targetExpression)
+
+	return elementType
+}
+
+func (checker *Checker) visitValueIndexingExpression(
+	indexedType ValueIndexableType,
+	indexingExpression ast.Expression,
+	isAssignment bool,
+) Type {
+	indexingType := indexingExpression.Accept(checker).(Type)
+
+	elementType := indexedType.ElementType(isAssignment)
+
+	// check indexing expression's type can be used to index
+	// into indexed expression's type
+
+	if !indexingType.IsInvalidType() &&
+		!IsSubType(indexingType, indexedType.IndexingType()) {
+
+		checker.report(
+			&NotIndexingTypeError{
+				Type:  indexingType,
+				Range: ast.NewRangeFromPositioned(indexingExpression),
+			},
+		)
+	}
+
+	return elementType
+}

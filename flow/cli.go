@@ -3,12 +3,10 @@ package cli
 
 import (
 	"crypto/rand"
-	"encoding/hex"
 	"fmt"
 	"os"
 
-	"github.com/dapperlabs/flow-go-sdk"
-	"github.com/dapperlabs/flow-go-sdk/keys"
+	"github.com/onflow/flow-go-sdk/crypto"
 )
 
 const EnvPrefix = "FLOW"
@@ -25,22 +23,10 @@ func Exitf(code int, msg string, args ...interface{}) {
 	os.Exit(code)
 }
 
-func DecodeAccountPrivateKeyHex(prKeyHex string) (flow.AccountPrivateKey, error) {
-	prKeyBytes, err := hex.DecodeString(prKeyHex)
+func MustDecodePrivateKeyHex(sigAlgo crypto.SignatureAlgorithm, prKeyHex string) crypto.PrivateKey {
+	prKey, err := crypto.DecodePrivateKeyHex(sigAlgo, prKeyHex)
 	if err != nil {
-		return flow.AccountPrivateKey{}, err
-	}
-	prKey, err := keys.DecodePrivateKey(prKeyBytes)
-	if err != nil {
-		return flow.AccountPrivateKey{}, err
-	}
-	return prKey, nil
-}
-
-func MustDecodeAccountPrivateKeyHex(prKeyHex string) flow.AccountPrivateKey {
-	prKey, err := DecodeAccountPrivateKeyHex(prKeyHex)
-	if err != nil {
-		Exitf(1, "Failed to decode account private key err: %v", err)
+		Exitf(1, "Failed to decode private key: %v", err)
 	}
 	return prKey
 }
