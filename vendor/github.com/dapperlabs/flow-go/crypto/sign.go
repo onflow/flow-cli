@@ -133,6 +133,10 @@ type PrivateKey interface {
 	PublicKey() PublicKey
 	// Encode returns a bytes representation of the private key
 	Encode() ([]byte, error)
+	// Equals returns true if the given PrivateKeys are equal. Keys are considered unequal if their algorithms are
+	// unequal or if their encoded representations are unequal. If the encoding of either key fails, they are considered
+	// unequal as well.
+	Equals(PrivateKey) bool
 }
 
 // PublicKey is an unspecified signature scheme public key.
@@ -145,4 +149,8 @@ type PublicKey interface {
 	Verify(Signature, []byte, Hasher) (bool, error)
 	// Encode returns a bytes representation of the public key.
 	Encode() ([]byte, error)
+	// Equals returns true if the given PublicKeys are equal. Keys are considered unequal if their algorithms are
+	// unequal or if their encoded representations are unequal. If the encoding of either key fails, they are considered
+	// unequal as well.
+	Equals(PublicKey) bool
 }

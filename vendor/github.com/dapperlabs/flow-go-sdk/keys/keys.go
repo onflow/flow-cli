@@ -4,8 +4,9 @@ package keys
 import (
 	"github.com/pkg/errors"
 
-	"github.com/dapperlabs/flow-go-sdk"
 	"github.com/dapperlabs/flow-go/crypto"
+
+	"github.com/dapperlabs/flow-go-sdk"
 )
 
 // KeyType is a key format supported by Flow.
@@ -52,7 +53,14 @@ const PublicKeyWeightThreshold int = 1000
 
 // GeneratePrivateKey generates a private key of the specified key type.
 func GeneratePrivateKey(keyType KeyType, seed []byte) (flow.AccountPrivateKey, error) {
-	privateKey, err := crypto.GeneratePrivateKey(keyType.SigningAlgorithm(), seed)
+	hasher, err := crypto.NewHasher(crypto.SHA3_384)
+	if err != nil {
+		return flow.AccountPrivateKey{}, err
+	}
+
+	keyGenSeed := hasher.ComputeHash(seed)
+
+	privateKey, err := crypto.GeneratePrivateKey(keyType.SigningAlgorithm(), keyGenSeed)
 	if err != nil {
 		return flow.AccountPrivateKey{}, err
 	}
@@ -62,20 +70,6 @@ func GeneratePrivateKey(keyType KeyType, seed []byte) (flow.AccountPrivateKey, e
 		SignAlgo:   keyType.SigningAlgorithm(),
 		HashAlgo:   keyType.HashingAlgorithm(),
 	}, nil
-}
-
-// SignTransaction signs a transaction with a private key.
-func SignTransaction(
-	tx flow.Transaction,
-	privateKey flow.AccountPrivateKey,
-) (crypto.Signature, error) {
-	hasher, err := crypto.NewHasher(privateKey.HashAlgo)
-	if err != nil {
-		return nil, err
-	}
-
-	b := tx.Encode()
-	return privateKey.PrivateKey.Sign(b, hasher)
 }
 
 // ValidateEncodedPublicKey returns an error if the bytes do not represent a valid public key.
@@ -89,7 +83,7 @@ func ValidateEncodedPublicKey(b []byte) error {
 }
 
 // ValidatePublicKey returns an error if the public key is invalid.
-func ValidatePublicKey(publicKey flow.AccountPublicKey) error {
+func ValidatePublicKey(publicKey flow.AccountKey) error {
 	if !CompatibleAlgorithms(publicKey.SignAlgo, publicKey.HashAlgo) {
 		return errors.Errorf(
 			"signing algorithm (%s) is incompatible with hashing algorithm (%s)",

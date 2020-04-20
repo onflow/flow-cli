@@ -1,10 +1,12 @@
 package memstore
 
 import (
+	"fmt"
 	"sync"
 
 	"github.com/dapperlabs/flow-go-sdk"
-	"github.com/dapperlabs/flow-go/crypto"
+	vm "github.com/dapperlabs/flow-go/engine/execution/computation/virtualmachine"
+	model "github.com/dapperlabs/flow-go/model/flow"
 
 	"github.com/dapperlabs/flow-emulator/storage"
 	"github.com/dapperlabs/flow-emulator/types"
@@ -13,17 +15,21 @@ import (
 // Store implements the Store interface with an in-memory store.
 type Store struct {
 	mu sync.RWMutex
-	// Maps block hashes to block numbers
-	blockHashToNumber map[string]uint64
-	// Finalized blocks indexed by block number
+	// block ID to block height
+	blockIDToHeight map[flow.Identifier]uint64
+	// blocks by height
 	blocks map[uint64]types.Block
-	// Finalized transactions by hash
-	transactions map[string]flow.Transaction
-	// Ledger states by block number
-	ledger map[uint64]flow.Ledger
-	// Stores events by block number
-	eventsByBlockNumber map[uint64][]flow.Event
-	// Tracks the highest block number
+	// collections by ID
+	collections map[model.Identifier]model.LightCollection
+	// transactions by ID
+	transactions map[flow.Identifier]flow.Transaction
+	// transaction results by ID
+	transactionResults map[flow.Identifier]types.StorableTransactionResult
+	// ledger states by block height
+	ledger map[uint64]vm.MapLedger
+	// events by block height
+	eventsByBlockHeight map[uint64][]flow.Event
+	// highest block height
 	blockHeight uint64
 }
 
@@ -31,37 +37,14 @@ type Store struct {
 func New() *Store {
 	return &Store{
 		mu:                  sync.RWMutex{},
-		blockHashToNumber:   make(map[string]uint64),
+		blockIDToHeight:     make(map[flow.Identifier]uint64),
 		blocks:              make(map[uint64]types.Block),
-		transactions:        make(map[string]flow.Transaction),
-		ledger:              make(map[uint64]flow.Ledger),
-		eventsByBlockNumber: make(map[uint64][]flow.Event),
+		collections:         make(map[model.Identifier]model.LightCollection),
+		transactions:        make(map[flow.Identifier]flow.Transaction),
+		transactionResults:  make(map[flow.Identifier]types.StorableTransactionResult),
+		ledger:              make(map[uint64]vm.MapLedger),
+		eventsByBlockHeight: make(map[uint64][]flow.Event),
 	}
-}
-
-func (s *Store) BlockByHash(hash crypto.Hash) (types.Block, error) {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
-
-	blockNumber := s.blockHashToNumber[hash.Hex()]
-	block, ok := s.blocks[blockNumber]
-	if !ok {
-		return types.Block{}, storage.ErrNotFound{}
-	}
-
-	return block, nil
-}
-
-func (s *Store) BlockByNumber(blockNumber uint64) (types.Block, error) {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
-
-	block, ok := s.blocks[blockNumber]
-	if !ok {
-		return types.Block{}, storage.ErrNotFound{}
-	}
-
-	return block, nil
 }
 
 func (s *Store) LatestBlock() (types.Block, error) {
@@ -70,54 +53,96 @@ func (s *Store) LatestBlock() (types.Block, error) {
 
 	latestBlock, ok := s.blocks[s.blockHeight]
 	if !ok {
-		return types.Block{}, storage.ErrNotFound{}
+		return types.Block{}, storage.ErrNotFound
 	}
 	return latestBlock, nil
 }
 
-func (s *Store) InsertBlock(block types.Block) error {
-	s.mu.Lock()
-	defer s.mu.Unlock()
+func (s *Store) BlockByID(id flow.Identifier) (types.Block, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
 
-	return s.insertBlock(block)
+	blockHeight := s.blockIDToHeight[id]
+	block, ok := s.blocks[blockHeight]
+	if !ok {
+		return types.Block{}, storage.ErrNotFound
+	}
+
+	return block, nil
+}
+
+func (s *Store) BlockByHeight(blockHeight uint64) (types.Block, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	block, ok := s.blocks[blockHeight]
+	if !ok {
+		return types.Block{}, storage.ErrNotFound
+	}
+
+	return block, nil
 }
 
 func (s *Store) insertBlock(block types.Block) error {
-	s.blocks[block.Number] = block
-	if block.Number > s.blockHeight {
-		s.blockHeight = block.Number
+	s.blocks[block.Height] = block
+	if block.Height > s.blockHeight {
+		s.blockHeight = block.Height
 	}
 
 	return nil
 }
 
 func (s *Store) CommitBlock(
-	block types.Block,
-	transactions []flow.Transaction,
+	block *types.Block,
+	collections []*model.LightCollection,
+	transactions map[flow.Identifier]*flow.Transaction,
+	transactionResults map[flow.Identifier]*types.StorableTransactionResult,
 	delta types.LedgerDelta,
 	events []flow.Event,
 ) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	err := s.insertBlock(block)
+	if len(transactions) != len(transactionResults) {
+		return fmt.Errorf(
+			"transactions count (%d) does not match result count (%d)",
+			len(transactions),
+			len(transactionResults),
+		)
+	}
+
+	err := s.insertBlock(*block)
 	if err != nil {
 		return err
 	}
 
-	for _, tx := range transactions {
-		err := s.insertTransaction(tx)
+	for _, col := range collections {
+		err := s.insertCollection(*col)
 		if err != nil {
 			return err
 		}
 	}
 
-	err = s.insertLedgerDelta(block.Number, delta)
+	for txID, tx := range transactions {
+		err := s.insertTransaction(txID, *tx)
+		if err != nil {
+			return err
+		}
+	}
+
+	for txID, result := range transactionResults {
+		err := s.insertTransactionResult(txID, *result)
+		if err != nil {
+			return err
+		}
+	}
+
+	err = s.insertLedgerDelta(block.Height, delta)
 	if err != nil {
 		return err
 	}
 
-	err = s.insertEvents(block.Number, events)
+	err = s.insertEvents(block.Height, events)
 	if err != nil {
 		return err
 	}
@@ -125,35 +150,60 @@ func (s *Store) CommitBlock(
 	return nil
 }
 
-func (s *Store) TransactionByHash(txHash crypto.Hash) (flow.Transaction, error) {
+func (s *Store) CollectionByID(colID flow.Identifier) (model.LightCollection, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
-	tx, ok := s.transactions[txHash.Hex()]
+	tx, ok := s.collections[model.Identifier(colID)]
 	if !ok {
-		return flow.Transaction{}, storage.ErrNotFound{}
+		return model.LightCollection{}, storage.ErrNotFound
 	}
 	return tx, nil
 }
 
-func (s *Store) InsertTransaction(tx flow.Transaction) error {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
-	return s.insertTransaction(tx)
-}
-
-func (s *Store) insertTransaction(tx flow.Transaction) error {
-	s.transactions[tx.Hash().Hex()] = tx
+func (s *Store) insertCollection(col model.LightCollection) error {
+	s.collections[col.ID()] = col
 	return nil
 }
 
-func (s *Store) LedgerViewByNumber(blockNumber uint64) *types.LedgerView {
+func (s *Store) TransactionByID(txID flow.Identifier) (flow.Transaction, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	tx, ok := s.transactions[txID]
+	if !ok {
+		return flow.Transaction{}, storage.ErrNotFound
+	}
+	return tx, nil
+}
+
+func (s *Store) insertTransaction(txID flow.Identifier, tx flow.Transaction) error {
+	s.transactions[txID] = tx
+	return nil
+}
+
+func (s *Store) TransactionResultByID(txID flow.Identifier) (types.StorableTransactionResult, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	result, ok := s.transactionResults[txID]
+	if !ok {
+		return types.StorableTransactionResult{}, storage.ErrNotFound
+	}
+	return result, nil
+}
+
+func (s *Store) insertTransactionResult(txID flow.Identifier, result types.StorableTransactionResult) error {
+	s.transactionResults[txID] = result
+	return nil
+}
+
+func (s *Store) LedgerViewByHeight(blockHeight uint64) *types.LedgerView {
 	return types.NewLedgerView(func(key string) ([]byte, error) {
 		s.mu.RLock()
 		defer s.mu.RUnlock()
 
-		ledger, ok := s.ledger[blockNumber]
+		ledger, ok := s.ledger[blockHeight]
 		if !ok {
 			return nil, nil
 		}
@@ -162,24 +212,17 @@ func (s *Store) LedgerViewByNumber(blockNumber uint64) *types.LedgerView {
 	})
 }
 
-func (s *Store) InsertLedgerDelta(blockNumber uint64, delta types.LedgerDelta) error {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
-	return s.insertLedgerDelta(blockNumber, delta)
-}
-
-func (s *Store) insertLedgerDelta(blockNumber uint64, delta types.LedgerDelta) error {
-	var oldLedger flow.Ledger
+func (s *Store) insertLedgerDelta(blockHeight uint64, delta types.LedgerDelta) error {
+	var oldLedger vm.MapLedger
 
 	// use empty ledger if this is the genesis block
-	if blockNumber == 0 {
-		oldLedger = make(flow.Ledger)
+	if blockHeight == 0 {
+		oldLedger = make(vm.MapLedger)
 	} else {
-		oldLedger = s.ledger[blockNumber-1]
+		oldLedger = s.ledger[blockHeight-1]
 	}
 
-	newLedger := make(flow.Ledger)
+	newLedger := make(vm.MapLedger)
 
 	// copy values from the previous ledger
 	for key, value := range oldLedger {
@@ -196,30 +239,25 @@ func (s *Store) insertLedgerDelta(blockNumber uint64, delta types.LedgerDelta) e
 		}
 	}
 
-	s.ledger[blockNumber] = newLedger
+	s.ledger[blockHeight] = newLedger
 
 	return nil
 }
 
-func (s *Store) RetrieveEvents(eventType string, startBlock, endBlock uint64) ([]flow.Event, error) {
+func (s *Store) EventsByHeight(blockHeight uint64, eventType string) ([]flow.Event, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
-	var events []flow.Event
-	// Filter by block number first
-	for i := startBlock; i <= endBlock; i++ {
-		if s.eventsByBlockNumber[i] != nil {
-			// Check for empty type, which indicates no type filtering
-			if eventType == "" {
-				events = append(events, s.eventsByBlockNumber[i]...)
-				continue
-			}
+	allEvents := s.eventsByBlockHeight[blockHeight]
 
-			// Otherwise, only add events with matching type
-			for _, event := range s.eventsByBlockNumber[i] {
-				if event.Type == eventType {
-					events = append(events, event)
-				}
+	events := make([]flow.Event, 0)
+
+	for _, event := range allEvents {
+		if eventType == "" {
+			events = append(events, event)
+		} else {
+			if event.Type == eventType {
+				events = append(events, event)
 			}
 		}
 	}
@@ -227,18 +265,11 @@ func (s *Store) RetrieveEvents(eventType string, startBlock, endBlock uint64) ([
 	return events, nil
 }
 
-func (s *Store) InsertEvents(blockNumber uint64, events []flow.Event) error {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
-	return s.insertEvents(blockNumber, events)
-}
-
-func (s *Store) insertEvents(blockNumber uint64, events []flow.Event) error {
-	if s.eventsByBlockNumber[blockNumber] == nil {
-		s.eventsByBlockNumber[blockNumber] = events
+func (s *Store) insertEvents(blockHeight uint64, events []flow.Event) error {
+	if s.eventsByBlockHeight[blockHeight] == nil {
+		s.eventsByBlockHeight[blockHeight] = events
 	} else {
-		s.eventsByBlockNumber[blockNumber] = append(s.eventsByBlockNumber[blockNumber], events...)
+		s.eventsByBlockHeight[blockHeight] = append(s.eventsByBlockHeight[blockHeight], events...)
 	}
 
 	return nil

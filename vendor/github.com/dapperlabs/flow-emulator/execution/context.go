@@ -106,7 +106,16 @@ func (r *RuntimeContext) CreateAccount(publicKeys [][]byte) (runtime.Address, er
 
 	r.ledger.Set(fullKey(string(accountID), "", keyBalance), big.NewInt(0).Bytes())
 
-	err := r.setAccountPublicKeys(accountID, publicKeys)
+	accountKeys := make([]accountKey, len(publicKeys))
+	for i, publicKey := range publicKeys {
+		accountKeys[i] = accountKey{
+			publicKey: publicKey,
+			// initial sequence number is zero
+			sequenceNumber: 0,
+		}
+	}
+
+	err := r.setAccountKeys(accountID, accountKeys)
 	if err != nil {
 		return runtime.Address{}, err
 	}
@@ -134,14 +143,20 @@ func (r *RuntimeContext) AddAccountKey(address runtime.Address, publicKey []byte
 		return fmt.Errorf("account with ID %s does not exist", accountID)
 	}
 
-	publicKeys, err := r.getAccountPublicKeys(accountID)
+	accountKeys, err := r.getAccountKeys(accountID)
 	if err != nil {
 		return err
 	}
 
-	publicKeys = append(publicKeys, publicKey)
+	newAccountKey := accountKey{
+		publicKey: publicKey,
+		// initial sequence number is zero
+		sequenceNumber: 0,
+	}
 
-	return r.setAccountPublicKeys(accountID, publicKeys)
+	accountKeys = append(accountKeys, newAccountKey)
+
+	return r.setAccountKeys(accountID, accountKeys)
 }
 
 // RemoveAccountKey removes a public key by index from an existing account.
@@ -159,28 +174,34 @@ func (r *RuntimeContext) RemoveAccountKey(address runtime.Address, index int) (p
 		return nil, fmt.Errorf("account with ID %s does not exist", accountID)
 	}
 
-	publicKeys, err := r.getAccountPublicKeys(accountID)
+	accountKeys, err := r.getAccountKeys(accountID)
 	if err != nil {
 		return publicKey, err
 	}
 
-	if index < 0 || index > len(publicKeys)-1 {
-		return publicKey, fmt.Errorf("invalid key index %d, account has %d keys", index, len(publicKeys))
+	if index < 0 || index > len(accountKeys)-1 {
+		return publicKey, fmt.Errorf("invalid key index %d, account has %d keys", index, len(accountKeys))
 	}
 
-	removedKey := publicKeys[index]
+	removedKey := accountKeys[index]
 
-	publicKeys = append(publicKeys[:index], publicKeys[index+1:]...)
+	// remove key from list
+	accountKeys = append(accountKeys[:index], accountKeys[index+1:]...)
 
-	err = r.setAccountPublicKeys(accountID, publicKeys)
+	err = r.setAccountKeys(accountID, accountKeys)
 	if err != nil {
 		return publicKey, err
 	}
 
-	return removedKey, nil
+	return removedKey.publicKey, nil
 }
 
-func (r *RuntimeContext) getAccountPublicKeys(accountID []byte) (publicKeys [][]byte, err error) {
+type accountKey struct {
+	publicKey      []byte
+	sequenceNumber uint64
+}
+
+func (r *RuntimeContext) getAccountKeys(accountID []byte) (accountKeys []accountKey, err error) {
 	countBytes, err := r.ledger.Get(
 		fullKey(string(accountID), string(accountID), keyPublicKeyCount),
 	)
@@ -194,7 +215,7 @@ func (r *RuntimeContext) getAccountPublicKeys(accountID []byte) (publicKeys [][]
 
 	count := int(big.NewInt(0).SetBytes(countBytes).Int64())
 
-	publicKeys = make([][]byte, count)
+	accountKeys = make([]accountKey, count)
 
 	for i := 0; i < count; i++ {
 		publicKey, err := r.ledger.Get(
@@ -208,13 +229,25 @@ func (r *RuntimeContext) getAccountPublicKeys(accountID []byte) (publicKeys [][]
 			return nil, fmt.Errorf("failed to retrieve key from account %s", accountID)
 		}
 
-		publicKeys[i] = cadence.NewBytes(publicKey)
+		seqNumBytes, err := r.ledger.Get(
+			fullKey(string(accountID), string(accountID), keyPublicKeySequenceNumber(i)),
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		seqNum := big.NewInt(0).SetBytes(seqNumBytes).Uint64()
+
+		accountKeys[i] = accountKey{
+			publicKey:      publicKey,
+			sequenceNumber: seqNum,
+		}
 	}
 
-	return publicKeys, nil
+	return accountKeys, nil
 }
 
-func (r *RuntimeContext) setAccountPublicKeys(accountID []byte, publicKeys [][]byte) error {
+func (r *RuntimeContext) setAccountKeys(accountID []byte, accountKeys []accountKey) error {
 	var existingCount int
 
 	countBytes, err := r.ledger.Get(
@@ -230,27 +263,35 @@ func (r *RuntimeContext) setAccountPublicKeys(accountID []byte, publicKeys [][]b
 		existingCount = 0
 	}
 
-	newCount := len(publicKeys)
+	newCount := len(accountKeys)
 
 	r.ledger.Set(
 		fullKey(string(accountID), string(accountID), keyPublicKeyCount),
 		big.NewInt(int64(newCount)).Bytes(),
 	)
 
-	for i, publicKey := range publicKeys {
-		if err := keys.ValidateEncodedPublicKey(publicKey); err != nil {
+	for i, accountKey := range accountKeys {
+		if err := keys.ValidateEncodedPublicKey(accountKey.publicKey); err != nil {
 			return err
 		}
 
 		r.ledger.Set(
 			fullKey(string(accountID), string(accountID), keyPublicKey(i)),
-			publicKey,
+			accountKey.publicKey,
+		)
+
+		seqNumBytes := big.NewInt(0).SetUint64(accountKey.sequenceNumber).Bytes()
+
+		r.ledger.Set(
+			fullKey(string(accountID), string(accountID), keyPublicKeySequenceNumber(i)),
+			seqNumBytes,
 		)
 	}
 
 	// delete leftover keys
 	for i := newCount; i < existingCount; i++ {
 		r.ledger.Delete(fullKey(string(accountID), string(accountID), keyPublicKey(i)))
+		r.ledger.Delete(fullKey(string(accountID), string(accountID), keyPublicKeySequenceNumber(i)))
 	}
 
 	return nil
@@ -300,17 +341,20 @@ func (r *RuntimeContext) GetAccount(address flow.Address) *flow.Account {
 
 	code, _ := r.ledger.Get(fullKey(string(accountID), string(accountID), keyCode))
 
-	publicKeys, err := r.getAccountPublicKeys(accountID)
+	accountKeys, err := r.getAccountKeys(accountID)
 	if err != nil {
 		panic(err)
 	}
 
-	accountPublicKeys := make([]flow.AccountPublicKey, len(publicKeys))
-	for i, publicKey := range publicKeys {
-		accountPublicKey, err := keys.DecodePublicKey(publicKey)
+	accountPublicKeys := make([]flow.AccountKey, len(accountKeys))
+	for i, accountKey := range accountKeys {
+		accountPublicKey, err := keys.DecodePublicKey(accountKey.publicKey)
 		if err != nil {
 			panic(err)
 		}
+
+		// include sequence number
+		accountPublicKey.SequenceNumber = accountKey.sequenceNumber
 
 		accountPublicKeys[i] = accountPublicKey
 	}
@@ -321,6 +365,47 @@ func (r *RuntimeContext) GetAccount(address flow.Address) *flow.Account {
 		Code:    code,
 		Keys:    accountPublicKeys,
 	}
+}
+
+// CheckAndIncrementSequenceNumber validates and increments a sequence number for with an account key.
+//
+// This function first checks that the provided sequence number matches the version stored on-chain.
+// If they are equal, the on-chain sequence number is incremented.
+// If they are not equal, the on-chain sequence number is not incremented.
+//
+// This function returns a boolean flag indicating validity as well as the updated sequence number value.
+// This function returns an error if the sequence number cannot be read from storage.
+func (r *RuntimeContext) CheckAndIncrementSequenceNumber(
+	address flow.Address,
+	keyID int,
+	sequenceNumber uint64,
+) (bool, uint64, error) {
+	accountID := address.Bytes()
+
+	seqNumKey := keyPublicKeySequenceNumber(keyID)
+
+	storedSeqNumBytes, err := r.ledger.Get(
+		fullKey(string(accountID), string(accountID), seqNumKey),
+	)
+	if err != nil {
+		return false, 0, err
+	}
+
+	storedSeqNum := big.NewInt(0).SetBytes(storedSeqNumBytes).Uint64()
+
+	valid := storedSeqNum == sequenceNumber
+
+	if valid {
+		storedSeqNum++
+		storedSeqNumBytes = big.NewInt(0).SetUint64(storedSeqNum).Bytes()
+
+		r.ledger.Set(
+			fullKey(string(accountID), string(accountID), seqNumKey),
+			storedSeqNumBytes,
+		)
+	}
+
+	return valid, storedSeqNum, nil
 }
 
 // ResolveImport imports code for the provided import location.
@@ -393,4 +478,8 @@ func fullKey(owner, controller, key string) string {
 
 func keyPublicKey(index int) string {
 	return fmt.Sprintf("public_key_%d", index)
+}
+
+func keyPublicKeySequenceNumber(index int) string {
+	return fmt.Sprintf("public_key_%d_seq_num", index)
 }

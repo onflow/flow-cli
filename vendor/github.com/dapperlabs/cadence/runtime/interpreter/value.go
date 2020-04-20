@@ -80,7 +80,7 @@ func init() {
 func (VoidValue) IsValue() {}
 
 func (VoidValue) DynamicType(_ *Interpreter) DynamicType {
-	return VoidType{}
+	return VoidDynamicType{}
 }
 
 func (v VoidValue) Copy() Value {
@@ -111,7 +111,7 @@ func init() {
 func (BoolValue) IsValue() {}
 
 func (BoolValue) DynamicType(_ *Interpreter) DynamicType {
-	return BoolType{}
+	return BoolDynamicType{}
 }
 
 func (v BoolValue) Copy() Value {
@@ -164,7 +164,7 @@ func NewStringValue(str string) *StringValue {
 func (*StringValue) IsValue() {}
 
 func (*StringValue) DynamicType(_ *Interpreter) DynamicType {
-	return StringType{}
+	return StringDynamicType{}
 }
 
 func (v *StringValue) Copy() Value {
@@ -346,7 +346,7 @@ func (v *ArrayValue) DynamicType(interpreter *Interpreter) DynamicType {
 		elementTypes[i] = value.DynamicType(interpreter)
 	}
 
-	return ArrayType{
+	return ArrayDynamicType{
 		ElementTypes: elementTypes,
 	}
 }
@@ -395,6 +395,11 @@ func (v *ArrayValue) GobEncode() ([]byte, error) {
 		return nil, err
 	}
 
+	err = encoder.Encode(v.Owner)
+	if err != nil {
+		return nil, err
+	}
+
 	return w.Bytes(), nil
 }
 
@@ -403,6 +408,11 @@ func (v *ArrayValue) GobDecode(buf []byte) error {
 	decoder := gob.NewDecoder(r)
 
 	err := decoder.Decode(&v.Values)
+	if err != nil {
+		return err
+	}
+
+	err = decoder.Decode(&v.Owner)
 	if err != nil {
 		return err
 	}
@@ -618,7 +628,7 @@ func ConvertInt(value Value, _ *Interpreter) Value {
 func (v IntValue) IsValue() {}
 
 func (IntValue) DynamicType(_ *Interpreter) DynamicType {
-	return NumberType{&sema.IntType{}}
+	return NumberDynamicType{&sema.IntType{}}
 }
 
 func (v IntValue) Copy() Value {
@@ -734,7 +744,7 @@ func init() {
 func (Int8Value) IsValue() {}
 
 func (Int8Value) DynamicType(_ *Interpreter) DynamicType {
-	return NumberType{&sema.Int8Type{}}
+	return NumberDynamicType{&sema.Int8Type{}}
 }
 
 func (v Int8Value) Copy() Value {
@@ -880,7 +890,7 @@ func init() {
 func (Int16Value) IsValue() {}
 
 func (Int16Value) DynamicType(_ *Interpreter) DynamicType {
-	return NumberType{&sema.Int16Type{}}
+	return NumberDynamicType{&sema.Int16Type{}}
 }
 
 func (v Int16Value) Copy() Value {
@@ -1026,7 +1036,7 @@ func init() {
 func (Int32Value) IsValue() {}
 
 func (Int32Value) DynamicType(_ *Interpreter) DynamicType {
-	return NumberType{&sema.Int32Type{}}
+	return NumberDynamicType{&sema.Int32Type{}}
 }
 
 func (v Int32Value) Copy() Value {
@@ -1172,7 +1182,7 @@ func init() {
 func (Int64Value) IsValue() {}
 
 func (Int64Value) DynamicType(_ *Interpreter) DynamicType {
-	return NumberType{&sema.Int64Type{}}
+	return NumberDynamicType{&sema.Int64Type{}}
 }
 
 func (v Int64Value) Copy() Value {
@@ -1324,7 +1334,7 @@ func init() {
 func (v Int128Value) IsValue() {}
 
 func (Int128Value) DynamicType(_ *Interpreter) DynamicType {
-	return NumberType{&sema.Int128Type{}}
+	return NumberDynamicType{&sema.Int128Type{}}
 }
 
 func (v Int128Value) Copy() Value {
@@ -1503,7 +1513,7 @@ func init() {
 func (v Int256Value) IsValue() {}
 
 func (Int256Value) DynamicType(_ *Interpreter) DynamicType {
-	return NumberType{&sema.Int256Type{}}
+	return NumberDynamicType{&sema.Int256Type{}}
 }
 
 func (v Int256Value) Copy() Value {
@@ -1694,7 +1704,7 @@ func ConvertUInt(value Value, _ *Interpreter) Value {
 func (v UIntValue) IsValue() {}
 
 func (UIntValue) DynamicType(_ *Interpreter) DynamicType {
-	return NumberType{&sema.UIntType{}}
+	return NumberDynamicType{&sema.UIntType{}}
 }
 
 func (v UIntValue) Copy() Value {
@@ -1813,7 +1823,7 @@ func init() {
 func (UInt8Value) IsValue() {}
 
 func (UInt8Value) DynamicType(_ *Interpreter) DynamicType {
-	return NumberType{&sema.UInt8Type{}}
+	return NumberDynamicType{&sema.UInt8Type{}}
 }
 
 func (v UInt8Value) Copy() Value {
@@ -1927,7 +1937,7 @@ func init() {
 func (UInt16Value) IsValue() {}
 
 func (UInt16Value) DynamicType(_ *Interpreter) DynamicType {
-	return NumberType{&sema.UInt16Type{}}
+	return NumberDynamicType{&sema.UInt16Type{}}
 }
 
 func (v UInt16Value) Copy() Value {
@@ -2039,7 +2049,7 @@ func init() {
 func (UInt32Value) IsValue() {}
 
 func (UInt32Value) DynamicType(_ *Interpreter) DynamicType {
-	return NumberType{&sema.UInt32Type{}}
+	return NumberDynamicType{&sema.UInt32Type{}}
 }
 
 func (v UInt32Value) Copy() Value {
@@ -2153,7 +2163,7 @@ func init() {
 func (UInt64Value) IsValue() {}
 
 func (UInt64Value) DynamicType(_ *Interpreter) DynamicType {
-	return NumberType{&sema.UInt64Type{}}
+	return NumberDynamicType{&sema.UInt64Type{}}
 }
 
 func (v UInt64Value) Copy() Value {
@@ -2274,7 +2284,7 @@ func init() {
 func (v UInt128Value) IsValue() {}
 
 func (UInt128Value) DynamicType(_ *Interpreter) DynamicType {
-	return NumberType{&sema.UInt128Type{}}
+	return NumberDynamicType{&sema.UInt128Type{}}
 }
 
 func (v UInt128Value) Copy() Value {
@@ -2423,7 +2433,7 @@ func init() {
 func (v UInt256Value) IsValue() {}
 
 func (UInt256Value) DynamicType(_ *Interpreter) DynamicType {
-	return NumberType{&sema.UInt256Type{}}
+	return NumberDynamicType{&sema.UInt256Type{}}
 }
 
 func (v UInt256Value) Copy() Value {
@@ -2570,7 +2580,7 @@ func init() {
 func (Word8Value) IsValue() {}
 
 func (Word8Value) DynamicType(_ *Interpreter) DynamicType {
-	return NumberType{&sema.Word8Type{}}
+	return NumberDynamicType{&sema.Word8Type{}}
 }
 
 func (v Word8Value) Copy() Value {
@@ -2670,7 +2680,7 @@ func init() {
 func (Word16Value) IsValue() {}
 
 func (Word16Value) DynamicType(_ *Interpreter) DynamicType {
-	return NumberType{&sema.Word16Type{}}
+	return NumberDynamicType{&sema.Word16Type{}}
 }
 
 func (v Word16Value) Copy() Value {
@@ -2768,7 +2778,7 @@ func init() {
 func (Word32Value) IsValue() {}
 
 func (Word32Value) DynamicType(_ *Interpreter) DynamicType {
-	return NumberType{&sema.Word32Type{}}
+	return NumberDynamicType{&sema.Word32Type{}}
 }
 
 func (v Word32Value) Copy() Value {
@@ -2868,7 +2878,7 @@ func init() {
 func (Word64Value) IsValue() {}
 
 func (Word64Value) DynamicType(_ *Interpreter) DynamicType {
-	return NumberType{&sema.Word64Type{}}
+	return NumberDynamicType{&sema.Word64Type{}}
 }
 
 func (v Word64Value) Copy() Value {
@@ -2968,7 +2978,7 @@ func init() {
 func (Fix64Value) IsValue() {}
 
 func (Fix64Value) DynamicType(_ *Interpreter) DynamicType {
-	return NumberType{&sema.Fix64Type{}}
+	return NumberDynamicType{&sema.Fix64Type{}}
 }
 
 func (v Fix64Value) Copy() Value {
@@ -3151,7 +3161,7 @@ func NewUFix64ValueWithFraction(integer, fraction uint64) UFix64Value {
 func (UFix64Value) IsValue() {}
 
 func (UFix64Value) DynamicType(_ *Interpreter) DynamicType {
-	return NumberType{&sema.UFix64Type{}}
+	return NumberDynamicType{&sema.UFix64Type{}}
 }
 
 func (v UFix64Value) Copy() Value {
@@ -3359,15 +3369,10 @@ func (v *CompositeValue) Destroy(interpreter *Interpreter, locationRange Locatio
 func (*CompositeValue) IsValue() {}
 
 func (v *CompositeValue) DynamicType(interpreter *Interpreter) DynamicType {
-	locationID, qualifiedIdentifier := sema.SplitCompositeTypeID(v.TypeID)
-	if locationID == "" {
-		panic("failed to split composite type ID")
+	staticType := interpreter.getCompositeType(v.Location, v.TypeID)
+	return CompositeDynamicType{
+		StaticType: staticType,
 	}
-
-	checker := interpreter.allCheckers[locationID]
-	staticType := checker.Elaboration.CompositeTypes[qualifiedIdentifier]
-
-	return CompositeType{StaticType: staticType}
 }
 
 func (v *CompositeValue) Copy() Value {
@@ -3433,15 +3438,7 @@ func (v *CompositeValue) GetMember(interpreter *Interpreter, locationRange Locat
 	if v.Kind == common.CompositeKindResource &&
 		name == "owner" {
 
-		if v.Owner == nil {
-			return NilValue{}
-		}
-
-		address := AddressValue(*v.Owner)
-
-		return NewSomeValueOwningNonCopying(
-			PublicAccountValue{Address: address},
-		)
+		return v.OwnerValue()
 	}
 
 	value, ok := v.Fields[name]
@@ -3497,6 +3494,18 @@ func (v *CompositeValue) GetMember(interpreter *Interpreter, locationRange Locat
 	return nil
 }
 
+func (v *CompositeValue) OwnerValue() OptionalValue {
+	if v.Owner == nil {
+		return NilValue{}
+	}
+
+	address := AddressValue(*v.Owner)
+
+	return NewSomeValueOwningNonCopying(
+		PublicAccountValue{Address: address},
+	)
+}
+
 func (v *CompositeValue) SetMember(_ *Interpreter, locationRange LocationRange, name string, value Value) {
 	v.checkStatus(locationRange)
 
@@ -3509,8 +3518,8 @@ func (v *CompositeValue) GobEncode() ([]byte, error) {
 	w := new(bytes.Buffer)
 	encoder := gob.NewEncoder(w)
 
-	// NOTE: important: decode as pointer, so gob sees
-	// the interface, not the concrete type
+	// NOTE: important: encode as pointer,
+	// so gob sees the interface, not the concrete type
 	err := encoder.Encode(&v.Location)
 	if err != nil {
 		return nil, err
@@ -3548,6 +3557,11 @@ func (v *CompositeValue) GobEncode() ([]byte, error) {
 	}
 
 	err = encoder.Encode(fieldValues)
+	if err != nil {
+		return nil, err
+	}
+
+	err = encoder.Encode(v.Owner)
 	if err != nil {
 		return nil, err
 	}
@@ -3592,6 +3606,11 @@ func (v *CompositeValue) GobDecode(buf []byte) error {
 
 	for i, fieldName := range fieldNames {
 		v.Fields[fieldName] = fieldValues[i]
+	}
+
+	err = decoder.Decode(&v.Owner)
+	if err != nil {
+		return err
 	}
 
 	// NOTE: *not* decoding functions – linked in on-demand
@@ -3666,7 +3685,7 @@ func (v *DictionaryValue) DynamicType(interpreter *Interpreter) DynamicType {
 			}
 	}
 
-	return DictionaryType{
+	return DictionaryDynamicType{
 		EntryTypes: entryTypes,
 	}
 }
@@ -3933,6 +3952,11 @@ func (v *DictionaryValue) GobEncode() ([]byte, error) {
 		return nil, err
 	}
 
+	err = encoder.Encode(v.Owner)
+	if err != nil {
+		return nil, err
+	}
+
 	return w.Bytes(), nil
 }
 
@@ -3961,6 +3985,11 @@ func (v *DictionaryValue) GobDecode(buf []byte) error {
 
 	for i, entryName := range entryNames {
 		v.Entries[entryName] = entryValues[i]
+	}
+
+	err = decoder.Decode(&v.Owner)
+	if err != nil {
+		return err
 	}
 
 	return nil
@@ -4043,7 +4072,7 @@ func init() {
 func (NilValue) IsValue() {}
 
 func (NilValue) DynamicType(_ *Interpreter) DynamicType {
-	return NilType{}
+	return NilDynamicType{}
 }
 
 func (NilValue) isOptionalValue() {}
@@ -4091,7 +4120,7 @@ func (*SomeValue) IsValue() {}
 
 func (v *SomeValue) DynamicType(interpreter *Interpreter) DynamicType {
 	innerType := v.Value.DynamicType(interpreter)
-	return SomeType{InnerType: innerType}
+	return SomeDynamicType{InnerType: innerType}
 }
 
 func (*SomeValue) isOptionalValue() {}
@@ -4126,58 +4155,6 @@ func (v *SomeValue) String() string {
 	return fmt.Sprint(v.Value)
 }
 
-// StorageValue
-
-type StorageValue struct {
-	Address common.Address
-}
-
-func (StorageValue) IsValue() {}
-
-func (v StorageValue) DynamicType(_ *Interpreter) DynamicType {
-	return StorageType{}
-}
-
-func (v StorageValue) Copy() Value {
-	return StorageValue{
-		Address: v.Address,
-	}
-}
-
-func (v StorageValue) GetOwner() *common.Address {
-	return &v.Address
-}
-
-func (StorageValue) SetOwner(_ *common.Address) {
-	// NO-OP: ownership cannot be changed
-}
-
-// PublishedValue
-
-type PublishedValue struct {
-	Address common.Address
-}
-
-func (PublishedValue) IsValue() {}
-
-func (v PublishedValue) DynamicType(_ *Interpreter) DynamicType {
-	return PublishedType{}
-}
-
-func (v PublishedValue) Copy() Value {
-	return PublishedValue{
-		Address: v.Address,
-	}
-}
-
-func (v PublishedValue) GetOwner() *common.Address {
-	return &v.Address
-}
-
-func (PublishedValue) SetOwner(_ *common.Address) {
-	// NO-OP: ownership cannot be changed
-}
-
 // StorageReferenceValue
 
 type StorageReferenceValue struct {
@@ -4201,7 +4178,7 @@ func (v *StorageReferenceValue) DynamicType(interpreter *Interpreter) DynamicTyp
 
 	innerType := (*referencedValue).DynamicType(interpreter)
 
-	return StorageReferenceType{
+	return StorageReferenceDynamicType{
 		authorized: v.Authorized,
 		innerType:  innerType,
 	}
@@ -4226,9 +4203,7 @@ func (v *StorageReferenceValue) SetOwner(owner *common.Address) {
 }
 
 func (v *StorageReferenceValue) referencedValue(interpreter *Interpreter) *Value {
-	key := PrefixedStorageKey(v.TargetKey, AccessLevelPrivate)
-
-	switch referenced := interpreter.readStored(v.TargetStorageAddress, key).(type) {
+	switch referenced := interpreter.readStored(v.TargetStorageAddress, v.TargetKey).(type) {
 	case *SomeValue:
 		return &referenced.Value
 	case NilValue:
@@ -4314,7 +4289,7 @@ func (v *EphemeralReferenceValue) DynamicType(interpreter *Interpreter) DynamicT
 
 	innerType := (*referencedValue).DynamicType(interpreter)
 
-	return EphemeralReferenceType{
+	return EphemeralReferenceDynamicType{
 		authorized: v.Authorized,
 		innerType:  innerType,
 	}
@@ -4444,7 +4419,7 @@ func ConvertAddress(value Value, _ *Interpreter) Value {
 func (AddressValue) IsValue() {}
 
 func (AddressValue) DynamicType(_ *Interpreter) DynamicType {
-	return AddressType{}
+	return AddressDynamicType{}
 }
 
 func (v AddressValue) Copy() Value {
@@ -4526,7 +4501,7 @@ func (v AuthAccountValue) AddressValue() AddressValue {
 }
 
 func (AuthAccountValue) DynamicType(_ *Interpreter) DynamicType {
-	return AuthAccountType{}
+	return AuthAccountDynamicType{}
 }
 
 func (v AuthAccountValue) Copy() Value {
@@ -4550,20 +4525,54 @@ func (v AuthAccountValue) String() string {
 	return fmt.Sprintf("AuthAccount(%s)", v.Address)
 }
 
+func accountGetCapabilityFunction(
+	addressValue AddressValue,
+	authorized bool,
+) HostFunctionValue {
+	return NewHostFunctionValue(func(invocation Invocation) trampoline.Trampoline {
+
+		path := invocation.Arguments[0].(PathValue)
+
+		if authorized {
+
+			// If the account is an authorized account (`AuthAccount`),
+			// ensure the path has a `private` or `public` domain.
+
+			if !checkPathDomain(
+				path,
+				common.PathDomainPrivate,
+				common.PathDomainPublic,
+			) {
+				return trampoline.Done{Result: NilValue{}}
+			}
+		} else {
+
+			// If the account is a public account (`PublicAccount`),
+			// ensure the path has a `public` domain.
+
+			if !checkPathDomain(
+				path,
+				common.PathDomainPublic,
+			) {
+				return trampoline.Done{Result: NilValue{}}
+			}
+		}
+
+		capability := CapabilityValue{
+			Address: addressValue,
+			Path:    path,
+		}
+
+		result := NewSomeValueOwningNonCopying(capability)
+
+		return trampoline.Done{Result: result}
+	})
+}
+
 func (v AuthAccountValue) GetMember(inter *Interpreter, _ LocationRange, name string) Value {
 	switch name {
 	case "address":
 		return v.Address
-
-	case "storage":
-		return StorageValue{
-			Address: v.Address.ToAddress(),
-		}
-
-	case "published":
-		return PublishedValue{
-			Address: v.Address.ToAddress(),
-		}
 
 	case "setCode":
 		return v.setCodeFunction
@@ -4577,6 +4586,9 @@ func (v AuthAccountValue) GetMember(inter *Interpreter, _ LocationRange, name st
 	case "load":
 		return inter.authAccountLoadFunction(v.Address)
 
+	case "copy":
+		return inter.authAccountCopyFunction(v.Address)
+
 	case "save":
 		return inter.authAccountSaveFunction(v.Address)
 
@@ -4585,6 +4597,15 @@ func (v AuthAccountValue) GetMember(inter *Interpreter, _ LocationRange, name st
 
 	case "link":
 		return inter.authAccountLinkFunction(v.Address)
+
+	case "unlink":
+		return inter.authAccountUnlinkFunction(v.Address)
+
+	case "getLinkTarget":
+		return inter.authAccountGetLinkTargetFunction(v.Address)
+
+	case "getCapability":
+		return accountGetCapabilityFunction(v.Address, true)
 
 	default:
 		panic(errors.NewUnreachableError())
@@ -4621,7 +4642,7 @@ func (v PublicAccountValue) AddressValue() AddressValue {
 }
 
 func (PublicAccountValue) DynamicType(_ *Interpreter) DynamicType {
-	return AuthAccountType{}
+	return AuthAccountDynamicType{}
 }
 
 func (v PublicAccountValue) Copy() Value {
@@ -4645,15 +4666,16 @@ func (v PublicAccountValue) String() string {
 	return fmt.Sprintf("PublicAccount(%s)", v.Address)
 }
 
-func (v PublicAccountValue) GetMember(_ *Interpreter, _ LocationRange, name string) Value {
+func (v PublicAccountValue) GetMember(inter *Interpreter, _ LocationRange, name string) Value {
 	switch name {
 	case "address":
 		return v.Address
 
-	case "published":
-		return PublishedValue{
-			Address: v.Address.ToAddress(),
-		}
+	case "getCapability":
+		return accountGetCapabilityFunction(v.Address, false)
+
+	case "getLinkTarget":
+		return inter.authAccountGetLinkTargetFunction(v.Address)
 
 	default:
 		panic(errors.NewUnreachableError())
@@ -4678,7 +4700,7 @@ func init() {
 func (PathValue) IsValue() {}
 
 func (PathValue) DynamicType(_ *Interpreter) DynamicType {
-	return PathType{}
+	return PathDynamicType{}
 }
 
 func (v PathValue) Copy() Value {
@@ -4720,7 +4742,7 @@ func init() {
 func (CapabilityValue) IsValue() {}
 
 func (CapabilityValue) DynamicType(_ *Interpreter) DynamicType {
-	return CapabilityType{}
+	return CapabilityDynamicType{}
 }
 
 func (v CapabilityValue) Copy() Value {
@@ -4745,5 +4767,64 @@ func (v CapabilityValue) String() string {
 		"/%s%s",
 		v.Address,
 		v.Path,
+	)
+}
+
+func (v CapabilityValue) GetMember(inter *Interpreter, _ LocationRange, name string) Value {
+	switch name {
+	case "borrow":
+		return inter.capabilityBorrowFunction(v.Address, v.Path)
+
+	case "check":
+		return inter.capabilityCheckFunction(v.Address, v.Path)
+
+	default:
+		panic(errors.NewUnreachableError())
+	}
+}
+
+func (CapabilityValue) SetMember(_ *Interpreter, _ LocationRange, _ string, _ Value) {
+	panic(errors.NewUnreachableError())
+}
+
+// LinkValue
+
+type LinkValue struct {
+	TargetPath PathValue
+	Type       StaticType
+}
+
+func init() {
+	gob.Register(LinkValue{})
+}
+
+func (LinkValue) IsValue() {}
+
+func (LinkValue) DynamicType(_ *Interpreter) DynamicType {
+	return CapabilityDynamicType{}
+}
+
+func (v LinkValue) Copy() Value {
+	return v
+}
+
+func (LinkValue) GetOwner() *common.Address {
+	// value is never owned
+	return nil
+}
+
+func (LinkValue) SetOwner(_ *common.Address) {
+	// NO-OP: value cannot be owned
+}
+
+func (v LinkValue) Destroy(_ *Interpreter, _ LocationRange) trampoline.Trampoline {
+	return trampoline.Done{}
+}
+
+func (v LinkValue) String() string {
+	return fmt.Sprintf(
+		"Link(type: %s, targetPath: %s)",
+		v.Type,
+		v.TargetPath,
 	)
 }

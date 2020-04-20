@@ -4,16 +4,15 @@ import (
 	"encoding/hex"
 	"time"
 
-	"github.com/dapperlabs/flow-go-sdk"
-	"github.com/dapperlabs/flow-go-sdk/keys"
 	"github.com/pkg/errors"
 	"github.com/psiemens/graceland"
 	"github.com/sirupsen/logrus"
 
-	"github.com/dapperlabs/flow-emulator"
+	emulator "github.com/dapperlabs/flow-emulator"
 	"github.com/dapperlabs/flow-emulator/storage"
 	"github.com/dapperlabs/flow-emulator/storage/badger"
 	"github.com/dapperlabs/flow-emulator/storage/memstore"
+	"github.com/dapperlabs/flow-go-sdk"
 )
 
 // EmulatorServer is a local server that runs a Flow Emulator instance.
@@ -28,6 +27,7 @@ type EmulatorServer struct {
 	blocksTicker   *BlocksTicker
 	livenessTicker *LivenessTicker
 	onCleanup      func()
+	group          *graceland.Group
 }
 
 const (
@@ -110,16 +110,17 @@ func NewEmulatorServer(logger *logrus.Logger, conf *Config) *EmulatorServer {
 	// only create blocks ticker if block time > 0
 	if conf.BlockTime > 0 {
 		server.blocksTicker = NewBlocksTicker(backend, conf.BlockTime)
-
 	}
 
 	address := blockchain.RootAccountAddress()
 	prKey := blockchain.RootKey()
-	prKeyBytes, _ := keys.EncodePrivateKey(prKey)
+	prKeyBytes, _ := prKey.PrivateKey.PrivateKey.Encode()
 
 	logger.WithFields(logrus.Fields{
-		"address": address.Hex(),
-		"prKey":   hex.EncodeToString(prKeyBytes),
+		"address":       address.Hex(),
+		"prKey":         hex.EncodeToString(prKeyBytes),
+		"prKeySigAlgo":  prKey.AccountKey().SignAlgo.String(),
+		"prKeyHashAlgo": prKey.AccountKey().HashAlgo.String(),
 	}).Infof("⚙️   Using root account 0x%s", address.Hex())
 
 	return server
@@ -129,7 +130,9 @@ func NewEmulatorServer(logger *logrus.Logger, conf *Config) *EmulatorServer {
 func (s *EmulatorServer) Start() {
 	defer s.cleanup()
 
-	g := graceland.NewGroup()
+	s.Stop()
+
+	s.group = graceland.NewGroup()
 
 	s.logger.
 		WithField("port", s.config.GRPCPort).
@@ -139,19 +142,29 @@ func (s *EmulatorServer) Start() {
 		WithField("port", s.config.HTTPPort).
 		Infof("🌱  Starting HTTP server on port %d...", s.config.HTTPPort)
 
-	g.Add(s.grpcServer)
-	g.Add(s.httpServer)
-	g.Add(s.livenessTicker)
+	s.group.Add(s.grpcServer)
+	s.group.Add(s.httpServer)
+	s.group.Add(s.livenessTicker)
 
 	// only start blocks ticker if it exists
 	if s.blocksTicker != nil {
-		g.Add(s.blocksTicker)
+		s.group.Add(s.blocksTicker)
 	}
 
-	err := g.Start()
+	err := s.group.Start()
 	if err != nil {
 		s.logger.WithError(err).Error("❗  Server error")
 	}
+
+	s.Stop()
+}
+
+func (s *EmulatorServer) Stop() {
+	if s.group == nil {
+		return
+	}
+
+	s.group.Stop()
 
 	s.logger.Info("🛑  Server stopped")
 }

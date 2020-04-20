@@ -4,7 +4,6 @@ import (
 	"github.com/dapperlabs/cadence/runtime/cmd/execute"
 	"github.com/spf13/cobra"
 
-	"github.com/dapperlabs/flow-cli/flow/cadence/abi"
 	"github.com/dapperlabs/flow-cli/flow/cadence/languageserver"
 	"github.com/dapperlabs/flow-cli/flow/cadence/vscode"
 )
@@ -24,5 +23,4 @@ var Cmd = &cobra.Command{
 func init() {
 	Cmd.AddCommand(languageserver.Cmd)
 	Cmd.AddCommand(vscode.Cmd)
-	Cmd.AddCommand(abi.Cmd)
 }

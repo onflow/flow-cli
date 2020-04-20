@@ -4,11 +4,12 @@ import (
 	"fmt"
 	"net"
 
-	"github.com/dapperlabs/flow-go/protobuf/services/observation"
 	grpcprometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
+
+	access "github.com/dapperlabs/flow/protobuf/go/flow/access"
 )
 
 type GRPCServer struct {
@@ -23,7 +24,7 @@ func NewGRPCServer(logger *logrus.Logger, backend *Backend, port int, debug bool
 		grpc.UnaryInterceptor(grpcprometheus.UnaryServerInterceptor),
 	)
 
-	observation.RegisterObserveServiceServer(grpcServer, backend)
+	access.RegisterAccessAPIServer(grpcServer, backend)
 	grpcprometheus.Register(grpcServer)
 
 	if debug {

@@ -2,17 +2,21 @@ package emulator
 
 import (
 	"github.com/dapperlabs/flow-go-sdk"
-	"github.com/dapperlabs/flow-go/crypto"
+	model "github.com/dapperlabs/flow-go/model/flow"
 
 	"github.com/dapperlabs/flow-emulator/types"
 )
 
 // A pendingBlock contains the pending state required to form a new block.
 type pendingBlock struct {
-	// block information (Number, PreviousBlockHash, TransactionHashes)
-	block *types.Block
-	// mapping from transaction hash to transaction
-	transactions map[string]*flow.Transaction
+	height   uint64
+	parentID flow.Identifier
+	// mapping from transaction ID to transaction
+	transactions map[flow.Identifier]*flow.Transaction
+	// list of transaction IDs in the block
+	transactionIDs []flow.Identifier
+	// mapping from transaction ID to transaction result
+	transactionResults map[flow.Identifier]*TransactionResult
 	// current working ledger, updated after each transaction execution
 	ledgerView *types.LedgerView
 	// events emitted during execution
@@ -21,39 +25,71 @@ type pendingBlock struct {
 	index int
 }
 
-// newPendingBlock creates a new pending block sequentially after a specified block.
-func newPendingBlock(prevBlock types.Block, ledgerView *types.LedgerView) *pendingBlock {
-	transactions := make(map[string]*flow.Transaction)
-	transactionHashes := make([]crypto.Hash, 0)
-
-	block := &types.Block{
-		Number:            prevBlock.Number + 1,
-		PreviousBlockHash: prevBlock.Hash(),
-		TransactionHashes: transactionHashes,
-	}
-
+// newPendingBlock creates a new pending block using the specified block as its parent.
+func newPendingBlock(prevBlock *types.Block, ledgerView *types.LedgerView) *pendingBlock {
 	return &pendingBlock{
-		block:        block,
-		transactions: transactions,
-		ledgerView:   ledgerView,
-		events:       make([]flow.Event, 0),
-		index:        0,
+		height:             prevBlock.Height + 1,
+		parentID:           prevBlock.ID(),
+		transactions:       make(map[flow.Identifier]*flow.Transaction),
+		transactionIDs:     make([]flow.Identifier, 0),
+		transactionResults: make(map[flow.Identifier]*TransactionResult),
+		ledgerView:         ledgerView,
+		events:             make([]flow.Event, 0),
+		index:              0,
 	}
 }
 
-// Hash returns the hash of the pending block.
-func (b *pendingBlock) Hash() crypto.Hash {
-	return b.block.Hash()
+// ID returns the ID of the pending block.
+func (b *pendingBlock) ID() flow.Identifier {
+	return b.Block().ID()
 }
 
-// Number returns the number of the pending block.
-func (b *pendingBlock) Number() uint64 {
-	return b.block.Number
+// Height returns the number of the pending block.
+func (b *pendingBlock) Height() uint64 {
+	return b.height
 }
 
 // Block returns the block information for the pending block.
-func (b *pendingBlock) Block() types.Block {
-	return *b.block
+func (b *pendingBlock) Block() *types.Block {
+	collections := b.Collections()
+
+	guarantees := make([]*model.CollectionGuarantee, len(collections))
+	for i, collection := range collections {
+		guarantees[i] = &model.CollectionGuarantee{
+			CollectionID: collection.ID(),
+		}
+	}
+
+	return &types.Block{
+		Height:     b.height,
+		ParentID:   b.parentID,
+		Guarantees: guarantees,
+	}
+}
+
+func (b *pendingBlock) Collections() []*model.LightCollection {
+	if len(b.transactionIDs) == 0 {
+		return []*model.LightCollection{}
+	}
+
+	transactionIDs := make([]model.Identifier, len(b.transactionIDs))
+
+	// TODO: remove once SDK models are removed
+	for i, transactionID := range b.transactionIDs {
+		transactionIDs[i] = model.Identifier(transactionID)
+	}
+
+	collection := model.LightCollection{Transactions: transactionIDs}
+
+	return []*model.LightCollection{&collection}
+}
+
+func (b *pendingBlock) Transactions() map[flow.Identifier]*flow.Transaction {
+	return b.transactions
+}
+
+func (b *pendingBlock) TransactionResults() map[flow.Identifier]*TransactionResult {
+	return b.transactionResults
 }
 
 // LedgerDelta returns the ledger delta for the pending block.
@@ -63,37 +99,25 @@ func (b *pendingBlock) LedgerDelta() types.LedgerDelta {
 
 // AddTransaction adds a transaction to the pending block.
 func (b *pendingBlock) AddTransaction(tx flow.Transaction) {
-	b.block.TransactionHashes = append(b.block.TransactionHashes, tx.Hash())
-	b.transactions[string(tx.Hash())] = &tx
+	b.transactionIDs = append(b.transactionIDs, tx.ID())
+	b.transactions[tx.ID()] = &tx
 }
 
 // ContainsTransaction checks if a transaction is included in the pending block.
-func (b *pendingBlock) ContainsTransaction(txHash crypto.Hash) bool {
-	_, exists := b.transactions[string(txHash)]
+func (b *pendingBlock) ContainsTransaction(txID flow.Identifier) bool {
+	_, exists := b.transactions[txID]
 	return exists
 }
 
-// GetTransaction retrieves a transaction in the pending block by hash, or nil
-// if it does not exist.
-func (b *pendingBlock) GetTransaction(txHash crypto.Hash) *flow.Transaction {
-	return b.transactions[string(txHash)]
+// GetTransaction retrieves a transaction in the pending block by ID.
+func (b *pendingBlock) GetTransaction(txID flow.Identifier) *flow.Transaction {
+	return b.transactions[txID]
 }
 
 // nextTransaction returns the next indexed transaction.
 func (b *pendingBlock) nextTransaction() *flow.Transaction {
-	txHash := b.block.TransactionHashes[b.index]
-	return b.GetTransaction(txHash)
-}
-
-// Transactions returns the transactions in the pending block.
-func (b *pendingBlock) Transactions() []flow.Transaction {
-	transactions := make([]flow.Transaction, len(b.block.TransactionHashes))
-
-	for i, txHash := range b.block.TransactionHashes {
-		transactions[i] = *b.transactions[string(txHash)]
-	}
-
-	return transactions
+	txID := b.transactionIDs[b.index]
+	return b.GetTransaction(txID)
 }
 
 // ExecuteNextTransaction executes the next transaction in the pending block.
@@ -101,27 +125,24 @@ func (b *pendingBlock) Transactions() []flow.Transaction {
 // This function uses the provided execute function to perform the actual
 // execution, then updates the pending block with the output.
 func (b *pendingBlock) ExecuteNextTransaction(
-	execute func(ledgerView *types.LedgerView, tx flow.Transaction) (TransactionResult, error),
-) (TransactionResult, error) {
+	execute func(ledgerView *types.LedgerView, tx flow.Transaction) (*TransactionResult, error),
+) (*TransactionResult, error) {
 	tx := b.nextTransaction()
 
 	result, err := execute(b.ledgerView, *tx)
 	if err != nil {
 		// fail fast if fatal error occurs
-		return TransactionResult{}, err
+		return nil, err
 	}
 
 	// increment transaction index even if transaction reverts
 	b.index++
 
-	if result.Reverted() {
-		tx.Status = flow.TransactionReverted
-	} else {
-		tx.Status = flow.TransactionFinalized
-		tx.Events = result.Events
-
+	if result.Error == nil {
 		b.events = append(b.events, result.Events...)
 	}
+
+	b.transactionResults[tx.ID()] = result
 
 	return result, nil
 }
@@ -143,7 +164,7 @@ func (b *pendingBlock) ExecutionComplete() bool {
 
 // Size returns the number of transactions in the pending block.
 func (b *pendingBlock) Size() int {
-	return len(b.block.TransactionHashes)
+	return len(b.transactionIDs)
 }
 
 // Empty returns true if the pending block is empty.

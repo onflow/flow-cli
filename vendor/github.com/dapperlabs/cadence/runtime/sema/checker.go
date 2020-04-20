@@ -19,8 +19,8 @@ const ResultIdentifier = "result"
 var beforeType = func() *FunctionType {
 
 	typeParameter := &TypeParameter{
-		Name: "T",
-		Type: &AnyStructType{},
+		Name:      "T",
+		TypeBound: &AnyStructType{},
 	}
 
 	typeAnnotation := NewTypeAnnotation(
@@ -336,12 +336,33 @@ func (checker *Checker) VisitProgram(program *ast.Program) ast.Repr {
 
 	// Declare interface and composite types
 
+	registerInElaboration := func(ty Type) {
+		switch typedType := ty.(type) {
+		case *InterfaceType:
+			checker.Elaboration.InterfaceTypes[typedType.ID()] = typedType
+		case *CompositeType:
+			checker.Elaboration.CompositeTypes[typedType.ID()] = typedType
+		default:
+			panic(errors.NewUnreachableError())
+		}
+	}
+
 	for _, declaration := range program.InterfaceDeclarations() {
-		checker.declareInterfaceType(declaration)
+		interfaceType := checker.declareInterfaceType(declaration)
+
+		// NOTE: register types in elaboration
+		// *after* the full container chain is fully set up
+
+		VisitContainerAndNested(interfaceType, registerInElaboration)
 	}
 
 	for _, declaration := range program.CompositeDeclarations() {
-		checker.declareCompositeType(declaration)
+		compositeType := checker.declareCompositeType(declaration)
+
+		// NOTE: register types in elaboration
+		// *after* the full container chain is fully set up
+
+		VisitContainerAndNested(compositeType, registerInElaboration)
 	}
 
 	// Declare interfaces' and composites' members
@@ -844,13 +865,135 @@ func (checker *Checker) ConvertType(t ast.Type) Type {
 func (checker *Checker) convertRestrictedType(t *ast.RestrictedType) Type {
 	var restrictedType Type
 
+	// Convert the restricted type, if any
+
 	if t.Type != nil {
 		restrictedType = checker.ConvertType(t.Type)
-	} else {
-		restrictedType = &AnyResourceType{}
 	}
 
-	// The restricted type must be a concrete resource type or `AnyResource`
+	// Convert the restrictions
+
+	var restrictions []*InterfaceType
+	restrictionRanges := make(map[*InterfaceType]ast.Range, len(t.Restrictions))
+
+	memberSet := map[string]*InterfaceType{}
+
+	restrictionsCompositeKind := common.CompositeKindUnknown
+
+	for _, restriction := range t.Restrictions {
+		restrictionResult := checker.ConvertType(restriction)
+
+		// The restriction must be a resource or structure interface type
+
+		restrictionInterfaceType, ok := restrictionResult.(*InterfaceType)
+		restrictionCompositeKind := common.CompositeKindUnknown
+		if ok {
+			restrictionCompositeKind = restrictionInterfaceType.CompositeKind
+		}
+		if !ok || (restrictionCompositeKind != common.CompositeKindResource &&
+			restrictionCompositeKind != common.CompositeKindStructure) {
+
+			checker.report(
+				&InvalidRestrictionTypeError{
+					Type:  restrictionResult,
+					Range: ast.NewRangeFromPositioned(restriction),
+				},
+			)
+			continue
+		}
+
+		if restrictionsCompositeKind == common.CompositeKindUnknown {
+			restrictionsCompositeKind = restrictionCompositeKind
+
+		} else if restrictionCompositeKind != restrictionsCompositeKind {
+
+			checker.report(
+				&RestrictionCompositeKindMismatchError{
+					CompositeKind:         restrictionCompositeKind,
+					PreviousCompositeKind: restrictionsCompositeKind,
+					Range:                 ast.NewRangeFromPositioned(restriction),
+				},
+			)
+		}
+
+		restrictions = append(restrictions, restrictionInterfaceType)
+
+		// The restriction must not be duplicated
+
+		if _, exists := restrictionRanges[restrictionInterfaceType]; exists {
+			checker.report(
+				&InvalidRestrictionTypeDuplicateError{
+					Type:  restrictionInterfaceType,
+					Range: ast.NewRangeFromPositioned(restriction),
+				},
+			)
+		} else {
+			restrictionRanges[restrictionInterfaceType] =
+				ast.NewRangeFromPositioned(restriction)
+		}
+
+		// The restrictions may not have clashing members
+
+		// TODO: also include interface conformances's members
+		//   once interfaces can have conformances
+
+		for name := range restrictionInterfaceType.Members {
+			if previousDeclaringInterfaceType, ok := memberSet[name]; ok {
+
+				// If there is an overlap in members, ensure the members have the same type
+
+				memberType := restrictionInterfaceType.Members[name].TypeAnnotation.Type
+				previousMemberType := previousDeclaringInterfaceType.Members[name].TypeAnnotation.Type
+
+				if !memberType.IsInvalidType() &&
+					!previousMemberType.IsInvalidType() &&
+					!memberType.Equal(previousMemberType) {
+
+					checker.report(
+						&RestrictionMemberClashError{
+							Name:                  name,
+							RedeclaringType:       restrictionInterfaceType,
+							OriginalDeclaringType: previousDeclaringInterfaceType,
+							Range:                 ast.NewRangeFromPositioned(restriction),
+						},
+					)
+				}
+			} else {
+				memberSet[name] = restrictionInterfaceType
+			}
+		}
+	}
+
+	if restrictedType == nil {
+		// If no restricted type is given, infer `AnyResource`/`AnyStruct`
+		// based on the composite kind of the restrictions.
+
+		switch restrictionsCompositeKind {
+		case common.CompositeKindUnknown:
+			// If no restricted type is given, and also no restrictions,
+			// the type is ambiguous.
+
+			restrictedType = &InvalidType{}
+
+			checker.report(
+				&AmbiguousRestrictedTypeError{
+					Range: ast.NewRangeFromPositioned(t),
+				},
+			)
+
+		case common.CompositeKindResource:
+			restrictedType = &AnyResourceType{}
+
+		case common.CompositeKindStructure:
+			restrictedType = &AnyStructType{}
+
+		default:
+			panic(errors.NewUnreachableError())
+		}
+	}
+
+	// The restricted type must be a composite type
+	// or `AnyResource`/`AnyStruct`
 
 	reportInvalidRestrictedType := func() {
 		checker.report(
@@ -861,102 +1004,39 @@ func (checker *Checker) convertRestrictedType(t *ast.RestrictedType) Type {
 		)
 	}
 
-	var resourceType *CompositeType
+	var compositeType *CompositeType
 
 	switch typeResult := restrictedType.(type) {
 	case *CompositeType:
-		if typeResult.Kind == common.CompositeKindResource {
-			resourceType = typeResult
-		} else {
+
+		switch typeResult.Kind {
+
+		case common.CompositeKindResource,
+			common.CompositeKindStructure:
+
+			compositeType = typeResult
+
+		default:
 			reportInvalidRestrictedType()
 		}
 
-	case *AnyResourceType:
+	case *AnyResourceType, *AnyStructType, *AnyType:
 		break
 
 	default:
-		reportInvalidRestrictedType()
-	}
-
-	// Convert the restrictions
-
-	var restrictions []*InterfaceType
-	restrictionRanges := make(map[*InterfaceType]ast.Range, len(t.Restrictions))
-
-	memberSet := map[string]*InterfaceType{}
-
-	for _, restriction := range t.Restrictions {
-		restrictionResult := checker.ConvertType(restriction)
-
-		// The restriction must be a resource interface type
-
-		interfaceType, ok := restrictionResult.(*InterfaceType)
-		if !ok || interfaceType.CompositeKind != common.CompositeKindResource {
-			checker.report(
-				&InvalidRestrictionTypeError{
-					Type:  restrictionResult,
-					Range: ast.NewRangeFromPositioned(restriction),
-				},
-			)
-			continue
-		}
-
-		restrictions = append(restrictions, interfaceType)
-
-		// The restriction must not be duplicated
-
-		if _, exists := restrictionRanges[interfaceType]; exists {
-			checker.report(
-				&InvalidRestrictionTypeDuplicateError{
-					Type:  interfaceType,
-					Range: ast.NewRangeFromPositioned(restriction),
-				},
-			)
-		} else {
-			restrictionRanges[interfaceType] =
-				ast.NewRangeFromPositioned(restriction)
-		}
-
-		// The restrictions may not have clashing members
-
-		// TODO: also include interface conformances's members
-		//   once interfaces can have conformances
-
-		for name := range interfaceType.Members {
-			if previousDeclaringInterfaceType, ok := memberSet[name]; ok {
-
-				// If there is an overlap in members, ensure the members have the same type
-
-				memberType := interfaceType.Members[name].TypeAnnotation.Type
-				previousMemberType := previousDeclaringInterfaceType.Members[name].TypeAnnotation.Type
-
-				if !memberType.IsInvalidType() &&
-					!previousMemberType.IsInvalidType() &&
-					!memberType.Equal(previousMemberType) {
-
-					checker.report(
-						&RestrictionMemberClashError{
-							Name:                  name,
-							RedeclaringType:       interfaceType,
-							OriginalDeclaringType: previousDeclaringInterfaceType,
-							Range:                 ast.NewRangeFromPositioned(restriction),
-						},
-					)
-				}
-			} else {
-				memberSet[name] = interfaceType
-			}
+		if t.Type != nil {
+			reportInvalidRestrictedType()
 		}
 	}
 
-	// If the restricted type is a concrete resource type,
+	// If the restricted type is a composite type,
 	// check that the restrictions are conformances
 
-	if resourceType != nil && resourceType.Kind == common.CompositeKindResource {
+	if compositeType != nil {
 
-		// Prepare a set of all the conformances of the resource
+		// Prepare a set of all the conformances
 
-		allConformances := resourceType.AllConformances()
+		allConformances := compositeType.AllConformances()
 		conformancesSet := make(map[*InterfaceType]bool, len(allConformances))
 		for _, conformance := range allConformances {
 			conformancesSet[conformance] = true
@@ -964,7 +1044,7 @@ func (checker *Checker) convertRestrictedType(t *ast.RestrictedType) Type {
 
 		for _, restriction := range restrictions {
 			// The restriction must be an explicit or implicit conformance
-			// of the resource (restricted type)
+			// of the composite (restricted type)
 
 			if !conformancesSet[restriction] {
 				checker.report(
@@ -977,7 +1057,7 @@ func (checker *Checker) convertRestrictedType(t *ast.RestrictedType) Type {
 		}
 	}
 
-	return &RestrictedResourceType{
+	return &RestrictedType{
 		Type:         restrictedType,
 		Restrictions: restrictions,
 	}
@@ -985,17 +1065,6 @@ func (checker *Checker) convertRestrictedType(t *ast.RestrictedType) Type {
 
 func (checker *Checker) convertReferenceType(t *ast.ReferenceType) Type {
 	ty := checker.ConvertType(t.Type)
-
-	if !ty.IsInvalidType() &&
-		!ty.IsResourceType() {
-
-		checker.report(
-			&NonResourceReferenceTypeError{
-				ActualType: ty,
-				Range:      ast.NewRangeFromPositioned(t),
-			},
-		)
-	}
 
 	return &ReferenceType{
 		Authorized: t.Authorized,
@@ -1124,11 +1193,8 @@ func (checker *Checker) convertNominalType(t *ast.NominalType) Type {
 
 	for _, identifier := range t.NestedIdentifiers {
 		switch typedResult := result.(type) {
-		case *CompositeType:
-			result = typedResult.NestedTypes[identifier.Identifier]
-
-		case *InterfaceType:
-			result = typedResult.NestedTypes[identifier.Identifier]
+		case ContainerType:
+			result = typedResult.NestedTypes()[identifier.Identifier]
 
 		default:
 			if !typedResult.IsInvalidType() {
@@ -1439,20 +1505,24 @@ func (checker *Checker) checkWithInitializedMembers(
 	return check()
 }
 
-// checkAccessResourceLoss checks for a resource loss caused by an expression which is accessed
-// (indexed or member). This is basically any expression that does not have an identifier
-// as its "base" expression.
+// checkUnusedExpressionResourceLoss checks for a resource loss caused by an expression
+// which has a resource type, but will not be used after its evaluation,
+// i.e. implicitly dropped at this point.
 //
 // For example, function invocations, array literals, or dictionary literals will cause a resource loss
 // if the expression is accessed immediately: e.g.
 //   - `returnResource()[0]`
-//   - `[<-create R(), <-create R()][0]`,
-//   - `{"resource": <-create R()}.length`
+//   - `[<-create R(), <-create R()][0]`
+//   - in an equality binary expression: `f() != nil`
 //
-// Safe expressions are identifier expressions, an indexing expression into a safe expression,
+// Basically any expression that does not have an identifier as its "base" expression
+// will cause the resource to be lost.
+//
+// Safe expressions are identifier expressions,
+// an indexing expression into a safe expression,
 // or a member access on a safe expression.
 //
-func (checker *Checker) checkAccessResourceLoss(expressionType Type, expression ast.Expression) {
+func (checker *Checker) checkUnusedExpressionResourceLoss(expressionType Type, expression ast.Expression) {
 	if !expressionType.IsResourceType() {
 		return
 	}
@@ -1748,35 +1818,63 @@ func (checker *Checker) withSelfResourceInvalidationAllowed(f func()) {
 func (checker *Checker) predeclaredMembers(containerType Type) []*Member {
 	var predeclaredMembers []*Member
 
-	addPredeclaredMember := func(member *Member) {
-		member.Predeclared = true
-		predeclaredMembers = append(predeclaredMembers, member)
+	addPredeclaredMember := func(
+		identifier string,
+		fieldType Type,
+		access ast.Access,
+		ignoreInSerialization bool,
+	) {
+		predeclaredMembers = append(predeclaredMembers, &Member{
+			ContainerType:         containerType,
+			Access:                access,
+			Identifier:            ast.Identifier{Identifier: identifier},
+			DeclarationKind:       common.DeclarationKindField,
+			VariableKind:          ast.VariableKindConstant,
+			TypeAnnotation:        NewTypeAnnotation(fieldType),
+			Predeclared:           true,
+			IgnoreInSerialization: ignoreInSerialization,
+		})
 	}
 
 	if compositeKindedType, ok := containerType.(CompositeKindedType); ok {
 
 		switch compositeKindedType.GetCompositeKind() {
 		case common.CompositeKindContract:
-			// Contracts have a predeclared private field `priv let account: AuthAccount`
 
-			member := NewPublicConstantFieldMember(
-				containerType,
+			// `priv let account: AuthAccount`,
+			// ignored in serialization
+
+			addPredeclaredMember(
 				"account",
 				&AuthAccountType{},
+				ast.AccessPrivate,
+				true,
 			)
-			member.Access = ast.AccessPrivate
-			addPredeclaredMember(member)
 
 		case common.CompositeKindResource:
-			// Resources have a predeclared field `pub let owner: PublicAccount?`
+			// Resources have two predeclared fields:
 
-			addPredeclaredMember(NewPublicConstantFieldMember(
-				containerType,
+			// `pub let owner: PublicAccount?`,
+			// ignored in serialization
+
+			addPredeclaredMember(
 				"owner",
 				&OptionalType{
 					Type: &PublicAccountType{},
 				},
-			))
+				ast.AccessPublic,
+				true,
+			)
+
+			// `pub let uuid: UInt64`,
+			// included in serialization
+
+			addPredeclaredMember(
+				"uuid",
+				&UInt64Type{},
+				ast.AccessPublic,
+				false,
+			)
 		}
 	}
 
@@ -1889,9 +1987,9 @@ func (checker *Checker) checkTypeAnnotation(typeAnnotation *TypeAnnotation, pos 
 		)
 	}
 
-	if typeAnnotation.Type.ContainsFirstLevelResourceInterfaceType() {
+	if typeAnnotation.Type.ContainsFirstLevelInterfaceType() {
 		checker.report(
-			&InvalidResourceInterfaceTypeError{
+			&InvalidInterfaceTypeError{
 				Type: typeAnnotation.Type,
 				Range: ast.Range{
 					StartPos: pos.StartPosition(),

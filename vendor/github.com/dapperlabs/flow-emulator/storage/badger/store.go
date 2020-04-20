@@ -5,8 +5,8 @@ import (
 	"fmt"
 
 	"github.com/dapperlabs/flow-go-sdk"
-	"github.com/dapperlabs/flow-go/crypto"
-	"github.com/dgraph-io/badger"
+	model "github.com/dapperlabs/flow-go/model/flow"
+	"github.com/dgraph-io/badger/v2"
 
 	"github.com/dapperlabs/flow-emulator/storage"
 	"github.com/dapperlabs/flow-emulator/types"
@@ -77,52 +77,51 @@ func (s *Store) setup() error {
 	})
 }
 
-func (s *Store) BlockByHash(blockHash crypto.Hash) (block types.Block, err error) {
-
-	err = s.db.View(func(txn *badger.Txn) error {
-		// get block number by block hash
-		encBlockNumber, err := getTx(txn)(blockHashIndexKey(blockHash))
-		if err != nil {
-			return err
-		}
-
-		// decode block number
-		var blockNumber uint64
-		if err := decodeUint64(&blockNumber, encBlockNumber); err != nil {
-			return err
-		}
-
-		// get block by block number and decode
-		encBlock, err := getTx(txn)(blockKey(blockNumber))
-		if err != nil {
-			return err
-		}
-		return decodeBlock(&block, encBlock)
-	})
-	return
-}
-
-func (s *Store) BlockByNumber(blockNumber uint64) (block types.Block, err error) {
-	err = s.db.View(func(txn *badger.Txn) error {
-		encBlock, err := getTx(txn)(blockKey(blockNumber))
-		if err != nil {
-			return err
-		}
-		return decodeBlock(&block, encBlock)
-	})
-	return
-}
-
 func (s *Store) LatestBlock() (block types.Block, err error) {
 	err = s.db.View(func(txn *badger.Txn) error {
-		// get latest block number
-		latestBlockNumber, err := getLatestBlockNumberTx(txn)
+		// get latest block height
+		latestBlockHeight, err := getLatestBlockHeightTx(txn)
 		if err != nil {
 			return err
 		}
 
 		// get corresponding block
-		encBlock, err := getTx(txn)(blockKey(latestBlockNumber))
+		encBlock, err := getTx(txn)(blockKey(latestBlockHeight))
+		if err != nil {
+			return err
+		}
+		return decodeBlock(&block, encBlock)
+	})
+	return
+}
+
+func (s *Store) BlockByID(blockID flow.Identifier) (block types.Block, err error) {
+	err = s.db.View(func(txn *badger.Txn) error {
+		// get block height by block ID
+		encBlockHeight, err := getTx(txn)(blockIDIndexKey(blockID))
+		if err != nil {
+			return err
+		}
+
+		// decode block height
+		var blockHeight uint64
+		if err := decodeUint64(&blockHeight, encBlockHeight); err != nil {
+			return err
+		}
+
+		// get block by block height and decode
+		encBlock, err := getTx(txn)(blockKey(blockHeight))
+		if err != nil {
+			return err
+		}
+		return decodeBlock(&block, encBlock)
+	})
+	return
+}
+
+func (s *Store) BlockByHeight(blockHeight uint64) (block types.Block, err error) {
+	err = s.db.View(func(txn *badger.Txn) error {
+		encBlock, err := getTx(txn)(blockKey(blockHeight))
 		if err != nil {
 			return err
 		}
@@ -141,61 +140,85 @@ func insertBlock(block types.Block) func(txn *badger.Txn) error {
 		if err != nil {
 			return err
 		}
-		encBlockNumber, err := encodeUint64(block.Number)
+		encBlockHeight, err := encodeUint64(block.Height)
 		if err != nil {
 			return err
 		}
 
-		// get latest block number
-		latestBlockNumber, err := getLatestBlockNumberTx(txn)
-		if err != nil && !errors.Is(err, storage.ErrNotFound{}) {
+		// get latest block height
+		latestBlockHeight, err := getLatestBlockHeightTx(txn)
+		if err != nil && !errors.Is(err, storage.ErrNotFound) {
 			return err
 		}
 
-		// insert the block by block number
-		if err := txn.Set(blockKey(block.Number), encBlock); err != nil {
+		// insert the block by block height
+		if err := txn.Set(blockKey(block.Height), encBlock); err != nil {
 			return err
 		}
-		// add block hash to hash->number lookup
-		if err := txn.Set(blockHashIndexKey(block.Hash()), encBlockNumber); err != nil {
+		// add block ID to ID->height lookup
+		if err := txn.Set(blockIDIndexKey(block.ID()), encBlockHeight); err != nil {
 			return err
 		}
 
 		// if this is latest block, set latest block
-		if block.Number >= latestBlockNumber {
-			return txn.Set(latestBlockKey(), encBlockNumber)
+		if block.Height >= latestBlockHeight {
+			return txn.Set(latestBlockKey(), encBlockHeight)
 		}
 
 		return nil
 	}
 }
 
-func (s Store) CommitBlock(
-	block types.Block,
-	transactions []flow.Transaction,
+func (s *Store) CommitBlock(
+	block *types.Block,
+	collections []*model.LightCollection,
+	transactions map[flow.Identifier]*flow.Transaction,
+	transactionResults map[flow.Identifier]*types.StorableTransactionResult,
 	delta types.LedgerDelta,
 	events []flow.Event,
 ) (err error) {
+	if len(transactions) != len(transactionResults) {
+		return fmt.Errorf(
+			"transactions count (%d) does not match result count (%d)",
+			len(transactions),
+			len(transactionResults),
+		)
+	}
+
 	err = s.db.Update(func(txn *badger.Txn) error {
-		err := insertBlock(block)(txn)
+		err := insertBlock(*block)(txn)
 		if err != nil {
 			return err
 		}
 
-		for _, tx := range transactions {
-			err := insertTransaction(tx)(txn)
+		for _, col := range collections {
+			err := insertCollection(*col)(txn)
 			if err != nil {
 				return err
 			}
 		}
 
-		err = s.insertLedgerDelta(block.Number, delta)(txn)
+		for txID, tx := range transactions {
+			err := insertTransaction(txID, *tx)(txn)
+			if err != nil {
+				return err
+			}
+		}
+
+		for txID, result := range transactionResults {
+			err := insertTransactionResult(txID, *result)(txn)
+			if err != nil {
+				return err
+			}
+		}
+
+		err = s.insertLedgerDelta(block.Height, delta)(txn)
 		if err != nil {
 			return err
 		}
 
 		if events != nil {
-			err = insertEvents(block.Number, events)(txn)
+			err = insertEvents(block.Height, events)(txn)
 			if err != nil {
 				return err
 			}
@@ -207,9 +230,35 @@ func (s Store) CommitBlock(
 	return err
 }
 
-func (s *Store) TransactionByHash(txHash crypto.Hash) (tx flow.Transaction, err error) {
+func (s *Store) CollectionByID(colID flow.Identifier) (col model.LightCollection, err error) {
 	err = s.db.View(func(txn *badger.Txn) error {
-		encTx, err := getTx(txn)(transactionKey(txHash))
+		encCol, err := getTx(txn)(collectionKey(colID))
+		if err != nil {
+			return err
+		}
+		return decodeCollection(&col, encCol)
+	})
+	return
+}
+
+func (s *Store) InsertCollection(col model.LightCollection) error {
+	return s.db.Update(insertCollection(col))
+}
+
+func insertCollection(col model.LightCollection) func(txn *badger.Txn) error {
+	return func(txn *badger.Txn) error {
+		encCol, err := encodeCollection(col)
+		if err != nil {
+			return err
+		}
+
+		return txn.Set(collectionKey(flow.Identifier(col.ID())), encCol)
+	}
+}
+
+func (s *Store) TransactionByID(txID flow.Identifier) (tx flow.Transaction, err error) {
+	err = s.db.View(func(txn *badger.Txn) error {
+		encTx, err := getTx(txn)(transactionKey(txID))
 		if err != nil {
 			return err
 		}
@@ -219,26 +268,52 @@ func (s *Store) TransactionByHash(txHash crypto.Hash) (tx flow.Transaction, err 
 }
 
 func (s *Store) InsertTransaction(tx flow.Transaction) error {
-	return s.db.Update(insertTransaction(tx))
+	return s.db.Update(insertTransaction(tx.ID(), tx))
 }
 
-func insertTransaction(tx flow.Transaction) func(txn *badger.Txn) error {
+func insertTransaction(txID flow.Identifier, tx flow.Transaction) func(txn *badger.Txn) error {
 	return func(txn *badger.Txn) error {
 		encTx, err := encodeTransaction(tx)
 		if err != nil {
 			return err
 		}
 
-		return txn.Set(transactionKey(tx.Hash()), encTx)
+		return txn.Set(transactionKey(txID), encTx)
 	}
 }
 
-func (s *Store) LedgerViewByNumber(blockNumber uint64) *types.LedgerView {
+func (s *Store) TransactionResultByID(txID flow.Identifier) (result types.StorableTransactionResult, err error) {
+	err = s.db.View(func(txn *badger.Txn) error {
+		encResult, err := getTx(txn)(transactionResultKey(txID))
+		if err != nil {
+			return err
+		}
+		return decodeTransactionResult(&result, encResult)
+	})
+	return
+}
+
+func (s *Store) InsertTransactionResult(txID flow.Identifier, result types.StorableTransactionResult) error {
+	return s.db.Update(insertTransactionResult(txID, result))
+}
+
+func insertTransactionResult(txID flow.Identifier, result types.StorableTransactionResult) func(txn *badger.Txn) error {
+	return func(txn *badger.Txn) error {
+		encResult, err := encodeTransactionResult(result)
+		if err != nil {
+			return err
+		}
+
+		return txn.Set(transactionResultKey(txID), encResult)
+	}
+}
+
+func (s *Store) LedgerViewByHeight(blockHeight uint64) *types.LedgerView {
 	return types.NewLedgerView(func(key string) (value []byte, err error) {
 		s.ledgerChangeLog.RLock()
 		defer s.ledgerChangeLog.RUnlock()
 
-		lastChangedBlock := s.ledgerChangeLog.getMostRecentChange(key, blockNumber)
+		lastChangedBlock := s.ledgerChangeLog.getMostRecentChange(key, blockHeight)
 
 		err = s.db.View(func(txn *badger.Txn) error {
 			value, err = getTx(txn)(ledgerValueKey(key, lastChangedBlock))
@@ -250,7 +325,7 @@ func (s *Store) LedgerViewByNumber(blockNumber uint64) *types.LedgerView {
 
 		if err != nil {
 			// silence not found errors
-			if errors.Is(err, storage.ErrNotFound{}) {
+			if errors.Is(err, storage.ErrNotFound) {
 				return nil, nil
 			}
 
@@ -261,11 +336,11 @@ func (s *Store) LedgerViewByNumber(blockNumber uint64) *types.LedgerView {
 	})
 }
 
-func (s *Store) InsertLedgerDelta(blockNumber uint64, delta types.LedgerDelta) error {
-	return s.db.Update(s.insertLedgerDelta(blockNumber, delta))
+func (s *Store) InsertLedgerDelta(blockHeight uint64, delta types.LedgerDelta) error {
+	return s.db.Update(s.insertLedgerDelta(blockHeight, delta))
 }
 
-func (s *Store) insertLedgerDelta(blockNumber uint64, delta types.LedgerDelta) func(txn *badger.Txn) error {
+func (s *Store) insertLedgerDelta(blockHeight uint64, delta types.LedgerDelta) func(txn *badger.Txn) error {
 	return func(txn *badger.Txn) error {
 		s.ledgerChangeLog.Lock()
 		defer s.ledgerChangeLog.Unlock()
@@ -273,7 +348,7 @@ func (s *Store) insertLedgerDelta(blockNumber uint64, delta types.LedgerDelta) f
 		for registerID, value := range delta.Updates() {
 			if value != nil {
 				// if register has an updated value, write it at this block
-				err := txn.Set(ledgerValueKey(registerID, blockNumber), value)
+				err := txn.Set(ledgerValueKey(registerID, blockHeight), value)
 				if err != nil {
 					return err
 				}
@@ -283,7 +358,7 @@ func (s *Store) insertLedgerDelta(blockNumber uint64, delta types.LedgerDelta) f
 			// and keep value as nil
 
 			// update the in-memory changelog
-			s.ledgerChangeLog.addChange(registerID, blockNumber)
+			s.ledgerChangeLog.addChange(registerID, blockHeight)
 
 			// encode and write the changelist for the register to disk
 			encChangelist, err := encodeChangelist(s.ledgerChangeLog.getChangelist(registerID))
@@ -297,70 +372,77 @@ func (s *Store) insertLedgerDelta(blockNumber uint64, delta types.LedgerDelta) f
 		}
 		return nil
 	}
-
-	return nil
 }
 
-func (s *Store) RetrieveEvents(eventType string, startBlock, endBlock uint64) (events []flow.Event, err error) {
-	// set up an iterator over all events
+func (s *Store) EventsByHeight(blockHeight uint64, eventType string) (events []flow.Event, err error) {
+	// set up an iterator over all events in the block
 	iterOpts := badger.DefaultIteratorOptions
-	iterOpts.Prefix = []byte(eventsKeyPrefix)
+	iterOpts.Prefix = eventKeyBlockPrefix(blockHeight)
+
+	eventTypeBytes := []byte(eventType)
 
 	err = s.db.View(func(txn *badger.Txn) error {
 		iter := txn.NewIterator(iterOpts)
 		defer iter.Close()
-		// create a buffer for copying events, this is reused for each block
-		eventBuf := make([]byte, 256)
 
-		// seek the iterator to the start block before the loop
-		iter.Seek(eventsKey(startBlock))
-		for ; iter.Valid(); iter.Next() {
+		// start from lowest possible event key for this block
+		startKey := eventKey(blockHeight, 0, 0, "")
+
+		// iteration happens in byte-wise lexicographical sorting order
+		for iter.Seek(startKey); iter.Valid(); iter.Next() {
 			item := iter.Item()
-			// ensure the events are within the block number range
-			blockNumber := blockNumberFromEventsKey(item.Key())
-			if blockNumber < startBlock || blockNumber > endBlock {
-				break
+
+			// filter by event type if specified
+			if eventType != "" {
+				if !eventKeyHasType(item.Key(), eventTypeBytes) {
+					continue
+				}
 			}
 
-			// decode the events from this block
-			encEvents, err := item.ValueCopy(eventBuf)
+			err = item.Value(func(b []byte) error {
+				var event flow.Event
+
+				err := decodeEvent(&event, b)
+				if err != nil {
+					return err
+				}
+
+				events = append(events, event)
+
+				return nil
+			})
 			if err != nil {
 				return err
 			}
-			var blockEvents []flow.Event
-			if err := decodeEvents(&blockEvents, encEvents); err != nil {
-				return err
-			}
-
-			if eventType == "" {
-				// if no type filter specified, add all block events
-				events = append(events, blockEvents...)
-			} else {
-				// otherwise filter by event type
-				for _, event := range blockEvents {
-					if event.Type == eventType {
-						events = append(events, event)
-					}
-				}
-			}
 		}
+
 		return nil
 	})
+
 	return
 }
 
-func (s *Store) InsertEvents(blockNumber uint64, events []flow.Event) error {
-	return s.db.Update(insertEvents(blockNumber, events))
+func (s *Store) InsertEvents(blockHeight uint64, events []flow.Event) error {
+	return s.db.Update(insertEvents(blockHeight, events))
 }
 
-func insertEvents(blockNumber uint64, events []flow.Event) func(txn *badger.Txn) error {
+func insertEvents(blockHeight uint64, events []flow.Event) func(txn *badger.Txn) error {
 	return func(txn *badger.Txn) error {
-		encEvents, err := encodeEvents(events)
-		if err != nil {
-			return err
+		for _, event := range events {
+			b, err := encodeEvent(event)
+			if err != nil {
+				return err
+			}
+
+			key := eventKey(blockHeight, event.TransactionIndex, event.EventIndex, event.Type)
+
+			err = txn.Set(key, b)
+			if err != nil {
+				return err
+			}
 		}
 
-		return txn.Set(eventsKey(blockNumber), encEvents)
+		return nil
 	}
 }
 
@@ -389,7 +471,7 @@ func getTx(txn *badger.Txn) func([]byte) ([]byte, error) {
 		item, err := txn.Get(key)
 		if err != nil {
 			if errors.Is(err, badger.ErrKeyNotFound) {
-				return nil, storage.ErrNotFound{}
+				return nil, storage.ErrNotFound
 			}
 			return nil, err
 		}
@@ -399,18 +481,18 @@ func getTx(txn *badger.Txn) func([]byte) ([]byte, error) {
 	}
 }
 
-// getLatestBlockNumberTx retrieves the latest block number and returns it.
+// getLatestBlockHeightTx retrieves the latest block height and returns it.
 // Must be called from within a Badger transaction.
-func getLatestBlockNumberTx(txn *badger.Txn) (uint64, error) {
-	encBlockNumber, err := getTx(txn)(latestBlockKey())
+func getLatestBlockHeightTx(txn *badger.Txn) (uint64, error) {
+	encBlockHeight, err := getTx(txn)(latestBlockKey())
 	if err != nil {
 		return 0, err
 	}
 
-	var blockNumber uint64
-	if err := decodeUint64(&blockNumber, encBlockNumber); err != nil {
+	var blockHeight uint64
+	if err := decodeUint64(&blockHeight, encBlockHeight); err != nil {
 		return 0, err
 	}
 
-	return blockNumber, nil
+	return blockHeight, nil
 }

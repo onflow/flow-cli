@@ -25,8 +25,8 @@ func (c changelist) Less(i, j int) bool { return c.blocks[i] < c.blocks[j] }
 
 func (c changelist) Swap(i, j int) { c.blocks[i], c.blocks[j] = c.blocks[j], c.blocks[i] }
 
-// search finds the highest block number B in the changelist so that B<=n.
-// Returns notFound if no such block number exists. This relies on the fact
+// search finds the highest block height B in the changelist so that B<=n.
+// Returns notFound if no such block height exists. This relies on the fact
 // that the changelist is kept sorted in ascending order.
 func (c changelist) search(n uint64) uint64 {
 	index := c.searchForIndex(n)
@@ -36,27 +36,27 @@ func (c changelist) search(n uint64) uint64 {
 	return c.blocks[index]
 }
 
-// searchForIndex finds the index of the highest block number B in the
-// changelist so that B<=n. Returns -1 if no such block number exists. This
+// searchForIndex finds the index of the highest block height B in the
+// changelist so that B<=n. Returns -1 if no such block height exists. This
 // relies on the fact that the changelist is kept sorted in ascending order.
 func (c changelist) searchForIndex(n uint64) (index int) {
 	if len(c.blocks) == 0 {
 		return -1
 	}
-	// This will return the lowest index where the block number is >n.
+	// This will return the lowest index where the block height is >n.
 	// What we want is the index directly BEFORE this.
 	foundIndex := sort.Search(c.Len(), func(i int) bool {
 		return c.blocks[i] > n
 	})
 
 	if foundIndex == 0 {
-		// All block numbers are >n.
+		// All block heights are >n.
 		return -1
 	}
 	return foundIndex - 1
 }
 
-// add adds the block number to the list, ensuring the list remains sorted. If
+// add adds the block height to the list, ensuring the list remains sorted. If
 // n already exists in the list, this is a no-op.
 func (c *changelist) add(n uint64) {
 	if n == notFound {
@@ -70,25 +70,25 @@ func (c *changelist) add(n uint64) {
 		return
 	}
 
-	lastBlockNumber := c.blocks[index]
-	if lastBlockNumber == n {
+	lastBlockHeight := c.blocks[index]
+	if lastBlockHeight == n {
 		// n already exists in the list
 		return
 	}
 
-	// insert n directly after lastBlockNumber
+	// insert n directly after lastBlockHeight
 	c.blocks = append(c.blocks[:index+1], append([]uint64{n}, c.blocks[index+1:]...)...)
 }
 
 // The changelog describes the change history of each register in a ledger.
-// For each register, the changelog contains a list of all the block numbers at
+// For each register, the changelog contains a list of all the block heights at
 // which the register's value changed. This enables quick lookups of the latest
 // register state change for a given block.
 //
 // Users of the changelog are responsible for acquiring the mutex before
 // reads and writes.
 type changelog struct {
-	// Maps register IDs to an ordered slice of all the block numbers at which
+	// Maps register IDs to an ordered slice of all the block heights at which
 	// the register value changed.
 	registers map[string]changelist
 	// Guards the register list from concurrent writes.
@@ -103,15 +103,15 @@ func newChangelog() changelog {
 	}
 }
 
-// getMostRecentChange returns the most recent block number at which the
+// getMostRecentChange returns the most recent block height at which the
 // register with the given ID changed value.
-func (c changelog) getMostRecentChange(registerID string, blockNumber uint64) uint64 {
+func (c changelog) getMostRecentChange(registerID string, blockHeight uint64) uint64 {
 	clist, ok := c.registers[registerID]
 	if !ok {
 		return notFound
 	}
 
-	return clist.search(blockNumber)
+	return clist.search(blockHeight)
 }
 
 // changelists returns an exhaustive list of changelists keyed by register ID.
@@ -136,8 +136,8 @@ func (c changelog) setChangelist(registerID string, clist changelist) {
 // this is a no-op.
 //
 // If the changelist doesn't exist, it is created.
-func (c *changelog) addChange(registerID string, blockNumber uint64) {
+func (c *changelog) addChange(registerID string, blockHeight uint64) {
 	clist := c.registers[registerID]
-	clist.add(blockNumber)
+	clist.add(blockHeight)
 	c.registers[registerID] = clist
 }

@@ -1,8 +1,6 @@
 package storage
 
-// ErrNotFound is an error returned when a resource cannot be found.
-type ErrNotFound struct{}
+import "errors"
 
-func (e ErrNotFound) Error() string {
-	return "emulator/store: could not find resource"
-}
+// ErrNotFound is an error returned when an entity cannot be found.
+var ErrNotFound = errors.New("could not find entity")
