@@ -23,5 +23,4 @@ var Cmd = &cobra.Command{
 func init() {
 	Cmd.AddCommand(languageserver.Cmd)
 	Cmd.AddCommand(vscode.Cmd)
-	//Cmd.AddCommand(abi.Cmd)
 }
