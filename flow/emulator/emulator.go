@@ -2,8 +2,6 @@ package emulator
 
 import (
 	"github.com/spf13/cobra"
-
-	"github.com/dapperlabs/flow-cli/flow/emulator/start"
 )
 
 var Cmd = &cobra.Command{
@@ -13,5 +11,5 @@ var Cmd = &cobra.Command{
 }
 
 func init() {
-	Cmd.AddCommand(start.Cmd)
+	// Cmd.AddCommand(start.Cmd)
 }

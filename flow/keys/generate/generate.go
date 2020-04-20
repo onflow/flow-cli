@@ -1,11 +1,11 @@
 package generate
 
 import (
+	"encoding/hex"
 	"fmt"
 	"log"
 
-	"github.com/dapperlabs/flow-go-sdk/keys"
-	"github.com/dapperlabs/flow-go/crypto"
+	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/psiemens/sconfig"
 	"github.com/spf13/cobra"
 
@@ -24,24 +24,20 @@ var Cmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		var seed []byte
 		if conf.Seed == "" {
-			seed = cli.RandomSeed(crypto.KeyGenSeedMinLenECDSA_P256)
+			seed = cli.RandomSeed(crypto.MinSeedLengthECDSA_P256)
 		} else {
 			seed = []byte(conf.Seed)
 		}
 
-		privateKey, err := keys.GeneratePrivateKey(keys.ECDSA_P256_SHA3_256, seed)
+		privateKey, err := crypto.GeneratePrivateKey(crypto.MinSeedLengthECDSA_P256, seed)
 		if err != nil {
 			cli.Exitf(1, "Failed to generate private key: %v", err)
 		}
 
-		prKeyBytes, err := keys.EncodePrivateKey(privateKey)
-		if err != nil {
-			fmt.Printf("Failed to encode private key\n")
-			return
-		}
+		prKeyBytes := privateKey.Encode()
 
 		fmt.Printf("Generated a new private key:\n")
-		fmt.Printf("%x\n", prKeyBytes)
+		fmt.Println(hex.EncodeToString(prKeyBytes))
 	},
 }
 
