@@ -26,9 +26,9 @@ func configuredRootKey(init bool) (crypto.PrivateKey, crypto.SignatureAlgorithm,
 
 		fmt.Printf("⚙️   Flow client initialized with root account:\n\n")
 		fmt.Printf("👤  Address: 0x%s\n", rootAcct.Address)
+	} else {
+		rootAcct = cli.LoadConfig().RootAccount()
 	}
-
-	rootAcct = cli.LoadConfig().RootAccount()
 
 	return rootAcct.PrivateKey, rootAcct.SigAlgo, rootAcct.HashAlgo
 }
