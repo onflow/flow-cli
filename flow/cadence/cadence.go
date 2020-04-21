@@ -1,7 +1,7 @@
 package cadence
 
 import (
-	"github.com/dapperlabs/cadence/runtime/cmd/execute"
+	"github.com/onflow/cadence/runtime/cmd/execute"
 	"github.com/spf13/cobra"
 
 	"github.com/dapperlabs/flow-cli/flow/cadence/languageserver"
