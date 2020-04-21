@@ -1,9 +1,9 @@
 package server
 
 import (
-	"encoding/hex"
 	"time"
 
+	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/pkg/errors"
 	"github.com/psiemens/graceland"
 	"github.com/sirupsen/logrus"
@@ -12,7 +12,6 @@ import (
 	"github.com/dapperlabs/flow-emulator/storage"
 	"github.com/dapperlabs/flow-emulator/storage/badger"
 	"github.com/dapperlabs/flow-emulator/storage/memstore"
-	"github.com/dapperlabs/flow-go-sdk"
 )
 
 // EmulatorServer is a local server that runs a Flow Emulator instance.
@@ -55,13 +54,15 @@ var (
 
 // Config is the configuration for an emulator server.
 type Config struct {
-	GRPCPort       int
-	GRPCDebug      bool
-	HTTPPort       int
-	HTTPHeaders    []HTTPHeader
-	BlockTime      time.Duration
-	RootAccountKey *flow.AccountPrivateKey
-	Persist        bool
+	GRPCPort        int
+	GRPCDebug       bool
+	HTTPPort        int
+	HTTPHeaders     []HTTPHeader
+	BlockTime       time.Duration
+	RootPublicKey   crypto.PublicKey
+	RootKeySigAlgo  crypto.SignatureAlgorithm
+	RootKeyHashAlgo crypto.HashAlgorithm
+	Persist         bool
 	// DBPath is the path to the Badger database on disk
 	DBPath string
 	// LivenessCheckTolerance is the tolerance level of the liveness check
@@ -71,7 +72,6 @@ type Config struct {
 
 // NewEmulatorServer creates a new instance of a Flow Emulator server.
 func NewEmulatorServer(logger *logrus.Logger, conf *Config) *EmulatorServer {
-
 	conf = sanitizeConfig(conf)
 
 	store, closeStore, err := configureStore(logger, conf)
@@ -111,17 +111,6 @@ func NewEmulatorServer(logger *logrus.Logger, conf *Config) *EmulatorServer {
 	if conf.BlockTime > 0 {
 		server.blocksTicker = NewBlocksTicker(backend, conf.BlockTime)
 	}
-
-	address := blockchain.RootAccountAddress()
-	prKey := blockchain.RootKey()
-	prKeyBytes, _ := prKey.PrivateKey.PrivateKey.Encode()
-
-	logger.WithFields(logrus.Fields{
-		"address":       address.Hex(),
-		"prKey":         hex.EncodeToString(prKeyBytes),
-		"prKeySigAlgo":  prKey.AccountKey().SignAlgo.String(),
-		"prKeyHashAlgo": prKey.AccountKey().HashAlgo.String(),
-	}).Infof("⚙️   Using root account 0x%s", address.Hex())
 
 	return server
 }
@@ -209,8 +198,11 @@ func configureBlockchain(conf *Config, store storage.Store) (*emulator.Blockchai
 		emulator.WithStore(store),
 	}
 
-	if conf.RootAccountKey != nil {
-		options = append(options, emulator.WithRootAccountKey(*conf.RootAccountKey))
+	if conf.RootPublicKey != (crypto.PublicKey{}) {
+		options = append(
+			options,
+			emulator.WithRootPublicKey(conf.RootPublicKey, conf.RootKeySigAlgo, conf.RootKeyHashAlgo),
+		)
 	}
 
 	blockchain, err := emulator.NewBlockchain(options...)

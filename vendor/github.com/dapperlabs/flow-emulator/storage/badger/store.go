@@ -4,9 +4,9 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/dapperlabs/flow-go-sdk"
 	model "github.com/dapperlabs/flow-go/model/flow"
 	"github.com/dgraph-io/badger/v2"
+	"github.com/onflow/flow-go-sdk"
 
 	"github.com/dapperlabs/flow-emulator/storage"
 	"github.com/dapperlabs/flow-emulator/types"

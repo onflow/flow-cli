@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/dapperlabs/flow-go-sdk"
 	vm "github.com/dapperlabs/flow-go/engine/execution/computation/virtualmachine"
 	model "github.com/dapperlabs/flow-go/model/flow"
+	"github.com/onflow/flow-go-sdk"
 
 	"github.com/dapperlabs/flow-emulator/storage"
 	"github.com/dapperlabs/flow-emulator/types"

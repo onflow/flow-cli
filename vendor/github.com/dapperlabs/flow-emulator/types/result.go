@@ -1,6 +1,6 @@
 package types
 
-import "github.com/dapperlabs/flow-go-sdk"
+import "github.com/onflow/flow-go-sdk"
 
 type StorableTransactionResult struct {
 	ErrorCode    int

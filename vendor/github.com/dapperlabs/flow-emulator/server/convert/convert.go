@@ -2,7 +2,7 @@ package convert
 
 import (
 	model "github.com/dapperlabs/flow-go/model/flow"
-	"github.com/dapperlabs/flow/protobuf/go/flow/entities"
+	"github.com/onflow/flow/protobuf/go/flow/entities"
 
 	"github.com/dapperlabs/flow-emulator/types"
 )

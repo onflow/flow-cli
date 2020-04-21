@@ -4,9 +4,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/dapperlabs/flow-go-sdk"
-	"github.com/dapperlabs/flow-go-sdk/keys"
-	"github.com/dapperlabs/flow-go/crypto"
+	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/psiemens/sconfig"
 	"github.com/spf13/cobra"
 
@@ -14,8 +12,10 @@ import (
 )
 
 type Config struct {
-	RootKey string `flag:"root-key,k" info:"root account key"`
-	Reset   bool   `default:"false" flag:"reset" info:"reset flow.json config file"`
+	RootPrivateKey  string `flag:"root-priv-key" info:"root account private key"`
+	RootKeySigAlgo  string `default:"ECDSA_P256" flag:"root-sig-algo" info:"root account key signature algorithm"`
+	RootKeyHashAlgo string `default:"SHA3_256" flag:"root-hash-algo" info:"root account key hash algorithm"`
+	Reset           bool   `default:"false" flag:"reset" info:"reset flow.json config file"`
 }
 
 var (
@@ -28,9 +28,11 @@ var Cmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		if !cli.ConfigExists() || conf.Reset {
 			var pconf *cli.Config
-			if len(conf.RootKey) > 0 {
-				rootKey := cli.MustDecodeAccountPrivateKeyHex(conf.RootKey)
-				pconf = InitProjectWithRootKey(rootKey)
+			if len(conf.RootPrivateKey) > 0 {
+				rootKeySigAlgo := crypto.StringToSignatureAlgorithm(conf.RootKeySigAlgo)
+				rootKeyHashAlgo := crypto.StringToHashAlgorithm(conf.RootKeyHashAlgo)
+				rootKey := cli.MustDecodePrivateKeyHex(rootKeySigAlgo, conf.RootPrivateKey)
+				pconf = InitProjectWithRootKey(rootKey, rootKeyHashAlgo)
 			} else {
 				pconf = InitProject()
 			}
@@ -47,21 +49,21 @@ var Cmd = &cobra.Command{
 
 // InitProject generates a new root key and saves project config.
 func InitProject() *cli.Config {
-	seed := cli.RandomSeed(crypto.KeyGenSeedMinLenECDSA_P256)
+	seed := cli.RandomSeed(crypto.MinSeedLengthECDSA_P256)
 
-	rootKey, err := keys.GeneratePrivateKey(keys.ECDSA_P256_SHA3_256, seed)
+	rootKey, err := crypto.GeneratePrivateKey(crypto.ECDSA_P256, seed)
 	if err != nil {
 		cli.Exitf(1, "Failed to generate private key: %v", err)
 	}
 
-	return InitProjectWithRootKey(rootKey)
+	return InitProjectWithRootKey(rootKey, crypto.SHA3_256)
 }
 
 // InitProjectWithRootKey creates and saves a new project config
 // using the specified root key.
-func InitProjectWithRootKey(rootKey flow.AccountPrivateKey) *cli.Config {
+func InitProjectWithRootKey(privateKey crypto.PrivateKey, hashAlgo crypto.HashAlgorithm) *cli.Config {
 	pconf := cli.NewConfig()
-	pconf.SetRootAccount(rootKey)
+	pconf.SetRootAccountKey(privateKey, hashAlgo)
 	cli.MustSaveConfig(pconf)
 	return pconf
 }

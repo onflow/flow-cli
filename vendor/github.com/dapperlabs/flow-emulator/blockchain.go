@@ -15,13 +15,11 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/dapperlabs/cadence/runtime"
-	"github.com/dapperlabs/flow-go-sdk"
-	sdkcrypto "github.com/dapperlabs/flow-go-sdk/crypto"
-	"github.com/dapperlabs/flow-go-sdk/keys"
-	"github.com/dapperlabs/flow-go-sdk/templates"
-	"github.com/dapperlabs/flow-go/crypto"
 	model "github.com/dapperlabs/flow-go/model/flow"
+	"github.com/onflow/cadence/runtime"
+	"github.com/onflow/flow-go-sdk"
+	"github.com/onflow/flow-go-sdk/crypto"
+	"github.com/onflow/flow-go-sdk/templates"
 
 	"github.com/dapperlabs/flow-emulator/execution"
 	"github.com/dapperlabs/flow-emulator/storage"
@@ -43,9 +41,8 @@ type Blockchain struct {
 	// runtime context used to execute transactions and scripts
 	computer *computer
 
-	rootAccountAddress    flow.Address
-	rootAccountPrivateKey flow.AccountPrivateKey
-	lastCreatedAddress    flow.Address
+	rootKey            RootKey
+	lastCreatedAddress flow.Address
 }
 
 // BlockchainAPI defines the method set of an emulated blockchain.
@@ -66,33 +63,52 @@ type BlockchainAPI interface {
 	GetEventsByHeight(blockHeight uint64, eventType string) ([]flow.Event, error)
 	ExecuteScript(script []byte) (*ScriptResult, error)
 	ExecuteScriptAtBlock(script []byte, blockHeight uint64) (*ScriptResult, error)
-	RootAccountAddress() flow.Address
 	RootKey() RootKey
 }
 
 var _ BlockchainAPI = &Blockchain{}
 
 type RootKey struct {
-	ID             int
 	Address        flow.Address
+	PrivateKey     *crypto.PrivateKey
+	PublicKey      *crypto.PublicKey
+	ID             int
+	SigAlgo        crypto.SignatureAlgorithm
+	HashAlgo       crypto.HashAlgorithm
+	Weight         int
 	SequenceNumber uint64
-	PrivateKey     flow.AccountPrivateKey
 }
 
-func (r RootKey) Signer() sdkcrypto.Signer {
-	return r.PrivateKey.Signer()
+func (r RootKey) Signer() crypto.Signer {
+	if r.PrivateKey == nil {
+		return nil
+	}
+	return crypto.NewNaiveSigner(*r.PrivateKey, r.HashAlgo)
 }
 
-func (r RootKey) AccountKey() flow.AccountKey {
-	accountKey := r.PrivateKey.ToAccountKey()
-	accountKey.Weight = keys.PublicKeyWeightThreshold
-	return accountKey
+func (r RootKey) AccountKey() *flow.AccountKey {
+	var publicKey crypto.PublicKey
+	if r.PublicKey != nil {
+		publicKey = *r.PublicKey
+	}
+	if r.PrivateKey != nil {
+		publicKey = r.PrivateKey.PublicKey()
+	}
+
+	return &flow.AccountKey{
+		ID:             r.ID,
+		PublicKey:      publicKey,
+		SigAlgo:        r.SigAlgo,
+		HashAlgo:       r.HashAlgo,
+		Weight:         r.Weight,
+		SequenceNumber: r.SequenceNumber,
+	}
 }
 
 // config is a set of configuration options for an emulated blockchain.
 type config struct {
-	RootAccountKey flow.AccountPrivateKey
-	Store          storage.Store
+	RootKey RootKey
+	Store   storage.Store
 }
 
 // defaultConfig is the default configuration for an emulated blockchain.
@@ -102,10 +118,33 @@ var defaultConfig config
 // Option is a function applying a change to the emulator config.
 type Option func(*config)
 
-// WithRootKey sets the root key.
-func WithRootAccountKey(rootKey flow.AccountPrivateKey) Option {
+// WithRootPrivateKey sets the root key from a private key.
+func WithRootPrivateKey(
+	rootPrivateKey crypto.PrivateKey,
+	sigAlgo crypto.SignatureAlgorithm,
+	hashAlgo crypto.HashAlgorithm,
+) Option {
 	return func(c *config) {
-		c.RootAccountKey = rootKey
+		c.RootKey = RootKey{
+			PrivateKey: &rootPrivateKey,
+			SigAlgo:    sigAlgo,
+			HashAlgo:   hashAlgo,
+		}
+	}
+}
+
+// WithRootPublicKey sets the root key from a public key.
+func WithRootPublicKey(
+	rootPublicKey crypto.PublicKey,
+	sigAlgo crypto.SignatureAlgorithm,
+	hashAlgo crypto.HashAlgorithm,
+) Option {
+	return func(c *config) {
+		c.RootKey = RootKey{
+			PublicKey: &rootPublicKey,
+			SigAlgo:   sigAlgo,
+			HashAlgo:  hashAlgo,
+		}
 	}
 }
 
@@ -119,7 +158,6 @@ func WithStore(store storage.Store) Option {
 // NewBlockchain instantiates a new emulated blockchain with the provided options.
 func NewBlockchain(opts ...Option) (*Blockchain, error) {
 	var pendingBlock *pendingBlock
-	var rootAccount *flow.Account
 
 	// apply options to the default config
 	config := defaultConfig
@@ -135,6 +173,11 @@ func NewBlockchain(opts ...Option) (*Blockchain, error) {
 	}
 	store := config.Store
 
+	// set up root key
+	rootKey := config.RootKey
+	rootKey.Address = flow.RootAddress
+	rootKey.Weight = flow.AccountKeyWeightThreshold
+
 	latestBlock, err := store.LatestBlock()
 	if err == nil && latestBlock.Height > 0 {
 		// storage contains data, load state from storage
@@ -142,7 +185,6 @@ func NewBlockchain(opts ...Option) (*Blockchain, error) {
 
 		// restore pending block header from store information
 		pendingBlock = newPendingBlock(&latestBlock, latestLedgerView)
-		rootAccount = getAccount(latestLedgerView, flow.RootAddress)
 	} else if err != nil && !errors.Is(err, storage.ErrNotFound) {
 		// internal storage error, fail fast
 		return nil, err
@@ -150,9 +192,7 @@ func NewBlockchain(opts ...Option) (*Blockchain, error) {
 		genesisLedgerView := store.LedgerViewByHeight(0)
 
 		// storage is empty, create the root account
-		createAccount(genesisLedgerView, config.RootAccountKey)
-
-		rootAccount = getAccount(genesisLedgerView, flow.RootAddress)
+		createAccount(genesisLedgerView, rootKey.AccountKey())
 
 		// commit the genesis block to storage
 		genesis := types.GenesisBlock()
@@ -177,11 +217,10 @@ func NewBlockchain(opts ...Option) (*Blockchain, error) {
 	}
 
 	b := &Blockchain{
-		storage:               config.Store,
-		pendingBlock:          pendingBlock,
-		rootAccountAddress:    rootAccount.Address,
-		rootAccountPrivateKey: config.RootAccountKey,
-		lastCreatedAddress:    rootAccount.Address,
+		storage:            config.Store,
+		pendingBlock:       pendingBlock,
+		rootKey:            rootKey,
+		lastCreatedAddress: rootKey.Address,
 	}
 
 	interpreterRuntime := runtime.NewInterpreterRuntime()
@@ -190,29 +229,20 @@ func NewBlockchain(opts ...Option) (*Blockchain, error) {
 	return b, nil
 }
 
-// RootAccountAddress returns the root account address for this blockchain.
-func (b *Blockchain) RootAccountAddress() flow.Address {
-	return b.rootAccountAddress
-}
-
 // RootKey returns the root private key for this blockchain.
 func (b *Blockchain) RootKey() RootKey {
-	rootAccountKey := RootKey{
-		Address:    b.rootAccountAddress,
-		PrivateKey: b.rootAccountPrivateKey,
-	}
-
-	rootAccount, err := b.getAccount(b.rootAccountAddress)
+	rootAccount, err := b.getAccount(b.rootKey.Address)
 	if err != nil {
-		return rootAccountKey
+		return b.rootKey
 	}
 
 	if len(rootAccount.Keys) > 0 {
-		rootAccountKey.ID = rootAccount.Keys[0].ID
-		rootAccountKey.SequenceNumber = rootAccount.Keys[0].SequenceNumber
+		b.rootKey.ID = rootAccount.Keys[0].ID
+		b.rootKey.SequenceNumber = rootAccount.Keys[0].SequenceNumber
+		b.rootKey.Weight = rootAccount.Keys[0].Weight
 	}
 
-	return rootAccountKey
+	return b.rootKey
 }
 
 // PendingBlockID returns the ID of the pending block.
@@ -691,7 +721,7 @@ func (b *Blockchain) aggregateAccountSignatures(
 
 // CreateAccount submits a transaction to create a new account with the given
 // account keys and code. The transaction is paid by the root account.
-func (b *Blockchain) CreateAccount(publicKeys []flow.AccountKey, code []byte) (flow.Address, error) {
+func (b *Blockchain) CreateAccount(publicKeys []*flow.AccountKey, code []byte) (flow.Address, error) {
 	createAccountScript, err := templates.CreateAccount(publicKeys, code)
 
 	if err != nil {
@@ -743,13 +773,11 @@ func (b *Blockchain) CreateAccount(publicKeys []flow.AccountKey, code []byte) (f
 func (b *Blockchain) verifyAccountSignature(
 	txSig flow.TransactionSignature,
 	message []byte,
-) (accountKey flow.AccountKey, err error) {
+) (accountKey *flow.AccountKey, err error) {
 	account, err := b.getAccount(txSig.Address)
 	if err != nil {
 		return accountKey, &InvalidSignatureAccountError{Address: txSig.Address}
 	}
-
-	signature := crypto.Signature(txSig.Signature)
 
 	if txSig.KeyID < 0 || txSig.KeyID >= len(account.Keys) {
 		return accountKey, &InvalidSignatureAccountError{Address: txSig.Address}
@@ -762,7 +790,7 @@ func (b *Blockchain) verifyAccountSignature(
 		return accountKey, fmt.Errorf("public key specifies invalid hash algorithm")
 	}
 
-	valid, err := accountKey.PublicKey.Verify(signature, message, hasher)
+	valid, err := accountKey.PublicKey.Verify(txSig.Signature, message, hasher)
 	if err != nil {
 		return accountKey, fmt.Errorf("cannot verify public key")
 	}
@@ -789,18 +817,12 @@ func (b *Blockchain) handleEvents(events []flow.Event, blockHeight uint64) {
 
 // createAccount creates an account with the given private key and injects it
 // into the given state, bypassing the need for a transaction.
-func createAccount(ledgerView *types.LedgerView, privateKey flow.AccountPrivateKey) flow.Account {
-	accountKey := privateKey.ToAccountKey()
-	accountKey.Weight = keys.PublicKeyWeightThreshold
-
-	publicKeyBytes, err := keys.EncodePublicKey(accountKey)
-	if err != nil {
-		panic(err)
-	}
+func createAccount(ledgerView *types.LedgerView, accountKey *flow.AccountKey) flow.Account {
+	accountKeyBytes := accountKey.Encode()
 
 	runtimeContext := execution.NewRuntimeContext(ledgerView)
 	accountAddress, err := runtimeContext.CreateAccount(
-		[][]byte{publicKeyBytes},
+		[][]byte{accountKeyBytes},
 	)
 	if err != nil {
 		panic(err)
@@ -815,7 +837,7 @@ func sigIsForProposalKey(txSig flow.TransactionSignature, proposalKey flow.Propo
 }
 
 func hasSufficientKeyWeight(weights map[flow.Address]int, address flow.Address) bool {
-	return weights[address] >= keys.PublicKeyWeightThreshold
+	return weights[address] >= flow.AccountKeyWeightThreshold
 }
 
 func convertToSealedResults(
@@ -832,14 +854,18 @@ func convertToSealedResults(
 	return output
 }
 
+const DefaultRootPrivateKeySeed = "elephant ears space cowboy octopus rodeo potato cannon pineapple"
+
 func init() {
 	// Initialize default emulator options
-	defaultRootKey, err := keys.GeneratePrivateKey(
-		keys.ECDSA_P256_SHA3_256,
-		[]byte("elephant ears space cowboy octopus rodeo potato cannon pineapple"))
+	privateKey, err := crypto.GeneratePrivateKey(crypto.ECDSA_P256, []byte(DefaultRootPrivateKeySeed))
 	if err != nil {
 		panic("Failed to generate default root key: " + err.Error())
 	}
 
-	defaultConfig.RootAccountKey = defaultRootKey
+	defaultConfig.RootKey = RootKey{
+		PrivateKey: &privateKey,
+		SigAlgo:    privateKey.Algorithm(),
+		HashAlgo:   crypto.SHA3_256,
+	}
 }

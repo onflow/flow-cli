@@ -9,7 +9,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 
-	access "github.com/dapperlabs/flow/protobuf/go/flow/access"
+	access "github.com/onflow/flow/protobuf/go/flow/access"
 )
 
 type GRPCServer struct {

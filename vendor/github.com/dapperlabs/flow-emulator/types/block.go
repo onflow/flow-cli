@@ -1,9 +1,10 @@
 package types
 
 import (
-	"github.com/dapperlabs/flow-go-sdk"
-	"github.com/dapperlabs/flow-go/crypto"
+	"github.com/dapperlabs/flow-go/model/encoding/rlp"
 	model "github.com/dapperlabs/flow-go/model/flow"
+	"github.com/onflow/flow-go-sdk"
+	"github.com/onflow/flow-go-sdk/crypto"
 )
 
 // Block is a naive data structure used to represent blocks in the emulator.
@@ -30,7 +31,8 @@ func (b Block) Encode() []byte {
 		model.GetIDs(b.Guarantees),
 	}
 
-	return flow.DefaultEncoder.MustEncode(&temp)
+	encoder := rlp.NewEncoder()
+	return encoder.MustEncode(&temp)
 }
 
 func (b Block) Header() flow.BlockHeader {
