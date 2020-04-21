@@ -14,6 +14,7 @@ ARCH=""
 get_architecture() {
     _ostype="$(uname -s)"
     _cputype="$(uname -m)"
+    _targetpath=""
     if [ "$_ostype" = Darwin ] && [ "$_cputype" = i386 ]; then
         if sysctl hw.optional.x86_64 | grep -q ': 1'; then
             _cputype=x86_64
@@ -22,9 +23,11 @@ get_architecture() {
     case "$_ostype" in
         Linux)
             _ostype=linux
+            _targetpath=$HOME/.local/bin
             ;;
         Darwin)
             _ostype=darwin
+            _targetpath=/usr/local/bin
             ;;
         *)
             echo "unrecognized OS type: $_ostype"
@@ -41,7 +44,8 @@ get_architecture() {
             ;;
     esac
     _arch="${_cputype}-${_ostype}"
-    ARCH="$_arch"
+    ARCH="${_arch}"
+    TARGET_PATH="${_targetpath}"
 }
 
 # Get the latest version from remote if none specified in args.
@@ -53,25 +57,29 @@ get_version() {
 }
 
 # Determine the system architecure, download the appropriate binary, and
-# install it in `/usr/local/bin` with executable permission.
+# install it in `/usr/local/bin` on macOS and `~/.local/bin` on Linux
+# with executable permission.
 main() {
 
   get_architecture || exit 1
   get_version || exit 1
 
+  tmpfile=$(mktemp -t flow)
+
   url="$BASE_URL/flow-$ARCH-$VERSION"
-  curl -s "$url" -o ./flow
+  curl -s "$url" -o $tmpfile
 
   # Ensure we don't receive a not found error as response.
-  if grep -q "The specified key does not exist" ./flow
+  if grep -q "The specified key does not exist" $tmpfile
   then
     echo "Version $VERSION could not be found"
     exit 1
   fi
 
-  chmod +x ./flow
-  mv ./flow /usr/local/bin
-  echo "Successfully installed version $VERSION with architecture $ARCH"
+  chmod +x $tmpfile
+  mv $tmpfile $TARGET_PATH/flow
+  echo "Successfully installed version $VERSION to $TARGET_PATH."
+  echo "Make sure $TARGET_PATH is in your \$PATH environment variable."
 }
 
 main
