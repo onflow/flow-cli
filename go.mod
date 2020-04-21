@@ -3,7 +3,7 @@ module github.com/dapperlabs/flow-cli
 go 1.13
 
 require (
-	github.com/dapperlabs/flow-emulator v1.0.0-alpha.5.0.20200421142957-4d73784a8203
+	github.com/dapperlabs/flow-emulator v1.0.0-alpha.5.0.20200421144110-78dc7f9ead45
 	github.com/onflow/cadence v0.0.0-20200421031132-d6870aa2e8f9
 	github.com/onflow/cadence/languageserver v0.0.0-20200421031132-d6870aa2e8f9
 	github.com/onflow/flow-go-sdk v0.1.0-alpha.4.0.20200420223206-69aa6477a6e2

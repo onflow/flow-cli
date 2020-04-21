@@ -13,7 +13,6 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 
-	emulator "github.com/dapperlabs/flow-emulator"
 	"github.com/dapperlabs/flow-emulator/server"
 )
 
@@ -32,91 +31,92 @@ type Config struct {
 	DBPath          string        `default:"./flowdb" flag:"dbpath" info:"path to database directory"`
 }
 
-const (
-	EnvPrefix                 = "FLOW"
-	DefaultRootPrivateKeySeed = emulator.DefaultRootPrivateKeySeed
-)
+const EnvPrefix = "FLOW"
 
 var (
 	logger *logrus.Logger
 	conf   Config
 )
 
-var Cmd = &cobra.Command{
-	Use:   "start",
-	Short: "Starts the Flow emulator server",
-	Run: func(cmd *cobra.Command, args []string) {
-		var (
-			rootPrivateKey  crypto.PrivateKey
-			rootPublicKey   crypto.PublicKey
-			rootKeySigAlgo  crypto.SignatureAlgorithm
-			rootKeyHashAlgo crypto.HashAlgorithm
-			err             error
-		)
+type rootKeyFunc func(init bool) (crypto.PrivateKey, crypto.SignatureAlgorithm, crypto.HashAlgorithm)
 
-		rootKeySigAlgo = crypto.StringToSignatureAlgorithm(conf.RootKeySigAlgo)
-		rootKeyHashAlgo = crypto.StringToHashAlgorithm(conf.RootKeyHashAlgo)
+func Cmd(getRootKey rootKeyFunc) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "start",
+		Short: "Starts the Flow emulator server",
+		Run: func(cmd *cobra.Command, args []string) {
+			var (
+				rootPrivateKey  crypto.PrivateKey
+				rootPublicKey   crypto.PublicKey
+				rootKeySigAlgo  crypto.SignatureAlgorithm
+				rootKeyHashAlgo crypto.HashAlgorithm
+				err             error
+			)
 
-		if len(conf.RootPublicKey) > 0 {
-			rootPublicKey, err = crypto.DecodePublicKeyHex(rootKeySigAlgo, conf.RootPublicKey)
-			if err != nil {
-				Exit(1, err.Error())
+			rootKeySigAlgo = crypto.StringToSignatureAlgorithm(conf.RootKeySigAlgo)
+			rootKeyHashAlgo = crypto.StringToHashAlgorithm(conf.RootKeyHashAlgo)
+
+			if len(conf.RootPublicKey) > 0 {
+				rootPublicKey, err = crypto.DecodePublicKeyHex(rootKeySigAlgo, conf.RootPublicKey)
+				if err != nil {
+					Exit(1, err.Error())
+				}
+			} else if len(conf.RootPrivateKey) > 0 {
+				rootPrivateKey, err = crypto.DecodePrivateKeyHex(rootKeySigAlgo, conf.RootPrivateKey)
+				if err != nil {
+					Exit(1, err.Error())
+				}
+
+				rootPublicKey = rootPrivateKey.PublicKey()
+			} else {
+				rootPrivateKey, rootKeySigAlgo, rootKeyHashAlgo = getRootKey(conf.Init)
+				rootPublicKey = rootPrivateKey.PublicKey()
 			}
-		} else if len(conf.RootPrivateKey) > 0 {
-			rootPrivateKey, err = crypto.DecodePrivateKeyHex(rootKeySigAlgo, conf.RootPrivateKey)
-			if err != nil {
-				Exit(1, err.Error())
+
+			if conf.Verbose {
+				logger.SetLevel(logrus.DebugLevel)
 			}
 
-			rootPublicKey = rootPrivateKey.PublicKey()
-		} else {
-			rootPrivateKey, _ = crypto.GeneratePrivateKey(crypto.ECDSA_P256, []byte(DefaultRootPrivateKeySeed))
+			rootAddress := flow.HexToAddress("01")
+			rootFields := logrus.Fields{
+				"rootAddress":  rootAddress.Hex(),
+				"rootPubKey":   hex.EncodeToString(rootPublicKey.Encode()),
+				"rootSigAlgo":  rootKeySigAlgo,
+				"rootHashAlgo": rootKeyHashAlgo,
+			}
 
-			rootPublicKey = rootPrivateKey.PublicKey()
-			rootKeySigAlgo = rootPrivateKey.Algorithm()
-			rootKeyHashAlgo = crypto.SHA3_256
-		}
+			if rootPrivateKey != (crypto.PrivateKey{}) {
+				rootFields["rootPrivKey"] = hex.EncodeToString(rootPrivateKey.Encode())
+			}
 
-		if conf.Verbose {
-			logger.SetLevel(logrus.DebugLevel)
-		}
+			logger.WithFields(rootFields).Infof("⚙️   Using root account 0x%s", rootAddress.Hex())
 
-		rootAddress := flow.HexToAddress("01")
-		rootFields := logrus.Fields{
-			"rootAddress":  rootAddress.Hex(),
-			"rootPubKey":   hex.EncodeToString(rootPublicKey.Encode()),
-			"rootSigAlgo":  rootKeySigAlgo,
-			"rootHashAlgo": rootKeyHashAlgo,
-		}
+			serverConf := &server.Config{
+				GRPCPort:  conf.Port,
+				GRPCDebug: conf.GRPCDebug,
+				HTTPPort:  conf.HTTPPort,
+				// TODO: allow headers to be parsed from environment
+				HTTPHeaders:     nil,
+				BlockTime:       conf.BlockTime,
+				RootPublicKey:   rootPublicKey,
+				RootKeySigAlgo:  rootKeySigAlgo,
+				RootKeyHashAlgo: rootKeyHashAlgo,
+				Persist:         conf.Persist,
+				DBPath:          conf.DBPath,
+			}
 
-		if rootPrivateKey != (crypto.PrivateKey{}) {
-			rootFields["rootPrivKey"] = hex.EncodeToString(rootPrivateKey.Encode())
-		}
+			emu := server.NewEmulatorServer(logger, serverConf)
+			emu.Start()
+		},
+	}
 
-		logger.WithFields(rootFields).Infof("⚙️   Using root account 0x%s", rootAddress.Hex())
+	initConfig(cmd)
 
-		serverConf := &server.Config{
-			GRPCPort:  conf.Port,
-			GRPCDebug: conf.GRPCDebug,
-			HTTPPort:  conf.HTTPPort,
-			// TODO: allow headers to be parsed from environment
-			HTTPHeaders:     nil,
-			BlockTime:       conf.BlockTime,
-			RootPublicKey:   rootPublicKey,
-			RootKeySigAlgo:  rootKeySigAlgo,
-			RootKeyHashAlgo: rootKeyHashAlgo,
-			Persist:         conf.Persist,
-			DBPath:          conf.DBPath,
-		}
-
-		emu := server.NewEmulatorServer(logger, serverConf)
-		emu.Start()
-	},
+	return cmd
 }
 
 func init() {
 	initLogger()
-	initConfig()
 }
 
 func initLogger() {
@@ -125,10 +125,10 @@ func initLogger() {
 	logger.Out = os.Stdout
 }
 
-func initConfig() {
+func initConfig(cmd *cobra.Command) {
 	err := sconfig.New(&conf).
 		FromEnvironment(EnvPrefix).
-		BindFlags(Cmd.PersistentFlags()).
+		BindFlags(cmd.PersistentFlags()).
 		Parse()
 	if err != nil {
 		log.Fatal(err)
