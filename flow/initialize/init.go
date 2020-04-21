@@ -12,9 +12,9 @@ import (
 )
 
 type Config struct {
-	RootPrivateKey  string `flag:"root-key,k" info:"root account pirvate key"`
-	RootKeySigAlgo  string `default:"ECDSA_P256" flag:"root-key-sig-algo" info:"root account key signature algorithm"`
-	RootKeyHashAlgo string `default:"SHA3_256" flag:"root-key-hash-algo" info:"root account key hash algorithm"`
+	RootPrivateKey  string `flag:"root-priv-key" info:"root account private key"`
+	RootKeySigAlgo  string `default:"ECDSA_P256" flag:"root-sig-algo" info:"root account key signature algorithm"`
+	RootKeyHashAlgo string `default:"SHA3_256" flag:"root-hash-algo" info:"root account key hash algorithm"`
 	Reset           bool   `default:"false" flag:"reset" info:"reset flow.json config file"`
 }
 

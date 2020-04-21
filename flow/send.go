@@ -27,8 +27,8 @@ func SendTransaction(host string, signerAccount *Account, script []byte) {
 	}
 
 	signer := crypto.NewNaiveSigner(
-		signerAccount.PrivateKey.PrivateKey,
-		signerAccount.PrivateKey.HashAlgo,
+		signerAccount.PrivateKey,
+		signerAccount.HashAlgo,
 	)
 
 	// TODO: always use first?

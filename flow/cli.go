@@ -9,7 +9,11 @@ import (
 	"github.com/onflow/flow-go-sdk/crypto"
 )
 
-const EnvPrefix = "FLOW"
+const (
+	EnvPrefix       = "FLOW"
+	DefaultSigAlgo  = crypto.ECDSA_P256
+	DefaultHashAlgo = crypto.SHA3_256
+)
 
 var ConfigPath = "flow.json"
 
@@ -29,6 +33,14 @@ func MustDecodePrivateKeyHex(sigAlgo crypto.SignatureAlgorithm, prKeyHex string)
 		Exitf(1, "Failed to decode private key: %v", err)
 	}
 	return prKey
+}
+
+func MustDecodePublicKeyHex(sigAlgo crypto.SignatureAlgorithm, pubKeyHex string) crypto.PublicKey {
+	pubKey, err := crypto.DecodePublicKeyHex(sigAlgo, pubKeyHex)
+	if err != nil {
+		Exitf(1, "Failed to decode public key: %v", err)
+	}
+	return pubKey
 }
 
 func RandomSeed(n int) []byte {
