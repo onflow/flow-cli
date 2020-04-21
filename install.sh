@@ -64,7 +64,7 @@ main() {
   get_architecture || exit 1
   get_version || exit 1
 
-  tmpfile=$(mktemp -t flow.XXXXXX)
+  tmpfile=$(mktemp 2>/dev/null || mktemp -t flow)
 
   url="$BASE_URL/flow-$ARCH-$VERSION"
   curl -s "$url" -o $tmpfile
@@ -77,7 +77,10 @@ main() {
   fi
 
   chmod +x $tmpfile
+
+  [ -d $TARGET_PATH ] || mkdir -p $TARGET_PATH
   mv $tmpfile $TARGET_PATH/flow
+
   echo "Successfully installed version $VERSION to $TARGET_PATH."
   echo "Make sure $TARGET_PATH is in your \$PATH environment variable."
 }
