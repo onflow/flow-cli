@@ -1,9 +1,8 @@
 package emulator
 
 import (
+	"github.com/dapperlabs/flow-emulator/cmd/emulator/start"
 	"github.com/spf13/cobra"
-
-	"github.com/dapperlabs/flow-cli/flow/emulator/start"
 )
 
 var Cmd = &cobra.Command{

@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/dapperlabs/flow-go-sdk"
-	"github.com/dapperlabs/flow-go-sdk/client"
-	"github.com/dapperlabs/flow-go-sdk/crypto"
+	"github.com/onflow/flow-go-sdk"
+	"github.com/onflow/flow-go-sdk/client"
+	"github.com/onflow/flow-go-sdk/crypto"
 	"google.golang.org/grpc"
 )
 
@@ -27,8 +27,8 @@ func SendTransaction(host string, signerAccount *Account, script []byte) {
 	}
 
 	signer := crypto.NewNaiveSigner(
-		signerAccount.PrivateKey.PrivateKey,
-		signerAccount.PrivateKey.HashAlgo,
+		signerAccount.PrivateKey,
+		signerAccount.HashAlgo,
 	)
 
 	// TODO: always use first?
@@ -54,4 +54,3 @@ func SendTransaction(host string, signerAccount *Account, script []byte) {
 		Exitf(1, "Failed to submit transaction: %s", err)
 	}
 }
-

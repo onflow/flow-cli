@@ -7,8 +7,8 @@ import (
 	"io/ioutil"
 	"os"
 
-	"github.com/dapperlabs/flow-go-sdk"
-	"github.com/dapperlabs/flow-go-sdk/keys"
+	"github.com/onflow/flow-go-sdk"
+	"github.com/onflow/flow-go-sdk/crypto"
 )
 
 var (
@@ -18,25 +18,28 @@ var (
 
 type Account struct {
 	Address    flow.Address
-	PrivateKey flow.AccountPrivateKey
+	PrivateKey crypto.PrivateKey
+	SigAlgo    crypto.SignatureAlgorithm
+	HashAlgo   crypto.HashAlgorithm
 }
 
 // An internal utility struct that defines how Account is converted to JSON.
 type accountJSON struct {
 	Address    string `json:"address"`
 	PrivateKey string `json:"privateKey"`
+	SigAlgo    string `json:"sigAlgorithm"`
+	HashAlgo   string `json:"hashAlgorithm"`
 }
 
 func (acct *Account) MarshalJSON() ([]byte, error) {
-	prKeyBytes, err := keys.EncodePrivateKey(acct.PrivateKey)
-	if err != nil {
-		return nil, err
-	}
-
+	prKeyBytes := acct.PrivateKey.Encode()
 	prKeyHex := hex.EncodeToString(prKeyBytes)
+
 	return json.Marshal(accountJSON{
 		Address:    acct.Address.Hex(),
 		PrivateKey: prKeyHex,
+		SigAlgo:    acct.SigAlgo.String(),
+		HashAlgo:   acct.HashAlgo.String(),
 	})
 }
 
@@ -46,6 +49,9 @@ func (acct *Account) UnmarshalJSON(data []byte) (err error) {
 		return
 	}
 
+	acct.SigAlgo = crypto.StringToSignatureAlgorithm(alias.SigAlgo)
+	acct.HashAlgo = crypto.StringToHashAlgorithm(alias.HashAlgo)
+
 	var prKeyBytes []byte
 	prKeyBytes, err = hex.DecodeString(alias.PrivateKey)
 	if err != nil {
@@ -53,7 +59,7 @@ func (acct *Account) UnmarshalJSON(data []byte) (err error) {
 	}
 
 	acct.Address = flow.HexToAddress(alias.Address)
-	acct.PrivateKey, err = keys.DecodePrivateKey(prKeyBytes)
+	acct.PrivateKey, err = crypto.DecodePrivateKey(acct.SigAlgo, prKeyBytes)
 	return
 }
 
@@ -75,10 +81,12 @@ func (c *Config) RootAccount() *Account {
 	return rootAcct
 }
 
-func (c *Config) SetRootAccount(prKey flow.AccountPrivateKey) {
+func (c *Config) SetRootAccountKey(privateKey crypto.PrivateKey, hashAlgo crypto.HashAlgorithm) {
 	c.Accounts[RootAccountName] = &Account{
 		Address:    RootAccountAddress,
-		PrivateKey: prKey,
+		PrivateKey: privateKey,
+		SigAlgo:    privateKey.Algorithm(),
+		HashAlgo:   hashAlgo,
 	}
 }
 
