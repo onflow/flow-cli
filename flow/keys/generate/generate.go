@@ -29,7 +29,7 @@ var Cmd = &cobra.Command{
 			seed = []byte(conf.Seed)
 		}
 
-		privateKey, err := crypto.GeneratePrivateKey(crypto.MinSeedLengthECDSA_P256, seed)
+		privateKey, err := crypto.GeneratePrivateKey(cli.DefaultSigAlgo, seed)
 		if err != nil {
 			cli.Exitf(1, "Failed to generate private key: %v", err)
 		}

@@ -14,7 +14,7 @@ import (
 
 type Config struct {
 	Signer string   `default:"root" flag:"signer,s"`
-	Keys   []string `flag:"key,k"`
+	Keys   []string `flag:"key,k" info:"public keys to attach to account"`
 	Code   string   `flag:"code,c" info:"path to a file containing code for the account"`
 	Host   string   `default:"127.0.0.1:3569" flag:"host" info:"Flow Observation API host address"`
 }
@@ -29,11 +29,16 @@ var Cmd = &cobra.Command{
 
 		signerAccount := projectConf.Accounts[conf.Signer]
 
-		accountKeys := make([]flow.AccountKey, len(conf.Keys))
+		accountKeys := make([]*flow.AccountKey, len(conf.Keys))
 
-		for i, privateKeyHex := range conf.Keys {
-			privateKey := cli.MustDecodeAccountPrivateKeyHex(privateKeyHex)
-			accountKeys[i] = privateKey.ToAccountKey()
+		for i, publicKeyHex := range conf.Keys {
+			publicKey := cli.MustDecodePublicKeyHex(cli.DefaultSigAlgo, publicKeyHex)
+			accountKeys[i] = &flow.AccountKey{
+				PublicKey: publicKey,
+				SigAlgo:   cli.DefaultSigAlgo,
+				HashAlgo:  cli.DefaultHashAlgo,
+				Weight:    flow.AccountKeyWeightThreshold,
+			}
 		}
 
 		var (
