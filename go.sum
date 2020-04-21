@@ -85,6 +85,8 @@ github.com/dapperlabs/flow-emulator v1.0.0-alpha.5.0.20200421001415-4ab51efae744
 github.com/dapperlabs/flow-emulator v1.0.0-alpha.5.0.20200421001415-4ab51efae744/go.mod h1:CmTgr01NRkCpcGMxyg5WDyLj+szfDskvn6pU2zlD58I=
 github.com/dapperlabs/flow-emulator v1.0.0-alpha.5.0.20200421005840-9df9e8a9bd8b h1:yX3+cJp+XTwfFa9XY40Xo2BL2DY6pU+FoWeyqwN6i2I=
 github.com/dapperlabs/flow-emulator v1.0.0-alpha.5.0.20200421005840-9df9e8a9bd8b/go.mod h1:CmTgr01NRkCpcGMxyg5WDyLj+szfDskvn6pU2zlD58I=
+github.com/dapperlabs/flow-emulator v1.0.0-alpha.5.0.20200421024431-03880fe55665 h1:mul1RHHVAIVi8RRxCcJcHmBJFy7QhBQJY4Tv41Zlk34=
+github.com/dapperlabs/flow-emulator v1.0.0-alpha.5.0.20200421024431-03880fe55665/go.mod h1:CmTgr01NRkCpcGMxyg5WDyLj+szfDskvn6pU2zlD58I=
 github.com/dapperlabs/flow-go v0.3.2-0.20200419224034-72584949fbfa h1:8gHPrLkDRsrYMrdKiAZ9caHlTjJ+ZeQ06fwEBbQ5F08=
 github.com/dapperlabs/flow-go v0.3.2-0.20200419224034-72584949fbfa/go.mod h1:LqYQxU1Oa3Bqux8h5fg8vRHzXOcQp8dzmL/vX6r0jjU=
 github.com/dapperlabs/flow-go/crypto v0.3.2-0.20200312195452-df4550a863b7 h1:p+tdbiV+3ykjkiawon7YXmkzXSpMNvhMsH1tWN8Yi1M=
