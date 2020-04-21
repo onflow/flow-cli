@@ -103,6 +103,9 @@ func (r *RuntimeContext) CreateAccount(publicKeys [][]byte) (runtime.Address, er
 
 	accountID := accountAddress[:]
 
+	// mark that account with this ID exists
+	r.ledger.Set(fullKey(string(accountID), "", keyExists), []byte{1})
+
 	r.ledger.Set(fullKey(string(accountID), "", keyBalance), big.NewInt(0).Bytes())
 
 	accountKeys := make([]accountKey, len(publicKeys))
@@ -122,7 +125,7 @@ func (r *RuntimeContext) CreateAccount(publicKeys [][]byte) (runtime.Address, er
 	r.ledger.Set(keyLatestAccount, accountID)
 
 	r.Log("Creating new account\n")
-	r.Log(fmt.Sprintf("Address: %x", accountAddress))
+	r.Log(fmt.Sprintf("Address: %s", accountAddress))
 
 	return runtime.Address(cadence.NewAddress(accountAddress)), nil
 }
@@ -134,12 +137,9 @@ func (r *RuntimeContext) CreateAccount(publicKeys [][]byte) (runtime.Address, er
 func (r *RuntimeContext) AddAccountKey(address runtime.Address, publicKey []byte) error {
 	accountID := address[:]
 
-	bal, err := r.ledger.Get(fullKey(string(accountID), "", keyBalance))
+	err := r.checkAccountExists(accountID)
 	if err != nil {
 		return err
-	}
-	if bal == nil {
-		return fmt.Errorf("account with ID %s does not exist", accountID)
 	}
 
 	accountKeys, err := r.getAccountKeys(accountID)
@@ -165,12 +165,9 @@ func (r *RuntimeContext) AddAccountKey(address runtime.Address, publicKey []byte
 func (r *RuntimeContext) RemoveAccountKey(address runtime.Address, index int) (publicKey []byte, err error) {
 	accountID := address[:]
 
-	bal, err := r.ledger.Get(fullKey(string(accountID), "", keyBalance))
+	err = r.checkAccountExists(accountID)
 	if err != nil {
 		return nil, err
-	}
-	if bal == nil {
-		return nil, fmt.Errorf("account with ID %s does not exist", accountID)
 	}
 
 	accountKeys, err := r.getAccountKeys(accountID)
@@ -315,15 +312,12 @@ func (r *RuntimeContext) UpdateAccountCode(address runtime.Address, code []byte,
 	accountID := address[:]
 
 	if checkPermission && !r.isValidSigningAccount(address) {
-		return fmt.Errorf("not permitted to update account with ID %x", accountID)
+		return fmt.Errorf("not permitted to update account with ID %s", accountID)
 	}
 
-	bal, err := r.ledger.Get(fullKey(string(accountID), "", keyBalance))
+	err = r.checkAccountExists(accountID)
 	if err != nil {
 		return err
-	}
-	if bal == nil {
-		return fmt.Errorf("account with ID %s does not exist", accountID)
 	}
 
 	r.ledger.Set(fullKey(string(accountID), string(accountID), keyCode), code)
@@ -337,11 +331,12 @@ func (r *RuntimeContext) UpdateAccountCode(address runtime.Address, code []byte,
 func (r *RuntimeContext) GetAccount(address flow.Address) *flow.Account {
 	accountID := address.Bytes()
 
-	balanceBytes, _ := r.ledger.Get(fullKey(string(accountID), "", keyBalance))
-	if balanceBytes == nil {
+	err := r.checkAccountExists(accountID)
+	if err != nil {
 		return nil
 	}
 
+	balanceBytes, _ := r.ledger.Get(fullKey(string(accountID), "", keyBalance))
 	balanceInt := big.NewInt(0).SetBytes(balanceBytes)
 
 	code, _ := r.ledger.Get(fullKey(string(accountID), string(accountID), keyCode))
@@ -371,6 +366,19 @@ func (r *RuntimeContext) GetAccount(address flow.Address) *flow.Account {
 		Code:    code,
 		Keys:    accountPublicKeys,
 	}
+}
+
+func (r *RuntimeContext) checkAccountExists(accountID []byte) error {
+	exists, err := r.ledger.Get(fullKey(string(accountID), "", keyExists))
+	if err != nil {
+		return err
+	}
+
+	if len(exists) == 0 {
+		return fmt.Errorf("account with ID %s does not exist", accountID)
+	}
+
+	return nil
 }
 
 // CheckAndIncrementSequenceNumber validates and increments a sequence number for with an account key.
@@ -434,7 +442,7 @@ func (r *RuntimeContext) ResolveImport(location runtime.Location) ([]byte, error
 	}
 
 	if code == nil {
-		return nil, fmt.Errorf("no code deployed at address %x", accountID)
+		return nil, fmt.Errorf("no code deployed at address %s", accountID)
 	}
 
 	return code, nil
@@ -473,6 +481,7 @@ func (r *RuntimeContext) checkProgram(code []byte, address runtime.Address) erro
 
 const (
 	keyLatestAccount  = "latest_account"
+	keyExists         = "exists"
 	keyBalance        = "balance"
 	keyCode           = "code"
 	keyPublicKeyCount = "public_key_count"
