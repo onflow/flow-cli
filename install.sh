@@ -64,7 +64,7 @@ main() {
   get_architecture || exit 1
   get_version || exit 1
 
-  tmpfile=$(mktemp -t flow)
+  tmpfile=$(mktemp -t flow.XXXXXX)
 
   url="$BASE_URL/flow-$ARCH-$VERSION"
   curl -s "$url" -o $tmpfile
