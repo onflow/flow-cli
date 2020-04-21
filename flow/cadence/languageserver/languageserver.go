@@ -1,9 +1,9 @@
 package languageserver
 
 import (
-    "github.com/spf13/cobra"
+	"github.com/spf13/cobra"
 
-	"github.com/dapperlabs/cadence/languageserver/server"
+	"github.com/onflow/cadence/languageserver/server"
 )
 
 var Cmd = &cobra.Command{
