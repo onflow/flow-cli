@@ -109,6 +109,10 @@ Already downloaded: /Users/foo/Library/Caches/Homebrew/downloads/5c97a5af672378d
 
 Last but not least, create a new commit for the updated formula. 
 
+```sh
+cd /usr/local/Homebrew/Library/Taps/onflow/homebrew-flow
+```
+
 If you run `git diff`, you should see that Homebrew automatically updated the `bottle` section of the formula:
 
 ![homebrew-bottle](./homebrew-bottle.png)
