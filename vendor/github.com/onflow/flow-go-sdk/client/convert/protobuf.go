@@ -1,3 +1,21 @@
+/*
+ * Flow Go SDK
+ *
+ * Copyright 2019-2020 Dapper Labs, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package convert
 
 import (
@@ -36,7 +54,7 @@ func MessageToBlock(m *entities.Block) (flow.Block, error) {
 	}
 
 	payload := flow.BlockPayload{
-		Guarantees: guarantees,
+		CollectionGuarantees: guarantees,
 	}
 
 	return flow.Block{
@@ -50,7 +68,7 @@ func BlockToMessage(b flow.Block) *entities.Block {
 		Id:                   b.ID.Bytes(),
 		ParentId:             b.ParentID.Bytes(),
 		Height:               b.Height,
-		CollectionGuarantees: CollectionGuaranteesToMessages(b.Guarantees),
+		CollectionGuarantees: CollectionGuaranteesToMessages(b.CollectionGuarantees),
 	}
 }
 
@@ -340,6 +358,7 @@ func MessageToAccountKey(m *entities.AccountKey) (*flow.AccountKey, error) {
 	}
 
 	return &flow.AccountKey{
+		ID:             int(m.GetIndex()),
 		PublicKey:      publicKey,
 		SigAlgo:        sigAlgo,
 		HashAlgo:       hashAlgo,
@@ -352,6 +371,7 @@ func AccountKeyToMessage(a *flow.AccountKey) (*entities.AccountKey, error) {
 	publicKey := a.PublicKey.Encode()
 
 	return &entities.AccountKey{
+		Index:          uint32(a.ID),
 		PublicKey:      publicKey,
 		SignAlgo:       uint32(a.SigAlgo),
 		HashAlgo:       uint32(a.HashAlgo),

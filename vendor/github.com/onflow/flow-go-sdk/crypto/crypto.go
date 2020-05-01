@@ -1,11 +1,27 @@
+/*
+ * Flow Go SDK
+ *
+ * Copyright 2019-2020 Dapper Labs, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package crypto
 
 import (
 	"encoding/hex"
-	"fmt"
 
 	"github.com/onflow/flow-go-sdk/crypto/internal/crypto"
-	"github.com/onflow/flow-go-sdk/crypto/internal/crypto/hash"
 )
 
 // SignatureAlgorithm is an identifier for a signature algorithm (and parameters if applicable).
@@ -26,6 +42,7 @@ func (f SignatureAlgorithm) String() string {
 	return [...]string{"UNKNOWN", "BLS_BLS12381", "ECDSA_P256", "ECDSA_secp256k1"}[f]
 }
 
+// StringToSignatureAlgorithm converts a string to a SignatureAlgorithm.
 func StringToSignatureAlgorithm(s string) SignatureAlgorithm {
 	switch s {
 	case BLS_BLS12381.String():
@@ -55,6 +72,7 @@ func (f HashAlgorithm) String() string {
 	return [...]string{"UNKNOWN", "SHA2_256", "SHA2_384", "SHA3_256", "SHA3_384"}[f]
 }
 
+// StringToHashAlgorithm converts a string to a HashAlgorithm.
 func StringToHashAlgorithm(s string) HashAlgorithm {
 	switch s {
 	case SHA2_256.String():
@@ -110,70 +128,92 @@ func (k KeyType) HashAlgorithm() HashAlgorithm {
 	}
 }
 
+// A PrivateKey is a cryptographic private key that can be used for in-memory signing.
 type PrivateKey struct {
-	PrivateKey crypto.PrivateKey
+	privateKey crypto.PrivateKey
 }
 
-func (pk PrivateKey) Sign(message []byte, hasher Hasher) ([]byte, error) {
-	return pk.PrivateKey.Sign(message, hasher)
+// Sign signs the given message with this private key and the provided hasher.
+//
+// This function returns an error if a signature cannot be generated.
+func (sk PrivateKey) Sign(message []byte, hasher Hasher) ([]byte, error) {
+	return sk.privateKey.Sign(message, hasher)
 }
 
-func (pk PrivateKey) Algorithm() SignatureAlgorithm {
-	return SignatureAlgorithm(pk.PrivateKey.Algorithm())
+// Algorithm returns the signature algorithm for this private key.
+func (sk PrivateKey) Algorithm() SignatureAlgorithm {
+	return SignatureAlgorithm(sk.privateKey.Algorithm())
 }
 
-func (pk PrivateKey) PublicKey() PublicKey {
-	return PublicKey{PublicKey: pk.PrivateKey.PublicKey()}
+// PublicKey returns the public key for this private key.
+func (sk PrivateKey) PublicKey() PublicKey {
+	return PublicKey{publicKey: sk.privateKey.PublicKey()}
 }
 
-func (pk PrivateKey) Encode() []byte {
-	return pk.PrivateKey.Encode()
+// Encode returns the raw byte encoding of this private key.
+func (sk PrivateKey) Encode() []byte {
+	return sk.privateKey.Encode()
 }
 
+// A PublicKey is a cryptographic public key that can be used to verify signatures.
 type PublicKey struct {
-	PublicKey crypto.PublicKey
+	publicKey crypto.PublicKey
 }
 
+// Verify verifies the given signature against a message with this public key and the provided hasher.
+//
+// This function returns true if the signature is valid for the message, and false otherwise. An error
+// is returned if the signature cannot be verified.
 func (pk PublicKey) Verify(sig, message []byte, hasher Hasher) (bool, error) {
-	return pk.PublicKey.Verify(sig, message, hasher)
+	return pk.publicKey.Verify(sig, message, hasher)
 }
 
+// Algorithm returns the signature algorithm for this public key.
 func (pk PublicKey) Algorithm() SignatureAlgorithm {
-	return SignatureAlgorithm(pk.PublicKey.Algorithm())
+	return SignatureAlgorithm(pk.publicKey.Algorithm())
 }
 
+// Encode returns the raw byte encoding of this public key.
 func (pk PublicKey) Encode() []byte {
-	return pk.PublicKey.Encode()
+	return pk.publicKey.Encode()
 }
 
+// A Signer is capable of signing cryptographic messages.
 type Signer interface {
+	// Sign signs the given message with this signer.
 	Sign(message []byte) ([]byte, error)
 }
 
-type NaiveSigner struct {
+// An InMemorySigner is a signer that generates signatures using an in-memory private key.
+type InMemorySigner struct {
 	PrivateKey PrivateKey
 	Hasher     Hasher
 }
 
-func NewNaiveSigner(privateKey PrivateKey, hashAlgo HashAlgorithm) NaiveSigner {
+// NewInMemorySigner initializes and returns a new in-memory signer with the provided private key
+// and hasher.
+func NewInMemorySigner(privateKey PrivateKey, hashAlgo HashAlgorithm) InMemorySigner {
 	hasher, _ := NewHasher(hashAlgo)
 
-	return NaiveSigner{
+	return InMemorySigner{
 		PrivateKey: privateKey,
 		Hasher:     hasher,
 	}
 }
 
-func (s NaiveSigner) Sign(message []byte) ([]byte, error) {
+func (s InMemorySigner) Sign(message []byte) ([]byte, error) {
 	return s.PrivateKey.Sign(message, s.Hasher)
 }
 
-type MockSigner []byte
+// NaiveSigner is an alias for InMemorySigner.
+type NaiveSigner = InMemorySigner
 
-func (s MockSigner) Sign(message []byte) ([]byte, error) {
-	return s, nil
+// NewNaiveSigner is an alias for NewInMemorySigner.
+func NewNaiveSigner(privateKey PrivateKey, hashAlgo HashAlgorithm) NaiveSigner {
+	return NewInMemorySigner(privateKey, hashAlgo)
 }
 
+// GeneratePrivateKey generates a private key with the specified signature algorithm from the given seed.
 func GeneratePrivateKey(sigAlgo SignatureAlgorithm, seed []byte) (PrivateKey, error) {
 	privKey, err := crypto.GeneratePrivateKey(crypto.SigningAlgorithm(sigAlgo), seed)
 	if err != nil {
@@ -181,10 +221,11 @@ func GeneratePrivateKey(sigAlgo SignatureAlgorithm, seed []byte) (PrivateKey, er
 	}
 
 	return PrivateKey{
-		PrivateKey: privKey,
+		privateKey: privKey,
 	}, nil
 }
 
+// DecodePrivateKey decodes a raw byte encoded private key with the given signature algorithm.
 func DecodePrivateKey(sigAlgo SignatureAlgorithm, b []byte) (PrivateKey, error) {
 	privKey, err := crypto.DecodePrivateKey(crypto.SigningAlgorithm(sigAlgo), b)
 	if err != nil {
@@ -192,10 +233,11 @@ func DecodePrivateKey(sigAlgo SignatureAlgorithm, b []byte) (PrivateKey, error) 
 	}
 
 	return PrivateKey{
-		PrivateKey: privKey,
+		privateKey: privKey,
 	}, nil
 }
 
+// DecodePrivateKeyHex decodes a raw hex encoded private key with the given signature algorithm.
 func DecodePrivateKeyHex(sigAlgo SignatureAlgorithm, s string) (PrivateKey, error) {
 	b, err := hex.DecodeString(s)
 	if err != nil {
@@ -205,6 +247,7 @@ func DecodePrivateKeyHex(sigAlgo SignatureAlgorithm, s string) (PrivateKey, erro
 	return DecodePrivateKey(sigAlgo, b)
 }
 
+// DecodePublicKey decodes a raw byte encoded public key with the given signature algorithm.
 func DecodePublicKey(sigAlgo SignatureAlgorithm, b []byte) (PublicKey, error) {
 	pubKey, err := crypto.DecodePublicKey(crypto.SigningAlgorithm(sigAlgo), b)
 	if err != nil {
@@ -212,10 +255,11 @@ func DecodePublicKey(sigAlgo SignatureAlgorithm, b []byte) (PublicKey, error) {
 	}
 
 	return PublicKey{
-		PublicKey: pubKey,
+		publicKey: pubKey,
 	}, nil
 }
 
+// DecodePublicKeyHex decodes a raw hex encoded public key with the given signature algorithm.
 func DecodePublicKeyHex(sigAlgo SignatureAlgorithm, s string) (PublicKey, error) {
 	b, err := hex.DecodeString(s)
 	if err != nil {
@@ -223,44 +267,6 @@ func DecodePublicKeyHex(sigAlgo SignatureAlgorithm, s string) (PublicKey, error)
 	}
 
 	return DecodePublicKey(sigAlgo, b)
-}
-
-type Hasher = hash.Hasher
-type Hash = hash.Hash
-
-func NewHasher(algo HashAlgorithm) (Hasher, error) {
-	switch algo {
-	case SHA2_256:
-		return NewSHA2_256(), nil
-	case SHA2_384:
-		return NewSHA2_384(), nil
-	case SHA3_256:
-		return NewSHA3_256(), nil
-	case SHA3_384:
-		return NewSHA3_384(), nil
-	default:
-		return nil, fmt.Errorf("invalid hash algorithm %s", algo)
-	}
-}
-
-// NewSHA2_256 returns a new instance of SHA2-256 hasher.
-func NewSHA2_256() Hasher {
-	return hash.NewSHA2_256()
-}
-
-// NewSHA2_384 returns a new instance of SHA2-384 hasher.
-func NewSHA2_384() Hasher {
-	return hash.NewSHA2_384()
-}
-
-// NewSHA3_256 returns a new instance of SHA3-256 hasher.
-func NewSHA3_256() Hasher {
-	return hash.NewSHA3_256()
-}
-
-// NewSHA3_384 returns a new instance of SHA3-384 hasher.
-func NewSHA3_384() Hasher {
-	return hash.NewSHA3_384()
 }
 
 // CompatibleAlgorithms returns true if the signature and hash algorithms are compatible.

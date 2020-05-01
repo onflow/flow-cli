@@ -1,3 +1,21 @@
+/*
+ * Flow Go SDK
+ *
+ * Copyright 2019-2020 Dapper Labs, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package flow
 
 import (
@@ -17,12 +35,13 @@ func init() {
 	gob.Register(Address{})
 }
 
-// Address represents the 20 byte address of an account.
+// An Address is a 20-byte identifier for a Flow account.
 type Address [AddressLength]byte
 
 var (
 	// ZeroAddress represents the "zero address" (account that no one owns).
 	ZeroAddress = Address{}
+	// RootAddress is the address of the Flow root account.
 	RootAddress = BytesToAddress(big.NewInt(1).Bytes())
 )
 
@@ -41,7 +60,7 @@ func HexToAddress(h string) Address {
 	return BytesToAddress(b)
 }
 
-// SetBytes sets the address to the value of b.
+// SetBytes sets this address to the value of b.
 //
 // If b is larger than len(a) it will panic.
 func (a *Address) SetBytes(b []byte) {
@@ -51,21 +70,20 @@ func (a *Address) SetBytes(b []byte) {
 	copy(a[AddressLength-len(b):], b)
 }
 
-// Bytes returns the byte representation of the address.
+// Bytes returns the byte representation of this address.
 func (a Address) Bytes() []byte { return a[:] }
 
-// Hex returns the hex string representation of the address.
+// Hex returns the hex string representation of this address.
 func (a Address) Hex() string {
 	return hex.EncodeToString(a.Bytes())
 }
 
-// String returns the string representation of the address.
+// String returns the string representation of this address.
 func (a Address) String() string {
 	return a.Hex()
 }
 
-// Short returns the string representation of the address with leading zeros
-// removed.
+// Short returns the string representation of this address with leading zeros removed.
 func (a Address) Short() string {
 	hex := a.String()
 	trimmed := strings.TrimLeft(hex, "0")

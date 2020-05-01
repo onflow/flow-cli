@@ -1,3 +1,21 @@
+/*
+ * Flow Go SDK
+ *
+ * Copyright 2019-2020 Dapper Labs, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package flow
 
 import (
@@ -8,27 +26,36 @@ import (
 	"github.com/onflow/flow-go-sdk/crypto"
 )
 
-// Identifier represents a 32-byte unique identifier for an entity.
+// An Identifier is a 32-byte unique identifier for an entity.
 type Identifier [32]byte
 
+// ZeroID is the empty identifier.
 var ZeroID = Identifier{}
 
+// Bytes returns the bytes representation of this identifier.
 func (i Identifier) Bytes() []byte {
 	return i[:]
 }
 
+// Hex returns the hexadecimal string representation of this identifier.
 func (i Identifier) Hex() string {
 	return hex.EncodeToString(i[:])
 }
 
+// String returns the string representation of this identifier.
 func (i Identifier) String() string {
 	return i.Hex()
 }
 
-func HashToID(hash []byte) Identifier {
+// BytesToID constructs an identifier from a byte slice.
+func BytesToID(b []byte) Identifier {
 	var id Identifier
-	copy(id[:], hash)
+	copy(id[:], b)
 	return id
+}
+
+func HashToID(hash []byte) Identifier {
+	return BytesToID(hash)
 }
 
 // DefaultHasher is the default hasher used by Flow.
@@ -52,11 +79,4 @@ func mustRLPEncode(v interface{}) []byte {
 		panic(err)
 	}
 	return b
-}
-
-func mustRLPDecode(b []byte, v interface{}) {
-	err := rlpDecode(b, v)
-	if err != nil {
-		panic(err)
-	}
 }

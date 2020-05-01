@@ -15,7 +15,7 @@ github.com/c-bata/go-prompt
 github.com/cespare/xxhash
 # github.com/cespare/xxhash/v2 v2.1.1
 github.com/cespare/xxhash/v2
-# github.com/dapperlabs/flow-emulator v1.0.0-alpha.5.0.20200421150717-72be839cb07e
+# github.com/dapperlabs/flow-emulator v0.1.1
 github.com/dapperlabs/flow-emulator
 github.com/dapperlabs/flow-emulator/cmd/emulator/start
 github.com/dapperlabs/flow-emulator/execution
@@ -129,7 +129,7 @@ github.com/onflow/cadence/languageserver/config
 github.com/onflow/cadence/languageserver/jsonrpc2
 github.com/onflow/cadence/languageserver/protocol
 github.com/onflow/cadence/languageserver/server
-# github.com/onflow/flow-go-sdk v0.1.0-alpha.4.0.20200420223206-69aa6477a6e2
+# github.com/onflow/flow-go-sdk v0.1.1
 github.com/onflow/flow-go-sdk
 github.com/onflow/flow-go-sdk/client
 github.com/onflow/flow-go-sdk/client/convert
