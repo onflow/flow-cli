@@ -29,8 +29,8 @@ import (
 // An Identifier is a 32-byte unique identifier for an entity.
 type Identifier [32]byte
 
-// ZeroID is the empty identifier.
-var ZeroID = Identifier{}
+// EmptyID is the empty identifier.
+var EmptyID = Identifier{}
 
 // Bytes returns the bytes representation of this identifier.
 func (i Identifier) Bytes() []byte {
@@ -54,8 +54,32 @@ func BytesToID(b []byte) Identifier {
 	return id
 }
 
+// HexToID constructs an identifier from a hexadecimal string.
+func HexToID(h string) Identifier {
+	b, _ := hex.DecodeString(h)
+	return BytesToID(b)
+}
+
 func HashToID(hash []byte) Identifier {
 	return BytesToID(hash)
+}
+
+// A ChainID is a unique identifier for a specific Flow network instance.
+//
+// Chain IDs are used used to prevent replay attacks and to support network-specific address generation.
+type ChainID string
+
+// Mainnet is the chain ID for the mainnet node chain.
+const Mainnet ChainID = "flow-mainnet"
+
+// Testnet is the chain ID for the testnet node chain.
+const Testnet ChainID = "flow-testnet"
+
+// Emulator is the chain ID for the emulated node chain.
+const Emulator ChainID = "flow-emulator"
+
+func (id ChainID) String() string {
+	return string(id)
 }
 
 // DefaultHasher is the default hasher used by Flow.

@@ -22,6 +22,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/golang/protobuf/ptypes"
 	"github.com/onflow/cadence"
 	jsoncdc "github.com/onflow/cadence/encoding/json"
 	"github.com/onflow/flow/protobuf/go/flow/access"
@@ -33,19 +34,103 @@ import (
 
 var ErrEmptyMessage = errors.New("protobuf message is empty")
 
-func IDsToMessages(l []flow.Identifier) [][]byte {
-	results := make([][]byte, len(l))
-	for i, item := range l {
-		results[i] = item.Bytes()
+func AccountToMessage(a flow.Account) *entities.Account {
+	accountKeys := make([]*entities.AccountKey, len(a.Keys))
+	for i, key := range a.Keys {
+		accountKeys[i] = AccountKeyToMessage(key)
 	}
-	return results
+
+	return &entities.Account{
+		Address: a.Address.Bytes(),
+		Balance: a.Balance,
+		Code:    a.Code,
+		Keys:    accountKeys,
+	}
+}
+
+func MessageToAccount(m *entities.Account) (flow.Account, error) {
+	if m == nil {
+		return flow.Account{}, ErrEmptyMessage
+	}
+
+	accountKeys := make([]*flow.AccountKey, len(m.GetKeys()))
+	for i, key := range m.GetKeys() {
+		accountKey, err := MessageToAccountKey(key)
+		if err != nil {
+			return flow.Account{}, err
+		}
+
+		accountKeys[i] = accountKey
+	}
+
+	return flow.Account{
+		Address: flow.BytesToAddress(m.GetAddress()),
+		Balance: m.GetBalance(),
+		Code:    m.GetCode(),
+		Keys:    accountKeys,
+	}, nil
+}
+
+func AccountKeyToMessage(a *flow.AccountKey) *entities.AccountKey {
+	return &entities.AccountKey{
+		Index:          uint32(a.ID),
+		PublicKey:      a.PublicKey.Encode(),
+		SignAlgo:       uint32(a.SigAlgo),
+		HashAlgo:       uint32(a.HashAlgo),
+		Weight:         uint32(a.Weight),
+		SequenceNumber: uint32(a.SequenceNumber),
+	}
+}
+
+func MessageToAccountKey(m *entities.AccountKey) (*flow.AccountKey, error) {
+	if m == nil {
+		return nil, ErrEmptyMessage
+	}
+
+	sigAlgo := crypto.SignatureAlgorithm(m.GetSignAlgo())
+	hashAlgo := crypto.HashAlgorithm(m.GetHashAlgo())
+
+	publicKey, err := crypto.DecodePublicKey(sigAlgo, m.GetPublicKey())
+	if err != nil {
+		return nil, err
+	}
+
+	return &flow.AccountKey{
+		ID:             int(m.GetIndex()),
+		PublicKey:      publicKey,
+		SigAlgo:        sigAlgo,
+		HashAlgo:       hashAlgo,
+		Weight:         int(m.GetWeight()),
+		SequenceNumber: uint64(m.GetSequenceNumber()),
+	}, nil
+}
+
+func BlockToMessage(b flow.Block) (*entities.Block, error) {
+	t, err := ptypes.TimestampProto(b.BlockHeader.Timestamp)
+	if err != nil {
+		return nil, fmt.Errorf("convert: failed to convert block timestamp to message: %w", err)
+	}
+
+	return &entities.Block{
+		Id:                   b.BlockHeader.ID.Bytes(),
+		ParentId:             b.BlockHeader.ParentID.Bytes(),
+		Height:               b.BlockHeader.Height,
+		Timestamp:            t,
+		CollectionGuarantees: CollectionGuaranteesToMessages(b.BlockPayload.CollectionGuarantees),
+	}, nil
 }
 
 func MessageToBlock(m *entities.Block) (flow.Block, error) {
-	header := flow.BlockHeader{
-		ID:       flow.HashToID(m.GetId()),
-		ParentID: flow.HashToID(m.GetParentId()),
-		Height:   m.GetHeight(),
+	t, err := ptypes.Timestamp(m.Timestamp)
+	if err != nil {
+		return flow.Block{}, err
+	}
+
+	header := &flow.BlockHeader{
+		ID:        flow.HashToID(m.GetId()),
+		ParentID:  flow.HashToID(m.GetParentId()),
+		Height:    m.GetHeight(),
+		Timestamp: t,
 	}
 
 	guarantees, err := MessagesToCollectionGuarantees(m.GetCollectionGuarantees())
@@ -53,23 +138,28 @@ func MessageToBlock(m *entities.Block) (flow.Block, error) {
 		return flow.Block{}, err
 	}
 
-	payload := flow.BlockPayload{
+	payload := &flow.BlockPayload{
 		CollectionGuarantees: guarantees,
 	}
 
 	return flow.Block{
-		BlockHeader:  header,
-		BlockPayload: payload,
+		BlockHeader:  *header,
+		BlockPayload: *payload,
 	}, nil
 }
 
-func BlockToMessage(b flow.Block) *entities.Block {
-	return &entities.Block{
-		Id:                   b.ID.Bytes(),
-		ParentId:             b.ParentID.Bytes(),
-		Height:               b.Height,
-		CollectionGuarantees: CollectionGuaranteesToMessages(b.CollectionGuarantees),
+func BlockHeaderToMessage(b flow.BlockHeader) (*entities.BlockHeader, error) {
+	t, err := ptypes.TimestampProto(b.Timestamp)
+	if err != nil {
+		return nil, fmt.Errorf("convert: failed to convert message to block timestamp: %w", err)
 	}
+
+	return &entities.BlockHeader{
+		Id:        b.ID.Bytes(),
+		ParentId:  b.ParentID.Bytes(),
+		Height:    b.Height,
+		Timestamp: t,
+	}, nil
 }
 
 func MessageToBlockHeader(m *entities.BlockHeader) (flow.BlockHeader, error) {
@@ -77,55 +167,46 @@ func MessageToBlockHeader(m *entities.BlockHeader) (flow.BlockHeader, error) {
 		return flow.BlockHeader{}, ErrEmptyMessage
 	}
 
+	t, err := ptypes.Timestamp(m.Timestamp)
+	if err != nil {
+		return flow.BlockHeader{}, err
+	}
+
 	return flow.BlockHeader{
-		ID:       flow.HashToID(m.GetId()),
-		ParentID: flow.HashToID(m.GetParentId()),
-		Height:   m.GetHeight(),
+		ID:        flow.HashToID(m.GetId()),
+		ParentID:  flow.HashToID(m.GetParentId()),
+		Height:    m.GetHeight(),
+		Timestamp: t,
 	}, nil
 }
 
-func BlockHeaderToMessage(b flow.BlockHeader) *entities.BlockHeader {
-	return &entities.BlockHeader{
-		Id:       b.ID.Bytes(),
-		ParentId: b.ParentID.Bytes(),
-		Height:   b.Height,
+func CadenceValueToMessage(value cadence.Value) ([]byte, error) {
+	b, err := jsoncdc.Encode(value)
+	if err != nil {
+		return nil, fmt.Errorf("convert: %w", err)
 	}
+
+	return b, nil
 }
 
-func MessageToCollectionGuarantee(m *entities.CollectionGuarantee) (flow.CollectionGuarantee, error) {
-	if m == nil {
-		return flow.CollectionGuarantee{}, ErrEmptyMessage
+func MessageToCadenceValue(m []byte) (cadence.Value, error) {
+	v, err := jsoncdc.Decode(m)
+	if err != nil {
+		return nil, fmt.Errorf("convert: %w", err)
 	}
 
-	return flow.CollectionGuarantee{
-		CollectionID: flow.HashToID(m.CollectionId),
-	}, nil
+	return v, nil
 }
 
-func MessagesToCollectionGuarantees(l []*entities.CollectionGuarantee) ([]*flow.CollectionGuarantee, error) {
-	results := make([]*flow.CollectionGuarantee, len(l))
-	for i, item := range l {
-		temp, err := MessageToCollectionGuarantee(item)
-		if err != nil {
-			return nil, err
-		}
-		results[i] = &temp
+func CollectionToMessage(c flow.Collection) *entities.Collection {
+	transactionIDMessages := make([][]byte, len(c.TransactionIDs))
+	for i, transactionID := range c.TransactionIDs {
+		transactionIDMessages[i] = transactionID.Bytes()
 	}
-	return results, nil
-}
 
-func CollectionGuaranteeToMessage(g flow.CollectionGuarantee) *entities.CollectionGuarantee {
-	return &entities.CollectionGuarantee{
-		CollectionId: g.CollectionID.Bytes(),
+	return &entities.Collection{
+		TransactionIds: transactionIDMessages,
 	}
-}
-
-func CollectionGuaranteesToMessages(l []*flow.CollectionGuarantee) []*entities.CollectionGuarantee {
-	results := make([]*entities.CollectionGuarantee, len(l))
-	for i, item := range l {
-		results[i] = CollectionGuaranteeToMessage(*item)
-	}
-	return results
 }
 
 func MessageToCollection(m *entities.Collection) (flow.Collection, error) {
@@ -145,61 +226,112 @@ func MessageToCollection(m *entities.Collection) (flow.Collection, error) {
 	}, nil
 }
 
-func CollectionToMessage(c flow.Collection) *entities.Collection {
-	transactionIDMessages := make([][]byte, len(c.TransactionIDs))
-	for i, transactionID := range c.TransactionIDs {
-		transactionIDMessages[i] = transactionID.Bytes()
-	}
-
-	return &entities.Collection{
-		TransactionIds: transactionIDMessages,
+func CollectionGuaranteeToMessage(g flow.CollectionGuarantee) *entities.CollectionGuarantee {
+	return &entities.CollectionGuarantee{
+		CollectionId: g.CollectionID.Bytes(),
 	}
 }
 
-func MessageToTransaction(m *entities.Transaction) (flow.Transaction, error) {
+func MessageToCollectionGuarantee(m *entities.CollectionGuarantee) (flow.CollectionGuarantee, error) {
 	if m == nil {
-		return flow.Transaction{}, ErrEmptyMessage
+		return flow.CollectionGuarantee{}, ErrEmptyMessage
 	}
 
-	t := flow.NewTransaction()
-
-	t.SetScript(m.GetScript())
-	t.SetReferenceBlockID(flow.HashToID(m.GetReferenceBlockId()))
-	t.SetGasLimit(m.GetGasLimit())
-
-	proposalKey := m.GetProposalKey()
-	if proposalKey != nil {
-		proposalAddress := flow.BytesToAddress(proposalKey.GetAddress())
-		t.SetProposalKey(proposalAddress, int(proposalKey.GetKeyId()), proposalKey.GetSequenceNumber())
-	}
-
-	payer := m.GetPayer()
-	if payer != nil {
-		t.SetPayer(
-			flow.BytesToAddress(payer),
-		)
-	}
-
-	for _, authorizer := range m.GetAuthorizers() {
-		t.AddAuthorizer(
-			flow.BytesToAddress(authorizer),
-		)
-	}
-
-	for _, sig := range m.GetPayloadSignatures() {
-		addr := flow.BytesToAddress(sig.GetAddress())
-		t.AddPayloadSignature(addr, int(sig.GetKeyId()), sig.GetSignature())
-	}
-
-	for _, sig := range m.GetEnvelopeSignatures() {
-		addr := flow.BytesToAddress(sig.GetAddress())
-		t.AddEnvelopeSignature(addr, int(sig.GetKeyId()), sig.GetSignature())
-	}
-
-	return *t, nil
+	return flow.CollectionGuarantee{
+		CollectionID: flow.HashToID(m.CollectionId),
+	}, nil
 }
 
-func TransactionToMessage(t flow.Transaction) *entities.Transaction {
+func CollectionGuaranteesToMessages(l []*flow.CollectionGuarantee) []*entities.CollectionGuarantee {
+	results := make([]*entities.CollectionGuarantee, len(l))
+	for i, item := range l {
+		results[i] = CollectionGuaranteeToMessage(*item)
+	}
+	return results
+}
+
+func MessagesToCollectionGuarantees(l []*entities.CollectionGuarantee) ([]*flow.CollectionGuarantee, error) {
+	results := make([]*flow.CollectionGuarantee, len(l))
+	for i, item := range l {
+		temp, err := MessageToCollectionGuarantee(item)
+		if err != nil {
+			return nil, err
+		}
+		results[i] = &temp
+	}
+	return results, nil
+}
+
+func EventToMessage(e flow.Event) (*entities.Event, error) {
+	payload, err := CadenceValueToMessage(e.Value)
+	if err != nil {
+		return nil, err
+	}
+
+	return &entities.Event{
+		Type:             e.Type,
+		TransactionId:    e.TransactionID[:],
+		TransactionIndex: uint32(e.TransactionIndex),
+		EventIndex:       uint32(e.EventIndex),
+		Payload:          payload,
+	}, nil
+}
+
+func MessageToEvent(m *entities.Event) (flow.Event, error) {
+	value, err := MessageToCadenceValue(m.GetPayload())
+	if err != nil {
+		return flow.Event{}, err
+	}
+
+	eventValue, isEvent := value.(cadence.Event)
+	if !isEvent {
+		return flow.Event{}, fmt.Errorf("convert: expected Event value, got %s", eventValue.Type().ID())
+	}
+
+	return flow.Event{
+		Type:             m.GetType(),
+		TransactionID:    flow.HashToID(m.GetTransactionId()),
+		TransactionIndex: int(m.GetTransactionIndex()),
+		EventIndex:       int(m.GetEventIndex()),
+		Value:            eventValue,
+	}, nil
+}
+
+func IdentifierToMessage(i flow.Identifier) []byte {
+	return i.Bytes()
+}
+
+func MessageToIdentifier(b []byte) flow.Identifier {
+	return flow.BytesToID(b)
+}
+
+func IdentifiersToMessages(l []flow.Identifier) [][]byte {
+	results := make([][]byte, len(l))
+	for i, item := range l {
+		results[i] = IdentifierToMessage(item)
+	}
+	return results
+}
+
+func MessagesToIdentifiers(l [][]byte) []flow.Identifier {
+	results := make([]flow.Identifier, len(l))
+	for i, item := range l {
+		results[i] = MessageToIdentifier(item)
+	}
+	return results
+}
+
+func TransactionToMessage(t flow.Transaction) (*entities.Transaction, error) {
+	var err error
+
+	arguments := make([][]byte, len(t.Arguments))
+	for i, arg := range t.Arguments {
+		arguments[i], err = CadenceValueToMessage(arg)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	proposalKeyMessage := &entities.Transaction_ProposalKey{
 		Address:        t.ProposalKey.Address.Bytes(),
 		KeyId:          uint32(t.ProposalKey.KeyID),
@@ -233,6 +365,7 @@ func TransactionToMessage(t flow.Transaction) *entities.Transaction {
 
 	return &entities.Transaction{
 		Script:             t.Script,
+		Arguments:          arguments,
 		ReferenceBlockId:   t.ReferenceBlockID.Bytes(),
 		GasLimit:           t.GasLimit,
 		ProposalKey:        proposalKeyMessage,
@@ -240,7 +373,87 @@ func TransactionToMessage(t flow.Transaction) *entities.Transaction {
 		Authorizers:        authMessages,
 		PayloadSignatures:  payloadSigMessages,
 		EnvelopeSignatures: envelopeSigMessages,
+	}, nil
+}
+
+func MessageToTransaction(m *entities.Transaction) (flow.Transaction, error) {
+	if m == nil {
+		return flow.Transaction{}, ErrEmptyMessage
 	}
+
+	t := flow.NewTransaction()
+
+	t.SetScript(m.GetScript())
+	t.SetReferenceBlockID(flow.HashToID(m.GetReferenceBlockId()))
+	t.SetGasLimit(m.GetGasLimit())
+
+	for _, arg := range m.GetArguments() {
+		value, err := MessageToCadenceValue(arg)
+		if err != nil {
+			return flow.Transaction{}, err
+		}
+
+		t.AddArgument(value)
+	}
+
+	proposalKey := m.GetProposalKey()
+	if proposalKey != nil {
+		proposalAddress := flow.BytesToAddress(proposalKey.GetAddress())
+		t.SetProposalKey(proposalAddress, int(proposalKey.GetKeyId()), proposalKey.GetSequenceNumber())
+	}
+
+	payer := m.GetPayer()
+	if payer != nil {
+		t.SetPayer(
+			flow.BytesToAddress(payer),
+		)
+	}
+
+	for _, authorizer := range m.GetAuthorizers() {
+		t.AddAuthorizer(
+			flow.BytesToAddress(authorizer),
+		)
+	}
+
+	for _, sig := range m.GetPayloadSignatures() {
+		addr := flow.BytesToAddress(sig.GetAddress())
+		t.AddPayloadSignature(addr, int(sig.GetKeyId()), sig.GetSignature())
+	}
+
+	for _, sig := range m.GetEnvelopeSignatures() {
+		addr := flow.BytesToAddress(sig.GetAddress())
+		t.AddEnvelopeSignature(addr, int(sig.GetKeyId()), sig.GetSignature())
+	}
+
+	return *t, nil
+}
+
+func TransactionResultToMessage(result flow.TransactionResult) (*access.TransactionResultResponse, error) {
+	eventMessages := make([]*entities.Event, len(result.Events))
+
+	for i, event := range result.Events {
+		eventMsg, err := EventToMessage(event)
+		if err != nil {
+			return nil, err
+		}
+
+		eventMessages[i] = eventMsg
+	}
+
+	statusCode := 0
+	errorMsg := ""
+
+	if result.Error != nil {
+		statusCode = 1
+		errorMsg = result.Error.Error()
+	}
+
+	return &access.TransactionResultResponse{
+		Status:       entities.TransactionStatus(result.Status),
+		StatusCode:   uint32(statusCode),
+		ErrorMessage: errorMsg,
+		Events:       eventMessages,
+	}, nil
 }
 
 func MessageToTransactionResult(m *access.TransactionResultResponse) (flow.TransactionResult, error) {
@@ -272,145 +485,5 @@ func MessageToTransactionResult(m *access.TransactionResultResponse) (flow.Trans
 		Status: flow.TransactionStatus(m.GetStatus()),
 		Error:  err,
 		Events: events,
-	}, nil
-}
-
-func TransactionResultToMessage(result flow.TransactionResult) (*access.TransactionResultResponse, error) {
-	eventMessages := make([]*entities.Event, len(result.Events))
-
-	for i, event := range result.Events {
-		eventMsg, err := EventToMessage(event)
-		if err != nil {
-			return nil, err
-		}
-
-		eventMessages[i] = eventMsg
-	}
-
-	statusCode := 0
-	errorMsg := ""
-
-	if result.Error != nil {
-		statusCode = 1
-		errorMsg = result.Error.Error()
-	}
-
-	return &access.TransactionResultResponse{
-		Status:       entities.TransactionStatus(result.Status),
-		StatusCode:   uint32(statusCode),
-		ErrorMessage: errorMsg,
-		Events:       eventMessages,
-	}, nil
-}
-
-func MessageToAccount(m *entities.Account) (flow.Account, error) {
-	if m == nil {
-		return flow.Account{}, ErrEmptyMessage
-	}
-
-	accountKeys := make([]*flow.AccountKey, len(m.Keys))
-	for i, key := range m.Keys {
-		accountKey, err := MessageToAccountKey(key)
-		if err != nil {
-			return flow.Account{}, err
-		}
-
-		accountKeys[i] = accountKey
-	}
-
-	return flow.Account{
-		Address: flow.BytesToAddress(m.Address),
-		Balance: m.Balance,
-		Code:    m.Code,
-		Keys:    accountKeys,
-	}, nil
-}
-
-func AccountToMessage(a flow.Account) (*entities.Account, error) {
-	accountKeys := make([]*entities.AccountKey, len(a.Keys))
-	for i, key := range a.Keys {
-		accountKeyMsg, err := AccountKeyToMessage(key)
-		if err != nil {
-			return nil, err
-		}
-		accountKeys[i] = accountKeyMsg
-	}
-
-	return &entities.Account{
-		Address: a.Address.Bytes(),
-		Balance: a.Balance,
-		Code:    a.Code,
-		Keys:    accountKeys,
-	}, nil
-}
-
-func MessageToAccountKey(m *entities.AccountKey) (*flow.AccountKey, error) {
-	if m == nil {
-		return nil, ErrEmptyMessage
-	}
-
-	sigAlgo := crypto.SignatureAlgorithm(m.GetSignAlgo())
-	hashAlgo := crypto.HashAlgorithm(m.GetHashAlgo())
-
-	publicKey, err := crypto.DecodePublicKey(sigAlgo, m.GetPublicKey())
-	if err != nil {
-		return nil, err
-	}
-
-	return &flow.AccountKey{
-		ID:             int(m.GetIndex()),
-		PublicKey:      publicKey,
-		SigAlgo:        sigAlgo,
-		HashAlgo:       hashAlgo,
-		Weight:         int(m.GetWeight()),
-		SequenceNumber: uint64(m.GetSequenceNumber()),
-	}, nil
-}
-
-func AccountKeyToMessage(a *flow.AccountKey) (*entities.AccountKey, error) {
-	publicKey := a.PublicKey.Encode()
-
-	return &entities.AccountKey{
-		Index:          uint32(a.ID),
-		PublicKey:      publicKey,
-		SignAlgo:       uint32(a.SigAlgo),
-		HashAlgo:       uint32(a.HashAlgo),
-		Weight:         uint32(a.Weight),
-		SequenceNumber: uint32(a.SequenceNumber),
-	}, nil
-}
-
-func MessageToEvent(m *entities.Event) (flow.Event, error) {
-	value, err := jsoncdc.Decode(m.GetPayload())
-	if err != nil {
-		return flow.Event{}, nil
-	}
-
-	eventValue, isEvent := value.(cadence.Event)
-	if !isEvent {
-		return flow.Event{}, fmt.Errorf("convert: expected Event value, got %s", eventValue.Type().ID())
-	}
-
-	return flow.Event{
-		Type:             m.GetType(),
-		TransactionID:    flow.HashToID(m.GetTransactionId()),
-		TransactionIndex: int(m.GetTransactionIndex()),
-		EventIndex:       int(m.GetEventIndex()),
-		Value:            eventValue,
-	}, nil
-}
-
-func EventToMessage(e flow.Event) (*entities.Event, error) {
-	payload, err := jsoncdc.Encode(e.Value)
-	if err != nil {
-		return nil, fmt.Errorf("convert: %w", err)
-	}
-
-	return &entities.Event{
-		Type:             e.Type,
-		TransactionId:    e.TransactionID[:],
-		TransactionIndex: uint32(e.TransactionIndex),
-		EventIndex:       uint32(e.EventIndex),
-		Payload:          payload,
 	}, nil
 }

@@ -2,27 +2,24 @@
 
 package flow
 
-import (
-	"github.com/dapperlabs/flow-go/crypto"
-)
-
 type Seal struct {
-	BlockID           Identifier
-	ExecutionResultID Identifier
-	PreviousState     StateCommitment
-	FinalState        StateCommitment
-	Signature         crypto.Signature
+	BlockID      Identifier
+	ResultID     Identifier
+	InitialState StateCommitment
+	FinalState   StateCommitment
 }
 
 func (s Seal) Body() interface{} {
 	return struct {
-		BlockID       Identifier
-		PreviousState StateCommitment
-		FinalState    StateCommitment
+		BlockID      Identifier
+		ResultID     Identifier
+		InitialState StateCommitment
+		FinalState   StateCommitment
 	}{
-		BlockID:       s.BlockID,
-		PreviousState: s.PreviousState,
-		FinalState:    s.FinalState,
+		BlockID:      s.BlockID,
+		ResultID:     s.ResultID,
+		InitialState: s.InitialState,
+		FinalState:   s.FinalState,
 	}
 }
 

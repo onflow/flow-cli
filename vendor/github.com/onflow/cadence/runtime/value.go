@@ -21,32 +21,32 @@ package runtime
 import (
 	"github.com/onflow/cadence/runtime/common"
 	"github.com/onflow/cadence/runtime/interpreter"
+	"github.com/onflow/cadence/runtime/sema"
 )
 
-// A Value is a Cadence value emitted by the runtime.
+// An exportableValue is a Cadence value emitted by the runtime.
 //
-// Runtime values can be converted to a simplified representation
-// and then further encoded for transport or use in other languages
-// and environments.
-type Value struct {
+// Runtime values can be exported to a simplified representation then further
+// encoded for transport or use in other environments.
+type exportableValue struct {
 	interpreter.Value
 	inter *interpreter.Interpreter
 }
 
-func newRuntimeValue(value interpreter.Value, inter *interpreter.Interpreter) Value {
-	return Value{
-		Value: value,
+func newExportableValue(v interpreter.Value, inter *interpreter.Interpreter) exportableValue {
+	return exportableValue{
+		Value: v,
 		inter: inter,
 	}
 }
 
-func (v Value) Interpreter() *interpreter.Interpreter {
+func (v exportableValue) Interpreter() *interpreter.Interpreter {
 	return v.inter
 }
 
-type Event struct {
-	Type   Type
-	Fields []Value
+type exportableEvent struct {
+	Type   sema.Type
+	Fields []exportableValue
 }
 
 type Address = common.Address

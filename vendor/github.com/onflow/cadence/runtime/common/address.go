@@ -22,7 +22,7 @@ import (
 	"fmt"
 )
 
-const AddressLength = 20
+const AddressLength = 8
 
 type Address [AddressLength]byte
 
@@ -53,4 +53,17 @@ func (a *Address) SetBytes(b []byte) {
 	}
 
 	copy(a[AddressLength-len(b):], b)
+}
+
+func (a Address) Bytes() []byte {
+	// Trim leading zeros
+	leadingZeros := 0
+	for _, b := range a {
+		if b != 0 {
+			break
+		}
+		leadingZeros += 1
+	}
+
+	return a[leadingZeros:]
 }

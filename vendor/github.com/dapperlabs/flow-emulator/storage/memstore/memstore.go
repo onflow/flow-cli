@@ -5,8 +5,8 @@ import (
 	"sync"
 
 	vm "github.com/dapperlabs/flow-go/engine/execution/computation/virtualmachine"
-	model "github.com/dapperlabs/flow-go/model/flow"
-	"github.com/onflow/flow-go-sdk"
+	"github.com/dapperlabs/flow-go/engine/execution/state/delta"
+	flowgo "github.com/dapperlabs/flow-go/model/flow"
 
 	"github.com/dapperlabs/flow-emulator/storage"
 	"github.com/dapperlabs/flow-emulator/types"
@@ -16,19 +16,19 @@ import (
 type Store struct {
 	mu sync.RWMutex
 	// block ID to block height
-	blockIDToHeight map[flow.Identifier]uint64
+	blockIDToHeight map[flowgo.Identifier]uint64
 	// blocks by height
-	blocks map[uint64]types.Block
+	blocks map[uint64]flowgo.Block
 	// collections by ID
-	collections map[model.Identifier]model.LightCollection
+	collections map[flowgo.Identifier]flowgo.LightCollection
 	// transactions by ID
-	transactions map[flow.Identifier]flow.Transaction
-	// transaction results by ID
-	transactionResults map[flow.Identifier]types.StorableTransactionResult
-	// ledger states by block height
+	transactions map[flowgo.Identifier]flowgo.TransactionBody
+	// Transaction results by ID
+	transactionResults map[flowgo.Identifier]types.StorableTransactionResult
+	// Ledger states by block height
 	ledger map[uint64]vm.MapLedger
 	// events by block height
-	eventsByBlockHeight map[uint64][]flow.Event
+	eventsByBlockHeight map[uint64][]flowgo.Event
 	// highest block height
 	blockHeight uint64
 }
@@ -37,68 +37,77 @@ type Store struct {
 func New() *Store {
 	return &Store{
 		mu:                  sync.RWMutex{},
-		blockIDToHeight:     make(map[flow.Identifier]uint64),
-		blocks:              make(map[uint64]types.Block),
-		collections:         make(map[model.Identifier]model.LightCollection),
-		transactions:        make(map[flow.Identifier]flow.Transaction),
-		transactionResults:  make(map[flow.Identifier]types.StorableTransactionResult),
+		blockIDToHeight:     make(map[flowgo.Identifier]uint64),
+		blocks:              make(map[uint64]flowgo.Block),
+		collections:         make(map[flowgo.Identifier]flowgo.LightCollection),
+		transactions:        make(map[flowgo.Identifier]flowgo.TransactionBody),
+		transactionResults:  make(map[flowgo.Identifier]types.StorableTransactionResult),
 		ledger:              make(map[uint64]vm.MapLedger),
-		eventsByBlockHeight: make(map[uint64][]flow.Event),
+		eventsByBlockHeight: make(map[uint64][]flowgo.Event),
 	}
 }
 
-func (s *Store) LatestBlock() (types.Block, error) {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
+var _ storage.Store = &Store{}
 
-	latestBlock, ok := s.blocks[s.blockHeight]
-	if !ok {
-		return types.Block{}, storage.ErrNotFound
-	}
-	return latestBlock, nil
-}
-
-func (s *Store) BlockByID(id flow.Identifier) (types.Block, error) {
+func (s *Store) BlockByID(id flowgo.Identifier) (*flowgo.Block, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
 	blockHeight := s.blockIDToHeight[id]
 	block, ok := s.blocks[blockHeight]
 	if !ok {
-		return types.Block{}, storage.ErrNotFound
+		return nil, storage.ErrNotFound
 	}
 
-	return block, nil
+	return &block, nil
 }
 
-func (s *Store) BlockByHeight(blockHeight uint64) (types.Block, error) {
+func (s *Store) BlockByHeight(blockHeight uint64) (*flowgo.Block, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
 	block, ok := s.blocks[blockHeight]
 	if !ok {
-		return types.Block{}, storage.ErrNotFound
+		return nil, storage.ErrNotFound
 	}
 
-	return block, nil
+	return &block, nil
 }
 
-func (s *Store) insertBlock(block types.Block) error {
-	s.blocks[block.Height] = block
-	if block.Height > s.blockHeight {
-		s.blockHeight = block.Height
+func (s *Store) LatestBlock() (flowgo.Block, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	latestBlock, ok := s.blocks[s.blockHeight]
+	if !ok {
+		return flowgo.Block{}, storage.ErrNotFound
+	}
+	return latestBlock, nil
+}
+
+func (s *Store) StoreBlock(block *flowgo.Block) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	return s.store(block)
+}
+
+func (s *Store) store(block *flowgo.Block) error {
+	s.blocks[block.Header.Height] = *block
+	if block.Header.Height > s.blockHeight {
+		s.blockHeight = block.Header.Height
 	}
 
 	return nil
 }
 
 func (s *Store) CommitBlock(
-	block *types.Block,
-	collections []*model.LightCollection,
-	transactions map[flow.Identifier]*flow.Transaction,
-	transactionResults map[flow.Identifier]*types.StorableTransactionResult,
-	delta types.LedgerDelta,
-	events []flow.Event,
+	block flowgo.Block,
+	collections []*flowgo.LightCollection,
+	transactions map[flowgo.Identifier]*flowgo.TransactionBody,
+	transactionResults map[flowgo.Identifier]*types.StorableTransactionResult,
+	delta delta.Delta,
+	events []flowgo.Event,
 ) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -111,7 +120,7 @@ func (s *Store) CommitBlock(
 		)
 	}
 
-	err := s.insertBlock(*block)
+	err := s.store(&block)
 	if err != nil {
 		return err
 	}
@@ -123,8 +132,8 @@ func (s *Store) CommitBlock(
 		}
 	}
 
-	for txID, tx := range transactions {
-		err := s.insertTransaction(txID, *tx)
+	for _, tx := range transactions {
+		err := s.insertTransaction(tx.ID(), *tx)
 		if err != nil {
 			return err
 		}
@@ -137,12 +146,12 @@ func (s *Store) CommitBlock(
 		}
 	}
 
-	err = s.insertLedgerDelta(block.Height, delta)
+	err = s.insertLedgerDelta(block.Header.Height, delta)
 	if err != nil {
 		return err
 	}
 
-	err = s.insertEvents(block.Height, events)
+	err = s.insertEvents(block.Header.Height, events)
 	if err != nil {
 		return err
 	}
@@ -150,39 +159,39 @@ func (s *Store) CommitBlock(
 	return nil
 }
 
-func (s *Store) CollectionByID(colID flow.Identifier) (model.LightCollection, error) {
+func (s *Store) CollectionByID(colID flowgo.Identifier) (flowgo.LightCollection, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
-	tx, ok := s.collections[model.Identifier(colID)]
+	tx, ok := s.collections[colID]
 	if !ok {
-		return model.LightCollection{}, storage.ErrNotFound
+		return flowgo.LightCollection{}, storage.ErrNotFound
 	}
 	return tx, nil
 }
 
-func (s *Store) insertCollection(col model.LightCollection) error {
+func (s *Store) insertCollection(col flowgo.LightCollection) error {
 	s.collections[col.ID()] = col
 	return nil
 }
 
-func (s *Store) TransactionByID(txID flow.Identifier) (flow.Transaction, error) {
+func (s *Store) TransactionByID(txID flowgo.Identifier) (flowgo.TransactionBody, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
 	tx, ok := s.transactions[txID]
 	if !ok {
-		return flow.Transaction{}, storage.ErrNotFound
+		return flowgo.TransactionBody{}, storage.ErrNotFound
 	}
 	return tx, nil
 }
 
-func (s *Store) insertTransaction(txID flow.Identifier, tx flow.Transaction) error {
+func (s *Store) insertTransaction(txID flowgo.Identifier, tx flowgo.TransactionBody) error {
 	s.transactions[txID] = tx
 	return nil
 }
 
-func (s *Store) TransactionResultByID(txID flow.Identifier) (types.StorableTransactionResult, error) {
+func (s *Store) TransactionResultByID(txID flowgo.Identifier) (types.StorableTransactionResult, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
@@ -193,13 +202,15 @@ func (s *Store) TransactionResultByID(txID flow.Identifier) (types.StorableTrans
 	return result, nil
 }
 
-func (s *Store) insertTransactionResult(txID flow.Identifier, result types.StorableTransactionResult) error {
+func (s *Store) insertTransactionResult(txID flowgo.Identifier, result types.StorableTransactionResult) error {
 	s.transactionResults[txID] = result
 	return nil
 }
 
-func (s *Store) LedgerViewByHeight(blockHeight uint64) *types.LedgerView {
-	return types.NewLedgerView(func(key string) ([]byte, error) {
+func (s *Store) LedgerViewByHeight(blockHeight uint64) *delta.View {
+	return delta.NewView(func(key flowgo.RegisterID) (value flowgo.RegisterValue, err error) {
+
+		//return types.NewLedgerView(func(key string) ([]byte, error) {
 		s.mu.RLock()
 		defer s.mu.RUnlock()
 
@@ -208,11 +219,11 @@ func (s *Store) LedgerViewByHeight(blockHeight uint64) *types.LedgerView {
 			return nil, nil
 		}
 
-		return ledger[key], nil
+		return ledger[string(key)], nil
 	})
 }
 
-func (s *Store) insertLedgerDelta(blockHeight uint64, delta types.LedgerDelta) error {
+func (s *Store) insertLedgerDelta(blockHeight uint64, delta delta.Delta) error {
 	var oldLedger vm.MapLedger
 
 	// use empty ledger if this is the genesis block
@@ -225,17 +236,20 @@ func (s *Store) insertLedgerDelta(blockHeight uint64, delta types.LedgerDelta) e
 	newLedger := make(vm.MapLedger)
 
 	// copy values from the previous ledger
-	for key, value := range oldLedger {
+	for keyString, value := range oldLedger {
+		key := flowgo.RegisterID(keyString)
 		// do not copy deleted values
 		if !delta.HasBeenDeleted(key) {
-			newLedger[key] = value
+			newLedger[keyString] = value
 		}
 	}
 
 	// write all updated values
-	for key, value := range delta.Updates() {
+	ids, values := delta.RegisterUpdates()
+	for i, value := range values {
+		key := ids[i]
 		if value != nil {
-			newLedger[key] = value
+			newLedger[string(key)] = value
 		}
 	}
 
@@ -244,19 +258,19 @@ func (s *Store) insertLedgerDelta(blockHeight uint64, delta types.LedgerDelta) e
 	return nil
 }
 
-func (s *Store) EventsByHeight(blockHeight uint64, eventType string) ([]flow.Event, error) {
+func (s *Store) EventsByHeight(blockHeight uint64, eventType string) ([]flowgo.Event, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
 	allEvents := s.eventsByBlockHeight[blockHeight]
 
-	events := make([]flow.Event, 0)
+	events := make([]flowgo.Event, 0)
 
 	for _, event := range allEvents {
 		if eventType == "" {
 			events = append(events, event)
 		} else {
-			if event.Type == eventType {
+			if string(event.Type) == eventType {
 				events = append(events, event)
 			}
 		}
@@ -265,7 +279,7 @@ func (s *Store) EventsByHeight(blockHeight uint64, eventType string) ([]flow.Eve
 	return events, nil
 }
 
-func (s *Store) insertEvents(blockHeight uint64, events []flow.Event) error {
+func (s *Store) insertEvents(blockHeight uint64, events []flowgo.Event) error {
 	if s.eventsByBlockHeight[blockHeight] == nil {
 		s.eventsByBlockHeight[blockHeight] = events
 	} else {

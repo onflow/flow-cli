@@ -131,18 +131,12 @@ func (v Bytes) ToGoValue() interface{} {
 
 // Address
 
-const AddressLength = 20
+const AddressLength = 8
 
 type Address [AddressLength]byte
 
 func NewAddress(b [AddressLength]byte) Address {
 	return b
-}
-
-func NewAddressFromBytes(b []byte) Address {
-	var a Address
-	copy(a[:], b)
-	return a
 }
 
 func (Address) isValue() {}

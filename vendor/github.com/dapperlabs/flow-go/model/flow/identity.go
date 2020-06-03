@@ -3,27 +3,29 @@ package flow
 import (
 	"encoding/json"
 	"fmt"
+	"math"
 	"math/rand"
 	"regexp"
+	"sort"
 	"strconv"
 
 	"github.com/pkg/errors"
+	"github.com/vmihailenco/msgpack"
 
 	"github.com/dapperlabs/flow-go/crypto"
 )
 
 // rxid is the regex for parsing node identity entries.
-var rxid = regexp.MustCompile(`^(collection|consensus|execution|verification|observation)-([0-9a-fA-F]{64})@([\w\d]+|[\w\d][\w\d\-]*[\w\d](?:\.*[\w\d][\w\d\-]*[\w\d])*|[\w\d][\w\d\-]*[\w\d])(:[\d]+)?=(\d{1,20})$`)
+var rxid = regexp.MustCompile(`^(collection|consensus|execution|verification|access)-([0-9a-fA-F]{64})@([\w\d]+|[\w\d][\w\d\-]*[\w\d](?:\.*[\w\d][\w\d\-]*[\w\d])*|[\w\d][\w\d\-]*[\w\d])(:[\d]+)?=(\d{1,20})$`)
 
 // Identity represents a node identity.
 type Identity struct {
-	NodeID             Identifier
-	Address            string
-	Role               Role
-	Stake              uint64
-	StakingPubKey      crypto.PublicKey
-	RandomBeaconPubKey crypto.PublicKey
-	NetworkPubKey      crypto.PublicKey
+	NodeID        Identifier
+	Address       string
+	Role          Role
+	Stake         uint64
+	StakingPubKey crypto.PublicKey
+	NetworkPubKey crypto.PublicKey
 }
 
 // ParseIdentity parses a string representation of an identity.
@@ -46,119 +48,159 @@ func ParseIdentity(identity string) (*Identity, error) {
 	stake, _ := strconv.ParseUint(matches[5], 10, 64)
 
 	// create the identity
-	id := Identity{
+	iy := Identity{
 		NodeID:  nodeID,
 		Address: address,
 		Role:    role,
 		Stake:   stake,
 	}
 
-	return &id, nil
+	return &iy, nil
 }
 
 // String returns a string representation of the identity.
-func (id Identity) String() string {
-	return fmt.Sprintf("%s-%s@%s=%d", id.Role, id.NodeID.String(), id.Address, id.Stake)
+func (iy Identity) String() string {
+	return fmt.Sprintf("%s-%s@%s=%d", iy.Role, iy.NodeID.String(), iy.Address, iy.Stake)
 }
 
 // ID returns a unique identifier for the identity.
-func (id Identity) ID() Identifier {
-	return id.NodeID
+func (iy Identity) ID() Identifier {
+	return iy.NodeID
 }
 
 // Checksum returns a checksum for the identity including mutable attributes.
-func (id Identity) Checksum() Identifier {
-	return MakeID(id)
+func (iy Identity) Checksum() Identifier {
+	return MakeID(iy)
 }
 
-type jsonMarshalIdentity struct {
-	NodeID             Identifier
-	Address            string
-	Role               Role
-	Stake              uint64
-	StakingPubKey      []byte
-	RandomBeaconPubKey []byte
-	NetworkPubKey      []byte
+type encodableIdentity struct {
+	NodeID        Identifier
+	Address       string
+	Role          Role
+	Stake         uint64
+	StakingPubKey []byte
+	NetworkPubKey []byte
 }
 
-func (id *Identity) UnmarshalJSON(b []byte) error {
-	var m jsonMarshalIdentity
-	if err := json.Unmarshal(b, &m); err != nil {
-		return err
+func toEncodable(iy Identity) (encodableIdentity, error) {
+	ie := encodableIdentity{iy.NodeID, iy.Address, iy.Role, iy.Stake, nil, nil}
+	if iy.StakingPubKey != nil {
+		ie.StakingPubKey = iy.StakingPubKey.Encode()
 	}
-	id.NodeID = m.NodeID
-	id.Address = m.Address
-	id.Role = m.Role
-	id.Stake = m.Stake
+	if iy.NetworkPubKey != nil {
+		ie.NetworkPubKey = iy.NetworkPubKey.Encode()
+	}
+	return ie, nil
+}
+
+func (iy Identity) MarshalJSON() ([]byte, error) {
+	encodable, err := toEncodable(iy)
+	if err != nil {
+		return nil, fmt.Errorf("could not convert to encodable: %w", err)
+	}
+	data, err := json.Marshal(encodable)
+	if err != nil {
+		return nil, fmt.Errorf("could not encode json: %w", err)
+	}
+	return data, nil
+}
+
+func (iy Identity) MarshalMsgpack() ([]byte, error) {
+	encodable, err := toEncodable(iy)
+	if err != nil {
+		return nil, fmt.Errorf("could not convert to encodable: %w", err)
+	}
+	data, err := msgpack.Marshal(encodable)
+	if err != nil {
+		return nil, fmt.Errorf("could not encode msgpack: %w", err)
+	}
+	return data, nil
+}
+
+func fromEncodable(ie encodableIdentity, identity *Identity) error {
+	identity.NodeID = ie.NodeID
+	identity.Address = ie.Address
+	identity.Role = ie.Role
+	identity.Stake = ie.Stake
 	var err error
-	if m.StakingPubKey != nil {
-		if id.StakingPubKey, err = crypto.DecodePublicKey(crypto.BLS_BLS12381, m.StakingPubKey); err != nil {
-			return err
+	if ie.StakingPubKey != nil {
+		if identity.StakingPubKey, err = crypto.DecodePublicKey(crypto.BLSBLS12381, ie.StakingPubKey); err != nil {
+			return fmt.Errorf("could not decode staking key: %w", err)
 		}
 	}
-	if m.RandomBeaconPubKey != nil {
-		if id.RandomBeaconPubKey, err = crypto.DecodePublicKey(crypto.BLS_BLS12381, m.RandomBeaconPubKey); err != nil {
-			return err
-		}
-	}
-	if m.NetworkPubKey != nil {
-		if id.NetworkPubKey, err = crypto.DecodePublicKey(crypto.ECDSA_SECp256k1, m.NetworkPubKey); err != nil {
-			return err
+	if ie.NetworkPubKey != nil {
+		if identity.NetworkPubKey, err = crypto.DecodePublicKey(crypto.ECDSAP256, ie.NetworkPubKey); err != nil {
+			return fmt.Errorf("could not decode network key: %w", err)
 		}
 	}
 	return nil
 }
 
-func (id Identity) MarshalJSON() ([]byte, error) {
-	m := jsonMarshalIdentity{id.NodeID, id.Address, id.Role, id.Stake, nil, nil, nil}
-	var err error
-	if id.StakingPubKey != nil {
-		if m.StakingPubKey, err = id.StakingPubKey.Encode(); err != nil {
-			return nil, err
-		}
+func (iy *Identity) UnmarshalJSON(b []byte) error {
+	var encodable encodableIdentity
+	err := json.Unmarshal(b, &encodable)
+	if err != nil {
+		return fmt.Errorf("could not decode json: %w", err)
 	}
-	if id.RandomBeaconPubKey != nil {
-		if m.RandomBeaconPubKey, err = id.RandomBeaconPubKey.Encode(); err != nil {
-			return nil, err
-		}
+	err = fromEncodable(encodable, iy)
+	if err != nil {
+		return fmt.Errorf("could not convert from encodable: %w", err)
 	}
-	if id.NetworkPubKey != nil {
-		if m.NetworkPubKey, err = id.NetworkPubKey.Encode(); err != nil {
-			return nil, err
-		}
-	}
+	return nil
+}
 
-	return json.Marshal(m)
+func (iy *Identity) UnmarshalMsgpack(b []byte) error {
+	var encodable encodableIdentity
+	err := msgpack.Unmarshal(b, &encodable)
+	if err != nil {
+		return fmt.Errorf("could not decode json: %w", err)
+	}
+	err = fromEncodable(encodable, iy)
+	if err != nil {
+		return fmt.Errorf("could not convert from encodable: %w", err)
+	}
+	return nil
 }
 
 // IdentityFilter is a filter on identities.
 type IdentityFilter func(*Identity) bool
 
+// IdentityOrder is a sort for identities.
+type IdentityOrder func(*Identity, *Identity) bool
+
 // IdentityList is a list of nodes.
 type IdentityList []*Identity
 
 // Filter will apply a filter to the identity list.
-func (il IdentityList) Filter(filters ...IdentityFilter) IdentityList {
+func (il IdentityList) Filter(filter IdentityFilter) IdentityList {
 	var dup IdentityList
 IDLoop:
-	for _, id := range il {
-		for _, filter := range filters {
-			if !filter(id) {
-				continue IDLoop
-			}
+	for _, identity := range il {
+		if !filter(identity) {
+			continue IDLoop
 		}
-		dup = append(dup, id)
+		dup = append(dup, identity)
 	}
+	return dup
+}
+
+// Order will sort the list using the given sort function.
+func (il IdentityList) Order(less IdentityOrder) IdentityList {
+	dup := make(IdentityList, 0, len(il))
+	dup = append(dup, il...)
+	sort.Slice(dup, func(i int, j int) bool {
+		return less(dup[i], dup[j])
+	})
 	return dup
 }
 
 // NodeIDs returns the NodeIDs of the nodes in the list.
 func (il IdentityList) NodeIDs() []Identifier {
-	ids := make([]Identifier, 0, len(il))
+	nodeIDs := make([]Identifier, 0, len(il))
 	for _, id := range il {
-		ids = append(ids, id.NodeID)
+		nodeIDs = append(nodeIDs, id.NodeID)
 	}
-	return ids
+	return nodeIDs
 }
 
 func (il IdentityList) Fingerprint() Identifier {
@@ -168,8 +210,8 @@ func (il IdentityList) Fingerprint() Identifier {
 // TotalStake returns the total stake of all given identities.
 func (il IdentityList) TotalStake() uint64 {
 	var total uint64
-	for _, id := range il {
-		total += id.Stake
+	for _, identity := range il {
+		total += identity.Stake
 	}
 	return total
 }
@@ -199,15 +241,44 @@ func (il IdentityList) ByNodeID(nodeID Identifier) (*Identity, bool) {
 
 // Sample returns simple random sample from the `IdentityList`
 func (il IdentityList) Sample(size uint) IdentityList {
-	if size > uint(len(il)) {
-		size = uint(len(il))
+	n := uint(len(il))
+	if size > n {
+		size = n
 	}
-	dup := make([]*Identity, 0, len(il))
-	for _, identity := range il {
-		dup = append(dup, identity)
+	dup := make([]*Identity, 0, n)
+	dup = append(dup, il...)
+	for i := uint(0); i < size; i++ {
+		j := uint(rand.Intn(int(n - i)))
+		dup[i], dup[j+i] = dup[j+i], dup[i]
 	}
-	rand.Shuffle(len(dup), func(i int, j int) {
-		dup[i], dup[j] = dup[j], dup[i]
-	})
 	return dup[:size]
+}
+
+// SamplePct returns a random sample from the receiver identity list. The
+// sample contains `pct` percentage of the list. The sample is rounded up
+// if `pct>0`, so this will always select at least one identity.
+//
+// NOTE: The input must be between 0-1.
+func (il IdentityList) SamplePct(pct float64) IdentityList {
+	if pct <= 0 {
+		return IdentityList{}
+	}
+
+	count := float64(il.Count()) * pct
+	size := uint(math.Round(count))
+	// ensure we always select at least 1, for non-zero input
+	if size == 0 {
+		size = 1
+	}
+
+	return il.Sample(size)
+}
+
+// StakingKeys returns a list of the staking public keys for the identities.
+func (il IdentityList) StakingKeys() []crypto.PublicKey {
+	keys := make([]crypto.PublicKey, 0, len(il))
+	for _, identity := range il {
+		keys = append(keys, identity.StakingPubKey)
+	}
+	return keys
 }

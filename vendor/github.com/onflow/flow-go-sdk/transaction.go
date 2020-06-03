@@ -19,7 +19,11 @@
 package flow
 
 import (
+	"fmt"
 	"sort"
+
+	"github.com/onflow/cadence"
+	jsoncdc "github.com/onflow/cadence/encoding/json"
 
 	"github.com/onflow/flow-go-sdk/crypto"
 )
@@ -27,6 +31,7 @@ import (
 // A Transaction is a full transaction object containing a payload and signatures.
 type Transaction struct {
 	Script             []byte
+	Arguments          []cadence.Value
 	ReferenceBlockID   Identifier
 	GasLimit           uint64
 	ProposalKey        ProposalKey
@@ -49,6 +54,12 @@ func (t *Transaction) ID() Identifier {
 // SetScript sets the Cadence script for this transaction.
 func (t *Transaction) SetScript(script []byte) *Transaction {
 	t.Script = script
+	return t
+}
+
+// AddArgument adds a Cadence argument to this transaction.
+func (t *Transaction) AddArgument(arg cadence.Value) *Transaction {
+	t.Arguments = append(t.Arguments, arg)
 	return t
 }
 
@@ -113,11 +124,11 @@ func (t *Transaction) signerList() []Address {
 		seen[address] = struct{}{}
 	}
 
-	if t.ProposalKey.Address != ZeroAddress {
+	if t.ProposalKey.Address != EmptyAddress {
 		addSigner(t.ProposalKey.Address)
 	}
 
-	if t.Payer != ZeroAddress {
+	if t.Payer != EmptyAddress {
 		addSigner(t.Payer)
 	}
 
@@ -215,6 +226,18 @@ func (t *Transaction) PayloadMessage() []byte {
 }
 
 func (t *Transaction) payloadCanonicalForm() interface{} {
+	var err error
+
+	arguments := make([][]byte, len(t.Arguments))
+	for i, arg := range t.Arguments {
+		arguments[i], err = jsoncdc.Encode(arg)
+		if err != nil {
+			panic(
+				fmt.Sprintf("failed to encode argument at index %d: %s", i, err.Error()),
+			)
+		}
+	}
+
 	authorizers := make([][]byte, len(t.Authorizers))
 	for i, auth := range t.Authorizers {
 		authorizers[i] = auth.Bytes()
@@ -222,6 +245,7 @@ func (t *Transaction) payloadCanonicalForm() interface{} {
 
 	return struct {
 		Script                    []byte
+		Arguments                 [][]byte
 		ReferenceBlockID          []byte
 		GasLimit                  uint64
 		ProposalKeyAddress        []byte
@@ -230,14 +254,15 @@ func (t *Transaction) payloadCanonicalForm() interface{} {
 		Payer                     []byte
 		Authorizers               [][]byte
 	}{
-		t.Script,
-		t.ReferenceBlockID[:],
-		t.GasLimit,
-		t.ProposalKey.Address.Bytes(),
-		uint64(t.ProposalKey.KeyID),
-		t.ProposalKey.SequenceNumber,
-		t.Payer.Bytes(),
-		authorizers,
+		Script:                    t.Script,
+		Arguments:                 arguments,
+		ReferenceBlockID:          t.ReferenceBlockID[:],
+		GasLimit:                  t.GasLimit,
+		ProposalKeyAddress:        t.ProposalKey.Address.Bytes(),
+		ProposalKeyID:             uint64(t.ProposalKey.KeyID),
+		ProposalKeySequenceNumber: t.ProposalKey.SequenceNumber,
+		Payer:                     t.Payer.Bytes(),
+		Authorizers:               authorizers,
 	}
 }
 
@@ -254,8 +279,8 @@ func (t *Transaction) envelopeCanonicalForm() interface{} {
 		Payload           interface{}
 		PayloadSignatures interface{}
 	}{
-		t.payloadCanonicalForm(),
-		signaturesList(t.PayloadSignatures).canonicalForm(),
+		Payload:           t.payloadCanonicalForm(),
+		PayloadSignatures: signaturesList(t.PayloadSignatures).canonicalForm(),
 	}
 }
 
@@ -266,10 +291,11 @@ func (t *Transaction) Encode() []byte {
 		PayloadSignatures  interface{}
 		EnvelopeSignatures interface{}
 	}{
-		t.payloadCanonicalForm(),
-		signaturesList(t.PayloadSignatures).canonicalForm(),
-		signaturesList(t.EnvelopeSignatures).canonicalForm(),
+		Payload:            t.payloadCanonicalForm(),
+		PayloadSignatures:  signaturesList(t.PayloadSignatures).canonicalForm(),
+		EnvelopeSignatures: signaturesList(t.EnvelopeSignatures).canonicalForm(),
 	}
+
 	return mustRLPEncode(&temp)
 }
 

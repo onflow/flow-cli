@@ -1,5 +1,7 @@
 package flow
 
+import "github.com/dapperlabs/flow-go/model/fingerprint"
+
 // Collection is set of transactions.
 type Collection struct {
 	Transactions []*TransactionBody
@@ -35,8 +37,25 @@ func (c Collection) ID() Identifier {
 	return c.Light().ID()
 }
 
+func (c Collection) Len() int {
+	return len(c.Transactions)
+}
+
 func (c Collection) Checksum() Identifier {
 	return c.Light().Checksum()
+}
+
+func (c Collection) Fingerprint() []byte {
+	var txs []byte
+	for _, tx := range c.Transactions {
+		txs = append(txs, tx.Fingerprint()...)
+	}
+
+	return fingerprint.Fingerprint(struct {
+		Transactions []byte
+	}{
+		Transactions: txs,
+	})
 }
 
 // LightCollection is a collection containing references to the constituent
@@ -56,6 +75,15 @@ func (lc LightCollection) Checksum() Identifier {
 
 func (lc LightCollection) Len() int {
 	return len(lc.Transactions)
+}
+
+func (lc LightCollection) Has(txID Identifier) bool {
+	for _, id := range lc.Transactions {
+		if txID == id {
+			return true
+		}
+	}
+	return false
 }
 
 // Note that this is the basic version of the List, we need to substitute it with something like Merkle tree at some point

@@ -349,7 +349,7 @@ variableDeclaration
 //   Being unrestritive here allows us to provide better error messages
 //   in the semantic analysis.
 assignment
-    : identifier expressionAccess* transfer expression
+    : target=expression transfer value=expression
     ;
 
 
@@ -396,17 +396,27 @@ relationalExpression
 
 nilCoalescingExpression
     // NOTE: right associative
-    : castingExpression (NilCoalescing nilCoalescingExpression)?
+    : bitwiseOrExpression (NilCoalescing nilCoalescingExpression)?
     ;
 
-castingExpression
-    : concatenatingExpression
-    | castingExpression castingOp typeAnnotation
+bitwiseOrExpression
+    : bitwiseXorExpression
+    | bitwiseOrExpression '|' bitwiseXorExpression
     ;
 
-concatenatingExpression
+bitwiseXorExpression
+    : bitwiseAndExpression
+    | bitwiseXorExpression '^' bitwiseAndExpression
+    ;
+
+bitwiseAndExpression
+    : bitwiseShiftExpression
+    | bitwiseAndExpression '&' bitwiseShiftExpression
+    ;
+
+bitwiseShiftExpression
     : additiveExpression
-    | concatenatingExpression Ampersand additiveExpression
+    | bitwiseShiftExpression bitwiseShiftOp additiveExpression
     ;
 
 additiveExpression
@@ -415,8 +425,16 @@ additiveExpression
     ;
 
 multiplicativeExpression
+    : castingExpression
+    | multiplicativeExpression multiplicativeOp castingExpression
+    ;
+
+// Like in Rust and Kotlin, but unlike Swift,
+// casting has precedence over arithmetic
+
+castingExpression
     : unaryExpression
-    | multiplicativeExpression multiplicativeOp unaryExpression
+    | castingExpression castingOp typeAnnotation
     ;
 
 unaryExpression
@@ -462,6 +480,14 @@ Less : '<' ;
 Greater : '>' ;
 LessEqual : '<=' ;
 GreaterEqual : '>=' ;
+
+bitwiseShiftOp
+    : ShiftLeft
+    | ShiftRight
+    ;
+
+ShiftLeft : '<<' ;
+ShiftRight : '>>' ;
 
 additiveOp
     : Plus

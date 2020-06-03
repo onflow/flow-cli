@@ -13,7 +13,7 @@ import (
 )
 
 type Config struct {
-	Signer string   `default:"root" flag:"signer,s"`
+	Signer string   `default:"service" flag:"signer,s"`
 	Keys   []string `flag:"key,k" info:"public keys to attach to account"`
 	Code   string   `flag:"code,c" info:"path to a file containing code for the account"`
 	Host   string   `default:"127.0.0.1:3569" flag:"host" info:"Flow Observation API host address"`

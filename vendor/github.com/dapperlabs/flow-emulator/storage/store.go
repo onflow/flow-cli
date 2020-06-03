@@ -3,8 +3,8 @@
 package storage
 
 import (
-	model "github.com/dapperlabs/flow-go/model/flow"
-	"github.com/onflow/flow-go-sdk"
+	"github.com/dapperlabs/flow-go/engine/execution/state/delta"
+	flowgo "github.com/dapperlabs/flow-go/model/flow"
 
 	"github.com/dapperlabs/flow-emulator/types"
 )
@@ -23,36 +23,41 @@ import (
 type Store interface {
 
 	// LatestBlock returns the block with the highest block height.
-	LatestBlock() (types.Block, error)
+	LatestBlock() (flowgo.Block, error)
 
-	// BlockByID returns the block with the given ID.
-	BlockByID(flow.Identifier) (types.Block, error)
+	// Store stores the block. If the exactly same block is already in a storage, return successfully
+	StoreBlock(block *flowgo.Block) error
 
-	// BlockByHeight returns the block with the given height.
-	BlockByHeight(blockHeight uint64) (types.Block, error)
+	// BlockByID returns the block with the given hash. It is available for
+	// finalized and ambiguous blocks.
+	BlockByID(blockID flowgo.Identifier) (*flowgo.Block, error)
+
+	// BlockByHeight returns the block at the given height. It is only available
+	// for finalized blocks.
+	BlockByHeight(height uint64) (*flowgo.Block, error)
 
 	// CommitBlock atomically saves the execution results for a block.
 	CommitBlock(
-		block *types.Block,
-		collections []*model.LightCollection,
-		transactions map[flow.Identifier]*flow.Transaction,
-		transactionResults map[flow.Identifier]*types.StorableTransactionResult,
-		delta types.LedgerDelta,
-		events []flow.Event,
+		block flowgo.Block,
+		collections []*flowgo.LightCollection,
+		transactions map[flowgo.Identifier]*flowgo.TransactionBody,
+		transactionResults map[flowgo.Identifier]*types.StorableTransactionResult,
+		delta delta.Delta,
+		events []flowgo.Event,
 	) error
 
 	// CollectionByID gets the collection (transaction IDs only) with the given ID.
-	CollectionByID(flow.Identifier) (model.LightCollection, error)
+	CollectionByID(flowgo.Identifier) (flowgo.LightCollection, error)
 
 	// TransactionByID gets the transaction with the given ID.
-	TransactionByID(flow.Identifier) (flow.Transaction, error)
+	TransactionByID(flowgo.Identifier) (flowgo.TransactionBody, error)
 
 	// TransactionResultByID gets the transaction result with the given ID.
-	TransactionResultByID(flow.Identifier) (types.StorableTransactionResult, error)
+	TransactionResultByID(flowgo.Identifier) (types.StorableTransactionResult, error)
 
 	// LedgerViewByHeight returns a view into the ledger state at a given block.
-	LedgerViewByHeight(blockHeight uint64) *types.LedgerView
+	LedgerViewByHeight(blockHeight uint64) *delta.View
 
 	// EventsByHeight returns the events in the block at the given height, optionally filtered by type.
-	EventsByHeight(blockHeight uint64, eventType string) ([]flow.Event, error)
+	EventsByHeight(blockHeight uint64, eventType string) ([]flowgo.Event, error)
 }

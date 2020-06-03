@@ -37,16 +37,6 @@ func (e *astTypeConversionError) Error() string {
 	return fmt.Sprintf("cannot convert unsupported AST type: %#+v", e.invalidASTType)
 }
 
-// unsupportedAssignmentTargetExpression
-
-type unsupportedAssignmentTargetExpression struct {
-	target ast.Expression
-}
-
-func (e *unsupportedAssignmentTargetExpression) Error() string {
-	return fmt.Sprintf("cannot assign to unsupported target expression: %#+v", e.target)
-}
-
 // unsupportedOperation
 
 type unsupportedOperation struct {
@@ -131,7 +121,7 @@ func (e *RedeclarationError) ErrorNotes() []errors.ErrorNote {
 	previousEndPos := previousStartPos.Shifted(length - 1)
 
 	return []errors.ErrorNote{
-		RedeclarationNote{
+		&RedeclarationNote{
 			Range: ast.Range{
 				StartPos: previousStartPos,
 				EndPos:   previousEndPos,
@@ -471,16 +461,31 @@ func (*ControlStatementError) isSemanticError() {}
 
 type InvalidAccessModifierError struct {
 	DeclarationKind common.DeclarationKind
+	Explanation     string
 	Access          ast.Access
 	Pos             ast.Position
 }
 
 func (e *InvalidAccessModifierError) Error() string {
-	return fmt.Sprintf(
-		"invalid access modifier for %s: `%s`",
-		e.DeclarationKind.Name(),
-		e.Access.Keyword(),
-	)
+	var explanation string
+	if e.Explanation != "" {
+		explanation = fmt.Sprintf(". %s", e.Explanation)
+	}
+
+	if e.Access == ast.AccessNotSpecified {
+		return fmt.Sprintf(
+			"invalid effective access modifier for %s%s",
+			e.DeclarationKind.Name(),
+			explanation,
+		)
+	} else {
+		return fmt.Sprintf(
+			"invalid access modifier for %s: `%s`%s",
+			e.DeclarationKind.Name(),
+			e.Access.Keyword(),
+			explanation,
+		)
+	}
 }
 
 func (*InvalidAccessModifierError) isSemanticError() {}
@@ -498,13 +503,20 @@ func (e *InvalidAccessModifierError) EndPosition() ast.Position {
 
 type MissingAccessModifierError struct {
 	DeclarationKind common.DeclarationKind
+	Explanation     string
 	Pos             ast.Position
 }
 
 func (e *MissingAccessModifierError) Error() string {
+	var explanation string
+	if e.Explanation != "" {
+		explanation = fmt.Sprintf(". %s", e.Explanation)
+	}
+
 	return fmt.Sprintf(
-		"missing access modifier for %s",
+		"missing access modifier for %s%s",
 		e.DeclarationKind.Name(),
+		explanation,
 	)
 }
 
@@ -826,6 +838,30 @@ func (e *ConformanceError) StartPosition() ast.Position {
 
 func (e *ConformanceError) EndPosition() ast.Position {
 	return e.Pos
+}
+
+func (e *ConformanceError) ErrorNotes() (notes []errors.ErrorNote) {
+
+	for _, memberMismatch := range e.MemberMismatches {
+		compositeMemberIdentifierRange :=
+			ast.NewRangeFromPositioned(memberMismatch.CompositeMember.Identifier)
+
+		notes = append(notes, &MemberMismatchNote{
+			Range: compositeMemberIdentifierRange,
+		})
+	}
+
+	return
+}
+
+// MemberMismatchNote
+
+type MemberMismatchNote struct {
+	ast.Range
+}
+
+func (n MemberMismatchNote) Message() string {
+	return "mismatch here"
 }
 
 // DuplicateConformanceError
@@ -1378,7 +1414,7 @@ func (e *ResourceUseAfterInvalidationError) HasInvalidationInPreviousLoopIterati
 
 func (e *ResourceUseAfterInvalidationError) ErrorNotes() (notes []errors.ErrorNote) {
 	for _, invalidation := range e.Invalidations {
-		notes = append(notes, ResourceInvalidationNote{
+		notes = append(notes, &ResourceInvalidationNote{
 			ResourceInvalidation: invalidation,
 			Range: ast.Range{
 				StartPos: invalidation.StartPos,
@@ -2319,8 +2355,8 @@ func (e *InvalidMoveError) EndPosition() ast.Position {
 // ConstantSizedArrayLiteralSizeError
 
 type ConstantSizedArrayLiteralSizeError struct {
-	ActualSize   uint64
-	ExpectedSize uint64
+	ActualSize   int64
+	ExpectedSize int64
 	ast.Range
 }
 

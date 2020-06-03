@@ -206,9 +206,12 @@ func (v *ProgramVisitor) VisitImportDeclaration(ctx *ImportDeclarationContext) i
 	}
 
 	allIdentifierNodes := ctx.AllIdentifier()
-	identifiers := make([]ast.Identifier, len(allIdentifierNodes))
-	for i, identifierNode := range allIdentifierNodes {
-		identifiers[i] = identifierNode.Accept(v).(ast.Identifier)
+	var identifiers []ast.Identifier
+	if len(allIdentifierNodes) > 0 {
+		identifiers = make([]ast.Identifier, len(allIdentifierNodes))
+		for i, identifierNode := range allIdentifierNodes {
+			identifiers[i] = identifierNode.Accept(v).(ast.Identifier)
+		}
 	}
 
 	return &ast.ImportDeclaration{
@@ -239,7 +242,7 @@ func (v *ProgramVisitor) VisitTransactionDeclaration(ctx *TransactionDeclaration
 	prepareCtx := ctx.Prepare()
 	if prepareCtx != nil {
 		prepareFunction = prepareCtx.Accept(v).(*ast.SpecialFunctionDeclaration)
-		prepareFunction.DeclarationKind = common.DeclarationKindPrepare
+		prepareFunction.Kind = common.DeclarationKindPrepare
 	}
 
 	var executeFunction *ast.SpecialFunctionDeclaration
@@ -289,7 +292,7 @@ func (v *ProgramVisitor) VisitExecute(ctx *ExecuteContext) interface{} {
 	startPosition := PositionFromToken(ctx.GetStart())
 
 	return &ast.SpecialFunctionDeclaration{
-		DeclarationKind: common.DeclarationKindExecute,
+		Kind: common.DeclarationKindExecute,
 		FunctionDeclaration: &ast.FunctionDeclaration{
 			Access:        ast.AccessNotSpecified,
 			Identifier:    identifier,
@@ -314,7 +317,7 @@ func (v *ProgramVisitor) VisitEventDeclaration(ctx *EventDeclarationContext) int
 
 		specialFunctions = append(specialFunctions,
 			&ast.SpecialFunctionDeclaration{
-				DeclarationKind: common.DeclarationKindInitializer,
+				Kind: common.DeclarationKindInitializer,
 				FunctionDeclaration: &ast.FunctionDeclaration{
 					ParameterList: parameterList,
 					StartPos:      parameterList.StartPos,
@@ -381,7 +384,12 @@ func (v *ProgramVisitor) VisitCompositeDeclaration(ctx *CompositeDeclarationCont
 
 func (v *ProgramVisitor) VisitConformances(ctx *ConformancesContext) interface{} {
 	typeContexts := ctx.AllNominalType()
-	conformances := make([]*ast.NominalType, len(typeContexts))
+	var conformances []*ast.NominalType
+	if len(typeContexts) == 0 {
+		return conformances
+	}
+
+	conformances = make([]*ast.NominalType, len(typeContexts))
 	for i, typeContext := range typeContexts {
 		conformances[i] = typeContext.Accept(v).(*ast.NominalType)
 	}
@@ -443,7 +451,15 @@ type membersAndNestedDeclarations struct {
 func (v *ProgramVisitor) VisitFields(ctx *FieldsContext) interface{} {
 	fieldsCtx := ctx.AllField()
 
-	fields := make([]*ast.FieldDeclaration, len(fieldsCtx))
+	fieldCount := len(fieldsCtx)
+
+	var fields []*ast.FieldDeclaration
+
+	if fieldCount == 0 {
+		return fields
+	}
+
+	fields = make([]*ast.FieldDeclaration, fieldCount)
 
 	for i, fieldCtx := range ctx.AllField() {
 		fields[i] = fieldCtx.Accept(v).(*ast.FieldDeclaration)
@@ -509,7 +525,7 @@ func (v *ProgramVisitor) VisitSpecialFunctionDeclaration(ctx *SpecialFunctionDec
 	}
 
 	return &ast.SpecialFunctionDeclaration{
-		DeclarationKind: declarationKind,
+		Kind: declarationKind,
 		FunctionDeclaration: &ast.FunctionDeclaration{
 			Identifier:    identifier,
 			ParameterList: parameterList,
@@ -610,7 +626,8 @@ func (v *ProgramVisitor) VisitParameter(ctx *ParameterContext) interface{} {
 
 	typeAnnotation := ctx.TypeAnnotation().Accept(v).(*ast.TypeAnnotation)
 
-	startPosition, endPosition := PositionRangeFromContext(ctx)
+	startPosition := PositionFromToken(ctx.GetStart())
+	endPosition := typeAnnotation.EndPosition()
 
 	return &ast.Parameter{
 		Label:          label,
@@ -664,8 +681,7 @@ func (v *ProgramVisitor) VisitFunctionType(ctx *FunctionTypeContext) interface{}
 	}
 	returnTypeAnnotation := ctx.returnType.Accept(v).(*ast.TypeAnnotation)
 
-	startPosition := PositionFromToken(ctx.OpenParen(0).GetSymbol())
-	endPosition := returnTypeAnnotation.EndPosition()
+	startPosition, endPosition := PositionRangeFromContext(ctx)
 
 	return &ast.FunctionType{
 		ParameterTypeAnnotations: parameterTypeAnnotations,
@@ -823,7 +839,13 @@ func (v *ProgramVisitor) VisitInnerType(ctx *InnerTypeContext) interface{} {
 
 func (v *ProgramVisitor) VisitTypeRestrictions(ctx *TypeRestrictionsContext) interface{} {
 	nominalTypeContexts := ctx.AllNominalType()
-	nominalTypes := make([]*ast.NominalType, len(nominalTypeContexts))
+
+	var nominalTypes []*ast.NominalType
+	if len(nominalTypeContexts) == 0 {
+		return nominalTypes
+	}
+
+	nominalTypes = make([]*ast.NominalType, len(nominalTypeContexts))
 
 	for i, context := range nominalTypeContexts {
 		nominalTypes[i] = context.Accept(v).(*ast.NominalType)
@@ -1158,33 +1180,15 @@ func (v *ProgramVisitor) VisitForStatement(ctx *ForStatementContext) interface{}
 }
 
 func (v *ProgramVisitor) VisitAssignment(ctx *AssignmentContext) interface{} {
-	target := v.targetExpression(ctx.Identifier(), ctx.AllExpressionAccess())
+	target := ctx.target.Accept(v).(ast.Expression)
 	transfer := ctx.Transfer().Accept(v).(*ast.Transfer)
-	value := ctx.Expression().Accept(v).(ast.Expression)
+	value := ctx.value.Accept(v).(ast.Expression)
 
 	return &ast.AssignmentStatement{
 		Target:   target,
 		Transfer: transfer,
 		Value:    value,
 	}
-}
-
-func (v *ProgramVisitor) targetExpression(
-	identifierContext IIdentifierContext,
-	expressionAccessContexts []IExpressionAccessContext,
-) ast.Expression {
-	identifier := identifierContext.Accept(v).(ast.Identifier)
-	var target ast.Expression = &ast.IdentifierExpression{
-		Identifier: identifier,
-	}
-
-	for _, accessExpressionContext := range expressionAccessContexts {
-		expression := accessExpressionContext.Accept(v)
-		accessExpression := expression.(ast.AccessExpression)
-		target = v.wrapPartialAccessExpression(target, accessExpression)
-	}
-
-	return target
 }
 
 func (v *ProgramVisitor) VisitTransfer(ctx *TransferContext) interface{} {
@@ -1329,7 +1333,7 @@ func (v *ProgramVisitor) VisitRelationalExpression(ctx *RelationalExpressionCont
 func (v *ProgramVisitor) VisitNilCoalescingExpression(ctx *NilCoalescingExpressionContext) interface{} {
 	// NOTE: right associative
 
-	left := ctx.CastingExpression().Accept(v)
+	left := ctx.BitwiseOrExpression().Accept(v)
 	if left == nil {
 		return nil
 	}
@@ -1349,31 +1353,14 @@ func (v *ProgramVisitor) VisitNilCoalescingExpression(ctx *NilCoalescingExpressi
 	}
 }
 
-func (v *ProgramVisitor) VisitCastingExpression(ctx *CastingExpressionContext) interface{} {
-	typeAnnotationContext := ctx.TypeAnnotation()
-	if typeAnnotationContext == nil {
-		return ctx.ConcatenatingExpression().Accept(v)
-	}
-
-	expression := ctx.CastingExpression().Accept(v).(ast.Expression)
-	typeAnnotation := typeAnnotationContext.Accept(v).(*ast.TypeAnnotation)
-	operation := ctx.CastingOp().Accept(v).(ast.Operation)
-
-	return &ast.CastingExpression{
-		Expression:     expression,
-		Operation:      operation,
-		TypeAnnotation: typeAnnotation,
-	}
-}
-
-func (v *ProgramVisitor) VisitConcatenatingExpression(ctx *ConcatenatingExpressionContext) interface{} {
-	right := ctx.AdditiveExpression().Accept(v)
+func (v *ProgramVisitor) VisitBitwiseOrExpression(ctx *BitwiseOrExpressionContext) interface{} {
+	right := ctx.BitwiseXorExpression().Accept(v)
 	if right == nil {
 		return nil
 	}
 	rightExpression := right.(ast.Expression)
 
-	leftContext := ctx.ConcatenatingExpression()
+	leftContext := ctx.BitwiseOrExpression()
 	if leftContext == nil {
 		return rightExpression
 	}
@@ -1381,7 +1368,71 @@ func (v *ProgramVisitor) VisitConcatenatingExpression(ctx *ConcatenatingExpressi
 	leftExpression := leftContext.Accept(v).(ast.Expression)
 
 	return &ast.BinaryExpression{
-		Operation: ast.OperationConcat,
+		Operation: ast.OperationBitwiseOr,
+		Left:      leftExpression,
+		Right:     rightExpression,
+	}
+}
+
+func (v *ProgramVisitor) VisitBitwiseXorExpression(ctx *BitwiseXorExpressionContext) interface{} {
+	right := ctx.BitwiseAndExpression().Accept(v)
+	if right == nil {
+		return nil
+	}
+	rightExpression := right.(ast.Expression)
+
+	leftContext := ctx.BitwiseXorExpression()
+	if leftContext == nil {
+		return rightExpression
+	}
+
+	leftExpression := leftContext.Accept(v).(ast.Expression)
+
+	return &ast.BinaryExpression{
+		Operation: ast.OperationBitwiseXor,
+		Left:      leftExpression,
+		Right:     rightExpression,
+	}
+}
+
+func (v *ProgramVisitor) VisitBitwiseAndExpression(ctx *BitwiseAndExpressionContext) interface{} {
+	right := ctx.BitwiseShiftExpression().Accept(v)
+	if right == nil {
+		return nil
+	}
+	rightExpression := right.(ast.Expression)
+
+	leftContext := ctx.BitwiseAndExpression()
+	if leftContext == nil {
+		return rightExpression
+	}
+
+	leftExpression := leftContext.Accept(v).(ast.Expression)
+
+	return &ast.BinaryExpression{
+		Operation: ast.OperationBitwiseAnd,
+		Left:      leftExpression,
+		Right:     rightExpression,
+	}
+}
+
+func (v *ProgramVisitor) VisitBitwiseShiftExpression(ctx *BitwiseShiftExpressionContext) interface{} {
+	right := ctx.AdditiveExpression().Accept(v)
+	if right == nil {
+		return nil
+	}
+	rightExpression := right.(ast.Expression)
+
+	leftContext := ctx.BitwiseShiftExpression()
+	if leftContext == nil {
+		return rightExpression
+	}
+
+	leftExpression := leftContext.Accept(v).(ast.Expression)
+	operation := ctx.BitwiseShiftOp().Accept(v).(ast.Operation)
+
+	return &ast.BinaryExpression{
+		Operation: operation,
 		Left:      leftExpression,
 		Right:     rightExpression,
 	}
@@ -1410,7 +1461,7 @@ func (v *ProgramVisitor) VisitAdditiveExpression(ctx *AdditiveExpressionContext)
 }
 
 func (v *ProgramVisitor) VisitMultiplicativeExpression(ctx *MultiplicativeExpressionContext) interface{} {
-	right := ctx.UnaryExpression().Accept(v)
+	right := ctx.CastingExpression().Accept(v)
 	if right == nil {
 		return nil
 	}
@@ -1428,6 +1479,23 @@ func (v *ProgramVisitor) VisitMultiplicativeExpression(ctx *MultiplicativeExpres
 		Operation: operation,
 		Left:      leftExpression,
 		Right:     rightExpression,
+	}
+}
+
+func (v *ProgramVisitor) VisitCastingExpression(ctx *CastingExpressionContext) interface{} {
+	typeAnnotationContext := ctx.TypeAnnotation()
+	if typeAnnotationContext == nil {
+		return ctx.UnaryExpression().Accept(v)
+	}
+
+	expression := ctx.CastingExpression().Accept(v).(ast.Expression)
+	typeAnnotation := typeAnnotationContext.Accept(v).(*ast.TypeAnnotation)
+	operation := ctx.CastingOp().Accept(v).(ast.Operation)
+
+	return &ast.CastingExpression{
+		Expression:     expression,
+		Operation:      operation,
+		TypeAnnotation: typeAnnotation,
 	}
 }
 
@@ -1455,15 +1523,11 @@ func (v *ProgramVisitor) VisitUnaryExpression(ctx *UnaryExpressionContext) inter
 	operation := ctx.UnaryOp(0).Accept(v).(ast.Operation)
 
 	startPosition := PositionFromToken(ctx.GetStart())
-	endPosition := expression.EndPosition()
 
 	return &ast.UnaryExpression{
 		Operation:  operation,
 		Expression: expression,
-		Range: ast.Range{
-			StartPos: startPosition,
-			EndPos:   endPosition,
-		},
+		StartPos:   startPosition,
 	}
 }
 
@@ -1622,7 +1686,7 @@ func (v *ProgramVisitor) VisitLiteral(ctx *LiteralContext) interface{} {
 
 func (v *ProgramVisitor) parseFixedPointPart(part string) (integer *big.Int, scale uint) {
 	withoutUnderscores := strings.Replace(part, "_", "", -1)
-	integer, _ = big.NewInt(0).SetString(withoutUnderscores, 10)
+	integer, _ = new(big.Int).SetString(withoutUnderscores, 10)
 	return integer, uint(len(withoutUnderscores))
 }
 
@@ -1638,6 +1702,10 @@ func (v *ProgramVisitor) VisitFixedPointLiteral(ctx *FixedPointLiteralContext) i
 	// NOTE: can't just negate integer, might be 0 and fractional part > 0
 	negative := ctx.Minus() != nil
 
+	if negative {
+		startPosition = PositionFromToken(ctx.Minus().GetSymbol())
+	}
+
 	return &ast.FixedPointExpression{
 		Negative:        negative,
 		UnsignedInteger: integer,
@@ -1652,8 +1720,11 @@ func (v *ProgramVisitor) VisitFixedPointLiteral(ctx *FixedPointLiteralContext) i
 
 func (v *ProgramVisitor) VisitIntegerLiteral(ctx *IntegerLiteralContext) interface{} {
 	intExpression := ctx.PositiveIntegerLiteral().Accept(v).(*ast.IntegerExpression)
-	if ctx.Minus() != nil && intExpression.Value != nil {
-		intExpression.Value.Neg(intExpression.Value)
+	if ctx.Minus() != nil {
+		if intExpression.Value != nil {
+			intExpression.Value.Neg(intExpression.Value)
+		}
+		intExpression.StartPos = PositionFromToken(ctx.GetStart())
 	}
 	return intExpression
 }
@@ -1693,7 +1764,7 @@ func (v *ProgramVisitor) parseIntegerExpression(token antlr.Token, text string, 
 	withoutUnderscores := strings.Replace(text, "_", "", -1)
 
 	base := kind.Base()
-	value, ok := big.NewInt(0).SetString(withoutUnderscores, base)
+	value, ok := new(big.Int).SetString(withoutUnderscores, base)
 	if !ok {
 		report(InvalidNumberLiteralKindUnknown)
 	}
@@ -2047,7 +2118,7 @@ func (v *ProgramVisitor) VisitEqualityOp(ctx *EqualityOpContext) interface{} {
 		return ast.OperationEqual
 
 	case ctx.Unequal() != nil:
-		return ast.OperationUnequal
+		return ast.OperationNotEqual
 
 	default:
 		panic(errors.NewUnreachableError())
@@ -2067,6 +2138,19 @@ func (v *ProgramVisitor) VisitRelationalOp(ctx *RelationalOpContext) interface{}
 
 	case ctx.GreaterEqual() != nil:
 		return ast.OperationGreaterEqual
+
+	default:
+		panic(errors.NewUnreachableError())
+	}
+}
+
+func (v *ProgramVisitor) VisitBitwiseShiftOp(ctx *BitwiseShiftOpContext) interface{} {
+	switch {
+	case ctx.ShiftLeft() != nil:
+		return ast.OperationBitwiseLeftShift
+
+	case ctx.ShiftRight() != nil:
+		return ast.OperationBitwiseRightShift
 
 	default:
 		panic(errors.NewUnreachableError())

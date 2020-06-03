@@ -19,6 +19,8 @@
 package interpreter
 
 import (
+	"fmt"
+
 	"github.com/raviqqe/hamt"
 
 	"github.com/onflow/cadence/runtime/ast"
@@ -61,6 +63,10 @@ type InterpretedFunctionValue struct {
 	PostConditions   ast.Conditions
 }
 
+func (f InterpretedFunctionValue) String() string {
+	return fmt.Sprintf("Function%s", f.Type.String())
+}
+
 func (InterpretedFunctionValue) IsValue() {}
 
 func (InterpretedFunctionValue) DynamicType(_ *Interpreter) DynamicType {
@@ -76,8 +82,16 @@ func (InterpretedFunctionValue) GetOwner() *common.Address {
 	return nil
 }
 
-func (InterpretedFunctionValue) SetOwner(owner *common.Address) {
+func (InterpretedFunctionValue) SetOwner(_ *common.Address) {
 	// NO-OP: value cannot be owned
+}
+
+func (InterpretedFunctionValue) IsModified() bool {
+	return false
+}
+
+func (InterpretedFunctionValue) SetModified(_ bool) {
+	// NO-OP
 }
 
 func (InterpretedFunctionValue) isFunctionValue() {}
@@ -93,6 +107,11 @@ type HostFunction func(invocation Invocation) Trampoline
 type HostFunctionValue struct {
 	Function HostFunction
 	Members  map[string]Value
+}
+
+func (f HostFunctionValue) String() string {
+	// TODO: include type
+	return "Function(...)"
 }
 
 func NewHostFunctionValue(
@@ -118,8 +137,16 @@ func (HostFunctionValue) GetOwner() *common.Address {
 	return nil
 }
 
-func (HostFunctionValue) SetOwner(owner *common.Address) {
+func (HostFunctionValue) SetOwner(_ *common.Address) {
 	// NO-OP: value cannot be owned
+}
+
+func (HostFunctionValue) IsModified() bool {
+	return false
+}
+
+func (HostFunctionValue) SetModified(_ bool) {
+	// NO-OP
 }
 
 func (HostFunctionValue) isFunctionValue() {}
@@ -128,7 +155,7 @@ func (f HostFunctionValue) Invoke(invocation Invocation) Trampoline {
 	return f.Function(invocation)
 }
 
-func (f HostFunctionValue) GetMember(interpreter *Interpreter, _ LocationRange, name string) Value {
+func (f HostFunctionValue) GetMember(_ *Interpreter, _ LocationRange, name string) Value {
 	return f.Members[name]
 }
 
@@ -141,6 +168,10 @@ func (f HostFunctionValue) SetMember(_ *Interpreter, _ LocationRange, _ string, 
 type BoundFunctionValue struct {
 	Function FunctionValue
 	Self     *CompositeValue
+}
+
+func (f BoundFunctionValue) String() string {
+	return fmt.Sprint(f.Function)
 }
 
 func (BoundFunctionValue) IsValue() {}
@@ -158,8 +189,16 @@ func (BoundFunctionValue) GetOwner() *common.Address {
 	return nil
 }
 
-func (BoundFunctionValue) SetOwner(owner *common.Address) {
+func (BoundFunctionValue) SetOwner(_ *common.Address) {
 	// NO-OP: value cannot be owned
+}
+
+func (BoundFunctionValue) IsModified() bool {
+	return false
+}
+
+func (BoundFunctionValue) SetModified(_ bool) {
+	// NO-OP
 }
 
 func (BoundFunctionValue) isFunctionValue() {}

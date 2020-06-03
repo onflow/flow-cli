@@ -25,7 +25,7 @@ import (
 
 //go:generate stringer -type=BinaryOperationKind
 
-type BinaryOperationKind int
+type BinaryOperationKind uint
 
 const (
 	BinaryOperationKindUnknown BinaryOperationKind = iota
@@ -34,7 +34,7 @@ const (
 	BinaryOperationKindBooleanLogic
 	BinaryOperationKindEquality
 	BinaryOperationKindNilCoalescing
-	BinaryOperationKindConcatenation
+	BinaryOperationKindBitwise
 )
 
 func binaryOperationKind(operation ast.Operation) BinaryOperationKind {
@@ -60,15 +60,20 @@ func binaryOperationKind(operation ast.Operation) BinaryOperationKind {
 		return BinaryOperationKindBooleanLogic
 
 	case ast.OperationEqual,
-		ast.OperationUnequal:
+		ast.OperationNotEqual:
 
 		return BinaryOperationKindEquality
 
 	case ast.OperationNilCoalesce:
 		return BinaryOperationKindNilCoalescing
 
-	case ast.OperationConcat:
-		return BinaryOperationKindConcatenation
+	case ast.OperationBitwiseOr,
+		ast.OperationBitwiseXor,
+		ast.OperationBitwiseAnd,
+		ast.OperationBitwiseLeftShift,
+		ast.OperationBitwiseRightShift:
+
+		return BinaryOperationKindBitwise
 	}
 
 	panic(errors.NewUnreachableError())

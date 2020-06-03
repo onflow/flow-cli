@@ -3,8 +3,9 @@ package badger
 import (
 	"bytes"
 	"fmt"
+	"strings"
 
-	"github.com/onflow/flow-go-sdk"
+	flowgo "github.com/dapperlabs/flow-go/model/flow"
 )
 
 const (
@@ -35,23 +36,23 @@ func blockKey(blockHeight uint64) []byte {
 	return []byte(fmt.Sprintf("%s-%032d", blockKeyPrefix, blockHeight))
 }
 
-func blockIDIndexKey(blockID flow.Identifier) []byte {
+func blockIDIndexKey(blockID flowgo.Identifier) []byte {
 	return []byte(fmt.Sprintf("%s-%x", blockIDIndexKeyPrefix, blockID))
 }
 
-func collectionKey(colID flow.Identifier) []byte {
+func collectionKey(colID flowgo.Identifier) []byte {
 	return []byte(fmt.Sprintf("%s-%x", collectionKeyPrefix, colID))
 }
 
-func transactionKey(txID flow.Identifier) []byte {
+func transactionKey(txID flowgo.Identifier) []byte {
 	return []byte(fmt.Sprintf("%s-%x", transactionKeyPrefix, txID))
 }
 
-func transactionResultKey(txID flow.Identifier) []byte {
+func transactionResultKey(txID flowgo.Identifier) []byte {
 	return []byte(fmt.Sprintf("%s-%x", transactionResultKeyPrefix, txID))
 }
 
-func eventKey(blockHeight uint64, txIndex, eventIndex int, eventType string) []byte {
+func eventKey(blockHeight uint64, txIndex, eventIndex uint32, eventType flowgo.EventType) []byte {
 	return []byte(fmt.Sprintf(
 		"%s-%032d-%032d-%032d-%s",
 		eventKeyPrefix,
@@ -80,18 +81,16 @@ func ledgerKey(blockHeight uint64) []byte {
 	return []byte(fmt.Sprintf("%s-%032d", ledgerKeyPrefix, blockHeight))
 }
 
-func ledgerChangelogKey(registerID string) []byte {
+func ledgerChangelogKey(registerID flowgo.RegisterID) []byte {
 	return []byte(fmt.Sprintf("%s-%s", ledgerChangelogKeyPrefix, registerID))
 }
 
-func ledgerValueKey(registerID string, blockHeight uint64) []byte {
-	return []byte(fmt.Sprintf("%s-%s-%032d", ledgerValueKeyPrefix, registerID, blockHeight))
+func ledgerValueKey(registerID flowgo.RegisterID, blockHeight uint64) []byte {
+	return []byte(fmt.Sprintf("%s-%s-%032d", ledgerValueKeyPrefix, string(registerID), blockHeight))
 }
 
 // registerIDFromLedgerChangelogKey recovers the register ID from a ledger
 // changelog key.
 func registerIDFromLedgerChangelogKey(key []byte) string {
-	var registerID string
-	_, _ = fmt.Sscanf(string(key), ledgerChangelogKeyPrefix+"-%s", &registerID)
-	return registerID
+	return strings.TrimPrefix(string(key), ledgerChangelogKeyPrefix+"-")
 }
