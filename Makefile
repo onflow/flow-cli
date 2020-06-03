@@ -46,6 +46,7 @@ binary: $(BINARY)
 $(BINARY):
 	GO111MODULE=on go build \
 		-mod vendor \
+		-trimpath \
 		-ldflags \
 		"-X github.com/dapperlabs/flow-cli/build.commit=$(COMMIT) -X github.com/dapperlabs/flow-cli/build.semver=$(VERSION)" \
 		-o $(BINARY) ./cmd/flow
