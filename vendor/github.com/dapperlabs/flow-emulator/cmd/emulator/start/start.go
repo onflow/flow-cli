@@ -6,7 +6,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/onflow/flow-go-sdk"
+	sdk "github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/prometheus/common/log"
 	"github.com/psiemens/sconfig"
@@ -17,18 +17,18 @@ import (
 )
 
 type Config struct {
-	Port            int           `default:"3569" flag:"port,p" info:"port to run RPC server"`
-	HTTPPort        int           `default:"8080" flag:"http-port" info:"port to run HTTP server"`
-	Verbose         bool          `default:"false" flag:"verbose,v" info:"enable verbose logging"`
-	BlockTime       time.Duration `flag:"block-time,b" info:"time between sealed blocks"`
-	RootPrivateKey  string        `flag:"root-priv-key" info:"root account private key"`
-	RootPublicKey   string        `flag:"root-pub-key" info:"root account public key"`
-	RootKeySigAlgo  string        `default:"ECDSA_P256" flag:"root-sig-algo" info:"root account key signature algorithm"`
-	RootKeyHashAlgo string        `default:"SHA3_256" flag:"root-hash-algo" info:"root account key hash algorithm"`
-	Init            bool          `default:"false" flag:"init" info:"whether to initialize a new account profile"`
-	GRPCDebug       bool          `default:"false" flag:"grpc-debug" info:"enable gRPC server reflection for debugging with grpc_cli"`
-	Persist         bool          `default:"false" flag:"persist" info:"enable persistent storage"`
-	DBPath          string        `default:"./flowdb" flag:"dbpath" info:"path to database directory"`
+	Port               int           `default:"3569" flag:"port,p" info:"port to run RPC server"`
+	HTTPPort           int           `default:"8080" flag:"http-port" info:"port to run HTTP server"`
+	Verbose            bool          `default:"false" flag:"verbose,v" info:"enable verbose logging"`
+	BlockTime          time.Duration `flag:"block-time,b" info:"time between sealed blocks"`
+	ServicePrivateKey  string        `flag:"service-priv-key" info:"service account private key"`
+	ServicePublicKey   string        `flag:"service-pub-key" info:"service account public key"`
+	ServiceKeySigAlgo  string        `default:"ECDSA_P256" flag:"service-sig-algo" info:"service account key signature algorithm"`
+	ServiceKeyHashAlgo string        `default:"SHA3_256" flag:"service-hash-algo" info:"service account key hash algorithm"`
+	Init               bool          `default:"false" flag:"init" info:"whether to initialize a new account profile"`
+	GRPCDebug          bool          `default:"false" flag:"grpc-debug" info:"enable gRPC server reflection for debugging with grpc_cli"`
+	Persist            bool          `default:"false" flag:"persist" info:"enable persistent storage"`
+	DBPath             string        `default:"./flowdb" flag:"dbpath" info:"path to database directory"`
 }
 
 const EnvPrefix = "FLOW"
@@ -38,71 +38,71 @@ var (
 	conf   Config
 )
 
-type rootKeyFunc func(init bool) (crypto.PrivateKey, crypto.SignatureAlgorithm, crypto.HashAlgorithm)
+type serviceKeyFunc func(init bool) (crypto.PrivateKey, crypto.SignatureAlgorithm, crypto.HashAlgorithm)
 
-func Cmd(getRootKey rootKeyFunc) *cobra.Command {
+func Cmd(getServiceKey serviceKeyFunc) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "start",
 		Short: "Starts the Flow emulator server",
 		Run: func(cmd *cobra.Command, args []string) {
 			var (
-				rootPrivateKey  crypto.PrivateKey
-				rootPublicKey   crypto.PublicKey
-				rootKeySigAlgo  crypto.SignatureAlgorithm
-				rootKeyHashAlgo crypto.HashAlgorithm
-				err             error
+				servicePrivateKey  crypto.PrivateKey
+				servicePublicKey   crypto.PublicKey
+				serviceKeySigAlgo  crypto.SignatureAlgorithm
+				serviceKeyHashAlgo crypto.HashAlgorithm
+				err                error
 			)
 
-			rootKeySigAlgo = crypto.StringToSignatureAlgorithm(conf.RootKeySigAlgo)
-			rootKeyHashAlgo = crypto.StringToHashAlgorithm(conf.RootKeyHashAlgo)
+			serviceKeySigAlgo = crypto.StringToSignatureAlgorithm(conf.ServiceKeySigAlgo)
+			serviceKeyHashAlgo = crypto.StringToHashAlgorithm(conf.ServiceKeyHashAlgo)
 
-			if len(conf.RootPublicKey) > 0 {
-				rootPublicKey, err = crypto.DecodePublicKeyHex(rootKeySigAlgo, conf.RootPublicKey)
+			if len(conf.ServicePublicKey) > 0 {
+				servicePublicKey, err = crypto.DecodePublicKeyHex(serviceKeySigAlgo, conf.ServicePublicKey)
 				if err != nil {
 					Exit(1, err.Error())
 				}
-			} else if len(conf.RootPrivateKey) > 0 {
-				rootPrivateKey, err = crypto.DecodePrivateKeyHex(rootKeySigAlgo, conf.RootPrivateKey)
+			} else if len(conf.ServicePrivateKey) > 0 {
+				servicePrivateKey, err = crypto.DecodePrivateKeyHex(serviceKeySigAlgo, conf.ServicePrivateKey)
 				if err != nil {
 					Exit(1, err.Error())
 				}
 
-				rootPublicKey = rootPrivateKey.PublicKey()
+				servicePublicKey = servicePrivateKey.PublicKey()
 			} else {
-				rootPrivateKey, rootKeySigAlgo, rootKeyHashAlgo = getRootKey(conf.Init)
-				rootPublicKey = rootPrivateKey.PublicKey()
+				servicePrivateKey, serviceKeySigAlgo, serviceKeyHashAlgo = getServiceKey(conf.Init)
+				servicePublicKey = servicePrivateKey.PublicKey()
 			}
 
 			if conf.Verbose {
 				logger.SetLevel(logrus.DebugLevel)
 			}
 
-			rootAddress := flow.HexToAddress("01")
-			rootFields := logrus.Fields{
-				"rootAddress":  rootAddress.Hex(),
-				"rootPubKey":   hex.EncodeToString(rootPublicKey.Encode()),
-				"rootSigAlgo":  rootKeySigAlgo,
-				"rootHashAlgo": rootKeyHashAlgo,
+			serviceAddress := sdk.ServiceAddress(sdk.Emulator)
+			serviceFields := logrus.Fields{
+				"serviceAddress":  serviceAddress.Hex(),
+				"servicePubKey":   hex.EncodeToString(servicePublicKey.Encode()),
+				"serviceSigAlgo":  serviceKeySigAlgo,
+				"serviceHashAlgo": serviceKeyHashAlgo,
 			}
 
-			if rootPrivateKey != (crypto.PrivateKey{}) {
-				rootFields["rootPrivKey"] = hex.EncodeToString(rootPrivateKey.Encode())
+			if servicePrivateKey != (crypto.PrivateKey{}) {
+				serviceFields["servicePrivKey"] = hex.EncodeToString(servicePrivateKey.Encode())
 			}
 
-			logger.WithFields(rootFields).Infof("⚙️   Using root account 0x%s", rootAddress.Hex())
+			logger.WithFields(serviceFields).Infof("⚙️   Using service account 0x%s", serviceAddress.Hex())
 
 			serverConf := &server.Config{
 				GRPCPort:  conf.Port,
 				GRPCDebug: conf.GRPCDebug,
 				HTTPPort:  conf.HTTPPort,
 				// TODO: allow headers to be parsed from environment
-				HTTPHeaders:     nil,
-				BlockTime:       conf.BlockTime,
-				RootPublicKey:   rootPublicKey,
-				RootKeySigAlgo:  rootKeySigAlgo,
-				RootKeyHashAlgo: rootKeyHashAlgo,
-				Persist:         conf.Persist,
-				DBPath:          conf.DBPath,
+				HTTPHeaders:        nil,
+				BlockTime:          conf.BlockTime,
+				ServicePublicKey:   servicePublicKey,
+				ServiceKeySigAlgo:  serviceKeySigAlgo,
+				ServiceKeyHashAlgo: serviceKeyHashAlgo,
+				Persist:            conf.Persist,
+				DBPath:             conf.DBPath,
 			}
 
 			emu := server.NewEmulatorServer(logger, serverConf)

@@ -16,8 +16,14 @@ Flow is a new blockchain for open worlds. Read more about it [here](https://gith
 - [Getting Started](#getting-started)
   - [Installing](#installing)
   - [Generating Keys](#generating-keys)
+    - [Supported Curves](#supported-curves)
   - [Creating an Account](#creating-an-account)
   - [Signing a Transaction](#signing-a-transaction)
+    - [How Signatures Work in Flow](#how-signatures-work-in-flow)
+      - [Single party, single signature](#single-party-single-signature)
+      - [Single party, multiple signatures](#single-party-multiple-signatures)
+      - [Multiple parties](#multiple-parties)
+      - [Multiple parties, multiple signatures](#multiple-parties-multiple-signatures)
   - [Sending a Transaction](#sending-a-transaction)
   - [Querying Transaction Results](#querying-transaction-results)
   - [Querying Blocks](#querying-blocks)
@@ -42,14 +48,17 @@ go get github.com/onflow/flow-go-sdk
 
 ### Generating Keys
 
-The signature scheme supported in Flow accounts is ECDSA. It can be coupled with the hashing algorithms SHA2-256 or SHA3-256.
+Flow uses [ECDSA key pairs](https://en.wikipedia.org/wiki/Elliptic_Curve_Digital_Signature_Algorithm) 
+to control access to user accounts. Each key pair can be used in combination with
+the SHA2-256 or SHA3-256 hashing algorithms.
 
-Here's how you can generate an `ECDSA-P256` private key:
+Here's how to generate an ECDSA private key on the P-256 curve:
 
 ```go
 import "github.com/onflow/flow-go-sdk/crypto"
 
-// deterministic seed phrase (this is only an example, please use a secure random generator for the key seed)
+// deterministic seed phrase
+// note: this is only an example, please use a secure random generator for the key seed
 seed := []byte("elephant ears space cowboy octopus rodeo potato cannon pineapple")
 
 privateKey, err := crypto.GeneratePrivateKey(crypto.ECDSA_P256, seed)
@@ -67,15 +76,23 @@ A private key has an accompanying public key:
 publicKey := privateKey.PublicKey()
 ```
 
-The example above uses an ECDSA key-pair of the elliptic curve P-256. Flow also supports the curve secp256k1. Here's how you can generate an `ECDSA-SECp256k1` private key:
+#### Supported Curves
+
+The example above uses an ECDSA key pair on the P-256 elliptic curve.
+Flow also supports the secp256k1 curve used by Bitcoin and Ethereum.
+
+Here's how to generate an ECDSA private key on the secp256k1 curve:
 
 ```go
 privateKey, err := crypto.GeneratePrivateKey(crypto.ECDSA_secp256k1, seed)
 ```
 
+Here's a full list of the supported signature and hash algorithms: [Flow Signature & Hash Algorithms](https://github.com/onflow/flow/blob/master/docs/accounts-and-keys.md#supported-signature--hash-algorithms)
+
 ### Creating an Account
 
-Once you have [generated a key-pair](#generating-keys), you can create a new account using its public key.
+Once you have [generated a key pair](#generating-keys), you can create a new account
+using its public key.
 
 ```go
 import (
@@ -84,13 +101,14 @@ import (
     "github.com/onflow/flow-go-sdk/templates"
 )
 
-// generate a new private key for the account (this is only an example, please use a secure random generator for the key seed)
 ctx := context.Background()
-// generate a new private key for the account (this is only an example, please use a secure random generator for the key seed)
+
+// generate a new private key for the account
+// note: this is only an example, please use a secure random generator for the key seed
 seed := []byte("elephant ears space cowboy octopus rodeo potato cannon pineapple")
 privateKey, _ := crypto.GeneratePrivateKey(crypto.ECDSA_P256, seed)
 
-// get the public key from the private key
+// get the public key
 publicKey := privateKey.PublicKey()
 
 // construct an account key from the public key
@@ -109,7 +127,7 @@ if err != nil {
     panic("failed to connect to emulator")
 }
 
-payer, payerKey, payerSigner := examples.RootAccount(c)
+payer, payerKey, payerSigner := examples.ServiceAccount(c)
 
 tx := flow.NewTransaction().
     SetScript(script).
@@ -139,14 +157,14 @@ if result.Status == flow.TransactionStatusSealed {
         if event.Type == flow.EventAccountCreated {
             accountCreatedEvent := flow.AccountCreatedEvent(event)
             myAddress = accountCreatedEvent.Address()
-            }
+        }
 	}
 }
 ```
 
 ### Signing a Transaction
 
-Below is a simple example of how to sign a transaction using a `crypto.PrivateKey`:
+Below is a simple example of how to sign a transaction using a `crypto.PrivateKey`.
 
 ```go
 import (
@@ -161,16 +179,19 @@ var (
 )
 
 tx := flow.NewTransaction().
-    SetScript(script).
+    SetScript([]byte("transaction { execute { log(\"Hello, World!\") } }")).
     SetGasLimit(100).
     SetProposalKey(myAddress, myAccountKey.ID, myAccountKey.SequenceNumber).
     SetPayer(myAddress)
 ```
 
-Transaction signing is done using the `crypto.Signer` interface. The simplest (and least secure) implementation of
-`crypto.Signer` is `crypto.InMemorySigner`.
+Transaction signing is done through the `crypto.Signer` interface. The simplest 
+(and least secure) implementation of `crypto.Signer` is `crypto.InMemorySigner`.
 
-Signatures can be generated more securely using hardware keys stored in a device such as an [HSM](https://en.wikipedia.org/wiki/Hardware_security_module). The `crypto.Signer` interface is intended to be flexible enough to support a variety of signer implementations and is not limited to in-memory implementations.
+Signatures can be generated more securely using hardware keys stored in a device such 
+as an [HSM](https://en.wikipedia.org/wiki/Hardware_security_module). The `crypto.Signer` 
+interface is intended to be flexible enough to support a variety of signer implementations 
+and is not limited to in-memory implementations.
 
 ```go
 // construct a signer from your private key and configured hash algorithm
@@ -182,15 +203,202 @@ if err != nil {
 }
 ```
 
-<!--
 #### How Signatures Work in Flow
 
-TODO: link to signatures doc
--->
+Flow introduces new concepts that allow for more flexibility when creating and signing transactions. 
+Before trying the examples below, we recommend that you read through the [transaction signature documentation](https://github.com/onflow/flow/blob/master/docs/accounts-and-keys.md#signing-a-transaction).
+
+---
+
+##### [Single party, single signature](https://github.com/onflow/flow/blob/master/docs/accounts-and-keys.md#single-party-single-signature)
+
+- Proposer, payer and authorizer are the same account (`0x01`).
+- Only the envelope must be signed.
+- Proposal key must have full signing weight.
+
+| Account   | Key ID | Weight |
+|-----------|--------|--------|
+| `0x01`    | 1      | 1.0    |
+
+```go
+account1, _ := c.GetAccount(ctx, flow.HexToAddress("01"))
+
+key1 := account1.Keys[0]
+
+// create signer from securely-stored private key
+key1Signer := getSignerForKey1()
+
+tx := flow.NewTransaction().
+    SetScript([]byte(`
+        transaction { 
+            prepare(signer: AuthAccount) { log(signer.address) }
+        }
+    `)).
+    SetGasLimit(100).
+    SetProposalKey(account1.Address, key1.ID, key1.SequenceNumber).
+    SetPayer(account1.Address).
+    AddAuthorizer(account1.Address)
+
+// account 1 signs the envelope with key 1
+err := tx.SignEnvelope(account1.Address, key1.ID, key1Signer)
+```
+
+[Full Runnable Example](/examples#single-party-single-signature)
+
+---
+
+##### [Single party, multiple signatures](https://github.com/onflow/flow/blob/master/docs/accounts-and-keys.md#single-party-multiple-signatures)
+
+- Proposer, payer and authorizer are the same account (`0x01`).
+- Only the envelope must be signed.
+- Each key has weight 0.5, so two signatures are required.
+
+| Account   | Key ID | Weight |
+|-----------|--------|--------|
+| `0x01`    | 1      | 0.5    |
+| `0x01`    | 2      | 0.5    |
+
+```go
+account1, _ := c.GetAccount(ctx, flow.HexToAddress("01"))
+
+key1 := account1.Keys[0]
+key2 := account1.Keys[1]
+
+// create signers from securely-stored private keys
+key1Signer := getSignerForKey1()
+key2Signer := getSignerForKey2()
+
+tx := flow.NewTransaction().
+    SetScript([]byte(`
+        transaction { 
+            prepare(signer: AuthAccount) { log(signer.address) }
+        }
+    `)).
+    SetGasLimit(100).
+    SetProposalKey(account1.Address, key1.ID, key1.SequenceNumber).
+    SetPayer(account1.Address).
+    AddAuthorizer(account1.Address)
+
+// account 1 signs the envelope with key 1
+err := tx.SignEnvelope(account1.Address, key1.ID, key1Signer)
+
+// account 1 signs the envelope with key 2
+err = tx.SignEnvelope(account1.Address, key2.ID, key2Signer)
+```
+
+[Full Runnable Example](/examples#single-party-multiple-signatures)
+
+---
+
+##### [Multiple parties](https://github.com/onflow/flow/blob/master/docs/accounts-and-keys.md#multiple-parties)
+
+- Proposer and authorizer are the same account (`0x01`).
+- Payer is a separate account (`0x02`).
+- Account `0x01` signs the payload.
+- Account `0x02` signs the envelope.
+  - Account `0x02` must sign last since it is the payer.
+
+| Account   | Key ID | Weight |
+|-----------|--------|--------|
+| `0x01`    | 1      | 1.0    |
+| `0x02`    | 3      | 1.0    |
+
+```go
+account1, _ := c.GetAccount(ctx, flow.HexToAddress("01"))
+account2, _ := c.GetAccount(ctx, flow.HexToAddress("02"))
+
+key1 := account1.Keys[0]
+key3 := account2.Keys[0]
+
+// create signers from securely-stored private keys
+key1Signer := getSignerForKey1()
+key3Signer := getSignerForKey3()
+
+tx := flow.NewTransaction().
+    SetScript([]byte(`
+        transaction { 
+            prepare(signer: AuthAccount) { log(signer.address) }
+        }
+    `)).
+    SetGasLimit(100).
+    SetProposalKey(account1.Address, key1.ID, key1.SequenceNumber).
+    SetPayer(account2.Address).
+    AddAuthorizer(account1.Address)
+
+// account 1 signs the payload with key 1
+err := tx.SignPayload(account1.Address, key1.ID, key1Signer)
+
+// account 2 signs the envelope with key 3
+// note: payer always signs last
+err = tx.SignEnvelope(account2.Address, key3.ID, key3Signer)
+```
+
+[Full Runnable Example](/examples#multiple-parties)
+
+---
+
+##### [Multiple parties, multiple signatures](https://github.com/onflow/flow/blob/master/docs/accounts-and-keys.md#multiple-parties-multiple-signatures)
+
+- Proposer and authorizer are the same account (`0x01`).
+- Payer is a separate account (`0x02`).
+- Account `0x01` signs the payload.
+- Account `0x02` signs the envelope.
+  - Account `0x02` must sign last since it is the payer.
+- Both accounts must sign twice (once with each of their keys).
+
+| Account   | Key ID | Weight |
+|-----------|--------|--------|
+| `0x01`    | 1      | 0.5    |
+| `0x01`    | 2      | 0.5    |
+| `0x02`    | 3      | 0.5    |
+| `0x02`    | 4      | 0.5    |
+
+```go
+account1, _ := c.GetAccount(ctx, flow.HexToAddress("01"))
+account2, _ := c.GetAccount(ctx, flow.HexToAddress("02"))
+
+key1 := account1.Keys[0]
+key2 := account1.Keys[1]
+key3 := account2.Keys[0]
+key4 := account2.Keys[1]
+
+// create signers from securely-stored private keys
+key1Signer := getSignerForKey1()
+key2Signer := getSignerForKey1()
+key3Signer := getSignerForKey3()
+key4Signer := getSignerForKey4()
+
+tx := flow.NewTransaction().
+    SetScript([]byte(`
+        transaction { 
+            prepare(signer: AuthAccount) { log(signer.address) }
+        }
+    `)).
+    SetGasLimit(100).
+    SetProposalKey(account1.Address, key1.ID, key1.SequenceNumber).
+    SetPayer(account2.Address).
+    AddAuthorizer(account1.Address)
+
+// account 1 signs the payload with key 1
+err := tx.SignPayload(account1.Address, key1.ID, key1Signer)
+
+// account 1 signs the payload with key 2
+err = tx.SignPayload(account1.Address, key2.ID, key2Signer)
+
+// account 2 signs the envelope with key 3
+// note: payer always signs last
+err = tx.SignEnvelope(account2.Address, key3.ID, key3Signer)
+
+// account 2 signs the envelope with key 4
+// note: payer always signs last
+err = tx.SignEnvelope(account2.Address, key4.ID, key4Signer)
+```
+
+[Full Runnable Example](/examples#multiple-parties-multiple-signatures)
 
 ### Sending a Transaction
 
-You can submit a transaction to the network using the Access API Client.
+You can submit a transaction to the network using the Access API client.
 
 ```go
 import "github.com/onflow/flow-go-sdk/client"

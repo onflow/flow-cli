@@ -173,7 +173,11 @@ func (e *FixedPointExpression) String() string {
 	}
 	builder.WriteString(e.UnsignedInteger.String())
 	builder.WriteRune('.')
-	builder.WriteString(e.Fractional.String())
+	fractional := e.Fractional.String()
+	for i := uint(0); i < (e.Scale - uint(len(fractional))); i++ {
+		builder.WriteRune('0')
+	}
+	builder.WriteString(fractional)
 	return builder.String()
 }
 
@@ -463,7 +467,7 @@ func (e *ConditionalExpression) EndPosition() Position {
 type UnaryExpression struct {
 	Operation  Operation
 	Expression Expression
-	Range
+	StartPos   Position
 }
 
 func (*UnaryExpression) isExpression() {}
@@ -483,6 +487,14 @@ func (e *UnaryExpression) String() string {
 		"%s%s",
 		e.Operation.Symbol(), e.Expression,
 	)
+}
+
+func (e *UnaryExpression) StartPosition() Position {
+	return e.StartPos
+}
+
+func (e *UnaryExpression) EndPosition() Position {
+	return e.Expression.EndPosition()
 }
 
 // BinaryExpression

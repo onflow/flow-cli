@@ -20,8 +20,10 @@ package crypto
 
 import (
 	"encoding/hex"
+	"fmt"
 
 	"github.com/onflow/flow-go-sdk/crypto/internal/crypto"
+	"github.com/onflow/flow-go-sdk/crypto/internal/crypto/hash"
 )
 
 // SignatureAlgorithm is an identifier for a signature algorithm (and parameters if applicable).
@@ -87,11 +89,6 @@ func StringToHashAlgorithm(s string) HashAlgorithm {
 		return UnknownHashAlgorithm
 	}
 }
-
-const (
-	MinSeedLengthECDSA_P256      = crypto.KeyGenSeedMinLenECDSAP256
-	MinSeedLengthECDSA_secp256k1 = crypto.KeyGenSeedMinLenECDSASecp256k1
-)
 
 // KeyType is a key format supported by Flow.
 type KeyType int
@@ -213,9 +210,54 @@ func NewNaiveSigner(privateKey PrivateKey, hashAlgo HashAlgorithm) NaiveSigner {
 	return NewInMemorySigner(privateKey, hashAlgo)
 }
 
+// MinSeedLength is the generic minimum seed length required to guarantee sufficient
+// entropy when generating keys.
+//
+// This minimum is used when the seed source is not necessarily a CSPRG and the seed
+// should be expanded before being passed to the key generation process.
+const MinSeedLength = crypto.MinSeedLen
+
+func keyGenerationKMACTag(sigAlgo SignatureAlgorithm) []byte {
+	return []byte(fmt.Sprintf("%s Key Generation", sigAlgo))
+}
+
 // GeneratePrivateKey generates a private key with the specified signature algorithm from the given seed.
 func GeneratePrivateKey(sigAlgo SignatureAlgorithm, seed []byte) (PrivateKey, error) {
-	privKey, err := crypto.GeneratePrivateKey(crypto.SigningAlgorithm(sigAlgo), seed)
+	// check the seed has minimum entropy
+	if len(seed) < MinSeedLength {
+		return PrivateKey{}, fmt.Errorf(
+			"crypto: insufficient seed length %d, must be at least %d bytes for %s",
+			len(seed),
+			MinSeedLength,
+			sigAlgo,
+		)
+	}
+
+	// expand the seed and uniformize its entropy
+	var seedLen int
+	switch sigAlgo {
+	case ECDSA_P256:
+		seedLen = crypto.KeyGenSeedMinLenECDSAP256
+	case ECDSA_secp256k1:
+		seedLen = crypto.KeyGenSeedMinLenECDSASecp256k1
+	default:
+		return PrivateKey{}, fmt.Errorf(
+			"crypto: Go SDK does not support key generation for %s algorithm",
+			sigAlgo,
+		)
+	}
+
+	generationTag := keyGenerationKMACTag(sigAlgo)
+	customizer := []byte("")
+	hasher, err := hash.NewKMAC_128(generationTag, customizer, seedLen)
+	if err != nil {
+		return PrivateKey{}, err
+	}
+
+	hashedSeed := hasher.ComputeHash(seed)
+
+	// generate the key
+	privKey, err := crypto.GeneratePrivateKey(crypto.SigningAlgorithm(sigAlgo), hashedSeed)
 	if err != nil {
 		return PrivateKey{}, err
 	}

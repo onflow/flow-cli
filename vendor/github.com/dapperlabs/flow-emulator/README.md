@@ -33,7 +33,7 @@ This command has several useful flags:
 
 You can start the emulator in your project context by running the above command
 in the same directory as `flow.json`. This will configure the emulator with your 
-project's root account, meaning you can use it to sign and submit transactions.	
+project's service account, meaning you can use it to sign and submit transactions.	
 
 ## Running the emulator with Docker
 
@@ -69,19 +69,19 @@ The environment variable names are the upper-case struct fields names, prefixed 
 
 The emulator uses a `flow.json` configuration file to store persistent
 configuration, including account keys. In order to start, at least one
-key (called the root key) must be configured. This key is used by default
+key (called the service key) must be configured. This key is used by default
 when creating other accounts.
 
 Because Docker does not persist files by default, this file will be 
 re-generated each time the emulator image restarts. For situations
-where it is important that the emulator always uses the same root key (ie.
-unit tests) you can specify a hex-encoded key as an environment variable.
+where it is important that the emulator always uses the same service key (ie.
+unit tests) you can specify a hex-encoded public key as an environment variable.
 
 ```bash
-docker run -e FLOW_ROOTKEY=<hex-encoded key> gcr.io/dl-flow/emulator
+docker run -e FLOW_SERVICEPUBLICKEY=<hex-encoded key> gcr.io/dl-flow/emulator
 ```
 
-To generate a root key, use the `keys generate` command in the Flow CLI.
+To generate a service key, use the `keys generate` command in the Flow CLI.
 ```bash
 flow keys generate
 ```
@@ -146,10 +146,10 @@ If not using Kubernetes, you can run the Docker container independently. Make su
 
 To gain persistence for data on the emulator, you will have to provision a volume for the docker container. We've done this through `Persistent Volumes` on Kubernetes, but a mounted volume would suffice. The mount point can be set with the `FLOW_DBPATH` environment variable. We suggest a volume of at least 10GB (100GB for a long-term deployment).
 
-Make sure the emulator also has access to the same `flow.json` file, or always launch it with the same root key, as mentioned above.
+Make sure the emulator also has access to the same `flow.json` file, or always launch it with the same service key, as mentioned above.
 
 ```bash
-docker run -e FLOW_ROOTKEY=<hex-encoded key> -e FLOW_DBPATH="/flowdb" -v "$(pwd)/flowdb":"/flowdb"  -p 3569:3569 gcr.io/dl-flow/emulator
+docker run -e FLOW_SERVICEPUBLICKEY=<hex-encoded key> -e FLOW_DBPATH="/flowdb" -v "$(pwd)/flowdb":"/flowdb"  -p 3569:3569 gcr.io/dl-flow/emulator
 ```
 
 ## Development

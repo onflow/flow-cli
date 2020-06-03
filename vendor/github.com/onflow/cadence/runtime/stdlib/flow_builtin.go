@@ -19,8 +19,6 @@
 package stdlib
 
 import (
-	"encoding/gob"
-
 	"github.com/onflow/cadence/runtime/ast"
 	"github.com/onflow/cadence/runtime/common"
 	"github.com/onflow/cadence/runtime/interpreter"
@@ -37,33 +35,15 @@ var accountFunctionType = &sema.FunctionType{
 	Parameters: []*sema.Parameter{
 		{
 			Label:      sema.ArgumentLabelNotRequired,
-			Identifier: "publicKeys",
+			Identifier: "payer",
 			TypeAnnotation: sema.NewTypeAnnotation(
-				&sema.VariableSizedType{
-					Type: &sema.VariableSizedType{
-						Type: &sema.IntType{},
-					},
-				},
-			),
-		},
-		{
-			Label:      sema.ArgumentLabelNotRequired,
-			Identifier: "code",
-			TypeAnnotation: sema.NewTypeAnnotation(
-				&sema.VariableSizedType{
-					Type: &sema.IntType{},
-				},
+				&sema.AuthAccountType{},
 			),
 		},
 	},
 	ReturnTypeAnnotation: sema.NewTypeAnnotation(
 		&sema.AuthAccountType{},
 	),
-	// additional arguments are passed to the contract initializer
-	RequiredArgumentCount: (func() *int {
-		var count = 2
-		return &count
-	})(),
 }
 
 var getAccountFunctionType = &sema.FunctionType{
@@ -100,6 +80,23 @@ var getCurrentBlockFunctionType = &sema.FunctionType{
 	ReturnTypeAnnotation: sema.NewTypeAnnotation(&BlockType{}),
 }
 
+var getBlockFunctionType = &sema.FunctionType{
+	Parameters: []*sema.Parameter{
+		{
+			Label:      "at",
+			Identifier: "height",
+			TypeAnnotation: sema.NewTypeAnnotation(
+				&sema.UInt64Type{},
+			),
+		},
+	},
+	ReturnTypeAnnotation: sema.NewTypeAnnotation(
+		&sema.OptionalType{
+			Type: &BlockType{},
+		},
+	),
+}
+
 // FlowBuiltinImpls defines the set of functions needed to implement the Flow
 // built-in functions.
 type FlowBuiltinImpls struct {
@@ -107,6 +104,7 @@ type FlowBuiltinImpls struct {
 	GetAccount      interpreter.HostFunction
 	Log             interpreter.HostFunction
 	GetCurrentBlock interpreter.HostFunction
+	GetBlock        interpreter.HostFunction
 }
 
 // FlowBuiltInFunctions returns a list of standard library functions, bound to
@@ -135,6 +133,12 @@ func FlowBuiltInFunctions(impls FlowBuiltinImpls) StandardLibraryFunctions {
 			"getCurrentBlock",
 			getCurrentBlockFunctionType,
 			impls.GetCurrentBlock,
+			nil,
+		),
+		NewStandardLibraryFunction(
+			"getBlock",
+			getBlockFunctionType,
+			impls.GetBlock,
 			nil,
 		),
 	}
@@ -169,101 +173,68 @@ func newFlowEventType(identifier string, parameters ...*sema.Parameter) *sema.Co
 	return eventType
 }
 
+const HashSize = 32
+
+var HashType = &sema.ConstantSizedType{
+	Size: HashSize,
+	Type: &sema.UInt8Type{},
+}
+
+var TypeIDsType = &sema.VariableSizedType{
+	Type: &sema.StringType{},
+}
+
+var AccountEventAddressParameter = &sema.Parameter{
+	Identifier:     "address",
+	TypeAnnotation: sema.NewTypeAnnotation(&sema.AddressType{}),
+}
+
+var AccountEventCodeHashParameter = &sema.Parameter{
+	Identifier:     "codeHash",
+	TypeAnnotation: sema.NewTypeAnnotation(HashType),
+}
+
+var AccountEventPublicKeyParameter = &sema.Parameter{
+	Identifier: "publicKey",
+	TypeAnnotation: sema.NewTypeAnnotation(
+		&sema.VariableSizedType{
+			Type: &sema.UInt8Type{},
+		},
+	),
+}
+
+var AccountEventContractsParameter = &sema.Parameter{
+	Identifier:     "contracts",
+	TypeAnnotation: sema.NewTypeAnnotation(TypeIDsType),
+}
+
 var AccountCreatedEventType = newFlowEventType(
 	"AccountCreated",
-	&sema.Parameter{
-		Identifier: "address",
-		TypeAnnotation: sema.NewTypeAnnotation(
-			&sema.StringType{},
-		),
-	},
-	&sema.Parameter{
-		Identifier: "codeHash",
-		TypeAnnotation: sema.NewTypeAnnotation(
-			&sema.VariableSizedType{
-				Type: &sema.IntType{},
-			},
-		),
-	},
-	&sema.Parameter{
-		Identifier: "contracts",
-		TypeAnnotation: sema.NewTypeAnnotation(
-			&sema.VariableSizedType{
-				Type: &sema.StringType{},
-			},
-		),
-	},
+	AccountEventAddressParameter,
 )
 
 var AccountKeyAddedEventType = newFlowEventType(
 	"AccountKeyAdded",
-	&sema.Parameter{
-		Identifier: "address",
-		TypeAnnotation: sema.NewTypeAnnotation(
-			&sema.StringType{},
-		),
-	},
-	&sema.Parameter{
-		Identifier: "publicKey",
-		TypeAnnotation: sema.NewTypeAnnotation(
-			&sema.VariableSizedType{
-				Type: &sema.IntType{},
-			},
-		),
-	},
+	AccountEventAddressParameter,
+	AccountEventPublicKeyParameter,
 )
 
 var AccountKeyRemovedEventType = newFlowEventType(
 	"AccountKeyRemoved",
-	&sema.Parameter{
-		Identifier: "address",
-		TypeAnnotation: sema.NewTypeAnnotation(
-			&sema.StringType{},
-		),
-	},
-	&sema.Parameter{
-		Identifier: "publicKey",
-		TypeAnnotation: sema.NewTypeAnnotation(
-			&sema.VariableSizedType{
-				Type: &sema.IntType{},
-			},
-		),
-	},
+	AccountEventAddressParameter,
+	AccountEventPublicKeyParameter,
 )
 
 var AccountCodeUpdatedEventType = newFlowEventType(
 	"AccountCodeUpdated",
-	&sema.Parameter{
-		Identifier: "address",
-		TypeAnnotation: sema.NewTypeAnnotation(
-			&sema.StringType{},
-		),
-	},
-	&sema.Parameter{
-		Identifier: "codeHash",
-		TypeAnnotation: sema.NewTypeAnnotation(
-			&sema.VariableSizedType{
-				Type: &sema.IntType{},
-			},
-		),
-	},
-	&sema.Parameter{
-		Identifier: "contracts",
-		TypeAnnotation: sema.NewTypeAnnotation(
-			&sema.VariableSizedType{
-				Type: &sema.StringType{},
-			},
-		),
-	},
+	AccountEventAddressParameter,
+	AccountEventCodeHashParameter,
+	AccountEventContractsParameter,
 )
 
 // BlockType
 
 type BlockType struct{}
-
-func init() {
-	gob.Register(&BlockType{})
-}
 
 func (*BlockType) IsType() {}
 
@@ -312,21 +283,17 @@ func (t *BlockType) GetMember(identifier string, _ ast.Range, _ func(error)) *se
 	}
 
 	switch identifier {
-	case "number":
+	case "height":
 		return newField(&sema.UInt64Type{})
+
+	case "timestamp":
+		return newField(&sema.UFix64Type{})
 
 	case "id":
 		return newField(
 			&sema.ConstantSizedType{
 				Type: &sema.UInt8Type{},
 				Size: BlockIDSize,
-			},
-		)
-
-	case "previousBlock", "nextBlock":
-		return newField(
-			&sema.OptionalType{
-				Type: &BlockType{},
 			},
 		)
 

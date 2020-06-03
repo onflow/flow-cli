@@ -3,6 +3,8 @@ package badger
 import (
 	"sort"
 	"sync"
+
+	"github.com/dapperlabs/flow-go/model/flow"
 )
 
 // notFound is a sentinel to indicate that a register has never been written by
@@ -105,8 +107,8 @@ func newChangelog() changelog {
 
 // getMostRecentChange returns the most recent block height at which the
 // register with the given ID changed value.
-func (c changelog) getMostRecentChange(registerID string, blockHeight uint64) uint64 {
-	clist, ok := c.registers[registerID]
+func (c changelog) getMostRecentChange(registerID flow.RegisterID, blockHeight uint64) uint64 {
+	clist, ok := c.registers[string(registerID)]
 	if !ok {
 		return notFound
 	}
@@ -121,8 +123,8 @@ func (c changelog) changelists() map[string]changelist {
 
 // getChangelist returns the changelist corresponding to the given register ID.
 // Returns an empty changelist if none exists.
-func (c changelog) getChangelist(registerID string) changelist {
-	return c.registers[registerID]
+func (c changelog) getChangelist(registerID flow.RegisterID) changelist {
+	return c.registers[string(registerID)]
 }
 
 // setChangelist sets the changelist for the given register ID, discarding the
@@ -136,8 +138,8 @@ func (c changelog) setChangelist(registerID string, clist changelist) {
 // this is a no-op.
 //
 // If the changelist doesn't exist, it is created.
-func (c *changelog) addChange(registerID string, blockHeight uint64) {
-	clist := c.registers[registerID]
+func (c *changelog) addChange(registerID flow.RegisterID, blockHeight uint64) {
+	clist := c.registers[string(registerID)]
 	clist.add(blockHeight)
-	c.registers[registerID] = clist
+	c.registers[string(registerID)] = clist
 }

@@ -19,12 +19,14 @@
 package runtime
 
 import (
-	"bytes"
-	"encoding/binary"
-	"encoding/gob"
-	"errors"
 	"fmt"
+	"math"
+	goRuntime "runtime"
+	"time"
 
+	"golang.org/x/crypto/sha3"
+
+	"github.com/onflow/cadence"
 	"github.com/onflow/cadence/runtime/ast"
 	"github.com/onflow/cadence/runtime/common"
 	runtimeErrors "github.com/onflow/cadence/runtime/errors"
@@ -41,13 +43,13 @@ type Runtime interface {
 	//
 	// This function returns an error if the program has errors (e.g syntax errors, type errors),
 	// or if the execution fails.
-	ExecuteScript(script []byte, runtimeInterface Interface, location Location) (Value, error)
+	ExecuteScript(script []byte, runtimeInterface Interface, location Location) (cadence.Value, error)
 
 	// ExecuteTransaction executes the given transaction.
 	//
 	// This function returns an error if the program has errors (e.g syntax errors, type errors),
 	// or if the execution fails.
-	ExecuteTransaction(script []byte, runtimeInterface Interface, location Location) error
+	ExecuteTransaction(script []byte, arguments [][]byte, runtimeInterface Interface, location Location) error
 
 	// ParseAndCheckProgram parses and checks the given code without executing the program.
 	//
@@ -85,6 +87,24 @@ func validTopLevelDeclarations(location ast.Location) []common.DeclarationKind {
 	return nil
 }
 
+func reportMetric(
+	f func(),
+	runtimeInterface Interface,
+	report func(Metrics, time.Duration),
+) {
+	metrics, ok := runtimeInterface.(Metrics)
+	if !ok {
+		f()
+		return
+	}
+
+	start := time.Now()
+	f()
+	elapsed := time.Since(start)
+
+	report(metrics, elapsed)
+}
+
 const contractKey = "contract"
 
 // interpreterRuntime is a interpreter-based version of the Flow runtime.
@@ -95,23 +115,29 @@ func NewInterpreterRuntime() Runtime {
 	return &interpreterRuntime{}
 }
 
-func (r *interpreterRuntime) ExecuteScript(script []byte, runtimeInterface Interface, location Location) (Value, error) {
+func (r *interpreterRuntime) ExecuteScript(
+	script []byte,
+	runtimeInterface Interface,
+	location Location,
+) (cadence.Value, error) {
+
 	runtimeStorage := newInterpreterRuntimeStorage(runtimeInterface)
 
 	functions := r.standardLibraryFunctions(runtimeInterface, runtimeStorage)
 
-	checker, err := r.parseAndCheckProgram(script, runtimeInterface, location, functions, nil)
+	checker, err := r.parseAndCheckProgram(script, runtimeInterface, location, functions, nil, true)
 	if err != nil {
-		return Value{}, newError(err)
+		return nil, newError(err)
 	}
 
 	_, ok := checker.GlobalValues["main"]
 	if !ok {
 		// TODO: error because no main?
-		return Value{}, nil
+		return nil, nil
 	}
 
 	value, err := r.interpret(
+		location,
 		runtimeInterface,
 		runtimeStorage,
 		checker,
@@ -122,7 +148,7 @@ func (r *interpreterRuntime) ExecuteScript(script []byte, runtimeInterface Inter
 		},
 	)
 	if err != nil {
-		return Value{}, newError(err)
+		return nil, newError(err)
 	}
 
 	// Write back all stored values, which were actually just cached, back into storage.
@@ -132,39 +158,53 @@ func (r *interpreterRuntime) ExecuteScript(script []byte, runtimeInterface Inter
 
 	runtimeStorage.writeCached()
 
-	return value, nil
+	return exportValue(value), nil
 }
 
+type interpretFunc func(inter *interpreter.Interpreter) (interpreter.Value, error)
+
 func (r *interpreterRuntime) interpret(
+	location ast.Location,
 	runtimeInterface Interface,
 	runtimeStorage *interpreterRuntimeStorage,
 	checker *sema.Checker,
 	functions stdlib.StandardLibraryFunctions,
 	options []interpreter.Option,
-	f func(inter *interpreter.Interpreter) (interpreter.Value, error),
+	f interpretFunc,
 ) (
-	Value,
+	exportableValue,
 	error,
 ) {
 	inter, err := r.newInterpreter(checker, functions, runtimeInterface, runtimeStorage, options)
 	if err != nil {
-		return Value{}, err
+		return exportableValue{}, err
 	}
 
-	if err := inter.Interpret(); err != nil {
-		return Value{}, err
+	var result interpreter.Value
+
+	reportMetric(
+		func() {
+			err = inter.Interpret()
+			if err != nil || f == nil {
+				return
+			}
+			result, err = f(inter)
+		},
+		runtimeInterface,
+		func(metrics Metrics, duration time.Duration) {
+			metrics.ProgramInterpreted(location, duration)
+		},
+	)
+
+	if err != nil {
+		return exportableValue{}, err
 	}
 
-	if f != nil {
-		value, err := f(inter)
-		if err != nil {
-			return Value{}, err
-		}
-
-		return newRuntimeValue(value, inter), nil
+	if f == nil {
+		return exportableValue{}, nil
 	}
 
-	return Value{}, nil
+	return newExportableValue(result, inter), nil
 }
 
 func (r *interpreterRuntime) newAuthAccountValue(
@@ -174,7 +214,22 @@ func (r *interpreterRuntime) newAuthAccountValue(
 ) interpreter.AuthAccountValue {
 	return interpreter.NewAuthAccountValue(
 		addressValue,
-		r.newSetCodeFunction(addressValue, runtimeInterface, runtimeStorage),
+		r.newSetCodeFunction(
+			addressValue,
+			runtimeInterface,
+			runtimeStorage,
+			setCodeOptions{
+				createContract: true,
+			},
+		),
+		r.newSetCodeFunction(
+			addressValue,
+			runtimeInterface,
+			runtimeStorage,
+			setCodeOptions{
+				createContract: false,
+			},
+		),
 		r.newAddPublicKeyFunction(addressValue, runtimeInterface),
 		r.newRemovePublicKeyFunction(addressValue, runtimeInterface),
 	)
@@ -182,6 +237,7 @@ func (r *interpreterRuntime) newAuthAccountValue(
 
 func (r *interpreterRuntime) ExecuteTransaction(
 	script []byte,
+	arguments [][]byte,
 	runtimeInterface Interface,
 	location Location,
 ) error {
@@ -189,7 +245,7 @@ func (r *interpreterRuntime) ExecuteTransaction(
 
 	functions := r.standardLibraryFunctions(runtimeInterface, runtimeStorage)
 
-	checker, err := r.parseAndCheckProgram(script, runtimeInterface, location, functions, nil)
+	checker, err := r.parseAndCheckProgram(script, runtimeInterface, location, functions, nil, true)
 	if err != nil {
 		return newError(err)
 	}
@@ -201,52 +257,58 @@ func (r *interpreterRuntime) ExecuteTransaction(
 	}
 
 	transactionType := transactions[0]
-	transactionFunctionType := transactionType.EntryPointFunctionType()
 
-	signingAccountAddresses := runtimeInterface.GetSigningAccounts()
+	var authorizers []Address
+	wrapPanic(func() {
+		authorizers = runtimeInterface.GetSigningAccounts()
+	})
 
 	// check parameter count
 
-	signingAccountsCount := len(signingAccountAddresses)
-	transactionFunctionParameterCount := len(transactionFunctionType.Parameters)
-	if signingAccountsCount != transactionFunctionParameterCount {
+	argumentCount := len(arguments)
+	authorizerCount := len(authorizers)
+
+	transactionParameterCount := len(transactionType.Parameters)
+	if argumentCount != transactionParameterCount {
 		return newError(InvalidTransactionParameterCountError{
-			Expected: signingAccountsCount,
-			Actual:   transactionFunctionParameterCount,
+			Expected: transactionParameterCount,
+			Actual:   argumentCount,
 		})
 	}
 
-	// check parameter types
-
-	for _, parameter := range transactionFunctionType.Parameters {
-		parameterType := parameter.TypeAnnotation.Type
-
-		if !parameterType.Equal(&sema.AuthAccountType{}) {
-			return newError(InvalidTransactionParameterTypeError{
-				Actual: parameterType,
-			})
-		}
+	transactionAuthorizerCount := len(transactionType.PrepareParameters)
+	if authorizerCount != transactionAuthorizerCount {
+		return newError(InvalidTransactionAuthorizerCountError{
+			Expected: transactionAuthorizerCount,
+			Actual:   authorizerCount,
+		})
 	}
 
-	signingAccounts := make([]interface{}, signingAccountsCount)
+	// gather authorizers
 
-	for i, address := range signingAccountAddresses {
-		signingAccounts[i] = r.newAuthAccountValue(
+	authorizerValues := make([]interpreter.Value, authorizerCount)
+
+	for i, address := range authorizers {
+		authorizerValues[i] = r.newAuthAccountValue(
 			interpreter.NewAddressValue(address),
 			runtimeInterface, runtimeStorage,
 		)
 	}
 
 	_, err = r.interpret(
+		location,
 		runtimeInterface,
 		runtimeStorage,
 		checker,
 		functions,
 		nil,
-		func(inter *interpreter.Interpreter) (interpreter.Value, error) {
-			err := inter.InvokeTransaction(0, signingAccounts...)
-			return nil, err
-		},
+		r.transactionExecutionFunction(
+			argumentCount,
+			transactionType,
+			arguments,
+			runtimeInterface,
+			authorizerValues,
+		),
 	)
 	if err != nil {
 		return newError(err)
@@ -258,11 +320,83 @@ func (r *interpreterRuntime) ExecuteTransaction(
 	return nil
 }
 
+func wrapPanic(f func()) {
+	defer func() {
+		if r := recover(); r != nil {
+			var ok bool
+			// don't recover Go errors
+			goErr, ok := r.(goRuntime.Error)
+			if ok {
+				panic(goErr)
+			}
+
+			panic(interpreter.ExternalError{
+				Recovered: r,
+			})
+		}
+	}()
+	f()
+}
+
+func (r *interpreterRuntime) transactionExecutionFunction(
+	argumentCount int,
+	transactionType *sema.TransactionType,
+	arguments [][]byte,
+	runtimeInterface Interface,
+	authorizerValues []interpreter.Value,
+) interpretFunc {
+	return func(inter *interpreter.Interpreter) (interpreter.Value, error) {
+		argumentValues := make([]interpreter.Value, argumentCount)
+
+		// decode arguments against parameter types
+		for i, parameter := range transactionType.Parameters {
+			parameterType := parameter.TypeAnnotation.Type
+			argument := arguments[i]
+
+			exportedParameterType := exportType(parameterType)
+			var value cadence.Value
+			var err error
+			wrapPanic(func() {
+				value, err = runtimeInterface.DecodeArgument(
+					argument,
+					exportedParameterType,
+				)
+			})
+			if err != nil {
+				return nil, &InvalidTransactionArgumentError{
+					Index: i,
+					Err:   err,
+				}
+			}
+
+			arg := importValue(value)
+
+			// check that decoded value is a subtype of static parameter type
+			if !interpreter.IsSubType(arg.DynamicType(inter), parameterType) {
+				return nil, &InvalidTransactionArgumentError{
+					Index: i,
+					Err: &InvalidTypeAssignmentError{
+						Value: arg,
+						Type:  parameterType,
+					},
+				}
+			}
+
+			argumentValues[i] = arg
+		}
+
+		allArguments := append(argumentValues, authorizerValues...)
+
+		err := inter.InvokeTransaction(0, allArguments...)
+		return nil, err
+	}
+}
+
 func (r *interpreterRuntime) ParseAndCheckProgram(script []byte, runtimeInterface Interface, location Location) error {
 	runtimeStorage := newInterpreterRuntimeStorage(runtimeInterface)
 	functions := r.standardLibraryFunctions(runtimeInterface, runtimeStorage)
 
-	_, err := r.parseAndCheckProgram(script, runtimeInterface, location, functions, nil)
+	_, err := r.parseAndCheckProgram(script, runtimeInterface, location, functions, nil, true)
 	if err != nil {
 		return newError(err)
 	}
@@ -276,10 +410,25 @@ func (r *interpreterRuntime) parseAndCheckProgram(
 	location Location,
 	functions stdlib.StandardLibraryFunctions,
 	options []sema.Option,
+	useCache bool,
 ) (*sema.Checker, error) {
-	program, err := r.parse(code)
-	if err != nil {
-		return nil, err
+
+	var program *ast.Program
+	var err error
+	if useCache {
+		wrapPanic(func() {
+			program, err = runtimeInterface.GetCachedProgram(location)
+		})
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if program == nil {
+		program, err = r.parse(location, code, runtimeInterface)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	importResolver := r.importResolver(runtimeInterface)
@@ -298,6 +447,17 @@ func (r *interpreterRuntime) parseAndCheckProgram(
 				sema.WithPredeclaredValues(valueDeclarations),
 				sema.WithPredeclaredTypes(typeDeclarations),
 				sema.WithValidTopLevelDeclarationsHandler(validTopLevelDeclarations),
+				sema.WithCheckHandler(func(location ast.Location, check func()) {
+					reportMetric(
+						func() {
+							check()
+						},
+						runtimeInterface,
+						func(metrics Metrics, duration time.Duration) {
+							metrics.ProgramChecked(location, duration)
+						},
+					)
+				}),
 			},
 			options...,
 		)...,
@@ -306,7 +466,16 @@ func (r *interpreterRuntime) parseAndCheckProgram(
 		return nil, err
 	}
 
-	if err := checker.Check(); err != nil {
+	err = checker.Check()
+	if err != nil {
+		return nil, err
+	}
+
+	// After the program has passed semantic analysis, cache the program AST.
+	wrapPanic(func() {
+		err = runtimeInterface.CacheProgram(location, program)
+	})
+	if err != nil {
 		return nil, err
 	}
 
@@ -321,8 +490,6 @@ func (r *interpreterRuntime) newInterpreter(
 	options []interpreter.Option,
 ) (*interpreter.Interpreter, error) {
 
-	importResolver := r.importResolver(runtimeInterface)
-
 	defaultOptions := []interpreter.Option{
 		interpreter.WithPredefinedValues(functions.ToValues()),
 		interpreter.WithOnEventEmittedHandler(
@@ -334,62 +501,19 @@ func (r *interpreterRuntime) newInterpreter(
 				r.emitEvent(inter, runtimeInterface, eventValue, eventType)
 			},
 		),
-		interpreter.WithStorageExistenceHandler(
-			func(_ *interpreter.Interpreter, address common.Address, key string) bool {
-				return runtimeStorage.valueExists(string(address[:]), key)
-			},
-		),
-		interpreter.WithStorageReadHandler(
-			func(_ *interpreter.Interpreter, address common.Address, key string) interpreter.OptionalValue {
-				return runtimeStorage.readValue(string(address[:]), key)
-			},
-		),
-		interpreter.WithStorageWriteHandler(
-			func(_ *interpreter.Interpreter, address common.Address, key string, value interpreter.OptionalValue) {
-				runtimeStorage.writeValue(string(address[:]), key, value)
-			},
-		),
 		interpreter.WithStorageKeyHandler(
 			func(_ *interpreter.Interpreter, _ common.Address, indexingType sema.Type) string {
 				return string(indexingType.ID())
 			},
 		),
 		interpreter.WithInjectedCompositeFieldsHandler(
-			func(
-				_ *interpreter.Interpreter,
-				location Location,
-				_ sema.TypeID,
-				compositeKind common.CompositeKind,
-			) map[string]interpreter.Value {
-
-				switch compositeKind {
-				case common.CompositeKindContract:
-					var address []byte
-
-					switch location := location.(type) {
-					case AddressLocation:
-						address = location
-					default:
-						panic(runtimeErrors.NewUnreachableError())
-					}
-
-					addressValue := interpreter.NewAddressValueFromBytes(address)
-
-					return map[string]interpreter.Value{
-						"account": r.newAuthAccountValue(addressValue, runtimeInterface, runtimeStorage),
-					}
-				}
-
-				return nil
-			},
+			r.injectedCompositeFieldsHandler(runtimeInterface, runtimeStorage),
 		),
-		interpreter.WithUUIDHandler(func() uint64 {
-			// TODO: move to main interface
-			if runtimeInterfaceV2, ok := runtimeInterface.(InterfaceV2); ok {
-				return runtimeInterfaceV2.GenerateUUID()
-			} else {
-				return 0
-			}
+		interpreter.WithUUIDHandler(func() (uuid uint64) {
+			wrapPanic(func() {
+				uuid = runtimeInterface.GenerateUUID()
+			})
+			return
 		}),
 		interpreter.WithContractValueHandler(
 			func(
@@ -402,26 +526,139 @@ func (r *interpreterRuntime) newInterpreter(
 			},
 		),
 		interpreter.WithImportProgramHandler(
-			func(inter *interpreter.Interpreter, location ast.Location) *ast.Program {
-				program, err := importResolver(location)
-				if err != nil {
-					panic(err)
-				}
-
-				err = program.ResolveImports(importResolver)
-				if err != nil {
-					panic(err)
-				}
-
-				return program
-			},
+			r.importProgramHandler(runtimeInterface),
 		),
 	}
+
+	defaultOptions = append(defaultOptions,
+		r.storageInterpreterOptions(runtimeStorage)...,
+	)
+
+	defaultOptions = append(defaultOptions,
+		r.meteringInterpreterOptions(runtimeInterface)...,
+	)
 
 	return interpreter.NewInterpreter(
 		checker,
 		append(defaultOptions, options...)...,
 	)
+}
+
+func (r *interpreterRuntime) importProgramHandler(runtimeInterface Interface) interpreter.ImportProgramHandlerFunc {
+	importResolver := r.importResolver(runtimeInterface)
+
+	return func(inter *interpreter.Interpreter, location ast.Location) *ast.Program {
+		program, err := importResolver(location)
+		if err != nil {
+			panic(err)
+		}
+
+		err = program.ResolveImports(importResolver)
+		if err != nil {
+			panic(err)
+		}
+
+		return program
+	}
+}
+
+func (r *interpreterRuntime) injectedCompositeFieldsHandler(
+	runtimeInterface Interface,
+	runtimeStorage *interpreterRuntimeStorage,
+) interpreter.InjectedCompositeFieldsHandlerFunc {
+	return func(
+		_ *interpreter.Interpreter,
+		location Location,
+		_ sema.TypeID,
+		compositeKind common.CompositeKind,
+	) map[string]interpreter.Value {
+
+		switch compositeKind {
+		case common.CompositeKindContract:
+			var address []byte
+
+			switch location := location.(type) {
+			case AddressLocation:
+				address = location
+			default:
+				panic(runtimeErrors.NewUnreachableError())
+			}
+
+			addressValue := interpreter.NewAddressValueFromBytes(address)
+
+			return map[string]interpreter.Value{
+				"account": r.newAuthAccountValue(addressValue, runtimeInterface, runtimeStorage),
+			}
+		}
+
+		return nil
+	}
+}
+
+func (r *interpreterRuntime) storageInterpreterOptions(runtimeStorage *interpreterRuntimeStorage) []interpreter.Option {
+	return []interpreter.Option{
+		interpreter.WithStorageExistenceHandler(
+			func(_ *interpreter.Interpreter, address common.Address, key string) bool {
+				return runtimeStorage.valueExists(address, key)
+			},
+		),
+		interpreter.WithStorageReadHandler(
+			func(_ *interpreter.Interpreter, address common.Address, key string, deferred bool) interpreter.OptionalValue {
+				return runtimeStorage.readValue(address, key, deferred)
+			},
+		),
+		interpreter.WithStorageWriteHandler(
+			func(_ *interpreter.Interpreter, address common.Address, key string, value interpreter.OptionalValue) {
+				runtimeStorage.writeValue(address, key, value)
+			},
+		),
+	}
+}
+
+func (r *interpreterRuntime) meteringInterpreterOptions(runtimeInterface Interface) []interpreter.Option {
+	var limit uint64
+	wrapPanic(func() {
+		limit = runtimeInterface.GetComputationLimit()
+	})
+	if limit == 0 {
+		return nil
+	}
+
+	if limit == math.MaxUint64 {
+		limit--
+	}
+
+	var used uint64
+
+	checkLimit := func() {
+		used++
+
+		if used <= limit {
+			return
+		}
+
+		panic(ComputationLimitExceededError{
+			Limit: limit,
+		})
+	}
+
+	return []interpreter.Option{
+		interpreter.WithOnStatementHandler(
+			func(_ *interpreter.Statement) {
+				checkLimit()
+			},
+		),
+		interpreter.WithOnLoopIterationHandler(
+			func(_ *interpreter.Interpreter, _ int) {
+				checkLimit()
+			},
+		),
+		interpreter.WithOnFunctionInvocationHandler(
+			func(_ *interpreter.Interpreter, _ int) {
+				checkLimit()
+			},
+		),
+	}
 }
 
 func (r *interpreterRuntime) standardLibraryFunctions(
@@ -434,23 +671,67 @@ func (r *interpreterRuntime) standardLibraryFunctions(
 			GetAccount:      r.newGetAccountFunction(runtimeInterface),
 			Log:             r.newLogFunction(runtimeInterface),
 			GetCurrentBlock: r.newGetCurrentBlockFunction(runtimeInterface),
+			GetBlock:        r.newGetBlockFunction(runtimeInterface),
 		}),
 		stdlib.BuiltinFunctions...,
 	)
 }
 
 func (r *interpreterRuntime) importResolver(runtimeInterface Interface) ImportResolver {
-	return func(location Location) (program *ast.Program, e error) {
-		script, err := runtimeInterface.ResolveImport(location)
+	return func(location Location) (program *ast.Program, err error) {
+		wrapPanic(func() {
+			program, err = runtimeInterface.GetCachedProgram(location)
+		})
 		if err != nil {
 			return nil, err
 		}
-		return r.parse(script)
+		if program != nil {
+			return program, nil
+		}
+
+		var script []byte
+		wrapPanic(func() {
+			script, err = runtimeInterface.ResolveImport(location)
+		})
+
+		if err != nil {
+			return nil, err
+		}
+
+		program, err = r.parse(location, script, runtimeInterface)
+		if err != nil {
+			return nil, err
+		}
+
+		wrapPanic(func() {
+			err = runtimeInterface.CacheProgram(location, program)
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		return program, nil
 	}
 }
 
-func (r *interpreterRuntime) parse(script []byte) (program *ast.Program, err error) {
-	program, _, err = parser.ParseProgram(string(script))
+func (r *interpreterRuntime) parse(
+	location ast.Location,
+	script []byte,
+	runtimeInterface Interface,
+) (
+	program *ast.Program,
+	err error,
+) {
+	reportMetric(
+		func() {
+			program, _, err = parser.ParseProgram(string(script))
+		},
+		runtimeInterface,
+		func(metrics Metrics, duration time.Duration) {
+			metrics.ProgramParsed(location, duration)
+		},
+	)
+
 	return
 }
 
@@ -461,31 +742,54 @@ func (r *interpreterRuntime) emitEvent(
 	event *interpreter.CompositeValue,
 	eventType *sema.CompositeType,
 ) {
-	fields := make([]Value, len(eventType.ConstructorParameters))
+	fields := make([]exportableValue, len(eventType.ConstructorParameters))
 
 	for i, parameter := range eventType.ConstructorParameters {
-		fields[i] = newRuntimeValue(event.Fields[parameter.Identifier], inter)
+		fields[i] = newExportableValue(event.Fields[parameter.Identifier], inter)
 	}
 
-	eventValue := Event{
+	eventValue := exportableEvent{
 		Type:   eventType,
 		Fields: fields,
 	}
 
-	runtimeInterface.EmitEvent(eventValue)
+	exportedEvent := exportEvent(eventValue)
+	wrapPanic(func() {
+		runtimeInterface.EmitEvent(exportedEvent)
+	})
 }
 
 func (r *interpreterRuntime) emitAccountEvent(
 	eventType *sema.CompositeType,
 	runtimeInterface Interface,
-	eventFields []Value,
+	eventFields []exportableValue,
 ) {
-	eventValue := Event{
+	eventValue := exportableEvent{
 		Type:   eventType,
 		Fields: eventFields,
 	}
 
-	runtimeInterface.EmitEvent(eventValue)
+	actualLen := len(eventFields)
+	expectedLen := len(eventType.ConstructorParameters)
+
+	if actualLen != expectedLen {
+		panic(fmt.Errorf(
+			"event emission value mismatch: event %s: expected %d, got %d",
+			eventType.QualifiedString(),
+			expectedLen,
+			actualLen,
+		))
+	}
+
+	exportedEvent := exportEvent(eventValue)
+	wrapPanic(func() {
+		runtimeInterface.EmitEvent(exportedEvent)
+	})
+}
+
+func CodeToHashValue(code []byte) *interpreter.ArrayValue {
+	codeHash := sha3.Sum256(code)
+	return interpreter.ByteSliceToByteArrayValue(codeHash[:])
 }
 
 func (r *interpreterRuntime) newCreateAccountFunction(
@@ -493,57 +797,30 @@ func (r *interpreterRuntime) newCreateAccountFunction(
 	runtimeStorage *interpreterRuntimeStorage,
 ) interpreter.HostFunction {
 	return func(invocation interpreter.Invocation) trampoline.Trampoline {
-		const requiredArgumentCount = 2
-
-		pkArray := invocation.Arguments[0].(*interpreter.ArrayValue)
-		pkValues := pkArray.Values
-		publicKeys := make([][]byte, len(pkValues))
-
-		for i, pkVal := range pkValues {
-			publicKey, err := toBytes(pkVal)
-			if err != nil {
-				panic(fmt.Sprintf("Account requires the first parameter to be an array of keys ([[Int]])"))
-			}
-			publicKeys[i] = publicKey
+		payer, ok := invocation.Arguments[0].(interpreter.AuthAccountValue)
+		if !ok {
+			panic(fmt.Sprintf(
+				"%[1]s requires the third parameter to be an %[1]s",
+				&sema.AuthAccountType{},
+			))
 		}
 
-		code, err := toBytes(invocation.Arguments[1])
-		if err != nil {
-			panic(fmt.Sprintf("Account requires the second parameter to be an array of bytes ([Int])"))
-		}
-
-		address, err := runtimeInterface.CreateAccount(publicKeys)
+		var address Address
+		var err error
+		wrapPanic(func() {
+			address, err = runtimeInterface.CreateAccount(payer.AddressValue().ToAddress())
+		})
 		if err != nil {
 			panic(err)
 		}
 
 		addressValue := interpreter.NewAddressValue(address)
 
-		constructorArguments := invocation.Arguments[requiredArgumentCount:]
-		constructorArgumentTypes := invocation.ArgumentTypes[requiredArgumentCount:]
-
-		contractTypes := r.updateAccountCode(
-			runtimeInterface,
-			runtimeStorage,
-			code,
-			addressValue,
-			constructorArguments,
-			constructorArgumentTypes,
-			false,
-			invocation.LocationRange.Range,
-		)
-
-		codeValue := fromBytes(code)
-
-		contractTypeIDs := compositeTypesToIDValues(contractTypes)
-
 		r.emitAccountEvent(
 			stdlib.AccountCreatedEventType,
 			runtimeInterface,
-			[]Value{
-				newRuntimeValue(addressValue, nil),
-				newRuntimeValue(codeValue, nil),
-				newRuntimeValue(contractTypeIDs, nil),
+			[]exportableValue{
+				newExportableValue(addressValue, nil),
 			},
 		)
 
@@ -561,12 +838,14 @@ func (r *interpreterRuntime) newAddPublicKeyFunction(
 		func(invocation interpreter.Invocation) trampoline.Trampoline {
 			publicKeyValue := invocation.Arguments[0].(*interpreter.ArrayValue)
 
-			publicKey, err := toBytes(publicKeyValue)
+			publicKey, err := interpreter.ByteArrayValueToByteSlice(publicKeyValue)
 			if err != nil {
 				panic(fmt.Sprintf("addPublicKey requires the first parameter to be an array"))
 			}
 
-			err = runtimeInterface.AddAccountKey(addressValue.ToAddress(), publicKey)
+			wrapPanic(func() {
+				err = runtimeInterface.AddAccountKey(addressValue.ToAddress(), publicKey)
+			})
 			if err != nil {
 				panic(err)
 			}
@@ -574,9 +853,9 @@ func (r *interpreterRuntime) newAddPublicKeyFunction(
 			r.emitAccountEvent(
 				stdlib.AccountKeyAddedEventType,
 				runtimeInterface,
-				[]Value{
-					newRuntimeValue(addressValue, nil),
-					newRuntimeValue(publicKeyValue, nil),
+				[]exportableValue{
+					newExportableValue(addressValue, nil),
+					newExportableValue(publicKeyValue, nil),
 				},
 			)
 
@@ -594,19 +873,23 @@ func (r *interpreterRuntime) newRemovePublicKeyFunction(
 		func(invocation interpreter.Invocation) trampoline.Trampoline {
 			index := invocation.Arguments[0].(interpreter.IntValue)
 
-			publicKey, err := runtimeInterface.RemoveAccountKey(addressValue.ToAddress(), index.ToInt())
+			var publicKey []byte
+			var err error
+			wrapPanic(func() {
+				publicKey, err = runtimeInterface.RemoveAccountKey(addressValue.ToAddress(), index.ToInt())
+			})
 			if err != nil {
 				panic(err)
 			}
 
-			publicKeyValue := fromBytes(publicKey)
+			publicKeyValue := interpreter.ByteSliceToByteArrayValue(publicKey)
 
 			r.emitAccountEvent(
 				stdlib.AccountKeyRemovedEventType,
 				runtimeInterface,
-				[]Value{
-					newRuntimeValue(addressValue, nil),
-					newRuntimeValue(publicKeyValue, nil),
+				[]exportableValue{
+					newExportableValue(addressValue, nil),
+					newExportableValue(publicKeyValue, nil),
 				},
 			)
 
@@ -616,16 +899,21 @@ func (r *interpreterRuntime) newRemovePublicKeyFunction(
 	)
 }
 
+type setCodeOptions struct {
+	createContract bool
+}
+
 func (r *interpreterRuntime) newSetCodeFunction(
 	addressValue interpreter.AddressValue,
 	runtimeInterface Interface,
 	runtimeStorage *interpreterRuntimeStorage,
+	options setCodeOptions,
 ) interpreter.HostFunctionValue {
 	return interpreter.NewHostFunctionValue(
 		func(invocation interpreter.Invocation) trampoline.Trampoline {
 			const requiredArgumentCount = 1
 
-			code, err := toBytes(invocation.Arguments[0])
+			code, err := interpreter.ByteArrayValueToByteSlice(invocation.Arguments[0])
 			if err != nil {
 				panic(fmt.Sprintf("setCode requires the first parameter to be an array of bytes ([Int])"))
 			}
@@ -640,21 +928,21 @@ func (r *interpreterRuntime) newSetCodeFunction(
 				addressValue,
 				constructorArguments,
 				constructorArgumentTypes,
-				true,
 				invocation.LocationRange.Range,
+				updateAccountCodeOptions(options),
 			)
 
-			codeValue := fromBytes(code)
+			codeHashValue := CodeToHashValue(code)
 
 			contractTypeIDs := compositeTypesToIDValues(contractTypes)
 
 			r.emitAccountEvent(
 				stdlib.AccountCodeUpdatedEventType,
 				runtimeInterface,
-				[]Value{
-					newRuntimeValue(addressValue, nil),
-					newRuntimeValue(codeValue, nil),
-					newRuntimeValue(contractTypeIDs, nil),
+				[]exportableValue{
+					newExportableValue(addressValue, nil),
+					newExportableValue(codeHashValue, nil),
+					newExportableValue(contractTypeIDs, nil),
 				},
 			)
 
@@ -664,6 +952,10 @@ func (r *interpreterRuntime) newSetCodeFunction(
 	)
 }
 
+type updateAccountCodeOptions struct {
+	createContract bool
+}
+
 func (r *interpreterRuntime) updateAccountCode(
 	runtimeInterface Interface,
 	runtimeStorage *interpreterRuntimeStorage,
@@ -671,8 +963,8 @@ func (r *interpreterRuntime) updateAccountCode(
 	addressValue interpreter.AddressValue,
 	constructorArguments []interpreter.Value,
 	constructorArgumentTypes []sema.Type,
-	checkPermission bool,
 	invocationRange ast.Range,
+	options updateAccountCodeOptions,
 ) (contractTypes []*sema.CompositeType) {
 	location := AddressLocation(addressValue[:])
 
@@ -683,6 +975,7 @@ func (r *interpreterRuntime) updateAccountCode(
 		location,
 		functions,
 		nil,
+		false,
 	)
 	if err != nil {
 		panic(err)
@@ -706,36 +999,45 @@ func (r *interpreterRuntime) updateAccountCode(
 	if len(contractTypes) > 0 {
 		contractType := contractTypes[0]
 
-		contract, err := r.instantiateContract(
-			contractType,
-			constructorArguments,
-			constructorArgumentTypes,
-			runtimeInterface,
-			runtimeStorage,
-			checker,
-			functions,
-			invocationRange,
-		)
+		if options.createContract {
 
-		if err != nil {
-			panic(err)
+			contract, err := r.instantiateContract(
+				location,
+				contractType,
+				constructorArguments,
+				constructorArgumentTypes,
+				runtimeInterface,
+				runtimeStorage,
+				checker,
+				functions,
+				invocationRange,
+			)
+
+			if err != nil {
+				panic(err)
+			}
+
+			contractValue = interpreter.NewSomeValueOwningNonCopying(contract)
 		}
-
-		contractValue = interpreter.NewSomeValueOwningNonCopying(contract)
 	}
 
-	address := common.Address(addressValue)
+	if options.createContract {
+		address := common.Address(addressValue)
 
-	contractValue.SetOwner(&address)
+		contractValue.SetOwner(&address)
+	}
 
 	// NOTE: only update account code if contract instantiation succeeded
-
-	err = runtimeInterface.UpdateAccountCode(addressValue.ToAddress(), code, checkPermission)
+	wrapPanic(func() {
+		err = runtimeInterface.UpdateAccountCode(addressValue.ToAddress(), code)
+	})
 	if err != nil {
 		panic(err)
 	}
 
-	r.writeContract(runtimeStorage, addressValue, contractValue)
+	if options.createContract {
+		r.writeContract(runtimeStorage, addressValue, contractValue)
+	}
 
 	return contractTypes
 }
@@ -746,7 +1048,7 @@ func (r *interpreterRuntime) writeContract(
 	contractValue interpreter.OptionalValue,
 ) {
 	runtimeStorage.writeValue(
-		string(addressValue[:]),
+		addressValue.ToAddress(),
 		contractKey,
 		contractValue,
 	)
@@ -758,8 +1060,9 @@ func (r *interpreterRuntime) loadContract(
 ) *interpreter.CompositeValue {
 	address := compositeType.Location.(AddressLocation).ToAddress()
 	storedValue := runtimeStorage.readValue(
-		string(address[:]),
+		address,
 		contractKey,
+		false,
 	)
 	switch typedValue := storedValue.(type) {
 	case *interpreter.SomeValue:
@@ -772,6 +1075,7 @@ func (r *interpreterRuntime) loadContract(
 }
 
 func (r *interpreterRuntime) instantiateContract(
+	location ast.Location,
 	contractType *sema.CompositeType,
 	constructorArguments []interpreter.Value,
 	argumentTypes []sema.Type,
@@ -860,6 +1164,7 @@ func (r *interpreterRuntime) instantiateContract(
 	}
 
 	_, err := r.interpret(
+		location,
 		runtimeInterface,
 		runtimeStorage,
 		checker,
@@ -885,83 +1190,70 @@ func (r *interpreterRuntime) newGetAccountFunction(_ Interface) interpreter.Host
 
 func (r *interpreterRuntime) newLogFunction(runtimeInterface Interface) interpreter.HostFunction {
 	return func(invocation interpreter.Invocation) trampoline.Trampoline {
-		runtimeInterface.Log(fmt.Sprint(invocation.Arguments[0]))
+		message := fmt.Sprint(invocation.Arguments[0])
+		wrapPanic(func() {
+			runtimeInterface.Log(message)
+		})
 		result := interpreter.VoidValue{}
 		return trampoline.Done{Result: result}
 	}
 }
 
-func (r *interpreterRuntime) newGetCurrentBlockFunction(_ Interface) interpreter.HostFunction {
+func (r *interpreterRuntime) getCurrentBlockHeight(runtimeInterface Interface) (currentBlockHeight uint64) {
+	wrapPanic(func() {
+		currentBlockHeight = runtimeInterface.GetCurrentBlockHeight()
+	})
+	return
+}
+
+func (r *interpreterRuntime) getBlockAtHeight(height uint64, runtimeInterface Interface) (*BlockValue, error) {
+
+	var hash BlockHash
+	var timestamp int64
+	var exists bool
+	var err error
+
+	wrapPanic(func() {
+		hash, timestamp, exists, err = runtimeInterface.GetBlockAtHeight(height)
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	if !exists {
+		return nil, nil
+	}
+
+	block := NewBlockValue(height, hash, time.Unix(0, timestamp))
+	return &block, nil
+}
+
+func (r *interpreterRuntime) newGetCurrentBlockFunction(runtimeInterface Interface) interpreter.HostFunction {
 	return func(invocation interpreter.Invocation) trampoline.Trampoline {
-		// TODO: https://github.com/dapperlabs/flow-go/issues/552
-
-		var makeBlock func(uint64) BlockValue
-		makeBlock = func(number uint64) BlockValue {
-
-			buf := new(bytes.Buffer)
-			err := binary.Write(buf, binary.BigEndian, number)
-			if err != nil {
-				panic(err)
-			}
-
-			encoded := buf.Bytes()
-			var hash [stdlib.BlockIDSize]byte
-			copy(hash[stdlib.BlockIDSize-len(encoded):], encoded)
-
-			return BlockValue{
-				Number: number,
-				ID:     hash,
-				NextBlock: func() *BlockValue {
-					nextBlock := makeBlock(number + 1)
-					return &nextBlock
-				},
-				PreviousBlock: func() *BlockValue {
-					if number == 1 {
-						return nil
-					}
-					previousBlock := makeBlock(number - 1)
-					return &previousBlock
-				},
-			}
+		height := r.getCurrentBlockHeight(runtimeInterface)
+		block, err := r.getBlockAtHeight(height, runtimeInterface)
+		if err != nil {
+			panic(err)
 		}
-
-		return trampoline.Done{Result: makeBlock(1)}
+		return trampoline.Done{Result: *block}
 	}
 }
 
-func toBytes(value interpreter.Value) ([]byte, error) {
-	array, ok := value.(*interpreter.ArrayValue)
-	if !ok {
-		return nil, errors.New("value is not an array")
-	}
-
-	result := make([]byte, len(array.Values))
-	for i, arrayValue := range array.Values {
-		intValue, ok := arrayValue.(interpreter.NumberValue)
-		if !ok {
-			return nil, errors.New("array value is not an integer")
+func (r *interpreterRuntime) newGetBlockFunction(runtimeInterface Interface) interpreter.HostFunction {
+	return func(invocation interpreter.Invocation) trampoline.Trampoline {
+		height := uint64(invocation.Arguments[0].(interpreter.UInt64Value))
+		block, err := r.getBlockAtHeight(height, runtimeInterface)
+		if err != nil {
+			panic(err)
 		}
-
-		j := intValue.ToInt()
-
-		if j < 0 || j > 255 {
-			return nil, errors.New("array value is not in byte range (0-255)")
+		var result interpreter.Value
+		if block == nil {
+			result = interpreter.NilValue{}
+		} else {
+			result = interpreter.NewSomeValueOwningNonCopying(*block)
 		}
-
-		result[i] = byte(j)
-	}
-
-	return result, nil
-}
-
-func fromBytes(buf []byte) *interpreter.ArrayValue {
-	values := make([]interpreter.Value, len(buf))
-	for i, b := range buf {
-		values[i] = interpreter.NewIntValueFromInt64(int64(b))
-	}
-
-	return &interpreter.ArrayValue{
-		Values: values,
+		return trampoline.Done{Result: result}
 	}
 }
 
@@ -978,14 +1270,31 @@ func compositeTypesToIDValues(types []*sema.CompositeType) *interpreter.ArrayVal
 // Block
 
 type BlockValue struct {
-	Number        uint64
-	ID            [stdlib.BlockIDSize]byte
-	NextBlock     func() *BlockValue
-	PreviousBlock func() *BlockValue
+	Height    interpreter.UInt64Value
+	ID        *interpreter.ArrayValue
+	Timestamp interpreter.Fix64Value
 }
 
-func init() {
-	gob.Register(&BlockValue{})
+func NewBlockValue(height uint64, id [stdlib.BlockIDSize]byte, timestamp time.Time) BlockValue {
+	// height
+	heightValue := interpreter.UInt64Value(height)
+
+	// ID
+	var values = make([]interpreter.Value, stdlib.BlockIDSize)
+	for i, b := range id {
+		values[i] = interpreter.UInt8Value(b)
+	}
+	idValue := &interpreter.ArrayValue{Values: values}
+
+	// timestamp
+	// TODO: verify
+	timestampValue := interpreter.NewFix64ValueWithInteger(timestamp.Unix())
+
+	return BlockValue{
+		Height:    heightValue,
+		ID:        idValue,
+		Timestamp: timestampValue,
+	}
 }
 
 func (BlockValue) IsValue() {}
@@ -1007,31 +1316,24 @@ func (BlockValue) SetOwner(_ *common.Address) {
 	// NO-OP: value cannot be owned
 }
 
+func (BlockValue) IsModified() bool {
+	return false
+}
+
+func (BlockValue) SetModified(_ bool) {
+	// NO-OP
+}
+
 func (v BlockValue) GetMember(_ *interpreter.Interpreter, _ interpreter.LocationRange, name string) interpreter.Value {
 	switch name {
-	case "number":
-		return interpreter.UInt64Value(v.Number)
+	case "height":
+		return v.Height
 
 	case "id":
-		var values = make([]interpreter.Value, stdlib.BlockIDSize)
-		for i, b := range v.ID {
-			values[i] = interpreter.UInt8Value(b)
-		}
-		return &interpreter.ArrayValue{Values: values}
+		return v.ID
 
-	case "previousBlock":
-		previousBlock := v.PreviousBlock()
-		if previousBlock == nil {
-			return interpreter.NilValue{}
-		}
-		return interpreter.NewSomeValueOwningNonCopying(previousBlock)
-
-	case "nextBlock":
-		nextBlock := v.NextBlock()
-		if nextBlock == nil {
-			return interpreter.NilValue{}
-		}
-		return interpreter.NewSomeValueOwningNonCopying(nextBlock)
+	case "timestamp":
+		return v.Timestamp
 
 	default:
 		panic(runtimeErrors.NewUnreachableError())
@@ -1042,9 +1344,19 @@ func (v BlockValue) SetMember(_ *interpreter.Interpreter, _ interpreter.Location
 	panic(runtimeErrors.NewUnreachableError())
 }
 
+func (v BlockValue) IDAsByteArray() [stdlib.BlockIDSize]byte {
+	var byteArray [stdlib.BlockIDSize]byte
+	for i, b := range v.ID.Values {
+		byteArray[i] = byte(b.(interpreter.UInt8Value))
+	}
+	return byteArray
+}
+
 func (v BlockValue) String() string {
 	return fmt.Sprintf(
-		"Block(number: %d, hash: 0x%x)",
-		v.Number, v.ID,
+		"Block(height: %s, id: 0x%x, timestamp: %s)",
+		v.Height,
+		v.IDAsByteArray(),
+		v.Timestamp,
 	)
 }

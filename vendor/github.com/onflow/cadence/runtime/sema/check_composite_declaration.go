@@ -135,7 +135,7 @@ func (checker *Checker) visitCompositeDeclaration(declaration *ast.CompositeDecl
 
 	checkMissingMembers := kind != ContainerKindInterface
 
-	for i, interfaceType := range compositeType.Conformances {
+	for i, interfaceType := range compositeType.ExplicitInterfaceConformances {
 		interfaceNominalType := declaration.Conformances[i]
 
 		checker.checkCompositeConformance(
@@ -463,38 +463,14 @@ func (checker *Checker) declareCompositeMembersAndValue(
 
 		// Resolve conformances
 
-		conformances := checker.conformances(declaration, compositeType)
-		compositeType.Conformances = conformances
+		conformances := checker.explicitInterfaceConformances(declaration, compositeType)
+		compositeType.ExplicitInterfaceConformances = conformances
 
 		// NOTE: determine initializer parameter types while nested types are in scope,
 		// and after declaring nested types as the initializer may use nested type in parameters
 
 		initializers := declaration.Members.Initializers()
 		compositeType.ConstructorParameters = checker.initializerParameters(initializers)
-
-		// Declare members
-
-		var members map[string]*Member
-		var origins map[string]*Origin
-
-		// Event members are derived from the initializer's parameter list
-
-		if declaration.CompositeKind == common.CompositeKindEvent {
-			members, origins = checker.eventMembersAndOrigins(
-				initializers[0],
-				compositeType,
-			)
-		} else {
-			members, origins = checker.nonEventMembersAndOrigins(
-				compositeType,
-				declaration.Members.Fields,
-				declaration.Members.Functions,
-				kind != ContainerKindInterface,
-			)
-		}
-
-		compositeType.Members = members
-		checker.memberOrigins[compositeType] = origins
 
 		// Declare nested declarations' members
 
@@ -522,6 +498,54 @@ func (checker *Checker) declareCompositeMembersAndValue(
 				VariableKind:    ast.VariableKindConstant,
 			}
 		}
+
+		// Declare implicit type requirement conformances, if any,
+		// after nested types are declared, and
+		// after explicit conformances are declared.
+		//
+		// For each nested composite type, check if a conformance
+		// declares a nested composite type with the same identifier,
+		// in which case it is a type requirement,
+		// and this nested composite type implicitly conforms to it.
+
+		for nestedTypeIdentifier, nestedType := range compositeType.NestedTypes() {
+			nestedCompositeType, ok := nestedType.(*CompositeType)
+			if !ok {
+				continue
+			}
+
+			for _, compositeTypeConformance := range compositeType.ExplicitInterfaceConformances {
+				conformanceNestedTypes := compositeTypeConformance.NestedTypes()
+				if typeRequirement, ok := conformanceNestedTypes[nestedTypeIdentifier].(*CompositeType); ok {
+					nestedCompositeType.AddImplicitTypeRequirementConformance(typeRequirement)
+				}
+			}
+		}
+
+		// Declare members
+		// NOTE: *After* declaring nested composite and interface declarations
+
+		var members map[string]*Member
+		var origins map[string]*Origin
+
+		// Event members are derived from the initializer's parameter list
+
+		if declaration.CompositeKind == common.CompositeKindEvent {
+			members, origins = checker.eventMembersAndOrigins(
+				initializers[0],
+				compositeType,
+			)
+		} else {
+			members, origins = checker.nonEventMembersAndOrigins(
+				compositeType,
+				declaration.Members.Fields,
+				declaration.Members.Functions,
+				kind,
+			)
+		}
+
+		compositeType.Members = members
+		checker.memberOrigins[compositeType] = origins
 	})()
 
 	// Always determine composite constructor type
@@ -605,7 +629,10 @@ func (checker *Checker) initializerParameters(initializers []*ast.SpecialFunctio
 	return parameters
 }
 
-func (checker *Checker) conformances(declaration *ast.CompositeDeclaration, compositeType *CompositeType) []*InterfaceType {
+func (checker *Checker) explicitInterfaceConformances(
+	declaration *ast.CompositeDeclaration,
+	compositeType *CompositeType,
+) []*InterfaceType {
 
 	var interfaceTypes []*InterfaceType
 	seenConformances := map[string]bool{}
@@ -799,7 +826,7 @@ func (checker *Checker) memberSatisfied(compositeMember, interfaceMember *Member
 			interfaceMemberFunctionType := interfaceMemberType.(*FunctionType)
 			compositeMemberFunctionType := compositeMemberType.(*FunctionType)
 
-			// TODO: subtype?
+			// TODO: parameters may be supertype, return type may be subtype
 			if !compositeMemberFunctionType.EqualIncludingArgumentLabels(interfaceMemberFunctionType) {
 				return false
 			}
@@ -819,17 +846,10 @@ func (checker *Checker) memberSatisfied(compositeMember, interfaceMember *Member
 
 	// Check access
 
-	if compositeMember.Access == ast.AccessPrivate {
-		return false
-	}
+	effectiveInterfaceMemberAccess := checker.effectiveInterfaceMemberAccess(interfaceMember.Access)
+	effectiveCompositeMemberAccess := checker.effectiveCompositeMemberAccess(compositeMember.Access)
 
-	if interfaceMember.Access != ast.AccessNotSpecified &&
-		compositeMember.Access.IsLessPermissiveThan(interfaceMember.Access) {
-
-		return false
-	}
-
-	return true
+	return !effectiveCompositeMemberAccess.IsLessPermissiveThan(effectiveInterfaceMemberAccess)
 }
 
 // checkTypeRequirement checks conformance of a nested type declaration
@@ -902,9 +922,9 @@ func (checker *Checker) checkTypeRequirement(
 	// Check that the composite declaration declares at least the conformances
 	// that the type requirement stated
 
-	for _, requiredConformance := range requiredCompositeType.Conformances {
+	for _, requiredConformance := range requiredCompositeType.ExplicitInterfaceConformances {
 		found := false
-		for _, conformance := range declaredCompositeType.Conformances {
+		for _, conformance := range declaredCompositeType.ExplicitInterfaceConformances {
 			if conformance == requiredConformance {
 				found = true
 				break
@@ -924,12 +944,12 @@ func (checker *Checker) checkTypeRequirement(
 	// Check the conformance of the composite to the type requirement
 	// like a top-level composite declaration to an interface type
 
-	interfaceType := requiredCompositeType.InterfaceType()
+	requiredInterfaceType := requiredCompositeType.InterfaceType()
 
 	checker.checkCompositeConformance(
 		compositeDeclaration,
 		declaredCompositeType,
-		interfaceType,
+		requiredInterfaceType,
 		compositeDeclaration.Identifier,
 		compositeConformanceCheckOptions{
 			checkMissingMembers:            true,
@@ -981,11 +1001,14 @@ func (checker *Checker) nonEventMembersAndOrigins(
 	containerType Type,
 	fields []*ast.FieldDeclaration,
 	functions []*ast.FunctionDeclaration,
-	requireVariableKind bool,
+	containerKind ContainerKind,
 ) (
 	members map[string]*Member,
 	origins map[string]*Origin,
 ) {
+	requireVariableKind := containerKind != ContainerKindInterface
+	requireNonPrivateMemberAccess := containerKind == ContainerKindInterface
+
 	memberCount := len(fields) + len(functions)
 	members = make(map[string]*Member, memberCount)
 	origins = make(map[string]*Origin, memberCount)
@@ -1027,11 +1050,28 @@ func (checker *Checker) nonEventMembersAndOrigins(
 		fieldTypeAnnotation := checker.ConvertTypeAnnotation(field.TypeAnnotation)
 		checker.checkTypeAnnotation(fieldTypeAnnotation, field.TypeAnnotation)
 
+		const declarationKind = common.DeclarationKindField
+
+		effectiveAccess := checker.effectiveMemberAccess(field.Access, containerKind)
+
+		if requireNonPrivateMemberAccess &&
+			effectiveAccess == ast.AccessPrivate {
+
+			checker.report(
+				&InvalidAccessModifierError{
+					DeclarationKind: declarationKind,
+					Access:          field.Access,
+					Explanation:     "private fields can never be used",
+					Pos:             field.StartPos,
+				},
+			)
+		}
+
 		members[identifier] = &Member{
 			ContainerType:   containerType,
 			Access:          field.Access,
 			Identifier:      field.Identifier,
-			DeclarationKind: common.DeclarationKindField,
+			DeclarationKind: declarationKind,
 			TypeAnnotation:  fieldTypeAnnotation,
 			VariableKind:    field.VariableKind,
 		}
@@ -1070,11 +1110,28 @@ func (checker *Checker) nonEventMembersAndOrigins(
 
 		fieldTypeAnnotation := &TypeAnnotation{Type: functionType}
 
+		const declarationKind = common.DeclarationKindFunction
+
+		effectiveAccess := checker.effectiveMemberAccess(function.Access, containerKind)
+
+		if requireNonPrivateMemberAccess &&
+			effectiveAccess == ast.AccessPrivate {
+
+			checker.report(
+				&InvalidAccessModifierError{
+					DeclarationKind: declarationKind,
+					Access:          function.Access,
+					Explanation:     "private functions can never be used",
+					Pos:             function.StartPos,
+				},
+			)
+		}
+
 		members[identifier] = &Member{
 			ContainerType:   containerType,
 			Access:          function.Access,
 			Identifier:      function.Identifier,
-			DeclarationKind: common.DeclarationKindFunction,
+			DeclarationKind: declarationKind,
 			TypeAnnotation:  fieldTypeAnnotation,
 			VariableKind:    ast.VariableKindConstant,
 			ArgumentLabels:  argumentLabels,
@@ -1237,7 +1294,7 @@ func (checker *Checker) checkSpecialFunction(
 			checker.checkInterfaceSpecialFunctionBlock(
 				specialFunction.FunctionBlock,
 				containerDeclarationKind,
-				specialFunction.DeclarationKind,
+				specialFunction.Kind,
 			)
 		}
 
@@ -1406,7 +1463,7 @@ func (checker *Checker) VisitFieldDeclaration(_ *ast.FieldDeclaration) ast.Repr 
 //
 func (checker *Checker) checkUnknownSpecialFunctions(functions []*ast.SpecialFunctionDeclaration) {
 	for _, function := range functions {
-		switch function.DeclarationKind {
+		switch function.Kind {
 		case common.DeclarationKindInitializer, common.DeclarationKindDestructor:
 			continue
 

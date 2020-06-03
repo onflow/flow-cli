@@ -85,8 +85,21 @@ type OnEventEmittedFunc func(
 // OnStatementFunc is a function that is triggered when a statement is about to be executed.
 //
 type OnStatementFunc func(
-	inter *Interpreter,
 	statement *Statement,
+)
+
+// OnLoopIterationFunc is a function that is triggered when a loop iteration is about to be executed.
+//
+type OnLoopIterationFunc func(
+	inter *Interpreter,
+	line int,
+)
+
+// OnFunctionInvocationFunc is a function that is triggered when a function is about to be invoked.
+//
+type OnFunctionInvocationFunc func(
+	inter *Interpreter,
+	line int,
 )
 
 // StorageExistenceHandlerFunc is a function that handles storage existence checks.
@@ -103,6 +116,7 @@ type StorageReadHandlerFunc func(
 	inter *Interpreter,
 	storageAddress common.Address,
 	key string,
+	deferred bool,
 ) OptionalValue
 
 // StorageWriteHandlerFunc is a function that handles storage writes.
@@ -195,6 +209,8 @@ type Interpreter struct {
 	Transactions                   []*HostFunctionValue
 	onEventEmitted                 OnEventEmittedFunc
 	onStatement                    OnStatementFunc
+	onLoopIteration                OnLoopIterationFunc
+	onFunctionInvocation           OnFunctionInvocationFunc
 	storageExistenceHandler        StorageExistenceHandlerFunc
 	storageReadHandler             StorageReadHandlerFunc
 	storageWriteHandler            StorageWriteHandlerFunc
@@ -223,6 +239,26 @@ func WithOnEventEmittedHandler(handler OnEventEmittedFunc) Option {
 func WithOnStatementHandler(handler OnStatementFunc) Option {
 	return func(interpreter *Interpreter) error {
 		interpreter.SetOnStatementHandler(handler)
+		return nil
+	}
+}
+
+// WithOnLoopIterationHandler returns an interpreter option which sets
+// the given function as the loop iteration handler.
+//
+func WithOnLoopIterationHandler(handler OnLoopIterationFunc) Option {
+	return func(interpreter *Interpreter) error {
+		interpreter.SetOnLoopIterationHandler(handler)
+		return nil
+	}
+}
+
+// WithOnLoopIterationHandler returns an interpreter option which sets
+// the given function as the loop iteration handler.
+//
+func WithOnFunctionInvocationHandler(handler OnFunctionInvocationFunc) Option {
+	return func(interpreter *Interpreter) error {
+		interpreter.SetOnFunctionInvocationHandler(handler)
 		return nil
 	}
 }
@@ -395,6 +431,18 @@ func (interpreter *Interpreter) SetOnStatementHandler(function OnStatementFunc) 
 	interpreter.onStatement = function
 }
 
+// SetOnLoopIterationHandler sets the function that is triggered when a loop iteration is about to be executed.
+//
+func (interpreter *Interpreter) SetOnLoopIterationHandler(function OnLoopIterationFunc) {
+	interpreter.onLoopIteration = function
+}
+
+// SetOnFunctionInvocationHandler sets the function that is triggered when a loop iteration is about to be executed.
+//
+func (interpreter *Interpreter) SetOnFunctionInvocationHandler(function OnFunctionInvocationFunc) {
+	interpreter.onFunctionInvocation = function
+}
+
 // SetStorageExistenceHandler sets the function that is used when a storage key is checked for existence.
 //
 func (interpreter *Interpreter) SetStorageExistenceHandler(function StorageExistenceHandlerFunc) {
@@ -511,8 +559,9 @@ func (interpreter *Interpreter) Interpret() (err error) {
 }
 
 type Statement struct {
-	Trampoline Trampoline
-	Line       int
+	Interpreter *Interpreter
+	Trampoline  Trampoline
+	Line        int
 }
 
 func (interpreter *Interpreter) runUntilNextStatement(t Trampoline) (interface{}, *Statement) {
@@ -523,8 +572,9 @@ func (interpreter *Interpreter) runUntilNextStatement(t Trampoline) (interface{}
 			return nil, &Statement{
 				// NOTE: resumption using outer trampoline,
 				// not just inner statement trampoline
-				Trampoline: t,
-				Line:       statement.Line,
+				Trampoline:  t,
+				Interpreter: statement.Interpreter,
+				Line:        statement.Line,
 			}
 		}
 
@@ -548,7 +598,7 @@ func (interpreter *Interpreter) runAllStatements(t Trampoline) interface{} {
 		}
 
 		if interpreter.onStatement != nil {
-			interpreter.onStatement(interpreter, statement)
+			interpreter.onStatement(statement)
 		}
 
 		result = statement.Trampoline.Resume()
@@ -632,7 +682,11 @@ func (interpreter *Interpreter) declareGlobal(declaration ast.Declaration) {
 	interpreter.Globals[name] = interpreter.findVariable(name)
 }
 
-func (interpreter *Interpreter) prepareInvokeVariable(functionName string, arguments []interface{}) (trampoline Trampoline, err error) {
+func (interpreter *Interpreter) prepareInvokeVariable(
+	functionName string,
+	arguments []Value,
+) (trampoline Trampoline, err error) {
+
 	variable, ok := interpreter.Globals[functionName]
 	if !ok {
 		return nil, &NotDeclaredError{
@@ -667,7 +721,7 @@ func (interpreter *Interpreter) prepareInvokeVariable(functionName string, argum
 
 func (interpreter *Interpreter) prepareInvokeTransaction(
 	index int,
-	arguments []interface{},
+	arguments []Value,
 ) (trampoline Trampoline, err error) {
 	if index >= len(interpreter.Transactions) {
 		return nil, &TransactionNotDeclaredError{Index: index}
@@ -684,20 +738,14 @@ func (interpreter *Interpreter) prepareInvokeTransaction(
 func (interpreter *Interpreter) prepareInvoke(
 	functionValue FunctionValue,
 	functionType *sema.FunctionType,
-	arguments []interface{},
+	arguments []Value,
 ) (trampoline Trampoline, err error) {
-
-	var argumentValues []Value
-	argumentValues, err = ToValues(arguments)
-	if err != nil {
-		return nil, err
-	}
 
 	// ensures the invocation's argument count matches the function's parameter count
 
 	parameters := functionType.Parameters
 	parameterCount := len(parameters)
-	argumentCount := len(argumentValues)
+	argumentCount := len(arguments)
 
 	if argumentCount != parameterCount {
 
@@ -712,7 +760,7 @@ func (interpreter *Interpreter) prepareInvoke(
 	}
 
 	preparedArguments := make([]Value, len(arguments))
-	for i, argument := range argumentValues {
+	for i, argument := range arguments {
 		parameterType := parameters[i].TypeAnnotation.Type
 		// TODO: value type is not known, reject for now
 		switch parameterType.(type) {
@@ -734,7 +782,7 @@ func (interpreter *Interpreter) prepareInvoke(
 	return trampoline, nil
 }
 
-func (interpreter *Interpreter) Invoke(functionName string, arguments ...interface{}) (value Value, err error) {
+func (interpreter *Interpreter) Invoke(functionName string, arguments ...Value) (value Value, err error) {
 	// recover internal panics and return them as an error
 	defer recoverErrors(func(internalErr error) {
 		err = internalErr
@@ -751,7 +799,7 @@ func (interpreter *Interpreter) Invoke(functionName string, arguments ...interfa
 	return result.(Value), nil
 }
 
-func (interpreter *Interpreter) InvokeTransaction(index int, arguments ...interface{}) (err error) {
+func (interpreter *Interpreter) InvokeTransaction(index int, arguments ...Value) (err error) {
 	// recover internal panics and return them as an error
 	defer recoverErrors(func(internalErr error) {
 		err = internalErr
@@ -769,16 +817,15 @@ func (interpreter *Interpreter) InvokeTransaction(index int, arguments ...interf
 
 func recoverErrors(onError func(error)) {
 	if r := recover(); r != nil {
-		var ok bool
-		// don't recover Go errors
-		goErr, ok := r.(goRuntime.Error)
-		if ok {
-			panic(goErr)
-		}
-
-		err, ok := r.(error)
-		if !ok {
-			err = fmt.Errorf("%v", r)
+		var err error
+		switch r := r.(type) {
+		case goRuntime.Error, ExternalError:
+			// Don't recover Go's or external panics
+			panic(r)
+		case error:
+			err = r
+		default:
+			err = fmt.Errorf("%s", r)
 		}
 
 		onError(err)
@@ -885,7 +932,8 @@ func (interpreter *Interpreter) visitStatements(statements []ast.Statement) Tram
 		F: func() Trampoline {
 			return statement.Accept(interpreter).(Trampoline)
 		},
-		Line: line,
+		Interpreter: interpreter,
+		Line:        line,
 	}.FlatMap(func(returnValue interface{}) Trampoline {
 		if _, isReturn := returnValue.(controlReturn); isReturn {
 			return Done{Result: returnValue}
@@ -1081,12 +1129,15 @@ func (interpreter *Interpreter) visitIfStatementWithVariableDeclaration(
 }
 
 func (interpreter *Interpreter) VisitWhileStatement(statement *ast.WhileStatement) ast.Repr {
+
 	return statement.Test.Accept(interpreter).(Trampoline).
 		FlatMap(func(result interface{}) Trampoline {
 			value := result.(BoolValue)
 			if !value {
 				return Done{}
 			}
+
+			interpreter.reportLoopIteration(statement)
 
 			return statement.Block.Accept(interpreter).(Trampoline).
 				FlatMap(func(value interface{}) Trampoline {
@@ -1122,6 +1173,8 @@ func (interpreter *Interpreter) VisitForStatement(statement *ast.ForStatement) a
 		if i == count {
 			return Done{}
 		}
+
+		interpreter.reportLoopIteration(statement)
 
 		variable.Value = values[i]
 
@@ -1428,88 +1481,142 @@ func (interpreter *Interpreter) visitBinaryOperation(expr *ast.BinaryExpression)
 		})
 }
 
+func (interpreter *Interpreter) visitNumberBinaryOperation(
+	expression *ast.BinaryExpression,
+	f func(left, right NumberValue) Value,
+) ast.Repr {
+	return interpreter.visitBinaryOperation(expression).
+		Map(func(result interface{}) interface{} {
+			tuple := result.(valueTuple)
+			left := tuple.left.(NumberValue)
+			right := tuple.right.(NumberValue)
+			return f(left, right)
+		})
+}
+
 func (interpreter *Interpreter) VisitBinaryExpression(expression *ast.BinaryExpression) ast.Repr {
 	switch expression.Operation {
 	case ast.OperationPlus:
-		return interpreter.visitBinaryOperation(expression).
-			Map(func(result interface{}) interface{} {
-				tuple := result.(valueTuple)
-				left := tuple.left.(NumberValue)
-				right := tuple.right.(NumberValue)
+		return interpreter.visitNumberBinaryOperation(
+			expression,
+			func(left, right NumberValue) Value {
 				return left.Plus(right)
-			})
+			},
+		)
 
 	case ast.OperationMinus:
-		return interpreter.visitBinaryOperation(expression).
-			Map(func(result interface{}) interface{} {
-				tuple := result.(valueTuple)
-				left := tuple.left.(NumberValue)
-				right := tuple.right.(NumberValue)
+		return interpreter.visitNumberBinaryOperation(
+			expression,
+			func(left, right NumberValue) Value {
 				return left.Minus(right)
-			})
+			},
+		)
 
 	case ast.OperationMod:
-		return interpreter.visitBinaryOperation(expression).
-			Map(func(result interface{}) interface{} {
-				tuple := result.(valueTuple)
-				left := tuple.left.(NumberValue)
-				right := tuple.right.(NumberValue)
+		return interpreter.visitNumberBinaryOperation(
+			expression,
+			func(left, right NumberValue) Value {
 				return left.Mod(right)
-			})
+			},
+		)
 
 	case ast.OperationMul:
-		return interpreter.visitBinaryOperation(expression).
-			Map(func(result interface{}) interface{} {
-				tuple := result.(valueTuple)
-				left := tuple.left.(NumberValue)
-				right := tuple.right.(NumberValue)
+		return interpreter.visitNumberBinaryOperation(
+			expression,
+			func(left, right NumberValue) Value {
 				return left.Mul(right)
-			})
+			},
+		)
 
 	case ast.OperationDiv:
-		return interpreter.visitBinaryOperation(expression).
-			Map(func(result interface{}) interface{} {
-				tuple := result.(valueTuple)
-				left := tuple.left.(NumberValue)
-				right := tuple.right.(NumberValue)
+		return interpreter.visitNumberBinaryOperation(
+			expression,
+			func(left, right NumberValue) Value {
 				return left.Div(right)
-			})
+			},
+		)
+
+	case ast.OperationBitwiseOr:
+		return interpreter.visitNumberBinaryOperation(
+			expression,
+			func(left, right NumberValue) Value {
+				leftInteger := left.(IntegerValue)
+				rightInteger := right.(IntegerValue)
+				return leftInteger.BitwiseOr(rightInteger)
+			},
+		)
+
+	case ast.OperationBitwiseXor:
+		return interpreter.visitNumberBinaryOperation(
+			expression,
+			func(left, right NumberValue) Value {
+				leftInteger := left.(IntegerValue)
+				rightInteger := right.(IntegerValue)
+				return leftInteger.BitwiseXor(rightInteger)
+			},
+		)
+
+	case ast.OperationBitwiseAnd:
+		return interpreter.visitNumberBinaryOperation(
+			expression,
+			func(left, right NumberValue) Value {
+				leftInteger := left.(IntegerValue)
+				rightInteger := right.(IntegerValue)
+				return leftInteger.BitwiseAnd(rightInteger)
+			},
+		)
+
+	case ast.OperationBitwiseLeftShift:
+		return interpreter.visitNumberBinaryOperation(
+			expression,
+			func(left, right NumberValue) Value {
+				leftInteger := left.(IntegerValue)
+				rightInteger := right.(IntegerValue)
+				return leftInteger.BitwiseLeftShift(rightInteger)
+			},
+		)
+
+	case ast.OperationBitwiseRightShift:
+		return interpreter.visitNumberBinaryOperation(
+			expression,
+			func(left, right NumberValue) Value {
+				leftInteger := left.(IntegerValue)
+				rightInteger := right.(IntegerValue)
+				return leftInteger.BitwiseRightShift(rightInteger)
+			},
+		)
 
 	case ast.OperationLess:
-		return interpreter.visitBinaryOperation(expression).
-			Map(func(result interface{}) interface{} {
-				tuple := result.(valueTuple)
-				left := tuple.left.(NumberValue)
-				right := tuple.right.(NumberValue)
+		return interpreter.visitNumberBinaryOperation(
+			expression,
+			func(left, right NumberValue) Value {
 				return left.Less(right)
-			})
+			},
+		)
 
 	case ast.OperationLessEqual:
-		return interpreter.visitBinaryOperation(expression).
-			Map(func(result interface{}) interface{} {
-				tuple := result.(valueTuple)
-				left := tuple.left.(NumberValue)
-				right := tuple.right.(NumberValue)
+		return interpreter.visitNumberBinaryOperation(
+			expression,
+			func(left, right NumberValue) Value {
 				return left.LessEqual(right)
-			})
+			},
+		)
 
 	case ast.OperationGreater:
-		return interpreter.visitBinaryOperation(expression).
-			Map(func(result interface{}) interface{} {
-				tuple := result.(valueTuple)
-				left := tuple.left.(NumberValue)
-				right := tuple.right.(NumberValue)
+		return interpreter.visitNumberBinaryOperation(
+			expression,
+			func(left, right NumberValue) Value {
 				return left.Greater(right)
-			})
+			},
+		)
 
 	case ast.OperationGreaterEqual:
-		return interpreter.visitBinaryOperation(expression).
-			Map(func(result interface{}) interface{} {
-				tuple := result.(valueTuple)
-				left := tuple.left.(NumberValue)
-				right := tuple.right.(NumberValue)
+		return interpreter.visitNumberBinaryOperation(
+			expression,
+			func(left, right NumberValue) Value {
 				return left.GreaterEqual(right)
-			})
+			},
+		)
 
 	case ast.OperationEqual:
 		return interpreter.visitBinaryOperation(expression).
@@ -1518,7 +1625,7 @@ func (interpreter *Interpreter) VisitBinaryExpression(expression *ast.BinaryExpr
 				return interpreter.testEqual(tuple.left, tuple.right)
 			})
 
-	case ast.OperationUnequal:
+	case ast.OperationNotEqual:
 		return interpreter.visitBinaryOperation(expression).
 			Map(func(result interface{}) interface{} {
 				tuple := result.(valueTuple)
@@ -1582,15 +1689,6 @@ func (interpreter *Interpreter) VisitBinaryExpression(expression *ast.BinaryExpr
 				value := left.(*SomeValue).Value
 				return Done{Result: value}
 			})
-
-	case ast.OperationConcat:
-		return interpreter.visitBinaryOperation(expression).
-			Map(func(result interface{}) interface{} {
-				tuple := result.(valueTuple)
-				left := tuple.left.(ConcatenatableValue)
-				right := tuple.right.(ConcatenatableValue)
-				return left.Concat(right)
-			})
 	}
 
 	panic(&unsupportedOperation{
@@ -1653,10 +1751,7 @@ func (interpreter *Interpreter) VisitUnaryExpression(expression *ast.UnaryExpres
 			panic(&unsupportedOperation{
 				kind:      common.OperationKindUnary,
 				operation: expression.Operation,
-				Range: ast.Range{
-					StartPos: expression.StartPos,
-					EndPos:   expression.EndPos,
-				},
+				Range:     ast.NewRangeFromPositioned(expression),
 			})
 		})
 }
@@ -1694,7 +1789,16 @@ func (interpreter *Interpreter) VisitIntegerExpression(expression *ast.IntegerEx
 func (interpreter *Interpreter) VisitFixedPointExpression(expression *ast.FixedPointExpression) ast.Repr {
 	// TODO: adjust once/if we support more fixed point types
 	value := interpreter.convertToFixedPointBigInt(expression, sema.Fix64Scale)
-	return Done{Result: Fix64Value(value.Int64())}
+
+	var result Value
+
+	if expression.Negative {
+		result = Fix64Value(value.Int64())
+	} else {
+		result = UFix64Value(value.Uint64())
+	}
+
+	return Done{Result: result}
 }
 
 func (interpreter *Interpreter) convertToFixedPointBigInt(expression *ast.FixedPointExpression, scale uint) *big.Int {
@@ -1702,11 +1806,11 @@ func (interpreter *Interpreter) convertToFixedPointBigInt(expression *ast.FixedP
 
 	// integer = expression.UnsignedInteger * 10 ^ scale
 
-	targetScale := big.NewInt(0).SetUint64(uint64(scale))
+	targetScale := new(big.Int).SetUint64(uint64(scale))
 
-	integer := big.NewInt(0).Mul(
+	integer := new(big.Int).Mul(
 		expression.UnsignedInteger,
-		big.NewInt(0).Exp(ten, targetScale, nil),
+		new(big.Int).Exp(ten, targetScale, nil),
 	)
 
 	// fractional = expression.Fractional * 10 ^ (scale - expression.Scale)
@@ -1715,15 +1819,15 @@ func (interpreter *Interpreter) convertToFixedPointBigInt(expression *ast.FixedP
 	if expression.Scale == scale {
 		fractional = expression.Fractional
 	} else if expression.Scale < scale {
-		scaleDiff := big.NewInt(0).SetUint64(uint64(scale - expression.Scale))
-		fractional = big.NewInt(0).Mul(
+		scaleDiff := new(big.Int).SetUint64(uint64(scale - expression.Scale))
+		fractional = new(big.Int).Mul(
 			expression.Fractional,
-			big.NewInt(0).Exp(ten, scaleDiff, nil),
+			new(big.Int).Exp(ten, scaleDiff, nil),
 		)
 	} else {
-		scaleDiff := big.NewInt(0).SetUint64(uint64(expression.Scale - scale))
-		fractional = big.NewInt(0).Div(expression.Fractional,
-			big.NewInt(0).Exp(ten, scaleDiff, nil),
+		scaleDiff := new(big.Int).SetUint64(uint64(expression.Scale - scale))
+		fractional = new(big.Int).Div(expression.Fractional,
+			new(big.Int).Exp(ten, scaleDiff, nil),
 		)
 	}
 
@@ -1789,7 +1893,8 @@ func (interpreter *Interpreter) VisitDictionaryExpression(expression *ast.Dictio
 				// NOTE: important to convert in optional, as assignment to dictionary
 				// is always considered as an optional
 
-				newDictionary.Insert(key, value)
+				locationRange := interpreter.locationRange(expression)
+				_ = newDictionary.Insert(interpreter, locationRange, key, value)
 			}
 
 			return Done{Result: newDictionary}
@@ -1910,6 +2015,8 @@ func (interpreter *Interpreter) VisitInvocationExpression(invocationExpression *
 						typeParameterTypes,
 						ast.NewRangeFromPositioned(invocationExpression),
 					)
+
+					interpreter.reportFunctionInvocation(invocationExpression)
 
 					// If this is invocation is optional chaining, wrap the result
 					// as an optional, as the result is expected to be an optional
@@ -2300,8 +2407,8 @@ func (interpreter *Interpreter) declareCompositeValue(
 	// in reverse order: first the conformances, then the type requirements;
 	// each conformances and type requirements in reverse order as well.
 
-	for i := len(compositeType.Conformances) - 1; i >= 0; i-- {
-		conformance := compositeType.Conformances[i]
+	for i := len(compositeType.ExplicitInterfaceConformances) - 1; i >= 0; i-- {
+		conformance := compositeType.ExplicitInterfaceConformances[i]
 
 		wrapFunctions(interpreter.typeCodes.interfaceCodes[conformance.ID()])
 	}
@@ -2351,7 +2458,8 @@ func (interpreter *Interpreter) declareCompositeValue(
 				Functions:      functions,
 				Destructor:     destructorFunction,
 				// NOTE: new value has no owner
-				Owner: nil,
+				Owner:    nil,
+				modified: true,
 			}
 
 			invocation.Self = value
@@ -2942,6 +3050,8 @@ func (interpreter *Interpreter) ensureLoaded(location ast.Location, loadProgram 
 		WithPredefinedValues(interpreter.PredefinedValues),
 		WithOnEventEmittedHandler(interpreter.onEventEmitted),
 		WithOnStatementHandler(interpreter.onStatement),
+		WithOnLoopIterationHandler(interpreter.onLoopIteration),
+		WithOnFunctionInvocationHandler(interpreter.onFunctionInvocation),
 		WithStorageExistenceHandler(interpreter.storageExistenceHandler),
 		WithStorageReadHandler(interpreter.storageReadHandler),
 		WithStorageWriteHandler(interpreter.storageWriteHandler),
@@ -3040,6 +3150,7 @@ func (interpreter *Interpreter) declareTransactionEntryPoint(declaration *ast.Tr
 	self := &CompositeValue{
 		Location: interpreter.Checker.Location,
 		Fields:   map[string]Value{},
+		modified: true,
 	}
 
 	transactionFunction := NewHostFunctionValue(
@@ -3140,7 +3251,7 @@ func (interpreter *Interpreter) VisitCastingExpression(expression *ast.CastingEx
 			switch expression.Operation {
 			case ast.OperationFailableCast, ast.OperationForceCast:
 				dynamicType := value.DynamicType(interpreter)
-				isSubType := interpreter.IsSubType(dynamicType, expectedType)
+				isSubType := IsSubType(dynamicType, expectedType)
 
 				switch expression.Operation {
 				case ast.OperationFailableCast:
@@ -3244,8 +3355,8 @@ func (interpreter *Interpreter) storedValueExists(storageAddress common.Address,
 	return interpreter.storageExistenceHandler(interpreter, storageAddress, key)
 }
 
-func (interpreter *Interpreter) readStored(storageAddress common.Address, key string) OptionalValue {
-	return interpreter.storageReadHandler(interpreter, storageAddress, key)
+func (interpreter *Interpreter) readStored(storageAddress common.Address, key string, deferred bool) OptionalValue {
+	return interpreter.storageReadHandler(interpreter, storageAddress, key, deferred)
 }
 
 func (interpreter *Interpreter) writeStored(storageAddress common.Address, key string, value OptionalValue) {
@@ -3298,6 +3409,28 @@ func (interpreter *Interpreter) defineBaseFunctions() {
 			panic(errors.NewUnreachableError())
 		}
 	}
+
+	err := interpreter.ImportValue(
+		"Type",
+		NewHostFunctionValue(
+			func(invocation Invocation) Trampoline {
+				// `Invocation.TypeParameterTypes` is a map, so get the first
+				// element / type by iterating over the values of the map.
+
+				var ty sema.Type
+				for _, ty = range invocation.TypeParameterTypes {
+					break
+				}
+
+				result := TypeValue{Type: ty}
+
+				return Done{Result: result}
+			},
+		),
+	)
+	if err != nil {
+		panic(errors.NewUnreachableError())
+	}
 }
 
 func (interpreter *Interpreter) newConverterFunction(converter ValueConverter) FunctionValue {
@@ -3318,8 +3451,17 @@ func (interpreter *Interpreter) newConverterFunction(converter ValueConverter) F
 // - PublicAccount
 // - Block
 
-func (interpreter *Interpreter) IsSubType(subType DynamicType, superType sema.Type) bool {
+func IsSubType(subType DynamicType, superType sema.Type) bool {
 	switch typedSubType := subType.(type) {
+	case MetaTypeDynamicType:
+		switch superType.(type) {
+		case *sema.MetaType, *sema.AnyStructType:
+			return true
+
+		default:
+			return false
+		}
+
 	case VoidDynamicType:
 		switch superType.(type) {
 		case *sema.VoidType, *sema.AnyStructType:
@@ -3380,7 +3522,7 @@ func (interpreter *Interpreter) IsSubType(subType DynamicType, superType sema.Ty
 		}
 
 		for _, elementType := range typedSubType.ElementTypes {
-			if !interpreter.IsSubType(elementType, superTypeElementType) {
+			if !IsSubType(elementType, superTypeElementType) {
 				return false
 			}
 		}
@@ -3392,8 +3534,8 @@ func (interpreter *Interpreter) IsSubType(subType DynamicType, superType sema.Ty
 		switch typedSuperType := superType.(type) {
 		case *sema.DictionaryType:
 			for _, entryTypes := range typedSubType.EntryTypes {
-				if !interpreter.IsSubType(entryTypes.KeyType, typedSuperType.KeyType) ||
-					!interpreter.IsSubType(entryTypes.ValueType, typedSuperType.ValueType) {
+				if !IsSubType(entryTypes.KeyType, typedSuperType.KeyType) ||
+					!IsSubType(entryTypes.ValueType, typedSuperType.ValueType) {
 
 					return false
 				}
@@ -3420,7 +3562,7 @@ func (interpreter *Interpreter) IsSubType(subType DynamicType, superType sema.Ty
 	case SomeDynamicType:
 		switch typedSuperType := superType.(type) {
 		case *sema.OptionalType:
-			return interpreter.IsSubType(typedSubType.InnerType, typedSuperType.Type)
+			return IsSubType(typedSubType.InnerType, typedSuperType.Type)
 
 		case *sema.AnyStructType, *sema.AnyResourceType:
 			return true
@@ -3436,7 +3578,7 @@ func (interpreter *Interpreter) IsSubType(subType DynamicType, superType sema.Ty
 
 		case *sema.ReferenceType:
 			if typedSubType.Authorized() {
-				return interpreter.IsSubType(typedSubType.InnerType(), typedSuperType.Type)
+				return IsSubType(typedSubType.InnerType(), typedSuperType.Type)
 			} else {
 				// NOTE: Allowing all casts for casting unauthorized references is intentional:
 				// all invalid cases have already been rejected statically
@@ -3556,7 +3698,7 @@ func (interpreter *Interpreter) authAccountReadFunction(addressValue AddressValu
 			common.PathDomainStorage,
 		)
 
-		value := interpreter.readStored(address, key)
+		value := interpreter.readStored(address, key, false)
 
 		switch value := value.(type) {
 		case NilValue:
@@ -3576,7 +3718,7 @@ func (interpreter *Interpreter) authAccountReadFunction(addressValue AddressValu
 			}
 
 			dynamicType := value.Value.DynamicType(interpreter)
-			if !interpreter.IsSubType(dynamicType, ty) {
+			if !IsSubType(dynamicType, ty) {
 				return Done{Result: NilValue{}}
 			}
 
@@ -3611,7 +3753,7 @@ func (interpreter *Interpreter) authAccountBorrowFunction(addressValue AddressVa
 			common.PathDomainStorage,
 		)
 
-		value := interpreter.readStored(address, key)
+		value := interpreter.readStored(address, key, false)
 
 		switch value := value.(type) {
 		case NilValue:
@@ -3633,7 +3775,7 @@ func (interpreter *Interpreter) authAccountBorrowFunction(addressValue AddressVa
 			referenceType := ty.(*sema.ReferenceType)
 
 			dynamicType := value.Value.DynamicType(interpreter)
-			if !interpreter.IsSubType(dynamicType, referenceType.Type) {
+			if !IsSubType(dynamicType, referenceType.Type) {
 				return Done{Result: NilValue{}}
 			}
 
@@ -3641,8 +3783,6 @@ func (interpreter *Interpreter) authAccountBorrowFunction(addressValue AddressVa
 				Authorized:           referenceType.Authorized,
 				TargetStorageAddress: address,
 				TargetKey:            key,
-				// NOTE: new value has no owner
-				Owner: nil,
 			}
 
 			return Done{Result: NewSomeValueOwningNonCopying(reference)}
@@ -3733,7 +3873,7 @@ func (interpreter *Interpreter) authAccountGetLinkTargetFunction(addressValue Ad
 			common.PathDomainPublic,
 		)
 
-		value := interpreter.readStored(address, capabilityKey)
+		value := interpreter.readStored(address, capabilityKey, false)
 
 		switch value := value.(type) {
 		case NilValue:
@@ -3805,8 +3945,6 @@ func (interpreter *Interpreter) capabilityBorrowFunction(addressValue AddressVal
 			Authorized:           authorized,
 			TargetStorageAddress: address,
 			TargetKey:            targetStorageKey,
-			// NOTE: new value has no owner
-			Owner: nil,
 		}
 
 		return Done{Result: NewSomeValueOwningNonCopying(reference)}
@@ -3871,7 +4009,7 @@ func (interpreter *Interpreter) getCapabilityFinalTargetStorageKey(
 			seenKeys[key] = struct{}{}
 		}
 
-		value := interpreter.readStored(address, key)
+		value := interpreter.readStored(address, key, false)
 
 		switch value := value.(type) {
 		case NilValue:
@@ -3935,4 +4073,22 @@ func (interpreter *Interpreter) getCompositeType(location ast.Location, typeID s
 func (interpreter *Interpreter) getInterfaceType(location ast.Location, typeID sema.TypeID) *sema.InterfaceType {
 	elaboration := interpreter.getElaboration(location)
 	return elaboration.InterfaceTypes[typeID]
+}
+
+func (interpreter *Interpreter) reportLoopIteration(pos ast.HasPosition) {
+	if interpreter.onLoopIteration == nil {
+		return
+	}
+
+	line := pos.StartPosition().Line
+	interpreter.onLoopIteration(interpreter, line)
+}
+
+func (interpreter *Interpreter) reportFunctionInvocation(pos ast.HasPosition) {
+	if interpreter.onFunctionInvocation == nil {
+		return
+	}
+
+	line := pos.StartPosition().Line
+	interpreter.onFunctionInvocation(interpreter, line)
 }

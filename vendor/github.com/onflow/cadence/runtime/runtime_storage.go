@@ -19,27 +19,34 @@
 package runtime
 
 import (
-	"bytes"
-	"encoding/gob"
+	"time"
 
+	"github.com/onflow/cadence/runtime/common"
 	"github.com/onflow/cadence/runtime/errors"
 	"github.com/onflow/cadence/runtime/interpreter"
 )
 
 type storageKey struct {
-	storageIdentifier string
-	key               string
+	address common.Address
+	key     string
+}
+
+type cacheEntry struct {
+	// true indicates that the value definitely must be written, independent of the value.
+	// false indicates that the value may has to be written if the value is modified.
+	mustWrite bool
+	value     interpreter.Value
 }
 
 type interpreterRuntimeStorage struct {
 	runtimeInterface Interface
-	cache            map[storageKey]interpreter.Value
+	cache            map[storageKey]cacheEntry
 }
 
 func newInterpreterRuntimeStorage(runtimeInterface Interface) *interpreterRuntimeStorage {
 	return &interpreterRuntimeStorage{
 		runtimeInterface: runtimeInterface,
-		cache:            map[storageKey]interpreter.Value{},
+		cache:            map[storageKey]cacheEntry{},
 	}
 }
 
@@ -52,41 +59,38 @@ func newInterpreterRuntimeStorage(runtimeInterface Interface) *interpreterRuntim
 // places in the cache, and returned.
 //
 func (s *interpreterRuntimeStorage) valueExists(
-	storageIdentifier string,
+	address common.Address,
 	key string,
 ) bool {
 
-	storageKey := storageKey{
-		storageIdentifier: storageIdentifier,
-		key:               key,
+	fullKey := storageKey{
+		address: address,
+		key:     key,
 	}
 
 	// Check cache
 
-	if cachedValue, ok := s.cache[storageKey]; ok {
-		return cachedValue != nil
+	if entry, ok := s.cache[fullKey]; ok {
+		return entry.value != nil
 	}
 
 	// Cache miss: Ask interface
 
 	var exists bool
-	if runtimeInterfaceV2, ok := s.runtimeInterface.(InterfaceV2); ok {
-		var err error
+	var err error
+	wrapPanic(func() {
 		// TODO: fix controller
-		exists, err = runtimeInterfaceV2.ValueExists([]byte(storageIdentifier), []byte{}, []byte(key))
-		if err != nil {
-			panic(err)
-		}
-	} else {
-		value, err := s.runtimeInterface.GetValue([]byte(storageIdentifier), []byte{}, []byte(key))
-		if err != nil {
-			panic(err)
-		}
-		exists = len(value) > 0
+		exists, err = s.runtimeInterface.ValueExists(address[:], []byte{}, []byte(key))
+	})
+	if err != nil {
+		panic(err)
 	}
 
 	if !exists {
-		s.cache[storageKey] = nil
+		s.cache[fullKey] = cacheEntry{
+			mustWrite: false,
+			value:     nil,
+		}
 	}
 
 	return exists
@@ -101,47 +105,69 @@ func (s *interpreterRuntimeStorage) valueExists(
 // places in the cache, and returned.
 //
 func (s *interpreterRuntimeStorage) readValue(
-	storageIdentifier string,
+	address common.Address,
 	key string,
+	deferred bool,
 ) interpreter.OptionalValue {
 
-	storageKey := storageKey{
-		storageIdentifier: storageIdentifier,
-		key:               key,
+	fullKey := storageKey{
+		address: address,
+		key:     key,
 	}
 
 	// Check cache. Return cached value, if any
 
-	if cachedValue, ok := s.cache[storageKey]; ok {
-		if cachedValue == nil {
+	if entry, ok := s.cache[fullKey]; ok {
+		if entry.value == nil {
 			return interpreter.NilValue{}
 		}
 
-		return interpreter.NewSomeValueOwningNonCopying(cachedValue)
+		return interpreter.NewSomeValueOwningNonCopying(entry.value)
 	}
 
 	// Cache miss: Load and deserialize the stored value (if any)
 	// through the runtime interface
 
-	// TODO: fix controller
-	storedData, err := s.runtimeInterface.GetValue([]byte(storageIdentifier), []byte{}, []byte(key))
+	var storedData []byte
+	var err error
+	wrapPanic(func() {
+		// TODO: fix controller
+		storedData, err = s.runtimeInterface.GetValue(address[:], nil, []byte(key))
+	})
 	if err != nil {
 		panic(err)
 	}
 
-	var storedValue interpreter.Value
 	if len(storedData) == 0 {
-		s.cache[storageKey] = nil
+		s.cache[fullKey] = cacheEntry{
+			mustWrite: false,
+			value:     nil,
+		}
 		return interpreter.NilValue{}
 	}
 
-	decoder := gob.NewDecoder(bytes.NewReader(storedData))
-	err = decoder.Decode(&storedValue)
+	var storedValue interpreter.Value
+
+	reportMetric(
+		func() {
+			storedValue, err = interpreter.DecodeValue(storedData, &address, []string{key})
+		},
+		s.runtimeInterface,
+		func(metrics Metrics, duration time.Duration) {
+			metrics.ValueDecoded(duration)
+		},
+	)
 	if err != nil {
 		panic(err)
 	}
 
-	s.cache[storageKey] = storedValue
+	if !deferred {
+		s.cache[fullKey] = cacheEntry{
+			mustWrite: false,
+			value:     storedValue,
+		}
+	}
+
 	return interpreter.NewSomeValueOwningNonCopying(storedValue)
 }
 
@@ -153,54 +179,155 @@ func (s *interpreterRuntimeStorage) readValue(
 // (The Cache is finally written back through the runtime interface in `writeCached`.)
 //
 func (s *interpreterRuntimeStorage) writeValue(
-	storageIdentifier string,
+	address common.Address,
 	key string,
 	value interpreter.OptionalValue,
 ) {
-	storageKey := storageKey{
-		storageIdentifier: storageIdentifier,
-		key:               key,
+	fullKey := storageKey{
+		address: address,
+		key:     key,
 	}
 
 	// Only write the value to the cache.
 	// The Cache is finally written back through the runtime interface in `writeCached`
 
+	entry := s.cache[fullKey]
+	entry.mustWrite = true
+
 	switch typedValue := value.(type) {
 	case *interpreter.SomeValue:
-		s.cache[storageKey] = typedValue.Value
+		entry.value = typedValue.Value
+
 	case interpreter.NilValue:
-		s.cache[storageKey] = nil
+		entry.value = nil
+
 	default:
 		panic(errors.NewUnreachableError())
 	}
+
+	s.cache[fullKey] = entry
 }
 
 // writeCached serializes/saves all values in the cache in storage (through the runtime interface).
 //
 func (s *interpreterRuntimeStorage) writeCached() {
 
-	for storageKey, value := range s.cache {
+	type writeItem struct {
+		storageKey storageKey
+		value      interpreter.Value
+	}
+
+	var items []writeItem
+
+	for fullKey, entry := range s.cache {
+
+		if !entry.mustWrite && entry.value != nil && !entry.value.IsModified() {
+			continue
+		}
+
+		items = append(items, writeItem{
+			storageKey: fullKey,
+			value:      entry.value,
+		})
+	}
+
+	// Don't use a for-range loop, as keys are added while iterating
+	for len(items) > 0 {
+		var item writeItem
+		item, items = items[0], items[1:]
 
 		var newData []byte
-		if value != nil {
-			var newStoredData bytes.Buffer
-			encoder := gob.NewEncoder(&newStoredData)
-			err := encoder.Encode(&value)
+		if item.value != nil {
+			var deferrals *interpreter.EncodingDeferrals
+			var err error
+			newData, deferrals, err = s.encodeValue(item.value, item.storageKey.key)
 			if err != nil {
 				panic(err)
 			}
-			newData = newStoredData.Bytes()
+
+			for deferredKey, deferredValue := range deferrals.Values {
+
+				deferredStorageKey := storageKey{
+					address: item.storageKey.address,
+					key:     deferredKey,
+				}
+
+				if !deferredValue.IsModified() {
+					continue
+				}
+
+				items = append(items, writeItem{
+					storageKey: deferredStorageKey,
+					value:      deferredValue,
+				})
+			}
+
+			for _, deferralMove := range deferrals.Moves {
+
+				s.move(
+					deferralMove.DeferredOwner,
+					deferralMove.DeferredStorageKey,
+					deferralMove.NewOwner,
+					deferralMove.NewStorageKey,
+				)
+			}
 		}
 
-		// TODO: fix controller
-		err := s.runtimeInterface.SetValue(
-			[]byte(storageKey.storageIdentifier),
-			[]byte{},
-			[]byte(storageKey.key),
-			newData,
-		)
+		var err error
+		wrapPanic(func() {
+			// TODO: fix controller
+			err = s.runtimeInterface.SetValue(
+				item.storageKey.address[:],
+				nil,
+				[]byte(item.storageKey.key),
+				newData,
+			)
+		})
 		if err != nil {
 			panic(err)
 		}
+	}
+}
+
+func (s *interpreterRuntimeStorage) encodeValue(
+	value interpreter.Value,
+	path string,
+) (
+	data []byte,
+	deferrals *interpreter.EncodingDeferrals,
+	err error,
+) {
+	reportMetric(
+		func() {
+			data, deferrals, err = interpreter.EncodeValue(value, []string{path}, true)
+		},
+		s.runtimeInterface,
+		func(metrics Metrics, duration time.Duration) {
+			metrics.ValueEncoded(duration)
+		},
+	)
+	return
+}
+
+func (s *interpreterRuntimeStorage) move(
+	oldOwner common.Address, oldKey string,
+	newOwner common.Address, newKey string,
+) {
+	// TODO: fix controller
+	data, err := s.runtimeInterface.GetValue(oldOwner[:], nil, []byte(oldKey))
+	if err != nil {
+		panic(err)
+	}
+
+	// TODO: fix controller
+	err = s.runtimeInterface.SetValue(oldOwner[:], nil, []byte(oldKey), nil)
+	if err != nil {
+		panic(err)
+	}
+
+	// TODO: fix controller
+	err = s.runtimeInterface.SetValue(newOwner[:], nil, []byte(newKey), data)
+	if err != nil {
+		panic(err)
 	}
 }

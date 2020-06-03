@@ -1,14 +1,11 @@
 package interpreter
 
 import (
-	"bytes"
 	"encoding/binary"
-	"encoding/gob"
 	"encoding/hex"
 	"fmt"
 	"math"
 	"math/big"
-	"sort"
 	"strconv"
 	"strings"
 
@@ -30,6 +27,8 @@ type Value interface {
 	Copy() Value
 	GetOwner() *common.Address
 	SetOwner(address *common.Address)
+	IsModified() bool
+	SetModified(modified bool)
 }
 
 // ValueIndexableValue
@@ -71,13 +70,67 @@ type HasKeyString interface {
 	KeyString() string
 }
 
+// TypeValue
+
+type TypeValue struct {
+	Type sema.Type
+}
+
+func (TypeValue) IsValue() {}
+
+func (TypeValue) DynamicType(_ *Interpreter) DynamicType {
+	return MetaTypeDynamicType{}
+}
+
+func (v TypeValue) Copy() Value {
+	return v
+}
+
+func (TypeValue) GetOwner() *common.Address {
+	// value is never owned
+	return nil
+}
+
+func (TypeValue) SetOwner(_ *common.Address) {
+	// NO-OP: value cannot be owned
+}
+
+func (TypeValue) IsModified() bool {
+	return false
+}
+
+func (TypeValue) SetModified(_ bool) {
+	// NO-OP
+}
+
+func (v TypeValue) String() string {
+	return fmt.Sprintf("Type<%s>", v.Type)
+}
+
+func (v TypeValue) Equal(other Value) BoolValue {
+	otherMetaType, ok := other.(TypeValue)
+	if !ok {
+		return false
+	}
+	return BoolValue(v.Type.Equal(otherMetaType.Type))
+}
+
+func (v TypeValue) GetMember(_ *Interpreter, _ LocationRange, name string) Value {
+	switch name {
+	case "identifier":
+		return NewStringValue(v.Type.QualifiedString())
+	default:
+		panic(errors.NewUnreachableError())
+	}
+}
+
+func (v TypeValue) SetMember(_ *Interpreter, _ LocationRange, _ string, _ Value) {
+	panic(errors.NewUnreachableError())
+}
+
 // VoidValue
 
 type VoidValue struct{}
-
-func init() {
-	gob.Register(VoidValue{})
-}
 
 func (VoidValue) IsValue() {}
 
@@ -98,6 +151,14 @@ func (VoidValue) SetOwner(_ *common.Address) {
 	// NO-OP: value cannot be owned
 }
 
+func (VoidValue) IsModified() bool {
+	return false
+}
+
+func (VoidValue) SetModified(_ bool) {
+	// NO-OP
+}
+
 func (VoidValue) String() string {
 	return "()"
 }
@@ -105,10 +166,6 @@ func (VoidValue) String() string {
 // BoolValue
 
 type BoolValue bool
-
-func init() {
-	gob.Register(BoolValue(true))
-}
 
 func (BoolValue) IsValue() {}
 
@@ -127,6 +184,14 @@ func (BoolValue) GetOwner() *common.Address {
 
 func (BoolValue) SetOwner(_ *common.Address) {
 	// NO-OP: value cannot be owned
+}
+
+func (BoolValue) IsModified() bool {
+	return false
+}
+
+func (BoolValue) SetModified(_ bool) {
+	// NO-OP
 }
 
 func (v BoolValue) Negate() BoolValue {
@@ -152,15 +217,15 @@ func (v BoolValue) KeyString() string {
 // StringValue
 
 type StringValue struct {
-	Str string
-}
-
-func init() {
-	gob.Register(&StringValue{})
+	Str      string
+	modified bool
 }
 
 func NewStringValue(str string) *StringValue {
-	return &StringValue{str}
+	return &StringValue{
+		Str:      str,
+		modified: true,
+	}
 }
 
 func (*StringValue) IsValue() {}
@@ -170,7 +235,7 @@ func (*StringValue) DynamicType(_ *Interpreter) DynamicType {
 }
 
 func (v *StringValue) Copy() Value {
-	return &StringValue{Str: v.Str}
+	return NewStringValue(v.Str)
 }
 
 func (*StringValue) GetOwner() *common.Address {
@@ -180,6 +245,14 @@ func (*StringValue) GetOwner() *common.Address {
 
 func (*StringValue) SetOwner(_ *common.Address) {
 	// NO-OP: value cannot be owned
+}
+
+func (v *StringValue) IsModified() bool {
+	return v.modified
+}
+
+func (v *StringValue) SetModified(modified bool) {
+	v.modified = modified
 }
 
 func (v *StringValue) String() string {
@@ -237,8 +310,13 @@ func (v *StringValue) Get(_ *Interpreter, _ LocationRange, key Value) Value {
 }
 
 func (v *StringValue) Set(_ *Interpreter, _ LocationRange, key Value, value Value) {
-	i := key.(NumberValue).ToInt()
-	char := value.(*StringValue).Str
+	index := key.(NumberValue).ToInt()
+	char := value.(*StringValue)
+	v.SetIndex(index, char)
+}
+
+func (v *StringValue) SetIndex(index int, char *StringValue) {
+	v.modified = true
 
 	str := v.Str
 
@@ -246,7 +324,7 @@ func (v *StringValue) Set(_ *Interpreter, _ LocationRange, key Value, value Valu
 	graphemes := uniseg.NewGraphemes(str)
 	graphemes.Next()
 
-	for j := 0; j < i; j++ {
+	for j := 0; j < index; j++ {
 		graphemes.Next()
 	}
 
@@ -255,7 +333,7 @@ func (v *StringValue) Set(_ *Interpreter, _ LocationRange, key Value, value Valu
 	var sb strings.Builder
 
 	sb.WriteString(str[:start])
-	sb.WriteString(char)
+	sb.WriteString(char.Str)
 	sb.WriteString(str[end:])
 
 	v.Str = sb.String()
@@ -318,12 +396,9 @@ func (*StringValue) SetMember(_ *Interpreter, _ LocationRange, _ string, _ Value
 // ArrayValue
 
 type ArrayValue struct {
-	Values []Value
-	Owner  *common.Address
-}
-
-func init() {
-	gob.Register(&ArrayValue{})
+	Values   []Value
+	Owner    *common.Address
+	modified bool
 }
 
 func NewArrayValueUnownedNonCopying(values ...Value) *ArrayValue {
@@ -333,9 +408,14 @@ func NewArrayValueUnownedNonCopying(values ...Value) *ArrayValue {
 		value.SetOwner(nil)
 	}
 
+	if values == nil {
+		values = make([]Value, 0)
+	}
+
 	return &ArrayValue{
-		Values: values,
-		Owner:  nil,
+		Values:   values,
+		modified: true,
+		Owner:    nil,
 	}
 }
 
@@ -378,53 +458,33 @@ func (v *ArrayValue) SetOwner(owner *common.Address) {
 	}
 }
 
+func (v *ArrayValue) IsModified() bool {
+	if v.modified {
+		return true
+	}
+
+	for _, value := range v.Values {
+		if value.IsModified() {
+			return true
+		}
+	}
+
+	return false
+}
+
+func (v *ArrayValue) SetModified(modified bool) {
+	v.modified = modified
+}
+
 func (v *ArrayValue) Destroy(interpreter *Interpreter, locationRange LocationRange) trampoline.Trampoline {
 	var result trampoline.Trampoline = trampoline.Done{}
 	for _, value := range v.Values {
+		capturedValue := value
 		result = result.FlatMap(func(_ interface{}) trampoline.Trampoline {
-			return value.(DestroyableValue).Destroy(interpreter, locationRange)
+			return capturedValue.(DestroyableValue).Destroy(interpreter, locationRange)
 		})
 	}
 	return result
-}
-
-func (v *ArrayValue) GobEncode() ([]byte, error) {
-	w := new(bytes.Buffer)
-	encoder := gob.NewEncoder(w)
-
-	err := encoder.Encode(v.Values)
-	if err != nil {
-		return nil, err
-	}
-
-	err = encoder.Encode(v.Owner)
-	if err != nil {
-		return nil, err
-	}
-
-	return w.Bytes(), nil
-}
-
-func (v *ArrayValue) GobDecode(buf []byte) error {
-	r := bytes.NewBuffer(buf)
-	decoder := gob.NewDecoder(r)
-
-	err := decoder.Decode(&v.Values)
-	if err != nil {
-		return err
-	}
-
-	err = decoder.Decode(&v.Owner)
-	if err != nil {
-		return err
-	}
-
-	// NOTE: ensure the `Values` slice is properly allocated
-	if v.Values == nil {
-		v.Values = make([]Value, 0)
-	}
-
-	return nil
 }
 
 func (v *ArrayValue) Concat(other ConcatenatableValue) Value {
@@ -439,10 +499,14 @@ func (v *ArrayValue) Get(_ *Interpreter, _ LocationRange, key Value) Value {
 }
 
 func (v *ArrayValue) Set(_ *Interpreter, _ LocationRange, key Value, value Value) {
-	value.SetOwner(v.Owner)
+	index := key.(NumberValue).ToInt()
+	v.SetIndex(index, value)
+}
 
-	integerKey := key.(NumberValue).ToInt()
-	v.Values[integerKey] = value
+func (v *ArrayValue) SetIndex(index int, value Value) {
+	v.modified = true
+	value.SetOwner(v.Owner)
+	v.Values[index] = value
 }
 
 func (v *ArrayValue) String() string {
@@ -459,17 +523,23 @@ func (v *ArrayValue) String() string {
 }
 
 func (v *ArrayValue) Append(element Value) {
+	v.modified = true
+
 	element.SetOwner(v.Owner)
 	v.Values = append(v.Values, element)
 }
 
 func (v *ArrayValue) Insert(i int, element Value) {
+	v.modified = true
+
 	element.SetOwner(v.Owner)
 	v.Values = append(v.Values[:i], append([]Value{element}, v.Values[i:]...)...)
 }
 
 // TODO: unset owner?
 func (v *ArrayValue) Remove(i int) Value {
+	v.modified = true
+
 	result := v.Values[i]
 
 	lastIndex := len(v.Values) - 1
@@ -485,6 +555,8 @@ func (v *ArrayValue) Remove(i int) Value {
 
 // TODO: unset owner?
 func (v *ArrayValue) RemoveFirst() Value {
+	v.modified = true
+
 	var firstElement Value
 	firstElement, v.Values = v.Values[0], v.Values[1:]
 	return firstElement
@@ -492,6 +564,8 @@ func (v *ArrayValue) RemoveFirst() Value {
 
 // TODO: unset owner?
 func (v *ArrayValue) RemoveLast() Value {
+	v.modified = true
+
 	var lastElement Value
 	lastIndex := len(v.Values) - 1
 	lastElement, v.Values = v.Values[lastIndex], v.Values[:lastIndex]
@@ -605,7 +679,17 @@ type NumberValue interface {
 	GreaterEqual(other NumberValue) BoolValue
 }
 
-// BigNumberValue
+type IntegerValue interface {
+	NumberValue
+	BitwiseOr(other IntegerValue) IntegerValue
+	BitwiseXor(other IntegerValue) IntegerValue
+	BitwiseAnd(other IntegerValue) IntegerValue
+	BitwiseLeftShift(other IntegerValue) IntegerValue
+	BitwiseRightShift(other IntegerValue) IntegerValue
+}
+
+// BigNumberValue.
+// Implemented by values with an integer value outside the range of int64
 
 type BigNumberValue interface {
 	NumberValue
@@ -616,10 +700,6 @@ type BigNumberValue interface {
 
 type IntValue struct {
 	BigInt *big.Int
-}
-
-func init() {
-	gob.Register(IntValue{})
 }
 
 func NewIntValueFromInt64(value int64) IntValue {
@@ -636,6 +716,7 @@ func ConvertInt(value Value, _ *Interpreter) Value {
 		return NewIntValueFromBigInt(value.ToBigInt())
 
 	case NumberValue:
+		// NOTE: safe, UInt64Value is handled by BigNumberValue above
 		return NewIntValueFromInt64(int64(value.ToInt()))
 
 	default:
@@ -650,7 +731,7 @@ func (IntValue) DynamicType(_ *Interpreter) DynamicType {
 }
 
 func (v IntValue) Copy() Value {
-	return IntValue{big.NewInt(0).Set(v.BigInt)}
+	return IntValue{new(big.Int).Set(v.BigInt)}
 }
 
 func (IntValue) GetOwner() *common.Address {
@@ -662,13 +743,21 @@ func (IntValue) SetOwner(_ *common.Address) {
 	// NO-OP: value cannot be owned
 }
 
+func (IntValue) IsModified() bool {
+	return false
+}
+
+func (IntValue) SetModified(_ bool) {
+	// NO-OP
+}
+
 func (v IntValue) ToInt() int {
 	// TODO: handle overflow
 	return int(v.BigInt.Int64())
 }
 
 func (v IntValue) ToBigInt() *big.Int {
-	return big.NewInt(0).Set(v.BigInt)
+	return new(big.Int).Set(v.BigInt)
 }
 
 func (v IntValue) String() string {
@@ -680,44 +769,44 @@ func (v IntValue) KeyString() string {
 }
 
 func (v IntValue) Negate() NumberValue {
-	return NewIntValueFromBigInt(big.NewInt(0).Neg(v.BigInt))
+	return NewIntValueFromBigInt(new(big.Int).Neg(v.BigInt))
 }
 
 func (v IntValue) Plus(other NumberValue) NumberValue {
 	o := other.(IntValue)
-	res := big.NewInt(0)
+	res := new(big.Int)
 	res.Add(v.BigInt, o.BigInt)
 	return IntValue{res}
 }
 
 func (v IntValue) Minus(other NumberValue) NumberValue {
 	o := other.(IntValue)
-	res := big.NewInt(0)
+	res := new(big.Int)
 	res.Sub(v.BigInt, o.BigInt)
 	return IntValue{res}
 }
 
 func (v IntValue) Mod(other NumberValue) NumberValue {
 	o := other.(IntValue)
-	res := big.NewInt(0)
+	res := new(big.Int)
 	// INT33-C
 	if o.BigInt.Cmp(res) == 0 {
 		panic(DivisionByZeroError{})
 	}
-	res.Mod(v.BigInt, o.BigInt)
+	res.Rem(v.BigInt, o.BigInt)
 	return IntValue{res}
 }
 
 func (v IntValue) Mul(other NumberValue) NumberValue {
 	o := other.(IntValue)
-	res := big.NewInt(0)
+	res := new(big.Int)
 	res.Mul(v.BigInt, o.BigInt)
 	return IntValue{res}
 }
 
 func (v IntValue) Div(other NumberValue) NumberValue {
 	o := other.(IntValue)
-	res := big.NewInt(0)
+	res := new(big.Int)
 	// INT33-C
 	if o.BigInt.Cmp(res) == 0 {
 		panic(DivisionByZeroError{})
@@ -755,13 +844,76 @@ func (v IntValue) Equal(other Value) BoolValue {
 	return cmp == 0
 }
 
+func (v IntValue) BitwiseOr(other IntegerValue) IntegerValue {
+	o := other.(IntValue)
+	res := new(big.Int)
+	res.Or(v.BigInt, o.BigInt)
+	return IntValue{res}
+}
+
+func (v IntValue) BitwiseXor(other IntegerValue) IntegerValue {
+	o := other.(IntValue)
+	res := new(big.Int)
+	res.Xor(v.BigInt, o.BigInt)
+	return IntValue{res}
+}
+
+func (v IntValue) BitwiseAnd(other IntegerValue) IntegerValue {
+	o := other.(IntValue)
+	res := new(big.Int)
+	res.And(v.BigInt, o.BigInt)
+	return IntValue{res}
+}
+
+func (v IntValue) BitwiseLeftShift(other IntegerValue) IntegerValue {
+	o := other.(IntValue)
+	res := new(big.Int)
+	if o.BigInt.Sign() < 0 {
+		panic(UnderflowError{})
+	}
+	if !o.BigInt.IsUint64() {
+		panic(OverflowError{})
+	}
+	res.Lsh(v.BigInt, uint(o.BigInt.Uint64()))
+	return IntValue{res}
+}
+
+func (v IntValue) BitwiseRightShift(other IntegerValue) IntegerValue {
+	o := other.(IntValue)
+	res := new(big.Int)
+	if o.BigInt.Sign() < 0 {
+		panic(UnderflowError{})
+	}
+	if !o.BigInt.IsUint64() {
+		panic(OverflowError{})
+	}
+	res.Rsh(v.BigInt, uint(o.BigInt.Uint64()))
+	return IntValue{res}
+}
+
+func (v IntValue) GetMember(_ *Interpreter, _ LocationRange, name string) Value {
+	switch name {
+
+	case sema.ToStringFunctionName:
+		return NewHostFunctionValue(
+			func(invocation Invocation) trampoline.Trampoline {
+				result := NewStringValue(v.String())
+				return trampoline.Done{Result: result}
+			},
+		)
+
+	default:
+		panic(errors.NewUnreachableError())
+	}
+}
+
+func (IntValue) SetMember(_ *Interpreter, _ LocationRange, _ string, _ Value) {
+	panic(errors.NewUnreachableError())
+}
+
 // Int8Value
 
 type Int8Value int8
-
-func init() {
-	gob.Register(Int8Value(0))
-}
 
 func (Int8Value) IsValue() {}
 
@@ -782,6 +934,14 @@ func (Int8Value) SetOwner(_ *common.Address) {
 	// NO-OP: value cannot be owned
 }
 
+func (Int8Value) IsModified() bool {
+	return false
+}
+
+func (Int8Value) SetModified(_ bool) {
+	// NO-OP
+}
+
 func (v Int8Value) String() string {
 	return strconv.FormatInt(int64(v), 10)
 }
@@ -797,7 +957,7 @@ func (v Int8Value) ToInt() int {
 func (v Int8Value) Negate() NumberValue {
 	// INT32-C
 	if v == math.MinInt8 {
-		panic(&OverflowError{})
+		panic(OverflowError{})
 	}
 	return -v
 }
@@ -806,9 +966,9 @@ func (v Int8Value) Plus(other NumberValue) NumberValue {
 	o := other.(Int8Value)
 	// INT32-C
 	if (o > 0) && (v > (math.MaxInt8 - o)) {
-		panic(&OverflowError{})
+		panic(OverflowError{})
 	} else if (o < 0) && (v < (math.MinInt8 - o)) {
-		panic(&UnderflowError{})
+		panic(UnderflowError{})
 	}
 	return v + o
 }
@@ -817,9 +977,9 @@ func (v Int8Value) Minus(other NumberValue) NumberValue {
 	o := other.(Int8Value)
 	// INT32-C
 	if (o > 0) && (v < (math.MinInt8 + o)) {
-		panic(&OverflowError{})
+		panic(OverflowError{})
 	} else if (o < 0) && (v > (math.MaxInt8 + o)) {
-		panic(&UnderflowError{})
+		panic(UnderflowError{})
 	}
 	return v - o
 }
@@ -828,7 +988,7 @@ func (v Int8Value) Mod(other NumberValue) NumberValue {
 	o := other.(Int8Value)
 	// INT33-C
 	if o == 0 {
-		panic(&DivisionByZeroError{})
+		panic(DivisionByZeroError{})
 	}
 	return v % o
 }
@@ -839,21 +999,21 @@ func (v Int8Value) Mul(other NumberValue) NumberValue {
 	if v > 0 {
 		if o > 0 {
 			if v > (math.MaxInt8 / o) {
-				panic(&OverflowError{})
+				panic(OverflowError{})
 			}
 		} else {
 			if o < (math.MinInt8 / v) {
-				panic(&OverflowError{})
+				panic(OverflowError{})
 			}
 		}
 	} else {
 		if o > 0 {
 			if v < (math.MinInt8 / o) {
-				panic(&OverflowError{})
+				panic(OverflowError{})
 			}
 		} else {
 			if (v != 0) && (o < (math.MaxInt8 / v)) {
-				panic(&OverflowError{})
+				panic(OverflowError{})
 			}
 		}
 	}
@@ -903,18 +1063,18 @@ func ConvertInt8(value Value, _ *Interpreter) Value {
 	case BigNumberValue:
 		v := value.ToBigInt()
 		if v.Cmp(sema.Int8TypeMaxInt) > 0 {
-			panic(&OverflowError{})
+			panic(OverflowError{})
 		} else if v.Cmp(sema.Int8TypeMinInt) < 0 {
-			panic(&UnderflowError{})
+			panic(UnderflowError{})
 		}
 		res = int8(v.Int64())
 
 	case NumberValue:
 		v := value.ToInt()
 		if v > math.MaxInt8 {
-			panic(&OverflowError{})
+			panic(OverflowError{})
 		} else if v < math.MinInt8 {
-			panic(&UnderflowError{})
+			panic(UnderflowError{})
 		}
 		res = int8(v)
 
@@ -925,13 +1085,54 @@ func ConvertInt8(value Value, _ *Interpreter) Value {
 	return Int8Value(res)
 }
 
+func (v Int8Value) BitwiseOr(other IntegerValue) IntegerValue {
+	o := other.(Int8Value)
+	return v | o
+}
+
+func (v Int8Value) BitwiseXor(other IntegerValue) IntegerValue {
+	o := other.(Int8Value)
+	return v ^ o
+}
+
+func (v Int8Value) BitwiseAnd(other IntegerValue) IntegerValue {
+	o := other.(Int8Value)
+	return v & o
+}
+
+func (v Int8Value) BitwiseLeftShift(other IntegerValue) IntegerValue {
+	o := other.(Int8Value)
+	return v << o
+}
+
+func (v Int8Value) BitwiseRightShift(other IntegerValue) IntegerValue {
+	o := other.(Int8Value)
+	return v >> o
+}
+
+func (v Int8Value) GetMember(_ *Interpreter, _ LocationRange, name string) Value {
+	switch name {
+
+	case sema.ToStringFunctionName:
+		return NewHostFunctionValue(
+			func(invocation Invocation) trampoline.Trampoline {
+				result := NewStringValue(v.String())
+				return trampoline.Done{Result: result}
+			},
+		)
+
+	default:
+		panic(errors.NewUnreachableError())
+	}
+}
+
+func (Int8Value) SetMember(_ *Interpreter, _ LocationRange, _ string, _ Value) {
+	panic(errors.NewUnreachableError())
+}
+
 // Int16Value
 
 type Int16Value int16
-
-func init() {
-	gob.Register(Int16Value(0))
-}
 
 func (Int16Value) IsValue() {}
 
@@ -952,6 +1153,14 @@ func (Int16Value) SetOwner(_ *common.Address) {
 	// NO-OP: value cannot be owned
 }
 
+func (Int16Value) IsModified() bool {
+	return false
+}
+
+func (Int16Value) SetModified(_ bool) {
+	// NO-OP
+}
+
 func (v Int16Value) String() string {
 	return strconv.FormatInt(int64(v), 10)
 }
@@ -967,7 +1176,7 @@ func (v Int16Value) ToInt() int {
 func (v Int16Value) Negate() NumberValue {
 	// INT32-C
 	if v == math.MinInt16 {
-		panic(&OverflowError{})
+		panic(OverflowError{})
 	}
 	return -v
 }
@@ -976,9 +1185,9 @@ func (v Int16Value) Plus(other NumberValue) NumberValue {
 	o := other.(Int16Value)
 	// INT32-C
 	if (o > 0) && (v > (math.MaxInt16 - o)) {
-		panic(&OverflowError{})
+		panic(OverflowError{})
 	} else if (o < 0) && (v < (math.MinInt16 - o)) {
-		panic(&UnderflowError{})
+		panic(UnderflowError{})
 	}
 	return v + o
 }
@@ -987,9 +1196,9 @@ func (v Int16Value) Minus(other NumberValue) NumberValue {
 	o := other.(Int16Value)
 	// INT32-C
 	if (o > 0) && (v < (math.MinInt16 + o)) {
-		panic(&OverflowError{})
+		panic(OverflowError{})
 	} else if (o < 0) && (v > (math.MaxInt16 + o)) {
-		panic(&UnderflowError{})
+		panic(UnderflowError{})
 	}
 	return v - o
 }
@@ -998,7 +1207,7 @@ func (v Int16Value) Mod(other NumberValue) NumberValue {
 	o := other.(Int16Value)
 	// INT33-C
 	if o == 0 {
-		panic(&DivisionByZeroError{})
+		panic(DivisionByZeroError{})
 	}
 	return v % o
 }
@@ -1009,21 +1218,21 @@ func (v Int16Value) Mul(other NumberValue) NumberValue {
 	if v > 0 {
 		if o > 0 {
 			if v > (math.MaxInt16 / o) {
-				panic(&OverflowError{})
+				panic(OverflowError{})
 			}
 		} else {
 			if o < (math.MinInt16 / v) {
-				panic(&OverflowError{})
+				panic(OverflowError{})
 			}
 		}
 	} else {
 		if o > 0 {
 			if v < (math.MinInt16 / o) {
-				panic(&OverflowError{})
+				panic(OverflowError{})
 			}
 		} else {
 			if (v != 0) && (o < (math.MaxInt16 / v)) {
-				panic(&OverflowError{})
+				panic(OverflowError{})
 			}
 		}
 	}
@@ -1073,18 +1282,18 @@ func ConvertInt16(value Value, _ *Interpreter) Value {
 	case BigNumberValue:
 		v := value.ToBigInt()
 		if v.Cmp(sema.Int16TypeMaxInt) > 0 {
-			panic(&OverflowError{})
+			panic(OverflowError{})
 		} else if v.Cmp(sema.Int16TypeMinInt) < 0 {
-			panic(&UnderflowError{})
+			panic(UnderflowError{})
 		}
 		res = int16(v.Int64())
 
 	case NumberValue:
 		v := value.ToInt()
 		if v > math.MaxInt16 {
-			panic(&OverflowError{})
+			panic(OverflowError{})
 		} else if v < math.MinInt16 {
-			panic(&UnderflowError{})
+			panic(UnderflowError{})
 		}
 		res = int16(v)
 
@@ -1095,13 +1304,54 @@ func ConvertInt16(value Value, _ *Interpreter) Value {
 	return Int16Value(res)
 }
 
+func (v Int16Value) BitwiseOr(other IntegerValue) IntegerValue {
+	o := other.(Int16Value)
+	return v | o
+}
+
+func (v Int16Value) BitwiseXor(other IntegerValue) IntegerValue {
+	o := other.(Int16Value)
+	return v ^ o
+}
+
+func (v Int16Value) BitwiseAnd(other IntegerValue) IntegerValue {
+	o := other.(Int16Value)
+	return v & o
+}
+
+func (v Int16Value) BitwiseLeftShift(other IntegerValue) IntegerValue {
+	o := other.(Int16Value)
+	return v << o
+}
+
+func (v Int16Value) BitwiseRightShift(other IntegerValue) IntegerValue {
+	o := other.(Int16Value)
+	return v >> o
+}
+
+func (v Int16Value) GetMember(_ *Interpreter, _ LocationRange, name string) Value {
+	switch name {
+
+	case sema.ToStringFunctionName:
+		return NewHostFunctionValue(
+			func(invocation Invocation) trampoline.Trampoline {
+				result := NewStringValue(v.String())
+				return trampoline.Done{Result: result}
+			},
+		)
+
+	default:
+		panic(errors.NewUnreachableError())
+	}
+}
+
+func (Int16Value) SetMember(_ *Interpreter, _ LocationRange, _ string, _ Value) {
+	panic(errors.NewUnreachableError())
+}
+
 // Int32Value
 
 type Int32Value int32
-
-func init() {
-	gob.Register(Int32Value(0))
-}
 
 func (Int32Value) IsValue() {}
 
@@ -1122,6 +1372,14 @@ func (Int32Value) SetOwner(_ *common.Address) {
 	// NO-OP: value cannot be owned
 }
 
+func (Int32Value) IsModified() bool {
+	return false
+}
+
+func (Int32Value) SetModified(_ bool) {
+	// NO-OP
+}
+
 func (v Int32Value) String() string {
 	return strconv.FormatInt(int64(v), 10)
 }
@@ -1137,7 +1395,7 @@ func (v Int32Value) ToInt() int {
 func (v Int32Value) Negate() NumberValue {
 	// INT32-C
 	if v == math.MinInt32 {
-		panic(&OverflowError{})
+		panic(OverflowError{})
 	}
 	return -v
 }
@@ -1146,9 +1404,9 @@ func (v Int32Value) Plus(other NumberValue) NumberValue {
 	o := other.(Int32Value)
 	// INT32-C
 	if (o > 0) && (v > (math.MaxInt32 - o)) {
-		panic(&OverflowError{})
+		panic(OverflowError{})
 	} else if (o < 0) && (v < (math.MinInt32 - o)) {
-		panic(&UnderflowError{})
+		panic(UnderflowError{})
 	}
 	return v + o
 }
@@ -1157,9 +1415,9 @@ func (v Int32Value) Minus(other NumberValue) NumberValue {
 	o := other.(Int32Value)
 	// INT32-C
 	if (o > 0) && (v < (math.MinInt32 + o)) {
-		panic(&OverflowError{})
+		panic(OverflowError{})
 	} else if (o < 0) && (v > (math.MaxInt32 + o)) {
-		panic(&UnderflowError{})
+		panic(UnderflowError{})
 	}
 	return v - o
 }
@@ -1168,7 +1426,7 @@ func (v Int32Value) Mod(other NumberValue) NumberValue {
 	o := other.(Int32Value)
 	// INT33-C
 	if o == 0 {
-		panic(&DivisionByZeroError{})
+		panic(DivisionByZeroError{})
 	}
 	return v % o
 }
@@ -1179,21 +1437,21 @@ func (v Int32Value) Mul(other NumberValue) NumberValue {
 	if v > 0 {
 		if o > 0 {
 			if v > (math.MaxInt32 / o) {
-				panic(&OverflowError{})
+				panic(OverflowError{})
 			}
 		} else {
 			if o < (math.MinInt32 / v) {
-				panic(&OverflowError{})
+				panic(OverflowError{})
 			}
 		}
 	} else {
 		if o > 0 {
 			if v < (math.MinInt32 / o) {
-				panic(&OverflowError{})
+				panic(OverflowError{})
 			}
 		} else {
 			if (v != 0) && (o < (math.MaxInt32 / v)) {
-				panic(&OverflowError{})
+				panic(OverflowError{})
 			}
 		}
 	}
@@ -1243,18 +1501,18 @@ func ConvertInt32(value Value, _ *Interpreter) Value {
 	case BigNumberValue:
 		v := value.ToBigInt()
 		if v.Cmp(sema.Int32TypeMaxInt) > 0 {
-			panic(&OverflowError{})
+			panic(OverflowError{})
 		} else if v.Cmp(sema.Int32TypeMinInt) < 0 {
-			panic(&UnderflowError{})
+			panic(UnderflowError{})
 		}
 		res = int32(v.Int64())
 
 	case NumberValue:
 		v := value.ToInt()
 		if v > math.MaxInt32 {
-			panic(&OverflowError{})
+			panic(OverflowError{})
 		} else if v < math.MinInt32 {
-			panic(&UnderflowError{})
+			panic(UnderflowError{})
 		}
 		res = int32(v)
 
@@ -1265,13 +1523,54 @@ func ConvertInt32(value Value, _ *Interpreter) Value {
 	return Int32Value(res)
 }
 
+func (v Int32Value) BitwiseOr(other IntegerValue) IntegerValue {
+	o := other.(Int32Value)
+	return v | o
+}
+
+func (v Int32Value) BitwiseXor(other IntegerValue) IntegerValue {
+	o := other.(Int32Value)
+	return v ^ o
+}
+
+func (v Int32Value) BitwiseAnd(other IntegerValue) IntegerValue {
+	o := other.(Int32Value)
+	return v & o
+}
+
+func (v Int32Value) BitwiseLeftShift(other IntegerValue) IntegerValue {
+	o := other.(Int32Value)
+	return v << o
+}
+
+func (v Int32Value) BitwiseRightShift(other IntegerValue) IntegerValue {
+	o := other.(Int32Value)
+	return v >> o
+}
+
+func (v Int32Value) GetMember(_ *Interpreter, _ LocationRange, name string) Value {
+	switch name {
+
+	case sema.ToStringFunctionName:
+		return NewHostFunctionValue(
+			func(invocation Invocation) trampoline.Trampoline {
+				result := NewStringValue(v.String())
+				return trampoline.Done{Result: result}
+			},
+		)
+
+	default:
+		panic(errors.NewUnreachableError())
+	}
+}
+
+func (Int32Value) SetMember(_ *Interpreter, _ LocationRange, _ string, _ Value) {
+	panic(errors.NewUnreachableError())
+}
+
 // Int64Value
 
 type Int64Value int64
-
-func init() {
-	gob.Register(Int64Value(0))
-}
 
 func (Int64Value) IsValue() {}
 
@@ -1292,6 +1591,14 @@ func (Int64Value) SetOwner(_ *common.Address) {
 	// NO-OP: value cannot be owned
 }
 
+func (Int64Value) IsModified() bool {
+	return false
+}
+
+func (Int64Value) SetModified(_ bool) {
+	// NO-OP
+}
+
 func (v Int64Value) String() string {
 	return strconv.FormatInt(int64(v), 10)
 }
@@ -1307,7 +1614,7 @@ func (v Int64Value) ToInt() int {
 func (v Int64Value) Negate() NumberValue {
 	// INT32-C
 	if v == math.MinInt64 {
-		panic(&OverflowError{})
+		panic(OverflowError{})
 	}
 	return -v
 }
@@ -1315,9 +1622,9 @@ func (v Int64Value) Negate() NumberValue {
 func safeAddInt64(a, b int64) int64 {
 	// INT32-C
 	if (b > 0) && (a > (math.MaxInt64 - b)) {
-		panic(&OverflowError{})
+		panic(OverflowError{})
 	} else if (b < 0) && (a < (math.MinInt64 - b)) {
-		panic(&UnderflowError{})
+		panic(UnderflowError{})
 	}
 	return a + b
 }
@@ -1331,9 +1638,9 @@ func (v Int64Value) Minus(other NumberValue) NumberValue {
 	o := other.(Int64Value)
 	// INT32-C
 	if (o > 0) && (v < (math.MinInt64 + o)) {
-		panic(&OverflowError{})
+		panic(OverflowError{})
 	} else if (o < 0) && (v > (math.MaxInt64 + o)) {
-		panic(&UnderflowError{})
+		panic(UnderflowError{})
 	}
 	return v - o
 }
@@ -1342,7 +1649,7 @@ func (v Int64Value) Mod(other NumberValue) NumberValue {
 	o := other.(Int64Value)
 	// INT33-C
 	if o == 0 {
-		panic(&DivisionByZeroError{})
+		panic(DivisionByZeroError{})
 	}
 	return v % o
 }
@@ -1353,21 +1660,21 @@ func (v Int64Value) Mul(other NumberValue) NumberValue {
 	if v > 0 {
 		if o > 0 {
 			if v > (math.MaxInt64 / o) {
-				panic(&OverflowError{})
+				panic(OverflowError{})
 			}
 		} else {
 			if o < (math.MinInt64 / v) {
-				panic(&OverflowError{})
+				panic(OverflowError{})
 			}
 		}
 	} else {
 		if o > 0 {
 			if v < (math.MinInt64 / o) {
-				panic(&OverflowError{})
+				panic(OverflowError{})
 			}
 		} else {
 			if (v != 0) && (o < (math.MaxInt64 / v)) {
-				panic(&OverflowError{})
+				panic(OverflowError{})
 			}
 		}
 	}
@@ -1417,19 +1724,14 @@ func ConvertInt64(value Value, _ *Interpreter) Value {
 	case BigNumberValue:
 		v := value.ToBigInt()
 		if v.Cmp(sema.Int64TypeMaxInt) > 0 {
-			panic(&OverflowError{})
+			panic(OverflowError{})
 		} else if v.Cmp(sema.Int64TypeMinInt) < 0 {
-			panic(&UnderflowError{})
+			panic(UnderflowError{})
 		}
 		res = v.Int64()
 
 	case NumberValue:
 		v := value.ToInt()
-		if v > math.MaxInt64 {
-			panic(&OverflowError{})
-		} else if v < math.MinInt64 {
-			panic(&UnderflowError{})
-		}
 		res = int64(v)
 
 	default:
@@ -1439,14 +1741,55 @@ func ConvertInt64(value Value, _ *Interpreter) Value {
 	return Int64Value(res)
 }
 
+func (v Int64Value) BitwiseOr(other IntegerValue) IntegerValue {
+	o := other.(Int64Value)
+	return v | o
+}
+
+func (v Int64Value) BitwiseXor(other IntegerValue) IntegerValue {
+	o := other.(Int64Value)
+	return v ^ o
+}
+
+func (v Int64Value) BitwiseAnd(other IntegerValue) IntegerValue {
+	o := other.(Int64Value)
+	return v & o
+}
+
+func (v Int64Value) BitwiseLeftShift(other IntegerValue) IntegerValue {
+	o := other.(Int64Value)
+	return v << o
+}
+
+func (v Int64Value) BitwiseRightShift(other IntegerValue) IntegerValue {
+	o := other.(Int64Value)
+	return v >> o
+}
+
+func (v Int64Value) GetMember(_ *Interpreter, _ LocationRange, name string) Value {
+	switch name {
+
+	case sema.ToStringFunctionName:
+		return NewHostFunctionValue(
+			func(invocation Invocation) trampoline.Trampoline {
+				result := NewStringValue(v.String())
+				return trampoline.Done{Result: result}
+			},
+		)
+
+	default:
+		panic(errors.NewUnreachableError())
+	}
+}
+
+func (Int64Value) SetMember(_ *Interpreter, _ LocationRange, _ string, _ Value) {
+	panic(errors.NewUnreachableError())
+}
+
 // Int128Value
 
 type Int128Value struct {
 	BigInt *big.Int
-}
-
-func init() {
-	gob.Register(Int128Value{})
 }
 
 func NewInt128ValueFromInt64(value int64) Int128Value {
@@ -1456,7 +1799,6 @@ func NewInt128ValueFromInt64(value int64) Int128Value {
 func NewInt128ValueFromBigInt(value *big.Int) Int128Value {
 	return Int128Value{BigInt: value}
 }
-
 func (v Int128Value) IsValue() {}
 
 func (Int128Value) DynamicType(_ *Interpreter) DynamicType {
@@ -1464,7 +1806,7 @@ func (Int128Value) DynamicType(_ *Interpreter) DynamicType {
 }
 
 func (v Int128Value) Copy() Value {
-	return Int128Value{BigInt: big.NewInt(0).Set(v.BigInt)}
+	return Int128Value{BigInt: new(big.Int).Set(v.BigInt)}
 }
 
 func (Int128Value) GetOwner() *common.Address {
@@ -1476,13 +1818,21 @@ func (Int128Value) SetOwner(_ *common.Address) {
 	// NO-OP: value cannot be owned
 }
 
+func (Int128Value) IsModified() bool {
+	return false
+}
+
+func (Int128Value) SetModified(_ bool) {
+	// NO-OP
+}
+
 func (v Int128Value) ToInt() int {
 	// TODO: handle overflow
 	return int(v.BigInt.Int64())
 }
 
 func (v Int128Value) ToBigInt() *big.Int {
-	return big.NewInt(0).Set(v.BigInt)
+	return new(big.Int).Set(v.BigInt)
 }
 
 func (v Int128Value) String() string {
@@ -1495,13 +1845,13 @@ func (v Int128Value) KeyString() string {
 
 func (v Int128Value) Negate() NumberValue {
 	// INT32-C
-	//   if v == Int128TypeMinInt {
+	//   if v == Int128TypeMinIntBig {
 	//       ...
 	//   }
-	if v.BigInt.Cmp(sema.Int128TypeMinInt) == 0 {
-		panic(&OverflowError{})
+	if v.BigInt.Cmp(sema.Int128TypeMinIntBig) == 0 {
+		panic(OverflowError{})
 	}
-	return Int128Value{big.NewInt(0).Neg(v.BigInt)}
+	return Int128Value{new(big.Int).Neg(v.BigInt)}
 }
 
 func (v Int128Value) Plus(other NumberValue) NumberValue {
@@ -1512,17 +1862,17 @@ func (v Int128Value) Plus(other NumberValue) NumberValue {
 	// If Go gains a native int128 type and we switch this value
 	// to be based on it, then we need to follow INT32-C:
 	//
-	//   if (o > 0) && (v > (Int128TypeMaxInt - o)) {
+	//   if (o > 0) && (v > (Int128TypeMaxIntBig - o)) {
 	//       ...
-	//   } else if (o < 0) && (v < (Int128TypeMinInt - o)) {
+	//   } else if (o < 0) && (v < (Int128TypeMinIntBig - o)) {
 	//       ...
 	//   }
 	//
-	res := big.NewInt(0)
+	res := new(big.Int)
 	res.Add(v.BigInt, o.BigInt)
-	if res.Cmp(sema.Int128TypeMinInt) < 0 {
+	if res.Cmp(sema.Int128TypeMinIntBig) < 0 {
 		panic(UnderflowError{})
-	} else if res.Cmp(sema.Int128TypeMaxInt) > 0 {
+	} else if res.Cmp(sema.Int128TypeMaxIntBig) > 0 {
 		panic(OverflowError{})
 	}
 	return Int128Value{res}
@@ -1536,17 +1886,17 @@ func (v Int128Value) Minus(other NumberValue) NumberValue {
 	// If Go gains a native int128 type and we switch this value
 	// to be based on it, then we need to follow INT32-C:
 	//
-	//   if (o > 0) && (v < (Int128TypeMinInt + o)) {
+	//   if (o > 0) && (v < (Int128TypeMinIntBig + o)) {
 	// 	     ...
-	//   } else if (o < 0) && (v > (Int128TypeMaxInt + o)) {
+	//   } else if (o < 0) && (v > (Int128TypeMaxIntBig + o)) {
 	//       ...
 	//   }
 	//
-	res := big.NewInt(0)
+	res := new(big.Int)
 	res.Sub(v.BigInt, o.BigInt)
-	if res.Cmp(sema.Int128TypeMinInt) < 0 {
+	if res.Cmp(sema.Int128TypeMinIntBig) < 0 {
 		panic(UnderflowError{})
-	} else if res.Cmp(sema.Int128TypeMaxInt) > 0 {
+	} else if res.Cmp(sema.Int128TypeMaxIntBig) > 0 {
 		panic(OverflowError{})
 	}
 	return Int128Value{res}
@@ -1554,22 +1904,22 @@ func (v Int128Value) Minus(other NumberValue) NumberValue {
 
 func (v Int128Value) Mod(other NumberValue) NumberValue {
 	o := other.(Int128Value)
-	res := big.NewInt(0)
+	res := new(big.Int)
 	// INT33-C
 	if o.BigInt.Cmp(res) == 0 {
 		panic(DivisionByZeroError{})
 	}
-	res.Mod(v.BigInt, o.BigInt)
+	res.Rem(v.BigInt, o.BigInt)
 	return Int128Value{res}
 }
 
 func (v Int128Value) Mul(other NumberValue) NumberValue {
 	o := other.(Int128Value)
-	res := big.NewInt(0)
+	res := new(big.Int)
 	res.Mul(v.BigInt, o.BigInt)
-	if res.Cmp(sema.Int128TypeMinInt) < 0 {
+	if res.Cmp(sema.Int128TypeMinIntBig) < 0 {
 		panic(UnderflowError{})
-	} else if res.Cmp(sema.Int128TypeMaxInt) > 0 {
+	} else if res.Cmp(sema.Int128TypeMaxIntBig) > 0 {
 		panic(OverflowError{})
 	}
 	return Int128Value{res}
@@ -1577,18 +1927,18 @@ func (v Int128Value) Mul(other NumberValue) NumberValue {
 
 func (v Int128Value) Div(other NumberValue) NumberValue {
 	o := other.(Int128Value)
-	res := big.NewInt(0)
+	res := new(big.Int)
 	// INT33-C:
 	//   if o == 0 {
 	//       ...
-	//   } else if (v == Int128TypeMinInt) && (o == -1) {
+	//   } else if (v == Int128TypeMinIntBig) && (o == -1) {
 	//       ...
 	//   }
 	if o.BigInt.Cmp(res) == 0 {
 		panic(DivisionByZeroError{})
 	}
 	res.SetInt64(-1)
-	if (v.BigInt.Cmp(sema.Int128TypeMinInt) == 0) && (o.BigInt.Cmp(res) == 0) {
+	if (v.BigInt.Cmp(sema.Int128TypeMinIntBig) == 0) && (o.BigInt.Cmp(res) == 0) {
 		panic(OverflowError{})
 	}
 	res.Div(v.BigInt, o.BigInt)
@@ -1638,23 +1988,86 @@ func ConvertInt128(value Value, _ *Interpreter) Value {
 		panic(errors.NewUnreachableError())
 	}
 
-	if v.Cmp(sema.Int128TypeMaxInt) > 0 {
-		panic(&OverflowError{})
-	} else if v.Cmp(sema.Int128TypeMinInt) < 0 {
-		panic(&UnderflowError{})
+	if v.Cmp(sema.Int128TypeMaxIntBig) > 0 {
+		panic(OverflowError{})
+	} else if v.Cmp(sema.Int128TypeMinIntBig) < 0 {
+		panic(UnderflowError{})
 	}
 
 	return NewInt128ValueFromBigInt(v)
+}
+
+func (v Int128Value) BitwiseOr(other IntegerValue) IntegerValue {
+	o := other.(Int128Value)
+	res := new(big.Int)
+	res.Or(v.BigInt, o.BigInt)
+	return Int128Value{res}
+}
+
+func (v Int128Value) BitwiseXor(other IntegerValue) IntegerValue {
+	o := other.(Int128Value)
+	res := new(big.Int)
+	res.Xor(v.BigInt, o.BigInt)
+	return Int128Value{res}
+}
+
+func (v Int128Value) BitwiseAnd(other IntegerValue) IntegerValue {
+	o := other.(Int128Value)
+	res := new(big.Int)
+	res.And(v.BigInt, o.BigInt)
+	return Int128Value{res}
+}
+
+func (v Int128Value) BitwiseLeftShift(other IntegerValue) IntegerValue {
+	o := other.(Int128Value)
+	res := new(big.Int)
+	if o.BigInt.Sign() < 0 {
+		panic(UnderflowError{})
+	}
+	if !o.BigInt.IsUint64() {
+		panic(OverflowError{})
+	}
+	res.Lsh(v.BigInt, uint(o.BigInt.Uint64()))
+	return Int128Value{res}
+}
+
+func (v Int128Value) BitwiseRightShift(other IntegerValue) IntegerValue {
+	o := other.(Int128Value)
+	res := new(big.Int)
+	if o.BigInt.Sign() < 0 {
+		panic(UnderflowError{})
+	}
+	if !o.BigInt.IsUint64() {
+		panic(OverflowError{})
+	}
+	res.Rsh(v.BigInt, uint(o.BigInt.Uint64()))
+	return Int128Value{res}
+}
+
+func (v Int128Value) GetMember(_ *Interpreter, _ LocationRange, name string) Value {
+	switch name {
+
+	case sema.ToStringFunctionName:
+		return NewHostFunctionValue(
+			func(invocation Invocation) trampoline.Trampoline {
+				result := NewStringValue(v.String())
+				return trampoline.Done{Result: result}
+			},
+		)
+
+	default:
+		panic(errors.NewUnreachableError())
+	}
+}
+
+func (Int128Value) SetMember(_ *Interpreter, _ LocationRange, _ string, _ Value) {
+	panic(errors.NewUnreachableError())
 }
 
 // Int256Value
 
 type Int256Value struct {
 	BigInt *big.Int
-}
-
-func init() {
-	gob.Register(Int256Value{})
 }
 
 func NewInt256ValueFromInt64(value int64) Int256Value {
@@ -1672,7 +2085,7 @@ func (Int256Value) DynamicType(_ *Interpreter) DynamicType {
 }
 
 func (v Int256Value) Copy() Value {
-	return Int256Value{big.NewInt(0).Set(v.BigInt)}
+	return Int256Value{new(big.Int).Set(v.BigInt)}
 }
 
 func (Int256Value) GetOwner() *common.Address {
@@ -1684,13 +2097,21 @@ func (Int256Value) SetOwner(_ *common.Address) {
 	// NO-OP: value cannot be owned
 }
 
+func (Int256Value) IsModified() bool {
+	return false
+}
+
+func (Int256Value) SetModified(_ bool) {
+	// NO-OP
+}
+
 func (v Int256Value) ToInt() int {
 	// TODO: handle overflow
 	return int(v.BigInt.Int64())
 }
 
 func (v Int256Value) ToBigInt() *big.Int {
-	return big.NewInt(0).Set(v.BigInt)
+	return new(big.Int).Set(v.BigInt)
 }
 
 func (v Int256Value) String() string {
@@ -1703,13 +2124,13 @@ func (v Int256Value) KeyString() string {
 
 func (v Int256Value) Negate() NumberValue {
 	// INT32-C
-	//   if v == Int256TypeMinInt {
+	//   if v == Int256TypeMinIntBig {
 	//       ...
 	//   }
-	if v.BigInt.Cmp(sema.Int256TypeMinInt) == 0 {
-		panic(&OverflowError{})
+	if v.BigInt.Cmp(sema.Int256TypeMinIntBig) == 0 {
+		panic(OverflowError{})
 	}
-	return Int256Value{BigInt: big.NewInt(0).Neg(v.BigInt)}
+	return Int256Value{BigInt: new(big.Int).Neg(v.BigInt)}
 }
 
 func (v Int256Value) Plus(other NumberValue) NumberValue {
@@ -1720,17 +2141,17 @@ func (v Int256Value) Plus(other NumberValue) NumberValue {
 	// If Go gains a native int256 type and we switch this value
 	// to be based on it, then we need to follow INT32-C:
 	//
-	//   if (o > 0) && (v > (Int256TypeMaxInt - o)) {
+	//   if (o > 0) && (v > (Int256TypeMaxIntBig - o)) {
 	//       ...
-	//   } else if (o < 0) && (v < (Int256TypeMinInt - o)) {
+	//   } else if (o < 0) && (v < (Int256TypeMinIntBig - o)) {
 	//       ...
 	//   }
 	//
-	res := big.NewInt(0)
+	res := new(big.Int)
 	res.Add(v.BigInt, o.BigInt)
-	if res.Cmp(sema.Int256TypeMinInt) < 0 {
+	if res.Cmp(sema.Int256TypeMinIntBig) < 0 {
 		panic(UnderflowError{})
-	} else if res.Cmp(sema.Int256TypeMaxInt) > 0 {
+	} else if res.Cmp(sema.Int256TypeMaxIntBig) > 0 {
 		panic(OverflowError{})
 	}
 	return Int256Value{res}
@@ -1744,17 +2165,17 @@ func (v Int256Value) Minus(other NumberValue) NumberValue {
 	// If Go gains a native int256 type and we switch this value
 	// to be based on it, then we need to follow INT32-C:
 	//
-	//   if (o > 0) && (v < (Int256TypeMinInt + o)) {
+	//   if (o > 0) && (v < (Int256TypeMinIntBig + o)) {
 	// 	     ...
-	//   } else if (o < 0) && (v > (Int256TypeMaxInt + o)) {
+	//   } else if (o < 0) && (v > (Int256TypeMaxIntBig + o)) {
 	//       ...
 	//   }
 	//
-	res := big.NewInt(0)
+	res := new(big.Int)
 	res.Sub(v.BigInt, o.BigInt)
-	if res.Cmp(sema.Int256TypeMinInt) < 0 {
+	if res.Cmp(sema.Int256TypeMinIntBig) < 0 {
 		panic(UnderflowError{})
-	} else if res.Cmp(sema.Int256TypeMaxInt) > 0 {
+	} else if res.Cmp(sema.Int256TypeMaxIntBig) > 0 {
 		panic(OverflowError{})
 	}
 	return Int256Value{res}
@@ -1762,22 +2183,22 @@ func (v Int256Value) Minus(other NumberValue) NumberValue {
 
 func (v Int256Value) Mod(other NumberValue) NumberValue {
 	o := other.(Int256Value)
-	res := big.NewInt(0)
+	res := new(big.Int)
 	// INT33-C
 	if o.BigInt.Cmp(res) == 0 {
 		panic(DivisionByZeroError{})
 	}
-	res.Mod(v.BigInt, o.BigInt)
+	res.Rem(v.BigInt, o.BigInt)
 	return Int256Value{res}
 }
 
 func (v Int256Value) Mul(other NumberValue) NumberValue {
 	o := other.(Int256Value)
-	res := big.NewInt(0)
+	res := new(big.Int)
 	res.Mul(v.BigInt, o.BigInt)
-	if res.Cmp(sema.Int256TypeMinInt) < 0 {
+	if res.Cmp(sema.Int256TypeMinIntBig) < 0 {
 		panic(UnderflowError{})
-	} else if res.Cmp(sema.Int256TypeMaxInt) > 0 {
+	} else if res.Cmp(sema.Int256TypeMaxIntBig) > 0 {
 		panic(OverflowError{})
 	}
 	return Int256Value{res}
@@ -1785,18 +2206,18 @@ func (v Int256Value) Mul(other NumberValue) NumberValue {
 
 func (v Int256Value) Div(other NumberValue) NumberValue {
 	o := other.(Int256Value)
-	res := big.NewInt(0)
+	res := new(big.Int)
 	// INT33-C:
 	//   if o == 0 {
 	//       ...
-	//   } else if (v == Int256TypeMinInt) && (o == -1) {
+	//   } else if (v == Int256TypeMinIntBig) && (o == -1) {
 	//       ...
 	//   }
 	if o.BigInt.Cmp(res) == 0 {
 		panic(DivisionByZeroError{})
 	}
 	res.SetInt64(-1)
-	if (v.BigInt.Cmp(sema.Int256TypeMinInt) == 0) && (o.BigInt.Cmp(res) == 0) {
+	if (v.BigInt.Cmp(sema.Int256TypeMinIntBig) == 0) && (o.BigInt.Cmp(res) == 0) {
 		panic(OverflowError{})
 	}
 	res.Div(v.BigInt, o.BigInt)
@@ -1846,13 +2267,80 @@ func ConvertInt256(value Value, _ *Interpreter) Value {
 		panic(errors.NewUnreachableError())
 	}
 
-	if v.Cmp(sema.Int256TypeMaxInt) > 0 {
-		panic(&OverflowError{})
-	} else if v.Cmp(sema.Int256TypeMinInt) < 0 {
-		panic(&UnderflowError{})
+	if v.Cmp(sema.Int256TypeMaxIntBig) > 0 {
+		panic(OverflowError{})
+	} else if v.Cmp(sema.Int256TypeMinIntBig) < 0 {
+		panic(UnderflowError{})
 	}
 
 	return NewInt256ValueFromBigInt(v)
+}
+
+func (v Int256Value) BitwiseOr(other IntegerValue) IntegerValue {
+	o := other.(Int256Value)
+	res := new(big.Int)
+	res.Or(v.BigInt, o.BigInt)
+	return Int256Value{res}
+}
+
+func (v Int256Value) BitwiseXor(other IntegerValue) IntegerValue {
+	o := other.(Int256Value)
+	res := new(big.Int)
+	res.Xor(v.BigInt, o.BigInt)
+	return Int256Value{res}
+}
+
+func (v Int256Value) BitwiseAnd(other IntegerValue) IntegerValue {
+	o := other.(Int256Value)
+	res := new(big.Int)
+	res.And(v.BigInt, o.BigInt)
+	return Int256Value{res}
+}
+
+func (v Int256Value) BitwiseLeftShift(other IntegerValue) IntegerValue {
+	o := other.(Int256Value)
+	res := new(big.Int)
+	if o.BigInt.Sign() < 0 {
+		panic(UnderflowError{})
+	}
+	if !o.BigInt.IsUint64() {
+		panic(OverflowError{})
+	}
+	res.Lsh(v.BigInt, uint(o.BigInt.Uint64()))
+	return Int256Value{res}
+}
+
+func (v Int256Value) BitwiseRightShift(other IntegerValue) IntegerValue {
+	o := other.(Int256Value)
+	res := new(big.Int)
+	if o.BigInt.Sign() < 0 {
+		panic(UnderflowError{})
+	}
+	if !o.BigInt.IsUint64() {
+		panic(OverflowError{})
+	}
+	res.Rsh(v.BigInt, uint(o.BigInt.Uint64()))
+	return Int256Value{res}
+}
+
+func (v Int256Value) GetMember(_ *Interpreter, _ LocationRange, name string) Value {
+	switch name {
+
+	case sema.ToStringFunctionName:
+		return NewHostFunctionValue(
+			func(invocation Invocation) trampoline.Trampoline {
+				result := NewStringValue(v.String())
+				return trampoline.Done{Result: result}
+			},
+		)
+
+	default:
+		panic(errors.NewUnreachableError())
+	}
+}
+
+func (Int256Value) SetMember(_ *Interpreter, _ LocationRange, _ string, _ Value) {
+	panic(errors.NewUnreachableError())
 }
 
 // UIntValue
@@ -1861,12 +2349,8 @@ type UIntValue struct {
 	BigInt *big.Int
 }
 
-func init() {
-	gob.Register(UIntValue{})
-}
-
 func NewUIntValueFromUint64(value uint64) UIntValue {
-	return NewUIntValueFromBigInt(big.NewInt(0).SetUint64(value))
+	return NewUIntValueFromBigInt(new(big.Int).SetUint64(value))
 }
 
 func NewUIntValueFromBigInt(value *big.Int) UIntValue {
@@ -1878,14 +2362,14 @@ func ConvertUInt(value Value, _ *Interpreter) Value {
 	case BigNumberValue:
 		v := value.ToBigInt()
 		if v.Sign() < 0 {
-			panic(&UnderflowError{})
+			panic(UnderflowError{})
 		}
 		return NewUIntValueFromBigInt(value.ToBigInt())
 
 	case NumberValue:
 		v := value.ToInt()
 		if v < 0 {
-			panic(&UnderflowError{})
+			panic(UnderflowError{})
 		}
 		return NewUIntValueFromUint64(uint64(v))
 
@@ -1901,7 +2385,7 @@ func (UIntValue) DynamicType(_ *Interpreter) DynamicType {
 }
 
 func (v UIntValue) Copy() Value {
-	return UIntValue{big.NewInt(0).Set(v.BigInt)}
+	return UIntValue{new(big.Int).Set(v.BigInt)}
 }
 
 func (UIntValue) GetOwner() *common.Address {
@@ -1913,13 +2397,21 @@ func (UIntValue) SetOwner(_ *common.Address) {
 	// NO-OP: value cannot be owned
 }
 
+func (UIntValue) IsModified() bool {
+	return false
+}
+
+func (UIntValue) SetModified(_ bool) {
+	// NO-OP
+}
+
 func (v UIntValue) ToInt() int {
 	// TODO: handle overflow
 	return int(v.BigInt.Int64())
 }
 
 func (v UIntValue) ToBigInt() *big.Int {
-	return big.NewInt(0).Set(v.BigInt)
+	return new(big.Int).Set(v.BigInt)
 }
 
 func (v UIntValue) String() string {
@@ -1936,42 +2428,42 @@ func (v UIntValue) Negate() NumberValue {
 
 func (v UIntValue) Plus(other NumberValue) NumberValue {
 	o := other.(UIntValue)
-	res := big.NewInt(0)
+	res := new(big.Int)
 	res.Add(v.BigInt, o.BigInt)
 	return UIntValue{res}
 }
 
 func (v UIntValue) Minus(other NumberValue) NumberValue {
 	o := other.(UIntValue)
-	res := big.NewInt(0)
+	res := new(big.Int)
 	res.Sub(v.BigInt, o.BigInt)
 	if res.Sign() < 0 {
-		panic(&UnderflowError{})
+		panic(UnderflowError{})
 	}
 	return UIntValue{res}
 }
 
 func (v UIntValue) Mod(other NumberValue) NumberValue {
 	o := other.(UIntValue)
-	res := big.NewInt(0)
+	res := new(big.Int)
 	// INT33-C
 	if o.BigInt.Cmp(res) == 0 {
 		panic(DivisionByZeroError{})
 	}
-	res.Mod(v.BigInt, o.BigInt)
+	res.Rem(v.BigInt, o.BigInt)
 	return UIntValue{res}
 }
 
 func (v UIntValue) Mul(other NumberValue) NumberValue {
 	o := other.(UIntValue)
-	res := big.NewInt(0)
+	res := new(big.Int)
 	res.Mul(v.BigInt, o.BigInt)
 	return UIntValue{res}
 }
 
 func (v UIntValue) Div(other NumberValue) NumberValue {
 	o := other.(UIntValue)
-	res := big.NewInt(0)
+	res := new(big.Int)
 	// INT33-C
 	if o.BigInt.Cmp(res) == 0 {
 		panic(DivisionByZeroError{})
@@ -2009,13 +2501,76 @@ func (v UIntValue) Equal(other Value) BoolValue {
 	return cmp == 0
 }
 
+func (v UIntValue) BitwiseOr(other IntegerValue) IntegerValue {
+	o := other.(UIntValue)
+	res := new(big.Int)
+	res.Or(v.BigInt, o.BigInt)
+	return UIntValue{res}
+}
+
+func (v UIntValue) BitwiseXor(other IntegerValue) IntegerValue {
+	o := other.(UIntValue)
+	res := new(big.Int)
+	res.Xor(v.BigInt, o.BigInt)
+	return UIntValue{res}
+}
+
+func (v UIntValue) BitwiseAnd(other IntegerValue) IntegerValue {
+	o := other.(UIntValue)
+	res := new(big.Int)
+	res.And(v.BigInt, o.BigInt)
+	return UIntValue{res}
+}
+
+func (v UIntValue) BitwiseLeftShift(other IntegerValue) IntegerValue {
+	o := other.(UIntValue)
+	res := new(big.Int)
+	if o.BigInt.Sign() < 0 {
+		panic(UnderflowError{})
+	}
+	if !o.BigInt.IsUint64() {
+		panic(OverflowError{})
+	}
+	res.Lsh(v.BigInt, uint(o.BigInt.Uint64()))
+	return UIntValue{res}
+}
+
+func (v UIntValue) BitwiseRightShift(other IntegerValue) IntegerValue {
+	o := other.(UIntValue)
+	res := new(big.Int)
+	if o.BigInt.Sign() < 0 {
+		panic(UnderflowError{})
+	}
+	if !o.BigInt.IsUint64() {
+		panic(OverflowError{})
+	}
+	res.Rsh(v.BigInt, uint(o.BigInt.Uint64()))
+	return UIntValue{res}
+}
+
+func (v UIntValue) GetMember(_ *Interpreter, _ LocationRange, name string) Value {
+	switch name {
+
+	case sema.ToStringFunctionName:
+		return NewHostFunctionValue(
+			func(invocation Invocation) trampoline.Trampoline {
+				result := NewStringValue(v.String())
+				return trampoline.Done{Result: result}
+			},
+		)
+
+	default:
+		panic(errors.NewUnreachableError())
+	}
+}
+
+func (UIntValue) SetMember(_ *Interpreter, _ LocationRange, _ string, _ Value) {
+	panic(errors.NewUnreachableError())
+}
+
 // UInt8Value
 
 type UInt8Value uint8
-
-func init() {
-	gob.Register(UInt8Value(0))
-}
 
 func (UInt8Value) IsValue() {}
 
@@ -2034,6 +2589,14 @@ func (UInt8Value) GetOwner() *common.Address {
 
 func (UInt8Value) SetOwner(_ *common.Address) {
 	// NO-OP: value cannot be owned
+}
+
+func (UInt8Value) IsModified() bool {
+	return false
+}
+
+func (UInt8Value) SetModified(_ bool) {
+	// NO-OP
 }
 
 func (v UInt8Value) String() string {
@@ -2073,7 +2636,7 @@ func (v UInt8Value) Minus(other NumberValue) NumberValue {
 func (v UInt8Value) Mod(other NumberValue) NumberValue {
 	o := other.(UInt8Value)
 	if o == 0 {
-		panic(&DivisionByZeroError{})
+		panic(DivisionByZeroError{})
 	}
 	return v % o
 }
@@ -2081,7 +2644,7 @@ func (v UInt8Value) Mod(other NumberValue) NumberValue {
 func (v UInt8Value) Mul(other NumberValue) NumberValue {
 	o := other.(UInt8Value)
 	if (v > 0) && (o > 0) && (v > (math.MaxUint8 / o)) {
-		panic(&OverflowError{})
+		panic(OverflowError{})
 	}
 	return v * o
 }
@@ -2089,7 +2652,7 @@ func (v UInt8Value) Mul(other NumberValue) NumberValue {
 func (v UInt8Value) Div(other NumberValue) NumberValue {
 	o := other.(UInt8Value)
 	if o == 0 {
-		panic(&DivisionByZeroError{})
+		panic(DivisionByZeroError{})
 	}
 	return v / o
 }
@@ -2125,18 +2688,18 @@ func ConvertUInt8(value Value, _ *Interpreter) Value {
 	case BigNumberValue:
 		v := value.ToBigInt()
 		if v.Cmp(sema.UInt8TypeMaxInt) > 0 {
-			panic(&OverflowError{})
+			panic(OverflowError{})
 		} else if v.Sign() < 0 {
-			panic(&UnderflowError{})
+			panic(UnderflowError{})
 		}
 		res = uint8(v.Int64())
 
 	case NumberValue:
 		v := value.ToInt()
 		if v > math.MaxUint8 {
-			panic(&OverflowError{})
+			panic(OverflowError{})
 		} else if v < 0 {
-			panic(&UnderflowError{})
+			panic(UnderflowError{})
 		}
 		res = uint8(v)
 
@@ -2147,13 +2710,54 @@ func ConvertUInt8(value Value, _ *Interpreter) Value {
 	return UInt8Value(res)
 }
 
+func (v UInt8Value) BitwiseOr(other IntegerValue) IntegerValue {
+	o := other.(UInt8Value)
+	return v | o
+}
+
+func (v UInt8Value) BitwiseXor(other IntegerValue) IntegerValue {
+	o := other.(UInt8Value)
+	return v ^ o
+}
+
+func (v UInt8Value) BitwiseAnd(other IntegerValue) IntegerValue {
+	o := other.(UInt8Value)
+	return v & o
+}
+
+func (v UInt8Value) BitwiseLeftShift(other IntegerValue) IntegerValue {
+	o := other.(UInt8Value)
+	return v << o
+}
+
+func (v UInt8Value) BitwiseRightShift(other IntegerValue) IntegerValue {
+	o := other.(UInt8Value)
+	return v >> o
+}
+
+func (v UInt8Value) GetMember(_ *Interpreter, _ LocationRange, name string) Value {
+	switch name {
+
+	case sema.ToStringFunctionName:
+		return NewHostFunctionValue(
+			func(invocation Invocation) trampoline.Trampoline {
+				result := NewStringValue(v.String())
+				return trampoline.Done{Result: result}
+			},
+		)
+
+	default:
+		panic(errors.NewUnreachableError())
+	}
+}
+
+func (UInt8Value) SetMember(_ *Interpreter, _ LocationRange, _ string, _ Value) {
+	panic(errors.NewUnreachableError())
+}
+
 // UInt16Value
 
 type UInt16Value uint16
-
-func init() {
-	gob.Register(UInt16Value(0))
-}
 
 func (UInt16Value) IsValue() {}
 
@@ -2171,6 +2775,14 @@ func (UInt16Value) GetOwner() *common.Address {
 
 func (UInt16Value) SetOwner(_ *common.Address) {
 	// NO-OP: value cannot be owned
+}
+
+func (UInt16Value) IsModified() bool {
+	return false
+}
+
+func (UInt16Value) SetModified(_ bool) {
+	// NO-OP
 }
 
 func (v UInt16Value) String() string {
@@ -2209,7 +2821,7 @@ func (v UInt16Value) Minus(other NumberValue) NumberValue {
 func (v UInt16Value) Mod(other NumberValue) NumberValue {
 	o := other.(UInt16Value)
 	if o == 0 {
-		panic(&DivisionByZeroError{})
+		panic(DivisionByZeroError{})
 	}
 	return v % o
 }
@@ -2217,7 +2829,7 @@ func (v UInt16Value) Mod(other NumberValue) NumberValue {
 func (v UInt16Value) Mul(other NumberValue) NumberValue {
 	o := other.(UInt16Value)
 	if (v > 0) && (o > 0) && (v > (math.MaxUint16 / o)) {
-		panic(&OverflowError{})
+		panic(OverflowError{})
 	}
 	return v * o
 }
@@ -2225,7 +2837,7 @@ func (v UInt16Value) Mul(other NumberValue) NumberValue {
 func (v UInt16Value) Div(other NumberValue) NumberValue {
 	o := other.(UInt16Value)
 	if o == 0 {
-		panic(&DivisionByZeroError{})
+		panic(DivisionByZeroError{})
 	}
 	return v / o
 }
@@ -2261,18 +2873,18 @@ func ConvertUInt16(value Value, _ *Interpreter) Value {
 	case BigNumberValue:
 		v := value.ToBigInt()
 		if v.Cmp(sema.UInt16TypeMaxInt) > 0 {
-			panic(&OverflowError{})
+			panic(OverflowError{})
 		} else if v.Sign() < 0 {
-			panic(&UnderflowError{})
+			panic(UnderflowError{})
 		}
 		res = uint16(v.Int64())
 
 	case NumberValue:
 		v := value.ToInt()
 		if v > math.MaxUint16 {
-			panic(&OverflowError{})
+			panic(OverflowError{})
 		} else if v < 0 {
-			panic(&UnderflowError{})
+			panic(UnderflowError{})
 		}
 		res = uint16(v)
 
@@ -2283,13 +2895,54 @@ func ConvertUInt16(value Value, _ *Interpreter) Value {
 	return UInt16Value(res)
 }
 
+func (v UInt16Value) BitwiseOr(other IntegerValue) IntegerValue {
+	o := other.(UInt16Value)
+	return v | o
+}
+
+func (v UInt16Value) BitwiseXor(other IntegerValue) IntegerValue {
+	o := other.(UInt16Value)
+	return v ^ o
+}
+
+func (v UInt16Value) BitwiseAnd(other IntegerValue) IntegerValue {
+	o := other.(UInt16Value)
+	return v & o
+}
+
+func (v UInt16Value) BitwiseLeftShift(other IntegerValue) IntegerValue {
+	o := other.(UInt16Value)
+	return v << o
+}
+
+func (v UInt16Value) BitwiseRightShift(other IntegerValue) IntegerValue {
+	o := other.(UInt16Value)
+	return v >> o
+}
+
+func (v UInt16Value) GetMember(_ *Interpreter, _ LocationRange, name string) Value {
+	switch name {
+
+	case sema.ToStringFunctionName:
+		return NewHostFunctionValue(
+			func(invocation Invocation) trampoline.Trampoline {
+				result := NewStringValue(v.String())
+				return trampoline.Done{Result: result}
+			},
+		)
+
+	default:
+		panic(errors.NewUnreachableError())
+	}
+}
+
+func (UInt16Value) SetMember(_ *Interpreter, _ LocationRange, _ string, _ Value) {
+	panic(errors.NewUnreachableError())
+}
+
 // UInt32Value
 
 type UInt32Value uint32
-
-func init() {
-	gob.Register(UInt32Value(0))
-}
 
 func (UInt32Value) IsValue() {}
 
@@ -2308,6 +2961,14 @@ func (UInt32Value) GetOwner() *common.Address {
 
 func (UInt32Value) SetOwner(_ *common.Address) {
 	// NO-OP: value cannot be owned
+}
+
+func (UInt32Value) IsModified() bool {
+	return false
+}
+
+func (UInt32Value) SetModified(_ bool) {
+	// NO-OP
 }
 
 func (v UInt32Value) String() string {
@@ -2347,7 +3008,7 @@ func (v UInt32Value) Minus(other NumberValue) NumberValue {
 func (v UInt32Value) Mod(other NumberValue) NumberValue {
 	o := other.(UInt32Value)
 	if o == 0 {
-		panic(&DivisionByZeroError{})
+		panic(DivisionByZeroError{})
 	}
 	return v % o
 }
@@ -2355,7 +3016,7 @@ func (v UInt32Value) Mod(other NumberValue) NumberValue {
 func (v UInt32Value) Mul(other NumberValue) NumberValue {
 	o := other.(UInt32Value)
 	if (v > 0) && (o > 0) && (v > (math.MaxUint32 / o)) {
-		panic(&OverflowError{})
+		panic(OverflowError{})
 	}
 	return v * o
 }
@@ -2363,7 +3024,7 @@ func (v UInt32Value) Mul(other NumberValue) NumberValue {
 func (v UInt32Value) Div(other NumberValue) NumberValue {
 	o := other.(UInt32Value)
 	if o == 0 {
-		panic(&DivisionByZeroError{})
+		panic(DivisionByZeroError{})
 	}
 	return v / o
 }
@@ -2399,18 +3060,18 @@ func ConvertUInt32(value Value, _ *Interpreter) Value {
 	case BigNumberValue:
 		v := value.ToBigInt()
 		if v.Cmp(sema.UInt32TypeMaxInt) > 0 {
-			panic(&OverflowError{})
+			panic(OverflowError{})
 		} else if v.Sign() < 0 {
-			panic(&UnderflowError{})
+			panic(UnderflowError{})
 		}
 		res = uint32(v.Int64())
 
 	case NumberValue:
 		v := value.ToInt()
 		if v > math.MaxUint32 {
-			panic(&OverflowError{})
+			panic(OverflowError{})
 		} else if v < 0 {
-			panic(&UnderflowError{})
+			panic(UnderflowError{})
 		}
 		res = uint32(v)
 
@@ -2421,13 +3082,54 @@ func ConvertUInt32(value Value, _ *Interpreter) Value {
 	return UInt32Value(res)
 }
 
+func (v UInt32Value) BitwiseOr(other IntegerValue) IntegerValue {
+	o := other.(UInt32Value)
+	return v | o
+}
+
+func (v UInt32Value) BitwiseXor(other IntegerValue) IntegerValue {
+	o := other.(UInt32Value)
+	return v ^ o
+}
+
+func (v UInt32Value) BitwiseAnd(other IntegerValue) IntegerValue {
+	o := other.(UInt32Value)
+	return v & o
+}
+
+func (v UInt32Value) BitwiseLeftShift(other IntegerValue) IntegerValue {
+	o := other.(UInt32Value)
+	return v << o
+}
+
+func (v UInt32Value) BitwiseRightShift(other IntegerValue) IntegerValue {
+	o := other.(UInt32Value)
+	return v >> o
+}
+
+func (v UInt32Value) GetMember(_ *Interpreter, _ LocationRange, name string) Value {
+	switch name {
+
+	case sema.ToStringFunctionName:
+		return NewHostFunctionValue(
+			func(invocation Invocation) trampoline.Trampoline {
+				result := NewStringValue(v.String())
+				return trampoline.Done{Result: result}
+			},
+		)
+
+	default:
+		panic(errors.NewUnreachableError())
+	}
+}
+
+func (UInt32Value) SetMember(_ *Interpreter, _ LocationRange, _ string, _ Value) {
+	panic(errors.NewUnreachableError())
+}
+
 // UInt64Value
 
 type UInt64Value uint64
-
-func init() {
-	gob.Register(UInt64Value(0))
-}
 
 func (UInt64Value) IsValue() {}
 
@@ -2446,6 +3148,14 @@ func (UInt64Value) GetOwner() *common.Address {
 
 func (UInt64Value) SetOwner(_ *common.Address) {
 	// NO-OP: value cannot be owned
+}
+
+func (UInt64Value) IsModified() bool {
+	return false
+}
+
+func (UInt64Value) SetModified(_ bool) {
+	// NO-OP
 }
 
 func (v UInt64Value) String() string {
@@ -2490,7 +3200,7 @@ func (v UInt64Value) Minus(other NumberValue) NumberValue {
 func (v UInt64Value) Mod(other NumberValue) NumberValue {
 	o := other.(UInt64Value)
 	if o == 0 {
-		panic(&DivisionByZeroError{})
+		panic(DivisionByZeroError{})
 	}
 	return v % o
 }
@@ -2498,7 +3208,7 @@ func (v UInt64Value) Mod(other NumberValue) NumberValue {
 func (v UInt64Value) Mul(other NumberValue) NumberValue {
 	o := other.(UInt64Value)
 	if (v > 0) && (o > 0) && (v > (math.MaxUint64 / o)) {
-		panic(&OverflowError{})
+		panic(OverflowError{})
 	}
 	return v * o
 }
@@ -2506,7 +3216,7 @@ func (v UInt64Value) Mul(other NumberValue) NumberValue {
 func (v UInt64Value) Div(other NumberValue) NumberValue {
 	o := other.(UInt64Value)
 	if o == 0 {
-		panic(&DivisionByZeroError{})
+		panic(DivisionByZeroError{})
 	}
 	return v / o
 }
@@ -2542,16 +3252,16 @@ func ConvertUInt64(value Value, _ *Interpreter) Value {
 	case BigNumberValue:
 		v := value.ToBigInt()
 		if v.Cmp(sema.UInt64TypeMaxInt) > 0 {
-			panic(&OverflowError{})
+			panic(OverflowError{})
 		} else if v.Sign() < 0 {
-			panic(&UnderflowError{})
+			panic(UnderflowError{})
 		}
 		res = uint64(v.Int64())
 
 	case NumberValue:
 		v := value.ToInt()
 		if v < 0 {
-			panic(&UnderflowError{})
+			panic(UnderflowError{})
 		}
 		res = uint64(v)
 
@@ -2562,18 +3272,59 @@ func ConvertUInt64(value Value, _ *Interpreter) Value {
 	return UInt64Value(res)
 }
 
+func (v UInt64Value) BitwiseOr(other IntegerValue) IntegerValue {
+	o := other.(UInt64Value)
+	return v | o
+}
+
+func (v UInt64Value) BitwiseXor(other IntegerValue) IntegerValue {
+	o := other.(UInt64Value)
+	return v ^ o
+}
+
+func (v UInt64Value) BitwiseAnd(other IntegerValue) IntegerValue {
+	o := other.(UInt64Value)
+	return v & o
+}
+
+func (v UInt64Value) BitwiseLeftShift(other IntegerValue) IntegerValue {
+	o := other.(UInt64Value)
+	return v << o
+}
+
+func (v UInt64Value) BitwiseRightShift(other IntegerValue) IntegerValue {
+	o := other.(UInt64Value)
+	return v >> o
+}
+
+func (v UInt64Value) GetMember(_ *Interpreter, _ LocationRange, name string) Value {
+	switch name {
+
+	case sema.ToStringFunctionName:
+		return NewHostFunctionValue(
+			func(invocation Invocation) trampoline.Trampoline {
+				result := NewStringValue(v.String())
+				return trampoline.Done{Result: result}
+			},
+		)
+
+	default:
+		panic(errors.NewUnreachableError())
+	}
+}
+
+func (UInt64Value) SetMember(_ *Interpreter, _ LocationRange, _ string, _ Value) {
+	panic(errors.NewUnreachableError())
+}
+
 // UInt128Value
 
 type UInt128Value struct {
 	BigInt *big.Int
 }
 
-func init() {
-	gob.Register(UInt128Value{})
-}
-
-func NewUInt128ValueFromInt64(value int64) UInt128Value {
-	return NewUInt128ValueFromBigInt(big.NewInt(value))
+func NewUInt128ValueFromUint64(value uint64) UInt128Value {
+	return NewUInt128ValueFromBigInt(new(big.Int).SetUint64(value))
 }
 
 func NewUInt128ValueFromBigInt(value *big.Int) UInt128Value {
@@ -2587,7 +3338,7 @@ func (UInt128Value) DynamicType(_ *Interpreter) DynamicType {
 }
 
 func (v UInt128Value) Copy() Value {
-	return UInt128Value{big.NewInt(0).Set(v.BigInt)}
+	return UInt128Value{new(big.Int).Set(v.BigInt)}
 }
 
 func (UInt128Value) GetOwner() *common.Address {
@@ -2599,13 +3350,21 @@ func (UInt128Value) SetOwner(_ *common.Address) {
 	// NO-OP: value cannot be owned
 }
 
+func (UInt128Value) IsModified() bool {
+	return false
+}
+
+func (UInt128Value) SetModified(_ bool) {
+	// NO-OP
+}
+
 func (v UInt128Value) ToInt() int {
 	// TODO: handle overflow
 	return int(v.BigInt.Int64())
 }
 
 func (v UInt128Value) ToBigInt() *big.Int {
-	return big.NewInt(0).Set(v.BigInt)
+	return new(big.Int).Set(v.BigInt)
 }
 
 func (v UInt128Value) String() string {
@@ -2621,7 +3380,7 @@ func (v UInt128Value) Negate() NumberValue {
 }
 
 func (v UInt128Value) Plus(other NumberValue) NumberValue {
-	sum := big.NewInt(0)
+	sum := new(big.Int)
 	sum.Add(v.BigInt, other.(UInt128Value).BigInt)
 	// Given that this value is backed by an arbitrary size integer,
 	// we can just add and check the range of the result.
@@ -2633,14 +3392,14 @@ func (v UInt128Value) Plus(other NumberValue) NumberValue {
 	//      ...
 	//  }
 	//
-	if sum.Cmp(sema.UInt128TypeMaxInt) > 0 {
+	if sum.Cmp(sema.UInt128TypeMaxIntBig) > 0 {
 		panic(OverflowError{})
 	}
 	return UInt128Value{sum}
 }
 
 func (v UInt128Value) Minus(other NumberValue) NumberValue {
-	diff := big.NewInt(0)
+	diff := new(big.Int)
 	diff.Sub(v.BigInt, other.(UInt128Value).BigInt)
 	// Given that this value is backed by an arbitrary size integer,
 	// we can just subtract and check the range of the result.
@@ -2652,7 +3411,7 @@ func (v UInt128Value) Minus(other NumberValue) NumberValue {
 	// 	     ...
 	//   }
 	//
-	if diff.Cmp(sema.UInt128TypeMinInt) < 0 {
+	if diff.Cmp(sema.UInt128TypeMinIntBig) < 0 {
 		panic(UnderflowError{})
 	}
 	return UInt128Value{diff}
@@ -2660,19 +3419,19 @@ func (v UInt128Value) Minus(other NumberValue) NumberValue {
 
 func (v UInt128Value) Mod(other NumberValue) NumberValue {
 	o := other.(UInt128Value)
-	res := big.NewInt(0)
+	res := new(big.Int)
 	if o.BigInt.Cmp(res) == 0 {
 		panic(DivisionByZeroError{})
 	}
-	res.Mod(v.BigInt, o.BigInt)
+	res.Rem(v.BigInt, o.BigInt)
 	return UInt128Value{res}
 }
 
 func (v UInt128Value) Mul(other NumberValue) NumberValue {
 	o := other.(UInt128Value)
-	res := big.NewInt(0)
+	res := new(big.Int)
 	res.Mul(v.BigInt, o.BigInt)
-	if res.Cmp(sema.UInt128TypeMaxInt) > 0 {
+	if res.Cmp(sema.UInt128TypeMaxIntBig) > 0 {
 		panic(OverflowError{})
 	}
 	return UInt128Value{res}
@@ -2680,7 +3439,7 @@ func (v UInt128Value) Mul(other NumberValue) NumberValue {
 
 func (v UInt128Value) Div(other NumberValue) NumberValue {
 	o := other.(UInt128Value)
-	res := big.NewInt(0)
+	res := new(big.Int)
 	if o.BigInt.Cmp(res) == 0 {
 		panic(DivisionByZeroError{})
 	}
@@ -2731,13 +3490,80 @@ func ConvertUInt128(value Value, _ *Interpreter) Value {
 		panic(errors.NewUnreachableError())
 	}
 
-	if v.Cmp(sema.UInt128TypeMaxInt) > 0 {
-		panic(&OverflowError{})
+	if v.Cmp(sema.UInt128TypeMaxIntBig) > 0 {
+		panic(OverflowError{})
 	} else if v.Sign() < 0 {
-		panic(&UnderflowError{})
+		panic(UnderflowError{})
 	}
 
 	return NewUInt128ValueFromBigInt(v)
+}
+
+func (v UInt128Value) BitwiseOr(other IntegerValue) IntegerValue {
+	o := other.(UInt128Value)
+	res := new(big.Int)
+	res.Or(v.BigInt, o.BigInt)
+	return UInt128Value{res}
+}
+
+func (v UInt128Value) BitwiseXor(other IntegerValue) IntegerValue {
+	o := other.(UInt128Value)
+	res := new(big.Int)
+	res.Xor(v.BigInt, o.BigInt)
+	return UInt128Value{res}
+}
+
+func (v UInt128Value) BitwiseAnd(other IntegerValue) IntegerValue {
+	o := other.(UInt128Value)
+	res := new(big.Int)
+	res.And(v.BigInt, o.BigInt)
+	return UInt128Value{res}
+}
+
+func (v UInt128Value) BitwiseLeftShift(other IntegerValue) IntegerValue {
+	o := other.(UInt128Value)
+	res := new(big.Int)
+	if o.BigInt.Sign() < 0 {
+		panic(UnderflowError{})
+	}
+	if !o.BigInt.IsUint64() {
+		panic(OverflowError{})
+	}
+	res.Lsh(v.BigInt, uint(o.BigInt.Uint64()))
+	return UInt128Value{res}
+}
+
+func (v UInt128Value) BitwiseRightShift(other IntegerValue) IntegerValue {
+	o := other.(UInt128Value)
+	res := new(big.Int)
+	if o.BigInt.Sign() < 0 {
+		panic(UnderflowError{})
+	}
+	if !o.BigInt.IsUint64() {
+		panic(OverflowError{})
+	}
+	res.Rsh(v.BigInt, uint(o.BigInt.Uint64()))
+	return UInt128Value{res}
+}
+
+func (v UInt128Value) GetMember(_ *Interpreter, _ LocationRange, name string) Value {
+	switch name {
+
+	case sema.ToStringFunctionName:
+		return NewHostFunctionValue(
+			func(invocation Invocation) trampoline.Trampoline {
+				result := NewStringValue(v.String())
+				return trampoline.Done{Result: result}
+			},
+		)
+
+	default:
+		panic(errors.NewUnreachableError())
+	}
+}
+
+func (UInt128Value) SetMember(_ *Interpreter, _ LocationRange, _ string, _ Value) {
+	panic(errors.NewUnreachableError())
 }
 
 // UInt256Value
@@ -2746,12 +3572,8 @@ type UInt256Value struct {
 	BigInt *big.Int
 }
 
-func init() {
-	gob.Register(UInt256Value{})
-}
-
-func NewUInt256ValueFromInt64(value int64) UInt256Value {
-	return NewUInt256ValueFromBigInt(big.NewInt(value))
+func NewUInt256ValueFromUint64(value uint64) UInt256Value {
+	return NewUInt256ValueFromBigInt(new(big.Int).SetUint64(value))
 }
 
 func NewUInt256ValueFromBigInt(value *big.Int) UInt256Value {
@@ -2765,7 +3587,7 @@ func (UInt256Value) DynamicType(_ *Interpreter) DynamicType {
 }
 
 func (v UInt256Value) Copy() Value {
-	return UInt256Value{big.NewInt(0).Set(v.BigInt)}
+	return UInt256Value{new(big.Int).Set(v.BigInt)}
 }
 
 func (UInt256Value) GetOwner() *common.Address {
@@ -2777,13 +3599,21 @@ func (UInt256Value) SetOwner(_ *common.Address) {
 	// NO-OP: value cannot be owned
 }
 
+func (UInt256Value) IsModified() bool {
+	return false
+}
+
+func (UInt256Value) SetModified(_ bool) {
+	// NO-OP
+}
+
 func (v UInt256Value) ToInt() int {
 	// TODO: handle overflow
 	return int(v.BigInt.Int64())
 }
 
 func (v UInt256Value) ToBigInt() *big.Int {
-	return big.NewInt(0).Set(v.BigInt)
+	return new(big.Int).Set(v.BigInt)
 }
 
 func (v UInt256Value) String() string {
@@ -2799,7 +3629,7 @@ func (v UInt256Value) Negate() NumberValue {
 }
 
 func (v UInt256Value) Plus(other NumberValue) NumberValue {
-	sum := big.NewInt(0)
+	sum := new(big.Int)
 	sum.Add(v.BigInt, other.(UInt256Value).BigInt)
 	// Given that this value is backed by an arbitrary size integer,
 	// we can just add and check the range of the result.
@@ -2811,14 +3641,14 @@ func (v UInt256Value) Plus(other NumberValue) NumberValue {
 	//      ...
 	//  }
 	//
-	if sum.Cmp(sema.UInt256TypeMaxInt) > 0 {
+	if sum.Cmp(sema.UInt256TypeMaxIntBig) > 0 {
 		panic(OverflowError{})
 	}
 	return UInt256Value{sum}
 }
 
 func (v UInt256Value) Minus(other NumberValue) NumberValue {
-	diff := big.NewInt(0)
+	diff := new(big.Int)
 	diff.Sub(v.BigInt, other.(UInt256Value).BigInt)
 	// Given that this value is backed by an arbitrary size integer,
 	// we can just subtract and check the range of the result.
@@ -2830,7 +3660,7 @@ func (v UInt256Value) Minus(other NumberValue) NumberValue {
 	// 	     ...
 	//   }
 	//
-	if diff.Cmp(sema.UInt256TypeMinInt) < 0 {
+	if diff.Cmp(sema.UInt256TypeMinIntBig) < 0 {
 		panic(UnderflowError{})
 	}
 	return UInt256Value{diff}
@@ -2838,19 +3668,19 @@ func (v UInt256Value) Minus(other NumberValue) NumberValue {
 
 func (v UInt256Value) Mod(other NumberValue) NumberValue {
 	o := other.(UInt256Value)
-	res := big.NewInt(0)
+	res := new(big.Int)
 	if o.BigInt.Cmp(res) == 0 {
 		panic(DivisionByZeroError{})
 	}
-	res.Mod(v.BigInt, o.BigInt)
+	res.Rem(v.BigInt, o.BigInt)
 	return UInt256Value{res}
 }
 
 func (v UInt256Value) Mul(other NumberValue) NumberValue {
 	o := other.(UInt256Value)
-	res := big.NewInt(0)
+	res := new(big.Int)
 	res.Mul(v.BigInt, o.BigInt)
-	if res.Cmp(sema.UInt256TypeMaxInt) > 0 {
+	if res.Cmp(sema.UInt256TypeMaxIntBig) > 0 {
 		panic(OverflowError{})
 	}
 	return UInt256Value{res}
@@ -2858,7 +3688,7 @@ func (v UInt256Value) Mul(other NumberValue) NumberValue {
 
 func (v UInt256Value) Div(other NumberValue) NumberValue {
 	o := other.(UInt256Value)
-	res := big.NewInt(0)
+	res := new(big.Int)
 	if o.BigInt.Cmp(res) == 0 {
 		panic(DivisionByZeroError{})
 	}
@@ -2909,22 +3739,85 @@ func ConvertUInt256(value Value, _ *Interpreter) Value {
 		panic(errors.NewUnreachableError())
 	}
 
-	if v.Cmp(sema.UInt256TypeMaxInt) > 0 {
-		panic(&OverflowError{})
+	if v.Cmp(sema.UInt256TypeMaxIntBig) > 0 {
+		panic(OverflowError{})
 	} else if v.Sign() < 0 {
-		panic(&UnderflowError{})
+		panic(UnderflowError{})
 	}
 
 	return NewUInt256ValueFromBigInt(v)
 }
 
+func (v UInt256Value) BitwiseOr(other IntegerValue) IntegerValue {
+	o := other.(UInt256Value)
+	res := new(big.Int)
+	res.Or(v.BigInt, o.BigInt)
+	return UInt256Value{res}
+}
+
+func (v UInt256Value) BitwiseXor(other IntegerValue) IntegerValue {
+	o := other.(UInt256Value)
+	res := new(big.Int)
+	res.Xor(v.BigInt, o.BigInt)
+	return UInt256Value{res}
+}
+
+func (v UInt256Value) BitwiseAnd(other IntegerValue) IntegerValue {
+	o := other.(UInt256Value)
+	res := new(big.Int)
+	res.And(v.BigInt, o.BigInt)
+	return UInt256Value{res}
+}
+
+func (v UInt256Value) BitwiseLeftShift(other IntegerValue) IntegerValue {
+	o := other.(UInt256Value)
+	res := new(big.Int)
+	if o.BigInt.Sign() < 0 {
+		panic(UnderflowError{})
+	}
+	if !o.BigInt.IsUint64() {
+		panic(OverflowError{})
+	}
+	res.Lsh(v.BigInt, uint(o.BigInt.Uint64()))
+	return UInt256Value{res}
+}
+
+func (v UInt256Value) BitwiseRightShift(other IntegerValue) IntegerValue {
+	o := other.(UInt256Value)
+	res := new(big.Int)
+	if o.BigInt.Sign() < 0 {
+		panic(UnderflowError{})
+	}
+	if !o.BigInt.IsUint64() {
+		panic(OverflowError{})
+	}
+	res.Rsh(v.BigInt, uint(o.BigInt.Uint64()))
+	return UInt256Value{res}
+}
+
+func (v UInt256Value) GetMember(_ *Interpreter, _ LocationRange, name string) Value {
+	switch name {
+
+	case sema.ToStringFunctionName:
+		return NewHostFunctionValue(
+			func(invocation Invocation) trampoline.Trampoline {
+				result := NewStringValue(v.String())
+				return trampoline.Done{Result: result}
+			},
+		)
+
+	default:
+		panic(errors.NewUnreachableError())
+	}
+}
+
+func (UInt256Value) SetMember(_ *Interpreter, _ LocationRange, _ string, _ Value) {
+	panic(errors.NewUnreachableError())
+}
+
 // Word8Value
 
 type Word8Value uint8
-
-func init() {
-	gob.Register(Word8Value(0))
-}
 
 func (Word8Value) IsValue() {}
 
@@ -2943,6 +3836,14 @@ func (Word8Value) GetOwner() *common.Address {
 
 func (Word8Value) SetOwner(_ *common.Address) {
 	// NO-OP: value cannot be owned
+}
+
+func (Word8Value) IsModified() bool {
+	return false
+}
+
+func (Word8Value) SetModified(_ bool) {
+	// NO-OP
 }
 
 func (v Word8Value) String() string {
@@ -2972,7 +3873,7 @@ func (v Word8Value) Minus(other NumberValue) NumberValue {
 func (v Word8Value) Mod(other NumberValue) NumberValue {
 	o := other.(Word8Value)
 	if o == 0 {
-		panic(&DivisionByZeroError{})
+		panic(DivisionByZeroError{})
 	}
 	return v % o
 }
@@ -2984,7 +3885,7 @@ func (v Word8Value) Mul(other NumberValue) NumberValue {
 func (v Word8Value) Div(other NumberValue) NumberValue {
 	o := other.(Word8Value)
 	if o == 0 {
-		panic(&DivisionByZeroError{})
+		panic(DivisionByZeroError{})
 	}
 	return v / o
 }
@@ -3017,13 +3918,54 @@ func ConvertWord8(value Value, interpreter *Interpreter) Value {
 	return Word8Value(ConvertUInt8(value, interpreter).(UInt8Value))
 }
 
+func (v Word8Value) BitwiseOr(other IntegerValue) IntegerValue {
+	o := other.(Word8Value)
+	return v | o
+}
+
+func (v Word8Value) BitwiseXor(other IntegerValue) IntegerValue {
+	o := other.(Word8Value)
+	return v ^ o
+}
+
+func (v Word8Value) BitwiseAnd(other IntegerValue) IntegerValue {
+	o := other.(Word8Value)
+	return v & o
+}
+
+func (v Word8Value) BitwiseLeftShift(other IntegerValue) IntegerValue {
+	o := other.(Word8Value)
+	return v << o
+}
+
+func (v Word8Value) BitwiseRightShift(other IntegerValue) IntegerValue {
+	o := other.(Word8Value)
+	return v >> o
+}
+
+func (v Word8Value) GetMember(_ *Interpreter, _ LocationRange, name string) Value {
+	switch name {
+
+	case sema.ToStringFunctionName:
+		return NewHostFunctionValue(
+			func(invocation Invocation) trampoline.Trampoline {
+				result := NewStringValue(v.String())
+				return trampoline.Done{Result: result}
+			},
+		)
+
+	default:
+		panic(errors.NewUnreachableError())
+	}
+}
+
+func (Word8Value) SetMember(_ *Interpreter, _ LocationRange, _ string, _ Value) {
+	panic(errors.NewUnreachableError())
+}
+
 // Word16Value
 
 type Word16Value uint16
-
-func init() {
-	gob.Register(Word16Value(0))
-}
 
 func (Word16Value) IsValue() {}
 
@@ -3041,6 +3983,14 @@ func (Word16Value) GetOwner() *common.Address {
 
 func (Word16Value) SetOwner(_ *common.Address) {
 	// NO-OP: value cannot be owned
+}
+
+func (Word16Value) IsModified() bool {
+	return false
+}
+
+func (Word16Value) SetModified(_ bool) {
+	// NO-OP
 }
 
 func (v Word16Value) String() string {
@@ -3069,7 +4019,7 @@ func (v Word16Value) Minus(other NumberValue) NumberValue {
 func (v Word16Value) Mod(other NumberValue) NumberValue {
 	o := other.(Word16Value)
 	if o == 0 {
-		panic(&DivisionByZeroError{})
+		panic(DivisionByZeroError{})
 	}
 	return v % o
 }
@@ -3081,7 +4031,7 @@ func (v Word16Value) Mul(other NumberValue) NumberValue {
 func (v Word16Value) Div(other NumberValue) NumberValue {
 	o := other.(Word16Value)
 	if o == 0 {
-		panic(&DivisionByZeroError{})
+		panic(DivisionByZeroError{})
 	}
 	return v / o
 }
@@ -3114,13 +4064,54 @@ func ConvertWord16(value Value, interpreter *Interpreter) Value {
 	return Word16Value(ConvertUInt16(value, interpreter).(UInt16Value))
 }
 
+func (v Word16Value) BitwiseOr(other IntegerValue) IntegerValue {
+	o := other.(Word16Value)
+	return v | o
+}
+
+func (v Word16Value) BitwiseXor(other IntegerValue) IntegerValue {
+	o := other.(Word16Value)
+	return v ^ o
+}
+
+func (v Word16Value) BitwiseAnd(other IntegerValue) IntegerValue {
+	o := other.(Word16Value)
+	return v & o
+}
+
+func (v Word16Value) BitwiseLeftShift(other IntegerValue) IntegerValue {
+	o := other.(Word16Value)
+	return v << o
+}
+
+func (v Word16Value) BitwiseRightShift(other IntegerValue) IntegerValue {
+	o := other.(Word16Value)
+	return v >> o
+}
+
+func (v Word16Value) GetMember(_ *Interpreter, _ LocationRange, name string) Value {
+	switch name {
+
+	case sema.ToStringFunctionName:
+		return NewHostFunctionValue(
+			func(invocation Invocation) trampoline.Trampoline {
+				result := NewStringValue(v.String())
+				return trampoline.Done{Result: result}
+			},
+		)
+
+	default:
+		panic(errors.NewUnreachableError())
+	}
+}
+
+func (Word16Value) SetMember(_ *Interpreter, _ LocationRange, _ string, _ Value) {
+	panic(errors.NewUnreachableError())
+}
+
 // Word32Value
 
 type Word32Value uint32
-
-func init() {
-	gob.Register(Word32Value(0))
-}
 
 func (Word32Value) IsValue() {}
 
@@ -3139,6 +4130,14 @@ func (Word32Value) GetOwner() *common.Address {
 
 func (Word32Value) SetOwner(_ *common.Address) {
 	// NO-OP: value cannot be owned
+}
+
+func (Word32Value) IsModified() bool {
+	return false
+}
+
+func (Word32Value) SetModified(_ bool) {
+	// NO-OP
 }
 
 func (v Word32Value) String() string {
@@ -3168,7 +4167,7 @@ func (v Word32Value) Minus(other NumberValue) NumberValue {
 func (v Word32Value) Mod(other NumberValue) NumberValue {
 	o := other.(Word32Value)
 	if o == 0 {
-		panic(&DivisionByZeroError{})
+		panic(DivisionByZeroError{})
 	}
 	return v % o
 }
@@ -3180,7 +4179,7 @@ func (v Word32Value) Mul(other NumberValue) NumberValue {
 func (v Word32Value) Div(other NumberValue) NumberValue {
 	o := other.(Word32Value)
 	if o == 0 {
-		panic(&DivisionByZeroError{})
+		panic(DivisionByZeroError{})
 	}
 	return v / o
 }
@@ -3213,13 +4212,54 @@ func ConvertWord32(value Value, interpreter *Interpreter) Value {
 	return Word32Value(ConvertUInt32(value, interpreter).(UInt32Value))
 }
 
+func (v Word32Value) BitwiseOr(other IntegerValue) IntegerValue {
+	o := other.(Word32Value)
+	return v | o
+}
+
+func (v Word32Value) BitwiseXor(other IntegerValue) IntegerValue {
+	o := other.(Word32Value)
+	return v ^ o
+}
+
+func (v Word32Value) BitwiseAnd(other IntegerValue) IntegerValue {
+	o := other.(Word32Value)
+	return v & o
+}
+
+func (v Word32Value) BitwiseLeftShift(other IntegerValue) IntegerValue {
+	o := other.(Word32Value)
+	return v << o
+}
+
+func (v Word32Value) BitwiseRightShift(other IntegerValue) IntegerValue {
+	o := other.(Word32Value)
+	return v >> o
+}
+
+func (v Word32Value) GetMember(_ *Interpreter, _ LocationRange, name string) Value {
+	switch name {
+
+	case sema.ToStringFunctionName:
+		return NewHostFunctionValue(
+			func(invocation Invocation) trampoline.Trampoline {
+				result := NewStringValue(v.String())
+				return trampoline.Done{Result: result}
+			},
+		)
+
+	default:
+		panic(errors.NewUnreachableError())
+	}
+}
+
+func (Word32Value) SetMember(_ *Interpreter, _ LocationRange, _ string, _ Value) {
+	panic(errors.NewUnreachableError())
+}
+
 // Word64Value
 
 type Word64Value uint64
-
-func init() {
-	gob.Register(Word64Value(0))
-}
 
 func (Word64Value) IsValue() {}
 
@@ -3238,6 +4278,14 @@ func (Word64Value) GetOwner() *common.Address {
 
 func (Word64Value) SetOwner(_ *common.Address) {
 	// NO-OP: value cannot be owned
+}
+
+func (Word64Value) IsModified() bool {
+	return false
+}
+
+func (Word64Value) SetModified(_ bool) {
+	// NO-OP
 }
 
 func (v Word64Value) String() string {
@@ -3267,7 +4315,7 @@ func (v Word64Value) Minus(other NumberValue) NumberValue {
 func (v Word64Value) Mod(other NumberValue) NumberValue {
 	o := other.(Word64Value)
 	if o == 0 {
-		panic(&DivisionByZeroError{})
+		panic(DivisionByZeroError{})
 	}
 	return v % o
 }
@@ -3279,7 +4327,7 @@ func (v Word64Value) Mul(other NumberValue) NumberValue {
 func (v Word64Value) Div(other NumberValue) NumberValue {
 	o := other.(Word64Value)
 	if o == 0 {
-		panic(&DivisionByZeroError{})
+		panic(DivisionByZeroError{})
 	}
 	return v / o
 }
@@ -3312,12 +4360,70 @@ func ConvertWord64(value Value, interpreter *Interpreter) Value {
 	return Word64Value(ConvertUInt64(value, interpreter).(UInt64Value))
 }
 
+func (v Word64Value) BitwiseOr(other IntegerValue) IntegerValue {
+	o := other.(Word64Value)
+	return v | o
+}
+
+func (v Word64Value) BitwiseXor(other IntegerValue) IntegerValue {
+	o := other.(Word64Value)
+	return v ^ o
+}
+
+func (v Word64Value) BitwiseAnd(other IntegerValue) IntegerValue {
+	o := other.(Word64Value)
+	return v & o
+}
+
+func (v Word64Value) BitwiseLeftShift(other IntegerValue) IntegerValue {
+	o := other.(Word64Value)
+	return v << o
+}
+
+func (v Word64Value) BitwiseRightShift(other IntegerValue) IntegerValue {
+	o := other.(Word64Value)
+	return v >> o
+}
+
+func (v Word64Value) GetMember(_ *Interpreter, _ LocationRange, name string) Value {
+	switch name {
+
+	case sema.ToStringFunctionName:
+		return NewHostFunctionValue(
+			func(invocation Invocation) trampoline.Trampoline {
+				result := NewStringValue(v.String())
+				return trampoline.Done{Result: result}
+			},
+		)
+
+	default:
+		panic(errors.NewUnreachableError())
+	}
+}
+
+func (Word64Value) SetMember(_ *Interpreter, _ LocationRange, _ string, _ Value) {
+	panic(errors.NewUnreachableError())
+}
+
 // Fix64Value
+
+const Fix64MaxValue = math.MaxInt64
+const Fix64MaxDivisorValue = sema.Fix64Factor * sema.Fix64Factor
+const Fix64MaxIntDividend = Fix64MaxValue / sema.Fix64Factor
 
 type Fix64Value int64
 
-func init() {
-	gob.Register(Fix64Value(0))
+func NewFix64ValueWithInteger(integer int64) Fix64Value {
+
+	if integer < sema.Fix64TypeMinInt {
+		panic(UnderflowError{})
+	}
+
+	if integer > sema.Fix64TypeMaxInt {
+		panic(OverflowError{})
+	}
+
+	return Fix64Value(integer * sema.Fix64Factor)
 }
 
 func (Fix64Value) IsValue() {}
@@ -3337,6 +4443,14 @@ func (Fix64Value) GetOwner() *common.Address {
 
 func (Fix64Value) SetOwner(_ *common.Address) {
 	// NO-OP: value cannot be owned
+}
+
+func (Fix64Value) IsModified() bool {
+	return false
+}
+
+func (Fix64Value) SetModified(_ bool) {
+	// NO-OP
 }
 
 func (v Fix64Value) String() string {
@@ -3361,13 +4475,13 @@ func (v Fix64Value) KeyString() string {
 }
 
 func (v Fix64Value) ToInt() int {
-	return int(v)
+	return int(v / sema.Fix64Factor)
 }
 
 func (v Fix64Value) Negate() NumberValue {
 	// INT32-C
 	if v == math.MinInt64 {
-		panic(&OverflowError{})
+		panic(OverflowError{})
 	}
 	return -v
 }
@@ -3381,9 +4495,9 @@ func (v Fix64Value) Minus(other NumberValue) NumberValue {
 	o := other.(Fix64Value)
 	// INT32-C
 	if (o > 0) && (v < (math.MinInt64 + o)) {
-		panic(&OverflowError{})
+		panic(OverflowError{})
 	} else if (o < 0) && (v > (math.MaxInt64 + o)) {
-		panic(&UnderflowError{})
+		panic(UnderflowError{})
 	}
 	return v - o
 }
@@ -3401,30 +4515,30 @@ func (v Fix64Value) Mul(other NumberValue) NumberValue {
 
 	x1y1 := x1 * y1
 	if x1 != 0 && x1y1/x1 != y1 {
-		panic(&OverflowError{})
+		panic(OverflowError{})
 	}
 
 	x1y1Fixed := x1y1 * sema.Fix64Factor
 	if x1y1 != 0 && x1y1Fixed/x1y1 != sema.Fix64Factor {
-		panic(&OverflowError{})
+		panic(OverflowError{})
 	}
 	x1y1 = x1y1Fixed
 
 	x2y1 := x2 * y1
 	if x2 != 0 && x2y1/x2 != y1 {
-		panic(&OverflowError{})
+		panic(OverflowError{})
 	}
 
 	x1y2 := x1 * y2
 	if x1 != 0 && x1y2/x1 != y2 {
-		panic(&OverflowError{})
+		panic(OverflowError{})
 	}
 
 	x2 = x2 / Fix64MulPrecision
 	y2 = y2 / Fix64MulPrecision
 	x2y2 := x2 * y2
 	if x2 != 0 && x2y2/x2 != y2 {
-		panic(&OverflowError{})
+		panic(OverflowError{})
 	}
 
 	result := x1y1
@@ -3434,14 +4548,27 @@ func (v Fix64Value) Mul(other NumberValue) NumberValue {
 	return Fix64Value(result)
 }
 
+func (v Fix64Value) Reciprocal() Fix64Value {
+	if v == 0 {
+		panic(DivisionByZeroError{})
+	}
+	return Fix64MaxDivisorValue / v
+}
+
 func (v Fix64Value) Div(other NumberValue) NumberValue {
-	// TODO:
-	panic("TODO")
+	o := other.(Fix64Value)
+	if o > Fix64MaxDivisorValue {
+		panic(OverflowError{})
+	}
+	return v.Mul(o.Reciprocal())
 }
 
 func (v Fix64Value) Mod(other NumberValue) NumberValue {
-	// TODO:
-	panic("TODO")
+	o := other.(Fix64Value)
+	// v - int(v/o) * o
+	quotient := v.Div(o).(Fix64Value)
+	truncatedQuotient := (int64(quotient) / sema.Fix64Factor) * sema.Fix64Factor
+	return v.Minus(Fix64Value(truncatedQuotient).Mul(o))
 }
 
 func (v Fix64Value) Less(other NumberValue) BoolValue {
@@ -3468,39 +4595,79 @@ func (v Fix64Value) Equal(other Value) BoolValue {
 	return v == otherFix64
 }
 
-const Fix64MaxValue = math.MaxInt64
-
 func ConvertFix64(value Value, interpreter *Interpreter) Value {
-	// TODO: https://github.com/dapperlabs/flow-go/issues/2141
-
 	switch value := value.(type) {
-	case UFix64Value:
-		if int(value) > Fix64MaxValue {
-			panic("UFix64 value is larger than maximum value for Fix64")
-		}
-		return Fix64Value(value)
-
 	case Fix64Value:
 		return value
 
+	case UFix64Value:
+		if value > Fix64MaxValue {
+			panic(OverflowError{})
+		}
+		return Fix64Value(value)
+
+	case BigNumberValue:
+		v := value.ToBigInt()
+
+		// First, check if the value is at least in the int64 range.
+		// The integer range for Fix64 is smaller, but this test at least
+		// allows us to call `v.Int64()` safely.
+
+		if !v.IsInt64() {
+			panic(OverflowError{})
+		}
+
+		// Now check that the integer value fits the range of Fix64
+		return NewFix64ValueWithInteger(v.Int64())
+
 	case NumberValue:
-		return Fix64Value(value.ToInt() * sema.Fix64Factor)
+		v := value.ToInt()
+		// Check that the integer value fits the range of Fix64
+		return NewFix64ValueWithInteger(int64(v))
 
 	default:
-		panic(fmt.Sprintf("can't convert %s to Fix64", value.DynamicType(interpreter)))
+		panic(fmt.Sprintf(
+			"can't convert %s to Fix64: %s",
+			value.DynamicType(interpreter),
+			value,
+		))
 	}
+}
+
+func (v Fix64Value) GetMember(_ *Interpreter, _ LocationRange, name string) Value {
+	switch name {
+
+	case sema.ToStringFunctionName:
+		return NewHostFunctionValue(
+			func(invocation Invocation) trampoline.Trampoline {
+				result := NewStringValue(v.String())
+				return trampoline.Done{Result: result}
+			},
+		)
+
+	default:
+		panic(errors.NewUnreachableError())
+	}
+}
+
+func (Fix64Value) SetMember(_ *Interpreter, _ LocationRange, _ string, _ Value) {
+	panic(errors.NewUnreachableError())
 }
 
 // UFix64Value
 
 type UFix64Value uint64
 
-func init() {
-	gob.Register(UFix64Value(0))
-}
+const UFix64MaxValue = math.MaxUint64
+const UFix64MaxDivisorValue = sema.Fix64Factor * sema.Fix64Factor
+const UFix64MaxIntDividend = UFix64MaxValue / sema.Fix64Factor
 
-func NewUFix64ValueWithFraction(integer, fraction uint64) UFix64Value {
-	return UFix64Value(integer*sema.Fix64Factor + fraction)
+func NewUFix64ValueWithInteger(integer uint64) UFix64Value {
+	if integer > sema.UFix64TypeMaxInt {
+		panic(OverflowError{})
+	}
+
+	return UFix64Value(integer * sema.Fix64Factor)
 }
 
 func (UFix64Value) IsValue() {}
@@ -3522,6 +4689,14 @@ func (UFix64Value) SetOwner(_ *common.Address) {
 	// NO-OP: value cannot be owned
 }
 
+func (UFix64Value) IsModified() bool {
+	return false
+}
+
+func (UFix64Value) SetModified(_ bool) {
+	// NO-OP
+}
+
 func (v UFix64Value) String() string {
 	factor := uint64(sema.Fix64Factor)
 	integer := uint64(v) / factor
@@ -3538,7 +4713,7 @@ func (v UFix64Value) KeyString() string {
 }
 
 func (v UFix64Value) ToInt() int {
-	return int(v)
+	return int(v / sema.Fix64Factor)
 }
 
 func (v UFix64Value) Negate() NumberValue {
@@ -3574,30 +4749,30 @@ func (v UFix64Value) Mul(other NumberValue) NumberValue {
 
 	x1y1 := x1 * y1
 	if x1 != 0 && x1y1/x1 != y1 {
-		panic(&OverflowError{})
+		panic(OverflowError{})
 	}
 
 	x1y1Fixed := x1y1 * factor
 	if x1y1 != 0 && x1y1Fixed/x1y1 != factor {
-		panic(&OverflowError{})
+		panic(OverflowError{})
 	}
 	x1y1 = x1y1Fixed
 
 	x2y1 := x2 * y1
 	if x2 != 0 && x2y1/x2 != y1 {
-		panic(&OverflowError{})
+		panic(OverflowError{})
 	}
 
 	x1y2 := x1 * y2
 	if x1 != 0 && x1y2/x1 != y2 {
-		panic(&OverflowError{})
+		panic(OverflowError{})
 	}
 
 	x2 = x2 / UFix64MulPrecision
 	y2 = y2 / UFix64MulPrecision
 	x2y2 := x2 * y2
 	if x2 != 0 && x2y2/x2 != y2 {
-		panic(&OverflowError{})
+		panic(OverflowError{})
 	}
 
 	result := x1y1
@@ -3607,14 +4782,27 @@ func (v UFix64Value) Mul(other NumberValue) NumberValue {
 	return UFix64Value(result)
 }
 
+func (v UFix64Value) Reciprocal() UFix64Value {
+	if v == 0 {
+		panic(DivisionByZeroError{})
+	}
+	return UFix64MaxDivisorValue / v
+}
+
 func (v UFix64Value) Div(other NumberValue) NumberValue {
-	// TODO:
-	panic("TODO")
+	o := other.(UFix64Value)
+	if o > UFix64MaxDivisorValue {
+		panic(OverflowError{})
+	}
+	return v.Mul(o.Reciprocal())
 }
 
 func (v UFix64Value) Mod(other NumberValue) NumberValue {
-	// TODO:
-	panic("TODO")
+	o := other.(UFix64Value)
+	// v - int(v/o) * o
+	quotient := v.Div(o).(UFix64Value)
+	truncatedQuotient := (uint64(quotient) / sema.Fix64Factor) * sema.Fix64Factor
+	return v.Minus(UFix64Value(truncatedQuotient).Mul(o))
 }
 
 func (v UFix64Value) Less(other NumberValue) BoolValue {
@@ -3642,24 +4830,69 @@ func (v UFix64Value) Equal(other Value) BoolValue {
 }
 
 func ConvertUFix64(value Value, interpreter *Interpreter) Value {
-	// TODO: https://github.com/dapperlabs/flow-go/issues/2141
-
 	switch value := value.(type) {
-	case Fix64Value:
-		if value < 0 {
-			panic("can't convert negative Fix64 to UFix64")
-		}
-		return UFix64Value(value)
-
 	case UFix64Value:
 		return value
 
+	case Fix64Value:
+		if value < 0 {
+			panic(UnderflowError{})
+		}
+		return UFix64Value(value)
+
+	case BigNumberValue:
+		v := value.ToBigInt()
+
+		if v.Sign() < 0 {
+			panic(UnderflowError{})
+		}
+
+		// First, check if the value is at least in the uint64 range.
+		// The integer range for UFix64 is smaller, but this test at least
+		// allows us to call `v.UInt64()` safely.
+
+		if !v.IsUint64() {
+			panic(OverflowError{})
+		}
+
+		// Now check that the integer value fits the range of UFix64
+		return NewUFix64ValueWithInteger(v.Uint64())
+
 	case NumberValue:
-		return UFix64Value(value.ToInt() * sema.Fix64Factor)
+		v := value.ToInt()
+		if v < 0 {
+			panic(UnderflowError{})
+		}
+		// Check that the integer value fits the range of UFix64
+		return NewUFix64ValueWithInteger(uint64(v))
 
 	default:
-		panic(fmt.Sprintf("can't convert %s to UFix64", value.DynamicType(interpreter)))
+		panic(fmt.Sprintf(
+			"can't convert %s to UFix64: %s",
+			value.DynamicType(interpreter),
+			value,
+		))
 	}
+}
+
+func (v UFix64Value) GetMember(_ *Interpreter, _ LocationRange, name string) Value {
+	switch name {
+
+	case sema.ToStringFunctionName:
+		return NewHostFunctionValue(
+			func(invocation Invocation) trampoline.Trampoline {
+				result := NewStringValue(v.String())
+				return trampoline.Done{Result: result}
+			},
+		)
+
+	default:
+		panic(errors.NewUnreachableError())
+	}
+}
+
+func (UFix64Value) SetMember(_ *Interpreter, _ LocationRange, _ string, _ Value) {
+	panic(errors.NewUnreachableError())
 }
 
 // CompositeValue
@@ -3674,11 +4907,28 @@ type CompositeValue struct {
 	Functions      map[string]FunctionValue
 	Destructor     FunctionValue
 	Owner          *common.Address
-	Destroyed      bool
+	destroyed      bool
+	modified       bool
 }
 
-func init() {
-	gob.Register(&CompositeValue{})
+func NewCompositeValue(
+	location ast.Location,
+	typeID sema.TypeID,
+	kind common.CompositeKind,
+	fields map[string]Value,
+	owner *common.Address,
+) *CompositeValue {
+	if fields == nil {
+		fields = map[string]Value{}
+	}
+	return &CompositeValue{
+		Location: location,
+		TypeID:   typeID,
+		Kind:     kind,
+		Fields:   fields,
+		Owner:    owner,
+		modified: true,
+	}
 }
 
 func (v *CompositeValue) Destroy(interpreter *Interpreter, locationRange LocationRange) trampoline.Trampoline {
@@ -3707,7 +4957,8 @@ func (v *CompositeValue) Destroy(interpreter *Interpreter, locationRange Locatio
 	}
 
 	return tramp.Then(func(_ interface{}) {
-		v.Destroyed = true
+		v.destroyed = true
+		v.modified = true
 	})
 }
 
@@ -3746,14 +4997,15 @@ func (v *CompositeValue) Copy() Value {
 		NestedValues:   v.NestedValues,
 		Functions:      v.Functions,
 		Destructor:     v.Destructor,
-		Destroyed:      v.Destroyed,
+		destroyed:      v.destroyed,
 		// NOTE: new value has no owner
-		Owner: nil,
+		Owner:    nil,
+		modified: true,
 	}
 }
 
 func (v *CompositeValue) checkStatus(locationRange LocationRange) {
-	if v.Destroyed {
+	if v.destroyed {
 		panic(&DestroyedCompositeError{
 			CompositeKind: v.Kind,
 			LocationRange: locationRange,
@@ -3775,6 +5027,36 @@ func (v *CompositeValue) SetOwner(owner *common.Address) {
 	for _, value := range v.Fields {
 		value.SetOwner(owner)
 	}
+}
+
+func (v *CompositeValue) IsModified() bool {
+	if v.modified {
+		return true
+	}
+
+	for _, value := range v.Fields {
+		if value.IsModified() {
+			return true
+		}
+	}
+
+	for _, value := range v.InjectedFields {
+		if value.IsModified() {
+			return true
+		}
+	}
+
+	for _, value := range v.NestedValues {
+		if value.IsModified() {
+			return true
+		}
+	}
+
+	return false
+}
+
+func (v *CompositeValue) SetModified(modified bool) {
+	v.modified = modified
 }
 
 func (v *CompositeValue) GetMember(interpreter *Interpreter, locationRange LocationRange, name string) Value {
@@ -3808,9 +5090,7 @@ func (v *CompositeValue) GetMember(interpreter *Interpreter, locationRange Locat
 	// If the composite value was deserialized, dynamically link in the functions
 	// and get injected fields
 
-	if v.Functions == nil {
-		v.Functions = interpreter.typeCodes.compositeCodes[v.TypeID].compositeFunctions
-	}
+	v.InitializeFunctions(interpreter)
 
 	if v.InjectedFields == nil && interpreter.injectedCompositeFieldsHandler != nil {
 		v.InjectedFields = interpreter.injectedCompositeFieldsHandler(
@@ -3839,6 +5119,13 @@ func (v *CompositeValue) GetMember(interpreter *Interpreter, locationRange Locat
 	return nil
 }
 
+func (v *CompositeValue) InitializeFunctions(interpreter *Interpreter) {
+	if v.Functions != nil {
+		return
+	}
+	v.Functions = interpreter.typeCodes.compositeCodes[v.TypeID].compositeFunctions
+}
+
 func (v *CompositeValue) OwnerValue() OptionalValue {
 	if v.Owner == nil {
 		return NilValue{}
@@ -3854,113 +5141,11 @@ func (v *CompositeValue) OwnerValue() OptionalValue {
 func (v *CompositeValue) SetMember(_ *Interpreter, locationRange LocationRange, name string, value Value) {
 	v.checkStatus(locationRange)
 
+	v.modified = true
+
 	value.SetOwner(v.Owner)
 
 	v.Fields[name] = value
-}
-
-func (v *CompositeValue) GobEncode() ([]byte, error) {
-	w := new(bytes.Buffer)
-	encoder := gob.NewEncoder(w)
-
-	// NOTE: important: encode as pointer,
-	// so gob sees the interface, not the concrete type
-	err := encoder.Encode(&v.Location)
-	if err != nil {
-		return nil, err
-	}
-
-	err = encoder.Encode(v.TypeID)
-	if err != nil {
-		return nil, err
-	}
-
-	err = encoder.Encode(v.Kind)
-	if err != nil {
-		return nil, err
-	}
-
-	// Encode fields in increasing order
-
-	fieldNames := make([]string, 0, len(v.Fields))
-
-	for name := range v.Fields {
-		fieldNames = append(fieldNames, name)
-	}
-
-	sort.Strings(fieldNames)
-
-	err = encoder.Encode(fieldNames)
-	if err != nil {
-		return nil, err
-	}
-
-	fieldValues := make([]Value, 0, len(v.Fields))
-
-	for _, name := range fieldNames {
-		fieldValues = append(fieldValues, v.Fields[name])
-	}
-
-	err = encoder.Encode(fieldValues)
-	if err != nil {
-		return nil, err
-	}
-
-	err = encoder.Encode(v.Owner)
-	if err != nil {
-		return nil, err
-	}
-
-	// NOTE: *not* encoding functions and destructor – linked in on-demand
-
-	return w.Bytes(), nil
-}
-
-func (v *CompositeValue) GobDecode(buf []byte) error {
-	r := bytes.NewBuffer(buf)
-	decoder := gob.NewDecoder(r)
-
-	err := decoder.Decode(&v.Location)
-	if err != nil {
-		return err
-	}
-
-	err = decoder.Decode(&v.TypeID)
-	if err != nil {
-		return err
-	}
-
-	err = decoder.Decode(&v.Kind)
-	if err != nil {
-		return err
-	}
-
-	var fieldNames []string
-	err = decoder.Decode(&fieldNames)
-	if err != nil {
-		return err
-	}
-
-	var fieldValues []Value
-	err = decoder.Decode(&fieldValues)
-	if err != nil {
-		return err
-	}
-
-	v.Fields = make(map[string]Value, len(fieldNames))
-
-	for i, fieldName := range fieldNames {
-		v.Fields[fieldName] = fieldValues[i]
-	}
-
-	err = decoder.Decode(&v.Owner)
-	if err != nil {
-		return err
-	}
-
-	// NOTE: *not* decoding functions – linked in on-demand
-
-	return nil
 }
 
 func (v *CompositeValue) String() string {
@@ -3988,9 +5173,25 @@ func (v *CompositeValue) GetField(name string) Value {
 // DictionaryValue
 
 type DictionaryValue struct {
-	Keys    *ArrayValue
-	Entries map[string]Value
-	Owner   *common.Address
+	Keys     *ArrayValue
+	Entries  map[string]Value
+	Owner    *common.Address
+	modified bool
+	// Deferral of values:
+	//
+	// Values in the dictionary might be deferred, i.e. are they encoded
+	// separately and stored in separate storage keys.
+	//
+	// DeferredOwner is the account in which the deferred values are stored.
+	// The account might differ from the owner: If the dictionary is moved
+	// from one account to another, its owner changes, but its deferred values
+	// stay stored in the deferred owner's account until the end of the transaction.
+	DeferredOwner *common.Address
+	// DeferredKeys are the keys which are deferred and have not been loaded from storage yet.
+	DeferredKeys map[string]string
+	// prevDeferredKeys are the keys which are deferred and have been loaded from storage,
+	// i.e. they are keys that were previously in DeferredKeys.
+	prevDeferredKeys map[string]string
 }
 
 func NewDictionaryValueUnownedNonCopying(keysAndValues ...Value) *DictionaryValue {
@@ -4003,18 +5204,18 @@ func NewDictionaryValueUnownedNonCopying(keysAndValues ...Value) *DictionaryValu
 		Keys:    NewArrayValueUnownedNonCopying(),
 		Entries: make(map[string]Value, keysAndValuesCount/2),
 		// NOTE: new value has no owner
-		Owner: nil,
+		Owner:            nil,
+		modified:         true,
+		DeferredOwner:    nil,
+		DeferredKeys:     nil,
+		prevDeferredKeys: nil,
 	}
 
 	for i := 0; i < keysAndValuesCount; i += 2 {
-		result.Insert(keysAndValues[i], keysAndValues[i+1])
+		_ = result.Insert(nil, LocationRange{}, keysAndValues[i], keysAndValues[i+1])
 	}
 
 	return result
-}
-
-func init() {
-	gob.Register(&DictionaryValue{})
 }
 
 func (*DictionaryValue) IsValue() {}
@@ -4023,10 +5224,13 @@ func (v *DictionaryValue) DynamicType(interpreter *Interpreter) DynamicType {
 	entryTypes := make([]struct{ KeyType, ValueType DynamicType }, len(v.Keys.Values))
 
 	for i, key := range v.Keys.Values {
+		// NOTE: Force unwrap, otherwise dynamic type check is for optional type.
+		// This is safe because we are iterating over the keys.
+		value := v.Get(interpreter, LocationRange{}, key).(*SomeValue).Value
 		entryTypes[i] =
 			struct{ KeyType, ValueType DynamicType }{
 				KeyType:   key.DynamicType(interpreter),
-				ValueType: v.Entries[dictionaryKey(key)].DynamicType(interpreter),
+				ValueType: value.DynamicType(interpreter),
 			}
 	}
 
@@ -4044,10 +5248,14 @@ func (v *DictionaryValue) Copy() Value {
 	}
 
 	return &DictionaryValue{
-		Keys:    newKeys,
-		Entries: newEntries,
+		Keys:             newKeys,
+		Entries:          newEntries,
+		DeferredOwner:    v.DeferredOwner,
+		DeferredKeys:     v.DeferredKeys,
+		prevDeferredKeys: v.prevDeferredKeys,
 		// NOTE: new value has no owner
-		Owner: nil,
+		Owner:    nil,
+		modified: true,
 	}
 }
 
@@ -4069,6 +5277,28 @@ func (v *DictionaryValue) SetOwner(owner *common.Address) {
 	}
 }
 
+func (v *DictionaryValue) IsModified() bool {
+	if v.modified {
+		return true
+	}
+
+	if v.Keys.IsModified() {
+		return true
+	}
+
+	for _, value := range v.Entries {
+		if value.IsModified() {
+			return true
+		}
+	}
+
+	return false
+}
+
+func (v *DictionaryValue) SetModified(modified bool) {
+	v.modified = modified
+}
+
 func (v *DictionaryValue) Destroy(interpreter *Interpreter, locationRange LocationRange) trampoline.Trampoline {
 	var result trampoline.Trampoline = trampoline.Done{}
 
@@ -4085,22 +5315,56 @@ func (v *DictionaryValue) Destroy(interpreter *Interpreter, locationRange Locati
 	}
 
 	for _, keyValue := range v.Keys.Values {
+		// Don't use `Entries` here: the value might be deferred and needs to be loaded
+		value := v.Get(interpreter, locationRange, keyValue)
 		maybeDestroy(keyValue)
+		maybeDestroy(value)
 	}
 
-	for _, value := range v.Entries {
-		maybeDestroy(value)
+	for _, storageKey := range v.DeferredKeys {
+		interpreter.writeStored(*v.DeferredOwner, storageKey, NilValue{})
+	}
+
+	for _, storageKey := range v.prevDeferredKeys {
+		interpreter.writeStored(*v.DeferredOwner, storageKey, NilValue{})
 	}
 
 	return result
 }
 
-func (v *DictionaryValue) Get(_ *Interpreter, _ LocationRange, keyValue Value) Value {
-	value, ok := v.Entries[dictionaryKey(keyValue)]
-	if !ok {
-		return NilValue{}
+func (v *DictionaryValue) Get(inter *Interpreter, _ LocationRange, keyValue Value) Value {
+	key := dictionaryKey(keyValue)
+	value, ok := v.Entries[key]
+	if ok {
+		return NewSomeValueOwningNonCopying(value)
 	}
-	return NewSomeValueOwningNonCopying(value)
+
+	// Is the key a deferred value? If so, load it from storage
+	// and keep it as an entry in memory
+
+	if v.DeferredKeys != nil {
+		storageKey, ok := v.DeferredKeys[key]
+		if ok {
+			delete(v.DeferredKeys, key)
+			if v.prevDeferredKeys == nil {
+				v.prevDeferredKeys = map[string]string{}
+			}
+			v.prevDeferredKeys[key] = storageKey
+
+			storedValue := inter.readStored(*v.DeferredOwner, storageKey, true)
+			v.Entries[key] = storedValue.(*SomeValue).Value
+
+			// NOTE: *not* writing nil to the storage key,
+			// as this would result in a loss of the value:
+			// the read value is not modified,
+			// so it won't be written back
+
+			return storedValue
+		}
+	}
+
+	return NilValue{}
+
 }
 
 func dictionaryKey(keyValue Value) string {
@@ -4111,13 +5375,15 @@ func dictionaryKey(keyValue Value) string {
 	return hasKeyString.KeyString()
 }
 
-func (v *DictionaryValue) Set(_ *Interpreter, _ LocationRange, keyValue Value, value Value) {
+func (v *DictionaryValue) Set(inter *Interpreter, locationRange LocationRange, keyValue Value, value Value) {
+	v.modified = true
+
 	switch typedValue := value.(type) {
 	case *SomeValue:
-		v.Insert(keyValue, typedValue.Value)
+		_ = v.Insert(inter, locationRange, keyValue, typedValue.Value)
 
 	case NilValue:
-		v.Remove(keyValue)
+		_ = v.Remove(inter, locationRange, keyValue)
 		return
 
 	default:
@@ -4171,18 +5437,13 @@ func (v *DictionaryValue) GetMember(_ *Interpreter, _ LocationRange, name string
 			func(invocation Invocation) trampoline.Trampoline {
 				keyValue := invocation.Arguments[0]
 
-				existingValue := v.Remove(keyValue)
+				existingValue := v.Remove(
+					invocation.Interpreter,
+					invocation.LocationRange,
+					keyValue,
+				)
 
-				var returnValue Value
-				if existingValue == nil {
-					returnValue = NilValue{}
-				} else {
-					returnValue = NewSomeValueOwningNonCopying(existingValue)
-				}
-
-				return trampoline.Done{
-					Result: returnValue,
-				}
+				return trampoline.Done{Result: existingValue}
 			},
 		)
 
@@ -4192,18 +5453,14 @@ func (v *DictionaryValue) GetMember(_ *Interpreter, _ LocationRange, name string
 				keyValue := invocation.Arguments[0]
 				newValue := invocation.Arguments[1]
 
-				existingValue := v.Insert(keyValue, newValue)
+				existingValue := v.Insert(
+					invocation.Interpreter,
+					invocation.LocationRange,
+					keyValue,
+					newValue,
+				)
 
-				var returnValue Value
-				if existingValue == nil {
-					returnValue = NilValue{}
-				} else {
-					returnValue = NewSomeValueOwningNonCopying(existingValue)
-				}
-
-				return trampoline.Done{
-					Result: returnValue,
-				}
+				return trampoline.Done{Result: existingValue}
 			},
 		)
 
@@ -4222,181 +5479,83 @@ func (v *DictionaryValue) Count() int {
 }
 
 // TODO: unset owner?
-func (v *DictionaryValue) Remove(keyValue Value) (existingValue Value) {
+func (v *DictionaryValue) Remove(inter *Interpreter, locationRange LocationRange, keyValue Value) OptionalValue {
+	v.modified = true
+
+	// Don't use `Entries` here: the value might be deferred and needs to be loaded
+	value := v.Get(inter, locationRange, keyValue)
+
 	key := dictionaryKey(keyValue)
-	existingValue, exists := v.Entries[key]
 
-	if !exists {
-		return nil
-	}
+	// If a resource that was previously deferred is removed from the dictionary,
+	// we delete its old key in storage, and then rely on resource semantics
+	// to make sure it is stored or destroyed later
 
-	delete(v.Entries, key)
-
-	// TODO: optimize linear scan
-	for i, keyValue := range v.Keys.Values {
-		if dictionaryKey(keyValue) == key {
-			v.Keys.Remove(i)
-			return existingValue
+	if v.prevDeferredKeys != nil {
+		if storageKey, ok := v.prevDeferredKeys[key]; ok {
+			inter.writeStored(*v.DeferredOwner, storageKey, NilValue{})
 		}
 	}
 
-	panic(errors.NewUnreachableError())
+	switch value := value.(type) {
+	case *SomeValue:
+
+		delete(v.Entries, key)
+
+		// TODO: optimize linear scan
+		for i, keyValue := range v.Keys.Values {
+			if dictionaryKey(keyValue) == key {
+				v.Keys.Remove(i)
+				return value
+			}
+		}
+
+		// Should never occur, the key should have been found
+		panic(errors.NewUnreachableError())
+
+	case NilValue:
+		return value
+
+	default:
+		panic(errors.NewUnreachableError())
+	}
 }
 
-func (v *DictionaryValue) Insert(keyValue Value, value Value) (existingValue Value) {
-	key := dictionaryKey(keyValue)
-	existingValue, existed := v.Entries[key]
+func (v *DictionaryValue) Insert(inter *Interpreter, locationRange LocationRange, keyValue, value Value) OptionalValue {
+	v.modified = true
 
-	if !existed {
-		v.Keys.Append(keyValue)
-	}
+	// Don't use `Entries` here: the value might be deferred and needs to be loaded
+	existingValue := v.Get(inter, locationRange, keyValue)
+
+	key := dictionaryKey(keyValue)
 
 	value.SetOwner(v.Owner)
 
+	// Mark the inserted value itself modified.
+	// It might have been stored as a deferred value and loaded,
+	// so must be written (potentially as a deferred value again),
+	// and would otherwise be ignored by the writeback optimization.
+
+	value.SetModified(true)
+
 	v.Entries[key] = value
 
-	if !existed {
-		return nil
+	switch existingValue := existingValue.(type) {
+	case *SomeValue:
+		return existingValue
+
+	case NilValue:
+		v.Keys.Append(keyValue)
+		return existingValue
+
+	default:
+		panic(errors.NewUnreachableError())
 	}
-
-	return existingValue
-}
-
-func (v *DictionaryValue) GobEncode() ([]byte, error) {
-	w := new(bytes.Buffer)
-	encoder := gob.NewEncoder(w)
-
-	err := encoder.Encode(v.Keys)
-	if err != nil {
-		return nil, err
-	}
-
-	// Encode entries in increasing order
-
-	entryNames := make([]string, 0, len(v.Entries))
-
-	for name := range v.Entries {
-		entryNames = append(entryNames, name)
-	}
-
-	sort.Strings(entryNames)
-
-	err = encoder.Encode(entryNames)
-	if err != nil {
-		return nil, err
-	}
-
-	entryValues := make([]Value, 0, len(v.Entries))
-
-	for _, name := range entryNames {
-		entryValues = append(entryValues, v.Entries[name])
-	}
-
-	err = encoder.Encode(entryValues)
-	if err != nil {
-		return nil, err
-	}
-
-	err = encoder.Encode(v.Owner)
-	if err != nil {
-		return nil, err
-	}
-
-	return w.Bytes(), nil
-}
-
-func (v *DictionaryValue) GobDecode(buf []byte) error {
-	r := bytes.NewBuffer(buf)
-	decoder := gob.NewDecoder(r)
-
-	err := decoder.Decode(&v.Keys)
-	if err != nil {
-		return err
-	}
-
-	var entryNames []string
-	err = decoder.Decode(&entryNames)
-	if err != nil {
-		return err
-	}
-
-	var entryValues []Value
-	err = decoder.Decode(&entryValues)
-	if err != nil {
-		return err
-	}
-
-	v.Entries = make(map[string]Value, len(entryNames))
-
-	for i, entryName := range entryNames {
-		v.Entries[entryName] = entryValues[i]
-	}
-
-	err = decoder.Decode(&v.Owner)
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
 
 type DictionaryEntryValues struct {
 	Key   Value
 	Value Value
-}
-
-// ToValue converts a Go value into an interpreter value
-func ToValue(value interface{}) (Value, error) {
-	// TODO: support more types
-	switch value := value.(type) {
-	case *big.Int:
-		return IntValue{value}, nil
-	case int:
-		return NewIntValueFromInt64(int64(value)), nil
-	case int8:
-		return Int8Value(value), nil
-	case int16:
-		return Int16Value(value), nil
-	case int32:
-		return Int32Value(value), nil
-	case int64:
-		return Int64Value(value), nil
-	case uint8:
-		return UInt8Value(value), nil
-	case uint16:
-		return UInt16Value(value), nil
-	case uint32:
-		return UInt32Value(value), nil
-	case uint64:
-		return UInt64Value(value), nil
-	case bool:
-		return BoolValue(value), nil
-	case string:
-		return NewStringValue(value), nil
-	case nil:
-		return NilValue{}, nil
-	}
-
-	return nil, fmt.Errorf("cannot convert Go value to value: %#+v", value)
-}
-
-func ToValues(inputs []interface{}) ([]Value, error) {
-	var newValues []Value
-	for _, argument := range inputs {
-		value, ok := argument.(Value)
-		if !ok {
-			var err error
-			value, err = ToValue(argument)
-			if err != nil {
-				return nil, err
-			}
-		}
-		newValues = append(
-			newValues,
-			value,
-		)
-	}
-	return newValues, nil
 }
 
 // OptionalValue
@@ -4409,10 +5568,6 @@ type OptionalValue interface {
 // NilValue
 
 type NilValue struct{}
-
-func init() {
-	gob.Register(NilValue{})
-}
 
 func (NilValue) IsValue() {}
 
@@ -4435,6 +5590,14 @@ func (NilValue) SetOwner(_ *common.Address) {
 	// NO-OP: value cannot be owned
 }
 
+func (NilValue) IsModified() bool {
+	return false
+}
+
+func (NilValue) SetModified(_ bool) {
+	// NO-OP
+}
+
 func (v NilValue) Destroy(_ *Interpreter, _ LocationRange) trampoline.Trampoline {
 	return trampoline.Done{}
 }
@@ -4448,10 +5611,6 @@ func (NilValue) String() string {
 type SomeValue struct {
 	Value Value
 	Owner *common.Address
-}
-
-func init() {
-	gob.Register(&SomeValue{})
 }
 
 func NewSomeValueOwningNonCopying(value Value) *SomeValue {
@@ -4492,6 +5651,14 @@ func (v *SomeValue) SetOwner(owner *common.Address) {
 	v.Value.SetOwner(owner)
 }
 
+func (v *SomeValue) IsModified() bool {
+	return v.Value.IsModified()
+}
+
+func (v *SomeValue) SetModified(modified bool) {
+	v.Value.SetModified(modified)
+}
+
 func (v *SomeValue) Destroy(interpreter *Interpreter, locationRange LocationRange) trampoline.Trampoline {
 	return v.Value.(DestroyableValue).Destroy(interpreter, locationRange)
 }
@@ -4506,11 +5673,6 @@ type StorageReferenceValue struct {
 	Authorized           bool
 	TargetStorageAddress common.Address
 	TargetKey            string
-	Owner                *common.Address
-}
-
-func init() {
-	gob.Register(&StorageReferenceValue{})
 }
 
 func (*StorageReferenceValue) IsValue() {}
@@ -4534,21 +5696,28 @@ func (v *StorageReferenceValue) Copy() Value {
 		Authorized:           v.Authorized,
 		TargetStorageAddress: v.TargetStorageAddress,
 		TargetKey:            v.TargetKey,
-		// NOTE: new value has no owner
-		Owner: nil,
 	}
 }
 
 func (v *StorageReferenceValue) GetOwner() *common.Address {
-	return v.Owner
+	// value is never owned
+	return nil
 }
 
-func (v *StorageReferenceValue) SetOwner(owner *common.Address) {
-	v.Owner = owner
+func (v *StorageReferenceValue) SetOwner(_ *common.Address) {
+	// NO-OP: value cannot be owned
+}
+
+func (*StorageReferenceValue) IsModified() bool {
+	return false
+}
+
+func (*StorageReferenceValue) SetModified(_ bool) {
+	// NO-OP
 }
 
 func (v *StorageReferenceValue) referencedValue(interpreter *Interpreter) *Value {
-	switch referenced := interpreter.readStored(v.TargetStorageAddress, v.TargetKey).(type) {
+	switch referenced := interpreter.readStored(v.TargetStorageAddress, v.TargetKey, false).(type) {
 	case *SomeValue:
 		return &referenced.Value
 	case NilValue:
@@ -4653,6 +5822,14 @@ func (v *EphemeralReferenceValue) SetOwner(_ *common.Address) {
 	// NO-OP: value cannot be owned
 }
 
+func (*EphemeralReferenceValue) IsModified() bool {
+	return false
+}
+
+func (*EphemeralReferenceValue) SetModified(_ bool) {
+	// NO-OP
+}
+
 func (v *EphemeralReferenceValue) referencedValue() *Value {
 	// Just like for storage references, references to optionals are unwrapped,
 	// i.e. a reference to `nil` aborts when dereferenced.
@@ -4729,10 +5906,6 @@ func (v *EphemeralReferenceValue) Equal(other Value) BoolValue {
 
 type AddressValue common.Address
 
-func init() {
-	gob.Register(AddressValue{})
-}
-
 func NewAddressValue(a common.Address) AddressValue {
 	return NewAddressValueFromBytes(a[:])
 }
@@ -4789,12 +5962,20 @@ func (AddressValue) SetOwner(_ *common.Address) {
 	// NO-OP: value cannot be owned
 }
 
+func (AddressValue) IsModified() bool {
+	return false
+}
+
+func (AddressValue) SetModified(_ bool) {
+	// NO-OP
+}
+
 func (v AddressValue) Equal(other Value) BoolValue {
 	otherAddress, ok := other.(AddressValue)
 	if !ok {
 		return false
 	}
-	return [common.AddressLength]byte(v) == [common.AddressLength]byte(otherAddress)
+	return v == otherAddress
 }
 
 func (v AddressValue) Hex() string {
@@ -4803,6 +5984,26 @@ func (v AddressValue) Hex() string {
 
 func (v AddressValue) ToAddress() common.Address {
 	return common.Address(v)
+}
+
+func (v AddressValue) GetMember(_ *Interpreter, _ LocationRange, name string) Value {
+	switch name {
+
+	case sema.ToStringFunctionName:
+		return NewHostFunctionValue(
+			func(invocation Invocation) trampoline.Trampoline {
+				result := NewStringValue(v.String())
+				return trampoline.Done{Result: result}
+			},
+		)
+
+	default:
+		panic(errors.NewUnreachableError())
+	}
+}
+
+func (AddressValue) SetMember(_ *Interpreter, _ LocationRange, _ string, _ Value) {
+	panic(errors.NewUnreachableError())
 }
 
 // AccountValue
@@ -4815,26 +6016,27 @@ type AccountValue interface {
 // AuthAccountValue
 
 type AuthAccountValue struct {
-	Address                 AddressValue
-	setCodeFunction         FunctionValue
-	addPublicKeyFunction    FunctionValue
-	removePublicKeyFunction FunctionValue
+	Address                              AddressValue
+	setCodeFunction                      FunctionValue
+	unsafeNotInitializingSetCodeFunction FunctionValue
+	addPublicKeyFunction                 FunctionValue
+	removePublicKeyFunction              FunctionValue
 }
 
 func NewAuthAccountValue(
 	address AddressValue,
-	setCodeFunction, addPublicKeyFunction, removePublicKeyFunction FunctionValue,
+	setCodeFunction FunctionValue,
+	unsafeNotInitializingSetCodeFunction FunctionValue,
+	addPublicKeyFunction FunctionValue,
+	removePublicKeyFunction FunctionValue,
 ) AuthAccountValue {
 	return AuthAccountValue{
-		Address:                 address,
-		setCodeFunction:         setCodeFunction,
-		addPublicKeyFunction:    addPublicKeyFunction,
-		removePublicKeyFunction: removePublicKeyFunction,
+		Address:                              address,
+		setCodeFunction:                      setCodeFunction,
+		unsafeNotInitializingSetCodeFunction: unsafeNotInitializingSetCodeFunction,
+		addPublicKeyFunction:                 addPublicKeyFunction,
+		removePublicKeyFunction:              removePublicKeyFunction,
 	}
-}
-
-func init() {
-	gob.Register(AuthAccountValue{})
 }
 
 func (AuthAccountValue) IsValue() {}
@@ -4860,6 +6062,14 @@ func (AuthAccountValue) GetOwner() *common.Address {
 
 func (AuthAccountValue) SetOwner(_ *common.Address) {
 	// NO-OP: value cannot be owned
+}
+
+func (AuthAccountValue) IsModified() bool {
+	return false
+}
+
+func (AuthAccountValue) SetModified(_ bool) {
+	// NO-OP
 }
 
 func (v AuthAccountValue) Destroy(_ *Interpreter, _ LocationRange) trampoline.Trampoline {
@@ -4922,6 +6132,9 @@ func (v AuthAccountValue) GetMember(inter *Interpreter, _ LocationRange, name st
 	case "setCode":
 		return v.setCodeFunction
 
+	case "unsafeNotInitializingSetCode":
+		return v.unsafeNotInitializingSetCodeFunction
+
 	case "addPublicKey":
 		return v.addPublicKeyFunction
 
@@ -4974,10 +6187,6 @@ func NewPublicAccountValue(address AddressValue) PublicAccountValue {
 	}
 }
 
-func init() {
-	gob.Register(PublicAccountValue{})
-}
-
 func (PublicAccountValue) IsValue() {}
 
 func (PublicAccountValue) isAccountValue() {}
@@ -5001,6 +6210,14 @@ func (PublicAccountValue) GetOwner() *common.Address {
 
 func (PublicAccountValue) SetOwner(_ *common.Address) {
 	// NO-OP: value cannot be owned
+}
+
+func (PublicAccountValue) IsModified() bool {
+	return false
+}
+
+func (PublicAccountValue) SetModified(_ bool) {
+	// NO-OP
 }
 
 func (v PublicAccountValue) Destroy(_ *Interpreter, _ LocationRange) trampoline.Trampoline {
@@ -5038,10 +6255,6 @@ type PathValue struct {
 	Identifier string
 }
 
-func init() {
-	gob.Register(PathValue{})
-}
-
 func (PathValue) IsValue() {}
 
 func (PathValue) DynamicType(_ *Interpreter) DynamicType {
@@ -5059,6 +6272,14 @@ func (PathValue) GetOwner() *common.Address {
 
 func (PathValue) SetOwner(_ *common.Address) {
 	// NO-OP: value cannot be owned
+}
+
+func (PathValue) IsModified() bool {
+	return false
+}
+
+func (PathValue) SetModified(_ bool) {
+	// NO-OP
 }
 
 func (v PathValue) Destroy(_ *Interpreter, _ LocationRange) trampoline.Trampoline {
@@ -5080,10 +6301,6 @@ type CapabilityValue struct {
 	Path    PathValue
 }
 
-func init() {
-	gob.Register(CapabilityValue{})
-}
-
 func (CapabilityValue) IsValue() {}
 
 func (CapabilityValue) DynamicType(_ *Interpreter) DynamicType {
@@ -5101,6 +6318,14 @@ func (CapabilityValue) GetOwner() *common.Address {
 
 func (CapabilityValue) SetOwner(_ *common.Address) {
 	// NO-OP: value cannot be owned
+}
+
+func (CapabilityValue) IsModified() bool {
+	return false
+}
+
+func (CapabilityValue) SetModified(_ bool) {
+	// NO-OP
 }
 
 func (v CapabilityValue) Destroy(_ *Interpreter, _ LocationRange) trampoline.Trampoline {
@@ -5139,10 +6364,6 @@ type LinkValue struct {
 	Type       StaticType
 }
 
-func init() {
-	gob.Register(LinkValue{})
-}
-
 func (LinkValue) IsValue() {}
 
 func (LinkValue) DynamicType(_ *Interpreter) DynamicType {
@@ -5160,6 +6381,14 @@ func (LinkValue) GetOwner() *common.Address {
 
 func (LinkValue) SetOwner(_ *common.Address) {
 	// NO-OP: value cannot be owned
+}
+
+func (LinkValue) IsModified() bool {
+	return false
+}
+
+func (LinkValue) SetModified(_ bool) {
+	// NO-OP
 }
 
 func (v LinkValue) Destroy(_ *Interpreter, _ LocationRange) trampoline.Trampoline {

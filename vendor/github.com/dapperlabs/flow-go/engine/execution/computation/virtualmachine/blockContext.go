@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 
+	jsoncdc "github.com/onflow/cadence/encoding/json"
+
 	"github.com/onflow/cadence/runtime"
 
 	"github.com/dapperlabs/flow-go/model/flow"
@@ -21,11 +23,21 @@ type BlockContext interface {
 
 	// ExecuteScript computes the result of a read-only script.
 	ExecuteScript(ledger Ledger, script []byte) (*ScriptResult, error)
+
+	// GetAccount reads an account from this block context.
+	GetAccount(ledger Ledger, addr flow.Address) (*flow.Account, error)
+}
+
+type Blocks interface {
+	// ByHeight returns the block at the given height. It is only available
+	// for finalized blocks.
+	ByHeight(height uint64) (*flow.Block, error)
 }
 
 type blockContext struct {
 	vm     *virtualMachine
 	header *flow.Header
+	blocks Blocks
 }
 
 func (bc *blockContext) newTransactionContext(
@@ -34,14 +46,23 @@ func (bc *blockContext) newTransactionContext(
 	options ...TransactionContextOption,
 ) *TransactionContext {
 
-	signingAccounts := make([]runtime.Address, len(tx.ScriptAccounts))
-	for i, addr := range tx.ScriptAccounts {
+	signingAccounts := make([]runtime.Address, len(tx.Authorizers))
+	for i, addr := range tx.Authorizers {
 		signingAccounts[i] = runtime.Address(addr)
 	}
 
 	ctx := &TransactionContext{
-		ledger:          ledger,
-		signingAccounts: signingAccounts,
+		bc:                               bc,
+		astCache:                         bc.vm.cache,
+		ledger:                           NewLedgerDAL(ledger),
+		signingAccounts:                  signingAccounts,
+		tx:                               tx,
+		gasLimit:                         tx.GasLimit,
+		header:                           bc.header,
+		blocks:                           bc.blocks,
+		signatureVerificationEnabled:     true,
+		restrictedAccountCreationEnabled: true,
+		restrictedDeploymentEnabled:      true,
 	}
 
 	for _, option := range options {
@@ -53,7 +74,12 @@ func (bc *blockContext) newTransactionContext(
 
 func (bc *blockContext) newScriptContext(ledger Ledger) *TransactionContext {
 	return &TransactionContext{
-		ledger: ledger,
+		bc:       bc,
+		astCache: bc.vm.cache,
+		ledger:   NewLedgerDAL(ledger),
+		header:   bc.header,
+		blocks:   bc.blocks,
+		gasLimit: scriptGasLimit,
 	}
 }
 
@@ -73,14 +99,50 @@ func (bc *blockContext) ExecuteTransaction(
 
 	ctx := bc.newTransactionContext(ledger, tx, options...)
 
-	err := bc.vm.executeTransaction(tx.Script, ctx, location)
+	if ctx.signatureVerificationEnabled {
+		flowErr := ctx.verifySignatures()
+		if flowErr != nil {
+			return &TransactionResult{
+				TransactionID: txID,
+				Error:         flowErr,
+			}, nil
+		}
+
+		flowErr, err := ctx.checkAndIncrementSequenceNumber()
+		if err != nil {
+			return nil, err
+		}
+		if flowErr != nil {
+			return &TransactionResult{
+				TransactionID: txID,
+				Error:         flowErr,
+			}, nil
+		}
+
+		flowErr, err = ctx.deductTransactionFee(tx.Payer)
+		if err != nil {
+			return nil, err
+		}
+
+		if flowErr != nil {
+			return &TransactionResult{
+				TransactionID: txID,
+				Error:         flowErr,
+			}, nil
+		}
+	}
+
+	err := bc.vm.executeTransaction(tx.Script, tx.Arguments, ctx, location)
 	if err != nil {
-		if errors.As(err, &runtime.Error{}) {
+		possibleRuntimeError := runtime.Error{}
+		if errors.As(err, &possibleRuntimeError) {
 			// runtime errors occur when the execution reverts
 			return &TransactionResult{
 				TransactionID: txID,
-				Error:         err,
-				Logs:          ctx.Logs(),
+				Error: &CodeExecutionError{
+					RuntimeError: possibleRuntimeError,
+				},
+				Logs: ctx.Logs(),
 			}, nil
 		}
 
@@ -93,6 +155,7 @@ func (bc *blockContext) ExecuteTransaction(
 		Error:         nil,
 		Events:        ctx.Events(),
 		Logs:          ctx.Logs(),
+		GasUsed:       0, // TODO: record gas usage
 	}, nil
 }
 
@@ -102,15 +165,17 @@ func (bc *blockContext) ExecuteScript(ledger Ledger, script []byte) (*ScriptResu
 	location := runtime.ScriptLocation(scriptHash)
 
 	ctx := bc.newScriptContext(ledger)
-
 	value, err := bc.vm.executeScript(script, ctx, location)
 	if err != nil {
-		if errors.As(err, &runtime.Error{}) {
+		possibleRuntimeError := runtime.Error{}
+		if errors.As(err, &possibleRuntimeError) {
 			// runtime errors occur when the execution reverts
 			return &ScriptResult{
 				ScriptID: flow.HashToID(scriptHash),
-				Error:    err,
-				Logs:     ctx.Logs(),
+				Error: &CodeExecutionError{
+					RuntimeError: possibleRuntimeError,
+				},
+				Logs: ctx.Logs(),
 			}, nil
 		}
 
@@ -121,5 +186,48 @@ func (bc *blockContext) ExecuteScript(ledger Ledger, script []byte) (*ScriptResu
 		ScriptID: flow.HashToID(scriptHash),
 		Value:    value,
 		Logs:     ctx.Logs(),
+		Events:   ctx.events,
 	}, nil
+}
+
+func (bc *blockContext) GetAccount(ledger Ledger, addr flow.Address) (*flow.Account, error) {
+	ledgerAccess := NewLedgerDAL(ledger)
+	acct := ledgerAccess.GetAccount(addr)
+	if acct == nil {
+		return nil, nil
+	}
+
+	result, err := bc.ExecuteScript(ledger, DefaultTokenBalanceScript(addr))
+	if err != nil {
+		return nil, err
+	}
+
+	if result.Error == nil {
+		acct.Balance = result.Value.ToGoValue().(uint64)
+	}
+
+	return acct, nil
+}
+
+// ConvertEvents creates flow.Events from runtime.events
+func ConvertEvents(txIndex uint32, tr *TransactionResult) ([]flow.Event, error) {
+
+	flowEvents := make([]flow.Event, len(tr.Events))
+
+	for i, event := range tr.Events {
+		payload, err := jsoncdc.Encode(event)
+		if err != nil {
+			return nil, fmt.Errorf("failed to encode event: %w", err)
+		}
+
+		flowEvents[i] = flow.Event{
+			Type:             flow.EventType(event.EventType.ID()),
+			TransactionID:    tr.TransactionID,
+			TransactionIndex: txIndex,
+			EventIndex:       uint32(i),
+			Payload:          payload,
+		}
+	}
+
+	return flowEvents, nil
 }

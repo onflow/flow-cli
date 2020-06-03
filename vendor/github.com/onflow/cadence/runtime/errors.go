@@ -23,6 +23,7 @@ import (
 	"strings"
 
 	"github.com/onflow/cadence/runtime/errors"
+	"github.com/onflow/cadence/runtime/interpreter"
 	"github.com/onflow/cadence/runtime/sema"
 )
 
@@ -45,6 +46,19 @@ func (e Error) Error() string {
 	sb.WriteString(errors.UnrollChildErrors(e.Err))
 	sb.WriteString("\n")
 	return sb.String()
+}
+
+// ComputationLimitExceededError
+
+type ComputationLimitExceededError struct {
+	Limit uint64
+}
+
+func (e ComputationLimitExceededError) Error() string {
+	return fmt.Sprintf(
+		"computation limited exceeded: %d",
+		e.Limit,
+	)
 }
 
 // InvalidTransactionCountError
@@ -79,16 +93,48 @@ func (e InvalidTransactionParameterCountError) Error() string {
 	)
 }
 
-// InvalidTransactionParameterTypeError
+// InvalidTransactionAuthorizerCountError
 
-type InvalidTransactionParameterTypeError struct {
-	Actual sema.Type
+type InvalidTransactionAuthorizerCountError struct {
+	Expected int
+	Actual   int
 }
 
-func (e InvalidTransactionParameterTypeError) Error() string {
+func (e InvalidTransactionAuthorizerCountError) Error() string {
 	return fmt.Sprintf(
-		"parameter type mismatch for transaction: expected `%s`, got `%s`",
-		&sema.AuthAccountType{},
+		"authorizer count mismatch for transaction: expected %d, got %d",
+		e.Expected,
 		e.Actual,
 	)
+}
+
+// InvalidTransactionArgumentError
+
+type InvalidTransactionArgumentError struct {
+	Index int
+	Err   error
+}
+
+func (e *InvalidTransactionArgumentError) Unwrap() error {
+	return e.Err
+}
+
+func (e *InvalidTransactionArgumentError) Error() string {
+	return fmt.Sprintf("invalid argument at index %d", e.Index)
+}
+
+// InvalidTypeAssignmentError
+
+type InvalidTypeAssignmentError struct {
+	Value interpreter.Value
+	Type  sema.Type
+	Err   error
+}
+
+func (e *InvalidTypeAssignmentError) Unwrap() error {
+	return e.Err
+}
+
+func (e *InvalidTypeAssignmentError) Error() string {
+	return fmt.Sprintf("cannot assign type %s to %s", e.Type, e.Value)
 }

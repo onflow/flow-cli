@@ -94,6 +94,7 @@ type Checker struct {
 	currentMemberExpression            *ast.MemberExpression
 	validTopLevelDeclarationsHandler   func(ast.Location) []common.DeclarationKind
 	beforeExtractor                    *BeforeExtractor
+	checkHandler                       CheckHandlerFunc
 }
 
 type Option func(*Checker) error
@@ -151,6 +152,18 @@ func WithValidTopLevelDeclarationsHandler(handler func(location ast.Location) []
 func WithAllCheckers(allCheckers map[ast.LocationID]*Checker) Option {
 	return func(checker *Checker) error {
 		checker.SetAllCheckers(allCheckers)
+		return nil
+	}
+}
+
+type CheckHandlerFunc func(location ast.Location, check func())
+
+// WithCheckHandler returns a checker option which sets
+// the given function as the handler for the checking of the program.
+//
+func WithCheckHandler(handler CheckHandlerFunc) Option {
+	return func(checker *Checker) error {
+		checker.checkHandler = handler
 		return nil
 	}
 }
@@ -293,7 +306,14 @@ func (checker *Checker) IsChecked() bool {
 func (checker *Checker) Check() error {
 	if !checker.IsChecked() {
 		checker.errors = nil
-		checker.Program.Accept(checker)
+		check := func() {
+			checker.Program.Accept(checker)
+		}
+		if checker.checkHandler != nil {
+			checker.checkHandler(checker.Location, check)
+		} else {
+			check()
+		}
 		checker.isChecked = true
 	}
 	err := checker.CheckerError()
@@ -528,9 +548,12 @@ func (checker *Checker) checkTypeCompatibility(expression ast.Expression, valueT
 			break
 		}
 
-		if IsSubType(unwrappedTargetType, &FixedPointType{}) {
-			checker.checkFixedPointLiteral(typedExpression, unwrappedTargetType)
+		valueTypeOK := checker.checkFixedPointLiteral(typedExpression, valueType)
 
+		if IsSubType(unwrappedTargetType, &FixedPointType{}) {
+			if valueTypeOK {
+				checker.checkFixedPointLiteral(typedExpression, unwrappedTargetType)
+			}
 			return true
 		}
 
@@ -548,7 +571,7 @@ func (checker *Checker) checkTypeCompatibility(expression ast.Expression, valueT
 				valueElementType := variableSizedValueType.ElementType(false)
 				targetElementType := constantSizedTargetType.ElementType(false)
 
-				literalCount := uint64(len(typedExpression.Values))
+				literalCount := int64(len(typedExpression.Values))
 
 				if IsSubType(valueElementType, targetElementType) {
 
@@ -607,7 +630,7 @@ func (checker *Checker) checkIntegerLiteral(expression *ast.IntegerExpression, t
 // checkFixedPointLiteral checks that the value of the fixed-point literal
 // fits into range of the target fixed-point type
 //
-func (checker *Checker) checkFixedPointLiteral(expression *ast.FixedPointExpression, targetType Type) {
+func (checker *Checker) checkFixedPointLiteral(expression *ast.FixedPointExpression, targetType Type) bool {
 
 	// The target type might just be an integer type,
 	// in which case only the integer range can be checked.
@@ -629,7 +652,7 @@ func (checker *Checker) checkFixedPointLiteral(expression *ast.FixedPointExpress
 				},
 			)
 
-			return
+			return false
 		}
 
 		if !checker.checkFixedPointRange(
@@ -652,37 +675,39 @@ func (checker *Checker) checkFixedPointLiteral(expression *ast.FixedPointExpress
 				},
 			)
 
-			return
+			return false
 		}
 
 	case IntegerRangedType:
 		minInt := targetType.MinInt()
 		maxInt := targetType.MaxInt()
 
-		integerValue := big.NewInt(0).Set(expression.UnsignedInteger)
+		integerValue := new(big.Int).Set(expression.UnsignedInteger)
 
 		if expression.Negative {
 			expression.UnsignedInteger.Neg(expression.UnsignedInteger)
 		}
 
-		if checker.checkIntegerRange(integerValue, minInt, maxInt) {
-			return
-		}
+		if !checker.checkIntegerRange(integerValue, minInt, maxInt) {
 
-		checker.report(
-			&InvalidIntegerLiteralRangeError{
-				ExpectedType:   targetType,
-				ExpectedMinInt: minInt,
-				ExpectedMaxInt: maxInt,
-				Range:          ast.NewRangeFromPositioned(expression),
-			},
-		)
+			checker.report(
+				&InvalidIntegerLiteralRangeError{
+					ExpectedType:   targetType,
+					ExpectedMinInt: minInt,
+					ExpectedMaxInt: maxInt,
+					Range:          ast.NewRangeFromPositioned(expression),
+				},
+			)
+
+			return false
+		}
 	}
+
+	return true
 }
 
 // checkAddressLiteral checks that the value of the integer literal
-// fits into the range of an address (160 bits / 20 bytes),
-// and is hexadecimal
+// fits into the range of an address (64 bits), and is hexadecimal
 //
 func (checker *Checker) checkAddressLiteral(expression *ast.IntegerExpression) {
 	ranged := &AddressType{}
@@ -697,15 +722,13 @@ func (checker *Checker) checkAddressLiteral(expression *ast.IntegerExpression) {
 		)
 	}
 
-	if checker.checkIntegerRange(expression.Value, rangeMin, rangeMax) {
-		return
+	if !checker.checkIntegerRange(expression.Value, rangeMin, rangeMax) {
+		checker.report(
+			&InvalidAddressLiteralError{
+				Range: ast.NewRangeFromPositioned(expression),
+			},
+		)
 	}
-
-	checker.report(
-		&InvalidAddressLiteralError{
-			Range: ast.NewRangeFromPositioned(expression),
-		},
-	)
 }
 
 func (checker *Checker) checkIntegerRange(value, min, max *big.Int) bool {
@@ -721,7 +744,7 @@ func (checker *Checker) checkFixedPointRange(
 ) bool {
 	minIntSign := minInt.Sign()
 
-	integerValue := big.NewInt(0).Set(unsignedIntegerValue)
+	integerValue := new(big.Int).Set(unsignedIntegerValue)
 	if negative {
 		if minIntSign == 0 && negative {
 			return false
@@ -1054,17 +1077,13 @@ func (checker *Checker) convertRestrictedType(t *ast.RestrictedType) Type {
 
 		// Prepare a set of all the conformances
 
-		allConformances := compositeType.AllConformances()
-		conformancesSet := make(map[*InterfaceType]bool, len(allConformances))
-		for _, conformance := range allConformances {
-			conformancesSet[conformance] = true
-		}
+		conformances := compositeType.ExplicitInterfaceConformanceSet()
 
 		for _, restriction := range restrictions {
 			// The restriction must be an explicit or implicit conformance
 			// of the composite (restricted type)
 
-			if !conformancesSet[restriction] {
+			if !conformances.Includes(restriction) {
 				checker.report(
 					&InvalidNonConformanceRestrictionError{
 						Type:  restriction,
@@ -1145,9 +1164,9 @@ func (checker *Checker) convertConstantSizedType(t *ast.ConstantSizedType) Type 
 
 	size := t.Size.Value
 
-	if !t.Size.Value.IsUint64() {
-		minSize := big.NewInt(0)
-		maxSize := big.NewInt(0).SetUint64(math.MaxUint64)
+	if !t.Size.Value.IsInt64() || t.Size.Value.Sign() < 0 {
+		minSize := new(big.Int)
+		maxSize := new(big.Int).SetInt64(math.MaxInt64)
 
 		checker.report(
 			&InvalidConstantSizedTypeSizeError{
@@ -1167,7 +1186,7 @@ func (checker *Checker) convertConstantSizedType(t *ast.ConstantSizedType) Type 
 		}
 	}
 
-	finalSize := size.Uint64()
+	finalSize := size.Int64()
 
 	const expectedBase = 10
 	if t.Size.Base != expectedBase {
@@ -1656,6 +1675,8 @@ func (checker *Checker) ResetErrors() {
 	checker.errors = nil
 }
 
+const invalidTypeDeclarationAccessModifierExplanation = "type declarations must be public"
+
 func (checker *Checker) checkDeclarationAccessModifier(
 	access ast.Access,
 	declarationKind common.DeclarationKind,
@@ -1668,6 +1689,7 @@ func (checker *Checker) checkDeclarationAccessModifier(
 			checker.report(
 				&InvalidAccessModifierError{
 					Access:          access,
+					Explanation:     "local declarations may not have an access modifier",
 					DeclarationKind: declarationKind,
 					Pos:             startPos,
 				},
@@ -1683,9 +1705,18 @@ func (checker *Checker) checkDeclarationAccessModifier(
 			// and type declarations must be public for now
 
 			if isConstant || isTypeDeclaration {
+				var explanation string
+				switch {
+				case isConstant:
+					explanation = "constants can never be set"
+				case isTypeDeclaration:
+					explanation = invalidTypeDeclarationAccessModifierExplanation
+				}
+
 				checker.report(
 					&InvalidAccessModifierError{
 						Access:          access,
+						Explanation:     explanation,
 						DeclarationKind: declarationKind,
 						Pos:             startPos,
 					},
@@ -1700,6 +1731,7 @@ func (checker *Checker) checkDeclarationAccessModifier(
 				checker.report(
 					&InvalidAccessModifierError{
 						Access:          access,
+						Explanation:     invalidTypeDeclarationAccessModifierExplanation,
 						DeclarationKind: declarationKind,
 						Pos:             startPos,
 					},
@@ -1715,6 +1747,7 @@ func (checker *Checker) checkDeclarationAccessModifier(
 				checker.report(
 					&InvalidAccessModifierError{
 						Access:          access,
+						Explanation:     invalidTypeDeclarationAccessModifierExplanation,
 						DeclarationKind: declarationKind,
 						Pos:             startPos,
 					},
@@ -1731,6 +1764,7 @@ func (checker *Checker) checkDeclarationAccessModifier(
 				checker.report(
 					&MissingAccessModifierError{
 						DeclarationKind: declarationKind,
+						Explanation:     invalidTypeDeclarationAccessModifierExplanation,
 						Pos:             startPos,
 					},
 				)
@@ -2015,5 +2049,49 @@ func (checker *Checker) checkTypeAnnotation(typeAnnotation *TypeAnnotation, pos 
 				},
 			},
 		)
+	}
+}
+
+func (checker *Checker) ValueActivationDepth() int {
+	return checker.valueActivations.Depth()
+}
+
+func (checker *Checker) TypeActivationDepth() int {
+	return checker.typeActivations.Depth()
+}
+
+func (checker *Checker) effectiveMemberAccess(access ast.Access, containerKind ContainerKind) ast.Access {
+	switch containerKind {
+	case ContainerKindComposite:
+		return checker.effectiveCompositeMemberAccess(access)
+	case ContainerKindInterface:
+		return checker.effectiveInterfaceMemberAccess(access)
+	default:
+		panic(errors.NewUnreachableError())
+	}
+}
+
+func (checker *Checker) effectiveInterfaceMemberAccess(access ast.Access) ast.Access {
+	if access == ast.AccessNotSpecified {
+		return ast.AccessPublic
+	} else {
+		return access
+	}
+}
+
+func (checker *Checker) effectiveCompositeMemberAccess(access ast.Access) ast.Access {
+	if access != ast.AccessNotSpecified {
+		return access
+	}
+
+	switch checker.accessCheckMode {
+	case AccessCheckModeStrict, AccessCheckModeNotSpecifiedRestricted:
+		return ast.AccessPrivate
+
+	case AccessCheckModeNotSpecifiedUnrestricted, AccessCheckModeNone:
+		return ast.AccessPublic
+
+	default:
+		panic(errors.NewUnreachableError())
 	}
 }
