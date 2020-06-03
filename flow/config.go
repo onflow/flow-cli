@@ -11,10 +11,7 @@ import (
 	"github.com/onflow/flow-go-sdk/crypto"
 )
 
-var (
-	RootAccountName    = "root"
-	RootAccountAddress = flow.HexToAddress("01")
-)
+const serviceAccountName = "service"
 
 type Account struct {
 	Address    flow.Address
@@ -73,17 +70,17 @@ func NewConfig() *Config {
 	}
 }
 
-func (c *Config) RootAccount() *Account {
-	rootAcct, ok := c.Accounts[RootAccountName]
+func (c *Config) ServiceAccount() *Account {
+	serviceAcct, ok := c.Accounts[serviceAccountName]
 	if !ok {
-		Exit(1, "Missing root account!")
+		Exit(1, "Missing service account!")
 	}
-	return rootAcct
+	return serviceAcct
 }
 
-func (c *Config) SetRootAccountKey(privateKey crypto.PrivateKey, hashAlgo crypto.HashAlgorithm) {
-	c.Accounts[RootAccountName] = &Account{
-		Address:    RootAccountAddress,
+func (c *Config) SetServiceAccountKey(privateKey crypto.PrivateKey, hashAlgo crypto.HashAlgorithm) {
+	c.Accounts[serviceAccountName] = &Account{
+		Address:    flow.ServiceAddress(flow.Emulator),
 		PrivateKey: privateKey,
 		SigAlgo:    privateKey.Algorithm(),
 		HashAlgo:   hashAlgo,

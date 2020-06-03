@@ -11,7 +11,7 @@ import (
 )
 
 type Config struct {
-	Signer string `default:"root" flag:"signer,s"`
+	Signer string `default:"service" flag:"signer,s"`
 	Code   string `flag:"code,c"`
 	Host   string `default:"127.0.0.1:3569" flag:"host" info:"Flow Observation API host address"`
 }

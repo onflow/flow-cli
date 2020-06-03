@@ -17,22 +17,22 @@ var Cmd = &cobra.Command{
 	TraverseChildren: true,
 }
 
-func configuredRootKey(init bool) (crypto.PrivateKey, crypto.SignatureAlgorithm, crypto.HashAlgorithm) {
-	var rootAcct *cli.Account
+func configuredServiceKey(init bool) (crypto.PrivateKey, crypto.SignatureAlgorithm, crypto.HashAlgorithm) {
+	var serviceAcct *cli.Account
 
 	if init {
 		pconf := initialize.InitProject()
-		rootAcct = pconf.RootAccount()
+		serviceAcct = pconf.ServiceAccount()
 
-		fmt.Printf("⚙️   Flow client initialized with root account:\n\n")
-		fmt.Printf("👤  Address: 0x%s\n", rootAcct.Address)
+		fmt.Printf("⚙️   Flow client initialized with service account:\n\n")
+		fmt.Printf("👤  Address: 0x%s\n", serviceAcct.Address)
 	} else {
-		rootAcct = cli.LoadConfig().RootAccount()
+		serviceAcct = cli.LoadConfig().ServiceAccount()
 	}
 
-	return rootAcct.PrivateKey, rootAcct.SigAlgo, rootAcct.HashAlgo
+	return serviceAcct.PrivateKey, serviceAcct.SigAlgo, serviceAcct.HashAlgo
 }
 
 func init() {
-	Cmd.AddCommand(start.Cmd(configuredRootKey))
+	Cmd.AddCommand(start.Cmd(configuredServiceKey))
 }

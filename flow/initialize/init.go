@@ -12,10 +12,10 @@ import (
 )
 
 type Config struct {
-	RootPrivateKey  string `flag:"root-priv-key" info:"root account private key"`
-	RootKeySigAlgo  string `default:"ECDSA_P256" flag:"root-sig-algo" info:"root account key signature algorithm"`
-	RootKeyHashAlgo string `default:"SHA3_256" flag:"root-hash-algo" info:"root account key hash algorithm"`
-	Reset           bool   `default:"false" flag:"reset" info:"reset flow.json config file"`
+	ServicePrivateKey  string `flag:"service-priv-key" info:"service account private key"`
+	ServiceKeySigAlgo  string `default:"ECDSA_P256" flag:"service-sig-algo" info:"service account key signature algorithm"`
+	ServiceKeyHashAlgo string `default:"SHA3_256" flag:"service-hash-algo" info:"service account key hash algorithm"`
+	Reset              bool   `default:"false" flag:"reset" info:"reset flow.json config file"`
 }
 
 var (
@@ -28,42 +28,42 @@ var Cmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		if !cli.ConfigExists() || conf.Reset {
 			var pconf *cli.Config
-			if len(conf.RootPrivateKey) > 0 {
-				rootKeySigAlgo := crypto.StringToSignatureAlgorithm(conf.RootKeySigAlgo)
-				rootKeyHashAlgo := crypto.StringToHashAlgorithm(conf.RootKeyHashAlgo)
-				rootKey := cli.MustDecodePrivateKeyHex(rootKeySigAlgo, conf.RootPrivateKey)
-				pconf = InitProjectWithRootKey(rootKey, rootKeyHashAlgo)
+			if len(conf.ServicePrivateKey) > 0 {
+				serviceKeySigAlgo := crypto.StringToSignatureAlgorithm(conf.ServiceKeySigAlgo)
+				serviceKeyHashAlgo := crypto.StringToHashAlgorithm(conf.ServiceKeyHashAlgo)
+				serviceKey := cli.MustDecodePrivateKeyHex(serviceKeySigAlgo, conf.ServicePrivateKey)
+				pconf = InitProjectWithServiceKey(serviceKey, serviceKeyHashAlgo)
 			} else {
 				pconf = InitProject()
 			}
-			rootAcct := pconf.RootAccount()
+			serviceAcct := pconf.ServiceAccount()
 
-			fmt.Printf("⚙️   Flow client initialized with root account:\n\n")
-			fmt.Printf("👤  Address: 0x%x\n", rootAcct.Address.Bytes())
-			fmt.Printf("ℹ️   Start the emulator with this root account by running: flow emulator start\n")
+			fmt.Printf("⚙️   Flow client initialized with service account:\n\n")
+			fmt.Printf("👤  Address: 0x%x\n", serviceAcct.Address.Bytes())
+			fmt.Printf("ℹ️   Start the emulator with this service account by running: flow emulator start\n")
 		} else {
 			fmt.Printf("⚠️   Flow configuration file already exists! Begin by running: flow emulator start\n")
 		}
 	},
 }
 
-// InitProject generates a new root key and saves project config.
+// InitProject generates a new service key and saves project config.
 func InitProject() *cli.Config {
-	seed := cli.RandomSeed(crypto.MinSeedLengthECDSA_P256)
+	seed := cli.RandomSeed(crypto.MinSeedLength)
 
-	rootKey, err := crypto.GeneratePrivateKey(crypto.ECDSA_P256, seed)
+	serviceKey, err := crypto.GeneratePrivateKey(crypto.ECDSA_P256, seed)
 	if err != nil {
 		cli.Exitf(1, "Failed to generate private key: %v", err)
 	}
 
-	return InitProjectWithRootKey(rootKey, crypto.SHA3_256)
+	return InitProjectWithServiceKey(serviceKey, crypto.SHA3_256)
 }
 
-// InitProjectWithRootKey creates and saves a new project config
-// using the specified root key.
-func InitProjectWithRootKey(privateKey crypto.PrivateKey, hashAlgo crypto.HashAlgorithm) *cli.Config {
+// InitProjectWithServiceKey creates and saves a new project config
+// using the specified service key.
+func InitProjectWithServiceKey(privateKey crypto.PrivateKey, hashAlgo crypto.HashAlgorithm) *cli.Config {
 	pconf := cli.NewConfig()
-	pconf.SetRootAccountKey(privateKey, hashAlgo)
+	pconf.SetServiceAccountKey(privateKey, hashAlgo)
 	cli.MustSaveConfig(pconf)
 	return pconf
 }
