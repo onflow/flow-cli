@@ -19,11 +19,11 @@ func SendTransaction(host string, signerAccount *Account, script []byte) {
 
 	signerAddress := signerAccount.Address
 
-	fmt.Printf("Getting information for account with address 0x%s ...\n", signerAddress.Short())
+	fmt.Printf("Getting information for account with address 0x%s ...\n", signerAddress.Hex())
 
 	account, err := flowClient.GetAccount(context.Background(), signerAddress)
 	if err != nil {
-		Exitf(1, "Failed to get account with address %s: 0x%s", signerAddress.Short(), err)
+		Exitf(1, "Failed to get account with address %s: 0x%s", signerAddress.Hex(), err)
 	}
 
 	signer := crypto.NewNaiveSigner(
