@@ -26,15 +26,7 @@ func GetTransactionResult(host string, id string) {
 	}
 
 	// Print out results of the TX to std out
-	fmt.Println()
-	fmt.Println("Status: " + res.Status.String())
-	if res.Error != nil {
-		fmt.Println("Execution Error: " + res.Error.Error())
-		return
-	}
-
-	printEvents(res)
-	fmt.Println()
+	printResult(res)
 }
 
 func waitForSeal(ctx context.Context, c *client.Client, id flow.Identifier) (*flow.TransactionResult, error) {
@@ -59,9 +51,21 @@ func waitForSeal(ctx context.Context, c *client.Client, id flow.Identifier) (*fl
 	return result, nil
 }
 
-func printEvents(res *flow.TransactionResult) {
+func printResult(res *flow.TransactionResult) {
+	fmt.Println()
+	fmt.Println("Status: " + res.Status.String())
+	if res.Error != nil {
+		fmt.Println("Execution Error: " + res.Error.Error())
+		return
+	}
+
+	printEvents(res.Events)
+	fmt.Println()
+}
+
+func printEvents(events []flow.Event) {
 	// Basic event info printing
-	for _, event := range res.Events {
+	for _, event := range events {
 		fmt.Printf("Event %d: %s\n", event.EventIndex, event.String())
 		fmt.Println("  Fields:")
 		for i, field := range event.Value.EventType.Fields {
@@ -70,7 +74,9 @@ func printEvents(res *flow.TransactionResult) {
 			// Try the two most obvious cases
 			if address, ok := v.([8]byte); ok {
 				fmt.Printf("%x", address)
-			} else if isByteSlice(v) {
+			} else if isByteSlice(v) || field.Identifier == "publicKey" {
+				// make exception for public key, since it get's interpreted as
+				// []*big.Int
 				for _, b := range v.([]interface{}) {
 					fmt.Printf("%x", b)
 				}
