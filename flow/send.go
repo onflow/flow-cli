@@ -60,8 +60,9 @@ func SendTransaction(host string, signerAccount *Account, script []byte) {
 	} else {
 		Exitf(1, "Failed to submit transaction: %s", err)
 	}
-	_, err = waitForSeal(ctx, flowClient, tx.ID())
+	res, err := waitForSeal(ctx, flowClient, tx.ID())
 	if err != nil {
 		Exitf(1, "Failed to seal transaction: %s", err)
 	}
+	printResult(res)
 }
