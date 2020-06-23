@@ -10,18 +10,17 @@ import (
 )
 
 type Config struct {
-	ID   string `flag:"id,i"`
 	Host string `default:"127.0.0.1:3569" flag:"host" info:"Flow Observation API host address"`
 }
 
 var conf Config
 
 var Cmd = &cobra.Command{
-	Use:   "status",
+	Use:   "status <tx_id>",
 	Short: "Get the transaction status",
+	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-
-		cli.GetTransactionResult(conf.Host, conf.ID)
+		cli.GetTransactionResult(conf.Host, args[0])
 	},
 }
 
