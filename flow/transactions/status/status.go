@@ -10,7 +10,7 @@ import (
 )
 
 type Config struct {
-	Host string `default:"127.0.0.1:3569" flag:"host" info:"Flow Observation API host address"`
+	Host string `default:"127.0.0.1:3569" flag:"host" info:"Flow Access API host address"`
 }
 
 var conf Config
