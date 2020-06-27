@@ -10,7 +10,8 @@ import (
 	"google.golang.org/grpc"
 )
 
-func SendTransaction(host string, signerAccount *Account, script []byte) {
+func SendTransaction(host string, signerAccount *Account, script []byte, withResults bool) {
+	ctx := context.Background()
 
 	flowClient, err := client.New(host, grpc.WithInsecure())
 	if err != nil {
@@ -21,7 +22,7 @@ func SendTransaction(host string, signerAccount *Account, script []byte) {
 
 	fmt.Printf("Getting information for account with address 0x%s ...\n", signerAddress.Hex())
 
-	account, err := flowClient.GetAccount(context.Background(), signerAddress)
+	account, err := flowClient.GetAccount(ctx, signerAddress)
 	if err != nil {
 		Exitf(1, "Failed to get account with address %s: 0x%s", signerAddress.Hex(), err)
 	}
@@ -34,7 +35,13 @@ func SendTransaction(host string, signerAccount *Account, script []byte) {
 	// TODO: always use first?
 	accountKey := account.Keys[0]
 
+	sealed, err := flowClient.GetLatestBlockHeader(ctx, true)
+	if err != nil {
+		Exitf(1, "Failed to get latest sealed block: %s", err)
+	}
+
 	tx := flow.NewTransaction().
+		SetReferenceBlockID(sealed.ID).
 		SetScript(script).
 		SetProposalKey(signerAddress, accountKey.ID, accountKey.SequenceNumber).
 		SetPayer(signerAddress).
@@ -52,5 +59,12 @@ func SendTransaction(host string, signerAccount *Account, script []byte) {
 		fmt.Printf("Successfully submitted transaction with ID %s\n", tx.ID())
 	} else {
 		Exitf(1, "Failed to submit transaction: %s", err)
+	}
+	if withResults {
+		res, err := waitForSeal(ctx, flowClient, tx.ID())
+		if err != nil {
+			Exitf(1, "Failed to seal transaction: %s", err)
+		}
+		printResult(res)
 	}
 }
