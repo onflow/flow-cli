@@ -10,7 +10,7 @@ import (
 	"google.golang.org/grpc"
 )
 
-func SendTransaction(host string, signerAccount *Account, script []byte) {
+func SendTransaction(host string, signerAccount *Account, script []byte, withResults bool) {
 	ctx := context.Background()
 
 	flowClient, err := client.New(host, grpc.WithInsecure())
@@ -60,9 +60,11 @@ func SendTransaction(host string, signerAccount *Account, script []byte) {
 	} else {
 		Exitf(1, "Failed to submit transaction: %s", err)
 	}
-	res, err := waitForSeal(ctx, flowClient, tx.ID())
-	if err != nil {
-		Exitf(1, "Failed to seal transaction: %s", err)
+	if withResults {
+		res, err := waitForSeal(ctx, flowClient, tx.ID())
+		if err != nil {
+			Exitf(1, "Failed to seal transaction: %s", err)
+		}
+		printResult(res)
 	}
-	printResult(res)
 }
