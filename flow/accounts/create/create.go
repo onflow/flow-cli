@@ -13,10 +13,11 @@ import (
 )
 
 type Config struct {
-	Signer string   `default:"service" flag:"signer,s"`
-	Keys   []string `flag:"key,k" info:"public keys to attach to account"`
-	Code   string   `flag:"code,c" info:"path to a file containing code for the account"`
-	Host   string   `default:"127.0.0.1:3569" flag:"host" info:"Flow Observation API host address"`
+	Signer  string   `default:"service" flag:"signer,s"`
+	Keys    []string `flag:"key,k" info:"public keys to attach to account"`
+	Code    string   `flag:"code,c" info:"path to a file containing code for the account"`
+	Host    string   `default:"127.0.0.1:3569" flag:"host" info:"Flow Observation API host address"`
+	Results bool     `default:"false" flag:"results" info:"Wether or not to wait for the results of the transaction"`
 }
 
 var conf Config
@@ -58,7 +59,7 @@ var Cmd = &cobra.Command{
 			cli.Exit(1, "Failed to generate transaction script")
 		}
 
-		cli.SendTransaction(conf.Host, signerAccount, script)
+		cli.SendTransaction(conf.Host, signerAccount, script, conf.Results)
 	},
 }
 

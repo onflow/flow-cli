@@ -11,9 +11,10 @@ import (
 )
 
 type Config struct {
-	Signer string `default:"service" flag:"signer,s"`
-	Code   string `flag:"code,c"`
-	Host   string `default:"127.0.0.1:3569" flag:"host" info:"Flow Observation API host address"`
+	Signer  string `default:"service" flag:"signer,s"`
+	Code    string `flag:"code,c"`
+	Host    string `default:"127.0.0.1:3569" flag:"host" info:"Flow Observation API host address"`
+	Results bool   `default:"false" flag:"results" info:"Wether or not to wait for the results of the transaction"`
 }
 
 var conf Config
@@ -38,7 +39,7 @@ var Cmd = &cobra.Command{
 			}
 		}
 
-		cli.SendTransaction(conf.Host, signerAccount, code)
+		cli.SendTransaction(conf.Host, signerAccount, code, conf.Results)
 	},
 }
 
