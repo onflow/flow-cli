@@ -111,8 +111,8 @@ github.com/cpuguy83/go-md2man/v2 v2.0.0-20190314233015-f79a8a8ca69d/go.mod h1:ma
 github.com/cpuguy83/go-md2man/v2 v2.0.0/go.mod h1:maD7wRr/U5Z6m/iR4s+kqSMx2CaBsrgA7czyZG/E6dU=
 github.com/dapperlabs/flow-core-contracts/contracts v0.0.0-20200526041238-ad2360621a1a h1:8qta1Pfh3RbkcvRVOvO6/ACpZmP0W5sIaaoCUF8JOQM=
 github.com/dapperlabs/flow-core-contracts/contracts v0.0.0-20200526041238-ad2360621a1a/go.mod h1:6SQ2GUde3Wj3EIRFq9Vu12IhSx3PiY3nVxLOEVehlmY=
-github.com/dapperlabs/flow-emulator v0.4.0 h1:Si9ENHgeEJswW3JdVb4D+k2/5gL3rj+Yeh4JYJEfc9g=
-github.com/dapperlabs/flow-emulator v0.4.0/go.mod h1:ZYHi97htOwLrNpdmCze39JXPcNtfnh85lLU2nc+WuOw=
+github.com/dapperlabs/flow-emulator v0.4.1 h1:Zuw+E4agzzh23j+IRO4kZPs+WUvC/B/LUQzL6ClugV8=
+github.com/dapperlabs/flow-emulator v0.4.1/go.mod h1:ZYHi97htOwLrNpdmCze39JXPcNtfnh85lLU2nc+WuOw=
 github.com/dapperlabs/flow-go v0.4.1-0.20200602235543-7c086e054cc3 h1:+UKAlUn9FfYp/MFV6ff5EcQAk68DuIusbVPMfOTTto8=
 github.com/dapperlabs/flow-go v0.4.1-0.20200602235543-7c086e054cc3/go.mod h1:/BdLWfMxQzG/RX+OhdkgmolAMkVnT2tO92VVevlSS6U=
 github.com/dapperlabs/flow-go/crypto v0.3.2-0.20200312195452-df4550a863b7 h1:p+tdbiV+3ykjkiawon7YXmkzXSpMNvhMsH1tWN8Yi1M=
