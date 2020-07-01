@@ -6,6 +6,7 @@ import (
 
 	cli "github.com/dapperlabs/flow-cli/flow"
 	"github.com/dapperlabs/flow-cli/flow/accounts"
+	"github.com/dapperlabs/flow-cli/flow/blocks"
 	"github.com/dapperlabs/flow-cli/flow/cadence"
 	"github.com/dapperlabs/flow-cli/flow/emulator"
 	"github.com/dapperlabs/flow-cli/flow/initialize"
@@ -22,6 +23,7 @@ var cmd = &cobra.Command{
 func init() {
 	cmd.AddCommand(initialize.Cmd)
 	cmd.AddCommand(accounts.Cmd)
+	cmd.AddCommand(blocks.Cmd)
 	cmd.AddCommand(keys.Cmd)
 	cmd.AddCommand(emulator.Cmd)
 	cmd.AddCommand(cadence.Cmd)
