@@ -107,7 +107,7 @@ import (
 )
 
 // Level defines log levels.
-type Level uint8
+type Level int8
 
 const (
 	// DebugLevel defines debug log level.
@@ -126,10 +126,15 @@ const (
 	NoLevel
 	// Disabled disables the logger.
 	Disabled
+
+	// TraceLevel defines trace log level.
+	TraceLevel Level = -1
 )
 
 func (l Level) String() string {
 	switch l {
+	case TraceLevel:
+		return "trace"
 	case DebugLevel:
 		return "debug"
 	case InfoLevel:
@@ -152,6 +157,8 @@ func (l Level) String() string {
 // returns an error if the input string does not match known values.
 func ParseLevel(levelStr string) (Level, error) {
 	switch levelStr {
+	case LevelFieldMarshalFunc(TraceLevel):
+		return TraceLevel, nil
 	case LevelFieldMarshalFunc(DebugLevel):
 		return DebugLevel, nil
 	case LevelFieldMarshalFunc(InfoLevel):
@@ -172,7 +179,7 @@ func ParseLevel(levelStr string) (Level, error) {
 
 // A Logger represents an active logging object that generates lines
 // of JSON output to an io.Writer. Each logging operation makes a single
-// call to the Writer's Write method. There is no guaranty on access
+// call to the Writer's Write method. There is no guarantee on access
 // serialization to the Writer. If your Writer is not thread safe,
 // you may consider a sync wrapper.
 type Logger struct {
@@ -188,7 +195,7 @@ type Logger struct {
 // one.
 //
 // Each logging operation makes a single call to the Writer's Write method. There is no
-// guaranty on access serialization to the Writer. If your Writer is not thread safe,
+// guarantee on access serialization to the Writer. If your Writer is not thread safe,
 // you may consider using sync wrapper.
 func New(w io.Writer) Logger {
 	if w == nil {
@@ -198,7 +205,7 @@ func New(w io.Writer) Logger {
 	if !ok {
 		lw = levelWriterAdapter{w}
 	}
-	return Logger{w: lw}
+	return Logger{w: lw, level: TraceLevel}
 }
 
 // Nop returns a disabled logger for which all operation are no-op.
@@ -227,6 +234,10 @@ func (l Logger) With() Context {
 	l.context = make([]byte, 0, 500)
 	if context != nil {
 		l.context = append(l.context, context...)
+	} else {
+		// This is needed for AppendKey to not check len of input
+		// thus making it inlinable
+		l.context = enc.AppendBeginMarker(l.context)
 	}
 	return Context{l}
 }
@@ -268,6 +279,13 @@ func (l Logger) Hook(h Hook) Logger {
 	return l
 }
 
+// Trace starts a new message with trace level.
+//
+// You must call Msg on the returned event in order to send the event.
+func (l *Logger) Trace() *Event {
+	return l.newEvent(TraceLevel, nil)
+}
+
 // Debug starts a new message with debug level.
 //
 // You must call Msg on the returned event in order to send the event.
@@ -303,9 +321,9 @@ func (l *Logger) Error() *Event {
 func (l *Logger) Err(err error) *Event {
 	if err != nil {
 		return l.Error().Err(err)
-	} else {
-		return l.Info()
 	}
+
+	return l.Info()
 }
 
 // Fatal starts a new message with fatal level. The os.Exit(1) function
@@ -331,6 +349,8 @@ func (l *Logger) Panic() *Event {
 // You must call Msg on the returned event in order to send the event.
 func (l *Logger) WithLevel(level Level) *Event {
 	switch level {
+	case TraceLevel:
+		return l.Trace()
 	case DebugLevel:
 		return l.Debug()
 	case InfoLevel:
@@ -399,7 +419,7 @@ func (l *Logger) newEvent(level Level, done func(string)) *Event {
 	if level != NoLevel {
 		e.Str(LevelFieldName, LevelFieldMarshalFunc(level))
 	}
-	if l.context != nil && len(l.context) > 0 {
+	if l.context != nil && len(l.context) > 1 {
 		e.buf = enc.AppendObjectData(e.buf, l.context)
 	}
 	return e

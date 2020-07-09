@@ -1,3 +1,21 @@
+/*
+ * Cadence - The resource-oriented smart contract programming language
+ *
+ * Copyright 2019-2020 Dapper Labs, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package interpreter
 
 import (
@@ -47,7 +65,7 @@ const (
 	cborTagSomeValue
 	cborTagAddressValue
 	cborTagCompositeValue
-	_
+	cborTagTypeValue
 	_
 	_
 	_
@@ -120,7 +138,7 @@ const (
 	// Locations
 	cborTagAddressLocation
 	cborTagStringLocation
-	_
+	cborTagIdentifierLocation
 	_
 	_
 	_
@@ -152,6 +170,7 @@ const (
 	cborTagOptionalStaticType
 	cborTagReferenceStaticType
 	cborTagRestrictedStaticType
+	cborTagCapabilityStaticType
 )
 
 func init() {
@@ -177,6 +196,7 @@ func init() {
 		cborTagCompositeValue:          encodedCompositeValue{},
 		cborTagPathValue:               encodedPathValue{},
 		cborTagCapabilityValue:         encodedCapabilityValue{},
+		cborTagTypeValue:               encodedTypeValue{},
 		cborTagStorageReferenceValue:   encodedStorageReferenceValue{},
 		cborTagLinkValue:               encodedLinkValue{},
 		cborTagCompositeStaticType:     encodedCompositeStaticType{},
@@ -410,10 +430,15 @@ func (e *Encoder) prepare(
 		return e.preparePathValue(v), nil
 
 	case CapabilityValue:
-		return e.prepareCapabilityValue(v), nil
+		return e.prepareCapabilityValue(v)
 
 	case LinkValue:
 		return e.prepareLinkValue(v)
+
+	// Type
+
+	case TypeValue:
+		return e.prepareTypeValue(v)
 
 	default:
 		return nil, fmt.Errorf("unsupported value: %[1]T, %[1]v", v)
@@ -809,15 +834,28 @@ func (e *Encoder) preparePathValue(v PathValue) encodedPathValue {
 }
 
 type encodedCapabilityValue struct {
-	Address cbor.Tag         `cbor:"0,keyasint"`
-	Path    encodedPathValue `cbor:"1,keyasint"`
+	Address    cbor.Tag         `cbor:"0,keyasint"`
+	Path       encodedPathValue `cbor:"1,keyasint"`
+	BorrowType interface{}      `cbor:"2,keyasint"`
 }
 
-func (e *Encoder) prepareCapabilityValue(v CapabilityValue) interface{} {
-	return encodedCapabilityValue{
-		Address: e.prepareAddressValue(v.Address),
-		Path:    e.preparePathValue(v.Path),
+func (e *Encoder) prepareCapabilityValue(v CapabilityValue) (interface{}, error) {
+
+	var preparedBorrowType interface{}
+
+	if v.BorrowType != nil {
+		var err error
+		preparedBorrowType, err = e.prepareStaticType(v.BorrowType)
+		if err != nil {
+			return nil, err
+		}
 	}
+
+	return encodedCapabilityValue{
+		Address:    e.prepareAddressValue(v.Address),
+		Path:       e.preparePathValue(v.Path),
+		BorrowType: preparedBorrowType,
+	}, nil
 }
 
 func (e *Encoder) prepareLocation(l ast.Location) (interface{}, error) {
@@ -831,6 +869,12 @@ func (e *Encoder) prepareLocation(l ast.Location) (interface{}, error) {
 	case ast.StringLocation:
 		return cbor.Tag{
 			Number:  cborTagStringLocation,
+			Content: string(l),
+		}, nil
+
+	case ast.IdentifierLocation:
+		return cbor.Tag{
+			Number:  cborTagIdentifierLocation,
 			Content: string(l),
 		}, nil
 
@@ -919,6 +963,9 @@ func (e *Encoder) prepareStaticType(t StaticType) (interface{}, error) {
 
 	case RestrictedStaticType:
 		return e.prepareRestrictedStaticType(v)
+
+	case CapabilityStaticType:
+		return e.prepareCapabilityStaticType(v)
 
 	default:
 		return nil, fmt.Errorf("unsupported static type: %T", t)
@@ -1040,5 +1087,35 @@ func (e *Encoder) prepareRestrictedStaticType(v RestrictedStaticType) (interface
 	return encodedRestrictedStaticType{
 		Type:         restrictedType,
 		Restrictions: encodedRestrictions,
+	}, nil
+}
+
+type encodedTypeValue struct {
+	Type interface{} `cbor:"0,keyasint"`
+}
+
+func (e *Encoder) prepareTypeValue(v TypeValue) (interface{}, error) {
+	staticType, err := e.prepareStaticType(v.Type)
+	if err != nil {
+		return nil, err
+	}
+	return encodedTypeValue{
+		Type: staticType,
+	}, nil
+}
+
+func (e *Encoder) prepareCapabilityStaticType(v CapabilityStaticType) (interface{}, error) {
+	var borrowStaticType interface{}
+	if v.BorrowType != nil {
+		var err error
+		borrowStaticType, err = e.prepareStaticType(v.BorrowType)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return cbor.Tag{
+		Number:  cborTagCapabilityStaticType,
+		Content: borrowStaticType,
 	}, nil
 }

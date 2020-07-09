@@ -10,7 +10,7 @@ import (
 	"google.golang.org/grpc"
 )
 
-func SendTransaction(host string, signerAccount *Account, script []byte, withResults bool) {
+func SendTransaction(host string, signerAccount *Account, tx *flow.Transaction, withResults bool) {
 	ctx := context.Background()
 
 	flowClient, err := client.New(host, grpc.WithInsecure())
@@ -40,12 +40,9 @@ func SendTransaction(host string, signerAccount *Account, script []byte, withRes
 		Exitf(1, "Failed to get latest sealed block: %s", err)
 	}
 
-	tx := flow.NewTransaction().
-		SetReferenceBlockID(sealed.ID).
-		SetScript(script).
+	tx.SetReferenceBlockID(sealed.ID).
 		SetProposalKey(signerAddress, accountKey.ID, accountKey.SequenceNumber).
-		SetPayer(signerAddress).
-		AddAuthorizer(signerAddress)
+		SetPayer(signerAddress)
 
 	err = tx.SignEnvelope(signerAddress, accountKey.ID, signer)
 	if err != nil {

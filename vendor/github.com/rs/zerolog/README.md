@@ -31,7 +31,7 @@ Find out [who uses zerolog](https://github.com/rs/zerolog/wiki/Who-uses-zerolog)
 
 ## Installation
 
-```go
+```bash
 go get -u github.com/rs/zerolog/log
 ```
 
@@ -125,6 +125,7 @@ func main() {
 * warn (`zerolog.WarnLevel`, 2)
 * info (`zerolog.InfoLevel`, 1)
 * debug (`zerolog.DebugLevel`, 0)
+* trace (`zerolog.TraceLevel`, -1)
 
 You can set the Global logging level to any of these options using the `SetGlobalLevel` function in the zerolog package, passing in one of the given constants above, e.g. `zerolog.InfoLevel` would be the "info" level.  Whichever level is chosen, all logs with a level greater than or equal to that level will be written. To turn off logging entirely, pass the `zerolog.Disabled` constant.
 
@@ -340,7 +341,7 @@ If your writer might be slow or not thread-safe and you need your log producers 
 wr := diode.NewWriter(os.Stdout, 1000, 10*time.Millisecond, func(missed int) {
 		fmt.Printf("Logger Dropped %d messages", missed)
 	})
-log := zerolog.New(w)
+log := zerolog.New(wr)
 log.Print("test")
 ```
 
@@ -434,11 +435,11 @@ c := alice.New()
 c = c.Append(hlog.NewHandler(log))
 
 // Install some provided extra handler to set some request's context fields.
-// Thanks to those handler, all our logs will come with some pre-populated fields.
+// Thanks to that handler, all our logs will come with some prepopulated fields.
 c = c.Append(hlog.AccessHandler(func(r *http.Request, status, size int, duration time.Duration) {
     hlog.FromRequest(r).Info().
         Str("method", r.Method).
-        Str("url", r.URL.String()).
+        Stringer("url", r.URL).
         Int("status", status).
         Int("size", size).
         Dur("duration", duration).
@@ -468,22 +469,40 @@ if err := http.ListenAndServe(":8080", nil); err != nil {
 }
 ```
 
+## Multiple Log Output
+`zerolog.MultiLevelWriter` may be used to send the log message to multiple outputs. 
+In this example, we send the log message to both `os.Stdout` and the in-built ConsoleWriter.
+```go
+func main() {
+	consoleWriter := zerolog.ConsoleWriter{Out: os.Stdout}
+
+	multi := zerolog.MultiLevelWriter(consoleWriter, os.Stdout)
+
+	logger := zerolog.New(multi).With().Timestamp().Logger()
+
+	logger.Info().Msg("Hello World!")
+}
+
+// Output (Line 1: Console; Line 2: Stdout)
+// 12:36PM INF Hello World!
+// {"level":"info","time":"2019-11-07T12:36:38+03:00","message":"Hello World!"}
+``` 
+
 ## Global Settings
 
 Some settings can be changed and will by applied to all loggers:
 
 * `log.Logger`: You can set this value to customize the global logger (the one used by package level methods).
-* `zerolog.SetGlobalLevel`: Can raise the minimum level of all loggers. Set this to `zerolog.Disabled` to disable logging altogether (quiet mode).
+* `zerolog.SetGlobalLevel`: Can raise the minimum level of all loggers. Call this with `zerolog.Disabled` to disable logging altogether (quiet mode).
 * `zerolog.DisableSampling`: If argument is `true`, all sampled loggers will stop sampling and issue 100% of their log events.
 * `zerolog.TimestampFieldName`: Can be set to customize `Timestamp` field name.
 * `zerolog.LevelFieldName`: Can be set to customize level field name.
 * `zerolog.MessageFieldName`: Can be set to customize message field name.
 * `zerolog.ErrorFieldName`: Can be set to customize `Err` field name.
-* `zerolog.TimeFieldFormat`: Can be set to customize `Time` field value formatting. If set with `zerolog.TimeFormatUnix` or `zerolog.TimeFormatUnixMs`, times are formated as UNIX timestamp.
-* DurationFieldUnit defines the unit for time.Duration type fields added using the Dur method.
-* `DurationFieldUnit`: Sets the unit of the fields added by `Dur` (default: `time.Millisecond`).
-* `DurationFieldInteger`: If set to true, `Dur` fields are formatted as integers instead of floats.
-* `ErrorHandler`: Called whenever zerolog fails to write an event on its output. If not set, an error is printed on the stderr. This handler must be thread safe and non-blocking.
+* `zerolog.TimeFieldFormat`: Can be set to customize `Time` field value formatting. If set with `zerolog.TimeFormatUnix`, `zerolog.TimeFormatUnixMs` or `zerolog.TimeFormatUnixMicro`, times are formated as UNIX timestamp.
+* `zerolog.DurationFieldUnit`: Can be set to customize the unit for time.Duration type fields added by `Dur` (default: `time.Millisecond`).
+* `zerolog.DurationFieldInteger`: If set to `true`, `Dur` fields are formatted as integers instead of floats (default: `false`). 
+* `zerolog.ErrorHandler`: Called whenever zerolog fails to write an event on its output. If not set, an error is printed on the stderr. This handler must be thread safe and non-blocking.
 
 ## Field Types
 
@@ -497,12 +516,16 @@ Some settings can be changed and will by applied to all loggers:
 
 ### Advanced Fields
 
-* `Err`: Takes an `error` and render it as a string using the `zerolog.ErrorFieldName` field name.
-* `Timestamp`: Insert a timestamp field with `zerolog.TimestampFieldName` field name and formatted using `zerolog.TimeFieldFormat`.
-* `Time`: Adds a field with the time formated with the `zerolog.TimeFieldFormat`.
-* `Dur`: Adds a field with a `time.Duration`.
+* `Err`: Takes an `error` and renders it as a string using the `zerolog.ErrorFieldName` field name.
+* `Timestamp`: Inserts a timestamp field with `zerolog.TimestampFieldName` field name, formatted using `zerolog.TimeFieldFormat`.
+* `Time`: Adds a field with time formatted with `zerolog.TimeFieldFormat`.
+* `Dur`: Adds a field with `time.Duration`.
 * `Dict`: Adds a sub-key/value as a field of the event.
+* `RawJSON`: Adds a field with an already encoded JSON (`[]byte`)
+* `Hex`: Adds a field with value formatted as a hexadecimal string (`[]byte`)
 * `Interface`: Uses reflection to marshal the type.
+
+Most fields are also available in the slice format (`Strs` for `[]string`, `Errs` for `[]error` etc.)
 
 ## Binary Encoding
 

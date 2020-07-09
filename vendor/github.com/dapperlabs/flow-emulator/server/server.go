@@ -4,35 +4,34 @@ import (
 	"time"
 
 	"github.com/onflow/flow-go-sdk/crypto"
-	"github.com/pkg/errors"
 	"github.com/psiemens/graceland"
 	"github.com/sirupsen/logrus"
 
 	emulator "github.com/dapperlabs/flow-emulator"
 	"github.com/dapperlabs/flow-emulator/storage"
-	"github.com/dapperlabs/flow-emulator/storage/badger"
-	"github.com/dapperlabs/flow-emulator/storage/memstore"
 )
 
 // EmulatorServer is a local server that runs a Flow Emulator instance.
 //
-// The server wraps an emulated blockchain instance with the Observation gRPC interface.
+// The server wraps an emulated blockchain instance with the Access API gRPC handlers.
 type EmulatorServer struct {
-	logger         *logrus.Logger
-	config         *Config
-	backend        *Backend
-	grpcServer     *GRPCServer
-	httpServer     *HTTPServer
-	blocksTicker   *BlocksTicker
-	livenessTicker *LivenessTicker
-	onCleanup      func()
-	group          *graceland.Group
+	logger   *logrus.Logger
+	config   *Config
+	backend  *Backend
+	group    *graceland.Group
+	liveness graceland.Routine
+	storage  graceland.Routine
+	grpc     graceland.Routine
+	http     graceland.Routine
+	blocks   graceland.Routine
 }
 
 const (
 	defaultGRPCPort               = 3569
 	defaultHTTPPort               = 8080
 	defaultLivenessCheckTolerance = time.Second
+	defaultDBGCInterval           = time.Minute * 5
+	defaultDBGCRatio              = 0.5
 )
 
 var (
@@ -63,10 +62,13 @@ type Config struct {
 	ServiceKeySigAlgo  crypto.SignatureAlgorithm
 	ServiceKeyHashAlgo crypto.HashAlgorithm
 	Persist            bool
-	// DBPath is the path to the Badger database on disk
+	// DBPath is the path to the Badger database on disk.
 	DBPath string
-	// LivenessCheckTolerance is the tolerance level of the liveness check
-	// e.g. how long we can go without answering before being considered not alive
+	// DBGCInterval is the time interval at which to garbage collect the Badger value log.
+	DBGCInterval time.Duration
+	// DBGCDiscardRatio is the ratio of space to reclaim during a Badger garbage collection run.
+	DBGCDiscardRatio float64
+	// LivenessCheckTolerance is the time interval in which the server must respond to liveness probes.
 	LivenessCheckTolerance time.Duration
 }
 
@@ -74,13 +76,13 @@ type Config struct {
 func NewEmulatorServer(logger *logrus.Logger, conf *Config) *EmulatorServer {
 	conf = sanitizeConfig(conf)
 
-	store, closeStore, err := configureStore(logger, conf)
+	storage, err := configureStorage(logger, conf)
 	if err != nil {
 		logger.WithError(err).Error("❗  Failed to configure storage")
 		return nil
 	}
 
-	blockchain, err := configureBlockchain(conf, store)
+	blockchain, err := configureBlockchain(conf, storage.Store())
 	if err != nil {
 		logger.WithError(err).Error("❗  Failed to configure emulated blockchain")
 		return nil
@@ -93,23 +95,18 @@ func NewEmulatorServer(logger *logrus.Logger, conf *Config) *EmulatorServer {
 	httpServer := NewHTTPServer(grpcServer, livenessTicker, conf.HTTPPort, conf.HTTPHeaders)
 
 	server := &EmulatorServer{
-		logger:         logger,
-		config:         conf,
-		backend:        backend,
-		grpcServer:     grpcServer,
-		httpServer:     httpServer,
-		livenessTicker: livenessTicker,
-		onCleanup: func() {
-			err := closeStore()
-			if err != nil {
-				logger.WithError(err).Infof("Failed to close storage")
-			}
-		},
+		logger:   logger,
+		config:   conf,
+		backend:  backend,
+		storage:  storage,
+		liveness: livenessTicker,
+		grpc:     grpcServer,
+		http:     httpServer,
 	}
 
 	// only create blocks ticker if block time > 0
 	if conf.BlockTime > 0 {
-		server.blocksTicker = NewBlocksTicker(backend, conf.BlockTime)
+		server.blocks = NewBlocksTicker(backend, conf.BlockTime)
 	}
 
 	return server
@@ -117,28 +114,29 @@ func NewEmulatorServer(logger *logrus.Logger, conf *Config) *EmulatorServer {
 
 // Start starts the Flow Emulator server.
 func (s *EmulatorServer) Start() {
-	defer s.cleanup()
-
 	s.Stop()
 
 	s.group = graceland.NewGroup()
 
 	s.logger.
 		WithField("port", s.config.GRPCPort).
-		Infof("🌱  Starting gRPC server on port %d...", s.config.GRPCPort)
+		Infof("🌱  Starting gRPC server on port %d", s.config.GRPCPort)
 
 	s.logger.
 		WithField("port", s.config.HTTPPort).
-		Infof("🌱  Starting HTTP server on port %d...", s.config.HTTPPort)
-
-	s.group.Add(s.grpcServer)
-	s.group.Add(s.httpServer)
-	s.group.Add(s.livenessTicker)
+		Infof("🌱  Starting HTTP server on port %d", s.config.HTTPPort)
 
 	// only start blocks ticker if it exists
-	if s.blocksTicker != nil {
-		s.group.Add(s.blocksTicker)
+	if s.blocks != nil {
+		s.group.Add(s.blocks)
 	}
+
+	s.group.Add(s.liveness)
+	s.group.Add(s.grpc)
+	s.group.Add(s.http)
+
+	// routines are shut down in insertion order, so database is added last
+	s.group.Add(s.storage)
 
 	err := s.group.Start()
 	if err != nil {
@@ -158,39 +156,12 @@ func (s *EmulatorServer) Stop() {
 	s.logger.Info("🛑  Server stopped")
 }
 
-// cleanup cleans up the server.
-// This MUST be called before the server process terminates.
-func (e *EmulatorServer) cleanup() {
-	e.onCleanup()
-}
-
-func configureStore(logger *logrus.Logger, conf *Config) (store storage.Store, close func() error, err error) {
+func configureStorage(logger *logrus.Logger, conf *Config) (storage Storage, err error) {
 	if conf.Persist {
-		badgerStore, err := badger.New(
-			badger.WithPath(conf.DBPath),
-			badger.WithLogger(logger),
-			badger.WithTruncate(true),
-		)
-		if err != nil {
-			return nil, nil, errors.Wrap(err, "failed to initialize Badger store")
-		}
-
-		close = func() error {
-			err := badgerStore.Close()
-			if err != nil {
-				return err
-			}
-
-			return nil
-		}
-
-		return badgerStore, close, nil
+		return NewBadgerStorage(logger, conf.DBPath, conf.DBGCInterval, conf.DBGCDiscardRatio)
 	}
 
-	store = memstore.New()
-	close = func() error { return nil }
-
-	return store, close, nil
+	return NewMemoryStorage(), nil
 }
 
 func configureBlockchain(conf *Config, store storage.Store) (*emulator.Blockchain, error) {
@@ -231,6 +202,14 @@ func sanitizeConfig(conf *Config) *Config {
 
 	if conf.HTTPHeaders == nil {
 		conf.HTTPHeaders = defaultHTTPHeaders
+	}
+
+	if conf.DBGCInterval == 0 {
+		conf.DBGCInterval = defaultDBGCInterval
+	}
+
+	if conf.DBGCDiscardRatio == 0 {
+		conf.DBGCDiscardRatio = defaultDBGCRatio
 	}
 
 	if conf.LivenessCheckTolerance == 0 {

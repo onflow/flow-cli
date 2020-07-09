@@ -8,8 +8,7 @@ type SigningAlgorithm int
 
 const (
 	// Supported signing algorithms
-
-	unknownSigningAlgorithm SigningAlgorithm = iota
+	UnknownSigningAlgorithm SigningAlgorithm = iota
 	// BLSBLS12381 is BLS on BLS 12-381 curve
 	BLSBLS12381
 	// ECDSAP256 is ECDSA on NIST P-256 curve
@@ -23,8 +22,8 @@ func (f SigningAlgorithm) String() string {
 	return [...]string{"UNKNOWN", "BLS_BLS12381", "ECDSA_P256", "ECDSA_secp256k1"}[f]
 }
 
-// StringToSignatureAlgorithm converts a string to a SignatureAlgorithm.
-func StringToSignatureAlgorithm(s string) SigningAlgorithm {
+// StringToSigningAlgorithm converts a string to a SigningAlgorithm.
+func StringToSigningAlgorithm(s string) SigningAlgorithm {
 	switch s {
 	case BLSBLS12381.String():
 		return BLSBLS12381
@@ -33,7 +32,7 @@ func StringToSignatureAlgorithm(s string) SigningAlgorithm {
 	case ECDSASecp256k1.String():
 		return ECDSASecp256k1
 	default:
-		return unknownSigningAlgorithm
+		return UnknownSigningAlgorithm
 	}
 }
 
@@ -88,8 +87,8 @@ const (
 	// ThresholdMaxSize is the minimum size of a group participating in a threshold signature protocol
 	ThresholdMaxSize = DKGMaxSize
 
-	// Relic internal constants (related to exported constants above)
-	// max byte length of bn_st
+	// Relic internal constant (related to exported constants above)
+	// max byte length of bn_st set to 2048 bits
 	maxScalarSize = 256
 
 	// max relic PRG seed length in bytes

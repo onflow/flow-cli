@@ -31,7 +31,7 @@ import (
 // A Transaction is a full transaction object containing a payload and signatures.
 type Transaction struct {
 	Script             []byte
-	Arguments          []cadence.Value
+	Arguments          [][]byte
 	ReferenceBlockID   Identifier
 	GasLimit           uint64
 	ProposalKey        ProposalKey
@@ -48,7 +48,7 @@ func NewTransaction() *Transaction {
 
 // ID returns the canonical SHA3-256 hash of this transaction.
 func (t *Transaction) ID() Identifier {
-	return HashToID(DefaultHasher.ComputeHash(t.Encode()))
+	return HashToID(defaultEntityHasher.ComputeHash(t.Encode()))
 }
 
 // SetScript sets the Cadence script for this transaction.
@@ -58,9 +58,40 @@ func (t *Transaction) SetScript(script []byte) *Transaction {
 }
 
 // AddArgument adds a Cadence argument to this transaction.
-func (t *Transaction) AddArgument(arg cadence.Value) *Transaction {
+func (t *Transaction) AddArgument(arg cadence.Value) error {
+	encodedArg, err := jsoncdc.Encode(arg)
+	if err != nil {
+		return fmt.Errorf("failed to encode argument: %w", err)
+	}
+
+	t.Arguments = append(t.Arguments, encodedArg)
+	return nil
+}
+
+// AddRawArgument adds a raw JSON-CDC encoded argument to this transaction.
+func (t *Transaction) AddRawArgument(arg []byte) *Transaction {
 	t.Arguments = append(t.Arguments, arg)
 	return t
+}
+
+// Argument returns the decoded argument at the given index.
+func (t *Transaction) Argument(i int) (cadence.Value, error) {
+	if i < 0 {
+		return nil, fmt.Errorf("argument index must be positive")
+	}
+
+	if i >= len(t.Arguments) {
+		return nil, fmt.Errorf("no argument at index %d", i)
+	}
+
+	encodedArg := t.Arguments[i]
+
+	arg, err := jsoncdc.Decode(encodedArg)
+	if err != nil {
+		return nil, fmt.Errorf("failed to decode argument at index %d: %w", i, err)
+	}
+
+	return arg, nil
 }
 
 // SetReferenceBlockID sets the reference block ID for this transaction.
@@ -226,18 +257,6 @@ func (t *Transaction) PayloadMessage() []byte {
 }
 
 func (t *Transaction) payloadCanonicalForm() interface{} {
-	var err error
-
-	arguments := make([][]byte, len(t.Arguments))
-	for i, arg := range t.Arguments {
-		arguments[i], err = jsoncdc.Encode(arg)
-		if err != nil {
-			panic(
-				fmt.Sprintf("failed to encode argument at index %d: %s", i, err.Error()),
-			)
-		}
-	}
-
 	authorizers := make([][]byte, len(t.Authorizers))
 	for i, auth := range t.Authorizers {
 		authorizers[i] = auth.Bytes()
@@ -255,7 +274,7 @@ func (t *Transaction) payloadCanonicalForm() interface{} {
 		Authorizers               [][]byte
 	}{
 		Script:                    t.Script,
-		Arguments:                 arguments,
+		Arguments:                 t.Arguments,
 		ReferenceBlockID:          t.ReferenceBlockID[:],
 		GasLimit:                  t.GasLimit,
 		ProposalKeyAddress:        t.ProposalKey.Address.Bytes(),
@@ -366,6 +385,8 @@ const (
 	TransactionStatusExecuted
 	// TransactionStatusSealed is the status of a sealed transaction.
 	TransactionStatusSealed
+	// TransactionStatusExpired is the status of an expired transaction.
+	TransactionStatusExpired
 )
 
 // String returns the string representation of a transaction status.

@@ -1,3 +1,21 @@
+/*
+ * Cadence - The resource-oriented smart contract programming language
+ *
+ * Copyright 2019-2020 Dapper Labs, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package sema
 
 import (
@@ -478,6 +496,19 @@ func (checker *Checker) declareCompositeMembersAndValue(
 			checker.declareInterfaceMembers(nestedInterfaceDeclaration)
 		}
 
+		// If this composite declaration has nested composite declaration,
+		// then recursively declare the members and values of them.
+		//
+		// For instance, a structure `S`, defined within a contract `MyContract`,
+		// as shown in the example code below, is a nested composite declaration
+		// which has its own members:
+		// ```
+		// contract MyContract {
+		//   struct S {
+		//     var v: Int
+		//   }
+		// }
+		// ```
 		for _, nestedCompositeDeclaration := range declaration.CompositeDeclarations {
 			checker.declareCompositeMembersAndValue(nestedCompositeDeclaration, kind)
 
@@ -544,6 +575,8 @@ func (checker *Checker) declareCompositeMembersAndValue(
 			)
 		}
 
+		checker.checkMemberStorability(members)
+
 		compositeType.Members = members
 		checker.memberOrigins[compositeType] = origins
 	})()
@@ -603,6 +636,26 @@ func (checker *Checker) declareCompositeMembersAndValue(
 			allowOuterScopeShadowing: false,
 		})
 		checker.report(err)
+	}
+}
+
+// checkMemberStorability check that all fields have a type that is storable.
+//
+func (checker *Checker) checkMemberStorability(members map[string]*Member) {
+
+	for _, member := range members {
+
+		if member.IsStorable() {
+			continue
+		}
+
+		checker.report(
+			&FieldTypeNotStorableError{
+				Name: member.Identifier.Identifier,
+				Type: member.TypeAnnotation.Type,
+				Pos:  member.Identifier.Pos,
+			},
+		)
 	}
 }
 
@@ -1254,6 +1307,7 @@ func (checker *Checker) checkNoInitializerNoFields(
 	)
 }
 
+// checkSpecialFunction checks special functions, like initializers and destructors
 func (checker *Checker) checkSpecialFunction(
 	specialFunction *ast.SpecialFunctionDeclaration,
 	containerType Type,
@@ -1636,7 +1690,7 @@ func (checker *Checker) checkResourceFieldsInvalidated(containerType Type, membe
 // checkResourceUseAfterInvalidation checks if a resource (variable or composite member)
 // is used after it was previously invalidated (moved or destroyed)
 //
-func (checker *Checker) checkResourceUseAfterInvalidation(resource interface{}, useIdentifier ast.Identifier) {
+func (checker *Checker) checkResourceUseAfterInvalidation(resource interface{}, usePosition ast.HasPosition) {
 	resourceInfo := checker.resources.Get(resource)
 	if resourceInfo.Invalidations.Size() == 0 {
 		return
@@ -1644,8 +1698,8 @@ func (checker *Checker) checkResourceUseAfterInvalidation(resource interface{}, 
 
 	checker.report(
 		&ResourceUseAfterInvalidationError{
-			StartPos:      useIdentifier.StartPosition(),
-			EndPos:        useIdentifier.EndPosition(),
+			StartPos:      usePosition.StartPosition(),
+			EndPos:        usePosition.EndPosition(),
 			Invalidations: resourceInfo.Invalidations.All(),
 		},
 	)

@@ -29,6 +29,7 @@ type Config struct {
 	GRPCDebug          bool          `default:"false" flag:"grpc-debug" info:"enable gRPC server reflection for debugging with grpc_cli"`
 	Persist            bool          `default:"false" flag:"persist" info:"enable persistent storage"`
 	DBPath             string        `default:"./flowdb" flag:"dbpath" info:"path to database directory"`
+	SimpleAddresses    bool          `default:"false" flag:"simple-addresses" info:"use sequential addresses starting with 0x01"`
 }
 
 const EnvPrefix = "FLOW"

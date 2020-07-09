@@ -1,28 +1,29 @@
 package convert
 
 import (
-	"github.com/dapperlabs/flow-go/engine/execution/computation/virtualmachine"
+	"github.com/dapperlabs/flow-go/fvm"
 
 	sdkConvert "github.com/dapperlabs/flow-emulator/convert/sdk"
 	"github.com/dapperlabs/flow-emulator/types"
 )
 
-func VMTransactionResultToEmulator(vmTxResult virtualmachine.TransactionResult, txIndex int) types.TransactionResult {
-	txID := sdkConvert.FlowIdentifierToSDK(vmTxResult.TransactionID)
+func VMTransactionResultToEmulator(tp *fvm.TransactionProcedure, txIndex int) types.TransactionResult {
+	txID := sdkConvert.FlowIdentifierToSDK(tp.ID)
 
-	sdkEvents := sdkConvert.RuntimeEventsToSDK(vmTxResult.Events, txID, txIndex)
+	sdkEvents := sdkConvert.RuntimeEventsToSDK(tp.Events, txID, txIndex)
 
 	return types.TransactionResult{
 		TransactionID: txID,
-		Error:         VMErrorToEmulator(vmTxResult.Error),
-		Logs:          vmTxResult.Logs,
+		Error:         VMErrorToEmulator(tp.Err),
+		Logs:          tp.Logs,
 		Events:        sdkEvents,
 	}
 }
 
-func VMErrorToEmulator(vmError virtualmachine.FlowError) error {
+func VMErrorToEmulator(vmError fvm.Error) error {
 	if vmError == nil {
 		return nil
 	}
+
 	return &types.FlowError{FlowError: vmError}
 }

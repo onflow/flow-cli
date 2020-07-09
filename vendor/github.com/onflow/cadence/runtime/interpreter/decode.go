@@ -1,3 +1,21 @@
+/*
+ * Cadence - The resource-oriented smart contract programming language
+ *
+ * Copyright 2019-2020 Dapper Labs, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package interpreter
 
 import (
@@ -193,6 +211,9 @@ func (d *Decoder) decodeValue(v interface{}, path []string) (Value, error) {
 		case cborTagLinkValue:
 			return d.decodeLink(v.Content)
 
+		case cborTagTypeValue:
+			return d.decodeType(v.Content)
+
 		default:
 			return nil, fmt.Errorf("unsupported decoded tag: %d, %v", v.Number, v.Content)
 		}
@@ -327,6 +348,9 @@ func (d *Decoder) decodeLocation(l interface{}) (ast.Location, error) {
 	case cborTagStringLocation:
 		return d.decodeStringLocation(content)
 
+	case cborTagIdentifierLocation:
+		return d.decodeIdentifierLocation(content)
+
 	default:
 		return nil, fmt.Errorf("invalid location encoding tag: %d", tag.Number)
 	}
@@ -352,6 +376,14 @@ func (d *Decoder) decodeStringLocation(content interface{}) (ast.Location, error
 		return nil, fmt.Errorf("invalid string location encoding: %T", content)
 	}
 	return ast.StringLocation(s), nil
+}
+
+func (d *Decoder) decodeIdentifierLocation(content interface{}) (ast.Location, error) {
+	s, ok := content.(string)
+	if !ok {
+		return nil, fmt.Errorf("invalid identifier location encoding: %T", content)
+	}
+	return ast.IdentifierLocation(s), nil
 }
 
 func (d *Decoder) decodeComposite(v interface{}, path []string) (*CompositeValue, error) {
@@ -867,9 +899,27 @@ func (d *Decoder) decodeCapability(v interface{}) (CapabilityValue, error) {
 		return CapabilityValue{}, fmt.Errorf("invalid capability path: %T", path)
 	}
 
+	// borrow type (optional, for backwards compatibility)
+
+	var borrowType StaticType
+
+	if field3, ok := encoded[uint64(2)]; ok && field3 != nil {
+
+		decodedStaticType, err := d.decodeStaticType(field3)
+		if err != nil {
+			return CapabilityValue{}, fmt.Errorf("invalid capability borrow type encoding: %w", err)
+		}
+
+		borrowType, ok = decodedStaticType.(StaticType)
+		if !ok {
+			return CapabilityValue{}, fmt.Errorf("invalid capability borrow encoding: %T", decodedStaticType)
+		}
+	}
+
 	return CapabilityValue{
-		Address: address,
-		Path:    path,
+		Address:    address,
+		Path:       path,
+		BorrowType: borrowType,
 	}, nil
 }
 
@@ -940,6 +990,9 @@ func (d *Decoder) decodeStaticType(v interface{}) (StaticType, error) {
 
 	case cborTagRestrictedStaticType:
 		return d.decodeRestrictedStaticType(content)
+
+	case cborTagCapabilityStaticType:
+		return d.decodeCapabilityStaticType(content)
 
 	default:
 		return nil, fmt.Errorf("invalid static type encoding tag: %d", tag.Number)
@@ -1130,5 +1183,40 @@ func (d *Decoder) decodeRestrictedStaticType(v interface{}) (StaticType, error) 
 	return RestrictedStaticType{
 		Type:         restrictedType,
 		Restrictions: restrictions,
+	}, nil
+}
+
+func (d *Decoder) decodeType(v interface{}) (TypeValue, error) {
+	encoded, ok := v.(map[interface{}]interface{})
+	if !ok {
+		return TypeValue{}, fmt.Errorf("invalid type encoding")
+	}
+
+	decodedStaticType, err := d.decodeStaticType(encoded[uint64(0)])
+	if err != nil {
+		return TypeValue{}, fmt.Errorf("invalid type encoding: %w", err)
+	}
+
+	staticType, ok := decodedStaticType.(StaticType)
+	if !ok {
+		return TypeValue{}, fmt.Errorf("invalid type encoding: %T", decodedStaticType)
+	}
+
+	return TypeValue{
+		Type: staticType,
+	}, nil
+}
+
+func (d *Decoder) decodeCapabilityStaticType(v interface{}) (StaticType, error) {
+	var borrowStaticType StaticType
+	if v != nil {
+		var err error
+		borrowStaticType, err = d.decodeStaticType(v)
+		if err != nil {
+			return nil, fmt.Errorf("invalid capability static type borrow type encoding: %w", err)
+		}
+	}
+	return CapabilityStaticType{
+		BorrowType: borrowStaticType,
 	}, nil
 }

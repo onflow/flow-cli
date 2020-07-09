@@ -1,28 +1,29 @@
 package convert
 
 import (
-	"github.com/dapperlabs/flow-go/engine/execution/computation/virtualmachine"
+	"github.com/dapperlabs/flow-go/fvm"
 
 	"github.com/dapperlabs/flow-emulator/types"
 )
 
-func ToStorableResult(tr *virtualmachine.TransactionResult, txIndex uint32) (types.StorableTransactionResult, error) {
+func ToStorableResult(tp *fvm.TransactionProcedure, txIndex uint32) (types.StorableTransactionResult, error) {
 	var errorCode int
 	var errorMessage string
 
-	if tr.Error != nil {
-		errorCode = int(tr.Error.StatusCode())
-		errorMessage = tr.Error.ErrorMessage()
+	if tp.Err != nil {
+		errorCode = int(tp.Err.Code())
+		errorMessage = tp.Err.Error()
 	}
 
-	events, err := virtualmachine.ConvertEvents(txIndex, tr)
+	events, err := tp.ConvertEvents(txIndex)
 	if err != nil {
 		return types.StorableTransactionResult{}, err
 	}
+
 	return types.StorableTransactionResult{
 		ErrorCode:    errorCode,
 		ErrorMessage: errorMessage,
-		Logs:         tr.Logs,
+		Logs:         tp.Logs,
 		Events:       events,
 	}, nil
 }

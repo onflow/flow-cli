@@ -465,6 +465,17 @@ func (s Store) Sync() error {
 	return s.db.Sync()
 }
 
+func (s Store) RunValueLogGC(discardRatio float64) error {
+	err := s.db.RunValueLogGC(discardRatio)
+
+	// ignore ErrNoRewrite, which occurs when GC results in no cleanup
+	if err != nil && !errors.Is(err, badger.ErrNoRewrite) {
+		return err
+	}
+
+	return nil
+}
+
 // getTx returns a getter function bound to the input transaction that can be
 // used to get values from Badger.
 //

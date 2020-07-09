@@ -20,8 +20,8 @@ func (f HashingAlgorithm) String() string {
 	return [...]string{"UNKNOWN", "SHA2_256", "SHA2_384", "SHA3_256", "SHA3_384", "KMAC128"}[f]
 }
 
-// StringToHashAlgorithm converts a string to a HashAlgorithm.
-func StringToHashAlgorithm(s string) HashingAlgorithm {
+// StringToHashingAlgorithm converts a string to a HashingAlgorithm.
+func StringToHashingAlgorithm(s string) HashingAlgorithm {
 	switch s {
 	case SHA2_256.String():
 		return SHA2_256
@@ -37,7 +37,6 @@ func StringToHashAlgorithm(s string) HashingAlgorithm {
 }
 
 const (
-
 	// Lengths of hash outputs in bytes
 	HashLenSha2_256 = 32
 	HashLenSha2_384 = 48

@@ -3,15 +3,14 @@ package emulator
 import (
 	"time"
 
-	"github.com/dapperlabs/flow-go/engine/execution/computation/virtualmachine"
 	"github.com/dapperlabs/flow-go/engine/execution/state/delta"
+	"github.com/dapperlabs/flow-go/fvm"
 	flowgo "github.com/dapperlabs/flow-go/model/flow"
-	"github.com/onflow/flow-go-sdk"
 )
 
 type IndexedTransactionResult struct {
-	TransactionResult *virtualmachine.TransactionResult
-	Index             uint32
+	Transaction *fvm.TransactionProcedure
+	Index       uint32
 }
 
 // A pendingBlock contains the pending state required to form a new block.
@@ -31,11 +30,6 @@ type pendingBlock struct {
 	events []flowgo.Event
 	// index of transaction execution
 	index int
-}
-
-type executionResult struct {
-	Transaction flow.Transaction
-	Result      *virtualmachine.TransactionResult
 }
 
 // newPendingBlock creates a new pending block sequentially after a specified block.
@@ -145,13 +139,13 @@ func (b *pendingBlock) nextTransaction() *flowgo.TransactionBody {
 // This function uses the provided execute function to perform the actual
 // execution, then updates the pending block with the output.
 func (b *pendingBlock) ExecuteNextTransaction(
-	execute func(ledgerView *delta.View, tx *flowgo.TransactionBody) (*virtualmachine.TransactionResult, error),
-) (*virtualmachine.TransactionResult, error) {
+	execute func(ledgerView *delta.View, tx *flowgo.TransactionBody) (*fvm.TransactionProcedure, error),
+) (*fvm.TransactionProcedure, error) {
 	tx := b.nextTransaction()
 
 	childView := b.ledgerView.NewChild()
 
-	result, err := execute(childView, tx)
+	tp, err := execute(childView, tx)
 	if err != nil {
 		// fail fast if fatal error occurs
 		return nil, err
@@ -160,19 +154,22 @@ func (b *pendingBlock) ExecuteNextTransaction(
 	// increment transaction index even if transaction reverts
 	b.index++
 
-	convertedEvents, err := virtualmachine.ConvertEvents(uint32(b.index), result)
+	convertedEvents, err := tp.ConvertEvents(uint32(b.index))
+	if err != nil {
+		return nil, err
+	}
 
-	if result.Succeeded() {
+	if tp.Err == nil {
 		b.events = append(b.events, convertedEvents...)
 		b.ledgerView.MergeView(childView)
 	}
 
 	b.transactionResults[tx.ID()] = IndexedTransactionResult{
-		TransactionResult: result,
-		Index:             uint32(b.index),
+		Transaction: tp,
+		Index:       uint32(b.index),
 	}
 
-	return result, nil
+	return tp, nil
 }
 
 // Events returns all events captured during the execution of the pending block.

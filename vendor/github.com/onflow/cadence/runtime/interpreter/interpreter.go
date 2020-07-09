@@ -20,11 +20,11 @@ package interpreter
 
 import (
 	"fmt"
-	"math/big"
 	goRuntime "runtime"
 
 	"github.com/raviqqe/hamt"
 
+	"github.com/onflow/cadence/fixedpoint"
 	"github.com/onflow/cadence/runtime/activations"
 	"github.com/onflow/cadence/runtime/ast"
 	"github.com/onflow/cadence/runtime/common"
@@ -151,51 +151,66 @@ type ContractValueHandlerFunc func(
 	inter *Interpreter,
 	compositeType *sema.CompositeType,
 	constructor FunctionValue,
+	invocationRange ast.Range,
 ) *CompositeValue
 
-// ImportProgramHandlerFunc is a function that handles imports of programs.
+// ImportLocationFunc is a function that handles imports of locations.
 //
-type ImportProgramHandlerFunc func(
+type ImportLocationHandlerFunc func(
 	inter *Interpreter,
 	location ast.Location,
-) *ast.Program
+) Import
 
 // UUIDHandlerFunc is a function that handles the generation of UUIDs.
 type UUIDHandlerFunc func() uint64
 
-// compositeTypeCode contains the the "prepared" / "callable" "code"
+// CompositeTypeCode contains the the "prepared" / "callable" "code"
 // for the functions and the destructor of a composite
 // (contract, struct, resource, event).
 //
 // As there is no support for inheritance of concrete types,
 // these are the "leaf" nodes in the call chain, and are functions.
 //
-type compositeTypeCode struct {
-	compositeFunctions map[string]FunctionValue
-	destructorFunction FunctionValue
+type CompositeTypeCode struct {
+	CompositeFunctions map[string]FunctionValue
+	DestructorFunction FunctionValue
 }
 
 type FunctionWrapper = func(inner FunctionValue) FunctionValue
 
-// wrapperCode contains the "prepared" / "callable" "code"
+// WrapperCode contains the "prepared" / "callable" "code"
 // for inherited types (interfaces and type requirements).
 //
 // These are "branch" nodes in the call chain, and are function wrappers,
 // i.e. they wrap the functions / function wrappers that inherit them.
 //
-type wrapperCode struct {
-	initializerFunctionWrapper FunctionWrapper
-	destructorFunctionWrapper  FunctionWrapper
-	functionWrappers           map[string]FunctionWrapper
+type WrapperCode struct {
+	InitializerFunctionWrapper FunctionWrapper
+	DestructorFunctionWrapper  FunctionWrapper
+	FunctionWrappers           map[string]FunctionWrapper
 }
 
-// typeCodes is the value which stores the "prepared" / "callable" "code"
+// TypeCodes is the value which stores the "prepared" / "callable" "code"
 // of all composite types, interface types, and type requirements.
 //
-type typeCodes struct {
-	compositeCodes       map[sema.TypeID]compositeTypeCode
-	interfaceCodes       map[sema.TypeID]wrapperCode
-	typeRequirementCodes map[sema.TypeID]wrapperCode
+type TypeCodes struct {
+	CompositeCodes       map[sema.TypeID]CompositeTypeCode
+	InterfaceCodes       map[sema.TypeID]WrapperCode
+	TypeRequirementCodes map[sema.TypeID]WrapperCode
+}
+
+func (c TypeCodes) Merge(codes TypeCodes) {
+	for typeID, code := range codes.CompositeCodes {
+		c.CompositeCodes[typeID] = code
+	}
+
+	for typeID, code := range codes.InterfaceCodes {
+		c.InterfaceCodes[typeID] = code
+	}
+
+	for typeID, code := range codes.TypeRequirementCodes {
+		c.TypeRequirementCodes[typeID] = code
+	}
 }
 
 type Interpreter struct {
@@ -205,7 +220,7 @@ type Interpreter struct {
 	Globals                        map[string]*Variable
 	allInterpreters                map[ast.LocationID]*Interpreter
 	allCheckers                    map[ast.LocationID]*sema.Checker
-	typeCodes                      typeCodes
+	typeCodes                      TypeCodes
 	Transactions                   []*HostFunctionValue
 	onEventEmitted                 OnEventEmittedFunc
 	onStatement                    OnStatementFunc
@@ -217,7 +232,7 @@ type Interpreter struct {
 	storageKeyHandler              StorageKeyHandlerFunc
 	injectedCompositeFieldsHandler InjectedCompositeFieldsHandlerFunc
 	contractValueHandler           ContractValueHandlerFunc
-	importProgramHandler           ImportProgramHandlerFunc
+	importLocationHandler          ImportLocationHandlerFunc
 	uuidHandler                    UUIDHandlerFunc
 }
 
@@ -341,12 +356,12 @@ func WithContractValueHandler(handler ContractValueHandlerFunc) Option {
 	}
 }
 
-// WithImportProgramHandler returns an interpreter option which sets the given function
-// as the function that is used to handle the imports of programs.
+// WithImportLocationHandler returns an interpreter option which sets the given function
+// as the function that is used to handle the imports of locations.
 //
-func WithImportProgramHandler(handler ImportProgramHandlerFunc) Option {
+func WithImportLocationHandler(handler ImportLocationHandlerFunc) Option {
 	return func(interpreter *Interpreter) error {
-		interpreter.SetImportProgramHandler(handler)
+		interpreter.SetImportLocationHandler(handler)
 		return nil
 	}
 }
@@ -383,7 +398,7 @@ func WithAllCheckers(allCheckers map[ast.LocationID]*sema.Checker) Option {
 
 // withTypeCodes returns an interpreter option which sets the type codes.
 //
-func withTypeCodes(typeCodes typeCodes) Option {
+func withTypeCodes(typeCodes TypeCodes) Option {
 	return func(interpreter *Interpreter) error {
 		interpreter.setTypeCodes(typeCodes)
 		return nil
@@ -400,10 +415,10 @@ func NewInterpreter(checker *sema.Checker, options ...Option) (*Interpreter, err
 	defaultOptions := []Option{
 		WithAllInterpreters(map[ast.LocationID]*Interpreter{}),
 		WithAllCheckers(map[ast.LocationID]*sema.Checker{}),
-		withTypeCodes(typeCodes{
-			compositeCodes:       map[sema.TypeID]compositeTypeCode{},
-			interfaceCodes:       map[sema.TypeID]wrapperCode{},
-			typeRequirementCodes: map[sema.TypeID]wrapperCode{},
+		withTypeCodes(TypeCodes{
+			CompositeCodes:       map[sema.TypeID]CompositeTypeCode{},
+			InterfaceCodes:       map[sema.TypeID]WrapperCode{},
+			TypeRequirementCodes: map[sema.TypeID]WrapperCode{},
 		}),
 	}
 
@@ -480,10 +495,10 @@ func (interpreter *Interpreter) SetContractValueHandler(function ContractValueHa
 	interpreter.contractValueHandler = function
 }
 
-// SetImportProgramHandler sets the function that is used to handle imports of programs.
+// SetImportLocationHandler sets the function that is used to handle imports of locations.
 //
-func (interpreter *Interpreter) SetImportProgramHandler(function ImportProgramHandlerFunc) {
-	interpreter.importProgramHandler = function
+func (interpreter *Interpreter) SetImportLocationHandler(function ImportLocationHandlerFunc) {
+	interpreter.importLocationHandler = function
 }
 
 // SetUUIDHandler sets the function that is used to handle the generation of UUIDs.
@@ -513,7 +528,7 @@ func (interpreter *Interpreter) SetAllCheckers(allCheckers map[ast.LocationID]*s
 
 // setTypeCodes sets the type codes.
 //
-func (interpreter *Interpreter) setTypeCodes(typeCodes typeCodes) {
+func (interpreter *Interpreter) setTypeCodes(typeCodes TypeCodes) {
 	interpreter.typeCodes = typeCodes
 }
 
@@ -553,6 +568,7 @@ func (interpreter *Interpreter) Interpret() (err error) {
 		err = internalErr
 	})
 
+	// declare all declarations and then run all statements
 	interpreter.runAllStatements(interpreter.interpret())
 
 	return nil
@@ -564,6 +580,13 @@ type Statement struct {
 	Line        int
 }
 
+// runUntilNextStatement executes the trampline until the next statement.
+// It either returns a result or a statement.
+// The difference between "runUntilNextStatement" and "Run" is that:
+// "Run" executes the Trampoline chain all the way until there is no more trampoline and returns the result,
+// whereas "runUntilNextStatement" executes the Trampoline chain, stops as soon as it meets a statement trampoline,
+// and returns the statement, which can be later resumed by calling "runUntilNextStatement" again.
+// Useful for implementing breakpoint debugging.
 func (interpreter *Interpreter) runUntilNextStatement(t Trampoline) (interface{}, *Statement) {
 	for {
 		statement := getStatement(t)
@@ -590,6 +613,8 @@ func (interpreter *Interpreter) runUntilNextStatement(t Trampoline) (interface{}
 	}
 }
 
+// runAllStatements runs all the statement until there is no more trampoline and returns the result.
+// When there is a statement, it calls the onStatement callback, and then continues the execution.
 func (interpreter *Interpreter) runAllStatements(t Trampoline) interface{} {
 	for {
 		result, statement := interpreter.runUntilNextStatement(t)
@@ -611,9 +636,11 @@ func (interpreter *Interpreter) runAllStatements(t Trampoline) interface{} {
 	}
 }
 
+// getStatement goes through the Trampoline chain and find the first StatementTrampoline
 func getStatement(t Trampoline) *StatementTrampoline {
 	switch t := t.(type) {
 	case FlatMap:
+		// Recurse into the nested trampoline
 		return getStatement(t.Subroutine)
 	case StatementTrampoline:
 		return &t
@@ -622,6 +649,8 @@ func getStatement(t Trampoline) *StatementTrampoline {
 	}
 }
 
+// interpret returns a Trampoline that is done when all top-level declarations
+// have been declared and evaluated.
 func (interpreter *Interpreter) interpret() Trampoline {
 	return interpreter.Checker.Program.Accept(interpreter).(Trampoline)
 }
@@ -682,11 +711,15 @@ func (interpreter *Interpreter) declareGlobal(declaration ast.Declaration) {
 	interpreter.Globals[name] = interpreter.findVariable(name)
 }
 
+// prepareInvokeVariable looks up the function by the given name from global
+// variables, checks the function type, and returns a trampoline which executes
+// the function with the given arguments
 func (interpreter *Interpreter) prepareInvokeVariable(
 	functionName string,
 	arguments []Value,
 ) (trampoline Trampoline, err error) {
 
+	// function must be defined as a global variable
 	variable, ok := interpreter.Globals[functionName]
 	if !ok {
 		return nil, &NotDeclaredError{
@@ -697,6 +730,7 @@ func (interpreter *Interpreter) prepareInvokeVariable(
 
 	variableValue := variable.Value
 
+	// the global variable must be declared as a function
 	functionValue, ok := variableValue.(FunctionValue)
 	if !ok {
 		return nil, &NotInvokableError{
@@ -706,6 +740,7 @@ func (interpreter *Interpreter) prepareInvokeVariable(
 
 	ty := interpreter.Checker.GlobalValues[functionName].Type
 
+	// function must be invokable
 	invokableType, ok := ty.(sema.InvokableType)
 
 	if !ok {
@@ -749,6 +784,9 @@ func (interpreter *Interpreter) prepareInvoke(
 
 	if argumentCount != parameterCount {
 
+		// if the function has defined optional parameters,
+		// then the provided arguments must be equal to or greater than
+		// the number of required parameters.
 		if functionType.RequiredArgumentCount == nil ||
 			argumentCount < *functionType.RequiredArgumentCount {
 
@@ -770,6 +808,7 @@ func (interpreter *Interpreter) prepareInvoke(
 			}
 		}
 
+		// converts the argument into the parameter type declared by the function
 		preparedArguments[i] = interpreter.convertAndBox(argument, nil, parameterType)
 	}
 
@@ -782,6 +821,7 @@ func (interpreter *Interpreter) prepareInvoke(
 	return trampoline, nil
 }
 
+// Invoke invokes a global function with the given arguments
 func (interpreter *Interpreter) Invoke(functionName string, arguments ...Value) (value Value, err error) {
 	// recover internal panics and return them as an error
 	defer recoverErrors(func(internalErr error) {
@@ -1021,10 +1061,7 @@ func (interpreter *Interpreter) visitConditions(conditions []*ast.Condition) Tra
 						panic(&ConditionError{
 							ConditionKind: condition.Kind,
 							Message:       message,
-							LocationRange: LocationRange{
-								Location: interpreter.Checker.Location,
-								Range:    ast.NewRangeFromPositioned(condition.Test),
-							},
+							LocationRange: interpreter.locationRange(condition.Test),
 						})
 					})
 			}
@@ -1271,6 +1308,7 @@ func (interpreter *Interpreter) movingStorageIndexExpression(expression ast.Expr
 	return indexExpression
 }
 
+// declareVariable declares a variable in the latest scope
 func (interpreter *Interpreter) declareVariable(identifier string, value Value) *Variable {
 	// NOTE: semantic analysis already checked possible invalid redeclaration
 	variable := &Variable{Value: value}
@@ -1434,16 +1472,16 @@ func (interpreter *Interpreter) indexExpressionGetterSetter(indexExpression *ast
 func (interpreter *Interpreter) memberExpressionGetterSetter(memberExpression *ast.MemberExpression) Trampoline {
 	return memberExpression.Expression.Accept(interpreter).(Trampoline).
 		FlatMap(func(result interface{}) Trampoline {
-			structure := result.(MemberAccessibleValue)
+			target := result.(Value)
 			locationRange := interpreter.locationRange(memberExpression)
 			identifier := memberExpression.Identifier.Identifier
 			return Done{
 				Result: getterSetter{
 					get: func() Value {
-						return structure.GetMember(interpreter, locationRange, identifier)
+						return interpreter.getMember(target, locationRange, identifier)
 					},
 					set: func(value Value) {
-						structure.SetMember(interpreter, locationRange, identifier, value)
+						interpreter.setMember(target, locationRange, identifier, value)
 					},
 				},
 			}
@@ -1705,17 +1743,17 @@ func (interpreter *Interpreter) testEqual(left, right Value) BoolValue {
 	// TODO: add support for arrays and dictionaries
 
 	switch left := left.(type) {
+	case NilValue:
+		_, ok := right.(NilValue)
+		return BoolValue(ok)
+
 	case EquatableValue:
 		// NOTE: might be NilValue
 		right, ok := right.(EquatableValue)
 		if !ok {
 			return false
 		}
-		return left.Equal(right)
-
-	case NilValue:
-		_, ok := right.(NilValue)
-		return BoolValue(ok)
+		return left.Equal(interpreter, right)
 
 	case *CompositeValue:
 		// TODO: call `equals` if RHS is composite
@@ -1725,9 +1763,10 @@ func (interpreter *Interpreter) testEqual(left, right Value) BoolValue {
 		*DictionaryValue:
 		// TODO:
 		return false
-	}
 
-	panic(errors.NewUnreachableError())
+	default:
+		return false
+	}
 }
 
 func (interpreter *Interpreter) VisitUnaryExpression(expression *ast.UnaryExpression) ast.Repr {
@@ -1788,7 +1827,14 @@ func (interpreter *Interpreter) VisitIntegerExpression(expression *ast.IntegerEx
 
 func (interpreter *Interpreter) VisitFixedPointExpression(expression *ast.FixedPointExpression) ast.Repr {
 	// TODO: adjust once/if we support more fixed point types
-	value := interpreter.convertToFixedPointBigInt(expression, sema.Fix64Scale)
+
+	value := fixedpoint.ConvertToFixedPointBigInt(
+		expression.Negative,
+		expression.UnsignedInteger,
+		expression.Fractional,
+		expression.Scale,
+		sema.Fix64Scale,
+	)
 
 	var result Value
 
@@ -1799,46 +1845,6 @@ func (interpreter *Interpreter) VisitFixedPointExpression(expression *ast.FixedP
 	}
 
 	return Done{Result: result}
-}
-
-func (interpreter *Interpreter) convertToFixedPointBigInt(expression *ast.FixedPointExpression, scale uint) *big.Int {
-	ten := big.NewInt(10)
-
-	// integer = expression.UnsignedInteger * 10 ^ scale
-
-	targetScale := new(big.Int).SetUint64(uint64(scale))
-
-	integer := new(big.Int).Mul(
-		expression.UnsignedInteger,
-		new(big.Int).Exp(ten, targetScale, nil),
-	)
-
-	// fractional = expression.Fractional * 10 ^ (scale - expression.Scale)
-
-	var fractional *big.Int
-	if expression.Scale == scale {
-		fractional = expression.Fractional
-	} else if expression.Scale < scale {
-		scaleDiff := new(big.Int).SetUint64(uint64(scale - expression.Scale))
-		fractional = new(big.Int).Mul(
-			expression.Fractional,
-			new(big.Int).Exp(ten, scaleDiff, nil),
-		)
-	} else {
-		scaleDiff := new(big.Int).SetUint64(uint64(expression.Scale - scale))
-		fractional = new(big.Int).Div(expression.Fractional,
-			new(big.Int).Exp(ten, scaleDiff, nil),
-		)
-	}
-
-	// value = integer + fractional
-
-	if expression.Negative {
-		integer.Neg(integer)
-		fractional.Neg(fractional)
-	}
-
-	return integer.Add(integer, fractional)
 }
 
 func (interpreter *Interpreter) VisitStringExpression(expression *ast.StringExpression) ast.Repr {
@@ -1917,9 +1923,9 @@ func (interpreter *Interpreter) VisitMemberExpression(expression *ast.MemberExpr
 				}
 			}
 
-			value := result.(MemberAccessibleValue)
+			value := result.(Value)
 			locationRange := interpreter.locationRange(expression)
-			resultValue := value.GetMember(interpreter, locationRange, expression.Identifier.Identifier)
+			resultValue := interpreter.getMember(value, locationRange, expression.Identifier.Identifier)
 
 			// If the member access is optional chaining, only wrap the result value
 			// in an optional, if it is not already an optional value
@@ -2001,7 +2007,7 @@ func (interpreter *Interpreter) VisitInvocationExpression(invocationExpression *
 					arguments := result.(*ArrayValue).Values
 
 					typeParameterTypes :=
-						interpreter.Checker.Elaboration.InvocationExpressionTypeParameterTypes[invocationExpression]
+						interpreter.Checker.Elaboration.InvocationExpressionTypeArguments[invocationExpression]
 					argumentTypes :=
 						interpreter.Checker.Elaboration.InvocationExpressionArgumentTypes[invocationExpression]
 					parameterTypes :=
@@ -2266,8 +2272,6 @@ func (interpreter *Interpreter) VisitCompositeDeclaration(declaration *ast.Compo
 	return Done{}
 }
 
-const ResourceUUIDMemberName = "uuid"
-
 // declareCompositeValue creates and declares the value for
 // the composite declaration.
 //
@@ -2373,12 +2377,12 @@ func (interpreter *Interpreter) declareCompositeValue(
 
 	functions := interpreter.compositeFunctions(declaration, lexicalScope)
 
-	wrapFunctions := func(code wrapperCode) {
+	wrapFunctions := func(code WrapperCode) {
 
 		// Wrap initializer
 
 		initializerFunctionWrapper :=
-			code.initializerFunctionWrapper
+			code.InitializerFunctionWrapper
 
 		if initializerFunctionWrapper != nil {
 			initializerFunction = initializerFunctionWrapper(initializerFunction)
@@ -2387,7 +2391,7 @@ func (interpreter *Interpreter) declareCompositeValue(
 		// Wrap destructor
 
 		destructorFunctionWrapper :=
-			code.destructorFunctionWrapper
+			code.DestructorFunctionWrapper
 
 		if destructorFunctionWrapper != nil {
 			destructorFunction = destructorFunctionWrapper(destructorFunction)
@@ -2395,7 +2399,7 @@ func (interpreter *Interpreter) declareCompositeValue(
 
 		// Wrap functions
 
-		for name, functionWrapper := range code.functionWrappers {
+		for name, functionWrapper := range code.FunctionWrappers {
 			functions[name] = functionWrapper(functions[name])
 		}
 	}
@@ -2410,7 +2414,7 @@ func (interpreter *Interpreter) declareCompositeValue(
 	for i := len(compositeType.ExplicitInterfaceConformances) - 1; i >= 0; i-- {
 		conformance := compositeType.ExplicitInterfaceConformances[i]
 
-		wrapFunctions(interpreter.typeCodes.interfaceCodes[conformance.ID()])
+		wrapFunctions(interpreter.typeCodes.InterfaceCodes[conformance.ID()])
 	}
 
 	typeRequirements := compositeType.TypeRequirements()
@@ -2418,12 +2422,12 @@ func (interpreter *Interpreter) declareCompositeValue(
 	for i := len(typeRequirements) - 1; i >= 0; i-- {
 		typeRequirement := typeRequirements[i]
 
-		wrapFunctions(interpreter.typeCodes.typeRequirementCodes[typeRequirement.ID()])
+		wrapFunctions(interpreter.typeCodes.TypeRequirementCodes[typeRequirement.ID()])
 	}
 
-	interpreter.typeCodes.compositeCodes[compositeType.ID()] = compositeTypeCode{
-		destructorFunction: destructorFunction,
-		compositeFunctions: functions,
+	interpreter.typeCodes.CompositeCodes[compositeType.ID()] = CompositeTypeCode{
+		DestructorFunction: destructorFunction,
+		CompositeFunctions: functions,
 	}
 
 	location := interpreter.Checker.Location
@@ -2446,7 +2450,7 @@ func (interpreter *Interpreter) declareCompositeValue(
 
 			if declaration.CompositeKind == common.CompositeKindResource {
 				uuid := interpreter.uuidHandler()
-				fields[ResourceUUIDMemberName] = UInt64Value(uuid)
+				fields[sema.UUIDFieldName] = UInt64Value(uuid)
 			}
 
 			value := &CompositeValue{
@@ -2490,7 +2494,13 @@ func (interpreter *Interpreter) declareCompositeValue(
 	// for all other composite kinds, the constructor is declared
 
 	if declaration.CompositeKind == common.CompositeKindContract {
-		contract := interpreter.contractValueHandler(interpreter, compositeType, constructor)
+		positioned := ast.NewRangeFromPositioned(declaration.Identifier)
+		contract := interpreter.contractValueHandler(
+			interpreter,
+			compositeType,
+			constructor,
+			positioned,
+		)
 		contract.NestedValues = members
 		value = contract
 		// NOTE: variable value is also set in the constructor function: it needs to be available
@@ -2861,10 +2871,10 @@ func (interpreter *Interpreter) declareInterface(
 	destructorFunctionWrapper := interpreter.destructorFunctionWrapper(declaration.Members, lexicalScope)
 	functionWrappers := interpreter.functionWrappers(declaration.Members, lexicalScope)
 
-	interpreter.typeCodes.interfaceCodes[typeID] = wrapperCode{
-		initializerFunctionWrapper: initializerFunctionWrapper,
-		destructorFunctionWrapper:  destructorFunctionWrapper,
-		functionWrappers:           functionWrappers,
+	interpreter.typeCodes.InterfaceCodes[typeID] = WrapperCode{
+		InitializerFunctionWrapper: initializerFunctionWrapper,
+		DestructorFunctionWrapper:  destructorFunctionWrapper,
+		FunctionWrappers:           functionWrappers,
 	}
 }
 
@@ -2895,10 +2905,10 @@ func (interpreter *Interpreter) declareTypeRequirement(
 	destructorFunctionWrapper := interpreter.destructorFunctionWrapper(declaration.Members, lexicalScope)
 	functionWrappers := interpreter.functionWrappers(declaration.Members, lexicalScope)
 
-	interpreter.typeCodes.typeRequirementCodes[typeID] = wrapperCode{
-		initializerFunctionWrapper: initializerFunctionWrapper,
-		destructorFunctionWrapper:  destructorFunctionWrapper,
-		functionWrappers:           functionWrappers,
+	interpreter.typeCodes.TypeRequirementCodes[typeID] = WrapperCode{
+		InitializerFunctionWrapper: initializerFunctionWrapper,
+		DestructorFunctionWrapper:  destructorFunctionWrapper,
+		FunctionWrappers:           functionWrappers,
 	}
 }
 
@@ -3024,19 +3034,42 @@ func (interpreter *Interpreter) functionConditionsWrapper(
 	}
 }
 
-func (interpreter *Interpreter) ensureLoaded(location ast.Location, loadProgram func() *ast.Program) (subInterpreter *Interpreter) {
+func (interpreter *Interpreter) ensureLoaded(
+	location ast.Location,
+	loadLocation func() Import,
+) (subInterpreter *Interpreter) {
+
 	locationID := location.ID()
 
-	// If sub-interpreter already exists, return it
+	// If a sub-interpreter already exists, return it
+
 	subInterpreter = interpreter.allInterpreters[locationID]
 	if subInterpreter != nil {
 		return subInterpreter
 	}
 
-	// Create a new sub-interpreter and interpret the top-level declarations
-	var checkerErr *sema.CheckerError
+	// Create a sub-checker and sub-interpreter
+
 	var importedChecker *sema.Checker
-	importedChecker, checkerErr = interpreter.Checker.EnsureLoaded(location, loadProgram)
+
+	var virtualImport *VirtualImport
+
+	var checkerErr *sema.CheckerError
+	importedChecker, checkerErr = interpreter.Checker.EnsureLoaded(location, func() *ast.Program {
+		imported := loadLocation()
+
+		switch imported := imported.(type) {
+		case VirtualImport:
+			virtualImport = &imported
+			return nil
+
+		case ProgramImport:
+			return imported.Program
+
+		default:
+			panic(errors.NewUnreachableError())
+		}
+	})
 	if importedChecker == nil {
 		panic("missing checker")
 	}
@@ -3058,7 +3091,7 @@ func (interpreter *Interpreter) ensureLoaded(location ast.Location, loadProgram 
 		WithStorageKeyHandler(interpreter.storageKeyHandler),
 		WithInjectedCompositeFieldsHandler(interpreter.injectedCompositeFieldsHandler),
 		WithContractValueHandler(interpreter.contractValueHandler),
-		WithImportProgramHandler(interpreter.importProgramHandler),
+		WithImportLocationHandler(interpreter.importLocationHandler),
 		WithUUIDHandler(interpreter.uuidHandler),
 		WithAllInterpreters(interpreter.allInterpreters),
 		WithAllCheckers(interpreter.allCheckers),
@@ -3068,7 +3101,25 @@ func (interpreter *Interpreter) ensureLoaded(location ast.Location, loadProgram 
 		panic(err)
 	}
 
-	subInterpreter.runAllStatements(subInterpreter.interpret())
+	if virtualImport != nil {
+		// If the imported location is a virtual import,
+		// prepare the interpreter
+
+		for name, value := range virtualImport.Globals {
+			variable := &Variable{Value: value}
+			subInterpreter.setVariable(name, variable)
+			subInterpreter.Globals[name] = variable
+		}
+
+		subInterpreter.typeCodes.
+			Merge(virtualImport.TypeCodes)
+
+	} else {
+		// If the imported location is an interpreted program,
+		// evaluate its top-level declarations
+
+		subInterpreter.runAllStatements(subInterpreter.interpret())
+	}
 
 	return subInterpreter
 }
@@ -3079,8 +3130,8 @@ func (interpreter *Interpreter) VisitImportDeclaration(declaration *ast.ImportDe
 
 	subInterpreter := interpreter.ensureLoaded(
 		location,
-		func() *ast.Program {
-			return interpreter.importProgramHandler(interpreter, location)
+		func() Import {
+			return interpreter.importLocationHandler(interpreter, location)
 		},
 	)
 
@@ -3103,8 +3154,10 @@ func (interpreter *Interpreter) VisitImportDeclaration(declaration *ast.ImportDe
 	for name, variable := range variables {
 
 		// don't import predeclared values
-		if _, ok := subInterpreter.Checker.PredeclaredValues[name]; ok {
-			continue
+		if subInterpreter.Checker != nil {
+			if _, ok := subInterpreter.Checker.PredeclaredValues[name]; ok {
+				continue
+			}
 		}
 
 		// don't import base values
@@ -3113,6 +3166,7 @@ func (interpreter *Interpreter) VisitImportDeclaration(declaration *ast.ImportDe
 		}
 
 		interpreter.setVariable(name, variable)
+		interpreter.Globals[name] = variable
 	}
 
 	return Done{}
@@ -3298,11 +3352,7 @@ func (interpreter *Interpreter) VisitDestroyExpression(expression *ast.DestroyEx
 
 			// TODO: optimize: only potentially used by host-functions
 
-			locationRange := LocationRange{
-				Location: interpreter.Checker.Location,
-				Range:    ast.NewRangeFromPositioned(expression),
-			}
-
+			locationRange := interpreter.locationRange(expression)
 			return value.(DestroyableValue).Destroy(interpreter, locationRange)
 		})
 }
@@ -3393,6 +3443,17 @@ var converters = map[string]ValueConverter{
 
 func init() {
 	for _, numberType := range sema.AllNumberTypes {
+
+		// Only leaf number types require a converter,
+		// "hierarchy" number types don't need one
+
+		switch numberType.(type) {
+		case *sema.NumberType, *sema.SignedNumberType,
+			*sema.IntegerType, *sema.SignedIntegerType,
+			*sema.FixedPointType, *sema.SignedFixedPointType:
+			continue
+		}
+
 		if _, ok := converters[numberType.String()]; !ok {
 			panic(fmt.Sprintf("missing converter for number type: %s", numberType))
 		}
@@ -3422,7 +3483,9 @@ func (interpreter *Interpreter) defineBaseFunctions() {
 					break
 				}
 
-				result := TypeValue{Type: ty}
+				result := TypeValue{
+					Type: ConvertSemaToStaticType(ty),
+				}
 
 				return Done{Result: result}
 			},
@@ -3444,10 +3507,9 @@ func (interpreter *Interpreter) newConverterFunction(converter ValueConverter) F
 
 // TODO:
 // - FunctionType
-// - PublishedType
 //
 // - Character
-// - Account
+// - AuthAccount
 // - PublicAccount
 // - Block
 
@@ -3587,6 +3649,38 @@ func IsSubType(subType DynamicType, superType sema.Type) bool {
 
 		default:
 			return false
+		}
+
+	case CapabilityDynamicType:
+		switch typedSuperType := superType.(type) {
+		case *sema.AnyStructType:
+			return true
+
+		case *sema.CapabilityType:
+
+			if typedSuperType.BorrowType != nil {
+
+				// Capability <: Capability<T>:
+				// never
+
+				if typedSubType.BorrowType == nil {
+					return false
+				}
+
+				// Capability<T> <: Capability<U>:
+				// if T <: U
+
+				return sema.IsSubType(
+					typedSubType.BorrowType,
+					typedSuperType.BorrowType,
+				)
+			}
+
+			// Capability<T> <: Capability || Capability <: Capability:
+			// always
+
+			return true
+
 		}
 	}
 
@@ -3801,13 +3895,13 @@ func (interpreter *Interpreter) authAccountLinkFunction(addressValue AddressValu
 		// `Invocation.TypeParameterTypes` is a map, so get the first
 		// element / type by iterating over the values of the map.
 
-		var referenceType *sema.ReferenceType
+		var borrowType *sema.ReferenceType
 		for _, ty := range invocation.TypeParameterTypes {
-			referenceType = ty.(*sema.ReferenceType)
+			borrowType = ty.(*sema.ReferenceType)
 			break
 		}
 
-		if referenceType == nil {
+		if borrowType == nil {
 			panic(errors.NewUnreachableError())
 		}
 
@@ -3831,10 +3925,12 @@ func (interpreter *Interpreter) authAccountLinkFunction(addressValue AddressValu
 
 		// Write new value
 
+		borrowStaticType := ConvertSemaToStaticType
+
 		storedValue := NewSomeValueOwningNonCopying(
 			LinkValue{
 				TargetPath: targetPath,
-				Type:       ConvertSemaToStaticType(referenceType),
+				Type:       borrowStaticType(borrowType),
 			},
 		)
 
@@ -3846,8 +3942,9 @@ func (interpreter *Interpreter) authAccountLinkFunction(addressValue AddressValu
 
 		returnValue := NewSomeValueOwningNonCopying(
 			CapabilityValue{
-				Address: addressValue,
-				Path:    targetPath,
+				Address:    addressValue,
+				Path:       targetPath,
+				BorrowType: borrowStaticType(borrowType),
 			},
 		)
 
@@ -3925,52 +4022,99 @@ func (interpreter *Interpreter) authAccountUnlinkFunction(addressValue AddressVa
 	})
 }
 
-func (interpreter *Interpreter) capabilityBorrowFunction(addressValue AddressValue, pathValue PathValue) HostFunctionValue {
-	return NewHostFunctionValue(func(invocation Invocation) Trampoline {
+func (interpreter *Interpreter) capabilityBorrowFunction(
+	addressValue AddressValue,
+	pathValue PathValue,
+	borrowType *sema.ReferenceType,
+) HostFunctionValue {
 
-		targetStorageKey, authorized :=
-			interpreter.getCapabilityFinalTargetStorageKey(
-				addressValue,
-				pathValue,
-				invocation,
-			)
+	return NewHostFunctionValue(
+		func(invocation Invocation) Trampoline {
 
-		if targetStorageKey == "" {
-			return Done{Result: NilValue{}}
-		}
+			if borrowType == nil {
 
-		address := addressValue.ToAddress()
+				// `Invocation.TypeParameterTypes` is a map, so get the first
+				// element / type by iterating over the values of the map.
 
-		reference := &StorageReferenceValue{
-			Authorized:           authorized,
-			TargetStorageAddress: address,
-			TargetKey:            targetStorageKey,
-		}
+				for _, ty := range invocation.TypeParameterTypes {
+					borrowType = ty.(*sema.ReferenceType)
+					break
+				}
+			}
 
-		return Done{Result: NewSomeValueOwningNonCopying(reference)}
-	})
+			if borrowType == nil {
+				panic(errors.NewUnreachableError())
+			}
+
+			targetStorageKey, authorized :=
+				interpreter.getCapabilityFinalTargetStorageKey(
+					addressValue,
+					pathValue,
+					borrowType,
+					invocation.LocationRange,
+				)
+
+			if targetStorageKey == "" {
+				return Done{Result: NilValue{}}
+			}
+
+			address := addressValue.ToAddress()
+
+			reference := &StorageReferenceValue{
+				Authorized:           authorized,
+				TargetStorageAddress: address,
+				TargetKey:            targetStorageKey,
+			}
+
+			return Done{Result: NewSomeValueOwningNonCopying(reference)}
+		},
+	)
 }
 
-func (interpreter *Interpreter) capabilityCheckFunction(addressValue AddressValue, pathValue PathValue) HostFunctionValue {
-	return NewHostFunctionValue(func(invocation Invocation) Trampoline {
+func (interpreter *Interpreter) capabilityCheckFunction(
+	addressValue AddressValue,
+	pathValue PathValue,
+	borrowType *sema.ReferenceType,
+) HostFunctionValue {
 
-		targetStorageKey, _ :=
-			interpreter.getCapabilityFinalTargetStorageKey(
-				addressValue,
-				pathValue,
-				invocation,
-			)
+	return NewHostFunctionValue(
+		func(invocation Invocation) Trampoline {
 
-		isValid := targetStorageKey != ""
+			if borrowType == nil {
 
-		return Done{Result: BoolValue(isValid)}
-	})
+				// `Invocation.TypeParameterTypes` is a map, so get the first
+				// element / type by iterating over the values of the map.
+
+				for _, ty := range invocation.TypeParameterTypes {
+					borrowType = ty.(*sema.ReferenceType)
+					break
+				}
+			}
+
+			if borrowType == nil {
+				panic(errors.NewUnreachableError())
+			}
+
+			targetStorageKey, _ :=
+				interpreter.getCapabilityFinalTargetStorageKey(
+					addressValue,
+					pathValue,
+					borrowType,
+					invocation.LocationRange,
+				)
+
+			isValid := targetStorageKey != ""
+
+			return Done{Result: BoolValue(isValid)}
+		},
+	)
 }
 
 func (interpreter *Interpreter) getCapabilityFinalTargetStorageKey(
 	addressValue AddressValue,
 	path PathValue,
-	invocation Invocation,
+	wantedBorrowType *sema.ReferenceType,
+	locationRange LocationRange,
 ) (
 	finalStorageKey string,
 	authorized bool,
@@ -3979,19 +4123,7 @@ func (interpreter *Interpreter) getCapabilityFinalTargetStorageKey(
 
 	key := storageKey(path)
 
-	// `Invocation.TypeParameterTypes` is a map, so get the first
-	// element / type by iterating over the values of the map.
-
-	var wantedType sema.Type
-	for _, wantedType = range invocation.TypeParameterTypes {
-		break
-	}
-
-	if wantedType == nil {
-		panic(errors.NewUnreachableError())
-	}
-
-	wantedReferenceType := wantedType.(*sema.ReferenceType)
+	wantedReferenceType := wantedBorrowType
 
 	seenKeys := map[string]struct{}{}
 	paths := []PathValue{path}
@@ -4003,7 +4135,7 @@ func (interpreter *Interpreter) getCapabilityFinalTargetStorageKey(
 			panic(&CyclicLinkError{
 				Address:       addressValue,
 				Paths:         paths,
-				LocationRange: invocation.LocationRange,
+				LocationRange: locationRange,
 			})
 		} else {
 			seenKeys[key] = struct{}{}
@@ -4021,7 +4153,7 @@ func (interpreter *Interpreter) getCapabilityFinalTargetStorageKey(
 
 				allowedType := interpreter.convertStaticToSemaType(link.Type)
 
-				if !sema.IsSubType(allowedType, wantedType) {
+				if !sema.IsSubType(allowedType, wantedBorrowType) {
 					return "", false
 				}
 
@@ -4056,13 +4188,20 @@ func (interpreter *Interpreter) getElaboration(location ast.Location) *sema.Elab
 	// Ensure the program for this location is loaded,
 	// so its checker is available
 
-	inter := interpreter.ensureLoaded(location, func() *ast.Program {
-		return interpreter.importProgramHandler(interpreter, location)
-	})
+	inter := interpreter.ensureLoaded(
+		location,
+		func() Import {
+			return interpreter.importLocationHandler(interpreter, location)
+		},
+	)
 
 	locationID := location.ID()
 
-	return inter.allCheckers[locationID].Elaboration
+	checker := inter.allCheckers[locationID]
+	if checker == nil {
+		return nil
+	}
+	return checker.Elaboration
 }
 
 func (interpreter *Interpreter) getCompositeType(location ast.Location, typeID sema.TypeID) *sema.CompositeType {
@@ -4091,4 +4230,43 @@ func (interpreter *Interpreter) reportFunctionInvocation(pos ast.HasPosition) {
 
 	line := pos.StartPosition().Line
 	interpreter.onFunctionInvocation(interpreter, line)
+}
+
+// getMember gets the member value by the given identifier from the given Value depending on its type.
+func (interpreter *Interpreter) getMember(self Value, locationRange LocationRange, identifier string) Value {
+	var result Value
+	// When the accessed value has a type that supports the declaration of members
+	// or is a built-in type that has members (`MemberAccessibleValue`),
+	// then try to get the member for the given identifier.
+	// For example, the built-in type `String` has a member "length",
+	// and composite declarations may contain member declarations
+	if memberAccessibleValue, ok := self.(MemberAccessibleValue); ok {
+		result = memberAccessibleValue.GetMember(interpreter, locationRange, identifier)
+	}
+	if result == nil {
+		switch identifier {
+		case sema.IsInstanceFunctionName:
+			return NewHostFunctionValue(
+				func(invocation Invocation) Trampoline {
+					firstArgument := invocation.Arguments[0]
+
+					// NOTE: not invocation.Self, as that is only set for composite values
+					dynamicType := self.DynamicType(interpreter)
+					ty := interpreter.convertStaticToSemaType(
+						firstArgument.(TypeValue).Type,
+					)
+					result := IsSubType(dynamicType, ty)
+					return Done{Result: BoolValue(result)}
+				},
+			)
+		}
+	}
+	if result == nil {
+		panic(errors.NewUnreachableError())
+	}
+	return result
+}
+
+func (interpreter *Interpreter) setMember(self Value, locationRange LocationRange, identifier string, value Value) {
+	self.(MemberAccessibleValue).SetMember(interpreter, locationRange, identifier, value)
 }

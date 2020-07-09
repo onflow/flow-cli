@@ -24,6 +24,7 @@ import (
 
 	"github.com/rivo/uniseg"
 
+	"github.com/onflow/cadence/fixedpoint"
 	"github.com/onflow/cadence/runtime/ast"
 	"github.com/onflow/cadence/runtime/common"
 	"github.com/onflow/cadence/runtime/errors"
@@ -62,6 +63,10 @@ var beforeType = func() *FunctionType {
 	}
 }()
 
+type ValidTopLevelDeclarationsHandlerFunc = func(ast.Location) []common.DeclarationKind
+
+type ImportHandlerFunc = func(location ast.Location) Import
+
 // Checker
 
 type Checker struct {
@@ -92,7 +97,8 @@ type Checker struct {
 	allowSelfResourceFieldInvalidation bool
 	Elaboration                        *Elaboration
 	currentMemberExpression            *ast.MemberExpression
-	validTopLevelDeclarationsHandler   func(ast.Location) []common.DeclarationKind
+	validTopLevelDeclarationsHandler   ValidTopLevelDeclarationsHandlerFunc
+	importHandler                      ImportHandlerFunc
 	beforeExtractor                    *BeforeExtractor
 	checkHandler                       CheckHandlerFunc
 }
@@ -139,7 +145,7 @@ func WithAccessCheckMode(mode AccessCheckMode) Option {
 // the slice of declaration kinds which are valid at the top-level
 // for a given location.
 //
-func WithValidTopLevelDeclarationsHandler(handler func(location ast.Location) []common.DeclarationKind) Option {
+func WithValidTopLevelDeclarationsHandler(handler ValidTopLevelDeclarationsHandlerFunc) Option {
 	return func(checker *Checker) error {
 		checker.validTopLevelDeclarationsHandler = handler
 		return nil
@@ -164,6 +170,16 @@ type CheckHandlerFunc func(location ast.Location, check func())
 func WithCheckHandler(handler CheckHandlerFunc) Option {
 	return func(checker *Checker) error {
 		checker.checkHandler = handler
+		return nil
+	}
+}
+
+// WithImportHandler returns a checker option which sets
+// the given handler as function which is used to resolve unresolved imports.
+//
+func WithImportHandler(handler ImportHandlerFunc) Option {
+	return func(checker *Checker) error {
+		checker.importHandler = handler
 		return nil
 	}
 }
@@ -655,7 +671,7 @@ func (checker *Checker) checkFixedPointLiteral(expression *ast.FixedPointExpress
 			return false
 		}
 
-		if !checker.checkFixedPointRange(
+		if !fixedpoint.CheckRange(
 			expression.Negative,
 			expression.UnsignedInteger,
 			expression.Fractional,
@@ -736,60 +752,6 @@ func (checker *Checker) checkIntegerRange(value, min, max *big.Int) bool {
 		(max == nil || value.Cmp(max) <= 0)
 }
 
-func (checker *Checker) checkFixedPointRange(
-	negative bool,
-	unsignedIntegerValue, fractionalValue,
-	minInt, minFractional,
-	maxInt, maxFractional *big.Int,
-) bool {
-	minIntSign := minInt.Sign()
-
-	integerValue := new(big.Int).Set(unsignedIntegerValue)
-	if negative {
-		if minIntSign == 0 && negative {
-			return false
-		}
-
-		integerValue.Neg(integerValue)
-	}
-
-	switch integerValue.Cmp(minInt) {
-	case -1:
-		return false
-	case 0:
-		if minIntSign < 0 {
-			if fractionalValue.Cmp(minFractional) > 0 {
-				return false
-			}
-		} else {
-			if fractionalValue.Cmp(minFractional) < 0 {
-				return false
-			}
-		}
-	case 1:
-		break
-	}
-
-	switch integerValue.Cmp(maxInt) {
-	case -1:
-		break
-	case 0:
-		if maxInt.Sign() >= 0 {
-			if fractionalValue.Cmp(maxFractional) > 0 {
-				return false
-			}
-		} else {
-			if fractionalValue.Cmp(maxFractional) < 0 {
-				return false
-			}
-		}
-	case 1:
-		return false
-	}
-
-	return true
-}
-
 func (checker *Checker) declareGlobalDeclaration(declaration ast.Declaration) {
 	identifier := declaration.DeclarationIdentifier()
 	if identifier == nil {
@@ -840,7 +802,7 @@ func (checker *Checker) checkResourceMoveOperation(valueExpression ast.Expressio
 	checker.recordResourceInvalidation(
 		unaryExpression.Expression,
 		valueType,
-		ResourceInvalidationKindMove,
+		ResourceInvalidationKindMoveDefinite,
 	)
 }
 
@@ -898,6 +860,9 @@ func (checker *Checker) ConvertType(t ast.Type) Type {
 
 	case *ast.RestrictedType:
 		return checker.convertRestrictedType(t)
+
+	case *ast.InstantiationType:
+		return checker.convertInstantiationType(t)
 	}
 
 	panic(&astTypeConversionError{invalidASTType: t})
@@ -1432,13 +1397,19 @@ func (checker *Checker) checkResourceLoss(depth int) {
 	}
 }
 
+type recordedResourceInvalidation struct {
+	resource     interface{}
+	invalidation ResourceInvalidation
+}
+
 func (checker *Checker) recordResourceInvalidation(
 	expression ast.Expression,
 	valueType Type,
 	invalidationKind ResourceInvalidationKind,
-) {
+) *recordedResourceInvalidation {
+
 	if !valueType.IsResourceType() {
-		return
+		return nil
 	}
 
 	reportInvalidNestedMove := func() {
@@ -1454,14 +1425,17 @@ func (checker *Checker) recordResourceInvalidation(
 
 	switch expression.(type) {
 	case *ast.MemberExpression:
-		if accessedSelfMember == nil || !checker.allowSelfResourceFieldInvalidation {
+
+		if accessedSelfMember == nil ||
+			!checker.allowSelfResourceFieldInvalidation {
+
 			reportInvalidNestedMove()
-			return
+			return nil
 		}
 
 	case *ast.IndexExpression:
 		reportInvalidNestedMove()
-		return
+		return nil
 	}
 
 	invalidation := ResourceInvalidation{
@@ -1472,20 +1446,26 @@ func (checker *Checker) recordResourceInvalidation(
 
 	if checker.allowSelfResourceFieldInvalidation && accessedSelfMember != nil {
 		checker.resources.AddInvalidation(accessedSelfMember, invalidation)
-		return
+
+		return &recordedResourceInvalidation{
+			resource:     accessedSelfMember,
+			invalidation: invalidation,
+		}
 	}
 
 	identifierExpression, ok := expression.(*ast.IdentifierExpression)
 	if !ok {
-		return
+		return nil
 	}
 
 	variable := checker.findAndCheckVariable(identifierExpression.Identifier, false)
 	if variable == nil {
-		return
+		return nil
 	}
 
-	if variable.DeclarationKind == common.DeclarationKindSelf {
+	if invalidationKind != ResourceInvalidationKindMoveTemporary &&
+		variable.DeclarationKind == common.DeclarationKindSelf {
+
 		checker.report(
 			&InvalidSelfInvalidationError{
 				InvalidationKind: invalidationKind,
@@ -1496,6 +1476,11 @@ func (checker *Checker) recordResourceInvalidation(
 	}
 
 	checker.resources.AddInvalidation(variable, invalidation)
+
+	return &recordedResourceInvalidation{
+		resource:     variable,
+		invalidation: invalidation,
+	}
 }
 
 func (checker *Checker) checkWithResources(
@@ -1867,12 +1852,16 @@ func (checker *Checker) withSelfResourceInvalidationAllowed(f func()) {
 	f()
 }
 
+const OwnerFieldName = "owner"
+const UUIDFieldName = "uuid"
+
 func (checker *Checker) predeclaredMembers(containerType Type) []*Member {
 	var predeclaredMembers []*Member
 
 	addPredeclaredMember := func(
 		identifier string,
 		fieldType Type,
+		declarationKind common.DeclarationKind,
 		access ast.Access,
 		ignoreInSerialization bool,
 	) {
@@ -1880,7 +1869,7 @@ func (checker *Checker) predeclaredMembers(containerType Type) []*Member {
 			ContainerType:         containerType,
 			Access:                access,
 			Identifier:            ast.Identifier{Identifier: identifier},
-			DeclarationKind:       common.DeclarationKindField,
+			DeclarationKind:       declarationKind,
 			VariableKind:          ast.VariableKindConstant,
 			TypeAnnotation:        NewTypeAnnotation(fieldType),
 			Predeclared:           true,
@@ -1888,32 +1877,46 @@ func (checker *Checker) predeclaredMembers(containerType Type) []*Member {
 		})
 	}
 
+	// All types have a predeclared member `fun isInstance(_ type: Type)`
+
+	addPredeclaredMember(
+		IsInstanceFunctionName,
+		isInstanceFunctionType,
+		common.DeclarationKindFunction,
+		ast.AccessPublic,
+		true,
+	)
+
 	if compositeKindedType, ok := containerType.(CompositeKindedType); ok {
 
 		switch compositeKindedType.GetCompositeKind() {
 		case common.CompositeKindContract:
 
+			// All contracts have a predeclared member
 			// `priv let account: AuthAccount`,
-			// ignored in serialization
+			// which is ignored in serialization
 
 			addPredeclaredMember(
 				"account",
 				&AuthAccountType{},
+				common.DeclarationKindField,
 				ast.AccessPrivate,
 				true,
 			)
 
 		case common.CompositeKindResource:
-			// Resources have two predeclared fields:
+
+			// All resources have two predeclared fields:
 
 			// `pub let owner: PublicAccount?`,
 			// ignored in serialization
 
 			addPredeclaredMember(
-				"owner",
+				OwnerFieldName,
 				&OptionalType{
 					Type: &PublicAccountType{},
 				},
+				common.DeclarationKindField,
 				ast.AccessPublic,
 				true,
 			)
@@ -1922,8 +1925,9 @@ func (checker *Checker) predeclaredMembers(containerType Type) []*Member {
 			// included in serialization
 
 			addPredeclaredMember(
-				"uuid",
+				UUIDFieldName,
 				&UInt64Type{},
+				common.DeclarationKindField,
 				ast.AccessPublic,
 				false,
 			)
@@ -2094,4 +2098,87 @@ func (checker *Checker) effectiveCompositeMemberAccess(access ast.Access) ast.Ac
 	default:
 		panic(errors.NewUnreachableError())
 	}
+}
+
+func (checker *Checker) convertInstantiationType(t *ast.InstantiationType) Type {
+
+	ty := checker.ConvertType(t.Type)
+
+	// Always convert (check) the type arguments,
+	// even if the instantiated type
+
+	typeArgumentCount := len(t.TypeArguments)
+	typeArgumentAnnotations := make([]*TypeAnnotation, typeArgumentCount)
+
+	for i, rawTypeArgument := range t.TypeArguments {
+		typeArgument := checker.ConvertTypeAnnotation(rawTypeArgument)
+		checker.checkTypeAnnotation(typeArgument, rawTypeArgument)
+		typeArgumentAnnotations[i] = typeArgument
+	}
+
+	parameterizedType, ok := ty.(ParameterizedType)
+	if !ok {
+
+		// The type is not parameterized,
+		// report an error for all type arguments
+
+		checker.report(
+			&UnparameterizedTypeInstantiationError{
+				Range: ast.Range{
+					StartPos: t.TypeArgumentsStartPos,
+					EndPos:   t.EndPosition(),
+				},
+			},
+		)
+
+		// Just return the converted instantiated type as-is
+
+		return ty
+	}
+
+	typeParameters := parameterizedType.TypeParameters()
+	typeParameterCount := len(typeParameters)
+
+	typeArguments := make([]Type, len(typeArgumentAnnotations))
+
+	for i, typeAnnotation := range typeArgumentAnnotations {
+		typeArgument := typeAnnotation.Type
+		typeArguments[i] = typeArgument
+
+		// If the type parameter corresponding to the type argument (if any) has a type bound,
+		// then check that the argument is a subtype of the type bound.
+
+		if i < typeParameterCount {
+			typeParameter := typeParameters[i]
+			rawTypeArgument := t.TypeArguments[i]
+
+			err := typeParameter.checkTypeBound(
+				typeArgument,
+				ast.NewRangeFromPositioned(rawTypeArgument),
+			)
+			checker.report(err)
+		}
+	}
+
+	if typeArgumentCount != typeParameterCount {
+
+		// The instantiation has an incorrect number of type arguments
+
+		checker.report(
+			&InvalidTypeArgumentCountError{
+				TypeParameterCount: typeParameterCount,
+				TypeArgumentCount:  typeArgumentCount,
+				Range: ast.Range{
+					StartPos: t.TypeArgumentsStartPos,
+					EndPos:   t.EndPos,
+				},
+			},
+		)
+
+		// Just return the converted instantiated type as-is
+
+		return ty
+	}
+
+	return parameterizedType.Instantiate(typeArguments, checker.report)
 }

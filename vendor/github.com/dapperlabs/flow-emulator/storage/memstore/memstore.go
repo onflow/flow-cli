@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"sync"
 
-	vm "github.com/dapperlabs/flow-go/engine/execution/computation/virtualmachine"
 	"github.com/dapperlabs/flow-go/engine/execution/state/delta"
+	"github.com/dapperlabs/flow-go/fvm/state"
 	flowgo "github.com/dapperlabs/flow-go/model/flow"
 
 	"github.com/dapperlabs/flow-emulator/storage"
@@ -26,7 +26,7 @@ type Store struct {
 	// Transaction results by ID
 	transactionResults map[flowgo.Identifier]types.StorableTransactionResult
 	// Ledger states by block height
-	ledger map[uint64]vm.MapLedger
+	ledger map[uint64]*state.MapLedger
 	// events by block height
 	eventsByBlockHeight map[uint64][]flowgo.Event
 	// highest block height
@@ -42,7 +42,7 @@ func New() *Store {
 		collections:         make(map[flowgo.Identifier]flowgo.LightCollection),
 		transactions:        make(map[flowgo.Identifier]flowgo.TransactionBody),
 		transactionResults:  make(map[flowgo.Identifier]types.StorableTransactionResult),
-		ledger:              make(map[uint64]vm.MapLedger),
+		ledger:              make(map[uint64]*state.MapLedger),
 		eventsByBlockHeight: make(map[uint64][]flowgo.Event),
 	}
 }
@@ -210,7 +210,6 @@ func (s *Store) insertTransactionResult(txID flowgo.Identifier, result types.Sto
 func (s *Store) LedgerViewByHeight(blockHeight uint64) *delta.View {
 	return delta.NewView(func(key flowgo.RegisterID) (value flowgo.RegisterValue, err error) {
 
-		//return types.NewLedgerView(func(key string) ([]byte, error) {
 		s.mu.RLock()
 		defer s.mu.RUnlock()
 
@@ -219,28 +218,28 @@ func (s *Store) LedgerViewByHeight(blockHeight uint64) *delta.View {
 			return nil, nil
 		}
 
-		return ledger[string(key)], nil
+		return ledger.Get(key)
 	})
 }
 
 func (s *Store) insertLedgerDelta(blockHeight uint64, delta delta.Delta) error {
-	var oldLedger vm.MapLedger
+	var oldLedger *state.MapLedger
 
 	// use empty ledger if this is the genesis block
 	if blockHeight == 0 {
-		oldLedger = make(vm.MapLedger)
+		oldLedger = state.NewMapLedger()
 	} else {
 		oldLedger = s.ledger[blockHeight-1]
 	}
 
-	newLedger := make(vm.MapLedger)
+	newLedger := state.NewMapLedger()
 
 	// copy values from the previous ledger
-	for keyString, value := range oldLedger {
+	for keyString, value := range oldLedger.Registers {
 		key := flowgo.RegisterID(keyString)
 		// do not copy deleted values
 		if !delta.HasBeenDeleted(key) {
-			newLedger[keyString] = value
+			newLedger.Set(key, value)
 		}
 	}
 
@@ -249,7 +248,7 @@ func (s *Store) insertLedgerDelta(blockHeight uint64, delta delta.Delta) error {
 	for i, value := range values {
 		key := ids[i]
 		if value != nil {
-			newLedger[string(key)] = value
+			newLedger.Set(key, value)
 		}
 	}
 

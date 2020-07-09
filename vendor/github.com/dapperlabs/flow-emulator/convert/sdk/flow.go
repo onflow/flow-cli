@@ -102,52 +102,32 @@ func FlowTransactionSignaturesToSDK(flowTransactionSignatures []flowgo.Transacti
 	return ret
 }
 
-func SDKTransactionToFlow(sdkTx sdk.Transaction) (flowgo.TransactionBody, error) {
-	var err error
-
-	arguments := make([][]byte, len(sdkTx.Arguments))
-	for i, arg := range sdkTx.Arguments {
-		arguments[i], err = jsoncdc.Encode(arg)
-		if err != nil {
-			return flowgo.TransactionBody{}, fmt.Errorf("failed to encode argument at index %d: %w", i, err)
-		}
-	}
-
+func SDKTransactionToFlow(sdkTx sdk.Transaction) flowgo.TransactionBody {
 	return flowgo.TransactionBody{
 		ReferenceBlockID:   SDKIdentifierToFlow(sdkTx.ReferenceBlockID),
 		Script:             sdkTx.Script,
-		Arguments:          arguments,
+		Arguments:          sdkTx.Arguments,
 		GasLimit:           sdkTx.GasLimit,
 		ProposalKey:        SDKProposalKeyToFlow(sdkTx.ProposalKey),
 		Payer:              SDKAddressToFlow(sdkTx.Payer),
 		Authorizers:        SDKAddressesToFlow(sdkTx.Authorizers),
 		PayloadSignatures:  SDKTransactionSignaturesToFlow(sdkTx.PayloadSignatures),
 		EnvelopeSignatures: SDKTransactionSignaturesToFlow(sdkTx.EnvelopeSignatures),
-	}, nil
+	}
 }
 
-func FlowTransactionToSDK(flowTx flowgo.TransactionBody) (sdk.Transaction, error) {
-	var err error
-
-	arguments := make([]cadence.Value, len(flowTx.Arguments))
-	for i, arg := range flowTx.Arguments {
-		arguments[i], err = jsoncdc.Decode(arg)
-		if err != nil {
-			return sdk.Transaction{}, fmt.Errorf("failed to decode argument at index %d: %w", i, err)
-		}
-	}
-
+func FlowTransactionToSDK(flowTx flowgo.TransactionBody) sdk.Transaction {
 	return sdk.Transaction{
 		ReferenceBlockID:   FlowIdentifierToSDK(flowTx.ReferenceBlockID),
 		Script:             flowTx.Script,
-		Arguments:          arguments,
+		Arguments:          flowTx.Arguments,
 		GasLimit:           flowTx.GasLimit,
 		ProposalKey:        FlowProposalKeyToSDK(flowTx.ProposalKey),
 		Payer:              FlowAddressToSDK(flowTx.Payer),
 		Authorizers:        FlowAddressesToSDK(flowTx.Authorizers),
 		PayloadSignatures:  FlowTransactionSignaturesToSDK(flowTx.PayloadSignatures),
 		EnvelopeSignatures: FlowTransactionSignaturesToSDK(flowTx.EnvelopeSignatures),
-	}, nil
+	}
 }
 
 func FlowEventToSDK(flowEvent flowgo.Event) (sdk.Event, error) {
@@ -187,7 +167,7 @@ func FlowSignAlgoToSDK(signAlgo flowcrypto.SigningAlgorithm) sdkcrypto.Signature
 }
 
 func SDKSignAlgoToFlow(signAlgo sdkcrypto.SignatureAlgorithm) flowcrypto.SigningAlgorithm {
-	return flowcrypto.StringToSignatureAlgorithm(signAlgo.String())
+	return flowcrypto.StringToSigningAlgorithm(signAlgo.String())
 }
 
 func flowhashAlgoToSDK(hashAlgo flowhash.HashingAlgorithm) sdkcrypto.HashAlgorithm {
@@ -195,7 +175,7 @@ func flowhashAlgoToSDK(hashAlgo flowhash.HashingAlgorithm) sdkcrypto.HashAlgorit
 }
 
 func SDKHashAlgoToFlow(hashAlgo sdkcrypto.HashAlgorithm) flowhash.HashingAlgorithm {
-	return flowhash.StringToHashAlgorithm(hashAlgo.String())
+	return flowhash.StringToHashingAlgorithm(hashAlgo.String())
 }
 
 func FlowAccountPublicKeyToSDK(flowPublicKey flowgo.AccountPublicKey, id int) (sdk.AccountKey, error) {

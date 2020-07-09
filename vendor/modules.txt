@@ -20,7 +20,7 @@ github.com/cespare/xxhash/v2
 # github.com/dapperlabs/flow-core-contracts/contracts v0.0.0-20200526041238-ad2360621a1a
 github.com/dapperlabs/flow-core-contracts/contracts
 github.com/dapperlabs/flow-core-contracts/contracts/internal/assets
-# github.com/dapperlabs/flow-emulator v0.4.0
+# github.com/dapperlabs/flow-emulator v0.5.0
 github.com/dapperlabs/flow-emulator
 github.com/dapperlabs/flow-emulator/cmd/emulator/start
 github.com/dapperlabs/flow-emulator/convert
@@ -31,13 +31,12 @@ github.com/dapperlabs/flow-emulator/storage
 github.com/dapperlabs/flow-emulator/storage/badger
 github.com/dapperlabs/flow-emulator/storage/memstore
 github.com/dapperlabs/flow-emulator/types
-# github.com/dapperlabs/flow-go v0.4.1-0.20200602235543-7c086e054cc3
+# github.com/dapperlabs/flow-go v0.4.1-0.20200708192840-30b3e2d5a586
 github.com/dapperlabs/flow-go/engine
-github.com/dapperlabs/flow-go/engine/execution/computation/virtualmachine
-github.com/dapperlabs/flow-go/engine/execution/state
-github.com/dapperlabs/flow-go/engine/execution/state/bootstrap
 github.com/dapperlabs/flow-go/engine/execution/state/delta
 github.com/dapperlabs/flow-go/engine/verification
+github.com/dapperlabs/flow-go/fvm
+github.com/dapperlabs/flow-go/fvm/state
 github.com/dapperlabs/flow-go/model/chunks
 github.com/dapperlabs/flow-go/model/cluster
 github.com/dapperlabs/flow-go/model/coldstuff
@@ -54,9 +53,9 @@ github.com/dapperlabs/flow-go/module/metrics
 github.com/dapperlabs/flow-go/module/trace
 github.com/dapperlabs/flow-go/network
 github.com/dapperlabs/flow-go/storage
-github.com/dapperlabs/flow-go/storage/badger/operation
 github.com/dapperlabs/flow-go/storage/merkle
-# github.com/dapperlabs/flow-go/crypto v0.3.2-0.20200602194037-af8844481849
+github.com/dapperlabs/flow-go/utils/slices
+# github.com/dapperlabs/flow-go/crypto v0.3.2-0.20200708192840-30b3e2d5a586
 github.com/dapperlabs/flow-go/crypto
 github.com/dapperlabs/flow-go/crypto/hash
 github.com/dapperlabs/flow-go/crypto/random
@@ -64,7 +63,7 @@ github.com/dapperlabs/flow-go/crypto/random
 github.com/davecgh/go-spew/spew
 # github.com/desertbit/timer v0.0.0-20180107155436-c41aec40b27f
 github.com/desertbit/timer
-# github.com/dgraph-io/badger/v2 v2.0.2
+# github.com/dgraph-io/badger/v2 v2.0.3
 github.com/dgraph-io/badger/v2
 github.com/dgraph-io/badger/v2/options
 github.com/dgraph-io/badger/v2/pb
@@ -72,7 +71,7 @@ github.com/dgraph-io/badger/v2/skl
 github.com/dgraph-io/badger/v2/table
 github.com/dgraph-io/badger/v2/trie
 github.com/dgraph-io/badger/v2/y
-# github.com/dgraph-io/ristretto v0.0.2-0.20200115201040-8f368f2f2ab3
+# github.com/dgraph-io/ristretto v0.0.2
 github.com/dgraph-io/ristretto
 github.com/dgraph-io/ristretto/z
 # github.com/dgryski/go-farm v0.0.0-20190423205320-6a90982ecee2
@@ -94,7 +93,7 @@ github.com/golang/protobuf/ptypes/duration
 github.com/golang/protobuf/ptypes/timestamp
 # github.com/golang/snappy v0.0.1
 github.com/golang/snappy
-# github.com/gorilla/websocket v1.4.1
+# github.com/gorilla/websocket v1.4.2
 github.com/gorilla/websocket
 # github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0
 github.com/grpc-ecosystem/go-grpc-prometheus
@@ -136,9 +135,10 @@ github.com/mattn/go-tty
 github.com/matttproud/golang_protobuf_extensions/pbutil
 # github.com/mitchellh/mapstructure v1.1.2
 github.com/mitchellh/mapstructure
-# github.com/onflow/cadence v0.4.0
+# github.com/onflow/cadence v0.5.0
 github.com/onflow/cadence
 github.com/onflow/cadence/encoding/json
+github.com/onflow/cadence/fixedpoint
 github.com/onflow/cadence/runtime
 github.com/onflow/cadence/runtime/activations
 github.com/onflow/cadence/runtime/ast
@@ -150,10 +150,13 @@ github.com/onflow/cadence/runtime/common/intervalst
 github.com/onflow/cadence/runtime/errors
 github.com/onflow/cadence/runtime/interpreter
 github.com/onflow/cadence/runtime/parser
+github.com/onflow/cadence/runtime/parser2
+github.com/onflow/cadence/runtime/parser2/lexer
 github.com/onflow/cadence/runtime/sema
 github.com/onflow/cadence/runtime/stdlib
+github.com/onflow/cadence/runtime/stdlib/internal
 github.com/onflow/cadence/runtime/trampoline
-# github.com/onflow/cadence/languageserver v0.4.0
+# github.com/onflow/cadence/languageserver v0.5.0
 github.com/onflow/cadence/languageserver/config
 github.com/onflow/cadence/languageserver/jsonrpc2
 github.com/onflow/cadence/languageserver/protocol
@@ -161,7 +164,7 @@ github.com/onflow/cadence/languageserver/server
 # github.com/onflow/flow-ft/contracts v0.0.0-20200525235630-0e8024a483ce
 github.com/onflow/flow-ft/contracts
 github.com/onflow/flow-ft/contracts/internal/assets
-# github.com/onflow/flow-go-sdk v0.4.0
+# github.com/onflow/flow-go-sdk v0.7.0
 github.com/onflow/flow-go-sdk
 github.com/onflow/flow-go-sdk/client
 github.com/onflow/flow-go-sdk/client/convert
@@ -169,7 +172,7 @@ github.com/onflow/flow-go-sdk/crypto
 github.com/onflow/flow-go-sdk/crypto/internal/crypto
 github.com/onflow/flow-go-sdk/crypto/internal/crypto/hash
 github.com/onflow/flow-go-sdk/templates
-# github.com/onflow/flow/protobuf/go/flow v0.1.5-0.20200601215056-34a11def1d6b
+# github.com/onflow/flow/protobuf/go/flow v0.1.5-0.20200611205353-548107cc9aca
 github.com/onflow/flow/protobuf/go/flow/access
 github.com/onflow/flow/protobuf/go/flow/entities
 # github.com/opentracing/opentracing-go v1.1.0
@@ -212,7 +215,7 @@ github.com/rivo/uniseg
 github.com/rs/cors
 # github.com/rs/xhandler v0.0.0-20160618193221-ed27b6fd6521
 github.com/rs/xhandler
-# github.com/rs/zerolog v1.15.0
+# github.com/rs/zerolog v1.19.0
 github.com/rs/zerolog
 github.com/rs/zerolog/internal/cbor
 github.com/rs/zerolog/internal/json
@@ -237,7 +240,7 @@ github.com/spf13/jwalterweatherman
 github.com/spf13/pflag
 # github.com/spf13/viper v1.4.0
 github.com/spf13/viper
-# github.com/stretchr/testify v1.5.1
+# github.com/stretchr/testify v1.6.1
 github.com/stretchr/testify/assert
 github.com/stretchr/testify/require
 # github.com/uber/jaeger-client-go v2.22.1+incompatible
@@ -273,14 +276,11 @@ github.com/vmihailenco/tagparser/internal
 github.com/vmihailenco/tagparser/internal/parser
 # github.com/x448/float16 v0.8.4
 github.com/x448/float16
-# go.uber.org/atomic v1.5.1
+# go.uber.org/atomic v1.6.0
 go.uber.org/atomic
-# golang.org/x/crypto v0.0.0-20200429183012-4b2356b1ed79
+# golang.org/x/crypto v0.0.0-20200510223506-06a226fb4e37
 golang.org/x/crypto/blake2b
 golang.org/x/crypto/sha3
-# golang.org/x/lint v0.0.0-20200130185559-910be7a94367
-golang.org/x/lint
-golang.org/x/lint/golint
 # golang.org/x/net v0.0.0-20200301022130-244492dfa37a
 golang.org/x/net/context
 golang.org/x/net/http/httpguts
@@ -289,7 +289,7 @@ golang.org/x/net/http2/hpack
 golang.org/x/net/idna
 golang.org/x/net/internal/timeseries
 golang.org/x/net/trace
-# golang.org/x/sys v0.0.0-20200501145240-bc7a7d42d5c3
+# golang.org/x/sys v0.0.0-20200509044756-6aff5f38e54f
 golang.org/x/sys/cpu
 golang.org/x/sys/internal/unsafeheader
 golang.org/x/sys/unix
@@ -301,10 +301,6 @@ golang.org/x/text/secure/bidirule
 golang.org/x/text/transform
 golang.org/x/text/unicode/bidi
 golang.org/x/text/unicode/norm
-# golang.org/x/tools v0.0.0-20200323144430-8dcfad9e016e
-golang.org/x/tools/go/ast/astutil
-golang.org/x/tools/go/gcexportdata
-golang.org/x/tools/go/internal/gcimporter
 # google.golang.org/appengine v1.6.5
 google.golang.org/appengine
 google.golang.org/appengine/datastore
@@ -319,12 +315,13 @@ google.golang.org/appengine/internal/modules
 google.golang.org/appengine/internal/remote_api
 # google.golang.org/genproto v0.0.0-20200224152610-e50cd9704f63
 google.golang.org/genproto/googleapis/rpc/status
-# google.golang.org/grpc v1.29.1
+# google.golang.org/grpc v1.30.0
 google.golang.org/grpc
 google.golang.org/grpc/attributes
 google.golang.org/grpc/backoff
 google.golang.org/grpc/balancer
 google.golang.org/grpc/balancer/base
+google.golang.org/grpc/balancer/grpclb/state
 google.golang.org/grpc/balancer/roundrobin
 google.golang.org/grpc/binarylog/grpc_binarylog_v1
 google.golang.org/grpc/codes
@@ -347,12 +344,12 @@ google.golang.org/grpc/internal/grpcsync
 google.golang.org/grpc/internal/grpcutil
 google.golang.org/grpc/internal/resolver/dns
 google.golang.org/grpc/internal/resolver/passthrough
+google.golang.org/grpc/internal/serviceconfig
 google.golang.org/grpc/internal/status
 google.golang.org/grpc/internal/syscall
 google.golang.org/grpc/internal/transport
 google.golang.org/grpc/keepalive
 google.golang.org/grpc/metadata
-google.golang.org/grpc/naming
 google.golang.org/grpc/peer
 google.golang.org/grpc/reflection
 google.golang.org/grpc/reflection/grpc_reflection_v1alpha
@@ -361,7 +358,7 @@ google.golang.org/grpc/serviceconfig
 google.golang.org/grpc/stats
 google.golang.org/grpc/status
 google.golang.org/grpc/tap
-# google.golang.org/protobuf v1.21.0
+# google.golang.org/protobuf v1.23.0
 google.golang.org/protobuf/encoding/prototext
 google.golang.org/protobuf/encoding/protowire
 google.golang.org/protobuf/internal/descfmt
@@ -397,3 +394,5 @@ google.golang.org/protobuf/types/known/timestamppb
 gopkg.in/alecthomas/kingpin.v2
 # gopkg.in/yaml.v2 v2.2.8
 gopkg.in/yaml.v2
+# gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c
+gopkg.in/yaml.v3

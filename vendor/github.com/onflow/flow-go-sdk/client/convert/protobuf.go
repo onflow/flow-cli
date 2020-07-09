@@ -21,6 +21,7 @@ package convert
 import (
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/golang/protobuf/ptypes"
 	"github.com/onflow/cadence"
@@ -121,16 +122,21 @@ func BlockToMessage(b flow.Block) (*entities.Block, error) {
 }
 
 func MessageToBlock(m *entities.Block) (flow.Block, error) {
-	t, err := ptypes.Timestamp(m.Timestamp)
-	if err != nil {
-		return flow.Block{}, err
+	var timestamp time.Time
+	var err error
+
+	if m.GetTimestamp() != nil {
+		timestamp, err = ptypes.Timestamp(m.GetTimestamp())
+		if err != nil {
+			return flow.Block{}, err
+		}
 	}
 
 	header := &flow.BlockHeader{
 		ID:        flow.HashToID(m.GetId()),
 		ParentID:  flow.HashToID(m.GetParentId()),
 		Height:    m.GetHeight(),
-		Timestamp: t,
+		Timestamp: timestamp,
 	}
 
 	guarantees, err := MessagesToCollectionGuarantees(m.GetCollectionGuarantees())
@@ -167,16 +173,21 @@ func MessageToBlockHeader(m *entities.BlockHeader) (flow.BlockHeader, error) {
 		return flow.BlockHeader{}, ErrEmptyMessage
 	}
 
-	t, err := ptypes.Timestamp(m.Timestamp)
-	if err != nil {
-		return flow.BlockHeader{}, err
+	var timestamp time.Time
+	var err error
+
+	if m.GetTimestamp() != nil {
+		timestamp, err = ptypes.Timestamp(m.GetTimestamp())
+		if err != nil {
+			return flow.BlockHeader{}, err
+		}
 	}
 
 	return flow.BlockHeader{
 		ID:        flow.HashToID(m.GetId()),
 		ParentID:  flow.HashToID(m.GetParentId()),
 		Height:    m.GetHeight(),
-		Timestamp: t,
+		Timestamp: timestamp,
 	}, nil
 }
 
@@ -187,6 +198,18 @@ func CadenceValueToMessage(value cadence.Value) ([]byte, error) {
 	}
 
 	return b, nil
+}
+
+func CadenceValuesToMessages(values []cadence.Value) ([][]byte, error) {
+	msgs := make([][]byte, len(values))
+	for i, val := range values {
+		msg, err := CadenceValueToMessage(val)
+		if err != nil {
+			return nil, fmt.Errorf("convert: %w", err)
+		}
+		msgs[i] = msg
+	}
+	return msgs, nil
 }
 
 func MessageToCadenceValue(m []byte) (cadence.Value, error) {
@@ -322,16 +345,6 @@ func MessagesToIdentifiers(l [][]byte) []flow.Identifier {
 }
 
 func TransactionToMessage(t flow.Transaction) (*entities.Transaction, error) {
-	var err error
-
-	arguments := make([][]byte, len(t.Arguments))
-	for i, arg := range t.Arguments {
-		arguments[i], err = CadenceValueToMessage(arg)
-		if err != nil {
-			return nil, err
-		}
-	}
-
 	proposalKeyMessage := &entities.Transaction_ProposalKey{
 		Address:        t.ProposalKey.Address.Bytes(),
 		KeyId:          uint32(t.ProposalKey.KeyID),
@@ -365,7 +378,7 @@ func TransactionToMessage(t flow.Transaction) (*entities.Transaction, error) {
 
 	return &entities.Transaction{
 		Script:             t.Script,
-		Arguments:          arguments,
+		Arguments:          t.Arguments,
 		ReferenceBlockId:   t.ReferenceBlockID.Bytes(),
 		GasLimit:           t.GasLimit,
 		ProposalKey:        proposalKeyMessage,
@@ -388,12 +401,7 @@ func MessageToTransaction(m *entities.Transaction) (flow.Transaction, error) {
 	t.SetGasLimit(m.GetGasLimit())
 
 	for _, arg := range m.GetArguments() {
-		value, err := MessageToCadenceValue(arg)
-		if err != nil {
-			return flow.Transaction{}, err
-		}
-
-		t.AddArgument(value)
+		t.AddRawArgument(arg)
 	}
 
 	proposalKey := m.GetProposalKey()

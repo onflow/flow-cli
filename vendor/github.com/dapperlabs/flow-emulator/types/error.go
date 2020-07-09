@@ -1,11 +1,13 @@
 package types
 
-import "github.com/dapperlabs/flow-go/engine/execution/computation/virtualmachine"
+import (
+	"github.com/dapperlabs/flow-go/fvm"
+)
 
 type FlowError struct {
-	FlowError virtualmachine.FlowError
+	FlowError fvm.Error
 }
 
 func (f *FlowError) Error() string {
-	return f.FlowError.ErrorMessage()
+	return f.FlowError.Error()
 }

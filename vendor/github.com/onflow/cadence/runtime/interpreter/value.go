@@ -1,3 +1,21 @@
+/*
+ * Cadence - The resource-oriented smart contract programming language
+ *
+ * Copyright 2019-2020 Dapper Labs, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package interpreter
 
 import (
@@ -22,6 +40,7 @@ import (
 // Value
 
 type Value interface {
+	fmt.Stringer
 	IsValue()
 	DynamicType(interpreter *Interpreter) DynamicType
 	Copy() Value
@@ -55,7 +74,7 @@ type ConcatenatableValue interface {
 
 type EquatableValue interface {
 	Value
-	Equal(other Value) BoolValue
+	Equal(interpreter *Interpreter, other Value) BoolValue
 }
 
 // DestroyableValue
@@ -73,7 +92,7 @@ type HasKeyString interface {
 // TypeValue
 
 type TypeValue struct {
-	Type sema.Type
+	Type StaticType
 }
 
 func (TypeValue) IsValue() {}
@@ -107,21 +126,26 @@ func (v TypeValue) String() string {
 	return fmt.Sprintf("Type<%s>", v.Type)
 }
 
-func (v TypeValue) Equal(other Value) BoolValue {
+func (v TypeValue) Equal(inter *Interpreter, other Value) BoolValue {
 	otherMetaType, ok := other.(TypeValue)
 	if !ok {
 		return false
 	}
-	return BoolValue(v.Type.Equal(otherMetaType.Type))
+
+	ty := inter.convertStaticToSemaType(v.Type)
+	otherTy := inter.convertStaticToSemaType(otherMetaType.Type)
+
+	return BoolValue(ty.Equal(otherTy))
 }
 
-func (v TypeValue) GetMember(_ *Interpreter, _ LocationRange, name string) Value {
+func (v TypeValue) GetMember(inter *Interpreter, _ LocationRange, name string) Value {
 	switch name {
 	case "identifier":
-		return NewStringValue(v.Type.QualifiedString())
-	default:
-		panic(errors.NewUnreachableError())
+		ty := inter.convertStaticToSemaType(v.Type)
+		return NewStringValue(ty.QualifiedString())
 	}
+
+	return nil
 }
 
 func (v TypeValue) SetMember(_ *Interpreter, _ LocationRange, _ string, _ Value) {
@@ -198,7 +222,7 @@ func (v BoolValue) Negate() BoolValue {
 	return !v
 }
 
-func (v BoolValue) Equal(other Value) BoolValue {
+func (v BoolValue) Equal(_ *Interpreter, other Value) BoolValue {
 	otherBool, ok := other.(BoolValue)
 	if !ok {
 		return false
@@ -264,7 +288,7 @@ func (v *StringValue) KeyString() string {
 	return v.Str
 }
 
-func (v *StringValue) Equal(other Value) BoolValue {
+func (v *StringValue) Equal(_ *Interpreter, other Value) BoolValue {
 	otherString, ok := other.(*StringValue)
 	if !ok {
 		return false
@@ -342,7 +366,7 @@ func (v *StringValue) SetIndex(index int, char *StringValue) {
 func (v *StringValue) GetMember(_ *Interpreter, _ LocationRange, name string) Value {
 	switch name {
 	case "length":
-		count := uniseg.GraphemeClusterCount(v.Str)
+		count := v.Length()
 		return NewIntValueFromInt64(int64(count))
 
 	case "concat":
@@ -367,26 +391,37 @@ func (v *StringValue) GetMember(_ *Interpreter, _ LocationRange, name string) Va
 	case "decodeHex":
 		return NewHostFunctionValue(
 			func(invocation Invocation) trampoline.Trampoline {
-				str := v.Str
-
-				bs, err := hex.DecodeString(str)
-				if err != nil {
-					panic(err)
-				}
-
-				values := make([]Value, len(str)/2)
-				for i, b := range bs {
-					values[i] = NewIntValueFromInt64(int64(b))
-				}
-				result := NewArrayValueUnownedNonCopying(values...)
-
+				result := v.DecodeHex()
 				return trampoline.Done{Result: result}
 			},
 		)
-
-	default:
-		panic(errors.NewUnreachableError())
 	}
+
+	return nil
+}
+
+// Length returns the number of characters (grapheme clusters)
+//
+func (v *StringValue) Length() int {
+	return uniseg.GraphemeClusterCount(v.Str)
+}
+
+// DecodeHex hex-decodes this string and returns an array of UInt8 values
+//
+func (v *StringValue) DecodeHex() *ArrayValue {
+	str := v.Str
+
+	bs, err := hex.DecodeString(str)
+	if err != nil {
+		panic(err)
+	}
+
+	values := make([]Value, len(str)/2)
+	for i, b := range bs {
+		values[i] = UInt8Value(b)
+	}
+	result := NewArrayValueUnownedNonCopying(values...)
+	return result
 }
 
 func (*StringValue) SetMember(_ *Interpreter, _ LocationRange, _ string, _ Value) {
@@ -576,7 +611,7 @@ func (v *ArrayValue) Contains(needleValue Value) BoolValue {
 	needleEquatable := needleValue.(EquatableValue)
 
 	for _, arrayValue := range v.Values {
-		if needleEquatable.Equal(arrayValue) {
+		if needleEquatable.Equal(nil, arrayValue) {
 			return true
 		}
 	}
@@ -649,9 +684,9 @@ func (v *ArrayValue) GetMember(_ *Interpreter, _ LocationRange, name string) Val
 			},
 		)
 
-	default:
-		panic(errors.NewUnreachableError())
 	}
+
+	return nil
 }
 
 func (v *ArrayValue) SetMember(_ *Interpreter, _ LocationRange, _ string, _ Value) {
@@ -677,6 +712,7 @@ type NumberValue interface {
 	LessEqual(other NumberValue) BoolValue
 	Greater(other NumberValue) BoolValue
 	GreaterEqual(other NumberValue) BoolValue
+	ToBigEndianBytes() []byte
 }
 
 type IntegerValue interface {
@@ -835,7 +871,7 @@ func (v IntValue) GreaterEqual(other NumberValue) BoolValue {
 	return cmp >= 0
 }
 
-func (v IntValue) Equal(other Value) BoolValue {
+func (v IntValue) Equal(_ *Interpreter, other Value) BoolValue {
 	otherInt, ok := other.(IntValue)
 	if !ok {
 		return false
@@ -902,13 +938,24 @@ func (v IntValue) GetMember(_ *Interpreter, _ LocationRange, name string) Value 
 			},
 		)
 
-	default:
-		panic(errors.NewUnreachableError())
+	case sema.ToBigEndianBytesFunctionName:
+		return NewHostFunctionValue(
+			func(invocation Invocation) trampoline.Trampoline {
+				result := ByteSliceToByteArrayValue(v.ToBigEndianBytes())
+				return trampoline.Done{Result: result}
+			},
+		)
 	}
+
+	return nil
 }
 
 func (IntValue) SetMember(_ *Interpreter, _ LocationRange, _ string, _ Value) {
 	panic(errors.NewUnreachableError())
+}
+
+func (v IntValue) ToBigEndianBytes() []byte {
+	return SignedBigIntToBigEndianBytes(v.BigInt)
 }
 
 // Int8Value
@@ -1048,7 +1095,7 @@ func (v Int8Value) GreaterEqual(other NumberValue) BoolValue {
 	return v >= other.(Int8Value)
 }
 
-func (v Int8Value) Equal(other Value) BoolValue {
+func (v Int8Value) Equal(_ *Interpreter, other Value) BoolValue {
 	otherInt8, ok := other.(Int8Value)
 	if !ok {
 		return false
@@ -1121,13 +1168,24 @@ func (v Int8Value) GetMember(_ *Interpreter, _ LocationRange, name string) Value
 			},
 		)
 
-	default:
-		panic(errors.NewUnreachableError())
+	case sema.ToBigEndianBytesFunctionName:
+		return NewHostFunctionValue(
+			func(invocation Invocation) trampoline.Trampoline {
+				result := ByteSliceToByteArrayValue(v.ToBigEndianBytes())
+				return trampoline.Done{Result: result}
+			},
+		)
 	}
+
+	return nil
 }
 
 func (Int8Value) SetMember(_ *Interpreter, _ LocationRange, _ string, _ Value) {
 	panic(errors.NewUnreachableError())
+}
+
+func (v Int8Value) ToBigEndianBytes() []byte {
+	return []byte{byte(v)}
 }
 
 // Int16Value
@@ -1267,7 +1325,7 @@ func (v Int16Value) GreaterEqual(other NumberValue) BoolValue {
 	return v >= other.(Int16Value)
 }
 
-func (v Int16Value) Equal(other Value) BoolValue {
+func (v Int16Value) Equal(_ *Interpreter, other Value) BoolValue {
 	otherInt16, ok := other.(Int16Value)
 	if !ok {
 		return false
@@ -1340,13 +1398,26 @@ func (v Int16Value) GetMember(_ *Interpreter, _ LocationRange, name string) Valu
 			},
 		)
 
-	default:
-		panic(errors.NewUnreachableError())
+	case sema.ToBigEndianBytesFunctionName:
+		return NewHostFunctionValue(
+			func(invocation Invocation) trampoline.Trampoline {
+				result := ByteSliceToByteArrayValue(v.ToBigEndianBytes())
+				return trampoline.Done{Result: result}
+			},
+		)
 	}
+
+	return nil
 }
 
 func (Int16Value) SetMember(_ *Interpreter, _ LocationRange, _ string, _ Value) {
 	panic(errors.NewUnreachableError())
+}
+
+func (v Int16Value) ToBigEndianBytes() []byte {
+	b := make([]byte, 2)
+	binary.BigEndian.PutUint16(b, uint16(v))
+	return b
 }
 
 // Int32Value
@@ -1486,7 +1557,7 @@ func (v Int32Value) GreaterEqual(other NumberValue) BoolValue {
 	return v >= other.(Int32Value)
 }
 
-func (v Int32Value) Equal(other Value) BoolValue {
+func (v Int32Value) Equal(_ *Interpreter, other Value) BoolValue {
 	otherInt32, ok := other.(Int32Value)
 	if !ok {
 		return false
@@ -1559,13 +1630,26 @@ func (v Int32Value) GetMember(_ *Interpreter, _ LocationRange, name string) Valu
 			},
 		)
 
-	default:
-		panic(errors.NewUnreachableError())
+	case sema.ToBigEndianBytesFunctionName:
+		return NewHostFunctionValue(
+			func(invocation Invocation) trampoline.Trampoline {
+				result := ByteSliceToByteArrayValue(v.ToBigEndianBytes())
+				return trampoline.Done{Result: result}
+			},
+		)
 	}
+
+	return nil
 }
 
 func (Int32Value) SetMember(_ *Interpreter, _ LocationRange, _ string, _ Value) {
 	panic(errors.NewUnreachableError())
+}
+
+func (v Int32Value) ToBigEndianBytes() []byte {
+	b := make([]byte, 4)
+	binary.BigEndian.PutUint32(b, uint32(v))
+	return b
 }
 
 // Int64Value
@@ -1709,7 +1793,7 @@ func (v Int64Value) GreaterEqual(other NumberValue) BoolValue {
 	return v >= other.(Int64Value)
 }
 
-func (v Int64Value) Equal(other Value) BoolValue {
+func (v Int64Value) Equal(_ *Interpreter, other Value) BoolValue {
 	otherInt64, ok := other.(Int64Value)
 	if !ok {
 		return false
@@ -1777,13 +1861,26 @@ func (v Int64Value) GetMember(_ *Interpreter, _ LocationRange, name string) Valu
 			},
 		)
 
-	default:
-		panic(errors.NewUnreachableError())
+	case sema.ToBigEndianBytesFunctionName:
+		return NewHostFunctionValue(
+			func(invocation Invocation) trampoline.Trampoline {
+				result := ByteSliceToByteArrayValue(v.ToBigEndianBytes())
+				return trampoline.Done{Result: result}
+			},
+		)
 	}
+
+	return nil
 }
 
 func (Int64Value) SetMember(_ *Interpreter, _ LocationRange, _ string, _ Value) {
 	panic(errors.NewUnreachableError())
+}
+
+func (v Int64Value) ToBigEndianBytes() []byte {
+	b := make([]byte, 8)
+	binary.BigEndian.PutUint64(b, uint64(v))
+	return b
 }
 
 // Int128Value
@@ -1965,7 +2062,7 @@ func (v Int128Value) GreaterEqual(other NumberValue) BoolValue {
 	return cmp >= 0
 }
 
-func (v Int128Value) Equal(other Value) BoolValue {
+func (v Int128Value) Equal(_ *Interpreter, other Value) BoolValue {
 	otherInt, ok := other.(Int128Value)
 	if !ok {
 		return false
@@ -2055,13 +2152,24 @@ func (v Int128Value) GetMember(_ *Interpreter, _ LocationRange, name string) Val
 			},
 		)
 
-	default:
-		panic(errors.NewUnreachableError())
+	case sema.ToBigEndianBytesFunctionName:
+		return NewHostFunctionValue(
+			func(invocation Invocation) trampoline.Trampoline {
+				result := ByteSliceToByteArrayValue(v.ToBigEndianBytes())
+				return trampoline.Done{Result: result}
+			},
+		)
 	}
+
+	return nil
 }
 
 func (Int128Value) SetMember(_ *Interpreter, _ LocationRange, _ string, _ Value) {
 	panic(errors.NewUnreachableError())
+}
+
+func (v Int128Value) ToBigEndianBytes() []byte {
+	return SignedBigIntToBigEndianBytes(v.BigInt)
 }
 
 // Int256Value
@@ -2244,7 +2352,7 @@ func (v Int256Value) GreaterEqual(other NumberValue) BoolValue {
 	return cmp >= 0
 }
 
-func (v Int256Value) Equal(other Value) BoolValue {
+func (v Int256Value) Equal(_ *Interpreter, other Value) BoolValue {
 	otherInt, ok := other.(Int256Value)
 	if !ok {
 		return false
@@ -2334,13 +2442,24 @@ func (v Int256Value) GetMember(_ *Interpreter, _ LocationRange, name string) Val
 			},
 		)
 
-	default:
-		panic(errors.NewUnreachableError())
+	case sema.ToBigEndianBytesFunctionName:
+		return NewHostFunctionValue(
+			func(invocation Invocation) trampoline.Trampoline {
+				result := ByteSliceToByteArrayValue(v.ToBigEndianBytes())
+				return trampoline.Done{Result: result}
+			},
+		)
 	}
+
+	return nil
 }
 
 func (Int256Value) SetMember(_ *Interpreter, _ LocationRange, _ string, _ Value) {
 	panic(errors.NewUnreachableError())
+}
+
+func (v Int256Value) ToBigEndianBytes() []byte {
+	return SignedBigIntToBigEndianBytes(v.BigInt)
 }
 
 // UIntValue
@@ -2492,7 +2611,7 @@ func (v UIntValue) GreaterEqual(other NumberValue) BoolValue {
 	return cmp >= 0
 }
 
-func (v UIntValue) Equal(other Value) BoolValue {
+func (v UIntValue) Equal(_ *Interpreter, other Value) BoolValue {
 	otherUInt, ok := other.(UIntValue)
 	if !ok {
 		return false
@@ -2559,13 +2678,24 @@ func (v UIntValue) GetMember(_ *Interpreter, _ LocationRange, name string) Value
 			},
 		)
 
-	default:
-		panic(errors.NewUnreachableError())
+	case sema.ToBigEndianBytesFunctionName:
+		return NewHostFunctionValue(
+			func(invocation Invocation) trampoline.Trampoline {
+				result := ByteSliceToByteArrayValue(v.ToBigEndianBytes())
+				return trampoline.Done{Result: result}
+			},
+		)
 	}
+
+	return nil
 }
 
 func (UIntValue) SetMember(_ *Interpreter, _ LocationRange, _ string, _ Value) {
 	panic(errors.NewUnreachableError())
+}
+
+func (v UIntValue) ToBigEndianBytes() []byte {
+	return UnsignedBigIntToBigEndianBytes(v.BigInt)
 }
 
 // UInt8Value
@@ -2673,7 +2803,7 @@ func (v UInt8Value) GreaterEqual(other NumberValue) BoolValue {
 	return v >= other.(UInt8Value)
 }
 
-func (v UInt8Value) Equal(other Value) BoolValue {
+func (v UInt8Value) Equal(_ *Interpreter, other Value) BoolValue {
 	otherUInt8, ok := other.(UInt8Value)
 	if !ok {
 		return false
@@ -2746,13 +2876,24 @@ func (v UInt8Value) GetMember(_ *Interpreter, _ LocationRange, name string) Valu
 			},
 		)
 
-	default:
-		panic(errors.NewUnreachableError())
+	case sema.ToBigEndianBytesFunctionName:
+		return NewHostFunctionValue(
+			func(invocation Invocation) trampoline.Trampoline {
+				result := ByteSliceToByteArrayValue(v.ToBigEndianBytes())
+				return trampoline.Done{Result: result}
+			},
+		)
 	}
+
+	return nil
 }
 
 func (UInt8Value) SetMember(_ *Interpreter, _ LocationRange, _ string, _ Value) {
 	panic(errors.NewUnreachableError())
+}
+
+func (v UInt8Value) ToBigEndianBytes() []byte {
+	return []byte{byte(v)}
 }
 
 // UInt16Value
@@ -2858,7 +2999,7 @@ func (v UInt16Value) GreaterEqual(other NumberValue) BoolValue {
 	return v >= other.(UInt16Value)
 }
 
-func (v UInt16Value) Equal(other Value) BoolValue {
+func (v UInt16Value) Equal(_ *Interpreter, other Value) BoolValue {
 	otherUInt16, ok := other.(UInt16Value)
 	if !ok {
 		return false
@@ -2931,13 +3072,26 @@ func (v UInt16Value) GetMember(_ *Interpreter, _ LocationRange, name string) Val
 			},
 		)
 
-	default:
-		panic(errors.NewUnreachableError())
+	case sema.ToBigEndianBytesFunctionName:
+		return NewHostFunctionValue(
+			func(invocation Invocation) trampoline.Trampoline {
+				result := ByteSliceToByteArrayValue(v.ToBigEndianBytes())
+				return trampoline.Done{Result: result}
+			},
+		)
 	}
+
+	return nil
 }
 
 func (UInt16Value) SetMember(_ *Interpreter, _ LocationRange, _ string, _ Value) {
 	panic(errors.NewUnreachableError())
+}
+
+func (v UInt16Value) ToBigEndianBytes() []byte {
+	b := make([]byte, 2)
+	binary.BigEndian.PutUint16(b, uint16(v))
+	return b
 }
 
 // UInt32Value
@@ -3045,7 +3199,7 @@ func (v UInt32Value) GreaterEqual(other NumberValue) BoolValue {
 	return v >= other.(UInt32Value)
 }
 
-func (v UInt32Value) Equal(other Value) BoolValue {
+func (v UInt32Value) Equal(_ *Interpreter, other Value) BoolValue {
 	otherUInt32, ok := other.(UInt32Value)
 	if !ok {
 		return false
@@ -3118,13 +3272,26 @@ func (v UInt32Value) GetMember(_ *Interpreter, _ LocationRange, name string) Val
 			},
 		)
 
-	default:
-		panic(errors.NewUnreachableError())
+	case sema.ToBigEndianBytesFunctionName:
+		return NewHostFunctionValue(
+			func(invocation Invocation) trampoline.Trampoline {
+				result := ByteSliceToByteArrayValue(v.ToBigEndianBytes())
+				return trampoline.Done{Result: result}
+			},
+		)
 	}
+
+	return nil
 }
 
 func (UInt32Value) SetMember(_ *Interpreter, _ LocationRange, _ string, _ Value) {
 	panic(errors.NewUnreachableError())
+}
+
+func (v UInt32Value) ToBigEndianBytes() []byte {
+	b := make([]byte, 4)
+	binary.BigEndian.PutUint32(b, uint32(v))
+	return b
 }
 
 // UInt64Value
@@ -3237,7 +3404,7 @@ func (v UInt64Value) GreaterEqual(other NumberValue) BoolValue {
 	return v >= other.(UInt64Value)
 }
 
-func (v UInt64Value) Equal(other Value) BoolValue {
+func (v UInt64Value) Equal(_ *Interpreter, other Value) BoolValue {
 	otherUInt64, ok := other.(UInt64Value)
 	if !ok {
 		return false
@@ -3308,13 +3475,26 @@ func (v UInt64Value) GetMember(_ *Interpreter, _ LocationRange, name string) Val
 			},
 		)
 
-	default:
-		panic(errors.NewUnreachableError())
+	case sema.ToBigEndianBytesFunctionName:
+		return NewHostFunctionValue(
+			func(invocation Invocation) trampoline.Trampoline {
+				result := ByteSliceToByteArrayValue(v.ToBigEndianBytes())
+				return trampoline.Done{Result: result}
+			},
+		)
 	}
+
+	return nil
 }
 
 func (UInt64Value) SetMember(_ *Interpreter, _ LocationRange, _ string, _ Value) {
 	panic(errors.NewUnreachableError())
+}
+
+func (v UInt64Value) ToBigEndianBytes() []byte {
+	b := make([]byte, 8)
+	binary.BigEndian.PutUint64(b, uint64(v))
+	return b
 }
 
 // UInt128Value
@@ -3467,7 +3647,7 @@ func (v UInt128Value) GreaterEqual(other NumberValue) BoolValue {
 	return cmp >= 0
 }
 
-func (v UInt128Value) Equal(other Value) BoolValue {
+func (v UInt128Value) Equal(_ *Interpreter, other Value) BoolValue {
 	otherInt, ok := other.(UInt128Value)
 	if !ok {
 		return false
@@ -3556,14 +3736,24 @@ func (v UInt128Value) GetMember(_ *Interpreter, _ LocationRange, name string) Va
 				return trampoline.Done{Result: result}
 			},
 		)
-
-	default:
-		panic(errors.NewUnreachableError())
+	case sema.ToBigEndianBytesFunctionName:
+		return NewHostFunctionValue(
+			func(invocation Invocation) trampoline.Trampoline {
+				result := ByteSliceToByteArrayValue(v.ToBigEndianBytes())
+				return trampoline.Done{Result: result}
+			},
+		)
 	}
+
+	return nil
 }
 
 func (UInt128Value) SetMember(_ *Interpreter, _ LocationRange, _ string, _ Value) {
 	panic(errors.NewUnreachableError())
+}
+
+func (v UInt128Value) ToBigEndianBytes() []byte {
+	return UnsignedBigIntToBigEndianBytes(v.BigInt)
 }
 
 // UInt256Value
@@ -3716,7 +3906,7 @@ func (v UInt256Value) GreaterEqual(other NumberValue) BoolValue {
 	return cmp >= 0
 }
 
-func (v UInt256Value) Equal(other Value) BoolValue {
+func (v UInt256Value) Equal(_ *Interpreter, other Value) BoolValue {
 	otherInt, ok := other.(UInt256Value)
 	if !ok {
 		return false
@@ -3806,13 +3996,24 @@ func (v UInt256Value) GetMember(_ *Interpreter, _ LocationRange, name string) Va
 			},
 		)
 
-	default:
-		panic(errors.NewUnreachableError())
+	case sema.ToBigEndianBytesFunctionName:
+		return NewHostFunctionValue(
+			func(invocation Invocation) trampoline.Trampoline {
+				result := ByteSliceToByteArrayValue(v.ToBigEndianBytes())
+				return trampoline.Done{Result: result}
+			},
+		)
 	}
+
+	return nil
 }
 
 func (UInt256Value) SetMember(_ *Interpreter, _ LocationRange, _ string, _ Value) {
 	panic(errors.NewUnreachableError())
+}
+
+func (v UInt256Value) ToBigEndianBytes() []byte {
+	return UnsignedBigIntToBigEndianBytes(v.BigInt)
 }
 
 // Word8Value
@@ -3906,7 +4107,7 @@ func (v Word8Value) GreaterEqual(other NumberValue) BoolValue {
 	return v >= other.(Word8Value)
 }
 
-func (v Word8Value) Equal(other Value) BoolValue {
+func (v Word8Value) Equal(_ *Interpreter, other Value) BoolValue {
 	otherWord8, ok := other.(Word8Value)
 	if !ok {
 		return false
@@ -3954,13 +4155,24 @@ func (v Word8Value) GetMember(_ *Interpreter, _ LocationRange, name string) Valu
 			},
 		)
 
-	default:
-		panic(errors.NewUnreachableError())
+	case sema.ToBigEndianBytesFunctionName:
+		return NewHostFunctionValue(
+			func(invocation Invocation) trampoline.Trampoline {
+				result := ByteSliceToByteArrayValue(v.ToBigEndianBytes())
+				return trampoline.Done{Result: result}
+			},
+		)
 	}
+
+	return nil
 }
 
 func (Word8Value) SetMember(_ *Interpreter, _ LocationRange, _ string, _ Value) {
 	panic(errors.NewUnreachableError())
+}
+
+func (v Word8Value) ToBigEndianBytes() []byte {
+	return []byte{byte(v)}
 }
 
 // Word16Value
@@ -4052,7 +4264,7 @@ func (v Word16Value) GreaterEqual(other NumberValue) BoolValue {
 	return v >= other.(Word16Value)
 }
 
-func (v Word16Value) Equal(other Value) BoolValue {
+func (v Word16Value) Equal(_ *Interpreter, other Value) BoolValue {
 	otherWord16, ok := other.(Word16Value)
 	if !ok {
 		return false
@@ -4100,13 +4312,26 @@ func (v Word16Value) GetMember(_ *Interpreter, _ LocationRange, name string) Val
 			},
 		)
 
-	default:
-		panic(errors.NewUnreachableError())
+	case sema.ToBigEndianBytesFunctionName:
+		return NewHostFunctionValue(
+			func(invocation Invocation) trampoline.Trampoline {
+				result := ByteSliceToByteArrayValue(v.ToBigEndianBytes())
+				return trampoline.Done{Result: result}
+			},
+		)
 	}
+
+	return nil
 }
 
 func (Word16Value) SetMember(_ *Interpreter, _ LocationRange, _ string, _ Value) {
 	panic(errors.NewUnreachableError())
+}
+
+func (v Word16Value) ToBigEndianBytes() []byte {
+	b := make([]byte, 2)
+	binary.BigEndian.PutUint16(b, uint16(v))
+	return b
 }
 
 // Word32Value
@@ -4200,7 +4425,7 @@ func (v Word32Value) GreaterEqual(other NumberValue) BoolValue {
 	return v >= other.(Word32Value)
 }
 
-func (v Word32Value) Equal(other Value) BoolValue {
+func (v Word32Value) Equal(_ *Interpreter, other Value) BoolValue {
 	otherWord32, ok := other.(Word32Value)
 	if !ok {
 		return false
@@ -4248,13 +4473,26 @@ func (v Word32Value) GetMember(_ *Interpreter, _ LocationRange, name string) Val
 			},
 		)
 
-	default:
-		panic(errors.NewUnreachableError())
+	case sema.ToBigEndianBytesFunctionName:
+		return NewHostFunctionValue(
+			func(invocation Invocation) trampoline.Trampoline {
+				result := ByteSliceToByteArrayValue(v.ToBigEndianBytes())
+				return trampoline.Done{Result: result}
+			},
+		)
 	}
+
+	return nil
 }
 
 func (Word32Value) SetMember(_ *Interpreter, _ LocationRange, _ string, _ Value) {
 	panic(errors.NewUnreachableError())
+}
+
+func (v Word32Value) ToBigEndianBytes() []byte {
+	b := make([]byte, 4)
+	binary.BigEndian.PutUint32(b, uint32(v))
+	return b
 }
 
 // Word64Value
@@ -4348,7 +4586,7 @@ func (v Word64Value) GreaterEqual(other NumberValue) BoolValue {
 	return v >= other.(Word64Value)
 }
 
-func (v Word64Value) Equal(other Value) BoolValue {
+func (v Word64Value) Equal(_ *Interpreter, other Value) BoolValue {
 	otherWord64, ok := other.(Word64Value)
 	if !ok {
 		return false
@@ -4396,13 +4634,26 @@ func (v Word64Value) GetMember(_ *Interpreter, _ LocationRange, name string) Val
 			},
 		)
 
-	default:
-		panic(errors.NewUnreachableError())
+	case sema.ToBigEndianBytesFunctionName:
+		return NewHostFunctionValue(
+			func(invocation Invocation) trampoline.Trampoline {
+				result := ByteSliceToByteArrayValue(v.ToBigEndianBytes())
+				return trampoline.Done{Result: result}
+			},
+		)
 	}
+
+	return nil
 }
 
 func (Word64Value) SetMember(_ *Interpreter, _ LocationRange, _ string, _ Value) {
 	panic(errors.NewUnreachableError())
+}
+
+func (v Word64Value) ToBigEndianBytes() []byte {
+	b := make([]byte, 8)
+	binary.BigEndian.PutUint64(b, uint64(v))
+	return b
 }
 
 // Fix64Value
@@ -4587,7 +4838,7 @@ func (v Fix64Value) GreaterEqual(other NumberValue) BoolValue {
 	return v >= other.(Fix64Value)
 }
 
-func (v Fix64Value) Equal(other Value) BoolValue {
+func (v Fix64Value) Equal(_ *Interpreter, other Value) BoolValue {
 	otherFix64, ok := other.(Fix64Value)
 	if !ok {
 		return false
@@ -4645,13 +4896,26 @@ func (v Fix64Value) GetMember(_ *Interpreter, _ LocationRange, name string) Valu
 			},
 		)
 
-	default:
-		panic(errors.NewUnreachableError())
+	case sema.ToBigEndianBytesFunctionName:
+		return NewHostFunctionValue(
+			func(invocation Invocation) trampoline.Trampoline {
+				result := ByteSliceToByteArrayValue(v.ToBigEndianBytes())
+				return trampoline.Done{Result: result}
+			},
+		)
 	}
+
+	return nil
 }
 
 func (Fix64Value) SetMember(_ *Interpreter, _ LocationRange, _ string, _ Value) {
 	panic(errors.NewUnreachableError())
+}
+
+func (v Fix64Value) ToBigEndianBytes() []byte {
+	b := make([]byte, 8)
+	binary.BigEndian.PutUint64(b, uint64(v))
+	return b
 }
 
 // UFix64Value
@@ -4821,7 +5085,7 @@ func (v UFix64Value) GreaterEqual(other NumberValue) BoolValue {
 	return v >= other.(UFix64Value)
 }
 
-func (v UFix64Value) Equal(other Value) BoolValue {
+func (v UFix64Value) Equal(_ *Interpreter, other Value) BoolValue {
 	otherUFix64, ok := other.(UFix64Value)
 	if !ok {
 		return false
@@ -4886,13 +5150,26 @@ func (v UFix64Value) GetMember(_ *Interpreter, _ LocationRange, name string) Val
 			},
 		)
 
-	default:
-		panic(errors.NewUnreachableError())
+	case sema.ToBigEndianBytesFunctionName:
+		return NewHostFunctionValue(
+			func(invocation Invocation) trampoline.Trampoline {
+				result := ByteSliceToByteArrayValue(v.ToBigEndianBytes())
+				return trampoline.Done{Result: result}
+			},
+		)
 	}
+
+	return nil
 }
 
 func (UFix64Value) SetMember(_ *Interpreter, _ LocationRange, _ string, _ Value) {
 	panic(errors.NewUnreachableError())
+}
+
+func (v UFix64Value) ToBigEndianBytes() []byte {
+	b := make([]byte, 8)
+	binary.BigEndian.PutUint64(b, uint64(v))
+	return b
 }
 
 // CompositeValue
@@ -4935,7 +5212,7 @@ func (v *CompositeValue) Destroy(interpreter *Interpreter, locationRange Locatio
 
 	// if composite was deserialized, dynamically link in the destructor
 	if v.Destructor == nil {
-		v.Destructor = interpreter.typeCodes.compositeCodes[v.TypeID].destructorFunction
+		v.Destructor = interpreter.typeCodes.CompositeCodes[v.TypeID].DestructorFunction
 	}
 
 	destructor := v.Destructor
@@ -5063,7 +5340,7 @@ func (v *CompositeValue) GetMember(interpreter *Interpreter, locationRange Locat
 	v.checkStatus(locationRange)
 
 	if v.Kind == common.CompositeKindResource &&
-		name == "owner" {
+		name == sema.OwnerFieldName {
 
 		return v.OwnerValue()
 	}
@@ -5082,9 +5359,12 @@ func (v *CompositeValue) GetMember(interpreter *Interpreter, locationRange Locat
 	// NOTE: standard library values have no location
 
 	if v.Location != nil && !ast.LocationsMatch(interpreter.Checker.Location, v.Location) {
-		interpreter = interpreter.ensureLoaded(v.Location, func() *ast.Program {
-			return interpreter.importProgramHandler(interpreter, v.Location)
-		})
+		interpreter = interpreter.ensureLoaded(
+			v.Location,
+			func() Import {
+				return interpreter.importLocationHandler(interpreter, v.Location)
+			},
+		)
 	}
 
 	// If the composite value was deserialized, dynamically link in the functions
@@ -5123,7 +5403,8 @@ func (v *CompositeValue) InitializeFunctions(interpreter *Interpreter) {
 	if v.Functions != nil {
 		return
 	}
-	v.Functions = interpreter.typeCodes.compositeCodes[v.TypeID].compositeFunctions
+
+	v.Functions = interpreter.typeCodes.CompositeCodes[v.TypeID].CompositeFunctions
 }
 
 func (v *CompositeValue) OwnerValue() OptionalValue {
@@ -5463,10 +5744,9 @@ func (v *DictionaryValue) GetMember(_ *Interpreter, _ LocationRange, name string
 				return trampoline.Done{Result: existingValue}
 			},
 		)
-
-	default:
-		panic(errors.NewUnreachableError())
 	}
+
+	return nil
 }
 
 func (v *DictionaryValue) SetMember(_ *Interpreter, _ LocationRange, _ string, _ Value) {
@@ -5677,6 +5957,10 @@ type StorageReferenceValue struct {
 
 func (*StorageReferenceValue) IsValue() {}
 
+func (v *StorageReferenceValue) String() string {
+	return "StorageReference()"
+}
+
 func (v *StorageReferenceValue) DynamicType(interpreter *Interpreter) DynamicType {
 	referencedValue := v.referencedValue(interpreter)
 	if referencedValue == nil {
@@ -5735,8 +6019,7 @@ func (v *StorageReferenceValue) GetMember(interpreter *Interpreter, locationRang
 		})
 	}
 
-	return (*referencedValue).(MemberAccessibleValue).
-		GetMember(interpreter, locationRange, name)
+	return interpreter.getMember(*referencedValue, locationRange, name)
 }
 
 func (v *StorageReferenceValue) SetMember(interpreter *Interpreter, locationRange LocationRange, name string, value Value) {
@@ -5747,8 +6030,7 @@ func (v *StorageReferenceValue) SetMember(interpreter *Interpreter, locationRang
 		})
 	}
 
-	(*referencedValue).(MemberAccessibleValue).
-		SetMember(interpreter, locationRange, name, value)
+	interpreter.setMember(*referencedValue, locationRange, name, value)
 }
 
 func (v *StorageReferenceValue) Get(interpreter *Interpreter, locationRange LocationRange, key Value) Value {
@@ -5775,7 +6057,7 @@ func (v *StorageReferenceValue) Set(interpreter *Interpreter, locationRange Loca
 		Set(interpreter, locationRange, key, value)
 }
 
-func (v *StorageReferenceValue) Equal(other Value) BoolValue {
+func (v *StorageReferenceValue) Equal(_ *Interpreter, other Value) BoolValue {
 	otherReference, ok := other.(*StorageReferenceValue)
 	if !ok {
 		return false
@@ -5794,6 +6076,10 @@ type EphemeralReferenceValue struct {
 }
 
 func (*EphemeralReferenceValue) IsValue() {}
+
+func (v *EphemeralReferenceValue) String() string {
+	return v.Value.String()
+}
 
 func (v *EphemeralReferenceValue) DynamicType(interpreter *Interpreter) DynamicType {
 	referencedValue := v.referencedValue()
@@ -5852,8 +6138,7 @@ func (v *EphemeralReferenceValue) GetMember(interpreter *Interpreter, locationRa
 		})
 	}
 
-	return (*referencedValue).(MemberAccessibleValue).
-		GetMember(interpreter, locationRange, name)
+	return interpreter.getMember(*referencedValue, locationRange, name)
 }
 
 func (v *EphemeralReferenceValue) SetMember(interpreter *Interpreter, locationRange LocationRange, name string, value Value) {
@@ -5864,8 +6149,7 @@ func (v *EphemeralReferenceValue) SetMember(interpreter *Interpreter, locationRa
 		})
 	}
 
-	(*referencedValue).(MemberAccessibleValue).
-		SetMember(interpreter, locationRange, name, value)
+	interpreter.setMember(*referencedValue, locationRange, name, value)
 }
 
 func (v *EphemeralReferenceValue) Get(interpreter *Interpreter, locationRange LocationRange, key Value) Value {
@@ -5892,7 +6176,7 @@ func (v *EphemeralReferenceValue) Set(interpreter *Interpreter, locationRange Lo
 		Set(interpreter, locationRange, key, value)
 }
 
-func (v *EphemeralReferenceValue) Equal(other Value) BoolValue {
+func (v *EphemeralReferenceValue) Equal(_ *Interpreter, other Value) BoolValue {
 	otherReference, ok := other.(*EphemeralReferenceValue)
 	if !ok {
 		return false
@@ -5970,7 +6254,7 @@ func (AddressValue) SetModified(_ bool) {
 	// NO-OP
 }
 
-func (v AddressValue) Equal(other Value) BoolValue {
+func (v AddressValue) Equal(_ *Interpreter, other Value) BoolValue {
 	otherAddress, ok := other.(AddressValue)
 	if !ok {
 		return false
@@ -5997,9 +6281,17 @@ func (v AddressValue) GetMember(_ *Interpreter, _ LocationRange, name string) Va
 			},
 		)
 
-	default:
-		panic(errors.NewUnreachableError())
+	case sema.ToBytesFunctionName:
+		return NewHostFunctionValue(
+			func(invocation Invocation) trampoline.Trampoline {
+				bytes := common.Address(v)
+				result := ByteSliceToByteArrayValue(bytes[:])
+				return trampoline.Done{Result: result}
+			},
+		)
 	}
+
+	return nil
 }
 
 func (AddressValue) SetMember(_ *Interpreter, _ LocationRange, _ string, _ Value) {
@@ -6084,44 +6376,64 @@ func accountGetCapabilityFunction(
 	addressValue AddressValue,
 	authorized bool,
 ) HostFunctionValue {
-	return NewHostFunctionValue(func(invocation Invocation) trampoline.Trampoline {
 
-		path := invocation.Arguments[0].(PathValue)
+	return NewHostFunctionValue(
+		func(invocation Invocation) trampoline.Trampoline {
 
-		if authorized {
+			path := invocation.Arguments[0].(PathValue)
 
-			// If the account is an authorized account (`AuthAccount`),
-			// ensure the path has a `private` or `public` domain.
+			// `Invocation.TypeParameterTypes` is a map, so get the first
+			// element / type by iterating over the values of the map.
 
-			if !checkPathDomain(
-				path,
-				common.PathDomainPrivate,
-				common.PathDomainPublic,
-			) {
-				return trampoline.Done{Result: NilValue{}}
+			// NOTE: the type parameter is optional, for backwards compatibility
+
+			var borrowType *sema.ReferenceType
+			for _, ty := range invocation.TypeParameterTypes {
+				borrowType = ty.(*sema.ReferenceType)
+				break
 			}
-		} else {
 
-			// If the account is a public account (`PublicAccount`),
-			// ensure the path has a `public` domain.
+			if authorized {
 
-			if !checkPathDomain(
-				path,
-				common.PathDomainPublic,
-			) {
-				return trampoline.Done{Result: NilValue{}}
+				// If the account is an authorized account (`AuthAccount`),
+				// ensure the path has a `private` or `public` domain.
+
+				if !checkPathDomain(
+					path,
+					common.PathDomainPrivate,
+					common.PathDomainPublic,
+				) {
+					return trampoline.Done{Result: NilValue{}}
+				}
+			} else {
+
+				// If the account is a public account (`PublicAccount`),
+				// ensure the path has a `public` domain.
+
+				if !checkPathDomain(
+					path,
+					common.PathDomainPublic,
+				) {
+					return trampoline.Done{Result: NilValue{}}
+				}
 			}
-		}
 
-		capability := CapabilityValue{
-			Address: addressValue,
-			Path:    path,
-		}
+			var borrowStaticType StaticType
+			if borrowType != nil {
+				borrowStaticType = ConvertSemaToStaticType(borrowType)
+			}
 
-		result := NewSomeValueOwningNonCopying(capability)
+			capability := CapabilityValue{
+				Address:    addressValue,
+				Path:       path,
+				BorrowType: borrowStaticType,
+			}
 
-		return trampoline.Done{Result: result}
-	})
+			result := NewSomeValueOwningNonCopying(capability)
+
+			return trampoline.Done{Result: result}
+		},
+	)
 }
 
 func (v AuthAccountValue) GetMember(inter *Interpreter, _ LocationRange, name string) Value {
@@ -6165,9 +6477,9 @@ func (v AuthAccountValue) GetMember(inter *Interpreter, _ LocationRange, name st
 	case "getCapability":
 		return accountGetCapabilityFunction(v.Address, true)
 
-	default:
-		panic(errors.NewUnreachableError())
 	}
+
+	return nil
 }
 
 func (AuthAccountValue) SetMember(_ *Interpreter, _ LocationRange, _ string, _ Value) {
@@ -6238,10 +6550,9 @@ func (v PublicAccountValue) GetMember(inter *Interpreter, _ LocationRange, name 
 
 	case "getLinkTarget":
 		return inter.authAccountGetLinkTargetFunction(v.Address)
-
-	default:
-		panic(errors.NewUnreachableError())
 	}
+
+	return nil
 }
 
 func (PublicAccountValue) SetMember(_ *Interpreter, _ LocationRange, _ string, _ Value) {
@@ -6297,14 +6608,22 @@ func (v PathValue) String() string {
 // CapabilityValue
 
 type CapabilityValue struct {
-	Address AddressValue
-	Path    PathValue
+	Address    AddressValue
+	Path       PathValue
+	BorrowType StaticType
 }
 
 func (CapabilityValue) IsValue() {}
 
-func (CapabilityValue) DynamicType(_ *Interpreter) DynamicType {
-	return CapabilityDynamicType{}
+func (v CapabilityValue) DynamicType(inter *Interpreter) DynamicType {
+	var borrowType *sema.ReferenceType
+	if v.BorrowType != nil {
+		borrowType = inter.convertStaticToSemaType(v.BorrowType).(*sema.ReferenceType)
+	}
+
+	return CapabilityDynamicType{
+		BorrowType: borrowType,
+	}
 }
 
 func (v CapabilityValue) Copy() Value {
@@ -6333,24 +6652,42 @@ func (v CapabilityValue) Destroy(_ *Interpreter, _ LocationRange) trampoline.Tra
 }
 
 func (v CapabilityValue) String() string {
-	return fmt.Sprintf(
-		"/%s%s",
-		v.Address,
-		v.Path,
-	)
+	var sb strings.Builder
+
+	sb.WriteString("Capability")
+
+	if v.BorrowType != nil {
+		sb.WriteRune('<')
+		sb.WriteString(v.BorrowType.String())
+		sb.WriteRune('>')
+	}
+	sb.WriteString("(/")
+	sb.WriteString(v.Address.String())
+	sb.WriteString(v.Path.String())
+	sb.WriteRune(')')
+
+	return sb.String()
 }
 
 func (v CapabilityValue) GetMember(inter *Interpreter, _ LocationRange, name string) Value {
 	switch name {
 	case "borrow":
-		return inter.capabilityBorrowFunction(v.Address, v.Path)
+		var borrowType *sema.ReferenceType
+		if v.BorrowType != nil {
+			borrowType = inter.convertStaticToSemaType(v.BorrowType).(*sema.ReferenceType)
+		}
+		return inter.capabilityBorrowFunction(v.Address, v.Path, borrowType)
 
 	case "check":
-		return inter.capabilityCheckFunction(v.Address, v.Path)
+		var borrowType *sema.ReferenceType
+		if v.BorrowType != nil {
+			borrowType = inter.convertStaticToSemaType(v.BorrowType).(*sema.ReferenceType)
+		}
+		return inter.capabilityCheckFunction(v.Address, v.Path, borrowType)
 
-	default:
-		panic(errors.NewUnreachableError())
 	}
+
+	return nil
 }
 
 func (CapabilityValue) SetMember(_ *Interpreter, _ LocationRange, _ string, _ Value) {
@@ -6367,7 +6704,7 @@ type LinkValue struct {
 func (LinkValue) IsValue() {}
 
 func (LinkValue) DynamicType(_ *Interpreter) DynamicType {
-	return CapabilityDynamicType{}
+	panic(errors.NewUnreachableError())
 }
 
 func (v LinkValue) Copy() Value {

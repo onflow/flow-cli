@@ -54,12 +54,9 @@ var Cmd = &cobra.Command{
 			}
 		}
 
-		script, err := templates.CreateAccount(accountKeys, code)
-		if err != nil {
-			cli.Exit(1, "Failed to generate transaction script")
-		}
+		tx := templates.CreateAccount(accountKeys, code, signerAccount.Address)
 
-		cli.SendTransaction(conf.Host, signerAccount, script, conf.Results)
+		cli.SendTransaction(conf.Host, signerAccount, tx, conf.Results)
 	},
 }
 
