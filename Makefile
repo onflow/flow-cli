@@ -61,6 +61,10 @@ versioned-binaries:
 versioned-binary:
 	GOOS=$(OS) GOARCH=amd64 $(MAKE) BINARY=./cmd/flow/flow-x86_64-$(OS)-$(VERSION) binary
 
+.PHONY: publish
+publish:
+	gsutil cp cmd/flow/flow-*-$(VERSION) gs://flow-cli
+
 .PHONY: vendor
 vendor:
 	GO111MODULE=on go mod vendor
