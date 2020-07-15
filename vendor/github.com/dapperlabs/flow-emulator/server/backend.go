@@ -255,11 +255,11 @@ func (b *Backend) GetTransactionResult(ctx context.Context, req *access.GetTrans
 	return res, nil
 }
 
-// GetAccount returns the info associated with an address.
-func (b *Backend) GetAccount(
+// GetAccountAtLatestBlock returns an account by address at the latest sealed block.
+func (b *Backend) GetAccountAtLatestBlock(
 	ctx context.Context,
-	req *access.GetAccountRequest,
-) (*access.GetAccountResponse, error) {
+	req *access.GetAccountAtLatestBlockRequest,
+) (*access.AccountResponse, error) {
 	address := sdk.BytesToAddress(req.GetAddress())
 	account, err := b.blockchain.GetAccount(address)
 	if err != nil {
@@ -273,13 +273,17 @@ func (b *Backend) GetAccount(
 
 	b.logger.
 		WithField("address", address).
-		Debugf("👤  GetAccount called")
+		Debugf("👤  GetAccountAtLatestBlock called")
 
 	accMsg := sdkconvert.AccountToMessage(*account)
 
-	return &access.GetAccountResponse{
+	return &access.AccountResponse{
 		Account: accMsg,
 	}, nil
+}
+
+func (b *Backend) GetAccountAtBlockHeight(ctx context.Context, request *access.GetAccountAtBlockHeightRequest) (*access.AccountResponse, error) {
+	panic("implement me")
 }
 
 // ExecuteScriptAtLatestBlock executes a script at a the latest block
