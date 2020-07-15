@@ -20,7 +20,7 @@ github.com/cespare/xxhash/v2
 # github.com/dapperlabs/flow-core-contracts/contracts v0.0.0-20200526041238-ad2360621a1a
 github.com/dapperlabs/flow-core-contracts/contracts
 github.com/dapperlabs/flow-core-contracts/contracts/internal/assets
-# github.com/dapperlabs/flow-emulator v0.6.0
+# github.com/dapperlabs/flow-emulator v0.6.1
 github.com/dapperlabs/flow-emulator
 github.com/dapperlabs/flow-emulator/cmd/emulator/start
 github.com/dapperlabs/flow-emulator/convert
@@ -31,7 +31,7 @@ github.com/dapperlabs/flow-emulator/storage
 github.com/dapperlabs/flow-emulator/storage/badger
 github.com/dapperlabs/flow-emulator/storage/memstore
 github.com/dapperlabs/flow-emulator/types
-# github.com/dapperlabs/flow-go v0.4.1-0.20200714185320-c0c6380ee9fc
+# github.com/dapperlabs/flow-go v0.4.1-0.20200715183900-b337e998d486
 github.com/dapperlabs/flow-go/engine
 github.com/dapperlabs/flow-go/engine/execution/state/delta
 github.com/dapperlabs/flow-go/engine/verification
