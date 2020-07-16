@@ -53,13 +53,16 @@ $(BINARY):
 
 .PHONY: versioned-binaries
 versioned-binaries:
-	$(MAKE) OS=linux versioned-binary
-	$(MAKE) OS=darwin versioned-binary
-	$(MAKE) OS=windows versioned-binary
+	$(MAKE) OS=linux ARCH=amd64 ARCHNAME=x86_64 versioned-binary
+	$(MAKE) OS=linux ARCH=arm64 versioned-binary
+	$(MAKE) OS=darwin ARCH=amd64 ARCHNAME=x86_64 versioned-binary
+	# enable once supported: https://github.com/golang/go/issues/38485
+	# $(MAKE) OS=darwin ARCH=arm64 versioned-binary
+	$(MAKE) OS=windows ARCH=amd64 ARCHNAME=x86_64 versioned-binary
 
 .PHONY: versioned-binary
 versioned-binary:
-	GOOS=$(OS) GOARCH=amd64 $(MAKE) BINARY=./cmd/flow/flow-x86_64-$(OS)-$(VERSION) binary
+	GOOS=$(OS) GOARCH=$(ARCH) $(MAKE) BINARY=./cmd/flow/flow-$(or ${ARCHNAME},${ARCHNAME},${ARCH})-$(OS)-$(VERSION) binary
 
 .PHONY: publish
 publish:
