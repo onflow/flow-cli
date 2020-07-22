@@ -10,6 +10,7 @@ import (
 	"github.com/dapperlabs/flow-cli/flow/emulator"
 	"github.com/dapperlabs/flow-cli/flow/initialize"
 	"github.com/dapperlabs/flow-cli/flow/keys"
+	"github.com/dapperlabs/flow-cli/flow/scripts"
 	"github.com/dapperlabs/flow-cli/flow/transactions"
 	"github.com/dapperlabs/flow-cli/flow/version"
 )
@@ -25,6 +26,7 @@ func init() {
 	cmd.AddCommand(keys.Cmd)
 	cmd.AddCommand(emulator.Cmd)
 	cmd.AddCommand(cadence.Cmd)
+	cmd.AddCommand(scripts.Cmd)
 	cmd.AddCommand(transactions.Cmd)
 	cmd.AddCommand(version.Cmd)
 	cmd.PersistentFlags().StringVarP(&cli.ConfigPath, "config-path", "f", cli.ConfigPath, "Path to flow configuration file")
