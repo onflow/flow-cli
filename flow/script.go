@@ -16,7 +16,7 @@ func ExecuteScript(host string, script []byte) {
 	if err != nil {
 		Exitf(1, "Failed to connect to host: %s", err)
 	}
-	value, err := flowClient.ExecuteScriptAtLatestBlock(ctx, script)
+	value, err := flowClient.ExecuteScriptAtLatestBlock(ctx, script, nil)
 	if err != nil {
 		Exitf(1, "Failed to submit executable script: %s", err)
 	}
