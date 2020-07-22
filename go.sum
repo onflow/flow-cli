@@ -126,6 +126,8 @@ github.com/dapperlabs/flow-core-contracts/contracts v0.0.0-20200526041238-ad2360
 github.com/dapperlabs/flow-core-contracts/contracts v0.0.0-20200526041238-ad2360621a1a/go.mod h1:6SQ2GUde3Wj3EIRFq9Vu12IhSx3PiY3nVxLOEVehlmY=
 github.com/dapperlabs/flow-emulator v0.6.1 h1:X/AETu4SxaN0dEo+sP08QlGjthfFIycF35H6kFDe//k=
 github.com/dapperlabs/flow-emulator v0.6.1/go.mod h1:Cywo29hiyNdv00zhOywFpcEFQ7jta4FIWOb+U75Aw2c=
+github.com/dapperlabs/flow-emulator v0.7.0 h1:oxwsLZlWX0ejXbScHocbKgDbl3sVCvoCD1hUXktGfKA=
+github.com/dapperlabs/flow-emulator v0.7.0/go.mod h1:Covw9MzQulC9tROQKI0ZeVr0PVzHyHbEP0nrwamSlrY=
 github.com/dapperlabs/flow-go v0.4.1-0.20200715183900-b337e998d486 h1:CKPagG/JvCAouhq9YgFmMVvzBxHGzYPCd948sYC/Q6c=
 github.com/dapperlabs/flow-go v0.4.1-0.20200715183900-b337e998d486/go.mod h1:pO32IbOCc3ZWBp4V7OsgeNaJVlMKpJEu7qhEQG3FkUE=
 github.com/dapperlabs/flow-go/crypto v0.3.2-0.20200312195452-df4550a863b7 h1:p+tdbiV+3ykjkiawon7YXmkzXSpMNvhMsH1tWN8Yi1M=
@@ -681,6 +683,8 @@ github.com/onflow/flow/protobuf/go/flow v0.1.5-0.20200611205353-548107cc9aca h1:
 github.com/onflow/flow/protobuf/go/flow v0.1.5-0.20200611205353-548107cc9aca/go.mod h1:kRugbzZjwQqvevJhrnnCFMJZNmoSJmxlKt6hTGXZojM=
 github.com/onflow/flow/protobuf/go/flow v0.1.5-0.20200619174948-a3a856d16a27 h1:ZZ8njaFTOz7JyBpQwXGfFUUOc9l2urVAxQ7FpMUpfnc=
 github.com/onflow/flow/protobuf/go/flow v0.1.5-0.20200619174948-a3a856d16a27/go.mod h1:kRugbzZjwQqvevJhrnnCFMJZNmoSJmxlKt6hTGXZojM=
+github.com/onflow/flow/protobuf/go/flow v0.1.5-0.20200722220305-ee8119767329 h1:sXXXr0Rh79bNVI1RCfOg/f40SBnr64Ssq45hxW9he2U=
+github.com/onflow/flow/protobuf/go/flow v0.1.5-0.20200722220305-ee8119767329/go.mod h1:kRugbzZjwQqvevJhrnnCFMJZNmoSJmxlKt6hTGXZojM=
 github.com/onsi/ginkgo v1.6.0/go.mod h1:lLunBs/Ym6LB5Z9jYTR76FiuTmxDTDusOGeTQH+WWjE=
 github.com/onsi/ginkgo v1.7.0/go.mod h1:lLunBs/Ym6LB5Z9jYTR76FiuTmxDTDusOGeTQH+WWjE=
 github.com/onsi/ginkgo v1.8.0 h1:VkHVNpR4iVnU8XQR6DBm8BqYjN7CRzw+xKUbVVbbW9w=

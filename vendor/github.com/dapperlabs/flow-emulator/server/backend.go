@@ -255,12 +255,49 @@ func (b *Backend) GetTransactionResult(ctx context.Context, req *access.GetTrans
 	return res, nil
 }
 
+// GetAccount returns an account by address at the latest sealed block.
+func (b *Backend) GetAccount(
+	ctx context.Context,
+	req *access.GetAccountRequest,
+) (*access.GetAccountResponse, error) {
+	address := sdk.BytesToAddress(req.GetAddress())
+
+	b.logger.
+		WithField("address", address).
+		Debugf("👤  GetAccount called")
+
+	account, err := b.getAccount(address)
+	if err != nil {
+		return nil, err
+	}
+
+	return &access.GetAccountResponse{
+		Account: account,
+	}, nil
+}
+
 // GetAccountAtLatestBlock returns an account by address at the latest sealed block.
 func (b *Backend) GetAccountAtLatestBlock(
 	ctx context.Context,
 	req *access.GetAccountAtLatestBlockRequest,
 ) (*access.AccountResponse, error) {
 	address := sdk.BytesToAddress(req.GetAddress())
+
+	b.logger.
+		WithField("address", address).
+		Debugf("👤  GetAccountAtLatestBlock called")
+
+	account, err := b.getAccount(address)
+	if err != nil {
+		return nil, err
+	}
+
+	return &access.AccountResponse{
+		Account: account,
+	}, nil
+}
+
+func (b *Backend) getAccount(address sdk.Address) (*entities.Account, error) {
 	account, err := b.blockchain.GetAccount(address)
 	if err != nil {
 		switch err.(type) {
@@ -275,11 +312,7 @@ func (b *Backend) GetAccountAtLatestBlock(
 		WithField("address", address).
 		Debugf("👤  GetAccountAtLatestBlock called")
 
-	accMsg := sdkconvert.AccountToMessage(*account)
-
-	return &access.AccountResponse{
-		Account: accMsg,
-	}, nil
+	return sdkconvert.AccountToMessage(*account), nil
 }
 
 func (b *Backend) GetAccountAtBlockHeight(ctx context.Context, request *access.GetAccountAtBlockHeightRequest) (*access.AccountResponse, error) {

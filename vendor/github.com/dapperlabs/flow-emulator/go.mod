@@ -15,7 +15,7 @@ require (
 	github.com/logrusorgru/aurora v0.0.0-20200102142835-e9ef32dff381
 	github.com/onflow/cadence v0.6.0
 	github.com/onflow/flow-go-sdk v0.8.0
-	github.com/onflow/flow/protobuf/go/flow v0.1.5-0.20200619174948-a3a856d16a27
+	github.com/onflow/flow/protobuf/go/flow v0.1.5-0.20200722220305-ee8119767329
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.5.1
 	github.com/prometheus/common v0.9.1

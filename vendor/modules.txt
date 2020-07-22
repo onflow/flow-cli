@@ -20,7 +20,7 @@ github.com/cespare/xxhash/v2
 # github.com/dapperlabs/flow-core-contracts/contracts v0.0.0-20200526041238-ad2360621a1a
 github.com/dapperlabs/flow-core-contracts/contracts
 github.com/dapperlabs/flow-core-contracts/contracts/internal/assets
-# github.com/dapperlabs/flow-emulator v0.6.1
+# github.com/dapperlabs/flow-emulator v0.7.0
 github.com/dapperlabs/flow-emulator
 github.com/dapperlabs/flow-emulator/cmd/emulator/start
 github.com/dapperlabs/flow-emulator/convert
@@ -172,7 +172,7 @@ github.com/onflow/flow-go-sdk/crypto
 github.com/onflow/flow-go-sdk/crypto/internal/crypto
 github.com/onflow/flow-go-sdk/crypto/internal/crypto/hash
 github.com/onflow/flow-go-sdk/templates
-# github.com/onflow/flow/protobuf/go/flow v0.1.5-0.20200619174948-a3a856d16a27
+# github.com/onflow/flow/protobuf/go/flow v0.1.5-0.20200722220305-ee8119767329
 github.com/onflow/flow/protobuf/go/flow/access
 github.com/onflow/flow/protobuf/go/flow/entities
 # github.com/opentracing/opentracing-go v1.1.0
