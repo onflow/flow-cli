@@ -32,7 +32,10 @@ import (
 
 func parseDeclarations(p *parser, endTokenType lexer.TokenType) (declarations []ast.Declaration) {
 	for {
-		p.skipSpaceAndComments(true)
+		_, docString := p.parseTrivia(triviaOptions{
+			skipNewlines:    true,
+			parseDocStrings: true,
+		})
 
 		switch p.current.Type {
 		case lexer.TokenSemicolon:
@@ -44,7 +47,7 @@ func parseDeclarations(p *parser, endTokenType lexer.TokenType) (declarations []
 			return
 
 		default:
-			declaration := parseDeclaration(p)
+			declaration := parseDeclaration(p, docString)
 			if declaration == nil {
 				return
 			}
@@ -54,7 +57,7 @@ func parseDeclarations(p *parser, endTokenType lexer.TokenType) (declarations []
 	}
 }
 
-func parseDeclaration(p *parser) ast.Declaration {
+func parseDeclaration(p *parser, docString string) ast.Declaration {
 
 	access := ast.AccessNotSpecified
 	var accessPos *ast.Position
@@ -63,13 +66,15 @@ func parseDeclaration(p *parser) ast.Declaration {
 		p.skipSpaceAndComments(true)
 
 		switch p.current.Type {
+		case lexer.TokenPragma:
+			return parsePragmaDeclaration(p)
 		case lexer.TokenIdentifier:
 			switch p.current.Value {
 			case keywordLet, keywordVar:
 				return parseVariableDeclaration(p, access, accessPos)
 
 			case keywordFun:
-				return parseFunctionDeclaration(p, false, access, accessPos)
+				return parseFunctionDeclaration(p, false, access, accessPos, docString)
 
 			case keywordImport:
 				return parseImportDeclaration(p)
@@ -330,6 +335,19 @@ func parseTransfer(p *parser) *ast.Transfer {
 	return &ast.Transfer{
 		Operation: operation,
 		Pos:       pos,
+	}
+}
+
+func parsePragmaDeclaration(p *parser) *ast.PragmaDeclaration {
+	startPos := p.current.StartPosition()
+	p.next()
+	expr := parseExpression(p, lowestBindingPower)
+	return &ast.PragmaDeclaration{
+		Range: ast.Range{
+			StartPos: startPos,
+			EndPos:   expr.EndPosition(),
+		},
+		Expression: expr,
 	}
 }
 
@@ -825,7 +843,10 @@ func parseMembersAndNestedDeclarations(
 	members = &ast.Members{}
 
 	for {
-		p.skipSpaceAndComments(true)
+		_, docString := p.parseTrivia(triviaOptions{
+			skipNewlines:    true,
+			parseDocStrings: true,
+		})
 
 		switch p.current.Type {
 		case lexer.TokenSemicolon:
@@ -837,7 +858,7 @@ func parseMembersAndNestedDeclarations(
 			return
 
 		default:
-			memberOrNestedDeclaration := parseMemberOrNestedDeclaration(p)
+			memberOrNestedDeclaration := parseMemberOrNestedDeclaration(p, docString)
 			if memberOrNestedDeclaration == nil {
 				return
 			}
@@ -877,7 +898,7 @@ func parseMembersAndNestedDeclarations(
 //                               | compositeDeclaration
 //                               | eventDeclaration
 //
-func parseMemberOrNestedDeclaration(p *parser) ast.Declaration {
+func parseMemberOrNestedDeclaration(p *parser, docString string) ast.Declaration {
 
 	const functionBlockIsOptional = true
 
@@ -896,7 +917,7 @@ func parseMemberOrNestedDeclaration(p *parser) ast.Declaration {
 				return parseFieldWithVariableKind(p, access, accessPos)
 
 			case keywordFun:
-				return parseFunctionDeclaration(p, functionBlockIsOptional, access, accessPos)
+				return parseFunctionDeclaration(p, functionBlockIsOptional, access, accessPos, docString)
 
 			case keywordEvent:
 				return parseEventDeclaration(p, access, accessPos)

@@ -999,6 +999,7 @@ func defineMemberExpression() {
 }
 
 func parseMemberAccess(p *parser, left ast.Expression, optional bool) ast.Expression {
+
 	p.skipSpaceAndComments(true)
 
 	// If there is an identifier, use it.
@@ -1039,7 +1040,9 @@ func exprLeftDenotationAllowsNewline(tokenType lexer.TokenType) bool {
 
 // parseExpression uses "Top-Down operator precedence parsing" (TDOP) technique to
 // parse expressions.
+//
 func parseExpression(p *parser, rightBindingPower int) ast.Expression {
+
 	p.skipSpaceAndComments(true)
 	t := p.current
 	p.next()
