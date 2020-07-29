@@ -154,6 +154,7 @@ github.com/onflow/cadence/runtime/stdlib
 github.com/onflow/cadence/runtime/stdlib/internal
 github.com/onflow/cadence/runtime/trampoline
 # github.com/onflow/cadence/languageserver v0.7.0
+github.com/onflow/cadence/languageserver
 github.com/onflow/cadence/languageserver/conversion
 github.com/onflow/cadence/languageserver/integration
 github.com/onflow/cadence/languageserver/jsonrpc2
