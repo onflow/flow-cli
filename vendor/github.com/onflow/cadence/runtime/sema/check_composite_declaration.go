@@ -528,6 +528,7 @@ func (checker *Checker) declareCompositeMembersAndValue(
 				DeclarationKind:       nestedCompositeDeclarationVariable.DeclarationKind,
 				VariableKind:          ast.VariableKindConstant,
 				IgnoreInSerialization: true,
+				DocString:             nestedCompositeDeclaration.DocString,
 			}
 		}
 
@@ -558,17 +559,18 @@ func (checker *Checker) declareCompositeMembersAndValue(
 		// NOTE: *After* declaring nested composite and interface declarations
 
 		var members map[string]*Member
+		var fields []string
 		var origins map[string]*Origin
 
 		// Event members are derived from the initializer's parameter list
 
 		if declaration.CompositeKind == common.CompositeKindEvent {
-			members, origins = checker.eventMembersAndOrigins(
+			members, fields, origins = checker.eventMembersAndOrigins(
 				initializers[0],
 				compositeType,
 			)
 		} else {
-			members, origins = checker.nonEventMembersAndOrigins(
+			members, fields, origins = checker.nonEventMembersAndOrigins(
 				compositeType,
 				declaration.Members.Fields,
 				declaration.Members.Functions,
@@ -579,6 +581,7 @@ func (checker *Checker) declareCompositeMembersAndValue(
 		checker.checkMemberStorability(members)
 
 		compositeType.Members = members
+		compositeType.Fields = fields
 		checker.memberOrigins[compositeType] = origins
 	})()
 
@@ -876,19 +879,52 @@ func (checker *Checker) memberSatisfied(compositeMember, interfaceMember *Member
 			}
 
 		case common.DeclarationKindFunction:
-			// If the member is a function, check the types are equal,
-			// but also check that the argument labels match
+			// If the member is a function, check that the argument labels are equal,
+			// the parameter types are equal (they are invariant),
+			// and that the return types are subtypes (the return type is covariant).
+			//
+			// This is different from subtyping for functions,
+			// where argument labels are not considered,
+			// and parameters are contravariant.
 
 			interfaceMemberFunctionType := interfaceMemberType.(*FunctionType)
 			compositeMemberFunctionType := compositeMemberType.(*FunctionType)
 
-			// TODO: parameters may be supertype, return type may be subtype
-			if !compositeMemberFunctionType.EqualIncludingArgumentLabels(interfaceMemberFunctionType) {
+			if !interfaceMemberFunctionType.HasSameArgumentLabels(compositeMemberFunctionType) {
 				return false
 			}
 
-		default:
-			panic(errors.NewUnreachableError())
+			// Functions are invariant in their parameter types
+
+			for i, subParameter := range compositeMemberFunctionType.Parameters {
+				superParameter := interfaceMemberFunctionType.Parameters[i]
+				if !subParameter.TypeAnnotation.Type.
+					Equal(superParameter.TypeAnnotation.Type) {
+
+					return false
+				}
+			}
+
+			// Functions are covariant in their return type
+
+			if compositeMemberFunctionType.ReturnTypeAnnotation != nil &&
+				interfaceMemberFunctionType.ReturnTypeAnnotation != nil {
+
+				if !IsSubType(
+					compositeMemberFunctionType.ReturnTypeAnnotation.Type,
+					interfaceMemberFunctionType.ReturnTypeAnnotation.Type,
+				) {
+					return false
+				}
+			}
+
+			if (compositeMemberFunctionType.ReturnTypeAnnotation != nil &&
+				interfaceMemberFunctionType.ReturnTypeAnnotation == nil) ||
+				(compositeMemberFunctionType.ReturnTypeAnnotation == nil &&
+					interfaceMemberFunctionType.ReturnTypeAnnotation != nil) {
+
+				return false
+			}
 		}
 	}
 
@@ -1060,6 +1096,7 @@ func (checker *Checker) nonEventMembersAndOrigins(
 	containerKind ContainerKind,
 ) (
 	members map[string]*Member,
+	fieldNames []string,
 	origins map[string]*Origin,
 ) {
 	requireVariableKind := containerKind != ContainerKindInterface
@@ -1076,6 +1113,10 @@ func (checker *Checker) nonEventMembersAndOrigins(
 		name := predeclaredMember.Identifier.Identifier
 		members[name] = predeclaredMember
 		invalidIdentifiers[name] = true
+
+		if predeclaredMember.DeclarationKind == common.DeclarationKindField {
+			fieldNames = append(fieldNames, name)
+		}
 	}
 
 	checkInvalidIdentifier := func(declaration ast.Declaration) bool {
@@ -1097,11 +1138,14 @@ func (checker *Checker) nonEventMembersAndOrigins(
 
 	// declare a member for each field
 	for _, field := range fields {
+
 		if !checkInvalidIdentifier(field) {
 			continue
 		}
 
 		identifier := field.Identifier.Identifier
+
+		fieldNames = append(fieldNames, identifier)
 
 		fieldTypeAnnotation := checker.ConvertTypeAnnotation(field.TypeAnnotation)
 		checker.checkTypeAnnotation(fieldTypeAnnotation, field.TypeAnnotation)
@@ -1130,6 +1174,7 @@ func (checker *Checker) nonEventMembersAndOrigins(
 			DeclarationKind: declarationKind,
 			TypeAnnotation:  fieldTypeAnnotation,
 			VariableKind:    field.VariableKind,
+			DocString:       field.DocString,
 		}
 
 		origins[identifier] =
@@ -1191,13 +1236,14 @@ func (checker *Checker) nonEventMembersAndOrigins(
 			TypeAnnotation:  fieldTypeAnnotation,
 			VariableKind:    ast.VariableKindConstant,
 			ArgumentLabels:  argumentLabels,
+			DocString:       function.DocString,
 		}
 
 		origins[identifier] =
 			checker.recordFunctionDeclarationOrigin(function, functionType)
 	}
 
-	return members, origins
+	return members, fieldNames, origins
 }
 
 func (checker *Checker) eventMembersAndOrigins(
@@ -1205,6 +1251,7 @@ func (checker *Checker) eventMembersAndOrigins(
 	containerType *CompositeType,
 ) (
 	members map[string]*Member,
+	fieldNames []string,
 	origins map[string]*Origin,
 ) {
 	parameters := initializer.ParameterList.Parameters
@@ -1216,6 +1263,8 @@ func (checker *Checker) eventMembersAndOrigins(
 		typeAnnotation := containerType.ConstructorParameters[i].TypeAnnotation
 
 		identifier := parameter.Identifier
+
+		fieldNames = append(fieldNames, identifier.Identifier)
 
 		members[identifier.Identifier] = &Member{
 			ContainerType:   containerType,

@@ -53,6 +53,19 @@ func (e *unsupportedOperation) Error() string {
 	)
 }
 
+// InvalidPragmaError
+
+type InvalidPragmaError struct {
+	Message string
+	ast.Range
+}
+
+func (e *InvalidPragmaError) isSemanticError() {}
+
+func (e *InvalidPragmaError) Error() string {
+	return fmt.Sprintf("invalid pragma %s", e.Message)
+}
+
 // MissingLocationError
 
 type MissingLocationError struct{}
@@ -243,6 +256,22 @@ func (e *NotIndexableTypeError) Error() string {
 }
 
 func (*NotIndexableTypeError) isSemanticError() {}
+
+// NotIndexingAssignableTypeError
+
+type NotIndexingAssignableTypeError struct {
+	Type Type
+	ast.Range
+}
+
+func (e *NotIndexingAssignableTypeError) Error() string {
+	return fmt.Sprintf(
+		"cannot assign into value which has type: `%s`",
+		e.Type.QualifiedString(),
+	)
+}
+
+func (*NotIndexingAssignableTypeError) isSemanticError() {}
 
 // NotIndexingTypeError
 
@@ -1607,22 +1636,6 @@ func (e *InvalidResourceFieldError) EndPosition() ast.Position {
 	length := len(e.Name)
 	return e.Pos.Shifted(length - 1)
 }
-
-// InvalidTypeIndexingError
-
-type InvalidTypeIndexingError struct {
-	ast.Range
-}
-
-func (e *InvalidTypeIndexingError) Error() string {
-	return "invalid index"
-}
-
-func (e *InvalidTypeIndexingError) SecondaryError() string {
-	return "expected type"
-}
-
-func (*InvalidTypeIndexingError) isSemanticError() {}
 
 // InvalidIndexingError
 

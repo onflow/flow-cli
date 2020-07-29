@@ -21,7 +21,6 @@ package runtime
 import (
 	"errors"
 	"fmt"
-	"sort"
 
 	"github.com/onflow/cadence"
 	"github.com/onflow/cadence/runtime/ast"
@@ -43,7 +42,8 @@ func exportEvent(event exportableEvent) cadence.Event {
 		fields[i] = exportValueWithInterpreter(field.Value, field.Interpreter())
 	}
 
-	return cadence.NewEvent(fields).WithType(exportType(event.Type).(cadence.EventType))
+	eventType := exportType(event.Type, map[sema.TypeID]cadence.Type{}).(*cadence.EventType)
+	return cadence.NewEvent(fields).WithType(eventType)
 }
 
 func exportValueWithInterpreter(value interpreter.Value, inter *interpreter.Interpreter) cadence.Value {
@@ -106,9 +106,13 @@ func exportValueWithInterpreter(value interpreter.Value, inter *interpreter.Inte
 		return exportDictionaryValue(v, inter)
 	case interpreter.AddressValue:
 		return cadence.NewAddress(v)
+	case *interpreter.StorageReferenceValue:
+		return exportStorageReferenceValue(v)
+	case interpreter.LinkValue:
+		return exportLinkValue(v, inter)
 	}
 
-	panic(fmt.Sprintf("cannot convert value of type %T", value))
+	panic(fmt.Sprintf("cannot export value of type %T", value))
 }
 
 func exportSomeValue(v *interpreter.SomeValue, inter *interpreter.Interpreter) cadence.Value {
@@ -132,35 +136,32 @@ func exportArrayValue(v *interpreter.ArrayValue, inter *interpreter.Interpreter)
 }
 
 func exportCompositeValue(v *interpreter.CompositeValue, inter *interpreter.Interpreter) cadence.Value {
-	fields := make([]cadence.Value, len(v.Fields))
-
-	keys := make([]string, 0, len(v.Fields))
-	for key := range v.Fields {
-		keys = append(keys, key)
-	}
-
-	// sort keys in lexicographical order
-	sort.Strings(keys)
-
-	for i, key := range keys {
-		field := v.Fields[key]
-		fields[i] = exportValueWithInterpreter(field, inter)
-	}
 
 	dynamicType := v.DynamicType(inter).(interpreter.CompositeDynamicType)
 	staticType := dynamicType.StaticType.(*sema.CompositeType)
+	// TODO: consider making the results map "global", by moving it up to exportValueWithInterpreter
+	t := exportCompositeType(staticType, map[sema.TypeID]cadence.Type{})
 
-	t := exportType(staticType)
+	// NOTE: use the exported type's fields to ensure fields in type
+	// and value are in sync
+
+	fieldNames := t.CompositeFields()
+	fields := make([]cadence.Value, len(fieldNames))
+
+	for i, field := range fieldNames {
+		fieldValue := v.Fields[field.Identifier]
+		fields[i] = exportValueWithInterpreter(fieldValue, inter)
+	}
 
 	switch staticType.Kind {
 	case common.CompositeKindStructure:
-		return cadence.NewStruct(fields).WithType(t.(cadence.StructType))
+		return cadence.NewStruct(fields).WithType(t.(*cadence.StructType))
 	case common.CompositeKindResource:
-		return cadence.NewResource(fields).WithType(t.(cadence.ResourceType))
+		return cadence.NewResource(fields).WithType(t.(*cadence.ResourceType))
 	case common.CompositeKindEvent:
-		return cadence.NewEvent(fields).WithType(t.(cadence.EventType))
+		return cadence.NewEvent(fields).WithType(t.(*cadence.EventType))
 	case common.CompositeKindContract:
-		return cadence.NewContract(fields).WithType(t.(cadence.ContractType))
+		return cadence.NewContract(fields).WithType(t.(*cadence.ContractType))
 	}
 
 	panic(fmt.Errorf(
@@ -198,6 +199,21 @@ func exportDictionaryValue(v *interpreter.DictionaryValue, inter *interpreter.In
 	}
 
 	return cadence.NewDictionary(pairs)
+}
+
+func exportStorageReferenceValue(v *interpreter.StorageReferenceValue) cadence.Value {
+	return cadence.NewStorageReference(
+		v.Authorized,
+		cadence.NewAddress(v.TargetStorageAddress),
+		v.TargetKey,
+	)
+}
+
+func exportLinkValue(v interpreter.LinkValue, inter *interpreter.Interpreter) cadence.Value {
+	return cadence.NewLink(
+		v.TargetPath.String(),
+		inter.ConvertStaticToSemaType(v.Type).QualifiedString(),
+	)
 }
 
 // importValue converts a Cadence value to a runtime value.
@@ -267,7 +283,7 @@ func importValue(value cadence.Value) interpreter.Value {
 		return importCompositeValue(common.CompositeKindEvent, v.EventType.ID(), v.EventType.Fields, v.Fields)
 	}
 
-	panic(fmt.Sprintf("cannot convert value of type %T", value))
+	panic(fmt.Sprintf("cannot import value of type %T", value))
 }
 
 func importOptionalValue(v cadence.Optional) interpreter.Value {

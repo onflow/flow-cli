@@ -89,12 +89,17 @@ func (d *Decoder) Decode() (value cadence.Value, err error) {
 }
 
 const (
-	typeKey   = "type"
-	valueKey  = "value"
-	keyKey    = "key"
-	nameKey   = "name"
-	fieldsKey = "fields"
-	idKey     = "id"
+	typeKey                 = "type"
+	valueKey                = "value"
+	keyKey                  = "key"
+	nameKey                 = "name"
+	fieldsKey               = "fields"
+	idKey                   = "id"
+	authorizedKey           = "authorized"
+	targetStorageAddressKey = "targetStorageAddress"
+	targetKeyKey            = "targetKey"
+	targetPathKey           = "targetPath"
+	borrowTypeKey           = "borrowType"
 )
 
 var ErrInvalidJSONCadence = errors.New("invalid JSON Cadence structure")
@@ -175,6 +180,12 @@ func decodeJSON(v interface{}) cadence.Value {
 		return decodeStruct(valueJSON)
 	case eventTypeStr:
 		return decodeEvent(valueJSON)
+	case contractTypeStr:
+		return decodeContract(valueJSON)
+	case storageReferenceTypeStr:
+		return decodeStorageReference(valueJSON)
+	case linkTypeStr:
+		return decodeLink(valueJSON)
 	}
 
 	panic(ErrInvalidJSONCadence)
@@ -514,7 +525,7 @@ func decodeCompositeField(valueJSON interface{}) (cadence.Value, cadence.Field) 
 func decodeStruct(valueJSON interface{}) cadence.Struct {
 	comp := decodeComposite(valueJSON)
 
-	return cadence.NewStruct(comp.fieldValues).WithType(cadence.StructType{
+	return cadence.NewStruct(comp.fieldValues).WithType(&cadence.StructType{
 		TypeID:     comp.typeID,
 		Identifier: comp.identifier,
 		Fields:     comp.fieldTypes,
@@ -524,7 +535,7 @@ func decodeStruct(valueJSON interface{}) cadence.Struct {
 func decodeResource(valueJSON interface{}) cadence.Resource {
 	comp := decodeComposite(valueJSON)
 
-	return cadence.NewResource(comp.fieldValues).WithType(cadence.ResourceType{
+	return cadence.NewResource(comp.fieldValues).WithType(&cadence.ResourceType{
 		TypeID:     comp.typeID,
 		Identifier: comp.identifier,
 		Fields:     comp.fieldTypes,
@@ -534,11 +545,40 @@ func decodeResource(valueJSON interface{}) cadence.Resource {
 func decodeEvent(valueJSON interface{}) cadence.Event {
 	comp := decodeComposite(valueJSON)
 
-	return cadence.NewEvent(comp.fieldValues).WithType(cadence.EventType{
+	return cadence.NewEvent(comp.fieldValues).WithType(&cadence.EventType{
 		TypeID:     comp.typeID,
 		Identifier: comp.identifier,
 		Fields:     comp.fieldTypes,
 	})
+}
+
+func decodeContract(valueJSON interface{}) cadence.Contract {
+	comp := decodeComposite(valueJSON)
+
+	return cadence.NewContract(comp.fieldValues).WithType(&cadence.ContractType{
+		TypeID:     comp.typeID,
+		Identifier: comp.identifier,
+		Fields:     comp.fieldTypes,
+	})
+}
+
+func decodeStorageReference(valueJSON interface{}) cadence.StorageReference {
+	obj := toObject(valueJSON)
+
+	return cadence.NewStorageReference(
+		obj.GetBool(authorizedKey),
+		decodeAddress(obj.Get(targetStorageAddressKey)),
+		obj.GetString(targetKeyKey),
+	)
+}
+
+func decodeLink(valueJSON interface{}) cadence.Link {
+	obj := toObject(valueJSON)
+
+	return cadence.NewLink(
+		obj.GetString(targetPathKey),
+		obj.GetString(borrowTypeKey),
+	)
 }
 
 // JSON types
@@ -553,6 +593,11 @@ func (obj jsonObject) Get(key string) interface{} {
 	}
 
 	return v
+}
+
+func (obj jsonObject) GetBool(key string) bool {
+	v := obj.Get(key)
+	return toBool(v)
 }
 
 func (obj jsonObject) GetString(key string) string {

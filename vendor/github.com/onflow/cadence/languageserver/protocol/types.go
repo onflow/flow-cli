@@ -706,11 +706,6 @@ type TextDocumentClientCapabilities struct {
 		 * Whether the clients accepts diagnostics with related information.
 		 */
 		RelatedInformation bool `json:"relatedInformation,omitempty"`
-
-		/*TagSupport defined:
-		 * Client supports the tag property to provide meta data about a diagnostic.
-		 */
-		TagSupport bool `json:"tagSupport,omitempty"`
 	} `json:"publishDiagnostics,omitempty"`
 }
 
@@ -1181,11 +1176,6 @@ type ClientCapabilities struct {
 			 * Whether the clients accepts diagnostics with related information.
 			 */
 			RelatedInformation bool `json:"relatedInformation,omitempty"`
-
-			/*TagSupport defined:
-			 * Client supports the tag property to provide meta data about a diagnostic.
-			 */
-			TagSupport bool `json:"tagSupport,omitempty"`
 		} `json:"publishDiagnostics,omitempty"`
 
 		/*Implementation defined:
@@ -2826,7 +2816,7 @@ type CompletionItem struct {
 	/*Documentation defined:
 	 * A human-readable string that represents a doc-comment.
 	 */
-	Documentation string `json:"documentation,omitempty"` // string | MarkupContent
+	Documentation interface{} `json:"documentation,omitempty"` // string | MarkupContent
 
 	/*Deprecated defined:
 	 * Indicates if this item is deprecated.

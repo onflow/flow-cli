@@ -5,8 +5,6 @@ github.com/alecthomas/template
 github.com/alecthomas/template/parse
 # github.com/alecthomas/units v0.0.0-20190717042225-c3de453c63f4
 github.com/alecthomas/units
-# github.com/antlr/antlr4 v0.0.0-20200503195918-621b933c7a7f
-github.com/antlr/antlr4/runtime/Go/antlr
 # github.com/beorn7/perks v1.0.1
 github.com/beorn7/perks/quantile
 # github.com/btcsuite/btcd v0.20.1-beta
@@ -133,9 +131,9 @@ github.com/mattn/go-runewidth
 github.com/mattn/go-tty
 # github.com/matttproud/golang_protobuf_extensions v1.0.1
 github.com/matttproud/golang_protobuf_extensions/pbutil
-# github.com/mitchellh/mapstructure v1.1.2
+# github.com/mitchellh/mapstructure v1.3.3
 github.com/mitchellh/mapstructure
-# github.com/onflow/cadence v0.6.0
+# github.com/onflow/cadence v0.7.0
 github.com/onflow/cadence
 github.com/onflow/cadence/encoding/json
 github.com/onflow/cadence/fixedpoint
@@ -149,15 +147,16 @@ github.com/onflow/cadence/runtime/common/interface_entry
 github.com/onflow/cadence/runtime/common/intervalst
 github.com/onflow/cadence/runtime/errors
 github.com/onflow/cadence/runtime/interpreter
-github.com/onflow/cadence/runtime/parser
 github.com/onflow/cadence/runtime/parser2
 github.com/onflow/cadence/runtime/parser2/lexer
 github.com/onflow/cadence/runtime/sema
 github.com/onflow/cadence/runtime/stdlib
 github.com/onflow/cadence/runtime/stdlib/internal
 github.com/onflow/cadence/runtime/trampoline
-# github.com/onflow/cadence/languageserver v0.5.1
-github.com/onflow/cadence/languageserver/config
+# github.com/onflow/cadence/languageserver v0.7.0
+github.com/onflow/cadence/languageserver
+github.com/onflow/cadence/languageserver/conversion
+github.com/onflow/cadence/languageserver/integration
 github.com/onflow/cadence/languageserver/jsonrpc2
 github.com/onflow/cadence/languageserver/protocol
 github.com/onflow/cadence/languageserver/server

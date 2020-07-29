@@ -19,12 +19,14 @@
 package runtime
 
 import (
+	"fmt"
+	"math/rand"
 	"sort"
 
 	"github.com/onflow/cadence/runtime/ast"
 	"github.com/onflow/cadence/runtime/errors"
 	"github.com/onflow/cadence/runtime/interpreter"
-	parser1 "github.com/onflow/cadence/runtime/parser"
+	"github.com/onflow/cadence/runtime/parser2"
 	"github.com/onflow/cadence/runtime/sema"
 	"github.com/onflow/cadence/runtime/stdlib"
 	"github.com/onflow/cadence/runtime/trampoline"
@@ -39,14 +41,32 @@ type REPL struct {
 
 func NewREPL(onError func(error), onResult func(interpreter.Value)) (*REPL, error) {
 
-	standardLibraryFunctions := append(stdlib.BuiltinFunctions, stdlib.HelperFunctions...)
-	valueDeclarations := standardLibraryFunctions.ToValueDeclarations()
-	typeDeclarations := stdlib.BuiltinTypes.ToTypeDeclarations()
+	valueDeclarations := append(
+		stdlib.FlowBuiltInFunctions(stdlib.FlowBuiltinImpls{
+			CreateAccount: func(invocation interpreter.Invocation) trampoline.Trampoline {
+				panic(fmt.Errorf("cannot create accounts in the REPL"))
+			},
+			GetAccount: func(invocation interpreter.Invocation) trampoline.Trampoline {
+				panic(fmt.Errorf("cannot get accounts in the REPL"))
+			},
+			Log: stdlib.LogFunction.Function.Function,
+			GetCurrentBlock: func(invocation interpreter.Invocation) trampoline.Trampoline {
+				panic(fmt.Errorf("cannot get blocks in the REPL"))
+			},
+			GetBlock: func(invocation interpreter.Invocation) trampoline.Trampoline {
+				panic(fmt.Errorf("cannot get blocks in the REPL"))
+			},
+			UnsafeRandom: func(invocation interpreter.Invocation) trampoline.Trampoline {
+				return trampoline.Done{Result: interpreter.UInt64Value(rand.Uint64())}
+			},
+		}),
+		stdlib.BuiltinFunctions...,
+	)
 
 	checker, err := sema.NewChecker(
 		nil,
 		REPLLocation{},
-		sema.WithPredeclaredValues(valueDeclarations),
+		sema.WithPredeclaredValues(valueDeclarations.ToValueDeclarations()),
 		sema.WithPredeclaredTypes(typeDeclarations),
 		sema.WithAccessCheckMode(sema.AccessCheckModeNotSpecifiedUnrestricted),
 	)
@@ -54,7 +74,7 @@ func NewREPL(onError func(error), onResult func(interpreter.Value)) (*REPL, erro
 		return nil, err
 	}
 
-	values := standardLibraryFunctions.ToValues()
+	values := valueDeclarations.ToValues()
 
 	var uuid uint64
 
@@ -108,9 +128,17 @@ func (r *REPL) check(element ast.Element, code string) bool {
 }
 
 func (r *REPL) Accept(code string) (inputIsComplete bool) {
-	var result []interface{}
+
+	// TODO: detect if the input is complete
+	inputIsComplete = true
+
 	var err error
-	result, inputIsComplete, err = parser1.ParseReplInput(code)
+	result, errs := parser2.ParseStatements(code)
+	if len(errs) > 0 {
+		err = parser2.Error{
+			Errors: errs,
+		}
+	}
 
 	if !inputIsComplete {
 		return

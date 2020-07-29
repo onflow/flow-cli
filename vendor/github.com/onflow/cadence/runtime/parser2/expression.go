@@ -985,7 +985,7 @@ func defineMemberExpression() {
 	setExprLeftDenotation(
 		lexer.TokenDot,
 		func(p *parser, token lexer.Token, left ast.Expression) ast.Expression {
-			return parseMemberAccess(p, left, false)
+			return parseMemberAccess(p, token, left, false)
 		},
 	)
 
@@ -993,13 +993,27 @@ func defineMemberExpression() {
 	setExprLeftDenotation(
 		lexer.TokenQuestionMarkDot,
 		func(p *parser, token lexer.Token, left ast.Expression) ast.Expression {
-			return parseMemberAccess(p, left, true)
+			return parseMemberAccess(p, token, left, true)
 		},
 	)
 }
 
-func parseMemberAccess(p *parser, left ast.Expression, optional bool) ast.Expression {
-	p.skipSpaceAndComments(true)
+func parseMemberAccess(p *parser, token lexer.Token, left ast.Expression, optional bool) ast.Expression {
+
+	// Whitespace after the '.' (dot token) is not allowed.
+	// We parse it anyways and report an error
+
+	if p.current.Is(lexer.TokenSpace) {
+		errorPos := p.current.StartPos
+		p.skipSpaceAndComments(true)
+		p.report(&SyntaxError{
+			Message: fmt.Sprintf(
+				"invalid whitespace after %s",
+				lexer.TokenDot,
+			),
+			Pos: errorPos,
+		})
+	}
 
 	// If there is an identifier, use it.
 	// If not, report an error
@@ -1016,13 +1030,16 @@ func parseMemberAccess(p *parser, left ast.Expression, optional bool) ast.Expres
 	}
 
 	return &ast.MemberExpression{
-		Optional:   optional,
 		Expression: left,
+		Optional:   optional,
+		// NOTE: use the end position, because the token
+		// can be an optional access token `?.`
+		AccessPos:  token.EndPos,
 		Identifier: identifier,
 	}
 }
 
-func exprLeftDenotationAllowsNewline(tokenType lexer.TokenType) bool {
+func exprLeftDenotationAllowsNewlineAfterNullDenotation(tokenType lexer.TokenType) bool {
 
 	// The postfix force unwrap, invocation expressions,
 	// and indexing expressions don't support newlines before them,
@@ -1037,9 +1054,25 @@ func exprLeftDenotationAllowsNewline(tokenType lexer.TokenType) bool {
 	}
 }
 
+func exprLeftDenotationAllowsWhitespaceAfterToken(tokenType lexer.TokenType) bool {
+
+	// The member access expressions, which starts with a '.' (dot token)
+	// or `?.` (question mark dot token), do not allow whitespace
+	// after the token (before the identifier)
+
+	switch tokenType {
+	case lexer.TokenDot, lexer.TokenQuestionMarkDot:
+		return false
+	default:
+		return true
+	}
+}
+
 // parseExpression uses "Top-Down operator precedence parsing" (TDOP) technique to
 // parse expressions.
+//
 func parseExpression(p *parser, rightBindingPower int) ast.Expression {
+
 	p.skipSpaceAndComments(true)
 	t := p.current
 	p.next()
@@ -1051,7 +1084,7 @@ func parseExpression(p *parser, rightBindingPower int) ast.Expression {
 	for {
 		newLineAfterLeft = p.skipSpaceAndComments(true) || newLineAfterLeft
 
-		if newLineAfterLeft && !exprLeftDenotationAllowsNewline(p.current.Type) {
+		if newLineAfterLeft && !exprLeftDenotationAllowsNewlineAfterNullDenotation(p.current.Type) {
 			break
 		}
 
@@ -1075,26 +1108,44 @@ func applyExprMetaLeftDenotation(
 	result ast.Expression,
 	done bool,
 ) {
-	t := p.current
-
-	// Normal left denotations are applied if the right binding power
+	// By default, left denotations are applied if the right binding power
 	// is less than the left binding power of the current token.
 	//
-	// Meta-left denotations allow determining the left binding power
-	// based on parsing more tokens.
+	// Token-specific meta-left denotations allow customizing this,
+	// e.g. determining the left binding power based on parsing more tokens
+	// or performing look-ahead
 
-	if metaLeftDenotation, ok := exprMetaLeftDenotations[t.Type]; ok {
-		return metaLeftDenotation(p, rightBindingPower, left)
+	metaLeftDenotation, ok := exprMetaLeftDenotations[p.current.Type]
+	if !ok {
+		metaLeftDenotation = defaultExprMetaLeftDenotation
 	}
 
-	if rightBindingPower >= exprLeftBindingPower(t) {
+	return metaLeftDenotation(p, rightBindingPower, left)
+}
+
+// defaultExprMetaLeftDenotation is the default expression left denotation, which applies
+// if the right binding power is less than the left binding power of the current token
+//
+func defaultExprMetaLeftDenotation(
+	p *parser,
+	rightBindingPower int,
+	left ast.Expression,
+) (
+	result ast.Expression,
+	done bool,
+) {
+	if rightBindingPower >= exprLeftBindingPower(p.current) {
 		return left, true
 	}
 
-	t = p.current
+	allowWhitespace := exprLeftDenotationAllowsWhitespaceAfterToken(p.current.Type)
+
+	t := p.current
 
 	p.next()
-	p.skipSpaceAndComments(true)
+	if allowWhitespace {
+		p.skipSpaceAndComments(true)
+	}
 
 	result = applyExprLeftDenotation(p, t, left)
 	return result, false

@@ -2451,7 +2451,7 @@ func (interpreter *Interpreter) declareCompositeValue(
 
 			if declaration.CompositeKind == common.CompositeKindResource {
 				uuid := interpreter.uuidHandler()
-				fields[sema.UUIDFieldName] = UInt64Value(uuid)
+				fields[sema.ResourceUUIDFieldName] = UInt64Value(uuid)
 			}
 
 			value := &CompositeValue{
@@ -3123,6 +3123,10 @@ func (interpreter *Interpreter) ensureLoaded(
 	}
 
 	return subInterpreter
+}
+
+func (interpreter *Interpreter) VisitPragmaDeclaration(declaration *ast.PragmaDeclaration) ast.Repr {
+	return Done{}
 }
 
 func (interpreter *Interpreter) VisitImportDeclaration(declaration *ast.ImportDeclaration) ast.Repr {
@@ -3953,7 +3957,7 @@ func (interpreter *Interpreter) authAccountLinkFunction(addressValue AddressValu
 	})
 }
 
-func (interpreter *Interpreter) authAccountGetLinkTargetFunction(addressValue AddressValue) HostFunctionValue {
+func (interpreter *Interpreter) accountGetLinkTargetFunction(addressValue AddressValue) HostFunctionValue {
 	return NewHostFunctionValue(func(invocation Invocation) Trampoline {
 
 		address := addressValue.ToAddress()
@@ -4152,7 +4156,7 @@ func (interpreter *Interpreter) getCapabilityFinalTargetStorageKey(
 
 			if link, ok := value.Value.(LinkValue); ok {
 
-				allowedType := interpreter.convertStaticToSemaType(link.Type)
+				allowedType := interpreter.ConvertStaticToSemaType(link.Type)
 
 				if !sema.IsSubType(allowedType, wantedBorrowType) {
 					return "", false
@@ -4172,7 +4176,7 @@ func (interpreter *Interpreter) getCapabilityFinalTargetStorageKey(
 	}
 }
 
-func (interpreter *Interpreter) convertStaticToSemaType(staticType StaticType) sema.Type {
+func (interpreter *Interpreter) ConvertStaticToSemaType(staticType StaticType) sema.Type {
 	return ConvertStaticToSemaType(
 		staticType,
 		func(location ast.Location, typeID sema.TypeID) *sema.InterfaceType {
@@ -4253,7 +4257,7 @@ func (interpreter *Interpreter) getMember(self Value, locationRange LocationRang
 
 					// NOTE: not invocation.Self, as that is only set for composite values
 					dynamicType := self.DynamicType(interpreter)
-					ty := interpreter.convertStaticToSemaType(
+					ty := interpreter.ConvertStaticToSemaType(
 						firstArgument.(TypeValue).Type,
 					)
 					result := IsSubType(dynamicType, ty)
