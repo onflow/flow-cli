@@ -131,9 +131,9 @@ github.com/mattn/go-runewidth
 github.com/mattn/go-tty
 # github.com/matttproud/golang_protobuf_extensions v1.0.1
 github.com/matttproud/golang_protobuf_extensions/pbutil
-# github.com/mitchellh/mapstructure v1.1.2
+# github.com/mitchellh/mapstructure v1.3.3
 github.com/mitchellh/mapstructure
-# github.com/onflow/cadence v0.6.1-0.20200727195916-4e0b2e955224
+# github.com/onflow/cadence v0.7.0
 github.com/onflow/cadence
 github.com/onflow/cadence/encoding/json
 github.com/onflow/cadence/fixedpoint
@@ -153,7 +153,7 @@ github.com/onflow/cadence/runtime/sema
 github.com/onflow/cadence/runtime/stdlib
 github.com/onflow/cadence/runtime/stdlib/internal
 github.com/onflow/cadence/runtime/trampoline
-# github.com/onflow/cadence/languageserver v0.6.1-0.20200727195916-4e0b2e955224
+# github.com/onflow/cadence/languageserver v0.7.0
 github.com/onflow/cadence/languageserver/conversion
 github.com/onflow/cadence/languageserver/integration
 github.com/onflow/cadence/languageserver/jsonrpc2

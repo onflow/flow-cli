@@ -21,7 +21,6 @@ package runtime
 import (
 	"errors"
 	"fmt"
-	"sort"
 
 	"github.com/onflow/cadence"
 	"github.com/onflow/cadence/runtime/ast"
@@ -43,7 +42,8 @@ func exportEvent(event exportableEvent) cadence.Event {
 		fields[i] = exportValueWithInterpreter(field.Value, field.Interpreter())
 	}
 
-	return cadence.NewEvent(fields).WithType(exportType(event.Type).(cadence.EventType))
+	eventType := exportType(event.Type, map[sema.TypeID]cadence.Type{}).(*cadence.EventType)
+	return cadence.NewEvent(fields).WithType(eventType)
 }
 
 func exportValueWithInterpreter(value interpreter.Value, inter *interpreter.Interpreter) cadence.Value {
@@ -136,35 +136,32 @@ func exportArrayValue(v *interpreter.ArrayValue, inter *interpreter.Interpreter)
 }
 
 func exportCompositeValue(v *interpreter.CompositeValue, inter *interpreter.Interpreter) cadence.Value {
-	fields := make([]cadence.Value, len(v.Fields))
-
-	keys := make([]string, 0, len(v.Fields))
-	for key := range v.Fields {
-		keys = append(keys, key)
-	}
-
-	// sort keys in lexicographical order
-	sort.Strings(keys)
-
-	for i, key := range keys {
-		field := v.Fields[key]
-		fields[i] = exportValueWithInterpreter(field, inter)
-	}
 
 	dynamicType := v.DynamicType(inter).(interpreter.CompositeDynamicType)
 	staticType := dynamicType.StaticType.(*sema.CompositeType)
+	// TODO: consider making the results map "global", by moving it up to exportValueWithInterpreter
+	t := exportCompositeType(staticType, map[sema.TypeID]cadence.Type{})
 
-	t := exportType(staticType)
+	// NOTE: use the exported type's fields to ensure fields in type
+	// and value are in sync
+
+	fieldNames := t.CompositeFields()
+	fields := make([]cadence.Value, len(fieldNames))
+
+	for i, field := range fieldNames {
+		fieldValue := v.Fields[field.Identifier]
+		fields[i] = exportValueWithInterpreter(fieldValue, inter)
+	}
 
 	switch staticType.Kind {
 	case common.CompositeKindStructure:
-		return cadence.NewStruct(fields).WithType(t.(cadence.StructType))
+		return cadence.NewStruct(fields).WithType(t.(*cadence.StructType))
 	case common.CompositeKindResource:
-		return cadence.NewResource(fields).WithType(t.(cadence.ResourceType))
+		return cadence.NewResource(fields).WithType(t.(*cadence.ResourceType))
 	case common.CompositeKindEvent:
-		return cadence.NewEvent(fields).WithType(t.(cadence.EventType))
+		return cadence.NewEvent(fields).WithType(t.(*cadence.EventType))
 	case common.CompositeKindContract:
-		return cadence.NewContract(fields).WithType(t.(cadence.ContractType))
+		return cadence.NewContract(fields).WithType(t.(*cadence.ContractType))
 	}
 
 	panic(fmt.Errorf(

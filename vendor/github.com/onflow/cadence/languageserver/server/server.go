@@ -21,13 +21,17 @@ package server
 import (
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 	"time"
+
+	"github.com/mitchellh/mapstructure"
 
 	"github.com/onflow/cadence/languageserver/conversion"
 	"github.com/onflow/cadence/languageserver/jsonrpc2"
 	"github.com/onflow/cadence/runtime"
 	"github.com/onflow/cadence/runtime/ast"
+	"github.com/onflow/cadence/runtime/common"
 	"github.com/onflow/cadence/runtime/errors"
 	"github.com/onflow/cadence/runtime/parser2"
 	"github.com/onflow/cadence/runtime/sema"
@@ -79,9 +83,10 @@ type DiagnosticProvider func(uri protocol.DocumentUri, checker *sema.Checker) ([
 type InitializationOptionsHandler func(initializationOptions interface{}) error
 
 type Server struct {
-	protocolServer *protocol.Server
-	checkers       map[protocol.DocumentUri]*sema.Checker
-	documents      map[protocol.DocumentUri]Document
+	protocolServer  *protocol.Server
+	checkers        map[protocol.DocumentUri]*sema.Checker
+	documents       map[protocol.DocumentUri]Document
+	memberResolvers map[protocol.DocumentUri]map[string]sema.MemberResolver
 	// commands is the registry of custom commands we support
 	commands map[string]CommandHandler
 	// resolveAddressImport is the optional function that is used to resolve address imports
@@ -170,9 +175,10 @@ func WithInitializationOptionsHandler(handler InitializationOptionsHandler) Opti
 
 func NewServer() *Server {
 	server := &Server{
-		checkers:  make(map[protocol.DocumentUri]*sema.Checker),
-		documents: make(map[protocol.DocumentUri]Document),
-		commands:  make(map[string]CommandHandler),
+		checkers:        make(map[protocol.DocumentUri]*sema.Checker),
+		documents:       make(map[protocol.DocumentUri]Document),
+		memberResolvers: make(map[protocol.DocumentUri]map[string]sema.MemberResolver),
+		commands:        make(map[string]CommandHandler),
 	}
 	server.protocolServer = protocol.NewServer(server)
 	return server
@@ -208,12 +214,12 @@ func (s *Server) Initialize(
 			TextDocumentSync:   protocol.Full,
 			HoverProvider:      true,
 			DefinitionProvider: true,
-			// TODO:
-			//SignatureHelpProvider: &protocol.SignatureHelpOptions{
-			//	TriggerCharacters: []string{"("},
-			//},
 			CodeLensProvider: &protocol.CodeLensOptions{
 				ResolveProvider: false,
+			},
+			CompletionProvider: &protocol.CompletionOptions{
+				TriggerCharacters: []string{"."},
+				ResolveProvider:   true,
 			},
 		},
 	}
@@ -293,10 +299,6 @@ func (s *Server) registerCommands(conn protocol.Conn) {
 // DidOpenTextDocument is called whenever a new file is opened.
 // We parse and check the text and publish diagnostics about the document.
 func (s *Server) DidOpenTextDocument(conn protocol.Conn, params *protocol.DidOpenTextDocumentParams) error {
-	conn.LogMessage(&protocol.LogMessageParams{
-		Type:    protocol.Log,
-		Message: "DidOpenTextDoc",
-	})
 
 	uri := params.TextDocument.URI
 	text := params.TextDocument.Text
@@ -325,21 +327,19 @@ func (s *Server) DidChangeTextDocument(
 	conn protocol.Conn,
 	params *protocol.DidChangeTextDocumentParams,
 ) error {
-	conn.LogMessage(&protocol.LogMessageParams{
-		Type:    protocol.Log,
-		Message: fmt.Sprintf("DidChangeText changes: %d", len(params.ContentChanges)),
-	})
+
 	uri := params.TextDocument.URI
 	text := params.ContentChanges[0].Text
 
 	diagnostics, err := s.getDiagnostics(conn, uri, text)
-	if err != nil {
-		return err
-	}
+	// NOTE: always publish diagnostics
 	conn.PublishDiagnostics(&protocol.PublishDiagnosticsParams{
 		URI:         uri,
 		Diagnostics: diagnostics,
 	})
+	if err != nil {
+		return err
+	}
 
 	s.documents[uri] = Document{
 		Text:          text,
@@ -372,9 +372,13 @@ func (s *Server) Hover(
 
 	contents := protocol.MarkupContent{
 		Kind:  protocol.Markdown,
-		Value: fmt.Sprintf("* Type: `%s`", occurrence.Origin.Type.QualifiedString()),
+		Value: formatType(occurrence.Origin.Type),
 	}
 	return &protocol.Hover{Contents: contents}, nil
+}
+
+func formatType(ty sema.Type) string {
+	return fmt.Sprintf("* Type: `%s`", ty.QualifiedString())
 }
 
 // Definition finds the definition of the type at the given location.
@@ -420,27 +424,492 @@ func (s *Server) SignatureHelp(
 
 // CodeLens is called every time the document contents change and returns a
 // list of actions to be injected into the source as inline buttons.
-func (s *Server) CodeLens(_ protocol.Conn, params *protocol.CodeLensParams) ([]*protocol.CodeLens, error) {
+func (s *Server) CodeLens(
+	_ protocol.Conn,
+	params *protocol.CodeLensParams,
+) (
+	codeLenses []*protocol.CodeLens,
+	err error,
+) {
+	// NOTE: Always initialize to an empty slice, i.e DON'T use nil:
+	// The later will be ignored instead of being treated as no items
+	codeLenses = []*protocol.CodeLens{}
 
 	uri := params.TextDocument.URI
 	checker, ok := s.checkers[uri]
 	if !ok {
 		// Can we ensure this doesn't happen?
-		return []*protocol.CodeLens{}, nil
+		return
 	}
-
-	var allCodeLenses []*protocol.CodeLens
 
 	for _, provider := range s.codeLensProviders {
-		moreCodeLenses, err := provider(uri, checker)
+		var moreCodeLenses []*protocol.CodeLens
+		moreCodeLenses, err = provider(uri, checker)
 		if err != nil {
-			return nil, err
+			return
 		}
 
-		allCodeLenses = append(allCodeLenses, moreCodeLenses...)
+		codeLenses = append(codeLenses, moreCodeLenses...)
 	}
 
-	return allCodeLenses, nil
+	return
+}
+
+type CompletionItemData struct {
+	URI protocol.DocumentUri `json:"uri"`
+}
+
+var statementCompletionItems = []*protocol.CompletionItem{
+	{
+		Kind:             protocol.KeywordCompletion,
+		InsertTextFormat: protocol.SnippetTextFormat,
+		Label:            "for",
+		Detail:           "for-in loop",
+		InsertText:       "for $1 in $2 {\n\t$0\n}",
+	},
+	{
+		Kind:             protocol.KeywordCompletion,
+		InsertTextFormat: protocol.SnippetTextFormat,
+		Label:            "while",
+		Detail:           "while loop",
+		InsertText:       "while $1 {\n\t$0\n}",
+	},
+	{
+		Kind:             protocol.KeywordCompletion,
+		InsertTextFormat: protocol.SnippetTextFormat,
+		Label:            "if",
+		Detail:           "if statement",
+		InsertText:       "if $1 {\n\t$0\n}",
+	},
+	{
+		Kind:             protocol.KeywordCompletion,
+		InsertTextFormat: protocol.SnippetTextFormat,
+		Label:            "if else",
+		Detail:           "if-else statement",
+		InsertText:       "if $1 {\n\t$2\n} else {\n\t$0\n}",
+	},
+	{
+		Kind:             protocol.KeywordCompletion,
+		InsertTextFormat: protocol.SnippetTextFormat,
+		Label:            "else",
+		Detail:           "else block",
+		InsertText:       "else {\n\t$0\n}",
+	},
+	{
+		Kind:             protocol.KeywordCompletion,
+		InsertTextFormat: protocol.SnippetTextFormat,
+		Label:            "if let",
+		Detail:           "if-let statement",
+		InsertText:       "if let $1 = $2 {\n\t$0\n}",
+	},
+	{
+		Kind:             protocol.KeywordCompletion,
+		InsertTextFormat: protocol.SnippetTextFormat,
+		Label:            "return",
+		Detail:           "return statement",
+		InsertText:       "return $0",
+	},
+	{
+		Kind:   protocol.KeywordCompletion,
+		Label:  "break",
+		Detail: "break statement",
+	},
+	{
+		Kind:   protocol.KeywordCompletion,
+		Label:  "continue",
+		Detail: "continue statement",
+	},
+	{
+		Kind:             protocol.KeywordCompletion,
+		InsertTextFormat: protocol.SnippetTextFormat,
+		Label:            "emit",
+		Detail:           "emit statement",
+		InsertText:       "emit $0",
+	},
+	{
+		Kind:             protocol.KeywordCompletion,
+		InsertTextFormat: protocol.SnippetTextFormat,
+		Label:            "destroy",
+		Detail:           "destroy expression",
+		InsertText:       "destroy $0",
+	},
+	{
+		Kind:             protocol.KeywordCompletion,
+		InsertTextFormat: protocol.SnippetTextFormat,
+		Label:            "pre",
+		Detail:           "pre conditions",
+		InsertText:       "pre {\n\t$0\n}",
+	},
+	{
+		Kind:             protocol.KeywordCompletion,
+		InsertTextFormat: protocol.SnippetTextFormat,
+		Label:            "post",
+		Detail:           "post conditions",
+		InsertText:       "post {\n\t$0\n}",
+	},
+}
+
+var expressionCompletionItems = []*protocol.CompletionItem{
+	{
+		Kind:             protocol.KeywordCompletion,
+		InsertTextFormat: protocol.SnippetTextFormat,
+		Label:            "create",
+		Detail:           "create statement",
+		InsertText:       "create $0",
+	},
+	{
+		Kind:             protocol.KeywordCompletion,
+		InsertTextFormat: protocol.SnippetTextFormat,
+		Label:            "create",
+		Detail:           "create statement",
+		InsertText:       "create $0",
+	},
+	{
+		Kind:             protocol.KeywordCompletion,
+		InsertTextFormat: protocol.SnippetTextFormat,
+		Label:            "let",
+		Detail:           "constant declaration",
+		InsertText:       "let $1 = $0",
+	},
+	{
+		Kind:             protocol.KeywordCompletion,
+		InsertTextFormat: protocol.SnippetTextFormat,
+		Label:            "var",
+		Detail:           "variable declaration",
+		InsertText:       "var $1 = $0",
+	},
+}
+
+const accessOptions = "pub,priv,pub(set),access(contract),access(account)"
+
+var declarationCompletionItems = []*protocol.CompletionItem{
+	{
+		Kind:             protocol.KeywordCompletion,
+		InsertTextFormat: protocol.SnippetTextFormat,
+		Label:            "struct",
+		Detail:           "struct declaration",
+		InsertText:       fmt.Sprintf("${1|%s|} struct $2 {\n\t$0\n}", accessOptions),
+	},
+	{
+		Kind:             protocol.KeywordCompletion,
+		InsertTextFormat: protocol.SnippetTextFormat,
+		Label:            "resource",
+		Detail:           "resource declaration",
+		InsertText:       fmt.Sprintf("${1|%s|} resource $2 {\n\t$0\n}", accessOptions),
+	},
+	{
+		Kind:             protocol.KeywordCompletion,
+		InsertTextFormat: protocol.SnippetTextFormat,
+		Label:            "contract",
+		Detail:           "contract declaration",
+		InsertText:       fmt.Sprintf("${1|%s|} contract $2 {\n\t$0\n}", accessOptions),
+	},
+	{
+		Kind:             protocol.KeywordCompletion,
+		InsertTextFormat: protocol.SnippetTextFormat,
+		Label:            "struct interface",
+		Detail:           "struct interface declaration",
+		InsertText:       fmt.Sprintf("${1|%s|} struct interface $2 {\n\t$0\n}", accessOptions),
+	},
+	{
+		Kind:             protocol.KeywordCompletion,
+		InsertTextFormat: protocol.SnippetTextFormat,
+		Label:            "resource interface",
+		Detail:           "resource interface declaration",
+		InsertText:       fmt.Sprintf("${1|%s|} resource interface $2 {\n\t$0\n}", accessOptions),
+	},
+	{
+		Kind:             protocol.KeywordCompletion,
+		InsertTextFormat: protocol.SnippetTextFormat,
+		Label:            "contract interface",
+		Detail:           "contract interface declaration",
+		InsertText:       fmt.Sprintf("${1|%s|} contract interface $2 {\n\t$0\n}", accessOptions),
+	},
+	{
+		Kind:             protocol.KeywordCompletion,
+		InsertTextFormat: protocol.SnippetTextFormat,
+		Label:            "event",
+		Detail:           "event declaration",
+		InsertText:       fmt.Sprintf("${1|%s|} event $2($0)", accessOptions),
+	},
+	{
+		Kind:             protocol.KeywordCompletion,
+		InsertTextFormat: protocol.SnippetTextFormat,
+		Label:            "fun",
+		Detail:           "function declaration",
+		InsertText:       fmt.Sprintf("${1|%s|} fun $2($3)${4:: $5} {\n\t$0\n}", accessOptions),
+	},
+}
+
+var containerCompletionItems = []*protocol.CompletionItem{
+	{
+		Kind:             protocol.KeywordCompletion,
+		InsertTextFormat: protocol.SnippetTextFormat,
+		Label:            "var",
+		Detail:           "variable field",
+		InsertText:       fmt.Sprintf("${1|%s|} var $2: $0", accessOptions),
+	},
+	{
+		Kind:             protocol.KeywordCompletion,
+		InsertTextFormat: protocol.SnippetTextFormat,
+		Label:            "let",
+		Detail:           "constant field",
+		InsertText:       fmt.Sprintf("${1|%s|} let $2: $0", accessOptions),
+	},
+	// alias for the above
+	{
+		Kind:             protocol.KeywordCompletion,
+		InsertTextFormat: protocol.SnippetTextFormat,
+		Label:            "const",
+		Detail:           "constant field",
+		InsertText:       fmt.Sprintf("${1|%s|} let $2: $0", accessOptions),
+	},
+}
+
+// Completion is called to compute completion items at a given cursor position.
+//
+func (s *Server) Completion(
+	_ protocol.Conn,
+	params *protocol.CompletionParams,
+) (
+	items []*protocol.CompletionItem,
+	err error,
+) {
+	// NOTE: Always initialize to an empty slice, i.e DON'T use nil:
+	// The later will be ignored instead of being treated as no items
+	items = []*protocol.CompletionItem{}
+
+	uri := params.TextDocument.URI
+	checker, ok := s.checkers[uri]
+	if !ok {
+		return
+	}
+
+	position := conversion.ProtocolToSemaPosition(params.Position)
+
+	memberCompletions := s.memberCompletions(position, checker, uri)
+
+	// prioritize member completion items over other items
+	for _, item := range memberCompletions {
+		item.SortText = fmt.Sprintf("1" + item.Label)
+	}
+
+	items = append(items, memberCompletions...)
+
+	// TODO: make conditional on position being inside a function declaration
+	items = append(items, statementCompletionItems...)
+
+	// TODO: make conditional on position being inside a function declaration
+	items = append(items, expressionCompletionItems...)
+
+	// TODO: make conditional on position being outside a function declaration
+	items = append(items, declarationCompletionItems...)
+
+	// TODO: make conditional on position being inside a container, but not a function declaration
+	items = append(items, containerCompletionItems...)
+
+	return
+}
+
+func (s *Server) memberCompletions(
+	position sema.Position,
+	checker *sema.Checker,
+	uri protocol.DocumentUri,
+) (items []*protocol.CompletionItem) {
+
+	// The client asks for the column after the identifier,
+	// query the member accesses for the preceding position
+
+	if position.Column > 0 {
+		position.Column -= 1
+	}
+	memberAccess := checker.MemberAccesses.Find(position)
+
+	delete(s.memberResolvers, uri)
+
+	if memberAccess == nil {
+		return
+	}
+
+	memberResolvers := memberAccess.AccessedType.GetMembers()
+	s.memberResolvers[uri] = memberResolvers
+
+	for name, resolver := range memberResolvers {
+		kind := convertDeclarationKindToCompletionItemType(resolver.Kind)
+		commitCharacters := declarationKindCommitCharacters(resolver.Kind)
+
+		item := &protocol.CompletionItem{
+			Label:            name,
+			Kind:             kind,
+			CommitCharacters: commitCharacters,
+			Data: CompletionItemData{
+				URI: uri,
+			},
+		}
+
+		// If the member is a function, also prepare the argument list
+		// with placeholders and suggest it
+
+		if resolver.Kind == common.DeclarationKindFunction {
+			s.prepareFunctionMemberCompletionItem(item, resolver, name)
+		}
+
+		items = append(items, item)
+	}
+
+	return items
+}
+
+func (s *Server) prepareFunctionMemberCompletionItem(
+	item *protocol.CompletionItem,
+	resolver sema.MemberResolver,
+	name string,
+) {
+	member := resolver.Resolve(item.Label, ast.Range{}, func(err error) { /* NO-OP */ })
+	functionType, ok := member.TypeAnnotation.Type.(*sema.FunctionType)
+	if !ok {
+		return
+	}
+
+	item.InsertTextFormat = protocol.SnippetTextFormat
+
+	var builder strings.Builder
+	builder.WriteString(name)
+	builder.WriteRune('(')
+
+	for i, parameter := range functionType.Parameters {
+		if i > 0 {
+			builder.WriteString(", ")
+		}
+		label := parameter.EffectiveArgumentLabel()
+		if label != sema.ArgumentLabelNotRequired {
+			builder.WriteString(label)
+			builder.WriteString(": ")
+		}
+		builder.WriteString("${")
+		builder.WriteString(strconv.Itoa(i + 1))
+		builder.WriteRune(':')
+		builder.WriteString(parameter.Identifier)
+		builder.WriteRune('}')
+	}
+
+	builder.WriteRune(')')
+	item.InsertText = builder.String()
+}
+
+func convertDeclarationKindToCompletionItemType(kind common.DeclarationKind) protocol.CompletionItemKind {
+	switch kind {
+	case common.DeclarationKindFunction:
+		return protocol.FunctionCompletion
+
+	case common.DeclarationKindField:
+		return protocol.FieldCompletion
+
+	case common.DeclarationKindStructure,
+		common.DeclarationKindResource,
+		common.DeclarationKindEvent,
+		common.DeclarationKindContract:
+		return protocol.ClassCompletion
+
+	case common.DeclarationKindStructureInterface,
+		common.DeclarationKindResourceInterface,
+		common.DeclarationKindContractInterface:
+		return protocol.InterfaceCompletion
+
+	default:
+		return protocol.TextCompletion
+	}
+}
+
+func declarationKindCommitCharacters(kind common.DeclarationKind) []string {
+	switch kind {
+	case common.DeclarationKindField:
+		return []string{"."}
+
+	default:
+		return nil
+	}
+}
+
+// Completion is called to compute completion items at a given cursor position.
+//
+func (s *Server) ResolveCompletionItem(
+	_ protocol.Conn,
+	item *protocol.CompletionItem,
+) (
+	result *protocol.CompletionItem,
+	err error,
+) {
+	result = item
+
+	var data CompletionItemData
+	cfg := &mapstructure.DecoderConfig{
+		Metadata: nil,
+		Result:   &data,
+		TagName:  "json",
+	}
+	decoder, _ := mapstructure.NewDecoder(cfg)
+	err = decoder.Decode(item.Data)
+	if err != nil {
+		return
+	}
+
+	memberResolvers, ok := s.memberResolvers[data.URI]
+	if !ok {
+		return
+	}
+
+	resolver, ok := memberResolvers[item.Label]
+	if !ok {
+		return
+	}
+
+	member := resolver.Resolve(item.Label, ast.Range{}, func(err error) { /* NO-OP */ })
+
+	result.Documentation = protocol.MarkupContent{
+		Kind:  "markdown",
+		Value: member.DocString,
+	}
+
+	switch member.DeclarationKind {
+	case common.DeclarationKindField:
+		typeString := member.TypeAnnotation.Type.QualifiedString()
+
+		result.Detail = fmt.Sprintf(
+			"(%s) %s.%s: %s",
+			member.VariableKind.Name(),
+			member.ContainerType.String(),
+			member.Identifier,
+			typeString,
+		)
+
+	case common.DeclarationKindFunction:
+		typeString := member.TypeAnnotation.Type.QualifiedString()
+
+		result.Detail = fmt.Sprintf(
+			"(function) %s.%s%s",
+			member.ContainerType.String(),
+			member.Identifier,
+			typeString[1:len(typeString)-1],
+		)
+
+	case common.DeclarationKindStructure,
+		common.DeclarationKindResource,
+		common.DeclarationKindEvent,
+		common.DeclarationKindContract,
+		common.DeclarationKindStructureInterface,
+		common.DeclarationKindResourceInterface,
+		common.DeclarationKindContractInterface:
+
+		result.Detail = fmt.Sprintf(
+			"(%s) %s.%s",
+			member.DeclarationKind.Name(),
+			member.ContainerType.String(),
+			member.Identifier,
+		)
+	}
+
+	return
 }
 
 // ExecuteCommand is called to execute a custom, server-defined command.
@@ -450,7 +919,7 @@ func (s *Server) CodeLens(_ protocol.Conn, params *protocol.CodeLensParams) ([]*
 func (s *Server) ExecuteCommand(conn protocol.Conn, params *protocol.ExecuteCommandParams) (interface{}, error) {
 	conn.LogMessage(&protocol.LogMessageParams{
 		Type:    protocol.Log,
-		Message: "called execute command: " + params.Command,
+		Message: fmt.Sprintf("called execute command: %s", params.Command),
 	})
 
 	f, ok := s.commands[params.Command]
@@ -484,23 +953,37 @@ const inMemoryPrefix = "inmemory:/"
 // that the caller is responsible for publishing to the client.
 //
 // Returns an error if an unexpected error occurred.
-func (s *Server) getDiagnostics(conn protocol.Conn, uri protocol.DocumentUri, text string) ([]protocol.Diagnostic, error) {
-	diagnostics := make([]protocol.Diagnostic, 0)
-	program, err := parse(conn, text, string(uri))
+func (s *Server) getDiagnostics(
+	conn protocol.Conn,
+	uri protocol.DocumentUri,
+	text string,
+) (
+	diagnostics []protocol.Diagnostic,
+	diagnosticsErr error,
+) {
+	// NOTE: Always initialize to an empty slice, i.e DON'T use nil:
+	// The later will be ignored instead of being treated as no items
+	diagnostics = []protocol.Diagnostic{}
+
+	program, parseError := parse(conn, text, string(uri))
 
 	// If there were parsing errors, convert each one to a diagnostic and exit
 	// without checking.
-	if err != nil {
-		if parentErr, ok := err.(errors.ParentError); ok {
+
+	if parseError != nil {
+		if parentErr, ok := parseError.(errors.ParentError); ok {
 			parserDiagnostics := getDiagnosticsForParentError(conn, parentErr)
 			diagnostics = append(diagnostics, parserDiagnostics...)
-			return diagnostics, nil
 		}
-		return nil, err
 	}
 
-	// There were no parser errors. Proceed to resolving imports and
-	// checking the parsed program.
+	// If there is a parse result succeeded proceed with resolving imports and checking the parsed program,
+	// even if there there might have been parsing errors.
+
+	if program == nil {
+		delete(s.checkers, uri)
+		return
+	}
 
 	mainPath := string(uri)
 
@@ -514,18 +997,28 @@ func (s *Server) getDiagnostics(conn protocol.Conn, uri protocol.DocumentUri, te
 		return s.resolveImport(conn, mainPath, location)
 	})
 
-	checker, err := sema.NewChecker(
+	var checker *sema.Checker
+	checker, diagnosticsErr = sema.NewChecker(
 		program,
 		runtime.FileLocation(uri),
 		sema.WithPredeclaredValues(valueDeclarations),
 		sema.WithPredeclaredTypes(typeDeclarations),
+		sema.WithImportHandler(func(location ast.Location) sema.Import {
+			switch location {
+			case stdlib.CryptoChecker.Location:
+				return sema.CheckerImport{
+					Checker: stdlib.CryptoChecker,
+				}
+			}
+			return nil
+		}),
 	)
-	if err != nil {
-		return nil, err
+	if diagnosticsErr != nil {
+		return
 	}
 
 	start := time.Now()
-	err = checker.Check()
+	checkError := checker.Check()
 	elapsed := time.Since(start)
 
 	// Log how long it took to check the file
@@ -536,25 +1029,23 @@ func (s *Server) getDiagnostics(conn protocol.Conn, uri protocol.DocumentUri, te
 
 	s.checkers[uri] = checker
 
-	if err != nil {
-		if parentErr, ok := err.(errors.ParentError); ok {
+	if checkError != nil {
+		if parentErr, ok := checkError.(errors.ParentError); ok {
 			checkerDiagnostics := getDiagnosticsForParentError(conn, parentErr)
 			diagnostics = append(diagnostics, checkerDiagnostics...)
-		} else {
-			return nil, err
 		}
 	}
 
 	for _, provider := range s.diagnosticProviders {
 		var extraDiagnostics []protocol.Diagnostic
-		extraDiagnostics, err = provider(uri, checker)
-		if err != nil {
-			return nil, err
+		extraDiagnostics, diagnosticsErr = provider(uri, checker)
+		if diagnosticsErr != nil {
+			return
 		}
 		diagnostics = append(diagnostics, extraDiagnostics...)
 	}
 
-	return diagnostics, nil
+	return
 }
 
 // getDiagnosticsForParentError unpacks all child errors and converts each to
