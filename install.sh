@@ -64,10 +64,12 @@ main() {
   get_architecture || exit 1
   get_version || exit 1
 
+  echo "Downloading version $VERSION ..."
+
   tmpfile=$(mktemp 2>/dev/null || mktemp -t flow)
 
   url="$BASE_URL/flow-$ARCH-$VERSION"
-  curl -s "$url" -o $tmpfile
+  curl --progress-bar "$url" -o $tmpfile
 
   # Ensure we don't receive a not found error as response.
   if grep -q "The specified key does not exist" $tmpfile
@@ -81,7 +83,7 @@ main() {
   [ -d $TARGET_PATH ] || mkdir -p $TARGET_PATH
   mv $tmpfile $TARGET_PATH/flow
 
-  echo "Successfully installed version $VERSION to $TARGET_PATH."
+  echo "Successfully installed the Flow CLI to $TARGET_PATH."
   echo "Make sure $TARGET_PATH is in your \$PATH environment variable."
 }
 
