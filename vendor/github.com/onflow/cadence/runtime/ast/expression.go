@@ -22,6 +22,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/big"
+	"strconv"
 	"strings"
 )
 
@@ -33,12 +34,6 @@ type Expression interface {
 	IfStatementTest
 	isExpression()
 	AcceptExp(ExpressionVisitor) Repr
-}
-
-// TargetExpression
-
-type TargetExpression interface {
-	isTargetExpression()
 }
 
 // BoolExpression
@@ -141,14 +136,24 @@ func (e *StringExpression) AcceptExp(visitor ExpressionVisitor) Repr {
 }
 
 func (e *StringExpression) String() string {
-	// TODO:
-	return ""
+	return strconv.Quote(e.Value)
+}
+
+func (e *StringExpression) MarshalJSON() ([]byte, error) {
+	type Alias StringExpression
+	return json.Marshal(&struct {
+		Type string
+		*Alias
+	}{
+		Type:  "StringExpression",
+		Alias: (*Alias)(e),
+	})
 }
 
 // IntegerExpression
 
 type IntegerExpression struct {
-	Value *big.Int
+	Value *big.Int `json:"-"`
 	Base  int
 	Range
 }
@@ -169,12 +174,25 @@ func (e *IntegerExpression) String() string {
 	return e.Value.String()
 }
 
+func (e *IntegerExpression) MarshalJSON() ([]byte, error) {
+	type Alias IntegerExpression
+	return json.Marshal(&struct {
+		Type  string
+		Value string
+		*Alias
+	}{
+		Type:  "IntegerExpression",
+		Value: e.Value.String(),
+		Alias: (*Alias)(e),
+	})
+}
+
 // FixedPointExpression
 
 type FixedPointExpression struct {
 	Negative        bool
-	UnsignedInteger *big.Int
-	Fractional      *big.Int
+	UnsignedInteger *big.Int `json:"-"`
+	Fractional      *big.Int `json:"-"`
 	Scale           uint
 	Range
 }
@@ -204,6 +222,21 @@ func (e *FixedPointExpression) String() string {
 	}
 	builder.WriteString(fractional)
 	return builder.String()
+}
+
+func (e *FixedPointExpression) MarshalJSON() ([]byte, error) {
+	type Alias FixedPointExpression
+	return json.Marshal(&struct {
+		Type            string
+		UnsignedInteger string
+		Fractional      string
+		*Alias
+	}{
+		Type:            "FixedPointExpression",
+		UnsignedInteger: e.UnsignedInteger.String(),
+		Fractional:      e.Fractional.String(),
+		Alias:           (*Alias)(e),
+	})
 }
 
 // ArrayExpression
@@ -238,10 +271,21 @@ func (e *ArrayExpression) String() string {
 	return builder.String()
 }
 
+func (e *ArrayExpression) MarshalJSON() ([]byte, error) {
+	type Alias ArrayExpression
+	return json.Marshal(&struct {
+		Type string
+		*Alias
+	}{
+		Type:  "ArrayExpression",
+		Alias: (*Alias)(e),
+	})
+}
+
 // DictionaryExpression
 
 type DictionaryExpression struct {
-	Entries []Entry
+	Entries []DictionaryEntry
 	Range
 }
 
@@ -272,20 +316,40 @@ func (e *DictionaryExpression) String() string {
 	return builder.String()
 }
 
-type Entry struct {
+func (e *DictionaryExpression) MarshalJSON() ([]byte, error) {
+	type Alias DictionaryExpression
+	return json.Marshal(&struct {
+		Type string
+		*Alias
+	}{
+		Type:  "DictionaryExpression",
+		Alias: (*Alias)(e),
+	})
+}
+
+type DictionaryEntry struct {
 	Key   Expression
 	Value Expression
+}
+
+func (e DictionaryEntry) MarshalJSON() ([]byte, error) {
+	type Alias DictionaryEntry
+	return json.Marshal(&struct {
+		Type string
+		*Alias
+	}{
+		Type:  "DictionaryEntry",
+		Alias: (*Alias)(&e),
+	})
 }
 
 // IdentifierExpression
 
 type IdentifierExpression struct {
-	Identifier
+	Identifier Identifier
 }
 
 func (*IdentifierExpression) isExpression() {}
-
-func (*IdentifierExpression) isTargetExpression() {}
 
 func (*IdentifierExpression) isIfStatementTest() {}
 
@@ -299,6 +363,27 @@ func (e *IdentifierExpression) AcceptExp(visitor ExpressionVisitor) Repr {
 
 func (e *IdentifierExpression) String() string {
 	return e.Identifier.Identifier
+}
+
+func (e *IdentifierExpression) MarshalJSON() ([]byte, error) {
+	type Alias IdentifierExpression
+	return json.Marshal(&struct {
+		Type string
+		*Alias
+		Range
+	}{
+		Type:  "IdentifierExpression",
+		Range: NewRangeFromPositioned(e.Identifier),
+		Alias: (*Alias)(e),
+	})
+}
+
+func (e *IdentifierExpression) StartPosition() Position {
+	return e.Identifier.StartPosition()
+}
+
+func (e *IdentifierExpression) EndPosition() Position {
+	return e.Identifier.EndPosition()
 }
 
 // Arguments
@@ -385,8 +470,6 @@ type MemberExpression struct {
 
 func (*MemberExpression) isExpression() {}
 
-func (*MemberExpression) isTargetExpression() {}
-
 func (*MemberExpression) isIfStatementTest() {}
 
 func (*MemberExpression) isAccessExpression() {}
@@ -426,6 +509,19 @@ func (e *MemberExpression) EndPosition() Position {
 	}
 }
 
+func (e *MemberExpression) MarshalJSON() ([]byte, error) {
+	type Alias MemberExpression
+	return json.Marshal(&struct {
+		Type string
+		Range
+		*Alias
+	}{
+		Type:  "MemberExpression",
+		Range: NewRangeFromPositioned(e),
+		Alias: (*Alias)(e),
+	})
+}
+
 // IndexExpression
 
 type IndexExpression struct {
@@ -435,8 +531,6 @@ type IndexExpression struct {
 }
 
 func (*IndexExpression) isExpression() {}
-
-func (*IndexExpression) isTargetExpression() {}
 
 func (*IndexExpression) isIfStatementTest() {}
 
@@ -458,6 +552,17 @@ func (e *IndexExpression) String() string {
 		"%s[%s]",
 		e.TargetExpression, e.IndexingExpression,
 	)
+}
+
+func (e *IndexExpression) MarshalJSON() ([]byte, error) {
+	type Alias IndexExpression
+	return json.Marshal(&struct {
+		Type string
+		*Alias
+	}{
+		Type:  "IndexExpression",
+		Alias: (*Alias)(e),
+	})
 }
 
 // ConditionalExpression
@@ -772,7 +877,7 @@ func (e *ForceExpression) EndPosition() Position {
 // PathExpression
 
 type PathExpression struct {
-	StartPos   Position
+	StartPos   Position `json:"-"`
 	Domain     Identifier
 	Identifier Identifier
 }
@@ -798,5 +903,18 @@ func (e *PathExpression) StartPosition() Position {
 }
 
 func (e *PathExpression) EndPosition() Position {
-	return e.Domain.EndPosition()
+	return e.Identifier.EndPosition()
+}
+
+func (e *PathExpression) MarshalJSON() ([]byte, error) {
+	type Alias PathExpression
+	return json.Marshal(&struct {
+		Type string
+		Range
+		*Alias
+	}{
+		Type:  "PathExpression",
+		Range: NewRangeFromPositioned(e),
+		Alias: (*Alias)(e),
+	})
 }

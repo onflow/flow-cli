@@ -19,10 +19,12 @@
 package ast
 
 import (
+	"encoding/json"
+
 	"github.com/onflow/cadence/runtime/errors"
 )
 
-//go:generate stringer -type=TransferOperation
+//go:generate go run golang.org/x/tools/cmd/stringer -type=TransferOperation
 
 type TransferOperation uint
 
@@ -32,6 +34,10 @@ const (
 	TransferOperationMove
 	TransferOperationMoveForced
 )
+
+func TransferOperationCount() int {
+	return len(_TransferOperation_index) - 1
+}
 
 func (k TransferOperation) Operator() string {
 	switch k {
@@ -53,4 +59,8 @@ func (k TransferOperation) IsMove() bool {
 	}
 
 	return false
+}
+
+func (k TransferOperation) MarshalJSON() ([]byte, error) {
+	return json.Marshal(k.String())
 }

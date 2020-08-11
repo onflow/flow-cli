@@ -21,6 +21,7 @@ package sema
 import (
 	"fmt"
 	"math/big"
+	"strings"
 
 	"github.com/onflow/cadence/runtime/ast"
 	"github.com/onflow/cadence/runtime/common"
@@ -1024,6 +1025,7 @@ func (*RepeatedImportError) isSemanticError() {}
 type NotExportedError struct {
 	Name           string
 	ImportLocation ast.Location
+	Available      []string
 	Pos            ast.Position
 }
 
@@ -1033,6 +1035,17 @@ func (e *NotExportedError) Error() string {
 		e.Name,
 		e.ImportLocation,
 	)
+}
+
+func (e *NotExportedError) SecondaryError() string {
+	var builder strings.Builder
+	builder.WriteString("available exported declarations are:\n")
+
+	for _, available := range e.Available {
+		builder.WriteString(fmt.Sprintf(" - `%s`\n", available))
+	}
+
+	return builder.String()
 }
 
 func (*NotExportedError) isSemanticError() {}
@@ -1313,24 +1326,20 @@ func (*InvalidResourceAnnotationError) isSemanticError() {}
 // InvalidInterfaceTypeError
 
 type InvalidInterfaceTypeError struct {
-	Type Type
+	ActualType   Type
+	ExpectedType Type
 	ast.Range
 }
 
 func (e *InvalidInterfaceTypeError) Error() string {
-	return "invalid interface type"
+	return "invalid use of interface as type"
 }
 
 func (e *InvalidInterfaceTypeError) SecondaryError() string {
-	var restrictedAny Type = &AnyStructType{}
-	if e.Type.IsResourceType() {
-		restrictedAny = &AnyResourceType{}
-	}
-
 	return fmt.Sprintf(
-		"got `%[1]s`; consider using `%[2]s{%[1]s}`",
-		e.Type.QualifiedString(),
-		restrictedAny,
+		"got `%s`; consider using `%s`",
+		e.ActualType.QualifiedString(),
+		e.ExpectedType.QualifiedString(),
 	)
 }
 
@@ -2007,7 +2016,7 @@ type InvalidAssignmentTargetError struct {
 }
 
 func (e *InvalidAssignmentTargetError) Error() string {
-	return "cannot assign to expression"
+	return "cannot assign to unassignable expression"
 }
 
 func (*InvalidAssignmentTargetError) isSemanticError() {}
