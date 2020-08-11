@@ -857,6 +857,10 @@ func (checker *Checker) ConvertType(t ast.Type) Type {
 
 	case *ast.InstantiationType:
 		return checker.convertInstantiationType(t)
+
+	case nil:
+		// The AST might contain "holes" if parsing failed
+		return &InvalidType{}
 	}
 
 	panic(&astTypeConversionError{invalidASTType: t})
@@ -2081,10 +2085,12 @@ func (checker *Checker) checkTypeAnnotation(typeAnnotation *TypeAnnotation, pos 
 		)
 	}
 
-	if typeAnnotation.Type.ContainsFirstLevelInterfaceType() {
+	rewrittenType, rewritten := typeAnnotation.Type.RewriteWithRestrictedTypes()
+	if rewritten {
 		checker.report(
 			&InvalidInterfaceTypeError{
-				Type: typeAnnotation.Type,
+				ActualType:   typeAnnotation.Type,
+				ExpectedType: rewrittenType,
 				Range: ast.Range{
 					StartPos: pos.StartPosition(),
 					EndPos:   pos.EndPosition(),

@@ -18,7 +18,7 @@ github.com/cespare/xxhash/v2
 # github.com/dapperlabs/flow-core-contracts/contracts v0.0.0-20200526041238-ad2360621a1a
 github.com/dapperlabs/flow-core-contracts/contracts
 github.com/dapperlabs/flow-core-contracts/contracts/internal/assets
-# github.com/dapperlabs/flow-emulator v0.7.0
+# github.com/dapperlabs/flow-emulator v0.8.0
 github.com/dapperlabs/flow-emulator
 github.com/dapperlabs/flow-emulator/cmd/emulator/start
 github.com/dapperlabs/flow-emulator/convert
@@ -29,7 +29,7 @@ github.com/dapperlabs/flow-emulator/storage
 github.com/dapperlabs/flow-emulator/storage/badger
 github.com/dapperlabs/flow-emulator/storage/memstore
 github.com/dapperlabs/flow-emulator/types
-# github.com/dapperlabs/flow-go v0.4.1-0.20200715183900-b337e998d486
+# github.com/dapperlabs/flow-go v0.4.1-0.20200811000347-954202e2f254
 github.com/dapperlabs/flow-go/engine
 github.com/dapperlabs/flow-go/engine/execution/state/delta
 github.com/dapperlabs/flow-go/engine/verification
@@ -45,7 +45,9 @@ github.com/dapperlabs/flow-go/model/fingerprint
 github.com/dapperlabs/flow-go/model/flow
 github.com/dapperlabs/flow-go/model/hash
 github.com/dapperlabs/flow-go/model/messages
+github.com/dapperlabs/flow-go/model/verification
 github.com/dapperlabs/flow-go/module
+github.com/dapperlabs/flow-go/module/mempool
 github.com/dapperlabs/flow-go/module/mempool/entity
 github.com/dapperlabs/flow-go/module/metrics
 github.com/dapperlabs/flow-go/module/trace
@@ -133,7 +135,7 @@ github.com/mattn/go-tty
 github.com/matttproud/golang_protobuf_extensions/pbutil
 # github.com/mitchellh/mapstructure v1.3.3
 github.com/mitchellh/mapstructure
-# github.com/onflow/cadence v0.7.0
+# github.com/onflow/cadence v0.8.0
 github.com/onflow/cadence
 github.com/onflow/cadence/encoding/json
 github.com/onflow/cadence/fixedpoint
@@ -153,7 +155,7 @@ github.com/onflow/cadence/runtime/sema
 github.com/onflow/cadence/runtime/stdlib
 github.com/onflow/cadence/runtime/stdlib/internal
 github.com/onflow/cadence/runtime/trampoline
-# github.com/onflow/cadence/languageserver v0.7.0
+# github.com/onflow/cadence/languageserver v0.8.0
 github.com/onflow/cadence/languageserver
 github.com/onflow/cadence/languageserver/conversion
 github.com/onflow/cadence/languageserver/integration
@@ -163,7 +165,7 @@ github.com/onflow/cadence/languageserver/server
 # github.com/onflow/flow-ft/contracts v0.0.0-20200525235630-0e8024a483ce
 github.com/onflow/flow-ft/contracts
 github.com/onflow/flow-ft/contracts/internal/assets
-# github.com/onflow/flow-go-sdk v0.8.0
+# github.com/onflow/flow-go-sdk v0.9.0
 github.com/onflow/flow-go-sdk
 github.com/onflow/flow-go-sdk/client
 github.com/onflow/flow-go-sdk/client/convert
@@ -174,7 +176,7 @@ github.com/onflow/flow-go-sdk/templates
 # github.com/onflow/flow/protobuf/go/flow v0.1.5-0.20200722220305-ee8119767329
 github.com/onflow/flow/protobuf/go/flow/access
 github.com/onflow/flow/protobuf/go/flow/entities
-# github.com/opentracing/opentracing-go v1.1.0
+# github.com/opentracing/opentracing-go v1.2.0
 github.com/opentracing/opentracing-go
 github.com/opentracing/opentracing-go/ext
 github.com/opentracing/opentracing-go/log
