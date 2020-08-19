@@ -10,7 +10,7 @@ import (
 	"google.golang.org/grpc"
 )
 
-func GetTransactionResult(host string, id string) {
+func GetTransactionResult(host string, id string, sealed bool) {
 	ctx := context.Background()
 
 	flowClient, err := client.New(host, grpc.WithInsecure())
@@ -20,13 +20,18 @@ func GetTransactionResult(host string, id string) {
 
 	txID := flow.HexToID(id)
 
-	res, err := waitForSeal(ctx, flowClient, txID)
+	var res *flow.TransactionResult
+	if sealed {
+		res, err = waitForSeal(ctx, flowClient, txID)
+	} else {
+		res, err = flowClient.GetTransactionResult(ctx, txID)
+	}
 	if err != nil {
 		Exitf(1, "Failed to get transaction result: %s", err)
 	}
 
 	// Print out results of the TX to std out
-	printResult(res)
+	printTxResult(res)
 }
 
 func waitForSeal(ctx context.Context, c *client.Client, id flow.Identifier) (*flow.TransactionResult, error) {
@@ -51,7 +56,7 @@ func waitForSeal(ctx context.Context, c *client.Client, id flow.Identifier) (*fl
 	return result, nil
 }
 
-func printResult(res *flow.TransactionResult) {
+func printTxResult(res *flow.TransactionResult) {
 	fmt.Println()
 	fmt.Println("Status: " + res.Status.String())
 	if res.Error != nil {
@@ -59,14 +64,40 @@ func printResult(res *flow.TransactionResult) {
 		return
 	}
 
-	printEvents(res.Events)
+	printEvents(res.Events, false)
 	fmt.Println()
 }
 
-func printEvents(events []flow.Event) {
+func GetBlockEvents(host string, height uint64, eventType string) {
+	ctx := context.Background()
+
+	flowClient, err := client.New(host, grpc.WithInsecure())
+	if err != nil {
+		Exitf(1, "Failed to connect to host: %s", err)
+	}
+
+	events, err := flowClient.GetEventsForHeightRange(ctx, client.EventRangeQuery{
+		Type:        eventType,
+		StartHeight: height,
+		EndHeight:   height,
+	})
+
+	if err != nil {
+		Exitf(1, "Failed to query block event by height: %s", err)
+	}
+
+	for _, blockEvent := range events {
+		printEvents(blockEvent.Events, true)
+	}
+}
+
+func printEvents(events []flow.Event, txID bool) {
 	// Basic event info printing
 	for _, event := range events {
 		fmt.Printf("Event %d: %s\n", event.EventIndex, event.String())
+		if txID {
+			fmt.Printf("Tx ID: %s\n", event.TransactionID)
+		}
 		fmt.Println("  Fields:")
 		for i, field := range event.Value.EventType.Fields {
 			fmt.Printf("    %s: ", field.Identifier)
