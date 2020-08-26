@@ -34,10 +34,14 @@ var Cmd = &cobra.Command{
 			cli.Exitf(1, "Failed to generate private key: %v", err)
 		}
 
-		prKeyBytes := privateKey.Encode()
-
-		fmt.Printf("Generated a new private key:\n")
-		fmt.Println(hex.EncodeToString(prKeyBytes))
+		fmt.Printf(
+			"\U0001F510 Private key (\u26A0\uFE0F\u202F store safely and don't share with anyone): %s\n",
+			hex.EncodeToString(privateKey.Encode()),
+		)
+		fmt.Printf(
+			"\U0001F54A️\uFE0F\u202F Encoded public key (share freely):                         %x\n",
+			privateKey.PublicKey().Encode(),
+		)
 	},
 }
 
