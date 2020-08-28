@@ -29,7 +29,16 @@ var Cmd = &cobra.Command{
 			seed = []byte(conf.Seed)
 		}
 
-		privateKey, err := crypto.GeneratePrivateKey(cli.DefaultSigAlgo, seed)
+		// Abstract out for now incase we want to allow choosing sig alg,
+		// and so we can print out what we're using to generate the key pair
+		sigAlg := cli.DefaultSigAlgo
+
+		fmt.Printf(
+			"Generating key pair with signature algorithm:                 %s\n...\n",
+			sigAlg,
+		)
+
+		privateKey, err := crypto.GeneratePrivateKey(sigAlg, seed)
 		if err != nil {
 			cli.Exitf(1, "Failed to generate private key: %v", err)
 		}
