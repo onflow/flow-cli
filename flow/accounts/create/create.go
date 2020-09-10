@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/onflow/flow-go-sdk"
+	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/onflow/flow-go-sdk/templates"
 	"github.com/psiemens/sconfig"
 	"github.com/spf13/cobra"
@@ -15,6 +16,8 @@ import (
 type Config struct {
 	Signer  string   `default:"service" flag:"signer,s"`
 	Keys    []string `flag:"key,k" info:"public keys to attach to account"`
+	Sig     string   `default:"ECDSA_P256" flag:"sig" info:"signature algorithm used to generate the keys"`
+	Hash    string   `default:"SHA3_256" flag:"hash" info:"hash used for the digest"`
 	Code    string   `flag:"code,c" info:"path to a file containing code for the account"`
 	Host    string   `default:"127.0.0.1:3569" flag:"host" info:"Flow Observation API host address"`
 	Results bool     `default:"false" flag:"results" info:"Wether or not to wait for the results of the transaction"`
@@ -32,12 +35,15 @@ var Cmd = &cobra.Command{
 
 		accountKeys := make([]*flow.AccountKey, len(conf.Keys))
 
+		sigAlgo := crypto.StringToSignatureAlgorithm(conf.Sig)
+		hashAlgo := crypto.StringToHashAlgorithm(conf.Hash)
+
 		for i, publicKeyHex := range conf.Keys {
 			publicKey := cli.MustDecodePublicKeyHex(cli.DefaultSigAlgo, publicKeyHex)
 			accountKeys[i] = &flow.AccountKey{
 				PublicKey: publicKey,
-				SigAlgo:   cli.DefaultSigAlgo,
-				HashAlgo:  cli.DefaultHashAlgo,
+				SigAlgo:   sigAlgo,
+				HashAlgo:  hashAlgo,
 				Weight:    flow.AccountKeyWeightThreshold,
 			}
 		}
