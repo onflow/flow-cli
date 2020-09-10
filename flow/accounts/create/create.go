@@ -36,7 +36,13 @@ var Cmd = &cobra.Command{
 		accountKeys := make([]*flow.AccountKey, len(conf.Keys))
 
 		sigAlgo := crypto.StringToSignatureAlgorithm(conf.Sig)
+		if sigAlgo == crypto.UnknownSignatureAlgorithm {
+			cli.Exitf(1, "Failed to determine signature algorithm from %s", conf.Sig)
+		}
 		hashAlgo := crypto.StringToHashAlgorithm(conf.Hash)
+		if hashAlgo == crypto.UnknownHashAlgorithm {
+			cli.Exitf(1, "Failed to determine hash algorithm from %s", conf.Hash)
+		}
 
 		for i, publicKeyHex := range conf.Keys {
 			publicKey := cli.MustDecodePublicKeyHex(cli.DefaultSigAlgo, publicKeyHex)
