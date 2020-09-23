@@ -13,7 +13,8 @@ import (
 )
 
 type Config struct {
-	Seed string `flag:"seed,s" info:"deterministic seed phrase"`
+	Seed    string `flag:"seed,s" info:"deterministic seed phrase"`
+	SigAlgo string `default:"ECDSA_P256" flag:"algo,a" info:"signature algorithm"`
 }
 
 var conf Config
@@ -29,16 +30,17 @@ var Cmd = &cobra.Command{
 			seed = []byte(conf.Seed)
 		}
 
-		// Abstract out for now incase we want to allow choosing sig alg,
-		// and so we can print out what we're using to generate the key pair
-		sigAlg := cli.DefaultSigAlgo
+		sigAlgo := crypto.StringToSignatureAlgorithm(conf.SigAlgo)
+		if sigAlgo == crypto.UnknownSignatureAlgorithm {
+			cli.Exitf(1, "Invalid signature algorithm: %s", conf.SigAlgo)
+		}
 
 		fmt.Printf(
 			"Generating key pair with signature algorithm:                 %s\n...\n",
-			sigAlg,
+			sigAlgo,
 		)
 
-		privateKey, err := crypto.GeneratePrivateKey(sigAlg, seed)
+		privateKey, err := crypto.GeneratePrivateKey(sigAlgo, seed)
 		if err != nil {
 			cli.Exitf(1, "Failed to generate private key: %v", err)
 		}
