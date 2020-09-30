@@ -14,13 +14,13 @@ import (
 )
 
 type Config struct {
-	Signer  string   `default:"service" flag:"signer,s"`
-	Keys    []string `flag:"key,k" info:"public keys to attach to account"`
-	SigAlgo     string   `default:"ECDSA_P256" flag:"sig-algo" info:"signature algorithm used to generate the keys"`
-	HashAlgo    string   `default:"SHA3_256" flag:"hash-algo" info:"hash used for the digest"`
-	Code    string   `flag:"code,c" info:"path to a file containing code for the account"`
-	Host    string   `default:"127.0.0.1:3569" flag:"host" info:"Flow Observation API host address"`
-	Results bool     `default:"false" flag:"results" info:"Wether or not to wait for the results of the transaction"`
+	Signer   string   `default:"service" flag:"signer,s"`
+	Keys     []string `flag:"key,k" info:"public keys to attach to account"`
+	SigAlgo  string   `default:"ECDSA_P256" flag:"sig-algo" info:"signature algorithm used to generate the keys"`
+	HashAlgo string   `default:"SHA3_256" flag:"hash-algo" info:"hash used for the digest"`
+	Code     string   `flag:"code,c" info:"path to a file containing code for the account"`
+	Host     string   `default:"127.0.0.1:3569" flag:"host" info:"Flow Observation API host address"`
+	Results  bool     `default:"false" flag:"results" info:"Wether or not to wait for the results of the transaction"`
 }
 
 var conf Config
@@ -37,11 +37,11 @@ var Cmd = &cobra.Command{
 
 		sigAlgo := crypto.StringToSignatureAlgorithm(conf.SigAlgo)
 		if sigAlgo == crypto.UnknownSignatureAlgorithm {
-			cli.Exitf(1, "Failed to determine signature algorithm from %s", conf.Sig)
+			cli.Exitf(1, "Failed to determine signature algorithm from %s", conf.SigAlgo)
 		}
 		hashAlgo := crypto.StringToHashAlgorithm(conf.HashAlgo)
 		if hashAlgo == crypto.UnknownHashAlgorithm {
-			cli.Exitf(1, "Failed to determine hash algorithm from %s", conf.Hash)
+			cli.Exitf(1, "Failed to determine hash algorithm from %s", conf.HashAlgo)
 		}
 
 		for i, publicKeyHex := range conf.Keys {
