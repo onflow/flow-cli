@@ -35,7 +35,7 @@ var Cmd = &cobra.Command{
 
 		accountKeys := make([]*flow.AccountKey, len(conf.Keys))
 
-		sigAlgo := crypto.StringToSignatureAlgorithm(conf.Sig)
+		sigAlgo := crypto.StringToSignatureAlgorithm(conf.SigAlgo)
 		if sigAlgo == crypto.UnknownSignatureAlgorithm {
 			cli.Exitf(1, "Failed to determine signature algorithm from %s", conf.Sig)
 		}
