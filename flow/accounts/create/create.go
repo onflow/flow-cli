@@ -39,7 +39,7 @@ var Cmd = &cobra.Command{
 		if sigAlgo == crypto.UnknownSignatureAlgorithm {
 			cli.Exitf(1, "Failed to determine signature algorithm from %s", conf.Sig)
 		}
-		hashAlgo := crypto.StringToHashAlgorithm(conf.Hash)
+		hashAlgo := crypto.StringToHashAlgorithm(conf.HashAlgo)
 		if hashAlgo == crypto.UnknownHashAlgorithm {
 			cli.Exitf(1, "Failed to determine hash algorithm from %s", conf.Hash)
 		}
