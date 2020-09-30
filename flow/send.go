@@ -24,7 +24,6 @@ import (
 
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/client"
-	"github.com/onflow/flow-go-sdk/crypto"
 	"google.golang.org/grpc"
 )
 
@@ -45,13 +44,8 @@ func SendTransaction(host string, signerAccount *Account, tx *flow.Transaction, 
 		Exitf(1, "Failed to get account with address %s: 0x%s", signerAddress.Hex(), err)
 	}
 
-	signer := crypto.NewNaiveSigner(
-		signerAccount.PrivateKey,
-		signerAccount.HashAlgo,
-	)
-
-	// TODO: always use first?
-	accountKey := account.Keys[0]
+	// Default 0, i.e. first key
+	accountKey := account.Keys[signerAccount.KeyIndex]
 
 	sealed, err := flowClient.GetLatestBlockHeader(ctx, true)
 	if err != nil {
@@ -62,7 +56,7 @@ func SendTransaction(host string, signerAccount *Account, tx *flow.Transaction, 
 		SetProposalKey(signerAddress, accountKey.Index, accountKey.SequenceNumber).
 		SetPayer(signerAddress)
 
-	err = tx.SignEnvelope(signerAddress, accountKey.Index, signer)
+	err = tx.SignEnvelope(signerAddress, accountKey.Index, signerAccount.Signer)
 	if err != nil {
 		Exitf(1, "Failed to sign transaction: %s", err)
 	}

@@ -19,9 +19,10 @@
 package keys
 
 import (
-    "github.com/spf13/cobra"
+	"github.com/spf13/cobra"
 
-    "github.com/onflow/flow-cli/flow/keys/generate"
+	"github.com/onflow/flow-cli/flow/keys/generate"
+	"github.com/onflow/flow-cli/flow/keys/save"
 )
 
 var Cmd = &cobra.Command{
@@ -32,4 +33,5 @@ var Cmd = &cobra.Command{
 
 func init() {
 	Cmd.AddCommand(generate.Cmd)
+	Cmd.AddCommand(save.Cmd)
 }
