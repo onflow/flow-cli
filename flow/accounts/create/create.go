@@ -16,7 +16,7 @@ import (
 type Config struct {
 	Signer  string   `default:"service" flag:"signer,s"`
 	Keys    []string `flag:"key,k" info:"public keys to attach to account"`
-	Sig     string   `default:"ECDSA_P256" flag:"sig" info:"signature algorithm used to generate the keys"`
+	SigAlgo     string   `default:"ECDSA_P256" flag:"sig-algo" info:"signature algorithm used to generate the keys"`
 	Hash    string   `default:"SHA3_256" flag:"hash" info:"hash used for the digest"`
 	Code    string   `flag:"code,c" info:"path to a file containing code for the account"`
 	Host    string   `default:"127.0.0.1:3569" flag:"host" info:"Flow Observation API host address"`
