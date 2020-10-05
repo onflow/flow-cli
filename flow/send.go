@@ -41,10 +41,10 @@ func SendTransaction(host string, signerAccount *Account, tx *flow.Transaction, 
 	}
 
 	tx.SetReferenceBlockID(sealed.ID).
-		SetProposalKey(signerAddress, accountKey.ID, accountKey.SequenceNumber).
+		SetProposalKey(signerAddress, accountKey.Index, accountKey.SequenceNumber).
 		SetPayer(signerAddress)
 
-	err = tx.SignEnvelope(signerAddress, accountKey.ID, signer)
+	err = tx.SignEnvelope(signerAddress, accountKey.Index, signer)
 	if err != nil {
 		Exitf(1, "Failed to sign transaction: %s", err)
 	}
