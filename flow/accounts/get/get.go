@@ -50,7 +50,7 @@ func printAccount(account *flow.Account, printCode bool) {
 	fmt.Println("Total Keys: ", len(account.Keys))
 	for _, key := range account.Keys {
 		fmt.Println("  ---")
-		fmt.Println("  Key ID: ", key.Index)
+		fmt.Println("  Key Index: ", key.Index)
 		fmt.Printf("  PublicKey: %x\n", key.PublicKey.Encode())
 		fmt.Println("  SigAlgo: ", key.SigAlgo)
 		fmt.Println("  HashAlgo: ", key.HashAlgo)
