@@ -3,8 +3,8 @@
 package storage
 
 import (
-	"github.com/dapperlabs/flow-go/engine/execution/state/delta"
-	flowgo "github.com/dapperlabs/flow-go/model/flow"
+	"github.com/onflow/flow-go/engine/execution/state/delta"
+	flowgo "github.com/onflow/flow-go/model/flow"
 
 	"github.com/dapperlabs/flow-emulator/types"
 )

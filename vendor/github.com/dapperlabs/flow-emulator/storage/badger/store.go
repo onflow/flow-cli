@@ -4,8 +4,9 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/dapperlabs/flow-go/engine/execution/state/delta"
-	flowgo "github.com/dapperlabs/flow-go/model/flow"
+	"github.com/onflow/flow-go/engine/execution/state/delta"
+	"github.com/onflow/flow-go/fvm/state"
+	flowgo "github.com/onflow/flow-go/model/flow"
 	"github.com/dgraph-io/badger/v2"
 
 	"github.com/dapperlabs/flow-emulator/storage"
@@ -313,16 +314,17 @@ func insertTransactionResult(txID flowgo.Identifier, result types.StorableTransa
 }
 
 func (s *Store) LedgerViewByHeight(blockHeight uint64) *delta.View {
-	return delta.NewView(func(key flowgo.RegisterID) (value flowgo.RegisterValue, err error) {
+	return delta.NewView(func(owner, controller, key string) (value flowgo.RegisterValue, err error) {
+		id := state.RegisterID(owner, controller, key)
 
 		//return types.NewLedgerView(func(key string) (value []byte, err error) {
 		s.ledgerChangeLog.RLock()
 		defer s.ledgerChangeLog.RUnlock()
 
-		lastChangedBlock := s.ledgerChangeLog.getMostRecentChange(key, blockHeight)
+		lastChangedBlock := s.ledgerChangeLog.getMostRecentChange(id, blockHeight)
 
 		err = s.db.View(func(txn *badger.Txn) error {
-			value, err = getTx(txn)(ledgerValueKey(key, lastChangedBlock))
+			value, err = getTx(txn)(ledgerValueKey(id, lastChangedBlock))
 			if err != nil {
 				return err
 			}

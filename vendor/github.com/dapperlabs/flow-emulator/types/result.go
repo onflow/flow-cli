@@ -1,7 +1,7 @@
 package types
 
 import (
-	flowgo "github.com/dapperlabs/flow-go/model/flow"
+	flowgo "github.com/onflow/flow-go/model/flow"
 	"github.com/onflow/cadence"
 	"github.com/onflow/flow-go-sdk"
 )

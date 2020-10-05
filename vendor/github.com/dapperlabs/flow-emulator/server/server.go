@@ -3,11 +3,13 @@ package server
 import (
 	"time"
 
+	"github.com/onflow/cadence"
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/psiemens/graceland"
 	"github.com/sirupsen/logrus"
 
 	emulator "github.com/dapperlabs/flow-emulator"
+	"github.com/dapperlabs/flow-emulator/server/backend"
 	"github.com/dapperlabs/flow-emulator/storage"
 )
 
@@ -17,7 +19,7 @@ import (
 type EmulatorServer struct {
 	logger   *logrus.Logger
 	config   *Config
-	backend  *Backend
+	backend  *backend.Backend
 	group    *graceland.Group
 	liveness graceland.Routine
 	storage  graceland.Routine
@@ -61,6 +63,9 @@ type Config struct {
 	ServicePublicKey   crypto.PublicKey
 	ServiceKeySigAlgo  crypto.SignatureAlgorithm
 	ServiceKeyHashAlgo crypto.HashAlgorithm
+	GenesisTokenSupply cadence.UFix64
+	TransactionExpiry  uint
+	ScriptGasLimit     uint64
 	Persist            bool
 	// DBPath is the path to the Badger database on disk.
 	DBPath string
@@ -167,10 +172,16 @@ func configureStorage(logger *logrus.Logger, conf *Config) (storage Storage, err
 func configureBlockchain(conf *Config, store storage.Store) (*emulator.Blockchain, error) {
 	options := []emulator.Option{
 		emulator.WithStore(store),
+		emulator.WithGenesisTokenSupply(conf.GenesisTokenSupply),
+		emulator.WithScriptGasLimit(conf.ScriptGasLimit),
+		emulator.WithTransactionExpiry(conf.TransactionExpiry),
 	}
 
 	if conf.ServicePublicKey != (crypto.PublicKey{}) {
-		options = append(options, emulator.WithServicePublicKey(conf.ServicePublicKey, conf.ServiceKeySigAlgo, conf.ServiceKeyHashAlgo))
+		options = append(
+			options,
+			emulator.WithServicePublicKey(conf.ServicePublicKey, conf.ServiceKeySigAlgo, conf.ServiceKeyHashAlgo),
+		)
 	}
 
 	blockchain, err := emulator.NewBlockchain(options...)
@@ -181,14 +192,14 @@ func configureBlockchain(conf *Config, store storage.Store) (*emulator.Blockchai
 	return blockchain, nil
 }
 
-func configureBackend(logger *logrus.Logger, conf *Config, blockchain *emulator.Blockchain) *Backend {
-	backend := NewBackend(logger, blockchain)
+func configureBackend(logger *logrus.Logger, conf *Config, blockchain *emulator.Blockchain) *backend.Backend {
+	b := backend.New(logger, blockchain)
 
 	if conf.BlockTime == 0 {
-		backend.EnableAutoMine()
+		b.EnableAutoMine()
 	}
 
-	return backend
+	return b
 }
 
 func sanitizeConfig(conf *Config) *Config {

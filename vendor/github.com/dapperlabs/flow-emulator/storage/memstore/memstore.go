@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/dapperlabs/flow-go/engine/execution/state/delta"
-	"github.com/dapperlabs/flow-go/fvm/state"
-	flowgo "github.com/dapperlabs/flow-go/model/flow"
+	"github.com/onflow/flow-go/engine/execution/state/delta"
+	"github.com/onflow/flow-go/fvm/state"
+	flowgo "github.com/onflow/flow-go/model/flow"
 
 	"github.com/dapperlabs/flow-emulator/storage"
 	"github.com/dapperlabs/flow-emulator/types"
@@ -53,7 +53,11 @@ func (s *Store) BlockByID(id flowgo.Identifier) (*flowgo.Block, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
-	blockHeight := s.blockIDToHeight[id]
+	blockHeight, ok := s.blockIDToHeight[id]
+	if !ok {
+		return nil, storage.ErrNotFound
+	}
+
 	block, ok := s.blocks[blockHeight]
 	if !ok {
 		return nil, storage.ErrNotFound
@@ -89,11 +93,13 @@ func (s *Store) StoreBlock(block *flowgo.Block) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	return s.store(block)
+	return s.storeBlock(block)
 }
 
-func (s *Store) store(block *flowgo.Block) error {
+func (s *Store) storeBlock(block *flowgo.Block) error {
 	s.blocks[block.Header.Height] = *block
+	s.blockIDToHeight[block.ID()] = block.Header.Height
+
 	if block.Header.Height > s.blockHeight {
 		s.blockHeight = block.Header.Height
 	}
@@ -120,7 +126,7 @@ func (s *Store) CommitBlock(
 		)
 	}
 
-	err := s.store(&block)
+	err := s.storeBlock(&block)
 	if err != nil {
 		return err
 	}
@@ -208,18 +214,33 @@ func (s *Store) insertTransactionResult(txID flowgo.Identifier, result types.Sto
 }
 
 func (s *Store) LedgerViewByHeight(blockHeight uint64) *delta.View {
-	return delta.NewView(func(key flowgo.RegisterID) (value flowgo.RegisterValue, err error) {
+	return delta.NewView(func(owner, controller, key string) (value flowgo.RegisterValue, err error) {
 
-		s.mu.RLock()
-		defer s.mu.RUnlock()
+		// Ledger.Get writes (!), so acquire a write lock!
+		s.mu.Lock()
+		defer s.mu.Unlock()
 
 		ledger, ok := s.ledger[blockHeight]
 		if !ok {
 			return nil, nil
 		}
 
-		return ledger.Get(key)
+		return ledger.Get(owner, controller, key)
 	})
+}
+
+func (s *Store) UnsafeInsertLedgerDelta(blockHeight uint64, delta delta.Delta) error {
+	return s.insertLedgerDelta(blockHeight, delta)
+}
+
+func DeltaHasBeenDeleted(d delta.Delta, registerID flowgo.RegisterID) bool {
+	value, exists := d.Data[string(registerID)]
+	return exists && value == nil
+}
+
+func MapLedgerSet(m *state.MapLedger, registerID flowgo.RegisterID, value flowgo.RegisterValue) {
+	m.RegisterTouches[string(registerID)] = true
+	m.Registers[string(registerID)] = value
 }
 
 func (s *Store) insertLedgerDelta(blockHeight uint64, delta delta.Delta) error {
@@ -237,9 +258,9 @@ func (s *Store) insertLedgerDelta(blockHeight uint64, delta delta.Delta) error {
 	// copy values from the previous ledger
 	for keyString, value := range oldLedger.Registers {
 		key := flowgo.RegisterID(keyString)
-		// do not copy deleted values
-		if !delta.HasBeenDeleted(key) {
-			newLedger.Set(key, value)
+
+		if !DeltaHasBeenDeleted(delta, key) {
+			MapLedgerSet(newLedger, key, value)
 		}
 	}
 
@@ -248,7 +269,7 @@ func (s *Store) insertLedgerDelta(blockHeight uint64, delta delta.Delta) error {
 	for i, value := range values {
 		key := ids[i]
 		if value != nil {
-			newLedger.Set(key, value)
+			MapLedgerSet(newLedger, key, value)
 		}
 	}
 

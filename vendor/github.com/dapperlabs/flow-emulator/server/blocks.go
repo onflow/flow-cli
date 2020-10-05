@@ -2,16 +2,18 @@ package server
 
 import (
 	"time"
+
+	"github.com/dapperlabs/flow-emulator/server/backend"
 )
 
 type BlocksTicker struct {
-	backend *Backend
+	backend *backend.Backend
 	ticker  *time.Ticker
 	done    chan bool
 }
 
 func NewBlocksTicker(
-	backend *Backend,
+	backend *backend.Backend,
 	blockTime time.Duration,
 ) *BlocksTicker {
 	return &BlocksTicker{
@@ -25,7 +27,7 @@ func (t *BlocksTicker) Start() error {
 	for {
 		select {
 		case <-t.ticker.C:
-			t.backend.commitBlock()
+			t.backend.CommitBlock()
 		case <-t.done:
 			return nil
 		}

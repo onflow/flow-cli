@@ -1,7 +1,7 @@
 package types
 
 import (
-	"github.com/dapperlabs/flow-go/fvm"
+	"github.com/onflow/flow-go/fvm"
 )
 
 type FlowError struct {

@@ -884,8 +884,80 @@ func (t *OptionalType) Resolve(typeParameters map[*TypeParameter]Type) Type {
 	}
 }
 
+const optionalTypeMapFunctionDocString = `
+Returns an optional of the result of calling the given function
+with the value of this optional when it is not nil.
+
+Returns nil if this optional is nil
+`
+
 func (t *OptionalType) GetMembers() map[string]MemberResolver {
-	return withBuiltinMembers(t, nil)
+
+	members := map[string]MemberResolver{
+		"map": {
+			Kind: common.DeclarationKindFunction,
+			Resolve: func(identifier string, targetRange ast.Range, report func(error)) *Member {
+
+				// It invalid for an optional of a resource to have a `map` function
+
+				if t.Type.IsResourceType() {
+					report(
+						&InvalidResourceOptionalMemberError{
+							Name:            identifier,
+							DeclarationKind: common.DeclarationKindFunction,
+							Range:           targetRange,
+						},
+					)
+				}
+
+				typeParameter := &TypeParameter{
+					Name: "T",
+				}
+
+				resultType := &GenericType{
+					TypeParameter: typeParameter,
+				}
+
+				return NewPublicFunctionMember(
+					t,
+					identifier,
+					&FunctionType{
+						TypeParameters: []*TypeParameter{
+							typeParameter,
+						},
+						Parameters: []*Parameter{
+							{
+								Label:      ArgumentLabelNotRequired,
+								Identifier: "transform",
+								TypeAnnotation: NewTypeAnnotation(
+									&FunctionType{
+										Parameters: []*Parameter{
+											{
+												Label:          ArgumentLabelNotRequired,
+												Identifier:     "value",
+												TypeAnnotation: NewTypeAnnotation(t.Type),
+											},
+										},
+										ReturnTypeAnnotation: NewTypeAnnotation(
+											resultType,
+										),
+									},
+								),
+							},
+						},
+						ReturnTypeAnnotation: NewTypeAnnotation(
+							&OptionalType{
+								Type: resultType,
+							},
+						),
+					},
+					optionalTypeMapFunctionDocString,
+				)
+			},
+		},
+	}
+
+	return withBuiltinMembers(t, members)
 }
 
 // GenericType
@@ -3679,7 +3751,7 @@ func (t *ConstantSizedType) Resolve(typeParameters map[*TypeParameter]Type) Type
 type InvokableType interface {
 	Type
 	InvocationFunctionType() *FunctionType
-	CheckArgumentExpressions(checker *Checker, argumentExpressions []ast.Expression)
+	CheckArgumentExpressions(checker *Checker, argumentExpressions []ast.Expression, invocationRange ast.Range)
 	ArgumentLabels() []string
 }
 
@@ -3870,7 +3942,7 @@ func (t *FunctionType) InvocationFunctionType() *FunctionType {
 	return t
 }
 
-func (*FunctionType) CheckArgumentExpressions(_ *Checker, _ []ast.Expression) {
+func (*FunctionType) CheckArgumentExpressions(checker *Checker, argumentExpressions []ast.Expression, invocationRange ast.Range) {
 	// NO-OP: no checks for normal functions
 }
 
@@ -4153,13 +4225,95 @@ func (t *FunctionType) ArgumentLabels() (argumentLabels []string) {
 	return
 }
 
-func (*FunctionType) Unify(_ Type, _ map[*TypeParameter]Type, _ func(err error), _ ast.Range) bool {
-	// TODO:
-	return false
+func (t *FunctionType) Unify(
+	other Type,
+	typeParameters map[*TypeParameter]Type,
+	report func(err error),
+	outerRange ast.Range,
+) (
+	result bool,
+) {
+
+	otherFunction, ok := other.(*FunctionType)
+	if !ok {
+		return false
+	}
+
+	// TODO: type parameters ?
+
+	if len(t.TypeParameters) > 0 ||
+		len(otherFunction.TypeParameters) > 0 {
+
+		return false
+	}
+
+	// parameters
+
+	if len(t.Parameters) != len(otherFunction.Parameters) {
+		return false
+	}
+
+	for i, parameter := range t.Parameters {
+		otherParameter := otherFunction.Parameters[i]
+		parameterUnified := parameter.TypeAnnotation.Type.Unify(
+			otherParameter.TypeAnnotation.Type,
+			typeParameters,
+			report,
+			outerRange,
+		)
+		result = result || parameterUnified
+	}
+
+	// return type
+
+	returnTypeUnified := t.ReturnTypeAnnotation.Type.Unify(
+		otherFunction.ReturnTypeAnnotation.Type,
+		typeParameters,
+		report,
+		outerRange,
+	)
+
+	result = result || returnTypeUnified
+
+	return
 }
 
-func (t *FunctionType) Resolve(_ map[*TypeParameter]Type) Type {
-	return t
+func (t *FunctionType) Resolve(typeParameters map[*TypeParameter]Type) Type {
+
+	// TODO: type parameters ?
+
+	// parameters
+
+	var newParameters []*Parameter
+
+	for _, parameter := range t.Parameters {
+		newParameterType := parameter.TypeAnnotation.Type.Resolve(typeParameters)
+		if newParameterType == nil {
+			return nil
+		}
+
+		newParameters = append(newParameters,
+			&Parameter{
+				Label:          parameter.Label,
+				Identifier:     parameter.Identifier,
+				TypeAnnotation: NewTypeAnnotation(newParameterType),
+			},
+		)
+	}
+
+	// return type
+
+	newReturnType := t.ReturnTypeAnnotation.Type.Resolve(typeParameters)
+	if newReturnType == nil {
+		return nil
+	}
+
+	return &FunctionType{
+		Parameters:            newParameters,
+		ReturnTypeAnnotation:  NewTypeAnnotation(newReturnType),
+		RequiredArgumentCount: t.RequiredArgumentCount,
+	}
+
 }
 
 func (t *FunctionType) GetMembers() map[string]MemberResolver {
@@ -4194,13 +4348,23 @@ func (t *SpecialFunctionType) GetMembers() map[string]MemberResolver {
 // CheckedFunctionType is the the type representing a function that checks the arguments,
 // e.g., integer functions
 
+type ArgumentExpressionsCheck func(
+	checker *Checker,
+	argumentExpressions []ast.Expression,
+	invocationRange ast.Range,
+)
+
 type CheckedFunctionType struct {
 	*FunctionType
-	ArgumentExpressionsCheck func(checker *Checker, argumentExpressions []ast.Expression)
+	ArgumentExpressionsCheck ArgumentExpressionsCheck
 }
 
-func (t *CheckedFunctionType) CheckArgumentExpressions(checker *Checker, argumentExpressions []ast.Expression) {
-	t.ArgumentExpressionsCheck(checker, argumentExpressions)
+func (t *CheckedFunctionType) CheckArgumentExpressions(
+	checker *Checker,
+	argumentExpressions []ast.Expression,
+	invocationRange ast.Range,
+) {
+	t.ArgumentExpressionsCheck(checker, argumentExpressions, invocationRange)
 }
 
 // baseTypes are the nominal types available in programs
@@ -4400,7 +4564,7 @@ func init() {
 				},
 				ReturnTypeAnnotation: &TypeAnnotation{Type: addressType},
 			},
-			ArgumentExpressionsCheck: func(checker *Checker, argumentExpressions []ast.Expression) {
+			ArgumentExpressionsCheck: func(checker *Checker, argumentExpressions []ast.Expression, _ ast.Range) {
 				if len(argumentExpressions) < 1 {
 					return
 				}
@@ -4416,19 +4580,137 @@ func init() {
 	}
 }
 
-func numberFunctionArgumentExpressionsChecker(numberType Type) func(*Checker, []ast.Expression) {
-	return func(checker *Checker, argumentExpressions []ast.Expression) {
-		if len(argumentExpressions) < 1 {
+func numberFunctionArgumentExpressionsChecker(targetType Type) ArgumentExpressionsCheck {
+	return func(checker *Checker, arguments []ast.Expression, invocationRange ast.Range) {
+		if len(arguments) < 1 {
 			return
 		}
 
-		switch numberExpression := argumentExpressions[0].(type) {
+		argument := arguments[0]
+
+		switch argument := argument.(type) {
 		case *ast.IntegerExpression:
-			checker.checkIntegerLiteral(numberExpression, numberType)
+			if checker.checkIntegerLiteral(argument, targetType) {
+
+				suggestIntegerLiteralConversionReplacement(checker, argument, targetType, invocationRange)
+			}
 
 		case *ast.FixedPointExpression:
-			checker.checkFixedPointLiteral(numberExpression, numberType)
+			if checker.checkFixedPointLiteral(argument, targetType) {
+
+				suggestFixedPointLiteralConversionReplacement(checker, targetType, argument, invocationRange)
+			}
 		}
+	}
+}
+
+func suggestIntegerLiteralConversionReplacement(
+	checker *Checker,
+	argument *ast.IntegerExpression,
+	targetType Type,
+	invocationRange ast.Range,
+) {
+	negative := argument.Value.Sign() < 0
+
+	if IsSubType(targetType, &FixedPointType{}) {
+
+		// If the integer literal is converted to a fixed-point type,
+		// suggest replacing it with a fixed-point literal
+
+		signed := IsSubType(targetType, &SignedFixedPointType{})
+
+		var hintExpression ast.Expression = &ast.FixedPointExpression{
+			Negative:        negative,
+			UnsignedInteger: new(big.Int).Abs(argument.Value),
+			Fractional:      new(big.Int),
+			Scale:           1,
+		}
+
+		// If the fixed-point literal is positive
+		// and the the target fixed-point type is signed,
+		// then a static cast is required
+
+		if !negative && signed {
+			hintExpression = &ast.CastingExpression{
+				Expression: hintExpression,
+				Operation:  ast.OperationCast,
+				TypeAnnotation: &ast.TypeAnnotation{
+					IsResource: false,
+					Type: &ast.NominalType{
+						Identifier: ast.Identifier{
+							Identifier: targetType.String(),
+						},
+					},
+				},
+			}
+		}
+
+		checker.hint(
+			&ReplacementHint{
+				Expression: hintExpression,
+				Range:      invocationRange,
+			},
+		)
+
+	} else if IsSubType(targetType, &IntegerType{}) {
+
+		// If the integer literal is converted to an integer type,
+		// suggest replacing it with a fixed-point literal
+
+		var hintExpression ast.Expression = argument
+
+		// If the target type is not `Int`,
+		// then a static cast is required,
+		// as all integer literals (positive and negative)
+		// are inferred to be of type `Int`
+
+		if !IsSubType(targetType, &IntType{}) {
+			hintExpression = &ast.CastingExpression{
+				Expression: hintExpression,
+				Operation:  ast.OperationCast,
+				TypeAnnotation: &ast.TypeAnnotation{
+					IsResource: false,
+					Type: &ast.NominalType{
+						Identifier: ast.Identifier{
+							Identifier: targetType.String(),
+						},
+					},
+				},
+			}
+		}
+
+		checker.hint(
+			&ReplacementHint{
+				Expression: hintExpression,
+				Range:      invocationRange,
+			},
+		)
+	}
+}
+
+func suggestFixedPointLiteralConversionReplacement(
+	checker *Checker,
+	targetType Type,
+	argument *ast.FixedPointExpression,
+	invocationRange ast.Range,
+) {
+	// If the fixed-point literal is converted to a fixed-point type,
+	// suggest replacing it with a fixed-point literal
+
+	if !IsSubType(targetType, &FixedPointType{}) {
+		return
+	}
+
+	negative := argument.Negative
+	signed := IsSubType(targetType, &SignedFixedPointType{})
+
+	if (!negative && !signed) || (negative && signed) {
+		checker.hint(
+			&ReplacementHint{
+				Expression: argument,
+				Range:      invocationRange,
+			},
+		)
 	}
 }
 
@@ -5372,12 +5654,11 @@ func (m *Member) IsStorable(results map[*Member]bool) (result bool) {
 		return result
 	}
 
-	// Temporarily assume the member is non-storable while it's type
+	// Temporarily assume the member is storable while it's type
 	// is checked for storability. If a recursive call occurs,
 	// the check for an existing result will prevent infinite recursion
-	// and the result will be correctly false
 
-	results[m] = false
+	results[m] = true
 
 	result = func() bool {
 		// Skip checking predeclared members
@@ -5801,8 +6082,9 @@ func (t *DictionaryType) Unify(
 		return false
 	}
 
-	return t.KeyType.Unify(otherDictionary.KeyType, typeParameters, report, outerRange) &&
-		t.ValueType.Unify(otherDictionary.ValueType, typeParameters, report, outerRange)
+	keyUnified := t.KeyType.Unify(otherDictionary.KeyType, typeParameters, report, outerRange)
+	valueUnified := t.ValueType.Unify(otherDictionary.ValueType, typeParameters, report, outerRange)
+	return keyUnified || valueUnified
 }
 
 func (t *DictionaryType) Resolve(typeParameters map[*TypeParameter]Type) Type {
@@ -5885,8 +6167,7 @@ func (t *ReferenceType) IsInvalidType() bool {
 }
 
 func (t *ReferenceType) IsStorable(_ map[*Member]bool) bool {
-	// TODO: https://github.com/onflow/cadence/issues/189
-	return true
+	return false
 }
 
 func (*ReferenceType) IsEquatable() bool {

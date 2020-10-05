@@ -1,7 +1,7 @@
 package convert
 
 import (
-	"github.com/dapperlabs/flow-go/fvm"
+	"github.com/onflow/flow-go/fvm"
 
 	sdkConvert "github.com/dapperlabs/flow-emulator/convert/sdk"
 	"github.com/dapperlabs/flow-emulator/types"

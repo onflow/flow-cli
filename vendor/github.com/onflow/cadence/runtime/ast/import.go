@@ -69,20 +69,31 @@ func (*ImportDeclaration) isDeclaration() {}
 
 func (*ImportDeclaration) isStatement() {}
 
-func (v *ImportDeclaration) Accept(visitor Visitor) Repr {
-	return visitor.VisitImportDeclaration(v)
+func (d *ImportDeclaration) Accept(visitor Visitor) Repr {
+	return visitor.VisitImportDeclaration(d)
 }
 
-func (v *ImportDeclaration) DeclarationIdentifier() *Identifier {
+func (d *ImportDeclaration) DeclarationIdentifier() *Identifier {
 	return nil
 }
 
-func (v *ImportDeclaration) DeclarationKind() common.DeclarationKind {
+func (d *ImportDeclaration) DeclarationKind() common.DeclarationKind {
 	return common.DeclarationKindImport
 }
 
-func (v *ImportDeclaration) DeclarationAccess() Access {
+func (d *ImportDeclaration) DeclarationAccess() Access {
 	return AccessNotSpecified
+}
+
+func (d *ImportDeclaration) MarshalJSON() ([]byte, error) {
+	type Alias ImportDeclaration
+	return json.Marshal(&struct {
+		Type string
+		*Alias
+	}{
+		Type:  "ImportDeclaration",
+		Alias: (*Alias)(d),
+	})
 }
 
 // Location describes the origin of a Cadence script.
@@ -149,6 +160,16 @@ func (l IdentifierLocation) ID() LocationID {
 	return NewLocationID(IdentifierLocationPrefix, string(l))
 }
 
+func (l IdentifierLocation) MarshalJSON() ([]byte, error) {
+	return json.Marshal(&struct {
+		Type       string
+		Identifier string
+	}{
+		Type:       "IdentifierLocation",
+		Identifier: string(l),
+	})
+}
+
 // StringLocation
 
 const StringLocationPrefix = "S"
@@ -157,6 +178,16 @@ type StringLocation string
 
 func (l StringLocation) ID() LocationID {
 	return NewLocationID(StringLocationPrefix, string(l))
+}
+
+func (l StringLocation) MarshalJSON() ([]byte, error) {
+	return json.Marshal(&struct {
+		Type   string
+		String string
+	}{
+		Type:   "StringLocation",
+		String: string(l),
+	})
 }
 
 // AddressLocation
@@ -175,6 +206,16 @@ func (l AddressLocation) ID() LocationID {
 
 func (l AddressLocation) ToAddress() common.Address {
 	return common.BytesToAddress(l)
+}
+
+func (l AddressLocation) MarshalJSON() ([]byte, error) {
+	return json.Marshal(&struct {
+		Type    string
+		Address string
+	}{
+		Type:    "AddressLocation",
+		Address: l.ToAddress().ShortHexWithPrefix(),
+	})
 }
 
 // HasImportLocation
