@@ -123,7 +123,7 @@ github.com/onflow/cadence/runtime/sema
 github.com/onflow/cadence/runtime/stdlib
 github.com/onflow/cadence/runtime/stdlib/internal
 github.com/onflow/cadence/runtime/trampoline
-# github.com/onflow/cadence/languageserver v0.9.3
+# github.com/onflow/cadence/languageserver v0.9.4
 github.com/onflow/cadence/languageserver
 github.com/onflow/cadence/languageserver/conversion
 github.com/onflow/cadence/languageserver/integration
