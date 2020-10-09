@@ -3,6 +3,7 @@ package emulator
 import (
 	"fmt"
 
+	emulator "github.com/dapperlabs/flow-emulator"
 	"github.com/dapperlabs/flow-emulator/cmd/emulator/start"
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/spf13/cobra"
@@ -17,11 +18,30 @@ var Cmd = &cobra.Command{
 	TraverseChildren: true,
 }
 
-func configuredServiceKey(init bool) (crypto.PrivateKey, crypto.SignatureAlgorithm, crypto.HashAlgorithm) {
+
+
+
+func configuredServiceKey(
+	init bool,
+	sigAlgo crypto.SignatureAlgorithm,
+	hashAlgo crypto.HashAlgorithm,
+) (
+	crypto.PrivateKey,
+	crypto.SignatureAlgorithm,
+	crypto.HashAlgorithm,
+) {
+	if sigAlgo == crypto.UnknownSignatureAlgorithm {
+		sigAlgo = emulator.DefaultServiceKeySigAlgo
+	}
+
+	if hashAlgo == crypto.UnknownHashAlgorithm {
+		hashAlgo = emulator.DefaultServiceKeyHashAlgo
+	}
+
 	var serviceAcct *cli.Account
 
 	if init {
-		pconf := initialize.InitProject()
+		pconf := initialize.InitProject(sigAlgo, hashAlgo)
 		serviceAcct = pconf.ServiceAccount()
 
 		fmt.Printf("⚙️   Flow client initialized with service account:\n\n")

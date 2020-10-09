@@ -3,7 +3,7 @@ package badger
 import (
 	"fmt"
 
-	flowgo "github.com/dapperlabs/flow-go/model/flow"
+	flowgo "github.com/onflow/flow-go/model/flow"
 	"github.com/fxamacker/cbor/v2"
 
 	"github.com/dapperlabs/flow-emulator/types"

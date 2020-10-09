@@ -4,7 +4,7 @@ import (
 	"sort"
 	"sync"
 
-	"github.com/dapperlabs/flow-go/model/flow"
+	"github.com/onflow/flow-go/model/flow"
 )
 
 // notFound is a sentinel to indicate that a register has never been written by

@@ -28,13 +28,13 @@ var Cmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		if !cli.ConfigExists() || conf.Reset {
 			var pconf *cli.Config
+			serviceKeySigAlgo := crypto.StringToSignatureAlgorithm(conf.ServiceKeySigAlgo)
+			serviceKeyHashAlgo := crypto.StringToHashAlgorithm(conf.ServiceKeyHashAlgo)
 			if len(conf.ServicePrivateKey) > 0 {
-				serviceKeySigAlgo := crypto.StringToSignatureAlgorithm(conf.ServiceKeySigAlgo)
-				serviceKeyHashAlgo := crypto.StringToHashAlgorithm(conf.ServiceKeyHashAlgo)
 				serviceKey := cli.MustDecodePrivateKeyHex(serviceKeySigAlgo, conf.ServicePrivateKey)
 				pconf = InitProjectWithServiceKey(serviceKey, serviceKeyHashAlgo)
 			} else {
-				pconf = InitProject()
+				pconf = InitProject(serviceKeySigAlgo, serviceKeyHashAlgo)
 			}
 			serviceAcct := pconf.ServiceAccount()
 
@@ -48,15 +48,15 @@ var Cmd = &cobra.Command{
 }
 
 // InitProject generates a new service key and saves project config.
-func InitProject() *cli.Config {
+func InitProject(sigAlgo crypto.SignatureAlgorithm, hashAlgo crypto.HashAlgorithm) *cli.Config {
 	seed := cli.RandomSeed(crypto.MinSeedLength)
 
-	serviceKey, err := crypto.GeneratePrivateKey(crypto.ECDSA_P256, seed)
+	serviceKey, err := crypto.GeneratePrivateKey(sigAlgo, seed)
 	if err != nil {
 		cli.Exitf(1, "Failed to generate private key: %v", err)
 	}
 
-	return InitProjectWithServiceKey(serviceKey, crypto.SHA3_256)
+	return InitProjectWithServiceKey(serviceKey, hashAlgo)
 }
 
 // InitProjectWithServiceKey creates and saves a new project config

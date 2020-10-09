@@ -2,9 +2,9 @@ package emulator
 
 import (
 	"fmt"
-	"strings"
 
-	flowgo "github.com/dapperlabs/flow-go/model/flow"
+	"github.com/onflow/flow-go/access"
+	flowgo "github.com/onflow/flow-go/model/flow"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
 )
@@ -76,54 +76,69 @@ func (e *AccountNotFoundError) Error() string {
 	return fmt.Sprintf("could not find account with address %s", e.Address)
 }
 
+// A TransactionValidationError indicates that a submitted transaction is invalid.
+type TransactionValidationError interface {
+	isTransactionValidationError()
+}
+
 // A DuplicateTransactionError indicates that a transaction has already been submitted.
 type DuplicateTransactionError struct {
 	TxID flowgo.Identifier
 }
 
+func (e *DuplicateTransactionError) isTransactionValidationError() {}
+
 func (e *DuplicateTransactionError) Error() string {
 	return fmt.Sprintf("transaction with ID %s has already been submitted", e.TxID)
 }
 
-//// A MissingSignatureError indicates that a transaction is missing a required signature.
-//type MissingSignatureError struct {
-//	Address flowgo.Address
-//}
-//
-//func (e *MissingSignatureError) Error() string {
-//	return fmt.Sprintf("account %s does not have sufficient signatures", e.Address)
-//}
-
-//// An InvalidSignaturePublicKeyError indicates that signature uses an invalid public key.
-//type InvalidSignaturePublicKeyError struct {
-//	Address flowgo.Address
-//	KeyID   int
-//}
-//
-//func (e *InvalidSignaturePublicKeyError) Error() string {
-//	return fmt.Sprintf("invalid signature for key %d on account %s", e.KeyID, e.Address)
-//}
-
-//// An InvalidSignatureAccountError indicates that a signature references a nonexistent account.
-//type InvalidSignatureAccountError struct {
-//	Address flowgo.Address
-//}
-//
-//func (e *InvalidSignatureAccountError) Error() string {
-//	return fmt.Sprintf("account with address %s does not exist", e.Address)
-//}
-
-// An InvalidTransactionError indicates that a submitted transaction is invalid (missing required fields).
-type InvalidTransactionError struct {
-	TxID          flowgo.Identifier
+// IncompleteTransactionError indicates that a transaction is missing one or more required fields.
+type IncompleteTransactionError struct {
 	MissingFields []string
 }
 
-func (e *InvalidTransactionError) Error() string {
-	return fmt.Sprintf("transaction with ID %s is invalid (missing required fields): %s",
-		e.TxID,
-		strings.Join(e.MissingFields, ", "),
-	)
+func (e *IncompleteTransactionError) isTransactionValidationError() {}
+
+func (e *IncompleteTransactionError) Error() string {
+	return fmt.Sprintf("transaction is missing required fields: %s", e.MissingFields)
+}
+
+// ExpiredTransactionError indicates that a transaction has expired.
+type ExpiredTransactionError struct {
+	RefHeight, FinalHeight uint64
+}
+
+func (e *ExpiredTransactionError) isTransactionValidationError() {}
+
+func (e *ExpiredTransactionError) Error() string {
+	return fmt.Sprintf("transaction is expired: ref_height=%d final_height=%d", e.RefHeight, e.FinalHeight)
+}
+
+// InvalidTransactionScriptError indicates that a transaction contains an invalid Cadence script.
+type InvalidTransactionScriptError struct {
+	ParserErr error
+}
+
+func (e *InvalidTransactionScriptError) isTransactionValidationError() {}
+
+func (e *InvalidTransactionScriptError) Error() string {
+	return fmt.Sprintf("failed to parse transaction Cadence script: %s", e.ParserErr)
+}
+
+func (e *InvalidTransactionScriptError) Unwrap() error {
+	return e.ParserErr
+}
+
+// InvalidTransactionGasLimitError indicates that a transaction specifies a gas limit that exceeds the maximum.
+type InvalidTransactionGasLimitError struct {
+	Maximum uint64
+	Actual  uint64
+}
+
+func (e *InvalidTransactionGasLimitError) isTransactionValidationError() {}
+
+func (e *InvalidTransactionGasLimitError) Error() string {
+	return fmt.Sprintf("transaction gas limit (%d) exceeds the maximum gas limit (%d)", e.Actual, e.Maximum)
 }
 
 // An InvalidStateVersionError indicates that a state version hash provided is invalid.
@@ -183,4 +198,19 @@ type ExecutionError struct {
 
 func (e *ExecutionError) Error() string {
 	return fmt.Sprintf("execution error code %d: %s", e.Code, e.Message)
+}
+
+func convertAccessError(err error) error {
+	switch typedErr := err.(type) {
+	case access.IncompleteTransactionError:
+		return &IncompleteTransactionError{MissingFields: typedErr.MissingFields}
+	case access.ExpiredTransactionError:
+		return &ExpiredTransactionError{RefHeight: typedErr.RefHeight, FinalHeight: typedErr.FinalHeight}
+	case access.InvalidGasLimitError:
+		return &InvalidTransactionGasLimitError{Maximum: typedErr.Maximum, Actual: typedErr.Actual}
+	case access.InvalidScriptError:
+		return &InvalidTransactionScriptError{ParserErr: typedErr.ParserErr}
+	}
+
+	return err
 }

@@ -15,50 +15,18 @@ github.com/c-bata/go-prompt
 github.com/cespare/xxhash
 # github.com/cespare/xxhash/v2 v2.1.1
 github.com/cespare/xxhash/v2
-# github.com/dapperlabs/flow-core-contracts/contracts v0.0.0-20200526041238-ad2360621a1a
-github.com/dapperlabs/flow-core-contracts/contracts
-github.com/dapperlabs/flow-core-contracts/contracts/internal/assets
-# github.com/dapperlabs/flow-emulator v0.8.0
+# github.com/dapperlabs/flow-emulator v0.11.0
 github.com/dapperlabs/flow-emulator
 github.com/dapperlabs/flow-emulator/cmd/emulator/start
 github.com/dapperlabs/flow-emulator/convert
 github.com/dapperlabs/flow-emulator/convert/sdk
 github.com/dapperlabs/flow-emulator/server
+github.com/dapperlabs/flow-emulator/server/backend
 github.com/dapperlabs/flow-emulator/server/liveness
 github.com/dapperlabs/flow-emulator/storage
 github.com/dapperlabs/flow-emulator/storage/badger
 github.com/dapperlabs/flow-emulator/storage/memstore
 github.com/dapperlabs/flow-emulator/types
-# github.com/dapperlabs/flow-go v0.4.1-0.20200811000347-954202e2f254
-github.com/dapperlabs/flow-go/engine
-github.com/dapperlabs/flow-go/engine/execution/state/delta
-github.com/dapperlabs/flow-go/engine/verification
-github.com/dapperlabs/flow-go/fvm
-github.com/dapperlabs/flow-go/fvm/state
-github.com/dapperlabs/flow-go/model/chunks
-github.com/dapperlabs/flow-go/model/cluster
-github.com/dapperlabs/flow-go/model/coldstuff
-github.com/dapperlabs/flow-go/model/encoding
-github.com/dapperlabs/flow-go/model/encoding/json
-github.com/dapperlabs/flow-go/model/encoding/rlp
-github.com/dapperlabs/flow-go/model/fingerprint
-github.com/dapperlabs/flow-go/model/flow
-github.com/dapperlabs/flow-go/model/hash
-github.com/dapperlabs/flow-go/model/messages
-github.com/dapperlabs/flow-go/model/verification
-github.com/dapperlabs/flow-go/module
-github.com/dapperlabs/flow-go/module/mempool
-github.com/dapperlabs/flow-go/module/mempool/entity
-github.com/dapperlabs/flow-go/module/metrics
-github.com/dapperlabs/flow-go/module/trace
-github.com/dapperlabs/flow-go/network
-github.com/dapperlabs/flow-go/storage
-github.com/dapperlabs/flow-go/storage/merkle
-github.com/dapperlabs/flow-go/utils/slices
-# github.com/dapperlabs/flow-go/crypto v0.3.2-0.20200708192840-30b3e2d5a586
-github.com/dapperlabs/flow-go/crypto
-github.com/dapperlabs/flow-go/crypto/hash
-github.com/dapperlabs/flow-go/crypto/random
 # github.com/davecgh/go-spew v1.1.1
 github.com/davecgh/go-spew/spew
 # github.com/desertbit/timer v0.0.0-20180107155436-c41aec40b27f
@@ -84,7 +52,7 @@ github.com/ethereum/go-ethereum/rlp
 github.com/fsnotify/fsnotify
 # github.com/fxamacker/cbor/v2 v2.2.0
 github.com/fxamacker/cbor/v2
-# github.com/golang/protobuf v1.4.0
+# github.com/golang/protobuf v1.4.2
 github.com/golang/protobuf/proto
 github.com/golang/protobuf/protoc-gen-go/descriptor
 github.com/golang/protobuf/ptypes
@@ -135,7 +103,7 @@ github.com/mattn/go-tty
 github.com/matttproud/golang_protobuf_extensions/pbutil
 # github.com/mitchellh/mapstructure v1.3.3
 github.com/mitchellh/mapstructure
-# github.com/onflow/cadence v0.8.0
+# github.com/onflow/cadence v0.9.1
 github.com/onflow/cadence
 github.com/onflow/cadence/encoding/json
 github.com/onflow/cadence/fixedpoint
@@ -155,17 +123,53 @@ github.com/onflow/cadence/runtime/sema
 github.com/onflow/cadence/runtime/stdlib
 github.com/onflow/cadence/runtime/stdlib/internal
 github.com/onflow/cadence/runtime/trampoline
-# github.com/onflow/cadence/languageserver v0.8.0
+# github.com/onflow/cadence/languageserver v0.9.4
 github.com/onflow/cadence/languageserver
 github.com/onflow/cadence/languageserver/conversion
 github.com/onflow/cadence/languageserver/integration
 github.com/onflow/cadence/languageserver/jsonrpc2
 github.com/onflow/cadence/languageserver/protocol
 github.com/onflow/cadence/languageserver/server
-# github.com/onflow/flow-ft/contracts v0.0.0-20200525235630-0e8024a483ce
-github.com/onflow/flow-ft/contracts
-github.com/onflow/flow-ft/contracts/internal/assets
-# github.com/onflow/flow-go-sdk v0.9.0
+# github.com/onflow/flow-core-contracts/lib/go/contracts v0.1.0
+github.com/onflow/flow-core-contracts/lib/go/contracts
+github.com/onflow/flow-core-contracts/lib/go/contracts/internal/assets
+# github.com/onflow/flow-ft/lib/go/contracts v0.2.0
+github.com/onflow/flow-ft/lib/go/contracts
+github.com/onflow/flow-ft/lib/go/contracts/internal/assets
+# github.com/onflow/flow-go v0.9.6
+github.com/onflow/flow-go/access
+github.com/onflow/flow-go/access/legacy
+github.com/onflow/flow-go/access/legacy/convert
+github.com/onflow/flow-go/consensus/hotstuff/model
+github.com/onflow/flow-go/engine
+github.com/onflow/flow-go/engine/common/rpc/convert
+github.com/onflow/flow-go/engine/execution/state/delta
+github.com/onflow/flow-go/engine/verification
+github.com/onflow/flow-go/fvm
+github.com/onflow/flow-go/fvm/state
+github.com/onflow/flow-go/model/chunks
+github.com/onflow/flow-go/model/cluster
+github.com/onflow/flow-go/model/coldstuff
+github.com/onflow/flow-go/model/encodable
+github.com/onflow/flow-go/model/encoding
+github.com/onflow/flow-go/model/encoding/json
+github.com/onflow/flow-go/model/encoding/rlp
+github.com/onflow/flow-go/model/fingerprint
+github.com/onflow/flow-go/model/flow
+github.com/onflow/flow-go/model/hash
+github.com/onflow/flow-go/model/messages
+github.com/onflow/flow-go/model/verification
+github.com/onflow/flow-go/module
+github.com/onflow/flow-go/module/mempool
+github.com/onflow/flow-go/module/mempool/entity
+github.com/onflow/flow-go/module/metrics
+github.com/onflow/flow-go/module/trace
+github.com/onflow/flow-go/network
+github.com/onflow/flow-go/state/protocol
+github.com/onflow/flow-go/storage
+github.com/onflow/flow-go/storage/merkle
+github.com/onflow/flow-go/utils/slices
+# github.com/onflow/flow-go-sdk v0.11.0
 github.com/onflow/flow-go-sdk
 github.com/onflow/flow-go-sdk/client
 github.com/onflow/flow-go-sdk/client/convert
@@ -173,9 +177,14 @@ github.com/onflow/flow-go-sdk/crypto
 github.com/onflow/flow-go-sdk/crypto/internal/crypto
 github.com/onflow/flow-go-sdk/crypto/internal/crypto/hash
 github.com/onflow/flow-go-sdk/templates
-# github.com/onflow/flow/protobuf/go/flow v0.1.5-0.20200722220305-ee8119767329
+# github.com/onflow/flow-go/crypto v0.9.4
+github.com/onflow/flow-go/crypto
+github.com/onflow/flow-go/crypto/hash
+# github.com/onflow/flow/protobuf/go/flow v0.1.7
 github.com/onflow/flow/protobuf/go/flow/access
 github.com/onflow/flow/protobuf/go/flow/entities
+github.com/onflow/flow/protobuf/go/flow/legacy/access
+github.com/onflow/flow/protobuf/go/flow/legacy/entities
 # github.com/opentracing/opentracing-go v1.2.0
 github.com/opentracing/opentracing-go
 github.com/opentracing/opentracing-go/ext
@@ -263,7 +272,7 @@ github.com/uber/jaeger-client-go/thrift-gen/sampling
 github.com/uber/jaeger-client-go/thrift-gen/zipkincore
 github.com/uber/jaeger-client-go/transport
 github.com/uber/jaeger-client-go/utils
-# github.com/uber/jaeger-lib v2.2.0+incompatible
+# github.com/uber/jaeger-lib v2.3.0+incompatible
 github.com/uber/jaeger-lib/metrics
 # github.com/vmihailenco/msgpack v4.0.4+incompatible
 github.com/vmihailenco/msgpack
@@ -279,10 +288,10 @@ github.com/vmihailenco/tagparser/internal/parser
 github.com/x448/float16
 # go.uber.org/atomic v1.6.0
 go.uber.org/atomic
-# golang.org/x/crypto v0.0.0-20200510223506-06a226fb4e37
+# golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9
 golang.org/x/crypto/blake2b
 golang.org/x/crypto/sha3
-# golang.org/x/net v0.0.0-20200301022130-244492dfa37a
+# golang.org/x/net v0.0.0-20200822124328-c89045814202
 golang.org/x/net/context
 golang.org/x/net/http/httpguts
 golang.org/x/net/http2
@@ -290,19 +299,19 @@ golang.org/x/net/http2/hpack
 golang.org/x/net/idna
 golang.org/x/net/internal/timeseries
 golang.org/x/net/trace
-# golang.org/x/sys v0.0.0-20200509044756-6aff5f38e54f
+# golang.org/x/sys v0.0.0-20200828194041-157a740278f4
 golang.org/x/sys/cpu
 golang.org/x/sys/internal/unsafeheader
 golang.org/x/sys/unix
 golang.org/x/sys/windows
 golang.org/x/sys/windows/registry
 golang.org/x/sys/windows/svc/eventlog
-# golang.org/x/text v0.3.2
+# golang.org/x/text v0.3.3
 golang.org/x/text/secure/bidirule
 golang.org/x/text/transform
 golang.org/x/text/unicode/bidi
 golang.org/x/text/unicode/norm
-# google.golang.org/appengine v1.6.5
+# google.golang.org/appengine v1.6.6
 google.golang.org/appengine
 google.golang.org/appengine/datastore
 google.golang.org/appengine/datastore/internal/cloudkey
@@ -314,9 +323,9 @@ google.golang.org/appengine/internal/datastore
 google.golang.org/appengine/internal/log
 google.golang.org/appengine/internal/modules
 google.golang.org/appengine/internal/remote_api
-# google.golang.org/genproto v0.0.0-20200224152610-e50cd9704f63
+# google.golang.org/genproto v0.0.0-20200831141814-d751682dd103
 google.golang.org/genproto/googleapis/rpc/status
-# google.golang.org/grpc v1.30.0
+# google.golang.org/grpc v1.32.0
 google.golang.org/grpc
 google.golang.org/grpc/attributes
 google.golang.org/grpc/backoff
@@ -328,7 +337,6 @@ google.golang.org/grpc/binarylog/grpc_binarylog_v1
 google.golang.org/grpc/codes
 google.golang.org/grpc/connectivity
 google.golang.org/grpc/credentials
-google.golang.org/grpc/credentials/internal
 google.golang.org/grpc/encoding
 google.golang.org/grpc/encoding/proto
 google.golang.org/grpc/grpclog
@@ -338,6 +346,7 @@ google.golang.org/grpc/internal/balancerload
 google.golang.org/grpc/internal/binarylog
 google.golang.org/grpc/internal/buffer
 google.golang.org/grpc/internal/channelz
+google.golang.org/grpc/internal/credentials
 google.golang.org/grpc/internal/envconfig
 google.golang.org/grpc/internal/grpclog
 google.golang.org/grpc/internal/grpcrand
@@ -359,7 +368,7 @@ google.golang.org/grpc/serviceconfig
 google.golang.org/grpc/stats
 google.golang.org/grpc/status
 google.golang.org/grpc/tap
-# google.golang.org/protobuf v1.23.0
+# google.golang.org/protobuf v1.25.0
 google.golang.org/protobuf/encoding/prototext
 google.golang.org/protobuf/encoding/protowire
 google.golang.org/protobuf/internal/descfmt
@@ -370,12 +379,11 @@ google.golang.org/protobuf/internal/encoding/messageset
 google.golang.org/protobuf/internal/encoding/tag
 google.golang.org/protobuf/internal/encoding/text
 google.golang.org/protobuf/internal/errors
-google.golang.org/protobuf/internal/fieldnum
 google.golang.org/protobuf/internal/fieldsort
 google.golang.org/protobuf/internal/filedesc
 google.golang.org/protobuf/internal/filetype
 google.golang.org/protobuf/internal/flags
-google.golang.org/protobuf/internal/genname
+google.golang.org/protobuf/internal/genid
 google.golang.org/protobuf/internal/impl
 google.golang.org/protobuf/internal/mapsort
 google.golang.org/protobuf/internal/pragma

@@ -217,7 +217,7 @@ func (s *ForStatement) MarshalJSON() ([]byte, error) {
 
 type EmitStatement struct {
 	InvocationExpression *InvocationExpression
-	StartPos             Position
+	StartPos             Position `json:"-"`
 }
 
 func (s *EmitStatement) StartPosition() Position {
@@ -232,6 +232,19 @@ func (*EmitStatement) isStatement() {}
 
 func (s *EmitStatement) Accept(visitor Visitor) Repr {
 	return visitor.VisitEmitStatement(s)
+}
+
+func (s *EmitStatement) MarshalJSON() ([]byte, error) {
+	type Alias EmitStatement
+	return json.Marshal(&struct {
+		Type string
+		Range
+		*Alias
+	}{
+		Type:  "EmitStatement",
+		Range: NewRangeFromPositioned(s),
+		Alias: (*Alias)(s),
+	})
 }
 
 // AssignmentStatement
@@ -256,6 +269,19 @@ func (s *AssignmentStatement) Accept(visitor Visitor) Repr {
 	return visitor.VisitAssignmentStatement(s)
 }
 
+func (s *AssignmentStatement) MarshalJSON() ([]byte, error) {
+	type Alias AssignmentStatement
+	return json.Marshal(&struct {
+		Type string
+		Range
+		*Alias
+	}{
+		Type:  "AssignmentStatement",
+		Range: NewRangeFromPositioned(s),
+		Alias: (*Alias)(s),
+	})
+}
+
 // SwapStatement
 
 type SwapStatement struct {
@@ -275,6 +301,19 @@ func (*SwapStatement) isStatement() {}
 
 func (s *SwapStatement) Accept(visitor Visitor) Repr {
 	return visitor.VisitSwapStatement(s)
+}
+
+func (s *SwapStatement) MarshalJSON() ([]byte, error) {
+	type Alias SwapStatement
+	return json.Marshal(&struct {
+		Type string
+		Range
+		*Alias
+	}{
+		Type:  "SwapStatement",
+		Range: NewRangeFromPositioned(s),
+		Alias: (*Alias)(s),
+	})
 }
 
 // ExpressionStatement

@@ -46,7 +46,7 @@ generate: generate-mocks
 
 .PHONY: generate-mocks
 generate-mocks:
-	GO111MODULE=on mockgen -destination=mocks/blockchain_api.go -package=mocks github.com/dapperlabs/flow-emulator BlockchainAPI
+	GO111MODULE=on mockgen -destination=server/backend/mocks/emulator.go -package=mocks github.com/dapperlabs/flow-emulator/server/backend Emulator
 	GO111MODULE=on mockgen -destination=storage/mocks/store.go -package=mocks github.com/dapperlabs/flow-emulator/storage Store
 
 .PHONY: ci

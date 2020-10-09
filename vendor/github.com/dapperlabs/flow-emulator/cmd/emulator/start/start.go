@@ -6,6 +6,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/onflow/cadence"
 	sdk "github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/prometheus/common/log"
@@ -23,13 +24,16 @@ type Config struct {
 	BlockTime          time.Duration `flag:"block-time,b" info:"time between sealed blocks"`
 	ServicePrivateKey  string        `flag:"service-priv-key" info:"service account private key"`
 	ServicePublicKey   string        `flag:"service-pub-key" info:"service account public key"`
-	ServiceKeySigAlgo  string        `default:"ECDSA_P256" flag:"service-sig-algo" info:"service account key signature algorithm"`
-	ServiceKeyHashAlgo string        `default:"SHA3_256" flag:"service-hash-algo" info:"service account key hash algorithm"`
+	ServiceKeySigAlgo  string        `flag:"service-sig-algo" info:"service account key signature algorithm"`
+	ServiceKeyHashAlgo string        `flag:"service-hash-algo" info:"service account key hash algorithm"`
 	Init               bool          `default:"false" flag:"init" info:"whether to initialize a new account profile"`
 	GRPCDebug          bool          `default:"false" flag:"grpc-debug" info:"enable gRPC server reflection for debugging with grpc_cli"`
 	Persist            bool          `default:"false" flag:"persist" info:"enable persistent storage"`
 	DBPath             string        `default:"./flowdb" flag:"dbpath" info:"path to database directory"`
 	SimpleAddresses    bool          `default:"false" flag:"simple-addresses" info:"use sequential addresses starting with 0x01"`
+	TokenSupply        string        `default:"100000000000.0" flag:"token-supply" info:"initial FLOW token supply"`
+	ScriptGasLimit     int           `default:"100000" flag:"script-gas-limit" info:"gas limit for scripts"`
+	TransactionExpiry  int           `default:"10" flag:"transaction-expiry" info:"transaction expiry, measured in blocks"`
 }
 
 const EnvPrefix = "FLOW"
@@ -39,7 +43,11 @@ var (
 	conf   Config
 )
 
-type serviceKeyFunc func(init bool) (crypto.PrivateKey, crypto.SignatureAlgorithm, crypto.HashAlgorithm)
+type serviceKeyFunc func(
+	init bool,
+	sigAlgo crypto.SignatureAlgorithm,
+	hashAlgo crypto.HashAlgorithm,
+) (crypto.PrivateKey, crypto.SignatureAlgorithm, crypto.HashAlgorithm)
 
 func Cmd(getServiceKey serviceKeyFunc) *cobra.Command {
 	cmd := &cobra.Command{
@@ -58,11 +66,15 @@ func Cmd(getServiceKey serviceKeyFunc) *cobra.Command {
 			serviceKeyHashAlgo = crypto.StringToHashAlgorithm(conf.ServiceKeyHashAlgo)
 
 			if len(conf.ServicePublicKey) > 0 {
+				checkKeyAlgorithms(serviceKeySigAlgo, serviceKeyHashAlgo)
+
 				servicePublicKey, err = crypto.DecodePublicKeyHex(serviceKeySigAlgo, conf.ServicePublicKey)
 				if err != nil {
 					Exit(1, err.Error())
 				}
 			} else if len(conf.ServicePrivateKey) > 0 {
+				checkKeyAlgorithms(serviceKeySigAlgo, serviceKeyHashAlgo)
+
 				servicePrivateKey, err = crypto.DecodePrivateKeyHex(serviceKeySigAlgo, conf.ServicePrivateKey)
 				if err != nil {
 					Exit(1, err.Error())
@@ -70,7 +82,11 @@ func Cmd(getServiceKey serviceKeyFunc) *cobra.Command {
 
 				servicePublicKey = servicePrivateKey.PublicKey()
 			} else {
-				servicePrivateKey, serviceKeySigAlgo, serviceKeyHashAlgo = getServiceKey(conf.Init)
+				servicePrivateKey, serviceKeySigAlgo, serviceKeyHashAlgo = getServiceKey(
+					conf.Init,
+					serviceKeySigAlgo,
+					serviceKeyHashAlgo,
+				)
 				servicePublicKey = servicePrivateKey.PublicKey()
 			}
 
@@ -104,6 +120,9 @@ func Cmd(getServiceKey serviceKeyFunc) *cobra.Command {
 				ServiceKeyHashAlgo: serviceKeyHashAlgo,
 				Persist:            conf.Persist,
 				DBPath:             conf.DBPath,
+				GenesisTokenSupply: parseTokenSupply(conf.TokenSupply),
+				ScriptGasLimit:     uint64(conf.ScriptGasLimit),
+				TransactionExpiry:  uint(conf.TransactionExpiry),
 			}
 
 			emu := server.NewEmulatorServer(logger, serverConf)
@@ -139,4 +158,29 @@ func initConfig(cmd *cobra.Command) {
 func Exit(code int, msg string) {
 	fmt.Println(msg)
 	os.Exit(code)
+}
+
+func parseTokenSupply(supply string) cadence.UFix64 {
+	tokenSupply, err := cadence.NewUFix64(supply)
+	if err != nil {
+		Exit(
+			1,
+			fmt.Sprintf(
+				"Invalid token supply. Failed to parse `%s` as an unsigned 64-bit fixed-point number: %s",
+				conf.TokenSupply,
+				err.Error()),
+		)
+	}
+
+	return tokenSupply
+}
+
+func checkKeyAlgorithms(sigAlgo crypto.SignatureAlgorithm, hashAlgo crypto.HashAlgorithm) {
+	if sigAlgo == crypto.UnknownSignatureAlgorithm {
+		Exit(1, "Must specify service key signature algorithm (e.g. --service-sig-algo=ECDSA_P256)")
+	}
+
+	if hashAlgo == crypto.UnknownHashAlgorithm {
+		Exit(1, "Must specify service key hash algorithm (e.g. --service-hash-algo=SHA3_256)")
+	}
 }

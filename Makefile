@@ -71,3 +71,7 @@ publish:
 .PHONY: vendor
 vendor:
 	GO111MODULE=on go mod vendor
+
+.PHONY: clean
+clean:
+	rm ./cmd/flow/flow*

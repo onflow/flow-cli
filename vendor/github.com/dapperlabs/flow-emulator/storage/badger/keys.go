@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	flowgo "github.com/dapperlabs/flow-go/model/flow"
+	flowgo "github.com/onflow/flow-go/model/flow"
 )
 
 const (
