@@ -10,7 +10,8 @@ import (
 )
 
 type Config struct {
-	Host string `default:"127.0.0.1:3569" flag:"host" info:"Flow Access API host address"`
+	Host   string `default:"127.0.0.1:3569" flag:"host" info:"Flow Access API host address"`
+	Sealed bool   `default:"true" flag:"sealed" info:"Wait for a sealed result"`
 }
 
 var conf Config
@@ -20,7 +21,7 @@ var Cmd = &cobra.Command{
 	Short: "Get the transaction status",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		cli.GetTransactionResult(conf.Host, args[0])
+		cli.GetTransactionResult(conf.Host, args[0], conf.Sealed)
 	},
 }
 
