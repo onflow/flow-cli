@@ -16,6 +16,7 @@ type Config struct {
 	Latest      bool   `default:"false" flag:"latest" info:"Display latest block"`
 	BlockID     string `default:"" flag:"id" info:"Display block by id"`
 	BlockHeight uint64 `default:"0" flag:"height" info:"Display block by height"`
+	Events      string `default:"" flag:"events" info:"List events of this type for the block"`
 	Verbose     bool   `default:"false" flag:"verbose" info:"Display transactions in block"`
 }
 
@@ -38,6 +39,9 @@ var Cmd = &cobra.Command{
 			block = cli.GetBlockByHeight(conf.Host, conf.BlockHeight)
 		}
 		printBlock(block, conf.Verbose)
+		if conf.Events != "" {
+			cli.GetBlockEvents(conf.Host, block.Height, conf.Events)
+		}
 	},
 }
 
