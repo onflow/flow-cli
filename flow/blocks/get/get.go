@@ -17,6 +17,7 @@ type Config struct {
 	BlockID     string `default:"" flag:"id" info:"Display block by id"`
 	BlockHeight uint64 `default:"0" flag:"height" info:"Display block by height"`
 	Events      string `default:"" flag:"events" info:"List events of this type for the block"`
+	Verbose     bool   `default:"false" flag:"verbose" info:"Display transactions in block"`
 }
 
 var conf Config
@@ -31,10 +32,13 @@ var Cmd = &cobra.Command{
 		} else if len(conf.BlockID) > 0 {
 			blockID := flow.HexToID(conf.BlockID)
 			block = cli.GetBlockByID(conf.Host, blockID)
+		} else if len(args) > 0 && len(args[0]) > 0 {
+			blockID := flow.HexToID(args[0])
+			block = cli.GetBlockByID(conf.Host, blockID)
 		} else {
 			block = cli.GetBlockByHeight(conf.Host, conf.BlockHeight)
 		}
-		printBlock(block)
+		printBlock(block, conf.Verbose)
 		if conf.Events != "" {
 			cli.GetBlockEvents(conf.Host, block.Height, conf.Events)
 		}
@@ -55,7 +59,7 @@ func initConfig() {
 	}
 }
 
-func printBlock(block *flow.Block) {
+func printBlock(block *flow.Block, verbose bool) {
 	fmt.Println()
 	fmt.Println("Block ID: ", block.ID)
 	fmt.Println("Parent ID: ", block.ParentID)
@@ -64,6 +68,12 @@ func printBlock(block *flow.Block) {
 	fmt.Println("Total Collections: ", len(block.CollectionGuarantees))
 	for i, guarantee := range block.CollectionGuarantees {
 		fmt.Printf("  Collection %d: %s\n", i, guarantee.CollectionID)
+		if verbose {
+			collection := cli.GetCollectionByID(conf.Host, guarantee.CollectionID)
+			for i, transaction := range collection.TransactionIDs {
+				fmt.Printf("    Transaction %d: %s\n", i, transaction)
+			}
+		}
 	}
 	fmt.Println("Total Seals: ", len(block.Seals))
 	fmt.Println()
