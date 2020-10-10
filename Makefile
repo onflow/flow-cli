@@ -24,7 +24,7 @@ install-tools:
 
 .PHONY: test
 test:
-	GO111MODULE=on go test -mod vendor -coverprofile=$(COVER_PROFILE) $(if $(JSON_OUTPUT),-json,) ./...
+	GO111MODULE=on go test -coverprofile=$(COVER_PROFILE) $(if $(JSON_OUTPUT),-json,) ./...
 
 .PHONY: coverage
 coverage:
@@ -45,7 +45,6 @@ binary: $(BINARY)
 
 $(BINARY):
 	GO111MODULE=on go build \
-		-mod vendor \
 		-trimpath \
 		-ldflags \
 		"-X github.com/dapperlabs/flow-cli/build.commit=$(COMMIT) -X github.com/dapperlabs/flow-cli/build.semver=$(VERSION)" \
@@ -67,10 +66,6 @@ versioned-binary:
 .PHONY: publish
 publish:
 	gsutil cp cmd/flow/flow-*-$(VERSION) gs://flow-cli
-
-.PHONY: vendor
-vendor:
-	GO111MODULE=on go mod vendor
 
 .PHONY: clean
 clean:
