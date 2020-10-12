@@ -13,6 +13,7 @@ const (
 	EnvPrefix       = "FLOW"
 	DefaultSigAlgo  = crypto.ECDSA_P256
 	DefaultHashAlgo = crypto.SHA3_256
+	DefaultHost     = "127.0.0.1:3569"
 )
 
 var ConfigPath = "flow.json"
