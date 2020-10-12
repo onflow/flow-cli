@@ -12,7 +12,7 @@ import (
 )
 
 type Config struct {
-	Host        string `default:"127.0.0.1:3569" flag:"host" info:"Flow Observation API host address"`
+	Host        string `flag:"host" info:"Flow Observation API host address"`
 	Latest      bool   `default:"false" flag:"latest" info:"Display latest block"`
 	BlockID     string `default:"" flag:"id" info:"Display block by id"`
 	BlockHeight uint64 `default:"0" flag:"height" info:"Display block by height"`
@@ -27,20 +27,25 @@ var Cmd = &cobra.Command{
 	Short: "Get block info",
 	Run: func(cmd *cobra.Command, args []string) {
 		var block *flow.Block
+		projectConf := new(cli.Config)
+		if conf.Host == "" {
+			projectConf = cli.LoadConfig()
+		}
+		host := projectConf.HostWithOverride(conf.Host)
 		if conf.Latest {
-			block = cli.GetLatestBlock(conf.Host)
+			block = cli.GetLatestBlock(host)
 		} else if len(conf.BlockID) > 0 {
 			blockID := flow.HexToID(conf.BlockID)
-			block = cli.GetBlockByID(conf.Host, blockID)
+			block = cli.GetBlockByID(host, blockID)
 		} else if len(args) > 0 && len(args[0]) > 0 {
 			blockID := flow.HexToID(args[0])
-			block = cli.GetBlockByID(conf.Host, blockID)
+			block = cli.GetBlockByID(host, blockID)
 		} else {
-			block = cli.GetBlockByHeight(conf.Host, conf.BlockHeight)
+			block = cli.GetBlockByHeight(host, conf.BlockHeight)
 		}
 		printBlock(block, conf.Verbose)
 		if conf.Events != "" {
-			cli.GetBlockEvents(conf.Host, block.Height, conf.Events)
+			cli.GetBlockEvents(host, block.Height, conf.Events)
 		}
 	},
 }

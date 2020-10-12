@@ -12,7 +12,7 @@ import (
 )
 
 type Config struct {
-	Host string `default:"127.0.0.1:3569" flag:"host" info:"Flow Observation API host address"`
+	Host string `flag:"host" info:"Flow Observation API host address"`
 	Code bool   `default:"false" flag:"code" info:"Display code deployed to the account"`
 }
 
@@ -23,7 +23,12 @@ var Cmd = &cobra.Command{
 	Short: "Get account info",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		acc := cli.GetAccount(conf.Host, flow.HexToAddress(args[0]))
+		projectConf := new(cli.Config)
+		if conf.Host == "" {
+			projectConf = cli.LoadConfig()
+		}
+
+		acc := cli.GetAccount(projectConf.HostWithOverride(conf.Host), flow.HexToAddress(args[0]))
 
 		printAccount(acc, conf.Code)
 	},
