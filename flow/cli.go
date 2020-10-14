@@ -15,6 +15,8 @@ const (
 	EnvPrefix       = "FLOW"
 	DefaultSigAlgo  = crypto.ECDSA_P256
 	DefaultHashAlgo = crypto.SHA3_256
+
+	FLOWDecimalPlaces = 8
 )
 
 var ConfigPath = "flow.json"
@@ -66,4 +68,8 @@ func AmountToString(amount uint64, decimalPlaces int) string {
 		return "0." + amountStr
 	}
 	return amountStr[:len(amountStr)-decimalPlaces] + "." + amountStr[len(amountStr)-decimalPlaces:]
+}
+
+func FormatFLOW(flow uint64) string {
+	return AmountToString(flow, FLOWDecimalPlaces)
 }
