@@ -5,6 +5,8 @@ import (
 	"crypto/rand"
 	"fmt"
 	"os"
+	"strconv"
+	"strings"
 
 	"github.com/onflow/flow-go-sdk/crypto"
 )
@@ -52,4 +54,16 @@ func RandomSeed(n int) []byte {
 	}
 
 	return seed
+}
+
+// AmountToString converts the given amount to a string with the given number of decimal places.
+func AmountToString(amount uint64, decimalPlaces int) string {
+	amountStr := strconv.Itoa(int(amount))
+	if len(amountStr) < decimalPlaces {
+		padding := strings.Repeat("0", decimalPlaces-len(amountStr))
+		return fmt.Sprintf("0.%s%s", padding, amountStr)
+	} else if len(amountStr) == decimalPlaces {
+		return "0." + amountStr
+	}
+	return amountStr[:len(amountStr)-decimalPlaces] + "." + amountStr[len(amountStr)-decimalPlaces:]
 }
