@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/onflow/cadence"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/client"
 	"google.golang.org/grpc"
@@ -100,30 +101,8 @@ func printEvents(events []flow.Event, txID bool) {
 		}
 		fmt.Println("  Fields:")
 		for i, field := range event.Value.EventType.Fields {
-			v := event.Value.Fields[i].ToGoValue()
-
-			typeInfo := "Unknown"
-			if field.Type != nil {
-				typeInfo = field.Type.ID()
-			} else if _, isAddress := v.([8]byte); isAddress {
-				typeInfo = "Address"
-			}
-			fmt.Printf("    %s (%s): ", field.Identifier, typeInfo)
-			// Try the two most obvious cases
-			if address, ok := v.([8]byte); ok {
-				fmt.Printf("%x", address)
-			} else if isByteSlice(v) || field.Identifier == "publicKey" {
-				// make exception for public key, since it get's interpreted as
-				// []*big.Int
-				for _, b := range v.([]interface{}) {
-					fmt.Printf("%x", b)
-				}
-			} else if uintVal, ok := v.(uint64); field.Type.ID() == "UFix64" && ok {
-				fmt.Print(FormatFLOW(uintVal))
-			} else {
-				fmt.Printf("%v", v)
-			}
-			fmt.Println()
+			value := event.Value.Fields[i]
+			printField(field, value)
 		}
 	}
 }
@@ -135,4 +114,30 @@ func isByteSlice(v interface{}) bool {
 	}
 	_, isBytes := slice[0].(byte)
 	return isBytes
+}
+
+func printField(field cadence.Field, value cadence.Value) {
+	v := value.ToGoValue()
+	typeInfo := "Unknown"
+	if field.Type != nil {
+		typeInfo = field.Type.ID()
+	} else if _, isAddress := v.([8]byte); isAddress {
+		typeInfo = "Address"
+	}
+	fmt.Printf("    %s (%s): ", field.Identifier, typeInfo)
+	// Try the two most obvious cases
+	if address, ok := v.([8]byte); ok {
+		fmt.Printf("%x", address)
+	} else if isByteSlice(v) || field.Identifier == "publicKey" {
+		// make exception for public key, since it get's interpreted as
+		// []*big.Int
+		for _, b := range v.([]interface{}) {
+			fmt.Printf("%x", b)
+		}
+	} else if uintVal, ok := v.(uint64); typeInfo == "UFix64" && ok {
+		fmt.Print(FormatFLOW(uintVal))
+	} else {
+		fmt.Printf("%v", v)
+	}
+	fmt.Println()
 }
