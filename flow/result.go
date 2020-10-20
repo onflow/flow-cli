@@ -100,8 +100,15 @@ func printEvents(events []flow.Event, txID bool) {
 		}
 		fmt.Println("  Fields:")
 		for i, field := range event.Value.EventType.Fields {
-			fmt.Printf("    %s: ", field.Identifier)
 			v := event.Value.Fields[i].ToGoValue()
+
+			typeInfo := "Unknown"
+			if field.Type != nil {
+				typeInfo = field.Type.ID()
+			} else if _, isAddress := v.([8]byte); isAddress {
+				typeInfo = "Address"
+			}
+			fmt.Printf("    %s (%s): ", field.Identifier, typeInfo)
 			// Try the two most obvious cases
 			if address, ok := v.([8]byte); ok {
 				fmt.Printf("%x", address)
@@ -111,6 +118,8 @@ func printEvents(events []flow.Event, txID bool) {
 				for _, b := range v.([]interface{}) {
 					fmt.Printf("%x", b)
 				}
+			} else if uintVal, ok := v.(uint64); field.Type.ID() == "UFix64" && ok {
+				fmt.Print(FormatFLOW(uintVal))
 			} else {
 				fmt.Printf("%v", v)
 			}
