@@ -30,8 +30,13 @@ func GetTransactionResult(host string, id string, sealed bool) {
 		Exitf(1, "Failed to get transaction result: %s", err)
 	}
 
+	tx, err := flowClient.GetTransaction(ctx, txID)
+	if err != nil {
+		Exitf(1, "Failed to get transaction: %s", err)
+	}
+
 	// Print out results of the TX to std out
-	printTxResult(res)
+	printTxResult(tx, res)
 }
 
 func waitForSeal(ctx context.Context, c *client.Client, id flow.Identifier) (*flow.TransactionResult, error) {
@@ -56,7 +61,7 @@ func waitForSeal(ctx context.Context, c *client.Client, id flow.Identifier) (*fl
 	return result, nil
 }
 
-func printTxResult(res *flow.TransactionResult) {
+func printTxResult(tx *flow.Transaction, res *flow.TransactionResult) {
 	fmt.Println()
 	fmt.Println("Status: " + res.Status.String())
 	if res.Error != nil {
@@ -64,6 +69,10 @@ func printTxResult(res *flow.TransactionResult) {
 		return
 	}
 
+	fmt.Println("Code: ")
+	fmt.Println(string(tx.Script))
+
+	fmt.Println("Events:")
 	printEvents(res.Events, false)
 	fmt.Println()
 }
