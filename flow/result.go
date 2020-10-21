@@ -96,20 +96,24 @@ func GetBlockEvents(host string, height uint64, eventType string) {
 	}
 
 	for _, blockEvent := range events {
+		fmt.Printf("Events for Block %s:", blockEvent.BlockID)
 		printEvents(blockEvent.Events, true)
 	}
 }
 
 func printEvents(events []flow.Event, txID bool) {
+	if len(events) == 0 {
+		fmt.Println("  None")
+	}
 	// Basic event info printing
 	for _, event := range events {
-		fmt.Printf("Event %d: %s\n", event.EventIndex, event.String())
+		fmt.Printf("  Event %d: %s\n", event.EventIndex, event.String())
 		if txID {
-			fmt.Printf("Tx ID: %s\n", event.TransactionID)
+			fmt.Printf("  Tx ID: %s\n", event.TransactionID)
 		}
-		fmt.Println("  Fields:")
+		fmt.Println("    Fields:")
 		for i, field := range event.Value.EventType.Fields {
-			fmt.Printf("    %s: ", field.Identifier)
+			fmt.Printf("      %s: ", field.Identifier)
 			v := event.Value.Fields[i].ToGoValue()
 			// Try the two most obvious cases
 			if address, ok := v.([8]byte); ok {
