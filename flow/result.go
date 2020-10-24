@@ -31,8 +31,13 @@ func GetTransactionResult(host string, id string, sealed bool) {
 		Exitf(1, "Failed to get transaction result: %s", err)
 	}
 
+	tx, err := flowClient.GetTransaction(ctx, txID)
+	if err != nil {
+		Exitf(1, "Failed to get transaction: %s", err)
+	}
+
 	// Print out results of the TX to std out
-	printTxResult(res)
+	printTxResult(tx, res)
 }
 
 func waitForSeal(ctx context.Context, c *client.Client, id flow.Identifier) (*flow.TransactionResult, error) {
@@ -57,7 +62,7 @@ func waitForSeal(ctx context.Context, c *client.Client, id flow.Identifier) (*fl
 	return result, nil
 }
 
-func printTxResult(res *flow.TransactionResult) {
+func printTxResult(tx *flow.Transaction, res *flow.TransactionResult) {
 	fmt.Println()
 	fmt.Println("Status: " + res.Status.String())
 	if res.Error != nil {
@@ -65,6 +70,10 @@ func printTxResult(res *flow.TransactionResult) {
 		return
 	}
 
+	fmt.Println("Code: ")
+	fmt.Println(string(tx.Script))
+
+	fmt.Println("Events:")
 	printEvents(res.Events, false)
 	fmt.Println()
 }
@@ -88,18 +97,22 @@ func GetBlockEvents(host string, height uint64, eventType string) {
 	}
 
 	for _, blockEvent := range events {
+		fmt.Printf("Events for Block %s:", blockEvent.BlockID)
 		printEvents(blockEvent.Events, true)
 	}
 }
 
 func printEvents(events []flow.Event, txID bool) {
+	if len(events) == 0 {
+		fmt.Println("  None")
+	}
 	// Basic event info printing
 	for _, event := range events {
-		fmt.Printf("Event %d: %s\n", event.EventIndex, event.String())
+		fmt.Printf("  Event %d: %s\n", event.EventIndex, event.String())
 		if txID {
-			fmt.Printf("Tx ID: %s\n", event.TransactionID)
+			fmt.Printf("  Tx ID: %s\n", event.TransactionID)
 		}
-		fmt.Println("  Fields:")
+		fmt.Println("    Fields:")
 		for i, field := range event.Value.EventType.Fields {
 			value := event.Value.Fields[i]
 			printField(field, value)
@@ -124,7 +137,7 @@ func printField(field cadence.Field, value cadence.Value) {
 	} else if _, isAddress := v.([8]byte); isAddress {
 		typeInfo = "Address"
 	}
-	fmt.Printf("    %s (%s): ", field.Identifier, typeInfo)
+	fmt.Printf("      %s (%s): ", field.Identifier, typeInfo)
 	// Try the two most obvious cases
 	if address, ok := v.([8]byte); ok {
 		fmt.Printf("%x", address)
@@ -135,7 +148,7 @@ func printField(field cadence.Field, value cadence.Value) {
 			fmt.Printf("%x", b)
 		}
 	} else if uintVal, ok := v.(uint64); typeInfo == "UFix64" && ok {
-		fmt.Print(FormatFLOW(uintVal))
+		fmt.Print(FormatUFix64(uintVal))
 	} else {
 		fmt.Printf("%v", v)
 	}
