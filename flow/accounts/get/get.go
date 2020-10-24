@@ -46,7 +46,7 @@ func initConfig() {
 func printAccount(account *flow.Account, printCode bool) {
 	fmt.Println()
 	fmt.Println("Address: " + account.Address.Hex())
-	fmt.Println("Balance : ", cli.FormatFLOW(account.Balance))
+	fmt.Println("Balance : ", cli.FormatUFix64(account.Balance))
 	fmt.Println("Total Keys: ", len(account.Keys))
 	for _, key := range account.Keys {
 		fmt.Println("  ---")

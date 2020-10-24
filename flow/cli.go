@@ -16,7 +16,7 @@ const (
 	DefaultSigAlgo  = crypto.ECDSA_P256
 	DefaultHashAlgo = crypto.SHA3_256
 
-	FLOWDecimalPlaces = 8
+	UFix64DecimalPlaces = 8
 )
 
 var ConfigPath = "flow.json"
@@ -65,11 +65,11 @@ func AmountToString(amount uint64, decimalPlaces int) string {
 		padding := strings.Repeat("0", decimalPlaces-len(amountStr))
 		return fmt.Sprintf("0.%s%s", padding, amountStr)
 	} else if len(amountStr) == decimalPlaces {
-		return "0." + amountStr
+		return fmt.Sprintf("0.%s", amountStr)
 	}
-	return amountStr[:len(amountStr)-decimalPlaces] + "." + amountStr[len(amountStr)-decimalPlaces:]
+	return fmt.Sprintf("%s.%s", amountStr[:len(amountStr)-decimalPlaces], amountStr[len(amountStr)-decimalPlaces:])
 }
 
-func FormatFLOW(flow uint64) string {
-	return AmountToString(flow, FLOWDecimalPlaces)
+func FormatUFix64(flow uint64) string {
+	return AmountToString(flow, UFix64DecimalPlaces)
 }
