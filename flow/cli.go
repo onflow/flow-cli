@@ -58,8 +58,8 @@ func RandomSeed(n int) []byte {
 	return seed
 }
 
-// AmountToString converts the given amount to a string with the given number of decimal places.
-func AmountToString(amount uint64, decimalPlaces int) string {
+// FixedPointToString converts the given amount to a string with the given number of decimal places.
+func FixedPointToString(amount uint64, decimalPlaces int) string {
 	amountStr := strconv.Itoa(int(amount))
 	if len(amountStr) < decimalPlaces {
 		padding := strings.Repeat("0", decimalPlaces-len(amountStr))
@@ -71,5 +71,5 @@ func AmountToString(amount uint64, decimalPlaces int) string {
 }
 
 func FormatUFix64(flow uint64) string {
-	return AmountToString(flow, UFix64DecimalPlaces)
+	return FixedPointToString(flow, UFix64DecimalPlaces)
 }
