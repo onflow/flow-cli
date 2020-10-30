@@ -21,8 +21,8 @@ package transactions
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/dapperlabs/flow-cli/flow/transactions/send"
-	"github.com/dapperlabs/flow-cli/flow/transactions/status"
+	"github.com/onflow/flow-cli/flow/transactions/send"
+	"github.com/onflow/flow-cli/flow/transactions/status"
 )
 
 var Cmd = &cobra.Command{

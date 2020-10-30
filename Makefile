@@ -47,7 +47,7 @@ $(BINARY):
 	GO111MODULE=on go build \
 		-trimpath \
 		-ldflags \
-		"-X github.com/dapperlabs/flow-cli/build.commit=$(COMMIT) -X github.com/dapperlabs/flow-cli/build.semver=$(VERSION)" \
+		"-X github.com/onflow/flow-cli/build.commit=$(COMMIT) -X github.com/onflow/flow-cli/build.semver=$(VERSION)" \
 		-o $(BINARY) ./cmd/flow
 
 .PHONY: versioned-binaries

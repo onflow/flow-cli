@@ -24,7 +24,7 @@ import (
 	"github.com/psiemens/sconfig"
 	"github.com/spf13/cobra"
 
-	cli "github.com/dapperlabs/flow-cli/flow"
+	cli "github.com/onflow/flow-cli/flow"
 )
 
 type Config struct {

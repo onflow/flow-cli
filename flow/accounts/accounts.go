@@ -21,8 +21,8 @@ package accounts
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/dapperlabs/flow-cli/flow/accounts/create"
-	"github.com/dapperlabs/flow-cli/flow/accounts/get"
+	"github.com/onflow/flow-cli/flow/accounts/create"
+	"github.com/onflow/flow-cli/flow/accounts/get"
 )
 
 var Cmd = &cobra.Command{

@@ -19,7 +19,7 @@ Make any necessary changes to the Flow CLI formula located at `homebrew-flow/For
 If you are just updating to a new version, it's as simple as changing this line to point to the new tag (and the commit hash it is pinned to):
 
 ```rb
-url "https://github.com/dapperlabs/flow-cli.git", :using => :git, :tag => "v0.1.0", :revision => "2a27b0565f03ddab70d49c421f20544da2463c5b"
+url "https://github.com/onflow/flow-cli.git", :using => :git, :tag => "v0.1.0", :revision => "2a27b0565f03ddab70d49c421f20544da2463c5b"
 ```
 
 **Don't push this change yet! We'll do that at the end.**
