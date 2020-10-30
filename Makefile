@@ -13,11 +13,14 @@ PATH := $(PATH):$(GOPATH)/bin
 # OS
 UNAME := $(shell uname)
 
+GOPATH ?= $(HOME)/go
+
 BINARY ?= ./cmd/flow/flow
 
 .PHONY: install-tools
 install-tools:
 	cd ${GOPATH}; \
+	mkdir -p ${GOPATH}; \
 	GO111MODULE=on go get github.com/axw/gocov/gocov; \
 	GO111MODULE=on go get github.com/matm/gocov-html; \
 	GO111MODULE=on go get github.com/sanderhahn/gozip/cmd/gozip;
@@ -70,3 +73,19 @@ publish:
 .PHONY: clean
 clean:
 	rm ./cmd/flow/flow*
+
+.PHONY: install-linter
+install-linter:
+	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b ${GOPATH}/bin v1.26.0
+
+.PHONY: lint
+lint:
+	golangci-lint run -v ./...
+
+.PHONY: check-headers
+check-headers:
+	@./check-headers.sh
+
+.PHONY: check-tidy
+check-tidy:
+	go mod tidy
