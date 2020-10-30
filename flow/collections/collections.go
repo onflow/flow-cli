@@ -21,7 +21,7 @@ package collections
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/dapperlabs/flow-cli/flow/collections/get"
+	"github.com/onflow/flow-cli/flow/collections/get"
 )
 
 var Cmd = &cobra.Command{

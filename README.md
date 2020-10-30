@@ -47,5 +47,5 @@ Simply re-run the installation commands above.
 _This installation method works on any system with Go >1.13 installed._
 
 ```shell script
-GO111MODULE=on go get github.com/dapperlabs/flow-cli/cmd/flow
+GO111MODULE=on go get github.com/onflow/flow-cli/cmd/flow
 ```

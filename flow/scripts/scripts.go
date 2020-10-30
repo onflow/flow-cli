@@ -21,7 +21,7 @@ package scripts
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/dapperlabs/flow-cli/flow/scripts/execute"
+	"github.com/onflow/flow-cli/flow/scripts/execute"
 )
 
 var Cmd = &cobra.Command{

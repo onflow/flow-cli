@@ -1,4 +1,4 @@
-module github.com/dapperlabs/flow-cli
+module github.com/onflow/flow-cli
 
 go 1.13
 

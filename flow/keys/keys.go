@@ -21,7 +21,7 @@ package keys
 import (
     "github.com/spf13/cobra"
 
-    "github.com/dapperlabs/flow-cli/flow/keys/generate"
+    "github.com/onflow/flow-cli/flow/keys/generate"
 )
 
 var Cmd = &cobra.Command{

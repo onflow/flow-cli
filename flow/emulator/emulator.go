@@ -26,8 +26,8 @@ import (
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/spf13/cobra"
 
-	cli "github.com/dapperlabs/flow-cli/flow"
-	"github.com/dapperlabs/flow-cli/flow/initialize"
+	cli "github.com/onflow/flow-cli/flow"
+	"github.com/onflow/flow-cli/flow/initialize"
 )
 
 var Cmd = &cobra.Command{

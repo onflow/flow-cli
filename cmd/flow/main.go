@@ -22,17 +22,17 @@ package main
 import (
 	"github.com/spf13/cobra"
 
-	cli "github.com/dapperlabs/flow-cli/flow"
-	"github.com/dapperlabs/flow-cli/flow/accounts"
-	"github.com/dapperlabs/flow-cli/flow/blocks"
-	"github.com/dapperlabs/flow-cli/flow/cadence"
-	"github.com/dapperlabs/flow-cli/flow/collections"
-	"github.com/dapperlabs/flow-cli/flow/emulator"
-	"github.com/dapperlabs/flow-cli/flow/initialize"
-	"github.com/dapperlabs/flow-cli/flow/keys"
-	"github.com/dapperlabs/flow-cli/flow/scripts"
-	"github.com/dapperlabs/flow-cli/flow/transactions"
-	"github.com/dapperlabs/flow-cli/flow/version"
+	cli "github.com/onflow/flow-cli/flow"
+	"github.com/onflow/flow-cli/flow/accounts"
+	"github.com/onflow/flow-cli/flow/blocks"
+	"github.com/onflow/flow-cli/flow/cadence"
+	"github.com/onflow/flow-cli/flow/collections"
+	"github.com/onflow/flow-cli/flow/emulator"
+	"github.com/onflow/flow-cli/flow/initialize"
+	"github.com/onflow/flow-cli/flow/keys"
+	"github.com/onflow/flow-cli/flow/scripts"
+	"github.com/onflow/flow-cli/flow/transactions"
+	"github.com/onflow/flow-cli/flow/version"
 )
 
 var cmd = &cobra.Command{
