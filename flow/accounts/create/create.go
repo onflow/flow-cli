@@ -19,7 +19,7 @@ type Config struct {
 	SigAlgo  string   `default:"ECDSA_P256" flag:"sig-algo" info:"signature algorithm used to generate the keys"`
 	HashAlgo string   `default:"SHA3_256" flag:"hash-algo" info:"hash used for the digest"`
 	Code     string   `flag:"code,c" info:"path to a file containing code for the account"`
-	Host     string   `flag:"host" info:"Flow Observation API host address"`
+	Host     string   `flag:"host" info:"Flow Access API host address"`
 	Results  bool     `default:"false" flag:"results" info:"Wether or not to wait for the results of the transaction"`
 }
 

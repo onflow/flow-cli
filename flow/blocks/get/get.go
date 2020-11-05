@@ -12,7 +12,7 @@ import (
 )
 
 type Config struct {
-	Host        string `flag:"host" info:"Flow Observation API host address"`
+	Host        string `flag:"host" info:"Flow Access API host address"`
 	Latest      bool   `default:"false" flag:"latest" info:"Display latest block"`
 	BlockID     string `default:"" flag:"id" info:"Display block by id"`
 	BlockHeight uint64 `default:"0" flag:"height" info:"Display block by height"`
