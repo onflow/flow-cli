@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"strings"
 
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
@@ -61,6 +62,7 @@ func (acct *Account) UnmarshalJSON(data []byte) (err error) {
 }
 
 type Config struct {
+	Host     string              `json:"host"`
 	Accounts map[string]*Account `json:"accounts"`
 }
 
@@ -87,6 +89,16 @@ func (c *Config) SetServiceAccountKey(privateKey crypto.PrivateKey, hashAlgo cry
 	}
 }
 
+func (c *Config) HostWithOverride(overrideIfNotEmpty string) string {
+	if len(strings.TrimSpace(overrideIfNotEmpty)) > 0 {
+		return overrideIfNotEmpty
+	}
+	if len(strings.TrimSpace(c.Host)) > 0 {
+		return c.Host
+	}
+	return DefaultHost
+}
+
 func SaveConfig(conf *Config) error {
 	data, err := json.MarshalIndent(conf, "", "\t")
 	if err != nil {
@@ -106,7 +118,7 @@ func LoadConfig() *Config {
 	f, err := os.Open(ConfigPath)
 	if err != nil {
 		if os.IsNotExist(err) {
-			fmt.Printf("Emulator config file %s does not exist. Please initialize first\n", ConfigPath)
+			fmt.Printf("Project config file %s does not exist. Please initialize first\n", ConfigPath)
 		} else {
 			fmt.Printf("Failed to open project configuration in %s\n", ConfigPath)
 		}
@@ -122,6 +134,7 @@ func LoadConfig() *Config {
 		fmt.Printf("%s contains invalid json: %s\n", ConfigPath, err.Error())
 		os.Exit(1)
 	}
+	fmt.Println(conf.Host)
 
 	return &conf
 }

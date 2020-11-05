@@ -14,7 +14,7 @@ import (
 type Config struct {
 	Signer  string `default:"service" flag:"signer,s"`
 	Code    string `flag:"code,c"`
-	Host    string `default:"127.0.0.1:3569" flag:"host" info:"Flow Observation API host address"`
+	Host    string `flag:"host" info:"Flow Access API host address"`
 	Results bool   `default:"false" flag:"results" info:"Whether or not to wait for the results of the transaction"`
 }
 
@@ -44,7 +44,7 @@ var Cmd = &cobra.Command{
 			SetScript(code).
 			AddAuthorizer(signerAccount.Address)
 
-		cli.SendTransaction(conf.Host, signerAccount, tx, conf.Results)
+		cli.SendTransaction(projectConf.HostWithOverride(conf.Host), signerAccount, tx, conf.Results)
 	},
 }
 
