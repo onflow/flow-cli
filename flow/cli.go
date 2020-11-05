@@ -12,10 +12,10 @@ import (
 )
 
 const (
-	EnvPrefix       = "FLOW"
-	DefaultSigAlgo  = crypto.ECDSA_P256
-	DefaultHashAlgo = crypto.SHA3_256
-
+	EnvPrefix           = "FLOW"
+	DefaultSigAlgo      = crypto.ECDSA_P256
+	DefaultHashAlgo     = crypto.SHA3_256
+	DefaultHost         = "127.0.0.1:3569"
 	UFix64DecimalPlaces = 8
 )
 

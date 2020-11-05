@@ -11,7 +11,7 @@ import (
 )
 
 type Config struct {
-	Host string `default:"127.0.0.1:3569" flag:"host" info:"Flow Observation API host address"`
+	Host string `flag:"host" info:"Flow Access API host address"`
 }
 
 var conf Config
@@ -25,8 +25,11 @@ var Cmd = &cobra.Command{
 		if err != nil {
 			cli.Exitf(1, "Failed to read script from %s", args[0])
 		}
-
-		cli.ExecuteScript(conf.Host, code)
+		projectConf := new(cli.Config)
+		if conf.Host == "" {
+			projectConf = cli.LoadConfig()
+		}
+		cli.ExecuteScript(projectConf.HostWithOverride(conf.Host), code)
 	},
 }
 

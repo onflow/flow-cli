@@ -12,7 +12,7 @@ import (
 )
 
 type Config struct {
-	Host string `default:"127.0.0.1:3569" flag:"host" info:"Flow Observation API host address"`
+	Host string `flag:"host" info:"Flow Access API host address"`
 }
 
 var conf Config
@@ -22,9 +22,12 @@ var Cmd = &cobra.Command{
 	Short: "Get collection info",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-
+		projectConf := new(cli.Config)
+		if conf.Host == "" {
+			projectConf = cli.LoadConfig()
+		}
 		collectionID := flow.HexToID(args[0])
-		collection := cli.GetCollectionByID(conf.Host, collectionID)
+		collection := cli.GetCollectionByID(projectConf.HostWithOverride(conf.Host), collectionID)
 		printCollection(collection)
 	},
 }
