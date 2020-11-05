@@ -12,7 +12,7 @@ import (
 )
 
 type Config struct {
-	Host string `flag:"host" info:"Flow Observation API host address"`
+	Host string `flag:"host" info:"Flow Access API host address"`
 	Code bool   `default:"false" flag:"code" info:"Display code deployed to the account"`
 }
 
