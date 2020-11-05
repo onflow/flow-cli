@@ -62,6 +62,6 @@ func SendTransaction(host string, signerAccount *Account, tx *flow.Transaction, 
 		if err != nil {
 			Exitf(1, "Failed to seal transaction: %s", err)
 		}
-		printTxResult(res)
+		printTxResult(tx, res)
 	}
 }
