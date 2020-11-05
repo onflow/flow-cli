@@ -118,7 +118,7 @@ func LoadConfig() *Config {
 	f, err := os.Open(ConfigPath)
 	if err != nil {
 		if os.IsNotExist(err) {
-			fmt.Printf("Network config file %s does not exist. Please initialize first\n", ConfigPath)
+			fmt.Printf("Project config file %s does not exist. Please initialize first\n", ConfigPath)
 		} else {
 			fmt.Printf("Failed to open project configuration in %s\n", ConfigPath)
 		}
