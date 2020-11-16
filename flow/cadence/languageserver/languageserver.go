@@ -19,14 +19,39 @@
 package languageserver
 
 import (
+	"log"
+
 	"github.com/onflow/cadence/languageserver"
+	"github.com/psiemens/sconfig"
 	"github.com/spf13/cobra"
+
+	cli "github.com/onflow/flow-cli/flow"
 )
+
+type Config struct {
+	EnableFlowClient bool `default:"true" flag:"enableFlowClient" info:"enable Flow client functionality"`
+}
+
+var conf Config
 
 var Cmd = &cobra.Command{
 	Use:   "language-server",
 	Short: "Start the Cadence language server",
 	Run: func(cmd *cobra.Command, args []string) {
-		languageserver.RunWithStdio()
+		languageserver.RunWithStdio(conf.EnableFlowClient)
 	},
+}
+
+func init() {
+	initConfig()
+}
+
+func initConfig() {
+	err := sconfig.New(&conf).
+		FromEnvironment(cli.EnvPrefix).
+		BindFlags(Cmd.PersistentFlags()).
+		Parse()
+	if err != nil {
+		log.Fatal(err)
+	}
 }
