@@ -17,6 +17,9 @@ GOPATH ?= $(HOME)/go
 
 BINARY ?= ./cmd/flow/flow
 
+.PHONY: binary
+binary: $(BINARY)
+
 .PHONY: install-tools
 install-tools:
 	cd ${GOPATH}; \
@@ -42,9 +45,6 @@ endif
 
 .PHONY: ci
 ci: install-tools test coverage
-
-.PHONY: binary
-binary: $(BINARY)
 
 $(BINARY):
 	GO111MODULE=on go build \
