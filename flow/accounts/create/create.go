@@ -19,7 +19,6 @@
 package create
 
 import (
-	"io/ioutil"
 	"log"
 
 	"github.com/onflow/flow-go-sdk"
@@ -36,7 +35,6 @@ type Config struct {
 	Keys     []string `flag:"key,k" info:"public keys to attach to account"`
 	SigAlgo  string   `default:"ECDSA_P256" flag:"sig-algo" info:"signature algorithm used to generate the keys"`
 	HashAlgo string   `default:"SHA3_256" flag:"hash-algo" info:"hash used for the digest"`
-	Code     string   `flag:"code,c" info:"path to a file containing code for the account"`
 	Host     string   `flag:"host" info:"Flow Access API host address"`
 	Results  bool     `default:"false" flag:"results" info:"Wether or not to wait for the results of the transaction"`
 }
@@ -72,19 +70,7 @@ var Cmd = &cobra.Command{
 			}
 		}
 
-		var (
-			code []byte
-			err  error
-		)
-
-		if conf.Code != "" {
-			code, err = ioutil.ReadFile(conf.Code)
-			if err != nil {
-				cli.Exitf(1, "Failed to read Cadence code from %s", conf.Code)
-			}
-		}
-
-		tx := templates.CreateAccount(accountKeys, code, signerAccount.Address)
+		tx := templates.CreateAccount(accountKeys, nil, signerAccount.Address)
 
 		cli.SendTransaction(projectConf.HostWithOverride(conf.Host), signerAccount, tx, conf.Results)
 	},
