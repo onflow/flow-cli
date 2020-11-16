@@ -21,8 +21,8 @@ package emulator
 import (
 	"fmt"
 
-	emulator "github.com/dapperlabs/flow-emulator"
-	"github.com/dapperlabs/flow-emulator/cmd/emulator/start"
+	emulator "github.com/onflow/flow-emulator"
+	"github.com/onflow/flow-emulator/cmd/emulator/start"
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/spf13/cobra"
 
