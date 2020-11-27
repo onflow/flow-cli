@@ -83,7 +83,7 @@ func printAccount(account *flow.Account, printCode bool) {
 	fmt.Println("  ---")
 	if printCode {
 		for name, code := range account.Contracts {
-			fmt.Printf("Code '%s':", name)
+			fmt.Printf("Code '%s':\n", name)
 			fmt.Println(string(code))
 		}
 	}
