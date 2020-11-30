@@ -46,9 +46,14 @@ var Cmd = &cobra.Command{
 			projectConf = cli.LoadConfig()
 		}
 
-		acc := cli.GetAccount(projectConf.HostWithOverride(conf.Host), flow.HexToAddress(args[0]))
+		address := flow.HexToAddress(args[0])
 
-		printAccount(acc, conf.Code)
+		account := cli.GetAccount(
+			projectConf.HostWithOverride(conf.Host),
+			address,
+		)
+
+		printAccount(account, conf.Code)
 	},
 }
 
@@ -71,6 +76,7 @@ func printAccount(account *flow.Account, printCode bool) {
 	fmt.Println("Address: " + account.Address.Hex())
 	fmt.Println("Balance : ", cli.FormatUFix64(account.Balance))
 	fmt.Println("Total Keys: ", len(account.Keys))
+
 	for _, key := range account.Keys {
 		fmt.Println("  ---")
 		fmt.Println("  Key Index: ", key.Index)
@@ -80,12 +86,15 @@ func printAccount(account *flow.Account, printCode bool) {
 		fmt.Println("  Weight: ", key.Weight)
 		fmt.Println("  SequenceNumber: ", key.SequenceNumber)
 	}
+
 	fmt.Println("  ---")
+
 	if printCode {
 		for name, code := range account.Contracts {
 			fmt.Printf("Code '%s':\n", name)
 			fmt.Println(string(code))
 		}
 	}
+
 	fmt.Println()
 }

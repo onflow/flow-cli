@@ -30,10 +30,10 @@ import (
 )
 
 type Config struct {
-	ServicePrivateKey  string `flag:"service-priv-key" info:"service account private key"`
-	ServiceKeySigAlgo  string `default:"ECDSA_P256" flag:"service-sig-algo" info:"service account key signature algorithm"`
-	ServiceKeyHashAlgo string `default:"SHA3_256" flag:"service-hash-algo" info:"service account key hash algorithm"`
-	Reset              bool   `default:"false" flag:"reset" info:"reset flow.json config file"`
+	ServicePrivateKey  string `flag:"service-priv-key" info:"Service account private key"`
+	ServiceKeySigAlgo  string `default:"ECDSA_P256" flag:"service-sig-algo" info:"Service account key signature algorithm"`
+	ServiceKeyHashAlgo string `default:"SHA3_256" flag:"service-hash-algo" info:"Service account key hash algorithm"`
+	Reset              bool   `default:"false" flag:"reset" info:"Reset flow.json config file"`
 }
 
 var (

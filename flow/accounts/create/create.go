@@ -32,11 +32,11 @@ import (
 
 type Config struct {
 	Signer   string   `default:"service" flag:"signer,s"`
-	Keys     []string `flag:"key,k" info:"public keys to attach to account"`
-	SigAlgo  string   `default:"ECDSA_P256" flag:"sig-algo" info:"signature algorithm used to generate the keys"`
-	HashAlgo string   `default:"SHA3_256" flag:"hash-algo" info:"hash used for the digest"`
+	Keys     []string `flag:"key,k" info:"Public keys to attach to account"`
+	SigAlgo  string   `default:"ECDSA_P256" flag:"sig-algo" info:"Signature algorithm used to generate the keys"`
+	HashAlgo string   `default:"SHA3_256" flag:"hash-algo" info:"Hash used for the digest"`
 	Host     string   `flag:"host" info:"Flow Access API host address"`
-	Results  bool     `default:"false" flag:"results" info:"whether or not to wait for the results of the transaction"`
+	Results  bool     `default:"false" flag:"results" info:"Display the results of the transaction"`
 }
 
 var conf Config
