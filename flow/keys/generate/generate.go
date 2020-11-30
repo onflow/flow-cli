@@ -31,8 +31,8 @@ import (
 )
 
 type Config struct {
-	Seed    string `flag:"seed,s" info:"deterministic seed phrase"`
-	SigAlgo string `default:"ECDSA_P256" flag:"algo,a" info:"signature algorithm"`
+	Seed    string `flag:"seed,s" info:"Deterministic seed phrase"`
+	SigAlgo string `default:"ECDSA_P256" flag:"algo,a" info:"Signature algorithm"`
 }
 
 var conf Config
