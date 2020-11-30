@@ -23,6 +23,7 @@ import (
 
 	"github.com/onflow/flow-cli/flow/accounts/create"
 	"github.com/onflow/flow-cli/flow/accounts/get"
+	"github.com/onflow/flow-cli/flow/accounts/update-contract"
 )
 
 var Cmd = &cobra.Command{
@@ -34,4 +35,5 @@ var Cmd = &cobra.Command{
 func init() {
 	Cmd.AddCommand(create.Cmd)
 	Cmd.AddCommand(get.Cmd)
+	Cmd.AddCommand(update_contract.Cmd)
 }
