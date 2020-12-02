@@ -25,6 +25,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"regexp"
 	"strings"
 
 	"github.com/onflow/flow-go-sdk"
@@ -38,8 +39,8 @@ const (
 	serviceAccountName = "service"
 
 	KeyTypeHex   KeyType = "hex"   // Hex private key with in memory signer
-	KeyTypeKMS           = "kms"   // Google KMS signer
-	KeyTypeShell         = "shell" // Exec out to a shell script
+	KeyTypeKMS   KeyType = "kms"   // Google KMS signer
+	KeyTypeShell KeyType = "shell" // Exec out to a shell script
 
 	defaultKeyType = KeyTypeHex
 )
@@ -72,15 +73,17 @@ func (acct *Account) MarshalJSON() ([]byte, error) {
 	if keyContext == nil {
 		keyContext = make(map[string]string)
 	}
-	if acct.KeyType == KeyTypeHex {
+
+	switch acct.KeyType {
+	case KeyTypeHex:
 		prKeyBytes := acct.PrivateKey.Encode()
 		keyContext["privateKey"] = hex.EncodeToString(prKeyBytes)
 		// Deprecated, but keep for now
 		prKeyHex = keyContext["privateKey"]
-	} else if acct.KeyType == KeyTypeKMS {
+	case KeyTypeKMS:
 		// Key context should be filled, do nothing
 		// TODO: Could validate contents
-	} else {
+	default:
 		return nil, fmt.Errorf("unknown key type %s", acct.KeyType)
 	}
 
@@ -266,7 +269,7 @@ func ConfigExists() bool {
 	return !info.IsDir()
 }
 
-var fields = []string{
+var kmsKeyContextFields = []string{
 	"projectId",
 	"locationId",
 	"keyRingId",
@@ -276,36 +279,31 @@ var fields = []string{
 
 func kmsKeyFromKeyContext(keyContext map[string]string) (cloudkms.Key, error) {
 
-	for _, field := range fields {
+	for _, field := range kmsKeyContextFields {
 		if val, ok := keyContext[field]; !ok || val == "" {
 			return cloudkms.Key{}, fmt.Errorf("Could not generate KMS key from Context. Invalid value for %s", field)
 		}
 	}
 
 	return cloudkms.Key{
-		ProjectID:  keyContext[fields[0]],
-		LocationID: keyContext[fields[1]],
-		KeyRingID:  keyContext[fields[2]],
-		KeyID:      keyContext[fields[3]],
-		KeyVersion: keyContext[fields[4]],
+		ProjectID:  keyContext[kmsKeyContextFields[0]],
+		LocationID: keyContext[kmsKeyContextFields[1]],
+		KeyRingID:  keyContext[kmsKeyContextFields[2]],
+		KeyID:      keyContext[kmsKeyContextFields[3]],
+		KeyVersion: keyContext[kmsKeyContextFields[4]],
 	}, nil
 }
 
+// Regex that matches the resource name of GCP KMS keys, and parses out the values
+var resourceRegexp = regexp.MustCompile(`projects/(?P<projectId>[^/]*)/locations/(?P<location>[^/]*)/keyRings/(?P<keyringId>[^/]*)/cryptoKeys/(?P<keyId>[^/]*)/cryptoKeyVersions/(?P<keyVersion>[^/]*)`)
+
 func KeyContextFromKMSResourceID(resourceID string) (map[string]string, error) {
-	resourceSplit := strings.Split(resourceID, "/")
-
-	// Should be 10, since we're assuming the format:
-	// projects/<PROJECTID>/locations/<LOCATION>/keyRings/<KEYRINGID>/cryptoKeys/<KEYID>/cryptoKeyVersions/<KEYVERSION>
-	if len(resourceSplit) != 10 {
-		return nil, fmt.Errorf("Malformed resource ID: %s", resourceID)
-	} else if len(fields) != 5 {
-		Exit(1, "list of fields for key context has unexpected length")
-	}
-
+	match := resourceRegexp.FindStringSubmatch(resourceID)
 	keyContext := make(map[string]string)
-
-	for i, field := range fields {
-		keyContext[field] = resourceSplit[i*2+1]
+	for i, name := range resourceRegexp.SubexpNames() {
+		if i != 0 && name != "" {
+			keyContext[name] = match[i]
+		}
 	}
 
 	return keyContext, nil

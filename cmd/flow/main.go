@@ -25,7 +25,9 @@ import (
 	cli "github.com/onflow/flow-cli/flow"
 	"github.com/onflow/flow-cli/flow/accounts"
 	"github.com/onflow/flow-cli/flow/blocks"
+	"github.com/onflow/flow-cli/flow/cadence"
 	"github.com/onflow/flow-cli/flow/collections"
+	"github.com/onflow/flow-cli/flow/emulator"
 	"github.com/onflow/flow-cli/flow/initialize"
 	"github.com/onflow/flow-cli/flow/keys"
 	"github.com/onflow/flow-cli/flow/scripts"
@@ -44,8 +46,8 @@ func init() {
 	cmd.AddCommand(blocks.Cmd)
 	cmd.AddCommand(collections.Cmd)
 	cmd.AddCommand(keys.Cmd)
-	// cmd.AddCommand(emulator.Cmd)
-	// cmd.AddCommand(cadence.Cmd)
+	cmd.AddCommand(emulator.Cmd)
+	cmd.AddCommand(cadence.Cmd)
 	cmd.AddCommand(scripts.Cmd)
 	cmd.AddCommand(transactions.Cmd)
 	cmd.AddCommand(version.Cmd)

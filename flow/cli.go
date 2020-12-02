@@ -105,12 +105,12 @@ func GcloudApplicationSignin(project string) {
 
 	output, err := loginCmd.CombinedOutput()
 	if err != nil {
-		Exitf(1, "Failed to gcloud auth application-default login --project=%s: %s", project, err)
+		Exitf(1, "Failed to gcloud auth application-default login --project=%s: %s\n", project, err)
 	}
 	regexResult := squareBracketRegex.FindAllStringSubmatch(string(output), -1)
 	// Should only be one value. Second index since first index contains the square brackets
 	googleApplicationCreds := regexResult[0][1]
-	fmt.Printf("Saving credentials and setting GOOGLE_APPLICATION_CREDENTIALS to file: %s", googleApplicationCreds)
+	fmt.Printf("Saving credentials and setting GOOGLE_APPLICATION_CREDENTIALS to file: %s\n", googleApplicationCreds)
 
 	os.Setenv("GOOGLE_APPLICATION_CREDENTIALS", googleApplicationCreds)
 }
