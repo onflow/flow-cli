@@ -105,7 +105,7 @@ func GcloudApplicationSignin(project string) {
 
 	output, err := loginCmd.CombinedOutput()
 	if err != nil {
-		Exitf(1, "Failed to gcloud auth application-default login --project=%s: %s\n", project, err)
+		Exitf(1, "Failed to run %q: %s\n", loginCmd.String(), err)
 	}
 	regexResult := squareBracketRegex.FindAllStringSubmatch(string(output), -1)
 	// Should only be one value. Second index since first index contains the square brackets
