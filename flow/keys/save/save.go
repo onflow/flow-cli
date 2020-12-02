@@ -16,22 +16,22 @@
  * limitations under the License.
  */
 
-package keys
+package save
 
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/onflow/flow-cli/flow/keys/generate"
-	"github.com/onflow/flow-cli/flow/keys/save"
+	"github.com/onflow/flow-cli/flow/keys/save/hex"
+	"github.com/onflow/flow-cli/flow/keys/save/kms"
 )
 
 var Cmd = &cobra.Command{
-	Use:              "keys",
-	Short:            "Utilities to manage cryptographic keys",
+	Use:              "save",
+	Short:            "save a key to the config",
 	TraverseChildren: true,
 }
 
 func init() {
-	Cmd.AddCommand(generate.Cmd)
-	Cmd.AddCommand(save.Cmd)
+	Cmd.AddCommand(hex.Cmd)
+	Cmd.AddCommand(kms.Cmd)
 }

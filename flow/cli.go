@@ -23,6 +23,8 @@ import (
 	"crypto/rand"
 	"fmt"
 	"os"
+	"os/exec"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -90,4 +92,25 @@ func FixedPointToString(amount uint64, decimalPlaces int) string {
 
 func FormatUFix64(flow uint64) string {
 	return FixedPointToString(flow, UFix64DecimalPlaces)
+}
+
+var squareBracketRegex = regexp.MustCompile(`(?s)\[(.*)\]`)
+
+// GcloudApplicationSignin signs in as an application user using gcloud command line tool
+// currently assumes gcloud is already installed on the machine
+// will by default pop a browser window to sign in
+func GcloudApplicationSignin(project string) {
+	// os.Exec(fmt.Sprintf("gcloud auth application-default login --%s"))
+	loginCmd := exec.Command("gcloud", "auth", "application-default", "login", fmt.Sprintf("--project=%s", project))
+
+	output, err := loginCmd.CombinedOutput()
+	if err != nil {
+		Exitf(1, "Failed to run %q: %s\n", loginCmd.String(), err)
+	}
+	regexResult := squareBracketRegex.FindAllStringSubmatch(string(output), -1)
+	// Should only be one value. Second index since first index contains the square brackets
+	googleApplicationCreds := regexResult[0][1]
+	fmt.Printf("Saving credentials and setting GOOGLE_APPLICATION_CREDENTIALS to file: %s\n", googleApplicationCreds)
+
+	os.Setenv("GOOGLE_APPLICATION_CREDENTIALS", googleApplicationCreds)
 }

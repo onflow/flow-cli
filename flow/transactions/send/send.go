@@ -21,6 +21,7 @@ package send
 import (
 	"io/ioutil"
 	"log"
+	"os"
 
 	"github.com/onflow/flow-go-sdk"
 	"github.com/psiemens/sconfig"
@@ -45,7 +46,7 @@ var Cmd = &cobra.Command{
 		projectConf := cli.LoadConfig()
 
 		signerAccount := projectConf.Accounts[conf.Signer]
-
+		validateKeyPreReq(signerAccount)
 		var (
 			code []byte
 			err  error
@@ -78,4 +79,23 @@ func initConfig() {
 	if err != nil {
 		log.Fatal(err)
 	}
+}
+
+func validateKeyPreReq(account *cli.Account) {
+	if account.KeyType == cli.KeyTypeHex {
+		// Always Valid
+		return
+	} else if account.KeyType == cli.KeyTypeKMS {
+		// Check GOOGLE_APPLICATION_CREDENTIALS
+		googleAppCreds := os.Getenv("GOOGLE_APPLICATION_CREDENTIALS")
+		if len(googleAppCreds) == 0 {
+			if len(account.KeyContext["projectId"]) == 0 {
+				cli.Exitf(1, "Could not get GOOGLE_APPLICATION_CREDENTIALS, no google service account json provided but private key type is KMS", account.Address)
+			}
+			cli.GcloudApplicationSignin(account.KeyContext["projectId"])
+		}
+		return
+	}
+	cli.Exitf(1, "Failed to validate %s key for %s", account.KeyType, account.Address)
+
 }
