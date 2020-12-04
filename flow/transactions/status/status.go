@@ -30,6 +30,7 @@ import (
 type Config struct {
 	Host   string `flag:"host" info:"Flow Access API host address"`
 	Sealed bool   `default:"true" flag:"sealed" info:"Wait for a sealed result"`
+	Code   bool   `default:"false" flag:"code" info:"Display transaction code"`
 }
 
 var conf Config
@@ -43,7 +44,7 @@ var Cmd = &cobra.Command{
 		if conf.Host == "" {
 			projectConf = cli.LoadConfig()
 		}
-		cli.GetTransactionResult(projectConf.HostWithOverride(conf.Host), args[0], conf.Sealed)
+		cli.GetTransactionResult(projectConf.HostWithOverride(conf.Host), args[0], conf.Sealed, conf.Code)
 	},
 }
 

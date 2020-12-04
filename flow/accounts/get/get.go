@@ -85,6 +85,7 @@ func printAccount(account *flow.Account, printCode bool) {
 		fmt.Println("  HashAlgo: ", key.HashAlgo)
 		fmt.Println("  Weight: ", key.Weight)
 		fmt.Println("  SequenceNumber: ", key.SequenceNumber)
+		fmt.Println("  Revoked: ", key.Revoked)
 	}
 
 	fmt.Println("  ---")

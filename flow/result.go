@@ -29,7 +29,7 @@ import (
 	"google.golang.org/grpc"
 )
 
-func GetTransactionResult(host string, id string, sealed bool) {
+func GetTransactionResult(host string, id string, sealed bool, showTransactionCode bool) {
 	ctx := context.Background()
 
 	flowClient, err := client.New(host, grpc.WithInsecure())
@@ -55,7 +55,7 @@ func GetTransactionResult(host string, id string, sealed bool) {
 	}
 
 	// Print out results of the TX to std out
-	printTxResult(tx, res)
+	printTxResult(tx, res, showTransactionCode)
 }
 
 func waitForSeal(ctx context.Context, c *client.Client, id flow.Identifier) (*flow.TransactionResult, error) {
@@ -80,16 +80,17 @@ func waitForSeal(ctx context.Context, c *client.Client, id flow.Identifier) (*fl
 	return result, nil
 }
 
-func printTxResult(tx *flow.Transaction, res *flow.TransactionResult) {
+func printTxResult(tx *flow.Transaction, res *flow.TransactionResult, showCode bool) {
 	fmt.Println()
 	fmt.Println("Status: " + res.Status.String())
 	if res.Error != nil {
 		fmt.Println("Execution Error: " + res.Error.Error())
-		return
 	}
 
-	fmt.Println("Code: ")
-	fmt.Println(string(tx.Script))
+	if showCode {
+		fmt.Println("Code: ")
+		fmt.Println(string(tx.Script))
+	}
 
 	fmt.Println("Events:")
 	printEvents(res.Events, false)
