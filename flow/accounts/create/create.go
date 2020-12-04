@@ -19,7 +19,9 @@
 package create
 
 import (
+	"io/ioutil"
 	"log"
+	"strings"
 
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
@@ -37,6 +39,7 @@ type Config struct {
 	HashAlgo string   `default:"SHA3_256" flag:"hash-algo" info:"Hash used for the digest"`
 	Host     string   `flag:"host" info:"Flow Access API host address"`
 	Results  bool     `default:"false" flag:"results" info:"Display the results of the transaction"`
+	Contract string   `flag:"contract,c" info:"Contract to be deployed during account creation. <name:path>"`
 }
 
 var conf Config
@@ -70,7 +73,28 @@ var Cmd = &cobra.Command{
 			}
 		}
 
-		tx := templates.CreateAccount(accountKeys, nil, signerAccount.Address)
+		var contracts []templates.Contract
+
+		if len(conf.Contract) > 0 {
+			contractFlagContent := strings.Split(conf.Contract, ":")
+			if len(contractFlagContent) != 2 {
+				cli.Exitf(1, "Failed to read contract name and path from flag. Ensure you're providing a contract name and a file path. %s", conf.Contract)
+			}
+			contractName := contractFlagContent[0]
+			contractPath := contractFlagContent[1]
+			contractSource, err := ioutil.ReadFile(contractPath)
+			if err != nil {
+				cli.Exitf(1, "Failed to read contract from source file %s", contractPath)
+			}
+			contracts = append(contracts,
+				templates.Contract{
+					Name:   contractName,
+					Source: string(contractSource),
+				},
+			)
+		}
+
+		tx := templates.CreateAccount(accountKeys, contracts, signerAccount.Address)
 
 		cli.SendTransaction(projectConf.HostWithOverride(conf.Host), signerAccount, tx, conf.Results)
 	},
