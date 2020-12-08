@@ -46,6 +46,14 @@ endif
 .PHONY: ci
 ci: install-tools test coverage
 
+.PHONY: install
+install:
+	GO111MODULE=on go install \
+		-trimpath \
+		-ldflags \
+		"-X github.com/onflow/flow-cli/build.commit=$(COMMIT) -X github.com/onflow/flow-cli/build.semver=$(VERSION)" \
+		./cmd/flow
+
 $(BINARY):
 	GO111MODULE=on go build \
 		-trimpath \

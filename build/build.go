@@ -29,33 +29,33 @@ const undefined = "undefined"
 
 // The following variables are injected at build-time using ldflags.
 var (
-    semver string
-    commit string
+	semver string
+	commit string
 )
 
 // Semver returns the semantic version of this build.
 func Semver() string {
-    return semver
+	return semver
 }
 
 // Commit returns the commit at which this build was created.
 func Commit() string {
-    return commit
+	return commit
 }
 
 // IsDefined determines whether a version string is defined. Inputs should
 // have been produced from this package.
 func IsDefined(v string) bool {
-    return v != undefined
+	return v != undefined
 }
 
 // If any of the build-time-injected variables are empty at initialization,
 // mark them as undefined.
 func init() {
-    if len(semver) == 0 {
-        semver = undefined
-    }
-    if len(commit) == 0 {
-        semver = undefined
-    }
+	if len(semver) == 0 {
+		semver = undefined
+	}
+	if len(commit) == 0 {
+		commit = undefined
+	}
 }
