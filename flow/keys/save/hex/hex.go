@@ -19,6 +19,7 @@
 package hex
 
 import (
+	"encoding/hex"
 	"log"
 
 	"github.com/onflow/flow-go-sdk"
@@ -48,17 +49,49 @@ var Cmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		projectConf := cli.LoadConfig()
 
+		if conf.Name == "" {
+			cli.Exitf(1, "missing name")
+		}
+
 		_, accountExists := projectConf.Accounts[conf.Name]
 		if accountExists && !conf.Overwrite {
 			cli.Exitf(1, "%s already exists in the config, and overwrite is false", conf.Name)
 		}
 
+		// Parse address
+		decodedAddress, err := hex.DecodeString(conf.Address)
+		if err != nil {
+			cli.Exitf(1, "invalid address: %s", err.Error())
+		}
+		address := flow.BytesToAddress(decodedAddress)
+
+		// Parse signature algorithm
+		if conf.SigAlgo == "" {
+			cli.Exitf(1, "missing signature algorithm")
+		}
+
+		algorithm := crypto.StringToSignatureAlgorithm(conf.SigAlgo)
+		if algorithm == crypto.UnknownSignatureAlgorithm {
+			cli.Exitf(1, "invalid signature algorithm")
+		}
+
+		// Parse hash algorithm
+
+		if conf.HashAlgo == "" {
+			cli.Exitf(1, "missing hash algorithm")
+		}
+
+		hashAlgorithm := crypto.StringToHashAlgorithm(conf.HashAlgo)
+		if hashAlgorithm == crypto.UnknownHashAlgorithm {
+			cli.Exitf(1, "invalid hash algorithm")
+		}
+
 		// Populate account
 		account := &cli.Account{
 			KeyType:    cli.KeyTypeHex,
-			Address:    flow.HexToAddress(conf.Address),
-			SigAlgo:    crypto.StringToSignatureAlgorithm(conf.SigAlgo),
-			HashAlgo:   crypto.StringToHashAlgorithm(conf.HashAlgo),
+			Address:    address,
+			SigAlgo:    algorithm,
+			HashAlgo:   hashAlgorithm,
 			KeyIndex:   conf.KeyIndex,
 			KeyContext: map[string]string{"privateKey": conf.KeyHex},
 		}
