@@ -21,6 +21,7 @@ package accounts
 import (
 	"github.com/spf13/cobra"
 
+	add_contract "github.com/onflow/flow-cli/flow/accounts/add-contract"
 	"github.com/onflow/flow-cli/flow/accounts/create"
 	"github.com/onflow/flow-cli/flow/accounts/get"
 	"github.com/onflow/flow-cli/flow/accounts/update-contract"
@@ -35,5 +36,6 @@ var Cmd = &cobra.Command{
 func init() {
 	Cmd.AddCommand(create.Cmd)
 	Cmd.AddCommand(get.Cmd)
+	Cmd.AddCommand(add_contract.Cmd)
 	Cmd.AddCommand(update_contract.Cmd)
 }
