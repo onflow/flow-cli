@@ -32,7 +32,7 @@ import (
 
 type Config struct {
 	Signer  string `default:"service" flag:"signer,s"`
-	Code    string `flag:"code,c"`
+	Code    string `flag:"code,c" info:"path to Cadence file"`
 	Host    string `flag:"host" info:"Flow Access API host address"`
 	Results bool   `default:"false" flag:"results" info:"Display the results of the transaction"`
 }
