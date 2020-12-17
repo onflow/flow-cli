@@ -6,15 +6,6 @@ The Flow CLI is a command-line interface that provides useful utilities for buil
 
 The Flow CLI can be installed in one of three ways:
 
-### Homebrew
-
-MacOS users can install the Flow CLI with Homebrew:
-
-```shell script
-brew tap dapperlabs/tap
-brew install flow-cli
-```
-
 ### From a pre-built binary
 
 #### Linux and macOS
