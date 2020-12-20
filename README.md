@@ -6,11 +6,17 @@ The Flow CLI is a command-line interface that provides useful utilities for buil
 
 The Flow CLI can be installed in one of three ways:
 
-### From a pre-built binary
+### macOS
 
-#### Linux and macOS
+#### Homebrew
 
-_This installation method only works on macOS/x86-64 and Linux/x86-64 architectures._
+```sh
+brew install flow-cli
+```
+
+#### From a pre-built binary
+
+_This installation method only works on x86-64._
 
 This script downloads and installs the appropriate binary for your system:
 
@@ -18,7 +24,25 @@ This script downloads and installs the appropriate binary for your system:
 sh -ci "$(curl -fsSL https://storage.googleapis.com/flow-cli/install.sh)"
 ```
 
-#### Windows
+To update, simply re-run the installation command above.
+
+### Linux
+
+#### From a pre-built binary
+
+_This installation method only works on x86-64._
+
+This script downloads and installs the appropriate binary for your system:
+
+```sh
+sh -ci "$(curl -fsSL https://storage.googleapis.com/flow-cli/install.sh)"
+```
+
+To update, simply re-run the installation command above.
+
+### Windows
+
+#### From a pre-built binary
 
 _This installation method only works on Windows 10, 8.1, or 7 (SP1, with [PowerShell 3.0](https://www.microsoft.com/en-ca/download/details.aspx?id=34595)), on x86-64._
 
@@ -29,14 +53,5 @@ _This installation method only works on Windows 10, 8.1, or 7 (SP1, with [PowerS
     iex "& { $(irm 'https://storage.googleapis.com/flow-cli/install.ps1') }"
     ```
 
-#### Upgrading an existing installation
+To update, simply re-run the installation command above.
 
-Simply re-run the installation commands above.
-
-### From source
-
-_This installation method works on any system with Go >1.13 installed._
-
-```shell script
-GO111MODULE=on go get github.com/onflow/flow-cli/cmd/flow
-```
