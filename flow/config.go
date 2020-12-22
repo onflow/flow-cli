@@ -185,6 +185,7 @@ func (c *Config) ServiceAccount() *Account {
 
 func (c *Config) SetServiceAccountKey(privateKey crypto.PrivateKey, hashAlgo crypto.HashAlgorithm) {
 	c.Accounts[serviceAccountName] = &Account{
+		KeyType:    KeyTypeHex,
 		Address:    flow.ServiceAddress(flow.Emulator),
 		PrivateKey: privateKey,
 		SigAlgo:    privateKey.Algorithm(),
