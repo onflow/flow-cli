@@ -123,15 +123,15 @@ func GetBlockEvents(host string, height uint64, eventType string) {
 
 func printEvents(events []flow.Event, txID bool) {
 	if len(events) == 0 {
-		fmt.Println("  None")
+		fmt.Println(Indent + "None")
 	}
 	// Basic event info printing
 	for _, event := range events {
-		fmt.Printf("  Event %d: %s\n", event.EventIndex, event.String())
+		fmt.Printf(Indent+"Event %d: %s\n", event.EventIndex, event.String())
 		if txID {
-			fmt.Printf("  Tx ID: %s\n", event.TransactionID)
+			fmt.Printf(Indent+"Tx ID: %s\n", event.TransactionID)
 		}
-		fmt.Println("    Fields:")
+		fmt.Println(Indent + Indent + "Fields:")
 		for i, field := range event.Value.EventType.Fields {
 			value := event.Value.Fields[i]
 			printField(field, value)
@@ -156,7 +156,8 @@ func printField(field cadence.Field, value cadence.Value) {
 	} else if _, isAddress := v.([8]byte); isAddress {
 		typeInfo = "Address"
 	}
-	fmt.Printf("      %s (%s): ", field.Identifier, typeInfo)
+	// TODO: consider replacing with a string writer
+	fmt.Printf(Indent+Indent+Indent+"%s (%s): ", field.Identifier, typeInfo)
 	// Try the two most obvious cases
 	if address, ok := v.([8]byte); ok {
 		fmt.Printf("%x", address)

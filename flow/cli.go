@@ -37,6 +37,7 @@ const (
 	DefaultHashAlgo     = crypto.SHA3_256
 	DefaultHost         = "127.0.0.1:3569"
 	UFix64DecimalPlaces = 8
+	Indent              = "  "
 )
 
 var ConfigPath = "flow.json"
