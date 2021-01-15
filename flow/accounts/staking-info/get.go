@@ -60,12 +60,12 @@ var Cmd = &cobra.Command{
 
 		env := cli.EnvFromNetwork(chain)
 
-		stakingInfoScript := templates.GenerateGetStakerInfoScript(env)
+		stakingInfoScript := templates.GenerateGetLockedStakerInfoScript(env)
 
 		fmt.Println("Account Staking Info:")
 		cli.ExecuteScript(projectConf.HostWithOverride(conf.Host), []byte(stakingInfoScript), cadenceAddress)
 
-		delegationInfoScript := templates.GenerateGetDelegatorInfoScript(env)
+		delegationInfoScript := templates.GenerateGetLockedDelegatorInfoScript(env)
 
 		fmt.Println("Account Delegation Info:")
 		cli.ExecuteScript(projectConf.HostWithOverride(conf.Host), []byte(delegationInfoScript), cadenceAddress)
