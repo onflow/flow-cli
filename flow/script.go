@@ -52,6 +52,6 @@ func ExecuteScript(host string, script []byte, arguments ...cadence.Value) {
 	if err != nil {
 		Exitf(1, "Failed to print cadence value: %s", err)
 	}
-	fmt.Print(Indent)
+	PrintIndent(1)
 	fmt.Println(prettyJSON.String())
 }

@@ -115,3 +115,9 @@ func GcloudApplicationSignin(project string) {
 
 	os.Setenv("GOOGLE_APPLICATION_CREDENTIALS", googleApplicationCreds)
 }
+
+func PrintIndent(numberOfIndents int) {
+	for i := 0; i < numberOfIndents; i++ {
+		fmt.Print(Indent)
+	}
+}
