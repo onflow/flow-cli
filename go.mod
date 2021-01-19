@@ -6,8 +6,8 @@ require (
 	github.com/magiconair/properties v1.8.1 // indirect
 	github.com/onflow/cadence v0.12.3
 	github.com/onflow/cadence/languageserver v0.12.3
-	github.com/onflow/flow-emulator v0.14.0-beta3
-	github.com/onflow/flow-go-sdk v0.14.0
+	github.com/onflow/flow-emulator v0.14.0
+	github.com/onflow/flow-go-sdk v0.14.1
 	github.com/psiemens/sconfig v0.0.0-20190623041652-6e01eb1354fc
 	github.com/sirupsen/logrus v1.5.0 // indirect
 	github.com/spf13/cobra v0.0.7
