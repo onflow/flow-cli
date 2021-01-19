@@ -5,7 +5,7 @@ go 1.13
 require (
 	github.com/magiconair/properties v1.8.1 // indirect
 	github.com/onflow/cadence v0.12.3
-	github.com/onflow/cadence/languageserver v0.12.3
+	github.com/onflow/cadence/languageserver v0.12.4
 	github.com/onflow/flow-emulator v0.14.0
 	github.com/onflow/flow-go-sdk v0.14.1
 	github.com/psiemens/sconfig v0.0.0-20190623041652-6e01eb1354fc
