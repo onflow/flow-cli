@@ -758,6 +758,12 @@ github.com/onflow/cadence v0.12.6 h1:IvKSx5C84B4DGBf4DUAtLE2WtC24KAZR4z5XZyGGPYM
 github.com/onflow/cadence v0.12.6/go.mod h1:CHQIgovf2fks/6kwrpBaatNarHxX5qJggynAbjEnSvQ=
 github.com/onflow/cadence/languageserver v0.12.7 h1:faEIO0HdsMb07oEViIG7FPyzh3HL+2FBaNQ4q+YX3Hs=
 github.com/onflow/cadence/languageserver v0.12.7/go.mod h1:zJX0uogJKdr1kcDUbwQKMb9WB6rhVtwCJuRS29f6a5U=
+github.com/onflow/cadence v0.12.5 h1:C3n5Sa7j5h6Y1S+vALgTneqUgR6NCnwiG6q80MBruME=
+github.com/onflow/cadence v0.12.5 h1:C3n5Sa7j5h6Y1S+vALgTneqUgR6NCnwiG6q80MBruME=
+github.com/onflow/cadence v0.12.5/go.mod h1:8NwJGO535nnY/+QWEMDc2rhvOFChToWQ9Bg7fUIIc/I=
+github.com/onflow/cadence v0.12.5/go.mod h1:8NwJGO535nnY/+QWEMDc2rhvOFChToWQ9Bg7fUIIc/I=
+github.com/onflow/cadence/languageserver v0.12.5 h1:JVnCkKZ3ILpJxVQQxC553Qsm8lAIRB0Aa3OzdzaYfhA=
+github.com/onflow/cadence/languageserver v0.12.5/go.mod h1:bNgO29SQSftDz9got/YFpLa1ehvIWoPwcU2rXiQhzTs=
 github.com/onflow/flow-core-contracts/lib/go/contracts v0.7.1 h1:nmIDPf94F9Ecx6ecGyd4uYBUl4LluntWLvtwAJYt4tw=
 github.com/onflow/flow-core-contracts/lib/go/contracts v0.7.1/go.mod h1:4zE/4A+5zyahxSFccQmcBqzp4ONXIwvGHaOKN8h8CRM=
 github.com/onflow/flow-emulator v0.14.2 h1:/kxGotqmmSL8wGAlFZ98pch2vZx3IjDJ45cXavDbleo=

@@ -24,6 +24,7 @@ import (
 
 	cli "github.com/onflow/flow-cli/flow"
 	"github.com/onflow/flow-cli/flow/accounts"
+	"github.com/onflow/flow-cli/flow/beta"
 	"github.com/onflow/flow-cli/flow/blocks"
 	"github.com/onflow/flow-cli/flow/cadence"
 	"github.com/onflow/flow-cli/flow/collections"
@@ -41,6 +42,7 @@ var cmd = &cobra.Command{
 }
 
 func init() {
+	cmd.AddCommand(beta.Cmd)
 	cmd.AddCommand(initialize.Cmd)
 	cmd.AddCommand(accounts.Cmd)
 	cmd.AddCommand(blocks.Cmd)
