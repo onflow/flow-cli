@@ -3,6 +3,7 @@ module github.com/onflow/flow-cli
 go 1.13
 
 require (
+	github.com/gosuri/uilive v0.0.4
 	github.com/magiconair/properties v1.8.1 // indirect
 	github.com/onflow/cadence v0.12.5
 	github.com/onflow/cadence/languageserver v0.12.5
