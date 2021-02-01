@@ -650,6 +650,8 @@ github.com/oklog/ulid v1.3.1/go.mod h1:CirwcVhetQ6Lv90oh/F+FBtV6XMibvdAFo93nm5qn
 github.com/olekukonko/tablewriter v0.0.1/go.mod h1:vsDQFd/mU46D+Z4whnwzcISnGGzXWMclvtLoiIKAKIo=
 github.com/olekukonko/tablewriter v0.0.2-0.20190409134802-7e037d187b0c/go.mod h1:vsDQFd/mU46D+Z4whnwzcISnGGzXWMclvtLoiIKAKIo=
 github.com/onflow/cadence v0.12.5 h1:C3n5Sa7j5h6Y1S+vALgTneqUgR6NCnwiG6q80MBruME=
+github.com/onflow/cadence v0.12.5 h1:C3n5Sa7j5h6Y1S+vALgTneqUgR6NCnwiG6q80MBruME=
+github.com/onflow/cadence v0.12.5/go.mod h1:8NwJGO535nnY/+QWEMDc2rhvOFChToWQ9Bg7fUIIc/I=
 github.com/onflow/cadence v0.12.5/go.mod h1:8NwJGO535nnY/+QWEMDc2rhvOFChToWQ9Bg7fUIIc/I=
 github.com/onflow/cadence/languageserver v0.12.5 h1:JVnCkKZ3ILpJxVQQxC553Qsm8lAIRB0Aa3OzdzaYfhA=
 github.com/onflow/cadence/languageserver v0.12.5/go.mod h1:bNgO29SQSftDz9got/YFpLa1ehvIWoPwcU2rXiQhzTs=
