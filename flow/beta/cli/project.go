@@ -20,6 +20,7 @@ package cli
 
 import (
 	"errors"
+	"path"
 
 	"github.com/onflow/flow-go-sdk"
 
@@ -79,6 +80,39 @@ func (p *Project) EmulatorConfig(profile string) config.EmulatorConfigProfile {
 	return p.conf.Emulator[profile]
 }
 
+func (p *Project) Contracts(network string) []Contract {
+	contracts := make([]Contract, 0)
+
+	for bundleName, bundle := range p.conf.ContractBundles {
+
+		for contractName, contractSource := range bundle.Source {
+
+			target := p.getTargetAddress(bundle.Target[network])
+
+			contract := Contract{
+				BundleName: bundleName,
+				Name:       contractName,
+				Source:     path.Clean(contractSource),
+				Target:     target,
+			}
+
+			contracts = append(contracts, contract)
+		}
+	}
+
+	return contracts
+}
+
+func (p *Project) Aliases(network string) map[string]string {
+	aliases := make(map[string]string)
+
+	for name, networks := range p.conf.Aliases {
+		aliases[name] = networks[network]
+	}
+
+	return aliases
+}
+
 func (p *Project) AccountByAddress(address flow.Address) *Account {
 	for _, account := range p.accounts {
 		if account.Address() == address {
@@ -96,6 +130,13 @@ func (p *Project) getTargetAddress(target string) flow.Address {
 	}
 
 	return flow.HexToAddress(target[2:])
+}
+
+type Contract struct {
+	BundleName string
+	Name       string
+	Source     string
+	Target     flow.Address
 }
 
 type Account struct {

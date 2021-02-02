@@ -19,8 +19,11 @@
 package cli
 
 import (
+	"crypto/rand"
 	"fmt"
 	"os"
+
+	"github.com/fatih/color"
 )
 
 const EnvPrefix = "FLOW"
@@ -34,3 +37,20 @@ func Exitf(code int, msg string, args ...interface{}) {
 	fmt.Printf(msg+"\n", args...)
 	os.Exit(code)
 }
+
+func RandomSeed(n int) []byte {
+	seed := make([]byte, n)
+
+	_, err := rand.Read(seed)
+	if err != nil {
+		Exitf(1, "Failed to generate random seed: %v", err)
+	}
+
+	return seed
+}
+
+// Colors
+var Yellow = color.New(color.FgYellow, color.Bold).SprintfFunc()
+var Green = color.New(color.FgGreen, color.Bold).SprintfFunc()
+var Red = color.New(color.FgRed, color.Bold).SprintfFunc()
+var Bold = color.New(color.Bold).SprintfFunc()
