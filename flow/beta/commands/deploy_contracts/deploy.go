@@ -37,7 +37,7 @@ import (
 
 type Config struct {
 	Network string `flag:"network" default:"emulator" info:"network configuration to use"`
-	// TODO: add "update" flag
+	Update  bool   `flag:"update" default:"false" info:"use update flag to update existing contracts"`
 }
 
 var conf Config
@@ -92,10 +92,7 @@ var Cmd = &cobra.Command{
 				continue
 			}
 
-			// TODO: remove hardcoded value, get from CLI arg instead
-			update := true
-
-			tx := prepareDeploymentTransaction(targetAccount, contract, update)
+			tx := prepareDeploymentTransaction(targetAccount, contract, conf.Update)
 
 			ctx := context.Background()
 
