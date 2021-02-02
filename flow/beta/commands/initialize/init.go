@@ -16,33 +16,28 @@
  * limitations under the License.
  */
 
-package cli
+package initialize
 
 import (
-	"crypto/rand"
 	"fmt"
-	"os"
+
+	"github.com/spf13/cobra"
+
+	"github.com/onflow/flow-cli/flow/beta/cli"
 )
 
-const EnvPrefix = "FLOW"
+var Cmd = &cobra.Command{
+	Use:   "init",
+	Short: "Initialize a new Flow project",
+	Run: func(cmd *cobra.Command, args []string) {
+		if !cli.ProjectExists() {
+			proj := cli.InitProject()
+			proj.Save()
 
-func Exit(code int, msg string) {
-	fmt.Println(msg)
-	os.Exit(code)
-}
-
-func Exitf(code int, msg string, args ...interface{}) {
-	fmt.Printf(msg+"\n", args...)
-	os.Exit(code)
-}
-
-func RandomSeed(n int) []byte {
-	seed := make([]byte, n)
-
-	_, err := rand.Read(seed)
-	if err != nil {
-		Exitf(1, "Failed to generate random seed: %v", err)
-	}
-
-	return seed
+			fmt.Printf("Initialized a new Flow project in \"%s\"!\n\n", cli.DefaultConfigPath)
+			fmt.Printf("Start the emulator by running: flow beta start-emulator\n")
+		} else {
+			fmt.Printf("Flow configuration file already exists! Begin by running: flow beta start-emulator\n")
+		}
+	},
 }
