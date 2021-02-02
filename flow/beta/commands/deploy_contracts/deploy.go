@@ -37,6 +37,7 @@ import (
 
 type Config struct {
 	Network string `flag:"network" default:"emulator" info:"network configuration to use"`
+	// TODO: add "update" flag
 }
 
 var conf Config
@@ -91,7 +92,10 @@ var Cmd = &cobra.Command{
 				continue
 			}
 
-			tx := prepareDeploymentTransaction(targetAccount, contract)
+			// TODO: remove hardcoded value, get from CLI arg instead
+			update := true
+
+			tx := prepareDeploymentTransaction(targetAccount, contract, update)
 
 			ctx := context.Background()
 
@@ -138,6 +142,7 @@ func initConfig() {
 func prepareDeploymentTransaction(
 	targetAccount *cli.Account,
 	contract *contracts.Contract,
+	update bool,
 ) *flow.Transaction {
 
 	return templates.AddAccountContracts(
@@ -148,6 +153,6 @@ func prepareDeploymentTransaction(
 				Source: contract.TranspiledCode(),
 			},
 		},
-		true,
+		update,
 	)
 }
