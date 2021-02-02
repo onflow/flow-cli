@@ -22,6 +22,8 @@ import (
 	"crypto/rand"
 	"fmt"
 	"os"
+
+	"github.com/fatih/color"
 )
 
 func Exit(code int, msg string) {
@@ -44,3 +46,9 @@ func RandomSeed(n int) []byte {
 
 	return seed
 }
+
+// Colors
+var Yellow = color.New(color.FgYellow, color.Bold).SprintfFunc()
+var Green = color.New(color.FgGreen, color.Bold).SprintfFunc()
+var Red = color.New(color.FgRed, color.Bold).SprintfFunc()
+var Bold = color.New(color.Bold).SprintfFunc()
