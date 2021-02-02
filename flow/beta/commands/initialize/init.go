@@ -34,10 +34,19 @@ var Cmd = &cobra.Command{
 			proj := cli.InitProject()
 			proj.Save()
 
-			fmt.Printf("Initialized a new Flow project in \"%s\"!\n\n", cli.DefaultConfigPath)
-			fmt.Printf("Start the emulator by running: flow beta start-emulator\n")
+			fmt.Print(
+				cli.Green(fmt.Sprintf("Initialized a new Flow project in %s\n\n", cli.DefaultConfigPath)),
+			)
+			fmt.Printf(
+				"Start the Flow Emulator by running: %s\n",
+				cli.Bold("flow beta start-emulator"),
+			)
 		} else {
-			fmt.Printf("Flow configuration file already exists! Begin by running: flow beta start-emulator\n")
+			fmt.Printf(
+				"%s\n\nStart the Flow Emulator by running: %s\n",
+				cli.Red(fmt.Sprintf("A Flow project already exists in %s", cli.DefaultConfigPath)),
+				cli.Bold("flow beta start-emulator"),
+			)
 		}
 	},
 }
