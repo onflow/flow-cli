@@ -38,9 +38,11 @@ const (
 )
 
 type Config struct {
-	Emulator map[string]EmulatorConfigProfile `json:"emulator"`
-	Networks map[string]Network               `json:"networks"`
-	Accounts map[string]Account               `json:"accounts"`
+	Emulator        map[string]EmulatorConfigProfile `json:"emulator"`
+	Networks        map[string]Network               `json:"networks"`
+	Aliases         map[string]map[string]string     `json:"aliases"`
+	ContractBundles map[string]ContractBundle        `json:"contracts"`
+	Accounts        map[string]Account               `json:"accounts"`
 }
 
 type EmulatorConfigProfile struct {
@@ -86,6 +88,11 @@ func (k EmulatorServiceKey) MarshalJSON() ([]byte, error) {
 type Network struct {
 	Host    string       `json:"host"`
 	ChainID flow.ChainID `json:"chain"`
+}
+
+type ContractBundle struct {
+	Source map[string]string `json:"source"`
+	Target map[string]string `json:"target"`
 }
 
 type Account struct {
