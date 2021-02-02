@@ -206,6 +206,13 @@ func (p *Preprocessor) PrepareForDeployment() ([]*Contract, error) {
 	return sorted, nil
 }
 
+// sortByDeploymentOrder sorts the given set of contracts in order of deployment.
+//
+// The resulting ordering ensures that each contract is deployed after all of its
+// dependencies are deployed. This function returns an error if an import cycle exists.
+//
+// This function constructs a directed graph in which contracts are nodes and imports are edges.
+// The ordering is computed by performing a topological sort on the constructed graph.
 func sortByDeploymentOrder(contracts map[string]*Contract) ([]*Contract, error) {
 	g := simple.NewDirectedGraph()
 
@@ -233,6 +240,6 @@ func sortByDeploymentOrder(contracts map[string]*Contract) ([]*Contract, error) 
 	return results, nil
 }
 
-func absolutePath(source, location string) string {
-	return path.Join(path.Dir(source), location)
+func absolutePath(basePath, relativePath string) string {
+	return path.Join(path.Dir(basePath), relativePath)
 }
