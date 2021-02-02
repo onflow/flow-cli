@@ -255,7 +255,13 @@ func accountFromConfig(accountName string, accountConf config.Account) (*Account
 		accountKeys = append(accountKeys, accountKey)
 	}
 
-	address := flow.HexToAddress(accountConf.Address)
+	var address flow.Address
+
+	if accountConf.Address == "service" {
+		address = flow.ServiceAddress(accountConf.ChainID)
+	} else {
+		address = flow.HexToAddress(accountConf.Address)
+	}
 
 	return &Account{
 		name:    accountName,
