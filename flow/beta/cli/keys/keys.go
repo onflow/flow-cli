@@ -19,6 +19,7 @@
 package keys
 
 import (
+	"encoding/hex"
 	"fmt"
 
 	"github.com/onflow/flow-go-sdk/crypto"
@@ -32,6 +33,7 @@ type AccountKey interface {
 	SigAlgo() crypto.SignatureAlgorithm
 	HashAlgo() crypto.HashAlgorithm
 	Signer() crypto.Signer
+	ToConfig() config.AccountKey
 }
 
 func NewAccountKey(accountKeyConf config.AccountKey) (AccountKey, error) {
@@ -82,6 +84,22 @@ type HexAccountKey struct {
 
 const privateKeyField = "privateKey"
 
+func NewHexAccountKeyFromPrivateKey(
+	index int,
+	hashAlgo crypto.HashAlgorithm,
+	privateKey crypto.PrivateKey,
+) *HexAccountKey {
+	return &HexAccountKey{
+		baseAccountKey: &baseAccountKey{
+			keyType:  config.KeyTypeHex,
+			index:    index,
+			sigAlgo:  privateKey.Algorithm(),
+			hashAlgo: hashAlgo,
+		},
+		privateKey: privateKey,
+	}
+}
+
 func newHexAccountKey(accountKeyConf config.AccountKey) (*HexAccountKey, error) {
 	privateKeyHex, ok := accountKeyConf.Context[privateKeyField]
 	if !ok {
@@ -101,4 +119,20 @@ func newHexAccountKey(accountKeyConf config.AccountKey) (*HexAccountKey, error) 
 
 func (a *HexAccountKey) Signer() crypto.Signer {
 	return crypto.NewInMemorySigner(a.privateKey, a.HashAlgo())
+}
+
+func (a *HexAccountKey) ToConfig() config.AccountKey {
+	return config.AccountKey{
+		Type:     a.keyType,
+		Index:    a.index,
+		SigAlgo:  a.sigAlgo,
+		HashAlgo: a.hashAlgo,
+		Context: map[string]string{
+			"privateKey": a.PrivateKeyHex(),
+		},
+	}
+}
+
+func (a *HexAccountKey) PrivateKeyHex() string {
+	return hex.EncodeToString(a.privateKey.Encode())
 }

@@ -20,8 +20,10 @@ package cli
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/onflow/flow-go-sdk"
+	"github.com/onflow/flow-go-sdk/crypto"
 
 	"github.com/onflow/flow-cli/flow/beta/cli/config"
 	"github.com/onflow/flow-cli/flow/beta/cli/keys"
@@ -32,20 +34,20 @@ type Project struct {
 	accounts []*Account
 }
 
-const defaultConfigPath = "flow.json"
+const DefaultConfigPath = "flow.json"
 
 func LoadProject() *Project {
-	conf, err := config.Load(defaultConfigPath)
+	conf, err := config.Load(DefaultConfigPath)
 	if err != nil {
 		if errors.Is(err, config.ErrDoesNotExist) {
 			Exitf(
 				1,
 				"Project config file %s does not exist. Please initialize first\n",
-				defaultConfigPath,
+				DefaultConfigPath,
 			)
 		}
 
-		Exitf(1, "Failed to open project configuration in %s\n", defaultConfigPath)
+		Exitf(1, "Failed to open project configuration in %s", DefaultConfigPath)
 
 		return nil
 	}
@@ -53,14 +55,76 @@ func LoadProject() *Project {
 	proj, err := newProject(conf)
 	if err != nil {
 		// TODO: replace with a more detailed error message
-		Exitf(1, "Invalid project configuration: %s\n", err)
+		Exitf(1, "Invalid project configuration: %s", err)
 	}
 
 	return proj
 }
 
+func ProjectExists() bool {
+	return config.Exists(DefaultConfigPath)
+}
+
+func InitProject() *Project {
+	serviceAccount, serviceAccountKey := generateEmulatorServiceAccount()
+
+	return &Project{
+		conf:     defaultConfig(serviceAccountKey),
+		accounts: []*Account{serviceAccount},
+	}
+}
+
+const (
+	DefaultEmulatorConfigProfileName  = "default"
+	defaultEmulatorNetworkName        = "emulator"
+	defaultEmulatorServiceAccountName = "emulator"
+	defaultEmulatorPort               = 3569
+	defaultEmulatorHost               = "127.0.0.1:3569"
+)
+
+func defaultConfig(serviceAccountKey *keys.HexAccountKey) *config.Config {
+	return &config.Config{
+		Emulator: map[string]config.EmulatorConfigProfile{
+			DefaultEmulatorConfigProfileName: {
+				Port: defaultEmulatorPort,
+				ServiceKey: config.EmulatorServiceKey{
+					PrivateKey: serviceAccountKey.PrivateKeyHex(),
+					SigAlgo:    serviceAccountKey.SigAlgo(),
+					HashAlgo:   serviceAccountKey.HashAlgo(),
+				},
+			},
+		},
+		Networks: map[string]config.Network{
+			defaultEmulatorNetworkName: {
+				Host:    defaultEmulatorHost,
+				ChainID: flow.Emulator,
+			},
+		},
+	}
+}
+
+func generateEmulatorServiceAccount() (*Account, *keys.HexAccountKey) {
+	seed := RandomSeed(crypto.MinSeedLength)
+
+	privateKey, err := crypto.GeneratePrivateKey(crypto.ECDSA_P256, seed)
+	if err != nil {
+		Exitf(1, "Failed to generate emulator service key: %v", err)
+	}
+
+	serviceAccountKey := keys.NewHexAccountKeyFromPrivateKey(0, crypto.SHA3_256, privateKey)
+
+	return &Account{
+		name:    defaultEmulatorServiceAccountName,
+		address: flow.ServiceAddress(flow.Emulator),
+		chainID: flow.Emulator,
+		keys: []keys.AccountKey{
+			serviceAccountKey,
+		},
+	}, serviceAccountKey
+}
+
 func newProject(conf *config.Config) (*Project, error) {
-	accounts, err := accountsFromConf(conf)
+	accounts, err := accountsFromConfig(conf)
 	if err != nil {
 		return nil, err
 	}
@@ -89,16 +153,27 @@ func (p *Project) AccountByAddress(address flow.Address) *Account {
 	return nil
 }
 
+func (p *Project) Save() {
+	p.conf.Accounts = accountsToConfig(p.accounts)
+
+	err := config.Save(p.conf, DefaultConfigPath)
+	if err != nil {
+		Exitf(1, "Failed to save project configuration to \"%s\"", DefaultConfigPath)
+	}
+}
+
 func (p *Project) getTargetAddress(target string) flow.Address {
-	account, accountExists := p.conf.Accounts[target]
-	if accountExists {
-		return account.Address
+	for _, account := range p.accounts {
+		if account.name == target {
+			return account.address
+		}
 	}
 
 	return flow.HexToAddress(target[2:])
 }
 
 type Account struct {
+	name    string
 	address flow.Address
 	chainID flow.ChainID
 	keys    []keys.AccountKey
@@ -112,11 +187,11 @@ func (a *Account) DefaultKey() keys.AccountKey {
 	return a.keys[0]
 }
 
-func accountsFromConf(conf *config.Config) ([]*Account, error) {
+func accountsFromConfig(conf *config.Config) ([]*Account, error) {
 	accounts := make([]*Account, 0, len(conf.Accounts))
 
-	for _, accountConf := range conf.Accounts {
-		account, err := accountFromConf(accountConf)
+	for accountName, accountConf := range conf.Accounts {
+		account, err := accountFromConfig(accountName, accountConf)
 		if err != nil {
 			return nil, err
 		}
@@ -127,7 +202,7 @@ func accountsFromConf(conf *config.Config) ([]*Account, error) {
 	return accounts, nil
 }
 
-func accountFromConf(accountConf config.Account) (*Account, error) {
+func accountFromConfig(accountName string, accountConf config.Account) (*Account, error) {
 	accountKeys := make([]keys.AccountKey, 0, len(accountConf.Keys))
 
 	for _, key := range accountConf.Keys {
@@ -139,9 +214,44 @@ func accountFromConf(accountConf config.Account) (*Account, error) {
 		accountKeys = append(accountKeys, accountKey)
 	}
 
+	address := flow.HexToAddress(accountConf.Address)
+
 	return &Account{
-		address: accountConf.Address,
+		name:    accountName,
+		address: address,
 		chainID: accountConf.ChainID,
 		keys:    accountKeys,
 	}, nil
+}
+
+func accountsToConfig(accounts []*Account) map[string]config.Account {
+	accountConfs := make(map[string]config.Account)
+
+	for _, account := range accounts {
+		accountConfs[account.name] = accountToConfig(account)
+	}
+
+	return accountConfs
+}
+
+func accountToConfig(account *Account) config.Account {
+	var address string
+
+	if account.address == flow.ServiceAddress(account.chainID) {
+		address = "service"
+	} else {
+		address = fmt.Sprintf("0x%s", account.address.Hex())
+	}
+
+	keyConfigs := make([]config.AccountKey, 0, len(account.keys))
+
+	for _, key := range account.keys {
+		keyConfigs = append(keyConfigs, key.ToConfig())
+	}
+
+	return config.Account{
+		Address: address,
+		ChainID: account.chainID,
+		Keys:    keyConfigs,
+	}
 }
