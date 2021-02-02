@@ -26,6 +26,8 @@ import (
 	"github.com/fatih/color"
 )
 
+const EnvPrefix = "FLOW"
+
 func Exit(code int, msg string) {
 	fmt.Println(msg)
 	os.Exit(code)
