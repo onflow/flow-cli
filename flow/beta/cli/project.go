@@ -78,7 +78,7 @@ func InitProject() *Project {
 const (
 	DefaultEmulatorConfigProfileName  = "default"
 	defaultEmulatorNetworkName        = "emulator"
-	defaultEmulatorServiceAccountName = "emulator"
+	defaultEmulatorServiceAccountName = "emulator-service-account"
 	defaultEmulatorPort               = 3569
 	defaultEmulatorHost               = "127.0.0.1:3569"
 )
