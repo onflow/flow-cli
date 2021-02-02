@@ -28,8 +28,6 @@ import (
 
 var Cmd *cobra.Command
 
-const defaultEmulatorConfig = "default"
-
 func configuredServiceKey(
 	_ bool,
 	_ crypto.SignatureAlgorithm,
@@ -41,13 +39,17 @@ func configuredServiceKey(
 ) {
 	proj := cli.LoadProject()
 
-	conf := proj.EmulatorConfig(defaultEmulatorConfig)
+	conf := proj.EmulatorConfig(cli.DefaultEmulatorConfigProfileName)
 
 	serviceKey := conf.ServiceKey
 
 	privateKey, err := crypto.DecodePrivateKeyHex(serviceKey.SigAlgo, serviceKey.PrivateKey)
 	if err != nil {
-		cli.Exitf(1, "Invalid private key in \"%s\" emulator configuration", defaultEmulatorConfig)
+		cli.Exitf(
+			1,
+			"Invalid private key in \"%s\" emulator configuration",
+			cli.DefaultEmulatorConfigProfileName,
+		)
 	}
 
 	return privateKey, serviceKey.SigAlgo, serviceKey.HashAlgo

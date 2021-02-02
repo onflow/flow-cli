@@ -24,7 +24,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"strings"
 
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
@@ -33,13 +32,9 @@ import (
 type KeyType string
 
 const (
-	serviceAccountName = "service"
-
 	KeyTypeHex       KeyType = "hex"        // Hex private key with in memory signer
 	KeyTypeGoogleKMS KeyType = "google-kms" // Google KMS signer
 	KeyTypeShell     KeyType = "shell"      // Exec out to a shell script
-
-	defaultKeyType = KeyTypeHex
 )
 
 type Config struct {
@@ -94,48 +89,9 @@ type Network struct {
 }
 
 type Account struct {
-	Address flow.Address
-	ChainID flow.ChainID
-	Keys    []AccountKey
-}
-
-type accountJSON struct {
 	Address string       `json:"address"`
-	Chain   string       `json:"chain"`
+	ChainID flow.ChainID `json:"chain"`
 	Keys    []AccountKey `json:"keys"`
-}
-
-func (a *Account) UnmarshalJSON(b []byte) error {
-	var s accountJSON
-
-	err := json.Unmarshal(b, &s)
-	if err != nil {
-		return err
-	}
-
-	chainID, err := stringToChainID(s.Chain)
-	if err != nil {
-		return err
-	}
-
-	if s.Address == serviceAccountName {
-		a.Address = flow.ServiceAddress(chainID)
-	} else {
-		a.Address = flow.HexToAddress(s.Address)
-	}
-
-	a.ChainID = chainID
-	a.Keys = s.Keys
-
-	return nil
-}
-
-func (a Account) MarshalJSON() ([]byte, error) {
-	return json.Marshal(accountJSON{
-		Address: a.Address.Hex(),
-		Chain:   chainIDToString(a.ChainID),
-		Keys:    a.Keys,
-	})
 }
 
 type AccountKey struct {
@@ -180,34 +136,6 @@ func (a AccountKey) MarshalJSON() ([]byte, error) {
 		Index:    a.Index,
 		Context:  a.Context,
 	})
-}
-
-func stringToChainID(s string) (flow.ChainID, error) {
-	switch strings.TrimSpace(s) {
-	case "emulator":
-		return flow.Emulator, nil
-	case "testnet":
-		return flow.Testnet, nil
-	case "mainnet":
-		return flow.Mainnet, nil
-	case "":
-		return "", errors.New("chain cannot be empty")
-	default:
-		return "", fmt.Errorf(`invalid chain: "%s"`, s)
-	}
-}
-
-func chainIDToString(chainID flow.ChainID) string {
-	switch chainID {
-	case flow.Emulator:
-		return "emulator"
-	case flow.Testnet:
-		return "testnet"
-	case flow.Mainnet:
-		return "mainnet"
-	default:
-		return ""
-	}
 }
 
 func Save(conf *Config, path string) error {
