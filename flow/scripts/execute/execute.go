@@ -19,6 +19,7 @@
 package execute
 
 import (
+	"github.com/onflow/cadence"
 	"io/ioutil"
 	"log"
 
@@ -30,7 +31,7 @@ import (
 
 type Config struct {
 	Host string `flag:"host" info:"Flow Access API host address"`
-	Args string `flag:"args" info:"arguments to pass to script"`
+	Args string `default:"" flag:"args" info:"arguments to pass to script"`
 }
 
 var conf Config
@@ -50,10 +51,12 @@ var Cmd = &cobra.Command{
 			projectConf = cli.LoadConfig()
 		}
 
-		scriptArguments, err := cli.ParseArguments(conf.Args)
-
-		if err != nil {
-			cli.Exitf(1, "Invalid arguments passed: %s", conf.Args)
+		scriptArguments := make([]cadence.Value, 0)
+		if conf.Args != "" {
+			scriptArguments, err = cli.ParseArguments(conf.Args)
+			if err != nil {
+				cli.Exitf(1, "Invalid arguments passed: %s", conf.Args)
+			}
 		}
 
 		cli.ExecuteScript(projectConf.HostWithOverride(conf.Host), code, scriptArguments)
