@@ -30,14 +30,16 @@ import (
 
 type Config struct {
 	Host string `flag:"host" info:"Flow Access API host address"`
+	Args string `flag:"args" info:"arguments to pass to script"`
 }
 
 var conf Config
 
 var Cmd = &cobra.Command{
-	Use:   "execute <script.cdc>",
-	Short: "Execute a script",
-	Args:  cobra.ExactArgs(1),
+	Use:     "execute <script.cdc>",
+	Short:   "Execute a script",
+	Example: `flow scripts execute ./basic.cdc "[{\"type\": \"String\", \"value\": \"Hello, Cadence\"}]"`,
+	Args:    cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		code, err := ioutil.ReadFile(args[0])
 		if err != nil {
@@ -47,7 +49,14 @@ var Cmd = &cobra.Command{
 		if conf.Host == "" {
 			projectConf = cli.LoadConfig()
 		}
-		cli.ExecuteScript(projectConf.HostWithOverride(conf.Host), code)
+
+		scriptArguments, err := cli.ParseArguments(conf.Args)
+
+		if err != nil {
+			cli.Exitf(1, "Invalid arguments passed: %s", conf.Args)
+		}
+
+		cli.ExecuteScript(projectConf.HostWithOverride(conf.Host), code, scriptArguments)
 	},
 }
 
