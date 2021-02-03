@@ -22,6 +22,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/client"
@@ -62,6 +63,8 @@ var Cmd = &cobra.Command{
 			proj.Aliases(conf.Network),
 		)
 
+		bundleNames := ""
+
 		for _, contract := range proj.Contracts(conf.Network) {
 			err = p.AddContractSource(
 				contract.BundleName,
@@ -73,6 +76,13 @@ var Cmd = &cobra.Command{
 				cli.Exit(1, err.Error())
 				return
 			}
+
+			if !strings.Contains(bundleNames, contract.BundleName) {
+				if len(bundleNames) > 0 {
+					bundleNames = bundleNames + ", "
+				}
+				bundleNames = bundleNames + contract.BundleName
+			}
 		}
 
 		contracts, err := p.PrepareForDeployment()
@@ -81,7 +91,7 @@ var Cmd = &cobra.Command{
 			return
 		}
 
-		fmt.Printf("Deploying contracts from: %s\n\n", cli.Yellow("nft, kitty-items"))
+		fmt.Printf("Deploying contracts from: %s\n\n", cli.Yellow(bundleNames))
 
 		var errs []error
 
