@@ -34,6 +34,8 @@ type Config struct {
 	Code string `flag:"code,c" info:"path to Cadence file"`
 	Host string `flag:"host" info:"Flow Access API host address"`
 	Args string `default:"" flag:"args" info:"arguments to pass to script"`
+	Code string `flag:"code,c" info:"path to Cadence file"`
+	Host string `flag:"host" info:"Flow Access API host address"`
 }
 
 var conf Config
