@@ -19,7 +19,6 @@
 package send
 
 import (
-	"github.com/onflow/cadence"
 	"io/ioutil"
 	"log"
 	"os"
