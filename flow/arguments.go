@@ -9,6 +9,7 @@ import (
 type CadenceArgument struct {
 	Value cadence.Value
 }
+
 func (v CadenceArgument) MarshalJSON() ([]byte, error) {
 	return jsoncdc.Encode(v.Value)
 }
