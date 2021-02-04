@@ -44,7 +44,7 @@ var conf Config
 var Cmd = &cobra.Command{
 	Use:     "send",
 	Short:   "Send a transaction",
-	Example: `flow transactions send --code=./tx.cdc --args="[{\"type\": \"String\", \"value\": \"Hello, Cadence\"}]"`,
+	Example: `flow transactions send --code=tx.cdc --args="[{\"type\": \"String\", \"value\": \"Hello, Cadence\"}]"`,
 	Run: func(cmd *cobra.Command, args []string) {
 		projectConf := cli.LoadConfig()
 
