@@ -39,7 +39,7 @@ var conf Config
 var Cmd = &cobra.Command{
 	Use:     "execute <script.cdc>",
 	Short:   "Execute a script",
-	Example: `flow scripts execute ./basic.cdc "[{\"type\": \"String\", \"value\": \"Hello, Cadence\"}]"`,
+	Example: `flow scripts execute ./basic.cdc --args="[{\"type\": \"String\", \"value\": \"Hello, Cadence\"}]"`,
 	Args:    cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		code, err := ioutil.ReadFile(args[0])
@@ -51,6 +51,7 @@ var Cmd = &cobra.Command{
 			projectConf = cli.LoadConfig()
 		}
 
+		// Arguments
 		scriptArguments := make([]cadence.Value, 0)
 		if conf.Args != "" {
 			scriptArguments, err = cli.ParseArguments(conf.Args)
