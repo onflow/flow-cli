@@ -97,7 +97,7 @@ func printTxResult(tx *flow.Transaction, res *flow.TransactionResult, showCode b
 	fmt.Println()
 }
 
-func GetBlockEvents(host string, startHeight, endHeight uint64, eventType string) {
+func GetBlockEvents(host string, startHeight, endHeight uint64, eventType string, printEmpty bool) {
 	ctx := context.Background()
 
 	flowClient, err := client.New(host, grpc.WithInsecure())
@@ -116,7 +116,10 @@ func GetBlockEvents(host string, startHeight, endHeight uint64, eventType string
 	}
 
 	for i, blockEvent := range events {
-		fmt.Printf("Events for Block %s (%d):", blockEvent.BlockID, startHeight+uint64(i))
+		if !printEmpty && len(blockEvent.Events) == 0 {
+			continue
+		}
+		fmt.Printf("Events for Block %s (%d):\n", blockEvent.BlockID, startHeight+uint64(i))
 		printEvents(blockEvent.Events, true)
 	}
 }

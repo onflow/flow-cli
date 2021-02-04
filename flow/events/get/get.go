@@ -30,7 +30,8 @@ import (
 )
 
 type Config struct {
-	Host string `flag:"host" info:"Flow Access API host address"`
+	Host    string `flag:"host" info:"Flow Access API host address"`
+	Verbose bool   `flag:"verbose" info:"Verbose output"`
 }
 
 var conf Config
@@ -48,7 +49,7 @@ var Cmd = &cobra.Command{
 
 		eventName, startHeight, endHeight := validateArguments(host, args)
 
-		cli.GetBlockEvents(host, startHeight, endHeight, eventName)
+		cli.GetBlockEvents(host, startHeight, endHeight, eventName, conf.Verbose)
 	},
 }
 

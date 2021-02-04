@@ -63,7 +63,7 @@ var Cmd = &cobra.Command{
 		}
 		printBlock(block, conf.Verbose)
 		if conf.Events != "" {
-			cli.GetBlockEvents(host, block.Height, block.Height, conf.Events)
+			cli.GetBlockEvents(host, block.Height, block.Height, conf.Events, true)
 		}
 	},
 }
