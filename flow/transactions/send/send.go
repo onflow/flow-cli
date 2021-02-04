@@ -19,7 +19,6 @@
 package send
 
 import (
-	"github.com/onflow/cadence"
 	"io/ioutil"
 	"log"
 	"os"
@@ -68,9 +67,8 @@ var Cmd = &cobra.Command{
 			AddAuthorizer(signerAccount.Address)
 
 		// Arguments
-		transactionArguments := make([]cadence.Value, 0)
 		if conf.Args != "" {
-			transactionArguments, err = cli.ParseArguments(conf.Args)
+			transactionArguments, err := cli.ParseArguments(conf.Args)
 			if err != nil {
 				cli.Exitf(1, "Invalid arguments passed: %s", conf.Args)
 			}
