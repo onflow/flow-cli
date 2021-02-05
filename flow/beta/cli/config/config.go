@@ -117,6 +117,36 @@ type accountKeyJSON struct {
 	Context  map[string]string `json:"context"`
 }
 
+func (a *Account) UnmarshalJSON(b []byte) error {
+
+	raw := make(map[string]json.RawMessage)
+	json.Unmarshal(b, &raw)
+
+	json.Unmarshal(raw["address"], &a.Address)
+	json.Unmarshal(raw["chain"], &a.ChainID)
+	err := json.Unmarshal(raw["keys"], &a.Keys)
+
+	// if error trying unmarshal into key structure then we try unmarshal a string
+	if err != nil {
+		var keysString string
+		json.Unmarshal(raw["keys"], &keysString)
+
+		var keys []AccountKey
+		json.Unmarshal([]byte(`[{
+			"type": "hex",
+			"index": 0,
+			"signatureAlgorithm": "ECDSA_P256",
+			"hashAlgorithm": "SHA3_256",
+			"context": {
+				"privateKey": "`+keysString+`"
+			}
+		}]`), &keys)
+		a.Keys = keys
+	}
+
+	return nil
+}
+
 func (a *AccountKey) UnmarshalJSON(b []byte) error {
 	var s accountKeyJSON
 
