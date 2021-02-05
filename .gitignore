@@ -21,3 +21,6 @@ flow.json
 .idea
 .vscode
 git
+
+# Ignore built CLI
+main
