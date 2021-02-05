@@ -12,6 +12,7 @@ require (
 	github.com/onflow/flow-go-sdk v0.14.3
 	github.com/psiemens/sconfig v0.0.0-20190623041652-6e01eb1354fc
 	github.com/spf13/cobra v0.0.7
+	github.com/stretchr/testify v1.6.1
 	gonum.org/v1/gonum v0.6.1
 	google.golang.org/grpc v1.32.0
 )
