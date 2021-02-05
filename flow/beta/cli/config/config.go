@@ -37,31 +37,73 @@ const (
 	KeyTypeShell     KeyType = "shell"      // Exec out to a shell script
 )
 
+// Config main configuration structure
 type Config struct {
-	Emulator        map[string]EmulatorConfigProfile `json:"emulator"`
-	Networks        map[string]Network               `json:"networks"`
-	Aliases         map[string]map[string]string     `json:"aliases"`
-	ContractBundles map[string]ContractBundle        `json:"contracts"`
-	Accounts        map[string]Account               `json:"accounts"`
+	Emulator  map[string]EmulatorConfigProfile `json:"emulator"`
+	Networks  map[string]Network               `json:"networks"`
+	Aliases   map[string]map[string]string     `json:"aliases"`
+	Contracts map[string]Contract              `json:"contracts"`
+	Accounts  map[string]Account               `json:"accounts"`
 }
 
+// EmulatorConfigProfile is emulator config
 type EmulatorConfigProfile struct {
 	Port       int                `json:"port"`
 	ServiceKey EmulatorServiceKey `json:"serviceKey"`
 }
 
+// EmulatorServiceKey is the service key for emulator
 type EmulatorServiceKey struct {
 	PrivateKey string
 	SigAlgo    crypto.SignatureAlgorithm
 	HashAlgo   crypto.HashAlgorithm
 }
 
+// emulatorServiceKeyJSON internal structure for parsing
 type emulatorServiceKeyJSON struct {
 	PrivateKey string `json:"privateKey"`
 	SigAlgo    string `json:"signatureAlgorithm"`
 	HashAlgo   string `json:"hashAlgorithm"`
 }
 
+// Network config sets host and chain id
+type Network struct {
+	Host    string       `json:"host"`
+	ChainID flow.ChainID `json:"chain"`
+}
+
+// ContractBundle sets all contracts in bundles for soruce and target
+type ContractBundle struct {
+	Source map[string]string `json:"source"`
+	Target map[string]string `json:"target"`
+}
+
+// Account is main config for each account
+type Account struct {
+	Address string       `json:"address"`
+	ChainID flow.ChainID `json:"chain"`
+	Keys    []AccountKey `json:"keys"`
+}
+
+// AccountKey is config for account key
+type AccountKey struct {
+	Type     KeyType
+	Index    int
+	SigAlgo  crypto.SignatureAlgorithm
+	HashAlgo crypto.HashAlgorithm
+	Context  map[string]string
+}
+
+// accountKeyJSON is internal struct for parsing key json
+type accountKeyJSON struct {
+	Type     KeyType           `json:"type"`
+	Index    int               `json:"index"`
+	SigAlgo  string            `json:"signatureAlgorithm"`
+	HashAlgo string            `json:"hashAlgorithm"`
+	Context  map[string]string `json:"context"`
+}
+
+// UnmarshalJSON EmulatorServiceKey is parer for emulator service key
 func (k *EmulatorServiceKey) UnmarshalJSON(b []byte) error {
 	var s emulatorServiceKeyJSON
 
@@ -77,6 +119,7 @@ func (k *EmulatorServiceKey) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+// MarshalJSON EmuatorServiceKey is encoding service key to json
 func (k EmulatorServiceKey) MarshalJSON() ([]byte, error) {
 	return json.Marshal(emulatorServiceKeyJSON{
 		PrivateKey: k.PrivateKey,
@@ -85,38 +128,8 @@ func (k EmulatorServiceKey) MarshalJSON() ([]byte, error) {
 	})
 }
 
-type Network struct {
-	Host    string       `json:"host"`
-	ChainID flow.ChainID `json:"chain"`
-}
-
-type ContractBundle struct {
-	Source map[string]string `json:"source"`
-	Target map[string]string `json:"target"`
-}
-
-type Account struct {
-	Address string       `json:"address"`
-	ChainID flow.ChainID `json:"chain"`
-	Keys    []AccountKey `json:"keys"`
-}
-
-type AccountKey struct {
-	Type     KeyType
-	Index    int
-	SigAlgo  crypto.SignatureAlgorithm
-	HashAlgo crypto.HashAlgorithm
-	Context  map[string]string
-}
-
-type accountKeyJSON struct {
-	Type     KeyType           `json:"type"`
-	Index    int               `json:"index"`
-	SigAlgo  string            `json:"signatureAlgorithm"`
-	HashAlgo string            `json:"hashAlgorithm"`
-	Context  map[string]string `json:"context"`
-}
-
+// UnmarshalJSON Account decodes json config for account
+// and has two options for keys - string and key object
 func (a *Account) UnmarshalJSON(b []byte) error {
 
 	raw := make(map[string]json.RawMessage)
@@ -147,6 +160,8 @@ func (a *Account) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+// UnmarshalJSON AccountKey decodes json object
+// to defined types for algo, hash, index etc
 func (a *AccountKey) UnmarshalJSON(b []byte) error {
 	var s accountKeyJSON
 
@@ -165,6 +180,7 @@ func (a *AccountKey) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+// MarshalJSON AccountKey convert to json format
 func (a AccountKey) MarshalJSON() ([]byte, error) {
 	return json.Marshal(accountKeyJSON{
 		SigAlgo:  a.SigAlgo.String(),
@@ -175,6 +191,7 @@ func (a AccountKey) MarshalJSON() ([]byte, error) {
 	})
 }
 
+// Save configuration to a path file in json format
 func Save(conf *Config, path string) error {
 	data, err := json.MarshalIndent(conf, "", "\t")
 	if err != nil {
@@ -189,6 +206,7 @@ func Save(conf *Config, path string) error {
 	return nil
 }
 
+// ErrDoesNotExist is error to be returned when config file does not exists
 var ErrDoesNotExist = errors.New("project config file does not exist")
 
 func Load(path string) (*Config, error) {
@@ -213,6 +231,7 @@ func Load(path string) (*Config, error) {
 	return conf, nil
 }
 
+// Exists checks if file exists on the specified path
 func Exists(path string) bool {
 	info, err := os.Stat(path)
 	if os.IsNotExist(err) {
