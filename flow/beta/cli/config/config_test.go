@@ -11,7 +11,7 @@ import (
 Accounts Config Tests
 ================================================================ */
 func Test_ConfigAccountKeysAdvanced(t *testing.T) {
-	var b = []byte(`{
+	b := []byte(`{
 		"address": "service",
 		"chain": "flow-emulator",
 		"keys": [
@@ -40,7 +40,7 @@ func Test_ConfigAccountKeysAdvanced(t *testing.T) {
 }
 
 func Test_ConfigAccountKeysAdvancedMultiple(t *testing.T) {
-	var b = []byte(`{
+	b := []byte(`{
 		"address": "service",
 		"chain": "flow-emulator",
 		"keys": [
@@ -84,7 +84,7 @@ func Test_ConfigAccountKeysAdvancedMultiple(t *testing.T) {
 }
 
 func Test_ConfigAccountKeysSimple(t *testing.T) {
-	var b = []byte(`{
+	b := []byte(`{
 		"address": "service-1",
 		"chain": "flow-emulator-1",
 		"keys": "2272967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47"
@@ -103,7 +103,7 @@ func Test_ConfigAccountKeysSimple(t *testing.T) {
 }
 
 func Test_ConfigMultipleAccountsSimple(t *testing.T) {
-	var b = []byte(`{
+	b := []byte(`{
 		"emulator-account": {
 			"address": "service-1",
 			"chain": "flow-emulator",
@@ -137,7 +137,7 @@ func Test_ConfigMultipleAccountsSimple(t *testing.T) {
 }
 
 func Test_ConfigMultipleAccountsAdvanced(t *testing.T) {
-	var b = []byte(`{
+	b := []byte(`{
 		"emulator-account": {
 			"address": "service",
 			"chain": "flow-emulator",
@@ -191,7 +191,7 @@ func Test_ConfigMultipleAccountsAdvanced(t *testing.T) {
 }
 
 func Test_ConfigMixedAccounts(t *testing.T) {
-	var b = []byte(`{
+	b := []byte(`{
 		"emulator-account": {
 			"address": "service",
 			"chain": "flow-emulator",
@@ -235,5 +235,54 @@ func Test_ConfigMixedAccounts(t *testing.T) {
 }
 
 /* ================================================================
-Config Tests
+Contracts Config Tests
 ================================================================ */
+
+func Test_ConfigContractsSimple(t *testing.T) {
+	b := []byte(`{
+    "KittyItems": "./cadence/kittyItems/contracts/KittyItems.cdc",
+    "KittyItemsMarket": {
+      "testnet": "0x123123123",
+      "emulator": "./cadence/kittyItemsMarket/contracts/KittyItemsMarket.cdc"
+    }
+  }`)
+
+	var contracts map[string]string
+	json.Unmarshal(b, &contracts)
+
+	assert.Equal(t, "./cadence/kittyItems/contracts/KittyItems.cdc", contracts["KittyItems"])
+	assert.Equal(t, `{"testnet": "0x123123123","emulator": "./cadence/kittyItemsMarket/contracts/KittyItemsMarket.cdc"}`, contracts["KittyItemsMarket"])
+
+}
+
+/* ================================================================
+Deploy Config Tests
+================================================================ */
+
+func Test_ConfigDeploySimple(t *testing.T) {
+	b := []byte(`{
+		"deploy": {
+			"testnet": {
+				"account-2": ["FungibleToken", "NonFungibleToken", "Kibble", "KittyItems"]
+			}, 
+			"emulator": {
+				"account-3": ["KittyItems", "KittyItemsMarket"],
+				"account-4": ["FungibleToken", "NonFungibleToken", "Kibble", "KittyItems", "KittyItemsMarket"]
+			}
+		}
+	}`)
+
+	config := new(Config)
+	json.Unmarshal(b, &config)
+
+	assert.Equal(t, "FungibleToken", config.Deploy["testnet"]["account-2"][0])
+
+	networks := make([]string, 0)
+	for k, _ := range config.Deploy {
+		networks = append(networks, k)
+	}
+
+	assert.Equal(t, "testnet", networks[0])
+	assert.Equal(t, "emulator", networks[1])
+
+}
