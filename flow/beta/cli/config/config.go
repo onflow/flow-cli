@@ -42,7 +42,7 @@ type Config struct {
 	Emulator  map[string]EmulatorConfigProfile `json:"emulator"`
 	Networks  map[string]Network               `json:"networks"`
 	Aliases   map[string]map[string]string     `json:"aliases"`
-	Contracts map[string]map[string][]string   `json:"contracts"` // todo later support objects in array
+	Contracts ContractCollection               `json:"contracts"` // todo later support objects in array
 	Accounts  AccountCollection                `json:"accounts"`
 	Deploy    map[string]map[string][]string   `json:"deploy"`
 }
@@ -73,6 +73,19 @@ type Network struct {
 	ChainID flow.ChainID `json:"chain"`
 }
 
+// Contract is config for contract
+type Contract struct {
+	Name    string
+	Source  string
+	Network string
+}
+
+// ContractCollection contains contracts with names
+type ContractCollection struct {
+	Contracts map[string]Contract
+}
+
+// AccountCollection contains accounts with names
 type AccountCollection struct {
 	Accounts map[string]Account
 }
@@ -128,15 +141,61 @@ func (k EmulatorServiceKey) MarshalJSON() ([]byte, error) {
 	})
 }
 
+func (c *ContractCollection) UnmarshalJSON(b []byte) error {
+	raw := make(map[string]json.RawMessage)
+	c.Contracts = make(map[string]Contract)
+
+	err := json.Unmarshal(b, &raw)
+	if err != nil {
+		return err
+	}
+
+	for name, value := range raw {
+		contract := new(Contract)
+		err = json.Unmarshal(value, &contract)
+		if err != nil {
+			return err
+		}
+
+		contract.Name = name
+		c.Contracts[name] = *contract
+	}
+
+	return nil
+}
+
+func (c *Contract) UnmarshalJSON(b []byte) error {
+	sourceNetwork := make(map[string]string)
+
+	// todo validate source
+	err := json.Unmarshal(b, &sourceNetwork)
+	if err != nil && len(sourceNetwork) > 0 {
+		// todo implement advanced schema
+		// contract { sourceNetwork["source"] }
+	} else { // basic schema
+		json.Unmarshal(b, &c.Source)
+	}
+
+	return nil
+}
+
 // UnmarshalJSON account collection to get the key name for the account as well
 func (c *AccountCollection) UnmarshalJSON(b []byte) error {
-	raw := make(map[string]json.RawMessage)
-	json.Unmarshal(b, &raw)
 	c.Accounts = make(map[string]Account)
+	raw := make(map[string]json.RawMessage)
+
+	err := json.Unmarshal(b, &raw)
+	if err != nil {
+		return err
+	}
 
 	for name, value := range raw {
 		account := new(Account)
-		json.Unmarshal(value, &account)
+		err := json.Unmarshal(value, &account)
+		if err != nil {
+			return err
+		}
+
 		account.Name = name
 
 		c.Accounts[name] = *account
@@ -148,13 +207,16 @@ func (c *AccountCollection) UnmarshalJSON(b []byte) error {
 // UnmarshalJSON Account decodes json config for account
 // and has two options for keys - string and key object
 func (a *Account) UnmarshalJSON(b []byte) error {
-
 	raw := make(map[string]json.RawMessage)
-	json.Unmarshal(b, &raw)
+
+	err := json.Unmarshal(b, &raw)
+	if err != nil {
+		return err
+	}
 
 	json.Unmarshal(raw["address"], &a.Address)
 	json.Unmarshal(raw["chain"], &a.ChainID)
-	err := json.Unmarshal(raw["keys"], &a.Keys)
+	err = json.Unmarshal(raw["keys"], &a.Keys)
 
 	// if error trying unmarshal into key structure then we try unmarshal a string
 	if err != nil {
@@ -263,18 +325,22 @@ func Exists(path string) bool {
 Config structure helpers
 */
 // GetContractsForNetwork get accounts and contracts for network
-func (c *Config) GetContractsForNetwork(network string) map[string][]string {
+func (c *ContractCollection) GetContractsForNetwork(network string) Contract {
 	return c.Contracts[network]
 }
 
 // GetContractsForAccountAndNetwork get contract array for account and network
-func (c *Config) GetContractsForAccountAndNetwork(network string, accountName string) []string {
-	return c.Contracts[network][accountName]
-}
+//func (c *ContractCollection) GetContractsForAccountAndNetwork(network string, accountName string) Contract {
+//	return c.Contracts[network][accountName]
+//}
 
-/** ====================================
-AccountCollection structure helpers
-*/
+// GetAccountByName get account from account collection by name
 func (c *AccountCollection) GetAccountByName(name string) Account {
 	return c.Accounts[name]
+}
+
+// todo see what data is needed from contracts
+// GetContractByName get contract from collection by name
+func (c *ContractCollection) GetContractByName(name string) Contract {
+	return c.Contracts[name]
 }
