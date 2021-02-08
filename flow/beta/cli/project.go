@@ -30,13 +30,27 @@ import (
 	"github.com/onflow/flow-cli/flow/beta/cli/keys"
 )
 
+type Contract struct {
+	Name   string
+	Source string
+	Target flow.Address
+}
+
+/** ======================================================
+Project struct defines configuration and accounts needed
+*/
 type Project struct {
 	conf     *config.Config
 	accounts []*Account
 }
 
+// todo discuss if this should be moved to config (i think config will be a
+// central point for configuration for whole cli and should be reused)
+
+// DefaultConfigPath path to default config file
 const DefaultConfigPath = "flow.json"
 
+// LoadProject parses config and create project instance
 func LoadProject() *Project {
 	conf, err := config.Load(DefaultConfigPath)
 	if err != nil {
@@ -62,10 +76,12 @@ func LoadProject() *Project {
 	return proj
 }
 
+// ProjectExists check if config exists
 func ProjectExists() bool {
 	return config.Exists(DefaultConfigPath)
 }
 
+// InitProject create project structure
 func InitProject() *Project {
 	serviceAccount, serviceAccountKey := generateEmulatorServiceAccount()
 
@@ -75,6 +91,8 @@ func InitProject() *Project {
 	}
 }
 
+// todo this should be moved to configuration
+// default values for emulator
 const (
 	DefaultEmulatorConfigProfileName  = "default"
 	defaultEmulatorNetworkName        = "emulator"
@@ -83,6 +101,8 @@ const (
 	defaultEmulatorHost               = "127.0.0.1:3569"
 )
 
+// todo this should be moved to config - it refferences config all over
+// defaultConfig initialize config with default values
 func defaultConfig(serviceAccountKey *keys.HexAccountKey) *config.Config {
 	return &config.Config{
 		Emulator: map[string]config.EmulatorConfigProfile{
@@ -104,6 +124,7 @@ func defaultConfig(serviceAccountKey *keys.HexAccountKey) *config.Config {
 	}
 }
 
+// generateEmulatorServieAccount create service account used by emulator
 func generateEmulatorServiceAccount() (*Account, *keys.HexAccountKey) {
 	seed := RandomSeed(crypto.MinSeedLength)
 
@@ -124,6 +145,7 @@ func generateEmulatorServiceAccount() (*Account, *keys.HexAccountKey) {
 	}, serviceAccountKey
 }
 
+// newProject creates new project based on configuration
 func newProject(conf *config.Config) (*Project, error) {
 	accounts, err := accountsFromConfig(conf)
 	if err != nil {
@@ -136,47 +158,41 @@ func newProject(conf *config.Config) (*Project, error) {
 	}, nil
 }
 
+// Host get project host
 func (p *Project) Host(network string) string {
 	return p.conf.Networks[network].Host
 }
 
+// EmulatorConfig get project emulator config
 func (p *Project) EmulatorConfig(profile string) config.EmulatorConfigProfile {
 	return p.conf.Emulator[profile]
 }
 
+// todo addapt this function - it takes network and it must return contract defined here as source (path), target (address) for network
 func (p *Project) Contracts(network string) []Contract {
 	contracts := make([]Contract, 0)
 
-	for bundleName, bundle := range p.conf.ContractBundles {
+	for account, contracts := range p.conf.Deploy[network] {
 
-		for contractName, contractSource := range bundle.Source {
+	}
 
-			target := p.getTargetAddress(bundle.Target[network])
+	for contractName, contractSource := range p.conf.Contracts {
 
-			contract := Contract{
-				BundleName: bundleName,
-				Name:       contractName,
-				Source:     path.Clean(contractSource),
-				Target:     target,
-			}
+		target := p.getTargetAddress(network)
 
-			contracts = append(contracts, contract)
+		contract := Contract{
+			Name:   contractName,
+			Source: path.Clean(contractSource), // path to contract
+			Target: target,                     // target account
 		}
+
+		contracts = append(contracts, contract)
 	}
 
 	return contracts
 }
 
-func (p *Project) Aliases(network string) map[string]string {
-	aliases := make(map[string]string)
-
-	for name, networks := range p.conf.Aliases {
-		aliases[name] = networks[network]
-	}
-
-	return aliases
-}
-
+// AccountByAddress get account by address for project
 func (p *Project) AccountByAddress(address flow.Address) *Account {
 	for _, account := range p.accounts {
 		if account.Address() == address {
@@ -187,6 +203,8 @@ func (p *Project) AccountByAddress(address flow.Address) *Account {
 	return nil
 }
 
+// todo should be moved to config
+// Save save project to config file
 func (p *Project) Save() {
 	p.conf.Accounts = accountsToConfig(p.accounts)
 
@@ -196,7 +214,9 @@ func (p *Project) Save() {
 	}
 }
 
+// getTargetAddress
 func (p *Project) getTargetAddress(target string) flow.Address {
+
 	for _, account := range p.accounts {
 		if account.name == target {
 			return account.address
@@ -206,13 +226,9 @@ func (p *Project) getTargetAddress(target string) flow.Address {
 	return flow.HexToAddress(target[2:])
 }
 
-type Contract struct {
-	BundleName string
-	Name       string
-	Source     string
-	Target     flow.Address
-}
-
+/** ======================================================
+Account struct defines properties for account used in deployment
+*/
 type Account struct {
 	name    string
 	address flow.Address
@@ -220,14 +236,17 @@ type Account struct {
 	keys    []keys.AccountKey
 }
 
+// Address get address of account
 func (a *Account) Address() flow.Address {
 	return a.address
 }
 
+// DefaultKey gets first default key for account
 func (a *Account) DefaultKey() keys.AccountKey {
 	return a.keys[0]
 }
 
+// accountsFromConfig convert the config structure to account internal structure
 func accountsFromConfig(conf *config.Config) ([]*Account, error) {
 	accounts := make([]*Account, 0, len(conf.Accounts))
 
@@ -243,6 +262,8 @@ func accountsFromConfig(conf *config.Config) ([]*Account, error) {
 	return accounts, nil
 }
 
+// todo think of refactoring this to config - is there a reason is not merged?
+// accountFromConfig convert single account from config. Implement service addresses
 func accountFromConfig(accountName string, accountConf config.Account) (*Account, error) {
 	accountKeys := make([]keys.AccountKey, 0, len(accountConf.Keys))
 
@@ -271,6 +292,7 @@ func accountFromConfig(accountName string, accountConf config.Account) (*Account
 	}, nil
 }
 
+// accountsToConfig convert account array to configuration accounts
 func accountsToConfig(accounts []*Account) map[string]config.Account {
 	accountConfs := make(map[string]config.Account)
 
@@ -281,6 +303,7 @@ func accountsToConfig(accounts []*Account) map[string]config.Account {
 	return accountConfs
 }
 
+// accountToConfig convert single account to configuration accounts
 func accountToConfig(account *Account) config.Account {
 	var address string
 
