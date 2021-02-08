@@ -116,24 +116,25 @@ func Test_ConfigMultipleAccountsSimple(t *testing.T) {
 		}
 	}`)
 
-	var accounts map[string]Account
+	var accounts AccountCollection
 	json.Unmarshal(b, &accounts)
 
-	assert.Equal(t, "service-1", accounts["emulator-account"].Address)
-	assert.Equal(t, "flow-emulator", accounts["emulator-account"].ChainID.String())
-	assert.Equal(t, 1, len(accounts["emulator-account"].Keys))
-	assert.Equal(t, "SHA3_256", accounts["emulator-account"].Keys[0].HashAlgo.String())
-	assert.Equal(t, 0, accounts["emulator-account"].Keys[0].Index)
-	assert.Equal(t, "ECDSA_P256", accounts["emulator-account"].Keys[0].SigAlgo.String())
-	assert.Equal(t, "dd72967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47", accounts["emulator-account"].Keys[0].Context["privateKey"])
+	assert.Equal(t, "emulator-account", accounts.Accounts["emulator-account"].Name)
+	assert.Equal(t, "service-1", accounts.Accounts["emulator-account"].Address)
+	assert.Equal(t, "flow-emulator", accounts.Accounts["emulator-account"].ChainID.String())
+	assert.Equal(t, 1, len(accounts.Accounts["emulator-account"].Keys))
+	assert.Equal(t, "SHA3_256", accounts.Accounts["emulator-account"].Keys[0].HashAlgo.String())
+	assert.Equal(t, 0, accounts.Accounts["emulator-account"].Keys[0].Index)
+	assert.Equal(t, "ECDSA_P256", accounts.Accounts["emulator-account"].Keys[0].SigAlgo.String())
+	assert.Equal(t, "dd72967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47", accounts.Accounts["emulator-account"].Keys[0].Context["privateKey"])
 
-	assert.Equal(t, "0x123123", accounts["testnet-account"].Address)
-	assert.Equal(t, "testnet", accounts["testnet-account"].ChainID.String())
-	assert.Equal(t, 1, len(accounts["testnet-account"].Keys))
-	assert.Equal(t, "SHA3_256", accounts["testnet-account"].Keys[0].HashAlgo.String())
-	assert.Equal(t, 0, accounts["testnet-account"].Keys[0].Index)
-	assert.Equal(t, "ECDSA_P256", accounts["testnet-account"].Keys[0].SigAlgo.String())
-	assert.Equal(t, "1232967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47", accounts["testnet-account"].Keys[0].Context["privateKey"])
+	assert.Equal(t, "0x123123", accounts.Accounts["testnet-account"].Address)
+	assert.Equal(t, "testnet", accounts.Accounts["testnet-account"].ChainID.String())
+	assert.Equal(t, 1, len(accounts.Accounts["testnet-account"].Keys))
+	assert.Equal(t, "SHA3_256", accounts.Accounts["testnet-account"].Keys[0].HashAlgo.String())
+	assert.Equal(t, 0, accounts.Accounts["testnet-account"].Keys[0].Index)
+	assert.Equal(t, "ECDSA_P256", accounts.Accounts["testnet-account"].Keys[0].SigAlgo.String())
+	assert.Equal(t, "1232967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47", accounts.Accounts["testnet-account"].Keys[0].Context["privateKey"])
 }
 
 func Test_ConfigMultipleAccountsAdvanced(t *testing.T) {
@@ -170,24 +171,24 @@ func Test_ConfigMultipleAccountsAdvanced(t *testing.T) {
 		}
 	}`)
 
-	var accounts map[string]Account
+	var accounts AccountCollection
 	json.Unmarshal(b, &accounts)
 
-	assert.Equal(t, "service", accounts["emulator-account"].Address)
-	assert.Equal(t, "flow-emulator", accounts["emulator-account"].ChainID.String())
-	assert.Equal(t, 1, len(accounts["emulator-account"].Keys))
-	assert.Equal(t, "SHA3_256", accounts["emulator-account"].Keys[0].HashAlgo.String())
-	assert.Equal(t, 0, accounts["emulator-account"].Keys[0].Index)
-	assert.Equal(t, "ECDSA_P256", accounts["emulator-account"].Keys[0].SigAlgo.String())
-	assert.Equal(t, "1272967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47", accounts["emulator-account"].Keys[0].Context["privateKey"])
+	assert.Equal(t, "service", accounts.Accounts["emulator-account"].Address)
+	assert.Equal(t, "flow-emulator", accounts.Accounts["emulator-account"].ChainID.String())
+	assert.Equal(t, 1, len(accounts.Accounts["emulator-account"].Keys))
+	assert.Equal(t, "SHA3_256", accounts.Accounts["emulator-account"].Keys[0].HashAlgo.String())
+	assert.Equal(t, 0, accounts.Accounts["emulator-account"].Keys[0].Index)
+	assert.Equal(t, "ECDSA_P256", accounts.Accounts["emulator-account"].Keys[0].SigAlgo.String())
+	assert.Equal(t, "1272967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47", accounts.Accounts["emulator-account"].Keys[0].Context["privateKey"])
 
-	assert.Equal(t, "0x123", accounts["testnet-account"].Address)
-	assert.Equal(t, "testnet", accounts["testnet-account"].ChainID.String())
-	assert.Equal(t, 1, len(accounts["testnet-account"].Keys))
-	assert.Equal(t, "SHA3_256", accounts["testnet-account"].Keys[0].HashAlgo.String())
-	assert.Equal(t, 0, accounts["testnet-account"].Keys[0].Index)
-	assert.Equal(t, "ECDSA_P256", accounts["testnet-account"].Keys[0].SigAlgo.String())
-	assert.Equal(t, "2272967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47", accounts["testnet-account"].Keys[0].Context["privateKey"])
+	assert.Equal(t, "0x123", accounts.Accounts["testnet-account"].Address)
+	assert.Equal(t, "testnet", accounts.Accounts["testnet-account"].ChainID.String())
+	assert.Equal(t, 1, len(accounts.Accounts["testnet-account"].Keys))
+	assert.Equal(t, "SHA3_256", accounts.Accounts["testnet-account"].Keys[0].HashAlgo.String())
+	assert.Equal(t, 0, accounts.Accounts["testnet-account"].Keys[0].Index)
+	assert.Equal(t, "ECDSA_P256", accounts.Accounts["testnet-account"].Keys[0].SigAlgo.String())
+	assert.Equal(t, "2272967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47", accounts.Accounts["testnet-account"].Keys[0].Context["privateKey"])
 }
 
 func Test_ConfigMixedAccounts(t *testing.T) {
@@ -214,24 +215,45 @@ func Test_ConfigMixedAccounts(t *testing.T) {
 		}
 	}`)
 
-	var accounts map[string]Account
+	var accounts AccountCollection
 	json.Unmarshal(b, &accounts)
 
-	assert.Equal(t, "service", accounts["emulator-account"].Address)
-	assert.Equal(t, "flow-emulator", accounts["emulator-account"].ChainID.String())
-	assert.Equal(t, 1, len(accounts["emulator-account"].Keys))
-	assert.Equal(t, "SHA3_256", accounts["emulator-account"].Keys[0].HashAlgo.String())
-	assert.Equal(t, 0, accounts["emulator-account"].Keys[0].Index)
-	assert.Equal(t, "ECDSA_P256", accounts["emulator-account"].Keys[0].SigAlgo.String())
-	assert.Equal(t, "1272967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47", accounts["emulator-account"].Keys[0].Context["privateKey"])
+	assert.Equal(t, "service", accounts.Accounts["emulator-account"].Address)
+	assert.Equal(t, "flow-emulator", accounts.Accounts["emulator-account"].ChainID.String())
+	assert.Equal(t, 1, len(accounts.Accounts["emulator-account"].Keys))
+	assert.Equal(t, "SHA3_256", accounts.Accounts["emulator-account"].Keys[0].HashAlgo.String())
+	assert.Equal(t, 0, accounts.Accounts["emulator-account"].Keys[0].Index)
+	assert.Equal(t, "ECDSA_P256", accounts.Accounts["emulator-account"].Keys[0].SigAlgo.String())
+	assert.Equal(t, "1272967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47", accounts.Accounts["emulator-account"].Keys[0].Context["privateKey"])
 
-	assert.Equal(t, "0x123", accounts["testnet-account"].Address)
-	assert.Equal(t, "testnet", accounts["testnet-account"].ChainID.String())
-	assert.Equal(t, 1, len(accounts["testnet-account"].Keys))
-	assert.Equal(t, "SHA3_256", accounts["testnet-account"].Keys[0].HashAlgo.String())
-	assert.Equal(t, 0, accounts["testnet-account"].Keys[0].Index)
-	assert.Equal(t, "ECDSA_P256", accounts["testnet-account"].Keys[0].SigAlgo.String())
-	assert.Equal(t, "2272967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47", accounts["testnet-account"].Keys[0].Context["privateKey"])
+	assert.Equal(t, "0x123", accounts.Accounts["testnet-account"].Address)
+	assert.Equal(t, "testnet", accounts.Accounts["testnet-account"].ChainID.String())
+	assert.Equal(t, 1, len(accounts.Accounts["testnet-account"].Keys))
+	assert.Equal(t, "SHA3_256", accounts.Accounts["testnet-account"].Keys[0].HashAlgo.String())
+	assert.Equal(t, 0, accounts.Accounts["testnet-account"].Keys[0].Index)
+	assert.Equal(t, "ECDSA_P256", accounts.Accounts["testnet-account"].Keys[0].SigAlgo.String())
+	assert.Equal(t, "2272967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47", accounts.Accounts["testnet-account"].Keys[0].Context["privateKey"])
+}
+
+func Test_ConfigAccountsMap(t *testing.T) {
+	b := []byte(`{
+		"emulator-account": {
+			"address": "service-1",
+			"chain": "flow-emulator",
+			"keys": "dd72967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47"
+		},
+		"testnet-account": {
+			"address": "0x123123",
+			"chain": "testnet",
+			"keys": "1232967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47"
+		}
+	}`)
+
+	var accounts AccountCollection
+	json.Unmarshal(b, &accounts)
+
+	assert.Equal(t, "service-1", accounts.GetAccountByName("emulator-account").Address)
+	assert.Equal(t, "emulator-account", accounts.GetAccountByName("emulator-account").Name)
 }
 
 /* ================================================================

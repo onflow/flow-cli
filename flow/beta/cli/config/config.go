@@ -42,8 +42,9 @@ type Config struct {
 	Emulator  map[string]EmulatorConfigProfile `json:"emulator"`
 	Networks  map[string]Network               `json:"networks"`
 	Aliases   map[string]map[string]string     `json:"aliases"`
-	Contracts map[string]Contract              `json:"contracts"`
-	Accounts  map[string]Account               `json:"accounts"`
+	Contracts map[string]map[string][]string   `json:"contracts"` // todo later support objects in array
+	Accounts  AccountCollection                `json:"accounts"`
+	Deploy    map[string]map[string][]string   `json:"deploy"`
 }
 
 // EmulatorConfigProfile is emulator config
@@ -72,14 +73,13 @@ type Network struct {
 	ChainID flow.ChainID `json:"chain"`
 }
 
-// ContractBundle sets all contracts in bundles for soruce and target
-type ContractBundle struct {
-	Source map[string]string `json:"source"`
-	Target map[string]string `json:"target"`
+type AccountCollection struct {
+	Accounts map[string]Account
 }
 
 // Account is main config for each account
 type Account struct {
+	Name    string
 	Address string       `json:"address"`
 	ChainID flow.ChainID `json:"chain"`
 	Keys    []AccountKey `json:"keys"`
@@ -128,6 +128,23 @@ func (k EmulatorServiceKey) MarshalJSON() ([]byte, error) {
 	})
 }
 
+// UnmarshalJSON account collection to get the key name for the account as well
+func (c *AccountCollection) UnmarshalJSON(b []byte) error {
+	raw := make(map[string]json.RawMessage)
+	json.Unmarshal(b, &raw)
+	c.Accounts = make(map[string]Account)
+
+	for name, value := range raw {
+		account := new(Account)
+		json.Unmarshal(value, &account)
+		account.Name = name
+
+		c.Accounts[name] = *account
+	}
+
+	return nil
+}
+
 // UnmarshalJSON Account decodes json config for account
 // and has two options for keys - string and key object
 func (a *Account) UnmarshalJSON(b []byte) error {
@@ -155,6 +172,8 @@ func (a *Account) UnmarshalJSON(b []byte) error {
 			}
 		}]`), &keys)
 		a.Keys = keys
+	} else {
+		return err
 	}
 
 	return nil
@@ -238,4 +257,24 @@ func Exists(path string) bool {
 		return false
 	}
 	return !info.IsDir()
+}
+
+/** ====================================
+Config structure helpers
+*/
+// GetContractsForNetwork get accounts and contracts for network
+func (c *Config) GetContractsForNetwork(network string) map[string][]string {
+	return c.Contracts[network]
+}
+
+// GetContractsForAccountAndNetwork get contract array for account and network
+func (c *Config) GetContractsForAccountAndNetwork(network string, accountName string) []string {
+	return c.Contracts[network][accountName]
+}
+
+/** ====================================
+AccountCollection structure helpers
+*/
+func (c *AccountCollection) GetAccountByName(name string) Account {
+	return c.Accounts[name]
 }
