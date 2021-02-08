@@ -52,7 +52,7 @@ var Cmd = &cobra.Command{
 		}
 
 		// Arguments
-		scriptArguments := make([]cadence.Value, 0)
+		var scriptArguments []cadence.Value
 		if conf.Args != "" {
 			scriptArguments, err = cli.ParseArguments(conf.Args)
 			if err != nil {
