@@ -263,6 +263,19 @@ Contracts Config Tests
 func Test_ConfigContractsSimple(t *testing.T) {
 	b := []byte(`{
     "KittyItems": "./cadence/kittyItems/contracts/KittyItems.cdc",
+    "KittyItemsMarket": "./cadence/kittyItems/contracts/KittyItemsMarket.cdc"
+  }`)
+
+	var contracts ContractCollection
+	json.Unmarshal(b, &contracts)
+
+	assert.Equal(t, "./cadence/kittyItems/contracts/KittyItems.cdc", contracts.Contracts["KittyItems"].Source)
+	assert.Equal(t, "./cadence/kittyItems/contracts/KittyItemsMarket.cdc", contracts.Contracts["KittyItemsMarket"].Source)
+}
+
+func Test_ConfigContractsComplex(t *testing.T) {
+	b := []byte(`{
+    "KittyItems": "./cadence/kittyItems/contracts/KittyItems.cdc",
     "KittyItemsMarket": {
       "testnet": "0x123123123",
       "emulator": "./cadence/kittyItemsMarket/contracts/KittyItemsMarket.cdc"
