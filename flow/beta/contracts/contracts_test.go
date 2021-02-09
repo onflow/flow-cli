@@ -12,8 +12,6 @@ import (
 	"github.com/onflow/flow-cli/flow/beta/contracts"
 )
 
-const bundleName = "test"
-
 type testContract struct {
 	name                 string
 	source               string
