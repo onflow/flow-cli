@@ -358,7 +358,7 @@ func (c *ContractCollection) GetByName(name string) Contract {
 // GetByNetwork returns all contracts for specific network
 func (c *ContractCollection) GetByNetwork(network string) []Contract {
 	return funk.Filter(c.Contracts, func(c Contract) bool {
-		return c.Network == network
+		return c.Network == network || c.Network == "" // if network is not defined return for all set value
 	}).([]Contract)
 }
 
