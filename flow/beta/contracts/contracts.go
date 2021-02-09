@@ -218,7 +218,7 @@ func sortByDeploymentOrder(contracts map[string]*Contract) ([]*Contract, error) 
 		}
 	}
 
-	sorted, err := topo.Sort(g)
+	sorted, err := topo.SortStabilized(g, nil)
 	if err != nil {
 		return nil, err
 	}
