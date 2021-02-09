@@ -302,31 +302,26 @@ func Test_ConfigContractsComplex(t *testing.T) {
 /* ================================================================
 Deploy Config Tests
 ================================================================ */
-//TODO: more deploy tests
 func Test_ConfigDeploySimple(t *testing.T) {
 	b := []byte(`{
-		"deploy": {
-			"testnet": {
-				"account-2": ["FungibleToken", "NonFungibleToken", "Kibble", "KittyItems"]
-			}, 
-			"emulator": {
-				"account-3": ["KittyItems", "KittyItemsMarket"],
-				"account-4": ["FungibleToken", "NonFungibleToken", "Kibble", "KittyItems", "KittyItemsMarket"]
-			}
+		"testnet": {
+			"account-2": ["FungibleToken", "NonFungibleToken", "Kibble", "KittyItems"]
+		}, 
+		"emulator": {
+			"account-3": ["KittyItems", "KittyItemsMarket"],
+			"account-4": ["FungibleToken", "NonFungibleToken", "Kibble", "KittyItems", "KittyItemsMarket"]
 		}
 	}`)
 
-	config := new(Config)
-	json.Unmarshal(b, &config)
+	deploy := new(DeployCollection)
+	json.Unmarshal(b, &deploy)
 
-	assert.Equal(t, "FungibleToken", config.Deploy["testnet"]["account-2"][0])
+	assert.Equal(t, "account-2", deploy.GetByNetwork("testnet")[0].Account)
+	assert.Equal(t, []string{"FungibleToken", "NonFungibleToken", "Kibble", "KittyItems"}, deploy.GetByNetwork("testnet")[0].Contracts)
 
-	networks := make([]string, 0)
-	for k, _ := range config.Deploy {
-		networks = append(networks, k)
-	}
-
-	assert.Equal(t, "testnet", networks[0])
-	assert.Equal(t, "emulator", networks[1])
-
+	assert.Equal(t, 2, len(deploy.GetByNetwork("emulator")))
+	assert.Equal(t, "account-3", deploy.GetByNetwork("emulator")[0].Account)
+	assert.Equal(t, "account-4", deploy.GetByNetwork("emulator")[1].Account)
+	assert.Equal(t, []string{"KittyItems", "KittyItemsMarket"}, deploy.GetByNetwork("emulator")[0].Contracts)
+	assert.Equal(t, []string{"FungibleToken", "NonFungibleToken", "Kibble", "KittyItems", "KittyItemsMarket"}, deploy.GetByNetwork("emulator")[1].Contracts)
 }
