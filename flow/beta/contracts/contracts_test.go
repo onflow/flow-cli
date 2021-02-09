@@ -116,7 +116,9 @@ var testContractH = testContract{
 	expectedDependencies: nil,
 }
 
-func testResolver(source string) (string, error) {
+type testLoader struct{}
+
+func (t testLoader) Load(source string) (string, error) {
 	switch source {
 	case testContractA.source:
 		return testContractA.code, nil
@@ -136,7 +138,11 @@ func testResolver(source string) (string, error) {
 		return testContractH.code, nil
 	}
 
-	return "", fmt.Errorf("failed to resolve %s", source)
+	return "", fmt.Errorf("failed to load %s", source)
+}
+
+func (t testLoader) Normalize(base, relative string) string {
+	return relative
 }
 
 type contractTestCase struct {
@@ -196,11 +202,10 @@ func TestResolveImports(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
-			p := contracts.NewPreprocessor(nil, testResolver)
+			p := contracts.NewPreprocessor(testLoader{})
 
 			for _, contract := range testCase.contracts {
 				err := p.AddContractSource(
-					bundleName,
 					contract.name,
 					contract.source,
 					contract.target,
@@ -242,11 +247,10 @@ func TestContractDeploymentOrder(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
-			p := contracts.NewPreprocessor(nil, testResolver)
+			p := contracts.NewPreprocessor(testLoader{})
 
 			for _, contract := range testCase.contracts {
 				err := p.AddContractSource(
-					bundleName,
 					contract.name,
 					contract.source,
 					contract.target,
