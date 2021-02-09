@@ -132,9 +132,14 @@ func (c *Contract) addDependency(location string, dep *Contract) {
 	c.dependencies[location] = dep
 }
 
-type SourceResolver func(source string) (string, error)
+type Loader interface {
+	Load(source string) (string, error)
+	Normalize(base, relative string) string
+}
 
-func FilesystemResolver(source string) (string, error) {
+type FilesystemLoader struct{}
+
+func (f FilesystemLoader) Load(source string) (string, error) {
 	codeBytes, err := ioutil.ReadFile(source)
 	if err != nil {
 		return "", err
@@ -143,15 +148,23 @@ func FilesystemResolver(source string) (string, error) {
 	return string(codeBytes), nil
 }
 
+func (f FilesystemLoader) Normalize(base, relative string) string {
+	return absolutePath(base, relative)
+}
+
+func absolutePath(basePath, relativePath string) string {
+	return path.Join(path.Dir(basePath), relativePath)
+}
+
 type Preprocessor struct {
-	resolver          SourceResolver
+	loader            Loader
 	contracts         []*Contract
 	contractsBySource map[string]*Contract
 }
 
-func NewPreprocessor(resolver SourceResolver) *Preprocessor {
+func NewPreprocessor(loader Loader) *Preprocessor {
 	return &Preprocessor{
-		resolver:          resolver,
+		loader:            loader,
 		contracts:         make([]*Contract, 0),
 		contractsBySource: make(map[string]*Contract),
 	}
@@ -163,7 +176,7 @@ func (p *Preprocessor) AddContractSource(
 	contractSource string,
 	target flow.Address,
 ) error {
-	contractCode, err := p.resolver(contractSource)
+	contractCode, err := p.loader.Load(contractSource)
 	if err != nil {
 		return err
 	}
@@ -189,7 +202,7 @@ func (p *Preprocessor) AddContractSource(
 func (p *Preprocessor) ResolveImports() {
 	for _, c := range p.contracts {
 		for _, location := range c.imports() {
-			importPath := absolutePath(c.source, location)
+			importPath := p.loader.Normalize(c.source, location)
 
 			importContract, isContract := p.contractsBySource[importPath]
 			if isContract {
@@ -290,8 +303,4 @@ func nodesToContracts(nodes []graph.Node) []*Contract {
 	}
 
 	return contracts
-}
-
-func absolutePath(source, location string) string {
-	return path.Join(path.Dir(source), location)
 }
