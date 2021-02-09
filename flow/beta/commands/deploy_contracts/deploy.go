@@ -59,6 +59,7 @@ var Cmd = &cobra.Command{
 
 		p := contracts.NewPreprocessor(
 			proj.Aliases(conf.Network),
+			contracts.FilesystemResolver,
 		)
 
 		for _, contract := range proj.Contracts(conf.Network) {
