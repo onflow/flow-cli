@@ -28,6 +28,7 @@ import (
 	"github.com/onflow/cadence/runtime/common"
 	"github.com/onflow/cadence/runtime/parser2"
 	"github.com/onflow/flow-go-sdk"
+	"gonum.org/v1/gonum/graph"
 	"gonum.org/v1/gonum/graph/simple"
 	"gonum.org/v1/gonum/graph/topo"
 )
@@ -212,6 +213,32 @@ func (p *Preprocessor) ContractDeploymentOrder() ([]*Contract, error) {
 	return sorted, nil
 }
 
+type CyclicImportError struct {
+	Cycles [][]*Contract
+}
+
+func (e *CyclicImportError) contractNames() [][]string {
+	cycles := make([][]string, 0, len(e.Cycles))
+
+	for _, cycle := range e.Cycles {
+		contracts := make([]string, 0, len(cycle))
+		for _, contract := range cycle {
+			contracts = append(contracts, contract.Name())
+		}
+
+		cycles = append(cycles, contracts)
+	}
+
+	return cycles
+}
+
+func (e *CyclicImportError) Error() string {
+	return fmt.Sprintf(
+		"contracts: import cycle(s) detected: %v",
+		e.contractNames(),
+	)
+}
+
 // sortByDeploymentOrder sorts the given set of contracts in order of deployment.
 //
 // The resulting ordering ensures that each contract is deployed after all of its
@@ -234,16 +261,35 @@ func sortByDeploymentOrder(contracts []*Contract) ([]*Contract, error) {
 
 	sorted, err := topo.SortStabilized(g, nil)
 	if err != nil {
-		return nil, err
+		switch topoErr := err.(type) {
+		case topo.Unorderable:
+			return nil, &CyclicImportError{Cycles: nodeSetsToContractSets(topoErr)}
+		default:
+			return nil, err
+		}
 	}
 
-	results := make([]*Contract, len(sorted))
+	return nodesToContracts(sorted), nil
+}
 
-	for i, s := range sorted {
-		results[i] = s.(*Contract)
+func nodeSetsToContractSets(nodes [][]graph.Node) [][]*Contract {
+	contracts := make([][]*Contract, len(nodes))
+
+	for i, s := range nodes {
+		contracts[i] = nodesToContracts(s)
 	}
 
-	return results, nil
+	return contracts
+}
+
+func nodesToContracts(nodes []graph.Node) []*Contract {
+	contracts := make([]*Contract, len(nodes))
+
+	for i, s := range nodes {
+		contracts[i] = s.(*Contract)
+	}
+
+	return contracts
 }
 
 func absolutePath(source, location string) string {
