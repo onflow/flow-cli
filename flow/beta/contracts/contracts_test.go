@@ -229,6 +229,8 @@ func TestResolveImports(t *testing.T) {
 					require.NotNil(t, contractDependency)
 
 					assert.Equal(t, contract.Dependencies()[dependency.source], contractDependency)
+
+					assert.Contains(t, contract.TranspiledCode(), dependency.target.Hex())
 				}
 			}
 		})
