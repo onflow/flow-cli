@@ -183,10 +183,8 @@ func (p *Preprocessor) AddContractSource(
 	return nil
 }
 
-func (p *Preprocessor) PrepareForDeployment() ([]*Contract, error) {
-
+func (p *Preprocessor) ResolveImports() {
 	for _, c := range p.contracts {
-
 		for _, location := range c.imports() {
 			importPath := absolutePath(c.source, location)
 
@@ -196,9 +194,12 @@ func (p *Preprocessor) PrepareForDeployment() ([]*Contract, error) {
 			}
 		}
 	}
+}
 
+func (p *Preprocessor) ContractDeploymentOrder() ([]*Contract, error) {
 	sorted, err := sortByDeploymentOrder(p.contracts)
 	if err != nil {
+		// TODO: add dedicated error types
 		return nil, err
 	}
 

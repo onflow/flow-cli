@@ -75,7 +75,9 @@ var Cmd = &cobra.Command{
 			}
 		}
 
-		contracts, err := p.PrepareForDeployment()
+		p.ResolveImports()
+
+		contracts, err := p.ContractDeploymentOrder()
 		if err != nil {
 			cli.Exit(1, err.Error())
 			return
