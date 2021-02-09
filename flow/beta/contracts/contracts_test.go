@@ -1,0 +1,278 @@
+package contracts_test
+
+import (
+	"fmt"
+	"testing"
+
+	"github.com/onflow/flow-go-sdk"
+	"github.com/onflow/flow-go-sdk/test"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
+	"github.com/onflow/flow-cli/flow/beta/contracts"
+)
+
+const bundleName = "test"
+
+type testContract struct {
+	name                 string
+	source               string
+	code                 string
+	target               flow.Address
+	expectedDependencies []testContract
+}
+
+var addresses = test.AddressGenerator()
+
+var testContractA = testContract{
+	name:                 "ContractA",
+	source:               "ContractA.cdc",
+	code:                 `pub contract ContractA {}`,
+	target:               addresses.New(),
+	expectedDependencies: nil,
+}
+
+var testContractB = testContract{
+	name:                 "ContractB",
+	source:               "ContractB.cdc",
+	code:                 `pub contract ContractB {}`,
+	target:               addresses.New(),
+	expectedDependencies: nil,
+}
+
+var testContractC = testContract{
+	name:   "ContractC",
+	source: "ContractC.cdc",
+	code: `
+        import ContractA from "ContractA.cdc"
+    
+        pub contract ContractC {}
+    `,
+	target:               addresses.New(),
+	expectedDependencies: []testContract{testContractA},
+}
+
+var testContractD = testContract{
+	name:   "ContractD",
+	source: "ContractD.cdc",
+	code: `
+        import ContractC from "ContractC.cdc"
+
+        pub contract ContractD {}
+    `,
+	target:               addresses.New(),
+	expectedDependencies: []testContract{testContractC},
+}
+
+var testContractE = testContract{
+	name:   "ContractE",
+	source: "ContractE.cdc",
+	code: `
+        import ContractF from "ContractF.cdc"
+
+        pub contract ContractE {}
+    `,
+}
+
+var testContractF = testContract{
+	name:   "ContractF",
+	source: "ContractF.cdc",
+	code: `
+        import ContractE from "ContractE.cdc"
+
+        pub contract ContractF {}
+    `,
+	target: addresses.New(),
+}
+
+func init() {
+	// create import cycle, cannot be done statically
+	testContractE.expectedDependencies = []testContract{testContractF}
+	testContractF.expectedDependencies = []testContract{testContractE}
+}
+
+var testContractG = testContract{
+	name:   "ContractG",
+	source: "ContractG.cdc",
+	code: `
+        import ContractA from "ContractA.cdc"
+        import ContractB from "ContractB.cdc"
+
+        pub contract ContractG {}
+    `,
+	target:               addresses.New(),
+	expectedDependencies: []testContract{testContractA, testContractB},
+}
+
+var testContractH = testContract{
+	name:   "ContractH",
+	source: "ContractH.cdc",
+	code: `
+        import ContractFoo from "Foo.cdc"
+
+        pub contract ContractH {}
+    `,
+	target:               addresses.New(),
+	expectedDependencies: nil,
+}
+
+func testResolver(source string) (string, error) {
+	switch source {
+	case testContractA.source:
+		return testContractA.code, nil
+	case testContractB.source:
+		return testContractB.code, nil
+	case testContractC.source:
+		return testContractC.code, nil
+	case testContractD.source:
+		return testContractD.code, nil
+	case testContractE.source:
+		return testContractE.code, nil
+	case testContractF.source:
+		return testContractF.code, nil
+	case testContractG.source:
+		return testContractG.code, nil
+	case testContractH.source:
+		return testContractH.code, nil
+	}
+
+	return "", fmt.Errorf("failed to resolve %s", source)
+}
+
+type contractTestCase struct {
+	name                    string
+	contracts               []testContract
+	expectedDeploymentOrder []testContract
+	expectedDeploymentError error
+}
+
+func getTestCases() []contractTestCase {
+	return []contractTestCase{
+		{
+			name:                    "No contracts",
+			contracts:               []testContract{},
+			expectedDeploymentOrder: []testContract{},
+		},
+		{
+			name:                    "Single contract no imports",
+			contracts:               []testContract{testContractA},
+			expectedDeploymentOrder: []testContract{testContractA},
+		},
+		{
+			name:                    "Two contracts no imports",
+			contracts:               []testContract{testContractA, testContractB},
+			expectedDeploymentOrder: []testContract{testContractA, testContractB},
+		},
+		{
+			name:                    "Two contracts with imports",
+			contracts:               []testContract{testContractA, testContractC},
+			expectedDeploymentOrder: []testContract{testContractA, testContractC},
+		},
+		{
+			name:                    "Three contracts with imports",
+			contracts:               []testContract{testContractA, testContractC, testContractD},
+			expectedDeploymentOrder: []testContract{testContractA, testContractC, testContractD},
+		},
+		{
+			name:                    "Two contracts with import cycle",
+			contracts:               []testContract{testContractE, testContractF},
+			expectedDeploymentError: &contracts.CyclicImportError{},
+		},
+		{
+			name:                    "Single contract with two imports",
+			contracts:               []testContract{testContractA, testContractB, testContractG},
+			expectedDeploymentOrder: []testContract{testContractA, testContractB, testContractG},
+		},
+		{
+			name:                    "Single contract with unresolved import",
+			contracts:               []testContract{testContractH},
+			expectedDeploymentOrder: []testContract{testContractH},
+		},
+	}
+}
+
+func TestResolveImports(t *testing.T) {
+	testCases := getTestCases()
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			p := contracts.NewPreprocessor(nil, testResolver)
+
+			for _, contract := range testCase.contracts {
+				err := p.AddContractSource(
+					bundleName,
+					contract.name,
+					contract.source,
+					contract.target,
+				)
+				require.NoError(t, err)
+			}
+
+			p.ResolveImports()
+
+			for _, sourceContract := range testCase.contracts {
+
+				contract := p.ContractBySource(sourceContract.source)
+				require.NotNil(t, contract)
+
+				require.Equal(
+					t,
+					len(sourceContract.expectedDependencies),
+					len(contract.Dependencies()),
+					"resolved dependency count does not match expected count",
+				)
+
+				for _, dependency := range sourceContract.expectedDependencies {
+					require.Contains(t, contract.Dependencies(), dependency.source)
+
+					contractDependency := p.ContractBySource(dependency.source)
+					require.NotNil(t, contractDependency)
+
+					assert.Equal(t, contract.Dependencies()[dependency.source], contractDependency)
+				}
+			}
+		})
+	}
+}
+
+func TestContractDeploymentOrder(t *testing.T) {
+	testCases := getTestCases()
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			p := contracts.NewPreprocessor(nil, testResolver)
+
+			for _, contract := range testCase.contracts {
+				err := p.AddContractSource(
+					bundleName,
+					contract.name,
+					contract.source,
+					contract.target,
+				)
+				require.NoError(t, err)
+			}
+
+			p.ResolveImports()
+
+			deployedContracts, err := p.ContractDeploymentOrder()
+
+			if testCase.expectedDeploymentError != nil {
+				assert.IsType(t, testCase.expectedDeploymentError, err)
+				return
+			} else {
+				require.NoError(t, err)
+			}
+
+			require.Equal(
+				t,
+				len(testCase.expectedDeploymentOrder),
+				len(deployedContracts),
+				"deployed contract count does not match expected count",
+			)
+
+			for i, deployedContract := range deployedContracts {
+				assert.Equal(t, testCase.expectedDeploymentOrder[i].name, deployedContract.Name())
+			}
+		})
+	}
+}
