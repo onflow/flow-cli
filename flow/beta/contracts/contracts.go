@@ -143,15 +143,16 @@ func FilesystemResolver(source string) (string, error) {
 }
 
 type Preprocessor struct {
-	aliases   map[string]string
-	contracts map[string]*Contract
-	resolver  SourceResolver
+	resolver          SourceResolver
+	contracts         []*Contract
+	contractsBySource map[string]*Contract
 }
 
 func NewPreprocessor(resolver SourceResolver) *Preprocessor {
 	return &Preprocessor{
-		contracts: make(map[string]*Contract),
-		resolver:  resolver,
+		resolver:          resolver,
+		contracts:         make([]*Contract, 0),
+		contractsBySource: make(map[string]*Contract),
 	}
 }
 
@@ -178,7 +179,8 @@ func (p *Preprocessor) AddContractSource(
 		return err
 	}
 
-	p.contracts[c.source] = c
+	p.contracts = append(p.contracts, c)
+	p.contractsBySource[c.source] = c
 
 	return nil
 }
@@ -188,12 +190,16 @@ func (p *Preprocessor) ResolveImports() {
 		for _, location := range c.imports() {
 			importPath := absolutePath(c.source, location)
 
-			importContract, isContract := p.contracts[importPath]
+			importContract, isContract := p.contractsBySource[importPath]
 			if isContract {
 				c.addDependency(location, importContract)
 			}
 		}
 	}
+}
+
+func (p *Preprocessor) ContractBySource(contractSource string) *Contract {
+	return p.contractsBySource[contractSource]
 }
 
 func (p *Preprocessor) ContractDeploymentOrder() ([]*Contract, error) {
@@ -206,7 +212,14 @@ func (p *Preprocessor) ContractDeploymentOrder() ([]*Contract, error) {
 	return sorted, nil
 }
 
-func sortByDeploymentOrder(contracts map[string]*Contract) ([]*Contract, error) {
+// sortByDeploymentOrder sorts the given set of contracts in order of deployment.
+//
+// The resulting ordering ensures that each contract is deployed after all of its
+// dependencies are deployed. This function returns an error if an import cycle exists.
+//
+// This function constructs a directed graph in which contracts are nodes and imports are edges.
+// The ordering is computed by performing a topological sort on the constructed graph.
+func sortByDeploymentOrder(contracts []*Contract) ([]*Contract, error) {
 	g := simple.NewDirectedGraph()
 
 	for _, c := range contracts {
