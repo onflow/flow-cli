@@ -48,18 +48,11 @@ func newContract(
 	index int,
 	bundleName,
 	contractName,
-	contractSource string,
+	contractSource,
+	contractCode string,
 	target flow.Address,
 ) (*Contract, error) {
-	codeBytes, err := ioutil.ReadFile(contractSource)
-	if err != nil {
-		// TODO
-		return nil, err
-	}
-
-	code := string(codeBytes)
-
-	program, err := parser2.ParseProgram(code)
+	program, err := parser2.ParseProgram(contractCode)
 	if err != nil {
 		return nil, err
 	}
@@ -70,7 +63,7 @@ func newContract(
 		name:         contractName,
 		source:       contractSource,
 		target:       target,
-		code:         code,
+		code:         contractCode,
 		program:      program,
 		dependencies: make(map[string]*Contract),
 		aliases:      make(map[string]flow.Address),
@@ -138,21 +131,27 @@ func (c *Contract) addDependency(location string, dep *Contract) {
 	c.dependencies[location] = dep
 }
 
-func (c *Contract) addAlias(location string, target flow.Address) {
-	c.aliases[location] = target
+type SourceResolver func(source string) (string, error)
+
+func FilesystemResolver(source string) (string, error) {
+	codeBytes, err := ioutil.ReadFile(source)
+	if err != nil {
+		return "", err
+	}
+
+	return string(codeBytes), nil
 }
 
 type Preprocessor struct {
 	aliases   map[string]string
 	contracts map[string]*Contract
+	resolver  SourceResolver
 }
 
-func NewPreprocessor(
-	aliases map[string]string,
-) *Preprocessor {
+func NewPreprocessor(resolver SourceResolver) *Preprocessor {
 	return &Preprocessor{
-		aliases:   aliases,
 		contracts: make(map[string]*Contract),
+		resolver:  resolver,
 	}
 }
 
@@ -162,12 +161,17 @@ func (p *Preprocessor) AddContractSource(
 	contractSource string,
 	target flow.Address,
 ) error {
+	contractCode, err := p.resolver(contractSource)
+	if err != nil {
+		return err
+	}
 
 	c, err := newContract(
 		len(p.contracts),
 		bundleName,
 		contractName,
 		contractSource,
+		contractCode,
 		target,
 	)
 	if err != nil {
@@ -189,11 +193,6 @@ func (p *Preprocessor) PrepareForDeployment() ([]*Contract, error) {
 			importContract, isContract := p.contracts[importPath]
 			if isContract {
 				c.addDependency(location, importContract)
-			}
-
-			importAlias, isAlias := p.aliases[location]
-			if isAlias {
-				c.addAlias(location, flow.HexToAddress(importAlias[2:]))
 			}
 		}
 	}
