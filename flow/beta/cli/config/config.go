@@ -217,6 +217,10 @@ func (a *Account) UnmarshalJSON(b []byte) error {
 
 	// TODO: address validation format
 	if address == "service" {
+		if a.ChainID == "" {
+			a.ChainID = "flow-emulator" // default value TODO: find better way for defaults in general
+		}
+
 		a.Address = flow.ServiceAddress(a.ChainID)
 	} else {
 		address = strings.ReplaceAll(address, "0x", "") // remove 0x if present
