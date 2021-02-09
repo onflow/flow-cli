@@ -44,7 +44,7 @@ type Config struct {
 	Emulator  map[string]EmulatorConfigProfile `json:"emulator"`
 	Networks  map[string]Network               `json:"networks"`
 	Aliases   map[string]map[string]string     `json:"aliases"`
-	Contracts ContractCollection               `json:"contracts"` // todo later support objects in array
+	Contracts ContractCollection               `json:"contracts"`
 	Accounts  AccountCollection                `json:"accounts"`
 	Deploy    DeployCollection                 `json:"deploy"`
 }
@@ -156,7 +156,6 @@ func (k EmulatorServiceKey) MarshalJSON() ([]byte, error) {
 //UnmarshalJSON collection to our structure
 func (d *DeployCollection) UnmarshalJSON(b []byte) error {
 	raw := make(map[string]map[string]json.RawMessage)
-	contracts := []string{}
 	d.Deploys = make([]Deploy, 0)
 
 	err := json.Unmarshal(b, &raw)
@@ -173,12 +172,15 @@ func (d *DeployCollection) UnmarshalJSON(b []byte) error {
 			deploy.Account = account
 
 			// try to parse contracts as array of strings
+			contracts := []string{}
 			err := json.Unmarshal(c, &contracts)
 			if err == nil { // simple format
 				deploy.Contracts = contracts
 			} else { // advanced fromat
 				//TODO: implement format with contract init values
 			}
+
+			d.Deploys = append(d.Deploys, *deploy)
 		}
 	}
 
@@ -261,7 +263,7 @@ func (a *Account) UnmarshalJSON(b []byte) error {
 	// TODO: address validation format
 	if address == "service" {
 		if a.ChainID == "" {
-			a.ChainID = "flow-emulator" // default value TODO: find better way for defaults in general
+			a.ChainID = flow.Emulator //TODO: find better way for defaults in general
 		}
 
 		a.Address = flow.ServiceAddress(a.ChainID)
@@ -389,7 +391,10 @@ func (c *ContractCollection) getForNetwork(network string) []Contract {
 }
 
 // getByNameAndNetwork get contract array for account and network
-func (c *ContractCollection) getByNameAndNetwork(name string, network string) Contract {
+func (c *ContractCollection) getByNameAndNetwork(
+	name string,
+	network string,
+) Contract {
 	return funk.Filter(c.Contracts, func(c Contract) bool {
 		return c.Network == network && c.Name == name
 	}).([]Contract)[0]
@@ -412,4 +417,20 @@ func (c *ContractCollection) GetByNetwork(network string) []Contract {
 // GetAccountByName get account from account collection by name
 func (c *AccountCollection) GetByName(name string) Account {
 	return c.Accounts[name]
+}
+
+// GetByNetwork get deploys needded for specific network
+func (d *DeployCollection) GetByNetwork(network string) []Deploy {
+	return funk.Filter(d.Deploys, func(d Deploy) bool {
+		return d.Network == network
+	}).([]Deploy)
+}
+
+func (d *DeployCollection) GetByAccountAndNetwork(
+	account string,
+	network string,
+) []Deploy {
+	return funk.Filter(d.Deploys, func(d Deploy) bool {
+		return d.Account == account && d.Network == network
+	}).([]Deploy)
 }
