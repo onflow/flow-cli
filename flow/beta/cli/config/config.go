@@ -24,9 +24,11 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"strings"
 
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
+	"github.com/thoas/go-funk"
 )
 
 type KeyType string
@@ -82,7 +84,7 @@ type Contract struct {
 
 // ContractCollection contains contracts with names
 type ContractCollection struct {
-	Contracts map[string]Contract
+	Contracts []Contract
 }
 
 // AccountCollection contains accounts with names
@@ -93,7 +95,7 @@ type AccountCollection struct {
 // Account is main config for each account
 type Account struct {
 	Name    string
-	Address string       `json:"address"`
+	Address flow.Address `json:"address"`
 	ChainID flow.ChainID `json:"chain"`
 	Keys    []AccountKey `json:"keys"`
 }
@@ -143,7 +145,8 @@ func (k EmulatorServiceKey) MarshalJSON() ([]byte, error) {
 
 func (c *ContractCollection) UnmarshalJSON(b []byte) error {
 	raw := make(map[string]json.RawMessage)
-	c.Contracts = make(map[string]Contract)
+	sourceNetwork := make(map[string]string)
+	c.Contracts = make([]Contract, 0)
 
 	err := json.Unmarshal(b, &raw)
 	if err != nil {
@@ -151,29 +154,22 @@ func (c *ContractCollection) UnmarshalJSON(b []byte) error {
 	}
 
 	for name, value := range raw {
-		contract := new(Contract)
-		err = json.Unmarshal(value, &contract)
-		if err != nil {
-			return err
+		err := json.Unmarshal(value, &sourceNetwork)
+		// advanced schema
+		if err == nil && len(sourceNetwork) > 0 {
+			for network, source := range sourceNetwork {
+				contract := new(Contract)
+				contract.Name = name
+				contract.Network = network
+				contract.Source = source
+				c.Contracts = append(c.Contracts, *contract)
+			}
+		} else { // basic schema
+			contract := new(Contract)
+			contract.Name = name
+			json.Unmarshal(value, &contract.Source)
+			c.Contracts = append(c.Contracts, *contract)
 		}
-
-		contract.Name = name
-		c.Contracts[name] = *contract
-	}
-
-	return nil
-}
-
-func (c *Contract) UnmarshalJSON(b []byte) error {
-	sourceNetwork := make(map[string]string)
-
-	// todo validate source
-	err := json.Unmarshal(b, &sourceNetwork)
-	if err != nil && len(sourceNetwork) > 0 {
-		// todo implement advanced schema
-		// contract { sourceNetwork["source"] }
-	} else { // basic schema
-		json.Unmarshal(b, &c.Source)
 	}
 
 	return nil
@@ -214,16 +210,28 @@ func (a *Account) UnmarshalJSON(b []byte) error {
 		return err
 	}
 
-	json.Unmarshal(raw["address"], &a.Address)
 	json.Unmarshal(raw["chain"], &a.ChainID)
-	err = json.Unmarshal(raw["keys"], &a.Keys)
 
-	// if error trying unmarshal into key structure then we try unmarshal a string
+	var address string
+	json.Unmarshal(raw["address"], &address)
+
+	// TODO: address validation format
+	if address == "service" {
+		a.Address = flow.ServiceAddress(a.ChainID)
+	} else {
+		address = strings.ReplaceAll(address, "0x", "") // remove 0x if present
+		a.Address = flow.HexToAddress(address)
+	}
+
+	// advanced key format
+	err = json.Unmarshal(raw["keys"], &a.Keys)
+	// basic key format
 	if err != nil {
 		var keysString string
 		json.Unmarshal(raw["keys"], &keysString)
 
 		var keys []AccountKey
+		// default values REF: maybe refactor to variables
 		json.Unmarshal([]byte(`[{
 			"type": "hex",
 			"index": 0,
@@ -324,23 +332,37 @@ func Exists(path string) bool {
 /** ====================================
 Config structure helpers
 */
-// GetContractsForNetwork get accounts and contracts for network
-func (c *ContractCollection) GetContractsForNetwork(network string) Contract {
-	return c.Contracts[network]
+//TODO: better handle error case out of index
+
+// getForNetwork get accounts and contracts for network
+func (c *ContractCollection) getForNetwork(network string) []Contract {
+	return funk.Filter(c.Contracts, func(c Contract) bool {
+		return c.Network == network
+	}).([]Contract)
 }
 
-// GetContractsForAccountAndNetwork get contract array for account and network
-//func (c *ContractCollection) GetContractsForAccountAndNetwork(network string, accountName string) Contract {
-//	return c.Contracts[network][accountName]
-//}
+// getByNameAndNetwork get contract array for account and network
+func (c *ContractCollection) getByNameAndNetwork(name string, network string) Contract {
+	return funk.Filter(c.Contracts, func(c Contract) bool {
+		return c.Network == network && c.Name == name
+	}).([]Contract)[0]
+}
+
+// GetByName get contract from collection by name
+func (c *ContractCollection) GetByName(name string) Contract {
+	return funk.Filter(c.Contracts, func(c Contract) bool {
+		return c.Name == name
+	}).([]Contract)[0]
+}
+
+// GetByNetwork returns all contracts for specific network
+func (c *ContractCollection) GetByNetwork(network string) []Contract {
+	return funk.Filter(c.Contracts, func(c Contract) bool {
+		return c.Network == network
+	}).([]Contract)
+}
 
 // GetAccountByName get account from account collection by name
-func (c *AccountCollection) GetAccountByName(name string) Account {
+func (c *AccountCollection) GetByName(name string) Account {
 	return c.Accounts[name]
-}
-
-// todo see what data is needed from contracts
-// GetContractByName get contract from collection by name
-func (c *ContractCollection) GetContractByName(name string) Contract {
-	return c.Contracts[name]
 }
