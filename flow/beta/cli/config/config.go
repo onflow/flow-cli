@@ -46,7 +46,7 @@ type Config struct {
 	Aliases   map[string]map[string]string     `json:"aliases"`
 	Contracts ContractCollection               `json:"contracts"` // todo later support objects in array
 	Accounts  AccountCollection                `json:"accounts"`
-	Deploy    map[string]map[string][]string   `json:"deploy"`
+	Deploy    DeployCollection                 `json:"deploy"`
 }
 
 // EmulatorConfigProfile is emulator config
@@ -73,6 +73,16 @@ type emulatorServiceKeyJSON struct {
 type Network struct {
 	Host    string       `json:"host"`
 	ChainID flow.ChainID `json:"chain"`
+}
+
+type Deploy struct {
+	Network   string
+	Account   string
+	Contracts []string
+}
+
+type DeployCollection struct {
+	Deploys []Deploy
 }
 
 // Contract is config for contract
@@ -143,6 +153,39 @@ func (k EmulatorServiceKey) MarshalJSON() ([]byte, error) {
 	})
 }
 
+//UnmarshalJSON collection to our structure
+func (d *DeployCollection) UnmarshalJSON(b []byte) error {
+	raw := make(map[string]map[string]json.RawMessage)
+	contracts := []string{}
+	d.Deploys = make([]Deploy, 0)
+
+	err := json.Unmarshal(b, &raw)
+	if err != nil {
+		return err
+	}
+
+	// go over each network
+	for network, v := range raw {
+		// for each network go through all accounts
+		for account, c := range v {
+			deploy := new(Deploy)
+			deploy.Network = network
+			deploy.Account = account
+
+			// try to parse contracts as array of strings
+			err := json.Unmarshal(c, &contracts)
+			if err == nil { // simple format
+				deploy.Contracts = contracts
+			} else { // advanced fromat
+				//TODO: implement format with contract init values
+			}
+		}
+	}
+
+	return nil
+}
+
+//UnmarshalJSON contracts so we can convert it to our structure
 func (c *ContractCollection) UnmarshalJSON(b []byte) error {
 	raw := make(map[string]json.RawMessage)
 	sourceNetwork := make(map[string]string)
