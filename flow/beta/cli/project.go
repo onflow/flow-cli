@@ -29,10 +29,13 @@ import (
 	"github.com/onflow/flow-cli/flow/beta/cli/keys"
 )
 
+// Project structure containing current config
 type Project struct {
 	Config config.Config
 }
 
+// Contract structure defines Name of the contract, Source of
+// the contract (path, url...), Target where to deploy contract to (account address)
 type Contract struct {
 	Name   string
 	Source string
@@ -146,14 +149,21 @@ func generateEmulatorServiceAccount() *config.Account {
 func (p *Project) GetContractsByNetwork(network string) []Contract {
 	contracts := make([]Contract, 0)
 
-	for _, c := range p.Config.Contracts.GetByNetwork(network) {
-		contract := Contract{
-			Name:   c.Name,
-			Source: path.Clean(c.Source), //TODO: not necessary path - future improvements will include urls... REF: move this to config as validation and parsing
-			Target: p.Config.Accounts.GetByName(c.Name).Address,
-		}
+	// get deploys for specific network
+	for _, deploy := range p.Config.Deploy.GetByNetwork(network) {
+		account := p.Config.Accounts.GetByName(deploy.Account)
+		// go through each contract for this deploy
+		for _, contractName := range deploy.Contracts {
+			c := p.Config.Contracts.GetByName(contractName)
 
-		contracts = append(contracts, contract)
+			contract := Contract{
+				Name:   c.Name,
+				Source: path.Clean(c.Source), //TODO: not necessary path - future improvements will include urls... REF: move this to config as validation and parsing
+				Target: account.Address,
+			}
+
+			contracts = append(contracts, contract)
+		}
 	}
 
 	return contracts
