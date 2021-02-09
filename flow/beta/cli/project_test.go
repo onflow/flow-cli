@@ -23,8 +23,7 @@ func Test_GetContractsByNameSimple(t *testing.T) {
 		},
 		"accounts": {
 			"account-1": {
-				"address": "service",
-				"keys": "service"
+				"address": "service"
 			}
 		}
 	}`)
@@ -40,7 +39,7 @@ func Test_GetContractsByNameSimple(t *testing.T) {
 	assert.Equal(t, 1, len(contracts))
 	assert.Equal(t, "NonFungibleToken", contracts[0].Name)
 	assert.Equal(t, "../hungry-kitties/cadence/contracts/NonFungibleToken.cdc", contracts[0].Source)
-	assert.Equal(t, config.Accounts.GetByName("account-1").Address, contracts[0].Target)
+	assert.Equal(t, p.Config.Accounts.GetByName("account-1").Address, contracts[0].Target)
 }
 
 func Test_GetContractsByNameComplex(t *testing.T) {
