@@ -33,15 +33,13 @@ func Test_GetContractsByNameSimple(t *testing.T) {
 	config := new(config.Config)
 	json.Unmarshal(b, &config)
 
-	p := Project{
-		Config: *config,
-	}
+	p, _ := newProject(config)
 	contracts := p.GetContractsByNetwork("emulator")
 
 	assert.Equal(t, 1, len(contracts))
 	assert.Equal(t, "NonFungibleToken", contracts[0].Name)
 	assert.Equal(t, "../hungry-kitties/cadence/contracts/NonFungibleToken.cdc", contracts[0].Source)
-	assert.Equal(t, p.Config.Accounts.GetByName("account-1").Address, contracts[0].Target)
+	assert.Equal(t, p.conf.Accounts.GetByName("account-1").Address, contracts[0].Target)
 }
 
 func Test_GetContractsByNameComplex(t *testing.T) {
@@ -86,9 +84,7 @@ func Test_GetContractsByNameComplex(t *testing.T) {
 	config := new(config.Config)
 	json.Unmarshal(b, &config)
 
-	p := Project{
-		Config: *config,
-	}
+	p, _ := newProject(config)
 	contracts := p.GetContractsByNetwork("emulator")
 
 	assert.Equal(t, 7, len(contracts))
