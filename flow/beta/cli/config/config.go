@@ -39,12 +39,14 @@ const (
 	KeyTypeShell     KeyType = "shell"      // Exec out to a shell script
 )
 
+//REF: rename Accounts to AccountsCollection and others and also consider not exporting them
 // Config main configuration structure
 type Config struct {
-	Networks  NetworkCollection  `json:"networks"`
-	Contracts ContractCollection `json:"contracts"`
-	Accounts  AccountCollection  `json:"accounts"`
-	Deploy    DeployCollection   `json:"deploy"`
+	Emulator  map[string]EmulatorConfigProfile `json:"emulator"`
+	Networks  NetworkCollection                `json:"networks"`
+	Contracts ContractCollection               `json:"contracts"`
+	Accounts  AccountCollection                `json:"accounts"`
+	Deploy    DeployCollection                 `json:"deploy"`
 }
 
 // EmulatorConfigProfile is emulator config
@@ -74,15 +76,16 @@ type NetworkCollection struct {
 
 // Network config sets host and chain id
 type Network struct {
+	Name    string
 	Host    string       `json:"host"`
 	ChainID flow.ChainID `json:"chain"`
 }
 
 // Deploy structure for contract
 type Deploy struct {
-	Network   string
-	Account   string
-	Contracts []string
+	Network   string   // network name to deploy to
+	Account   string   // account name to which to deploy to
+	Contracts []string // contracts names to deploy
 }
 
 type DeployCollection struct {
@@ -186,6 +189,30 @@ func (d *DeployCollection) UnmarshalJSON(b []byte) error {
 
 			d.Deploys = append(d.Deploys, *deploy)
 		}
+	}
+
+	return nil
+}
+
+func (c *NetworkCollection) UnmarshalJSON(b []byte) error {
+	raw := make(map[string]json.RawMessage)
+	c.Networks = make([]Network, 0)
+
+	err := json.Unmarshal(b, &raw)
+	if err != nil {
+		return err
+	}
+
+	for name, v := range raw {
+		network := new(Network)
+		network.Name = name
+
+		err := json.Unmarshal(v, &network)
+		if err != nil {
+			return err
+		}
+
+		c.Networks = append(c.Networks, *network)
 	}
 
 	return nil
@@ -426,8 +453,15 @@ func (c *ContractCollection) GetByNetwork(network string) []Contract {
 }
 
 // GetAccountByName get account from account collection by name
-func (c *AccountCollection) GetByName(name string) Account {
-	return c.Accounts[name]
+func (a *AccountCollection) GetByName(name string) Account {
+	return a.Accounts[name]
+}
+
+// GetByAddress get account from collection by address
+func (a *AccountCollection) GetByAddress(address string) Account {
+	return funk.Filter(a.Accounts, func(a Account) bool {
+		return a.Address.String() == strings.ReplaceAll(address, "0x", "")
+	}).([]Account)[0]
 }
 
 // GetByNetwork get deploys needded for specific network
@@ -437,6 +471,7 @@ func (d *DeployCollection) GetByNetwork(network string) []Deploy {
 	}).([]Deploy)
 }
 
+// GetByAccountAndNetwork get deploy for account and network
 func (d *DeployCollection) GetByAccountAndNetwork(
 	account string,
 	network string,
@@ -444,4 +479,11 @@ func (d *DeployCollection) GetByAccountAndNetwork(
 	return funk.Filter(d.Deploys, func(d Deploy) bool {
 		return d.Account == account && d.Network == network
 	}).([]Deploy)
+}
+
+// GetByName get network from collection by name
+func (n *NetworkCollection) GetByName(name string) Network {
+	return funk.Filter(n.Networks, func(n Network) bool {
+		return n.Name == name
+	}).([]Network)[0]
 }
