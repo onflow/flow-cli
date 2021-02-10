@@ -2,10 +2,12 @@ package cli
 
 import (
 	"encoding/json"
+	"sort"
 	"testing"
 
 	"github.com/onflow/flow-cli/flow/beta/cli/config"
 	"github.com/stretchr/testify/assert"
+	"github.com/thoas/go-funk"
 )
 
 /* ================================================================
@@ -75,7 +77,7 @@ func Test_GetContractsByNameComplex(t *testing.T) {
 				"keys": "service"
 			},
 			"account-4": {
-				"address": "0xf8d6e0586b0a20c7",
+				"address": "0xf8d6e0586b0a20c1",
 				"keys": "4442967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47"
 			}
 		}
@@ -89,6 +91,35 @@ func Test_GetContractsByNameComplex(t *testing.T) {
 	}
 	contracts := p.GetContractsByNetwork("emulator")
 
-	assert.Equal(t, 1, len(contracts))
+	assert.Equal(t, 7, len(contracts))
 
+	//sort names so tests are deterministic
+	contractNames := funk.Map(contracts, func(c Contract) string {
+		return c.Name
+	}).([]string)
+	sort.Strings(contractNames)
+
+	assert.Equal(t, "FungibleToken", contractNames[0])
+	assert.Equal(t, "Kibble", contractNames[1])
+	assert.Equal(t, "KittyItems", contractNames[2])
+	assert.Equal(t, "KittyItems", contractNames[3])
+	assert.Equal(t, "KittyItemsMarket", contractNames[4])
+	assert.Equal(t, "KittyItemsMarket", contractNames[5])
+	assert.Equal(t, "NonFungibleToken", contractNames[6])
+
+	assert.Equal(t, "../cadence/kittyItems/contracts/KittyItems.cdc", contracts[0].Source)
+	assert.Equal(t, "../cadence/kittyItemsMarket/contracts/KittyItemsMarket.cdc", contracts[1].Source)
+	assert.Equal(t, "../hungry-kitties/cadence/contracts/FungibleToken.cdc", contracts[2].Source)
+	assert.Equal(t, "../hungry-kitties/cadence/contracts/NonFungibleToken.cdc", contracts[3].Source)
+	assert.Equal(t, "../cadence/kibble/contracts/Kibble.cdc", contracts[4].Source)
+	assert.Equal(t, "../cadence/kittyItems/contracts/KittyItems.cdc", contracts[5].Source)
+	assert.Equal(t, "../cadence/kittyItemsMarket/contracts/KittyItemsMarket.cdc", contracts[6].Source)
+
+	assert.Equal(t, "f8d6e0586b0a20c7", contracts[0].Target.String())
+	assert.Equal(t, "f8d6e0586b0a20c7", contracts[1].Target.String())
+	assert.Equal(t, "f8d6e0586b0a20c1", contracts[2].Target.String())
+	assert.Equal(t, "f8d6e0586b0a20c1", contracts[3].Target.String())
+	assert.Equal(t, "f8d6e0586b0a20c1", contracts[4].Target.String())
+	assert.Equal(t, "f8d6e0586b0a20c1", contracts[5].Target.String())
+	assert.Equal(t, "f8d6e0586b0a20c1", contracts[6].Target.String())
 }
