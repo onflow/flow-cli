@@ -24,82 +24,68 @@ import (
 
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
+	"github.com/thoas/go-funk"
 
 	"github.com/onflow/flow-cli/flow/beta/cli/config"
 	"github.com/onflow/flow-cli/flow/beta/cli/keys"
 )
 
-// Project structure containing current config
 type Project struct {
-	Config config.Config
+	conf     *config.Config
+	accounts []*Account
 }
 
-// Contract structure defines Name of the contract, Source of
-// the contract (path, url...), Target where to deploy contract to (account address)
-type Contract struct {
-	Name   string
-	Source string
-	Target flow.Address
-}
+// REF: maybe this should be part of config prasers - also since json might not be the only format support
+const DefaultConfigPath = "flow.json"
 
-// REF: this should be moved to config as it deals with config
-// LoadProject parses config and create project instance
 func LoadProject() *Project {
-	configLocation := "flow.json" //TODO: support this from cli
-
-	conf, err := config.Load(configLocation)
+	conf, err := config.Load(DefaultConfigPath)
 	if err != nil {
 		if errors.Is(err, config.ErrDoesNotExist) {
 			Exitf(
 				1,
 				"Project config file %s does not exist. Please initialize first\n",
-				configLocation,
+				DefaultConfigPath,
 			)
 		}
 
-		Exitf(1, "Failed to open project configuration in %s", configLocation)
+		Exitf(1, "Failed to open project configuration in %s", DefaultConfigPath)
 
 		return nil
 	}
 
-	return newProject(conf)
+	proj, err := newProject(conf)
+	if err != nil {
+		// TODO: replace with a more detailed error message
+		Exitf(1, "Invalid project configuration: %s", err)
+	}
+
+	return proj
 }
 
-//REF: discuss and rethink what project init is and where configuration init should be stored
-// InitProject create project structure
+func ProjectExists() bool {
+	return config.Exists(DefaultConfigPath)
+}
+
 func InitProject() *Project {
-	serviceAccount := generateEmulatorServiceAccount()
+	serviceAccount, serviceAccountKey := generateEmulatorServiceAccount()
 
-	config := config.Config{
-		Accounts: config.AccountCollection{
-			Accounts: map[string]config.Account{
-				"emulator": *serviceAccount,
-			},
-		},
-	}
-
-	//TODO: create default config
-	return newProject(&config)
-}
-
-func newProject(config *config.Config) *Project {
 	return &Project{
-		Config: *config,
+		conf:     defaultConfig(serviceAccountKey),
+		accounts: []*Account{serviceAccount},
 	}
 }
 
-//REF: discuss and rethink what project init is and where configuration init should be stored
-// default values for emulator
+// REF: discuss if moving this to configuration make sense as it is default values for parameters from config
 const (
 	DefaultEmulatorConfigProfileName  = "default"
 	defaultEmulatorNetworkName        = "emulator"
-	defaultEmulatorServiceAccountName = "emulator-service-account"
+	defaultEmulatorServiceAccountName = "emulator"
 	defaultEmulatorPort               = 3569
 	defaultEmulatorHost               = "127.0.0.1:3569"
 )
 
-//REF: discuss and rethink what project init is and where configuration init should be stored
-// defaultConfig initialize config with default values
+// REF: this also might be part of config
 func defaultConfig(serviceAccountKey *keys.HexAccountKey) *config.Config {
 	return &config.Config{
 		Emulator: map[string]config.EmulatorConfigProfile{
@@ -112,17 +98,17 @@ func defaultConfig(serviceAccountKey *keys.HexAccountKey) *config.Config {
 				},
 			},
 		},
-		Networks: map[string]config.Network{
-			defaultEmulatorNetworkName: {
+		Networks: config.NetworkCollection{
+			Networks: []config.Network{{
+				Name:    "defaultEmulatorNetworkName",
 				Host:    defaultEmulatorHost,
 				ChainID: flow.Emulator,
-			},
+			}},
 		},
 	}
 }
 
-// generateEmulatorServieAccount create service account used by emulator
-func generateEmulatorServiceAccount() *config.Account {
+func generateEmulatorServiceAccount() (*Account, *keys.HexAccountKey) {
 	seed := RandomSeed(crypto.MinSeedLength)
 
 	privateKey, err := crypto.GeneratePrivateKey(crypto.ECDSA_P256, seed)
@@ -132,34 +118,51 @@ func generateEmulatorServiceAccount() *config.Account {
 
 	serviceAccountKey := keys.NewHexAccountKeyFromPrivateKey(0, crypto.SHA3_256, privateKey)
 
-	return &config.Account{
-		Name:    defaultEmulatorServiceAccountName,
-		Address: flow.ServiceAddress(flow.Emulator),
-		ChainID: flow.Emulator,
-		Keys: []config.AccountKey{{
-			Type:     serviceAccountKey.Type(),
-			Index:    serviceAccountKey.Index(),
-			SigAlgo:  serviceAccountKey.SigAlgo(),
-			HashAlgo: serviceAccountKey.HashAlgo(),
-			Context:  serviceAccountKey.ToConfig().Context,
-		}},
+	return &Account{
+		name:    defaultEmulatorServiceAccountName,
+		address: flow.ServiceAddress(flow.Emulator),
+		chainID: flow.Emulator,
+		keys: []keys.AccountKey{
+			serviceAccountKey,
+		},
+	}, serviceAccountKey
+}
+
+func newProject(conf *config.Config) (*Project, error) {
+	accounts, err := accountsFromConfig(conf)
+	if err != nil {
+		return nil, err
 	}
+
+	return &Project{
+		conf:     conf,
+		accounts: accounts,
+	}, nil
+}
+
+func (p *Project) Host(network string) string {
+	return p.conf.Networks.GetByName(network).Host
+}
+
+func (p *Project) EmulatorConfig(profile string) config.EmulatorConfigProfile {
+	return p.conf.Emulator[profile]
 }
 
 func (p *Project) GetContractsByNetwork(network string) []Contract {
 	contracts := make([]Contract, 0)
 
 	// get deploys for specific network
-	for _, deploy := range p.Config.Deploy.GetByNetwork(network) {
-		account := p.Config.Accounts.GetByName(deploy.Account)
+	for _, deploy := range p.conf.Deploy.GetByNetwork(network) {
+		account := p.GetAccountByName(deploy.Account)
+
 		// go through each contract for this deploy
 		for _, contractName := range deploy.Contracts {
-			c := p.Config.Contracts.GetByNameAndNetwork(contractName, network)
+			c := p.conf.Contracts.GetByNameAndNetwork(contractName, network)
 
 			contract := Contract{
 				Name:   c.Name,
 				Source: path.Clean(c.Source), //TODO: not necessary path - future improvements will include urls... REF: move this to config as validation and parsing
-				Target: account.Address,
+				Target: account.address,
 			}
 
 			contracts = append(contracts, contract)
@@ -169,15 +172,106 @@ func (p *Project) GetContractsByNetwork(network string) []Contract {
 	return contracts
 }
 
-//TODO: should be moved to config
-// Save save project to config file
+func (p *Project) GetAccountByName(name string) *Account {
+	return funk.Filter(p.accounts, func(a *Account) bool {
+		return a.name == name
+	}).([]*Account)[0]
+}
+
+func (p *Project) GetAccountByAddress(address string) *Account {
+	return funk.Filter(p.accounts, func(a *Account) bool {
+		return a.address.String() == address
+	}).([]*Account)[0]
+}
+
 func (p *Project) Save() {
-	//TODO: implement this in current code
 	/*
 		p.conf.Accounts = accountsToConfig(p.accounts)
 
-		err := config.Save(p.Config, DefaultConfigPath)
+		err := config.Save(p.conf, DefaultConfigPath)
 		if err != nil {
 			Exitf(1, "Failed to save project configuration to \"%s\"", DefaultConfigPath)
-		}*/
+		}
+	*/
+}
+
+type Contract struct {
+	BundleName string
+	Name       string
+	Source     string
+	Target     flow.Address
+}
+
+type Account struct {
+	name    string
+	address flow.Address
+	chainID flow.ChainID
+	keys    []keys.AccountKey
+}
+
+func (a *Account) Address() flow.Address {
+	return a.address
+}
+
+func (a *Account) DefaultKey() keys.AccountKey {
+	return a.keys[0]
+}
+
+func accountsFromConfig(conf *config.Config) ([]*Account, error) {
+	accounts := make([]*Account, 0, len(conf.Accounts.Accounts))
+
+	for _, accountConf := range conf.Accounts.Accounts {
+		account, err := accountFromConfig(accountConf)
+		if err != nil {
+			return nil, err
+		}
+
+		accounts = append(accounts, account)
+	}
+
+	return accounts, nil
+}
+
+func accountFromConfig(accountConf config.Account) (*Account, error) {
+	accountKeys := make([]keys.AccountKey, 0, len(accountConf.Keys))
+
+	for _, key := range accountConf.Keys {
+		accountKey, err := keys.NewAccountKey(key)
+		if err != nil {
+			return nil, err
+		}
+
+		accountKeys = append(accountKeys, accountKey)
+	}
+
+	return &Account{
+		name:    accountConf.Name,
+		address: accountConf.Address,
+		chainID: accountConf.ChainID,
+		keys:    accountKeys,
+	}, nil
+}
+
+func accountsToConfig(accounts []*Account) map[string]config.Account {
+	accountConfs := make(map[string]config.Account)
+
+	for _, account := range accounts {
+		accountConfs[account.name] = accountToConfig(account)
+	}
+
+	return accountConfs
+}
+
+func accountToConfig(account *Account) config.Account {
+	keyConfigs := make([]config.AccountKey, 0, len(account.keys))
+
+	for _, key := range account.keys {
+		keyConfigs = append(keyConfigs, key.ToConfig())
+	}
+
+	return config.Account{
+		Address: account.address,
+		ChainID: account.chainID,
+		Keys:    keyConfigs,
+	}
 }
