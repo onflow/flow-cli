@@ -61,7 +61,6 @@ var Cmd = &cobra.Command{
 		processor := contracts.NewPreprocessor()
 
 		for _, contract := range project.GetContractsByNetwork(conf.Network) {
-			// add contracts to the processor for later deployment - from this point on we probably can leave the code as it is
 			err = processor.AddContractSource(
 				contract.Name,
 				contract.Source,
@@ -82,13 +81,9 @@ var Cmd = &cobra.Command{
 		var errs []error
 
 		for _, contract := range contracts {
+			targetAccount := project.GetAccountByAddress(contract.Target().String())
 
-			targetAccount := project.AccountByAddress(contract.Target())
-			if targetAccount == nil {
-				continue
-			}
-
-			tx := prepareDeploymentTransaction(targetAccount, contract, conf.Update)
+			tx := prepareDeploymentTransaction(contract.Target(), contract, conf.Update)
 
 			ctx := context.Background()
 
@@ -133,13 +128,13 @@ func initConfig() {
 }
 
 func prepareDeploymentTransaction(
-	targetAccount *cli.Account,
+	targetAccount flow.Address,
 	contract *contracts.Contract,
 	update bool,
 ) *flow.Transaction {
 
 	return templates.AddAccountContracts(
-		targetAccount.Address(),
+		targetAccount,
 		[]templates.Contract{
 			{
 				Name:   contract.Name(),
