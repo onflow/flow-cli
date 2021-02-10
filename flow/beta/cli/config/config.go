@@ -384,20 +384,27 @@ Config structure helpers
 //TODO: better handle error case out of index
 
 // getForNetwork get accounts and contracts for network
-func (c *ContractCollection) getForNetwork(network string) []Contract {
+func (c *ContractCollection) GetForNetwork(network string) []Contract {
 	return funk.Filter(c.Contracts, func(c Contract) bool {
 		return c.Network == network
 	}).([]Contract)
 }
 
 // getByNameAndNetwork get contract array for account and network
-func (c *ContractCollection) getByNameAndNetwork(
+func (c *ContractCollection) GetByNameAndNetwork(
 	name string,
 	network string,
 ) Contract {
-	return funk.Filter(c.Contracts, func(c Contract) bool {
+	contracts := funk.Filter(c.Contracts, func(c Contract) bool {
 		return c.Network == network && c.Name == name
-	}).([]Contract)[0]
+	}).([]Contract)
+
+	// if we don't find contract by name and network return default for name
+	if len(contracts) == 0 {
+		return c.GetByName(name)
+	}
+
+	return contracts[0]
 }
 
 // GetByName get contract from collection by name
