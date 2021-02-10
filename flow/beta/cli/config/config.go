@@ -42,7 +42,7 @@ const (
 // Config main configuration structure
 type Config struct {
 	Emulator  map[string]EmulatorConfigProfile `json:"emulator"`
-	Networks  map[string]Network               `json:"networks"`
+	Networks  NetworkCollection                `json:"networks"`
 	Aliases   map[string]map[string]string     `json:"aliases"`
 	Contracts ContractCollection               `json:"contracts"`
 	Accounts  AccountCollection                `json:"accounts"`
@@ -69,12 +69,18 @@ type emulatorServiceKeyJSON struct {
 	HashAlgo   string `json:"hashAlgorithm"`
 }
 
+// Network collection of networks
+type NetworkCollection struct {
+	Networks []Network
+}
+
 // Network config sets host and chain id
 type Network struct {
 	Host    string       `json:"host"`
 	ChainID flow.ChainID `json:"chain"`
 }
 
+// Deploy structure for contract
 type Deploy struct {
 	Network   string
 	Account   string
