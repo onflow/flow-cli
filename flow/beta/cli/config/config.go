@@ -41,12 +41,10 @@ const (
 
 // Config main configuration structure
 type Config struct {
-	Emulator  map[string]EmulatorConfigProfile `json:"emulator"`
-	Networks  NetworkCollection                `json:"networks"`
-	Aliases   map[string]map[string]string     `json:"aliases"`
-	Contracts ContractCollection               `json:"contracts"`
-	Accounts  AccountCollection                `json:"accounts"`
-	Deploy    DeployCollection                 `json:"deploy"`
+	Networks  NetworkCollection  `json:"networks"`
+	Contracts ContractCollection `json:"contracts"`
+	Accounts  AccountCollection  `json:"accounts"`
+	Deploy    DeployCollection   `json:"deploy"`
 }
 
 // EmulatorConfigProfile is emulator config
