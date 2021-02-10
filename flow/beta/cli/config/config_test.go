@@ -286,8 +286,8 @@ func Test_ConfigContractsComplex(t *testing.T) {
 	json.Unmarshal(b, &contracts)
 
 	assert.Equal(t, "./cadence/kittyItems/contracts/KittyItems.cdc", contracts.GetByName("KittyItems").Source)
-	assert.Equal(t, "./cadence/kittyItemsMarket/contracts/KittyItemsMarket.cdc", contracts.getByNameAndNetwork("KittyItemsMarket", "emulator").Source)
-	assert.Equal(t, "0x123123123", contracts.getByNameAndNetwork("KittyItemsMarket", "testnet").Source)
+	assert.Equal(t, "./cadence/kittyItemsMarket/contracts/KittyItemsMarket.cdc", contracts.GetByNameAndNetwork("KittyItemsMarket", "emulator").Source)
+	assert.Equal(t, "0x123123123", contracts.GetByNameAndNetwork("KittyItemsMarket", "testnet").Source)
 
 	assert.Equal(t, 2, len(contracts.GetByNetwork("testnet")))
 	assert.Equal(t, 2, len(contracts.GetByNetwork("emulator")))
