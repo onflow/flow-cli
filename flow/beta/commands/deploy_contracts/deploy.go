@@ -22,7 +22,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"strings"
 
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/client"
@@ -47,9 +46,9 @@ var Cmd = &cobra.Command{
 	Use:   "deploy-contracts",
 	Short: "",
 	Run: func(cmd *cobra.Command, args []string) {
-		proj := cli.LoadProject()
+		project := cli.LoadProject()
 
-		host := proj.Host(conf.Network)
+		host := project.Host(conf.Network)
 
 		c, err := client.New(host, grpc.WithInsecure())
 		if err != nil {
@@ -59,15 +58,11 @@ var Cmd = &cobra.Command{
 
 		sender := txsender.NewSender(c)
 
-		p := contracts.NewPreprocessor(
-			proj.Aliases(conf.Network),
-		)
+		processor := contracts.NewPreprocessor()
 
-		bundleNames := ""
-
-		for _, contract := range proj.Contracts(conf.Network) {
-			err = p.AddContractSource(
-				contract.BundleName,
+		for _, contract := range project.GetContractsByNetwork(conf.Network) {
+			// add contracts to the processor for later deployment - from this point on we probably can leave the code as it is
+			err = processor.AddContractSource(
 				contract.Name,
 				contract.Source,
 				contract.Target,
@@ -76,28 +71,19 @@ var Cmd = &cobra.Command{
 				cli.Exit(1, err.Error())
 				return
 			}
-
-			if !strings.Contains(bundleNames, contract.BundleName) {
-				if len(bundleNames) > 0 {
-					bundleNames = bundleNames + ", "
-				}
-				bundleNames = bundleNames + contract.BundleName
-			}
 		}
 
-		contracts, err := p.PrepareForDeployment()
+		contracts, err := processor.PrepareForDeployment()
 		if err != nil {
 			cli.Exit(1, err.Error())
 			return
 		}
 
-		fmt.Printf("Deploying contracts from: %s\n\n", cli.Yellow(bundleNames))
-
 		var errs []error
 
 		for _, contract := range contracts {
 
-			targetAccount := proj.AccountByAddress(contract.Target())
+			targetAccount := project.AccountByAddress(contract.Target())
 			if targetAccount == nil {
 				continue
 			}
