@@ -154,7 +154,7 @@ func (p *Project) GetContractsByNetwork(network string) []Contract {
 		account := p.Config.Accounts.GetByName(deploy.Account)
 		// go through each contract for this deploy
 		for _, contractName := range deploy.Contracts {
-			c := p.Config.Contracts.GetByName(contractName)
+			c := p.Config.Contracts.GetByNameAndNetwork(contractName, network)
 
 			contract := Contract{
 				Name:   c.Name,
