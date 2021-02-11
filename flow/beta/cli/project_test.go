@@ -2,6 +2,7 @@ package cli
 
 import (
 	"encoding/json"
+	"fmt"
 	"sort"
 	"testing"
 
@@ -20,12 +21,13 @@ func Test_GetContractsByNameSimple(t *testing.T) {
 		},
 		"deploy": { 
 			"emulator": {
-				"account-1": ["NonFungibleToken"]
+				"emulator-service": ["NonFungibleToken"]
 			}
 		},
 		"accounts": {
-			"account-1": {
-				"address": "service"
+			"emulator-service": {
+				"address": "service",
+				"keys": "dd72967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47"
 			}
 		}
 	}`)
@@ -33,13 +35,17 @@ func Test_GetContractsByNameSimple(t *testing.T) {
 	config := new(config.Config)
 	json.Unmarshal(b, &config)
 
-	p, _ := newProject(config)
+	p, err := newProject(config)
+	if err != nil {
+		fmt.Println(err)
+	}
+
 	contracts := p.GetContractsByNetwork("emulator")
 
 	assert.Equal(t, 1, len(contracts))
 	assert.Equal(t, "NonFungibleToken", contracts[0].Name)
 	assert.Equal(t, "../hungry-kitties/cadence/contracts/NonFungibleToken.cdc", contracts[0].Source)
-	assert.Equal(t, p.conf.Accounts.GetByName("account-1").Address, contracts[0].Target)
+	assert.Equal(t, p.conf.Accounts.GetByName("emulator-service").Address, contracts[0].Target)
 }
 
 func Test_GetContractsByNameComplex(t *testing.T) {
@@ -60,7 +66,7 @@ func Test_GetContractsByNameComplex(t *testing.T) {
 				"account-2": ["FungibleToken", "NonFungibleToken", "Kibble", "KittyItems"]
 			}, 
 			"emulator": {
-				"account-3": ["KittyItems", "KittyItemsMarket"],
+				"emulator-service": ["KittyItems", "KittyItemsMarket"],
 				"account-4": ["FungibleToken", "NonFungibleToken", "Kibble", "KittyItems", "KittyItemsMarket"]
 			}
 		},
@@ -68,15 +74,15 @@ func Test_GetContractsByNameComplex(t *testing.T) {
 		"accounts": {
 			"account-2": {
 				"address": "0x2c1162386b0a245f",
-				"keys": "22232967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47"
+				"keys": "dd72967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47"
 			},
-			"account-3": {
+			"emulator-service": {
 				"address": "service",
-				"keys": "service"
+				"keys": "dd72967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47"
 			},
 			"account-4": {
 				"address": "0xf8d6e0586b0a20c1",
-				"keys": "4442967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47"
+				"keys": "dd72967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47"
 			}
 		}
 	}`)
@@ -84,7 +90,11 @@ func Test_GetContractsByNameComplex(t *testing.T) {
 	config := new(config.Config)
 	json.Unmarshal(b, &config)
 
-	p, _ := newProject(config)
+	p, err := newProject(config)
+	if err != nil {
+		fmt.Println(err)
+	}
+
 	contracts := p.GetContractsByNetwork("emulator")
 
 	assert.Equal(t, 7, len(contracts))
@@ -95,6 +105,16 @@ func Test_GetContractsByNameComplex(t *testing.T) {
 	}).([]string)
 	sort.Strings(contractNames)
 
+	sources := funk.Map(contracts, func(c Contract) string {
+		return c.Source
+	}).([]string)
+	sort.Strings(sources)
+
+	targets := funk.Map(contracts, func(c Contract) string {
+		return c.Target.String()
+	}).([]string)
+	sort.Strings(targets)
+
 	assert.Equal(t, "FungibleToken", contractNames[0])
 	assert.Equal(t, "Kibble", contractNames[1])
 	assert.Equal(t, "KittyItems", contractNames[2])
@@ -103,19 +123,19 @@ func Test_GetContractsByNameComplex(t *testing.T) {
 	assert.Equal(t, "KittyItemsMarket", contractNames[5])
 	assert.Equal(t, "NonFungibleToken", contractNames[6])
 
-	assert.Equal(t, "../cadence/kittyItems/contracts/KittyItems.cdc", contracts[0].Source)
-	assert.Equal(t, "../cadence/kittyItemsMarket/contracts/KittyItemsMarket.cdc", contracts[1].Source)
-	assert.Equal(t, "../hungry-kitties/cadence/contracts/FungibleToken.cdc", contracts[2].Source)
-	assert.Equal(t, "../hungry-kitties/cadence/contracts/NonFungibleToken.cdc", contracts[3].Source)
-	assert.Equal(t, "../cadence/kibble/contracts/Kibble.cdc", contracts[4].Source)
-	assert.Equal(t, "../cadence/kittyItems/contracts/KittyItems.cdc", contracts[5].Source)
-	assert.Equal(t, "../cadence/kittyItemsMarket/contracts/KittyItemsMarket.cdc", contracts[6].Source)
+	assert.Equal(t, "../hungry-kitties/cadence/contracts/FungibleToken.cdc", sources[0])
+	assert.Equal(t, "../hungry-kitties/cadence/contracts/NonFungibleToken.cdc", sources[1])
+	assert.Equal(t, "cadence/kibble/contracts/Kibble.cdc", sources[2])
+	assert.Equal(t, "cadence/kittyItems/contracts/KittyItems.cdc", sources[3])
+	assert.Equal(t, "cadence/kittyItems/contracts/KittyItems.cdc", sources[4])
+	assert.Equal(t, "cadence/kittyItemsMarket/contracts/KittyItemsMarket.cdc", sources[5])
+	assert.Equal(t, "cadence/kittyItemsMarket/contracts/KittyItemsMarket.cdc", sources[6])
 
-	assert.Equal(t, "f8d6e0586b0a20c7", contracts[0].Target.String())
-	assert.Equal(t, "f8d6e0586b0a20c7", contracts[1].Target.String())
-	assert.Equal(t, "f8d6e0586b0a20c1", contracts[2].Target.String())
-	assert.Equal(t, "f8d6e0586b0a20c1", contracts[3].Target.String())
-	assert.Equal(t, "f8d6e0586b0a20c1", contracts[4].Target.String())
-	assert.Equal(t, "f8d6e0586b0a20c1", contracts[5].Target.String())
-	assert.Equal(t, "f8d6e0586b0a20c1", contracts[6].Target.String())
+	assert.Equal(t, "f8d6e0586b0a20c1", targets[0])
+	assert.Equal(t, "f8d6e0586b0a20c1", targets[1])
+	assert.Equal(t, "f8d6e0586b0a20c1", targets[2])
+	assert.Equal(t, "f8d6e0586b0a20c1", targets[3])
+	assert.Equal(t, "f8d6e0586b0a20c1", targets[4])
+	assert.Equal(t, "f8d6e0586b0a20c7", targets[5])
+	assert.Equal(t, "f8d6e0586b0a20c7", targets[6])
 }
