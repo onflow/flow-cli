@@ -39,7 +39,7 @@ const (
 	KeyTypeShell     KeyType = "shell"      // Exec out to a shell script
 )
 
-//REF: rename Accounts to AccountsCollection and others and also consider not exporting them
+//REF: check comments on github
 // Config main configuration structure
 type Config struct {
 	Networks  NetworkCollection  `json:"networks"`
@@ -114,7 +114,6 @@ type accountKeyJSON struct {
 	Context  map[string]string `json:"context"`
 }
 
-//UnmarshalJSON collection to our structure
 func (d *DeployCollection) UnmarshalJSON(b []byte) error {
 	raw := make(map[string]map[string]json.RawMessage)
 	d.Deploys = make([]Deploy, 0)
@@ -172,7 +171,6 @@ func (c *NetworkCollection) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
-//UnmarshalJSON contracts so we can convert it to our structure
 func (c *ContractCollection) UnmarshalJSON(b []byte) error {
 	raw := make(map[string]json.RawMessage)
 	sourceNetwork := make(map[string]string)
@@ -205,7 +203,6 @@ func (c *ContractCollection) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
-// UnmarshalJSON account collection to get the key name for the account as well
 func (c *AccountCollection) UnmarshalJSON(b []byte) error {
 	c.Accounts = make(map[string]Account)
 	raw := make(map[string]json.RawMessage)
@@ -230,8 +227,6 @@ func (c *AccountCollection) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
-// UnmarshalJSON Account decodes json config for account
-// and has two options for keys - string and key object
 func (a *Account) UnmarshalJSON(b []byte) error {
 	raw := make(map[string]json.RawMessage)
 
@@ -283,8 +278,6 @@ func (a *Account) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
-// UnmarshalJSON AccountKey decodes json object
-// to defined types for algo, hash, index etc
 func (a *AccountKey) UnmarshalJSON(b []byte) error {
 	var s accountKeyJSON
 
@@ -303,7 +296,6 @@ func (a *AccountKey) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
-// MarshalJSON AccountKey convert to json format
 func (a AccountKey) MarshalJSON() ([]byte, error) {
 	return json.Marshal(accountKeyJSON{
 		SigAlgo:  a.SigAlgo.String(),
@@ -368,14 +360,14 @@ Config structure helpers
 */
 //TODO: better handle error case out of index
 
-// getForNetwork get accounts and contracts for network
+// GetForNetwork get accounts and contracts for network
 func (c *ContractCollection) GetForNetwork(network string) []Contract {
 	return funk.Filter(c.Contracts, func(c Contract) bool {
 		return c.Network == network
 	}).([]Contract)
 }
 
-// getByNameAndNetwork get contract array for account and network
+// GetByNameAndNetwork get contract array for account and network
 func (c *ContractCollection) GetByNameAndNetwork(
 	name string,
 	network string,
