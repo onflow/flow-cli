@@ -301,7 +301,7 @@ func (a AccountKey) MarshalJSON() ([]byte, error) {
 	})
 }
 
-// Save configuration to a path file in json format
+// Save saves the configuration to the specified path file in JSON format.
 func Save(conf *Config, path string) error {
 	data, err := json.MarshalIndent(conf, "", "\t")
 	if err != nil {
