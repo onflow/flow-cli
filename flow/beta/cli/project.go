@@ -80,7 +80,7 @@ func InitProject() *Project {
 const (
 	DefaultEmulatorConfigProfileName  = "default"
 	defaultEmulatorNetworkName        = "emulator"
-	defaultEmulatorServiceAccountName = "emulator"
+	defaultEmulatorServiceAccountName = "emulator-account"
 	defaultEmulatorPort               = 3569
 	defaultEmulatorHost               = "127.0.0.1:3569"
 )
@@ -88,19 +88,9 @@ const (
 // REF: this also might be part of config
 func defaultConfig(serviceAccountKey *keys.HexAccountKey) *config.Config {
 	return &config.Config{
-		Emulator: map[string]config.EmulatorConfigProfile{
-			DefaultEmulatorConfigProfileName: {
-				Port: defaultEmulatorPort,
-				ServiceKey: config.EmulatorServiceKey{
-					PrivateKey: serviceAccountKey.PrivateKeyHex(),
-					SigAlgo:    serviceAccountKey.SigAlgo(),
-					HashAlgo:   serviceAccountKey.HashAlgo(),
-				},
-			},
-		},
 		Networks: config.NetworkCollection{
 			Networks: []config.Network{{
-				Name:    "defaultEmulatorNetworkName",
+				Name:    defaultEmulatorNetworkName,
 				Host:    defaultEmulatorHost,
 				ChainID: flow.Emulator,
 			}},
@@ -144,8 +134,8 @@ func (p *Project) Host(network string) string {
 	return p.conf.Networks.GetByName(network).Host
 }
 
-func (p *Project) EmulatorConfig(profile string) config.EmulatorConfigProfile {
-	return p.conf.Emulator[profile]
+func (p *Project) EmulatorConfig() config.Account {
+	return p.conf.Accounts.GetByName(defaultEmulatorServiceAccountName)
 }
 
 func (p *Project) GetContractsByNetwork(network string) []Contract {
@@ -185,14 +175,12 @@ func (p *Project) GetAccountByAddress(address string) *Account {
 }
 
 func (p *Project) Save() {
-	/*
-		p.conf.Accounts = accountsToConfig(p.accounts)
+	p.conf.Accounts.Accounts = accountsToConfig(p.accounts)
 
-		err := config.Save(p.conf, DefaultConfigPath)
-		if err != nil {
-			Exitf(1, "Failed to save project configuration to \"%s\"", DefaultConfigPath)
-		}
-	*/
+	err := config.Save(p.conf, DefaultConfigPath)
+	if err != nil {
+		Exitf(1, "Failed to save project configuration to \"%s\"", DefaultConfigPath)
+	}
 }
 
 type Contract struct {
@@ -253,7 +241,7 @@ func accountFromConfig(accountConf config.Account) (*Account, error) {
 }
 
 func accountsToConfig(accounts []*Account) map[string]config.Account {
-	accountConfs := make(map[string]config.Account)
+	accountConfs := make(map[string]config.Account, 0)
 
 	for _, account := range accounts {
 		accountConfs[account.name] = accountToConfig(account)
@@ -270,6 +258,7 @@ func accountToConfig(account *Account) config.Account {
 	}
 
 	return config.Account{
+		Name:    account.name,
 		Address: account.address,
 		ChainID: account.chainID,
 		Keys:    keyConfigs,
