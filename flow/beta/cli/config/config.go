@@ -259,20 +259,15 @@ func (a *Account) UnmarshalJSON(b []byte) error {
 		var keysString string
 		json.Unmarshal(raw["keys"], &keysString)
 
-		var keys []AccountKey
-		// default values REF: maybe refactor to variables
-		json.Unmarshal([]byte(`[{
-			"type": "hex",
-			"index": 0,
-			"signatureAlgorithm": "ECDSA_P256",
-			"hashAlgorithm": "SHA3_256",
-			"context": {
-				"privateKey": "`+keysString+`"
-			}
-		}]`), &keys)
-		a.Keys = keys
-	} else {
-		return err
+		a.Keys = []AccountKey{{
+			Type:     KeyTypeHex,
+			Index:    0,
+			SigAlgo:  crypto.ECDSA_P256,
+			HashAlgo: crypto.SHA3_256,
+			Context: map[string]string{
+				"privateKey": keysString,
+			},
+		}}
 	}
 
 	return nil
