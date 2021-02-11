@@ -39,11 +39,11 @@ func configuredServiceKey(
 ) {
 	proj := cli.LoadProject()
 
-	conf := proj.EmulatorConfig(cli.DefaultEmulatorConfigProfileName)
+	conf := proj.EmulatorConfig()
 
-	serviceKey := conf.ServiceKey
+	serviceKey := conf.Keys[0]
 
-	privateKey, err := crypto.DecodePrivateKeyHex(serviceKey.SigAlgo, serviceKey.PrivateKey)
+	privateKey, err := crypto.DecodePrivateKeyHex(serviceKey.SigAlgo, serviceKey.Context["privateKey"])
 	if err != nil {
 		cli.Exitf(
 			1,

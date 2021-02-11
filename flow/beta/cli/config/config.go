@@ -42,31 +42,10 @@ const (
 //REF: rename Accounts to AccountsCollection and others and also consider not exporting them
 // Config main configuration structure
 type Config struct {
-	Emulator  map[string]EmulatorConfigProfile `json:"emulator"`
-	Networks  NetworkCollection                `json:"networks"`
-	Contracts ContractCollection               `json:"contracts"`
-	Accounts  AccountCollection                `json:"accounts"`
-	Deploy    DeployCollection                 `json:"deploy"`
-}
-
-// EmulatorConfigProfile is emulator config
-type EmulatorConfigProfile struct {
-	Port       int                `json:"port"`
-	ServiceKey EmulatorServiceKey `json:"serviceKey"`
-}
-
-// EmulatorServiceKey is the service key for emulator
-type EmulatorServiceKey struct {
-	PrivateKey string
-	SigAlgo    crypto.SignatureAlgorithm
-	HashAlgo   crypto.HashAlgorithm
-}
-
-// emulatorServiceKeyJSON internal structure for parsing
-type emulatorServiceKeyJSON struct {
-	PrivateKey string `json:"privateKey"`
-	SigAlgo    string `json:"signatureAlgorithm"`
-	HashAlgo   string `json:"hashAlgorithm"`
+	Networks  NetworkCollection  `json:"networks"`
+	Contracts ContractCollection `json:"contracts"`
+	Accounts  AccountCollection  `json:"accounts"`
+	Deploy    DeployCollection   `json:"deploy"`
 }
 
 // Network collection of networks
@@ -133,31 +112,6 @@ type accountKeyJSON struct {
 	SigAlgo  string            `json:"signatureAlgorithm"`
 	HashAlgo string            `json:"hashAlgorithm"`
 	Context  map[string]string `json:"context"`
-}
-
-// UnmarshalJSON EmulatorServiceKey is parer for emulator service key
-func (k *EmulatorServiceKey) UnmarshalJSON(b []byte) error {
-	var s emulatorServiceKeyJSON
-
-	err := json.Unmarshal(b, &s)
-	if err != nil {
-		return err
-	}
-
-	k.PrivateKey = s.PrivateKey
-	k.SigAlgo = crypto.StringToSignatureAlgorithm(s.SigAlgo)
-	k.HashAlgo = crypto.StringToHashAlgorithm(s.HashAlgo)
-
-	return nil
-}
-
-// MarshalJSON EmuatorServiceKey is encoding service key to json
-func (k EmulatorServiceKey) MarshalJSON() ([]byte, error) {
-	return json.Marshal(emulatorServiceKeyJSON{
-		PrivateKey: k.PrivateKey,
-		SigAlgo:    k.SigAlgo.String(),
-		HashAlgo:   k.HashAlgo.String(),
-	})
 }
 
 //UnmarshalJSON collection to our structure
