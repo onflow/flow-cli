@@ -25,6 +25,7 @@ func Test_ConfigNetworkMultiple(t *testing.T) {
 	b := []byte(`{
     "emulator": {
       "host": "127.0.0.1:3569",
+			"chain": "flow-emulator",
       "serviceAccount": "emulator-service"
     },
     "testnet": "access.testnet.nodes.onflow.org:9000"
@@ -40,4 +41,17 @@ func Test_ConfigNetworkMultiple(t *testing.T) {
 
 	assert.Equal(t, networks.GetByName("emulator").Name, "emulator")
 	assert.Equal(t, networks.GetByName("emulator").Host, "127.0.0.1:3569")
+}
+
+func Test_TransformNetworkToJSON(t *testing.T) {
+	b := []byte(`{"emulator":{"host":"127.0.0.1:3569","chain":"flow-emulator"},"testnet":"access.testnet.nodes.onflow.org:9000"}`)
+
+	var jsonNetworks jsonNetworks
+	json.Unmarshal(b, &jsonNetworks)
+	networks := jsonNetworks.transformToConfig()
+
+	j := jsonNetworks.transformToJSON(networks)
+	x, _ := json.Marshal(j)
+
+	assert.Equal(t, string(b), string(x))
 }
