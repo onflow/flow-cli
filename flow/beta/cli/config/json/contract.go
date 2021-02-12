@@ -2,7 +2,6 @@ package json
 
 import (
 	"encoding/json"
-	"errors"
 
 	"github.com/onflow/flow-cli/flow/beta/cli/config"
 )
@@ -45,22 +44,22 @@ type jsonContract struct {
 }
 
 func (j *jsonContract) UnmarshalJSON(b []byte) error {
-	var val interface{}
+	var source string
+	var sourcesByNetwork map[string]string
 
-	err := json.Unmarshal(b, &val)
-	if err != nil {
-		return err
+	// simple
+	err := json.Unmarshal(b, &source)
+	if err == nil {
+		j.Source = source
+		return nil
 	}
 
-	switch typedVal := val.(type) {
-	case string:
-		// simple: single source for all networks
-		j.Source = typedVal
-	case map[string]string:
-		// advanced: different source for each network
-		j.SourcesByNetwork = typedVal
-	default:
-		return errors.New("invalid contract definition")
+	// advanced
+	err = json.Unmarshal(b, &sourcesByNetwork)
+	if err == nil {
+		j.SourcesByNetwork = sourcesByNetwork
+	} else {
+		return err
 	}
 
 	return nil
