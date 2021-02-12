@@ -82,6 +82,7 @@ const (
 	KeyTypeShell     KeyType = "shell"      // Exec out to a shell script
 )
 
+//TODO: replace filter with find where only one is expected
 // GetForNetwork get all contracts by network
 func (c *Contracts) GetForNetwork(network string) Contracts {
 	return funk.Filter([]Contract(*c), func(c Contract) bool {
