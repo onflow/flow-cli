@@ -27,6 +27,7 @@ import (
 	"github.com/thoas/go-funk"
 
 	"github.com/onflow/flow-cli/flow/beta/cli/config"
+	"github.com/onflow/flow-cli/flow/beta/cli/config/json"
 	"github.com/onflow/flow-cli/flow/beta/cli/keys"
 )
 
@@ -39,9 +40,9 @@ type Project struct {
 const DefaultConfigPath = "flow.json"
 
 func LoadProject() *Project {
-	conf, err := config.Load(DefaultConfigPath)
+	conf, err := json.Load(DefaultConfigPath)
 	if err != nil {
-		if errors.Is(err, config.ErrDoesNotExist) {
+		if errors.Is(err, json.ErrDoesNotExist) {
 			Exitf(
 				1,
 				"Project config file %s does not exist. Please initialize first\n",
@@ -64,7 +65,7 @@ func LoadProject() *Project {
 }
 
 func ProjectExists() bool {
-	return config.Exists(DefaultConfigPath)
+	return json.Exists(DefaultConfigPath)
 }
 
 func InitProject() *Project {
@@ -177,7 +178,7 @@ func (p *Project) GetAccountByAddress(address string) *Account {
 func (p *Project) Save() {
 	p.conf.Accounts = accountsToConfig(p.accounts)
 
-	err := config.Save(p.conf, DefaultConfigPath)
+	err := json.Save(p.conf, DefaultConfigPath)
 	if err != nil {
 		Exitf(1, "Failed to save project configuration to \"%s\"", DefaultConfigPath)
 	}
