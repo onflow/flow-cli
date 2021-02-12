@@ -36,10 +36,11 @@ type Project struct {
 	accounts []*Account
 }
 
-// REF: maybe this should be part of config prasers - also since json might not be the only format support
+//REF: move this to json config
 const DefaultConfigPath = "flow.json"
 
 func LoadProject() *Project {
+	//REF: this should interact with config and not json directly - currently problem with CD
 	conf, err := json.Load(DefaultConfigPath)
 	if err != nil {
 		if errors.Is(err, json.ErrDoesNotExist) {
@@ -77,7 +78,7 @@ func InitProject() *Project {
 	}
 }
 
-// REF: discuss if moving this to configuration make sense as it is default values for parameters from config
+// REF: move this to config
 const (
 	DefaultEmulatorConfigProfileName  = "default"
 	defaultEmulatorNetworkName        = "emulator"
@@ -191,6 +192,9 @@ type Contract struct {
 	Target     flow.Address
 }
 
+//TODO: discuss if account makes sense to be defined here in new structure
+// once config will be central point for getting account and if multiple commands
+// will need account to sign something we would need to always make this structure
 type Account struct {
 	name    string
 	address flow.Address
