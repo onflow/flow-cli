@@ -80,6 +80,48 @@ func (j jsonAccounts) transformToConfig() config.Accounts {
 	return accounts
 }
 
+func (j jsonAccounts) transformToJSON(accounts config.Accounts) jsonAccounts {
+	jsonAccounts := jsonAccounts{}
+
+	for _, a := range accounts {
+		// if simple
+		//REF: horible implementation improvemenet needed
+		if len(a.Keys) == 1 && a.Keys[0].Index == 0 &&
+			a.Keys[0].Type == config.KeyTypeHex &&
+			a.Keys[0].SigAlgo == crypto.ECDSA_P256 &&
+			a.Keys[0].HashAlgo == crypto.SHA3_256 {
+			jsonAccounts[a.Name] = jsonAccount{
+				Simple: jsonAccountSimple{
+					Address: a.Address.String(),
+					Chain:   a.ChainID.String(),
+					Keys:    a.Keys[0].Context["privateKey"],
+				},
+			}
+		} else { // if advanced
+			var keys []jsonAccountKey
+			for _, k := range a.Keys {
+				keys = append(keys, jsonAccountKey{
+					Type:     k.Type,
+					Index:    k.Index,
+					SigAlgo:  k.SigAlgo.String(),
+					HashAlgo: k.HashAlgo.String(),
+					Context:  k.Context,
+				})
+			}
+
+			jsonAccounts[a.Name] = jsonAccount{
+				Advanced: jsonAccountAdvanced{
+					Address: a.Address.String(),
+					Chain:   a.ChainID.String(),
+					Keys:    keys,
+				},
+			}
+		}
+	}
+
+	return jsonAccounts
+}
+
 type jsonAccountSimple struct {
 	Address string `json:"address"`
 	Keys    string `json:"keys"`
@@ -125,4 +167,12 @@ func (j *jsonAccount) UnmarshalJSON(b []byte) error {
 	}
 
 	return err
+}
+
+func (j jsonAccount) MarshalJSON() ([]byte, error) {
+	if j.Simple.Address != "" {
+		return json.Marshal(j.Simple)
+	} else {
+		return json.Marshal(j.Advanced)
+	}
 }
