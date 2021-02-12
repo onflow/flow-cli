@@ -14,6 +14,7 @@ require (
 	github.com/sirupsen/logrus v1.5.0 // indirect
 	github.com/spf13/cobra v0.0.7
 	github.com/stretchr/testify v1.6.1
+	github.com/thoas/go-funk v0.7.0
 	gonum.org/v1/gonum v0.6.1
 	google.golang.org/grpc v1.32.0
 )
