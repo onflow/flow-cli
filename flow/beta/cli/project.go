@@ -132,6 +132,24 @@ func newProject(conf *config.Config) (*Project, error) {
 	}, nil
 }
 
+// CheckContractConflict checks if there is any contract duplication between accounts
+// for now we don't allow two different accounts deploying same contract
+func (p *Project) ContractConflictExists(network string) bool {
+	contracts := p.GetContractsByNetwork(network)
+
+	uniq := funk.Uniq(
+		funk.Map(contracts, func(c Contract) string {
+			return c.Name
+		}).([]string),
+	).([]string)
+
+	all := funk.Map(contracts, func(c Contract) string {
+		return c.Name
+	}).([]string)
+
+	return len(all) != len(uniq)
+}
+
 func (p *Project) Host(network string) string {
 	return p.conf.Networks.GetByName(network).Host
 }
