@@ -88,12 +88,12 @@ const (
 // REF: this also might be part of config
 func defaultConfig(serviceAccountKey *keys.HexAccountKey) *config.Config {
 	return &config.Config{
-		Networks: config.NetworkCollection{
-			Networks: []config.Network{{
+		Networks: config.Networks{
+			config.Network{
 				Name:    defaultEmulatorNetworkName,
 				Host:    defaultEmulatorHost,
 				ChainID: flow.Emulator,
-			}},
+			},
 		},
 	}
 }
@@ -142,7 +142,7 @@ func (p *Project) GetContractsByNetwork(network string) []Contract {
 	contracts := make([]Contract, 0)
 
 	// get deploys for specific network
-	for _, deploy := range p.conf.Deploy.GetByNetwork(network) {
+	for _, deploy := range p.conf.Deploys.GetByNetwork(network) {
 		account := p.GetAccountByName(deploy.Account)
 
 		// go through each contract for this deploy
@@ -175,7 +175,7 @@ func (p *Project) GetAccountByAddress(address string) *Account {
 }
 
 func (p *Project) Save() {
-	p.conf.Accounts.Accounts = accountsToConfig(p.accounts)
+	p.conf.Accounts = accountsToConfig(p.accounts)
 
 	err := config.Save(p.conf, DefaultConfigPath)
 	if err != nil {
@@ -206,9 +206,9 @@ func (a *Account) DefaultKey() keys.AccountKey {
 }
 
 func accountsFromConfig(conf *config.Config) ([]*Account, error) {
-	accounts := make([]*Account, 0, len(conf.Accounts.Accounts))
+	accounts := make([]*Account, 0, len(conf.Accounts))
 
-	for _, accountConf := range conf.Accounts.Accounts {
+	for _, accountConf := range conf.Accounts {
 		account, err := accountFromConfig(accountConf)
 		if err != nil {
 			return nil, err
@@ -240,11 +240,11 @@ func accountFromConfig(accountConf config.Account) (*Account, error) {
 	}, nil
 }
 
-func accountsToConfig(accounts []*Account) map[string]config.Account {
-	accountConfs := make(map[string]config.Account, 0)
+func accountsToConfig(accounts []*Account) config.Accounts {
+	accountConfs := make([]config.Account, 0)
 
 	for _, account := range accounts {
-		accountConfs[account.name] = accountToConfig(account)
+		accountConfs = append(accountConfs, accountToConfig(account))
 	}
 
 	return accountConfs
