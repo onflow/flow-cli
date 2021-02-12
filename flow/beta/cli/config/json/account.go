@@ -2,7 +2,7 @@ package json
 
 import (
 	"encoding/json"
-	"errors"
+	"strings"
 
 	"github.com/onflow/flow-cli/flow/beta/cli/config"
 	"github.com/onflow/flow-go-sdk"
@@ -10,6 +10,27 @@ import (
 )
 
 type jsonAccounts map[string]jsonAccount
+
+func transformChainID(rawChainID string, rawAddress string) flow.ChainID {
+	if rawAddress == "service" && rawChainID == "" {
+		return flow.Emulator
+	}
+	return flow.ChainID(rawChainID)
+}
+
+func transformAddress(rawAddress string, rawChainID string) flow.Address {
+	var address flow.Address
+	chainID := transformChainID(rawChainID, rawAddress)
+
+	if rawAddress == "service" {
+		address = flow.ServiceAddress(chainID)
+	} else {
+		rawAddress = strings.ReplaceAll(rawAddress, "0x", "") // remove 0x if present
+		address = flow.HexToAddress(rawAddress)
+	}
+
+	return address
+}
 
 func (j jsonAccounts) transformToConfig() config.Accounts {
 	accounts := make(config.Accounts, 0)
@@ -20,7 +41,8 @@ func (j jsonAccounts) transformToConfig() config.Accounts {
 		if a.Simple.Address != "" {
 			account = config.Account{
 				Name:    accountName,
-				Address: flow.HexToAddress(a.Simple.Address), //TODO: improve (0x handle, validation)
+				ChainID: transformChainID(a.Simple.Chain, a.Simple.Address),
+				Address: transformAddress(a.Simple.Address, a.Simple.Chain),
 				Keys: []config.AccountKey{{
 					Type:     config.KeyTypeHex,
 					Index:    0,
@@ -46,7 +68,8 @@ func (j jsonAccounts) transformToConfig() config.Accounts {
 
 			account = config.Account{
 				Name:    accountName,
-				Address: flow.HexToAddress(a.Advanced.Address), //REF: merge with logic above - code dup
+				ChainID: transformChainID(a.Advanced.Chain, a.Advanced.Address),
+				Address: transformAddress(a.Advanced.Address, a.Advanced.Chain),
 				Keys:    keys,
 			}
 		}
@@ -60,10 +83,12 @@ func (j jsonAccounts) transformToConfig() config.Accounts {
 type jsonAccountSimple struct {
 	Address string `json:"address"`
 	Keys    string `json:"keys"`
+	Chain   string `json:"chain"`
 }
 
 type jsonAccountAdvanced struct {
 	Address string           `json:"address"`
+	Chain   string           `json:"chain"`
 	Keys    []jsonAccountKey `json:"keys"`
 	//TODO: define more properties
 }
@@ -81,22 +106,23 @@ type jsonAccount struct {
 	Advanced jsonAccountAdvanced
 }
 
-func (j jsonAccount) UnmarshalJSON(b []byte) error {
-	var val interface{}
+func (j *jsonAccount) UnmarshalJSON(b []byte) error {
 
-	err := json.Unmarshal(b, &val)
-	if err != nil {
-		return err
+	// try simple format
+	var simple jsonAccountSimple
+	err := json.Unmarshal(b, &simple)
+	if err == nil {
+		j.Simple = simple
+		return nil
 	}
 
-	switch typedVal := val.(type) {
-	case jsonAccountSimple:
-		j.Simple = typedVal
-	case jsonAccountAdvanced:
-		j.Advanced = typedVal
-	default:
-		return errors.New("invalid account definition")
+	// try advanced format
+	var advanced jsonAccountAdvanced
+	err = json.Unmarshal(b, &advanced)
+	if err == nil {
+		j.Advanced = advanced
+		return nil
 	}
 
-	return nil
+	return err
 }

@@ -2,7 +2,6 @@ package json
 
 import (
 	"encoding/json"
-	"errors"
 
 	"github.com/onflow/flow-cli/flow/beta/cli/config"
 	"github.com/onflow/flow-go-sdk"
@@ -35,30 +34,32 @@ func (j jsonNetworks) transformToConfig() config.Networks {
 	return networks
 }
 
+type Advanced struct {
+	Host    string `json:"host"`
+	ChainID string `json:"chain"`
+}
+
 type jsonNetwork struct {
 	Host     string
-	Advanced struct {
-		Host    string `json:"host"`
-		ChainID string `json:"chain"`
-	}
+	Advanced Advanced
 }
 
 func (j *jsonNetwork) UnmarshalJSON(b []byte) error {
-	var val interface{}
-
-	err := json.Unmarshal(b, &val)
-	if err != nil {
-		return err
+	// simple
+	var host string
+	err := json.Unmarshal(b, &host)
+	if err == nil {
+		j.Host = host
+		return nil
 	}
 
-	switch typedVal := val.(type) {
-	case string:
-		// simple: host string for network
-		j.Host = typedVal
-	case map[string]string: //TODO: try changing j.Advanced
-		json.Unmarshal(b, &j.Advanced)
-	default:
-		return errors.New("invalid network definition")
+	// advanced
+	var advanced Advanced
+	err = json.Unmarshal(b, &advanced)
+	if err == nil {
+		j.Advanced = advanced
+	} else {
+		return err
 	}
 
 	return nil

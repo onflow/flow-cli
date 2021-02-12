@@ -2,7 +2,6 @@ package json
 
 import (
 	"encoding/json"
-	"errors"
 
 	"github.com/onflow/flow-cli/flow/beta/cli/config"
 )
@@ -34,20 +33,14 @@ type jsonDeploy struct {
 	//TODO: advanced format will include variables
 }
 
-func (j jsonDeploy) UnmarshalJSON(b []byte) error {
-	var val interface{}
+func (j *jsonDeploy) UnmarshalJSON(b []byte) error {
+	var simple map[string][]string
 
-	err := json.Unmarshal(b, &val)
+	err := json.Unmarshal(b, &simple)
 	if err != nil {
 		return err
 	}
-
-	switch typedVal := val.(type) {
-	case Simple:
-		j.Simple = typedVal
-	default:
-		return errors.New("invalid deploy definition")
-	}
+	j.Simple = simple
 
 	return nil
 }
