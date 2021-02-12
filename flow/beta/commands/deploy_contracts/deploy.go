@@ -22,6 +22,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/client"
@@ -77,6 +78,14 @@ var Cmd = &cobra.Command{
 			cli.Exit(1, err.Error())
 			return
 		}
+
+		fmt.Println(
+			fmt.Sprintf(
+				"Deploying %v contracts for accounts: %s",
+				len(contracts),
+				strings.Join(project.GetAllAccountNames(), ","),
+			),
+		)
 
 		var errs []error
 

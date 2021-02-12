@@ -164,6 +164,14 @@ func (p *Project) GetContractsByNetwork(network string) []Contract {
 	return contracts
 }
 
+func (p *Project) GetAllAccountNames() []string {
+	return funk.Uniq(
+		funk.Map(p.accounts, func(a *Account) string {
+			return a.name
+		}).([]string),
+	).([]string)
+}
+
 func (p *Project) GetAccountByName(name string) *Account {
 	return funk.Filter(p.accounts, func(a *Account) bool {
 		return a.name == name
@@ -186,10 +194,9 @@ func (p *Project) Save() {
 }
 
 type Contract struct {
-	BundleName string
-	Name       string
-	Source     string
-	Target     flow.Address
+	Name   string
+	Source string
+	Target flow.Address
 }
 
 //TODO: discuss if account makes sense to be defined here in new structure
