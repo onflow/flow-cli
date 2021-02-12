@@ -26,6 +26,24 @@ func (j jsonDeploys) transformToConfig() config.Deploys {
 	return deploys
 }
 
+func (j jsonDeploys) transformToJSON(deploys config.Deploys) jsonDeploys {
+	jsonDeploys := jsonDeploys{}
+
+	for _, d := range deploys {
+		if _, exists := jsonDeploys[d.Network]; exists {
+			jsonDeploys[d.Network].Simple[d.Account] = d.Contracts
+		} else {
+			jsonDeploys[d.Network] = jsonDeploy{
+				Simple: map[string][]string{
+					d.Account: d.Contracts,
+				},
+			}
+		}
+	}
+
+	return jsonDeploys
+}
+
 type Simple map[string][]string
 
 type jsonDeploy struct {
@@ -43,4 +61,8 @@ func (j *jsonDeploy) UnmarshalJSON(b []byte) error {
 	j.Simple = simple
 
 	return nil
+}
+
+func (j jsonDeploy) MarshalJSON() ([]byte, error) {
+	return json.Marshal(j.Simple)
 }
