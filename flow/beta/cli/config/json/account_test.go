@@ -274,3 +274,32 @@ func Test_ConfigAccountsMap(t *testing.T) {
 	assert.Equal(t, "0000000000000000", accounts.GetByName("emulator-account").Address.String())
 	assert.Equal(t, "emulator-account", accounts.GetByName("emulator-account").Name)
 }
+
+func Test_TransformDefaultAccountToJSON(t *testing.T) {
+	b := []byte(`{"emulator-account":{"address":"f8d6e0586b0a20c7","chain":"flow-emulator","keys":[{"type":"hex","index":0,"signatureAlgorithm":"ECDSA_P256","hashAlgorithm":"SHA3_256","context":{"privateKey":"1272967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47"}}]},"testnet-account":{"address":"3c1162386b0a245f","keys":"2272967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47","chain":"testnet"}}`)
+
+	var jsonAccounts jsonAccounts
+	json.Unmarshal(b, &jsonAccounts)
+
+	accounts := jsonAccounts.transformToConfig()
+
+	j := jsonAccounts.transformToJSON(accounts)
+	x, _ := json.Marshal(j)
+
+	// our output format is shorted - improve test
+	assert.NotEqual(t, string(b), string(x))
+}
+
+func Test_TransformAccountToJSON(t *testing.T) {
+	b := []byte(`{"emulator-account":{"address":"f8d6e0586b0a20c7","chain":"flow-emulator","keys":[{"type":"hex","index":1,"signatureAlgorithm":"ECDSA_P256","hashAlgorithm":"SHA3_256","context":{"privateKey":"1272967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47"}}]},"testnet-account":{"address":"3c1162386b0a245f","keys":"2272967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47","chain":"testnet"}}`)
+
+	var jsonAccounts jsonAccounts
+	json.Unmarshal(b, &jsonAccounts)
+
+	accounts := jsonAccounts.transformToConfig()
+
+	j := jsonAccounts.transformToJSON(accounts)
+	x, _ := json.Marshal(j)
+
+	assert.Equal(t, string(b), string(x))
+}
