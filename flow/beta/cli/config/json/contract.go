@@ -37,6 +37,31 @@ func (j jsonContracts) transformToConfig() config.Contracts {
 	return contracts
 }
 
+//REF: if we already loaded json from config no need to do this just return
+func (j jsonContracts) transformToJSON(contracts config.Contracts) jsonContracts {
+	jsonContracts := jsonContracts{}
+
+	for _, c := range contracts {
+		// if simple case
+		if c.Network == "" {
+			jsonContracts[c.Name] = jsonContract{
+				Source: c.Source,
+			}
+		} else { // if advanced config
+			// check if we already created for this name then add or create
+			if _, exists := jsonContracts[c.Name]; exists {
+				jsonContracts[c.Name].SourcesByNetwork[c.Network] = c.Source
+			} else {
+				jsonContracts[c.Name] = jsonContract{
+					SourcesByNetwork: map[string]string{c.Network: c.Source},
+				}
+			}
+		}
+	}
+
+	return jsonContracts
+}
+
 // jsonContract structure for json parsing
 type jsonContract struct {
 	Source           string
@@ -63,4 +88,12 @@ func (j *jsonContract) UnmarshalJSON(b []byte) error {
 	}
 
 	return nil
+}
+
+func (j jsonContract) MarshalJSON() ([]byte, error) {
+	if j.Source != "" {
+		return json.Marshal(j.Source)
+	} else {
+		return json.Marshal(j.SourcesByNetwork)
+	}
 }
