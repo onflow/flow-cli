@@ -84,16 +84,16 @@ const (
 
 // GetForNetwork get all contracts by network
 func (c *Contracts) GetForNetwork(network string) Contracts {
-	return funk.Filter(c, func(c Contract) bool {
+	return funk.Filter([]Contract(*c), func(c Contract) bool {
 		return c.Network == network
-	}).(Contracts)
+	}).([]Contract)
 }
 
 // GetByNameAndNetwork get contract array for account and network
 func (c *Contracts) GetByNameAndNetwork(name string, network string) Contract {
-	contracts := funk.Filter(c, func(c Contract) bool {
+	contracts := funk.Filter([]Contract(*c), func(c Contract) bool {
 		return c.Network == network && c.Name == name
-	}).(Contracts)
+	}).([]Contract)
 
 	// if we don't find contract by name and network return default for name
 	if len(contracts) == 0 {
@@ -105,49 +105,49 @@ func (c *Contracts) GetByNameAndNetwork(name string, network string) Contract {
 
 // GetByName get contract by name
 func (c *Contracts) GetByName(name string) Contract {
-	return funk.Filter(c, func(c Contract) bool {
+	return funk.Filter([]Contract(*c), func(c Contract) bool {
 		return c.Name == name
-	}).(Contracts)[0]
+	}).([]Contract)[0]
 }
 
 // GetByNetwork returns all contracts for specific network
 func (c *Contracts) GetByNetwork(network string) Contracts {
-	return funk.Filter(c, func(c Contract) bool {
+	return funk.Filter([]Contract(*c), func(c Contract) bool {
 		return c.Network == network || c.Network == "" // if network is not defined return for all set value
-	}).(Contracts)
+	}).([]Contract)
 }
 
 // GetAccountByName get account by name
 func (a *Accounts) GetByName(name string) Account {
-	return funk.Filter(a, func(a Account) bool {
+	return funk.Filter([]Account(*a), func(a Account) bool {
 		return a.Name == name
-	}).(Accounts)[0]
+	}).([]Account)[0]
 }
 
 // GetByAddress get account by address
 func (a *Accounts) GetByAddress(address string) Account {
-	return funk.Filter(a, func(a Account) bool {
+	return funk.Filter([]Account(*a), func(a Account) bool {
 		return a.Address.String() == address
-	}).(Accounts)[0]
+	}).([]Account)[0]
 }
 
 // GetByNetwork get all deploys by network
 func (d *Deploys) GetByNetwork(network string) Deploys {
-	return funk.Filter(d, func(d Deploy) bool {
+	return funk.Filter([]Deploy(*d), func(d Deploy) bool {
 		return d.Network == network
-	}).(Deploys)
+	}).([]Deploy)
 }
 
 // GetByAccountAndNetwork get deploy by account and network
 func (d *Deploys) GetByAccountAndNetwork(account string, network string) []Deploy {
-	return funk.Filter(d, func(d Deploy) bool {
+	return funk.Filter([]Deploy(*d), func(d Deploy) bool {
 		return d.Account == account && d.Network == network
-	}).(Deploys)
+	}).([]Deploy)
 }
 
 // GetByName get network by name
 func (n *Networks) GetByName(name string) Network {
-	return funk.Filter(n, func(n Network) bool {
+	return funk.Filter([]Network(*n), func(n Network) bool {
 		return n.Name == name
-	}).(Networks)[0]
+	}).([]Network)[0]
 }
