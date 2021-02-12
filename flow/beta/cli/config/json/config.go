@@ -17,8 +17,8 @@ type jsonConfig struct {
 	Deploys   jsonDeploys   `json:"deploys"`
 }
 
-func (j jsonConfig) transformToConfig() config.Config {
-	return config.Config{
+func (j jsonConfig) transformToConfig() *config.Config {
+	return &config.Config{
 		Contracts: j.Contracts.transformToConfig(),
 		Networks:  j.Networks.transformToConfig(),
 		Accounts:  j.Accounts.transformToConfig(),
@@ -55,15 +55,15 @@ func Load(path string) (*config.Config, error) {
 	}
 
 	d := json.NewDecoder(f)
+	conf := new(jsonConfig)
+	err = d.Decode(conf)
 
-	conf := new(config.Config)
-
-	if err := d.Decode(conf); err != nil {
+	if err != nil {
 		fmt.Printf("%s contains invalid json: %s\n", path, err.Error())
 		os.Exit(1)
 	}
 
-	return conf, nil
+	return conf.transformToConfig(), nil
 }
 
 // Exists checks if file exists on the specified path
