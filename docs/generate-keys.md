@@ -1,11 +1,11 @@
 ---
 title: Generate Keys with the Flow CLI
 sidebar_title: Generate Keys
-description: How to generate a Flow account key pair from a command line
+description: How to generate a Flow account key-pair from the command line
 ---
 
 The Flow CLI provides a command to generate ECDSA key pairs
-that can be attached to new or existing Flow accounts.
+that can be [attached to new or existing Flow accounts](https://docs.onflow.org/concepts/accounts-and-keys).
 
 `flow keys generate`
 
@@ -27,16 +27,18 @@ Generating key pair with signature algorithm:                 ECDSA_P256
 - Valid inputs: `"ECDSA_P256", "ECDSA_secp256k1"`
 - Default: `"ECDSA_P256"`
 
-Specify the ECDSA signature algorithm used to generate the key pair.
+Specify the ECDSA signature algorithm for the key pair.
+
+Flow supports the secp256k1 and P-256 curves.
 
 ### Seed
 
 - Flag: `--seed,s`
 - Valid inputs: any string with length >= 32
 
-Specify a UTF-8 seed string used to generate the key pair.
+Specify a UTF-8 seed string that will be used to generate the key pair.
 Key generation is deterministic, so the same seed will always
 result in the same key.
 
-If no seed is specified, the key pair is generated using
+If no seed is specified, the key pair will be generated using
 a random 32 byte seed.
