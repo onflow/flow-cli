@@ -7,9 +7,7 @@ description: How to generate a Flow account key pair from a command line
 The Flow CLI provides a command to generate ECDSA key pairs
 that can be attached to new or existing Flow accounts.
 
-```shell
-flow keys generate
-```
+`flow keys generate`
 
 ## Example Usage
 
