@@ -5,15 +5,15 @@ description: How to install the Flow command-line interface
 
 The Flow CLI can be installed in one of three ways:
 
-### macOS
+## macOS
 
-#### Homebrew
+### Homebrew
 
 ```sh
 brew install flow-cli
 ```
 
-#### From a pre-built binary
+### From a pre-built binary
 
 _This installation method only works on x86-64._
 
@@ -25,9 +25,9 @@ sh -ci "$(curl -fsSL https://storage.googleapis.com/flow-cli/install.sh)"
 
 To update, simply re-run the installation command above.
 
-### Linux
+## Linux
 
-#### From a pre-built binary
+### From a pre-built binary
 
 _This installation method only works on x86-64._
 
@@ -39,9 +39,9 @@ sh -ci "$(curl -fsSL https://storage.googleapis.com/flow-cli/install.sh)"
 
 To update, simply re-run the installation command above.
 
-### Windows
+## Windows
 
-#### From a pre-built binary
+### From a pre-built binary
 
 _This installation method only works on Windows 10, 8.1, or 7 (SP1, with [PowerShell 3.0](https://www.microsoft.com/en-ca/download/details.aspx?id=34595)), on x86-64._
 
