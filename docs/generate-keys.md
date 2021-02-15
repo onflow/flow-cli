@@ -1,6 +1,6 @@
 ---
 title: Generate Keys with the Flow CLI
-sidebar_title: Generate Keys
+sidebar_title: Generate a Key
 description: How to generate a Flow account key-pair from the command line
 ---
 
@@ -13,6 +13,7 @@ that can be [attached to new or existing Flow accounts](https://docs.onflow.org/
 
 ```shell
 > flow keys generate
+
 Generating key pair with signature algorithm:                 ECDSA_P256
 ...
 🔐 Private key (do not share with anyone):                    xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
