@@ -57,7 +57,7 @@ func (j jsonContracts) transformToConfig() config.Contracts {
 
 //REF: if we already loaded json from config no need to do this just return
 // transformToJSON transforms config structure to json structures for saving
-func (j jsonContracts) transformToJSON(contracts config.Contracts) jsonContracts {
+func transformContractsToJSON(contracts config.Contracts) jsonContracts {
 	jsonContracts := jsonContracts{}
 
 	for _, c := range contracts {
