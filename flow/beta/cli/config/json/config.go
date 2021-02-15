@@ -46,18 +46,18 @@ func (j jsonConfig) transformToConfig() *config.Config {
 
 func transformConfigToJSON(config *config.Config) jsonConfig {
 	return jsonConfig{
-		Contracts: j.Contracts.transformToJSON(config.Contracts),
-		Networks:  j.Networks.transformToJSON(config.Networks),
-		Accounts:  j.Accounts.transformToJSON(config.Accounts),
-		Deploys:   j.Deploys.transformToJSON(config.Deploys),
+		Contracts: transformContractsToJSON(config.Contracts),
+		Networks:  transformNetworksToJSON(config.Networks),
+		Accounts:  transformAccountsToJSON(config.Accounts),
+		Deploys:   transformDeploysToJSON(config.Deploys),
 	}
 }
 
 // Save saves the configuration to the specified path file in JSON format.
 func Save(conf *config.Config, path string) error {
-	jsonConf := jsonConfig{}.transformToJSON(conf)
+	jsonConf := transformConfigToJSON(conf)
 
-	data, err := json.MarshalIndent(jsonConfig, "", "\t")
+	data, err := json.MarshalIndent(jsonConf, "", "\t")
 	if err != nil {
 		return err
 	}
