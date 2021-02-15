@@ -192,7 +192,7 @@ func (j *jsonAccount) UnmarshalJSON(b []byte) error {
 }
 
 func (j jsonAccount) MarshalJSON() ([]byte, error) {
-	if j.Simple.Address != "" {
+	if j.Simple != jsonAccountSimple{} {
 		return json.Marshal(j.Simple)
 	} else {
 		return json.Marshal(j.Advanced)
