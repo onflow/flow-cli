@@ -1,5 +1,5 @@
 ---
-title: Query a Transaction with the Flow CLI
+title: Query a Transaction Result with the Flow CLI
 sidebar_title: Query a Transaction Result
 description: How to get the result of a Flow transaction from the command line
 ---
@@ -51,4 +51,4 @@ a timeout is reached.
 - Default: `localhost:3569` (Flow Emulator)
 
 Specify the hostname of the Access API that will be
-used to query the transaction.
+used to submit the transaction query.

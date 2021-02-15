@@ -69,7 +69,7 @@ Flow supports the secp256k1 and P-256 curves.
 Specify the hashing algorithm that will be paired with the public key
 upon account creation.
 
-### Wait for Sealed
+### Wait for Seal
 
 - Flag: `--sealed`
 - Valid inputs: `true`, `false`
@@ -94,7 +94,7 @@ and pay the account creation fee.
 - Default: `localhost:3569` (Flow Emulator)
 
 Specify the hostname of the Access API that will be
-used to query the transaction.
+used to submit the transaction.
 
 ### Results
 
