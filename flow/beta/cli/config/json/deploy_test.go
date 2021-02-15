@@ -57,7 +57,7 @@ func Test_TransformDeployToJSON(t *testing.T) {
 	json.Unmarshal(b, &jsonDeploys)
 	deploys := jsonDeploys.transformToConfig()
 
-	j := jsonDeploys.transformToJSON(deploys)
+	j := transformDeploysToJSON(deploys)
 	x, _ := json.Marshal(j)
 
 	assert.Equal(t, string(b), string(x))
