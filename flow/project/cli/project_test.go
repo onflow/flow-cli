@@ -67,7 +67,7 @@ func generateComplexProject() Project {
 			}},
 		}, {
 			Name:    "account-2",
-			Address: flow.HexToAddress("0x2c1162386b0a245f"),
+			Address: flow.HexToAddress("2c1162386b0a245f"),
 			ChainID: flow.Emulator,
 			Keys: []config.AccountKey{{
 				Type:     config.KeyTypeHex,
@@ -80,7 +80,7 @@ func generateComplexProject() Project {
 			}},
 		}, {
 			Name:    "account-4",
-			Address: flow.HexToAddress("0xf8d6e0586b0a20c1"),
+			Address: flow.HexToAddress("f8d6e0586b0a20c1"),
 			ChainID: flow.Emulator,
 			Keys: []config.AccountKey{{
 				Type:     config.KeyTypeHex,
@@ -263,8 +263,8 @@ func Test_AccountByNameComplex(t *testing.T) {
 	p := generateComplexProject()
 	acc := p.GetAccountByName("account-2")
 
-	assert.Equal(t, "0x2c1162386b0a245f", acc.Address().String())
-	assert.Equal(t, "dd72967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47", acc.DefaultKey())
+	assert.Equal(t, "2c1162386b0a245f", acc.Address().String())
+	assert.Equal(t, "dd72967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47", acc.DefaultKey().ToConfig().Context["privateKey"])
 }
 
 func Test_HostComplex(t *testing.T) {
