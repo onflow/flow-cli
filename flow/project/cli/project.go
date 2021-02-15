@@ -21,6 +21,7 @@ package cli
 import (
 	"errors"
 	"path"
+	"strings"
 
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
@@ -198,7 +199,7 @@ func (p *Project) GetAccountByName(name string) *Account {
 
 func (p *Project) GetAccountByAddress(address string) *Account {
 	return funk.Filter(p.accounts, func(a *Account) bool {
-		return a.address.String() == address
+		return a.address.String() == strings.ReplaceAll(address, "0x", "")
 	}).([]*Account)[0]
 }
 
