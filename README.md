@@ -4,7 +4,11 @@ The Flow CLI is a command-line interface that provides useful utilities for buil
 
 ## Installation
 
-// TODO: Link
+To install the Flow CLI, follow the [installation instructions](https://docs.onflow.org/flow-cli/install) on the Flow documentation website.
+
+## Documentation
+
+You can find the CLI documentation on the [Flow documentation website](https://docs.onflow.org/flow-cli).
 
 ## Development 
 
