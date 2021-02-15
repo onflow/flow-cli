@@ -300,7 +300,7 @@ func Test_TransformDefaultAccountToJSON(t *testing.T) {
 
 	accounts := jsonAccounts.transformToConfig()
 
-	j := jsonAccounts.transformToJSON(accounts)
+	j := transformAccountsToJSON(accounts)
 	x, _ := json.Marshal(j)
 
 	// our output format is shorted - improve test
@@ -315,7 +315,7 @@ func Test_TransformAccountToJSON(t *testing.T) {
 
 	accounts := jsonAccounts.transformToConfig()
 
-	j := jsonAccounts.transformToJSON(accounts)
+	j := transformAccountsToJSON(accounts)
 	x, _ := json.Marshal(j)
 
 	assert.Equal(t, string(b), string(x))
