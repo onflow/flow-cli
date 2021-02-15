@@ -2,8 +2,6 @@
 title: Flow CLI
 sidebar_title: Introduction
 description: A command-line interface that provides useful utilities for building Flow applications
-
-sidebar_title: Introduction
 ---
 
 The Flow CLI includes several commands to interact with Flow networks, such as querying account information,
