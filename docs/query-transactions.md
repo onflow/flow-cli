@@ -5,7 +5,7 @@ description: How to get the result of a Flow transaction from the command line
 ---
 
 The Flow CLI provides a command to query the result of a transaction
-that was previously submitted.
+that was previously submitted to an Access API.
 
 `flow transactions status`
 
@@ -18,6 +18,12 @@ that was previously submitted.
     74c02a67297458dbed26273d3b407eedcb42957bdc8d2deb3c6939145bf2b240
 ```
 
+## Arguments
+
+### Transaction ID
+
+The first argument is the ID (hash) of the transaction being fetched.
+
 ## Options
     
 ### Display Transaction Code
@@ -28,7 +34,7 @@ that was previously submitted.
 
 Indicate whether to print the transaction Cadence code.
 
-### Wait for Sealed
+### Wait for Seal
 
 - Flag: `--sealed`
 - Valid inputs: `true`, `false`
