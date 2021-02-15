@@ -44,7 +44,7 @@ func (j jsonConfig) transformToConfig() *config.Config {
 	}
 }
 
-func (j jsonConfig) transformToJSON(config *config.Config) jsonConfig {
+func transformConfigToJSON(config *config.Config) jsonConfig {
 	return jsonConfig{
 		Contracts: j.Contracts.transformToJSON(config.Contracts),
 		Networks:  j.Networks.transformToJSON(config.Networks),
