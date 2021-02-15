@@ -22,7 +22,7 @@ that was previously submitted to an Access API.
 
 ### Transaction ID
 
-The first argument is the ID (hash) of the transaction being fetched.
+The first argument is the ID (hash) of the transaction.
 
 ## Options
     

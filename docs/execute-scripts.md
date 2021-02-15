@@ -13,7 +13,8 @@ the Flow execution state with any Flow Access API.
 
 ```shell
 # Submit a transaction to Flow Testnet
-> flow scripts execute MyScript.cdc \
+> flow scripts execute \
+    MyScript.cdc \
     --host access.testnet.nodes.onflow.org:9000
 ```
 
@@ -21,7 +22,7 @@ the Flow execution state with any Flow Access API.
 
 ### Script Code
 
-The first argument is the path to a Cadence file containing the 
+The first argument is a path to a Cadence file containing the 
 script to be executed.
 
 ## Options
