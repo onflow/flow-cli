@@ -31,9 +31,9 @@ import (
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 
-	"github.com/onflow/flow-cli/flow/beta/cli"
-	"github.com/onflow/flow-cli/flow/beta/cli/txsender"
-	"github.com/onflow/flow-cli/flow/beta/contracts"
+	"github.com/onflow/flow-cli/flow/project/cli"
+	"github.com/onflow/flow-cli/flow/project/cli/txsender"
+	"github.com/onflow/flow-cli/flow/project/contracts"
 )
 
 type Config struct {
@@ -45,7 +45,7 @@ var conf Config
 
 var Cmd = &cobra.Command{
 	Use:   "deploy-contracts",
-	Short: "",
+	Short: "Deploy Cadence contracts",
 	Run: func(cmd *cobra.Command, args []string) {
 		project := cli.LoadProject()
 

@@ -24,7 +24,7 @@ import (
 
 	"github.com/onflow/flow-go-sdk/crypto"
 
-	"github.com/onflow/flow-cli/flow/beta/cli/config"
+	"github.com/onflow/flow-cli/flow/project/cli/config"
 )
 
 type AccountKey interface {

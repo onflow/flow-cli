@@ -21,7 +21,7 @@ package json
 import (
 	"encoding/json"
 
-	"github.com/onflow/flow-cli/flow/beta/cli/config"
+	"github.com/onflow/flow-cli/flow/project/cli/config"
 )
 
 type jsonDeploys map[string]jsonDeploy
