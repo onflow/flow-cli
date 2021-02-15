@@ -9,7 +9,7 @@ transaction to any Flow Access API.
 
 `flow accounts create`
 
-:warning: _This command requires an existing Testnet or Mainnet account._
+⚠️ _This command requires an existing Testnet or Mainnet account._
 
 ## Example Usage
 
