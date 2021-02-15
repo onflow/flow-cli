@@ -54,7 +54,7 @@ func (j jsonNetworks) transformToConfig() config.Networks {
 }
 
 // transformToJSON transforms config structure to json structures for saving
-func (j jsonNetworks) transformToJSON(networks config.Networks) jsonNetworks {
+func transformNetworksToJSON(networks config.Networks) jsonNetworks {
 	jsonNetworks := jsonNetworks{}
 
 	for _, n := range networks {
