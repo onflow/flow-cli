@@ -75,7 +75,7 @@ func Test_TransformContractToJSON(t *testing.T) {
 	json.Unmarshal(b, &jsonContracts)
 	contracts := jsonContracts.transformToConfig()
 
-	j := jsonContracts.transformToJSON(contracts)
+	j := transformContractsToJSON(contracts)
 	x, _ := json.Marshal(j)
 
 	assert.Equal(t, string(b), string(x))

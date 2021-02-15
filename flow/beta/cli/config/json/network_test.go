@@ -67,7 +67,7 @@ func Test_TransformNetworkToJSON(t *testing.T) {
 	json.Unmarshal(b, &jsonNetworks)
 	networks := jsonNetworks.transformToConfig()
 
-	j := jsonNetworks.transformToJSON(networks)
+	j := transformNetworksToJSON(networks)
 	x, _ := json.Marshal(j)
 
 	assert.Equal(t, string(b), string(x))
