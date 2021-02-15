@@ -68,7 +68,7 @@ type Simple map[string][]string
 
 type jsonDeploy struct {
 	Simple
-	//TODO: advanced format will include variables
+	// TODO: advanced format will include initializer arguments
 }
 
 func (j *jsonDeploy) UnmarshalJSON(b []byte) error {
