@@ -26,9 +26,9 @@ import (
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/thoas/go-funk"
 
-	"github.com/onflow/flow-cli/flow/beta/cli/config"
-	"github.com/onflow/flow-cli/flow/beta/cli/config/json"
-	"github.com/onflow/flow-cli/flow/beta/cli/keys"
+	"github.com/onflow/flow-cli/flow/project/cli/config"
+	"github.com/onflow/flow-cli/flow/project/cli/config/json"
+	"github.com/onflow/flow-cli/flow/project/cli/keys"
 )
 
 type Project struct {

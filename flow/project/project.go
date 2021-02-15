@@ -16,18 +16,19 @@
  * limitations under the License.
  */
 
-package beta
+package project
 
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/onflow/flow-cli/flow/beta/commands/deploy_contracts"
-	"github.com/onflow/flow-cli/flow/beta/commands/initialize"
-	"github.com/onflow/flow-cli/flow/beta/commands/start_emulator"
+	"github.com/onflow/flow-cli/flow/project/commands/deploy_contracts"
+	"github.com/onflow/flow-cli/flow/project/commands/initialize"
+	"github.com/onflow/flow-cli/flow/project/commands/start_emulator"
 )
 
 var Cmd = &cobra.Command{
-	Use:              "beta",
+	Use:              "project",
+	Short:            "Manage your Cadence project",
 	TraverseChildren: true,
 }
 

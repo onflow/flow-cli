@@ -23,7 +23,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/onflow/flow-cli/flow/beta/cli"
+	"github.com/onflow/flow-cli/flow/project/cli"
 )
 
 var Cmd = &cobra.Command{
