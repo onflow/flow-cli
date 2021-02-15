@@ -46,7 +46,7 @@ func (j jsonDeploys) transformToConfig() config.Deploys {
 }
 
 // transformToJSON transforms config structure to json structures for saving
-func (j jsonDeploys) transformToJSON(deploys config.Deploys) jsonDeploys {
+func transformDeploysToJSON(deploys config.Deploys) jsonDeploys {
 	jsonDeploys := jsonDeploys{}
 
 	for _, d := range deploys {
