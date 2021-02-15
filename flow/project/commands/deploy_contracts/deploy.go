@@ -44,7 +44,7 @@ type Config struct {
 var conf Config
 
 var Cmd = &cobra.Command{
-	Use:   "deploy-contracts",
+	Use:   "deploy",
 	Short: "Deploy Cadence contracts",
 	Run: func(cmd *cobra.Command, args []string) {
 		project := cli.LoadProject()
