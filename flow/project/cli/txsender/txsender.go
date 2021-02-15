@@ -25,7 +25,7 @@ import (
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/client"
 
-	"github.com/onflow/flow-cli/flow/beta/cli"
+	"github.com/onflow/flow-cli/flow/project/cli"
 )
 
 const (

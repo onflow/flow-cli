@@ -6,7 +6,7 @@ import (
 	"sort"
 	"testing"
 
-	"github.com/onflow/flow-cli/flow/beta/cli/config"
+	"github.com/onflow/flow-cli/flow/project/cli/config"
 	"github.com/stretchr/testify/assert"
 	"github.com/thoas/go-funk"
 )
