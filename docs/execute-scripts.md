@@ -17,12 +17,11 @@ the Flow execution state with any Flow Access API.
     --host access.testnet.nodes.onflow.org:9000
 ```
 
-
 ## Arguments
 
 ### Script Code
 
-The first argument is the path to the Cadence file containing the 
+The first argument is the path to a Cadence file containing the 
 script to be executed.
 
 ## Options
