@@ -55,7 +55,7 @@ func transformConfigToJSON(config *config.Config) jsonConfig {
 
 // Save saves the configuration to the specified path file in JSON format.
 func Save(conf *config.Config, path string) error {
-	jsonConfig := jsonConfig{}.transformToJSON(conf)
+	jsonConf := jsonConfig{}.transformToJSON(conf)
 
 	data, err := json.MarshalIndent(jsonConfig, "", "\t")
 	if err != nil {
