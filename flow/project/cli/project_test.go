@@ -274,12 +274,12 @@ func Test_HostComplex(t *testing.T) {
 	assert.Equal(t, "127.0.0.1.3569", host)
 }
 
-func Test_(t *testing.T) {
+func Test_ContractConflictComplex(t *testing.T) {
 	p := generateComplexProject()
 	exists := p.ContractConflictExists("emulator")
 	notexists := p.ContractConflictExists("testnet")
 
-	assert.Equal(t, true, exists)
-	assert.Equal(t, false, notexists)
+	assert.True(t, exists)
+	assert.False(t, notexists)
 
 }

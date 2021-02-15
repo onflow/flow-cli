@@ -39,13 +39,13 @@ var Cmd = &cobra.Command{
 			)
 			fmt.Printf(
 				"Start the Flow Emulator by running: %s\n",
-				cli.Bold("flow beta start-emulator"),
+				cli.Bold("flow project start-emulator"),
 			)
 		} else {
 			fmt.Printf(
 				"%s\n\nStart the Flow Emulator by running: %s\n",
 				cli.Red(fmt.Sprintf("A Flow project already exists in %s", cli.DefaultConfigPath)),
-				cli.Bold("flow beta start-emulator"),
+				cli.Bold("flow project start-emulator"),
 			)
 		}
 	},
