@@ -24,6 +24,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/flow/project/cli"
+	"github.com/onflow/flow-cli/flow/project/cli/config"
 )
 
 var Cmd *cobra.Command
@@ -39,16 +40,16 @@ func configuredServiceKey(
 ) {
 	proj := cli.LoadProject()
 
-	conf := proj.EmulatorAccount()
+	serviceAccount := proj.EmulatorServiceAccount()
 
-	serviceKey := conf.Keys[0]
+	serviceKey := serviceAccount.Keys[0]
 
 	privateKey, err := crypto.DecodePrivateKeyHex(serviceKey.SigAlgo, serviceKey.Context["privateKey"])
 	if err != nil {
 		cli.Exitf(
 			1,
 			"Invalid private key in \"%s\" emulator configuration",
-			cli.DefaultEmulatorConfigProfileName,
+			config.DefaultEmulatorConfigName,
 		)
 	}
 

@@ -71,17 +71,16 @@ func ProjectExists() bool {
 }
 
 func InitProject() *Project {
-	serviceAccount, serviceAccountKey := generateEmulatorServiceAccount()
+	emulatorServiceAccount := generateEmulatorServiceAccount()
 
 	return &Project{
-		conf:     defaultConfig(serviceAccountKey),
-		accounts: []*Account{serviceAccount},
+		conf:     defaultConfig(emulatorServiceAccount),
+		accounts: []*Account{emulatorServiceAccount},
 	}
 }
 
 // REF: move this to config
 const (
-	DefaultEmulatorConfigProfileName  = "default"
 	defaultEmulatorNetworkName        = "emulator"
 	defaultEmulatorServiceAccountName = "emulator-account"
 	defaultEmulatorPort               = 3569
@@ -89,11 +88,11 @@ const (
 )
 
 // REF: this also might be part of config
-func defaultConfig(serviceAccountKey *keys.HexAccountKey) *config.Config {
+func defaultConfig(defaultEmulatorServiceAccount *Account) *config.Config {
 	return &config.Config{
 		Emulators: config.Emulators{{
-			Name:           DefaultEmulatorConfigProfileName,
-			ServiceAccount: defaultEmulatorServiceAccountName,
+			Name:           config.DefaultEmulatorConfigName,
+			ServiceAccount: defaultEmulatorServiceAccount.name,
 			Port:           defaultEmulatorPort,
 		}},
 		Networks: config.Networks{{
@@ -104,7 +103,7 @@ func defaultConfig(serviceAccountKey *keys.HexAccountKey) *config.Config {
 	}
 }
 
-func generateEmulatorServiceAccount() (*Account, *keys.HexAccountKey) {
+func generateEmulatorServiceAccount() *Account {
 	seed := RandomSeed(crypto.MinSeedLength)
 
 	privateKey, err := crypto.GeneratePrivateKey(crypto.ECDSA_P256, seed)
@@ -121,7 +120,7 @@ func generateEmulatorServiceAccount() (*Account, *keys.HexAccountKey) {
 		keys: []keys.AccountKey{
 			serviceAccountKey,
 		},
-	}, serviceAccountKey
+	}
 }
 
 func newProject(conf *config.Config) (*Project, error) {
@@ -158,7 +157,7 @@ func (p *Project) Host(network string) string {
 	return p.conf.Networks.GetByName(network).Host
 }
 
-func (p *Project) EmulatorAccount() config.Account {
+func (p *Project) EmulatorServiceAccount() config.Account {
 	emulator := p.conf.Emulators.GetDefault()
 	return p.conf.Accounts.GetByName(emulator.ServiceAccount)
 }
@@ -222,7 +221,7 @@ type Contract struct {
 	Target flow.Address
 }
 
-//TODO: discuss if account makes sense to be defined here in new structure
+// TODO: discuss if account makes sense to be defined here in new structure
 // once config will be central point for getting account and if multiple commands
 // will need account to sign something we would need to always make this structure
 type Account struct {
