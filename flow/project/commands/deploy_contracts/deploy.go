@@ -99,9 +99,26 @@ var Cmd = &cobra.Command{
 		for _, contract := range contracts {
 			targetAccount := project.GetAccountByAddress(contract.Target().String())
 
-			tx := prepareDeploymentTransaction(contract.Target(), contract, conf.Update)
-
 			ctx := context.Background()
+
+			targetAccountInfo, err := c.GetAccountAtLatestBlock(ctx, targetAccount.Address())
+			if err != nil {
+				cli.Exitf(1, "Failed to fetch information for account %s", targetAccount.Address())
+				return
+			}
+
+			var tx *flow.Transaction
+
+			_, exists := targetAccountInfo.Contracts[contract.Name()]
+			if exists {
+				if !conf.Update {
+					continue
+				}
+
+				tx = prepareUpdateContractTransaction(targetAccount.Address(), contract)
+			} else {
+				tx = prepareAddContractTransaction(targetAccount.Address(), contract)
+			}
 
 			getResult := sender.Send(ctx, tx, targetAccount)
 
@@ -143,20 +160,28 @@ func initConfig() {
 	}
 }
 
-func prepareDeploymentTransaction(
+func prepareUpdateContractTransaction(
 	targetAccount flow.Address,
 	contract *contracts.Contract,
-	update bool,
 ) *flow.Transaction {
-
-	return templates.AddAccountContracts(
+	return templates.UpdateAccountContract(
 		targetAccount,
-		[]templates.Contract{
-			{
-				Name:   contract.Name(),
-				Source: contract.TranspiledCode(),
-			},
+		templates.Contract{
+			Name:   contract.Name(),
+			Source: contract.TranspiledCode(),
 		},
-		update,
+	)
+}
+
+func prepareAddContractTransaction(
+	targetAccount flow.Address,
+	contract *contracts.Contract,
+) *flow.Transaction {
+	return templates.AddAccountContract(
+		targetAccount,
+		templates.Contract{
+			Name:   contract.Name(),
+			Source: contract.TranspiledCode(),
+		},
 	)
 }
