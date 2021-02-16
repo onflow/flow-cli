@@ -22,6 +22,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func Test_ConfigContractsSimple(t *testing.T) {
@@ -31,7 +32,9 @@ func Test_ConfigContractsSimple(t *testing.T) {
   }`)
 
 	var jsonContracts jsonContracts
-	json.Unmarshal(b, &jsonContracts)
+	err := json.Unmarshal(b, &jsonContracts)
+	require.NoError(t, err)
+
 	contracts := jsonContracts.transformToConfig()
 
 	assert.Equal(t, "./cadence/kittyItems/contracts/KittyItems.cdc", contracts.GetByName("KittyItems").Source)
@@ -48,7 +51,9 @@ func Test_ConfigContractsComplex(t *testing.T) {
   }`)
 
 	var jsonContracts jsonContracts
-	json.Unmarshal(b, &jsonContracts)
+	err := json.Unmarshal(b, &jsonContracts)
+	require.NoError(t, err)
+
 	contracts := jsonContracts.transformToConfig()
 
 	assert.Equal(t, len(contracts), 3)
@@ -72,7 +77,9 @@ func Test_TransformContractToJSON(t *testing.T) {
 	b := []byte(`{"KittyItems":"./cadence/kittyItems/contracts/KittyItems.cdc","KittyItemsMarket":{"emulator":"./cadence/kittyItemsMarket/contracts/KittyItemsMarket.cdc","testnet":"0x123123123"}}`)
 
 	var jsonContracts jsonContracts
-	json.Unmarshal(b, &jsonContracts)
+	err := json.Unmarshal(b, &jsonContracts)
+	require.NoError(t, err)
+
 	contracts := jsonContracts.transformToConfig()
 
 	j := transformContractsToJSON(contracts)

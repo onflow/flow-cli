@@ -22,6 +22,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func Test_ConfigEmulatorSimple(t *testing.T) {
@@ -33,7 +34,8 @@ func Test_ConfigEmulatorSimple(t *testing.T) {
 	 }`)
 
 	var jsonEmulators jsonEmulators
-	json.Unmarshal(b, &jsonEmulators)
+	err := json.Unmarshal(b, &jsonEmulators)
+	require.NoError(t, err)
 
 	emulators := jsonEmulators.transformToConfig()
 
