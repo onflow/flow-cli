@@ -22,6 +22,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func Test_ConfigDeploySimple(t *testing.T) {
@@ -36,7 +37,9 @@ func Test_ConfigDeploySimple(t *testing.T) {
 	}`)
 
 	var jsonDeploys jsonDeploys
-	json.Unmarshal(b, &jsonDeploys)
+	err := json.Unmarshal(b, &jsonDeploys)
+	require.NoError(t, err)
+
 	deploys := jsonDeploys.transformToConfig()
 
 	//TODO: fix test to be sorted since its not necessary correct order
@@ -54,7 +57,9 @@ func Test_TransformDeployToJSON(t *testing.T) {
 	b := []byte(`{"emulator":{"account-3":["KittyItems","KittyItemsMarket"],"account-4":["FungibleToken","NonFungibleToken","Kibble","KittyItems","KittyItemsMarket"]},"testnet":{"account-2":["FungibleToken","NonFungibleToken","Kibble","KittyItems"]}}`)
 
 	var jsonDeploys jsonDeploys
-	json.Unmarshal(b, &jsonDeploys)
+	err := json.Unmarshal(b, &jsonDeploys)
+	require.NoError(t, err)
+
 	deploys := jsonDeploys.transformToConfig()
 
 	j := transformDeploysToJSON(deploys)

@@ -22,6 +22,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func Test_ConfigNetworkSimple(t *testing.T) {
@@ -30,7 +31,8 @@ func Test_ConfigNetworkSimple(t *testing.T) {
 	}`)
 
 	var jsonNetworks jsonNetworks
-	json.Unmarshal(b, &jsonNetworks)
+	err := json.Unmarshal(b, &jsonNetworks)
+	require.NoError(t, err)
 
 	networks := jsonNetworks.transformToConfig()
 
@@ -49,7 +51,8 @@ func Test_ConfigNetworkMultiple(t *testing.T) {
 	}`)
 
 	var jsonNetworks jsonNetworks
-	json.Unmarshal(b, &jsonNetworks)
+	err := json.Unmarshal(b, &jsonNetworks)
+	require.NoError(t, err)
 
 	networks := jsonNetworks.transformToConfig()
 
@@ -64,7 +67,9 @@ func Test_TransformNetworkToJSON(t *testing.T) {
 	b := []byte(`{"emulator":{"host":"127.0.0.1:3569","chain":"flow-emulator"},"testnet":"access.testnet.nodes.onflow.org:9000"}`)
 
 	var jsonNetworks jsonNetworks
-	json.Unmarshal(b, &jsonNetworks)
+	err := json.Unmarshal(b, &jsonNetworks)
+	require.NoError(t, err)
+
 	networks := jsonNetworks.transformToConfig()
 
 	j := transformNetworksToJSON(networks)
