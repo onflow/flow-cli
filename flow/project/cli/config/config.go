@@ -162,8 +162,10 @@ func (n *Networks) GetByName(name string) Network {
 	}).([]Network)[0]
 }
 
+const DefaultEmulatorConfigName = "default"
+
 func (e *Emulators) GetDefault() Emulator {
 	return funk.Filter([]Emulator(*e), func(e Emulator) bool {
-		return e.Name == "default"
+		return e.Name == DefaultEmulatorConfigName
 	}).([]Emulator)[0]
 }
