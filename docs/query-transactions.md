@@ -40,9 +40,8 @@ Indicate whether to print the transaction Cadence code.
 - Valid inputs: `true`, `false`
 - Default: `false`
 
-Indicate whether to wait for the transaction to be sealed.
-If true, the CLI will block until the transaction has been sealed or
-a timeout is reached.
+Indicate whether to wait for the transaction to be sealed
+before displaying the result.
 
 ### Host
 
