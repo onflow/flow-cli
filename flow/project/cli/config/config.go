@@ -25,6 +25,7 @@ import (
 )
 
 type Config struct {
+	Emulators Emulators
 	Contracts Contracts
 	Networks  Networks
 	Accounts  Accounts
@@ -35,6 +36,7 @@ type Contracts []Contract
 type Networks []Network
 type Accounts []Account
 type Deploys []Deploy
+type Emulators []Emulator
 
 // Network config sets host and chain id
 type Network struct {
@@ -72,6 +74,13 @@ type AccountKey struct {
 	SigAlgo  crypto.SignatureAlgorithm
 	HashAlgo crypto.HashAlgorithm
 	Context  map[string]string
+}
+
+// Emulator is config for emulator
+type Emulator struct {
+	Name           string
+	Port           int
+	ServiceAccount string
 }
 
 type KeyType string
@@ -151,4 +160,10 @@ func (n *Networks) GetByName(name string) Network {
 	return funk.Filter([]Network(*n), func(n Network) bool {
 		return n.Name == name
 	}).([]Network)[0]
+}
+
+func (e *Emulators) GetDefault() Emulator {
+	return funk.Filter([]Emulator(*e), func(e Emulator) bool {
+		return e.Name == "default"
+	}).([]Emulator)[0]
 }

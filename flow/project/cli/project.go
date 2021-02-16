@@ -91,13 +91,16 @@ const (
 // REF: this also might be part of config
 func defaultConfig(serviceAccountKey *keys.HexAccountKey) *config.Config {
 	return &config.Config{
-		Networks: config.Networks{
-			config.Network{
-				Name:    defaultEmulatorNetworkName,
-				Host:    defaultEmulatorHost,
-				ChainID: flow.Emulator,
-			},
-		},
+		Emulators: config.Emulators{{
+			Name:           DefaultEmulatorConfigProfileName,
+			ServiceAccount: defaultEmulatorServiceAccountName,
+			Port:           defaultEmulatorPort,
+		}},
+		Networks: config.Networks{{
+			Name:    defaultEmulatorNetworkName,
+			Host:    defaultEmulatorHost,
+			ChainID: flow.Emulator,
+		}},
 	}
 }
 
@@ -155,8 +158,9 @@ func (p *Project) Host(network string) string {
 	return p.conf.Networks.GetByName(network).Host
 }
 
-func (p *Project) EmulatorConfig() config.Account {
-	return p.conf.Accounts.GetByName(defaultEmulatorServiceAccountName)
+func (p *Project) EmulatorAccount() config.Account {
+	emulator := p.conf.Emulators.GetDefault()
+	return p.conf.Accounts.GetByName(emulator.ServiceAccount)
 }
 
 func (p *Project) GetContractsByNetwork(network string) []Contract {

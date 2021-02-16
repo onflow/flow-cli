@@ -29,6 +29,7 @@ import (
 )
 
 type jsonConfig struct {
+	Emulators jsonEmulators `json:"emulators"`
 	Contracts jsonContracts `json:"contracts"`
 	Networks  jsonNetworks  `json:"networks"`
 	Accounts  jsonAccounts  `json:"accounts"`
@@ -37,6 +38,7 @@ type jsonConfig struct {
 
 func (j jsonConfig) transformToConfig() *config.Config {
 	return &config.Config{
+		Emulators: j.Emulators.transformToConfig(),
 		Contracts: j.Contracts.transformToConfig(),
 		Networks:  j.Networks.transformToConfig(),
 		Accounts:  j.Accounts.transformToConfig(),
@@ -46,6 +48,7 @@ func (j jsonConfig) transformToConfig() *config.Config {
 
 func transformConfigToJSON(config *config.Config) jsonConfig {
 	return jsonConfig{
+		Emulators: transformEmulatorsToJSON(config.Emulators),
 		Contracts: transformContractsToJSON(config.Contracts),
 		Networks:  transformNetworksToJSON(config.Networks),
 		Accounts:  transformAccountsToJSON(config.Accounts),
