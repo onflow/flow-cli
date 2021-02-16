@@ -40,9 +40,9 @@ func configuredServiceKey(
 ) {
 	proj := cli.LoadProject()
 
-	conf := proj.EmulatorAccount()
+	serviceAccount := proj.EmulatorServiceAccount()
 
-	serviceKey := conf.Keys[0]
+	serviceKey := serviceAccount.Keys[0]
 
 	privateKey, err := crypto.DecodePrivateKeyHex(serviceKey.SigAlgo, serviceKey.Context["privateKey"])
 	if err != nil {
