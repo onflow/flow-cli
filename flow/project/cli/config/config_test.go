@@ -18,7 +18,6 @@
 package config
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/onflow/flow-go-sdk"
@@ -28,6 +27,11 @@ import (
 
 func generateComplexConfig() Config {
 	return Config{
+		Emulators: Emulators{{
+			Name:           "default",
+			Port:           9000,
+			ServiceAccount: "emulator-account",
+		}},
 		Contracts: Contracts{{
 			Name:    "NonFungibleToken",
 			Source:  "../hungry-kitties/cadence/contracts/NonFungibleToken.cdc",
@@ -146,14 +150,12 @@ func Test_GetAccountByNameComplex(t *testing.T) {
 	conf := generateComplexConfig()
 	acc := conf.Accounts.GetByName("account-4")
 
-	fmt.Println(acc)
-
 	assert.Equal(t, "f8d6e0586b0a20c1", acc.Address.String())
 }
 
 func Test_GetAccountByAddressComplex(t *testing.T) {
 	conf := generateComplexConfig()
-	acc1 := conf.Accounts.GetByAddress("0xf8d6e0586b0a20c1")
+	acc1 := conf.Accounts.GetByAddress("f8d6e0586b0a20c1")
 	acc2 := conf.Accounts.GetByAddress("2c1162386b0a245f")
 
 	assert.Equal(t, "account-4", acc1.Name)
@@ -162,7 +164,7 @@ func Test_GetAccountByAddressComplex(t *testing.T) {
 
 func Test_GetDeploysByNetworkComplex(t *testing.T) {
 	conf := generateComplexConfig()
-	deploys := conf.Deploys.GetByAccountAndNetwork("account-2", "emulator")
+	deploys := conf.Deploys.GetByAccountAndNetwork("account-2", "testnet")
 
 	assert.Equal(t, deploys[0].Contracts, []string{"FungibleToken", "NonFungibleToken", "Kibble", "KittyItems"})
 }
