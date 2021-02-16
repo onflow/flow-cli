@@ -39,7 +39,7 @@ func configuredServiceKey(
 ) {
 	proj := cli.LoadProject()
 
-	conf := proj.EmulatorConfig()
+	conf := proj.EmulatorAccount()
 
 	serviceKey := conf.Keys[0]
 

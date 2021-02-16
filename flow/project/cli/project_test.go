@@ -14,6 +14,11 @@ import (
 
 func generateComplexProject() Project {
 	config := config.Config{
+		Emulators: config.Emulators{{
+			Name:           "default",
+			Port:           9000,
+			ServiceAccount: "emulator-account",
+		}},
 		Contracts: config.Contracts{{
 			Name:    "NonFungibleToken",
 			Source:  "../hungry-kitties/cadence/contracts/NonFungibleToken.cdc",
@@ -109,6 +114,11 @@ func generateComplexProject() Project {
 
 func generateSimpleProject() Project {
 	config := config.Config{
+		Emulators: config.Emulators{{
+			Name:           "default",
+			Port:           9000,
+			ServiceAccount: "emulator-account",
+		}},
 		Contracts: config.Contracts{{
 			Name:    "NonFungibleToken",
 			Source:  "../hungry-kitties/cadence/contracts/NonFungibleToken.cdc",
@@ -164,7 +174,7 @@ func Test_GetContractsByNameSimple(t *testing.T) {
 
 func Test_EmulatorConfigSimple(t *testing.T) {
 	p := generateSimpleProject()
-	emulator := p.EmulatorConfig()
+	emulator := p.EmulatorAccount()
 
 	assert.Equal(t, "emulator-account", emulator.Name)
 	assert.Equal(t, "dd72967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47", emulator.Keys[0].Context["privateKey"])
@@ -243,7 +253,7 @@ func Test_GetContractsByNameComplex(t *testing.T) {
 
 func Test_EmulatorConfigComplex(t *testing.T) {
 	p := generateComplexProject()
-	emulator := p.EmulatorConfig()
+	emulator := p.EmulatorAccount()
 
 	assert.Equal(t, "emulator-account", emulator.Name)
 	assert.Equal(t, "dd72967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47", emulator.Keys[0].Context["privateKey"])
