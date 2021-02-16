@@ -57,7 +57,7 @@ var Cmd = &cobra.Command{
 			return
 		}
 
-		// check there are not mulitple accounts with same contract
+		// check there are not multiple accounts with same contract
 		if project.ContractConflictExists(conf.Network) {
 			fmt.Println("\n❌ Currently it is not possible to deploy same contract with multiple accounts, please check Deploys in config and make sure contract is only present in one account")
 			cli.Exit(1, "")
@@ -86,12 +86,10 @@ var Cmd = &cobra.Command{
 			return
 		}
 
-		fmt.Println(
-			fmt.Sprintf(
-				"Deploying %v contracts for accounts: %s",
-				len(contracts),
-				strings.Join(project.GetAllAccountNames(), ","),
-			),
+		fmt.Printf(
+			"Deploying %v contracts for accounts: %s\n",
+			len(contracts),
+			strings.Join(project.GetAllAccountNames(), ","),
 		)
 
 		var errs []error
