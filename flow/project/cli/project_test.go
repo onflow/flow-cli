@@ -176,6 +176,56 @@ func generateSimpleProject() Project {
 	return *p
 }
 
+func generateAliasesProject() Project {
+	config := config.Config{
+		Emulators: config.Emulators{{
+			Name:           "default",
+			Port:           9000,
+			ServiceAccount: "emulator-account",
+		}},
+		Contracts: config.Contracts{{
+			Name:    "NonFungibleToken",
+			Source:  "../hungry-kitties/cadence/contracts/NonFungibleToken.cdc",
+			Network: "emulator",
+		}, {
+			Name:    "FungibleToken",
+			Source:  "ee82856bf20e2aa6",
+			Network: "emulator",
+		}},
+		Deploys: config.Deploys{{
+			Network:   "emulator",
+			Account:   "emulator-account",
+			Contracts: []string{"NonFungibleToken"},
+		}},
+		Accounts: config.Accounts{{
+			Name:    "emulator-account",
+			Address: flow.ServiceAddress(flow.Emulator),
+			ChainID: flow.Emulator,
+			Keys: []config.AccountKey{{
+				Type:     config.KeyTypeHex,
+				Index:    0,
+				SigAlgo:  crypto.ECDSA_P256,
+				HashAlgo: crypto.SHA3_256,
+				Context: map[string]string{
+					"privateKey": "dd72967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47",
+				},
+			}},
+		}},
+		Networks: config.Networks{{
+			Name:    "emulator",
+			Host:    "127.0.0.1.3569",
+			ChainID: flow.Emulator,
+		}},
+	}
+
+	p, err := newProject(&config)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	return *p
+}
+
 /* ================================================================
 Project Tests
 ================================================================ */
@@ -310,4 +360,16 @@ func Test_ContractConflictComplex(t *testing.T) {
 	assert.True(t, exists)
 	assert.False(t, notexists)
 
+}
+
+func Test_GetAliasesComplex(t *testing.T) {
+	p := generateAliasesProject()
+
+	aliases := p.GetAliases("emulator")
+	contracts := p.GetContractsByNetwork("emulator")
+
+	assert.Equal(t, 1, len(aliases))
+	assert.Equal(t, "ee82856bf20e2aa6", aliases["FungibleToken"])
+	assert.Equal(t, 1, len(contracts))
+	assert.Equal(t, "NonFungibleToken", contracts[0].Name)
 }
