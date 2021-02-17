@@ -206,6 +206,25 @@ func (p *Project) GetAccountByAddress(address string) *Account {
 	}).([]*Account)[0]
 }
 
+func (p *Project) GetAliases(network string) map[string]string {
+	aliases := make(map[string]string)
+	n := p.conf.Networks.GetByName(network)
+
+	// get all contracts for selected network and if any has an address as target make it an alias
+	for _, contract := range p.conf.Contracts.GetByNetwork(network) {
+		// remove 0x prefix if present
+		addr := flow.HexToAddress(
+			strings.ReplaceAll(contract.Source, "0x", ""),
+		)
+
+		if addr.IsValid(n.ChainID) {
+			aliases[contract.Name] = addr.String()
+		}
+	}
+
+	return aliases
+}
+
 func (p *Project) Save() {
 	p.conf.Accounts = accountsToConfig(p.accounts)
 

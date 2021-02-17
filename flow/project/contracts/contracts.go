@@ -19,6 +19,7 @@
 package contracts
 
 import (
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"path"
@@ -40,6 +41,7 @@ type Contract struct {
 	code         string
 	program      *ast.Program
 	dependencies map[string]*Contract
+	aliases      map[string]flow.Address
 }
 
 func newContract(
@@ -69,6 +71,7 @@ func newContract(
 		code:         code,
 		program:      program,
 		dependencies: make(map[string]*Contract),
+		aliases:      make(map[string]flow.Address),
 	}, nil
 }
 
@@ -92,6 +95,15 @@ func (c *Contract) TranspiledCode() string {
 			code,
 			fmt.Sprintf(`"%s"`, location),
 			fmt.Sprintf("0x%s", dep.Target()),
+			1,
+		)
+	}
+
+	for location, target := range c.aliases {
+		code = strings.Replace(
+			code,
+			fmt.Sprintf(`"%s"`, location),
+			fmt.Sprintf("0x%s", target),
 			1,
 		)
 	}
@@ -124,12 +136,20 @@ func (c *Contract) addDependency(location string, dep *Contract) {
 	c.dependencies[location] = dep
 }
 
+func (c *Contract) addAlias(location string, target flow.Address) {
+	c.aliases[location] = target
+}
+
 type Preprocessor struct {
+	aliases   map[string]string
 	contracts map[string]*Contract
 }
 
-func NewPreprocessor() *Preprocessor {
+func NewPreprocessor(
+	aliases map[string]string,
+) *Preprocessor {
 	return &Preprocessor{
+		aliases:   aliases,
 		contracts: make(map[string]*Contract),
 	}
 }
@@ -158,13 +178,18 @@ func (p *Preprocessor) AddContractSource(
 func (p *Preprocessor) PrepareForDeployment() ([]*Contract, error) {
 
 	for _, c := range p.contracts {
-
 		for _, location := range c.imports() {
-			importPath := absolutePath(c.source, location)
 
+			importPath := absolutePath(c.source, location)
 			importContract, isContract := p.contracts[importPath]
+			importAlias, isAlias := p.aliases[strings.ReplaceAll(location, ".cdc", "")]
+
 			if isContract {
 				c.addDependency(location, importContract)
+			} else if isAlias {
+				c.addAlias(location, flow.HexToAddress(importAlias))
+			} else {
+				return nil, errors.New(fmt.Sprintf("Import from %s could not be find: %s, make sure import path is correct.", c.name, importPath))
 			}
 		}
 	}

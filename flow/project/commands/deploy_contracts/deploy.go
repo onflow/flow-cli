@@ -66,7 +66,9 @@ var Cmd = &cobra.Command{
 
 		sender := txsender.NewSender(c)
 
-		processor := contracts.NewPreprocessor()
+		processor := contracts.NewPreprocessor(
+			project.GetAliases(conf.Network),
+		)
 
 		for _, contract := range project.GetContractsByNetwork(conf.Network) {
 			err = processor.AddContractSource(
