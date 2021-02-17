@@ -51,7 +51,7 @@ var Cmd = &cobra.Command{
 
 		host := project.Host(conf.Network)
 
-		c, err := client.New(host, grpc.WithInsecure())
+		grpcClient, err := client.New(host, grpc.WithInsecure())
 		if err != nil {
 			cli.Exit(1, err.Error())
 			return
@@ -64,7 +64,7 @@ var Cmd = &cobra.Command{
 			return
 		}
 
-		sender := txsender.NewSender(c)
+		sender := txsender.NewSender(grpcClient)
 
 		processor := contracts.NewPreprocessor(
 			project.GetAliases(conf.Network),
@@ -101,7 +101,7 @@ var Cmd = &cobra.Command{
 
 			ctx := context.Background()
 
-			targetAccountInfo, err := c.GetAccountAtLatestBlock(ctx, targetAccount.Address())
+			targetAccountInfo, err := grpcClient.GetAccountAtLatestBlock(ctx, targetAccount.Address())
 			if err != nil {
 				cli.Exitf(1, "Failed to fetch information for account %s", targetAccount.Address())
 				return
