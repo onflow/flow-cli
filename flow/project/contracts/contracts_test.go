@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/onflow/flow-cli/flow/beta/contracts"
+	"github.com/onflow/flow-cli/flow/project/contracts"
 )
 
 type testContract struct {
