@@ -19,6 +19,7 @@ package json
 
 import (
 	"encoding/json"
+	"sort"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -62,15 +63,29 @@ func Test_ConfigContractsComplex(t *testing.T) {
 	assert.Equal(t, "./cadence/kittyItemsMarket/contracts/KittyItemsMarket.cdc", contracts.GetByNameAndNetwork("KittyItemsMarket", "emulator").Source)
 	assert.Equal(t, "0x123123123", contracts.GetByNameAndNetwork("KittyItemsMarket", "testnet").Source)
 
-	assert.Equal(t, 2, len(contracts.GetByNetwork("testnet")))
-	assert.Equal(t, 2, len(contracts.GetByNetwork("emulator")))
+	testnet := contracts.GetByNetwork("testnet")
+	emulator := contracts.GetByNetwork("emulator")
 
-	//REF: sort result since it is not arranged
-	assert.Equal(t, "./cadence/kittyItems/contracts/KittyItems.cdc", contracts.GetByNetwork("testnet")[0].Source)
-	assert.Equal(t, "0x123123123", contracts.GetByNetwork("testnet")[1].Source)
+	assert.Equal(t, 2, len(testnet))
+	assert.Equal(t, 2, len(emulator))
 
-	assert.Equal(t, "./cadence/kittyItems/contracts/KittyItems.cdc", contracts.GetByNetwork("emulator")[0].Source)
-	assert.Equal(t, "./cadence/kittyItemsMarket/contracts/KittyItemsMarket.cdc", contracts.GetByNetwork("emulator")[1].Source)
+	testnetSorted := make([]string, 0)
+	for _, c := range testnet {
+		testnetSorted = append(testnetSorted, c.Source)
+	}
+	sort.Strings(testnetSorted)
+
+	emulatorSorted := make([]string, 0)
+	for _, c := range emulator {
+		emulatorSorted = append(emulatorSorted, c.Source)
+	}
+	sort.Strings(emulatorSorted)
+
+	assert.Equal(t, "./cadence/kittyItems/contracts/KittyItems.cdc", testnetSorted[0])
+	assert.Equal(t, "0x123123123", testnetSorted[1])
+
+	assert.Equal(t, "./cadence/kittyItems/contracts/KittyItems.cdc", emulatorSorted[0])
+	assert.Equal(t, "./cadence/kittyItemsMarket/contracts/KittyItemsMarket.cdc", emulatorSorted[1])
 }
 
 func Test_TransformContractToJSON(t *testing.T) {
