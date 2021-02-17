@@ -19,7 +19,6 @@
 package contracts
 
 import (
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"path"
@@ -189,7 +188,7 @@ func (p *Preprocessor) PrepareForDeployment() ([]*Contract, error) {
 			} else if isAlias {
 				c.addAlias(location, flow.HexToAddress(importAlias))
 			} else {
-				return nil, errors.New(fmt.Sprintf("Import from %s could not be find: %s, make sure import path is correct.", c.name, importPath))
+				return nil, fmt.Errorf("Import from %s could not be find: %s, make sure import path is correct.", c.name, importPath)
 			}
 		}
 	}
