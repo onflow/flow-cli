@@ -28,6 +28,7 @@ import (
 	"github.com/onflow/cadence/runtime/common"
 	"github.com/onflow/cadence/runtime/parser2"
 	"github.com/onflow/flow-go-sdk"
+	"gonum.org/v1/gonum/graph"
 	"gonum.org/v1/gonum/graph/simple"
 	"gonum.org/v1/gonum/graph/topo"
 )
@@ -40,23 +41,17 @@ type Contract struct {
 	code         string
 	program      *ast.Program
 	dependencies map[string]*Contract
+	aliases      map[string]flow.Address
 }
 
 func newContract(
 	index int,
 	contractName,
-	contractSource string,
+	contractSource,
+	contractCode string,
 	target flow.Address,
 ) (*Contract, error) {
-	codeBytes, err := ioutil.ReadFile(contractSource)
-	if err != nil {
-		// TODO
-		return nil, err
-	}
-
-	code := string(codeBytes)
-
-	program, err := parser2.ParseProgram(code)
+	program, err := parser2.ParseProgram(contractCode)
 	if err != nil {
 		return nil, err
 	}
@@ -66,9 +61,10 @@ func newContract(
 		name:         contractName,
 		source:       contractSource,
 		target:       target,
-		code:         code,
+		code:         contractCode,
 		program:      program,
 		dependencies: make(map[string]*Contract),
+		aliases:      make(map[string]flow.Address),
 	}, nil
 }
 
@@ -92,6 +88,15 @@ func (c *Contract) TranspiledCode() string {
 			code,
 			fmt.Sprintf(`"%s"`, location),
 			fmt.Sprintf("0x%s", dep.Target()),
+			1,
+		)
+	}
+
+	for location, target := range c.aliases {
+		code = strings.Replace(
+			code,
+			fmt.Sprintf(`"%s"`, location),
+			fmt.Sprintf("0x%s", target),
 			1,
 		)
 	}
@@ -124,13 +129,41 @@ func (c *Contract) addDependency(location string, dep *Contract) {
 	c.dependencies[location] = dep
 }
 
-type Preprocessor struct {
-	contracts map[string]*Contract
+type Loader interface {
+	Load(source string) (string, error)
+	Normalize(base, relative string) string
 }
 
-func NewPreprocessor() *Preprocessor {
+type FilesystemLoader struct{}
+
+func (f FilesystemLoader) Load(source string) (string, error) {
+	codeBytes, err := ioutil.ReadFile(source)
+	if err != nil {
+		return "", err
+	}
+
+	return string(codeBytes), nil
+}
+
+func (f FilesystemLoader) Normalize(base, relative string) string {
+	return absolutePath(base, relative)
+}
+
+func absolutePath(basePath, relativePath string) string {
+	return path.Join(path.Dir(basePath), relativePath)
+}
+
+type Preprocessor struct {
+	loader            Loader
+	contracts         []*Contract
+	contractsBySource map[string]*Contract
+}
+
+func NewPreprocessor(loader Loader) *Preprocessor {
 	return &Preprocessor{
-		contracts: make(map[string]*Contract),
+		loader:            loader,
+		contracts:         make([]*Contract, 0),
+		contractsBySource: make(map[string]*Contract),
 	}
 }
 
@@ -139,42 +172,79 @@ func (p *Preprocessor) AddContractSource(
 	contractSource string,
 	target flow.Address,
 ) error {
+	contractCode, err := p.loader.Load(contractSource)
+	if err != nil {
+		return err
+	}
 
 	c, err := newContract(
 		len(p.contracts),
 		contractName,
 		contractSource,
+		contractCode,
 		target,
 	)
 	if err != nil {
 		return err
 	}
 
-	p.contracts[c.source] = c
+	p.contracts = append(p.contracts, c)
+	p.contractsBySource[c.source] = c
 
 	return nil
 }
 
-func (p *Preprocessor) PrepareForDeployment() ([]*Contract, error) {
-
+func (p *Preprocessor) ResolveImports() {
 	for _, c := range p.contracts {
-
 		for _, location := range c.imports() {
-			importPath := absolutePath(c.source, location)
+			importPath := p.loader.Normalize(c.source, location)
 
-			importContract, isContract := p.contracts[importPath]
+			importContract, isContract := p.contractsBySource[importPath]
 			if isContract {
 				c.addDependency(location, importContract)
 			}
 		}
 	}
+}
 
+func (p *Preprocessor) ContractBySource(contractSource string) *Contract {
+	return p.contractsBySource[contractSource]
+}
+
+func (p *Preprocessor) ContractDeploymentOrder() ([]*Contract, error) {
 	sorted, err := sortByDeploymentOrder(p.contracts)
 	if err != nil {
+		// TODO: add dedicated error types
 		return nil, err
 	}
 
 	return sorted, nil
+}
+
+type CyclicImportError struct {
+	Cycles [][]*Contract
+}
+
+func (e *CyclicImportError) contractNames() [][]string {
+	cycles := make([][]string, 0, len(e.Cycles))
+
+	for _, cycle := range e.Cycles {
+		contracts := make([]string, 0, len(cycle))
+		for _, contract := range cycle {
+			contracts = append(contracts, contract.Name())
+		}
+
+		cycles = append(cycles, contracts)
+	}
+
+	return cycles
+}
+
+func (e *CyclicImportError) Error() string {
+	return fmt.Sprintf(
+		"contracts: import cycle(s) detected: %v",
+		e.contractNames(),
+	)
 }
 
 // sortByDeploymentOrder sorts the given set of contracts in order of deployment.
@@ -184,7 +254,7 @@ func (p *Preprocessor) PrepareForDeployment() ([]*Contract, error) {
 //
 // This function constructs a directed graph in which contracts are nodes and imports are edges.
 // The ordering is computed by performing a topological sort on the constructed graph.
-func sortByDeploymentOrder(contracts map[string]*Contract) ([]*Contract, error) {
+func sortByDeploymentOrder(contracts []*Contract) ([]*Contract, error) {
 	g := simple.NewDirectedGraph()
 
 	for _, c := range contracts {
@@ -197,20 +267,35 @@ func sortByDeploymentOrder(contracts map[string]*Contract) ([]*Contract, error) 
 		}
 	}
 
-	sorted, err := topo.Sort(g)
+	sorted, err := topo.SortStabilized(g, nil)
 	if err != nil {
-		return nil, err
+		switch topoErr := err.(type) {
+		case topo.Unorderable:
+			return nil, &CyclicImportError{Cycles: nodeSetsToContractSets(topoErr)}
+		default:
+			return nil, err
+		}
 	}
 
-	results := make([]*Contract, len(sorted))
-
-	for i, s := range sorted {
-		results[i] = s.(*Contract)
-	}
-
-	return results, nil
+	return nodesToContracts(sorted), nil
 }
 
-func absolutePath(basePath, relativePath string) string {
-	return path.Join(path.Dir(basePath), relativePath)
+func nodeSetsToContractSets(nodes [][]graph.Node) [][]*Contract {
+	contracts := make([][]*Contract, len(nodes))
+
+	for i, s := range nodes {
+		contracts[i] = nodesToContracts(s)
+	}
+
+	return contracts
+}
+
+func nodesToContracts(nodes []graph.Node) []*Contract {
+	contracts := make([]*Contract, len(nodes))
+
+	for i, s := range nodes {
+		contracts[i] = s.(*Contract)
+	}
+
+	return contracts
 }

@@ -66,7 +66,7 @@ var Cmd = &cobra.Command{
 
 		sender := txsender.NewSender(c)
 
-		processor := contracts.NewPreprocessor()
+		processor := contracts.NewPreprocessor(contracts.FilesystemLoader{})
 
 		for _, contract := range project.GetContractsByNetwork(conf.Network) {
 			err = processor.AddContractSource(
@@ -80,7 +80,9 @@ var Cmd = &cobra.Command{
 			}
 		}
 
-		contracts, err := processor.PrepareForDeployment()
+		processor.ResolveImports()
+
+		contracts, err := processor.ContractDeploymentOrder()
 		if err != nil {
 			cli.Exit(1, err.Error())
 			return
