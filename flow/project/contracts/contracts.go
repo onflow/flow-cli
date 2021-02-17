@@ -19,6 +19,7 @@
 package contracts
 
 import (
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"path"
@@ -129,6 +130,10 @@ func (c *Contract) addDependency(location string, dep *Contract) {
 	c.dependencies[location] = dep
 }
 
+func (c *Contract) addAlias(location string, target flow.Address) {
+	c.aliases[location] = target
+}
+
 type Loader interface {
 	Load(source string) (string, error)
 	Normalize(base, relative string) string
@@ -155,13 +160,15 @@ func absolutePath(basePath, relativePath string) string {
 
 type Preprocessor struct {
 	loader            Loader
+	aliases           map[string]string
 	contracts         []*Contract
 	contractsBySource map[string]*Contract
 }
 
-func NewPreprocessor(loader Loader) *Preprocessor {
+func NewPreprocessor(loader Loader, aliases map[string]string) *Preprocessor {
 	return &Preprocessor{
 		loader:            loader,
+		aliases:           aliases,
 		contracts:         make([]*Contract, 0),
 		contractsBySource: make(map[string]*Contract),
 	}
@@ -194,17 +201,25 @@ func (p *Preprocessor) AddContractSource(
 	return nil
 }
 
-func (p *Preprocessor) ResolveImports() {
+func (p *Preprocessor) ResolveImports() error {
 	for _, c := range p.contracts {
 		for _, location := range c.imports() {
 			importPath := p.loader.Normalize(c.source, location)
 
 			importContract, isContract := p.contractsBySource[importPath]
+			importAlias, isAlias := p.aliases[strings.ReplaceAll(location, ".cdc", "")]
+
 			if isContract {
 				c.addDependency(location, importContract)
+			} else if isAlias {
+				c.addAlias(location, flow.HexToAddress(importAlias))
+			} else {
+				return errors.New(fmt.Sprintf("Import from %s could not be find: %s, make sure import path is correct.", c.name, importPath))
 			}
 		}
 	}
+
+	return nil
 }
 
 func (p *Preprocessor) ContractBySource(contractSource string) *Contract {
