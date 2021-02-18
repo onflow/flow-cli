@@ -25,7 +25,7 @@ import (
 	"io/ioutil"
 	"os"
 
-	"github.com/onflow/flow-cli/flow/project/cli/config"
+	"github.com/onflow/flow-cli/flow/config"
 )
 
 type jsonConfig struct {

@@ -22,7 +22,7 @@ import (
 	"encoding/json"
 	"strings"
 
-	"github.com/onflow/flow-cli/flow/project/cli/config"
+	"github.com/onflow/flow-cli/flow/config"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
 )

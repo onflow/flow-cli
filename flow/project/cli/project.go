@@ -27,8 +27,8 @@ import (
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/thoas/go-funk"
 
-	"github.com/onflow/flow-cli/flow/project/cli/config"
-	"github.com/onflow/flow-cli/flow/project/cli/config/json"
+	"github.com/onflow/flow-cli/flow/config"
+	"github.com/onflow/flow-cli/flow/config/json"
 	"github.com/onflow/flow-cli/flow/project/cli/keys"
 )
 

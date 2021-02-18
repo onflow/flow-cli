@@ -22,9 +22,8 @@ import (
 	"encoding/hex"
 	"fmt"
 
+	"github.com/onflow/flow-cli/flow/config"
 	"github.com/onflow/flow-go-sdk/crypto"
-
-	"github.com/onflow/flow-cli/flow/project/cli/config"
 )
 
 type AccountKey interface {
