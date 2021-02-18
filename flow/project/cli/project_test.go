@@ -316,9 +316,9 @@ func Test_GetContractsByNameSimple(t *testing.T) {
 
 	contracts := p.GetContractsByNetwork("emulator")
 
-	assert.Equal(t, 1, len(contracts))
-	assert.Equal(t, "NonFungibleToken", contracts[0].Name)
-	assert.Equal(t, "../hungry-kitties/cadence/contracts/NonFungibleToken.cdc", contracts[0].Source)
+	assert.Len(t, contracts, 1)
+	assert.Equal(t, contracts[0].Name, "NonFungibleToken")
+	assert.Equal(t, contracts[0].Source, "../hungry-kitties/cadence/contracts/NonFungibleToken.cdc")
 	assert.Equal(t, p.conf.Accounts.GetByName("emulator-account").Address, contracts[0].Target)
 }
 
@@ -326,8 +326,8 @@ func Test_EmulatorConfigSimple(t *testing.T) {
 	p := generateSimpleProject()
 	emulatorServiceAccount := p.EmulatorServiceAccount()
 
-	assert.Equal(t, "emulator-account", emulatorServiceAccount.Name)
-	assert.Equal(t, "dd72967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47", emulatorServiceAccount.Keys[0].Context["privateKey"])
+	assert.Equal(t, emulatorServiceAccount.Name, "emulator-account")
+	assert.Equal(t, emulatorServiceAccount.Keys[0].Context["privateKey"], "dd72967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47")
 	assert.Equal(t, flow.ServiceAddress("flow-emulator"), emulatorServiceAccount.Address)
 }
 
@@ -335,7 +335,7 @@ func Test_AccountByAddressSimple(t *testing.T) {
 	p := generateSimpleProject()
 	acc := p.GetAccountByAddress(flow.ServiceAddress("flow-emulator").String())
 
-	assert.Equal(t, "emulator-account", acc.name)
+	assert.Equal(t, acc.name, "emulator-account")
 }
 
 func Test_AccountByNameSimple(t *testing.T) {
@@ -343,14 +343,14 @@ func Test_AccountByNameSimple(t *testing.T) {
 	acc := p.GetAccountByName("emulator-account")
 
 	assert.Equal(t, flow.ServiceAddress("flow-emulator").String(), acc.Address().String())
-	assert.Equal(t, "dd72967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47", acc.DefaultKey().ToConfig().Context["privateKey"])
+	assert.Equal(t, acc.DefaultKey().ToConfig().Context["privateKey"], "dd72967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47")
 }
 
 func Test_HostSimple(t *testing.T) {
 	p := generateSimpleProject()
 	host := p.Host("emulator")
 
-	assert.Equal(t, "127.0.0.1.3569", host)
+	assert.Equal(t, host, "127.0.0.1.3569")
 }
 
 func Test_GetContractsByNameComplex(t *testing.T) {
@@ -376,38 +376,38 @@ func Test_GetContractsByNameComplex(t *testing.T) {
 	}).([]string)
 	sort.Strings(targets)
 
-	assert.Equal(t, "FungibleToken", contractNames[0])
-	assert.Equal(t, "Kibble", contractNames[1])
-	assert.Equal(t, "KittyItems", contractNames[2])
-	assert.Equal(t, "KittyItems", contractNames[3])
-	assert.Equal(t, "KittyItemsMarket", contractNames[4])
-	assert.Equal(t, "KittyItemsMarket", contractNames[5])
-	assert.Equal(t, "NonFungibleToken", contractNames[6])
+	assert.Equal(t, contractNames[0], "FungibleToken")
+	assert.Equal(t, contractNames[1], "Kibble")
+	assert.Equal(t, contractNames[2], "KittyItems")
+	assert.Equal(t, contractNames[3], "KittyItems")
+	assert.Equal(t, contractNames[4], "KittyItemsMarket")
+	assert.Equal(t, contractNames[5], "KittyItemsMarket")
+	assert.Equal(t, contractNames[6], "NonFungibleToken")
 
-	assert.Equal(t, "../hungry-kitties/cadence/contracts/FungibleToken.cdc", sources[0])
-	assert.Equal(t, "../hungry-kitties/cadence/contracts/NonFungibleToken.cdc", sources[1])
-	assert.Equal(t, "cadence/kibble/contracts/Kibble.cdc", sources[2])
-	assert.Equal(t, "cadence/kittyItems/contracts/KittyItems.cdc", sources[3])
-	assert.Equal(t, "cadence/kittyItems/contracts/KittyItems.cdc", sources[4])
-	assert.Equal(t, "cadence/kittyItemsMarket/contracts/KittyItemsMarket.cdc", sources[5])
-	assert.Equal(t, "cadence/kittyItemsMarket/contracts/KittyItemsMarket.cdc", sources[6])
+	assert.Equal(t, sources[0], "../hungry-kitties/cadence/contracts/FungibleToken.cdc")
+	assert.Equal(t, sources[1], "../hungry-kitties/cadence/contracts/NonFungibleToken.cdc")
+	assert.Equal(t, sources[2], "cadence/kibble/contracts/Kibble.cdc")
+	assert.Equal(t, sources[3], "cadence/kittyItems/contracts/KittyItems.cdc")
+	assert.Equal(t, sources[4], "cadence/kittyItems/contracts/KittyItems.cdc")
+	assert.Equal(t, sources[5], "cadence/kittyItemsMarket/contracts/KittyItemsMarket.cdc")
+	assert.Equal(t, sources[6], "cadence/kittyItemsMarket/contracts/KittyItemsMarket.cdc")
 
-	assert.Equal(t, "f8d6e0586b0a20c1", targets[0])
-	assert.Equal(t, "f8d6e0586b0a20c1", targets[1])
-	assert.Equal(t, "f8d6e0586b0a20c1", targets[2])
-	assert.Equal(t, "f8d6e0586b0a20c1", targets[3])
-	assert.Equal(t, "f8d6e0586b0a20c1", targets[4])
-	assert.Equal(t, "f8d6e0586b0a20c7", targets[5])
-	assert.Equal(t, "f8d6e0586b0a20c7", targets[6])
+	assert.Equal(t, targets[0], "f8d6e0586b0a20c1")
+	assert.Equal(t, targets[1], "f8d6e0586b0a20c1")
+	assert.Equal(t, targets[2], "f8d6e0586b0a20c1")
+	assert.Equal(t, targets[3], "f8d6e0586b0a20c1")
+	assert.Equal(t, targets[4], "f8d6e0586b0a20c1")
+	assert.Equal(t, targets[5], "f8d6e0586b0a20c7")
+	assert.Equal(t, targets[6], "f8d6e0586b0a20c7")
 }
 
 func Test_EmulatorConfigComplex(t *testing.T) {
 	p := generateComplexProject()
 	emulatorServiceAccount := p.EmulatorServiceAccount()
 
-	assert.Equal(t, "emulator-account", emulatorServiceAccount.Name)
-	assert.Equal(t, "dd72967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47", emulatorServiceAccount.Keys[0].Context["privateKey"])
-	assert.Equal(t, flow.ServiceAddress("flow-emulator"), emulatorServiceAccount.Address)
+	assert.Equal(t, emulatorServiceAccount.Name, "emulator-account")
+	assert.Equal(t, emulatorServiceAccount.Keys[0].Context["privateKey"], "dd72967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47")
+	assert.Equal(t, emulatorServiceAccount.Address, flow.ServiceAddress("flow-emulator"))
 }
 
 func Test_AccountByAddressComplex(t *testing.T) {
@@ -415,23 +415,23 @@ func Test_AccountByAddressComplex(t *testing.T) {
 	acc1 := p.GetAccountByAddress("f8d6e0586b0a20c1")
 	acc2 := p.GetAccountByAddress("0x2c1162386b0a245f")
 
-	assert.Equal(t, "account-4", acc1.name)
-	assert.Equal(t, "account-2", acc2.name)
+	assert.Equal(t, acc1.name, "account-4")
+	assert.Equal(t, acc2.name, "account-2")
 }
 
 func Test_AccountByNameComplex(t *testing.T) {
 	p := generateComplexProject()
 	acc := p.GetAccountByName("account-2")
 
-	assert.Equal(t, "2c1162386b0a245f", acc.Address().String())
-	assert.Equal(t, "dd72967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47", acc.DefaultKey().ToConfig().Context["privateKey"])
+	assert.Equal(t, acc.Address().String(), "2c1162386b0a245f")
+	assert.Equal(t, acc.DefaultKey().ToConfig().Context["privateKey"], "dd72967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47")
 }
 
 func Test_HostComplex(t *testing.T) {
 	p := generateComplexProject()
 	host := p.Host("emulator")
 
-	assert.Equal(t, "127.0.0.1.3569", host)
+	assert.Equal(t, host, "127.0.0.1.3569")
 }
 
 func Test_ContractConflictComplex(t *testing.T) {
@@ -450,10 +450,10 @@ func Test_GetAliases(t *testing.T) {
 	aliases := p.GetAliases("emulator")
 	contracts := p.GetContractsByNetwork("emulator")
 
-	assert.Equal(t, 1, len(aliases))
-	assert.Equal(t, "ee82856bf20e2aa6", aliases["FungibleToken"])
-	assert.Equal(t, 1, len(contracts))
-	assert.Equal(t, "NonFungibleToken", contracts[0].Name)
+	assert.Len(t, aliases, 1)
+	assert.Equal(t, aliases["FungibleToken"], "ee82856bf20e2aa6")
+	assert.Len(t, contracts, 1)
+	assert.Equal(t, contracts[0].Name, "NonFungibleToken")
 }
 
 func Test_GetAliasesComplex(t *testing.T) {
@@ -465,17 +465,17 @@ func Test_GetAliasesComplex(t *testing.T) {
 	aTestnet := p.GetAliases("testnet")
 	cTestnet := p.GetContractsByNetwork("testnet")
 
-	assert.Equal(t, 1, len(cEmulator))
-	assert.Equal(t, "NonFungibleToken", cEmulator[0].Name)
+	assert.Len(t, cEmulator, 1)
+	assert.Equal(t, cEmulator[0].Name, "NonFungibleToken")
 
-	assert.Equal(t, 2, len(aEmulator))
-	assert.Equal(t, "ee82856bf20e2aa6", aEmulator["FungibleToken"])
-	assert.Equal(t, "ee82856bf20e2aa6", aEmulator["Kibble"])
+	assert.Len(t, aEmulator, 2)
+	assert.Equal(t, aEmulator["FungibleToken"], "ee82856bf20e2aa6")
+	assert.Equal(t, aEmulator["Kibble"], "ee82856bf20e2aa6")
 
-	assert.Equal(t, 1, len(aTestnet))
-	assert.Equal(t, "ee82856bf20e2aa6", aTestnet["Kibble"])
+	assert.Len(t, aTestnet, 1)
+	assert.Equal(t, aTestnet["Kibble"], "ee82856bf20e2aa6")
 
-	assert.Equal(t, 2, len(cTestnet))
-	assert.Equal(t, "NonFungibleToken", cTestnet[0].Name)
-	assert.Equal(t, "FungibleToken", cTestnet[1].Name)
+	assert.Len(t, cTestnet, 2)
+	assert.Equal(t, cTestnet[0].Name, "NonFungibleToken")
+	assert.Equal(t, cTestnet[1].Name, "FungibleToken")
 }

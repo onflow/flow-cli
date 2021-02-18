@@ -39,6 +39,6 @@ func Test_ConfigEmulatorSimple(t *testing.T) {
 
 	emulators := jsonEmulators.transformToConfig()
 
-	assert.Equal(t, "default", emulators[0].Name)
-	assert.Equal(t, 9000, emulators[0].Port)
+	assert.Equal(t, emulators[0].Name, "default")
+	assert.Equal(t, emulators[0].Port, 9000)
 }

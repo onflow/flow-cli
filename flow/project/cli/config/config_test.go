@@ -123,15 +123,15 @@ func Test_GetContractsForNetworkComplex(t *testing.T) {
 	kitty := conf.Contracts.GetByName("KittyItems")
 	market := conf.Contracts.GetByName("KittyItemsMarket")
 
-	assert.Equal(t, "KittyItems", kitty.Name)
-	assert.Equal(t, "./cadence/kittyItemsMarket/contracts/KittyItemsMarket.cdc", market.Source)
+	assert.Equal(t, kitty.Name, "KittyItems")
+	assert.Equal(t, market.Source, "./cadence/kittyItemsMarket/contracts/KittyItemsMarket.cdc")
 }
 
 func Test_GetContractsByNameAndNetworkComplex(t *testing.T) {
 	conf := generateComplexConfig()
 	market := conf.Contracts.GetByNameAndNetwork("KittyItemsMarket", "testnet")
 
-	assert.Equal(t, "0x123123123", market.Source)
+	assert.Equal(t, market.Source, "0x123123123")
 }
 
 func Test_GetContractsByNetworkComplex(t *testing.T) {
@@ -139,18 +139,18 @@ func Test_GetContractsByNetworkComplex(t *testing.T) {
 	contracts := conf.Contracts.GetByNetwork("emulator")
 
 	assert.Equal(t, 5, len(contracts))
-	assert.Equal(t, "NonFungibleToken", contracts[0].Name)
-	assert.Equal(t, "FungibleToken", contracts[1].Name)
-	assert.Equal(t, "Kibble", contracts[2].Name)
-	assert.Equal(t, "KittyItems", contracts[3].Name)
-	assert.Equal(t, "KittyItemsMarket", contracts[4].Name)
+	assert.Equal(t, contracts[0].Name, "NonFungibleToken")
+	assert.Equal(t, contracts[1].Name, "FungibleToken")
+	assert.Equal(t, contracts[2].Name, "Kibble")
+	assert.Equal(t, contracts[3].Name, "KittyItems")
+	assert.Equal(t, contracts[4].Name, "KittyItemsMarket")
 }
 
 func Test_GetAccountByNameComplex(t *testing.T) {
 	conf := generateComplexConfig()
 	acc := conf.Accounts.GetByName("account-4")
 
-	assert.Equal(t, "f8d6e0586b0a20c1", acc.Address.String())
+	assert.Equal(t, acc.Address.String(), "f8d6e0586b0a20c1")
 }
 
 func Test_GetAccountByAddressComplex(t *testing.T) {
@@ -158,8 +158,8 @@ func Test_GetAccountByAddressComplex(t *testing.T) {
 	acc1 := conf.Accounts.GetByAddress("f8d6e0586b0a20c1")
 	acc2 := conf.Accounts.GetByAddress("2c1162386b0a245f")
 
-	assert.Equal(t, "account-4", acc1.Name)
-	assert.Equal(t, "account-2", acc2.Name)
+	assert.Equal(t, acc1.Name, "account-4")
+	assert.Equal(t, acc2.Name, "account-2")
 }
 
 func Test_GetDeploysByNetworkComplex(t *testing.T) {
