@@ -42,14 +42,14 @@ func Test_ConfigDeploySimple(t *testing.T) {
 
 	deploys := jsonDeploys.transformToConfig()
 
-	assert.Equal(t, deploys.GetByAccountAndNetwork("account-2", "testnet")[0], "account-2")
+	assert.Equal(t, deploys.GetByAccountAndNetwork("account-2", "testnet")[0].Account, "account-2")
 	assert.Equal(t, deploys.GetByAccountAndNetwork("account-2", "testnet")[0].Contracts, []string{"FungibleToken", "NonFungibleToken", "Kibble", "KittyItems"})
 
 	assert.Len(t, deploys.GetByNetwork("emulator"), 2)
 	assert.Equal(t, deploys.GetByAccountAndNetwork("account-3", "emulator")[0].Account, "account-3")
-	assert.Equal(t, deploys.GetByAccountAndNetwork("account-4", "emulator")[1].Account, "account-4")
+	assert.Equal(t, deploys.GetByAccountAndNetwork("account-4", "emulator")[0].Account, "account-4")
 	assert.Equal(t, deploys.GetByAccountAndNetwork("account-3", "emulator")[0].Contracts, []string{"KittyItems", "KittyItemsMarket"})
-	assert.Equal(t, deploys.GetByAccountAndNetwork("account-4", "emulator")[1].Contracts, []string{"FungibleToken", "NonFungibleToken", "Kibble", "KittyItems", "KittyItemsMarket"})
+	assert.Equal(t, deploys.GetByAccountAndNetwork("account-4", "emulator")[0].Contracts, []string{"FungibleToken", "NonFungibleToken", "Kibble", "KittyItems", "KittyItemsMarket"})
 }
 
 func Test_TransformDeployToJSON(t *testing.T) {
