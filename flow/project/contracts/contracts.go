@@ -188,7 +188,9 @@ func (p *Preprocessor) PrepareForDeployment() ([]*Contract, error) {
 			if isContract {
 				c.addDependency(location, importContract)
 			} else if isAlias {
-				c.addAlias(location, flow.HexToAddress(importAlias))
+				c.addAlias(location, flow.HexToAddress(
+					strings.ReplaceAll(importAlias, "0x", ""), // REF: go-sdk should handle this
+				))
 			} else {
 				return nil, fmt.Errorf("Import from %s could not be find: %s, make sure import path is correct.", c.name, importPath)
 			}
