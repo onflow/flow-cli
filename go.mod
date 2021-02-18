@@ -16,5 +16,4 @@ require (
 	github.com/thoas/go-funk v0.7.0
 	gonum.org/v1/gonum v0.6.1
 	google.golang.org/grpc v1.32.0
-	google.golang.org/protobuf v1.25.0
 )
