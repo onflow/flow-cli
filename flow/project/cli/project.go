@@ -37,9 +37,6 @@ type Project struct {
 	accounts []*Account
 }
 
-//REF: move this to json config
-const DefaultConfigPath = "flow.json"
-
 func LoadProject() *Project {
 	//REF: this should interact with config and not json directly - currently problem with CD
 	conf, err := json.Load(DefaultConfigPath)
