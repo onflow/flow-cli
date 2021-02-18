@@ -67,8 +67,9 @@ var Cmd = &cobra.Command{
 		sender := txsender.NewSender(grpcClient)
 
 		processor := contracts.NewPreprocessor(
-			project.GetAliases(conf.Network),
-		)
+      contracts.FilesystemLoader{},
+      project.GetAliases(conf.Network),
+    )
 
 		for _, contract := range project.GetContractsByNetwork(conf.Network) {
 			err = processor.AddContractSource(
@@ -82,7 +83,9 @@ var Cmd = &cobra.Command{
 			}
 		}
 
-		contracts, err := processor.PrepareForDeployment()
+		processor.ResolveImports()
+
+		contracts, err := processor.ContractDeploymentOrder()
 		if err != nil {
 			cli.Exit(1, err.Error())
 			return
