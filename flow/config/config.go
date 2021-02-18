@@ -93,6 +93,10 @@ const (
 	KeyTypeShell     KeyType = "shell"      // Exec out to a shell script
 )
 
+const (
+	DefaultEmulatorConfigName = "default"
+)
+
 // IsAlias checks if contract has an alias
 func (c *Contract) IsAlias() bool {
 	return c.Alias != ""
@@ -157,6 +161,10 @@ func (a *Accounts) GetByAddress(address string) Account {
 	}).([]Account)[0]
 }
 
+func (a *Account) GetDefaultKey() AccountKey {
+	return a.Keys[0]
+}
+
 // GetByNetwork get all deploys by network
 func (d *Deploys) GetByNetwork(network string) Deploys {
 	return funk.Filter([]Deploy(*d), func(d Deploy) bool {
@@ -178,10 +186,16 @@ func (n *Networks) GetByName(name string) Network {
 	}).([]Network)[0]
 }
 
-const DefaultEmulatorConfigName = "default"
-
 func (e *Emulators) GetDefault() Emulator {
 	return funk.Filter([]Emulator(*e), func(e Emulator) bool {
 		return e.Name == DefaultEmulatorConfigName
 	}).([]Emulator)[0]
+}
+
+func (c *Config) HostWithOverride(host string) string {
+	if host != "" {
+		return host
+	}
+	// TODO fix this to support different networks (global flag)
+	return c.Networks.GetByName(DefaultEmulatorConfigName).Host
 }

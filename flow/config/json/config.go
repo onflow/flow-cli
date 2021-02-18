@@ -76,6 +76,8 @@ func Save(conf *config.Config, path string) error {
 // ErrDoesNotExist is error to be returned when config file does not exists
 var ErrDoesNotExist = errors.New("project config file does not exist")
 
+const DefaultConfigPath = "flow.json"
+
 func Load(path string) (*config.Config, error) {
 	f, err := os.Open(path)
 	if err != nil {

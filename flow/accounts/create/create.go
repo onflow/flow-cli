@@ -30,9 +30,10 @@ import (
 	"github.com/spf13/cobra"
 
 	cli "github.com/onflow/flow-cli/flow"
+	"github.com/onflow/flow-cli/flow/config"
 )
 
-type Config struct {
+type Flags struct {
 	Signer    string   `default:"service" flag:"signer,s"`
 	Keys      []string `flag:"key,k" info:"Public keys to attach to account"`
 	SigAlgo   string   `default:"ECDSA_P256" flag:"sig-algo" info:"Signature algorithm used to generate the keys"`
@@ -42,28 +43,32 @@ type Config struct {
 	Contracts []string `flag:"contract,c" info:"Contract to be deployed during account creation. <name:path>"`
 }
 
-var conf Config
+var flags Flags
 
 var Cmd = &cobra.Command{
 	Use:   "create",
 	Short: "Create a new account",
 	Run: func(cmd *cobra.Command, args []string) {
-		projectConf := cli.LoadConfig()
+		config, err := config.Load("")
+		if err != nil {
+			cli.Exit(1, err.Error())
+			return
+		}
 
-		signerAccount := projectConf.Accounts[conf.Signer]
+		signerAccount := config.Accounts.GetByName(flags.Signer)
 
-		accountKeys := make([]*flow.AccountKey, len(conf.Keys))
+		accountKeys := make([]*flow.AccountKey, len(flags.Keys))
 
-		sigAlgo := crypto.StringToSignatureAlgorithm(conf.SigAlgo)
+		sigAlgo := crypto.StringToSignatureAlgorithm(flags.SigAlgo)
 		if sigAlgo == crypto.UnknownSignatureAlgorithm {
-			cli.Exitf(1, "Failed to determine signature algorithm from %s", conf.SigAlgo)
+			cli.Exitf(1, "Failed to determine signature algorithm from %s", flags.SigAlgo)
 		}
-		hashAlgo := crypto.StringToHashAlgorithm(conf.HashAlgo)
+		hashAlgo := crypto.StringToHashAlgorithm(flags.HashAlgo)
 		if hashAlgo == crypto.UnknownHashAlgorithm {
-			cli.Exitf(1, "Failed to determine hash algorithm from %s", conf.HashAlgo)
+			cli.Exitf(1, "Failed to determine hash algorithm from %s", flags.HashAlgo)
 		}
 
-		for i, publicKeyHex := range conf.Keys {
+		for i, publicKeyHex := range flags.Keys {
 			publicKey := cli.MustDecodePublicKeyHex(cli.DefaultSigAlgo, publicKeyHex)
 			accountKeys[i] = &flow.AccountKey{
 				PublicKey: publicKey,
@@ -75,7 +80,7 @@ var Cmd = &cobra.Command{
 
 		contracts := []templates.Contract{}
 
-		for _, contract := range conf.Contracts {
+		for _, contract := range flags.Contracts {
 			contractFlagContent := strings.SplitN(contract, ":", 2)
 			if len(contractFlagContent) != 2 {
 				cli.Exitf(1, "Failed to read contract name and path from flag. Ensure you're providing a contract name and a file path. %s", contract)
@@ -96,7 +101,7 @@ var Cmd = &cobra.Command{
 
 		tx := templates.CreateAccount(accountKeys, contracts, signerAccount.Address)
 
-		cli.SendTransaction(projectConf.HostWithOverride(conf.Host), signerAccount, tx, conf.Results)
+		cli.SendTransaction(config.HostWithOverride(flags.Host), signerAccount, tx, flags.Results)
 	},
 }
 
@@ -105,7 +110,7 @@ func init() {
 }
 
 func initConfig() {
-	err := sconfig.New(&conf).
+	err := sconfig.New(&flags).
 		FromEnvironment(cli.EnvPrefix).
 		BindFlags(Cmd.PersistentFlags()).
 		Parse()

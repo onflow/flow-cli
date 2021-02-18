@@ -22,12 +22,13 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/onflow/flow-cli/flow/config"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/client"
 	"google.golang.org/grpc"
 )
 
-func SendTransaction(host string, signerAccount *Account, tx *flow.Transaction, withResults bool) {
+func SendTransaction(host string, signerAccount *config.Account, tx *flow.Transaction, withResults bool) {
 	ctx := context.Background()
 
 	flowClient, err := client.New(host, grpc.WithInsecure())
@@ -45,7 +46,7 @@ func SendTransaction(host string, signerAccount *Account, tx *flow.Transaction, 
 	}
 
 	// Default 0, i.e. first key
-	accountKey := account.Keys[signerAccount.KeyIndex]
+	accountKey := account.Keys[0]
 
 	sealed, err := flowClient.GetLatestBlockHeader(ctx, true)
 	if err != nil {

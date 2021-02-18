@@ -21,39 +21,44 @@ package get
 import (
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/onflow/flow-go-sdk"
 	"github.com/psiemens/sconfig"
 	"github.com/spf13/cobra"
 
 	cli "github.com/onflow/flow-cli/flow"
+	"github.com/onflow/flow-cli/flow/config"
 )
 
-type Config struct {
+type Flags struct {
 	Host string `flag:"host" info:"Flow Access API host address"`
 	Code bool   `default:"false" flag:"code" info:"Display code deployed to the account"`
 }
 
-var conf Config
+var flag Flags
 
 var Cmd = &cobra.Command{
 	Use:   "get <address>",
 	Short: "Get account info",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		projectConf := new(cli.Config)
-		if conf.Host == "" {
-			projectConf = cli.LoadConfig()
+		config, err := config.Load("")
+		if err != nil {
+			cli.Exit(1, err.Error())
+			return
 		}
 
-		address := flow.HexToAddress(args[0])
+		address := flow.HexToAddress(
+			strings.ReplaceAll(args[0], "0x", ""),
+		)
 
 		account := cli.GetAccount(
-			projectConf.HostWithOverride(conf.Host),
+			config.HostWithOverride(flag.Host),
 			address,
 		)
 
-		printAccount(account, conf.Code)
+		printAccount(account, flag.Code)
 	},
 }
 
@@ -62,7 +67,7 @@ func init() {
 }
 
 func initConfig() {
-	err := sconfig.New(&conf).
+	err := sconfig.New(&flag).
 		FromEnvironment(cli.EnvPrefix).
 		BindFlags(Cmd.PersistentFlags()).
 		Parse()

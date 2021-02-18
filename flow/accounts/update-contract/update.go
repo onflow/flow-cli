@@ -27,22 +27,27 @@ import (
 	"github.com/spf13/cobra"
 
 	cli "github.com/onflow/flow-cli/flow"
+	"github.com/onflow/flow-cli/flow/config"
 )
 
-type Config struct {
-	Signer   string   `default:"service" flag:"signer,s"`
-	Host     string   `flag:"host" info:"Flow Access API host address"`
-	Results  bool     `default:"false" flag:"results" info:"Display the results of the transaction"`
+type Flags struct {
+	Signer  string `default:"service" flag:"signer,s"`
+	Host    string `flag:"host" info:"Flow Access API host address"`
+	Results bool   `default:"false" flag:"results" info:"Display the results of the transaction"`
 }
 
-var conf Config
+var flags Flags
 
 var Cmd = &cobra.Command{
 	Use:   "update-contract <name> <filename>",
 	Short: "Update a contract deployed to an account",
 	Args:  cobra.ExactArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
-		projectConf := cli.LoadConfig()
+		config, err := config.Load("")
+		if err != nil {
+			cli.Exit(1, err.Error())
+			return
+		}
 
 		contractName := args[0]
 		contractFilename := args[1]
@@ -52,21 +57,21 @@ var Cmd = &cobra.Command{
 			cli.Exitf(1, "Failed to read contract from source file %s", contractFilename)
 		}
 
-		signerAccount := projectConf.Accounts[conf.Signer]
+		signerAccount := config.Accounts.GetByName(flags.Signer)
 
 		tx := templates.UpdateAccountContract(
 			signerAccount.Address,
 			templates.Contract{
-				Name: contractName,
+				Name:   contractName,
 				Source: string(contractSource),
 			},
 		)
 
 		cli.SendTransaction(
-			projectConf.HostWithOverride(conf.Host),
+			config.HostWithOverride(flags.Host),
 			signerAccount,
 			tx,
-			conf.Results,
+			flags.Results,
 		)
 	},
 }
@@ -76,7 +81,7 @@ func init() {
 }
 
 func initConfig() {
-	err := sconfig.New(&conf).
+	err := sconfig.New(&flags).
 		FromEnvironment(cli.EnvPrefix).
 		BindFlags(Cmd.PersistentFlags()).
 		Parse()

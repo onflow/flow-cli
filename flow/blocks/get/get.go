@@ -27,9 +27,10 @@ import (
 	"github.com/spf13/cobra"
 
 	cli "github.com/onflow/flow-cli/flow"
+	"github.com/onflow/flow-cli/flow/config"
 )
 
-type Config struct {
+type Flags struct {
 	Host        string `flag:"host" info:"Flow Access API host address"`
 	Latest      bool   `default:"false" flag:"latest" info:"Display latest block"`
 	BlockID     string `default:"" flag:"id" info:"Display block by id"`
@@ -38,19 +39,22 @@ type Config struct {
 	Verbose     bool   `default:"false" flag:"verbose" info:"Display transactions in block"`
 }
 
-var conf Config
+var flag Flags
 
 var Cmd = &cobra.Command{
 	Use:   "get <block_id>",
 	Short: "Get block info",
 	Run: func(cmd *cobra.Command, args []string) {
 		var block *flow.Block
-		projectConf := new(cli.Config)
-		if conf.Host == "" {
-			projectConf = cli.LoadConfig()
+		config, err := config.Load("")
+		if err != nil {
+			cli.Exit(1, err.Error())
+			return
 		}
-		host := projectConf.HostWithOverride(conf.Host)
-		if conf.Latest {
+
+		host := config.HostWithOverride(flag.Host)
+
+		if flag.Latest {
 			block = cli.GetLatestBlock(host)
 		} else if len(conf.BlockID) > 0 {
 			blockID := flow.HexToID(conf.BlockID)
