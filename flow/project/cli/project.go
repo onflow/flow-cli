@@ -175,7 +175,7 @@ func (p *Project) GetContractsByNetwork(network string) []Contract {
 
 			contract := Contract{
 				Name:   c.Name,
-				Source: path.Clean(c.Source), //TODO: not necessary path - future improvements will include urls... REF: move this to config as validation and parsing
+				Source: path.Clean(c.Source),
 				Target: account.address,
 			}
 
@@ -208,17 +208,11 @@ func (p *Project) GetAccountByAddress(address string) *Account {
 
 func (p *Project) GetAliases(network string) map[string]string {
 	aliases := make(map[string]string)
-	n := p.conf.Networks.GetByName(network)
 
 	// get all contracts for selected network and if any has an address as target make it an alias
 	for _, contract := range p.conf.Contracts.GetByNetwork(network) {
-		// remove 0x prefix if present
-		addr := flow.HexToAddress(
-			strings.ReplaceAll(contract.Source, "0x", ""),
-		)
-
-		if addr.IsValid(n.ChainID) {
-			aliases[contract.Name] = addr.String()
+		if contract.IsAlias() {
+			aliases[contract.Name] = contract.Alias
 		}
 	}
 
@@ -240,9 +234,6 @@ type Contract struct {
 	Target flow.Address
 }
 
-// TODO: discuss if account makes sense to be defined here in new structure
-// once config will be central point for getting account and if multiple commands
-// will need account to sign something we would need to always make this structure
 type Account struct {
 	name    string
 	address flow.Address
