@@ -212,7 +212,7 @@ func (p *Project) GetAliases(network string) map[string]string {
 	// get all contracts for selected network and if any has an address as target make it an alias
 	for _, contract := range p.conf.Contracts.GetByNetwork(network) {
 		if contract.IsAlias() {
-			aliases[contract.Name] = contract.Alias
+			aliases[contract.Source] = contract.Alias
 		}
 	}
 
