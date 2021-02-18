@@ -83,7 +83,11 @@ var Cmd = &cobra.Command{
 			}
 		}
 
-		processor.ResolveImports()
+		err = processor.ResolveImports()
+		if err != nil {
+			cli.Exit(1, err.Error())
+			return
+		}
 
 		contracts, err := processor.ContractDeploymentOrder()
 		if err != nil {
