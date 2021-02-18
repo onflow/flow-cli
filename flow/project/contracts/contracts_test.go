@@ -132,6 +132,8 @@ var testContractH = testContract{
 	expectedDependencies: nil,
 }
 
+var noAliases = map[string]string{}
+
 type testLoader struct{}
 
 func (t testLoader) Load(source string) (string, error) {
@@ -218,7 +220,7 @@ func TestResolveImports(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
-			p := contracts.NewPreprocessor(testLoader{})
+			p := contracts.NewPreprocessor(testLoader{}, noAliases)
 
 			for _, contract := range testCase.contracts {
 				err := p.AddContractSource(
@@ -263,7 +265,7 @@ func TestContractDeploymentOrder(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
-			p := contracts.NewPreprocessor(testLoader{})
+			p := contracts.NewPreprocessor(testLoader{}, noAliases)
 
 			for _, contract := range testCase.contracts {
 				err := p.AddContractSource(

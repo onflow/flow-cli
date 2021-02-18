@@ -205,10 +205,10 @@ func (p *Preprocessor) ResolveImports() error {
 	for _, c := range p.contracts {
 		for _, location := range c.imports() {
 			importPath := p.loader.Normalize(c.source, location)
-			importPathAlias := getAliasForImport(location)
+			importPathAlias := getAliasForImport(importPath)
 
-			importContract, isContract := p.contractsBySource[importPath]
 			importAlias, isAlias := p.aliases[importPathAlias]
+			importContract, isContract := p.contractsBySource[importPath]
 
 			if isContract {
 				c.addDependency(location, importContract)
