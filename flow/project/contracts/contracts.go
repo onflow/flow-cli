@@ -214,7 +214,7 @@ func (p *Preprocessor) ResolveImports() error {
 					strings.ReplaceAll(importAlias, "0x", ""), // REF: go-sdk should handle this
 				))
 			} else {
-				return fmt.Errorf("Import from %s could not be find: %s, make sure import path is correct.", c.name, importPath)
+				return fmt.Errorf("Import from %s could not be found: %s, make sure import path is correct.", c.name, importPath)
 			}
 		}
 	}
