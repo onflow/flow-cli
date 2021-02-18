@@ -157,10 +157,10 @@ func absolutePath(basePath, relativePath string) string {
 func (c *Contract) addAlias(location string, target flow.Address) {
 	c.aliases[location] = target
 }
-    
+
 type Preprocessor struct {
 	loader            Loader
-  aliases           map[string]string
+	aliases           map[string]string
 	contracts         []*Contract
 	contractsBySource map[string]*Contract
 }
@@ -168,10 +168,9 @@ type Preprocessor struct {
 func NewPreprocessor(loader Loader, aliases map[string]string) *Preprocessor {
 	return &Preprocessor{
 		loader:            loader,
-    aliases:           aliases,
+		aliases:           aliases,
 		contracts:         make([]*Contract, 0),
 		contractsBySource: make(map[string]*Contract),
-    
 	}
 }
 
@@ -202,11 +201,13 @@ func (p *Preprocessor) AddContractSource(
 	return nil
 }
 
-func (p *Preprocessor) ResolveImports() {
+func (p *Preprocessor) ResolveImports() error {
 	for _, c := range p.contracts {
 		for _, location := range c.imports() {
 			importPath := p.loader.Normalize(c.source, location)
-      importAlias, isAlias := p.aliases[importPathAlias]
+			importPathAlias := getAliasForImport(importPath)
+
+			importAlias, isAlias := p.aliases[importPathAlias]
 			importContract, isContract := p.contractsBySource[importPath]
 
 			if isContract {
@@ -216,10 +217,12 @@ func (p *Preprocessor) ResolveImports() {
 					strings.ReplaceAll(importAlias, "0x", ""), // REF: go-sdk should handle this
 				))
 			} else {
-				return nil, fmt.Errorf("Import from %s could not be find: %s, make sure import path is correct.", c.name, importPath)
+				return fmt.Errorf("Import from %s could not be find: %s, make sure import path is correct.", c.name, importPath)
 			}
 		}
 	}
+
+	return nil
 }
 
 func (p *Preprocessor) ContractBySource(contractSource string) *Contract {
