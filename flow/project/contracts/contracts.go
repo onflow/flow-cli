@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"path"
+	"path/filepath"
 	"strings"
 
 	"github.com/onflow/cadence/runtime/ast"
@@ -180,8 +181,9 @@ func (p *Preprocessor) PrepareForDeployment() ([]*Contract, error) {
 		for _, location := range c.imports() {
 
 			importPath := absolutePath(c.source, location)
+			importPathAlias := getAliasForImport(location)
 			importContract, isContract := p.contracts[importPath]
-			importAlias, isAlias := p.aliases[strings.ReplaceAll(location, ".cdc", "")]
+			importAlias, isAlias := p.aliases[importPathAlias]
 
 			if isContract {
 				c.addDependency(location, importContract)
@@ -237,4 +239,10 @@ func sortByDeploymentOrder(contracts map[string]*Contract) ([]*Contract, error) 
 
 func absolutePath(basePath, relativePath string) string {
 	return path.Join(path.Dir(basePath), relativePath)
+}
+
+func getAliasForImport(location string) string {
+	return strings.ReplaceAll(
+		filepath.Base(location), ".cdc", "",
+	)
 }

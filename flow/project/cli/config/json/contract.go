@@ -32,30 +32,30 @@ func (j jsonContracts) transformToConfig() config.Contracts {
 	contracts := make(config.Contracts, 0)
 
 	for contractName, c := range j {
-		if c.Source != "" {
+		if c.Simple != "" {
 			contract := config.Contract{
 				Name:   contractName,
-				Source: c.Source,
+				Source: c.Simple,
 			}
 
 			contracts = append(contracts, contract)
-		}
+		} else {
+			for network, alias := range c.Advanced.Aliases {
+				contract := config.Contract{
+					Name:    contractName,
+					Source:  c.Advanced.Source,
+					Network: network,
+					Alias:   alias,
+				}
 
-		for networkName, source := range c.SourcesByNetwork {
-			contract := config.Contract{
-				Name:    contractName,
-				Source:  source,
-				Network: networkName,
+				contracts = append(contracts, contract)
 			}
-
-			contracts = append(contracts, contract)
 		}
 	}
 
 	return contracts
 }
 
-//REF: if we already loaded json from config no need to do this just return
 // transformToJSON transforms config structure to json structures for saving
 func transformContractsToJSON(contracts config.Contracts) jsonContracts {
 	jsonContracts := jsonContracts{}
@@ -64,15 +64,18 @@ func transformContractsToJSON(contracts config.Contracts) jsonContracts {
 		// if simple case
 		if c.Network == "" {
 			jsonContracts[c.Name] = jsonContract{
-				Source: c.Source,
+				Simple: c.Source,
 			}
 		} else { // if advanced config
 			// check if we already created for this name then add or create
 			if _, exists := jsonContracts[c.Name]; exists {
-				jsonContracts[c.Name].SourcesByNetwork[c.Network] = c.Source
+				jsonContracts[c.Name].Advanced.Aliases[c.Network] = c.Source
 			} else {
 				jsonContracts[c.Name] = jsonContract{
-					SourcesByNetwork: map[string]string{c.Network: c.Source},
+					Advanced: jsonContractAdvanced{
+						Source:  c.Source,
+						Aliases: map[string]string{c.Network: c.Alias},
+					},
 				}
 			}
 		}
@@ -81,27 +84,33 @@ func transformContractsToJSON(contracts config.Contracts) jsonContracts {
 	return jsonContracts
 }
 
+// jsonContractAdvanced for json parsing advanced config
+type jsonContractAdvanced struct {
+	Source  string            `json:"source"`
+	Aliases map[string]string `json:"aliases"`
+}
+
 // jsonContract structure for json parsing
 type jsonContract struct {
-	Source           string
-	SourcesByNetwork map[string]string
+	Simple   string
+	Advanced jsonContractAdvanced
 }
 
 func (j *jsonContract) UnmarshalJSON(b []byte) error {
 	var source string
-	var sourcesByNetwork map[string]string
+	var advancedFormat jsonContractAdvanced
 
 	// simple
 	err := json.Unmarshal(b, &source)
 	if err == nil {
-		j.Source = source
+		j.Simple = source
 		return nil
 	}
 
 	// advanced
-	err = json.Unmarshal(b, &sourcesByNetwork)
+	err = json.Unmarshal(b, &advancedFormat)
 	if err == nil {
-		j.SourcesByNetwork = sourcesByNetwork
+		j.Advanced = advancedFormat
 	} else {
 		return err
 	}
@@ -110,9 +119,9 @@ func (j *jsonContract) UnmarshalJSON(b []byte) error {
 }
 
 func (j jsonContract) MarshalJSON() ([]byte, error) {
-	if j.Source != "" {
-		return json.Marshal(j.Source)
+	if j.Simple != "" {
+		return json.Marshal(j.Simple)
 	} else {
-		return json.Marshal(j.SourcesByNetwork)
+		return json.Marshal(j.Advanced)
 	}
 }
