@@ -19,7 +19,6 @@ package json
 
 import (
 	"encoding/json"
-	"sort"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -65,29 +64,11 @@ func Test_ConfigContractsComplex(t *testing.T) {
 	assert.Equal(t, "./cadence/kittyItemsMarket/contracts/KittyItemsMarket.cdc", contracts.GetByNameAndNetwork("KittyItemsMarket", "emulator").Source)
 	assert.Equal(t, "./cadence/kittyItemsMarket/contracts/KittyItemsMarket.cdc", contracts.GetByNameAndNetwork("KittyItemsMarket", "testnet").Source)
 
-	testnet := contracts.GetByNetwork("testnet")
-	emulator := contracts.GetByNetwork("emulator")
+	assert.Equal(t, "", contracts.GetByNameAndNetwork("KittyItems", "emulator").Alias)
+	assert.Equal(t, "", contracts.GetByNameAndNetwork("KittyItems", "testnet").Alias)
 
-	assert.Equal(t, 2, len(testnet))
-	assert.Equal(t, 1, len(emulator))
-
-	testnetSorted := make([]string, 0)
-	for _, c := range testnet {
-		testnetSorted = append(testnetSorted, c.Source)
-	}
-	sort.Strings(testnetSorted)
-
-	emulatorSorted := make([]string, 0)
-	for _, c := range emulator {
-		emulatorSorted = append(emulatorSorted, c.Source)
-	}
-	sort.Strings(emulatorSorted)
-
-	assert.Equal(t, "./cadence/kittyItems/contracts/KittyItems.cdc", testnetSorted[0])
-	assert.Equal(t, "0x123123123", testnetSorted[1])
-
-	assert.Equal(t, "./cadence/kittyItems/contracts/KittyItems.cdc", emulatorSorted[0])
-	assert.Equal(t, "./cadence/kittyItemsMarket/contracts/KittyItemsMarket.cdc", emulatorSorted[1])
+	assert.Equal(t, "0x123123123", contracts.GetByNameAndNetwork("KittyItemsMarket", "testnet").Alias)
+	assert.Equal(t, "", contracts.GetByNameAndNetwork("KittyItemsMarket", "emulator").Alias)
 }
 
 func Test_ConfigContractsAliases(t *testing.T) {
@@ -134,7 +115,15 @@ func Test_ConfigContractsAliases(t *testing.T) {
 }
 
 func Test_TransformContractToJSON(t *testing.T) {
-	b := []byte(`{"KittyItems":"./cadence/kittyItems/contracts/KittyItems.cdc","KittyItemsMarket":{"emulator":"./cadence/kittyItemsMarket/contracts/KittyItemsMarket.cdc","testnet":"0x123123123"}}`)
+	b := []byte(`{
+		"KittyItems": "./cadence/kittyItems/contracts/KittyItems.cdc",
+		"KittyItemsMarket": {
+			"source": "./cadence/kittyItemsMarket/contracts/KittyItemsMarket.cdc",
+			"aliases": {
+				"testnet":"0x123123123"
+			}
+		}
+	}`)
 
 	var jsonContracts jsonContracts
 	err := json.Unmarshal(b, &jsonContracts)
@@ -145,5 +134,35 @@ func Test_TransformContractToJSON(t *testing.T) {
 	j := transformContractsToJSON(contracts)
 	x, _ := json.Marshal(j)
 
-	assert.Equal(t, string(b), string(x))
+	assert.JSONEq(t, string(b), string(x))
+}
+
+func Test_TransformComplexContractToJSON(t *testing.T) {
+	b := []byte(`{
+		"KittyItems": "./cadence/kittyItems/contracts/KittyItems.cdc",
+		"KittyItemsMarket": {
+			"source": "./cadence/kittyItemsMarket/contracts/KittyItemsMarket.cdc",
+			"aliases": {
+				"testnet":"0x123123123"
+			}
+		},
+		"Kibble": {
+			"source": "./cadence/kittyItems/contracts/KittyItems.cdc",
+			"aliases": {
+				"testnet": "0x22222222",
+				"emulator": "0x123123123"
+			}
+		}
+	}`)
+
+	var jsonContracts jsonContracts
+	err := json.Unmarshal(b, &jsonContracts)
+	require.NoError(t, err)
+
+	contracts := jsonContracts.transformToConfig()
+
+	j := transformContractsToJSON(contracts)
+	x, _ := json.Marshal(j)
+
+	assert.JSONEq(t, string(b), string(x))
 }
