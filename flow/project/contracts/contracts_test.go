@@ -20,6 +20,7 @@ package contracts_test
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/onflow/flow-go-sdk"
@@ -231,7 +232,10 @@ func TestResolveImports(t *testing.T) {
 				require.NoError(t, err)
 			}
 
-			p.ResolveImports()
+			err := p.ResolveImports()
+			if !strings.Contains(testCase.name, "unresolved") {
+				assert.NoError(t, err)
+			}
 
 			for _, sourceContract := range testCase.contracts {
 
@@ -276,7 +280,10 @@ func TestContractDeploymentOrder(t *testing.T) {
 				require.NoError(t, err)
 			}
 
-			p.ResolveImports()
+			err := p.ResolveImports()
+			if !strings.Contains(testCase.name, "unresolved") {
+				assert.NoError(t, err)
+			}
 
 			deployedContracts, err := p.ContractDeploymentOrder()
 
