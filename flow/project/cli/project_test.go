@@ -189,8 +189,9 @@ func generateAliasesProject() Project {
 			Network: "emulator",
 		}, {
 			Name:    "FungibleToken",
-			Source:  "ee82856bf20e2aa6",
+			Source:  "../hungry-kitties/cadence/contracts/FungibleToken.cdc",
 			Network: "emulator",
+			Alias:   "ee82856bf20e2aa6",
 		}},
 		Deploys: config.Deploys{{
 			Network:   "emulator",
@@ -215,6 +216,87 @@ func generateAliasesProject() Project {
 			Name:    "emulator",
 			Host:    "127.0.0.1.3569",
 			ChainID: flow.Emulator,
+		}},
+	}
+
+	p, err := newProject(&config)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	return *p
+}
+
+func generateAliasesComplexProject() Project {
+	config := config.Config{
+		Emulators: config.Emulators{{
+			Name:           "default",
+			Port:           9000,
+			ServiceAccount: "emulator-account",
+		}},
+		Contracts: config.Contracts{{
+			Name:   "NonFungibleToken",
+			Source: "../hungry-kitties/cadence/contracts/NonFungibleToken.cdc",
+		}, {
+			Name:    "FungibleToken",
+			Source:  "../hungry-kitties/cadence/contracts/FungibleToken.cdc",
+			Network: "emulator",
+			Alias:   "ee82856bf20e2aa6",
+		}, {
+			Name:    "Kibble",
+			Source:  "../hungry-kitties/cadence/contracts/Kibble.cdc",
+			Network: "testnet",
+			Alias:   "ee82856bf20e2aa6",
+		}, {
+			Name:    "Kibble",
+			Source:  "../hungry-kitties/cadence/contracts/Kibble.cdc",
+			Network: "emulator",
+			Alias:   "ee82856bf20e2aa6",
+		}},
+		Deploys: config.Deploys{{
+			Network:   "emulator",
+			Account:   "emulator-account",
+			Contracts: []string{"NonFungibleToken"},
+		}, {
+			Network:   "testnet",
+			Account:   "testnet-account",
+			Contracts: []string{"NonFungibleToken", "FungibleToken"},
+		}},
+		Accounts: config.Accounts{{
+			Name:    "emulator-account",
+			Address: flow.ServiceAddress(flow.Emulator),
+			ChainID: flow.Emulator,
+			Keys: []config.AccountKey{{
+				Type:     config.KeyTypeHex,
+				Index:    0,
+				SigAlgo:  crypto.ECDSA_P256,
+				HashAlgo: crypto.SHA3_256,
+				Context: map[string]string{
+					"privateKey": "dd72967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47",
+				},
+			}},
+		}, {
+			Name:    "testnet-account",
+			Address: flow.HexToAddress("1e82856bf20e2aa6"),
+			ChainID: flow.Testnet,
+			Keys: []config.AccountKey{{
+				Type:     config.KeyTypeHex,
+				Index:    0,
+				SigAlgo:  crypto.ECDSA_P256,
+				HashAlgo: crypto.SHA3_256,
+				Context: map[string]string{
+					"privateKey": "dd72967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47",
+				},
+			}},
+		}},
+		Networks: config.Networks{{
+			Name:    "emulator",
+			Host:    "127.0.0.1.3569",
+			ChainID: flow.Emulator,
+		}, {
+			Name:    "testnet",
+			Host:    "127.0.0.1.3569",
+			ChainID: flow.Testnet,
 		}},
 	}
 
@@ -362,7 +444,7 @@ func Test_ContractConflictComplex(t *testing.T) {
 
 }
 
-func Test_GetAliasesComplex(t *testing.T) {
+func Test_GetAliases(t *testing.T) {
 	p := generateAliasesProject()
 
 	aliases := p.GetAliases("emulator")
@@ -372,4 +454,28 @@ func Test_GetAliasesComplex(t *testing.T) {
 	assert.Equal(t, "ee82856bf20e2aa6", aliases["FungibleToken"])
 	assert.Equal(t, 1, len(contracts))
 	assert.Equal(t, "NonFungibleToken", contracts[0].Name)
+}
+
+func Test_GetAliasesComplex(t *testing.T) {
+	p := generateAliasesComplexProject()
+
+	aEmulator := p.GetAliases("emulator")
+	cEmulator := p.GetContractsByNetwork("emulator")
+
+	aTestnet := p.GetAliases("testnet")
+	cTestnet := p.GetContractsByNetwork("testnet")
+
+	assert.Equal(t, 1, len(cEmulator))
+	assert.Equal(t, "NonFungibleToken", cEmulator[0].Name)
+
+	assert.Equal(t, 2, len(aEmulator))
+	assert.Equal(t, "ee82856bf20e2aa6", aEmulator["FungibleToken"])
+	assert.Equal(t, "ee82856bf20e2aa6", aEmulator["Kibble"])
+
+	assert.Equal(t, 1, len(aTestnet))
+	assert.Equal(t, "ee82856bf20e2aa6", aTestnet["Kibble"])
+
+	assert.Equal(t, 2, len(cTestnet))
+	assert.Equal(t, "NonFungibleToken", cTestnet[0].Name)
+	assert.Equal(t, "FungibleToken", cTestnet[1].Name)
 }

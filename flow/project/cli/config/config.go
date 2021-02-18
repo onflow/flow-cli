@@ -57,6 +57,7 @@ type Contract struct {
 	Name    string
 	Source  string
 	Network string
+	Alias   string
 }
 
 // Account is main config for each account
@@ -91,12 +92,9 @@ const (
 	KeyTypeShell     KeyType = "shell"      // Exec out to a shell script
 )
 
-//TODO: replace filter with find where only one is expected
-// GetForNetwork get all contracts by network
-func (c *Contracts) GetForNetwork(network string) Contracts {
-	return funk.Filter([]Contract(*c), func(c Contract) bool {
-		return c.Network == network
-	}).([]Contract)
+// IsAlias checks if contract has an alias
+func (c *Contract) IsAlias() bool {
+	return c.Alias != ""
 }
 
 // GetByNameAndNetwork get contract array for account and network
@@ -105,9 +103,16 @@ func (c *Contracts) GetByNameAndNetwork(name string, network string) Contract {
 		return c.Network == network && c.Name == name
 	}).([]Contract)
 
-	// if we don't find contract by name and network return default for name
+	// if we don't find contract by name and network create a new contract
+	// and replace only name and source with existing
 	if len(contracts) == 0 {
-		return c.GetByName(name)
+		cName := c.GetByName(name)
+
+		return Contract{
+			Name:    cName.Name,
+			Network: network,
+			Source:  cName.Source,
+		}
 	}
 
 	return contracts[0]
