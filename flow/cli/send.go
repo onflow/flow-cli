@@ -22,13 +22,12 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/onflow/flow-cli/flow/config"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/client"
 	"google.golang.org/grpc"
 )
 
-func SendTransaction(host string, signerAccount *config.Account, tx *flow.Transaction, withResults bool) {
+func SendTransaction(host string, signerAccount *Account, tx *flow.Transaction, withResults bool) {
 	ctx := context.Background()
 
 	flowClient, err := client.New(host, grpc.WithInsecure())
@@ -36,7 +35,7 @@ func SendTransaction(host string, signerAccount *config.Account, tx *flow.Transa
 		Exitf(1, "Failed to connect to host: %s", err)
 	}
 
-	signerAddress := signerAccount.Address
+	signerAddress := signerAccount.address
 
 	fmt.Printf("Getting information for account with address 0x%s ...\n", signerAddress.Hex())
 
@@ -57,7 +56,7 @@ func SendTransaction(host string, signerAccount *config.Account, tx *flow.Transa
 		SetProposalKey(signerAddress, accountKey.Index, accountKey.SequenceNumber).
 		SetPayer(signerAddress)
 
-	err = tx.SignEnvelope(signerAddress, accountKey.Index, signerAccount.Signer)
+	err = tx.SignEnvelope(signerAddress, accountKey.Index, signerAccount.DefaultKey().Signer())
 	if err != nil {
 		Exitf(1, "Failed to sign transaction: %s", err)
 	}

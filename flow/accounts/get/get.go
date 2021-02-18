@@ -43,9 +43,8 @@ var Cmd = &cobra.Command{
 	Short: "Get account info",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		config, err := config.Load("")
-		if err != nil {
-			cli.Exit(1, err.Error())
+		project := cli.LoadProject()
+		if project == nil {
 			return
 		}
 
@@ -54,7 +53,7 @@ var Cmd = &cobra.Command{
 		)
 
 		account := cli.GetAccount(
-			config.HostWithOverride(flag.Host),
+			project.HostWithOverride(flag.Host),
 			address,
 		)
 

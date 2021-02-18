@@ -28,6 +28,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/fatih/color"
 	"github.com/onflow/flow-go-sdk/crypto"
 )
 
@@ -39,8 +40,6 @@ const (
 	UFix64DecimalPlaces = 8
 )
 
-var ConfigPath = "flow.json"
-
 func Exit(code int, msg string) {
 	fmt.Println(msg)
 	os.Exit(code)
@@ -50,6 +49,12 @@ func Exitf(code int, msg string, args ...interface{}) {
 	fmt.Printf(msg+"\n", args...)
 	os.Exit(code)
 }
+
+// Colors
+var Yellow = color.New(color.FgYellow, color.Bold).SprintfFunc()
+var Green = color.New(color.FgGreen, color.Bold).SprintfFunc()
+var Red = color.New(color.FgRed, color.Bold).SprintfFunc()
+var Bold = color.New(color.Bold).SprintfFunc()
 
 func MustDecodePrivateKeyHex(sigAlgo crypto.SignatureAlgorithm, prKeyHex string) crypto.PrivateKey {
 	prKey, err := crypto.DecodePrivateKeyHex(sigAlgo, prKeyHex)

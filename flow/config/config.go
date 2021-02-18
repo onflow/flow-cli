@@ -191,11 +191,3 @@ func (e *Emulators) GetDefault() Emulator {
 		return e.Name == DefaultEmulatorConfigName
 	}).([]Emulator)[0]
 }
-
-func (c *Config) HostWithOverride(host string) string {
-	if host != "" {
-		return host
-	}
-	// TODO fix this to support different networks (global flag)
-	return c.Networks.GetByName(DefaultEmulatorConfigName).Host
-}

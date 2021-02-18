@@ -27,10 +27,12 @@ import (
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/thoas/go-funk"
 
+	"github.com/onflow/flow-cli/flow/cli/keys"
 	"github.com/onflow/flow-cli/flow/config"
 	"github.com/onflow/flow-cli/flow/config/json"
-	"github.com/onflow/flow-cli/flow/project/cli/keys"
 )
+
+const DefaultConfigPath = "flow.json"
 
 type Project struct {
 	conf     *config.Config
@@ -38,18 +40,17 @@ type Project struct {
 }
 
 func LoadProject() *Project {
-	//REF: this should interact with config and not json directly - currently problem with CD
-	conf, err := json.Load(DefaultConfigPath)
+	conf, err := json.Load()
 	if err != nil {
+		// TODO: removed default path - check if that is ok
 		if errors.Is(err, json.ErrDoesNotExist) {
 			Exitf(
 				1,
-				"Project config file %s does not exist. Please initialize first\n",
-				DefaultConfigPath,
+				"Project config file %s does not exist. Please initialize first\n", " ",
 			)
 		}
 
-		Exitf(1, "Failed to open project configuration in %s", DefaultConfigPath)
+		Exitf(1, "Failed to open project configuration in %s")
 
 		return nil
 	}
@@ -64,7 +65,7 @@ func LoadProject() *Project {
 }
 
 func ProjectExists() bool {
-	return json.Exists(DefaultConfigPath)
+	return json.Exists()
 }
 
 func InitProject() *Project {
@@ -76,7 +77,6 @@ func InitProject() *Project {
 	}
 }
 
-// REF: move this to config
 const (
 	defaultEmulatorNetworkName        = "emulator"
 	defaultEmulatorServiceAccountName = "emulator-account"
@@ -84,7 +84,6 @@ const (
 	defaultEmulatorHost               = "127.0.0.1:3569"
 )
 
-// REF: this also might be part of config
 func defaultConfig(defaultEmulatorServiceAccount *Account) *config.Config {
 	return &config.Config{
 		Emulators: config.Emulators{{
@@ -148,6 +147,14 @@ func (p *Project) ContractConflictExists(network string) bool {
 	}).([]string)
 
 	return len(all) != len(uniq)
+}
+
+func (p *Project) HostWithOverride(host string) string {
+	if host != "" {
+		return host
+	}
+	// TODO fix this to support different networks (global flag)
+	return p.conf.Networks.GetByName(DefaultEmulatorConfigName).Host
 }
 
 func (p *Project) Host(network string) string {

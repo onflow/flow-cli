@@ -76,10 +76,11 @@ func Save(conf *config.Config, path string) error {
 // ErrDoesNotExist is error to be returned when config file does not exists
 var ErrDoesNotExist = errors.New("project config file does not exist")
 
+// TODO: allow path to change
 const DefaultConfigPath = "flow.json"
 
-func Load(path string) (*config.Config, error) {
-	f, err := os.Open(path)
+func Load() (*config.Config, error) {
+	f, err := os.Open(DefaultConfigPath)
 	if err != nil {
 		if os.IsNotExist(err) {
 			return nil, ErrDoesNotExist
@@ -93,7 +94,7 @@ func Load(path string) (*config.Config, error) {
 	err = d.Decode(conf)
 
 	if err != nil {
-		fmt.Printf("%s contains invalid json: %s\n", path, err.Error())
+		fmt.Printf("%s contains invalid json: %s\n", DefaultConfigPath, err.Error())
 		os.Exit(1)
 	}
 
@@ -101,8 +102,8 @@ func Load(path string) (*config.Config, error) {
 }
 
 // Exists checks if file exists on the specified path
-func Exists(path string) bool {
-	info, err := os.Stat(path)
+func Exists() bool {
+	info, err := os.Stat(DefaultConfigPath)
 	if os.IsNotExist(err) {
 		return false
 	}

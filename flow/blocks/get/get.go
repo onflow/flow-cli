@@ -27,7 +27,6 @@ import (
 	"github.com/spf13/cobra"
 
 	cli "github.com/onflow/flow-cli/flow"
-	"github.com/onflow/flow-cli/flow/config"
 )
 
 type Flags struct {
@@ -39,35 +38,34 @@ type Flags struct {
 	Verbose     bool   `default:"false" flag:"verbose" info:"Display transactions in block"`
 }
 
-var flag Flags
+var flags Flags
 
 var Cmd = &cobra.Command{
 	Use:   "get <block_id>",
 	Short: "Get block info",
 	Run: func(cmd *cobra.Command, args []string) {
 		var block *flow.Block
-		config, err := config.Load("")
-		if err != nil {
-			cli.Exit(1, err.Error())
+		project := cli.LoadProject()
+		if project == nil {
 			return
 		}
 
-		host := config.HostWithOverride(flag.Host)
+		host := project.HostWithOverride(flags.Host)
 
-		if flag.Latest {
+		if flags.Latest {
 			block = cli.GetLatestBlock(host)
-		} else if len(conf.BlockID) > 0 {
-			blockID := flow.HexToID(conf.BlockID)
+		} else if len(flags.BlockID) > 0 {
+			blockID := flow.HexToID(flags.BlockID)
 			block = cli.GetBlockByID(host, blockID)
 		} else if len(args) > 0 && len(args[0]) > 0 {
 			blockID := flow.HexToID(args[0])
 			block = cli.GetBlockByID(host, blockID)
 		} else {
-			block = cli.GetBlockByHeight(host, conf.BlockHeight)
+			block = cli.GetBlockByHeight(host, flags.BlockHeight)
 		}
-		printBlock(block, conf.Verbose)
-		if conf.Events != "" {
-			cli.GetBlockEvents(host, block.Height, conf.Events)
+		printBlock(block, flags.Verbose)
+		if flags.Events != "" {
+			cli.GetBlockEvents(host, block.Height, flags.Events)
 		}
 	},
 }
@@ -77,7 +75,7 @@ func init() {
 }
 
 func initConfig() {
-	err := sconfig.New(&conf).
+	err := sconfig.New(&flags).
 		FromEnvironment(cli.EnvPrefix).
 		BindFlags(Cmd.PersistentFlags()).
 		Parse()
@@ -96,7 +94,7 @@ func printBlock(block *flow.Block, verbose bool) {
 	for i, guarantee := range block.CollectionGuarantees {
 		fmt.Printf("  Collection %d: %s\n", i, guarantee.CollectionID)
 		if verbose {
-			collection := cli.GetCollectionByID(conf.Host, guarantee.CollectionID)
+			collection := cli.GetCollectionByID(flags.Host, guarantee.CollectionID)
 			for i, transaction := range collection.TransactionIDs {
 				fmt.Printf("    Transaction %d: %s\n", i, transaction)
 			}

@@ -26,7 +26,7 @@ import (
 	"github.com/psiemens/sconfig"
 	"github.com/spf13/cobra"
 
-	cli "github.com/onflow/flow-cli/flow"
+	"github.com/onflow/flow-cli/flow/cli"
 	"github.com/onflow/flow-cli/flow/config"
 )
 
@@ -43,9 +43,8 @@ var Cmd = &cobra.Command{
 	Short: "Update a contract deployed to an account",
 	Args:  cobra.ExactArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
-		config, err := config.Load("")
-		if err != nil {
-			cli.Exit(1, err.Error())
+		project := cli.LoadProject()
+		if project == nil {
 			return
 		}
 

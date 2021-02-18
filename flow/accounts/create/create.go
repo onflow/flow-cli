@@ -29,8 +29,7 @@ import (
 	"github.com/psiemens/sconfig"
 	"github.com/spf13/cobra"
 
-	cli "github.com/onflow/flow-cli/flow"
-	"github.com/onflow/flow-cli/flow/config"
+	"github.com/onflow/flow-cli/flow/cli"
 )
 
 type Flags struct {
@@ -49,13 +48,12 @@ var Cmd = &cobra.Command{
 	Use:   "create",
 	Short: "Create a new account",
 	Run: func(cmd *cobra.Command, args []string) {
-		config, err := config.Load("")
-		if err != nil {
-			cli.Exit(1, err.Error())
+		project := cli.LoadProject()
+		if project == nil {
 			return
 		}
 
-		signerAccount := config.Accounts.GetByName(flags.Signer)
+		signerAccount := project.GetAccountByName(flags.Signer)
 
 		accountKeys := make([]*flow.AccountKey, len(flags.Keys))
 
@@ -99,9 +97,9 @@ var Cmd = &cobra.Command{
 			)
 		}
 
-		tx := templates.CreateAccount(accountKeys, contracts, signerAccount.Address)
+		tx := templates.CreateAccount(accountKeys, contracts, signerAccount.Address())
 
-		cli.SendTransaction(config.HostWithOverride(flags.Host), signerAccount, tx, flags.Results)
+		cli.SendTransaction(project.HostWithOverride(flags.Host), signerAccount, tx, flags.Results)
 	},
 }
 
