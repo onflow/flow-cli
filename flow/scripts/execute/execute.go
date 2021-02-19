@@ -22,17 +22,16 @@ import (
 	"io/ioutil"
 	"log"
 
+	"github.com/onflow/flow-cli/flow/cli"
 	"github.com/psiemens/sconfig"
 	"github.com/spf13/cobra"
-
-	cli "github.com/onflow/flow-cli/flow"
 )
 
-type Config struct {
+type Flags struct {
 	Host string `flag:"host" info:"Flow Access API host address"`
 }
 
-var conf Config
+var flags Flags
 
 var Cmd = &cobra.Command{
 	Use:   "execute <script.cdc>",
@@ -43,11 +42,13 @@ var Cmd = &cobra.Command{
 		if err != nil {
 			cli.Exitf(1, "Failed to read script from %s", args[0])
 		}
-		projectConf := new(cli.Config)
-		if conf.Host == "" {
-			projectConf = cli.LoadConfig()
+
+		project := cli.LoadProject()
+		if project == nil {
+			return
 		}
-		cli.ExecuteScript(projectConf.HostWithOverride(conf.Host), code)
+
+		cli.ExecuteScript(project.HostWithOverride(flags.Host), code)
 	},
 }
 
@@ -56,7 +57,7 @@ func init() {
 }
 
 func initConfig() {
-	err := sconfig.New(&conf).
+	err := sconfig.New(&flags).
 		FromEnvironment(cli.EnvPrefix).
 		BindFlags(Cmd.PersistentFlags()).
 		Parse()
