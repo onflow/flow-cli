@@ -27,7 +27,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/flow/cli"
-	"github.com/onflow/flow-cli/flow/config"
 )
 
 type Flags struct {
@@ -56,10 +55,10 @@ var Cmd = &cobra.Command{
 			cli.Exitf(1, "Failed to read contract from source file %s", contractFilename)
 		}
 
-		signerAccount := config.Accounts.GetByName(flags.Signer)
+		signerAccount := project.GetAccountByName(flags.Signer)
 
 		tx := templates.UpdateAccountContract(
-			signerAccount.Address,
+			signerAccount.Address(),
 			templates.Contract{
 				Name:   contractName,
 				Source: string(contractSource),
@@ -67,7 +66,7 @@ var Cmd = &cobra.Command{
 		)
 
 		cli.SendTransaction(
-			config.HostWithOverride(flags.Host),
+			project.HostWithOverride(flags.Host),
 			signerAccount,
 			tx,
 			flags.Results,
