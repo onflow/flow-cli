@@ -25,17 +25,17 @@ import (
 )
 
 type Config struct {
-	Emulators Emulators
-	Contracts Contracts
-	Networks  Networks
-	Accounts  Accounts
-	Deploys   Deploys
+	Emulators   Emulators
+	Contracts   Contracts
+	Networks    Networks
+	Accounts    Accounts
+	Deployments Deployments
 }
 
 type Contracts []Contract
 type Networks []Network
 type Accounts []Account
-type Deploys []Deploy
+type Deployments []Deploy
 type Emulators []Emulator
 
 // Network config sets host and chain id
@@ -146,15 +146,15 @@ func (a *Accounts) GetByAddress(address string) Account {
 	}).([]Account)[0]
 }
 
-// GetByNetwork get all deploys by network
-func (d *Deploys) GetByNetwork(network string) Deploys {
+// GetByNetwork get all deployments by network
+func (d *Deployments) GetByNetwork(network string) Deployments {
 	return funk.Filter([]Deploy(*d), func(d Deploy) bool {
 		return d.Network == network
 	}).([]Deploy)
 }
 
 // GetByAccountAndNetwork get deploy by account and network
-func (d *Deploys) GetByAccountAndNetwork(account string, network string) []Deploy {
+func (d *Deployments) GetByAccountAndNetwork(account string, network string) []Deploy {
 	return funk.Filter([]Deploy(*d), func(d Deploy) bool {
 		return d.Account == account && d.Network == network
 	}).([]Deploy)

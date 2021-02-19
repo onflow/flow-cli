@@ -62,7 +62,7 @@ func generateComplexProject() Project {
 			Source:  "0x123123123",
 			Network: "testnet",
 		}},
-		Deploys: config.Deploys{{
+		Deployments: config.Deployments{{
 			Network:   "emulator",
 			Account:   "emulator-account",
 			Contracts: []string{"KittyItems", "KittyItemsMarket"},
@@ -142,7 +142,7 @@ func generateSimpleProject() Project {
 			Source:  "../hungry-kitties/cadence/contracts/NonFungibleToken.cdc",
 			Network: "emulator",
 		}},
-		Deploys: config.Deploys{{
+		Deployments: config.Deployments{{
 			Network:   "emulator",
 			Account:   "emulator-account",
 			Contracts: []string{"NonFungibleToken"},
@@ -253,7 +253,7 @@ func generateAliasesComplexProject() Project {
 			Network: "emulator",
 			Alias:   "ee82856bf20e2aa6",
 		}},
-		Deploys: config.Deploys{{
+		Deployments: config.Deployments{{
 			Network:   "emulator",
 			Account:   "emulator-account",
 			Contracts: []string{"NonFungibleToken"},
