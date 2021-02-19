@@ -19,7 +19,6 @@
 package cli
 
 import (
-	"errors"
 	"path"
 	"strings"
 
@@ -40,22 +39,14 @@ type Project struct {
 }
 
 func LoadProject() *Project {
-	conf, err := json.Load()
+	// TODO: dont have direct json loading here
+	config, err := json.Load(DefaultConfigPath)
 	if err != nil {
-		// TODO: removed default path - check if that is ok
-		if errors.Is(err, json.ErrDoesNotExist) {
-			Exitf(
-				1,
-				"Project config file %s does not exist. Please initialize first\n", " ",
-			)
-		}
-
-		Exitf(1, "Failed to open project configuration in %s")
-
+		Exitf(1, "Invalid project configuration: %s", err)
 		return nil
 	}
 
-	proj, err := newProject(conf)
+	proj, err := newProject(config)
 	if err != nil {
 		// TODO: replace with a more detailed error message
 		Exitf(1, "Invalid project configuration: %s", err)
@@ -154,7 +145,7 @@ func (p *Project) HostWithOverride(host string) string {
 		return host
 	}
 	// TODO fix this to support different networks (global flag)
-	return p.conf.Networks.GetByName(DefaultEmulatorConfigName).Host
+	return p.conf.Networks.GetByName(config.DefaultEmulatorConfigName).Host
 }
 
 func (p *Project) Host(network string) string {
@@ -202,6 +193,10 @@ func (p *Project) GetAccountByName(name string) *Account {
 	return funk.Filter(p.accounts, func(a *Account) bool {
 		return a.name == name
 	}).([]*Account)[0]
+}
+
+func (p *Project) AddAccountByName(name string, account *Account) {
+
 }
 
 func (p *Project) GetAccountByAddress(address string) *Account {
