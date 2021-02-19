@@ -4,7 +4,7 @@ sidebar_title: Add Project Contracts
 description: How to define the Cadence contracts for Flow project
 ---
 
-⚠️ _Warning: CLI projects are an experimental feature._
+⚠️ _Warning: CLI projects are an experimental feature. Functionality is subject to change._
 
 ## Add a Contract
 
@@ -26,9 +26,9 @@ contract `Foo` from the `FooContract.cdc` file.
 
 ## Define Contract Deployment Targets
 
-Once a contract is registered, it can then be assigned to one or more deployment targets.
+Once a contract is added, it can then be assigned to one or more deployment targets.
 
-A deployment target is an account at which the contract will be deployed.
+A deployment target is an account to which the contract will be deployed.
 In a typical project, a contract has one deployment target per network (e.g. Emulator, Testnet, Mainnet).
 
 Deployment targets are defined in the `"deploy"` section of your `flow.json` file.
