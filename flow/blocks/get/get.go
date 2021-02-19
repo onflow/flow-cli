@@ -22,11 +22,10 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/onflow/flow-cli/flow/cli"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/psiemens/sconfig"
 	"github.com/spf13/cobra"
-
-	cli "github.com/onflow/flow-cli/flow"
 )
 
 type Flags struct {
