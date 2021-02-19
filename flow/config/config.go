@@ -19,7 +19,6 @@
 package config
 
 import (
-	"github.com/onflow/flow-cli/flow/config/json"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/thoas/go-funk"
@@ -100,16 +99,6 @@ const (
 // IsAlias checks if contract has an alias
 func (c *Contract) IsAlias() bool {
 	return c.Alias != ""
-}
-
-func Load(path string) (*Config, error) {
-	// TODO: support different formats and versions
-	conf, err := json.Load(path)
-	if err != nil {
-		return nil, err
-	}
-
-	return *conf, nil
 }
 
 // GetByNameAndNetwork get contract array for account and network

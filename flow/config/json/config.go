@@ -79,8 +79,8 @@ var ErrDoesNotExist = errors.New("project config file does not exist")
 // TODO: allow path to change
 const DefaultConfigPath = "flow.json"
 
-func Load() (*config.Config, error) {
-	f, err := os.Open(DefaultConfigPath)
+func Load(path string) (*config.Config, error) {
+	f, err := os.Open(path)
 	if err != nil {
 		if os.IsNotExist(err) {
 			return nil, ErrDoesNotExist
