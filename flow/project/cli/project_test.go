@@ -193,7 +193,7 @@ func generateAliasesProject() Project {
 			Network: "emulator",
 			Alias:   "ee82856bf20e2aa6",
 		}},
-		Deploys: config.Deploys{{
+		Deployments: config.Deployments{{
 			Network:   "emulator",
 			Account:   "emulator-account",
 			Contracts: []string{"NonFungibleToken"},
