@@ -31,7 +31,7 @@ Once a contract is added, it can then be assigned to one or more deployment targ
 A deployment target is an account to which the contract will be deployed.
 In a typical project, a contract has one deployment target per network (e.g. Emulator, Testnet, Mainnet).
 
-Deployment targets are defined in the `"deploy"` section of your `flow.json` file.
+Deployment targets are defined in the `"deployments"` section of your `flow.json` file.
 
 Targets are grouped by network, where each network is a mapping from target account to contract list. 
 Multiple contracts can be deployed to the same target account.

@@ -37,7 +37,7 @@ In the example above, your `flow.json` file might look something like this:
     "Foo": "./cadence/contracts/FooContract.cdc",
     "Bar": "./cadence/contracts/BarContract.cdc"
   },
-  "deploy": {
+  "deployments": {
     "testnet": {
       "my-testnet-account": ["Foo", "Bar"]
     }
