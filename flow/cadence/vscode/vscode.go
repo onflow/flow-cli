@@ -19,14 +19,13 @@
 package vscode
 
 import (
-    "fmt"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"os/exec"
 
+	"github.com/onflow/flow-cli/flow/cli"
 	"github.com/spf13/cobra"
-
-	cli "github.com/onflow/flow-cli/flow"
 )
 
 const cadenceExt = "cadence.vsix"
