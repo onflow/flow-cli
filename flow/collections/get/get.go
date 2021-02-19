@@ -22,11 +22,10 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/onflow/flow-cli/flow/cli"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/psiemens/sconfig"
 	"github.com/spf13/cobra"
-
-	cli "github.com/onflow/flow-cli/flow"
 )
 
 type Config struct {
@@ -40,12 +39,13 @@ var Cmd = &cobra.Command{
 	Short: "Get collection info",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		projectConf := new(cli.Config)
-		if conf.Host == "" {
-			projectConf = cli.LoadConfig()
+		project := cli.LoadProject()
+		if project == nil {
+			return
 		}
+
 		collectionID := flow.HexToID(args[0])
-		collection := cli.GetCollectionByID(projectConf.HostWithOverride(conf.Host), collectionID)
+		collection := cli.GetCollectionByID(project.HostWithOverride(conf.Host), collectionID)
 		printCollection(collection)
 	},
 }
