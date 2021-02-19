@@ -26,10 +26,10 @@ import (
 	"github.com/psiemens/sconfig"
 	"github.com/spf13/cobra"
 
-	cli "github.com/onflow/flow-cli/flow"
+	"github.com/onflow/flow-cli/flow/cli"
 )
 
-type Config struct {
+type Flags struct {
 	Name       string `flag:"name" info:"name of the key"`
 	Address    string `flag:"address" info:"flow address of the account"`
 	SigAlgo    string `flag:"sigalgo" info:"signature algorithm for the key"`
@@ -39,46 +39,47 @@ type Config struct {
 	Overwrite  bool   `flag:"overwrite" info:"bool indicating if we should overwrite an existing config with the same name in the config file"`
 }
 
-var conf Config
+var flags Flags
 
 var Cmd = &cobra.Command{
 	Use:     "kms",
 	Short:   "Save a KMS key to the config file",
 	Example: "flow keys save kms --name test --address 8c5303eaa26202d6 --sigalgo ECDSA_secp256k1 --hashalgo SHA2_256 --index 0 --context 'KMS_RESOURCE_ID'",
 	Run: func(cmd *cobra.Command, args []string) {
-		projectConf := cli.LoadConfig()
-
-		_, accountExists := projectConf.Accounts[conf.Name]
-		if accountExists && !conf.Overwrite {
-			cli.Exitf(1, "%s already exists in the config, and overwrite is false", conf.Name)
+		project := cli.LoadProject()
+		if project == nil {
+			return
 		}
 
-		keyContext, err := cli.KeyContextFromKMSResourceID(conf.KeyContext)
+		//accountExists := project.GetAccountByName(flags.Name) // TODO: check if exists
+		if /*accountExists &&*/ !flags.Overwrite {
+			cli.Exitf(1, "%s already exists in the config, and overwrite is false", flags.Name)
+		}
+
+		keyContext, err := cli.KeyContextFromKMSResourceID(flags.KeyContext)
 		if err != nil {
-			cli.Exitf(1, "key context could not be parsed %s", conf.KeyContext)
+			cli.Exitf(1, "key context could not be parsed %s", flags.KeyContext)
 		}
+
 		// Populate account
 		account := &cli.Account{
-			KeyType:    cli.KeyTypeKMS,
-			Address:    flow.HexToAddress(conf.Address),
-			SigAlgo:    crypto.StringToSignatureAlgorithm(conf.SigAlgo),
-			HashAlgo:   crypto.StringToHashAlgorithm(conf.HashAlgo),
-			KeyIndex:   conf.KeyIndex,
+			KeyType:    config.KeyTypeKMS,
+			Address:    flow.HexToAddress(flags.Address),
+			SigAlgo:    crypto.StringToSignatureAlgorithm(flags.SigAlgo),
+			HashAlgo:   crypto.StringToHashAlgorithm(flags.HashAlgo),
+			KeyIndex:   flags.KeyIndex,
 			KeyContext: keyContext,
 		}
 
 		// Validate account
 		err = account.LoadSigner()
 		if err != nil {
-			cli.Exitf(1, "provide key context could not be loaded as a valid signer %s", conf.KeyContext)
+			cli.Exitf(1, "provide key context could not be loaded as a valid signer %s", flags.KeyContext)
 		}
 
-		projectConf.Accounts[conf.Name] = account
-		err = cli.SaveConfig(projectConf)
-		if err != nil {
-			cli.Exitf(1, "could not save config file %s", cli.ConfigPath)
-		}
+		project.AddAccountByName(flags.Name, account)
 
+		project.Save() // TODO: handle error
 	},
 }
 

@@ -22,12 +22,11 @@ import (
 	"encoding/hex"
 	"log"
 
+	"github.com/onflow/flow-cli/flow/cli"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/psiemens/sconfig"
 	"github.com/spf13/cobra"
-
-	cli "github.com/onflow/flow-cli/flow"
 )
 
 type Config struct {
@@ -47,13 +46,16 @@ var Cmd = &cobra.Command{
 	Short:   "Save a hex key to the config file",
 	Example: "flow keys save hex --name test --address 8c5303eaa26202d6 --sigalgo ECDSA_secp256k1 --hashalgo SHA2_256 --index 0 --privatekey <HEX_PRIVATEKEY>",
 	Run: func(cmd *cobra.Command, args []string) {
-		projectConf := cli.LoadConfig()
+		project := project.LoadProject()
+		if project == nil {
+			return
+		}
 
 		if conf.Name == "" {
 			cli.Exitf(1, "missing name")
 		}
 
-		_, accountExists := projectConf.Accounts[conf.Name]
+		_, accountExists := project.GetAccountByName(conf.Name)
 		if accountExists && !conf.Overwrite {
 			cli.Exitf(1, "%s already exists in the config, and overwrite is false", conf.Name)
 		}
@@ -108,13 +110,8 @@ var Cmd = &cobra.Command{
 			cli.Exitf(1, "provide key could not be loaded as a valid signer %s", conf.KeyHex)
 		}
 
-		projectConf.Accounts[conf.Name] = account
-
-		err = cli.SaveConfig(projectConf)
-		if err != nil {
-			cli.Exitf(1, "could not save config file %s", cli.ConfigPath)
-		}
-
+		project.AddAccountByName(conf.Name, account)
+		project.Save() // TODO: handle error
 	},
 }
 
