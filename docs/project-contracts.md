@@ -44,7 +44,7 @@ For example, here's how we'd deploy contracts `Foo` and `Bar` to the account `my
     "Foo": "./cadence/contracts/FooContract.cdc",
     "Bar": "./cadence/contracts/BarContract.cdc"
   },
-  "deploy": {
+  "deployments": {
     "testnet": {
       "my-testnet-account": ["Foo", "Bar"]
     }
