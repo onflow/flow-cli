@@ -4,7 +4,7 @@ sidebar_title: Deploy a Project
 description: How to deploy Flow project contracts with the CLI
 ---
 
-⚠️ _Warning: CLI projects are an experimental feature._
+⚠️ _Warning: CLI projects are an experimental feature. Functionality is subject to change._
 
 ```shell
 flow project deploy
@@ -20,7 +20,7 @@ Before using this command, read about how to
 
 ```shell
 # Deploy project contracts to all Testnet targets
-> flow project deploy-contracts testnet
+> flow project deploy --network=testnet
 
 NonFungibleToken -> 0xf8d6e0586b0a20c7
 FungibleToken -> 0xf8d6e0586b0a20c7
@@ -65,7 +65,7 @@ pub contract Bar {
 
 The `deploy` command attempts to resolve the import statements in all contracts being deployed.
 
-After the dependencies are found, the CLI will deploy the contracts in a deterministic ordering
+After the dependencies are found, the CLI will deploy the contracts in a deterministic order
 such that no contract is deployed until all of its dependencies are deployed.
 The command will return an error if no such ordering exists due to one or more cyclic dependencies.
 
@@ -74,7 +74,8 @@ In the example above, `Foo` will always be deployed before `Bar`.
 ## Address Replacement
 
 After resolving all dependencies, the `deploy` command rewrites each contract so 
-that its dependencies are imported from their _target addresses_ rather than their source files.
+that its dependencies are imported from their _target addresses_ rather than their 
+source file location.
 
 The rewritten versions are then deployed to their respective targets,
 leaving the original contract files unchanged.

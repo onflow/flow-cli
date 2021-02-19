@@ -4,7 +4,7 @@ sidebar_title: Initialize a Project
 description: How to initialize a new Flow project with the CLI
 ---
 
-⚠️ _Warning: CLI projects are an experimental feature._
+⚠️ _Warning: CLI projects are an experimental feature. Functionality is subject to change._
 
 ```shell
 flow project init
