@@ -22,10 +22,10 @@ package main
 import (
 	"github.com/spf13/cobra"
 
-	cli "github.com/onflow/flow-cli/flow"
 	"github.com/onflow/flow-cli/flow/accounts"
 	"github.com/onflow/flow-cli/flow/blocks"
 	"github.com/onflow/flow-cli/flow/cadence"
+	"github.com/onflow/flow-cli/flow/cli"
 	"github.com/onflow/flow-cli/flow/collections"
 	"github.com/onflow/flow-cli/flow/emulator"
 	"github.com/onflow/flow-cli/flow/initialize"
