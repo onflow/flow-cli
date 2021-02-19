@@ -29,30 +29,30 @@ import (
 )
 
 type jsonConfig struct {
-	Emulators jsonEmulators `json:"emulators"`
-	Contracts jsonContracts `json:"contracts"`
-	Networks  jsonNetworks  `json:"networks"`
-	Accounts  jsonAccounts  `json:"accounts"`
-	Deploys   jsonDeploys   `json:"deploys"`
+	Emulators   jsonEmulators   `json:"emulators"`
+	Contracts   jsonContracts   `json:"contracts"`
+	Networks    jsonNetworks    `json:"networks"`
+	Accounts    jsonAccounts    `json:"accounts"`
+	Deployments jsonDeployments `json:"deployments"`
 }
 
 func (j jsonConfig) transformToConfig() *config.Config {
 	return &config.Config{
-		Emulators: j.Emulators.transformToConfig(),
-		Contracts: j.Contracts.transformToConfig(),
-		Networks:  j.Networks.transformToConfig(),
-		Accounts:  j.Accounts.transformToConfig(),
-		Deploys:   j.Deploys.transformToConfig(),
+		Emulators:   j.Emulators.transformToConfig(),
+		Contracts:   j.Contracts.transformToConfig(),
+		Networks:    j.Networks.transformToConfig(),
+		Accounts:    j.Accounts.transformToConfig(),
+		Deployments: j.Deployments.transformToConfig(),
 	}
 }
 
 func transformConfigToJSON(config *config.Config) jsonConfig {
 	return jsonConfig{
-		Emulators: transformEmulatorsToJSON(config.Emulators),
-		Contracts: transformContractsToJSON(config.Contracts),
-		Networks:  transformNetworksToJSON(config.Networks),
-		Accounts:  transformAccountsToJSON(config.Accounts),
-		Deploys:   transformDeploysToJSON(config.Deploys),
+		Emulators:   transformEmulatorsToJSON(config.Emulators),
+		Contracts:   transformContractsToJSON(config.Contracts),
+		Networks:    transformNetworksToJSON(config.Networks),
+		Accounts:    transformAccountsToJSON(config.Accounts),
+		Deployments: transformDeploymentsToJSON(config.Deployments),
 	}
 }
 

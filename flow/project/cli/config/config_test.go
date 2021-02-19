@@ -57,7 +57,7 @@ func generateComplexConfig() Config {
 			Source:  "0x123123123",
 			Network: "testnet",
 		}},
-		Deploys: Deploys{{
+		Deployments: Deployments{{
 			Network:   "emulator",
 			Account:   "emulator-account",
 			Contracts: []string{"KittyItems", "KittyItemsMarket"},
@@ -162,11 +162,11 @@ func Test_GetAccountByAddressComplex(t *testing.T) {
 	assert.Equal(t, acc2.Name, "account-2")
 }
 
-func Test_GetDeploysByNetworkComplex(t *testing.T) {
+func Test_GetDeploymentsByNetworkComplex(t *testing.T) {
 	conf := generateComplexConfig()
-	deploys := conf.Deploys.GetByAccountAndNetwork("account-2", "testnet")
+	deployments := conf.Deployments.GetByAccountAndNetwork("account-2", "testnet")
 
-	assert.Equal(t, deploys[0].Contracts, []string{"FungibleToken", "NonFungibleToken", "Kibble", "KittyItems"})
+	assert.Equal(t, deployments[0].Contracts, []string{"FungibleToken", "NonFungibleToken", "Kibble", "KittyItems"})
 }
 
 func Test_GetNetworkByNameComplex(t *testing.T) {

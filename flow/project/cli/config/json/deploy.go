@@ -24,11 +24,11 @@ import (
 	"github.com/onflow/flow-cli/flow/project/cli/config"
 )
 
-type jsonDeploys map[string]jsonDeploy
+type jsonDeployments map[string]jsonDeploy
 
 // transformToConfig transforms json structures to config structure
-func (j jsonDeploys) transformToConfig() config.Deploys {
-	deploys := make(config.Deploys, 0)
+func (j jsonDeployments) transformToConfig() config.Deployments {
+	deployments := make(config.Deployments, 0)
 
 	for networkName, d := range j {
 		for accountName, contracts := range d.Simple {
@@ -38,22 +38,22 @@ func (j jsonDeploys) transformToConfig() config.Deploys {
 				Contracts: contracts,
 			}
 
-			deploys = append(deploys, deploy)
+			deployments = append(deployments, deploy)
 		}
 	}
 
-	return deploys
+	return deployments
 }
 
 // transformToJSON transforms config structure to json structures for saving
-func transformDeploysToJSON(deploys config.Deploys) jsonDeploys {
-	jsonDeploys := jsonDeploys{}
+func transformDeploymentsToJSON(deployments config.Deployments) jsonDeployments {
+	jsonDeployments := jsonDeployments{}
 
-	for _, d := range deploys {
-		if _, exists := jsonDeploys[d.Network]; exists {
-			jsonDeploys[d.Network].Simple[d.Account] = d.Contracts
+	for _, d := range deployments {
+		if _, exists := jsonDeployments[d.Network]; exists {
+			jsonDeployments[d.Network].Simple[d.Account] = d.Contracts
 		} else {
-			jsonDeploys[d.Network] = jsonDeploy{
+			jsonDeployments[d.Network] = jsonDeploy{
 				Simple: map[string][]string{
 					d.Account: d.Contracts,
 				},
@@ -61,7 +61,7 @@ func transformDeploysToJSON(deploys config.Deploys) jsonDeploys {
 		}
 	}
 
-	return jsonDeploys
+	return jsonDeployments
 }
 
 type Simple map[string][]string
