@@ -19,14 +19,7 @@
 package initialize
 
 import (
-	"fmt"
-	"log"
-
-	"github.com/onflow/flow-go-sdk/crypto"
-	"github.com/psiemens/sconfig"
 	"github.com/spf13/cobra"
-
-	cli "github.com/onflow/flow-cli/flow"
 )
 
 type Config struct {
@@ -44,27 +37,29 @@ var Cmd = &cobra.Command{
 	Use:   "init",
 	Short: "Initialize a new account profile",
 	Run: func(cmd *cobra.Command, args []string) {
-		if !cli.ConfigExists() || conf.Reset {
-			var pconf *cli.Config
-			serviceKeySigAlgo := crypto.StringToSignatureAlgorithm(conf.ServiceKeySigAlgo)
-			serviceKeyHashAlgo := crypto.StringToHashAlgorithm(conf.ServiceKeyHashAlgo)
-			if len(conf.ServicePrivateKey) > 0 {
-				serviceKey := cli.MustDecodePrivateKeyHex(serviceKeySigAlgo, conf.ServicePrivateKey)
-				pconf = InitProjectWithServiceKey(serviceKey, serviceKeyHashAlgo)
-			} else {
-				pconf = InitProject(serviceKeySigAlgo, serviceKeyHashAlgo)
-			}
-			serviceAcct := pconf.ServiceAccount()
+		/*
+			if !cli.ConfigExists() || conf.Reset {
+				var pconf *cli.Config
+				serviceKeySigAlgo := crypto.StringToSignatureAlgorithm(conf.ServiceKeySigAlgo)
+				serviceKeyHashAlgo := crypto.StringToHashAlgorithm(conf.ServiceKeyHashAlgo)
+				if len(conf.ServicePrivateKey) > 0 {
+					serviceKey := cli.MustDecodePrivateKeyHex(serviceKeySigAlgo, conf.ServicePrivateKey)
+					pconf = InitProjectWithServiceKey(serviceKey, serviceKeyHashAlgo)
+				} else {
+					pconf = InitProject(serviceKeySigAlgo, serviceKeyHashAlgo)
+				}
+				serviceAcct := pconf.ServiceAccount()
 
-			fmt.Printf("⚙️   Flow client initialized with service account:\n\n")
-			fmt.Printf("👤  Address: 0x%x\n", serviceAcct.Address.Bytes())
-			fmt.Printf("ℹ️   Start the emulator with this service account by running: flow emulator start\n")
-		} else {
-			fmt.Printf("⚠️   Flow configuration file already exists! Begin by running: flow emulator start\n")
-		}
+				fmt.Printf("⚙️   Flow client initialized with service account:\n\n")
+				fmt.Printf("👤  Address: 0x%x\n", serviceAcct.Address.Bytes())
+				fmt.Printf("ℹ️   Start the emulator with this service account by running: flow emulator start\n")
+			} else {
+				fmt.Printf("⚠️   Flow configuration file already exists! Begin by running: flow emulator start\n")
+			}*/
 	},
 }
 
+/*
 // InitProject generates a new service key and saves project config.
 func InitProject(sigAlgo crypto.SignatureAlgorithm, hashAlgo crypto.HashAlgorithm) *cli.Config {
 	seed := cli.RandomSeed(crypto.MinSeedLength)
@@ -99,3 +94,4 @@ func initConfig() {
 		log.Fatal(err)
 	}
 }
+*/

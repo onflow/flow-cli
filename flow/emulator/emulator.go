@@ -19,15 +19,9 @@
 package emulator
 
 import (
-	"fmt"
-
 	emulator "github.com/onflow/flow-emulator"
-	"github.com/onflow/flow-emulator/cmd/emulator/start"
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/spf13/cobra"
-
-	cli "github.com/onflow/flow-cli/flow"
-	"github.com/onflow/flow-cli/flow/initialize"
 )
 
 var Cmd = &cobra.Command{
@@ -40,10 +34,6 @@ func configuredServiceKey(
 	init bool,
 	sigAlgo crypto.SignatureAlgorithm,
 	hashAlgo crypto.HashAlgorithm,
-) (
-	crypto.PrivateKey,
-	crypto.SignatureAlgorithm,
-	crypto.HashAlgorithm,
 ) {
 	if sigAlgo == crypto.UnknownSignatureAlgorithm {
 		sigAlgo = emulator.DefaultServiceKeySigAlgo
@@ -53,21 +43,9 @@ func configuredServiceKey(
 		hashAlgo = emulator.DefaultServiceKeyHashAlgo
 	}
 
-	var serviceAcct *cli.Account
-
-	if init {
-		pconf := initialize.InitProject(sigAlgo, hashAlgo)
-		serviceAcct = pconf.ServiceAccount()
-
-		fmt.Printf("⚙️   Flow client initialized with service account:\n\n")
-		fmt.Printf("👤  Address: 0x%s\n", serviceAcct.Address)
-	} else {
-		serviceAcct = cli.LoadConfig().ServiceAccount()
-	}
-
-	return serviceAcct.PrivateKey, serviceAcct.SigAlgo, serviceAcct.HashAlgo
+	// TODO: start emulator from project
 }
 
 func init() {
-	Cmd.AddCommand(start.Cmd(configuredServiceKey))
+	//Cmd.AddCommand(start.Cmd(configuredServiceKey))
 }
