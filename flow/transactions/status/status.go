@@ -24,27 +24,28 @@ import (
 	"github.com/psiemens/sconfig"
 	"github.com/spf13/cobra"
 
-	cli "github.com/onflow/flow-cli/flow"
+	"github.com/onflow/flow-cli/flow/cli"
 )
 
-type Config struct {
+type Flags struct {
 	Host   string `flag:"host" info:"Flow Access API host address"`
 	Sealed bool   `default:"true" flag:"sealed" info:"Wait for a sealed result"`
 	Code   bool   `default:"false" flag:"code" info:"Display transaction code"`
 }
 
-var conf Config
+var flags Flags
 
 var Cmd = &cobra.Command{
 	Use:   "status <tx_id>",
 	Short: "Get the transaction status",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		projectConf := new(cli.Config)
-		if conf.Host == "" {
-			projectConf = cli.LoadConfig()
+		project := cli.LoadProject()
+		if project == nil {
+			return
 		}
-		cli.GetTransactionResult(projectConf.HostWithOverride(conf.Host), args[0], conf.Sealed, conf.Code)
+
+		cli.GetTransactionResult(project.HostWithOverride(flags.Host), args[0], flags.Sealed, flags.Code)
 	},
 }
 
@@ -53,7 +54,7 @@ func init() {
 }
 
 func initConfig() {
-	err := sconfig.New(&conf).
+	err := sconfig.New(&flags).
 		FromEnvironment(cli.EnvPrefix).
 		BindFlags(Cmd.PersistentFlags()).
 		Parse()

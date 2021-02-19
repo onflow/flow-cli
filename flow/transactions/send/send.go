@@ -21,49 +21,50 @@ package send
 import (
 	"io/ioutil"
 	"log"
-	"os"
 
+	"github.com/onflow/flow-cli/flow/cli"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/psiemens/sconfig"
 	"github.com/spf13/cobra"
-
-	cli "github.com/onflow/flow-cli/flow"
 )
 
-type Config struct {
+type Flags struct {
 	Signer  string `default:"service" flag:"signer,s"`
 	Code    string `flag:"code,c" info:"path to Cadence file"`
 	Host    string `flag:"host" info:"Flow Access API host address"`
 	Results bool   `default:"false" flag:"results" info:"Display the results of the transaction"`
 }
 
-var conf Config
+var flags Flags
 
 var Cmd = &cobra.Command{
 	Use:   "send",
 	Short: "Send a transaction",
 	Run: func(cmd *cobra.Command, args []string) {
-		projectConf := cli.LoadConfig()
+		project := cli.LoadProject()
+		if project == nil {
+			return
+		}
 
-		signerAccount := projectConf.Accounts[conf.Signer]
-		validateKeyPreReq(signerAccount)
+		signerAccount := project.GetAccountByName(flags.Signer)
+		//validateKeyPreReq(signerAccount)
 		var (
 			code []byte
 			err  error
 		)
 
-		if conf.Code != "" {
-			code, err = ioutil.ReadFile(conf.Code)
+		if flags.Code != "" {
+			code, err = ioutil.ReadFile(flags.Code)
 			if err != nil {
-				cli.Exitf(1, "Failed to read transaction script from %s", conf.Code)
+				cli.Exitf(1, "Failed to read transaction script from %s", flags.Code)
 			}
 		}
 
 		tx := flow.NewTransaction().
 			SetScript(code).
-			AddAuthorizer(signerAccount.Address)
+			AddAuthorizer(signerAccount.Address())
 
-		cli.SendTransaction(projectConf.HostWithOverride(conf.Host), signerAccount, tx, conf.Results)
+		cli.SendTransaction(project.HostWithOverride(flags.Host), signerAccount, tx, flags.Results)
 	},
 }
 
@@ -72,7 +73,7 @@ func init() {
 }
 
 func initConfig() {
-	err := sconfig.New(&conf).
+	err := sconfig.New(&flags).
 		FromEnvironment(cli.EnvPrefix).
 		BindFlags(Cmd.PersistentFlags()).
 		Parse()
@@ -81,6 +82,8 @@ func initConfig() {
 	}
 }
 
+// TODO:
+/*
 func validateKeyPreReq(account *cli.Account) {
 	if account.KeyType == cli.KeyTypeHex {
 		// Always Valid
@@ -99,3 +102,4 @@ func validateKeyPreReq(account *cli.Account) {
 	cli.Exitf(1, "Failed to validate %s key for %s", account.KeyType, account.Address)
 
 }
+*/
