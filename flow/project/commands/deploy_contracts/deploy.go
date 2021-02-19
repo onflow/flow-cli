@@ -31,8 +31,8 @@ import (
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 
-	"github.com/onflow/flow-cli/flow/project/cli"
-	"github.com/onflow/flow-cli/flow/project/cli/txsender"
+	"github.com/onflow/flow-cli/flow/cli"
+	"github.com/onflow/flow-cli/flow/cli/txsender"
 	"github.com/onflow/flow-cli/flow/project/contracts"
 )
 

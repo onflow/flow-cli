@@ -23,8 +23,8 @@ import (
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/spf13/cobra"
 
+	"github.com/onflow/flow-cli/flow/cli"
 	"github.com/onflow/flow-cli/flow/config"
-	"github.com/onflow/flow-cli/flow/project/cli"
 )
 
 var Cmd *cobra.Command
