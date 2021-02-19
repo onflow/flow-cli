@@ -165,8 +165,8 @@ func (p *Project) EmulatorServiceAccount() config.Account {
 func (p *Project) GetContractsByNetwork(network string) []Contract {
 	contracts := make([]Contract, 0)
 
-	// get deploys for specific network
-	for _, deploy := range p.conf.Deploys.GetByNetwork(network) {
+	// get deployments for specific network
+	for _, deploy := range p.conf.Deployments.GetByNetwork(network) {
 		account := p.GetAccountByName(deploy.Account)
 
 		// go through each contract for this deploy
