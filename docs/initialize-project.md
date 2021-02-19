@@ -68,7 +68,7 @@ We'll walk through each property one by one.
     }
   },
 
-  "deploy": {
+  "deployments": {
     "testnet": {
       "admin-account": ["NonFungibleToken"],
       "user-account": ["Kibble", "KittyItems", "KittyItemsMarket"]
