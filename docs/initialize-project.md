@@ -57,7 +57,7 @@ We'll walk through each property one by one.
 {
   "contracts": {
     "NonFungibleToken": "./cadence/contracts/NonFungibleToken.cdc",
-    "Kibble": "./cadence/kibble/contracts/Kibble.cdc",
+    "Kibble": "./cadence/contracts/Kibble.cdc",
     "KittyItems": "./cadence/contracts/KittyItems.cdc",
     "KittyItemsMarket": "./cadence/contracts/KittyItemsMarket.cdc",
     "FungibleToken": {
