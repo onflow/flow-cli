@@ -90,6 +90,7 @@ const (
 	KeyTypeHex       KeyType = "hex"        // Hex private key with in memory signer
 	KeyTypeGoogleKMS KeyType = "google-kms" // Google KMS signer
 	KeyTypeShell     KeyType = "shell"      // Exec out to a shell script
+	KeyTypeKMS       KeyType = "kms"        // TODO: check what is difference to google-kms
 )
 
 const (

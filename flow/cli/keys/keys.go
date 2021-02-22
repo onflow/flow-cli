@@ -21,6 +21,7 @@ package keys
 import (
 	"encoding/hex"
 	"fmt"
+	"regexp"
 
 	"github.com/onflow/flow-cli/flow/config"
 	"github.com/onflow/flow-go-sdk/crypto"
@@ -83,6 +84,20 @@ type HexAccountKey struct {
 
 const privateKeyField = "privateKey"
 
+var resourceRegexp = regexp.MustCompile(`projects/(?P<projectId>[^/]*)/locations/(?P<location>[^/]*)/keyRings/(?P<keyringId>[^/]*)/cryptoKeys/(?P<keyId>[^/]*)/cryptoKeyVersions/(?P<keyVersion>[^/]*)`)
+
+func KeyContextFromKMSResourceID(resourceID string) (map[string]string, error) {
+	match := resourceRegexp.FindStringSubmatch(resourceID)
+	keyContext := make(map[string]string)
+	for i, name := range resourceRegexp.SubexpNames() {
+		if i != 0 && name != "" {
+			keyContext[name] = match[i]
+		}
+	}
+
+	return keyContext, nil
+}
+
 func NewHexAccountKeyFromPrivateKey(
 	index int,
 	hashAlgo crypto.HashAlgorithm,
@@ -127,7 +142,7 @@ func (a *HexAccountKey) ToConfig() config.AccountKey {
 		SigAlgo:  a.sigAlgo,
 		HashAlgo: a.hashAlgo,
 		Context: map[string]string{
-			"privateKey": a.PrivateKeyHex(),
+			"privateKey": a.PrivateKeyHex(), // TODO: replace string with privateKeyField var
 		},
 	}
 }

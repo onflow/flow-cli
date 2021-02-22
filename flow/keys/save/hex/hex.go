@@ -113,6 +113,14 @@ var Cmd = &cobra.Command{
 			},
 		)
 
+		/* TODO: discuss how this changed
+		// Validate account
+		err = account.LoadSigner()
+		if err != nil {
+			cli.Exitf(1, "provide key could not be loaded as a valid signer %s", conf.KeyHex)
+		}
+		*/
+
 		project.AddAccount(account)
 		project.Save()
 	},

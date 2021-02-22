@@ -25,6 +25,10 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/flow/cli"
+	"github.com/onflow/flow-cli/flow/cli/keys"
+	"github.com/onflow/flow-cli/flow/config"
+	"github.com/onflow/flow-go-sdk"
+	"github.com/onflow/flow-go-sdk/crypto"
 )
 
 type Flags struct {
@@ -45,38 +49,50 @@ var Cmd = &cobra.Command{
 	Example: "flow keys save kms --name test --address 8c5303eaa26202d6 --sigalgo ECDSA_secp256k1 --hashalgo SHA2_256 --index 0 --context 'KMS_RESOURCE_ID'",
 	Run: func(cmd *cobra.Command, args []string) {
 		project := cli.LoadProject()
-		if project == nil {
-			return
-		}
+
 		/* TODO: implement
 		accountExists := project.GetAccountByName(flags.Name)
 		if accountExists && !flags.Overwrite {
 			cli.Exitf(1, "%s already exists in the config, and overwrite is false", flags.Name)
 		}
+		*/
 
-		keyContext, err := cli.KeyContextFromKMSResourceID(flags.KeyContext)
+		keyContext, err := keys.KeyContextFromKMSResourceID(flags.KeyContext)
 		if err != nil {
 			cli.Exitf(1, "key context could not be parsed %s", flags.KeyContext)
 		}
 
-		// Populate account
-		account := &cli.Account{
-			KeyType:    config.KeyTypeKMS,
-			Address:    flow.HexToAddress(flags.Address),
-			SigAlgo:    crypto.StringToSignatureAlgorithm(flags.SigAlgo),
-			HashAlgo:   crypto.StringToHashAlgorithm(flags.HashAlgo),
-			KeyIndex:   flags.KeyIndex,
-			KeyContext: keyContext,
+		address := flow.HexToAddress(flags.Address)
+		if !address.IsValid(flow.Emulator) { // TODO: don't hardcode this
+			cli.Exitf(1, "key address not valid")
 		}
 
+		keys := []config.AccountKey{{
+			Type:     config.KeyTypeKMS,
+			Index:    flags.KeyIndex,
+			SigAlgo:  crypto.StringToSignatureAlgorithm(flags.SigAlgo),
+			HashAlgo: crypto.StringToHashAlgorithm(flags.HashAlgo),
+			Context:  keyContext,
+		}}
+
+		account, err := cli.AccountFromConfig(
+			config.Account{
+				Name:    flags.Name,
+				Address: address,
+				ChainID: flow.Emulator, // TODO: don't hardcode this
+				Keys:    keys,
+			},
+		)
+
+		/* TODO: discuss how this changed
 		// Validate account
 		err = account.LoadSigner()
 		if err != nil {
 			cli.Exitf(1, "provide key context could not be loaded as a valid signer %s", flags.KeyContext)
 		}
-
-		project.AddAccountByName(flags.Name, account)
 		*/
+
+		project.AddAccount(account)
 		project.Save() // TODO: handle error
 	},
 }
