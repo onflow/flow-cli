@@ -145,7 +145,7 @@ func (p *Project) HostWithOverride(host string) string {
 		return host
 	}
 	// TODO fix this to support different networks (global flag)
-	return p.conf.Networks.GetByName(config.DefaultEmulatorConfigName).Host
+	return p.conf.Networks.GetByName(defaultEmulatorNetworkName).Host
 }
 
 func (p *Project) Host(network string) string {

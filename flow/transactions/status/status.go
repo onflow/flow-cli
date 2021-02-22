@@ -41,11 +41,10 @@ var Cmd = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		project := cli.LoadProject()
-		if project == nil {
-			return
-		}
 
-		cli.GetTransactionResult(project.HostWithOverride(flags.Host), args[0], flags.Sealed, flags.Code)
+		cli.GetTransactionResult(
+			project.HostWithOverride(flags.Host), args[0], flags.Sealed, flags.Code,
+		)
 	},
 }
 
