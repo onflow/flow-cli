@@ -31,7 +31,7 @@ import (
 	"github.com/onflow/flow-cli/flow/config/json"
 )
 
-const DefaultConfigPath = "flow.json"
+var DefaultConfigPath string = "flow.json"
 
 type Project struct {
 	conf     *config.Config

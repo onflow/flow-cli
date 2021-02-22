@@ -19,12 +19,9 @@
 package hex
 
 import (
-	"encoding/hex"
 	"log"
 
 	"github.com/onflow/flow-cli/flow/cli"
-	"github.com/onflow/flow-go-sdk"
-	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/psiemens/sconfig"
 	"github.com/spf13/cobra"
 )
@@ -46,7 +43,7 @@ var Cmd = &cobra.Command{
 	Short:   "Save a hex key to the config file",
 	Example: "flow keys save hex --name test --address 8c5303eaa26202d6 --sigalgo ECDSA_secp256k1 --hashalgo SHA2_256 --index 0 --privatekey <HEX_PRIVATEKEY>",
 	Run: func(cmd *cobra.Command, args []string) {
-		project := project.LoadProject()
+		project := cli.LoadProject()
 		if project == nil {
 			return
 		}
@@ -54,63 +51,84 @@ var Cmd = &cobra.Command{
 		if conf.Name == "" {
 			cli.Exitf(1, "missing name")
 		}
-
-		_, accountExists := project.GetAccountByName(conf.Name)
-		if accountExists && !conf.Overwrite {
-			cli.Exitf(1, "%s already exists in the config, and overwrite is false", conf.Name)
-		}
-
-		// Parse address
-		decodedAddress, err := hex.DecodeString(conf.Address)
-		if err != nil {
-			cli.Exitf(1, "invalid address: %s", err.Error())
-		}
-		address := flow.BytesToAddress(decodedAddress)
-
-		// Parse signature algorithm
-		if conf.SigAlgo == "" {
-			cli.Exitf(1, "missing signature algorithm")
-		}
-
-		algorithm := crypto.StringToSignatureAlgorithm(conf.SigAlgo)
-		if algorithm == crypto.UnknownSignatureAlgorithm {
-			cli.Exitf(1, "invalid signature algorithm")
-		}
-
-		// Parse hash algorithm
-
-		if conf.HashAlgo == "" {
-			cli.Exitf(1, "missing hash algorithm")
-		}
-
-		hashAlgorithm := crypto.StringToHashAlgorithm(conf.HashAlgo)
-		if hashAlgorithm == crypto.UnknownHashAlgorithm {
-			cli.Exitf(1, "invalid hash algorithm")
-		}
-
+		// TODO: implement
 		// Populate account
-		account := &cli.Account{
-			KeyType:    cli.KeyTypeHex,
-			Address:    address,
-			SigAlgo:    algorithm,
-			HashAlgo:   hashAlgorithm,
-			KeyIndex:   conf.KeyIndex,
-			KeyContext: map[string]string{"privateKey": conf.KeyHex},
-		}
-		privateKey, err := crypto.DecodePrivateKeyHex(account.SigAlgo, conf.KeyHex)
-		if err != nil {
-			cli.Exitf(1, "key hex could not be parsed")
-		}
+		/*
 
-		account.PrivateKey = privateKey
+			accountExists := project.GetAccountByName(conf.Name)
+			if accountExists && !conf.Overwrite {
+				cli.Exitf(1, "%s already exists in the config, and overwrite is false", conf.Name)
+			}
 
-		// Validate account
-		err = account.LoadSigner()
-		if err != nil {
-			cli.Exitf(1, "provide key could not be loaded as a valid signer %s", conf.KeyHex)
-		}
+			// Parse address
+			decodedAddress, err := hex.DecodeString(conf.Address)
+			if err != nil {
+				cli.Exitf(1, "invalid address: %s", err.Error())
+			}
+			address := flow.BytesToAddress(decodedAddress)
 
-		project.AddAccountByName(conf.Name, account)
+			// Parse signature algorithm
+			if conf.SigAlgo == "" {
+				cli.Exitf(1, "missing signature algorithm")
+			}
+
+			algorithm := crypto.StringToSignatureAlgorithm(conf.SigAlgo)
+			if algorithm == crypto.UnknownSignatureAlgorithm {
+				cli.Exitf(1, "invalid signature algorithm")
+			}
+
+			// Parse hash algorithm
+
+			if conf.HashAlgo == "" {
+				cli.Exitf(1, "missing hash algorithm")
+			}
+
+			hashAlgorithm := crypto.StringToHashAlgorithm(conf.HashAlgo)
+			if hashAlgorithm == crypto.UnknownHashAlgorithm {
+				cli.Exitf(1, "invalid hash algorithm")
+			}
+
+
+					account := &cli.Account{
+						KeyType:    cli.KeyTypeHex,
+						Address:    address,
+						SigAlgo:    algorithm,
+						HashAlgo:   hashAlgorithm,
+						KeyIndex:   conf.KeyIndex,
+						KeyContext: map[string]string{"privateKey": conf.KeyHex},
+					}
+					privateKey, err := crypto.DecodePrivateKeyHex(account.SigAlgo, conf.KeyHex)
+					if err != nil {
+						cli.Exitf(1, "key hex could not be parsed")
+					}
+
+					account.PrivateKey = privateKey
+
+					// Validate account
+					err = account.LoadSigner()
+					if err != nil {
+						cli.Exitf(1, "provide key could not be loaded as a valid signer %s", conf.KeyHex)
+					}
+
+					project.AddAccountByName(conf.Name, account)
+
+				accountKey := &config.AccountKey{
+					Type:     config.KeyTypeHex,
+					SigAlgo:  algorithm,
+					HashAlgo: hashAlgorithm,
+					Index:    conf.KeyIndex,
+					Context:  map[string]string{"privateKey": conf.KeyHex},
+				}
+
+				account := &config.Account{
+					Address: address,
+					Keys:    []config.AccountKey{*accountKey},
+				}
+
+				newKey, err := keys.NewAccountKey(*accountKey)
+				account.Keys[0] = newKey
+		*/
+
 		project.Save() // TODO: handle error
 	},
 }

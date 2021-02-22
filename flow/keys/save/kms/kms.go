@@ -21,8 +21,6 @@ package kms
 import (
 	"log"
 
-	"github.com/onflow/flow-go-sdk"
-	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/psiemens/sconfig"
 	"github.com/spf13/cobra"
 
@@ -50,9 +48,9 @@ var Cmd = &cobra.Command{
 		if project == nil {
 			return
 		}
-
-		//accountExists := project.GetAccountByName(flags.Name) // TODO: check if exists
-		if /*accountExists &&*/ !flags.Overwrite {
+		/* TODO: implement
+		accountExists := project.GetAccountByName(flags.Name)
+		if accountExists && !flags.Overwrite {
 			cli.Exitf(1, "%s already exists in the config, and overwrite is false", flags.Name)
 		}
 
@@ -78,7 +76,7 @@ var Cmd = &cobra.Command{
 		}
 
 		project.AddAccountByName(flags.Name, account)
-
+		*/
 		project.Save() // TODO: handle error
 	},
 }
@@ -88,7 +86,7 @@ func init() {
 }
 
 func initConfig() {
-	err := sconfig.New(&conf).
+	err := sconfig.New(&flags).
 		FromEnvironment(cli.EnvPrefix).
 		BindFlags(Cmd.PersistentFlags()).
 		Parse()
