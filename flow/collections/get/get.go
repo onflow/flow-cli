@@ -39,10 +39,7 @@ var Cmd = &cobra.Command{
 	Short: "Get collection info",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		project := cli.LoadProject()
-		if project == nil {
-			return
-		}
+		project := cli.LoadProject() // TODO: handle error
 
 		collectionID := flow.HexToID(args[0])
 		collection := cli.GetCollectionByID(project.HostWithOverride(conf.Host), collectionID)

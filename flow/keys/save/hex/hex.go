@@ -19,14 +19,18 @@
 package hex
 
 import (
+	"encoding/hex"
 	"log"
 
 	"github.com/onflow/flow-cli/flow/cli"
+	"github.com/onflow/flow-cli/flow/config"
+	"github.com/onflow/flow-go-sdk"
+	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/psiemens/sconfig"
 	"github.com/spf13/cobra"
 )
 
-type Config struct {
+type Flags struct {
 	Name      string `flag:"name" info:"name of the key"`
 	Address   string `flag:"address" info:"flow address of the account"`
 	SigAlgo   string `flag:"sigalgo" info:"signature algorithm for the key"`
@@ -36,7 +40,7 @@ type Config struct {
 	Overwrite bool   `flag:"overwrite" info:"bool indicating if we should overwrite an existing config with the same name in the config file"`
 }
 
-var conf Config
+var flags Flags
 
 var Cmd = &cobra.Command{
 	Use:     "hex",
@@ -48,88 +52,69 @@ var Cmd = &cobra.Command{
 			return
 		}
 
-		if conf.Name == "" {
+		if flags.Name == "" {
 			cli.Exitf(1, "missing name")
 		}
+
 		// TODO: implement
-		// Populate account
-		/*
+		//accountExists := project.GetAccountByName(flags.Name)
+		//if accountExists && !flags.Overwrite {
+		//	cli.Exitf(1, "%s already exists in the config, and overwrite is false", flags.Name)
+		//}
 
-			accountExists := project.GetAccountByName(conf.Name)
-			if accountExists && !conf.Overwrite {
-				cli.Exitf(1, "%s already exists in the config, and overwrite is false", conf.Name)
-			}
+		// Parse address
+		decodedAddress, err := hex.DecodeString(flags.Address)
+		if err != nil {
+			cli.Exitf(1, "invalid address: %s", err.Error())
+		}
+		address := flow.BytesToAddress(decodedAddress)
 
-			// Parse address
-			decodedAddress, err := hex.DecodeString(conf.Address)
-			if err != nil {
-				cli.Exitf(1, "invalid address: %s", err.Error())
-			}
-			address := flow.BytesToAddress(decodedAddress)
+		// Parse signature algorithm
+		if flags.SigAlgo == "" {
+			cli.Exitf(1, "missing signature algorithm")
+		}
 
-			// Parse signature algorithm
-			if conf.SigAlgo == "" {
-				cli.Exitf(1, "missing signature algorithm")
-			}
+		algorithm := crypto.StringToSignatureAlgorithm(flags.SigAlgo)
+		if algorithm == crypto.UnknownSignatureAlgorithm {
+			cli.Exitf(1, "invalid signature algorithm")
+		}
 
-			algorithm := crypto.StringToSignatureAlgorithm(conf.SigAlgo)
-			if algorithm == crypto.UnknownSignatureAlgorithm {
-				cli.Exitf(1, "invalid signature algorithm")
-			}
+		// Parse hash algorithm
+		if flags.HashAlgo == "" {
+			cli.Exitf(1, "missing hash algorithm")
+		}
 
-			// Parse hash algorithm
+		hashAlgorithm := crypto.StringToHashAlgorithm(flags.HashAlgo)
+		if hashAlgorithm == crypto.UnknownHashAlgorithm {
+			cli.Exitf(1, "invalid hash algorithm")
+		}
 
-			if conf.HashAlgo == "" {
-				cli.Exitf(1, "missing hash algorithm")
-			}
+		_, err = crypto.DecodePrivateKeyHex(algorithm, flags.KeyHex)
+		if err != nil {
+			cli.Exitf(1, "key hex could not be parsed")
+		}
 
-			hashAlgorithm := crypto.StringToHashAlgorithm(conf.HashAlgo)
-			if hashAlgorithm == crypto.UnknownHashAlgorithm {
-				cli.Exitf(1, "invalid hash algorithm")
-			}
+		keys := []config.AccountKey{{
+			Type:     config.KeyTypeHex,
+			Index:    flags.KeyIndex,
+			SigAlgo:  algorithm,
+			HashAlgo: hashAlgorithm,
+			Context: map[string]string{
+				"privateKey": flags.KeyHex,
+			},
+		}}
 
+		account, err := cli.AccountFromConfig(
+			config.Account{
+				Name:    flags.Name,
+				Address: address,
+				ChainID: flow.Emulator, // TODO: don't hardcode this
+				Keys:    keys,
+			},
+		)
 
-					account := &cli.Account{
-						KeyType:    cli.KeyTypeHex,
-						Address:    address,
-						SigAlgo:    algorithm,
-						HashAlgo:   hashAlgorithm,
-						KeyIndex:   conf.KeyIndex,
-						KeyContext: map[string]string{"privateKey": conf.KeyHex},
-					}
-					privateKey, err := crypto.DecodePrivateKeyHex(account.SigAlgo, conf.KeyHex)
-					if err != nil {
-						cli.Exitf(1, "key hex could not be parsed")
-					}
-
-					account.PrivateKey = privateKey
-
-					// Validate account
-					err = account.LoadSigner()
-					if err != nil {
-						cli.Exitf(1, "provide key could not be loaded as a valid signer %s", conf.KeyHex)
-					}
-
-					project.AddAccountByName(conf.Name, account)
-
-				accountKey := &config.AccountKey{
-					Type:     config.KeyTypeHex,
-					SigAlgo:  algorithm,
-					HashAlgo: hashAlgorithm,
-					Index:    conf.KeyIndex,
-					Context:  map[string]string{"privateKey": conf.KeyHex},
-				}
-
-				account := &config.Account{
-					Address: address,
-					Keys:    []config.AccountKey{*accountKey},
-				}
-
-				newKey, err := keys.NewAccountKey(*accountKey)
-				account.Keys[0] = newKey
-		*/
-
-		project.Save() // TODO: handle error
+		project.AddAccount(account)
+		project.Save()
 	},
 }
 
@@ -138,7 +123,7 @@ func init() {
 }
 
 func initConfig() {
-	err := sconfig.New(&conf).
+	err := sconfig.New(&flags).
 		FromEnvironment(cli.EnvPrefix).
 		BindFlags(Cmd.PersistentFlags()).
 		Parse()

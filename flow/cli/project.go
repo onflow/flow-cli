@@ -195,8 +195,8 @@ func (p *Project) GetAccountByName(name string) *Account {
 	}).([]*Account)[0]
 }
 
-func (p *Project) AddAccountByName(name string, account *Account) {
-
+func (p *Project) AddAccount(account *Account) {
+	p.accounts = append(p.accounts, account)
 }
 
 func (p *Project) GetAccountByAddress(address string) *Account {
@@ -252,7 +252,7 @@ func accountsFromConfig(conf *config.Config) ([]*Account, error) {
 	accounts := make([]*Account, 0, len(conf.Accounts))
 
 	for _, accountConf := range conf.Accounts {
-		account, err := accountFromConfig(accountConf)
+		account, err := AccountFromConfig(accountConf)
 		if err != nil {
 			return nil, err
 		}
@@ -263,7 +263,7 @@ func accountsFromConfig(conf *config.Config) ([]*Account, error) {
 	return accounts, nil
 }
 
-func accountFromConfig(accountConf config.Account) (*Account, error) {
+func AccountFromConfig(accountConf config.Account) (*Account, error) {
 	accountKeys := make([]keys.AccountKey, 0, len(accountConf.Keys))
 
 	for _, key := range accountConf.Keys {
