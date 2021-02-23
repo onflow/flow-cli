@@ -16,28 +16,24 @@
  * limitations under the License.
  */
 
-package accounts
+package project
 
 import (
 	"github.com/spf13/cobra"
 
-	add_contract "github.com/onflow/flow-cli/flow/accounts/add-contract"
-	"github.com/onflow/flow-cli/flow/accounts/create"
-	"github.com/onflow/flow-cli/flow/accounts/get"
-	staking_info "github.com/onflow/flow-cli/flow/accounts/staking-info"
-	update_contract "github.com/onflow/flow-cli/flow/accounts/update-contract"
+	"github.com/onflow/flow-cli/flow/project/commands/deploy_contracts"
+	"github.com/onflow/flow-cli/flow/project/commands/initialize"
+	"github.com/onflow/flow-cli/flow/project/commands/start_emulator"
 )
 
 var Cmd = &cobra.Command{
-	Use:              "accounts",
-	Short:            "Utilities to manage accounts",
+	Use:              "project",
+	Short:            "Manage your Cadence project",
 	TraverseChildren: true,
 }
 
 func init() {
-	Cmd.AddCommand(create.Cmd)
-	Cmd.AddCommand(get.Cmd)
-	Cmd.AddCommand(staking_info.Cmd)
-	Cmd.AddCommand(add_contract.Cmd)
-	Cmd.AddCommand(update_contract.Cmd)
+	Cmd.AddCommand(initialize.Cmd)
+	Cmd.AddCommand(start_emulator.Cmd)
+	Cmd.AddCommand(deploy_contracts.Cmd)
 }

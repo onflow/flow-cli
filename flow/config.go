@@ -252,7 +252,6 @@ func LoadConfig() *Config {
 		fmt.Printf("%s contains invalid json: %s\n", ConfigPath, err.Error())
 		os.Exit(1)
 	}
-	fmt.Println(conf.Host)
 
 	err = conf.LoadSigners()
 	if err != nil {

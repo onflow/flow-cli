@@ -20,6 +20,7 @@ package cli
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/client"
@@ -39,4 +40,18 @@ func GetAccount(host string, address flow.Address) *flow.Account {
 		Exitf(1, "Failed to get account with address %s: %s", address, err)
 	}
 	return account
+}
+
+func GetAddressNetwork(address flow.Address) (flow.ChainID, error) {
+	networks := []flow.ChainID{
+		flow.Mainnet,
+		flow.Testnet,
+		flow.Emulator,
+	}
+	for _, net := range networks {
+		if address.IsValid(net) {
+			return net, nil
+		}
+	}
+	return flow.ChainID(""), fmt.Errorf("Unrecognized address not valid for any known chain: %s", address)
 }
