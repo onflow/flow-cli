@@ -16,9 +16,10 @@
  * limitations under the License.
  */
 
-package send
+package sign
 
 import (
+	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
@@ -31,25 +32,30 @@ import (
 )
 
 type Config struct {
-	Signer  string `default:"service" flag:"signer,s"`
-	Code    string `flag:"code,c" info:"path to Cadence file"`
-	Host    string `flag:"host" info:"Flow Access API host address"`
-	Results bool   `default:"false" flag:"results" info:"Display the results of the transaction"`
+	Signer                string   `default:"service" flag:"signer,s"`
+	Role                  string   `default:"authorizer" flag:"role"`
+	AdditionalAuthorizers []string `flag:"Additional authorizer addresses to add to the transaction"`
+	PayerAddress          string   `flag:"payer" info:"Specify payer of the transaction. Defaults to current signer."`
+	Code                  string   `flag:"code,c" info:"path to Cadence file"`
+	Host                  string   `flag:"host" info:"Flow Access API host address"`
+	Encoding              string   `default:"hexrlp" flag:"encoding" info:"Encoding to use for transactio (rlp)"`
+	Output                string   `default:"transaction.rlp" flag:"output,o" info:"Output location for transaction file"`
 }
 
 var conf Config
 
 var Cmd = &cobra.Command{
-	Use:   "send",
-	Short: "Send a transaction",
+	Use:   "sign",
+	Short: "Sign a transaction",
 	Run: func(cmd *cobra.Command, args []string) {
 		projectConf := cli.LoadConfig()
 
 		signerAccount := projectConf.Accounts[conf.Signer]
 		validateKeyPreReq(signerAccount)
 		var (
-			code []byte
-			err  error
+			code  []byte
+			payer flow.Address
+			err   error
 		)
 
 		if conf.Code != "" {
@@ -59,11 +65,42 @@ var Cmd = &cobra.Command{
 			}
 		}
 
-		tx := flow.NewTransaction().
-			SetScript(code).
-			AddAuthorizer(signerAccount.Address)
+		if conf.PayerAddress != "" {
+			payer = flow.HexToAddress(conf.PayerAddress)
+		} else {
+			payer = signerAccount.Address
+		}
 
-		cli.SendTransaction(projectConf.HostWithOverride(conf.Host), signerAccount, tx, signerAccount.Address, conf.Results)
+		tx := flow.NewTransaction().
+			SetScript(code)
+
+		switch conf.Role {
+		case "authorizer":
+			tx.AddAuthorizer(signerAccount.Address)
+		case "payer":
+			if payer != signerAccount.Address {
+				cli.Exitf(1, "Role specified as Payer, but Payer address also provided, and different: %s !=", payer, signerAccount.Address)
+			}
+		case "proposer":
+			cli.Exitf(1, "Proposer role not yet supported: %s", conf.Role)
+		default:
+			cli.Exitf(1, "unknown role %s", conf.Role)
+		}
+
+		for _, authorizerString := range conf.AdditionalAuthorizers {
+			authorizerAddress := flow.HexToAddress(authorizerString)
+			tx.AddAuthorizer(authorizerAddress)
+		}
+
+		tx = cli.SignTransaction(projectConf.HostWithOverride(conf.Host), signerAccount, conf.Role, tx, payer)
+
+		fmt.Printf("%s encoded transaction written to %s\n", conf.Encoding, conf.Output)
+
+		output := fmt.Sprintf("%x\n", tx.Encode())
+		err = ioutil.WriteFile(conf.Output, []byte(output), os.ModePerm)
+		if err != nil {
+			cli.Exitf(1, "Failed to save encoded transaction to file %s", conf.Output)
+		}
 	},
 }
 

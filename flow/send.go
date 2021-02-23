@@ -27,13 +27,63 @@ import (
 	"google.golang.org/grpc"
 )
 
-func SendTransaction(host string, signerAccount *Account, tx *flow.Transaction, withResults bool) {
+func SendTransaction(host string, signerAccount *Account, tx *flow.Transaction, payer flow.Address, withResults bool) {
 	ctx := context.Background()
 
 	flowClient, err := client.New(host, grpc.WithInsecure())
 	if err != nil {
 		Exitf(1, "Failed to connect to host: %s", err)
 	}
+
+	tx = signTransaction(ctx, flowClient, signerAccount, "payer", tx, payer)
+
+	fmt.Printf("Submitting transaction with ID %s ...\n", tx.ID())
+
+	err = flowClient.SendTransaction(context.Background(), *tx)
+	if err == nil {
+		fmt.Printf("Successfully submitted transaction with ID %s\n", tx.ID())
+	} else {
+		Exitf(1, "Failed to submit transaction: %s", err)
+	}
+	if withResults {
+		res, err := waitForSeal(ctx, flowClient, tx.ID())
+		if err != nil {
+			Exitf(1, "Failed to seal transaction: %s", err)
+		}
+		printTxResult(tx, res, true)
+	}
+}
+
+func SignTransaction(host string, signerAccount *Account, signerRole string, tx *flow.Transaction, payer flow.Address) *flow.Transaction {
+	ctx := context.Background()
+
+	flowClient, err := client.New(host, grpc.WithInsecure())
+	if err != nil {
+		Exitf(1, "Failed to connect to host: %s", err)
+	}
+
+	tx = signTransaction(ctx, flowClient, signerAccount, signerRole, tx, payer)
+
+	fmt.Printf("Submitting transaction with ID %s ...\n", tx.ID())
+
+	err = flowClient.SendTransaction(context.Background(), *tx)
+	if err == nil {
+		fmt.Printf("Successfully submitted transaction with ID %s\n", tx.ID())
+	} else {
+		Exitf(1, "Failed to submit transaction: %s", err)
+	}
+
+	return tx
+}
+
+func signTransaction(
+	ctx context.Context,
+	flowClient *client.Client,
+	signerAccount *Account,
+	signerRole string,
+	tx *flow.Transaction,
+	payer flow.Address,
+) *flow.Transaction {
 
 	signerAddress := signerAccount.Address
 
@@ -54,26 +104,22 @@ func SendTransaction(host string, signerAccount *Account, tx *flow.Transaction, 
 
 	tx.SetReferenceBlockID(sealed.ID).
 		SetProposalKey(signerAddress, accountKey.Index, accountKey.SequenceNumber).
-		SetPayer(signerAddress)
+		SetPayer(payer)
 
-	err = tx.SignEnvelope(signerAddress, accountKey.Index, signerAccount.Signer)
-	if err != nil {
-		Exitf(1, "Failed to sign transaction: %s", err)
-	}
-
-	fmt.Printf("Submitting transaction with ID %s ...\n", tx.ID())
-
-	err = flowClient.SendTransaction(context.Background(), *tx)
-	if err == nil {
-		fmt.Printf("Successfully submitted transaction with ID %s\n", tx.ID())
-	} else {
-		Exitf(1, "Failed to submit transaction: %s", err)
-	}
-	if withResults {
-		res, err := waitForSeal(ctx, flowClient, tx.ID())
+	switch signerRole {
+	case "authorizer":
+		err = tx.SignPayload(signerAddress, accountKey.Index, signerAccount.Signer)
 		if err != nil {
-			Exitf(1, "Failed to seal transaction: %s", err)
+			Exitf(1, "Failed to sign transaction: %s", err)
 		}
-		printTxResult(tx, res, true)
+	case "payer":
+		err = tx.SignEnvelope(signerAddress, accountKey.Index, signerAccount.Signer)
+		if err != nil {
+			Exitf(1, "Failed to sign transaction: %s", err)
+		}
+	default:
+		Exitf(1, "Failed to sign transaction: unknown signer role %s", signerRole)
 	}
+
+	return tx
 }
