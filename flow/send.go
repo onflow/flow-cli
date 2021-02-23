@@ -27,6 +27,14 @@ import (
 	"google.golang.org/grpc"
 )
 
+type SignerRole string
+
+const (
+	SignerRoleAuthorizer SignerRole = "authorizer"
+	SignerRoleProposer   SignerRole = "proposer"
+	SignerRolePayer      SignerRole = "payer"
+)
+
 func SendTransaction(host string, signerAccount *Account, tx *flow.Transaction, payer flow.Address, withResults bool) {
 	ctx := context.Background()
 
@@ -35,7 +43,7 @@ func SendTransaction(host string, signerAccount *Account, tx *flow.Transaction, 
 		Exitf(1, "Failed to connect to host: %s", err)
 	}
 
-	tx = signTransaction(ctx, flowClient, signerAccount, "payer", tx, payer)
+	tx = signTransaction(ctx, flowClient, signerAccount, SignerRolePayer, tx, payer)
 
 	fmt.Printf("Submitting transaction with ID %s ...\n", tx.ID())
 
@@ -54,7 +62,7 @@ func SendTransaction(host string, signerAccount *Account, tx *flow.Transaction, 
 	}
 }
 
-func SignTransaction(host string, signerAccount *Account, signerRole string, tx *flow.Transaction, payer flow.Address) *flow.Transaction {
+func SignTransaction(host string, signerAccount *Account, signerRole SignerRole, tx *flow.Transaction, payer flow.Address) *flow.Transaction {
 	ctx := context.Background()
 
 	flowClient, err := client.New(host, grpc.WithInsecure())
@@ -80,7 +88,7 @@ func signTransaction(
 	ctx context.Context,
 	flowClient *client.Client,
 	signerAccount *Account,
-	signerRole string,
+	signerRole SignerRole,
 	tx *flow.Transaction,
 	payer flow.Address,
 ) *flow.Transaction {
@@ -107,12 +115,12 @@ func signTransaction(
 		SetPayer(payer)
 
 	switch signerRole {
-	case "authorizer":
+	case SignerRoleAuthorizer:
 		err = tx.SignPayload(signerAddress, accountKey.Index, signerAccount.Signer)
 		if err != nil {
 			Exitf(1, "Failed to sign transaction: %s", err)
 		}
-	case "payer":
+	case SignerRolePayer:
 		err = tx.SignEnvelope(signerAddress, accountKey.Index, signerAccount.Signer)
 		if err != nil {
 			Exitf(1, "Failed to sign transaction: %s", err)

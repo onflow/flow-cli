@@ -74,14 +74,15 @@ var Cmd = &cobra.Command{
 		tx := flow.NewTransaction().
 			SetScript(code)
 
-		switch conf.Role {
-		case "authorizer":
+		signerRole := cli.SignerRole(conf.Role)
+		switch signerRole {
+		case cli.SignerRoleAuthorizer:
 			tx.AddAuthorizer(signerAccount.Address)
-		case "payer":
+		case cli.SignerRolePayer:
 			if payer != signerAccount.Address {
 				cli.Exitf(1, "Role specified as Payer, but Payer address also provided, and different: %s !=", payer, signerAccount.Address)
 			}
-		case "proposer":
+		case cli.SignerRoleProposer:
 			cli.Exitf(1, "Proposer role not yet supported: %s", conf.Role)
 		default:
 			cli.Exitf(1, "unknown role %s", conf.Role)
@@ -92,7 +93,7 @@ var Cmd = &cobra.Command{
 			tx.AddAuthorizer(authorizerAddress)
 		}
 
-		tx = cli.SignTransaction(projectConf.HostWithOverride(conf.Host), signerAccount, conf.Role, tx, payer)
+		tx = cli.SignTransaction(projectConf.HostWithOverride(conf.Host), signerAccount, signerRole, tx, payer)
 
 		fmt.Printf("%s encoded transaction written to %s\n", conf.Encoding, conf.Output)
 
