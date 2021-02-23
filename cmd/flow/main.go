@@ -30,6 +30,7 @@ import (
 	"github.com/onflow/flow-cli/flow/emulator"
 	"github.com/onflow/flow-cli/flow/initialize"
 	"github.com/onflow/flow-cli/flow/keys"
+	"github.com/onflow/flow-cli/flow/project"
 	"github.com/onflow/flow-cli/flow/scripts"
 	"github.com/onflow/flow-cli/flow/transactions"
 	"github.com/onflow/flow-cli/flow/version"
@@ -41,6 +42,7 @@ var cmd = &cobra.Command{
 }
 
 func init() {
+	cmd.AddCommand(project.Cmd)
 	cmd.AddCommand(initialize.Cmd)
 	cmd.AddCommand(accounts.Cmd)
 	cmd.AddCommand(blocks.Cmd)
