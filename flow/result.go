@@ -29,10 +29,12 @@ import (
 	"google.golang.org/grpc"
 )
 
+const maxGRPCMessageSize = 1024 * 1024 * 16
+
 func GetTransactionResult(host string, id string, sealed bool, showTransactionCode bool) {
 	ctx := context.Background()
 
-	flowClient, err := client.New(host, grpc.WithInsecure())
+	flowClient, err := client.New(host, grpc.WithInsecure(), grpc.WithMaxMsgSize(maxGRPCMessageSize))
 	if err != nil {
 		Exitf(1, "Failed to connect to host: %s", err)
 	}
