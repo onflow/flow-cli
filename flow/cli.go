@@ -38,6 +38,7 @@ const (
 	DefaultHost         = "127.0.0.1:3569"
 	UFix64DecimalPlaces = 8
 	MaxGRPCMessageSize  = 1024 * 1024 * 16
+	Indent              = "  "
 )
 
 var ConfigPath = "flow.json"
@@ -114,4 +115,10 @@ func GcloudApplicationSignin(project string) {
 	fmt.Printf("Saving credentials and setting GOOGLE_APPLICATION_CREDENTIALS to file: %s\n", googleApplicationCreds)
 
 	os.Setenv("GOOGLE_APPLICATION_CREDENTIALS", googleApplicationCreds)
+}
+
+func PrintIndent(numberOfIndents int) {
+	for i := 0; i < numberOfIndents; i++ {
+		fmt.Print(Indent)
+	}
 }
