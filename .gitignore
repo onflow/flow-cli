@@ -15,7 +15,9 @@ index.html
 
 .DS_Store
 
+# Ignore flow json config
 flow.json
+flow*.json
 
 # IDE related files
 .idea
