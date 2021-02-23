@@ -21,8 +21,10 @@ package send
 import (
 	"io/ioutil"
 	"log"
+	"os"
 
 	"github.com/onflow/flow-cli/flow/cli"
+	"github.com/onflow/flow-cli/flow/config"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/psiemens/sconfig"
 	"github.com/spf13/cobra"
@@ -47,7 +49,11 @@ var Cmd = &cobra.Command{
 		}
 
 		signerAccount := project.GetAccountByName(flags.Signer)
-		//validateKeyPreReq(signerAccount)
+		if signerAccount == nil {
+			cli.Exitf(1, "Account %s not found. Check that account name matches an account defined in configuration.", flags.Signer)
+		}
+
+		validateKeyPreReq(signerAccount)
 		var (
 			code []byte
 			err  error
@@ -82,24 +88,21 @@ func initConfig() {
 	}
 }
 
-// TODO:
-/*
 func validateKeyPreReq(account *cli.Account) {
-	if account.KeyType == cli.KeyTypeHex {
+	if account.DefaultKey().Type() == config.KeyTypeHex {
 		// Always Valid
-		return
-	} else if account.KeyType == cli.KeyTypeKMS {
+		return // TODO: check difference between googleKMS and KMS
+	} else if account.DefaultKey().Type() == config.KeyTypeGoogleKMS {
 		// Check GOOGLE_APPLICATION_CREDENTIALS
 		googleAppCreds := os.Getenv("GOOGLE_APPLICATION_CREDENTIALS")
 		if len(googleAppCreds) == 0 {
-			if len(account.KeyContext["projectId"]) == 0 {
+			if len(account.DefaultKey().ToConfig().Context["projectId"]) == 0 {
 				cli.Exitf(1, "Could not get GOOGLE_APPLICATION_CREDENTIALS, no google service account json provided but private key type is KMS", account.Address)
 			}
-			cli.GcloudApplicationSignin(account.KeyContext["projectId"])
+			cli.GcloudApplicationSignin(account.DefaultKey().ToConfig().Context["projectId"])
 		}
 		return
 	}
-	cli.Exitf(1, "Failed to validate %s key for %s", account.KeyType, account.Address)
 
+	cli.Exitf(1, "Failed to validate %s key for %s", account.DefaultKey().Type(), account.Address)
 }
-*/
