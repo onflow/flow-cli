@@ -23,11 +23,9 @@ import (
 
 	"github.com/psiemens/sconfig"
 	"github.com/spf13/cobra"
+	"github.com/onflow/flow-go-sdk/templates"
 
-	"github.com/onflow/cadence"
-	jsoncdc "github.com/onflow/cadence/encoding/json"
 	cli "github.com/onflow/flow-cli/flow"
-	"github.com/onflow/flow-go-sdk"
 )
 
 type Config struct {
@@ -49,7 +47,7 @@ var Cmd = &cobra.Command{
 
 		signerAccount := projectConf.Accounts[conf.Signer]
 
-		tx := RemoveAccountContract(signerAccount.Address, contractName)
+		tx := templates.RemoveAccountContract(signerAccount.Address, contractName)
 
 		cli.SendTransaction(
 			projectConf.HostWithOverride(conf.Host),
@@ -73,21 +71,3 @@ func initConfig() {
 		log.Fatal(err)
 	}
 }
-
-// RemoveAccountContract generates a transaction that updates a contract deployed at an account.
-func RemoveAccountContract(address flow.Address, contractName string) *flow.Transaction {
-	cadenceName := cadence.NewString(contractName)
-
-	return flow.NewTransaction().
-		SetScript([]byte(removeAccountContractTemplate)).
-		AddRawArgument(jsoncdc.MustEncode(cadenceName)).
-		AddAuthorizer(address)
-}
-
-const removeAccountContractTemplate = `
-transaction(name: String) {
-	prepare(signer: AuthAccount) {
-		signer.contracts.remove(name: name)
-	}
-}
-`

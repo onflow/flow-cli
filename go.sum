@@ -112,6 +112,11 @@ github.com/btcsuite/snappy-go v0.0.0-20151229074030-0bdef8d06723/go.mod h1:8woku
 github.com/btcsuite/websocket v0.0.0-20150119174127-31079b680792/go.mod h1:ghJtEyQwv5/p4Mg4C0fgbePVuGr935/5ddU9Z3TmDRY=
 github.com/btcsuite/winsvc v1.0.0/go.mod h1:jsenWakMcC0zFBFurPLEAyrnc/teJEM1O46fmI40EZs=
 github.com/bytecodealliance/wasmtime-go v0.22.0/go.mod h1:q320gUxqyI8yB+ZqRuaJOEnGkAnHh6WtJjMaT2CW4wI=
+<<<<<<< HEAD
+=======
+github.com/c-bata/go-prompt v0.2.3 h1:jjCS+QhG/sULBhAaBdjb2PlMRVaKXQgn+4yzaauvs2s=
+github.com/c-bata/go-prompt v0.2.3/go.mod h1:VzqtzE2ksDBcdln8G7mk2RX9QyGjH+OVqOCSiVIqS34=
+>>>>>>> ed74bed (trying to use new go-sdk version)
 github.com/c-bata/go-prompt v0.2.5 h1:3zg6PecEywxNn0xiqcXHD96fkbxghD+gdB2tbsYfl+Y=
 github.com/c-bata/go-prompt v0.2.5/go.mod h1:vFnjEGDIIA/Lib7giyE4E9c50Lvl8j0S+7FVlAwDAVw=
 github.com/casbin/casbin/v2 v2.1.2/go.mod h1:YcPU1XXisHhLzuxH9coDNf2FbKpjGlbCg3n9yuLkIJQ=
@@ -640,6 +645,11 @@ github.com/mattn/go-colorable v0.1.0/go.mod h1:9vuHe8Xs5qXnSaW/c/ABM9alt+Vo+STaO
 github.com/mattn/go-colorable v0.1.1/go.mod h1:FuOcm+DKB9mbwrcAfNl7/TZVBZ6rcnceauSikq3lYCQ=
 github.com/mattn/go-colorable v0.1.4 h1:snbPLB8fVfU9iwbbo30TPtbLRzwWu6aJS6Xh4eaaviA=
 github.com/mattn/go-colorable v0.1.4/go.mod h1:U0ppj6V5qS13XJ6of8GYAs25YV2eR4EVcfRqFIhoBtE=
+<<<<<<< HEAD
+=======
+github.com/mattn/go-colorable v0.1.6 h1:6Su7aK7lXmJ/U79bYtBjLNaha4Fs1Rg9plHpcH+vvnE=
+github.com/mattn/go-colorable v0.1.6/go.mod h1:u6P/XSegPjTcexA+o6vUJrdnUu04hMope9wVRipJSqc=
+>>>>>>> ed74bed (trying to use new go-sdk version)
 github.com/mattn/go-colorable v0.1.7 h1:bQGKb3vps/j0E9GfJQ03JyhRuxsvdAanXlT9BTw3mdw=
 github.com/mattn/go-colorable v0.1.7/go.mod h1:u6P/XSegPjTcexA+o6vUJrdnUu04hMope9wVRipJSqc=
 github.com/mattn/go-ieproxy v0.0.0-20190610004146-91bb50d98149/go.mod h1:31jz6HNzdxOmlERGGEc4v/dMssOfmp2p5bT/okiKFFc=
@@ -776,12 +786,24 @@ github.com/onflow/flow-emulator v0.15.0 h1:P+4FkT8ABUztWS9nR+vgVpOuHI8lUFbA1LPS3
 github.com/onflow/flow-emulator v0.15.0/go.mod h1:D0y97TNJdPLVgr/Msq1J5umsm1CBpDQ78sddrioPgLc=
 github.com/onflow/flow-ft/lib/go/contracts v0.4.0 h1:M1I4z027GHOLcjkj9lL2UUUpZpEAF90hY5gRqvFGAPg=
 github.com/onflow/flow-ft/lib/go/contracts v0.4.0/go.mod h1:1zoTjp1KzNnOPkyqKmWKerUyf0gciw+e6tAEt0Ks3JE=
+<<<<<<< HEAD
 github.com/onflow/flow-go v0.14.1-0.20210223171959-f21d550c6ab0 h1:m9nJozAZGkpBnUPZl4boiyQ1C7wRxean0Fs6rEcrwzY=
 github.com/onflow/flow-go v0.14.1-0.20210223171959-f21d550c6ab0/go.mod h1:7FMn+uagtcvn/wTEZEzAtjXKma8F3kkLQbq1dueDfow=
+=======
+github.com/onflow/flow-go v0.14.0 h1:vFFxg+gkWS6mhTCz5gdIeu7HedPlV7FIJiX4LSRi1ww=
+github.com/onflow/flow-go v0.14.0/go.mod h1:0Uf23S/xNZZSxtXqWy0vpCPBvkWzxxObd03Vc0MbKws=
+github.com/onflow/flow-go-sdk v0.14.3 h1:6t1ycWJSPpgz7LeMDaZ3cIbiKa24JNxUEFyAu3Vvi2U=
+github.com/onflow/flow-go-sdk v0.14.3/go.mod h1:VAXKnZQlRRPfIkm8nw71B6bwhXNnmTfqV4wNrP3fK9I=
+>>>>>>> ed74bed (trying to use new go-sdk version)
 github.com/onflow/flow-go-sdk v0.15.0 h1:h2FD/d1p/VRIWEcAYcVOT2rm4qKppIn4sVog+/eXKrw=
 github.com/onflow/flow-go-sdk v0.15.0/go.mod h1:Dkcd1xQta8EPQL5XKE9vi2OTa6CoMsbX0jIQ4ozhUUs=
 github.com/onflow/flow-go/crypto v0.12.0 h1:TMsqn5nsW4vrCIFG/HRE/oy/a5/sffHrDRDYqicwO98=
 github.com/onflow/flow-go/crypto v0.12.0/go.mod h1:oXuvU0Dr4lHKgye6nHEFbBXIWNv+dBQUzoVW5Go38+o=
+<<<<<<< HEAD
+=======
+github.com/onflow/flow/protobuf/go/flow v0.1.8 h1:jBR8aXEL0MOh3gVJmCr0KYXmtG3JUBhzADonKkYE6oI=
+github.com/onflow/flow/protobuf/go/flow v0.1.8/go.mod h1:kRugbzZjwQqvevJhrnnCFMJZNmoSJmxlKt6hTGXZojM=
+>>>>>>> ed74bed (trying to use new go-sdk version)
 github.com/onflow/flow/protobuf/go/flow v0.1.9 h1:ugK6/9K4AkMxqPbCvQzbbV24AH50Ozze43nqpukQoOM=
 github.com/onflow/flow/protobuf/go/flow v0.1.9/go.mod h1:kRugbzZjwQqvevJhrnnCFMJZNmoSJmxlKt6hTGXZojM=
 github.com/onsi/ginkgo v1.6.0/go.mod h1:lLunBs/Ym6LB5Z9jYTR76FiuTmxDTDusOGeTQH+WWjE=
@@ -821,6 +843,11 @@ github.com/pkg/errors v0.8.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINE
 github.com/pkg/errors v0.9.1 h1:FEBLx1zS214owpjy7qsBeixbURkuhQAwrK5UwLGTwt4=
 github.com/pkg/errors v0.9.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
 github.com/pkg/profile v1.2.1/go.mod h1:hJw3o1OdXxsrSjjVksARp5W95eeEaEfptyVZyv6JUPA=
+<<<<<<< HEAD
+=======
+github.com/pkg/term v0.0.0-20190109203006-aa71e9d9e942 h1:A7GG7zcGjl3jqAqGPmcNjd/D9hzL95SuoOQAaFNdLU0=
+github.com/pkg/term v0.0.0-20190109203006-aa71e9d9e942/go.mod h1:eCbImbZ95eXtAUIbLAuAVnBnwf83mjf6QIVH8SHYwqQ=
+>>>>>>> ed74bed (trying to use new go-sdk version)
 github.com/pkg/term v1.1.0 h1:xIAAdCMh3QIAy+5FrE8Ad8XoDhEU4ufwbaSozViP9kk=
 github.com/pkg/term v1.1.0/go.mod h1:E25nymQcrSllhX42Ok8MRm1+hyBdHY0dCeiKZ9jpNGw=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
