@@ -37,9 +37,10 @@ type Config struct {
 var conf Config
 
 var Cmd = &cobra.Command{
-	Use:   "get <event_name> <block_height_range_start> <optional:block_height_range_end|latest>",
-	Short: "Get events in a block range",
-	Args:  cobra.RangeArgs(2, 3),
+	Use:     "get <event_name> <block_height_range_start> <optional:block_height_range_end|latest>",
+	Short:   "Get events in a block range",
+	Args:    cobra.RangeArgs(2, 3),
+	Example: "flow events get A.1654653399040a61.FlowToken.TokensDeposited 11559500 11559600",
 	Run: func(cmd *cobra.Command, args []string) {
 		projectConf := new(cli.Config)
 		if conf.Host == "" {
