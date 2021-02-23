@@ -55,6 +55,9 @@ var Cmd = &cobra.Command{
 		}
 
 		signerAccount := project.GetAccountByName(flags.Signer)
+		if signerAccount == nil {
+			cli.Exitf(1, "Account %s not found. Check that account name matches an account defined in configuration.", flags.Signer)
+		}
 
 		tx := templates.AddAccountContract(
 			signerAccount.Address(),

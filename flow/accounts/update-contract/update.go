@@ -43,9 +43,6 @@ var Cmd = &cobra.Command{
 	Args:  cobra.ExactArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
 		project := cli.LoadProject()
-		if project == nil {
-			return
-		}
 
 		contractName := args[0]
 		contractFilename := args[1]
@@ -56,6 +53,9 @@ var Cmd = &cobra.Command{
 		}
 
 		signerAccount := project.GetAccountByName(flags.Signer)
+		if signerAccount == nil {
+			cli.Exitf(1, "Account %s not found. Check that account name matches an account defined in configuration.", flags.Signer)
+		}
 
 		tx := templates.UpdateAccountContract(
 			signerAccount.Address(),

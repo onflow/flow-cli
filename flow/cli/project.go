@@ -190,9 +190,15 @@ func (p *Project) GetAllAccountNames() []string {
 }
 
 func (p *Project) GetAccountByName(name string) *Account {
-	return funk.Filter(p.accounts, func(a *Account) bool {
-		return a.name == name
-	}).([]*Account)[0]
+	var account *Account
+
+	for _, acc := range p.accounts {
+		if acc.name == name {
+			account = acc
+		}
+	}
+
+	return account
 }
 
 func (p *Project) AddAccount(account *Account) {
