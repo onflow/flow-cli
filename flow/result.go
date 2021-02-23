@@ -97,7 +97,7 @@ func printTxResult(tx *flow.Transaction, res *flow.TransactionResult, showCode b
 	fmt.Println()
 }
 
-func GetBlockEvents(host string, height uint64, eventType string) {
+func GetBlockEvents(host string, startHeight, endHeight uint64, eventType string, printEmpty bool) {
 	ctx := context.Background()
 
 	flowClient, err := client.New(host, grpc.WithInsecure())
@@ -107,16 +107,19 @@ func GetBlockEvents(host string, height uint64, eventType string) {
 
 	events, err := flowClient.GetEventsForHeightRange(ctx, client.EventRangeQuery{
 		Type:        eventType,
-		StartHeight: height,
-		EndHeight:   height,
+		StartHeight: startHeight,
+		EndHeight:   endHeight,
 	})
 
 	if err != nil {
 		Exitf(1, "Failed to query block event by height: %s", err)
 	}
 
-	for _, blockEvent := range events {
-		fmt.Printf("Events for Block %s:", blockEvent.BlockID)
+	for i, blockEvent := range events {
+		if !printEmpty && len(blockEvent.Events) == 0 {
+			continue
+		}
+		fmt.Printf("Events for Block %s (%d):\n", blockEvent.BlockID, startHeight+uint64(i))
 		printEvents(blockEvent.Events, true)
 	}
 }
