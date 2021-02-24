@@ -32,7 +32,7 @@ import (
 func GetTransactionResult(host string, id string, sealed bool, showTransactionCode bool) {
 	ctx := context.Background()
 
-	flowClient, err := client.New(host, grpc.WithInsecure())
+	flowClient, err := client.New(host, grpc.WithInsecure(), grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(MaxGRPCMessageSize)))
 	if err != nil {
 		Exitf(1, "Failed to connect to host: %s", err)
 	}
@@ -100,7 +100,7 @@ func printTxResult(tx *flow.Transaction, res *flow.TransactionResult, showCode b
 func GetBlockEvents(host string, startHeight, endHeight uint64, eventType string, printEmpty bool) {
 	ctx := context.Background()
 
-	flowClient, err := client.New(host, grpc.WithInsecure())
+	flowClient, err := client.New(host, grpc.WithInsecure(), grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(MaxGRPCMessageSize)))
 	if err != nil {
 		Exitf(1, "Failed to connect to host: %s", err)
 	}
