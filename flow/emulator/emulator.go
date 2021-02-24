@@ -19,7 +19,9 @@
 package emulator
 
 import (
-	emulator "github.com/onflow/flow-emulator"
+	"github.com/onflow/flow-cli/flow/cli"
+	"github.com/onflow/flow-cli/flow/config"
+	"github.com/onflow/flow-emulator/cmd/emulator/start"
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/spf13/cobra"
 )
@@ -31,21 +33,33 @@ var Cmd = &cobra.Command{
 }
 
 func configuredServiceKey(
-	init bool,
-	sigAlgo crypto.SignatureAlgorithm,
-	hashAlgo crypto.HashAlgorithm,
+	_ bool,
+	_ crypto.SignatureAlgorithm,
+	_ crypto.HashAlgorithm,
+) (
+	crypto.PrivateKey,
+	crypto.SignatureAlgorithm,
+	crypto.HashAlgorithm,
 ) {
-	if sigAlgo == crypto.UnknownSignatureAlgorithm {
-		sigAlgo = emulator.DefaultServiceKeySigAlgo
+	proj := cli.LoadProject()
+
+	serviceAccount := proj.EmulatorServiceAccount()
+
+	serviceKey := serviceAccount.Keys[0]
+
+	privateKey, err := crypto.DecodePrivateKeyHex(serviceKey.SigAlgo, serviceKey.Context["privateKey"])
+	if err != nil {
+		cli.Exitf(
+			1,
+			"Invalid private key in \"%s\" emulator configuration",
+			config.DefaultEmulatorConfigName,
+		)
 	}
 
-	if hashAlgo == crypto.UnknownHashAlgorithm {
-		hashAlgo = emulator.DefaultServiceKeyHashAlgo
-	}
-
-	// TODO: start emulator from project
+	return privateKey, serviceKey.SigAlgo, serviceKey.HashAlgo
 }
 
 func init() {
-	//Cmd.AddCommand(start.Cmd(configuredServiceKey))
+	Cmd = start.Cmd(configuredServiceKey)
+	Cmd.Use = "emulator"
 }
