@@ -26,7 +26,7 @@ import (
 
 // ReplaceEnv finds env variables and replaces them with env values
 func ReplaceEnv(raw string) string {
-	envRegex := regexp.MustCompile("\\$\\{env\\:(.+)\\}")
+	envRegex := regexp.MustCompile(`\$\{env\:(.+)\}`)
 	envMatches := envRegex.FindAllStringSubmatch(raw, -1)
 
 	for _, match := range envMatches {
@@ -40,7 +40,7 @@ func ReplaceEnv(raw string) string {
 	return raw
 }
 
-// get environment varaible by name
+// get environment variable by name
 func getEnvVariable(name string) string {
 	return os.Getenv(name)
 }

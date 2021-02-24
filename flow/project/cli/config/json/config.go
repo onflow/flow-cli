@@ -77,7 +77,7 @@ func Save(conf *config.Config, path string) error {
 var ErrDoesNotExist = errors.New("project config file does not exist")
 
 func Load(path string) (*config.Config, error) {
-	raw, err := ioutil.ReadFile(path) // REF: try using os.open instead
+	raw, err := ioutil.ReadFile(path)
 
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -91,7 +91,7 @@ func Load(path string) (*config.Config, error) {
 	envReplaced := config.ReplaceEnv(string(raw))
 
 	var conf jsonConfig
-	json.Unmarshal([]byte(envReplaced), &conf)
+	err = json.Unmarshal([]byte(envReplaced), &conf)
 
 	if err != nil {
 		fmt.Printf("%s contains invalid json: %s\n", path, err.Error())
