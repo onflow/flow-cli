@@ -787,11 +787,16 @@ github.com/onflow/flow-emulator v0.15.0/go.mod h1:D0y97TNJdPLVgr/Msq1J5umsm1CBpD
 github.com/onflow/flow-ft/lib/go/contracts v0.4.0 h1:M1I4z027GHOLcjkj9lL2UUUpZpEAF90hY5gRqvFGAPg=
 github.com/onflow/flow-ft/lib/go/contracts v0.4.0/go.mod h1:1zoTjp1KzNnOPkyqKmWKerUyf0gciw+e6tAEt0Ks3JE=
 <<<<<<< HEAD
+<<<<<<< HEAD
 github.com/onflow/flow-go v0.14.1-0.20210223171959-f21d550c6ab0 h1:m9nJozAZGkpBnUPZl4boiyQ1C7wRxean0Fs6rEcrwzY=
 github.com/onflow/flow-go v0.14.1-0.20210223171959-f21d550c6ab0/go.mod h1:7FMn+uagtcvn/wTEZEzAtjXKma8F3kkLQbq1dueDfow=
 =======
 github.com/onflow/flow-go v0.14.0 h1:vFFxg+gkWS6mhTCz5gdIeu7HedPlV7FIJiX4LSRi1ww=
 github.com/onflow/flow-go v0.14.0/go.mod h1:0Uf23S/xNZZSxtXqWy0vpCPBvkWzxxObd03Vc0MbKws=
+=======
+github.com/onflow/flow-go v0.14.1-0.20210223171959-f21d550c6ab0 h1:m9nJozAZGkpBnUPZl4boiyQ1C7wRxean0Fs6rEcrwzY=
+github.com/onflow/flow-go v0.14.1-0.20210223171959-f21d550c6ab0/go.mod h1:7FMn+uagtcvn/wTEZEzAtjXKma8F3kkLQbq1dueDfow=
+>>>>>>> 6859847 (fix go mod files)
 github.com/onflow/flow-go-sdk v0.14.3 h1:6t1ycWJSPpgz7LeMDaZ3cIbiKa24JNxUEFyAu3Vvi2U=
 github.com/onflow/flow-go-sdk v0.14.3/go.mod h1:VAXKnZQlRRPfIkm8nw71B6bwhXNnmTfqV4wNrP3fK9I=
 >>>>>>> ed74bed (trying to use new go-sdk version)
