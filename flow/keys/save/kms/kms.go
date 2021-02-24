@@ -50,12 +50,10 @@ var Cmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		project := cli.LoadProject()
 
-		/* TODO: implement
-		accountExists := project.GetAccountByName(flags.Name)
-		if accountExists && !flags.Overwrite {
+		account := project.GetAccountByName(flags.Name)
+		if account != nil && !flags.Overwrite {
 			cli.Exitf(1, "%s already exists in the config, and overwrite is false", flags.Name)
 		}
-		*/
 
 		keyContext, err := keys.KeyContextFromKMSResourceID(flags.KeyContext)
 		if err != nil {
