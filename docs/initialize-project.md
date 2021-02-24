@@ -53,7 +53,7 @@ The new `flow.json` file will contain the following:
 Below is an example of a configuration file for a complete Flow project.
 We'll walk through each property one by one.
 
-```
+```json
 {
   "contracts": {
     "NonFungibleToken": "./cadence/contracts/NonFungibleToken.cdc",
@@ -61,9 +61,10 @@ We'll walk through each property one by one.
     "KittyItems": "./cadence/contracts/KittyItems.cdc",
     "KittyItemsMarket": "./cadence/contracts/KittyItemsMarket.cdc",
     "FungibleToken": {
-      "source": "./cadence/contracts/NonFungibleToken.cdc",
+      "source": "./cadence/contracts/FungibleToken.cdc",
       "aliases": {
-        "testnet": "12f54cb6e3f42a14"
+        "testnet": "9a0766d93b6608b7",
+        "emulator": "ee82856bf20e2aa6"
       }
     }
   },
@@ -76,7 +77,6 @@ We'll walk through each property one by one.
     "emulator": {
       "emulator-account": [
         "NonFungibleToken",
-        "FungibleToken",
         "Kibble",
         "KittyItems",
         "KittyItemsMarket"
@@ -87,15 +87,15 @@ We'll walk through each property one by one.
   "accounts": {
     "admin-account": {
       "address": "3ae53cb6e3f42a79",
-      "keys": "22232967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47"
+      "keys": "12332967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad1111"
     },
     "user-account": {
       "address": "e2a8b7f23e8b548f",
-      "keys": "22232967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47"
+      "keys": "22232967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad1111"
     },
     "emulator-account": {
       "address": "f8d6e0586b0a20c7",
-      "keys": "2eae2f31cb5b756151fa11d82949c634b8f28796a711d7eb1e52cc301edfb3e0",
+      "keys": "2eae2f31cb5b756151fa11d82949c634b8f28796a711d7eb1e52cc301ed11111",
       "chain": "flow-emulator"
     }
   },
@@ -119,7 +119,7 @@ The advanced format allows us to specify aliases for each network.
 
 #### Simple Format 
 
-```
+```json
 ...
 
 "contracts": {
@@ -132,17 +132,23 @@ The advanced format allows us to specify aliases for each network.
 #### Advanced Format 
 
 Using advanced format we can define `aliases`. Aliases define an address where the contract is already deployed for that specific network. 
-In the example scenario below the contract `FungibleToken` would be imported from the address `12f54cb6e3f42a14` when deploying to testnet network. 
+In the example scenario below the contract `FungibleToken` would be imported from the address `9a0766d93b6608b7` when deploying to testnet network 
+and address `ee82856bf20e2aa6` when deploying to testnet. 
 We can specify aliases for each network we have defined. When deploying to testnet it is always a good idea to specify aliases for all the [common 
-contracts](https://docs.onflow.org/core-contracts) that have already been deployed to the testnet.
+contracts](https://docs.onflow.org/core-contracts) that have already been deployed to the testnet. 
 
-```
+⚠️ If we use an alias for the contract we should not specify it in the `deployment` section for that network. 
+
+Our example bellow should not include `FungibleToken` in  `deployment` section for testnet and emulator network.
+
+```json
 ...
 
 "FungibleToken": {
-  "source": "./cadence/contracts/NonFungibleToken.cdc",
+  "source": "./cadence/contracts/FungibleToken.cdc",
   "aliases": {
-    "testnet": "12f54cb6e3f42a14"
+    "testnet": "9a0766d93b6608b7",
+    "emulator": "ee82856bf20e2aa6"
   }
 }
 
@@ -159,13 +165,13 @@ Each account must include a name, which is then referenced throughout the config
 When using the simple format, simply specify the address for the account and a single hex-encoded
 private key.
 
-```
+```json
 ...
 
 "accounts": {
   "admin-account": {
-    "address": "f8d6e0586b0a20c7",
-    "keys": "22232967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47"
+    "address": "3ae53cb6e3f42a79",
+    "keys": "12332967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad1111"
   }
 }
 
@@ -180,11 +186,11 @@ We can define the signature algorithm and hashing algorithm, as well as custom k
 Please note that we can use `service` for address in case the account is used on `emulator` network as this is a special 
 value that is defined on the run time to the default service address on the emulator network.
 
-```
+```json
 ...
 
 "accounts": {
-  "admin-account": {
+  "admin-account-multiple-keys": {
     "address": "service",
     "chain": "flow-emulator",
     "keys": [
@@ -194,7 +200,7 @@ value that is defined on the run time to the default service address on the emul
         "signatureAlgorithm": "ECDSA_P256",
         "hashAlgorithm": "SHA3_256",
         "context": {
-          "privateKey": "1272967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47"
+          "privateKey": "12332967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad1111"
         }
       },
       {
@@ -203,7 +209,7 @@ value that is defined on the run time to the default service address on the emul
         "signatureAlgorithm": "ECDSA_P256",
         "hashAlgorithm": "SHA3_256",
         "context": {
-          "privateKey": "2372967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47"
+          "privateKey": "333332967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad1111"
         }
       }
     ]
@@ -219,14 +225,13 @@ The deployments section defines where the `project deploy` command will deploy s
 This configuration property acts as the glue that ties together accounts, 
 contracts and networks, all of which are referenced by name.
 
-```
+```json
 ...
 
 "deployments": {
   "emulator": {
     "emulator-account": [
       "NonFungibleToken",
-      "FungibleToken",
       "Kibble",
       "KittyItems",
       "KittyItemsMarket"
@@ -251,7 +256,7 @@ Use this section to define networks and connection parameters for that specific 
 
 #### Simple format
 
-```
+```json
 ...
 
 "networks": {
