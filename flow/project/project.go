@@ -22,7 +22,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/flow/project/commands/deploy_contracts"
-	"github.com/onflow/flow-cli/flow/project/commands/initialize"
 	"github.com/onflow/flow-cli/flow/project/commands/start_emulator"
 )
 
@@ -33,7 +32,6 @@ var Cmd = &cobra.Command{
 }
 
 func init() {
-	Cmd.AddCommand(initialize.Cmd)
 	Cmd.AddCommand(start_emulator.Cmd)
 	Cmd.AddCommand(deploy_contracts.Cmd)
 }
