@@ -59,8 +59,8 @@ func ProjectExists() bool {
 	return json.Exists()
 }
 
-func InitProject() *Project {
-	emulatorServiceAccount := generateEmulatorServiceAccount()
+func InitProject(sigAlgo crypto.SignatureAlgorithm, hashAlgo crypto.HashAlgorithm) *Project {
+	emulatorServiceAccount := generateEmulatorServiceAccount(sigAlgo, hashAlgo)
 
 	return &Project{
 		conf:     defaultConfig(emulatorServiceAccount),
@@ -90,15 +90,15 @@ func defaultConfig(defaultEmulatorServiceAccount *Account) *config.Config {
 	}
 }
 
-func generateEmulatorServiceAccount() *Account {
+func generateEmulatorServiceAccount(sigAlgo crypto.SignatureAlgorithm, hashAlgo crypto.HashAlgorithm) *Account {
 	seed := RandomSeed(crypto.MinSeedLength)
 
-	privateKey, err := crypto.GeneratePrivateKey(crypto.ECDSA_P256, seed)
+	privateKey, err := crypto.GeneratePrivateKey(sigAlgo, seed)
 	if err != nil {
 		Exitf(1, "Failed to generate emulator service key: %v", err)
 	}
 
-	serviceAccountKey := keys.NewHexAccountKeyFromPrivateKey(0, crypto.SHA3_256, privateKey)
+	serviceAccountKey := keys.NewHexAccountKeyFromPrivateKey(0, hashAlgo, privateKey)
 
 	return &Account{
 		name:    defaultEmulatorServiceAccountName,
@@ -155,6 +155,12 @@ func (p *Project) Host(network string) string {
 func (p *Project) EmulatorServiceAccount() config.Account {
 	emulator := p.conf.Emulators.GetDefault()
 	return p.conf.Accounts.GetByName(emulator.ServiceAccount)
+}
+
+func (p *Project) SetEmulatorServiceKey(privateKey crypto.PrivateKey) {
+	acc := p.accounts[0]
+	key := acc.DefaultKey()
+	acc.keys[0] = keys.NewHexAccountKeyFromPrivateKey(key.Index(), key.HashAlgo(), privateKey)
 }
 
 func (p *Project) GetContractsByNetwork(network string) []Contract {

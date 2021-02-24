@@ -19,34 +19,12 @@
 package initialize
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
-
-	"github.com/onflow/flow-cli/flow/cli"
 )
 
 var Cmd = &cobra.Command{
 	Use:   "init",
 	Short: "Initialize a new Flow project",
 	Run: func(cmd *cobra.Command, args []string) {
-		if !cli.ProjectExists() {
-			proj := cli.InitProject()
-			proj.Save()
-
-			fmt.Print(
-				cli.Green(fmt.Sprintf("Initialized a new Flow project in %s\n\n", cli.DefaultConfigPath)),
-			)
-			fmt.Printf(
-				"Start the Flow Emulator by running: %s\n",
-				cli.Bold("flow project start-emulator"),
-			)
-		} else {
-			fmt.Printf(
-				"%s\n\nStart the Flow Emulator by running: %s\n",
-				cli.Red(fmt.Sprintf("A Flow project already exists in %s", cli.DefaultConfigPath)),
-				cli.Bold("flow project start-emulator"),
-			)
-		}
 	},
 }
