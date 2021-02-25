@@ -118,6 +118,8 @@ func (c *Contracts) GetByNameAndNetwork(name string, network string) Contract {
 	return contracts[0]
 }
 
+// REF: this filtering can cause error if not found, better to refactor to returning
+
 // GetByName get contract by name
 func (c *Contracts) GetByName(name string) Contract {
 	return funk.Filter([]Contract(*c), func(c Contract) bool {
@@ -133,10 +135,14 @@ func (c *Contracts) GetByNetwork(network string) Contracts {
 }
 
 // GetAccountByName get account by name
-func (a *Accounts) GetByName(name string) Account {
-	return funk.Filter([]Account(*a), func(a Account) bool {
-		return a.Name == name
-	}).([]Account)[0]
+func (a *Accounts) GetByName(name string) *Account {
+	for _, account := range *a {
+		if account.Name == name {
+			return &account
+		}
+	}
+
+	return nil
 }
 
 // GetByAddress get account by address
