@@ -148,6 +148,7 @@ var Cmd = &cobra.Command{
 		if len(errs) == 0 {
 			fmt.Println("\n✅ All contracts deployed successfully")
 		} else {
+			// REF: better output when errors
 			fmt.Println("\n❌ Failed to deploy all contracts")
 		}
 	},
