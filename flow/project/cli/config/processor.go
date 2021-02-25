@@ -19,14 +19,20 @@
 package config
 
 import (
+	"fmt"
+	"io/ioutil"
 	"os"
 	"regexp"
 	"strings"
 )
 
-// ReplaceEnv finds env variables and replaces them with env values
-func ReplaceEnv(raw string) string {
-	envRegex := regexp.MustCompile(`\$\{env\:(.+)\}`)
+var (
+	envRegex  *regexp.Regexp = regexp.MustCompile(`\$\{env\:(.+)\}`)
+	fileRegex *regexp.Regexp = regexp.MustCompile(`\"\$\{file\:(.+)\}\"`)
+)
+
+// processEnv finds env variables and insert env values
+func processEnv(raw string) string {
 	envMatches := envRegex.FindAllStringSubmatch(raw, -1)
 
 	for _, match := range envMatches {
@@ -36,6 +42,36 @@ func ReplaceEnv(raw string) string {
 			getEnvVariable(match[1]),
 		)
 	}
+
+	return raw
+}
+
+// processFile finds file variables and insert content
+func processFile(raw string) string {
+	fileMatches := fileRegex.FindAllStringSubmatch(raw, -1)
+
+	for _, match := range fileMatches {
+		configFileRaw, err := ioutil.ReadFile(match[1])
+
+		if err != nil {
+			fmt.Printf("Config file %s not found. \n", match[1])
+			os.Exit(1)
+		}
+
+		raw = strings.ReplaceAll(
+			raw,
+			match[0],
+			string(configFileRaw),
+		)
+	}
+
+	return raw
+}
+
+// PreProcess configuration before it is deserialized to structs
+func PreProcess(raw string) string {
+	raw = processEnv(raw)
+	raw = processFile(raw)
 
 	return raw
 }

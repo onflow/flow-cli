@@ -76,21 +76,8 @@ func Save(conf *config.Config, path string) error {
 // ErrDoesNotExist is error to be returned when config file does not exists
 var ErrDoesNotExist = errors.New("project config file does not exist")
 
-func mergeConfigs(privateConfig *config.Config, config *config.Config) *config.Config {
-	for _, account := range privateConfig.Accounts {
-		// if account is already included in config skip
-		if config.Accounts.GetByName(account.Name) != nil {
-			continue
-		}
-
-		config.Accounts = append(config.Accounts, account)
-	}
-
-	return config
-}
-
 // REF: think of reusing file loader interface from contract loaders
-func loadConfig(path string) (*config.Config, error) {
+func loadConfigFile(path string) (*config.Config, error) {
 	raw, err := ioutil.ReadFile(path)
 
 	if err != nil {
@@ -101,11 +88,11 @@ func loadConfig(path string) (*config.Config, error) {
 		return nil, err
 	}
 
-	// replace all env variables
-	envReplaced := config.ReplaceEnv(string(raw))
+	// preprocess configuration
+	preProcessed := config.PreProcess(string(raw))
 
 	var jsonConf jsonConfig
-	err = json.Unmarshal([]byte(envReplaced), &jsonConf)
+	err = json.Unmarshal([]byte(preProcessed), &jsonConf)
 
 	if err != nil {
 		fmt.Printf("%s contains invalid json: %s\n", path, err.Error())
@@ -116,19 +103,12 @@ func loadConfig(path string) (*config.Config, error) {
 }
 
 func Load(path string) (*config.Config, error) {
-	config, err := loadConfig(path)
+	config, err := loadConfigFile(path)
 	if err != nil {
 		return nil, err
 	}
 
-	privateConfig, err := loadConfig("flow.private.json")
-	if err != nil {
-		return nil, err
-	}
-	// REF: move merging to config layer from config json layer
-	merged := mergeConfigs(privateConfig, config)
-
-	return merged, nil
+	return config, nil
 }
 
 // Exists checks if file exists on the specified path
