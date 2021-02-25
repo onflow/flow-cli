@@ -101,3 +101,57 @@ func Test_SimpleJSONConfigEnvAccount(t *testing.T) {
 	assert.Equal(t, 1, len(conf.Accounts))
 	assert.Equal(t, "21c5dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7", conf.Accounts[0].Keys[0].Context["privateKey"])
 }
+
+func Test_PrivateJSONConfig(t *testing.T) {
+	b := []byte(`{
+		"emulators": {
+			"default": {
+				"port": 3569,
+				"serviceAccount": "emulator-account"
+			}
+		},
+		"contracts": {},
+		"networks": {
+			"emulator": {
+				"host": "127.0.0.1:3569",
+				"chain": "flow-emulator"
+			}
+		},
+		"accounts": {
+			"emulator-account": {
+				"address": "f8d6e0586b0a20c7",
+				"keys": "11c5dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7",
+				"chain": "flow-emulator"
+			}
+		},
+		"deploys": {}
+	}`)
+
+	p := []byte(`{
+		"accounts": {
+			"private-account": {
+				"address": "abd6e0586b0a20c7",
+				"keys": "33c5dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7"
+			}
+		}
+	}`)
+
+	// REF: this needs to be refactored to not use file loader directly but by injecting instance
+	// in test scenario mock instance
+	err := ioutil.WriteFile("test1-flow.json", b, os.ModePerm)
+	require.NoError(t, err)
+
+	err = ioutil.WriteFile("flow.private.json", p, os.ModePerm)
+	require.NoError(t, err)
+
+	conf, loadErr := Load("test1-flow.json")
+
+	os.Remove("test1-flow.json")
+	os.Remove("flow.private.json")
+
+	require.NoError(t, loadErr)
+	assert.Equal(t, 2, len(conf.Accounts))
+	assert.Equal(t, "abd6e0586b0a20c7", conf.Accounts.GetByName("private-account").Address.String())
+	assert.Equal(t, "33c5dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7", conf.Accounts.GetByName("private-account").Keys[0].Context["privateKey"])
+	assert.Equal(t, "f8d6e0586b0a20c7", conf.Accounts.GetByName("emulator-account").Address.String())
+}
