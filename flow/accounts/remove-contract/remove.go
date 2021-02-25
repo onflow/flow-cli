@@ -21,9 +21,9 @@ package remove_contract
 import (
 	"log"
 
+	"github.com/onflow/flow-go-sdk/templates"
 	"github.com/psiemens/sconfig"
 	"github.com/spf13/cobra"
-	"github.com/onflow/flow-go-sdk/templates"
 
 	cli "github.com/onflow/flow-cli/flow"
 )
@@ -39,7 +39,7 @@ var conf Config
 var Cmd = &cobra.Command{
 	Use:   "remove-contract <name>",
 	Short: "Remove a contract deployed to an account",
-	Args:  cobra.ExactArgs(2),
+	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		projectConf := cli.LoadConfig()
 
