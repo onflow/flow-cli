@@ -3,6 +3,8 @@ module github.com/onflow/flow-cli
 go 1.13
 
 require (
+	github.com/a8m/envsubst v1.2.0
+	github.com/davecgh/go-spew v1.1.1
 	github.com/fatih/color v1.7.0
 	github.com/gosuri/uilive v0.0.4
 	github.com/magiconair/properties v1.8.1 // indirect
