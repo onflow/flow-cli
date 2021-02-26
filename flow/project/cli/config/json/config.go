@@ -26,6 +26,7 @@ import (
 	"os"
 
 	"github.com/onflow/flow-cli/flow/project/cli/config"
+	"github.com/spf13/afero"
 )
 
 type jsonConfig struct {
@@ -76,9 +77,10 @@ func Save(conf *config.Config, path string) error {
 // ErrDoesNotExist is error to be returned when config file does not exists
 var ErrDoesNotExist = errors.New("project config file does not exist")
 
-// REF: think of reusing file loader interface from contract loaders
-func loadConfigFile(path string) (*config.Config, error) {
-	raw, err := ioutil.ReadFile(path)
+// Load config file
+func Load(path string, filesystem afero.Fs) (*config.Config, error) {
+	af := &afero.Afero{Fs: filesystem}
+	raw, err := af.ReadFile(path)
 
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -89,7 +91,8 @@ func loadConfigFile(path string) (*config.Config, error) {
 	}
 
 	// preprocess configuration
-	preProcessed := config.PreProcess(string(raw))
+	preprocessor := config.NewPreprocessor(af.Fs)
+	preProcessed := preprocessor.Run(string(raw))
 
 	var jsonConf jsonConfig
 	err = json.Unmarshal([]byte(preProcessed), &jsonConf)
@@ -100,15 +103,6 @@ func loadConfigFile(path string) (*config.Config, error) {
 	}
 
 	return jsonConf.transformToConfig(), nil
-}
-
-func Load(path string) (*config.Config, error) {
-	config, err := loadConfigFile(path)
-	if err != nil {
-		return nil, err
-	}
-
-	return config, nil
 }
 
 // Exists checks if file exists on the specified path

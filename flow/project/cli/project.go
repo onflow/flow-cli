@@ -25,6 +25,7 @@ import (
 
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
+	"github.com/spf13/afero"
 	"github.com/thoas/go-funk"
 
 	"github.com/onflow/flow-cli/flow/project/cli/config"
@@ -32,17 +33,19 @@ import (
 	"github.com/onflow/flow-cli/flow/project/cli/keys"
 )
 
+// Project has all the funcionality to manage project
 type Project struct {
 	conf     *config.Config
 	accounts []*Account
 }
 
-//REF: move this to json config
+//TODO: move this to json config
 const DefaultConfigPath = "flow.json"
 
+// LoadProject loads configuration and setup the project
 func LoadProject() *Project {
-	//REF: this should interact with config and not json directly - currently problem with CD
-	conf, err := json.Load(DefaultConfigPath)
+	//TODO: this should interact with config and not json directly - currently problem with CD
+	conf, err := json.Load(DefaultConfigPath, afero.NewOsFs())
 	if err != nil {
 		if errors.Is(err, json.ErrDoesNotExist) {
 			Exitf(
@@ -66,10 +69,12 @@ func LoadProject() *Project {
 	return proj
 }
 
+// ProjectExists checks if project exists
 func ProjectExists() bool {
 	return json.Exists(DefaultConfigPath)
 }
 
+// InitProject initializes the project
 func InitProject() *Project {
 	emulatorServiceAccount := generateEmulatorServiceAccount()
 

@@ -18,10 +18,10 @@
 package json
 
 import (
-	"io/ioutil"
 	"os"
 	"testing"
 
+	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -51,11 +51,12 @@ func Test_SimpleJSONConfig(t *testing.T) {
 		"deploys": {}
 	}`)
 
-	err := ioutil.WriteFile("test1-flow.json", b, os.ModePerm)
+	mockFS := afero.NewMemMapFs()
+	err := afero.WriteFile(mockFS, "test1-flow.json", b, 0644)
+
 	require.NoError(t, err)
 
-	conf, loadErr := Load("test1-flow.json")
-	os.Remove("test1-flow.json")
+	conf, loadErr := Load("test1-flow.json", mockFS)
 
 	require.NoError(t, loadErr)
 	assert.Equal(t, 1, len(conf.Accounts))
@@ -91,11 +92,12 @@ func Test_SimpleJSONConfigEnvAccount(t *testing.T) {
 
 	os.Setenv("EMULATOR__KEY", "21c5dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7")
 
-	err := ioutil.WriteFile("test2-flow.json", b, os.ModePerm)
+	mockFS := afero.NewMemMapFs()
+	err := afero.WriteFile(mockFS, "test2-flow.json", b, 0644)
+
 	require.NoError(t, err)
 
-	conf, loadErr := Load("test2-flow.json")
-	os.Remove("test2-flow.json")
+	conf, loadErr := Load("test2-flow.json", mockFS)
 
 	require.NoError(t, loadErr)
 	assert.Equal(t, 1, len(conf.Accounts))
