@@ -33,9 +33,6 @@ type Config struct {
 	Args string `default:"" flag:"args" info:"arguments in JSON-Cadence format"`
 	Code string `flag:"code,c" info:"path to Cadence file"`
 	Host string `flag:"host" info:"Flow Access API host address"`
-	Args string `default:"" flag:"args" info:"arguments to pass to script"`
-	Code string `flag:"code,c" info:"path to Cadence file"`
-	Host string `flag:"host" info:"Flow Access API host address"`
 }
 
 var conf Config
@@ -63,7 +60,7 @@ var Cmd = &cobra.Command{
 			}
 		}
 
-		cli.ExecuteScript(projectConf.HostWithOverride(conf.Host), code, scriptArguments)
+		cli.ExecuteScript(projectConf.HostWithOverride(conf.Host), code, scriptArguments...)
 	},
 }
 
