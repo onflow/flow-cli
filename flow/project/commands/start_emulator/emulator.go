@@ -41,7 +41,7 @@ func configuredServiceKey(
 	proj := cli.LoadProject()
 
 	serviceAccount := proj.EmulatorServiceAccount()
-	// REF: this shouldn't be accessed like this, make a getter
+	// TODO: this shouldn't be accessed like this, make a getter
 	serviceKey := serviceAccount.Keys[0]
 
 	privateKey, err := crypto.DecodePrivateKeyHex(serviceKey.SigAlgo, serviceKey.Context["privateKey"])

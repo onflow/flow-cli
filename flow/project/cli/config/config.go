@@ -118,7 +118,7 @@ func (c *Contracts) GetByNameAndNetwork(name string, network string) Contract {
 	return contracts[0]
 }
 
-// REF: this filtering can cause error if not found, better to refactor to returning
+// TODO: this filtering can cause error if not found, better to refactor to returning
 
 // GetByName get contract by name
 func (c *Contracts) GetByName(name string) Contract {
