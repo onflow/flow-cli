@@ -26,7 +26,6 @@ import (
 	"os"
 
 	"github.com/a8m/envsubst"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/onflow/flow-cli/flow/project/cli/config"
 )
 
