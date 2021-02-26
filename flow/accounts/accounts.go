@@ -24,6 +24,7 @@ import (
 	add_contract "github.com/onflow/flow-cli/flow/accounts/add-contract"
 	"github.com/onflow/flow-cli/flow/accounts/create"
 	"github.com/onflow/flow-cli/flow/accounts/get"
+	remove_contract "github.com/onflow/flow-cli/flow/accounts/remove-contract"
 	staking_info "github.com/onflow/flow-cli/flow/accounts/staking-info"
 	update_contract "github.com/onflow/flow-cli/flow/accounts/update-contract"
 )
@@ -40,4 +41,5 @@ func init() {
 	Cmd.AddCommand(staking_info.Cmd)
 	Cmd.AddCommand(add_contract.Cmd)
 	Cmd.AddCommand(update_contract.Cmd)
+	Cmd.AddCommand(remove_contract.Cmd)
 }
