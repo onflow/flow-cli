@@ -24,6 +24,7 @@ import (
 
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func Test_PrivateKeyEnv(t *testing.T) {
@@ -100,7 +101,9 @@ func Test_PrivateConfigFileAccounts(t *testing.T) {
 	}`)
 
 	mockFS := afero.NewMemMapFs()
-	afero.WriteFile(mockFS, "test.flow.json", f, 0644)
+	err := afero.WriteFile(mockFS, "test.flow.json", f, 0644)
+
+	require.NoError(t, err)
 
 	preprocessor := NewPreprocessor(mockFS)
 	result := preprocessor.Run(string(b))
@@ -142,7 +145,9 @@ func Test_PrivateConfigFileAndEnvAccounts(t *testing.T) {
 	os.Setenv("ADMIN_FILE", "${file:test.flow.json}")
 
 	mockFS := afero.NewMemMapFs()
-	afero.WriteFile(mockFS, "test.flow.json", f, 0644)
+	err := afero.WriteFile(mockFS, "test.flow.json", f, 0644)
+
+	require.NoError(t, err)
 
 	preprocessor := NewPreprocessor(mockFS)
 	result := preprocessor.Run(string(b))
