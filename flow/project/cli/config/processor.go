@@ -20,7 +20,6 @@ package config
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"regexp"
 	"strings"
@@ -35,14 +34,14 @@ var (
 
 // Preprocessor is used to pre-process configuration file
 type Preprocessor struct {
-	filesystem afero.Fs
+	af *afero.Afero
 }
 
 // NewPreprocessor creates new instance of preprocessor
 func NewPreprocessor(filesystem afero.Fs) *Preprocessor {
-	return &Preprocessor{
-		filesystem: filesystem,
-	}
+	af := &afero.Afero{Fs: filesystem}
+
+	return &Preprocessor{af: af}
 }
 
 // Run all pre-processors
@@ -72,7 +71,7 @@ func (p *Preprocessor) processFile(raw string) string {
 	fileMatches := fileRegex.FindAllStringSubmatch(raw, -1)
 
 	for _, match := range fileMatches {
-		configFileRaw, err := ioutil.ReadFile(match[1])
+		configFileRaw, err := p.af.ReadFile(match[1])
 
 		if err != nil {
 			fmt.Printf("Config file %s not found. \n", match[1])

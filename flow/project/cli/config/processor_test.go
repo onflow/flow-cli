@@ -19,64 +19,37 @@
 package config
 
 import (
-	"io/ioutil"
 	"os"
 	"testing"
 
+	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func Test_PrivateKeyEnv(t *testing.T) {
 	os.Setenv("TEST", "123")
 
 	test := `{
-		"emulators": {
-			"default": {
-				"port": 3569,
-				"serviceAccount": "emulator-account"
-			}
-		},
-		"contracts": {},
-		"networks": {
-			"emulator": {
-				"host": "127.0.0.1:3569",
-				"chain": "flow-emulator"
-			}
-		},
 		"accounts": {
 			"emulator-account": {
 				"address": "f8d6e0586b0a20c7",
 				"keys": "${env:TEST}",
 				"chain": "flow-emulator"
 			}
-		},
-		"deploys": {}
+		}
 	}`
 
-	result := PreProcess(test)
+	preprocessor := NewPreprocessor(new(afero.MemMapFs))
+	result := preprocessor.Run(test)
+
 	assert.JSONEq(t, `{
-			"emulators": {
-				"default": {
-					"port": 3569,
-					"serviceAccount": "emulator-account"
-				}
-			},
-			"contracts": {},
-			"networks": {
-				"emulator": {
-					"host": "127.0.0.1:3569",
-					"chain": "flow-emulator"
-				}
-			},
 			"accounts": {
 				"emulator-account": {
 					"address": "f8d6e0586b0a20c7",
 					"keys": "123",
 					"chain": "flow-emulator"
 				}
-			},
-			"deploys": {}
+			}
 		}`, result)
 }
 
@@ -85,89 +58,39 @@ func Test_PrivateKeyEnvMultipleAccounts(t *testing.T) {
 	os.Setenv("TEST2", "333")
 
 	test := `{
-		"emulators": {
-			"default": {
-				"port": 3569,
-				"serviceAccount": "emulator-account"
-			}
-		},
-		"contracts": {},
-		"networks": {
-			"emulator": {
-				"host": "127.0.0.1:3569",
-				"chain": "flow-emulator"
-			}
-		},
 		"accounts": {
 			"emulator-account": {
 				"address": "f8d6e0586b0a20c7",
 				"keys": "${env:TEST}",
 				"chain": "flow-emulator"
-			},
-			"emulator-account-2": {
-				"address": "f8d6e0586b0a20c7",
-				"keys": "${env:TEST2}",
-				"chain": "flow-emulator"
 			}
-		},
-		"deploys": {}
+		}
 	}`
 
-	result := PreProcess(test)
+	preprocessor := NewPreprocessor(new(afero.MemMapFs))
+	result := preprocessor.Run(test)
+
 	assert.JSONEq(t, `{
-			"emulators": {
-				"default": {
-					"port": 3569,
-					"serviceAccount": "emulator-account"
-				}
-			},
-			"contracts": {},
-			"networks": {
-				"emulator": {
-					"host": "127.0.0.1:3569",
-					"chain": "flow-emulator"
-				}
-			},
-			"accounts": {
-				"emulator-account": {
-					"address": "f8d6e0586b0a20c7",
-					"keys": "123",
-					"chain": "flow-emulator"
-				}, 
-				"emulator-account-2": {
-					"address": "f8d6e0586b0a20c7",
-					"keys": "333",
-					"chain": "flow-emulator"
-				}
-			},
-			"deploys": {}
-		}`, result)
+		"accounts": {
+			"emulator-account": {
+				"address": "f8d6e0586b0a20c7",
+				"keys": "123",
+				"chain": "flow-emulator"
+			}
+		}
+	}`, result)
 }
 
 func Test_PrivateConfigFileAccounts(t *testing.T) {
 	b := `{
-		"emulators": {
-			"default": {
-				"port": 3569,
-				"serviceAccount": "emulator-account"
-			}
-		},
-		"contracts": {},
-		"networks": {
-			"emulator": {
-				"host": "127.0.0.1:3569",
-				"chain": "flow-emulator"
-			}
-		},
 		"accounts": {
 			"emulator-account": {
 				"address": "f8d6e0586b0a20c7",
 				"keys": "11c5dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7",
 				"chain": "flow-emulator"
 			},
-			"admin-account": "${file:flow.admin.json}"
-		},
-		"deploys": {}
+			"admin-account": "${file:test.flow.json}"
+		}
 	}`
 
 	f := []byte(`{
@@ -176,24 +99,13 @@ func Test_PrivateConfigFileAccounts(t *testing.T) {
 		"chain": "flow-emulator"  
 	}`)
 
-	err := ioutil.WriteFile("flow.admin.json", f, os.ModePerm)
-	require.NoError(t, err)
+	mockFS := afero.NewMemMapFs()
+	afero.WriteFile(mockFS, "test.flow.json", f, 0644)
 
-	result := PreProcess(b)
+	preprocessor := NewPreprocessor(mockFS)
+	result := preprocessor.Run(string(b))
+
 	assert.JSONEq(t, `{
-			"emulators": {
-				"default": {
-					"port": 3569,
-					"serviceAccount": "emulator-account"
-				}
-			},
-			"contracts": {},
-			"networks": {
-				"emulator": {
-					"host": "127.0.0.1:3569",
-					"chain": "flow-emulator"
-				}
-			},
 			"accounts": {
 				"emulator-account": {
 					"address": "f8d6e0586b0a20c7",
@@ -205,28 +117,12 @@ func Test_PrivateConfigFileAccounts(t *testing.T) {
 					"keys": "17a616e230d38c04fb887dd83283a45f9a3082579db512c96eb84c5c562ac054",
 					"chain": "flow-emulator" 
 				}
-			},
-			"deploys": {}
+			}
 		}`, result)
-
-	os.Remove("flow.admin.json")
 }
 
 func Test_PrivateConfigFileAndEnvAccounts(t *testing.T) {
 	b := `{
-		"emulators": {
-			"default": {
-				"port": 3569,
-				"serviceAccount": "emulator-account"
-			}
-		},
-		"contracts": {},
-		"networks": {
-			"emulator": {
-				"host": "127.0.0.1:3569",
-				"chain": "flow-emulator"
-			}
-		},
 		"accounts": {
 			"emulator-account": {
 				"address": "f8d6e0586b0a20c7",
@@ -234,8 +130,7 @@ func Test_PrivateConfigFileAndEnvAccounts(t *testing.T) {
 				"chain": "flow-emulator"
 			},
 			"admin-account": "${env:ADMIN_FILE}"
-		},
-		"deploys": {}
+		}
 	}`
 
 	f := []byte(`{
@@ -244,27 +139,15 @@ func Test_PrivateConfigFileAndEnvAccounts(t *testing.T) {
 		"chain": "flow-emulator"  
 	}`)
 
-	// REF: don't create files but mock it
 	os.Setenv("ADMIN_FILE", "${file:test.flow.json}")
-	err := ioutil.WriteFile("test.flow.json", f, os.ModePerm)
-	defer os.Remove("test.flow.json")
-	require.NoError(t, err)
 
-	result := PreProcess(b)
+	mockFS := afero.NewMemMapFs()
+	afero.WriteFile(mockFS, "test.flow.json", f, 0644)
+
+	preprocessor := NewPreprocessor(mockFS)
+	result := preprocessor.Run(string(b))
+
 	assert.JSONEq(t, `{
-			"emulators": {
-				"default": {
-					"port": 3569,
-					"serviceAccount": "emulator-account"
-				}
-			},
-			"contracts": {},
-			"networks": {
-				"emulator": {
-					"host": "127.0.0.1:3569",
-					"chain": "flow-emulator"
-				}
-			},
 			"accounts": {
 				"emulator-account": {
 					"address": "f8d6e0586b0a20c7",
@@ -276,7 +159,6 @@ func Test_PrivateConfigFileAndEnvAccounts(t *testing.T) {
 					"keys": "17a616e230d38c04fb887dd83283a45f9a3082579db512c96eb84c5c562ac054",
 					"chain": "flow-emulator" 
 				}
-			},
-			"deploys": {}
+			}
 		}`, result)
 }
