@@ -24,6 +24,8 @@ import (
 	"os"
 	"regexp"
 	"strings"
+
+	"github.com/spf13/afero"
 )
 
 var (
@@ -31,15 +33,34 @@ var (
 	fileRegex *regexp.Regexp = regexp.MustCompile(`\"\$\{file\:(.+)\}\"`)
 )
 
+// Preprocessor is used to pre-process configuration file
+type Preprocessor struct {
+	filesystem afero.Fs
+}
+
+// NewPreprocessor creates new instance of preprocessor
+func NewPreprocessor(filesystem afero.Fs) *Preprocessor {
+	return &Preprocessor{
+		filesystem: filesystem,
+	}
+}
+
+// Run all pre-processors
+func (p *Preprocessor) Run(raw string) string {
+	raw = p.processEnv(raw)
+	raw = p.processFile(raw)
+	return raw
+}
+
 // processEnv finds env variables and insert env values
-func processEnv(raw string) string {
+func (p *Preprocessor) processEnv(raw string) string {
 	envMatches := envRegex.FindAllStringSubmatch(raw, -1)
 
 	for _, match := range envMatches {
 		raw = strings.ReplaceAll(
 			raw,
 			match[0],
-			getEnvVariable(match[1]),
+			p.getEnvVariable(match[1]),
 		)
 	}
 
@@ -47,7 +68,7 @@ func processEnv(raw string) string {
 }
 
 // processFile finds file variables and insert content
-func processFile(raw string) string {
+func (p *Preprocessor) processFile(raw string) string {
 	fileMatches := fileRegex.FindAllStringSubmatch(raw, -1)
 
 	for _, match := range fileMatches {
@@ -68,15 +89,7 @@ func processFile(raw string) string {
 	return raw
 }
 
-// PreProcess configuration before it is deserialized to structs
-func PreProcess(raw string) string {
-	raw = processEnv(raw)
-	raw = processFile(raw)
-
-	return raw
-}
-
 // get environment variable by name
-func getEnvVariable(name string) string {
+func (p *Preprocessor) getEnvVariable(name string) string {
 	return os.Getenv(name)
 }
