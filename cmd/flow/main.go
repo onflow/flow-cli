@@ -55,7 +55,7 @@ func init() {
 	cmd.AddCommand(scripts.Cmd)
 	cmd.AddCommand(transactions.Cmd)
 	cmd.AddCommand(version.Cmd)
-	cmd.PersistentFlags().StringVarP(&cli.ConfigPath, "config-path", "f", cli.ConfigPath, "Path to flow configuration file")
+	cmd.PersistentFlags().StringSliceVarP(&cli.ConfigPath, "config-path", "f", cli.ConfigPath, "Path to flow configuration file")
 }
 
 func main() {

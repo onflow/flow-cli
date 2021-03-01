@@ -23,6 +23,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	c "github.com/onflow/flow-cli/flow"
 	"github.com/onflow/flow-cli/flow/project/cli"
 )
 
@@ -30,12 +31,12 @@ var Cmd = &cobra.Command{
 	Use:   "init",
 	Short: "Initialize a new Flow project",
 	Run: func(cmd *cobra.Command, args []string) {
-		if !cli.ProjectExists() {
+		if !cli.ProjectExists(c.ConfigPath[0]) {
 			proj := cli.InitProject()
-			proj.Save()
+			proj.Save(c.ConfigPath[0])
 
 			fmt.Print(
-				cli.Green(fmt.Sprintf("Initialized a new Flow project in %s\n\n", cli.DefaultConfigPath)),
+				cli.Green(fmt.Sprintf("Initialized a new Flow project in %s\n\n", c.ConfigPath)),
 			)
 			fmt.Printf(
 				"Start the Flow Emulator by running: %s\n",
@@ -44,7 +45,7 @@ var Cmd = &cobra.Command{
 		} else {
 			fmt.Printf(
 				"%s\n\nStart the Flow Emulator by running: %s\n",
-				cli.Red(fmt.Sprintf("A Flow project already exists in %s", cli.DefaultConfigPath)),
+				cli.Red(fmt.Sprintf("A Flow project already exists in %s", c.ConfigPath)),
 				cli.Bold("flow project start-emulator"),
 			)
 		}
