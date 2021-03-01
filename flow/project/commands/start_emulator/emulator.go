@@ -19,10 +19,12 @@
 package start_emulator
 
 import (
+	"fmt"
 	"github.com/onflow/flow-emulator/cmd/emulator/start"
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/spf13/cobra"
 
+	c "github.com/onflow/flow-cli/flow"
 	"github.com/onflow/flow-cli/flow/project/cli"
 	"github.com/onflow/flow-cli/flow/project/cli/config"
 )
@@ -38,7 +40,8 @@ func configuredServiceKey(
 	crypto.SignatureAlgorithm,
 	crypto.HashAlgorithm,
 ) {
-	proj := cli.LoadProject()
+	fmt.Println(c.ConfigPath)
+	proj := cli.LoadProject(c.ConfigPath)
 
 	serviceAccount := proj.EmulatorServiceAccount()
 	// TODO: this shouldn't be accessed like this, make a getter
