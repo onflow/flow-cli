@@ -20,6 +20,7 @@ package cli
 
 import (
 	"fmt"
+	"github.com/spf13/afero"
 	"sort"
 	"testing"
 
@@ -29,6 +30,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/thoas/go-funk"
 )
+
+var composer = config.NewComposer(afero.NewOsFs())
 
 func generateComplexProject() Project {
 	config := config.Config{
@@ -122,7 +125,7 @@ func generateComplexProject() Project {
 		}},
 	}
 
-	p, err := newProject(&config)
+	p, err := newProject(&config, composer)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -168,7 +171,7 @@ func generateSimpleProject() Project {
 		}},
 	}
 
-	p, err := newProject(&config)
+	p, err := newProject(&config, composer)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -219,7 +222,7 @@ func generateAliasesProject() Project {
 		}},
 	}
 
-	p, err := newProject(&config)
+	p, err := newProject(&config, composer)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -300,7 +303,7 @@ func generateAliasesComplexProject() Project {
 		}},
 	}
 
-	p, err := newProject(&config)
+	p, err := newProject(&config, composer)
 	if err != nil {
 		fmt.Println(err)
 	}

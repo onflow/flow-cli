@@ -30,7 +30,7 @@ import (
 func Test_PrivateKeyEnv(t *testing.T) {
 	os.Setenv("TEST", "123")
 
-	test := `{
+	test := []byte(`{
 		"accounts": {
 			"emulator-account": {
 				"address": "f8d6e0586b0a20c7",
@@ -38,7 +38,7 @@ func Test_PrivateKeyEnv(t *testing.T) {
 				"chain": "flow-emulator"
 			}
 		}
-	}`
+	}`)
 
 	preprocessor := NewPreprocessor(new(afero.MemMapFs))
 	result := preprocessor.Run(test)
@@ -51,14 +51,14 @@ func Test_PrivateKeyEnv(t *testing.T) {
 					"chain": "flow-emulator"
 				}
 			}
-		}`, result)
+		}`, string(result))
 }
 
 func Test_PrivateKeyEnvMultipleAccounts(t *testing.T) {
 	os.Setenv("TEST", "123")
 	os.Setenv("TEST2", "333")
 
-	test := `{
+	test := []byte(`{
 		"accounts": {
 			"emulator-account": {
 				"address": "f8d6e0586b0a20c7",
@@ -66,7 +66,7 @@ func Test_PrivateKeyEnvMultipleAccounts(t *testing.T) {
 				"chain": "flow-emulator"
 			}
 		}
-	}`
+	}`)
 
 	preprocessor := NewPreprocessor(new(afero.MemMapFs))
 	result := preprocessor.Run(test)
@@ -79,11 +79,11 @@ func Test_PrivateKeyEnvMultipleAccounts(t *testing.T) {
 				"chain": "flow-emulator"
 			}
 		}
-	}`, result)
+	}`, string(result))
 }
 
 func Test_PrivateConfigFileAccounts(t *testing.T) {
-	b := `{
+	b := []byte(`{
 		"accounts": {
 			"emulator-account": {
 				"address": "f8d6e0586b0a20c7",
@@ -92,7 +92,7 @@ func Test_PrivateConfigFileAccounts(t *testing.T) {
 			},
 			"admin-account": "${file:test.flow.json}"
 		}
-	}`
+	}`)
 
 	f := []byte(`{
 		"address": "f669cb8d41ce0c74",
@@ -106,7 +106,7 @@ func Test_PrivateConfigFileAccounts(t *testing.T) {
 	require.NoError(t, err)
 
 	preprocessor := NewPreprocessor(mockFS)
-	result := preprocessor.Run(string(b))
+	result := preprocessor.Run(b)
 
 	assert.JSONEq(t, `{
 			"accounts": {
@@ -121,11 +121,11 @@ func Test_PrivateConfigFileAccounts(t *testing.T) {
 					"chain": "flow-emulator" 
 				}
 			}
-		}`, result)
+		}`, string(result))
 }
 
 func Test_PrivateConfigFileAndEnvAccounts(t *testing.T) {
-	b := `{
+	b := []byte(`{
 		"accounts": {
 			"emulator-account": {
 				"address": "f8d6e0586b0a20c7",
@@ -134,7 +134,7 @@ func Test_PrivateConfigFileAndEnvAccounts(t *testing.T) {
 			},
 			"admin-account": "${env:ADMIN_FILE}"
 		}
-	}`
+	}`)
 
 	f := []byte(`{
 		"address": "f669cb8d41ce0c74",
@@ -150,7 +150,7 @@ func Test_PrivateConfigFileAndEnvAccounts(t *testing.T) {
 	require.NoError(t, err)
 
 	preprocessor := NewPreprocessor(mockFS)
-	result := preprocessor.Run(string(b))
+	result := preprocessor.Run(b)
 
 	assert.JSONEq(t, `{
 			"accounts": {
@@ -165,5 +165,5 @@ func Test_PrivateConfigFileAndEnvAccounts(t *testing.T) {
 					"chain": "flow-emulator" 
 				}
 			}
-		}`, result)
+		}`, string(result))
 }
