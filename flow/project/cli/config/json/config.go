@@ -25,6 +25,7 @@ import (
 	"io/ioutil"
 	"os"
 
+	"github.com/a8m/envsubst"
 	"github.com/onflow/flow-cli/flow/project/cli/config"
 )
 
@@ -77,7 +78,7 @@ func Save(conf *config.Config, path string) error {
 var ErrDoesNotExist = errors.New("project config file does not exist")
 
 func Load(path string) (*config.Config, error) {
-	f, err := os.Open(path)
+	f, err := envsubst.ReadFile(path)
 	if err != nil {
 		if os.IsNotExist(err) {
 			return nil, ErrDoesNotExist
@@ -85,10 +86,8 @@ func Load(path string) (*config.Config, error) {
 
 		return nil, err
 	}
-
-	d := json.NewDecoder(f)
 	conf := new(jsonConfig)
-	err = d.Decode(conf)
+	err = json.Unmarshal(f, &conf)
 
 	if err != nil {
 		fmt.Printf("%s contains invalid json: %s\n", path, err.Error())
