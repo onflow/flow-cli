@@ -22,6 +22,7 @@ import (
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/thoas/go-funk"
+	"reflect"
 )
 
 type Config struct {
@@ -92,6 +93,13 @@ const (
 	KeyTypeShell     KeyType = "shell"      // Exec out to a shell script
 )
 
+// Parser is interface for any configuration format parser to implement
+type Parser interface {
+	Serialize(*Config) ([]byte, error)
+	Deserialize([]byte) (*Config, error)
+	SupportsFormat(string) bool
+}
+
 // IsAlias checks if contract has an alias
 func (c *Contract) IsAlias() bool {
 	return c.Alias != ""
@@ -140,6 +148,17 @@ func (c *Contracts) GetByNetwork(network string) Contracts {
 	return contracts
 }
 
+func (c *Contracts) SetForName(name string, contract Contract) {
+	for _, con := range *c {
+		if con.Name == name {
+			con = contract
+			return
+		}
+	}
+
+	*c = append(*c, contract)
+}
+
 // GetAccountByName get account by name
 func (a *Accounts) GetByName(name string) *Account {
 	for _, account := range *a {
@@ -160,6 +179,17 @@ func (a *Accounts) GetByAddress(address string) *Account {
 	}
 
 	return nil
+}
+
+func (a *Accounts) SetForName(name string, account Account) {
+	for _, acc := range *a {
+		if acc.Name == name {
+			acc = account
+			return
+		}
+	}
+
+	*a = append(*a, account)
 }
 
 // GetByNetwork get all deployments by network
@@ -188,6 +218,16 @@ func (d *Deployments) GetByAccountAndNetwork(account string, network string) []D
 	return deployments
 }
 
+func (d *Deployments) AddIfMissing(deployment Deploy) {
+	for _, dep := range *d {
+		if reflect.DeepEqual(dep, deployment) {
+			return
+		}
+	}
+
+	*d = append(*d, deployment)
+}
+
 // GetByName get network by name
 func (n *Networks) GetByName(name string) *Network {
 	for _, network := range *n {
@@ -197,6 +237,17 @@ func (n *Networks) GetByName(name string) *Network {
 	}
 
 	return nil
+}
+
+func (n *Networks) SetForName(name string, network Network) {
+	for _, net := range *n {
+		if net.Name == name {
+			net = network
+			return
+		}
+	}
+
+	*n = append(*n, network)
 }
 
 const DefaultEmulatorConfigName = "default"
@@ -210,4 +261,15 @@ func (e *Emulators) GetDefault() *Emulator {
 	}
 
 	return nil
+}
+
+func (e *Emulators) SetForName(name string, emulator Emulator) {
+	for _, em := range *e {
+		if em.Name == name {
+			em = emulator
+			return
+		}
+	}
+
+	*e = append(*e, emulator)
 }

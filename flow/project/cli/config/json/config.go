@@ -20,14 +20,12 @@ package json
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
-	"io/ioutil"
-	"os"
-
 	"github.com/onflow/flow-cli/flow/project/cli/config"
-	"github.com/spf13/afero"
+	"os"
 )
+
+// TODO: implement interface for all specific config implementation
 
 type jsonConfig struct {
 	Emulators   jsonEmulators   `json:"emulators"`
@@ -37,7 +35,7 @@ type jsonConfig struct {
 	Deployments jsonDeployments `json:"deployments"`
 }
 
-func (j jsonConfig) transformToConfig() *config.Config {
+func (j *jsonConfig) transformToConfig() *config.Config {
 	return &config.Config{
 		Emulators:   j.Emulators.transformToConfig(),
 		Contracts:   j.Contracts.transformToConfig(),
@@ -57,59 +55,34 @@ func transformConfigToJSON(config *config.Config) jsonConfig {
 	}
 }
 
+func NewParser() config.Parser {
+	return new(jsonConfig)
+}
+
 // Save saves the configuration to the specified path file in JSON format.
-func Save(conf *config.Config, path string) error {
+func (j *jsonConfig) Serialize(conf *config.Config) ([]byte, error) {
 	jsonConf := transformConfigToJSON(conf)
 
 	data, err := json.MarshalIndent(jsonConf, "", "\t")
 	if err != nil {
-		return err
-	}
-
-	err = ioutil.WriteFile(path, data, 0777)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// ErrDoesNotExist is error to be returned when config file does not exists
-var ErrDoesNotExist = errors.New("project config file does not exist")
-
-// Load config file
-func Load(path string, filesystem afero.Fs) (*config.Config, error) {
-	af := &afero.Afero{Fs: filesystem}
-	raw, err := af.ReadFile(path)
-
-	if err != nil {
-		if os.IsNotExist(err) {
-			return nil, ErrDoesNotExist
-		}
-
 		return nil, err
 	}
 
-	// preprocess configuration
-	preprocessor := config.NewPreprocessor(af.Fs)
-	preProcessed := preprocessor.Run(string(raw))
+	return data, nil
+}
 
+func (j *jsonConfig) Deserialize(raw []byte) (*config.Config, error) {
 	var jsonConf jsonConfig
-	err = json.Unmarshal([]byte(preProcessed), &jsonConf)
+	err := json.Unmarshal(raw, &jsonConf)
 
 	if err != nil {
-		fmt.Printf("%s contains invalid json: %s\n", path, err.Error())
+		fmt.Printf("Invalid json: %s\n", err.Error())
 		os.Exit(1)
 	}
 
 	return jsonConf.transformToConfig(), nil
 }
 
-// Exists checks if file exists on the specified path
-func Exists(path string) bool {
-	info, err := os.Stat(path)
-	if os.IsNotExist(err) {
-		return false
-	}
-	return !info.IsDir()
+func (j *jsonConfig) SupportsFormat(extension string) bool {
+	return extension == ".json"
 }
