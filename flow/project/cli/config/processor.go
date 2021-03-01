@@ -45,10 +45,12 @@ func NewPreprocessor(filesystem afero.Fs) *Preprocessor {
 }
 
 // Run all pre-processors
-func (p *Preprocessor) Run(raw string) string {
-	raw = p.processEnv(raw)
-	raw = p.processFile(raw)
-	return raw
+func (p *Preprocessor) Run(raw []byte) []byte {
+	rawString := string(raw)
+	rawString = p.processEnv(rawString)
+	rawString = p.processFile(rawString)
+
+	return []byte(rawString)
 }
 
 // processEnv finds env variables and insert env values
