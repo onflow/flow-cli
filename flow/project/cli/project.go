@@ -20,6 +20,7 @@ package cli
 
 import (
 	"errors"
+	"github.com/onflow/flow-cli/flow/project/cli/config/json"
 	"path"
 	"strings"
 
@@ -29,38 +30,39 @@ import (
 	"github.com/thoas/go-funk"
 
 	"github.com/onflow/flow-cli/flow/project/cli/config"
-	"github.com/onflow/flow-cli/flow/project/cli/config/json"
 	"github.com/onflow/flow-cli/flow/project/cli/keys"
 )
 
 // Project has all the funcionality to manage project
 type Project struct {
+	composer *config.Composer
 	conf     *config.Config
 	accounts []*Account
 }
 
-//TODO: move this to json config
-const DefaultConfigPath = "flow.json"
-
 // LoadProject loads configuration and setup the project
-func LoadProject() *Project {
-	//TODO: this should interact with config and not json directly - currently problem with CD
-	conf, err := json.Load(DefaultConfigPath, afero.NewOsFs())
+func LoadProject(configFilePath []string) *Project {
+	composer := config.NewComposer(afero.NewOsFs())
+
+	// here we add all available parsers (more to add yaml etc...)
+	composer.AddConfigParser(json.NewParser())
+	conf, err := composer.Load(configFilePath)
+
 	if err != nil {
-		if errors.Is(err, json.ErrDoesNotExist) {
+		if errors.Is(err, config.ErrDoesNotExist) {
 			Exitf(
 				1,
 				"Project config file %s does not exist. Please initialize first\n",
-				DefaultConfigPath,
+				configFilePath,
 			)
 		}
 
-		Exitf(1, "Failed to open project configuration in %s", DefaultConfigPath)
+		Exitf(1, "Failed to open project configuration in %s", configFilePath)
 
 		return nil
 	}
 
-	proj, err := newProject(conf)
+	proj, err := newProject(conf, composer)
 	if err != nil {
 		// TODO: replace with a more detailed error message
 		Exitf(1, "Invalid project configuration: %s", err)
@@ -70,8 +72,8 @@ func LoadProject() *Project {
 }
 
 // ProjectExists checks if project exists
-func ProjectExists() bool {
-	return json.Exists(DefaultConfigPath)
+func ProjectExists(path string) bool {
+	return config.Exists(path)
 }
 
 // InitProject initializes the project
@@ -79,6 +81,7 @@ func InitProject() *Project {
 	emulatorServiceAccount := generateEmulatorServiceAccount()
 
 	return &Project{
+		composer: config.NewComposer(afero.NewOsFs()),
 		conf:     defaultConfig(emulatorServiceAccount),
 		accounts: []*Account{emulatorServiceAccount},
 	}
@@ -128,13 +131,14 @@ func generateEmulatorServiceAccount() *Account {
 	}
 }
 
-func newProject(conf *config.Config) (*Project, error) {
+func newProject(conf *config.Config, composer *config.Composer) (*Project, error) {
 	accounts, err := accountsFromConfig(conf)
 	if err != nil {
 		return nil, err
 	}
 
 	return &Project{
+		composer: composer,
 		conf:     conf,
 		accounts: accounts,
 	}, nil
@@ -224,12 +228,12 @@ func (p *Project) GetAliases(network string) map[string]string {
 	return aliases
 }
 
-func (p *Project) Save() {
+func (p *Project) Save(path string) {
 	p.conf.Accounts = accountsToConfig(p.accounts)
+	err := p.composer.Save(p.conf, path)
 
-	err := json.Save(p.conf, DefaultConfigPath)
 	if err != nil {
-		Exitf(1, "Failed to save project configuration to \"%s\"", DefaultConfigPath)
+		Exitf(1, "Failed to save project configuration to \"%s\"", path)
 	}
 }
 
