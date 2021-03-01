@@ -129,9 +129,15 @@ func (c *Contracts) GetByName(name string) Contract {
 
 // GetByNetwork returns all contracts for specific network
 func (c *Contracts) GetByNetwork(network string) Contracts {
-	return funk.Filter([]Contract(*c), func(c Contract) bool {
-		return c.Network == network || c.Network == "" // if network is not defined return for all set value
-	}).([]Contract)
+	var contracts []Contract
+
+	for _, contract := range *c {
+		if contract.Network == network || contract.Network == "" {
+			contracts = append(contracts, contract)
+		}
+	}
+
+	return contracts
 }
 
 // GetAccountByName get account by name
@@ -146,37 +152,62 @@ func (a *Accounts) GetByName(name string) *Account {
 }
 
 // GetByAddress get account by address
-func (a *Accounts) GetByAddress(address string) Account {
-	return funk.Filter([]Account(*a), func(a Account) bool {
-		return a.Address.String() == address
-	}).([]Account)[0]
+func (a *Accounts) GetByAddress(address string) *Account {
+	for _, account := range *a {
+		if account.Address.String() == address {
+			return &account
+		}
+	}
+
+	return nil
 }
 
 // GetByNetwork get all deployments by network
 func (d *Deployments) GetByNetwork(network string) Deployments {
-	return funk.Filter([]Deploy(*d), func(d Deploy) bool {
-		return d.Network == network
-	}).([]Deploy)
+	var deployments []Deploy
+
+	for _, deploy := range *d {
+		if deploy.Network == network {
+			deployments = append(deployments, deploy)
+		}
+	}
+
+	return deployments
 }
 
 // GetByAccountAndNetwork get deploy by account and network
 func (d *Deployments) GetByAccountAndNetwork(account string, network string) []Deploy {
-	return funk.Filter([]Deploy(*d), func(d Deploy) bool {
-		return d.Account == account && d.Network == network
-	}).([]Deploy)
+	var deployments []Deploy
+
+	for _, deploy := range *d {
+		if deploy.Network == network && deploy.Account == account {
+			deployments = append(deployments, deploy)
+		}
+	}
+
+	return deployments
 }
 
 // GetByName get network by name
-func (n *Networks) GetByName(name string) Network {
-	return funk.Filter([]Network(*n), func(n Network) bool {
-		return n.Name == name
-	}).([]Network)[0]
+func (n *Networks) GetByName(name string) *Network {
+	for _, network := range *n {
+		if network.Name == name {
+			return &network
+		}
+	}
+
+	return nil
 }
 
 const DefaultEmulatorConfigName = "default"
 
-func (e *Emulators) GetDefault() Emulator {
-	return funk.Filter([]Emulator(*e), func(e Emulator) bool {
-		return e.Name == DefaultEmulatorConfigName
-	}).([]Emulator)[0]
+// GetDefault emulator
+func (e *Emulators) GetDefault() *Emulator {
+	for _, emulator := range *e {
+		if emulator.Name == DefaultEmulatorConfigName {
+			return &emulator
+		}
+	}
+
+	return nil
 }
