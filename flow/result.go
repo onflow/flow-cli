@@ -1,7 +1,7 @@
 /*
  * Flow CLI
  *
- * Copyright 2019-2020 Dapper Labs, Inc.
+ * Copyright 2019-2021 Dapper Labs, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -176,7 +176,7 @@ func printField(field cadence.Field, value cadence.Value) {
 			fmt.Printf("%x", b)
 		}
 	} else if uintVal, ok := v.(uint64); typeInfo == "UFix64" && ok {
-		fmt.Print(FormatUFix64(uintVal))
+		fmt.Print(cadence.UFix64(uintVal))
 	} else {
 		fmt.Printf("%v", v)
 	}
