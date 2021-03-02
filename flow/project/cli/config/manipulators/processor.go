@@ -16,32 +16,30 @@
  * limitations under the License.
  */
 
-package config
+package manipulators
 
 import (
-	"fmt"
 	"os"
 	"regexp"
 	"strings"
-
-	"github.com/spf13/afero"
 )
 
 var (
-	envRegex  *regexp.Regexp = regexp.MustCompile(`\$\{env\:(.+)\}`)
-	fileRegex *regexp.Regexp = regexp.MustCompile(`\"\$\{file\:(.+)\}\"`)
+	envRegex      *regexp.Regexp = regexp.MustCompile(`\$\{env\:(.+)\}`)
+	fileRegex     *regexp.Regexp = regexp.MustCompile(`"([^"]*)"\s*:\s*{\s*"fromFile"\s*:\s*"([^"]*)"\s*},?`)
+	trailingComma *regexp.Regexp = regexp.MustCompile(`\,\s*}`)
 )
 
 // Preprocessor is used to pre-process configuration file
 type Preprocessor struct {
-	af *afero.Afero
+	composer *Composer
 }
 
 // NewPreprocessor creates new instance of preprocessor
-func NewPreprocessor(filesystem afero.Fs) *Preprocessor {
-	af := &afero.Afero{Fs: filesystem}
-
-	return &Preprocessor{af: af}
+func NewPreprocessor(composer *Composer) *Preprocessor {
+	return &Preprocessor{
+		composer: composer,
+	}
 }
 
 // Run all pre-processors
@@ -73,18 +71,17 @@ func (p *Preprocessor) processFile(raw string) string {
 	fileMatches := fileRegex.FindAllStringSubmatch(raw, -1)
 
 	for _, match := range fileMatches {
-		configFileRaw, err := p.af.ReadFile(match[1])
-
-		if err != nil {
-			fmt.Printf("Config file %s not found. \n", match[1])
-			os.Exit(1)
+		if len(match) < 3 {
+			continue
 		}
 
-		raw = strings.ReplaceAll(
-			raw,
-			match[0],
-			string(configFileRaw),
-		)
+		p.composer.AddAccountFromFile(match[2], match[1])
+
+		// remove from config
+		raw = strings.ReplaceAll(raw, match[0], "")
+
+		// remove possible trailing comma
+		raw = trailingComma.ReplaceAllString(raw, "}")
 	}
 
 	return raw
