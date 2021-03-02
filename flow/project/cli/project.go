@@ -21,6 +21,7 @@ package cli
 import (
 	"errors"
 	"github.com/onflow/flow-cli/flow/project/cli/config/json"
+	"github.com/onflow/flow-cli/flow/project/cli/config/manipulators"
 	"path"
 	"strings"
 
@@ -35,21 +36,21 @@ import (
 
 // Project has all the funcionality to manage project
 type Project struct {
-	composer *Composer
+	composer *manipulators.Composer
 	conf     *config.Config
 	accounts []*Account
 }
 
 // LoadProject loads configuration and setup the project
 func LoadProject(configFilePath []string) *Project {
-	composer := NewComposer(afero.NewOsFs())
+	composer := manipulators.NewComposer(afero.NewOsFs())
 
 	// here we add all available parsers (more to add yaml etc...)
 	composer.AddConfigParser(json.NewParser())
 	conf, err := composer.Load(configFilePath)
 
 	if err != nil {
-		if errors.Is(err, ErrDoesNotExist) {
+		if errors.Is(err, manipulators.ErrDoesNotExist) {
 			Exitf(
 				1,
 				"Project config file %s does not exist. Please initialize first\n",
@@ -73,7 +74,7 @@ func LoadProject(configFilePath []string) *Project {
 
 // ProjectExists checks if project exists
 func ProjectExists(path string) bool {
-	return Exists(path)
+	return manipulators.Exists(path)
 }
 
 // InitProject initializes the project
@@ -81,7 +82,7 @@ func InitProject() *Project {
 	emulatorServiceAccount := generateEmulatorServiceAccount()
 
 	return &Project{
-		composer: NewComposer(afero.NewOsFs()),
+		composer: manipulators.NewComposer(afero.NewOsFs()),
 		conf:     defaultConfig(emulatorServiceAccount),
 		accounts: []*Account{emulatorServiceAccount},
 	}
@@ -131,7 +132,7 @@ func generateEmulatorServiceAccount() *Account {
 	}
 }
 
-func newProject(conf *config.Config, composer *Composer) (*Project, error) {
+func newProject(conf *config.Config, composer *manipulators.Composer) (*Project, error) {
 	accounts, err := accountsFromConfig(conf)
 	if err != nil {
 		return nil, err
