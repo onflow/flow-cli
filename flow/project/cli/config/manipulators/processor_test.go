@@ -16,7 +16,7 @@
 * limitations under the License.
  */
 
-package config
+package manipulators
 
 import (
 	"os"
@@ -24,7 +24,6 @@ import (
 
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func Test_PrivateKeyEnv(t *testing.T) {
@@ -40,7 +39,7 @@ func Test_PrivateKeyEnv(t *testing.T) {
 		}
 	}`)
 
-	preprocessor := NewPreprocessor(new(afero.MemMapFs))
+	preprocessor := NewPreprocessor(NewComposer(afero.NewMemMapFs()))
 	result := preprocessor.Run(test)
 
 	assert.JSONEq(t, `{
@@ -68,7 +67,7 @@ func Test_PrivateKeyEnvMultipleAccounts(t *testing.T) {
 		}
 	}`)
 
-	preprocessor := NewPreprocessor(new(afero.MemMapFs))
+	preprocessor := NewPreprocessor(NewComposer(afero.NewMemMapFs()))
 	result := preprocessor.Run(test)
 
 	assert.JSONEq(t, `{
@@ -90,66 +89,16 @@ func Test_PrivateConfigFileAccounts(t *testing.T) {
 				"keys": "11c5dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7",
 				"chain": "flow-emulator"
 			},
-			"admin-account": "${file:test.flow.json}"
-		}
-	}`)
+			"admin-account": { "fromFile": "test.json" },
+			"admin-account": { "fromFile": "test.json" },
 
-	f := []byte(`{
-		"address": "f669cb8d41ce0c74",
-		"keys": "17a616e230d38c04fb887dd83283a45f9a3082579db512c96eb84c5c562ac054",
-		"chain": "flow-emulator"  
-	}`)
-
-	mockFS := afero.NewMemMapFs()
-	err := afero.WriteFile(mockFS, "test.flow.json", f, 0644)
-
-	require.NoError(t, err)
-
-	preprocessor := NewPreprocessor(mockFS)
-	result := preprocessor.Run(b)
-
-	assert.JSONEq(t, `{
-			"accounts": {
-				"emulator-account": {
-					"address": "f8d6e0586b0a20c7",
-					"keys": "11c5dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7",
-					"chain": "flow-emulator"
-				}, 
-				"admin-account": {
-					"address": "f669cb8d41ce0c74",
-					"keys": "17a616e230d38c04fb887dd83283a45f9a3082579db512c96eb84c5c562ac054",
-					"chain": "flow-emulator" 
-				}
+			"admin-account":{ 
+				"fromFile": "test.json" 
 			}
-		}`, string(result))
-}
-
-func Test_PrivateConfigFileAndEnvAccounts(t *testing.T) {
-	b := []byte(`{
-		"accounts": {
-			"emulator-account": {
-				"address": "f8d6e0586b0a20c7",
-				"keys": "11c5dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7",
-				"chain": "flow-emulator"
-			},
-			"admin-account": "${env:ADMIN_FILE}"
 		}
 	}`)
 
-	f := []byte(`{
-		"address": "f669cb8d41ce0c74",
-		"keys": "17a616e230d38c04fb887dd83283a45f9a3082579db512c96eb84c5c562ac054",
-		"chain": "flow-emulator"  
-	}`)
-
-	os.Setenv("ADMIN_FILE", "${file:test.flow.json}")
-
-	mockFS := afero.NewMemMapFs()
-	err := afero.WriteFile(mockFS, "test.flow.json", f, 0644)
-
-	require.NoError(t, err)
-
-	preprocessor := NewPreprocessor(mockFS)
+	preprocessor := NewPreprocessor(NewComposer(afero.NewMemMapFs()))
 	result := preprocessor.Run(b)
 
 	assert.JSONEq(t, `{
@@ -158,11 +107,6 @@ func Test_PrivateConfigFileAndEnvAccounts(t *testing.T) {
 					"address": "f8d6e0586b0a20c7",
 					"keys": "11c5dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7",
 					"chain": "flow-emulator"
-				}, 
-				"admin-account": {
-					"address": "f669cb8d41ce0c74",
-					"keys": "17a616e230d38c04fb887dd83283a45f9a3082579db512c96eb84c5c562ac054",
-					"chain": "flow-emulator" 
 				}
 			}
 		}`, string(result))
