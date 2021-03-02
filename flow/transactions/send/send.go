@@ -19,6 +19,7 @@
 package send
 
 import (
+	"encoding/hex"
 	"io/ioutil"
 	"log"
 	"os"
@@ -33,6 +34,7 @@ import (
 type Config struct {
 	Signer  string `default:"service" flag:"signer,s"`
 	Code    string `flag:"code,c" info:"path to Cadence file"`
+	Partial string `flag:"partial-tx" info:"path to Partial Transaction file"`
 	Host    string `flag:"host" info:"Flow Access API host address"`
 	Results bool   `default:"false" flag:"results" info:"Display the results of the transaction"`
 }
@@ -48,20 +50,38 @@ var Cmd = &cobra.Command{
 		signerAccount := projectConf.Accounts[conf.Signer]
 		validateKeyPreReq(signerAccount)
 		var (
+			tx   *flow.Transaction
 			code []byte
 			err  error
 		)
 
-		if conf.Code != "" {
-			code, err = ioutil.ReadFile(conf.Code)
+		if conf.Partial != "" && conf.Code != "" {
+			cli.Exitf(1, "Both a partial transaction and Cadence code file provided, but cannot use both")
+		} else if conf.Partial != "" {
+			partialTxHex, err := ioutil.ReadFile(conf.Partial)
 			if err != nil {
-				cli.Exitf(1, "Failed to read transaction script from %s", conf.Code)
+				cli.Exitf(1, "Failed to read partial transaction from %s", conf.Partial)
 			}
-		}
+			partialTxBytes, err := hex.DecodeString(string(partialTxHex))
+			if err != nil {
+				cli.Exitf(1, "Failed to decode partial transaction from %s", conf.Partial)
+			}
+			tx, err = flow.DecodeTransaction(partialTxBytes)
+			if err != nil {
+				cli.Exitf(1, "Failed to decode transaction from %s", conf.Partial)
+			}
+		} else {
+			if conf.Code != "" {
+				code, err = ioutil.ReadFile(conf.Code)
+				if err != nil {
+					cli.Exitf(1, "Failed to read transaction script from %s", conf.Code)
+				}
+			}
 
-		tx := flow.NewTransaction().
-			SetScript(code).
-			AddAuthorizer(signerAccount.Address)
+			tx = flow.NewTransaction().
+				SetScript(code).
+				AddAuthorizer(signerAccount.Address)
+		}
 
 		cli.SendTransaction(projectConf.HostWithOverride(conf.Host), signerAccount, tx, signerAccount.Address, conf.Results)
 	},
