@@ -15,7 +15,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
  */
-package cli
+package manipulators
 
 import (
 	"github.com/onflow/flow-cli/flow/project/cli/config/json"
@@ -67,7 +67,7 @@ func Test_JSONSimple(t *testing.T) {
 	assert.Equal(t, "21c5dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7", conf.Accounts[0].Keys[0].Context["privateKey"])
 }
 
-func Test_MultipleJSON(t *testing.T) {
+func Test_ComposeJSON(t *testing.T) {
 	b := []byte(`{
 		"accounts": {
 			"emulator-account": {
@@ -109,7 +109,7 @@ func Test_MultipleJSON(t *testing.T) {
 	)
 }
 
-func Test_MultipleJSONOverwrite(t *testing.T) {
+func Test_ComposeJSONOverwrite(t *testing.T) {
 	b := []byte(`{
 		"accounts": {
 			"admin-account": {
@@ -146,6 +146,110 @@ func Test_MultipleJSONOverwrite(t *testing.T) {
 	assert.Equal(t, "3335dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7",
 		conf.Accounts.GetByName("admin-account").Keys[0].Context["privateKey"],
 	)
+}
+
+func Test_FromFileAccountSimple(t *testing.T) {
+	b := []byte(`{
+		"accounts": {
+			"service-account": {
+				"address": "f8d6e0586b0a20c7",
+				"keys": "21c5dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7"
+			},
+			"admin-account": { "fromFile": "private.json" }
+		}
+	}`)
+
+	b2 := []byte(`{
+		 "accounts":{
+				"admin-account":{
+					 "address":"f1d6e0586b0a20c7",
+					 "keys":"3335dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7"
+				}
+		 }
+	}`)
+
+	mockFS := afero.NewMemMapFs()
+	err := afero.WriteFile(mockFS, "flow.json", b, 0644)
+	err2 := afero.WriteFile(mockFS, "private.json", b2, 0644)
+
+	require.NoError(t, err)
+	require.NoError(t, err2)
+
+	composer := NewComposer(mockFS)
+	composer.AddConfigParser(json.NewParser())
+
+	conf, loadErr := composer.Load([]string{"flow.json", "private.json"})
+
+	require.NoError(t, loadErr)
+	assert.Equal(t, 2, len(conf.Accounts))
+	assert.NotNil(t, conf.Accounts.GetByName("admin-account"))
+	assert.Equal(t, conf.Accounts.GetByName("admin-account").Address.String(), "f1d6e0586b0a20c7")
+	assert.Equal(t, conf.Accounts.GetByName("service-account").Address.String(), "f8d6e0586b0a20c7")
+}
+
+func Test_FromFileAccountComplex(t *testing.T) {
+	b := []byte(`{
+		"accounts": {
+			"service-account": {
+				"address": "f8d6e0586b0a20c7",
+				"keys": "21c5dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7"
+			},
+			"admin-account-1": { "fromFile": "private.json" },
+			"admin-account-3": { "fromFile": "private.json" },
+			"admin-account-5": { "fromFile": "private.testnet.json" }
+		}
+	}`)
+
+	b2 := []byte(`{
+		 "accounts":{
+				"admin-account-1":{
+					 "address":"f1d6e0586b0a20c7",
+					 "keys":"3335dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7"
+				},
+				"admin-account-2":{
+					 "address":"f2d6e0586b0a20c7",
+					 "keys":"3335dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7"
+				},
+				"admin-account-3":{
+					 "address":"f3d6e0586b0a20c7",
+					 "keys":"3335dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7"
+				}
+		 }
+	}`)
+
+	b3 := []byte(`{
+		 "accounts":{
+				"admin-account-5":{
+					 "address":"f5d6e0586b0a20c7",
+					 "keys":"3335dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7"
+				}
+		 }
+	}`)
+
+	mockFS := afero.NewMemMapFs()
+	err := afero.WriteFile(mockFS, "flow.json", b, 0644)
+	err2 := afero.WriteFile(mockFS, "private.json", b2, 0644)
+	err3 := afero.WriteFile(mockFS, "private.testnet.json", b3, 0644)
+
+	require.NoError(t, err)
+	require.NoError(t, err2)
+	require.NoError(t, err3)
+
+	composer := NewComposer(mockFS)
+	composer.AddConfigParser(json.NewParser())
+
+	conf, loadErr := composer.Load([]string{"flow.json"})
+
+	require.NoError(t, loadErr)
+	assert.Equal(t, 4, len(conf.Accounts))
+	assert.NotNil(t, conf.Accounts.GetByName("service-account"))
+	assert.NotNil(t, conf.Accounts.GetByName("admin-account-1"))
+	assert.NotNil(t, conf.Accounts.GetByName("admin-account-3"))
+	assert.NotNil(t, conf.Accounts.GetByName("admin-account-5"))
+	assert.Equal(t, conf.Accounts.GetByName("service-account").Address.String(), "f8d6e0586b0a20c7")
+	assert.Equal(t, conf.Accounts.GetByName("admin-account-1").Address.String(), "f1d6e0586b0a20c7")
+	assert.Equal(t, conf.Accounts.GetByName("admin-account-3").Address.String(), "f3d6e0586b0a20c7")
+	assert.Equal(t, conf.Accounts.GetByName("admin-account-5").Address.String(), "f5d6e0586b0a20c7")
 }
 
 func Test_JSONEnv(t *testing.T) {
