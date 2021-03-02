@@ -35,21 +35,21 @@ import (
 
 // Project has all the funcionality to manage project
 type Project struct {
-	composer *config.Composer
+	composer *Composer
 	conf     *config.Config
 	accounts []*Account
 }
 
 // LoadProject loads configuration and setup the project
 func LoadProject(configFilePath []string) *Project {
-	composer := config.NewComposer(afero.NewOsFs())
+	composer := NewComposer(afero.NewOsFs())
 
 	// here we add all available parsers (more to add yaml etc...)
 	composer.AddConfigParser(json.NewParser())
 	conf, err := composer.Load(configFilePath)
 
 	if err != nil {
-		if errors.Is(err, config.ErrDoesNotExist) {
+		if errors.Is(err, ErrDoesNotExist) {
 			Exitf(
 				1,
 				"Project config file %s does not exist. Please initialize first\n",
@@ -73,7 +73,7 @@ func LoadProject(configFilePath []string) *Project {
 
 // ProjectExists checks if project exists
 func ProjectExists(path string) bool {
-	return config.Exists(path)
+	return Exists(path)
 }
 
 // InitProject initializes the project
@@ -81,7 +81,7 @@ func InitProject() *Project {
 	emulatorServiceAccount := generateEmulatorServiceAccount()
 
 	return &Project{
-		composer: config.NewComposer(afero.NewOsFs()),
+		composer: NewComposer(afero.NewOsFs()),
 		conf:     defaultConfig(emulatorServiceAccount),
 		accounts: []*Account{emulatorServiceAccount},
 	}
@@ -131,7 +131,7 @@ func generateEmulatorServiceAccount() *Account {
 	}
 }
 
-func newProject(conf *config.Config, composer *config.Composer) (*Project, error) {
+func newProject(conf *config.Config, composer *Composer) (*Project, error) {
 	accounts, err := accountsFromConfig(conf)
 	if err != nil {
 		return nil, err

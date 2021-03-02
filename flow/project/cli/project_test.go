@@ -31,7 +31,7 @@ import (
 	"github.com/thoas/go-funk"
 )
 
-var composer = config.NewComposer(afero.NewOsFs())
+var composer = NewComposer(afero.NewOsFs())
 
 func generateComplexProject() Project {
 	config := config.Config{
