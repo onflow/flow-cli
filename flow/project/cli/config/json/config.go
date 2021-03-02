@@ -20,9 +20,7 @@ package json
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/onflow/flow-cli/flow/project/cli/config"
-	"os"
 )
 
 // TODO: implement interface for all specific config implementation
@@ -55,7 +53,7 @@ func transformConfigToJSON(config *config.Config) jsonConfig {
 	}
 }
 
-func NewParser() config.Parser {
+func NewParser() *jsonConfig {
 	return new(jsonConfig)
 }
 
@@ -76,8 +74,7 @@ func (j *jsonConfig) Deserialize(raw []byte) (*config.Config, error) {
 	err := json.Unmarshal(raw, &jsonConf)
 
 	if err != nil {
-		fmt.Printf("Invalid json: %s\n", err.Error())
-		os.Exit(1)
+		return nil, err
 	}
 
 	return jsonConf.transformToConfig(), nil
