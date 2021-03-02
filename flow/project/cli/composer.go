@@ -16,10 +16,12 @@
  * limitations under the License.
  */
 
-package config
+package cli
 
 import (
 	"errors"
+	"fmt"
+	"github.com/onflow/flow-cli/flow/project/cli/config"
 	"os"
 	"path/filepath"
 
@@ -38,6 +40,13 @@ func Exists(path string) bool {
 		return false
 	}
 	return !info.IsDir()
+}
+
+// Parser is interface for any configuration format parser to implement
+type Parser interface {
+	Serialize(*config.Config) ([]byte, error)
+	Deserialize([]byte) (*config.Config, error)
+	SupportsFormat(string) bool
 }
 
 type ConfigParsers []Parser
@@ -67,24 +76,28 @@ func (c *Composer) AddConfigParser(format Parser) {
 }
 
 // Load configuration
-func (c *Composer) loadSingle(path string) (*Config, error) {
+func (c *Composer) loadSingle(path string) (*config.Config, error) {
 	raw, err := c.loadFile(path)
 
 	if err != nil {
 		return nil, err
 	}
 
-	preprocessor := NewPreprocessor(c.af.Fs)
+	preprocessor := config.NewPreprocessor(c.af.Fs)
 	preProcessed := preprocessor.Run(raw)
 
-	configFormat := c.configParsers.FindForFormat(
+	configParser := c.configParsers.FindForFormat(
 		filepath.Ext(path),
 	)
 
-	return configFormat.Deserialize(preProcessed)
+	if configParser == nil {
+		return nil, errors.New(fmt.Sprintf("Parser not found for config: %s", path))
+	}
+
+	return configParser.Deserialize(preProcessed)
 }
 
-func (c *Composer) Save(conf *Config, path string) error {
+func (c *Composer) Save(conf *config.Config, path string) error {
 	configFormat := c.configParsers.FindForFormat(
 		filepath.Ext(path),
 	)
@@ -94,7 +107,7 @@ func (c *Composer) Save(conf *Config, path string) error {
 		return err
 	}
 
-	err = c.af.WriteFile(path, data, 0755)
+	err = c.af.WriteFile(path, data, 0644)
 	if err != nil {
 		return err
 	}
@@ -103,8 +116,8 @@ func (c *Composer) Save(conf *Config, path string) error {
 }
 
 // Load and compose multiple configurations
-func (c *Composer) Load(paths []string) (*Config, error) {
-	var config *Config
+func (c *Composer) Load(paths []string) (*config.Config, error) {
+	var baseConf *config.Config
 
 	for _, path := range paths {
 		conf, err := c.loadSingle(path)
@@ -112,31 +125,28 @@ func (c *Composer) Load(paths []string) (*Config, error) {
 			return nil, err
 		}
 
-		// if first config just save it
-		if config == nil {
-			config = conf
+		// if first baseConf just save it
+		if baseConf == nil {
+			baseConf = conf
 			continue
 		}
 
 		// if not first overwrite first with this one
 		for _, account := range conf.Accounts {
-			conf.Accounts.SetForName(account.Name, account)
+			baseConf.Accounts.SetForName(account.Name, account)
 		}
-
 		for _, network := range conf.Networks {
-			conf.Networks.SetForName(network.Name, network)
+			baseConf.Networks.SetForName(network.Name, network)
 		}
-
 		for _, contract := range conf.Contracts {
-			conf.Contracts.SetForName(contract.Name, contract)
+			baseConf.Contracts.SetForName(contract.Name, contract)
 		}
-
 		for _, deployment := range conf.Deployments {
-			conf.Deployments.AddIfMissing(deployment)
+			baseConf.Deployments.AddIfMissing(deployment)
 		}
 	}
 
-	return config, nil
+	return baseConf, nil
 }
 
 func (c *Composer) loadFile(path string) ([]byte, error) {
