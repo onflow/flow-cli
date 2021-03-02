@@ -93,13 +93,6 @@ const (
 	KeyTypeShell     KeyType = "shell"      // Exec out to a shell script
 )
 
-// Parser is interface for any configuration format parser to implement
-type Parser interface {
-	Serialize(*Config) ([]byte, error)
-	Deserialize([]byte) (*Config, error)
-	SupportsFormat(string) bool
-}
-
 // IsAlias checks if contract has an alias
 func (c *Contract) IsAlias() bool {
 	return c.Alias != ""
@@ -149,9 +142,9 @@ func (c *Contracts) GetByNetwork(network string) Contracts {
 }
 
 func (c *Contracts) SetForName(name string, contract Contract) {
-	for _, con := range *c {
-		if con.Name == name {
-			con = contract
+	for i := range *c {
+		if (*c)[i].Name == name {
+			(*c)[i] = contract
 			return
 		}
 	}
@@ -182,9 +175,9 @@ func (a *Accounts) GetByAddress(address string) *Account {
 }
 
 func (a *Accounts) SetForName(name string, account Account) {
-	for _, acc := range *a {
-		if acc.Name == name {
-			acc = account
+	for i := range *a {
+		if (*a)[i].Name == name {
+			(*a)[i] = account
 			return
 		}
 	}
@@ -240,9 +233,9 @@ func (n *Networks) GetByName(name string) *Network {
 }
 
 func (n *Networks) SetForName(name string, network Network) {
-	for _, net := range *n {
-		if net.Name == name {
-			net = network
+	for i := range *n {
+		if (*n)[i].Name == name {
+			(*n)[i] = network
 			return
 		}
 	}
