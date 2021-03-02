@@ -33,7 +33,7 @@ func Test_PrivateKeyEnv(t *testing.T) {
 		"accounts": {
 			"emulator-account": {
 				"address": "f8d6e0586b0a20c7",
-				"keys": "${env:TEST}",
+				"keys": "$TEST",
 				"chain": "flow-emulator"
 			}
 		}
@@ -61,7 +61,7 @@ func Test_PrivateKeyEnvMultipleAccounts(t *testing.T) {
 		"accounts": {
 			"emulator-account": {
 				"address": "f8d6e0586b0a20c7",
-				"keys": "${env:TEST}",
+				"keys": "$TEST",
 				"chain": "flow-emulator"
 			}
 		}

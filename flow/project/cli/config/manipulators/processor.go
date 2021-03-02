@@ -19,13 +19,12 @@
 package manipulators
 
 import (
-	"os"
+	"github.com/a8m/envsubst"
 	"regexp"
 	"strings"
 )
 
 var (
-	envRegex      *regexp.Regexp = regexp.MustCompile(`\$\{env\:(.+)\}`)
 	fileRegex     *regexp.Regexp = regexp.MustCompile(`"([^"]*)"\s*:\s*{\s*"fromFile"\s*:\s*"([^"]*)"\s*},?`)
 	trailingComma *regexp.Regexp = regexp.MustCompile(`\,\s*}`)
 )
@@ -53,16 +52,7 @@ func (p *Preprocessor) Run(raw []byte) []byte {
 
 // processEnv finds env variables and insert env values
 func (p *Preprocessor) processEnv(raw string) string {
-	envMatches := envRegex.FindAllStringSubmatch(raw, -1)
-
-	for _, match := range envMatches {
-		raw = strings.ReplaceAll(
-			raw,
-			match[0],
-			p.getEnvVariable(match[1]),
-		)
-	}
-
+	raw, _ = envsubst.String(raw)
 	return raw
 }
 
@@ -77,7 +67,7 @@ func (p *Preprocessor) processFile(raw string) string {
 
 		p.composer.AddAccountFromFile(match[2], match[1])
 
-		// remove from config
+		// remove fromFile from config after we add that to composer
 		raw = strings.ReplaceAll(raw, match[0], "")
 
 		// remove possible trailing comma
@@ -85,9 +75,4 @@ func (p *Preprocessor) processFile(raw string) string {
 	}
 
 	return raw
-}
-
-// get environment variable by name
-func (p *Preprocessor) getEnvVariable(name string) string {
-	return os.Getenv(name)
 }

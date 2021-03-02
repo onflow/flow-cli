@@ -257,7 +257,7 @@ func Test_JSONEnv(t *testing.T) {
 		"accounts": {
 			"emulator-account": {
 				"address": "f8d6e0586b0a20c7",
-				"keys": "${env:EMULATOR_KEY}",
+				"keys": "$EMULATOR_KEY",
 				"chain": "flow-emulator"
 			}
 		}
