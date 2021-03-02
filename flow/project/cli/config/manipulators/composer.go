@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package cli
+package manipulators
 
 import (
 	"errors"
@@ -30,8 +30,6 @@ import (
 
 // ErrDoesNotExist is error to be returned when config file does not exists
 var ErrDoesNotExist = errors.New("project config file does not exist")
-
-const DefaultConfigPath = "flow.json"
 
 // Exists checks if file exists on the specified path
 func Exists(path string) bool {
@@ -62,42 +60,29 @@ func (c *ConfigParsers) FindForFormat(extension string) Parser {
 }
 
 type Composer struct {
-	af            *afero.Afero
-	configParsers ConfigParsers
+	af               *afero.Afero
+	configParsers    ConfigParsers
+	composedMultiple bool
+	composedFromFile map[string]string
 }
 
 func NewComposer(filesystem afero.Fs) *Composer {
 	af := &afero.Afero{Fs: filesystem}
-	return &Composer{af: af}
+	return &Composer{
+		af:               af,
+		composedFromFile: map[string]string{},
+	}
 }
 
 func (c *Composer) AddConfigParser(format Parser) {
 	c.configParsers = append(c.configParsers, format)
 }
 
-// Load configuration
-func (c *Composer) loadSingle(path string) (*config.Config, error) {
-	raw, err := c.loadFile(path)
-
-	if err != nil {
-		return nil, err
-	}
-
-	preprocessor := config.NewPreprocessor(c.af.Fs)
-	preProcessed := preprocessor.Run(raw)
-
-	configParser := c.configParsers.FindForFormat(
-		filepath.Ext(path),
-	)
-
-	if configParser == nil {
-		return nil, errors.New(fmt.Sprintf("Parser not found for config: %s", path))
-	}
-
-	return configParser.Deserialize(preProcessed)
-}
-
 func (c *Composer) Save(conf *config.Config, path string) error {
+	if c.composedMultiple || c.composedFromFile != nil {
+		return errors.New("Saving configuration to multiple files currently not supported")
+	}
+
 	configFormat := c.configParsers.FindForFormat(
 		filepath.Ext(path),
 	)
@@ -120,33 +105,93 @@ func (c *Composer) Load(paths []string) (*config.Config, error) {
 	var baseConf *config.Config
 
 	for _, path := range paths {
-		conf, err := c.loadSingle(path)
+		raw, err := c.loadFile(path)
 		if err != nil {
 			return nil, err
 		}
 
-		// if first baseConf just save it
+		preProcessed := c.preprocess(raw)
+		configParser := c.configParsers.FindForFormat(filepath.Ext(path))
+		if configParser == nil {
+			return nil, errors.New(fmt.Sprintf("Parser not found for config: %s", path))
+		}
+
+		conf, err := configParser.Deserialize(preProcessed)
+		if err != nil {
+			return nil, err
+		}
+
+		// if first conf just assign as baseConf
 		if baseConf == nil {
 			baseConf = conf
 			continue
 		}
 
-		// if not first overwrite first with this one
-		for _, account := range conf.Accounts {
-			baseConf.Accounts.SetForName(account.Name, account)
-		}
-		for _, network := range conf.Networks {
-			baseConf.Networks.SetForName(network.Name, network)
-		}
-		for _, contract := range conf.Contracts {
-			baseConf.Contracts.SetForName(contract.Name, contract)
-		}
-		for _, deployment := range conf.Deployments {
-			baseConf.Deployments.AddIfMissing(deployment)
-		}
+		c.composeConfig(baseConf, conf)
+	}
+
+	baseConf, err := c.postprocess(baseConf)
+	if err != nil {
+		return nil, err
 	}
 
 	return baseConf, nil
+}
+
+func (c *Composer) AddAccountFromFile(path string, name string) {
+	c.composedFromFile[name] = path
+}
+
+func (c *Composer) preprocess(raw []byte) []byte {
+	preprocessor := NewPreprocessor(c)
+	return preprocessor.Run(raw)
+}
+
+func (c *Composer) postprocess(baseConf *config.Config) (*config.Config, error) {
+	for name, path := range c.composedFromFile {
+		raw, err := c.loadFile(path)
+		if err != nil {
+			return nil, err
+		}
+
+		configParser := c.configParsers.FindForFormat(filepath.Ext(path))
+		if configParser == nil {
+			return nil, errors.New(fmt.Sprintf("Parser not found for config: %s", path))
+		}
+
+		conf, err := configParser.Deserialize(raw)
+		if err != nil {
+			return nil, err
+		}
+
+		// create an empty config with single account so we don't include all accounts in file
+		accountConf := &config.Config{
+			Accounts: []config.Account{*conf.Accounts.GetByName(name)},
+		}
+
+		c.composeConfig(baseConf, accountConf)
+	}
+
+	return baseConf, nil
+}
+
+func (c *Composer) composeConfig(baseConf *config.Config, conf *config.Config) {
+	// flag for saving
+	c.composedMultiple = true
+
+	// if not first overwrite first with this one
+	for _, account := range conf.Accounts {
+		baseConf.Accounts.SetForName(account.Name, account)
+	}
+	for _, network := range conf.Networks {
+		baseConf.Networks.SetForName(network.Name, network)
+	}
+	for _, contract := range conf.Contracts {
+		baseConf.Contracts.SetForName(contract.Name, contract)
+	}
+	for _, deployment := range conf.Deployments {
+		baseConf.Deployments.AddIfMissing(deployment)
+	}
 }
 
 func (c *Composer) loadFile(path string) ([]byte, error) {
