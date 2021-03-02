@@ -19,6 +19,7 @@
 package execute
 
 import (
+	"github.com/onflow/cadence"
 	"io/ioutil"
 	"log"
 
@@ -29,25 +30,37 @@ import (
 )
 
 type Config struct {
+	Args string `default:"" flag:"args" info:"arguments in JSON-Cadence format"`
+	Code string `flag:"code,c" info:"path to Cadence file"`
 	Host string `flag:"host" info:"Flow Access API host address"`
 }
 
 var conf Config
 
 var Cmd = &cobra.Command{
-	Use:   "execute <script.cdc>",
-	Short: "Execute a script",
-	Args:  cobra.ExactArgs(1),
+	Use:     "execute",
+	Short:   "Execute a script",
+	Example: `flow scripts execute --code=script.cdc --args="[{\"type\": \"String\", \"value\": \"Hello, Cadence\"}]"`,
 	Run: func(cmd *cobra.Command, args []string) {
-		code, err := ioutil.ReadFile(args[0])
+		code, err := ioutil.ReadFile(conf.Code)
 		if err != nil {
-			cli.Exitf(1, "Failed to read script from %s", args[0])
+			cli.Exitf(1, "Failed to read script from %s", conf.Code)
 		}
 		projectConf := new(cli.Config)
 		if conf.Host == "" {
 			projectConf = cli.LoadConfig()
 		}
-		cli.ExecuteScript(projectConf.HostWithOverride(conf.Host), code)
+
+		// Arguments
+		var scriptArguments []cadence.Value
+		if conf.Args != "" {
+			scriptArguments, err = cli.ParseArguments(conf.Args)
+			if err != nil {
+				cli.Exitf(1, "Invalid arguments passed: %s", conf.Args)
+			}
+		}
+
+		cli.ExecuteScript(projectConf.HostWithOverride(conf.Host), code, scriptArguments...)
 	},
 }
 
