@@ -113,7 +113,7 @@ func (c *Composer) Load(paths []string) (*config.Config, error) {
 		preProcessed := c.preprocess(raw)
 		configParser := c.configParsers.FindForFormat(filepath.Ext(path))
 		if configParser == nil {
-			return nil, errors.New(fmt.Sprintf("Parser not found for config: %s", path))
+			return nil, fmt.Errorf("Parser not found for config: %s", path)
 		}
 
 		conf, err := configParser.Deserialize(preProcessed)
@@ -156,7 +156,7 @@ func (c *Composer) postprocess(baseConf *config.Config) (*config.Config, error) 
 
 		configParser := c.configParsers.FindForFormat(filepath.Ext(path))
 		if configParser == nil {
-			return nil, errors.New(fmt.Sprintf("Parser not found for config: %s", path))
+			return nil, fmt.Errorf("Parser not found for config: %s", path)
 		}
 
 		conf, err := configParser.Deserialize(raw)
