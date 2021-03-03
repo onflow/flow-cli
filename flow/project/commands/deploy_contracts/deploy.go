@@ -31,6 +31,7 @@ import (
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 
+	c "github.com/onflow/flow-cli/flow"
 	"github.com/onflow/flow-cli/flow/cli"
 	"github.com/onflow/flow-cli/flow/cli/txsender"
 	"github.com/onflow/flow-cli/flow/project/contracts"
@@ -47,7 +48,7 @@ var Cmd = &cobra.Command{
 	Use:   "deploy",
 	Short: "Deploy Cadence contracts",
 	Run: func(cmd *cobra.Command, args []string) {
-		project := cli.LoadProject()
+		project := cli.LoadProject(c.ConfigPath)
 
 		host := project.Host(conf.Network)
 
@@ -59,7 +60,7 @@ var Cmd = &cobra.Command{
 
 		// check there are not multiple accounts with same contract
 		if project.ContractConflictExists(conf.Network) {
-			fmt.Println("\n❌ Currently it is not possible to deploy same contract with multiple accounts, please check Deploys in config and make sure contract is only present in one account")
+			fmt.Println("\n❌ Currently it is not possible to deploy same contract with multiple accounts, please check Deployments in config and make sure contract is only present in one account")
 			cli.Exit(1, "")
 			return
 		}
@@ -148,6 +149,7 @@ var Cmd = &cobra.Command{
 		if len(errs) == 0 {
 			fmt.Println("\n✅ All contracts deployed successfully")
 		} else {
+			// REF: better output when errors
 			fmt.Println("\n❌ Failed to deploy all contracts")
 		}
 	},

@@ -20,92 +20,60 @@ package json
 
 import (
 	"encoding/json"
-	"errors"
-	"fmt"
-	"io/ioutil"
-	"os"
-
-	"github.com/onflow/flow-cli/flow/config"
+	"github.com/onflow/flow-cli/flow/project/cli/config"
 )
 
 type jsonConfig struct {
-	Emulators jsonEmulators `json:"emulators"`
-	Contracts jsonContracts `json:"contracts"`
-	Networks  jsonNetworks  `json:"networks"`
-	Accounts  jsonAccounts  `json:"accounts"`
-	Deploys   jsonDeploys   `json:"deploys"`
+	Emulators   jsonEmulators   `json:"emulators"`
+	Contracts   jsonContracts   `json:"contracts"`
+	Networks    jsonNetworks    `json:"networks"`
+	Accounts    jsonAccounts    `json:"accounts"`
+	Deployments jsonDeployments `json:"deployments"`
 }
 
-func (j jsonConfig) transformToConfig() *config.Config {
+func (j *jsonConfig) transformToConfig() *config.Config {
 	return &config.Config{
-		Emulators: j.Emulators.transformToConfig(),
-		Contracts: j.Contracts.transformToConfig(),
-		Networks:  j.Networks.transformToConfig(),
-		Accounts:  j.Accounts.transformToConfig(),
-		Deploys:   j.Deploys.transformToConfig(),
+		Emulators:   j.Emulators.transformToConfig(),
+		Contracts:   j.Contracts.transformToConfig(),
+		Networks:    j.Networks.transformToConfig(),
+		Accounts:    j.Accounts.transformToConfig(),
+		Deployments: j.Deployments.transformToConfig(),
 	}
 }
 
 func transformConfigToJSON(config *config.Config) jsonConfig {
 	return jsonConfig{
-		Emulators: transformEmulatorsToJSON(config.Emulators),
-		Contracts: transformContractsToJSON(config.Contracts),
-		Networks:  transformNetworksToJSON(config.Networks),
-		Accounts:  transformAccountsToJSON(config.Accounts),
-		Deploys:   transformDeploysToJSON(config.Deploys),
+		Emulators:   transformEmulatorsToJSON(config.Emulators),
+		Contracts:   transformContractsToJSON(config.Contracts),
+		Networks:    transformNetworksToJSON(config.Networks),
+		Accounts:    transformAccountsToJSON(config.Accounts),
+		Deployments: transformDeploymentsToJSON(config.Deployments),
 	}
 }
 
+func NewParser() *jsonConfig {
+	return new(jsonConfig)
+}
+
 // Save saves the configuration to the specified path file in JSON format.
-func Save(conf *config.Config, path string) error {
+func (j *jsonConfig) Serialize(conf *config.Config) ([]byte, error) {
 	jsonConf := transformConfigToJSON(conf)
 
 	data, err := json.MarshalIndent(jsonConf, "", "\t")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	err = ioutil.WriteFile(path, data, 0777)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return data, nil
 }
 
-// ErrDoesNotExist is error to be returned when config file does not exists
-var ErrDoesNotExist = errors.New("project config file does not exist")
+func (j *jsonConfig) Deserialize(raw []byte) (*config.Config, error) {
+	var jsonConf jsonConfig
+	err := json.Unmarshal(raw, &jsonConf)
 
 // TODO: allow path to change
 const DefaultConfigPath = "flow.json"
 
-func Load(path string) (*config.Config, error) {
-	f, err := os.Open(path)
-	if err != nil {
-		if os.IsNotExist(err) {
-			return nil, ErrDoesNotExist
-		}
-
-		return nil, err
-	}
-
-	d := json.NewDecoder(f)
-	conf := new(jsonConfig)
-	err = d.Decode(conf)
-
-	if err != nil {
-		fmt.Printf("%s contains invalid json: %s\n", DefaultConfigPath, err.Error())
-		os.Exit(1)
-	}
-
-	return conf.transformToConfig(), nil
-}
-
-// Exists checks if file exists on the specified path
-func Exists() bool {
-	info, err := os.Stat(DefaultConfigPath)
-	if os.IsNotExist(err) {
-		return false
-	}
-	return !info.IsDir()
+func (j *jsonConfig) SupportsFormat(extension string) bool {
+	return extension == ".json"
 }

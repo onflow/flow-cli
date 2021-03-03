@@ -1,7 +1,7 @@
 /*
  * Flow CLI
  *
- * Copyright 2019-2020 Dapper Labs, Inc.
+ * Copyright 2019-2021 Dapper Labs, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,6 +27,8 @@ import (
 	"github.com/onflow/flow-go-sdk"
 	"github.com/psiemens/sconfig"
 	"github.com/spf13/cobra"
+
+	"github.com/onflow/cadence"
 )
 
 type Flags struct {
@@ -76,7 +78,7 @@ func initConfig() {
 func printAccount(account *flow.Account, printCode bool) {
 	fmt.Println()
 	fmt.Println("Address: " + account.Address.Hex())
-	fmt.Println("Balance : ", cli.FormatUFix64(account.Balance))
+	fmt.Println("Balance: ", cadence.UFix64(account.Balance))
 	fmt.Println("Total Keys: ", len(account.Keys))
 
 	for _, key := range account.Keys {

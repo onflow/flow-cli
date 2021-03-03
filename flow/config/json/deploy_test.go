@@ -25,7 +25,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func Test_ConfigDeploySimple(t *testing.T) {
+func Test_ConfigDeploymentsSimple(t *testing.T) {
 	b := []byte(`{
 		"testnet": {
 			"account-2": ["FungibleToken", "NonFungibleToken", "Kibble", "KittyItems"]
@@ -36,32 +36,33 @@ func Test_ConfigDeploySimple(t *testing.T) {
 		}
 	}`)
 
-	var jsonDeploys jsonDeploys
-	err := json.Unmarshal(b, &jsonDeploys)
+	var jsonDeployments jsonDeployments
+	err := json.Unmarshal(b, &jsonDeployments)
 	require.NoError(t, err)
 
-	deploys := jsonDeploys.transformToConfig()
+	deployments := jsonDeployments.transformToConfig()
 
-	assert.Equal(t, deploys.GetByAccountAndNetwork("account-2", "testnet")[0].Account, "account-2")
-	assert.Equal(t, deploys.GetByAccountAndNetwork("account-2", "testnet")[0].Contracts, []string{"FungibleToken", "NonFungibleToken", "Kibble", "KittyItems"})
+	//TODO: fix test to be sorted since its not necessary correct order
+	assert.Equal(t, "account-2", deployments.GetByNetwork("testnet")[0].Account)
+	assert.Equal(t, []string{"FungibleToken", "NonFungibleToken", "Kibble", "KittyItems"}, deployments.GetByNetwork("testnet")[0].Contracts)
 
-	assert.Len(t, deploys.GetByNetwork("emulator"), 2)
-	assert.Equal(t, deploys.GetByAccountAndNetwork("account-3", "emulator")[0].Account, "account-3")
-	assert.Equal(t, deploys.GetByAccountAndNetwork("account-4", "emulator")[0].Account, "account-4")
-	assert.Equal(t, deploys.GetByAccountAndNetwork("account-3", "emulator")[0].Contracts, []string{"KittyItems", "KittyItemsMarket"})
-	assert.Equal(t, deploys.GetByAccountAndNetwork("account-4", "emulator")[0].Contracts, []string{"FungibleToken", "NonFungibleToken", "Kibble", "KittyItems", "KittyItemsMarket"})
+	assert.Equal(t, 2, len(deployments.GetByNetwork("emulator")))
+	assert.Equal(t, "account-3", deployments.GetByAccountAndNetwork("account-3", "emulator")[0].Account)
+	assert.Equal(t, "account-4", deployments.GetByAccountAndNetwork("account-4", "emulator")[0].Account)
+	assert.Equal(t, []string{"KittyItems", "KittyItemsMarket"}, deployments.GetByNetwork("emulator")[0].Contracts)
+	assert.Equal(t, []string{"FungibleToken", "NonFungibleToken", "Kibble", "KittyItems", "KittyItemsMarket"}, deployments.GetByNetwork("emulator")[1].Contracts)
 }
 
 func Test_TransformDeployToJSON(t *testing.T) {
 	b := []byte(`{"emulator":{"account-3":["KittyItems","KittyItemsMarket"],"account-4":["FungibleToken","NonFungibleToken","Kibble","KittyItems","KittyItemsMarket"]},"testnet":{"account-2":["FungibleToken","NonFungibleToken","Kibble","KittyItems"]}}`)
 
-	var jsonDeploys jsonDeploys
-	err := json.Unmarshal(b, &jsonDeploys)
+	var jsonDeployments jsonDeployments
+	err := json.Unmarshal(b, &jsonDeployments)
 	require.NoError(t, err)
 
-	deploys := jsonDeploys.transformToConfig()
+	deployments := jsonDeployments.transformToConfig()
 
-	j := transformDeploysToJSON(deploys)
+	j := transformDeploymentsToJSON(deployments)
 	x, _ := json.Marshal(j)
 
 	assert.Equal(t, string(b), string(x))

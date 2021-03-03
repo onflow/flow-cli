@@ -22,7 +22,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"path"
-	"path/filepath"
 	"strings"
 
 	"github.com/onflow/cadence/runtime/ast"
@@ -205,9 +204,7 @@ func (p *Preprocessor) ResolveImports() error {
 	for _, c := range p.contracts {
 		for _, location := range c.imports() {
 			importPath := p.loader.Normalize(c.source, location)
-			importPathAlias := getAliasForImport(importPath)
-
-			importAlias, isAlias := p.aliases[importPathAlias]
+			importAlias, isAlias := p.aliases[importPath]
 			importContract, isContract := p.contractsBySource[importPath]
 
 			if isContract {
@@ -217,7 +214,7 @@ func (p *Preprocessor) ResolveImports() error {
 					strings.ReplaceAll(importAlias, "0x", ""), // REF: go-sdk should handle this
 				))
 			} else {
-				return fmt.Errorf("Import from %s could not be find: %s, make sure import path is correct.", c.name, importPath)
+				return fmt.Errorf("Import from %s could not be found: %s, make sure import path is correct.", c.name, importPath)
 			}
 		}
 	}
@@ -316,10 +313,4 @@ func nodesToContracts(nodes []graph.Node) []*Contract {
 	}
 
 	return contracts
-}
-
-func getAliasForImport(location string) string {
-	return strings.ReplaceAll(
-		filepath.Base(location), ".cdc", "",
-	)
 }

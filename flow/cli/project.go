@@ -19,11 +19,14 @@
 package cli
 
 import (
+	"github.com/onflow/flow-cli/flow/project/cli/config/json"
+	"github.com/onflow/flow-cli/flow/project/cli/config/manipulators"
 	"path"
 	"strings"
 
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
+	"github.com/spf13/afero"
 	"github.com/thoas/go-funk"
 
 	"github.com/onflow/flow-cli/flow/cli/keys"
@@ -33,20 +36,36 @@ import (
 
 var DefaultConfigPath string = "flow.json"
 
+// Project has all the funcionality to manage project
 type Project struct {
+	composer *manipulators.Composer
 	conf     *config.Config
 	accounts []*Account
 }
 
-func LoadProject() *Project {
-	// TODO: dont have direct json loading here
-	config, err := json.Load(DefaultConfigPath)
+// LoadProject loads configuration and setup the project
+func LoadProject(configFilePath []string) *Project {
+	composer := manipulators.NewComposer(afero.NewOsFs())
+
+	// here we add all available parsers (more to add yaml etc...)
+	composer.AddConfigParser(json.NewParser())
+	conf, err := composer.Load(configFilePath)
+
 	if err != nil {
-		Exitf(1, "Invalid project configuration: %s", err)
+		if errors.Is(err, manipulators.ErrDoesNotExist) {
+			Exitf(
+				1,
+				"Project config file %s does not exist. Please initialize first\n",
+				configFilePath,
+			)
+		}
+
+		Exitf(1, "Failed to open project configuration in %s", configFilePath)
+
 		return nil
 	}
 
-	proj, err := newProject(config)
+	proj, err := newProject(conf, composer)
 	if err != nil {
 		// TODO: replace with a more detailed error message
 		Exitf(1, "Invalid project configuration: %s", err)
@@ -55,14 +74,17 @@ func LoadProject() *Project {
 	return proj
 }
 
-func ProjectExists() bool {
-	return json.Exists()
+// ProjectExists checks if project exists
+func ProjectExists(path string) bool {
+	return manipulators.Exists(path)
 }
 
-func InitProject(sigAlgo crypto.SignatureAlgorithm, hashAlgo crypto.HashAlgorithm) *Project {
-	emulatorServiceAccount := generateEmulatorServiceAccount(sigAlgo, hashAlgo)
+// InitProject initializes the project
+func InitProject() *Project {
+	emulatorServiceAccount := generateEmulatorServiceAccount()
 
 	return &Project{
+		composer: manipulators.NewComposer(afero.NewOsFs()),
 		conf:     defaultConfig(emulatorServiceAccount),
 		accounts: []*Account{emulatorServiceAccount},
 	}
@@ -110,13 +132,14 @@ func generateEmulatorServiceAccount(sigAlgo crypto.SignatureAlgorithm, hashAlgo 
 	}
 }
 
-func newProject(conf *config.Config) (*Project, error) {
+func newProject(conf *config.Config, composer *manipulators.Composer) (*Project, error) {
 	accounts, err := accountsFromConfig(conf)
 	if err != nil {
 		return nil, err
 	}
 
 	return &Project{
+		composer: composer,
 		conf:     conf,
 		accounts: accounts,
 	}, nil
@@ -167,8 +190,8 @@ func (p *Project) SetEmulatorServiceKey(privateKey crypto.PrivateKey) {
 func (p *Project) GetContractsByNetwork(network string) []Contract {
 	contracts := make([]Contract, 0)
 
-	// get deploys for specific network
-	for _, deploy := range p.conf.Deploys.GetByNetwork(network) {
+	// get deployments for specific network
+	for _, deploy := range p.conf.Deployments.GetByNetwork(network) {
 		account := p.GetAccountByName(deploy.Account)
 
 		// go through each contract for this deploy
@@ -231,12 +254,12 @@ func (p *Project) GetAliases(network string) map[string]string {
 	return aliases
 }
 
-func (p *Project) Save() {
+func (p *Project) Save(path string) {
 	p.conf.Accounts = accountsToConfig(p.accounts)
+	err := p.composer.Save(p.conf, path)
 
-	err := json.Save(p.conf, DefaultConfigPath)
 	if err != nil {
-		Exitf(1, "Failed to save project configuration to \"%s\"", DefaultConfigPath)
+		Exitf(1, "Failed to save project configuration to \"%s\"", path)
 	}
 }
 

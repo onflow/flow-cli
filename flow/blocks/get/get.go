@@ -64,7 +64,7 @@ var Cmd = &cobra.Command{
 		}
 		printBlock(block, flags.Verbose)
 		if flags.Events != "" {
-			cli.GetBlockEvents(host, block.Height, flags.Events)
+			cli.GetBlockEvents(host, block.Height, block.Height, flags.Events, true)
 		}
 	},
 }

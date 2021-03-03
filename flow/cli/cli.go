@@ -1,7 +1,7 @@
 /*
  * Flow CLI
  *
- * Copyright 2019-2020 Dapper Labs, Inc.
+ * Copyright 2019-2021 Dapper Labs, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,8 +25,6 @@ import (
 	"os"
 	"os/exec"
 	"regexp"
-	"strconv"
-	"strings"
 
 	"github.com/fatih/color"
 	"github.com/onflow/flow-go-sdk/crypto"
@@ -37,8 +35,11 @@ const (
 	DefaultSigAlgo      = crypto.ECDSA_P256
 	DefaultHashAlgo     = crypto.SHA3_256
 	DefaultHost         = "127.0.0.1:3569"
-	UFix64DecimalPlaces = 8
+	MaxGRPCMessageSize  = 1024 * 1024 * 16
+	Indent              = "  "
 )
+
+var ConfigPath = []string{"flow.json"}
 
 func Exit(code int, msg string) {
 	fmt.Println(msg)
@@ -83,22 +84,6 @@ func RandomSeed(n int) []byte {
 	return seed
 }
 
-// FixedPointToString converts the given amount to a string with the given number of decimal places.
-func FixedPointToString(amount uint64, decimalPlaces int) string {
-	amountStr := strconv.Itoa(int(amount))
-	if len(amountStr) < decimalPlaces {
-		padding := strings.Repeat("0", decimalPlaces-len(amountStr))
-		return fmt.Sprintf("0.%s%s", padding, amountStr)
-	} else if len(amountStr) == decimalPlaces {
-		return fmt.Sprintf("0.%s", amountStr)
-	}
-	return fmt.Sprintf("%s.%s", amountStr[:len(amountStr)-decimalPlaces], amountStr[len(amountStr)-decimalPlaces:])
-}
-
-func FormatUFix64(flow uint64) string {
-	return FixedPointToString(flow, UFix64DecimalPlaces)
-}
-
 var squareBracketRegex = regexp.MustCompile(`(?s)\[(.*)\]`)
 
 // GcloudApplicationSignin signs in as an application user using gcloud command line tool
@@ -118,4 +103,10 @@ func GcloudApplicationSignin(project string) {
 	fmt.Printf("Saving credentials and setting GOOGLE_APPLICATION_CREDENTIALS to file: %s\n", googleApplicationCreds)
 
 	os.Setenv("GOOGLE_APPLICATION_CREDENTIALS", googleApplicationCreds)
+}
+
+func PrintIndent(numberOfIndents int) {
+	for i := 0; i < numberOfIndents; i++ {
+		fmt.Print(Indent)
+	}
 }

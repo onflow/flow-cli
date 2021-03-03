@@ -31,17 +31,19 @@ import (
 )
 
 type Flags struct {
-	Signer  string `default:"service" flag:"signer,s"`
+	Args    string `default:"" flag:"args" info:"arguments in JSON-Cadence format"`
 	Code    string `flag:"code,c" info:"path to Cadence file"`
 	Host    string `flag:"host" info:"Flow Access API host address"`
+	Signer  string `default:"service" flag:"signer,s"`
 	Results bool   `default:"false" flag:"results" info:"Display the results of the transaction"`
 }
 
 var flags Flags
 
 var Cmd = &cobra.Command{
-	Use:   "send",
-	Short: "Send a transaction",
+	Use:     "send",
+	Short:   "Send a transaction",
+	Example: `flow transactions send --code=tx.cdc --args="[{\"type\": \"String\", \"value\": \"Hello, Cadence\"}]"`,
 	Run: func(cmd *cobra.Command, args []string) {
 		project := cli.LoadProject()
 		if project == nil {
@@ -70,7 +72,23 @@ var Cmd = &cobra.Command{
 			SetScript(code).
 			AddAuthorizer(signerAccount.Address())
 
-		cli.SendTransaction(project.HostWithOverride(flags.Host), signerAccount, tx, flags.Results)
+		// Arguments
+		if flags.Args != "" {
+			transactionArguments, err := cli.ParseArguments(flags.Args)
+			if err != nil {
+				cli.Exitf(1, "Invalid arguments passed: %s", flags.Args)
+			}
+
+			for _, arg := range transactionArguments {
+				err := tx.AddArgument(arg)
+
+				if err != nil {
+					cli.Exitf(1, "Failed to add %s argument to a transaction ", flags.Code)
+				}
+			}
+		}
+
+		cli.SendTransaction(projectConf.HostWithOverride(flags.Host), signerAccount, tx, flags.Results)
 	},
 }
 

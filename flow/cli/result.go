@@ -1,7 +1,7 @@
 /*
  * Flow CLI
  *
- * Copyright 2019-2020 Dapper Labs, Inc.
+ * Copyright 2019-2021 Dapper Labs, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,7 +32,7 @@ import (
 func GetTransactionResult(host string, id string, sealed bool, showTransactionCode bool) {
 	ctx := context.Background()
 
-	flowClient, err := client.New(host, grpc.WithInsecure())
+	flowClient, err := client.New(host, grpc.WithInsecure(), grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(MaxGRPCMessageSize)))
 	if err != nil {
 		Exitf(1, "Failed to connect to host: %s", err)
 	}
@@ -97,41 +97,48 @@ func printTxResult(tx *flow.Transaction, res *flow.TransactionResult, showCode b
 	fmt.Println()
 }
 
-func GetBlockEvents(host string, height uint64, eventType string) {
+func GetBlockEvents(host string, startHeight, endHeight uint64, eventType string, printEmpty bool) {
 	ctx := context.Background()
 
-	flowClient, err := client.New(host, grpc.WithInsecure())
+	flowClient, err := client.New(host, grpc.WithInsecure(), grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(MaxGRPCMessageSize)))
 	if err != nil {
 		Exitf(1, "Failed to connect to host: %s", err)
 	}
 
 	events, err := flowClient.GetEventsForHeightRange(ctx, client.EventRangeQuery{
 		Type:        eventType,
-		StartHeight: height,
-		EndHeight:   height,
+		StartHeight: startHeight,
+		EndHeight:   endHeight,
 	})
 
 	if err != nil {
 		Exitf(1, "Failed to query block event by height: %s", err)
 	}
 
-	for _, blockEvent := range events {
-		fmt.Printf("Events for Block %s:", blockEvent.BlockID)
+	for i, blockEvent := range events {
+		if !printEmpty && len(blockEvent.Events) == 0 {
+			continue
+		}
+		fmt.Printf("Events for Block %s (%d):\n", blockEvent.BlockID, startHeight+uint64(i))
 		printEvents(blockEvent.Events, true)
 	}
 }
 
 func printEvents(events []flow.Event, txID bool) {
 	if len(events) == 0 {
-		fmt.Println("  None")
+		PrintIndent(1)
+		fmt.Println("None")
 	}
 	// Basic event info printing
 	for _, event := range events {
-		fmt.Printf("  Event %d: %s\n", event.EventIndex, event.String())
+		PrintIndent(1)
+		fmt.Printf("Event %d: %s\n", event.EventIndex, event.String())
 		if txID {
-			fmt.Printf("  Tx ID: %s\n", event.TransactionID)
+			PrintIndent(1)
+			fmt.Printf("Tx ID: %s\n", event.TransactionID)
 		}
-		fmt.Println("    Fields:")
+		PrintIndent(2)
+		fmt.Println("Fields:")
 		for i, field := range event.Value.EventType.Fields {
 			value := event.Value.Fields[i]
 			printField(field, value)
@@ -156,7 +163,9 @@ func printField(field cadence.Field, value cadence.Value) {
 	} else if _, isAddress := v.([8]byte); isAddress {
 		typeInfo = "Address"
 	}
-	fmt.Printf("      %s (%s): ", field.Identifier, typeInfo)
+	// TODO: consider replacing with a string writer
+	PrintIndent(3)
+	fmt.Printf("%s (%s): ", field.Identifier, typeInfo)
 	// Try the two most obvious cases
 	if address, ok := v.([8]byte); ok {
 		fmt.Printf("%x", address)
@@ -167,7 +176,7 @@ func printField(field cadence.Field, value cadence.Value) {
 			fmt.Printf("%x", b)
 		}
 	} else if uintVal, ok := v.(uint64); typeInfo == "UFix64" && ok {
-		fmt.Print(FormatUFix64(uintVal))
+		fmt.Print(cadence.UFix64(uintVal))
 	} else {
 		fmt.Printf("%v", v)
 	}
