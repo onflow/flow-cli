@@ -1,7 +1,7 @@
 /*
  * Flow CLI
  *
- * Copyright 2019-2020 Dapper Labs, Inc.
+ * Copyright 2019-2021 Dapper Labs, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,13 +16,12 @@
  * limitations under the License.
  */
 
-package execute
+package remove_contract
 
 import (
-	"github.com/onflow/cadence"
-	"io/ioutil"
 	"log"
 
+	"github.com/onflow/flow-go-sdk/templates"
 	"github.com/psiemens/sconfig"
 	"github.com/spf13/cobra"
 
@@ -30,37 +29,32 @@ import (
 )
 
 type Config struct {
-	Args string `default:"" flag:"args" info:"arguments in JSON-Cadence format"`
-	Code string `flag:"code,c" info:"path to Cadence file"`
-	Host string `flag:"host" info:"Flow Access API host address"`
+	Signer  string `default:"service" flag:"signer,s"`
+	Host    string `flag:"host" info:"Flow Access API host address"`
+	Results bool   `default:"false" flag:"results" info:"Display the results of the transaction"`
 }
 
 var conf Config
 
 var Cmd = &cobra.Command{
-	Use:     "execute",
-	Short:   "Execute a script",
-	Example: `flow scripts execute --code=script.cdc --args="[{\"type\": \"String\", \"value\": \"Hello, Cadence\"}]"`,
+	Use:   "remove-contract <name>",
+	Short: "Remove a contract deployed to an account",
+	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		code, err := ioutil.ReadFile(conf.Code)
-		if err != nil {
-			cli.Exitf(1, "Failed to read script from %s", conf.Code)
-		}
-		projectConf := new(cli.Config)
-		if conf.Host == "" {
-			projectConf = cli.LoadConfig()
-		}
+		projectConf := cli.LoadConfig()
 
-		// Arguments
-		var scriptArguments []cadence.Value
-		if conf.Args != "" {
-			scriptArguments, err = cli.ParseArguments(conf.Args)
-			if err != nil {
-				cli.Exitf(1, "Invalid arguments passed: %s", conf.Args)
-			}
-		}
+		contractName := args[0]
 
-		cli.ExecuteScript(projectConf.HostWithOverride(conf.Host), code, scriptArguments...)
+		signerAccount := projectConf.Accounts[conf.Signer]
+
+		tx := templates.RemoveAccountContract(signerAccount.Address, contractName)
+
+		cli.SendTransaction(
+			projectConf.HostWithOverride(conf.Host),
+			signerAccount,
+			tx,
+			conf.Results,
+		)
 	},
 }
 
