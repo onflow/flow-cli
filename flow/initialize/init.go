@@ -60,13 +60,13 @@ var Cmd = &cobra.Command{
 			serviceAcct, _ := project.EmulatorServiceAccount()
 
 			fmt.Printf("⚙️   Flow client initialized with service account:\n\n")
-			fmt.Printf("👤  Address: 0x%s\n", serviceAcct.Address)
+			fmt.Printf("👤  Address: 0x%s\n", serviceAcct.Address().String())
 			fmt.Printf(
 				"Start the Flow Emulator by running: %s\n",
 				cli.Bold("flow project start-emulator"),
 			)
 		} else {
-			fmt.Printf(
+			fmt.Print(
 				cli.Red(fmt.Sprintf("A Flow project already exists in %s \n", cli.DefaultConfigPath)),
 			)
 			fmt.Printf(

@@ -103,7 +103,7 @@ var Cmd = &cobra.Command{
 			},
 		}}
 
-		account, err := cli.AccountFromConfig(
+		account, _ := cli.AccountFromConfig(
 			config.Account{
 				Name:    flags.Name,
 				Address: address,

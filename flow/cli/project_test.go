@@ -324,11 +324,11 @@ func Test_GetContractsByNameSimple(t *testing.T) {
 
 func Test_EmulatorConfigSimple(t *testing.T) {
 	p := generateSimpleProject()
-	emulatorServiceAccount := p.EmulatorServiceAccount()
+	emulatorServiceAccount, _ := p.EmulatorServiceAccount()
 
-	assert.Equal(t, emulatorServiceAccount.Name, "emulator-account")
-	assert.Equal(t, emulatorServiceAccount.Keys[0].Context["privateKey"], "dd72967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47")
-	assert.Equal(t, flow.ServiceAddress("flow-emulator"), emulatorServiceAccount.Address)
+	assert.Equal(t, emulatorServiceAccount.name, "emulator-account")
+	assert.Equal(t, emulatorServiceAccount.keys[0].ToConfig().Context["privateKey"], "dd72967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47")
+	assert.Equal(t, flow.ServiceAddress("flow-emulator").String(), emulatorServiceAccount.Address().String())
 }
 
 func Test_AccountByAddressSimple(t *testing.T) {
@@ -403,11 +403,11 @@ func Test_GetContractsByNameComplex(t *testing.T) {
 
 func Test_EmulatorConfigComplex(t *testing.T) {
 	p := generateComplexProject()
-	emulatorServiceAccount := p.EmulatorServiceAccount()
+	emulatorServiceAccount, _ := p.EmulatorServiceAccount()
 
-	assert.Equal(t, emulatorServiceAccount.Name, "emulator-account")
-	assert.Equal(t, emulatorServiceAccount.Keys[0].Context["privateKey"], "dd72967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47")
-	assert.Equal(t, emulatorServiceAccount.Address, flow.ServiceAddress("flow-emulator"))
+	assert.Equal(t, emulatorServiceAccount.name, "emulator-account")
+	assert.Equal(t, emulatorServiceAccount.keys[0].ToConfig().Context["privateKey"], "dd72967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47")
+	assert.Equal(t, emulatorServiceAccount.Address().String(), flow.ServiceAddress("flow-emulator").String())
 }
 
 func Test_AccountByAddressComplex(t *testing.T) {
