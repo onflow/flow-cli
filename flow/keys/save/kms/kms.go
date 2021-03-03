@@ -61,7 +61,7 @@ var Cmd = &cobra.Command{
 		}
 
 		keys := []config.AccountKey{{
-			Type:     config.KeyTypeKMS,
+			Type:     config.KeyTypeGoogleKMS,
 			Index:    flags.KeyIndex,
 			SigAlgo:  crypto.StringToSignatureAlgorithm(flags.SigAlgo),
 			HashAlgo: crypto.StringToHashAlgorithm(flags.HashAlgo),
