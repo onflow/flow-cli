@@ -57,7 +57,7 @@ var Cmd = &cobra.Command{
 
 			project.Save()
 
-			serviceAcct := project.EmulatorServiceAccount()
+			serviceAcct, _ := project.EmulatorServiceAccount()
 
 			fmt.Printf("⚙️   Flow client initialized with service account:\n\n")
 			fmt.Printf("👤  Address: 0x%s\n", serviceAcct.Address)

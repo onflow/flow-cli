@@ -20,6 +20,7 @@ package emulator
 
 import (
 	"github.com/onflow/flow-cli/flow/cli"
+	"github.com/onflow/flow-cli/flow/cli/keys"
 	"github.com/onflow/flow-cli/flow/config"
 	"github.com/onflow/flow-emulator/cmd/emulator/start"
 	"github.com/onflow/flow-go-sdk/crypto"
@@ -42,12 +43,14 @@ func configuredServiceKey(
 	crypto.HashAlgorithm,
 ) {
 	proj := cli.LoadProject()
+	serviceAccount, _ := proj.EmulatorServiceAccount()
 
-	serviceAccount := proj.EmulatorServiceAccount()
+	serviceKeyHex, ok := serviceAccount.DefaultKey().(*keys.HexAccountKey)
+	if !ok {
+		cli.Exit(1, "Only hexadecimal keys can be used as the emulator service account key.")
+	}
 
-	serviceKey := serviceAccount.Keys[0]
-
-	privateKey, err := crypto.DecodePrivateKeyHex(serviceKey.SigAlgo, serviceKey.Context["privateKey"])
+	privateKey, err := crypto.DecodePrivateKeyHex(serviceKeyHex.SigAlgo(), serviceKeyHex.PrivateKeyHex())
 	if err != nil {
 		cli.Exitf(
 			1,
@@ -56,7 +59,7 @@ func configuredServiceKey(
 		)
 	}
 
-	return privateKey, serviceKey.SigAlgo, serviceKey.HashAlgo
+	return privateKey, serviceKeyHex.SigAlgo(), serviceKeyHex.HashAlgo()
 }
 
 func init() {

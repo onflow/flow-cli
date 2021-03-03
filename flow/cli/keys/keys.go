@@ -135,6 +135,10 @@ func (a *HexAccountKey) Signer() crypto.Signer {
 	return crypto.NewInMemorySigner(a.privateKey, a.HashAlgo())
 }
 
+func (a *HexAccountKey) PrivateKey() crypto.PrivateKey {
+	return a.privateKey
+}
+
 func (a *HexAccountKey) ToConfig() config.AccountKey {
 	return config.AccountKey{
 		Type:     a.keyType,

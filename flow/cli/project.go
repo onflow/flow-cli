@@ -152,9 +152,10 @@ func (p *Project) Host(network string) string {
 	return p.conf.Networks.GetByName(network).Host
 }
 
-func (p *Project) EmulatorServiceAccount() config.Account {
+func (p *Project) EmulatorServiceAccount() (*Account, error) {
 	emulator := p.conf.Emulators.GetDefault()
-	return p.conf.Accounts.GetByName(emulator.ServiceAccount)
+	acc := p.conf.Accounts.GetByName(emulator.ServiceAccount)
+	return AccountFromConfig(acc)
 }
 
 func (p *Project) SetEmulatorServiceKey(privateKey crypto.PrivateKey) {
