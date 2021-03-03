@@ -40,7 +40,6 @@ func configuredServiceKey(
 	crypto.SignatureAlgorithm,
 	crypto.HashAlgorithm,
 ) {
-	fmt.Println(c.ConfigPath)
 	proj := cli.LoadProject(c.ConfigPath)
 
 	serviceAccount := proj.EmulatorServiceAccount()
