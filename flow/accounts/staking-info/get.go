@@ -20,6 +20,7 @@ package staking_info
 
 import (
 	"fmt"
+	"github.com/onflow/flow-cli/flow/cli"
 	"log"
 
 	"github.com/onflow/cadence"
@@ -28,8 +29,6 @@ import (
 	"github.com/onflow/flow-go-sdk"
 	"github.com/psiemens/sconfig"
 	"github.com/spf13/cobra"
-
-	cli "github.com/onflow/flow-cli/flow"
 )
 
 type Config struct {
@@ -43,10 +42,7 @@ var Cmd = &cobra.Command{
 	Short: "Get account staking info",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		projectConf := new(cli.Config)
-		if conf.Host == "" {
-			projectConf = cli.LoadConfig()
-		}
+		project := cli.LoadProject(cli.ConfigPath)
 
 		address := flow.HexToAddress(args[0])
 
@@ -63,12 +59,12 @@ var Cmd = &cobra.Command{
 		stakingInfoScript := templates.GenerateGetLockedStakerInfoScript(env)
 
 		fmt.Println("Account Staking Info:")
-		cli.ExecuteScript(projectConf.HostWithOverride(conf.Host), []byte(stakingInfoScript), cadenceAddress)
+		cli.ExecuteScript(project.HostWithOverride(conf.Host), []byte(stakingInfoScript), cadenceAddress)
 
 		delegationInfoScript := templates.GenerateGetLockedDelegatorInfoScript(env)
 
 		fmt.Println("Account Delegation Info:")
-		cli.ExecuteScript(projectConf.HostWithOverride(conf.Host), []byte(delegationInfoScript), cadenceAddress)
+		cli.ExecuteScript(project.HostWithOverride(conf.Host), []byte(delegationInfoScript), cadenceAddress)
 	},
 }
 

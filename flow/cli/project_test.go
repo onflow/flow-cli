@@ -20,6 +20,8 @@ package cli
 
 import (
 	"fmt"
+	"github.com/onflow/flow-cli/flow/config/manipulators"
+	"github.com/spf13/afero"
 	"sort"
 	"testing"
 
@@ -62,7 +64,7 @@ func generateComplexProject() Project {
 			Source:  "0x123123123",
 			Network: "testnet",
 		}},
-		Deploys: config.Deploys{{
+		Deployments: config.Deployments{{
 			Network:   "emulator",
 			Account:   "emulator-account",
 			Contracts: []string{"KittyItems", "KittyItemsMarket"},
@@ -122,7 +124,7 @@ func generateComplexProject() Project {
 		}},
 	}
 
-	p, err := newProject(&config)
+	p, err := newProject(&config, manipulators.NewComposer(afero.NewMemMapFs()))
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -142,7 +144,7 @@ func generateSimpleProject() Project {
 			Source:  "../hungry-kitties/cadence/contracts/NonFungibleToken.cdc",
 			Network: "emulator",
 		}},
-		Deploys: config.Deploys{{
+		Deployments: config.Deployments{{
 			Network:   "emulator",
 			Account:   "emulator-account",
 			Contracts: []string{"NonFungibleToken"},
@@ -168,7 +170,7 @@ func generateSimpleProject() Project {
 		}},
 	}
 
-	p, err := newProject(&config)
+	p, err := newProject(&config, manipulators.NewComposer(afero.NewMemMapFs()))
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -193,7 +195,7 @@ func generateAliasesProject() Project {
 			Network: "emulator",
 			Alias:   "ee82856bf20e2aa6",
 		}},
-		Deploys: config.Deploys{{
+		Deployments: config.Deployments{{
 			Network:   "emulator",
 			Account:   "emulator-account",
 			Contracts: []string{"NonFungibleToken"},
@@ -219,7 +221,7 @@ func generateAliasesProject() Project {
 		}},
 	}
 
-	p, err := newProject(&config)
+	p, err := newProject(&config, manipulators.NewComposer(afero.NewMemMapFs()))
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -253,7 +255,7 @@ func generateAliasesComplexProject() Project {
 			Network: "emulator",
 			Alias:   "ee82856bf20e2aa6",
 		}},
-		Deploys: config.Deploys{{
+		Deployments: config.Deployments{{
 			Network:   "emulator",
 			Account:   "emulator-account",
 			Contracts: []string{"NonFungibleToken"},
@@ -300,7 +302,7 @@ func generateAliasesComplexProject() Project {
 		}},
 	}
 
-	p, err := newProject(&config)
+	p, err := newProject(&config, manipulators.NewComposer(afero.NewMemMapFs()))
 	if err != nil {
 		fmt.Println(err)
 	}

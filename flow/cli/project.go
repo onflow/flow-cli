@@ -19,8 +19,9 @@
 package cli
 
 import (
-	"github.com/onflow/flow-cli/flow/project/cli/config/json"
-	"github.com/onflow/flow-cli/flow/project/cli/config/manipulators"
+	"errors"
+	"fmt"
+	"github.com/onflow/flow-cli/flow/config/manipulators"
 	"path"
 	"strings"
 
@@ -80,8 +81,8 @@ func ProjectExists(path string) bool {
 }
 
 // InitProject initializes the project
-func InitProject() *Project {
-	emulatorServiceAccount := generateEmulatorServiceAccount()
+func InitProject(sigAlgo crypto.SignatureAlgorithm, hashAlgo crypto.HashAlgorithm) *Project {
+	emulatorServiceAccount := generateEmulatorServiceAccount(sigAlgo, hashAlgo)
 
 	return &Project{
 		composer: manipulators.NewComposer(afero.NewOsFs()),
@@ -178,7 +179,7 @@ func (p *Project) Host(network string) string {
 func (p *Project) EmulatorServiceAccount() (*Account, error) {
 	emulator := p.conf.Emulators.GetDefault()
 	acc := p.conf.Accounts.GetByName(emulator.ServiceAccount)
-	return AccountFromConfig(acc)
+	return AccountFromConfig(*acc)
 }
 
 func (p *Project) SetEmulatorServiceKey(privateKey crypto.PrivateKey) {
@@ -259,6 +260,7 @@ func (p *Project) Save(path string) {
 	err := p.composer.Save(p.conf, path)
 
 	if err != nil {
+		fmt.Println(err)
 		Exitf(1, "Failed to save project configuration to \"%s\"", path)
 	}
 }

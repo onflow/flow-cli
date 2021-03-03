@@ -41,26 +41,26 @@ var Cmd = &cobra.Command{
 	Short:   "Execute a script",
 	Example: `flow scripts execute --code=script.cdc --args="[{\"type\": \"String\", \"value\": \"Hello, Cadence\"}]"`,
 	Run: func(cmd *cobra.Command, args []string) {
-		code, err := ioutil.ReadFile(conf.Code)
+		code, err := ioutil.ReadFile(flags.Code)
 		if err != nil {
-			cli.Exitf(1, "Failed to read script from %s", conf.Code)
+			cli.Exitf(1, "Failed to read script from %s", flags.Code)
 		}
 
-		project := cli.LoadProject()
+		project := cli.LoadProject(cli.ConfigPath) // TODO: change this to only config since if config file doesnt exists we get an error
 		if project == nil {
 			return
 		}
 
 		// Arguments
 		var scriptArguments []cadence.Value
-		if conf.Args != "" {
-			scriptArguments, err = cli.ParseArguments(conf.Args)
+		if flags.Args != "" {
+			scriptArguments, err = cli.ParseArguments(flags.Args)
 			if err != nil {
-				cli.Exitf(1, "Invalid arguments passed: %s", conf.Args)
+				cli.Exitf(1, "Invalid arguments passed: %s", flags.Args)
 			}
 		}
 
-		cli.ExecuteScript(projectConf.HostWithOverride(flags.Host), code, scriptArguments...)
+		cli.ExecuteScript(project.HostWithOverride(flags.Host), code, scriptArguments...)
 	},
 }
 

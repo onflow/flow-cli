@@ -21,7 +21,7 @@ package manipulators
 import (
 	"errors"
 	"fmt"
-	"github.com/onflow/flow-cli/flow/project/cli/config"
+	"github.com/onflow/flow-cli/flow/config"
 	"os"
 	"path/filepath"
 

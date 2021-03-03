@@ -43,8 +43,8 @@ var Cmd = &cobra.Command{
 	Use:   "init",
 	Short: "Initialize a new account profile",
 	Run: func(cmd *cobra.Command, args []string) {
-
-		if !cli.ProjectExists() || flags.Reset {
+		// TODO: fix default config path with possible argument in path
+		if !cli.ProjectExists(cli.DefaultConfigPath) || flags.Reset {
 			serviceKeySigAlgo := crypto.StringToSignatureAlgorithm(flags.ServiceKeySigAlgo)
 			serviceKeyHashAlgo := crypto.StringToHashAlgorithm(flags.ServiceKeyHashAlgo)
 
@@ -55,7 +55,7 @@ var Cmd = &cobra.Command{
 				project.SetEmulatorServiceKey(serviceKey)
 			}
 
-			project.Save()
+			project.Save(cli.DefaultConfigPath)
 
 			serviceAcct, _ := project.EmulatorServiceAccount()
 

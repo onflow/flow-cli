@@ -43,10 +43,7 @@ var Cmd = &cobra.Command{
 	Short: "Get account info",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		project := cli.LoadProject()
-		if project == nil {
-			return
-		}
+		project := cli.LoadProject(cli.ConfigPath)
 
 		address := flow.HexToAddress(
 			strings.ReplaceAll(args[0], "0x", ""),

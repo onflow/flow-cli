@@ -87,9 +87,9 @@ type Emulator struct {
 type KeyType string
 
 const (
-	KeyTypeHex       KeyType = "hex"        // Hex private key with in memory signer
-	KeyTypeGoogleKMS KeyType = "google-kms" // Google KMS signer
-	DefaultEmulatorConfigName = "default"
+	KeyTypeHex                KeyType = "hex"        // Hex private key with in memory signer
+	KeyTypeGoogleKMS          KeyType = "google-kms" // Google KMS signer
+	DefaultEmulatorConfigName         = "default"
 )
 
 //TODO: replace filter with find where only one is expected
@@ -250,8 +250,6 @@ func (n *Networks) AddOrUpdate(name string, network Network) {
 
 	*n = append(*n, network)
 }
-
-const DefaultEmulatorConfigName = "default"
 
 // GetDefault emulator
 func (e *Emulators) GetDefault() *Emulator {

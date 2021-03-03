@@ -44,7 +44,7 @@ var Cmd = &cobra.Command{
 	Short: "Get block info",
 	Run: func(cmd *cobra.Command, args []string) {
 		var block *flow.Block
-		project := cli.LoadProject()
+		project := cli.LoadProject(cli.ConfigPath)
 		if project == nil {
 			return
 		}

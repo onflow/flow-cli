@@ -19,41 +19,39 @@
 package remove_contract
 
 import (
+	"github.com/onflow/flow-cli/flow/cli"
 	"log"
 
 	"github.com/onflow/flow-go-sdk/templates"
 	"github.com/psiemens/sconfig"
 	"github.com/spf13/cobra"
-
-	cli "github.com/onflow/flow-cli/flow"
 )
 
-type Config struct {
+type Flags struct {
 	Signer  string `default:"service" flag:"signer,s"`
 	Host    string `flag:"host" info:"Flow Access API host address"`
 	Results bool   `default:"false" flag:"results" info:"Display the results of the transaction"`
 }
 
-var conf Config
+var flags Flags
 
 var Cmd = &cobra.Command{
 	Use:   "remove-contract <name>",
 	Short: "Remove a contract deployed to an account",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		projectConf := cli.LoadConfig()
+		project := cli.LoadProject(cli.ConfigPath)
 
 		contractName := args[0]
+		signerAccount := project.GetAccountByName(flags.Signer)
 
-		signerAccount := projectConf.Accounts[conf.Signer]
-
-		tx := templates.RemoveAccountContract(signerAccount.Address, contractName)
+		tx := templates.RemoveAccountContract(signerAccount.Address(), contractName)
 
 		cli.SendTransaction(
-			projectConf.HostWithOverride(conf.Host),
+			project.HostWithOverride(flags.Host),
 			signerAccount,
 			tx,
-			conf.Results,
+			flags.Results,
 		)
 	},
 }
@@ -63,7 +61,7 @@ func init() {
 }
 
 func initConfig() {
-	err := sconfig.New(&conf).
+	err := sconfig.New(&flags).
 		FromEnvironment(cli.EnvPrefix).
 		BindFlags(Cmd.PersistentFlags()).
 		Parse()

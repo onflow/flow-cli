@@ -20,7 +20,7 @@ package json
 
 import (
 	"encoding/json"
-	"github.com/onflow/flow-cli/flow/project/cli/config"
+	"github.com/onflow/flow-cli/flow/config"
 )
 
 type jsonConfig struct {
@@ -71,8 +71,12 @@ func (j *jsonConfig) Deserialize(raw []byte) (*config.Config, error) {
 	var jsonConf jsonConfig
 	err := json.Unmarshal(raw, &jsonConf)
 
-// TODO: allow path to change
-const DefaultConfigPath = "flow.json"
+	if err != nil {
+		return nil, err
+	}
+
+	return jsonConf.transformToConfig(), nil
+}
 
 func (j *jsonConfig) SupportsFormat(extension string) bool {
 	return extension == ".json"

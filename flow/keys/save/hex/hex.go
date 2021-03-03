@@ -47,7 +47,7 @@ var Cmd = &cobra.Command{
 	Short:   "Save a hex key to the config file",
 	Example: "flow keys save hex --name test --address 8c5303eaa26202d6 --sigalgo ECDSA_secp256k1 --hashalgo SHA2_256 --index 0 --privatekey <HEX_PRIVATEKEY>",
 	Run: func(cmd *cobra.Command, args []string) {
-		project := cli.LoadProject()
+		project := cli.LoadProject(cli.ConfigPath)
 		if project == nil {
 			return
 		}
@@ -118,7 +118,7 @@ var Cmd = &cobra.Command{
 		}
 
 		project.AddAccount(account)
-		project.Save()
+		project.Save(cli.ConfigPath[0])
 	},
 }
 

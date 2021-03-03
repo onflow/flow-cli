@@ -42,7 +42,7 @@ var Cmd = &cobra.Command{
 	Short: "Update a contract deployed to an account",
 	Args:  cobra.ExactArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
-		project := cli.LoadProject()
+		project := cli.LoadProject(cli.ConfigPath)
 
 		contractName := args[0]
 		contractFilename := args[1]

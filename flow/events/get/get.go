@@ -19,22 +19,21 @@
 package get
 
 import (
+	"github.com/onflow/flow-cli/flow/cli"
 	"log"
 	"strconv"
 	"strings"
 
 	"github.com/psiemens/sconfig"
 	"github.com/spf13/cobra"
-
-	cli "github.com/onflow/flow-cli/flow"
 )
 
-type Config struct {
+type Flags struct {
 	Host    string `flag:"host" info:"Flow Access API host address"`
 	Verbose bool   `flag:"verbose" info:"Verbose output"`
 }
 
-var conf Config
+var flags Flags
 
 var Cmd = &cobra.Command{
 	Use:     "get <event_name> <block_height_range_start> <optional:block_height_range_end|latest>",
@@ -42,15 +41,12 @@ var Cmd = &cobra.Command{
 	Args:    cobra.RangeArgs(2, 3),
 	Example: "flow events get A.1654653399040a61.FlowToken.TokensDeposited 11559500 11559600",
 	Run: func(cmd *cobra.Command, args []string) {
-		projectConf := new(cli.Config)
-		if conf.Host == "" {
-			projectConf = cli.LoadConfig()
-		}
-		host := projectConf.HostWithOverride(conf.Host)
+		project := cli.LoadProject(cli.ConfigPath) // TODO: handle error
+		host := project.HostWithOverride(flags.Host)
 
 		eventName, startHeight, endHeight := validateArguments(host, args)
 
-		cli.GetBlockEvents(host, startHeight, endHeight, eventName, conf.Verbose)
+		cli.GetBlockEvents(host, startHeight, endHeight, eventName, flags.Verbose)
 	},
 }
 
@@ -59,7 +55,7 @@ func init() {
 }
 
 func initConfig() {
-	err := sconfig.New(&conf).
+	err := sconfig.New(&flags).
 		FromEnvironment(cli.EnvPrefix).
 		BindFlags(Cmd.PersistentFlags()).
 		Parse()
