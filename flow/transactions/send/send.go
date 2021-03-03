@@ -45,7 +45,10 @@ var Cmd = &cobra.Command{
 	Short:   "Send a transaction",
 	Example: `flow transactions send --code=tx.cdc --args="[{\"type\": \"String\", \"value\": \"Hello, Cadence\"}]"`,
 	Run: func(cmd *cobra.Command, args []string) {
-		project, _ := cli.LoadProject(cli.ConfigPath)
+		project, err := cli.LoadProject(cli.ConfigPath)
+		if err != nil {
+			cli.Exitf(1, err.Error())
+		}
 
 		host := flags.Host
 		if host == "" {
@@ -58,11 +61,8 @@ var Cmd = &cobra.Command{
 		}
 
 		validateKeyPreReq(signerAccount)
-		var (
-			code []byte
-			err  error
-		)
 
+		var code []byte
 		if flags.Code != "" {
 			code, err = ioutil.ReadFile(flags.Code)
 			if err != nil {

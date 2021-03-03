@@ -48,7 +48,10 @@ var Cmd = &cobra.Command{
 	Short:   "Save a KMS key to the config file",
 	Example: "flow keys save kms --name test --address 8c5303eaa26202d6 --sigalgo ECDSA_secp256k1 --hashalgo SHA2_256 --index 0 --context 'KMS_RESOURCE_ID'",
 	Run: func(cmd *cobra.Command, args []string) {
-		project, _ := cli.LoadProject(cli.ConfigPath)
+		project, err := cli.LoadProject(cli.ConfigPath)
+		if err != nil {
+			cli.Exitf(1, err.Error())
+		}
 
 		account := project.GetAccountByName(flags.Name)
 		if account != nil && !flags.Overwrite {

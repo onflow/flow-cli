@@ -42,11 +42,9 @@ var Cmd = &cobra.Command{
 	Short: "Get account staking info",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		project, _ := cli.LoadProject(cli.ConfigPath)
-
-		host := flags.Host
-		if host == "" {
-			host = project.DefaultHost("")
+		host, err := cli.LoadHostForNetwork(flags.Host, "")
+		if err != nil {
+			cli.Exitf(1, err.Error())
 		}
 
 		address := flow.HexToAddress(args[0])

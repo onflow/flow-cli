@@ -42,7 +42,10 @@ var Cmd = &cobra.Command{
 	Short: "Update a contract deployed to an account",
 	Args:  cobra.ExactArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
-		project, _ := cli.LoadProject(cli.ConfigPath)
+		project, err := cli.LoadProject(cli.ConfigPath)
+		if err != nil {
+			cli.Exitf(1, err.Error())
+		}
 
 		host := flags.Host
 		if host == "" {

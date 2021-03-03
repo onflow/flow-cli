@@ -46,11 +46,9 @@ var Cmd = &cobra.Command{
 			cli.Exitf(1, "Failed to read script from %s", flags.Code)
 		}
 
-		project, _ := cli.LoadProject(cli.ConfigPath)
-
-		host := flags.Host
-		if host == "" {
-			host = project.DefaultHost("")
+		host, err := cli.LoadHostForNetwork(flags.Host, "")
+		if err != nil {
+			cli.Exitf(1, err.Error())
 		}
 
 		// Arguments

@@ -43,15 +43,9 @@ var Cmd = &cobra.Command{
 	Short: "Get account info",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		host := flags.Host
-
-		if host == "" {
-			project, err := cli.LoadProject(cli.ConfigPath)
-			if err != nil {
-				cli.Exitf(1, "Couldn't find host, use --host flag or initialize config with: flow project init.")
-			}
-
-			host = project.DefaultHost("")
+		host, err := cli.LoadHostForNetwork(flags.Host, "")
+		if err != nil {
+			cli.Exitf(1, err.Error())
 		}
 
 		address := flow.HexToAddress(

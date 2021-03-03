@@ -48,7 +48,10 @@ var Cmd = &cobra.Command{
 	Use:   "create",
 	Short: "Create a new account",
 	Run: func(cmd *cobra.Command, args []string) {
-		project, _ := cli.LoadProject(cli.ConfigPath)
+		project, err := cli.LoadProject(cli.ConfigPath)
+		if err != nil {
+			cli.Exitf(1, err.Error())
+		}
 
 		host := flags.Host
 		if host == "" {

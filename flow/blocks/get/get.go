@@ -44,11 +44,9 @@ var Cmd = &cobra.Command{
 	Short: "Get block info",
 	Run: func(cmd *cobra.Command, args []string) {
 		var block *flow.Block
-		project, _ := cli.LoadProject(cli.ConfigPath)
-
-		host := flags.Host
-		if host == "" {
-			host = project.DefaultHost("")
+		host, err := cli.LoadHostForNetwork(flags.Host, "")
+		if err != nil {
+			cli.Exitf(1, err.Error())
 		}
 
 		if flags.Latest {

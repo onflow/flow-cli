@@ -41,12 +41,16 @@ var Cmd = &cobra.Command{
 	Short: "Deploy a new contract to an account",
 	Args:  cobra.ExactArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
-		project, _ := cli.LoadProject(cli.ConfigPath)
+		project, err := cli.LoadProject(cli.ConfigPath)
+		if err != nil {
+			cli.Exitf(1, err.Error())
+		}
 
 		host := flags.Host
 		if host == "" {
 			host = project.DefaultHost("")
 		}
+
 		contractName := args[0]
 		contractFilename := args[1]
 
