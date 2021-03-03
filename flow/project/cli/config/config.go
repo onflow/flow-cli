@@ -142,8 +142,8 @@ func (c *Contracts) GetByNetwork(network string) Contracts {
 }
 
 func (c *Contracts) AddOrUpdate(name string, contract Contract) {
-	for i := range *c {
-		if (*c)[i].Name == name {
+	for i, existingContract := range *c {
+		if existingContract.Name == name {
 			(*c)[i] = contract
 			return
 		}
@@ -175,8 +175,8 @@ func (a *Accounts) GetByAddress(address string) *Account {
 }
 
 func (a *Accounts) AddOrUpdate(name string, account Account) {
-	for i := range *a {
-		if (*a)[i].Name == name {
+	for i, existingAccount := range *a {
+		if existingAccount.Name == name {
 			(*a)[i] = account
 			return
 		}
@@ -233,8 +233,8 @@ func (n *Networks) GetByName(name string) *Network {
 }
 
 func (n *Networks) AddOrUpdate(name string, network Network) {
-	for i := range *n {
-		if (*n)[i].Name == name {
+	for i, existingNetwork := range *n {
+		if existingNetwork.Name == name {
 			(*n)[i] = network
 			return
 		}
