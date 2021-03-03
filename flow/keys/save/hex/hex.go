@@ -56,11 +56,10 @@ var Cmd = &cobra.Command{
 			cli.Exitf(1, "missing name")
 		}
 
-		// TODO: implement
-		//accountExists := project.GetAccountByName(flags.Name)
-		//if accountExists && !flags.Overwrite {
-		//	cli.Exitf(1, "%s already exists in the config, and overwrite is false", flags.Name)
-		//}
+		accountExists := project.GetAccountByName(flags.Name)
+		if accountExists != nil && !flags.Overwrite {
+			cli.Exitf(1, "%s already exists in the config, and overwrite is false", flags.Name)
+		}
 
 		// Parse address
 		decodedAddress, err := hex.DecodeString(flags.Address)
@@ -113,13 +112,10 @@ var Cmd = &cobra.Command{
 			},
 		)
 
-		/* TODO: discuss how this changed
-		// Validate account
-		err = account.LoadSigner()
+		_, err = account.DefaultKey().Signer().Sign([]byte(""))
 		if err != nil {
-			cli.Exitf(1, "provide key could not be loaded as a valid signer %s", conf.KeyHex)
+			cli.Exitf(1, "provide key could not be loaded as a valid signer %s", flags.KeyHex)
 		}
-		*/
 
 		project.AddAccount(account)
 		project.Save()

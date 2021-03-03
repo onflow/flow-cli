@@ -60,11 +60,6 @@ var Cmd = &cobra.Command{
 			cli.Exitf(1, "key context could not be parsed %s", flags.KeyContext)
 		}
 
-		address := flow.HexToAddress(flags.Address)
-		if !address.IsValid(flow.Emulator) { // TODO: don't hardcode this
-			cli.Exitf(1, "key address not valid")
-		}
-
 		keys := []config.AccountKey{{
 			Type:     config.KeyTypeKMS,
 			Index:    flags.KeyIndex,
@@ -73,25 +68,26 @@ var Cmd = &cobra.Command{
 			Context:  keyContext,
 		}}
 
-		account, err := cli.AccountFromConfig(
+		account, err = cli.AccountFromConfig(
 			config.Account{
 				Name:    flags.Name,
-				Address: address,
-				ChainID: flow.Emulator, // TODO: don't hardcode this
+				Address: flow.HexToAddress(flags.Address),
 				Keys:    keys,
 			},
 		)
 
-		/* TODO: discuss how this changed
+		if err != nil || account == nil {
+			cli.Exitf(1, "config parameters not valid")
+		}
+
 		// Validate account
-		err = account.LoadSigner()
+		_, err = account.DefaultKey().Signer().Sign([]byte(""))
 		if err != nil {
 			cli.Exitf(1, "provide key context could not be loaded as a valid signer %s", flags.KeyContext)
 		}
-		*/
 
 		project.AddAccount(account)
-		project.Save() // TODO: handle error
+		project.Save()
 	},
 }
 
