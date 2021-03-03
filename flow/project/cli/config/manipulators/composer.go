@@ -190,7 +190,7 @@ func (c *Composer) composeConfig(baseConf *config.Config, conf *config.Config) {
 		baseConf.Contracts.AddOrUpdate(contract.Name, contract)
 	}
 	for _, deployment := range conf.Deployments {
-		baseConf.Deployments.AddIfMissing(deployment)
+		baseConf.Deployments.AddOrUpdate(deployment)
 	}
 }
 

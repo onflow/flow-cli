@@ -22,7 +22,6 @@ import (
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/thoas/go-funk"
-	"reflect"
 )
 
 type Config struct {
@@ -211,9 +210,10 @@ func (d *Deployments) GetByAccountAndNetwork(account string, network string) []D
 	return deployments
 }
 
-func (d *Deployments) AddIfMissing(deployment Deploy) {
-	for _, dep := range *d {
-		if reflect.DeepEqual(dep, deployment) {
+func (d *Deployments) AddOrUpdate(deployment Deploy) {
+	for i, existingDeployment := range *d {
+		if existingDeployment.Account == deployment.Account {
+			(*d)[i] = deployment
 			return
 		}
 	}
