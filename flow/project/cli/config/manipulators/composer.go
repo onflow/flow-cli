@@ -181,13 +181,13 @@ func (c *Composer) composeConfig(baseConf *config.Config, conf *config.Config) {
 
 	// if not first overwrite first with this one
 	for _, account := range conf.Accounts {
-		baseConf.Accounts.SetForName(account.Name, account)
+		baseConf.Accounts.AddOrUpdate(account.Name, account)
 	}
 	for _, network := range conf.Networks {
-		baseConf.Networks.SetForName(network.Name, network)
+		baseConf.Networks.AddOrUpdate(network.Name, network)
 	}
 	for _, contract := range conf.Contracts {
-		baseConf.Contracts.SetForName(contract.Name, contract)
+		baseConf.Contracts.AddOrUpdate(contract.Name, contract)
 	}
 	for _, deployment := range conf.Deployments {
 		baseConf.Deployments.AddIfMissing(deployment)

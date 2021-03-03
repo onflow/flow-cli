@@ -141,7 +141,7 @@ func (c *Contracts) GetByNetwork(network string) Contracts {
 	return contracts
 }
 
-func (c *Contracts) SetForName(name string, contract Contract) {
+func (c *Contracts) AddOrUpdate(name string, contract Contract) {
 	for i := range *c {
 		if (*c)[i].Name == name {
 			(*c)[i] = contract
@@ -174,7 +174,7 @@ func (a *Accounts) GetByAddress(address string) *Account {
 	return nil
 }
 
-func (a *Accounts) SetForName(name string, account Account) {
+func (a *Accounts) AddOrUpdate(name string, account Account) {
 	for i := range *a {
 		if (*a)[i].Name == name {
 			(*a)[i] = account
@@ -232,7 +232,7 @@ func (n *Networks) GetByName(name string) *Network {
 	return nil
 }
 
-func (n *Networks) SetForName(name string, network Network) {
+func (n *Networks) AddOrUpdate(name string, network Network) {
 	for i := range *n {
 		if (*n)[i].Name == name {
 			(*n)[i] = network
