@@ -41,8 +41,12 @@ var Cmd = &cobra.Command{
 	Args:    cobra.RangeArgs(2, 3),
 	Example: "flow events get A.1654653399040a61.FlowToken.TokensDeposited 11559500 11559600",
 	Run: func(cmd *cobra.Command, args []string) {
-		project := cli.LoadProject(cli.ConfigPath) // TODO: handle error
-		host := project.HostWithOverride(flags.Host)
+		host := flags.Host
+
+		if host == "" {
+			project, _ := cli.LoadProject(cli.ConfigPath)
+			host = project.DefaultHost("")
+		}
 
 		eventName, startHeight, endHeight := validateArguments(host, args)
 

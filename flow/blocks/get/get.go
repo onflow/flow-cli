@@ -44,12 +44,12 @@ var Cmd = &cobra.Command{
 	Short: "Get block info",
 	Run: func(cmd *cobra.Command, args []string) {
 		var block *flow.Block
-		project := cli.LoadProject(cli.ConfigPath)
-		if project == nil {
-			return
-		}
+		project, _ := cli.LoadProject(cli.ConfigPath)
 
-		host := project.HostWithOverride(flags.Host)
+		host := flags.Host
+		if host == "" {
+			host = project.DefaultHost("")
+		}
 
 		if flags.Latest {
 			block = cli.GetLatestBlock(host)

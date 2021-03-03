@@ -47,7 +47,7 @@ var Cmd = &cobra.Command{
 	Use:   "deploy",
 	Short: "Deploy Cadence contracts",
 	Run: func(cmd *cobra.Command, args []string) {
-		project := cli.LoadProject(cli.ConfigPath)
+		project, _ := cli.LoadProject(cli.ConfigPath)
 
 		host := project.Host(conf.Network)
 

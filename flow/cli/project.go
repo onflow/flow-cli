@@ -45,7 +45,7 @@ type Project struct {
 }
 
 // LoadProject loads configuration and setup the project
-func LoadProject(configFilePath []string) *Project {
+func LoadProject(configFilePath []string) (*Project, error) {
 	composer := manipulators.NewComposer(afero.NewOsFs())
 
 	// here we add all available parsers (more to add yaml etc...)
@@ -54,25 +54,22 @@ func LoadProject(configFilePath []string) *Project {
 
 	if err != nil {
 		if errors.Is(err, manipulators.ErrDoesNotExist) {
-			Exitf(
-				1,
+			return nil, fmt.Errorf(
 				"Project config file %s does not exist. Please initialize first\n",
 				configFilePath,
 			)
 		}
 
-		Exitf(1, "Failed to open project configuration in %s", configFilePath)
-
-		return nil
+		return nil, fmt.Errorf("Failed to open project configuration in %s", configFilePath)
 	}
 
 	proj, err := newProject(conf, composer)
 	if err != nil {
 		// TODO: replace with a more detailed error message
-		Exitf(1, "Invalid project configuration: %s", err)
+		return nil, fmt.Errorf("Invalid project configuration: %s", err)
 	}
 
-	return proj
+	return proj, nil
 }
 
 // ProjectExists checks if project exists
@@ -84,8 +81,11 @@ func ProjectExists(path string) bool {
 func InitProject(sigAlgo crypto.SignatureAlgorithm, hashAlgo crypto.HashAlgorithm) *Project {
 	emulatorServiceAccount := generateEmulatorServiceAccount(sigAlgo, hashAlgo)
 
+	composer := manipulators.NewComposer(afero.NewOsFs())
+	composer.AddConfigParser(json.NewParser())
+
 	return &Project{
-		composer: manipulators.NewComposer(afero.NewOsFs()),
+		composer: composer,
 		conf:     defaultConfig(emulatorServiceAccount),
 		accounts: []*Account{emulatorServiceAccount},
 	}
@@ -164,12 +164,12 @@ func (p *Project) ContractConflictExists(network string) bool {
 	return len(all) != len(uniq)
 }
 
-func (p *Project) HostWithOverride(host string) string {
-	if host != "" {
-		return host
+func (p *Project) DefaultHost(network string) string {
+	if network == "" {
+		network = defaultEmulatorNetworkName
 	}
-	// TODO fix this to support different networks (global flag)
-	return p.conf.Networks.GetByName(defaultEmulatorNetworkName).Host
+
+	return p.conf.Networks.GetByName(network).Host
 }
 
 func (p *Project) Host(network string) string {
@@ -260,7 +260,6 @@ func (p *Project) Save(path string) {
 	err := p.composer.Save(p.conf, path)
 
 	if err != nil {
-		fmt.Println(err)
 		Exitf(1, "Failed to save project configuration to \"%s\"", path)
 	}
 }

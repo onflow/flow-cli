@@ -31,18 +31,23 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type Config struct {
+type Flags struct {
 	Host string `flag:"host" info:"Flow Access API host address"`
 }
 
-var conf Config
+var flags Flags
 
 var Cmd = &cobra.Command{
 	Use:   "staking-info <address>",
 	Short: "Get account staking info",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		project := cli.LoadProject(cli.ConfigPath)
+		project, _ := cli.LoadProject(cli.ConfigPath)
+
+		host := flags.Host
+		if host == "" {
+			host = project.DefaultHost("")
+		}
 
 		address := flow.HexToAddress(args[0])
 
@@ -59,12 +64,12 @@ var Cmd = &cobra.Command{
 		stakingInfoScript := templates.GenerateGetLockedStakerInfoScript(env)
 
 		fmt.Println("Account Staking Info:")
-		cli.ExecuteScript(project.HostWithOverride(conf.Host), []byte(stakingInfoScript), cadenceAddress)
+		cli.ExecuteScript(host, []byte(stakingInfoScript), cadenceAddress)
 
 		delegationInfoScript := templates.GenerateGetLockedDelegatorInfoScript(env)
 
 		fmt.Println("Account Delegation Info:")
-		cli.ExecuteScript(project.HostWithOverride(conf.Host), []byte(delegationInfoScript), cadenceAddress)
+		cli.ExecuteScript(host, []byte(delegationInfoScript), cadenceAddress)
 	},
 }
 
@@ -73,7 +78,7 @@ func init() {
 }
 
 func initConfig() {
-	err := sconfig.New(&conf).
+	err := sconfig.New(&flags).
 		FromEnvironment(cli.EnvPrefix).
 		BindFlags(Cmd.PersistentFlags()).
 		Parse()

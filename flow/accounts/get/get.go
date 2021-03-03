@@ -36,25 +36,31 @@ type Flags struct {
 	Code bool   `default:"false" flag:"code" info:"Display code deployed to the account"`
 }
 
-var flag Flags
+var flags Flags
 
 var Cmd = &cobra.Command{
 	Use:   "get <address>",
 	Short: "Get account info",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		project := cli.LoadProject(cli.ConfigPath)
+		host := flags.Host
+
+		if host == "" {
+			project, err := cli.LoadProject(cli.ConfigPath)
+			if err != nil {
+				cli.Exitf(1, "Couldn't find host, use --host flag or initialize config with: flow project init.")
+			}
+
+			host = project.DefaultHost("")
+		}
 
 		address := flow.HexToAddress(
 			strings.ReplaceAll(args[0], "0x", ""),
 		)
 
-		account := cli.GetAccount(
-			project.HostWithOverride(flag.Host),
-			address,
-		)
+		account := cli.GetAccount(host, address)
 
-		printAccount(account, flag.Code)
+		printAccount(account, flags.Code)
 	},
 }
 
@@ -63,7 +69,7 @@ func init() {
 }
 
 func initConfig() {
-	err := sconfig.New(&flag).
+	err := sconfig.New(&flags).
 		FromEnvironment(cli.EnvPrefix).
 		BindFlags(Cmd.PersistentFlags()).
 		Parse()

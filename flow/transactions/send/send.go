@@ -45,9 +45,11 @@ var Cmd = &cobra.Command{
 	Short:   "Send a transaction",
 	Example: `flow transactions send --code=tx.cdc --args="[{\"type\": \"String\", \"value\": \"Hello, Cadence\"}]"`,
 	Run: func(cmd *cobra.Command, args []string) {
-		project := cli.LoadProject(cli.ConfigPath)
-		if project == nil {
-			return
+		project, _ := cli.LoadProject(cli.ConfigPath)
+
+		host := flags.Host
+		if host == "" {
+			host = project.DefaultHost("")
 		}
 
 		signerAccount := project.GetAccountByName(flags.Signer)
@@ -88,7 +90,7 @@ var Cmd = &cobra.Command{
 			}
 		}
 
-		cli.SendTransaction(project.HostWithOverride(flags.Host), signerAccount, tx, flags.Results)
+		cli.SendTransaction(host, signerAccount, tx, flags.Results)
 	},
 }
 

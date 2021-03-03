@@ -46,9 +46,11 @@ var Cmd = &cobra.Command{
 			cli.Exitf(1, "Failed to read script from %s", flags.Code)
 		}
 
-		project := cli.LoadProject(cli.ConfigPath) // TODO: change this to only config since if config file doesnt exists we get an error
-		if project == nil {
-			return
+		project, _ := cli.LoadProject(cli.ConfigPath)
+
+		host := flags.Host
+		if host == "" {
+			host = project.DefaultHost("")
 		}
 
 		// Arguments
@@ -60,7 +62,7 @@ var Cmd = &cobra.Command{
 			}
 		}
 
-		cli.ExecuteScript(project.HostWithOverride(flags.Host), code, scriptArguments...)
+		cli.ExecuteScript(host, code, scriptArguments...)
 	},
 }
 

@@ -70,6 +70,7 @@ func NewComposer(filesystem afero.Fs) *Composer {
 	af := &afero.Afero{Fs: filesystem}
 	return &Composer{
 		af:               af,
+		composedMultiple: false,
 		composedFromFile: map[string]string{},
 	}
 }
@@ -79,13 +80,16 @@ func (c *Composer) AddConfigParser(format Parser) {
 }
 
 func (c *Composer) Save(conf *config.Config, path string) error {
-	if c.composedMultiple || c.composedFromFile != nil {
+	if c.composedMultiple || len(c.composedFromFile) > 0 {
 		return errors.New("Saving configuration to multiple files currently not supported")
 	}
 
-	configFormat := c.configParsers.FindForFormat(
-		filepath.Ext(path),
-	)
+	format := filepath.Ext(path)
+	configFormat := c.configParsers.FindForFormat(format)
+
+	if configFormat == nil {
+		return fmt.Errorf("Parser for selected format not found %s", format)
+	}
 
 	data, err := configFormat.Serialize(conf)
 	if err != nil {

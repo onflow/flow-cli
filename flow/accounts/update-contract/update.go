@@ -42,7 +42,12 @@ var Cmd = &cobra.Command{
 	Short: "Update a contract deployed to an account",
 	Args:  cobra.ExactArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
-		project := cli.LoadProject(cli.ConfigPath)
+		project, _ := cli.LoadProject(cli.ConfigPath)
+
+		host := flags.Host
+		if host == "" {
+			host = project.DefaultHost("")
+		}
 
 		contractName := args[0]
 		contractFilename := args[1]
@@ -65,12 +70,7 @@ var Cmd = &cobra.Command{
 			},
 		)
 
-		cli.SendTransaction(
-			project.HostWithOverride(flags.Host),
-			signerAccount,
-			tx,
-			flags.Results,
-		)
+		cli.SendTransaction(host, signerAccount, tx, flags.Results)
 	},
 }
 

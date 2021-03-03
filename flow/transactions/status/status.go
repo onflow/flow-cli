@@ -40,11 +40,14 @@ var Cmd = &cobra.Command{
 	Short: "Get the transaction status",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		project := cli.LoadProject(cli.ConfigPath)
+		host := flags.Host
 
-		cli.GetTransactionResult(
-			project.HostWithOverride(flags.Host), args[0], flags.Sealed, flags.Code,
-		)
+		if host == "" {
+			project, _ := cli.LoadProject(cli.ConfigPath)
+			host = project.DefaultHost("")
+		}
+
+		cli.GetTransactionResult(host, args[0], flags.Sealed, flags.Code)
 	},
 }
 

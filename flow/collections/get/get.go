@@ -28,21 +28,26 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type Config struct {
+type Flags struct {
 	Host string `flag:"host" info:"Flow Access API host address"`
 }
 
-var conf Config
+var flags Flags
 
 var Cmd = &cobra.Command{
 	Use:   "get <collection_id>",
 	Short: "Get collection info",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		project := cli.LoadProject(cli.ConfigPath) // TODO: handle error
+		project, _ := cli.LoadProject(cli.ConfigPath)
+
+		host := flags.Host
+		if host == "" {
+			host = project.DefaultHost("")
+		}
 
 		collectionID := flow.HexToID(args[0])
-		collection := cli.GetCollectionByID(project.HostWithOverride(conf.Host), collectionID)
+		collection := cli.GetCollectionByID(host, collectionID)
 		printCollection(collection)
 	},
 }
@@ -52,7 +57,7 @@ func init() {
 }
 
 func initConfig() {
-	err := sconfig.New(&conf).
+	err := sconfig.New(&flags).
 		FromEnvironment(cli.EnvPrefix).
 		BindFlags(Cmd.PersistentFlags()).
 		Parse()

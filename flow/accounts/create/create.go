@@ -48,9 +48,11 @@ var Cmd = &cobra.Command{
 	Use:   "create",
 	Short: "Create a new account",
 	Run: func(cmd *cobra.Command, args []string) {
-		project := cli.LoadProject(cli.ConfigPath)
-		if project == nil {
-			return
+		project, _ := cli.LoadProject(cli.ConfigPath)
+
+		host := flags.Host
+		if host == "" {
+			host = project.DefaultHost("")
 		}
 
 		signerAccount := project.GetAccountByName(flags.Signer)
@@ -99,7 +101,7 @@ var Cmd = &cobra.Command{
 
 		tx := templates.CreateAccount(accountKeys, contracts, signerAccount.Address())
 
-		cli.SendTransaction(project.HostWithOverride(flags.Host), signerAccount, tx, flags.Results)
+		cli.SendTransaction(host, signerAccount, tx, flags.Results)
 	},
 }
 

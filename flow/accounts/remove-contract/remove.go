@@ -40,7 +40,12 @@ var Cmd = &cobra.Command{
 	Short: "Remove a contract deployed to an account",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		project := cli.LoadProject(cli.ConfigPath)
+		project, _ := cli.LoadProject(cli.ConfigPath)
+
+		host := flags.Host
+		if host == "" {
+			host = project.DefaultHost("")
+		}
 
 		contractName := args[0]
 		signerAccount := project.GetAccountByName(flags.Signer)
@@ -48,7 +53,7 @@ var Cmd = &cobra.Command{
 		tx := templates.RemoveAccountContract(signerAccount.Address(), contractName)
 
 		cli.SendTransaction(
-			project.HostWithOverride(flags.Host),
+			host,
 			signerAccount,
 			tx,
 			flags.Results,
