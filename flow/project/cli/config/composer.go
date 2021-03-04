@@ -60,30 +60,30 @@ func (c *ConfigParsers) FindForFormat(extension string) Parser {
 	return nil
 }
 
-// Composer contains actions for composing and modification of configuration
-type Composer struct {
+// Loader contains actions for composing and modification of configuration
+type Loader struct {
 	af               *afero.Afero
 	configParsers    ConfigParsers
 	composedMultiple bool
 	composedFromFile map[string]string
 }
 
-// NewComposer creates a composer
-func NewComposer(filesystem afero.Fs) *Composer {
+// NewLoader creates a new loader
+func NewLoader(filesystem afero.Fs) *Loader {
 	af := &afero.Afero{Fs: filesystem}
-	return &Composer{
+	return &Loader{
 		af:               af,
 		composedFromFile: map[string]string{},
 	}
 }
 
 // AddConfigParser adds new parssers for configuration
-func (c *Composer) AddConfigParser(format Parser) {
+func (c *Loader) AddConfigParser(format Parser) {
 	c.configParsers = append(c.configParsers, format)
 }
 
 // Save save configuration to a path with correct serializer
-func (c *Composer) Save(conf *Config, path string) error {
+func (c *Loader) Save(conf *Config, path string) error {
 	if c.composedMultiple || c.composedFromFile != nil {
 		return errors.New("Saving configuration to multiple files currently not supported")
 	}
@@ -106,7 +106,7 @@ func (c *Composer) Save(conf *Config, path string) error {
 }
 
 // Load and compose multiple configurations
-func (c *Composer) Load(paths []string) (*Config, error) {
+func (c *Loader) Load(paths []string) (*Config, error) {
 	var baseConf *Config
 
 	for _, path := range paths {
@@ -144,7 +144,7 @@ func (c *Composer) Load(paths []string) (*Config, error) {
 }
 
 // preprocess configuration - all manipulations to the raw configuration format happens here
-func (c *Composer) preprocess(raw []byte) []byte {
+func (c *Loader) preprocess(raw []byte) []byte {
 	raw, accountsFromFile := ProcessorRun(raw)
 
 	// add all imports from files preprocessor detected for later processing
@@ -154,7 +154,7 @@ func (c *Composer) preprocess(raw []byte) []byte {
 }
 
 // postprocess configuration - do all stateful changes to configuration structures here after it is parsed
-func (c *Composer) postprocess(baseConf *Config) (*Config, error) {
+func (c *Loader) postprocess(baseConf *Config) (*Config, error) {
 	for name, path := range c.composedFromFile {
 		raw, err := c.loadFile(path)
 		if err != nil {
@@ -183,7 +183,7 @@ func (c *Composer) postprocess(baseConf *Config) (*Config, error) {
 }
 
 // composeConfig - here we merge multiple configuration files from right to left
-func (c *Composer) composeConfig(baseConf *Config, conf *Config) {
+func (c *Loader) composeConfig(baseConf *Config, conf *Config) {
 	// flag for saving
 	c.composedMultiple = true
 
@@ -203,7 +203,7 @@ func (c *Composer) composeConfig(baseConf *Config, conf *Config) {
 }
 
 // simple file loader
-func (c *Composer) loadFile(path string) ([]byte, error) {
+func (c *Loader) loadFile(path string) ([]byte, error) {
 	raw, err := c.af.ReadFile(path)
 
 	// TODO: better handle

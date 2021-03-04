@@ -35,14 +35,14 @@ import (
 
 // Project has all the funcionality to manage project
 type Project struct {
-	composer *config.Composer
+	composer *config.Loader
 	conf     *config.Config
 	accounts []*Account
 }
 
 // LoadProject loads configuration and setup the project
 func LoadProject(configFilePath []string) *Project {
-	composer := config.NewComposer(afero.NewOsFs())
+	composer := config.NewLoader(afero.NewOsFs())
 
 	// here we add all available parsers (more to add yaml etc...)
 	composer.AddConfigParser(json.NewParser())
@@ -81,7 +81,7 @@ func InitProject() *Project {
 	emulatorServiceAccount := generateEmulatorServiceAccount()
 
 	return &Project{
-		composer: config.NewComposer(afero.NewOsFs()),
+		composer: config.NewLoader(afero.NewOsFs()),
 		conf:     defaultConfig(emulatorServiceAccount),
 		accounts: []*Account{emulatorServiceAccount},
 	}
@@ -131,7 +131,7 @@ func generateEmulatorServiceAccount() *Account {
 	}
 }
 
-func newProject(conf *config.Config, composer *config.Composer) (*Project, error) {
+func newProject(conf *config.Config, composer *config.Loader) (*Project, error) {
 	accounts, err := accountsFromConfig(conf)
 	if err != nil {
 		return nil, err

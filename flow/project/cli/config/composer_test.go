@@ -58,7 +58,7 @@ func Test_JSONSimple(t *testing.T) {
 
 	require.NoError(t, err)
 
-	composer := NewComposer(mockFS)
+	composer := NewLoader(mockFS)
 	composer.AddConfigParser(json.NewParser())
 	conf, loadErr := composer.Load([]string{"test2-flow.json"})
 
@@ -93,7 +93,7 @@ func Test_ComposeJSON(t *testing.T) {
 	require.NoError(t, err)
 	require.NoError(t, err2)
 
-	composer := NewComposer(mockFS)
+	composer := NewLoader(mockFS)
 	composer.AddConfigParser(json.NewParser())
 
 	conf, loadErr := composer.Load([]string{"flow.json", "flow-testnet.json"})
@@ -135,7 +135,7 @@ func Test_ComposeJSONOverwrite(t *testing.T) {
 	require.NoError(t, err)
 	require.NoError(t, err2)
 
-	composer := NewComposer(mockFS)
+	composer := NewLoader(mockFS)
 	composer.AddConfigParser(json.NewParser())
 
 	conf, loadErr := composer.Load([]string{"flow.json", "flow-testnet.json"})
@@ -175,7 +175,7 @@ func Test_FromFileAccountSimple(t *testing.T) {
 	require.NoError(t, err)
 	require.NoError(t, err2)
 
-	composer := NewComposer(mockFS)
+	composer := NewLoader(mockFS)
 	composer.AddConfigParser(json.NewParser())
 
 	conf, loadErr := composer.Load([]string{"flow.json", "private.json"})
@@ -235,7 +235,7 @@ func Test_FromFileAccountComplex(t *testing.T) {
 	require.NoError(t, err2)
 	require.NoError(t, err3)
 
-	composer := NewComposer(mockFS)
+	composer := NewLoader(mockFS)
 	composer.AddConfigParser(json.NewParser())
 
 	conf, loadErr := composer.Load([]string{"flow.json"})
@@ -270,7 +270,7 @@ func Test_JSONEnv(t *testing.T) {
 
 	require.NoError(t, err)
 
-	composer := NewComposer(mockFS)
+	composer := NewLoader(mockFS)
 	composer.AddConfigParser(json.NewParser())
 	conf, loadErr := composer.Load([]string{"test2-flow.json"})
 

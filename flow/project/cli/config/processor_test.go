@@ -39,7 +39,7 @@ func Test_PrivateKeyEnv(t *testing.T) {
 		}
 	}`)
 
-	preprocessor := NewPreprocessor(NewComposer(afero.NewMemMapFs()))
+	preprocessor := NewPreprocessor(NewLoader(afero.NewMemMapFs()))
 	result := preprocessor.Run(test)
 
 	assert.JSONEq(t, `{
@@ -67,7 +67,7 @@ func Test_PrivateKeyEnvMultipleAccounts(t *testing.T) {
 		}
 	}`)
 
-	preprocessor := NewPreprocessor(NewComposer(afero.NewMemMapFs()))
+	preprocessor := NewPreprocessor(NewLoader(afero.NewMemMapFs()))
 	result := preprocessor.Run(test)
 
 	assert.JSONEq(t, `{
@@ -98,7 +98,7 @@ func Test_PrivateConfigFileAccounts(t *testing.T) {
 		}
 	}`)
 
-	preprocessor := NewPreprocessor(NewComposer(afero.NewMemMapFs()))
+	preprocessor := NewPreprocessor(NewLoader(afero.NewMemMapFs()))
 	result := preprocessor.Run(b)
 
 	assert.JSONEq(t, `{
