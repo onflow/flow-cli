@@ -256,10 +256,10 @@ func (e *Emulators) GetDefault() *Emulator {
 	return nil
 }
 
-func (e *Emulators) SetForName(name string, emulator Emulator) {
-	for _, em := range *e {
-		if em.Name == name {
-			em = emulator
+func (e *Emulators) AddOrUpdate(name string, emulator Emulator) {
+	for i, existingEmulator := range *e {
+		if existingEmulator.Name == name {
+			(*e)[i] = emulator
 			return
 		}
 	}
