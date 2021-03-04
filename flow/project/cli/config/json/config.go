@@ -53,12 +53,14 @@ func transformConfigToJSON(config *config.Config) jsonConfig {
 	}
 }
 
-func NewParser() *jsonConfig {
-	return new(jsonConfig)
+type Parser struct{}
+
+func NewParser() *Parser {
+	return &Parser{}
 }
 
 // Save saves the configuration to the specified path file in JSON format.
-func (j *jsonConfig) Serialize(conf *config.Config) ([]byte, error) {
+func (p *Parser) Serialize(conf *config.Config) ([]byte, error) {
 	jsonConf := transformConfigToJSON(conf)
 
 	data, err := json.MarshalIndent(jsonConf, "", "\t")
@@ -69,7 +71,7 @@ func (j *jsonConfig) Serialize(conf *config.Config) ([]byte, error) {
 	return data, nil
 }
 
-func (j *jsonConfig) Deserialize(raw []byte) (*config.Config, error) {
+func (p *Parser) Deserialize(raw []byte) (*config.Config, error) {
 	var jsonConf jsonConfig
 	err := json.Unmarshal(raw, &jsonConf)
 
@@ -80,6 +82,6 @@ func (j *jsonConfig) Deserialize(raw []byte) (*config.Config, error) {
 	return jsonConf.transformToConfig(), nil
 }
 
-func (j *jsonConfig) SupportsFormat(extension string) bool {
+func (p *Parser) SupportsFormat(extension string) bool {
 	return extension == ".json"
 }
