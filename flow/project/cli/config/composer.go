@@ -143,15 +143,14 @@ func (c *Composer) Load(paths []string) (*Config, error) {
 	return baseConf, nil
 }
 
-// AddAccountFromFile stores a list of file imports in config
-func (c *Composer) AddAccountFromFile(path string, name string) {
-	c.composedFromFile[name] = path
-}
-
 // preprocess configuration - all manipulations to the raw configuration format happens here
 func (c *Composer) preprocess(raw []byte) []byte {
-	preprocessor := NewPreprocessor(c)
-	return preprocessor.Run(raw)
+	raw, accountsFromFile := ProcessorRun(raw)
+
+	// add all imports from files preprocessor detected for later processing
+	c.composedFromFile = accountsFromFile
+
+	return raw
 }
 
 // postprocess configuration - do all stateful changes to configuration structures here after it is parsed

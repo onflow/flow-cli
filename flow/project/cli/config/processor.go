@@ -29,43 +29,32 @@ var (
 	trailingComma *regexp.Regexp = regexp.MustCompile(`\,\s*}`)
 )
 
-// Preprocessor is used to pre-process configuration file
-type Preprocessor struct {
-	composer *Composer
-}
-
-// NewPreprocessor creates new instance of preprocessor
-func NewPreprocessor(composer *Composer) *Preprocessor {
-	return &Preprocessor{
-		composer: composer,
-	}
-}
-
-// Run all pre-processors
-func (p *Preprocessor) Run(raw []byte) []byte {
+// ProcessorRun all pre-processors
+func ProcessorRun(raw []byte) ([]byte, map[string]string) {
 	rawString := string(raw)
-	rawString = p.processEnv(rawString)
-	rawString = p.processFile(rawString)
+	rawString = processEnv(rawString)
+	rawString, accountFromFiles := processFile(rawString)
 
-	return []byte(rawString)
+	return []byte(rawString), accountFromFiles
 }
 
 // processEnv finds env variables and insert env values
-func (p *Preprocessor) processEnv(raw string) string {
+func processEnv(raw string) string {
 	raw, _ = envsubst.String(raw)
 	return raw
 }
 
 // processFile finds file variables and insert content
-func (p *Preprocessor) processFile(raw string) string {
+func processFile(raw string) (string, map[string]string) {
 	fileMatches := fileRegex.FindAllStringSubmatch(raw, -1)
+	accountFromFiles := map[string]string{}
 
 	for _, match := range fileMatches {
 		if len(match) < 3 {
 			continue
 		}
 
-		p.composer.AddAccountFromFile(match[2], match[1])
+		accountFromFiles[match[2]] = match[1]
 
 		// remove fromFile from config after we add that to composer
 		raw = strings.ReplaceAll(raw, match[0], "")
@@ -74,5 +63,5 @@ func (p *Preprocessor) processFile(raw string) string {
 		raw = trailingComma.ReplaceAllString(raw, "}")
 	}
 
-	return raw
+	return raw, accountFromFiles
 }
