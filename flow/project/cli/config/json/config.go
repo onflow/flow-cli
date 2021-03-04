@@ -53,13 +53,15 @@ func transformConfigToJSON(config *config.Config) jsonConfig {
 	}
 }
 
+// Parsers for configuration
 type Parser struct{}
 
+// NewParser returns a parser
 func NewParser() *Parser {
 	return &Parser{}
 }
 
-// Save saves the configuration to the specified path file in JSON format.
+// Serialize configuration to raw
 func (p *Parser) Serialize(conf *config.Config) ([]byte, error) {
 	jsonConf := transformConfigToJSON(conf)
 
@@ -71,6 +73,7 @@ func (p *Parser) Serialize(conf *config.Config) ([]byte, error) {
 	return data, nil
 }
 
+// Deserialize configuration to config structure
 func (p *Parser) Deserialize(raw []byte) (*config.Config, error) {
 	var jsonConf jsonConfig
 	err := json.Unmarshal(raw, &jsonConf)
@@ -82,6 +85,7 @@ func (p *Parser) Deserialize(raw []byte) (*config.Config, error) {
 	return jsonConf.transformToConfig(), nil
 }
 
+// SupportsFormat check if the file format is supported
 func (p *Parser) SupportsFormat(extension string) bool {
 	return extension == ".json"
 }

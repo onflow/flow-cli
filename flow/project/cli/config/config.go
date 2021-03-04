@@ -140,6 +140,7 @@ func (c *Contracts) GetByNetwork(network string) Contracts {
 	return contracts
 }
 
+// AddOrUpdate add new or update if already present
 func (c *Contracts) AddOrUpdate(name string, contract Contract) {
 	for i, existingContract := range *c {
 		if existingContract.Name == name {
@@ -173,6 +174,7 @@ func (a *Accounts) GetByAddress(address string) *Account {
 	return nil
 }
 
+// AddOrUpdate add new or update if already present
 func (a *Accounts) AddOrUpdate(name string, account Account) {
 	for i, existingAccount := range *a {
 		if existingAccount.Name == name {
@@ -210,6 +212,7 @@ func (d *Deployments) GetByAccountAndNetwork(account string, network string) []D
 	return deployments
 }
 
+// AddOrUpdate add new or update if already present
 func (d *Deployments) AddOrUpdate(deployment Deploy) {
 	for i, existingDeployment := range *d {
 		if existingDeployment.Account == deployment.Account {
@@ -232,6 +235,7 @@ func (n *Networks) GetByName(name string) *Network {
 	return nil
 }
 
+// AddOrUpdate add new network or update if already present
 func (n *Networks) AddOrUpdate(name string, network Network) {
 	for i, existingNetwork := range *n {
 		if existingNetwork.Name == name {
@@ -243,9 +247,10 @@ func (n *Networks) AddOrUpdate(name string, network Network) {
 	*n = append(*n, network)
 }
 
+// DefaultEmulatorConfigName
 const DefaultEmulatorConfigName = "default"
 
-// GetDefault emulator
+// GetDefault gets default emulator
 func (e *Emulators) GetDefault() *Emulator {
 	for _, emulator := range *e {
 		if emulator.Name == DefaultEmulatorConfigName {
@@ -256,6 +261,7 @@ func (e *Emulators) GetDefault() *Emulator {
 	return nil
 }
 
+// AddOrUpdate add new or update if already present
 func (e *Emulators) AddOrUpdate(name string, emulator Emulator) {
 	for i, existingEmulator := range *e {
 		if existingEmulator.Name == name {
