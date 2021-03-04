@@ -15,9 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package config
+package config_test
 
 import (
+	"github.com/onflow/flow-cli/flow/project/cli/config"
 	"testing"
 
 	"github.com/onflow/flow-go-sdk"
@@ -25,14 +26,14 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func generateComplexConfig() Config {
-	return Config{
-		Emulators: Emulators{{
+func generateComplexConfig() config.Config {
+	return config.Config{
+		Emulators: config.Emulators{{
 			Name:           "default",
 			Port:           9000,
 			ServiceAccount: "emulator-account",
 		}},
-		Contracts: Contracts{{
+		Contracts: config.Contracts{{
 			Name:    "NonFungibleToken",
 			Source:  "../hungry-kitties/cadence/contracts/NonFungibleToken.cdc",
 			Network: "emulator",
@@ -57,7 +58,7 @@ func generateComplexConfig() Config {
 			Source:  "0x123123123",
 			Network: "testnet",
 		}},
-		Deployments: Deployments{{
+		Deployments: config.Deployments{{
 			Network:   "emulator",
 			Account:   "emulator-account",
 			Contracts: []string{"KittyItems", "KittyItemsMarket"},
@@ -70,12 +71,12 @@ func generateComplexConfig() Config {
 			Account:   "account-2",
 			Contracts: []string{"FungibleToken", "NonFungibleToken", "Kibble", "KittyItems"},
 		}},
-		Accounts: Accounts{{
+		Accounts: config.Accounts{{
 			Name:    "emulator-account",
 			Address: flow.ServiceAddress(flow.Emulator),
 			ChainID: flow.Emulator,
-			Keys: []AccountKey{{
-				Type:     KeyTypeHex,
+			Keys: []config.AccountKey{{
+				Type:     config.KeyTypeHex,
 				Index:    0,
 				SigAlgo:  crypto.ECDSA_P256,
 				HashAlgo: crypto.SHA3_256,
@@ -87,8 +88,8 @@ func generateComplexConfig() Config {
 			Name:    "account-2",
 			Address: flow.HexToAddress("2c1162386b0a245f"),
 			ChainID: flow.Emulator,
-			Keys: []AccountKey{{
-				Type:     KeyTypeHex,
+			Keys: []config.AccountKey{{
+				Type:     config.KeyTypeHex,
 				Index:    0,
 				SigAlgo:  crypto.ECDSA_P256,
 				HashAlgo: crypto.SHA3_256,
@@ -100,8 +101,8 @@ func generateComplexConfig() Config {
 			Name:    "account-4",
 			Address: flow.HexToAddress("f8d6e0586b0a20c1"),
 			ChainID: flow.Emulator,
-			Keys: []AccountKey{{
-				Type:     KeyTypeHex,
+			Keys: []config.AccountKey{{
+				Type:     config.KeyTypeHex,
 				Index:    0,
 				SigAlgo:  crypto.ECDSA_P256,
 				HashAlgo: crypto.SHA3_256,
@@ -110,7 +111,7 @@ func generateComplexConfig() Config {
 				},
 			}},
 		}},
-		Networks: Networks{{
+		Networks: config.Networks{{
 			Name:    "emulator",
 			Host:    "127.0.0.1.3569",
 			ChainID: flow.Emulator,

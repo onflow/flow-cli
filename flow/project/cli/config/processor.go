@@ -54,7 +54,7 @@ func processFile(raw string) (string, map[string]string) {
 			continue
 		}
 
-		accountFromFiles[match[2]] = match[1]
+		accountFromFiles[match[1]] = match[2]
 
 		// remove fromFile from config after we add that to composer
 		raw = strings.ReplaceAll(raw, match[0], "")

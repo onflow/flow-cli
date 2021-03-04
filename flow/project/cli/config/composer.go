@@ -209,7 +209,8 @@ func (c *Loader) loadFile(path string) ([]byte, error) {
 	// TODO: better handle
 	if err != nil {
 		if os.IsNotExist(err) {
-			return nil, ErrDoesNotExist
+			return nil, err
+			//return nil, ErrDoesNotExist
 		}
 
 		return nil, err
