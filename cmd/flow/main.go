@@ -19,10 +19,14 @@
 // Package main implements the entry point for the Flow CLI.
 package main
 
+import "C"
 import (
+	"fmt"
+	"github.com/onflow/flow-cli/cmd"
+	"github.com/onflow/flow-cli/cmd/accounts"
+	"github.com/psiemens/sconfig"
 	"github.com/spf13/cobra"
 
-	"github.com/onflow/flow-cli/flow/accounts"
 	"github.com/onflow/flow-cli/flow/blocks"
 	"github.com/onflow/flow-cli/flow/cadence"
 	"github.com/onflow/flow-cli/flow/cli"
@@ -37,29 +41,70 @@ import (
 	"github.com/onflow/flow-cli/flow/version"
 )
 
-var cmd = &cobra.Command{
+var c = &cobra.Command{
 	Use:              "flow",
 	TraverseChildren: true,
 }
 
 func init() {
-	cmd.AddCommand(project.Cmd)
-	cmd.AddCommand(initialize.Cmd)
-	cmd.AddCommand(accounts.Cmd)
-	cmd.AddCommand(blocks.Cmd)
-	cmd.AddCommand(collections.Cmd)
-	cmd.AddCommand(keys.Cmd)
-	cmd.AddCommand(emulator.Cmd)
-	cmd.AddCommand(events.Cmd)
-	cmd.AddCommand(cadence.Cmd)
-	cmd.AddCommand(scripts.Cmd)
-	cmd.AddCommand(transactions.Cmd)
-	cmd.AddCommand(version.Cmd)
-	cmd.PersistentFlags().StringSliceVarP(&cli.ConfigPath, "config-path", "f", cli.ConfigPath, "Path to flow configuration file")
+	c.AddCommand(project.Cmd)
+	c.AddCommand(initialize.Cmd)
+	c.AddCommand(blocks.Cmd)
+	c.AddCommand(collections.Cmd)
+	c.AddCommand(keys.Cmd)
+	c.AddCommand(emulator.Cmd)
+	c.AddCommand(events.Cmd)
+	c.AddCommand(cadence.Cmd)
+	c.AddCommand(scripts.Cmd)
+	c.AddCommand(transactions.Cmd)
+	c.AddCommand(version.Cmd)
+
+	addCommand(c, accounts.Init())
+
+	c.PersistentFlags().StringSliceVarP(&cli.ConfigPath, "config-path", "f", cli.ConfigPath, "Path to flow configuration file")
+}
+
+func addCommand(c *cobra.Command, command cmd.Command) {
+	command.GetCmd().RunE = func(cmd *cobra.Command, args []string) error {
+
+		// validation of flags
+		err := command.ValidateFlags()
+		if err != nil {
+			fmt.Println("flag validation error", err)
+		}
+
+		// initialize project but ignore error since config can be missing
+		project, _ := cli.LoadProject(cli.ConfigPath)
+
+		// run command
+		result, err := command.Run(cmd, args, project)
+		if err != nil {
+			fmt.Println("Error: ", err)
+			return nil
+		}
+
+		// TODO check flag for json
+		fmt.Println(result.String())
+
+		return nil
+	}
+
+	bindFlags(command.SetFlags())
+	c.AddCommand(command.GetCmd())
+}
+
+func bindFlags(config *sconfig.Config) {
+	err := config.
+		FromEnvironment(cli.EnvPrefix).
+		BindFlags(c.PersistentFlags()).
+		Parse()
+	if err != nil {
+		fmt.Println(err)
+	}
 }
 
 func main() {
-	if err := cmd.Execute(); err != nil {
+	if err := c.Execute(); err != nil {
 		cli.Exit(1, err.Error())
 	}
 }
