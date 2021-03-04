@@ -20,7 +20,6 @@ package cli
 
 import (
 	"fmt"
-	"github.com/onflow/flow-cli/flow/project/cli/config/manipulators"
 	"github.com/spf13/afero"
 	"sort"
 	"testing"
@@ -32,7 +31,7 @@ import (
 	"github.com/thoas/go-funk"
 )
 
-var composer = manipulators.NewComposer(afero.NewOsFs())
+var composer = config.NewComposer(afero.NewOsFs())
 
 func generateComplexProject() Project {
 	config := config.Config{

@@ -15,7 +15,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
  */
-package manipulators
+package config
 
 import (
 	"github.com/onflow/flow-cli/flow/project/cli/config/json"

@@ -16,7 +16,7 @@
 * limitations under the License.
  */
 
-package manipulators
+package config
 
 import (
 	"os"

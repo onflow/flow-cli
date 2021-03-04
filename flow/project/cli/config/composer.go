@@ -16,12 +16,11 @@
  * limitations under the License.
  */
 
-package manipulators
+package config
 
 import (
 	"errors"
 	"fmt"
-	"github.com/onflow/flow-cli/flow/project/cli/config"
 	"os"
 	"path/filepath"
 
@@ -42,8 +41,8 @@ func Exists(path string) bool {
 
 // Parser is interface for any configuration format parser to implement
 type Parser interface {
-	Serialize(*config.Config) ([]byte, error)
-	Deserialize([]byte) (*config.Config, error)
+	Serialize(*Config) ([]byte, error)
+	Deserialize([]byte) (*Config, error)
 	SupportsFormat(string) bool
 }
 
@@ -78,7 +77,7 @@ func (c *Composer) AddConfigParser(format Parser) {
 	c.configParsers = append(c.configParsers, format)
 }
 
-func (c *Composer) Save(conf *config.Config, path string) error {
+func (c *Composer) Save(conf *Config, path string) error {
 	if c.composedMultiple || c.composedFromFile != nil {
 		return errors.New("Saving configuration to multiple files currently not supported")
 	}
@@ -101,8 +100,8 @@ func (c *Composer) Save(conf *config.Config, path string) error {
 }
 
 // Load and compose multiple configurations
-func (c *Composer) Load(paths []string) (*config.Config, error) {
-	var baseConf *config.Config
+func (c *Composer) Load(paths []string) (*Config, error) {
+	var baseConf *Config
 
 	for _, path := range paths {
 		raw, err := c.loadFile(path)
@@ -147,7 +146,7 @@ func (c *Composer) preprocess(raw []byte) []byte {
 	return preprocessor.Run(raw)
 }
 
-func (c *Composer) postprocess(baseConf *config.Config) (*config.Config, error) {
+func (c *Composer) postprocess(baseConf *Config) (*Config, error) {
 	for name, path := range c.composedFromFile {
 		raw, err := c.loadFile(path)
 		if err != nil {
@@ -165,8 +164,8 @@ func (c *Composer) postprocess(baseConf *config.Config) (*config.Config, error) 
 		}
 
 		// create an empty config with single account so we don't include all accounts in file
-		accountConf := &config.Config{
-			Accounts: []config.Account{*conf.Accounts.GetByName(name)},
+		accountConf := &Config{
+			Accounts: []Account{*conf.Accounts.GetByName(name)},
 		}
 
 		c.composeConfig(baseConf, accountConf)
@@ -175,7 +174,7 @@ func (c *Composer) postprocess(baseConf *config.Config) (*config.Config, error) 
 	return baseConf, nil
 }
 
-func (c *Composer) composeConfig(baseConf *config.Config, conf *config.Config) {
+func (c *Composer) composeConfig(baseConf *Config, conf *Config) {
 	// flag for saving
 	c.composedMultiple = true
 
