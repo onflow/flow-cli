@@ -78,17 +78,17 @@ func NewLoader(filesystem afero.Fs) *Loader {
 }
 
 // AddConfigParser adds new parssers for configuration
-func (c *Loader) AddConfigParser(format Parser) {
-	c.configParsers = append(c.configParsers, format)
+func (l *Loader) AddConfigParser(format Parser) {
+	l.configParsers = append(l.configParsers, format)
 }
 
 // Save save configuration to a path with correct serializer
-func (c *Loader) Save(conf *Config, path string) error {
-	if c.composedMultiple || c.composedFromFile != nil {
+func (l *Loader) Save(conf *Config, path string) error {
+	if l.composedMultiple || l.composedFromFile != nil {
 		return errors.New("Saving configuration to multiple files currently not supported")
 	}
 
-	configFormat := c.configParsers.FindForFormat(
+	configFormat := l.configParsers.FindForFormat(
 		filepath.Ext(path),
 	)
 
@@ -97,7 +97,7 @@ func (c *Loader) Save(conf *Config, path string) error {
 		return err
 	}
 
-	err = c.af.WriteFile(path, data, 0644)
+	err = l.af.WriteFile(path, data, 0644)
 	if err != nil {
 		return err
 	}
@@ -106,17 +106,17 @@ func (c *Loader) Save(conf *Config, path string) error {
 }
 
 // Load and compose multiple configurations
-func (c *Loader) Load(paths []string) (*Config, error) {
+func (l *Loader) Load(paths []string) (*Config, error) {
 	var baseConf *Config
 
 	for _, path := range paths {
-		raw, err := c.loadFile(path)
+		raw, err := l.loadFile(path)
 		if err != nil {
 			return nil, err
 		}
 
-		preProcessed := c.preprocess(raw)
-		configParser := c.configParsers.FindForFormat(filepath.Ext(path))
+		preProcessed := l.preprocess(raw)
+		configParser := l.configParsers.FindForFormat(filepath.Ext(path))
 		if configParser == nil {
 			return nil, fmt.Errorf("Parser not found for config: %s", path)
 		}
@@ -132,10 +132,10 @@ func (c *Loader) Load(paths []string) (*Config, error) {
 			continue
 		}
 
-		c.composeConfig(baseConf, conf)
+		l.composeConfig(baseConf, conf)
 	}
 
-	baseConf, err := c.postprocess(baseConf)
+	baseConf, err := l.postprocess(baseConf)
 	if err != nil {
 		return nil, err
 	}
@@ -144,24 +144,24 @@ func (c *Loader) Load(paths []string) (*Config, error) {
 }
 
 // preprocess configuration - all manipulations to the raw configuration format happens here
-func (c *Loader) preprocess(raw []byte) []byte {
+func (l *Loader) preprocess(raw []byte) []byte {
 	raw, accountsFromFile := ProcessorRun(raw)
 
 	// add all imports from files preprocessor detected for later processing
-	c.composedFromFile = accountsFromFile
+	l.composedFromFile = accountsFromFile
 
 	return raw
 }
 
 // postprocess configuration - do all stateful changes to configuration structures here after it is parsed
-func (c *Loader) postprocess(baseConf *Config) (*Config, error) {
-	for name, path := range c.composedFromFile {
-		raw, err := c.loadFile(path)
+func (l *Loader) postprocess(baseConf *Config) (*Config, error) {
+	for name, path := range l.composedFromFile {
+		raw, err := l.loadFile(path)
 		if err != nil {
 			return nil, err
 		}
 
-		configParser := c.configParsers.FindForFormat(filepath.Ext(path))
+		configParser := l.configParsers.FindForFormat(filepath.Ext(path))
 		if configParser == nil {
 			return nil, fmt.Errorf("Parser not found for config: %s", path)
 		}
@@ -176,16 +176,16 @@ func (c *Loader) postprocess(baseConf *Config) (*Config, error) {
 			Accounts: []Account{*conf.Accounts.GetByName(name)},
 		}
 
-		c.composeConfig(baseConf, accountConf)
+		l.composeConfig(baseConf, accountConf)
 	}
 
 	return baseConf, nil
 }
 
 // composeConfig - here we merge multiple configuration files from right to left
-func (c *Loader) composeConfig(baseConf *Config, conf *Config) {
+func (l *Loader) composeConfig(baseConf *Config, conf *Config) {
 	// flag for saving
-	c.composedMultiple = true
+	l.composedMultiple = true
 
 	// if not first overwrite first with this one
 	for _, account := range conf.Accounts {
@@ -203,8 +203,8 @@ func (c *Loader) composeConfig(baseConf *Config, conf *Config) {
 }
 
 // simple file loader
-func (c *Loader) loadFile(path string) ([]byte, error) {
-	raw, err := c.af.ReadFile(path)
+func (l *Loader) loadFile(path string) ([]byte, error) {
+	raw, err := l.af.ReadFile(path)
 
 	// TODO: better handle
 	if err != nil {
