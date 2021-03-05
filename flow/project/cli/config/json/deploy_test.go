@@ -1,7 +1,7 @@
 /*
  * Flow CLI
  *
- * Copyright 2019-2020 Dapper Labs, Inc.
+ * Copyright 2019-2021 Dapper Labs, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -47,8 +47,8 @@ func Test_ConfigDeploymentsSimple(t *testing.T) {
 	assert.Equal(t, []string{"FungibleToken", "NonFungibleToken", "Kibble", "KittyItems"}, deployments.GetByNetwork("testnet")[0].Contracts)
 
 	assert.Equal(t, 2, len(deployments.GetByNetwork("emulator")))
-	assert.Equal(t, "account-3", deployments.GetByNetwork("emulator")[0].Account)
-	assert.Equal(t, "account-4", deployments.GetByNetwork("emulator")[1].Account)
+	assert.Equal(t, "account-3", deployments.GetByAccountAndNetwork("account-3", "emulator")[0].Account)
+	assert.Equal(t, "account-4", deployments.GetByAccountAndNetwork("account-4", "emulator")[0].Account)
 	assert.Equal(t, []string{"KittyItems", "KittyItemsMarket"}, deployments.GetByNetwork("emulator")[0].Contracts)
 	assert.Equal(t, []string{"FungibleToken", "NonFungibleToken", "Kibble", "KittyItems", "KittyItemsMarket"}, deployments.GetByNetwork("emulator")[1].Contracts)
 }

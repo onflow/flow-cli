@@ -1,7 +1,7 @@
 /*
  * Flow CLI
  *
- * Copyright 2019-2020 Dapper Labs, Inc.
+ * Copyright 2019-2021 Dapper Labs, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,6 +31,7 @@ import (
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 
+	c "github.com/onflow/flow-cli/flow"
 	"github.com/onflow/flow-cli/flow/project/cli"
 	"github.com/onflow/flow-cli/flow/project/cli/txsender"
 	"github.com/onflow/flow-cli/flow/project/contracts"
@@ -47,7 +48,7 @@ var Cmd = &cobra.Command{
 	Use:   "deploy",
 	Short: "Deploy Cadence contracts",
 	Run: func(cmd *cobra.Command, args []string) {
-		project := cli.LoadProject()
+		project := cli.LoadProject(c.ConfigPath)
 
 		host := project.Host(conf.Network)
 
@@ -148,6 +149,7 @@ var Cmd = &cobra.Command{
 		if len(errs) == 0 {
 			fmt.Println("\n✅ All contracts deployed successfully")
 		} else {
+			// REF: better output when errors
 			fmt.Println("\n❌ Failed to deploy all contracts")
 		}
 	},

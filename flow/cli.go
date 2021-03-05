@@ -38,7 +38,7 @@ const (
 	Indent              = "  "
 )
 
-var ConfigPath = "flow.json"
+var ConfigPath = []string{"flow.json"}
 
 func Exit(code int, msg string) {
 	fmt.Println(msg)

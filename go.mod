@@ -13,6 +13,7 @@ require (
 	github.com/onflow/flow-emulator v0.15.0
 	github.com/onflow/flow-go-sdk v0.15.0
 	github.com/psiemens/sconfig v0.0.0-20190623041652-6e01eb1354fc
+	github.com/spf13/afero v1.1.2
 	github.com/spf13/cobra v0.0.7
 	github.com/stretchr/testify v1.7.0
 	github.com/thoas/go-funk v0.7.0
