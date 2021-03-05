@@ -21,12 +21,10 @@ package main
 
 import "C"
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/onflow/flow-cli/cmd"
 	"github.com/onflow/flow-cli/cmd/accounts"
-	"github.com/psiemens/sconfig"
-	"github.com/spf13/cobra"
-
 	"github.com/onflow/flow-cli/flow/blocks"
 	"github.com/onflow/flow-cli/flow/cadence"
 	"github.com/onflow/flow-cli/flow/cli"
@@ -39,6 +37,13 @@ import (
 	"github.com/onflow/flow-cli/flow/scripts"
 	"github.com/onflow/flow-cli/flow/transactions"
 	"github.com/onflow/flow-cli/flow/version"
+	"github.com/onflow/flow-cli/sharedlib/services"
+	"github.com/onflow/flow-go-sdk/client"
+	"github.com/psiemens/sconfig"
+	"github.com/spf13/afero"
+	"github.com/spf13/cobra"
+	"os"
+	"strings"
 )
 
 var c = &cobra.Command{
@@ -59,32 +64,51 @@ func init() {
 	c.AddCommand(transactions.Cmd)
 	c.AddCommand(version.Cmd)
 
-	addCommand(c, accounts.Init())
-
 	c.PersistentFlags().StringSliceVarP(&cli.ConfigPath, "config-path", "f", cli.ConfigPath, "Path to flow configuration file")
+
+	newInit()
 }
 
+var (
+	filter      = ""
+	format      = ""
+	save        = ""
+	runEmulator = false
+)
+
+func newInit() {
+	addCommand(c, accounts.Init())
+
+	c.PersistentFlags().StringVarP(&filter, "filter", "", filter, "Filter result values by property name")
+	c.PersistentFlags().StringVarP(&format, "format", "", format, "Format to show result in")
+	c.PersistentFlags().StringVarP(&save, "save", "", save, "Save result to a filename")
+	c.PersistentFlags().BoolVarP(&runEmulator, "emulator", "", runEmulator, "Run in-memory emulator")
+
+}
+
+// addCommand add new command to main cmd
+// and initializes all necessary things as well as take care of errors and output
+// here we can do all boilerplate code that is else copied in each command and make sure
+// we have one place to handle all errors and ensure commands have consistent results
 func addCommand(c *cobra.Command, command cmd.Command) {
 	command.GetCmd().RunE = func(cmd *cobra.Command, args []string) error {
-
-		// validation of flags
-		err := command.ValidateFlags()
-		if err != nil {
-			fmt.Println("flag validation error", err)
-		}
 
 		// initialize project but ignore error since config can be missing
 		project, _ := cli.LoadProject(cli.ConfigPath)
 
-		// run command
-		result, err := command.Run(cmd, args, project)
-		if err != nil {
-			fmt.Println("Error: ", err)
-			return nil
-		}
+		service, err := createService(cmd, project)
+		handleError("Service Error", err)
 
-		// TODO check flag for json
-		fmt.Println(result.String())
+		// run command
+		result, err := command.Run(cmd, args, project, service)
+		handleError("Command Error", err)
+
+		// format output result
+		formattedResult := formatResult(cmd, result)
+
+		// output result
+		err = outputResult(cmd, formattedResult)
+		handleError("Output Error", err)
 
 		return nil
 	}
@@ -93,6 +117,92 @@ func addCommand(c *cobra.Command, command cmd.Command) {
 	c.AddCommand(command.GetCmd())
 }
 
+// createService creates a service to be used, defaults to grpc but can support others
+func createService(cmd *cobra.Command, project *cli.Project) (services.Service, error) {
+	// create in memory emulator client
+	if runEmulator {
+		return services.NewEmulatorService(), nil
+	}
+
+	// resolve host - todo: handle if host is nil (version command)
+	host := cmd.Flag("host").Value.String()
+	if host == "" && project != nil {
+		host = project.Host("emulator")
+	} else if host == "" {
+		return nil, fmt.Errorf("Host must be provided using --host flag or in config by initializing project: flow project init")
+	}
+
+	// create default grpc client
+	return services.NewRpcService(host)
+}
+
+// outputResult takes care of showing the result
+func formatResult(cmd *cobra.Command, result cmd.Result) string {
+	filter := cmd.Flag("filter").Value.String()
+	format := cmd.Flag("format").Value.String()
+
+	if filter != "" {
+		var jsonResult map[string]interface{}
+		val, _ := json.Marshal(result.JSON())
+		json.Unmarshal(val, &jsonResult)
+
+		return fmt.Sprintf("%v", jsonResult[filter])
+	}
+
+	if format == "json" {
+		jsonRes, _ := json.Marshal(result.JSON())
+		return string(jsonRes)
+	}
+
+	if format == "inline" {
+		return result.Oneliner()
+	}
+
+	return result.String()
+}
+
+// outputResult to selected media
+func outputResult(cmd *cobra.Command, result string) error {
+	save := cmd.Flag("save").Value.String()
+
+	if save != "" {
+		af := afero.Afero{
+			Fs: afero.NewOsFs(),
+		}
+
+		fmt.Printf("💾 Result saved to: %s \n", save)
+		return af.WriteFile(save, []byte(result), 0644)
+	}
+
+	// todo: grep output
+
+	// default normal output - todo: this can be changed to writer so we can test outputs easier
+	fmt.Fprintf(os.Stdout, "%s\n", result)
+	return nil
+}
+
+// handleError handle errors
+func handleError(description string, err error) {
+	if err == nil {
+		return
+	}
+
+	// handle rpc error
+	switch t := err.(type) {
+	case *client.RPCError:
+		fmt.Fprintf(os.Stderr, "🔴️ Grpc Error: %s \n", t.GRPCStatus().Err)
+	default:
+		if strings.Contains(err.Error(), "transport:") {
+			fmt.Fprintf(os.Stderr, "🔴️ %s \n", strings.Split(err.Error(), "transport:")[1])
+		} else {
+			fmt.Fprintf(os.Stderr, "🔴️ %s: %s", description, err)
+		}
+	}
+
+	os.Exit(1)
+}
+
+// bindFlags bind all the flags needed
 func bindFlags(config *sconfig.Config) {
 	err := config.
 		FromEnvironment(cli.EnvPrefix).
