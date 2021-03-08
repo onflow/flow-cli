@@ -37,9 +37,9 @@ import (
 	"github.com/onflow/flow-cli/flow/scripts"
 	"github.com/onflow/flow-cli/flow/transactions"
 	"github.com/onflow/flow-cli/flow/version"
+	"github.com/onflow/flow-cli/sharedlib/gateway"
 	"github.com/onflow/flow-cli/sharedlib/services"
 	"github.com/onflow/flow-go-sdk/client"
-	"github.com/psiemens/sconfig"
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
 	"os"
@@ -77,7 +77,9 @@ var (
 )
 
 func newInit() {
-	addCommand(c, accounts.Init())
+	c.AddCommand(accounts.Cmd)
+	addCommand(accounts.Cmd, accounts.NewGetCmd())
+	addCommand(accounts.Cmd, accounts.NewCreateCmd())
 
 	c.PersistentFlags().StringVarP(&filter, "filter", "", filter, "Filter result values by property name")
 	c.PersistentFlags().StringVarP(&format, "format", "", format, "Format to show result in")
@@ -96,15 +98,18 @@ func addCommand(c *cobra.Command, command cmd.Command) {
 		// initialize project but ignore error since config can be missing
 		project, _ := cli.LoadProject(cli.ConfigPath)
 
-		service, err := createService(cmd, project)
-		handleError("Service Error", err)
+		gateway, err := createGateway(cmd, project)
+		handleError("Gateway Error", err)
+
+		service := services.NewServices(gateway, *project)
 
 		// run command
 		result, err := command.Run(cmd, args, project, service)
 		handleError("Command Error", err)
 
 		// format output result
-		formattedResult := formatResult(cmd, result)
+		formattedResult, err := formatResult(cmd, result)
+		handleError("Result", err)
 
 		// output result
 		err = outputResult(cmd, formattedResult)
@@ -113,15 +118,15 @@ func addCommand(c *cobra.Command, command cmd.Command) {
 		return nil
 	}
 
-	bindFlags(command.SetFlags())
+	bindFlags(command)
 	c.AddCommand(command.GetCmd())
 }
 
-// createService creates a service to be used, defaults to grpc but can support others
-func createService(cmd *cobra.Command, project *cli.Project) (services.Service, error) {
+// createGateway creates a gateway to be used, defaults to grpc but can support others
+func createGateway(cmd *cobra.Command, project *cli.Project) (gateway.Gateway, error) {
 	// create in memory emulator client
 	if runEmulator {
-		return services.NewEmulatorService(), nil
+		return gateway.NewEmulatorGateway(), nil
 	}
 
 	// resolve host - todo: handle if host is nil (version command)
@@ -133,32 +138,39 @@ func createService(cmd *cobra.Command, project *cli.Project) (services.Service, 
 	}
 
 	// create default grpc client
-	return services.NewRpcService(host)
+	return gateway.NewGrpcGateway(host)
 }
 
 // outputResult takes care of showing the result
-func formatResult(cmd *cobra.Command, result cmd.Result) string {
+func formatResult(cmd *cobra.Command, result cmd.Result) (string, error) {
+	if result == nil {
+		return "", fmt.Errorf("Missing")
+	}
+
 	filter := cmd.Flag("filter").Value.String()
 	format := cmd.Flag("format").Value.String()
 
 	if filter != "" {
 		var jsonResult map[string]interface{}
 		val, _ := json.Marshal(result.JSON())
-		json.Unmarshal(val, &jsonResult)
+		err := json.Unmarshal(val, &jsonResult)
+		if err != nil {
+			return "", err
+		}
 
-		return fmt.Sprintf("%v", jsonResult[filter])
+		return fmt.Sprintf("%v", jsonResult[filter]), nil
 	}
 
 	if format == "json" {
 		jsonRes, _ := json.Marshal(result.JSON())
-		return string(jsonRes)
+		return string(jsonRes), nil
 	}
 
 	if format == "inline" {
-		return result.Oneliner()
+		return result.Oneliner(), nil
 	}
 
-	return result.String()
+	return result.String(), nil
 }
 
 // outputResult to selected media
@@ -170,7 +182,7 @@ func outputResult(cmd *cobra.Command, result string) error {
 			Fs: afero.NewOsFs(),
 		}
 
-		fmt.Printf("💾 Result saved to: %s \n", save)
+		fmt.Printf("💾 result saved to: %s \n", save)
 		return af.WriteFile(save, []byte(result), 0644)
 	}
 
@@ -199,14 +211,15 @@ func handleError(description string, err error) {
 		}
 	}
 
+	fmt.Println()
 	os.Exit(1)
 }
 
 // bindFlags bind all the flags needed
-func bindFlags(config *sconfig.Config) {
-	err := config.
+func bindFlags(command cmd.Command) {
+	err := command.GetFlags().
 		FromEnvironment(cli.EnvPrefix).
-		BindFlags(c.PersistentFlags()).
+		BindFlags(command.GetCmd().PersistentFlags()).
 		Parse()
 	if err != nil {
 		fmt.Println(err)
