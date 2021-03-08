@@ -146,7 +146,7 @@ func (a *Accounts) AddContract(accountName string, contractName string, contract
 }
 
 // RemoveContracts removes a contract from the account
-func (a *Accounts) RemoveContract(accountName string, contractName string) (*flow.Account, error) {
+func (a *Accounts) RemoveContract(contractName string, accountName string) (*flow.Account, error) {
 	account := a.project.GetAccountByName(accountName)
 	if account == nil {
 		return nil, fmt.Errorf("Account: [%s] doesn't exists in configuration.", accountName)
