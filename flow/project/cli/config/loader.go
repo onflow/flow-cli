@@ -64,7 +64,6 @@ func (c *ConfigParsers) FindForFormat(extension string) Parser {
 type Loader struct {
 	af               *afero.Afero
 	configParsers    ConfigParsers
-	composedMultiple bool
 	composedFromFile map[string]string
 }
 

@@ -156,7 +156,7 @@ func (acct *Account) FIX_parseProjectConfig(data []byte) {
 		return
 	}
 
-	acct.PrivateKey, err = crypto.DecodePrivateKey(acct.SigAlgo, prKeyBytes)
+	acct.PrivateKey, _ = crypto.DecodePrivateKey(acct.SigAlgo, prKeyBytes)
 	acct.KeyContext = map[string]string{"privateKey": conf["keys"]}
 }
 
