@@ -9,8 +9,6 @@ import (
 
 type Command interface {
 	GetCmd() *cobra.Command
-	SetFlags() *sconfig.Config
-	Run(*cobra.Command, []string, *cli.Project, services.Service) (Result, error)
-	// ValidateFlags
-	// ValidateArgs
+	GetFlags() *sconfig.Config
+	Run(*cobra.Command, []string, *cli.Project, *services.Services) (Result, error)
 }
