@@ -66,6 +66,7 @@ func LoadProject(configFilePath []string) *Project {
 	proj, err := newProject(conf, composer)
 	if err != nil {
 		// TODO: replace with a more detailed error message
+		fmt.Println("⚠️  Make sure you generated configuration by using: flow project init, and not: flow init")
 		Exitf(1, "Invalid project configuration: %s", err)
 	}
 
