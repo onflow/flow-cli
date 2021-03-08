@@ -1,7 +1,7 @@
 /*
  * Flow CLI
  *
- * Copyright 2019-2020 Dapper Labs, Inc.
+ * Copyright 2019-2021 Dapper Labs, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -118,6 +118,8 @@ func (c *Contracts) GetByNameAndNetwork(name string, network string) Contract {
 	return contracts[0]
 }
 
+// TODO: this filtering can cause error if not found, better to refactor to returning
+
 // GetByName get contract by name
 func (c *Contracts) GetByName(name string) Contract {
 	return funk.Filter([]Contract(*c), func(c Contract) bool {
@@ -127,50 +129,146 @@ func (c *Contracts) GetByName(name string) Contract {
 
 // GetByNetwork returns all contracts for specific network
 func (c *Contracts) GetByNetwork(network string) Contracts {
-	return funk.Filter([]Contract(*c), func(c Contract) bool {
-		return c.Network == network || c.Network == "" // if network is not defined return for all set value
-	}).([]Contract)
+	var contracts []Contract
+
+	for _, contract := range *c {
+		if contract.Network == network || contract.Network == "" {
+			contracts = append(contracts, contract)
+		}
+	}
+
+	return contracts
+}
+
+// AddOrUpdate add new or update if already present
+func (c *Contracts) AddOrUpdate(name string, contract Contract) {
+	for i, existingContract := range *c {
+		if existingContract.Name == name {
+			(*c)[i] = contract
+			return
+		}
+	}
+
+	*c = append(*c, contract)
 }
 
 // GetAccountByName get account by name
-func (a *Accounts) GetByName(name string) Account {
-	return funk.Filter([]Account(*a), func(a Account) bool {
-		return a.Name == name
-	}).([]Account)[0]
+func (a *Accounts) GetByName(name string) *Account {
+	for _, account := range *a {
+		if account.Name == name {
+			return &account
+		}
+	}
+
+	return nil
 }
 
 // GetByAddress get account by address
-func (a *Accounts) GetByAddress(address string) Account {
-	return funk.Filter([]Account(*a), func(a Account) bool {
-		return a.Address.String() == address
-	}).([]Account)[0]
+func (a *Accounts) GetByAddress(address string) *Account {
+	for _, account := range *a {
+		if account.Address.String() == address {
+			return &account
+		}
+	}
+
+	return nil
+}
+
+// AddOrUpdate add new or update if already present
+func (a *Accounts) AddOrUpdate(name string, account Account) {
+	for i, existingAccount := range *a {
+		if existingAccount.Name == name {
+			(*a)[i] = account
+			return
+		}
+	}
+
+	*a = append(*a, account)
 }
 
 // GetByNetwork get all deployments by network
 func (d *Deployments) GetByNetwork(network string) Deployments {
-	return funk.Filter([]Deploy(*d), func(d Deploy) bool {
-		return d.Network == network
-	}).([]Deploy)
+	var deployments []Deploy
+
+	for _, deploy := range *d {
+		if deploy.Network == network {
+			deployments = append(deployments, deploy)
+		}
+	}
+
+	return deployments
 }
 
 // GetByAccountAndNetwork get deploy by account and network
 func (d *Deployments) GetByAccountAndNetwork(account string, network string) []Deploy {
-	return funk.Filter([]Deploy(*d), func(d Deploy) bool {
-		return d.Account == account && d.Network == network
-	}).([]Deploy)
+	var deployments []Deploy
+
+	for _, deploy := range *d {
+		if deploy.Network == network && deploy.Account == account {
+			deployments = append(deployments, deploy)
+		}
+	}
+
+	return deployments
+}
+
+// AddOrUpdate add new or update if already present
+func (d *Deployments) AddOrUpdate(deployment Deploy) {
+	for i, existingDeployment := range *d {
+		if existingDeployment.Account == deployment.Account {
+			(*d)[i] = deployment
+			return
+		}
+	}
+
+	*d = append(*d, deployment)
 }
 
 // GetByName get network by name
-func (n *Networks) GetByName(name string) Network {
-	return funk.Filter([]Network(*n), func(n Network) bool {
-		return n.Name == name
-	}).([]Network)[0]
+func (n *Networks) GetByName(name string) *Network {
+	for _, network := range *n {
+		if network.Name == name {
+			return &network
+		}
+	}
+
+	return nil
 }
 
+// AddOrUpdate add new network or update if already present
+func (n *Networks) AddOrUpdate(name string, network Network) {
+	for i, existingNetwork := range *n {
+		if existingNetwork.Name == name {
+			(*n)[i] = network
+			return
+		}
+	}
+
+	*n = append(*n, network)
+}
+
+// DefaultEmulatorConfigName
 const DefaultEmulatorConfigName = "default"
 
-func (e *Emulators) GetDefault() Emulator {
-	return funk.Filter([]Emulator(*e), func(e Emulator) bool {
-		return e.Name == DefaultEmulatorConfigName
-	}).([]Emulator)[0]
+// GetDefault gets default emulator
+func (e *Emulators) GetDefault() *Emulator {
+	for _, emulator := range *e {
+		if emulator.Name == DefaultEmulatorConfigName {
+			return &emulator
+		}
+	}
+
+	return nil
+}
+
+// AddOrUpdate add new or update if already present
+func (e *Emulators) AddOrUpdate(name string, emulator Emulator) {
+	for i, existingEmulator := range *e {
+		if existingEmulator.Name == name {
+			(*e)[i] = emulator
+			return
+		}
+	}
+
+	*e = append(*e, emulator)
 }

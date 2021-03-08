@@ -1,7 +1,7 @@
 /*
  * Flow CLI
  *
- * Copyright 2019-2020 Dapper Labs, Inc.
+ * Copyright 2019-2021 Dapper Labs, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,9 +30,9 @@ import (
 )
 
 type Config struct {
-	Signer   string   `default:"service" flag:"signer,s"`
-	Host     string   `flag:"host" info:"Flow Access API host address"`
-	Results  bool     `default:"false" flag:"results" info:"Display the results of the transaction"`
+	Signer  string `default:"service" flag:"signer,s"`
+	Host    string `flag:"host" info:"Flow Access API host address"`
+	Results bool   `default:"false" flag:"results" info:"Display the results of the transaction"`
 }
 
 var conf Config
@@ -57,7 +57,7 @@ var Cmd = &cobra.Command{
 		tx := templates.AddAccountContract(
 			signerAccount.Address,
 			templates.Contract{
-				Name: contractName,
+				Name:   contractName,
 				Source: string(contractSource),
 			},
 		)

@@ -1,7 +1,7 @@
 /*
  * Flow CLI
  *
- * Copyright 2019-2020 Dapper Labs, Inc.
+ * Copyright 2019-2021 Dapper Labs, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -218,7 +218,7 @@ func SaveConfig(conf *Config) error {
 	if err != nil {
 		return err
 	}
-	err = ioutil.WriteFile(ConfigPath, data, 0777)
+	err = ioutil.WriteFile(ConfigPath[0], data, 0777)
 	if err != nil {
 		return err
 	}
@@ -233,7 +233,7 @@ func MustSaveConfig(conf *Config) {
 }
 
 func LoadConfig() *Config {
-	f, err := os.Open(ConfigPath)
+	f, err := os.Open(ConfigPath[0])
 	if err != nil {
 		if os.IsNotExist(err) {
 			fmt.Printf("Project config file %s does not exist. Please initialize first\n", ConfigPath)
@@ -262,7 +262,7 @@ func LoadConfig() *Config {
 }
 
 func ConfigExists() bool {
-	info, err := os.Stat(ConfigPath)
+	info, err := os.Stat(ConfigPath[0])
 	if os.IsNotExist(err) {
 		return false
 	}

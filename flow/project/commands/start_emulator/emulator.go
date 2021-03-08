@@ -1,7 +1,7 @@
 /*
  * Flow CLI
  *
- * Copyright 2019-2020 Dapper Labs, Inc.
+ * Copyright 2019-2021 Dapper Labs, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@ import (
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/spf13/cobra"
 
+	c "github.com/onflow/flow-cli/flow"
 	"github.com/onflow/flow-cli/flow/project/cli"
 	"github.com/onflow/flow-cli/flow/project/cli/config"
 )
@@ -38,10 +39,10 @@ func configuredServiceKey(
 	crypto.SignatureAlgorithm,
 	crypto.HashAlgorithm,
 ) {
-	proj := cli.LoadProject()
+	proj := cli.LoadProject(c.ConfigPath)
 
 	serviceAccount := proj.EmulatorServiceAccount()
-
+	// TODO: this shouldn't be accessed like this, make a getter
 	serviceKey := serviceAccount.Keys[0]
 
 	privateKey, err := crypto.DecodePrivateKeyHex(serviceKey.SigAlgo, serviceKey.Context["privateKey"])
