@@ -13,6 +13,7 @@ type flagsCreate struct {
 	Keys      []string `flag:"key,k" info:"Public keys to attach to account"`
 	SigAlgo   string   `default:"ECDSA_P256" flag:"sig-algo" info:"Signature algorithm used to generate the keys"`
 	HashAlgo  string   `default:"SHA3_256" flag:"hash-algo" info:"Hash used for the digest"`
+	Name      string   `default:"default" flag:"name" info:"Name used for saving account"`
 	Host      string   `flag:"host" info:"Flow Access API host address"`
 	Results   bool     `default:"false" flag:"results" info:"Display the results of the transaction"`
 	Contracts []string `flag:"contract,c" info:"Contract to be deployed during account creation. <name:path>"`
@@ -49,7 +50,9 @@ func (a *cmdCreate) Run(
 		a.flags.Contracts,
 	)
 
-	return &AccountResult{account}, err
+	return &AccountResult{
+		Account: account,
+	}, err
 }
 
 func (a *cmdCreate) GetFlags() *sconfig.Config {

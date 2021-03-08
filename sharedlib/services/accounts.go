@@ -35,7 +35,7 @@ func (a *Accounts) Get(address string) (*flow.Account, error) {
 	return a.gateway.GetAccount(flowAddress)
 }
 
-// Create creates an account with signer name, keys, algorithms, contracts
+// Create creates an account with signer name, keys, algorithms, contracts and returns the new account
 func (a *Accounts) Create(
 	signerName string,
 	keys []string,
@@ -110,4 +110,53 @@ func (a *Accounts) Create(
 	}
 
 	return a.gateway.GetAccount(*newAccountAddress)
+}
+
+// AddContract adds new contract to the account and returns the updated account
+func (a *Accounts) AddContract(accountName string, contractName string, contractFilename string) (*flow.Account, error) {
+	contractSource, err := ioutil.ReadFile(contractFilename)
+	if err != nil {
+		cli.Exitf(1, "Failed to read contract from source file %s", contractFilename)
+	}
+
+	account := a.project.GetAccountByName(accountName)
+	if account == nil {
+		return nil, fmt.Errorf("Account: [%s] doesn't exists in configuration.", accountName)
+	}
+
+	tx := templates.AddAccountContract(
+		account.Address(),
+		templates.Contract{
+			Name:   contractName,
+			Source: string(contractSource),
+		},
+	)
+
+	tx, err = a.gateway.SendTransaction(tx, account)
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = a.gateway.GetTransactionResult(tx)
+	if err != nil {
+		return nil, err
+	}
+
+	return a.gateway.GetAccount(account.Address())
+}
+
+// RemoveContracts removes a contract from the account
+func (a *Accounts) RemoveContract(accountName string, contractName string) (*flow.Account, error) {
+	account := a.project.GetAccountByName(accountName)
+	if account == nil {
+		return nil, fmt.Errorf("Account: [%s] doesn't exists in configuration.", accountName)
+	}
+
+	tx := templates.RemoveAccountContract(account.Address(), contractName)
+	tx, err := a.gateway.SendTransaction(tx, account)
+	if err != nil {
+		return nil, err
+	}
+
+	return a.gateway.GetAccount(account.Address())
 }

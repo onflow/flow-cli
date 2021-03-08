@@ -9,8 +9,7 @@ import (
 )
 
 type flagsGet struct {
-	Host string `flag:"host" info:"Flow Access API host address"`
-	Code bool   `default:"false" flag:"code" info:"Display code deployed to the account"`
+	Code bool `default:"false" flag:"code" info:"Display code deployed to the account"`
 }
 
 type cmdGet struct {
@@ -30,9 +29,18 @@ func NewGetCmd() cmd.Command {
 	}
 }
 
-func (a *cmdGet) Run(cmd *cobra.Command, args []string, project *cli.Project, services *services.Services) (cmd.Result, error) {
+func (a *cmdGet) Run(
+	cmd *cobra.Command,
+	args []string,
+	project *cli.Project,
+	services *services.Services,
+) (cmd.Result, error) {
+
 	account, err := services.Accounts.Get(args[0])
-	return &AccountResult{account}, err
+	return &AccountResult{
+		Account:  account,
+		showCode: a.flags.Code,
+	}, err
 }
 
 func (a *cmdGet) GetFlags() *sconfig.Config {

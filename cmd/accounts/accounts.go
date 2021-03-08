@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/spf13/cobra"
-	"strings"
 	"text/tabwriter"
 )
 
@@ -17,6 +16,7 @@ var Cmd = &cobra.Command{
 
 type AccountResult struct {
 	*flow.Account
+	showCode bool
 }
 
 func (r *AccountResult) JSON() interface{} {
@@ -40,8 +40,12 @@ func (r *AccountResult) String() string {
 		fmt.Fprintf(writer, "\n")
 	}
 
-	fmt.Fprintf(writer, "\nCode\t\t %s", strings.ReplaceAll(string(r.Code), "\n", "\n\t "))
-	fmt.Fprintf(writer, "\n")
+	if r.showCode {
+		for name, code := range r.Contracts {
+			fmt.Fprintf(writer, "Code '%s':\n", name)
+			fmt.Fprintln(writer, string(code))
+		}
+	}
 
 	writer.Flush()
 
@@ -50,4 +54,9 @@ func (r *AccountResult) String() string {
 
 func (r *AccountResult) Oneliner() string {
 	return fmt.Sprintf("Address: %s, Balance: %v, Keys: %s", r.Address, r.Balance, r.Keys[0].PublicKey)
+}
+
+func (r *AccountResult) ToConfig() string {
+	// TODO: this could be cool, to have a --save-config flag and it would be added to config
+	return ""
 }

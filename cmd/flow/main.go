@@ -74,13 +74,17 @@ var (
 	format      = ""
 	save        = ""
 	runEmulator = false
+	host        = "127.0.0.1:3569"
 )
 
 func newInit() {
 	c.AddCommand(accounts.Cmd)
 	addCommand(accounts.Cmd, accounts.NewGetCmd())
 	addCommand(accounts.Cmd, accounts.NewCreateCmd())
+	addCommand(accounts.Cmd, accounts.NewAddContractCmd())
+	addCommand(accounts.Cmd, accounts.NewRemoveContractCmd())
 
+	c.PersistentFlags().StringVarP(&host, "host", "", host, "Flow Access API host address")
 	c.PersistentFlags().StringVarP(&filter, "filter", "", filter, "Filter result values by property name")
 	c.PersistentFlags().StringVarP(&format, "format", "", format, "Format to show result in")
 	c.PersistentFlags().StringVarP(&save, "save", "", save, "Save result to a filename")
