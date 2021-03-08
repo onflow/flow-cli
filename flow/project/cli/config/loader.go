@@ -84,10 +84,6 @@ func (l *Loader) AddConfigParser(format Parser) {
 
 // Save save configuration to a path with correct serializer
 func (l *Loader) Save(conf *Config, path string) error {
-	if l.composedMultiple || l.composedFromFile != nil {
-		return errors.New("Saving configuration to multiple files currently not supported")
-	}
-
 	configFormat := l.configParsers.FindForFormat(
 		filepath.Ext(path),
 	)
@@ -184,9 +180,6 @@ func (l *Loader) postprocess(baseConf *Config) (*Config, error) {
 
 // composeConfig - here we merge multiple configuration files from right to left
 func (l *Loader) composeConfig(baseConf *Config, conf *Config) {
-	// flag for saving
-	l.composedMultiple = true
-
 	// if not first overwrite first with this one
 	for _, account := range conf.Accounts {
 		baseConf.Accounts.AddOrUpdate(account.Name, account)

@@ -124,11 +124,40 @@ func (acct *Account) UnmarshalJSON(data []byte) (err error) {
 
 		acct.PrivateKey, err = crypto.DecodePrivateKey(acct.SigAlgo, prKeyBytes)
 		if err != nil {
-			return
+			// Quick workaround TODO: remove this
+			acct.FIX_parseProjectConfig(data)
+			err = nil
 		}
 	}
 
 	return
+}
+
+func (acct *Account) FIX_parseProjectConfig(data []byte) {
+	var conf map[string]string
+
+	err := json.Unmarshal(data, &conf)
+	if err != nil {
+		return
+	}
+
+	fmt.Println("⚠️ You are using a new experimental configuration format. Support for this format is not yet available across all CLI commands.")
+
+	acct.Address = flow.HexToAddress(conf["address"])
+	acct.SigAlgo = crypto.ECDSA_P256
+	acct.HashAlgo = crypto.SHA3_256
+	acct.KeyIndex = 0
+	acct.KeyType = defaultKeyType
+
+	var prKeyBytes []byte
+	prKeyBytes, err = hex.DecodeString(conf["keys"])
+	if err != nil {
+		fmt.Println("ERROR decoding keys")
+		return
+	}
+
+	acct.PrivateKey, err = crypto.DecodePrivateKey(acct.SigAlgo, prKeyBytes)
+	acct.KeyContext = map[string]string{"privateKey": conf["keys"]}
 }
 
 func (account *Account) LoadSigner() error {
@@ -178,7 +207,16 @@ func NewConfig() *Config {
 func (c *Config) ServiceAccount() *Account {
 	serviceAcct, ok := c.Accounts[serviceAccountName]
 	if !ok {
-		Exit(1, "Missing service account!")
+		return c.FIX_getServiceAccountProject() // TODO: remove this
+		//Exit(1, "Missing service account!")
+	}
+	return serviceAcct
+}
+
+func (c *Config) FIX_getServiceAccountProject() *Account {
+	serviceAcct, ok := c.Accounts["emulator-account"]
+	if !ok {
+		Exit(1, "Missing service account!!!!")
 	}
 	return serviceAcct
 }

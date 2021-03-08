@@ -46,6 +46,10 @@ var Cmd = &cobra.Command{
 		contractName := args[0]
 
 		signerAccount := projectConf.Accounts[conf.Signer]
+		// TODO: remove this - quick fix
+		if signerAccount == nil && conf.Signer == "service" {
+			signerAccount = projectConf.Accounts["emulator-account"]
+		}
 
 		tx := templates.RemoveAccountContract(signerAccount.Address, contractName)
 
