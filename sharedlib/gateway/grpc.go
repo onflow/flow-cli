@@ -5,17 +5,20 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/onflow/cadence"
 	"github.com/onflow/flow-cli/flow/cli"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/client"
 	"google.golang.org/grpc"
 )
 
+// GrpcGateway contains all functions that need flow client to execute
 type GrpcGateway struct {
 	client *client.Client
 	ctx    context.Context
 }
 
+// NewGrpcGateway creates new grpc gateway
 func NewGrpcGateway(host string) (*GrpcGateway, error) {
 	client, err := client.New(host, grpc.WithInsecure())
 	ctx := context.Background()
@@ -30,6 +33,7 @@ func NewGrpcGateway(host string) (*GrpcGateway, error) {
 	}, nil
 }
 
+// GetAccount gets account by the address from flow
 func (g *GrpcGateway) GetAccount(address flow.Address) (*flow.Account, error) {
 	account, err := g.client.GetAccount(g.ctx, address)
 	if err != nil {
@@ -39,6 +43,7 @@ func (g *GrpcGateway) GetAccount(address flow.Address) (*flow.Account, error) {
 	return account, nil
 }
 
+// SendTransaction send a transaction to flow
 func (g *GrpcGateway) SendTransaction(tx *flow.Transaction, signer *cli.Account) (*flow.Transaction, error) {
 	//fmt.Printf("Getting information for account with address 0x%s ...\n", signer.Address()) TODO: change to log
 
@@ -74,6 +79,7 @@ func (g *GrpcGateway) SendTransaction(tx *flow.Transaction, signer *cli.Account)
 	return tx, nil
 }
 
+// GetTransactionResult gets result of a transaction on flow
 func (g *GrpcGateway) GetTransactionResult(tx *flow.Transaction) (*flow.TransactionResult, error) {
 	result, err := g.client.GetTransactionResult(g.ctx, tx.ID())
 	if err != nil {
@@ -89,6 +95,17 @@ func (g *GrpcGateway) GetTransactionResult(tx *flow.Transaction) (*flow.Transact
 
 	//fmt.Printf("Transaction %s sealed \n", id) todo: change to log
 	return result, nil
+}
+
+// ExecuteScript execute scripts on flow
+func (g *GrpcGateway) ExecuteScript(script []byte, arguments []cadence.Value) (cadence.Value, error) {
+
+	value, err := g.client.ExecuteScriptAtLatestBlock(g.ctx, script, arguments)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to submit executable script %s", err)
+	}
+
+	return value, nil
 }
 
 func (g *GrpcGateway) GetEvents() {}
