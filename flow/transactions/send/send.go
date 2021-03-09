@@ -34,7 +34,7 @@ type Flags struct {
 	Args    string `default:"" flag:"args" info:"arguments in JSON-Cadence format"`
 	Code    string `flag:"code,c" info:"path to Cadence file"`
 	Host    string `flag:"host" info:"Flow Access API host address"`
-	Signer  string `default:"service" flag:"signer,s"`
+	Signer  string `default:"emulator-account" flag:"signer,s"`
 	Results bool   `default:"false" flag:"results" info:"Display the results of the transaction"`
 }
 
@@ -119,7 +119,7 @@ func validateKeyPreReq(account *cli.Account) {
 			if len(account.DefaultKey().ToConfig().Context["projectId"]) == 0 {
 				cli.Exitf(1, "Could not get GOOGLE_APPLICATION_CREDENTIALS, no google service account json provided but private key type is KMS", account.Address)
 			}
-			cli.GcloudApplicationSignin(account.DefaultKey().ToConfig().Context["projectId"])
+			cli.GcloudApplicationSignin(account)
 		}
 		return
 	}

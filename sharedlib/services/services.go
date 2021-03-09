@@ -5,12 +5,18 @@ import (
 	"github.com/onflow/flow-cli/sharedlib/gateway"
 )
 
+// Services are a place where we define domain functionality
 type Services struct {
-	Accounts *Accounts
+	Accounts     *Accounts
+	Scripts      *Scripts
+	Transactions *Transactions
 }
 
+// NewServices create new services with gateway and project
 func NewServices(gateway gateway.Gateway, project cli.Project) *Services {
 	return &Services{
-		Accounts: NewAccounts(gateway, project),
+		Accounts:     NewAccounts(gateway, project),
+		Scripts:      NewScripts(gateway, project),
+		Transactions: NewTransactions(gateway, project),
 	}
 }
