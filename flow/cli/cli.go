@@ -31,12 +31,12 @@ import (
 )
 
 const (
-	EnvPrefix           = "FLOW"
-	DefaultSigAlgo      = crypto.ECDSA_P256
-	DefaultHashAlgo     = crypto.SHA3_256
-	DefaultHost         = "127.0.0.1:3569"
-	MaxGRPCMessageSize  = 1024 * 1024 * 16
-	Indent              = "  "
+	EnvPrefix          = "FLOW"
+	DefaultSigAlgo     = crypto.ECDSA_P256
+	DefaultHashAlgo    = crypto.SHA3_256
+	DefaultHost        = "127.0.0.1:3569"
+	MaxGRPCMessageSize = 1024 * 1024 * 16
+	Indent             = "  "
 )
 
 var ConfigPath = []string{"flow.json"}
@@ -89,13 +89,22 @@ var squareBracketRegex = regexp.MustCompile(`(?s)\[(.*)\]`)
 // GcloudApplicationSignin signs in as an application user using gcloud command line tool
 // currently assumes gcloud is already installed on the machine
 // will by default pop a browser window to sign in
-func GcloudApplicationSignin(project string) {
-	// os.Exec(fmt.Sprintf("gcloud auth application-default login --%s"))
+func GcloudApplicationSignin(account *Account) error {
+	googleAppCreds := os.Getenv("GOOGLE_APPLICATION_CREDENTIALS")
+	if len(googleAppCreds) > 0 {
+		return nil
+	}
+
+	project := account.DefaultKey().ToConfig().Context["projectId"]
+	if len(project) == 0 {
+		return fmt.Errorf("Could not get GOOGLE_APPLICATION_CREDENTIALS, no google service account json provided but private key type is KMS", account.Address)
+	}
+
 	loginCmd := exec.Command("gcloud", "auth", "application-default", "login", fmt.Sprintf("--project=%s", project))
 
 	output, err := loginCmd.CombinedOutput()
 	if err != nil {
-		Exitf(1, "Failed to run %q: %s\n", loginCmd.String(), err)
+		return fmt.Errorf("Failed to run %q: %s\n", loginCmd.String(), err)
 	}
 	regexResult := squareBracketRegex.FindAllStringSubmatch(string(output), -1)
 	// Should only be one value. Second index since first index contains the square brackets
@@ -103,6 +112,8 @@ func GcloudApplicationSignin(project string) {
 	fmt.Printf("Saving credentials and setting GOOGLE_APPLICATION_CREDENTIALS to file: %s\n", googleApplicationCreds)
 
 	os.Setenv("GOOGLE_APPLICATION_CREDENTIALS", googleApplicationCreds)
+
+	return nil
 }
 
 func PrintIndent(numberOfIndents int) {
