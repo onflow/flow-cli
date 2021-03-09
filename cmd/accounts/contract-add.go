@@ -21,9 +21,10 @@ type cmdAddContract struct {
 func NewAddContractCmd() cmd.Command {
 	return &cmdAddContract{
 		cmd: &cobra.Command{
-			Use:   "add-contract <name> <filename>",
-			Short: "Deploy a new contract to an account",
-			Args:  cobra.ExactArgs(2),
+			Use:     "add-contract <name> <filename>",
+			Short:   "Deploy a new contract to an account",
+			Example: `flow accounts add-contract FungibleToken ./FungibleToken.cdc`,
+			Args:    cobra.ExactArgs(2),
 		},
 	}
 }

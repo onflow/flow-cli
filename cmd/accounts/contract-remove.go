@@ -20,9 +20,10 @@ type cmdRemoveContract struct {
 func NewRemoveContractCmd() cmd.Command {
 	return &cmdRemoveContract{
 		cmd: &cobra.Command{
-			Use:   "remove-contract <name>",
-			Short: "Remove a contract deployed to an account",
-			Args:  cobra.ExactArgs(1),
+			Use:     "remove-contract <name>",
+			Short:   "Remove a contract deployed to an account",
+			Example: `flow accounts remove-contract FungibleToken`,
+			Args:    cobra.ExactArgs(1),
 		},
 	}
 }
