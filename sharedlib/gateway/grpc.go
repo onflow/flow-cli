@@ -3,11 +3,12 @@ package gateway
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"github.com/onflow/flow-cli/flow/cli"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/client"
 	"google.golang.org/grpc"
-	"time"
 )
 
 type GrpcGateway struct {
@@ -86,7 +87,7 @@ func (g *GrpcGateway) GetTransactionResult(tx *flow.Transaction) (*flow.Transact
 		return g.GetTransactionResult(tx)
 	}
 
-	//fmt.Printf("Transaction %s sealed\n", id) todo: change to log
+	//fmt.Printf("Transaction %s sealed \n", id) todo: change to log
 	return result, nil
 }
 

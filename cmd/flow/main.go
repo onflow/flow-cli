@@ -23,6 +23,9 @@ import "C"
 import (
 	"encoding/json"
 	"fmt"
+	"os"
+	"strings"
+
 	"github.com/onflow/flow-cli/cmd"
 	"github.com/onflow/flow-cli/cmd/accounts"
 	"github.com/onflow/flow-cli/flow/blocks"
@@ -42,8 +45,6 @@ import (
 	"github.com/onflow/flow-go-sdk/client"
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
-	"os"
-	"strings"
 )
 
 var c = &cobra.Command{
@@ -83,6 +84,7 @@ func newInit() {
 	addCommand(accounts.Cmd, accounts.NewCreateCmd())
 	addCommand(accounts.Cmd, accounts.NewAddContractCmd())
 	addCommand(accounts.Cmd, accounts.NewRemoveContractCmd())
+	addCommand(accounts.Cmd, accounts.NewUpdateContractCmd())
 
 	c.PersistentFlags().StringVarP(&host, "host", "", host, "Flow Access API host address")
 	c.PersistentFlags().StringVarP(&filter, "filter", "", filter, "Filter result values by property name")
