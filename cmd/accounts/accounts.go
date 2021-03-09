@@ -3,9 +3,10 @@ package accounts
 import (
 	"bytes"
 	"fmt"
+	"text/tabwriter"
+
 	"github.com/onflow/flow-go-sdk"
 	"github.com/spf13/cobra"
-	"text/tabwriter"
 )
 
 var Cmd = &cobra.Command{
@@ -14,15 +15,18 @@ var Cmd = &cobra.Command{
 	TraverseChildren: true,
 }
 
+// AccountResult represent result from all account commands
 type AccountResult struct {
 	*flow.Account
 	showCode bool
 }
 
+// JSON convert result to JSON
 func (r *AccountResult) JSON() interface{} {
 	return r
 }
 
+// String convert result to string
 func (r *AccountResult) String() string {
 	var b bytes.Buffer
 	writer := tabwriter.NewWriter(&b, 0, 8, 1, '\t', tabwriter.AlignRight)
@@ -52,11 +56,12 @@ func (r *AccountResult) String() string {
 	return b.String()
 }
 
+// Oneliner show result as one liner grep friendly
 func (r *AccountResult) Oneliner() string {
 	return fmt.Sprintf("Address: %s, Balance: %v, Keys: %s", r.Address, r.Balance, r.Keys[0].PublicKey)
 }
 
 func (r *AccountResult) ToConfig() string {
-	// TODO: this could be cool, to have a --save-config flag and it would be added to config
+	// TODO: it would be good to have a --save-config flag and it would be added to config
 	return ""
 }

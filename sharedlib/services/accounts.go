@@ -2,8 +2,9 @@ package services
 
 import (
 	"fmt"
-	"io/ioutil"
 	"strings"
+
+	"github.com/onflow/flow-cli/sharedlib/util"
 
 	"github.com/onflow/flow-cli/flow/cli"
 	"github.com/onflow/flow-cli/sharedlib/gateway"
@@ -47,18 +48,18 @@ func (a *Accounts) Create(
 
 	signer := a.project.GetAccountByName(signerName)
 	if signer == nil {
-		return nil, fmt.Errorf("Signer account: [%s] doesn't exists in configuration.", signerName)
+		return nil, fmt.Errorf("signer account: [%s] doesn't exists in configuration", signerName)
 	}
 
 	accountKeys := make([]*flow.AccountKey, len(keys))
 
 	sigAlgo := crypto.StringToSignatureAlgorithm(signatureAlgorithm)
 	if sigAlgo == crypto.UnknownSignatureAlgorithm {
-		return nil, fmt.Errorf("Failed to determine signature algorithm from %s", sigAlgo)
+		return nil, fmt.Errorf("failed to determine signature algorithm from %s", sigAlgo)
 	}
 	hashAlgo := crypto.StringToHashAlgorithm(hashingAlgorithm)
 	if hashAlgo == crypto.UnknownHashAlgorithm {
-		return nil, fmt.Errorf("Failed to determine hash algorithm from %s", hashAlgo)
+		return nil, fmt.Errorf("failed to determine hash algorithm from %s", hashAlgo)
 	}
 
 	for i, publicKeyHex := range keys {
@@ -76,14 +77,16 @@ func (a *Accounts) Create(
 	for _, contract := range contracts {
 		contractFlagContent := strings.SplitN(contract, ":", 2)
 		if len(contractFlagContent) != 2 {
-			return nil, fmt.Errorf("Failed to read contract name and path from flag. Ensure you're providing a contract name and a file path. %s", contract)
+			return nil, fmt.Errorf("failed to read contract name and path from flag. Ensure you're providing a contract name and a file path %s", contract)
 		}
 		contractName := contractFlagContent[0]
 		contractPath := contractFlagContent[1]
-		contractSource, err := ioutil.ReadFile(contractPath)
+
+		contractSource, err := util.LoadFile(contractPath)
 		if err != nil {
-			return nil, fmt.Errorf("Failed to read contract from source file %s", contractPath)
+			return nil, err
 		}
+
 		contractTemplates = append(contractTemplates,
 			templates.Contract{
 				Name:   contractName,
@@ -120,14 +123,14 @@ func (a *Accounts) AddContract(
 	contractFilename string,
 	updateExisting bool,
 ) (*flow.Account, error) {
-	contractSource, err := ioutil.ReadFile(contractFilename)
+	contractSource, err := util.LoadFile(contractFilename)
 	if err != nil {
-		cli.Exitf(1, "Failed to read contract from source file %s", contractFilename)
+		return nil, err
 	}
 
 	account := a.project.GetAccountByName(accountName)
 	if account == nil {
-		return nil, fmt.Errorf("Account: [%s] doesn't exists in configuration.", accountName)
+		return nil, fmt.Errorf("account: [%s] doesn't exists in configuration", accountName)
 	}
 
 	tx := templates.AddAccountContract(
@@ -169,7 +172,7 @@ func (a *Accounts) RemoveContract(
 ) (*flow.Account, error) {
 	account := a.project.GetAccountByName(accountName)
 	if account == nil {
-		return nil, fmt.Errorf("Account: [%s] doesn't exists in configuration.", accountName)
+		return nil, fmt.Errorf("account: [%s] doesn't exists in configuration", accountName)
 	}
 
 	tx := templates.RemoveAccountContract(account.Address(), contractName)
