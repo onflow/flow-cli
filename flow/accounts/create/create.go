@@ -51,6 +51,10 @@ var Cmd = &cobra.Command{
 		projectConf := cli.LoadConfig()
 
 		signerAccount := projectConf.Accounts[conf.Signer]
+		// TODO: Remove once new configuration is migrated
+		if signerAccount == nil && conf.Signer == "service" {
+			signerAccount = projectConf.Accounts["emulator-account"]
+		}
 
 		accountKeys := make([]*flow.AccountKey, len(conf.Keys))
 

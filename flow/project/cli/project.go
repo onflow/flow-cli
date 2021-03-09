@@ -20,6 +20,7 @@ package cli
 
 import (
 	"errors"
+	"fmt"
 	"github.com/onflow/flow-cli/flow/project/cli/config/json"
 	"path"
 	"strings"
@@ -65,6 +66,7 @@ func LoadProject(configFilePath []string) *Project {
 	proj, err := newProject(conf, composer)
 	if err != nil {
 		// TODO: replace with a more detailed error message
+		fmt.Println("⚠️  Make sure you generated configuration by using: flow project init, and not: flow init")
 		Exitf(1, "Invalid project configuration: %s", err)
 	}
 
@@ -80,8 +82,11 @@ func ProjectExists(path string) bool {
 func InitProject() *Project {
 	emulatorServiceAccount := generateEmulatorServiceAccount()
 
+	composer := config.NewLoader(afero.NewOsFs())
+	composer.AddConfigParser(json.NewParser())
+
 	return &Project{
-		composer: config.NewLoader(afero.NewOsFs()),
+		composer: composer,
 		conf:     defaultConfig(emulatorServiceAccount),
 		accounts: []*Account{emulatorServiceAccount},
 	}
@@ -233,6 +238,7 @@ func (p *Project) Save(path string) {
 	err := p.composer.Save(p.conf, path)
 
 	if err != nil {
+		fmt.Println(err)
 		Exitf(1, "Failed to save project configuration to \"%s\"", path)
 	}
 }
