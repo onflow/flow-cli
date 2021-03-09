@@ -2,14 +2,15 @@ package services
 
 import (
 	"fmt"
+	"io/ioutil"
+	"strings"
+
 	"github.com/onflow/flow-cli/flow/cli"
 	"github.com/onflow/flow-cli/sharedlib/gateway"
 	"github.com/onflow/flow-cli/sharedlib/lib"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/onflow/flow-go-sdk/templates"
-	"io/ioutil"
-	"strings"
 )
 
 // Accounts service handles all interactions for accounts
@@ -113,7 +114,12 @@ func (a *Accounts) Create(
 }
 
 // AddContract adds new contract to the account and returns the updated account
-func (a *Accounts) AddContract(accountName string, contractName string, contractFilename string) (*flow.Account, error) {
+func (a *Accounts) AddContract(
+	accountName string,
+	contractName string,
+	contractFilename string,
+	updateExisting bool,
+) (*flow.Account, error) {
 	contractSource, err := ioutil.ReadFile(contractFilename)
 	if err != nil {
 		cli.Exitf(1, "Failed to read contract from source file %s", contractFilename)
@@ -132,6 +138,17 @@ func (a *Accounts) AddContract(accountName string, contractName string, contract
 		},
 	)
 
+	// if we are updating contract
+	if updateExisting {
+		tx = templates.UpdateAccountContract(
+			account.Address(),
+			templates.Contract{
+				Name:   contractName,
+				Source: string(contractSource),
+			},
+		)
+	}
+
 	tx, err = a.gateway.SendTransaction(tx, account)
 	if err != nil {
 		return nil, err
@@ -146,7 +163,10 @@ func (a *Accounts) AddContract(accountName string, contractName string, contract
 }
 
 // RemoveContracts removes a contract from the account
-func (a *Accounts) RemoveContract(contractName string, accountName string) (*flow.Account, error) {
+func (a *Accounts) RemoveContract(
+	contractName string,
+	accountName string,
+) (*flow.Account, error) {
 	account := a.project.GetAccountByName(accountName)
 	if account == nil {
 		return nil, fmt.Errorf("Account: [%s] doesn't exists in configuration.", accountName)

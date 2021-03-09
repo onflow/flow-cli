@@ -8,44 +8,45 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type flagsAddContract struct {
+type flagsUpdateContract struct {
 	Account string `default:"emulator-account" flag:"account,a"`
 	Host    string `flag:"host" info:"Flow Access API host address"`
 }
 
-type cmdAddContract struct {
+type cmdUpdateContract struct {
 	cmd   *cobra.Command
-	flags flagsAddContract
+	flags flagsUpdateContract
 }
 
-func NewAddContractCmd() cmd.Command {
-	return &cmdAddContract{
+func NewUpdateContractCmd() cmd.Command {
+	return &cmdUpdateContract{
 		cmd: &cobra.Command{
-			Use:   "add-contract <name> <filename>",
-			Short: "Deploy a new contract to an account",
+			Use:   "update-contract <name> <filename>",
+			Short: "Update a contract deployed to an account",
 			Args:  cobra.ExactArgs(2),
 		},
 	}
 }
 
-func (a *cmdAddContract) Run(
+func (c *cmdUpdateContract) Run(
 	cmd *cobra.Command,
 	args []string,
 	project *cli.Project,
 	services *services.Services,
 ) (cmd.Result, error) {
 
-	account, err := services.Accounts.AddContract(a.flags.Account, args[0], args[1], false)
+	account, err := services.Accounts.AddContract(c.flags.Account, args[0], args[1], true)
 	return &AccountResult{
 		Account:  account,
 		showCode: true,
 	}, err
+
 }
 
-func (a *cmdAddContract) GetFlags() *sconfig.Config {
-	return sconfig.New(&a.flags)
+func (c *cmdUpdateContract) GetFlags() *sconfig.Config {
+	return sconfig.New(&c.flags)
 }
 
-func (a *cmdAddContract) GetCmd() *cobra.Command {
-	return a.cmd
+func (c *cmdUpdateContract) GetCmd() *cobra.Command {
+	return c.cmd
 }
