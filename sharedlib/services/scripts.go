@@ -25,15 +25,23 @@ func NewScripts(gateway gateway.Gateway, project cli.Project) *Scripts {
 }
 
 // Execute script
-func (s *Scripts) Execute(scriptFilename string, args []string) (cadence.Value, error) {
+func (s *Scripts) Execute(scriptFilename string, args []string, argsJSON string) (cadence.Value, error) {
 	script, err := util.LoadFile(scriptFilename)
 	if err != nil {
 		return nil, err
 	}
 
-	scriptArgs, err := lib.ParseArgumentsCommaSplit(args)
-	if err != nil {
-		return nil, err
+	var scriptArgs []cadence.Value
+	if argsJSON != "" {
+		scriptArgs, err = lib.ParseArgumentsJSON(argsJSON)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		scriptArgs, err = lib.ParseArgumentsCommaSplit(args)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return s.gateway.ExecuteScript(script, scriptArgs)
