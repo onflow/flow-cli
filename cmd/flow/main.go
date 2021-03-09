@@ -26,8 +26,11 @@ import (
 	"os"
 	"strings"
 
+	"github.com/onflow/flow-cli/cmd/transactions"
+
 	"github.com/onflow/flow-cli/cmd"
 	"github.com/onflow/flow-cli/cmd/accounts"
+	"github.com/onflow/flow-cli/cmd/scripts"
 	"github.com/onflow/flow-cli/flow/blocks"
 	"github.com/onflow/flow-cli/flow/cadence"
 	"github.com/onflow/flow-cli/flow/cli"
@@ -37,8 +40,6 @@ import (
 	"github.com/onflow/flow-cli/flow/initialize"
 	"github.com/onflow/flow-cli/flow/keys"
 	"github.com/onflow/flow-cli/flow/project"
-	"github.com/onflow/flow-cli/flow/scripts"
-	"github.com/onflow/flow-cli/flow/transactions"
 	"github.com/onflow/flow-cli/flow/version"
 	"github.com/onflow/flow-cli/sharedlib/gateway"
 	"github.com/onflow/flow-cli/sharedlib/services"
@@ -61,8 +62,6 @@ func init() {
 	c.AddCommand(emulator.Cmd)
 	c.AddCommand(events.Cmd)
 	c.AddCommand(cadence.Cmd)
-	c.AddCommand(scripts.Cmd)
-	c.AddCommand(transactions.Cmd)
 	c.AddCommand(version.Cmd)
 
 	c.PersistentFlags().StringSliceVarP(&cli.ConfigPath, "config-path", "f", cli.ConfigPath, "Path to flow configuration file")
@@ -85,6 +84,12 @@ func newInit() {
 	addCommand(accounts.Cmd, accounts.NewAddContractCmd())
 	addCommand(accounts.Cmd, accounts.NewRemoveContractCmd())
 	addCommand(accounts.Cmd, accounts.NewUpdateContractCmd())
+
+	c.AddCommand(scripts.Cmd)
+	addCommand(scripts.Cmd, scripts.NewExecuteScriptCmd())
+
+	c.AddCommand(transactions.Cmd)
+	addCommand(transactions.Cmd, transactions.NewSendCmd())
 
 	c.PersistentFlags().StringVarP(&host, "host", "", host, "Flow Access API host address")
 	c.PersistentFlags().StringVarP(&filter, "filter", "", filter, "Filter result values by property name")
