@@ -26,6 +26,8 @@ import (
 	"os"
 	"strings"
 
+	"github.com/onflow/flow-cli/cmd/collections"
+
 	"github.com/onflow/flow-cli/cmd/events"
 
 	"github.com/onflow/flow-cli/cmd/keys"
@@ -38,7 +40,6 @@ import (
 	"github.com/onflow/flow-cli/flow/blocks"
 	"github.com/onflow/flow-cli/flow/cadence"
 	"github.com/onflow/flow-cli/flow/cli"
-	"github.com/onflow/flow-cli/flow/collections"
 	"github.com/onflow/flow-cli/flow/emulator"
 	"github.com/onflow/flow-cli/flow/initialize"
 	"github.com/onflow/flow-cli/flow/project"
@@ -59,7 +60,6 @@ func init() {
 	c.AddCommand(project.Cmd)
 	c.AddCommand(initialize.Cmd)
 	c.AddCommand(blocks.Cmd)
-	c.AddCommand(collections.Cmd)
 	c.AddCommand(emulator.Cmd)
 	c.AddCommand(cadence.Cmd)
 	c.AddCommand(version.Cmd)
@@ -97,6 +97,9 @@ func newInit() {
 
 	c.AddCommand(events.Cmd)
 	addCommand(events.Cmd, events.NewGetCmd())
+
+	c.AddCommand(collections.Cmd)
+	addCommand(collections.Cmd, collections.NewGetCmd())
 
 	c.PersistentFlags().StringVarP(&host, "host", "", host, "Flow Access API host address")
 	c.PersistentFlags().StringVarP(&filter, "filter", "", filter, "Filter result values by property name")
@@ -217,15 +220,18 @@ func handleError(description string, err error) {
 		return
 	}
 
+	// TODO: refactor this to better handle errors not by string matching
 	// handle rpc error
 	switch t := err.(type) {
 	case *client.RPCError:
-		fmt.Fprintf(os.Stderr, "🔴️ Grpc Error: %s \n", t.GRPCStatus().Err)
+		fmt.Fprintf(os.Stderr, "🔴️Grpc Error: %s \n", t.GRPCStatus().Err)
 	default:
 		if strings.Contains(err.Error(), "transport:") {
-			fmt.Fprintf(os.Stderr, "🔴️ %s \n", strings.Split(err.Error(), "transport:")[1])
+			fmt.Fprintf(os.Stderr, "🔴️%s \n", strings.Split(err.Error(), "transport:")[1])
+		} else if strings.Contains(err.Error(), "NotFound desc =") {
+			fmt.Fprintf(os.Stderr, "🔴️Not Found:%s \n", strings.Split(err.Error(), "NotFound desc =")[1])
 		} else {
-			fmt.Fprintf(os.Stderr, "🔴️ %s: %s", description, err)
+			fmt.Fprintf(os.Stderr, "🔴️%s: %s", description, err)
 		}
 	}
 
