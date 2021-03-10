@@ -26,6 +26,8 @@ import (
 	"os"
 	"strings"
 
+	"github.com/onflow/flow-cli/cmd/emulator"
+
 	"github.com/onflow/flow-cli/cmd/collections"
 
 	"github.com/onflow/flow-cli/cmd/events"
@@ -40,7 +42,6 @@ import (
 	"github.com/onflow/flow-cli/flow/blocks"
 	"github.com/onflow/flow-cli/flow/cadence"
 	"github.com/onflow/flow-cli/flow/cli"
-	"github.com/onflow/flow-cli/flow/emulator"
 	"github.com/onflow/flow-cli/flow/initialize"
 	"github.com/onflow/flow-cli/flow/project"
 	"github.com/onflow/flow-cli/flow/version"
@@ -60,7 +61,6 @@ func init() {
 	c.AddCommand(project.Cmd)
 	c.AddCommand(initialize.Cmd)
 	c.AddCommand(blocks.Cmd)
-	c.AddCommand(emulator.Cmd)
 	c.AddCommand(cadence.Cmd)
 	c.AddCommand(version.Cmd)
 
@@ -97,6 +97,8 @@ func newInit() {
 
 	c.AddCommand(events.Cmd)
 	addCommand(events.Cmd, events.NewGetCmd())
+
+	c.AddCommand(emulator.Cmd)
 
 	c.AddCommand(collections.Cmd)
 	addCommand(collections.Cmd, collections.NewGetCmd())

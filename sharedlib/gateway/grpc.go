@@ -35,7 +35,7 @@ func NewGrpcGateway(host string) (*GrpcGateway, error) {
 
 // GetAccount gets account by the address from flow
 func (g *GrpcGateway) GetAccount(address flow.Address) (*flow.Account, error) {
-	account, err := g.client.GetAccount(g.ctx, address)
+	account, err := g.client.GetAccountAtLatestBlock(g.ctx, address)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to get account with address %s: %s", address, err)
 	}
@@ -43,6 +43,7 @@ func (g *GrpcGateway) GetAccount(address flow.Address) (*flow.Account, error) {
 	return account, nil
 }
 
+// TODO: replace with txsender - much nicer implemented
 // SendTransaction send a transaction to flow
 func (g *GrpcGateway) SendTransaction(tx *flow.Transaction, signer *cli.Account) (*flow.Transaction, error) {
 	//fmt.Printf("Getting information for account with address 0x%s ...\n", signer.Address()) TODO: change to log
@@ -135,4 +136,9 @@ func (g *GrpcGateway) GetEvents(
 	)
 
 	return events, err
+}
+
+// GetCollection get collection by id from flow
+func (g *GrpcGateway) GetCollection(id flow.Identifier) (*flow.Collection, error) {
+	return g.client.GetCollection(g.ctx, id)
 }

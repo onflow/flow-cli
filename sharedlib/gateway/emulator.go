@@ -38,11 +38,11 @@ func (g *EmulatorGateway) SendTransaction(tx *flow.Transaction, signer *cli.Acco
 }
 
 func (g *EmulatorGateway) GetTransactionResult(tx *flow.Transaction) (*flow.TransactionResult, error) {
-	return nil, fmt.Errorf("Not Supported Yet")
+	return g.emulator.GetTransactionResult(tx.ID())
 }
 
 func (g *EmulatorGateway) GetTransaction(id flow.Identifier) (*flow.Transaction, error) {
-	return nil, fmt.Errorf("Not Supported Yet")
+	return g.emulator.GetTransaction(id)
 }
 
 func (g *EmulatorGateway) ExecuteScript(script []byte, arguments []cadence.Value) (cadence.Value, error) {
@@ -54,5 +54,9 @@ func (g *EmulatorGateway) GetLatestBlock() (*flow.Block, error) {
 }
 
 func (g *EmulatorGateway) GetEvents(string, uint64, uint64) ([]client.BlockEvents, error) {
+	return nil, fmt.Errorf("Not Supported Yet")
+}
+
+func (g *EmulatorGateway) GetCollection(id flow.Identifier) (*flow.Collection, error) {
 	return nil, fmt.Errorf("Not Supported Yet")
 }

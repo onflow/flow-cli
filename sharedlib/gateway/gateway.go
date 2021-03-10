@@ -15,4 +15,5 @@ type Gateway interface {
 	ExecuteScript([]byte, []cadence.Value) (cadence.Value, error)
 	GetLatestBlock() (*flow.Block, error)
 	GetEvents(string, uint64, uint64) ([]client.BlockEvents, error)
+	GetCollection(flow.Identifier) (*flow.Collection, error)
 }
