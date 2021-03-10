@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"text/tabwriter"
 
+	"github.com/onflow/flow-cli/cmd/events"
+
 	"github.com/onflow/flow-go-sdk"
 	"github.com/spf13/cobra"
 )
@@ -19,11 +21,17 @@ var Cmd = &cobra.Command{
 type TransactionResult struct {
 	result *flow.TransactionResult
 	tx     *flow.Transaction
+	code   bool
 }
 
 // JSON convert result to JSON
 func (r *TransactionResult) JSON() interface{} {
-	return r
+	result := make(map[string]string, 0)
+	result["Hash"] = r.tx.ID().String()
+	result["Status"] = r.result.Status.String()
+	result["Events"] = fmt.Sprintf("%s", r.result.Events)
+
+	return result
 }
 
 // String convert result to string
@@ -33,7 +41,16 @@ func (r *TransactionResult) String() string {
 
 	fmt.Fprintf(writer, "Hash\t %s\n", r.tx.ID())
 	fmt.Fprintf(writer, "Status\t %s\n", r.result.Status)
-	fmt.Fprintf(writer, "Events\t %s\n", r.result.Events)
+	fmt.Fprintf(writer, "Payer\t %s\n", r.tx.Payer.Hex())
+
+	events := events.EventResult{
+		Events: r.result.Events,
+	}
+	fmt.Fprintf(writer, "Events\t %s\n", events.String())
+
+	if r.code {
+		fmt.Fprintf(writer, "Code\n\n%s\n", r.tx.Script)
+	}
 
 	writer.Flush()
 	return b.String()
