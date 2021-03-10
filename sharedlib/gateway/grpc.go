@@ -79,6 +79,11 @@ func (g *GrpcGateway) SendTransaction(tx *flow.Transaction, signer *cli.Account)
 	return tx, nil
 }
 
+// GetTransaction gets transaction by id
+func (g *GrpcGateway) GetTransaction(id flow.Identifier) (*flow.Transaction, error) {
+	return g.client.GetTransaction(g.ctx, id)
+}
+
 // GetTransactionResult gets result of a transaction on flow
 func (g *GrpcGateway) GetTransactionResult(tx *flow.Transaction) (*flow.TransactionResult, error) {
 	result, err := g.client.GetTransactionResult(g.ctx, tx.ID())
@@ -108,4 +113,26 @@ func (g *GrpcGateway) ExecuteScript(script []byte, arguments []cadence.Value) (c
 	return value, nil
 }
 
-func (g *GrpcGateway) GetEvents() {}
+// GetLatestBlock gets latest block from flow
+func (g *GrpcGateway) GetLatestBlock() (*flow.Block, error) {
+	return g.client.GetLatestBlock(g.ctx, true)
+}
+
+// GetEvents gets event from start and end height
+func (g *GrpcGateway) GetEvents(
+	eventType string,
+	startHeight uint64,
+	endHeight uint64,
+) ([]client.BlockEvents, error) {
+
+	events, err := g.client.GetEventsForHeightRange(
+		g.ctx,
+		client.EventRangeQuery{
+			Type:        eventType,
+			StartHeight: startHeight,
+			EndHeight:   endHeight,
+		},
+	)
+
+	return events, err
+}
