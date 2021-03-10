@@ -19,10 +19,11 @@
 package get
 
 import (
-	"github.com/onflow/flow-cli/flow/cli"
 	"log"
 	"strconv"
 	"strings"
+
+	"github.com/onflow/flow-cli/flow/cli"
 
 	"github.com/psiemens/sconfig"
 	"github.com/spf13/cobra"
