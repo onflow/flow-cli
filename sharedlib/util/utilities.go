@@ -18,3 +18,12 @@ func LoadFile(filename string) ([]byte, error) {
 
 	return code, nil
 }
+
+func IsByteSlice(v interface{}) bool {
+	slice, isSlice := v.([]interface{})
+	if !isSlice {
+		return false
+	}
+	_, isBytes := slice[0].(byte)
+	return isBytes
+}
