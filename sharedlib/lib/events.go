@@ -2,8 +2,9 @@ package lib
 
 import (
 	"fmt"
-	"github.com/onflow/flow-go-sdk"
 	"strings"
+
+	"github.com/onflow/flow-go-sdk"
 )
 
 type Event struct {
@@ -13,7 +14,7 @@ type Event struct {
 
 type Events []Event
 
-func NewEventsFromResult(tx *flow.TransactionResult) Events {
+func EventsFromTransaction(tx *flow.TransactionResult) Events {
 	var events Events
 	for _, event := range tx.Events {
 		events = append(events, newEvent(event))

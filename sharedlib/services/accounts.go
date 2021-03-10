@@ -106,7 +106,7 @@ func (a *Accounts) Create(
 		return nil, err
 	}
 
-	events := lib.NewEventsFromResult(result)
+	events := lib.EventsFromTransaction(result)
 	newAccountAddress := events.GetAddress()
 
 	if newAccountAddress == nil {
