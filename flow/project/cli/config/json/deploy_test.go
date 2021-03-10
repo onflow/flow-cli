@@ -28,11 +28,11 @@ import (
 func Test_ConfigDeploymentsSimple(t *testing.T) {
 	b := []byte(`{
 		"testnet": {
-			"account-2": ["FungibleToken", "NonFungibleToken", "Kibble", "KittyItems"]
+			"account-1": ["FungibleToken", "NonFungibleToken", "Kibble", "KittyItems"]
 		}, 
 		"emulator": {
-			"account-3": ["KittyItems", "KittyItemsMarket"],
-			"account-4": ["FungibleToken", "NonFungibleToken", "Kibble", "KittyItems", "KittyItemsMarket"]
+			"account-2": ["KittyItems", "KittyItemsMarket"],
+			"account-3": ["FungibleToken", "NonFungibleToken", "Kibble", "KittyItems", "KittyItemsMarket"]
 		}
 	}`)
 
@@ -42,15 +42,39 @@ func Test_ConfigDeploymentsSimple(t *testing.T) {
 
 	deployments := jsonDeployments.transformToConfig()
 
-	//TODO: fix test to be sorted since its not necessary correct order
-	assert.Equal(t, "account-2", deployments.GetByNetwork("testnet")[0].Account)
-	assert.Equal(t, []string{"FungibleToken", "NonFungibleToken", "Kibble", "KittyItems"}, deployments.GetByNetwork("testnet")[0].Contracts)
+	const account1Name = "account-1"
+	const account2Name = "account-2"
+	const account3Name = "account-3"
 
+	assert.Equal(t, 1, len(deployments.GetByNetwork("testnet")))
 	assert.Equal(t, 2, len(deployments.GetByNetwork("emulator")))
-	assert.Equal(t, "account-3", deployments.GetByAccountAndNetwork("account-3", "emulator")[0].Account)
-	assert.Equal(t, "account-4", deployments.GetByAccountAndNetwork("account-4", "emulator")[0].Account)
-	assert.Equal(t, []string{"KittyItems", "KittyItemsMarket"}, deployments.GetByNetwork("emulator")[0].Contracts)
-	assert.Equal(t, []string{"FungibleToken", "NonFungibleToken", "Kibble", "KittyItems", "KittyItemsMarket"}, deployments.GetByNetwork("emulator")[1].Contracts)
+
+	account1Deployment := deployments.GetByAccountAndNetwork(account1Name, "testnet")
+	account2Deployment := deployments.GetByAccountAndNetwork(account2Name, "emulator")
+	account3Deployment := deployments.GetByAccountAndNetwork(account3Name, "emulator")
+
+	require.Len(t, account1Deployment, 1)
+	require.Len(t, account2Deployment, 1)
+	require.Len(t, account3Deployment, 1)
+
+	assert.Equal(t, account1Name, account1Deployment[0].Account)
+	assert.Equal(t, account2Name, account2Deployment[0].Account)
+	assert.Equal(t, account3Name, account3Deployment[0].Account)
+
+	assert.Equal(t,
+		[]string{"FungibleToken", "NonFungibleToken", "Kibble", "KittyItems"},
+		account1Deployment[0].Contracts,
+	)
+
+	assert.Equal(t,
+		[]string{"KittyItems", "KittyItemsMarket"},
+		account2Deployment[0].Contracts,
+	)
+
+	assert.Equal(t,
+		[]string{"FungibleToken", "NonFungibleToken", "Kibble", "KittyItems", "KittyItemsMarket"},
+		account3Deployment[0].Contracts,
+	)
 }
 
 func Test_TransformDeployToJSON(t *testing.T) {
