@@ -73,9 +73,23 @@ func (t *Transactions) Send(
 	}
 
 	res, err := t.gateway.GetTransactionResult(tx)
+
+	return tx, res, err
+}
+
+// Send transaction
+func (t *Transactions) GetStatus(
+	transactionID string,
+	waitSeal bool,
+) (*flow.Transaction, *flow.TransactionResult, error) {
+	txID := flow.HexToID(transactionID)
+
+	tx, err := t.gateway.GetTransaction(txID)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	return tx, res, nil
+	result, err := t.gateway.GetTransactionResult(tx)
+
+	return tx, result, err
 }
