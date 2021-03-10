@@ -12,6 +12,7 @@ type Services struct {
 	Transactions *Transactions
 	Keys         *Keys
 	Events       *Events
+	Collections  *Collections
 }
 
 // NewServices create new services with gateway and project
@@ -22,5 +23,6 @@ func NewServices(gateway gateway.Gateway, project cli.Project) *Services {
 		Transactions: NewTransactions(gateway, project),
 		Keys:         NewKeys(gateway, project),
 		Events:       NewEvents(gateway, project),
+		Collections:  NewCollections(gateway, project),
 	}
 }
