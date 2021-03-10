@@ -30,7 +30,7 @@ install-tools:
 
 .PHONY: test
 test:
-	GO111MODULE=on go test -coverprofile=$(COVER_PROFILE) $(if $(JSON_OUTPUT),-json,) ./...
+	GO111MODULE=on go test -coverprofile=$(COVER_PROFILE) -count=1 $(if $(JSON_OUTPUT),-json,) ./...
 
 .PHONY: coverage
 coverage:
