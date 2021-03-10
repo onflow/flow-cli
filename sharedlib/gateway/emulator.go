@@ -3,6 +3,8 @@ package gateway
 import (
 	"fmt"
 
+	"github.com/onflow/flow-go-sdk/client"
+
 	"github.com/onflow/cadence"
 	"github.com/onflow/flow-cli/flow/cli"
 	emulator "github.com/onflow/flow-emulator"
@@ -39,6 +41,18 @@ func (g *EmulatorGateway) GetTransactionResult(tx *flow.Transaction) (*flow.Tran
 	return nil, fmt.Errorf("Not Supported Yet")
 }
 
+func (g *EmulatorGateway) GetTransaction(id flow.Identifier) (*flow.Transaction, error) {
+	return nil, fmt.Errorf("Not Supported Yet")
+}
+
 func (g *EmulatorGateway) ExecuteScript(script []byte, arguments []cadence.Value) (cadence.Value, error) {
+	return nil, fmt.Errorf("Not Supported Yet")
+}
+
+func (g *EmulatorGateway) GetLatestBlock() (*flow.Block, error) {
+	return nil, fmt.Errorf("Not Supported Yet")
+}
+
+func (g *EmulatorGateway) GetEvents(string, uint64, uint64) ([]client.BlockEvents, error) {
 	return nil, fmt.Errorf("Not Supported Yet")
 }
