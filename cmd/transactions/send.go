@@ -24,7 +24,7 @@ func NewSendCmd() cmd.Command {
 		cmd: &cobra.Command{
 			Use:     "send <filename>",
 			Short:   "Send a transaction",
-			Example: `flow transactions send --code=tx.cdc --args="[{\"type\": \"String\", \"value\": \"Hello, Cadence\"}]"`,
+			Example: `flow transactions send tx.cdc --args String:"Hello world"`,
 		},
 	}
 }
