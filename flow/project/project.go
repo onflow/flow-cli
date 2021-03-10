@@ -19,6 +19,10 @@
 package project
 
 import (
+	"bytes"
+	"fmt"
+	"text/tabwriter"
+
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/flow/project/commands/deploy_contracts"
@@ -32,4 +36,25 @@ var Cmd = &cobra.Command{
 
 func init() {
 	Cmd.AddCommand(deploy_contracts.Cmd)
+}
+
+type ProjectResult struct {
+}
+
+// JSON convert result to JSON
+func (r *ProjectResult) JSON() interface{} {
+	return r
+}
+
+// String convert result to string
+func (r *ProjectResult) String() string {
+	var b bytes.Buffer
+	writer := tabwriter.NewWriter(&b, 0, 8, 1, '\t', tabwriter.AlignRight)
+	writer.Flush()
+	return b.String()
+}
+
+// Oneliner show result as one liner grep friendly
+func (r *ProjectResult) Oneliner() string {
+	return fmt.Sprintf("%s", "")
 }
