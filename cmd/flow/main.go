@@ -26,6 +26,10 @@ import (
 	"os"
 	"strings"
 
+	"github.com/onflow/flow-cli/cmd/events"
+
+	"github.com/onflow/flow-cli/cmd/keys"
+
 	"github.com/onflow/flow-cli/cmd/transactions"
 
 	"github.com/onflow/flow-cli/cmd"
@@ -36,9 +40,7 @@ import (
 	"github.com/onflow/flow-cli/flow/cli"
 	"github.com/onflow/flow-cli/flow/collections"
 	"github.com/onflow/flow-cli/flow/emulator"
-	"github.com/onflow/flow-cli/flow/events"
 	"github.com/onflow/flow-cli/flow/initialize"
-	"github.com/onflow/flow-cli/flow/keys"
 	"github.com/onflow/flow-cli/flow/project"
 	"github.com/onflow/flow-cli/flow/version"
 	"github.com/onflow/flow-cli/sharedlib/gateway"
@@ -58,9 +60,7 @@ func init() {
 	c.AddCommand(initialize.Cmd)
 	c.AddCommand(blocks.Cmd)
 	c.AddCommand(collections.Cmd)
-	c.AddCommand(keys.Cmd)
 	c.AddCommand(emulator.Cmd)
-	c.AddCommand(events.Cmd)
 	c.AddCommand(cadence.Cmd)
 	c.AddCommand(version.Cmd)
 
@@ -90,6 +90,13 @@ func newInit() {
 
 	c.AddCommand(transactions.Cmd)
 	addCommand(transactions.Cmd, transactions.NewSendCmd())
+	addCommand(transactions.Cmd, transactions.NewStatusCmd())
+
+	c.AddCommand(keys.Cmd)
+	addCommand(keys.Cmd, keys.NewGenerateCmd())
+
+	c.AddCommand(events.Cmd)
+	addCommand(events.Cmd, events.NewGetCmd())
 
 	c.PersistentFlags().StringVarP(&host, "host", "", host, "Flow Access API host address")
 	c.PersistentFlags().StringVarP(&filter, "filter", "", filter, "Filter result values by property name")
