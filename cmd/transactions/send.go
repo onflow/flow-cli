@@ -35,7 +35,7 @@ func (a *cmdSend) Run(
 	project *cli.Project,
 	services *services.Services,
 ) (cmd.Result, error) {
-	tx, result, err := services.Transactions.Send(args[0], a.flags.Signer, a.flags.Args)
+	tx, result, err := services.Transactions.Send(args[0], a.flags.Signer, a.flags.Args, a.flags.ArgsJSON)
 	return &TransactionResult{
 		result: result,
 		tx:     tx,
