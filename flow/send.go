@@ -94,6 +94,11 @@ func SendTransaction(host string, signerAccount *Account, tx *flow.Transaction, 
 	}
 }
 
+func PrepareAndSendTransaction(host string, signerAccount *Account, tx *flow.Transaction, payer flow.Address, withResults bool) {
+	preparedTx := PrepareTransaction(host, signerAccount, tx, payer)
+	SendTransaction(host, signerAccount, preparedTx, withResults)
+}
+
 func SignTransaction(host string, signerAccount *Account, signerRole SignerRole, tx *flow.Transaction) *flow.Transaction {
 	ctx := context.Background()
 
