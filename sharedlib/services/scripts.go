@@ -31,17 +31,9 @@ func (s *Scripts) Execute(scriptFilename string, args []string, argsJSON string)
 		return nil, err
 	}
 
-	var scriptArgs []cadence.Value
-	if argsJSON != "" {
-		scriptArgs, err = lib.ParseArgumentsJSON(argsJSON)
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		scriptArgs, err = lib.ParseArgumentsCommaSplit(args)
-		if err != nil {
-			return nil, err
-		}
+	scriptArgs, err := lib.ParseArguments(args, argsJSON)
+	if err != nil {
+		return nil, err
 	}
 
 	return s.gateway.ExecuteScript(script, scriptArgs)

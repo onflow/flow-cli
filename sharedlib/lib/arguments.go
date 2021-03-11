@@ -64,3 +64,15 @@ func ParseArgumentsCommaSplit(input []string) ([]cadence.Value, error) {
 
 	return cadenceArgs, err
 }
+
+func ParseArguments(args []string, argsJSON string) (scriptArgs []cadence.Value, err error) {
+	if argsJSON != "" {
+		scriptArgs, err = ParseArgumentsJSON(argsJSON)
+	} else {
+		scriptArgs, err = ParseArgumentsCommaSplit(args)
+	}
+	if err != nil {
+		return nil, err
+	}
+	return
+}

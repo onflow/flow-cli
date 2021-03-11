@@ -31,6 +31,7 @@ func (t *Transactions) Send(
 	transactionFilename string,
 	signerName string,
 	args []string,
+	argsJSON string,
 ) (*flow.Transaction, *flow.TransactionResult, error) {
 
 	signer := t.project.GetAccountByName(signerName)
@@ -55,7 +56,7 @@ func (t *Transactions) Send(
 		SetScript(code).
 		AddAuthorizer(signer.Address())
 
-	transactionArguments, err := lib.ParseArgumentsCommaSplit(args)
+	transactionArguments, err := lib.ParseArguments(args, argsJSON)
 	if err != nil {
 		return nil, nil, err
 	}
