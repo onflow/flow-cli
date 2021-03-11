@@ -93,11 +93,13 @@ var Cmd = &cobra.Command{
 			tx.AddAuthorizer(authorizerAddress)
 		}
 
-		tx = cli.SignTransaction(projectConf.HostWithOverride(conf.Host), signerAccount, signerRole, tx, payer)
+		cli.PrepareTransaction(projectConf.HostWithOverride(conf.Host), signerAccount, tx, payer)
+
+		tx = cli.SignTransaction(projectConf.HostWithOverride(conf.Host), signerAccount, signerRole, tx)
 
 		fmt.Printf("%s encoded transaction written to %s\n", conf.Encoding, conf.Output)
 
-		output := fmt.Sprintf("%x\n", tx.Encode())
+		output := fmt.Sprintf("%x", tx.Encode())
 		err = ioutil.WriteFile(conf.Output, []byte(output), os.ModePerm)
 		if err != nil {
 			cli.Exitf(1, "Failed to save encoded transaction to file %s", conf.Output)

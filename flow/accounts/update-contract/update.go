@@ -62,11 +62,17 @@ var Cmd = &cobra.Command{
 			},
 		)
 
-		cli.SendTransaction(
+		cli.PrepareTransaction(
 			projectConf.HostWithOverride(conf.Host),
 			signerAccount,
 			tx,
 			signerAccount.Address,
+		)
+
+		cli.SendTransaction(
+			projectConf.HostWithOverride(conf.Host),
+			signerAccount,
+			tx,
 			conf.Results,
 		)
 	},

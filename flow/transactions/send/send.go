@@ -60,30 +60,37 @@ var Cmd = &cobra.Command{
 		} else if conf.Partial != "" {
 			partialTxHex, err := ioutil.ReadFile(conf.Partial)
 			if err != nil {
-				cli.Exitf(1, "Failed to read partial transaction from %s", conf.Partial)
+				cli.Exitf(1, "Failed to read partial transaction from %s: %v", conf.Partial, err)
 			}
 			partialTxBytes, err := hex.DecodeString(string(partialTxHex))
 			if err != nil {
-				cli.Exitf(1, "Failed to decode partial transaction from %s", conf.Partial)
+				cli.Exitf(1, "Failed to decode partial transaction from %s: %v", conf.Partial, err)
 			}
 			tx, err = flow.DecodeTransaction(partialTxBytes)
 			if err != nil {
-				cli.Exitf(1, "Failed to decode transaction from %s", conf.Partial)
+				cli.Exitf(1, "Failed to decode transaction from %s: %v", conf.Partial, err)
 			}
 		} else {
 			if conf.Code != "" {
 				code, err = ioutil.ReadFile(conf.Code)
 				if err != nil {
-					cli.Exitf(1, "Failed to read transaction script from %s", conf.Code)
+					cli.Exitf(1, "Failed to read transaction script from %s: %v", conf.Code, err)
 				}
 			}
 
 			tx = flow.NewTransaction().
 				SetScript(code).
 				AddAuthorizer(signerAccount.Address)
+
+			tx = cli.PrepareTransaction(projectConf.HostWithOverride(conf.Host), signerAccount, tx, signerAccount.Address)
 		}
 
-		cli.SendTransaction(projectConf.HostWithOverride(conf.Host), signerAccount, tx, signerAccount.Address, conf.Results)
+		cli.SendTransaction(
+			projectConf.HostWithOverride(conf.Host),
+			signerAccount,
+			tx,
+			conf.Results,
+		)
 	},
 }
 
