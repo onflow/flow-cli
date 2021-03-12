@@ -26,24 +26,19 @@ import (
 	"os"
 	"strings"
 
-	"github.com/onflow/flow-cli/cmd/emulator"
-
-	"github.com/onflow/flow-cli/cmd/collections"
-
-	"github.com/onflow/flow-cli/cmd/events"
-
-	"github.com/onflow/flow-cli/cmd/keys"
-
-	"github.com/onflow/flow-cli/cmd/transactions"
+	"github.com/onflow/flow-cli/cmd/project"
 
 	"github.com/onflow/flow-cli/cmd"
 	"github.com/onflow/flow-cli/cmd/accounts"
+	"github.com/onflow/flow-cli/cmd/collections"
+	"github.com/onflow/flow-cli/cmd/emulator"
+	"github.com/onflow/flow-cli/cmd/events"
+	"github.com/onflow/flow-cli/cmd/keys"
 	"github.com/onflow/flow-cli/cmd/scripts"
+	"github.com/onflow/flow-cli/cmd/transactions"
 	"github.com/onflow/flow-cli/flow/blocks"
 	"github.com/onflow/flow-cli/flow/cadence"
 	"github.com/onflow/flow-cli/flow/cli"
-	"github.com/onflow/flow-cli/flow/initialize"
-	"github.com/onflow/flow-cli/flow/project"
 	"github.com/onflow/flow-cli/flow/version"
 	"github.com/onflow/flow-cli/sharedlib/gateway"
 	"github.com/onflow/flow-cli/sharedlib/services"
@@ -58,8 +53,6 @@ var c = &cobra.Command{
 }
 
 func init() {
-	c.AddCommand(project.Cmd)
-	c.AddCommand(initialize.Cmd)
 	c.AddCommand(blocks.Cmd)
 	c.AddCommand(cadence.Cmd)
 	c.AddCommand(version.Cmd)
@@ -103,6 +96,10 @@ func newInit() {
 	c.AddCommand(collections.Cmd)
 	addCommand(collections.Cmd, collections.NewGetCmd())
 
+	c.AddCommand(project.Cmd)
+	addCommand(project.Cmd, project.NewInitCmd())
+	addCommand(project.Cmd, project.NewDeployCmd())
+
 	c.PersistentFlags().StringVarP(&host, "host", "", host, "Flow Access API host address")
 	c.PersistentFlags().StringVarP(&filter, "filter", "", filter, "Filter result values by property name")
 	c.PersistentFlags().StringVarP(&format, "format", "", format, "Format to show result in")
@@ -117,14 +114,13 @@ func newInit() {
 // we have one place to handle all errors and ensure commands have consistent results
 func addCommand(c *cobra.Command, command cmd.Command) {
 	command.GetCmd().RunE = func(cmd *cobra.Command, args []string) error {
-
 		// initialize project but ignore error since config can be missing
 		project, _ := cli.LoadProject(cli.ConfigPath)
 
 		gateway, err := createGateway(cmd, project)
 		handleError("Gateway Error", err)
 
-		service := services.NewServices(gateway, *project)
+		service := services.NewServices(gateway, project)
 
 		// run command
 		result, err := command.Run(cmd, args, project, service)
@@ -226,14 +222,16 @@ func handleError(description string, err error) {
 	// handle rpc error
 	switch t := err.(type) {
 	case *client.RPCError:
-		fmt.Fprintf(os.Stderr, "🔴️Grpc Error: %s \n", t.GRPCStatus().Err)
+		fmt.Fprintf(os.Stderr, "🔴️ Grpc Error: %s \n", t.GRPCStatus().Err)
 	default:
 		if strings.Contains(err.Error(), "transport:") {
-			fmt.Fprintf(os.Stderr, "🔴️%s \n", strings.Split(err.Error(), "transport:")[1])
+			fmt.Fprintf(os.Stderr, "🔴️ %s \n", strings.Split(err.Error(), "transport:")[1])
 		} else if strings.Contains(err.Error(), "NotFound desc =") {
-			fmt.Fprintf(os.Stderr, "🔴️Not Found:%s \n", strings.Split(err.Error(), "NotFound desc =")[1])
+			fmt.Fprintf(os.Stderr, "🔴️ Not Found:%s \n", strings.Split(err.Error(), "NotFound desc =")[1])
+		} else if strings.Contains(err.Error(), "code = InvalidArgument desc = ") {
+			fmt.Fprintf(os.Stderr, "🔴 Invalid argument: %s \n", strings.Split(err.Error(), "code = InvalidArgument desc = ")[1])
 		} else {
-			fmt.Fprintf(os.Stderr, "🔴️%s: %s", description, err)
+			fmt.Fprintf(os.Stderr, "🔴️ %s: %s", description, err)
 		}
 	}
 

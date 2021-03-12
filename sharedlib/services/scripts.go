@@ -13,11 +13,11 @@ import (
 // Scripts service handles all interactions for scripts
 type Scripts struct {
 	gateway gateway.Gateway
-	project cli.Project
+	project *cli.Project
 }
 
 // NewScripts create new script service
-func NewScripts(gateway gateway.Gateway, project cli.Project) *Scripts {
+func NewScripts(gateway gateway.Gateway, project *cli.Project) *Scripts {
 	return &Scripts{
 		gateway: gateway,
 		project: project,
