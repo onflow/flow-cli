@@ -31,7 +31,7 @@ func (r *AccountResult) String() string {
 	var b bytes.Buffer
 	writer := tabwriter.NewWriter(&b, 0, 8, 1, '\t', tabwriter.AlignRight)
 
-	fmt.Fprintf(writer, "Address\t %s\n", r.Address)
+	fmt.Fprintf(writer, "Address\t 0x%s\n", r.Address)
 	fmt.Fprintf(writer, "Balance\t %d\n", r.Balance)
 
 	fmt.Fprintf(writer, "Keys\t %d\n", len(r.Keys))
@@ -58,7 +58,7 @@ func (r *AccountResult) String() string {
 
 // Oneliner show result as one liner grep friendly
 func (r *AccountResult) Oneliner() string {
-	return fmt.Sprintf("Address: %s, Balance: %v, Keys: %s", r.Address, r.Balance, r.Keys[0].PublicKey)
+	return fmt.Sprintf("Address: 0x%s, Balance: %v, Keys: %s", r.Address, r.Balance, r.Keys[0].PublicKey)
 }
 
 func (r *AccountResult) ToConfig() string {
