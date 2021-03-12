@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/onflow/flow-go-sdk/crypto"
+
 	"github.com/onflow/flow-go-sdk/templates"
 
 	"github.com/onflow/flow-cli/flow/cli"
@@ -15,22 +17,38 @@ import (
 // Project service handles all interactions for project
 type Project struct {
 	gateway gateway.Gateway
-	project cli.Project
+	project *cli.Project
 }
 
 // NewProject create new project service
-func NewProject(gateway gateway.Gateway, project cli.Project) *Keys {
-	return &Keys{
+func NewProject(gateway gateway.Gateway, project *cli.Project) *Project {
+	return &Project{
 		gateway: gateway,
 		project: project,
 	}
 }
 
-func (p *Project) Init() {
+func (p *Project) Init(reset bool, serviceKeySigAlgo string, serviceKeyHashAlgo string, servicePrivateKey string) (*cli.Project, error) {
+	if !cli.ProjectExists(cli.DefaultConfigPath) || reset {
+		serviceKeySigAlgo := crypto.StringToSignatureAlgorithm(serviceKeySigAlgo)
+		serviceKeyHashAlgo := crypto.StringToHashAlgorithm(serviceKeyHashAlgo)
 
+		project := cli.InitProject(serviceKeySigAlgo, serviceKeyHashAlgo)
+
+		if len(servicePrivateKey) > 0 {
+			serviceKey := cli.MustDecodePrivateKeyHex(serviceKeySigAlgo, servicePrivateKey)
+			project.SetEmulatorServiceKey(serviceKey)
+		}
+
+		project.Save(cli.DefaultConfigPath)
+
+		return project, nil
+	} else {
+		return nil, fmt.Errorf("configuration already exists at: %s, if you want to reset configuration use the reset flag", cli.DefaultConfigPath)
+	}
 }
 
-func (p *Project) Deploy(network string, update bool) (*Project, error) {
+func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, error) {
 	// check there are not multiple accounts with same contract
 	// TODO: specify which contract by name is a problem
 	if p.project.ContractConflictExists(network) {
@@ -121,7 +139,7 @@ func (p *Project) Deploy(network string, update bool) (*Project, error) {
 		fmt.Println("\n❌ Failed to deploy all contracts")
 	}
 
-	return nil, nil
+	return contracts, nil
 }
 
 func prepareUpdateContractTransaction(
