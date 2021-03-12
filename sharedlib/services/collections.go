@@ -9,11 +9,11 @@ import (
 // Collections service handles all interactions for collections
 type Collections struct {
 	gateway gateway.Gateway
-	project cli.Project
+	project *cli.Project
 }
 
 // NewCollections create new collection service
-func NewCollections(gateway gateway.Gateway, project cli.Project) *Collections {
+func NewCollections(gateway gateway.Gateway, project *cli.Project) *Collections {
 	return &Collections{
 		gateway: gateway,
 		project: project,

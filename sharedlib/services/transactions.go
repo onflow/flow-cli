@@ -15,11 +15,11 @@ import (
 // Scripts service handles all interactions for transactions
 type Transactions struct {
 	gateway gateway.Gateway
-	project cli.Project
+	project *cli.Project
 }
 
 // NewTransactions create new transaction service
-func NewTransactions(gateway gateway.Gateway, project cli.Project) *Transactions {
+func NewTransactions(gateway gateway.Gateway, project *cli.Project) *Transactions {
 	return &Transactions{
 		gateway: gateway,
 		project: project,

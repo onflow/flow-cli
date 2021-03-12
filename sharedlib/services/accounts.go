@@ -17,11 +17,11 @@ import (
 // Accounts service handles all interactions for accounts
 type Accounts struct {
 	gateway gateway.Gateway
-	project cli.Project
+	project *cli.Project
 }
 
 // NewAccounts create new account service
-func NewAccounts(gateway gateway.Gateway, project cli.Project) *Accounts {
+func NewAccounts(gateway gateway.Gateway, project *cli.Project) *Accounts {
 	return &Accounts{
 		gateway: gateway,
 		project: project,

@@ -13,11 +13,11 @@ import (
 // Events service handles all interactions for scripts
 type Events struct {
 	gateway gateway.Gateway
-	project cli.Project
+	project *cli.Project
 }
 
 // NewEvents create new event service
-func NewEvents(gateway gateway.Gateway, project cli.Project) *Events {
+func NewEvents(gateway gateway.Gateway, project *cli.Project) *Events {
 	return &Events{
 		gateway: gateway,
 		project: project,

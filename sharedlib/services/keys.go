@@ -11,11 +11,11 @@ import (
 // Keys service handles all interactions for keys
 type Keys struct {
 	gateway gateway.Gateway
-	project cli.Project
+	project *cli.Project
 }
 
 // NewTransactions create new transaction service
-func NewKeys(gateway gateway.Gateway, project cli.Project) *Keys {
+func NewKeys(gateway gateway.Gateway, project *cli.Project) *Keys {
 	return &Keys{
 		gateway: gateway,
 		project: project,
