@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package cli
+package util
 
 import (
 	"fmt"
