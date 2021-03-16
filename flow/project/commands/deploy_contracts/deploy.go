@@ -24,6 +24,8 @@ import (
 	"log"
 	"strings"
 
+	"github.com/onflow/flow-cli/sharedlib/util"
+
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/client"
 	"github.com/onflow/flow-go-sdk/templates"
@@ -132,7 +134,7 @@ var Cmd = &cobra.Command{
 
 			getResult := sender.Send(ctx, tx, targetAccount)
 
-			spinner := cli.NewSpinner(
+			spinner := util.NewSpinner(
 				fmt.Sprintf("%s ", cli.Bold(contract.Name())),
 				" deploying...",
 			)

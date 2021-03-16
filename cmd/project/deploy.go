@@ -1,10 +1,6 @@
 package project
 
 import (
-	"bytes"
-	"fmt"
-	"text/tabwriter"
-
 	"github.com/onflow/flow-cli/cmd"
 	"github.com/onflow/flow-cli/flow/cli"
 	"github.com/onflow/flow-cli/flow/project/contracts"
@@ -61,20 +57,18 @@ type DeployResult struct {
 
 // JSON convert result to JSON
 func (r *DeployResult) JSON() interface{} {
-	return r
+	result := make(map[string]string, 0)
+
+	for _, contract := range r.contracts {
+		result[contract.Name()] = contract.Target().String()
+	}
+
+	return result
 }
 
 // String convert result to string
 func (r *DeployResult) String() string {
-	var b bytes.Buffer
-	writer := tabwriter.NewWriter(&b, 0, 8, 1, '\t', tabwriter.AlignRight)
-
-	for _, contract := range r.contracts {
-		fmt.Fprintf(writer, "%s\t0x%s\n", cli.Bold(contract.Name()), contract.Target())
-	}
-
-	writer.Flush()
-	return b.String()
+	return ""
 }
 
 // Oneliner show result as one liner grep friendly
