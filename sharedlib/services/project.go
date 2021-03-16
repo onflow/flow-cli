@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/onflow/flow-cli/sharedlib/util"
+
 	"github.com/onflow/flow-go-sdk/crypto"
 
 	"github.com/onflow/flow-go-sdk/templates"
@@ -18,13 +20,19 @@ import (
 type Project struct {
 	gateway gateway.Gateway
 	project *cli.Project
+	logger  util.Logger
 }
 
 // NewProject create new project service
-func NewProject(gateway gateway.Gateway, project *cli.Project) *Project {
+func NewProject(
+	gateway gateway.Gateway,
+	project *cli.Project,
+	logger util.Logger,
+) *Project {
 	return &Project{
 		gateway: gateway,
 		project: project,
+		logger:  logger,
 	}
 }
 
@@ -81,15 +89,13 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 		return nil, err
 	}
 
-	// TODO: change to log
-	fmt.Printf(
-		"Deploying %v contracts for accounts: %s\n",
+	p.logger.Info(fmt.Sprintf(
+		"Deploying %v contracts for accounts: %s",
 		len(contracts),
 		strings.Join(p.project.GetAllAccountNames(), ","),
-	)
+	))
 
 	var errs []error
-
 	for _, contract := range contracts {
 		targetAccount := p.project.GetAccountByAddress(contract.Target().String())
 
@@ -103,6 +109,9 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 		_, exists := targetAccountInfo.Contracts[contract.Name()]
 		if exists {
 			if !update {
+				p.logger.Info(fmt.Sprintf(
+					"❌  Contract %s is already deployed to account, use --update flag to force update.", contract.Name(),
+				))
 				continue
 			}
 
@@ -113,8 +122,7 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 
 		tx, err = p.gateway.SendTransaction(tx, targetAccount)
 
-		// TODO: part of verbose logging
-		spinner := cli.NewSpinner(
+		spinner := util.NewSpinner(
 			fmt.Sprintf("%s ", cli.Bold(contract.Name())),
 			" deploying...",
 		)
@@ -122,21 +130,25 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 
 		result, err := p.gateway.GetTransactionResult(tx)
 
-		// TODO: part of verbose logging
 		if result.Error == nil {
-			spinner.Stop(fmt.Sprintf("%s -> 0x%s", cli.Green(contract.Name()), contract.Target()))
+			p.logger.Info(
+				fmt.Sprintf("%s -> 0x%s", cli.Green(contract.Name()), contract.Target()),
+			)
 		} else {
-			spinner.Stop(fmt.Sprintf("%s error", cli.Red(contract.Name())))
+			p.logger.Info(
+				fmt.Sprintf("%s error", cli.Red(contract.Name())),
+			)
+
 			errs = append(errs, result.Error)
 		}
 	}
 
 	// TODO: part of logging
 	if len(errs) == 0 {
-		fmt.Println("\n✅ All contracts deployed successfully")
+		p.logger.Info("\n✨  All contracts deployed successfully")
 	} else {
-		// REF: better output when errors
-		fmt.Println("\n❌ Failed to deploy all contracts")
+		p.logger.Info("❌  Failed to deploy all contracts")
+		return nil, fmt.Errorf(`%v`, errs)
 	}
 
 	return contracts, nil
