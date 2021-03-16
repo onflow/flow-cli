@@ -23,6 +23,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"strings"
 
 	"github.com/onflow/flow-go-sdk"
 	"github.com/psiemens/sconfig"
@@ -34,12 +35,12 @@ import (
 type Config struct {
 	Signer                string   `default:"service" flag:"signer,s"`
 	Role                  string   `default:"authorizer" flag:"role"`
-	AdditionalAuthorizers []string `flag:"Additional authorizer addresses to add to the transaction"`
+	AdditionalAuthorizers []string `flag:"additional-authorizers" info:"Additional authorizer addresses to add to the transaction"`
 	PayerAddress          string   `flag:"payer" info:"Specify payer of the transaction. Defaults to current signer."`
 	Code                  string   `flag:"code,c" info:"path to Cadence file"`
 	Host                  string   `flag:"host" info:"Flow Access API host address"`
 	Encoding              string   `default:"hexrlp" flag:"encoding" info:"Encoding to use for transactio (rlp)"`
-	Output                string   `default:"transaction.rlp" flag:"output,o" info:"Output location for transaction file"`
+	Output                string   `default:"" flag:"output,o" info:"Output location for transaction file"`
 }
 
 var conf Config
@@ -93,11 +94,17 @@ var Cmd = &cobra.Command{
 			tx.AddAuthorizer(authorizerAddress)
 		}
 
-		tx = cli.SignTransaction(projectConf.HostWithOverride(conf.Host), signerAccount, signerRole, tx, payer)
+		cli.PrepareTransaction(projectConf.HostWithOverride(conf.Host), signerAccount, tx, payer)
+
+		tx = cli.SignTransaction(projectConf.HostWithOverride(conf.Host), signerAccount, signerRole, tx)
 
 		fmt.Printf("%s encoded transaction written to %s\n", conf.Encoding, conf.Output)
 
-		output := fmt.Sprintf("%x\n", tx.Encode())
+		output := fmt.Sprintf("%x", tx.Encode())
+		if len(strings.TrimSpace(conf.Output)) == 0 {
+			fmt.Println(output)
+			return
+		}
 		err = ioutil.WriteFile(conf.Output, []byte(output), os.ModePerm)
 		if err != nil {
 			cli.Exitf(1, "Failed to save encoded transaction to file %s", conf.Output)
