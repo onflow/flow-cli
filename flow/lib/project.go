@@ -71,19 +71,6 @@ func LoadProject(configFilePath []string) (*Project, error) {
 	return proj, nil
 }
 
-func LoadHostForNetwork(host string, network string) (string, error) {
-	if host == "" {
-		project, err := LoadProject(ConfigPath)
-		if err != nil {
-			return "", errors.New("Couldn't find host, use --host flag or initialize config with: flow project init.")
-		}
-
-		host = project.DefaultHost(network)
-	}
-
-	return host, nil
-}
-
 // ProjectExists checks if project exists
 func ProjectExists(path string) bool {
 	return config.Exists(path)

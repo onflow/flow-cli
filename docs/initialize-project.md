@@ -162,7 +162,7 @@ Each account must include a name, which is then referenced throughout the config
 
 #### Simple Format
 
-When using the simple format, simply specify the address for the account and a single hex-encoded
+When using the simple format, simply specify the address for the account, and a single hex-encoded
 private key.
 
 ```json

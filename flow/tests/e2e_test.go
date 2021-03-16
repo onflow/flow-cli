@@ -132,13 +132,13 @@ func TestAccount(t *testing.T) {
 }
 
 func TestEvents(t *testing.T) {
-	gateway, err := gateway.NewGrpcGateway(host)
+	gw, err := gateway.NewGrpcGateway(host)
 	require.NoError(t, err)
 
 	project, err := lib.LoadProject([]string{conf})
 	require.NoError(t, err)
 
-	events := services.NewEvents(gateway, project, logger)
+	events := services.NewEvents(gw, project, logger)
 
 	t.Run("Get Event", func(t *testing.T) {
 		event, err := events.Get("flow.createAccount", "0", "100")
@@ -149,13 +149,13 @@ func TestEvents(t *testing.T) {
 }
 
 func TestKeys(t *testing.T) {
-	gateway, err := gateway.NewGrpcGateway(host)
+	gw, err := gateway.NewGrpcGateway(host)
 	require.NoError(t, err)
 
 	project, err := lib.LoadProject([]string{conf})
 	require.NoError(t, err)
 
-	keys := services.NewKeys(gateway, project, logger)
+	keys := services.NewKeys(gw, project, logger)
 
 	t.Run("Generate keys", func(t *testing.T) {
 		key, err := keys.Generate("", "ECDSA_P256")
@@ -167,13 +167,13 @@ func TestKeys(t *testing.T) {
 }
 
 func TestProject(t *testing.T) {
-	gateway, err := gateway.NewGrpcGateway(host)
+	gw, err := gateway.NewGrpcGateway(host)
 	require.NoError(t, err)
 
 	project, err := lib.LoadProject([]string{conf})
 	require.NoError(t, err)
 
-	projects := services.NewProject(gateway, project, logger)
+	projects := services.NewProject(gw, project, logger)
 
 	t.Run("Deploy project", func(t *testing.T) {
 		contracts, err := projects.Deploy("emulator", true)
@@ -211,13 +211,13 @@ func TestScripts(t *testing.T) {
 }
 
 func TestTransactions(t *testing.T) {
-	gateway, err := gateway.NewGrpcGateway(host)
+	gw, err := gateway.NewGrpcGateway(host)
 	require.NoError(t, err)
 
 	project, err := lib.LoadProject([]string{conf})
 	require.NoError(t, err)
 
-	transactions := services.NewTransactions(gateway, project, logger)
+	transactions := services.NewTransactions(gw, project, logger)
 	var txID1 flow.Identifier
 
 	t.Run("Test Transactions", func(t *testing.T) {

@@ -73,8 +73,8 @@ func ParseArgumentsCommaSplit(input []string) ([]cadence.Value, error) {
 		}
 
 		args = append(args, map[string]string{
-			"value": string(argInput[1]),
-			"type":  string(argInput[0]),
+			"value": argInput[1],
+			"type":  argInput[0],
 		})
 	}
 	jsonArgs, _ := json.Marshal(args)

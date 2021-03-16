@@ -102,7 +102,7 @@ func (a *Accounts) Create(
 		}
 	}
 
-	contractTemplates := []templates.Contract{}
+	var contractTemplates []templates.Contract
 
 	for _, contract := range contracts {
 		contractFlagContent := strings.SplitN(contract, ":", 2)
