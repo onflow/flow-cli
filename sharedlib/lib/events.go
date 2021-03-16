@@ -25,13 +25,14 @@ func EventsFromTransaction(tx *flow.TransactionResult) Events {
 
 func newEvent(event flow.Event) Event {
 	var names []string
+
 	for _, eventType := range event.Value.EventType.Fields {
 		names = append(names, eventType.Identifier)
 	}
 	values := map[string]string{}
 	for id, field := range event.Value.Fields {
 		name := names[id]
-		values[name] = fmt.Sprintf("%v", field)
+		values[name] = fmt.Sprintf("%s", field)
 	}
 
 	return Event{
@@ -43,7 +44,7 @@ func newEvent(event flow.Event) Event {
 func (e *Events) GetAddress() *flow.Address {
 	addr := ""
 	for _, event := range *e {
-		if event.Values["address"] != "" {
+		if event.Type == flow.EventAccountCreated {
 			addr = event.Values["address"]
 		}
 	}
@@ -53,7 +54,8 @@ func (e *Events) GetAddress() *flow.Address {
 	}
 
 	address := flow.HexToAddress(
-		strings.ReplaceAll(addr, "0x", ""),
+		strings.Replace(addr, "0x", "", 1),
 	)
-	return &address // todo: maybe not
+
+	return &address
 }
