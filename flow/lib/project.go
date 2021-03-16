@@ -64,7 +64,6 @@ func LoadProject(configFilePath []string) (*Project, error) {
 
 	proj, err := newProject(conf, composer)
 	if err != nil {
-		// TODO: replace with a more detailed error message
 		return nil, fmt.Errorf("Invalid project configuration: %s", err)
 	}
 

@@ -65,8 +65,6 @@ func (g *GrpcGateway) GetAccount(address flow.Address) (*flow.Account, error) {
 // TODO: replace with txsender - much nicer implemented
 // SendTransaction send a transaction to flow
 func (g *GrpcGateway) SendTransaction(tx *flow.Transaction, signer *lib.Account) (*flow.Transaction, error) {
-	//fmt.Printf("Getting information for account with address 0x%s ...\n", signer.Address()) TODO: change to log
-
 	account, err := g.GetAccount(signer.Address())
 	if err != nil {
 		return nil, fmt.Errorf("Failed to get account with address %s: 0x%s", signer.Address(), err)

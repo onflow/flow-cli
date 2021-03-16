@@ -229,7 +229,6 @@ func (p *Preprocessor) ContractBySource(contractSource string) *Contract {
 func (p *Preprocessor) ContractDeploymentOrder() ([]*Contract, error) {
 	sorted, err := sortByDeploymentOrder(p.contracts)
 	if err != nil {
-		// TODO: add dedicated error types
 		return nil, err
 	}
 

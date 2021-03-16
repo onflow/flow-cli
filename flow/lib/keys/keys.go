@@ -146,7 +146,7 @@ func (a *HexAccountKey) ToConfig() config.AccountKey {
 		SigAlgo:  a.sigAlgo,
 		HashAlgo: a.hashAlgo,
 		Context: map[string]string{
-			"privateKey": a.PrivateKeyHex(), // TODO: replace string with privateKeyField var
+			privateKeyField: a.PrivateKeyHex(),
 		},
 	}
 }

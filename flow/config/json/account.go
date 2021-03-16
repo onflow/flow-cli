@@ -166,7 +166,6 @@ type jsonAccountAdvanced struct {
 	Address string           `json:"address"`
 	Chain   string           `json:"chain"`
 	Keys    []jsonAccountKey `json:"keys"`
-	//TODO: define more properties
 }
 
 type jsonAccountKey struct {

@@ -149,7 +149,7 @@ func createGateway(cmd *cobra.Command, project *lib.Project) (gateway.Gateway, e
 		return gateway.NewEmulatorGateway(), nil
 	}
 
-	// resolve host - todo: handle if host is nil (version command)
+	// resolve host
 	host := hostFlag
 	if host == "" && project != nil {
 		host = project.Host("emulator")
@@ -211,7 +211,7 @@ func outputResult(result string) error {
 		return af.WriteFile(saveFlag, []byte(result), 0644)
 	}
 
-	// default normal output - todo: this can be changed to writer so we can test outputs easier
+	// default normal output
 	fmt.Fprintf(os.Stdout, "%s\n", result)
 	return nil
 }

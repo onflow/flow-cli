@@ -55,7 +55,7 @@ func (s *cmdExecuteScript) Run(
 	project *lib.Project,
 	services *services.Services,
 ) (cmd.Result, error) {
-	value, err := services.Scripts.Execute(args[0], s.flags.Args, s.flags.ArgsJSON) // TODO: add support for json args
+	value, err := services.Scripts.Execute(args[0], s.flags.Args, s.flags.ArgsJSON)
 	return &ScriptResult{value}, err
 }
 

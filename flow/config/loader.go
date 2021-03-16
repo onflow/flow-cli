@@ -198,7 +198,6 @@ func (l *Loader) composeConfig(baseConf *Config, conf *Config) {
 func (l *Loader) loadFile(path string) ([]byte, error) {
 	raw, err := l.af.ReadFile(path)
 
-	// TODO: better handle
 	if err != nil {
 		if os.IsNotExist(err) {
 			return nil, err
