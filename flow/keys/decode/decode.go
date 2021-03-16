@@ -1,7 +1,7 @@
 /*
  * Flow CLI
  *
- * Copyright 2019-2020 Dapper Labs, Inc.
+ * Copyright 2019-2021 Dapper Labs, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,11 +30,6 @@ import (
 	cli "github.com/onflow/flow-cli/flow"
 )
 
-type Config struct {
-}
-
-var conf Config
-
 var Cmd = &cobra.Command{
 	Use:   "decode <public key>",
 	Short: "Decode a public account key hex string",
@@ -53,23 +48,9 @@ var Cmd = &cobra.Command{
 			cli.Exitf(1, "Failed to decode private key bytes: %v", err)
 		}
 
-		fmt.Printf("  PublicKey: %x\n", accountKey.PublicKey.Encode())
-		fmt.Println("  SigAlgo: ", accountKey.SigAlgo)
-		fmt.Println("  HashAlgo: ", accountKey.HashAlgo)
-		fmt.Println("  Weight: ", accountKey.Weight)
+		fmt.Printf("  Public key: %x\n", accountKey.PublicKey.Encode())
+		fmt.Printf("  Signature algorithm: %s\n", accountKey.SigAlgo)
+		fmt.Printf("  Hash algorithm: %s\n", accountKey.HashAlgo)
+		fmt.Printf("  Weight: %d\n", accountKey.Weight)
 	},
-}
-
-func init() {
-	initConfig()
-}
-
-func initConfig() {
-	err := sconfig.New(&conf).
-		FromEnvironment(cli.EnvPrefix).
-		BindFlags(Cmd.PersistentFlags()).
-		Parse()
-	if err != nil {
-		log.Fatal(err)
-	}
 }
