@@ -1,7 +1,7 @@
 /*
  * Flow CLI
  *
- * Copyright 2019-2020 Dapper Labs, Inc.
+ * Copyright 2019-2021 Dapper Labs, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,22 +32,29 @@ import (
 )
 
 type Config struct {
-	Signer  string `default:"service" flag:"signer,s"`
+	Args    string `default:"" flag:"args" info:"arguments in JSON-Cadence format"`
 	Code    string `flag:"code,c" info:"path to Cadence file"`
 	Partial string `flag:"partial-tx" info:"path to Partial Transaction file"`
 	Host    string `flag:"host" info:"Flow Access API host address"`
+	Signer  string `default:"service" flag:"signer,s"`
 	Results bool   `default:"false" flag:"results" info:"Display the results of the transaction"`
 }
 
 var conf Config
 
 var Cmd = &cobra.Command{
-	Use:   "send",
-	Short: "Send a transaction",
+	Use:     "send",
+	Short:   "Send a transaction",
+	Example: `flow transactions send --code=tx.cdc --args="[{\"type\": \"String\", \"value\": \"Hello, Cadence\"}]"`,
 	Run: func(cmd *cobra.Command, args []string) {
 		projectConf := cli.LoadConfig()
 
 		signerAccount := projectConf.Accounts[conf.Signer]
+		// TODO: Remove once new configuration is migrated
+		if signerAccount == nil && conf.Signer == "service" {
+			signerAccount = projectConf.Accounts["emulator-account"]
+		}
+
 		validateKeyPreReq(signerAccount)
 		var (
 			tx   *flow.Transaction
@@ -81,6 +88,22 @@ var Cmd = &cobra.Command{
 			tx = flow.NewTransaction().
 				SetScript(code).
 				AddAuthorizer(signerAccount.Address)
+
+			// Arguments
+			if conf.Args != "" {
+				transactionArguments, err := cli.ParseArguments(conf.Args)
+				if err != nil {
+					cli.Exitf(1, "Invalid arguments passed: %s", conf.Args)
+				}
+
+				for _, arg := range transactionArguments {
+					err := tx.AddArgument(arg)
+
+					if err != nil {
+						cli.Exitf(1, "Failed to add %s argument to a transaction ", conf.Code)
+					}
+				}
+			}
 
 			tx = cli.PrepareTransaction(projectConf.HostWithOverride(conf.Host), signerAccount, tx, signerAccount.Address)
 		}

@@ -1,7 +1,7 @@
 /*
  * Flow CLI
  *
- * Copyright 2019-2020 Dapper Labs, Inc.
+ * Copyright 2019-2021 Dapper Labs, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -65,6 +65,9 @@ type accountJSON struct {
 	KeyType    string            `json:"keyType"`
 	KeyIndex   int               `json:"keyIndex"`
 	KeyContext map[string]string `json:"keyContext"`
+
+	// TODO: Remove once new configuration is migrated
+	Keys string `json:"keys"`
 }
 
 func (acct *Account) MarshalJSON() ([]byte, error) {
@@ -104,6 +107,11 @@ func (acct *Account) UnmarshalJSON(data []byte) (err error) {
 		return
 	}
 
+	// TODO: Remove once new configuration is migrated
+	if alias.Keys != "" {
+		return acct.parseProjectConfig(alias)
+	}
+
 	acct.Address = flow.HexToAddress(alias.Address)
 	acct.SigAlgo = crypto.StringToSignatureAlgorithm(alias.SigAlgo)
 	acct.HashAlgo = crypto.StringToHashAlgorithm(alias.HashAlgo)
@@ -124,23 +132,45 @@ func (acct *Account) UnmarshalJSON(data []byte) (err error) {
 
 		acct.PrivateKey, err = crypto.DecodePrivateKey(acct.SigAlgo, prKeyBytes)
 		if err != nil {
-			return
+			return err
 		}
 	}
 
 	return
 }
 
-func (account *Account) LoadSigner() error {
-	switch account.KeyType {
+// TODO: Remove once new configuration is migrated
+func (acct *Account) parseProjectConfig(conf accountJSON) error {
+	fmt.Println("⚠️ You are using a new experimental configuration format. Support for this format is not yet available across all CLI commands.")
+
+	acct.Address = flow.HexToAddress(conf.Address)
+	acct.SigAlgo = crypto.ECDSA_P256
+	acct.HashAlgo = crypto.SHA3_256
+	acct.KeyIndex = 0
+	acct.KeyType = defaultKeyType
+
+	var prKeyBytes []byte
+	prKeyBytes, err := hex.DecodeString(conf.Keys)
+	if err != nil {
+		return err
+	}
+
+	acct.PrivateKey, _ = crypto.DecodePrivateKey(acct.SigAlgo, prKeyBytes)
+	acct.KeyContext = map[string]string{"privateKey": conf.Keys}
+
+	return nil
+}
+
+func (acct *Account) LoadSigner() error {
+	switch acct.KeyType {
 	case KeyTypeHex:
-		account.Signer = crypto.NewNaiveSigner(
-			account.PrivateKey,
-			account.HashAlgo,
+		acct.Signer = crypto.NewNaiveSigner(
+			acct.PrivateKey,
+			acct.HashAlgo,
 		)
 	case KeyTypeKMS:
 		ctx := context.Background()
-		accountKMSKey, err := kmsKeyFromKeyContext(account.KeyContext)
+		accountKMSKey, err := kmsKeyFromKeyContext(acct.KeyContext)
 		if err != nil {
 			return err
 		}
@@ -151,15 +181,15 @@ func (account *Account) LoadSigner() error {
 
 		accountKMSSigner, err := kmsClient.SignerForKey(
 			ctx,
-			account.Address,
+			acct.Address,
 			accountKMSKey,
 		)
 		if err != nil {
 			return err
 		}
-		account.Signer = accountKMSSigner
+		acct.Signer = accountKMSSigner
 	default:
-		return fmt.Errorf("Could not load signer with type %s", account.KeyType)
+		return fmt.Errorf("could not load signer with type %s", acct.KeyType)
 	}
 	return nil
 }
@@ -178,7 +208,18 @@ func NewConfig() *Config {
 func (c *Config) ServiceAccount() *Account {
 	serviceAcct, ok := c.Accounts[serviceAccountName]
 	if !ok {
-		Exit(1, "Missing service account!")
+		// TODO: Remove once new configuration is migrated
+		return c.getProjectServiceAccount()
+		// Exit(1, "Missing service account!")
+	}
+	return serviceAcct
+}
+
+// TODO: Remove once new configuration is migrated
+func (c *Config) getProjectServiceAccount() *Account {
+	serviceAcct, ok := c.Accounts["emulator-account"]
+	if !ok {
+		Exit(1, "Missing service account")
 	}
 	return serviceAcct
 }
@@ -218,7 +259,7 @@ func SaveConfig(conf *Config) error {
 	if err != nil {
 		return err
 	}
-	err = ioutil.WriteFile(ConfigPath, data, 0777)
+	err = ioutil.WriteFile(ConfigPath[0], data, 0777)
 	if err != nil {
 		return err
 	}
@@ -233,7 +274,7 @@ func MustSaveConfig(conf *Config) {
 }
 
 func LoadConfig() *Config {
-	f, err := os.Open(ConfigPath)
+	f, err := os.Open(ConfigPath[0])
 	if err != nil {
 		if os.IsNotExist(err) {
 			fmt.Printf("Project config file %s does not exist. Please initialize first\n", ConfigPath)
@@ -262,7 +303,7 @@ func LoadConfig() *Config {
 }
 
 func ConfigExists() bool {
-	info, err := os.Stat(ConfigPath)
+	info, err := os.Stat(ConfigPath[0])
 	if os.IsNotExist(err) {
 		return false
 	}

@@ -1,7 +1,7 @@
 /*
  * Flow CLI
  *
- * Copyright 2019-2020 Dapper Labs, Inc.
+ * Copyright 2019-2021 Dapper Labs, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,60 +20,73 @@ package cli
 
 import (
 	"errors"
+	"fmt"
+	"github.com/onflow/flow-cli/flow/project/cli/config/json"
 	"path"
 	"strings"
 
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
+	"github.com/spf13/afero"
 	"github.com/thoas/go-funk"
 
 	"github.com/onflow/flow-cli/flow/project/cli/config"
-	"github.com/onflow/flow-cli/flow/project/cli/config/json"
 	"github.com/onflow/flow-cli/flow/project/cli/keys"
 )
 
+// Project has all the funcionality to manage project
 type Project struct {
+	composer *config.Loader
 	conf     *config.Config
 	accounts []*Account
 }
 
-//REF: move this to json config
-const DefaultConfigPath = "flow.json"
+// LoadProject loads configuration and setup the project
+func LoadProject(configFilePath []string) *Project {
+	composer := config.NewLoader(afero.NewOsFs())
 
-func LoadProject() *Project {
-	//REF: this should interact with config and not json directly - currently problem with CD
-	conf, err := json.Load(DefaultConfigPath)
+	// here we add all available parsers (more to add yaml etc...)
+	composer.AddConfigParser(json.NewParser())
+	conf, err := composer.Load(configFilePath)
+
 	if err != nil {
-		if errors.Is(err, json.ErrDoesNotExist) {
+		if errors.Is(err, config.ErrDoesNotExist) {
 			Exitf(
 				1,
 				"Project config file %s does not exist. Please initialize first\n",
-				DefaultConfigPath,
+				configFilePath,
 			)
 		}
 
-		Exitf(1, "Failed to open project configuration in %s", DefaultConfigPath)
+		Exitf(1, "Failed to open project configuration in %s", configFilePath)
 
 		return nil
 	}
 
-	proj, err := newProject(conf)
+	proj, err := newProject(conf, composer)
 	if err != nil {
 		// TODO: replace with a more detailed error message
+		fmt.Println("⚠️  Make sure you generated configuration by using: flow project init, and not: flow init")
 		Exitf(1, "Invalid project configuration: %s", err)
 	}
 
 	return proj
 }
 
-func ProjectExists() bool {
-	return json.Exists(DefaultConfigPath)
+// ProjectExists checks if project exists
+func ProjectExists(path string) bool {
+	return config.Exists(path)
 }
 
+// InitProject initializes the project
 func InitProject() *Project {
 	emulatorServiceAccount := generateEmulatorServiceAccount()
 
+	composer := config.NewLoader(afero.NewOsFs())
+	composer.AddConfigParser(json.NewParser())
+
 	return &Project{
+		composer: composer,
 		conf:     defaultConfig(emulatorServiceAccount),
 		accounts: []*Account{emulatorServiceAccount},
 	}
@@ -123,13 +136,14 @@ func generateEmulatorServiceAccount() *Account {
 	}
 }
 
-func newProject(conf *config.Config) (*Project, error) {
+func newProject(conf *config.Config, composer *config.Loader) (*Project, error) {
 	accounts, err := accountsFromConfig(conf)
 	if err != nil {
 		return nil, err
 	}
 
 	return &Project{
+		composer: composer,
 		conf:     conf,
 		accounts: accounts,
 	}, nil
@@ -157,7 +171,7 @@ func (p *Project) Host(network string) string {
 	return p.conf.Networks.GetByName(network).Host
 }
 
-func (p *Project) EmulatorServiceAccount() config.Account {
+func (p *Project) EmulatorServiceAccount() *config.Account {
 	emulator := p.conf.Emulators.GetDefault()
 	return p.conf.Accounts.GetByName(emulator.ServiceAccount)
 }
@@ -219,12 +233,13 @@ func (p *Project) GetAliases(network string) map[string]string {
 	return aliases
 }
 
-func (p *Project) Save() {
+func (p *Project) Save(path string) {
 	p.conf.Accounts = accountsToConfig(p.accounts)
+	err := p.composer.Save(p.conf, path)
 
-	err := json.Save(p.conf, DefaultConfigPath)
 	if err != nil {
-		Exitf(1, "Failed to save project configuration to \"%s\"", DefaultConfigPath)
+		fmt.Println(err)
+		Exitf(1, "Failed to save project configuration to \"%s\"", path)
 	}
 }
 

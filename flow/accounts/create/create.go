@@ -1,7 +1,7 @@
 /*
  * Flow CLI
  *
- * Copyright 2019-2020 Dapper Labs, Inc.
+ * Copyright 2019-2021 Dapper Labs, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -51,6 +51,10 @@ var Cmd = &cobra.Command{
 		projectConf := cli.LoadConfig()
 
 		signerAccount := projectConf.Accounts[conf.Signer]
+		// TODO: Remove once new configuration is migrated
+		if signerAccount == nil && conf.Signer == "service" {
+			signerAccount = projectConf.Accounts["emulator-account"]
+		}
 
 		accountKeys := make([]*flow.AccountKey, len(conf.Keys))
 

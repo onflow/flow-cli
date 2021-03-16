@@ -23,8 +23,7 @@ Before using this command, read about how to
 > flow project deploy --network=testnet
 
 NonFungibleToken -> 0xf8d6e0586b0a20c7
-FungibleToken -> 0xf8d6e0586b0a20c7
-Kibble -> 0xf8d6e0586b0a20c7
+KittyItems -> 0xf8d6e0586b0a20c7
 
 ✅ All contracts deployed successfully
 ```
@@ -34,12 +33,12 @@ In the example above, your `flow.json` file might look something like this:
 ```json
 {
   "contracts": {
-    "Foo": "./cadence/contracts/FooContract.cdc",
-    "Bar": "./cadence/contracts/BarContract.cdc"
+    "NonFungibleToken": "./cadence/contracts/NonFungibleToken.cdc",
+    "KittyItems": "./cadence/contracts/KittyItems.cdc"
   },
   "deployments": {
     "testnet": {
-      "my-testnet-account": ["Foo", "Bar"]
+      "my-testnet-account": ["KittyItems", "NonFungibleToken"]
     }
   }
 }
@@ -47,19 +46,86 @@ In the example above, your `flow.json` file might look something like this:
 
 Here's a sketch of the contract source files:
 
-```cadence:title=Foo.cdc
-pub contract Foo { 
+```cadence:title=NonFungibleToken.cdc
+pub contract NonFungibleToken { 
   // ...
 }
 ```
 
-```cadence:title=Bar.cdc
-import Foo from Foo.cdc
+```cadence:title=KittyItems.cdc
+import NonFungibleToken from "./NonFungibleToken.cdc"
 
-pub contract Bar { 
+pub contract KittyItems { 
   // ...
 }
 ```
+
+## Security
+
+⚠️ Warning: Please be careful when using private keys in configuration files. We suggest you 
+to separate private keys in another configuration file, put that file in `.gitignore` and then 
+reference that account in configuration with `fromeFile` property. 
+
+### Private Account Configuration File
+`flow.json` Main configuration file example:
+```json
+{
+  "contracts": {
+    "NonFungibleToken": "./cadence/contracts/NonFungibleToken.cdc",
+    "KittyItems": "./cadence/contracts/KittyItems.cdc"
+  },
+  "deployments": {
+    "testnet": {
+      "my-testnet-account": ["KittyItems", "NonFungibleToken"]
+    }
+  },
+  "accounts": {
+    "my-testnet-account": { "fromFile": "./flow.testnet.json" }
+  }
+}
+```
+
+`flow.testnet.json` Private configuration file. **Put this file in `.gitignore`**
+```json
+{
+  "accounts": {
+    "my-testnet-account": {
+      "address": "3ae53cb6e3f42a79",
+      "keys": "334232967f52bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad1111"
+    }
+  }
+}
+```
+
+### Private Account Configuration Environment Variable
+
+Use environment variable for any values that should be kept private (private keys, addresses...). 
+See example bellow:
+
+`flow.json` Main configuration file. Set environment variable when running flow cli like so:
+```shell
+PRIVATE_KEY=key flow project deploy
+```
+```json
+{
+  ...
+  "accounts": {
+    "my-testnet-account": {
+      "address": "3ae53cb6e3f42a79",
+      "keys": "$PRIVATE_KEY"
+    }
+  }
+  ...
+}
+```
+
+### Composing Multiple Configuration Files
+You can use composition of configuration files like so:
+```shell
+flow project deploy -f main.json -f private.json
+```
+
+This way you can keep your private accounts in the `private.json` file and add that file to `.gitignore`.
 
 ## Dependency Resolution
 

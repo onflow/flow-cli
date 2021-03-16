@@ -1,7 +1,7 @@
 /*
  * Flow CLI
  *
- * Copyright 2019-2020 Dapper Labs, Inc.
+ * Copyright 2019-2021 Dapper Labs, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,7 +32,7 @@ import (
 func GetTransactionResult(host string, id string, sealed bool, showTransactionCode bool) {
 	ctx := context.Background()
 
-	flowClient, err := client.New(host, grpc.WithInsecure())
+	flowClient, err := client.New(host, grpc.WithInsecure(), grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(MaxGRPCMessageSize)))
 	if err != nil {
 		Exitf(1, "Failed to connect to host: %s", err)
 	}
@@ -100,7 +100,7 @@ func printTxResult(tx *flow.Transaction, res *flow.TransactionResult, showCode b
 func GetBlockEvents(host string, startHeight, endHeight uint64, eventType string, printEmpty bool) {
 	ctx := context.Background()
 
-	flowClient, err := client.New(host, grpc.WithInsecure())
+	flowClient, err := client.New(host, grpc.WithInsecure(), grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(MaxGRPCMessageSize)))
 	if err != nil {
 		Exitf(1, "Failed to connect to host: %s", err)
 	}
@@ -176,7 +176,7 @@ func printField(field cadence.Field, value cadence.Value) {
 			fmt.Printf("%x", b)
 		}
 	} else if uintVal, ok := v.(uint64); typeInfo == "UFix64" && ok {
-		fmt.Print(FormatUFix64(uintVal))
+		fmt.Print(cadence.UFix64(uintVal))
 	} else {
 		fmt.Printf("%v", v)
 	}

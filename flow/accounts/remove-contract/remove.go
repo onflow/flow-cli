@@ -16,12 +16,12 @@
  * limitations under the License.
  */
 
-package languageserver
+package remove_contract
 
 import (
 	"log"
 
-	"github.com/onflow/cadence/languageserver"
+	"github.com/onflow/flow-go-sdk/templates"
 	"github.com/psiemens/sconfig"
 	"github.com/spf13/cobra"
 
@@ -29,16 +29,36 @@ import (
 )
 
 type Config struct {
-	EnableFlowClient bool `default:"true" flag:"enableFlowClient" info:"Enable Flow client functionality"`
+	Signer  string `default:"service" flag:"signer,s"`
+	Host    string `flag:"host" info:"Flow Access API host address"`
+	Results bool   `default:"false" flag:"results" info:"Display the results of the transaction"`
 }
 
 var conf Config
 
 var Cmd = &cobra.Command{
-	Use:   "language-server",
-	Short: "Start the Cadence language server",
+	Use:   "remove-contract <name>",
+	Short: "Remove a contract deployed to an account",
+	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		languageserver.RunWithStdio(conf.EnableFlowClient)
+		projectConf := cli.LoadConfig()
+
+		contractName := args[0]
+
+		signerAccount := projectConf.Accounts[conf.Signer]
+		// TODO: Remove once new configuration is migrated
+		if signerAccount == nil && conf.Signer == "service" {
+			signerAccount = projectConf.Accounts["emulator-account"]
+		}
+
+		tx := templates.RemoveAccountContract(signerAccount.Address, contractName)
+
+		cli.SendTransaction(
+			projectConf.HostWithOverride(conf.Host),
+			signerAccount,
+			tx,
+			conf.Results,
+		)
 	},
 }
 

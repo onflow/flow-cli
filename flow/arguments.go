@@ -19,24 +19,37 @@
 package cli
 
 import (
-	"context"
-
-	"github.com/onflow/flow-go-sdk"
-	"github.com/onflow/flow-go-sdk/client"
-	"google.golang.org/grpc"
+	"encoding/json"
+	"github.com/onflow/cadence"
+	jsoncdc "github.com/onflow/cadence/encoding/json"
 )
 
-func GetCollectionByID(host string, collectionID flow.Identifier) *flow.Collection {
-	ctx := context.Background()
+type CadenceArgument struct {
+	Value cadence.Value
+}
 
-	flowClient, err := client.New(host, grpc.WithInsecure())
+func (v CadenceArgument) MarshalJSON() ([]byte, error) {
+	return jsoncdc.Encode(v.Value)
+}
+func (v *CadenceArgument) UnmarshalJSON(b []byte) (err error) {
+	v.Value, err = jsoncdc.Decode(b)
 	if err != nil {
-		Exitf(1, "Failed to connect to host: %s", err)
+		return err
+	}
+	return nil
+}
+func ParseArguments(input string) ([]cadence.Value, error) {
+	var args []CadenceArgument
+	b := []byte(input)
+	err := json.Unmarshal(b, &args)
+
+	if err != nil {
+		return nil, err
 	}
 
-	collection, err := flowClient.GetCollection(ctx, collectionID)
-	if err != nil {
-		Exitf(1, "Failed to retrieve collection by ID %s: %s", collectionID, err)
+	cadenceArgs := make([]cadence.Value, len(args))
+	for i, arg := range args {
+		cadenceArgs[i] = arg.Value
 	}
-	return collection
+	return cadenceArgs, nil
 }
