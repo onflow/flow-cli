@@ -21,10 +21,8 @@ package decode
 import (
 	"encoding/hex"
 	"fmt"
-	"log"
 
 	flowsdk "github.com/onflow/flow-go-sdk"
-	"github.com/psiemens/sconfig"
 	"github.com/spf13/cobra"
 
 	cli "github.com/onflow/flow-cli/flow"
