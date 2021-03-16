@@ -5,9 +5,10 @@ import (
 	"fmt"
 	"text/tabwriter"
 
+	"github.com/onflow/flow-cli/flow/lib"
+
 	"github.com/onflow/flow-cli/cmd"
-	"github.com/onflow/flow-cli/flow/cli"
-	"github.com/onflow/flow-cli/sharedlib/services"
+	"github.com/onflow/flow-cli/flow/services"
 	"github.com/psiemens/sconfig"
 	"github.com/spf13/cobra"
 )
@@ -38,7 +39,7 @@ func NewInitCmd() cmd.Command {
 func (s *cmdInit) Run(
 	cmd *cobra.Command,
 	args []string,
-	project *cli.Project,
+	project *lib.Project,
 	services *services.Services,
 ) (cmd.Result, error) {
 	project, err := services.Project.Init(
@@ -61,7 +62,7 @@ func (s *cmdInit) GetCmd() *cobra.Command {
 }
 
 type InitResult struct {
-	*cli.Project
+	*lib.Project
 }
 
 // JSON convert result to JSON
@@ -76,11 +77,11 @@ func (r *InitResult) String() string {
 	account, _ := r.Project.EmulatorServiceAccount()
 
 	fmt.Fprintf(writer, "Configuration initialized\n")
-	fmt.Fprintf(writer, "Service account: %s\n\n", cli.Bold("0x"+account.Address().String()))
+	fmt.Fprintf(writer, "Service account: %s\n\n", lib.Bold("0x"+account.Address().String()))
 	fmt.Fprintf(writer,
 		"Start emulator by runing: %s \nReset configuration using: %s.\n",
-		cli.Bold("flow emulator start"),
-		cli.Bold("flow init --rest"),
+		lib.Bold("flow emulator start"),
+		lib.Bold("flow init --rest"),
 	)
 
 	writer.Flush()

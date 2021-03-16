@@ -1,4 +1,4 @@
-package collections
+package blocks
 
 import (
 	"github.com/onflow/flow-cli/cmd"
@@ -8,37 +8,43 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type flagsCollections struct {
+type flagsBlocks struct {
+	Events  string `default:"" flag:"events" info:"List events of this type for the block"`
+	Verbose bool   `default:"false" flag:"verbose" info:"Display transactions in block"`
 }
 
 type cmdGet struct {
 	cmd   *cobra.Command
-	flags flagsCollections
+	flags flagsBlocks
 }
 
 // NewGetCmd creates new get command
 func NewGetCmd() cmd.Command {
 	return &cmdGet{
 		cmd: &cobra.Command{
-			Use:   "get <collection_id>",
-			Short: "Get collection info",
-			Args:  cobra.ExactArgs(1),
+			Use:   "get <block_id|latest|block_height>",
+			Short: "Get block info",
 		},
 	}
 }
 
-// Run collection command
+// Run script command
 func (s *cmdGet) Run(
 	cmd *cobra.Command,
 	args []string,
 	project *lib.Project,
 	services *services.Services,
 ) (cmd.Result, error) {
-	collection, err := services.Collections.Get(args[0])
-	return &CollectionResult{collection}, err
+	block, events, err := services.Blocks.GetBlock(args[0], s.flags.Events)
+
+	return &BlockResult{
+		block:   block,
+		events:  events,
+		verbose: false,
+	}, err
 }
 
-// GetFlags for collection
+// GetFlags for script
 func (s *cmdGet) GetFlags() *sconfig.Config {
 	return sconfig.New(&s.flags)
 }

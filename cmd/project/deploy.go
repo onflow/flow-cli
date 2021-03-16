@@ -2,9 +2,9 @@ package project
 
 import (
 	"github.com/onflow/flow-cli/cmd"
-	"github.com/onflow/flow-cli/flow/cli"
-	"github.com/onflow/flow-cli/flow/project/contracts"
-	"github.com/onflow/flow-cli/sharedlib/services"
+	"github.com/onflow/flow-cli/flow/lib"
+	"github.com/onflow/flow-cli/flow/lib/contracts"
+	"github.com/onflow/flow-cli/flow/services"
 	"github.com/psiemens/sconfig"
 	"github.com/spf13/cobra"
 )
@@ -33,7 +33,7 @@ func NewDeployCmd() cmd.Command {
 func (s *cmdDeploy) Run(
 	cmd *cobra.Command,
 	args []string,
-	project *cli.Project,
+	project *lib.Project,
 	services *services.Services,
 ) (cmd.Result, error) {
 	c, err := services.Project.Deploy(s.flags.Network, s.flags.Update)
@@ -52,7 +52,7 @@ func (s *cmdDeploy) GetCmd() *cobra.Command {
 
 type DeployResult struct {
 	contracts []*contracts.Contract
-	project   *cli.Project
+	project   *lib.Project
 }
 
 // JSON convert result to JSON

@@ -2,8 +2,8 @@ package scripts
 
 import (
 	"github.com/onflow/flow-cli/cmd"
-	"github.com/onflow/flow-cli/flow/cli"
-	"github.com/onflow/flow-cli/sharedlib/services"
+	"github.com/onflow/flow-cli/flow/lib"
+	"github.com/onflow/flow-cli/flow/services"
 	"github.com/psiemens/sconfig"
 	"github.com/spf13/cobra"
 )
@@ -34,7 +34,7 @@ func NewExecuteScriptCmd() cmd.Command {
 func (s *cmdExecuteScript) Run(
 	cmd *cobra.Command,
 	args []string,
-	project *cli.Project,
+	project *lib.Project,
 	services *services.Services,
 ) (cmd.Result, error) {
 	value, err := services.Scripts.Execute(args[0], s.flags.Args, s.flags.ArgsJSON) // TODO: add support for json args

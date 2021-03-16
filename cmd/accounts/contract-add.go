@@ -2,8 +2,8 @@ package accounts
 
 import (
 	"github.com/onflow/flow-cli/cmd"
-	"github.com/onflow/flow-cli/flow/cli"
-	"github.com/onflow/flow-cli/sharedlib/services"
+	"github.com/onflow/flow-cli/flow/lib"
+	"github.com/onflow/flow-cli/flow/services"
 	"github.com/psiemens/sconfig"
 	"github.com/spf13/cobra"
 )
@@ -32,7 +32,7 @@ func NewAddContractCmd() cmd.Command {
 func (a *cmdAddContract) Run(
 	cmd *cobra.Command,
 	args []string,
-	project *cli.Project,
+	project *lib.Project,
 	services *services.Services,
 ) (cmd.Result, error) {
 

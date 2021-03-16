@@ -20,6 +20,7 @@ package json
 
 import (
 	"encoding/json"
+
 	"github.com/onflow/flow-cli/flow/config"
 )
 

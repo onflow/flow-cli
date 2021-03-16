@@ -19,49 +19,38 @@
 // Package main implements the entry point for the Flow CLI.
 package main
 
-import "C"
 import (
 	"encoding/json"
 	"fmt"
 	"os"
 	"strings"
 
-	"github.com/onflow/flow-cli/sharedlib/util"
+	"github.com/onflow/flow-cli/cmd/blocks"
+	"github.com/onflow/flow-cli/cmd/emulator"
 
-	"github.com/onflow/flow-cli/cmd/project"
+	"github.com/spf13/afero"
+	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/cmd"
 	"github.com/onflow/flow-cli/cmd/accounts"
+	"github.com/onflow/flow-cli/cmd/cadence"
 	"github.com/onflow/flow-cli/cmd/collections"
-	"github.com/onflow/flow-cli/cmd/emulator"
 	"github.com/onflow/flow-cli/cmd/events"
 	"github.com/onflow/flow-cli/cmd/keys"
+	"github.com/onflow/flow-cli/cmd/project"
 	"github.com/onflow/flow-cli/cmd/scripts"
 	"github.com/onflow/flow-cli/cmd/transactions"
-	"github.com/onflow/flow-cli/flow/blocks"
-	"github.com/onflow/flow-cli/flow/cadence"
-	"github.com/onflow/flow-cli/flow/cli"
-	"github.com/onflow/flow-cli/flow/version"
-	"github.com/onflow/flow-cli/sharedlib/gateway"
-	"github.com/onflow/flow-cli/sharedlib/services"
+	"github.com/onflow/flow-cli/cmd/version"
+	"github.com/onflow/flow-cli/flow/gateway"
+	"github.com/onflow/flow-cli/flow/lib"
+	"github.com/onflow/flow-cli/flow/services"
+	"github.com/onflow/flow-cli/flow/util"
 	"github.com/onflow/flow-go-sdk/client"
-	"github.com/spf13/afero"
-	"github.com/spf13/cobra"
 )
 
 var c = &cobra.Command{
 	Use:              "flow",
 	TraverseChildren: true,
-}
-
-func init() {
-	c.AddCommand(blocks.Cmd)
-	c.AddCommand(cadence.Cmd)
-	c.AddCommand(version.Cmd)
-
-	c.PersistentFlags().StringSliceVarP(&cli.ConfigPath, "config-path", "f", cli.ConfigPath, "Path to flow configuration file")
-
-	newInit()
 }
 
 var (
@@ -73,7 +62,12 @@ var (
 	logFlag         = util.InfoLog
 )
 
-func newInit() {
+func init() {
+
+	c.AddCommand(cadence.Cmd)
+	c.AddCommand(version.Cmd)
+	c.AddCommand(emulator.Cmd)
+
 	c.AddCommand(accounts.Cmd)
 	addCommand(accounts.Cmd, accounts.NewGetCmd())
 	addCommand(accounts.Cmd, accounts.NewCreateCmd())
@@ -94,7 +88,8 @@ func newInit() {
 	c.AddCommand(events.Cmd)
 	addCommand(events.Cmd, events.NewGetCmd())
 
-	c.AddCommand(emulator.Cmd)
+	c.AddCommand(blocks.Cmd)
+	addCommand(blocks.Cmd, blocks.NewGetCmd())
 
 	c.AddCommand(collections.Cmd)
 	addCommand(collections.Cmd, collections.NewGetCmd())
@@ -109,7 +104,7 @@ func newInit() {
 	c.PersistentFlags().StringVarP(&saveFlag, "save", "", saveFlag, "Save result to a filename")
 	c.PersistentFlags().StringVarP(&logFlag, "log", "", logFlag, "Logging level")
 	c.PersistentFlags().BoolVarP(&runEmulatorFlag, "emulator", "", runEmulatorFlag, "Run in-memory emulator")
-
+	c.PersistentFlags().StringSliceVarP(&lib.ConfigPath, "config-path", "f", lib.ConfigPath, "Path to flow configuration file")
 }
 
 // addCommand add new command to main cmd
@@ -119,7 +114,7 @@ func newInit() {
 func addCommand(c *cobra.Command, command cmd.Command) {
 	command.GetCmd().RunE = func(cmd *cobra.Command, args []string) error {
 		// initialize project but ignore error since config can be missing
-		project, _ := cli.LoadProject(cli.ConfigPath)
+		project, _ := lib.LoadProject(lib.ConfigPath)
 
 		gateway, err := createGateway(cmd, project)
 		handleError("Gateway Error", err)
@@ -148,7 +143,7 @@ func addCommand(c *cobra.Command, command cmd.Command) {
 }
 
 // createGateway creates a gateway to be used, defaults to grpc but can support others
-func createGateway(cmd *cobra.Command, project *cli.Project) (gateway.Gateway, error) {
+func createGateway(cmd *cobra.Command, project *lib.Project) (gateway.Gateway, error) {
 	// create in memory emulator client
 	if runEmulatorFlag {
 		return gateway.NewEmulatorGateway(), nil
@@ -251,7 +246,7 @@ func handleError(description string, err error) {
 // bindFlags bind all the flags needed
 func bindFlags(command cmd.Command) {
 	err := command.GetFlags().
-		FromEnvironment(cli.EnvPrefix).
+		FromEnvironment(lib.EnvPrefix).
 		BindFlags(command.GetCmd().PersistentFlags()).
 		Parse()
 	if err != nil {
@@ -261,6 +256,6 @@ func bindFlags(command cmd.Command) {
 
 func main() {
 	if err := c.Execute(); err != nil {
-		cli.Exit(1, err.Error())
+		lib.Exit(1, err.Error())
 	}
 }

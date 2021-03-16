@@ -6,7 +6,7 @@ import (
 	"io"
 	"text/tabwriter"
 
-	"github.com/onflow/flow-cli/sharedlib/util"
+	"github.com/onflow/flow-cli/flow/util"
 
 	"github.com/onflow/cadence"
 	"github.com/onflow/flow-go-sdk"

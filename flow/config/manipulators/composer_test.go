@@ -18,10 +18,11 @@
 package manipulators
 
 import (
+	"os"
+
 	"github.com/onflow/flow-cli/flow/config/json"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/require"
-	"os"
 
 	"testing"
 

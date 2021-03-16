@@ -19,9 +19,10 @@
 package manipulators
 
 import (
-	"github.com/a8m/envsubst"
 	"regexp"
 	"strings"
+
+	"github.com/a8m/envsubst"
 )
 
 var (
