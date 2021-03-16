@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/onflow/flow-cli/flow/util"
+	"github.com/onflow/flow-cli/flow/lib"
 
 	"github.com/onflow/flow-cli/flow/gateway"
-	"github.com/onflow/flow-cli/flow/lib"
+	"github.com/onflow/flow-cli/flow/util"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/onflow/flow-go-sdk/templates"
@@ -68,10 +68,13 @@ func (a *Accounts) Create(
 	}
 
 	for i, publicKeyHex := range keys {
-		publicKey := lib.MustDecodePublicKeyHex(
-			lib.DefaultSigAlgo,
+		publicKey, err := crypto.DecodePublicKeyHex(
+			sigAlgo,
 			strings.ReplaceAll(publicKeyHex, "0x", ""),
 		)
+		if err != nil {
+			return nil, fmt.Errorf("could not decode public key for key: %s, with signature algorith: %s", publicKeyHex, sigAlgo)
+		}
 
 		accountKeys[i] = &flow.AccountKey{
 			PublicKey: publicKey,

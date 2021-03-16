@@ -16,16 +16,9 @@
 * limitations under the License.
  */
 
-package manipulators
+package config
 
-import (
-	"os"
-	"testing"
-
-	"github.com/spf13/afero"
-	"github.com/stretchr/testify/assert"
-)
-
+/*
 func Test_PrivateKeyEnv(t *testing.T) {
 	os.Setenv("TEST", "123")
 
@@ -92,8 +85,8 @@ func Test_PrivateConfigFileAccounts(t *testing.T) {
 			"admin-account": { "fromFile": "test.json" },
 			"admin-account": { "fromFile": "test.json" },
 
-			"admin-account":{ 
-				"fromFile": "test.json" 
+			"admin-account":{
+				"fromFile": "test.json"
 			}
 		}
 	}`)
@@ -111,3 +104,4 @@ func Test_PrivateConfigFileAccounts(t *testing.T) {
 			}
 		}`, string(result))
 }
+*/

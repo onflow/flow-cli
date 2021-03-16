@@ -1,7 +1,7 @@
 /*
  * Flow CLI
  *
- * Copyright 2019-2020 Dapper Labs, Inc.
+ * Copyright 2019-2021 Dapper Labs, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,8 +24,6 @@ import (
 	"path"
 	"strings"
 
-	"github.com/onflow/flow-cli/flow/config/manipulators"
-
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/spf13/afero"
@@ -40,21 +38,21 @@ var DefaultConfigPath string = "flow.json"
 
 // Project has all the funcionality to manage project
 type Project struct {
-	composer *manipulators.Composer
+	composer *config.Loader
 	conf     *config.Config
 	accounts []*Account
 }
 
 // LoadProject loads configuration and setup the project
 func LoadProject(configFilePath []string) (*Project, error) {
-	composer := manipulators.NewComposer(afero.NewOsFs())
+	composer := config.NewLoader(afero.NewOsFs())
 
 	// here we add all available parsers (more to add yaml etc...)
 	composer.AddConfigParser(json.NewParser())
 	conf, err := composer.Load(configFilePath)
 
 	if err != nil {
-		if errors.Is(err, manipulators.ErrDoesNotExist) {
+		if errors.Is(err, config.ErrDoesNotExist) {
 			return nil, fmt.Errorf(
 				"Project config file %s does not exist. Please initialize first\n",
 				configFilePath,
@@ -88,21 +86,21 @@ func LoadHostForNetwork(host string, network string) (string, error) {
 
 // ProjectExists checks if project exists
 func ProjectExists(path string) bool {
-	return manipulators.Exists(path)
+	return config.Exists(path)
 }
 
 // InitProject initializes the project
-func InitProject(sigAlgo crypto.SignatureAlgorithm, hashAlgo crypto.HashAlgorithm) *Project {
-	emulatorServiceAccount := generateEmulatorServiceAccount(sigAlgo, hashAlgo)
+func InitProject(sigAlgo crypto.SignatureAlgorithm, hashAlgo crypto.HashAlgorithm) (*Project, error) {
+	emulatorServiceAccount, err := generateEmulatorServiceAccount(sigAlgo, hashAlgo)
 
-	composer := manipulators.NewComposer(afero.NewOsFs())
+	composer := config.NewLoader(afero.NewOsFs())
 	composer.AddConfigParser(json.NewParser())
 
 	return &Project{
 		composer: composer,
 		conf:     defaultConfig(emulatorServiceAccount),
 		accounts: []*Account{emulatorServiceAccount},
-	}
+	}, err
 }
 
 const (
@@ -127,12 +125,15 @@ func defaultConfig(defaultEmulatorServiceAccount *Account) *config.Config {
 	}
 }
 
-func generateEmulatorServiceAccount(sigAlgo crypto.SignatureAlgorithm, hashAlgo crypto.HashAlgorithm) *Account {
-	seed := RandomSeed(crypto.MinSeedLength)
+func generateEmulatorServiceAccount(sigAlgo crypto.SignatureAlgorithm, hashAlgo crypto.HashAlgorithm) (*Account, error) {
+	seed, err := RandomSeed(crypto.MinSeedLength)
+	if err != nil {
+		return nil, err
+	}
 
 	privateKey, err := crypto.GeneratePrivateKey(sigAlgo, seed)
 	if err != nil {
-		Exitf(1, "Failed to generate emulator service key: %v", err)
+		return nil, fmt.Errorf("failed to generate emulator service key: %v", err)
 	}
 
 	serviceAccountKey := keys.NewHexAccountKeyFromPrivateKey(0, hashAlgo, privateKey)
@@ -144,10 +145,10 @@ func generateEmulatorServiceAccount(sigAlgo crypto.SignatureAlgorithm, hashAlgo 
 		keys: []keys.AccountKey{
 			serviceAccountKey,
 		},
-	}
+	}, nil
 }
 
-func newProject(conf *config.Config, composer *manipulators.Composer) (*Project, error) {
+func newProject(conf *config.Config, composer *config.Loader) (*Project, error) {
 	accounts, err := accountsFromConfig(conf)
 	if err != nil {
 		return nil, err
@@ -269,13 +270,15 @@ func (p *Project) GetAliases(network string) map[string]string {
 	return aliases
 }
 
-func (p *Project) Save(path string) {
+func (p *Project) Save(path string) error {
 	p.conf.Accounts = accountsToConfig(p.accounts)
 	err := p.composer.Save(p.conf, path)
 
 	if err != nil {
-		Exitf(1, "Failed to save project configuration to \"%s\"", path)
+		return fmt.Errorf("failed to save project configuration to: %s", path)
 	}
+
+	return nil
 }
 
 type Contract struct {

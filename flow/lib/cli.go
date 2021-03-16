@@ -57,31 +57,15 @@ var Green = color.New(color.FgGreen, color.Bold).SprintfFunc()
 var Red = color.New(color.FgRed, color.Bold).SprintfFunc()
 var Bold = color.New(color.Bold).SprintfFunc()
 
-func MustDecodePrivateKeyHex(sigAlgo crypto.SignatureAlgorithm, prKeyHex string) crypto.PrivateKey {
-	prKey, err := crypto.DecodePrivateKeyHex(sigAlgo, prKeyHex)
-	if err != nil {
-		Exitf(1, "Failed to decode private key: %v", err)
-	}
-	return prKey
-}
-
-func MustDecodePublicKeyHex(sigAlgo crypto.SignatureAlgorithm, pubKeyHex string) crypto.PublicKey {
-	pubKey, err := crypto.DecodePublicKeyHex(sigAlgo, pubKeyHex)
-	if err != nil {
-		Exitf(1, "Failed to decode public key: %v", err)
-	}
-	return pubKey
-}
-
-func RandomSeed(n int) []byte {
+func RandomSeed(n int) ([]byte, error) {
 	seed := make([]byte, n)
 
 	_, err := rand.Read(seed)
 	if err != nil {
-		Exitf(1, "Failed to generate random seed: %v", err)
+		return nil, fmt.Errorf("failed to generate random seed: %v", err)
 	}
 
-	return seed
+	return seed, nil
 }
 
 var squareBracketRegex = regexp.MustCompile(`(?s)\[(.*)\]`)
@@ -97,7 +81,7 @@ func GcloudApplicationSignin(account *Account) error {
 
 	project := account.DefaultKey().ToConfig().Context["projectId"]
 	if len(project) == 0 {
-		return fmt.Errorf("Could not get GOOGLE_APPLICATION_CREDENTIALS, no google service account json provided but private key type is KMS", account.Address)
+		return fmt.Errorf("could not get GOOGLE_APPLICATION_CREDENTIALS, no google service account JSON provided but private key type is KMS for account %s", account.Address())
 	}
 
 	loginCmd := exec.Command("gcloud", "auth", "application-default", "login", fmt.Sprintf("--project=%s", project))

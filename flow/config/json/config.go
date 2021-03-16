@@ -1,7 +1,7 @@
 /*
  * Flow CLI
  *
- * Copyright 2019-2020 Dapper Labs, Inc.
+ * Copyright 2019-2021 Dapper Labs, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -52,12 +52,16 @@ func transformConfigToJSON(config *config.Config) jsonConfig {
 	}
 }
 
-func NewParser() *jsonConfig {
-	return new(jsonConfig)
+// Parsers for configuration
+type Parser struct{}
+
+// NewParser returns a parser
+func NewParser() *Parser {
+	return &Parser{}
 }
 
-// Save saves the configuration to the specified path file in JSON format.
-func (j *jsonConfig) Serialize(conf *config.Config) ([]byte, error) {
+// Serialize configuration to raw
+func (p *Parser) Serialize(conf *config.Config) ([]byte, error) {
 	jsonConf := transformConfigToJSON(conf)
 
 	data, err := json.MarshalIndent(jsonConf, "", "\t")
@@ -68,7 +72,8 @@ func (j *jsonConfig) Serialize(conf *config.Config) ([]byte, error) {
 	return data, nil
 }
 
-func (j *jsonConfig) Deserialize(raw []byte) (*config.Config, error) {
+// Deserialize configuration to config structure
+func (p *Parser) Deserialize(raw []byte) (*config.Config, error) {
 	var jsonConf jsonConfig
 	err := json.Unmarshal(raw, &jsonConf)
 
@@ -79,6 +84,7 @@ func (j *jsonConfig) Deserialize(raw []byte) (*config.Config, error) {
 	return jsonConf.transformToConfig(), nil
 }
 
-func (j *jsonConfig) SupportsFormat(extension string) bool {
+// SupportsFormat check if the file format is supported
+func (p *Parser) SupportsFormat(extension string) bool {
 	return extension == ".json"
 }

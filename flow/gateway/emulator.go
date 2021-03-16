@@ -3,13 +3,12 @@ package gateway
 import (
 	"fmt"
 
-	"github.com/onflow/flow-cli/flow/lib"
-
-	"github.com/onflow/flow-go-sdk/client"
-
 	"github.com/onflow/cadence"
 	emulator "github.com/onflow/flow-emulator"
 	"github.com/onflow/flow-go-sdk"
+
+	"github.com/onflow/flow-cli/flow/lib"
+	"github.com/onflow/flow-go-sdk/client"
 )
 
 type EmulatorGateway struct {

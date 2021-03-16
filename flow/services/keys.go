@@ -33,8 +33,14 @@ func NewKeys(
 
 func (k *Keys) Generate(inputSeed string, signatureAlgo string) (*crypto.PrivateKey, error) {
 	var seed []byte
+	var err error
+
 	if inputSeed == "" {
-		seed = lib.RandomSeed(crypto.MinSeedLength)
+		seed, err = lib.RandomSeed(crypto.MinSeedLength)
+		if err != nil {
+			return nil, err
+		}
+
 	} else {
 		seed = []byte(inputSeed)
 	}

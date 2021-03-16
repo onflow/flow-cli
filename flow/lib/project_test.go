@@ -1,7 +1,7 @@
 /*
  * Flow CLI
  *
- * Copyright 2019-2020 Dapper Labs, Inc.
+ * Copyright 2019-2021 Dapper Labs, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,7 +23,6 @@ import (
 	"sort"
 	"testing"
 
-	"github.com/onflow/flow-cli/flow/config/manipulators"
 	"github.com/spf13/afero"
 
 	"github.com/onflow/flow-cli/flow/config"
@@ -32,6 +31,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/thoas/go-funk"
 )
+
+var composer = config.NewLoader(afero.NewOsFs())
 
 func generateComplexProject() Project {
 	config := config.Config{
@@ -125,7 +126,7 @@ func generateComplexProject() Project {
 		}},
 	}
 
-	p, err := newProject(&config, manipulators.NewComposer(afero.NewMemMapFs()))
+	p, err := newProject(&config, composer)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -171,7 +172,7 @@ func generateSimpleProject() Project {
 		}},
 	}
 
-	p, err := newProject(&config, manipulators.NewComposer(afero.NewMemMapFs()))
+	p, err := newProject(&config, composer)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -222,7 +223,7 @@ func generateAliasesProject() Project {
 		}},
 	}
 
-	p, err := newProject(&config, manipulators.NewComposer(afero.NewMemMapFs()))
+	p, err := newProject(&config, composer)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -303,7 +304,7 @@ func generateAliasesComplexProject() Project {
 		}},
 	}
 
-	p, err := newProject(&config, manipulators.NewComposer(afero.NewMemMapFs()))
+	p, err := newProject(&config, composer)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -454,7 +455,7 @@ func Test_GetAliases(t *testing.T) {
 	contracts := p.GetContractsByNetwork("emulator")
 
 	assert.Len(t, aliases, 1)
-	assert.Equal(t, aliases["FungibleToken"], "ee82856bf20e2aa6")
+	assert.Equal(t, aliases["../hungry-kitties/cadence/contracts/FungibleToken.cdc"], "ee82856bf20e2aa6")
 	assert.Len(t, contracts, 1)
 	assert.Equal(t, contracts[0].Name, "NonFungibleToken")
 }
@@ -472,11 +473,11 @@ func Test_GetAliasesComplex(t *testing.T) {
 	assert.Equal(t, cEmulator[0].Name, "NonFungibleToken")
 
 	assert.Len(t, aEmulator, 2)
-	assert.Equal(t, aEmulator["FungibleToken"], "ee82856bf20e2aa6")
-	assert.Equal(t, aEmulator["Kibble"], "ee82856bf20e2aa6")
+	assert.Equal(t, aEmulator["../hungry-kitties/cadence/contracts/FungibleToken.cdc"], "ee82856bf20e2aa6")
+	assert.Equal(t, aEmulator["../hungry-kitties/cadence/contracts/Kibble.cdc"], "ee82856bf20e2aa6")
 
 	assert.Len(t, aTestnet, 1)
-	assert.Equal(t, aTestnet["Kibble"], "ee82856bf20e2aa6")
+	assert.Equal(t, aTestnet["../hungry-kitties/cadence/contracts/Kibble.cdc"], "ee82856bf20e2aa6")
 
 	assert.Len(t, cTestnet, 2)
 	assert.Equal(t, cTestnet[0].Name, "NonFungibleToken")

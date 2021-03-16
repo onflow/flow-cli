@@ -1,7 +1,7 @@
 /*
  * Flow CLI
  *
- * Copyright 2019-2020 Dapper Labs, Inc.
+ * Copyright 2019-2021 Dapper Labs, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -226,7 +226,7 @@ func handleError(description string, err error) {
 	// handle rpc error
 	switch t := err.(type) {
 	case *client.RPCError:
-		fmt.Fprintf(os.Stderr, "❌  Grpc Error: %s \n", t.GRPCStatus().Err)
+		fmt.Fprintf(os.Stderr, "❌  Grpc Error: %s \n", t.GRPCStatus().Err().Error())
 	default:
 		if strings.Contains(err.Error(), "transport:") {
 			fmt.Fprintf(os.Stderr, "❌  %s \n", strings.Split(err.Error(), "transport:")[1])

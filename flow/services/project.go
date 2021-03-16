@@ -42,14 +42,24 @@ func (p *Project) Init(reset bool, serviceKeySigAlgo string, serviceKeyHashAlgo 
 		serviceKeySigAlgo := crypto.StringToSignatureAlgorithm(serviceKeySigAlgo)
 		serviceKeyHashAlgo := crypto.StringToHashAlgorithm(serviceKeyHashAlgo)
 
-		project := lib.InitProject(serviceKeySigAlgo, serviceKeyHashAlgo)
+		project, err := lib.InitProject(serviceKeySigAlgo, serviceKeyHashAlgo)
+		if err != nil {
+			return nil, err
+		}
 
 		if len(servicePrivateKey) > 0 {
-			serviceKey := lib.MustDecodePrivateKeyHex(serviceKeySigAlgo, servicePrivateKey)
+			serviceKey, err := crypto.DecodePrivateKeyHex(serviceKeySigAlgo, servicePrivateKey)
+			if err != nil {
+				return nil, fmt.Errorf("could not decode private key for a service account, provided private key: %s", servicePrivateKey)
+			}
+
 			project.SetEmulatorServiceKey(serviceKey)
 		}
 
-		project.Save(lib.DefaultConfigPath)
+		err = project.Save(lib.DefaultConfigPath)
+		if err != nil {
+			return nil, err
+		}
 
 		return project, nil
 	} else {
@@ -144,7 +154,6 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 		}
 	}
 
-	// TODO: part of logging
 	if len(errs) == 0 {
 		p.logger.Info("\n✨  All contracts deployed successfully")
 	} else {
