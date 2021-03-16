@@ -26,6 +26,8 @@ import (
 	"os"
 	"strings"
 
+	"github.com/onflow/flow-cli/sharedlib/util"
+
 	"github.com/onflow/flow-cli/cmd/project"
 
 	"github.com/onflow/flow-cli/cmd"
@@ -63,11 +65,12 @@ func init() {
 }
 
 var (
-	filter      = ""
-	format      = ""
-	save        = ""
-	runEmulator = false
-	host        = "127.0.0.1:3569"
+	filterFlag      = ""
+	formatFlag      = ""
+	saveFlag        = ""
+	runEmulatorFlag = false
+	hostFlag        = "127.0.0.1:3569"
+	logFlag         = util.InfoLog
 )
 
 func newInit() {
@@ -100,11 +103,12 @@ func newInit() {
 	addCommand(project.Cmd, project.NewInitCmd())
 	addCommand(project.Cmd, project.NewDeployCmd())
 
-	c.PersistentFlags().StringVarP(&host, "host", "", host, "Flow Access API host address")
-	c.PersistentFlags().StringVarP(&filter, "filter", "", filter, "Filter result values by property name")
-	c.PersistentFlags().StringVarP(&format, "format", "", format, "Format to show result in")
-	c.PersistentFlags().StringVarP(&save, "save", "", save, "Save result to a filename")
-	c.PersistentFlags().BoolVarP(&runEmulator, "emulator", "", runEmulator, "Run in-memory emulator")
+	c.PersistentFlags().StringVarP(&hostFlag, "host", "", hostFlag, "Flow Access API host address")
+	c.PersistentFlags().StringVarP(&filterFlag, "filter", "", filterFlag, "Filter result values by property name")
+	c.PersistentFlags().StringVarP(&formatFlag, "format", "", formatFlag, "Format to show result in")
+	c.PersistentFlags().StringVarP(&saveFlag, "save", "", saveFlag, "Save result to a filename")
+	c.PersistentFlags().StringVarP(&logFlag, "log", "", logFlag, "Logging level")
+	c.PersistentFlags().BoolVarP(&runEmulatorFlag, "emulator", "", runEmulatorFlag, "Run in-memory emulator")
 
 }
 
@@ -120,18 +124,20 @@ func addCommand(c *cobra.Command, command cmd.Command) {
 		gateway, err := createGateway(cmd, project)
 		handleError("Gateway Error", err)
 
-		service := services.NewServices(gateway, project)
+		logger := createLogger()
+
+		service := services.NewServices(gateway, project, logger)
 
 		// run command
 		result, err := command.Run(cmd, args, project, service)
 		handleError("Command Error", err)
 
 		// format output result
-		formattedResult, err := formatResult(cmd, result)
+		formattedResult, err := formatResult(result)
 		handleError("Result", err)
 
 		// output result
-		err = outputResult(cmd, formattedResult)
+		err = outputResult(formattedResult)
 		handleError("Output Error", err)
 
 		return nil
@@ -144,12 +150,12 @@ func addCommand(c *cobra.Command, command cmd.Command) {
 // createGateway creates a gateway to be used, defaults to grpc but can support others
 func createGateway(cmd *cobra.Command, project *cli.Project) (gateway.Gateway, error) {
 	// create in memory emulator client
-	if runEmulator {
+	if runEmulatorFlag {
 		return gateway.NewEmulatorGateway(), nil
 	}
 
 	// resolve host - todo: handle if host is nil (version command)
-	host := cmd.Flag("host").Value.String()
+	host := hostFlag
 	if host == "" && project != nil {
 		host = project.Host("emulator")
 	} else if host == "" {
@@ -160,16 +166,24 @@ func createGateway(cmd *cobra.Command, project *cli.Project) (gateway.Gateway, e
 	return gateway.NewGrpcGateway(host)
 }
 
+// create logger utility
+func createLogger() util.Logger {
+	// disable logging if we user want a specific format like JSON
+	//(more common they will not want also to have logs)
+	if formatFlag != "" {
+		logFlag = util.NoneLog
+	}
+
+	return util.NewStdoutLogger(logFlag)
+}
+
 // outputResult takes care of showing the result
-func formatResult(cmd *cobra.Command, result cmd.Result) (string, error) {
+func formatResult(result cmd.Result) (string, error) {
 	if result == nil {
 		return "", fmt.Errorf("Missing")
 	}
 
-	filter := cmd.Flag("filter").Value.String()
-	format := cmd.Flag("format").Value.String()
-
-	if filter != "" {
+	if filterFlag != "" {
 		var jsonResult map[string]interface{}
 		val, _ := json.Marshal(result.JSON())
 		err := json.Unmarshal(val, &jsonResult)
@@ -177,35 +191,30 @@ func formatResult(cmd *cobra.Command, result cmd.Result) (string, error) {
 			return "", err
 		}
 
-		return fmt.Sprintf("%v", jsonResult[filter]), nil
+		return fmt.Sprintf("%v", jsonResult[filterFlag]), nil
 	}
 
-	if format == "json" {
+	switch formatFlag {
+	case "json":
 		jsonRes, _ := json.Marshal(result.JSON())
 		return string(jsonRes), nil
-	}
-
-	if format == "inline" {
+	case "inline":
 		return result.Oneliner(), nil
+	default:
+		return result.String(), nil
 	}
-
-	return result.String(), nil
 }
 
 // outputResult to selected media
-func outputResult(cmd *cobra.Command, result string) error {
-	save := cmd.Flag("save").Value.String()
-
-	if save != "" {
+func outputResult(result string) error {
+	if saveFlag != "" {
 		af := afero.Afero{
 			Fs: afero.NewOsFs(),
 		}
 
-		fmt.Printf("💾 result saved to: %s \n", save)
-		return af.WriteFile(save, []byte(result), 0644)
+		fmt.Printf("💾 result saved to: %s \n", saveFlag)
+		return af.WriteFile(saveFlag, []byte(result), 0644)
 	}
-
-	// todo: grep output
 
 	// default normal output - todo: this can be changed to writer so we can test outputs easier
 	fmt.Fprintf(os.Stdout, "%s\n", result)
@@ -222,16 +231,16 @@ func handleError(description string, err error) {
 	// handle rpc error
 	switch t := err.(type) {
 	case *client.RPCError:
-		fmt.Fprintf(os.Stderr, "🔴️ Grpc Error: %s \n", t.GRPCStatus().Err)
+		fmt.Fprintf(os.Stderr, "❌  Grpc Error: %s \n", t.GRPCStatus().Err)
 	default:
 		if strings.Contains(err.Error(), "transport:") {
-			fmt.Fprintf(os.Stderr, "🔴️ %s \n", strings.Split(err.Error(), "transport:")[1])
+			fmt.Fprintf(os.Stderr, "❌  %s \n", strings.Split(err.Error(), "transport:")[1])
 		} else if strings.Contains(err.Error(), "NotFound desc =") {
-			fmt.Fprintf(os.Stderr, "🔴️ Not Found:%s \n", strings.Split(err.Error(), "NotFound desc =")[1])
+			fmt.Fprintf(os.Stderr, "❌  Not Found:%s \n", strings.Split(err.Error(), "NotFound desc =")[1])
 		} else if strings.Contains(err.Error(), "code = InvalidArgument desc = ") {
-			fmt.Fprintf(os.Stderr, "🔴 Invalid argument: %s \n", strings.Split(err.Error(), "code = InvalidArgument desc = ")[1])
+			fmt.Fprintf(os.Stderr, "❌  Invalid argument: %s \n", strings.Split(err.Error(), "code = InvalidArgument desc = ")[1])
 		} else {
-			fmt.Fprintf(os.Stderr, "🔴️ %s: %s", description, err)
+			fmt.Fprintf(os.Stderr, "❌  %s: %s", description, err)
 		}
 	}
 
