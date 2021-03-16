@@ -2,6 +2,7 @@ package services
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/onflow/flow-cli/sharedlib/util"
 
@@ -16,13 +17,19 @@ import (
 type Transactions struct {
 	gateway gateway.Gateway
 	project *cli.Project
+	logger  util.Logger
 }
 
 // NewTransactions create new transaction service
-func NewTransactions(gateway gateway.Gateway, project *cli.Project) *Transactions {
+func NewTransactions(
+	gateway gateway.Gateway,
+	project *cli.Project,
+	logger util.Logger,
+) *Transactions {
 	return &Transactions{
 		gateway: gateway,
 		project: project,
+		logger:  logger,
 	}
 }
 
@@ -83,7 +90,9 @@ func (t *Transactions) GetStatus(
 	transactionID string,
 	waitSeal bool,
 ) (*flow.Transaction, *flow.TransactionResult, error) {
-	txID := flow.HexToID(transactionID)
+	txID := flow.HexToID(
+		strings.ReplaceAll(transactionID, "0x", ""),
+	)
 
 	tx, err := t.gateway.GetTransaction(txID)
 	if err != nil {

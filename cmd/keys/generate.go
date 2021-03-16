@@ -36,7 +36,6 @@ func (a *cmdGenerate) Run(
 	project *cli.Project,
 	services *services.Services,
 ) (cmd.Result, error) {
-
 	keys, err := services.Keys.Generate(a.flags.Seed, a.flags.SigAlgo)
 	return &KeyResult{keys}, err
 }

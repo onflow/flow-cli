@@ -14,13 +14,19 @@ import (
 type Scripts struct {
 	gateway gateway.Gateway
 	project *cli.Project
+	logger  util.Logger
 }
 
 // NewScripts create new script service
-func NewScripts(gateway gateway.Gateway, project *cli.Project) *Scripts {
+func NewScripts(
+	gateway gateway.Gateway,
+	project *cli.Project,
+	logger util.Logger,
+) *Scripts {
 	return &Scripts{
 		gateway: gateway,
 		project: project,
+		logger:  logger,
 	}
 }
 

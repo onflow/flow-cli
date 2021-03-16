@@ -18,13 +18,19 @@ import (
 type Accounts struct {
 	gateway gateway.Gateway
 	project *cli.Project
+	logger  util.Logger
 }
 
 // NewAccounts create new account service
-func NewAccounts(gateway gateway.Gateway, project *cli.Project) *Accounts {
+func NewAccounts(
+	gateway gateway.Gateway,
+	project *cli.Project,
+	logger util.Logger,
+) *Accounts {
 	return &Accounts{
 		gateway: gateway,
 		project: project,
+		logger:  logger,
 	}
 }
 
@@ -63,7 +69,11 @@ func (a *Accounts) Create(
 	}
 
 	for i, publicKeyHex := range keys {
-		publicKey := cli.MustDecodePublicKeyHex(cli.DefaultSigAlgo, publicKeyHex)
+		publicKey := cli.MustDecodePublicKeyHex(
+			cli.DefaultSigAlgo,
+			strings.ReplaceAll(publicKeyHex, "0x", ""),
+		)
+
 		accountKeys[i] = &flow.AccountKey{
 			PublicKey: publicKey,
 			SigAlgo:   sigAlgo,
@@ -110,7 +120,7 @@ func (a *Accounts) Create(
 	newAccountAddress := events.GetAddress()
 
 	if newAccountAddress == nil {
-		return nil, fmt.Errorf("New account address couldn't be fetched")
+		return nil, fmt.Errorf("new account address couldn't be fetched")
 	}
 
 	return a.gateway.GetAccount(*newAccountAddress)

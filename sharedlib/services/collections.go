@@ -3,6 +3,7 @@ package services
 import (
 	"github.com/onflow/flow-cli/flow/cli"
 	"github.com/onflow/flow-cli/sharedlib/gateway"
+	"github.com/onflow/flow-cli/sharedlib/util"
 	"github.com/onflow/flow-go-sdk"
 )
 
@@ -10,13 +11,19 @@ import (
 type Collections struct {
 	gateway gateway.Gateway
 	project *cli.Project
+	logger  util.Logger
 }
 
 // NewCollections create new collection service
-func NewCollections(gateway gateway.Gateway, project *cli.Project) *Collections {
+func NewCollections(
+	gateway gateway.Gateway,
+	project *cli.Project,
+	logger util.Logger,
+) *Collections {
 	return &Collections{
 		gateway: gateway,
 		project: project,
+		logger:  logger,
 	}
 }
 

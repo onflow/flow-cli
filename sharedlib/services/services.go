@@ -3,6 +3,7 @@ package services
 import (
 	"github.com/onflow/flow-cli/flow/cli"
 	"github.com/onflow/flow-cli/sharedlib/gateway"
+	"github.com/onflow/flow-cli/sharedlib/util"
 )
 
 // Services are a place where we define domain functionality
@@ -17,14 +18,18 @@ type Services struct {
 }
 
 // NewServices create new services with gateway and project
-func NewServices(gateway gateway.Gateway, project *cli.Project) *Services {
+func NewServices(
+	gateway gateway.Gateway,
+	project *cli.Project,
+	logger util.Logger,
+) *Services {
 	return &Services{
-		Accounts:     NewAccounts(gateway, project),
-		Scripts:      NewScripts(gateway, project),
-		Transactions: NewTransactions(gateway, project),
-		Keys:         NewKeys(gateway, project),
-		Events:       NewEvents(gateway, project),
-		Collections:  NewCollections(gateway, project),
-		Project:      NewProject(gateway, project),
+		Accounts:     NewAccounts(gateway, project, logger),
+		Scripts:      NewScripts(gateway, project, logger),
+		Transactions: NewTransactions(gateway, project, logger),
+		Keys:         NewKeys(gateway, project, logger),
+		Events:       NewEvents(gateway, project, logger),
+		Collections:  NewCollections(gateway, project, logger),
+		Project:      NewProject(gateway, project, logger),
 	}
 }
