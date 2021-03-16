@@ -35,7 +35,7 @@ import (
 type Config struct {
 	Signer                string   `default:"service" flag:"signer,s"`
 	Role                  string   `default:"authorizer" flag:"role"`
-	AdditionalAuthorizers []string `flag:"Additional authorizer addresses to add to the transaction"`
+	AdditionalAuthorizers []string `flag:"additional-authorizers" info:"Additional authorizer addresses to add to the transaction"`
 	PayerAddress          string   `flag:"payer" info:"Specify payer of the transaction. Defaults to current signer."`
 	Code                  string   `flag:"code,c" info:"path to Cadence file"`
 	Host                  string   `flag:"host" info:"Flow Access API host address"`
