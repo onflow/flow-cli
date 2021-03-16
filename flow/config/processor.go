@@ -26,8 +26,8 @@ import (
 )
 
 var (
-	fileRegex     *regexp.Regexp = regexp.MustCompile(`"([^"]*)"\s*:\s*{\s*"fromFile"\s*:\s*"([^"]*)"\s*},?`)
-	trailingComma *regexp.Regexp = regexp.MustCompile(`\,\s*}`)
+	fileRegex     = regexp.MustCompile(`"([^"]*)"\s*:\s*{\s*"fromFile"\s*:\s*"([^"]*)"\s*},?`)
+	trailingComma = regexp.MustCompile(`\,\s*}`)
 )
 
 // ProcessorRun all pre-processors

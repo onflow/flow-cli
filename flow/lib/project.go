@@ -34,7 +34,7 @@ import (
 	"github.com/onflow/flow-cli/flow/lib/keys"
 )
 
-var DefaultConfigPath string = "flow.json"
+var DefaultConfigPath = "flow.json"
 
 // Project has all the funcionality to manage project
 type Project struct {
