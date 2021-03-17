@@ -53,13 +53,13 @@ func NewEvents(
 
 // Get an event
 func (e *Events) Get(name string, start string, end string) ([]client.BlockEvents, error) {
-	if len(name) == 0 {
+	if name == "" {
 		return nil, fmt.Errorf("cannot use empty string as event name")
 	}
 
 	startHeight, err := strconv.ParseUint(start, 10, 64)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse start height of block range: %v", startHeight)
+		return nil, fmt.Errorf("failed to parse start height of block range: %v", start)
 	}
 
 	var endHeight uint64
