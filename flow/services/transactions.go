@@ -22,11 +22,12 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/onflow/flow-cli/flow/util"
+	"github.com/onflow/flow-go-sdk/crypto"
 
 	"github.com/onflow/flow-cli/flow/config"
 	"github.com/onflow/flow-cli/flow/gateway"
 	"github.com/onflow/flow-cli/flow/lib"
+	"github.com/onflow/flow-cli/flow/util"
 	"github.com/onflow/flow-go-sdk"
 )
 
@@ -62,6 +63,39 @@ func (t *Transactions) Send(
 	if signer == nil {
 		return nil, nil, fmt.Errorf("signer account: [%s] doesn't exists in configuration", signerName)
 	}
+
+	return t.send(transactionFilename, signer, args, argsJSON)
+}
+
+// SendForAddress send transaction for address and private key specified
+func (t *Transactions) SendForAddress(
+	transactionFilename string,
+	signerAddress string,
+	signerPrivateKey string,
+	args []string,
+	argsJSON string,
+) (*flow.Transaction, *flow.TransactionResult, error) {
+
+	address := flow.HexToAddress(
+		strings.ReplaceAll(signerAddress, "0x", ""),
+	)
+
+	privateKey, err := crypto.DecodePrivateKeyHex(crypto.ECDSA_P256, signerPrivateKey)
+	if err != nil {
+		return nil, nil, fmt.Errorf("private key is not correct")
+	}
+
+	account := lib.AccountFromAddressAndKey(address, privateKey)
+
+	return t.send(transactionFilename, account, args, argsJSON)
+}
+
+func (t *Transactions) send(
+	transactionFilename string,
+	signer *lib.Account,
+	args []string,
+	argsJSON string,
+) (*flow.Transaction, *flow.TransactionResult, error) {
 
 	// if google kms account then sign in
 	if signer.DefaultKey().Type() == config.KeyTypeGoogleKMS {
@@ -108,7 +142,7 @@ func (t *Transactions) Send(
 	return tx, res, err
 }
 
-// Send transaction
+// GetStatus of transaction
 func (t *Transactions) GetStatus(
 	transactionID string,
 	waitSeal bool,

@@ -303,6 +303,17 @@ func accountsFromConfig(conf *config.Config) ([]*Account, error) {
 	return accounts, nil
 }
 
+func AccountFromAddressAndKey(address flow.Address, privateKey crypto.PrivateKey) *Account {
+	key := keys.NewHexAccountKeyFromPrivateKey(0, crypto.SHA3_256, privateKey)
+
+	return &Account{
+		name:    "",
+		address: address,
+		chainID: flow.Emulator, // todo: specify
+		keys:    []keys.AccountKey{key},
+	}
+}
+
 func AccountFromConfig(accountConf config.Account) (*Account, error) {
 	accountKeys := make([]keys.AccountKey, 0, len(accountConf.Keys))
 
