@@ -62,7 +62,7 @@ func newEvent(event flow.Event) Event {
 func (e *Events) GetAddress() *flow.Address {
 	addr := ""
 	for _, event := range *e {
-		if event.Type == flow.EventAccountCreated {
+		if strings.Contains(event.Type, flow.EventAccountCreated) {
 			addr = event.Values["address"]
 		}
 	}
@@ -72,7 +72,9 @@ func (e *Events) GetAddress() *flow.Address {
 	}
 
 	address := flow.HexToAddress(
-		strings.Replace(addr, "0x", "", 1),
+		strings.ReplaceAll(
+			strings.ReplaceAll(addr, "0x", ""),
+			`"`, ""),
 	)
 
 	return &address
