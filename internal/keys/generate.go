@@ -56,7 +56,8 @@ func (a *cmdGenerate) Run(
 	services *services.Services,
 ) (command.Result, error) {
 	keys, err := services.Keys.Generate(a.flags.Seed, a.flags.SigAlgo)
-	return &KeyResult{keys}, err
+	pubKey := keys.PublicKey()
+	return &KeyResult{privateKey: keys, publicKey: &pubKey}, err
 }
 
 // GetFlags get command flags

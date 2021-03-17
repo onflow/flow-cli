@@ -66,6 +66,7 @@ func init() {
 
 	c.AddCommand(keys.Cmd)
 	command.Add(keys.Cmd, keys.NewGenerateCmd())
+	command.Add(keys.Cmd, keys.NewCmdDecode())
 
 	c.AddCommand(events.Cmd)
 	command.Add(events.Cmd, events.NewGetCmd())

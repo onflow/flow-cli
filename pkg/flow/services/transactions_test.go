@@ -62,7 +62,7 @@ func TestTransactions(t *testing.T) {
 			return tests.NewTransaction(), nil
 		}
 
-		_, _, err := transactions.Send("../tests/transaction.cdc", serviceName, []string{"String:Bar"}, "")
+		_, _, err := transactions.Send("../../../tests/transaction.cdc", serviceName, []string{"String:Bar"}, "")
 
 		assert.NoError(t, err)
 		assert.Equal(t, called, 2)
@@ -84,7 +84,7 @@ func TestTransactions(t *testing.T) {
 		}
 
 		_, _, err := transactions.Send(
-			"../tests/transaction.cdc",
+			"../../../tests/transaction.cdc",
 			serviceName,
 			nil,
 			"[{\"type\": \"String\", \"value\": \"Bar\"}]",
@@ -95,7 +95,7 @@ func TestTransactions(t *testing.T) {
 	})
 
 	t.Run("Send Transaction Fails wrong args", func(t *testing.T) {
-		_, _, err := transactions.Send("../tests/transaction.cdc", serviceName, []string{"Bar"}, "")
+		_, _, err := transactions.Send("../../../tests/transaction.cdc", serviceName, []string{"Bar"}, "")
 		assert.Equal(t, err.Error(), "Argument not passed in correct format, correct format is: Type:Value, got Bar")
 	})
 
@@ -105,7 +105,7 @@ func TestTransactions(t *testing.T) {
 	})
 
 	t.Run("Send Transaction Fails wrong args", func(t *testing.T) {
-		_, _, err := transactions.Send("../tests/transaction.cdc", serviceName, nil, "[{\"Bar\":\"No\"}]")
+		_, _, err := transactions.Send("../../../tests/transaction.cdc", serviceName, nil, "[{\"Bar\":\"No\"}]")
 		assert.Equal(t, err.Error(), "failed to decode value: invalid JSON Cadence structure")
 	})
 }

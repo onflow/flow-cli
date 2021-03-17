@@ -22,26 +22,26 @@ import (
 	"fmt"
 	"strconv"
 
-	flow2 "github.com/onflow/flow-cli/pkg/flow"
+	"github.com/onflow/flow-cli/pkg/flow"
 
 	"github.com/onflow/flow-go-sdk/client"
 
 	"github.com/onflow/flow-cli/pkg/flow/gateway"
 	"github.com/onflow/flow-cli/pkg/flow/util"
-	"github.com/onflow/flow-go-sdk"
+	flowsdk "github.com/onflow/flow-go-sdk"
 )
 
 // Blocks service handles all interactions for blocks
 type Blocks struct {
 	gateway gateway.Gateway
-	project *flow2.Project
+	project *flow.Project
 	logger  util.Logger
 }
 
 // NewBlocks create new block service
 func NewBlocks(
 	gateway gateway.Gateway,
-	project *flow2.Project,
+	project *flow.Project,
 	logger util.Logger,
 ) *Blocks {
 	return &Blocks{
@@ -56,8 +56,8 @@ func (e *Blocks) GetBlock(
 	query string,
 	eventType string,
 	verbose bool,
-) (*flow.Block, []client.BlockEvents, []*flow.Collection, error) {
-	var block *flow.Block
+) (*flowsdk.Block, []client.BlockEvents, []*flowsdk.Collection, error) {
+	var block *flowsdk.Block
 	var err error
 
 	// smart parsing of query
@@ -66,7 +66,7 @@ func (e *Blocks) GetBlock(
 	} else if height, err := strconv.ParseUint(query, 10, 64); err == nil {
 		block, err = e.gateway.GetBlockByHeight(height)
 	} else {
-		block, err = e.gateway.GetBlockByID(flow.HexToID(query))
+		block, err = e.gateway.GetBlockByID(flowsdk.HexToID(query))
 	}
 
 	if block == nil {
@@ -83,7 +83,7 @@ func (e *Blocks) GetBlock(
 	}
 
 	// if verbose fetch all collections from block too
-	collections := make([]*flow.Collection, 0)
+	collections := make([]*flowsdk.Collection, 0)
 	if verbose {
 		for _, guarantee := range block.CollectionGuarantees {
 			collection, err := e.gateway.GetCollection(guarantee.CollectionID)

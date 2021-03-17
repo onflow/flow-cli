@@ -92,7 +92,7 @@ func TestAccounts(t *testing.T) {
 			return tests.NewAccountWithAddress(newAddress), nil
 		}
 
-		account, err := accounts.Create(serviceName, []string{pubKey}, sigAlgo, hashAlgo, []string{"Hello:../tests/Hello.cdc"})
+		account, err := accounts.Create(serviceName, []string{pubKey}, sigAlgo, hashAlgo, []string{"Hello:../../../tests/Hello.cdc"})
 
 		require.NoError(t, err)
 		assert.Equal(t, len(account.Address), 8)
@@ -115,7 +115,7 @@ func TestAccounts(t *testing.T) {
 			return tests.NewAccountWithAddress(address.String()), nil
 		}
 
-		account, err := accounts.AddContract(serviceName, "Hello", "../tests/Hello.cdc", false)
+		account, err := accounts.AddContract(serviceName, "Hello", "../../../tests/Hello.cdc", false)
 
 		require.NoError(t, err)
 		assert.Equal(t, len(account.Address), 8)
@@ -138,7 +138,7 @@ func TestAccounts(t *testing.T) {
 			return tests.NewAccountWithAddress(address.String()), nil
 		}
 
-		account, err := accounts.AddContract(serviceName, "Hello", "../tests/Hello.cdc", true)
+		account, err := accounts.AddContract(serviceName, "Hello", "../../../tests/Hello.cdc", true)
 
 		require.NoError(t, err)
 		assert.Equal(t, len(account.Address), 8)

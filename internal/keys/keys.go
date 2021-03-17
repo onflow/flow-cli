@@ -24,6 +24,8 @@ import (
 	"fmt"
 	"text/tabwriter"
 
+	"github.com/onflow/flow-go-sdk"
+
 	"github.com/onflow/flow-go-sdk/crypto"
 
 	"github.com/spf13/cobra"
@@ -37,14 +39,16 @@ var Cmd = &cobra.Command{
 
 // KeyResult represent result from all account commands
 type KeyResult struct {
-	*crypto.PrivateKey
+	privateKey *crypto.PrivateKey
+	publicKey  *crypto.PublicKey
+	accountKey *flow.AccountKey
 }
 
 // JSON convert result to JSON
 func (k *KeyResult) JSON() interface{} {
 	result := make(map[string]string, 0)
-	result["Private"] = hex.EncodeToString(k.PublicKey().Encode())
-	result["Public"] = hex.EncodeToString(k.Encode())
+	result["Private"] = hex.EncodeToString(k.privateKey.PublicKey().Encode())
+	result["Public"] = hex.EncodeToString(k.privateKey.Encode())
 
 	return result
 }
@@ -53,9 +57,20 @@ func (k *KeyResult) JSON() interface{} {
 func (k *KeyResult) String() string {
 	var b bytes.Buffer
 	writer := tabwriter.NewWriter(&b, 0, 8, 1, '\t', tabwriter.AlignRight)
-	fmt.Fprintf(writer, "🔴️ Store Private Key safely and don't share with anyone! \n")
-	fmt.Fprintf(writer, "Public Key \t %x \n", k.PublicKey().Encode())
-	fmt.Fprintf(writer, "Private Key \t %x \n", k.Encode())
+
+	if k.privateKey != nil {
+		fmt.Fprintf(writer, "🔴️ Store Private Key safely and don't share with anyone! \n")
+		fmt.Fprintf(writer, "Private Key \t %x \n", k.privateKey.Encode())
+	}
+
+	fmt.Fprintf(writer, "Public Key \t %x \n", k.publicKey.Encode())
+
+	if k.accountKey != nil {
+		fmt.Fprintf(writer, "Signature algorithm \t %s\n", k.accountKey.SigAlgo)
+		fmt.Fprintf(writer, "Hash algorithm \t %s\n", k.accountKey.HashAlgo)
+		fmt.Fprintf(writer, "Weight \t %d\n", k.accountKey.Weight)
+	}
+
 	writer.Flush()
 
 	return b.String()

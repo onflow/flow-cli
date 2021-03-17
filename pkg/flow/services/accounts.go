@@ -22,11 +22,11 @@ import (
 	"fmt"
 	"strings"
 
-	flow2 "github.com/onflow/flow-cli/pkg/flow"
+	"github.com/onflow/flow-cli/pkg/flow"
 
 	"github.com/onflow/flow-cli/pkg/flow/gateway"
 	"github.com/onflow/flow-cli/pkg/flow/util"
-	"github.com/onflow/flow-go-sdk"
+	flowsdk "github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/onflow/flow-go-sdk/templates"
 )
@@ -34,14 +34,14 @@ import (
 // Accounts service handles all interactions for accounts
 type Accounts struct {
 	gateway gateway.Gateway
-	project *flow2.Project
+	project *flow.Project
 	logger  util.Logger
 }
 
 // NewAccounts create new account service
 func NewAccounts(
 	gateway gateway.Gateway,
-	project *flow2.Project,
+	project *flow.Project,
 	logger util.Logger,
 ) *Accounts {
 	return &Accounts{
@@ -52,8 +52,8 @@ func NewAccounts(
 }
 
 // Get gets an account based on address
-func (a *Accounts) Get(address string) (*flow.Account, error) {
-	flowAddress := flow.HexToAddress(
+func (a *Accounts) Get(address string) (*flowsdk.Account, error) {
+	flowAddress := flowsdk.HexToAddress(
 		strings.ReplaceAll(address, "0x", ""),
 	)
 
@@ -67,14 +67,14 @@ func (a *Accounts) Create(
 	signatureAlgorithm string,
 	hashingAlgorithm string,
 	contracts []string,
-) (*flow.Account, error) {
+) (*flowsdk.Account, error) {
 
 	signer := a.project.GetAccountByName(signerName)
 	if signer == nil {
 		return nil, fmt.Errorf("signer account: [%s] doesn't exists in configuration", signerName)
 	}
 
-	accountKeys := make([]*flow.AccountKey, len(keys))
+	accountKeys := make([]*flowsdk.AccountKey, len(keys))
 
 	sigAlgo := crypto.StringToSignatureAlgorithm(signatureAlgorithm)
 	if sigAlgo == crypto.UnknownSignatureAlgorithm {
@@ -94,11 +94,11 @@ func (a *Accounts) Create(
 			return nil, fmt.Errorf("could not decode public key for key: %s, with signature algorith: %s", publicKeyHex, sigAlgo)
 		}
 
-		accountKeys[i] = &flow.AccountKey{
+		accountKeys[i] = &flowsdk.AccountKey{
 			PublicKey: publicKey,
 			SigAlgo:   sigAlgo,
 			HashAlgo:  hashAlgo,
-			Weight:    flow.AccountKeyWeightThreshold,
+			Weight:    flowsdk.AccountKeyWeightThreshold,
 		}
 	}
 
@@ -140,7 +140,7 @@ func (a *Accounts) Create(
 
 	a.logger.StopProgress("")
 
-	events := flow2.EventsFromTransaction(result)
+	events := flow.EventsFromTransaction(result)
 	newAccountAddress := events.GetAddress()
 
 	if newAccountAddress == nil {
@@ -156,7 +156,7 @@ func (a *Accounts) AddContract(
 	contractName string,
 	contractFilename string,
 	updateExisting bool,
-) (*flow.Account, error) {
+) (*flowsdk.Account, error) {
 
 	account := a.project.GetAccountByName(accountName)
 	if account == nil {
@@ -173,7 +173,7 @@ func (a *Accounts) AddContractForAddress(
 	contractName string,
 	contractFilename string,
 	updateExisting bool,
-) (*flow.Account, error) {
+) (*flowsdk.Account, error) {
 	account, err := util.AccountFromAddressAndKey(accountAddress, accountPrivateKey)
 	if err != nil {
 		return nil, err
@@ -183,11 +183,11 @@ func (a *Accounts) AddContractForAddress(
 }
 
 func (a *Accounts) addContract(
-	account *flow2.Account,
+	account *flow.Account,
 	contractName string,
 	contractFilename string,
 	updateExisting bool,
-) (*flow.Account, error) {
+) (*flowsdk.Account, error) {
 	contractSource, err := util.LoadFile(contractFilename)
 	if err != nil {
 		return nil, err
@@ -231,7 +231,7 @@ func (a *Accounts) addContract(
 func (a *Accounts) RemoveContract(
 	contractName string,
 	accountName string,
-) (*flow.Account, error) {
+) (*flowsdk.Account, error) {
 	account := a.project.GetAccountByName(accountName)
 	if account == nil {
 		return nil, fmt.Errorf("account: [%s] doesn't exists in configuration", accountName)
@@ -245,7 +245,7 @@ func (a *Accounts) RemoveContractForAddress(
 	contractName string,
 	accountAddress string,
 	accountPrivateKey string,
-) (*flow.Account, error) {
+) (*flowsdk.Account, error) {
 	account, err := util.AccountFromAddressAndKey(accountAddress, accountPrivateKey)
 	if err != nil {
 		return nil, err
@@ -256,8 +256,8 @@ func (a *Accounts) RemoveContractForAddress(
 
 func (a *Accounts) removeContract(
 	contractName string,
-	account *flow2.Account,
-) (*flow.Account, error) {
+	account *flow.Account,
+) (*flowsdk.Account, error) {
 	tx := templates.RemoveAccountContract(account.Address(), contractName)
 	tx, err := a.gateway.SendTransaction(tx, account)
 	if err != nil {

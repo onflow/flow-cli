@@ -38,7 +38,7 @@ func TestBlocks(t *testing.T) {
 			return nil, nil
 		}
 
-		_, _, err := blocks.GetBlock("latest", "flow.AccountCreated")
+		_, _, _, err := blocks.GetBlock("latest", "flow.AccountCreated", false)
 
 		assert.NoError(t, err)
 		assert.True(t, called)
@@ -57,7 +57,7 @@ func TestBlocks(t *testing.T) {
 			return nil, nil
 		}
 
-		_, _, err := blocks.GetBlock("10", "flow.AccountCreated")
+		_, _, _, err := blocks.GetBlock("10", "flow.AccountCreated", false)
 
 		assert.NoError(t, err)
 		assert.True(t, called)
@@ -77,7 +77,7 @@ func TestBlocks(t *testing.T) {
 			return nil, nil
 		}
 
-		_, _, err := blocks.GetBlock("a310685082f0b09f2a148b2e8905f08ea458ed873596b53b200699e8e1f6536f", "flow.AccountCreated")
+		_, _, _, err := blocks.GetBlock("a310685082f0b09f2a148b2e8905f08ea458ed873596b53b200699e8e1f6536f", "flow.AccountCreated", false)
 
 		assert.NoError(t, err)
 		assert.True(t, called)

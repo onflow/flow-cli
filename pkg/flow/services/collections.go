@@ -19,23 +19,23 @@
 package services
 
 import (
-	flow2 "github.com/onflow/flow-cli/pkg/flow"
+	"github.com/onflow/flow-cli/pkg/flow"
 	"github.com/onflow/flow-cli/pkg/flow/gateway"
 	"github.com/onflow/flow-cli/pkg/flow/util"
-	"github.com/onflow/flow-go-sdk"
+	flowsdk "github.com/onflow/flow-go-sdk"
 )
 
 // Collections service handles all interactions for collections
 type Collections struct {
 	gateway gateway.Gateway
-	project *flow2.Project
+	project *flow.Project
 	logger  util.Logger
 }
 
 // NewCollections create new collection service
 func NewCollections(
 	gateway gateway.Gateway,
-	project *flow2.Project,
+	project *flow.Project,
 	logger util.Logger,
 ) *Collections {
 	return &Collections{
@@ -46,7 +46,7 @@ func NewCollections(
 }
 
 // Get collection
-func (c *Collections) Get(id string) (*flow.Collection, error) {
-	collectionID := flow.HexToID(id)
+func (c *Collections) Get(id string) (*flowsdk.Collection, error) {
+	collectionID := flowsdk.HexToID(id)
 	return c.gateway.GetCollection(collectionID)
 }
