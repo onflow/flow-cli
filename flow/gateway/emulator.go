@@ -55,7 +55,7 @@ func (g *EmulatorGateway) SendTransaction(tx *flow.Transaction, signer *lib.Acco
 	return nil, fmt.Errorf("Not Supported Yet")
 }
 
-func (g *EmulatorGateway) GetTransactionResult(tx *flow.Transaction) (*flow.TransactionResult, error) {
+func (g *EmulatorGateway) GetTransactionResult(tx *flow.Transaction, waitSeal bool) (*flow.TransactionResult, error) {
 	return g.emulator.GetTransactionResult(tx.ID())
 }
 

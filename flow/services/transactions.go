@@ -135,7 +135,7 @@ func (t *Transactions) send(
 
 	t.logger.StartProgress("Waiting for transaction to be sealed...")
 
-	res, err := t.gateway.GetTransactionResult(tx)
+	res, err := t.gateway.GetTransactionResult(tx, true)
 
 	t.logger.StartProgress("")
 
@@ -156,10 +156,11 @@ func (t *Transactions) GetStatus(
 		return nil, nil, err
 	}
 
-	t.logger.StartProgress("Waiting for transaction to be sealed...")
+	if waitSeal {
+		t.logger.StartProgress("Waiting for transaction to be sealed...")
+	}
 
-	result, err := t.gateway.GetTransactionResult(tx)
-
+	result, err := t.gateway.GetTransactionResult(tx, waitSeal)
 	t.logger.StopProgress("")
 
 	return tx, result, err

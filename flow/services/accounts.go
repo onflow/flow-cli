@@ -133,7 +133,7 @@ func (a *Accounts) Create(
 
 	a.logger.StartProgress("Waiting for transaction to be sealed...")
 
-	result, err := a.gateway.GetTransactionResult(tx)
+	result, err := a.gateway.GetTransactionResult(tx, true)
 	if err != nil {
 		return nil, err
 	}
@@ -219,7 +219,7 @@ func (a *Accounts) addContract(
 	}
 
 	// we wait for transaction to be sealed
-	_, err = a.gateway.GetTransactionResult(tx)
+	_, err = a.gateway.GetTransactionResult(tx, true)
 	if err != nil {
 		return nil, err
 	}

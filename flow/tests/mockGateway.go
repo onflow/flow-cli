@@ -34,7 +34,7 @@ func (g *MockGateway) SendTransaction(tx *flow.Transaction, signer *lib.Account)
 	return g.SendTransactionMock(tx, signer)
 }
 
-func (g *MockGateway) GetTransactionResult(tx *flow.Transaction) (*flow.TransactionResult, error) {
+func (g *MockGateway) GetTransactionResult(tx *flow.Transaction, waitSeal bool) (*flow.TransactionResult, error) {
 	return g.GetTransactionResultMock(tx)
 }
 

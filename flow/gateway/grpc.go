@@ -101,15 +101,15 @@ func (g *GrpcGateway) GetTransaction(id flow.Identifier) (*flow.Transaction, err
 }
 
 // GetTransactionResult gets result of a transaction on flow
-func (g *GrpcGateway) GetTransactionResult(tx *flow.Transaction) (*flow.TransactionResult, error) {
+func (g *GrpcGateway) GetTransactionResult(tx *flow.Transaction, waitSeal bool) (*flow.TransactionResult, error) {
 	result, err := g.client.GetTransactionResult(g.ctx, tx.ID())
 	if err != nil {
 		return nil, err
 	}
 
-	if result.Status != flow.TransactionStatusSealed {
+	if result.Status != flow.TransactionStatusSealed && waitSeal {
 		time.Sleep(time.Second)
-		return g.GetTransactionResult(tx)
+		return g.GetTransactionResult(tx, waitSeal)
 	}
 
 	return result, nil

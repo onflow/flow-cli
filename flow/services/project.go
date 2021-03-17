@@ -155,7 +155,7 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 			fmt.Sprintf("%s deploying...", lib.Bold(contract.Name())),
 		)
 
-		result, err := p.gateway.GetTransactionResult(tx)
+		result, err := p.gateway.GetTransactionResult(tx, true)
 
 		p.logger.StopProgress("")
 

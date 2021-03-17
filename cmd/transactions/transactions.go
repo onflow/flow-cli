@@ -47,7 +47,10 @@ func (r *TransactionResult) JSON() interface{} {
 	result := make(map[string]string, 0)
 	result["Hash"] = r.tx.ID().String()
 	result["Status"] = r.result.Status.String()
-	result["Events"] = fmt.Sprintf("%s", r.result.Events)
+
+	if r.result != nil {
+		result["Events"] = fmt.Sprintf("%s", r.result.Events)
+	}
 
 	return result
 }
