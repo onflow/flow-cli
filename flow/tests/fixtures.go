@@ -11,6 +11,7 @@ var accounts = test.AccountGenerator()
 var transactions = test.TransactionGenerator()
 var transactionResults = test.TransactionResultGenerator()
 var events = test.EventGenerator()
+var blocks = test.BlockGenerator()
 
 func NewAccountWithAddress(address string) *flow.Account {
 	account := accounts.New()
@@ -19,8 +20,11 @@ func NewAccountWithAddress(address string) *flow.Account {
 }
 
 func NewTransaction() *flow.Transaction {
-	tx := transactions.New()
-	return tx
+	return transactions.New()
+}
+
+func NewBlock() *flow.Block {
+	return blocks.New()
 }
 
 func NewEvent(index int, eventId string, fields []cadence.Field, values []cadence.Value) *flow.Event {

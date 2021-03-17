@@ -19,6 +19,7 @@
 package services
 
 import (
+	"fmt"
 	"strconv"
 
 	"github.com/onflow/flow-go-sdk/client"
@@ -60,6 +61,10 @@ func (e *Blocks) GetBlock(query string, eventType string) (*flow.Block, []client
 		block, err = e.gateway.GetBlockByHeight(height)
 	} else {
 		block, err = e.gateway.GetBlockByID(flow.HexToID(query))
+	}
+
+	if block == nil {
+		return nil, nil, fmt.Errorf("block not found")
 	}
 
 	var events []client.BlockEvents
