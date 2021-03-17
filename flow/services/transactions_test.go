@@ -44,11 +44,9 @@ func TestTransactions(t *testing.T) {
 
 	t.Run("Send Transaction args", func(t *testing.T) {
 		called := 0
-		txs := tests.NewTransaction()
 
 		mock.GetTransactionResultMock = func(tx *flow.Transaction) (*flow.TransactionResult, error) {
 			called++
-			assert.Equal(t, tx.ID().String(), txs.ID().String())
 			return tests.NewTransactionResult(nil), nil
 		}
 
@@ -71,11 +69,9 @@ func TestTransactions(t *testing.T) {
 
 	t.Run("Send Transaction JSON args", func(t *testing.T) {
 		called := 0
-		txs := tests.NewTransaction()
 
 		mock.GetTransactionResultMock = func(tx *flow.Transaction) (*flow.TransactionResult, error) {
 			called++
-			assert.Equal(t, tx.ID().String(), txs.ID().String())
 			return tests.NewTransactionResult(nil), nil
 		}
 
