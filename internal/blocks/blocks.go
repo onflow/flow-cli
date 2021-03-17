@@ -38,9 +38,10 @@ var Cmd = &cobra.Command{
 
 // BlockResult
 type BlockResult struct {
-	block   *flow.Block
-	events  []client.BlockEvents
-	verbose bool
+	block       *flow.Block
+	events      []client.BlockEvents
+	collections []*flow.Collection
+	verbose     bool
 }
 
 // JSON convert result to JSON
@@ -65,14 +66,11 @@ func (r *BlockResult) String() string {
 	for i, guarantee := range r.block.CollectionGuarantees {
 		fmt.Fprintf(writer, "    Collection %d:\t%s\n", i, guarantee.CollectionID)
 
-		/* todo:
 		if r.verbose {
-			collection := cli.GetCollectionByID(conf.Host, guarantee.CollectionID)
-			for i, transaction := range collection.TransactionIDs {
-				fmt.Printf("    Transaction %d: %s\n", i, transaction)
+			for x, tx := range r.collections[i].TransactionIDs {
+				fmt.Fprintf(writer, "         Transaction %d: %s\n", x, tx)
 			}
 		}
-		*/
 	}
 
 	if len(r.events) > 0 {

@@ -52,10 +52,15 @@ func NewBlocks(
 }
 
 // Get the block
-func (e *Blocks) GetBlock(query string, eventType string) (*flow.Block, []client.BlockEvents, error) {
+func (e *Blocks) GetBlock(
+	query string,
+	eventType string,
+	verbose bool,
+) (*flow.Block, []client.BlockEvents, []*flow.Collection, error) {
 	var block *flow.Block
 	var err error
 
+	// smart parsing of query
 	if query == "latest" {
 		block, err = e.gateway.GetLatestBlock()
 	} else if height, err := strconv.ParseUint(query, 10, 64); err == nil {
@@ -65,13 +70,29 @@ func (e *Blocks) GetBlock(query string, eventType string) (*flow.Block, []client
 	}
 
 	if block == nil {
-		return nil, nil, fmt.Errorf("block not found")
+		return nil, nil, nil, fmt.Errorf("block not found")
 	}
 
+	// if we specify event get events by the type
 	var events []client.BlockEvents
 	if eventType != "" {
 		events, err = e.gateway.GetEvents(eventType, block.Height, block.Height)
+		if err != nil {
+			return nil, nil, nil, err
+		}
 	}
 
-	return block, events, err
+	// if verbose fetch all collections from block too
+	collections := make([]*flow.Collection, 0)
+	if verbose {
+		for _, guarantee := range block.CollectionGuarantees {
+			collection, err := e.gateway.GetCollection(guarantee.CollectionID)
+			if err != nil {
+				return nil, nil, nil, err
+			}
+			collections = append(collections, collection)
+		}
+	}
+
+	return block, events, collections, err
 }

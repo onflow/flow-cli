@@ -53,12 +53,13 @@ func (s *cmdGet) Run(
 	project *flow.Project,
 	services *services.Services,
 ) (command.Result, error) {
-	block, events, err := services.Blocks.GetBlock(args[0], s.flags.Events)
+	block, events, collections, err := services.Blocks.GetBlock(args[0], s.flags.Events, s.flags.Verbose)
 
 	return &BlockResult{
-		block:   block,
-		events:  events,
-		verbose: false,
+		block:       block,
+		events:      events,
+		verbose:     s.flags.Verbose,
+		collections: collections,
 	}, err
 }
 
