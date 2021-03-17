@@ -58,7 +58,6 @@ func (k *Keys) Generate(inputSeed string, signatureAlgo string) (*crypto.Private
 		if err != nil {
 			return nil, err
 		}
-
 	} else {
 		seed = []byte(inputSeed)
 	}
