@@ -107,7 +107,7 @@ func (a *Accounts) Create(
 	for _, contract := range contracts {
 		contractFlagContent := strings.SplitN(contract, ":", 2)
 		if len(contractFlagContent) != 2 {
-			return nil, fmt.Errorf("failed to read contract name and path from flag. Ensure you're providing a contract name and a file path %s", contract)
+			return nil, fmt.Errorf("wrong format for contract flag. Correct format is name:path, but got: %s", contract)
 		}
 		contractName := contractFlagContent[0]
 		contractPath := contractFlagContent[1]
@@ -212,11 +212,13 @@ func (a *Accounts) addContract(
 		)
 	}
 
+	// send transaction with contract
 	tx, err = a.gateway.SendTransaction(tx, account)
 	if err != nil {
 		return nil, err
 	}
 
+	// we wait for transaction to be sealed
 	_, err = a.gateway.GetTransactionResult(tx)
 	if err != nil {
 		return nil, err
