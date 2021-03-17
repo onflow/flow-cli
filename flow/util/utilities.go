@@ -21,6 +21,11 @@ package util
 import (
 	"fmt"
 	"io/ioutil"
+	"strings"
+
+	"github.com/onflow/flow-cli/flow/lib"
+	"github.com/onflow/flow-go-sdk"
+	"github.com/onflow/flow-go-sdk/crypto"
 )
 
 func LoadFile(filename string) ([]byte, error) {
@@ -44,4 +49,19 @@ func IsByteSlice(v interface{}) bool {
 	}
 	_, isBytes := slice[0].(byte)
 	return isBytes
+}
+
+// AccountFromAddressAndKey get account from address and private key
+func AccountFromAddressAndKey(accountAddress string, accountPrivateKey string) (*lib.Account, error) {
+	address := flow.HexToAddress(
+		strings.ReplaceAll(accountAddress, "0x", ""),
+	)
+
+	privateKey, err := crypto.DecodePrivateKeyHex(crypto.ECDSA_P256, accountPrivateKey)
+	if err != nil {
+		return nil, fmt.Errorf("private key is not correct")
+	}
+
+	account := lib.AccountFromAddressAndKey(address, privateKey)
+	return account, nil
 }

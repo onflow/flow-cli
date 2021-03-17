@@ -157,14 +157,40 @@ func (a *Accounts) AddContract(
 	contractFilename string,
 	updateExisting bool,
 ) (*flow.Account, error) {
-	contractSource, err := util.LoadFile(contractFilename)
-	if err != nil {
-		return nil, err
-	}
 
 	account := a.project.GetAccountByName(accountName)
 	if account == nil {
 		return nil, fmt.Errorf("account: [%s] doesn't exists in configuration", accountName)
+	}
+
+	return a.addContract(account, contractName, contractFilename, updateExisting)
+}
+
+// AddContractForAddress adds new contract to the address using private key specified
+func (a *Accounts) AddContractForAddress(
+	accountAddress string,
+	accountPrivateKey string,
+	contractName string,
+	contractFilename string,
+	updateExisting bool,
+) (*flow.Account, error) {
+	account, err := util.AccountFromAddressAndKey(accountAddress, accountPrivateKey)
+	if err != nil {
+		return nil, err
+	}
+
+	return a.addContract(account, contractName, contractFilename, updateExisting)
+}
+
+func (a *Accounts) addContract(
+	account *lib.Account,
+	contractName string,
+	contractFilename string,
+	updateExisting bool,
+) (*flow.Account, error) {
+	contractSource, err := util.LoadFile(contractFilename)
+	if err != nil {
+		return nil, err
 	}
 
 	tx := templates.AddAccountContract(
@@ -209,6 +235,27 @@ func (a *Accounts) RemoveContract(
 		return nil, fmt.Errorf("account: [%s] doesn't exists in configuration", accountName)
 	}
 
+	return a.removeContract(contractName, account)
+}
+
+// RemoveContractForAddress removes contract from address using private key
+func (a *Accounts) RemoveContractForAddress(
+	contractName string,
+	accountAddress string,
+	accountPrivateKey string,
+) (*flow.Account, error) {
+	account, err := util.AccountFromAddressAndKey(accountAddress, accountPrivateKey)
+	if err != nil {
+		return nil, err
+	}
+
+	return a.removeContract(contractName, account)
+}
+
+func (a *Accounts) removeContract(
+	contractName string,
+	account *lib.Account,
+) (*flow.Account, error) {
 	tx := templates.RemoveAccountContract(account.Address(), contractName)
 	tx, err := a.gateway.SendTransaction(tx, account)
 	if err != nil {
