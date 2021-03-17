@@ -81,5 +81,7 @@ func (s *StdoutLogger) StopProgress(msg string) {
 		return
 	}
 
-	s.spinner.Stop(msg)
+	if s.spinner != nil {
+		s.spinner.Stop(msg)
+	}
 }
