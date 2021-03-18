@@ -137,7 +137,7 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 
 		targetAccountInfo, err := p.gateway.GetAccount(targetAccount.Address())
 		if err != nil {
-			return nil, fmt.Errorf("failed to fetch information for account %s", targetAccount.Address())
+			return nil, fmt.Errorf("failed to fetch information for account %s with error %s", targetAccount.Address(), err.Error())
 		}
 
 		var tx *flowsdk.Transaction
@@ -172,7 +172,7 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 			)
 		} else {
 			p.logger.Error(
-				fmt.Sprintf("%s error", contract.Name()),
+				fmt.Sprintf("%s error: %s", contract.Name(), result.Error),
 			)
 
 			errs = append(errs, result.Error)
@@ -180,9 +180,9 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 	}
 
 	if len(errs) == 0 {
-		p.logger.Info("✨  All contracts deployed successfully")
+		p.logger.Info("\n✨  All contracts deployed successfully")
 	} else {
-		p.logger.Error("Failed to deploy all contracts")
+		p.logger.Error(fmt.Sprintf("Failed to deploy the contracts", errs))
 		return nil, fmt.Errorf(`%v`, errs)
 	}
 

@@ -175,6 +175,10 @@ func (p *Project) DefaultHost(network string) string {
 	return p.conf.Networks.GetByName(network).Host
 }
 
+func (p *Project) GetNetworkByName(name string) *config.Network {
+	return p.conf.Networks.GetByName(name)
+}
+
 func (p *Project) Host(network string) string {
 	return p.conf.Networks.GetByName(network).Host
 }
@@ -326,11 +330,12 @@ func accountsFromConfig(conf *config.Config) ([]*Account, error) {
 
 func AccountFromAddressAndKey(address flow.Address, privateKey crypto.PrivateKey) *Account {
 	key := keys.NewHexAccountKeyFromPrivateKey(0, crypto.SHA3_256, privateKey)
+	chainID, _ := util.GetAddressNetwork(address)
 
 	return &Account{
 		name:    "",
 		address: address,
-		chainID: flow.Emulator, // todo: specify
+		chainID: chainID,
 		keys:    []keys.AccountKey{key},
 	}
 }

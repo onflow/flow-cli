@@ -57,11 +57,18 @@ func NewAccounts(
 
 // Get gets an account based on address
 func (a *Accounts) Get(address string) (*flowsdk.Account, error) {
+	a.logger.StartProgress(
+		fmt.Sprintf("Loading %s...", address),
+	)
+
 	flowAddress := flowsdk.HexToAddress(
 		strings.ReplaceAll(address, "0x", ""),
 	)
 
-	return a.gateway.GetAccount(flowAddress)
+	account, err := a.gateway.GetAccount(flowAddress)
+	a.logger.StopProgress("")
+
+	return account, err
 }
 
 func (a *Accounts) Add(
@@ -199,6 +206,9 @@ func (a *Accounts) Create(
 	hashingAlgorithm string,
 	contracts []string,
 ) (*flowsdk.Account, error) {
+	a.logger.StartProgress(
+		fmt.Sprintf("Creating Account..."),
+	)
 
 	signer := a.project.GetAccountByName(signerName)
 	if signer == nil {
@@ -258,6 +268,8 @@ func (a *Accounts) Create(
 		return nil, err
 	}
 
+	a.logger.StopProgress("")
+
 	a.logger.StartProgress("Waiting for transaction to be sealed...")
 
 	result, err := a.gateway.GetTransactionResult(tx, true)
@@ -315,6 +327,10 @@ func (a *Accounts) addContract(
 	contractFilename string,
 	updateExisting bool,
 ) (*flowsdk.Account, error) {
+	a.logger.StartProgress(
+		fmt.Sprintf("Adding Contract..."),
+	)
+
 	contractSource, err := util.LoadFile(contractFilename)
 	if err != nil {
 		return nil, err
@@ -358,7 +374,10 @@ func (a *Accounts) addContract(
 		return nil, trx.Error
 	}
 
-	return a.gateway.GetAccount(account.Address())
+	update, err := a.gateway.GetAccount(account.Address())
+
+	a.logger.StopProgress("")
+	return update, err
 }
 
 // RemoveContracts removes a contract from the account
@@ -392,11 +411,17 @@ func (a *Accounts) removeContract(
 	contractName string,
 	account *flow.Account,
 ) (*flowsdk.Account, error) {
+	a.logger.StartProgress(
+		fmt.Sprintf("Removing Contract..."),
+	)
+
 	tx := templates.RemoveAccountContract(account.Address(), contractName)
 	tx, err := a.gateway.SendTransaction(tx, account)
 	if err != nil {
 		return nil, err
 	}
+
+	a.logger.StopProgress("")
 
 	a.logger.Info(fmt.Sprintf("Contract %s removed from account %s\n", contractName, account.Address()))
 

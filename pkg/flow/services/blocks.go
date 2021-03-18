@@ -59,6 +59,9 @@ func (e *Blocks) GetBlock(
 ) (*flowsdk.Block, []client.BlockEvents, []*flowsdk.Collection, error) {
 	var block *flowsdk.Block
 	var err error
+	e.logger.StartProgress(
+		fmt.Sprintf("Fetching Block..."),
+	)
 
 	// smart parsing of query
 	if query == "latest" {
@@ -93,6 +96,8 @@ func (e *Blocks) GetBlock(
 			collections = append(collections, collection)
 		}
 	}
+
+	e.logger.StopProgress("")
 
 	return block, events, collections, err
 }

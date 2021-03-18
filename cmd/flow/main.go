@@ -86,7 +86,7 @@ func init() {
 	c.PersistentFlags().StringVarP(
 		&command.HostFlag,
 		"host",
-		"n",
+		"",
 		command.HostFlag,
 		"Flow Access API host address",
 	)
@@ -137,6 +137,14 @@ func init() {
 		"f",
 		flow.ConfigPath,
 		"Path to flow configuration file",
+	)
+
+	c.PersistentFlags().StringVarP(
+		&command.NetworkFlag,
+		"network",
+		"n",
+		command.NetworkFlag,
+		"Network from configuration file",
 	)
 }
 

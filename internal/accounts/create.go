@@ -46,8 +46,8 @@ func NewCreateCmd() command.Command {
 		cmd: &cobra.Command{
 			Use:     "create",
 			Short:   "Create a new account",
+			Example: `flow accounts create --key d651f1931a2...8745`,
 			Aliases: []string{"create"},
-			Long:    `Create new account with keys`,
 		},
 	}
 }

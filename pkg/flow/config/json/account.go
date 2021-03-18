@@ -22,6 +22,8 @@ import (
 	"encoding/json"
 	"strings"
 
+	"github.com/onflow/flow-cli/pkg/flow/util"
+
 	"github.com/onflow/flow-cli/pkg/flow/config"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
@@ -34,6 +36,13 @@ func transformChainID(rawChainID string, rawAddress string) flow.ChainID {
 	if rawAddress == "service" && rawChainID == "" {
 		return flow.Emulator
 	}
+
+	if rawChainID == "" {
+		address := flow.HexToAddress(strings.ReplaceAll(rawAddress, "0x", ""))
+		chainID, _ := util.GetAddressNetwork(address)
+		return chainID
+	}
+
 	return flow.ChainID(rawChainID)
 }
 

@@ -45,8 +45,9 @@ var (
 	FormatFlag      = ""
 	SaveFlag        = ""
 	RunEmulatorFlag = false
-	HostFlag        = "127.0.0.1:3569"
+	HostFlag        = flow.DefaultHost
 	LogFlag         = "info"
+	NetworkFlag     = ""
 )
 
 // addCommand add new command to main cmd
@@ -93,10 +94,19 @@ func createGateway(cmd *cobra.Command, project *flow.Project) (gateway.Gateway, 
 
 	// resolve host
 	host := HostFlag
-	if host == "" && project != nil {
-		host = project.Host("emulator")
+	if host == flow.DefaultHost && project != nil {
+		if NetworkFlag != "" {
+			check := project.GetNetworkByName(NetworkFlag)
+			if check == nil {
+				return nil, fmt.Errorf("provided network with name %s doesn't exists in condiguration", NetworkFlag)
+			}
+
+			host = project.Host(NetworkFlag)
+		} else {
+			host = project.Host("emulator")
+		}
 	} else if host == "" {
-		return nil, fmt.Errorf("Host must be provided using --host flag or in config by initializing project: flow project init")
+		return nil, fmt.Errorf("host must be provided using --host flag or in config by initializing project: flow project init")
 	}
 
 	// create default grpc client

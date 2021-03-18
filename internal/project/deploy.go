@@ -28,8 +28,7 @@ import (
 )
 
 type flagsDeploy struct {
-	Network string `flag:"network" default:"emulator" info:"network configuration to use"`
-	Update  bool   `flag:"update" default:"false" info:"use update flag to update existing contracts"`
+	Update bool `flag:"update" default:"false" info:"use update flag to update existing contracts"`
 }
 
 type cmdDeploy struct {
@@ -54,7 +53,7 @@ func (s *cmdDeploy) Run(
 	project *flow.Project,
 	services *services.Services,
 ) (command.Result, error) {
-	c, err := services.Project.Deploy(s.flags.Network, s.flags.Update)
+	c, err := services.Project.Deploy(command.NetworkFlag, s.flags.Update)
 	return &DeployResult{contracts: c, project: project}, err
 }
 

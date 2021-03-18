@@ -111,6 +111,10 @@ func (t *Transactions) send(
 		return nil, nil, err
 	}
 
+	t.logger.StartProgress(
+		fmt.Sprintf("Sending Transaction..."),
+	)
+
 	tx := flow.NewTransaction().
 		SetScript(code).
 		AddAuthorizer(signer.Address())
@@ -134,11 +138,12 @@ func (t *Transactions) send(
 		return nil, nil, err
 	}
 
+	t.logger.StopProgress("")
 	t.logger.StartProgress("Waiting for transaction to be sealed...")
 
 	res, err := t.gateway.GetTransactionResult(tx, true)
 
-	t.logger.StartProgress("")
+	t.logger.StopProgress("")
 
 	return tx, res, err
 }
@@ -152,6 +157,10 @@ func (t *Transactions) GetStatus(
 		strings.ReplaceAll(transactionID, "0x", ""),
 	)
 
+	t.logger.StartProgress(
+		fmt.Sprintf("Fetching Transaction..."),
+	)
+
 	tx, err := t.gateway.GetTransaction(txID)
 	if err != nil {
 		return nil, nil, err
@@ -162,6 +171,9 @@ func (t *Transactions) GetStatus(
 	}
 
 	result, err := t.gateway.GetTransactionResult(tx, waitSeal)
+
+	// two times since wait seal might have started another progress - no harm if stopped two times
+	t.logger.StopProgress("")
 	t.logger.StopProgress("")
 
 	return tx, result, err
