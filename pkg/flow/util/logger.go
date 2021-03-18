@@ -61,7 +61,7 @@ func (s *StdoutLogger) log(msg string, level int) {
 
 // Info log
 func (s *StdoutLogger) Info(msg string) {
-	s.log(msg, InfoLog)
+	s.log(fmt.Sprintf("\n  %s\n", msg), InfoLog)
 }
 
 // Debug log
@@ -71,7 +71,7 @@ func (s *StdoutLogger) Debug(msg string) {
 
 // Error log
 func (s *StdoutLogger) Error(msg string) {
-	s.log(fmt.Sprintf("%s", Red(msg)), ErrorLog)
+	s.log(fmt.Sprintf("❌  %s", Red(msg)), ErrorLog)
 }
 
 func (s *StdoutLogger) StartProgress(msg string) {

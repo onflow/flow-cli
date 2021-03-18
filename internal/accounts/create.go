@@ -27,13 +27,12 @@ import (
 )
 
 type flagsCreate struct {
-	Signer    string   `default:"emulator-account" flag:"signer,s"`
-	Keys      []string `flag:"key,k" info:"Public keys to attach to account"`
+	Signer    string   `default:"emulator-account" flag:"signer"`
+	Keys      []string `flag:"key" info:"Public keys to attach to account"`
 	SigAlgo   string   `default:"ECDSA_P256" flag:"sig-algo" info:"Signature algorithm used to generate the keys"`
 	HashAlgo  string   `default:"SHA3_256" flag:"hash-algo" info:"Hash used for the digest"`
 	Name      string   `default:"default" flag:"name" info:"Name used for saving account"`
 	Host      string   `flag:"host" info:"Flow Access API host address"`
-	Results   bool     `default:"false" flag:"results" info:"Display the results of the transaction"`
 	Contracts []string `flag:"contract,c" info:"Contract to be deployed during account creation. <name:path>"`
 }
 

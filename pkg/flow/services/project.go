@@ -141,8 +141,8 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 		_, exists := targetAccountInfo.Contracts[contract.Name()]
 		if exists {
 			if !update {
-				p.logger.Info(fmt.Sprintf(
-					"❌  Contract %s is already deployed to account, use --update flag to force update.", contract.Name(),
+				p.logger.Error(fmt.Sprintf(
+					"Contract %s is already deployed to account, use --update flag to force update.", contract.Name(),
 				))
 				continue
 			}
@@ -176,9 +176,9 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 	}
 
 	if len(errs) == 0 {
-		p.logger.Info("\n✨  All contracts deployed successfully")
+		p.logger.Info("✨  All contracts deployed successfully")
 	} else {
-		p.logger.Info("❌  Failed to deploy all contracts")
+		p.logger.Error("Failed to deploy all contracts")
 		return nil, fmt.Errorf(`%v`, errs)
 	}
 

@@ -26,8 +26,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type flagsCollections struct {
-}
+type flagsCollections struct{}
 
 type cmdGet struct {
 	cmd   *cobra.Command

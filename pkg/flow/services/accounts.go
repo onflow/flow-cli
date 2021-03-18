@@ -330,6 +330,8 @@ func (a *Accounts) addContract(
 
 	// if we are updating contract
 	if updateExisting {
+		a.logger.Info(fmt.Sprintf("Contract %s updated on account %s", contractName, account.Address()))
+
 		tx = templates.UpdateAccountContract(
 			account.Address(),
 			templates.Contract{
@@ -352,7 +354,7 @@ func (a *Accounts) addContract(
 	}
 
 	if trx.Error != nil {
-		a.logger.Info("Deploying contract failed")
+		a.logger.Error("Deploying contract failed")
 		return nil, trx.Error
 	}
 

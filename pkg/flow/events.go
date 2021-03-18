@@ -46,8 +46,6 @@ func EventsFromTransaction(tx *flow.TransactionResult) Events {
 func newEvent(event flow.Event) Event {
 	var names []string
 
-	fmt.Println(event.String(), event.Value.String(), event.Value.Fields)
-
 	for _, eventType := range event.Value.EventType.Fields {
 		names = append(names, eventType.Identifier)
 	}
@@ -55,10 +53,8 @@ func newEvent(event flow.Event) Event {
 	for id, field := range event.Value.Fields {
 		name := names[id]
 		values[name] = fmt.Sprintf("%s", field)
-		fmt.Println(values[name])
 	}
 
-	fmt.Println(values)
 	return Event{
 		Type:   event.Type,
 		Values: values,
@@ -77,8 +73,6 @@ func (e *Events) GetAddress() *flow.Address {
 		return nil
 	}
 
-	fmt.Println("ADDRESS", addr)
-
 	// add 0 to beginning of address due to them being stripped
 	if len(addr) < addressLength {
 		addr = strings.Repeat("0", addressLength-len(addr)) + addr
@@ -89,10 +83,6 @@ func (e *Events) GetAddress() *flow.Address {
 			strings.ReplaceAll(addr, "0x", ""),
 			`"`, ""),
 	)
-
-	addr2 := flow.HexToAddress(addr)
-
-	fmt.Println(address.String(), addr2.String())
 
 	return &address
 }
