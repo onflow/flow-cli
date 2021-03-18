@@ -2,11 +2,8 @@ package accounts
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"text/tabwriter"
-
-	jsoncdc "github.com/onflow/cadence/encoding/json"
 
 	"github.com/onflow/cadence"
 
@@ -60,10 +57,11 @@ type StakingResult struct {
 
 // JSON convert result to JSON
 func (r *StakingResult) JSON() interface{} {
-	staking := cadenceToJSON(*r.staking)
-	delegation := cadenceToJSON(*r.delegation)
+	result := make(map[string]interface{}, 0)
+	result["staking"] = *r.staking
+	result["delegation"] = *r.delegation
 
-	return staking + delegation
+	return result
 }
 
 // String convert result to string
@@ -71,14 +69,11 @@ func (r *StakingResult) String() string {
 	var b bytes.Buffer
 	writer := tabwriter.NewWriter(&b, 0, 8, 1, '\t', tabwriter.AlignRight)
 
-	staking := cadenceToJSON(*r.staking)
-	delegation := cadenceToJSON(*r.delegation)
+	fmt.Fprintf(writer, "Account Staking Info:\n")
+	fmt.Fprintf(writer, "%v\n\n", *r.staking)
 
-	fmt.Fprint(writer, "Staking Info\n")
-	fmt.Fprint(writer, "%v\n\n", staking)
-
-	fmt.Fprint(writer, "Staking Info\n")
-	fmt.Fprint(writer, "%v\n", delegation)
+	fmt.Fprintf(writer, "Account Delegation Info:\n")
+	fmt.Fprintf(writer, "%v\n", *r.delegation)
 
 	writer.Flush()
 	return b.String()
@@ -87,16 +82,4 @@ func (r *StakingResult) String() string {
 // Oneliner show result as one liner grep friendly
 func (r *StakingResult) Oneliner() string {
 	return fmt.Sprintf("")
-}
-
-func cadenceToJSON(value cadence.Value) string {
-	var prettyJSON bytes.Buffer
-
-	b, err := jsoncdc.Encode(value)
-	err = json.Indent(&prettyJSON, b, "    ", "    ")
-	if err != nil {
-		return ""
-	}
-
-	return prettyJSON.String()
 }

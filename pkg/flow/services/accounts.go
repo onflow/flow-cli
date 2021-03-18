@@ -24,13 +24,10 @@ import (
 
 	"github.com/onflow/cadence"
 
-	"github.com/onflow/flow-cli/pkg/flow/keys"
-
-	"github.com/onflow/flow-cli/pkg/flow/config"
-
 	"github.com/onflow/flow-cli/pkg/flow"
-
+	"github.com/onflow/flow-cli/pkg/flow/config"
 	"github.com/onflow/flow-cli/pkg/flow/gateway"
+	"github.com/onflow/flow-cli/pkg/flow/keys"
 	"github.com/onflow/flow-cli/pkg/flow/util"
 	tmpl "github.com/onflow/flow-core-contracts/lib/go/templates"
 	flowsdk "github.com/onflow/flow-go-sdk"
@@ -158,13 +155,19 @@ func (a *Accounts) Add(
 
 // StakingInfo gets staking info for the account
 func (a *Accounts) StakingInfo(accountAddress string) (*cadence.Value, *cadence.Value, error) {
-	address := flowsdk.HexToAddress(accountAddress)
+	address := flowsdk.HexToAddress(
+		strings.ReplaceAll(accountAddress, "0x", ""),
+	)
 
 	cadenceAddress := []cadence.Value{cadence.NewAddress(address)}
 
 	chain, err := util.GetAddressNetwork(address)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to determine network from input address")
+	}
+
+	if chain == flowsdk.Emulator {
+		return nil, nil, fmt.Errorf("emulator chain not supported")
 	}
 
 	env := flow.EnvFromNetwork(chain)
@@ -295,7 +298,7 @@ func (a *Accounts) AddContractForAddress(
 	contractFilename string,
 	updateExisting bool,
 ) (*flowsdk.Account, error) {
-	account, err := util.AccountFromAddressAndKey(accountAddress, accountPrivateKey)
+	account, err := accountFromAddressAndKey(accountAddress, accountPrivateKey)
 	if err != nil {
 		return nil, err
 	}
@@ -367,7 +370,7 @@ func (a *Accounts) RemoveContractForAddress(
 	accountAddress string,
 	accountPrivateKey string,
 ) (*flowsdk.Account, error) {
-	account, err := util.AccountFromAddressAndKey(accountAddress, accountPrivateKey)
+	account, err := accountFromAddressAndKey(accountAddress, accountPrivateKey)
 	if err != nil {
 		return nil, err
 	}
@@ -386,4 +389,19 @@ func (a *Accounts) removeContract(
 	}
 
 	return a.gateway.GetAccount(account.Address())
+}
+
+// AccountFromAddressAndKey get account from address and private key
+func accountFromAddressAndKey(accountAddress string, accountPrivateKey string) (*flow.Account, error) {
+	address := flowsdk.HexToAddress(
+		strings.ReplaceAll(accountAddress, "0x", ""),
+	)
+
+	privateKey, err := crypto.DecodePrivateKeyHex(crypto.ECDSA_P256, accountPrivateKey)
+	if err != nil {
+		return nil, fmt.Errorf("private key is not correct")
+	}
+
+	account := flow.AccountFromAddressAndKey(address, privateKey)
+	return account, nil
 }

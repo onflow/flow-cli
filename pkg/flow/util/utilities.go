@@ -21,11 +21,8 @@ package util
 import (
 	"fmt"
 	"io/ioutil"
-	"strings"
 
-	flow2 "github.com/onflow/flow-cli/pkg/flow"
-
-	"github.com/onflow/flow-go-sdk"
+	flowsdk "github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
 )
 
@@ -51,21 +48,6 @@ func IsByteSlice(v interface{}) bool {
 	}
 	_, isBytes := slice[0].(byte)
 	return isBytes
-}
-
-// AccountFromAddressAndKey get account from address and private key
-func AccountFromAddressAndKey(accountAddress string, accountPrivateKey string) (*flow2.Account, error) {
-	address := flow.HexToAddress(
-		strings.ReplaceAll(accountAddress, "0x", ""),
-	)
-
-	privateKey, err := crypto.DecodePrivateKeyHex(crypto.ECDSA_P256, accountPrivateKey)
-	if err != nil {
-		return nil, fmt.Errorf("private key is not correct")
-	}
-
-	account := flow2.AccountFromAddressAndKey(address, privateKey)
-	return account, nil
 }
 
 // ConvertSigAndHashAlgo converts signature and hashing algorithm from string and do validation
@@ -97,11 +79,11 @@ func StringContains(s []string, e string) bool {
 }
 
 // GetAddressNetwork get chain id based on address
-func GetAddressNetwork(address flow.Address) (flow.ChainID, error) {
-	networks := []flow.ChainID{
-		flow.Mainnet,
-		flow.Testnet,
-		flow.Emulator,
+func GetAddressNetwork(address flowsdk.Address) (flowsdk.ChainID, error) {
+	networks := []flowsdk.ChainID{
+		flowsdk.Mainnet,
+		flowsdk.Testnet,
+		flowsdk.Emulator,
 	}
 	for _, net := range networks {
 		if address.IsValid(net) {
@@ -109,5 +91,5 @@ func GetAddressNetwork(address flow.Address) (flow.ChainID, error) {
 		}
 	}
 
-	return flow.ChainID(""), fmt.Errorf("unrecognized address not valid for any known chain: %s", address)
+	return flowsdk.ChainID(""), fmt.Errorf("unrecognized address not valid for any known chain: %s", address)
 }
