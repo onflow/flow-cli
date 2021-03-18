@@ -52,6 +52,7 @@ func init() {
 
 	c.AddCommand(accounts.Cmd)
 	command.Add(accounts.Cmd, accounts.NewGetCmd())
+	command.Add(accounts.Cmd, accounts.NewAddCmd())
 	command.Add(accounts.Cmd, accounts.NewCreateCmd())
 	command.Add(accounts.Cmd, accounts.NewAddContractCmd())
 	command.Add(accounts.Cmd, accounts.NewRemoveContractCmd())

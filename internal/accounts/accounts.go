@@ -23,7 +23,7 @@ import (
 	"fmt"
 	"text/tabwriter"
 
-	"github.com/onflow/flow-go-sdk"
+	flowsdk "github.com/onflow/flow-go-sdk"
 	"github.com/spf13/cobra"
 )
 
@@ -35,7 +35,7 @@ var Cmd = &cobra.Command{
 
 // AccountResult represent result from all account commands
 type AccountResult struct {
-	*flow.Account
+	*flowsdk.Account
 	showCode bool
 }
 
