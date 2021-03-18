@@ -58,6 +58,7 @@ func NewEvent(index int, eventId string, fields []cadence.Field, values []cadenc
 func NewTransactionResult(events []flow.Event) *flow.TransactionResult {
 	res := transactionResults.New()
 	res.Events = events
+	res.Error = nil
 
 	return &res
 }

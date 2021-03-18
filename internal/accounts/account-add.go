@@ -95,7 +95,7 @@ func (r *AccountAddResult) String() string {
 func (r *AccountAddResult) Oneliner() string {
 	return fmt.Sprintf(
 		"Address: 0x%s, Hash Algo: %s, Sig Algo: %s",
-		r.Address,
+		r.Address(),
 		r.Account.DefaultKey().HashAlgo(),
 		r.Account.DefaultKey().SigAlgo(),
 	)

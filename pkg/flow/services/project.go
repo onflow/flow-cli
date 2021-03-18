@@ -182,7 +182,7 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 	if len(errs) == 0 {
 		p.logger.Info("\n✨  All contracts deployed successfully")
 	} else {
-		p.logger.Error(fmt.Sprintf("Failed to deploy the contracts", errs))
+		p.logger.Error(fmt.Sprintf("Failed to deploy the contracts with error: %s", errs))
 		return nil, fmt.Errorf(`%v`, errs)
 	}
 
