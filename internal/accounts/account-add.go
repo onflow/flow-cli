@@ -52,6 +52,7 @@ func (a *cmdAdd) Run(
 		a.flags.KeyHex,
 		a.flags.KeyContext,
 		a.flags.Overwrite,
+		flow.ConfigPath,
 	)
 
 	return &AccountAddResult{account}, err

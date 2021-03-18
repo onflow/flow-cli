@@ -73,6 +73,7 @@ func (a *Accounts) Add(
 	keyHex string,
 	keyContext string,
 	overwrite bool,
+	path []string,
 ) (*flow.Account, error) {
 
 	existingAccount := a.project.GetAccountByName(name)
@@ -139,7 +140,12 @@ func (a *Accounts) Add(
 		return nil, fmt.Errorf("could not sign with the new key")
 	}
 
-	a.project.AddAccount(account)
+	a.project.AddOrUpdateAccount(account)
+
+	err = a.project.Save(path[0]) // only allow saving to one config for now
+	if err != nil {
+		return nil, err
+	}
 
 	return account, nil
 }
