@@ -26,7 +26,6 @@ import (
 	"os/exec"
 	"regexp"
 
-	"github.com/fatih/color"
 	"github.com/onflow/flow-go-sdk/crypto"
 )
 
@@ -50,10 +49,6 @@ func Exitf(code int, msg string, args ...interface{}) {
 	fmt.Printf(msg+"\n", args...)
 	os.Exit(code)
 }
-
-var Green = color.New(color.FgGreen, color.Bold).SprintfFunc()
-var Red = color.New(color.FgRed, color.Bold).SprintfFunc()
-var Bold = color.New(color.Bold).SprintfFunc()
 
 func RandomSeed(n int) ([]byte, error) {
 	seed := make([]byte, n)

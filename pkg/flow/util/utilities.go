@@ -22,9 +22,15 @@ import (
 	"fmt"
 	"io/ioutil"
 
+	"github.com/fatih/color"
+
 	flowsdk "github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
 )
+
+var Green = color.New(color.FgGreen, color.Bold).SprintfFunc()
+var Red = color.New(color.FgRed, color.Bold).SprintfFunc()
+var Bold = color.New(color.Bold).SprintfFunc()
 
 // LoadFile loads file from filename
 func LoadFile(filename string) ([]byte, error) {

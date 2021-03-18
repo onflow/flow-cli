@@ -23,6 +23,8 @@ import (
 	"fmt"
 	"text/tabwriter"
 
+	"github.com/onflow/flow-cli/pkg/flow/util"
+
 	"github.com/onflow/flow-cli/internal/command"
 
 	"github.com/onflow/flow-cli/pkg/flow"
@@ -97,11 +99,11 @@ func (r *InitResult) String() string {
 	account, _ := r.Project.EmulatorServiceAccount()
 
 	fmt.Fprintf(writer, "Configuration initialized\n")
-	fmt.Fprintf(writer, "Service account: %s\n\n", flow.Bold("0x"+account.Address().String()))
+	fmt.Fprintf(writer, "Service account: %s\n\n", util.Bold("0x"+account.Address().String()))
 	fmt.Fprintf(writer,
 		"Start emulator by runing: %s \nReset configuration using: %s.\n",
-		flow.Bold("flow emulator start"),
-		flow.Bold("flow init --rest"),
+		util.Bold("flow emulator start"),
+		util.Bold("flow init --rest"),
 	)
 
 	writer.Flush()

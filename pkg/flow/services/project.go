@@ -155,7 +155,7 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 		tx, err = p.gateway.SendTransaction(tx, targetAccount)
 
 		p.logger.StartProgress(
-			fmt.Sprintf("%s deploying...", flow.Bold(contract.Name())),
+			fmt.Sprintf("%s deploying...", util.Bold(contract.Name())),
 		)
 
 		result, err := p.gateway.GetTransactionResult(tx, true)
@@ -164,11 +164,11 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 
 		if result.Error == nil {
 			p.logger.Info(
-				fmt.Sprintf("%s -> 0x%s", flow.Green(contract.Name()), contract.Target()),
+				fmt.Sprintf("%s -> 0x%s", util.Green(contract.Name()), contract.Target()),
 			)
 		} else {
-			p.logger.Info(
-				fmt.Sprintf("%s error", flow.Red(contract.Name())),
+			p.logger.Error(
+				fmt.Sprintf("%s error", contract.Name()),
 			)
 
 			errs = append(errs, result.Error)

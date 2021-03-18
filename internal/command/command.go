@@ -46,7 +46,7 @@ var (
 	SaveFlag        = ""
 	RunEmulatorFlag = false
 	HostFlag        = "127.0.0.1:3569"
-	LogFlag         = util.InfoLog
+	LogFlag         = "info"
 )
 
 // addCommand add new command to main cmd
@@ -107,11 +107,23 @@ func createGateway(cmd *cobra.Command, project *flow.Project) (gateway.Gateway, 
 func createLogger() util.Logger {
 	// disable logging if we user want a specific format like JSON
 	//(more common they will not want also to have logs)
-	if FormatFlag != "" {
-		LogFlag = util.NoneLog
+	verbose := util.InfoLog
+	switch LogFlag {
+	case "none":
+		verbose = util.NoneLog
+	case "error":
+		verbose = util.ErrorLog
+	case "debug":
+		verbose = util.DebugLog
+	default:
+		verbose = util.InfoLog
 	}
 
-	return util.NewStdoutLogger(LogFlag)
+	if FormatFlag != "" {
+		verbose = util.NoneLog
+	}
+
+	return util.NewStdoutLogger(verbose)
 }
 
 // outputResult takes care of showing the result
@@ -176,6 +188,8 @@ func handleError(description string, err error) {
 			fmt.Fprintf(os.Stderr, "❌  Not Found:%s \n", strings.Split(err.Error(), "NotFound desc =")[1])
 		} else if strings.Contains(err.Error(), "code = InvalidArgument desc = ") {
 			fmt.Fprintf(os.Stderr, "❌  Invalid argument: %s \n", strings.Split(err.Error(), "code = InvalidArgument desc = ")[1])
+		} else if strings.Contains(err.Error(), "invalid signature:") {
+			fmt.Fprintf(os.Stderr, "❌  Invalid signature: %s \n", strings.Split(err.Error(), "invalid signature:")[1])
 		} else {
 			fmt.Fprintf(os.Stderr, "❌  %s: %s", description, err)
 		}

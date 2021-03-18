@@ -23,21 +23,23 @@ import (
 )
 
 const (
-	NoneLog  = "none"
-	DebugLog = "debug"
-	InfoLog  = "info"
+	NoneLog  = 0
+	ErrorLog = 1
+	DebugLog = 2
+	InfoLog  = 3
 )
 
 // Logger interface
 type Logger interface {
 	Debug(string)
 	Info(string)
+	Error(string)
 	StartProgress(string)
 	StopProgress(string)
 }
 
 // NewStdoutLogger create new logger
-func NewStdoutLogger(level string) Logger {
+func NewStdoutLogger(level int) Logger {
 	return &StdoutLogger{
 		level: level,
 	}
@@ -45,16 +47,16 @@ func NewStdoutLogger(level string) Logger {
 
 // StdoutLogger stdout logging implementation
 type StdoutLogger struct {
-	level   string
+	level   int
 	spinner *Spinner
 }
 
-func (s *StdoutLogger) log(msg string, level string) {
-	if s.level == NoneLog || s.level == DebugLog && s.level != level {
+func (s *StdoutLogger) log(msg string, level int) {
+	if s.level > level {
 		return
 	}
 
-	fmt.Println(msg)
+	fmt.Printf("%s\n", msg)
 }
 
 // Info log
@@ -65,6 +67,11 @@ func (s *StdoutLogger) Info(msg string) {
 // Debug log
 func (s *StdoutLogger) Debug(msg string) {
 	s.log(msg, DebugLog)
+}
+
+// Error log
+func (s *StdoutLogger) Error(msg string) {
+	s.log(fmt.Sprintf("%s", Red(msg)), ErrorLog)
 }
 
 func (s *StdoutLogger) StartProgress(msg string) {

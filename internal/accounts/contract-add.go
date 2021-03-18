@@ -57,7 +57,7 @@ func (a *cmdAddContract) Run(
 	account, err := services.Accounts.AddContract(a.flags.Account, args[0], args[1], false)
 	return &AccountResult{
 		Account:  account,
-		showCode: true,
+		showCode: false,
 	}, err
 }
 
