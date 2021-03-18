@@ -22,6 +22,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/onflow/cadence"
+
 	"github.com/onflow/flow-cli/pkg/flow/keys"
 
 	"github.com/onflow/flow-cli/pkg/flow/config"
@@ -30,6 +32,7 @@ import (
 
 	"github.com/onflow/flow-cli/pkg/flow/gateway"
 	"github.com/onflow/flow-cli/pkg/flow/util"
+	tmpl "github.com/onflow/flow-core-contracts/lib/go/templates"
 	flowsdk "github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/onflow/flow-go-sdk/templates"
@@ -66,7 +69,7 @@ func (a *Accounts) Get(address string) (*flowsdk.Account, error) {
 
 func (a *Accounts) Add(
 	name string,
-	address string,
+	accountAddress string,
 	signatureAlgorithm string,
 	hashingAlgorithm string,
 	keyIndex int,
@@ -90,19 +93,22 @@ func (a *Accounts) Add(
 		return nil, fmt.Errorf("key index must be positive number")
 	}
 
+	address := flowsdk.HexToAddress(accountAddress)
+	chainID, err := util.GetAddressNetwork(address)
+	if err != nil {
+		return nil, err
+	}
+
 	confAccount := config.Account{
 		Name:    name,
-		Address: flowsdk.HexToAddress(address),
-		ChainID: "", // todo: chain id
-		Keys:    nil,
+		Address: address,
+		ChainID: chainID,
 	}
 
 	accountKey := config.AccountKey{
-		Type:     "",
 		Index:    keyIndex,
 		SigAlgo:  sigAlgo,
 		HashAlgo: hashAlgo,
-		Context:  nil,
 	}
 
 	// hex key
@@ -148,6 +154,35 @@ func (a *Accounts) Add(
 	}
 
 	return account, nil
+}
+
+// StakingInfo gets staking info for the account
+func (a *Accounts) StakingInfo(accountAddress string) (*cadence.Value, *cadence.Value, error) {
+	address := flowsdk.HexToAddress(accountAddress)
+
+	cadenceAddress := []cadence.Value{cadence.NewAddress(address)}
+
+	chain, err := util.GetAddressNetwork(address)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to determine network from input address")
+	}
+
+	env := flow.EnvFromNetwork(chain)
+
+	stakingInfoScript := tmpl.GenerateGetLockedStakerInfoScript(env)
+	delegationInfoScript := tmpl.GenerateGetLockedDelegatorInfoScript(env)
+
+	stakingValue, err := a.gateway.ExecuteScript(stakingInfoScript, cadenceAddress)
+	if err != nil {
+		return nil, nil, fmt.Errorf("error getting staking info: %s", err.Error())
+	}
+
+	delegationValue, err := a.gateway.ExecuteScript(delegationInfoScript, cadenceAddress)
+	if err != nil {
+		return nil, nil, fmt.Errorf("error getting delegation info: %s", err.Error())
+	}
+
+	return &stakingValue, &delegationValue, nil
 }
 
 // Create creates an account with signer name, keys, algorithms, contracts and returns the new account

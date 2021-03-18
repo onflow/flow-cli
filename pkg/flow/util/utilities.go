@@ -86,6 +86,7 @@ func ConvertSigAndHashAlgo(
 	return sigAlgo, hashAlgo, nil
 }
 
+// StringContains check if string slice contains string
 func StringContains(s []string, e string) bool {
 	for _, a := range s {
 		if a == e {
@@ -93,4 +94,20 @@ func StringContains(s []string, e string) bool {
 		}
 	}
 	return false
+}
+
+// GetAddressNetwork get chain id based on address
+func GetAddressNetwork(address flow.Address) (flow.ChainID, error) {
+	networks := []flow.ChainID{
+		flow.Mainnet,
+		flow.Testnet,
+		flow.Emulator,
+	}
+	for _, net := range networks {
+		if address.IsValid(net) {
+			return net, nil
+		}
+	}
+
+	return flow.ChainID(""), fmt.Errorf("unrecognized address not valid for any known chain: %s", address)
 }

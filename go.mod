@@ -9,6 +9,7 @@ require (
 	github.com/magiconair/properties v1.8.1 // indirect
 	github.com/onflow/cadence v0.13.7
 	github.com/onflow/cadence/languageserver v0.13.1
+	github.com/onflow/flow-core-contracts/lib/go/templates v0.7.1
 	github.com/onflow/flow-emulator v0.16.1
 	github.com/onflow/flow-go v0.14.9
 	github.com/onflow/flow-go-sdk v0.16.2
