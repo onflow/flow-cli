@@ -82,8 +82,6 @@ type HexAccountKey struct {
 	privateKey crypto.PrivateKey
 }
 
-const privateKeyField = "privateKey"
-
 var resourceRegexp = regexp.MustCompile(`projects/(?P<projectId>[^/]*)/locations/(?P<location>[^/]*)/keyRings/(?P<keyringId>[^/]*)/cryptoKeys/(?P<keyId>[^/]*)/cryptoKeyVersions/(?P<keyVersion>[^/]*)`)
 
 func KeyContextFromKMSResourceID(resourceID string) (map[string]string, error) {
@@ -115,9 +113,9 @@ func NewHexAccountKeyFromPrivateKey(
 }
 
 func newHexAccountKey(accountKeyConf config.AccountKey) (*HexAccountKey, error) {
-	privateKeyHex, ok := accountKeyConf.Context[privateKeyField]
+	privateKeyHex, ok := accountKeyConf.Context[config.PrivateKeyField]
 	if !ok {
-		return nil, fmt.Errorf("\"%s\" field is required", privateKeyField)
+		return nil, fmt.Errorf("\"%s\" field is required", config.PrivateKeyField)
 	}
 
 	privateKey, err := crypto.DecodePrivateKeyHex(accountKeyConf.SigAlgo, privateKeyHex)
@@ -146,7 +144,7 @@ func (a *HexAccountKey) ToConfig() config.AccountKey {
 		SigAlgo:  a.sigAlgo,
 		HashAlgo: a.hashAlgo,
 		Context: map[string]string{
-			privateKeyField: a.PrivateKeyHex(),
+			config.PrivateKeyField: a.PrivateKeyHex(),
 		},
 	}
 }

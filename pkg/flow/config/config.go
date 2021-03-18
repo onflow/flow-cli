@@ -91,6 +91,7 @@ const (
 	KeyTypeGoogleKMS          KeyType = "google-kms" // Google KMS signer
 	KeyTypeShell              KeyType = "shell"      // Exec out to a shell script
 	DefaultEmulatorConfigName         = "default"
+	PrivateKeyField                   = "privateKey"
 )
 
 //TODO: replace filter with find where only one is expected

@@ -70,7 +70,7 @@ func (j jsonAccounts) transformToConfig() config.Accounts {
 					SigAlgo:  crypto.ECDSA_P256,
 					HashAlgo: crypto.SHA3_256,
 					Context: map[string]string{
-						"privateKey": a.Simple.Keys,
+						config.PrivateKeyField: a.Simple.Keys,
 					},
 				}},
 			}
@@ -113,7 +113,7 @@ func transformSimpleAccountToJSON(a config.Account) jsonAccount {
 		Simple: jsonAccountSimple{
 			Address: a.Address.String(),
 			Chain:   a.ChainID.String(),
-			Keys:    a.Keys[0].Context["privateKey"],
+			Keys:    a.Keys[0].Context[config.PrivateKeyField],
 		},
 	}
 }
