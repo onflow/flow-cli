@@ -131,6 +131,10 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 	for _, contract := range contracts {
 		targetAccount := p.project.GetAccountByAddress(contract.Target().String())
 
+		if targetAccount == nil {
+			return nil, fmt.Errorf("target account for deploying contract not found in configuration")
+		}
+
 		targetAccountInfo, err := p.gateway.GetAccount(targetAccount.Address())
 		if err != nil {
 			return nil, fmt.Errorf("failed to fetch information for account %s", targetAccount.Address())

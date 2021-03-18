@@ -27,7 +27,7 @@ import (
 )
 
 type flagsGenerate struct {
-	Seed     string `flag:"seed,s" info:"Deterministic seed phrase"`
+	Seed     string `flag:"seed" info:"Deterministic seed phrase"`
 	SigAlgo  string `default:"ECDSA_P256" flag:"algo,a" info:"Signature algorithm"`
 	HashAlgo string `flag:"hashalgo" info:"hash algorithm for the key"`
 	KeyIndex int    `flag:"index" info:"index of the key on the account"`
