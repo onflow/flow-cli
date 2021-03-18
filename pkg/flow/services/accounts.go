@@ -22,6 +22,10 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/onflow/flow-cli/pkg/flow/keys"
+
+	"github.com/onflow/flow-cli/pkg/flow/config"
+
 	"github.com/onflow/flow-cli/pkg/flow"
 
 	"github.com/onflow/flow-cli/pkg/flow/gateway"
@@ -58,6 +62,86 @@ func (a *Accounts) Get(address string) (*flowsdk.Account, error) {
 	)
 
 	return a.gateway.GetAccount(flowAddress)
+}
+
+func (a *Accounts) Add(
+	name string,
+	address string,
+	signatureAlgorithm string,
+	hashingAlgorithm string,
+	keyIndex int,
+	keyHex string,
+	keyContext string,
+	overwrite bool,
+) (*flow.Account, error) {
+
+	existingAccount := a.project.GetAccountByName(name)
+	if existingAccount != nil && !overwrite {
+		return nil, fmt.Errorf("account with name [%s] already exists in the config, use --overwrite flag if you want to overwrite it", name)
+	}
+
+	sigAlgo, hashAlgo, err := util.ConvertSigAndHashAlgo(signatureAlgorithm, hashingAlgorithm)
+	if err != nil {
+		return nil, err
+	}
+
+	if keyIndex < 0 {
+		return nil, fmt.Errorf("key index must be positive number")
+	}
+
+	confAccount := config.Account{
+		Name:    name,
+		Address: flowsdk.HexToAddress(address),
+		ChainID: "", // todo: chain id
+		Keys:    nil,
+	}
+
+	accountKey := config.AccountKey{
+		Type:     "",
+		Index:    keyIndex,
+		SigAlgo:  sigAlgo,
+		HashAlgo: hashAlgo,
+		Context:  nil,
+	}
+
+	// hex key
+	if keyHex != "" {
+		_, err := crypto.DecodePrivateKeyHex(sigAlgo, keyHex)
+		if err != nil {
+			return nil, fmt.Errorf("key hex could not be parsed")
+		}
+
+		accountKey.Type = config.KeyTypeHex
+		accountKey.Context[config.PrivateKeyField] = keyHex
+
+	} else if keyContext != "" {
+		keyCtx, err := keys.KeyContextFromKMSResourceID(keyContext)
+		if err != nil {
+			return nil, fmt.Errorf("key context could not be parsed %s", keyContext)
+		}
+
+		accountKey.Type = config.KeyTypeGoogleKMS
+		accountKey.Context = keyCtx
+
+	} else {
+		return nil, fmt.Errorf("either --privatekey or --context flag must be provided")
+	}
+
+	confAccount.Keys = []config.AccountKey{accountKey}
+
+	account, err := flow.AccountFromConfig(confAccount)
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = account.DefaultKey().Signer().Sign([]byte("test"))
+	if err != nil {
+		return nil, fmt.Errorf("could not sign with the new key")
+	}
+
+	a.project.AddAccount(account)
+
+	return account, nil
 }
 
 // Create creates an account with signer name, keys, algorithms, contracts and returns the new account
@@ -122,7 +206,7 @@ func (a *Accounts) Create(
 	}
 
 	tx := templates.CreateAccount(accountKeys, contractTemplates, signer.Address())
-	tx, err := a.gateway.SendTransaction(tx, signer)
+	tx, err = a.gateway.SendTransaction(tx, signer)
 	if err != nil {
 		return nil, err
 	}
