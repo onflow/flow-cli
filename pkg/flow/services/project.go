@@ -20,10 +20,10 @@ package services
 
 import (
 	"fmt"
+
 	"strings"
 
-	flow2 "github.com/onflow/flow-cli/pkg/flow"
-
+	"github.com/onflow/flow-cli/pkg/flow"
 	"github.com/onflow/flow-cli/pkg/flow/util"
 
 	"github.com/onflow/flow-go-sdk/crypto"
@@ -32,20 +32,20 @@ import (
 
 	"github.com/onflow/flow-cli/pkg/flow/contracts"
 	"github.com/onflow/flow-cli/pkg/flow/gateway"
-	"github.com/onflow/flow-go-sdk"
+	flowsdk "github.com/onflow/flow-go-sdk"
 )
 
 // Project service handles all interactions for project
 type Project struct {
 	gateway gateway.Gateway
-	project *flow2.Project
+	project *flow.Project
 	logger  util.Logger
 }
 
 // NewProject create new project service
 func NewProject(
 	gateway gateway.Gateway,
-	project *flow2.Project,
+	project *flow.Project,
 	logger util.Logger,
 ) *Project {
 	return &Project{
@@ -55,18 +55,21 @@ func NewProject(
 	}
 }
 
-func (p *Project) Init(reset bool, serviceKeySigAlgo string, serviceKeyHashAlgo string, servicePrivateKey string) (*flow2.Project, error) {
-	if !flow2.ProjectExists(flow2.DefaultConfigPath) || reset {
-		serviceKeySigAlgo := crypto.StringToSignatureAlgorithm(serviceKeySigAlgo)
-		serviceKeyHashAlgo := crypto.StringToHashAlgorithm(serviceKeyHashAlgo)
+func (p *Project) Init(reset bool, serviceKeySigAlgo string, serviceKeyHashAlgo string, servicePrivateKey string) (*flow.Project, error) {
+	if !flow.ProjectExists(flow.DefaultConfigPath) || reset {
 
-		project, err := flow2.InitProject(serviceKeySigAlgo, serviceKeyHashAlgo)
+		sigAlgo, hashAlgo, err := util.ConvertSigAndHashAlgo(serviceKeySigAlgo, serviceKeyHashAlgo)
+		if err != nil {
+			return nil, err
+		}
+
+		project, err := flow.InitProject(sigAlgo, hashAlgo)
 		if err != nil {
 			return nil, err
 		}
 
 		if len(servicePrivateKey) > 0 {
-			serviceKey, err := crypto.DecodePrivateKeyHex(serviceKeySigAlgo, servicePrivateKey)
+			serviceKey, err := crypto.DecodePrivateKeyHex(sigAlgo, servicePrivateKey)
 			if err != nil {
 				return nil, fmt.Errorf("could not decode private key for a service account, provided private key: %s", servicePrivateKey)
 			}
@@ -74,14 +77,14 @@ func (p *Project) Init(reset bool, serviceKeySigAlgo string, serviceKeyHashAlgo 
 			project.SetEmulatorServiceKey(serviceKey)
 		}
 
-		err = project.Save(flow2.DefaultConfigPath)
+		err = project.Save(flow.DefaultConfigPath)
 		if err != nil {
 			return nil, err
 		}
 
 		return project, nil
 	} else {
-		return nil, fmt.Errorf("configuration already exists at: %s, if you want to reset configuration use the reset flag", flow2.DefaultConfigPath)
+		return nil, fmt.Errorf("configuration already exists at: %s, if you want to reset configuration use the reset flag", flow.DefaultConfigPath)
 	}
 }
 
@@ -133,7 +136,7 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 			return nil, fmt.Errorf("failed to fetch information for account %s", targetAccount.Address())
 		}
 
-		var tx *flow.Transaction
+		var tx *flowsdk.Transaction
 
 		_, exists := targetAccountInfo.Contracts[contract.Name()]
 		if exists {
@@ -152,7 +155,7 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 		tx, err = p.gateway.SendTransaction(tx, targetAccount)
 
 		p.logger.StartProgress(
-			fmt.Sprintf("%s deploying...", flow2.Bold(contract.Name())),
+			fmt.Sprintf("%s deploying...", flow.Bold(contract.Name())),
 		)
 
 		result, err := p.gateway.GetTransactionResult(tx, true)
@@ -161,11 +164,11 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 
 		if result.Error == nil {
 			p.logger.Info(
-				fmt.Sprintf("%s -> 0x%s", flow2.Green(contract.Name()), contract.Target()),
+				fmt.Sprintf("%s -> 0x%s", flow.Green(contract.Name()), contract.Target()),
 			)
 		} else {
 			p.logger.Info(
-				fmt.Sprintf("%s error", flow2.Red(contract.Name())),
+				fmt.Sprintf("%s error", flow.Red(contract.Name())),
 			)
 
 			errs = append(errs, result.Error)
@@ -183,9 +186,9 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 }
 
 func prepareUpdateContractTransaction(
-	targetAccount flow.Address,
+	targetAccount flowsdk.Address,
 	contract *contracts.Contract,
-) *flow.Transaction {
+) *flowsdk.Transaction {
 	return templates.UpdateAccountContract(
 		targetAccount,
 		templates.Contract{
@@ -196,9 +199,9 @@ func prepareUpdateContractTransaction(
 }
 
 func prepareAddContractTransaction(
-	targetAccount flow.Address,
+	targetAccount flowsdk.Address,
 	contract *contracts.Contract,
-) *flow.Transaction {
+) *flowsdk.Transaction {
 	return templates.AddAccountContract(
 		targetAccount,
 		templates.Contract{

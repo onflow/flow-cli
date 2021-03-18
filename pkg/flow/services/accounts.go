@@ -76,13 +76,9 @@ func (a *Accounts) Create(
 
 	accountKeys := make([]*flowsdk.AccountKey, len(keys))
 
-	sigAlgo := crypto.StringToSignatureAlgorithm(signatureAlgorithm)
-	if sigAlgo == crypto.UnknownSignatureAlgorithm {
-		return nil, fmt.Errorf("failed to determine signature algorithm from %s", sigAlgo)
-	}
-	hashAlgo := crypto.StringToHashAlgorithm(hashingAlgorithm)
-	if hashAlgo == crypto.UnknownHashAlgorithm {
-		return nil, fmt.Errorf("failed to determine hash algorithm from %s", hashAlgo)
+	sigAlgo, hashAlgo, err := util.ConvertSigAndHashAlgo(signatureAlgorithm, hashingAlgorithm)
+	if err != nil {
+		return nil, err
 	}
 
 	for i, publicKeyHex := range keys {
