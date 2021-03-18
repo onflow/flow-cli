@@ -21,7 +21,6 @@ package config
 import (
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
-	"github.com/thoas/go-funk"
 )
 
 type Config struct {
@@ -97,9 +96,15 @@ const (
 //TODO: replace filter with find where only one is expected
 // GetForNetwork get all contracts by network
 func (c *Contracts) GetForNetwork(network string) Contracts {
-	return funk.Filter([]Contract(*c), func(c Contract) bool {
-		return c.Network == network
-	}).([]Contract)
+	contracts := make(Contracts, 0)
+
+	for _, contract := range *c {
+		if contract.Network == network {
+			contracts = append(contracts, contract)
+		}
+	}
+
+	return contracts
 }
 
 // IsAlias checks if contract has an alias
@@ -109,9 +114,13 @@ func (c *Contract) IsAlias() bool {
 
 // GetByNameAndNetwork get contract array for account and network
 func (c *Contracts) GetByNameAndNetwork(name string, network string) Contract {
-	contracts := funk.Filter([]Contract(*c), func(c Contract) bool {
-		return c.Network == network && c.Name == name
-	}).([]Contract)
+	contracts := make(Contracts, 0)
+
+	for _, contract := range *c {
+		if contract.Network == network && contract.Name == name {
+			contracts = append(contracts, contract)
+		}
+	}
 
 	// if we don't find contract by name and network create a new contract
 	// and replace only name and source with existing
@@ -131,10 +140,14 @@ func (c *Contracts) GetByNameAndNetwork(name string, network string) Contract {
 // TODO: this filtering can cause error if not found, better to refactor to returning
 
 // GetByName get contract by name
-func (c *Contracts) GetByName(name string) Contract {
-	return funk.Filter([]Contract(*c), func(c Contract) bool {
-		return c.Name == name
-	}).([]Contract)[0]
+func (c *Contracts) GetByName(name string) *Contract {
+	for _, contract := range *c {
+		if contract.Name == name {
+			return &contract
+		}
+	}
+
+	return nil
 }
 
 // GetByNetwork returns all contracts for specific network

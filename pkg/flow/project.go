@@ -24,6 +24,8 @@ import (
 	"path"
 	"strings"
 
+	"github.com/onflow/flow-cli/pkg/flow/util"
+
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/spf13/afero"
@@ -214,11 +216,15 @@ func (p *Project) GetContractsByNetwork(network string) []Contract {
 }
 
 func (p *Project) GetAllAccountNames() []string {
-	return funk.Uniq(
-		funk.Map(p.accounts, func(a *Account) string {
-			return a.name
-		}).([]string),
-	).([]string)
+	names := make([]string, 0)
+
+	for _, account := range p.accounts {
+		if !util.StringContains(names, account.name) {
+			names = append(names, account.name)
+		}
+	}
+
+	return names
 }
 
 func (p *Project) GetAccountByName(name string) *Account {
@@ -237,10 +243,25 @@ func (p *Project) AddAccount(account *Account) {
 	p.accounts = append(p.accounts, account)
 }
 
+func (p *Project) AddOrUpdateAccount(account *Account) {
+	for i, existingAccount := range p.accounts {
+		if existingAccount.name == account.name {
+			(*p).accounts[i] = account
+			return
+		}
+	}
+
+	p.accounts = append(p.accounts, account)
+}
+
 func (p *Project) GetAccountByAddress(address string) *Account {
-	return funk.Filter(p.accounts, func(a *Account) bool {
-		return a.address.String() == strings.ReplaceAll(address, "0x", "")
-	}).([]*Account)[0]
+	for _, account := range p.accounts {
+		if account.address.String() == strings.ReplaceAll(address, "0x", "") {
+			return account
+		}
+	}
+
+	return nil
 }
 
 func (p *Project) GetAliases(network string) map[string]string {
