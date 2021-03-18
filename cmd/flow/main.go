@@ -64,7 +64,7 @@ func init() {
 
 	c.AddCommand(transactions.Cmd)
 	command.Add(transactions.Cmd, transactions.NewSendCmd())
-	command.Add(transactions.Cmd, transactions.NewStatusCmd())
+	command.Add(transactions.Cmd, transactions.NewGetCmd())
 
 	c.AddCommand(keys.Cmd)
 	command.Add(keys.Cmd, keys.NewGenerateCmd())

@@ -32,16 +32,16 @@ type flagsStatus struct {
 	Code   bool   `default:"false" flag:"code" info:"Display transaction code"`
 }
 
-type cmdStatus struct {
+type cmdGet struct {
 	cmd   *cobra.Command
 	flags flagsStatus
 }
 
-// NewStatusCmd new status command
-func NewStatusCmd() command.Command {
-	return &cmdStatus{
+// NewGetCmd new status command
+func NewGetCmd() command.Command {
+	return &cmdGet{
 		cmd: &cobra.Command{
-			Use:   "status <tx_id>",
+			Use:   "get <tx_id>",
 			Short: "Get the transaction status",
 			Args:  cobra.ExactArgs(1),
 		},
@@ -49,7 +49,7 @@ func NewStatusCmd() command.Command {
 }
 
 // Run command
-func (s *cmdStatus) Run(
+func (s *cmdGet) Run(
 	cmd *cobra.Command,
 	args []string,
 	project *flow.Project,
@@ -64,11 +64,11 @@ func (s *cmdStatus) Run(
 }
 
 // GetFlags for command
-func (s *cmdStatus) GetFlags() *sconfig.Config {
+func (s *cmdGet) GetFlags() *sconfig.Config {
 	return sconfig.New(&s.flags)
 }
 
 // GetCmd gets command
-func (s *cmdStatus) GetCmd() *cobra.Command {
+func (s *cmdGet) GetCmd() *cobra.Command {
 	return s.cmd
 }

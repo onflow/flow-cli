@@ -19,6 +19,7 @@
 package tests
 
 import (
+	"os"
 	"testing"
 
 	flow2 "github.com/onflow/flow-cli/pkg/flow"
@@ -44,8 +45,13 @@ const (
 )
 
 var logger = util.NewStdoutLogger(util.NoneLog)
+var e2e = os.Getenv("E2E")
 
 func TestAccount(t *testing.T) {
+	if e2e == "" {
+		t.Skip("Skipping end-to-end tests")
+	}
+
 	helloContract, _ := io.ReadFile(contractPath)
 
 	gw, err := gateway.NewGrpcGateway(host)
@@ -55,15 +61,6 @@ func TestAccount(t *testing.T) {
 	require.NoError(t, err)
 
 	accounts := services.NewAccounts(gw, project, logger)
-
-	/*
-		t.Run("Address Test", func(t *testing.T) {
-			tx := services.NewTransactions(gw, project, logger)
-			_, tr, _ := tx.GetStatus("c0ff9c817f54526d69d381ba1e22e2721e95308b2e88f9107a543b7f233fce05", false)
-			fmt.Println(tr.Events[0].Value)
-
-		})
-	*/
 
 	t.Run("Get an Account", func(t *testing.T) {
 		account, err := accounts.Get(serviceAddress)
@@ -132,6 +129,10 @@ func TestAccount(t *testing.T) {
 }
 
 func TestEvents(t *testing.T) {
+	if e2e == "" {
+		t.Skip("Skipping end-to-end tests")
+	}
+
 	gw, err := gateway.NewGrpcGateway(host)
 	require.NoError(t, err)
 
@@ -149,6 +150,10 @@ func TestEvents(t *testing.T) {
 }
 
 func TestKeys(t *testing.T) {
+	if e2e == "" {
+		t.Skip("Skipping end-to-end tests")
+	}
+
 	gw, err := gateway.NewGrpcGateway(host)
 	require.NoError(t, err)
 
@@ -167,6 +172,10 @@ func TestKeys(t *testing.T) {
 }
 
 func TestProject(t *testing.T) {
+	if e2e == "" {
+		t.Skip("Skipping end-to-end tests")
+	}
+
 	gw, err := gateway.NewGrpcGateway(host)
 	require.NoError(t, err)
 
@@ -187,6 +196,10 @@ func TestProject(t *testing.T) {
 }
 
 func TestScripts(t *testing.T) {
+	if e2e == "" {
+		t.Skip("Skipping end-to-end tests")
+	}
+
 	gateway, err := gateway.NewGrpcGateway(host)
 	require.NoError(t, err)
 
@@ -211,6 +224,10 @@ func TestScripts(t *testing.T) {
 }
 
 func TestTransactions(t *testing.T) {
+	if e2e == "" {
+		t.Skip("Skipping end-to-end tests")
+	}
+
 	gw, err := gateway.NewGrpcGateway(host)
 	require.NoError(t, err)
 
