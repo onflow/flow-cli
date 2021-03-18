@@ -116,6 +116,7 @@ func (a *Accounts) Add(
 		}
 
 		accountKey.Type = config.KeyTypeHex
+		accountKey.Context = make(map[string]string, 0)
 		accountKey.Context[config.PrivateKeyField] = keyHex
 
 	} else if keyContext != "" {
@@ -149,6 +150,8 @@ func (a *Accounts) Add(
 	if err != nil {
 		return nil, err
 	}
+
+	a.logger.Info("Account added to configuration\n")
 
 	return account, nil
 }
@@ -343,9 +346,14 @@ func (a *Accounts) addContract(
 	}
 
 	// we wait for transaction to be sealed
-	_, err = a.gateway.GetTransactionResult(tx, true)
+	trx, err := a.gateway.GetTransactionResult(tx, true)
 	if err != nil {
 		return nil, err
+	}
+
+	if trx.Error != nil {
+		a.logger.Info("Deploying contract failed")
+		return nil, trx.Error
 	}
 
 	return a.gateway.GetAccount(account.Address())
@@ -387,6 +395,8 @@ func (a *Accounts) removeContract(
 	if err != nil {
 		return nil, err
 	}
+
+	a.logger.Info(fmt.Sprintf("Contract %s removed from account %s\n", contractName, account.Address()))
 
 	return a.gateway.GetAccount(account.Address())
 }

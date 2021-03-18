@@ -62,6 +62,11 @@ func (r *AccountResult) String() string {
 		fmt.Fprintf(writer, "\n")
 	}
 
+	fmt.Fprintf(writer, "Contracts Deployed: %d\n", len(r.Contracts))
+	for name, _ := range r.Contracts {
+		fmt.Fprintf(writer, "Contract: '%s'\n", name)
+	}
+
 	if r.showCode {
 		for name, code := range r.Contracts {
 			fmt.Fprintf(writer, "Code '%s':\n", name)

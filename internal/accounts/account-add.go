@@ -81,7 +81,6 @@ func (r *AccountAddResult) String() string {
 	var b bytes.Buffer
 	writer := tabwriter.NewWriter(&b, 0, 8, 1, '\t', tabwriter.AlignRight)
 
-	fmt.Fprintf(writer, "Account added to configuration")
 	fmt.Fprintf(writer, "Address\t 0x%s\n", r.Account.Address())
 	fmt.Fprintf(writer, "Hash Algo\t %s\n", r.Account.DefaultKey().HashAlgo())
 	fmt.Fprintf(writer, "Signature Algo\t %s\n", r.Account.DefaultKey().SigAlgo())
