@@ -29,6 +29,7 @@ import (
 	"github.com/onflow/flow-go-sdk/crypto"
 )
 
+// LoadFile loads file from filename
 func LoadFile(filename string) ([]byte, error) {
 	var code []byte
 	var err error
@@ -65,4 +66,22 @@ func AccountFromAddressAndKey(accountAddress string, accountPrivateKey string) (
 
 	account := flow2.AccountFromAddressAndKey(address, privateKey)
 	return account, nil
+}
+
+// ConvertSigAndHashAlgo converts signature and hashing algorithm from string and do validation
+func ConvertSigAndHashAlgo(
+	signatureAlgorithm string,
+	hashingAlgorithm string,
+) (crypto.SignatureAlgorithm, crypto.HashAlgorithm, error) {
+	sigAlgo := crypto.StringToSignatureAlgorithm(signatureAlgorithm)
+	if sigAlgo == crypto.UnknownSignatureAlgorithm {
+		return crypto.UnknownSignatureAlgorithm, crypto.UnknownHashAlgorithm, fmt.Errorf("failed to determine signature algorithm from %s", sigAlgo)
+	}
+
+	hashAlgo := crypto.StringToHashAlgorithm(hashingAlgorithm)
+	if hashAlgo == crypto.UnknownHashAlgorithm {
+		return crypto.UnknownSignatureAlgorithm, crypto.UnknownHashAlgorithm, fmt.Errorf("failed to determine hash algorithm from %s", hashAlgo)
+	}
+
+	return sigAlgo, hashAlgo, nil
 }
