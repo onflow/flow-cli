@@ -86,7 +86,7 @@ func init() {
 	c.PersistentFlags().StringVarP(
 		&command.HostFlag,
 		"host",
-		"",
+		"n",
 		command.HostFlag,
 		"Flow Access API host address",
 	)
@@ -94,23 +94,23 @@ func init() {
 	c.PersistentFlags().StringVarP(
 		&command.FilterFlag,
 		"filter",
-		"",
+		"x",
 		command.FilterFlag,
 		"Filter result values by property name",
 	)
 
 	c.PersistentFlags().StringVarP(
 		&command.FormatFlag,
-		"format",
-		"",
+		"output",
+		"o",
 		command.FormatFlag,
-		"Format to show result in",
+		"Output format",
 	)
 
 	c.PersistentFlags().StringVarP(
 		&command.SaveFlag,
 		"save",
-		"",
+		"s",
 		command.SaveFlag,
 		"Save result to a filename",
 	)
@@ -118,22 +118,22 @@ func init() {
 	c.PersistentFlags().StringVarP(
 		&command.LogFlag,
 		"log",
-		"",
+		"l",
 		command.LogFlag,
-		"Logging level",
+		"Log level verbosity",
 	)
 
 	c.PersistentFlags().BoolVarP(
 		&command.RunEmulatorFlag,
 		"emulator",
-		"",
+		"e",
 		command.RunEmulatorFlag,
 		"Run in-memory emulator",
 	)
 
 	c.PersistentFlags().StringSliceVarP(
 		&flow.ConfigPath,
-		"config-path",
+		"conf",
 		"f",
 		flow.ConfigPath,
 		"Path to flow configuration file",
