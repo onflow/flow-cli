@@ -45,7 +45,7 @@ var (
 	FormatFlag      = ""
 	SaveFlag        = ""
 	RunEmulatorFlag = false
-	HostFlag        = flow.DefaultHost
+	HostFlag        = ""
 	LogFlag         = "info"
 	NetworkFlag     = ""
 )
@@ -94,7 +94,7 @@ func createGateway(cmd *cobra.Command, project *flow.Project) (gateway.Gateway, 
 
 	// resolve host
 	host := HostFlag
-	if host == flow.DefaultHost && project != nil {
+	if project != nil && host == flow.DefaultHost {
 		if NetworkFlag != "" {
 			check := project.GetNetworkByName(NetworkFlag)
 			if check == nil {
@@ -102,8 +102,6 @@ func createGateway(cmd *cobra.Command, project *flow.Project) (gateway.Gateway, 
 			}
 
 			host = project.Host(NetworkFlag)
-		} else {
-			host = project.Host("emulator")
 		}
 	} else if host == "" {
 		return nil, fmt.Errorf("host must be provided using --host flag or in config by initializing project: flow project init")

@@ -32,7 +32,6 @@ type flagsCreate struct {
 	SigAlgo   string   `default:"ECDSA_P256" flag:"sig-algo" info:"Signature algorithm used to generate the keys"`
 	HashAlgo  string   `default:"SHA3_256" flag:"hash-algo" info:"Hash used for the digest"`
 	Name      string   `default:"default" flag:"name" info:"Name used for saving account"`
-	Host      string   `flag:"host" info:"Flow Access API host address"`
 	Contracts []string `flag:"contract,c" info:"Contract to be deployed during account creation. <name:path>"`
 }
 

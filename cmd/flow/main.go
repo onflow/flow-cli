@@ -84,19 +84,19 @@ func init() {
 	command.Add(project.Cmd, project.NewDeployCmd())
 
 	c.PersistentFlags().StringVarP(
-		&command.HostFlag,
-		"host",
-		"",
-		command.HostFlag,
-		"Flow Access API host address",
-	)
-
-	c.PersistentFlags().StringVarP(
 		&command.FilterFlag,
 		"filter",
 		"x",
 		command.FilterFlag,
 		"Filter result values by property name",
+	)
+
+	c.PersistentFlags().StringVarP(
+		&command.HostFlag,
+		"host",
+		"",
+		command.HostFlag,
+		"Flow Access API host address",
 	)
 
 	c.PersistentFlags().StringVarP(

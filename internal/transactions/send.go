@@ -29,7 +29,7 @@ import (
 type flagsSend struct {
 	ArgsJSON string   `default:"" flag:"argsJSON" info:"arguments in JSON-Cadence format"`
 	Args     []string `default:"" flag:"arg" info:"argument in Type:Value format"`
-	Signer   string   `default:"emulator-account" flag:"signer,s"`
+	Signer   string   `default:"emulator-account" flag:"signer"`
 }
 
 type cmdSend struct {
@@ -43,6 +43,7 @@ func NewSendCmd() command.Command {
 		cmd: &cobra.Command{
 			Use:     "send <filename>",
 			Short:   "Send a transaction",
+			Args:    cobra.ExactArgs(1),
 			Example: `flow transactions send tx.cdc --args String:"Hello world"`,
 		},
 	}

@@ -28,7 +28,6 @@ import (
 
 type flagsAddContract struct {
 	Account string `default:"emulator-account" flag:"account,a"`
-	Host    string `flag:"host" info:"Flow Access API host address"`
 }
 
 type cmdAddContract struct {

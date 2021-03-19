@@ -27,9 +27,8 @@ import (
 )
 
 type flagsStatus struct {
-	Host   string `flag:"host" info:"Flow Access API host address"`
-	Sealed bool   `default:"true" flag:"sealed" info:"Wait for a sealed result"`
-	Code   bool   `default:"false" flag:"code" info:"Display transaction code"`
+	Sealed bool `default:"true" flag:"sealed" info:"Wait for a sealed result"`
+	Code   bool `default:"false" flag:"code" info:"Display transaction code"`
 }
 
 type cmdGet struct {
