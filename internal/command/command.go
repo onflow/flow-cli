@@ -93,20 +93,30 @@ func createGateway(cmd *cobra.Command, project *flow.Project) (gateway.Gateway, 
 	}
 
 	// resolve host
-	host := HostFlag
-	if NetworkFlag != "" && project != nil {
-		check := project.GetNetworkByName(NetworkFlag)
-		if check == nil {
-			return nil, fmt.Errorf("provided network with name %s doesn't exists in condiguration", NetworkFlag)
-		}
-
-		host = project.Host(NetworkFlag)
-	} else if host == "" {
-		host = flow.DefaultHost
+	host, err := resolveHost(project, HostFlag, NetworkFlag)
+	if err != nil {
+		return nil, err
 	}
 
 	// create default grpc client
 	return gateway.NewGrpcGateway(host)
+}
+
+// resolveHost from the flags provided
+func resolveHost(project *flow.Project, hostFlag string, networkFlag string) (string, error) {
+	host := hostFlag
+	if networkFlag != "" && project != nil {
+		check := project.GetNetworkByName(networkFlag)
+		if check == nil {
+			return "", fmt.Errorf("provided network with name %s doesn't exists in condiguration", networkFlag)
+		}
+
+		host = project.Host(networkFlag)
+	} else if host == "" {
+		host = flow.DefaultHost
+	}
+
+	return host, nil
 }
 
 // create logger utility
