@@ -31,35 +31,35 @@ func NewStakingInfoCmd() command.Command {
 	}
 }
 
-func (a *cmdStakingInfo) Run(
+func (c *cmdStakingInfo) Run(
 	cmd *cobra.Command,
 	args []string,
 	project *flow.Project,
 	services *services.Services,
 ) (command.Result, error) {
 	staking, delegation, err := services.Accounts.StakingInfo(args[0])
-	return &StakingResult{staking, delegation}, err
+	return &StakingResult{*staking, *delegation}, err
 }
 
-func (a *cmdStakingInfo) GetFlags() *sconfig.Config {
-	return sconfig.New(&a.flags)
+func (c *cmdStakingInfo) GetFlags() *sconfig.Config {
+	return sconfig.New(&c.flags)
 }
 
-func (a *cmdStakingInfo) GetCmd() *cobra.Command {
-	return a.cmd
+func (c *cmdStakingInfo) GetCmd() *cobra.Command {
+	return c.cmd
 }
 
-// AccountResult represent result from all account commands
+// StakingResult represent result from all account commands
 type StakingResult struct {
-	staking    *cadence.Value
-	delegation *cadence.Value
+	staking    cadence.Value
+	delegation cadence.Value
 }
 
 // JSON convert result to JSON
 func (r *StakingResult) JSON() interface{} {
 	result := make(map[string]interface{}, 0)
-	result["staking"] = flow.NewStakingInfoFromValue(*r.staking)
-	result["delegation"] = flow.NewStakingInfoFromValue(*r.delegation)
+	result["staking"] = flow.NewStakingInfoFromValue(r.staking)
+	result["delegation"] = flow.NewStakingInfoFromValue(r.delegation)
 
 	return result
 }
@@ -71,7 +71,7 @@ func (r *StakingResult) String() string {
 
 	fmt.Fprintf(writer, "Account Staking Info:\n")
 
-	stakingInfo := flow.NewStakingInfoFromValue(*r.staking)
+	stakingInfo := flow.NewStakingInfoFromValue(r.staking)
 
 	fmt.Fprintf(writer, "ID: \t %v\n", stakingInfo["id"])
 	fmt.Fprintf(writer, "Initial Weight: \t %v\n", stakingInfo["initialWeight"])
@@ -87,7 +87,7 @@ func (r *StakingResult) String() string {
 	fmt.Fprintf(writer, "Tokens Unstaking: \t %v\n", stakingInfo["tokensUnstaking"])
 	fmt.Fprintf(writer, "Total Tokens Staked: \t %v\n", stakingInfo["totalTokensStaked"])
 
-	delegationStakingInfo := flow.NewStakingInfoFromValue(*r.delegation)
+	delegationStakingInfo := flow.NewStakingInfoFromValue(r.delegation)
 
 	fmt.Fprintf(writer, "\n\nAccount Delegation Info:\n")
 	fmt.Fprintf(writer, "ID: \t %v\n", delegationStakingInfo["id"])
@@ -104,5 +104,5 @@ func (r *StakingResult) String() string {
 
 // Oneliner show result as one liner grep friendly
 func (r *StakingResult) Oneliner() string {
-	return fmt.Sprintf("")
+	return ""
 }

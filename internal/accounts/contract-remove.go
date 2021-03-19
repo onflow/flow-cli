@@ -27,7 +27,7 @@ import (
 )
 
 type flagsRemoveContract struct {
-	Account string `default:"emulator-account" flag:"account,a"`
+	Signer string `default:"emulator-account" flag:"signer"`
 }
 
 type cmdRemoveContract struct {
@@ -53,7 +53,7 @@ func (c *cmdRemoveContract) Run(
 	services *services.Services,
 ) (command.Result, error) {
 
-	account, err := services.Accounts.RemoveContract(args[0], c.flags.Account)
+	account, err := services.Accounts.RemoveContract(args[0], c.flags.Signer)
 	return &AccountResult{
 		Account:  account,
 		showCode: false,

@@ -46,12 +46,11 @@ func NewCreateCmd() command.Command {
 			Use:     "create",
 			Short:   "Create a new account",
 			Example: `flow accounts create --key d651f1931a2...8745`,
-			Aliases: []string{"create"},
 		},
 	}
 }
 
-func (a *cmdCreate) Run(
+func (c *cmdCreate) Run(
 	cmd *cobra.Command,
 	args []string,
 	project *flow.Project,
@@ -59,11 +58,11 @@ func (a *cmdCreate) Run(
 ) (command.Result, error) {
 
 	account, err := services.Accounts.Create(
-		a.flags.Signer,
-		a.flags.Keys,
-		a.flags.SigAlgo,
-		a.flags.HashAlgo,
-		a.flags.Contracts,
+		c.flags.Signer,
+		c.flags.Keys,
+		c.flags.SigAlgo,
+		c.flags.HashAlgo,
+		c.flags.Contracts,
 	)
 
 	return &AccountResult{
@@ -71,10 +70,10 @@ func (a *cmdCreate) Run(
 	}, err
 }
 
-func (a *cmdCreate) GetFlags() *sconfig.Config {
-	return sconfig.New(&a.flags)
+func (c *cmdCreate) GetFlags() *sconfig.Config {
+	return sconfig.New(&c.flags)
 }
 
-func (a *cmdCreate) GetCmd() *cobra.Command {
-	return a.cmd
+func (c *cmdCreate) GetCmd() *cobra.Command {
+	return c.cmd
 }

@@ -38,11 +38,10 @@ type cmdGet struct {
 func NewGetCmd() command.Command {
 	return &cmdGet{
 		cmd: &cobra.Command{
-			Use:     "get <address>",
-			Short:   "Gets an account by address",
-			Aliases: []string{"fetch", "g"},
-			Long:    `Gets an account by address (address, balance, keys, code)`,
-			Args:    cobra.ExactArgs(1),
+			Use:   "get <address>",
+			Short: "Gets an account by address",
+			Long:  `Gets an account by address (address, balance, keys, code)`,
+			Args:  cobra.ExactArgs(1),
 		},
 	}
 }

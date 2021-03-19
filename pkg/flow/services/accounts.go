@@ -330,7 +330,7 @@ func (a *Accounts) addContract(
 	updateExisting bool,
 ) (*flowsdk.Account, error) {
 	a.logger.StartProgress(
-		fmt.Sprintf("Adding Contract %s to account %s...", contractName, account.Address()),
+		fmt.Sprintf("Adding Contract '%s' to the account '%s'...", contractName, account.Address()),
 	)
 
 	contractSource, err := util.LoadFile(contractFilename)
@@ -348,8 +348,6 @@ func (a *Accounts) addContract(
 
 	// if we are updating contract
 	if updateExisting {
-		a.logger.Info(fmt.Sprintf("Contract %s updated on account %s", contractName, account.Address()))
-
 		tx = templates.UpdateAccountContract(
 			account.Address(),
 			templates.Contract{
@@ -379,6 +377,13 @@ func (a *Accounts) addContract(
 	update, err := a.gateway.GetAccount(account.Address())
 
 	a.logger.StopProgress("")
+
+	if updateExisting {
+		a.logger.Info(fmt.Sprintf("Contract '%s' updated on the account '%s'.", contractName, account.Address()))
+	} else {
+		a.logger.Info(fmt.Sprintf("Contract '%s' deployed to the account '%s'.", contractName, account.Address()))
+	}
+
 	return update, err
 }
 
@@ -424,6 +429,12 @@ func (a *Accounts) removeContract(
 	}
 
 	a.logger.StopProgress("")
+
+	txr, err := a.gateway.GetTransactionResult(tx, true)
+	if txr.Error != nil {
+		a.logger.Error("Removing contract failed")
+		return nil, txr.Error
+	}
 
 	a.logger.Info(fmt.Sprintf("Contract %s removed from account %s\n", contractName, account.Address()))
 

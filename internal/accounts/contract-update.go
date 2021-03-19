@@ -27,8 +27,7 @@ import (
 )
 
 type flagsUpdateContract struct {
-	Account string `default:"emulator-account" flag:"account,a"`
-	Host    string `flag:"host" info:"Flow Access API host address"`
+	Signer string `default:"emulator-account" flag:"signer"`
 }
 
 type cmdUpdateContract struct {
@@ -54,7 +53,7 @@ func (c *cmdUpdateContract) Run(
 	services *services.Services,
 ) (command.Result, error) {
 
-	account, err := services.Accounts.AddContract(c.flags.Account, args[0], args[1], true)
+	account, err := services.Accounts.AddContract(c.flags.Signer, args[0], args[1], true)
 	return &AccountResult{
 		Account:  account,
 		showCode: false,

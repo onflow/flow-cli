@@ -59,12 +59,12 @@ func Add(c *cobra.Command, command Command) {
 		// initialize project but ignore error since config can be missing
 		project, _ := flow.LoadProject(flow.ConfigPath)
 
-		gateway, err := createGateway(cmd, project)
+		clientGateway, err := createGateway(cmd, project)
 		handleError("Gateway Error", err)
 
 		logger := createLogger()
 
-		service := services.NewServices(gateway, project, logger)
+		service := services.NewServices(clientGateway, project, logger)
 
 		// run command
 		result, err := command.Run(cmd, args, project, service)
@@ -94,17 +94,15 @@ func createGateway(cmd *cobra.Command, project *flow.Project) (gateway.Gateway, 
 
 	// resolve host
 	host := HostFlag
-	if project != nil && host == flow.DefaultHost {
-		if NetworkFlag != "" {
-			check := project.GetNetworkByName(NetworkFlag)
-			if check == nil {
-				return nil, fmt.Errorf("provided network with name %s doesn't exists in condiguration", NetworkFlag)
-			}
-
-			host = project.Host(NetworkFlag)
+	if NetworkFlag != "" && project != nil {
+		check := project.GetNetworkByName(NetworkFlag)
+		if check == nil {
+			return nil, fmt.Errorf("provided network with name %s doesn't exists in condiguration", NetworkFlag)
 		}
+
+		host = project.Host(NetworkFlag)
 	} else if host == "" {
-		return nil, fmt.Errorf("host must be provided using --host flag or in config by initializing project: flow project init")
+		host = flow.DefaultHost
 	}
 
 	// create default grpc client
@@ -115,23 +113,23 @@ func createGateway(cmd *cobra.Command, project *flow.Project) (gateway.Gateway, 
 func createLogger() util.Logger {
 	// disable logging if we user want a specific format like JSON
 	//(more common they will not want also to have logs)
-	verbose := util.InfoLog
+	logLevel := util.InfoLog
 	switch LogFlag {
 	case "none":
-		verbose = util.NoneLog
+		logLevel = util.NoneLog
 	case "error":
-		verbose = util.ErrorLog
+		logLevel = util.ErrorLog
 	case "debug":
-		verbose = util.DebugLog
+		logLevel = util.DebugLog
 	default:
-		verbose = util.InfoLog
+		logLevel = util.InfoLog
 	}
 
 	if FormatFlag != "" {
-		verbose = util.NoneLog
+		logLevel = util.NoneLog
 	}
 
-	return util.NewStdoutLogger(verbose)
+	return util.NewStdoutLogger(logLevel)
 }
 
 // formatResult formats a result for printing.
@@ -191,15 +189,20 @@ func handleError(description string, err error) {
 		fmt.Fprintf(os.Stderr, "❌  Grpc Error: %s \n", t.GRPCStatus().Err().Error())
 	default:
 		if strings.Contains(err.Error(), "transport:") {
-			fmt.Fprintf(os.Stderr, "❌  %s \n", strings.Split(err.Error(), "transport:")[1])
+			fmt.Fprintf(os.Stderr, "❌ %s \n", strings.Split(err.Error(), "transport:")[1])
+			fmt.Fprintf(os.Stderr, "⚠️  Make sure your emulator is running or connection address is correct.")
 		} else if strings.Contains(err.Error(), "NotFound desc =") {
 			fmt.Fprintf(os.Stderr, "❌  Not Found:%s \n", strings.Split(err.Error(), "NotFound desc =")[1])
 		} else if strings.Contains(err.Error(), "code = InvalidArgument desc = ") {
 			fmt.Fprintf(os.Stderr, "❌  Invalid argument: %s \n", strings.Split(err.Error(), "code = InvalidArgument desc = ")[1])
+			fmt.Fprintf(os.Stderr, "⚠️  Check your argument and flags value, you can use --help.")
 		} else if strings.Contains(err.Error(), "invalid signature:") {
 			fmt.Fprintf(os.Stderr, "❌  Invalid signature: %s \n", strings.Split(err.Error(), "invalid signature:")[1])
+		} else if strings.Contains(err.Error(), "signature could not be verified using public key with") {
+			fmt.Fprintf(os.Stderr, "❌ %s: %s \n", description, err)
+			fmt.Fprintf(os.Stderr, "⚠️  If you are runing emulator locally make sure that the emulator was started with the same config as used in this command. \nTry restarting the emulator.")
 		} else {
-			fmt.Fprintf(os.Stderr, "❌  %s: %s", description, err)
+			fmt.Fprintf(os.Stderr, "❌ %s: %s", description, err)
 		}
 	}
 

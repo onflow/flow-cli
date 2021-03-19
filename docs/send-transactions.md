@@ -50,13 +50,12 @@ Specify a path to a Cadence file containing the transaction script.
 Specify the name of the account that will be used to sign the transaction.
 
 ### Host
-
 - Flag: `--host`
 - Valid inputs: an IP address or hostname.
-- Default: `localhost:3569` (Flow Emulator)
+- Default: `127.0.0.1:3569` (Flow Emulator)
 
 Specify the hostname of the Access API that will be
-used to submit the transaction.
+used to execute the commands.
 
 ### Results
 

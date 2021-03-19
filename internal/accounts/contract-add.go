@@ -27,7 +27,7 @@ import (
 )
 
 type flagsAddContract struct {
-	Account string `default:"emulator-account" flag:"account,a"`
+	Signer string `default:"emulator-account" flag:"signer"`
 }
 
 type cmdAddContract struct {
@@ -53,7 +53,7 @@ func (a *cmdAddContract) Run(
 	services *services.Services,
 ) (command.Result, error) {
 
-	account, err := services.Accounts.AddContract(a.flags.Account, args[0], args[1], false)
+	account, err := services.Accounts.AddContract(a.flags.Signer, args[0], args[1], false)
 	return &AccountResult{
 		Account:  account,
 		showCode: false,
