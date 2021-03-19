@@ -13,12 +13,12 @@ import (
 )
 
 type flagsAdd struct {
-	KeySigAlgo    string `default:"ECDSA_P256" flag:"sig-algo" info:"Signature algorithm"`
-	KeyHashAlgo   string `default:"SHA3_256" flag:"hash-algo" info:"Hashing algorithm"`
-	KeyIndex   int    `flag:"index" info:"Account key index"`
-	KeyHex     string `flag:"privateKey" info:"Private key in hex format"`
-	KeyContext string `flag:"context" info:"Projects/<PROJECTID>/locations/<LOCATION>/keyRings/<KEYRINGID>/cryptoKeys/<KEYID>/cryptoKeyVersions/<KEYVERSION>"`
-	Overwrite  bool   `flag:"overwrite,o" info:"Overwrite an existing account"`
+	KeySigAlgo  string `default:"ECDSA_P256" flag:"sig-algo" info:"Signature algorithm"`
+	KeyHashAlgo string `default:"SHA3_256" flag:"hash-algo" info:"Hashing algorithm"`
+	KeyIndex    int    `flag:"index" info:"Account key index"`
+	KeyHex      string `flag:"privateKey" info:"Private key in hex format"`
+	KeyContext  string `flag:"context" info:"Projects/<PROJECTID>/locations/<LOCATION>/keyRings/<KEYRINGID>/cryptoKeys/<KEYID>/cryptoKeyVersions/<KEYVERSION>"`
+	Overwrite   bool   `flag:"overwrite,o" info:"Overwrite an existing account"`
 }
 
 type cmdAdd struct {
@@ -46,8 +46,8 @@ func (a *cmdAdd) Run(
 	account, err := services.Accounts.Add(
 		args[0],
 		args[1],
-		a.flags.SigAlgo,
-		a.flags.HashAlgo,
+		a.flags.KeySigAlgo,
+		a.flags.KeyHashAlgo,
 		a.flags.KeyIndex,
 		a.flags.KeyHex,
 		a.flags.KeyContext,
