@@ -136,7 +136,7 @@ func createLogger() util.Logger {
 	return util.NewStdoutLogger(verbose)
 }
 
-// outputResult takes care of showing the result
+// formatResult formats a result for printing.
 func formatResult(result Result) (string, error) {
 	if result == nil {
 		return "", fmt.Errorf("Missing")
