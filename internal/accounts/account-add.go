@@ -66,7 +66,7 @@ func (a *cmdAdd) GetCmd() *cobra.Command {
 	return a.cmd
 }
 
-// AccountResult represent result from all account commands
+// AccountAddResult is the result from the "flow accounts add" command.
 type AccountAddResult struct {
 	*flow.Account
 }
