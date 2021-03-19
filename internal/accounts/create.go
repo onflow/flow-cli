@@ -32,7 +32,7 @@ type flagsCreate struct {
 	SigAlgo   string   `default:"ECDSA_P256" flag:"sig-algo" info:"Signature algorithm used to generate the keys"`
 	HashAlgo  string   `default:"SHA3_256" flag:"hash-algo" info:"Hash used for the digest"`
 	Name      string   `default:"default" flag:"name" info:"Name used for saving account"`
-	Contracts []string `flag:"contract,c" info:"Contract to be deployed during account creation. <name:path>"`
+	Contracts []string `flag:"contract" info:"Contract to be deployed during account creation. <name:filename>"`
 }
 
 type cmdCreate struct {

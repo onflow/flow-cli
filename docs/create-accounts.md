@@ -16,12 +16,18 @@ transaction to any Flow Access API.
 ```shell
 # Create an account on Flow Testnet
 > flow accounts create \
-    --key a69c6986e69fa1eadcd3bcb4aa51ee8aed74fc9430004af6b96f9e7d0e4891e84cfb99171846ba6d0354d195571397f5904cd319c3e01e96375d5777f1a47010 \
+    --key a69c6986e846ba6d0....1397f5904cd319c3e01e96375d5777f1a47010 \
     --sig-algo ECDSA_secp256k1 \
     --hash-algo SHA3_256 \
     --host access.testnet.nodes.onflow.org:9000 \
     --signer my-testnet-account \
     --results
+```
+
+### Example Response
+
+```shell
+
 ```
 
 In the above example, the `flow.json` file would look something like this:
@@ -43,7 +49,7 @@ In the above example, the `flow.json` file would look something like this:
     
 ### Public Key
 
-- Flag: `--key,-k`
+- Flag: `--key`
 - Valid inputs: a hex-encoded public key in raw form.
 
 Specify the public key that will be added to the new account
@@ -69,19 +75,9 @@ Flow supports the secp256k1 and P-256 curves.
 Specify the hashing algorithm that will be paired with the public key
 upon account creation.
 
-### Wait for Seal
-
-- Flag: `--sealed`
-- Valid inputs: `true`, `false`
-- Default: `false`
-
-Indicate whether to wait for the transaction to be sealed.
-If true, the CLI will block until the transaction has been sealed, or
-a timeout is reached.
-
 ### Signer
 
-- Flag: `--signer,s`
+- Flag: `--signer`
 - Valid inputs: the name of an account defined in `flow.json`
 
 Specify the name of the account that will be used to sign the transaction
@@ -96,15 +92,11 @@ and pay the account creation fee.
 Specify the hostname of the Access API that will be
 used to submit the transaction.
 
-### Results
+### Contract
 
-- Flag: `--results`
-- Valid inputs: `true`, `false`
-- Default: `false`
+- Flag: `--contract`
+- Valid inputs: String with format `name:filename`, where `name` is 
+  name of the contract as it is defined in the contract source code
+  and `filename` is the filename of the contract source code.
 
-Indicate whether to wait for the transaction to be sealed
-and display the result, including the new account address.
-
-If false, the command returns immediately after sending the transaction
-to the Access API. You can later use the `transactions status` command
-to fetch the result.
+Contract to be deployed during account creation.
