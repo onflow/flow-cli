@@ -13,12 +13,12 @@ import (
 )
 
 type flagsAdd struct {
-	SigAlgo    string `default:"ECDSA_P256" flag:"algo,a" info:"Signature algorithm"`
-	HashAlgo   string `default:"SHA3_256" flag:"service-hash-algo" info:"Hashing algorithm"`
+	KeySigAlgo    string `default:"ECDSA_P256" flag:"sig-algo" info:"Signature algorithm"`
+	KeyHashAlgo   string `default:"SHA3_256" flag:"hash-algo" info:"Hashing algorithm"`
 	KeyIndex   int    `flag:"index" info:"Account key index"`
 	KeyHex     string `flag:"privateKey" info:"Private key in hex format"`
 	KeyContext string `flag:"context" info:"Projects/<PROJECTID>/locations/<LOCATION>/keyRings/<KEYRINGID>/cryptoKeys/<KEYID>/cryptoKeyVersions/<KEYVERSION>"`
-	Overwrite  bool   `flag:"overwrite" info:"Overwrite an existing account"`
+	Overwrite  bool   `flag:"overwrite,o" info:"Overwrite an existing account"`
 }
 
 type cmdAdd struct {
@@ -31,7 +31,7 @@ func NewAddCmd() command.Command {
 		cmd: &cobra.Command{
 			Use:     "add <name> <address>",
 			Short:   "Add account by name to config",
-			Example: `flow accounts add Alice 18d6e0586b0a20c5 --privateKey=11c5dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7`,
+			Example: `flow accounts add alice 18d6e0586b0a20c5 --privateKey=11c5dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7`,
 			Args:    cobra.ExactArgs(2),
 		},
 	}
