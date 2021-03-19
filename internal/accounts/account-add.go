@@ -69,17 +69,15 @@ func (a *cmdAdd) GetCmd() *cobra.Command {
 	return a.cmd
 }
 
-// AccountResult represent result from all account commands
+// AccountAddResult is the result from the "flow accounts add" command.
 type AccountAddResult struct {
 	*flow.Account
 }
 
-// JSON convert result to JSON
 func (r *AccountAddResult) JSON() interface{} {
 	return r
 }
 
-// String convert result to string
 func (r *AccountAddResult) String() string {
 	var b bytes.Buffer
 	writer := tabwriter.NewWriter(&b, 0, 8, 1, '\t', tabwriter.AlignRight)
@@ -94,7 +92,6 @@ func (r *AccountAddResult) String() string {
 	return b.String()
 }
 
-// Oneliner show result as one liner grep friendly
 func (r *AccountAddResult) Oneliner() string {
 	return fmt.Sprintf(
 		"Address: 0x%s, Hash Algo: %s, Sig Algo: %s",
