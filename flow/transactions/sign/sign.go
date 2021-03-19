@@ -33,6 +33,7 @@ import (
 )
 
 type Config struct {
+	Args                  string   `default:"" flag:"args" info:"arguments in JSON-Cadence format"`
 	Signer                string   `default:"service" flag:"signer,s"`
 	Role                  string   `default:"authorizer" flag:"role"`
 	AdditionalAuthorizers []string `flag:"additional-authorizers" info:"Additional authorizer addresses to add to the transaction"`
@@ -74,6 +75,22 @@ var Cmd = &cobra.Command{
 
 		tx := flow.NewTransaction().
 			SetScript(code)
+
+		// Arguments
+		if conf.Args != "" {
+			transactionArguments, err := cli.ParseArguments(conf.Args)
+			if err != nil {
+				cli.Exitf(1, "Invalid arguments passed: %s", conf.Args)
+			}
+
+			for _, arg := range transactionArguments {
+				err := tx.AddArgument(arg)
+
+				if err != nil {
+					cli.Exitf(1, "Failed to add %s argument to a transaction ", conf.Code)
+				}
+			}
+		}
 
 		signerRole := cli.SignerRole(conf.Role)
 		switch signerRole {
