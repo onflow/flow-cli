@@ -54,13 +54,16 @@ func (s *cmdGet) Run(
 	services *services.Services,
 ) (command.Result, error) {
 	block, events, collections, err := services.Blocks.GetBlock(args[0], s.flags.Events, s.flags.Verbose)
+	if err != nil {
+		return nil, err
+	}
 
 	return &BlockResult{
 		block:       block,
 		events:      events,
 		verbose:     s.flags.Verbose,
 		collections: collections,
-	}, err
+	}, nil
 }
 
 // GetFlags for blocks

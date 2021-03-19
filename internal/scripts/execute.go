@@ -56,7 +56,11 @@ func (s *cmdExecuteScript) Run(
 	services *services.Services,
 ) (command.Result, error) {
 	value, err := services.Scripts.Execute(args[0], s.flags.Args, s.flags.ArgsJSON)
-	return &ScriptResult{value}, err
+	if err != nil {
+		return nil, err
+	}
+
+	return &ScriptResult{value}, nil
 }
 
 // GetFlags for script

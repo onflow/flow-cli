@@ -52,12 +52,15 @@ func (c *cmdUpdateContract) Run(
 	project *flow.Project,
 	services *services.Services,
 ) (command.Result, error) {
-
 	account, err := services.Accounts.AddContract(c.flags.Signer, args[0], args[1], true)
+	if err != nil {
+		return nil, err
+	}
+
 	return &AccountResult{
 		Account:  account,
 		showCode: false,
-	}, err
+	}, nil
 
 }
 

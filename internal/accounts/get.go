@@ -52,12 +52,15 @@ func (a *cmdGet) Run(
 	project *flow.Project,
 	services *services.Services,
 ) (command.Result, error) {
-
 	account, err := services.Accounts.Get(args[0])
+	if err != nil {
+		return nil, err
+	}
+
 	return &AccountResult{
 		Account:  account,
 		showCode: a.flags.Code,
-	}, err
+	}, nil
 }
 
 func (a *cmdGet) GetFlags() *sconfig.Config {

@@ -57,10 +57,14 @@ func (a *cmdSend) Run(
 	services *services.Services,
 ) (command.Result, error) {
 	tx, result, err := services.Transactions.Send(args[0], a.flags.Signer, a.flags.Args, a.flags.ArgsJSON)
+	if err != nil {
+		return nil, err
+	}
+
 	return &TransactionResult{
 		result: result,
 		tx:     tx,
-	}, err
+	}, nil
 }
 
 // GetFlags for transactions command

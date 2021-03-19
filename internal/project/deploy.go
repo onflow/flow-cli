@@ -54,7 +54,11 @@ func (s *cmdDeploy) Run(
 	services *services.Services,
 ) (command.Result, error) {
 	c, err := services.Project.Deploy(command.NetworkFlag, s.flags.Update)
-	return &DeployResult{contracts: c, project: project}, err
+	if err != nil {
+		return nil, err
+	}
+
+	return &DeployResult{contracts: c, project: project}, nil
 }
 
 // GetFlags for script

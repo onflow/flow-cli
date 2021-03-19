@@ -54,8 +54,11 @@ func (a *cmdAdd) Run(
 		a.flags.Overwrite,
 		flow.ConfigPath,
 	)
+	if err != nil {
+		return nil, err
+	}
 
-	return &AccountAddResult{account}, err
+	return &AccountAddResult{account}, nil
 }
 
 func (a *cmdAdd) GetFlags() *sconfig.Config {

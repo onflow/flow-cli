@@ -59,7 +59,11 @@ func (a *cmdGet) Run(
 	}
 
 	events, err := services.Events.Get(args[0], args[1], end)
-	return &EventResult{BlockEvents: events}, err
+	if err != nil {
+		return nil, err
+	}
+
+	return &EventResult{BlockEvents: events}, nil
 }
 
 // GetFlags for the event

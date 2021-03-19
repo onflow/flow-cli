@@ -55,11 +55,15 @@ func (s *cmdGet) Run(
 	services *services.Services,
 ) (command.Result, error) {
 	tx, result, err := services.Transactions.GetStatus(args[0], s.flags.Sealed)
+	if err != nil {
+		return nil, err
+	}
+
 	return &TransactionResult{
 		result: result,
 		tx:     tx,
 		code:   s.flags.Code,
-	}, err
+	}, nil
 }
 
 // GetFlags for command

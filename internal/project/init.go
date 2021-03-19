@@ -69,7 +69,11 @@ func (s *cmdInit) Run(
 		s.flags.ServiceKeyHashAlgo,
 		s.flags.ServicePrivateKey,
 	)
-	return &InitResult{project}, err
+	if err != nil {
+		return nil, err
+	}
+
+	return &InitResult{project}, nil
 }
 
 // GetFlags for init

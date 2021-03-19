@@ -52,12 +52,15 @@ func (c *cmdRemoveContract) Run(
 	project *flow.Project,
 	services *services.Services,
 ) (command.Result, error) {
-
 	account, err := services.Accounts.RemoveContract(args[0], c.flags.Signer)
+	if err != nil {
+		return nil, err
+	}
+
 	return &AccountResult{
 		Account:  account,
 		showCode: false,
-	}, err
+	}, nil
 }
 
 func (c *cmdRemoveContract) GetFlags() *sconfig.Config {

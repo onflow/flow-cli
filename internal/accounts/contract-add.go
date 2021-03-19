@@ -52,12 +52,15 @@ func (a *cmdAddContract) Run(
 	project *flow.Project,
 	services *services.Services,
 ) (command.Result, error) {
-
 	account, err := services.Accounts.AddContract(a.flags.Signer, args[0], args[1], false)
+	if err != nil {
+		return nil, err
+	}
+
 	return &AccountResult{
 		Account:  account,
 		showCode: false,
-	}, err
+	}, nil
 }
 
 func (a *cmdAddContract) GetFlags() *sconfig.Config {

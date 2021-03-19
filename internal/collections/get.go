@@ -52,7 +52,11 @@ func (s *cmdGet) Run(
 	services *services.Services,
 ) (command.Result, error) {
 	collection, err := services.Collections.Get(args[0])
-	return &CollectionResult{collection}, err
+	if err != nil {
+		return nil, err
+	}
+
+	return &CollectionResult{collection}, nil
 }
 
 // GetFlags for collection

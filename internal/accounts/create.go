@@ -56,7 +56,6 @@ func (c *cmdCreate) Run(
 	project *flow.Project,
 	services *services.Services,
 ) (command.Result, error) {
-
 	account, err := services.Accounts.Create(
 		c.flags.Signer,
 		c.flags.Keys,
@@ -65,9 +64,13 @@ func (c *cmdCreate) Run(
 		c.flags.Contracts,
 	)
 
+	if err != nil {
+		return nil, err
+	}
+
 	return &AccountResult{
 		Account: account,
-	}, err
+	}, nil
 }
 
 func (c *cmdCreate) GetFlags() *sconfig.Config {

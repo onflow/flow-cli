@@ -38,7 +38,11 @@ func (c *cmdStakingInfo) Run(
 	services *services.Services,
 ) (command.Result, error) {
 	staking, delegation, err := services.Accounts.StakingInfo(args[0])
-	return &StakingResult{*staking, *delegation}, err
+	if err != nil {
+		return nil, err
+	}
+
+	return &StakingResult{*staking, *delegation}, nil
 }
 
 func (c *cmdStakingInfo) GetFlags() *sconfig.Config {
