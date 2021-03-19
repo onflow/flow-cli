@@ -89,7 +89,6 @@ func (r *AccountAddResult) String() string {
 	return b.String()
 }
 
-// Oneliner show result as one liner grep friendly
 func (r *AccountAddResult) Oneliner() string {
 	return fmt.Sprintf(
 		"Address: 0x%s, Hash Algo: %s, Sig Algo: %s",
