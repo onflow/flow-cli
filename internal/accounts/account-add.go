@@ -75,7 +75,6 @@ func (r *AccountAddResult) JSON() interface{} {
 	return r
 }
 
-// String convert result to string
 func (r *AccountAddResult) String() string {
 	var b bytes.Buffer
 	writer := tabwriter.NewWriter(&b, 0, 8, 1, '\t', tabwriter.AlignRight)
