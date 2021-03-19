@@ -18,7 +18,7 @@ type flagsAdd struct {
 	KeyIndex   int    `flag:"index" info:"Account key index"`
 	KeyHex     string `flag:"privateKey" info:"Private key in hex format"`
 	KeyContext string `flag:"context" info:"Projects/<PROJECTID>/locations/<LOCATION>/keyRings/<KEYRINGID>/cryptoKeys/<KEYID>/cryptoKeyVersions/<KEYVERSION>"`
-	Overwrite  bool   `flag:"overwrite" info:"Overwrite an existing account"`
+	Overwrite  bool   `flag:"overwrite,o" info:"Overwrite an existing account"`
 }
 
 type cmdAdd struct {
