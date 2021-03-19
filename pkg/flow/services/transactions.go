@@ -167,13 +167,12 @@ func (t *Transactions) GetStatus(
 	}
 
 	if waitSeal {
+		t.logger.StopProgress("")
 		t.logger.StartProgress("Waiting for transaction to be sealed...")
 	}
 
 	result, err := t.gateway.GetTransactionResult(tx, waitSeal)
 
-	// two times since wait seal might have started another progress - no harm if stopped two times
-	t.logger.StopProgress("")
 	t.logger.StopProgress("")
 
 	return tx, result, err

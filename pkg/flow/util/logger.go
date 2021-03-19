@@ -52,7 +52,7 @@ type StdoutLogger struct {
 }
 
 func (s *StdoutLogger) log(msg string, level int) {
-	if s.level > level {
+	if s.level < level {
 		return
 	}
 

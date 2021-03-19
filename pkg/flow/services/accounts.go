@@ -57,9 +57,7 @@ func NewAccounts(
 
 // Get gets an account based on address
 func (a *Accounts) Get(address string) (*flowsdk.Account, error) {
-	a.logger.StartProgress(
-		fmt.Sprintf("Loading %s...", address),
-	)
+	a.logger.StartProgress(fmt.Sprintf("Loading %s...", address))
 
 	flowAddress := flowsdk.HexToAddress(
 		strings.ReplaceAll(address, "0x", ""),
@@ -165,6 +163,8 @@ func (a *Accounts) Add(
 
 // StakingInfo gets staking info for the account
 func (a *Accounts) StakingInfo(accountAddress string) (*cadence.Value, *cadence.Value, error) {
+	a.logger.StartProgress(fmt.Sprintf("Fetching info for %s...", accountAddress))
+
 	address := flowsdk.HexToAddress(
 		strings.ReplaceAll(accountAddress, "0x", ""),
 	)
@@ -173,7 +173,7 @@ func (a *Accounts) StakingInfo(accountAddress string) (*cadence.Value, *cadence.
 
 	chain, err := util.GetAddressNetwork(address)
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to determine network from input address")
+		return nil, nil, fmt.Errorf("failed to determine network from address, check the address and network")
 	}
 
 	if chain == flowsdk.Emulator {
@@ -194,6 +194,8 @@ func (a *Accounts) StakingInfo(accountAddress string) (*cadence.Value, *cadence.
 	if err != nil {
 		return nil, nil, fmt.Errorf("error getting delegation info: %s", err.Error())
 	}
+
+	a.logger.StopProgress("")
 
 	return &stakingValue, &delegationValue, nil
 }
@@ -328,7 +330,7 @@ func (a *Accounts) addContract(
 	updateExisting bool,
 ) (*flowsdk.Account, error) {
 	a.logger.StartProgress(
-		fmt.Sprintf("Adding Contract..."),
+		fmt.Sprintf("Adding Contract %s to account %s...", contractName, account.Address()),
 	)
 
 	contractSource, err := util.LoadFile(contractFilename)
@@ -412,7 +414,7 @@ func (a *Accounts) removeContract(
 	account *flow.Account,
 ) (*flowsdk.Account, error) {
 	a.logger.StartProgress(
-		fmt.Sprintf("Removing Contract..."),
+		fmt.Sprintf("Removing Contract %s from %s...", contractName, account.Address()),
 	)
 
 	tx := templates.RemoveAccountContract(account.Address(), contractName)
