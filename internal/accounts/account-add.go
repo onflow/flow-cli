@@ -13,7 +13,7 @@ import (
 )
 
 type flagsAdd struct {
-	SigAlgo    string `default:"ECDSA_P256" flag:"algo,a" info:"Signature algorithm"`
+	KeySigAlgo    string `default:"ECDSA_P256" flag:"sig-algo" info:"Signature algorithm"`
 	HashAlgo   string `default:"SHA3_256" flag:"service-hash-algo" info:"Hashing algorithm"`
 	KeyIndex   int    `flag:"index" info:"Account key index"`
 	KeyHex     string `flag:"privateKey" info:"Private key in hex format"`
