@@ -71,7 +71,6 @@ type AccountAddResult struct {
 	*flow.Account
 }
 
-// JSON convert result to JSON
 func (r *AccountAddResult) JSON() interface{} {
 	return r
 }
