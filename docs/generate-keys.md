@@ -43,3 +43,11 @@ result in the same key.
 
 If no seed is specified, the key pair will be generated using
 a random 32 byte seed.
+
+### Host
+- Flag: `--host`
+- Valid inputs: an IP address or hostname.
+- Default: `127.0.0.1:3569` (Flow Emulator)
+
+Specify the hostname of the Access API that will be
+used to execute the commands.

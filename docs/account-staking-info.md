@@ -54,6 +54,7 @@ Flow [account address](https://docs.onflow.org/concepts/accounts-and-keys/) (pre
 
 ## Flags
 
+
 ### Host
 - Flag: `--host`
 - Valid inputs: an IP address or hostname.
@@ -61,3 +62,54 @@ Flow [account address](https://docs.onflow.org/concepts/accounts-and-keys/) (pre
 
 Specify the hostname of the Access API that will be
 used to execute the commands.
+
+### Network
+
+- Flag: `--network`
+- Short Flag: `-n`
+- Valid inputs: the name of a network defined in the configuration (`flow.json`)
+
+Specify which network you want the command to use for execution.
+
+### Filter
+
+- Flag: `--filter`
+- Short Flag: `-x`
+- Valid inputs: case-sensitive name of the result property.
+
+Specify any property name from the result you want to return as the only value.
+
+### Output
+
+- Flag: `--output`
+- Short Flag: `-o`
+- Valid inputs: `json`, `inline`
+
+Specify in which format you want to display the result.
+
+### Save
+
+- Flag: `--save`
+- Short Flag: `-s`
+- Valid inputs: valid filename
+
+Specify the filename where you want the result to be saved.
+
+### Log
+
+- Flag: `--log`
+- Short Flag: `-l`
+- Valid inputs: `none`, `error`, `debug`
+- Default: `info`
+
+Specify the log level. Control how much output you want to see while command execution.
+
+### Configuration
+
+- Flag: `--conf`
+- Short Flag: `-f`
+- Valid inputs: valid filename
+
+Specify filename for the configuration files, you can provide multiple configuration
+files by using `-f` flag multiple times.
+

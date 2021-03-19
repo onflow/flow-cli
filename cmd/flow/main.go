@@ -104,7 +104,7 @@ func init() {
 		"output",
 		"o",
 		command.FormatFlag,
-		"Output format",
+		"Output format, values (json, inline)",
 	)
 
 	c.PersistentFlags().StringVarP(
@@ -120,7 +120,7 @@ func init() {
 		"log",
 		"l",
 		command.LogFlag,
-		"Log level verbosity",
+		"Log level verbosity, values (none, error, debug)",
 	)
 
 	c.PersistentFlags().BoolVarP(
