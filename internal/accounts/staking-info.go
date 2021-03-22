@@ -10,47 +10,31 @@ import (
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/pkg/flow"
 	"github.com/onflow/flow-cli/pkg/flow/services"
-	"github.com/psiemens/sconfig"
 	"github.com/spf13/cobra"
 )
 
 type flagsStakingInfo struct{}
 
-type cmdStakingInfo struct {
-	cmd   *cobra.Command
-	flags flagsStakingInfo
-}
+var StakingCommand = &command.Command{
+	Cmd: &cobra.Command{
+		Use:   "staking-info <address>",
+		Short: "Get account staking info",
+		Args:  cobra.ExactArgs(1),
+	},
+	Flags: &flagsStakingInfo{},
+	Run: func(
+		cmd *cobra.Command,
+		args []string,
+		project *flow.Project,
+		services *services.Services,
+	) (command.Result, error) {
+		staking, delegation, err := services.Accounts.StakingInfo(args[0])
+		if err != nil {
+			return nil, err
+		}
 
-func NewStakingInfoCmd() command.Command {
-	return &cmdStakingInfo{
-		cmd: &cobra.Command{
-			Use:   "staking-info <address>",
-			Short: "Get account staking info",
-			Args:  cobra.ExactArgs(1),
-		},
-	}
-}
-
-func (c *cmdStakingInfo) Run(
-	cmd *cobra.Command,
-	args []string,
-	project *flow.Project,
-	services *services.Services,
-) (command.Result, error) {
-	staking, delegation, err := services.Accounts.StakingInfo(args[0])
-	if err != nil {
-		return nil, err
-	}
-
-	return &StakingResult{*staking, *delegation}, nil
-}
-
-func (c *cmdStakingInfo) GetFlags() *sconfig.Config {
-	return sconfig.New(&c.flags)
-}
-
-func (c *cmdStakingInfo) GetCmd() *cobra.Command {
-	return c.cmd
+		return &StakingResult{*staking, *delegation}, nil
+	},
 }
 
 // StakingResult represent result from all account commands

@@ -22,7 +22,6 @@ import (
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/pkg/flow"
 	"github.com/onflow/flow-cli/pkg/flow/services"
-	"github.com/psiemens/sconfig"
 	"github.com/spf13/cobra"
 )
 
@@ -30,43 +29,30 @@ type flagsRemoveContract struct {
 	Signer string `default:"emulator-account" flag:"signer"`
 }
 
-type cmdRemoveContract struct {
-	cmd   *cobra.Command
-	flags flagsRemoveContract
-}
+var flagsRemove = &flagsRemoveContract{}
 
-func NewRemoveContractCmd() command.Command {
-	return &cmdRemoveContract{
-		cmd: &cobra.Command{
-			Use:     "remove-contract <name>",
-			Short:   "Remove a contract deployed to an account",
-			Example: `flow accounts remove-contract FungibleToken`,
-			Args:    cobra.ExactArgs(1),
-		},
-	}
-}
+var RemoveCommand = &command.Command{
+	Cmd: &cobra.Command{
+		Use:     "remove-contract <name>",
+		Short:   "Remove a contract deployed to an account",
+		Example: `flow accounts remove-contract FungibleToken`,
+		Args:    cobra.ExactArgs(1),
+	},
+	Flags: &addFlags,
+	Run: func(
+		cmd *cobra.Command,
+		args []string,
+		project *flow.Project,
+		services *services.Services,
+	) (command.Result, error) {
+		account, err := services.Accounts.RemoveContract(args[0], flagsRemove.Signer)
+		if err != nil {
+			return nil, err
+		}
 
-func (c *cmdRemoveContract) Run(
-	cmd *cobra.Command,
-	args []string,
-	project *flow.Project,
-	services *services.Services,
-) (command.Result, error) {
-	account, err := services.Accounts.RemoveContract(args[0], c.flags.Signer)
-	if err != nil {
-		return nil, err
-	}
-
-	return &AccountResult{
-		Account:  account,
-		showCode: false,
-	}, nil
-}
-
-func (c *cmdRemoveContract) GetFlags() *sconfig.Config {
-	return sconfig.New(&c.flags)
-}
-
-func (c *cmdRemoveContract) GetCmd() *cobra.Command {
-	return c.cmd
+		return &AccountResult{
+			Account:  account,
+			showCode: false,
+		}, nil
+	},
 }

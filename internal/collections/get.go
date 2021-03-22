@@ -22,49 +22,29 @@ import (
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/pkg/flow"
 	"github.com/onflow/flow-cli/pkg/flow/services"
-	"github.com/psiemens/sconfig"
 	"github.com/spf13/cobra"
 )
 
 type flagsCollections struct{}
 
-type cmdGet struct {
-	cmd   *cobra.Command
-	flags flagsCollections
-}
+var Command = &command.Command{
+	Cmd: &cobra.Command{
+		Use:   "get <collection_id>",
+		Short: "Get collection info",
+		Args:  cobra.ExactArgs(1),
+	},
+	Flags: &flagsCollections{},
+	Run: func(
+		cmd *cobra.Command,
+		args []string,
+		project *flow.Project,
+		services *services.Services,
+	) (command.Result, error) {
+		collection, err := services.Collections.Get(args[0])
+		if err != nil {
+			return nil, err
+		}
 
-// NewGetCmd creates new get command
-func NewGetCmd() command.Command {
-	return &cmdGet{
-		cmd: &cobra.Command{
-			Use:   "get <collection_id>",
-			Short: "Get collection info",
-			Args:  cobra.ExactArgs(1),
-		},
-	}
-}
-
-// Run collection command
-func (s *cmdGet) Run(
-	cmd *cobra.Command,
-	args []string,
-	project *flow.Project,
-	services *services.Services,
-) (command.Result, error) {
-	collection, err := services.Collections.Get(args[0])
-	if err != nil {
-		return nil, err
-	}
-
-	return &CollectionResult{collection}, nil
-}
-
-// GetFlags for collection
-func (s *cmdGet) GetFlags() *sconfig.Config {
-	return sconfig.New(&s.flags)
-}
-
-// GetCmd get command
-func (s *cmdGet) GetCmd() *cobra.Command {
-	return s.cmd
+		return &CollectionResult{collection}, nil
+	},
 }

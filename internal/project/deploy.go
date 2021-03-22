@@ -23,7 +23,6 @@ import (
 	"github.com/onflow/flow-cli/pkg/flow"
 	"github.com/onflow/flow-cli/pkg/flow/contracts"
 	"github.com/onflow/flow-cli/pkg/flow/services"
-	"github.com/psiemens/sconfig"
 	"github.com/spf13/cobra"
 )
 
@@ -31,44 +30,27 @@ type flagsDeploy struct {
 	Update bool `flag:"update" default:"false" info:"use update flag to update existing contracts"`
 }
 
-type cmdDeploy struct {
-	cmd   *cobra.Command
-	flags flagsDeploy
-}
+var deployFlags = &flagsDeploy{}
 
-// NewDeployCmd creates new deploy command
-func NewDeployCmd() command.Command {
-	return &cmdDeploy{
-		cmd: &cobra.Command{
-			Use:   "deploy",
-			Short: "Deploy Cadence contracts",
-		},
-	}
-}
+var Command = &command.Command{
+	Cmd: &cobra.Command{
+		Use:   "deploy",
+		Short: "Deploy Cadence contracts",
+	},
+	Flags: &deployFlags,
+	Run: func(
+		cmd *cobra.Command,
+		args []string,
+		project *flow.Project,
+		services *services.Services,
+	) (command.Result, error) {
+		c, err := services.Project.Deploy(command.NetworkFlag, deployFlags.Update)
+		if err != nil {
+			return nil, err
+		}
 
-// Run script command
-func (s *cmdDeploy) Run(
-	cmd *cobra.Command,
-	args []string,
-	project *flow.Project,
-	services *services.Services,
-) (command.Result, error) {
-	c, err := services.Project.Deploy(command.NetworkFlag, s.flags.Update)
-	if err != nil {
-		return nil, err
-	}
-
-	return &DeployResult{contracts: c, project: project}, nil
-}
-
-// GetFlags for script
-func (s *cmdDeploy) GetFlags() *sconfig.Config {
-	return sconfig.New(&s.flags)
-}
-
-// GetCmd get command
-func (s *cmdDeploy) GetCmd() *cobra.Command {
-	return s.cmd
+		return &DeployResult{contracts: c, project: project}, nil
+	},
 }
 
 // DeployResult result structure

@@ -22,7 +22,6 @@ import (
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/pkg/flow"
 	"github.com/onflow/flow-cli/pkg/flow/services"
-	"github.com/psiemens/sconfig"
 	"github.com/spf13/cobra"
 )
 
@@ -31,47 +30,30 @@ type flagsBlocks struct {
 	Verbose bool   `default:"false" flag:"verbose" info:"Display transactions in block"`
 }
 
-type cmdGet struct {
-	cmd   *cobra.Command
-	flags flagsBlocks
-}
+var blockFlags = &flagsBlocks{}
 
-// NewGetCmd creates new get command
-func NewGetCmd() command.Command {
-	return &cmdGet{
-		cmd: &cobra.Command{
-			Use:   "get <block_id|latest|block_height>",
-			Short: "Get block info",
-		},
-	}
-}
+var GetCommand = &command.Command{
+	Cmd: &cobra.Command{
+		Use:   "get <block_id|latest|block_height>",
+		Short: "Get block info",
+	},
+	Flags: *blockFlags,
+	Run: func(
+		cmd *cobra.Command,
+		args []string,
+		project *flow.Project,
+		services *services.Services,
+	) (command.Result, error) {
+		block, events, collections, err := services.Blocks.GetBlock(args[0], blockFlags.Events, blockFlags.Verbose)
+		if err != nil {
+			return nil, err
+		}
 
-// Run block command
-func (s *cmdGet) Run(
-	cmd *cobra.Command,
-	args []string,
-	project *flow.Project,
-	services *services.Services,
-) (command.Result, error) {
-	block, events, collections, err := services.Blocks.GetBlock(args[0], s.flags.Events, s.flags.Verbose)
-	if err != nil {
-		return nil, err
-	}
-
-	return &BlockResult{
-		block:       block,
-		events:      events,
-		verbose:     s.flags.Verbose,
-		collections: collections,
-	}, nil
-}
-
-// GetFlags for blocks
-func (s *cmdGet) GetFlags() *sconfig.Config {
-	return sconfig.New(&s.flags)
-}
-
-// GetCmd get command
-func (s *cmdGet) GetCmd() *cobra.Command {
-	return s.cmd
+		return &BlockResult{
+			block:       block,
+			events:      events,
+			verbose:     blockFlags.Verbose,
+			collections: collections,
+		}, nil
+	},
 }

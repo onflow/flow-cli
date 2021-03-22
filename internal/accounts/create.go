@@ -22,7 +22,6 @@ import (
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/pkg/flow"
 	"github.com/onflow/flow-cli/pkg/flow/services"
-	"github.com/psiemens/sconfig"
 	"github.com/spf13/cobra"
 )
 
@@ -35,48 +34,35 @@ type flagsCreate struct {
 	Contracts []string `flag:"contract" info:"Contract to be deployed during account creation. <name:filename>"`
 }
 
-type cmdCreate struct {
-	cmd   *cobra.Command
-	flags flagsCreate
-}
+var createFlags = &flagsCreate{}
 
-func NewCreateCmd() command.Command {
-	return &cmdCreate{
-		cmd: &cobra.Command{
-			Use:     "create",
-			Short:   "Create a new account",
-			Example: `flow accounts create --key d651f1931a2...8745`,
-		},
-	}
-}
+var Command = &command.Command{
+	Cmd: &cobra.Command{
+		Use:     "create",
+		Short:   "Create a new account",
+		Example: `flow accounts create --key d651f1931a2...8745`,
+	},
+	Flags: &createFlags,
+	Run: func(
+		cmd *cobra.Command,
+		args []string,
+		project *flow.Project,
+		services *services.Services,
+	) (command.Result, error) {
+		account, err := services.Accounts.Create(
+			createFlags.Signer,
+			createFlags.Keys,
+			createFlags.SigAlgo,
+			createFlags.HashAlgo,
+			createFlags.Contracts,
+		)
 
-func (c *cmdCreate) Run(
-	cmd *cobra.Command,
-	args []string,
-	project *flow.Project,
-	services *services.Services,
-) (command.Result, error) {
-	account, err := services.Accounts.Create(
-		c.flags.Signer,
-		c.flags.Keys,
-		c.flags.SigAlgo,
-		c.flags.HashAlgo,
-		c.flags.Contracts,
-	)
+		if err != nil {
+			return nil, err
+		}
 
-	if err != nil {
-		return nil, err
-	}
-
-	return &AccountResult{
-		Account: account,
-	}, nil
-}
-
-func (c *cmdCreate) GetFlags() *sconfig.Config {
-	return sconfig.New(&c.flags)
-}
-
-func (c *cmdCreate) GetCmd() *cobra.Command {
-	return c.cmd
+		return &AccountResult{
+			Account: account,
+		}, nil
+	},
 }

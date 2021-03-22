@@ -24,7 +24,6 @@ import (
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/pkg/flow"
 	"github.com/onflow/flow-cli/pkg/flow/services"
-	"github.com/psiemens/sconfig"
 	"github.com/spf13/cobra"
 )
 
@@ -34,48 +33,31 @@ type flagsScripts struct {
 	Code     bool     `default:"false" flag:"code" info:"⚠️  DEPRECATED: use filename argument"`
 }
 
-type cmdExecuteScript struct {
-	cmd   *cobra.Command
-	flags flagsScripts
-}
+var scriptFlags = &flagsScripts{}
 
-// NewExecuteScriptCmd creates new script command
-func NewExecuteScriptCmd() command.Command {
-	return &cmdExecuteScript{
-		cmd: &cobra.Command{
-			Use:     "execute <filename>",
-			Short:   "Execute a script",
-			Example: `flow scripts execute script.cdc --arg String:"Hello" --arg String:"World"`,
-			Args:    cobra.ExactArgs(1),
-		},
-	}
-}
+var ExecuteCommand = &command.Command{
+	Cmd: &cobra.Command{
+		Use:     "execute <filename>",
+		Short:   "Execute a script",
+		Example: `flow scripts execute script.cdc --arg String:"Hello" --arg String:"World"`,
+		Args:    cobra.ExactArgs(1),
+	},
+	Flags: &scriptFlags,
+	Run: func(
+		cmd *cobra.Command,
+		args []string,
+		project *flow.Project,
+		services *services.Services,
+	) (command.Result, error) {
+		if scriptFlags.Code {
+			return nil, fmt.Errorf("⚠️  DEPRECATED: use filename argument")
+		}
 
-// Run script command
-func (s *cmdExecuteScript) Run(
-	cmd *cobra.Command,
-	args []string,
-	project *flow.Project,
-	services *services.Services,
-) (command.Result, error) {
-	if s.flags.Code {
-		return nil, fmt.Errorf("⚠️  DEPRECATED: use filename argument")
-	}
+		value, err := services.Scripts.Execute(args[0], scriptFlags.Args, scriptFlags.ArgsJSON)
+		if err != nil {
+			return nil, err
+		}
 
-	value, err := services.Scripts.Execute(args[0], s.flags.Args, s.flags.ArgsJSON)
-	if err != nil {
-		return nil, err
-	}
-
-	return &ScriptResult{value}, nil
-}
-
-// GetFlags for script
-func (s *cmdExecuteScript) GetFlags() *sconfig.Config {
-	return sconfig.New(&s.flags)
-}
-
-// GetCmd get command
-func (s *cmdExecuteScript) GetCmd() *cobra.Command {
-	return s.cmd
+		return &ScriptResult{value}, nil
+	},
 }

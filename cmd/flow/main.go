@@ -55,7 +55,7 @@ func init() {
 	command.Add(accounts.Cmd, accounts.NewAddCmd())
 	command.Add(accounts.Cmd, accounts.NewCreateCmd())
 	command.Add(accounts.Cmd, accounts.NewStakingInfoCmd())
-	command.Add(accounts.Cmd, accounts.NewAddContractCmd())
+	command.Add(accounts.Cmd, accounts.AddContractCommand)
 	command.Add(accounts.Cmd, accounts.NewRemoveContractCmd())
 	command.Add(accounts.Cmd, accounts.NewUpdateContractCmd())
 

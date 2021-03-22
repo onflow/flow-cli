@@ -22,7 +22,6 @@ import (
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/pkg/flow"
 	"github.com/onflow/flow-cli/pkg/flow/services"
-	"github.com/psiemens/sconfig"
 	"github.com/spf13/cobra"
 )
 
@@ -31,47 +30,30 @@ type flagsStatus struct {
 	Code   bool `default:"false" flag:"code" info:"Display transaction code"`
 }
 
-type cmdGet struct {
-	cmd   *cobra.Command
-	flags flagsStatus
-}
+var statusFlags = &flagsStatus{}
 
-// NewGetCmd new status command
-func NewGetCmd() command.Command {
-	return &cmdGet{
-		cmd: &cobra.Command{
-			Use:   "get <tx_id>",
-			Short: "Get the transaction status",
-			Args:  cobra.ExactArgs(1),
-		},
-	}
-}
+var Command = &command.Command{
+	Cmd: &cobra.Command{
+		Use:   "get <tx_id>",
+		Short: "Get the transaction status",
+		Args:  cobra.ExactArgs(1),
+	},
+	Flags: &statusFlags,
+	Run: func(
+		cmd *cobra.Command,
+		args []string,
+		project *flow.Project,
+		services *services.Services,
+	) (command.Result, error) {
+		tx, result, err := services.Transactions.GetStatus(args[0], statusFlags.Sealed)
+		if err != nil {
+			return nil, err
+		}
 
-// Run command
-func (s *cmdGet) Run(
-	cmd *cobra.Command,
-	args []string,
-	project *flow.Project,
-	services *services.Services,
-) (command.Result, error) {
-	tx, result, err := services.Transactions.GetStatus(args[0], s.flags.Sealed)
-	if err != nil {
-		return nil, err
-	}
-
-	return &TransactionResult{
-		result: result,
-		tx:     tx,
-		code:   s.flags.Code,
-	}, nil
-}
-
-// GetFlags for command
-func (s *cmdGet) GetFlags() *sconfig.Config {
-	return sconfig.New(&s.flags)
-}
-
-// GetCmd gets command
-func (s *cmdGet) GetCmd() *cobra.Command {
-	return s.cmd
+		return &TransactionResult{
+			result: result,
+			tx:     tx,
+			code:   statusFlags.Code,
+		}, nil
+	},
 }

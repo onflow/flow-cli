@@ -24,7 +24,6 @@ import (
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/pkg/flow"
 	"github.com/onflow/flow-cli/pkg/flow/services"
-	"github.com/psiemens/sconfig"
 	"github.com/spf13/cobra"
 )
 
@@ -33,47 +32,34 @@ type flagsGet struct {
 	Code      bool `default:"false" flag:"code" info:"⚠️  DEPRECATED: use contracts flag instead"`
 }
 
-type cmdGet struct {
-	cmd   *cobra.Command
-	flags flagsGet
-}
+var getFlags = &flagsGet{}
 
-func NewGetCmd() command.Command {
-	return &cmdGet{
-		cmd: &cobra.Command{
-			Use:   "get <address>",
-			Short: "Gets an account by address",
-			Long:  `Gets an account by address (address, balance, keys, code)`,
-			Args:  cobra.ExactArgs(1),
-		},
-	}
-}
+var GetCommand = &command.Command{
+	Cmd: &cobra.Command{
+		Use:   "get <address>",
+		Short: "Gets an account by address",
+		Long:  `Gets an account by address (address, balance, keys, code)`,
+		Args:  cobra.ExactArgs(1),
+	},
+	Flags: &getFlags,
+	Run: func(
+		cmd *cobra.Command,
+		args []string,
+		project *flow.Project,
+		services *services.Services,
+	) (command.Result, error) {
+		if getFlags.Code {
+			return nil, fmt.Errorf("⚠️  DEPRECATED: use contracts flag instead")
+		}
 
-func (a *cmdGet) Run(
-	cmd *cobra.Command,
-	args []string,
-	project *flow.Project,
-	services *services.Services,
-) (command.Result, error) {
-	if a.flags.Code {
-		return nil, fmt.Errorf("⚠️  DEPRECATED: use contracts flag instead")
-	}
+		account, err := services.Accounts.Get(args[0])
+		if err != nil {
+			return nil, err
+		}
 
-	account, err := services.Accounts.Get(args[0])
-	if err != nil {
-		return nil, err
-	}
-
-	return &AccountResult{
-		Account:  account,
-		showCode: a.flags.Contracts,
-	}, nil
-}
-
-func (a *cmdGet) GetFlags() *sconfig.Config {
-	return sconfig.New(&a.flags)
-}
-
-func (a *cmdGet) GetCmd() *cobra.Command {
-	return a.cmd
+		return &AccountResult{
+			Account:  account,
+			showCode: getFlags.Contracts,
+		}, nil
+	},
 }

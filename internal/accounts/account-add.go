@@ -8,7 +8,6 @@ import (
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/pkg/flow"
 	"github.com/onflow/flow-cli/pkg/flow/services"
-	"github.com/psiemens/sconfig"
 	"github.com/spf13/cobra"
 )
 
@@ -21,52 +20,39 @@ type flagsAdd struct {
 	Overwrite   bool   `flag:"overwrite,o" info:"Overwrite an existing account"`
 }
 
-type cmdAdd struct {
-	cmd   *cobra.Command
-	flags flagsAdd
-}
+var addFlags = &flagsAdd{}
 
-func NewAddCmd() command.Command {
-	return &cmdAdd{
-		cmd: &cobra.Command{
-			Use:     "add <name> <address>",
-			Short:   "Add account by name to config",
-			Example: `flow accounts add alice 18d6e0586b0a20c5 --privateKey=11c5dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7`,
-			Args:    cobra.ExactArgs(2),
-		},
-	}
-}
+var AddCommand = &command.Command{
+	Cmd: &cobra.Command{
+		Use:     "add <name> <address>",
+		Short:   "Add account by name to config",
+		Example: `flow accounts add alice 18d6e0586b0a20c5 --privateKey=11c5dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7`,
+		Args:    cobra.ExactArgs(2),
+	},
+	Flags: addFlags,
+	Run: func(
+		cmd *cobra.Command,
+		args []string,
+		project *flow.Project,
+		services *services.Services,
+	) (command.Result, error) {
+		account, err := services.Accounts.Add(
+			args[0],
+			args[1],
+			addFlags.KeySigAlgo,
+			addFlags.KeyHashAlgo,
+			addFlags.KeyIndex,
+			addFlags.KeyHex,
+			addFlags.KeyContext,
+			addFlags.Overwrite,
+			flow.ConfigPath,
+		)
+		if err != nil {
+			return nil, err
+		}
 
-func (a *cmdAdd) Run(
-	cmd *cobra.Command,
-	args []string,
-	project *flow.Project,
-	services *services.Services,
-) (command.Result, error) {
-	account, err := services.Accounts.Add(
-		args[0],
-		args[1],
-		a.flags.KeySigAlgo,
-		a.flags.KeyHashAlgo,
-		a.flags.KeyIndex,
-		a.flags.KeyHex,
-		a.flags.KeyContext,
-		a.flags.Overwrite,
-		flow.ConfigPath,
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	return &AccountAddResult{account}, nil
-}
-
-func (a *cmdAdd) GetFlags() *sconfig.Config {
-	return sconfig.New(&a.flags)
-}
-
-func (a *cmdAdd) GetCmd() *cobra.Command {
-	return a.cmd
+		return &AccountAddResult{account}, nil
+	},
 }
 
 // AccountAddResult is the result from the "flow accounts add" command.

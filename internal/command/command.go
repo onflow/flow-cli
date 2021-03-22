@@ -24,20 +24,45 @@ import (
 	"os"
 	"strings"
 
+	"github.com/psiemens/sconfig"
+
 	"github.com/onflow/flow-cli/pkg/flow"
 	"github.com/onflow/flow-cli/pkg/flow/gateway"
 	"github.com/onflow/flow-cli/pkg/flow/services"
 	"github.com/onflow/flow-cli/pkg/flow/util"
 	"github.com/onflow/flow-go-sdk/client"
-	"github.com/psiemens/sconfig"
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
 )
 
-type Command interface {
-	GetCmd() *cobra.Command
-	GetFlags() *sconfig.Config
-	Run(*cobra.Command, []string, *flow.Project, *services.Services) (Result, error)
+/*
+
+var Command = &command.Command{
+	Cmd: ,
+	Flags: ,
+	Run: func(
+		cmd *cobra.Command,
+		args []string,
+		project *flow.Project,
+		services *services.Services,
+	) (command.Result, error) {
+
+	},
+}
+
+*/
+
+type RunCommand func(
+	*cobra.Command,
+	[]string,
+	*flow.Project,
+	*services.Services,
+) (Result, error)
+
+type Command struct {
+	Cmd   *cobra.Command
+	Flags interface{}
+	Run   RunCommand
 }
 
 var (
@@ -55,7 +80,7 @@ var (
 // here we can do all boilerplate code that is else copied in each command and make sure
 // we have one place to handle all errors and ensure commands have consistent results
 func Add(c *cobra.Command, command Command) {
-	command.GetCmd().RunE = func(cmd *cobra.Command, args []string) error {
+	command.Cmd.RunE = func(cmd *cobra.Command, args []string) error {
 		// initialize project but ignore error since config can be missing
 		project, _ := flow.LoadProject(flow.ConfigPath)
 
@@ -82,7 +107,7 @@ func Add(c *cobra.Command, command Command) {
 	}
 
 	bindFlags(command)
-	c.AddCommand(command.GetCmd())
+	c.AddCommand(command.Cmd)
 }
 
 // createGateway creates a gateway to be used, defaults to grpc but can support others
@@ -222,9 +247,9 @@ func handleError(description string, err error) {
 
 // bindFlags bind all the flags needed
 func bindFlags(command Command) {
-	err := command.GetFlags().
+	err := sconfig.New(command.Flags).
 		FromEnvironment(flow.EnvPrefix).
-		BindFlags(command.GetCmd().PersistentFlags()).
+		BindFlags(command.Cmd.PersistentFlags()).
 		Parse()
 	if err != nil {
 		fmt.Println(err)

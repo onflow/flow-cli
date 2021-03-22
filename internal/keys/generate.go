@@ -22,7 +22,6 @@ import (
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/pkg/flow"
 	"github.com/onflow/flow-cli/pkg/flow/services"
-	"github.com/psiemens/sconfig"
 	"github.com/spf13/cobra"
 )
 
@@ -31,43 +30,26 @@ type flagsGenerate struct {
 	KeySigAlgo string `default:"ECDSA_P256" flag:"sig-algo" info:"Signature algorithm"`
 }
 
-type cmdGenerate struct {
-	cmd   *cobra.Command
-	flags flagsGenerate
-}
+var generateFlags = &flagsGenerate{}
 
-// NewGenerateCmd return new command
-func NewGenerateCmd() command.Command {
-	return &cmdGenerate{
-		cmd: &cobra.Command{
-			Use:   "generate",
-			Short: "Generate a new key-pair",
-		},
-	}
-}
+var Command = &command.Command{
+	Cmd: &cobra.Command{
+		Use:   "generate",
+		Short: "Generate a new key-pair",
+	},
+	Flags: &generateFlags,
+	Run: func(
+		cmd *cobra.Command,
+		args []string,
+		project *flow.Project,
+		services *services.Services,
+	) (command.Result, error) {
+		keys, err := services.Keys.Generate(generateFlags.Seed, generateFlags.KeySigAlgo)
+		if err != nil {
+			return nil, err
+		}
 
-// Run command
-func (a *cmdGenerate) Run(
-	cmd *cobra.Command,
-	args []string,
-	project *flow.Project,
-	services *services.Services,
-) (command.Result, error) {
-	keys, err := services.Keys.Generate(a.flags.Seed, a.flags.KeySigAlgo)
-	if err != nil {
-		return nil, err
-	}
-
-	pubKey := keys.PublicKey()
-	return &KeyResult{privateKey: keys, publicKey: &pubKey}, nil
-}
-
-// GetFlags get command flags
-func (a *cmdGenerate) GetFlags() *sconfig.Config {
-	return sconfig.New(&a.flags)
-}
-
-// GetCmd gets command
-func (a *cmdGenerate) GetCmd() *cobra.Command {
-	return a.cmd
+		pubKey := keys.PublicKey()
+		return &KeyResult{privateKey: keys, publicKey: &pubKey}, nil
+	},
 }

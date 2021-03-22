@@ -24,7 +24,6 @@ import (
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/pkg/flow"
 	"github.com/onflow/flow-cli/pkg/flow/services"
-	"github.com/psiemens/sconfig"
 	"github.com/spf13/cobra"
 )
 
@@ -36,55 +35,38 @@ type flagsSend struct {
 	Results  bool     `default:"" flag:"results" info:"⚠️  DEPRECATED: all transactions will provide result"`
 }
 
-type cmdSend struct {
-	cmd   *cobra.Command
-	flags flagsSend
-}
+var sendFlags = &flagsSend{}
 
-// NewSendCmd new send command
-func NewSendCmd() command.Command {
-	return &cmdSend{
-		cmd: &cobra.Command{
-			Use:     "send <filename>",
-			Short:   "Send a transaction",
-			Args:    cobra.ExactArgs(1),
-			Example: `flow transactions send tx.cdc --args String:"Hello world"`,
-		},
-	}
-}
+var SendCommand = &command.Command{
+	Cmd: &cobra.Command{
+		Use:     "send <filename>",
+		Short:   "Send a transaction",
+		Args:    cobra.ExactArgs(1),
+		Example: `flow transactions send tx.cdc --args String:"Hello world"`,
+	},
+	Flags: &sendFlags,
+	Run: func(
+		cmd *cobra.Command,
+		args []string,
+		project *flow.Project,
+		services *services.Services,
+	) (command.Result, error) {
+		if sendFlags.Code != "" {
+			return nil, fmt.Errorf("⚠️  DEPRECATED: use filename argument")
+		}
 
-// Run command
-func (a *cmdSend) Run(
-	cmd *cobra.Command,
-	args []string,
-	project *flow.Project,
-	services *services.Services,
-) (command.Result, error) {
-	if a.flags.Code != "" {
-		return nil, fmt.Errorf("⚠️  DEPRECATED: use filename argument")
-	}
+		if sendFlags.Results {
+			return nil, fmt.Errorf("⚠️  DEPRECATED: all transactions will provide results")
+		}
 
-	if a.flags.Results {
-		return nil, fmt.Errorf("⚠️  DEPRECATED: all transactions will provide results")
-	}
+		tx, result, err := services.Transactions.Send(args[0], sendFlags.Signer, sendFlags.Args, sendFlags.ArgsJSON)
+		if err != nil {
+			return nil, err
+		}
 
-	tx, result, err := services.Transactions.Send(args[0], a.flags.Signer, a.flags.Args, a.flags.ArgsJSON)
-	if err != nil {
-		return nil, err
-	}
-
-	return &TransactionResult{
-		result: result,
-		tx:     tx,
-	}, nil
-}
-
-// GetFlags for transactions command
-func (a *cmdSend) GetFlags() *sconfig.Config {
-	return sconfig.New(&a.flags)
-}
-
-// GetCmd gets command
-func (a *cmdSend) GetCmd() *cobra.Command {
-	return a.cmd
+		return &TransactionResult{
+			result: result,
+			tx:     tx,
+		}, nil
+	},
 }

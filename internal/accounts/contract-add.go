@@ -22,7 +22,6 @@ import (
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/pkg/flow"
 	"github.com/onflow/flow-cli/pkg/flow/services"
-	"github.com/psiemens/sconfig"
 	"github.com/spf13/cobra"
 )
 
@@ -30,43 +29,36 @@ type flagsAddContract struct {
 	Signer string `default:"emulator-account" flag:"signer"`
 }
 
-type cmdAddContract struct {
-	cmd   *cobra.Command
-	flags flagsAddContract
-}
+var addContractFlags = &flagsAddContract{}
 
-func NewAddContractCmd() command.Command {
-	return &cmdAddContract{
-		cmd: &cobra.Command{
-			Use:     "add-contract <name> <filename>",
-			Short:   "Deploy a new contract to an account",
-			Example: `flow accounts add-contract FungibleToken ./FungibleToken.cdc`,
-			Args:    cobra.ExactArgs(2),
-		},
-	}
-}
+var AddContractCommand = &command.Command{
+	Cmd: &cobra.Command{
+		Use:     "add-contract <name> <filename>",
+		Short:   "Deploy a new contract to an account",
+		Example: `flow accounts add-contract FungibleToken ./FungibleToken.cdc`,
+		Args:    cobra.ExactArgs(2),
+	},
+	Flags: addContractFlags,
+	Run: func(
+		cmd *cobra.Command,
+		args []string,
+		project *flow.Project,
+		services *services.Services,
+	) (command.Result, error) {
+		account, err := services.Accounts.AddContract(
+			addContractFlags.Signer,
+			args[0],
+			args[1],
+			false,
+		)
 
-func (a *cmdAddContract) Run(
-	cmd *cobra.Command,
-	args []string,
-	project *flow.Project,
-	services *services.Services,
-) (command.Result, error) {
-	account, err := services.Accounts.AddContract(a.flags.Signer, args[0], args[1], false)
-	if err != nil {
-		return nil, err
-	}
+		if err != nil {
+			return nil, err
+		}
 
-	return &AccountResult{
-		Account:  account,
-		showCode: false,
-	}, nil
-}
-
-func (a *cmdAddContract) GetFlags() *sconfig.Config {
-	return sconfig.New(&a.flags)
-}
-
-func (a *cmdAddContract) GetCmd() *cobra.Command {
-	return a.cmd
+		return &AccountResult{
+			Account:  account,
+			showCode: false,
+		}, nil
+	},
 }

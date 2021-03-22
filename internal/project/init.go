@@ -30,7 +30,6 @@ import (
 	"github.com/onflow/flow-cli/pkg/flow"
 
 	"github.com/onflow/flow-cli/pkg/flow/services"
-	"github.com/psiemens/sconfig"
 	"github.com/spf13/cobra"
 )
 
@@ -41,49 +40,32 @@ type flagsInit struct {
 	Reset              bool   `default:"false" flag:"reset" info:"Reset flow.json config file"`
 }
 
-type cmdInit struct {
-	cmd   *cobra.Command
-	flags flagsInit
-}
+var initFlag = &flagsInit{}
 
-// NewInitCmd creates new init command
-func NewInitCmd() command.Command {
-	return &cmdInit{
-		cmd: &cobra.Command{
-			Use:   "init",
-			Short: "Initialize a new account profile",
-		},
-	}
-}
+var InitCommand = &command.Command{
+	Cmd: &cobra.Command{
+		Use:   "init",
+		Short: "Initialize a new account profile",
+	},
+	Flags: &initFlag,
+	Run: func(
+		cmd *cobra.Command,
+		args []string,
+		project *flow.Project,
+		services *services.Services,
+	) (command.Result, error) {
+		project, err := services.Project.Init(
+			initFlag.Reset,
+			initFlag.ServiceKeySigAlgo,
+			initFlag.ServiceKeyHashAlgo,
+			initFlag.ServicePrivateKey,
+		)
+		if err != nil {
+			return nil, err
+		}
 
-// Run init command
-func (s *cmdInit) Run(
-	cmd *cobra.Command,
-	args []string,
-	project *flow.Project,
-	services *services.Services,
-) (command.Result, error) {
-	project, err := services.Project.Init(
-		s.flags.Reset,
-		s.flags.ServiceKeySigAlgo,
-		s.flags.ServiceKeyHashAlgo,
-		s.flags.ServicePrivateKey,
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	return &InitResult{project}, nil
-}
-
-// GetFlags for init
-func (s *cmdInit) GetFlags() *sconfig.Config {
-	return sconfig.New(&s.flags)
-}
-
-// GetCmd get command
-func (s *cmdInit) GetCmd() *cobra.Command {
-	return s.cmd
+		return &InitResult{project}, nil
+	},
 }
 
 // InitResult result structure
