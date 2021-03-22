@@ -64,7 +64,7 @@ func (e *Blocks) GetBlock(
 	var block *flowsdk.Block
 	if query == "latest" {
 		block, err = e.gateway.GetLatestBlock()
-	} else if height, _ := strconv.ParseUint(query, 10, 64); err == nil {
+	} else if height, ce := strconv.ParseUint(query, 10, 64); ce == nil {
 		block, err = e.gateway.GetBlockByHeight(height)
 	} else {
 		block, err = e.gateway.GetBlockByID(flowsdk.HexToID(query))

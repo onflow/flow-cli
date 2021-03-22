@@ -31,6 +31,16 @@ func TestBlocks(t *testing.T) {
 			return tests.NewBlock(), nil
 		}
 
+		mock.GetBlockByIDMock = func(identifier flow.Identifier) (*flow.Block, error) {
+			assert.Fail(t, "shouldn't be called")
+			return nil, nil
+		}
+
+		mock.GetBlockByHeightMock = func(height uint64) (*flow.Block, error) {
+			assert.Fail(t, "shouldn't be called")
+			return nil, nil
+		}
+
 		mock.GetEventsMock = func(name string, start uint64, end uint64) ([]client.BlockEvents, error) {
 			assert.Equal(t, name, "flow.AccountCreated")
 			return nil, nil
@@ -48,6 +58,16 @@ func TestBlocks(t *testing.T) {
 			called = true
 			assert.Equal(t, height, uint64(10))
 			return tests.NewBlock(), nil
+		}
+
+		mock.GetBlockByIDMock = func(identifier flow.Identifier) (*flow.Block, error) {
+			assert.Fail(t, "shouldn't be called")
+			return nil, nil
+		}
+
+		mock.GetLatestBlockMock = func() (*flow.Block, error) {
+			assert.Fail(t, "shouldn't be called")
+			return nil, nil
 		}
 
 		mock.GetEventsMock = func(name string, start uint64, end uint64) ([]client.BlockEvents, error) {
@@ -68,6 +88,16 @@ func TestBlocks(t *testing.T) {
 
 			assert.Equal(t, id.String(), "a310685082f0b09f2a148b2e8905f08ea458ed873596b53b200699e8e1f6536f")
 			return tests.NewBlock(), nil
+		}
+
+		mock.GetBlockByHeightMock = func(u uint64) (*flow.Block, error) {
+			assert.Fail(t, "shouldn't be called")
+			return nil, nil
+		}
+
+		mock.GetLatestBlockMock = func() (*flow.Block, error) {
+			assert.Fail(t, "shouldn't be called")
+			return nil, nil
 		}
 
 		mock.GetEventsMock = func(name string, start uint64, end uint64) ([]client.BlockEvents, error) {
