@@ -1,50 +1,61 @@
 ---
-title: Execute a Script with the Flow CLI
-sidebar_title: Execute a Script
-description: How to execute a Cadence script on Flow from the command line
+title: Get a Transaction with the Flow CLI
+sidebar_title: Get a Transaction
+description: How to get a Flow transaction from the command line
 ---
 
-The Flow CLI provides a command to execute a Cadence script on
-the Flow execution state with any Flow Access API.
+The Flow CLI provides a command to get a transaction
+that was previously submitted to an Access API.
 
-`flow scripts execute <filename>`
+`flow transactions get <tx_id>`
 
 ## Example Usage
 
 ```shell
-# Submit a transaction to Flow Testnet
-> flow scripts execute script.cdc --arg String:"Hello" --arg String:"World"
+> flow transactions get ff35821007322405608c0d3da79312617f8d16e118afe63e764b5e68edc96dd5 --host access.mainnet.nodes.onflow.org:9000
 
-"Hello World"
+Hash	 ff35821007322405608c0d3da79312617f8d16e118afe63e764b5e68edc96dd5
+Status	 SEALED
+Payer	 12e354a23e4f791d
+Events	 
+	 Index	 0
+	 Type	 flow.AccountCreated
+	 Tx ID	 ff35821007322405608c0d3da79312617f8d16e118afe63e764b5e68edc96dd5
+	 Values
+		 address (Address)	18c4931b5f3c7151
+
+	 Index	 1
+	 Type	 flow.AccountKeyAdded
+	 Tx ID	 ff35821007322405608c0d3da79312617f8d16e118afe63e764b5e68edc96dd5
+	 Values
+		 address (Address)	18c4931b5f3c7151
+		 publicKey (Unknown)	f847b8404c296679364d2...7b168678cc762bc08f342d8d92e0a36e6ecfdcf15850721821823e8
 ```
 
 ## Arguments
 
-### Filename
-- Name: `filename`
-- Valid inputs: Any filename and path valid on the system.
+### Transaction ID
+- Name: `<tx_id>`
+- Valid Input: transaction hash
 
-The first argument is a path to a Cadence file containing the 
-script to be executed.
+The first argument is the ID (hash) of the transaction.
 
 ## Flags
+    
+### Display Transaction Code
 
-### Arguments
-- Flag: `--arg`
-- Valid inputs: Argument in `Type:Value` format.
+- Flag: `--code`
+- Default: `false`
 
-Arguments passed to the Cadence script in `Type:Value` format. 
-The `Type` must be the same as type in the script source code for that argument.  
+Indicate whether to print the transaction Cadence code.
 
-### Arguments JSON
-- Flag: `--argsJSON`
-- Valid inputs: Arguments in JSON-Cadence format.
+### Wait for Seal
 
-Arguments passed to the Cadence script in `Type:Value` format.
-The `Type` must be the same as type in the script source code for that argument.
+- Flag: `--sealed`
+- Default: `false`
 
-### Code
-⚠️  DEPRECATED: use filename argument.
+Indicate whether to wait for the transaction to be sealed
+before displaying the result.
 
 ### Host
 - Flag: `--host`

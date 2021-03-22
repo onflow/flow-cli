@@ -11,12 +11,8 @@ Retrieve staking information for the account on the Flow network using Flow CLI.
 ## Example Usage
 
 ```shell
-accounts staking-info 535b975637fb6bee --host access.testnet.nodes.onflow.org:9000
-```
+> accounts staking-info 535b975637fb6bee --host access.testnet.nodes.onflow.org:9000
 
-### Example response
-
-```shell
 Account Staking Info:
 ID: 			 "ca00101101010100001011010101010101010101010101011010101010101010"
 Initial Weight: 	 100
@@ -110,6 +106,6 @@ Specify the log level. Control how much output you want to see while command exe
 - Short Flag: `-f`
 - Valid inputs: valid filename
 
-Specify filename for the configuration files, you can provide multiple configuration
+Specify a filename for the configuration files, you can provide multiple configuration
 files by using `-f` flag multiple times.
 

@@ -13,12 +13,8 @@ Deploy a new contract to the account on the Flow network using Flow CLI.
 ## Example Usage
 
 ```shell
-flow accounts add-contract FungibleToken ./FungibleToken.cdc
-```
+> flow accounts add-contract FungibleToken ./FungibleToken.cdc
 
-### Example response
-
-```shell
 Contract 'FungibleToken' deployed to the account 0xf8d6e0586b0a20c7
 
 Address	 0xf8d6e0586b0a20c7
@@ -112,6 +108,6 @@ Specify the log level. Control how much output you want to see while command exe
 - Short Flag: `-f`
 - Valid inputs: valid filename
 
-Specify filename for the configuration files, you can provide multiple configuration
+Specify a filename for the configuration files, you can provide multiple configuration
 files by using `-f` flag multiple times.
 

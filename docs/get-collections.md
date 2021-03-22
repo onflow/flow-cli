@@ -6,17 +6,13 @@ description: How to get a collection from the command line
 
 The Flow CLI provides a command to fetch any collection from the Flow network.
 
-```bash
-flow collections get 3e694588e789a72489667a36dd73104dea4579bcd400959d47aedccd7f930eeb \
---host access.mainnet.nodes.onflow.org:9000
-```
-
-{optional warning}
+`flow collections get <collection_id>`
 
 ## Example Usage
 
 ```shell
-{usage example}
+flow collections get 3e694588e789a72489667a36dd73104dea4579bcd400959d47aedccd7f930eeb \
+--host access.mainnet.nodes.onflow.org:9000
 ```
 
 ### Example response
@@ -32,36 +28,15 @@ ae8bfbc85ce994899a3f942072bfd3455823b1f7652106ac102d161c17fcb55c
 
 ## Arguments
 
-### {Argument 1}
-- Name: `{argument}`
-- Valid Input: `{input}`
+### Collection ID
+- Name: `collection_id`
+- Valid Input: SHA3-256 hash of the collection contents
 
 {argument general description}
 
 ## Arguments
 
-### Address
-- Name: `address`
-- Valid Input: Flow account address
-
-Flow [account address](https://docs.onflow.org/concepts/accounts-and-keys/) (prefixed with `0x` or not).
-
-
 ## Flags
-
-### {Option 1}
-
-- Flag: `{flag value}`
-- Valid inputs: {input description}
-
-{flag general description}
-
-### Signer
-
-- Flag: `--signer`
-- Valid inputs: the name of an account defined in the configuration (`flow.json`)
-
-Specify the name of the account that will be used to sign the transaction.
 
 ### Host
 - Flag: `--host`

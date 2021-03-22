@@ -19,19 +19,21 @@ Before using this command, read about how to
 ## Example Usage
 
 ```shell
-# Deploy project contracts to all Testnet targets
 > flow project deploy --network=testnet
 
-NonFungibleToken -> 0xf8d6e0586b0a20c7
-KittyItems -> 0xf8d6e0586b0a20c7
+Deploying 2 contracts for accounts: my-testnet-account
 
-✅ All contracts deployed successfully
+NonFungibleToken -> 0x8910590293346ec4
+KittyItems -> 0x8910590293346ec4
+
+✨  All contracts deployed successfully
 ```
 
 In the example above, your `flow.json` file might look something like this:
 
 ```json
 {
+  ...
   "contracts": {
     "NonFungibleToken": "./cadence/contracts/NonFungibleToken.cdc",
     "KittyItems": "./cadence/contracts/KittyItems.cdc"
@@ -40,7 +42,8 @@ In the example above, your `flow.json` file might look something like this:
     "testnet": {
       "my-testnet-account": ["KittyItems", "NonFungibleToken"]
     }
-  }
+  },
+  ...
 }
 ```
 
@@ -224,6 +227,6 @@ Specify the log level. Control how much output you want to see while command exe
 - Short Flag: `-f`
 - Valid inputs: valid filename
 
-Specify filename for the configuration files, you can provide multiple configuration
+Specify a filename for the configuration files, you can provide multiple configuration
 files by using `-f` flag multiple times.
 

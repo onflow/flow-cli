@@ -69,7 +69,7 @@ func (r *AccountResult) String() string {
 
 	if r.showCode {
 		for name, code := range r.Contracts {
-			fmt.Fprintf(writer, "Code '%s':\n", name)
+			fmt.Fprintf(writer, "Contracts '%s':\n", name)
 			fmt.Fprintln(writer, string(code))
 		}
 	}

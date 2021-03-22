@@ -21,6 +21,7 @@ package collections
 import (
 	"bytes"
 	"fmt"
+	"strings"
 	"text/tabwriter"
 
 	"github.com/onflow/flow-go-sdk"
@@ -40,14 +41,26 @@ type CollectionResult struct {
 
 // JSON convert result to JSON
 func (c *CollectionResult) JSON() interface{} {
-	return c
+	txIDs := make([]string, 0)
+
+	for _, tx := range c.Collection.TransactionIDs {
+		txIDs = append(txIDs, tx.String())
+	}
+
+	return txIDs
 }
 
 // String convert result to string
 func (c *CollectionResult) String() string {
 	var b bytes.Buffer
 	writer := tabwriter.NewWriter(&b, 0, 8, 1, '\t', tabwriter.AlignRight)
-	fmt.Fprintf(writer, "%s\n", c.Collection)
+
+	fmt.Fprintf(writer, "Collection ID %s:\n", c.Collection.ID())
+
+	for _, tx := range c.Collection.TransactionIDs {
+		fmt.Fprintf(writer, "%s\n", tx.String())
+	}
+
 	writer.Flush()
 
 	return b.String()
@@ -55,5 +68,5 @@ func (c *CollectionResult) String() string {
 
 // Oneliner show result as one liner grep friendly
 func (c *CollectionResult) Oneliner() string {
-	return fmt.Sprintf("%s", c.Collection)
+	return strings.Join(c.JSON().([]string), ",")
 }

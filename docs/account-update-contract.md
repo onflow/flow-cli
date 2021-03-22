@@ -11,12 +11,8 @@ Update an existing contract deployed to an account on the Flow network using Flo
 ## Example Usage
 
 ```shell
-flow accounts update-contract FungibleToken ./FungibleToken.cdc
-```
+> flow accounts update-contract FungibleToken ./FungibleToken.cdc
 
-### Example response
-
-```shell
 Contract 'FungibleToken' updated on account '0xf8d6e0586b0a20c7'
 
 Address	 0xf8d6e0586b0a20c7
@@ -112,6 +108,6 @@ Specify the log level. Control how much output you want to see while command exe
 - Short Flag: `-f`
 - Valid inputs: valid filename
 
-Specify filename for the configuration files, you can provide multiple configuration
+Specify a filename for the configuration files, you can provide multiple configuration
 files by using `-f` flag multiple times.
 
