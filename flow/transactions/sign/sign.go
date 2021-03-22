@@ -85,7 +85,7 @@ var Cmd = &cobra.Command{
 				cli.Exitf(1, "Role specified as Payer, but Payer address also provided, and different: %s !=", payer, signerAccount.Address)
 			}
 		case cli.SignerRoleProposer:
-			cli.Exitf(1, "Proposer role not yet supported: %s", conf.Role)
+			// Just sign payload, no special actions needed
 		default:
 			cli.Exitf(1, "unknown role %s", conf.Role)
 		}
@@ -133,6 +133,9 @@ func initConfig() {
 }
 
 func validateKeyPreReq(account *cli.Account) {
+	if account == nil {
+		cli.Exitf(1, "A specified key was not found")
+	}
 	if account.KeyType == cli.KeyTypeHex {
 		// Always Valid
 		return

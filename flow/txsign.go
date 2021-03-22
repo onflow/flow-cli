@@ -60,7 +60,7 @@ func signTransaction(
 	}
 	accountKey := account.Keys[signerAccount.KeyIndex]
 	switch signerRole {
-	case SignerRoleAuthorizer:
+	case SignerRoleAuthorizer, SignerRoleProposer:
 		err := tx.SignPayload(signerAddress, accountKey.Index, signerAccount.Signer)
 		if err != nil {
 			Exitf(1, "Failed to sign transaction: %s", err)
