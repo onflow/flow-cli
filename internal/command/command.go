@@ -24,6 +24,18 @@ import (
 	"os"
 	"strings"
 
+	"github.com/onflow/flow-cli/internal/accounts"
+	"github.com/onflow/flow-cli/internal/blocks"
+	"github.com/onflow/flow-cli/internal/cadence"
+	"github.com/onflow/flow-cli/internal/collections"
+	"github.com/onflow/flow-cli/internal/emulator"
+	"github.com/onflow/flow-cli/internal/events"
+	"github.com/onflow/flow-cli/internal/keys"
+	"github.com/onflow/flow-cli/internal/project"
+	"github.com/onflow/flow-cli/internal/scripts"
+	"github.com/onflow/flow-cli/internal/transactions"
+	"github.com/onflow/flow-cli/internal/version"
+
 	"github.com/psiemens/sconfig"
 
 	"github.com/onflow/flow-cli/pkg/flow"
@@ -34,23 +46,6 @@ import (
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
 )
-
-/*
-
-var Command = &command.Command{
-	Cmd: ,
-	Flags: ,
-	Run: func(
-		cmd *cobra.Command,
-		args []string,
-		project *flow.Project,
-		services *services.Services,
-	) (command.Result, error) {
-
-	},
-}
-
-*/
 
 type RunCommand func(
 	*cobra.Command,
@@ -75,12 +70,102 @@ var (
 	NetworkFlag     = ""
 )
 
+// InitCommands initialize all commands
+// and adds them to root command
+func InitCommands() *cobra.Command {
+	var cmd = &cobra.Command{
+		Use:              "flow",
+		TraverseChildren: true,
+	}
+
+	cmd.AddCommand(cadence.Cmd)
+	cmd.AddCommand(version.Cmd)
+	cmd.AddCommand(emulator.Cmd)
+	cmd.AddCommand(accounts.Cmd)
+	cmd.AddCommand(scripts.Cmd)
+	cmd.AddCommand(transactions.Cmd)
+	cmd.AddCommand(keys.Cmd)
+	cmd.AddCommand(events.Cmd)
+	cmd.AddCommand(blocks.Cmd)
+	cmd.AddCommand(collections.Cmd)
+	cmd.AddCommand(project.Cmd)
+
+	return cmd
+}
+
+// InitFlags init all the global persistent flags
+func InitFlags(cmd cobra.Command) {
+	cmd.PersistentFlags().StringVarP(
+		&FilterFlag,
+		"filter",
+		"x",
+		FilterFlag,
+		"Filter result values by property name",
+	)
+
+	cmd.PersistentFlags().StringVarP(
+		&HostFlag,
+		"host",
+		"",
+		HostFlag,
+		"Flow Access API host address",
+	)
+
+	cmd.PersistentFlags().StringVarP(
+		&FormatFlag,
+		"output",
+		"o",
+		FormatFlag,
+		"Output format, values (json, inline)",
+	)
+
+	cmd.PersistentFlags().StringVarP(
+		&SaveFlag,
+		"save",
+		"s",
+		SaveFlag,
+		"Save result to a filename",
+	)
+
+	cmd.PersistentFlags().StringVarP(
+		&LogFlag,
+		"log",
+		"l",
+		LogFlag,
+		"Log level verbosity, values (none, error, debug)",
+	)
+
+	cmd.PersistentFlags().BoolVarP(
+		&RunEmulatorFlag,
+		"emulator",
+		"e",
+		RunEmulatorFlag,
+		"Run in-memory emulator",
+	)
+
+	cmd.PersistentFlags().StringSliceVarP(
+		&flow.ConfigPath,
+		"conf",
+		"f",
+		flow.ConfigPath,
+		"Path to flow configuration file",
+	)
+
+	cmd.PersistentFlags().StringVarP(
+		&NetworkFlag,
+		"network",
+		"n",
+		NetworkFlag,
+		"Network from configuration file",
+	)
+}
+
 // addCommand add new command to main cmd
 // and initializes all necessary things as well as take care of errors and output
 // here we can do all boilerplate code that is else copied in each command and make sure
 // we have one place to handle all errors and ensure commands have consistent results
-func Add(c *cobra.Command, command Command) {
-	command.Cmd.RunE = func(cmd *cobra.Command, args []string) error {
+func (c Command) Add(parent *cobra.Command) {
+	c.Cmd.RunE = func(cmd *cobra.Command, args []string) error {
 		// initialize project but ignore error since config can be missing
 		project, _ := flow.LoadProject(flow.ConfigPath)
 
@@ -92,7 +177,7 @@ func Add(c *cobra.Command, command Command) {
 		service := services.NewServices(clientGateway, project, logger)
 
 		// run command
-		result, err := command.Run(cmd, args, project, service)
+		result, err := c.Run(cmd, args, project, service)
 		handleError("Command Error", err)
 
 		// format output result
@@ -106,8 +191,8 @@ func Add(c *cobra.Command, command Command) {
 		return nil
 	}
 
-	bindFlags(command)
-	c.AddCommand(command.Cmd)
+	bindFlags(c)
+	parent.AddCommand(c.Cmd)
 }
 
 // createGateway creates a gateway to be used, defaults to grpc but can support others

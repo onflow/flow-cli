@@ -22,134 +22,13 @@ package main
 import (
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/pkg/flow"
-
-	"github.com/onflow/flow-cli/internal/blocks"
-	"github.com/onflow/flow-cli/internal/emulator"
-
-	"github.com/spf13/cobra"
-
-	"github.com/onflow/flow-cli/internal/accounts"
-	"github.com/onflow/flow-cli/internal/cadence"
-	"github.com/onflow/flow-cli/internal/collections"
-	"github.com/onflow/flow-cli/internal/events"
-	"github.com/onflow/flow-cli/internal/keys"
-	"github.com/onflow/flow-cli/internal/project"
-	"github.com/onflow/flow-cli/internal/scripts"
-	"github.com/onflow/flow-cli/internal/transactions"
-	"github.com/onflow/flow-cli/internal/version"
 )
 
-var c = &cobra.Command{
-	Use:              "flow",
-	TraverseChildren: true,
-}
-
-func init() {
-
-	c.AddCommand(cadence.Cmd)
-	c.AddCommand(version.Cmd)
-	c.AddCommand(emulator.Cmd)
-
-	c.AddCommand(accounts.Cmd)
-	command.Add(accounts.Cmd, accounts.NewGetCmd())
-	command.Add(accounts.Cmd, accounts.NewAddCmd())
-	command.Add(accounts.Cmd, accounts.NewCreateCmd())
-	command.Add(accounts.Cmd, accounts.NewStakingInfoCmd())
-	command.Add(accounts.Cmd, accounts.AddContractCommand)
-	command.Add(accounts.Cmd, accounts.NewRemoveContractCmd())
-	command.Add(accounts.Cmd, accounts.NewUpdateContractCmd())
-
-	c.AddCommand(scripts.Cmd)
-	command.Add(scripts.Cmd, scripts.NewExecuteScriptCmd())
-
-	c.AddCommand(transactions.Cmd)
-	command.Add(transactions.Cmd, transactions.NewSendCmd())
-	command.Add(transactions.Cmd, transactions.NewGetCmd())
-
-	c.AddCommand(keys.Cmd)
-	command.Add(keys.Cmd, keys.NewGenerateCmd())
-	command.Add(keys.Cmd, keys.NewCmdDecode())
-
-	c.AddCommand(events.Cmd)
-	command.Add(events.Cmd, events.NewGetCmd())
-
-	c.AddCommand(blocks.Cmd)
-	command.Add(blocks.Cmd, blocks.NewGetCmd())
-
-	c.AddCommand(collections.Cmd)
-	command.Add(collections.Cmd, collections.NewGetCmd())
-
-	c.AddCommand(project.Cmd)
-	command.Add(project.Cmd, project.NewInitCmd())
-	command.Add(project.Cmd, project.NewDeployCmd())
-
-	c.PersistentFlags().StringVarP(
-		&command.FilterFlag,
-		"filter",
-		"x",
-		command.FilterFlag,
-		"Filter result values by property name",
-	)
-
-	c.PersistentFlags().StringVarP(
-		&command.HostFlag,
-		"host",
-		"",
-		command.HostFlag,
-		"Flow Access API host address",
-	)
-
-	c.PersistentFlags().StringVarP(
-		&command.FormatFlag,
-		"output",
-		"o",
-		command.FormatFlag,
-		"Output format, values (json, inline)",
-	)
-
-	c.PersistentFlags().StringVarP(
-		&command.SaveFlag,
-		"save",
-		"s",
-		command.SaveFlag,
-		"Save result to a filename",
-	)
-
-	c.PersistentFlags().StringVarP(
-		&command.LogFlag,
-		"log",
-		"l",
-		command.LogFlag,
-		"Log level verbosity, values (none, error, debug)",
-	)
-
-	c.PersistentFlags().BoolVarP(
-		&command.RunEmulatorFlag,
-		"emulator",
-		"e",
-		command.RunEmulatorFlag,
-		"Run in-memory emulator",
-	)
-
-	c.PersistentFlags().StringSliceVarP(
-		&flow.ConfigPath,
-		"conf",
-		"f",
-		flow.ConfigPath,
-		"Path to flow configuration file",
-	)
-
-	c.PersistentFlags().StringVarP(
-		&command.NetworkFlag,
-		"network",
-		"n",
-		command.NetworkFlag,
-		"Network from configuration file",
-	)
-}
-
 func main() {
-	if err := c.Execute(); err != nil {
+	cmd := command.InitCommands()
+	command.InitFlags(*cmd)
+
+	if err := cmd.Execute(); err != nil {
 		flow.Exit(1, err.Error())
 	}
 }

@@ -27,7 +27,7 @@ import (
 
 type flagsCollections struct{}
 
-var Command = &command.Command{
+var GetCommand = &command.Command{
 	Cmd: &cobra.Command{
 		Use:   "get <collection_id>",
 		Short: "Get collection info",

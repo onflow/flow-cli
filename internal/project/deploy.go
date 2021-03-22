@@ -32,7 +32,7 @@ type flagsDeploy struct {
 
 var deployFlags = &flagsDeploy{}
 
-var Command = &command.Command{
+var DeployCommand = &command.Command{
 	Cmd: &cobra.Command{
 		Use:   "deploy",
 		Short: "Deploy Cadence contracts",

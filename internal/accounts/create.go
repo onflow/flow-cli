@@ -36,7 +36,7 @@ type flagsCreate struct {
 
 var createFlags = &flagsCreate{}
 
-var Command = &command.Command{
+var CreateCommand = &command.Command{
 	Cmd: &cobra.Command{
 		Use:     "create",
 		Short:   "Create a new account",

@@ -29,7 +29,7 @@ type flagsGenerate struct{}
 
 var generateFlag = &flagsGenerate{}
 
-var Command = &command.Command{
+var GetCommand = &command.Command{
 	Cmd: &cobra.Command{
 		Use:     "get <event_name> <block_height_range_start> <optional:block_height_range_end|latest>",
 		Short:   "Get events in a block range",

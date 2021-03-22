@@ -34,6 +34,10 @@ var Cmd = &cobra.Command{
 	TraverseChildren: true,
 }
 
+func init() {
+	GetCommand.Add(Cmd)
+}
+
 // CollectionResult
 type CollectionResult struct {
 	*flow.Collection

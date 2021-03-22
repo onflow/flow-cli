@@ -35,6 +35,11 @@ var Cmd = &cobra.Command{
 	TraverseChildren: true,
 }
 
+func init() {
+	GetCommand.Add(Cmd)
+	SendCommand.Add(Cmd)
+}
+
 // TransactionResult represent result from all account commands
 type TransactionResult struct {
 	result *flow.TransactionResult

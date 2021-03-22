@@ -37,6 +37,11 @@ var Cmd = &cobra.Command{
 	TraverseChildren: true,
 }
 
+func init() {
+	GenerateCommand.Add(Cmd)
+	DecodeCommand.Add(Cmd)
+}
+
 // KeyResult represent result from all account commands
 type KeyResult struct {
 	privateKey *crypto.PrivateKey

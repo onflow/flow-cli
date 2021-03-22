@@ -32,7 +32,7 @@ type flagsStatus struct {
 
 var statusFlags = &flagsStatus{}
 
-var Command = &command.Command{
+var GetCommand = &command.Command{
 	Cmd: &cobra.Command{
 		Use:   "get <tx_id>",
 		Short: "Get the transaction status",

@@ -33,6 +33,10 @@ var Cmd = &cobra.Command{
 	TraverseChildren: true,
 }
 
+func init() {
+	ExecuteCommand.Add(Cmd)
+}
+
 type ScriptResult struct {
 	cadence.Value
 }

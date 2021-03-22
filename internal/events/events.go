@@ -38,6 +38,10 @@ var Cmd = &cobra.Command{
 	TraverseChildren: true,
 }
 
+func init() {
+	GetCommand.Add(Cmd)
+}
+
 // EventResult result structure
 type EventResult struct {
 	BlockEvents []client.BlockEvents

@@ -32,7 +32,7 @@ type flagsGenerate struct {
 
 var generateFlags = &flagsGenerate{}
 
-var Command = &command.Command{
+var GenerateCommand = &command.Command{
 	Cmd: &cobra.Command{
 		Use:   "generate",
 		Short: "Generate a new key-pair",

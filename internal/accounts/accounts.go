@@ -33,6 +33,15 @@ var Cmd = &cobra.Command{
 	TraverseChildren: true,
 }
 
+func init() {
+	AddCommand.Add(Cmd)
+	AddContractCommand.Add(Cmd)
+	RemoveCommand.Add(Cmd)
+	UpdateCommand.Add(Cmd)
+	CreateCommand.Add(Cmd)
+	StakingCommand.Add(Cmd)
+}
+
 // AccountResult represent result from all account commands
 type AccountResult struct {
 	*flowsdk.Account
