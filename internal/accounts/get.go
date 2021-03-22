@@ -27,7 +27,8 @@ import (
 )
 
 type flagsGet struct {
-	Code bool `default:"false" flag:"code" info:"Display code deployed to the account"`
+	Contracts bool `default:"false" flag:"contracts" info:"Display contracts deployed to the account"`
+	Code      bool `default:"false" flag:"code" info:"⚠️  DEPRECATED: use contracts flag instead"`
 }
 
 type cmdGet struct {
@@ -59,7 +60,7 @@ func (a *cmdGet) Run(
 
 	return &AccountResult{
 		Account:  account,
-		showCode: a.flags.Code,
+		showCode: a.flags.Contracts,
 	}, nil
 }
 

@@ -35,11 +35,14 @@ Contract: 'FlowStorageFees'
 
 ## Flags
 
-### Code
+### Contracts
 
-- Flag: `--code`
+- Flag: `--contracts`
 
-Display contract code deployed to the account.
+Display contracts deployed to the account.
+
+### Code 
+⚠️  DEPRECATED: use contracts flag instead.
 
 ### Host
 - Flag: `--host`
