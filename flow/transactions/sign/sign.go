@@ -42,6 +42,7 @@ type Config struct {
 	PayerAddress          string   `flag:"payer-address" info:"Specify payer of the transaction. Defaults to current signer."`
 	Code                  string   `flag:"code,c" info:"path to Cadence file"`
 	Payload               string   `flag:"payload" info:"path to Transaction Payload file"`
+	Confirm               bool     `default:"false" flag:"confirm" info:"Auto confirm correctness of payload"`
 	Host                  string   `flag:"host" info:"Flow Access API host address"`
 	Encoding              string   `default:"hexrlp" flag:"encoding" info:"Encoding to use for transactio (rlp)"`
 	Output                string   `default:"" flag:"output,o" info:"Output location for transaction file"`
@@ -94,6 +95,7 @@ var Cmd = &cobra.Command{
 			cli.Exitf(1, "Both a partial transaction and Cadence code file provided, but cannot use both")
 		} else if conf.Payload != "" {
 			tx = utils.LoadTransactionPayloadFromFile(conf.Payload)
+			utils.DisplayTransactionForConfirmation(tx, conf.Confirm)
 		} else {
 			// The additional authorizers and payer flags are only taken into account if we're
 			// generating a new transaction

@@ -34,6 +34,7 @@ type Config struct {
 	Args    string `default:"" flag:"args" info:"arguments in JSON-Cadence format"`
 	Code    string `flag:"code,c" info:"path to Cadence file"`
 	Payload string `flag:"payload" info:"path to Transaction Payload file"`
+	Confirm bool   `default:"false" flag:"confirm" info:"Auto confirm correctness of payload"`
 	Host    string `flag:"host" info:"Flow Access API host address"`
 	Signer  string `default:"service" flag:"signer,s"`
 	Results bool   `default:"false" flag:"results" info:"Display the results of the transaction"`
@@ -61,6 +62,7 @@ var Cmd = &cobra.Command{
 			cli.Exitf(1, "Both a partial transaction and Cadence code file provided, but cannot use both")
 		} else if conf.Payload != "" {
 			tx = utils.LoadTransactionPayloadFromFile(conf.Payload)
+			utils.DisplayTransactionForConfirmation(tx, conf.Confirm)
 		} else {
 			tx = utils.NewTransactionWithCodeArgsAuthorizers(conf.Code, conf.Args, []string{signerAccount.Address.String()})
 			tx = cli.PrepareTransaction(projectConf.HostWithOverride(conf.Host), signerAccount, tx, signerAccount.Address)

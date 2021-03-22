@@ -19,8 +19,12 @@
 package utils
 
 import (
+	"bufio"
 	"encoding/hex"
+	"fmt"
 	"io/ioutil"
+	"os"
+	"strings"
 
 	cli "github.com/onflow/flow-cli/flow"
 	"github.com/onflow/flow-go-sdk"
@@ -81,4 +85,72 @@ func NewTransactionWithCodeArgsAuthorizers(code string, args string, authorizers
 	}
 
 	return tx
+}
+
+// StdInYesOrError
+// This function currently reads from stdin, and will error on anything other that
+// y or yes (case insensitive).
+// If there is ever a use case where we do not want to exit right away on a non-yes
+// response form the user, this function will need to be changed
+func StdInYesOrError() bool {
+	buf := bufio.NewReader(os.Stdin)
+	fmt.Print("> ")
+	input, err := buf.ReadString('\n')
+	input = strings.TrimSpace(input)
+	if err != nil {
+		cli.Exitf(1, "Unable to read input %s", err)
+	} else if strings.EqualFold(input, "y") || strings.EqualFold(input, "yes") {
+		return true
+	}
+	cli.Exitf(1, "Input not accepted (%s), exiting", input)
+	return false
+}
+
+func DisplayTransactionForConfirmation(tx *flow.Transaction, autoConfirm bool) {
+	// Display authorizers
+	if len(tx.Authorizers) == 0 {
+		fmt.Println("No authorizers")
+	} else {
+		fmt.Printf("Authorizers (%d):\n", len(tx.Authorizers))
+		for i, authorizer := range tx.Authorizers {
+			fmt.Printf(cli.Indent+"Authorizer %d: %s\n", i, authorizer)
+		}
+	}
+	fmt.Println()
+	// Display Arguments
+	if len(tx.Arguments) == 0 {
+		fmt.Println("No arguments")
+	} else {
+		fmt.Printf("Arguments (%d):\n", len(tx.Arguments))
+		for i, argument := range tx.Arguments {
+			fmt.Printf(cli.Indent+"Argument %d: %s\n", i, argument)
+		}
+	}
+	fmt.Println()
+	// Display Code
+	fmt.Println("Script:")
+	fmt.Println(string(tx.Script))
+	// Display Payer
+	fmt.Println("===")
+	fmt.Printf("Proposer Address: %s\n", tx.ProposalKey.Address)
+	fmt.Printf("Proposer Key Index: %d\n", tx.ProposalKey.KeyIndex)
+	fmt.Printf("Payer Address: %s\n", tx.Payer)
+	fmt.Println("===")
+	if len(tx.PayloadSignatures) == 0 {
+		fmt.Println("No payload signatures")
+	} else {
+		fmt.Printf("Payload Signatures (%d):\n", len(tx.PayloadSignatures))
+		for i, sig := range tx.PayloadSignatures {
+			fmt.Printf(cli.Indent+"Signature %d Signer Address: %s\n", i, sig.Address)
+			fmt.Printf(cli.Indent+"Signature %d Signer Key Index: %d\n", i, sig.KeyIndex)
+		}
+	}
+	fmt.Println("===")
+	if autoConfirm {
+		fmt.Println("Auto confirming correctness of payload")
+	} else {
+		fmt.Println("Does this look correct? (y/n)")
+		StdInYesOrError()
+		fmt.Println("Payload contents verified")
+	}
 }
