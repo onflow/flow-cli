@@ -17,17 +17,19 @@ transaction to any Flow Access API.
 # Create an account on Flow Testnet
 > flow accounts create \
     --key a69c6986e846ba6d0....1397f5904cd319c3e01e96375d5777f1a47010 \
-    --sig-algo ECDSA_secp256k1 \
-    --hash-algo SHA3_256 \
     --host access.testnet.nodes.onflow.org:9000 \
-    --signer my-testnet-account \
-    --results
-```
+    --signer my-testnet-account 
 
-### Example Response
+Address	 0x01cf0e2f2f715450
+Balance	 10000000
+Keys	 1
 
-```shell
+Key 0	Public Key		 a69c6986e846ba6d0....1397f5904cd319c3e01e96375d5777f1a47010
+	Weight			 1000
+	Signature Algorithm	 ECDSA_P256
+	Hash Algorithm		 SHA3_256
 
+Contracts Deployed: 0
 ```
 
 In the above example, the `flow.json` file would look something like this:
@@ -36,10 +38,8 @@ In the above example, the `flow.json` file would look something like this:
 {
   "accounts": {
     "my-testnet-account": {
-      "address": "f8d6e0586b0a20c7",
-      "privateKey": "xxxxxxxx",
-      "sigAlgorithm": "ECDSA_P256",
-      "hashAlgorithm": "SHA3_256"
+      "address": "a2c4941b5f3c7151",
+      "keys": "12c5dfde...bb2e542f1af710bd1d40b2"
     }
   }
 }
@@ -148,6 +148,6 @@ Specify the log level. Control how much output you want to see while command exe
 - Short Flag: `-f`
 - Valid inputs: valid filename
 
-Specify filename for the configuration files, you can provide multiple configuration
+Specify a filename for the configuration files, you can provide multiple configuration
 files by using `-f` flag multiple times.
 

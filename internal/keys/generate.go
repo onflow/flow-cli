@@ -27,10 +27,8 @@ import (
 )
 
 type flagsGenerate struct {
-	Seed     string `flag:"seed" info:"Deterministic seed phrase"`
-	SigAlgo  string `default:"ECDSA_P256" flag:"algo,a" info:"Signature algorithm"`
-	HashAlgo string `flag:"hashalgo" info:"hash algorithm for the key"`
-	KeyIndex int    `flag:"index" info:"index of the key on the account"`
+	Seed       string `flag:"seed" info:"Deterministic seed phrase"`
+	KeySigAlgo string `default:"ECDSA_P256" flag:"sig-algo" info:"Signature algorithm"`
 }
 
 type cmdGenerate struct {
@@ -55,7 +53,7 @@ func (a *cmdGenerate) Run(
 	project *flow.Project,
 	services *services.Services,
 ) (command.Result, error) {
-	keys, err := services.Keys.Generate(a.flags.Seed, a.flags.SigAlgo)
+	keys, err := services.Keys.Generate(a.flags.Seed, a.flags.KeySigAlgo)
 	if err != nil {
 		return nil, err
 	}

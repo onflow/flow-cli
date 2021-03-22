@@ -19,6 +19,8 @@
 package transactions
 
 import (
+	"fmt"
+
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/pkg/flow"
 	"github.com/onflow/flow-cli/pkg/flow/services"
@@ -30,6 +32,8 @@ type flagsSend struct {
 	ArgsJSON string   `default:"" flag:"argsJSON" info:"arguments in JSON-Cadence format"`
 	Args     []string `default:"" flag:"arg" info:"argument in Type:Value format"`
 	Signer   string   `default:"emulator-account" flag:"signer"`
+	Code     string   `default:"" flag:"code" info:"⚠️  DEPRECATED: use filename argument"`
+	Results  bool     `default:"" flag:"results" info:"⚠️  DEPRECATED: all transactions will provide result"`
 }
 
 type cmdSend struct {
@@ -56,6 +60,14 @@ func (a *cmdSend) Run(
 	project *flow.Project,
 	services *services.Services,
 ) (command.Result, error) {
+	if a.flags.Code != "" {
+		return nil, fmt.Errorf("⚠️  DEPRECATED: use filename argument")
+	}
+
+	if a.flags.Results {
+		return nil, fmt.Errorf("⚠️  DEPRECATED: all transactions will provide results")
+	}
+
 	tx, result, err := services.Transactions.Send(args[0], a.flags.Signer, a.flags.Args, a.flags.ArgsJSON)
 	if err != nil {
 		return nil, err

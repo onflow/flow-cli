@@ -19,6 +19,8 @@
 package accounts
 
 import (
+	"fmt"
+
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/pkg/flow"
 	"github.com/onflow/flow-cli/pkg/flow/services"
@@ -53,6 +55,10 @@ func (a *cmdGet) Run(
 	project *flow.Project,
 	services *services.Services,
 ) (command.Result, error) {
+	if a.flags.Code {
+		return nil, fmt.Errorf("⚠️  DEPRECATED: use contracts flag instead")
+	}
+
 	account, err := services.Accounts.Get(args[0])
 	if err != nil {
 		return nil, err

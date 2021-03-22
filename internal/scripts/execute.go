@@ -19,6 +19,8 @@
 package scripts
 
 import (
+	"fmt"
+
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/pkg/flow"
 	"github.com/onflow/flow-cli/pkg/flow/services"
@@ -29,6 +31,7 @@ import (
 type flagsScripts struct {
 	ArgsJSON string   `default:"" flag:"argsJSON" info:"arguments in JSON-Cadence format"`
 	Args     []string `default:"" flag:"arg" info:"argument in Type:Value format"`
+	Code     bool     `default:"false" flag:"code" info:"⚠️  DEPRECATED: use filename argument"`
 }
 
 type cmdExecuteScript struct {
@@ -55,6 +58,10 @@ func (s *cmdExecuteScript) Run(
 	project *flow.Project,
 	services *services.Services,
 ) (command.Result, error) {
+	if s.flags.Code {
+		return nil, fmt.Errorf("⚠️  DEPRECATED: use filename argument")
+	}
+
 	value, err := services.Scripts.Execute(args[0], s.flags.Args, s.flags.ArgsJSON)
 	if err != nil {
 		return nil, err
