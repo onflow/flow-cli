@@ -30,15 +30,18 @@ import (
 	"github.com/spf13/cobra"
 
 	cli "github.com/onflow/flow-cli/flow"
+	"github.com/onflow/flow-cli/flow/transactions/utils"
 )
 
 type Config struct {
 	Args                  string   `default:"" flag:"args" info:"arguments in JSON-Cadence format"`
 	Signer                string   `default:"service" flag:"signer,s"`
+	Proposer              string   `default:"" flag:"proposer"`
 	Role                  string   `default:"authorizer" flag:"role"`
 	AdditionalAuthorizers []string `flag:"additional-authorizers" info:"Additional authorizer addresses to add to the transaction"`
-	PayerAddress          string   `flag:"payer" info:"Specify payer of the transaction. Defaults to current signer."`
+	PayerAddress          string   `flag:"payer-address" info:"Specify payer of the transaction. Defaults to current signer."`
 	Code                  string   `flag:"code,c" info:"path to Cadence file"`
+	Payload               string   `flag:"payload" info:"path to Transaction Payload file"`
 	Host                  string   `flag:"host" info:"Flow Access API host address"`
 	Encoding              string   `default:"hexrlp" flag:"encoding" info:"Encoding to use for transactio (rlp)"`
 	Output                string   `default:"" flag:"output,o" info:"Output location for transaction file"`
@@ -54,18 +57,17 @@ var Cmd = &cobra.Command{
 
 		signerAccount := projectConf.Accounts[conf.Signer]
 		validateKeyPreReq(signerAccount)
-		var (
-			code  []byte
-			payer flow.Address
-			err   error
-		)
-
-		if conf.Code != "" {
-			code, err = ioutil.ReadFile(conf.Code)
-			if err != nil {
-				cli.Exitf(1, "Failed to read transaction script from %s", conf.Code)
-			}
+		proposerAccount := signerAccount
+		if conf.Proposer != "" {
+			proposerAccount = projectConf.Accounts[conf.Proposer]
+			validateKeyPreReq(proposerAccount)
 		}
+		var (
+			tx             *flow.Transaction
+			allAuthorizers []string = []string{}
+			payer          flow.Address
+			err            error
+		)
 
 		if conf.PayerAddress != "" {
 			payer = flow.HexToAddress(conf.PayerAddress)
@@ -73,29 +75,11 @@ var Cmd = &cobra.Command{
 			payer = signerAccount.Address
 		}
 
-		tx := flow.NewTransaction().
-			SetScript(code)
-
-		// Arguments
-		if conf.Args != "" {
-			transactionArguments, err := cli.ParseArguments(conf.Args)
-			if err != nil {
-				cli.Exitf(1, "Invalid arguments passed: %s", conf.Args)
-			}
-
-			for _, arg := range transactionArguments {
-				err := tx.AddArgument(arg)
-
-				if err != nil {
-					cli.Exitf(1, "Failed to add %s argument to a transaction ", conf.Code)
-				}
-			}
-		}
-
 		signerRole := cli.SignerRole(conf.Role)
 		switch signerRole {
 		case cli.SignerRoleAuthorizer:
-			tx.AddAuthorizer(signerAccount.Address)
+			// Ignored if we're loading from a tx payload
+			allAuthorizers = []string{signerAccount.Address.String()}
 		case cli.SignerRolePayer:
 			if payer != signerAccount.Address {
 				cli.Exitf(1, "Role specified as Payer, but Payer address also provided, and different: %s !=", payer, signerAccount.Address)
@@ -106,12 +90,17 @@ var Cmd = &cobra.Command{
 			cli.Exitf(1, "unknown role %s", conf.Role)
 		}
 
-		for _, authorizerString := range conf.AdditionalAuthorizers {
-			authorizerAddress := flow.HexToAddress(authorizerString)
-			tx.AddAuthorizer(authorizerAddress)
+		if conf.Payload != "" && conf.Code != "" {
+			cli.Exitf(1, "Both a partial transaction and Cadence code file provided, but cannot use both")
+		} else if conf.Payload != "" {
+			tx = utils.LoadTransactionPayloadFromFile(conf.Payload)
+		} else {
+			// The additional authorizers and payer flags are only taken into account if we're
+			// generating a new transaction
+			allAuthorizers = append(allAuthorizers, conf.AdditionalAuthorizers...)
+			tx = utils.NewTransactionWithCodeArgsAuthorizers(conf.Code, conf.Args, allAuthorizers)
+			tx = cli.PrepareTransaction(projectConf.HostWithOverride(conf.Host), proposerAccount, tx, payer)
 		}
-
-		cli.PrepareTransaction(projectConf.HostWithOverride(conf.Host), signerAccount, tx, payer)
 
 		tx = cli.SignTransaction(projectConf.HostWithOverride(conf.Host), signerAccount, signerRole, tx)
 

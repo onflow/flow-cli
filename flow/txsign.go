@@ -20,7 +20,6 @@ package cli
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/client"
@@ -34,70 +33,6 @@ const (
 	SignerRoleProposer   SignerRole = "proposer"
 	SignerRolePayer      SignerRole = "payer"
 )
-
-func PrepareTransaction(host string, signerAccount *Account, tx *flow.Transaction, payer flow.Address) *flow.Transaction {
-	ctx := context.Background()
-
-	flowClient, err := client.New(host, grpc.WithInsecure())
-	if err != nil {
-		Exitf(1, "Failed to connect to host: %s", err)
-	}
-
-	signerAddress := signerAccount.Address
-
-	fmt.Printf("Getting information for account with address 0x%s ...\n", signerAddress.Hex())
-
-	account, err := flowClient.GetAccount(ctx, signerAddress)
-	if err != nil {
-		Exitf(1, "Failed to get account with address %s: 0x%s", signerAddress.Hex(), err)
-	}
-
-	// Default 0, i.e. first key
-	accountKey := account.Keys[signerAccount.KeyIndex]
-
-	sealed, err := flowClient.GetLatestBlockHeader(ctx, true)
-	if err != nil {
-		Exitf(1, "Failed to get latest sealed block: %s", err)
-	}
-
-	tx.SetReferenceBlockID(sealed.ID).
-		SetProposalKey(signerAddress, accountKey.Index, accountKey.SequenceNumber).
-		SetPayer(payer)
-
-	return tx
-}
-
-func SendTransaction(host string, signerAccount *Account, tx *flow.Transaction, withResults bool) {
-	ctx := context.Background()
-
-	flowClient, err := client.New(host, grpc.WithInsecure())
-	if err != nil {
-		Exitf(1, "Failed to connect to host: %s", err)
-	}
-
-	tx = signTransaction(ctx, flowClient, signerAccount, SignerRolePayer, tx)
-
-	fmt.Printf("Submitting transaction with ID %s ...\n", tx.ID())
-
-	err = flowClient.SendTransaction(context.Background(), *tx)
-	if err == nil {
-		fmt.Printf("Successfully submitted transaction with ID %s\n", tx.ID())
-	} else {
-		Exitf(1, "Failed to submit transaction: %s", err)
-	}
-	if withResults {
-		res, err := waitForSeal(ctx, flowClient, tx.ID())
-		if err != nil {
-			Exitf(1, "Failed to seal transaction: %s", err)
-		}
-		printTxResult(tx, res, true)
-	}
-}
-
-func PrepareAndSendTransaction(host string, signerAccount *Account, tx *flow.Transaction, payer flow.Address, withResults bool) {
-	preparedTx := PrepareTransaction(host, signerAccount, tx, payer)
-	SendTransaction(host, signerAccount, preparedTx, withResults)
-}
 
 func SignTransaction(host string, signerAccount *Account, signerRole SignerRole, tx *flow.Transaction) *flow.Transaction {
 	ctx := context.Background()

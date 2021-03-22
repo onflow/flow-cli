@@ -19,8 +19,6 @@
 package send
 
 import (
-	"encoding/hex"
-	"io/ioutil"
 	"log"
 	"os"
 
@@ -29,12 +27,13 @@ import (
 	"github.com/spf13/cobra"
 
 	cli "github.com/onflow/flow-cli/flow"
+	"github.com/onflow/flow-cli/flow/transactions/utils"
 )
 
 type Config struct {
 	Args    string `default:"" flag:"args" info:"arguments in JSON-Cadence format"`
 	Code    string `flag:"code,c" info:"path to Cadence file"`
-	Partial string `flag:"partial-tx" info:"path to Partial Transaction file"`
+	Payload string `flag:"payload" info:"path to Transaction Payload file"`
 	Host    string `flag:"host" info:"Flow Access API host address"`
 	Signer  string `default:"service" flag:"signer,s"`
 	Results bool   `default:"false" flag:"results" info:"Display the results of the transaction"`
@@ -56,55 +55,14 @@ var Cmd = &cobra.Command{
 		}
 
 		validateKeyPreReq(signerAccount)
-		var (
-			tx   *flow.Transaction
-			code []byte
-			err  error
-		)
+		var tx *flow.Transaction
 
-		if conf.Partial != "" && conf.Code != "" {
+		if conf.Payload != "" && conf.Code != "" {
 			cli.Exitf(1, "Both a partial transaction and Cadence code file provided, but cannot use both")
-		} else if conf.Partial != "" {
-			partialTxHex, err := ioutil.ReadFile(conf.Partial)
-			if err != nil {
-				cli.Exitf(1, "Failed to read partial transaction from %s: %v", conf.Partial, err)
-			}
-			partialTxBytes, err := hex.DecodeString(string(partialTxHex))
-			if err != nil {
-				cli.Exitf(1, "Failed to decode partial transaction from %s: %v", conf.Partial, err)
-			}
-			tx, err = flow.DecodeTransaction(partialTxBytes)
-			if err != nil {
-				cli.Exitf(1, "Failed to decode transaction from %s: %v", conf.Partial, err)
-			}
+		} else if conf.Payload != "" {
+			tx = utils.LoadTransactionPayloadFromFile(conf.Payload)
 		} else {
-			if conf.Code != "" {
-				code, err = ioutil.ReadFile(conf.Code)
-				if err != nil {
-					cli.Exitf(1, "Failed to read transaction script from %s: %v", conf.Code, err)
-				}
-			}
-
-			tx = flow.NewTransaction().
-				SetScript(code).
-				AddAuthorizer(signerAccount.Address)
-
-			// Arguments
-			if conf.Args != "" {
-				transactionArguments, err := cli.ParseArguments(conf.Args)
-				if err != nil {
-					cli.Exitf(1, "Invalid arguments passed: %s", conf.Args)
-				}
-
-				for _, arg := range transactionArguments {
-					err := tx.AddArgument(arg)
-
-					if err != nil {
-						cli.Exitf(1, "Failed to add %s argument to a transaction ", conf.Code)
-					}
-				}
-			}
-
+			tx = utils.NewTransactionWithCodeArgsAuthorizers(conf.Code, conf.Args, []string{signerAccount.Address.String()})
 			tx = cli.PrepareTransaction(projectConf.HostWithOverride(conf.Host), signerAccount, tx, signerAccount.Address)
 		}
 
