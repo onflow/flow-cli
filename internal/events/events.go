@@ -50,7 +50,18 @@ type EventResult struct {
 
 // JSON convert result to JSON
 func (k *EventResult) JSON() interface{} {
-	result := make(map[string]string, 0)
+	result := make(map[string]map[uint64]map[string]interface{}, 0)
+	for _, blockEvent := range k.BlockEvents {
+		if len(blockEvent.Events) > 0 {
+			for _, event := range blockEvent.Events {
+				result["BlockID"][blockEvent.Height]["Index"] = event.EventIndex
+				result["BlockID"][blockEvent.Height]["Type"] = event.Type
+				result["BlockID"][blockEvent.Height]["TxID"] = event.TransactionID
+				result["BlockID"][blockEvent.Height]["Values"] = event.Value
+			}
+		}
+	}
+
 	return result
 }
 
@@ -76,11 +87,21 @@ func (k *EventResult) String() string {
 
 // Oneliner show result as one liner grep friendly
 func (k *EventResult) Oneliner() string {
-	return fmt.Sprintf("")
-}
+	result := ""
+	for _, blockEvent := range k.BlockEvents {
+		if len(blockEvent.Events) > 0 {
+			result += fmt.Sprintf("Events Block #%v: [", blockEvent.Height)
+			for _, event := range blockEvent.Events {
+				result += fmt.Sprintf(
+					"Index: %v, Type: %v, TxID: %s, Value: %v",
+					event.EventIndex, event.Type, event.TransactionID, event.Value,
+				)
+			}
+			result += "] "
+		}
+	}
 
-func (k *EventResult) ToConfig() string {
-	return ""
+	return result
 }
 
 func eventsString(writer io.Writer, events []flow.Event) {
