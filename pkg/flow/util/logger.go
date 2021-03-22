@@ -61,7 +61,7 @@ func (s *StdoutLogger) log(msg string, level int) {
 
 // Info log
 func (s *StdoutLogger) Info(msg string) {
-	s.log(fmt.Sprintf("%s", msg), InfoLog)
+	s.log(msg, InfoLog)
 }
 
 // Debug log

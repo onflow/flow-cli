@@ -51,7 +51,7 @@ var InitCommand = &command.Command{
 	Run: func(
 		cmd *cobra.Command,
 		args []string,
-		project *flow.Project,
+		proj *flow.Project,
 		services *services.Services,
 	) (command.Result, error) {
 		project, err := services.Project.Init(
@@ -87,7 +87,7 @@ func (r *InitResult) String() string {
 	fmt.Fprintf(writer, "Configuration initialized\n")
 	fmt.Fprintf(writer, "Service account: %s\n\n", util.Bold("0x"+account.Address().String()))
 	fmt.Fprintf(writer,
-		"Start emulator by runing: %s \nReset configuration using: %s.\n",
+		"Start emulator by running: %s \nReset configuration using: %s.\n",
 		util.Bold("flow emulator start"),
 		util.Bold("flow init --rest"),
 	)

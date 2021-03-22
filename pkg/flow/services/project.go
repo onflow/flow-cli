@@ -157,12 +157,20 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 		}
 
 		tx, err = p.gateway.SendTransaction(tx, targetAccount)
+		if err != nil {
+			p.logger.Error(err.Error())
+			errs = append(errs, err)
+		}
 
 		p.logger.StartProgress(
 			fmt.Sprintf("%s deploying...", util.Bold(contract.Name())),
 		)
 
 		result, err := p.gateway.GetTransactionResult(tx, true)
+		if err != nil {
+			p.logger.Error(err.Error())
+			errs = append(errs, err)
+		}
 
 		p.logger.StopProgress("")
 

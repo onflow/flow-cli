@@ -22,7 +22,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func Test_ConfigAccountKeysSimple(t *testing.T) {
@@ -36,7 +35,7 @@ func Test_ConfigAccountKeysSimple(t *testing.T) {
 
 	var jsonAccounts jsonAccounts
 	err := json.Unmarshal(b, &jsonAccounts)
-	require.NoError(t, err)
+	assert.NoError(t, err)
 
 	accounts := jsonAccounts.transformToConfig()
 
@@ -70,7 +69,7 @@ func Test_ConfigAccountKeysAdvanced(t *testing.T) {
 
 	var jsonAccounts jsonAccounts
 	err := json.Unmarshal(b, &jsonAccounts)
-	require.NoError(t, err)
+	assert.NoError(t, err)
 
 	accounts := jsonAccounts.transformToConfig()
 	account := accounts.GetByName("test")
@@ -114,7 +113,7 @@ func Test_ConfigAccountKeysAdvancedMultiple(t *testing.T) {
 
 	var jsonAccounts jsonAccounts
 	err := json.Unmarshal(b, &jsonAccounts)
-	require.NoError(t, err)
+	assert.NoError(t, err)
 
 	accounts := jsonAccounts.transformToConfig()
 	account := accounts.GetByName("test")
@@ -150,7 +149,7 @@ func Test_ConfigMultipleAccountsSimple(t *testing.T) {
 
 	var jsonAccounts jsonAccounts
 	err := json.Unmarshal(b, &jsonAccounts)
-	require.NoError(t, err)
+	assert.NoError(t, err)
 
 	accounts := jsonAccounts.transformToConfig()
 
@@ -208,7 +207,7 @@ func Test_ConfigMultipleAccountsAdvanced(t *testing.T) {
 
 	var jsonAccounts jsonAccounts
 	err := json.Unmarshal(b, &jsonAccounts)
-	require.NoError(t, err)
+	assert.NoError(t, err)
 
 	accounts := jsonAccounts.transformToConfig()
 
@@ -255,7 +254,7 @@ func Test_ConfigMixedAccounts(t *testing.T) {
 
 	var jsonAccounts jsonAccounts
 	err := json.Unmarshal(b, &jsonAccounts)
-	require.NoError(t, err)
+	assert.NoError(t, err)
 
 	accounts := jsonAccounts.transformToConfig()
 
@@ -292,7 +291,7 @@ func Test_ConfigAccountsMap(t *testing.T) {
 
 	var jsonAccounts jsonAccounts
 	err := json.Unmarshal(b, &jsonAccounts)
-	require.NoError(t, err)
+	assert.NoError(t, err)
 
 	accounts := jsonAccounts.transformToConfig()
 
@@ -305,7 +304,7 @@ func Test_TransformDefaultAccountToJSON(t *testing.T) {
 
 	var jsonAccounts jsonAccounts
 	err := json.Unmarshal(b, &jsonAccounts)
-	require.NoError(t, err)
+	assert.NoError(t, err)
 
 	accounts := jsonAccounts.transformToConfig()
 
@@ -321,7 +320,7 @@ func Test_TransformAccountToJSON(t *testing.T) {
 
 	var jsonAccounts jsonAccounts
 	err := json.Unmarshal(b, &jsonAccounts)
-	require.NoError(t, err)
+	assert.NoError(t, err)
 
 	accounts := jsonAccounts.transformToConfig()
 

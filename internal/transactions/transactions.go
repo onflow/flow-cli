@@ -49,7 +49,7 @@ type TransactionResult struct {
 
 // JSON convert result to JSON
 func (r *TransactionResult) JSON() interface{} {
-	result := make(map[string]string, 0)
+	result := make(map[string]string)
 	result["Hash"] = r.tx.ID().String()
 	result["Status"] = r.result.Status.String()
 

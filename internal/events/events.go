@@ -50,7 +50,7 @@ type EventResult struct {
 
 // JSON convert result to JSON
 func (k *EventResult) JSON() interface{} {
-	result := make(map[string]map[uint64]map[string]interface{}, 0)
+	result := make(map[string]map[uint64]map[string]interface{})
 	for _, blockEvent := range k.BlockEvents {
 		if len(blockEvent.Events) > 0 {
 			for _, event := range blockEvent.Events {

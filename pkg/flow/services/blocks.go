@@ -57,19 +57,21 @@ func (e *Blocks) GetBlock(
 	eventType string,
 	verbose bool,
 ) (*flowsdk.Block, []client.BlockEvents, []*flowsdk.Collection, error) {
-	var block *flowsdk.Block
-	var err error
-	e.logger.StartProgress(
-		fmt.Sprintf("Fetching Block..."),
-	)
+	e.logger.StartProgress("Fetching Block...")
 
 	// smart parsing of query
+	var err error
+	var block *flowsdk.Block
 	if query == "latest" {
 		block, err = e.gateway.GetLatestBlock()
-	} else if height, err := strconv.ParseUint(query, 10, 64); err == nil {
+	} else if height, _ := strconv.ParseUint(query, 10, 64); err == nil {
 		block, err = e.gateway.GetBlockByHeight(height)
 	} else {
 		block, err = e.gateway.GetBlockByID(flowsdk.HexToID(query))
+	}
+
+	if err != nil {
+		return nil, nil, nil, fmt.Errorf("error fetching block: %s", err.Error())
 	}
 
 	if block == nil {

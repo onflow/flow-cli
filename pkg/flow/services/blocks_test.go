@@ -11,8 +11,6 @@ import (
 
 	"github.com/onflow/flow-go-sdk/crypto"
 
-	"github.com/stretchr/testify/require"
-
 	"github.com/onflow/flow-cli/pkg/flow/util"
 	"github.com/onflow/flow-cli/tests"
 )
@@ -22,7 +20,7 @@ func TestBlocks(t *testing.T) {
 	mock := &tests.MockGateway{}
 
 	project, err := flow2.InitProject(crypto.ECDSA_P256, crypto.SHA3_256)
-	require.NoError(t, err)
+	assert.NoError(t, err)
 
 	blocks := NewBlocks(mock, project, util.NewStdoutLogger(util.InfoLog))
 

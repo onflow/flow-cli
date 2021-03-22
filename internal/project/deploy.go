@@ -61,7 +61,7 @@ type DeployResult struct {
 
 // JSON convert result to JSON
 func (r *DeployResult) JSON() interface{} {
-	result := make(map[string]string, 0)
+	result := make(map[string]string)
 
 	for _, contract := range r.contracts {
 		result[contract.Name()] = contract.Target().String()

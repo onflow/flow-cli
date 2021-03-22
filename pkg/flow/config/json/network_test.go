@@ -22,7 +22,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func Test_ConfigNetworkSimple(t *testing.T) {
@@ -32,7 +31,7 @@ func Test_ConfigNetworkSimple(t *testing.T) {
 
 	var jsonNetworks jsonNetworks
 	err := json.Unmarshal(b, &jsonNetworks)
-	require.NoError(t, err)
+	assert.NoError(t, err)
 
 	networks := jsonNetworks.transformToConfig()
 
@@ -52,7 +51,7 @@ func Test_ConfigNetworkMultiple(t *testing.T) {
 
 	var jsonNetworks jsonNetworks
 	err := json.Unmarshal(b, &jsonNetworks)
-	require.NoError(t, err)
+	assert.NoError(t, err)
 
 	networks := jsonNetworks.transformToConfig()
 
@@ -68,7 +67,7 @@ func Test_TransformNetworkToJSON(t *testing.T) {
 
 	var jsonNetworks jsonNetworks
 	err := json.Unmarshal(b, &jsonNetworks)
-	require.NoError(t, err)
+	assert.NoError(t, err)
 
 	networks := jsonNetworks.transformToConfig()
 

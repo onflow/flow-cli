@@ -45,7 +45,7 @@ type StakingResult struct {
 
 // JSON convert result to JSON
 func (r *StakingResult) JSON() interface{} {
-	result := make(map[string]interface{}, 0)
+	result := make(map[string]interface{})
 	result["staking"] = flow.NewStakingInfoFromValue(r.staking)
 	result["delegation"] = flow.NewStakingInfoFromValue(r.delegation)
 

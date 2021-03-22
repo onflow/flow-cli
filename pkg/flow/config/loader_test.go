@@ -23,7 +23,6 @@ import (
 	"github.com/onflow/flow-cli/pkg/flow/config"
 	"github.com/onflow/flow-cli/pkg/flow/config/json"
 	"github.com/spf13/afero"
-	"github.com/stretchr/testify/require"
 
 	"testing"
 
@@ -58,13 +57,13 @@ func Test_JSONSimple(t *testing.T) {
 	mockFS := afero.NewMemMapFs()
 	err := afero.WriteFile(mockFS, "test2-flow.json", b, 0644)
 
-	require.NoError(t, err)
+	assert.NoError(t, err)
 
 	composer := config.NewLoader(mockFS)
 	composer.AddConfigParser(json.NewParser())
 	conf, loadErr := composer.Load([]string{"test2-flow.json"})
 
-	require.NoError(t, loadErr)
+	assert.NoError(t, loadErr)
 	assert.Equal(t, 1, len(conf.Accounts))
 	assert.Equal(t, "21c5dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7", conf.Accounts[0].Keys[0].Context["privateKey"])
 }
@@ -92,15 +91,15 @@ func Test_ComposeJSON(t *testing.T) {
 	err := afero.WriteFile(mockFS, "flow.json", b, 0644)
 	err2 := afero.WriteFile(mockFS, "flow-testnet.json", b2, 0644)
 
-	require.NoError(t, err)
-	require.NoError(t, err2)
+	assert.NoError(t, err)
+	assert.NoError(t, err2)
 
 	composer := config.NewLoader(mockFS)
 	composer.AddConfigParser(json.NewParser())
 
 	conf, loadErr := composer.Load([]string{"flow.json", "flow-testnet.json"})
 
-	require.NoError(t, loadErr)
+	assert.NoError(t, loadErr)
 	assert.Equal(t, 2, len(conf.Accounts))
 	assert.Equal(t, "21c5dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7",
 		conf.Accounts.GetByName("emulator-account").Keys[0].Context["privateKey"],
@@ -134,15 +133,15 @@ func Test_ComposeJSONOverwrite(t *testing.T) {
 	err := afero.WriteFile(mockFS, "flow.json", b, 0644)
 	err2 := afero.WriteFile(mockFS, "flow-testnet.json", b2, 0644)
 
-	require.NoError(t, err)
-	require.NoError(t, err2)
+	assert.NoError(t, err)
+	assert.NoError(t, err2)
 
 	composer := config.NewLoader(mockFS)
 	composer.AddConfigParser(json.NewParser())
 
 	conf, loadErr := composer.Load([]string{"flow.json", "flow-testnet.json"})
 
-	require.NoError(t, loadErr)
+	assert.NoError(t, loadErr)
 	assert.Equal(t, 1, len(conf.Accounts))
 	assert.NotNil(t, conf.Accounts.GetByName("admin-account"))
 	assert.Equal(t, "3335dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7",
@@ -174,15 +173,15 @@ func Test_FromFileAccountSimple(t *testing.T) {
 	err := afero.WriteFile(mockFS, "flow.json", b, 0644)
 	err2 := afero.WriteFile(mockFS, "private.json", b2, 0644)
 
-	require.NoError(t, err)
-	require.NoError(t, err2)
+	assert.NoError(t, err)
+	assert.NoError(t, err2)
 
 	composer := config.NewLoader(mockFS)
 	composer.AddConfigParser(json.NewParser())
 
 	conf, loadErr := composer.Load([]string{"flow.json", "private.json"})
 
-	require.NoError(t, loadErr)
+	assert.NoError(t, loadErr)
 	assert.Equal(t, 2, len(conf.Accounts))
 	assert.NotNil(t, conf.Accounts.GetByName("admin-account"))
 	assert.Equal(t, conf.Accounts.GetByName("admin-account").Address.String(), "f1d6e0586b0a20c7")
@@ -233,16 +232,16 @@ func Test_FromFileAccountComplex(t *testing.T) {
 	err2 := afero.WriteFile(mockFS, "private.json", b2, 0644)
 	err3 := afero.WriteFile(mockFS, "private.testnet.json", b3, 0644)
 
-	require.NoError(t, err)
-	require.NoError(t, err2)
-	require.NoError(t, err3)
+	assert.NoError(t, err)
+	assert.NoError(t, err2)
+	assert.NoError(t, err3)
 
 	composer := config.NewLoader(mockFS)
 	composer.AddConfigParser(json.NewParser())
 
 	conf, loadErr := composer.Load([]string{"flow.json"})
 
-	require.NoError(t, loadErr)
+	assert.NoError(t, loadErr)
 	assert.Equal(t, 4, len(conf.Accounts))
 	assert.NotNil(t, conf.Accounts.GetByName("service-account"))
 	assert.NotNil(t, conf.Accounts.GetByName("admin-account-1"))
@@ -270,13 +269,13 @@ func Test_JSONEnv(t *testing.T) {
 	mockFS := afero.NewMemMapFs()
 	err := afero.WriteFile(mockFS, "test2-flow.json", b, 0644)
 
-	require.NoError(t, err)
+	assert.NoError(t, err)
 
 	composer := config.NewLoader(mockFS)
 	composer.AddConfigParser(json.NewParser())
 	conf, loadErr := composer.Load([]string{"test2-flow.json"})
 
-	require.NoError(t, loadErr)
+	assert.NoError(t, loadErr)
 	assert.Equal(t, 1, len(conf.Accounts))
 	assert.Equal(t, "21c5dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7", conf.Accounts[0].Keys[0].Context["privateKey"])
 }

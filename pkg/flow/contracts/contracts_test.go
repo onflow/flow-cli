@@ -229,7 +229,7 @@ func TestResolveImports(t *testing.T) {
 					contract.source,
 					contract.target,
 				)
-				require.NoError(t, err)
+				assert.NoError(t, err)
 			}
 
 			err := p.ResolveImports()
@@ -277,7 +277,7 @@ func TestContractDeploymentOrder(t *testing.T) {
 					contract.source,
 					contract.target,
 				)
-				require.NoError(t, err)
+				assert.NoError(t, err)
 			}
 
 			err := p.ResolveImports()
@@ -291,7 +291,7 @@ func TestContractDeploymentOrder(t *testing.T) {
 				assert.IsType(t, testCase.expectedDeploymentError, err)
 				return
 			} else {
-				require.NoError(t, err)
+				assert.NoError(t, err)
 			}
 
 			require.Equal(

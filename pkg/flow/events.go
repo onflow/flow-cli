@@ -19,7 +19,6 @@
 package flow
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/onflow/flow-go-sdk"
@@ -52,7 +51,7 @@ func newEvent(event flow.Event) Event {
 	values := map[string]string{}
 	for id, field := range event.Value.Fields {
 		name := names[id]
-		values[name] = fmt.Sprintf("%s", field)
+		values[name] = field.String()
 	}
 
 	return Event{

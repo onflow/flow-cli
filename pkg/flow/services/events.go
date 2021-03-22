@@ -62,9 +62,7 @@ func (e *Events) Get(name string, start string, end string) ([]client.BlockEvent
 		return nil, fmt.Errorf("failed to parse start height of block range: %v", start)
 	}
 
-	e.logger.StartProgress(
-		fmt.Sprintf("Fetching Events..."),
-	)
+	e.logger.StartProgress("Fetching Events...")
 
 	var endHeight uint64
 	if end == "" {

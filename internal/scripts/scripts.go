@@ -60,5 +60,5 @@ func (r *ScriptResult) String() string {
 
 // Oneliner show result as one liner grep friendly
 func (r *ScriptResult) Oneliner() string {
-	return fmt.Sprintf("%s", r.Value)
+	return r.Value.String()
 }

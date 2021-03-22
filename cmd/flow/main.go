@@ -20,12 +20,40 @@
 package main
 
 import (
+	"github.com/onflow/flow-cli/internal/accounts"
+	"github.com/onflow/flow-cli/internal/blocks"
+	"github.com/onflow/flow-cli/internal/cadence"
+	"github.com/onflow/flow-cli/internal/collections"
 	"github.com/onflow/flow-cli/internal/command"
+	"github.com/onflow/flow-cli/internal/emulator"
+	"github.com/onflow/flow-cli/internal/events"
+	"github.com/onflow/flow-cli/internal/keys"
+	"github.com/onflow/flow-cli/internal/project"
+	"github.com/onflow/flow-cli/internal/scripts"
+	"github.com/onflow/flow-cli/internal/transactions"
+	"github.com/onflow/flow-cli/internal/version"
 	"github.com/onflow/flow-cli/pkg/flow"
+	"github.com/spf13/cobra"
 )
 
 func main() {
-	cmd := command.InitCommands()
+	var cmd = &cobra.Command{
+		Use:              "flow",
+		TraverseChildren: true,
+	}
+
+	cmd.AddCommand(cadence.Cmd)
+	cmd.AddCommand(version.Cmd)
+	cmd.AddCommand(emulator.Cmd)
+	cmd.AddCommand(accounts.Cmd)
+	cmd.AddCommand(scripts.Cmd)
+	cmd.AddCommand(transactions.Cmd)
+	cmd.AddCommand(keys.Cmd)
+	cmd.AddCommand(events.Cmd)
+	cmd.AddCommand(blocks.Cmd)
+	cmd.AddCommand(collections.Cmd)
+	cmd.AddCommand(project.Cmd)
+
 	command.InitFlags(*cmd)
 
 	if err := cmd.Execute(); err != nil {

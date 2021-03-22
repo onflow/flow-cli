@@ -81,7 +81,7 @@ func (r *BlockResult) String() string {
 		fmt.Fprintf(writer, "\n")
 
 		e := events.EventResult{BlockEvents: r.events}
-		fmt.Fprintf(writer, e.String())
+		fmt.Fprintf(writer, "%s", e.String())
 	}
 
 	writer.Flush()
@@ -90,5 +90,5 @@ func (r *BlockResult) String() string {
 
 // Oneliner show result as one liner grep friendly
 func (r *BlockResult) Oneliner() string {
-	return fmt.Sprintf("%s", r.block.ID)
+	return r.block.ID.String()
 }

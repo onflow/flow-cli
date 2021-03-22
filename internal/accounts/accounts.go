@@ -72,7 +72,7 @@ func (r *AccountResult) String() string {
 	}
 
 	fmt.Fprintf(writer, "Contracts Deployed: %d\n", len(r.Contracts))
-	for name, _ := range r.Contracts {
+	for name := range r.Contracts {
 		fmt.Fprintf(writer, "Contract: '%s'\n", name)
 	}
 

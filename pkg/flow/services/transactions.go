@@ -111,9 +111,7 @@ func (t *Transactions) send(
 		return nil, nil, err
 	}
 
-	t.logger.StartProgress(
-		fmt.Sprintf("Sending Transaction..."),
-	)
+	t.logger.StartProgress("Sending Transaction...")
 
 	tx := flow.NewTransaction().
 		SetScript(code).
@@ -157,9 +155,7 @@ func (t *Transactions) GetStatus(
 		strings.ReplaceAll(transactionID, "0x", ""),
 	)
 
-	t.logger.StartProgress(
-		fmt.Sprintf("Fetching Transaction..."),
-	)
+	t.logger.StartProgress("Fetching Transaction...")
 
 	tx, err := t.gateway.GetTransaction(txID)
 	if err != nil {

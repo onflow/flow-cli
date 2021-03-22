@@ -10,14 +10,13 @@ import (
 	"github.com/onflow/flow-cli/tests"
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestScripts(t *testing.T) {
 	mock := &tests.MockGateway{}
 
 	project, err := flow.InitProject(crypto.ECDSA_P256, crypto.SHA3_256)
-	require.NoError(t, err)
+	assert.NoError(t, err)
 
 	scripts := NewScripts(mock, project, util.NewStdoutLogger(util.InfoLog))
 

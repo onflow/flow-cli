@@ -121,7 +121,7 @@ func (a *Accounts) Add(
 		}
 
 		accountKey.Type = config.KeyTypeHex
-		accountKey.Context = make(map[string]string, 0)
+		accountKey.Context = make(map[string]string)
 		accountKey.Context[config.PrivateKeyField] = keyHex
 
 	} else if keyContext != "" {
@@ -208,9 +208,7 @@ func (a *Accounts) Create(
 	hashingAlgorithm string,
 	contracts []string,
 ) (*flowsdk.Account, error) {
-	a.logger.StartProgress(
-		fmt.Sprintf("Creating Account..."),
-	)
+	a.logger.StartProgress("Creating Account...")
 
 	signer := a.project.GetAccountByName(signerName)
 	if signer == nil {
@@ -431,7 +429,10 @@ func (a *Accounts) removeContract(
 	a.logger.StopProgress("")
 
 	txr, err := a.gateway.GetTransactionResult(tx, true)
-	if txr.Error != nil {
+	if err != nil {
+		return nil, err
+	}
+	if txr != nil && txr.Error != nil {
 		a.logger.Error("Removing contract failed")
 		return nil, txr.Error
 	}

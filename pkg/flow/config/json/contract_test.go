@@ -22,7 +22,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func Test_ConfigContractsSimple(t *testing.T) {
@@ -33,7 +32,7 @@ func Test_ConfigContractsSimple(t *testing.T) {
 
 	var jsonContracts jsonContracts
 	err := json.Unmarshal(b, &jsonContracts)
-	require.NoError(t, err)
+	assert.NoError(t, err)
 
 	contracts := jsonContracts.transformToConfig()
 
@@ -54,7 +53,7 @@ func Test_ConfigContractsComplex(t *testing.T) {
 
 	var jsonContracts jsonContracts
 	err := json.Unmarshal(b, &jsonContracts)
-	require.NoError(t, err)
+	assert.NoError(t, err)
 
 	contracts := jsonContracts.transformToConfig()
 
@@ -91,7 +90,7 @@ func Test_ConfigContractsAliases(t *testing.T) {
 
 	var jsonContracts jsonContracts
 	err := json.Unmarshal(b, &jsonContracts)
-	require.NoError(t, err)
+	assert.NoError(t, err)
 
 	contracts := jsonContracts.transformToConfig()
 
@@ -127,7 +126,7 @@ func Test_TransformContractToJSON(t *testing.T) {
 
 	var jsonContracts jsonContracts
 	err := json.Unmarshal(b, &jsonContracts)
-	require.NoError(t, err)
+	assert.NoError(t, err)
 
 	contracts := jsonContracts.transformToConfig()
 
@@ -157,7 +156,7 @@ func Test_TransformComplexContractToJSON(t *testing.T) {
 
 	var jsonContracts jsonContracts
 	err := json.Unmarshal(b, &jsonContracts)
-	require.NoError(t, err)
+	assert.NoError(t, err)
 
 	contracts := jsonContracts.transformToConfig()
 

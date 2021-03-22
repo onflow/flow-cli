@@ -24,18 +24,6 @@ import (
 	"os"
 	"strings"
 
-	"github.com/onflow/flow-cli/internal/accounts"
-	"github.com/onflow/flow-cli/internal/blocks"
-	"github.com/onflow/flow-cli/internal/cadence"
-	"github.com/onflow/flow-cli/internal/collections"
-	"github.com/onflow/flow-cli/internal/emulator"
-	"github.com/onflow/flow-cli/internal/events"
-	"github.com/onflow/flow-cli/internal/keys"
-	"github.com/onflow/flow-cli/internal/project"
-	"github.com/onflow/flow-cli/internal/scripts"
-	"github.com/onflow/flow-cli/internal/transactions"
-	"github.com/onflow/flow-cli/internal/version"
-
 	"github.com/psiemens/sconfig"
 
 	"github.com/onflow/flow-cli/pkg/flow"
@@ -69,29 +57,6 @@ var (
 	LogFlag         = "info"
 	NetworkFlag     = ""
 )
-
-// InitCommands initialize all commands
-// and adds them to root command
-func InitCommands() *cobra.Command {
-	var cmd = &cobra.Command{
-		Use:              "flow",
-		TraverseChildren: true,
-	}
-
-	cmd.AddCommand(cadence.Cmd)
-	cmd.AddCommand(version.Cmd)
-	cmd.AddCommand(emulator.Cmd)
-	cmd.AddCommand(accounts.Cmd)
-	cmd.AddCommand(scripts.Cmd)
-	cmd.AddCommand(transactions.Cmd)
-	cmd.AddCommand(keys.Cmd)
-	cmd.AddCommand(events.Cmd)
-	cmd.AddCommand(blocks.Cmd)
-	cmd.AddCommand(collections.Cmd)
-	cmd.AddCommand(project.Cmd)
-
-	return cmd
-}
 
 // InitFlags init all the global persistent flags
 func InitFlags(cmd cobra.Command) {
@@ -233,7 +198,7 @@ func resolveHost(project *flow.Project, hostFlag string, networkFlag string) (st
 func createLogger() util.Logger {
 	// disable logging if we user want a specific format like JSON
 	//(more common they will not want also to have logs)
-	logLevel := util.InfoLog
+	var logLevel int
 	switch LogFlag {
 	case "none":
 		logLevel = util.NoneLog
@@ -320,7 +285,7 @@ func handleError(description string, err error) {
 			fmt.Fprintf(os.Stderr, "❌  Invalid signature: %s \n", strings.Split(err.Error(), "invalid signature:")[1])
 		} else if strings.Contains(err.Error(), "signature could not be verified using public key with") {
 			fmt.Fprintf(os.Stderr, "❌ %s: %s \n", description, err)
-			fmt.Fprintf(os.Stderr, "⚠️  If you are runing emulator locally make sure that the emulator was started with the same config as used in this command. \nTry restarting the emulator.")
+			fmt.Fprintf(os.Stderr, "⚠️  If you are running emulator locally make sure that the emulator was started with the same config as used in this command. \nTry restarting the emulator.")
 		} else {
 			fmt.Fprintf(os.Stderr, "❌ %s: %s", description, err)
 		}

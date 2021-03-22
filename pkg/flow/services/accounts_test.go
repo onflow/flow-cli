@@ -8,11 +8,9 @@ import (
 
 	"github.com/onflow/flow-go-sdk/crypto"
 
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-
 	"github.com/onflow/flow-cli/pkg/flow/util"
 	flowsdk "github.com/onflow/flow-go-sdk"
+	"github.com/stretchr/testify/assert"
 
 	"github.com/onflow/flow-cli/tests"
 )
@@ -30,7 +28,7 @@ func TestAccounts(t *testing.T) {
 	mock := &tests.MockGateway{}
 
 	project, err := flow.InitProject(crypto.ECDSA_P256, crypto.SHA3_256)
-	require.NoError(t, err)
+	assert.NoError(t, err)
 
 	accounts := NewAccounts(mock, project, util.NewStdoutLogger(util.NoneLog))
 
@@ -41,7 +39,7 @@ func TestAccounts(t *testing.T) {
 
 		account, err := accounts.Get(serviceAddress)
 
-		require.NoError(t, err)
+		assert.NoError(t, err)
 		assert.Equal(t, account.Address.String(), serviceAddress)
 	})
 
@@ -65,10 +63,11 @@ func TestAccounts(t *testing.T) {
 			return tests.NewAccountWithAddress(newAddress), nil
 		}
 
-		account, err := accounts.Create(serviceName, []string{pubKey}, sigAlgo, hashAlgo, nil)
+		a, err := accounts.Create(serviceName, []string{pubKey}, sigAlgo, hashAlgo, nil)
 
-		require.NoError(t, err)
-		assert.Equal(t, len(account.Address), 8)
+		assert.NotNil(t, a)
+		assert.NoError(t, err)
+		assert.Equal(t, len(a.Address), 8)
 	})
 
 	t.Run("Create an Account with Contract", func(t *testing.T) {
@@ -92,10 +91,11 @@ func TestAccounts(t *testing.T) {
 			return tests.NewAccountWithAddress(newAddress), nil
 		}
 
-		account, err := accounts.Create(serviceName, []string{pubKey}, sigAlgo, hashAlgo, []string{"Hello:../../../tests/Hello.cdc"})
+		a, err := accounts.Create(serviceName, []string{pubKey}, sigAlgo, hashAlgo, []string{"Hello:../../../tests/Hello.cdc"})
 
-		require.NoError(t, err)
-		assert.Equal(t, len(account.Address), 8)
+		assert.NotNil(t, a)
+		assert.NoError(t, err)
+		assert.Equal(t, len(a.Address), 8)
 	})
 
 	t.Run("Contract Add for Account", func(t *testing.T) {
@@ -115,10 +115,11 @@ func TestAccounts(t *testing.T) {
 			return tests.NewAccountWithAddress(address.String()), nil
 		}
 
-		account, err := accounts.AddContract(serviceName, "Hello", "../../../tests/Hello.cdc", false)
+		a, err := accounts.AddContract(serviceName, "Hello", "../../../tests/Hello.cdc", false)
 
-		require.NoError(t, err)
-		assert.Equal(t, len(account.Address), 8)
+		assert.NotNil(t, a)
+		assert.NoError(t, err)
+		assert.Equal(t, len(a.Address), 8)
 	})
 
 	t.Run("Contract Update for Account", func(t *testing.T) {
@@ -140,8 +141,9 @@ func TestAccounts(t *testing.T) {
 
 		account, err := accounts.AddContract(serviceName, "Hello", "../../../tests/Hello.cdc", true)
 
-		require.NoError(t, err)
+		assert.NotNil(t, account)
 		assert.Equal(t, len(account.Address), 8)
+		assert.NoError(t, err)
 	})
 
 	t.Run("Contract Remove for Account", func(t *testing.T) {
@@ -163,8 +165,9 @@ func TestAccounts(t *testing.T) {
 
 		account, err := accounts.RemoveContract("Hello", serviceName)
 
-		require.NoError(t, err)
+		assert.NotNil(t, account)
 		assert.Equal(t, len(account.Address), 8)
+		assert.NoError(t, err)
 	})
 
 }

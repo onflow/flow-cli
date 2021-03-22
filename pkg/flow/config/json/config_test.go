@@ -21,7 +21,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func Test_SimpleJSONConfig(t *testing.T) {
@@ -52,7 +51,7 @@ func Test_SimpleJSONConfig(t *testing.T) {
 	parser := NewParser()
 	conf, err := parser.Deserialize(b)
 
-	require.NoError(t, err)
+	assert.NoError(t, err)
 	assert.Equal(t, 1, len(conf.Accounts))
 	assert.Equal(t, "emulator-account", conf.Accounts[0].Name)
 	assert.Equal(t, "11c5dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7", conf.Accounts[0].Keys[0].Context["privateKey"])

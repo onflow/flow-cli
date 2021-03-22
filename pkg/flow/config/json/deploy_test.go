@@ -38,7 +38,7 @@ func Test_ConfigDeploymentsSimple(t *testing.T) {
 
 	var jsonDeployments jsonDeployments
 	err := json.Unmarshal(b, &jsonDeployments)
-	require.NoError(t, err)
+	assert.NoError(t, err)
 
 	deployments := jsonDeployments.transformToConfig()
 
@@ -82,7 +82,7 @@ func Test_TransformDeployToJSON(t *testing.T) {
 
 	var jsonDeployments jsonDeployments
 	err := json.Unmarshal(b, &jsonDeployments)
-	require.NoError(t, err)
+	assert.NoError(t, err)
 
 	deployments := jsonDeployments.transformToConfig()
 

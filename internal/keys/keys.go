@@ -51,7 +51,7 @@ type KeyResult struct {
 
 // JSON convert result to JSON
 func (k *KeyResult) JSON() interface{} {
-	result := make(map[string]string, 0)
+	result := make(map[string]string)
 	result["Private"] = hex.EncodeToString(k.privateKey.PublicKey().Encode())
 	result["Public"] = hex.EncodeToString(k.privateKey.Encode())
 
@@ -83,7 +83,7 @@ func (k *KeyResult) String() string {
 
 // Oneliner show result as one liner grep friendly
 func (k *KeyResult) Oneliner() string {
-	return fmt.Sprintf("")
+	return fmt.Sprintf("Private Key: %x, Public Key: %x", k.privateKey.Encode(), k.publicKey.Encode())
 }
 
 func (k *KeyResult) ToConfig() string {
