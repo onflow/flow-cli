@@ -33,7 +33,6 @@ var AddCommand = &command.Command{
 	Run: func(
 		cmd *cobra.Command,
 		args []string,
-		project *flow.Project,
 		services *services.Services,
 	) (command.Result, error) {
 		account, err := services.Accounts.Add(

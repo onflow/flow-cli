@@ -2,7 +2,6 @@ package keys
 
 import (
 	"github.com/onflow/flow-cli/internal/command"
-	"github.com/onflow/flow-cli/pkg/flow"
 	"github.com/onflow/flow-cli/pkg/flow/services"
 	"github.com/spf13/cobra"
 )
@@ -21,7 +20,6 @@ var DecodeCommand = &command.Command{
 	Run: func(
 		cmd *cobra.Command,
 		args []string,
-		project *flow.Project,
 		services *services.Services,
 	) (command.Result, error) {
 		accountKey, err := services.Keys.Decode(args[0])

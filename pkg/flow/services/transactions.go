@@ -57,6 +57,9 @@ func (t *Transactions) Send(
 	args []string,
 	argsJSON string,
 ) (*flowsdk.Transaction, *flowsdk.TransactionResult, error) {
+	if t.project == nil {
+		return nil, nil, fmt.Errorf("missing configuration, initialize it: flow project init")
+	}
 
 	signer := t.project.GetAccountByName(signerName)
 	if signer == nil {

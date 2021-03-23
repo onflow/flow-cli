@@ -20,7 +20,6 @@ package accounts
 
 import (
 	"github.com/onflow/flow-cli/internal/command"
-	"github.com/onflow/flow-cli/pkg/flow"
 	"github.com/onflow/flow-cli/pkg/flow/services"
 	"github.com/spf13/cobra"
 )
@@ -42,7 +41,6 @@ var UpdateCommand = &command.Command{
 	Run: func(
 		cmd *cobra.Command,
 		args []string,
-		project *flow.Project,
 		services *services.Services,
 	) (command.Result, error) {
 		account, err := services.Accounts.AddContract(

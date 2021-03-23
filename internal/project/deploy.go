@@ -20,7 +20,6 @@ package project
 
 import (
 	"github.com/onflow/flow-cli/internal/command"
-	"github.com/onflow/flow-cli/pkg/flow"
 	"github.com/onflow/flow-cli/pkg/flow/contracts"
 	"github.com/onflow/flow-cli/pkg/flow/services"
 	"github.com/spf13/cobra"
@@ -41,7 +40,6 @@ var DeployCommand = &command.Command{
 	Run: func(
 		cmd *cobra.Command,
 		args []string,
-		project *flow.Project,
 		services *services.Services,
 	) (command.Result, error) {
 		c, err := services.Project.Deploy(command.NetworkFlag, deployFlags.Update)
@@ -49,14 +47,13 @@ var DeployCommand = &command.Command{
 			return nil, err
 		}
 
-		return &DeployResult{contracts: c, project: project}, nil
+		return &DeployResult{c}, nil
 	},
 }
 
 // DeployResult result structure
 type DeployResult struct {
 	contracts []*contracts.Contract
-	project   *flow.Project
 }
 
 // JSON convert result to JSON

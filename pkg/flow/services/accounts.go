@@ -296,6 +296,9 @@ func (a *Accounts) AddContract(
 	contractFilename string,
 	updateExisting bool,
 ) (*flowsdk.Account, error) {
+	if a.project == nil {
+		return nil, fmt.Errorf("missing configuration, initialize it: flow project init")
+	}
 
 	account := a.project.GetAccountByName(accountName)
 	if account == nil {
