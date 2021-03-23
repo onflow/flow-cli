@@ -3,10 +3,11 @@ package services
 import (
 	"testing"
 
+	"github.com/onflow/flow-cli/pkg/flow/config/output"
+
 	"github.com/onflow/flow-cli/pkg/flow"
 
 	"github.com/onflow/cadence"
-	"github.com/onflow/flow-cli/pkg/flow/util"
 	"github.com/onflow/flow-cli/tests"
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/stretchr/testify/assert"
@@ -18,7 +19,7 @@ func TestScripts(t *testing.T) {
 	project, err := flow.InitProject(crypto.ECDSA_P256, crypto.SHA3_256)
 	assert.NoError(t, err)
 
-	scripts := NewScripts(mock, project, util.NewStdoutLogger(util.InfoLog))
+	scripts := NewScripts(mock, project, output.NewStdoutLogger(output.InfoLog))
 
 	t.Run("Execute Script", func(t *testing.T) {
 		mock.ExecuteScriptMock = func(script []byte, arguments []cadence.Value) (cadence.Value, error) {

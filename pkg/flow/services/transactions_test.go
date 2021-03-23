@@ -3,11 +3,12 @@ package services
 import (
 	"testing"
 
+	"github.com/onflow/flow-cli/pkg/flow/config/output"
+
 	flowsdk "github.com/onflow/flow-go-sdk"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/onflow/flow-cli/pkg/flow"
-	"github.com/onflow/flow-cli/pkg/flow/util"
 	"github.com/onflow/flow-cli/tests"
 	"github.com/onflow/flow-go-sdk/crypto"
 )
@@ -18,7 +19,7 @@ func TestTransactions(t *testing.T) {
 	project, err := flow.InitProject(crypto.ECDSA_P256, crypto.SHA3_256)
 	assert.NoError(t, err)
 
-	transactions := NewTransactions(mock, project, util.NewStdoutLogger(util.NoneLog))
+	transactions := NewTransactions(mock, project, output.NewStdoutLogger(output.NoneLog))
 
 	t.Run("Get Transaction", func(t *testing.T) {
 		called := 0

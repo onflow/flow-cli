@@ -22,6 +22,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/onflow/flow-cli/pkg/flow/config/output"
+
 	"github.com/onflow/cadence"
 
 	"github.com/onflow/flow-cli/pkg/flow"
@@ -39,14 +41,14 @@ import (
 type Accounts struct {
 	gateway gateway.Gateway
 	project *flow.Project
-	logger  util.Logger
+	logger  output.Logger
 }
 
 // NewAccounts create new account service
 func NewAccounts(
 	gateway gateway.Gateway,
 	project *flow.Project,
-	logger util.Logger,
+	logger output.Logger,
 ) *Accounts {
 	return &Accounts{
 		gateway: gateway,

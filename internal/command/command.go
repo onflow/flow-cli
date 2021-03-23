@@ -25,6 +25,8 @@ import (
 	"os"
 	"strings"
 
+	"github.com/onflow/flow-cli/pkg/flow/config/output"
+
 	"github.com/onflow/flow-cli/pkg/flow/config"
 
 	"github.com/psiemens/sconfig"
@@ -32,7 +34,6 @@ import (
 	"github.com/onflow/flow-cli/pkg/flow"
 	"github.com/onflow/flow-cli/pkg/flow/gateway"
 	"github.com/onflow/flow-cli/pkg/flow/services"
-	"github.com/onflow/flow-cli/pkg/flow/util"
 	"github.com/onflow/flow-go-sdk/client"
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
@@ -198,26 +199,26 @@ func resolveHost(project *flow.Project, hostFlag string, networkFlag string) (st
 }
 
 // create logger utility
-func createLogger(logFlag string, formatFlag string) util.Logger {
+func createLogger(logFlag string, formatFlag string) output.Logger {
 	// disable logging if we user want a specific format like JSON
 	//(more common they will not want also to have logs)
 	var logLevel int
 	switch logFlag {
 	case "none":
-		logLevel = util.NoneLog
+		logLevel = output.NoneLog
 	case "error":
-		logLevel = util.ErrorLog
+		logLevel = output.ErrorLog
 	case "debug":
-		logLevel = util.DebugLog
+		logLevel = output.DebugLog
 	default:
-		logLevel = util.InfoLog
+		logLevel = output.InfoLog
 	}
 
 	if formatFlag != "" {
-		logLevel = util.NoneLog
+		logLevel = output.NoneLog
 	}
 
-	return util.NewStdoutLogger(logLevel)
+	return output.NewStdoutLogger(logLevel)
 }
 
 // formatResult formats a result for printing.

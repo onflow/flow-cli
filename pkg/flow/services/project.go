@@ -21,6 +21,8 @@ package services
 import (
 	"fmt"
 
+	"github.com/onflow/flow-cli/pkg/flow/config/output"
+
 	"strings"
 
 	"github.com/onflow/flow-cli/pkg/flow"
@@ -39,14 +41,14 @@ import (
 type Project struct {
 	gateway gateway.Gateway
 	project *flow.Project
-	logger  util.Logger
+	logger  output.Logger
 }
 
 // NewProject create new project service
 func NewProject(
 	gateway gateway.Gateway,
 	project *flow.Project,
-	logger util.Logger,
+	logger output.Logger,
 ) *Project {
 	return &Project{
 		gateway: gateway,

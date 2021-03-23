@@ -3,9 +3,10 @@ package services
 import (
 	"testing"
 
+	"github.com/onflow/flow-cli/pkg/flow/config/output"
+
 	"github.com/onflow/flow-cli/pkg/flow"
 
-	"github.com/onflow/flow-cli/pkg/flow/util"
 	"github.com/onflow/flow-cli/tests"
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/stretchr/testify/assert"
@@ -17,7 +18,7 @@ func TestKeys(t *testing.T) {
 	project, err := flow.InitProject(crypto.ECDSA_P256, crypto.SHA3_256)
 	assert.NoError(t, err)
 
-	keys := NewKeys(mock, project, util.NewStdoutLogger(util.InfoLog))
+	keys := NewKeys(mock, project, output.NewStdoutLogger(output.InfoLog))
 
 	t.Run("Generate Keys", func(t *testing.T) {
 		key, err := keys.Generate("", "ECDSA_P256")

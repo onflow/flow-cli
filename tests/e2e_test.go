@@ -22,11 +22,12 @@ import (
 	"os"
 	"testing"
 
+	"github.com/onflow/flow-cli/pkg/flow/config/output"
+
 	"github.com/onflow/flow-cli/pkg/flow"
 
 	"github.com/onflow/flow-cli/pkg/flow/gateway"
 	"github.com/onflow/flow-cli/pkg/flow/services"
-	"github.com/onflow/flow-cli/pkg/flow/util"
 	flowsdk "github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go/utils/io"
 	"github.com/stretchr/testify/assert"
@@ -41,7 +42,7 @@ const (
 	conf            = "./flow.json"
 )
 
-var logger = util.NewStdoutLogger(util.NoneLog)
+var logger = output.NewStdoutLogger(output.NoneLog)
 var e2e = os.Getenv("E2E")
 
 func TestAccount(t *testing.T) {

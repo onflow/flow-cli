@@ -341,7 +341,7 @@ func AccountFromConfig(accountConf config.Account) (*Account, error) {
 	accountKeys := make([]keys.AccountKey, 0, len(accountConf.Keys))
 
 	for _, key := range accountConf.Keys {
-		accountKey, err := keys.NewAccountKey(key)
+		accountKey, err := keys.NewAccountKey(key, accountConf.Address)
 		if err != nil {
 			return nil, err
 		}

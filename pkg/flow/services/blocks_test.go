@@ -3,8 +3,9 @@ package services
 import (
 	"testing"
 
+	"github.com/onflow/flow-cli/pkg/flow/config/output"
+
 	"github.com/onflow/flow-cli/pkg/flow"
-	"github.com/onflow/flow-cli/pkg/flow/util"
 	"github.com/onflow/flow-cli/tests"
 	flowsdk "github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/client"
@@ -19,7 +20,7 @@ func TestBlocks(t *testing.T) {
 	project, err := flow.InitProject(crypto.ECDSA_P256, crypto.SHA3_256)
 	assert.NoError(t, err)
 
-	blocks := NewBlocks(mock, project, util.NewStdoutLogger(util.InfoLog))
+	blocks := NewBlocks(mock, project, output.NewStdoutLogger(output.InfoLog))
 
 	t.Run("Get Latest Block", func(t *testing.T) {
 		called := false

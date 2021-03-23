@@ -20,6 +20,7 @@ package services
 
 import (
 	"github.com/onflow/flow-cli/pkg/flow"
+	"github.com/onflow/flow-cli/pkg/flow/config/output"
 	"github.com/onflow/flow-cli/pkg/flow/util"
 
 	"github.com/onflow/cadence"
@@ -31,14 +32,14 @@ import (
 type Scripts struct {
 	gateway gateway.Gateway
 	project *flow.Project
-	logger  util.Logger
+	logger  output.Logger
 }
 
 // NewScripts create new script service
 func NewScripts(
 	gateway gateway.Gateway,
 	project *flow.Project,
-	logger util.Logger,
+	logger output.Logger,
 ) *Scripts {
 	return &Scripts{
 		gateway: gateway,

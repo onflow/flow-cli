@@ -4,11 +4,12 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/onflow/flow-cli/pkg/flow/config/output"
+
 	"github.com/onflow/flow-cli/pkg/flow"
 
 	"github.com/onflow/flow-go-sdk/crypto"
 
-	"github.com/onflow/flow-cli/pkg/flow/util"
 	flowsdk "github.com/onflow/flow-go-sdk"
 	"github.com/stretchr/testify/assert"
 
@@ -30,7 +31,7 @@ func TestAccounts(t *testing.T) {
 	project, err := flow.InitProject(crypto.ECDSA_P256, crypto.SHA3_256)
 	assert.NoError(t, err)
 
-	accounts := NewAccounts(mock, project, util.NewStdoutLogger(util.NoneLog))
+	accounts := NewAccounts(mock, project, output.NewStdoutLogger(output.NoneLog))
 
 	t.Run("Get an Account", func(t *testing.T) {
 		mock.GetAccountMock = func(address flowsdk.Address) (*flowsdk.Account, error) {

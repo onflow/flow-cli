@@ -22,9 +22,9 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/onflow/flow-cli/pkg/flow"
+	"github.com/onflow/flow-cli/pkg/flow/config/output"
 
-	"github.com/onflow/flow-cli/pkg/flow/util"
+	"github.com/onflow/flow-cli/pkg/flow"
 
 	"github.com/onflow/flow-go-sdk/client"
 
@@ -35,14 +35,14 @@ import (
 type Events struct {
 	gateway gateway.Gateway
 	project *flow.Project
-	logger  util.Logger
+	logger  output.Logger
 }
 
 // NewEvents create new event service
 func NewEvents(
 	gateway gateway.Gateway,
 	project *flow.Project,
-	logger util.Logger,
+	logger output.Logger,
 ) *Events {
 	return &Events{
 		gateway: gateway,

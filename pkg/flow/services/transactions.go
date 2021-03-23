@@ -22,6 +22,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/onflow/flow-cli/pkg/flow/config/output"
+
 	"github.com/onflow/flow-cli/pkg/flow"
 	"github.com/onflow/flow-cli/pkg/flow/config"
 	"github.com/onflow/flow-cli/pkg/flow/gateway"
@@ -34,14 +36,14 @@ import (
 type Transactions struct {
 	gateway gateway.Gateway
 	project *flow.Project
-	logger  util.Logger
+	logger  output.Logger
 }
 
 // NewTransactions create new transaction service
 func NewTransactions(
 	gateway gateway.Gateway,
 	project *flow.Project,
-	logger util.Logger,
+	logger output.Logger,
 ) *Transactions {
 	return &Transactions{
 		gateway: gateway,

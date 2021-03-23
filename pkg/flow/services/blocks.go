@@ -22,12 +22,13 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/onflow/flow-cli/pkg/flow/config/output"
+
 	"github.com/onflow/flow-cli/pkg/flow"
 
 	"github.com/onflow/flow-go-sdk/client"
 
 	"github.com/onflow/flow-cli/pkg/flow/gateway"
-	"github.com/onflow/flow-cli/pkg/flow/util"
 	flowsdk "github.com/onflow/flow-go-sdk"
 )
 
@@ -35,14 +36,14 @@ import (
 type Blocks struct {
 	gateway gateway.Gateway
 	project *flow.Project
-	logger  util.Logger
+	logger  output.Logger
 }
 
 // NewBlocks create new block service
 func NewBlocks(
 	gateway gateway.Gateway,
 	project *flow.Project,
-	logger util.Logger,
+	logger output.Logger,
 ) *Blocks {
 	return &Blocks{
 		gateway: gateway,

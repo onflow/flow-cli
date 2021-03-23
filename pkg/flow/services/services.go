@@ -20,8 +20,8 @@ package services
 
 import (
 	"github.com/onflow/flow-cli/pkg/flow"
+	"github.com/onflow/flow-cli/pkg/flow/config/output"
 	"github.com/onflow/flow-cli/pkg/flow/gateway"
-	"github.com/onflow/flow-cli/pkg/flow/util"
 )
 
 // Services are a place where we define domain functionality
@@ -40,7 +40,7 @@ type Services struct {
 func NewServices(
 	gateway gateway.Gateway,
 	project *flow.Project,
-	logger util.Logger,
+	logger output.Logger,
 ) *Services {
 	return &Services{
 		Accounts:     NewAccounts(gateway, project, logger),

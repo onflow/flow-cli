@@ -16,10 +16,12 @@
  * limitations under the License.
  */
 
-package util
+package output
 
 import (
 	"fmt"
+
+	"github.com/onflow/flow-cli/pkg/flow/util"
 )
 
 const (
@@ -71,7 +73,7 @@ func (s *StdoutLogger) Debug(msg string) {
 
 // Error log
 func (s *StdoutLogger) Error(msg string) {
-	s.log(fmt.Sprintf("❌  %s", Red(msg)), ErrorLog)
+	s.log(fmt.Sprintf("❌  %s", util.Red(msg)), ErrorLog)
 }
 
 func (s *StdoutLogger) StartProgress(msg string) {
