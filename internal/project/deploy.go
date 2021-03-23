@@ -30,7 +30,7 @@ type flagsDeploy struct {
 	Update bool `flag:"update" default:"false" info:"use update flag to update existing contracts"`
 }
 
-var deployFlags = &flagsDeploy{}
+var deployFlags = flagsDeploy{}
 
 var DeployCommand = &command.Command{
 	Cmd: &cobra.Command{

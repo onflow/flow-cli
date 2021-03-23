@@ -35,7 +35,7 @@ type flagsSend struct {
 	Results  bool     `default:"" flag:"results" info:"⚠️  DEPRECATED: all transactions will provide result"`
 }
 
-var sendFlags = &flagsSend{}
+var sendFlags = flagsSend{}
 
 var SendCommand = &command.Command{
 	Cmd: &cobra.Command{

@@ -34,7 +34,7 @@ type flagsCreate struct {
 	Contracts []string `flag:"contract" info:"Contract to be deployed during account creation. <name:filename>"`
 }
 
-var createFlags = &flagsCreate{}
+var createFlags = flagsCreate{}
 
 var CreateCommand = &command.Command{
 	Cmd: &cobra.Command{

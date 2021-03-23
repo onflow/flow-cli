@@ -20,7 +20,7 @@ type flagsAdd struct {
 	Overwrite   bool   `flag:"overwrite,o" info:"Overwrite an existing account"`
 }
 
-var addFlags = &flagsAdd{}
+var addFlags = flagsAdd{}
 
 var AddCommand = &command.Command{
 	Cmd: &cobra.Command{

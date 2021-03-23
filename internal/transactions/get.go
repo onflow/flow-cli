@@ -30,7 +30,7 @@ type flagsStatus struct {
 	Code   bool `default:"false" flag:"code" info:"Display transaction code"`
 }
 
-var statusFlags = &flagsStatus{}
+var statusFlags = flagsStatus{}
 
 var GetCommand = &command.Command{
 	Cmd: &cobra.Command{

@@ -30,14 +30,14 @@ type flagsBlocks struct {
 	Verbose bool   `default:"false" flag:"verbose" info:"Display transactions in block"`
 }
 
-var blockFlags = &flagsBlocks{}
+var blockFlags = flagsBlocks{}
 
 var GetCommand = &command.Command{
 	Cmd: &cobra.Command{
 		Use:   "get <block_id|latest|block_height>",
 		Short: "Get block info",
 	},
-	Flags: *blockFlags,
+	Flags: &blockFlags,
 	Run: func(
 		cmd *cobra.Command,
 		args []string,

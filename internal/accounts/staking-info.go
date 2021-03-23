@@ -15,13 +15,15 @@ import (
 
 type flagsStakingInfo struct{}
 
+var stakingFlags = flagsStakingInfo{}
+
 var StakingCommand = &command.Command{
 	Cmd: &cobra.Command{
 		Use:   "staking-info <address>",
 		Short: "Get account staking info",
 		Args:  cobra.ExactArgs(1),
 	},
-	Flags: &flagsStakingInfo{},
+	Flags: stakingFlags,
 	Run: func(
 		cmd *cobra.Command,
 		args []string,

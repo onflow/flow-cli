@@ -29,7 +29,7 @@ type flagsUpdateContract struct {
 	Signer string `default:"emulator-account" flag:"signer"`
 }
 
-var updateFlags = &flagsUpdateContract{}
+var updateFlags = flagsUpdateContract{}
 
 var UpdateCommand = &command.Command{
 	Cmd: &cobra.Command{

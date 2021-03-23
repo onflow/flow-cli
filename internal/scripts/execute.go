@@ -33,7 +33,7 @@ type flagsScripts struct {
 	Code     bool     `default:"false" flag:"code" info:"⚠️  DEPRECATED: use filename argument"`
 }
 
-var scriptFlags = &flagsScripts{}
+var scriptFlags = flagsScripts{}
 
 var ExecuteCommand = &command.Command{
 	Cmd: &cobra.Command{

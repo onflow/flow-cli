@@ -32,7 +32,7 @@ type flagsGet struct {
 	Code      bool `default:"false" flag:"code" info:"⚠️  DEPRECATED: use contracts flag instead"`
 }
 
-var getFlags = &flagsGet{}
+var getFlags = flagsGet{}
 
 var GetCommand = &command.Command{
 	Cmd: &cobra.Command{

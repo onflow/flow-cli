@@ -40,7 +40,7 @@ type flagsInit struct {
 	Reset              bool   `default:"false" flag:"reset" info:"Reset flow.json config file"`
 }
 
-var initFlag = &flagsInit{}
+var initFlag = flagsInit{}
 
 var InitCommand = &command.Command{
 	Cmd: &cobra.Command{

@@ -29,7 +29,7 @@ type flagsRemoveContract struct {
 	Signer string `default:"emulator-account" flag:"signer"`
 }
 
-var flagsRemove = &flagsRemoveContract{}
+var flagsRemove = flagsRemoveContract{}
 
 var RemoveCommand = &command.Command{
 	Cmd: &cobra.Command{

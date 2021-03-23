@@ -27,13 +27,15 @@ import (
 
 type flagsCollections struct{}
 
+var collectionFlags = flagsCollections{}
+
 var GetCommand = &command.Command{
 	Cmd: &cobra.Command{
 		Use:   "get <collection_id>",
 		Short: "Get collection info",
 		Args:  cobra.ExactArgs(1),
 	},
-	Flags: &flagsCollections{},
+	Flags: &collectionFlags,
 	Run: func(
 		cmd *cobra.Command,
 		args []string,

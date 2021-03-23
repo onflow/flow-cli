@@ -27,7 +27,7 @@ import (
 
 type flagsGenerate struct{}
 
-var generateFlag = &flagsGenerate{}
+var generateFlag = flagsGenerate{}
 
 var GetCommand = &command.Command{
 	Cmd: &cobra.Command{
@@ -36,7 +36,7 @@ var GetCommand = &command.Command{
 		Args:    cobra.RangeArgs(2, 3),
 		Example: "flow events get A.1654653399040a61.FlowToken.TokensDeposited 11559500 11559600",
 	},
-	Flags: generateFlag,
+	Flags: &generateFlag,
 	Run: func(
 		cmd *cobra.Command,
 		args []string,

@@ -9,13 +9,15 @@ import (
 
 type flagsDecode struct{}
 
+var decodeFlags = flagsDecode{}
+
 var DecodeCommand = &command.Command{
 	Cmd: &cobra.Command{
 		Use:   "decode <public key>",
 		Short: "Decode a public account key hex string",
 		Args:  cobra.ExactArgs(1),
 	},
-	Flags: &flagsDecode{},
+	Flags: &decodeFlags,
 	Run: func(
 		cmd *cobra.Command,
 		args []string,

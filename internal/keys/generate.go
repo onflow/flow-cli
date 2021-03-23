@@ -30,7 +30,7 @@ type flagsGenerate struct {
 	KeySigAlgo string `default:"ECDSA_P256" flag:"sig-algo" info:"Signature algorithm"`
 }
 
-var generateFlags = &flagsGenerate{}
+var generateFlags = flagsGenerate{}
 
 var GenerateCommand = &command.Command{
 	Cmd: &cobra.Command{
