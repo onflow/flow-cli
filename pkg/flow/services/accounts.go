@@ -80,6 +80,9 @@ func (a *Accounts) Add(
 	overwrite bool,
 	path []string,
 ) (*flow.Account, error) {
+	if a.project == nil {
+		return nil, fmt.Errorf("missing configuration, initialize it: flow project init")
+	}
 
 	existingAccount := a.project.GetAccountByName(name)
 	if existingAccount != nil && !overwrite {
@@ -208,12 +211,16 @@ func (a *Accounts) Create(
 	hashingAlgorithm string,
 	contracts []string,
 ) (*flowsdk.Account, error) {
-	a.logger.StartProgress("Creating Account...")
+	if a.project == nil {
+		return nil, fmt.Errorf("missing configuration, initialize it: flow project init")
+	}
 
 	signer := a.project.GetAccountByName(signerName)
 	if signer == nil {
 		return nil, fmt.Errorf("signer account: [%s] doesn't exists in configuration", signerName)
 	}
+
+	a.logger.StartProgress("Creating Account...")
 
 	accountKeys := make([]*flowsdk.AccountKey, len(keys))
 

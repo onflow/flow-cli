@@ -89,6 +89,10 @@ func (p *Project) Init(reset bool, serviceKeySigAlgo string, serviceKeyHashAlgo 
 }
 
 func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, error) {
+	if p.project == nil {
+		return nil, fmt.Errorf("missing configuration, initialize it: flow project init")
+	}
+
 	// check there are not multiple accounts with same contract
 	// TODO: specify which contract by name is a problem
 	if p.project.ContractConflictExists(network) {
