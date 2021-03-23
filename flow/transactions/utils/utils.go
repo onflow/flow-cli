@@ -21,6 +21,7 @@ package utils
 import (
 	"encoding/hex"
 	"io/ioutil"
+	"os"
 	"strings"
 
 	cli "github.com/onflow/flow-cli/flow"
@@ -88,4 +89,26 @@ func AssertEmptyOnLoadingPayload(shouldBeEmpty string, paramName string) {
 	if strings.TrimSpace(shouldBeEmpty) != "" {
 		cli.Exitf(1, "Loading transaction payload from file, but %s provided which cannot be used", paramName)
 	}
+}
+
+func ValidateKeyPreReq(account *cli.Account) {
+	if account == nil {
+		cli.Exitf(1, "A specified key was not found")
+	}
+	if account.KeyType == cli.KeyTypeHex {
+		// Always Valid
+		return
+	} else if account.KeyType == cli.KeyTypeKMS {
+		// Check GOOGLE_APPLICATION_CREDENTIALS
+		googleAppCreds := os.Getenv("GOOGLE_APPLICATION_CREDENTIALS")
+		if len(googleAppCreds) == 0 {
+			if len(account.KeyContext["projectId"]) == 0 {
+				cli.Exitf(1, "Could not get GOOGLE_APPLICATION_CREDENTIALS, no google service account json provided but private key type is KMS", account.Address)
+			}
+			cli.GcloudApplicationSignin(account.KeyContext["projectId"])
+		}
+		return
+	}
+	cli.Exitf(1, "Failed to validate %s key for %s", account.KeyType, account.Address)
+
 }
