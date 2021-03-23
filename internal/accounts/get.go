@@ -52,7 +52,7 @@ var GetCommand = &command.Command{
 			return nil, fmt.Errorf("⚠️  DEPRECATED: use contracts flag instead")
 		}
 
-		account, err := services.Accounts.Get(args[0])
+		account, err := services.Accounts.Get(args[0]) // address
 		if err != nil {
 			return nil, err
 		}

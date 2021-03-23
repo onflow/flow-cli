@@ -45,7 +45,12 @@ var UpdateCommand = &command.Command{
 		project *flow.Project,
 		services *services.Services,
 	) (command.Result, error) {
-		account, err := services.Accounts.AddContract(updateFlags.Signer, args[0], args[1], true)
+		account, err := services.Accounts.AddContract(
+			updateFlags.Signer,
+			args[0], // name
+			args[1], // filename
+			true,
+		)
 		if err != nil {
 			return nil, err
 		}

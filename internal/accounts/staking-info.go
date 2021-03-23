@@ -28,7 +28,7 @@ var StakingCommand = &command.Command{
 		project *flow.Project,
 		services *services.Services,
 	) (command.Result, error) {
-		staking, delegation, err := services.Accounts.StakingInfo(args[0])
+		staking, delegation, err := services.Accounts.StakingInfo(args[0]) // address
 		if err != nil {
 			return nil, err
 		}

@@ -45,7 +45,10 @@ var GetCommand = &command.Command{
 		project *flow.Project,
 		services *services.Services,
 	) (command.Result, error) {
-		tx, result, err := services.Transactions.GetStatus(args[0], statusFlags.Sealed)
+		tx, result, err := services.Transactions.GetStatus(
+			args[0], // transaction id
+			statusFlags.Sealed,
+		)
 		if err != nil {
 			return nil, err
 		}

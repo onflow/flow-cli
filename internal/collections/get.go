@@ -40,7 +40,7 @@ var GetCommand = &command.Command{
 		project *flow.Project,
 		services *services.Services,
 	) (command.Result, error) {
-		collection, err := services.Collections.Get(args[0])
+		collection, err := services.Collections.Get(args[0]) // collection id
 		if err != nil {
 			return nil, err
 		}

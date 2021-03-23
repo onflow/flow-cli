@@ -53,7 +53,11 @@ var ExecuteCommand = &command.Command{
 			return nil, fmt.Errorf("⚠️  DEPRECATED: use filename argument")
 		}
 
-		value, err := services.Scripts.Execute(args[0], scriptFlags.Args, scriptFlags.ArgsJSON)
+		value, err := services.Scripts.Execute(
+			args[0], // filename
+			scriptFlags.Args,
+			scriptFlags.ArgsJSON,
+		)
 		if err != nil {
 			return nil, err
 		}

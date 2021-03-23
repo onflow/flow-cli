@@ -37,8 +37,8 @@ var AddCommand = &command.Command{
 		services *services.Services,
 	) (command.Result, error) {
 		account, err := services.Accounts.Add(
-			args[0],
-			args[1],
+			args[0], // name
+			args[1], // address
 			addFlags.KeySigAlgo,
 			addFlags.KeyHashAlgo,
 			addFlags.KeyIndex,

@@ -45,7 +45,10 @@ var RemoveCommand = &command.Command{
 		project *flow.Project,
 		services *services.Services,
 	) (command.Result, error) {
-		account, err := services.Accounts.RemoveContract(args[0], flagsRemove.Signer)
+		account, err := services.Accounts.RemoveContract(
+			args[0], // name
+			flagsRemove.Signer,
+		)
 		if err != nil {
 			return nil, err
 		}

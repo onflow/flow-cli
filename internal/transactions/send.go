@@ -59,7 +59,12 @@ var SendCommand = &command.Command{
 			return nil, fmt.Errorf("⚠️  DEPRECATED: all transactions will provide results")
 		}
 
-		tx, result, err := services.Transactions.Send(args[0], sendFlags.Signer, sendFlags.Args, sendFlags.ArgsJSON)
+		tx, result, err := services.Transactions.Send(
+			args[0], // filename
+			sendFlags.Signer,
+			sendFlags.Args,
+			sendFlags.ArgsJSON,
+		)
 		if err != nil {
 			return nil, err
 		}

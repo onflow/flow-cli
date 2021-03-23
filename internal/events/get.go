@@ -45,10 +45,14 @@ var GetCommand = &command.Command{
 	) (command.Result, error) {
 		end := ""
 		if len(args) == 3 {
-			end = args[2]
+			end = args[2] // block height range end
 		}
 
-		events, err := services.Events.Get(args[0], args[1], end)
+		events, err := services.Events.Get(
+			args[0], // event name
+			args[1], // block height range start
+			end,
+		)
 		if err != nil {
 			return nil, err
 		}

@@ -44,7 +44,11 @@ var GetCommand = &command.Command{
 		project *flow.Project,
 		services *services.Services,
 	) (command.Result, error) {
-		block, events, collections, err := services.Blocks.GetBlock(args[0], blockFlags.Events, blockFlags.Verbose)
+		block, events, collections, err := services.Blocks.GetBlock(
+			args[0], // block id
+			blockFlags.Events,
+			blockFlags.Verbose,
+		)
 		if err != nil {
 			return nil, err
 		}

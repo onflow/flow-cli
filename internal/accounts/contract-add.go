@@ -47,8 +47,8 @@ var AddContractCommand = &command.Command{
 	) (command.Result, error) {
 		account, err := services.Accounts.AddContract(
 			addContractFlags.Signer,
-			args[0],
-			args[1],
+			args[0], // name
+			args[1], // filename
 			false,
 		)
 
