@@ -39,7 +39,7 @@ type Logger interface {
 }
 
 // NewStdoutLogger create new logger
-func NewStdoutLogger(level int) Logger {
+func NewStdoutLogger(level int) *StdoutLogger {
 	return &StdoutLogger{
 		level: level,
 	}
