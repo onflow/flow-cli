@@ -20,9 +20,12 @@ package command
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"strings"
+
+	"github.com/onflow/flow-cli/pkg/flow/config"
 
 	"github.com/psiemens/sconfig"
 
@@ -38,7 +41,6 @@ import (
 type RunCommand func(
 	*cobra.Command,
 	[]string,
-	*flow.Project,
 	*services.Services,
 ) (Result, error)
 
@@ -132,7 +134,11 @@ func InitFlags(cmd *cobra.Command) {
 func (c Command) Add(parent *cobra.Command) {
 	c.Cmd.RunE = func(cmd *cobra.Command, args []string) error {
 		// initialize project but ignore error since config can be missing
-		project, _ := flow.LoadProject(flow.ConfigPath) // TODO: handle error, but maybe handle not found flow as ok and others as not ok, or maybe handle err in services that require project
+		project, err := flow.LoadProject(flow.ConfigPath)
+		// here we ignore if config does not exist as some commands don't require it
+		if !errors.Is(err, config.ErrDoesNotExist) {
+			handleError("Config Error", err)
+		}
 
 		host, err := resolveHost(project, HostFlag, NetworkFlag)
 		handleError("Host Error", err)
@@ -145,7 +151,7 @@ func (c Command) Add(parent *cobra.Command) {
 		service := services.NewServices(clientGateway, project, logger)
 
 		// run command
-		result, err := c.Run(cmd, args, project, service)
+		result, err := c.Run(cmd, args, service)
 		handleError("Command Error", err)
 
 		// format output result

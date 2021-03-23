@@ -55,18 +55,15 @@ func LoadProject(configFilePath []string) (*Project, error) {
 
 	if err != nil {
 		if errors.Is(err, config.ErrDoesNotExist) {
-			return nil, fmt.Errorf(
-				"Project config file %s does not exist. Please initialize first\n",
-				configFilePath,
-			)
+			return nil, err
 		}
 
-		return nil, fmt.Errorf("Failed to open project configuration in %s", configFilePath)
+		return nil, fmt.Errorf("failed to open project configuration: %s", configFilePath)
 	}
 
 	proj, err := newProject(conf, composer)
 	if err != nil {
-		return nil, fmt.Errorf("Invalid project configuration: %s", err)
+		return nil, fmt.Errorf("invalid project configuration: %s", err)
 	}
 
 	return proj, nil

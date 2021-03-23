@@ -200,8 +200,7 @@ func (l *Loader) loadFile(path string) ([]byte, error) {
 
 	if err != nil {
 		if os.IsNotExist(err) {
-			return nil, err
-			//return nil, ErrDoesNotExist
+			return nil, ErrDoesNotExist
 		}
 
 		return nil, err
