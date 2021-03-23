@@ -38,7 +38,7 @@ var UpdateCommand = &command.Command{
 		Example: `flow accounts update-contract FungibleToken ./FungibleToken.cdc`,
 		Args:    cobra.ExactArgs(2),
 	},
-	Flags: updateFlags,
+	Flags: &updateFlags,
 	Run: func(
 		cmd *cobra.Command,
 		args []string,

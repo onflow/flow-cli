@@ -29,7 +29,7 @@ var AddCommand = &command.Command{
 		Example: `flow accounts add alice 18d6e0586b0a20c5 --privateKey=11c5dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7`,
 		Args:    cobra.ExactArgs(2),
 	},
-	Flags: addFlags,
+	Flags: &addFlags,
 	Run: func(
 		cmd *cobra.Command,
 		args []string,

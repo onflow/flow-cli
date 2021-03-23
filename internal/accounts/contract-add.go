@@ -38,7 +38,7 @@ var AddContractCommand = &command.Command{
 		Example: `flow accounts add-contract FungibleToken ./FungibleToken.cdc`,
 		Args:    cobra.ExactArgs(2),
 	},
-	Flags: addContractFlags,
+	Flags: &addContractFlags,
 	Run: func(
 		cmd *cobra.Command,
 		args []string,

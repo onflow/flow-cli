@@ -23,7 +23,7 @@ var StakingCommand = &command.Command{
 		Short: "Get account staking info",
 		Args:  cobra.ExactArgs(1),
 	},
-	Flags: stakingFlags,
+	Flags: &stakingFlags,
 	Run: func(
 		cmd *cobra.Command,
 		args []string,
