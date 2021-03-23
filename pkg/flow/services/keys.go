@@ -22,7 +22,7 @@ import (
 	"encoding/hex"
 	"fmt"
 
-	"github.com/onflow/flow-cli/pkg/flow/config/output"
+	"github.com/onflow/flow-cli/pkg/flow/output"
 
 	"github.com/onflow/flow-cli/pkg/flow"
 

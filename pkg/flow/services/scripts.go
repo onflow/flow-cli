@@ -20,7 +20,7 @@ package services
 
 import (
 	"github.com/onflow/flow-cli/pkg/flow"
-	"github.com/onflow/flow-cli/pkg/flow/config/output"
+	"github.com/onflow/flow-cli/pkg/flow/output"
 	"github.com/onflow/flow-cli/pkg/flow/util"
 
 	"github.com/onflow/cadence"

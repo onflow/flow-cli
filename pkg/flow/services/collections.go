@@ -20,8 +20,8 @@ package services
 
 import (
 	"github.com/onflow/flow-cli/pkg/flow"
-	"github.com/onflow/flow-cli/pkg/flow/config/output"
 	"github.com/onflow/flow-cli/pkg/flow/gateway"
+	"github.com/onflow/flow-cli/pkg/flow/output"
 	flowsdk "github.com/onflow/flow-go-sdk"
 )
 

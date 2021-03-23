@@ -3,7 +3,7 @@ package services
 import (
 	"testing"
 
-	"github.com/onflow/flow-cli/pkg/flow/config/output"
+	"github.com/onflow/flow-cli/pkg/flow/output"
 
 	"github.com/onflow/flow-cli/pkg/flow"
 	"github.com/onflow/flow-cli/tests"

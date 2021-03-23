@@ -3,7 +3,7 @@ package services
 import (
 	"testing"
 
-	"github.com/onflow/flow-cli/pkg/flow/config/output"
+	"github.com/onflow/flow-cli/pkg/flow/output"
 
 	flowsdk "github.com/onflow/flow-go-sdk"
 	"github.com/stretchr/testify/assert"
