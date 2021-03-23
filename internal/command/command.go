@@ -132,12 +132,15 @@ func InitFlags(cmd *cobra.Command) {
 func (c Command) Add(parent *cobra.Command) {
 	c.Cmd.RunE = func(cmd *cobra.Command, args []string) error {
 		// initialize project but ignore error since config can be missing
-		project, _ := flow.LoadProject(flow.ConfigPath)
+		project, _ := flow.LoadProject(flow.ConfigPath) // TODO: handle error, but maybe handle not found flow as ok and others as not ok, or maybe handle err in services that require project
 
-		clientGateway, err := createGateway(project)
+		host, err := resolveHost(project, HostFlag, NetworkFlag)
+		handleError("Host Error", err)
+
+		clientGateway, err := createGateway(host)
 		handleError("Gateway Error", err)
 
-		logger := createLogger()
+		logger := createLogger(LogFlag, FormatFlag)
 
 		service := services.NewServices(clientGateway, project, logger)
 
@@ -146,11 +149,11 @@ func (c Command) Add(parent *cobra.Command) {
 		handleError("Command Error", err)
 
 		// format output result
-		formattedResult, err := formatResult(result)
+		formattedResult, err := formatResult(result, FilterFlag, FormatFlag)
 		handleError("Result", err)
 
 		// output result
-		err = outputResult(formattedResult)
+		err = outputResult(formattedResult, SaveFlag)
 		handleError("Output Error", err)
 
 		return nil
@@ -161,16 +164,10 @@ func (c Command) Add(parent *cobra.Command) {
 }
 
 // createGateway creates a gateway to be used, defaults to grpc but can support others
-func createGateway(project *flow.Project) (gateway.Gateway, error) {
+func createGateway(host string) (gateway.Gateway, error) {
 	// create in memory emulator client
 	if RunEmulatorFlag {
 		return gateway.NewEmulatorGateway(), nil
-	}
-
-	// resolve host
-	host, err := resolveHost(project, HostFlag, NetworkFlag)
-	if err != nil {
-		return nil, err
 	}
 
 	// create default grpc client
@@ -195,11 +192,11 @@ func resolveHost(project *flow.Project, hostFlag string, networkFlag string) (st
 }
 
 // create logger utility
-func createLogger() util.Logger {
+func createLogger(logFlag string, formatFlag string) util.Logger {
 	// disable logging if we user want a specific format like JSON
 	//(more common they will not want also to have logs)
 	var logLevel int
-	switch LogFlag {
+	switch logFlag {
 	case "none":
 		logLevel = util.NoneLog
 	case "error":
@@ -210,7 +207,7 @@ func createLogger() util.Logger {
 		logLevel = util.InfoLog
 	}
 
-	if FormatFlag != "" {
+	if formatFlag != "" {
 		logLevel = util.NoneLog
 	}
 
@@ -218,12 +215,12 @@ func createLogger() util.Logger {
 }
 
 // formatResult formats a result for printing.
-func formatResult(result Result) (string, error) {
+func formatResult(result Result, filterFlag string, formatFlag string) (string, error) {
 	if result == nil {
 		return "", fmt.Errorf("Missing")
 	}
 
-	if FilterFlag != "" {
+	if filterFlag != "" {
 		var jsonResult map[string]interface{}
 		val, _ := json.Marshal(result.JSON())
 		err := json.Unmarshal(val, &jsonResult)
@@ -231,10 +228,10 @@ func formatResult(result Result) (string, error) {
 			return "", err
 		}
 
-		return fmt.Sprintf("%v", jsonResult[FilterFlag]), nil
+		return fmt.Sprintf("%v", jsonResult[filterFlag]), nil
 	}
 
-	switch FormatFlag {
+	switch formatFlag {
 	case "json":
 		jsonRes, _ := json.Marshal(result.JSON())
 		return string(jsonRes), nil
@@ -246,14 +243,14 @@ func formatResult(result Result) (string, error) {
 }
 
 // outputResult to selected media
-func outputResult(result string) error {
-	if SaveFlag != "" {
+func outputResult(result string, saveFlag string) error {
+	if saveFlag != "" {
 		af := afero.Afero{
 			Fs: afero.NewOsFs(),
 		}
 
-		fmt.Printf("💾 result saved to: %s \n", SaveFlag)
-		return af.WriteFile(SaveFlag, []byte(result), 0644)
+		fmt.Printf("💾 result saved to: %s \n", saveFlag)
+		return af.WriteFile(saveFlag, []byte(result), 0644)
 	}
 
 	// default normal output
