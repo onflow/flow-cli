@@ -21,6 +21,7 @@ package utils
 import (
 	"encoding/hex"
 	"io/ioutil"
+	"strings"
 
 	cli "github.com/onflow/flow-cli/flow"
 	"github.com/onflow/flow-go-sdk"
@@ -81,4 +82,10 @@ func NewTransactionWithCodeArgsAuthorizers(code string, args string, authorizers
 	}
 
 	return tx
+}
+
+func AssertEmptyOnLoadingPayload(shouldBeEmpty string, paramName string) {
+	if strings.TrimSpace(shouldBeEmpty) != "" {
+		cli.Exitf(1, "Loading transaction payload from file, but %s provided which cannot be used", paramName)
+	}
 }

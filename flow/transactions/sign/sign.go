@@ -34,16 +34,16 @@ import (
 )
 
 type Config struct {
-	Args                  string   `default:"" flag:"args" info:"arguments in JSON-Cadence format"`
-	Signer                string   `default:"service" flag:"signer,s"`
-	Proposer              string   `default:"" flag:"proposer"`
-	Role                  string   `default:"authorizer" flag:"role"`
 	AdditionalAuthorizers []string `flag:"additional-authorizers" info:"Additional authorizer addresses to add to the transaction"`
+	Args                  string   `default:"" flag:"args" info:"Arguments in JSON-Cadence format. Only used if not "`
+	Proposer              string   `default:"" flag:"proposer"`
 	PayerAddress          string   `flag:"payer-address" info:"Specify payer of the transaction. Defaults to current signer."`
 	Code                  string   `flag:"code,c" info:"path to Cadence file"`
 	Payload               string   `flag:"payload" info:"path to Transaction Payload file"`
+	Role                  string   `default:"authorizer" flag:"role"`
+	Signer                string   `default:"service" flag:"signer,s"`
 	Host                  string   `flag:"host" info:"Flow Access API host address"`
-	Encoding              string   `default:"hexrlp" flag:"encoding" info:"Encoding to use for transactio (rlp)"`
+	Encoding              string   `default:"hexrlp" flag:"encoding" info:"Encoding to use for transaction (rlp)"`
 	Output                string   `default:"" flag:"output,o" info:"Output location for transaction file"`
 }
 
@@ -93,6 +93,14 @@ var Cmd = &cobra.Command{
 		if conf.Payload != "" && conf.Code != "" {
 			cli.Exitf(1, "Both a partial transaction and Cadence code file provided, but cannot use both")
 		} else if conf.Payload != "" {
+			// Exit if any transaction construction flags provided
+			utils.AssertEmptyOnLoadingPayload(conf.Args, "arguments")
+			utils.AssertEmptyOnLoadingPayload(conf.Proposer, "proposer")
+			utils.AssertEmptyOnLoadingPayload(conf.PayerAddress, "payer-address")
+			if len(conf.AdditionalAuthorizers) > 0 {
+				cli.Exitf(1, "Loading transaction payload from file, but additional-authorizers provided which cannot be used")
+			}
+
 			tx = utils.LoadTransactionPayloadFromFile(conf.Payload)
 		} else {
 			// The additional authorizers and payer flags are only taken into account if we're

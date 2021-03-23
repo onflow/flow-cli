@@ -60,6 +60,8 @@ var Cmd = &cobra.Command{
 		if conf.Payload != "" && conf.Code != "" {
 			cli.Exitf(1, "Both a partial transaction and Cadence code file provided, but cannot use both")
 		} else if conf.Payload != "" {
+			utils.AssertEmptyOnLoadingPayload(conf.Args, "arguments")
+
 			tx = utils.LoadTransactionPayloadFromFile(conf.Payload)
 		} else {
 			tx = utils.NewTransactionWithCodeArgsAuthorizers(conf.Code, conf.Args, []string{signerAccount.Address.String()})
