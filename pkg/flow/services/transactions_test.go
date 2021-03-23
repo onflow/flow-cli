@@ -3,11 +3,10 @@ package services
 import (
 	"testing"
 
-	flow2 "github.com/onflow/flow-cli/pkg/flow"
-
-	"github.com/onflow/flow-go-sdk"
+	flowsdk "github.com/onflow/flow-go-sdk"
 	"github.com/stretchr/testify/assert"
 
+	"github.com/onflow/flow-cli/pkg/flow"
 	"github.com/onflow/flow-cli/pkg/flow/util"
 	"github.com/onflow/flow-cli/tests"
 	"github.com/onflow/flow-go-sdk/crypto"
@@ -16,7 +15,7 @@ import (
 func TestTransactions(t *testing.T) {
 	mock := &tests.MockGateway{}
 
-	project, err := flow2.InitProject(crypto.ECDSA_P256, crypto.SHA3_256)
+	project, err := flow.InitProject(crypto.ECDSA_P256, crypto.SHA3_256)
 	assert.NoError(t, err)
 
 	transactions := NewTransactions(mock, project, util.NewStdoutLogger(util.NoneLog))
@@ -25,13 +24,13 @@ func TestTransactions(t *testing.T) {
 		called := 0
 		txs := tests.NewTransaction()
 
-		mock.GetTransactionResultMock = func(tx *flow.Transaction) (*flow.TransactionResult, error) {
+		mock.GetTransactionResultMock = func(tx *flowsdk.Transaction) (*flowsdk.TransactionResult, error) {
 			called++
 			assert.Equal(t, tx.ID().String(), txs.ID().String())
 			return tests.NewTransactionResult(nil), nil
 		}
 
-		mock.GetTransactionMock = func(id flow.Identifier) (*flow.Transaction, error) {
+		mock.GetTransactionMock = func(id flowsdk.Identifier) (*flowsdk.Transaction, error) {
 			called++
 			return txs, nil
 		}
@@ -45,12 +44,12 @@ func TestTransactions(t *testing.T) {
 	t.Run("Send Transaction args", func(t *testing.T) {
 		called := 0
 
-		mock.GetTransactionResultMock = func(tx *flow.Transaction) (*flow.TransactionResult, error) {
+		mock.GetTransactionResultMock = func(tx *flowsdk.Transaction) (*flowsdk.TransactionResult, error) {
 			called++
 			return tests.NewTransactionResult(nil), nil
 		}
 
-		mock.SendTransactionMock = func(tx *flow.Transaction, signer *flow2.Account) (*flow.Transaction, error) {
+		mock.SendTransactionMock = func(tx *flowsdk.Transaction, signer *flow.Account) (*flowsdk.Transaction, error) {
 			called++
 			arg, err := tx.Argument(0)
 
@@ -70,12 +69,12 @@ func TestTransactions(t *testing.T) {
 	t.Run("Send Transaction JSON args", func(t *testing.T) {
 		called := 0
 
-		mock.GetTransactionResultMock = func(tx *flow.Transaction) (*flow.TransactionResult, error) {
+		mock.GetTransactionResultMock = func(tx *flowsdk.Transaction) (*flowsdk.TransactionResult, error) {
 			called++
 			return tests.NewTransactionResult(nil), nil
 		}
 
-		mock.SendTransactionMock = func(tx *flow.Transaction, signer *flow2.Account) (*flow.Transaction, error) {
+		mock.SendTransactionMock = func(tx *flowsdk.Transaction, signer *flow.Account) (*flowsdk.Transaction, error) {
 			called++
 			assert.Equal(t, signer.Address().String(), serviceAddress)
 			assert.Equal(t, len(string(tx.Script)), 209)

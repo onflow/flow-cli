@@ -22,9 +22,9 @@ import (
 	"context"
 	"time"
 
-	flow2 "github.com/onflow/flow-cli/pkg/flow"
+	"github.com/onflow/flow-cli/pkg/flow"
 
-	"github.com/onflow/flow-go-sdk"
+	flowsdk "github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/client"
 )
 
@@ -45,8 +45,8 @@ func NewSender(c *client.Client) *Sender {
 
 func (s *Sender) Send(
 	ctx context.Context,
-	tx *flow.Transaction,
-	signer *flow2.Account,
+	tx *flowsdk.Transaction,
+	signer *flow.Account,
 ) <-chan Result {
 
 	result := make(chan Result)
@@ -64,9 +64,9 @@ func (s *Sender) Send(
 
 func (s *Sender) send(
 	ctx context.Context,
-	tx *flow.Transaction,
-	signer *flow2.Account,
-) (*flow.TransactionResult, error) {
+	tx *flowsdk.Transaction,
+	signer *flow.Account,
+) (*flowsdk.TransactionResult, error) {
 
 	latestSealedBlock, err := s.client.GetLatestBlockHeader(ctx, true)
 	if err != nil {
@@ -103,14 +103,14 @@ func (s *Sender) send(
 
 func (s *Sender) waitForSeal(
 	ctx context.Context,
-	id flow.Identifier,
-) (*flow.TransactionResult, error) {
+	id flowsdk.Identifier,
+) (*flowsdk.TransactionResult, error) {
 	result, err := s.client.GetTransactionResult(ctx, id)
 	if err != nil {
 		return nil, err
 	}
 
-	for result.Status != flow.TransactionStatusSealed {
+	for result.Status != flowsdk.TransactionStatusSealed {
 		time.Sleep(defaultResultPollInterval)
 
 		result, err = s.client.GetTransactionResult(ctx, id)
@@ -122,7 +122,7 @@ func (s *Sender) waitForSeal(
 	return result, nil
 }
 
-func (s *Sender) getSequenceNumber(ctx context.Context, account *flow2.Account) (uint64, error) {
+func (s *Sender) getSequenceNumber(ctx context.Context, account *flow.Account) (uint64, error) {
 	accountResult, err := s.client.GetAccount(ctx, account.Address())
 	if err != nil {
 		return 0, err
@@ -136,7 +136,7 @@ func (s *Sender) getSequenceNumber(ctx context.Context, account *flow2.Account) 
 }
 
 type Result struct {
-	txResult *flow.TransactionResult
+	txResult *flowsdk.TransactionResult
 	err      error
 }
 
@@ -152,6 +152,6 @@ func (r *Result) Error() error {
 	return nil
 }
 
-func (r *Result) TransactionResult() *flow.TransactionResult {
+func (r *Result) TransactionResult() *flowsdk.TransactionResult {
 	return r.txResult
 }

@@ -22,27 +22,25 @@ import (
 	"fmt"
 	"strings"
 
-	flow2 "github.com/onflow/flow-cli/pkg/flow"
-
-	"github.com/onflow/flow-go-sdk/crypto"
-
+	"github.com/onflow/flow-cli/pkg/flow"
 	"github.com/onflow/flow-cli/pkg/flow/config"
 	"github.com/onflow/flow-cli/pkg/flow/gateway"
 	"github.com/onflow/flow-cli/pkg/flow/util"
-	"github.com/onflow/flow-go-sdk"
+	flowsdk "github.com/onflow/flow-go-sdk"
+	"github.com/onflow/flow-go-sdk/crypto"
 )
 
 // Scripts service handles all interactions for transactions
 type Transactions struct {
 	gateway gateway.Gateway
-	project *flow2.Project
+	project *flow.Project
 	logger  util.Logger
 }
 
 // NewTransactions create new transaction service
 func NewTransactions(
 	gateway gateway.Gateway,
-	project *flow2.Project,
+	project *flow.Project,
 	logger util.Logger,
 ) *Transactions {
 	return &Transactions{
@@ -58,7 +56,7 @@ func (t *Transactions) Send(
 	signerName string,
 	args []string,
 	argsJSON string,
-) (*flow.Transaction, *flow.TransactionResult, error) {
+) (*flowsdk.Transaction, *flowsdk.TransactionResult, error) {
 
 	signer := t.project.GetAccountByName(signerName)
 	if signer == nil {
@@ -75,9 +73,9 @@ func (t *Transactions) SendForAddress(
 	signerPrivateKey string,
 	args []string,
 	argsJSON string,
-) (*flow.Transaction, *flow.TransactionResult, error) {
+) (*flowsdk.Transaction, *flowsdk.TransactionResult, error) {
 
-	address := flow.HexToAddress(
+	address := flowsdk.HexToAddress(
 		strings.ReplaceAll(signerAddress, "0x", ""),
 	)
 
@@ -86,21 +84,21 @@ func (t *Transactions) SendForAddress(
 		return nil, nil, fmt.Errorf("private key is not correct")
 	}
 
-	account := flow2.AccountFromAddressAndKey(address, privateKey)
+	account := flow.AccountFromAddressAndKey(address, privateKey)
 
 	return t.send(transactionFilename, account, args, argsJSON)
 }
 
 func (t *Transactions) send(
 	transactionFilename string,
-	signer *flow2.Account,
+	signer *flow.Account,
 	args []string,
 	argsJSON string,
-) (*flow.Transaction, *flow.TransactionResult, error) {
+) (*flowsdk.Transaction, *flowsdk.TransactionResult, error) {
 
 	// if google kms account then sign in
 	if signer.DefaultKey().Type() == config.KeyTypeGoogleKMS {
-		err := flow2.GcloudApplicationSignin(signer)
+		err := flow.GcloudApplicationSignin(signer)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -113,11 +111,11 @@ func (t *Transactions) send(
 
 	t.logger.StartProgress("Sending Transaction...")
 
-	tx := flow.NewTransaction().
+	tx := flowsdk.NewTransaction().
 		SetScript(code).
 		AddAuthorizer(signer.Address())
 
-	transactionArguments, err := flow2.ParseArguments(args, argsJSON)
+	transactionArguments, err := flow.ParseArguments(args, argsJSON)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -150,8 +148,8 @@ func (t *Transactions) send(
 func (t *Transactions) GetStatus(
 	transactionID string,
 	waitSeal bool,
-) (*flow.Transaction, *flow.TransactionResult, error) {
-	txID := flow.HexToID(
+) (*flowsdk.Transaction, *flowsdk.TransactionResult, error) {
+	txID := flowsdk.HexToID(
 		strings.ReplaceAll(transactionID, "0x", ""),
 	)
 

@@ -3,27 +3,26 @@ package services
 import (
 	"testing"
 
-	flow2 "github.com/onflow/flow-cli/pkg/flow"
-
-	"github.com/onflow/flow-go-sdk"
-	"github.com/stretchr/testify/assert"
+	"github.com/onflow/flow-cli/pkg/flow"
 
 	"github.com/onflow/flow-cli/pkg/flow/util"
 	"github.com/onflow/flow-cli/tests"
+	flowsdk "github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestCollections(t *testing.T) {
 	mock := &tests.MockGateway{}
 
-	project, err := flow2.InitProject(crypto.ECDSA_P256, crypto.SHA3_256)
+	project, err := flow.InitProject(crypto.ECDSA_P256, crypto.SHA3_256)
 	assert.NoError(t, err)
 
 	collections := NewCollections(mock, project, util.NewStdoutLogger(util.InfoLog))
 
 	t.Run("Get Collection", func(t *testing.T) {
 		called := false
-		mock.GetCollectionMock = func(id flow.Identifier) (*flow.Collection, error) {
+		mock.GetCollectionMock = func(id flowsdk.Identifier) (*flowsdk.Collection, error) {
 			called = true
 			return tests.NewCollection(), nil
 		}

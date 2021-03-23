@@ -22,16 +22,13 @@ import (
 	"os"
 	"testing"
 
-	flow2 "github.com/onflow/flow-cli/pkg/flow"
-
-	"github.com/onflow/flow-go-sdk"
-
-	"github.com/onflow/flow-go/utils/io"
-
-	"github.com/onflow/flow-cli/pkg/flow/services"
+	"github.com/onflow/flow-cli/pkg/flow"
 
 	"github.com/onflow/flow-cli/pkg/flow/gateway"
+	"github.com/onflow/flow-cli/pkg/flow/services"
 	"github.com/onflow/flow-cli/pkg/flow/util"
+	flowsdk "github.com/onflow/flow-go-sdk"
+	"github.com/onflow/flow-go/utils/io"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -57,7 +54,7 @@ func TestAccount(t *testing.T) {
 	gw, err := gateway.NewGrpcGateway(host)
 	assert.NoError(t, err)
 
-	project, err := flow2.LoadProject([]string{conf})
+	project, err := flow.LoadProject([]string{conf})
 	assert.NoError(t, err)
 
 	accounts := services.NewAccounts(gw, project, logger)
@@ -136,7 +133,7 @@ func TestEvents(t *testing.T) {
 	gw, err := gateway.NewGrpcGateway(host)
 	assert.NoError(t, err)
 
-	project, err := flow2.LoadProject([]string{conf})
+	project, err := flow.LoadProject([]string{conf})
 	assert.NoError(t, err)
 
 	events := services.NewEvents(gw, project, logger)
@@ -157,7 +154,7 @@ func TestKeys(t *testing.T) {
 	gw, err := gateway.NewGrpcGateway(host)
 	assert.NoError(t, err)
 
-	project, err := flow2.LoadProject([]string{conf})
+	project, err := flow.LoadProject([]string{conf})
 	assert.NoError(t, err)
 
 	keys := services.NewKeys(gw, project, logger)
@@ -179,7 +176,7 @@ func TestProject(t *testing.T) {
 	gw, err := gateway.NewGrpcGateway(host)
 	assert.NoError(t, err)
 
-	project, err := flow2.LoadProject([]string{conf})
+	project, err := flow.LoadProject([]string{conf})
 	assert.NoError(t, err)
 
 	projects := services.NewProject(gw, project, logger)
@@ -203,7 +200,7 @@ func TestScripts(t *testing.T) {
 	gateway, err := gateway.NewGrpcGateway(host)
 	assert.NoError(t, err)
 
-	project, err := flow2.LoadProject([]string{conf})
+	project, err := flow.LoadProject([]string{conf})
 	assert.NoError(t, err)
 
 	scripts := services.NewScripts(gateway, project, logger)
@@ -231,11 +228,11 @@ func TestTransactions(t *testing.T) {
 	gw, err := gateway.NewGrpcGateway(host)
 	assert.NoError(t, err)
 
-	project, err := flow2.LoadProject([]string{conf})
+	project, err := flow.LoadProject([]string{conf})
 	assert.NoError(t, err)
 
 	transactions := services.NewTransactions(gw, project, logger)
-	var txID1 flow.Identifier
+	var txID1 flowsdk.Identifier
 
 	t.Run("Test Transactions", func(t *testing.T) {
 		tx, tr, err := transactions.Send("./transaction.cdc", emulatorAccount, []string{"String:Hello"}, "")

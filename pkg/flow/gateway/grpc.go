@@ -23,10 +23,9 @@ import (
 	"fmt"
 	"time"
 
-	flow2 "github.com/onflow/flow-cli/pkg/flow"
-
 	"github.com/onflow/cadence"
-	"github.com/onflow/flow-go-sdk"
+	"github.com/onflow/flow-cli/pkg/flow"
+	flowsdk "github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/client"
 	"google.golang.org/grpc"
 )
@@ -53,7 +52,7 @@ func NewGrpcGateway(host string) (*GrpcGateway, error) {
 }
 
 // GetAccount gets account by the address from flow
-func (g *GrpcGateway) GetAccount(address flow.Address) (*flow.Account, error) {
+func (g *GrpcGateway) GetAccount(address flowsdk.Address) (*flowsdk.Account, error) {
 	account, err := g.client.GetAccountAtLatestBlock(g.ctx, address)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to get account with address %s: %s", address, err)
@@ -64,7 +63,7 @@ func (g *GrpcGateway) GetAccount(address flow.Address) (*flow.Account, error) {
 
 // TODO: replace with txsender - much nicer implemented
 // SendTransaction send a transaction to flow
-func (g *GrpcGateway) SendTransaction(tx *flow.Transaction, signer *flow2.Account) (*flow.Transaction, error) {
+func (g *GrpcGateway) SendTransaction(tx *flowsdk.Transaction, signer *flow.Account) (*flowsdk.Transaction, error) {
 	account, err := g.GetAccount(signer.Address())
 	if err != nil {
 		return nil, fmt.Errorf("Failed to get account with address %s: 0x%s", signer.Address(), err)
@@ -96,18 +95,18 @@ func (g *GrpcGateway) SendTransaction(tx *flow.Transaction, signer *flow2.Accoun
 }
 
 // GetTransaction gets transaction by id
-func (g *GrpcGateway) GetTransaction(id flow.Identifier) (*flow.Transaction, error) {
+func (g *GrpcGateway) GetTransaction(id flowsdk.Identifier) (*flowsdk.Transaction, error) {
 	return g.client.GetTransaction(g.ctx, id)
 }
 
 // GetTransactionResult gets result of a transaction on flow
-func (g *GrpcGateway) GetTransactionResult(tx *flow.Transaction, waitSeal bool) (*flow.TransactionResult, error) {
+func (g *GrpcGateway) GetTransactionResult(tx *flowsdk.Transaction, waitSeal bool) (*flowsdk.TransactionResult, error) {
 	result, err := g.client.GetTransactionResult(g.ctx, tx.ID())
 	if err != nil {
 		return nil, err
 	}
 
-	if result.Status != flow.TransactionStatusSealed && waitSeal {
+	if result.Status != flowsdk.TransactionStatusSealed && waitSeal {
 		time.Sleep(time.Second)
 		return g.GetTransactionResult(tx, waitSeal)
 	}
@@ -127,17 +126,17 @@ func (g *GrpcGateway) ExecuteScript(script []byte, arguments []cadence.Value) (c
 }
 
 // GetLatestBlock gets latest block from flow
-func (g *GrpcGateway) GetLatestBlock() (*flow.Block, error) {
+func (g *GrpcGateway) GetLatestBlock() (*flowsdk.Block, error) {
 	return g.client.GetLatestBlock(g.ctx, true)
 }
 
 // GetBlockByID get block by id from flow
-func (g *GrpcGateway) GetBlockByID(id flow.Identifier) (*flow.Block, error) {
+func (g *GrpcGateway) GetBlockByID(id flowsdk.Identifier) (*flowsdk.Block, error) {
 	return g.client.GetBlockByID(g.ctx, id)
 }
 
 // GetBlockByHeight get block by id from flow
-func (g *GrpcGateway) GetBlockByHeight(height uint64) (*flow.Block, error) {
+func (g *GrpcGateway) GetBlockByHeight(height uint64) (*flowsdk.Block, error) {
 	return g.client.GetBlockByHeight(g.ctx, height)
 }
 
@@ -161,6 +160,6 @@ func (g *GrpcGateway) GetEvents(
 }
 
 // GetCollection get collection by id from flow
-func (g *GrpcGateway) GetCollection(id flow.Identifier) (*flow.Collection, error) {
+func (g *GrpcGateway) GetCollection(id flowsdk.Identifier) (*flowsdk.Collection, error) {
 	return g.client.GetCollection(g.ctx, id)
 }

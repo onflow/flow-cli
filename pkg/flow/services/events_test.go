@@ -3,14 +3,12 @@ package services
 import (
 	"testing"
 
-	flow2 "github.com/onflow/flow-cli/pkg/flow"
+	flowsdk "github.com/onflow/flow-go-sdk"
 
-	"github.com/onflow/flow-go-sdk"
-
-	"github.com/onflow/flow-go-sdk/client"
-
+	"github.com/onflow/flow-cli/pkg/flow"
 	"github.com/onflow/flow-cli/pkg/flow/util"
 	"github.com/onflow/flow-cli/tests"
+	"github.com/onflow/flow-go-sdk/client"
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/stretchr/testify/assert"
 )
@@ -18,7 +16,7 @@ import (
 func TestEvents(t *testing.T) {
 	mock := &tests.MockGateway{}
 
-	project, err := flow2.InitProject(crypto.ECDSA_P256, crypto.SHA3_256)
+	project, err := flow.InitProject(crypto.ECDSA_P256, crypto.SHA3_256)
 	assert.NoError(t, err)
 
 	events := NewEvents(mock, project, util.NewStdoutLogger(util.InfoLog))
@@ -43,7 +41,7 @@ func TestEvents(t *testing.T) {
 			return nil, nil
 		}
 
-		mock.GetLatestBlockMock = func() (*flow.Block, error) {
+		mock.GetLatestBlockMock = func() (*flowsdk.Block, error) {
 			called++
 			return tests.NewBlock(), nil
 		}

@@ -20,20 +20,20 @@ package gateway
 
 import (
 	"github.com/onflow/cadence"
-	flow2 "github.com/onflow/flow-cli/pkg/flow"
-	"github.com/onflow/flow-go-sdk"
+	"github.com/onflow/flow-cli/pkg/flow"
+	flowsdk "github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/client"
 )
 
 type Gateway interface {
-	GetAccount(flow.Address) (*flow.Account, error)
-	SendTransaction(*flow.Transaction, *flow2.Account) (*flow.Transaction, error)
-	GetTransactionResult(*flow.Transaction, bool) (*flow.TransactionResult, error)
-	GetTransaction(flow.Identifier) (*flow.Transaction, error)
+	GetAccount(flowsdk.Address) (*flowsdk.Account, error)
+	SendTransaction(*flowsdk.Transaction, *flow.Account) (*flowsdk.Transaction, error)
+	GetTransactionResult(*flowsdk.Transaction, bool) (*flowsdk.TransactionResult, error)
+	GetTransaction(flowsdk.Identifier) (*flowsdk.Transaction, error)
 	ExecuteScript([]byte, []cadence.Value) (cadence.Value, error)
-	GetLatestBlock() (*flow.Block, error)
-	GetBlockByHeight(uint64) (*flow.Block, error)
-	GetBlockByID(flow.Identifier) (*flow.Block, error)
+	GetLatestBlock() (*flowsdk.Block, error)
+	GetBlockByHeight(uint64) (*flowsdk.Block, error)
+	GetBlockByID(flowsdk.Identifier) (*flowsdk.Block, error)
 	GetEvents(string, uint64, uint64) ([]client.BlockEvents, error)
-	GetCollection(flow.Identifier) (*flow.Collection, error)
+	GetCollection(flowsdk.Identifier) (*flowsdk.Collection, error)
 }

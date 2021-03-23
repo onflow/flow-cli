@@ -21,12 +21,11 @@ package gateway
 import (
 	"fmt"
 
-	flow2 "github.com/onflow/flow-cli/pkg/flow"
+	"github.com/onflow/flow-cli/pkg/flow"
 
 	"github.com/onflow/cadence"
 	emulator "github.com/onflow/flow-emulator"
-	"github.com/onflow/flow-go-sdk"
-
+	flowsdk "github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/client"
 )
 
@@ -48,19 +47,19 @@ func newEmulator() *emulator.Blockchain {
 	return b
 }
 
-func (g *EmulatorGateway) GetAccount(address flow.Address) (*flow.Account, error) {
+func (g *EmulatorGateway) GetAccount(address flowsdk.Address) (*flowsdk.Account, error) {
 	return g.emulator.GetAccount(address)
 }
 
-func (g *EmulatorGateway) SendTransaction(tx *flow.Transaction, signer *flow2.Account) (*flow.Transaction, error) {
+func (g *EmulatorGateway) SendTransaction(tx *flowsdk.Transaction, signer *flow.Account) (*flowsdk.Transaction, error) {
 	return nil, fmt.Errorf("Not Supported Yet")
 }
 
-func (g *EmulatorGateway) GetTransactionResult(tx *flow.Transaction, waitSeal bool) (*flow.TransactionResult, error) {
+func (g *EmulatorGateway) GetTransactionResult(tx *flowsdk.Transaction, waitSeal bool) (*flowsdk.TransactionResult, error) {
 	return g.emulator.GetTransactionResult(tx.ID())
 }
 
-func (g *EmulatorGateway) GetTransaction(id flow.Identifier) (*flow.Transaction, error) {
+func (g *EmulatorGateway) GetTransaction(id flowsdk.Identifier) (*flowsdk.Transaction, error) {
 	return g.emulator.GetTransaction(id)
 }
 
@@ -68,7 +67,7 @@ func (g *EmulatorGateway) ExecuteScript(script []byte, arguments []cadence.Value
 	return nil, fmt.Errorf("Not Supported Yet")
 }
 
-func (g *EmulatorGateway) GetLatestBlock() (*flow.Block, error) {
+func (g *EmulatorGateway) GetLatestBlock() (*flowsdk.Block, error) {
 	return nil, fmt.Errorf("Not Supported Yet")
 }
 
@@ -76,14 +75,14 @@ func (g *EmulatorGateway) GetEvents(string, uint64, uint64) ([]client.BlockEvent
 	return nil, fmt.Errorf("Not Supported Yet")
 }
 
-func (g *EmulatorGateway) GetCollection(id flow.Identifier) (*flow.Collection, error) {
+func (g *EmulatorGateway) GetCollection(id flowsdk.Identifier) (*flowsdk.Collection, error) {
 	return nil, fmt.Errorf("Not Supported Yet")
 }
 
-func (g *EmulatorGateway) GetBlockByID(id flow.Identifier) (*flow.Block, error) {
+func (g *EmulatorGateway) GetBlockByID(id flowsdk.Identifier) (*flowsdk.Block, error) {
 	return nil, fmt.Errorf("Not Supported Yet")
 }
 
-func (g *EmulatorGateway) GetBlockByHeight(height uint64) (*flow.Block, error) {
+func (g *EmulatorGateway) GetBlockByHeight(height uint64) (*flowsdk.Block, error) {
 	return nil, fmt.Errorf("Not Supported Yet")
 }
