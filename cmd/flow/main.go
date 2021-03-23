@@ -54,7 +54,7 @@ func main() {
 	cmd.AddCommand(collections.Cmd)
 	cmd.AddCommand(project.Cmd)
 
-	command.InitFlags(*cmd)
+	command.InitFlags(cmd)
 
 	if err := cmd.Execute(); err != nil {
 		flow.Exit(1, err.Error())

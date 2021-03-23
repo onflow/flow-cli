@@ -59,7 +59,7 @@ var (
 )
 
 // InitFlags init all the global persistent flags
-func InitFlags(cmd cobra.Command) {
+func InitFlags(cmd *cobra.Command) {
 	cmd.PersistentFlags().StringVarP(
 		&FilterFlag,
 		"filter",
@@ -134,7 +134,7 @@ func (c Command) Add(parent *cobra.Command) {
 		// initialize project but ignore error since config can be missing
 		project, _ := flow.LoadProject(flow.ConfigPath)
 
-		clientGateway, err := createGateway(cmd, project)
+		clientGateway, err := createGateway(project)
 		handleError("Gateway Error", err)
 
 		logger := createLogger()
@@ -161,7 +161,7 @@ func (c Command) Add(parent *cobra.Command) {
 }
 
 // createGateway creates a gateway to be used, defaults to grpc but can support others
-func createGateway(cmd *cobra.Command, project *flow.Project) (gateway.Gateway, error) {
+func createGateway(project *flow.Project) (gateway.Gateway, error) {
 	// create in memory emulator client
 	if RunEmulatorFlag {
 		return gateway.NewEmulatorGateway(), nil
