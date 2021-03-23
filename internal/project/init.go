@@ -51,7 +51,6 @@ var InitCommand = &command.Command{
 	Run: func(
 		cmd *cobra.Command,
 		args []string,
-		proj *flow.Project,
 		services *services.Services,
 	) (command.Result, error) {
 		project, err := services.Project.Init(
