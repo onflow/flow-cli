@@ -22,11 +22,11 @@ import (
 	"os"
 	"testing"
 
-	"github.com/onflow/flow-cli/pkg/flow/output"
-	"github.com/onflow/flow-cli/pkg/flow/project"
+	"github.com/onflow/flow-cli/pkg/flowcli/output"
+	"github.com/onflow/flow-cli/pkg/flowcli/project"
 
-	"github.com/onflow/flow-cli/pkg/flow/gateway"
-	"github.com/onflow/flow-cli/pkg/flow/services"
+	"github.com/onflow/flow-cli/pkg/flowcli/gateway"
+	"github.com/onflow/flow-cli/pkg/flowcli/services"
 	flowsdk "github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go/utils/io"
 	"github.com/stretchr/testify/assert"

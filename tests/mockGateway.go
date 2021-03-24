@@ -2,8 +2,8 @@ package tests
 
 import (
 	"github.com/onflow/cadence"
-	"github.com/onflow/flow-cli/pkg/flow/gateway"
-	"github.com/onflow/flow-cli/pkg/flow/project"
+	"github.com/onflow/flow-cli/pkg/flowcli/gateway"
+	"github.com/onflow/flow-cli/pkg/flowcli/project"
 	flowsdk "github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/client"
 )

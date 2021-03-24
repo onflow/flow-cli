@@ -32,7 +32,7 @@ import (
 	"github.com/onflow/flow-cli/internal/scripts"
 	"github.com/onflow/flow-cli/internal/transactions"
 	"github.com/onflow/flow-cli/internal/version"
-	"github.com/onflow/flow-cli/pkg/flow/util"
+	"github.com/onflow/flow-cli/pkg/flowcli/util"
 	"github.com/spf13/cobra"
 )
 

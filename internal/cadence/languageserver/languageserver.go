@@ -21,7 +21,7 @@ package languageserver
 import (
 	"log"
 
-	"github.com/onflow/flow-cli/pkg/flow/util"
+	"github.com/onflow/flow-cli/pkg/flowcli/util"
 
 	"github.com/onflow/cadence/languageserver"
 	"github.com/psiemens/sconfig"

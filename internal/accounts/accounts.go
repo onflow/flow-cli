@@ -23,7 +23,7 @@ import (
 	"fmt"
 	"text/tabwriter"
 
-	flowsdk "github.com/onflow/flow-go-sdk"
+	"github.com/onflow/flow-go-sdk"
 	"github.com/spf13/cobra"
 )
 
@@ -44,7 +44,7 @@ func init() {
 
 // AccountResult represent result from all account commands
 type AccountResult struct {
-	*flowsdk.Account
+	*flow.Account
 	showCode bool
 }
 

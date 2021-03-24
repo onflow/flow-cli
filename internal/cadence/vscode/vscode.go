@@ -24,7 +24,7 @@ import (
 	"os"
 	"os/exec"
 
-	"github.com/onflow/flow-cli/pkg/flow/util"
+	"github.com/onflow/flow-cli/pkg/flowcli/util"
 
 	"github.com/spf13/cobra"
 )
