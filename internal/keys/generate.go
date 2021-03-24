@@ -43,12 +43,12 @@ var GenerateCommand = &command.Command{
 		globalFlags command.GlobalFlags,
 		services *services.Services,
 	) (command.Result, error) {
-		keys, err := services.Keys.Generate(generateFlags.Seed, generateFlags.KeySigAlgo)
+		privateKey, err := services.Keys.Generate(generateFlags.Seed, generateFlags.KeySigAlgo)
 		if err != nil {
 			return nil, err
 		}
 
-		pubKey := keys.PublicKey()
-		return &KeyResult{privateKey: keys, publicKey: &pubKey}, nil
+		pubKey := privateKey.PublicKey()
+		return &KeyResult{privateKey: privateKey, publicKey: &pubKey}, nil
 	},
 }
