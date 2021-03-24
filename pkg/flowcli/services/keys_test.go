@@ -3,12 +3,13 @@ package services
 import (
 	"testing"
 
+	"github.com/onflow/flow-cli/tests"
+
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/onflow/flow-cli/pkg/flowcli/output"
 	"github.com/onflow/flow-cli/pkg/flowcli/project"
-	"github.com/onflow/flow-cli/tests"
 )
 
 func TestKeys(t *testing.T) {
@@ -36,7 +37,7 @@ func TestKeys(t *testing.T) {
 	t.Run("Fail generate keys, too short seed", func(t *testing.T) {
 		_, err := keys.Generate("im_short", "ECDSA_P256")
 
-		assert.Equal(t, err.Error(), "crypto: insufficient seed length 8, must be at least 32 bytes for ECDSA_P256")
+		assert.Equal(t, err.Error(), "failed to generate private key: crypto: insufficient seed length 8, must be at least 32 bytes for ECDSA_P256")
 	})
 
 	t.Run("Fail generate keys, invalid sig algo", func(t *testing.T) {
