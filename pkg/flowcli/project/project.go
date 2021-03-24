@@ -106,6 +106,7 @@ const (
 	DefaultEmulatorHost               = "127.0.0.1:3569"
 )
 
+// defaultConfig creates new default configuration
 func defaultConfig(defaultEmulatorServiceAccount *Account) *config.Config {
 	return &config.Config{
 		Emulators: config.Emulators{{
@@ -121,6 +122,7 @@ func defaultConfig(defaultEmulatorServiceAccount *Account) *config.Config {
 	}
 }
 
+// newProject creates new project from configuration passed
 func newProject(conf *config.Config, composer *config.Loader) (*Project, error) {
 	accounts, err := accountsFromConfig(conf)
 	if err != nil {
@@ -152,32 +154,28 @@ func (p *Project) ContractConflictExists(network string) bool {
 	return len(all) != len(uniq)
 }
 
-func (p *Project) DefaultHost(network string) string {
-	if network == "" {
-		network = DefaultEmulatorNetworkName
-	}
-
-	return p.conf.Networks.GetByName(network).Host
-}
-
+// GetNetworkByName returns a network by name
 func (p *Project) GetNetworkByName(name string) *config.Network {
 	return p.conf.Networks.GetByName(name)
 }
 
-func (p *Project) Host(network string) string {
-	return p.conf.Networks.GetByName(network).Host
-}
-
+// EmulatorServiceAccount gets a service account for emulator
 func (p *Project) EmulatorServiceAccount() (*Account, error) {
 	emulator := p.conf.Emulators.GetDefault()
 	acc := p.conf.Accounts.GetByName(emulator.ServiceAccount)
 	return AccountFromConfig(*acc)
 }
 
+// SetEmulatorServiceKey sets emulator service key
 func (p *Project) SetEmulatorServiceKey(privateKey crypto.PrivateKey) {
-	acc := p.accounts[0]
-	key := acc.DefaultKey()
-	acc.keys[0] = NewHexAccountKeyFromPrivateKey(key.Index(), key.HashAlgo(), privateKey)
+	acc := p.GetAccountByName(DefaultEmulatorServiceAccountName)
+	acc.SetDefaultKey(
+		NewHexAccountKeyFromPrivateKey(
+			acc.DefaultKey().Index(),
+			acc.DefaultKey().HashAlgo(),
+			privateKey,
+		),
+	)
 }
 
 func (p *Project) GetContractsByNetwork(network string) []Contract {
