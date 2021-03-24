@@ -37,7 +37,6 @@ var GetCommand = &command.Command{
 	Cmd: &cobra.Command{
 		Use:   "get <address>",
 		Short: "Gets an account by address",
-		Long:  `Gets an account by address (address, balance, keys, code)`,
 		Args:  cobra.ExactArgs(1),
 	},
 	Flags: &getFlags,
