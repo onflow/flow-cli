@@ -27,10 +27,10 @@ func TestAccounts(t *testing.T) {
 
 	mock := &tests.MockGateway{}
 
-	project, err := project.InitProject(crypto.ECDSA_P256, crypto.SHA3_256)
+	proj, err := project.InitProject(crypto.ECDSA_P256, crypto.SHA3_256)
 	assert.NoError(t, err)
 
-	accounts := NewAccounts(mock, project, output.NewStdoutLogger(output.NoneLog))
+	accounts := NewAccounts(mock, proj, output.NewStdoutLogger(output.NoneLog))
 
 	t.Run("Get an Account", func(t *testing.T) {
 		mock.GetAccountMock = func(address flowsdk.Address) (*flowsdk.Account, error) {
