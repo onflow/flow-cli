@@ -37,11 +37,18 @@ import (
 
 var DefaultConfigPath = "flow.json"
 
-// Project has all the funcionality to manage project
+// Project has all the functionality to manage project
 type Project struct {
 	composer *config.Loader
 	conf     *config.Config
 	accounts []*Account
+}
+
+// Contract has all the functionality to manage contracts
+type Contract struct {
+	Name   string
+	Source string
+	Target flow.Address
 }
 
 // Load loads configuration and setup the project
@@ -178,6 +185,7 @@ func (p *Project) SetEmulatorServiceKey(privateKey crypto.PrivateKey) {
 	)
 }
 
+// GetContractsByNetwork return all contract for network
 func (p *Project) GetContractsByNetwork(network string) []Contract {
 	contracts := make([]Contract, 0)
 
@@ -202,6 +210,7 @@ func (p *Project) GetContractsByNetwork(network string) []Contract {
 	return contracts
 }
 
+// GetAllAccountNames gets all account names
 func (p *Project) GetAllAccountNames() []string {
 	names := make([]string, 0)
 
@@ -214,6 +223,7 @@ func (p *Project) GetAllAccountNames() []string {
 	return names
 }
 
+// GetAccountByName returns account by name
 func (p *Project) GetAccountByName(name string) *Account {
 	var account *Account
 
@@ -226,10 +236,12 @@ func (p *Project) GetAccountByName(name string) *Account {
 	return account
 }
 
+// AddAccount adds account
 func (p *Project) AddAccount(account *Account) {
 	p.accounts = append(p.accounts, account)
 }
 
+// AddOrUpdateAccount addds or updates account
 func (p *Project) AddOrUpdateAccount(account *Account) {
 	for i, existingAccount := range p.accounts {
 		if existingAccount.name == account.name {
@@ -241,6 +253,7 @@ func (p *Project) AddOrUpdateAccount(account *Account) {
 	p.accounts = append(p.accounts, account)
 }
 
+// GetAccountByAddress adds new account by address
 func (p *Project) GetAccountByAddress(address string) *Account {
 	for _, account := range p.accounts {
 		if account.address.String() == strings.ReplaceAll(address, "0x", "") {
@@ -251,6 +264,7 @@ func (p *Project) GetAccountByAddress(address string) *Account {
 	return nil
 }
 
+// GetAliases gets all deployment aliases for network
 func (p *Project) GetAliases(network string) map[string]string {
 	aliases := make(map[string]string)
 
@@ -262,10 +276,4 @@ func (p *Project) GetAliases(network string) map[string]string {
 	}
 
 	return aliases
-}
-
-type Contract struct {
-	Name   string
-	Source string
-	Target flow.Address
 }

@@ -24,6 +24,10 @@ func (a *Account) DefaultKey() AccountKey {
 	return a.keys[0]
 }
 
+func (a *Account) SetDefaultKey(key AccountKey) {
+	a.keys[0] = key
+}
+
 func accountsFromConfig(conf *config.Config) ([]*Account, error) {
 	accounts := make([]*Account, 0, len(conf.Accounts))
 

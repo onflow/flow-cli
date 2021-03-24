@@ -352,7 +352,7 @@ func Test_AccountByNameSimple(t *testing.T) {
 
 func Test_HostSimple(t *testing.T) {
 	p := generateSimpleProject()
-	host := p.Host("emulator")
+	host := p.GetNetworkByName("emulator").Host
 
 	assert.Equal(t, host, "127.0.0.1.3569")
 }
@@ -433,7 +433,7 @@ func Test_AccountByNameComplex(t *testing.T) {
 
 func Test_HostComplex(t *testing.T) {
 	p := generateComplexProject()
-	host := p.Host("emulator")
+	host := p.GetNetworkByName("emulator").Host
 
 	assert.Equal(t, host, "127.0.0.1.3569")
 }

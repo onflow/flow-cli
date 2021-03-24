@@ -192,7 +192,7 @@ func resolveHost(proj *project.Project, hostFlag string, networkFlag string) (st
 			return "", fmt.Errorf("provided network with name %s doesn't exists in condiguration", networkFlag)
 		}
 
-		host = proj.Host(networkFlag)
+		host = proj.GetNetworkByName(networkFlag).Host
 	} else if host == "" {
 		host = project.DefaultEmulatorHost
 	}
