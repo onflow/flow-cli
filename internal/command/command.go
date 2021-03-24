@@ -137,13 +137,13 @@ func InitFlags(cmd *cobra.Command) {
 func (c Command) Add(parent *cobra.Command) {
 	c.Cmd.RunE = func(cmd *cobra.Command, args []string) error {
 		// initialize project but ignore error since config can be missing
-		project, err := project.LoadProject(util.ConfigPath)
+		proj, err := project.LoadProject(util.ConfigPath)
 		// here we ignore if config does not exist as some commands don't require it
 		if !errors.Is(err, config.ErrDoesNotExist) {
 			handleError("Config Error", err)
 		}
 
-		host, err := resolveHost(project, HostFlag, NetworkFlag)
+		host, err := resolveHost(proj, HostFlag, NetworkFlag)
 		handleError("Host Error", err)
 
 		clientGateway, err := createGateway(host)
@@ -151,7 +151,7 @@ func (c Command) Add(parent *cobra.Command) {
 
 		logger := createLogger(LogFlag, FormatFlag)
 
-		service := services.NewServices(clientGateway, project, logger)
+		service := services.NewServices(clientGateway, proj, logger)
 
 		// run command
 		result, err := c.Run(cmd, args, service)

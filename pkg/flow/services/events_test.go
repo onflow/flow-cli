@@ -17,10 +17,10 @@ import (
 func TestEvents(t *testing.T) {
 	mock := &tests.MockGateway{}
 
-	project, err := project.InitProject(crypto.ECDSA_P256, crypto.SHA3_256)
+	proj, err := project.InitProject(crypto.ECDSA_P256, crypto.SHA3_256)
 	assert.NoError(t, err)
 
-	events := NewEvents(mock, project, output.NewStdoutLogger(output.InfoLog))
+	events := NewEvents(mock, proj, output.NewStdoutLogger(output.InfoLog))
 
 	t.Run("Get Events", func(t *testing.T) {
 		called := false

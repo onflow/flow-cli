@@ -39,17 +39,17 @@ type Services struct {
 // NewServices create new services with gateway and project
 func NewServices(
 	gateway gateway.Gateway,
-	project *project.Project,
+	proj *project.Project,
 	logger output.Logger,
 ) *Services {
 	return &Services{
-		Accounts:     NewAccounts(gateway, project, logger),
-		Scripts:      NewScripts(gateway, project, logger),
-		Transactions: NewTransactions(gateway, project, logger),
-		Keys:         NewKeys(gateway, project, logger),
-		Events:       NewEvents(gateway, project, logger),
-		Collections:  NewCollections(gateway, project, logger),
-		Project:      NewProject(gateway, project, logger),
-		Blocks:       NewBlocks(gateway, project, logger),
+		Accounts:     NewAccounts(gateway, proj, logger),
+		Scripts:      NewScripts(gateway, proj, logger),
+		Transactions: NewTransactions(gateway, proj, logger),
+		Keys:         NewKeys(gateway, proj, logger),
+		Events:       NewEvents(gateway, proj, logger),
+		Collections:  NewCollections(gateway, proj, logger),
+		Project:      NewProject(gateway, proj, logger),
+		Blocks:       NewBlocks(gateway, proj, logger),
 	}
 }

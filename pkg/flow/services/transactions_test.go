@@ -16,10 +16,10 @@ import (
 func TestTransactions(t *testing.T) {
 	mock := &tests.MockGateway{}
 
-	project, err := project.InitProject(crypto.ECDSA_P256, crypto.SHA3_256)
+	proj, err := project.InitProject(crypto.ECDSA_P256, crypto.SHA3_256)
 	assert.NoError(t, err)
 
-	transactions := NewTransactions(mock, project, output.NewStdoutLogger(output.NoneLog))
+	transactions := NewTransactions(mock, proj, output.NewStdoutLogger(output.NoneLog))
 
 	t.Run("Get Transaction", func(t *testing.T) {
 		called := 0

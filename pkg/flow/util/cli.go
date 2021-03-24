@@ -82,12 +82,12 @@ func GcloudApplicationSignin(account *project.Account) error {
 		return err
 	}
 
-	project := kms.ProjectID
-	if len(project) == 0 {
+	proj := kms.ProjectID
+	if len(proj) == 0 {
 		return fmt.Errorf("could not get GOOGLE_APPLICATION_CREDENTIALS, no google service account JSON provided but private key type is KMS for account %s", account.Address())
 	}
 
-	loginCmd := exec.Command("gcloud", "auth", "application-default", "login", fmt.Sprintf("--project=%s", project))
+	loginCmd := exec.Command("gcloud", "auth", "application-default", "login", fmt.Sprintf("--project=%s", proj))
 
 	output, err := loginCmd.CombinedOutput()
 	if err != nil {

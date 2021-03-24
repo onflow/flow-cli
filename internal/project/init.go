@@ -23,13 +23,12 @@ import (
 	"fmt"
 	"text/tabwriter"
 
-	"github.com/onflow/flow-cli/pkg/flow/project"
-	"github.com/onflow/flow-cli/pkg/flow/util"
+	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
-
+	"github.com/onflow/flow-cli/pkg/flow/project"
 	"github.com/onflow/flow-cli/pkg/flow/services"
-	"github.com/spf13/cobra"
+	"github.com/onflow/flow-cli/pkg/flow/util"
 )
 
 type flagsInit struct {
@@ -52,7 +51,7 @@ var InitCommand = &command.Command{
 		args []string,
 		services *services.Services,
 	) (command.Result, error) {
-		project, err := services.Project.Init(
+		proj, err := services.Project.Init(
 			initFlag.Reset,
 			initFlag.ServiceKeySigAlgo,
 			initFlag.ServiceKeyHashAlgo,
@@ -62,7 +61,7 @@ var InitCommand = &command.Command{
 			return nil, err
 		}
 
-		return &InitResult{project}, nil
+		return &InitResult{proj}, nil
 	},
 }
 

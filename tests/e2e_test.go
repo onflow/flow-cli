@@ -154,10 +154,10 @@ func TestKeys(t *testing.T) {
 	gw, err := gateway.NewGrpcGateway(host)
 	assert.NoError(t, err)
 
-	project, err := project.LoadProject([]string{conf})
+	proj, err := project.LoadProject([]string{conf})
 	assert.NoError(t, err)
 
-	keys := services.NewKeys(gw, project, logger)
+	keys := services.NewKeys(gw, proj, logger)
 
 	t.Run("Generate keys", func(t *testing.T) {
 		key, err := keys.Generate("", "ECDSA_P256")
