@@ -44,6 +44,7 @@ import (
 type RunCommand func(
 	*cobra.Command,
 	[]string,
+	GlobalFlags,
 	*services.Services,
 ) (Result, error)
 
@@ -53,63 +54,73 @@ type Command struct {
 	Run   RunCommand
 }
 
-var (
-	FilterFlag      = ""
-	FormatFlag      = ""
-	SaveFlag        = ""
-	RunEmulatorFlag = false
-	HostFlag        = ""
-	LogFlag         = "info"
-	NetworkFlag     = ""
-)
+type GlobalFlags struct {
+	Filter      string
+	Format      string
+	Save        string
+	RunEmulator bool
+	Host        string
+	Log         string
+	Network     string
+}
+
+var flags = GlobalFlags{
+	Filter:      "",
+	Format:      "",
+	Save:        "",
+	RunEmulator: false,
+	Host:        "",
+	Log:         "info",
+	Network:     "",
+}
 
 // InitFlags init all the global persistent flags
 func InitFlags(cmd *cobra.Command) {
 	cmd.PersistentFlags().StringVarP(
-		&FilterFlag,
+		&flags.Filter,
 		"filter",
 		"x",
-		FilterFlag,
+		flags.Filter,
 		"Filter result values by property name",
 	)
 
 	cmd.PersistentFlags().StringVarP(
-		&HostFlag,
+		&flags.Host,
 		"host",
 		"",
-		HostFlag,
+		flags.Host,
 		"Flow Access API host address",
 	)
 
 	cmd.PersistentFlags().StringVarP(
-		&FormatFlag,
+		&flags.Format,
 		"output",
 		"o",
-		FormatFlag,
+		flags.Format,
 		"Output format, values (json, inline)",
 	)
 
 	cmd.PersistentFlags().StringVarP(
-		&SaveFlag,
+		&flags.Save,
 		"save",
 		"s",
-		SaveFlag,
+		flags.Save,
 		"Save result to a filename",
 	)
 
 	cmd.PersistentFlags().StringVarP(
-		&LogFlag,
+		&flags.Log,
 		"log",
 		"l",
-		LogFlag,
+		flags.Log,
 		"Log level verbosity, values (none, error, debug)",
 	)
 
 	cmd.PersistentFlags().BoolVarP(
-		&RunEmulatorFlag,
+		&flags.RunEmulator,
 		"emulator",
 		"e",
-		RunEmulatorFlag,
+		flags.RunEmulator,
 		"Run in-memory emulator",
 	)
 
@@ -122,10 +133,10 @@ func InitFlags(cmd *cobra.Command) {
 	)
 
 	cmd.PersistentFlags().StringVarP(
-		&NetworkFlag,
+		&flags.Network,
 		"network",
 		"n",
-		NetworkFlag,
+		flags.Network,
 		"Network from configuration file",
 	)
 }
@@ -143,26 +154,26 @@ func (c Command) Add(parent *cobra.Command) {
 			handleError("Config Error", err)
 		}
 
-		host, err := resolveHost(proj, HostFlag, NetworkFlag)
+		host, err := resolveHost(proj, flags.Host, flags.Network)
 		handleError("Host Error", err)
 
 		clientGateway, err := createGateway(host)
 		handleError("Gateway Error", err)
 
-		logger := createLogger(LogFlag, FormatFlag)
+		logger := createLogger(flags.Log, flags.Format)
 
 		service := services.NewServices(clientGateway, proj, logger)
 
 		// run command
-		result, err := c.Run(cmd, args, service)
+		result, err := c.Run(cmd, args, flags, service)
 		handleError("Command Error", err)
 
 		// format output result
-		formattedResult, err := formatResult(result, FilterFlag, FormatFlag)
+		formattedResult, err := formatResult(result, flags.Filter, flags.Format)
 		handleError("Result", err)
 
 		// output result
-		err = outputResult(formattedResult, SaveFlag)
+		err = outputResult(formattedResult, flags.Save)
 		handleError("Output Error", err)
 
 		return nil
@@ -175,7 +186,7 @@ func (c Command) Add(parent *cobra.Command) {
 // createGateway creates a gateway to be used, defaults to grpc but can support others
 func createGateway(host string) (gateway.Gateway, error) {
 	// create in memory emulator client
-	if RunEmulatorFlag {
+	if flags.RunEmulator {
 		return gateway.NewEmulatorGateway(), nil
 	}
 

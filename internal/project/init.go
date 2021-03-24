@@ -49,6 +49,7 @@ var InitCommand = &command.Command{
 	Run: func(
 		cmd *cobra.Command,
 		args []string,
+		globalFlags command.GlobalFlags,
 		services *services.Services,
 	) (command.Result, error) {
 		proj, err := services.Project.Init(

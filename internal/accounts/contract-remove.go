@@ -41,6 +41,7 @@ var RemoveCommand = &command.Command{
 	Run: func(
 		cmd *cobra.Command,
 		args []string,
+		globalFlags command.GlobalFlags,
 		services *services.Services,
 	) (command.Result, error) {
 		account, err := services.Accounts.RemoveContract(

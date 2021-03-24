@@ -40,9 +40,10 @@ var DeployCommand = &command.Command{
 	Run: func(
 		cmd *cobra.Command,
 		args []string,
+		globalFlags command.GlobalFlags,
 		services *services.Services,
 	) (command.Result, error) {
-		c, err := services.Project.Deploy(command.NetworkFlag, deployFlags.Update)
+		c, err := services.Project.Deploy(globalFlags.Network, deployFlags.Update)
 		if err != nil {
 			return nil, err
 		}

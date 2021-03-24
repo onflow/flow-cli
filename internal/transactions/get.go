@@ -41,6 +41,7 @@ var GetCommand = &command.Command{
 	Run: func(
 		cmd *cobra.Command,
 		args []string,
+		globalFlags command.GlobalFlags,
 		services *services.Services,
 	) (command.Result, error) {
 		tx, result, err := services.Transactions.GetStatus(
