@@ -333,8 +333,8 @@ func (a *Accounts) addContract(
 		fmt.Sprintf("Adding Contract '%s' to the account '%s'...", contractName, account.Address()),
 	)
 
-	// TODO: refactor this for same reasons as it is in addAccount and sendTransaction
 	if account.DefaultKey().Type() == config.KeyTypeGoogleKMS {
+		a.logger.StartProgress("Connecting to KMS...")
 		resourceID := account.DefaultKey().ToConfig().Context[config.KMSContextField]
 		err := util.GcloudApplicationSignin(resourceID)
 		if err != nil {
