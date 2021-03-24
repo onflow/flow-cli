@@ -255,7 +255,7 @@ func (p *Project) AddOrUpdateAccount(account *Account) {
 // GetAccountByAddress adds new account by address
 func (p *Project) GetAccountByAddress(address string) *Account {
 	for _, account := range p.accounts {
-		if account.address.String() == address {
+		if account.address.String() == flow.HexToAddress(address).String() {
 			return account
 		}
 	}
