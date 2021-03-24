@@ -6,7 +6,7 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowcli/output"
 	"github.com/onflow/flow-cli/pkg/flowcli/project"
 
-	flowsdk "github.com/onflow/flow-go-sdk"
+	"github.com/onflow/flow-go-sdk"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/onflow/flow-cli/tests"
@@ -25,13 +25,13 @@ func TestTransactions(t *testing.T) {
 		called := 0
 		txs := tests.NewTransaction()
 
-		mock.GetTransactionResultMock = func(tx *flowsdk.Transaction) (*flowsdk.TransactionResult, error) {
+		mock.GetTransactionResultMock = func(tx *flow.Transaction) (*flow.TransactionResult, error) {
 			called++
 			assert.Equal(t, tx.ID().String(), txs.ID().String())
 			return tests.NewTransactionResult(nil), nil
 		}
 
-		mock.GetTransactionMock = func(id flowsdk.Identifier) (*flowsdk.Transaction, error) {
+		mock.GetTransactionMock = func(id flow.Identifier) (*flow.Transaction, error) {
 			called++
 			return txs, nil
 		}
@@ -45,12 +45,12 @@ func TestTransactions(t *testing.T) {
 	t.Run("Send Transaction args", func(t *testing.T) {
 		called := 0
 
-		mock.GetTransactionResultMock = func(tx *flowsdk.Transaction) (*flowsdk.TransactionResult, error) {
+		mock.GetTransactionResultMock = func(tx *flow.Transaction) (*flow.TransactionResult, error) {
 			called++
 			return tests.NewTransactionResult(nil), nil
 		}
 
-		mock.SendTransactionMock = func(tx *flowsdk.Transaction, signer *project.Account) (*flowsdk.Transaction, error) {
+		mock.SendTransactionMock = func(tx *flow.Transaction, signer *project.Account) (*flow.Transaction, error) {
 			called++
 			arg, err := tx.Argument(0)
 
@@ -70,12 +70,12 @@ func TestTransactions(t *testing.T) {
 	t.Run("Send Transaction JSON args", func(t *testing.T) {
 		called := 0
 
-		mock.GetTransactionResultMock = func(tx *flowsdk.Transaction) (*flowsdk.TransactionResult, error) {
+		mock.GetTransactionResultMock = func(tx *flow.Transaction) (*flow.TransactionResult, error) {
 			called++
 			return tests.NewTransactionResult(nil), nil
 		}
 
-		mock.SendTransactionMock = func(tx *flowsdk.Transaction, signer *project.Account) (*flowsdk.Transaction, error) {
+		mock.SendTransactionMock = func(tx *flow.Transaction, signer *project.Account) (*flow.Transaction, error) {
 			called++
 			assert.Equal(t, signer.Address().String(), serviceAddress)
 			assert.Equal(t, len(string(tx.Script)), 209)

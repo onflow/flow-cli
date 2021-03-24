@@ -23,7 +23,7 @@ import (
 	"time"
 
 	"github.com/onflow/flow-cli/pkg/flowcli/project"
-	flowsdk "github.com/onflow/flow-go-sdk"
+	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/client"
 )
 
@@ -44,7 +44,7 @@ func NewSender(c *client.Client) *Sender {
 
 func (s *Sender) Send(
 	ctx context.Context,
-	tx *flowsdk.Transaction,
+	tx *flow.Transaction,
 	signer *project.Account,
 ) <-chan Result {
 
@@ -63,9 +63,9 @@ func (s *Sender) Send(
 
 func (s *Sender) send(
 	ctx context.Context,
-	tx *flowsdk.Transaction,
+	tx *flow.Transaction,
 	signer *project.Account,
-) (*flowsdk.TransactionResult, error) {
+) (*flow.TransactionResult, error) {
 
 	latestSealedBlock, err := s.client.GetLatestBlockHeader(ctx, true)
 	if err != nil {
@@ -102,14 +102,14 @@ func (s *Sender) send(
 
 func (s *Sender) waitForSeal(
 	ctx context.Context,
-	id flowsdk.Identifier,
-) (*flowsdk.TransactionResult, error) {
+	id flow.Identifier,
+) (*flow.TransactionResult, error) {
 	result, err := s.client.GetTransactionResult(ctx, id)
 	if err != nil {
 		return nil, err
 	}
 
-	for result.Status != flowsdk.TransactionStatusSealed {
+	for result.Status != flow.TransactionStatusSealed {
 		time.Sleep(defaultResultPollInterval)
 
 		result, err = s.client.GetTransactionResult(ctx, id)
@@ -135,7 +135,7 @@ func (s *Sender) getSequenceNumber(ctx context.Context, account *project.Account
 }
 
 type Result struct {
-	txResult *flowsdk.TransactionResult
+	txResult *flow.TransactionResult
 	err      error
 }
 
@@ -151,6 +151,6 @@ func (r *Result) Error() error {
 	return nil
 }
 
-func (r *Result) TransactionResult() *flowsdk.TransactionResult {
+func (r *Result) TransactionResult() *flow.TransactionResult {
 	return r.txResult
 }

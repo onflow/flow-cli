@@ -6,7 +6,7 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowcli/output"
 	"github.com/onflow/flow-cli/pkg/flowcli/project"
 
-	flowsdk "github.com/onflow/flow-go-sdk"
+	"github.com/onflow/flow-go-sdk"
 
 	"github.com/onflow/flow-cli/tests"
 	"github.com/onflow/flow-go-sdk/client"
@@ -42,7 +42,7 @@ func TestEvents(t *testing.T) {
 			return nil, nil
 		}
 
-		mock.GetLatestBlockMock = func() (*flowsdk.Block, error) {
+		mock.GetLatestBlockMock = func() (*flow.Block, error) {
 			called++
 			return tests.NewBlock(), nil
 		}

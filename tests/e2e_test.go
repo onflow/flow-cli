@@ -27,7 +27,7 @@ import (
 
 	"github.com/onflow/flow-cli/pkg/flowcli/gateway"
 	"github.com/onflow/flow-cli/pkg/flowcli/services"
-	flowsdk "github.com/onflow/flow-go-sdk"
+	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go/utils/io"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -232,7 +232,7 @@ func TestTransactions(t *testing.T) {
 	assert.NoError(t, err)
 
 	transactions := services.NewTransactions(gw, project, logger)
-	var txID1 flowsdk.Identifier
+	var txID1 flow.Identifier
 
 	t.Run("Test Transactions", func(t *testing.T) {
 		tx, tr, err := transactions.Send("./transaction.cdc", emulatorAccount, []string{"String:Hello"}, "")

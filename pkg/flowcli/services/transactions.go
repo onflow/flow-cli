@@ -29,7 +29,7 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowcli/config"
 	"github.com/onflow/flow-cli/pkg/flowcli/gateway"
 	"github.com/onflow/flow-cli/pkg/flowcli/util"
-	flowsdk "github.com/onflow/flow-go-sdk"
+	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
 )
 
@@ -59,7 +59,7 @@ func (t *Transactions) Send(
 	signerName string,
 	args []string,
 	argsJSON string,
-) (*flowsdk.Transaction, *flowsdk.TransactionResult, error) {
+) (*flow.Transaction, *flow.TransactionResult, error) {
 	if t.project == nil {
 		return nil, nil, fmt.Errorf("missing configuration, initialize it: flow project init")
 	}
@@ -79,9 +79,9 @@ func (t *Transactions) SendForAddress(
 	signerPrivateKey string,
 	args []string,
 	argsJSON string,
-) (*flowsdk.Transaction, *flowsdk.TransactionResult, error) {
+) (*flow.Transaction, *flow.TransactionResult, error) {
 
-	address := flowsdk.HexToAddress(
+	address := flow.HexToAddress(
 		strings.ReplaceAll(signerAddress, "0x", ""),
 	)
 
@@ -100,7 +100,7 @@ func (t *Transactions) send(
 	signer *project.Account,
 	args []string,
 	argsJSON string,
-) (*flowsdk.Transaction, *flowsdk.TransactionResult, error) {
+) (*flow.Transaction, *flow.TransactionResult, error) {
 
 	// if google kms account then sign in
 	if signer.DefaultKey().Type() == config.KeyTypeGoogleKMS {
@@ -117,7 +117,7 @@ func (t *Transactions) send(
 
 	t.logger.StartProgress("Sending Transaction...")
 
-	tx := flowsdk.NewTransaction().
+	tx := flow.NewTransaction().
 		SetScript(code).
 		AddAuthorizer(signer.Address())
 
@@ -154,8 +154,8 @@ func (t *Transactions) send(
 func (t *Transactions) GetStatus(
 	transactionID string,
 	waitSeal bool,
-) (*flowsdk.Transaction, *flowsdk.TransactionResult, error) {
-	txID := flowsdk.HexToID(
+) (*flow.Transaction, *flow.TransactionResult, error) {
+	txID := flow.HexToID(
 		strings.ReplaceAll(transactionID, "0x", ""),
 	)
 

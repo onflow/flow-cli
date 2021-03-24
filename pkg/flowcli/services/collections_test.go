@@ -7,7 +7,7 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowcli/project"
 
 	"github.com/onflow/flow-cli/tests"
-	flowsdk "github.com/onflow/flow-go-sdk"
+	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/stretchr/testify/assert"
 )
@@ -22,7 +22,7 @@ func TestCollections(t *testing.T) {
 
 	t.Run("Get Collection", func(t *testing.T) {
 		called := false
-		mock.GetCollectionMock = func(id flowsdk.Identifier) (*flowsdk.Collection, error) {
+		mock.GetCollectionMock = func(id flow.Identifier) (*flow.Collection, error) {
 			called = true
 			return tests.NewCollection(), nil
 		}

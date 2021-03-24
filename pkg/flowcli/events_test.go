@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	flowsdk "github.com/onflow/flow-go-sdk"
+	"github.com/onflow/flow-go-sdk"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/onflow/cadence"
@@ -23,7 +23,7 @@ func TestEvent(t *testing.T) {
 			cadence.NewString("00c4fef62310c807"),
 		},
 	)
-	tx := tests.NewTransactionResult([]flowsdk.Event{*flowEvent})
+	tx := tests.NewTransactionResult([]flow.Event{*flowEvent})
 	e := flowcli.EventsFromTransaction(tx)
 
 	fmt.Println(e.GetAddress())
@@ -31,6 +31,6 @@ func TestEvent(t *testing.T) {
 }
 
 func TestAddress(t *testing.T) {
-	address := flowsdk.HexToAddress("cdfef0f4f0786e9")
+	address := flow.HexToAddress("cdfef0f4f0786e9")
 	assert.Equal(t, "0cdfef0f4f0786e9", address.String())
 }

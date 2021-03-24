@@ -33,7 +33,7 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowcli/gateway"
 	"github.com/onflow/flow-cli/pkg/flowcli/util"
 	tmpl "github.com/onflow/flow-core-contracts/lib/go/templates"
-	flowsdk "github.com/onflow/flow-go-sdk"
+	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/onflow/flow-go-sdk/templates"
 )
@@ -59,10 +59,10 @@ func NewAccounts(
 }
 
 // Get gets an account based on address
-func (a *Accounts) Get(address string) (*flowsdk.Account, error) {
+func (a *Accounts) Get(address string) (*flow.Account, error) {
 	a.logger.StartProgress(fmt.Sprintf("Loading %s...", address))
 
-	flowAddress := flowsdk.HexToAddress(
+	flowAddress := flow.HexToAddress(
 		strings.ReplaceAll(address, "0x", ""),
 	)
 
@@ -100,7 +100,7 @@ func (a *Accounts) Add(
 		return nil, fmt.Errorf("key index must be positive number")
 	}
 
-	address := flowsdk.HexToAddress(accountAddress)
+	address := flow.HexToAddress(accountAddress)
 	chainID, err := util.GetAddressNetwork(address)
 	if err != nil {
 		return nil, err
@@ -168,7 +168,7 @@ func (a *Accounts) Add(
 func (a *Accounts) StakingInfo(accountAddress string) (*cadence.Value, *cadence.Value, error) {
 	a.logger.StartProgress(fmt.Sprintf("Fetching info for %s...", accountAddress))
 
-	address := flowsdk.HexToAddress(
+	address := flow.HexToAddress(
 		strings.ReplaceAll(accountAddress, "0x", ""),
 	)
 
@@ -179,7 +179,7 @@ func (a *Accounts) StakingInfo(accountAddress string) (*cadence.Value, *cadence.
 		return nil, nil, fmt.Errorf("failed to determine network from address, check the address and network")
 	}
 
-	if chain == flowsdk.Emulator {
+	if chain == flow.Emulator {
 		return nil, nil, fmt.Errorf("emulator chain not supported")
 	}
 
@@ -210,7 +210,7 @@ func (a *Accounts) Create(
 	signatureAlgorithm string,
 	hashingAlgorithm string,
 	contracts []string,
-) (*flowsdk.Account, error) {
+) (*flow.Account, error) {
 	if a.project == nil {
 		return nil, fmt.Errorf("missing configuration, initialize it: flow project init")
 	}
@@ -222,7 +222,7 @@ func (a *Accounts) Create(
 
 	a.logger.StartProgress("Creating Account...")
 
-	accountKeys := make([]*flowsdk.AccountKey, len(keys))
+	accountKeys := make([]*flow.AccountKey, len(keys))
 
 	sigAlgo, hashAlgo, err := util.ConvertSigAndHashAlgo(signatureAlgorithm, hashingAlgorithm)
 	if err != nil {
@@ -238,11 +238,11 @@ func (a *Accounts) Create(
 			return nil, fmt.Errorf("could not decode public key for key: %s, with signature algorith: %s", publicKeyHex, sigAlgo)
 		}
 
-		accountKeys[i] = &flowsdk.AccountKey{
+		accountKeys[i] = &flow.AccountKey{
 			PublicKey: publicKey,
 			SigAlgo:   sigAlgo,
 			HashAlgo:  hashAlgo,
-			Weight:    flowsdk.AccountKeyWeightThreshold,
+			Weight:    flow.AccountKeyWeightThreshold,
 		}
 	}
 
@@ -302,7 +302,7 @@ func (a *Accounts) AddContract(
 	contractName string,
 	contractFilename string,
 	updateExisting bool,
-) (*flowsdk.Account, error) {
+) (*flow.Account, error) {
 	if a.project == nil {
 		return nil, fmt.Errorf("missing configuration, initialize it: flow project init")
 	}
@@ -322,7 +322,7 @@ func (a *Accounts) AddContractForAddress(
 	contractName string,
 	contractFilename string,
 	updateExisting bool,
-) (*flowsdk.Account, error) {
+) (*flow.Account, error) {
 	account, err := accountFromAddressAndKey(accountAddress, accountPrivateKey)
 	if err != nil {
 		return nil, err
@@ -336,7 +336,7 @@ func (a *Accounts) addContract(
 	contractName string,
 	contractFilename string,
 	updateExisting bool,
-) (*flowsdk.Account, error) {
+) (*flow.Account, error) {
 	a.logger.StartProgress(
 		fmt.Sprintf("Adding Contract '%s' to the account '%s'...", contractName, account.Address()),
 	)
@@ -407,7 +407,7 @@ func (a *Accounts) addContract(
 func (a *Accounts) RemoveContract(
 	contractName string,
 	accountName string,
-) (*flowsdk.Account, error) {
+) (*flow.Account, error) {
 	account := a.project.GetAccountByName(accountName)
 	if account == nil {
 		return nil, fmt.Errorf("account: [%s] doesn't exists in configuration", accountName)
@@ -421,7 +421,7 @@ func (a *Accounts) RemoveContractForAddress(
 	contractName string,
 	accountAddress string,
 	accountPrivateKey string,
-) (*flowsdk.Account, error) {
+) (*flow.Account, error) {
 	account, err := accountFromAddressAndKey(accountAddress, accountPrivateKey)
 	if err != nil {
 		return nil, err
@@ -433,7 +433,7 @@ func (a *Accounts) RemoveContractForAddress(
 func (a *Accounts) removeContract(
 	contractName string,
 	account *project.Account,
-) (*flowsdk.Account, error) {
+) (*flow.Account, error) {
 	a.logger.StartProgress(
 		fmt.Sprintf("Removing Contract %s from %s...", contractName, account.Address()),
 	)
@@ -462,7 +462,7 @@ func (a *Accounts) removeContract(
 
 // AccountFromAddressAndKey get account from address and private key
 func accountFromAddressAndKey(accountAddress string, accountPrivateKey string) (*project.Account, error) {
-	address := flowsdk.HexToAddress(
+	address := flow.HexToAddress(
 		strings.ReplaceAll(accountAddress, "0x", ""),
 	)
 

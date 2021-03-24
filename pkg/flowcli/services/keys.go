@@ -28,7 +28,7 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowcli/project"
 
 	"github.com/onflow/flow-cli/pkg/flowcli/gateway"
-	flowsdk "github.com/onflow/flow-go-sdk"
+	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
 )
 
@@ -74,13 +74,13 @@ func (k *Keys) Generate(inputSeed string, signatureAlgo string) (*crypto.Private
 	return &privateKey, err
 }
 
-func (k *Keys) Decode(publicKey string) (*flowsdk.AccountKey, error) {
+func (k *Keys) Decode(publicKey string) (*flow.AccountKey, error) {
 	publicKeyBytes, err := hex.DecodeString(publicKey)
 	if err != nil {
 		return nil, fmt.Errorf("failed to decode public key: %v", err)
 	}
 
-	accountKey, err := flowsdk.DecodeAccountKey(publicKeyBytes)
+	accountKey, err := flow.DecodeAccountKey(publicKeyBytes)
 	if err != nil {
 		return nil, fmt.Errorf("failed to decode private key bytes: %v", err)
 	}
