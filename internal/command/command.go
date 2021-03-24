@@ -55,23 +55,21 @@ type Command struct {
 }
 
 type GlobalFlags struct {
-	Filter      string
-	Format      string
-	Save        string
-	RunEmulator bool
-	Host        string
-	Log         string
-	Network     string
+	Filter  string
+	Format  string
+	Save    string
+	Host    string
+	Log     string
+	Network string
 }
 
 var flags = GlobalFlags{
-	Filter:      "",
-	Format:      "",
-	Save:        "",
-	RunEmulator: false,
-	Host:        "",
-	Log:         "info",
-	Network:     "",
+	Filter:  "",
+	Format:  "",
+	Save:    "",
+	Host:    "",
+	Log:     "info",
+	Network: "",
 }
 
 // InitFlags init all the global persistent flags
@@ -114,14 +112,6 @@ func InitFlags(cmd *cobra.Command) {
 		"l",
 		flags.Log,
 		"Log level verbosity, values (none, error, debug)",
-	)
-
-	cmd.PersistentFlags().BoolVarP(
-		&flags.RunEmulator,
-		"emulator",
-		"e",
-		flags.RunEmulator,
-		"Run in-memory emulator",
 	)
 
 	cmd.PersistentFlags().StringSliceVarP(
@@ -183,10 +173,7 @@ func (c Command) AddToParent(parent *cobra.Command) {
 
 // createGateway creates a gateway to be used, defaults to grpc but can support others
 func createGateway(host string) (gateway.Gateway, error) {
-	// create in memory emulator client
-	if flags.RunEmulator {
-		return gateway.NewEmulatorGateway(), nil
-	}
+	// TODO implement emulator gateway and check emulator flag here
 
 	// create default grpc client
 	return gateway.NewGrpcGateway(host)
