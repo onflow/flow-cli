@@ -40,6 +40,7 @@ func init() {
 	UpdateCommand.Add(Cmd)
 	CreateCommand.Add(Cmd)
 	StakingCommand.Add(Cmd)
+	GetCommand.Add(Cmd)
 }
 
 // AccountResult represent result from all account commands
