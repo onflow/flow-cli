@@ -2,15 +2,15 @@ package tests
 
 import (
 	"github.com/onflow/cadence"
-	"github.com/onflow/flow-cli/pkg/flow"
 	"github.com/onflow/flow-cli/pkg/flow/gateway"
+	"github.com/onflow/flow-cli/pkg/flow/project"
 	flowsdk "github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/client"
 )
 
 type MockGateway struct {
 	GetAccountMock           func(address flowsdk.Address) (*flowsdk.Account, error)
-	SendTransactionMock      func(tx *flowsdk.Transaction, signer *flow.Account) (*flowsdk.Transaction, error)
+	SendTransactionMock      func(tx *flowsdk.Transaction, signer *project.Account) (*flowsdk.Transaction, error)
 	GetTransactionResultMock func(tx *flowsdk.Transaction) (*flowsdk.TransactionResult, error)
 	GetTransactionMock       func(id flowsdk.Identifier) (*flowsdk.Transaction, error)
 	ExecuteScriptMock        func(script []byte, arguments []cadence.Value) (cadence.Value, error)
@@ -29,7 +29,7 @@ func (g *MockGateway) GetAccount(address flowsdk.Address) (*flowsdk.Account, err
 	return g.GetAccountMock(address)
 }
 
-func (g *MockGateway) SendTransaction(tx *flowsdk.Transaction, signer *flow.Account) (*flowsdk.Transaction, error) {
+func (g *MockGateway) SendTransaction(tx *flowsdk.Transaction, signer *project.Account) (*flowsdk.Transaction, error) {
 	return g.SendTransactionMock(tx, signer)
 }
 

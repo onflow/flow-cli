@@ -4,10 +4,10 @@ import (
 	"testing"
 
 	"github.com/onflow/flow-cli/pkg/flow/output"
+	"github.com/onflow/flow-cli/pkg/flow/project"
 
 	flowsdk "github.com/onflow/flow-go-sdk"
 
-	"github.com/onflow/flow-cli/pkg/flow"
 	"github.com/onflow/flow-cli/tests"
 	"github.com/onflow/flow-go-sdk/client"
 	"github.com/onflow/flow-go-sdk/crypto"
@@ -17,7 +17,7 @@ import (
 func TestEvents(t *testing.T) {
 	mock := &tests.MockGateway{}
 
-	project, err := flow.InitProject(crypto.ECDSA_P256, crypto.SHA3_256)
+	project, err := project.InitProject(crypto.ECDSA_P256, crypto.SHA3_256)
 	assert.NoError(t, err)
 
 	events := NewEvents(mock, project, output.NewStdoutLogger(output.InfoLog))

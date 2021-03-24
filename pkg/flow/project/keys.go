@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package keys
+package project
 
 import (
 	"context"
@@ -24,11 +24,10 @@ import (
 	"fmt"
 
 	"github.com/onflow/flow-go-sdk"
-
+	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/onflow/flow-go-sdk/crypto/cloudkms"
 
 	"github.com/onflow/flow-cli/pkg/flow/config"
-	"github.com/onflow/flow-go-sdk/crypto"
 )
 
 type AccountKey interface {

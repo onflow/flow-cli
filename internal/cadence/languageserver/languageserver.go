@@ -21,7 +21,7 @@ package languageserver
 import (
 	"log"
 
-	"github.com/onflow/flow-cli/pkg/flow"
+	"github.com/onflow/flow-cli/pkg/flow/util"
 
 	"github.com/onflow/cadence/languageserver"
 	"github.com/psiemens/sconfig"
@@ -48,7 +48,7 @@ func init() {
 
 func initConfig() {
 	err := sconfig.New(&conf).
-		FromEnvironment(flow.EnvPrefix).
+		FromEnvironment(util.EnvPrefix).
 		BindFlags(Cmd.PersistentFlags()).
 		Parse()
 	if err != nil {

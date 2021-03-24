@@ -19,9 +19,9 @@
 package emulator
 
 import (
-	"github.com/onflow/flow-cli/pkg/flow"
 	"github.com/onflow/flow-cli/pkg/flow/config"
-	"github.com/onflow/flow-cli/pkg/flow/keys"
+	"github.com/onflow/flow-cli/pkg/flow/project"
+	"github.com/onflow/flow-cli/pkg/flow/util"
 	"github.com/onflow/flow-emulator/cmd/emulator/start"
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/spf13/cobra"
@@ -42,21 +42,21 @@ func configuredServiceKey(
 	crypto.SignatureAlgorithm,
 	crypto.HashAlgorithm,
 ) {
-	project, err := flow.LoadProject(flow.ConfigPath)
+	project, err := project.LoadProject(util.ConfigPath)
 	if err != nil {
-		flow.Exitf(1, err.Error())
+		util.Exitf(1, err.Error())
 	}
 
 	serviceAccount, _ := project.EmulatorServiceAccount()
 
-	serviceKeyHex, ok := serviceAccount.DefaultKey().(*keys.HexAccountKey)
+	serviceKeyHex, ok := serviceAccount.DefaultKey().(*project.HexAccountKey)
 	if !ok {
-		flow.Exit(1, "Only hexadecimal keys can be used as the emulator service account key.")
+		util.Exit(1, "Only hexadecimal keys can be used as the emulator service account key.")
 	}
 
 	privateKey, err := crypto.DecodePrivateKeyHex(serviceKeyHex.SigAlgo(), serviceKeyHex.PrivateKeyHex())
 	if err != nil {
-		flow.Exitf(
+		util.Exitf(
 			1,
 			"Invalid private key in \"%s\" emulator configuration",
 			config.DefaultEmulatorConfigName,

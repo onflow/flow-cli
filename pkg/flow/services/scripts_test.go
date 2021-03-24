@@ -4,8 +4,7 @@ import (
 	"testing"
 
 	"github.com/onflow/flow-cli/pkg/flow/output"
-
-	"github.com/onflow/flow-cli/pkg/flow"
+	"github.com/onflow/flow-cli/pkg/flow/project"
 
 	"github.com/onflow/cadence"
 	"github.com/onflow/flow-cli/tests"
@@ -16,7 +15,7 @@ import (
 func TestScripts(t *testing.T) {
 	mock := &tests.MockGateway{}
 
-	project, err := flow.InitProject(crypto.ECDSA_P256, crypto.SHA3_256)
+	project, err := project.InitProject(crypto.ECDSA_P256, crypto.SHA3_256)
 	assert.NoError(t, err)
 
 	scripts := NewScripts(mock, project, output.NewStdoutLogger(output.InfoLog))

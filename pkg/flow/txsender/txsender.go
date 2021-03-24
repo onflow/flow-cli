@@ -22,8 +22,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/onflow/flow-cli/pkg/flow"
-
+	"github.com/onflow/flow-cli/pkg/flow/project"
 	flowsdk "github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/client"
 )
@@ -46,7 +45,7 @@ func NewSender(c *client.Client) *Sender {
 func (s *Sender) Send(
 	ctx context.Context,
 	tx *flowsdk.Transaction,
-	signer *flow.Account,
+	signer *project.Account,
 ) <-chan Result {
 
 	result := make(chan Result)
@@ -65,7 +64,7 @@ func (s *Sender) Send(
 func (s *Sender) send(
 	ctx context.Context,
 	tx *flowsdk.Transaction,
-	signer *flow.Account,
+	signer *project.Account,
 ) (*flowsdk.TransactionResult, error) {
 
 	latestSealedBlock, err := s.client.GetLatestBlockHeader(ctx, true)
@@ -122,7 +121,7 @@ func (s *Sender) waitForSeal(
 	return result, nil
 }
 
-func (s *Sender) getSequenceNumber(ctx context.Context, account *flow.Account) (uint64, error) {
+func (s *Sender) getSequenceNumber(ctx context.Context, account *project.Account) (uint64, error) {
 	accountResult, err := s.client.GetAccount(ctx, account.Address())
 	if err != nil {
 		return 0, err

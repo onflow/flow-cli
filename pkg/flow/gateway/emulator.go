@@ -21,9 +21,8 @@ package gateway
 import (
 	"fmt"
 
-	"github.com/onflow/flow-cli/pkg/flow"
-
 	"github.com/onflow/cadence"
+	"github.com/onflow/flow-cli/pkg/flow/project"
 	emulator "github.com/onflow/flow-emulator"
 	flowsdk "github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/client"
@@ -51,7 +50,7 @@ func (g *EmulatorGateway) GetAccount(address flowsdk.Address) (*flowsdk.Account,
 	return g.emulator.GetAccount(address)
 }
 
-func (g *EmulatorGateway) SendTransaction(tx *flowsdk.Transaction, signer *flow.Account) (*flowsdk.Transaction, error) {
+func (g *EmulatorGateway) SendTransaction(tx *flowsdk.Transaction, signer *project.Account) (*flowsdk.Transaction, error) {
 	return nil, fmt.Errorf("Not Supported Yet")
 }
 

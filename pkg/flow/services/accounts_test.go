@@ -5,8 +5,7 @@ import (
 	"testing"
 
 	"github.com/onflow/flow-cli/pkg/flow/output"
-
-	"github.com/onflow/flow-cli/pkg/flow"
+	"github.com/onflow/flow-cli/pkg/flow/project"
 
 	"github.com/onflow/flow-go-sdk/crypto"
 
@@ -28,7 +27,7 @@ func TestAccounts(t *testing.T) {
 
 	mock := &tests.MockGateway{}
 
-	project, err := flow.InitProject(crypto.ECDSA_P256, crypto.SHA3_256)
+	project, err := project.InitProject(crypto.ECDSA_P256, crypto.SHA3_256)
 	assert.NoError(t, err)
 
 	accounts := NewAccounts(mock, project, output.NewStdoutLogger(output.NoneLog))
@@ -47,7 +46,7 @@ func TestAccounts(t *testing.T) {
 	t.Run("Create an Account", func(t *testing.T) {
 		newAddress := "192440c99cb17282"
 
-		mock.SendTransactionMock = func(tx *flowsdk.Transaction, signer *flow.Account) (*flowsdk.Transaction, error) {
+		mock.SendTransactionMock = func(tx *flowsdk.Transaction, signer *project.Account) (*flowsdk.Transaction, error) {
 			assert.Equal(t, tx.Authorizers[0].String(), serviceAddress)
 			assert.Equal(t, signer.Address().String(), serviceAddress)
 
@@ -74,7 +73,7 @@ func TestAccounts(t *testing.T) {
 	t.Run("Create an Account with Contract", func(t *testing.T) {
 		newAddress := "192440c99cb17282"
 
-		mock.SendTransactionMock = func(tx *flowsdk.Transaction, signer *flow.Account) (*flowsdk.Transaction, error) {
+		mock.SendTransactionMock = func(tx *flowsdk.Transaction, signer *project.Account) (*flowsdk.Transaction, error) {
 			assert.Equal(t, tx.Authorizers[0].String(), serviceAddress)
 			assert.Equal(t, signer.Address().String(), serviceAddress)
 			assert.True(t, strings.Contains(string(tx.Script), "acct.contracts.add"))
@@ -100,7 +99,7 @@ func TestAccounts(t *testing.T) {
 	})
 
 	t.Run("Contract Add for Account", func(t *testing.T) {
-		mock.SendTransactionMock = func(tx *flowsdk.Transaction, signer *flow.Account) (*flowsdk.Transaction, error) {
+		mock.SendTransactionMock = func(tx *flowsdk.Transaction, signer *project.Account) (*flowsdk.Transaction, error) {
 			assert.Equal(t, tx.Authorizers[0].String(), serviceAddress)
 			assert.Equal(t, signer.Address().String(), serviceAddress)
 			assert.True(t, strings.Contains(string(tx.Script), "signer.contracts.add"))
@@ -124,7 +123,7 @@ func TestAccounts(t *testing.T) {
 	})
 
 	t.Run("Contract Update for Account", func(t *testing.T) {
-		mock.SendTransactionMock = func(tx *flowsdk.Transaction, signer *flow.Account) (*flowsdk.Transaction, error) {
+		mock.SendTransactionMock = func(tx *flowsdk.Transaction, signer *project.Account) (*flowsdk.Transaction, error) {
 			assert.Equal(t, tx.Authorizers[0].String(), serviceAddress)
 			assert.Equal(t, signer.Address().String(), serviceAddress)
 			assert.True(t, strings.Contains(string(tx.Script), "signer.contracts.update__experimental"))
@@ -148,7 +147,7 @@ func TestAccounts(t *testing.T) {
 	})
 
 	t.Run("Contract Remove for Account", func(t *testing.T) {
-		mock.SendTransactionMock = func(tx *flowsdk.Transaction, signer *flow.Account) (*flowsdk.Transaction, error) {
+		mock.SendTransactionMock = func(tx *flowsdk.Transaction, signer *project.Account) (*flowsdk.Transaction, error) {
 			assert.Equal(t, tx.Authorizers[0].String(), serviceAddress)
 			assert.Equal(t, signer.Address().String(), serviceAddress)
 			assert.True(t, strings.Contains(string(tx.Script), "signer.contracts.remove"))

@@ -24,7 +24,7 @@ import (
 
 	"github.com/fatih/color"
 
-	flowsdk "github.com/onflow/flow-go-sdk"
+	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
 )
 
@@ -85,11 +85,11 @@ func StringContains(s []string, e string) bool {
 }
 
 // GetAddressNetwork get chain id based on address
-func GetAddressNetwork(address flowsdk.Address) (flowsdk.ChainID, error) {
-	networks := []flowsdk.ChainID{
-		flowsdk.Mainnet,
-		flowsdk.Testnet,
-		flowsdk.Emulator,
+func GetAddressNetwork(address flow.Address) (flow.ChainID, error) {
+	networks := []flow.ChainID{
+		flow.Mainnet,
+		flow.Testnet,
+		flow.Emulator,
 	}
 	for _, net := range networks {
 		if address.IsValid(net) {
@@ -97,5 +97,5 @@ func GetAddressNetwork(address flowsdk.Address) (flowsdk.ChainID, error) {
 		}
 	}
 
-	return flowsdk.ChainID(""), fmt.Errorf("unrecognized address not valid for any known chain: %s", address)
+	return flow.ChainID(""), fmt.Errorf("unrecognized address not valid for any known chain: %s", address)
 }

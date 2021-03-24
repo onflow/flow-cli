@@ -26,6 +26,7 @@ import (
 	"github.com/spf13/afero"
 
 	"github.com/onflow/flow-cli/pkg/flow/config"
+	"github.com/onflow/flow-cli/pkg/flow/project"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/stretchr/testify/assert"
@@ -34,7 +35,7 @@ import (
 
 var composer = config.NewLoader(afero.NewOsFs())
 
-func generateComplexProject() Project {
+func generateComplexProject() project.Project {
 	config := config.Config{
 		Emulators: config.Emulators{{
 			Name:           "default",
@@ -126,7 +127,7 @@ func generateComplexProject() Project {
 		}},
 	}
 
-	p, err := newProject(&config, composer)
+	p, err := project.newProject(&config, composer)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -134,7 +135,7 @@ func generateComplexProject() Project {
 	return *p
 }
 
-func generateSimpleProject() Project {
+func generateSimpleProject() project.Project {
 	config := config.Config{
 		Emulators: config.Emulators{{
 			Name:           "default",
@@ -172,7 +173,7 @@ func generateSimpleProject() Project {
 		}},
 	}
 
-	p, err := newProject(&config, composer)
+	p, err := project.newProject(&config, composer)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -180,7 +181,7 @@ func generateSimpleProject() Project {
 	return *p
 }
 
-func generateAliasesProject() Project {
+func generateAliasesProject() project.Project {
 	config := config.Config{
 		Emulators: config.Emulators{{
 			Name:           "default",
@@ -223,7 +224,7 @@ func generateAliasesProject() Project {
 		}},
 	}
 
-	p, err := newProject(&config, composer)
+	p, err := project.newProject(&config, composer)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -231,7 +232,7 @@ func generateAliasesProject() Project {
 	return *p
 }
 
-func generateAliasesComplexProject() Project {
+func generateAliasesComplexProject() project.Project {
 	config := config.Config{
 		Emulators: config.Emulators{{
 			Name:           "default",
@@ -304,7 +305,7 @@ func generateAliasesComplexProject() Project {
 		}},
 	}
 
-	p, err := newProject(&config, composer)
+	p, err := project.newProject(&config, composer)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -365,17 +366,17 @@ func Test_GetContractsByNameComplex(t *testing.T) {
 	assert.Equal(t, 7, len(contracts))
 
 	//sort names so tests are deterministic
-	contractNames := funk.Map(contracts, func(c Contract) string {
+	contractNames := funk.Map(contracts, func(c project.Contract) string {
 		return c.Name
 	}).([]string)
 	sort.Strings(contractNames)
 
-	sources := funk.Map(contracts, func(c Contract) string {
+	sources := funk.Map(contracts, func(c project.Contract) string {
 		return c.Source
 	}).([]string)
 	sort.Strings(sources)
 
-	targets := funk.Map(contracts, func(c Contract) string {
+	targets := funk.Map(contracts, func(c project.Contract) string {
 		return c.Target.String()
 	}).([]string)
 	sort.Strings(targets)

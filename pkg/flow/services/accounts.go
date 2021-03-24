@@ -24,6 +24,7 @@ import (
 	"strings"
 
 	"github.com/onflow/flow-cli/pkg/flow/output"
+	"github.com/onflow/flow-cli/pkg/flow/project"
 
 	"github.com/onflow/cadence"
 
@@ -40,14 +41,14 @@ import (
 // Accounts service handles all interactions for accounts
 type Accounts struct {
 	gateway gateway.Gateway
-	project *flow.Project
+	project *project.Project
 	logger  output.Logger
 }
 
 // NewAccounts create new account service
 func NewAccounts(
 	gateway gateway.Gateway,
-	project *flow.Project,
+	project *project.Project,
 	logger output.Logger,
 ) *Accounts {
 	return &Accounts{
@@ -80,7 +81,7 @@ func (a *Accounts) Add(
 	keyHex string,
 	overwrite bool,
 	path []string,
-) (*flow.Account, error) {
+) (*project.Account, error) {
 	if a.project == nil {
 		return nil, fmt.Errorf("missing configuration, initialize it: flow project init")
 	}
@@ -136,7 +137,7 @@ func (a *Accounts) Add(
 
 	confAccount.Keys = []config.AccountKey{accountKey}
 
-	account, err := flow.AccountFromConfig(confAccount)
+	account, err := project.AccountFromConfig(confAccount)
 	if err != nil {
 		return nil, err
 	}
@@ -331,7 +332,7 @@ func (a *Accounts) AddContractForAddress(
 }
 
 func (a *Accounts) addContract(
-	account *flow.Account,
+	account *project.Account,
 	contractName string,
 	contractFilename string,
 	updateExisting bool,
@@ -342,7 +343,7 @@ func (a *Accounts) addContract(
 
 	// TODO: refactor this for same reasons as it is in addAccount and sendTransaction
 	if account.DefaultKey().Type() == config.KeyTypeGoogleKMS {
-		err := flow.GcloudApplicationSignin(account)
+		err := util.GcloudApplicationSignin(account)
 		if err != nil {
 			return nil, err
 		}
@@ -431,7 +432,7 @@ func (a *Accounts) RemoveContractForAddress(
 
 func (a *Accounts) removeContract(
 	contractName string,
-	account *flow.Account,
+	account *project.Account,
 ) (*flowsdk.Account, error) {
 	a.logger.StartProgress(
 		fmt.Sprintf("Removing Contract %s from %s...", contractName, account.Address()),
@@ -460,7 +461,7 @@ func (a *Accounts) removeContract(
 }
 
 // AccountFromAddressAndKey get account from address and private key
-func accountFromAddressAndKey(accountAddress string, accountPrivateKey string) (*flow.Account, error) {
+func accountFromAddressAndKey(accountAddress string, accountPrivateKey string) (*project.Account, error) {
 	address := flowsdk.HexToAddress(
 		strings.ReplaceAll(accountAddress, "0x", ""),
 	)
@@ -470,6 +471,6 @@ func accountFromAddressAndKey(accountAddress string, accountPrivateKey string) (
 		return nil, fmt.Errorf("private key is not correct")
 	}
 
-	account := flow.AccountFromAddressAndKey(address, privateKey)
+	account := project.AccountFromAddressAndKey(address, privateKey)
 	return account, nil
 }

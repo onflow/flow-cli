@@ -32,7 +32,7 @@ import (
 	"github.com/onflow/flow-cli/internal/scripts"
 	"github.com/onflow/flow-cli/internal/transactions"
 	"github.com/onflow/flow-cli/internal/version"
-	"github.com/onflow/flow-cli/pkg/flow"
+	"github.com/onflow/flow-cli/pkg/flow/util"
 	"github.com/spf13/cobra"
 )
 
@@ -57,6 +57,6 @@ func main() {
 	command.InitFlags(cmd)
 
 	if err := cmd.Execute(); err != nil {
-		flow.Exit(1, err.Error())
+		util.Exit(1, err.Error())
 	}
 }

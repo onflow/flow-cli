@@ -24,7 +24,7 @@ import (
 	"os"
 	"os/exec"
 
-	"github.com/onflow/flow-cli/pkg/flow"
+	"github.com/onflow/flow-cli/pkg/flow/util"
 
 	"github.com/spf13/cobra"
 )
@@ -40,7 +40,7 @@ var Cmd = &cobra.Command{
 		// create temporary directory
 		dir, err := ioutil.TempDir("", "vscode-cadence")
 		if err != nil {
-			flow.Exit(1, err.Error())
+			util.Exit(1, err.Error())
 		}
 
 		// delete temporary directory
@@ -50,14 +50,14 @@ var Cmd = &cobra.Command{
 
 		err = ioutil.WriteFile(tmpCadenceExt, ext, 0644)
 		if err != nil {
-			flow.Exit(1, err.Error())
+			util.Exit(1, err.Error())
 		}
 
 		// run vscode command to install extension from temporary directory
 		c := exec.Command("code", "--install-extension", tmpCadenceExt)
 		err = c.Run()
 		if err != nil {
-			flow.Exit(1, err.Error())
+			util.Exit(1, err.Error())
 		}
 
 		fmt.Println("Installed the Cadence Visual Studio Code extension")

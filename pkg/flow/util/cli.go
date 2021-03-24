@@ -17,7 +17,7 @@
  */
 
 // Package cli defines constants, configurations, and utilities that are used across the Flow CLI.
-package flow
+package util
 
 import (
 	"crypto/rand"
@@ -27,9 +27,10 @@ import (
 	"regexp"
 
 	"github.com/onflow/flow-cli/pkg/flow/config"
-	"github.com/onflow/flow-go-sdk/crypto/cloudkms"
+	"github.com/onflow/flow-cli/pkg/flow/project"
 
 	"github.com/onflow/flow-go-sdk/crypto"
+	"github.com/onflow/flow-go-sdk/crypto/cloudkms"
 )
 
 const (
@@ -69,7 +70,7 @@ var squareBracketRegex = regexp.MustCompile(`(?s)\[(.*)\]`)
 // GcloudApplicationSignin signs in as an application user using gcloud command line tool
 // currently assumes gcloud is already installed on the machine
 // will by default pop a browser window to sign in
-func GcloudApplicationSignin(account *Account) error {
+func GcloudApplicationSignin(account *project.Account) error {
 	googleAppCreds := os.Getenv("GOOGLE_APPLICATION_CREDENTIALS")
 	if len(googleAppCreds) > 0 {
 		return nil

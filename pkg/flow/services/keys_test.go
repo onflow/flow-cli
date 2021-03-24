@@ -3,9 +3,9 @@ package services
 import (
 	"testing"
 
-	"github.com/onflow/flow-cli/pkg/flow/output"
+	keys2 "github.com/onflow/flow-cli/pkg/flow/keys"
 
-	"github.com/onflow/flow-cli/pkg/flow"
+	"github.com/onflow/flow-cli/pkg/flow/output"
 
 	"github.com/onflow/flow-cli/tests"
 	"github.com/onflow/flow-go-sdk/crypto"
@@ -15,7 +15,7 @@ import (
 func TestKeys(t *testing.T) {
 	mock := &tests.MockGateway{}
 
-	project, err := flow.InitProject(crypto.ECDSA_P256, crypto.SHA3_256)
+	project, err := keys2.InitProject(crypto.ECDSA_P256, crypto.SHA3_256)
 	assert.NoError(t, err)
 
 	keys := NewKeys(mock, project, output.NewStdoutLogger(output.InfoLog))

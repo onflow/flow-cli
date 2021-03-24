@@ -23,8 +23,7 @@ import (
 	"strconv"
 
 	"github.com/onflow/flow-cli/pkg/flow/output"
-
-	"github.com/onflow/flow-cli/pkg/flow"
+	"github.com/onflow/flow-cli/pkg/flow/project"
 
 	"github.com/onflow/flow-go-sdk/client"
 
@@ -35,14 +34,14 @@ import (
 // Blocks service handles all interactions for blocks
 type Blocks struct {
 	gateway gateway.Gateway
-	project *flow.Project
+	project *project.Project
 	logger  output.Logger
 }
 
 // NewBlocks create new block service
 func NewBlocks(
 	gateway gateway.Gateway,
-	project *flow.Project,
+	project *project.Project,
 	logger output.Logger,
 ) *Blocks {
 	return &Blocks{

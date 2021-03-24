@@ -4,11 +4,11 @@ import (
 	"testing"
 
 	"github.com/onflow/flow-cli/pkg/flow/output"
+	"github.com/onflow/flow-cli/pkg/flow/project"
 
 	flowsdk "github.com/onflow/flow-go-sdk"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/onflow/flow-cli/pkg/flow"
 	"github.com/onflow/flow-cli/tests"
 	"github.com/onflow/flow-go-sdk/crypto"
 )
@@ -16,7 +16,7 @@ import (
 func TestTransactions(t *testing.T) {
 	mock := &tests.MockGateway{}
 
-	project, err := flow.InitProject(crypto.ECDSA_P256, crypto.SHA3_256)
+	project, err := project.InitProject(crypto.ECDSA_P256, crypto.SHA3_256)
 	assert.NoError(t, err)
 
 	transactions := NewTransactions(mock, project, output.NewStdoutLogger(output.NoneLog))
@@ -50,7 +50,7 @@ func TestTransactions(t *testing.T) {
 			return tests.NewTransactionResult(nil), nil
 		}
 
-		mock.SendTransactionMock = func(tx *flowsdk.Transaction, signer *flow.Account) (*flowsdk.Transaction, error) {
+		mock.SendTransactionMock = func(tx *flowsdk.Transaction, signer *project.Account) (*flowsdk.Transaction, error) {
 			called++
 			arg, err := tx.Argument(0)
 
@@ -75,7 +75,7 @@ func TestTransactions(t *testing.T) {
 			return tests.NewTransactionResult(nil), nil
 		}
 
-		mock.SendTransactionMock = func(tx *flowsdk.Transaction, signer *flow.Account) (*flowsdk.Transaction, error) {
+		mock.SendTransactionMock = func(tx *flowsdk.Transaction, signer *project.Account) (*flowsdk.Transaction, error) {
 			called++
 			assert.Equal(t, signer.Address().String(), serviceAddress)
 			assert.Equal(t, len(string(tx.Script)), 209)

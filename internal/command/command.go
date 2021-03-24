@@ -25,13 +25,15 @@ import (
 	"os"
 	"strings"
 
+	"github.com/onflow/flow-cli/pkg/flow/util"
+
 	"github.com/onflow/flow-cli/pkg/flow/output"
+	"github.com/onflow/flow-cli/pkg/flow/project"
 
 	"github.com/onflow/flow-cli/pkg/flow/config"
 
 	"github.com/psiemens/sconfig"
 
-	"github.com/onflow/flow-cli/pkg/flow"
 	"github.com/onflow/flow-cli/pkg/flow/gateway"
 	"github.com/onflow/flow-cli/pkg/flow/services"
 	"github.com/onflow/flow-go-sdk/client"
@@ -112,10 +114,10 @@ func InitFlags(cmd *cobra.Command) {
 	)
 
 	cmd.PersistentFlags().StringSliceVarP(
-		&flow.ConfigPath,
+		&util.ConfigPath,
 		"conf",
 		"f",
-		flow.ConfigPath,
+		util.ConfigPath,
 		"Path to flow configuration file",
 	)
 
@@ -135,7 +137,7 @@ func InitFlags(cmd *cobra.Command) {
 func (c Command) Add(parent *cobra.Command) {
 	c.Cmd.RunE = func(cmd *cobra.Command, args []string) error {
 		// initialize project but ignore error since config can be missing
-		project, err := flow.LoadProject(flow.ConfigPath)
+		project, err := project.LoadProject(util.ConfigPath)
 		// here we ignore if config does not exist as some commands don't require it
 		if !errors.Is(err, config.ErrDoesNotExist) {
 			handleError("Config Error", err)
@@ -182,7 +184,7 @@ func createGateway(host string) (gateway.Gateway, error) {
 }
 
 // resolveHost from the flags provided
-func resolveHost(project *flow.Project, hostFlag string, networkFlag string) (string, error) {
+func resolveHost(project *project.Project, hostFlag string, networkFlag string) (string, error) {
 	host := hostFlag
 	if networkFlag != "" && project != nil {
 		check := project.GetNetworkByName(networkFlag)
@@ -192,7 +194,7 @@ func resolveHost(project *flow.Project, hostFlag string, networkFlag string) (st
 
 		host = project.Host(networkFlag)
 	} else if host == "" {
-		host = flow.DefaultHost
+		host = util.DefaultHost
 	}
 
 	return host, nil
@@ -302,7 +304,7 @@ func handleError(description string, err error) {
 // bindFlags bind all the flags needed
 func bindFlags(command Command) {
 	err := sconfig.New(command.Flags).
-		FromEnvironment(flow.EnvPrefix).
+		FromEnvironment(util.EnvPrefix).
 		BindFlags(command.Cmd.PersistentFlags()).
 		Parse()
 	if err != nil {

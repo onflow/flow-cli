@@ -24,7 +24,7 @@ import (
 	"time"
 
 	"github.com/onflow/cadence"
-	"github.com/onflow/flow-cli/pkg/flow"
+	"github.com/onflow/flow-cli/pkg/flow/project"
 	flowsdk "github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/client"
 	"google.golang.org/grpc"
@@ -63,7 +63,7 @@ func (g *GrpcGateway) GetAccount(address flowsdk.Address) (*flowsdk.Account, err
 
 // TODO: replace with txsender - much nicer implemented
 // SendTransaction send a transaction to flow
-func (g *GrpcGateway) SendTransaction(tx *flowsdk.Transaction, signer *flow.Account) (*flowsdk.Transaction, error) {
+func (g *GrpcGateway) SendTransaction(tx *flowsdk.Transaction, signer *project.Account) (*flowsdk.Transaction, error) {
 	account, err := g.GetAccount(signer.Address())
 	if err != nil {
 		return nil, fmt.Errorf("Failed to get account with address %s: 0x%s", signer.Address(), err)

@@ -20,34 +20,30 @@ package services
 
 import (
 	"fmt"
-
-	"github.com/onflow/flow-cli/pkg/flow/output"
-
 	"strings"
 
-	"github.com/onflow/flow-cli/pkg/flow"
-	"github.com/onflow/flow-cli/pkg/flow/util"
-
+	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
-
 	"github.com/onflow/flow-go-sdk/templates"
 
 	"github.com/onflow/flow-cli/pkg/flow/contracts"
 	"github.com/onflow/flow-cli/pkg/flow/gateway"
-	flowsdk "github.com/onflow/flow-go-sdk"
+	"github.com/onflow/flow-cli/pkg/flow/output"
+	"github.com/onflow/flow-cli/pkg/flow/project"
+	"github.com/onflow/flow-cli/pkg/flow/util"
 )
 
 // Project service handles all interactions for project
 type Project struct {
 	gateway gateway.Gateway
-	project *flow.Project
+	project *project.Project
 	logger  output.Logger
 }
 
 // NewProject create new project service
 func NewProject(
 	gateway gateway.Gateway,
-	project *flow.Project,
+	project *project.Project,
 	logger output.Logger,
 ) *Project {
 	return &Project{
@@ -57,15 +53,15 @@ func NewProject(
 	}
 }
 
-func (p *Project) Init(reset bool, serviceKeySigAlgo string, serviceKeyHashAlgo string, servicePrivateKey string) (*flow.Project, error) {
-	if !flow.ProjectExists(flow.DefaultConfigPath) || reset {
+func (p *Project) Init(reset bool, serviceKeySigAlgo string, serviceKeyHashAlgo string, servicePrivateKey string) (*project.Project, error) {
+	if !project.ProjectExists(project.DefaultConfigPath) || reset {
 
 		sigAlgo, hashAlgo, err := util.ConvertSigAndHashAlgo(serviceKeySigAlgo, serviceKeyHashAlgo)
 		if err != nil {
 			return nil, err
 		}
 
-		project, err := flow.InitProject(sigAlgo, hashAlgo)
+		proj, err := project.InitProject(sigAlgo, hashAlgo)
 		if err != nil {
 			return nil, err
 		}
@@ -76,17 +72,17 @@ func (p *Project) Init(reset bool, serviceKeySigAlgo string, serviceKeyHashAlgo 
 				return nil, fmt.Errorf("could not decode private key for a service account, provided private key: %s", servicePrivateKey)
 			}
 
-			project.SetEmulatorServiceKey(serviceKey)
+			proj.SetEmulatorServiceKey(serviceKey)
 		}
 
-		err = project.Save(flow.DefaultConfigPath)
+		err = proj.Save(project.DefaultConfigPath)
 		if err != nil {
 			return nil, err
 		}
 
-		return project, nil
+		return proj, nil
 	} else {
-		return nil, fmt.Errorf("configuration already exists at: %s, if you want to reset configuration use the reset flag", flow.DefaultConfigPath)
+		return nil, fmt.Errorf("configuration already exists at: %s, if you want to reset configuration use the reset flag", project.DefaultConfigPath)
 	}
 }
 
@@ -146,7 +142,7 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 			return nil, fmt.Errorf("failed to fetch information for account %s with error %s", targetAccount.Address(), err.Error())
 		}
 
-		var tx *flowsdk.Transaction
+		var tx *flow.Transaction
 
 		_, exists := targetAccountInfo.Contracts[contract.Name()]
 		if exists {
@@ -204,9 +200,9 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 }
 
 func prepareUpdateContractTransaction(
-	targetAccount flowsdk.Address,
+	targetAccount flow.Address,
 	contract *contracts.Contract,
-) *flowsdk.Transaction {
+) *flow.Transaction {
 	return templates.UpdateAccountContract(
 		targetAccount,
 		templates.Contract{
@@ -217,9 +213,9 @@ func prepareUpdateContractTransaction(
 }
 
 func prepareAddContractTransaction(
-	targetAccount flowsdk.Address,
+	targetAccount flow.Address,
 	contract *contracts.Contract,
-) *flowsdk.Transaction {
+) *flow.Transaction {
 	return templates.AddAccountContract(
 		targetAccount,
 		templates.Contract{

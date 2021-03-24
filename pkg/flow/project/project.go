@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package flow
+package project
 
 import (
 	"errors"
@@ -33,7 +33,6 @@ import (
 
 	"github.com/onflow/flow-cli/pkg/flow/config"
 	"github.com/onflow/flow-cli/pkg/flow/config/json"
-	"github.com/onflow/flow-cli/pkg/flow/keys"
 )
 
 var DefaultConfigPath = "flow.json"
@@ -111,7 +110,7 @@ func defaultConfig(defaultEmulatorServiceAccount *Account) *config.Config {
 }
 
 func generateEmulatorServiceAccount(sigAlgo crypto.SignatureAlgorithm, hashAlgo crypto.HashAlgorithm) (*Account, error) {
-	seed, err := RandomSeed(crypto.MinSeedLength)
+	seed, err := util.RandomSeed(crypto.MinSeedLength)
 	if err != nil {
 		return nil, err
 	}
@@ -121,13 +120,13 @@ func generateEmulatorServiceAccount(sigAlgo crypto.SignatureAlgorithm, hashAlgo 
 		return nil, fmt.Errorf("failed to generate emulator service key: %v", err)
 	}
 
-	serviceAccountKey := keys.NewHexAccountKeyFromPrivateKey(0, hashAlgo, privateKey)
+	serviceAccountKey := NewHexAccountKeyFromPrivateKey(0, hashAlgo, privateKey)
 
 	return &Account{
 		name:    defaultEmulatorServiceAccountName,
 		address: flow.ServiceAddress(flow.Emulator),
 		chainID: flow.Emulator,
-		keys: []keys.AccountKey{
+		keys: []AccountKey{
 			serviceAccountKey,
 		},
 	}, nil
@@ -189,7 +188,7 @@ func (p *Project) EmulatorServiceAccount() (*Account, error) {
 func (p *Project) SetEmulatorServiceKey(privateKey crypto.PrivateKey) {
 	acc := p.accounts[0]
 	key := acc.DefaultKey()
-	acc.keys[0] = keys.NewHexAccountKeyFromPrivateKey(key.Index(), key.HashAlgo(), privateKey)
+	acc.keys[0] = NewHexAccountKeyFromPrivateKey(key.Index(), key.HashAlgo(), privateKey)
 }
 
 func (p *Project) GetContractsByNetwork(network string) []Contract {
@@ -293,91 +292,4 @@ type Contract struct {
 	Name   string
 	Source string
 	Target flow.Address
-}
-
-type Account struct {
-	name    string
-	address flow.Address
-	chainID flow.ChainID
-	keys    []keys.AccountKey
-}
-
-func (a *Account) Address() flow.Address {
-	return a.address
-}
-
-func (a *Account) DefaultKey() keys.AccountKey {
-	return a.keys[0]
-}
-
-func accountsFromConfig(conf *config.Config) ([]*Account, error) {
-	accounts := make([]*Account, 0, len(conf.Accounts))
-
-	for _, accountConf := range conf.Accounts {
-		account, err := AccountFromConfig(accountConf)
-		if err != nil {
-			return nil, err
-		}
-
-		accounts = append(accounts, account)
-	}
-
-	return accounts, nil
-}
-
-func AccountFromAddressAndKey(address flow.Address, privateKey crypto.PrivateKey) *Account {
-	key := keys.NewHexAccountKeyFromPrivateKey(0, crypto.SHA3_256, privateKey)
-	chainID, _ := util.GetAddressNetwork(address)
-
-	return &Account{
-		name:    "",
-		address: address,
-		chainID: chainID,
-		keys:    []keys.AccountKey{key},
-	}
-}
-
-func AccountFromConfig(accountConf config.Account) (*Account, error) {
-	accountKeys := make([]keys.AccountKey, 0, len(accountConf.Keys))
-
-	for _, key := range accountConf.Keys {
-		accountKey, err := keys.NewAccountKey(key)
-		if err != nil {
-			return nil, err
-		}
-
-		accountKeys = append(accountKeys, accountKey)
-	}
-
-	return &Account{
-		name:    accountConf.Name,
-		address: accountConf.Address,
-		chainID: accountConf.ChainID,
-		keys:    accountKeys,
-	}, nil
-}
-
-func accountsToConfig(accounts []*Account) config.Accounts {
-	accountConfs := make([]config.Account, 0)
-
-	for _, account := range accounts {
-		accountConfs = append(accountConfs, accountToConfig(account))
-	}
-
-	return accountConfs
-}
-
-func accountToConfig(account *Account) config.Account {
-	keyConfigs := make([]config.AccountKey, 0, len(account.keys))
-
-	for _, key := range account.keys {
-		keyConfigs = append(keyConfigs, key.ToConfig())
-	}
-
-	return config.Account{
-		Name:    account.name,
-		Address: account.address,
-		ChainID: account.chainID,
-		Keys:    keyConfigs,
-	}
 }

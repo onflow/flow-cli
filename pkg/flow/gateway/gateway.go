@@ -20,14 +20,14 @@ package gateway
 
 import (
 	"github.com/onflow/cadence"
-	"github.com/onflow/flow-cli/pkg/flow"
+	"github.com/onflow/flow-cli/pkg/flow/project"
 	flowsdk "github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/client"
 )
 
 type Gateway interface {
 	GetAccount(flowsdk.Address) (*flowsdk.Account, error)
-	SendTransaction(*flowsdk.Transaction, *flow.Account) (*flowsdk.Transaction, error)
+	SendTransaction(*flowsdk.Transaction, *project.Account) (*flowsdk.Transaction, error)
 	GetTransactionResult(*flowsdk.Transaction, bool) (*flowsdk.TransactionResult, error)
 	GetTransaction(flowsdk.Identifier) (*flowsdk.Transaction, error)
 	ExecuteScript([]byte, []cadence.Value) (cadence.Value, error)

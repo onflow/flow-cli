@@ -22,9 +22,10 @@ import (
 	"encoding/hex"
 	"fmt"
 
-	"github.com/onflow/flow-cli/pkg/flow/output"
+	"github.com/onflow/flow-cli/pkg/flow/util"
 
-	"github.com/onflow/flow-cli/pkg/flow"
+	"github.com/onflow/flow-cli/pkg/flow/output"
+	"github.com/onflow/flow-cli/pkg/flow/project"
 
 	"github.com/onflow/flow-cli/pkg/flow/gateway"
 	flowsdk "github.com/onflow/flow-go-sdk"
@@ -34,14 +35,14 @@ import (
 // Keys service handles all interactions for keys
 type Keys struct {
 	gateway gateway.Gateway
-	project *flow.Project
+	project *project.Project
 	logger  output.Logger
 }
 
 // NewTransactions create new transaction service
 func NewKeys(
 	gateway gateway.Gateway,
-	project *flow.Project,
+	project *project.Project,
 	logger output.Logger,
 ) *Keys {
 	return &Keys{
@@ -56,7 +57,7 @@ func (k *Keys) Generate(inputSeed string, signatureAlgo string) (*crypto.Private
 	var err error
 
 	if inputSeed == "" {
-		seed, err = flow.RandomSeed(crypto.MinSeedLength)
+		seed, err = util.RandomSeed(crypto.MinSeedLength)
 		if err != nil {
 			return nil, err
 		}

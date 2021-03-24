@@ -23,6 +23,7 @@ import (
 	"strings"
 
 	"github.com/onflow/flow-cli/pkg/flow/output"
+	"github.com/onflow/flow-cli/pkg/flow/project"
 
 	"github.com/onflow/flow-cli/pkg/flow"
 	"github.com/onflow/flow-cli/pkg/flow/config"
@@ -35,14 +36,14 @@ import (
 // Scripts service handles all interactions for transactions
 type Transactions struct {
 	gateway gateway.Gateway
-	project *flow.Project
+	project *project.Project
 	logger  output.Logger
 }
 
 // NewTransactions create new transaction service
 func NewTransactions(
 	gateway gateway.Gateway,
-	project *flow.Project,
+	project *project.Project,
 	logger output.Logger,
 ) *Transactions {
 	return &Transactions{
@@ -89,21 +90,21 @@ func (t *Transactions) SendForAddress(
 		return nil, nil, fmt.Errorf("private key is not correct")
 	}
 
-	account := flow.AccountFromAddressAndKey(address, privateKey)
+	account := project.AccountFromAddressAndKey(address, privateKey)
 
 	return t.send(transactionFilename, account, args, argsJSON)
 }
 
 func (t *Transactions) send(
 	transactionFilename string,
-	signer *flow.Account,
+	signer *project.Account,
 	args []string,
 	argsJSON string,
 ) (*flowsdk.Transaction, *flowsdk.TransactionResult, error) {
 
 	// if google kms account then sign in
 	if signer.DefaultKey().Type() == config.KeyTypeGoogleKMS {
-		err := flow.GcloudApplicationSignin(signer)
+		err := util.GcloudApplicationSignin(signer)
 		if err != nil {
 			return nil, nil, err
 		}
