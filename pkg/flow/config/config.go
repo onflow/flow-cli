@@ -91,6 +91,7 @@ const (
 	KeyTypeShell              KeyType = "shell"      // Exec out to a shell script
 	DefaultEmulatorConfigName         = "default"
 	PrivateKeyField                   = "privateKey"
+	KMSContextField                   = "resourceName"
 )
 
 //TODO: replace filter with find where only one is expected

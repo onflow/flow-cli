@@ -81,7 +81,12 @@ func (g *GrpcGateway) SendTransaction(tx *flowsdk.Transaction, signer *flow.Acco
 		SetProposalKey(signer.Address(), accountKey.Index, accountKey.SequenceNumber).
 		SetPayer(signer.Address())
 
-	err = tx.SignEnvelope(signer.Address(), accountKey.Index, signer.DefaultKey().Signer())
+	sig, err := signer.DefaultKey().Signer(g.ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	err = tx.SignEnvelope(signer.Address(), accountKey.Index, sig)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to sign transaction: %s", err)
 	}

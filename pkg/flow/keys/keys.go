@@ -19,9 +19,13 @@
 package keys
 
 import (
+	"context"
 	"encoding/hex"
 	"fmt"
-	"regexp"
+
+	"github.com/onflow/flow-go-sdk"
+
+	"github.com/onflow/flow-go-sdk/crypto/cloudkms"
 
 	"github.com/onflow/flow-cli/pkg/flow/config"
 	"github.com/onflow/flow-go-sdk/crypto"
@@ -32,7 +36,7 @@ type AccountKey interface {
 	Index() int
 	SigAlgo() crypto.SignatureAlgorithm
 	HashAlgo() crypto.HashAlgorithm
-	Signer() crypto.Signer
+	Signer(ctx context.Context) (crypto.Signer, error)
 	ToConfig() config.AccountKey
 }
 
@@ -40,6 +44,8 @@ func NewAccountKey(accountKeyConf config.AccountKey) (AccountKey, error) {
 	switch accountKeyConf.Type {
 	case config.KeyTypeHex:
 		return newHexAccountKey(accountKeyConf)
+	case config.KeyTypeGoogleKMS:
+		return newKmsAccountKey(accountKeyConf)
 	}
 
 	return nil, fmt.Errorf(`invalid key type: "%s"`, accountKeyConf.Type)
@@ -77,23 +83,68 @@ func (a *baseAccountKey) Index() int {
 	return a.index
 }
 
-type HexAccountKey struct {
+type KmsAccountKey struct {
 	*baseAccountKey
-	privateKey crypto.PrivateKey
+	kmsKey cloudkms.Key
 }
 
-var resourceRegexp = regexp.MustCompile(`projects/(?P<projectId>[^/]*)/locations/(?P<location>[^/]*)/keyRings/(?P<keyringId>[^/]*)/cryptoKeys/(?P<keyId>[^/]*)/cryptoKeyVersions/(?P<keyVersion>[^/]*)`)
+func (a *KmsAccountKey) ToConfig() config.AccountKey {
+	return config.AccountKey{
+		Type:     a.keyType,
+		Index:    a.index,
+		SigAlgo:  a.sigAlgo,
+		HashAlgo: a.hashAlgo,
+		Context: map[string]string{
+			config.KMSContextField: a.kmsKey.ResourceID(),
+		},
+	}
+}
 
-func KeyContextFromKMSResourceID(resourceID string) (map[string]string, error) {
-	match := resourceRegexp.FindStringSubmatch(resourceID)
-	keyContext := make(map[string]string)
-	for i, name := range resourceRegexp.SubexpNames() {
-		if i != 0 && name != "" {
-			keyContext[name] = match[i]
-		}
+func (a *KmsAccountKey) Signer(ctx context.Context) (crypto.Signer, error) {
+	kmsClient, err := cloudkms.NewClient(ctx)
+	if err != nil {
+		return nil, err
 	}
 
-	return keyContext, nil
+	accountKMSSigner, err := kmsClient.SignerForKey(
+		ctx,
+		flow.Address{}, // TODO: this is temporary workaround as SignerForKey accepts address but never uses it so should be removed
+		a.kmsKey,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return accountKMSSigner, nil
+}
+
+func KeyContextFromKMSResourceID(resourceID string) (map[string]string, error) {
+	ctx := make(map[string]string)
+	ctx[config.KMSContextField] = resourceID
+
+	_, err := cloudkms.KeyFromResourceID(resourceID)
+	if err != nil {
+		return nil, err
+	}
+
+	return ctx, nil
+}
+
+func newKmsAccountKey(key config.AccountKey) (AccountKey, error) {
+	accountKMSKey, err := cloudkms.KeyFromResourceID(key.Context[config.KMSContextField])
+	if err != nil {
+		return nil, err
+	}
+
+	return &KmsAccountKey{
+		baseAccountKey: &baseAccountKey{
+			keyType:  config.KeyTypeGoogleKMS,
+			index:    key.Index,
+			sigAlgo:  key.SigAlgo,
+			hashAlgo: key.HashAlgo,
+		},
+		kmsKey: accountKMSKey,
+	}, nil
 }
 
 func NewHexAccountKeyFromPrivateKey(
@@ -129,8 +180,13 @@ func newHexAccountKey(accountKeyConf config.AccountKey) (*HexAccountKey, error) 
 	}, nil
 }
 
-func (a *HexAccountKey) Signer() crypto.Signer {
-	return crypto.NewInMemorySigner(a.privateKey, a.HashAlgo())
+type HexAccountKey struct {
+	*baseAccountKey
+	privateKey crypto.PrivateKey
+}
+
+func (a *HexAccountKey) Signer(ctx context.Context) (crypto.Signer, error) {
+	return crypto.NewInMemorySigner(a.privateKey, a.HashAlgo()), nil
 }
 
 func (a *HexAccountKey) PrivateKey() crypto.PrivateKey {

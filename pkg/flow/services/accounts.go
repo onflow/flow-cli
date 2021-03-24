@@ -19,6 +19,7 @@
 package services
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
@@ -118,7 +119,9 @@ func (a *Accounts) Add(
 		HashAlgo: hashAlgo,
 	}
 
-	// hex key
+	// TODO: refactor this to models
+	//  as it will lead to code duplication when creating accounts elsewhere
+	//  key context could/should be abstracted from implementation here
 	if keyHex != "" {
 		_, err := crypto.DecodePrivateKeyHex(sigAlgo, keyHex)
 		if err != nil {
@@ -132,7 +135,7 @@ func (a *Accounts) Add(
 	} else if keyContext != "" {
 		keyCtx, err := keys.KeyContextFromKMSResourceID(keyContext)
 		if err != nil {
-			return nil, fmt.Errorf("key context could not be parsed %s", keyContext)
+			return nil, fmt.Errorf("key context could not be parsed: %s, with error: %s", keyContext, err.Error())
 		}
 
 		accountKey.Type = config.KeyTypeGoogleKMS
@@ -148,8 +151,13 @@ func (a *Accounts) Add(
 	if err != nil {
 		return nil, err
 	}
+	// TODO: refactor context
+	sig, err := account.DefaultKey().Signer(context.Background())
+	if err != nil {
+		return nil, err
+	}
 
-	_, err = account.DefaultKey().Signer().Sign([]byte("test"))
+	_, err = sig.Sign([]byte("test"))
 	if err != nil {
 		return nil, fmt.Errorf("could not sign with the new key")
 	}
@@ -342,6 +350,14 @@ func (a *Accounts) addContract(
 	a.logger.StartProgress(
 		fmt.Sprintf("Adding Contract '%s' to the account '%s'...", contractName, account.Address()),
 	)
+
+	// TODO: refactor this for same reasons as it is in addAccount and sendTransaction
+	if account.DefaultKey().Type() == config.KeyTypeGoogleKMS {
+		err := flow.GcloudApplicationSignin(account)
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	contractSource, err := util.LoadFile(contractFilename)
 	if err != nil {

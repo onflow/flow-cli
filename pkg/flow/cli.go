@@ -26,6 +26,9 @@ import (
 	"os/exec"
 	"regexp"
 
+	"github.com/onflow/flow-cli/pkg/flow/config"
+	"github.com/onflow/flow-go-sdk/crypto/cloudkms"
+
 	"github.com/onflow/flow-go-sdk/crypto"
 )
 
@@ -72,7 +75,13 @@ func GcloudApplicationSignin(account *Account) error {
 		return nil
 	}
 
-	project := account.DefaultKey().ToConfig().Context["projectId"]
+	resourceID := account.DefaultKey().ToConfig().Context[config.KMSContextField]
+	kms, err := cloudkms.KeyFromResourceID(resourceID)
+	if err != nil {
+		return err
+	}
+
+	project := kms.ProjectID
 	if len(project) == 0 {
 		return fmt.Errorf("could not get GOOGLE_APPLICATION_CREDENTIALS, no google service account JSON provided but private key type is KMS for account %s", account.Address())
 	}
