@@ -18,7 +18,13 @@
 
 package config
 
-/*
+import (
+	"os"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+)
+
 func Test_PrivateKeyEnv(t *testing.T) {
 	os.Setenv("TEST", "123")
 
@@ -32,8 +38,7 @@ func Test_PrivateKeyEnv(t *testing.T) {
 		}
 	}`)
 
-	preprocessor := NewPreprocessor(NewComposer(afero.NewMemMapFs()))
-	result := preprocessor.Run(test)
+	result, _ := ProcessorRun(test)
 
 	assert.JSONEq(t, `{
 			"accounts": {
@@ -60,8 +65,7 @@ func Test_PrivateKeyEnvMultipleAccounts(t *testing.T) {
 		}
 	}`)
 
-	preprocessor := NewPreprocessor(NewComposer(afero.NewMemMapFs()))
-	result := preprocessor.Run(test)
+	result, _ := ProcessorRun(test)
 
 	assert.JSONEq(t, `{
 		"accounts": {
@@ -82,17 +86,13 @@ func Test_PrivateConfigFileAccounts(t *testing.T) {
 				"keys": "11c5dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7",
 				"chain": "flow-emulator"
 			},
-			"admin-account": { "fromFile": "test.json" },
-			"admin-account": { "fromFile": "test.json" },
-
-			"admin-account":{
-				"fromFile": "test.json"
-			}
+			"admin-account": { "fromFile": "test.json" }
 		}
 	}`)
 
-	preprocessor := NewPreprocessor(NewComposer(afero.NewMemMapFs()))
-	result := preprocessor.Run(b)
+	preprocessor, accFromFile := ProcessorRun(b)
+
+	assert.Equal(t, len(accFromFile), 1)
 
 	assert.JSONEq(t, `{
 			"accounts": {
@@ -102,6 +102,5 @@ func Test_PrivateConfigFileAccounts(t *testing.T) {
 					"chain": "flow-emulator"
 				}
 			}
-		}`, string(result))
+		}`, string(preprocessor))
 }
-*/
