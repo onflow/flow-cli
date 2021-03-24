@@ -80,7 +80,6 @@ func (t *Transactions) SendForAddress(
 	args []string,
 	argsJSON string,
 ) (*flow.Transaction, *flow.TransactionResult, error) {
-
 	address := flow.HexToAddress(signerAddress)
 
 	privateKey, err := crypto.DecodePrivateKeyHex(crypto.ECDSA_P256, signerPrivateKey)
@@ -100,9 +99,8 @@ func (t *Transactions) send(
 	argsJSON string,
 ) (*flow.Transaction, *flow.TransactionResult, error) {
 
-	// if google kms account then sign in
+	// if google kms account then sign in TODO discuss refactor - move to account
 	if signer.DefaultKey().Type() == config.KeyTypeGoogleKMS {
-		// TODO refactor
 		resourceID := signer.DefaultKey().ToConfig().Context[config.KMSContextField]
 		err := util.GcloudApplicationSignin(resourceID)
 		if err != nil {
@@ -140,7 +138,6 @@ func (t *Transactions) send(
 		return nil, nil, err
 	}
 
-	t.logger.StopProgress("")
 	t.logger.StartProgress("Waiting for transaction to be sealed...")
 
 	res, err := t.gateway.GetTransactionResult(tx, true)
@@ -167,7 +164,6 @@ func (t *Transactions) GetStatus(
 	}
 
 	if waitSeal {
-		t.logger.StopProgress("")
 		t.logger.StartProgress("Waiting for transaction to be sealed...")
 	}
 

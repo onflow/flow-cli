@@ -81,6 +81,10 @@ func (s *StdoutLogger) StartProgress(msg string) {
 		return
 	}
 
+	if s.spinner != nil {
+		s.spinner.Stop("")
+	}
+
 	s.spinner = NewSpinner(msg, "")
 	s.spinner.Start()
 }

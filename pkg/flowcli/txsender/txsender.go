@@ -83,6 +83,10 @@ func (s *Sender) send(
 		SetReferenceBlockID(latestSealedBlock.ID)
 
 	sig, err := signer.DefaultKey().Signer(context.Background())
+	if err != nil {
+		return nil, err
+	}
+
 	err = tx.SignEnvelope(signer.Address(), signer.DefaultKey().Index(), sig)
 	if err != nil {
 		return nil, err

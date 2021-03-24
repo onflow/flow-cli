@@ -116,9 +116,7 @@ func (a *Accounts) Add(
 		HashAlgo: hashAlgo,
 	}
 
-	// TODO: refactor this to models
-	//  as it will lead to code duplication when creating accounts elsewhere
-	//  key context could/should be abstracted from implementation here
+	// TODO: discuss refactor to accounts
 	if keyHex != "" {
 		_, err := crypto.DecodePrivateKeyHex(sigAlgo, keyHex)
 		if err != nil {
@@ -271,8 +269,6 @@ func (a *Accounts) Create(
 		return nil, err
 	}
 
-	a.logger.StopProgress("")
-
 	a.logger.StartProgress("Waiting for transaction to be sealed...")
 
 	result, err := a.gateway.GetTransactionResult(tx, true)
@@ -280,14 +276,14 @@ func (a *Accounts) Create(
 		return nil, err
 	}
 
-	a.logger.StopProgress("")
-
 	events := flowcli.EventsFromTransaction(result)
 	newAccountAddress := events.GetAddress()
 
 	if newAccountAddress == nil {
 		return nil, fmt.Errorf("new account address couldn't be fetched")
 	}
+
+	a.logger.StopProgress("")
 
 	return a.gateway.GetAccount(*newAccountAddress)
 }
@@ -441,8 +437,6 @@ func (a *Accounts) removeContract(
 		return nil, err
 	}
 
-	a.logger.StopProgress("")
-
 	txr, err := a.gateway.GetTransactionResult(tx, true)
 	if err != nil {
 		return nil, err
@@ -452,6 +446,7 @@ func (a *Accounts) removeContract(
 		return nil, txr.Error
 	}
 
+	a.logger.StopProgress("")
 	a.logger.Info(fmt.Sprintf("Contract %s removed from account %s\n", contractName, account.Address()))
 
 	return a.gateway.GetAccount(account.Address())
