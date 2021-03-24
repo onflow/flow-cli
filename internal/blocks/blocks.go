@@ -59,7 +59,7 @@ func (r *BlockResult) String() string {
 	writer := tabwriter.NewWriter(&b, 0, 8, 1, '\t', tabwriter.AlignRight)
 
 	fmt.Fprintf(writer, "Block ID\t%s\n", r.block.ID)
-	fmt.Fprintf(writer, "Prent ID\t%s\n", r.block.ParentID)
+	fmt.Fprintf(writer, "Parent ID\t%s\n", r.block.ParentID)
 	fmt.Fprintf(writer, "Timestamp\t%s\n", r.block.Timestamp)
 	fmt.Fprintf(writer, "Height\t%v\n", r.block.Height)
 

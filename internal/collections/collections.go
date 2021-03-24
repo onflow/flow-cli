@@ -30,7 +30,7 @@ import (
 
 var Cmd = &cobra.Command{
 	Use:              "collections",
-	Short:            "Utilities to manage collections",
+	Short:            "Utilities to read collections",
 	TraverseChildren: true,
 }
 

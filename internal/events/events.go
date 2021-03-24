@@ -34,7 +34,7 @@ import (
 
 var Cmd = &cobra.Command{
 	Use:              "events",
-	Short:            "Utilities to get events",
+	Short:            "Utilities to read events",
 	TraverseChildren: true,
 }
 
