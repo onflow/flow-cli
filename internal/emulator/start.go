@@ -42,12 +42,12 @@ func configuredServiceKey(
 	crypto.SignatureAlgorithm,
 	crypto.HashAlgorithm,
 ) {
-	project, err := project.LoadProject(util.ConfigPath)
+	proj, err := project.LoadProject(util.ConfigPath)
 	if err != nil {
 		util.Exitf(1, err.Error())
 	}
 
-	serviceAccount, _ := project.EmulatorServiceAccount()
+	serviceAccount, _ := proj.EmulatorServiceAccount()
 
 	serviceKeyHex, ok := serviceAccount.DefaultKey().(*project.HexAccountKey)
 	if !ok {
