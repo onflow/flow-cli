@@ -343,7 +343,8 @@ func (a *Accounts) addContract(
 
 	// TODO: refactor this for same reasons as it is in addAccount and sendTransaction
 	if account.DefaultKey().Type() == config.KeyTypeGoogleKMS {
-		err := util.GcloudApplicationSignin(account)
+		resourceID := account.DefaultKey().ToConfig().Context[config.KMSContextField]
+		err := util.GcloudApplicationSignin(resourceID)
 		if err != nil {
 			return nil, err
 		}

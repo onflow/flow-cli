@@ -82,7 +82,8 @@ func (s *Sender) send(
 		SetProposalKey(signer.Address(), signer.DefaultKey().Index(), seqNo).
 		SetReferenceBlockID(latestSealedBlock.ID)
 
-	err = tx.SignEnvelope(signer.Address(), signer.DefaultKey().Index(), signer.DefaultKey().Signer())
+	sig, err := signer.DefaultKey().Signer(context.Background())
+	err = tx.SignEnvelope(signer.Address(), signer.DefaultKey().Index(), sig)
 	if err != nil {
 		return nil, err
 	}

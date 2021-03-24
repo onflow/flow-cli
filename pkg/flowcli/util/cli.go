@@ -26,9 +26,6 @@ import (
 	"os/exec"
 	"regexp"
 
-	"github.com/onflow/flow-cli/pkg/flowcli/config"
-	"github.com/onflow/flow-cli/pkg/flowcli/project"
-
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/onflow/flow-go-sdk/crypto/cloudkms"
 )
@@ -70,13 +67,12 @@ var squareBracketRegex = regexp.MustCompile(`(?s)\[(.*)\]`)
 // GcloudApplicationSignin signs in as an application user using gcloud command line tool
 // currently assumes gcloud is already installed on the machine
 // will by default pop a browser window to sign in
-func GcloudApplicationSignin(account *project.Account) error {
+func GcloudApplicationSignin(resourceID string) error {
 	googleAppCreds := os.Getenv("GOOGLE_APPLICATION_CREDENTIALS")
 	if len(googleAppCreds) > 0 {
 		return nil
 	}
 
-	resourceID := account.DefaultKey().ToConfig().Context[config.KMSContextField]
 	kms, err := cloudkms.KeyFromResourceID(resourceID)
 	if err != nil {
 		return err
@@ -84,7 +80,7 @@ func GcloudApplicationSignin(account *project.Account) error {
 
 	proj := kms.ProjectID
 	if len(proj) == 0 {
-		return fmt.Errorf("could not get GOOGLE_APPLICATION_CREDENTIALS, no google service account JSON provided but private key type is KMS for account %s", account.Address())
+		return fmt.Errorf("could not get GOOGLE_APPLICATION_CREDENTIALS, no google service account JSON provided but private key type is KMS")
 	}
 
 	loginCmd := exec.Command("gcloud", "auth", "application-default", "login", fmt.Sprintf("--project=%s", proj))

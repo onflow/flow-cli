@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package flowcli
+package project
 
 import (
 	"fmt"
@@ -26,7 +26,6 @@ import (
 	"github.com/spf13/afero"
 
 	"github.com/onflow/flow-cli/pkg/flowcli/config"
-	"github.com/onflow/flow-cli/pkg/flowcli/project"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/stretchr/testify/assert"
@@ -35,7 +34,7 @@ import (
 
 var composer = config.NewLoader(afero.NewOsFs())
 
-func generateComplexProject() project.Project {
+func generateComplexProject() Project {
 	config := config.Config{
 		Emulators: config.Emulators{{
 			Name:           "default",
@@ -127,7 +126,7 @@ func generateComplexProject() project.Project {
 		}},
 	}
 
-	p, err := project.newProject(&config, composer)
+	p, err := newProject(&config, composer)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -135,7 +134,7 @@ func generateComplexProject() project.Project {
 	return *p
 }
 
-func generateSimpleProject() project.Project {
+func generateSimpleProject() Project {
 	config := config.Config{
 		Emulators: config.Emulators{{
 			Name:           "default",
@@ -173,7 +172,7 @@ func generateSimpleProject() project.Project {
 		}},
 	}
 
-	p, err := project.newProject(&config, composer)
+	p, err := newProject(&config, composer)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -181,7 +180,7 @@ func generateSimpleProject() project.Project {
 	return *p
 }
 
-func generateAliasesProject() project.Project {
+func generateAliasesProject() Project {
 	config := config.Config{
 		Emulators: config.Emulators{{
 			Name:           "default",
@@ -224,7 +223,7 @@ func generateAliasesProject() project.Project {
 		}},
 	}
 
-	p, err := project.newProject(&config, composer)
+	p, err := newProject(&config, composer)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -232,7 +231,7 @@ func generateAliasesProject() project.Project {
 	return *p
 }
 
-func generateAliasesComplexProject() project.Project {
+func generateAliasesComplexProject() Project {
 	config := config.Config{
 		Emulators: config.Emulators{{
 			Name:           "default",
@@ -305,7 +304,7 @@ func generateAliasesComplexProject() project.Project {
 		}},
 	}
 
-	p, err := project.newProject(&config, composer)
+	p, err := newProject(&config, composer)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -366,17 +365,17 @@ func Test_GetContractsByNameComplex(t *testing.T) {
 	assert.Equal(t, 7, len(contracts))
 
 	//sort names so tests are deterministic
-	contractNames := funk.Map(contracts, func(c project.Contract) string {
+	contractNames := funk.Map(contracts, func(c Contract) string {
 		return c.Name
 	}).([]string)
 	sort.Strings(contractNames)
 
-	sources := funk.Map(contracts, func(c project.Contract) string {
+	sources := funk.Map(contracts, func(c Contract) string {
 		return c.Source
 	}).([]string)
 	sort.Strings(sources)
 
-	targets := funk.Map(contracts, func(c project.Contract) string {
+	targets := funk.Map(contracts, func(c Contract) string {
 		return c.Target.String()
 	}).([]string)
 	sort.Strings(targets)

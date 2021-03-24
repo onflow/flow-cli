@@ -104,7 +104,9 @@ func (t *Transactions) send(
 
 	// if google kms account then sign in
 	if signer.DefaultKey().Type() == config.KeyTypeGoogleKMS {
-		err := util.GcloudApplicationSignin(signer)
+		// TODO refactor
+		resourceID := signer.DefaultKey().ToConfig().Context[config.KMSContextField]
+		err := util.GcloudApplicationSignin(resourceID)
 		if err != nil {
 			return nil, nil, err
 		}
