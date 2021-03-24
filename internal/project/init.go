@@ -34,7 +34,7 @@ import (
 )
 
 type flagsInit struct {
-	ServicePrivateKey  string `flag:"service-priv-key" info:"Service account private key"`
+	ServicePrivateKey  string `flag:"service-private-key" info:"Service account private key"`
 	ServiceKeySigAlgo  string `default:"ECDSA_P256" flag:"service-sig-algo" info:"Service account key signature algorithm"`
 	ServiceKeyHashAlgo string `default:"SHA3_256" flag:"service-hash-algo" info:"Service account key hash algorithm"`
 	Reset              bool   `default:"false" flag:"reset" info:"Reset flow.json config file"`

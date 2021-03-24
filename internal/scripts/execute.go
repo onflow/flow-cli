@@ -27,7 +27,7 @@ import (
 )
 
 type flagsScripts struct {
-	ArgsJSON string   `default:"" flag:"argsJSON" info:"arguments in JSON-Cadence format"`
+	ArgsJSON string   `default:"" flag:"args-json" info:"arguments in JSON-Cadence format"`
 	Args     []string `default:"" flag:"arg" info:"argument in Type:Value format"`
 	Code     bool     `default:"false" flag:"code" info:"⚠️  DEPRECATED: use filename argument"`
 }

@@ -15,7 +15,7 @@ type flagsAdd struct {
 	KeySigAlgo  string `default:"ECDSA_P256" flag:"sig-algo" info:"Signature algorithm"`
 	KeyHashAlgo string `default:"SHA3_256" flag:"hash-algo" info:"Hashing algorithm"`
 	KeyIndex    int    `flag:"index" info:"Account key index"`
-	KeyHex      string `flag:"privateKey" info:"Private key in hex format"`
+	KeyHex      string `flag:"private-key" info:"Private key in hex format"`
 	KeyContext  string `flag:"context" info:"Projects/<PROJECTID>/locations/<LOCATION>/keyRings/<KEYRINGID>/cryptoKeys/<KEYID>/cryptoKeyVersions/<KEYVERSION>"`
 	Overwrite   bool   `flag:"overwrite,o" info:"Overwrite an existing account"`
 }

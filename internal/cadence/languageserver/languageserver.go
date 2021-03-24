@@ -29,7 +29,7 @@ import (
 )
 
 type Config struct {
-	EnableFlowClient bool `default:"true" flag:"enableFlowClient" info:"Enable Flow client functionality"`
+	EnableFlowClient bool `default:"true" flag:"enable-flow-client" info:"Enable Flow client functionality"`
 }
 
 var conf Config

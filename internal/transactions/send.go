@@ -27,7 +27,7 @@ import (
 )
 
 type flagsSend struct {
-	ArgsJSON string   `default:"" flag:"argsJSON" info:"arguments in JSON-Cadence format"`
+	ArgsJSON string   `default:"" flag:"args-json" info:"arguments in JSON-Cadence format"`
 	Args     []string `default:"" flag:"arg" info:"argument in Type:Value format"`
 	Signer   string   `default:"emulator-account" flag:"signer"`
 	Code     string   `default:"" flag:"code" info:"⚠️  DEPRECATED: use filename argument"`
