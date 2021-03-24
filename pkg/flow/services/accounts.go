@@ -30,7 +30,6 @@ import (
 	"github.com/onflow/flow-cli/pkg/flow"
 	"github.com/onflow/flow-cli/pkg/flow/config"
 	"github.com/onflow/flow-cli/pkg/flow/gateway"
-	"github.com/onflow/flow-cli/pkg/flow/keys"
 	"github.com/onflow/flow-cli/pkg/flow/util"
 	tmpl "github.com/onflow/flow-core-contracts/lib/go/templates"
 	flowsdk "github.com/onflow/flow-go-sdk"
@@ -79,7 +78,6 @@ func (a *Accounts) Add(
 	hashingAlgorithm string,
 	keyIndex int,
 	keyHex string,
-	keyContext string,
 	overwrite bool,
 	path []string,
 ) (*flow.Account, error) {
@@ -89,7 +87,7 @@ func (a *Accounts) Add(
 
 	existingAccount := a.project.GetAccountByName(name)
 	if existingAccount != nil && !overwrite {
-		return nil, fmt.Errorf("account with name [%s] already exists in the config, use --overwrite flag if you want to overwrite it", name)
+		return nil, fmt.Errorf("account with name [%s] already exists in the config, use `overwrite` if you want to overwrite it", name)
 	}
 
 	sigAlgo, hashAlgo, err := util.ConvertSigAndHashAlgo(signatureAlgorithm, hashingAlgorithm)
@@ -132,17 +130,8 @@ func (a *Accounts) Add(
 		accountKey.Context = make(map[string]string)
 		accountKey.Context[config.PrivateKeyField] = keyHex
 
-	} else if keyContext != "" {
-		keyCtx, err := keys.KeyContextFromKMSResourceID(keyContext)
-		if err != nil {
-			return nil, fmt.Errorf("key context could not be parsed: %s, with error: %s", keyContext, err.Error())
-		}
-
-		accountKey.Type = config.KeyTypeGoogleKMS
-		accountKey.Context = keyCtx
-
 	} else {
-		return nil, fmt.Errorf("either --privatekey or --context flag must be provided")
+		return nil, fmt.Errorf("private key must be provided")
 	}
 
 	confAccount.Keys = []config.AccountKey{accountKey}
@@ -261,7 +250,7 @@ func (a *Accounts) Create(
 	for _, contract := range contracts {
 		contractFlagContent := strings.SplitN(contract, ":", 2)
 		if len(contractFlagContent) != 2 {
-			return nil, fmt.Errorf("wrong format for contract flag. Correct format is name:path, but got: %s", contract)
+			return nil, fmt.Errorf("wrong format for contract. Correct format is name:path, but got: %s", contract)
 		}
 		contractName := contractFlagContent[0]
 		contractPath := contractFlagContent[1]

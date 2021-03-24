@@ -16,7 +16,6 @@ type flagsAdd struct {
 	KeyHashAlgo string `default:"SHA3_256" flag:"hash-algo" info:"Hashing algorithm"`
 	KeyIndex    int    `flag:"index" info:"Account key index"`
 	KeyHex      string `flag:"private-key" info:"Private key in hex format"`
-	KeyContext  string `flag:"context" info:"Projects/<PROJECTID>/locations/<LOCATION>/keyRings/<KEYRINGID>/cryptoKeys/<KEYID>/cryptoKeyVersions/<KEYVERSION>"`
 	Overwrite   bool   `flag:"overwrite,o" info:"Overwrite an existing account"`
 }
 
@@ -42,7 +41,6 @@ var AddCommand = &command.Command{
 			addFlags.KeyHashAlgo,
 			addFlags.KeyIndex,
 			addFlags.KeyHex,
-			addFlags.KeyContext,
 			addFlags.Overwrite,
 			flow.ConfigPath,
 		)
