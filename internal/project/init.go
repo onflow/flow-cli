@@ -88,7 +88,7 @@ func (r *InitResult) String() string {
 	fmt.Fprintf(writer,
 		"Start emulator by running: %s \nReset configuration using: %s.\n",
 		util.Bold("flow emulator start"),
-		util.Bold("flow init --rest"),
+		util.Bold("flow init --reset"),
 	)
 
 	writer.Flush()
