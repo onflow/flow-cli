@@ -54,14 +54,14 @@ func NewProject(
 }
 
 func (p *Project) Init(reset bool, serviceKeySigAlgo string, serviceKeyHashAlgo string, servicePrivateKey string) (*project.Project, error) {
-	if !project.ProjectExists(project.DefaultConfigPath) || reset {
+	if !project.Exists(project.DefaultConfigPath) || reset {
 
 		sigAlgo, hashAlgo, err := util.ConvertSigAndHashAlgo(serviceKeySigAlgo, serviceKeyHashAlgo)
 		if err != nil {
 			return nil, err
 		}
 
-		proj, err := project.InitProject(sigAlgo, hashAlgo)
+		proj, err := project.Init(sigAlgo, hashAlgo)
 		if err != nil {
 			return nil, err
 		}

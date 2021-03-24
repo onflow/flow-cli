@@ -44,8 +44,8 @@ type Project struct {
 	accounts []*Account
 }
 
-// LoadProject loads configuration and setup the project
-func LoadProject(configFilePath []string) (*Project, error) {
+// Load loads configuration and setup the project
+func Load(configFilePath []string) (*Project, error) {
 	composer := config.NewLoader(afero.NewOsFs())
 
 	// here we add all available parsers (more to add yaml etc...)
@@ -68,13 +68,25 @@ func LoadProject(configFilePath []string) (*Project, error) {
 	return proj, nil
 }
 
-// ProjectExists checks if project exists
-func ProjectExists(path string) bool {
+// Save saves project to path configuration
+func (p *Project) Save(path string) error {
+	p.conf.Accounts = accountsToConfig(p.accounts)
+	err := p.composer.Save(p.conf, path)
+
+	if err != nil {
+		return fmt.Errorf("failed to save project configuration to: %s", path)
+	}
+
+	return nil
+}
+
+// Exists checks if project exists
+func Exists(path string) bool {
 	return config.Exists(path)
 }
 
-// InitProject initializes the project
-func InitProject(sigAlgo crypto.SignatureAlgorithm, hashAlgo crypto.HashAlgorithm) (*Project, error) {
+// Init initializes the project
+func Init(sigAlgo crypto.SignatureAlgorithm, hashAlgo crypto.HashAlgorithm) (*Project, error) {
 	emulatorServiceAccount, err := generateEmulatorServiceAccount(sigAlgo, hashAlgo)
 
 	composer := config.NewLoader(afero.NewOsFs())
@@ -107,29 +119,6 @@ func defaultConfig(defaultEmulatorServiceAccount *Account) *config.Config {
 			ChainID: flow.Emulator,
 		}},
 	}
-}
-
-func generateEmulatorServiceAccount(sigAlgo crypto.SignatureAlgorithm, hashAlgo crypto.HashAlgorithm) (*Account, error) {
-	seed, err := util.RandomSeed(crypto.MinSeedLength)
-	if err != nil {
-		return nil, err
-	}
-
-	privateKey, err := crypto.GeneratePrivateKey(sigAlgo, seed)
-	if err != nil {
-		return nil, fmt.Errorf("failed to generate emulator service key: %v", err)
-	}
-
-	serviceAccountKey := NewHexAccountKeyFromPrivateKey(0, hashAlgo, privateKey)
-
-	return &Account{
-		name:    defaultEmulatorServiceAccountName,
-		address: flow.ServiceAddress(flow.Emulator),
-		chainID: flow.Emulator,
-		keys: []AccountKey{
-			serviceAccountKey,
-		},
-	}, nil
 }
 
 func newProject(conf *config.Config, composer *config.Loader) (*Project, error) {
@@ -275,17 +264,6 @@ func (p *Project) GetAliases(network string) map[string]string {
 	}
 
 	return aliases
-}
-
-func (p *Project) Save(path string) error {
-	p.conf.Accounts = accountsToConfig(p.accounts)
-	err := p.composer.Save(p.conf, path)
-
-	if err != nil {
-		return fmt.Errorf("failed to save project configuration to: %s", path)
-	}
-
-	return nil
 }
 
 type Contract struct {

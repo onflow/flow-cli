@@ -137,7 +137,7 @@ func InitFlags(cmd *cobra.Command) {
 func (c Command) Add(parent *cobra.Command) {
 	c.Cmd.RunE = func(cmd *cobra.Command, args []string) error {
 		// initialize project but ignore error since config can be missing
-		proj, err := project.LoadProject(util.ConfigPath)
+		proj, err := project.Load(util.ConfigPath)
 		// here we ignore if config does not exist as some commands don't require it
 		if !errors.Is(err, config.ErrDoesNotExist) {
 			handleError("Config Error", err)

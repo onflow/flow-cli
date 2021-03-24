@@ -27,7 +27,7 @@ func TestAccounts(t *testing.T) {
 
 	mock := &tests.MockGateway{}
 
-	proj, err := project.InitProject(crypto.ECDSA_P256, crypto.SHA3_256)
+	proj, err := project.Init(crypto.ECDSA_P256, crypto.SHA3_256)
 	assert.NoError(t, err)
 
 	accounts := NewAccounts(mock, proj, output.NewStdoutLogger(output.NoneLog))

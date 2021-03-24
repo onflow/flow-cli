@@ -42,7 +42,7 @@ func configuredServiceKey(
 	crypto.SignatureAlgorithm,
 	crypto.HashAlgorithm,
 ) {
-	proj, err := project.LoadProject(util.ConfigPath)
+	proj, err := project.Load(util.ConfigPath)
 	if err != nil {
 		util.Exitf(1, err.Error())
 	}

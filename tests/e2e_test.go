@@ -54,7 +54,7 @@ func TestAccount(t *testing.T) {
 	gw, err := gateway.NewGrpcGateway(host)
 	assert.NoError(t, err)
 
-	project, err := project.LoadProject([]string{conf})
+	project, err := project.Load([]string{conf})
 	assert.NoError(t, err)
 
 	accounts := services.NewAccounts(gw, project, logger)
@@ -133,7 +133,7 @@ func TestEvents(t *testing.T) {
 	gw, err := gateway.NewGrpcGateway(host)
 	assert.NoError(t, err)
 
-	project, err := project.LoadProject([]string{conf})
+	project, err := project.Load([]string{conf})
 	assert.NoError(t, err)
 
 	events := services.NewEvents(gw, project, logger)
@@ -154,7 +154,7 @@ func TestKeys(t *testing.T) {
 	gw, err := gateway.NewGrpcGateway(host)
 	assert.NoError(t, err)
 
-	proj, err := project.LoadProject([]string{conf})
+	proj, err := project.Load([]string{conf})
 	assert.NoError(t, err)
 
 	keys := services.NewKeys(gw, proj, logger)
@@ -176,7 +176,7 @@ func TestProject(t *testing.T) {
 	gw, err := gateway.NewGrpcGateway(host)
 	assert.NoError(t, err)
 
-	project, err := project.LoadProject([]string{conf})
+	project, err := project.Load([]string{conf})
 	assert.NoError(t, err)
 
 	projects := services.NewProject(gw, project, logger)
@@ -200,7 +200,7 @@ func TestScripts(t *testing.T) {
 	gateway, err := gateway.NewGrpcGateway(host)
 	assert.NoError(t, err)
 
-	project, err := project.LoadProject([]string{conf})
+	project, err := project.Load([]string{conf})
 	assert.NoError(t, err)
 
 	scripts := services.NewScripts(gateway, project, logger)
@@ -228,7 +228,7 @@ func TestTransactions(t *testing.T) {
 	gw, err := gateway.NewGrpcGateway(host)
 	assert.NoError(t, err)
 
-	project, err := project.LoadProject([]string{conf})
+	project, err := project.Load([]string{conf})
 	assert.NoError(t, err)
 
 	transactions := services.NewTransactions(gw, project, logger)

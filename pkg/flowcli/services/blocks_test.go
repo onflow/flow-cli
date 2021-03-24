@@ -17,7 +17,7 @@ func TestBlocks(t *testing.T) {
 
 	mock := &tests.MockGateway{}
 
-	project, err := project.InitProject(crypto.ECDSA_P256, crypto.SHA3_256)
+	project, err := project.Init(crypto.ECDSA_P256, crypto.SHA3_256)
 	assert.NoError(t, err)
 
 	blocks := NewBlocks(mock, project, output.NewStdoutLogger(output.InfoLog))

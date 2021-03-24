@@ -1,6 +1,8 @@
 package project
 
 import (
+	"fmt"
+
 	"github.com/onflow/flow-cli/pkg/flowcli/config"
 	"github.com/onflow/flow-cli/pkg/flowcli/util"
 	"github.com/onflow/flow-go-sdk"
@@ -92,4 +94,27 @@ func accountToConfig(account *Account) config.Account {
 		ChainID: account.chainID,
 		Keys:    keyConfigs,
 	}
+}
+
+func generateEmulatorServiceAccount(sigAlgo crypto.SignatureAlgorithm, hashAlgo crypto.HashAlgorithm) (*Account, error) {
+	seed, err := util.RandomSeed(crypto.MinSeedLength)
+	if err != nil {
+		return nil, err
+	}
+
+	privateKey, err := crypto.GeneratePrivateKey(sigAlgo, seed)
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate emulator service key: %v", err)
+	}
+
+	serviceAccountKey := NewHexAccountKeyFromPrivateKey(0, hashAlgo, privateKey)
+
+	return &Account{
+		name:    defaultEmulatorServiceAccountName,
+		address: flow.ServiceAddress(flow.Emulator),
+		chainID: flow.Emulator,
+		keys: []AccountKey{
+			serviceAccountKey,
+		},
+	}, nil
 }
