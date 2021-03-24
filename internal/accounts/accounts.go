@@ -34,13 +34,13 @@ var Cmd = &cobra.Command{
 }
 
 func init() {
-	AddCommand.Add(Cmd)
-	AddContractCommand.Add(Cmd)
-	RemoveCommand.Add(Cmd)
-	UpdateCommand.Add(Cmd)
-	CreateCommand.Add(Cmd)
-	StakingCommand.Add(Cmd)
-	GetCommand.Add(Cmd)
+	AddCommand.AddToParent(Cmd)
+	AddContractCommand.AddToParent(Cmd)
+	RemoveCommand.AddToParent(Cmd)
+	UpdateCommand.AddToParent(Cmd)
+	CreateCommand.AddToParent(Cmd)
+	StakingCommand.AddToParent(Cmd)
+	GetCommand.AddToParent(Cmd)
 }
 
 // AccountResult represent result from all account commands

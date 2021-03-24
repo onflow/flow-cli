@@ -34,8 +34,8 @@ var Cmd = &cobra.Command{
 }
 
 func init() {
-	DeployCommand.Add(Cmd)
-	InitCommand.Add(Cmd)
+	DeployCommand.AddToParent(Cmd)
+	InitCommand.AddToParent(Cmd)
 }
 
 // ProjectResult structure

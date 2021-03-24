@@ -34,7 +34,7 @@ var Cmd = &cobra.Command{
 }
 
 func init() {
-	ExecuteCommand.Add(Cmd)
+	ExecuteCommand.AddToParent(Cmd)
 }
 
 type ScriptResult struct {

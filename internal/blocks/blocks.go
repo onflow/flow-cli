@@ -37,7 +37,7 @@ var Cmd = &cobra.Command{
 }
 
 func init() {
-	GetCommand.Add(Cmd)
+	GetCommand.AddToParent(Cmd)
 }
 
 // BlockResult

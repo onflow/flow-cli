@@ -141,12 +141,12 @@ func InitFlags(cmd *cobra.Command) {
 	)
 }
 
-// addCommand add new command to main cmd
+// AddToParent add new command to main parent cmd
 // and initializes all necessary things as well as take care of errors and output
 // here we can do all boilerplate code that is else copied in each command and make sure
 // we have one place to handle all errors and ensure commands have consistent results
-func (c Command) Add(parent *cobra.Command) {
-	c.Cmd.RunE = func(cmd *cobra.Command, args []string) error {
+func (c Command) AddToParent(parent *cobra.Command) {
+	c.Cmd.Run = func(cmd *cobra.Command, args []string) {
 		// initialize project but ignore error since config can be missing
 		proj, err := project.Load(util.ConfigPath)
 		// here we ignore if config does not exist as some commands don't require it
@@ -175,8 +175,6 @@ func (c Command) Add(parent *cobra.Command) {
 		// output result
 		err = outputResult(formattedResult, flags.Save)
 		handleError("Output Error", err)
-
-		return nil
 	}
 
 	bindFlags(c)
