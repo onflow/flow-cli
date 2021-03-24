@@ -26,17 +26,11 @@ import (
 	"os/exec"
 	"regexp"
 
-	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/onflow/flow-go-sdk/crypto/cloudkms"
 )
 
 const (
-	EnvPrefix          = "FLOW"
-	DefaultSigAlgo     = crypto.ECDSA_P256
-	DefaultHashAlgo    = crypto.SHA3_256
-	DefaultHost        = "127.0.0.1:3569"
-	MaxGRPCMessageSize = 1024 * 1024 * 16
-	Indent             = "  "
+	EnvPrefix = "FLOW"
 )
 
 var ConfigPath = []string{"flow.json"}
@@ -97,10 +91,4 @@ func GcloudApplicationSignin(resourceID string) error {
 	os.Setenv("GOOGLE_APPLICATION_CREDENTIALS", googleApplicationCreds)
 
 	return nil
-}
-
-func PrintIndent(numberOfIndents int) {
-	for i := 0; i < numberOfIndents; i++ {
-		fmt.Print(Indent)
-	}
 }

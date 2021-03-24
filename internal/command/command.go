@@ -184,17 +184,17 @@ func createGateway(host string) (gateway.Gateway, error) {
 }
 
 // resolveHost from the flags provided
-func resolveHost(project *project.Project, hostFlag string, networkFlag string) (string, error) {
+func resolveHost(proj *project.Project, hostFlag string, networkFlag string) (string, error) {
 	host := hostFlag
-	if networkFlag != "" && project != nil {
-		check := project.GetNetworkByName(networkFlag)
+	if networkFlag != "" && proj != nil {
+		check := proj.GetNetworkByName(networkFlag)
 		if check == nil {
 			return "", fmt.Errorf("provided network with name %s doesn't exists in condiguration", networkFlag)
 		}
 
-		host = project.Host(networkFlag)
+		host = proj.Host(networkFlag)
 	} else if host == "" {
-		host = util.DefaultHost
+		host = project.DefaultEmulatorHost
 	}
 
 	return host, nil

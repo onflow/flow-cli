@@ -100,10 +100,10 @@ func Init(sigAlgo crypto.SignatureAlgorithm, hashAlgo crypto.HashAlgorithm) (*Pr
 }
 
 const (
-	defaultEmulatorNetworkName        = "emulator"
-	defaultEmulatorServiceAccountName = "emulator-account"
-	defaultEmulatorPort               = 3569
-	defaultEmulatorHost               = "127.0.0.1:3569"
+	DefaultEmulatorNetworkName        = "emulator"
+	DefaultEmulatorServiceAccountName = "emulator-account"
+	DefaultEmulatorPort               = 3569
+	DefaultEmulatorHost               = "127.0.0.1:3569"
 )
 
 func defaultConfig(defaultEmulatorServiceAccount *Account) *config.Config {
@@ -111,11 +111,11 @@ func defaultConfig(defaultEmulatorServiceAccount *Account) *config.Config {
 		Emulators: config.Emulators{{
 			Name:           config.DefaultEmulatorConfigName,
 			ServiceAccount: defaultEmulatorServiceAccount.name,
-			Port:           defaultEmulatorPort,
+			Port:           DefaultEmulatorPort,
 		}},
 		Networks: config.Networks{{
-			Name:    defaultEmulatorNetworkName,
-			Host:    defaultEmulatorHost,
+			Name:    DefaultEmulatorNetworkName,
+			Host:    DefaultEmulatorHost,
 			ChainID: flow.Emulator,
 		}},
 	}
@@ -154,7 +154,7 @@ func (p *Project) ContractConflictExists(network string) bool {
 
 func (p *Project) DefaultHost(network string) string {
 	if network == "" {
-		network = defaultEmulatorNetworkName
+		network = DefaultEmulatorNetworkName
 	}
 
 	return p.conf.Networks.GetByName(network).Host
