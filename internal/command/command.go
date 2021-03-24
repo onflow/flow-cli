@@ -95,7 +95,7 @@ func InitFlags(cmd *cobra.Command) {
 		"output",
 		"o",
 		flags.Format,
-		"Output format, values (json, inline)",
+		"Output format, values: 'json', 'inline'",
 	)
 
 	cmd.PersistentFlags().StringVarP(
@@ -111,7 +111,7 @@ func InitFlags(cmd *cobra.Command) {
 		"log",
 		"l",
 		flags.Log,
-		"Log level verbosity, values (none, error, debug)",
+		"Log level verbosity, values: 'none', 'error', 'debug'",
 	)
 
 	cmd.PersistentFlags().StringSliceVarP(
