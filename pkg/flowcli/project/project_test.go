@@ -483,3 +483,35 @@ func Test_GetAliasesComplex(t *testing.T) {
 	assert.Equal(t, cTestnet[0].Name, "NonFungibleToken")
 	assert.Equal(t, cTestnet[1].Name, "FungibleToken")
 }
+
+func Test_SDKParsing(t *testing.T) {
+
+	t.Run("Address Parsing", func(t *testing.T) {
+		addr1 := flow.HexToAddress("0xf8d6e0586b0a20c7")
+		addr2 := flow.HexToAddress("f8d6e0586b0a20c7")
+
+		assert.True(t, addr1.IsValid(flow.Emulator))
+		assert.True(t, addr2.IsValid(flow.Emulator))
+		assert.Equal(t, addr1.String(), addr2.String())
+	})
+	/* TODO test this after it is implemented in sdk
+	t.Run("Tx ID Parsing", func(t *testing.T) {
+		txid := "09f24d9dcde4c4d63d2f790e42905427ba04e6b0d601a7ec790b663f7cf2d942"
+		id1 := flow.HexToID(txid)
+		id2 := flow.HexToID("0x" + txid)
+
+		assert.Equal(t, id1.String(), id2.String())
+	})
+
+	t.Run("Public Key Hex Parsing", func(t *testing.T) {
+		pubKey := "642fcceac4b0af1ea7b78c11d5ce2ed505bb41b13c9e3f57725246b75d828651d9387e0cd19c5ebb1a44d571ce58cc3a83f0d92a6d3a70a45fe359d5d25d15d7"
+		k1, err := crypto.DecodePublicKeyHex(crypto.ECDSA_P256, pubKey)
+		assert.NoError(t, err)
+
+		k2, err := crypto.DecodePublicKeyHex(crypto.ECDSA_P256, "0x"+pubKey)
+		assert.NoError(t, err)
+
+		assert.Equal(t, k1.String(), k2.String())
+	})
+	*/
+}

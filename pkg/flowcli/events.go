@@ -77,11 +77,7 @@ func (e *Events) GetAddress() *flow.Address {
 		addr = strings.Repeat("0", addressLength-len(addr)) + addr
 	}
 
-	address := flow.HexToAddress(
-		strings.ReplaceAll(
-			strings.ReplaceAll(addr, "0x", ""),
-			`"`, ""),
-	)
+	address := flow.HexToAddress(strings.ReplaceAll(addr, `"`, ""))
 
 	return &address
 }

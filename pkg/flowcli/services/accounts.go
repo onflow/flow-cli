@@ -62,9 +62,7 @@ func NewAccounts(
 func (a *Accounts) Get(address string) (*flow.Account, error) {
 	a.logger.StartProgress(fmt.Sprintf("Loading %s...", address))
 
-	flowAddress := flow.HexToAddress(
-		strings.ReplaceAll(address, "0x", ""),
-	)
+	flowAddress := flow.HexToAddress(address)
 
 	account, err := a.gateway.GetAccount(flowAddress)
 	a.logger.StopProgress("")
@@ -168,9 +166,7 @@ func (a *Accounts) Add(
 func (a *Accounts) StakingInfo(accountAddress string) (*cadence.Value, *cadence.Value, error) {
 	a.logger.StartProgress(fmt.Sprintf("Fetching info for %s...", accountAddress))
 
-	address := flow.HexToAddress(
-		strings.ReplaceAll(accountAddress, "0x", ""),
-	)
+	address := flow.HexToAddress(accountAddress)
 
 	cadenceAddress := []cadence.Value{cadence.NewAddress(address)}
 
@@ -462,16 +458,14 @@ func (a *Accounts) removeContract(
 }
 
 // AccountFromAddressAndKey get account from address and private key
-func accountFromAddressAndKey(accountAddress string, accountPrivateKey string) (*project.Account, error) {
-	address := flow.HexToAddress(
-		strings.ReplaceAll(accountAddress, "0x", ""),
-	)
-
+func accountFromAddressAndKey(address string, accountPrivateKey string) (*project.Account, error) {
 	privateKey, err := crypto.DecodePrivateKeyHex(crypto.ECDSA_P256, accountPrivateKey)
 	if err != nil {
 		return nil, fmt.Errorf("private key is not correct")
 	}
 
-	account := project.AccountFromAddressAndKey(address, privateKey)
-	return account, nil
+	return project.AccountFromAddressAndKey(
+		flow.HexToAddress(address),
+		privateKey,
+	), nil
 }

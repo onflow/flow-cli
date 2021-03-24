@@ -20,7 +20,6 @@ package json
 
 import (
 	"encoding/json"
-	"strings"
 
 	"github.com/onflow/flow-cli/pkg/flowcli/util"
 
@@ -38,7 +37,7 @@ func transformChainID(rawChainID string, rawAddress string) flow.ChainID {
 	}
 
 	if rawChainID == "" {
-		address := flow.HexToAddress(strings.ReplaceAll(rawAddress, "0x", ""))
+		address := flow.HexToAddress(rawAddress)
 		chainID, _ := util.GetAddressNetwork(address)
 		return chainID
 	}
@@ -47,18 +46,14 @@ func transformChainID(rawChainID string, rawAddress string) flow.ChainID {
 }
 
 // transformAddress returns address based on address and chain id
-func transformAddress(rawAddress string, rawChainID string) flow.Address {
-	var address flow.Address
-	chainID := transformChainID(rawChainID, rawAddress)
+func transformAddress(address string, rawChainID string) flow.Address {
+	chainID := transformChainID(rawChainID, address)
 
-	if rawAddress == "service" {
-		address = flow.ServiceAddress(chainID)
-	} else {
-		rawAddress = strings.ReplaceAll(rawAddress, "0x", "") // remove 0x if present
-		address = flow.HexToAddress(rawAddress)
+	if address == "service" {
+		return flow.ServiceAddress(chainID)
 	}
 
-	return address
+	return flow.HexToAddress(address)
 }
 
 // transformToConfig transforms json structures to config structure

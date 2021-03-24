@@ -81,9 +81,7 @@ func (t *Transactions) SendForAddress(
 	argsJSON string,
 ) (*flow.Transaction, *flow.TransactionResult, error) {
 
-	address := flow.HexToAddress(
-		strings.ReplaceAll(signerAddress, "0x", ""),
-	)
+	address := flow.HexToAddress(signerAddress)
 
 	privateKey, err := crypto.DecodePrivateKeyHex(crypto.ECDSA_P256, signerPrivateKey)
 	if err != nil {

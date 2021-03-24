@@ -22,7 +22,6 @@ import (
 	"errors"
 	"fmt"
 	"path"
-	"strings"
 
 	"github.com/onflow/flow-cli/pkg/flowcli/util"
 
@@ -256,7 +255,7 @@ func (p *Project) AddOrUpdateAccount(account *Account) {
 // GetAccountByAddress adds new account by address
 func (p *Project) GetAccountByAddress(address string) *Account {
 	for _, account := range p.accounts {
-		if account.address.String() == strings.ReplaceAll(address, "0x", "") {
+		if account.address.String() == address {
 			return account
 		}
 	}

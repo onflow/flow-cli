@@ -124,14 +124,6 @@ func TestAccount(t *testing.T) {
 		assert.Equal(t, string(acc.Contracts["Hello"]), "")
 	})
 
-	t.Run("Address Parsing", func(t *testing.T) {
-		addr1 := flow.HexToAddress("0xf8d6e0586b0a20c7")
-		addr2 := flow.HexToAddress("f8d6e0586b0a20c7")
-
-		assert.True(t, addr1.IsValid(flow.Emulator))
-		assert.True(t, addr2.IsValid(flow.Emulator))
-		assert.Equal(t, addr1.String(), addr2.String())
-	})
 }
 
 func TestEvents(t *testing.T) {
