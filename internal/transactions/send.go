@@ -41,7 +41,7 @@ var SendCommand = &command.Command{
 		Use:     "send <filename>",
 		Short:   "Send a transaction",
 		Args:    cobra.ExactArgs(1),
-		Example: `flow transactions send tx.cdc --args String:"Hello world"`,
+		Example: `flow transactions send tx.cdc --arg String:"Hello world"`,
 	},
 	Flags: &sendFlags,
 	Run: func(
