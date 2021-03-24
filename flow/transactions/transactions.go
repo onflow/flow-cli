@@ -22,7 +22,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/flow/transactions/send"
-	"github.com/onflow/flow-cli/flow/transactions/sign"
 	"github.com/onflow/flow-cli/flow/transactions/status"
 )
 
@@ -34,6 +33,5 @@ var Cmd = &cobra.Command{
 
 func init() {
 	Cmd.AddCommand(send.Cmd)
-	Cmd.AddCommand(sign.Cmd)
 	Cmd.AddCommand(status.Cmd)
 }
