@@ -96,5 +96,6 @@ func (s *StdoutLogger) StopProgress(msg string) {
 
 	if s.spinner != nil {
 		s.spinner.Stop(msg)
+		s.spinner = nil
 	}
 }
