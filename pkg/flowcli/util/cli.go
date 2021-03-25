@@ -86,7 +86,6 @@ func GcloudApplicationSignin(resourceID string) error {
 	regexResult := squareBracketRegex.FindAllStringSubmatch(string(output), -1)
 	// Should only be one value. Second index since first index contains the square brackets
 	googleApplicationCreds := regexResult[0][1]
-	fmt.Printf("Saving credentials and setting GOOGLE_APPLICATION_CREDENTIALS to file: %s\n", googleApplicationCreds)
 
 	os.Setenv("GOOGLE_APPLICATION_CREDENTIALS", googleApplicationCreds)
 
