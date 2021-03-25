@@ -68,7 +68,7 @@ var Cmd = &cobra.Command{
 		}
 
 		for i, publicKeyHex := range conf.Keys {
-			publicKey := cli.MustDecodePublicKeyHex(cli.DefaultSigAlgo, publicKeyHex)
+			publicKey := cli.MustDecodePublicKeyHex(sigAlgo, publicKeyHex)
 			accountKeys[i] = &flow.AccountKey{
 				PublicKey: publicKey,
 				SigAlgo:   sigAlgo,
