@@ -273,21 +273,22 @@ func handleError(description string, err error) {
 	// handle rpc error
 	switch t := err.(type) {
 	case *client.RPCError:
-		fmt.Fprintf(os.Stderr, "❌  Grpc Error: %s \n", t.GRPCStatus().Err().Error())
+		fmt.Fprintf(os.Stderr, "❌ Grpc Error: %s \n", t.GRPCStatus().Err().Error())
 	default:
 		if strings.Contains(err.Error(), "transport:") {
 			fmt.Fprintf(os.Stderr, "❌ %s \n", strings.Split(err.Error(), "transport:")[1])
-			fmt.Fprintf(os.Stderr, "⚠️  Make sure your emulator is running or connection address is correct.")
+			fmt.Fprintf(os.Stderr, "🙏 Make sure your emulator is running or connection address is correct.")
 		} else if strings.Contains(err.Error(), "NotFound desc =") {
-			fmt.Fprintf(os.Stderr, "❌  Not Found:%s \n", strings.Split(err.Error(), "NotFound desc =")[1])
+			fmt.Fprintf(os.Stderr, "❌ Not Found:%s \n", strings.Split(err.Error(), "NotFound desc =")[1])
 		} else if strings.Contains(err.Error(), "code = InvalidArgument desc = ") {
-			fmt.Fprintf(os.Stderr, "❌  Invalid argument: %s \n", strings.Split(err.Error(), "code = InvalidArgument desc = ")[1])
-			fmt.Fprintf(os.Stderr, "⚠️  Check your argument and flags value, you can use --help.")
+			fmt.Fprintf(os.Stderr, "❌ Invalid argument: %s \n", strings.Split(err.Error(), "code = InvalidArgument desc = ")[1])
+			fmt.Fprintf(os.Stderr, "🙏 Check your argument and flags value, you can use --help.")
 		} else if strings.Contains(err.Error(), "invalid signature:") {
-			fmt.Fprintf(os.Stderr, "❌  Invalid signature: %s \n", strings.Split(err.Error(), "invalid signature:")[1])
+			fmt.Fprintf(os.Stderr, "❌ Invalid signature: %s \n", strings.Split(err.Error(), "invalid signature:")[1])
+			fmt.Fprintf(os.Stderr, "🙏 Check your private key is provided and in correct format.")
 		} else if strings.Contains(err.Error(), "signature could not be verified using public key with") {
 			fmt.Fprintf(os.Stderr, "❌ %s: %s \n", description, err)
-			fmt.Fprintf(os.Stderr, "⚠️  If you are running emulator locally make sure that the emulator was started with the same config as used in this command. \nTry restarting the emulator.")
+			fmt.Fprintf(os.Stderr, "🙏 If you are running emulator locally make sure that the emulator was started with the same config as used in this command. \nTry restarting the emulator.")
 		} else {
 			fmt.Fprintf(os.Stderr, "❌ %s: %s", description, err)
 		}
