@@ -117,18 +117,6 @@ func (a *KmsAccountKey) Signer(ctx context.Context) (crypto.Signer, error) {
 	return accountKMSSigner, nil
 }
 
-func KeyContextFromKMSResourceID(resourceID string) (map[string]string, error) {
-	ctx := make(map[string]string)
-	ctx[config.KMSContextField] = resourceID
-
-	_, err := cloudkms.KeyFromResourceID(resourceID)
-	if err != nil {
-		return nil, err
-	}
-
-	return ctx, nil
-}
-
 func newKmsAccountKey(key config.AccountKey) (AccountKey, error) {
 	accountKMSKey, err := cloudkms.KeyFromResourceID(key.Context[config.KMSContextField])
 	if err != nil {
