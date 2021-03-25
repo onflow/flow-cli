@@ -282,10 +282,14 @@ func handleError(description string, err error) {
 			fmt.Fprintf(os.Stderr, "❌ Not Found:%s \n", strings.Split(err.Error(), "NotFound desc =")[1])
 		} else if strings.Contains(err.Error(), "code = InvalidArgument desc = ") {
 			fmt.Fprintf(os.Stderr, "❌ Invalid argument: %s \n", strings.Split(err.Error(), "code = InvalidArgument desc = ")[1])
-			fmt.Fprintf(os.Stderr, "🙏 Check your argument and flags value, you can use --help.")
+			if strings.Contains(err.Error(), "is invalid for chain") {
+				fmt.Fprintf(os.Stderr, "🙏 Check you are connecting to the correct network or account address you use is correct.")
+			} else {
+				fmt.Fprintf(os.Stderr, "🙏 Check your argument and flags value, you can use --help.")
+			}
 		} else if strings.Contains(err.Error(), "invalid signature:") {
 			fmt.Fprintf(os.Stderr, "❌ Invalid signature: %s \n", strings.Split(err.Error(), "invalid signature:")[1])
-			fmt.Fprintf(os.Stderr, "🙏 Check your private key is provided and in correct format.")
+			fmt.Fprintf(os.Stderr, "🙏 Check the signer private key is provided or is in the correct format. If running emulator, make sure it's using the same configuration as this command.")
 		} else if strings.Contains(err.Error(), "signature could not be verified using public key with") {
 			fmt.Fprintf(os.Stderr, "❌ %s: %s \n", description, err)
 			fmt.Fprintf(os.Stderr, "🙏 If you are running emulator locally make sure that the emulator was started with the same config as used in this command. \nTry restarting the emulator.")

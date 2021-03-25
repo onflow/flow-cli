@@ -19,6 +19,8 @@
 package accounts
 
 import (
+	"fmt"
+
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/pkg/flowcli/services"
 	"github.com/spf13/cobra"
@@ -31,6 +33,7 @@ type flagsCreate struct {
 	HashAlgo  string   `default:"SHA3_256" flag:"hash-algo" info:"Hash used for the digest"`
 	Name      string   `default:"default" flag:"name" info:"Name used for saving account"`
 	Contracts []string `flag:"contract" info:"Contract to be deployed during account creation. <name:filename>"`
+	Results   bool     `default:"false" flag:"results" info:"⚠️  DEPRECATED: use contracts flag instead"`
 }
 
 var createFlags = flagsCreate{}
@@ -38,7 +41,7 @@ var createFlags = flagsCreate{}
 var CreateCommand = &command.Command{
 	Cmd: &cobra.Command{
 		Use:     "create",
-		Short:   "Create a new account",
+		Short:   "Create a new account on network",
 		Example: `flow accounts create --key d651f1931a2...8745`,
 	},
 	Flags: &createFlags,
@@ -48,6 +51,10 @@ var CreateCommand = &command.Command{
 		globalFlags command.GlobalFlags,
 		services *services.Services,
 	) (command.Result, error) {
+		if createFlags.Results {
+			return nil, fmt.Errorf("⚠️  DEPRECATED: results flags is deperacated, results are by default included in all executions.")
+		}
+
 		account, err := services.Accounts.Create(
 			createFlags.Signer,
 			createFlags.Keys,

@@ -18,7 +18,7 @@ type flagsAdd struct {
 	KeyHashAlgo string `default:"SHA3_256" flag:"hash-algo" info:"Hashing algorithm"`
 	KeyIndex    int    `flag:"index" info:"Account key index"`
 	KeyHex      string `flag:"private-key" info:"Private key in hex format"`
-	Overwrite   bool   `flag:"overwrite,o" info:"Overwrite an existing account"`
+	Overwrite   bool   `flag:"overwrite" info:"Overwrite an existing account"`
 }
 
 var addFlags = flagsAdd{}
@@ -26,7 +26,7 @@ var addFlags = flagsAdd{}
 var AddCommand = &command.Command{
 	Cmd: &cobra.Command{
 		Use:     "add <name> <address>",
-		Short:   "Add account by name to config",
+		Short:   "Add account to config",
 		Example: `flow accounts add alice 18d6e0586b0a20c5 --private-key=11c5dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7`,
 		Args:    cobra.ExactArgs(2),
 	},

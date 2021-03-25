@@ -19,12 +19,16 @@
 package events
 
 import (
+	"fmt"
+
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/pkg/flowcli/services"
 	"github.com/spf13/cobra"
 )
 
-type flagsGenerate struct{}
+type flagsGenerate struct {
+	Verbose bool `flag:"verbose" info:"⚠️  DEPRECATED"`
+}
 
 var generateFlag = flagsGenerate{}
 
@@ -42,6 +46,10 @@ var GetCommand = &command.Command{
 		globalFlags command.GlobalFlags,
 		services *services.Services,
 	) (command.Result, error) {
+		if generateFlag.Verbose {
+			return nil, fmt.Errorf("⚠️  DEPRECATED: flag is deperacated.")
+		}
+
 		end := ""
 		if len(args) == 3 {
 			end = args[2] // block height range end

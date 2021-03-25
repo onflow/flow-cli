@@ -19,13 +19,16 @@
 package accounts
 
 import (
+	"fmt"
+
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/pkg/flowcli/services"
 	"github.com/spf13/cobra"
 )
 
 type flagsRemoveContract struct {
-	Signer string `default:"emulator-account" flag:"signer"`
+	Signer  string `default:"emulator-account" flag:"signer"`
+	Results bool   `default:"false" flag:"results" info:"⚠️  DEPRECATED: use contracts flag instead"`
 }
 
 var flagsRemove = flagsRemoveContract{}
@@ -37,13 +40,17 @@ var RemoveCommand = &command.Command{
 		Example: `flow accounts remove-contract FungibleToken`,
 		Args:    cobra.ExactArgs(1),
 	},
-	Flags: &addFlags,
+	Flags: &flagsRemove,
 	Run: func(
 		cmd *cobra.Command,
 		args []string,
 		globalFlags command.GlobalFlags,
 		services *services.Services,
 	) (command.Result, error) {
+		if createFlags.Results {
+			return nil, fmt.Errorf("⚠️  DEPRECATED: results flags is deperacated, results are by default included in all executions.")
+		}
+
 		account, err := services.Accounts.RemoveContract(
 			args[0], // name
 			flagsRemove.Signer,

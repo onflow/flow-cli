@@ -84,6 +84,16 @@ func (e *Events) Get(name string, start string, end string) ([]client.BlockEvent
 		return nil, fmt.Errorf("cannot have end height (%d) of block range less that start height (%d)", endHeight, startHeight)
 	}
 
+	maxBlockRange := uint64(10000)
+	if endHeight-startHeight > maxBlockRange {
+		return nil, fmt.Errorf("block range is too big: %d, maximum block range is %d", endHeight-startHeight, maxBlockRange)
+	}
+
+	events, err := e.gateway.GetEvents(name, startHeight, endHeight)
+	if err != nil {
+		return nil, err
+	}
+
 	e.logger.StopProgress("")
-	return e.gateway.GetEvents(name, startHeight, endHeight)
+	return events, nil
 }

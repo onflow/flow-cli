@@ -19,6 +19,8 @@
 package emulator
 
 import (
+	"strings"
+
 	"github.com/onflow/flow-cli/pkg/flowcli/config"
 	"github.com/onflow/flow-cli/pkg/flowcli/project"
 	"github.com/onflow/flow-cli/pkg/flowcli/util"
@@ -44,7 +46,11 @@ func configuredServiceKey(
 ) {
 	proj, err := project.Load(util.ConfigPath)
 	if err != nil {
-		util.Exitf(1, err.Error())
+		if strings.Contains(err.Error(), "project config file does not exist") {
+			util.Exitf(1, "🙏 Configuration is missing, initialize it with: 'flow project init' and then rerun this command.")
+		} else {
+			util.Exitf(1, err.Error())
+		}
 	}
 
 	serviceAccount, _ := proj.EmulatorServiceAccount()
@@ -69,4 +75,5 @@ func configuredServiceKey(
 func init() {
 	Cmd = start.Cmd(configuredServiceKey)
 	Cmd.Use = "emulator"
+	Cmd.Flags().MarkDeprecated("init", "init is deprecated use `flow project init` first")
 }

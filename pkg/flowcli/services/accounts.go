@@ -275,6 +275,9 @@ func (a *Accounts) Create(
 	if err != nil {
 		return nil, err
 	}
+	if result.Error != nil {
+		return nil, result.Error
+	}
 
 	events := flowcli.EventsFromTransaction(result)
 	newAccountAddress := events.GetAddress()

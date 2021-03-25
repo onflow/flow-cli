@@ -19,14 +19,19 @@
 package blocks
 
 import (
+	"fmt"
+
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/pkg/flowcli/services"
 	"github.com/spf13/cobra"
 )
 
 type flagsBlocks struct {
-	Events  string `default:"" flag:"events" info:"List events of this type for the block"`
-	Verbose bool   `default:"false" flag:"verbose" info:"Display transactions in block"`
+	Events      string `default:"" flag:"events" info:"List events of this type for the block"`
+	Verbose     bool   `default:"false" flag:"verbose" info:"Display transactions in block"`
+	Latest      bool   `default:"false" flag:"latest" info:"⚠️  DEPRECATED: use command argument"`
+	BlockID     string `default:"" flag:"id" info:"⚠️  DEPRECATED: use command argument"`
+	BlockHeight uint64 `default:"0" flag:"height" info:"⚠️  DEPRECATED: use command argument"`
 }
 
 var blockFlags = flagsBlocks{}
@@ -43,6 +48,10 @@ var GetCommand = &command.Command{
 		globalFlags command.GlobalFlags,
 		services *services.Services,
 	) (command.Result, error) {
+		if blockFlags.Latest || blockFlags.BlockID != "" || blockFlags.BlockHeight != 0 {
+			return nil, fmt.Errorf("⚠️  DEPRECATED: flag is deperacated, use command argument.")
+		}
+
 		block, events, collections, err := services.Blocks.GetBlock(
 			args[0], // block id
 			blockFlags.Events,
