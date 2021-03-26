@@ -20,46 +20,43 @@
 package main
 
 import (
+	"github.com/onflow/flow-cli/internal/accounts"
+	"github.com/onflow/flow-cli/internal/blocks"
+	"github.com/onflow/flow-cli/internal/cadence"
+	"github.com/onflow/flow-cli/internal/collections"
+	"github.com/onflow/flow-cli/internal/command"
+	"github.com/onflow/flow-cli/internal/emulator"
+	"github.com/onflow/flow-cli/internal/events"
+	"github.com/onflow/flow-cli/internal/keys"
+	"github.com/onflow/flow-cli/internal/project"
+	"github.com/onflow/flow-cli/internal/scripts"
+	"github.com/onflow/flow-cli/internal/transactions"
+	"github.com/onflow/flow-cli/internal/version"
+	"github.com/onflow/flow-cli/pkg/flowcli/util"
 	"github.com/spf13/cobra"
-
-	cli "github.com/onflow/flow-cli/flow"
-	"github.com/onflow/flow-cli/flow/accounts"
-	"github.com/onflow/flow-cli/flow/blocks"
-	"github.com/onflow/flow-cli/flow/cadence"
-	"github.com/onflow/flow-cli/flow/collections"
-	"github.com/onflow/flow-cli/flow/emulator"
-	"github.com/onflow/flow-cli/flow/events"
-	"github.com/onflow/flow-cli/flow/initialize"
-	"github.com/onflow/flow-cli/flow/keys"
-	"github.com/onflow/flow-cli/flow/project"
-	"github.com/onflow/flow-cli/flow/scripts"
-	"github.com/onflow/flow-cli/flow/transactions"
-	"github.com/onflow/flow-cli/flow/version"
 )
 
-var cmd = &cobra.Command{
-	Use:              "flow",
-	TraverseChildren: true,
-}
+func main() {
+	var cmd = &cobra.Command{
+		Use:              "flow",
+		TraverseChildren: true,
+	}
 
-func init() {
-	cmd.AddCommand(project.Cmd)
-	cmd.AddCommand(initialize.Cmd)
-	cmd.AddCommand(accounts.Cmd)
-	cmd.AddCommand(blocks.Cmd)
-	cmd.AddCommand(collections.Cmd)
-	cmd.AddCommand(keys.Cmd)
-	cmd.AddCommand(emulator.Cmd)
-	cmd.AddCommand(events.Cmd)
 	cmd.AddCommand(cadence.Cmd)
+	cmd.AddCommand(version.Cmd)
+	cmd.AddCommand(emulator.Cmd)
+	cmd.AddCommand(accounts.Cmd)
 	cmd.AddCommand(scripts.Cmd)
 	cmd.AddCommand(transactions.Cmd)
-	cmd.AddCommand(version.Cmd)
-	cmd.PersistentFlags().StringSliceVarP(&cli.ConfigPath, "config-path", "f", cli.ConfigPath, "Path to flow configuration file")
-}
+	cmd.AddCommand(keys.Cmd)
+	cmd.AddCommand(events.Cmd)
+	cmd.AddCommand(blocks.Cmd)
+	cmd.AddCommand(collections.Cmd)
+	cmd.AddCommand(project.Cmd)
 
-func main() {
+	command.InitFlags(cmd)
+
 	if err := cmd.Execute(); err != nil {
-		cli.Exit(1, err.Error())
+		util.Exit(1, err.Error())
 	}
 }

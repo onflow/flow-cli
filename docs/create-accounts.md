@@ -16,12 +16,20 @@ transaction to any Flow Access API.
 ```shell
 # Create an account on Flow Testnet
 > flow accounts create \
-    --key a69c6986e69fa1eadcd3bcb4aa51ee8aed74fc9430004af6b96f9e7d0e4891e84cfb99171846ba6d0354d195571397f5904cd319c3e01e96375d5777f1a47010 \
-    --sig-algo ECDSA_secp256k1 \
-    --hash-algo SHA3_256 \
+    --key a69c6986e846ba6d0....1397f5904cd319c3e01e96375d5777f1a47010 \
     --host access.testnet.nodes.onflow.org:9000 \
-    --signer my-testnet-account \
-    --results
+    --signer my-testnet-account 
+
+Address	 0x01cf0e2f2f715450
+Balance	 10000000
+Keys	 1
+
+Key 0	Public Key		 a69c6986e846ba6d0....1397f5904cd319c3e01e96375d5777f1a47010
+	Weight			 1000
+	Signature Algorithm	 ECDSA_P256
+	Hash Algorithm		 SHA3_256
+
+Contracts Deployed: 0
 ```
 
 In the above example, the `flow.json` file would look something like this:
@@ -30,10 +38,8 @@ In the above example, the `flow.json` file would look something like this:
 {
   "accounts": {
     "my-testnet-account": {
-      "address": "f8d6e0586b0a20c7",
-      "privateKey": "xxxxxxxx",
-      "sigAlgorithm": "ECDSA_P256",
-      "hashAlgorithm": "SHA3_256"
+      "address": "a2c4941b5f3c7151",
+      "keys": "12c5dfde...bb2e542f1af710bd1d40b2"
     }
   }
 }
@@ -43,7 +49,7 @@ In the above example, the `flow.json` file would look something like this:
     
 ### Public Key
 
-- Flag: `--key,-k`
+- Flag: `--key`
 - Valid inputs: a hex-encoded public key in raw form.
 
 Specify the public key that will be added to the new account
@@ -69,42 +75,79 @@ Flow supports the secp256k1 and P-256 curves.
 Specify the hashing algorithm that will be paired with the public key
 upon account creation.
 
-### Wait for Seal
-
-- Flag: `--sealed`
-- Valid inputs: `true`, `false`
-- Default: `false`
-
-Indicate whether to wait for the transaction to be sealed.
-If true, the CLI will block until the transaction has been sealed, or
-a timeout is reached.
-
 ### Signer
 
-- Flag: `--signer,s`
+- Flag: `--signer`
 - Valid inputs: the name of an account defined in `flow.json`
 
 Specify the name of the account that will be used to sign the transaction
 and pay the account creation fee.
 
-### Host
+### Contract
 
+- Flag: `--contract`
+- Valid inputs: String with format `name:filename`, where `name` is 
+  name of the contract as it is defined in the contract source code
+  and `filename` is the filename of the contract source code.
+
+Contract to be deployed during account creation.
+
+
+### Host
 - Flag: `--host`
 - Valid inputs: an IP address or hostname.
-- Default: `localhost:3569` (Flow Emulator)
+- Default: `127.0.0.1:3569` (Flow Emulator)
 
 Specify the hostname of the Access API that will be
-used to submit the transaction.
+used to execute the commands.
 
-### Results
+### Network
 
-- Flag: `--results`
-- Valid inputs: `true`, `false`
-- Default: `false`
+- Flag: `--network`
+- Short Flag: `-n`
+- Valid inputs: the name of a network defined in the configuration (`flow.json`)
 
-Indicate whether to wait for the transaction to be sealed
-and display the result, including the new account address.
+Specify which network you want the command to use for execution.
 
-If false, the command returns immediately after sending the transaction
-to the Access API. You can later use the `transactions status` command
-to fetch the result.
+### Filter
+
+- Flag: `--filter`
+- Short Flag: `-x`
+- Valid inputs: case-sensitive name of the result property.
+
+Specify any property name from the result you want to return as the only value.
+
+### Output
+
+- Flag: `--output`
+- Short Flag: `-o`
+- Valid inputs: `json`, `inline`
+
+Specify in which format you want to display the result.
+
+### Save
+
+- Flag: `--save`
+- Short Flag: `-s`
+- Valid inputs: valid filename
+
+Specify the filename where you want the result to be saved.
+
+### Log
+
+- Flag: `--log`
+- Short Flag: `-l`
+- Valid inputs: `none`, `error`, `debug`
+- Default: `info`
+
+Specify the log level. Control how much output you want to see while command execution.
+
+### Configuration
+
+- Flag: `--conf`
+- Short Flag: `-f`
+- Valid inputs: valid filename
+
+Specify a filename for the configuration files, you can provide multiple configuration
+files by using `-f` flag multiple times.
+
