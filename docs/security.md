@@ -4,17 +4,22 @@ sidebar_title: Security
 description: How to securely use CLI
 ---
 
-Handling accounts, and their private keys is intrinsically dangerous. We must take extra
-precautions to secure private keys and not expose them to third parties. Flow CLI enables 
-many options to secure the private keys.
+The managing of accounts and private keys is intrinsically dangerous. 
+We must take extra precautions to not expose private key data when using
+the CLI.
 
-⚠️ Warning: Please be careful when using private keys in configuration files. We suggest you
-to separate private keys in another configuration file, put that file in `.gitignore` and then
-reference that account in configuration with `fromeFile` property.
+The Flow CLI provides several options to secure private account data.
+
+⚠️ Warning: please be careful when using private keys in configuration files. 
+Never commit private key data to source control.
+If private key data must be kept in text, we suggest using a separate file
+that is not checked into source control (e.g. excluded with `.gitignore`).
 
 ### Private Account Configuration File
-`flow.json` Main configuration file example:
+
+#### Main configuration file
 ```json
+// flow.json
 {
   "contracts": {
     "NonFungibleToken": "./cadence/contracts/NonFungibleToken.cdc",
@@ -31,8 +36,11 @@ reference that account in configuration with `fromeFile` property.
 }
 ```
 
-`flow.testnet.json` Private configuration file. **Put this file in `.gitignore`**
+#### Private configuration file
+
+**Put this file in `.gitignore`:**
 ```json
+// flow.testnet.json
 {
   "accounts": {
     "my-testnet-account": {
@@ -43,16 +51,18 @@ reference that account in configuration with `fromeFile` property.
 }
 ```
 
-### Private Account Configuration Environment Variable
+### Store Configuration in Environment Variables
 
-Use environment variable for any values that should be kept private (private keys, addresses...).
-See example bellow:
+You can use environment variables for values that should be kept private (e.g. private keys, addresses).
 
-`flow.json` Main configuration file. Set environment variable when running flow cli like so:
+See example below:
+
 ```shell
 PRIVATE_KEY=key flow project deploy
 ```
+
 ```json
+// flow.json
 {
   ...
   "accounts": {
@@ -66,10 +76,9 @@ PRIVATE_KEY=key flow project deploy
 ```
 
 ### Composing Multiple Configuration Files
-You can use composition of configuration files like so:
+
+You can merge multiple configuration files like so:
+
 ```shell
 flow project deploy -f main.json -f private.json
 ```
-
-### Google Cloud Key Managment System
-tbd

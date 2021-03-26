@@ -25,14 +25,6 @@ To learn more about using the Emulator, have a look at the [README of the reposi
 
 ## Flags
 
-### Host
-- Flag: `--host`
-- Valid inputs: an IP address or hostname.
-- Default: `127.0.0.1:3569` (Flow Emulator)
-
-Specify the hostname of the Access API that will be
-used to execute the commands.
-
 ### Configuration
 
 - Flag: `--conf`
@@ -41,8 +33,3 @@ used to execute the commands.
 
 Specify a filename for the configuration files, you can provide multiple configuration
 files by using `-f` flag multiple times.
-
-
-
-
-

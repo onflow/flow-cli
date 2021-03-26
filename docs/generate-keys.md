@@ -20,6 +20,8 @@ flow keys generate
 ### Example response
 
 ```shell
+> flow keys generate
+
 🔴️ Store Private Key safely and don't share with anyone! 
 Private Key 	 c778170793026a9a7a3815dabed68ded445bde7f40a8c66889908197412be89f 
 Public Key 	 584245c57e5316d6606c53b1ce46dae29f5c9bd26e9e8...aaa5091b2eebcb2ac71c75cf70842878878a2d650f7 
@@ -55,7 +57,7 @@ Flow supports the secp256k1 and P-256 curves.
 
 - Flag: `--filter`
 - Short Flag: `-x`
-- Valid inputs: case-sensitive name of the result property.
+- Valid inputs: a case-sensitive name of the result property.
 
 Specify any property name from the result you want to return as the only value.
 
@@ -65,15 +67,15 @@ Specify any property name from the result you want to return as the only value.
 - Short Flag: `-o`
 - Valid inputs: `json`, `inline`
 
-Specify in which format you want to display the result.
+Specify the format of the command results.
 
 ### Save
 
 - Flag: `--save`
 - Short Flag: `-s`
-- Valid inputs: valid filename
+- Valid inputs: a path in the current filesystem.
 
-Specify the filename where you want the result to be saved.
+Specify the filename where you want the result to be saved
 
 ### Log
 
@@ -82,7 +84,15 @@ Specify the filename where you want the result to be saved.
 - Valid inputs: `none`, `error`, `debug`
 - Default: `info`
 
-Specify the log level. Control how much output you want to see while command execution.
+Specify the log level. Control how much output you want to see during command execution.
 
+### Configuration
 
+- Flag: `--conf`
+- Short Flag: `-f`
+- Valid inputs: a path in the current filesystem.
+- Default: `flow.json`
 
+Specify the path to the `flow.json` configuration file.
+You can use the `-f` flag multiple times to merge
+several configuration files.

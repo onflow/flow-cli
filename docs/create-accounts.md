@@ -7,7 +7,9 @@ description: How to create a Flow account from the command line
 The Flow CLI provides a command to submit an account creation 
 transaction to any Flow Access API.
 
-`flow accounts create`
+```shell
+flow accounts create
+```
 
 ⚠️ _This command requires an existing Testnet or Mainnet account._
 
@@ -72,13 +74,13 @@ Flow supports the secp256k1 and P-256 curves.
 - Valid inputs: `"SHA2_256", "SHA3_256"`
 - Default: `"SHA3_256"`
 
-Specify the hashing algorithm that will be paired with the public key
+Specify the hash algorithm that will be paired with the public key
 upon account creation.
 
 ### Signer
 
 - Flag: `--signer`
-- Valid inputs: the name of an account defined in `flow.json`
+- Valid inputs: the name of an account defined in `flow.json`.
 
 Specify the name of the account that will be used to sign the transaction
 and pay the account creation fee.
@@ -90,16 +92,17 @@ and pay the account creation fee.
   name of the contract as it is defined in the contract source code
   and `filename` is the filename of the contract source code.
 
-Contract to be deployed during account creation.
-
+Specify one or more contracts to be deployed during account creation.
 
 ### Host
+
 - Flag: `--host`
 - Valid inputs: an IP address or hostname.
 - Default: `127.0.0.1:3569` (Flow Emulator)
 
 Specify the hostname of the Access API that will be
-used to execute the commands.
+used to execute the command. This flag overrides
+any host defined by the `--network` flag.
 
 ### Network
 
@@ -113,7 +116,7 @@ Specify which network you want the command to use for execution.
 
 - Flag: `--filter`
 - Short Flag: `-x`
-- Valid inputs: case-sensitive name of the result property.
+- Valid inputs: a case-sensitive name of the result property.
 
 Specify any property name from the result you want to return as the only value.
 
@@ -123,15 +126,15 @@ Specify any property name from the result you want to return as the only value.
 - Short Flag: `-o`
 - Valid inputs: `json`, `inline`
 
-Specify in which format you want to display the result.
+Specify the format of the command results.
 
 ### Save
 
 - Flag: `--save`
 - Short Flag: `-s`
-- Valid inputs: valid filename
+- Valid inputs: a path in the current filesystem.
 
-Specify the filename where you want the result to be saved.
+Specify the filename where you want the result to be saved
 
 ### Log
 
@@ -140,14 +143,15 @@ Specify the filename where you want the result to be saved.
 - Valid inputs: `none`, `error`, `debug`
 - Default: `info`
 
-Specify the log level. Control how much output you want to see while command execution.
+Specify the log level. Control how much output you want to see during command execution.
 
 ### Configuration
 
 - Flag: `--conf`
 - Short Flag: `-f`
-- Valid inputs: valid filename
+- Valid inputs: a path in the current filesystem.
+- Default: `flow.json`
 
-Specify a filename for the configuration files, you can provide multiple configuration
-files by using `-f` flag multiple times.
-
+Specify the path to the `flow.json` configuration file.
+You can use the `-f` flag multiple times to merge
+several configuration files.
