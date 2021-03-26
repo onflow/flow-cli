@@ -271,8 +271,8 @@ func (n *Networks) AddOrUpdate(name string, network Network) {
 	*n = append(*n, network)
 }
 
-// GetDefault gets default emulator
-func (e *Emulators) GetDefault() *Emulator {
+// Default gets default emulator
+func (e *Emulators) Default() *Emulator {
 	for _, emulator := range *e {
 		if emulator.Name == DefaultEmulatorConfigName {
 			return &emulator

@@ -167,7 +167,7 @@ func (p *Project) NetworkByName(name string) *config.Network {
 
 // EmulatorServiceAccount gets a service account for emulator
 func (p *Project) EmulatorServiceAccount() (*Account, error) {
-	emulator := p.conf.Emulators.GetDefault()
+	emulator := p.conf.Emulators.Default()
 	acc := p.conf.Accounts.GetByName(emulator.ServiceAccount)
 	return AccountFromConfig(*acc)
 }
