@@ -4,7 +4,7 @@ sidebar_title: Get a Transaction
 description: How to get a Flow transaction from the command line
 ---
 
-The Flow CLI provides a command to get a transaction
+The Flow CLI provides a command to fetch a transaction
 that was previously submitted to an Access API.
 
 `flow transactions get <tx_id>`
@@ -35,8 +35,9 @@ Events
 ## Arguments
 
 ### Transaction ID
+
 - Name: `<tx_id>`
-- Valid Input: transaction hash
+- Valid Input: transaction hash.
 
 The first argument is the ID (hash) of the transaction.
 
@@ -58,12 +59,14 @@ Indicate whether to wait for the transaction to be sealed
 before displaying the result.
 
 ### Host
+
 - Flag: `--host`
 - Valid inputs: an IP address or hostname.
 - Default: `127.0.0.1:3569` (Flow Emulator)
 
 Specify the hostname of the Access API that will be
-used to execute the commands.
+used to execute the command. This flag overrides
+any host defined by the `--network` flag.
 
 ### Network
 
@@ -77,7 +80,7 @@ Specify which network you want the command to use for execution.
 
 - Flag: `--filter`
 - Short Flag: `-x`
-- Valid inputs: case-sensitive name of the result property.
+- Valid inputs: a case-sensitive name of the result property.
 
 Specify any property name from the result you want to return as the only value.
 
@@ -87,15 +90,15 @@ Specify any property name from the result you want to return as the only value.
 - Short Flag: `-o`
 - Valid inputs: `json`, `inline`
 
-Specify in which format you want to display the result.
+Specify the format of the command results.
 
 ### Save
 
 - Flag: `--save`
 - Short Flag: `-s`
-- Valid inputs: valid filename
+- Valid inputs: a path in the current filesystem.
 
-Specify the filename where you want the result to be saved.
+Specify the filename where you want the result to be saved
 
 ### Log
 
@@ -104,18 +107,15 @@ Specify the filename where you want the result to be saved.
 - Valid inputs: `none`, `error`, `debug`
 - Default: `info`
 
-Specify the log level. Control how much output you want to see while command execution.
+Specify the log level. Control how much output you want to see during command execution.
 
 ### Configuration
 
 - Flag: `--conf`
 - Short Flag: `-f`
-- Valid inputs: valid filename
+- Valid inputs: a path in the current filesystem.
+- Default: `flow.json`
 
-Specify a filename for the configuration files, you can provide multiple configuration
-files by using `-f` flag multiple times.
-
-
-
-
-
+Specify the path to the `flow.json` configuration file.
+You can use the `-f` flag multiple times to merge
+several configuration files.
