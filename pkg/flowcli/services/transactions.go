@@ -127,7 +127,7 @@ func (t *Transactions) send(
 	for _, arg := range transactionArguments {
 		err := tx.AddArgument(arg)
 		if err != nil {
-			return nil, nil, fmt.Errorf("failed to add %s argument to a transaction", transactionFilename)
+			return nil, nil, fmt.Errorf("failed to add %s argument to a transaction", arg)
 		}
 	}
 
