@@ -145,7 +145,7 @@ func newProject(conf *config.Config, composer *config.Loader) (*Project, error) 
 // CheckContractConflict checks if there is any contract duplication between accounts
 // for now we don't allow two different accounts deploying same contract
 func (p *Project) ContractConflictExists(network string) bool {
-	contracts := p.GetContractsByNetwork(network)
+	contracts := p.ContractsByNetwork(network)
 
 	uniq := funk.Uniq(
 		funk.Map(contracts, func(c Contract) string {
@@ -160,8 +160,8 @@ func (p *Project) ContractConflictExists(network string) bool {
 	return len(all) != len(uniq)
 }
 
-// GetNetworkByName returns a network by name
-func (p *Project) GetNetworkByName(name string) *config.Network {
+// NetworkByName returns a network by name
+func (p *Project) NetworkByName(name string) *config.Network {
 	return p.conf.Networks.GetByName(name)
 }
 
@@ -174,7 +174,7 @@ func (p *Project) EmulatorServiceAccount() (*Account, error) {
 
 // SetEmulatorServiceKey sets emulator service key
 func (p *Project) SetEmulatorServiceKey(privateKey crypto.PrivateKey) {
-	acc := p.GetAccountByName(DefaultEmulatorServiceAccountName)
+	acc := p.AccountByName(DefaultEmulatorServiceAccountName)
 	acc.SetDefaultKey(
 		NewHexAccountKeyFromPrivateKey(
 			acc.DefaultKey().Index(),
@@ -184,13 +184,13 @@ func (p *Project) SetEmulatorServiceKey(privateKey crypto.PrivateKey) {
 	)
 }
 
-// GetContractsByNetwork return all contract for network
-func (p *Project) GetContractsByNetwork(network string) []Contract {
+// ContractsByNetwork return all contract for network
+func (p *Project) ContractsByNetwork(network string) []Contract {
 	contracts := make([]Contract, 0)
 
 	// get deployments for specific network
 	for _, deploy := range p.conf.Deployments.GetByNetwork(network) {
-		account := p.GetAccountByName(deploy.Account)
+		account := p.AccountByName(deploy.Account)
 
 		// go through each contract for this deploy
 		for _, contractName := range deploy.Contracts {
@@ -209,8 +209,8 @@ func (p *Project) GetContractsByNetwork(network string) []Contract {
 	return contracts
 }
 
-// GetAllAccountNames gets all account names
-func (p *Project) GetAllAccountNames() []string {
+// AllAccountName gets all account names
+func (p *Project) AllAccountName() []string {
 	names := make([]string, 0)
 
 	for _, account := range p.accounts {
@@ -220,19 +220,6 @@ func (p *Project) GetAllAccountNames() []string {
 	}
 
 	return names
-}
-
-// GetAccountByName returns account by name
-func (p *Project) GetAccountByName(name string) *Account {
-	var account *Account
-
-	for _, acc := range p.accounts {
-		if acc.name == name {
-			account = acc
-		}
-	}
-
-	return account
 }
 
 // AddAccount adds account
@@ -252,8 +239,8 @@ func (p *Project) AddOrUpdateAccount(account *Account) {
 	p.accounts = append(p.accounts, account)
 }
 
-// GetAccountByAddress adds new account by address
-func (p *Project) GetAccountByAddress(address string) *Account {
+// AccountByAddress adds new account by address
+func (p *Project) AccountByAddress(address string) *Account {
 	for _, account := range p.accounts {
 		if account.address.String() == flow.HexToAddress(address).String() {
 			return account
@@ -263,8 +250,21 @@ func (p *Project) GetAccountByAddress(address string) *Account {
 	return nil
 }
 
-// GetAliases gets all deployment aliases for network
-func (p *Project) GetAliases(network string) map[string]string {
+// AccountByName returns account by name
+func (p *Project) AccountByName(name string) *Account {
+	var account *Account
+
+	for _, acc := range p.accounts {
+		if acc.name == name {
+			account = acc
+		}
+	}
+
+	return account
+}
+
+// AliasesForNetwork gets all deployment aliases for network
+func (p *Project) AliasesForNetwork(network string) map[string]string {
 	aliases := make(map[string]string)
 
 	// get all contracts for selected network and if any has an address as target make it an alias

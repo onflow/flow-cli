@@ -64,7 +64,7 @@ func (t *Transactions) Send(
 		return nil, nil, fmt.Errorf("missing configuration, initialize it: flow project init")
 	}
 
-	signer := t.project.GetAccountByName(signerName)
+	signer := t.project.AccountByName(signerName)
 	if signer == nil {
 		return nil, nil, fmt.Errorf("signer account: [%s] doesn't exists in configuration", signerName)
 	}

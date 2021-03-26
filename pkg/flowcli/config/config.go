@@ -176,7 +176,7 @@ func (c *Contracts) AddOrUpdate(name string, contract Contract) {
 	*c = append(*c, contract)
 }
 
-// GetAccountByName get account by name
+// AccountByName get account by name
 func (a *Accounts) GetByName(name string) *Account {
 	for _, account := range *a {
 		if account.Name == name {

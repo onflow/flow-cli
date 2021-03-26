@@ -84,7 +84,7 @@ func (a *Accounts) Add(
 		return nil, fmt.Errorf("missing configuration, initialize it: flow project init")
 	}
 
-	existingAccount := a.project.GetAccountByName(name)
+	existingAccount := a.project.AccountByName(name)
 	if existingAccount != nil && !overwrite {
 		return nil, fmt.Errorf("account with name [%s] already exists in the config, use `overwrite` if you want to overwrite it", name)
 	}
@@ -209,7 +209,7 @@ func (a *Accounts) Create(
 		return nil, fmt.Errorf("missing configuration, initialize it: flow project init")
 	}
 
-	signer := a.project.GetAccountByName(signerName)
+	signer := a.project.AccountByName(signerName)
 	if signer == nil {
 		return nil, fmt.Errorf("signer account: [%s] doesn't exists in configuration", signerName)
 	}
@@ -302,7 +302,7 @@ func (a *Accounts) AddContract(
 		return nil, fmt.Errorf("missing configuration, initialize it: flow project init")
 	}
 
-	account := a.project.GetAccountByName(accountName)
+	account := a.project.AccountByName(accountName)
 	if account == nil {
 		return nil, fmt.Errorf("account: [%s] doesn't exists in configuration", accountName)
 	}
@@ -404,7 +404,7 @@ func (a *Accounts) RemoveContract(
 	contractName string,
 	accountName string,
 ) (*flow.Account, error) {
-	account := a.project.GetAccountByName(accountName)
+	account := a.project.AccountByName(accountName)
 	if account == nil {
 		return nil, fmt.Errorf("account: [%s] doesn't exists in configuration", accountName)
 	}

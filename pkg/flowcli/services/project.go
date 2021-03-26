@@ -99,10 +99,10 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 
 	processor := contracts.NewPreprocessor(
 		contracts.FilesystemLoader{},
-		p.project.GetAliases(network),
+		p.project.AliasesForNetwork(network),
 	)
 
-	for _, contract := range p.project.GetContractsByNetwork(network) {
+	for _, contract := range p.project.ContractsByNetwork(network) {
 		err := processor.AddContractSource(
 			contract.Name,
 			contract.Source,
@@ -126,12 +126,12 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 	p.logger.Info(fmt.Sprintf(
 		"Deploying %v contracts for accounts: %s",
 		len(contracts),
-		strings.Join(p.project.GetAllAccountNames(), ","),
+		strings.Join(p.project.AllAccountName(), ","),
 	))
 
 	var errs []error
 	for _, contract := range contracts {
-		targetAccount := p.project.GetAccountByAddress(contract.Target().String())
+		targetAccount := p.project.AccountByAddress(contract.Target().String())
 
 		if targetAccount == nil {
 			return nil, fmt.Errorf("target account for deploying contract not found in configuration")

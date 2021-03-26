@@ -183,12 +183,12 @@ func createGateway(host string) (gateway.Gateway, error) {
 func resolveHost(proj *project.Project, hostFlag string, networkFlag string) (string, error) {
 	host := hostFlag
 	if networkFlag != "" && proj != nil {
-		check := proj.GetNetworkByName(networkFlag)
+		check := proj.NetworkByName(networkFlag)
 		if check == nil {
 			return "", fmt.Errorf("provided network with name %s doesn't exists in condiguration", networkFlag)
 		}
 
-		host = proj.GetNetworkByName(networkFlag).Host
+		host = proj.NetworkByName(networkFlag).Host
 	} else if host == "" {
 		host = project.DefaultEmulatorHost
 	}
