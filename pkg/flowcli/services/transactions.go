@@ -69,12 +69,17 @@ func (t *Transactions) Send(
 		return nil, nil, fmt.Errorf("signer account: [%s] doesn't exists in configuration", signerName)
 	}
 
-	return t.send(transactionFilename, signer, args, argsJSON)
+	code, err := util.LoadFile(transactionFilename)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return t.send(code, signer, args, argsJSON)
 }
 
-// SendForAddress send transaction for address and private key specified
-func (t *Transactions) SendForAddress(
-	transactionFilename string,
+// SendForAddressWithCode send transaction for address and private key specified with code
+func (t *Transactions) SendForAddressWithCode(
+	code []byte,
 	signerAddress string,
 	signerPrivateKey string,
 	args []string,
@@ -89,11 +94,11 @@ func (t *Transactions) SendForAddress(
 
 	account := project.AccountFromAddressAndKey(address, privateKey)
 
-	return t.send(transactionFilename, account, args, argsJSON)
+	return t.send(code, account, args, argsJSON)
 }
 
 func (t *Transactions) send(
-	transactionFilename string,
+	code []byte,
 	signer *project.Account,
 	args []string,
 	argsJSON string,
@@ -106,11 +111,6 @@ func (t *Transactions) send(
 		if err != nil {
 			return nil, nil, err
 		}
-	}
-
-	code, err := util.LoadFile(transactionFilename)
-	if err != nil {
-		return nil, nil, err
 	}
 
 	t.logger.StartProgress("Sending Transaction...")
