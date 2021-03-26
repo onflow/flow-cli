@@ -56,10 +56,18 @@ func (s *Scripts) Execute(scriptFilename string, args []string, argsJSON string)
 		return nil, err
 	}
 
+	return s.execute(script, args, argsJSON)
+}
+
+func (s *Scripts) ExecuteWithCode(code []byte, args []string, argsJSON string) (cadence.Value, error) {
+	return s.execute(code, args, argsJSON)
+}
+
+func (s *Scripts) execute(code []byte, args []string, argsJSON string) (cadence.Value, error) {
 	scriptArgs, err := flowcli.ParseArguments(args, argsJSON)
 	if err != nil {
 		return nil, err
 	}
 
-	return s.gateway.ExecuteScript(script, scriptArgs)
+	return s.gateway.ExecuteScript(code, scriptArgs)
 }
