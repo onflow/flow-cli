@@ -216,7 +216,7 @@ It's important to get this balance right.
 Commands must be stateless and idempotent, meaning they can be run without relying on external state.
 If we have some external state like config each command must include an option to
 define it on the fly, but it must also work without by first relaying on the externally
-saved state in config and if not found relaying on default value. If when relaying on
+saved state in the configuration, and if not found, relying on a default value.
 default value the value creates an error there should be an explanation for the user
 that config must be created. We try to use default values first to get that “works like magic” feeling.
 
