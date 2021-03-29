@@ -220,8 +220,9 @@ Commands must be stateless and idempotent, meaning they can be run without relyi
 If we have some external state like config each command must include an option to
 define it on the fly, but it must also work without by first relaying on the externally
 saved state in the configuration, and if not found, relying on a default value.
-default value the value creates an error there should be an explanation for the user
-that config must be created. We try to use default values first to get that “works like magic” feeling.
+When relying on a default value results in an error, there should be an explanation for the user that a configuration should be created. 
+
+We try to use default values first to get that “works like magic” feeling.
 
 Never require a prompt for user input. Always offer a flag to provide that input,
 however if a user doesn't provide required input we can offer a prompt as an alternative.
