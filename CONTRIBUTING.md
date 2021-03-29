@@ -144,8 +144,8 @@ be predictable and will with time feel natural even without resorting to reading
 ## Commands
 Be consistent across commands and subcommands. In case we define a subcommand we
 should use `noun verb` pattern. **Don’t have ambiguous or similarly-named commands.**
-Naming and language should be same as used in Flow documentation. Use only
-lowercase letters, and dashes if you really need to. Keep it short.
+Naming and language should be the same as used in the rest of Flow's documentation. 
+Use only lowercase letters, and dashes if you really need to. Keep it short.
 Users will be typing it all the time.
 
 ```
