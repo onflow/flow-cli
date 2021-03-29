@@ -155,7 +155,7 @@ flow account
 ## Flags
 Flags are **named parameters**, denoted with either a hyphen, and a
 single-letter name (`-r`) or a double hyphen and a multiple-letter
-name (`--recursive`). Longer version is preferred for better readability
+name (`--recursive`). The longer version is preferred for better readability
 and simpler learning experience in the beginning but after users will
 probably start using the shorter version. Every flag should have a shorter
 version and they should be both presented in the help. Every flag that can
