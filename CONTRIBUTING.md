@@ -224,8 +224,8 @@ When relying on a default value results in an error, there should be an explanat
 
 We try to use default values first to get that “works like magic” feeling.
 
-Never require a prompt for user input. Always offer a flag to provide that input,
-however if a user doesn't provide required input we can offer a prompt as an alternative.
+Never require a prompt for user input. Always offer a flag to provide that input.
+However, if a user doesn't provide required input we can offer a prompt as an alternative.
 
 
 ## Output
