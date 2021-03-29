@@ -137,7 +137,7 @@ This is a design guideline used for the development of the Flow CLI. The purpose
 
 # Human Interaction
 
-Our interaction with CLI is done by executing CLI commands and passing arguments
+Our interaction with the CLI is done by executing CLI commands and passing arguments
 and flags which need to be consistent. Consistency will allow interactions to
 be predictable and will with time feel natural even without resorting to reading instructions.
 
