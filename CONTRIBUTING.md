@@ -330,7 +330,7 @@ If a command completes an operation that has no result to be shown it
 should write out that command was executed. This is meant to assure the user
 of the completion of the command.
 If user is executing a destructive command they should be asked for approval
-but this command should allow passing confirmation with a flag --yes.
+but this command should allow passing confirmation with a flag `--yes`.
 
 ```
 💾 result saved to: account.txt 
