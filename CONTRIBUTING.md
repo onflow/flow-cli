@@ -193,7 +193,7 @@ Arguments should be one word verbs following general naming guideline.
 Use an argument for the value that command requires in order to run.
 
 ```
-flow account get <address>
+flow accounts get <address>
 ```
 
 ## Robustness
