@@ -167,7 +167,7 @@ Support flags following a value delimited by a space or
 equal (=) sign (ex: `--username test` or `--username=test`)
 
 ```
-flow account get --filter "address"
+flow accounts get --filter "address"
 ```
 
 Use common naming for default falgs such as:
