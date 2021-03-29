@@ -128,9 +128,7 @@ We try to follow the coding guidelines from the Go community.
 - Code should pass all tests: `make test`
 
 # CLI Guidelines
-This is a design guideline used for development of Flow CLI. Purpose of this guidline
-is to achieve consistency across new features and allow composability of commands that
-build the fundaments of great CLI design.
+This is a design guideline used for the development of the Flow CLI. The purpose of this guideline is to achieve consistency across new features and allow composability of commands that build the fundamentals of great CLI design.
 
 > Whatever software you’re building, you can be absolutely certain that people will
 > use it in ways you didn’t anticipate. Your software will become a part in a larger
