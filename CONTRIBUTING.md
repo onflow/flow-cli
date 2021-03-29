@@ -131,8 +131,8 @@ We try to follow the coding guidelines from the Go community.
 This is a design guideline used for the development of the Flow CLI. The purpose of this guideline is to achieve consistency across new features and allow composability of commands that build the fundamentals of great CLI design.
 
 > Whatever software you’re building, you can be absolutely certain that people will
-> use it in ways you didn’t anticipate. Your software will become a part in a larger
-> system—your only choice is over whether it will be a well-behaved part. - [Clig](https://clig.dev/)
+> use it in ways you didn’t anticipate. Your software will become a part in a larger system
+> — your only choice is over whether it will be a well-behaved part. - [Clig](https://clig.dev/)
 
 
 # Human Interaction
