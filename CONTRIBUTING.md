@@ -182,11 +182,13 @@ Use common naming for default falgs such as:
 
 
 ## Arguments
-Arguments, or args, are positional parameters to a command. There should be as little
-arguments as possible because they make it hard for users to remember the sequence of arguments.
-Because they are relaying on position flags should be used where
-more than one argument would be required. Arguments should be one word
-verbs following general naming guideline. **Prefer flags to arguments**.
+Arguments, or args, are positional parameters to a command. 
+There should be as few arguments as possible, because it is hard for users to remember the sequence of arguments.
+
+Because they are relying on position, flags should be used where more than one argument would be required. 
+
+Arguments should be one word verbs following general naming guideline. 
+**Prefer flags to arguments**.
 
 Use an argument for the value that command requires in order to run.
 
