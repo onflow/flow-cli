@@ -220,7 +220,7 @@ It's important to get this balance right.
 ## Interaction
 Commands must be stateless and idempotent, meaning they can be run without relying on external state.
 If we have some external state, like the configuration, each command must include an option to
-define it on the fly, but it must also work without by first relaying on the externally
+define it on the fly, but it must also work without it by first relying on the externally
 saved state in the configuration, and if not found, relying on a default value.
 When relying on a default value results in an error, there should be an explanation for the user that a configuration should be created. 
 
