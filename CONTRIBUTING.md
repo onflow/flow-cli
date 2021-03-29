@@ -339,7 +339,7 @@ but this command should allow passing confirmation with a flag `--yes`.
 ## Exit
 CLI should return zero status unless it is shut down because of an error.
 This will allow chaining of commands and interfacing with other cli. If a
-command is long running then provide description how to exit it (press ctrl+c to stop).
+command is long running then provide description how to exit it (e.g. "Press Ctrl+C to stop").
 ```
 exit status 1
 ```
