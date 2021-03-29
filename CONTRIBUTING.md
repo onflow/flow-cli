@@ -149,7 +149,7 @@ Use only lowercase letters, and dashes if you really need to. Keep it short.
 Users will be typing it all the time.
 
 ```
-flow account
+flow accounts
 ```
 
 ## Flags
