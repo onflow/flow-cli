@@ -208,7 +208,7 @@ future-proof, and tell them how to do it.
 
 # Computer Interaction
 
-CLI will respond to execution of commands by providing some output.
+The CLI will respond to execution of commands by providing some output.
 Output should with the same reasons as input be consistent and predictable,
 even further it should follow some industry standards and thus allow great strength
 of CLI use: composability. Output should be served in the right dosage. We shouldn't
