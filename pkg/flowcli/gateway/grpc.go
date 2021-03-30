@@ -30,6 +30,10 @@ import (
 	"google.golang.org/grpc"
 )
 
+const (
+	defaultGasLimit = 1000
+)
+
 // GrpcGateway contains all functions that need flow client to execute
 type GrpcGateway struct {
 	client *client.Client
@@ -61,37 +65,35 @@ func (g *GrpcGateway) GetAccount(address flow.Address) (*flow.Account, error) {
 	return account, nil
 }
 
-// TODO: replace with txsender - much nicer implemented
-// SendTransaction send a transaction to flow
-func (g *GrpcGateway) SendTransaction(tx *flow.Transaction, signer *project.Account) (*flow.Transaction, error) {
-	account, err := g.GetAccount(signer.Address())
+// PrepareTransactionPayload prepares the payload for the transaction from the network
+func (g *GrpcGateway) PrepareTransactionPayload(tx *project.Transaction) (*project.Transaction, error) {
+	signerAddress := tx.Signer().Address()
+	account, err := g.GetAccount(signerAddress)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to get account with address %s: 0x%s", signer.Address(), err)
+		return nil, err
 	}
 
-	// Default 0, i.e. first key
-	accountKey := account.Keys[0]
+	accountKey := account.Keys[tx.Signer().DefaultKey().Index()]
 
 	sealed, err := g.client.GetLatestBlockHeader(g.ctx, true)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to get latest sealed block: %s", err)
 	}
 
-	tx.SetReferenceBlockID(sealed.ID).
-		SetProposalKey(signer.Address(), accountKey.Index, accountKey.SequenceNumber).
-		SetPayer(signer.Address())
+	tx.FlowTransaction().
+		SetReferenceBlockID(sealed.ID).
+		SetGasLimit(defaultGasLimit).
+		SetProposalKey(signerAddress, accountKey.Index, accountKey.SequenceNumber).
+		SetPayer(signerAddress)
 
-	sig, err := signer.DefaultKey().Signer(g.ctx)
-	if err != nil {
-		return nil, err
-	}
+	return tx, nil
+}
 
-	err = tx.SignEnvelope(signer.Address(), accountKey.Index, sig)
-	if err != nil {
-		return nil, fmt.Errorf("Failed to sign transaction: %s", err)
-	}
+// SendSignedTransaction sends a transaction to flow that is already prepared and signed
+func (g *GrpcGateway) SendSignedTransaction(transaction *project.Transaction) (*flow.Transaction, error) {
+	tx := transaction.FlowTransaction()
 
-	err = g.client.SendTransaction(g.ctx, *tx)
+	err := g.client.SendTransaction(g.ctx, *tx)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to submit transaction: %s", err)
 	}
