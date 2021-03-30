@@ -50,7 +50,7 @@ func (g *EmulatorGateway) GetAccount(address flow.Address) (*flow.Account, error
 	return g.emulator.GetAccount(address)
 }
 
-func (g *EmulatorGateway) SendTransaction(tx *flow.Transaction, signer *project.Account) (*flow.Transaction, error) {
+func (g *EmulatorGateway) SendSignedTransaction(tx *flow.Transaction, signer *project.Account) (*flow.Transaction, error) {
 	return nil, fmt.Errorf("Not Supported Yet")
 }
 
