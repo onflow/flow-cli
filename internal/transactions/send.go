@@ -30,6 +30,7 @@ type flagsSend struct {
 	ArgsJSON string   `default:"" flag:"args-json" info:"arguments in JSON-Cadence format"`
 	Args     []string `default:"" flag:"arg" info:"argument in Type:Value format"`
 	Signer   string   `default:"emulator-account" flag:"signer"`
+	Payload  string   `flag:"payload" info:"path to the transaction payload file"`
 	Code     string   `default:"" flag:"code" info:"⚠️  DEPRECATED: use filename argument"`
 	Results  bool     `default:"" flag:"results" info:"⚠️  DEPRECATED: all transactions will provide result"`
 }
@@ -60,6 +61,7 @@ var SendCommand = &command.Command{
 
 		tx, result, err := services.Transactions.Send(
 			args[0], // filename
+			sendFlags.Payload,
 			sendFlags.Signer,
 			sendFlags.Args,
 			sendFlags.ArgsJSON,
