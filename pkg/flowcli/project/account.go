@@ -32,6 +32,18 @@ func (a *Account) SetDefaultKey(key AccountKey) {
 	a.keys[0] = key
 }
 
+func (a *Account) ValidateKey() error {
+	if a.DefaultKey().Type() == config.KeyTypeGoogleKMS {
+		resourceID := a.DefaultKey().ToConfig().Context[config.KMSContextField]
+		err := util.GcloudApplicationSignin(resourceID)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 func accountsFromConfig(conf *config.Config) ([]*Account, error) {
 	accounts := make([]*Account, 0, len(conf.Accounts))
 
