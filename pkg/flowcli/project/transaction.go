@@ -5,6 +5,9 @@ import (
 	"encoding/hex"
 	"fmt"
 	"io/ioutil"
+	"strings"
+
+	"github.com/onflow/flow-go-sdk/templates"
 
 	"github.com/onflow/flow-cli/pkg/flowcli"
 
@@ -24,16 +27,18 @@ const (
 
 func NewTransaction() *Transaction {
 	return &Transaction{
-		tx: flow.NewTransaction(),
+		tx:        flow.NewTransaction(),
+		contracts: []templates.Contract{},
 	}
 }
 
 type Transaction struct {
-	signer   *Account
-	role     signerRole
-	proposer *Account
-	payer    flow.Address
-	tx       *flow.Transaction
+	signer    *Account
+	role      signerRole
+	proposer  *Account
+	payer     flow.Address
+	tx        *flow.Transaction
+	contracts []templates.Contract
 }
 
 func (t *Transaction) Signer() *Account {
@@ -68,6 +73,10 @@ func (t *Transaction) SetScriptWithArgsFromFile(filepath string, args []string, 
 		return err
 	}
 
+	return t.SetScriptWithArgs(script, args, argsJSON)
+}
+
+func (t *Transaction) SetScriptWithArgs(script []byte, args []string, argsJSON string) error {
 	t.tx.SetScript(script)
 	return t.AddRawArguments(args, argsJSON)
 }
@@ -184,4 +193,51 @@ func (t *Transaction) Sign() (*Transaction, error) {
 	}
 
 	return t, nil
+}
+
+func (t *Transaction) AddContractsFromArgs(contractArgs []string) error {
+	for _, contract := range contractArgs {
+		contractFlagContent := strings.SplitN(contract, ":", 2)
+		if len(contractFlagContent) != 2 {
+			return fmt.Errorf("wrong format for contract. Correct format is name:path, but got: %s", contract)
+		}
+		contractName := contractFlagContent[0]
+		contractPath := contractFlagContent[1]
+
+		contractSource, err := util.LoadFile(contractPath)
+		if err != nil {
+			return err
+		}
+
+		t.AddContract(contractName, string(contractSource))
+	}
+
+	return nil
+}
+
+func (t *Transaction) AddContract(name string, source string) {
+	t.contracts = append(t.contracts,
+		templates.Contract{
+			Name:   name,
+			Source: source,
+		},
+	)
+}
+
+func (t *Transaction) SetCreateAccount(keys []*flow.AccountKey) {
+	t.tx = templates.CreateAccount(keys, t.contracts, t.signer.Address())
+}
+
+func (t *Transaction) SetUpdateContract(name string, source string) {
+	t.AddContract(name, source)
+	t.tx = templates.UpdateAccountContract(t.signer.Address(), t.contracts[0])
+}
+
+func (t *Transaction) SetDeployContract(name string, source string) {
+	t.AddContract(name, source)
+	t.tx = templates.AddAccountContract(t.signer.Address(), t.contracts[0])
+}
+
+func (t *Transaction) SetRemoveContract(name string) {
+	t.tx = templates.RemoveAccountContract(t.signer.Address(), name)
 }
