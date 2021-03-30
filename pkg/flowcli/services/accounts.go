@@ -35,7 +35,6 @@ import (
 	tmpl "github.com/onflow/flow-core-contracts/lib/go/templates"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
-	"github.com/onflow/flow-go-sdk/templates"
 )
 
 // Accounts service handles all interactions for accounts
@@ -240,38 +239,33 @@ func (a *Accounts) Create(
 		}
 	}
 
-	var contractTemplates []templates.Contract
+	tx := project.NewTransaction()
 
-	for _, contract := range contracts {
-		contractFlagContent := strings.SplitN(contract, ":", 2)
-		if len(contractFlagContent) != 2 {
-			return nil, fmt.Errorf("wrong format for contract. Correct format is name:path, but got: %s", contract)
-		}
-		contractName := contractFlagContent[0]
-		contractPath := contractFlagContent[1]
-
-		contractSource, err := util.LoadFile(contractPath)
-		if err != nil {
-			return nil, err
-		}
-
-		contractTemplates = append(contractTemplates,
-			templates.Contract{
-				Name:   contractName,
-				Source: string(contractSource),
-			},
-		)
+	err = tx.AddContractsFromArgs(contracts)
+	if err != nil {
+		return nil, err
 	}
 
-	tx := templates.CreateAccount(accountKeys, contractTemplates, signer.Address())
-	tx, err = a.gateway.SendTransaction(tx, signer)
+	err = tx.SetSigner(signer)
+	if err != nil {
+		return nil, err
+	}
+
+	tx.SetCreateAccount(accountKeys)
+
+	signed, err := tx.Sign()
+	if err != nil {
+		return nil, err
+	}
+
+	sentTx, err := a.gateway.SendSignedTransaction(signed)
 	if err != nil {
 		return nil, err
 	}
 
 	a.logger.StartProgress("Waiting for transaction to be sealed...")
 
-	result, err := a.gateway.GetTransactionResult(tx, true)
+	result, err := a.gateway.GetTransactionResult(sentTx, true)
 	if err != nil {
 		return nil, err
 	}
@@ -336,47 +330,33 @@ func (a *Accounts) addContract(
 		fmt.Sprintf("Adding Contract '%s' to the account '%s'...", contractName, account.Address()),
 	)
 
-	if account.DefaultKey().Type() == config.KeyTypeGoogleKMS {
-		a.logger.StartProgress("Connecting to KMS...")
-		resourceID := account.DefaultKey().ToConfig().Context[config.KMSContextField]
-		err := util.GcloudApplicationSignin(resourceID)
-		if err != nil {
-			return nil, err
-		}
-	}
-
 	contractSource, err := util.LoadFile(contractFilename)
 	if err != nil {
 		return nil, err
 	}
 
-	tx := templates.AddAccountContract(
-		account.Address(),
-		templates.Contract{
-			Name:   contractName,
-			Source: string(contractSource),
-		},
-	)
+	tx := project.NewTransaction()
+
+	err = tx.SetSigner(account)
+	if err != nil {
+		return nil, err
+	}
+
+	tx.SetDeployContract(contractName, string(contractSource))
 
 	// if we are updating contract
 	if updateExisting {
-		tx = templates.UpdateAccountContract(
-			account.Address(),
-			templates.Contract{
-				Name:   contractName,
-				Source: string(contractSource),
-			},
-		)
+		tx.SetUpdateContract(contractName, string(contractSource))
 	}
 
 	// send transaction with contract
-	tx, err = a.gateway.SendTransaction(tx, account)
+	sentTx, err := a.gateway.SendSignedTransaction(tx)
 	if err != nil {
 		return nil, err
 	}
 
 	// we wait for transaction to be sealed
-	trx, err := a.gateway.GetTransactionResult(tx, true)
+	trx, err := a.gateway.GetTransactionResult(sentTx, true)
 	if err != nil {
 		return nil, err
 	}
@@ -434,13 +414,20 @@ func (a *Accounts) removeContract(
 		fmt.Sprintf("Removing Contract %s from %s...", contractName, account.Address()),
 	)
 
-	tx := templates.RemoveAccountContract(account.Address(), contractName)
-	tx, err := a.gateway.SendTransaction(tx, account)
+	tx := project.NewTransaction()
+	err := tx.SetSigner(account)
 	if err != nil {
 		return nil, err
 	}
 
-	txr, err := a.gateway.GetTransactionResult(tx, true)
+	tx.SetRemoveContract(contractName)
+
+	sentTx, err := a.gateway.SendSignedTransaction(tx)
+	if err != nil {
+		return nil, err
+	}
+
+	txr, err := a.gateway.GetTransactionResult(sentTx, true)
 	if err != nil {
 		return nil, err
 	}
