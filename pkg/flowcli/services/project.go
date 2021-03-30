@@ -142,7 +142,8 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 			return nil, fmt.Errorf("failed to fetch information for account %s with error %s", targetAccount.Address(), err.Error())
 		}
 
-		var tx *flow.Transaction
+		//var tx *flow.Transaction
+		tx := project.NewTransaction()
 
 		_, exists := targetAccountInfo.Contracts[contract.Name()]
 		if exists {
@@ -153,12 +154,17 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 				continue
 			}
 
-			tx = prepareUpdateContractTransaction(targetAccount.Address(), contract)
+			err := tx.SetSigner(targetAccount)
+			if err != nil {
+				errs = append(errs, err)
+			}
+
+			tx.SetUpdateContract(contract.Name(), contract.TranspiledCode())
 		} else {
-			tx = prepareAddContractTransaction(targetAccount.Address(), contract)
+			tx.SetDeployContract(contract.Name(), contract.TranspiledCode())
 		}
 
-		tx, err = p.gateway.SendTransaction(tx, targetAccount)
+		sentTx, err := p.gateway.SendSignedTransaction(tx)
 		if err != nil {
 			p.logger.Error(err.Error())
 			errs = append(errs, err)
@@ -168,7 +174,7 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 			fmt.Sprintf("%s deploying...", util.Bold(contract.Name())),
 		)
 
-		result, err := p.gateway.GetTransactionResult(tx, true)
+		result, err := p.gateway.GetTransactionResult(sentTx, true)
 		if err != nil {
 			p.logger.Error(err.Error())
 			errs = append(errs, err)
