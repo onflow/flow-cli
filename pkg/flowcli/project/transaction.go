@@ -82,7 +82,7 @@ func (t *Transaction) SetScriptWithArgs(script []byte, args []string, argsJSON s
 }
 
 func (t *Transaction) SetSigner(account *Account) error {
-	err := account.ValidateKey()
+	err := account.DefaultKey().Validate()
 	if err != nil {
 		return err
 	}
@@ -92,7 +92,7 @@ func (t *Transaction) SetSigner(account *Account) error {
 }
 
 func (t *Transaction) SetProposer(account *Account) error {
-	err := account.ValidateKey()
+	err := account.DefaultKey().Validate()
 	if err != nil {
 		return err
 	}
