@@ -27,18 +27,104 @@ const (
 
 func NewTransaction() *Transaction {
 	return &Transaction{
-		tx:        flow.NewTransaction(),
-		contracts: []templates.Contract{},
+		tx: flow.NewTransaction(),
 	}
 }
 
+func NewUpdateAccountContractTransaction(signer *Account, name string, source string) (*Transaction, error) {
+	contract := templates.Contract{
+		Name:   name,
+		Source: source,
+	}
+
+	tx := &Transaction{
+		tx: templates.UpdateAccountContract(signer.Address(), contract),
+	}
+
+	err := tx.SetSigner(signer)
+	if err != nil {
+		return nil, err
+	}
+
+	return tx, nil
+}
+
+func NewAddAccountContractTransaction(signer *Account, name string, source string) (*Transaction, error) {
+	contract := templates.Contract{
+		Name:   name,
+		Source: source,
+	}
+
+	tx := &Transaction{
+		tx: templates.AddAccountContract(signer.Address(), contract),
+	}
+
+	err := tx.SetSigner(signer)
+	if err != nil {
+		return nil, err
+	}
+
+	return tx, nil
+}
+
+func NewRemoveAccountContractTransaction(signer *Account, name string) (*Transaction, error) {
+	tx := &Transaction{
+		tx: templates.RemoveAccountContract(signer.Address(), name),
+	}
+
+	err := tx.SetSigner(signer)
+	if err != nil {
+		return nil, err
+	}
+
+	return tx, nil
+}
+
+func NewCreateAccountTransaction(
+	signer *Account,
+	keys []*flow.AccountKey,
+	contractArgs []string,
+) (*Transaction, error) {
+
+	contracts := make([]templates.Contract, 0)
+
+	for _, contract := range contractArgs {
+		contractFlagContent := strings.SplitN(contract, ":", 2)
+		if len(contractFlagContent) != 2 {
+			return nil, fmt.Errorf("wrong format for contract. Correct format is name:path, but got: %s", contract)
+		}
+		contractName := contractFlagContent[0]
+		contractPath := contractFlagContent[1]
+
+		contractSource, err := util.LoadFile(contractPath)
+		if err != nil {
+			return nil, err
+		}
+
+		contracts = append(contracts, templates.Contract{
+			Name:   contractName,
+			Source: string(contractSource),
+		})
+	}
+
+	tx := &Transaction{
+		tx: templates.CreateAccount(keys, contracts, signer.Address()),
+	}
+
+	err := tx.SetSigner(signer)
+	if err != nil {
+		return nil, err
+	}
+
+	return tx, nil
+}
+
 type Transaction struct {
-	signer    *Account
-	role      signerRole
-	proposer  *Account
-	payer     flow.Address
-	tx        *flow.Transaction
-	contracts []templates.Contract
+	signer   *Account
+	role     signerRole
+	proposer *Account
+	payer    flow.Address
+	tx       *flow.Transaction
 }
 
 func (t *Transaction) Signer() *Account {
@@ -193,51 +279,4 @@ func (t *Transaction) Sign() (*Transaction, error) {
 	}
 
 	return t, nil
-}
-
-func (t *Transaction) AddContractsFromArgs(contractArgs []string) error {
-	for _, contract := range contractArgs {
-		contractFlagContent := strings.SplitN(contract, ":", 2)
-		if len(contractFlagContent) != 2 {
-			return fmt.Errorf("wrong format for contract. Correct format is name:path, but got: %s", contract)
-		}
-		contractName := contractFlagContent[0]
-		contractPath := contractFlagContent[1]
-
-		contractSource, err := util.LoadFile(contractPath)
-		if err != nil {
-			return err
-		}
-
-		t.AddContract(contractName, string(contractSource))
-	}
-
-	return nil
-}
-
-func (t *Transaction) AddContract(name string, source string) {
-	t.contracts = append(t.contracts,
-		templates.Contract{
-			Name:   name,
-			Source: source,
-		},
-	)
-}
-
-func (t *Transaction) SetCreateAccount(keys []*flow.AccountKey) {
-	t.tx = templates.CreateAccount(keys, t.contracts, t.signer.Address())
-}
-
-func (t *Transaction) SetUpdateContract(name string, source string) {
-	t.AddContract(name, source)
-	t.tx = templates.UpdateAccountContract(t.signer.Address(), t.contracts[0])
-}
-
-func (t *Transaction) SetDeployContract(name string, source string) {
-	t.AddContract(name, source)
-	t.tx = templates.AddAccountContract(t.signer.Address(), t.contracts[0])
-}
-
-func (t *Transaction) SetRemoveContract(name string) {
-	t.tx = templates.RemoveAccountContract(t.signer.Address(), name)
 }

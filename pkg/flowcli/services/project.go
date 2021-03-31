@@ -22,15 +22,12 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/onflow/flow-go-sdk"
-	"github.com/onflow/flow-go-sdk/crypto"
-	"github.com/onflow/flow-go-sdk/templates"
-
 	"github.com/onflow/flow-cli/pkg/flowcli/contracts"
 	"github.com/onflow/flow-cli/pkg/flowcli/gateway"
 	"github.com/onflow/flow-cli/pkg/flowcli/output"
 	"github.com/onflow/flow-cli/pkg/flowcli/project"
 	"github.com/onflow/flow-cli/pkg/flowcli/util"
+	"github.com/onflow/flow-go-sdk/crypto"
 )
 
 // Project service handles all interactions for project
@@ -142,8 +139,10 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 			return nil, fmt.Errorf("failed to fetch information for account %s with error %s", targetAccount.Address(), err.Error())
 		}
 
-		//var tx *flow.Transaction
-		tx := project.NewTransaction()
+		tx, err := project.NewAddAccountContractTransaction(targetAccount, contract.Name(), contract.TranspiledCode())
+		if err != nil {
+			errs = append(errs, err)
+		}
 
 		_, exists := targetAccountInfo.Contracts[contract.Name()]
 		if exists {
@@ -154,17 +153,13 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 				continue
 			}
 
-			err := tx.SetSigner(targetAccount)
+			tx, err = project.NewUpdateAccountContractTransaction(targetAccount, contract.Name(), contract.TranspiledCode())
 			if err != nil {
 				errs = append(errs, err)
 			}
-
-			tx.SetUpdateContract(contract.Name(), contract.TranspiledCode())
-		} else {
-			tx.SetDeployContract(contract.Name(), contract.TranspiledCode())
 		}
 
-		sentTx, err := p.gateway.SendSignedTransaction(tx)
+		sentTx, err := p.gateway.SendTransaction(tx)
 		if err != nil {
 			p.logger.Error(err.Error())
 			errs = append(errs, err)
@@ -204,30 +199,4 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 	}
 
 	return contracts, nil
-}
-
-func prepareUpdateContractTransaction(
-	targetAccount flow.Address,
-	contract *contracts.Contract,
-) *flow.Transaction {
-	return templates.UpdateAccountContract(
-		targetAccount,
-		templates.Contract{
-			Name:   contract.Name(),
-			Source: contract.TranspiledCode(),
-		},
-	)
-}
-
-func prepareAddContractTransaction(
-	targetAccount flow.Address,
-	contract *contracts.Contract,
-) *flow.Transaction {
-	return templates.AddAccountContract(
-		targetAccount,
-		templates.Contract{
-			Name:   contract.Name(),
-			Source: contract.TranspiledCode(),
-		},
-	)
 }

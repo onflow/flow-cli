@@ -239,26 +239,9 @@ func (a *Accounts) Create(
 		}
 	}
 
-	tx := project.NewTransaction()
+	tx, err := project.NewCreateAccountTransaction(signer, accountKeys, contracts)
 
-	err = tx.AddContractsFromArgs(contracts)
-	if err != nil {
-		return nil, err
-	}
-
-	err = tx.SetSigner(signer)
-	if err != nil {
-		return nil, err
-	}
-
-	tx.SetCreateAccount(accountKeys)
-
-	signed, err := tx.Sign()
-	if err != nil {
-		return nil, err
-	}
-
-	sentTx, err := a.gateway.SendSignedTransaction(signed)
+	sentTx, err := a.gateway.SendTransaction(tx)
 	if err != nil {
 		return nil, err
 	}
@@ -335,22 +318,34 @@ func (a *Accounts) addContract(
 		return nil, err
 	}
 
-	tx := project.NewTransaction()
-
-	err = tx.SetSigner(account)
+	tx, err := project.NewAddAccountContractTransaction(
+		account,
+		contractName,
+		string(contractSource),
+	)
 	if err != nil {
 		return nil, err
 	}
 
-	tx.SetDeployContract(contractName, string(contractSource))
-
 	// if we are updating contract
 	if updateExisting {
-		tx.SetUpdateContract(contractName, string(contractSource))
+		tx, err = project.NewUpdateAccountContractTransaction(
+			account,
+			contractName,
+			string(contractSource),
+		)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	signed, err := tx.Sign()
+	if err != nil {
+		return nil, err
 	}
 
 	// send transaction with contract
-	sentTx, err := a.gateway.SendSignedTransaction(tx)
+	sentTx, err := a.gateway.SendSignedTransaction(signed)
 	if err != nil {
 		return nil, err
 	}
@@ -414,15 +409,12 @@ func (a *Accounts) removeContract(
 		fmt.Sprintf("Removing Contract %s from %s...", contractName, account.Address()),
 	)
 
-	tx := project.NewTransaction()
-	err := tx.SetSigner(account)
+	tx, err := project.NewRemoveAccountContractTransaction(account, contractName)
 	if err != nil {
 		return nil, err
 	}
 
-	tx.SetRemoveContract(contractName)
-
-	sentTx, err := a.gateway.SendSignedTransaction(tx)
+	sentTx, err := a.gateway.SendTransaction(tx)
 	if err != nil {
 		return nil, err
 	}

@@ -89,6 +89,21 @@ func (g *GrpcGateway) PrepareTransactionPayload(tx *project.Transaction) (*proje
 	return tx, nil
 }
 
+// SendTransaction prepares, signs and sends the transaction to the network
+func (g *GrpcGateway) SendTransaction(transaction *project.Transaction) (*flow.Transaction, error) {
+	tx, err := g.PrepareTransactionPayload(transaction)
+	if err != nil {
+		return nil, err
+	}
+
+	tx, err = tx.Sign()
+	if err != nil {
+		return nil, err
+	}
+
+	return g.SendSignedTransaction(tx)
+}
+
 // SendSignedTransaction sends a transaction to flow that is already prepared and signed
 func (g *GrpcGateway) SendSignedTransaction(transaction *project.Transaction) (*flow.Transaction, error) {
 	tx := transaction.FlowTransaction()
