@@ -78,6 +78,31 @@ func (t *Transactions) Send(
 }
 
 // SendForAddressWithCode send transaction for address and private key specified with code
+func (t *Transactions) SendForAddress(
+	transactionFilename string,
+	signerAddress string,
+	signerPrivateKey string,
+	args []string,
+	argsJSON string,
+) (*flow.Transaction, *flow.TransactionResult, error) {
+	code, err := util.LoadFile(transactionFilename)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	address := flow.HexToAddress(signerAddress)
+
+	privateKey, err := crypto.DecodePrivateKeyHex(crypto.ECDSA_P256, signerPrivateKey)
+	if err != nil {
+		return nil, nil, fmt.Errorf("private key is not correct")
+	}
+
+	account := project.AccountFromAddressAndKey(address, privateKey)
+
+	return t.send(code, account, args, argsJSON)
+}
+
+// SendForAddressWithCode send transaction for address and private key specified with code
 func (t *Transactions) SendForAddressWithCode(
 	code []byte,
 	signerAddress string,
