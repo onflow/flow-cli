@@ -40,6 +40,7 @@ var GetCommand = &command.Command{
 	Cmd: &cobra.Command{
 		Use:   "get <block_id|latest|block_height>",
 		Short: "Get block info",
+		Args:  cobra.ExactArgs(1),
 	},
 	Flags: &blockFlags,
 	Run: func(
