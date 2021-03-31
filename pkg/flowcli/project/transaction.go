@@ -20,10 +20,9 @@ import (
 type signerRole string
 
 const (
-	SignerRoleAuthorizer      signerRole = "authorizer"
-	SignerRoleProposer        signerRole = "proposer"
-	SignerRolePayer           signerRole = "payer"
-	SignerRoleAuthorizerPayer signerRole = "authorizer-payer"
+	SignerRoleAuthorizer signerRole = "authorizer"
+	SignerRoleProposer   signerRole = "proposer"
+	SignerRolePayer      signerRole = "payer"
 )
 
 func NewTransaction() *Transaction {
@@ -112,11 +111,6 @@ func NewCreateAccountTransaction(
 	}
 
 	err := tx.SetSigner(signer)
-	if err != nil {
-		return nil, err
-	}
-
-	err = tx.SetSignerRole(string(SignerRoleAuthorizerPayer))
 	if err != nil {
 		return nil, err
 	}
@@ -244,24 +238,14 @@ func (t *Transaction) AddAuthorizer(address string) error {
 func (t *Transaction) SetSignerRole(role string) error {
 	t.signerRole = signerRole(role)
 
-	switch t.signerRole {
-	case SignerRoleAuthorizer: // Ignored if we're loading from a tx payload
+	if t.signerRole == SignerRoleAuthorizer {
 		err := t.AddAuthorizer(t.signer.Address().String())
 		if err != nil {
 			return err
 		}
-	case SignerRoleAuthorizerPayer:
-		err := t.AddAuthorizer(t.signer.Address().String())
-		if err != nil {
-			return err
-		}
-	case SignerRolePayer:
-		if t.payer != t.signer.Address() {
-			return fmt.Errorf("role specified as Payer, but Payer address also provided, and different: %s != %s", t.payer, t.signer.Address())
-		}
-	case SignerRoleProposer: // Just sign payload, no special actions needed
-	default:
-		return fmt.Errorf("unknown role %s", role)
+	}
+	if t.signerRole == SignerRolePayer && t.payer != t.signer.Address() {
+		return fmt.Errorf("role specified as Payer, but Payer address also provided, and different: %s != %s", t.payer, t.signer.Address())
 	}
 
 	return nil
@@ -275,18 +259,12 @@ func (t *Transaction) Sign() (*Transaction, error) {
 		return nil, err
 	}
 
-	switch t.signerRole {
-	case SignerRoleAuthorizer, SignerRoleProposer:
+	if t.signerRole == SignerRoleAuthorizer || t.signerRole == SignerRoleProposer {
 		err := t.tx.SignPayload(signerAddress, keyIndex, signer)
 		if err != nil {
 			return nil, fmt.Errorf("failed to sign transaction: %s", err)
 		}
-	case SignerRolePayer:
-		err := t.tx.SignEnvelope(signerAddress, keyIndex, signer)
-		if err != nil {
-			return nil, fmt.Errorf("failed to sign transaction: %s", err)
-		}
-	case SignerRoleAuthorizerPayer:
+	} else {
 		err := t.tx.SignEnvelope(signerAddress, keyIndex, signer)
 		if err != nil {
 			return nil, fmt.Errorf("failed to sign transaction: %s", err)

@@ -171,7 +171,7 @@ func (t *Transactions) Send(
 		"",
 		"",
 		[]string{},
-		string(project.SignerRoleAuthorizerPayer),
+		"",
 		transactionFilename,
 		payloadFilename,
 		args,

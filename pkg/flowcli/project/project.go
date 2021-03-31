@@ -227,7 +227,7 @@ func (p *Project) AddAccount(account *Account) {
 	p.accounts = append(p.accounts, account)
 }
 
-// AddOrUpdateAccount addds or updates account
+// AddOrUpdateAccount adds or updates account
 func (p *Project) AddOrUpdateAccount(account *Account) {
 	for i, existingAccount := range p.accounts {
 		if existingAccount.name == account.name {

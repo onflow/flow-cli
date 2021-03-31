@@ -281,7 +281,8 @@ func handleError(description string, err error) {
 		} else if strings.Contains(err.Error(), "NotFound desc =") {
 			fmt.Fprintf(os.Stderr, "❌ Not Found:%s \n", strings.Split(err.Error(), "NotFound desc =")[1])
 		} else if strings.Contains(err.Error(), "code = InvalidArgument desc = ") {
-			fmt.Fprintf(os.Stderr, "❌ Invalid argument: %s \n", strings.Split(err.Error(), "code = InvalidArgument desc = ")[1])
+			desc := strings.Split(err.Error(), "code = InvalidArgument desc = ")
+			fmt.Fprintf(os.Stderr, "❌ Invalid argument: %s \n", desc[len(desc)-1])
 			if strings.Contains(err.Error(), "is invalid for chain") {
 				fmt.Fprintf(os.Stderr, "🙏 Check you are connecting to the correct network or account address you use is correct.")
 			} else {

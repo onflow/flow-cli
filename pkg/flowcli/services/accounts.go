@@ -69,6 +69,7 @@ func (a *Accounts) Get(address string) (*flow.Account, error) {
 	return account, err
 }
 
+// Add account to the configuration
 func (a *Accounts) Add(
 	name string,
 	accountAddress string,
@@ -339,13 +340,8 @@ func (a *Accounts) addContract(
 		}
 	}
 
-	signed, err := tx.Sign()
-	if err != nil {
-		return nil, err
-	}
-
 	// send transaction with contract
-	sentTx, err := a.gateway.SendSignedTransaction(signed)
+	sentTx, err := a.gateway.SendTransaction(tx)
 	if err != nil {
 		return nil, err
 	}
