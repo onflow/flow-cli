@@ -9,16 +9,18 @@ import (
 )
 
 type MockGateway struct {
-	GetAccountMock           func(address flow.Address) (*flow.Account, error)
-	SendTransactionMock      func(tx *flow.Transaction, signer *project.Account) (*flow.Transaction, error)
-	GetTransactionResultMock func(tx *flow.Transaction) (*flow.TransactionResult, error)
-	GetTransactionMock       func(id flow.Identifier) (*flow.Transaction, error)
-	ExecuteScriptMock        func(script []byte, arguments []cadence.Value) (cadence.Value, error)
-	GetLatestBlockMock       func() (*flow.Block, error)
-	GetEventsMock            func(string, uint64, uint64) ([]client.BlockEvents, error)
-	GetCollectionMock        func(id flow.Identifier) (*flow.Collection, error)
-	GetBlockByHeightMock     func(uint64) (*flow.Block, error)
-	GetBlockByIDMock         func(flow.Identifier) (*flow.Block, error)
+	GetAccountMock                func(address flow.Address) (*flow.Account, error)
+	SendTransactionMock           func(tx *project.Transaction) (*flow.Transaction, error)
+	PrepareTransactionPayloadMock func(tx *project.Transaction) (*project.Transaction, error)
+	SendSignedTransactionMock     func(tx *project.Transaction) (*flow.Transaction, error)
+	GetTransactionResultMock      func(tx *flow.Transaction) (*flow.TransactionResult, error)
+	GetTransactionMock            func(id flow.Identifier) (*flow.Transaction, error)
+	ExecuteScriptMock             func(script []byte, arguments []cadence.Value) (cadence.Value, error)
+	GetLatestBlockMock            func() (*flow.Block, error)
+	GetEventsMock                 func(string, uint64, uint64) ([]client.BlockEvents, error)
+	GetCollectionMock             func(id flow.Identifier) (*flow.Collection, error)
+	GetBlockByHeightMock          func(uint64) (*flow.Block, error)
+	GetBlockByIDMock              func(flow.Identifier) (*flow.Block, error)
 }
 
 func NewMockGateway() gateway.Gateway {
@@ -29,8 +31,16 @@ func (g *MockGateway) GetAccount(address flow.Address) (*flow.Account, error) {
 	return g.GetAccountMock(address)
 }
 
-func (g *MockGateway) SendTransaction(tx *flow.Transaction, signer *project.Account) (*flow.Transaction, error) {
-	return g.SendTransactionMock(tx, signer)
+func (g *MockGateway) SendTransaction(tx *project.Transaction) (*flow.Transaction, error) {
+	return g.SendTransactionMock(tx)
+}
+
+func (g *MockGateway) SendSignedTransaction(tx *project.Transaction) (*flow.Transaction, error) {
+	return g.SendSignedTransactionMock(tx)
+}
+
+func (g *MockGateway) PrepareTransactionPayload(tx *project.Transaction) (*project.Transaction, error) {
+	return g.PrepareTransactionPayloadMock(tx)
 }
 
 func (g *MockGateway) GetTransactionResult(tx *flow.Transaction, waitSeal bool) (*flow.TransactionResult, error) {
