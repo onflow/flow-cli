@@ -20,9 +20,10 @@ import (
 type signerRole string
 
 const (
-	SignerRoleAuthorizer signerRole = "authorizer"
-	SignerRoleProposer   signerRole = "proposer"
-	SignerRolePayer      signerRole = "payer"
+	SignerRoleAuthorizer      signerRole = "authorizer"
+	SignerRoleProposer        signerRole = "proposer"
+	SignerRolePayer           signerRole = "payer"
+	SignerRoleAuthorizerPayer signerRole = "authorizer-payer"
 )
 
 func NewTransaction() *Transaction {
@@ -87,7 +88,6 @@ func NewCreateAccountTransaction(
 ) (*Transaction, error) {
 
 	contracts := make([]templates.Contract, 0)
-
 	for _, contract := range contractArgs {
 		contractFlagContent := strings.SplitN(contract, ":", 2)
 		if len(contractFlagContent) != 2 {
@@ -116,15 +116,20 @@ func NewCreateAccountTransaction(
 		return nil, err
 	}
 
+	err = tx.SetSignerRole(string(SignerRoleAuthorizerPayer))
+	if err != nil {
+		return nil, err
+	}
+
 	return tx, nil
 }
 
 type Transaction struct {
-	signer   *Account
-	role     signerRole
-	proposer *Account
-	payer    flow.Address
-	tx       *flow.Transaction
+	signer     *Account
+	signerRole signerRole
+	proposer   *Account
+	payer      flow.Address
+	tx         *flow.Transaction
 }
 
 func (t *Transaction) Signer() *Account {
@@ -236,11 +241,16 @@ func (t *Transaction) AddAuthorizer(address string) error {
 	return nil
 }
 
-func (t *Transaction) SignerRole(role string) error {
-	t.role = signerRole(role)
+func (t *Transaction) SetSignerRole(role string) error {
+	t.signerRole = signerRole(role)
 
-	switch t.role {
+	switch t.signerRole {
 	case SignerRoleAuthorizer: // Ignored if we're loading from a tx payload
+		err := t.AddAuthorizer(t.signer.Address().String())
+		if err != nil {
+			return err
+		}
+	case SignerRoleAuthorizerPayer:
 		err := t.AddAuthorizer(t.signer.Address().String())
 		if err != nil {
 			return err
@@ -265,13 +275,18 @@ func (t *Transaction) Sign() (*Transaction, error) {
 		return nil, err
 	}
 
-	switch t.role {
+	switch t.signerRole {
 	case SignerRoleAuthorizer, SignerRoleProposer:
 		err := t.tx.SignPayload(signerAddress, keyIndex, signer)
 		if err != nil {
 			return nil, fmt.Errorf("failed to sign transaction: %s", err)
 		}
 	case SignerRolePayer:
+		err := t.tx.SignEnvelope(signerAddress, keyIndex, signer)
+		if err != nil {
+			return nil, fmt.Errorf("failed to sign transaction: %s", err)
+		}
+	case SignerRoleAuthorizerPayer:
 		err := t.tx.SignEnvelope(signerAddress, keyIndex, signer)
 		if err != nil {
 			return nil, fmt.Errorf("failed to sign transaction: %s", err)

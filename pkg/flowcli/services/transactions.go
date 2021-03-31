@@ -125,7 +125,7 @@ func (t *Transactions) Sign(
 		tx.SetPayer(flow.HexToAddress(payerAddress))
 	}
 
-	err = tx.SignerRole(role)
+	err = tx.SetSignerRole(role)
 	if err != nil {
 		return nil, err
 	}
@@ -171,7 +171,7 @@ func (t *Transactions) Send(
 		"",
 		"",
 		[]string{},
-		string(project.SignerRoleAuthorizer),
+		string(project.SignerRoleAuthorizerPayer),
 		transactionFilename,
 		payloadFilename,
 		args,
