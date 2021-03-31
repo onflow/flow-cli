@@ -29,7 +29,7 @@ import (
 type flagsGenerate struct {
 	Seed       string `flag:"seed" info:"Deterministic seed phrase"`
 	KeySigAlgo string `default:"ECDSA_P256" flag:"sig-algo" info:"Signature algorithm"`
-	Algo       string `default:"" flag:"algo" info:"⚠️  DEPRECATED: use command argument"`
+	Algo       string `default:"" flag:"algo" info:"⚠️  DEPRECATED: use sig-algo argument"`
 }
 
 var generateFlags = flagsGenerate{}

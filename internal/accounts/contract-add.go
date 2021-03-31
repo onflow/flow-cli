@@ -28,7 +28,7 @@ import (
 
 type flagsAddContract struct {
 	Signer  string `default:"emulator-account" flag:"signer"`
-	Results bool   `default:"false" flag:"results" info:"⚠️  DEPRECATED: use contracts flag instead"`
+	Results bool   `default:"false" flag:"results" info:"⚠️  DEPRECATED: results are provided by default"`
 }
 
 var addContractFlags = flagsAddContract{}
