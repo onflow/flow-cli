@@ -42,7 +42,7 @@ Contract: 'FlowStorageFees'
 Display contracts deployed to the account.
 
 ### Code 
-⚠️  DEPRECATED: use contracts flag instead.
+⚠️ No longer supported: use contracts flag instead.
 
 
 ### Host

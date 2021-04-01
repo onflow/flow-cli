@@ -30,8 +30,8 @@ type flagsSend struct {
 	ArgsJSON string   `default:"" flag:"args-json" info:"arguments in JSON-Cadence format"`
 	Args     []string `default:"" flag:"arg" info:"argument in Type:Value format"`
 	Signer   string   `default:"emulator-account" flag:"signer"`
-	Code     string   `default:"" flag:"code" info:"⚠️  DEPRECATED: use filename argument"`
-	Results  bool     `default:"" flag:"results" info:"⚠️  DEPRECATED: all transactions will provide result"`
+	Code     string   `default:"" flag:"code" info:"⚠️ No longer supported: use filename argument"`
+	Results  bool     `default:"" flag:"results" info:"⚠️ No longer supported: all transactions will provide result"`
 }
 
 var sendFlags = flagsSend{}
@@ -51,11 +51,11 @@ var SendCommand = &command.Command{
 		services *services.Services,
 	) (command.Result, error) {
 		if sendFlags.Code != "" {
-			return nil, fmt.Errorf("⚠️  DEPRECATED: use filename argument")
+			return nil, fmt.Errorf("⚠️ No longer supported: use filename argument")
 		}
 
 		if sendFlags.Results {
-			return nil, fmt.Errorf("⚠️  DEPRECATED: all transactions will provide results")
+			return nil, fmt.Errorf("⚠️ No longer supported: all transactions will provide results")
 		}
 
 		tx, result, err := services.Transactions.Send(
