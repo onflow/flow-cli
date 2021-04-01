@@ -28,7 +28,7 @@ import (
 
 type flagsUpdateContract struct {
 	Signer  string `default:"emulator-account" flag:"signer"`
-	Results bool   `default:"false" flag:"results" info:"⚠️ No longer supported: results are provided by default"`
+	Results bool   `default:"false" flag:"results" info:"⚠️  No longer supported: results are provided by default"`
 }
 
 var updateFlags = flagsUpdateContract{}

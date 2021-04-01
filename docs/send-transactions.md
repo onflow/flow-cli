@@ -51,13 +51,13 @@ transaction to be executed.
 
 - Flag: `--code`
 
-⚠️ No longer supported: use filename argument.
+⚠️  No longer supported: use filename argument.
 
 ### Results
 
 - Flag: `--results`
 
-⚠️ No longer supported: all transactions will provide result.
+⚠️  No longer supported: all transactions will provide result.
 
 ### Signer
 

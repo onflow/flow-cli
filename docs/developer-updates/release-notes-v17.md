@@ -9,7 +9,7 @@ Configuration format was unified to work for all CLI commands.
 Generating new configuration is done by executing command `flow project init`.
 Command `flow init` was removed as it provides the same functionality as project init command.
 
-###⚠️ No longer supported flags
+###⚠️  No longer supported flags
 
 **Accounts**
 - Flag `--results` is no longer supported, results are displayed by default.

@@ -33,7 +33,7 @@ type flagsCreate struct {
 	HashAlgo  string   `default:"SHA3_256" flag:"hash-algo" info:"Hash used for the digest"`
 	Name      string   `default:"default" flag:"name" info:"Name used for saving account"`
 	Contracts []string `flag:"contract" info:"Contract to be deployed during account creation. <name:filename>"`
-	Results   bool     `default:"false" flag:"results" info:"⚠️ No longer supported: results are provided by default"`
+	Results   bool     `default:"false" flag:"results" info:"⚠️  No longer supported: results are provided by default"`
 }
 
 var createFlags = flagsCreate{}

@@ -53,7 +53,7 @@ in the Cadence source code.
 
 - Flag: `--code`
 
-⚠️ No longer supported: use filename argument.
+⚠️  No longer supported: use filename argument.
 
 ### Host
 
