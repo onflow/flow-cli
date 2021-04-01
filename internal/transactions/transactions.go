@@ -38,6 +38,7 @@ var Cmd = &cobra.Command{
 func init() {
 	GetCommand.AddToParent(Cmd)
 	SendCommand.AddToParent(Cmd)
+	SignCommand.AddToParent(Cmd)
 }
 
 // TransactionResult represent result from all account commands
