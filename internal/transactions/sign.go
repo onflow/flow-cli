@@ -47,13 +47,18 @@ var SignCommand = &command.Command{
 			return nil, fmt.Errorf("⚠️  DEPRECATED: all transactions will provide results")
 		}
 
+		codeFilename := ""
+		if len(args) > 0 {
+			codeFilename = args[0]
+		}
+
 		signed, err := services.Transactions.Sign(
 			signFlags.Signer,
 			signFlags.Proposer,
 			signFlags.PayerAddress,
 			signFlags.AdditionalAuthorizers,
 			signFlags.Role,
-			args[0], // optional filename code
+			codeFilename,
 			signFlags.Payload,
 			signFlags.Args,
 			signFlags.ArgsJSON,
@@ -89,6 +94,7 @@ func (r *SignResult) String() string {
 	tx := r.signed.FlowTransaction()
 
 	fmt.Fprintf(writer, "Authorizers\t%s\n", tx.Authorizers)
+	fmt.Fprintf(writer, "Payer\t%s\n", tx.Payer)
 
 	fmt.Fprintf(writer,
 		"\nProposal Key:\t\n    Address\t%s\n    Index\t%v\n    Sequence\t%v\n",

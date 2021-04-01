@@ -41,7 +41,7 @@ var SendCommand = &command.Command{
 	Cmd: &cobra.Command{
 		Use:     "send <filename>",
 		Short:   "Send a transaction",
-		Args:    cobra.ExactArgs(1),
+		Args:    cobra.MaximumNArgs(1),
 		Example: `flow transactions send tx.cdc --arg String:"Hello world"`,
 	},
 	Flags: &sendFlags,
@@ -59,8 +59,13 @@ var SendCommand = &command.Command{
 			return nil, fmt.Errorf("⚠️  DEPRECATED: all transactions will provide results")
 		}
 
+		filename := ""
+		if len(args) > 0 {
+			filename = args[0]
+		}
+
 		tx, result, err := services.Transactions.Send(
-			args[0], // filename
+			filename,
 			sendFlags.Payload,
 			sendFlags.Signer,
 			sendFlags.Args,
