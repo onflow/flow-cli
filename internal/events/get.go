@@ -47,7 +47,7 @@ var GetCommand = &command.Command{
 		services *services.Services,
 	) (command.Result, error) {
 		if generateFlag.Verbose {
-			return nil, fmt.Errorf("⚠️  DEPRECATED: flag is deperacated.")
+			return nil, fmt.Errorf("⚠️  DEPRECATED: flag is deprecated.")
 		}
 
 		end := ""

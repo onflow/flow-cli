@@ -48,7 +48,7 @@ var GenerateCommand = &command.Command{
 		services *services.Services,
 	) (command.Result, error) {
 		if generateFlags.Algo != "" {
-			return nil, fmt.Errorf("⚠️  DEPRECATED: flag is deperacated, use '--sig-algo' flag.")
+			return nil, fmt.Errorf("⚠️  DEPRECATED: flag is deprecated, use '--sig-algo' flag.")
 		}
 
 		privateKey, err := services.Keys.Generate(generateFlags.Seed, generateFlags.KeySigAlgo)

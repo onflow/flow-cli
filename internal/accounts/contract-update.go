@@ -48,7 +48,7 @@ var UpdateCommand = &command.Command{
 		services *services.Services,
 	) (command.Result, error) {
 		if createFlags.Results {
-			return nil, fmt.Errorf("⚠️  DEPRECATED: results flags is deperacated, results are by default included in all executions.")
+			return nil, fmt.Errorf("⚠️  DEPRECATED: results flags is deprecated, results are by default included in all executions.")
 		}
 
 		account, err := services.Accounts.AddContract(
