@@ -265,6 +265,11 @@ func (t *Transaction) Sign() (*Transaction, error) {
 			return nil, fmt.Errorf("failed to sign transaction: %s", err)
 		}
 	} else {
+		// make sure we have at least signer as authorizer
+		if len(t.tx.Authorizers) == 0 {
+			t.tx.AddAuthorizer(t.signer.Address())
+		}
+
 		err := t.tx.SignEnvelope(signerAddress, keyIndex, signer)
 		if err != nil {
 			return nil, fmt.Errorf("failed to sign transaction: %s", err)

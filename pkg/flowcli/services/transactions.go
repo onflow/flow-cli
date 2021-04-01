@@ -109,6 +109,11 @@ func (t *Transactions) Sign(
 		return nil, err
 	}
 
+	err = tx.SetSignerRole(role)
+	if err != nil {
+		return nil, err
+	}
+
 	if proposerName != "" {
 		proposerAccount := t.project.AccountByName(proposerName)
 		if proposerAccount == nil {
@@ -123,11 +128,6 @@ func (t *Transactions) Sign(
 
 	if payerAddress != "" {
 		tx.SetPayer(flow.HexToAddress(payerAddress))
-	}
-
-	err = tx.SetSignerRole(role)
-	if err != nil {
-		return nil, err
 	}
 
 	if payloadFilename != "" {
