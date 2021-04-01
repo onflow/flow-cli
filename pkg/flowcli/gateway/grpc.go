@@ -83,8 +83,7 @@ func (g *GrpcGateway) PrepareTransactionPayload(tx *project.Transaction) (*proje
 	tx.FlowTransaction().
 		SetReferenceBlockID(sealed.ID).
 		SetGasLimit(defaultGasLimit).
-		SetProposalKey(signerAddress, accountKey.Index, accountKey.SequenceNumber).
-		SetPayer(signerAddress)
+		SetProposalKey(signerAddress, accountKey.Index, accountKey.SequenceNumber)
 
 	return tx, nil
 }

@@ -188,6 +188,7 @@ func (t *Transaction) SetProposer(account *Account) error {
 
 func (t *Transaction) SetPayer(address flow.Address) {
 	t.payer = address
+	t.tx.SetPayer(address)
 }
 
 func (t *Transaction) AddRawArguments(args []string, argsJSON string) error {
