@@ -4,8 +4,6 @@ sidebar_title: Add Project Contracts
 description: How to define the Cadence contracts for Flow project
 ---
 
-⚠️ _Warning: CLI projects are an experimental feature. Functionality is subject to change._
-
 ## Add a Contract
 
 To add a contract to your project, update the `"contracts"` section of your `flow.json` file.
