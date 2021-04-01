@@ -163,7 +163,7 @@ func (c Command) AddToParent(parent *cobra.Command) {
 		handleError("Result", err)
 
 		// output result
-		err = outputResult(formattedResult, flags.Save)
+		err = outputResult(formattedResult, flags.Save, flags.Format, flags.Filter)
 		handleError("Output Error", err)
 	}
 
@@ -236,7 +236,7 @@ func formatResult(result Result, filterFlag string, formatFlag string) (string, 
 		return fmt.Sprintf("%v", jsonResult[filterFlag]), nil
 	}
 
-	switch formatFlag {
+	switch strings.ToLower(formatFlag) {
 	case "json":
 		jsonRes, _ := json.Marshal(result.JSON())
 		return string(jsonRes), nil
@@ -248,7 +248,7 @@ func formatResult(result Result, filterFlag string, formatFlag string) (string, 
 }
 
 // outputResult to selected media
-func outputResult(result string, saveFlag string) error {
+func outputResult(result string, saveFlag string, formatFlag string, filterFlag string) error {
 	if saveFlag != "" {
 		af := afero.Afero{
 			Fs: afero.NewOsFs(),
@@ -258,8 +258,11 @@ func outputResult(result string, saveFlag string) error {
 		return af.WriteFile(saveFlag, []byte(result), 0644)
 	}
 
-	// default normal output
-	fmt.Fprintf(os.Stdout, "%s\n", result)
+	if formatFlag == "inline" || filterFlag != "" {
+		fmt.Fprintf(os.Stdout, "%s", result)
+	} else { // default normal output
+		fmt.Fprintf(os.Stdout, "\n%s\n\n", result)
+	}
 	return nil
 }
 
