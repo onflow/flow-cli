@@ -222,9 +222,9 @@ func TestScripts(t *testing.T) {
 }
 
 func TestTransactions(t *testing.T) {
-	//if e2e == "" {
-	//	t.Skip("Skipping end-to-end tests")
-	//}
+	if e2e == "" {
+		t.Skip("Skipping end-to-end tests")
+	}
 
 	gw, err := gateway.NewGrpcGateway(host)
 	assert.NoError(t, err)
@@ -249,6 +249,7 @@ func TestTransactions(t *testing.T) {
 		tx, tr, err := transactions.Send("./transactionErr.cdc", "", emulatorAccount, []string{}, "")
 
 		assert.NoError(t, err)
+		assert.NotNil(t, tr.Error)
 		assert.Equal(t, tx.Payer.String(), serviceAddress)
 		assert.Equal(t, tr.Status.String(), "SEALED")
 		require.Greater(t, len(tr.Error.Error()), 100)
