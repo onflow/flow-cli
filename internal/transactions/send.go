@@ -29,7 +29,7 @@ import (
 type flagsSend struct {
 	ArgsJSON string   `default:"" flag:"args-json" info:"arguments in JSON-Cadence format"`
 	Args     []string `default:"" flag:"arg" info:"argument in Type:Value format"`
-	Signer   string   `default:"emulator-account" flag:"signer"`
+	Signer   string   `default:"emulator-account" flag:"signer" info:"name of the account used to sign"`
 	Payload  string   `flag:"payload" info:"path to the transaction payload file"`
 	Code     string   `default:"" flag:"code" info:"⚠️  DEPRECATED: use filename argument"`
 	Results  bool     `default:"" flag:"results" info:"⚠️  DEPRECATED: all transactions will provide result"`

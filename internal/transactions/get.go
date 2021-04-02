@@ -34,7 +34,7 @@ var statusFlags = flagsStatus{}
 var GetCommand = &command.Command{
 	Cmd: &cobra.Command{
 		Use:   "get <tx_id>",
-		Short: "Get the transaction status",
+		Short: "Get transaction by ID",
 		Args:  cobra.ExactArgs(1),
 	},
 	Flags: &statusFlags,
