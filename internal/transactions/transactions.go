@@ -91,6 +91,14 @@ func (r *TransactionResult) String() string {
 		r.tx.ProposalKey.Address, r.tx.ProposalKey.KeyIndex, r.tx.ProposalKey.SequenceNumber,
 	)
 
+	if len(r.tx.PayloadSignatures) == 0 {
+		fmt.Fprintf(writer, "\nNo Payload Signatures\n")
+	}
+
+	if len(r.tx.EnvelopeSignatures) == 0 {
+		fmt.Fprintf(writer, "\nNo Envelope Signatures\n")
+	}
+
 	for i, e := range r.tx.PayloadSignatures {
 		fmt.Fprintf(writer, "\nPayload Signature %v:\n", i)
 		fmt.Fprintf(writer, "    Address\t%s\n", e.Address)
@@ -109,14 +117,29 @@ func (r *TransactionResult) String() string {
 		e := events.EventResult{
 			Events: r.result.Events,
 		}
-		fmt.Fprintf(writer, "\n\nEvents:\t %s\n", e.String())
+
+		eventsOutput := e.String()
+		if eventsOutput == "" {
+			eventsOutput = "None"
+		}
+
+		fmt.Fprintf(writer, "\n\nEvents:\t %s\n", eventsOutput)
+	}
+
+	if r.tx.Script != nil {
+		if len(r.tx.Arguments) == 0 {
+			fmt.Fprintf(writer, "\n\nArguments\tNo arguments\n")
+		} else {
+			fmt.Fprintf(writer, "\n\nArguments (%d):\n", len(r.tx.Arguments))
+			for i, argument := range r.tx.Arguments {
+				fmt.Fprintf(writer, "    - Argument %d: %s\n", i, argument)
+			}
+		}
+
+		fmt.Fprintf(writer, "\nCode\n\n%s\n", r.tx.Script)
 	}
 
 	fmt.Fprintf(writer, "\n\nPayload:\n%x", r.tx.Encode())
-
-	if r.code {
-		fmt.Fprintf(writer, "\n\nCode\n\n%s\n", r.tx.Script)
-	}
 
 	writer.Flush()
 	return b.String()
