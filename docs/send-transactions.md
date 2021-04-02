@@ -12,7 +12,6 @@ any Flow Access API.
 ## Example Usage
 
 ```shell
-# Submit a transaction to Flow Testnet
 > flow transactions send <filename>
     --signer my-testnet-account \
     --host access.testnet.nodes.onflow.org:9000
@@ -65,6 +64,31 @@ transaction to be executed.
 - Valid inputs: the name of an account defined in the configuration (`flow.json`)
 
 Specify the name of the account that will be used to sign the transaction.
+
+### Arguments
+
+- Flag: `--arg`
+- Valid inputs: argument in `Type:Value` format.
+
+Arguments passed to the Cadence transaction in `Type:Value` format.
+The `Type` must be the same as type in the transaction source code for that argument.
+
+### Arguments JSON
+
+- Flag: `--argsJSON`
+- Valid inputs: arguments in JSON-Cadence form.
+
+Arguments passed to the Cadence transaction in `Type:Value` format.
+The `Type` must be the same type as the corresponding parameter
+in the Cadence transaction code.
+
+### Payload
+
+- Flag: `--payload`
+- Valid inputs: any filename and path valid on the system.
+
+Specify the filename containing valid transaction payload that will be used for signing.
+To be used with the `flow transaction sign` command.
 
 ### Host
 

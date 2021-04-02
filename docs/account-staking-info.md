@@ -45,7 +45,7 @@ Tokens Unstaking: 	 0.00000000
 ### Address
 
 - Name: `address`
-- Valid Input: Flow account address
+- Valid Input: Flow account address.
 
 Flow [account address](https://docs.onflow.org/concepts/accounts-and-keys/) (prefixed with `0x` or not).
 

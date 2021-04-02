@@ -33,6 +33,16 @@ Contract: 'FlowStorageFees'
 
 ```
 
+## Arguments
+
+### Address
+
+- Name: `address`
+- Valid Input: Flow account address
+
+Flow [account address](https://docs.onflow.org/concepts/accounts-and-keys/) (prefixed with `0x` or not).
+
+
 ## Flags
 
 ### Contracts
@@ -43,7 +53,6 @@ Display contracts deployed to the account.
 
 ### Code 
 ⚠️  DEPRECATED: use contracts flag instead.
-
 
 ### Host
 

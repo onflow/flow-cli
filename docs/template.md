@@ -13,10 +13,8 @@ description:
 ## Example Usage
 
 ```shell
-{usage example}
+{usage example with response}
 ```
-
-### Example response
 
 ## Arguments
 
