@@ -29,7 +29,7 @@ import (
 type flagsGenerate struct {
 	Seed       string `flag:"seed" info:"Deterministic seed phrase"`
 	KeySigAlgo string `default:"ECDSA_P256" flag:"sig-algo" info:"Signature algorithm"`
-	Algo       string `default:"" flag:"algo" info:"⚠️  DEPRECATED: use command argument"`
+	Algo       string `default:"" flag:"algo" info:"⚠️  No longer supported: use sig-algo argument"`
 }
 
 var generateFlags = flagsGenerate{}
@@ -48,7 +48,7 @@ var GenerateCommand = &command.Command{
 		services *services.Services,
 	) (command.Result, error) {
 		if generateFlags.Algo != "" {
-			return nil, fmt.Errorf("⚠️  DEPRECATED: flag is deperacated, use '--sig-algo' flag.")
+			return nil, fmt.Errorf("⚠️ Algo flag no longer supported: use '--sig-algo' flag.")
 		}
 
 		privateKey, err := services.Keys.Generate(generateFlags.Seed, generateFlags.KeySigAlgo)

@@ -39,7 +39,6 @@ var Cmd = &cobra.Command{
 
 func init() {
 	GenerateCommand.AddToParent(Cmd)
-	DecodeCommand.AddToParent(Cmd)
 }
 
 // KeyResult represent result from all account commands
@@ -64,7 +63,7 @@ func (k *KeyResult) String() string {
 	writer := tabwriter.NewWriter(&b, 0, 8, 1, '\t', tabwriter.AlignRight)
 
 	if k.privateKey != nil {
-		fmt.Fprintf(writer, "🔴️ Store Private Key safely and don't share with anyone! \n")
+		fmt.Fprintf(writer, "🔴️ Store private key safely and don't share with anyone! \n")
 		fmt.Fprintf(writer, "Private Key \t %x \n", k.privateKey.Encode())
 	}
 

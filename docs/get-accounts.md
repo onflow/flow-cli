@@ -52,7 +52,7 @@ Flow [account address](https://docs.onflow.org/concepts/accounts-and-keys/) (pre
 Display contracts deployed to the account.
 
 ### Code 
-⚠️  DEPRECATED: use contracts flag instead.
+⚠️  No longer supported: use contracts flag instead.
 
 ### Host
 

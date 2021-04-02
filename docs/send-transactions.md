@@ -50,13 +50,13 @@ transaction to be executed.
 
 - Flag: `--code`
 
-⚠️  DEPRECATED: use filename argument.
+⚠️  No longer supported: use filename argument.
 
 ### Results
 
 - Flag: `--results`
 
-⚠️  DEPRECATED: all transactions will provide result.
+⚠️  No longer supported: all transactions will provide result.
 
 ### Signer
 

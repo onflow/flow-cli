@@ -4,8 +4,6 @@ sidebar_title: Deploy a Project
 description: How to deploy Flow project contracts with the CLI
 ---
 
-⚠️ _Warning: CLI projects are an experimental feature. Functionality is subject to change._
-
 ```shell
 flow project deploy
 ```

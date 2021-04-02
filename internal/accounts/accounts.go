@@ -34,7 +34,6 @@ var Cmd = &cobra.Command{
 }
 
 func init() {
-	AddCommand.AddToParent(Cmd)
 	AddContractCommand.AddToParent(Cmd)
 	RemoveCommand.AddToParent(Cmd)
 	UpdateCommand.AddToParent(Cmd)
@@ -91,7 +90,12 @@ func (r *AccountResult) String() string {
 
 // Oneliner show result as one liner grep friendly
 func (r *AccountResult) Oneliner() string {
-	return fmt.Sprintf("Address: 0x%s, Balance: %v, Keys: %s", r.Address, r.Balance, r.Keys[0].PublicKey)
+	keys := make([]string, 0)
+	for _, key := range r.Keys {
+		keys = append(keys, key.PublicKey.String())
+	}
+
+	return fmt.Sprintf("Address: 0x%s, Balance: %v, Public Keys: %s", r.Address, r.Balance, keys)
 }
 
 func (r *AccountResult) ToConfig() string {

@@ -28,8 +28,9 @@ import (
 
 type flagsScripts struct {
 	ArgsJSON string   `default:"" flag:"args-json" info:"arguments in JSON-Cadence format"`
-	Args     []string `default:"" flag:"arg" info:"argument in Type:Value format"`
-	Code     bool     `default:"false" flag:"code" info:"⚠️  DEPRECATED: use filename argument"`
+	Arg      []string `default:"" flag:"arg" info:"argument in Type:Value format"`
+	Code     bool     `default:"false" flag:"code" info:"⚠️  No longer supported: use filename argument"`
+	Args     string   `default:"false" flag:"args" info:"⚠️  No longer supported: use arg or args-json flag"`
 }
 
 var scriptFlags = flagsScripts{}
@@ -38,7 +39,7 @@ var ExecuteCommand = &command.Command{
 	Cmd: &cobra.Command{
 		Use:     "execute <filename>",
 		Short:   "Execute a script",
-		Example: `flow scripts execute script.cdc --arg String:"Hello" --arg String:"World"`,
+		Example: `flow scripts execute script.cdc --arg String:"Meow" --arg String:"Woof"`,
 		Args:    cobra.ExactArgs(1),
 	},
 	Flags: &scriptFlags,
@@ -49,12 +50,15 @@ var ExecuteCommand = &command.Command{
 		services *services.Services,
 	) (command.Result, error) {
 		if scriptFlags.Code {
-			return nil, fmt.Errorf("⚠️  DEPRECATED: use filename argument")
+			return nil, fmt.Errorf("⚠️  No longer supported: use filename argument")
+		}
+		if scriptFlags.Args != "" {
+			return nil, fmt.Errorf("⚠️  No longer supported: use arg flag in Type:Value format or arg-json for JSON format")
 		}
 
 		value, err := services.Scripts.Execute(
 			args[0], // filename
-			scriptFlags.Args,
+			scriptFlags.Arg,
 			scriptFlags.ArgsJSON,
 		)
 		if err != nil {

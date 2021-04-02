@@ -29,9 +29,9 @@ import (
 type flagsBlocks struct {
 	Events      string `default:"" flag:"events" info:"List events of this type for the block"`
 	Verbose     bool   `default:"false" flag:"verbose" info:"Display transactions in block"`
-	Latest      bool   `default:"false" flag:"latest" info:"⚠️  DEPRECATED: use command argument"`
-	BlockID     string `default:"" flag:"id" info:"⚠️  DEPRECATED: use command argument"`
-	BlockHeight uint64 `default:"0" flag:"height" info:"⚠️  DEPRECATED: use command argument"`
+	Latest      bool   `default:"false" flag:"latest" info:"⚠️  No longer supported: use command argument"`
+	BlockID     string `default:"" flag:"id" info:"⚠️  No longer supported: use command argument"`
+	BlockHeight uint64 `default:"0" flag:"height" info:"⚠️  No longer supported: use command argument"`
 }
 
 var blockFlags = flagsBlocks{}
@@ -40,6 +40,7 @@ var GetCommand = &command.Command{
 	Cmd: &cobra.Command{
 		Use:   "get <block_id|latest|block_height>",
 		Short: "Get block info",
+		Args:  cobra.ExactArgs(1),
 	},
 	Flags: &blockFlags,
 	Run: func(
@@ -49,7 +50,7 @@ var GetCommand = &command.Command{
 		services *services.Services,
 	) (command.Result, error) {
 		if blockFlags.Latest || blockFlags.BlockID != "" || blockFlags.BlockHeight != 0 {
-			return nil, fmt.Errorf("⚠️  DEPRECATED: flag is deperacated, use command argument.")
+			return nil, fmt.Errorf("⚠️  No longer supported: use command argument.")
 		}
 
 		block, events, collections, err := services.Blocks.GetBlock(

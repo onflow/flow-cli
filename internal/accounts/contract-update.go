@@ -28,7 +28,7 @@ import (
 
 type flagsUpdateContract struct {
 	Signer  string `default:"emulator-account" flag:"signer"`
-	Results bool   `default:"false" flag:"results" info:"⚠️  DEPRECATED: use contracts flag instead"`
+	Results bool   `default:"false" flag:"results" info:"⚠️  No longer supported: results are provided by default"`
 }
 
 var updateFlags = flagsUpdateContract{}
@@ -48,7 +48,7 @@ var UpdateCommand = &command.Command{
 		services *services.Services,
 	) (command.Result, error) {
 		if createFlags.Results {
-			return nil, fmt.Errorf("⚠️  DEPRECATED: results flags is deperacated, results are by default included in all executions.")
+			return nil, fmt.Errorf("⚠️ Results flag is no longer supported, results are by default included in all executions.")
 		}
 
 		account, err := services.Accounts.AddContract(

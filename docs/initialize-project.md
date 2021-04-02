@@ -12,8 +12,6 @@ using the init command. Read more about [state configuration here](https://docs.
 flow project init
 ```
 
-⚠️ _Warning: CLI projects are an experimental feature. Functionality is subject to change._
-
 ## Example Usage
 
 ```shell
