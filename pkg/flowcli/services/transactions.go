@@ -87,7 +87,9 @@ func (t *Transactions) Sign(
 	scriptFilename string,
 	payloadFilename string,
 	args []string,
-	argsJSON string) (*project.Transaction, error) {
+	argsJSON string,
+	approveSigning bool,
+) (*project.Transaction, error) {
 	if t.project == nil {
 		return nil, fmt.Errorf("missing configuration, initialize it: flow project init")
 	}
@@ -111,8 +113,11 @@ func (t *Transactions) Sign(
 			return nil, err
 		}
 
-		approved, err := output.ApproveTransactionPrompt(tx)
-		if approved {
+		if approveSigning {
+			return tx.Sign()
+		}
+
+		if output.ApproveTransactionPrompt(tx) {
 			return tx.Sign()
 		} else {
 			return nil, fmt.Errorf("transaction was not approved for signing")
@@ -189,6 +194,7 @@ func (t *Transactions) Send(
 		payloadFilename,
 		args,
 		argsJSON,
+		true,
 	)
 	if err != nil {
 		return nil, nil, err

@@ -9,7 +9,7 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowcli/project"
 )
 
-func ApproveTransactionPrompt(transaction *project.Transaction) (bool, error) {
+func ApproveTransactionPrompt(transaction *project.Transaction) bool {
 	writer := uilive.New()
 	tx := transaction.FlowTransaction()
 
@@ -66,14 +66,10 @@ func ApproveTransactionPrompt(transaction *project.Transaction) (bool, error) {
 		Items: []string{"No", "Yes"},
 	}
 
-	_, result, err := prompt.Run()
+	_, result, _ := prompt.Run()
 
 	fmt.Fprintf(writer, "\r\r")
 	writer.Flush()
 
-	if err != nil {
-		return false, fmt.Errorf("Prompt failed %v\n", err)
-	}
-
-	return result == "Yes", nil
+	return result == "Yes"
 }
