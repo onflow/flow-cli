@@ -54,8 +54,8 @@ func (s *Spinner) run() {
 
 	for {
 		select {
-		case message := <-s.done:
-			_, _ = fmt.Fprintln(writer, message)
+		case <-s.done:
+			_, _ = fmt.Fprintf(writer, "\r")
 			_ = writer.Flush()
 			close(s.done)
 			return
@@ -73,7 +73,6 @@ func (s *Spinner) run() {
 	}
 }
 
-func (s *Spinner) Stop(message string) {
-	s.done <- message
-	<-s.done
+func (s *Spinner) Stop() {
+	s.done <- ""
 }

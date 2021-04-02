@@ -72,7 +72,7 @@ func (t *Transactions) GetStatus(
 
 	result, err := t.gateway.GetTransactionResult(tx, waitSeal)
 
-	t.logger.StopProgress("")
+	t.logger.StopProgress()
 
 	return tx, result, err
 }
@@ -200,7 +200,7 @@ func (t *Transactions) Send(
 
 	res, err := t.gateway.GetTransactionResult(tx, true)
 
-	t.logger.StopProgress("")
+	t.logger.StopProgress()
 
 	return tx, res, err
 }
@@ -249,6 +249,6 @@ func (t *Transactions) SendForAddressWithCode(
 
 	res, err := t.gateway.GetTransactionResult(sentTx, true)
 
-	t.logger.StopProgress("")
+	t.logger.StopProgress()
 	return sentTx, res, err
 }

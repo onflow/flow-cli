@@ -64,7 +64,7 @@ func (a *Accounts) Get(address string) (*flow.Account, error) {
 	flowAddress := flow.HexToAddress(address)
 
 	account, err := a.gateway.GetAccount(flowAddress)
-	a.logger.StopProgress("")
+	a.logger.StopProgress()
 
 	return account, err
 }
@@ -192,7 +192,7 @@ func (a *Accounts) StakingInfo(accountAddress string) (*cadence.Value, *cadence.
 		return nil, nil, fmt.Errorf("error getting delegation info: %s", err.Error())
 	}
 
-	a.logger.StopProgress("")
+	a.logger.StopProgress()
 
 	return &stakingValue, &delegationValue, nil
 }
@@ -264,7 +264,7 @@ func (a *Accounts) Create(
 		return nil, fmt.Errorf("new account address couldn't be fetched")
 	}
 
-	a.logger.StopProgress("")
+	a.logger.StopProgress()
 
 	return a.gateway.GetAccount(*newAccountAddress)
 }
@@ -359,7 +359,7 @@ func (a *Accounts) addContract(
 
 	update, err := a.gateway.GetAccount(account.Address())
 
-	a.logger.StopProgress("")
+	a.logger.StopProgress()
 
 	if updateExisting {
 		a.logger.Info(fmt.Sprintf("Contract '%s' updated on the account '%s'.", contractName, account.Address()))
@@ -424,7 +424,7 @@ func (a *Accounts) removeContract(
 		return nil, txr.Error
 	}
 
-	a.logger.StopProgress("")
+	a.logger.StopProgress()
 	a.logger.Info(fmt.Sprintf("Contract %s removed from account %s\n", contractName, account.Address()))
 
 	return a.gateway.GetAccount(account.Address())

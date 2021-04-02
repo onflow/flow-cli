@@ -99,7 +99,7 @@ func (e *Blocks) GetBlock(
 		}
 	}
 
-	e.logger.StopProgress("")
+	e.logger.StopProgress()
 
 	return block, events, collections, err
 }
