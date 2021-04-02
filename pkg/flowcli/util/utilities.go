@@ -99,3 +99,12 @@ func GetAddressNetwork(address flow.Address) (flow.ChainID, error) {
 
 	return flow.ChainID(""), fmt.Errorf("unrecognized address not valid for any known chain: %s", address)
 }
+
+func ContainsString(s []string, e string) bool {
+	for _, a := range s {
+		if a == e {
+			return true
+		}
+	}
+	return false
+}
