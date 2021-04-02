@@ -52,11 +52,14 @@ type TransactionResult struct {
 func (r *TransactionResult) JSON() interface{} {
 	result := make(map[string]string)
 	result["Hash"] = r.tx.ID().String()
-	result["Status"] = r.result.Status.String()
-	result["Error"] = r.result.Error.Error()
+	result["Payload"] = fmt.Sprintf("%x", r.tx.Encode())
+	result["Authorizers"] = fmt.Sprintf("%s", r.tx.Authorizers)
+	result["Payer"] = r.tx.Payer.String()
 
 	if r.result != nil {
 		result["Events"] = fmt.Sprintf("%s", r.result.Events)
+		result["Status"] = r.result.Status.String()
+		result["Error"] = r.result.Error.Error()
 	}
 
 	return result
@@ -67,21 +70,21 @@ func (r *TransactionResult) String() string {
 	var b bytes.Buffer
 	writer := tabwriter.NewWriter(&b, 0, 8, 1, '\t', tabwriter.AlignRight)
 
-	if r.result.Error != nil {
-		fmt.Fprintf(writer, "❌ Transaction Error \n%s\n\n\n", r.result.Error.Error())
+	if r.result != nil {
+		if r.result.Error != nil {
+			fmt.Fprintf(writer, "❌ Transaction Error \n%s\n\n\n", r.result.Error.Error())
+		}
+
+		statusBadge := ""
+		if r.result.Status == flow.TransactionStatusSealed {
+			statusBadge = "✅"
+		}
+		fmt.Fprintf(writer, "Status\t%s %s\n", statusBadge, r.result.Status)
 	}
 
-	statusBadge := ""
-	if r.result.Status == flow.TransactionStatusSealed {
-		statusBadge = "✅"
-	}
-
-	fmt.Fprintf(writer, "Status\t%s %s\n", statusBadge, r.result.Status)
 	fmt.Fprintf(writer, "Hash\t%s\n", r.tx.ID())
 	fmt.Fprintf(writer, "Payer\t%s\n", r.tx.Payer.Hex())
-
 	fmt.Fprintf(writer, "Authorizers\t%s\n", r.tx.Authorizers)
-	fmt.Fprintf(writer, "Payer\t%s\n", r.tx.Payer)
 
 	fmt.Fprintf(writer,
 		"\nProposal Key:\t\n    Address\t%s\n    Index\t%v\n    Sequence\t%v\n",
@@ -102,15 +105,17 @@ func (r *TransactionResult) String() string {
 		fmt.Fprintf(writer, "    Key Index\t%d\n", e.KeyIndex)
 	}
 
-	fmt.Fprintf(writer, "\n\nTransaction Payload:\n%x", r.tx.Encode())
-
-	e := events.EventResult{
-		Events: r.result.Events,
+	if r.result != nil {
+		e := events.EventResult{
+			Events: r.result.Events,
+		}
+		fmt.Fprintf(writer, "\n\nEvents:\t %s\n", e.String())
 	}
-	fmt.Fprintf(writer, "Events\t %s\n", e.String())
+
+	fmt.Fprintf(writer, "\n\nPayload:\n%x", r.tx.Encode())
 
 	if r.code {
-		fmt.Fprintf(writer, "Code\n\n%s\n", r.tx.Script)
+		fmt.Fprintf(writer, "\n\nCode\n\n%s\n", r.tx.Script)
 	}
 
 	writer.Flush()
