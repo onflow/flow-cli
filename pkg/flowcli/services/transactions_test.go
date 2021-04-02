@@ -16,6 +16,15 @@ import (
 func TestTransactions(t *testing.T) {
 	mock := &tests.MockGateway{}
 
+	// default implementations
+	mock.PrepareTransactionPayloadMock = func(tx *project.Transaction) (*project.Transaction, error) {
+		return tx, nil
+	}
+
+	mock.SendSignedTransactionMock = func(tx *project.Transaction) (*flow.Transaction, error) {
+		return tx.FlowTransaction(), nil
+	}
+
 	proj, err := project.Init(crypto.ECDSA_P256, crypto.SHA3_256)
 	assert.NoError(t, err)
 
@@ -50,18 +59,24 @@ func TestTransactions(t *testing.T) {
 			return tests.NewTransactionResult(nil), nil
 		}
 
-		mock.SendTransactionMock = func(tx *flow.Transaction, signer *project.Account) (*flow.Transaction, error) {
+		mock.SendSignedTransactionMock = func(tx *project.Transaction) (*flow.Transaction, error) {
 			called++
-			arg, err := tx.Argument(0)
+			arg, err := tx.FlowTransaction().Argument(0)
 
 			assert.NoError(t, err)
 			assert.Equal(t, arg.String(), "\"Bar\"")
-			assert.Equal(t, signer.Address().String(), serviceAddress)
-			assert.Equal(t, len(string(tx.Script)), 209)
+			assert.Equal(t, tx.Signer().Address().String(), serviceAddress)
+			assert.Equal(t, len(string(tx.FlowTransaction().Script)), 209)
 			return tests.NewTransaction(), nil
 		}
 
-		_, _, err := transactions.Send("../../../tests/transaction.cdc", serviceName, []string{"String:Bar"}, "")
+		_, _, err := transactions.Send(
+			"../../../tests/transaction.cdc",
+			"",
+			serviceName,
+			[]string{"String:Bar"},
+			"",
+		)
 
 		assert.NoError(t, err)
 		assert.Equal(t, called, 2)
@@ -75,15 +90,16 @@ func TestTransactions(t *testing.T) {
 			return tests.NewTransactionResult(nil), nil
 		}
 
-		mock.SendTransactionMock = func(tx *flow.Transaction, signer *project.Account) (*flow.Transaction, error) {
+		mock.SendSignedTransactionMock = func(tx *project.Transaction) (*flow.Transaction, error) {
 			called++
-			assert.Equal(t, signer.Address().String(), serviceAddress)
-			assert.Equal(t, len(string(tx.Script)), 209)
+			assert.Equal(t, tx.Signer().Address().String(), serviceAddress)
+			assert.Equal(t, len(string(tx.FlowTransaction().Script)), 209)
 			return tests.NewTransaction(), nil
 		}
 
 		_, _, err := transactions.Send(
 			"../../../tests/transaction.cdc",
+			"",
 			serviceName,
 			nil,
 			"[{\"type\": \"String\", \"value\": \"Bar\"}]",
@@ -94,17 +110,35 @@ func TestTransactions(t *testing.T) {
 	})
 
 	t.Run("Send Transaction Fails wrong args", func(t *testing.T) {
-		_, _, err := transactions.Send("../../../tests/transaction.cdc", serviceName, []string{"Bar"}, "")
+		_, _, err := transactions.Send(
+			"../../../tests/transaction.cdc",
+			"",
+			serviceName,
+			[]string{"Bar"},
+			"",
+		)
 		assert.Equal(t, err.Error(), "Argument not passed in correct format, correct format is: Type:Value, got Bar")
 	})
 
 	t.Run("Send Transaction Fails wrong filename", func(t *testing.T) {
-		_, _, err := transactions.Send("nooo.cdc", serviceName, []string{"Bar"}, "")
+		_, _, err := transactions.Send(
+			"nooo.cdc",
+			"",
+			serviceName,
+			[]string{"Bar"},
+			"",
+		)
 		assert.Equal(t, err.Error(), "Failed to load file: nooo.cdc")
 	})
 
 	t.Run("Send Transaction Fails wrong args", func(t *testing.T) {
-		_, _, err := transactions.Send("../../../tests/transaction.cdc", serviceName, nil, "[{\"Bar\":\"No\"}]")
+		_, _, err := transactions.Send(
+			"../../../tests/transaction.cdc",
+			"",
+			serviceName,
+			nil,
+			"[{\"Bar\":\"No\"}]",
+		)
 		assert.Equal(t, err.Error(), "failed to decode value: invalid JSON Cadence structure")
 	})
 }
