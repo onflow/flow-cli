@@ -111,7 +111,12 @@ func (t *Transactions) Sign(
 			return nil, err
 		}
 
-		return tx.Sign()
+		approved, err := output.ApproveTransactionPrompt(tx)
+		if approved {
+			return tx.Sign()
+		} else {
+			return nil, fmt.Errorf("transaction was not approved for signing")
+		}
 	}
 
 	// we are creating a new transaction
