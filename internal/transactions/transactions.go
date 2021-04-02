@@ -67,13 +67,42 @@ func (r *TransactionResult) String() string {
 	var b bytes.Buffer
 	writer := tabwriter.NewWriter(&b, 0, 8, 1, '\t', tabwriter.AlignRight)
 
-	fmt.Fprintf(writer, "Hash\t %s\n", r.tx.ID())
-	fmt.Fprintf(writer, "Status\t %s\n", r.result.Status)
-	fmt.Fprintf(writer, "Payer\t %s\n", r.tx.Payer.Hex())
-
 	if r.result.Error != nil {
-		fmt.Fprintf(writer, "\n❌ Transaction Error \n%s\n", r.result.Error.Error())
+		fmt.Fprintf(writer, "❌ Transaction Error \n%s\n\n\n", r.result.Error.Error())
 	}
+
+	statusBadge := ""
+	if r.result.Status == flow.TransactionStatusSealed {
+		statusBadge = "✅"
+	}
+
+	fmt.Fprintf(writer, "Status\t%s %s\n", statusBadge, r.result.Status)
+	fmt.Fprintf(writer, "Hash\t%s\n", r.tx.ID())
+	fmt.Fprintf(writer, "Payer\t%s\n", r.tx.Payer.Hex())
+
+	fmt.Fprintf(writer, "Authorizers\t%s\n", r.tx.Authorizers)
+	fmt.Fprintf(writer, "Payer\t%s\n", r.tx.Payer)
+
+	fmt.Fprintf(writer,
+		"\nProposal Key:\t\n    Address\t%s\n    Index\t%v\n    Sequence\t%v\n",
+		r.tx.ProposalKey.Address, r.tx.ProposalKey.KeyIndex, r.tx.ProposalKey.SequenceNumber,
+	)
+
+	for i, e := range r.tx.PayloadSignatures {
+		fmt.Fprintf(writer, "\nPayload Signature %v:\n", i)
+		fmt.Fprintf(writer, "    Address\t%s\n", e.Address)
+		fmt.Fprintf(writer, "    Signature\t%x\n", e.Signature)
+		fmt.Fprintf(writer, "    Key Index\t%d\n", e.KeyIndex)
+	}
+
+	for i, e := range r.tx.EnvelopeSignatures {
+		fmt.Fprintf(writer, "\nEnvelope Signature %v:\n", i)
+		fmt.Fprintf(writer, "    Address\t%s\n", e.Address)
+		fmt.Fprintf(writer, "    Signature\t%x\n", e.Signature)
+		fmt.Fprintf(writer, "    Key Index\t%d\n", e.KeyIndex)
+	}
+
+	fmt.Fprintf(writer, "\n\nTransaction Payload:\n%x", r.tx.Encode())
 
 	e := events.EventResult{
 		Events: r.result.Events,
