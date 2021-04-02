@@ -135,7 +135,7 @@ func InitFlags(cmd *cobra.Command) {
 	cmd.PersistentFlags().BoolVarP(
 		&flags.Yes,
 		"yes",
-		"n",
+		"y",
 		flags.Yes,
 		"Approve any prompts",
 	)
