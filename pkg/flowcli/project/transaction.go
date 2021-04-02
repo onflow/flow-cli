@@ -31,6 +31,36 @@ func NewTransaction() *Transaction {
 	}
 }
 
+func NewTransactionFromPayload(signer *Account, filename string, role string) (*Transaction, error) {
+	partialTxHex, err := ioutil.ReadFile(filename)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read partial transaction from %s: %v", filename, err)
+	}
+
+	partialTxBytes, err := hex.DecodeString(string(partialTxHex))
+	if err != nil {
+		return nil, fmt.Errorf("failed to decode partial transaction from %s: %v", filename, err)
+	}
+
+	decodedTx, err := flow.DecodeTransaction(partialTxBytes)
+	if err != nil {
+		return nil, fmt.Errorf("failed to decode transaction from %s: %v", filename, err)
+	}
+
+	tx := &Transaction{
+		tx: decodedTx,
+	}
+
+	err = tx.SetSigner(signer)
+	if err != nil {
+		return nil, err
+	}
+	// we need to set the role here for signing purpose, so we know what to sign envelope or payload
+	tx.signerRole = signerRole(role)
+
+	return tx, nil
+}
+
 func NewUpdateAccountContractTransaction(signer *Account, name string, source string) (*Transaction, error) {
 	contract := templates.Contract{
 		Name:   name,
@@ -45,6 +75,7 @@ func NewUpdateAccountContractTransaction(signer *Account, name string, source st
 	if err != nil {
 		return nil, err
 	}
+	tx.SetPayer(signer.Address())
 
 	return tx, nil
 }
@@ -63,6 +94,7 @@ func NewAddAccountContractTransaction(signer *Account, name string, source strin
 	if err != nil {
 		return nil, err
 	}
+	tx.SetPayer(signer.Address())
 
 	return tx, nil
 }
@@ -114,6 +146,7 @@ func NewCreateAccountTransaction(
 	if err != nil {
 		return nil, err
 	}
+	tx.SetPayer(signer.Address())
 
 	return tx, nil
 }
@@ -122,7 +155,6 @@ type Transaction struct {
 	signer     *Account
 	signerRole signerRole
 	proposer   *Account
-	payer      flow.Address
 	tx         *flow.Transaction
 }
 
@@ -132,24 +164,6 @@ func (t *Transaction) Signer() *Account {
 
 func (t *Transaction) FlowTransaction() *flow.Transaction {
 	return t.tx
-}
-
-func (t *Transaction) SetPayloadFromFile(filename string) error {
-	partialTxHex, err := ioutil.ReadFile(filename)
-	if err != nil {
-		return fmt.Errorf("failed to read partial transaction from %s: %v", filename, err)
-	}
-	partialTxBytes, err := hex.DecodeString(string(partialTxHex))
-	if err != nil {
-		return fmt.Errorf("failed to decode partial transaction from %s: %v", filename, err)
-	}
-	tx, err := flow.DecodeTransaction(partialTxBytes)
-	if err != nil {
-		return fmt.Errorf("failed to decode transaction from %s: %v", filename, err)
-	}
-
-	t.tx = tx
-	return nil
 }
 
 func (t *Transaction) SetScriptWithArgsFromFile(filepath string, args []string, argsJSON string) error {
@@ -187,8 +201,11 @@ func (t *Transaction) SetProposer(account *Account) error {
 }
 
 func (t *Transaction) SetPayer(address flow.Address) {
-	t.payer = address
 	t.tx.SetPayer(address)
+}
+
+func (t *Transaction) HasPayer() bool {
+	return t.tx.Payer != flow.EmptyAddress
 }
 
 func (t *Transaction) AddRawArguments(args []string, argsJSON string) error {
@@ -245,8 +262,8 @@ func (t *Transaction) SetSignerRole(role string) error {
 			return err
 		}
 	}
-	if t.signerRole == SignerRolePayer && t.payer != t.signer.Address() {
-		return fmt.Errorf("role specified as Payer, but Payer address also provided, and different: %s != %s", t.payer, t.signer.Address())
+	if t.signerRole == SignerRolePayer && t.tx.Payer != t.signer.Address() {
+		return fmt.Errorf("role specified as Payer, but Payer address also provided, and different: %s != %s", t.tx.Payer, t.signer.Address())
 	}
 
 	return nil
@@ -266,7 +283,7 @@ func (t *Transaction) Sign() (*Transaction, error) {
 			return nil, fmt.Errorf("failed to sign transaction: %s", err)
 		}
 	} else {
-		// make sure we have at least signer as authorizer
+		// make sure we have at least signer as authorizer else add self
 		if len(t.tx.Authorizers) == 0 {
 			t.tx.AddAuthorizer(t.signer.Address())
 		}

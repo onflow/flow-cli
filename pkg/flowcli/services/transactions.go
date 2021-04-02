@@ -88,12 +88,6 @@ func (t *Transactions) Sign(
 	payloadFilename string,
 	args []string,
 	argsJSON string) (*project.Transaction, error) {
-	tx := project.NewTransaction()
-
-	if payloadFilename != "" && scriptFilename != "" {
-		return nil, fmt.Errorf("both a partial transaction and Cadence code file provided, but cannot use both")
-	}
-
 	if t.project == nil {
 		return nil, fmt.Errorf("missing configuration, initialize it: flow project init")
 	}
@@ -103,6 +97,25 @@ func (t *Transactions) Sign(
 	if signerAccount == nil {
 		return nil, fmt.Errorf("signer account: [%s] doesn't exists in configuration", signerName)
 	}
+
+	if payloadFilename != "" && scriptFilename != "" {
+		return nil, fmt.Errorf("can not use both a transaction payload and Cadence code file")
+	} else if payloadFilename == "" && scriptFilename == "" {
+		return nil, fmt.Errorf("provide either a transaction payload or Cadence code file")
+	}
+
+	// if we received already created transaction payload, create from payload and return signed
+	if payloadFilename != "" {
+		tx, err := project.NewTransactionFromPayload(signerAccount, payloadFilename, role)
+		if err != nil {
+			return nil, err
+		}
+
+		return tx.Sign()
+	}
+
+	// we are creating a new transaction
+	tx := project.NewTransaction()
 
 	err := tx.SetSigner(signerAccount)
 	if err != nil {
@@ -114,6 +127,7 @@ func (t *Transactions) Sign(
 		return nil, err
 	}
 
+	// if proposer is specified and exists assign it
 	if proposerName != "" {
 		proposerAccount := t.project.AccountByName(proposerName)
 		if proposerAccount == nil {
@@ -126,32 +140,26 @@ func (t *Transactions) Sign(
 		}
 	}
 
+	// set payer if specified, else set current signer as payer if tx doesn't have one yet associated
 	if payerAddress != "" {
 		tx.SetPayer(flow.HexToAddress(payerAddress))
+	} else if !tx.HasPayer() {
+		tx.SetPayer(signerAccount.Address())
 	}
 
-	if payloadFilename != "" {
-		err = tx.SetPayloadFromFile(payloadFilename)
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		if scriptFilename != "" {
-			err = tx.SetScriptWithArgsFromFile(scriptFilename, args, argsJSON)
-			if err != nil {
-				return nil, err
-			}
-		}
+	err = tx.SetScriptWithArgsFromFile(scriptFilename, args, argsJSON)
+	if err != nil {
+		return nil, err
+	}
 
-		err = tx.AddAuthorizers(additionalAuthorizers)
-		if err != nil {
-			return nil, err
-		}
+	err = tx.AddAuthorizers(additionalAuthorizers)
+	if err != nil {
+		return nil, err
+	}
 
-		tx, err = t.gateway.PrepareTransactionPayload(tx)
-		if err != nil {
-			return nil, err
-		}
+	tx, err = t.gateway.PrepareTransactionPayload(tx)
+	if err != nil {
+		return nil, err
 	}
 
 	return tx.Sign()
