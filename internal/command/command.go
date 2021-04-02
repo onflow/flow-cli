@@ -61,6 +61,7 @@ type GlobalFlags struct {
 	Host    string
 	Log     string
 	Network string
+	Yes     bool
 }
 
 var flags = GlobalFlags{
@@ -70,6 +71,7 @@ var flags = GlobalFlags{
 	Host:    "",
 	Log:     "info",
 	Network: "",
+	Yes:     false,
 }
 
 // InitFlags init all the global persistent flags
@@ -128,6 +130,14 @@ func InitFlags(cmd *cobra.Command) {
 		"n",
 		flags.Network,
 		"Network from configuration file",
+	)
+
+	cmd.PersistentFlags().BoolVarP(
+		&flags.Yes,
+		"yes",
+		"n",
+		flags.Yes,
+		"Approve any prompts",
 	)
 }
 

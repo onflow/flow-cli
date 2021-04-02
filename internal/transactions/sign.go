@@ -58,6 +58,7 @@ var SignCommand = &command.Command{
 			signFlags.Payload,
 			signFlags.Args,
 			signFlags.ArgsJSON,
+			globalFlags.Yes,
 		)
 		if err != nil {
 			return nil, err
