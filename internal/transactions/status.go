@@ -16,7 +16,6 @@ var StatusCommand = &command.Command{
 	Cmd: &cobra.Command{
 		Use:   "status",
 		Short: "⚠️  No longer supported: use 'transactions get' command",
-		Args:  cobra.ExactArgs(1),
 	},
 	Flags: &statusFlags,
 	Run: func(
