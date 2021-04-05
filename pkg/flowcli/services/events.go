@@ -22,12 +22,11 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/onflow/flow-cli/pkg/flowcli/output"
-	"github.com/onflow/flow-cli/pkg/flowcli/project"
-
 	"github.com/onflow/flow-go-sdk/client"
 
 	"github.com/onflow/flow-cli/pkg/flowcli/gateway"
+	"github.com/onflow/flow-cli/pkg/flowcli/output"
+	"github.com/onflow/flow-cli/pkg/flowcli/project"
 )
 
 // Events service handles all interactions for scripts

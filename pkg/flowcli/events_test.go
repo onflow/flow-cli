@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/onflow/cadence"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/onflow/cadence"
 	"github.com/onflow/flow-cli/pkg/flowcli"
 	"github.com/onflow/flow-cli/tests"
 )
