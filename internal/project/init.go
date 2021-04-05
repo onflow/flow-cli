@@ -73,7 +73,12 @@ type InitResult struct {
 
 // JSON convert result to JSON
 func (r *InitResult) JSON() interface{} {
-	return r
+	account, _ := r.Project.EmulatorServiceAccount()
+	result := make(map[string]string)
+
+	result["serviceAccount"] = account.Address().Hex()
+
+	return result
 }
 
 // String convert result to string

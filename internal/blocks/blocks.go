@@ -51,11 +51,11 @@ type BlockResult struct {
 // JSON convert result to JSON
 func (r *BlockResult) JSON() interface{} {
 	result := make(map[string]interface{})
-	result["BlockID"] = r.block.ID.String()
-	result["ParentID"] = r.block.ParentID.String()
-	result["Height"] = r.block.Height
-	result["TotalSeals"] = len(r.block.Seals)
-	result["TotalCollections"] = len(r.block.CollectionGuarantees)
+	result["blockID"] = r.block.ID.String()
+	result["parentID"] = r.block.ParentID.String()
+	result["height"] = r.block.Height
+	result["totalSeals"] = len(r.block.Seals)
+	result["totalCollections"] = len(r.block.CollectionGuarantees)
 
 	collections := make([]interface{}, 0)
 	for i, guarantee := range r.block.CollectionGuarantees {
@@ -67,13 +67,13 @@ func (r *BlockResult) JSON() interface{} {
 			for _, tx := range r.collections[i].TransactionIDs {
 				txs = append(txs, tx.String())
 			}
-			collection["Transactions"] = txs
+			collection["transactions"] = txs
 		}
 
 		collections = append(collections, collection)
 	}
 
-	result["Collection"] = collections
+	result["collection"] = collections
 	return result
 }
 
