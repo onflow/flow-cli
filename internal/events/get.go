@@ -28,7 +28,7 @@ import (
 )
 
 type flagsGenerate struct {
-	Verbose bool `flag:"verbose" info:"⚠️  No longer supported"`
+	Verbose bool `flag:"verbose" info:"⚠️  Deprecated"`
 }
 
 var generateFlag = flagsGenerate{}
@@ -48,7 +48,7 @@ var GetCommand = &command.Command{
 		services *services.Services,
 	) (command.Result, error) {
 		if generateFlag.Verbose {
-			return nil, fmt.Errorf("⚠️  No longer supported.")
+			fmt.Println("⚠️  DEPRECATION WARNING: verbose flag is deprecated")
 		}
 
 		end := ""
