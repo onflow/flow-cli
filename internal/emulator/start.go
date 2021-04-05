@@ -21,6 +21,8 @@ package emulator
 import (
 	"strings"
 
+	emulator "github.com/onflow/flow-emulator"
+
 	"github.com/onflow/flow-emulator/cmd/emulator/start"
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/spf13/cobra"
@@ -37,14 +39,34 @@ var Cmd = &cobra.Command{
 }
 
 func configuredServiceKey(
-	_ bool,
-	_ crypto.SignatureAlgorithm,
-	_ crypto.HashAlgorithm,
+	init bool,
+	sigAlgo crypto.SignatureAlgorithm,
+	hashAlgo crypto.HashAlgorithm,
 ) (
 	crypto.PrivateKey,
 	crypto.SignatureAlgorithm,
 	crypto.HashAlgorithm,
 ) {
+	if init {
+		if sigAlgo == crypto.UnknownSignatureAlgorithm {
+			sigAlgo = emulator.DefaultServiceKeySigAlgo
+		}
+
+		if hashAlgo == crypto.UnknownHashAlgorithm {
+			hashAlgo = emulator.DefaultServiceKeyHashAlgo
+		}
+
+		p, err := project.Init(sigAlgo, hashAlgo)
+		if err != nil {
+			util.Exitf(1, err.Error())
+		} else {
+			err = p.Save(project.DefaultConfigPath)
+			if err != nil {
+				util.Exitf(1, err.Error())
+			}
+		}
+	}
+
 	proj, err := project.Load(util.ConfigPath)
 	if err != nil {
 		if strings.Contains(err.Error(), "project config file does not exist") {
