@@ -74,7 +74,9 @@ func GcloudApplicationSignin(resourceID string) error {
 
 	proj := kms.ProjectID
 	if len(proj) == 0 {
-		return fmt.Errorf("could not get GOOGLE_APPLICATION_CREDENTIALS, no google service account JSON provided but private key type is KMS")
+		return fmt.Errorf(
+			"could not get GOOGLE_APPLICATION_CREDENTIALS, no google service account JSON provided but private key type is KMS",
+		)
 	}
 
 	loginCmd := exec.Command("gcloud", "auth", "application-default", "login", fmt.Sprintf("--project=%s", proj))
@@ -83,6 +85,7 @@ func GcloudApplicationSignin(resourceID string) error {
 	if err != nil {
 		return fmt.Errorf("Failed to run %q: %s\n", loginCmd.String(), err)
 	}
+
 	regexResult := squareBracketRegex.FindAllStringSubmatch(string(output), -1)
 	// Should only be one value. Second index since first index contains the square brackets
 	googleApplicationCreds := regexResult[0][1]

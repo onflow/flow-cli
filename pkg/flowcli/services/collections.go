@@ -25,14 +25,14 @@ import (
 	"github.com/onflow/flow-go-sdk"
 )
 
-// Collections service handles all interactions for collections
+// Collections is aa service that handles all collection-related interactions.
 type Collections struct {
 	gateway gateway.Gateway
 	project *project.Project
 	logger  output.Logger
 }
 
-// NewCollections create new collection service
+// NewCollections returns a new collections service.
 func NewCollections(
 	gateway gateway.Gateway,
 	project *project.Project,
@@ -45,7 +45,7 @@ func NewCollections(
 	}
 }
 
-// Get collection
+// Get returns a collection by ID.
 func (c *Collections) Get(id string) (*flow.Collection, error) {
 	collectionID := flow.HexToID(id)
 	return c.gateway.GetCollection(collectionID)

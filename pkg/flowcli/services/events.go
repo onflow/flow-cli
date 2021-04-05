@@ -30,14 +30,14 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowcli/gateway"
 )
 
-// Events service handles all interactions for scripts
+// Events is a service that handles all event-related interactions.
 type Events struct {
 	gateway gateway.Gateway
 	project *project.Project
 	logger  output.Logger
 }
 
-// NewEvents create new event service
+// NewEvents returns a new events service.
 func NewEvents(
 	gateway gateway.Gateway,
 	project *project.Project,
@@ -50,7 +50,7 @@ func NewEvents(
 	}
 }
 
-// Get an event
+// Get queries for an event by name and block range.
 func (e *Events) Get(name string, start string, end string) ([]client.BlockEvents, error) {
 	if name == "" {
 		return nil, fmt.Errorf("cannot use empty string as event name")

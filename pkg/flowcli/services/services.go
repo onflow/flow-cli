@@ -24,7 +24,8 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowcli/project"
 )
 
-// Services are a place where we define domain functionality
+// Services is a collection of services that provide domain-specific functionality
+// for the different components of a Flow project.
 type Services struct {
 	Accounts     *Accounts
 	Scripts      *Scripts
@@ -36,7 +37,8 @@ type Services struct {
 	Blocks       *Blocks
 }
 
-// NewServices create new services with gateway and project
+// NewServices returns a new services collection for a project,
+// initialized with a gateway and logger.
 func NewServices(
 	gateway gateway.Gateway,
 	proj *project.Project,

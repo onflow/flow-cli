@@ -46,7 +46,7 @@ type Parser interface {
 	SupportsFormat(string) bool
 }
 
-// ConfigParsers lsit of all configuration parsers
+// ConfigParsers is a list of all configuration parsers.
 type ConfigParsers []Parser
 
 // FindForFormat finds a parser that can parse a specific format based on extension
@@ -60,14 +60,14 @@ func (c *ConfigParsers) FindForFormat(extension string) Parser {
 	return nil
 }
 
-// Loader contains actions for composing and modification of configuration
+// Loader contains actions for composing and modifying configuration.
 type Loader struct {
 	af               *afero.Afero
 	configParsers    ConfigParsers
 	composedFromFile map[string]string
 }
 
-// NewLoader creates a new loader
+// NewLoader returns a new loader.
 func NewLoader(filesystem afero.Fs) *Loader {
 	af := &afero.Afero{Fs: filesystem}
 	return &Loader{
@@ -76,12 +76,12 @@ func NewLoader(filesystem afero.Fs) *Loader {
 	}
 }
 
-// AddConfigParser adds new parssers for configuration
+// AddConfigParser adds a new configuration parser.
 func (l *Loader) AddConfigParser(format Parser) {
 	l.configParsers = append(l.configParsers, format)
 }
 
-// Save save configuration to a path with correct serializer
+// Save saves a configuration to a path with correct serializer
 func (l *Loader) Save(conf *Config, path string) error {
 	configFormat := l.configParsers.FindForFormat(
 		filepath.Ext(path),
@@ -100,7 +100,10 @@ func (l *Loader) Save(conf *Config, path string) error {
 	return nil
 }
 
-// Load and compose multiple configurations
+// Load loads configuration from one or more file paths.
+//
+// If more than one path is specified, their contents are merged
+// together into on configuration object.
 func (l *Loader) Load(paths []string) (*Config, error) {
 	var baseConf *Config
 
