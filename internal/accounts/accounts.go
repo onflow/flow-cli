@@ -97,8 +97,3 @@ func (r *AccountResult) Oneliner() string {
 
 	return fmt.Sprintf("Address: 0x%s, Balance: %v, Public Keys: %s", r.Address, r.Balance, keys)
 }
-
-func (r *AccountResult) ToConfig() string {
-	// TODO: it would be good to have a --save-config flag and it would be added to config
-	return ""
-}

@@ -11,6 +11,7 @@ linters:
     - typecheck
     - misspell
     - goimports
+    - unused
 linters-settings:
   goimports:
     # put imports beginning with prefix after 3rd-party package

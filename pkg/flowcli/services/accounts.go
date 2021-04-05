@@ -320,23 +320,6 @@ func (a *Accounts) AddContract(
 	return a.addContract(account, contractName, contractFilename, updateExisting)
 }
 
-// TODO: remove, unused
-// AddContractForAddress adds a new contract to an address using private key specified
-func (a *Accounts) AddContractForAddress(
-	accountAddress string,
-	accountPrivateKey string,
-	contractName string,
-	contractFilename string,
-	updateExisting bool,
-) (*flow.Account, error) {
-	account, err := accountFromAddressAndKey(accountAddress, accountPrivateKey)
-	if err != nil {
-		return nil, err
-	}
-
-	return a.addContract(account, contractName, contractFilename, updateExisting)
-}
-
 func (a *Accounts) addContract(
 	account *project.Account,
 	contractName string,
@@ -432,28 +415,6 @@ func (a *Accounts) RemoveContract(
 		return nil, fmt.Errorf("account: [%s] doesn't exists in configuration", accountName)
 	}
 
-	return a.removeContract(contractName, account)
-}
-
-// TODO: remove, unused
-// RemoveContractForAddress removes contract from address using private key
-func (a *Accounts) RemoveContractForAddress(
-	contractName string,
-	accountAddress string,
-	accountPrivateKey string,
-) (*flow.Account, error) {
-	account, err := accountFromAddressAndKey(accountAddress, accountPrivateKey)
-	if err != nil {
-		return nil, err
-	}
-
-	return a.removeContract(contractName, account)
-}
-
-func (a *Accounts) removeContract(
-	contractName string,
-	account *project.Account,
-) (*flow.Account, error) {
 	a.logger.StartProgress(
 		fmt.Sprintf("Removing Contract %s from %s...", contractName, account.Address()),
 	)
@@ -477,18 +438,4 @@ func (a *Accounts) removeContract(
 	a.logger.Info(fmt.Sprintf("Contract %s removed from account %s\n", contractName, account.Address()))
 
 	return a.gateway.GetAccount(account.Address())
-}
-
-// TODO: remove, unused
-// AccountFromAddressAndKey get account from address and private key
-func accountFromAddressAndKey(address string, accountPrivateKey string) (*project.Account, error) {
-	privateKey, err := crypto.DecodePrivateKeyHex(crypto.ECDSA_P256, accountPrivateKey)
-	if err != nil {
-		return nil, fmt.Errorf("private key is not correct")
-	}
-
-	return project.AccountFromAddressAndKey(
-		flow.HexToAddress(address),
-		privateKey,
-	), nil
 }

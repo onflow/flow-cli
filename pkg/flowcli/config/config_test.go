@@ -155,15 +155,6 @@ func Test_GetAccountByNameComplex(t *testing.T) {
 	assert.Equal(t, acc.Address.String(), "f8d6e0586b0a20c1")
 }
 
-func Test_GetAccountByAddressComplex(t *testing.T) {
-	conf := generateComplexConfig()
-	acc1 := conf.Accounts.GetByAddress("f8d6e0586b0a20c1")
-	acc2 := conf.Accounts.GetByAddress("2c1162386b0a245f")
-
-	assert.Equal(t, acc1.Name, "account-4")
-	assert.Equal(t, acc2.Name, "account-2")
-}
-
 func Test_GetDeploymentsByNetworkComplex(t *testing.T) {
 	conf := generateComplexConfig()
 	deployments := conf.Deployments.GetByAccountAndNetwork("account-2", "testnet")

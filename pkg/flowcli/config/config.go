@@ -94,19 +94,6 @@ const (
 	KMSContextField                   = "resourceName"
 )
 
-// GetForNetwork returns all contracts for a single network.
-func (c *Contracts) GetForNetwork(network string) Contracts {
-	contracts := make(Contracts, 0)
-
-	for _, contract := range *c {
-		if contract.Network == network {
-			contracts = append(contracts, contract)
-		}
-	}
-
-	return contracts
-}
-
 // IsAlias checks if contract has an alias
 func (c *Contract) IsAlias() bool {
 	return c.Alias != ""
@@ -179,17 +166,6 @@ func (c *Contracts) AddOrUpdate(name string, contract Contract) {
 func (a *Accounts) GetByName(name string) *Account {
 	for _, account := range *a {
 		if account.Name == name {
-			return &account
-		}
-	}
-
-	return nil
-}
-
-// GetByAddress get account by address
-func (a *Accounts) GetByAddress(address string) *Account {
-	for _, account := range *a {
-		if account.Address.String() == address {
 			return &account
 		}
 	}

@@ -224,11 +224,6 @@ func (p *Project) AllAccountName() []string {
 	return names
 }
 
-// AddAccount adds an account.
-func (p *Project) AddAccount(account *Account) {
-	p.accounts = append(p.accounts, account)
-}
-
 // AddOrUpdateAccount adds or updates an account.
 func (p *Project) AddOrUpdateAccount(account *Account) {
 	for i, existingAccount := range p.accounts {
