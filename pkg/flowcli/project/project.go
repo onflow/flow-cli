@@ -93,6 +93,9 @@ func Exists(path string) bool {
 // Init initializes a new Flow project.
 func Init(sigAlgo crypto.SignatureAlgorithm, hashAlgo crypto.HashAlgorithm) (*Project, error) {
 	emulatorServiceAccount, err := generateEmulatorServiceAccount(sigAlgo, hashAlgo)
+	if err != nil {
+		return nil, err
+	}
 
 	composer := config.NewLoader(afero.NewOsFs())
 	composer.AddConfigParser(json.NewParser())
@@ -101,7 +104,7 @@ func Init(sigAlgo crypto.SignatureAlgorithm, hashAlgo crypto.HashAlgorithm) (*Pr
 		composer: composer,
 		conf:     defaultConfig(emulatorServiceAccount),
 		accounts: []*Account{emulatorServiceAccount},
-	}, err
+	}, nil
 }
 
 const (
