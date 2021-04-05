@@ -10,3 +10,4 @@ linters:
     - ineffassign
     - typecheck
     - misspell
+    - unused

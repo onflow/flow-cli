@@ -84,7 +84,3 @@ func (k *KeyResult) String() string {
 func (k *KeyResult) Oneliner() string {
 	return fmt.Sprintf("Private Key: %x, Public Key: %x", k.privateKey.Encode(), k.publicKey.Encode())
 }
-
-func (k *KeyResult) ToConfig() string {
-	return ""
-}
