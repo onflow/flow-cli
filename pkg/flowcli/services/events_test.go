@@ -71,5 +71,4 @@ func TestEvents(t *testing.T) {
 		_, err := events.Get("test", "10", "5")
 		assert.Equal(t, err.Error(), "cannot have end height (5) of block range less that start height (10)")
 	})
-
 }

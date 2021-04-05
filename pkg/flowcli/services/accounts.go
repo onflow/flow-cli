@@ -37,14 +37,14 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowcli/util"
 )
 
-// Accounts service handles all interactions for accounts
+// Accounts is a service that handles all account-related interactions.
 type Accounts struct {
 	gateway gateway.Gateway
 	project *project.Project
 	logger  output.Logger
 }
 
-// NewAccounts create new account service
+// NewAccounts returns a new accounts service.
 func NewAccounts(
 	gateway gateway.Gateway,
 	project *project.Project,
@@ -57,7 +57,7 @@ func NewAccounts(
 	}
 }
 
-// Get gets an account based on address
+// Get returns an account by on address.
 func (a *Accounts) Get(address string) (*flow.Account, error) {
 	a.logger.StartProgress(fmt.Sprintf("Loading %s...", address))
 
@@ -159,7 +159,7 @@ func (a *Accounts) Add(
 	return account, nil
 }
 
-// StakingInfo gets staking info for the account
+// StakingInfo returns the staking information for an account.
 func (a *Accounts) StakingInfo(accountAddress string) (*cadence.Value, *cadence.Value, error) {
 	a.logger.StartProgress(fmt.Sprintf("Fetching info for %s...", accountAddress))
 
@@ -169,7 +169,9 @@ func (a *Accounts) StakingInfo(accountAddress string) (*cadence.Value, *cadence.
 
 	chain, err := util.GetAddressNetwork(address)
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to determine network from address, check the address and network")
+		return nil, nil, fmt.Errorf(
+			"failed to determine network from address, check the address and network",
+		)
 	}
 
 	if chain == flow.Emulator {
@@ -196,7 +198,11 @@ func (a *Accounts) StakingInfo(accountAddress string) (*cadence.Value, *cadence.
 	return &stakingValue, &delegationValue, nil
 }
 
-// Create creates an account with signer name, keys, algorithms, contracts and returns the new account
+// Create creates and returns a new account.
+//
+// The new account is created with the given public keys and contracts.
+//
+// The account creation transaction is signed by the specified signer.
 func (a *Accounts) Create(
 	signerName string,
 	keys []string,
@@ -213,7 +219,7 @@ func (a *Accounts) Create(
 		return nil, fmt.Errorf("signer account: [%s] doesn't exists in configuration", signerName)
 	}
 
-	a.logger.StartProgress("Creating Account...")
+	a.logger.StartProgress("Creating account...")
 
 	accountKeys := make([]*flow.AccountKey, len(keys))
 
@@ -228,7 +234,11 @@ func (a *Accounts) Create(
 			strings.ReplaceAll(publicKeyHex, "0x", ""),
 		)
 		if err != nil {
-			return nil, fmt.Errorf("could not decode public key for key: %s, with signature algorith: %s", publicKeyHex, sigAlgo)
+			return nil, fmt.Errorf(
+				"could not decode public key for key: %s, with signature algorith: %s",
+				publicKeyHex,
+				sigAlgo,
+			)
 		}
 
 		accountKeys[i] = &flow.AccountKey{
@@ -274,6 +284,7 @@ func (a *Accounts) Create(
 	if err != nil {
 		return nil, err
 	}
+
 	if result.Error != nil {
 		return nil, result.Error
 	}
@@ -290,7 +301,7 @@ func (a *Accounts) Create(
 	return a.gateway.GetAccount(*newAccountAddress)
 }
 
-// AddContract adds new contract to the account and returns the updated account
+// AddContract adds a new contract to an account and returns the updated account.
 func (a *Accounts) AddContract(
 	accountName string,
 	contractName string,
@@ -309,7 +320,8 @@ func (a *Accounts) AddContract(
 	return a.addContract(account, contractName, contractFilename, updateExisting)
 }
 
-// AddContractForAddress adds new contract to the address using private key specified
+// TODO: remove, unused
+// AddContractForAddress adds a new contract to an address using private key specified
 func (a *Accounts) AddContractForAddress(
 	accountAddress string,
 	accountPrivateKey string,
@@ -332,7 +344,11 @@ func (a *Accounts) addContract(
 	updateExisting bool,
 ) (*flow.Account, error) {
 	a.logger.StartProgress(
-		fmt.Sprintf("Adding Contract '%s' to the account '%s'...", contractName, account.Address()),
+		fmt.Sprintf(
+			"Adding contract '%s' to account '%s'...",
+			contractName,
+			account.Address(),
+		),
 	)
 
 	if account.DefaultKey().Type() == config.KeyTypeGoogleKMS {
@@ -381,7 +397,7 @@ func (a *Accounts) addContract(
 	}
 
 	if trx.Error != nil {
-		a.logger.Error("Deploying contract failed")
+		a.logger.Error("Failed to deploy contract")
 		return nil, trx.Error
 	}
 
@@ -390,15 +406,23 @@ func (a *Accounts) addContract(
 	a.logger.StopProgress("")
 
 	if updateExisting {
-		a.logger.Info(fmt.Sprintf("Contract '%s' updated on the account '%s'.", contractName, account.Address()))
+		a.logger.Info(fmt.Sprintf(
+			"Contract '%s' updated on the account '%s'.",
+			contractName,
+			account.Address(),
+		))
 	} else {
-		a.logger.Info(fmt.Sprintf("Contract '%s' deployed to the account '%s'.", contractName, account.Address()))
+		a.logger.Info(fmt.Sprintf(
+			"Contract '%s' deployed to the account '%s'.",
+			contractName,
+			account.Address(),
+		))
 	}
 
 	return update, err
 }
 
-// RemoveContracts removes a contract from the account
+// RemoveContracts removes a contract from an account and returns the updated account.
 func (a *Accounts) RemoveContract(
 	contractName string,
 	accountName string,
@@ -411,6 +435,7 @@ func (a *Accounts) RemoveContract(
 	return a.removeContract(contractName, account)
 }
 
+// TODO: remove, unused
 // RemoveContractForAddress removes contract from address using private key
 func (a *Accounts) RemoveContractForAddress(
 	contractName string,
@@ -454,6 +479,7 @@ func (a *Accounts) removeContract(
 	return a.gateway.GetAccount(account.Address())
 }
 
+// TODO: remove, unused
 // AccountFromAddressAndKey get account from address and private key
 func accountFromAddressAndKey(address string, accountPrivateKey string) (*project.Account, error) {
 	privateKey, err := crypto.DecodePrivateKeyHex(crypto.ECDSA_P256, accountPrivateKey)

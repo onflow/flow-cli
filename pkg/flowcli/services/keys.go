@@ -31,14 +31,14 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowcli/util"
 )
 
-// Keys service handles all interactions for keys
+// Keys is a service that handles all key-related interactions.
 type Keys struct {
 	gateway gateway.Gateway
 	project *project.Project
 	logger  output.Logger
 }
 
-// NewTransactions create new transaction service
+// NewKeys returns a new keys service.
 func NewKeys(
 	gateway gateway.Gateway,
 	project *project.Project,
@@ -51,6 +51,7 @@ func NewKeys(
 	}
 }
 
+// Generate generates a new private key from the given seed and signature algorithm.
 func (k *Keys) Generate(inputSeed string, signatureAlgo string) (*crypto.PrivateKey, error) {
 	var seed []byte
 	var err error

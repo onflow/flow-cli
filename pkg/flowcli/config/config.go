@@ -37,21 +37,21 @@ type Accounts []Account
 type Deployments []Deploy
 type Emulators []Emulator
 
-// Network config sets host and chain id
+// Network defines the configuration for a Flow network.
 type Network struct {
 	Name    string
 	Host    string
 	ChainID flow.ChainID
 }
 
-// Deploy structure for contract
+// Deploy defines the configuration for a contract deployment.
 type Deploy struct {
 	Network   string   // network name to deploy to
 	Account   string   // account name to which to deploy to
 	Contracts []string // contracts names to deploy
 }
 
-// Contract is config for contract
+// Contract defines the configuration for a Cadence contract.
 type Contract struct {
 	Name    string
 	Source  string
@@ -59,7 +59,7 @@ type Contract struct {
 	Alias   string
 }
 
-// Account is main config for each account
+// Account defines the configuration for a Flow account.
 type Account struct {
 	Name    string
 	Address flow.Address
@@ -67,7 +67,7 @@ type Account struct {
 	Keys    []AccountKey
 }
 
-// AccountKey is config for account key
+// AccountKey defines the configuration for a Flow account key.
 type AccountKey struct {
 	Type     KeyType
 	Index    int
@@ -76,7 +76,7 @@ type AccountKey struct {
 	Context  map[string]string
 }
 
-// Emulator is config for emulator
+// Emulator defines the configuration for a Flow Emulator instance.
 type Emulator struct {
 	Name           string
 	Port           int
@@ -94,8 +94,7 @@ const (
 	KMSContextField                   = "resourceName"
 )
 
-//TODO: replace filter with find where only one is expected
-// GetForNetwork get all contracts by network
+// GetForNetwork returns all contracts for a single network.
 func (c *Contracts) GetForNetwork(network string) Contracts {
 	contracts := make(Contracts, 0)
 

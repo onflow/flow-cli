@@ -33,14 +33,14 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowcli/util"
 )
 
-// Project service handles all interactions for project
+// Project is a service that handles all interactions for a project.
 type Project struct {
 	gateway gateway.Gateway
 	project *project.Project
 	logger  output.Logger
 }
 
-// NewProject create new project service
+// NewProject returns a new project service.
 func NewProject(
 	gateway gateway.Gateway,
 	project *project.Project,
@@ -53,7 +53,12 @@ func NewProject(
 	}
 }
 
-func (p *Project) Init(reset bool, serviceKeySigAlgo string, serviceKeyHashAlgo string, servicePrivateKey string) (*project.Project, error) {
+func (p *Project) Init(
+	reset bool,
+	serviceKeySigAlgo string,
+	serviceKeyHashAlgo string,
+	servicePrivateKey string,
+) (*project.Project, error) {
 	if !project.Exists(project.DefaultConfigPath) || reset {
 
 		sigAlgo, hashAlgo, err := util.ConvertSigAndHashAlgo(serviceKeySigAlgo, serviceKeyHashAlgo)
@@ -81,9 +86,12 @@ func (p *Project) Init(reset bool, serviceKeySigAlgo string, serviceKeyHashAlgo 
 		}
 
 		return proj, nil
-	} else {
-		return nil, fmt.Errorf("configuration already exists at: %s, if you want to reset configuration use the reset flag", project.DefaultConfigPath)
 	}
+
+	return nil, fmt.Errorf(
+		"configuration already exists at: %s, if you want to reset configuration use the reset flag",
+		project.DefaultConfigPath,
+	)
 }
 
 func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, error) {
@@ -94,7 +102,9 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 	// check there are not multiple accounts with same contract
 	// TODO: specify which contract by name is a problem
 	if p.project.ContractConflictExists(network) {
-		return nil, fmt.Errorf("currently it is not possible to deploy same contract with multiple accounts, please check Deployments in config and make sure a contract is only present in one account")
+		return nil, fmt.Errorf(
+			"the same contract cannot be deployed to multiple accounts on the same network",
+		)
 	}
 
 	processor := contracts.NewPreprocessor(
@@ -124,7 +134,7 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 	}
 
 	p.logger.Info(fmt.Sprintf(
-		"Deploying %v contracts for accounts: %s",
+		"Deploying %d contracts for accounts: %s",
 		len(contracts),
 		strings.Join(p.project.AllAccountName(), ","),
 	))
@@ -148,7 +158,8 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 		if exists {
 			if !update {
 				p.logger.Error(fmt.Sprintf(
-					"Contract %s is already deployed to account, use --update flag to force update.", contract.Name(),
+					"Contract %s is already deployed to this account. Use the --update flag to force update.",
+					contract.Name(),
 				))
 				continue
 			}

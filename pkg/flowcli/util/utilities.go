@@ -32,7 +32,7 @@ var Green = color.New(color.FgGreen, color.Bold).SprintfFunc()
 var Red = color.New(color.FgRed, color.Bold).SprintfFunc()
 var Bold = color.New(color.Bold).SprintfFunc()
 
-// LoadFile loads file from filename
+// LoadFile loads a file by filename.
 func LoadFile(filename string) ([]byte, error) {
 	var code []byte
 	var err error
@@ -56,35 +56,40 @@ func IsByteSlice(v interface{}) bool {
 	return isBytes
 }
 
-// ConvertSigAndHashAlgo converts signature and hashing algorithm from string and do validation
+// ConvertSigAndHashAlgo parses and validates a signature and hash algorithm pair.
 func ConvertSigAndHashAlgo(
 	signatureAlgorithm string,
 	hashingAlgorithm string,
 ) (crypto.SignatureAlgorithm, crypto.HashAlgorithm, error) {
 	sigAlgo := crypto.StringToSignatureAlgorithm(signatureAlgorithm)
 	if sigAlgo == crypto.UnknownSignatureAlgorithm {
-		return crypto.UnknownSignatureAlgorithm, crypto.UnknownHashAlgorithm, fmt.Errorf("failed to determine signature algorithm from %s", sigAlgo)
+		return crypto.UnknownSignatureAlgorithm,
+			crypto.UnknownHashAlgorithm,
+			fmt.Errorf("failed to determine signature algorithm from %s", sigAlgo)
 	}
 
 	hashAlgo := crypto.StringToHashAlgorithm(hashingAlgorithm)
 	if hashAlgo == crypto.UnknownHashAlgorithm {
-		return crypto.UnknownSignatureAlgorithm, crypto.UnknownHashAlgorithm, fmt.Errorf("failed to determine hash algorithm from %s", hashAlgo)
+		return crypto.UnknownSignatureAlgorithm,
+			crypto.UnknownHashAlgorithm,
+			fmt.Errorf("failed to determine hash algorithm from %s", hashAlgo)
 	}
 
 	return sigAlgo, hashAlgo, nil
 }
 
-// StringContains check if string slice contains string
+// StringContains returns true if the slice contains the given string.
 func StringContains(s []string, e string) bool {
 	for _, a := range s {
 		if a == e {
 			return true
 		}
 	}
+
 	return false
 }
 
-// GetAddressNetwork get chain id based on address
+// GetAddressNetwork returns the chain ID for an address.
 func GetAddressNetwork(address flow.Address) (flow.ChainID, error) {
 	networks := []flow.ChainID{
 		flow.Mainnet,
@@ -97,5 +102,5 @@ func GetAddressNetwork(address flow.Address) (flow.ChainID, error) {
 		}
 	}
 
-	return flow.ChainID(""), fmt.Errorf("unrecognized address not valid for any known chain: %s", address)
+	return "", fmt.Errorf("address not valid for any known chain: %s", address)
 }

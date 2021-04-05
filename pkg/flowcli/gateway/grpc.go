@@ -31,13 +31,13 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowcli/project"
 )
 
-// GrpcGateway contains all functions that need flow client to execute
+// GrpcGateway is a gateway implementation that uses the Flow Access gRPC API.
 type GrpcGateway struct {
 	client *client.Client
 	ctx    context.Context
 }
 
-// NewGrpcGateway creates new grpc gateway
+// NewGrpcGateway returns a new gRPC gateway.
 func NewGrpcGateway(host string) (*GrpcGateway, error) {
 	gClient, err := client.New(host, grpc.WithInsecure())
 	ctx := context.Background()
@@ -52,22 +52,22 @@ func NewGrpcGateway(host string) (*GrpcGateway, error) {
 	}, nil
 }
 
-// GetAccount gets account by the address from flow
+// GetAccount gets an account by address from the Flow Access API.
 func (g *GrpcGateway) GetAccount(address flow.Address) (*flow.Account, error) {
 	account, err := g.client.GetAccountAtLatestBlock(g.ctx, address)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to get account with address %s: %s", address, err)
+		return nil, fmt.Errorf("failed to get account with address %s: %w", address, err)
 	}
 
 	return account, nil
 }
 
 // TODO: replace with txsender - much nicer implemented
-// SendTransaction send a transaction to flow
+// SendTransaction sends a transaction to Flow through the Access API.
 func (g *GrpcGateway) SendTransaction(tx *flow.Transaction, signer *project.Account) (*flow.Transaction, error) {
 	account, err := g.GetAccount(signer.Address())
 	if err != nil {
-		return nil, fmt.Errorf("Failed to get account with address %s: 0x%s", signer.Address(), err)
+		return nil, fmt.Errorf("failed to get account with address %s: %w", signer.Address(), err)
 	}
 
 	// Default 0, i.e. first key
@@ -75,7 +75,7 @@ func (g *GrpcGateway) SendTransaction(tx *flow.Transaction, signer *project.Acco
 
 	sealed, err := g.client.GetLatestBlockHeader(g.ctx, true)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to get latest sealed block: %s", err)
+		return nil, fmt.Errorf("failed to get latest sealed block: %w", err)
 	}
 
 	tx.SetReferenceBlockID(sealed.ID).
@@ -89,23 +89,23 @@ func (g *GrpcGateway) SendTransaction(tx *flow.Transaction, signer *project.Acco
 
 	err = tx.SignEnvelope(signer.Address(), accountKey.Index, sig)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to sign transaction: %s", err)
+		return nil, fmt.Errorf("failed to sign transaction: %w", err)
 	}
 
 	err = g.client.SendTransaction(g.ctx, *tx)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to submit transaction: %s", err)
+		return nil, fmt.Errorf("failed to submit transaction: %w", err)
 	}
 
 	return tx, nil
 }
 
-// GetTransaction gets transaction by id
+// GetTransaction gets a transaction by ID from the Flow Access API.
 func (g *GrpcGateway) GetTransaction(id flow.Identifier) (*flow.Transaction, error) {
 	return g.client.GetTransaction(g.ctx, id)
 }
 
-// GetTransactionResult gets result of a transaction on flow
+// GetTransactionResult gets a transaction result by ID from the Flow Access API.
 func (g *GrpcGateway) GetTransactionResult(tx *flow.Transaction, waitSeal bool) (*flow.TransactionResult, error) {
 	result, err := g.client.GetTransactionResult(g.ctx, tx.ID())
 	if err != nil {
@@ -120,33 +120,33 @@ func (g *GrpcGateway) GetTransactionResult(tx *flow.Transaction, waitSeal bool) 
 	return result, nil
 }
 
-// ExecuteScript execute scripts on flow
+// ExecuteScript execute a scripts on Flow through the Access API.
 func (g *GrpcGateway) ExecuteScript(script []byte, arguments []cadence.Value) (cadence.Value, error) {
 
 	value, err := g.client.ExecuteScriptAtLatestBlock(g.ctx, script, arguments)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to submit executable script %s", err)
+		return nil, fmt.Errorf("failed to submit executable script: %w", err)
 	}
 
 	return value, nil
 }
 
-// GetLatestBlock gets latest block from flow
+// GetLatestBlock gets the latest block on Flow through the Access API.
 func (g *GrpcGateway) GetLatestBlock() (*flow.Block, error) {
 	return g.client.GetLatestBlock(g.ctx, true)
 }
 
-// GetBlockByID get block by id from flow
+// GetBlockByID get block by ID from the Flow Access API.
 func (g *GrpcGateway) GetBlockByID(id flow.Identifier) (*flow.Block, error) {
 	return g.client.GetBlockByID(g.ctx, id)
 }
 
-// GetBlockByHeight get block by id from flow
+// GetBlockByHeight get block by height from the Flow Access API.
 func (g *GrpcGateway) GetBlockByHeight(height uint64) (*flow.Block, error) {
 	return g.client.GetBlockByHeight(g.ctx, height)
 }
 
-// GetEvents gets event from start and end height
+// GetEvents gets events by name and block range from the Flow Access API.
 func (g *GrpcGateway) GetEvents(
 	eventType string,
 	startHeight uint64,
@@ -165,7 +165,7 @@ func (g *GrpcGateway) GetEvents(
 	return events, err
 }
 
-// GetCollection get collection by id from flow
+// GetCollection gets a collection by ID from the Flow Access API.
 func (g *GrpcGateway) GetCollection(id flow.Identifier) (*flow.Collection, error) {
 	return g.client.GetCollection(g.ctx, id)
 }

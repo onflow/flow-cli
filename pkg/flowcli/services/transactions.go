@@ -33,14 +33,14 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowcli/util"
 )
 
-// Scripts service handles all interactions for transactions
+// Transactions is a service that handles all transaction-related interactions.
 type Transactions struct {
 	gateway gateway.Gateway
 	project *project.Project
 	logger  output.Logger
 }
 
-// NewTransactions create new transaction service
+// NewTransactions returns a new transactions service.
 func NewTransactions(
 	gateway gateway.Gateway,
 	project *project.Project,
@@ -53,7 +53,7 @@ func NewTransactions(
 	}
 }
 
-// Send transaction
+// Send sends a transaction from a file.
 func (t *Transactions) Send(
 	transactionFilename string,
 	signerName string,
@@ -104,7 +104,8 @@ func (t *Transactions) send(
 	argsJSON string,
 ) (*flow.Transaction, *flow.TransactionResult, error) {
 
-	// if google kms account then sign in TODO discuss refactor - move to account
+	// if google kms account then sign in
+	// TODO discuss refactor - move to account
 	if signer.DefaultKey().Type() == config.KeyTypeGoogleKMS {
 		resourceID := signer.DefaultKey().ToConfig().Context[config.KMSContextField]
 		err := util.GcloudApplicationSignin(resourceID)
@@ -113,7 +114,7 @@ func (t *Transactions) send(
 		}
 	}
 
-	t.logger.StartProgress("Sending Transaction...")
+	t.logger.StartProgress("Sending transaction...")
 
 	tx := flow.NewTransaction().
 		SetScript(code).

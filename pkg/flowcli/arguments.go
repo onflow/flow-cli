@@ -69,7 +69,10 @@ func ParseArgumentsCommaSplit(input []string) ([]cadence.Value, error) {
 	for _, in := range input {
 		argInput := strings.Split(in, ":")
 		if len(argInput) != 2 {
-			return nil, fmt.Errorf("Argument not passed in correct format, correct format is: Type:Value, got %s", in)
+			return nil, fmt.Errorf(
+				"argument not passed in correct format, correct format is: Type:Value, got %s",
+				in,
+			)
 		}
 
 		args = append(args, map[string]string{
@@ -92,5 +95,6 @@ func ParseArguments(args []string, argsJSON string) (scriptArgs []cadence.Value,
 	if err != nil {
 		return nil, err
 	}
+
 	return
 }
