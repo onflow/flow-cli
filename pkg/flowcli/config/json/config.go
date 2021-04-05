@@ -20,6 +20,7 @@ package json
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/onflow/flow-cli/pkg/flowcli/config"
 )
@@ -52,6 +53,26 @@ func transformConfigToJSON(config *config.Config) jsonConfig {
 	}
 }
 
+type oldFormat struct {
+	Host     interface{} `json:"host"`
+	Accounts interface{} `json:"accounts"`
+}
+
+func oldConfigFormat(raw []byte) bool {
+	var conf oldFormat
+
+	err := json.Unmarshal(raw, &conf)
+	if err != nil { // ignore errors in this case
+		return false
+	}
+
+	if conf.Host != nil {
+		return true
+	}
+
+	return false
+}
+
 // Parsers for configuration
 type Parser struct{}
 
@@ -74,6 +95,13 @@ func (p *Parser) Serialize(conf *config.Config) ([]byte, error) {
 
 // Deserialize configuration to config structure
 func (p *Parser) Deserialize(raw []byte) (*config.Config, error) {
+	// check if old format of config and return an error
+	if oldConfigFormat(raw) {
+		return nil, fmt.Errorf(
+			"you are using old configuration format. Please remove flow.json and generate a new configuration by using 'flow init' command	",
+		)
+	}
+
 	var jsonConf jsonConfig
 	err := json.Unmarshal(raw, &jsonConf)
 

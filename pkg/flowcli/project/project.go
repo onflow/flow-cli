@@ -62,7 +62,7 @@ func Load(configFilePath []string) (*Project, error) {
 			return nil, err
 		}
 
-		return nil, fmt.Errorf("failed to open project configuration: %s", configFilePath)
+		return nil, err
 	}
 
 	proj, err := newProject(conf, composer)
