@@ -75,5 +75,4 @@ func configuredServiceKey(
 func init() {
 	Cmd = start.Cmd(configuredServiceKey)
 	Cmd.Use = "emulator"
-	Cmd.Flags().MarkDeprecated("init", "init is no longer supported use `flow project init` first")
 }
