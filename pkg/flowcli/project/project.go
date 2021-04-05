@@ -99,32 +99,9 @@ func Init(sigAlgo crypto.SignatureAlgorithm, hashAlgo crypto.HashAlgorithm) (*Pr
 
 	return &Project{
 		composer: composer,
-		conf:     defaultConfig(emulatorServiceAccount),
+		conf:     config.DefaultConfig(),
 		accounts: []*Account{emulatorServiceAccount},
 	}, err
-}
-
-const (
-	DefaultEmulatorNetworkName        = "emulator"
-	DefaultEmulatorServiceAccountName = "emulator-account"
-	DefaultEmulatorPort               = 3569
-	DefaultEmulatorHost               = "127.0.0.1:3569"
-)
-
-// defaultConfig returns a new default configuration object.
-func defaultConfig(defaultEmulatorServiceAccount *Account) *config.Config {
-	return &config.Config{
-		Emulators: config.Emulators{{
-			Name:           config.DefaultEmulatorConfigName,
-			ServiceAccount: defaultEmulatorServiceAccount.name,
-			Port:           DefaultEmulatorPort,
-		}},
-		Networks: config.Networks{{
-			Name:    DefaultEmulatorNetworkName,
-			Host:    DefaultEmulatorHost,
-			ChainID: flow.Emulator,
-		}},
-	}
 }
 
 // newProject creates a new project from a configuration object.
@@ -176,7 +153,7 @@ func (p *Project) EmulatorServiceAccount() (*Account, error) {
 
 // SetEmulatorServiceKey sets the default emulator service account private key.
 func (p *Project) SetEmulatorServiceKey(privateKey crypto.PrivateKey) {
-	acc := p.AccountByName(DefaultEmulatorServiceAccountName)
+	acc := p.AccountByName(config.DefaultEmulatorServiceAccountName)
 	acc.SetDefaultKey(
 		NewHexAccountKeyFromPrivateKey(
 			acc.DefaultKey().Index(),
