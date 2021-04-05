@@ -25,20 +25,17 @@ import (
 	"os"
 	"strings"
 
-	"github.com/onflow/flow-cli/pkg/flowcli/util"
-
-	"github.com/onflow/flow-cli/pkg/flowcli/output"
-	"github.com/onflow/flow-cli/pkg/flowcli/project"
-
-	"github.com/onflow/flow-cli/pkg/flowcli/config"
-
-	"github.com/psiemens/sconfig"
-
-	"github.com/onflow/flow-cli/pkg/flowcli/gateway"
-	"github.com/onflow/flow-cli/pkg/flowcli/services"
 	"github.com/onflow/flow-go-sdk/client"
+	"github.com/psiemens/sconfig"
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
+
+	"github.com/onflow/flow-cli/pkg/flowcli/config"
+	"github.com/onflow/flow-cli/pkg/flowcli/gateway"
+	"github.com/onflow/flow-cli/pkg/flowcli/output"
+	"github.com/onflow/flow-cli/pkg/flowcli/project"
+	"github.com/onflow/flow-cli/pkg/flowcli/services"
+	"github.com/onflow/flow-cli/pkg/flowcli/util"
 )
 
 type RunCommand func(

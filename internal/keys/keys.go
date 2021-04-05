@@ -25,9 +25,7 @@ import (
 	"text/tabwriter"
 
 	"github.com/onflow/flow-go-sdk"
-
 	"github.com/onflow/flow-go-sdk/crypto"
-
 	"github.com/spf13/cobra"
 )
 

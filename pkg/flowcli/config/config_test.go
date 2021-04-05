@@ -20,11 +20,11 @@ package config_test
 import (
 	"testing"
 
-	"github.com/onflow/flow-cli/pkg/flowcli/config"
-
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/onflow/flow-cli/pkg/flowcli/config"
 )
 
 func generateComplexConfig() config.Config {

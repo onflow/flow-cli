@@ -23,13 +23,13 @@ import (
 	"sort"
 	"testing"
 
-	"github.com/spf13/afero"
-
-	"github.com/onflow/flow-cli/pkg/flowcli/config"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
+	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 	"github.com/thoas/go-funk"
+
+	"github.com/onflow/flow-cli/pkg/flowcli/config"
 )
 
 var composer = config.NewLoader(afero.NewOsFs())

@@ -24,9 +24,9 @@ import (
 	"os"
 	"os/exec"
 
-	"github.com/onflow/flow-cli/pkg/flowcli/util"
-
 	"github.com/spf13/cobra"
+
+	"github.com/onflow/flow-cli/pkg/flowcli/util"
 )
 
 const cadenceExt = "cadence.vsix"

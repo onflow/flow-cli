@@ -19,14 +19,13 @@
 package services
 
 import (
+	"github.com/onflow/cadence"
+
 	"github.com/onflow/flow-cli/pkg/flowcli"
+	"github.com/onflow/flow-cli/pkg/flowcli/gateway"
 	"github.com/onflow/flow-cli/pkg/flowcli/output"
 	"github.com/onflow/flow-cli/pkg/flowcli/project"
 	"github.com/onflow/flow-cli/pkg/flowcli/util"
-
-	"github.com/onflow/cadence"
-
-	"github.com/onflow/flow-cli/pkg/flowcli/gateway"
 )
 
 // Scripts service handles all interactions for scripts

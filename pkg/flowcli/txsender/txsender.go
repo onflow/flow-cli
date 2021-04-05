@@ -22,9 +22,10 @@ import (
 	"context"
 	"time"
 
-	"github.com/onflow/flow-cli/pkg/flowcli/project"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/client"
+
+	"github.com/onflow/flow-cli/pkg/flowcli/project"
 )
 
 const (

@@ -19,14 +19,13 @@ package config_test
 
 import (
 	"os"
+	"testing"
+
+	"github.com/spf13/afero"
+	"github.com/stretchr/testify/assert"
 
 	"github.com/onflow/flow-cli/pkg/flowcli/config"
 	"github.com/onflow/flow-cli/pkg/flowcli/config/json"
-	"github.com/spf13/afero"
-
-	"testing"
-
-	"github.com/stretchr/testify/assert"
 )
 
 func Test_JSONSimple(t *testing.T) {

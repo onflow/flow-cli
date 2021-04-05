@@ -23,8 +23,6 @@ import (
 	"fmt"
 	"path"
 
-	"github.com/onflow/flow-cli/pkg/flowcli/util"
-
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/spf13/afero"
@@ -32,6 +30,7 @@ import (
 
 	"github.com/onflow/flow-cli/pkg/flowcli/config"
 	"github.com/onflow/flow-cli/pkg/flowcli/config/json"
+	"github.com/onflow/flow-cli/pkg/flowcli/util"
 )
 
 var DefaultConfigPath = "flow.json"

@@ -21,8 +21,9 @@ package json
 import (
 	"encoding/json"
 
-	"github.com/onflow/flow-cli/pkg/flowcli/config"
 	"github.com/onflow/flow-go-sdk"
+
+	"github.com/onflow/flow-cli/pkg/flowcli/config"
 )
 
 type jsonNetworks map[string]jsonNetwork
