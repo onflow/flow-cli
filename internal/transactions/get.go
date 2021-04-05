@@ -25,12 +25,12 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowcli/services"
 )
 
-type flagsStatus struct {
+type flagsGet struct {
 	Sealed bool `default:"true" flag:"sealed" info:"Wait for a sealed result"`
 	Code   bool `default:"false" flag:"code" info:"Display transaction code"`
 }
 
-var statusFlags = flagsStatus{}
+var getFlags = flagsGet{}
 
 var GetCommand = &command.Command{
 	Cmd: &cobra.Command{
@@ -38,7 +38,7 @@ var GetCommand = &command.Command{
 		Short: "Get the transaction status",
 		Args:  cobra.ExactArgs(1),
 	},
-	Flags: &statusFlags,
+	Flags: &getFlags,
 	Run: func(
 		cmd *cobra.Command,
 		args []string,
@@ -47,7 +47,7 @@ var GetCommand = &command.Command{
 	) (command.Result, error) {
 		tx, result, err := services.Transactions.GetStatus(
 			args[0], // transaction id
-			statusFlags.Sealed,
+			getFlags.Sealed,
 		)
 		if err != nil {
 			return nil, err
@@ -56,7 +56,7 @@ var GetCommand = &command.Command{
 		return &TransactionResult{
 			result: result,
 			tx:     tx,
-			code:   statusFlags.Code,
+			code:   getFlags.Code,
 		}, nil
 	},
 }
