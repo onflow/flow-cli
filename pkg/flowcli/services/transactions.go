@@ -61,7 +61,7 @@ func (t *Transactions) Send(
 	argsJSON string,
 ) (*flow.Transaction, *flow.TransactionResult, error) {
 	if t.project == nil {
-		return nil, nil, fmt.Errorf("missing configuration, initialize it: flow project init")
+		return nil, nil, fmt.Errorf("missing configuration, initialize it: flow init")
 	}
 
 	signer := t.project.AccountByName(signerName)

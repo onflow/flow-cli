@@ -20,6 +20,7 @@
 package main
 
 import (
+	"github.com/onflow/flow-cli/internal/config"
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/accounts"
@@ -43,6 +44,10 @@ func main() {
 		TraverseChildren: true,
 	}
 
+	// hot commands
+	config.InitCommand.AddToParent(cmd)
+
+	// structured commands
 	cmd.AddCommand(cadence.Cmd)
 	cmd.AddCommand(version.Cmd)
 	cmd.AddCommand(emulator.Cmd)

@@ -48,7 +48,7 @@ func configuredServiceKey(
 	proj, err := project.Load(util.ConfigPath)
 	if err != nil {
 		if strings.Contains(err.Error(), "project config file does not exist") {
-			util.Exitf(1, "🙏 Configuration is missing, initialize it with: 'flow project init' and then rerun this command.")
+			util.Exitf(1, "🙏 Configuration is missing, initialize it with: 'flow init' and then rerun this command.")
 		} else {
 			util.Exitf(1, err.Error())
 		}
