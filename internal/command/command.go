@@ -219,18 +219,16 @@ func createLogger(logFlag string, formatFlag string) output.Logger {
 // formatResult formats a result for printing.
 func formatResult(result Result, filterFlag string, formatFlag string) (string, error) {
 	if result == nil {
-		return "", fmt.Errorf("Missing")
+		return "", fmt.Errorf("missing result")
 	}
 
 	if filterFlag != "" {
-		var jsonResult map[string]interface{}
-		val, _ := json.Marshal(result.JSON())
-		err := json.Unmarshal(val, &jsonResult)
+		value, err := filterResultValue(result, filterFlag)
 		if err != nil {
 			return "", err
 		}
 
-		return fmt.Sprintf("%v", jsonResult[filterFlag]), nil
+		return fmt.Sprintf("%v", value), nil
 	}
 
 	switch formatFlag {
@@ -258,6 +256,29 @@ func outputResult(result string, saveFlag string) error {
 	// default normal output
 	fmt.Fprintf(os.Stdout, "%s\n", result)
 	return nil
+}
+
+// filterResultValue returns a value by its name filtered from other result values
+func filterResultValue(result Result, filter string) (interface{}, error) {
+	var jsonResult map[string]interface{}
+	val, _ := json.Marshal(result.JSON())
+	err := json.Unmarshal(val, &jsonResult)
+	if err != nil {
+		return "", err
+	}
+
+	possibleFilters := make([]string, 0)
+	for key, _ := range jsonResult {
+		possibleFilters = append(possibleFilters, fmt.Sprintf("%s", key))
+	}
+
+	value := jsonResult[filter]
+
+	if value == nil {
+		return nil, fmt.Errorf("value for filter: '%s' doesn't exists, possible values to filter by: %s", filter, possibleFilters)
+	}
+
+	return value, nil
 }
 
 // handleError handle errors
