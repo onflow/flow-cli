@@ -27,6 +27,7 @@ import (
 	"github.com/onflow/flow-cli/internal/cadence"
 	"github.com/onflow/flow-cli/internal/collections"
 	"github.com/onflow/flow-cli/internal/command"
+	"github.com/onflow/flow-cli/internal/config"
 	"github.com/onflow/flow-cli/internal/emulator"
 	"github.com/onflow/flow-cli/internal/events"
 	"github.com/onflow/flow-cli/internal/keys"
@@ -43,6 +44,10 @@ func main() {
 		TraverseChildren: true,
 	}
 
+	// hot commands
+	config.InitCommand.AddToParent(cmd)
+
+	// structured commands
 	cmd.AddCommand(cadence.Cmd)
 	cmd.AddCommand(version.Cmd)
 	cmd.AddCommand(emulator.Cmd)

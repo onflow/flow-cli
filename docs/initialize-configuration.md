@@ -1,7 +1,7 @@
 ---
-title: Initialize a Flow Project
-sidebar_title: Initialize a Project
-description: How to initialize a new Flow project with the CLI
+title: Initialize Flow Configuration
+sidebar_title: Initialize Configuration
+description: How to initialize Flow configuration using CLI
 ---
 
 Flow CLI uses a state to operate which is called configuration (usually `flow.json` file). 
@@ -9,19 +9,19 @@ Before using commands that require this configuration we must initialize the pro
 using the init command. Read more about [state configuration here](https://docs.onflow.org/flow-cli/configuration/).
 
 ```shell
-flow project init
+flow init
 ```
 
 ## Example Usage
 
 ```shell
-> flow project init
+> flow init
 
 Configuration initialized
 Service account: 0xf8d6e0586b0a20c7
 
-Start emulator by running: 'flow emulator start' 
-Reset configuration using: 'flow init --rest'
+Start emulator by running: 'flow emulator' 
+Reset configuration using: 'flow init --reset'
 
 ```
 

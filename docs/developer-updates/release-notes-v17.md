@@ -6,8 +6,7 @@ Follow the [Flow CLI installation guide](https://docs.onflow.org/flow-cli/instal
 
 ### Initializing Configuration
 Configuration format was unified to work for all CLI commands.
-Generating new configuration is done by executing command `flow project init`.
-Command `flow init` was removed as it provides the same functionality as project init command.
+Generating new configuration is done by executing command `flow init`.
 
 ###⚠️  No longer supported flags
 

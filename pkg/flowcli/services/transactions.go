@@ -61,7 +61,7 @@ func (t *Transactions) Send(
 	argsJSON string,
 ) (*flow.Transaction, *flow.TransactionResult, error) {
 	if t.project == nil {
-		return nil, nil, fmt.Errorf("missing configuration, initialize it: flow project init")
+		return nil, nil, fmt.Errorf("missing configuration, initialize it: flow init")
 	}
 
 	signer := t.project.AccountByName(signerName)
@@ -77,7 +77,23 @@ func (t *Transactions) Send(
 	return t.send(code, signer, args, argsJSON)
 }
 
-// SendForAddressWithCode send transaction for address and private key specified with code
+// SendForAddress send transaction for address and private key, code passed via filename
+func (t *Transactions) SendForAddress(
+	transactionFilename string,
+	signerAddress string,
+	signerPrivateKey string,
+	args []string,
+	argsJSON string,
+) (*flow.Transaction, *flow.TransactionResult, error) {
+	code, err := util.LoadFile(transactionFilename)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return t.SendForAddressWithCode(code, signerAddress, signerPrivateKey, args, argsJSON)
+}
+
+// SendForAddressWithCode send transaction for address and private key, code passed via byte array
 func (t *Transactions) SendForAddressWithCode(
 	code []byte,
 	signerAddress string,

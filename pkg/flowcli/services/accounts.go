@@ -80,7 +80,7 @@ func (a *Accounts) Add(
 	path []string,
 ) (*project.Account, error) {
 	if a.project == nil {
-		return nil, fmt.Errorf("missing configuration, initialize it: flow project init")
+		return nil, fmt.Errorf("missing configuration, initialize it: flow init")
 	}
 
 	existingAccount := a.project.AccountByName(name)
@@ -211,7 +211,7 @@ func (a *Accounts) Create(
 	contracts []string,
 ) (*flow.Account, error) {
 	if a.project == nil {
-		return nil, fmt.Errorf("missing configuration, initialize it: flow project init")
+		return nil, fmt.Errorf("missing configuration, initialize it: flow init")
 	}
 
 	signer := a.project.AccountByName(signerName)
@@ -309,7 +309,7 @@ func (a *Accounts) AddContract(
 	updateExisting bool,
 ) (*flow.Account, error) {
 	if a.project == nil {
-		return nil, fmt.Errorf("missing configuration, initialize it: flow project init")
+		return nil, fmt.Errorf("missing configuration, initialize it: flow init")
 	}
 
 	account := a.project.AccountByName(accountName)

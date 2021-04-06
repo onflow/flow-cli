@@ -25,6 +25,10 @@ func (a *Account) Name() string {
 	return a.name
 }
 
+func (a *Account) Keys() []AccountKey {
+	return a.keys
+}
+
 func (a *Account) DefaultKey() AccountKey {
 	return a.keys[0]
 }

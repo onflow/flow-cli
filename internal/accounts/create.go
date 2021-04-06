@@ -34,7 +34,7 @@ type flagsCreate struct {
 	HashAlgo  string   `default:"SHA3_256" flag:"hash-algo" info:"Hash used for the digest"`
 	Name      string   `default:"default" flag:"name" info:"Name used for saving account"`
 	Contracts []string `flag:"contract" info:"Contract to be deployed during account creation. <name:filename>"`
-	Results   bool     `default:"false" flag:"results" info:"⚠️  No longer supported: results are provided by default"`
+	Results   bool     `default:"false" flag:"results" info:"⚠️  Deprecated: results are provided by default"`
 }
 
 var createFlags = flagsCreate{}
@@ -53,7 +53,7 @@ var CreateCommand = &command.Command{
 		services *services.Services,
 	) (command.Result, error) {
 		if createFlags.Results {
-			return nil, fmt.Errorf("⚠️ Results flag is no longer supported, results are by default included in all executions.")
+			fmt.Println("⚠️ DEPRECATION WARNING: results flag is deprecated, results are by default included in all executions")
 		}
 
 		account, err := services.Accounts.Create(

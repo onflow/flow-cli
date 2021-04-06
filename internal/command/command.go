@@ -52,21 +52,23 @@ type Command struct {
 }
 
 type GlobalFlags struct {
-	Filter  string
-	Format  string
-	Save    string
-	Host    string
-	Log     string
-	Network string
+	Filter     string
+	Format     string
+	Save       string
+	Host       string
+	Log        string
+	Network    string
+	ConfigPath []string
 }
 
 var flags = GlobalFlags{
-	Filter:  "",
-	Format:  "",
-	Save:    "",
-	Host:    "",
-	Log:     "info",
-	Network: "",
+	Filter:     "",
+	Format:     "",
+	Save:       "",
+	Host:       "",
+	Log:        "info",
+	Network:    "",
+	ConfigPath: project.DefaultConfigPaths,
 }
 
 // InitFlags init all the global persistent flags
@@ -112,10 +114,10 @@ func InitFlags(cmd *cobra.Command) {
 	)
 
 	cmd.PersistentFlags().StringSliceVarP(
-		&util.ConfigPath,
+		&flags.ConfigPath,
 		"conf",
 		"f",
-		util.ConfigPath,
+		flags.ConfigPath,
 		"Path to flow configuration file",
 	)
 
@@ -135,7 +137,7 @@ func InitFlags(cmd *cobra.Command) {
 func (c Command) AddToParent(parent *cobra.Command) {
 	c.Cmd.Run = func(cmd *cobra.Command, args []string) {
 		// initialize project but ignore error since config can be missing
-		proj, err := project.Load(util.ConfigPath)
+		proj, err := project.Load(flags.ConfigPath)
 		// here we ignore if config does not exist as some commands don't require it
 		if !errors.Is(err, config.ErrDoesNotExist) {
 			handleError("Config Error", err)
@@ -219,18 +221,16 @@ func createLogger(logFlag string, formatFlag string) output.Logger {
 // formatResult formats a result for printing.
 func formatResult(result Result, filterFlag string, formatFlag string) (string, error) {
 	if result == nil {
-		return "", fmt.Errorf("Missing")
+		return "", fmt.Errorf("missing result")
 	}
 
 	if filterFlag != "" {
-		var jsonResult map[string]interface{}
-		val, _ := json.Marshal(result.JSON())
-		err := json.Unmarshal(val, &jsonResult)
+		value, err := filterResultValue(result, filterFlag)
 		if err != nil {
 			return "", err
 		}
 
-		return fmt.Sprintf("%v", jsonResult[filterFlag]), nil
+		return fmt.Sprintf("%v", value), nil
 	}
 
 	switch formatFlag {
@@ -260,6 +260,29 @@ func outputResult(result string, saveFlag string) error {
 	return nil
 }
 
+// filterResultValue returns a value by its name filtered from other result values
+func filterResultValue(result Result, filter string) (interface{}, error) {
+	var jsonResult map[string]interface{}
+	val, _ := json.Marshal(result.JSON())
+	err := json.Unmarshal(val, &jsonResult)
+	if err != nil {
+		return "", err
+	}
+
+	possibleFilters := make([]string, 0)
+	for key, _ := range jsonResult {
+		possibleFilters = append(possibleFilters, fmt.Sprintf("%s", key))
+	}
+
+	value := jsonResult[filter]
+
+	if value == nil {
+		return nil, fmt.Errorf("value for filter: '%s' doesn't exists, possible values to filter by: %s", filter, possibleFilters)
+	}
+
+	return value, nil
+}
+
 // handleError handle errors
 func handleError(description string, err error) {
 	if err == nil {
@@ -272,7 +295,10 @@ func handleError(description string, err error) {
 	case *client.RPCError:
 		fmt.Fprintf(os.Stderr, "❌ Grpc Error: %s \n", t.GRPCStatus().Err().Error())
 	default:
-		if strings.Contains(err.Error(), "transport:") {
+		if errors.Is(err, config.ErrOutdatedFormat) {
+			fmt.Fprintf(os.Stderr, "❌ Config Error: %s \n", err.Error())
+			fmt.Fprintf(os.Stderr, "🙏 Please reset configuration using: 'flow init --reset'. Read more about new configuration here: https://github.com/onflow/flow-cli/releases/tag/v0.17.0")
+		} else if strings.Contains(err.Error(), "transport:") {
 			fmt.Fprintf(os.Stderr, "❌ %s \n", strings.Split(err.Error(), "transport:")[1])
 			fmt.Fprintf(os.Stderr, "🙏 Make sure your emulator is running or connection address is correct.")
 		} else if strings.Contains(err.Error(), "NotFound desc =") {

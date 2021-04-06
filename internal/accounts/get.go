@@ -29,7 +29,7 @@ import (
 
 type flagsGet struct {
 	Contracts bool `default:"false" flag:"contracts" info:"Display contracts deployed to the account"`
-	Code      bool `default:"false" flag:"code" info:"⚠️  No longer supported: use contracts flag instead"`
+	Code      bool `default:"false" flag:"code" info:"⚠️  Deprecated: use contracts flag instead"`
 }
 
 var getFlags = flagsGet{}
@@ -48,7 +48,7 @@ var GetCommand = &command.Command{
 		services *services.Services,
 	) (command.Result, error) {
 		if getFlags.Code {
-			return nil, fmt.Errorf("⚠️  No longer supported: use contracts flag instead")
+			fmt.Println("⚠️  DEPRECATION WARNING: use contracts flag instead")
 		}
 
 		account, err := services.Accounts.Get(args[0]) // address
@@ -58,7 +58,7 @@ var GetCommand = &command.Command{
 
 		return &AccountResult{
 			Account:  account,
-			showCode: getFlags.Contracts,
+			showCode: getFlags.Contracts || getFlags.Code,
 		}, nil
 	},
 }

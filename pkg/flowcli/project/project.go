@@ -33,7 +33,10 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowcli/util"
 )
 
-var DefaultConfigPath = "flow.json"
+var (
+	DefaultConfigPaths = []string{"flow.json"}
+	DefaultConfigPath  = DefaultConfigPaths[0]
+)
 
 // Project contains the configuration for a Flow project.
 type Project struct {
@@ -62,7 +65,7 @@ func Load(configFilePath []string) (*Project, error) {
 			return nil, err
 		}
 
-		return nil, fmt.Errorf("failed to open project configuration: %s", configFilePath)
+		return nil, err
 	}
 
 	proj, err := newProject(conf, composer)
@@ -93,6 +96,9 @@ func Exists(path string) bool {
 // Init initializes a new Flow project.
 func Init(sigAlgo crypto.SignatureAlgorithm, hashAlgo crypto.HashAlgorithm) (*Project, error) {
 	emulatorServiceAccount, err := generateEmulatorServiceAccount(sigAlgo, hashAlgo)
+	if err != nil {
+		return nil, err
+	}
 
 	composer := config.NewLoader(afero.NewOsFs())
 	composer.AddConfigParser(json.NewParser())
@@ -101,7 +107,7 @@ func Init(sigAlgo crypto.SignatureAlgorithm, hashAlgo crypto.HashAlgorithm) (*Pr
 		composer: composer,
 		conf:     config.DefaultConfig(),
 		accounts: []*Account{emulatorServiceAccount},
-	}, err
+	}, nil
 }
 
 // newProject creates a new project from a configuration object.

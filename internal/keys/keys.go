@@ -49,8 +49,8 @@ type KeyResult struct {
 // JSON convert result to JSON
 func (k *KeyResult) JSON() interface{} {
 	result := make(map[string]string)
-	result["Private"] = hex.EncodeToString(k.privateKey.PublicKey().Encode())
-	result["Public"] = hex.EncodeToString(k.privateKey.Encode())
+	result["private"] = hex.EncodeToString(k.privateKey.PublicKey().Encode())
+	result["public"] = hex.EncodeToString(k.privateKey.Encode())
 
 	return result
 }
