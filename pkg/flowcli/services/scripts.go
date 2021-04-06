@@ -69,5 +69,8 @@ func (s *Scripts) execute(code []byte, args []string, argsJSON string) (cadence.
 		return nil, err
 	}
 
+	// code has imports
+	// code = project resolveImports
+
 	return s.gateway.ExecuteScript(code, scriptArgs)
 }
