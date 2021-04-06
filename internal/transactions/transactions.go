@@ -51,11 +51,11 @@ type TransactionResult struct {
 // JSON convert result to JSON
 func (r *TransactionResult) JSON() interface{} {
 	result := make(map[string]string)
-	result["Hash"] = r.tx.ID().String()
-	result["Status"] = r.result.Status.String()
+	result["hash"] = r.tx.ID().String()
+	result["status"] = r.result.Status.String()
 
 	if r.result != nil {
-		result["Events"] = fmt.Sprintf("%s", r.result.Events)
+		result["events"] = fmt.Sprintf("%s", r.result.Events)
 	}
 
 	return result

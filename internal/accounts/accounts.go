@@ -50,7 +50,33 @@ type AccountResult struct {
 
 // JSON convert result to JSON
 func (r *AccountResult) JSON() interface{} {
-	return r
+	result := make(map[string]interface{})
+	result["address"] = r.Address
+	result["balance"] = r.Balance
+
+	keys := make([]string, 0)
+	for _, key := range r.Keys {
+		keys = append(keys, fmt.Sprintf("%x", key.PublicKey.Encode()))
+	}
+
+	result["keys"] = keys
+
+	contracts := make([]string, 0)
+	for name := range r.Contracts {
+		contracts = append(contracts, name)
+	}
+
+	result["contracts"] = contracts
+
+	if r.showCode {
+		c := make(map[string]string)
+		for name, code := range r.Contracts {
+			c[name] = string(code)
+		}
+		result["code"] = c
+	}
+
+	return result
 }
 
 // String convert result to string
