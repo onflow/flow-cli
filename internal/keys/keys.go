@@ -71,6 +71,7 @@ func (k *KeyResult) String() string {
 		fmt.Fprintf(writer, "Signature algorithm \t %s\n", k.accountKey.SigAlgo)
 		fmt.Fprintf(writer, "Hash algorithm \t %s\n", k.accountKey.HashAlgo)
 		fmt.Fprintf(writer, "Weight \t %d\n", k.accountKey.Weight)
+		fmt.Fprintf(writer, "Revoked \t %t\n", k.accountKey.Revoked)
 	}
 
 	writer.Flush()
