@@ -94,7 +94,7 @@ func TestTransactions(t *testing.T) {
 
 	t.Run("Send Transaction Fails wrong args", func(t *testing.T) {
 		_, _, err := transactions.Send("../../../tests/transaction.cdc", serviceName, []string{"Bar"}, "")
-		assert.Equal(t, err.Error(), "Argument not passed in correct format, correct format is: Type:Value, got Bar")
+		assert.Equal(t, err.Error(), "argument not passed in correct format, correct format is: Type:Value, got Bar")
 	})
 
 	t.Run("Send Transaction Fails wrong filename", func(t *testing.T) {
