@@ -21,17 +21,19 @@ package contracts
 import (
 	"fmt"
 
+	"github.com/onflow/flow-cli/pkg/flowcli/project"
+
 	"github.com/onflow/flow-go-sdk"
 )
 
 type Preprocessor struct {
 	loader            Loader
-	aliases           map[string]string
+	aliases           project.Aliases
 	contracts         []*Contract
 	contractsBySource map[string]*Contract
 }
 
-func NewPreprocessor(loader Loader, aliases map[string]string) *Preprocessor {
+func NewPreprocessor(loader Loader, aliases project.Aliases) *Preprocessor {
 	return &Preprocessor{
 		loader:            loader,
 		aliases:           aliases,

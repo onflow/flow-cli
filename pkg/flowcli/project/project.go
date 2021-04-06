@@ -266,9 +266,11 @@ func (p *Project) AccountByName(name string) *Account {
 	return account
 }
 
+type Aliases map[string]string
+
 // AliasesForNetwork returns all deployment aliases for a network.
-func (p *Project) AliasesForNetwork(network string) map[string]string {
-	aliases := make(map[string]string)
+func (p *Project) AliasesForNetwork(network string) Aliases {
+	aliases := make(Aliases)
 
 	// get all contracts for selected network and if any has an address as target make it an alias
 	for _, contract := range p.conf.Contracts.GetByNetwork(network) {
