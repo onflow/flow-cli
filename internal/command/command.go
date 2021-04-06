@@ -272,7 +272,10 @@ func handleError(description string, err error) {
 	case *client.RPCError:
 		fmt.Fprintf(os.Stderr, "❌ Grpc Error: %s \n", t.GRPCStatus().Err().Error())
 	default:
-		if strings.Contains(err.Error(), "transport:") {
+		if errors.Is(err, config.ErrOutdatedFormat) {
+			fmt.Fprintf(os.Stderr, "❌ Config Error: %s \n", err.Error())
+			fmt.Fprintf(os.Stderr, "🙏 Please reset configuration using: 'flow init --reset'. Read more about new configuration here: https://github.com/onflow/flow-cli/releases/tag/v0.17.0")
+		} else if strings.Contains(err.Error(), "transport:") {
 			fmt.Fprintf(os.Stderr, "❌ %s \n", strings.Split(err.Error(), "transport:")[1])
 			fmt.Fprintf(os.Stderr, "🙏 Make sure your emulator is running or connection address is correct.")
 		} else if strings.Contains(err.Error(), "NotFound desc =") {
