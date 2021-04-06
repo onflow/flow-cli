@@ -28,6 +28,14 @@ Flow configuration (`flow.json`) file will contain the following properties:
     "emulator": {
       "host": "127.0.0.1:3569",
       "chain": "flow-emulator"
+    },
+    "mainnet": {
+      "host": "access.mainnet.nodes.onflow.org:9000",
+      "chain": "flow-mainnet"
+    },
+    "testnet": {
+      "host": "access.devnet.nodes.onflow.org:9000",
+      "chain": "flow-testnet"
     }
   },
   "accounts": {
@@ -97,9 +105,23 @@ We'll walk through each property one by one.
   "networks": {
     "emulator": {
       "host": "127.0.0.1:3569",
-      "serviceAccount": "emulator-service"
+      "chain": "flow-emulator"
     },
-    "testnet": "access.testnet.nodes.onflow.org:9000"
+    "mainnet": {
+      "host": "access.mainnet.nodes.onflow.org:9000",
+      "chain": "flow-mainnet"
+    },
+    "testnet": {
+      "host": "access.devnet.nodes.onflow.org:9000",
+      "chain": "flow-testnet"
+    }
+  },
+
+  "emulators": {
+    "default": {
+      "port": 3569,
+      "serviceAccount": "emulator-account"
+    }
   }
 }
 ```
@@ -256,9 +278,16 @@ Use this section to define networks and connection parameters for that specific 
 "networks": {
   "emulator": {
     "host": "127.0.0.1:3569",
-    "serviceAccount": "emulator-service"
+    "chain": "flow-emulator"
   },
-  "testnet": "access.testnet.nodes.onflow.org:9000"
+  "mainnet": {
+    "host": "access.mainnet.nodes.onflow.org:9000",
+    "chain": "flow-mainnet"
+  },
+  "testnet": {
+    "host": "access.devnet.nodes.onflow.org:9000",
+    "chain": "flow-testnet"
+  }
 }
 
 ...
