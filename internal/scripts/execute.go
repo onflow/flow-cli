@@ -61,7 +61,7 @@ var ExecuteCommand = &command.Command{
 		}
 
 		if scriptFlags.Args != "" {
-			fmt.Println("⚠️  DEPRECATION WARNING: use arg flag in Type:Value format or arg-json for JSON format")
+			fmt.Println("⚠️  DEPRECATION WARNING: use arg flag in Type:Value format or args-json for JSON format")
 
 			if len(scriptFlags.Arg) == 0 && scriptFlags.ArgsJSON == "" {
 				scriptFlags.ArgsJSON = scriptFlags.Args // backward compatible, args was in json format
