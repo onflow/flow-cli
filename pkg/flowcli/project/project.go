@@ -217,13 +217,15 @@ func (p *Project) ContractsByNetwork(network string) []Contract {
 	return contracts
 }
 
-// AllAccountName returns all configured account names.
-func (p *Project) AllAccountName() []string {
+// AllAccountsNames returns all configured account names.
+func (p *Project) AccountNamesForNetwork(network string) []string {
 	names := make([]string, 0)
 
 	for _, account := range p.accounts {
-		if !util.StringContains(names, account.name) {
-			names = append(names, account.name)
+		if len(p.conf.Deployments.GetByAccountAndNetwork(account.name, network)) > 0 {
+			if !util.StringContains(names, account.name) {
+				names = append(names, account.name)
+			}
 		}
 	}
 

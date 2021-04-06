@@ -128,19 +128,19 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 		return nil, err
 	}
 
-	contracts, err := processor.ContractDeploymentOrder()
+	orderedContracts, err := processor.ContractDeploymentOrder()
 	if err != nil {
 		return nil, err
 	}
 
 	p.logger.Info(fmt.Sprintf(
-		"Deploying %d contracts for accounts: %s",
-		len(contracts),
-		strings.Join(p.project.AllAccountName(), ","),
+		"\nDeploying %d contracts for accounts: %s\n",
+		len(orderedContracts),
+		strings.Join(p.project.AccountNamesForNetwork(network), ","),
 	))
 
-	var errs []error
-	for _, contract := range contracts {
+	deployErr := false
+	for _, contract := range orderedContracts {
 		targetAccount := p.project.AccountByAddress(contract.Target().String())
 
 		if targetAccount == nil {
@@ -158,9 +158,11 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 		if exists {
 			if !update {
 				p.logger.Error(fmt.Sprintf(
-					"Contract %s is already deployed to this account. Use the --update flag to force update.",
+					"contract %s is already deployed to this account. Use the --update flag to force update",
 					contract.Name(),
 				))
+
+				deployErr = true
 				continue
 			}
 
@@ -172,7 +174,7 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 		tx, err = p.gateway.SendTransaction(tx, targetAccount)
 		if err != nil {
 			p.logger.Error(err.Error())
-			errs = append(errs, err)
+			deployErr = true
 		}
 
 		p.logger.StartProgress(
@@ -182,10 +184,10 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 		result, err := p.gateway.GetTransactionResult(tx, true)
 		if err != nil {
 			p.logger.Error(err.Error())
-			errs = append(errs, err)
+			deployErr = true
 		}
 
-		if result.Error == nil {
+		if result.Error == nil && !deployErr {
 			p.logger.StopProgress(
 				fmt.Sprintf("%s -> 0x%s", util.Green(contract.Name()), contract.Target()),
 			)
@@ -196,19 +198,18 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 			p.logger.Error(
 				fmt.Sprintf("%s error: %s", contract.Name(), result.Error),
 			)
-
-			errs = append(errs, result.Error)
 		}
 	}
 
-	if len(errs) == 0 {
+	if !deployErr {
 		p.logger.Info("\n✨  All contracts deployed successfully")
 	} else {
-		p.logger.Error(fmt.Sprintf("Failed to deploy the contracts with error: %s", errs))
-		return nil, fmt.Errorf(`%v`, errs)
+		err = fmt.Errorf("failed to deploy contracts")
+		p.logger.Error(err.Error())
+		return nil, err
 	}
 
-	return contracts, nil
+	return orderedContracts, nil
 }
 
 func prepareUpdateContractTransaction(
