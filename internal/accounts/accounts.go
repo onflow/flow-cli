@@ -94,7 +94,7 @@ func (r *AccountResult) String() string {
 		fmt.Fprintf(writer, "\tWeight\t %d\n", key.Weight)
 		fmt.Fprintf(writer, "\tSignature Algorithm\t %s\n", key.SigAlgo)
 		fmt.Fprintf(writer, "\tHash Algorithm\t %s\n", key.HashAlgo)
-		fmt.Fprintf(writer, "Revoked \t %t\n", key.Revoked)
+		fmt.Fprintf(writer, "\tRevoked \t %t\n", key.Revoked)
 		fmt.Fprintf(writer, "\n")
 	}
 
