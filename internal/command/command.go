@@ -52,21 +52,23 @@ type Command struct {
 }
 
 type GlobalFlags struct {
-	Filter  string
-	Format  string
-	Save    string
-	Host    string
-	Log     string
-	Network string
+	Filter     string
+	Format     string
+	Save       string
+	Host       string
+	Log        string
+	Network    string
+	ConfigPath []string
 }
 
 var flags = GlobalFlags{
-	Filter:  "",
-	Format:  "",
-	Save:    "",
-	Host:    "",
-	Log:     "info",
-	Network: "",
+	Filter:     "",
+	Format:     "",
+	Save:       "",
+	Host:       "",
+	Log:        "info",
+	Network:    "",
+	ConfigPath: project.DefaultConfigPaths,
 }
 
 // InitFlags init all the global persistent flags
@@ -112,10 +114,10 @@ func InitFlags(cmd *cobra.Command) {
 	)
 
 	cmd.PersistentFlags().StringSliceVarP(
-		&util.ConfigPath,
+		&flags.ConfigPath,
 		"conf",
 		"f",
-		util.ConfigPath,
+		flags.ConfigPath,
 		"Path to flow configuration file",
 	)
 
@@ -135,7 +137,7 @@ func InitFlags(cmd *cobra.Command) {
 func (c Command) AddToParent(parent *cobra.Command) {
 	c.Cmd.Run = func(cmd *cobra.Command, args []string) {
 		// initialize project but ignore error since config can be missing
-		proj, err := project.Load(util.ConfigPath)
+		proj, err := project.Load(flags.ConfigPath)
 		// here we ignore if config does not exist as some commands don't require it
 		if !errors.Is(err, config.ErrDoesNotExist) {
 			handleError("Config Error", err)

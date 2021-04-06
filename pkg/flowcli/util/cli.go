@@ -33,8 +33,6 @@ const (
 	EnvPrefix = "FLOW"
 )
 
-var ConfigPath = []string{"flow.json"}
-
 func Exit(code int, msg string) {
 	fmt.Println(msg)
 	os.Exit(code)

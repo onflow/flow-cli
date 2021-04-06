@@ -19,7 +19,9 @@
 package emulator
 
 import (
-	"strings"
+	"errors"
+
+	emulator "github.com/onflow/flow-emulator"
 
 	"github.com/onflow/flow-emulator/cmd/emulator/start"
 	"github.com/onflow/flow-go-sdk/crypto"
@@ -37,20 +39,43 @@ var Cmd = &cobra.Command{
 }
 
 func configuredServiceKey(
-	_ bool,
-	_ crypto.SignatureAlgorithm,
-	_ crypto.HashAlgorithm,
+	init bool,
+	sigAlgo crypto.SignatureAlgorithm,
+	hashAlgo crypto.HashAlgorithm,
 ) (
 	crypto.PrivateKey,
 	crypto.SignatureAlgorithm,
 	crypto.HashAlgorithm,
 ) {
-	proj, err := project.Load(util.ConfigPath)
-	if err != nil {
-		if strings.Contains(err.Error(), "project config file does not exist") {
-			util.Exitf(1, "🙏 Configuration is missing, initialize it with: 'flow project init' and then rerun this command.")
-		} else {
+	var proj *project.Project
+	var err error
+
+	if init {
+		if sigAlgo == crypto.UnknownSignatureAlgorithm {
+			sigAlgo = emulator.DefaultServiceKeySigAlgo
+		}
+
+		if hashAlgo == crypto.UnknownHashAlgorithm {
+			hashAlgo = emulator.DefaultServiceKeyHashAlgo
+		}
+
+		proj, err = project.Init(sigAlgo, hashAlgo)
+		if err != nil {
 			util.Exitf(1, err.Error())
+		} else {
+			err = proj.Save(project.DefaultConfigPath)
+			if err != nil {
+				util.Exitf(1, err.Error())
+			}
+		}
+	} else {
+		proj, err = project.Load(project.DefaultConfigPaths)
+		if err != nil {
+			if errors.Is(err, config.ErrDoesNotExist) {
+				util.Exitf(1, "🙏 Configuration is missing, initialize it with: 'flow project init' and then rerun this command.")
+			} else {
+				util.Exitf(1, err.Error())
+			}
 		}
 	}
 
