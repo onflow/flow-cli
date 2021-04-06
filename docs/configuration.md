@@ -4,11 +4,11 @@ sidebar_title: Configuration
 description: What is Flow CLI Configuration
 ---
 
-Flow CLI uses a state called configuration and it is stored to a file (usually `flow.json`). 
+Flow CLI uses a state called configuration which is stored in a file (usually `flow.json`). 
 
 Flow configuration (`flow.json`) file will contain the following properties:
 
-- A `networks` list pre-populated with the Flow Emulator connection configuration.
+- A `networks` list pre-populated with the Flow emulator, testnet and mainnet connection configuration.
 - An `accounts` list pre-populated with the Flow Emulator service account.
 - An `emulators` list pre-populated with Flow Emulator configuration.
 - A `deployments` empty object where all [deployment targets](https://docs.onflow.org/flow-cli/project-contracts/) can be defined. 

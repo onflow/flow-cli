@@ -118,7 +118,7 @@ func DefaultMainnetNetwork() Network {
 	return Network{
 		Name:    "mainnet",
 		Host:    "access.mainnet.nodes.onflow.org:9000",
-		ChainID: flow.Testnet,
+		ChainID: flow.Mainnet,
 	}
 }
 
@@ -140,36 +140,11 @@ func DefaultEmulator() Emulator {
 	}
 }
 
-// DefaultContracts get all standard contracts
-func StandardContracts() Contracts {
-	return Contracts{
-		Contract{
-			Name:    "FlowToken",
-			Source:  "",
-			Network: DefaultTestnetNetwork().Name,
-			Alias:   "0x7e60df042a9c0868",
-		},
-		Contract{
-			Name:    "FlowToken",
-			Source:  "",
-			Network: DefaultEmulatorNetwork().Name,
-			Alias:   "0x0ae53cb6e3f42a79",
-		},
-		Contract{
-			Name:    "FlowToken",
-			Source:  "",
-			Network: DefaultMainnetNetwork().Name,
-			Alias:   "0x1654653399040a61",
-		},
-	}
-}
-
 // DefaultConfig gets default configuration
 func DefaultConfig() *Config {
 	return &Config{
 		Emulators: DefaultEmulators(),
 		Networks:  DefaultNetworks(),
-		Contracts: StandardContracts(),
 	}
 }
 
