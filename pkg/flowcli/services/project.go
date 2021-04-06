@@ -96,7 +96,7 @@ func (p *Project) Init(
 
 func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, error) {
 	if p.project == nil {
-		return nil, fmt.Errorf("missing configuration, initialize it: flow project init")
+		return nil, fmt.Errorf("missing configuration, initialize it: flow init")
 	}
 
 	// check there are not multiple accounts with same contract
