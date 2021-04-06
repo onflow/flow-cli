@@ -50,6 +50,7 @@ var GenerateCommand = &command.Command{
 	) (command.Result, error) {
 		if generateFlags.Algo != "" {
 			fmt.Println("⚠️ DEPRECATION WARNING: flag no longer supported, use '--sig-algo' instead.")
+			generateFlags.KeySigAlgo = generateFlags.Algo
 		}
 
 		privateKey, err := services.Keys.Generate(generateFlags.Seed, generateFlags.KeySigAlgo)
