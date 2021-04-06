@@ -19,6 +19,8 @@
 package config
 
 import (
+	"errors"
+
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
 )
@@ -93,6 +95,8 @@ const (
 	PrivateKeyField                   = "privateKey"
 	KMSContextField                   = "resourceName"
 )
+
+var ErrOutdatedFormat = errors.New("you are using old configuration format")
 
 // IsAlias checks if contract has an alias
 func (c *Contract) IsAlias() bool {

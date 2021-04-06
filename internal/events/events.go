@@ -54,10 +54,10 @@ func (k *EventResult) JSON() interface{} {
 	for _, blockEvent := range k.BlockEvents {
 		if len(blockEvent.Events) > 0 {
 			for _, event := range blockEvent.Events {
-				result["BlockID"][blockEvent.Height]["Index"] = event.EventIndex
-				result["BlockID"][blockEvent.Height]["Type"] = event.Type
-				result["BlockID"][blockEvent.Height]["TxID"] = event.TransactionID
-				result["BlockID"][blockEvent.Height]["Values"] = event.Value
+				result["blockID"][blockEvent.Height]["index"] = event.EventIndex
+				result["blockID"][blockEvent.Height]["type"] = event.Type
+				result["blockID"][blockEvent.Height]["txID"] = event.TransactionID
+				result["blockID"][blockEvent.Height]["values"] = event.Value
 			}
 		}
 	}
