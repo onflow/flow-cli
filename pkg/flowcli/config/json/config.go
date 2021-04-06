@@ -20,7 +20,6 @@ package json
 
 import (
 	"encoding/json"
-	"fmt"
 
 	"github.com/onflow/flow-cli/pkg/flowcli/config"
 )
@@ -97,9 +96,7 @@ func (p *Parser) Serialize(conf *config.Config) ([]byte, error) {
 func (p *Parser) Deserialize(raw []byte) (*config.Config, error) {
 	// check if old format of config and return an error
 	if oldConfigFormat(raw) {
-		return nil, fmt.Errorf(
-			"you are using old configuration format. Please remove flow.json and generate a new configuration by using 'flow init' command	",
-		)
+		return nil, config.ErrOutdatedFormat
 	}
 
 	var jsonConf jsonConfig
