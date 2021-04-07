@@ -5,6 +5,8 @@ import (
 	"path"
 	"strings"
 
+	"github.com/onflow/flow-go-sdk"
+
 	"github.com/onflow/cadence/runtime/ast"
 	"github.com/onflow/cadence/runtime/common"
 	"github.com/onflow/cadence/runtime/parser2"
@@ -76,7 +78,7 @@ func (r *Resolver) getSourceTarget(
 	}
 
 	for source, target := range aliases {
-		sourceTarget[source] = target
+		sourceTarget[path.Clean(source)] = target
 	}
 
 	return sourceTarget
@@ -93,7 +95,7 @@ func (r *Resolver) parseImports() []string {
 
 	for _, importDeclaration := range r.program.ImportDeclarations() {
 		location, ok := importDeclaration.Location.(common.StringLocation)
-		if ok {
+		if ok && flow.HexToAddress(location.String()) == flow.EmptyAddress {
 			imports = append(imports, location.String())
 		}
 	}
