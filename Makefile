@@ -32,6 +32,14 @@ install-tools:
 test:
 	GO111MODULE=on go test -coverprofile=$(COVER_PROFILE) $(if $(JSON_OUTPUT),-json,) ./...
 
+.PHONY: test-e2e
+test-e2e:
+	GO111MODULE=on E2E=1 go test tests/e2e_test.go
+
+.PHONY: test-e2e-emulator
+test-e2e-emulator:
+	flow -f tests/flow.json emulator start
+
 .PHONY: coverage
 coverage:
 ifeq ($(COVER), true)
