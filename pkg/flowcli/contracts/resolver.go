@@ -3,7 +3,6 @@ package contracts
 import (
 	"fmt"
 	"path"
-	"path/filepath"
 	"strings"
 
 	"github.com/onflow/cadence/runtime/ast"
@@ -13,7 +12,7 @@ import (
 )
 
 type Resolver struct {
-	code    string
+	code    []byte
 	program *ast.Program
 }
 
@@ -24,41 +23,38 @@ func NewResolver(code []byte) (*Resolver, error) {
 	}
 
 	return &Resolver{
-		code:    string(code),
+		code:    code,
 		program: program,
 	}, nil
 }
 
 func (r *Resolver) ResolveImports(
+	scriptPath string,
 	contracts []project.Contract,
 	aliases project.Aliases,
-) string {
+) ([]byte, error) {
 	imports := r.parseImports()
 	sourceTarget := r.getSourceTarget(contracts, aliases)
 
-	fmt.Println(absolutePath("./tests/Foo.cdc", "./Foo.cdc"), path.Clean("./tests/Foo.cdc"))
-	fmt.Println(filepath.Abs("./Foo.cdc"))
-	fmt.Println(filepath.Abs("./tests/Foo.cdc"))
-
 	for _, imp := range imports {
-		fmt.Println(absolutePath(imp, sourceTarget[imp]))
-		fmt.Println(imp, sourceTarget[imp], sourceTarget)
-
-		if sourceTarget[imp] != "" {
-			r.code = r.replaceImport(imp, sourceTarget[imp])
+		target := sourceTarget[absolutePath(scriptPath, imp)]
+		if target != "" {
+			r.code = r.replaceImport(imp, target)
+		} else {
+			return nil, fmt.Errorf("import %s could not be resolved from the configuration", imp)
 		}
 	}
 
-	return r.code
+	return r.code, nil
 }
 
-func (r *Resolver) replaceImport(from string, to string) string {
-	return strings.Replace(
-		r.code,
+func (r *Resolver) replaceImport(from string, to string) []byte {
+	return []byte(strings.Replace(
+		string(r.code),
 		fmt.Sprintf(`"%s"`, from),
 		fmt.Sprintf("0x%s", to),
 		1,
-	)
+	))
 }
 
 func (r *Resolver) getSourceTarget(

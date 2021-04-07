@@ -19,7 +19,10 @@
 package services
 
 import (
+	"fmt"
+
 	"github.com/onflow/cadence"
+	"github.com/onflow/flow-cli/pkg/flowcli/contracts"
 
 	"github.com/onflow/flow-cli/pkg/flowcli"
 	"github.com/onflow/flow-cli/pkg/flowcli/gateway"
@@ -49,28 +52,49 @@ func NewScripts(
 }
 
 // Execute executes a Cadence script from a file.
-func (s *Scripts) Execute(scriptFilename string, args []string, argsJSON string) (cadence.Value, error) {
-	script, err := util.LoadFile(scriptFilename)
+func (s *Scripts) Execute(scriptPath string, args []string, argsJSON string, network string) (cadence.Value, error) {
+	script, err := util.LoadFile(scriptPath)
 	if err != nil {
 		return nil, err
 	}
 
-	return s.execute(script, args, argsJSON)
+	return s.execute(script, args, argsJSON, scriptPath, network)
 }
 
 // Execute executes a Cadence script from a source code string.
 func (s *Scripts) ExecuteWithCode(code []byte, args []string, argsJSON string) (cadence.Value, error) {
-	return s.execute(code, args, argsJSON)
+	return s.execute(code, args, argsJSON, "", "")
 }
 
-func (s *Scripts) execute(code []byte, args []string, argsJSON string) (cadence.Value, error) {
+func (s *Scripts) execute(code []byte, args []string, argsJSON string, scriptPath string, network string) (cadence.Value, error) {
 	scriptArgs, err := flowcli.ParseArguments(args, argsJSON)
 	if err != nil {
 		return nil, err
 	}
 
-	// code has imports
-	// code = project resolveImports
+	resolver, err := contracts.NewResolver(code)
+	if err != nil {
+		return nil, err
+	}
+
+	if resolver.ImportExists() {
+		if s.project == nil {
+			return nil, fmt.Errorf("missing configuration, initialize it: flow init")
+		} else if network == "" {
+			return nil, fmt.Errorf("missing network, specify which network to use to resolve imports in script code")
+		} else if scriptPath == "" { // when used as lib with code we don't support imports
+			return nil, fmt.Errorf("resolving imports in scripts not supported")
+		}
+
+		code, err = resolver.ResolveImports(
+			scriptPath,
+			s.project.ContractsByNetwork(network),
+			s.project.AliasesForNetwork(network),
+		)
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	return s.gateway.ExecuteScript(code, scriptArgs)
 }
