@@ -67,7 +67,7 @@ var flags = GlobalFlags{
 	Save:       "",
 	Host:       "",
 	Log:        "info",
-	Network:    "",
+	Network:    project.DefaultEmulatorNetworkName,
 	ConfigPath: project.DefaultConfigPaths,
 }
 
@@ -180,19 +180,26 @@ func createGateway(host string) (gateway.Gateway, error) {
 
 // resolveHost from the flags provided
 func resolveHost(proj *project.Project, hostFlag string, networkFlag string) (string, error) {
-	host := hostFlag
+	// don't allow both network and host flag as the host might be different
+	if networkFlag != "" && hostFlag != "" {
+		return "", fmt.Errorf("shouldn't use both host and network flags, better to use network flag")
+	}
+
+	// host flag has highest priority
+	if hostFlag != "" {
+		return hostFlag, nil
+	}
+	// network flag with project initialized is next
 	if networkFlag != "" && proj != nil {
 		check := proj.NetworkByName(networkFlag)
 		if check == nil {
 			return "", fmt.Errorf("provided network with name %s doesn't exists in condiguration", networkFlag)
 		}
 
-		host = proj.NetworkByName(networkFlag).Host
-	} else if host == "" {
-		host = project.DefaultEmulatorHost
+		return proj.NetworkByName(networkFlag).Host, nil
 	}
-
-	return host, nil
+	// default to emulator host
+	return project.DefaultEmulatorHost, nil
 }
 
 // create logger utility
