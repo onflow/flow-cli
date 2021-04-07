@@ -4,28 +4,78 @@ Follow the [Flow CLI installation guide](https://docs.onflow.org/flow-cli/instal
 
 ## 💥 Breaking Changes
 
-### Initializing Configuration
-Configuration format was unified to work for all CLI commands.
-Generating new configuration is done by executing command `flow init`.
+### Configuration Format
 
-###⚠️  No longer supported flags
+The default configuration format (i.e. the contents of `flow.json`) has been updated.
+It is now unified to work with all CLI commands. 
+The new format is not backwards compatible with the old format.
 
-**Accounts**
+If needed, you can generate a new configuration file with the `flow init` command.
+
+Read more about the new configuration format in the [documentation](https://docs.onflow.org/flow-cli/configuration).
+
+### Updated: `flow blocks get`
+
+The `--latest`, `--id` and `--height` have been removed.
+
+Instead, use the new argument syntax:
+
+```sh
+# get latest block
+flow blocks get latest
+
+# get a block by ID
+flow blocks get 6bb0e0fceef9225a3cf9ceb6df9a31bd0063e6ee8e8dd7fdd93b831783243cd3
+
+# get a block by height
+flow blocks get 28329914
+```
+
+Read more about this change in the [documentation](https://docs.onflow.org/flow-cli/get-blocks).
+
+### Removed: `flow keys decode`
+
+The `flow keys decode` command has been temporarily removed due to a bug that requires further investigation.
+
+### Removed: `flow keys save`
+
+The `flow keys save` command has been removed in favour of an upcoming `flow accounts add` command. 
+
+## ⚠️ Deprecation Warnings
+
+**`flow accounts create`, `flow accounts add-contract`, `flow accounts remove-contract`, `flow accounts update-contract`**
+
 - Flag `--results` is deprecated, results are displayed by default.
-- Flag `--code` on `accounts get` command is deprecated, use `--contracts` flag instead.
 
-**Blocks**
-- Flags `--latest`, `--id` and `--height` are deprecated in favour of using block argument.
-  Command should be used with query argument where you can specify block height, id or value `latest`.
-  Read more about it in the [documentation](https://docs.onflow.org/flow-cli/get-blocks).
+**`flow accounts get`**
 
-**Events**
+- Flag `--code` is deprecated, use `--contracts` flag instead.
+
+**`flow events get`**
+
 - Flag `--verbose` is deprecated.
 
-**Keys**
+**`flow keys generate`**
+
 - Flag `--algo` is deprecated, use flag `--sig-algo`.
 
-**Transactions**
+**`flow transactions send`**
+
 - Flag `--code` is deprecated, use filename argument instead.
 - Flag `--results` is deprecated, results are displayed by default.
 
+**`flow transactions status`**
+
+- This command has been deprecated in favour of `flow transactions get`.
+
+**`flow project init`**
+
+- This command has been deprecated in favour of `flow init`.
+
+**`flow project start-emulator`**
+
+- This command has been deprecated in favour of `flow emulator`.
+
+**`flow emulator start`**
+
+- This command has been deprecated in favour of `flow emulator`.
