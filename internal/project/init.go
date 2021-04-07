@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package transactions
+package project
 
 import (
 	"fmt"
@@ -24,46 +24,36 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
+	"github.com/onflow/flow-cli/internal/config"
 	"github.com/onflow/flow-cli/pkg/flowcli/services"
 )
 
-type flagsGet struct {
-	Sealed bool `default:"true" flag:"sealed" info:"Wait for a sealed result"`
-	Code   bool `default:"false" flag:"code" info:"Display transaction code"`
-}
+var initFlag = config.FlagsInit{}
 
-var getFlags = flagsGet{}
-
-var GetCommand = &command.Command{
+var InitCommand = &command.Command{
 	Cmd: &cobra.Command{
-		Use:     "get <tx_id>",
-		Aliases: []string{"status"},
-		Short:   "Get the transaction by ID",
-		Args:    cobra.ExactArgs(1),
+		Use:   "init",
+		Short: "Initialize a new configuration",
 	},
-	Flags: &getFlags,
+	Flags: &initFlag,
 	Run: func(
 		cmd *cobra.Command,
 		args []string,
 		globalFlags command.GlobalFlags,
 		services *services.Services,
 	) (command.Result, error) {
-		if cmd.CalledAs() == "status" {
-			fmt.Println("⚠️  DEPRECATION WARNING: use \"flow transactions get\" instead")
-		}
+		fmt.Println("⚠️  DEPRECATION WARNING: use \"flow init\" instead")
 
-		tx, result, err := services.Transactions.GetStatus(
-			args[0], // transaction id
-			getFlags.Sealed,
+		proj, err := services.Project.Init(
+			initFlag.Reset,
+			initFlag.ServiceKeySigAlgo,
+			initFlag.ServiceKeyHashAlgo,
+			initFlag.ServicePrivateKey,
 		)
 		if err != nil {
 			return nil, err
 		}
 
-		return &TransactionResult{
-			result: result,
-			tx:     tx,
-			code:   getFlags.Code,
-		}, nil
+		return &config.InitResult{Project: proj}, nil
 	},
 }

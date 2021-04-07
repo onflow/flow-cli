@@ -317,7 +317,12 @@ func (a *Accounts) AddContract(
 		return nil, fmt.Errorf("account: [%s] doesn't exists in configuration", accountName)
 	}
 
-	return a.addContract(account, contractName, contractFilename, updateExisting)
+	contractSource, err := util.LoadFile(contractFilename)
+	if err != nil {
+		return nil, err
+	}
+
+	return a.addContract(account, contractName, contractSource, updateExisting)
 }
 
 // AddContractForAddress adds a new contract to an address using private key specified
@@ -333,13 +338,34 @@ func (a *Accounts) AddContractForAddress(
 		return nil, err
 	}
 
-	return a.addContract(account, contractName, contractFilename, updateExisting)
+	contractSource, err := util.LoadFile(contractFilename)
+	if err != nil {
+		return nil, err
+	}
+
+	return a.addContract(account, contractName, contractSource, updateExisting)
+}
+
+// AddContractForAddressWithCode adds a new contract to an address using private key and code specified
+func (a *Accounts) AddContractForAddressWithCode(
+	accountAddress string,
+	accountPrivateKey string,
+	contractName string,
+	contractCode []byte,
+	updateExisting bool,
+) (*flow.Account, error) {
+	account, err := accountFromAddressAndKey(accountAddress, accountPrivateKey)
+	if err != nil {
+		return nil, err
+	}
+
+	return a.addContract(account, contractName, contractCode, updateExisting)
 }
 
 func (a *Accounts) addContract(
 	account *project.Account,
 	contractName string,
-	contractFilename string,
+	contractSource []byte,
 	updateExisting bool,
 ) (*flow.Account, error) {
 	a.logger.StartProgress(
@@ -357,11 +383,6 @@ func (a *Accounts) addContract(
 		if err != nil {
 			return nil, err
 		}
-	}
-
-	contractSource, err := util.LoadFile(contractFilename)
-	if err != nil {
-		return nil, err
 	}
 
 	tx := templates.AddAccountContract(
@@ -384,7 +405,7 @@ func (a *Accounts) addContract(
 	}
 
 	// send transaction with contract
-	tx, err = a.gateway.SendTransaction(tx, account)
+	tx, err := a.gateway.SendTransaction(tx, account)
 	if err != nil {
 		return nil, err
 	}
