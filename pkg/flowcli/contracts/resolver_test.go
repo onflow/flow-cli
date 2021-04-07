@@ -25,16 +25,46 @@ func TestResolver(t *testing.T) {
 		Name:   "FT",
 		Source: "./tests/FT.cdc",
 		Target: flow.HexToAddress("0x2"),
-	}, {
-		Name:   "NFT",
-		Source: "./tests/NFT.cdc",
-		Target: flow.HexToAddress("0x3"),
 	}}
+
+	aliases := map[string]string{
+		"./tests/NFT.cdc": flow.HexToAddress("0x4").String(),
+	}
+
+	paths := []string{
+		"./tests/foo.cdc",
+		"./scripts/bar/foo.cdc",
+		"./scripts/bar/foo.cdc",
+	}
 
 	scripts := [][]byte{
 		[]byte(`
 			import Kibble from "./Kibble.cdc"
       import FT from "./FT.cdc"
+			pub fun main() {}
+    `), []byte(`
+			import Kibble from "../../tests/Kibble.cdc"
+      import FT from "../../tests/FT.cdc"
+			pub fun main() {}
+    `), []byte(`
+			import Kibble from "../../tests/Kibble.cdc"
+      import NFT from "../../tests/NFT.cdc"
+			pub fun main() {}
+    `),
+	}
+
+	resolved := [][]byte{
+		[]byte(`
+			import Kibble from 0x0000000000000001 
+			import FT from 0x0000000000000002 
+			pub fun main() {}
+    `), []byte(`
+			import Kibble from 0x0000000000000001 
+			import FT from 0x0000000000000002 
+			pub fun main() {}
+    `), []byte(`
+			import Kibble from 0x0000000000000001 
+			import NFT from 0x0000000000000004 
 			pub fun main() {}
     `),
 	}
@@ -54,6 +84,13 @@ func TestResolver(t *testing.T) {
     `))
 		assert.NoError(t, err)
 		assert.False(t, resolver.ImportExists())
+
+		resolver, err = NewResolver([]byte(`
+			import Foo from 0xf8d6e0586b0a20c7
+      pub fun main() {}
+    `))
+		assert.NoError(t, err)
+		assert.False(t, resolver.ImportExists())
 	})
 
 	t.Run("Parse imports", func(t *testing.T) {
@@ -65,17 +102,15 @@ func TestResolver(t *testing.T) {
 	})
 
 	t.Run("Resolve imports", func(t *testing.T) {
-		resolver, err := NewResolver(scripts[0])
-		assert.NoError(t, err)
+		for i, script := range scripts {
+			resolver, err := NewResolver(script)
+			assert.NoError(t, err)
 
-		code, err := resolver.ResolveImports("./tests/foo.cdc", contracts, make(map[string]string))
+			code, err := resolver.ResolveImports(paths[i], contracts, aliases)
 
-		assert.NoError(t, err)
-		assert.Equal(t, cleanCode(code), cleanCode([]byte(`
-			import Kibble from 0x0000000000000001 
-			import FT from 0x0000000000000002 
-			pub fun main() {}
-		`)))
+			assert.NoError(t, err)
+			assert.Equal(t, cleanCode(code), cleanCode(resolved[i]))
+		}
 	})
 
 }
