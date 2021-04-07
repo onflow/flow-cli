@@ -11,11 +11,13 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowcli/project"
 )
 
+// Resolver handles resolving imports in Cadence code
 type Resolver struct {
 	code    []byte
 	program *ast.Program
 }
 
+// NewResolver creates a new resolver
 func NewResolver(code []byte) (*Resolver, error) {
 	program, err := parser2.ParseProgram(string(code))
 	if err != nil {
@@ -28,6 +30,11 @@ func NewResolver(code []byte) (*Resolver, error) {
 	}, nil
 }
 
+// ResolveImports resolves imports in code to addresses
+//
+// resolving is done based on code file path and is resolved to
+// addresses defined in configuration for contracts or their aliases
+//
 func (r *Resolver) ResolveImports(
 	codePath string,
 	contracts []project.Contract,
@@ -48,6 +55,7 @@ func (r *Resolver) ResolveImports(
 	return r.code, nil
 }
 
+// replaceImport replaces import from path to address
 func (r *Resolver) replaceImport(from string, to string) []byte {
 	return []byte(strings.Replace(
 		string(r.code),
@@ -57,6 +65,7 @@ func (r *Resolver) replaceImport(from string, to string) []byte {
 	))
 }
 
+// getSourceTarget return a map with contract paths as keys and addresses as values
 func (r *Resolver) getSourceTarget(
 	contracts []project.Contract,
 	aliases project.Aliases,
@@ -73,10 +82,12 @@ func (r *Resolver) getSourceTarget(
 	return sourceTarget
 }
 
+// ImportExists checks if there is an import statement present in Cadence code
 func (r *Resolver) ImportExists() bool {
 	return len(r.parseImports()) > 0
 }
 
+// parseImports returns all imports from Cadence code as an array
 func (r *Resolver) parseImports() []string {
 	imports := make([]string, 0)
 
