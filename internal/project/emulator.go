@@ -19,6 +19,8 @@
 package project
 
 import (
+	"fmt"
+
 	"github.com/onflow/flow-emulator/cmd/emulator/start"
 	"github.com/spf13/cobra"
 
@@ -29,5 +31,8 @@ var EmulatorCommand *cobra.Command
 
 func init() {
 	EmulatorCommand = start.Cmd(emulator.ConfiguredServiceKey)
+	EmulatorCommand.PreRun = func(cmd *cobra.Command, args []string) {
+		fmt.Printf("⚠️  DEPRECATION WARNING: use \"flow emulator\" instead\n\n")
+	}
 	EmulatorCommand.Use = "start-emulator"
 }
