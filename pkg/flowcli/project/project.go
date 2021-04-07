@@ -217,7 +217,7 @@ func (p *Project) ContractsByNetwork(network string) []Contract {
 	return contracts
 }
 
-// AllAccountsNames returns all configured account names.
+// AccountNamesForNetwork returns all configured account names for a network.
 func (p *Project) AccountNamesForNetwork(network string) []string {
 	names := make([]string, 0)
 
