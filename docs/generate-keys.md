@@ -88,7 +88,7 @@ Specify the log level. Control how much output you want to see during command ex
 
 ### Configuration
 
-- Flag: `--conf`
+- Flag: `--config-path`
 - Short Flag: `-f`
 - Valid inputs: a path in the current filesystem.
 - Default: `flow.json`

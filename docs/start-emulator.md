@@ -27,7 +27,7 @@ To learn more about using the Emulator, have a look at the [README of the reposi
 
 ### Configuration
 
-- Flag: `--conf`
+- Flag: `--config-path`
 - Short Flag: `-f`
 - Valid inputs: valid filename
 
