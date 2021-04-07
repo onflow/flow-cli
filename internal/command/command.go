@@ -122,7 +122,7 @@ func InitFlags(cmd *cobra.Command) {
 
 	cmd.PersistentFlags().StringSliceVarP(
 		&flags.ConfigPath,
-		"conf",
+		"config-path",
 		"f",
 		flags.ConfigPath,
 		"Path to flow configuration file",
