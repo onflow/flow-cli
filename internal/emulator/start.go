@@ -32,13 +32,9 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowcli/util"
 )
 
-var Cmd = &cobra.Command{
-	Use:              "emulator",
-	Short:            "Flow emulator server",
-	TraverseChildren: true,
-}
+var Cmd *cobra.Command
 
-func configuredServiceKey(
+func ConfiguredServiceKey(
 	init bool,
 	sigAlgo crypto.SignatureAlgorithm,
 	hashAlgo crypto.HashAlgorithm,
@@ -99,6 +95,6 @@ func configuredServiceKey(
 }
 
 func init() {
-	Cmd = start.Cmd(configuredServiceKey)
+	Cmd = start.Cmd(ConfiguredServiceKey)
 	Cmd.Use = "emulator"
 }
