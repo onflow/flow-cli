@@ -4,8 +4,6 @@ sidebar_title: Deploy a Project
 description: How to deploy Flow project contracts with the CLI
 ---
 
-⚠️ _Warning: CLI projects are an experimental feature. Functionality is subject to change._
-
 ```shell
 flow project deploy
 ```
@@ -19,19 +17,21 @@ Before using this command, read about how to
 ## Example Usage
 
 ```shell
-# Deploy project contracts to all Testnet targets
 > flow project deploy --network=testnet
 
-NonFungibleToken -> 0xf8d6e0586b0a20c7
-KittyItems -> 0xf8d6e0586b0a20c7
+Deploying 2 contracts for accounts: my-testnet-account
 
-✅ All contracts deployed successfully
+NonFungibleToken -> 0x8910590293346ec4
+KittyItems -> 0x8910590293346ec4
+
+✨  All contracts deployed successfully
 ```
 
 In the example above, your `flow.json` file might look something like this:
 
 ```json
 {
+  ...
   "contracts": {
     "NonFungibleToken": "./cadence/contracts/NonFungibleToken.cdc",
     "KittyItems": "./cadence/contracts/KittyItems.cdc"
@@ -40,7 +40,8 @@ In the example above, your `flow.json` file might look something like this:
     "testnet": {
       "my-testnet-account": ["KittyItems", "NonFungibleToken"]
     }
-  }
+  },
+  ...
 }
 ```
 
@@ -60,72 +61,9 @@ pub contract KittyItems {
 }
 ```
 
-## Security
-
-⚠️ Warning: Please be careful when using private keys in configuration files. We suggest you 
-to separate private keys in another configuration file, put that file in `.gitignore` and then 
-reference that account in configuration with `fromeFile` property. 
-
-### Private Account Configuration File
-`flow.json` Main configuration file example:
-```json
-{
-  "contracts": {
-    "NonFungibleToken": "./cadence/contracts/NonFungibleToken.cdc",
-    "KittyItems": "./cadence/contracts/KittyItems.cdc"
-  },
-  "deployments": {
-    "testnet": {
-      "my-testnet-account": ["KittyItems", "NonFungibleToken"]
-    }
-  },
-  "accounts": {
-    "my-testnet-account": { "fromFile": "./flow.testnet.json" }
-  }
-}
-```
-
-`flow.testnet.json` Private configuration file. **Put this file in `.gitignore`**
-```json
-{
-  "accounts": {
-    "my-testnet-account": {
-      "address": "3ae53cb6e3f42a79",
-      "keys": "334232967f52bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad1111"
-    }
-  }
-}
-```
-
-### Private Account Configuration Environment Variable
-
-Use environment variable for any values that should be kept private (private keys, addresses...). 
-See example bellow:
-
-`flow.json` Main configuration file. Set environment variable when running flow cli like so:
-```shell
-PRIVATE_KEY=key flow project deploy
-```
-```json
-{
-  ...
-  "accounts": {
-    "my-testnet-account": {
-      "address": "3ae53cb6e3f42a79",
-      "keys": "$PRIVATE_KEY"
-    }
-  }
-  ...
-}
-```
-
-### Composing Multiple Configuration Files
-You can use composition of configuration files like so:
-```shell
-flow project deploy -f main.json -f private.json
-```
-
-This way you can keep your private accounts in the `private.json` file and add that file to `.gitignore`.
+⚠️ Warning: before proceeding, 
+we recommend reading the [Flow CLI security guidelines](https://docs.onflow.org/flow-cli/security/)
+to learn about the best practices for private key storage.
 
 ## Dependency Resolution
 
@@ -156,15 +94,7 @@ pub contract Bar {
 }
 ```
 
-## Options
-
-### Network
-
-- Flag: `--network`
-- Valid inputs: the name of a network configured in `flow.json`
-- Default: `emulator`
-
-Specify which network you want to deploy the project contracts to.
+## Flags
 
 ### Allow Updates
 
@@ -175,3 +105,65 @@ Specify which network you want to deploy the project contracts to.
 Indicate whether to overwrite and upgrade existing contracts.
 
 ⚠️ _Warning: contract upgrades are a dangerous experimental feature._
+
+### Host
+
+- Flag: `--host`
+- Valid inputs: an IP address or hostname.
+- Default: `127.0.0.1:3569` (Flow Emulator)
+
+Specify the hostname of the Access API that will be
+used to execute the command. This flag overrides
+any host defined by the `--network` flag.
+
+### Network
+
+- Flag: `--network`
+- Short Flag: `-n`
+- Valid inputs: the name of a network defined in the configuration (`flow.json`)
+
+Specify which network you want the command to use for execution.
+
+### Filter
+
+- Flag: `--filter`
+- Short Flag: `-x`
+- Valid inputs: a case-sensitive name of the result property.
+
+Specify any property name from the result you want to return as the only value.
+
+### Output
+
+- Flag: `--output`
+- Short Flag: `-o`
+- Valid inputs: `json`, `inline`
+
+Specify the format of the command results.
+
+### Save
+
+- Flag: `--save`
+- Short Flag: `-s`
+- Valid inputs: a path in the current filesystem.
+
+Specify the filename where you want the result to be saved
+
+### Log
+
+- Flag: `--log`
+- Short Flag: `-l`
+- Valid inputs: `none`, `error`, `debug`
+- Default: `info`
+
+Specify the log level. Control how much output you want to see during command execution.
+
+### Configuration
+
+- Flag: `--config-path`
+- Short Flag: `-f`
+- Valid inputs: a path in the current filesystem.
+- Default: `flow.json`
+
+Specify the path to the `flow.json` configuration file.
+You can use the `-f` flag multiple times to merge
+several configuration files.

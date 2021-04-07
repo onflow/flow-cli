@@ -4,8 +4,6 @@ sidebar_title: Add Project Contracts
 description: How to define the Cadence contracts for Flow project
 ---
 
-⚠️ _Warning: CLI projects are an experimental feature. Functionality is subject to change._
-
 ## Add a Contract
 
 To add a contract to your project, update the `"contracts"` section of your `flow.json` file.
@@ -33,7 +31,7 @@ In a typical project, a contract has one deployment target per network (e.g. Emu
 
 Deployment targets are defined in the `"deployments"` section of your `flow.json` file.
 
-Targets are grouped by network, where each network is a mapping from target account to contract list. 
+Targets are grouped by their network, where each network is a mapping from target account to contract list. 
 Multiple contracts can be deployed to the same target account.
 
 For example, here's how we'd deploy contracts `Foo` and `Bar` to the account `my-testnet-account`:
