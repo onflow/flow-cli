@@ -37,4 +37,5 @@ type Gateway interface {
 	GetBlockByID(flow.Identifier) (*flow.Block, error)
 	GetEvents(string, uint64, uint64) ([]client.BlockEvents, error)
 	GetCollection(flow.Identifier) (*flow.Collection, error)
+	Ping() (error)
 }
