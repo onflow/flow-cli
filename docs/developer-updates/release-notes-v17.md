@@ -64,11 +64,13 @@ The following functionality has been deprecated and will be removed in an upcomi
 **`flow transactions send`**
 
 - Flag `--code` is deprecated, use filename argument instead.
+- Flag `--args` is deprecated, use `--arg` or `--args-json` instead.
 - Flag `--results` is deprecated, results are displayed by default.
 
 **`flow scripts execute`**
 
 - Flag `--code` is deprecated, use filename argument instead.
+- Flag `--args` is deprecated, use `--arg` or `--args-json` instead.
 
 **`flow transactions status`**
 
