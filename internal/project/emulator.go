@@ -19,17 +19,20 @@
 package project
 
 import (
+	"fmt"
+
+	"github.com/onflow/flow-emulator/cmd/emulator/start"
 	"github.com/spf13/cobra"
+
+	"github.com/onflow/flow-cli/internal/emulator"
 )
 
-var Cmd = &cobra.Command{
-	Use:              "project",
-	Short:            "Manage your Cadence project",
-	TraverseChildren: true,
-}
+var EmulatorCommand *cobra.Command
 
 func init() {
-	InitCommand.AddToParent(Cmd)
-	DeployCommand.AddToParent(Cmd)
-	Cmd.AddCommand(EmulatorCommand)
+	EmulatorCommand = start.Cmd(emulator.ConfiguredServiceKey)
+	EmulatorCommand.PreRun = func(cmd *cobra.Command, args []string) {
+		fmt.Printf("⚠️  DEPRECATION WARNING: use \"flow emulator\" instead\n\n")
+	}
+	EmulatorCommand.Use = "start-emulator"
 }

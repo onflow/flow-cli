@@ -32,7 +32,6 @@ type flagsCreate struct {
 	Keys      []string `flag:"key" info:"Public keys to attach to account"`
 	SigAlgo   string   `default:"ECDSA_P256" flag:"sig-algo" info:"Signature algorithm used to generate the keys"`
 	HashAlgo  string   `default:"SHA3_256" flag:"hash-algo" info:"Hash used for the digest"`
-	Name      string   `default:"default" flag:"name" info:"Name used for saving account"`
 	Contracts []string `flag:"contract" info:"Contract to be deployed during account creation. <name:filename>"`
 	Results   bool     `default:"false" flag:"results" info:"⚠️  Deprecated: results are provided by default"`
 }

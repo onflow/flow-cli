@@ -88,13 +88,72 @@ type Emulator struct {
 type KeyType string
 
 const (
-	KeyTypeHex                KeyType = "hex"        // Hex private key with in memory signer
-	KeyTypeGoogleKMS          KeyType = "google-kms" // Google KMS signer
-	KeyTypeShell              KeyType = "shell"      // Exec out to a shell script
-	DefaultEmulatorConfigName         = "default"
-	PrivateKeyField                   = "privateKey"
-	KMSContextField                   = "resourceName"
+	KeyTypeHex                        KeyType = "hex"        // Hex private key with in memory signer
+	KeyTypeGoogleKMS                  KeyType = "google-kms" // Google KMS signer
+	KeyTypeShell                      KeyType = "shell"      // Exec out to a shell script
+	DefaultEmulatorConfigName                 = "default"
+	PrivateKeyField                           = "privateKey"
+	KMSContextField                           = "resourceName"
+	DefaultEmulatorServiceAccountName         = "emulator-account"
 )
+
+// DefaultEmulatorNetwork get default emulator network
+func DefaultEmulatorNetwork() Network {
+	return Network{
+		Name:    "emulator",
+		Host:    "127.0.0.1:3569",
+		ChainID: flow.Emulator,
+	}
+}
+
+// DefaultTestnetNetwork get default testnet network
+func DefaultTestnetNetwork() Network {
+	return Network{
+		Name:    "testnet",
+		Host:    "access.devnet.nodes.onflow.org:9000",
+		ChainID: flow.Testnet,
+	}
+}
+
+// DefaultMainnetNetwork get default mainnet network
+func DefaultMainnetNetwork() Network {
+	return Network{
+		Name:    "mainnet",
+		Host:    "access.mainnet.nodes.onflow.org:9000",
+		ChainID: flow.Mainnet,
+	}
+}
+
+// DefaultNetworks gets all default networks
+func DefaultNetworks() Networks {
+	return Networks{
+		DefaultEmulatorNetwork(),
+		DefaultTestnetNetwork(),
+		DefaultMainnetNetwork(),
+	}
+}
+
+// DefaultEmulator gets default emulator
+func DefaultEmulator() Emulator {
+	return Emulator{
+		Name:           "default",
+		ServiceAccount: DefaultEmulatorServiceAccountName,
+		Port:           3569,
+	}
+}
+
+// DefaultConfig gets default configuration
+func DefaultConfig() *Config {
+	return &Config{
+		Emulators: DefaultEmulators(),
+		Networks:  DefaultNetworks(),
+	}
+}
+
+// DefaultEmulators gets all default emulators
+func DefaultEmulators() Emulators {
+	return Emulators{DefaultEmulator()}
+}
 
 var ErrOutdatedFormat = errors.New("you are using old configuration format")
 

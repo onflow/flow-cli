@@ -61,9 +61,22 @@ type GlobalFlags struct {
 	ConfigPath []string
 }
 
+const (
+	formatText   = "text"
+	formatInline = "inline"
+	formatJSON   = "json"
+)
+
+const (
+	logLevelDebug = "debug"
+	logLevelInfo  = "info"
+	logLevelError = "error"
+	logLevelNone  = "none"
+)
+
 var flags = GlobalFlags{
 	Filter:     "",
-	Format:     "",
+	Format:     formatText,
 	Save:       "",
 	Host:       "",
 	Log:        "info",
@@ -94,7 +107,7 @@ func InitFlags(cmd *cobra.Command) {
 		"output",
 		"o",
 		flags.Format,
-		"Output format, values: 'json', 'inline'",
+		"Output format, options: \"text\", \"json\", \"inline\"",
 	)
 
 	cmd.PersistentFlags().StringVarP(
@@ -110,12 +123,12 @@ func InitFlags(cmd *cobra.Command) {
 		"log",
 		"l",
 		flags.Log,
-		"Log level verbosity, values: 'none', 'error', 'debug'",
+		"Log level, options: \"debug\", \"info\", \"error\", \"none\"",
 	)
 
 	cmd.PersistentFlags().StringSliceVarP(
 		&flags.ConfigPath,
-		"conf",
+		"config-path",
 		"f",
 		flags.ConfigPath,
 		"Path to flow configuration file",
@@ -204,22 +217,24 @@ func resolveHost(proj *project.Project, hostFlag string, networkFlag string) (st
 
 // create logger utility
 func createLogger(logFlag string, formatFlag string) output.Logger {
+
 	// disable logging if we user want a specific format like JSON
-	//(more common they will not want also to have logs)
-	var logLevel int
-	switch logFlag {
-	case "none":
-		logLevel = output.NoneLog
-	case "error":
-		logLevel = output.ErrorLog
-	case "debug":
-		logLevel = output.DebugLog
-	default:
-		logLevel = output.InfoLog
+	// (more common they will not want also to have logs)
+	if formatFlag != "" {
+		logFlag = logLevelNone
 	}
 
-	if formatFlag != "" {
+	var logLevel int
+
+	switch logFlag {
+	case logLevelDebug:
+		logLevel = output.DebugLog
+	case logLevelError:
+		logLevel = output.ErrorLog
+	case logLevelNone:
 		logLevel = output.NoneLog
+	default:
+		logLevel = output.InfoLog
 	}
 
 	return output.NewStdoutLogger(logLevel)
@@ -241,10 +256,10 @@ func formatResult(result Result, filterFlag string, formatFlag string) (string, 
 	}
 
 	switch formatFlag {
-	case "json":
+	case formatJSON:
 		jsonRes, _ := json.Marshal(result.JSON())
 		return string(jsonRes), nil
-	case "inline":
+	case formatInline:
 		return result.Oneliner(), nil
 	default:
 		return result.String(), nil
@@ -277,8 +292,8 @@ func filterResultValue(result Result, filter string) (interface{}, error) {
 	}
 
 	possibleFilters := make([]string, 0)
-	for key, _ := range jsonResult {
-		possibleFilters = append(possibleFilters, fmt.Sprintf("%s", key))
+	for key := range jsonResult {
+		possibleFilters = append(possibleFilters, key)
 	}
 
 	value := jsonResult[filter]
