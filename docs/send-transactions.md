@@ -17,7 +17,7 @@ any Flow Access API.
     --signer my-testnet-account \
     --host access.testnet.nodes.onflow.org:9000
     
-Hash	 f23582ba17322405608c0d3da79312617f8d16e118afe63e764b5e68edc5f211
+ID	 f23582ba17322405608c0d3da79312617f8d16e118afe63e764b5e68edc5f211
 Status	 SEALED
 Payer	 a2c4941b5f3c7151
 Events

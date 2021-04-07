@@ -7,14 +7,14 @@ description: How to get a Flow transaction from the command line
 The Flow CLI provides a command to fetch a transaction
 that was previously submitted to an Access API.
 
-`flow transactions get <tx_hash>`
+`flow transactions get <tx_id>`
 
 ## Example Usage
 
 ```shell
 > flow transactions get ff35821007322405608c0d3da79312617f8d16e118afe63e764b5e68edc96dd5 --host access.mainnet.nodes.onflow.org:9000
 
-Hash	 ff35821007322405608c0d3da79312617f8d16e118afe63e764b5e68edc96dd5
+ID	 ff35821007322405608c0d3da79312617f8d16e118afe63e764b5e68edc96dd5
 Status	 SEALED
 Payer	 12e354a23e4f791d
 Events	 
@@ -34,12 +34,12 @@ Events
 
 ## Arguments
 
-### Transaction Hash
+### Transaction ID
 
-- Name: `<tx_hash>`
-- Valid Input: transaction hash.
+- Name: `<tx_id>`
+- Valid Input: transaction ID.
 
-The first argument is the Hash (ID) of the transaction.
+The first argument is the ID (hash) of the transaction.
 
 ## Flags
     
