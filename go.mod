@@ -8,6 +8,7 @@ require (
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
 	github.com/gosuri/uilive v0.0.4
 	github.com/kr/text v0.2.0 // indirect
+	github.com/manifoldco/promptui v0.8.0
 	github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e // indirect
 	github.com/onflow/cadence v0.13.7
 	github.com/onflow/cadence/languageserver v0.13.1
