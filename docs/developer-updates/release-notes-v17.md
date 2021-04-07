@@ -43,6 +43,8 @@ The `flow keys save` command has been removed in favour of an upcoming `flow acc
 
 ## ⚠️ Deprecation Warnings
 
+The following functionality has been deprecated and will be removed in an upcoming release.
+
 **`flow accounts create`, `flow accounts add-contract`, `flow accounts remove-contract`, `flow accounts update-contract`**
 
 - Flag `--results` is deprecated, results are displayed by default.
