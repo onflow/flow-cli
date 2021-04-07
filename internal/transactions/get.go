@@ -19,6 +19,8 @@
 package transactions
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
@@ -34,9 +36,10 @@ var getFlags = flagsGet{}
 
 var GetCommand = &command.Command{
 	Cmd: &cobra.Command{
-		Use:   "get <tx_id>",
-		Short: "Get the transaction by ID",
-		Args:  cobra.ExactArgs(1),
+		Use:     "get <tx_id>",
+		Aliases: []string{"status"},
+		Short:   "Get the transaction by ID",
+		Args:    cobra.ExactArgs(1),
 	},
 	Flags: &getFlags,
 	Run: func(
@@ -45,6 +48,10 @@ var GetCommand = &command.Command{
 		globalFlags command.GlobalFlags,
 		services *services.Services,
 	) (command.Result, error) {
+		if cmd.CalledAs() == "status" {
+			fmt.Println("⚠️  DEPRECATION WARNING: use \"flow transactions get\" instead")
+		}
+
 		tx, result, err := services.Transactions.GetStatus(
 			args[0], // transaction id
 			getFlags.Sealed,
