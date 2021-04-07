@@ -1,6 +1,6 @@
 ---
-title: Get Network Status
-sidebar_title: Network Status
+title: Get Network Status 
+sidebar_title: Network Status 
 description: How to get access node status from the command line
 ---
 
@@ -11,10 +11,10 @@ flow status
 ```
 
 ## Example Usage
+
 ```shell
 > flow status --network mainnet
-
-Network is: ONLINE
+mainnet access node at access.mainnet.nodes.onflow.org:9000 is 🟢 ONLINE
 ```
 
 ## Options
