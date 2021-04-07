@@ -33,7 +33,7 @@ type flagsSend struct {
 	Signer   string   `default:"emulator-account" flag:"signer"`
 	Code     string   `default:"" flag:"code" info:"⚠️  Deprecated: use filename argument"`
 	Results  bool     `default:"" flag:"results" info:"⚠️  Deprecated: all transactions will provide result"`
-	Args     string   `default:"false" flag:"args" info:"⚠️  Deprecated: use arg or args-json flag"`
+	Args     string   `default:"" flag:"args" info:"⚠️  Deprecated: use arg or args-json flag"`
 }
 
 var sendFlags = flagsSend{}
