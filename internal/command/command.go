@@ -270,8 +270,8 @@ func filterResultValue(result Result, filter string) (interface{}, error) {
 	}
 
 	possibleFilters := make([]string, 0)
-	for key, _ := range jsonResult {
-		possibleFilters = append(possibleFilters, fmt.Sprintf("%s", key))
+	for key := range jsonResult {
+		possibleFilters = append(possibleFilters, key)
 	}
 
 	value := jsonResult[filter]
