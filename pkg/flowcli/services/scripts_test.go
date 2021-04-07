@@ -45,7 +45,7 @@ func TestScripts(t *testing.T) {
 			return arguments[0], nil
 		}
 
-		_, err := scripts.Execute("../../../tests/script.cdc", []string{"String:Foo"}, "")
+		_, err := scripts.Execute("../../../tests/script.cdc", []string{"String:Foo"}, "", "")
 
 		assert.NoError(t, err)
 	})
