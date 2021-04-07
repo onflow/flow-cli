@@ -64,6 +64,10 @@ The `flow keys save` command has been removed in favour of an upcoming `flow acc
 - Flag `--code` is deprecated, use filename argument instead.
 - Flag `--results` is deprecated, results are displayed by default.
 
+**`flow scripts execute`**
+
+- Flag `--code` is deprecated, use filename argument instead.
+
 **`flow transactions status`**
 
 - This command has been deprecated in favour of `flow transactions get`.
