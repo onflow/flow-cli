@@ -75,6 +75,11 @@ func ParseArgumentsCommaSplit(input []string) ([]cadence.Value, error) {
 			)
 		}
 
+		// if we are passing address check and handle without 0x prefix as else it wont work and error is not descriptive
+		if argInput[0] == "Address" && !strings.Contains(argInput[1], "0x") {
+			argInput[1] = fmt.Sprintf("0x%s", argInput[1])
+		}
+
 		args = append(args, map[string]string{
 			"value": argInput[1],
 			"type":  argInput[0],

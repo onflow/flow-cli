@@ -78,7 +78,7 @@ func (r *Resolver) getSourceTarget(
 	}
 
 	for source, target := range aliases {
-		sourceTarget[path.Clean(source)] = target
+		sourceTarget[path.Clean(source)] = flow.HexToAddress(target).String()
 	}
 
 	return sourceTarget
