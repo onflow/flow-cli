@@ -213,7 +213,7 @@ func createLogger(logFlag string, formatFlag string) output.Logger {
 
 	// disable logging if we user want a specific format like JSON
 	// (more common they will not want also to have logs)
-	if formatFlag != "" {
+	if formatFlag != formatText {
 		logFlag = logLevelNone
 	}
 
