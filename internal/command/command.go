@@ -62,6 +62,12 @@ type GlobalFlags struct {
 }
 
 const (
+	formatText   = "text"
+	formatInline = "inline"
+	formatJSON   = "json"
+)
+
+const (
 	logLevelDebug = "debug"
 	logLevelInfo  = "info"
 	logLevelError = "error"
@@ -70,7 +76,7 @@ const (
 
 var flags = GlobalFlags{
 	Filter:     "",
-	Format:     "",
+	Format:     formatText,
 	Save:       "",
 	Host:       "",
 	Log:        logLevelInfo,
@@ -101,7 +107,7 @@ func InitFlags(cmd *cobra.Command) {
 		"output",
 		"o",
 		flags.Format,
-		"Output format, values: 'json', 'inline'",
+		"Output format, options: \"text\", \"json\", \"inline\"",
 	)
 
 	cmd.PersistentFlags().StringVarP(
@@ -243,10 +249,10 @@ func formatResult(result Result, filterFlag string, formatFlag string) (string, 
 	}
 
 	switch formatFlag {
-	case "json":
+	case formatJSON:
 		jsonRes, _ := json.Marshal(result.JSON())
 		return string(jsonRes), nil
-	case "inline":
+	case formatInline:
 		return result.Oneliner(), nil
 	default:
 		return result.String(), nil
