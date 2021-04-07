@@ -189,7 +189,7 @@ func resolveHost(proj *project.Project, hostFlag string, networkFlag string) (st
 
 		host = proj.NetworkByName(networkFlag).Host
 	} else if host == "" {
-		host = project.DefaultEmulatorHost
+		host = config.DefaultEmulatorNetwork().Host
 	}
 
 	return host, nil
