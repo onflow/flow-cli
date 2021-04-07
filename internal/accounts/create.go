@@ -28,7 +28,7 @@ import (
 )
 
 type flagsCreate struct {
-	Signer    string   `default:"emulator-account" flag:"signer"`
+	Signer    string   `default:"emulator-account" flag:"signer" info:"Account name from configuration used to sign the transaction"`
 	Keys      []string `flag:"key" info:"Public keys to attach to account"`
 	SigAlgo   string   `default:"ECDSA_P256" flag:"sig-algo" info:"Signature algorithm used to generate the keys"`
 	HashAlgo  string   `default:"SHA3_256" flag:"hash-algo" info:"Hash used for the digest"`
