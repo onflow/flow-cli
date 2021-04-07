@@ -20,9 +20,12 @@ package status
 
 import (
 	"fmt"
+	"github.com/fatih/color"
 	"github.com/onflow/flow-cli/internal/command"
+	"github.com/onflow/flow-cli/pkg/flowcli/project"
 	"github.com/onflow/flow-cli/pkg/flowcli/services"
 	"github.com/spf13/cobra"
+	"strings"
 )
 
 type FlagsStatus struct {
@@ -31,7 +34,7 @@ type FlagsStatus struct {
 var statusFlags = FlagsStatus{}
 
 const (
-	NetworkOnline = "ONLINE"
+	NetworkOnline  = "ONLINE"
 	NetworkOffline = "OFFLINE"
 )
 
@@ -47,26 +50,61 @@ var InitCommand = &command.Command{
 		globalFlags command.GlobalFlags,
 		services *services.Services,
 	) (command.Result, error) {
-		err := services.Status.Ping()
-		if err != nil {
-			return &Result{NetworkOffline}, nil
+		// Get network name from global flag
+		network := globalFlags.Network
+		if network == "" {
+			network = "emulator"
 		}
 
-		return &Result{NetworkOnline}, nil
+		config := globalFlags.ConfigPath
+		proj, err := project.Load(config)
+
+		if err != nil {
+			return nil, fmt.Errorf("project can't be loaded from specified config path")
+		}
+
+		net := proj.NetworkByName(network)
+		accessNode := net.Host
+
+		err = services.Status.Ping()
+		if err != nil {
+			return &Result{
+				network,
+				NetworkOffline,
+				accessNode,
+			}, nil
+		}
+
+		return &Result{
+			network,
+			NetworkOnline,
+			accessNode,
+		}, nil
 	},
 }
 
 // Result structure
 type Result struct {
-	status string
+	network    string
+	status     string
+	accessNode string
 }
 
 func (r *Result) String() string {
 	icon := "🔴"
+	statusMessage := color.RedString(r.status)
 	if r.status == NetworkOnline {
 		icon = "🟢"
+		statusMessage = color.GreenString(r.status)
 	}
-	return fmt.Sprintf("Network is: %s %s", icon, r.status)
+	return strings.Join([]string{
+		color.YellowString(r.network),
+		"access node at",
+		color.CyanString(r.accessNode),
+		"is",
+		icon,
+		statusMessage,
+	}," ")
 }
 
 // JSON convert result to JSON
