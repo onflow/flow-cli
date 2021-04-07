@@ -51,7 +51,7 @@ type TransactionResult struct {
 // JSON convert result to JSON
 func (r *TransactionResult) JSON() interface{} {
 	result := make(map[string]string)
-	result["hash"] = r.tx.ID().String()
+	result["id"] = r.tx.ID().String()
 	result["status"] = r.result.Status.String()
 
 	if r.result != nil {
@@ -66,7 +66,7 @@ func (r *TransactionResult) String() string {
 	var b bytes.Buffer
 	writer := tabwriter.NewWriter(&b, 0, 8, 1, '\t', tabwriter.AlignRight)
 
-	fmt.Fprintf(writer, "Hash\t %s\n", r.tx.ID())
+	fmt.Fprintf(writer, "ID\t %s\n", r.tx.ID())
 	fmt.Fprintf(writer, "Status\t %s\n", r.result.Status)
 	fmt.Fprintf(writer, "Payer\t %s\n", r.tx.Payer.Hex())
 
@@ -85,5 +85,5 @@ func (r *TransactionResult) String() string {
 
 // Oneliner show result as one liner grep friendly
 func (r *TransactionResult) Oneliner() string {
-	return fmt.Sprintf("Hash: %s, Status: %s, Events: %s", r.tx.ID(), r.result.Status, r.result.Events)
+	return fmt.Sprintf("ID: %s, Status: %s, Events: %s", r.tx.ID(), r.result.Status, r.result.Events)
 }
