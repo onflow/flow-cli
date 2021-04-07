@@ -21,6 +21,8 @@ package json
 import (
 	"encoding/json"
 
+	"github.com/onflow/flow-cli/pkg/flowcli"
+
 	"github.com/onflow/flow-cli/pkg/flowcli/config"
 )
 
@@ -64,20 +66,36 @@ func transformDeploymentsToJSON(deployments config.Deployments) jsonDeployments 
 	return jsonDeployments
 }
 
-type Simple map[string][]string
-
-type jsonDeploy struct {
-	Simple
+type advanced struct {
+	name string
+	args []flowcli.CadenceArgument
 }
 
-func (j *jsonDeploy) UnmarshalJSON(b []byte) error {
-	var simple map[string][]string
+type deployment struct {
+	simple   string
+	advanced advanced
+}
 
+type jsonDeploy map[string][]deployment
+
+func (j *jsonDeploy) UnmarshalJSON(b []byte) error {
+	var simple Simple
+	var advanced advancedArgs
+
+	// simple
 	err := json.Unmarshal(b, &simple)
-	if err != nil {
+	if err == nil {
+		j.Simple = simple
+		return nil
+	}
+
+	// advanced
+	err = json.Unmarshal(b, &advanced)
+	if err == nil {
+		j.AdvancedArgs = advanced
+	} else {
 		return err
 	}
-	j.Simple = simple
 
 	return nil
 }

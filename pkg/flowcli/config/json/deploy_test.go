@@ -91,3 +91,21 @@ func Test_TransformDeployToJSON(t *testing.T) {
 
 	assert.Equal(t, string(b), string(x))
 }
+
+func Test_DeploymentAdvanced(t *testing.T) {
+	b := []byte(`{
+		"emulator": {
+			"alice": [
+				"KittyItems", {
+					"name": "Kibble",
+					"args": [{ "type": "String", "value": "Hello World" }]
+				},
+				"KittyItemsMarket"
+			]
+		}
+	}`)
+
+	var jsonDeployments jsonDeployments
+	err := json.Unmarshal(b, &jsonDeployments)
+	assert.NoError(t, err)
+}
