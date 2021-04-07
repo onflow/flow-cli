@@ -29,7 +29,7 @@ func NewResolver(code []byte) (*Resolver, error) {
 }
 
 func (r *Resolver) ResolveImports(
-	scriptPath string,
+	codePath string,
 	contracts []project.Contract,
 	aliases project.Aliases,
 ) ([]byte, error) {
@@ -37,7 +37,7 @@ func (r *Resolver) ResolveImports(
 	sourceTarget := r.getSourceTarget(contracts, aliases)
 
 	for _, imp := range imports {
-		target := sourceTarget[absolutePath(scriptPath, imp)]
+		target := sourceTarget[absolutePath(codePath, imp)]
 		if target != "" {
 			r.code = r.replaceImport(imp, target)
 		} else {

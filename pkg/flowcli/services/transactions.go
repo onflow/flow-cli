@@ -22,6 +22,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/onflow/flow-cli/pkg/flowcli/contracts"
+
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
 
@@ -55,10 +57,11 @@ func NewTransactions(
 
 // Send sends a transaction from a file.
 func (t *Transactions) Send(
-	transactionFilename string,
+	codePath string,
 	signerName string,
 	args []string,
 	argsJSON string,
+	network string,
 ) (*flow.Transaction, *flow.TransactionResult, error) {
 	if t.project == nil {
 		return nil, nil, fmt.Errorf("missing configuration, initialize it: flow init")
@@ -69,12 +72,12 @@ func (t *Transactions) Send(
 		return nil, nil, fmt.Errorf("signer account: [%s] doesn't exists in configuration", signerName)
 	}
 
-	code, err := util.LoadFile(transactionFilename)
+	code, err := util.LoadFile(codePath)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	return t.send(code, signer, args, argsJSON)
+	return t.send(code, signer, args, argsJSON, codePath, network)
 }
 
 // SendForAddress send transaction for address and private key, code passed via filename
@@ -110,7 +113,7 @@ func (t *Transactions) SendForAddressWithCode(
 
 	account := project.AccountFromAddressAndKey(address, privateKey)
 
-	return t.send(code, account, args, argsJSON)
+	return t.send(code, account, args, argsJSON, "", "")
 }
 
 func (t *Transactions) send(
@@ -118,6 +121,8 @@ func (t *Transactions) send(
 	signer *project.Account,
 	args []string,
 	argsJSON string,
+	codePath string,
+	network string,
 ) (*flow.Transaction, *flow.TransactionResult, error) {
 
 	// if google kms account then sign in
@@ -131,6 +136,28 @@ func (t *Transactions) send(
 	}
 
 	t.logger.StartProgress("Sending transaction...")
+
+	resolver, err := contracts.NewResolver(code)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	if resolver.ImportExists() {
+		if network == "" {
+			return nil, nil, fmt.Errorf("missing network, specify which network to use to resolve imports in transaction code")
+		} else if codePath == "" { // when used as lib with code we don't support imports
+			return nil, nil, fmt.Errorf("resolving imports in transactions not supported")
+		}
+
+		code, err = resolver.ResolveImports(
+			codePath,
+			t.project.ContractsByNetwork(network),
+			t.project.AliasesForNetwork(network),
+		)
+		if err != nil {
+			return nil, nil, err
+		}
+	}
 
 	tx := flow.NewTransaction().
 		SetScript(code).

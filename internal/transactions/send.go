@@ -79,6 +79,7 @@ var SendCommand = &command.Command{
 			sendFlags.Signer,
 			sendFlags.Arg,
 			sendFlags.ArgsJSON,
+			globalFlags.Network,
 		)
 		if err != nil {
 			return nil, err
