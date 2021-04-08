@@ -21,13 +21,12 @@ package events
 import (
 	"bytes"
 	"fmt"
-	"io"
-	"text/tabwriter"
-
 	"github.com/onflow/cadence"
+	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/client"
 	"github.com/spf13/cobra"
+	"io"
 
 	"github.com/onflow/flow-cli/pkg/flowcli/util"
 )
@@ -68,7 +67,7 @@ func (k *EventResult) JSON() interface{} {
 // String convert result to string
 func (k *EventResult) String() string {
 	var b bytes.Buffer
-	writer := tabwriter.NewWriter(&b, 0, 8, 1, '\t', tabwriter.AlignRight)
+	writer := command.CreateTabWriter(&b)
 
 	for _, blockEvent := range k.BlockEvents {
 		if len(blockEvent.Events) > 0 {

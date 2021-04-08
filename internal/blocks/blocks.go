@@ -21,8 +21,7 @@ package blocks
 import (
 	"bytes"
 	"fmt"
-	"text/tabwriter"
-
+	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/client"
 	"github.com/spf13/cobra"
@@ -80,7 +79,7 @@ func (r *BlockResult) JSON() interface{} {
 // String convert result to string
 func (r *BlockResult) String() string {
 	var b bytes.Buffer
-	writer := tabwriter.NewWriter(&b, 0, 8, 1, '\t', tabwriter.AlignRight)
+	writer := command.CreateTabWriter(&b)
 
 	fmt.Fprintf(writer, "Block ID\t%s\n", r.block.ID)
 	fmt.Fprintf(writer, "Parent ID\t%s\n", r.block.ParentID)
