@@ -23,6 +23,8 @@ import (
 	"fmt"
 	"path"
 
+	"github.com/onflow/flow-cli/pkg/flowcli"
+
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/spf13/afero"
@@ -50,6 +52,7 @@ type Contract struct {
 	Name   string
 	Source string
 	Target flow.Address
+	Args   []flowcli.CadenceArgument
 }
 
 // Load loads a project configuration and returns the resulting project.
@@ -201,13 +204,14 @@ func (p *Project) ContractsByNetwork(network string) []Contract {
 		account := p.AccountByName(deploy.Account)
 
 		// go through each contract in this deployment
-		for _, contractName := range deploy.Contracts {
-			c := p.conf.Contracts.GetByNameAndNetwork(contractName, network)
+		for _, deploymentContract := range deploy.Contracts {
+			c := p.conf.Contracts.GetByNameAndNetwork(deploymentContract.Name, network)
 
 			contract := Contract{
 				Name:   c.Name,
 				Source: path.Clean(c.Source),
 				Target: account.address,
+				Args:   deploymentContract.Args,
 			}
 
 			contracts = append(contracts, contract)
