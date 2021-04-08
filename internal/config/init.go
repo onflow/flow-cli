@@ -21,8 +21,6 @@ package config
 import (
 	"bytes"
 	"fmt"
-	"text/tabwriter"
-
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
@@ -79,7 +77,7 @@ func (r *InitResult) JSON() interface{} {
 // String convert result to string
 func (r *InitResult) String() string {
 	var b bytes.Buffer
-	writer := tabwriter.NewWriter(&b, 0, 8, 1, '\t', tabwriter.AlignRight)
+	writer := command.CreateTabWriter(&b)
 	account, _ := r.Project.EmulatorServiceAccount()
 
 	fmt.Fprintf(writer, "Configuration initialized\n")

@@ -22,8 +22,7 @@ import (
 	"bytes"
 	"encoding/hex"
 	"fmt"
-	"text/tabwriter"
-
+	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/spf13/cobra"
@@ -58,7 +57,7 @@ func (k *KeyResult) JSON() interface{} {
 // String convert result to string
 func (k *KeyResult) String() string {
 	var b bytes.Buffer
-	writer := tabwriter.NewWriter(&b, 0, 8, 1, '\t', tabwriter.AlignRight)
+	writer := command.CreateTabWriter(&b)
 
 	if k.privateKey != nil {
 		fmt.Fprintf(writer, "🔴️ Store private key safely and don't share with anyone! \n")

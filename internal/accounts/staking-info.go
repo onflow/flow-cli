@@ -21,8 +21,6 @@ package accounts
 import (
 	"bytes"
 	"fmt"
-	"text/tabwriter"
-
 	"github.com/onflow/cadence"
 	"github.com/spf13/cobra"
 
@@ -75,7 +73,7 @@ func (r *StakingResult) JSON() interface{} {
 // String convert result to string
 func (r *StakingResult) String() string {
 	var b bytes.Buffer
-	writer := tabwriter.NewWriter(&b, 0, 8, 1, '\t', tabwriter.AlignRight)
+	writer := command.CreateTabWriter(&b)
 
 	fmt.Fprintf(writer, "Account Staking Info:\n")
 
