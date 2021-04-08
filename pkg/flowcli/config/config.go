@@ -21,6 +21,8 @@ package config
 import (
 	"errors"
 
+	"github.com/onflow/flow-cli/pkg/flowcli"
+
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
 )
@@ -48,9 +50,15 @@ type Network struct {
 
 // Deploy defines the configuration for a contract deployment.
 type Deploy struct {
-	Network   string   // network name to deploy to
-	Account   string   // account name to which to deploy to
-	Contracts []string // contracts names to deploy
+	Network   string               // network name to deploy to
+	Account   string               // account name to which to deploy to
+	Contracts []ContractDeployment // contracts to deploy
+}
+
+// ContractDeployment defines the deployment of the contract with possible args
+type ContractDeployment struct {
+	Name string
+	Args []flowcli.CadenceArgument
 }
 
 // Contract defines the configuration for a Cadence contract.
@@ -189,7 +197,7 @@ func (a *Accounts) AddOrUpdate(name string, account Account) {
 
 // GetByNetwork get all deployments by network
 func (d *Deployments) GetByNetwork(network string) Deployments {
-	var deployments []Deploy
+	var deployments Deployments
 
 	for _, deploy := range *d {
 		if deploy.Network == network {
@@ -201,8 +209,8 @@ func (d *Deployments) GetByNetwork(network string) Deployments {
 }
 
 // GetByAccountAndNetwork get deploy by account and network
-func (d *Deployments) GetByAccountAndNetwork(account string, network string) []Deploy {
-	var deployments []Deploy
+func (d *Deployments) GetByAccountAndNetwork(account string, network string) Deployments {
+	var deployments Deployments
 
 	for _, deploy := range *d {
 		if deploy.Network == network && deploy.Account == account {
