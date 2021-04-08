@@ -22,24 +22,46 @@ import (
 	"encoding/json"
 
 	"github.com/onflow/flow-cli/pkg/flowcli"
-
 	"github.com/onflow/flow-cli/pkg/flowcli/config"
 )
 
-type jsonDeployments map[string]jsonDeploy
+type jsonDeployments map[string]jsonDeployment
 
 // transformToConfig transforms json structures to config structure
 func (j jsonDeployments) transformToConfig() config.Deployments {
 	deployments := make(config.Deployments, 0)
 
-	for networkName, d := range j {
-		for accountName, contracts := range d.Simple {
-			deploy := config.Deploy{
-				Network:   networkName,
-				Account:   accountName,
-				Contracts: contracts,
+	for networkName, deploys := range j {
+
+		var deploy config.Deploy
+		for accountName, contracts := range deploys {
+			deploy = config.Deploy{
+				Network: networkName,
+				Account: accountName,
 			}
 
+			var contractDeploys []config.ContractDeployment
+			for _, contract := range contracts {
+				if contract.simple != "" {
+					contractDeploys = append(
+						contractDeploys,
+						config.ContractDeployment{
+							Name: contract.simple,
+							Args: nil,
+						},
+					)
+				} else {
+					contractDeploys = append(
+						contractDeploys,
+						config.ContractDeployment{
+							Name: contract.advanced.Name,
+							Args: contract.advanced.Args,
+						},
+					)
+				}
+			}
+
+			deploy.Contracts = contractDeploys
 			deployments = append(deployments, deploy)
 		}
 	}
@@ -48,51 +70,67 @@ func (j jsonDeployments) transformToConfig() config.Deployments {
 }
 
 // transformToJSON transforms config structure to json structures for saving
-func transformDeploymentsToJSON(deployments config.Deployments) jsonDeployments {
-	jsonDeployments := jsonDeployments{}
+func transformDeploymentsToJSON(configDeployments config.Deployments) jsonDeployments {
+	jsonDeploys := jsonDeployments{}
 
-	for _, d := range deployments {
-		if _, exists := jsonDeployments[d.Network]; exists {
-			jsonDeployments[d.Network].Simple[d.Account] = d.Contracts
-		} else {
-			jsonDeployments[d.Network] = jsonDeploy{
-				Simple: map[string][]string{
-					d.Account: d.Contracts,
-				},
+	for _, d := range configDeployments {
+
+		deployments := make([]deployment, 0)
+		for _, c := range d.Contracts {
+			if len(c.Args) == 0 {
+				deployments = append(deployments, deployment{
+					simple: c.Name,
+				})
+			} else {
+				deployments = append(deployments, deployment{
+					advanced: contractDeployment{
+						Name: c.Name,
+						Args: c.Args,
+					},
+				})
 			}
 		}
+
+		if _, ok := jsonDeploys[d.Network]; ok {
+			jsonDeploys[d.Network][d.Account] = deployments
+		} else {
+			jsonDeploys[d.Network] = jsonDeployment{
+				d.Account: deployments,
+			}
+		}
+
 	}
 
-	return jsonDeployments
+	return jsonDeploys
 }
 
-type advanced struct {
-	name string
-	args []flowcli.CadenceArgument
+type contractDeployment struct {
+	Name string                    `json:"name"`
+	Args []flowcli.CadenceArgument `json:"args"`
 }
 
 type deployment struct {
 	simple   string
-	advanced advanced
+	advanced contractDeployment
 }
 
-type jsonDeploy map[string][]deployment
+type jsonDeployment map[string][]deployment
 
-func (j *jsonDeploy) UnmarshalJSON(b []byte) error {
-	var simple Simple
-	var advanced advancedArgs
+func (d *deployment) UnmarshalJSON(b []byte) error {
 
-	// simple
+	// simple format
+	var simple string
 	err := json.Unmarshal(b, &simple)
 	if err == nil {
-		j.Simple = simple
+		d.simple = simple
 		return nil
 	}
 
-	// advanced
+	// advanced format
+	var advanced contractDeployment
 	err = json.Unmarshal(b, &advanced)
 	if err == nil {
-		j.AdvancedArgs = advanced
+		d.advanced = advanced
 	} else {
 		return err
 	}
@@ -100,6 +138,10 @@ func (j *jsonDeploy) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
-func (j jsonDeploy) MarshalJSON() ([]byte, error) {
-	return json.Marshal(j.Simple)
+func (d deployment) MarshalJSON() ([]byte, error) {
+	if d.simple != "" {
+		return json.Marshal(d.simple)
+	} else {
+		return json.Marshal(d.advanced)
+	}
 }
