@@ -20,6 +20,8 @@ package config_test
 import (
 	"testing"
 
+	"github.com/onflow/flow-cli/pkg/flowcli"
+
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/stretchr/testify/assert"
@@ -62,15 +64,26 @@ func generateComplexConfig() config.Config {
 		Deployments: config.Deployments{{
 			Network:   "emulator",
 			Account:   "emulator-account",
-			Contracts: []string{"KittyItems", "KittyItemsMarket"},
+			Contracts: []config.ContractDeployment{{Name: "KittyItems", Args: nil}, {Name: "KittyItemsMarket", Args: nil}},
 		}, {
-			Network:   "emulator",
-			Account:   "account-4",
-			Contracts: []string{"FungibleToken", "NonFungibleToken", "Kibble", "KittyItems", "KittyItemsMarket"},
+			Network: "emulator",
+			Account: "account-4",
+			Contracts: []config.ContractDeployment{
+				{Name: "FungibleToken", Args: nil},
+				{Name: "NonFungibleToken", Args: nil},
+				{Name: "Kibble", Args: nil},
+				{Name: "KittyItems", Args: nil},
+				{Name: "KittyItemsMarket", Args: nil},
+			},
 		}, {
-			Network:   "testnet",
-			Account:   "account-2",
-			Contracts: []string{"FungibleToken", "NonFungibleToken", "Kibble", "KittyItems"},
+			Network: "testnet",
+			Account: "account-2",
+			Contracts: []config.ContractDeployment{
+				{Name: "FungibleToken", Args: nil},
+				{Name: "NonFungibleToken", Args: nil},
+				{Name: "Kibble", Args: nil},
+				{Name: "KittyItems", Args: nil},
+			},
 		}},
 		Accounts: config.Accounts{{
 			Name:    "emulator-account",
@@ -159,7 +172,12 @@ func Test_GetDeploymentsByNetworkComplex(t *testing.T) {
 	conf := generateComplexConfig()
 	deployments := conf.Deployments.GetByAccountAndNetwork("account-2", "testnet")
 
-	assert.Equal(t, deployments[0].Contracts, []string{"FungibleToken", "NonFungibleToken", "Kibble", "KittyItems"})
+	assert.Equal(t, deployments[0].Contracts, []config.ContractDeployment{
+		{Name: "FungibleToken", Args: []flowcli.CadenceArgument(nil)},
+		{Name: "NonFungibleToken", Args: []flowcli.CadenceArgument(nil)},
+		{Name: "Kibble", Args: []flowcli.CadenceArgument(nil)},
+		{Name: "KittyItems", Args: []flowcli.CadenceArgument(nil)},
+	})
 }
 
 func Test_GetNetworkByNameComplex(t *testing.T) {
