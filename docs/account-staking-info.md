@@ -6,7 +6,9 @@ description: How to get staking info
 
 Retrieve staking information for the account on the Flow network using Flow CLI.
 
-`flow accounts staking-info <address>`
+```shell
+flow accounts staking-info <address>
+```
 
 ## Example Usage
 

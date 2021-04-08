@@ -7,7 +7,9 @@ description: How to start Flow emulator from the command line
 The Flow CLI provides a command to start an emulator. 
 The Flow Emulator is a lightweight tool that emulates the behaviour of the real Flow network.
 
-`flow emulator`
+```shell
+flow emulator
+```
 
 ⚠️ The emulator command expects configuration to be initialized. See [flow init](https://docs.onflow.org/flow-cli/initialize-configuration/) command.
 

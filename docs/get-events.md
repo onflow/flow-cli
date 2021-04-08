@@ -10,7 +10,7 @@ Events can be requested for a specific sealed block range via the
 start and end block height fields and further filtered by event name.
 
 ```shell
-flow events get <event_name> <block_height_range_start> <optional:block_height_range_end|latest>`
+flow events get <event_name> <block_height_range_start> <optional:block_height_range_end|latest>
 ```
 
 ## Example Usage
