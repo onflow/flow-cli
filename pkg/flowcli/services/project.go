@@ -22,6 +22,9 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/onflow/cadence"
+	jsoncdc "github.com/onflow/cadence/encoding/json"
+
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/onflow/flow-go-sdk/templates"
@@ -117,6 +120,7 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 			contract.Name,
 			contract.Source,
 			contract.Target,
+			contract.Args,
 		)
 		if err != nil {
 			return nil, err
@@ -128,19 +132,19 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 		return nil, err
 	}
 
-	contracts, err := processor.ContractDeploymentOrder()
+	orderedContracts, err := processor.ContractDeploymentOrder()
 	if err != nil {
 		return nil, err
 	}
 
 	p.logger.Info(fmt.Sprintf(
 		"Deploying %d contracts for accounts: %s",
-		len(contracts),
+		len(orderedContracts),
 		strings.Join(p.project.AllAccountName(), ","),
 	))
 
 	var errs []error
-	for _, contract := range contracts {
+	for _, contract := range orderedContracts {
 		targetAccount := p.project.AccountByAddress(contract.Target().String())
 
 		if targetAccount == nil {
@@ -166,8 +170,13 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 
 			tx = prepareUpdateContractTransaction(targetAccount.Address(), contract)
 		} else {
-			tx = prepareAddContractTransaction(targetAccount.Address(), contract)
+			//tx = prepareAddContractTransaction(targetAccount.Address(), contract)
 		}
+
+		tx = addAccountContractWithArgs(targetAccount.Address(), templates.Contract{
+			Name:   contract.Name(),
+			Source: contract.TranspiledCode(),
+		}, contract.Args()[0].Value)
 
 		tx, err = p.gateway.SendTransaction(tx, targetAccount)
 		if err != nil {
@@ -208,7 +217,7 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 		return nil, fmt.Errorf(`%v`, errs)
 	}
 
-	return contracts, nil
+	return orderedContracts, nil
 }
 
 func prepareUpdateContractTransaction(
@@ -235,4 +244,24 @@ func prepareAddContractTransaction(
 			Source: contract.TranspiledCode(),
 		},
 	)
+}
+
+const addAccountContractTemplate = `
+transaction(name: String, code: String, supply: UFix64) {
+	prepare(signer: AuthAccount) {
+		signer.contracts.add(name: name, code: code.decodeHex(), supply: supply)
+	}
+}
+`
+
+func addAccountContractWithArgs(address flow.Address, contract templates.Contract, supply cadence.Value) *flow.Transaction {
+	cadenceName := cadence.NewString(contract.Name)
+	cadenceCode := cadence.NewString(contract.SourceHex())
+
+	return flow.NewTransaction().
+		SetScript([]byte(addAccountContractTemplate)).
+		AddRawArgument(jsoncdc.MustEncode(cadenceName)).
+		AddRawArgument(jsoncdc.MustEncode(cadenceCode)).
+		AddRawArgument(jsoncdc.MustEncode(supply)).
+		AddAuthorizer(address)
 }
