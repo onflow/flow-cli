@@ -22,7 +22,7 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/onflow/cadence"
-	"github.com/onflow/flow-cli/internal/command"
+	"github.com/onflow/flow-cli/pkg/flowcli/util"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/spf13/cobra"
 )
@@ -82,7 +82,7 @@ func (r *AccountResult) JSON() interface{} {
 // String convert result to string
 func (r *AccountResult) String() string {
 	var b bytes.Buffer
-	writer := command.CreateTabWriter(&b)
+	writer := util.CreateTabWriter(&b)
 
 	fmt.Fprintf(writer, "Address\t 0x%s\n", r.Address)
 	fmt.Fprintf(writer, "Balance\t %s\n", cadence.UFix64(r.Balance))
