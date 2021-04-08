@@ -5,9 +5,7 @@ sidebar_title: Update a Contract
 
 Update an existing contract deployed to a Flow account using the Flow CLI.
 
-```shell
-flow accounts update-contract <name> <filename>
-```
+`flow accounts update-contract <name> <filename>`
 
 ## Example Usage
 

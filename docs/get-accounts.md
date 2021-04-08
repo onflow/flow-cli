@@ -8,7 +8,6 @@ The Flow CLI provides a command to fetch any account by its address from the Flo
 
 `flow accounts get <address>`
 
-
 ## Example Usage
 
 ```shell

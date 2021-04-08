@@ -5,9 +5,7 @@ sidebar_title: Remove a Contract
 
 Remove an existing contract deployed to a Flow account using the Flow CLI.
 
-```shell
-flow accounts remove-contract <name>
-```
+`flow accounts remove-contract <name>`
 
 ## Example Usage
 

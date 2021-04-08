@@ -4,9 +4,7 @@ sidebar_title: Deploy a Project
 description: How to deploy Flow project contracts with the CLI
 ---
 
-```shell
-flow project deploy
-```
+`flow project deploy`
 
 This command automatically deploys your project's contracts based on the 
 configuration defined in your `flow.json` file.
