@@ -54,6 +54,6 @@ func NewServices(
 		Collections:  NewCollections(gateway, proj, logger),
 		Project:      NewProject(gateway, proj, logger),
 		Blocks:       NewBlocks(gateway, proj, logger),
-		Status:       NewStatus(gateway, logger),
+		Status:       NewStatus(gateway, proj, logger),
 	}
 }
