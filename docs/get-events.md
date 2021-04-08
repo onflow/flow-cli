@@ -9,7 +9,9 @@ The Flow CLI provides a command to fetch any block from the Flow network.
 Events can be requested for a specific sealed block range via the 
 start and end block height fields and further filtered by event name.
 
-`flow events get <event_name> <block_height_range_start> <optional:block_height_range_end|latest>`
+```shell
+flow events get <event_name> <block_height_range_start> <optional:block_height_range_end|latest>
+```
 
 ## Example Usage
 

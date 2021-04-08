@@ -6,7 +6,9 @@ description: How to get a block from the command line
 
 The Flow CLI provides a command to fetch any block from the Flow network.
 
-`flow blocks get <block_id|latest|block_height>`
+```shell
+flow blocks get <block_id|latest|block_height>
+```
 
 ## Example Usage
 

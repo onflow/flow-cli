@@ -5,7 +5,9 @@ sidebar_title: Deploy a Contract
 
 Deploy a new contract to a Flow account using the Flow CLI.   
 
-`flow accounts add-contract <name> <filename>`
+```shell
+flow accounts add-contract <name> <filename>
+````
 
 ## Example Usage
 

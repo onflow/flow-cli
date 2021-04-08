@@ -6,7 +6,9 @@ description:
 
 {short description}
 
-`{command}`
+```shell
+{command}
+```
 
 {optional warning}
 

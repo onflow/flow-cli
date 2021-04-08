@@ -6,7 +6,9 @@ description: How to get a Flow account from the command line
 
 The Flow CLI provides a command to fetch any account by its address from the Flow network.
 
-`flow accounts get <address>`
+```shell
+flow accounts get <address>
+```
 
 ## Example Usage
 

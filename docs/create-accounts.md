@@ -7,7 +7,9 @@ description: How to create a Flow account from the command line
 The Flow CLI provides a command to submit an account creation 
 transaction to any Flow Access API.
 
-`flow accounts create`
+```shell
+flow accounts create
+```
 
 ⚠️ _This command requires an existing Testnet or Mainnet account._
 

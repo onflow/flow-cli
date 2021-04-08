@@ -7,7 +7,9 @@ description: How to execute a Cadence script on Flow from the command line
 The Flow CLI provides a command to execute a Cadence script on
 the Flow execution state with any Flow Access API.
 
-`flow scripts execute <filename>`
+```shell
+flow scripts execute <filename>
+```
 
 ## Example Usage
 

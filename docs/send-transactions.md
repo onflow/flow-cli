@@ -7,7 +7,9 @@ description: How to send a Flow transaction from the command line
 The Flow CLI provides a command to sign and send transactions to
 any Flow Access API.
 
-`flow transactions send`
+```shell
+flow transactions send
+```
 
 ## Example Usage
 

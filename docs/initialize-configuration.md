@@ -8,7 +8,9 @@ Flow CLI uses a state to operate which is called configuration (usually `flow.js
 Before using commands that require this configuration we must initialize the project by 
 using the init command. Read more about [state configuration here](https://docs.onflow.org/flow-cli/configuration/).
 
-`flow init`
+```shell
+flow init
+```
 
 ## Example Usage
 
