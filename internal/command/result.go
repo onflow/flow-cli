@@ -18,8 +18,17 @@
 
 package command
 
+import (
+	"bytes"
+	"text/tabwriter"
+)
+
 type Result interface {
 	String() string
 	Oneliner() string
 	JSON() interface{}
+}
+
+func CreateTabWriter(b *bytes.Buffer) *tabwriter.Writer {
+	return tabwriter.NewWriter(b, 0, 8, 1, '\t', tabwriter.AlignRight)
 }
