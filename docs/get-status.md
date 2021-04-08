@@ -6,15 +6,16 @@ description: How to get access node status from the command line
 
 The Flow CLI provides a command to get network status of specified Flow Access Node
 
-```shell
-flow status
-```
+`flow status`
 
 ## Example Usage
 
 ```shell
-> flow status --network mainnet
-mainnet access node at access.mainnet.nodes.onflow.org:9000 is 🟢 ONLINE
+> flow status --network testnet
+
+Status:		 🟢 ONLINE
+Network:	 testnet
+Access Node:	 access.devnet.nodes.onflow.org:9000
 ```
 
 ## Options
