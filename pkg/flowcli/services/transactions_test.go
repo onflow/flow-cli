@@ -132,7 +132,7 @@ func TestTransactions(t *testing.T) {
 		_, _, err := transactions.Send(
 			"nooo.cdc",
 			serviceName,
-			[]string{"Bar"},
+			[]string{"String:Bar"},
 			"",
 			"",
 		)

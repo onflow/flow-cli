@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/onflow/cadence"
 	"github.com/onflow/flow-cli/pkg/flowcli/contracts"
 
 	"github.com/onflow/flow-go-sdk"
@@ -63,6 +64,22 @@ func (t *Transactions) Send(
 	argsJSON string,
 	network string,
 ) (*flow.Transaction, *flow.TransactionResult, error) {
+
+	transactionArguments, err := flowcli.ParseArguments(args, argsJSON)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return t.SendWithArguments(codePath, signerName, transactionArguments, network)
+}
+
+//SendWithArguments Send sends a transaction from a file with cadence values as arguments
+func (t *Transactions) SendWithArguments(
+	codePath string,
+	signerName string,
+	transactionArguments []cadence.Value,
+	network string,
+) (*flow.Transaction, *flow.TransactionResult, error) {
 	if t.project == nil {
 		return nil, nil, fmt.Errorf("missing configuration, initialize it: flow init")
 	}
@@ -77,7 +94,7 @@ func (t *Transactions) Send(
 		return nil, nil, err
 	}
 
-	return t.send(code, signer, args, argsJSON, codePath, network)
+	return t.send(code, signer, transactionArguments, codePath, network)
 }
 
 // SendForAddress send transaction for address and private key, code passed via filename
@@ -104,6 +121,12 @@ func (t *Transactions) SendForAddressWithCode(
 	args []string,
 	argsJSON string,
 ) (*flow.Transaction, *flow.TransactionResult, error) {
+
+	transactionArguments, err := flowcli.ParseArguments(args, argsJSON)
+	if err != nil {
+		return nil, nil, err
+	}
+
 	address := flow.HexToAddress(signerAddress)
 
 	privateKey, err := crypto.DecodePrivateKeyHex(crypto.ECDSA_P256, signerPrivateKey)
@@ -113,14 +136,13 @@ func (t *Transactions) SendForAddressWithCode(
 
 	account := project.AccountFromAddressAndKey(address, privateKey)
 
-	return t.send(code, account, args, argsJSON, "", "")
+	return t.send(code, account, transactionArguments, "", "")
 }
 
 func (t *Transactions) send(
 	code []byte,
 	signer *project.Account,
-	args []string,
-	argsJSON string,
+	transactionArguments []cadence.Value,
 	codePath string,
 	network string,
 ) (*flow.Transaction, *flow.TransactionResult, error) {
@@ -162,11 +184,6 @@ func (t *Transactions) send(
 	tx := flow.NewTransaction().
 		SetScript(code).
 		AddAuthorizer(signer.Address())
-
-	transactionArguments, err := flowcli.ParseArguments(args, argsJSON)
-	if err != nil {
-		return nil, nil, err
-	}
 
 	for _, arg := range transactionArguments {
 		err := tx.AddArgument(arg)
