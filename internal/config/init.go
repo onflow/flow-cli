@@ -77,7 +77,7 @@ func (r *InitResult) JSON() interface{} {
 // String convert result to string
 func (r *InitResult) String() string {
 	var b bytes.Buffer
-	writer := command.CreateTabWriter(&b)
+	writer := util.CreateTabWriter(&b)
 	account, _ := r.Project.EmulatorServiceAccount()
 
 	fmt.Fprintf(writer, "Configuration initialized\n")

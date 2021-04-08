@@ -25,7 +25,6 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowcli/output"
 	"github.com/onflow/flow-cli/pkg/flowcli/project"
 	"github.com/onflow/flow-cli/pkg/flowcli/util"
-	"text/tabwriter"
 )
 
 
@@ -95,7 +94,7 @@ func (r *PingResponse) getStatusIcon() string {
 
 func (r *PingResponse) String() string {
 	var b bytes.Buffer
-	writer := tabwriter.NewWriter(&b, 0, 8, 1, '\t', tabwriter.AlignRight)
+	writer := util.CreateTabWriter(&b)
 
 	fmt.Fprintf(writer, "Status:\t %s %s\n", r.getStatusIcon(), r.getStatus())
 	fmt.Fprintf(writer, "Network:\t %s\n", r.network)

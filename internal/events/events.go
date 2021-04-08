@@ -22,7 +22,6 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/onflow/cadence"
-	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/client"
 	"github.com/spf13/cobra"
@@ -67,7 +66,7 @@ func (k *EventResult) JSON() interface{} {
 // String convert result to string
 func (k *EventResult) String() string {
 	var b bytes.Buffer
-	writer := command.CreateTabWriter(&b)
+	writer := util.CreateTabWriter(&b)
 
 	for _, blockEvent := range k.BlockEvents {
 		if len(blockEvent.Events) > 0 {

@@ -22,6 +22,7 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/onflow/cadence"
+	"github.com/onflow/flow-cli/pkg/flowcli/util"
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
@@ -73,7 +74,7 @@ func (r *StakingResult) JSON() interface{} {
 // String convert result to string
 func (r *StakingResult) String() string {
 	var b bytes.Buffer
-	writer := command.CreateTabWriter(&b)
+	writer := util.CreateTabWriter(&b)
 
 	fmt.Fprintf(writer, "Account Staking Info:\n")
 

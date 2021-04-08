@@ -22,7 +22,7 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/onflow/cadence"
-	"github.com/onflow/flow-cli/internal/command"
+	"github.com/onflow/flow-cli/pkg/flowcli/util"
 	"github.com/spf13/cobra"
 )
 
@@ -50,7 +50,7 @@ func (r *ScriptResult) JSON() interface{} {
 // String convert result to string
 func (r *ScriptResult) String() string {
 	var b bytes.Buffer
-	writer := command.CreateTabWriter(&b)
+	writer := util.CreateTabWriter(&b)
 
 	fmt.Fprintf(writer, "Result: %s\n", r.Value)
 
