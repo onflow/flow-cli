@@ -21,10 +21,10 @@ package services
 import (
 	"bytes"
 	"fmt"
-	"github.com/fatih/color"
 	"github.com/onflow/flow-cli/pkg/flowcli/gateway"
 	"github.com/onflow/flow-cli/pkg/flowcli/output"
 	"github.com/onflow/flow-cli/pkg/flowcli/project"
+	"github.com/onflow/flow-cli/pkg/flowcli/util"
 	"text/tabwriter"
 )
 
@@ -78,10 +78,10 @@ type PingResponse struct {
 // GetStatus returns string representation for network status
 func (r *PingResponse) getStatus() string {
 	if r.connectionError == nil {
-		return color.GreenString("%s", OnlineStatus)
+		return util.Green(OnlineStatus)
 	}
 
-	return color.RedString("%s", OfflineStatus)
+	return util.Red(OfflineStatus)
 }
 
 // GetStatusIcon returns emoji icon representing network status
