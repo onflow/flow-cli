@@ -66,7 +66,7 @@ func transformNetworksToJSON(networks config.Networks) jsonNetworks {
 			}
 		} else { // if advanced case
 			jsonNetworks[n.Name] = jsonNetwork{
-				Advanced: advanced{
+				Advanced: advancedNetwork{
 					Host:    n.Host,
 					ChainID: n.ChainID.String(),
 				},
@@ -77,14 +77,14 @@ func transformNetworksToJSON(networks config.Networks) jsonNetworks {
 	return jsonNetworks
 }
 
-type advanced struct {
+type advancedNetwork struct {
 	Host    string `json:"host"`
 	ChainID string `json:"chain"`
 }
 
 type jsonNetwork struct {
 	Host     string
-	Advanced advanced
+	Advanced advancedNetwork
 }
 
 func (j *jsonNetwork) UnmarshalJSON(b []byte) error {
@@ -97,7 +97,7 @@ func (j *jsonNetwork) UnmarshalJSON(b []byte) error {
 	}
 
 	// advanced
-	var advanced advanced
+	var advanced advancedNetwork
 	err = json.Unmarshal(b, &advanced)
 	if err == nil {
 		j.Advanced = advanced
