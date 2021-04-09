@@ -21,7 +21,7 @@ package config
 import (
 	"errors"
 
-	"github.com/onflow/flow-cli/pkg/flowcli"
+	"github.com/onflow/cadence"
 
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
@@ -58,7 +58,13 @@ type Deploy struct {
 // ContractDeployment defines the deployment of the contract with possible args
 type ContractDeployment struct {
 	Name string
-	Args []flowcli.CadenceArgument
+	Args []ContractArgument
+}
+
+// ContractArgument defines contract init argument by name, type and value
+type ContractArgument struct {
+	Name string
+	Arg  cadence.Value
 }
 
 // Contract defines the configuration for a Cadence contract.

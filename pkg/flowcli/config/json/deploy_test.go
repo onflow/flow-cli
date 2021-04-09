@@ -19,13 +19,14 @@ package json
 
 import (
 	"encoding/json"
+	"fmt"
 	"regexp"
 	"strings"
 	"testing"
 
-	"github.com/stretchr/testify/require"
+	jsoncdc "github.com/onflow/cadence/encoding/json"
 
-	"github.com/onflow/cadence"
+	"github.com/stretchr/testify/require"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -119,7 +120,7 @@ func Test_DeploymentAdvanced(t *testing.T) {
 			"alice": [
 				{
 					"name": "Kibble",
-					"args": [{ "type": "String", "value": "Hello World" }]
+					"args": [{ "name": "foo", "type": "String", "value": "Hello World" }]
 				},
 				"KittyItemsMarket"
 			]
@@ -136,7 +137,15 @@ func Test_DeploymentAdvanced(t *testing.T) {
 	assert.Len(t, alice, 1)
 	assert.Len(t, alice[0].Contracts, 2)
 	assert.Equal(t, alice[0].Contracts[0].Name, "Kibble")
-	assert.Equal(t, alice[0].Contracts[0].Args[0].Value, cadence.String("Hello World"))
+	assert.Equal(t, alice[0].Contracts[0].Args[0].Arg.String(), "Hello World")
+	assert.Equal(t, alice[0].Contracts[0].Args[0].Name, "foo")
 	assert.Equal(t, alice[0].Contracts[1].Name, "KittyItemsMarket")
 	assert.Len(t, alice[0].Contracts[1].Args, 0)
+}
+
+func Test_Decode(t *testing.T) {
+	b := []byte(`{ "name": "foo", "type": "String", "value": "Hello World" }`)
+	val, err := jsoncdc.Decode(b)
+	assert.NoError(t, err)
+	fmt.Println(val)
 }
