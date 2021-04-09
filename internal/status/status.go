@@ -25,7 +25,6 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowcli/services"
 	"github.com/onflow/flow-cli/pkg/flowcli/util"
 	"github.com/spf13/cobra"
-	"text/tabwriter"
 )
 
 type FlagsStatus struct {
@@ -107,7 +106,7 @@ var InitCommand = &command.Command{
 // String convert result to string
 func (r *Result) String() string {
 	var b bytes.Buffer
-	writer := tabwriter.NewWriter(&b, 0, 8, 1, '\t', tabwriter.AlignRight)
+	writer := util.CreateTabWriter(&b)
 
 	fmt.Fprintf(writer, "Status:\t %s %s\n", r.getIcon(), r.getColoredStatus())
 	fmt.Fprintf(writer, "Network:\t %s\n", r.network)
