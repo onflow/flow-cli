@@ -19,22 +19,9 @@
 package services
 
 import (
-	"bytes"
-	"fmt"
 	"github.com/onflow/flow-cli/pkg/flowcli/gateway"
 	"github.com/onflow/flow-cli/pkg/flowcli/output"
 	"github.com/onflow/flow-cli/pkg/flowcli/project"
-	"github.com/onflow/flow-cli/pkg/flowcli/util"
-	"text/tabwriter"
-)
-
-
-const (
-	OnlineIcon   = "🟢"
-	OnlineStatus = "ONLINE"
-
-	OfflineIcon   = "🔴"
-	OfflineStatus = "OFFLINE"
 )
 
 // Status is a service that handles status of access node
@@ -58,66 +45,9 @@ func NewStatus(
 }
 
 // Ping sends Ping request to network
-func (s *Status) Ping(network string) PingResponse {
+func (s *Status) Ping(network string) (string, error) {
 	err := s.gateway.Ping()
 	accessNode := s.project.NetworkByName(network).Host
 
-	return PingResponse{
-		network: network,
-		accessNode: accessNode,
-		connectionError: err,
-	}
+	return accessNode, err
 }
-
-type PingResponse struct {
-	network string
-	accessNode string
-	connectionError error
-}
-
-// GetStatus returns string representation for network status
-func (r *PingResponse) getStatus() string {
-	if r.connectionError == nil {
-		return util.Green(OnlineStatus)
-	}
-
-	return util.Red(OfflineStatus)
-}
-
-// GetStatusIcon returns emoji icon representing network status
-func (r *PingResponse) getStatusIcon() string {
-	if r.connectionError == nil {
-		return OnlineIcon
-	}
-
-	return OfflineIcon
-}
-
-func (r *PingResponse) String() string {
-	var b bytes.Buffer
-	writer := tabwriter.NewWriter(&b, 0, 8, 1, '\t', tabwriter.AlignRight)
-
-	fmt.Fprintf(writer, "Status:\t %s %s\n", r.getStatusIcon(), r.getStatus())
-	fmt.Fprintf(writer, "Network:\t %s\n", r.network)
-	fmt.Fprintf(writer, "Access Node:\t %s\n", r.accessNode)
-
-	writer.Flush()
-	return b.String()
-}
-
-// JSON convert result to JSON
-func (r *PingResponse) JSON() interface{} {
-	result := make(map[string]string)
-
-	result["network"] = r.network
-	result["accessNode"] = r.accessNode
-	result["status"] = r.getStatus()
-
-	return result
-}
-
-// Oneliner show result as one liner grep friendly
-func (r *PingResponse) Oneliner() string {
-	return fmt.Sprintf("%s:%s", r.network, r.getStatus())
-}
-

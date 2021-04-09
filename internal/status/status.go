@@ -19,15 +19,62 @@
 package status
 
 import (
+	"bytes"
+	"fmt"
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/pkg/flowcli/services"
+	"github.com/onflow/flow-cli/pkg/flowcli/util"
 	"github.com/spf13/cobra"
+	"text/tabwriter"
 )
 
 type FlagsStatus struct {
 }
 
 var statusFlags = FlagsStatus{}
+
+
+type Result struct {
+	network  string
+	accessNode string
+	connectionError error
+}
+
+
+const (
+	OnlineIcon   = "🟢"
+	OnlineStatus = "ONLINE"
+
+	OfflineIcon   = "🔴"
+	OfflineStatus = "OFFLINE"
+)
+
+// getStatus returns string representation for network status
+func (r *Result) getStatus() string {
+	if r.connectionError == nil {
+		return OnlineStatus
+	}
+
+	return OfflineStatus
+}
+
+// getColoredStatus returns colored string representation for network status
+func (r *Result) getColoredStatus() string {
+	if r.connectionError == nil {
+		return util.Green(OnlineStatus)
+	}
+
+	return util.Red(OfflineStatus)
+}
+
+// getIcon returns emoji icon representing network statu
+func (r *Result) getIcon() string {
+	if r.connectionError == nil {
+		return OnlineIcon
+	}
+
+	return OfflineIcon
+}
 
 var InitCommand = &command.Command{
 	Cmd: &cobra.Command{
@@ -47,7 +94,41 @@ var InitCommand = &command.Command{
 			network = "emulator"
 		}
 
-		response := services.Status.Ping(network)
-		return &response, nil
+		accessNode, err := services.Status.Ping(network)
+
+		return &Result{
+			network:  network,
+			accessNode: accessNode,
+			connectionError: err,
+		}, nil
 	},
+}
+
+// String convert result to string
+func (r *Result) String() string {
+	var b bytes.Buffer
+	writer := tabwriter.NewWriter(&b, 0, 8, 1, '\t', tabwriter.AlignRight)
+
+	fmt.Fprintf(writer, "Status:\t %s %s\n", r.getIcon(), r.getColoredStatus())
+	fmt.Fprintf(writer, "Network:\t %s\n", r.network)
+	fmt.Fprintf(writer, "Access Node:\t %s\n", r.accessNode)
+
+	writer.Flush()
+	return b.String()
+}
+
+// JSON convert result to JSON
+func (r *Result) JSON() interface{} {
+	result := make(map[string]string)
+
+	result["network"] = r.network
+	result["accessNode"] = r.accessNode
+	result["status"] = r.getStatus()
+
+	return result
+}
+
+// Oneliner show result as one liner grep friendly
+func (r *Result) Oneliner() string {
+	return r.getStatus()
 }
