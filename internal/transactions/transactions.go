@@ -21,8 +21,7 @@ package transactions
 import (
 	"bytes"
 	"fmt"
-	"text/tabwriter"
-
+	"github.com/onflow/flow-cli/pkg/flowcli/util"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/spf13/cobra"
 
@@ -63,7 +62,7 @@ func (r *TransactionResult) JSON() interface{} {
 // String convert result to string
 func (r *TransactionResult) String() string {
 	var b bytes.Buffer
-	writer := tabwriter.NewWriter(&b, 0, 8, 1, '\t', tabwriter.AlignRight)
+	writer := util.CreateTabWriter(&b)
 
 	fmt.Fprintf(writer, "ID\t %s\n", r.tx.ID())
 	fmt.Fprintf(writer, "Status\t %s\n", r.result.Status)
