@@ -1,8 +1,6 @@
 package transactions
 
 import (
-	"fmt"
-
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/pkg/flowcli/services"
 	"github.com/spf13/cobra"
@@ -35,13 +33,6 @@ var SignCommand = &command.Command{
 		globalFlags command.GlobalFlags,
 		services *services.Services,
 	) (command.Result, error) {
-		if sendFlags.Code != "" {
-			return nil, fmt.Errorf("⚠️  DEPRECATED: use filename argument")
-		}
-
-		if sendFlags.Results {
-			return nil, fmt.Errorf("⚠️  DEPRECATED: all transactions will provide results")
-		}
 
 		codeFilename := ""
 		if len(args) > 0 {

@@ -108,6 +108,16 @@ func (t *Transactions) Sign(
 
 	// if we received already created transaction payload, create from payload and return signed
 	if payloadFilename != "" {
+		if payerAddress != "" {
+			return nil, fmt.Errorf("setting a payer is not permissible when using transaction payload")
+		} else if proposerName != "" {
+			return nil, fmt.Errorf("setting a proposer is not possible when using transaction payload")
+		} else if len(args) > 0 || argsJSON != "" {
+			return nil, fmt.Errorf("setting arguments is not possible when using transaction payload")
+		} else if len(additionalAuthorizers) > 0 {
+			return nil, fmt.Errorf("setting additional authorizers is not possible when using transaction payload")
+		}
+
 		tx, err := project.NewTransactionFromPayload(signerAccount, payloadFilename, role)
 		if err != nil {
 			return nil, err
