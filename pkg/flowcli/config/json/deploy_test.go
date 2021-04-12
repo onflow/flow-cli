@@ -19,12 +19,9 @@ package json
 
 import (
 	"encoding/json"
-	"fmt"
 	"regexp"
 	"strings"
 	"testing"
-
-	jsoncdc "github.com/onflow/cadence/encoding/json"
 
 	"github.com/stretchr/testify/require"
 
@@ -93,7 +90,10 @@ func Test_TransformDeployToJSON(t *testing.T) {
 		"emulator":{
 			"account-3":["KittyItems", {
 					"name": "Kibble",
-					"args": [{ "type": "String", "value": "Hello World" }]
+					"args": [
+						{ "name": "foo", "type": "String", "value": "Hello World" },
+						{ "name": "bar", "type": "Int8", "value": "10" }
+					]
 			}],
 			"account-4":["FungibleToken","NonFungibleToken","Kibble","KittyItems","KittyItemsMarket"]
 		},
@@ -120,7 +120,10 @@ func Test_DeploymentAdvanced(t *testing.T) {
 			"alice": [
 				{
 					"name": "Kibble",
-					"args": [{ "name": "foo", "type": "String", "value": "Hello World" }]
+					"args": [
+						{ "name": "foo", "type": "String", "value": "Hello World" },
+						{ "name": "bar", "type": "Int8", "value": "10" }
+					]
 				},
 				"KittyItemsMarket"
 			]
@@ -137,15 +140,11 @@ func Test_DeploymentAdvanced(t *testing.T) {
 	assert.Len(t, alice, 1)
 	assert.Len(t, alice[0].Contracts, 2)
 	assert.Equal(t, alice[0].Contracts[0].Name, "Kibble")
-	assert.Equal(t, alice[0].Contracts[0].Args[0].Arg.String(), "Hello World")
+	assert.Len(t, alice[0].Contracts[0].Args, 2)
 	assert.Equal(t, alice[0].Contracts[0].Args[0].Name, "foo")
+	assert.Equal(t, alice[0].Contracts[0].Args[0].Arg.String(), `"Hello World"`)
+	assert.Equal(t, alice[0].Contracts[0].Args[1].Name, "bar")
+	assert.Equal(t, alice[0].Contracts[0].Args[1].Arg.String(), "10")
 	assert.Equal(t, alice[0].Contracts[1].Name, "KittyItemsMarket")
 	assert.Len(t, alice[0].Contracts[1].Args, 0)
-}
-
-func Test_Decode(t *testing.T) {
-	b := []byte(`{ "name": "foo", "type": "String", "value": "Hello World" }`)
-	val, err := jsoncdc.Decode(b)
-	assert.NoError(t, err)
-	fmt.Println(val)
 }

@@ -20,8 +20,9 @@ package json
 
 import (
 	"encoding/json"
+	"fmt"
 
-	"github.com/onflow/cadence"
+	jsoncdc "github.com/onflow/cadence/encoding/json"
 
 	"github.com/onflow/flow-cli/pkg/flowcli/config"
 )
@@ -54,10 +55,16 @@ func (j jsonDeployments) transformToConfig() config.Deployments {
 				} else {
 					args := make([]config.ContractArgument, 0)
 					for _, arg := range contract.advanced.Args {
+						name := arg["name"]
+						delete(arg, "name")
+
+						// todo check if parser exists for better solution
+						b, _ := json.Marshal(arg)
+						cadenceArg, _ := jsoncdc.Decode(b)
 
 						args = append(args, config.ContractArgument{
-							Name: arg.Name,
-							Arg:  arg.Arg,
+							Name: name,
+							Arg:  cadenceArg,
 						})
 					}
 
@@ -92,11 +99,12 @@ func transformDeploymentsToJSON(configDeployments config.Deployments) jsonDeploy
 					simple: c.Name,
 				})
 			} else {
-				args := make([]argument, 0)
+				args := make([]map[string]string, 0)
 				for _, arg := range c.Args {
-					args = append(args, argument{
-						Name: arg.Name,
-						Arg:  arg.Arg,
+					args = append(args, map[string]string{
+						"name":  arg.Name,
+						"type":  arg.Arg.Type().ID(),
+						"value": fmt.Sprintf("%v", arg.Arg.ToGoValue()),
 					})
 				}
 
@@ -122,14 +130,9 @@ func transformDeploymentsToJSON(configDeployments config.Deployments) jsonDeploy
 	return jsonDeploys
 }
 
-type argument struct {
-	Name string
-	Arg  cadence.Value
-}
-
 type contractDeployment struct {
-	Name string     `json:"name"`
-	Args []argument `json:"args"`
+	Name string              `json:"name"`
+	Args []map[string]string `json:"args"`
 }
 
 type deployment struct {
