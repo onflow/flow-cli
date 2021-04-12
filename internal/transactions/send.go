@@ -70,8 +70,8 @@ var SendCommand = &command.Command{
 		} else if sendFlags.Code != "" {
 			fmt.Println("⚠️  DEPRECATION WARNING: use filename as a command argument <filename>")
 			filename = sendFlags.Code
-		} else {
-			return nil, fmt.Errorf("provide a valide filename command argument")
+		} else if sendFlags.Payload == "" {
+			return nil, fmt.Errorf("provide a valid filename command argument")
 		}
 
 		tx, result, err := services.Transactions.Send(
