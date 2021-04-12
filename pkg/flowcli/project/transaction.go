@@ -162,6 +162,10 @@ func (t *Transaction) Signer() *Account {
 	return t.signer
 }
 
+func (t *Transaction) Proposer() *Account {
+	return t.proposer
+}
+
 func (t *Transaction) FlowTransaction() *flow.Transaction {
 	return t.tx
 }

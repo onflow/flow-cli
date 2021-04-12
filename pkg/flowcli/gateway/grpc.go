@@ -67,13 +67,17 @@ func (g *GrpcGateway) GetAccount(address flow.Address) (*flow.Account, error) {
 
 // PrepareTransactionPayload prepares the payload for the transaction from the network
 func (g *GrpcGateway) PrepareTransactionPayload(tx *project.Transaction) (*project.Transaction, error) {
-	signerAddress := tx.Signer().Address()
-	account, err := g.GetAccount(signerAddress)
+	proposalAddress := tx.Signer().Address()
+	if tx.Proposer() != nil { // default proposer is signer
+		proposalAddress = tx.Proposer().Address()
+	}
+
+	proposer, err := g.GetAccount(proposalAddress)
 	if err != nil {
 		return nil, err
 	}
 
-	accountKey := account.Keys[tx.Signer().DefaultKey().Index()]
+	proposerKey := proposer.Keys[tx.Signer().DefaultKey().Index()]
 
 	sealed, err := g.client.GetLatestBlockHeader(g.ctx, true)
 	if err != nil {
@@ -83,7 +87,7 @@ func (g *GrpcGateway) PrepareTransactionPayload(tx *project.Transaction) (*proje
 	tx.FlowTransaction().
 		SetReferenceBlockID(sealed.ID).
 		SetGasLimit(defaultGasLimit).
-		SetProposalKey(signerAddress, accountKey.Index, accountKey.SequenceNumber)
+		SetProposalKey(proposalAddress, proposerKey.Index, proposerKey.SequenceNumber)
 
 	return tx, nil
 }
