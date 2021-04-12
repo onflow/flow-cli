@@ -23,6 +23,7 @@ import (
 	"fmt"
 	"text/tabwriter"
 
+	"github.com/onflow/cadence"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/spf13/cobra"
 )
@@ -85,7 +86,7 @@ func (r *AccountResult) String() string {
 	writer := tabwriter.NewWriter(&b, 0, 8, 1, '\t', tabwriter.AlignRight)
 
 	fmt.Fprintf(writer, "Address\t 0x%s\n", r.Address)
-	fmt.Fprintf(writer, "Balance\t %d\n", r.Balance)
+	fmt.Fprintf(writer, "Balance\t %s\n", cadence.UFix64(r.Balance))
 
 	fmt.Fprintf(writer, "Keys\t %d\n", len(r.Keys))
 

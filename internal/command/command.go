@@ -25,17 +25,17 @@ import (
 	"os"
 	"strings"
 
-	"github.com/onflow/flow-go-sdk/client"
-	"github.com/psiemens/sconfig"
-	"github.com/spf13/afero"
-	"github.com/spf13/cobra"
-
 	"github.com/onflow/flow-cli/pkg/flowcli/config"
 	"github.com/onflow/flow-cli/pkg/flowcli/gateway"
 	"github.com/onflow/flow-cli/pkg/flowcli/output"
 	"github.com/onflow/flow-cli/pkg/flowcli/project"
 	"github.com/onflow/flow-cli/pkg/flowcli/services"
 	"github.com/onflow/flow-cli/pkg/flowcli/util"
+
+	"github.com/onflow/flow-go-sdk/client"
+	"github.com/psiemens/sconfig"
+	"github.com/spf13/afero"
+	"github.com/spf13/cobra"
 )
 
 type RunCommand func(
@@ -58,16 +58,31 @@ type GlobalFlags struct {
 	Host       string
 	Log        string
 	Network    string
+	Yes        bool
 	ConfigPath []string
 }
 
+const (
+	formatText   = "text"
+	formatInline = "inline"
+	formatJSON   = "json"
+)
+
+const (
+	logLevelDebug = "debug"
+	logLevelInfo  = "info"
+	logLevelError = "error"
+	logLevelNone  = "none"
+)
+
 var flags = GlobalFlags{
 	Filter:     "",
-	Format:     "",
+	Format:     formatText,
 	Save:       "",
 	Host:       "",
-	Log:        "info",
+	Log:        logLevelInfo,
 	Network:    "",
+	Yes:        false,
 	ConfigPath: project.DefaultConfigPaths,
 }
 
@@ -94,7 +109,7 @@ func InitFlags(cmd *cobra.Command) {
 		"output",
 		"o",
 		flags.Format,
-		"Output format, values: 'json', 'inline'",
+		"Output format, options: \"text\", \"json\", \"inline\"",
 	)
 
 	cmd.PersistentFlags().StringVarP(
@@ -110,12 +125,12 @@ func InitFlags(cmd *cobra.Command) {
 		"log",
 		"l",
 		flags.Log,
-		"Log level verbosity, values: 'none', 'error', 'debug'",
+		"Log level, options: \"debug\", \"info\", \"error\", \"none\"",
 	)
 
 	cmd.PersistentFlags().StringSliceVarP(
 		&flags.ConfigPath,
-		"conf",
+		"config-path",
 		"f",
 		flags.ConfigPath,
 		"Path to flow configuration file",
@@ -127,6 +142,14 @@ func InitFlags(cmd *cobra.Command) {
 		"n",
 		flags.Network,
 		"Network from configuration file",
+	)
+
+	cmd.PersistentFlags().BoolVarP(
+		&flags.Yes,
+		"yes",
+		"y",
+		flags.Yes,
+		"Approve any prompts",
 	)
 }
 
@@ -162,7 +185,7 @@ func (c Command) AddToParent(parent *cobra.Command) {
 		handleError("Result", err)
 
 		// output result
-		err = outputResult(formattedResult, flags.Save)
+		err = outputResult(formattedResult, flags.Save, flags.Format, flags.Filter)
 		handleError("Output Error", err)
 	}
 
@@ -189,7 +212,7 @@ func resolveHost(proj *project.Project, hostFlag string, networkFlag string) (st
 
 		host = proj.NetworkByName(networkFlag).Host
 	} else if host == "" {
-		host = project.DefaultEmulatorHost
+		host = config.DefaultEmulatorNetwork().Host
 	}
 
 	return host, nil
@@ -198,21 +221,22 @@ func resolveHost(proj *project.Project, hostFlag string, networkFlag string) (st
 // create logger utility
 func createLogger(logFlag string, formatFlag string) output.Logger {
 	// disable logging if we user want a specific format like JSON
-	//(more common they will not want also to have logs)
-	var logLevel int
-	switch logFlag {
-	case "none":
-		logLevel = output.NoneLog
-	case "error":
-		logLevel = output.ErrorLog
-	case "debug":
-		logLevel = output.DebugLog
-	default:
-		logLevel = output.InfoLog
+	// (more common they will not want also to have logs)
+	if formatFlag != formatText {
+		logFlag = logLevelNone
 	}
 
-	if formatFlag != "" {
+	var logLevel int
+
+	switch logFlag {
+	case logLevelDebug:
+		logLevel = output.DebugLog
+	case logLevelError:
+		logLevel = output.ErrorLog
+	case logLevelNone:
 		logLevel = output.NoneLog
+	default:
+		logLevel = output.InfoLog
 	}
 
 	return output.NewStdoutLogger(logLevel)
@@ -233,11 +257,11 @@ func formatResult(result Result, filterFlag string, formatFlag string) (string, 
 		return fmt.Sprintf("%v", value), nil
 	}
 
-	switch formatFlag {
-	case "json":
+	switch strings.ToLower(formatFlag) {
+	case formatJSON:
 		jsonRes, _ := json.Marshal(result.JSON())
 		return string(jsonRes), nil
-	case "inline":
+	case formatInline:
 		return result.Oneliner(), nil
 	default:
 		return result.String(), nil
@@ -245,7 +269,7 @@ func formatResult(result Result, filterFlag string, formatFlag string) (string, 
 }
 
 // outputResult to selected media
-func outputResult(result string, saveFlag string) error {
+func outputResult(result string, saveFlag string, formatFlag string, filterFlag string) error {
 	if saveFlag != "" {
 		af := afero.Afero{
 			Fs: afero.NewOsFs(),
@@ -255,8 +279,11 @@ func outputResult(result string, saveFlag string) error {
 		return af.WriteFile(saveFlag, []byte(result), 0644)
 	}
 
-	// default normal output
-	fmt.Fprintf(os.Stdout, "%s\n", result)
+	if formatFlag == formatInline || filterFlag != "" {
+		fmt.Fprintf(os.Stdout, "%s", result)
+	} else { // default normal output
+		fmt.Fprintf(os.Stdout, "\n%s\n\n", result)
+	}
 	return nil
 }
 
@@ -270,11 +297,11 @@ func filterResultValue(result Result, filter string) (interface{}, error) {
 	}
 
 	possibleFilters := make([]string, 0)
-	for key, _ := range jsonResult {
-		possibleFilters = append(possibleFilters, fmt.Sprintf("%s", key))
+	for key := range jsonResult {
+		possibleFilters = append(possibleFilters, key)
 	}
 
-	value := jsonResult[filter]
+	value := jsonResult[strings.ToLower(filter)]
 
 	if value == nil {
 		return nil, fmt.Errorf("value for filter: '%s' doesn't exists, possible values to filter by: %s", filter, possibleFilters)
@@ -304,7 +331,8 @@ func handleError(description string, err error) {
 		} else if strings.Contains(err.Error(), "NotFound desc =") {
 			fmt.Fprintf(os.Stderr, "❌ Not Found:%s \n", strings.Split(err.Error(), "NotFound desc =")[1])
 		} else if strings.Contains(err.Error(), "code = InvalidArgument desc = ") {
-			fmt.Fprintf(os.Stderr, "❌ Invalid argument: %s \n", strings.Split(err.Error(), "code = InvalidArgument desc = ")[1])
+			desc := strings.Split(err.Error(), "code = InvalidArgument desc = ")
+			fmt.Fprintf(os.Stderr, "❌ Invalid argument: %s \n", desc[len(desc)-1])
 			if strings.Contains(err.Error(), "is invalid for chain") {
 				fmt.Fprintf(os.Stderr, "🙏 Check you are connecting to the correct network or account address you use is correct.")
 			} else {

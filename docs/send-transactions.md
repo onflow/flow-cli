@@ -7,17 +7,18 @@ description: How to send a Flow transaction from the command line
 The Flow CLI provides a command to sign and send transactions to
 any Flow Access API.
 
-`flow transactions send`
+```shell
+flow transactions send
+```
 
 ## Example Usage
 
 ```shell
-# Submit a transaction to Flow Testnet
 > flow transactions send <filename>
     --signer my-testnet-account \
     --host access.testnet.nodes.onflow.org:9000
     
-Hash	 f23582ba17322405608c0d3da79312617f8d16e118afe63e764b5e68edc5f211
+ID	 f23582ba17322405608c0d3da79312617f8d16e118afe63e764b5e68edc5f211
 Status	 SEALED
 Payer	 a2c4941b5f3c7151
 Events
@@ -65,6 +66,31 @@ transaction to be executed.
 - Valid inputs: the name of an account defined in the configuration (`flow.json`)
 
 Specify the name of the account that will be used to sign the transaction.
+
+### Arguments
+
+- Flag: `--arg`
+- Valid inputs: argument in `Type:Value` format.
+
+Arguments passed to the Cadence transaction in `Type:Value` format.
+The `Type` must be the same as type in the transaction source code for that argument.
+
+### Arguments JSON
+
+- Flag: `--argsJSON`
+- Valid inputs: arguments in JSON-Cadence form.
+
+Arguments passed to the Cadence transaction in `Type:Value` format.
+The `Type` must be the same type as the corresponding parameter
+in the Cadence transaction code.
+
+### Payload
+
+- Flag: `--payload`
+- Valid inputs: any filename and path valid on the system.
+
+Specify the filename containing valid transaction payload that will be used for signing.
+To be used with the `flow transaction sign` command.
 
 ### Host
 
@@ -119,7 +145,7 @@ Specify the log level. Control how much output you want to see during command ex
 
 ### Configuration
 
-- Flag: `--conf`
+- Flag: `--config-path`
 - Short Flag: `-f`
 - Valid inputs: a path in the current filesystem.
 - Default: `flow.json`

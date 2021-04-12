@@ -6,7 +6,9 @@ description: How to get staking info
 
 Retrieve staking information for the account on the Flow network using Flow CLI.
 
-`flow accounts staking-info <address>`
+```shell
+flow accounts staking-info <address>
+```
 
 ## Example Usage
 
@@ -45,7 +47,7 @@ Tokens Unstaking: 	 0.00000000
 ### Address
 
 - Name: `address`
-- Valid Input: Flow account address
+- Valid Input: Flow account address.
 
 Flow [account address](https://docs.onflow.org/concepts/accounts-and-keys/) (prefixed with `0x` or not).
 
@@ -104,7 +106,7 @@ Specify the log level. Control how much output you want to see during command ex
 
 ### Configuration
 
-- Flag: `--conf`
+- Flag: `--config-path`
 - Short Flag: `-f`
 - Valid inputs: a path in the current filesystem
 - Default: `flow.json`

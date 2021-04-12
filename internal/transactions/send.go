@@ -30,10 +30,11 @@ import (
 type flagsSend struct {
 	ArgsJSON string   `default:"" flag:"args-json" info:"arguments in JSON-Cadence format"`
 	Arg      []string `default:"" flag:"arg" info:"argument in Type:Value format"`
-	Signer   string   `default:"emulator-account" flag:"signer"`
+	Signer   string   `default:"emulator-account" flag:"signer" info:"Account name from configuration used to sign the transaction"`
 	Code     string   `default:"" flag:"code" info:"⚠️  Deprecated: use filename argument"`
 	Results  bool     `default:"" flag:"results" info:"⚠️  Deprecated: all transactions will provide result"`
-	Args     string   `default:"false" flag:"args" info:"⚠️  Deprecated: use arg or args-json flag"`
+	Args     string   `default:"" flag:"args" info:"⚠️  Deprecated: use arg or args-json flag"`
+	Payload  string   `flag:"payload" info:"path to the transaction payload file"`
 }
 
 var sendFlags = flagsSend{}
@@ -70,12 +71,13 @@ var SendCommand = &command.Command{
 		} else if sendFlags.Code != "" {
 			fmt.Println("⚠️  DEPRECATION WARNING: use filename as a command argument <filename>")
 			filename = sendFlags.Code
-		} else {
-			return nil, fmt.Errorf("provide a valide filename command argument")
+		} else if sendFlags.Payload == "" {
+			return nil, fmt.Errorf("provide a valid filename command argument")
 		}
 
 		tx, result, err := services.Transactions.Send(
 			filename,
+			sendFlags.Payload,
 			sendFlags.Signer,
 			sendFlags.Arg,
 			sendFlags.ArgsJSON,

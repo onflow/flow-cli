@@ -54,10 +54,10 @@ func (k *EventResult) JSON() interface{} {
 	for _, blockEvent := range k.BlockEvents {
 		if len(blockEvent.Events) > 0 {
 			for _, event := range blockEvent.Events {
-				result["blockID"][blockEvent.Height]["index"] = event.EventIndex
-				result["blockID"][blockEvent.Height]["type"] = event.Type
-				result["blockID"][blockEvent.Height]["txID"] = event.TransactionID
-				result["blockID"][blockEvent.Height]["values"] = event.Value
+				result["blockId"][blockEvent.Height]["index"] = event.EventIndex
+				result["blockId"][blockEvent.Height]["type"] = event.Type
+				result["blockId"][blockEvent.Height]["transactionId"] = event.TransactionID
+				result["blockId"][blockEvent.Height]["values"] = event.Value
 			}
 		}
 	}
@@ -111,10 +111,10 @@ func eventsString(writer io.Writer, events []flow.Event) {
 }
 
 func eventString(writer io.Writer, event flow.Event) {
-	fmt.Fprintf(writer, "\n\t Index\t %v\n", event.EventIndex)
-	fmt.Fprintf(writer, "\t Type\t %s\n", event.Type)
-	fmt.Fprintf(writer, "\t Tx ID\t %s\n", event.TransactionID)
-	fmt.Fprintf(writer, "\t Values\n")
+	fmt.Fprintf(writer, "\n    Index\t%d\n", event.EventIndex)
+	fmt.Fprintf(writer, "    Type\t%s\n", event.Type)
+	fmt.Fprintf(writer, "    Tx ID\t%s\n", event.TransactionID)
+	fmt.Fprintf(writer, "    Values\n")
 
 	for i, field := range event.Value.EventType.Fields {
 		value := event.Value.Fields[i]
@@ -132,8 +132,8 @@ func printField(writer io.Writer, field cadence.Field, value cadence.Value) {
 		typeInfo = "Address"
 	}
 
-	fmt.Fprintf(writer, "\t\t")
-	fmt.Fprintf(writer, " %s (%s)\t", field.Identifier, typeInfo)
+	fmt.Fprintf(writer, "\t\t-")
+	fmt.Fprintf(writer, " %s (%s):\t", field.Identifier, typeInfo)
 	// Try the two most obvious cases
 	if address, ok := v.([8]byte); ok {
 		fmt.Fprintf(writer, "%x", address)

@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package accounts
+package project
 
 import (
 	"fmt"
@@ -24,48 +24,36 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
+	"github.com/onflow/flow-cli/internal/config"
 	"github.com/onflow/flow-cli/pkg/flowcli/services"
 )
 
-type flagsAddContract struct {
-	Signer  string `default:"emulator-account" flag:"signer" info:"Account name from configuration used to sign the transaction"`
-	Results bool   `default:"false" flag:"results" info:"⚠️  Deprecated: results are provided by default"`
-}
+var initFlag = config.FlagsInit{}
 
-var addContractFlags = flagsAddContract{}
-
-var AddContractCommand = &command.Command{
+var InitCommand = &command.Command{
 	Cmd: &cobra.Command{
-		Use:     "add-contract <name> <filename>",
-		Short:   "Deploy a new contract to an account",
-		Example: `flow accounts add-contract FungibleToken ./FungibleToken.cdc`,
-		Args:    cobra.ExactArgs(2),
+		Use:   "init",
+		Short: "Initialize a new configuration",
 	},
-	Flags: &addContractFlags,
+	Flags: &initFlag,
 	Run: func(
 		cmd *cobra.Command,
 		args []string,
 		globalFlags command.GlobalFlags,
 		services *services.Services,
 	) (command.Result, error) {
-		if createFlags.Results {
-			fmt.Println("⚠️ DEPRECATION WARNING: results flag is deprecated, results are by default included in all executions")
-		}
+		fmt.Println("⚠️  DEPRECATION WARNING: use \"flow init\" instead")
 
-		account, err := services.Accounts.AddContract(
-			addContractFlags.Signer,
-			args[0], // name
-			args[1], // filename
-			false,
+		proj, err := services.Project.Init(
+			initFlag.Reset,
+			initFlag.ServiceKeySigAlgo,
+			initFlag.ServiceKeyHashAlgo,
+			initFlag.ServicePrivateKey,
 		)
-
 		if err != nil {
 			return nil, err
 		}
 
-		return &AccountResult{
-			Account:  account,
-			showCode: false,
-		}, nil
+		return &config.InitResult{Project: proj}, nil
 	},
 }

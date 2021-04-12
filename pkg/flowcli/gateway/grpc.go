@@ -31,6 +31,10 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowcli/project"
 )
 
+const (
+	defaultGasLimit = 1000
+)
+
 // GrpcGateway is a gateway implementation that uses the Flow Access gRPC API.
 type GrpcGateway struct {
 	client *client.Client
@@ -62,37 +66,53 @@ func (g *GrpcGateway) GetAccount(address flow.Address) (*flow.Account, error) {
 	return account, nil
 }
 
-// TODO: replace with txsender - much nicer implemented
-// SendTransaction sends a transaction to Flow through the Access API.
-func (g *GrpcGateway) SendTransaction(tx *flow.Transaction, signer *project.Account) (*flow.Transaction, error) {
-	account, err := g.GetAccount(signer.Address())
-	if err != nil {
-		return nil, fmt.Errorf("failed to get account with address %s: %w", signer.Address(), err)
+// PrepareTransactionPayload prepares the payload for the transaction from the network
+func (g *GrpcGateway) PrepareTransactionPayload(tx *project.Transaction) (*project.Transaction, error) {
+	proposalAddress := tx.Signer().Address()
+	if tx.Proposer() != nil { // default proposer is signer
+		proposalAddress = tx.Proposer().Address()
 	}
 
-	// Default 0, i.e. first key
-	accountKey := account.Keys[0]
+	proposer, err := g.GetAccount(proposalAddress)
+	if err != nil {
+		return nil, err
+	}
+
+	proposerKey := proposer.Keys[tx.Signer().DefaultKey().Index()]
 
 	sealed, err := g.client.GetLatestBlockHeader(g.ctx, true)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get latest sealed block: %w", err)
 	}
 
-	tx.SetReferenceBlockID(sealed.ID).
-		SetProposalKey(signer.Address(), accountKey.Index, accountKey.SequenceNumber).
-		SetPayer(signer.Address())
+	tx.FlowTransaction().
+		SetReferenceBlockID(sealed.ID).
+		SetGasLimit(defaultGasLimit).
+		SetProposalKey(proposalAddress, proposerKey.Index, proposerKey.SequenceNumber)
 
-	sig, err := signer.DefaultKey().Signer(g.ctx)
+	return tx, nil
+}
+
+// SendTransaction prepares, signs and sends the transaction to the network
+func (g *GrpcGateway) SendTransaction(transaction *project.Transaction) (*flow.Transaction, error) {
+	tx, err := g.PrepareTransactionPayload(transaction)
 	if err != nil {
 		return nil, err
 	}
 
-	err = tx.SignEnvelope(signer.Address(), accountKey.Index, sig)
+	tx, err = tx.Sign()
 	if err != nil {
 		return nil, fmt.Errorf("failed to sign transaction: %w", err)
 	}
 
-	err = g.client.SendTransaction(g.ctx, *tx)
+	return g.SendSignedTransaction(tx)
+}
+
+// SendSignedTransaction sends a transaction to flow that is already prepared and signed
+func (g *GrpcGateway) SendSignedTransaction(transaction *project.Transaction) (*flow.Transaction, error) {
+	tx := transaction.FlowTransaction()
+
+	err := g.client.SendTransaction(g.ctx, *tx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to submit transaction: %w", err)
 	}

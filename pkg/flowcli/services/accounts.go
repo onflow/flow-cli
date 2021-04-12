@@ -23,18 +23,17 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/onflow/cadence"
-	tmpl "github.com/onflow/flow-core-contracts/lib/go/templates"
-	"github.com/onflow/flow-go-sdk"
-	"github.com/onflow/flow-go-sdk/crypto"
-	"github.com/onflow/flow-go-sdk/templates"
-
 	"github.com/onflow/flow-cli/pkg/flowcli"
 	"github.com/onflow/flow-cli/pkg/flowcli/config"
 	"github.com/onflow/flow-cli/pkg/flowcli/gateway"
 	"github.com/onflow/flow-cli/pkg/flowcli/output"
 	"github.com/onflow/flow-cli/pkg/flowcli/project"
 	"github.com/onflow/flow-cli/pkg/flowcli/util"
+
+	"github.com/onflow/cadence"
+	tmpl "github.com/onflow/flow-core-contracts/lib/go/templates"
+	"github.com/onflow/flow-go-sdk"
+	"github.com/onflow/flow-go-sdk/crypto"
 )
 
 // Accounts is a service that handles all account-related interactions.
@@ -64,11 +63,12 @@ func (a *Accounts) Get(address string) (*flow.Account, error) {
 	flowAddress := flow.HexToAddress(address)
 
 	account, err := a.gateway.GetAccount(flowAddress)
-	a.logger.StopProgress("")
+	a.logger.StopProgress()
 
 	return account, err
 }
 
+// Add account to the configuration
 func (a *Accounts) Add(
 	name string,
 	accountAddress string,
@@ -193,7 +193,7 @@ func (a *Accounts) StakingInfo(accountAddress string) (*cadence.Value, *cadence.
 		return nil, nil, fmt.Errorf("error getting delegation info: %s", err.Error())
 	}
 
-	a.logger.StopProgress("")
+	a.logger.StopProgress()
 
 	return &stakingValue, &delegationValue, nil
 }
@@ -249,38 +249,19 @@ func (a *Accounts) Create(
 		}
 	}
 
-	var contractTemplates []templates.Contract
-
-	for _, contract := range contracts {
-		contractFlagContent := strings.SplitN(contract, ":", 2)
-		if len(contractFlagContent) != 2 {
-			return nil, fmt.Errorf("wrong format for contract. Correct format is name:path, but got: %s", contract)
-		}
-		contractName := contractFlagContent[0]
-		contractPath := contractFlagContent[1]
-
-		contractSource, err := util.LoadFile(contractPath)
-		if err != nil {
-			return nil, err
-		}
-
-		contractTemplates = append(contractTemplates,
-			templates.Contract{
-				Name:   contractName,
-				Source: string(contractSource),
-			},
-		)
+	tx, err := project.NewCreateAccountTransaction(signer, accountKeys, contracts)
+	if err != nil {
+		return nil, err
 	}
 
-	tx := templates.CreateAccount(accountKeys, contractTemplates, signer.Address())
-	tx, err = a.gateway.SendTransaction(tx, signer)
+	sentTx, err := a.gateway.SendTransaction(tx)
 	if err != nil {
 		return nil, err
 	}
 
 	a.logger.StartProgress("Waiting for transaction to be sealed...")
 
-	result, err := a.gateway.GetTransactionResult(tx, true)
+	result, err := a.gateway.GetTransactionResult(sentTx, true)
 	if err != nil {
 		return nil, err
 	}
@@ -296,7 +277,7 @@ func (a *Accounts) Create(
 		return nil, fmt.Errorf("new account address couldn't be fetched")
 	}
 
-	a.logger.StopProgress("")
+	a.logger.StopProgress()
 
 	return a.gateway.GetAccount(*newAccountAddress)
 }
@@ -376,42 +357,35 @@ func (a *Accounts) addContract(
 		),
 	)
 
-	if account.DefaultKey().Type() == config.KeyTypeGoogleKMS {
-		a.logger.StartProgress("Connecting to KMS...")
-		resourceID := account.DefaultKey().ToConfig().Context[config.KMSContextField]
-		err := util.GcloudApplicationSignin(resourceID)
+	tx, err := project.NewAddAccountContractTransaction(
+		account,
+		contractName,
+		string(contractSource),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	// if we are updating contract
+	if updateExisting {
+		tx, err = project.NewUpdateAccountContractTransaction(
+			account,
+			contractName,
+			string(contractSource),
+		)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	tx := templates.AddAccountContract(
-		account.Address(),
-		templates.Contract{
-			Name:   contractName,
-			Source: string(contractSource),
-		},
-	)
-
-	// if we are updating contract
-	if updateExisting {
-		tx = templates.UpdateAccountContract(
-			account.Address(),
-			templates.Contract{
-				Name:   contractName,
-				Source: string(contractSource),
-			},
-		)
-	}
-
 	// send transaction with contract
-	tx, err := a.gateway.SendTransaction(tx, account)
+	sentTx, err := a.gateway.SendTransaction(tx)
 	if err != nil {
 		return nil, err
 	}
 
 	// we wait for transaction to be sealed
-	trx, err := a.gateway.GetTransactionResult(tx, true)
+	trx, err := a.gateway.GetTransactionResult(sentTx, true)
 	if err != nil {
 		return nil, err
 	}
@@ -423,7 +397,7 @@ func (a *Accounts) addContract(
 
 	update, err := a.gateway.GetAccount(account.Address())
 
-	a.logger.StopProgress("")
+	a.logger.StopProgress()
 
 	if updateExisting {
 		a.logger.Info(fmt.Sprintf(
@@ -456,13 +430,17 @@ func (a *Accounts) RemoveContract(
 		fmt.Sprintf("Removing Contract %s from %s...", contractName, account.Address()),
 	)
 
-	tx := templates.RemoveAccountContract(account.Address(), contractName)
-	tx, err := a.gateway.SendTransaction(tx, account)
+	tx, err := project.NewRemoveAccountContractTransaction(account, contractName)
 	if err != nil {
 		return nil, err
 	}
 
-	txr, err := a.gateway.GetTransactionResult(tx, true)
+	sentTx, err := a.gateway.SendTransaction(tx)
+	if err != nil {
+		return nil, err
+	}
+
+	txr, err := a.gateway.GetTransactionResult(sentTx, true)
 	if err != nil {
 		return nil, err
 	}
@@ -471,7 +449,7 @@ func (a *Accounts) RemoveContract(
 		return nil, txr.Error
 	}
 
-	a.logger.StopProgress("")
+	a.logger.StopProgress()
 	a.logger.Info(fmt.Sprintf("Contract %s removed from account %s\n", contractName, account.Address()))
 
 	return a.gateway.GetAccount(account.Address())

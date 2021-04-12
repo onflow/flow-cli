@@ -23,6 +23,8 @@ import (
 	"fmt"
 	"path"
 
+	"github.com/onflow/flow-cli/pkg/flowcli/util"
+
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/spf13/afero"
@@ -30,7 +32,6 @@ import (
 
 	"github.com/onflow/flow-cli/pkg/flowcli/config"
 	"github.com/onflow/flow-cli/pkg/flowcli/config/json"
-	"github.com/onflow/flow-cli/pkg/flowcli/util"
 )
 
 var (
@@ -106,32 +107,9 @@ func Init(sigAlgo crypto.SignatureAlgorithm, hashAlgo crypto.HashAlgorithm) (*Pr
 
 	return &Project{
 		composer: composer,
-		conf:     defaultConfig(emulatorServiceAccount),
+		conf:     config.DefaultConfig(),
 		accounts: []*Account{emulatorServiceAccount},
 	}, nil
-}
-
-const (
-	DefaultEmulatorNetworkName        = "emulator"
-	DefaultEmulatorServiceAccountName = "emulator-account"
-	DefaultEmulatorPort               = 3569
-	DefaultEmulatorHost               = "127.0.0.1:3569"
-)
-
-// defaultConfig returns a new default configuration object.
-func defaultConfig(defaultEmulatorServiceAccount *Account) *config.Config {
-	return &config.Config{
-		Emulators: config.Emulators{{
-			Name:           config.DefaultEmulatorConfigName,
-			ServiceAccount: defaultEmulatorServiceAccount.name,
-			Port:           DefaultEmulatorPort,
-		}},
-		Networks: config.Networks{{
-			Name:    DefaultEmulatorNetworkName,
-			Host:    DefaultEmulatorHost,
-			ChainID: flow.Emulator,
-		}},
-	}
 }
 
 // newProject creates a new project from a configuration object.
@@ -183,7 +161,7 @@ func (p *Project) EmulatorServiceAccount() (*Account, error) {
 
 // SetEmulatorServiceKey sets the default emulator service account private key.
 func (p *Project) SetEmulatorServiceKey(privateKey crypto.PrivateKey) {
-	acc := p.AccountByName(DefaultEmulatorServiceAccountName)
+	acc := p.AccountByName(config.DefaultEmulatorServiceAccountName)
 	acc.SetDefaultKey(
 		NewHexAccountKeyFromPrivateKey(
 			acc.DefaultKey().Index(),
@@ -219,13 +197,15 @@ func (p *Project) ContractsByNetwork(network string) []Contract {
 	return contracts
 }
 
-// AllAccountName returns all configured account names.
-func (p *Project) AllAccountName() []string {
+// AccountNamesForNetwork returns all configured account names for a network.
+func (p *Project) AccountNamesForNetwork(network string) []string {
 	names := make([]string, 0)
 
 	for _, account := range p.accounts {
-		if !util.StringContains(names, account.name) {
-			names = append(names, account.name)
+		if len(p.conf.Deployments.GetByAccountAndNetwork(account.name, network)) > 0 {
+			if !util.StringContains(names, account.name) {
+				names = append(names, account.name)
+			}
 		}
 	}
 

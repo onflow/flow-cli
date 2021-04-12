@@ -18,6 +18,7 @@ index.html
 # Ignore flow json config
 flow.json
 flow*.json
+!tests/flow.json
 
 # IDE related files
 .idea

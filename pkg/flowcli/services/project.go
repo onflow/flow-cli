@@ -22,11 +22,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/onflow/flow-cli/pkg/flowcli/config"
-
-	"github.com/onflow/cadence"
-	jsoncdc "github.com/onflow/cadence/encoding/json"
-
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/onflow/flow-go-sdk/templates"
@@ -64,39 +59,38 @@ func (p *Project) Init(
 	serviceKeyHashAlgo string,
 	servicePrivateKey string,
 ) (*project.Project, error) {
-	if !project.Exists(project.DefaultConfigPath) || reset {
-
-		sigAlgo, hashAlgo, err := util.ConvertSigAndHashAlgo(serviceKeySigAlgo, serviceKeyHashAlgo)
-		if err != nil {
-			return nil, err
-		}
-
-		proj, err := project.Init(sigAlgo, hashAlgo)
-		if err != nil {
-			return nil, err
-		}
-
-		if len(servicePrivateKey) > 0 {
-			serviceKey, err := crypto.DecodePrivateKeyHex(sigAlgo, servicePrivateKey)
-			if err != nil {
-				return nil, fmt.Errorf("could not decode private key for a service account, provided private key: %s", servicePrivateKey)
-			}
-
-			proj.SetEmulatorServiceKey(serviceKey)
-		}
-
-		err = proj.Save(project.DefaultConfigPath)
-		if err != nil {
-			return nil, err
-		}
-
-		return proj, nil
+	if project.Exists(project.DefaultConfigPath) && !reset {
+		return nil, fmt.Errorf(
+			"configuration already exists at: %s, if you want to reset configuration use the reset flag",
+			project.DefaultConfigPath,
+		)
 	}
 
-	return nil, fmt.Errorf(
-		"configuration already exists at: %s, if you want to reset configuration use the reset flag",
-		project.DefaultConfigPath,
-	)
+	sigAlgo, hashAlgo, err := util.ConvertSigAndHashAlgo(serviceKeySigAlgo, serviceKeyHashAlgo)
+	if err != nil {
+		return nil, err
+	}
+
+	proj, err := project.Init(sigAlgo, hashAlgo)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(servicePrivateKey) > 0 {
+		serviceKey, err := crypto.DecodePrivateKeyHex(sigAlgo, servicePrivateKey)
+		if err != nil {
+			return nil, fmt.Errorf("could not decode private key for a service account, provided private key: %s", servicePrivateKey)
+		}
+
+		proj.SetEmulatorServiceKey(serviceKey)
+	}
+
+	err = proj.Save(project.DefaultConfigPath)
+	if err != nil {
+		return nil, err
+	}
+
+	return proj, nil
 }
 
 func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, error) {
@@ -140,12 +134,12 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 	}
 
 	p.logger.Info(fmt.Sprintf(
-		"Deploying %d contracts for accounts: %s",
+		"\nDeploying %d contracts for accounts: %s\n",
 		len(orderedContracts),
-		strings.Join(p.project.AllAccountName(), ","),
+		strings.Join(p.project.AccountNamesForNetwork(network), ","),
 	))
 
-	var errs []error
+	deployErr := false
 	for _, contract := range orderedContracts {
 		targetAccount := p.project.AccountByAddress(contract.Target().String())
 
@@ -158,29 +152,33 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 			return nil, fmt.Errorf("failed to fetch information for account %s with error %s", targetAccount.Address(), err.Error())
 		}
 
-		var tx *flow.Transaction
+		tx, err := project.NewAddAccountContractTransaction(targetAccount, contract.Name(), contract.TranspiledCode())
+		if err != nil {
+			return nil, err
+		}
 
 		_, exists := targetAccountInfo.Contracts[contract.Name()]
 		if exists {
 			if !update {
-				err = fmt.Errorf(
+				p.logger.Error(fmt.Sprintf(
 					"contract %s is already deployed to this account. Use the --update flag to force update",
 					contract.Name(),
 				)
-				p.logger.Error(err.Error())
-				errs = append(errs, err)
+				deployErr = true
 				continue
 			} else if len(contract.Args()) > 0 { // todo discuss we might better remove the contract and redeploy it - ux issue
-				err = fmt.Errorf(
+				p.logger.Error(fmt.Sprintf(
 					"contract %s is already deployed and can not be updated with initialization arguments",
 					contract.Name(),
-				)
-				p.logger.Error(err.Error())
-				errs = append(errs, err)
+				))
+				deployErr = true
 				continue
 			}
 
-			tx = prepareUpdateContractTransaction(targetAccount.Address(), contract)
+			tx, err = project.NewUpdateAccountContractTransaction(targetAccount, contract.Name(), contract.TranspiledCode())
+			if err != nil {
+				return nil, err
+			}
 		} else {
 			tx = addAccountContractWithArgs(targetAccount.Address(), templates.Contract{
 				Name:   contract.Name(),
@@ -188,72 +186,42 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 			}, contract.Args())
 		}
 
-		tx, err = p.gateway.SendTransaction(tx, targetAccount)
+		sentTx, err := p.gateway.SendTransaction(tx)
 		if err != nil {
 			p.logger.Error(err.Error())
-			errs = append(errs, err)
+			deployErr = true
 		}
 
 		p.logger.StartProgress(
 			fmt.Sprintf("%s deploying...", util.Bold(contract.Name())),
 		)
 
-		result, err := p.gateway.GetTransactionResult(tx, true)
+		result, err := p.gateway.GetTransactionResult(sentTx, true)
 		if err != nil {
 			p.logger.Error(err.Error())
-			errs = append(errs, err)
+			deployErr = true
 		}
 
-		if result.Error == nil {
-			p.logger.StopProgress(
-				fmt.Sprintf("%s -> 0x%s", util.Green(contract.Name()), contract.Target()),
-			)
+		if result.Error == nil && !deployErr {
+			p.logger.StopProgress()
+			fmt.Printf("%s -> 0x%s\n", util.Green(contract.Name()), contract.Target())
 		} else {
-			p.logger.StopProgress(
-				fmt.Sprintf("%s error", util.Red(contract.Name())),
-			)
+			p.logger.StopProgress()
 			p.logger.Error(
 				fmt.Sprintf("%s error: %s", contract.Name(), result.Error),
 			)
-
-			errs = append(errs, result.Error)
 		}
 	}
 
-	if len(errs) == 0 {
+	if !deployErr {
 		p.logger.Info("\n✨  All contracts deployed successfully")
 	} else {
-		p.logger.Error(fmt.Sprintf("Failed to deploy the contracts with error: %s", errs))
-		return nil, fmt.Errorf(`%v`, errs)
+		err = fmt.Errorf("failed to deploy contracts")
+		p.logger.Error(err.Error())
+		return nil, err
 	}
 
 	return orderedContracts, nil
-}
-
-func prepareUpdateContractTransaction(
-	targetAccount flow.Address,
-	contract *contracts.Contract,
-) *flow.Transaction {
-	return templates.UpdateAccountContract(
-		targetAccount,
-		templates.Contract{
-			Name:   contract.Name(),
-			Source: contract.TranspiledCode(),
-		},
-	)
-}
-
-func prepareAddContractTransaction(
-	targetAccount flow.Address,
-	contract *contracts.Contract,
-) *flow.Transaction {
-	return templates.AddAccountContract(
-		targetAccount,
-		templates.Contract{
-			Name:   contract.Name(),
-			Source: contract.TranspiledCode(),
-		},
-	)
 }
 
 const addAccountContractTemplate = `

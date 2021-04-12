@@ -28,7 +28,9 @@ import (
 
 type Gateway interface {
 	GetAccount(flow.Address) (*flow.Account, error)
-	SendTransaction(*flow.Transaction, *project.Account) (*flow.Transaction, error)
+	SendTransaction(*project.Transaction) (*flow.Transaction, error)
+	SendSignedTransaction(*project.Transaction) (*flow.Transaction, error)
+	PrepareTransactionPayload(*project.Transaction) (*project.Transaction, error)
 	GetTransactionResult(*flow.Transaction, bool) (*flow.TransactionResult, error)
 	GetTransaction(flow.Identifier) (*flow.Transaction, error)
 	ExecuteScript([]byte, []cadence.Value) (cadence.Value, error)

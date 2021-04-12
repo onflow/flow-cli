@@ -23,10 +23,10 @@ import (
 	"fmt"
 	"text/tabwriter"
 
+	"github.com/onflow/flow-cli/internal/events"
+
 	"github.com/onflow/flow-go-sdk"
 	"github.com/spf13/cobra"
-
-	"github.com/onflow/flow-cli/internal/events"
 )
 
 var Cmd = &cobra.Command{
@@ -38,7 +38,7 @@ var Cmd = &cobra.Command{
 func init() {
 	GetCommand.AddToParent(Cmd)
 	SendCommand.AddToParent(Cmd)
-	StatusCommand.AddToParent(Cmd)
+	SignCommand.AddToParent(Cmd)
 }
 
 // TransactionResult represent result from all account commands
@@ -51,11 +51,15 @@ type TransactionResult struct {
 // JSON convert result to JSON
 func (r *TransactionResult) JSON() interface{} {
 	result := make(map[string]string)
-	result["hash"] = r.tx.ID().String()
-	result["status"] = r.result.Status.String()
+	result["id"] = r.tx.ID().String()
+	result["payload"] = fmt.Sprintf("%x", r.tx.Encode())
+	result["authorizers"] = fmt.Sprintf("%s", r.tx.Authorizers)
+	result["payer"] = r.tx.Payer.String()
 
 	if r.result != nil {
 		result["events"] = fmt.Sprintf("%s", r.result.Events)
+		result["status"] = r.result.Status.String()
+		result["error"] = r.result.Error.Error()
 	}
 
 	return result
@@ -66,18 +70,76 @@ func (r *TransactionResult) String() string {
 	var b bytes.Buffer
 	writer := tabwriter.NewWriter(&b, 0, 8, 1, '\t', tabwriter.AlignRight)
 
-	fmt.Fprintf(writer, "Hash\t %s\n", r.tx.ID())
-	fmt.Fprintf(writer, "Status\t %s\n", r.result.Status)
-	fmt.Fprintf(writer, "Payer\t %s\n", r.tx.Payer.Hex())
+	if r.result != nil {
+		if r.result.Error != nil {
+			fmt.Fprintf(writer, "❌ Transaction Error \n%s\n\n\n", r.result.Error.Error())
+		}
 
-	events := events.EventResult{
-		Events: r.result.Events,
+		statusBadge := ""
+		if r.result.Status == flow.TransactionStatusSealed {
+			statusBadge = "✅"
+		}
+		fmt.Fprintf(writer, "Status\t%s %s\n", statusBadge, r.result.Status)
 	}
-	fmt.Fprintf(writer, "Events\t %s\n", events.String())
 
-	if r.code {
-		fmt.Fprintf(writer, "Code\n\n%s\n", r.tx.Script)
+	fmt.Fprintf(writer, "ID\t%s\n", r.tx.ID())
+	fmt.Fprintf(writer, "Payer\t%s\n", r.tx.Payer.Hex())
+	fmt.Fprintf(writer, "Authorizers\t%s\n", r.tx.Authorizers)
+
+	fmt.Fprintf(writer,
+		"\nProposal Key:\t\n    Address\t%s\n    Index\t%v\n    Sequence\t%v\n",
+		r.tx.ProposalKey.Address, r.tx.ProposalKey.KeyIndex, r.tx.ProposalKey.SequenceNumber,
+	)
+
+	if len(r.tx.PayloadSignatures) == 0 {
+		fmt.Fprintf(writer, "\nNo Payload Signatures\n")
 	}
+
+	if len(r.tx.EnvelopeSignatures) == 0 {
+		fmt.Fprintf(writer, "\nNo Envelope Signatures\n")
+	}
+
+	for i, e := range r.tx.PayloadSignatures {
+		fmt.Fprintf(writer, "\nPayload Signature %v:\n", i)
+		fmt.Fprintf(writer, "    Address\t%s\n", e.Address)
+		fmt.Fprintf(writer, "    Signature\t%x\n", e.Signature)
+		fmt.Fprintf(writer, "    Key Index\t%d\n", e.KeyIndex)
+	}
+
+	for i, e := range r.tx.EnvelopeSignatures {
+		fmt.Fprintf(writer, "\nEnvelope Signature %v:\n", i)
+		fmt.Fprintf(writer, "    Address\t%s\n", e.Address)
+		fmt.Fprintf(writer, "    Signature\t%x\n", e.Signature)
+		fmt.Fprintf(writer, "    Key Index\t%d\n", e.KeyIndex)
+	}
+
+	if r.result != nil {
+		e := events.EventResult{
+			Events: r.result.Events,
+		}
+
+		eventsOutput := e.String()
+		if eventsOutput == "" {
+			eventsOutput = "None"
+		}
+
+		fmt.Fprintf(writer, "\n\nEvents:\t %s\n", eventsOutput)
+	}
+
+	if r.tx.Script != nil {
+		if len(r.tx.Arguments) == 0 {
+			fmt.Fprintf(writer, "\n\nArguments\tNo arguments\n")
+		} else {
+			fmt.Fprintf(writer, "\n\nArguments (%d):\n", len(r.tx.Arguments))
+			for i, argument := range r.tx.Arguments {
+				fmt.Fprintf(writer, "    - Argument %d: %s\n", i, argument)
+			}
+		}
+
+		fmt.Fprintf(writer, "\nCode\n\n%s\n", r.tx.Script)
+	}
+
+	fmt.Fprintf(writer, "\n\nPayload:\n%x", r.tx.Encode())
 
 	writer.Flush()
 	return b.String()
@@ -85,5 +147,5 @@ func (r *TransactionResult) String() string {
 
 // Oneliner show result as one liner grep friendly
 func (r *TransactionResult) Oneliner() string {
-	return fmt.Sprintf("Hash: %s, Status: %s, Events: %s", r.tx.ID(), r.result.Status, r.result.Events)
+	return fmt.Sprintf("ID: %s, Status: %s, Events: %s", r.tx.ID(), r.result.Status, r.result.Events)
 }

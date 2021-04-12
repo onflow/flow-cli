@@ -93,6 +93,6 @@ func (e *Events) Get(name string, start string, end string) ([]client.BlockEvent
 		return nil, err
 	}
 
-	e.logger.StopProgress("")
+	e.logger.StopProgress()
 	return events, nil
 }

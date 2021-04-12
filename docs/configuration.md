@@ -4,11 +4,11 @@ sidebar_title: Configuration
 description: What is Flow CLI Configuration
 ---
 
-Flow CLI uses a state called configuration and it is stored to a file (usually `flow.json`). 
+Flow CLI uses a state called configuration which is stored in a file (usually `flow.json`). 
 
 Flow configuration (`flow.json`) file will contain the following properties:
 
-- A `networks` list pre-populated with the Flow Emulator connection configuration.
+- A `networks` list pre-populated with the Flow emulator, testnet and mainnet connection configuration.
 - An `accounts` list pre-populated with the Flow Emulator service account.
 - An `emulators` list pre-populated with Flow Emulator configuration.
 - A `deployments` empty object where all [deployment targets](https://docs.onflow.org/flow-cli/project-contracts/) can be defined. 
@@ -28,6 +28,14 @@ Flow configuration (`flow.json`) file will contain the following properties:
     "emulator": {
       "host": "127.0.0.1:3569",
       "chain": "flow-emulator"
+    },
+    "mainnet": {
+      "host": "access.mainnet.nodes.onflow.org:9000",
+      "chain": "flow-mainnet"
+    },
+    "testnet": {
+      "host": "access.devnet.nodes.onflow.org:9000",
+      "chain": "flow-testnet"
     }
   },
   "accounts": {
@@ -97,9 +105,23 @@ We'll walk through each property one by one.
   "networks": {
     "emulator": {
       "host": "127.0.0.1:3569",
-      "serviceAccount": "emulator-service"
+      "chain": "flow-emulator"
     },
-    "testnet": "access.testnet.nodes.onflow.org:9000"
+    "mainnet": {
+      "host": "access.mainnet.nodes.onflow.org:9000",
+      "chain": "flow-mainnet"
+    },
+    "testnet": {
+      "host": "access.devnet.nodes.onflow.org:9000",
+      "chain": "flow-testnet"
+    }
+  },
+
+  "emulators": {
+    "default": {
+      "port": 3569,
+      "serviceAccount": "emulator-account"
+    }
   }
 }
 ```
@@ -256,9 +278,16 @@ Use this section to define networks and connection parameters for that specific 
 "networks": {
   "emulator": {
     "host": "127.0.0.1:3569",
-    "serviceAccount": "emulator-service"
+    "chain": "flow-emulator"
   },
-  "testnet": "access.testnet.nodes.onflow.org:9000"
+  "mainnet": {
+    "host": "access.mainnet.nodes.onflow.org:9000",
+    "chain": "flow-mainnet"
+  },
+  "testnet": {
+    "host": "access.devnet.nodes.onflow.org:9000",
+    "chain": "flow-testnet"
+  }
 }
 
 ...
