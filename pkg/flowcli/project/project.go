@@ -34,23 +34,26 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowcli/config/json"
 )
 
-var DefaultConfigPath = "flow.json"
+var (
+	DefaultConfigPaths = []string{"flow.json"}
+	DefaultConfigPath  = DefaultConfigPaths[0]
+)
 
-// Project has all the functionality to manage project
+// Project contains the configuration for a Flow project.
 type Project struct {
 	composer *config.Loader
 	conf     *config.Config
 	accounts []*Account
 }
 
-// Contract has all the functionality to manage contracts
+// Contract is a Cadence contract definition for a project.
 type Contract struct {
 	Name   string
 	Source string
 	Target flow.Address
 }
 
-// Load loads configuration and setup the project
+// Load loads a project configuration and returns the resulting project.
 func Load(configFilePath []string) (*Project, error) {
 	composer := config.NewLoader(afero.NewOsFs())
 
@@ -63,7 +66,7 @@ func Load(configFilePath []string) (*Project, error) {
 			return nil, err
 		}
 
-		return nil, fmt.Errorf("failed to open project configuration: %s", configFilePath)
+		return nil, err
 	}
 
 	proj, err := newProject(conf, composer)
@@ -74,7 +77,7 @@ func Load(configFilePath []string) (*Project, error) {
 	return proj, nil
 }
 
-// Save saves project to path configuration
+// Save saves the project configuration to the given path.
 func (p *Project) Save(path string) error {
 	p.conf.Accounts = accountsToConfig(p.accounts)
 	err := p.composer.Save(p.conf, path)
@@ -86,49 +89,29 @@ func (p *Project) Save(path string) error {
 	return nil
 }
 
-// Exists checks if project exists
+// Exists checks if a project configuration exists.
 func Exists(path string) bool {
 	return config.Exists(path)
 }
 
-// Init initializes the project
+// Init initializes a new Flow project.
 func Init(sigAlgo crypto.SignatureAlgorithm, hashAlgo crypto.HashAlgorithm) (*Project, error) {
 	emulatorServiceAccount, err := generateEmulatorServiceAccount(sigAlgo, hashAlgo)
+	if err != nil {
+		return nil, err
+	}
 
 	composer := config.NewLoader(afero.NewOsFs())
 	composer.AddConfigParser(json.NewParser())
 
 	return &Project{
 		composer: composer,
-		conf:     defaultConfig(emulatorServiceAccount),
+		conf:     config.DefaultConfig(),
 		accounts: []*Account{emulatorServiceAccount},
-	}, err
+	}, nil
 }
 
-const (
-	DefaultEmulatorNetworkName        = "emulator"
-	DefaultEmulatorServiceAccountName = "emulator-account"
-	DefaultEmulatorPort               = 3569
-	DefaultEmulatorHost               = "127.0.0.1:3569"
-)
-
-// defaultConfig creates new default configuration
-func defaultConfig(defaultEmulatorServiceAccount *Account) *config.Config {
-	return &config.Config{
-		Emulators: config.Emulators{{
-			Name:           config.DefaultEmulatorConfigName,
-			ServiceAccount: defaultEmulatorServiceAccount.name,
-			Port:           DefaultEmulatorPort,
-		}},
-		Networks: config.Networks{{
-			Name:    DefaultEmulatorNetworkName,
-			Host:    DefaultEmulatorHost,
-			ChainID: flow.Emulator,
-		}},
-	}
-}
-
-// newProject creates new project from configuration passed
+// newProject creates a new project from a configuration object.
 func newProject(conf *config.Config, composer *config.Loader) (*Project, error) {
 	accounts, err := accountsFromConfig(conf)
 	if err != nil {
@@ -142,8 +125,11 @@ func newProject(conf *config.Config, composer *config.Loader) (*Project, error) 
 	}, nil
 }
 
-// CheckContractConflict checks if there is any contract duplication between accounts
-// for now we don't allow two different accounts deploying same contract
+// CheckContractConflict returns true if the same contract is configured to deploy
+// to more than one account in the same network.
+//
+// The CLI currently does not allow the same contract to be deployed to multiple
+// accounts in the same network.
 func (p *Project) ContractConflictExists(network string) bool {
 	contracts := p.ContractsByNetwork(network)
 
@@ -160,21 +146,21 @@ func (p *Project) ContractConflictExists(network string) bool {
 	return len(all) != len(uniq)
 }
 
-// NetworkByName returns a network by name
+// NetworkByName returns a network by name.
 func (p *Project) NetworkByName(name string) *config.Network {
 	return p.conf.Networks.GetByName(name)
 }
 
-// EmulatorServiceAccount gets a service account for emulator
+// EmulatorServiceAccount returns the service account for the default emulator profilee.
 func (p *Project) EmulatorServiceAccount() (*Account, error) {
 	emulator := p.conf.Emulators.Default()
 	acc := p.conf.Accounts.GetByName(emulator.ServiceAccount)
 	return AccountFromConfig(*acc)
 }
 
-// SetEmulatorServiceKey sets emulator service key
+// SetEmulatorServiceKey sets the default emulator service account private key.
 func (p *Project) SetEmulatorServiceKey(privateKey crypto.PrivateKey) {
-	acc := p.AccountByName(DefaultEmulatorServiceAccountName)
+	acc := p.AccountByName(config.DefaultEmulatorServiceAccountName)
 	acc.SetDefaultKey(
 		NewHexAccountKeyFromPrivateKey(
 			acc.DefaultKey().Index(),
@@ -184,15 +170,15 @@ func (p *Project) SetEmulatorServiceKey(privateKey crypto.PrivateKey) {
 	)
 }
 
-// ContractsByNetwork return all contract for network
+// ContractsByNetwork returns all contracts for a network.
 func (p *Project) ContractsByNetwork(network string) []Contract {
 	contracts := make([]Contract, 0)
 
-	// get deployments for specific network
+	// get deployments for the specified network
 	for _, deploy := range p.conf.Deployments.GetByNetwork(network) {
 		account := p.AccountByName(deploy.Account)
 
-		// go through each contract for this deploy
+		// go through each contract in this deployment
 		for _, contractName := range deploy.Contracts {
 			c := p.conf.Contracts.GetByNameAndNetwork(contractName, network)
 
@@ -209,25 +195,22 @@ func (p *Project) ContractsByNetwork(network string) []Contract {
 	return contracts
 }
 
-// AllAccountName gets all account names
-func (p *Project) AllAccountName() []string {
+// AccountNamesForNetwork returns all configured account names for a network.
+func (p *Project) AccountNamesForNetwork(network string) []string {
 	names := make([]string, 0)
 
 	for _, account := range p.accounts {
-		if !util.StringContains(names, account.name) {
-			names = append(names, account.name)
+		if len(p.conf.Deployments.GetByAccountAndNetwork(account.name, network)) > 0 {
+			if !util.StringContains(names, account.name) {
+				names = append(names, account.name)
+			}
 		}
 	}
 
 	return names
 }
 
-// AddAccount adds account
-func (p *Project) AddAccount(account *Account) {
-	p.accounts = append(p.accounts, account)
-}
-
-// AddOrUpdateAccount adds or updates account
+// AddOrUpdateAccount adds or updates an account.
 func (p *Project) AddOrUpdateAccount(account *Account) {
 	for i, existingAccount := range p.accounts {
 		if existingAccount.name == account.name {
@@ -239,7 +222,7 @@ func (p *Project) AddOrUpdateAccount(account *Account) {
 	p.accounts = append(p.accounts, account)
 }
 
-// AccountByAddress adds new account by address
+// AccountByAddress returns an account by address.
 func (p *Project) AccountByAddress(address string) *Account {
 	for _, account := range p.accounts {
 		if account.address.String() == flow.HexToAddress(address).String() {
@@ -250,7 +233,7 @@ func (p *Project) AccountByAddress(address string) *Account {
 	return nil
 }
 
-// AccountByName returns account by name
+// AccountByName returns an account by name.
 func (p *Project) AccountByName(name string) *Account {
 	var account *Account
 
@@ -263,7 +246,7 @@ func (p *Project) AccountByName(name string) *Account {
 	return account
 }
 
-// AliasesForNetwork gets all deployment aliases for network
+// AliasesForNetwork returns all deployment aliases for a network.
 func (p *Project) AliasesForNetwork(network string) map[string]string {
 	aliases := make(map[string]string)
 

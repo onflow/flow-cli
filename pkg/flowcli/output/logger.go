@@ -31,7 +31,6 @@ const (
 	InfoLog  = 3
 )
 
-// Logger interface
 type Logger interface {
 	Debug(string)
 	Info(string)
@@ -40,14 +39,14 @@ type Logger interface {
 	StopProgress()
 }
 
-// NewStdoutLogger create new logger
+// NewStdoutLogger returns a new stdout logger.
 func NewStdoutLogger(level int) *StdoutLogger {
 	return &StdoutLogger{
 		level: level,
 	}
 }
 
-// StdoutLogger stdout logging implementation
+// StdoutLogger is a stdout logging implementation.
 type StdoutLogger struct {
 	level   int
 	spinner *Spinner
@@ -61,17 +60,14 @@ func (s *StdoutLogger) log(msg string, level int) {
 	fmt.Printf("%s\n", msg)
 }
 
-// Info log
 func (s *StdoutLogger) Info(msg string) {
 	s.log(msg, InfoLog)
 }
 
-// Debug log
 func (s *StdoutLogger) Debug(msg string) {
 	s.log(msg, DebugLog)
 }
 
-// Error log
 func (s *StdoutLogger) Error(msg string) {
 	s.log(fmt.Sprintf("❌  %s", util.Red(msg)), ErrorLog)
 }

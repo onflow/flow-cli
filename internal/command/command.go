@@ -62,16 +62,31 @@ type GlobalFlags struct {
 	Log     string
 	Network string
 	Yes     bool
+	ConfigPath []string
 }
+
+const (
+	formatText   = "text"
+	formatInline = "inline"
+	formatJSON   = "json"
+)
+
+const (
+	logLevelDebug = "debug"
+	logLevelInfo  = "info"
+	logLevelError = "error"
+	logLevelNone  = "none"
+)
 
 var flags = GlobalFlags{
 	Filter:  "",
-	Format:  "",
+	Format:     formatText,
 	Save:    "",
 	Host:    "",
-	Log:     "info",
+	Log:        logLevelInfo,
 	Network: "",
 	Yes:     false,
+	ConfigPath: project.DefaultConfigPaths,
 }
 
 // InitFlags init all the global persistent flags
@@ -97,7 +112,7 @@ func InitFlags(cmd *cobra.Command) {
 		"output",
 		"o",
 		flags.Format,
-		"Output format, values: 'json', 'inline'",
+		"Output format, options: \"text\", \"json\", \"inline\"",
 	)
 
 	cmd.PersistentFlags().StringVarP(
@@ -113,14 +128,14 @@ func InitFlags(cmd *cobra.Command) {
 		"log",
 		"l",
 		flags.Log,
-		"Log level verbosity, values: 'none', 'error', 'debug'",
+		"Log level, options: \"debug\", \"info\", \"error\", \"none\"",
 	)
 
 	cmd.PersistentFlags().StringSliceVarP(
-		&util.ConfigPath,
-		"conf",
+		&flags.ConfigPath,
+		"config-path",
 		"f",
-		util.ConfigPath,
+		flags.ConfigPath,
 		"Path to flow configuration file",
 	)
 
@@ -148,7 +163,7 @@ func InitFlags(cmd *cobra.Command) {
 func (c Command) AddToParent(parent *cobra.Command) {
 	c.Cmd.Run = func(cmd *cobra.Command, args []string) {
 		// initialize project but ignore error since config can be missing
-		proj, err := project.Load(util.ConfigPath)
+		proj, err := project.Load(flags.ConfigPath)
 		// here we ignore if config does not exist as some commands don't require it
 		if !errors.Is(err, config.ErrDoesNotExist) {
 			handleError("Config Error", err)
@@ -200,7 +215,7 @@ func resolveHost(proj *project.Project, hostFlag string, networkFlag string) (st
 
 		host = proj.NetworkByName(networkFlag).Host
 	} else if host == "" {
-		host = project.DefaultEmulatorHost
+		host = config.DefaultEmulatorNetwork().Host
 	}
 
 	return host, nil
@@ -209,21 +224,22 @@ func resolveHost(proj *project.Project, hostFlag string, networkFlag string) (st
 // create logger utility
 func createLogger(logFlag string, formatFlag string) output.Logger {
 	// disable logging if we user want a specific format like JSON
-	//(more common they will not want also to have logs)
-	var logLevel int
-	switch logFlag {
-	case "none":
-		logLevel = output.NoneLog
-	case "error":
-		logLevel = output.ErrorLog
-	case "debug":
-		logLevel = output.DebugLog
-	default:
-		logLevel = output.InfoLog
+	// (more common they will not want also to have logs)
+	if formatFlag != formatText {
+		logFlag = logLevelNone
 	}
 
-	if formatFlag != "" {
+	var logLevel int
+
+	switch logFlag {
+	case logLevelDebug:
+		logLevel = output.DebugLog
+	case logLevelError:
+		logLevel = output.ErrorLog
+	case logLevelNone:
 		logLevel = output.NoneLog
+	default:
+		logLevel = output.InfoLog
 	}
 
 	return output.NewStdoutLogger(logLevel)
@@ -232,25 +248,23 @@ func createLogger(logFlag string, formatFlag string) output.Logger {
 // formatResult formats a result for printing.
 func formatResult(result Result, filterFlag string, formatFlag string) (string, error) {
 	if result == nil {
-		return "", fmt.Errorf("Missing")
+		return "", fmt.Errorf("missing result")
 	}
 
 	if filterFlag != "" {
-		var jsonResult map[string]interface{}
-		val, _ := json.Marshal(result.JSON())
-		err := json.Unmarshal(val, &jsonResult)
+		value, err := filterResultValue(result, filterFlag)
 		if err != nil {
 			return "", err
 		}
 
-		return fmt.Sprintf("%v", jsonResult[filterFlag]), nil
+		return fmt.Sprintf("%v", value), nil
 	}
 
 	switch strings.ToLower(formatFlag) {
-	case "json":
+	case formatJSON:
 		jsonRes, _ := json.Marshal(result.JSON())
 		return string(jsonRes), nil
-	case "inline":
+	case formatInline:
 		return result.Oneliner(), nil
 	default:
 		return result.String(), nil
@@ -276,6 +290,29 @@ func outputResult(result string, saveFlag string, formatFlag string, filterFlag 
 	return nil
 }
 
+// filterResultValue returns a value by its name filtered from other result values
+func filterResultValue(result Result, filter string) (interface{}, error) {
+	var jsonResult map[string]interface{}
+	val, _ := json.Marshal(result.JSON())
+	err := json.Unmarshal(val, &jsonResult)
+	if err != nil {
+		return "", err
+	}
+
+	possibleFilters := make([]string, 0)
+	for key := range jsonResult {
+		possibleFilters = append(possibleFilters, key)
+	}
+
+	value := jsonResult[filter]
+
+	if value == nil {
+		return nil, fmt.Errorf("value for filter: '%s' doesn't exists, possible values to filter by: %s", filter, possibleFilters)
+	}
+
+	return value, nil
+}
+
 // handleError handle errors
 func handleError(description string, err error) {
 	if err == nil {
@@ -288,7 +325,10 @@ func handleError(description string, err error) {
 	case *client.RPCError:
 		fmt.Fprintf(os.Stderr, "❌ Grpc Error: %s \n", t.GRPCStatus().Err().Error())
 	default:
-		if strings.Contains(err.Error(), "transport:") {
+		if errors.Is(err, config.ErrOutdatedFormat) {
+			fmt.Fprintf(os.Stderr, "❌ Config Error: %s \n", err.Error())
+			fmt.Fprintf(os.Stderr, "🙏 Please reset configuration using: 'flow init --reset'. Read more about new configuration here: https://github.com/onflow/flow-cli/releases/tag/v0.17.0")
+		} else if strings.Contains(err.Error(), "transport:") {
 			fmt.Fprintf(os.Stderr, "❌ %s \n", strings.Split(err.Error(), "transport:")[1])
 			fmt.Fprintf(os.Stderr, "🙏 Make sure your emulator is running or connection address is correct.")
 		} else if strings.Contains(err.Error(), "NotFound desc =") {

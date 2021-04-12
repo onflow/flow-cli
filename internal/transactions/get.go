@@ -24,29 +24,34 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type flagsStatus struct {
+type flagsGet struct {
 	Sealed bool `default:"true" flag:"sealed" info:"Wait for a sealed result"`
 	Code   bool `default:"false" flag:"code" info:"Display transaction code"`
 }
 
-var statusFlags = flagsStatus{}
+var getFlags = flagsGet{}
 
 var GetCommand = &command.Command{
 	Cmd: &cobra.Command{
-		Use:   "get <tx_id>",
-		Short: "Get transaction by ID",
-		Args:  cobra.ExactArgs(1),
+		Use:     "get <tx_id>",
+		Aliases: []string{"status"},
+		Short:   "Get the transaction by ID",
+		Args:    cobra.ExactArgs(1),
 	},
-	Flags: &statusFlags,
+	Flags: &getFlags,
 	Run: func(
 		cmd *cobra.Command,
 		args []string,
 		globalFlags command.GlobalFlags,
 		services *services.Services,
 	) (command.Result, error) {
+		if cmd.CalledAs() == "status" {
+			fmt.Println("⚠️  DEPRECATION WARNING: use \"flow transactions get\" instead")
+		}
+
 		tx, result, err := services.Transactions.GetStatus(
 			args[0], // transaction id
-			statusFlags.Sealed,
+			getFlags.Sealed,
 		)
 		if err != nil {
 			return nil, err
@@ -55,7 +60,7 @@ var GetCommand = &command.Command{
 		return &TransactionResult{
 			result: result,
 			tx:     tx,
-			code:   statusFlags.Code,
+			code:   getFlags.Code,
 		}, nil
 	},
 }

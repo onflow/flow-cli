@@ -21,15 +21,16 @@ package keys
 import (
 	"fmt"
 
+	"github.com/spf13/cobra"
+
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/pkg/flowcli/services"
-	"github.com/spf13/cobra"
 )
 
 type flagsGenerate struct {
 	Seed       string `flag:"seed" info:"Deterministic seed phrase"`
 	KeySigAlgo string `default:"ECDSA_P256" flag:"sig-algo" info:"Signature algorithm"`
-	Algo       string `default:"" flag:"algo" info:"⚠️  No longer supported: use sig-algo argument"`
+	Algo       string `default:"" flag:"algo" info:"⚠️  Deprecated: use sig-algo argument"`
 }
 
 var generateFlags = flagsGenerate{}
@@ -48,7 +49,8 @@ var GenerateCommand = &command.Command{
 		services *services.Services,
 	) (command.Result, error) {
 		if generateFlags.Algo != "" {
-			return nil, fmt.Errorf("⚠️ Algo flag no longer supported: use '--sig-algo' flag.")
+			fmt.Println("⚠️ DEPRECATION WARNING: flag no longer supported, use '--sig-algo' instead.")
+			generateFlags.KeySigAlgo = generateFlags.Algo
 		}
 
 		privateKey, err := services.Keys.Generate(generateFlags.Seed, generateFlags.KeySigAlgo)

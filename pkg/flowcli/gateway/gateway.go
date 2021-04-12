@@ -20,9 +20,10 @@ package gateway
 
 import (
 	"github.com/onflow/cadence"
-	"github.com/onflow/flow-cli/pkg/flowcli/project"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/client"
+
+	"github.com/onflow/flow-cli/pkg/flowcli/project"
 )
 
 type Gateway interface {

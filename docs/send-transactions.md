@@ -7,7 +7,9 @@ description: How to send a Flow transaction from the command line
 The Flow CLI provides a command to sign and send transactions to
 any Flow Access API.
 
-`flow transactions send`
+```shell
+flow transactions send
+```
 
 ## Example Usage
 
@@ -16,7 +18,7 @@ any Flow Access API.
     --signer my-testnet-account \
     --host access.testnet.nodes.onflow.org:9000
     
-Hash	 f23582ba17322405608c0d3da79312617f8d16e118afe63e764b5e68edc5f211
+ID	 f23582ba17322405608c0d3da79312617f8d16e118afe63e764b5e68edc5f211
 Status	 SEALED
 Payer	 a2c4941b5f3c7151
 Events
@@ -143,7 +145,7 @@ Specify the log level. Control how much output you want to see during command ex
 
 ### Configuration
 
-- Flag: `--conf`
+- Flag: `--config-path`
 - Short Flag: `-f`
 - Valid inputs: a path in the current filesystem.
 - Default: `flow.json`

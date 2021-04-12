@@ -51,15 +51,15 @@ type TransactionResult struct {
 // JSON convert result to JSON
 func (r *TransactionResult) JSON() interface{} {
 	result := make(map[string]string)
-	result["Hash"] = r.tx.ID().String()
-	result["Payload"] = fmt.Sprintf("%x", r.tx.Encode())
-	result["Authorizers"] = fmt.Sprintf("%s", r.tx.Authorizers)
-	result["Payer"] = r.tx.Payer.String()
+	result["id"] = r.tx.ID().String()
+	result["payload"] = fmt.Sprintf("%x", r.tx.Encode())
+	result["authorizers"] = fmt.Sprintf("%s", r.tx.Authorizers)
+	result["payer"] = r.tx.Payer.String()
 
 	if r.result != nil {
-		result["Events"] = fmt.Sprintf("%s", r.result.Events)
-		result["Status"] = r.result.Status.String()
-		result["Error"] = r.result.Error.Error()
+		result["events"] = fmt.Sprintf("%s", r.result.Events)
+		result["status"] = r.result.Status.String()
+		result["error"] = r.result.Error.Error()
 	}
 
 	return result
@@ -147,5 +147,5 @@ func (r *TransactionResult) String() string {
 
 // Oneliner show result as one liner grep friendly
 func (r *TransactionResult) Oneliner() string {
-	return fmt.Sprintf("Hash: %s, Status: %s, Events: %s", r.tx.ID(), r.result.Status, r.result.Events)
+	return fmt.Sprintf("ID: %s, Status: %s, Events: %s", r.tx.ID(), r.result.Status, r.result.Events)
 }

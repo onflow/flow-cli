@@ -22,10 +22,11 @@ import (
 	"fmt"
 
 	"github.com/onflow/cadence"
-	"github.com/onflow/flow-cli/pkg/flowcli/project"
 	emulator "github.com/onflow/flow-emulator"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/client"
+
+	"github.com/onflow/flow-cli/pkg/flowcli/project"
 )
 
 type EmulatorGateway struct {

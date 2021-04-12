@@ -20,11 +20,11 @@ package config_test
 import (
 	"testing"
 
-	"github.com/onflow/flow-cli/pkg/flowcli/config"
-
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/onflow/flow-cli/pkg/flowcli/config"
 )
 
 func generateComplexConfig() config.Config {
@@ -153,15 +153,6 @@ func Test_GetAccountByNameComplex(t *testing.T) {
 	acc := conf.Accounts.GetByName("account-4")
 
 	assert.Equal(t, acc.Address.String(), "f8d6e0586b0a20c1")
-}
-
-func Test_GetAccountByAddressComplex(t *testing.T) {
-	conf := generateComplexConfig()
-	acc1 := conf.Accounts.GetByAddress("f8d6e0586b0a20c1")
-	acc2 := conf.Accounts.GetByAddress("2c1162386b0a245f")
-
-	assert.Equal(t, acc1.Name, "account-4")
-	assert.Equal(t, acc2.Name, "account-2")
 }
 
 func Test_GetDeploymentsByNetworkComplex(t *testing.T) {

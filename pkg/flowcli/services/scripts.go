@@ -19,24 +19,23 @@
 package services
 
 import (
+	"github.com/onflow/cadence"
+
 	"github.com/onflow/flow-cli/pkg/flowcli"
+	"github.com/onflow/flow-cli/pkg/flowcli/gateway"
 	"github.com/onflow/flow-cli/pkg/flowcli/output"
 	"github.com/onflow/flow-cli/pkg/flowcli/project"
 	"github.com/onflow/flow-cli/pkg/flowcli/util"
-
-	"github.com/onflow/cadence"
-
-	"github.com/onflow/flow-cli/pkg/flowcli/gateway"
 )
 
-// Scripts service handles all interactions for scripts
+// Scripts is a service that handles all script-related interactions.
 type Scripts struct {
 	gateway gateway.Gateway
 	project *project.Project
 	logger  output.Logger
 }
 
-// NewScripts create new script service
+// NewScripts returns a new scripts service.
 func NewScripts(
 	gateway gateway.Gateway,
 	project *project.Project,
@@ -49,7 +48,7 @@ func NewScripts(
 	}
 }
 
-// Execute script
+// Execute executes a Cadence script from a file.
 func (s *Scripts) Execute(scriptFilename string, args []string, argsJSON string) (cadence.Value, error) {
 	script, err := util.LoadFile(scriptFilename)
 	if err != nil {
@@ -59,6 +58,7 @@ func (s *Scripts) Execute(scriptFilename string, args []string, argsJSON string)
 	return s.execute(script, args, argsJSON)
 }
 
+// Execute executes a Cadence script from a source code string.
 func (s *Scripts) ExecuteWithCode(code []byte, args []string, argsJSON string) (cadence.Value, error) {
 	return s.execute(code, args, argsJSON)
 }

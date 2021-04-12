@@ -25,9 +25,7 @@ import (
 	"text/tabwriter"
 
 	"github.com/onflow/flow-go-sdk"
-
 	"github.com/onflow/flow-go-sdk/crypto"
-
 	"github.com/spf13/cobra"
 )
 
@@ -51,8 +49,8 @@ type KeyResult struct {
 // JSON convert result to JSON
 func (k *KeyResult) JSON() interface{} {
 	result := make(map[string]string)
-	result["Private"] = hex.EncodeToString(k.privateKey.PublicKey().Encode())
-	result["Public"] = hex.EncodeToString(k.privateKey.Encode())
+	result["private"] = hex.EncodeToString(k.privateKey.PublicKey().Encode())
+	result["public"] = hex.EncodeToString(k.privateKey.Encode())
 
 	return result
 }
@@ -73,6 +71,7 @@ func (k *KeyResult) String() string {
 		fmt.Fprintf(writer, "Signature algorithm \t %s\n", k.accountKey.SigAlgo)
 		fmt.Fprintf(writer, "Hash algorithm \t %s\n", k.accountKey.HashAlgo)
 		fmt.Fprintf(writer, "Weight \t %d\n", k.accountKey.Weight)
+		fmt.Fprintf(writer, "Revoked \t %t\n", k.accountKey.Revoked)
 	}
 
 	writer.Flush()
@@ -83,8 +82,4 @@ func (k *KeyResult) String() string {
 // Oneliner show result as one liner grep friendly
 func (k *KeyResult) Oneliner() string {
 	return fmt.Sprintf("Private Key: %x, Public Key: %x", k.privateKey.Encode(), k.publicKey.Encode())
-}
-
-func (k *KeyResult) ToConfig() string {
-	return ""
 }

@@ -19,6 +19,8 @@
 package config
 
 import (
+	"errors"
+
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
 )
@@ -37,21 +39,21 @@ type Accounts []Account
 type Deployments []Deploy
 type Emulators []Emulator
 
-// Network config sets host and chain id
+// Network defines the configuration for a Flow network.
 type Network struct {
 	Name    string
 	Host    string
 	ChainID flow.ChainID
 }
 
-// Deploy structure for contract
+// Deploy defines the configuration for a contract deployment.
 type Deploy struct {
 	Network   string   // network name to deploy to
 	Account   string   // account name to which to deploy to
 	Contracts []string // contracts names to deploy
 }
 
-// Contract is config for contract
+// Contract defines the configuration for a Cadence contract.
 type Contract struct {
 	Name    string
 	Source  string
@@ -59,7 +61,7 @@ type Contract struct {
 	Alias   string
 }
 
-// Account is main config for each account
+// Account defines the configuration for a Flow account.
 type Account struct {
 	Name    string
 	Address flow.Address
@@ -67,7 +69,7 @@ type Account struct {
 	Keys    []AccountKey
 }
 
-// AccountKey is config for account key
+// AccountKey defines the configuration for a Flow account key.
 type AccountKey struct {
 	Type     KeyType
 	Index    int
@@ -76,7 +78,7 @@ type AccountKey struct {
 	Context  map[string]string
 }
 
-// Emulator is config for emulator
+// Emulator defines the configuration for a Flow Emulator instance.
 type Emulator struct {
 	Name           string
 	Port           int
@@ -86,27 +88,74 @@ type Emulator struct {
 type KeyType string
 
 const (
-	KeyTypeHex                KeyType = "hex"        // Hex private key with in memory signer
-	KeyTypeGoogleKMS          KeyType = "google-kms" // Google KMS signer
-	KeyTypeShell              KeyType = "shell"      // Exec out to a shell script
-	DefaultEmulatorConfigName         = "default"
-	PrivateKeyField                   = "privateKey"
-	KMSContextField                   = "resourceName"
+	KeyTypeHex                        KeyType = "hex"        // Hex private key with in memory signer
+	KeyTypeGoogleKMS                  KeyType = "google-kms" // Google KMS signer
+	KeyTypeShell                      KeyType = "shell"      // Exec out to a shell script
+	DefaultEmulatorConfigName                 = "default"
+	PrivateKeyField                           = "privateKey"
+	KMSContextField                           = "resourceName"
+	DefaultEmulatorServiceAccountName         = "emulator-account"
 )
 
-//TODO: replace filter with find where only one is expected
-// GetForNetwork get all contracts by network
-func (c *Contracts) GetForNetwork(network string) Contracts {
-	contracts := make(Contracts, 0)
-
-	for _, contract := range *c {
-		if contract.Network == network {
-			contracts = append(contracts, contract)
-		}
+// DefaultEmulatorNetwork get default emulator network
+func DefaultEmulatorNetwork() Network {
+	return Network{
+		Name:    "emulator",
+		Host:    "127.0.0.1:3569",
+		ChainID: flow.Emulator,
 	}
-
-	return contracts
 }
+
+// DefaultTestnetNetwork get default testnet network
+func DefaultTestnetNetwork() Network {
+	return Network{
+		Name:    "testnet",
+		Host:    "access.devnet.nodes.onflow.org:9000",
+		ChainID: flow.Testnet,
+	}
+}
+
+// DefaultMainnetNetwork get default mainnet network
+func DefaultMainnetNetwork() Network {
+	return Network{
+		Name:    "mainnet",
+		Host:    "access.mainnet.nodes.onflow.org:9000",
+		ChainID: flow.Mainnet,
+	}
+}
+
+// DefaultNetworks gets all default networks
+func DefaultNetworks() Networks {
+	return Networks{
+		DefaultEmulatorNetwork(),
+		DefaultTestnetNetwork(),
+		DefaultMainnetNetwork(),
+	}
+}
+
+// DefaultEmulator gets default emulator
+func DefaultEmulator() Emulator {
+	return Emulator{
+		Name:           "default",
+		ServiceAccount: DefaultEmulatorServiceAccountName,
+		Port:           3569,
+	}
+}
+
+// DefaultConfig gets default configuration
+func DefaultConfig() *Config {
+	return &Config{
+		Emulators: DefaultEmulators(),
+		Networks:  DefaultNetworks(),
+	}
+}
+
+// DefaultEmulators gets all default emulators
+func DefaultEmulators() Emulators {
+	return Emulators{DefaultEmulator()}
+}
+
+var ErrOutdatedFormat = errors.New("you are using old configuration format")
 
 // IsAlias checks if contract has an alias
 func (c *Contract) IsAlias() bool {
@@ -180,17 +229,6 @@ func (c *Contracts) AddOrUpdate(name string, contract Contract) {
 func (a *Accounts) GetByName(name string) *Account {
 	for _, account := range *a {
 		if account.Name == name {
-			return &account
-		}
-	}
-
-	return nil
-}
-
-// GetByAddress get account by address
-func (a *Accounts) GetByAddress(address string) *Account {
-	for _, account := range *a {
-		if account.Address.String() == address {
 			return &account
 		}
 	}

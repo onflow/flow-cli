@@ -23,11 +23,11 @@ import (
 	"fmt"
 	"text/tabwriter"
 
-	"github.com/onflow/flow-cli/internal/events"
-
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/client"
 	"github.com/spf13/cobra"
+
+	"github.com/onflow/flow-cli/internal/events"
 )
 
 var Cmd = &cobra.Command{
@@ -51,29 +51,29 @@ type BlockResult struct {
 // JSON convert result to JSON
 func (r *BlockResult) JSON() interface{} {
 	result := make(map[string]interface{})
-	result["BlockID"] = r.block.ID.String()
-	result["ParentID"] = r.block.ParentID.String()
-	result["Height"] = r.block.Height
-	result["TotalSeals"] = len(r.block.Seals)
-	result["TotalCollections"] = len(r.block.CollectionGuarantees)
+	result["blockId"] = r.block.ID.String()
+	result["parentId"] = r.block.ParentID.String()
+	result["height"] = r.block.Height
+	result["totalSeals"] = len(r.block.Seals)
+	result["totalCollections"] = len(r.block.CollectionGuarantees)
 
 	collections := make([]interface{}, 0)
 	for i, guarantee := range r.block.CollectionGuarantees {
 		collection := make(map[string]interface{})
-		collection["ID"] = guarantee.CollectionID.String()
+		collection["id"] = guarantee.CollectionID.String()
 
 		if r.verbose {
 			txs := make([]string, 0)
 			for _, tx := range r.collections[i].TransactionIDs {
 				txs = append(txs, tx.String())
 			}
-			collection["Transactions"] = txs
+			collection["transactions"] = txs
 		}
 
 		collections = append(collections, collection)
 	}
 
-	result["Collection"] = collections
+	result["collection"] = collections
 	return result
 }
 

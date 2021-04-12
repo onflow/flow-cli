@@ -24,12 +24,12 @@ import (
 	"io"
 	"text/tabwriter"
 
-	"github.com/onflow/flow-cli/pkg/flowcli/util"
-
 	"github.com/onflow/cadence"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/client"
 	"github.com/spf13/cobra"
+
+	"github.com/onflow/flow-cli/pkg/flowcli/util"
 )
 
 var Cmd = &cobra.Command{
@@ -54,10 +54,10 @@ func (k *EventResult) JSON() interface{} {
 	for _, blockEvent := range k.BlockEvents {
 		if len(blockEvent.Events) > 0 {
 			for _, event := range blockEvent.Events {
-				result["BlockID"][blockEvent.Height]["Index"] = event.EventIndex
-				result["BlockID"][blockEvent.Height]["Type"] = event.Type
-				result["BlockID"][blockEvent.Height]["TxID"] = event.TransactionID
-				result["BlockID"][blockEvent.Height]["Values"] = event.Value
+				result["blockId"][blockEvent.Height]["index"] = event.EventIndex
+				result["blockId"][blockEvent.Height]["type"] = event.Type
+				result["blockId"][blockEvent.Height]["transactionId"] = event.TransactionID
+				result["blockId"][blockEvent.Height]["values"] = event.Value
 			}
 		}
 	}

@@ -21,16 +21,17 @@ package scripts
 import (
 	"fmt"
 
+	"github.com/spf13/cobra"
+
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/pkg/flowcli/services"
-	"github.com/spf13/cobra"
 )
 
 type flagsScripts struct {
 	ArgsJSON string   `default:"" flag:"args-json" info:"arguments in JSON-Cadence format"`
 	Arg      []string `default:"" flag:"arg" info:"argument in Type:Value format"`
-	Code     bool     `default:"false" flag:"code" info:"⚠️  No longer supported: use filename argument"`
-	Args     string   `default:"false" flag:"args" info:"⚠️  No longer supported: use arg or args-json flag"`
+	Code     string   `default:"" flag:"code" info:"⚠️  Deprecated: use filename argument"`
+	Args     string   `default:"" flag:"args" info:"⚠️  Deprecated: use arg or args-json flag"`
 }
 
 var scriptFlags = flagsScripts{}
@@ -40,7 +41,7 @@ var ExecuteCommand = &command.Command{
 		Use:     "execute <filename>",
 		Short:   "Execute a script",
 		Example: `flow scripts execute script.cdc --arg String:"Meow" --arg String:"Woof"`,
-		Args:    cobra.ExactArgs(1),
+		Args:    cobra.MaximumNArgs(1),
 	},
 	Flags: &scriptFlags,
 	Run: func(
@@ -49,15 +50,26 @@ var ExecuteCommand = &command.Command{
 		globalFlags command.GlobalFlags,
 		services *services.Services,
 	) (command.Result, error) {
-		if scriptFlags.Code {
-			return nil, fmt.Errorf("⚠️  No longer supported: use filename argument")
+		filename := ""
+		if len(args) == 1 {
+			filename = args[0]
+		} else if scriptFlags.Code != "" {
+			fmt.Println("⚠️  DEPRECATION WARNING: use filename as a command argument <filename>")
+			filename = scriptFlags.Code
+		} else {
+			return nil, fmt.Errorf("provide a valide filename command argument")
 		}
+
 		if scriptFlags.Args != "" {
-			return nil, fmt.Errorf("⚠️  No longer supported: use arg flag in Type:Value format or arg-json for JSON format")
+			fmt.Println("⚠️  DEPRECATION WARNING: use arg flag in Type:Value format or args-json for JSON format")
+
+			if len(scriptFlags.Arg) == 0 && scriptFlags.ArgsJSON == "" {
+				scriptFlags.ArgsJSON = scriptFlags.Args // backward compatible, args was in json format
+			}
 		}
 
 		value, err := services.Scripts.Execute(
-			args[0], // filename
+			filename,
 			scriptFlags.Arg,
 			scriptFlags.ArgsJSON,
 		)

@@ -21,11 +21,11 @@ package json
 import (
 	"encoding/json"
 
-	"github.com/onflow/flow-cli/pkg/flowcli/util"
-
-	"github.com/onflow/flow-cli/pkg/flowcli/config"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
+
+	"github.com/onflow/flow-cli/pkg/flowcli/config"
+	"github.com/onflow/flow-cli/pkg/flowcli/util"
 )
 
 type jsonAccounts map[string]jsonAccount

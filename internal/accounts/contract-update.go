@@ -21,14 +21,15 @@ package accounts
 import (
 	"fmt"
 
+	"github.com/spf13/cobra"
+
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/pkg/flowcli/services"
-	"github.com/spf13/cobra"
 )
 
 type flagsUpdateContract struct {
-	Signer  string `default:"emulator-account" flag:"signer"`
-	Results bool   `default:"false" flag:"results" info:"⚠️  No longer supported: results are provided by default"`
+	Signer  string `default:"emulator-account" flag:"signer" info:"Account name from configuration used to sign the transaction"`
+	Results bool   `default:"false" flag:"results" info:"⚠️  Deprecated: results are provided by default"`
 }
 
 var updateFlags = flagsUpdateContract{}
@@ -47,8 +48,8 @@ var UpdateCommand = &command.Command{
 		globalFlags command.GlobalFlags,
 		services *services.Services,
 	) (command.Result, error) {
-		if createFlags.Results {
-			return nil, fmt.Errorf("⚠️ Results flag is no longer supported, results are by default included in all executions.")
+		if updateFlags.Results {
+			fmt.Println("⚠️ DEPRECATION WARNING: results flag is deprecated, results are by default included in all executions")
 		}
 
 		account, err := services.Accounts.AddContract(

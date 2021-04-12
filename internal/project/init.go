@@ -19,31 +19,21 @@
 package project
 
 import (
-	"bytes"
 	"fmt"
-	"text/tabwriter"
 
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
-	"github.com/onflow/flow-cli/pkg/flowcli/project"
+	"github.com/onflow/flow-cli/internal/config"
 	"github.com/onflow/flow-cli/pkg/flowcli/services"
-	"github.com/onflow/flow-cli/pkg/flowcli/util"
 )
 
-type flagsInit struct {
-	ServicePrivateKey  string `flag:"service-private-key" info:"Service account private key"`
-	ServiceKeySigAlgo  string `default:"ECDSA_P256" flag:"service-sig-algo" info:"Service account key signature algorithm"`
-	ServiceKeyHashAlgo string `default:"SHA3_256" flag:"service-hash-algo" info:"Service account key hash algorithm"`
-	Reset              bool   `default:"false" flag:"reset" info:"Reset flow.json config file"`
-}
-
-var initFlag = flagsInit{}
+var initFlag = config.FlagsInit{}
 
 var InitCommand = &command.Command{
 	Cmd: &cobra.Command{
 		Use:   "init",
-		Short: "Initialize a new account profile",
+		Short: "Initialize a new configuration",
 	},
 	Flags: &initFlag,
 	Run: func(
@@ -52,6 +42,8 @@ var InitCommand = &command.Command{
 		globalFlags command.GlobalFlags,
 		services *services.Services,
 	) (command.Result, error) {
+		fmt.Println("⚠️  DEPRECATION WARNING: use \"flow init\" instead")
+
 		proj, err := services.Project.Init(
 			initFlag.Reset,
 			initFlag.ServiceKeySigAlgo,
@@ -62,39 +54,6 @@ var InitCommand = &command.Command{
 			return nil, err
 		}
 
-		return &InitResult{proj}, nil
+		return &config.InitResult{Project: proj}, nil
 	},
-}
-
-// InitResult result structure
-type InitResult struct {
-	*project.Project
-}
-
-// JSON convert result to JSON
-func (r *InitResult) JSON() interface{} {
-	return r
-}
-
-// String convert result to string
-func (r *InitResult) String() string {
-	var b bytes.Buffer
-	writer := tabwriter.NewWriter(&b, 0, 8, 1, '\t', tabwriter.AlignRight)
-	account, _ := r.Project.EmulatorServiceAccount()
-
-	fmt.Fprintf(writer, "Configuration initialized\n")
-	fmt.Fprintf(writer, "Service account: %s\n\n", util.Bold("0x"+account.Address().String()))
-	fmt.Fprintf(writer,
-		"Start emulator by running: %s \nReset configuration using: %s\n",
-		util.Bold("'flow emulator'"),
-		util.Bold("'flow project init --reset'"),
-	)
-
-	writer.Flush()
-	return b.String()
-}
-
-// Oneliner show result as one liner grep friendly
-func (r *InitResult) Oneliner() string {
-	return ""
 }

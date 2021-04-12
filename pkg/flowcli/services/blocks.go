@@ -22,23 +22,22 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/onflow/flow-cli/pkg/flowcli/output"
-	"github.com/onflow/flow-cli/pkg/flowcli/project"
-
+	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/client"
 
 	"github.com/onflow/flow-cli/pkg/flowcli/gateway"
-	"github.com/onflow/flow-go-sdk"
+	"github.com/onflow/flow-cli/pkg/flowcli/output"
+	"github.com/onflow/flow-cli/pkg/flowcli/project"
 )
 
-// Blocks service handles all interactions for blocks
+// Blocks is a service that handles all block-related interactions.
 type Blocks struct {
 	gateway gateway.Gateway
 	project *project.Project
 	logger  output.Logger
 }
 
-// NewBlocks create new block service
+// NewBlocks returns a new blocks service.
 func NewBlocks(
 	gateway gateway.Gateway,
 	project *project.Project,
@@ -51,7 +50,12 @@ func NewBlocks(
 	}
 }
 
-// Get the block
+// GetBlock returns a block based on the provided query string.
+//
+// Query string options:
+// - "latest"                : return the latest block
+// - height (e.g. 123456789) : return block at this height
+// - ID                      : return block with this ID
 func (e *Blocks) GetBlock(
 	query string,
 	eventType string,

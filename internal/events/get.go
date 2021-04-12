@@ -21,13 +21,14 @@ package events
 import (
 	"fmt"
 
+	"github.com/spf13/cobra"
+
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/pkg/flowcli/services"
-	"github.com/spf13/cobra"
 )
 
 type flagsGenerate struct {
-	Verbose bool `flag:"verbose" info:"⚠️  No longer supported"`
+	Verbose bool `flag:"verbose" info:"⚠️  Deprecated"`
 }
 
 var generateFlag = flagsGenerate{}
@@ -47,7 +48,7 @@ var GetCommand = &command.Command{
 		services *services.Services,
 	) (command.Result, error) {
 		if generateFlag.Verbose {
-			return nil, fmt.Errorf("⚠️  No longer supported.")
+			fmt.Println("⚠️  DEPRECATION WARNING: verbose flag is deprecated")
 		}
 
 		end := ""

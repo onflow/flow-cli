@@ -30,14 +30,14 @@ import (
 	"github.com/onflow/flow-go-sdk/crypto"
 )
 
-// Project service handles all interactions for project
+// Project is a service that handles all interactions for a project.
 type Project struct {
 	gateway gateway.Gateway
 	project *project.Project
 	logger  output.Logger
 }
 
-// NewProject create new project service
+// NewProject returns a new project service.
 func NewProject(
 	gateway gateway.Gateway,
 	project *project.Project,
@@ -50,48 +50,57 @@ func NewProject(
 	}
 }
 
-func (p *Project) Init(reset bool, serviceKeySigAlgo string, serviceKeyHashAlgo string, servicePrivateKey string) (*project.Project, error) {
-	if !project.Exists(project.DefaultConfigPath) || reset {
-
-		sigAlgo, hashAlgo, err := util.ConvertSigAndHashAlgo(serviceKeySigAlgo, serviceKeyHashAlgo)
-		if err != nil {
-			return nil, err
-		}
-
-		proj, err := project.Init(sigAlgo, hashAlgo)
-		if err != nil {
-			return nil, err
-		}
-
-		if len(servicePrivateKey) > 0 {
-			serviceKey, err := crypto.DecodePrivateKeyHex(sigAlgo, servicePrivateKey)
-			if err != nil {
-				return nil, fmt.Errorf("could not decode private key for a service account, provided private key: %s", servicePrivateKey)
-			}
-
-			proj.SetEmulatorServiceKey(serviceKey)
-		}
-
-		err = proj.Save(project.DefaultConfigPath)
-		if err != nil {
-			return nil, err
-		}
-
-		return proj, nil
-	} else {
-		return nil, fmt.Errorf("configuration already exists at: %s, if you want to reset configuration use the reset flag", project.DefaultConfigPath)
+func (p *Project) Init(
+	reset bool,
+	serviceKeySigAlgo string,
+	serviceKeyHashAlgo string,
+	servicePrivateKey string,
+) (*project.Project, error) {
+	if project.Exists(project.DefaultConfigPath) && !reset {
+		return nil, fmt.Errorf(
+			"configuration already exists at: %s, if you want to reset configuration use the reset flag",
+			project.DefaultConfigPath,
+		)
 	}
+
+	sigAlgo, hashAlgo, err := util.ConvertSigAndHashAlgo(serviceKeySigAlgo, serviceKeyHashAlgo)
+	if err != nil {
+		return nil, err
+	}
+
+	proj, err := project.Init(sigAlgo, hashAlgo)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(servicePrivateKey) > 0 {
+		serviceKey, err := crypto.DecodePrivateKeyHex(sigAlgo, servicePrivateKey)
+		if err != nil {
+			return nil, fmt.Errorf("could not decode private key for a service account, provided private key: %s", servicePrivateKey)
+		}
+
+		proj.SetEmulatorServiceKey(serviceKey)
+	}
+
+	err = proj.Save(project.DefaultConfigPath)
+	if err != nil {
+		return nil, err
+	}
+
+	return proj, nil
 }
 
 func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, error) {
 	if p.project == nil {
-		return nil, fmt.Errorf("missing configuration, initialize it: flow project init")
+		return nil, fmt.Errorf("missing configuration, initialize it: flow init")
 	}
 
 	// check there are not multiple accounts with same contract
 	// TODO: specify which contract by name is a problem
 	if p.project.ContractConflictExists(network) {
-		return nil, fmt.Errorf("currently it is not possible to deploy same contract with multiple accounts, please check Deployments in config and make sure a contract is only present in one account")
+		return nil, fmt.Errorf(
+			"the same contract cannot be deployed to multiple accounts on the same network",
+		)
 	}
 
 	processor := contracts.NewPreprocessor(
@@ -115,19 +124,19 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 		return nil, err
 	}
 
-	contracts, err := processor.ContractDeploymentOrder()
+	orderedContracts, err := processor.ContractDeploymentOrder()
 	if err != nil {
 		return nil, err
 	}
 
 	p.logger.Info(fmt.Sprintf(
-		"Deploying %v contracts for accounts: %s",
-		len(contracts),
-		strings.Join(p.project.AllAccountName(), ","),
+		"\nDeploying %d contracts for accounts: %s\n",
+		len(orderedContracts),
+		strings.Join(p.project.AccountNamesForNetwork(network), ","),
 	))
 
-	var errs []error
-	for _, contract := range contracts {
+	deployErr := false
+	for _, contract := range orderedContracts {
 		targetAccount := p.project.AccountByAddress(contract.Target().String())
 
 		if targetAccount == nil {
@@ -148,8 +157,11 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 		if exists {
 			if !update {
 				p.logger.Error(fmt.Sprintf(
-					"Contract %s is already deployed to account, use --update flag to force update.", contract.Name(),
+					"contract %s is already deployed to this account. Use the --update flag to force update",
+					contract.Name(),
 				))
+
+				deployErr = true
 				continue
 			}
 
@@ -162,7 +174,7 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 		sentTx, err := p.gateway.SendTransaction(tx)
 		if err != nil {
 			p.logger.Error(err.Error())
-			errs = append(errs, err)
+			deployErr = true
 		}
 
 		p.logger.StartProgress(
@@ -172,29 +184,27 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 		result, err := p.gateway.GetTransactionResult(sentTx, true)
 		if err != nil {
 			p.logger.Error(err.Error())
-			errs = append(errs, err)
+			deployErr = true
 		}
 
-		if result.Error == nil {
+		if result.Error == nil && !deployErr {
 			p.logger.StopProgress()
 			fmt.Printf("%s -> 0x%s\n", util.Green(contract.Name()), contract.Target())
-
 		} else {
 			p.logger.StopProgress()
 			p.logger.Error(
 				fmt.Sprintf("%s error: %s", contract.Name(), result.Error),
 			)
-
-			errs = append(errs, result.Error)
 		}
 	}
 
-	if len(errs) == 0 {
+	if !deployErr {
 		p.logger.Info("\n✨  All contracts deployed successfully")
 	} else {
-		p.logger.Error(fmt.Sprintf("Failed to deploy the contracts with error: %s", errs))
-		return nil, fmt.Errorf(`%v`, errs)
+		err = fmt.Errorf("failed to deploy contracts")
+		p.logger.Error(err.Error())
+		return nil, err
 	}
 
-	return contracts, nil
+	return orderedContracts, nil
 }

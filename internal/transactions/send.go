@@ -29,10 +29,10 @@ import (
 type flagsSend struct {
 	ArgsJSON string   `default:"" flag:"args-json" info:"arguments in JSON-Cadence format"`
 	Arg      []string `default:"" flag:"arg" info:"argument in Type:Value format"`
-	Signer   string   `default:"emulator-account" flag:"signer"`
-	Code     string   `default:"" flag:"code" info:"⚠️  No longer supported: use filename argument"`
-	Results  bool     `default:"" flag:"results" info:"⚠️  No longer supported: all transactions will provide result"`
-	Args     string   `default:"false" flag:"args" info:"⚠️  No longer supported: use arg or args-json flag"`
+	Signer   string   `default:"emulator-account" flag:"signer" info:"Account name from configuration used to sign the transaction"`
+	Code     string   `default:"" flag:"code" info:"⚠️  Deprecated: use filename argument"`
+	Results  bool     `default:"" flag:"results" info:"⚠️  Deprecated: all transactions will provide result"`
+	Args     string   `default:"" flag:"args" info:"⚠️  Deprecated: use arg or args-json flag"`
 	Payload  string   `flag:"payload" info:"path to the transaction payload file"`
 }
 
@@ -52,24 +52,30 @@ var SendCommand = &command.Command{
 		globalFlags command.GlobalFlags,
 		services *services.Services,
 	) (command.Result, error) {
-		if sendFlags.Code != "" {
-			return nil, fmt.Errorf("⚠️  No longer supported: use filename argument")
-		}
 		if sendFlags.Results {
-			return nil, fmt.Errorf("⚠️  No longer supported: all transactions will provide results")
+			fmt.Println("⚠️  DEPRECATION WARNING: all transactions will provide results")
 		}
+
 		if sendFlags.Args != "" {
-			return nil, fmt.Errorf("⚠️  No longer supported: use arg flag in Type:Value format or arg-json for JSON format")
+			fmt.Println("⚠️  DEPRECATION WARNING: use arg flag in Type:Value format or arg-json for JSON format")
+
+			if len(sendFlags.Arg) == 0 && sendFlags.ArgsJSON == "" {
+				sendFlags.ArgsJSON = sendFlags.Args // backward compatible, args was in json format
+			}
 		}
 
 		filename := ""
-		if len(args) > 0 {
+		if len(args) == 1 {
 			filename = args[0]
+		} else if sendFlags.Code != "" {
+			fmt.Println("⚠️  DEPRECATION WARNING: use filename as a command argument <filename>")
+			filename = sendFlags.Code
+		} else {
+			return nil, fmt.Errorf("provide a valide filename command argument")
 		}
 
 		tx, result, err := services.Transactions.Send(
 			filename,
-			sendFlags.Payload,
 			sendFlags.Signer,
 			sendFlags.Arg,
 			sendFlags.ArgsJSON,

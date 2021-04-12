@@ -10,3 +10,9 @@ linters:
     - ineffassign
     - typecheck
     - misspell
+    - goimports
+    - unused
+linters-settings:
+  goimports:
+    # put imports beginning with prefix after 3rd-party package
+    local-prefixes: github.com/onflow/flow-cli

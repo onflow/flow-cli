@@ -23,6 +23,7 @@ import (
 	"fmt"
 	"text/tabwriter"
 
+	"github.com/onflow/cadence"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/spf13/cobra"
 )
@@ -50,7 +51,33 @@ type AccountResult struct {
 
 // JSON convert result to JSON
 func (r *AccountResult) JSON() interface{} {
-	return r
+	result := make(map[string]interface{})
+	result["address"] = r.Address
+	result["balance"] = r.Balance
+
+	keys := make([]string, 0)
+	for _, key := range r.Keys {
+		keys = append(keys, fmt.Sprintf("%x", key.PublicKey.Encode()))
+	}
+
+	result["keys"] = keys
+
+	contracts := make([]string, 0)
+	for name := range r.Contracts {
+		contracts = append(contracts, name)
+	}
+
+	result["contracts"] = contracts
+
+	if r.showCode {
+		c := make(map[string]string)
+		for name, code := range r.Contracts {
+			c[name] = string(code)
+		}
+		result["code"] = c
+	}
+
+	return result
 }
 
 // String convert result to string
@@ -59,7 +86,7 @@ func (r *AccountResult) String() string {
 	writer := tabwriter.NewWriter(&b, 0, 8, 1, '\t', tabwriter.AlignRight)
 
 	fmt.Fprintf(writer, "Address\t 0x%s\n", r.Address)
-	fmt.Fprintf(writer, "Balance\t %d\n", r.Balance)
+	fmt.Fprintf(writer, "Balance\t %s\n", cadence.UFix64(r.Balance))
 
 	fmt.Fprintf(writer, "Keys\t %d\n", len(r.Keys))
 
@@ -68,6 +95,7 @@ func (r *AccountResult) String() string {
 		fmt.Fprintf(writer, "\tWeight\t %d\n", key.Weight)
 		fmt.Fprintf(writer, "\tSignature Algorithm\t %s\n", key.SigAlgo)
 		fmt.Fprintf(writer, "\tHash Algorithm\t %s\n", key.HashAlgo)
+		fmt.Fprintf(writer, "\tRevoked \t %t\n", key.Revoked)
 		fmt.Fprintf(writer, "\n")
 	}
 
@@ -96,9 +124,4 @@ func (r *AccountResult) Oneliner() string {
 	}
 
 	return fmt.Sprintf("Address: 0x%s, Balance: %v, Public Keys: %s", r.Address, r.Balance, keys)
-}
-
-func (r *AccountResult) ToConfig() string {
-	// TODO: it would be good to have a --save-config flag and it would be added to config
-	return ""
 }

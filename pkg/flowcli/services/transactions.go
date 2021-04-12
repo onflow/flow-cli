@@ -22,22 +22,25 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/onflow/flow-cli/pkg/flowcli"
 	"github.com/onflow/flow-cli/pkg/flowcli/output"
 	"github.com/onflow/flow-cli/pkg/flowcli/project"
 
+	"github.com/onflow/flow-cli/pkg/flowcli/config"
 	"github.com/onflow/flow-cli/pkg/flowcli/gateway"
+	"github.com/onflow/flow-cli/pkg/flowcli/util"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
 )
 
-// Scripts service handles all interactions for transactions
+// Transactions is a service that handles all transaction-related interactions.
 type Transactions struct {
 	gateway gateway.Gateway
 	project *project.Project
 	logger  output.Logger
 }
 
-// NewTransactions create new transaction service
+// NewTransactions returns a new transactions service.
 func NewTransactions(
 	gateway gateway.Gateway,
 	project *project.Project,
@@ -175,7 +178,7 @@ func (t *Transactions) Sign(
 	return tx.Sign()
 }
 
-// Send transaction
+// Send sends a transaction from a file.
 func (t *Transactions) Send(
 	transactionFilename string,
 	payloadFilename string,
