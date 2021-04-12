@@ -22,6 +22,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/onflow/flow-cli/pkg/flowcli/config"
+
 	"github.com/onflow/cadence"
 	jsoncdc "github.com/onflow/cadence/encoding/json"
 
@@ -161,22 +163,30 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 		_, exists := targetAccountInfo.Contracts[contract.Name()]
 		if exists {
 			if !update {
-				p.logger.Error(fmt.Sprintf(
-					"Contract %s is already deployed to this account. Use the --update flag to force update.",
+				err = fmt.Errorf(
+					"contract %s is already deployed to this account. Use the --update flag to force update",
 					contract.Name(),
-				))
+				)
+				p.logger.Error(err.Error())
+				errs = append(errs, err)
+				continue
+			} else if len(contract.Args()) > 0 { // todo discuss we might better remove the contract and redeploy it - ux issue
+				err = fmt.Errorf(
+					"contract %s is already deployed and can not be updated with initialization arguments",
+					contract.Name(),
+				)
+				p.logger.Error(err.Error())
+				errs = append(errs, err)
 				continue
 			}
 
 			tx = prepareUpdateContractTransaction(targetAccount.Address(), contract)
 		} else {
-			//tx = prepareAddContractTransaction(targetAccount.Address(), contract)
+			tx = addAccountContractWithArgs(targetAccount.Address(), templates.Contract{
+				Name:   contract.Name(),
+				Source: contract.TranspiledCode(),
+			}, contract.Args())
 		}
-
-		tx = addAccountContractWithArgs(targetAccount.Address(), templates.Contract{
-			Name:   contract.Name(),
-			Source: contract.TranspiledCode(),
-		}, contract.Args()[0].Value)
 
 		tx, err = p.gateway.SendTransaction(tx, targetAccount)
 		if err != nil {
@@ -247,21 +257,35 @@ func prepareAddContractTransaction(
 }
 
 const addAccountContractTemplate = `
-transaction(name: String, code: String, supply: UFix64) {
+transaction(name: String, code: String%s) {
 	prepare(signer: AuthAccount) {
-		signer.contracts.add(name: name, code: code.decodeHex(), supply: supply)
+		signer.contracts.add(name: name, code: code.decodeHex()%s)
 	}
 }
 `
 
-func addAccountContractWithArgs(address flow.Address, contract templates.Contract, supply cadence.Value) *flow.Transaction {
+func addAccountContractWithArgs(
+	address flow.Address,
+	contract templates.Contract,
+	args []config.ContractArgument,
+) *flow.Transaction {
 	cadenceName := cadence.NewString(contract.Name)
 	cadenceCode := cadence.NewString(contract.SourceHex())
 
-	return flow.NewTransaction().
-		SetScript([]byte(addAccountContractTemplate)).
+	tx := flow.NewTransaction().
 		AddRawArgument(jsoncdc.MustEncode(cadenceName)).
-		AddRawArgument(jsoncdc.MustEncode(cadenceCode)).
-		AddRawArgument(jsoncdc.MustEncode(supply)).
+		AddRawArgument(jsoncdc.MustEncode(cadenceCode))
+
+	txArgs, addArgs := "", ""
+	for _, arg := range args {
+		tx.AddRawArgument(jsoncdc.MustEncode(arg.Arg))
+		txArgs += fmt.Sprintf(",%s: %s", arg.Name, arg.Arg.Type().ID())
+		addArgs += fmt.Sprintf(",%s: %s", arg.Name, arg.Name)
+	}
+
+	script := fmt.Sprintf(addAccountContractTemplate, txArgs, addArgs)
+
+	return tx.
+		SetScript([]byte(script)).
 		AddAuthorizer(address)
 }
