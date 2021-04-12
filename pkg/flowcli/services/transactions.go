@@ -249,7 +249,7 @@ func (t *Transactions) SendForAddressWithCode(
 		return nil, nil, err
 	}
 
-	t.logger.StartProgress("Sending Transaction...")
+	t.logger.StartProgress("Sending transaction...")
 
 	sentTx, err := t.gateway.SendSignedTransaction(tx)
 	if err != nil {
