@@ -14,7 +14,7 @@ func ApproveTransactionPrompt(transaction *project.Transaction) bool {
 	tx := transaction.FlowTransaction()
 
 	fmt.Fprintf(writer, "\n")
-	fmt.Fprintf(writer, "Hash\t%s\n", tx.ID())
+	fmt.Fprintf(writer, "ID\t%s\n", tx.ID())
 	fmt.Fprintf(writer, "Payer\t%s\n", tx.Payer.Hex())
 	fmt.Fprintf(writer, "Authorizers\t%s\n", tx.Authorizers)
 
