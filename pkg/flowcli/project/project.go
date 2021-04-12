@@ -23,8 +23,6 @@ import (
 	"fmt"
 	"path"
 
-	"github.com/onflow/flow-cli/pkg/flowcli"
-
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/spf13/afero"
@@ -52,7 +50,7 @@ type Contract struct {
 	Name   string
 	Source string
 	Target flow.Address
-	Args   []flowcli.CadenceArgument
+	Args   []config.ContractArgument
 }
 
 // Load loads a project configuration and returns the resulting project.
