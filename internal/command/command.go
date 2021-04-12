@@ -282,7 +282,7 @@ func outputResult(result string, saveFlag string, formatFlag string, filterFlag 
 		return af.WriteFile(saveFlag, []byte(result), 0644)
 	}
 
-	if formatFlag == "inline" || filterFlag != "" {
+	if formatFlag == formatInline || filterFlag != "" {
 		fmt.Fprintf(os.Stdout, "%s", result)
 	} else { // default normal output
 		fmt.Fprintf(os.Stdout, "\n%s\n\n", result)
@@ -304,7 +304,7 @@ func filterResultValue(result Result, filter string) (interface{}, error) {
 		possibleFilters = append(possibleFilters, key)
 	}
 
-	value := jsonResult[filter]
+	value := jsonResult[strings.ToLower(filter)]
 
 	if value == nil {
 		return nil, fmt.Errorf("value for filter: '%s' doesn't exists, possible values to filter by: %s", filter, possibleFilters)
