@@ -361,6 +361,7 @@ func (a *Accounts) addContract(
 		account,
 		contractName,
 		string(contractSource),
+		[]config.ContractArgument{}, // todo add support for args on account add-contract
 	)
 	if err != nil {
 		return nil, err

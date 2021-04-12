@@ -7,6 +7,10 @@ import (
 	"io/ioutil"
 	"strings"
 
+	jsoncdc "github.com/onflow/cadence/encoding/json"
+
+	"github.com/onflow/flow-cli/pkg/flowcli/config"
+
 	"github.com/onflow/flow-go-sdk/templates"
 
 	"github.com/onflow/flow-cli/pkg/flowcli"
@@ -80,14 +84,18 @@ func NewUpdateAccountContractTransaction(signer *Account, name string, source st
 	return tx, nil
 }
 
-func NewAddAccountContractTransaction(signer *Account, name string, source string) (*Transaction, error) {
-	contract := templates.Contract{
-		Name:   name,
-		Source: source,
-	}
+func NewAddAccountContractTransaction(
+	signer *Account,
+	name string,
+	source string,
+	args []config.ContractArgument,
+) (*Transaction, error) {
 
 	tx := &Transaction{
-		tx: templates.AddAccountContract(signer.Address(), contract),
+		tx: addAccountContractWithArgs(templates.Contract{
+			Name:   name,
+			Source: source,
+		}, args),
 	}
 
 	err := tx.SetSigner(signer)
@@ -110,6 +118,35 @@ func NewRemoveAccountContractTransaction(signer *Account, name string) (*Transac
 	}
 
 	return tx, nil
+}
+
+func addAccountContractWithArgs(
+	contract templates.Contract,
+	args []config.ContractArgument,
+) *flow.Transaction {
+	const addAccountContractTemplate = `
+	transaction(name: String, code: String%s) {
+		prepare(signer: AuthAccount) {
+			signer.contracts.add(name: name, code: code.decodeHex()%s)
+		}
+	}`
+
+	cadenceName := cadence.NewString(contract.Name)
+	cadenceCode := cadence.NewString(contract.SourceHex())
+
+	tx := flow.NewTransaction().
+		AddRawArgument(jsoncdc.MustEncode(cadenceName)).
+		AddRawArgument(jsoncdc.MustEncode(cadenceCode))
+
+	txArgs, addArgs := "", ""
+	for _, arg := range args {
+		tx.AddRawArgument(jsoncdc.MustEncode(arg.Arg))
+		txArgs += fmt.Sprintf(",%s: %s", arg.Name, arg.Arg.Type().ID())
+		addArgs += fmt.Sprintf(",%s: %s", arg.Name, arg.Name)
+	}
+
+	script := fmt.Sprintf(addAccountContractTemplate, txArgs, addArgs)
+	return tx.SetScript([]byte(script))
 }
 
 func NewCreateAccountTransaction(

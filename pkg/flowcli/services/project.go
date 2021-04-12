@@ -22,9 +22,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
-	"github.com/onflow/flow-go-sdk/templates"
 
 	"github.com/onflow/flow-cli/pkg/flowcli/contracts"
 	"github.com/onflow/flow-cli/pkg/flowcli/gateway"
@@ -99,18 +97,19 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 	}
 
 	// check there are not multiple accounts with same contract
-	// TODO: specify which contract by name is a problem
 	if p.project.ContractConflictExists(network) {
-		return nil, fmt.Errorf(
+		return nil, fmt.Errorf( // TODO: specify which contract by name is a problem
 			"the same contract cannot be deployed to multiple accounts on the same network",
 		)
 	}
 
+	// create new processor for contract
 	processor := contracts.NewPreprocessor(
 		contracts.FilesystemLoader{},
 		p.project.AliasesForNetwork(network),
 	)
 
+	// add all contracts needed to deploy to processor
 	for _, contract := range p.project.ContractsByNetwork(network) {
 		err := processor.AddContractSource(
 			contract.Name,
@@ -123,11 +122,13 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 		}
 	}
 
+	// resolve imports assigns accounts to imports
 	err := processor.ResolveImports()
 	if err != nil {
 		return nil, err
 	}
 
+	// sort correct deployment order of contracts so we don't have import that is not yet deployed
 	orderedContracts, err := processor.ContractDeploymentOrder()
 	if err != nil {
 		return nil, err
@@ -139,6 +140,7 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 		strings.Join(p.project.AccountNamesForNetwork(network), ","),
 	))
 
+	// go through each contract and deploy it
 	deployErr := false
 	for _, contract := range orderedContracts {
 		targetAccount := p.project.AccountByAddress(contract.Target().String())
@@ -147,43 +149,43 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 			return nil, fmt.Errorf("target account for deploying contract not found in configuration")
 		}
 
+		// get deployment account
 		targetAccountInfo, err := p.gateway.GetAccount(targetAccount.Address())
 		if err != nil {
 			return nil, fmt.Errorf("failed to fetch information for account %s with error %s", targetAccount.Address(), err.Error())
 		}
 
-		tx, err := project.NewAddAccountContractTransaction(targetAccount, contract.Name(), contract.TranspiledCode())
+		// create transaction to deploy new contract with args
+		tx, err := project.NewAddAccountContractTransaction(
+			targetAccount,
+			contract.Name(),
+			contract.TranspiledCode(),
+			contract.Args(),
+		)
 		if err != nil {
 			return nil, err
 		}
-
+		// check if contract exists on account
 		_, exists := targetAccountInfo.Contracts[contract.Name()]
-		if exists {
-			if !update {
-				p.logger.Error(fmt.Sprintf(
-					"contract %s is already deployed to this account. Use the --update flag to force update",
-					contract.Name(),
-				)
-				deployErr = true
-				continue
-			} else if len(contract.Args()) > 0 { // todo discuss we might better remove the contract and redeploy it - ux issue
-				p.logger.Error(fmt.Sprintf(
-					"contract %s is already deployed and can not be updated with initialization arguments",
-					contract.Name(),
-				))
-				deployErr = true
-				continue
-			}
-
+		if exists && !update {
+			p.logger.Error(fmt.Sprintf(
+				"contract %s is already deployed to this account. Use the --update flag to force update",
+				contract.Name(),
+			))
+			deployErr = true
+			continue
+		} else if exists && len(contract.Args()) > 0 { // todo discuss we might better remove the contract and redeploy it - ux issue
+			p.logger.Error(fmt.Sprintf(
+				"contract %s is already deployed and can not be updated with initialization arguments",
+				contract.Name(),
+			))
+			deployErr = true
+			continue
+		} else if exists {
 			tx, err = project.NewUpdateAccountContractTransaction(targetAccount, contract.Name(), contract.TranspiledCode())
 			if err != nil {
 				return nil, err
 			}
-		} else {
-			tx = addAccountContractWithArgs(targetAccount.Address(), templates.Contract{
-				Name:   contract.Name(),
-				Source: contract.TranspiledCode(),
-			}, contract.Args())
 		}
 
 		sentTx, err := p.gateway.SendTransaction(tx)
@@ -222,38 +224,4 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 	}
 
 	return orderedContracts, nil
-}
-
-const addAccountContractTemplate = `
-transaction(name: String, code: String%s) {
-	prepare(signer: AuthAccount) {
-		signer.contracts.add(name: name, code: code.decodeHex()%s)
-	}
-}
-`
-
-func addAccountContractWithArgs(
-	address flow.Address,
-	contract templates.Contract,
-	args []config.ContractArgument,
-) *flow.Transaction {
-	cadenceName := cadence.NewString(contract.Name)
-	cadenceCode := cadence.NewString(contract.SourceHex())
-
-	tx := flow.NewTransaction().
-		AddRawArgument(jsoncdc.MustEncode(cadenceName)).
-		AddRawArgument(jsoncdc.MustEncode(cadenceCode))
-
-	txArgs, addArgs := "", ""
-	for _, arg := range args {
-		tx.AddRawArgument(jsoncdc.MustEncode(arg.Arg))
-		txArgs += fmt.Sprintf(",%s: %s", arg.Name, arg.Arg.Type().ID())
-		addArgs += fmt.Sprintf(",%s: %s", arg.Name, arg.Name)
-	}
-
-	script := fmt.Sprintf(addAccountContractTemplate, txArgs, addArgs)
-
-	return tx.
-		SetScript([]byte(script)).
-		AddAuthorizer(address)
 }
