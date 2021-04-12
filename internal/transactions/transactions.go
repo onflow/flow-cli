@@ -82,7 +82,7 @@ func (r *TransactionResult) String() string {
 		fmt.Fprintf(writer, "Status\t%s %s\n", statusBadge, r.result.Status)
 	}
 
-	fmt.Fprintf(writer, "Hash\t%s\n", r.tx.ID())
+	fmt.Fprintf(writer, "ID\t%s\n", r.tx.ID())
 	fmt.Fprintf(writer, "Payer\t%s\n", r.tx.Payer.Hex())
 	fmt.Fprintf(writer, "Authorizers\t%s\n", r.tx.Authorizers)
 
