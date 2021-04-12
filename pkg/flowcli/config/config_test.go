@@ -20,8 +20,6 @@ package config_test
 import (
 	"testing"
 
-	"github.com/onflow/flow-cli/pkg/flowcli"
-
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/stretchr/testify/assert"
@@ -173,10 +171,10 @@ func Test_GetDeploymentsByNetworkComplex(t *testing.T) {
 	deployments := conf.Deployments.GetByAccountAndNetwork("account-2", "testnet")
 
 	assert.Equal(t, deployments[0].Contracts, []config.ContractDeployment{
-		{Name: "FungibleToken", Args: []flowcli.CadenceArgument(nil)},
-		{Name: "NonFungibleToken", Args: []flowcli.CadenceArgument(nil)},
-		{Name: "Kibble", Args: []flowcli.CadenceArgument(nil)},
-		{Name: "KittyItems", Args: []flowcli.CadenceArgument(nil)},
+		{Name: "FungibleToken", Args: []config.ContractArgument(nil)},
+		{Name: "NonFungibleToken", Args: []config.ContractArgument(nil)},
+		{Name: "Kibble", Args: []config.ContractArgument(nil)},
+		{Name: "KittyItems", Args: []config.ContractArgument(nil)},
 	})
 }
 
