@@ -55,13 +55,13 @@ type Command struct {
 }
 
 type GlobalFlags struct {
-	Filter  string
-	Format  string
-	Save    string
-	Host    string
-	Log     string
-	Network string
-	Yes     bool
+	Filter     string
+	Format     string
+	Save       string
+	Host       string
+	Log        string
+	Network    string
+	Yes        bool
 	ConfigPath []string
 }
 
@@ -79,13 +79,13 @@ const (
 )
 
 var flags = GlobalFlags{
-	Filter:  "",
+	Filter:     "",
 	Format:     formatText,
-	Save:    "",
-	Host:    "",
+	Save:       "",
+	Host:       "",
 	Log:        logLevelInfo,
-	Network: "",
-	Yes:     false,
+	Network:    "",
+	Yes:        false,
 	ConfigPath: project.DefaultConfigPaths,
 }
 

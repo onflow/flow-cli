@@ -150,7 +150,7 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 
 		tx, err := project.NewAddAccountContractTransaction(targetAccount, contract.Name(), contract.TranspiledCode())
 		if err != nil {
-			errs = append(errs, err)
+			return nil, err
 		}
 
 		_, exists := targetAccountInfo.Contracts[contract.Name()]
@@ -167,7 +167,7 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 
 			tx, err = project.NewUpdateAccountContractTransaction(targetAccount, contract.Name(), contract.TranspiledCode())
 			if err != nil {
-				errs = append(errs, err)
+				return nil, err
 			}
 		}
 

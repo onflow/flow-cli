@@ -76,6 +76,7 @@ var SendCommand = &command.Command{
 
 		tx, result, err := services.Transactions.Send(
 			filename,
+			sendFlags.Payload,
 			sendFlags.Signer,
 			sendFlags.Arg,
 			sendFlags.ArgsJSON,

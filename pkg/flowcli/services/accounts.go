@@ -35,7 +35,6 @@ import (
 	tmpl "github.com/onflow/flow-core-contracts/lib/go/templates"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
-	"github.com/onflow/flow-go-sdk/templates"
 )
 
 // Accounts is a service that handles all account-related interactions.
