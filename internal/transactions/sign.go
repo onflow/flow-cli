@@ -25,7 +25,7 @@ var SignCommand = &command.Command{
 	Cmd: &cobra.Command{
 		Use:     "sign <optional code filename>",
 		Short:   "Sign a transaction",
-		Example: `flow transactions sign`,
+		Example: "flow transactions sign",
 		Args:    cobra.MaximumNArgs(1),
 	},
 	Flags: &signFlags,
