@@ -24,14 +24,13 @@ import (
 	"strings"
 
 	"github.com/onflow/flow-cli/pkg/flowcli"
-	"github.com/onflow/flow-cli/pkg/flowcli/output"
-	"github.com/onflow/flow-cli/pkg/flowcli/project"
-
-	"github.com/onflow/cadence"
-
 	"github.com/onflow/flow-cli/pkg/flowcli/config"
 	"github.com/onflow/flow-cli/pkg/flowcli/gateway"
+	"github.com/onflow/flow-cli/pkg/flowcli/output"
+	"github.com/onflow/flow-cli/pkg/flowcli/project"
 	"github.com/onflow/flow-cli/pkg/flowcli/util"
+
+	"github.com/onflow/cadence"
 	tmpl "github.com/onflow/flow-core-contracts/lib/go/templates"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
@@ -251,6 +250,9 @@ func (a *Accounts) Create(
 	}
 
 	tx, err := project.NewCreateAccountTransaction(signer, accountKeys, contracts)
+	if err != nil {
+		return nil, err
+	}
 
 	sentTx, err := a.gateway.SendTransaction(tx)
 	if err != nil {

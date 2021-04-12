@@ -24,10 +24,11 @@ import (
 	"time"
 
 	"github.com/onflow/cadence"
-	"github.com/onflow/flow-cli/pkg/flowcli/project"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/client"
 	"google.golang.org/grpc"
+
+	"github.com/onflow/flow-cli/pkg/flowcli/project"
 )
 
 const (
