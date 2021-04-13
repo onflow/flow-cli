@@ -80,7 +80,7 @@ var flags = GlobalFlags{
 	Format:     formatText,
 	Save:       "",
 	Host:       "",
-	Network:    project.DefaultEmulatorNetworkName,
+	Network:    config.DefaultMainnetNetwork().Name,
 	Log:        logLevelInfo,
 	Yes:        false,
 	ConfigPath: project.DefaultConfigPaths,
@@ -222,7 +222,7 @@ func resolveHost(proj *project.Project, hostFlag string, networkFlag string) (st
 		return proj.NetworkByName(networkFlag).Host, nil
 	}
 	// default to emulator host
-	return project.DefaultEmulatorHost, nil
+	return config.DefaultEmulatorNetwork().Host, nil
 }
 
 // create logger utility
