@@ -96,6 +96,8 @@ func (r *AccountResult) String() string {
 		fmt.Fprintf(writer, "\tSignature Algorithm\t %s\n", key.SigAlgo)
 		fmt.Fprintf(writer, "\tHash Algorithm\t %s\n", key.HashAlgo)
 		fmt.Fprintf(writer, "\tRevoked \t %t\n", key.Revoked)
+		fmt.Fprintf(writer, "\tSequence Number \t %d\n", key.SequenceNumber)
+		fmt.Fprintf(writer, "\tIndex \t %d\n", key.Index)
 		fmt.Fprintf(writer, "\n")
 	}
 
