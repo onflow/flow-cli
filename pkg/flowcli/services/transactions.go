@@ -23,6 +23,7 @@ import (
 	"strings"
 
 	"github.com/onflow/flow-cli/pkg/flowcli/contracts"
+	"github.com/onflow/flow-cli/pkg/flowcli/util"
 
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
@@ -86,11 +87,12 @@ func (t *Transactions) Sign(
 	payerAddress string,
 	additionalAuthorizers []string,
 	role string,
-	scriptFilename string,
+	codeFilename string,
 	payloadFilename string,
 	args []string,
 	argsJSON string,
 	approveSigning bool,
+	network string,
 ) (*project.Transaction, error) {
 	if t.project == nil {
 		return nil, fmt.Errorf("missing configuration, initialize it: flow project init")
@@ -102,10 +104,10 @@ func (t *Transactions) Sign(
 		return nil, fmt.Errorf("signer account: [%s] doesn't exists in configuration", signerName)
 	}
 
-	if payloadFilename != "" && scriptFilename != "" {
+	if payloadFilename != "" && codeFilename != "" {
 		return nil, fmt.Errorf("can not use both a transaction payload and Cadence code file")
-	} 
-  if payloadFilename == "" && scriptFilename == "" {
+	}
+	if payloadFilename == "" && codeFilename == "" {
 		return nil, fmt.Errorf("provide either a transaction payload or Cadence code file")
 	}
 
@@ -114,13 +116,13 @@ func (t *Transactions) Sign(
 		if payerAddress != "" {
 			return nil, fmt.Errorf("setting a payer is not permissible when using transaction payload")
 		}
-    if proposerName != "" {
+		if proposerName != "" {
 			return nil, fmt.Errorf("setting a proposer is not possible when using transaction payload")
 		}
-    if len(args) > 0 || argsJSON != "" {
+		if len(args) > 0 || argsJSON != "" {
 			return nil, fmt.Errorf("setting arguments is not possible when using transaction payload")
 		}
-    if len(additionalAuthorizers) > 0 {
+		if len(additionalAuthorizers) > 0 {
 			return nil, fmt.Errorf("setting additional authorizers is not possible when using transaction payload")
 		}
 
@@ -173,7 +175,35 @@ func (t *Transactions) Sign(
 		tx.SetPayer(signerAccount.Address())
 	}
 
-	err = tx.SetScriptWithArgsFromFile(scriptFilename, args, argsJSON)
+	code, err := util.LoadFile(codeFilename)
+	if err != nil {
+		return nil, err
+	}
+
+	resolver, err := contracts.NewResolver(code)
+	if err != nil {
+		return nil, err
+	}
+
+	if resolver.HasFileImports() {
+		if network == "" {
+			return nil, fmt.Errorf("missing network, specify which network to use to resolve imports in transaction code")
+		}
+		if codeFilename == "" { // when used as lib with code we don't support imports
+			return nil, fmt.Errorf("resolving imports in transactions not supported")
+		}
+
+		code, err = resolver.ResolveImports(
+			codeFilename,
+			t.project.ContractsByNetwork(network),
+			t.project.AliasesForNetwork(network),
+		)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	err = tx.SetScriptWithArgs(code, args, argsJSON)
 	if err != nil {
 		return nil, err
 	}
@@ -198,6 +228,7 @@ func (t *Transactions) Send(
 	signerName string,
 	args []string,
 	argsJSON string,
+	network string,
 ) (*flow.Transaction, *flow.TransactionResult, error) {
 
 	signed, err := t.Sign(
@@ -211,6 +242,7 @@ func (t *Transactions) Send(
 		args,
 		argsJSON,
 		true,
+		network,
 	)
 	if err != nil {
 		return nil, nil, err
