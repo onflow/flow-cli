@@ -19,13 +19,16 @@ flow accounts get 0xf8d6e0586b0a20c7
 ### Example response
 ```shell
 Address	 0xf8d6e0586b0a20c7
-Balance	 9999999999970000000
+Balance	 99999999999.70000000
 Keys	 1
 
-Key 0	Public Key		 858a7d978b25d61f348841a343f79131f4b9fab341dd8a476a6f4367c25510570bf69b795fc9c3d2b7191327d869bcf848508526a3c1cafd1af34f71c7765117
+Key 0	Public Key		 640a5a359bf3536d15192f18d872d57c98a96cb871b92b70cecb0739c2d5c37b4be12548d3526933c2cda9b0b9c69412f45ffb6b85b6840d8569d969fe84e5b7
 	Weight			 1000
 	Signature Algorithm	 ECDSA_P256
 	Hash Algorithm		 SHA3_256
+	Revoked 		 false
+	Sequence Number 	 6
+	Index 			 0
 
 Contracts Deployed: 2
 Contract: 'FlowServiceAccount'
