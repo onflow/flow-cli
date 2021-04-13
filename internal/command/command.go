@@ -80,7 +80,7 @@ var flags = GlobalFlags{
 	Format:     formatText,
 	Save:       "",
 	Host:       "",
-	Network:    config.DefaultMainnetNetwork().Name,
+	Network:    config.DefaultEmulatorNetwork().Name,
 	Log:        logLevelInfo,
 	Yes:        false,
 	ConfigPath: project.DefaultConfigPaths,
