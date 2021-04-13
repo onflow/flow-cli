@@ -28,7 +28,7 @@ import (
 )
 
 type flagsUpdateContract struct {
-	Signer  string `default:"emulator-account" flag:"signer"`
+	Signer  string `default:"emulator-account" flag:"signer" info:"Account name from configuration used to sign the transaction"`
 	Results bool   `default:"false" flag:"results" info:"⚠️  Deprecated: results are provided by default"`
 }
 

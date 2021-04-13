@@ -1,0 +1,36 @@
+{
+	"emulators": {
+		"default": {
+			"port": 3569,
+			"serviceAccount": "emulator-account"
+		}
+	},
+	"contracts": {
+		"NonFungibleToken": "./NonFungibleToken.cdc",
+		"Foo": "./Foo.cdc",
+		"FungibleToken": {
+			"source": "./FungibleToken.cdc",
+			"aliases": {
+				"emulator": "ee82856bf20e2aa6"
+			}
+		}
+	},
+	"networks": {
+		"emulator": {
+			"host": "127.0.0.1:3569",
+			"chain": "flow-emulator"
+		}
+	},
+	"accounts": {
+		"emulator-account": {
+			"address": "f8d6e0586b0a20c7",
+			"keys": "11c5dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7",
+			"chain": "flow-emulator"
+		}
+	},
+	"deployments": {
+		"emulator": {
+			"emulator-account": ["NonFungibleToken", "Foo"]
+		}
+	}
+}

@@ -236,18 +236,20 @@ func TestTransactions(t *testing.T) {
 	var txID1 flow.Identifier
 
 	t.Run("Test Transactions", func(t *testing.T) {
-		tx, tr, err := transactions.Send("./transaction.cdc", emulatorAccount, []string{"String:Hello"}, "", "")
+		tx, tr, err := transactions.Send("./transaction.cdc", "", emulatorAccount, []string{"String:Hello"}, "")
 		txID1 = tx.ID()
 
+		assert.NoError(t, tr.Error)
 		assert.NoError(t, err)
 		assert.Equal(t, tx.Payer.String(), serviceAddress)
 		assert.Equal(t, tr.Status.String(), "SEALED")
 	})
 
 	t.Run("Test Failed Transactions", func(t *testing.T) {
-		tx, tr, err := transactions.Send("./transactionErr.cdc", emulatorAccount, []string{}, "", "")
+		tx, tr, err := transactions.Send("./transactionErr.cdc", "", emulatorAccount, []string{}, "")
 
 		assert.NoError(t, err)
+		assert.NotNil(t, tr.Error)
 		assert.Equal(t, tx.Payer.String(), serviceAddress)
 		assert.Equal(t, tr.Status.String(), "SEALED")
 		require.Greater(t, len(tr.Error.Error()), 100)

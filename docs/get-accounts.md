@@ -6,8 +6,9 @@ description: How to get a Flow account from the command line
 
 The Flow CLI provides a command to fetch any account by its address from the Flow network.
 
-`flow accounts get <address>`
-
+```shell
+flow accounts get <address>
+```
 
 ## Example Usage
 
@@ -33,6 +34,16 @@ Contract: 'FlowStorageFees'
 
 ```
 
+## Arguments
+
+### Address
+
+- Name: `address`
+- Valid Input: Flow account address
+
+Flow [account address](https://docs.onflow.org/concepts/accounts-and-keys/) (prefixed with `0x` or not).
+
+
 ## Flags
 
 ### Contracts
@@ -43,7 +54,6 @@ Display contracts deployed to the account.
 
 ### Code 
 ⚠️  No longer supported: use contracts flag instead.
-
 
 ### Host
 
@@ -98,7 +108,7 @@ Specify the log level. Control how much output you want to see during command ex
 
 ### Configuration
 
-- Flag: `--conf`
+- Flag: `--config-path`
 - Short Flag: `-f`
 - Valid inputs: a path in the current filesystem.
 - Default: `flow.json`

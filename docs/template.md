@@ -6,17 +6,17 @@ description:
 
 {short description}
 
-`{command}`
+```shell
+{command}
+```
 
 {optional warning}
 
 ## Example Usage
 
 ```shell
-{usage example}
+{usage example with response}
 ```
-
-### Example response
 
 ## Arguments
 
@@ -102,7 +102,7 @@ Specify the log level. Control how much output you want to see while command exe
 
 ### Configuration
 
-- Flag: `--conf`
+- Flag: `--config-path`
 - Short Flag: `-f`
 - Valid inputs: valid filename
 
