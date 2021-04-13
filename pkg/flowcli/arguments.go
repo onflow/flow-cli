@@ -75,10 +75,7 @@ func ParseArgumentsCommaSplit(input []string) ([]cadence.Value, error) {
 			)
 		}
 
-		// if we are passing address check and handle without 0x prefix as else it wont work and error is not descriptive
-		if argInput[0] == "Address" && !strings.Contains(argInput[1], "0x") {
-			argInput[1] = fmt.Sprintf("0x%s", argInput[1])
-		}
+		argInput = sanitizeAddressArg(argInput)
 
 		args = append(args, map[string]string{
 			"value": argInput[1],
@@ -89,6 +86,15 @@ func ParseArgumentsCommaSplit(input []string) ([]cadence.Value, error) {
 	cadenceArgs, err := ParseArgumentsJSON(string(jsonArgs))
 
 	return cadenceArgs, err
+}
+
+// sanitizeAddressArg sanitize address and make sure it has 0x prefix
+func sanitizeAddressArg(argInput []string) []string {
+	if argInput[0] == "Address" && !strings.Contains(argInput[1], "0x") {
+		argInput[1] = fmt.Sprintf("0x%s", argInput[1])
+	}
+
+	return argInput
 }
 
 func ParseArguments(args []string, argsJSON string) (scriptArgs []cadence.Value, err error) {

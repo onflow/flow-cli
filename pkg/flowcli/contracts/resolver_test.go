@@ -75,7 +75,7 @@ func TestResolver(t *testing.T) {
       pub fun main() {}
     `))
 		assert.NoError(t, err)
-		assert.True(t, resolver.ImportExists())
+		assert.True(t, resolver.HasFileImports())
 	})
 
 	t.Run("Import doesn't exists", func(t *testing.T) {
@@ -83,20 +83,20 @@ func TestResolver(t *testing.T) {
       pub fun main() {}
     `))
 		assert.NoError(t, err)
-		assert.False(t, resolver.ImportExists())
+		assert.False(t, resolver.HasFileImports())
 
 		resolver, err = NewResolver([]byte(`
 			import Foo from 0xf8d6e0586b0a20c7
       pub fun main() {}
     `))
 		assert.NoError(t, err)
-		assert.False(t, resolver.ImportExists())
+		assert.False(t, resolver.HasFileImports())
 	})
 
 	t.Run("Parse imports", func(t *testing.T) {
 		resolver, err := NewResolver(scripts[0])
 		assert.NoError(t, err)
-		assert.Equal(t, resolver.parseImports(), []string{
+		assert.Equal(t, resolver.getFileImports(), []string{
 			"./Kibble.cdc", "./FT.cdc",
 		})
 	})

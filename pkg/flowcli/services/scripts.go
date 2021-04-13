@@ -77,12 +77,14 @@ func (s *Scripts) execute(code []byte, args []string, argsJSON string, scriptPat
 		return nil, err
 	}
 
-	if resolver.ImportExists() {
+	if resolver.HasFileImports() {
 		if s.project == nil {
 			return nil, fmt.Errorf("missing configuration, initialize it: flow init")
-		} else if network == "" {
+		}
+		if network == "" {
 			return nil, fmt.Errorf("missing network, specify which network to use to resolve imports in script code")
-		} else if scriptPath == "" { // when used as lib with code we don't support imports
+		}
+		if scriptPath == "" { // when used as lib with code we don't support imports
 			return nil, fmt.Errorf("resolving imports in scripts not supported")
 		}
 

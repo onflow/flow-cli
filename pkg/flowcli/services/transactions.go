@@ -142,10 +142,11 @@ func (t *Transactions) send(
 		return nil, nil, err
 	}
 
-	if resolver.ImportExists() {
+	if resolver.HasFileImports() {
 		if network == "" {
 			return nil, nil, fmt.Errorf("missing network, specify which network to use to resolve imports in transaction code")
-		} else if codePath == "" { // when used as lib with code we don't support imports
+		}
+		if codePath == "" { // when used as lib with code we don't support imports
 			return nil, nil, fmt.Errorf("resolving imports in transactions not supported")
 		}
 

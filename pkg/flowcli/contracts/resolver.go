@@ -42,7 +42,7 @@ func (r *Resolver) ResolveImports(
 	contracts []project.Contract,
 	aliases project.Aliases,
 ) ([]byte, error) {
-	imports := r.parseImports()
+	imports := r.getFileImports()
 	sourceTarget := r.getSourceTarget(contracts, aliases)
 
 	for _, imp := range imports {
@@ -84,18 +84,18 @@ func (r *Resolver) getSourceTarget(
 	return sourceTarget
 }
 
-// ImportExists checks if there is an import statement present in Cadence code
-func (r *Resolver) ImportExists() bool {
-	return len(r.parseImports()) > 0
+// HasFileImports checks if there is a file import statement present in Cadence code
+func (r *Resolver) HasFileImports() bool {
+	return len(r.getFileImports()) > 0
 }
 
-// parseImports returns all imports from Cadence code as an array
-func (r *Resolver) parseImports() []string {
+// getFileImports returns all cadence file imports from Cadence code as an array
+func (r *Resolver) getFileImports() []string {
 	imports := make([]string, 0)
 
 	for _, importDeclaration := range r.program.ImportDeclarations() {
-		location, ok := importDeclaration.Location.(common.StringLocation)
-		if ok && flow.HexToAddress(location.String()) == flow.EmptyAddress {
+		location, ok := importDeclaration.Location.(common.AddressLocation)
+		if !ok {
 			imports = append(imports, location.String())
 		}
 	}
