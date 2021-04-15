@@ -136,6 +136,11 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 		strings.Join(p.project.AccountNamesForNetwork(network), ","),
 	))
 
+	block, err := p.gateway.GetLatestBlock()
+	if err != nil {
+		return nil, err
+	}
+
 	deployErr := false
 	for _, contract := range orderedContracts {
 		targetAccount := p.project.AccountByAddress(contract.Target().String())
@@ -172,7 +177,15 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 			}
 		}
 
-		sentTx, err := p.gateway.SendTransaction(tx)
+		tx.SetBlockReference(block).
+			SetProposer(targetAccountInfo, 0)
+
+		tx, err = tx.Sign()
+		if err != nil {
+			return nil, err
+		}
+
+		sentTx, err := p.gateway.SendSignedTransaction(tx)
 		if err != nil {
 			p.logger.Error(err.Error())
 			deployErr = true
