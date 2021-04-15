@@ -39,6 +39,8 @@ func init() {
 	GetCommand.AddToParent(Cmd)
 	SendCommand.AddToParent(Cmd)
 	SignCommand.AddToParent(Cmd)
+	BuildCommand.AddToParent(Cmd)
+	SendSignedCommand.AddToParent(Cmd)
 }
 
 // TransactionResult represent result from all account commands
