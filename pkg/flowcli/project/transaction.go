@@ -38,9 +38,7 @@ import (
 type signerRole string
 
 const (
-	SignerRoleAuthorizer signerRole = "authorizer"
-	SignerRoleProposer   signerRole = "proposer"
-	SignerRolePayer      signerRole = "payer"
+	defaultGasLimit = 1000
 )
 
 func NewTransaction() *Transaction {
@@ -49,7 +47,7 @@ func NewTransaction() *Transaction {
 	}
 }
 
-func NewTransactionFromPayload(signer *Account, filename string, role string) (*Transaction, error) {
+func NewTransactionFromPayload(filename string) (*Transaction, error) {
 	partialTxHex, err := ioutil.ReadFile(filename)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read partial transaction from %s: %v", filename, err)
@@ -68,13 +66,6 @@ func NewTransactionFromPayload(signer *Account, filename string, role string) (*
 	tx := &Transaction{
 		tx: decodedTx,
 	}
-
-	err = tx.SetSigner(signer)
-	if err != nil {
-		return nil, err
-	}
-	// we need to set the role here for signing purpose, so we know what to sign envelope or payload
-	tx.signerRole = signerRole(role)
 
 	return tx, nil
 }
@@ -142,16 +133,14 @@ func NewCreateAccountTransaction(
 		if len(contractFlagContent) != 2 {
 			return nil, fmt.Errorf("wrong format for contract. Correct format is name:path, but got: %s", contract)
 		}
-		contractName := contractFlagContent[0]
-		contractPath := contractFlagContent[1]
 
-		contractSource, err := util.LoadFile(contractPath)
+		contractSource, err := util.LoadFile(contractFlagContent[1])
 		if err != nil {
 			return nil, err
 		}
 
 		contracts = append(contracts, templates.Contract{
-			Name:   contractName,
+			Name:   contractFlagContent[0],
 			Source: string(contractSource),
 		})
 	}
@@ -172,7 +161,7 @@ func NewCreateAccountTransaction(
 type Transaction struct {
 	signer     *Account
 	signerRole signerRole
-	proposer   *Account
+	proposer   *flow.Account
 	tx         *flow.Transaction
 }
 
@@ -180,7 +169,7 @@ func (t *Transaction) Signer() *Account {
 	return t.signer
 }
 
-func (t *Transaction) Proposer() *Account {
+func (t *Transaction) Proposer() *flow.Account {
 	return t.proposer
 }
 
@@ -212,22 +201,32 @@ func (t *Transaction) SetSigner(account *Account) error {
 	return nil
 }
 
-func (t *Transaction) SetProposer(account *Account) error {
-	err := account.DefaultKey().Validate()
-	if err != nil {
-		return err
-	}
+func (t *Transaction) SetProposer(proposer *flow.Account, keyIndex int) *Transaction {
+	t.proposer = proposer
+	proposerKey := proposer.Keys[keyIndex]
 
-	t.proposer = account
-	return nil
+	t.tx.SetProposalKey(
+		proposer.Address,
+		proposerKey.Index,
+		proposerKey.SequenceNumber,
+	)
+
+	return t
 }
 
-func (t *Transaction) SetPayer(address flow.Address) {
+func (t *Transaction) SetPayer(address flow.Address) *Transaction {
 	t.tx.SetPayer(address)
+	return t
 }
 
-func (t *Transaction) HasPayer() bool {
-	return t.tx.Payer != flow.EmptyAddress
+func (t *Transaction) SetBlockReference(block *flow.Block) *Transaction {
+	t.tx.SetReferenceBlockID(block.ID)
+	return t
+}
+
+func (t *Transaction) SetDefaultGasLimit() *Transaction {
+	t.tx.SetGasLimit(defaultGasLimit)
+	return t
 }
 
 func (t *Transaction) AddRawArguments(args []string, argsJSON string) error {
@@ -254,67 +253,51 @@ func (t *Transaction) AddArgument(arg cadence.Value) error {
 	return t.tx.AddArgument(arg)
 }
 
-func (t *Transaction) AddAuthorizers(addresses []string) error {
-	for _, address := range addresses {
-		err := t.AddAuthorizer(address)
-		if err != nil { // return error even if one breaks
-			return err
-		}
+func (t *Transaction) AddAuthorizers(authorizers []flow.Address) *Transaction {
+	for _, authorizer := range authorizers {
+		t.tx.AddAuthorizer(authorizer)
 	}
 
-	return nil
-}
-
-func (t *Transaction) AddAuthorizer(address string) error {
-	authorizerAddress := flow.HexToAddress(address)
-	if authorizerAddress == flow.EmptyAddress {
-		return fmt.Errorf("invalid authorizer address provided %s", address)
-	}
-
-	t.tx.AddAuthorizer(authorizerAddress)
-	return nil
-}
-
-func (t *Transaction) SetSignerRole(role string) error {
-	t.signerRole = signerRole(role)
-
-	if t.signerRole == SignerRoleAuthorizer {
-		err := t.AddAuthorizer(t.signer.Address().String())
-		if err != nil {
-			return err
-		}
-	}
-	if t.signerRole == SignerRolePayer && t.tx.Payer != t.signer.Address() {
-		return fmt.Errorf("role specified as Payer, but Payer address also provided, and different: %s != %s", t.tx.Payer, t.signer.Address())
-	}
-
-	return nil
+	return t
 }
 
 func (t *Transaction) Sign() (*Transaction, error) {
 	keyIndex := t.signer.DefaultKey().Index()
-	signerAddress := t.signer.Address()
 	signer, err := t.signer.DefaultKey().Signer(context.Background())
 	if err != nil {
 		return nil, err
 	}
 
-	if t.signerRole == SignerRoleAuthorizer || t.signerRole == SignerRoleProposer {
-		err := t.tx.SignPayload(signerAddress, keyIndex, signer)
+	if t.shouldSignEnvelope() {
+		err = t.tx.SignEnvelope(t.signer.address, keyIndex, signer)
 		if err != nil {
 			return nil, fmt.Errorf("failed to sign transaction: %s", err)
 		}
 	} else {
-		// make sure we have at least signer as authorizer else add self
-		if len(t.tx.Authorizers) == 0 {
-			t.tx.AddAuthorizer(t.signer.Address())
-		}
-
-		err := t.tx.SignEnvelope(signerAddress, keyIndex, signer)
+		err = t.tx.SignPayload(t.signer.address, keyIndex, signer)
 		if err != nil {
 			return nil, fmt.Errorf("failed to sign transaction: %s", err)
 		}
 	}
 
 	return t, nil
+}
+
+func (t *Transaction) shouldSignEnvelope() bool {
+	// if signer is payer
+	if t.signer.address == t.tx.Payer {
+		return true
+		/*
+			// and either authorizer or proposer - special case
+			if len(t.tx.Authorizers) == 1 && t.tx.Authorizers[0] == t.signer.address {
+				return true
+			} else if t.signer.address == t.tx.ProposalKey.Address {
+				return true
+			} else {
+				// ?
+			}
+		*/
+	}
+
+	return false
 }
