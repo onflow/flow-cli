@@ -4,15 +4,22 @@ sidebar_title: Sign a Transaction
 description: How to sign a Flow transaction from the command line
 ---
 
-The Flow CLI provides a command to sign transactions with options to specify 
-authorizator accounts, payer accounts and proposer accounts.
+The Flow CLI provides a command to sign transactions with options to specify
+authorizer accounts, payer accounts and proposer accounts.
 
-`flow transctions sign`
+Use this functionality in the following order:
+1. Use this command to build the transaction
+2. Use the sign command to sign with all accounts specified in the build process
+3. Use send signed command to submit the signed transaction to the network.
+
+```shell
+flow transactions sign <built transaction filename>
+```
 
 ## Example Usage
 
 ```shell
-> flow transactions sign ./tests/transaction.cdc --arg String:"Meow"
+> flow transactions sign ./built.rlp --signer alice
 
 Hash		b03b18a8d9d30ff7c9f0fdaa80fcaab242c2f36eedb687dd9b368326311fe376
 Payer		f8d6e0586b0a20c7
@@ -54,143 +61,14 @@ Payload:
 f90184f...a199bfd9b837a11a0885f9104b54014750f5e3e5bfe4a5795968b0df86769dd54c0
 ```
 
-
-### Example Sign and Send
-
-```shell
-
-> flow transactions sign ./tests/transaction.cdc --arg String:"Meow" --filter Payload --save payload1
-💾 result saved to: payload1 
-
-
-> flow transactions send --payload payload1
-
-Status		✅ SEALED
-Hash		9a38fb25c9fedc20b008aaed7a5ff00169a178411238573d6a6a55982a645129
-Payer		f8d6e0586b0a20c7
-Authorizers	[f8d6e0586b0a20c7]
-
-Proposal Key:	
-    Address	f8d6e0586b0a20c7
-    Index	0
-    Sequence	6
-
-Payload Signature 0:
-    Address	f8d6e0586b0a20c7
-    Signature	c7ede88cfd45c7c01b2...097e4d5040f730f640c1d4ac
-    Key Index	0
-
-Envelope Signature 0:
-    Address	f8d6e0586b0a20c7
-    Signature	fb8226d6c61ddd58a2b...798e7a9be084eb622cf40f4f
-    Key Index	0
-
-
-Events:	 None
-
-
-Arguments (1):
-    - Argument 0: {"type":"String","value":"Meow"}
-
-
-Code
-
-transaction(greeting: String) {
-  let guest: Address
-
-  prepare(authorizer: AuthAccount) {
-    self.guest = authorizer.address
-  }
-
-  execute {
-    log(greeting.concat(",").concat(self.guest.toString()))
-  }
-}
-
-
-Payload:
-f901cbf90138b......4649a4088797523c02d53f0c798e7a9be084eb622cf40f4f
-
-
-```
-
-### Example Different Payer and Signer
-
-```shell
-> flow transactions sign ./tests/transaction.cdc --arg String:"Meow" --payer-address 179b6b1cb6755e31  --filter Payload --save payload1
-💾 result saved to: payload1 
-
-
-> flow transactions sign --payload payload1 --role payer --signer alice --filter Payload --save payload2
-💾 result saved to: payload2
-
-
-> transactions send --payload payload2
-
-Status		✅ SEALED
-Hash		379ccb941b956c760f19307bbc961cc1e6bcdd7334b5941e9f55ab2151f52d43
-Payer		179b6b1cb6755e31
-Authorizers	[f8d6e0586b0a20c7]
-
-Proposal Key:	
-    Address	f8d6e0586b0a20c7
-    Index	0
-    Sequence	7
-
-Payload Signature 0:
-    Address	f8d6e0586b0a20c7
-    Signature	f940766ce...3d2001e0b4b795e4f35345a18a04abc87466f6d0f1617b949b
-    Key Index	0
-
-Envelope Signature 0:
-    Address	f8d6e0586b0a20c7
-    Signature	000621...6ff9cdef2d62fb5e98ebbc7a7bacdb505ab799522c76f1d6e5aa3
-    Key Index	0
-
-Envelope Signature 1:
-    Address	179b6b1cb6755e31
-    Signature	c423ebae6...a855564dc927dcd3f764b81c67048d7936af131abe1952dc80
-    Key Index	0
-
-
-Events:	 None
-
-
-Arguments (1):
-    - Argument 0: {"type":"String","value":"Meow"}
-
-
-Code
-
-transaction(greeting: String) {
-  let guest: Address
-
-  prepare(authorizer: AuthAccount) {
-    self.guest = authorizer.address
-  }
-
-  execute {
-    log(greeting.concat(",").concat(self.guest.toString()))
-  }
-}
-
-
-Payload:
-f90211f901...7a6520417574684163636f756e7429207b0a2020202073656c662e67756573
-
-```
-
-
 ## Arguments
 
-### Filename (optional)
-- Name: `filename`
+### Built Transaction Filename
+- Name: `built transaction filename`
 - Valid inputs: Any filename and path valid on the system.
 
-The first argument is a path to a Cadence file containing the
-transaction to be executed. This argument is optional as we can 
-use `--payload` flag if we already have created a transaction and
-we would just like to sign it.
+Specify the filename containing valid transaction payload that will be used for signing.
+To be used with the `flow transaction build` command.
 
 ## Flags
 
@@ -200,62 +78,6 @@ we would just like to sign it.
 - Valid inputs: the name of an account defined in the configuration (`flow.json`)
 
 Specify the name of the account that will be used to sign the transaction.
-
-### Payload
-
-- Flag: `--payload`
-- Valid inputs: any filename and path valid on the system.
-
-Specify the filename containing valid transaction payload that will be used for signing.
-
-### Proposer
-
-- Flag: `--proposer`
-- Valid inputs: account from configuration.
-
-Specify a name of the account that is proposing the transaction. 
-Account must be defined in flow configuration.
-
-### Role
-
-- Flag: `--role`
-- Valid inputs: authorizer, proposer, payer.
-
-Specify a role of the signer. 
-Read more about signer roles [here](https://docs.onflow.org/concepts/accounts-and-keys/).
-
-### Add Authorizers
-
-- Flag: `--add-authorizer`
-- Valid Input: Flow account address.
-
-Additional authorizer addresses to add to the transaction.
-Read more about authorizers [here](https://docs.onflow.org/concepts/accounts-and-keys/).
-
-### Payer Address
-
-- Flag: `--payer-address`
-- Valid Input: Flow account address.
-
-Specify account address that will be paying for the transaction.
-Read more about payers [here](https://docs.onflow.org/concepts/accounts-and-keys/).
-
-### Arguments
-
-- Flag: `--arg`
-- Valid inputs: argument in `Type:Value` format.
-
-Arguments passed to the Cadence transaction in `Type:Value` format.
-The `Type` must be the same as type in the transaction source code for that argument.
-
-### Arguments JSON
-
-- Flag: `--argsJSON`
-- Valid inputs: arguments in JSON-Cadence form.
-
-Arguments passed to the Cadence transaction in `Type:Value` format.
-The `Type` must be the same type as the corresponding parameter
-in the Cadence transaction code.
 
 ### Host
 - Flag: `--host`

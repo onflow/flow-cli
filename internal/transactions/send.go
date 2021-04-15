@@ -40,7 +40,7 @@ var sendFlags = flagsSend{}
 
 var SendCommand = &command.Command{
 	Cmd: &cobra.Command{
-		Use:     "send <filename>",
+		Use:     "send <code filename>",
 		Short:   "Send a transaction",
 		Args:    cobra.MaximumNArgs(1),
 		Example: `flow transactions send tx.cdc --arg String:"Hello world"`,

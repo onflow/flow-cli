@@ -33,7 +33,7 @@ var signFlags = flagsSign{}
 
 var SignCommand = &command.Command{
 	Cmd: &cobra.Command{
-		Use:     "sign <build transaction filename>",
+		Use:     "sign <built transaction filename>",
 		Short:   "Sign built transaction",
 		Example: "flow transactions sign ./built.rlp --signer alice",
 		Args:    cobra.ExactArgs(1),

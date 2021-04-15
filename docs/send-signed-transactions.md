@@ -1,22 +1,25 @@
 ---
-title: Send a Transaction with the Flow CLI
-sidebar_title: Send a Transaction
-description: How to send a Flow transaction from the command line
+title: Send Signed Transaction with the Flow CLI
+sidebar_title: Send Signed Transaction
+description: How to send signed Flow transaction from the command line
 ---
 
-The Flow CLI provides a command to sign and send transactions to
+The Flow CLI provides a command to send signed transactions to
 any Flow Access API.
 
+Use this functionality in the following order:
+1. Use this command to build the transaction
+2. Use the sign command to sign with all accounts specified in the build process
+3. Use send signed command to submit the signed transaction to the network.
+
 ```shell
-flow transactions send <code filename>
+flow transactions send-signed <signed transaction filename>
 ```
 
 ## Example Usage
 
 ```shell
-> flow transactions send <code filename>
-    --signer my-testnet-account \
-    --host access.testnet.nodes.onflow.org:9000
+> flow transactions send-signed ./signed.rlp
     
 Status		✅ SEALED
 ID		b6430b35ba23849a8acb4fa1a4a1d5cce3ed4589111ecbb3984de1b6bd1ba39e
@@ -63,65 +66,17 @@ f90184f90138...8a9462751237da2742048166f9d5c925a8dcb78a6d8c710921d67
 
 ```
 
-In the above example, the `flow.json` file would look something like this:
-
-```json
-{
-  "accounts": {
-    "my-testnet-account": {
-      "address": "a2c4941b5f3c7151",
-      "keys": "12c5dfde...bb2e542f1af710bd1d40b2"
-    }
-  }
-}
-```
 
 ## Arguments
 
-### Code Filename
-- Name: `code filename`
+### Signed Code Filename
+- Name: `signed transaction filename`
 - Valid inputs: Any filename and path valid on the system.
 
 The first argument is a path to a Cadence file containing the
 transaction to be executed.
 
 ## Flags
-
-### Code
-
-- Flag: `--code`
-
-⚠️  No longer supported: use filename argument.
-
-### Results
-
-- Flag: `--results`
-
-⚠️  No longer supported: all transactions will provide result.
-
-### Signer
-
-- Flag: `--signer`
-- Valid inputs: the name of an account defined in the configuration (`flow.json`)
-
-Specify the name of the account that will be used to sign the transaction.
-
-### Arguments
-
-- Flag: `--arg`
-- Valid inputs: argument in `Type:Value` format.
-
-Arguments passed to the Cadence transaction in `Type:Value` format.
-The `Type` must be the same as type in the transaction source code for that argument.
-
-### Arguments JSON
-
-- Flag: `--argsJSON`
-- Valid inputs: arguments in JSON-Cadence form.
-
-Arguments passed to the Cadence transaction in `Type:Value` format.
-The `Type` must be the same type as the corresponding parameter
-in the Cadence transaction code.
 
 ### Host
 
