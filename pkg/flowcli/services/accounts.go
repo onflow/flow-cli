@@ -19,12 +19,10 @@
 package services
 
 import (
-	"context"
 	"fmt"
 	"strings"
 
 	"github.com/onflow/flow-cli/pkg/flowcli"
-	"github.com/onflow/flow-cli/pkg/flowcli/config"
 	"github.com/onflow/flow-cli/pkg/flowcli/gateway"
 	"github.com/onflow/flow-cli/pkg/flowcli/output"
 	"github.com/onflow/flow-cli/pkg/flowcli/project"
@@ -66,97 +64,6 @@ func (a *Accounts) Get(address string) (*flow.Account, error) {
 	a.logger.StopProgress()
 
 	return account, err
-}
-
-// Add account to the configuration
-func (a *Accounts) Add(
-	name string,
-	accountAddress string,
-	signatureAlgorithm string,
-	hashingAlgorithm string,
-	keyIndex int,
-	keyHex string,
-	overwrite bool,
-	path []string,
-) (*project.Account, error) {
-	if a.project == nil {
-		return nil, fmt.Errorf("missing configuration, initialize it: flow init")
-	}
-
-	existingAccount := a.project.AccountByName(name)
-	if existingAccount != nil && !overwrite {
-		return nil, fmt.Errorf("account with name [%s] already exists in the config, use `overwrite` if you want to overwrite it", name)
-	}
-
-	sigAlgo, hashAlgo, err := util.ConvertSigAndHashAlgo(signatureAlgorithm, hashingAlgorithm)
-	if err != nil {
-		return nil, err
-	}
-
-	if keyIndex < 0 {
-		return nil, fmt.Errorf("key index must be positive number")
-	}
-
-	address := flow.HexToAddress(accountAddress)
-	chainID, err := util.GetAddressNetwork(address)
-	if err != nil {
-		return nil, err
-	}
-
-	confAccount := config.Account{
-		Name:    name,
-		Address: address,
-		ChainID: chainID,
-	}
-
-	accountKey := config.AccountKey{
-		Index:    keyIndex,
-		SigAlgo:  sigAlgo,
-		HashAlgo: hashAlgo,
-	}
-
-	// TODO: discuss refactor to accounts
-	if keyHex != "" {
-		_, err := crypto.DecodePrivateKeyHex(sigAlgo, keyHex)
-		if err != nil {
-			return nil, fmt.Errorf("key hex could not be parsed")
-		}
-
-		accountKey.Type = config.KeyTypeHex
-		accountKey.Context = make(map[string]string)
-		accountKey.Context[config.PrivateKeyField] = keyHex
-
-	} else {
-		return nil, fmt.Errorf("private key must be provided")
-	}
-
-	confAccount.Keys = []config.AccountKey{accountKey}
-
-	account, err := project.AccountFromConfig(confAccount)
-	if err != nil {
-		return nil, err
-	}
-	// TODO: refactor context
-	sig, err := account.DefaultKey().Signer(context.Background())
-	if err != nil {
-		return nil, err
-	}
-
-	_, err = sig.Sign([]byte("test"))
-	if err != nil {
-		return nil, fmt.Errorf("could not sign with the new key")
-	}
-
-	a.project.AddOrUpdateAccount(account)
-
-	err = a.project.Save(path[0]) // only allow saving to one config for now
-	if err != nil {
-		return nil, err
-	}
-
-	a.logger.Info("Account added to configuration\n")
-
-	return account, nil
 }
 
 // StakingInfo returns the staking information for an account.
@@ -254,7 +161,12 @@ func (a *Accounts) Create(
 		return nil, err
 	}
 
-	sentTx, err := a.gateway.SendTransaction(tx)
+	tx, err = a.prepareTransaction(tx, signer)
+	if err != nil {
+		return nil, err
+	}
+
+	sentTx, err := a.gateway.SendSignedTransaction(tx)
 	if err != nil {
 		return nil, err
 	}
@@ -378,8 +290,13 @@ func (a *Accounts) addContract(
 		}
 	}
 
+	tx, err = a.prepareTransaction(tx, account)
+	if err != nil {
+		return nil, err
+	}
+
 	// send transaction with contract
-	sentTx, err := a.gateway.SendTransaction(tx)
+	sentTx, err := a.gateway.SendSignedTransaction(tx)
 	if err != nil {
 		return nil, err
 	}
@@ -435,7 +352,12 @@ func (a *Accounts) RemoveContract(
 		return nil, err
 	}
 
-	sentTx, err := a.gateway.SendTransaction(tx)
+	tx, err = a.prepareTransaction(tx, account)
+	if err != nil {
+		return nil, err
+	}
+
+	sentTx, err := a.gateway.SendSignedTransaction(tx)
 	if err != nil {
 		return nil, err
 	}
@@ -453,6 +375,33 @@ func (a *Accounts) RemoveContract(
 	a.logger.Info(fmt.Sprintf("Contract %s removed from account %s\n", contractName, account.Address()))
 
 	return a.gateway.GetAccount(account.Address())
+}
+
+// prepareTransaction prepares transaction for sending with data from network
+func (a *Accounts) prepareTransaction(
+	tx *project.Transaction,
+	account *project.Account,
+) (*project.Transaction, error) {
+
+	block, err := a.gateway.GetLatestBlock()
+	if err != nil {
+		return nil, err
+	}
+
+	proposer, err := a.gateway.GetAccount(account.Address())
+	if err != nil {
+		return nil, err
+	}
+
+	tx.SetBlockReference(block).
+		SetProposer(proposer, 0)
+
+	tx, err = tx.Sign()
+	if err != nil {
+		return nil, err
+	}
+
+	return tx, nil
 }
 
 // AccountFromAddressAndKey get account from address and private key
