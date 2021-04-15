@@ -35,8 +35,6 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowcli/util"
 )
 
-type signerRole string
-
 const (
 	defaultGasLimit = 1000
 )
@@ -151,10 +149,9 @@ func newTransactionFromTemplate(templateTx *flow.Transaction, signer *Account) (
 
 // Transaction builder of flow transactions
 type Transaction struct {
-	signer     *Account
-	signerRole signerRole
-	proposer   *flow.Account
-	tx         *flow.Transaction
+	signer   *Account
+	proposer *flow.Account
+	tx       *flow.Transaction
 }
 
 // Signer get signer
@@ -293,19 +290,5 @@ func (t *Transaction) Sign() (*Transaction, error) {
 // shouldSignEnvelope checks if signer should sign envelope or payload
 func (t *Transaction) shouldSignEnvelope() bool {
 	// if signer is payer
-	if t.signer.address == t.tx.Payer {
-		return true
-		/*
-			// and either authorizer or proposer - special case
-			if len(t.tx.Authorizers) == 1 && t.tx.Authorizers[0] == t.signer.address {
-				return true
-			} else if t.signer.address == t.tx.ProposalKey.Address {
-				return true
-			} else {
-				// ?
-			}
-		*/
-	}
-
-	return false
+	return t.signer.address == t.tx.Payer // todo discuss
 }

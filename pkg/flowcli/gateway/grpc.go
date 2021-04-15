@@ -31,10 +31,6 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowcli/project"
 )
 
-const (
-	defaultGasLimit = 1000
-)
-
 // GrpcGateway is a gateway implementation that uses the Flow Access gRPC API.
 type GrpcGateway struct {
 	client *client.Client
