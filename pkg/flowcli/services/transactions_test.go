@@ -33,13 +33,16 @@ import (
 func TestTransactions(t *testing.T) {
 	mock := &tests.MockGateway{}
 
-	// default implementations
-	mock.PrepareTransactionPayloadMock = func(tx *project.Transaction) (*project.Transaction, error) {
-		return tx, nil
-	}
-
 	mock.SendSignedTransactionMock = func(tx *project.Transaction) (*flow.Transaction, error) {
 		return tx.FlowTransaction(), nil
+	}
+
+	mock.GetLatestBlockMock = func() (*flow.Block, error) {
+		return tests.NewBlock(), nil
+	}
+
+	mock.GetAccountMock = func(address flow.Address) (*flow.Account, error) {
+		return tests.NewAccountWithAddress(address.String()), nil
 	}
 
 	proj, err := project.Init(crypto.ECDSA_P256, crypto.SHA3_256)
@@ -85,14 +88,6 @@ func TestTransactions(t *testing.T) {
 			assert.Equal(t, tx.Signer().Address().String(), serviceAddress)
 			assert.Equal(t, len(string(tx.FlowTransaction().Script)), 209)
 			return tests.NewTransaction(), nil
-		}
-
-		mock.GetLatestBlockMock = func() (*flow.Block, error) {
-			return tests.NewBlock(), nil
-		}
-
-		mock.GetAccountMock = func(address flow.Address) (*flow.Account, error) {
-			return tests.NewAccountWithAddress(address.String()), nil
 		}
 
 		_, _, err := transactions.Send(

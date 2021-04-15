@@ -50,16 +50,8 @@ func (g *MockGateway) GetAccount(address flow.Address) (*flow.Account, error) {
 	return g.GetAccountMock(address)
 }
 
-func (g *MockGateway) SendTransaction(tx *project.Transaction) (*flow.Transaction, error) {
-	return g.SendTransactionMock(tx)
-}
-
 func (g *MockGateway) SendSignedTransaction(tx *project.Transaction) (*flow.Transaction, error) {
 	return g.SendSignedTransactionMock(tx)
-}
-
-func (g *MockGateway) PrepareTransactionPayload(tx *project.Transaction) (*project.Transaction, error) {
-	return g.PrepareTransactionPayloadMock(tx)
 }
 
 func (g *MockGateway) GetTransactionResult(tx *flow.Transaction, waitSeal bool) (*flow.TransactionResult, error) {
