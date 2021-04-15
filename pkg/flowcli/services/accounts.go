@@ -217,7 +217,11 @@ func (a *Accounts) Create(
 
 	// if more than one key is provided and at least one weight is specified, make sure there isn't a missmatch
 	if len(keys) > 1 && len(keyWeights) > 0 && len(keys) != len(keyWeights) {
-		return nil, fmt.Errorf("number of keys and weights provided must match, provided keys %s")
+		return nil, fmt.Errorf(
+			"number of keys and weights provided must match, number of provided keys: %d, number of provided key weights: %d",
+			len(keys),
+			len(keyWeights),
+		)
 	}
 
 	signer := a.project.AccountByName(signerName)
