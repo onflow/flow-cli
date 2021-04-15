@@ -34,7 +34,6 @@ type flagsSend struct {
 	Code     string   `default:"" flag:"code" info:"⚠️  Deprecated: use filename argument"`
 	Results  bool     `default:"" flag:"results" info:"⚠️  Deprecated: all transactions will provide result"`
 	Args     string   `default:"" flag:"args" info:"⚠️  Deprecated: use arg or args-json flag"`
-	Payload  string   `flag:"payload" info:"path to the transaction payload file"`
 }
 
 var sendFlags = flagsSend{}
@@ -71,13 +70,10 @@ var SendCommand = &command.Command{
 		} else if sendFlags.Code != "" {
 			fmt.Println("⚠️  DEPRECATION WARNING: use filename as a command argument <filename>")
 			filename = sendFlags.Code
-		} else if sendFlags.Payload == "" {
-			return nil, fmt.Errorf("provide a valid filename command argument")
 		}
 
 		tx, result, err := services.Transactions.Send(
 			filename,
-			sendFlags.Payload,
 			sendFlags.Signer,
 			sendFlags.Arg,
 			sendFlags.ArgsJSON,
