@@ -24,14 +24,14 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowcli/project"
 )
 
-// Status is a service that handles status of access node
+// Status is a service that handles status of access node.
 type Status struct {
 	gateway gateway.Gateway
 	project *project.Project
 	logger  output.Logger
 }
 
-// NewStatus returns a new ping service
+// NewStatus returns a new status service.
 func NewStatus(
 	gateway gateway.Gateway,
 	project *project.Project,
@@ -44,7 +44,7 @@ func NewStatus(
 	}
 }
 
-// Ping sends Ping request to network
+// Ping sends Ping request to network.
 func (s *Status) Ping(network string) (string, error) {
 	err := s.gateway.Ping()
 	accessNode := s.project.NetworkByName(network).Host
