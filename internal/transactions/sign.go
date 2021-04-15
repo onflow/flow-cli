@@ -26,24 +26,17 @@ import (
 )
 
 type flagsSign struct {
-	ArgsJSON              string   `default:"" flag:"args-json" info:"arguments in JSON-Cadence format"`
-	Args                  []string `default:"" flag:"arg" info:"argument in Type:Value format"`
-	Signer                string   `default:"emulator-account" flag:"signer" info:"name of the account used to sign"`
-	Payload               string   `flag:"payload" info:"path to the transaction payload file"`
-	Proposer              string   `default:"" flag:"proposer" info:"name of the account that is proposing the transaction"`
-	Role                  string   `default:"authorizer" flag:"role" info:"Specify a role of the signer, values: proposer, payer, authorizer"`
-	AdditionalAuthorizers []string `flag:"add-authorizer" info:"Additional authorizer addresses to add to the transaction"`
-	PayerAddress          string   `flag:"payer-address" info:"Specify payer of the transaction. Defaults to first signer."`
+	Signer string `default:"emulator-account" flag:"signer" info:"name of the account used to sign"`
 }
 
 var signFlags = flagsSign{}
 
 var SignCommand = &command.Command{
 	Cmd: &cobra.Command{
-		Use:     "sign <optional code filename>",
-		Short:   "Sign a transaction",
-		Example: "flow transactions sign",
-		Args:    cobra.MaximumNArgs(1),
+		Use:     "sign <build transaction filename>",
+		Short:   "Sign built transaction",
+		Example: "flow transactions sign ./built.rlp --signer alice",
+		Args:    cobra.ExactArgs(1),
 	},
 	Flags: &signFlags,
 	Run: func(
@@ -53,21 +46,9 @@ var SignCommand = &command.Command{
 		services *services.Services,
 	) (command.Result, error) {
 
-		codeFilename := ""
-		if len(args) > 0 {
-			codeFilename = args[0]
-		}
-
 		signed, err := services.Transactions.Sign(
+			args[0], // transaction payload
 			signFlags.Signer,
-			signFlags.Proposer,
-			signFlags.PayerAddress,
-			signFlags.AdditionalAuthorizers,
-			signFlags.Role,
-			codeFilename,
-			signFlags.Payload,
-			signFlags.Args,
-			signFlags.ArgsJSON,
 			globalFlags.Yes,
 		)
 		if err != nil {
