@@ -113,3 +113,12 @@ func ContainsString(s []string, e string) bool {
 	}
 	return false
 }
+
+func ValidAddress(value string) bool {
+	address := flow.HexToAddress(value)
+
+	// valid on any chain
+	return address.IsValid(flow.Mainnet) ||
+		address.IsValid(flow.Testnet) ||
+		address.IsValid(flow.Emulator)
+}

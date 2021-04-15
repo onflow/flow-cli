@@ -236,7 +236,7 @@ func TestTransactions(t *testing.T) {
 	var txID1 flow.Identifier
 
 	t.Run("Test Transactions", func(t *testing.T) {
-		tx, tr, err := transactions.Send("./transaction.cdc", "", emulatorAccount, []string{"String:Hello"}, "")
+		tx, tr, err := transactions.Send("./transaction.cdc", emulatorAccount, []string{"String:Hello"}, "")
 		txID1 = tx.ID()
 
 		assert.NoError(t, tr.Error)
@@ -246,7 +246,7 @@ func TestTransactions(t *testing.T) {
 	})
 
 	t.Run("Test Failed Transactions", func(t *testing.T) {
-		tx, tr, err := transactions.Send("./transactionErr.cdc", "", emulatorAccount, []string{}, "")
+		tx, tr, err := transactions.Send("./transactionErr.cdc", emulatorAccount, []string{}, "")
 
 		assert.NoError(t, err)
 		assert.NotNil(t, tr.Error)
