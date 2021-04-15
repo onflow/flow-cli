@@ -22,6 +22,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/onflow/flow-cli/pkg/flowcli/util"
+
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
 
@@ -77,17 +79,63 @@ func (t *Transactions) GetStatus(
 	return tx, result, err
 }
 
-// Sign transaction
-func (t *Transactions) Sign(
-	signerName string,
-	proposerName string,
-	payerAddress string,
-	additionalAuthorizers []string,
-	role string,
+func (t *Transactions) Build(
+	proposer string,
+	authorizer []string,
+	payer string,
+	proposerKeyIndex int,
 	scriptFilename string,
-	payloadFilename string,
 	args []string,
 	argsJSON string,
+) (*project.Transaction, error) {
+	proposerAddress, err := getAddressFromStringOrConfig(proposer, t.project)
+	if err != nil {
+		return nil, err
+	}
+
+	payerAddress, err := getAddressFromStringOrConfig(payer, t.project)
+	if err != nil {
+		return nil, err
+	}
+
+	authorizerAddresses := make([]flow.Address, 0)
+	for _, a := range authorizer {
+		authorizerAddress, err := getAddressFromStringOrConfig(a, t.project)
+		if err != nil {
+			return nil, err
+		}
+		authorizerAddresses = append(authorizerAddresses, authorizerAddress)
+	}
+
+	latestBlock, err := t.gateway.GetLatestBlock()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get latest sealed block: %w", err)
+	}
+
+	proposerAccount, err := t.gateway.GetAccount(proposerAddress)
+	if err != nil {
+		return nil, err
+	}
+
+	tx := project.NewTransaction().
+		SetPayer(payerAddress).
+		SetProposer(proposerAccount, proposerKeyIndex).
+		AddAuthorizers(authorizerAddresses).
+		SetDefaultGasLimit().
+		SetBlockReference(latestBlock)
+
+	err = tx.SetScriptWithArgsFromFile(scriptFilename, args, argsJSON)
+	if err != nil {
+		return nil, err
+	}
+
+	return tx, nil
+}
+
+// Sign transaction
+func (t *Transactions) Sign(
+	payloadFilename string,
+	signerName string,
 	approveSigning bool,
 ) (*project.Transaction, error) {
 	if t.project == nil {
@@ -100,130 +148,101 @@ func (t *Transactions) Sign(
 		return nil, fmt.Errorf("signer account: [%s] doesn't exists in configuration", signerName)
 	}
 
-	if payloadFilename != "" && scriptFilename != "" {
-		return nil, fmt.Errorf("can not use both a transaction payload and Cadence code file")
-	} else if payloadFilename == "" && scriptFilename == "" {
-		return nil, fmt.Errorf("provide either a transaction payload or Cadence code file")
-	}
-
-	// if we received already created transaction payload, create from payload and return signed
-	if payloadFilename != "" {
-		if payerAddress != "" {
-			return nil, fmt.Errorf("setting a payer is not permissible when using transaction payload")
-		} else if proposerName != "" {
-			return nil, fmt.Errorf("setting a proposer is not possible when using transaction payload")
-		} else if len(args) > 0 || argsJSON != "" {
-			return nil, fmt.Errorf("setting arguments is not possible when using transaction payload")
-		} else if len(additionalAuthorizers) > 0 {
-			return nil, fmt.Errorf("setting additional authorizers is not possible when using transaction payload")
-		}
-
-		tx, err := project.NewTransactionFromPayload(signerAccount, payloadFilename, role)
-		if err != nil {
-			return nil, err
-		}
-
-		if approveSigning {
-			return tx.Sign()
-		}
-
-		if output.ApproveTransactionPrompt(tx) {
-			return tx.Sign()
-		} else {
-			return nil, fmt.Errorf("transaction was not approved for signing")
-		}
-	}
-
-	// we are creating a new transaction
-	tx := project.NewTransaction()
-
-	err := tx.SetSigner(signerAccount)
+	tx, err := project.NewTransactionFromPayload(payloadFilename)
 	if err != nil {
 		return nil, err
 	}
 
-	err = tx.SetSignerRole(role)
+	err = tx.SetSigner(signerAccount)
 	if err != nil {
 		return nil, err
 	}
 
-	// if proposer is specified and exists assign it
-	if proposerName != "" {
-		proposerAccount := t.project.AccountByName(proposerName)
-		if proposerAccount == nil {
-			return nil, fmt.Errorf("proposer account: [%s] doesn't exists in configuration", signerName)
-		}
-
-		err = tx.SetProposer(proposerAccount)
-		if err != nil {
-			return nil, err
-		}
+	if approveSigning {
+		return tx.Sign()
 	}
 
-	// set payer if specified, else set current signer as payer if tx doesn't have one yet associated
-	if payerAddress != "" {
-		tx.SetPayer(flow.HexToAddress(payerAddress))
-	} else if !tx.HasPayer() {
-		tx.SetPayer(signerAccount.Address())
-	}
-
-	err = tx.SetScriptWithArgsFromFile(scriptFilename, args, argsJSON)
-	if err != nil {
-		return nil, err
-	}
-
-	err = tx.AddAuthorizers(additionalAuthorizers)
-	if err != nil {
-		return nil, err
-	}
-
-	tx, err = t.gateway.PrepareTransactionPayload(tx)
-	if err != nil {
-		return nil, err
+	if !output.ApproveTransactionPrompt(tx) {
+		return nil, fmt.Errorf("transaction was not approved for signing")
 	}
 
 	return tx.Sign()
 }
 
+func (t *Transactions) SendSigned(
+	signedFilename string,
+) (*flow.Transaction, *flow.TransactionResult, error) {
+	tx, err := project.NewTransactionFromPayload(signedFilename)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	sentTx, err := t.gateway.SendSignedTransaction(tx)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	res, err := t.gateway.GetTransactionResult(sentTx, true)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return sentTx, res, nil
+}
+
 // Send sends a transaction from a file.
 func (t *Transactions) Send(
 	transactionFilename string,
-	payloadFilename string,
 	signerName string,
 	args []string,
 	argsJSON string,
 ) (*flow.Transaction, *flow.TransactionResult, error) {
+	if t.project == nil {
+		return nil, nil, fmt.Errorf("missing configuration, initialize it: flow project init")
+	}
 
-	signed, err := t.Sign(
+	signerAccount := t.project.AccountByName(signerName)
+	if signerAccount == nil {
+		return nil, nil, fmt.Errorf("signer account: [%s] doesn't exists in configuration", signerName)
+	}
+
+	tx, err := t.Build(
 		signerName,
-		"",
-		"",
-		[]string{},
-		"",
+		[]string{signerName},
+		signerName,
+		0, // default 0 key
 		transactionFilename,
-		payloadFilename,
 		args,
 		argsJSON,
-		true,
 	)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	err = tx.SetSigner(signerAccount)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	signed, err := tx.Sign()
 	if err != nil {
 		return nil, nil, err
 	}
 
 	t.logger.StartProgress("Sending Transaction...")
 
-	tx, err := t.gateway.SendSignedTransaction(signed)
+	sentTx, err := t.gateway.SendSignedTransaction(signed)
 	if err != nil {
 		return nil, nil, err
 	}
 
 	t.logger.StartProgress("Waiting for transaction to be sealed...")
 
-	res, err := t.gateway.GetTransactionResult(tx, true)
+	res, err := t.gateway.GetTransactionResult(sentTx, true)
 
 	t.logger.StopProgress()
 
-	return tx, res, err
+	return sentTx, res, err
 }
 
 // SendForAddressWithCode send transaction for address and private key specified with code
@@ -272,4 +291,18 @@ func (t *Transactions) SendForAddressWithCode(
 
 	t.logger.StopProgress()
 	return sentTx, res, err
+}
+
+func getAddressFromStringOrConfig(value string, project *project.Project) (flow.Address, error) {
+	if util.ValidAddress(value) {
+		return flow.HexToAddress(value), nil
+	} else if project != nil {
+		account := project.AccountByName(value)
+		if account == nil {
+			return flow.EmptyAddress, fmt.Errorf("account could not be found")
+		}
+		return account.Address(), nil
+	} else {
+		return flow.EmptyAddress, fmt.Errorf("could not parse address or account name from config, missing configuration")
+	}
 }
