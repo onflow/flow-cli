@@ -66,16 +66,6 @@ func (g *GrpcGateway) GetAccount(address flow.Address) (*flow.Account, error) {
 	return account, nil
 }
 
-// SendTransaction signs and sends the transaction to the network
-func (g *GrpcGateway) SendTransaction(tx *project.Transaction) (*flow.Transaction, error) {
-	tx, err := tx.Sign()
-	if err != nil {
-		return nil, fmt.Errorf("failed to sign transaction: %w", err)
-	}
-
-	return g.SendSignedTransaction(tx)
-}
-
 // SendSignedTransaction sends a transaction to flow that is already prepared and signed
 func (g *GrpcGateway) SendSignedTransaction(transaction *project.Transaction) (*flow.Transaction, error) {
 	tx := transaction.FlowTransaction()
