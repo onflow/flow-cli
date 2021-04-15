@@ -32,53 +32,10 @@ type FlagsStatus struct {
 
 var statusFlags = FlagsStatus{}
 
-
-type Result struct {
-	network  string
-	accessNode string
-	connectionError error
-}
-
-
-const (
-	OnlineIcon   = "🟢"
-	OnlineStatus = "ONLINE"
-
-	OfflineIcon   = "🔴"
-	OfflineStatus = "OFFLINE"
-)
-
-// getStatus returns string representation for network status
-func (r *Result) getStatus() string {
-	if r.connectionError == nil {
-		return OnlineStatus
-	}
-
-	return OfflineStatus
-}
-
-// getColoredStatus returns colored string representation for network status
-func (r *Result) getColoredStatus() string {
-	if r.connectionError == nil {
-		return util.Green(OnlineStatus)
-	}
-
-	return util.Red(OfflineStatus)
-}
-
-// getIcon returns emoji icon representing network statu
-func (r *Result) getIcon() string {
-	if r.connectionError == nil {
-		return OnlineIcon
-	}
-
-	return OfflineIcon
-}
-
-var InitCommand = &command.Command{
+var Command = &command.Command{
 	Cmd: &cobra.Command{
 		Use:   "status",
-		Short: "Display status of network",
+		Short: "Display the status of the Flow network",
 	},
 	Flags: &statusFlags,
 	Run: func(
@@ -90,7 +47,7 @@ var InitCommand = &command.Command{
 		// Get network name from global flag
 		network := globalFlags.Network
 		if network == "" {
-			network = "emulator"
+			network = command.NetworkEmulator
 		}
 
 		accessNode, err := services.Status.Ping(network)
@@ -98,12 +55,54 @@ var InitCommand = &command.Command{
 		return &Result{
 			network:  network,
 			accessNode: accessNode,
-			connectionError: err,
+			err: err,
 		}, nil
 	},
 }
 
-// String convert result to string
+type Result struct {
+	network  string
+	accessNode string
+	err error
+}
+
+
+const (
+	OnlineIcon   = "🟢"
+	OnlineStatus = "ONLINE"
+
+	OfflineIcon   = "🔴"
+	OfflineStatus = "OFFLINE"
+)
+
+// getStatus returns string representation for Flow network status.
+func (r *Result) getStatus() string {
+	if r.err == nil {
+		return OnlineStatus
+	}
+
+	return OfflineStatus
+}
+
+// getColoredStatus returns colored string representation for Flow network status.
+func (r *Result) getColoredStatus() string {
+	if r.err == nil {
+		return util.Green(OnlineStatus)
+	}
+
+	return util.Red(OfflineStatus)
+}
+
+// getIcon returns emoji icon representing Flow network status.
+func (r *Result) getIcon() string {
+	if r.err == nil {
+		return OnlineIcon
+	}
+
+	return OfflineIcon
+}
+
+// String converts result to a string.
 func (r *Result) String() string {
 	var b bytes.Buffer
 	writer := util.CreateTabWriter(&b)
@@ -116,7 +115,7 @@ func (r *Result) String() string {
 	return b.String()
 }
 
-// JSON convert result to JSON
+// JSON converts result to a JSON.
 func (r *Result) JSON() interface{} {
 	result := make(map[string]string)
 
@@ -127,7 +126,7 @@ func (r *Result) JSON() interface{} {
 	return result
 }
 
-// Oneliner show result as one liner grep friendly
+// Oneliner returns result as one liner grep friendly.
 func (r *Result) Oneliner() string {
 	return r.getStatus()
 }
