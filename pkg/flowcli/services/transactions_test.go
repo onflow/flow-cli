@@ -87,9 +87,16 @@ func TestTransactions(t *testing.T) {
 			return tests.NewTransaction(), nil
 		}
 
+		mock.GetLatestBlockMock = func() (*flow.Block, error) {
+			return tests.NewBlock(), nil
+		}
+
+		mock.GetAccountMock = func(address flow.Address) (*flow.Account, error) {
+			return tests.NewAccountWithAddress(address.String()), nil
+		}
+
 		_, _, err := transactions.Send(
 			"../../../tests/transaction.cdc",
-			"",
 			serviceName,
 			[]string{"String:Bar"},
 			"",
@@ -116,7 +123,6 @@ func TestTransactions(t *testing.T) {
 
 		_, _, err := transactions.Send(
 			"../../../tests/transaction.cdc",
-			"",
 			serviceName,
 			nil,
 			"[{\"type\": \"String\", \"value\": \"Bar\"}]",
@@ -129,7 +135,6 @@ func TestTransactions(t *testing.T) {
 	t.Run("Send Transaction Fails wrong args", func(t *testing.T) {
 		_, _, err := transactions.Send(
 			"../../../tests/transaction.cdc",
-			"",
 			serviceName,
 			[]string{"Bar"},
 			"",
@@ -140,7 +145,6 @@ func TestTransactions(t *testing.T) {
 	t.Run("Send Transaction Fails wrong filename", func(t *testing.T) {
 		_, _, err := transactions.Send(
 			"nooo.cdc",
-			"",
 			serviceName,
 			[]string{"Bar"},
 			"",
@@ -151,7 +155,6 @@ func TestTransactions(t *testing.T) {
 	t.Run("Send Transaction Fails wrong args", func(t *testing.T) {
 		_, _, err := transactions.Send(
 			"../../../tests/transaction.cdc",
-			"",
 			serviceName,
 			nil,
 			"[{\"Bar\":\"No\"}]",
