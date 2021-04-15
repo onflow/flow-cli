@@ -79,6 +79,7 @@ func (t *Transactions) GetStatus(
 	return tx, result, err
 }
 
+// Build builds a transaction with specified payer, proposer and authorizer
 func (t *Transactions) Build(
 	proposer string,
 	authorizer []string,
@@ -169,6 +170,7 @@ func (t *Transactions) Sign(
 	return tx.Sign()
 }
 
+// SendSigned sends the transaction that is already signed
 func (t *Transactions) SendSigned(
 	signedFilename string,
 ) (*flow.Transaction, *flow.TransactionResult, error) {
@@ -293,6 +295,7 @@ func (t *Transactions) SendForAddressWithCode(
 	return sentTx, res, err
 }
 
+// getAddressFromStringOrConfig try to parse value as address or as an account from the config
 func getAddressFromStringOrConfig(value string, project *project.Project) (flow.Address, error) {
 	if util.ValidAddress(value) {
 		return flow.HexToAddress(value), nil
