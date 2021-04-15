@@ -152,7 +152,7 @@ func (c Command) AddToParent(parent *cobra.Command) {
 		// initialize project but ignore error since config can be missing
 		proj, err := project.Load(flags.ConfigPath)
 		// here we ignore if config does not exist as some commands don't require it
-		if !errors.Is(err, config.ErrDoesNotExist) {
+		if !errors.Is(err, config.ErrDoesNotExist) && cmd.CommandPath() != "flow init" { // ignore configs errors if we are doing init config
 			handleError("Config Error", err)
 		}
 
