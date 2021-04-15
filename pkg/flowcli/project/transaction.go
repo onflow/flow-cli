@@ -79,17 +79,10 @@ func NewUpdateAccountContractTransaction(signer *Account, name string, source st
 		Source: source,
 	}
 
-	tx := &Transaction{
-		tx: templates.UpdateAccountContract(signer.Address(), contract),
-	}
-
-	err := tx.SetSigner(signer)
-	if err != nil {
-		return nil, err
-	}
-	tx.SetPayer(signer.Address())
-
-	return tx, nil
+	return newTransactionFromTemplate(
+		templates.UpdateAccountContract(signer.Address(), contract),
+		signer,
+	)
 }
 
 // NewAddAccountContractTransaction add new contract to the account
@@ -99,31 +92,18 @@ func NewAddAccountContractTransaction(signer *Account, name string, source strin
 		Source: source,
 	}
 
-	tx := &Transaction{
-		tx: templates.AddAccountContract(signer.Address(), contract),
-	}
-
-	err := tx.SetSigner(signer)
-	if err != nil {
-		return nil, err
-	}
-	tx.SetPayer(signer.Address())
-
-	return tx, nil
+	return newTransactionFromTemplate(
+		templates.AddAccountContract(signer.Address(), contract),
+		signer,
+	)
 }
 
 // NewRemoveAccountContractTransaction creates new transaction to remove contract
 func NewRemoveAccountContractTransaction(signer *Account, name string) (*Transaction, error) {
-	tx := &Transaction{
-		tx: templates.RemoveAccountContract(signer.Address(), name),
-	}
-
-	err := tx.SetSigner(signer)
-	if err != nil {
-		return nil, err
-	}
-
-	return tx, nil
+	return newTransactionFromTemplate(
+		templates.RemoveAccountContract(signer.Address(), name),
+		signer,
+	)
 }
 
 // NewCreateAccountTransaction creates new transaction for account
@@ -151,9 +131,14 @@ func NewCreateAccountTransaction(
 		})
 	}
 
-	tx := &Transaction{
-		tx: templates.CreateAccount(keys, contracts, signer.Address()),
-	}
+	return newTransactionFromTemplate(
+		templates.CreateAccount(keys, contracts, signer.Address()),
+		signer,
+	)
+}
+
+func newTransactionFromTemplate(templateTx *flow.Transaction, signer *Account) (*Transaction, error) {
+	tx := &Transaction{tx: templateTx}
 
 	err := tx.SetSigner(signer)
 	if err != nil {
