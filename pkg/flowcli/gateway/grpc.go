@@ -66,41 +66,9 @@ func (g *GrpcGateway) GetAccount(address flow.Address) (*flow.Account, error) {
 	return account, nil
 }
 
-// PrepareTransactionPayload prepares the payload for the transaction from the network
-func (g *GrpcGateway) PrepareTransactionPayload(tx *project.Transaction) (*project.Transaction, error) {
-	proposalAddress := tx.Signer().Address()
-	if tx.Proposer() != nil { // default proposer is signer
-		proposalAddress = tx.Proposer().Address()
-	}
-
-	proposer, err := g.GetAccount(proposalAddress)
-	if err != nil {
-		return nil, err
-	}
-
-	proposerKey := proposer.Keys[tx.Signer().DefaultKey().Index()]
-
-	sealed, err := g.client.GetLatestBlockHeader(g.ctx, true)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get latest sealed block: %w", err)
-	}
-
-	tx.FlowTransaction().
-		SetReferenceBlockID(sealed.ID).
-		SetGasLimit(defaultGasLimit).
-		SetProposalKey(proposalAddress, proposerKey.Index, proposerKey.SequenceNumber)
-
-	return tx, nil
-}
-
-// SendTransaction prepares, signs and sends the transaction to the network
-func (g *GrpcGateway) SendTransaction(transaction *project.Transaction) (*flow.Transaction, error) {
-	tx, err := g.PrepareTransactionPayload(transaction)
-	if err != nil {
-		return nil, err
-	}
-
-	tx, err = tx.Sign()
+// SendTransaction signs and sends the transaction to the network
+func (g *GrpcGateway) SendTransaction(tx *project.Transaction) (*flow.Transaction, error) {
+	tx, err := tx.Sign()
 	if err != nil {
 		return nil, fmt.Errorf("failed to sign transaction: %w", err)
 	}
