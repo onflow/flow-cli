@@ -79,7 +79,7 @@ func TestAccounts(t *testing.T) {
 			return tests.NewAccountWithAddress(newAddress), nil
 		}
 
-		a, err := accounts.Create(serviceName, []string{pubKey}, sigAlgo, hashAlgo, nil)
+		a, err := accounts.Create(serviceName, []string{pubKey}, []int{1000}, sigAlgo, hashAlgo, nil)
 
 		assert.NotNil(t, a)
 		assert.NoError(t, err)
@@ -107,7 +107,7 @@ func TestAccounts(t *testing.T) {
 			return tests.NewAccountWithAddress(newAddress), nil
 		}
 
-		a, err := accounts.Create(serviceName, []string{pubKey}, sigAlgo, hashAlgo, []string{"Hello:../../../tests/Hello.cdc"})
+		a, err := accounts.Create(serviceName, []string{pubKey}, []int{1000}, sigAlgo, hashAlgo, []string{"Hello:../../../tests/Hello.cdc"})
 
 		assert.NotNil(t, a)
 		assert.NoError(t, err)
