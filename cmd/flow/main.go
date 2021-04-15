@@ -47,7 +47,7 @@ func main() {
 
 	// hot commands
 	config.InitCommand.AddToParent(cmd)
-	status.InitCommand.AddToParent(cmd)
+	status.Command.AddToParent(cmd)
 
 	// structured commands
 	cmd.AddCommand(cadence.Cmd)
