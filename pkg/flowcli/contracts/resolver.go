@@ -5,11 +5,11 @@ import (
 	"path"
 	"strings"
 
-	"github.com/onflow/flow-go-sdk"
-
 	"github.com/onflow/cadence/runtime/ast"
 	"github.com/onflow/cadence/runtime/common"
 	"github.com/onflow/cadence/runtime/parser2"
+	"github.com/onflow/flow-go-sdk"
+
 	"github.com/onflow/flow-cli/pkg/flowcli/project"
 )
 
@@ -72,7 +72,7 @@ func (r *Resolver) getSourceTarget(
 	contracts []project.Contract,
 	aliases project.Aliases,
 ) map[string]string {
-	sourceTarget := make(map[string]string, 0)
+	sourceTarget := make(map[string]string)
 	for _, contract := range contracts {
 		sourceTarget[path.Clean(contract.Source)] = contract.Target.String()
 	}

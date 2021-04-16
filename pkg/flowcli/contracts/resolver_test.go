@@ -4,10 +4,10 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/onflow/flow-cli/pkg/flowcli/project"
 	"github.com/onflow/flow-go-sdk"
-
 	"github.com/stretchr/testify/assert"
+
+	"github.com/onflow/flow-cli/pkg/flowcli/project"
 )
 
 func cleanCode(code []byte) string {

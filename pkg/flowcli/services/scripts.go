@@ -22,9 +22,9 @@ import (
 	"fmt"
 
 	"github.com/onflow/cadence"
-	"github.com/onflow/flow-cli/pkg/flowcli/contracts"
 
 	"github.com/onflow/flow-cli/pkg/flowcli"
+	"github.com/onflow/flow-cli/pkg/flowcli/contracts"
 	"github.com/onflow/flow-cli/pkg/flowcli/gateway"
 	"github.com/onflow/flow-cli/pkg/flowcli/output"
 	"github.com/onflow/flow-cli/pkg/flowcli/project"
