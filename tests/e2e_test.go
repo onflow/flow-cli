@@ -207,14 +207,19 @@ func TestScripts(t *testing.T) {
 	scripts := services.NewScripts(gateway, project, logger)
 
 	t.Run("Test Script", func(t *testing.T) {
-		val, err := scripts.Execute("./script.cdc", []string{"String:Mr G"}, "")
+		val, err := scripts.Execute("./script.cdc", []string{"String:Mr G"}, "", "")
 
 		assert.NoError(t, err)
 		assert.Equal(t, val.String(), `"Hello Mr G"`)
 	})
 
 	t.Run("Test Script JSON args", func(t *testing.T) {
-		val, err := scripts.Execute("./script.cdc", []string{}, "[{\"type\": \"String\", \"value\": \"Mr G\"}]")
+		val, err := scripts.Execute(
+			"./script.cdc",
+			[]string{},
+			"[{\"type\": \"String\", \"value\": \"Mr G\"}]",
+			"",
+		)
 
 		assert.NoError(t, err)
 		assert.Equal(t, val.String(), `"Hello Mr G"`)
@@ -236,7 +241,11 @@ func TestTransactions(t *testing.T) {
 	var txID1 flow.Identifier
 
 	t.Run("Test Transactions", func(t *testing.T) {
-		tx, tr, err := transactions.Send("./transaction.cdc", emulatorAccount, []string{"String:Hello"}, "")
+		tx, tr, err := transactions.Send(
+			"./transaction.cdc",
+			emulatorAccount, []string{"String:Hello"}, "",
+			"",
+		)
 		txID1 = tx.ID()
 
 		assert.NoError(t, tr.Error)
@@ -246,7 +255,11 @@ func TestTransactions(t *testing.T) {
 	})
 
 	t.Run("Test Failed Transactions", func(t *testing.T) {
-		tx, tr, err := transactions.Send("./transactionErr.cdc", emulatorAccount, []string{}, "")
+		tx, tr, err := transactions.Send(
+			"./transactionErr.cdc",
+			emulatorAccount, []string{}, "",
+			"",
+		)
 
 		assert.NoError(t, err)
 		assert.NotNil(t, tr.Error)

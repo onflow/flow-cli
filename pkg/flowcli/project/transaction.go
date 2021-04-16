@@ -169,17 +169,6 @@ func (t *Transaction) FlowTransaction() *flow.Transaction {
 	return t.tx
 }
 
-// SetScriptWithArgsFromFile set scripts for transaction by loading it from file and setting args
-func (t *Transaction) SetScriptWithArgsFromFile(filepath string, args []string, argsJSON string) error {
-	script, err := util.LoadFile(filepath)
-	if err != nil {
-		return err
-	}
-
-	return t.SetScriptWithArgs(script, args, argsJSON)
-}
-
-// SetScriptWithArgs set script for transaction and set arguments for script
 func (t *Transaction) SetScriptWithArgs(script []byte, args []string, argsJSON string) error {
 	t.tx.SetScript(script)
 	return t.AddRawArguments(args, argsJSON)

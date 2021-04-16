@@ -50,6 +50,7 @@ var SignCommand = &command.Command{
 			args[0], // transaction payload
 			signFlags.Signer,
 			globalFlags.Yes,
+			globalFlags.Network,
 		)
 		if err != nil {
 			return nil, err

@@ -95,6 +95,7 @@ func TestTransactions(t *testing.T) {
 			serviceName,
 			[]string{"String:Bar"},
 			"",
+			"",
 		)
 
 		assert.NoError(t, err)
@@ -121,6 +122,7 @@ func TestTransactions(t *testing.T) {
 			serviceName,
 			nil,
 			"[{\"type\": \"String\", \"value\": \"Bar\"}]",
+			"",
 		)
 
 		assert.NoError(t, err)
@@ -133,6 +135,7 @@ func TestTransactions(t *testing.T) {
 			serviceName,
 			[]string{"Bar"},
 			"",
+			"",
 		)
 		assert.Equal(t, err.Error(), "argument not passed in correct format, correct format is: Type:Value, got Bar")
 	})
@@ -142,6 +145,7 @@ func TestTransactions(t *testing.T) {
 			"nooo.cdc",
 			serviceName,
 			[]string{"Bar"},
+			"",
 			"",
 		)
 		assert.Equal(t, err.Error(), "Failed to load file: nooo.cdc")
@@ -153,6 +157,7 @@ func TestTransactions(t *testing.T) {
 			serviceName,
 			nil,
 			"[{\"Bar\":\"No\"}]",
+			"",
 		)
 		assert.Equal(t, err.Error(), "failed to decode value: invalid JSON Cadence structure")
 	})
