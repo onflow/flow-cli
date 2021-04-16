@@ -22,6 +22,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
+	"net/http"
 	"os"
 	"strings"
 
@@ -31,6 +33,7 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowcli/project"
 	"github.com/onflow/flow-cli/pkg/flowcli/services"
 	"github.com/onflow/flow-cli/pkg/flowcli/util"
+	"github.com/onflow/flow-cli/build"
 
 	"github.com/onflow/flow-go-sdk/client"
 	"github.com/psiemens/sconfig"
@@ -175,6 +178,8 @@ func (c Command) AddToParent(parent *cobra.Command) {
 		logger := createLogger(Flags.Log, Flags.Format)
 
 		service := services.NewServices(clientGateway, proj, logger)
+
+		checkVersion(logger)
 
 		// run command
 		result, err := c.Run(cmd, args, Flags, service)
@@ -358,6 +363,25 @@ func handleError(description string, err error) {
 
 	fmt.Println()
 	os.Exit(1)
+}
+
+// checkVersion fetches latest version and compares it to local
+func checkVersion(logger output.Logger) {
+	resp, err := http.Get("https://raw.githubusercontent.com/onflow/flow-cli/master/version.txt")
+	if err != nil || resp.StatusCode >= 400 {
+		return
+	}
+
+	defer resp.Body.Close()
+	latestVersion, _ := ioutil.ReadAll(resp.Body)
+
+	if string(latestVersion) != build.Semver() {
+		logger.Info(fmt.Sprintf(
+			"\n⚠️  Version Warning: New version %s of Flow CLI is available.\n"+
+				"Follow the Flow CLI installation guide for instructions on how to install or upgrade the CLI: https://docs.onflow.org/flow-cli/install",
+			strings.ReplaceAll(string(latestVersion), "\n", ""),
+		))
+	}
 }
 
 // bindFlags bind all the flags needed
