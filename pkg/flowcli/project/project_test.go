@@ -67,17 +67,31 @@ func generateComplexProject() Project {
 			Network: "testnet",
 		}},
 		Deployments: config.Deployments{{
-			Network:   "emulator",
-			Account:   "emulator-account",
-			Contracts: []string{"KittyItems", "KittyItemsMarket"},
+			Network: "emulator",
+			Account: "emulator-account",
+			Contracts: []config.ContractDeployment{
+				{Name: "KittyItems", Args: nil},
+				{Name: "KittyItemsMarket", Args: nil},
+			},
 		}, {
-			Network:   "emulator",
-			Account:   "account-4",
-			Contracts: []string{"FungibleToken", "NonFungibleToken", "Kibble", "KittyItems", "KittyItemsMarket"},
+			Network: "emulator",
+			Account: "account-4",
+			Contracts: []config.ContractDeployment{
+				{Name: "FungibleToken", Args: nil},
+				{Name: "NonFungibleToken", Args: nil},
+				{Name: "Kibble", Args: nil},
+				{Name: "KittyItems", Args: nil},
+				{Name: "KittyItemsMarket", Args: nil},
+			},
 		}, {
-			Network:   "testnet",
-			Account:   "account-2",
-			Contracts: []string{"FungibleToken", "NonFungibleToken", "Kibble", "KittyItems"},
+			Network: "testnet",
+			Account: "account-2",
+			Contracts: []config.ContractDeployment{
+				{Name: "FungibleToken", Args: nil},
+				{Name: "NonFungibleToken", Args: nil},
+				{Name: "Kibble", Args: nil},
+				{Name: "KittyItems", Args: nil},
+			},
 		}},
 		Accounts: config.Accounts{{
 			Name:    "emulator-account",
@@ -147,9 +161,11 @@ func generateSimpleProject() Project {
 			Network: "emulator",
 		}},
 		Deployments: config.Deployments{{
-			Network:   "emulator",
-			Account:   "emulator-account",
-			Contracts: []string{"NonFungibleToken"},
+			Network: "emulator",
+			Account: "emulator-account",
+			Contracts: []config.ContractDeployment{
+				{Name: "NonFungibleToken", Args: nil},
+			},
 		}},
 		Accounts: config.Accounts{{
 			Name:    "emulator-account",
@@ -198,9 +214,11 @@ func generateAliasesProject() Project {
 			Alias:   "ee82856bf20e2aa6",
 		}},
 		Deployments: config.Deployments{{
-			Network:   "emulator",
-			Account:   "emulator-account",
-			Contracts: []string{"NonFungibleToken"},
+			Network: "emulator",
+			Account: "emulator-account",
+			Contracts: []config.ContractDeployment{
+				{Name: "NonFungibleToken", Args: nil},
+			},
 		}},
 		Accounts: config.Accounts{{
 			Name:    "emulator-account",
@@ -258,13 +276,18 @@ func generateAliasesComplexProject() Project {
 			Alias:   "ee82856bf20e2aa6",
 		}},
 		Deployments: config.Deployments{{
-			Network:   "emulator",
-			Account:   "emulator-account",
-			Contracts: []string{"NonFungibleToken"},
+			Network: "emulator",
+			Account: "emulator-account",
+			Contracts: []config.ContractDeployment{
+				{Name: "NonFungibleToken", Args: nil},
+			},
 		}, {
-			Network:   "testnet",
-			Account:   "testnet-account",
-			Contracts: []string{"NonFungibleToken", "FungibleToken"},
+			Network: "testnet",
+			Account: "testnet-account",
+			Contracts: []config.ContractDeployment{
+				{Name: "NonFungibleToken", Args: nil},
+				{Name: "FungibleToken", Args: nil},
+			},
 		}},
 		Accounts: config.Accounts{{
 			Name:    "emulator-account",

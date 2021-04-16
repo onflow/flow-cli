@@ -23,6 +23,8 @@ import (
 	"path"
 	"strings"
 
+	"github.com/onflow/flow-cli/pkg/flowcli/config"
+
 	"github.com/onflow/cadence/runtime/ast"
 	"github.com/onflow/cadence/runtime/common"
 	"github.com/onflow/cadence/runtime/parser2"
@@ -38,6 +40,7 @@ type Contract struct {
 	source       string
 	target       flow.Address
 	code         string
+	args         []config.ContractArgument
 	program      *ast.Program
 	dependencies map[string]*Contract
 	aliases      map[string]flow.Address
@@ -49,6 +52,7 @@ func newContract(
 	contractSource,
 	contractCode string,
 	target flow.Address,
+	args []config.ContractArgument,
 ) (*Contract, error) {
 	program, err := parser2.ParseProgram(contractCode)
 	if err != nil {
@@ -62,6 +66,7 @@ func newContract(
 		target:       target,
 		code:         contractCode,
 		program:      program,
+		args:         args,
 		dependencies: make(map[string]*Contract),
 		aliases:      make(map[string]flow.Address),
 	}, nil
@@ -77,6 +82,10 @@ func (c *Contract) Name() string {
 
 func (c *Contract) Code() string {
 	return c.code
+}
+
+func (c *Contract) Args() []config.ContractArgument {
+	return c.args
 }
 
 func (c *Contract) TranspiledCode() string {
@@ -132,8 +141,106 @@ func (c *Contract) addAlias(location string, target flow.Address) {
 	c.aliases[location] = target
 }
 
+type Loader interface {
+	Load(source string) (string, error)
+	Normalize(base, relative string) string
+}
+
+type FilesystemLoader struct{}
+
+func (f FilesystemLoader) Load(source string) (string, error) {
+	codeBytes, err := ioutil.ReadFile(source)
+	if err != nil {
+		return "", err
+	}
+
+	return string(codeBytes), nil
+}
+
+func (f FilesystemLoader) Normalize(base, relative string) string {
+	return absolutePath(base, relative)
+}
+
 func absolutePath(basePath, relativePath string) string {
 	return path.Join(path.Dir(basePath), relativePath)
+}
+
+type Preprocessor struct {
+	loader            Loader
+	aliases           map[string]string
+	contracts         []*Contract
+	contractsBySource map[string]*Contract
+}
+
+func NewPreprocessor(loader Loader, aliases map[string]string) *Preprocessor {
+	return &Preprocessor{
+		loader:            loader,
+		aliases:           aliases,
+		contracts:         make([]*Contract, 0),
+		contractsBySource: make(map[string]*Contract),
+	}
+}
+
+func (p *Preprocessor) AddContractSource(
+	contractName,
+	contractSource string,
+	target flow.Address,
+	args []config.ContractArgument,
+) error {
+	contractCode, err := p.loader.Load(contractSource)
+	if err != nil {
+		return err
+	}
+
+	c, err := newContract(
+		len(p.contracts),
+		contractName,
+		contractSource,
+		contractCode,
+		target,
+		args,
+	)
+	if err != nil {
+		return err
+	}
+
+	p.contracts = append(p.contracts, c)
+	p.contractsBySource[c.source] = c
+
+	return nil
+}
+
+func (p *Preprocessor) ResolveImports() error {
+	for _, c := range p.contracts {
+		for _, location := range c.imports() {
+			importPath := p.loader.Normalize(c.source, location)
+			importAlias, isAlias := p.aliases[importPath]
+			importContract, isContract := p.contractsBySource[importPath]
+
+			if isContract {
+				c.addDependency(location, importContract)
+			} else if isAlias {
+				c.addAlias(location, flow.HexToAddress(importAlias))
+			} else {
+				return fmt.Errorf("Import from %s could not be found: %s, make sure import path is correct.", c.name, importPath)
+			}
+		}
+	}
+
+	return nil
+}
+
+func (p *Preprocessor) ContractBySource(contractSource string) *Contract {
+	return p.contractsBySource[contractSource]
+}
+
+func (p *Preprocessor) ContractDeploymentOrder() ([]*Contract, error) {
+	sorted, err := sortByDeploymentOrder(p.contracts)
+	if err != nil {
+		return nil, err
+	}
+
+	return sorted, nil
 }
 
 type CyclicImportError struct {

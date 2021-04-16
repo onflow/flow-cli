@@ -97,34 +97,38 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 	}
 
 	// check there are not multiple accounts with same contract
-	// TODO: specify which contract by name is a problem
 	if p.project.ContractConflictExists(network) {
-		return nil, fmt.Errorf(
+		return nil, fmt.Errorf( // TODO: specify which contract by name is a problem
 			"the same contract cannot be deployed to multiple accounts on the same network",
 		)
 	}
 
+	// create new processor for contract
 	processor := contracts.NewPreprocessor(
 		contracts.FilesystemLoader{},
 		p.project.AliasesForNetwork(network),
 	)
 
+	// add all contracts needed to deploy to processor
 	for _, contract := range p.project.ContractsByNetwork(network) {
 		err := processor.AddContractSource(
 			contract.Name,
 			contract.Source,
 			contract.Target,
+			contract.Args,
 		)
 		if err != nil {
 			return nil, err
 		}
 	}
 
+	// resolve imports assigns accounts to imports
 	err := processor.ResolveImports()
 	if err != nil {
 		return nil, err
 	}
 
+	// sort correct deployment order of contracts so we don't have import that is not yet deployed
 	orderedContracts, err := processor.ContractDeploymentOrder()
 	if err != nil {
 		return nil, err
@@ -149,28 +153,39 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 			return nil, fmt.Errorf("target account for deploying contract not found in configuration")
 		}
 
+		// get deployment account
 		targetAccountInfo, err := p.gateway.GetAccount(targetAccount.Address())
 		if err != nil {
 			return nil, fmt.Errorf("failed to fetch information for account %s with error %s", targetAccount.Address(), err.Error())
 		}
 
-		tx, err := project.NewAddAccountContractTransaction(targetAccount, contract.Name(), contract.TranspiledCode())
+		// create transaction to deploy new contract with args
+		tx, err := project.NewAddAccountContractTransaction(
+			targetAccount,
+			contract.Name(),
+			contract.TranspiledCode(),
+			contract.Args(),
+		)
 		if err != nil {
 			return nil, err
 		}
-
+		// check if contract exists on account
 		_, exists := targetAccountInfo.Contracts[contract.Name()]
-		if exists {
-			if !update {
-				p.logger.Error(fmt.Sprintf(
-					"contract %s is already deployed to this account. Use the --update flag to force update",
-					contract.Name(),
-				))
-
-				deployErr = true
-				continue
-			}
-
+		if exists && !update {
+			p.logger.Error(fmt.Sprintf(
+				"contract %s is already deployed to this account. Use the --update flag to force update",
+				contract.Name(),
+			))
+			deployErr = true
+			continue
+		} else if exists && len(contract.Args()) > 0 { // todo discuss we might better remove the contract and redeploy it - ux issue
+			p.logger.Error(fmt.Sprintf(
+				"contract %s is already deployed and can not be updated with initialization arguments",
+				contract.Name(),
+			))
+			deployErr = true
+			continue
+		} else if exists {
 			tx, err = project.NewUpdateAccountContractTransaction(targetAccount, contract.Name(), contract.TranspiledCode())
 			if err != nil {
 				return nil, err

@@ -124,7 +124,6 @@ func TestAccounts(t *testing.T) {
 
 	t.Run("Contract Add for Account", func(t *testing.T) {
 		mock.SendSignedTransactionMock = func(tx *project.Transaction) (*flow.Transaction, error) {
-			assert.Equal(t, tx.FlowTransaction().Authorizers[0].String(), serviceAddress)
 			assert.Equal(t, tx.Signer().Address().String(), serviceAddress)
 			assert.True(t, strings.Contains(string(tx.FlowTransaction().Script), "signer.contracts.add"))
 
