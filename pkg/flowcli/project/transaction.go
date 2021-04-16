@@ -94,15 +94,10 @@ func NewAddAccountContractTransaction(
 	source string,
 	args []config.ContractArgument,
 ) (*Transaction, error) {
-	contract := addAccountContractWithArgs(templates.Contract{
+	return addAccountContractWithArgs(signer, templates.Contract{
 		Name:   name,
 		Source: source,
 	}, args)
-
-	return newTransactionFromTemplate(
-		templates.AddAccountContract(signer.Address(), contract),
-		signer,
-	)
 }
 
 // NewRemoveAccountContractTransaction creates new transaction to remove contract
@@ -114,9 +109,10 @@ func NewRemoveAccountContractTransaction(signer *Account, name string) (*Transac
 }
 
 func addAccountContractWithArgs(
+	signer *Account,
 	contract templates.Contract,
 	args []config.ContractArgument,
-) *flow.Transaction {
+) (*Transaction, error) {
 	const addAccountContractTemplate = `
 	transaction(name: String, code: String%s) {
 		prepare(signer: AuthAccount) {
@@ -139,7 +135,16 @@ func addAccountContractWithArgs(
 	}
 
 	script := fmt.Sprintf(addAccountContractTemplate, txArgs, addArgs)
-	return tx.SetScript([]byte(script))
+	tx.SetScript([]byte(script))
+
+	t := &Transaction{tx: tx}
+	err := t.SetSigner(signer)
+	if err != nil {
+		return nil, err
+	}
+	t.SetPayer(signer.Address())
+
+	return t, nil
 }
 
 // NewCreateAccountTransaction creates new transaction for account
