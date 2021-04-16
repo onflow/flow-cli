@@ -60,6 +60,7 @@ var BuildCommand = &command.Command{
 			args[0], // code filename
 			buildFlags.Args,
 			buildFlags.ArgsJSON,
+			globalFlags.Network,
 		)
 		if err != nil {
 			return nil, err

@@ -22,14 +22,15 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/onflow/flow-cli/pkg/flowcli/contracts"
+
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
 
-	"github.com/onflow/flow-cli/pkg/flowcli/util"
-	"github.com/onflow/flow-cli/pkg/flowcli/contracts"
 	"github.com/onflow/flow-cli/pkg/flowcli/gateway"
 	"github.com/onflow/flow-cli/pkg/flowcli/output"
 	"github.com/onflow/flow-cli/pkg/flowcli/project"
+	"github.com/onflow/flow-cli/pkg/flowcli/util"
 )
 
 // Transactions is a service that handles all transaction-related interactions.
@@ -85,9 +86,10 @@ func (t *Transactions) Build(
 	authorizer []string,
 	payer string,
 	proposerKeyIndex int,
-	scriptFilename string,
+	codeFilename string,
 	args []string,
 	argsJSON string,
+	network string,
 ) (*project.Transaction, error) {
 	proposerAddress, err := getAddressFromStringOrConfig(proposer, t.project)
 	if err != nil {
@@ -125,7 +127,35 @@ func (t *Transactions) Build(
 		SetDefaultGasLimit().
 		SetBlockReference(latestBlock)
 
-	err = tx.SetScriptWithArgsFromFile(scriptFilename, args, argsJSON)
+	code, err := util.LoadFile(codeFilename)
+	if err != nil {
+		return nil, err
+	}
+
+	resolver, err := contracts.NewResolver(code)
+	if err != nil {
+		return nil, err
+	}
+
+	if resolver.HasFileImports() {
+		if network == "" {
+			return nil, fmt.Errorf("missing network, specify which network to use to resolve imports in transaction code")
+		}
+		if codeFilename == "" { // when used as lib with code we don't support imports
+			return nil, fmt.Errorf("resolving imports in transactions not supported")
+		}
+
+		code, err = resolver.ResolveImports(
+			codeFilename,
+			t.project.ContractsByNetwork(network),
+			t.project.AliasesForNetwork(network),
+		)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	err = tx.SetScriptWithArgs(code, args, argsJSON)
 	if err != nil {
 		return nil, err
 	}
@@ -198,6 +228,7 @@ func (t *Transactions) Send(
 	signerName string,
 	args []string,
 	argsJSON string,
+	network string,
 ) (*flow.Transaction, *flow.TransactionResult, error) {
 	if t.project == nil {
 		return nil, nil, fmt.Errorf("missing configuration, initialize it: flow project init")
@@ -216,6 +247,7 @@ func (t *Transactions) Send(
 		transactionFilename,
 		args,
 		argsJSON,
+		network,
 	)
 	if err != nil {
 		return nil, nil, err
