@@ -50,7 +50,7 @@ var BuildCommand = &command.Command{
 		services *services.Services,
 	) (command.Result, error) {
 
-		// proposer key index?
+		globalFlags.Filter = "payload"
 
 		build, err := services.Transactions.Build(
 			buildFlags.Proposer,
