@@ -75,7 +75,7 @@ const (
 	logLevelNone  = "none"
 )
 
-var flags = GlobalFlags{
+var Flags = GlobalFlags{
 	Filter:     "",
 	Format:     formatText,
 	Save:       "",
@@ -89,66 +89,66 @@ var flags = GlobalFlags{
 // InitFlags init all the global persistent flags
 func InitFlags(cmd *cobra.Command) {
 	cmd.PersistentFlags().StringVarP(
-		&flags.Filter,
+		&Flags.Filter,
 		"filter",
 		"x",
-		flags.Filter,
+		Flags.Filter,
 		"Filter result values by property name",
 	)
 
 	cmd.PersistentFlags().StringVarP(
-		&flags.Host,
+		&Flags.Host,
 		"host",
 		"",
-		flags.Host,
+		Flags.Host,
 		"Flow Access API host address",
 	)
 
 	cmd.PersistentFlags().StringVarP(
-		&flags.Format,
+		&Flags.Format,
 		"output",
 		"o",
-		flags.Format,
+		Flags.Format,
 		"Output format, options: \"text\", \"json\", \"inline\"",
 	)
 
 	cmd.PersistentFlags().StringVarP(
-		&flags.Save,
+		&Flags.Save,
 		"save",
 		"s",
-		flags.Save,
+		Flags.Save,
 		"Save result to a filename",
 	)
 
 	cmd.PersistentFlags().StringVarP(
-		&flags.Log,
+		&Flags.Log,
 		"log",
 		"l",
-		flags.Log,
+		Flags.Log,
 		"Log level, options: \"debug\", \"info\", \"error\", \"none\"",
 	)
 
 	cmd.PersistentFlags().StringSliceVarP(
-		&flags.ConfigPath,
+		&Flags.ConfigPath,
 		"config-path",
 		"f",
-		flags.ConfigPath,
+		Flags.ConfigPath,
 		"Path to flow configuration file",
 	)
 
 	cmd.PersistentFlags().StringVarP(
-		&flags.Network,
+		&Flags.Network,
 		"network",
 		"n",
-		flags.Network,
+		Flags.Network,
 		"Network from configuration file",
 	)
 
 	cmd.PersistentFlags().BoolVarP(
-		&flags.Yes,
+		&Flags.Yes,
 		"yes",
 		"y",
-		flags.Yes,
+		Flags.Yes,
 		"Approve any prompts",
 	)
 }
@@ -160,32 +160,32 @@ func InitFlags(cmd *cobra.Command) {
 func (c Command) AddToParent(parent *cobra.Command) {
 	c.Cmd.Run = func(cmd *cobra.Command, args []string) {
 		// initialize project but ignore error since config can be missing
-		proj, err := project.Load(flags.ConfigPath)
+		proj, err := project.Load(Flags.ConfigPath)
 		// here we ignore if config does not exist as some commands don't require it
 		if !errors.Is(err, config.ErrDoesNotExist) && cmd.CommandPath() != "flow init" { // ignore configs errors if we are doing init config
 			handleError("Config Error", err)
 		}
 
-		host, err := resolveHost(proj, flags.Host, flags.Network)
+		host, err := resolveHost(proj, Flags.Host, Flags.Network)
 		handleError("Host Error", err)
 
 		clientGateway, err := createGateway(host)
 		handleError("Gateway Error", err)
 
-		logger := createLogger(flags.Log, flags.Format)
+		logger := createLogger(Flags.Log, Flags.Format)
 
 		service := services.NewServices(clientGateway, proj, logger)
 
 		// run command
-		result, err := c.Run(cmd, args, flags, service)
+		result, err := c.Run(cmd, args, Flags, service)
 		handleError("Command Error", err)
 
 		// format output result
-		formattedResult, err := formatResult(result, flags.Filter, flags.Format)
+		formattedResult, err := formatResult(result, Flags.Filter, Flags.Format)
 		handleError("Result", err)
 
 		// output result
-		err = outputResult(formattedResult, flags.Save, flags.Format, flags.Filter)
+		err = outputResult(formattedResult, Flags.Save, flags.Format, flags.Filter)
 		handleError("Output Error", err)
 	}
 
