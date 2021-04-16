@@ -21,6 +21,8 @@ package emulator
 import (
 	"errors"
 
+	"github.com/onflow/flow-cli/internal/command"
+
 	emulator "github.com/onflow/flow-emulator"
 
 	"github.com/onflow/flow-emulator/cmd/emulator/start"
@@ -65,7 +67,7 @@ func ConfiguredServiceKey(
 			}
 		}
 	} else {
-		proj, err = project.Load(project.DefaultConfigPaths)
+		proj, err = project.Load(command.Flags.ConfigPath)
 		if err != nil {
 			if errors.Is(err, config.ErrDoesNotExist) {
 				util.Exitf(1, "🙏 Configuration is missing, initialize it with: 'flow project init' and then rerun this command.")
