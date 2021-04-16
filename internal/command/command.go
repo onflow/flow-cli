@@ -185,7 +185,7 @@ func (c Command) AddToParent(parent *cobra.Command) {
 		handleError("Result", err)
 
 		// output result
-		err = outputResult(formattedResult, Flags.Save, flags.Format, flags.Filter)
+		err = outputResult(formattedResult, Flags.Save, Flags.Format, Flags.Filter)
 		handleError("Output Error", err)
 	}
 
