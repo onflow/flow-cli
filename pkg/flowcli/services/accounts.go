@@ -22,6 +22,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/onflow/flow-cli/pkg/flowcli/config"
+
 	"github.com/onflow/flow-cli/pkg/flowcli"
 	"github.com/onflow/flow-cli/pkg/flowcli/gateway"
 	"github.com/onflow/flow-cli/pkg/flowcli/output"

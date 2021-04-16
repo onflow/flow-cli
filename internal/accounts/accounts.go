@@ -32,6 +32,7 @@ var Cmd = &cobra.Command{
 	Use:              "accounts",
 	Short:            "Utilities to manage accounts",
 	TraverseChildren: true,
+	ValidArgs:        []string{"get", "contract-add"},
 }
 
 func init() {
