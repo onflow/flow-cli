@@ -113,12 +113,22 @@ func (a *Accounts) StakingInfo(accountAddress string) (*cadence.Value, *cadence.
 func (a *Accounts) Create(
 	signerName string,
 	keys []string,
+	keyWeights []int,
 	signatureAlgorithm string,
 	hashingAlgorithm string,
 	contracts []string,
 ) (*flow.Account, error) {
 	if a.project == nil {
 		return nil, fmt.Errorf("missing configuration, initialize it: flow init")
+	}
+
+	// if more than one key is provided and at least one weight is specified, make sure there isn't a missmatch
+	if len(keys) > 1 && len(keyWeights) > 0 && len(keys) != len(keyWeights) {
+		return nil, fmt.Errorf(
+			"number of keys and weights provided must match, number of provided keys: %d, number of provided key weights: %d",
+			len(keys),
+			len(keyWeights),
+		)
 	}
 
 	signer := a.project.AccountByName(signerName)
@@ -148,11 +158,20 @@ func (a *Accounts) Create(
 			)
 		}
 
+		weight := flow.AccountKeyWeightThreshold
+		if len(keyWeights) > i {
+			weight = keyWeights[i]
+
+			if weight > flow.AccountKeyWeightThreshold || weight <= 0 {
+				return nil, fmt.Errorf("invalid key weight, valid range (0 - 1000)")
+			}
+		}
+
 		accountKeys[i] = &flow.AccountKey{
 			PublicKey: publicKey,
 			SigAlgo:   sigAlgo,
 			HashAlgo:  hashAlgo,
-			Weight:    flow.AccountKeyWeightThreshold,
+			Weight:    weight,
 		}
 	}
 

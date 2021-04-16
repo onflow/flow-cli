@@ -47,7 +47,7 @@ In the above example, the `flow.json` file would look something like this:
 }
 ```
 
-## Options
+## Flags
     
 ### Public Key
 
@@ -56,6 +56,15 @@ In the above example, the `flow.json` file would look something like this:
 
 Specify the public key that will be added to the new account
 upon creation.
+
+### Key Weight
+
+- Flag: `--key-weight`
+- Valid inputs: number between 0 and 1000
+- Default: 1000
+
+Specify the weight of the key. When key weight is provided it must 
+match the number of keys. Specify key weight flag for each key flag.
 
 ### Public Key Signature Algorithm
     

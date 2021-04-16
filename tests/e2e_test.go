@@ -71,6 +71,7 @@ func TestAccount(t *testing.T) {
 		account, err := accounts.Create(
 			emulatorAccount,
 			keys,
+			[]int{1000},
 			"ECDSA_P256",
 			"SHA3_256",
 			[]string{},
