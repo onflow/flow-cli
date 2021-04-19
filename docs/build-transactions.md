@@ -22,7 +22,12 @@ flow transactions build <code filename>
 ## Example Usage
 
 ```shell
-> flow transactions build ./transaction.cdc --signer alice --proposer bob --payer charlie --arg "String:Meow"
+> flow transactions build ./transaction.cdc \
+  --signer alice \
+  --proposer bob \
+  --payer charlie \
+  --arg "String:Meow" \
+  --filter payload --save built.rlp
 
 ID		e8c0a69952fbe50a66703985e220307c8d44b8fa36c76cbca03f8c43d0167847
 Payer		e03daebed8ca0615

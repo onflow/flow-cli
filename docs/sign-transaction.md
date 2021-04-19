@@ -8,9 +8,9 @@ The Flow CLI provides a command to sign transactions with options to specify
 authorizer accounts, payer accounts and proposer accounts.
 
 Use this functionality in the following order:
-1. Use this command to build the transaction
-2. Use the sign command to sign with all accounts specified in the build process
-3. Use send signed command to submit the signed transaction to the network.
+1. Use this command (`build`) to build the transaction.
+2. Use the `sign` command to sign with all accounts specified in the build process.
+3. Use `send-signed` command to submit the signed transaction to the Flow network.
 
 ```shell
 flow transactions sign <built transaction filename>
@@ -19,7 +19,8 @@ flow transactions sign <built transaction filename>
 ## Example Usage
 
 ```shell
-> flow transactions sign ./built.rlp --signer alice
+> flow transactions sign ./built.rlp --signer alice \
+  --filter payload --save signed.rlp
 
 Hash		b03b18a8d9d30ff7c9f0fdaa80fcaab242c2f36eedb687dd9b368326311fe376
 Payer		f8d6e0586b0a20c7
