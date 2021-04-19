@@ -70,7 +70,7 @@ func ConfiguredServiceKey(
 		proj, err = project.Load(command.Flags.ConfigPath)
 		if err != nil {
 			if errors.Is(err, config.ErrDoesNotExist) {
-				util.Exitf(1, "🙏 Configuration is missing, initialize it with: 'flow project init' and then rerun this command.")
+				util.Exitf(1, "🙏 Configuration is missing, initialize it with: 'flow init' and then rerun this command.")
 			} else {
 				util.Exitf(1, err.Error())
 			}
