@@ -38,7 +38,7 @@ var buildFlags = flagsBuild{}
 var BuildCommand = &command.Command{
 	Cmd: &cobra.Command{
 		Use:     "build <code filename>",
-		Short:   "Build a transaction for later signing",
+		Short:   "Build an unsigned transaction",
 		Example: "flow transactions build ./transaction.cdc --proposer alice --authorizer alice --payer bob",
 		Args:    cobra.ExactArgs(1),
 	},

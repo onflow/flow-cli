@@ -1,7 +1,7 @@
 ---
 title: Send Signed Transaction with the Flow CLI
 sidebar_title: Send Signed Transaction
-description: How to send signed Flow transaction from the command line
+description: How to send a signed Flow transaction from the command line
 ---
 
 The Flow CLI provides a command to send signed transactions to
