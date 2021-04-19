@@ -7,8 +7,8 @@ description: How to build a Flow transaction from the command line
 The Flow CLI provides a command to build a transactions with options to specify
 authorizer accounts, payer account and proposer account. 
 
-Build command don't produce any signatures and 
-should be used with the `sign` and `send-signed` commands. 
+The `build` command doesn't produce any signatures and instead
+is designed to be used with the `sign` and `send-signed` commands. 
 
 Use this functionality in the following order:
 1. Use this command to build the transaction
@@ -168,7 +168,6 @@ Specify the log level. Control how much output you want to see while command exe
 
 Specify a filename for the configuration files, you can provide multiple configuration
 files by using `-f` flag multiple times.
-
 
 
 
