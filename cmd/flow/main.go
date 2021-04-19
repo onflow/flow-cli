@@ -48,7 +48,6 @@ func main() {
 	var cmd = &cobra.Command{
 		Use:              "flow",
 		TraverseChildren: true,
-		ValidArgs:        []string{"accounts"},
 	}
 
 	autocompletion(cmd)
@@ -81,9 +80,12 @@ func autocompletion(cmd *cobra.Command) {
 	shell := os.Getenv("SHELL")
 
 	if strings.Contains(shell, "zsh") {
-		out, _ := exec.Command("echo ${fpath[1]}").Output()
-		fmt.Println("OUT:", out)
-		fmt.Println("OUT 2", os.Getenv("fpath"))
-		cmd.Root().GenZshCompletion(os.Stdout)
+		c := exec.Command("zsh", "-c ", `echo -n ${fpath[1]}`)
+		path, err := c.Output()
+		if err != nil {
+			return
+		}
+
+		cmd.GenZshCompletionFile(fmt.Sprintf("%s/_dflow", path))
 	}
 }
