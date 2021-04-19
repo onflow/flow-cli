@@ -62,6 +62,7 @@ func (e *Blocks) GetBlock(
 	verbose bool,
 ) (*flow.Block, []client.BlockEvents, []*flow.Collection, error) {
 	e.logger.StartProgress("Fetching Block...")
+	defer e.logger.StopProgress()
 
 	// smart parsing of query
 	var err error
@@ -75,12 +76,10 @@ func (e *Blocks) GetBlock(
 	}
 
 	if err != nil {
-		e.logger.StopProgress()
 		return nil, nil, nil, fmt.Errorf("error fetching block: %s", err.Error())
 	}
 
 	if block == nil {
-		e.logger.StopProgress()
 		return nil, nil, nil, fmt.Errorf("block not found")
 	}
 
@@ -89,7 +88,6 @@ func (e *Blocks) GetBlock(
 	if eventType != "" {
 		events, err = e.gateway.GetEvents(eventType, block.Height, block.Height)
 		if err != nil {
-			e.logger.StopProgress()
 			return nil, nil, nil, err
 		}
 	}
@@ -100,7 +98,6 @@ func (e *Blocks) GetBlock(
 		for _, guarantee := range block.CollectionGuarantees {
 			collection, err := e.gateway.GetCollection(guarantee.CollectionID)
 			if err != nil {
-				e.logger.StopProgress()
 				return nil, nil, nil, err
 			}
 			collections = append(collections, collection)

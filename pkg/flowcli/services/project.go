@@ -135,6 +135,7 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 		len(orderedContracts),
 		strings.Join(p.project.AccountNamesForNetwork(network), ","),
 	))
+	defer p.logger.StopProgress()
 
 	block, err := p.gateway.GetLatestBlock()
 	if err != nil {
