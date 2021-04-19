@@ -3,9 +3,7 @@
 Follow the [Flow CLI installation guide](https://docs.onflow.org/flow-cli/install/) for instructions on how to install or upgrade the CLI.
 
 ## 💥 Breaking Changes
-
-### Updated: 
-### Removed:
+/
 
 ## ⭐ Features
 
