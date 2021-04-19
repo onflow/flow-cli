@@ -318,7 +318,7 @@ Project Tests
 func Test_GetContractsByNameSimple(t *testing.T) {
 	p := generateSimpleProject()
 
-	contracts := p.ContractsByNetwork("emulator")
+	contracts, _ := p.ContractsByNetwork("emulator")
 
 	assert.Len(t, contracts, 1)
 	assert.Equal(t, contracts[0].Name, "NonFungibleToken")
@@ -360,7 +360,7 @@ func Test_HostSimple(t *testing.T) {
 func Test_GetContractsByNameComplex(t *testing.T) {
 	p := generateComplexProject()
 
-	contracts := p.ContractsByNetwork("emulator")
+	contracts, _ := p.ContractsByNetwork("emulator")
 
 	assert.Equal(t, 7, len(contracts))
 
@@ -452,7 +452,7 @@ func Test_GetAliases(t *testing.T) {
 	p := generateAliasesProject()
 
 	aliases := p.AliasesForNetwork("emulator")
-	contracts := p.ContractsByNetwork("emulator")
+	contracts, _ := p.ContractsByNetwork("emulator")
 
 	assert.Len(t, aliases, 1)
 	assert.Equal(t, aliases["../hungry-kitties/cadence/contracts/FungibleToken.cdc"], "ee82856bf20e2aa6")
@@ -464,10 +464,10 @@ func Test_GetAliasesComplex(t *testing.T) {
 	p := generateAliasesComplexProject()
 
 	aEmulator := p.AliasesForNetwork("emulator")
-	cEmulator := p.ContractsByNetwork("emulator")
+	cEmulator, _ := p.ContractsByNetwork("emulator")
 
 	aTestnet := p.AliasesForNetwork("testnet")
-	cTestnet := p.ContractsByNetwork("testnet")
+	cTestnet, _ := p.ContractsByNetwork("testnet")
 
 	assert.Len(t, cEmulator, 1)
 	assert.Equal(t, cEmulator[0].Name, "NonFungibleToken")
