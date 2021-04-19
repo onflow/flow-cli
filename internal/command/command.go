@@ -209,7 +209,7 @@ func createGateway(host string) (gateway.Gateway, error) {
 // resolveHost from the flags provided
 func resolveHost(proj *project.Project, hostFlag string, networkFlag string) (string, error) {
 	// don't allow both network and host flag as the host might be different
-	if networkFlag != "" && hostFlag != "" {
+	if networkFlag != config.DefaultEmulatorNetwork().Name && hostFlag != "" {
 		return "", fmt.Errorf("shouldn't use both host and network flags, better to use network flag")
 	}
 
