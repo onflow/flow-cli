@@ -53,7 +53,7 @@ type AccountResult struct {
 func (r *AccountResult) JSON() interface{} {
 	result := make(map[string]interface{})
 	result["address"] = r.Address
-	result["balance"] = r.Balance
+	result["balance"] = fmt.Sprintf("%s", cadence.UFix64(r.Balance))
 
 	keys := make([]string, 0)
 	for _, key := range r.Keys {
@@ -125,5 +125,5 @@ func (r *AccountResult) Oneliner() string {
 		keys = append(keys, key.PublicKey.String())
 	}
 
-	return fmt.Sprintf("Address: 0x%s, Balance: %v, Public Keys: %s", r.Address, r.Balance, keys)
+	return fmt.Sprintf("Address: 0x%s, Balance: %s, Public Keys: %s", r.Address, cadence.UFix64(r.Balance), keys)
 }
