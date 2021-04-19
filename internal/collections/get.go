@@ -31,9 +31,10 @@ var collectionFlags = flagsCollections{}
 
 var GetCommand = &command.Command{
 	Cmd: &cobra.Command{
-		Use:   "get <collection_id>",
-		Short: "Get collection info",
-		Args:  cobra.ExactArgs(1),
+		Use:     "get <collection_id>",
+		Short:   "Get collection info",
+		Example: "flow collections get 270d...9c31e",
+		Args:    cobra.ExactArgs(1),
 	},
 	Flags: &collectionFlags,
 	Run: func(
