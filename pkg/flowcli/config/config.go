@@ -163,7 +163,7 @@ func (c *Contract) IsAlias() bool {
 }
 
 // GetByNameAndNetwork get contract array for account and network
-func (c *Contracts) GetByNameAndNetwork(name string, network string) Contract {
+func (c *Contracts) GetByNameAndNetwork(name string, network string) *Contract {
 	contracts := make(Contracts, 0)
 
 	for _, contract := range *c {
@@ -176,15 +176,18 @@ func (c *Contracts) GetByNameAndNetwork(name string, network string) Contract {
 	// and replace only name and source with existing
 	if len(contracts) == 0 {
 		cName := c.GetByName(name)
+		if cName == nil {
+			return nil
+		}
 
-		return Contract{
+		return &Contract{
 			Name:    cName.Name,
 			Network: network,
 			Source:  cName.Source,
 		}
 	}
 
-	return contracts[0]
+	return &contracts[0]
 }
 
 // TODO: this filtering can cause error if not found, better to refactor to returning
