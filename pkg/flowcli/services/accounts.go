@@ -69,6 +69,7 @@ func (a *Accounts) Get(address string) (*flow.Account, error) {
 // StakingInfo returns the staking information for an account.
 func (a *Accounts) StakingInfo(accountAddress string) (*cadence.Value, *cadence.Value, error) {
 	a.logger.StartProgress(fmt.Sprintf("Fetching info for %s...", accountAddress))
+	defer a.logger.StopProgress()
 
 	address := flow.HexToAddress(accountAddress)
 
@@ -137,6 +138,7 @@ func (a *Accounts) Create(
 	}
 
 	a.logger.StartProgress("Creating account...")
+	defer a.logger.StopProgress()
 
 	accountKeys := make([]*flow.AccountKey, len(keys))
 
@@ -287,6 +289,7 @@ func (a *Accounts) addContract(
 			account.Address(),
 		),
 	)
+	defer a.logger.StopProgress()
 
 	tx, err := project.NewAddAccountContractTransaction(
 		account,
@@ -365,6 +368,7 @@ func (a *Accounts) RemoveContract(
 	a.logger.StartProgress(
 		fmt.Sprintf("Removing Contract %s from %s...", contractName, account.Address()),
 	)
+	defer a.logger.StopProgress()
 
 	tx, err := project.NewRemoveAccountContractTransaction(account, contractName)
 	if err != nil {

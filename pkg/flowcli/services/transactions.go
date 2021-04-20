@@ -264,6 +264,7 @@ func (t *Transactions) Send(
 	}
 
 	t.logger.StartProgress(fmt.Sprintf("Sending Transaction with ID: %s", signed.FlowTransaction().ID()))
+	defer t.logger.StopProgress()
 
 	sentTx, err := t.gateway.SendSignedTransaction(signed)
 	if err != nil {
@@ -313,6 +314,7 @@ func (t *Transactions) SendForAddressWithCode(
 	}
 
 	t.logger.StartProgress("Sending transaction...")
+	defer t.logger.StopProgress()
 
 	sentTx, err := t.gateway.SendSignedTransaction(tx)
 	if err != nil {
