@@ -96,7 +96,6 @@ func generateComplexProject() Project {
 		Accounts: config.Accounts{{
 			Name:    "emulator-account",
 			Address: flow.ServiceAddress(flow.Emulator),
-			ChainID: flow.Emulator,
 			Keys: []config.AccountKey{{
 				Type:     config.KeyTypeHex,
 				Index:    0,
@@ -109,7 +108,6 @@ func generateComplexProject() Project {
 		}, {
 			Name:    "account-2",
 			Address: flow.HexToAddress("2c1162386b0a245f"),
-			ChainID: flow.Emulator,
 			Keys: []config.AccountKey{{
 				Type:     config.KeyTypeHex,
 				Index:    0,
@@ -122,7 +120,6 @@ func generateComplexProject() Project {
 		}, {
 			Name:    "account-4",
 			Address: flow.HexToAddress("f8d6e0586b0a20c1"),
-			ChainID: flow.Emulator,
 			Keys: []config.AccountKey{{
 				Type:     config.KeyTypeHex,
 				Index:    0,
@@ -134,9 +131,8 @@ func generateComplexProject() Project {
 			}},
 		}},
 		Networks: config.Networks{{
-			Name:    "emulator",
-			Host:    "127.0.0.1.3569",
-			ChainID: flow.Emulator,
+			Name: "emulator",
+			Host: "127.0.0.1.3569",
 		}},
 	}
 
@@ -170,7 +166,6 @@ func generateSimpleProject() Project {
 		Accounts: config.Accounts{{
 			Name:    "emulator-account",
 			Address: flow.ServiceAddress(flow.Emulator),
-			ChainID: flow.Emulator,
 			Keys: []config.AccountKey{{
 				Type:     config.KeyTypeHex,
 				Index:    0,
@@ -182,9 +177,8 @@ func generateSimpleProject() Project {
 			}},
 		}},
 		Networks: config.Networks{{
-			Name:    "emulator",
-			Host:    "127.0.0.1.3569",
-			ChainID: flow.Emulator,
+			Name: "emulator",
+			Host: "127.0.0.1.3569",
 		}},
 	}
 
@@ -223,7 +217,6 @@ func generateAliasesProject() Project {
 		Accounts: config.Accounts{{
 			Name:    "emulator-account",
 			Address: flow.ServiceAddress(flow.Emulator),
-			ChainID: flow.Emulator,
 			Keys: []config.AccountKey{{
 				Type:     config.KeyTypeHex,
 				Index:    0,
@@ -235,9 +228,8 @@ func generateAliasesProject() Project {
 			}},
 		}},
 		Networks: config.Networks{{
-			Name:    "emulator",
-			Host:    "127.0.0.1.3569",
-			ChainID: flow.Emulator,
+			Name: "emulator",
+			Host: "127.0.0.1.3569",
 		}},
 	}
 
@@ -292,7 +284,6 @@ func generateAliasesComplexProject() Project {
 		Accounts: config.Accounts{{
 			Name:    "emulator-account",
 			Address: flow.ServiceAddress(flow.Emulator),
-			ChainID: flow.Emulator,
 			Keys: []config.AccountKey{{
 				Type:     config.KeyTypeHex,
 				Index:    0,
@@ -305,7 +296,6 @@ func generateAliasesComplexProject() Project {
 		}, {
 			Name:    "testnet-account",
 			Address: flow.HexToAddress("1e82856bf20e2aa6"),
-			ChainID: flow.Testnet,
 			Keys: []config.AccountKey{{
 				Type:     config.KeyTypeHex,
 				Index:    0,
@@ -317,13 +307,11 @@ func generateAliasesComplexProject() Project {
 			}},
 		}},
 		Networks: config.Networks{{
-			Name:    "emulator",
-			Host:    "127.0.0.1.3569",
-			ChainID: flow.Emulator,
+			Name: "emulator",
+			Host: "127.0.0.1.3569",
 		}, {
-			Name:    "testnet",
-			Host:    "127.0.0.1.3569",
-			ChainID: flow.Testnet,
+			Name: "testnet",
+			Host: "127.0.0.1.3569",
 		}},
 	}
 

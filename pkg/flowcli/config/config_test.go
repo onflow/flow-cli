@@ -86,7 +86,6 @@ func generateComplexConfig() config.Config {
 		Accounts: config.Accounts{{
 			Name:    "emulator-account",
 			Address: flow.ServiceAddress(flow.Emulator),
-			ChainID: flow.Emulator,
 			Keys: []config.AccountKey{{
 				Type:     config.KeyTypeHex,
 				Index:    0,
@@ -99,7 +98,6 @@ func generateComplexConfig() config.Config {
 		}, {
 			Name:    "account-2",
 			Address: flow.HexToAddress("2c1162386b0a245f"),
-			ChainID: flow.Emulator,
 			Keys: []config.AccountKey{{
 				Type:     config.KeyTypeHex,
 				Index:    0,
@@ -112,7 +110,6 @@ func generateComplexConfig() config.Config {
 		}, {
 			Name:    "account-4",
 			Address: flow.HexToAddress("f8d6e0586b0a20c1"),
-			ChainID: flow.Emulator,
 			Keys: []config.AccountKey{{
 				Type:     config.KeyTypeHex,
 				Index:    0,
@@ -124,9 +121,8 @@ func generateComplexConfig() config.Config {
 			}},
 		}},
 		Networks: config.Networks{{
-			Name:    "emulator",
-			Host:    "127.0.0.1.3569",
-			ChainID: flow.Emulator,
+			Name: "emulator",
+			Host: "127.0.0.1.3569",
 		}},
 	}
 }
