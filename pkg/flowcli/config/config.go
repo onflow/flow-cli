@@ -43,9 +43,8 @@ type Emulators []Emulator
 
 // Network defines the configuration for a Flow network.
 type Network struct {
-	Name    string
-	Host    string
-	ChainID flow.ChainID
+	Name string
+	Host string
 }
 
 // Deploy defines the configuration for a contract deployment.
@@ -79,7 +78,6 @@ type Contract struct {
 type Account struct {
 	Name    string
 	Address flow.Address
-	ChainID flow.ChainID
 	Keys    []AccountKey
 }
 
@@ -114,27 +112,24 @@ const (
 // DefaultEmulatorNetwork get default emulator network
 func DefaultEmulatorNetwork() Network {
 	return Network{
-		Name:    "emulator",
-		Host:    "127.0.0.1:3569",
-		ChainID: flow.Emulator,
+		Name: "emulator",
+		Host: "127.0.0.1:3569",
 	}
 }
 
 // DefaultTestnetNetwork get default testnet network
 func DefaultTestnetNetwork() Network {
 	return Network{
-		Name:    "testnet",
-		Host:    "access.devnet.nodes.onflow.org:9000",
-		ChainID: flow.Testnet,
+		Name: "testnet",
+		Host: "access.devnet.nodes.onflow.org:9000",
 	}
 }
 
 // DefaultMainnetNetwork get default mainnet network
 func DefaultMainnetNetwork() Network {
 	return Network{
-		Name:    "mainnet",
-		Host:    "access.mainnet.nodes.onflow.org:9000",
-		ChainID: flow.Mainnet,
+		Name: "mainnet",
+		Host: "access.mainnet.nodes.onflow.org:9000",
 	}
 }
 
