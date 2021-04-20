@@ -21,8 +21,6 @@ package json
 import (
 	"encoding/json"
 
-	"github.com/onflow/flow-go-sdk"
-
 	"github.com/onflow/flow-cli/pkg/flowcli/config"
 )
 
@@ -33,19 +31,9 @@ func (j jsonNetworks) transformToConfig() config.Networks {
 	networks := make(config.Networks, 0)
 
 	for networkName, n := range j {
-		var network config.Network
-
-		if n.Host != "" {
-			network = config.Network{
-				Name: networkName,
-				Host: n.Host,
-			}
-		} else {
-			network = config.Network{
-				Name:    networkName,
-				Host:    n.Advanced.Host,
-				ChainID: flow.ChainID(n.Advanced.ChainID),
-			}
+		network := config.Network{
+			Name: networkName,
+			Host: n.Host,
 		}
 
 		networks = append(networks, network)
@@ -59,59 +47,29 @@ func transformNetworksToJSON(networks config.Networks) jsonNetworks {
 	jsonNetworks := jsonNetworks{}
 
 	for _, n := range networks {
-		// if simple case
-		if n.ChainID == "" {
-			jsonNetworks[n.Name] = jsonNetwork{
-				Host: n.Host,
-			}
-		} else { // if advanced case
-			jsonNetworks[n.Name] = jsonNetwork{
-				Advanced: advancedNetwork{
-					Host:    n.Host,
-					ChainID: n.ChainID.String(),
-				},
-			}
+		jsonNetworks[n.Name] = jsonNetwork{
+			Host: n.Host,
 		}
 	}
 
 	return jsonNetworks
 }
 
-type advancedNetwork struct {
-	Host    string `json:"host"`
-	ChainID string `json:"chain"`
-}
-
 type jsonNetwork struct {
-	Host     string
-	Advanced advancedNetwork
+	Host string
 }
 
 func (j *jsonNetwork) UnmarshalJSON(b []byte) error {
-	// simple
 	var host string
 	err := json.Unmarshal(b, &host)
-	if err == nil {
-		j.Host = host
-		return nil
-	}
-
-	// advanced
-	var advanced advancedNetwork
-	err = json.Unmarshal(b, &advanced)
-	if err == nil {
-		j.Advanced = advanced
-	} else {
+	if err != nil {
 		return err
 	}
 
+	j.Host = host
 	return nil
 }
 
 func (j jsonNetwork) MarshalJSON() ([]byte, error) {
-	if j.Host != "" {
-		return json.Marshal(j.Host)
-	} else {
-		return json.Marshal(j.Advanced)
-	}
+	return json.Marshal(j.Host)
 }
