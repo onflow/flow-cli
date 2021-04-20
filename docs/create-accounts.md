@@ -63,8 +63,9 @@ upon creation.
 - Valid inputs: number between 0 and 1000
 - Default: 1000
 
-Specify the weight of the key. When key weight is provided it must 
-match the number of keys. Specify key weight flag for each key flag.
+Specify the weight of the public key being added to the new account. 
+
+When opting to use this flag, you must specify a `--key-weight` flag for each public `--key` flag provided.
 
 ### Public Key Signature Algorithm
     
@@ -118,6 +119,7 @@ any host defined by the `--network` flag.
 - Flag: `--network`
 - Short Flag: `-n`
 - Valid inputs: the name of a network defined in the configuration (`flow.json`)
+- Default: `emulator`
 
 Specify which network you want the command to use for execution.
 

@@ -39,6 +39,7 @@ var GetCommand = &command.Command{
 		Use:     "get <tx_id>",
 		Aliases: []string{"status"},
 		Short:   "Get the transaction by ID",
+		Example: "flow transactions get 07a8...b433",
 		Args:    cobra.ExactArgs(1),
 	},
 	Flags: &getFlags,

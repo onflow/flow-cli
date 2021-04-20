@@ -34,8 +34,9 @@ var deployFlags = flagsDeploy{}
 
 var DeployCommand = &command.Command{
 	Cmd: &cobra.Command{
-		Use:   "deploy",
-		Short: "Deploy Cadence contracts",
+		Use:     "deploy",
+		Short:   "Deploy Cadence contracts",
+		Example: "flow project deploy --network testnet",
 	},
 	Flags: &deployFlags,
 	Run: func(
