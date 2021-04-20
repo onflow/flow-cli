@@ -7,13 +7,13 @@ description: How to build a Flow transaction from the command line
 The Flow CLI provides a command to build a transactions with options to specify
 authorizer accounts, payer account and proposer account. 
 
-Build command don't produce any signatures and 
-should be used with the `sign` and `send-signed` commands. 
+The `build` command doesn't produce any signatures and instead
+is designed to be used with the `sign` and `send-signed` commands. 
 
 Use this functionality in the following order:
-1. Use this command to build the transaction
-2. Use the sign command to sign with all accounts specified in the build process
-3. Use send signed command to submit the signed transaction to the network.
+1. Use this command (`build`) to build the transaction.
+2. Use the `sign` command to sign with all accounts specified in the build process.
+3. Use `send-signed` command to submit the signed transaction to the Flow network.
 
 ```shell
 flow transactions build <code filename>
@@ -22,7 +22,12 @@ flow transactions build <code filename>
 ## Example Usage
 
 ```shell
-> flow transactions build ./transaction.cdc --signer alice --proposer bob --payer charlie --arg "String:Meow"
+> flow transactions build ./transaction.cdc \
+  --signer alice \
+  --proposer bob \
+  --payer charlie \
+  --arg "String:Meow" \
+  --filter payload --save built.rlp
 
 ID		e8c0a69952fbe50a66703985e220307c8d44b8fa36c76cbca03f8c43d0167847
 Payer		e03daebed8ca0615
@@ -169,8 +174,6 @@ Specify the log level. Control how much output you want to see while command exe
 
 Specify a filename for the configuration files, you can provide multiple configuration
 files by using `-f` flag multiple times.
-
-
 
 
 

@@ -336,8 +336,10 @@ func (t *Transactions) SendForAddressWithCode(
 
 // getAddressFromStringOrConfig try to parse value as address or as an account from the config
 func getAddressFromStringOrConfig(value string, project *project.Project) (flow.Address, error) {
-	if util.ValidAddress(value) {
-		return flow.HexToAddress(value), nil
+	address, isValid := util.ParseAddress(value)
+
+	if isValid {
+		return address, nil
 	} else if project != nil {
 		account := project.AccountByName(value)
 		if account == nil {
