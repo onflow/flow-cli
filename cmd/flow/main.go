@@ -20,11 +20,6 @@
 package main
 
 import (
-	"fmt"
-	"os"
-	"os/exec"
-	"strings"
-
 	"github.com/onflow/flow-cli/internal/completion"
 	"github.com/spf13/cobra"
 
@@ -50,7 +45,6 @@ func main() {
 		TraverseChildren: true,
 	}
 
-	autocompletion(cmd)
 	// hot commands
 	config.InitCommand.AddToParent(cmd)
 
@@ -66,6 +60,7 @@ func main() {
 	cmd.AddCommand(blocks.Cmd)
 	cmd.AddCommand(collections.Cmd)
 	cmd.AddCommand(project.Cmd)
+	cmd.AddCommand(config.Cmd)
 
 	cmd.AddCommand(completion.Cmd)
 
@@ -73,19 +68,5 @@ func main() {
 
 	if err := cmd.Execute(); err != nil {
 		util.Exit(1, err.Error())
-	}
-}
-
-func autocompletion(cmd *cobra.Command) {
-	shell := os.Getenv("SHELL")
-
-	if strings.Contains(shell, "zsh") {
-		c := exec.Command("zsh", "-c ", `echo -n ${fpath[1]}`)
-		path, err := c.Output()
-		if err != nil {
-			return
-		}
-
-		cmd.GenZshCompletionFile(fmt.Sprintf("%s/_dflow", path))
 	}
 }

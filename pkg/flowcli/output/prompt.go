@@ -91,3 +91,32 @@ func ApproveTransactionPrompt(transaction *project.Transaction) bool {
 
 	return result == "Yes"
 }
+
+func AutocompletionPrompt() (string, string) {
+	prompt := promptui.Select{
+		Label: "❓ Select your shell (you can run 'echo $SHELL' to find out)",
+		Items: []string{"bash", "zsh", "powershell"},
+	}
+
+	_, shell, _ := prompt.Run()
+	os := ""
+
+	switch shell {
+	case "bash":
+		prompt := promptui.Select{
+			Label: "❓ Select operation system",
+			Items: []string{"MacOS", "Linux"},
+		}
+		_, os, _ = prompt.Run()
+	case "powershell":
+		fmt.Printf(`PowerShell Instalation Guide:
+PS> flow config setup-completions powershell | Out-String | Invoke-Expression
+
+# To load completions for every new session, run:
+PS> flow config setup-completions powershell > flow.ps1
+# and source this file from your PowerShell profile.
+`)
+	}
+
+	return shell, os
+}
