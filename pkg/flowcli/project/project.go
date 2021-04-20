@@ -189,7 +189,7 @@ func (p *Project) ContractsByNetwork(network string) ([]Contract, error) {
 		for _, deploymentContract := range deploy.Contracts {
 			c := p.conf.Contracts.GetByNameAndNetwork(deploymentContract.Name, network)
 			if c == nil {
-				return nil, fmt.Errorf("could not find contract with name name %s in the configuration", contractName)
+				return nil, fmt.Errorf("could not find contract with name name %s in the configuration", deploymentContract.Name)
 			}
 
 			contract := Contract{
