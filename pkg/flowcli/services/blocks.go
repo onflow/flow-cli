@@ -62,6 +62,7 @@ func (e *Blocks) GetBlock(
 	verbose bool,
 ) (*flow.Block, []client.BlockEvents, []*flow.Collection, error) {
 	e.logger.StartProgress("Fetching Block...")
+	defer e.logger.StopProgress()
 
 	// smart parsing of query
 	var err error
@@ -103,7 +104,7 @@ func (e *Blocks) GetBlock(
 		}
 	}
 
-	e.logger.StopProgress("")
+	e.logger.StopProgress()
 
 	return block, events, collections, err
 }

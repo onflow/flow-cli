@@ -61,6 +61,7 @@ func (e *Events) Get(name string, start string, end string) ([]client.BlockEvent
 	}
 
 	e.logger.StartProgress("Fetching Events...")
+	defer e.logger.StopProgress()
 
 	var endHeight uint64
 	if end == "" {
@@ -93,6 +94,6 @@ func (e *Events) Get(name string, start string, end string) ([]client.BlockEvent
 		return nil, err
 	}
 
-	e.logger.StopProgress("")
+	e.logger.StopProgress()
 	return events, nil
 }

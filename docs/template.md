@@ -15,10 +15,8 @@ description:
 ## Example Usage
 
 ```shell
-{usage example}
+{usage example with response}
 ```
-
-### Example response
 
 ## Arguments
 
@@ -66,6 +64,7 @@ used to execute the commands.
 - Flag: `--network`
 - Short Flag: `-n`
 - Valid inputs: the name of a network defined in the configuration (`flow.json`)
+- Default: `emulator`
 
 Specify which network you want the command to use for execution.
 

@@ -47,7 +47,7 @@ In the above example, the `flow.json` file would look something like this:
 }
 ```
 
-## Options
+## Flags
     
 ### Public Key
 
@@ -56,6 +56,16 @@ In the above example, the `flow.json` file would look something like this:
 
 Specify the public key that will be added to the new account
 upon creation.
+
+### Key Weight
+
+- Flag: `--key-weight`
+- Valid inputs: number between 0 and 1000
+- Default: 1000
+
+Specify the weight of the public key being added to the new account. 
+
+When opting to use this flag, you must specify a `--key-weight` flag for each public `--key` flag provided.
 
 ### Public Key Signature Algorithm
     
@@ -109,6 +119,7 @@ any host defined by the `--network` flag.
 - Flag: `--network`
 - Short Flag: `-n`
 - Valid inputs: the name of a network defined in the configuration (`flow.json`)
+- Default: `emulator`
 
 Specify which network you want the command to use for execution.
 

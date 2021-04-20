@@ -19,22 +19,19 @@
 package services
 
 import (
-	"context"
 	"fmt"
 	"strings"
+
+	"github.com/onflow/flow-cli/pkg/flowcli"
+	"github.com/onflow/flow-cli/pkg/flowcli/gateway"
+	"github.com/onflow/flow-cli/pkg/flowcli/output"
+	"github.com/onflow/flow-cli/pkg/flowcli/project"
+	"github.com/onflow/flow-cli/pkg/flowcli/util"
 
 	"github.com/onflow/cadence"
 	tmpl "github.com/onflow/flow-core-contracts/lib/go/templates"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
-	"github.com/onflow/flow-go-sdk/templates"
-
-	"github.com/onflow/flow-cli/pkg/flowcli"
-	"github.com/onflow/flow-cli/pkg/flowcli/config"
-	"github.com/onflow/flow-cli/pkg/flowcli/gateway"
-	"github.com/onflow/flow-cli/pkg/flowcli/output"
-	"github.com/onflow/flow-cli/pkg/flowcli/project"
-	"github.com/onflow/flow-cli/pkg/flowcli/util"
 )
 
 // Accounts is a service that handles all account-related interactions.
@@ -64,104 +61,15 @@ func (a *Accounts) Get(address string) (*flow.Account, error) {
 	flowAddress := flow.HexToAddress(address)
 
 	account, err := a.gateway.GetAccount(flowAddress)
-	a.logger.StopProgress("")
+	a.logger.StopProgress()
 
 	return account, err
-}
-
-func (a *Accounts) Add(
-	name string,
-	accountAddress string,
-	signatureAlgorithm string,
-	hashingAlgorithm string,
-	keyIndex int,
-	keyHex string,
-	overwrite bool,
-	path []string,
-) (*project.Account, error) {
-	if a.project == nil {
-		return nil, fmt.Errorf("missing configuration, initialize it: flow init")
-	}
-
-	existingAccount := a.project.AccountByName(name)
-	if existingAccount != nil && !overwrite {
-		return nil, fmt.Errorf("account with name [%s] already exists in the config, use `overwrite` if you want to overwrite it", name)
-	}
-
-	sigAlgo, hashAlgo, err := util.ConvertSigAndHashAlgo(signatureAlgorithm, hashingAlgorithm)
-	if err != nil {
-		return nil, err
-	}
-
-	if keyIndex < 0 {
-		return nil, fmt.Errorf("key index must be positive number")
-	}
-
-	address := flow.HexToAddress(accountAddress)
-	chainID, err := util.GetAddressNetwork(address)
-	if err != nil {
-		return nil, err
-	}
-
-	confAccount := config.Account{
-		Name:    name,
-		Address: address,
-		ChainID: chainID,
-	}
-
-	accountKey := config.AccountKey{
-		Index:    keyIndex,
-		SigAlgo:  sigAlgo,
-		HashAlgo: hashAlgo,
-	}
-
-	// TODO: discuss refactor to accounts
-	if keyHex != "" {
-		_, err := crypto.DecodePrivateKeyHex(sigAlgo, keyHex)
-		if err != nil {
-			return nil, fmt.Errorf("key hex could not be parsed")
-		}
-
-		accountKey.Type = config.KeyTypeHex
-		accountKey.Context = make(map[string]string)
-		accountKey.Context[config.PrivateKeyField] = keyHex
-
-	} else {
-		return nil, fmt.Errorf("private key must be provided")
-	}
-
-	confAccount.Keys = []config.AccountKey{accountKey}
-
-	account, err := project.AccountFromConfig(confAccount)
-	if err != nil {
-		return nil, err
-	}
-	// TODO: refactor context
-	sig, err := account.DefaultKey().Signer(context.Background())
-	if err != nil {
-		return nil, err
-	}
-
-	_, err = sig.Sign([]byte("test"))
-	if err != nil {
-		return nil, fmt.Errorf("could not sign with the new key")
-	}
-
-	a.project.AddOrUpdateAccount(account)
-
-	err = a.project.Save(path[0]) // only allow saving to one config for now
-	if err != nil {
-		return nil, err
-	}
-
-	a.logger.Info("Account added to configuration\n")
-
-	return account, nil
 }
 
 // StakingInfo returns the staking information for an account.
 func (a *Accounts) StakingInfo(accountAddress string) (*cadence.Value, *cadence.Value, error) {
 	a.logger.StartProgress(fmt.Sprintf("Fetching info for %s...", accountAddress))
+	defer a.logger.StopProgress()
 
 	address := flow.HexToAddress(accountAddress)
 
@@ -193,7 +101,7 @@ func (a *Accounts) StakingInfo(accountAddress string) (*cadence.Value, *cadence.
 		return nil, nil, fmt.Errorf("error getting delegation info: %s", err.Error())
 	}
 
-	a.logger.StopProgress("")
+	a.logger.StopProgress()
 
 	return &stakingValue, &delegationValue, nil
 }
@@ -206,6 +114,7 @@ func (a *Accounts) StakingInfo(accountAddress string) (*cadence.Value, *cadence.
 func (a *Accounts) Create(
 	signerName string,
 	keys []string,
+	keyWeights []int,
 	signatureAlgorithm string,
 	hashingAlgorithm string,
 	contracts []string,
@@ -214,12 +123,22 @@ func (a *Accounts) Create(
 		return nil, fmt.Errorf("missing configuration, initialize it: flow init")
 	}
 
+	// if more than one key is provided and at least one weight is specified, make sure there isn't a missmatch
+	if len(keys) > 1 && len(keyWeights) > 0 && len(keys) != len(keyWeights) {
+		return nil, fmt.Errorf(
+			"number of keys and weights provided must match, number of provided keys: %d, number of provided key weights: %d",
+			len(keys),
+			len(keyWeights),
+		)
+	}
+
 	signer := a.project.AccountByName(signerName)
 	if signer == nil {
 		return nil, fmt.Errorf("signer account: [%s] doesn't exists in configuration", signerName)
 	}
 
 	a.logger.StartProgress("Creating account...")
+	defer a.logger.StopProgress()
 
 	accountKeys := make([]*flow.AccountKey, len(keys))
 
@@ -241,46 +160,41 @@ func (a *Accounts) Create(
 			)
 		}
 
+		weight := flow.AccountKeyWeightThreshold
+		if len(keyWeights) > i {
+			weight = keyWeights[i]
+
+			if weight > flow.AccountKeyWeightThreshold || weight <= 0 {
+				return nil, fmt.Errorf("invalid key weight, valid range (0 - 1000)")
+			}
+		}
+
 		accountKeys[i] = &flow.AccountKey{
 			PublicKey: publicKey,
 			SigAlgo:   sigAlgo,
 			HashAlgo:  hashAlgo,
-			Weight:    flow.AccountKeyWeightThreshold,
+			Weight:    weight,
 		}
 	}
 
-	var contractTemplates []templates.Contract
-
-	for _, contract := range contracts {
-		contractFlagContent := strings.SplitN(contract, ":", 2)
-		if len(contractFlagContent) != 2 {
-			return nil, fmt.Errorf("wrong format for contract. Correct format is name:path, but got: %s", contract)
-		}
-		contractName := contractFlagContent[0]
-		contractPath := contractFlagContent[1]
-
-		contractSource, err := util.LoadFile(contractPath)
-		if err != nil {
-			return nil, err
-		}
-
-		contractTemplates = append(contractTemplates,
-			templates.Contract{
-				Name:   contractName,
-				Source: string(contractSource),
-			},
-		)
+	tx, err := project.NewCreateAccountTransaction(signer, accountKeys, contracts)
+	if err != nil {
+		return nil, err
 	}
 
-	tx := templates.CreateAccount(accountKeys, contractTemplates, signer.Address())
-	tx, err = a.gateway.SendTransaction(tx, signer)
+	tx, err = a.prepareTransaction(tx, signer)
+	if err != nil {
+		return nil, err
+	}
+
+	sentTx, err := a.gateway.SendSignedTransaction(tx)
 	if err != nil {
 		return nil, err
 	}
 
 	a.logger.StartProgress("Waiting for transaction to be sealed...")
 
-	result, err := a.gateway.GetTransactionResult(tx, true)
+	result, err := a.gateway.GetTransactionResult(sentTx, true)
 	if err != nil {
 		return nil, err
 	}
@@ -296,7 +210,7 @@ func (a *Accounts) Create(
 		return nil, fmt.Errorf("new account address couldn't be fetched")
 	}
 
-	a.logger.StopProgress("")
+	a.logger.StopProgress()
 
 	return a.gateway.GetAccount(*newAccountAddress)
 }
@@ -375,43 +289,42 @@ func (a *Accounts) addContract(
 			account.Address(),
 		),
 	)
+	defer a.logger.StopProgress()
 
-	if account.DefaultKey().Type() == config.KeyTypeGoogleKMS {
-		a.logger.StartProgress("Connecting to KMS...")
-		resourceID := account.DefaultKey().ToConfig().Context[config.KMSContextField]
-		err := util.GcloudApplicationSignin(resourceID)
+	tx, err := project.NewAddAccountContractTransaction(
+		account,
+		contractName,
+		string(contractSource),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	// if we are updating contract
+	if updateExisting {
+		tx, err = project.NewUpdateAccountContractTransaction(
+			account,
+			contractName,
+			string(contractSource),
+		)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	tx := templates.AddAccountContract(
-		account.Address(),
-		templates.Contract{
-			Name:   contractName,
-			Source: string(contractSource),
-		},
-	)
-
-	// if we are updating contract
-	if updateExisting {
-		tx = templates.UpdateAccountContract(
-			account.Address(),
-			templates.Contract{
-				Name:   contractName,
-				Source: string(contractSource),
-			},
-		)
+	tx, err = a.prepareTransaction(tx, account)
+	if err != nil {
+		return nil, err
 	}
 
 	// send transaction with contract
-	tx, err := a.gateway.SendTransaction(tx, account)
+	sentTx, err := a.gateway.SendSignedTransaction(tx)
 	if err != nil {
 		return nil, err
 	}
 
 	// we wait for transaction to be sealed
-	trx, err := a.gateway.GetTransactionResult(tx, true)
+	trx, err := a.gateway.GetTransactionResult(sentTx, true)
 	if err != nil {
 		return nil, err
 	}
@@ -423,7 +336,7 @@ func (a *Accounts) addContract(
 
 	update, err := a.gateway.GetAccount(account.Address())
 
-	a.logger.StopProgress("")
+	a.logger.StopProgress()
 
 	if updateExisting {
 		a.logger.Info(fmt.Sprintf(
@@ -455,14 +368,24 @@ func (a *Accounts) RemoveContract(
 	a.logger.StartProgress(
 		fmt.Sprintf("Removing Contract %s from %s...", contractName, account.Address()),
 	)
+	defer a.logger.StopProgress()
 
-	tx := templates.RemoveAccountContract(account.Address(), contractName)
-	tx, err := a.gateway.SendTransaction(tx, account)
+	tx, err := project.NewRemoveAccountContractTransaction(account, contractName)
 	if err != nil {
 		return nil, err
 	}
 
-	txr, err := a.gateway.GetTransactionResult(tx, true)
+	tx, err = a.prepareTransaction(tx, account)
+	if err != nil {
+		return nil, err
+	}
+
+	sentTx, err := a.gateway.SendSignedTransaction(tx)
+	if err != nil {
+		return nil, err
+	}
+
+	txr, err := a.gateway.GetTransactionResult(sentTx, true)
 	if err != nil {
 		return nil, err
 	}
@@ -471,10 +394,37 @@ func (a *Accounts) RemoveContract(
 		return nil, txr.Error
 	}
 
-	a.logger.StopProgress("")
+	a.logger.StopProgress()
 	a.logger.Info(fmt.Sprintf("Contract %s removed from account %s\n", contractName, account.Address()))
 
 	return a.gateway.GetAccount(account.Address())
+}
+
+// prepareTransaction prepares transaction for sending with data from network
+func (a *Accounts) prepareTransaction(
+	tx *project.Transaction,
+	account *project.Account,
+) (*project.Transaction, error) {
+
+	block, err := a.gateway.GetLatestBlock()
+	if err != nil {
+		return nil, err
+	}
+
+	proposer, err := a.gateway.GetAccount(account.Address())
+	if err != nil {
+		return nil, err
+	}
+
+	tx.SetBlockReference(block).
+		SetProposer(proposer, 0)
+
+	tx, err = tx.Sign()
+	if err != nil {
+		return nil, err
+	}
+
+	return tx, nil
 }
 
 // AccountFromAddressAndKey get account from address and private key

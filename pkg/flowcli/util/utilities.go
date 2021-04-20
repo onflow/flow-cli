@@ -30,7 +30,7 @@ import (
 
 var Green = color.New(color.FgGreen, color.Bold).SprintfFunc()
 var Red = color.New(color.FgRed, color.Bold).SprintfFunc()
-var Bold = color.New(color.Bold).SprintfFunc()
+var Bold = color.New(color.FgCyan).SprintfFunc()
 
 // LoadFile loads a file by filename.
 func LoadFile(filename string) ([]byte, error) {
@@ -103,4 +103,22 @@ func GetAddressNetwork(address flow.Address) (flow.ChainID, error) {
 	}
 
 	return "", fmt.Errorf("address not valid for any known chain: %s", address)
+}
+
+func ContainsString(s []string, e string) bool {
+	for _, a := range s {
+		if a == e {
+			return true
+		}
+	}
+	return false
+}
+
+func ParseAddress(value string) (flow.Address, bool) {
+	address := flow.HexToAddress(value)
+
+	// valid on any chain
+	return address, address.IsValid(flow.Mainnet) ||
+		address.IsValid(flow.Testnet) ||
+		address.IsValid(flow.Emulator)
 }

@@ -36,7 +36,7 @@ type Logger interface {
 	Info(string)
 	Error(string)
 	StartProgress(string)
-	StopProgress(string)
+	StopProgress()
 }
 
 // NewStdoutLogger returns a new stdout logger.
@@ -78,20 +78,20 @@ func (s *StdoutLogger) StartProgress(msg string) {
 	}
 
 	if s.spinner != nil {
-		s.spinner.Stop("")
+		s.spinner.Stop()
 	}
 
 	s.spinner = NewSpinner(msg, "")
 	s.spinner.Start()
 }
 
-func (s *StdoutLogger) StopProgress(msg string) {
+func (s *StdoutLogger) StopProgress() {
 	if s.level == NoneLog {
 		return
 	}
 
 	if s.spinner != nil {
-		s.spinner.Stop(msg)
+		s.spinner.Stop()
 		s.spinner = nil
 	}
 }

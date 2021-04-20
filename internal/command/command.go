@@ -22,20 +22,23 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
+	"net/http"
 	"os"
 	"strings"
 
-	"github.com/onflow/flow-go-sdk/client"
-	"github.com/psiemens/sconfig"
-	"github.com/spf13/afero"
-	"github.com/spf13/cobra"
-
+	"github.com/onflow/flow-cli/build"
 	"github.com/onflow/flow-cli/pkg/flowcli/config"
 	"github.com/onflow/flow-cli/pkg/flowcli/gateway"
 	"github.com/onflow/flow-cli/pkg/flowcli/output"
 	"github.com/onflow/flow-cli/pkg/flowcli/project"
 	"github.com/onflow/flow-cli/pkg/flowcli/services"
 	"github.com/onflow/flow-cli/pkg/flowcli/util"
+
+	"github.com/onflow/flow-go-sdk/client"
+	"github.com/psiemens/sconfig"
+	"github.com/spf13/afero"
+	"github.com/spf13/cobra"
 )
 
 type RunCommand func(
@@ -58,6 +61,7 @@ type GlobalFlags struct {
 	Host       string
 	Log        string
 	Network    string
+	Yes        bool
 	ConfigPath []string
 }
 
@@ -74,72 +78,81 @@ const (
 	logLevelNone  = "none"
 )
 
-var flags = GlobalFlags{
+var Flags = GlobalFlags{
 	Filter:     "",
 	Format:     formatText,
 	Save:       "",
 	Host:       "",
+	Network:    config.DefaultEmulatorNetwork().Name,
 	Log:        logLevelInfo,
-	Network:    "",
+	Yes:        false,
 	ConfigPath: project.DefaultConfigPaths,
 }
 
 // InitFlags init all the global persistent flags
 func InitFlags(cmd *cobra.Command) {
 	cmd.PersistentFlags().StringVarP(
-		&flags.Filter,
+		&Flags.Filter,
 		"filter",
 		"x",
-		flags.Filter,
+		Flags.Filter,
 		"Filter result values by property name",
 	)
 
 	cmd.PersistentFlags().StringVarP(
-		&flags.Host,
+		&Flags.Host,
 		"host",
 		"",
-		flags.Host,
+		Flags.Host,
 		"Flow Access API host address",
 	)
 
 	cmd.PersistentFlags().StringVarP(
-		&flags.Format,
+		&Flags.Format,
 		"output",
 		"o",
-		flags.Format,
+		Flags.Format,
 		"Output format, options: \"text\", \"json\", \"inline\"",
 	)
 
 	cmd.PersistentFlags().StringVarP(
-		&flags.Save,
+		&Flags.Save,
 		"save",
 		"s",
-		flags.Save,
+		Flags.Save,
 		"Save result to a filename",
 	)
 
 	cmd.PersistentFlags().StringVarP(
-		&flags.Log,
+		&Flags.Log,
 		"log",
 		"l",
-		flags.Log,
+		Flags.Log,
 		"Log level, options: \"debug\", \"info\", \"error\", \"none\"",
 	)
 
 	cmd.PersistentFlags().StringSliceVarP(
-		&flags.ConfigPath,
+		&Flags.ConfigPath,
 		"config-path",
 		"f",
-		flags.ConfigPath,
+		Flags.ConfigPath,
 		"Path to flow configuration file",
 	)
 
 	cmd.PersistentFlags().StringVarP(
-		&flags.Network,
+		&Flags.Network,
 		"network",
 		"n",
-		flags.Network,
+		Flags.Network,
 		"Network from configuration file",
+	)
+
+	cmd.PersistentFlags().BoolVarP(
+		&Flags.Yes,
+		"yes",
+		"y",
+		Flags.Yes,
+		"Approve any prompts",
 	)
 }
 
@@ -150,32 +163,34 @@ func InitFlags(cmd *cobra.Command) {
 func (c Command) AddToParent(parent *cobra.Command) {
 	c.Cmd.Run = func(cmd *cobra.Command, args []string) {
 		// initialize project but ignore error since config can be missing
-		proj, err := project.Load(flags.ConfigPath)
+		proj, err := project.Load(Flags.ConfigPath)
 		// here we ignore if config does not exist as some commands don't require it
-		if !errors.Is(err, config.ErrDoesNotExist) {
+		if !errors.Is(err, config.ErrDoesNotExist) && cmd.CommandPath() != "flow init" { // ignore configs errors if we are doing init config
 			handleError("Config Error", err)
 		}
 
-		host, err := resolveHost(proj, flags.Host, flags.Network)
+		host, err := resolveHost(proj, Flags.Host, Flags.Network)
 		handleError("Host Error", err)
 
 		clientGateway, err := createGateway(host)
 		handleError("Gateway Error", err)
 
-		logger := createLogger(flags.Log, flags.Format)
+		logger := createLogger(Flags.Log, Flags.Format)
 
 		service := services.NewServices(clientGateway, proj, logger)
 
+		checkVersion(logger)
+
 		// run command
-		result, err := c.Run(cmd, args, flags, service)
+		result, err := c.Run(cmd, args, Flags, service)
 		handleError("Command Error", err)
 
 		// format output result
-		formattedResult, err := formatResult(result, flags.Filter, flags.Format)
+		formattedResult, err := formatResult(result, Flags.Filter, Flags.Format)
 		handleError("Result", err)
 
 		// output result
-		err = outputResult(formattedResult, flags.Save)
+		err = outputResult(formattedResult, Flags.Save, Flags.Format, Flags.Filter)
 		handleError("Output Error", err)
 	}
 
@@ -193,24 +208,30 @@ func createGateway(host string) (gateway.Gateway, error) {
 
 // resolveHost from the flags provided
 func resolveHost(proj *project.Project, hostFlag string, networkFlag string) (string, error) {
-	host := hostFlag
-	if networkFlag != "" && proj != nil {
-		check := proj.NetworkByName(networkFlag)
-		if check == nil {
-			return "", fmt.Errorf("provided network with name %s doesn't exists in condiguration", networkFlag)
-		}
-
-		host = proj.NetworkByName(networkFlag).Host
-	} else if host == "" {
-		host = config.DefaultEmulatorNetwork().Host
+	// don't allow both network and host flag as the host might be different
+	if networkFlag != config.DefaultEmulatorNetwork().Name && hostFlag != "" {
+		return "", fmt.Errorf("shouldn't use both host and network flags, better to use network flag")
 	}
 
-	return host, nil
+	// host flag has highest priority
+	if hostFlag != "" {
+		return hostFlag, nil
+	}
+	// network flag with project initialized is next
+	if proj != nil {
+		check := proj.NetworkByName(networkFlag)
+		if check == nil {
+			return "", fmt.Errorf("network with name %s does not exist in configuration", networkFlag)
+		}
+
+		return proj.NetworkByName(networkFlag).Host, nil
+	}
+	// default to emulator host
+	return config.DefaultEmulatorNetwork().Host, nil
 }
 
 // create logger utility
 func createLogger(logFlag string, formatFlag string) output.Logger {
-
 	// disable logging if we user want a specific format like JSON
 	// (more common they will not want also to have logs)
 	if formatFlag != formatText {
@@ -248,7 +269,7 @@ func formatResult(result Result, filterFlag string, formatFlag string) (string, 
 		return fmt.Sprintf("%v", value), nil
 	}
 
-	switch formatFlag {
+	switch strings.ToLower(formatFlag) {
 	case formatJSON:
 		jsonRes, _ := json.Marshal(result.JSON())
 		return string(jsonRes), nil
@@ -260,7 +281,7 @@ func formatResult(result Result, filterFlag string, formatFlag string) (string, 
 }
 
 // outputResult to selected media
-func outputResult(result string, saveFlag string) error {
+func outputResult(result string, saveFlag string, formatFlag string, filterFlag string) error {
 	if saveFlag != "" {
 		af := afero.Afero{
 			Fs: afero.NewOsFs(),
@@ -270,8 +291,11 @@ func outputResult(result string, saveFlag string) error {
 		return af.WriteFile(saveFlag, []byte(result), 0644)
 	}
 
-	// default normal output
-	fmt.Fprintf(os.Stdout, "%s\n", result)
+	if formatFlag == formatInline || filterFlag != "" {
+		fmt.Fprintf(os.Stdout, "%s", result)
+	} else { // default normal output
+		fmt.Fprintf(os.Stdout, "\n%s\n\n", result)
+	}
 	return nil
 }
 
@@ -289,7 +313,7 @@ func filterResultValue(result Result, filter string) (interface{}, error) {
 		possibleFilters = append(possibleFilters, key)
 	}
 
-	value := jsonResult[filter]
+	value := jsonResult[strings.ToLower(filter)]
 
 	if value == nil {
 		return nil, fmt.Errorf("value for filter: '%s' doesn't exists, possible values to filter by: %s", filter, possibleFilters)
@@ -319,7 +343,8 @@ func handleError(description string, err error) {
 		} else if strings.Contains(err.Error(), "NotFound desc =") {
 			fmt.Fprintf(os.Stderr, "❌ Not Found:%s \n", strings.Split(err.Error(), "NotFound desc =")[1])
 		} else if strings.Contains(err.Error(), "code = InvalidArgument desc = ") {
-			fmt.Fprintf(os.Stderr, "❌ Invalid argument: %s \n", strings.Split(err.Error(), "code = InvalidArgument desc = ")[1])
+			desc := strings.Split(err.Error(), "code = InvalidArgument desc = ")
+			fmt.Fprintf(os.Stderr, "❌ Invalid argument: %s \n", desc[len(desc)-1])
 			if strings.Contains(err.Error(), "is invalid for chain") {
 				fmt.Fprintf(os.Stderr, "🙏 Check you are connecting to the correct network or account address you use is correct.")
 			} else {
@@ -338,6 +363,26 @@ func handleError(description string, err error) {
 
 	fmt.Println()
 	os.Exit(1)
+}
+
+// checkVersion fetches latest version and compares it to local
+func checkVersion(logger output.Logger) {
+	resp, err := http.Get("https://raw.githubusercontent.com/onflow/flow-cli/master/version.txt")
+	if err != nil || resp.StatusCode >= 400 {
+		return
+	}
+
+	defer resp.Body.Close()
+	body, _ := ioutil.ReadAll(resp.Body)
+	latestVersion := strings.TrimSpace(string(body))
+
+	if latestVersion != build.Semver() {
+		logger.Info(fmt.Sprintf(
+			"\n⚠️  Version warning: a new version of Flow CLI is available (%s).\n"+
+				"Read the installation guide for upgrade instructions: https://docs.onflow.org/flow-cli/install",
+			strings.ReplaceAll(string(latestVersion), "\n", ""),
+		))
+	}
 }
 
 // bindFlags bind all the flags needed

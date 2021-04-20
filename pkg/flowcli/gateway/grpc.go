@@ -62,37 +62,11 @@ func (g *GrpcGateway) GetAccount(address flow.Address) (*flow.Account, error) {
 	return account, nil
 }
 
-// TODO: replace with txsender - much nicer implemented
-// SendTransaction sends a transaction to Flow through the Access API.
-func (g *GrpcGateway) SendTransaction(tx *flow.Transaction, signer *project.Account) (*flow.Transaction, error) {
-	account, err := g.GetAccount(signer.Address())
-	if err != nil {
-		return nil, fmt.Errorf("failed to get account with address %s: %w", signer.Address(), err)
-	}
+// SendSignedTransaction sends a transaction to flow that is already prepared and signed
+func (g *GrpcGateway) SendSignedTransaction(transaction *project.Transaction) (*flow.Transaction, error) {
+	tx := transaction.FlowTransaction()
 
-	// Default 0, i.e. first key
-	accountKey := account.Keys[0]
-
-	sealed, err := g.client.GetLatestBlockHeader(g.ctx, true)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get latest sealed block: %w", err)
-	}
-
-	tx.SetReferenceBlockID(sealed.ID).
-		SetProposalKey(signer.Address(), accountKey.Index, accountKey.SequenceNumber).
-		SetPayer(signer.Address())
-
-	sig, err := signer.DefaultKey().Signer(g.ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	err = tx.SignEnvelope(signer.Address(), accountKey.Index, sig)
-	if err != nil {
-		return nil, fmt.Errorf("failed to sign transaction: %w", err)
-	}
-
-	err = g.client.SendTransaction(g.ctx, *tx)
+	err := g.client.SendTransaction(g.ctx, *tx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to submit transaction: %w", err)
 	}

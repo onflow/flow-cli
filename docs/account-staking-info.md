@@ -47,7 +47,7 @@ Tokens Unstaking: 	 0.00000000
 ### Address
 
 - Name: `address`
-- Valid Input: Flow account address
+- Valid Input: Flow account address.
 
 Flow [account address](https://docs.onflow.org/concepts/accounts-and-keys/) (prefixed with `0x` or not).
 
@@ -68,6 +68,7 @@ any host defined by the `--network` flag.
 - Flag: `--network`
 - Short Flag: `-n`
 - Valid inputs: the name of a network defined in the configuration (`flow.json`)
+- Default: `emulator`
 
 Specify which network you want the command to use for execution.
 

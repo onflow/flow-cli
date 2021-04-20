@@ -72,6 +72,7 @@ var ExecuteCommand = &command.Command{
 			filename,
 			scriptFlags.Arg,
 			scriptFlags.ArgsJSON,
+			globalFlags.Network,
 		)
 		if err != nil {
 			return nil, err

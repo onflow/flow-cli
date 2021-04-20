@@ -22,11 +22,11 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/onflow/flow-cli/pkg/flowcli/contracts"
+
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
 
-	"github.com/onflow/flow-cli/pkg/flowcli"
-	"github.com/onflow/flow-cli/pkg/flowcli/config"
 	"github.com/onflow/flow-cli/pkg/flowcli/gateway"
 	"github.com/onflow/flow-cli/pkg/flowcli/output"
 	"github.com/onflow/flow-cli/pkg/flowcli/project"
@@ -53,117 +53,6 @@ func NewTransactions(
 	}
 }
 
-// Send sends a transaction from a file.
-func (t *Transactions) Send(
-	transactionFilename string,
-	signerName string,
-	args []string,
-	argsJSON string,
-) (*flow.Transaction, *flow.TransactionResult, error) {
-	if t.project == nil {
-		return nil, nil, fmt.Errorf("missing configuration, initialize it: flow init")
-	}
-
-	signer := t.project.AccountByName(signerName)
-	if signer == nil {
-		return nil, nil, fmt.Errorf("signer account: [%s] doesn't exists in configuration", signerName)
-	}
-
-	code, err := util.LoadFile(transactionFilename)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	return t.send(code, signer, args, argsJSON)
-}
-
-// SendForAddress send transaction for address and private key, code passed via filename
-func (t *Transactions) SendForAddress(
-	transactionFilename string,
-	signerAddress string,
-	signerPrivateKey string,
-	args []string,
-	argsJSON string,
-) (*flow.Transaction, *flow.TransactionResult, error) {
-	code, err := util.LoadFile(transactionFilename)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	return t.SendForAddressWithCode(code, signerAddress, signerPrivateKey, args, argsJSON)
-}
-
-// SendForAddressWithCode send transaction for address and private key, code passed via byte array
-func (t *Transactions) SendForAddressWithCode(
-	code []byte,
-	signerAddress string,
-	signerPrivateKey string,
-	args []string,
-	argsJSON string,
-) (*flow.Transaction, *flow.TransactionResult, error) {
-	address := flow.HexToAddress(signerAddress)
-
-	privateKey, err := crypto.DecodePrivateKeyHex(crypto.ECDSA_P256, signerPrivateKey)
-	if err != nil {
-		return nil, nil, fmt.Errorf("private key is not correct")
-	}
-
-	account := project.AccountFromAddressAndKey(address, privateKey)
-
-	return t.send(code, account, args, argsJSON)
-}
-
-func (t *Transactions) send(
-	code []byte,
-	signer *project.Account,
-	args []string,
-	argsJSON string,
-) (*flow.Transaction, *flow.TransactionResult, error) {
-
-	// if google kms account then sign in
-	// TODO discuss refactor - move to account
-	if signer.DefaultKey().Type() == config.KeyTypeGoogleKMS {
-		resourceID := signer.DefaultKey().ToConfig().Context[config.KMSContextField]
-		err := util.GcloudApplicationSignin(resourceID)
-		if err != nil {
-			return nil, nil, err
-		}
-	}
-
-	t.logger.StartProgress("Sending transaction...")
-
-	tx := flow.NewTransaction().
-		SetScript(code).
-		AddAuthorizer(signer.Address())
-
-	transactionArguments, err := flowcli.ParseArguments(args, argsJSON)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	for _, arg := range transactionArguments {
-		err := tx.AddArgument(arg)
-		if err != nil {
-			return nil, nil, fmt.Errorf("failed to add %s argument to a transaction", arg)
-		}
-	}
-
-	t.logger.Info(fmt.Sprintf("Sending transaction with ID %s", tx.ID()))
-
-	tx, err = t.gateway.SendTransaction(tx, signer)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	t.logger.StartProgress("Waiting for transaction to be sealed...")
-
-	res, err := t.gateway.GetTransactionResult(tx, true)
-
-	t.logger.StopProgress("")
-
-	return tx, res, err
-}
-
 // GetStatus of transaction
 func (t *Transactions) GetStatus(
 	transactionID string,
@@ -186,7 +75,278 @@ func (t *Transactions) GetStatus(
 
 	result, err := t.gateway.GetTransactionResult(tx, waitSeal)
 
-	t.logger.StopProgress("")
+	t.logger.StopProgress()
 
 	return tx, result, err
+}
+
+// Build builds a transaction with specified payer, proposer and authorizer
+func (t *Transactions) Build(
+	proposer string,
+	authorizer []string,
+	payer string,
+	proposerKeyIndex int,
+	codeFilename string,
+	args []string,
+	argsJSON string,
+	network string,
+) (*project.Transaction, error) {
+	proposerAddress, err := getAddressFromStringOrConfig(proposer, t.project)
+	if err != nil {
+		return nil, err
+	}
+
+	payerAddress, err := getAddressFromStringOrConfig(payer, t.project)
+	if err != nil {
+		return nil, err
+	}
+
+	authorizerAddresses := make([]flow.Address, 0)
+	for _, a := range authorizer {
+		authorizerAddress, err := getAddressFromStringOrConfig(a, t.project)
+		if err != nil {
+			return nil, err
+		}
+		authorizerAddresses = append(authorizerAddresses, authorizerAddress)
+	}
+
+	latestBlock, err := t.gateway.GetLatestBlock()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get latest sealed block: %w", err)
+	}
+
+	proposerAccount, err := t.gateway.GetAccount(proposerAddress)
+	if err != nil {
+		return nil, err
+	}
+
+	tx := project.NewTransaction().
+		SetPayer(payerAddress).
+		SetProposer(proposerAccount, proposerKeyIndex).
+		AddAuthorizers(authorizerAddresses).
+		SetDefaultGasLimit().
+		SetBlockReference(latestBlock)
+
+	code, err := util.LoadFile(codeFilename)
+	if err != nil {
+		return nil, err
+	}
+
+	resolver, err := contracts.NewResolver(code)
+	if err != nil {
+		return nil, err
+	}
+
+	if resolver.HasFileImports() {
+		if network == "" {
+			return nil, fmt.Errorf("missing network, specify which network to use to resolve imports in transaction code")
+		}
+		if codeFilename == "" { // when used as lib with code we don't support imports
+			return nil, fmt.Errorf("resolving imports in transactions not supported")
+		}
+
+		contractsNetwork, err := t.project.ContractsByNetwork(network)
+		if err != nil {
+			return nil, err
+		}
+
+		code, err = resolver.ResolveImports(
+			codeFilename,
+			contractsNetwork,
+			t.project.AliasesForNetwork(network),
+		)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	err = tx.SetScriptWithArgs(code, args, argsJSON)
+	if err != nil {
+		return nil, err
+	}
+
+	return tx, nil
+}
+
+// Sign transaction
+func (t *Transactions) Sign(
+	payloadFilename string,
+	signerName string,
+	approveSigning bool,
+) (*project.Transaction, error) {
+	if t.project == nil {
+		return nil, fmt.Errorf("missing configuration, initialize it: flow project init")
+	}
+
+	// get the signer account
+	signerAccount := t.project.AccountByName(signerName)
+	if signerAccount == nil {
+		return nil, fmt.Errorf("signer account: [%s] doesn't exists in configuration", signerName)
+	}
+
+	tx, err := project.NewTransactionFromPayload(payloadFilename)
+	if err != nil {
+		return nil, err
+	}
+
+	err = tx.SetSigner(signerAccount)
+	if err != nil {
+		return nil, err
+	}
+
+	if approveSigning {
+		return tx.Sign()
+	}
+
+	if !output.ApproveTransactionPrompt(tx) {
+		return nil, fmt.Errorf("transaction was not approved for signing")
+	}
+
+	return tx.Sign()
+}
+
+// SendSigned sends the transaction that is already signed
+func (t *Transactions) SendSigned(
+	signedFilename string,
+) (*flow.Transaction, *flow.TransactionResult, error) {
+	tx, err := project.NewTransactionFromPayload(signedFilename)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	sentTx, err := t.gateway.SendSignedTransaction(tx)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	res, err := t.gateway.GetTransactionResult(sentTx, true)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return sentTx, res, nil
+}
+
+// Send sends a transaction from a file.
+func (t *Transactions) Send(
+	transactionFilename string,
+	signerName string,
+	args []string,
+	argsJSON string,
+	network string,
+) (*flow.Transaction, *flow.TransactionResult, error) {
+	if t.project == nil {
+		return nil, nil, fmt.Errorf("missing configuration, initialize it: flow project init")
+	}
+
+	signerAccount := t.project.AccountByName(signerName)
+	if signerAccount == nil {
+		return nil, nil, fmt.Errorf("signer account: [%s] doesn't exists in configuration", signerName)
+	}
+
+	tx, err := t.Build(
+		signerName,
+		[]string{signerName},
+		signerName,
+		0, // default 0 key
+		transactionFilename,
+		args,
+		argsJSON,
+		network,
+	)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	err = tx.SetSigner(signerAccount)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	signed, err := tx.Sign()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	t.logger.StartProgress(fmt.Sprintf("Sending Transaction with ID: %s", signed.FlowTransaction().ID()))
+	defer t.logger.StopProgress()
+
+	sentTx, err := t.gateway.SendSignedTransaction(signed)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	t.logger.StartProgress("Waiting for transaction to be sealed...")
+
+	res, err := t.gateway.GetTransactionResult(sentTx, true)
+
+	t.logger.StopProgress()
+
+	return sentTx, res, err
+}
+
+// SendForAddressWithCode send transaction for address and private key specified with code
+func (t *Transactions) SendForAddressWithCode(
+	code []byte,
+	signerAddress string,
+	signerPrivateKey string,
+	args []string,
+	argsJSON string,
+) (*flow.Transaction, *flow.TransactionResult, error) {
+	address := flow.HexToAddress(signerAddress)
+
+	privateKey, err := crypto.DecodePrivateKeyHex(crypto.ECDSA_P256, signerPrivateKey)
+	if err != nil {
+		return nil, nil, fmt.Errorf("private key is not correct")
+	}
+
+	signer := project.AccountFromAddressAndKey(address, privateKey)
+
+	tx := project.NewTransaction()
+	err = tx.SetSigner(signer)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	err = tx.SetScriptWithArgs(code, args, argsJSON)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	tx, err = tx.Sign()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	t.logger.StartProgress("Sending transaction...")
+	defer t.logger.StopProgress()
+
+	sentTx, err := t.gateway.SendSignedTransaction(tx)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	t.logger.StartProgress("Waiting for transaction to be sealed...")
+
+	res, err := t.gateway.GetTransactionResult(sentTx, true)
+
+	t.logger.StopProgress()
+	return sentTx, res, err
+}
+
+// getAddressFromStringOrConfig try to parse value as address or as an account from the config
+func getAddressFromStringOrConfig(value string, project *project.Project) (flow.Address, error) {
+	address, isValid := util.ParseAddress(value)
+
+	if isValid {
+		return address, nil
+	} else if project != nil {
+		account := project.AccountByName(value)
+		if account == nil {
+			return flow.EmptyAddress, fmt.Errorf("account could not be found")
+		}
+		return account.Address(), nil
+	} else {
+		return flow.EmptyAddress, fmt.Errorf("could not parse address or account name from config, missing configuration")
+	}
 }

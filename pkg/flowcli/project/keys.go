@@ -23,6 +23,8 @@ import (
 	"encoding/hex"
 	"fmt"
 
+	"github.com/onflow/flow-cli/pkg/flowcli/util"
+
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/onflow/flow-go-sdk/crypto/cloudkms"
@@ -37,6 +39,7 @@ type AccountKey interface {
 	HashAlgo() crypto.HashAlgorithm
 	Signer(ctx context.Context) (crypto.Signer, error)
 	ToConfig() config.AccountKey
+	Validate() error
 }
 
 func NewAccountKey(accountKeyConf config.AccountKey) (AccountKey, error) {
@@ -82,6 +85,10 @@ func (a *baseAccountKey) Index() int {
 	return a.index
 }
 
+func (a *baseAccountKey) Validate() error {
+	return nil
+}
+
 type KmsAccountKey struct {
 	*baseAccountKey
 	kmsKey cloudkms.Key
@@ -115,6 +122,11 @@ func (a *KmsAccountKey) Signer(ctx context.Context) (crypto.Signer, error) {
 	}
 
 	return accountKMSSigner, nil
+}
+
+func (a *KmsAccountKey) Validate() error {
+	resourceID := a.ToConfig().Context[config.KMSContextField]
+	return util.GcloudApplicationSignin(resourceID)
 }
 
 func newKmsAccountKey(key config.AccountKey) (AccountKey, error) {

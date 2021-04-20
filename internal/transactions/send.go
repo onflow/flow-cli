@@ -40,7 +40,7 @@ var sendFlags = flagsSend{}
 
 var SendCommand = &command.Command{
 	Cmd: &cobra.Command{
-		Use:     "send <filename>",
+		Use:     "send <code filename>",
 		Short:   "Send a transaction",
 		Args:    cobra.MaximumNArgs(1),
 		Example: `flow transactions send tx.cdc --arg String:"Hello world"`,
@@ -70,8 +70,6 @@ var SendCommand = &command.Command{
 		} else if sendFlags.Code != "" {
 			fmt.Println("⚠️  DEPRECATION WARNING: use filename as a command argument <filename>")
 			filename = sendFlags.Code
-		} else {
-			return nil, fmt.Errorf("provide a valide filename command argument")
 		}
 
 		tx, result, err := services.Transactions.Send(
@@ -79,6 +77,7 @@ var SendCommand = &command.Command{
 			sendFlags.Signer,
 			sendFlags.Arg,
 			sendFlags.ArgsJSON,
+			globalFlags.Network,
 		)
 		if err != nil {
 			return nil, err

@@ -17,13 +17,16 @@ flow accounts update-contract <name> <filename>
 Contract 'FungibleToken' updated on account '0xf8d6e0586b0a20c7'
 
 Address	 0xf8d6e0586b0a20c7
-Balance	 9999999999970000000
+Balance	 99999999999.70000000
 Keys	 1
 
 Key 0	Public Key		 640a5a359bf3536d15192f18d872d57c98a96cb871b92b70cecb0739c2d5c37b4be12548d3526933c2cda9b0b9c69412f45ffb6b85b6840d8569d969fe84e5b7
 	Weight			 1000
 	Signature Algorithm	 ECDSA_P256
 	Hash Algorithm		 SHA3_256
+	Revoked 		 false
+	Sequence Number 	 6
+	Index 			 0
 
 Contracts Deployed: 1
 Contract: 'FungibleToken'
@@ -67,6 +70,7 @@ any host defined by the `--network` flag.
 - Flag: `--network`
 - Short Flag: `-n`
 - Valid inputs: the name of a network defined in the configuration (`flow.json`)
+- Default: `emulator`
 
 Specify which network you want the command to use for execution.
 
