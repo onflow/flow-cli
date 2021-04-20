@@ -373,12 +373,13 @@ func checkVersion(logger output.Logger) {
 	}
 
 	defer resp.Body.Close()
-	latestVersion, _ := ioutil.ReadAll(resp.Body)
+	body, _ := ioutil.ReadAll(resp.Body)
+	latestVersion := strings.TrimSpace(string(body))
 
-	if string(latestVersion) != build.Semver() {
+	if latestVersion != build.Semver() {
 		logger.Info(fmt.Sprintf(
-			"\n⚠️  Version Warning: New version %s of Flow CLI is available.\n"+
-				"Follow the Flow CLI installation guide for instructions on how to install or upgrade the CLI: https://docs.onflow.org/flow-cli/install",
+			"\n⚠️  Version warning: a new version of Flow CLI is available (%s).\n"+
+				"Read the installation guide for upgrade instructions: https://docs.onflow.org/flow-cli/install",
 			strings.ReplaceAll(string(latestVersion), "\n", ""),
 		))
 	}
