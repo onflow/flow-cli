@@ -218,7 +218,7 @@ func resolveHost(proj *project.Project, hostFlag string, networkFlag string) (st
 		return hostFlag, nil
 	}
 	// network flag with project initialized is next
-	if networkFlag != "" && proj != nil {
+	if proj != nil {
 		check := proj.NetworkByName(networkFlag)
 		if check == nil {
 			return "", fmt.Errorf("network with name %s does not exist in configuration", networkFlag)
