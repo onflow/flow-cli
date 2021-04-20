@@ -53,7 +53,7 @@ type AccountResult struct {
 func (r *AccountResult) JSON() interface{} {
 	result := make(map[string]interface{})
 	result["address"] = r.Address
-	result["balance"] = fmt.Sprintf("%s", cadence.UFix64(r.Balance))
+	result["balance"] = cadence.UFix64(r.Balance).String()
 
 	keys := make([]string, 0)
 	for _, key := range r.Keys {
