@@ -5,9 +5,11 @@ Follow the [Flow CLI installation guide](https://docs.onflow.org/flow-cli/instal
 ## ⭐ Features
 
 ### Resolve Contract Imports in Scripts and Transactions
-A new feature that allows you to send transactions and scripts that reference 
-contract deployed using the project deploy command. Imports are resolved 
-the same way as project deploy are. Example:
+This is a new feature that allows you to send transactions and scripts that reference 
+contracts deployed using the `project deploy` command. Imports are resolved 
+by matching contract source paths to their declarations in `flow.json`.
+
+For example:
 
 Example script: `get_supply.cdc`
 ```
