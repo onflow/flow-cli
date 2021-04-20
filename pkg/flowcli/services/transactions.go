@@ -145,9 +145,14 @@ func (t *Transactions) Build(
 			return nil, fmt.Errorf("resolving imports in transactions not supported")
 		}
 
+		contractsNetwork, err := t.project.ContractsByNetwork(network)
+		if err != nil {
+			return nil, err
+		}
+
 		code, err = resolver.ResolveImports(
 			codeFilename,
-			t.project.ContractsByNetwork(network),
+			contractsNetwork,
 			t.project.AliasesForNetwork(network),
 		)
 		if err != nil {
@@ -263,7 +268,8 @@ func (t *Transactions) Send(
 		return nil, nil, err
 	}
 
-	t.logger.StartProgress("Sending Transaction...")
+	t.logger.StartProgress(fmt.Sprintf("Sending Transaction with ID: %s", signed.FlowTransaction().ID()))
+	defer t.logger.StopProgress()
 
 	sentTx, err := t.gateway.SendSignedTransaction(signed)
 	if err != nil {
@@ -313,6 +319,7 @@ func (t *Transactions) SendForAddressWithCode(
 	}
 
 	t.logger.StartProgress("Sending transaction...")
+	defer t.logger.StopProgress()
 
 	sentTx, err := t.gateway.SendSignedTransaction(tx)
 	if err != nil {
@@ -329,8 +336,10 @@ func (t *Transactions) SendForAddressWithCode(
 
 // getAddressFromStringOrConfig try to parse value as address or as an account from the config
 func getAddressFromStringOrConfig(value string, project *project.Project) (flow.Address, error) {
-	if util.ValidAddress(value) {
-		return flow.HexToAddress(value), nil
+	address, isValid := util.ParseAddress(value)
+
+	if isValid {
+		return address, nil
 	} else if project != nil {
 		account := project.AccountByName(value)
 		if account == nil {

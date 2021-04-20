@@ -1,16 +1,16 @@
 ---
 title: Send Signed Transaction with the Flow CLI
 sidebar_title: Send Signed Transaction
-description: How to send signed Flow transaction from the command line
+description: How to send a signed Flow transaction from the command line
 ---
 
 The Flow CLI provides a command to send signed transactions to
 any Flow Access API.
 
 Use this functionality in the following order:
-1. Use this command to build the transaction
-2. Use the sign command to sign with all accounts specified in the build process
-3. Use send signed command to submit the signed transaction to the network.
+1. Use this command (`build`) to build the transaction.
+2. Use the `sign` command to sign with all accounts specified in the build process.
+3. Use `send-signed` command to submit the signed transaction to the Flow network.
 
 ```shell
 flow transactions send-signed <signed transaction filename>
@@ -93,6 +93,7 @@ any host defined by the `--network` flag.
 - Flag: `--network`
 - Short Flag: `-n`
 - Valid inputs: the name of a network defined in the configuration (`flow.json`)
+- Default: `emulator`
 
 Specify which network you want the command to use for execution.
 

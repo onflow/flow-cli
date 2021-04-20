@@ -209,7 +209,7 @@ func createGateway(host string) (gateway.Gateway, error) {
 // resolveHost from the flags provided
 func resolveHost(proj *project.Project, hostFlag string, networkFlag string) (string, error) {
 	// don't allow both network and host flag as the host might be different
-	if networkFlag != "" && hostFlag != "" {
+	if networkFlag != config.DefaultEmulatorNetwork().Name && hostFlag != "" {
 		return "", fmt.Errorf("shouldn't use both host and network flags, better to use network flag")
 	}
 
@@ -373,12 +373,13 @@ func checkVersion(logger output.Logger) {
 	}
 
 	defer resp.Body.Close()
-	latestVersion, _ := ioutil.ReadAll(resp.Body)
+	body, _ := ioutil.ReadAll(resp.Body)
+	latestVersion := strings.TrimSpace(string(body))
 
-	if string(latestVersion) != build.Semver() {
+	if latestVersion != build.Semver() {
 		logger.Info(fmt.Sprintf(
-			"\n⚠️  Version Warning: New version %s of Flow CLI is available.\n"+
-				"Follow the Flow CLI installation guide for instructions on how to install or upgrade the CLI: https://docs.onflow.org/flow-cli/install",
+			"\n⚠️  Version warning: a new version of Flow CLI is available (%s).\n"+
+				"Read the installation guide for upgrade instructions: https://docs.onflow.org/flow-cli/install",
 			strings.ReplaceAll(string(latestVersion), "\n", ""),
 		))
 	}

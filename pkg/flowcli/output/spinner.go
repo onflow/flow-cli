@@ -75,4 +75,5 @@ func (s *Spinner) run() {
 
 func (s *Spinner) Stop() {
 	s.done <- ""
+	time.Sleep(50 * time.Millisecond)
 }

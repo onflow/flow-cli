@@ -37,9 +37,10 @@ var stakingFlags = flagsStakingInfo{}
 
 var StakingCommand = &command.Command{
 	Cmd: &cobra.Command{
-		Use:   "staking-info <address>",
-		Short: "Get account staking info",
-		Args:  cobra.ExactArgs(1),
+		Use:     "staking-info <address>",
+		Short:   "Get account staking info",
+		Example: "flow accounts staking-info f8d6e0586b0a20c7",
+		Args:    cobra.ExactArgs(1),
 	},
 	Flags: &stakingFlags,
 	Run: func(

@@ -110,7 +110,12 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 	)
 
 	// add all contracts needed to deploy to processor
-	for _, contract := range p.project.ContractsByNetwork(network) {
+	contractsNetwork, err := p.project.ContractsByNetwork(network)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, contract := range contractsNetwork {
 		err := processor.AddContractSource(
 			contract.Name,
 			contract.Source,
@@ -123,7 +128,7 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 	}
 
 	// resolve imports assigns accounts to imports
-	err := processor.ResolveImports()
+	err = processor.ResolveImports()
 	if err != nil {
 		return nil, err
 	}
@@ -139,6 +144,7 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 		len(orderedContracts),
 		strings.Join(p.project.AccountNamesForNetwork(network), ","),
 	))
+	defer p.logger.StopProgress()
 
 	block, err := p.gateway.GetLatestBlock()
 	if err != nil {

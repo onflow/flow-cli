@@ -132,7 +132,10 @@ func newProject(conf *config.Config, composer *config.Loader) (*Project, error) 
 // The CLI currently does not allow the same contract to be deployed to multiple
 // accounts in the same network.
 func (p *Project) ContractConflictExists(network string) bool {
-	contracts := p.ContractsByNetwork(network)
+	contracts, err := p.ContractsByNetwork(network)
+	if err != nil {
+		return false
+	}
 
 	uniq := funk.Uniq(
 		funk.Map(contracts, func(c Contract) string {
@@ -172,16 +175,22 @@ func (p *Project) SetEmulatorServiceKey(privateKey crypto.PrivateKey) {
 }
 
 // ContractsByNetwork returns all contracts for a network.
-func (p *Project) ContractsByNetwork(network string) []Contract {
+func (p *Project) ContractsByNetwork(network string) ([]Contract, error) {
 	contracts := make([]Contract, 0)
 
 	// get deployments for the specified network
 	for _, deploy := range p.conf.Deployments.GetByNetwork(network) {
 		account := p.AccountByName(deploy.Account)
+		if account == nil {
+			return nil, fmt.Errorf("could not find account with name %s in the configuration", deploy.Account)
+		}
 
 		// go through each contract in this deployment
 		for _, deploymentContract := range deploy.Contracts {
 			c := p.conf.Contracts.GetByNameAndNetwork(deploymentContract.Name, network)
+			if c == nil {
+				return nil, fmt.Errorf("could not find contract with name name %s in the configuration", deploymentContract.Name)
+			}
 
 			contract := Contract{
 				Name:   c.Name,
@@ -194,7 +203,7 @@ func (p *Project) ContractsByNetwork(network string) []Contract {
 		}
 	}
 
-	return contracts
+	return contracts, nil
 }
 
 // AccountNamesForNetwork returns all configured account names for a network.

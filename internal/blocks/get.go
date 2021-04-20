@@ -39,9 +39,10 @@ var blockFlags = flagsBlocks{}
 
 var GetCommand = &command.Command{
 	Cmd: &cobra.Command{
-		Use:   "get <block_id|latest|block_height>",
-		Short: "Get block info",
-		Args:  cobra.ExactArgs(1),
+		Use:     "get <block_id|latest|block_height>",
+		Short:   "Get block info",
+		Example: "flow blocks get latest --network testnet",
+		Args:    cobra.ExactArgs(1),
 	},
 	Flags: &blockFlags,
 	Run: func(
