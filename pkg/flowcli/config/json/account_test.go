@@ -40,7 +40,6 @@ func Test_ConfigAccountKeysSimple(t *testing.T) {
 	accounts := jsonAccounts.transformToConfig()
 
 	assert.Equal(t, accounts.GetByName("test").Address.String(), "f8d6e0586b0a20c7")
-	assert.Equal(t, accounts.GetByName("test").ChainID.String(), "flow-emulator")
 	assert.Len(t, accounts.GetByName("test").Keys, 1)
 	assert.Equal(t, accounts.GetByName("test").Keys[0].HashAlgo.String(), "SHA3_256")
 	assert.Equal(t, accounts.GetByName("test").Keys[0].Index, 0)
@@ -75,7 +74,6 @@ func Test_ConfigAccountKeysAdvanced(t *testing.T) {
 	account := accounts.GetByName("test")
 
 	assert.Equal(t, account.Address.String(), "f8d6e0586b0a20c7")
-	assert.Equal(t, account.ChainID.String(), "flow-emulator")
 	assert.Len(t, account.Keys, 1)
 	assert.Equal(t, account.Keys[0].HashAlgo.String(), "SHA3_256")
 	assert.Equal(t, account.Keys[0].Index, 0)
@@ -119,7 +117,6 @@ func Test_ConfigAccountKeysAdvancedMultiple(t *testing.T) {
 	account := accounts.GetByName("test")
 
 	assert.Equal(t, account.Address.String(), "f8d6e0586b0a20c7")
-	assert.Equal(t, account.ChainID.String(), "flow-emulator")
 	assert.Len(t, account.Keys, 2)
 
 	assert.Equal(t, account.Keys[0].HashAlgo.String(), "SHA3_256")
@@ -155,7 +152,6 @@ func Test_ConfigMultipleAccountsSimple(t *testing.T) {
 
 	assert.Equal(t, accounts.GetByName("emulator-account").Name, "emulator-account")
 	assert.Equal(t, accounts.GetByName("emulator-account").Address.String(), "0000000000000000")
-	assert.Equal(t, accounts.GetByName("emulator-account").ChainID.String(), "flow-emulator")
 	assert.Len(t, accounts.GetByName("emulator-account").Keys, 1)
 	assert.Equal(t, accounts.GetByName("emulator-account").Keys[0].HashAlgo.String(), "SHA3_256")
 	assert.Equal(t, accounts.GetByName("emulator-account").Keys[0].Index, 0)
@@ -163,7 +159,6 @@ func Test_ConfigMultipleAccountsSimple(t *testing.T) {
 	assert.Equal(t, accounts.GetByName("emulator-account").Keys[0].Context["privateKey"], "dd72967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47")
 
 	assert.Equal(t, accounts.GetByName("testnet-account").Address.String(), "2c1162386b0a245f")
-	assert.Equal(t, accounts.GetByName("testnet-account").ChainID.String(), "testnet")
 	assert.Len(t, accounts.GetByName("testnet-account").Keys, 1)
 	assert.Equal(t, accounts.GetByName("testnet-account").Keys[0].HashAlgo.String(), "SHA3_256")
 	assert.Equal(t, accounts.GetByName("testnet-account").Keys[0].Index, 0)
@@ -212,7 +207,6 @@ func Test_ConfigMultipleAccountsAdvanced(t *testing.T) {
 	accounts := jsonAccounts.transformToConfig()
 
 	assert.Equal(t, accounts.GetByName("emulator-account").Address.String(), "f8d6e0586b0a20c7")
-	assert.Equal(t, accounts.GetByName("emulator-account").ChainID.String(), "flow-emulator")
 	assert.Len(t, accounts.GetByName("emulator-account").Keys, 1)
 	assert.Equal(t, accounts.GetByName("emulator-account").Keys[0].HashAlgo.String(), "SHA3_256")
 	assert.Equal(t, accounts.GetByName("emulator-account").Keys[0].Index, 0)
@@ -220,7 +214,6 @@ func Test_ConfigMultipleAccountsAdvanced(t *testing.T) {
 	assert.Equal(t, accounts.GetByName("emulator-account").Keys[0].Context["privateKey"], "1272967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47")
 
 	assert.Equal(t, accounts.GetByName("testnet-account").Address.String(), "1c1162386b0a245f")
-	assert.Equal(t, accounts.GetByName("testnet-account").ChainID.String(), "testnet")
 	assert.Len(t, accounts.GetByName("testnet-account").Keys, 1)
 	assert.Equal(t, accounts.GetByName("testnet-account").Keys[0].HashAlgo.String(), "SHA3_256")
 	assert.Equal(t, accounts.GetByName("testnet-account").Keys[0].Index, 0)
@@ -259,7 +252,6 @@ func Test_ConfigMixedAccounts(t *testing.T) {
 	accounts := jsonAccounts.transformToConfig()
 
 	assert.Equal(t, accounts.GetByName("emulator-account").Address.String(), "f8d6e0586b0a20c7")
-	assert.Equal(t, accounts.GetByName("emulator-account").ChainID.String(), "flow-emulator")
 	assert.Len(t, accounts.GetByName("emulator-account").Keys, 1)
 	assert.Equal(t, accounts.GetByName("emulator-account").Keys[0].HashAlgo.String(), "SHA3_256")
 	assert.Equal(t, accounts.GetByName("emulator-account").Keys[0].Index, 0)
@@ -267,7 +259,6 @@ func Test_ConfigMixedAccounts(t *testing.T) {
 	assert.Equal(t, accounts.GetByName("emulator-account").Keys[0].Context["privateKey"], "1272967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47")
 
 	assert.Equal(t, accounts.GetByName("testnet-account").Address.String(), "3c1162386b0a245f")
-	assert.Equal(t, accounts.GetByName("testnet-account").ChainID.String(), "testnet")
 	assert.Len(t, accounts.GetByName("testnet-account").Keys, 1)
 	assert.Equal(t, accounts.GetByName("testnet-account").Keys[0].HashAlgo.String(), "SHA3_256")
 	assert.Equal(t, accounts.GetByName("testnet-account").Keys[0].Index, 0)
