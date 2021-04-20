@@ -131,8 +131,8 @@ func newProject(conf *config.Config, composer *config.Loader) (*Project, error) 
 // The CLI currently does not allow the same contract to be deployed to multiple
 // accounts in the same network.
 func (p *Project) ContractConflictExists(network string) bool {
-	contracts, error := p.ContractsByNetwork(network)
-	if error != nil {
+	contracts, err := p.ContractsByNetwork(network)
+	if err != nil {
 		return false
 	}
 
