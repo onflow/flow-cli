@@ -31,7 +31,6 @@ import (
 type Account struct {
 	name    string
 	address flow.Address
-	chainID flow.ChainID
 	keys    []AccountKey
 }
 
@@ -72,12 +71,10 @@ func accountsFromConfig(conf *config.Config) ([]*Account, error) {
 
 func AccountFromAddressAndKey(address flow.Address, privateKey crypto.PrivateKey) *Account {
 	key := NewHexAccountKeyFromPrivateKey(0, crypto.SHA3_256, privateKey)
-	chainID, _ := util.GetAddressNetwork(address)
 
 	return &Account{
 		name:    "",
 		address: address,
-		chainID: chainID,
 		keys:    []AccountKey{key},
 	}
 }
@@ -141,7 +138,6 @@ func generateEmulatorServiceAccount(sigAlgo crypto.SignatureAlgorithm, hashAlgo 
 	return &Account{
 		name:    config.DefaultEmulatorServiceAccountName,
 		address: flow.ServiceAddress(flow.Emulator),
-		chainID: flow.Emulator,
 		keys: []AccountKey{
 			serviceAccountKey,
 		},

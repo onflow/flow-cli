@@ -25,25 +25,9 @@ import (
 	"github.com/onflow/flow-go-sdk/crypto"
 
 	"github.com/onflow/flow-cli/pkg/flowcli/config"
-	"github.com/onflow/flow-cli/pkg/flowcli/util"
 )
 
 type jsonAccounts map[string]jsonAccount
-
-// transformChainID return chain id based on address and chain id
-func transformChainID(rawChainID string, rawAddress string) flow.ChainID {
-	if rawAddress == "service" && rawChainID == "" {
-		return flow.Emulator
-	}
-
-	if rawChainID == "" {
-		address := flow.HexToAddress(rawAddress)
-		chainID, _ := util.GetAddressNetwork(address)
-		return chainID
-	}
-
-	return flow.ChainID(rawChainID)
-}
 
 // transformAddress returns address based on address and chain id
 func transformAddress(address string) flow.Address {
