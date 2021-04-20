@@ -8,9 +8,9 @@ The Flow CLI provides a command to send signed transactions to
 any Flow Access API.
 
 Use this functionality in the following order:
-1. Use this command (`build`) to build the transaction.
-2. Use the `sign` command to sign with all accounts specified in the build process.
-3. Use `send-signed` command to submit the signed transaction to the Flow network.
+1. Use the `build` command to build the transaction.
+2. Use the `sign` command to sign with each account specified in the build process.
+3. Use this command (`send-signed`) to submit the signed transaction to the Flow network.
 
 ```shell
 flow transactions send-signed <signed transaction filename>
