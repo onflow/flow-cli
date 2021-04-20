@@ -46,11 +46,10 @@ func transformChainID(rawChainID string, rawAddress string) flow.ChainID {
 }
 
 // transformAddress returns address based on address and chain id
-func transformAddress(address string, rawChainID string) flow.Address {
-	chainID := transformChainID(rawChainID, address)
-
+func transformAddress(address string) flow.Address {
+	// only allow service for emulator
 	if address == "service" {
-		return flow.ServiceAddress(chainID)
+		return flow.ServiceAddress(flow.Emulator)
 	}
 
 	return flow.HexToAddress(address)
@@ -66,8 +65,7 @@ func (j jsonAccounts) transformToConfig() config.Accounts {
 		if a.Simple.Address != "" {
 			account = config.Account{
 				Name:    accountName,
-				ChainID: transformChainID(a.Simple.Chain, a.Simple.Address),
-				Address: transformAddress(a.Simple.Address, a.Simple.Chain),
+				Address: transformAddress(a.Simple.Address),
 				Keys: []config.AccountKey{{
 					Type:     config.KeyTypeHex,
 					Index:    0,
@@ -93,8 +91,7 @@ func (j jsonAccounts) transformToConfig() config.Accounts {
 
 			account = config.Account{
 				Name:    accountName,
-				ChainID: transformChainID(a.Advanced.Chain, a.Advanced.Address),
-				Address: transformAddress(a.Advanced.Address, a.Advanced.Chain),
+				Address: transformAddress(a.Advanced.Address),
 				Keys:    keys,
 			}
 		}
@@ -116,7 +113,6 @@ func transformSimpleAccountToJSON(a config.Account) jsonAccount {
 	return jsonAccount{
 		Simple: jsonAccountSimple{
 			Address: a.Address.String(),
-			Chain:   a.ChainID.String(),
 			Keys:    a.Keys[0].Context[config.PrivateKeyField],
 		},
 	}
@@ -138,7 +134,6 @@ func transformAdvancedAccountToJSON(a config.Account) jsonAccount {
 	return jsonAccount{
 		Advanced: jsonAccountAdvanced{
 			Address: a.Address.String(),
-			Chain:   a.ChainID.String(),
 			Keys:    keys,
 		},
 	}
@@ -163,12 +158,10 @@ func transformAccountsToJSON(accounts config.Accounts) jsonAccounts {
 type jsonAccountSimple struct {
 	Address string `json:"address"`
 	Keys    string `json:"keys"`
-	Chain   string `json:"chain"`
 }
 
 type jsonAccountAdvanced struct {
 	Address string           `json:"address"`
-	Chain   string           `json:"chain"`
 	Keys    []jsonAccountKey `json:"keys"`
 }
 
