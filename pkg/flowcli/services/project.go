@@ -109,7 +109,12 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 		p.project.AliasesForNetwork(network),
 	)
 
-	for _, contract := range p.project.ContractsByNetwork(network) {
+	contractsNetwork, err := p.project.ContractsByNetwork(network)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, contract := range contractsNetwork {
 		err := processor.AddContractSource(
 			contract.Name,
 			contract.Source,
@@ -120,7 +125,7 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 		}
 	}
 
-	err := processor.ResolveImports()
+	err = processor.ResolveImports()
 	if err != nil {
 		return nil, err
 	}

@@ -88,9 +88,14 @@ func (s *Scripts) execute(code []byte, args []string, argsJSON string, scriptPat
 			return nil, fmt.Errorf("resolving imports in scripts not supported")
 		}
 
+		contractsNetwork, err := s.project.ContractsByNetwork(network)
+		if err != nil {
+			return nil, err
+		}
+
 		code, err = resolver.ResolveImports(
 			scriptPath,
-			s.project.ContractsByNetwork(network),
+			contractsNetwork,
 			s.project.AliasesForNetwork(network),
 		)
 		if err != nil {

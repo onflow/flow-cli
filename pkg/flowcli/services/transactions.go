@@ -145,9 +145,14 @@ func (t *Transactions) Build(
 			return nil, fmt.Errorf("resolving imports in transactions not supported")
 		}
 
+		contractsNetwork, err := t.project.ContractsByNetwork(network)
+		if err != nil {
+			return nil, err
+		}
+
 		code, err = resolver.ResolveImports(
 			codeFilename,
-			t.project.ContractsByNetwork(network),
+			contractsNetwork,
 			t.project.AliasesForNetwork(network),
 		)
 		if err != nil {
