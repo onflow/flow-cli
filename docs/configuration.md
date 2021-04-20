@@ -25,24 +25,14 @@ Flow configuration (`flow.json`) file will contain the following properties:
     }
   },
   "networks": {
-    "emulator": {
-      "host": "127.0.0.1:3569",
-      "chain": "flow-emulator"
-    },
-    "mainnet": {
-      "host": "access.mainnet.nodes.onflow.org:9000",
-      "chain": "flow-mainnet"
-    },
-    "testnet": {
-      "host": "access.devnet.nodes.onflow.org:9000",
-      "chain": "flow-testnet"
-    }
+    "emulator": "127.0.0.1:3569",
+    "mainnet": "access.mainnet.nodes.onflow.org:9000",
+    "testnet": "access.devnet.nodes.onflow.org:9000"
   },
   "accounts": {
     "emulator-account": {
       "address": "f8d6e0586b0a20c7",
       "keys": "ae1b44c0f5e8f6992ef2348898a35e50a8b0b9684000da8b1dade1b3bcd6ebee",
-      "chain": "flow-emulator"
     }
   },
   "deployments": {},
@@ -98,23 +88,13 @@ We'll walk through each property one by one.
     "emulator-account": {
       "address": "f8d6e0586b0a20c7",
       "keys": "2eae2f31cb5b756151fa11d82949c634b8f28796a711d7eb1e52cc301ed11111",
-      "chain": "flow-emulator"
     }
   },
 
   "networks": {
-    "emulator": {
-      "host": "127.0.0.1:3569",
-      "chain": "flow-emulator"
-    },
-    "mainnet": {
-      "host": "access.mainnet.nodes.onflow.org:9000",
-      "chain": "flow-mainnet"
-    },
-    "testnet": {
-      "host": "access.devnet.nodes.onflow.org:9000",
-      "chain": "flow-testnet"
-    }
+    "emulator": "127.0.0.1:3569",
+    "mainnet": "access.mainnet.nodes.onflow.org:9000",
+    "testnet": "access.devnet.nodes.onflow.org:9000"
   },
 
   "emulators": {
@@ -208,7 +188,6 @@ value that is defined on the run time to the default service address on the emul
 "accounts": {
   "admin-account-multiple-keys": {
     "address": "service",
-    "chain": "flow-emulator",
     "keys": [
       {
         "type": "hex",
@@ -270,24 +249,13 @@ contracts and networks, all of which are referenced by name.
 
 Use this section to define networks and connection parameters for that specific network. 
 
-#### Simple format
-
 ```json
 ...
 
 "networks": {
-  "emulator": {
-    "host": "127.0.0.1:3569",
-    "chain": "flow-emulator"
-  },
-  "mainnet": {
-    "host": "access.mainnet.nodes.onflow.org:9000",
-    "chain": "flow-mainnet"
-  },
-  "testnet": {
-    "host": "access.devnet.nodes.onflow.org:9000",
-    "chain": "flow-testnet"
-  }
+    "emulator": "127.0.0.1:3569",
+    "mainnet": "access.mainnet.nodes.onflow.org:9000",
+    "testnet": "access.devnet.nodes.onflow.org:9000"
 }
 
 ...
