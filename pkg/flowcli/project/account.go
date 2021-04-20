@@ -97,7 +97,6 @@ func AccountFromConfig(accountConf config.Account) (*Account, error) {
 	return &Account{
 		name:    accountConf.Name,
 		address: accountConf.Address,
-		chainID: accountConf.ChainID,
 		keys:    accountKeys,
 	}, nil
 }
@@ -122,7 +121,6 @@ func accountToConfig(account *Account) config.Account {
 	return config.Account{
 		Name:    account.name,
 		Address: account.address,
-		ChainID: account.chainID,
 		Keys:    keyConfigs,
 	}
 }
