@@ -59,15 +59,27 @@ type jsonNetwork struct {
 	Host string
 }
 
+type advancedNetwork struct {
+	Host  string
+	Chain string
+}
+
 func (j *jsonNetwork) UnmarshalJSON(b []byte) error {
 	var host string
 	err := json.Unmarshal(b, &host)
-	if err != nil {
-		return err
+	if err == nil {
+		j.Host = host
+		return nil
 	}
 
-	j.Host = host
-	return nil
+	// ignore advanced schema from previous configuration format
+	var advanced advancedNetwork
+	err = json.Unmarshal(b, &advanced)
+	if err == nil {
+		j.Host = advanced.Host
+	}
+
+	return err
 }
 
 func (j jsonNetwork) MarshalJSON() ([]byte, error) {
