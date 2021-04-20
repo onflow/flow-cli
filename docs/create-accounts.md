@@ -63,8 +63,9 @@ upon creation.
 - Valid inputs: number between 0 and 1000
 - Default: 1000
 
-Specify the weight of the key. When key weight is provided it must 
-match the number of keys. Specify key weight flag for each key flag.
+Specify the weight of the public key being added to the new account. 
+
+When opting to use this flag, you must specify a `--key-weight` flag for each public `--key` flag provided.
 
 ### Public Key Signature Algorithm
     
