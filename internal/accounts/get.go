@@ -36,9 +36,10 @@ var getFlags = flagsGet{}
 
 var GetCommand = &command.Command{
 	Cmd: &cobra.Command{
-		Use:   "get <address>",
-		Short: "Gets an account by address",
-		Args:  cobra.ExactArgs(1),
+		Use:     "get <address>",
+		Short:   "Gets an account by address",
+		Example: "flow accounts get f8d6e0586b0a20c7",
+		Args:    cobra.ExactArgs(1),
 	},
 	Flags: &getFlags,
 	Run: func(

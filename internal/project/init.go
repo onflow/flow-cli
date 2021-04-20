@@ -32,8 +32,9 @@ var initFlag = config.FlagsInit{}
 
 var InitCommand = &command.Command{
 	Cmd: &cobra.Command{
-		Use:   "init",
-		Short: "Initialize a new configuration",
+		Use:     "init",
+		Short:   "Initialize a new configuration",
+		Example: "flow project init",
 	},
 	Flags: &initFlag,
 	Run: func(
