@@ -46,7 +46,7 @@ func Test_JSONSimple(t *testing.T) {
 		"accounts": {
 			"emulator-account": {
 				"address": "f8d6e0586b0a20c7",
-				"keys": "21c5dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7",
+				"key": "21c5dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7",
 				"chain": "flow-emulator"
 			}
 		},
@@ -72,7 +72,7 @@ func Test_ComposeJSON(t *testing.T) {
 		"accounts": {
 			"emulator-account": {
 				"address": "f8d6e0586b0a20c7",
-				"keys": "21c5dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7"
+				"key": "21c5dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7"
 			}
 		}
 	}`)
@@ -81,7 +81,7 @@ func Test_ComposeJSON(t *testing.T) {
 		 "accounts":{
 				"admin-account":{
 					 "address":"f1d6e0586b0a20c7",
-					 "keys":"3335dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7"
+					 "key":"3335dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7"
 				}
 		 }
 	}`)
@@ -114,7 +114,7 @@ func Test_ComposeJSONOverwrite(t *testing.T) {
 		"accounts": {
 			"admin-account": {
 				"address": "f8d6e0586b0a20c7",
-				"keys": "21c5dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7"
+				"key": "21c5dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7"
 			}
 		}
 	}`)
@@ -123,7 +123,7 @@ func Test_ComposeJSONOverwrite(t *testing.T) {
 		 "accounts":{
 				"admin-account":{
 					 "address":"f1d6e0586b0a20c7",
-					 "keys":"3335dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7"
+					 "key":"3335dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7"
 				}
 		 }
 	}`)
@@ -153,7 +153,7 @@ func Test_FromFileAccountSimple(t *testing.T) {
 		"accounts": {
 			"service-account": {
 				"address": "f8d6e0586b0a20c7",
-				"keys": "21c5dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7"
+				"key": "21c5dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7"
 			},
 			"admin-account": { "fromFile": "private.json" }
 		}
@@ -163,7 +163,7 @@ func Test_FromFileAccountSimple(t *testing.T) {
 		 "accounts":{
 				"admin-account":{
 					 "address":"f1d6e0586b0a20c7",
-					 "keys":"3335dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7"
+					 "key":"3335dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7"
 				}
 		 }
 	}`)
@@ -192,7 +192,7 @@ func Test_FromFileAccountComplex(t *testing.T) {
 		"accounts": {
 			"service-account": {
 				"address": "f8d6e0586b0a20c7",
-				"keys": "21c5dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7"
+				"key": "21c5dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7"
 			},
 			"admin-account-1": { "fromFile": "private.json" },
 			"admin-account-3": { "fromFile": "private.json" },
@@ -204,15 +204,15 @@ func Test_FromFileAccountComplex(t *testing.T) {
 		 "accounts":{
 				"admin-account-1":{
 					 "address":"f1d6e0586b0a20c7",
-					 "keys":"3335dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7"
+					 "key":"3335dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7"
 				},
 				"admin-account-2":{
 					 "address":"f2d6e0586b0a20c7",
-					 "keys":"3335dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7"
+					 "key":"3335dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7"
 				},
 				"admin-account-3":{
 					 "address":"f3d6e0586b0a20c7",
-					 "keys":"3335dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7"
+					 "key":"3335dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7"
 				}
 		 }
 	}`)
@@ -221,7 +221,7 @@ func Test_FromFileAccountComplex(t *testing.T) {
 		 "accounts":{
 				"admin-account-5":{
 					 "address":"f5d6e0586b0a20c7",
-					 "keys":"3335dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7"
+					 "key":"3335dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7"
 				}
 		 }
 	}`)
@@ -257,7 +257,7 @@ func Test_JSONEnv(t *testing.T) {
 		"accounts": {
 			"emulator-account": {
 				"address": "f8d6e0586b0a20c7",
-				"keys": "$EMULATOR_KEY",
+				"key": "$EMULATOR_KEY",
 				"chain": "flow-emulator"
 			}
 		}
