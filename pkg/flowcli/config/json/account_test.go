@@ -28,7 +28,7 @@ func Test_ConfigAccountKeysSimple(t *testing.T) {
 	b := []byte(`{
 		"test": {
 			"address": "service",
-			"keys": "2272967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47"
+			"key": "2272967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47"
 		}
 	}`)
 
@@ -39,7 +39,6 @@ func Test_ConfigAccountKeysSimple(t *testing.T) {
 	accounts := jsonAccounts.transformToConfig()
 
 	assert.Equal(t, accounts.GetByName("test").Address.String(), "f8d6e0586b0a20c7")
-	assert.Len(t, accounts.GetByName("test").Key, 1)
 	assert.Equal(t, accounts.GetByName("test").Key.HashAlgo.String(), "SHA3_256")
 	assert.Equal(t, accounts.GetByName("test").Key.Index, 0)
 	assert.Equal(t, accounts.GetByName("test").Key.SigAlgo.String(), "ECDSA_P256")
@@ -50,17 +49,15 @@ func Test_ConfigAccountKeysAdvanced(t *testing.T) {
 	b := []byte(`{
 		"test": {
 			"address": "service",
-			"keys": [
-				{
-					"type": "hex",
-					"index": 0,
-					"signatureAlgorithm": "ECDSA_P256",
-					"hashAlgorithm": "SHA3_256",
-					"context": {
-						"privateKey": "1272967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47"
-					}
+			"key": {
+				"type": "hex",
+				"index": 0,
+				"signatureAlgorithm": "ECDSA_P256",
+				"hashAlgorithm": "SHA3_256",
+				"context": {
+					"privateKey": "1272967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47"
 				}
-			]
+			}
 		}
 	}`)
 
@@ -82,11 +79,11 @@ func Test_ConfigMultipleAccountsSimple(t *testing.T) {
 	b := []byte(`{
 		"emulator-account": {
 			"address": "service-1",
-			"keys": "dd72967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47"
+			"key": "dd72967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47"
 		},
 		"testnet-account": {
 			"address": "0x2c1162386b0a245f",
-			"keys": "1232967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47"
+			"key": "1232967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47"
 		}
 	}`)
 
@@ -114,31 +111,27 @@ func Test_ConfigMultipleAccountsAdvanced(t *testing.T) {
 	b := []byte(`{
 		"emulator-account": {
 			"address": "service",
-			"keys": [
-				{
-					"type": "hex",
-					"index": 0,
-					"signatureAlgorithm": "ECDSA_P256",
-					"hashAlgorithm": "SHA3_256",
-					"context": {
-						"privateKey": "1272967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47"
-					}
+			"key": {
+				"type": "hex",
+				"index": 0,
+				"signatureAlgorithm": "ECDSA_P256",
+				"hashAlgorithm": "SHA3_256",
+				"context": {
+					"privateKey": "1272967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47"
 				}
-			]
+			}
 		},
 		"testnet-account": {
 			"address": "1c1162386b0a245f",
-			"keys": [
-				{
-					"type": "0x18d6e0586b0a20c7",
-					"index": 0,
-					"signatureAlgorithm": "ECDSA_P256",
-					"hashAlgorithm": "SHA3_256",
-					"context": {
-						"privateKey": "2272967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47"
-					}
+			"key": {
+				"type": "0x18d6e0586b0a20c7",
+				"index": 0,
+				"signatureAlgorithm": "ECDSA_P256",
+				"hashAlgorithm": "SHA3_256",
+				"context": {
+					"privateKey": "2272967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47"
 				}
-			]
+			}
 		}
 	}`)
 
@@ -165,21 +158,19 @@ func Test_ConfigMixedAccounts(t *testing.T) {
 	b := []byte(`{
 		"emulator-account": {
 			"address": "service",
-			"keys": [
-				{
-					"type": "hex",
-					"index": 0,
-					"signatureAlgorithm": "ECDSA_P256",
-					"hashAlgorithm": "SHA3_256",
-					"context": {
-						"privateKey": "1272967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47"
-					}
+			"key": {
+				"type": "hex",
+				"index": 0,
+				"signatureAlgorithm": "ECDSA_P256",
+				"hashAlgorithm": "SHA3_256",
+				"context": {
+					"privateKey": "1272967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47"
 				}
-			]
+			}
 		},
 		"testnet-account": {
 			"address": "3c1162386b0a245f",
-			"keys": "2272967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47"
+			"key": "2272967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47"
 		}
 	}`)
 
@@ -206,11 +197,11 @@ func Test_ConfigAccountsMap(t *testing.T) {
 	b := []byte(`{
 		"emulator-account": {
 			"address": "service-1",
-			"keys": "dd72967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47"
+			"key": "dd72967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47"
 		},
 		"testnet-account": {
 			"address": "3c1162386b0a245f",
-			"keys": "1232967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47"
+			"key": "1232967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47"
 		}
 	}`)
 
@@ -225,7 +216,7 @@ func Test_ConfigAccountsMap(t *testing.T) {
 }
 
 func Test_TransformDefaultAccountToJSON(t *testing.T) {
-	b := []byte(`{"emulator-account":{"address":"f8d6e0586b0a20c7","keys":[{"type":"hex","index":0,"signatureAlgorithm":"ECDSA_P256","hashAlgorithm":"SHA3_256","context":{"privateKey":"1272967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47"}}]},"testnet-account":{"address":"3c1162386b0a245f","keys":"2272967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47"}}`)
+	b := []byte(`{"emulator-account":{"address":"f8d6e0586b0a20c7","key":{"type":"hex","index":0,"signatureAlgorithm":"ECDSA_P256","hashAlgorithm":"SHA3_256","context":{"privateKey":"1272967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47"}}},"testnet-account":{"address":"3c1162386b0a245f","key":"2272967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47"}}`)
 
 	var jsonAccounts jsonAccounts
 	err := json.Unmarshal(b, &jsonAccounts)
@@ -241,7 +232,7 @@ func Test_TransformDefaultAccountToJSON(t *testing.T) {
 }
 
 func Test_TransformAccountToJSON(t *testing.T) {
-	b := []byte(`{"emulator-account":{"address":"f8d6e0586b0a20c7","keys":[{"type":"hex","index":1,"signatureAlgorithm":"ECDSA_P256","hashAlgorithm":"SHA3_256","context":{"privateKey":"1272967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47"}}]},"testnet-account":{"address":"3c1162386b0a245f","keys":"2272967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47"}}`)
+	b := []byte(`{"emulator-account":{"address":"f8d6e0586b0a20c7","key":{"type":"hex","index":1,"signatureAlgorithm":"ECDSA_P256","hashAlgorithm":"SHA3_256","context":{"privateKey":"1272967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47"}}},"testnet-account":{"address":"3c1162386b0a245f","key":"2272967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47"}}`)
 
 	var jsonAccounts jsonAccounts
 	err := json.Unmarshal(b, &jsonAccounts)
