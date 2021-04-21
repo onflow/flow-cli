@@ -247,5 +247,43 @@ func Test_TransformAccountToJSON(t *testing.T) {
 }
 
 func Test_SupportForOldFormatWithMultipleKeys(t *testing.T) {
-	assert.Fail(t, "todo")
+	b := []byte(`{
+		"emulator-account": {
+			"address": "service-1",
+			"chain": "flow-emulator",
+			"keys": "dd72967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47"
+		},
+		"testnet-account": {
+			"address": "3c1162386b0a245f",
+			"chain": "testnet",
+			"keys": [
+				{
+					"type": "hex",
+					"index": 0,
+					"signatureAlgorithm": "ECDSA_P256",
+					"hashAlgorithm": "SHA3_256",
+					"context": {
+						"privateKey": "1272967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47"
+					}
+				},{
+					"type": "hex",
+					"index": 0,
+					"signatureAlgorithm": "ECDSA_P256",
+					"hashAlgorithm": "SHA3_256",
+					"context": {
+						"privateKey": "2332967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b44"
+					}
+				}
+			]
+		}
+	}`)
+
+	var jsonAccounts jsonAccounts
+	err := json.Unmarshal(b, &jsonAccounts)
+	assert.NoError(t, err)
+
+	conf := jsonAccounts.transformToConfig()
+
+	assert.Equal(t, conf.GetByName("testnet-account").Key.Context["privateKey"], "1272967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47")
+	assert.Equal(t, conf.GetByName("emulator-account").Key.Context["privateKey"], "dd72967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47")
 }

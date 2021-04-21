@@ -20,6 +20,7 @@ package json
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
@@ -145,6 +146,16 @@ type jsonAccountKey struct {
 	Context  map[string]string `json:"context"`
 }
 
+type jsonAccountSimpleOld struct {
+	Address string `json:"address"`
+	Keys    string `json:"keys"`
+}
+
+type jsonAccountAdvancedOld struct {
+	Address string           `json:"address"`
+	Keys    []jsonAccountKey `json:"keys"`
+}
+
 type jsonAccount struct {
 	Simple   jsonAccountSimple
 	Advanced jsonAccountAdvanced
@@ -152,9 +163,33 @@ type jsonAccount struct {
 
 func (j *jsonAccount) UnmarshalJSON(b []byte) error {
 
+	fmt.Println("IN", string(b))
+
+	// try simple old format
+	var simpleOld jsonAccountSimpleOld
+	err := json.Unmarshal(b, &simpleOld)
+	if err == nil {
+		j.Simple = jsonAccountSimple{
+			Address: simpleOld.Address,
+			Key:     simpleOld.Keys,
+		}
+		return nil
+	}
+
+	// try advanced old format
+	var advancedOld jsonAccountAdvancedOld
+	err = json.Unmarshal(b, &advancedOld)
+	if err == nil {
+		j.Advanced = jsonAccountAdvanced{
+			Address: advancedOld.Address,
+			Key:     advancedOld.Keys[0],
+		}
+		return nil
+	}
+
 	// try simple format
 	var simple jsonAccountSimple
-	err := json.Unmarshal(b, &simple)
+	err = json.Unmarshal(b, &simple)
 	if err == nil {
 		j.Simple = simple
 		return nil
