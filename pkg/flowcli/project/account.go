@@ -32,7 +32,7 @@ type Account struct {
 	name    string
 	address flow.Address
 	chainID flow.ChainID
-	keys    []AccountKey
+	key     AccountKey
 }
 
 func (a *Account) Address() flow.Address {
@@ -43,16 +43,12 @@ func (a *Account) Name() string {
 	return a.name
 }
 
-func (a *Account) Keys() []AccountKey {
-	return a.keys
+func (a *Account) Key() AccountKey {
+	return a.key
 }
 
-func (a *Account) DefaultKey() AccountKey {
-	return a.keys[0]
-}
-
-func (a *Account) SetDefaultKey(key AccountKey) {
-	a.keys[0] = key
+func (a *Account) SetKey(key AccountKey) {
+	a.key = key
 }
 
 func accountsFromConfig(conf *config.Config) ([]*Account, error) {
@@ -71,34 +67,27 @@ func accountsFromConfig(conf *config.Config) ([]*Account, error) {
 }
 
 func AccountFromAddressAndKey(address flow.Address, privateKey crypto.PrivateKey) *Account {
-	key := NewHexAccountKeyFromPrivateKey(0, crypto.SHA3_256, privateKey)
 	chainID, _ := util.GetAddressNetwork(address)
 
 	return &Account{
 		name:    "",
 		address: address,
 		chainID: chainID,
-		keys:    []AccountKey{key},
+		key:     NewHexAccountKeyFromPrivateKey(0, crypto.SHA3_256, privateKey),
 	}
 }
 
-func AccountFromConfig(accountConf config.Account) (*Account, error) {
-	accountKeys := make([]AccountKey, 0, len(accountConf.Keys))
-
-	for _, key := range accountConf.Keys {
-		accountKey, err := NewAccountKey(key)
-		if err != nil {
-			return nil, err
-		}
-
-		accountKeys = append(accountKeys, accountKey)
+func AccountFromConfig(account config.Account) (*Account, error) {
+	key, err := NewAccountKey(account.Key)
+	if err != nil {
+		return nil, err
 	}
 
 	return &Account{
-		name:    accountConf.Name,
-		address: accountConf.Address,
-		chainID: accountConf.ChainID,
-		keys:    accountKeys,
+		name:    account.Name,
+		address: account.Address,
+		chainID: account.ChainID,
+		key:     key,
 	}, nil
 }
 
@@ -113,17 +102,11 @@ func accountsToConfig(accounts []*Account) config.Accounts {
 }
 
 func accountToConfig(account *Account) config.Account {
-	keyConfigs := make([]config.AccountKey, 0, len(account.keys))
-
-	for _, key := range account.keys {
-		keyConfigs = append(keyConfigs, key.ToConfig())
-	}
-
 	return config.Account{
 		Name:    account.name,
 		Address: account.address,
 		ChainID: account.chainID,
-		Keys:    keyConfigs,
+		Key:     account.key.ToConfig(),
 	}
 }
 
@@ -138,14 +121,10 @@ func generateEmulatorServiceAccount(sigAlgo crypto.SignatureAlgorithm, hashAlgo 
 		return nil, fmt.Errorf("failed to generate emulator service key: %v", err)
 	}
 
-	serviceAccountKey := NewHexAccountKeyFromPrivateKey(0, hashAlgo, privateKey)
-
 	return &Account{
 		name:    config.DefaultEmulatorServiceAccountName,
 		address: flow.ServiceAddress(flow.Emulator),
 		chainID: flow.Emulator,
-		keys: []AccountKey{
-			serviceAccountKey,
-		},
+		key:     NewHexAccountKeyFromPrivateKey(0, hashAlgo, privateKey),
 	}, nil
 }
