@@ -20,7 +20,6 @@ package json
 
 import (
 	"encoding/json"
-	"fmt"
 
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
@@ -161,49 +160,74 @@ type jsonAccount struct {
 	Advanced jsonAccountAdvanced
 }
 
+type FormatType int
+
+const (
+	simpleFormat      FormatType = 0
+	advancedFormat    FormatType = 1
+	simpleOldFormat   FormatType = 2
+	advancedOldFormat FormatType = 3
+)
+
+func decideFormat(b []byte) (FormatType, error) {
+	var raw map[string]interface{}
+	err := json.Unmarshal(b, &raw)
+	if err != nil {
+		return 0, err
+	}
+
+	if raw["keys"] != nil {
+		switch raw["keys"].(type) {
+		case string:
+			return simpleOldFormat, nil
+		default:
+			return advancedOldFormat, nil
+		}
+	}
+
+	switch raw["key"].(type) {
+	case string:
+		return simpleFormat, nil
+	default:
+		return advancedFormat, nil
+	}
+}
+
 func (j *jsonAccount) UnmarshalJSON(b []byte) error {
 
-	fmt.Println("IN", string(b))
+	format, err := decideFormat(b)
+	if err != nil {
+		return err
+	}
 
-	// try simple old format
-	var simpleOld jsonAccountSimpleOld
-	err := json.Unmarshal(b, &simpleOld)
-	if err == nil {
+	switch format {
+	case simpleFormat:
+		var simple jsonAccountSimple
+		err = json.Unmarshal(b, &simple)
+		j.Simple = simple
+
+	case advancedFormat:
+		var advanced jsonAccountAdvanced
+		err = json.Unmarshal(b, &advanced)
+		j.Advanced = advanced
+
+	case simpleOldFormat:
+		var simpleOld jsonAccountSimpleOld
+		err = json.Unmarshal(b, &simpleOld)
 		j.Simple = jsonAccountSimple{
 			Address: simpleOld.Address,
 			Key:     simpleOld.Keys,
 		}
-		return nil
-	}
 
-	// try advanced old format
-	var advancedOld jsonAccountAdvancedOld
-	err = json.Unmarshal(b, &advancedOld)
-	if err == nil {
+	case advancedOldFormat:
+		var advancedOld jsonAccountAdvancedOld
+		err = json.Unmarshal(b, &advancedOld)
 		j.Advanced = jsonAccountAdvanced{
 			Address: advancedOld.Address,
 			Key:     advancedOld.Keys[0],
 		}
-		return nil
 	}
 
-	// try simple format
-	var simple jsonAccountSimple
-	err = json.Unmarshal(b, &simple)
-	if err == nil {
-		j.Simple = simple
-		return nil
-	}
-
-	// try advanced format
-	var advanced jsonAccountAdvanced
-	err = json.Unmarshal(b, &advanced)
-	if err == nil {
-		j.Advanced = advanced
-		return nil
-	}
-
-	// TODO: better error handling - here we just return error from advanced case
 	return err
 }
 
