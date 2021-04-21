@@ -38,7 +38,8 @@ that is not checked into source control (e.g. excluded with `.gitignore`).
 
 #### Private configuration file
 
-**Put this file in `.gitignore`:**
+⚠️ Put this file in `.gitignore`:
+
 ```json
 // flow.testnet.json
 {
@@ -73,6 +74,19 @@ PRIVATE_KEY=key flow project deploy
   }
   ...
 }
+```
+
+### Private Environment File
+
+Setting environment variables can be avoided by using environment file `.env`. Anything 
+you put in `.env` file will be loaded as environment variable and replaced in configuration the 
+same way as environment variable.
+
+⚠️ Please be sure to add `.env` file to `.gitignore`
+
+Example `.env` file:
+```bash
+PRIVATE_KEY=123
 ```
 
 ### Composing Multiple Configuration Files
