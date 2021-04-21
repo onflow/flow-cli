@@ -86,7 +86,7 @@ var Flags = GlobalFlags{
 	Network:    config.DefaultEmulatorNetwork().Name,
 	Log:        logLevelInfo,
 	Yes:        false,
-	ConfigPath: project.DefaultConfigPaths,
+	ConfigPath: config.DefaultConfigPaths,
 }
 
 // InitFlags init all the global persistent flags
