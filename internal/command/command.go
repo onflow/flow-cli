@@ -55,14 +55,14 @@ type Command struct {
 }
 
 type GlobalFlags struct {
-	Filter     string
-	Format     string
-	Save       string
-	Host       string
-	Log        string
-	Network    string
-	Yes        bool
-	ConfigPath []string
+	Filter      string
+	Format      string
+	Save        string
+	Host        string
+	Log         string
+	Network     string
+	Yes         bool
+	ConfigPaths []string
 }
 
 const (
@@ -79,14 +79,14 @@ const (
 )
 
 var Flags = GlobalFlags{
-	Filter:     "",
-	Format:     formatText,
-	Save:       "",
-	Host:       "",
-	Network:    config.DefaultEmulatorNetwork().Name,
-	Log:        logLevelInfo,
-	Yes:        false,
-	ConfigPath: config.DefaultConfigPaths,
+	Filter:      "",
+	Format:      formatText,
+	Save:        "",
+	Host:        "",
+	Network:     config.DefaultEmulatorNetwork().Name,
+	Log:         logLevelInfo,
+	Yes:         false,
+	ConfigPaths: config.DefaultPaths(),
 }
 
 // InitFlags init all the global persistent flags
@@ -132,10 +132,10 @@ func InitFlags(cmd *cobra.Command) {
 	)
 
 	cmd.PersistentFlags().StringSliceVarP(
-		&Flags.ConfigPath,
+		&Flags.ConfigPaths,
 		"config-path",
 		"f",
-		Flags.ConfigPath,
+		Flags.ConfigPaths,
 		"Path to flow configuration file",
 	)
 
@@ -163,7 +163,8 @@ func InitFlags(cmd *cobra.Command) {
 func (c Command) AddToParent(parent *cobra.Command) {
 	c.Cmd.Run = func(cmd *cobra.Command, args []string) {
 		// initialize project but ignore error since config can be missing
-		proj, err := project.Load(Flags.ConfigPath)
+		proj, err := project.Load(Flags.ConfigPaths)
+
 		// here we ignore if config does not exist as some commands don't require it
 		if !errors.Is(err, config.ErrDoesNotExist) && cmd.CommandPath() != "flow init" { // ignore configs errors if we are doing init config
 			handleError("Config Error", err)
@@ -225,6 +226,8 @@ func resolveHost(proj *project.Project, hostFlag string, networkFlag string) (st
 		}
 
 		return proj.NetworkByName(networkFlag).Host, nil
+	} else if networkFlag != config.DefaultEmulatorNetwork().Name {
+		return "", fmt.Errorf("network not found, make sure flow configuration exists")
 	}
 	// default to emulator host
 	return config.DefaultEmulatorNetwork().Host, nil
