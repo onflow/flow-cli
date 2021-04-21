@@ -1,5 +1,5 @@
 ---
-title: Deploy a Contract with the Fow CLI
+title: Deploy a Contract with the Flow CLI
 sidebar_title: Deploy a Contract
 ---
 

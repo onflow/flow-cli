@@ -1,5 +1,5 @@
 ---
-title: Remove a Contract with the Fow CLI
+title: Remove a Contract with the Flow CLI
 sidebar_title: Remove a Contract
 ---
 
