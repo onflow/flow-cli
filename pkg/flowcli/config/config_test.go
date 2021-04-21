@@ -91,7 +91,7 @@ func generateComplexConfig() config.Config {
 		Accounts: config.Accounts{{
 			Name:    "emulator-account",
 			Address: flow.ServiceAddress(flow.Emulator),
-			Keys: []config.AccountKey{{
+			Key: config.AccountKey{
 				Type:     config.KeyTypeHex,
 				Index:    0,
 				SigAlgo:  crypto.ECDSA_P256,
@@ -99,11 +99,11 @@ func generateComplexConfig() config.Config {
 				Context: map[string]string{
 					"privateKey": "dd72967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47",
 				},
-			}},
+			},
 		}, {
 			Name:    "account-2",
 			Address: flow.HexToAddress("2c1162386b0a245f"),
-			Keys: []config.AccountKey{{
+			Key: config.AccountKey{
 				Type:     config.KeyTypeHex,
 				Index:    0,
 				SigAlgo:  crypto.ECDSA_P256,
@@ -111,11 +111,11 @@ func generateComplexConfig() config.Config {
 				Context: map[string]string{
 					"privateKey": "dd72967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47",
 				},
-			}},
+			},
 		}, {
 			Name:    "account-4",
 			Address: flow.HexToAddress("f8d6e0586b0a20c1"),
-			Keys: []config.AccountKey{{
+			Key: config.AccountKey{
 				Type:     config.KeyTypeHex,
 				Index:    0,
 				SigAlgo:  crypto.ECDSA_P256,
@@ -123,7 +123,7 @@ func generateComplexConfig() config.Config {
 				Context: map[string]string{
 					"privateKey": "dd72967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47",
 				},
-			}},
+			},
 		}},
 		Networks: config.Networks{{
 			Name: "emulator",
