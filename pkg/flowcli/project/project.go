@@ -34,11 +34,6 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowcli/config/json"
 )
 
-var (
-	DefaultConfigPaths = []string{"flow.json"}
-	DefaultConfigPath  = DefaultConfigPaths[0]
-)
-
 // Project contains the configuration for a Flow project.
 type Project struct {
 	composer *config.Loader

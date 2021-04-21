@@ -22,6 +22,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/onflow/flow-cli/pkg/flowcli/config"
+
 	"github.com/onflow/flow-go-sdk/crypto"
 
 	"github.com/onflow/flow-cli/pkg/flowcli/contracts"
@@ -53,14 +55,20 @@ func NewProject(
 
 func (p *Project) Init(
 	reset bool,
+	global bool,
 	serviceKeySigAlgo string,
 	serviceKeyHashAlgo string,
 	servicePrivateKey string,
 ) (*project.Project, error) {
-	if project.Exists(project.DefaultConfigPath) && !reset {
+	path := config.DefaultConfigPath
+	if global {
+		path = ""
+	}
+
+	if project.Exists(path) && !reset {
 		return nil, fmt.Errorf(
 			"configuration already exists at: %s, if you want to reset configuration use the reset flag",
-			project.DefaultConfigPath,
+			config.DefaultConfigPath,
 		)
 	}
 
@@ -83,7 +91,7 @@ func (p *Project) Init(
 		proj.SetEmulatorServiceKey(serviceKey)
 	}
 
-	err = proj.Save(project.DefaultConfigPath)
+	err = proj.Save(path)
 	if err != nil {
 		return nil, err
 	}

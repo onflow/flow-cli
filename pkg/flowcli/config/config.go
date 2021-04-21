@@ -111,6 +111,11 @@ const (
 	DefaultEmulatorServiceAccountName         = "emulator-account"
 )
 
+var (
+	DefaultConfigPaths = []string{"flow.json"}
+	DefaultConfigPath  = DefaultConfigPaths[0]
+)
+
 // DefaultEmulatorNetwork get default emulator network
 func DefaultEmulatorNetwork() Network {
 	return Network{

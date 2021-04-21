@@ -35,7 +35,8 @@ type FlagsInit struct {
 	ServicePrivateKey  string `flag:"service-private-key" info:"Service account private key"`
 	ServiceKeySigAlgo  string `default:"ECDSA_P256" flag:"service-sig-algo" info:"Service account key signature algorithm"`
 	ServiceKeyHashAlgo string `default:"SHA3_256" flag:"service-hash-algo" info:"Service account key hash algorithm"`
-	Reset              bool   `default:"false" flag:"reset" info:"Reset flow.json config file"`
+	Reset              bool   `default:"false" flag:"reset" info:"Reset configuration file"`
+	Global             bool   `default:"false" flag:"global" info:"Initialize global user configuration"`
 }
 
 var initFlag = FlagsInit{}
@@ -54,6 +55,7 @@ var InitCommand = &command.Command{
 	) (command.Result, error) {
 		proj, err := services.Project.Init(
 			initFlag.Reset,
+			initFlag.Global,
 			initFlag.ServiceKeySigAlgo,
 			initFlag.ServiceKeyHashAlgo,
 			initFlag.ServicePrivateKey,
