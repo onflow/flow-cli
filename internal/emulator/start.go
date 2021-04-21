@@ -79,7 +79,7 @@ func ConfiguredServiceKey(
 
 	serviceAccount, _ := proj.EmulatorServiceAccount()
 
-	serviceKeyHex, ok := serviceAccount.DefaultKey().(*project.HexAccountKey)
+	serviceKeyHex, ok := serviceAccount.Key().(*project.HexAccountKey)
 	if !ok {
 		util.Exit(1, "Only hexadecimal keys can be used as the emulator service account key.")
 	}
