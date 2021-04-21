@@ -60,15 +60,15 @@ func (p *Project) Init(
 	serviceKeyHashAlgo string,
 	servicePrivateKey string,
 ) (*project.Project, error) {
-	path := config.DefaultConfigPath
+	path := config.DefaultPath
 	if global {
-		path = ""
+		path = config.GlobalPath()
 	}
 
 	if project.Exists(path) && !reset {
 		return nil, fmt.Errorf(
 			"configuration already exists at: %s, if you want to reset configuration use the reset flag",
-			config.DefaultConfigPath,
+			path,
 		)
 	}
 
