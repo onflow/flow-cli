@@ -97,7 +97,7 @@ func generateComplexProject() Project {
 			Name:    "emulator-account",
 			Address: flow.ServiceAddress(flow.Emulator),
 			ChainID: flow.Emulator,
-			Keys: []config.AccountKey{{
+			Key: config.AccountKey{
 				Type:     config.KeyTypeHex,
 				Index:    0,
 				SigAlgo:  crypto.ECDSA_P256,
@@ -105,12 +105,12 @@ func generateComplexProject() Project {
 				Context: map[string]string{
 					"privateKey": "dd72967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47",
 				},
-			}},
+			},
 		}, {
 			Name:    "account-2",
 			Address: flow.HexToAddress("2c1162386b0a245f"),
 			ChainID: flow.Emulator,
-			Keys: []config.AccountKey{{
+			Key: config.AccountKey{
 				Type:     config.KeyTypeHex,
 				Index:    0,
 				SigAlgo:  crypto.ECDSA_P256,
@@ -118,12 +118,12 @@ func generateComplexProject() Project {
 				Context: map[string]string{
 					"privateKey": "dd72967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47",
 				},
-			}},
+			},
 		}, {
 			Name:    "account-4",
 			Address: flow.HexToAddress("f8d6e0586b0a20c1"),
 			ChainID: flow.Emulator,
-			Keys: []config.AccountKey{{
+			Key: config.AccountKey{
 				Type:     config.KeyTypeHex,
 				Index:    0,
 				SigAlgo:  crypto.ECDSA_P256,
@@ -131,7 +131,7 @@ func generateComplexProject() Project {
 				Context: map[string]string{
 					"privateKey": "dd72967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47",
 				},
-			}},
+			},
 		}},
 		Networks: config.Networks{{
 			Name:    "emulator",
@@ -171,7 +171,7 @@ func generateSimpleProject() Project {
 			Name:    "emulator-account",
 			Address: flow.ServiceAddress(flow.Emulator),
 			ChainID: flow.Emulator,
-			Keys: []config.AccountKey{{
+			Key: config.AccountKey{
 				Type:     config.KeyTypeHex,
 				Index:    0,
 				SigAlgo:  crypto.ECDSA_P256,
@@ -179,7 +179,7 @@ func generateSimpleProject() Project {
 				Context: map[string]string{
 					"privateKey": "dd72967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47",
 				},
-			}},
+			},
 		}},
 		Networks: config.Networks{{
 			Name:    "emulator",
@@ -224,7 +224,7 @@ func generateAliasesProject() Project {
 			Name:    "emulator-account",
 			Address: flow.ServiceAddress(flow.Emulator),
 			ChainID: flow.Emulator,
-			Keys: []config.AccountKey{{
+			Key: config.AccountKey{
 				Type:     config.KeyTypeHex,
 				Index:    0,
 				SigAlgo:  crypto.ECDSA_P256,
@@ -232,7 +232,7 @@ func generateAliasesProject() Project {
 				Context: map[string]string{
 					"privateKey": "dd72967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47",
 				},
-			}},
+			},
 		}},
 		Networks: config.Networks{{
 			Name:    "emulator",
@@ -293,7 +293,7 @@ func generateAliasesComplexProject() Project {
 			Name:    "emulator-account",
 			Address: flow.ServiceAddress(flow.Emulator),
 			ChainID: flow.Emulator,
-			Keys: []config.AccountKey{{
+			Key: config.AccountKey{
 				Type:     config.KeyTypeHex,
 				Index:    0,
 				SigAlgo:  crypto.ECDSA_P256,
@@ -301,12 +301,12 @@ func generateAliasesComplexProject() Project {
 				Context: map[string]string{
 					"privateKey": "dd72967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47",
 				},
-			}},
+			},
 		}, {
 			Name:    "testnet-account",
 			Address: flow.HexToAddress("1e82856bf20e2aa6"),
 			ChainID: flow.Testnet,
-			Keys: []config.AccountKey{{
+			Key: config.AccountKey{
 				Type:     config.KeyTypeHex,
 				Index:    0,
 				SigAlgo:  crypto.ECDSA_P256,
@@ -314,7 +314,7 @@ func generateAliasesComplexProject() Project {
 				Context: map[string]string{
 					"privateKey": "dd72967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47",
 				},
-			}},
+			},
 		}},
 		Networks: config.Networks{{
 			Name:    "emulator",
@@ -354,7 +354,7 @@ func Test_EmulatorConfigSimple(t *testing.T) {
 	emulatorServiceAccount, _ := p.EmulatorServiceAccount()
 
 	assert.Equal(t, emulatorServiceAccount.name, "emulator-account")
-	assert.Equal(t, emulatorServiceAccount.keys[0].ToConfig().Context["privateKey"], "dd72967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47")
+	assert.Equal(t, emulatorServiceAccount.key.ToConfig().Context["privateKey"], "dd72967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47")
 	assert.Equal(t, flow.ServiceAddress("flow-emulator").String(), emulatorServiceAccount.Address().String())
 }
 
@@ -370,7 +370,7 @@ func Test_AccountByNameSimple(t *testing.T) {
 	acc := p.AccountByName("emulator-account")
 
 	assert.Equal(t, flow.ServiceAddress("flow-emulator").String(), acc.Address().String())
-	assert.Equal(t, acc.DefaultKey().ToConfig().Context["privateKey"], "dd72967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47")
+	assert.Equal(t, acc.key.ToConfig().Context["privateKey"], "dd72967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47")
 }
 
 func Test_HostSimple(t *testing.T) {
@@ -433,7 +433,7 @@ func Test_EmulatorConfigComplex(t *testing.T) {
 	emulatorServiceAccount, _ := p.EmulatorServiceAccount()
 
 	assert.Equal(t, emulatorServiceAccount.name, "emulator-account")
-	assert.Equal(t, emulatorServiceAccount.keys[0].ToConfig().Context["privateKey"], "dd72967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47")
+	assert.Equal(t, emulatorServiceAccount.key.ToConfig().Context["privateKey"], "dd72967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47")
 	assert.Equal(t, emulatorServiceAccount.Address().String(), flow.ServiceAddress("flow-emulator").String())
 }
 
@@ -451,7 +451,7 @@ func Test_AccountByNameComplex(t *testing.T) {
 	acc := p.AccountByName("account-2")
 
 	assert.Equal(t, acc.Address().String(), "2c1162386b0a245f")
-	assert.Equal(t, acc.DefaultKey().ToConfig().Context["privateKey"], "dd72967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47")
+	assert.Equal(t, acc.key.ToConfig().Context["privateKey"], "dd72967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47")
 }
 
 func Test_HostComplex(t *testing.T) {
