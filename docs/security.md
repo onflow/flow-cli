@@ -78,9 +78,7 @@ PRIVATE_KEY=key flow project deploy
 
 ### Private Dotenv File
 
-Setting environment variables can be avoided by using environment file `.env`. Anything 
-you put in `.env` file will be loaded as environment variable and replaced in configuration the 
-same way as environment variable.
+The CLI will load environment variables defined a .env file in the active directory, if one exists. These variables can be substituted inside flow.json, just like any other environment variable.
 
 ⚠️ You should never commit `.env` to source control, especially if it contains sensitive information like a private key.
 
