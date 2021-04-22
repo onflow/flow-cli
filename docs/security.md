@@ -76,7 +76,7 @@ PRIVATE_KEY=key flow project deploy
 }
 ```
 
-### Private Environment File
+### Private Dotenv File
 
 Setting environment variables can be avoided by using environment file `.env`. Anything 
 you put in `.env` file will be loaded as environment variable and replaced in configuration the 
