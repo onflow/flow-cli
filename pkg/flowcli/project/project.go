@@ -56,11 +56,11 @@ type Contract struct {
 
 // Load loads a project configuration and returns the resulting project.
 func Load(configFilePath []string) (*Project, error) {
-	composer := config.NewLoader(afero.NewOsFs())
+	loader := config.NewLoader(afero.NewOsFs())
 
 	// here we add all available parsers (more to add yaml etc...)
-	composer.AddConfigParser(json.NewParser())
-	conf, err := composer.Load(configFilePath)
+	loader.AddConfigParser(json.NewParser())
+	conf, err := loader.Load(configFilePath)
 
 	if err != nil {
 		if errors.Is(err, config.ErrDoesNotExist) {
@@ -70,12 +70,17 @@ func Load(configFilePath []string) (*Project, error) {
 		return nil, err
 	}
 
-	proj, err := newProject(conf, composer)
+	proj, err := newProject(conf, loader)
 	if err != nil {
 		return nil, fmt.Errorf("invalid project configuration: %s", err)
 	}
 
 	return proj, nil
+}
+
+// SaveDefault saves configuration to default path
+func (p *Project) SaveDefault() error {
+	return p.Save(DefaultConfigPath)
 }
 
 // Save saves the project configuration to the given path.

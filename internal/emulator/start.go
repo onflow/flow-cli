@@ -61,7 +61,7 @@ func ConfiguredServiceKey(
 		if err != nil {
 			util.Exitf(1, err.Error())
 		} else {
-			err = proj.Save(project.DefaultConfigPath)
+			err = proj.SaveDefault()
 			if err != nil {
 				util.Exitf(1, err.Error())
 			}

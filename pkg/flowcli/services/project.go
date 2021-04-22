@@ -83,7 +83,7 @@ func (p *Project) Init(
 		proj.SetEmulatorServiceKey(serviceKey)
 	}
 
-	err = proj.Save(project.DefaultConfigPath)
+	err = proj.SaveDefault()
 	if err != nil {
 		return nil, err
 	}
