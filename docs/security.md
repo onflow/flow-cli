@@ -82,7 +82,7 @@ Setting environment variables can be avoided by using environment file `.env`. A
 you put in `.env` file will be loaded as environment variable and replaced in configuration the 
 same way as environment variable.
 
-⚠️ Please be sure to add `.env` file to `.gitignore`
+⚠️ You should never commit `.env` to source control, especially if it contains sensitive information like a private key.
 
 Example `.env` file:
 ```bash
