@@ -137,7 +137,7 @@ func newProject(conf *config.Config, composer *config.Loader) (*Project, error) 
 // The CLI currently does not allow the same contract to be deployed to multiple
 // accounts in the same network.
 func (p *Project) ContractConflictExists(network string) bool {
-	contracts, err := p.ContractsByNetwork(network)
+	contracts, err := p.DeploymentContractsByNetwork(network)
 	if err != nil {
 		return false
 	}
@@ -160,6 +160,11 @@ func (p *Project) NetworkByName(name string) *config.Network {
 	return p.conf.Networks.GetByName(name)
 }
 
+// Config get project configuration
+func (p *Project) Config() *config.Config {
+	return p.conf
+}
+
 // EmulatorServiceAccount returns the service account for the default emulator profilee.
 func (p *Project) EmulatorServiceAccount() (*Account, error) {
 	emulator := p.conf.Emulators.Default()
@@ -179,8 +184,8 @@ func (p *Project) SetEmulatorServiceKey(privateKey crypto.PrivateKey) {
 	)
 }
 
-// ContractsByNetwork returns all contracts for a network.
-func (p *Project) ContractsByNetwork(network string) ([]Contract, error) {
+// DeploymentContractsByNetwork returns all contracts for a network.
+func (p *Project) DeploymentContractsByNetwork(network string) ([]Contract, error) {
 	contracts := make([]Contract, 0)
 
 	// get deployments for the specified network
