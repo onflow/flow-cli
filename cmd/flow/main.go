@@ -59,6 +59,7 @@ func main() {
 	cmd.AddCommand(blocks.Cmd)
 	cmd.AddCommand(collections.Cmd)
 	cmd.AddCommand(project.Cmd)
+	cmd.AddCommand(config.Cmd)
 
 	command.InitFlags(cmd)
 
