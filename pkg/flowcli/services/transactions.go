@@ -145,7 +145,7 @@ func (t *Transactions) Build(
 			return nil, fmt.Errorf("resolving imports in transactions not supported")
 		}
 
-		contractsNetwork, err := t.project.ContractsByNetwork(network)
+		contractsNetwork, err := t.project.DeploymentContractsByNetwork(network)
 		if err != nil {
 			return nil, err
 		}
