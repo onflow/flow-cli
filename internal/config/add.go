@@ -17,7 +17,7 @@ var addFlags = flagsAdd{}
 
 var AddCommand = &command.Command{
 	Cmd: &cobra.Command{
-		Use:       "add <account|contract|deployment|network>",
+		Use:       "add account",
 		Short:     "Add resource to configuration",
 		Example:   "flow config add account",
 		ValidArgs: []string{"account", "contract", "deployment", "network"},

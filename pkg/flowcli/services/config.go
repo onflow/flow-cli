@@ -125,19 +125,3 @@ func (c *Config) RemoveDeployment(account string, network string) error {
 
 	return c.project.SaveDefault()
 }
-
-func (c *Config) ListDeployments() {
-
-}
-
-func (c *Config) ListAccounts() {
-
-}
-
-func (c *Config) ListNetworks() {
-
-}
-
-func (c *Config) ListContracts() {
-
-}
