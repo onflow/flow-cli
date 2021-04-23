@@ -122,3 +122,14 @@ func ParseAddress(value string) (flow.Address, bool) {
 		address.IsValid(flow.Testnet) ||
 		address.IsValid(flow.Emulator)
 }
+
+func RemoveFromStringArray(s []string, el string) []string {
+	for i, v := range s {
+		if v == el {
+			s = append(s[:i], s[i+1:]...)
+			break
+		}
+	}
+
+	return s
+}
