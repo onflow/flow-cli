@@ -36,7 +36,6 @@ var AddCommand = &command.Command{
 		if err != nil {
 			return nil, fmt.Errorf("configuration does not exists")
 		}
-
 		conf := p.Config()
 
 		switch resource {
@@ -82,7 +81,7 @@ var AddCommand = &command.Command{
 			}, nil
 
 		case "deployment":
-			deployData := output.NewDeploymentPrompt(conf)
+			deployData := output.NewDeploymentPrompt(conf.Networks, conf.Accounts, conf.Contracts)
 			deployment := config.StringToDeployment(
 				deployData["network"].(string),
 				deployData["account"].(string),

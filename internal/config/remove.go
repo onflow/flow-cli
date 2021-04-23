@@ -35,10 +35,11 @@ var RemoveCommand = &command.Command{
 		if err != nil {
 			return nil, fmt.Errorf("configuration does not exists")
 		}
+		conf := p.Config()
 
 		switch resource {
 		case "account":
-			name := output.RemoveAccountPrompt(p.Config())
+			name := output.RemoveAccountPrompt(conf.Accounts)
 			err := services.Config.RemoveAccount(name)
 			if err != nil {
 				return nil, err
@@ -49,7 +50,7 @@ var RemoveCommand = &command.Command{
 			}, nil
 
 		case "deployment":
-			accountName, networkName := output.RemoveDeploymentPrompt(p.Config())
+			accountName, networkName := output.RemoveDeploymentPrompt(conf.Deployments)
 			err := services.Config.RemoveDeployment(accountName, networkName)
 			if err != nil {
 				return nil, err
@@ -60,7 +61,7 @@ var RemoveCommand = &command.Command{
 			}, nil
 
 		case "contract":
-			name := output.RemoveContractPrompt(p.Config())
+			name := output.RemoveContractPrompt(conf.Contracts)
 			err := services.Config.RemoveContract(name)
 			if err != nil {
 				return nil, err
@@ -71,7 +72,7 @@ var RemoveCommand = &command.Command{
 			}, nil
 
 		case "network":
-			name := output.RemoveNetworkPrompt(p.Config())
+			name := output.RemoveNetworkPrompt(conf.Networks)
 			err := services.Config.RemoveNetwork(name)
 			if err != nil {
 				return nil, err

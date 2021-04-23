@@ -242,11 +242,15 @@ func NewNetworkPrompt() map[string]string {
 	return networkData
 }
 
-func NewDeploymentPrompt(conf *config.Config) map[string]interface{} {
+func NewDeploymentPrompt(
+	networks config.Networks,
+	accounts config.Accounts,
+	contracts config.Contracts,
+) map[string]interface{} {
 	deploymentData := make(map[string]interface{})
 
 	networkNames := make([]string, 0)
-	for _, network := range conf.Networks {
+	for _, network := range networks {
 		networkNames = append(networkNames, network.Name)
 	}
 
@@ -257,7 +261,7 @@ func NewDeploymentPrompt(conf *config.Config) map[string]interface{} {
 	_, deploymentData["network"], _ = networkPrompt.Run()
 
 	accountNames := make([]string, 0)
-	for _, account := range conf.Accounts {
+	for _, account := range accounts {
 		accountNames = append(accountNames, account.Name)
 	}
 
@@ -268,7 +272,7 @@ func NewDeploymentPrompt(conf *config.Config) map[string]interface{} {
 	_, deploymentData["account"], _ = accountPrompt.Run()
 
 	contractNames := make([]string, 0)
-	for _, contract := range conf.Contracts {
+	for _, contract := range contracts {
 		contractNames = append(contractNames, contract.Name)
 	}
 
@@ -291,10 +295,10 @@ func NewDeploymentPrompt(conf *config.Config) map[string]interface{} {
 	return deploymentData
 }
 
-func RemoveAccountPrompt(conf *config.Config) string {
+func RemoveAccountPrompt(accounts config.Accounts) string {
 	accountNames := make([]string, 0)
 
-	for _, account := range conf.Accounts {
+	for _, account := range accounts {
 		accountNames = append(accountNames, account.Name)
 	}
 
@@ -308,10 +312,10 @@ func RemoveAccountPrompt(conf *config.Config) string {
 	return name
 }
 
-func RemoveDeploymentPrompt(conf *config.Config) (account string, network string) {
+func RemoveDeploymentPrompt(deployments config.Deployments) (account string, network string) {
 	deploymentNames := make([]string, 0)
 
-	for _, deployment := range conf.Deployments {
+	for _, deployment := range deployments {
 		contractNames := make([]string, 0)
 		for _, c := range deployment.Contracts {
 			contractNames = append(contractNames, c.Name)
@@ -335,13 +339,13 @@ func RemoveDeploymentPrompt(conf *config.Config) (account string, network string
 
 	index, _, _ := deployPrompt.Run()
 
-	return conf.Deployments[index].Account, conf.Deployments[index].Network
+	return deployments[index].Account, deployments[index].Network
 }
 
-func RemoveContractPrompt(conf *config.Config) string {
+func RemoveContractPrompt(contracts config.Contracts) string {
 	contractNames := make([]string, 0)
 
-	for _, contract := range conf.Contracts {
+	for _, contract := range contracts {
 		contractNames = append(contractNames, contract.Name)
 	}
 
@@ -354,10 +358,10 @@ func RemoveContractPrompt(conf *config.Config) string {
 	return name
 }
 
-func RemoveNetworkPrompt(conf *config.Config) string {
+func RemoveNetworkPrompt(networks config.Networks) string {
 	networkNames := make([]string, 0)
 
-	for _, network := range conf.Networks {
+	for _, network := range networks {
 		networkNames = append(networkNames, network.Name)
 	}
 
