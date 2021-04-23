@@ -29,6 +29,8 @@ func NewConfig(
 	}
 }
 
+// TODO maybe this service layer is not needed
+
 func (c *Config) AddAccount(account config.Account) error {
 	if c.project == nil {
 		return fmt.Errorf("missing configuration, initialize it: flow init")
@@ -39,8 +41,18 @@ func (c *Config) AddAccount(account config.Account) error {
 	return c.project.SaveDefault()
 }
 
-func (c *Config) RemoveAccount(name string) {
+// todo not removed as it is in config
+func (c *Config) RemoveAccount(name string) error {
+	if c.project == nil {
+		return fmt.Errorf("missing configuration, initialize it: flow init")
+	}
 
+	err := c.project.Config().Accounts.Remove(name)
+	if err != nil {
+		return err
+	}
+
+	return c.project.SaveDefault()
 }
 
 func (c *Config) AddContracts(contracts []config.Contract) error {
@@ -55,8 +67,17 @@ func (c *Config) AddContracts(contracts []config.Contract) error {
 	return c.project.SaveDefault()
 }
 
-func (c *Config) RemoveContract(name string) {
+func (c *Config) RemoveContract(name string) error {
+	if c.project == nil {
+		return fmt.Errorf("missing configuration, initialize it: flow init")
+	}
 
+	err := c.project.Config().Contracts.Remove(name)
+	if err != nil {
+		return err
+	}
+
+	return c.project.SaveDefault()
 }
 
 func (c *Config) AddNetwork(network config.Network) error {
@@ -69,8 +90,17 @@ func (c *Config) AddNetwork(network config.Network) error {
 	return c.project.SaveDefault()
 }
 
-func (c *Config) RemoveNetwork(name string) {
+func (c *Config) RemoveNetwork(name string) error {
+	if c.project == nil {
+		return fmt.Errorf("missing configuration, initialize it: flow init")
+	}
 
+	err := c.project.Config().Networks.Remove(name)
+	if err != nil {
+		return err
+	}
+
+	return c.project.SaveDefault()
 }
 
 func (c *Config) AddDeployment(deployment config.Deploy) error {
@@ -83,8 +113,17 @@ func (c *Config) AddDeployment(deployment config.Deploy) error {
 	return c.project.SaveDefault()
 }
 
-func (c *Config) RemoveDeployment(name string) {
+func (c *Config) RemoveDeployment(account string, network string) error {
+	if c.project == nil {
+		return fmt.Errorf("missing configuration, initialize it: flow init")
+	}
 
+	err := c.project.Config().Deployments.Remove(account, network)
+	if err != nil {
+		return err
+	}
+
+	return c.project.SaveDefault()
 }
 
 func (c *Config) ListDeployments() {
