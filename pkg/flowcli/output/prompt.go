@@ -291,8 +291,81 @@ func NewDeploymentPrompt(conf *config.Config) map[string]interface{} {
 	return deploymentData
 }
 
-func RemoveAccountPrompt(conf *config.Config) {
+func RemoveAccountPrompt(conf *config.Config) string {
+	accountNames := make([]string, 0)
 
-	// list and remove
+	for _, account := range conf.Accounts {
+		accountNames = append(accountNames, account.Name)
+	}
 
+	namePrompt := promptui.Select{
+		Label: "Select an account name you wish to remove",
+		Items: accountNames,
+	}
+
+	_, name, _ := namePrompt.Run()
+
+	return name
+}
+
+func RemoveDeploymentPrompt(conf *config.Config) (account string, network string) {
+	deploymentNames := make([]string, 0)
+
+	for _, deployment := range conf.Deployments {
+		contractNames := make([]string, 0)
+		for _, c := range deployment.Contracts {
+			contractNames = append(contractNames, c.Name)
+		}
+
+		deploymentNames = append(
+			deploymentNames,
+			fmt.Sprintf(
+				"Account: %s, Network: %s, Contracts: %s",
+				deployment.Account,
+				deployment.Network,
+				contractNames,
+			),
+		)
+	}
+
+	deployPrompt := promptui.Select{
+		Label: "Select deployment you wish to remove",
+		Items: deploymentNames,
+	}
+
+	index, _, _ := deployPrompt.Run()
+
+	return conf.Deployments[index].Account, conf.Deployments[index].Network
+}
+
+func RemoveContractPrompt(conf *config.Config) string {
+	contractNames := make([]string, 0)
+
+	for _, contract := range conf.Contracts {
+		contractNames = append(contractNames, contract.Name)
+	}
+
+	contractPrompt := promptui.Select{
+		Label: "Select contract you wish to remove",
+		Items: contractNames,
+	}
+
+	_, name, _ := contractPrompt.Run()
+	return name
+}
+
+func RemoveNetworkPrompt(conf *config.Config) string {
+	networkNames := make([]string, 0)
+
+	for _, network := range conf.Networks {
+		networkNames = append(networkNames, network.Name)
+	}
+
+	networkPrompt := promptui.Select{
+		Label: "Select network you wish to remove",
+		Items: networkNames,
+	}
+
+	_, name, _ := networkPrompt.Run()
+	return name
 }
