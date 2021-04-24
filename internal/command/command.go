@@ -208,6 +208,12 @@ func createGateway(host string) (gateway.Gateway, error) {
 }
 
 // resolveHost from the flags provided
+//
+// Resolve the network host in the following order:
+// 1. if host flag is provided resolve to that host
+// 2. if conf is initialized return host by network flag
+// 3. if conf is not initialized and network flag is provided resolve to coded value for that network
+// 4. default to emulator network
 func resolveHost(proj *project.Project, hostFlag string, networkFlag string) (string, error) {
 	// don't allow both network and host flag as the host might be different
 	if networkFlag != config.DefaultEmulatorNetwork().Name && hostFlag != "" {
@@ -229,8 +235,15 @@ func resolveHost(proj *project.Project, hostFlag string, networkFlag string) (st
 	} else if networkFlag != config.DefaultEmulatorNetwork().Name {
 		return "", fmt.Errorf("network not found, make sure flow configuration exists")
 	}
-	// default to emulator host
-	return config.DefaultEmulatorNetwork().Host, nil
+
+	networks := config.DefaultNetworks()
+	network := networks.GetByName(networkFlag)
+	
+	if network != nil {
+		return network.Host, nil
+	}
+	
+	return "", fmt.Errorf("invalid network with name %s", networkFlag)
 }
 
 // create logger utility
