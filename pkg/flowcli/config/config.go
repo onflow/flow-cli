@@ -20,6 +20,8 @@ package config
 
 import (
 	"errors"
+	"fmt"
+	"os"
 
 	"github.com/onflow/cadence"
 
@@ -165,6 +167,26 @@ func DefaultEmulators() Emulators {
 }
 
 var ErrOutdatedFormat = errors.New("you are using old configuration format")
+
+const DefaultPath = "flow.json"
+
+// GlobalPath gets global path based on home dir
+func GlobalPath() string {
+	dirname, err := os.UserHomeDir()
+	if err != nil {
+		return ""
+	}
+
+	return fmt.Sprintf("%s/.%s", dirname, DefaultPath)
+}
+
+// DefaultPaths determines default paths for configuration
+func DefaultPaths() []string {
+	return []string{
+		GlobalPath(),
+		DefaultPath,
+	}
+}
 
 // IsAlias checks if contract has an alias
 func (c *Contract) IsAlias() bool {

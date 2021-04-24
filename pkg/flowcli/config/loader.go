@@ -107,16 +107,21 @@ func (l *Loader) Save(conf *Config, path string) error {
 func (l *Loader) Load(paths []string) (*Config, error) {
 	var baseConf *Config
 
-	for _, path := range paths {
-		raw, err := l.loadFile(path)
+	for _, confPath := range paths {
+		raw, err := l.loadFile(confPath)
+		// if we don't find local config or global config skip as either may miss
+		if err != nil && (confPath == DefaultPath || confPath == GlobalPath()) {
+			continue
+		}
+
 		if err != nil {
 			return nil, err
 		}
 
 		preProcessed := l.preprocess(raw)
-		configParser := l.configParsers.FindForFormat(filepath.Ext(path))
+		configParser := l.configParsers.FindForFormat(filepath.Ext(confPath))
 		if configParser == nil {
-			return nil, fmt.Errorf("Parser not found for config: %s", path)
+			return nil, fmt.Errorf("parser not found for config: %s", confPath)
 		}
 
 		conf, err := configParser.Deserialize(preProcessed)
@@ -131,6 +136,11 @@ func (l *Loader) Load(paths []string) (*Config, error) {
 		}
 
 		l.composeConfig(baseConf, conf)
+	}
+
+	// if no config was loaded - neither local nor global return an error
+	if baseConf == nil {
+		return nil, fmt.Errorf("configuration not found, create one using `flow init`")
 	}
 
 	baseConf, err := l.postprocess(baseConf)

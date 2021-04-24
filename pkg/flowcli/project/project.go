@@ -34,11 +34,6 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowcli/config/json"
 )
 
-var (
-	DefaultConfigPaths = []string{"flow.json"}
-	DefaultConfigPath  = DefaultConfigPaths[0]
-)
-
 // Project contains the configuration for a Flow project.
 type Project struct {
 	composer *config.Loader
@@ -55,12 +50,12 @@ type Contract struct {
 }
 
 // Load loads a project configuration and returns the resulting project.
-func Load(configFilePath []string) (*Project, error) {
+func Load(configFilePaths []string) (*Project, error) {
 	composer := config.NewLoader(afero.NewOsFs())
 
 	// here we add all available parsers (more to add yaml etc...)
 	composer.AddConfigParser(json.NewParser())
-	conf, err := composer.Load(configFilePath)
+	conf, err := composer.Load(configFilePaths)
 
 	if err != nil {
 		if errors.Is(err, config.ErrDoesNotExist) {
