@@ -65,8 +65,6 @@ type GlobalFlags struct {
 	ConfigPaths []string
 }
 
-const NetworkEmulator = "emulator"
-
 const (
 	formatText   = "text"
 	formatInline = "inline"

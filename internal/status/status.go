@@ -44,28 +44,21 @@ var Command = &command.Command{
 		globalFlags command.GlobalFlags,
 		services *services.Services,
 	) (command.Result, error) {
-		// Get network name from global flag
-		network := globalFlags.Network
-		if network == "" {
-			network = command.NetworkEmulator
-		}
-
-		accessNode, err := services.Status.Ping(network)
+		accessNode, err := services.Status.Ping(globalFlags.Network)
 
 		return &Result{
-			network:  network,
+			network:    globalFlags.Network,
 			accessNode: accessNode,
-			err: err,
+			err:        err,
 		}, nil
 	},
 }
 
 type Result struct {
-	network  string
+	network    string
 	accessNode string
-	err error
+	err        error
 }
-
 
 const (
 	OnlineIcon   = "🟢"
