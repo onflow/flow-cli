@@ -61,7 +61,7 @@ func (s *Scripts) Execute(scriptPath string, args []string, argsJSON string, net
 	return s.execute(script, args, argsJSON, scriptPath, network)
 }
 
-// Execute executes a Cadence script from a source code string.
+// ExecuteWithCode executes a Cadence script from a source code string.
 func (s *Scripts) ExecuteWithCode(code []byte, args []string, argsJSON string) (cadence.Value, error) {
 	return s.execute(code, args, argsJSON, "", "")
 }
