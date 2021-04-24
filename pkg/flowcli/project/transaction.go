@@ -219,7 +219,7 @@ func (t *Transaction) SetScriptWithArgs(script []byte, args []string, argsJSON s
 
 // SetSigner sets the signer for transaction
 func (t *Transaction) SetSigner(account *Account) error {
-	err := account.DefaultKey().Validate()
+	err := account.Key().Validate()
 	if err != nil {
 		return err
 	}
@@ -298,8 +298,8 @@ func (t *Transaction) AddAuthorizers(authorizers []flow.Address) *Transaction {
 
 // Sign signs transaction using signer account
 func (t *Transaction) Sign() (*Transaction, error) {
-	keyIndex := t.signer.DefaultKey().Index()
-	signer, err := t.signer.DefaultKey().Signer(context.Background())
+	keyIndex := t.signer.Key().Index()
+	signer, err := t.signer.Key().Signer(context.Background())
 	if err != nil {
 		return nil, err
 	}

@@ -50,33 +50,27 @@ func (j jsonAccounts) transformToConfig() config.Accounts {
 			account = config.Account{
 				Name:    accountName,
 				Address: transformAddress(a.Simple.Address),
-				Keys: []config.AccountKey{{
+				Key: config.AccountKey{
 					Type:     config.KeyTypeHex,
 					Index:    0,
 					SigAlgo:  crypto.ECDSA_P256,
 					HashAlgo: crypto.SHA3_256,
 					Context: map[string]string{
-						config.PrivateKeyField: a.Simple.Keys,
+						config.PrivateKeyField: a.Simple.Key,
 					},
-				}},
+				},
 			}
 		} else { // advanced format
-			keys := make([]config.AccountKey, 0)
-			for _, key := range a.Advanced.Keys {
-				key := config.AccountKey{
-					Type:     key.Type,
-					Index:    key.Index,
-					SigAlgo:  crypto.StringToSignatureAlgorithm(key.SigAlgo),
-					HashAlgo: crypto.StringToHashAlgorithm(key.HashAlgo),
-					Context:  key.Context,
-				}
-				keys = append(keys, key)
-			}
-
 			account = config.Account{
 				Name:    accountName,
 				Address: transformAddress(a.Advanced.Address),
-				Keys:    keys,
+				Key: config.AccountKey{
+					Type:     a.Advanced.Key.Type,
+					Index:    a.Advanced.Key.Index,
+					SigAlgo:  crypto.StringToSignatureAlgorithm(a.Advanced.Key.SigAlgo),
+					HashAlgo: crypto.StringToHashAlgorithm(a.Advanced.Key.HashAlgo),
+					Context:  a.Advanced.Key.Context,
+				},
 			}
 		}
 
@@ -86,39 +80,33 @@ func (j jsonAccounts) transformToConfig() config.Accounts {
 	return accounts
 }
 
-func isDefaultKeyFormat(keys []config.AccountKey) bool {
-	return len(keys) == 1 && keys[0].Index == 0 &&
-		keys[0].Type == config.KeyTypeHex &&
-		keys[0].SigAlgo == crypto.ECDSA_P256 &&
-		keys[0].HashAlgo == crypto.SHA3_256
+func isDefaultKeyFormat(key config.AccountKey) bool {
+	return key.Index == 0 &&
+		key.Type == config.KeyTypeHex &&
+		key.SigAlgo == crypto.ECDSA_P256 &&
+		key.HashAlgo == crypto.SHA3_256
 }
 
 func transformSimpleAccountToJSON(a config.Account) jsonAccount {
 	return jsonAccount{
 		Simple: jsonAccountSimple{
 			Address: a.Address.String(),
-			Keys:    a.Keys[0].Context[config.PrivateKeyField],
+			Key:     a.Key.Context[config.PrivateKeyField],
 		},
 	}
 }
 
 func transformAdvancedAccountToJSON(a config.Account) jsonAccount {
-	var keys []jsonAccountKey
-
-	for _, k := range a.Keys {
-		keys = append(keys, jsonAccountKey{
-			Type:     k.Type,
-			Index:    k.Index,
-			SigAlgo:  k.SigAlgo.String(),
-			HashAlgo: k.HashAlgo.String(),
-			Context:  k.Context,
-		})
-	}
-
 	return jsonAccount{
 		Advanced: jsonAccountAdvanced{
 			Address: a.Address.String(),
-			Keys:    keys,
+			Key: jsonAccountKey{
+				Type:     a.Key.Type,
+				Index:    a.Key.Index,
+				SigAlgo:  a.Key.SigAlgo.String(),
+				HashAlgo: a.Key.HashAlgo.String(),
+				Context:  a.Key.Context,
+			},
 		},
 	}
 }
@@ -129,7 +117,7 @@ func transformAccountsToJSON(accounts config.Accounts) jsonAccounts {
 
 	for _, a := range accounts {
 		// if simple
-		if isDefaultKeyFormat(a.Keys) {
+		if isDefaultKeyFormat(a.Key) {
 			jsonAccounts[a.Name] = transformSimpleAccountToJSON(a)
 		} else { // if advanced
 			jsonAccounts[a.Name] = transformAdvancedAccountToJSON(a)
@@ -141,12 +129,12 @@ func transformAccountsToJSON(accounts config.Accounts) jsonAccounts {
 
 type jsonAccountSimple struct {
 	Address string `json:"address"`
-	Keys    string `json:"keys"`
+	Key     string `json:"key"`
 }
 
 type jsonAccountAdvanced struct {
-	Address string           `json:"address"`
-	Keys    []jsonAccountKey `json:"keys"`
+	Address string         `json:"address"`
+	Key     jsonAccountKey `json:"key"`
 }
 
 type jsonAccountKey struct {
@@ -157,30 +145,89 @@ type jsonAccountKey struct {
 	Context  map[string]string `json:"context"`
 }
 
+type jsonAccountSimpleOld struct {
+	Address string `json:"address"`
+	Keys    string `json:"keys"`
+}
+
+type jsonAccountAdvancedOld struct {
+	Address string           `json:"address"`
+	Keys    []jsonAccountKey `json:"keys"`
+}
+
 type jsonAccount struct {
 	Simple   jsonAccountSimple
 	Advanced jsonAccountAdvanced
 }
 
+type FormatType int
+
+const (
+	simpleFormat      FormatType = 0
+	advancedFormat    FormatType = 1
+	simpleOldFormat   FormatType = 2
+	advancedOldFormat FormatType = 3
+)
+
+func decideFormat(b []byte) (FormatType, error) {
+	var raw map[string]interface{}
+	err := json.Unmarshal(b, &raw)
+	if err != nil {
+		return 0, err
+	}
+
+	if raw["keys"] != nil {
+		switch raw["keys"].(type) {
+		case string:
+			return simpleOldFormat, nil
+		default:
+			return advancedOldFormat, nil
+		}
+	}
+
+	switch raw["key"].(type) {
+	case string:
+		return simpleFormat, nil
+	default:
+		return advancedFormat, nil
+	}
+}
+
 func (j *jsonAccount) UnmarshalJSON(b []byte) error {
 
-	// try simple format
-	var simple jsonAccountSimple
-	err := json.Unmarshal(b, &simple)
-	if err == nil {
+	format, err := decideFormat(b)
+	if err != nil {
+		return err
+	}
+
+	switch format {
+	case simpleFormat:
+		var simple jsonAccountSimple
+		err = json.Unmarshal(b, &simple)
 		j.Simple = simple
-		return nil
-	}
 
-	// try advanced format
-	var advanced jsonAccountAdvanced
-	err = json.Unmarshal(b, &advanced)
-	if err == nil {
+	case advancedFormat:
+		var advanced jsonAccountAdvanced
+		err = json.Unmarshal(b, &advanced)
 		j.Advanced = advanced
-		return nil
+
+	case simpleOldFormat:
+		var simpleOld jsonAccountSimpleOld
+		err = json.Unmarshal(b, &simpleOld)
+		j.Simple = jsonAccountSimple{
+			Address: simpleOld.Address,
+			Key:     simpleOld.Keys,
+		}
+
+	case advancedOldFormat:
+		var advancedOld jsonAccountAdvancedOld
+		err = json.Unmarshal(b, &advancedOld)
+		j.Advanced = jsonAccountAdvanced{
+			Address: advancedOld.Address,
+			Key:     advancedOld.Keys[0],
+		}
 	}
 
-	// TODO: better error handling - here we just return error from advanced case
 	return err
 }
 

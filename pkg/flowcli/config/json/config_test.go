@@ -38,7 +38,7 @@ func Test_SimpleJSONConfig(t *testing.T) {
 		"accounts": {
 			"emulator-account": {
 				"address": "f8d6e0586b0a20c7",
-				"keys": "11c5dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7"
+				"key": "11c5dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7"
 			}
 		},
 		"deploys": {}
@@ -50,6 +50,6 @@ func Test_SimpleJSONConfig(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, 1, len(conf.Accounts))
 	assert.Equal(t, "emulator-account", conf.Accounts[0].Name)
-	assert.Equal(t, "11c5dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7", conf.Accounts[0].Keys[0].Context["privateKey"])
+	assert.Equal(t, "11c5dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7", conf.Accounts[0].Key.Context["privateKey"])
 	assert.Equal(t, "127.0.0.1:3569", conf.Networks.GetByName("emulator").Host)
 }
