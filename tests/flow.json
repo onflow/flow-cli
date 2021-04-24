@@ -6,31 +6,39 @@
 		}
 	},
 	"contracts": {
-		"NonFungibleToken": "./NonFungibleToken.cdc",
 		"Foo": "./Foo.cdc",
+		"Bar": "./Bar.cdc",
+		"NonFungibleToken": "./NonFungibleToken.cdc",
 		"FungibleToken": {
 			"source": "./FungibleToken.cdc",
 			"aliases": {
-				"emulator": "ee82856bf20e2aa6"
+				"emulator": "0xee82856bf20e2aa6"
 			}
 		}
 	},
 	"networks": {
-		"emulator": {
-			"host": "127.0.0.1:3569",
-			"chain": "flow-emulator"
-		}
+		"emulator": "127.0.0.1:3569",
+		"mainnet": "access.mainnet.nodes.onflow.org:9000",
+		"testnet": "access.devnet.nodes.onflow.org:9000"
 	},
 	"accounts": {
 		"emulator-account": {
 			"address": "f8d6e0586b0a20c7",
-			"keys": "11c5dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7",
-			"chain": "flow-emulator"
+			"key": "12868d0829a38b31301394cba9cee25bf18833f1d436de2e39af86afa1c01afc"
 		}
 	},
 	"deployments": {
 		"emulator": {
-			"emulator-account": ["NonFungibleToken", "Foo"]
+			"emulator-account": [
+				"Foo",
+				"NonFungibleToken", {
+					"name": "Bar",
+					"args": [
+						{ "name": "a", "type": "String", "value": "Hello World" },
+						{ "name": "b", "type": "UInt32", "value": "10" }
+					]
+				}
+			]
 		}
 	}
 }
