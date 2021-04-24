@@ -66,8 +66,6 @@ func accountsFromConfig(conf *config.Config) ([]*Account, error) {
 }
 
 func AccountFromAddressAndKey(address flow.Address, privateKey crypto.PrivateKey) *Account {
-	key := NewHexAccountKeyFromPrivateKey(0, crypto.SHA3_256, privateKey)
-
 	return &Account{
 		name:    "",
 		address: address,

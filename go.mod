@@ -6,7 +6,7 @@ require (
 	github.com/a8m/envsubst v1.2.0
 	github.com/fatih/color v1.7.0
 	github.com/gosuri/uilive v0.0.4
-	github.com/joho/godotenv v1.3.0 // indirect
+	github.com/joho/godotenv v1.3.0
 	github.com/magiconair/properties v1.8.1 // indirect
 	github.com/manifoldco/promptui v0.8.0
 	github.com/onflow/cadence v0.14.4
