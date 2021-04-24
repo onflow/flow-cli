@@ -38,7 +38,8 @@ that is not checked into source control (e.g. excluded with `.gitignore`).
 
 #### Private configuration file
 
-**Put this file in `.gitignore`:**
+⚠️ Put this file in `.gitignore`:
+
 ```json
 // flow.testnet.json
 {
@@ -73,6 +74,17 @@ PRIVATE_KEY=key flow project deploy
   }
   ...
 }
+```
+
+### Private Dotenv File
+
+The CLI will load environment variables defined a .env file in the active directory, if one exists. These variables can be substituted inside flow.json, just like any other environment variable.
+
+⚠️ You should never commit `.env` to source control, especially if it contains sensitive information like a private key.
+
+Example `.env` file:
+```bash
+PRIVATE_KEY=123
 ```
 
 ### Composing Multiple Configuration Files
