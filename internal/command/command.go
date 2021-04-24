@@ -175,7 +175,7 @@ func (c Command) AddToParent(parent *cobra.Command) {
 		host, err := resolveHost(proj, Flags.Host, Flags.Network)
 		handleError("Host Error", err)
 
-		clientGateway, err := createGateway(host)
+		clientGateway, err := createGateway(host, Flags.Network)
 		handleError("Gateway Error", err)
 
 		logger := createLogger(Flags.Log, Flags.Format)
@@ -202,8 +202,10 @@ func (c Command) AddToParent(parent *cobra.Command) {
 }
 
 // createGateway creates a gateway to be used, defaults to grpc but can support others
-func createGateway(host string) (gateway.Gateway, error) {
-	// TODO implement emulator gateway and check emulator flag here
+func createGateway(host string, network string) (gateway.Gateway, error) {
+	if network == "hosted" {
+		return gateway.NewEmulatorGateway(), nil
+	}
 
 	// create default grpc client
 	return gateway.NewGrpcGateway(host)
@@ -220,6 +222,11 @@ func resolveHost(proj *project.Project, hostFlag string, networkFlag string) (st
 	// don't allow both network and host flag as the host might be different
 	if networkFlag != config.DefaultEmulatorNetwork().Name && hostFlag != "" {
 		return "", fmt.Errorf("shouldn't use both host and network flags, better to use network flag")
+	}
+
+	// don't resolve host if network is hosted as it is not needed
+	if networkFlag == "hosted" {
+		return "", nil
 	}
 
 	// host flag has highest priority
