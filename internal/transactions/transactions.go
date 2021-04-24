@@ -25,6 +25,7 @@ import (
 
 	"github.com/onflow/flow-cli/internal/events"
 
+	"github.com/onflow/flow-cli/pkg/flowcli/util"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/spf13/cobra"
 )
@@ -70,7 +71,7 @@ func (r *TransactionResult) JSON() interface{} {
 // String convert result to string
 func (r *TransactionResult) String() string {
 	var b bytes.Buffer
-	writer := tabwriter.NewWriter(&b, 0, 8, 1, '\t', tabwriter.AlignRight)
+	writer := util.CreateTabWriter(&b)
 
 	if r.result != nil {
 		if r.result.Error != nil {

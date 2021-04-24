@@ -19,8 +19,10 @@
 package util
 
 import (
+	"bytes"
 	"fmt"
 	"io/ioutil"
+	"text/tabwriter"
 
 	"github.com/fatih/color"
 
@@ -103,6 +105,10 @@ func GetAddressNetwork(address flow.Address) (flow.ChainID, error) {
 	}
 
 	return "", fmt.Errorf("address not valid for any known chain: %s", address)
+}
+
+func CreateTabWriter(b *bytes.Buffer) *tabwriter.Writer {
+	return tabwriter.NewWriter(b, 0, 8, 1, '\t', tabwriter.AlignRight)
 }
 
 func ContainsString(s []string, e string) bool {
