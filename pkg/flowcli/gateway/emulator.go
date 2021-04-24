@@ -20,6 +20,8 @@ package gateway
 
 import (
 	"fmt"
+	"github.com/onflow/flow-go-sdk/client/convert"
+	flowGo "github.com/onflow/flow-go/model/flow"
 
 	"github.com/onflow/cadence"
 	emulator "github.com/onflow/flow-emulator"
@@ -51,8 +53,15 @@ func (g *EmulatorGateway) GetAccount(address flow.Address) (*flow.Account, error
 	return g.emulator.GetAccount(address)
 }
 
-func (g *EmulatorGateway) SendSignedTransaction(tx *flow.Transaction, signer *project.Account) (*flow.Transaction, error) {
-	return nil, fmt.Errorf("Not Supported Yet")
+func (g *EmulatorGateway) SendSignedTransaction(transaction *project.Transaction) (*flow.Transaction, error) {
+	tx := transaction.FlowTransaction()
+
+	err := g.emulator.AddTransaction(*tx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to submit transaction: %w", err)
+	}
+
+	return tx, nil
 }
 
 func (g *EmulatorGateway) GetTransactionResult(tx *flow.Transaction, waitSeal bool) (*flow.TransactionResult, error) {
@@ -68,25 +77,91 @@ func (g *EmulatorGateway) Ping() error {
 }
 
 func (g *EmulatorGateway) ExecuteScript(script []byte, arguments []cadence.Value) (cadence.Value, error) {
-	return nil, fmt.Errorf("Not Supported Yet")
+	args, err := convert.CadenceValuesToMessages(arguments)
+	if err != nil {
+		return nil, err
+	}
+
+	result, err := g.emulator.ExecuteScript(script, args)
+	if err != nil {
+		return nil, err
+	}
+
+	return result.Value, nil
 }
 
 func (g *EmulatorGateway) GetLatestBlock() (*flow.Block, error) {
-	return nil, fmt.Errorf("Not Supported Yet")
+	block, err := g.emulator.GetLatestBlock()
+	if err != nil {
+		return nil, err
+	}
+
+	return convertBlock(block), nil
 }
 
-func (g *EmulatorGateway) GetEvents(string, uint64, uint64) ([]client.BlockEvents, error) {
-	return nil, fmt.Errorf("Not Supported Yet")
+func convertBlock(block *flowGo.Block) *flow.Block {
+	return &flow.Block{
+		BlockHeader: flow.BlockHeader{
+			ID:        flow.Identifier(block.Header.ID()),
+			ParentID:  flow.Identifier(block.Header.ParentID),
+			Height:    block.Header.Height,
+			Timestamp: block.Header.Timestamp,
+		},
+		BlockPayload: flow.BlockPayload{
+			CollectionGuarantees: nil,
+			Seals:                nil,
+		},
+	}
+}
+
+func (g *EmulatorGateway) GetEvents(
+	eventType string,
+	startHeight uint64,
+	endHeight uint64,
+) ([]client.BlockEvents, error) {
+	events := make([]client.BlockEvents, 0)
+
+	for height := startHeight; height < endHeight; height++ {
+		events = append(events, g.getBlockEvent(height, eventType))
+	}
+
+	return events, nil
+}
+
+func (g *EmulatorGateway) getBlockEvent(height uint64, eventType string) client.BlockEvents {
+	events, _ := g.emulator.GetEventsByHeight(height, eventType)
+	block, _ := g.emulator.GetBlockByHeight(height)
+
+	flowEvents := make([]flow.Event, 0)
+
+	for _, e := range events {
+		flowEvents = append(flowEvents, flow.Event{
+			Type:             e.Type,
+			TransactionID:    e.TransactionID,
+			TransactionIndex: e.TransactionIndex,
+			EventIndex:       e.EventIndex,
+			Value:            e.Value,
+		})
+	}
+
+	return client.BlockEvents{
+		BlockID:        flow.Identifier(block.Header.ID()),
+		Height:         block.Header.Height,
+		BlockTimestamp: block.Header.Timestamp,
+		Events:         flowEvents,
+	}
 }
 
 func (g *EmulatorGateway) GetCollection(id flow.Identifier) (*flow.Collection, error) {
-	return nil, fmt.Errorf("Not Supported Yet")
+	return g.emulator.GetCollection(id)
 }
 
 func (g *EmulatorGateway) GetBlockByID(id flow.Identifier) (*flow.Block, error) {
-	return nil, fmt.Errorf("Not Supported Yet")
+	block, err := g.emulator.GetBlockByID(id)
+	return convertBlock(block), err
 }
 
 func (g *EmulatorGateway) GetBlockByHeight(height uint64) (*flow.Block, error) {
-	return nil, fmt.Errorf("Not Supported Yet")
+	block, err := g.emulator.GetBlockByHeight(height)
+	return convertBlock(block), err
 }

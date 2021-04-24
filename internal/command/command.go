@@ -240,11 +240,11 @@ func resolveHost(proj *project.Project, hostFlag string, networkFlag string) (st
 
 	networks := config.DefaultNetworks()
 	network := networks.GetByName(networkFlag)
-	
+
 	if network != nil {
 		return network.Host, nil
 	}
-	
+
 	return "", fmt.Errorf("invalid network with name %s", networkFlag)
 }
 
