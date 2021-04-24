@@ -125,7 +125,8 @@ func addAccountContractWithArgs(
 
 	tx := flow.NewTransaction().
 		AddRawArgument(jsoncdc.MustEncode(cadenceName)).
-		AddRawArgument(jsoncdc.MustEncode(cadenceCode))
+		AddRawArgument(jsoncdc.MustEncode(cadenceCode)).
+		AddAuthorizer(signer.Address())
 
 	txArgs, addArgs := "", ""
 	for _, arg := range args {
