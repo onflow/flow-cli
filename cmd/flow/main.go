@@ -20,7 +20,6 @@
 package main
 
 import (
-	"github.com/onflow/flow-cli/internal/completion"
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/accounts"
@@ -63,8 +62,6 @@ func main() {
 	cmd.AddCommand(collections.Cmd)
 	cmd.AddCommand(project.Cmd)
 	cmd.AddCommand(config.Cmd)
-
-	cmd.AddCommand(completion.Cmd)
 
 	command.InitFlags(cmd)
 
