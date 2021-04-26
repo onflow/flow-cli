@@ -86,6 +86,10 @@ var AddAccountCommand = &command.Command{
 	},
 }
 
+func init() {
+	AddAccountCommand.AddToParent(AddCmd)
+}
+
 func flagsToAccountData(flags flagsAddAccount) (map[string]string, bool, error) {
 	if flags.Name == "" && flags.Address == "" && flags.Key == "" {
 		return nil, false, nil

@@ -79,6 +79,10 @@ var AddContractCommand = &command.Command{
 	},
 }
 
+func init() {
+	AddContractCommand.AddToParent(AddCmd)
+}
+
 func flagsToContractData(flags flagsAddContract) (map[string]string, bool, error) {
 	if flags.Name == "" && flags.Filename == "" {
 		return nil, false, nil

@@ -73,6 +73,10 @@ var AddNetworkCommand = &command.Command{
 	},
 }
 
+func init() {
+	AddNetworkCommand.AddToParent(AddCmd)
+}
+
 func flagsToNetworkData(flags flagsAddNetwork) (map[string]string, bool, error) {
 	if flags.Name == "" && flags.Host == "" {
 		return nil, false, nil
