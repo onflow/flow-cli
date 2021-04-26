@@ -20,7 +20,6 @@ package gateway
 
 import (
 	"fmt"
-	"github.com/onflow/flow-emulator/storage/badger"
 	"github.com/onflow/flow-go-sdk/client/convert"
 	flowGo "github.com/onflow/flow-go/model/flow"
 
@@ -43,12 +42,6 @@ func NewEmulatorGateway() *EmulatorGateway {
 }
 
 func newEmulator() *emulator.Blockchain {
-	store, err := badger.New(badger.WithPath("./db"))
-	if err != nil {
-		panic(err)
-	}
-	emulator.WithStore(store)
-
 	b, err := emulator.NewBlockchain()
 	if err != nil {
 		panic(err)
