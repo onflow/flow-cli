@@ -28,7 +28,9 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type flagsRemove struct{}
+type flagsRemove struct {
+	Name string `flag:"name" info:"Resource name"`
+}
 
 var removeFlags = flagsRemove{}
 
@@ -57,7 +59,11 @@ var RemoveCommand = &command.Command{
 
 		switch resource {
 		case "account":
-			name := output.RemoveAccountPrompt(conf.Accounts)
+			name := removeFlags.Name
+			if name == "" {
+				name = output.RemoveAccountPrompt(conf.Accounts)
+			}
+
 			err := services.Config.RemoveAccount(name)
 			if err != nil {
 				return nil, err
@@ -79,7 +85,11 @@ var RemoveCommand = &command.Command{
 			}, nil
 
 		case "contract":
-			name := output.RemoveContractPrompt(conf.Contracts)
+			name := removeFlags.Name
+			if name == "" {
+				name = output.RemoveContractPrompt(conf.Contracts)
+			}
+
 			err := services.Config.RemoveContract(name)
 			if err != nil {
 				return nil, err
@@ -90,7 +100,11 @@ var RemoveCommand = &command.Command{
 			}, nil
 
 		case "network":
-			name := output.RemoveNetworkPrompt(conf.Networks)
+			name := removeFlags.Name
+			if name == "" {
+				name = output.RemoveNetworkPrompt(conf.Networks)
+			}
+
 			err := services.Config.RemoveNetwork(name)
 			if err != nil {
 				return nil, err
