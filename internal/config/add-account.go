@@ -81,7 +81,13 @@ var AddAccountCommand = &command.Command{
 			return nil, err
 		}
 
-		p.Config().Accounts.AddOrUpdate(account.Name, *account)
+		acc, err := project.AccountFromConfig(*account)
+		if err != nil {
+			return nil, err
+		}
+
+		p.AddOrUpdateAccount(acc)
+
 		err = p.SaveDefault()
 		if err != nil {
 			return nil, err
@@ -121,7 +127,7 @@ func flagsToAccountData(flags flagsAddAccount) (map[string]string, bool, error) 
 		"address":  flags.Address,
 		"keyIndex": flags.KeyIndex,
 		"sigAlgo":  flags.SigAlgo,
-		"hashAlg":  flags.HashAlgo,
+		"hashAlgo": flags.HashAlgo,
 		"key":      flags.Key,
 	}, true, nil
 }

@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/onflow/flow-go-sdk/crypto"
 
@@ -39,7 +40,7 @@ func StringToAccount(
 		SigAlgo:  crypto.StringToSignatureAlgorithm(sigAlgo),
 		HashAlgo: crypto.StringToHashAlgorithm(hashAlgo),
 		Context: map[string]string{
-			PrivateKeyField: parsedKey.String(),
+			PrivateKeyField: strings.ReplaceAll(parsedKey.String(), "0x", ""),
 		},
 	}
 
