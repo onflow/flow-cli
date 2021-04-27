@@ -66,9 +66,7 @@ var AddNetworkCommand = &command.Command{
 			networkData = output.NewNetworkPrompt()
 		}
 
-		networkData = output.NewNetworkPrompt()
 		network := config.StringToNetwork(networkData["name"], networkData["host"])
-
 		p.Config().Networks.AddOrUpdate(network.Name, network)
 
 		err = p.SaveDefault()
