@@ -67,7 +67,6 @@ var AddContractCommand = &command.Command{
 			contractData = output.NewContractPrompt()
 		}
 
-		contractData = output.NewContractPrompt()
 		contracts := config.StringToContracts(
 			contractData["name"],
 			contractData["source"],

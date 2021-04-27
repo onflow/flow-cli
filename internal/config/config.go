@@ -31,7 +31,7 @@ var Cmd = &cobra.Command{
 func init() {
 	//InitCommand.AddToParent(Cmd)
 	Cmd.AddCommand(AddCmd)
-	RemoveCommand.AddToParent(Cmd)
+	Cmd.AddCommand(RemoveCmd)
 }
 
 // ConfigResult result from configuration

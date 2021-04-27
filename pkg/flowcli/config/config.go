@@ -324,7 +324,8 @@ func (d *Deployments) GetByAccountAndNetwork(account string, network string) Dep
 // AddOrUpdate add new or update if already present
 func (d *Deployments) AddOrUpdate(deployment Deploy) {
 	for i, existingDeployment := range *d {
-		if existingDeployment.Account == deployment.Account {
+		if existingDeployment.Account == deployment.Account &&
+			existingDeployment.Network == deployment.Network {
 			(*d)[i] = deployment
 			return
 		}
