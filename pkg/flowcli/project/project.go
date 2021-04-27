@@ -243,6 +243,22 @@ func (p *Project) AddOrUpdateAccount(account *Account) {
 	p.accounts = append(p.accounts, account)
 }
 
+// RemoveAccount removes an account from configuration
+func (p *Project) RemoveAccount(name string) error {
+	account := p.AccountByName(name)
+	if account == nil {
+		return fmt.Errorf("account named %s does not exist in configuration", name)
+	}
+
+	for i, account := range p.accounts {
+		if account.name == name {
+			(*p).accounts = append(p.accounts[0:i], p.accounts[i+1:]...) // remove item
+		}
+	}
+
+	return nil
+}
+
 // AccountByAddress returns an account by address.
 func (p *Project) AccountByAddress(address string) *Account {
 	for _, account := range p.accounts {

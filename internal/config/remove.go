@@ -49,6 +49,7 @@ var RemoveCommand = &command.Command{
 	) (command.Result, error) {
 		resource := args[0]
 		name := args[1]
+		var result *ConfigResult
 
 		p, err := project.Load(globalFlags.ConfigPath)
 		if err != nil {
@@ -62,14 +63,14 @@ var RemoveCommand = &command.Command{
 				name = output.RemoveAccountPrompt(conf.Accounts)
 			}
 
-			err = conf.Accounts.Remove(name)
+			err = p.RemoveAccount(name)
 			if err != nil {
 				return nil, err
 			}
 
-			return &ConfigResult{
+			result = &ConfigResult{
 				result: "account removed",
-			}, nil
+			}
 
 		case "deployment":
 			accountName, networkName := output.RemoveDeploymentPrompt(conf.Deployments)
@@ -79,9 +80,9 @@ var RemoveCommand = &command.Command{
 				return nil, err
 			}
 
-			return &ConfigResult{
+			result = &ConfigResult{
 				result: "deployment removed",
-			}, nil
+			}
 
 		case "contract":
 			if name == "" {
@@ -93,9 +94,9 @@ var RemoveCommand = &command.Command{
 				return nil, err
 			}
 
-			return &ConfigResult{
+			result = &ConfigResult{
 				result: "contract removed",
-			}, nil
+			}
 
 		case "network":
 			if name == "" {
@@ -107,9 +108,9 @@ var RemoveCommand = &command.Command{
 				return nil, err
 			}
 
-			return &ConfigResult{
+			result = &ConfigResult{
 				result: "network removed",
-			}, nil
+			}
 		}
 
 		err = p.SaveDefault()
@@ -117,6 +118,6 @@ var RemoveCommand = &command.Command{
 			return nil, err
 		}
 
-		return nil, nil
+		return result, nil
 	},
 }
