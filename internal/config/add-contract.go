@@ -21,6 +21,8 @@ package config
 import (
 	"fmt"
 
+	"github.com/onflow/flow-cli/pkg/flowcli/project"
+
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/pkg/flowcli/config"
 	"github.com/onflow/flow-cli/pkg/flowcli/output"
@@ -51,6 +53,11 @@ var AddContractCommand = &command.Command{
 		globalFlags command.GlobalFlags,
 		services *services.Services,
 	) (command.Result, error) {
+		p, err := project.Load(globalFlags.ConfigPath)
+		if err != nil {
+			return nil, fmt.Errorf("configuration does not exists")
+		}
+
 		contractData, flagsProvided, err := flagsToContractData(addContractFlags)
 		if err != nil {
 			return nil, err
@@ -68,7 +75,11 @@ var AddContractCommand = &command.Command{
 			contractData["testnet"],
 		)
 
-		err = services.Config.AddContracts(contracts)
+		for _, contract := range contracts {
+			p.Config().Contracts.AddOrUpdate(contract.Name, contract)
+		}
+
+		err = p.SaveDefault()
 		if err != nil {
 			return nil, err
 		}

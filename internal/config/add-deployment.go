@@ -71,7 +71,10 @@ var AddDeploymentCommand = &command.Command{
 			deployData["account"].(string),
 			deployData["contracts"].([]string),
 		)
-		err = services.Config.AddDeployment(deployment)
+
+		conf.Deployments.AddOrUpdate(deployment)
+
+		err = p.SaveDefault()
 		if err != nil {
 			return nil, err
 		}

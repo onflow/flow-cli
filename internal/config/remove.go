@@ -28,19 +28,17 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type flagsRemove struct {
-	Name string `flag:"name" info:"Resource name"`
-}
+type flagsRemove struct{}
 
 var removeFlags = flagsRemove{}
 
 var RemoveCommand = &command.Command{
 	Cmd: &cobra.Command{
-		Use:       "remove <account|contract|deployment|network>",
+		Use:       "remove <account|contract|deployment|network> <name>",
 		Short:     "Remove resource from configuration",
 		Example:   "flow config remove account",
 		ValidArgs: []string{"account", "contract", "deployment", "network"},
-		Args:      cobra.ExactArgs(1),
+		Args:      cobra.ExactArgs(2),
 	},
 	Flags: &removeFlags,
 	Run: func(
@@ -50,6 +48,7 @@ var RemoveCommand = &command.Command{
 		services *services.Services,
 	) (command.Result, error) {
 		resource := args[0]
+		name := args[1]
 
 		p, err := project.Load(globalFlags.ConfigPath)
 		if err != nil {
@@ -59,12 +58,11 @@ var RemoveCommand = &command.Command{
 
 		switch resource {
 		case "account":
-			name := removeFlags.Name
 			if name == "" {
 				name = output.RemoveAccountPrompt(conf.Accounts)
 			}
 
-			err := services.Config.RemoveAccount(name)
+			err = conf.Accounts.Remove(name)
 			if err != nil {
 				return nil, err
 			}
@@ -75,7 +73,8 @@ var RemoveCommand = &command.Command{
 
 		case "deployment":
 			accountName, networkName := output.RemoveDeploymentPrompt(conf.Deployments)
-			err := services.Config.RemoveDeployment(accountName, networkName)
+
+			err = conf.Deployments.Remove(accountName, networkName)
 			if err != nil {
 				return nil, err
 			}
@@ -85,12 +84,11 @@ var RemoveCommand = &command.Command{
 			}, nil
 
 		case "contract":
-			name := removeFlags.Name
 			if name == "" {
 				name = output.RemoveContractPrompt(conf.Contracts)
 			}
 
-			err := services.Config.RemoveContract(name)
+			err = conf.Contracts.Remove(name)
 			if err != nil {
 				return nil, err
 			}
@@ -100,12 +98,11 @@ var RemoveCommand = &command.Command{
 			}, nil
 
 		case "network":
-			name := removeFlags.Name
 			if name == "" {
 				name = output.RemoveNetworkPrompt(conf.Networks)
 			}
 
-			err := services.Config.RemoveNetwork(name)
+			err = conf.Networks.Remove(name)
 			if err != nil {
 				return nil, err
 			}
@@ -113,6 +110,11 @@ var RemoveCommand = &command.Command{
 			return &ConfigResult{
 				result: "network removed",
 			}, nil
+		}
+
+		err = p.SaveDefault()
+		if err != nil {
+			return nil, err
 		}
 
 		return nil, nil

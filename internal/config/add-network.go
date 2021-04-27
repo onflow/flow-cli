@@ -22,6 +22,8 @@ import (
 	"fmt"
 	"net/url"
 
+	"github.com/onflow/flow-cli/pkg/flowcli/project"
+
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/pkg/flowcli/config"
 	"github.com/onflow/flow-cli/pkg/flowcli/output"
@@ -50,6 +52,11 @@ var AddNetworkCommand = &command.Command{
 		globalFlags command.GlobalFlags,
 		services *services.Services,
 	) (command.Result, error) {
+		p, err := project.Load(globalFlags.ConfigPath)
+		if err != nil {
+			return nil, fmt.Errorf("configuration does not exists")
+		}
+
 		networkData, flagsProvided, err := flagsToNetworkData(addNetworkFlags)
 		if err != nil {
 			return nil, err
@@ -62,7 +69,9 @@ var AddNetworkCommand = &command.Command{
 		networkData = output.NewNetworkPrompt()
 		network := config.StringToNetwork(networkData["name"], networkData["host"])
 
-		err = services.Config.AddNetwork(network)
+		p.Config().Networks.AddOrUpdate(network.Name, network)
+
+		err = p.SaveDefault()
 		if err != nil {
 			return nil, err
 		}

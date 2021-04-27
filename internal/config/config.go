@@ -34,7 +34,7 @@ func init() {
 	RemoveCommand.AddToParent(Cmd)
 }
 
-// configResult result from configuration
+// ConfigResult result from configuration
 type ConfigResult struct {
 	result string
 }

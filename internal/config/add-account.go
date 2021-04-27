@@ -21,6 +21,8 @@ package config
 import (
 	"fmt"
 
+	"github.com/onflow/flow-cli/pkg/flowcli/project"
+
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/pkg/flowcli/config"
 	"github.com/onflow/flow-cli/pkg/flowcli/output"
@@ -53,6 +55,11 @@ var AddAccountCommand = &command.Command{
 		globalFlags command.GlobalFlags,
 		services *services.Services,
 	) (command.Result, error) {
+		p, err := project.Load(globalFlags.ConfigPath)
+		if err != nil {
+			return nil, fmt.Errorf("configuration does not exists")
+		}
+
 		accountData, flagsProvided, err := flagsToAccountData(addAccountFlags)
 		if err != nil {
 			return nil, err
@@ -74,7 +81,8 @@ var AddAccountCommand = &command.Command{
 			return nil, err
 		}
 
-		err = services.Config.AddAccount(*account)
+		p.Config().Accounts.AddOrUpdate(account.Name, *account)
+		err = p.SaveDefault()
 		if err != nil {
 			return nil, err
 		}
