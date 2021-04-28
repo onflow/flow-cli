@@ -51,11 +51,11 @@ type Contract struct {
 
 // Load loads a project configuration and returns the resulting project.
 func Load(configFilePaths []string) (*Project, error) {
-	composer := config.NewLoader(afero.NewOsFs())
+	loader := config.NewLoader(afero.NewOsFs())
 
 	// here we add all available parsers (more to add yaml etc...)
-	composer.AddConfigParser(json.NewParser())
-	conf, err := composer.Load(configFilePaths)
+	loader.AddConfigParser(json.NewParser())
+	conf, err := loader.Load(configFilePaths)
 
 	if err != nil {
 		if errors.Is(err, config.ErrDoesNotExist) {
@@ -65,12 +65,17 @@ func Load(configFilePaths []string) (*Project, error) {
 		return nil, err
 	}
 
-	proj, err := newProject(conf, composer)
+	proj, err := newProject(conf, loader)
 	if err != nil {
 		return nil, fmt.Errorf("invalid project configuration: %s", err)
 	}
 
 	return proj, nil
+}
+
+// SaveDefault saves configuration to default path
+func (p *Project) SaveDefault() error {
+	return p.Save(DefaultConfigPath)
 }
 
 // Save saves the project configuration to the given path.
@@ -127,7 +132,7 @@ func newProject(conf *config.Config, composer *config.Loader) (*Project, error) 
 // The CLI currently does not allow the same contract to be deployed to multiple
 // accounts in the same network.
 func (p *Project) ContractConflictExists(network string) bool {
-	contracts, err := p.ContractsByNetwork(network)
+	contracts, err := p.DeploymentContractsByNetwork(network)
 	if err != nil {
 		return false
 	}
@@ -150,6 +155,11 @@ func (p *Project) NetworkByName(name string) *config.Network {
 	return p.conf.Networks.GetByName(name)
 }
 
+// Config get project configuration
+func (p *Project) Config() *config.Config {
+	return p.conf
+}
+
 // EmulatorServiceAccount returns the service account for the default emulator profilee.
 func (p *Project) EmulatorServiceAccount() (*Account, error) {
 	emulator := p.conf.Emulators.Default()
@@ -169,8 +179,8 @@ func (p *Project) SetEmulatorServiceKey(privateKey crypto.PrivateKey) {
 	)
 }
 
-// ContractsByNetwork returns all contracts for a network.
-func (p *Project) ContractsByNetwork(network string) ([]Contract, error) {
+// DeploymentContractsByNetwork returns all contracts for a network.
+func (p *Project) DeploymentContractsByNetwork(network string) ([]Contract, error) {
 	contracts := make([]Contract, 0)
 
 	// get deployments for the specified network
@@ -226,6 +236,22 @@ func (p *Project) AddOrUpdateAccount(account *Account) {
 	}
 
 	p.accounts = append(p.accounts, account)
+}
+
+// RemoveAccount removes an account from configuration
+func (p *Project) RemoveAccount(name string) error {
+	account := p.AccountByName(name)
+	if account == nil {
+		return fmt.Errorf("account named %s does not exist in configuration", name)
+	}
+
+	for i, account := range p.accounts {
+		if account.name == name {
+			(*p).accounts = append(p.accounts[0:i], p.accounts[i+1:]...) // remove item
+		}
+	}
+
+	return nil
 }
 
 // AccountByAddress returns an account by address.

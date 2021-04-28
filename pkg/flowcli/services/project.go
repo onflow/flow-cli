@@ -91,7 +91,7 @@ func (p *Project) Init(
 		proj.SetEmulatorServiceKey(serviceKey)
 	}
 
-	err = proj.Save(path)
+	err = proj.SaveDefault()
 	if err != nil {
 		return nil, err
 	}
@@ -118,7 +118,7 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 	)
 
 	// add all contracts needed to deploy to processor
-	contractsNetwork, err := p.project.ContractsByNetwork(network)
+	contractsNetwork, err := p.project.DeploymentContractsByNetwork(network)
 	if err != nil {
 		return nil, err
 	}

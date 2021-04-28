@@ -22,37 +22,11 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var Cmd = &cobra.Command{
-	Use:              "config",
-	Short:            "Utilities to manage configuration",
+var RemoveCmd = &cobra.Command{
+	Use:              "remove <account|contract|deployment|network>",
+	Short:            "Remove resource from configuration",
+	Example:          "flow config remove account",
+	ValidArgs:        []string{"account", "contract", "deployment", "network"},
+	Args:             cobra.ExactArgs(1),
 	TraverseChildren: true,
-}
-
-func init() {
-	//InitCommand.AddToParent(Cmd)
-	Cmd.AddCommand(AddCmd)
-	Cmd.AddCommand(RemoveCmd)
-}
-
-// ConfigResult result from configuration
-type ConfigResult struct {
-	result string
-}
-
-// JSON convert result to JSON
-func (r *ConfigResult) JSON() interface{} {
-	return nil
-}
-
-func (r *ConfigResult) String() string {
-	if r.result != "" {
-		return r.result
-	}
-
-	return ""
-}
-
-// Oneliner show result as one liner grep friendly
-func (r *ConfigResult) Oneliner() string {
-	return ""
 }

@@ -68,7 +68,7 @@ func transformContractsToJSON(contracts config.Contracts) jsonContracts {
 			}
 		} else { // if advanced config
 			// check if we already created for this name then add or create
-			if _, exists := jsonContracts[c.Name]; exists {
+			if _, exists := jsonContracts[c.Name]; exists && jsonContracts[c.Name].Advanced.Aliases != nil {
 				jsonContracts[c.Name].Advanced.Aliases[c.Network] = c.Alias
 			} else {
 				jsonContracts[c.Name] = jsonContract{

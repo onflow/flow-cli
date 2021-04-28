@@ -14,6 +14,9 @@ Flow configuration (`flow.json`) file will contain the following properties:
 - A `deployments` empty object where all [deployment targets](https://docs.onflow.org/flow-cli/project-contracts/) can be defined. 
 - A `contracts` empty object where you [define contracts](https://docs.onflow.org/flow-cli/project-contracts/) you wish to deploy.
 
+Configuration should be managed using [manage commands](https://docs.onflow.org/flow-cli/manage-configuration/) 
+`flow config add` or `flow config remove`.
+
 ## Example Project Configuration
 
 ```json

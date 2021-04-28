@@ -21,7 +21,6 @@ package config
 import (
 	"errors"
 	"fmt"
-	"os"
 
 	"github.com/onflow/cadence"
 
@@ -248,13 +247,29 @@ func (c *Contracts) GetByNetwork(network string) Contracts {
 // AddOrUpdate add new or update if already present
 func (c *Contracts) AddOrUpdate(name string, contract Contract) {
 	for i, existingContract := range *c {
-		if existingContract.Name == name {
+		if existingContract.Name == name &&
+			existingContract.Network == contract.Network {
 			(*c)[i] = contract
 			return
 		}
 	}
 
 	*c = append(*c, contract)
+}
+
+func (c *Contracts) Remove(name string) error {
+	contract := c.GetByName(name)
+	if contract == nil {
+		return fmt.Errorf("contract named %s does not exist in configuration", name)
+	}
+
+	for i, contract := range *c {
+		if contract.Name == name {
+			*c = append((*c)[0:i], (*c)[i+1:]...) // remove item
+		}
+	}
+
+	return nil
 }
 
 // AccountByName get account by name
@@ -278,6 +293,22 @@ func (a *Accounts) AddOrUpdate(name string, account Account) {
 	}
 
 	*a = append(*a, account)
+}
+
+// Remove remove account by name
+func (a *Accounts) Remove(name string) error {
+	account := a.GetByName(name)
+	if account == nil {
+		return fmt.Errorf("account named %s does not exist in configuration", name)
+	}
+
+	for i, account := range *a {
+		if account.Name == name {
+			*a = append((*a)[0:i], (*a)[i+1:]...) // remove item
+		}
+	}
+
+	return nil
 }
 
 // GetByNetwork get all deployments by network
@@ -309,13 +340,34 @@ func (d *Deployments) GetByAccountAndNetwork(account string, network string) Dep
 // AddOrUpdate add new or update if already present
 func (d *Deployments) AddOrUpdate(deployment Deploy) {
 	for i, existingDeployment := range *d {
-		if existingDeployment.Account == deployment.Account {
+		if existingDeployment.Account == deployment.Account &&
+			existingDeployment.Network == deployment.Network {
 			(*d)[i] = deployment
 			return
 		}
 	}
 
 	*d = append(*d, deployment)
+}
+
+// Remove removes deployment by account and network
+func (d *Deployments) Remove(account string, network string) error {
+	deployment := d.GetByAccountAndNetwork(account, network)
+	if deployment == nil {
+		return fmt.Errorf(
+			"deployment for account %s on network %s does not exist in configuration",
+			account,
+			network,
+		)
+	}
+
+	for i, deployment := range *d {
+		if deployment.Network == network && deployment.Account == account {
+			*d = append((*d)[0:i], (*d)[i+1:]...) // remove item
+		}
+	}
+
+	return nil
 }
 
 // GetByName get network by name
@@ -339,6 +391,21 @@ func (n *Networks) AddOrUpdate(name string, network Network) {
 	}
 
 	*n = append(*n, network)
+}
+
+func (n *Networks) Remove(name string) error {
+	network := n.GetByName(name)
+	if network == nil {
+		return fmt.Errorf("network named %s does not exist in configuration", name)
+	}
+
+	for i, network := range *n {
+		if network.Name == name {
+			*n = append((*n)[0:i], (*n)[i+1:]...) // remove item
+		}
+	}
+
+	return nil
 }
 
 // Default gets default emulator
