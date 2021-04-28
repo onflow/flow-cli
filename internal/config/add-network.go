@@ -92,7 +92,7 @@ func flagsToNetworkData(flags flagsAddNetwork) (map[string]string, bool, error) 
 	if flags.Name == "" {
 		return nil, true, fmt.Errorf("name must be provided")
 	} else if flags.Host == "" {
-		return nil, true, fmt.Errorf("contract file name must be provided")
+		return nil, true, fmt.Errorf("host must be provided")
 	}
 
 	_, err := url.ParseRequestURI(flags.Host)
