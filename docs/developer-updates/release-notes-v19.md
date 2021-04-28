@@ -102,3 +102,7 @@ different keys. This new functionality is backward compatible.
 ### Keys Generate JSON output
 Keys generation output in JSON format was fixed and it now shows correctly 
 private and public keys.
+
+### Account Key Index When Sending Transactions
+Account key index is now fetched from the configuration and 
+it doesn't default to 0 anymore.
