@@ -31,7 +31,7 @@ import (
 type Account struct {
 	name    string
 	address flow.Address
-	key     AccountKey
+	keys    []AccountKey
 }
 
 func (a *Account) Address() flow.Address {
@@ -42,12 +42,16 @@ func (a *Account) Name() string {
 	return a.name
 }
 
-func (a *Account) Key() AccountKey {
-	return a.key
+func (a *Account) Keys() []AccountKey {
+	return a.keys
 }
 
-func (a *Account) SetKey(key AccountKey) {
-	a.key = key
+func (a *Account) DefaultKey() AccountKey {
+	return a.keys[0]
+}
+
+func (a *Account) SetDefaultKey(key AccountKey) {
+	a.keys[0] = key
 }
 
 func accountsFromConfig(conf *config.Config) ([]*Account, error) {
@@ -69,20 +73,26 @@ func AccountFromAddressAndKey(address flow.Address, privateKey crypto.PrivateKey
 	return &Account{
 		name:    "",
 		address: address,
-		key:     NewHexAccountKeyFromPrivateKey(0, crypto.SHA3_256, privateKey),
+		keys:    []AccountKey{key},
 	}
 }
 
-func AccountFromConfig(account config.Account) (*Account, error) {
-	key, err := NewAccountKey(account.Key)
-	if err != nil {
-		return nil, err
+func AccountFromConfig(accountConf config.Account) (*Account, error) {
+	accountKeys := make([]AccountKey, 0, len(accountConf.Keys))
+
+	for _, key := range accountConf.Keys {
+		accountKey, err := NewAccountKey(key)
+		if err != nil {
+			return nil, err
+		}
+
+		accountKeys = append(accountKeys, accountKey)
 	}
 
 	return &Account{
-		name:    account.Name,
-		address: account.Address,
-		key:     key,
+		name:    accountConf.Name,
+		address: accountConf.Address,
+		keys:    accountKeys,
 	}, nil
 }
 
@@ -97,10 +107,16 @@ func accountsToConfig(accounts []*Account) config.Accounts {
 }
 
 func accountToConfig(account *Account) config.Account {
+	keyConfigs := make([]config.AccountKey, 0, len(account.keys))
+
+	for _, key := range account.keys {
+		keyConfigs = append(keyConfigs, key.ToConfig())
+	}
+
 	return config.Account{
 		Name:    account.name,
 		Address: account.address,
-		Key:     account.key.ToConfig(),
+		Keys:    keyConfigs,
 	}
 }
 
@@ -115,9 +131,13 @@ func generateEmulatorServiceAccount(sigAlgo crypto.SignatureAlgorithm, hashAlgo 
 		return nil, fmt.Errorf("failed to generate emulator service key: %v", err)
 	}
 
+	serviceAccountKey := NewHexAccountKeyFromPrivateKey(0, hashAlgo, privateKey)
+
 	return &Account{
 		name:    config.DefaultEmulatorServiceAccountName,
 		address: flow.ServiceAddress(flow.Emulator),
-		key:     NewHexAccountKeyFromPrivateKey(0, hashAlgo, privateKey),
+		keys: []AccountKey{
+			serviceAccountKey,
+		},
 	}, nil
 }

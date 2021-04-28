@@ -77,22 +77,23 @@ func ConfiguredServiceKey(
 		}
 	}
 
-	serviceAccount, err := proj.EmulatorServiceAccount()
-	if err != nil {
-		util.Exit(1, err.Error())
-	}
+	serviceAccount, _ := proj.EmulatorServiceAccount()
 
-	privateKey, err := serviceAccount.Key().PrivateKey()
-	if err != nil {
+	serviceKeyHex, ok := serviceAccount.DefaultKey().(*project.HexAccountKey)
+	if !ok {
 		util.Exit(1, "Only hexadecimal keys can be used as the emulator service account key.")
 	}
 
-	err = serviceAccount.Key().Validate()
+	privateKey, err := crypto.DecodePrivateKeyHex(serviceKeyHex.SigAlgo(), serviceKeyHex.PrivateKeyHex())
 	if err != nil {
-		util.Exit(1, err.Error())
+		util.Exitf(
+			1,
+			"Invalid private key in \"%s\" emulator configuration",
+			config.DefaultEmulatorConfigName,
+		)
 	}
 
-	return *privateKey, serviceAccount.Key().SigAlgo(), serviceAccount.Key().HashAlgo()
+	return privateKey, serviceKeyHex.SigAlgo(), serviceKeyHex.HashAlgo()
 }
 
 func init() {
