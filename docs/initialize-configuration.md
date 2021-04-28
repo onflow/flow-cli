@@ -36,7 +36,7 @@ or by removing the configuration file first.
 
 ## Global Configuration
 
-Flow supports global configuration which is a `.flow.json` file saved in your home 
+Flow supports global configuration which is a `flow.json` file saved in your home 
 directory and loaded as the first configuration file wherever you execute the CLI command. 
 
 Please be aware that global configuration has the lowest priority and is overwritten 
@@ -48,9 +48,9 @@ You can generate a global configuration using `--global` flag.
 Command example: `flow init --global`.
 
 Global flow configuration is saved as:
-- MacOs: `~/.flow.json`
-- Linux: `~/.flow.json`
-- Windows: `C:\Users\$USER\.flow.json`
+- MacOs: `~/flow.json`
+- Linux: `~/flow.json`
+- Windows: `C:\Users\$USER\flow.json`
 
 
 ## Flags

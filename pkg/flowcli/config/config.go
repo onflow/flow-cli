@@ -177,7 +177,7 @@ func GlobalPath() string {
 		return ""
 	}
 
-	return fmt.Sprintf("%s/.%s", dirname, DefaultPath)
+	return fmt.Sprintf("%s/%s", dirname, DefaultPath)
 }
 
 // DefaultPaths determines default paths for configuration
