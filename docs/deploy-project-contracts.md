@@ -61,6 +61,33 @@ pub contract KittyItems {
 }
 ```
 
+## Initialization Arguments
+Deploying contracts that take initialization arguments 
+can be achieved with adding those arguments to the configuration. 
+
+Each deployment can be specified as an object containing 
+`name` and `args` key specifying arguments to be 
+used during the deployment. Example:
+
+```
+...
+  "deployments": {
+    "testnet": {
+      "my-testnet-account": [
+        "NonFungibleToken", {
+            "name": "KittyItems", 
+            "args": [{
+                "name": "supply",
+                "type": "UInt",
+                "value": "10",
+            }]
+        }]
+    }
+  }
+...
+```
+
+
 ⚠️ Warning: before proceeding, 
 we recommend reading the [Flow CLI security guidelines](https://docs.onflow.org/flow-cli/security/)
 to learn about the best practices for private key storage.
