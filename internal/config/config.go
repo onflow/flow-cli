@@ -29,7 +29,6 @@ var Cmd = &cobra.Command{
 }
 
 func init() {
-	//InitCommand.AddToParent(Cmd)
 	Cmd.AddCommand(AddCmd)
 	Cmd.AddCommand(RemoveCmd)
 }
