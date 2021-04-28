@@ -47,9 +47,9 @@ type EventResult struct {
 }
 
 // JSON convert result to JSON
-func (k *EventResult) JSON() interface{} {
+func (e *EventResult) JSON() interface{} {
 	result := make(map[string]map[uint64]map[string]interface{})
-	for _, blockEvent := range k.BlockEvents {
+	for _, blockEvent := range e.BlockEvents {
 		if len(blockEvent.Events) > 0 {
 			for _, event := range blockEvent.Events {
 				result["blockId"][blockEvent.Height]["index"] = event.EventIndex
@@ -64,11 +64,11 @@ func (k *EventResult) JSON() interface{} {
 }
 
 // String convert result to string
-func (k *EventResult) String() string {
+func (e *EventResult) String() string {
 	var b bytes.Buffer
 	writer := util.CreateTabWriter(&b)
 
-	for _, blockEvent := range k.BlockEvents {
+	for _, blockEvent := range e.BlockEvents {
 		if len(blockEvent.Events) > 0 {
 			fmt.Fprintf(writer, "Events Block #%v:", blockEvent.Height)
 			eventsString(writer, blockEvent.Events)
@@ -77,16 +77,16 @@ func (k *EventResult) String() string {
 	}
 
 	// if we have events passed directly and not in relation to block
-	eventsString(writer, k.Events)
+	eventsString(writer, e.Events)
 
 	writer.Flush()
 	return b.String()
 }
 
 // Oneliner show result as one liner grep friendly
-func (k *EventResult) Oneliner() string {
+func (e *EventResult) Oneliner() string {
 	result := ""
-	for _, blockEvent := range k.BlockEvents {
+	for _, blockEvent := range e.BlockEvents {
 		if len(blockEvent.Events) > 0 {
 			result += fmt.Sprintf("Events Block #%v: [", blockEvent.Height)
 			for _, event := range blockEvent.Events {
