@@ -35,7 +35,7 @@
 					"name": "Bar",
 					"args": [
 						{ "type": "String", "value": "Hello World" },
-						{ "type": "String", "value": "10" }
+						{ "type": "UInt32", "value": "10" }
 					]
 				}
 			]

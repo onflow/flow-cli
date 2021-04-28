@@ -112,9 +112,9 @@ func addAccountContractWithArgs(
 	args []cadence.Value,
 ) (*Transaction, error) {
 	const addAccountContractTemplate = `
-	transaction(name: String, code: String) {
+	transaction(name: String, code: String %s) {
 		prepare(signer: AuthAccount) {
-			signer.contracts.add(name: name, code: code.decodeHex()%s)
+			signer.contracts.add(name: name, code: code.decodeHex() %s)
 		}
 	}`
 
@@ -126,12 +126,18 @@ func addAccountContractWithArgs(
 		AddRawArgument(jsoncdc.MustEncode(cadenceCode)).
 		AddAuthorizer(signer.Address())
 
-	txArgs := ""
 	for _, arg := range args {
-		txArgs += fmt.Sprintf(",%s", arg)
+		arg.Type().ID()
+		tx.AddRawArgument(jsoncdc.MustEncode(arg))
 	}
 
-	script := fmt.Sprintf(addAccountContractTemplate, txArgs)
+	txArgs, addArgs := "", ""
+	for i, arg := range args {
+		txArgs += fmt.Sprintf(",arg%d:%s", i, arg.Type().ID())
+		addArgs += fmt.Sprintf(",arg%d", i)
+	}
+
+	script := fmt.Sprintf(addAccountContractTemplate, txArgs, addArgs)
 	tx.SetScript([]byte(script))
 
 	t := &Transaction{tx: tx}
