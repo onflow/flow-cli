@@ -244,11 +244,13 @@ func (t *Transactions) Send(
 		return nil, nil, fmt.Errorf("signer account: [%s] doesn't exists in configuration", signerName)
 	}
 
+	signerKeyIndex := signerAccount.DefaultKey().Index()
+
 	tx, err := t.Build(
 		signerName,
 		[]string{signerName},
 		signerName,
-		0, // default 0 key
+		signerKeyIndex,
 		transactionFilename,
 		args,
 		argsJSON,
