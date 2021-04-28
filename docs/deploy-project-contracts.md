@@ -75,12 +75,11 @@ used during the deployment. Example:
     "testnet": {
       "my-testnet-account": [
         "NonFungibleToken", {
-            "name": "KittyItems", 
-            "args": [{
-                "name": "supply",
-                "type": "UInt",
-                "value": "10",
-            }]
+            "name": "Foo", 
+            "args": [
+                { "name": "greeting", "type": "String", "value": "Hello World" },
+                { "name": "supply", "type": "UInt32", "value": "10" }
+            ]
         }]
     }
   }
