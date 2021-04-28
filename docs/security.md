@@ -78,9 +78,13 @@ PRIVATE_KEY=key flow project deploy
 
 ### Private Dotenv File
 
-The CLI will load environment variables defined a .env file in the active directory, if one exists. These variables can be substituted inside flow.json, just like any other environment variable.
+The CLI will load environment variables defined in the `.env` file in the active directory, if one exists. 
+These variables can be substituted inside the `flow.json`, 
+just like any other environment variable.
 
-⚠️ You should never commit `.env` to source control, especially if it contains sensitive information like a private key.
+⚠️ You should never commit `.env` to source control, 
+especially if it contains sensitive information 
+like a private key.
 
 Example `.env` file:
 ```bash
