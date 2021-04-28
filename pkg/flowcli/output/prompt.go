@@ -98,7 +98,6 @@ func ApproveTransactionPrompt(transaction *project.Transaction) bool {
 	return result == "Yes"
 }
 
-
 func AutocompletionPrompt() (string, string) {
 	prompt := promptui.Select{
 		Label: "❓ Select your shell (you can run 'echo $SHELL' to find out)",
@@ -127,7 +126,6 @@ PS> flow config setup-completions powershell > flow.ps1
 
 	return shell, os
 }
-
 
 func namePrompt() string {
 	namePrompt := promptui.Prompt{

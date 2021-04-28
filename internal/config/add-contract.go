@@ -53,7 +53,7 @@ var AddContractCommand = &command.Command{
 		globalFlags command.GlobalFlags,
 		services *services.Services,
 	) (command.Result, error) {
-		p, err := project.Load(globalFlags.ConfigPath)
+		p, err := project.Load(globalFlags.ConfigPaths)
 		if err != nil {
 			return nil, fmt.Errorf("configuration does not exists")
 		}

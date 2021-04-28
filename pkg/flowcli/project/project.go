@@ -75,7 +75,7 @@ func Load(configFilePaths []string) (*Project, error) {
 
 // SaveDefault saves configuration to default path
 func (p *Project) SaveDefault() error {
-	return p.Save(DefaultConfigPath)
+	return p.Save(config.DefaultPath)
 }
 
 // Save saves the project configuration to the given path.
