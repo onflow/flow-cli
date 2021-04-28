@@ -21,6 +21,7 @@ package accounts
 import (
 	"bytes"
 	"fmt"
+
 	"github.com/onflow/cadence"
 	"github.com/onflow/flow-cli/pkg/flowcli/util"
 	"github.com/onflow/flow-go-sdk"
@@ -31,7 +32,6 @@ var Cmd = &cobra.Command{
 	Use:              "accounts",
 	Short:            "Utilities to manage accounts",
 	TraverseChildren: true,
-	ValidArgs:        []string{"get", "contract-add"},
 }
 
 func init() {
