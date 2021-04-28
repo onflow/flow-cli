@@ -135,7 +135,7 @@ func addressPrompt() string {
 }
 
 func contractAliasPrompt(contractName string) (string, string) {
-	networks := []string{"emulator", "testnet"}
+	networks := []string{"", "emulator", "testnet"}
 
 	aliasesPrompt := promptui.Select{
 		Label: fmt.Sprintf(
@@ -253,13 +253,31 @@ func NewContractPrompt() map[string]string {
 		os.Exit(-1)
 	}
 
-	aliasAnswer, network := contractAliasPrompt(contractData["name"])
-	for aliasAnswer != "No" {
-		aliasAddress := addressPrompt()
-		contractData[network] = aliasAddress
+	emulatorAliasPrompt := promptui.Prompt{
+		Label: "Enter emulator alias, if exists",
+		Validate: func(s string) error {
+			if s != "" {
+				_, err := config.StringToAddress(s)
+				return err
+			}
 
-		aliasAnswer, network = contractAliasPrompt(contractData["name"])
+			return nil
+		},
 	}
+	contractData["emulator"], _ = emulatorAliasPrompt.Run()
+
+	testnetAliasPrompt := promptui.Prompt{
+		Label: "Enter testnet alias, if exists",
+		Validate: func(s string) error {
+			if s != "" {
+				_, err := config.StringToAddress(s)
+				return err
+			}
+
+			return nil
+		},
+	}
+	contractData["testnet"], _ = testnetAliasPrompt.Run()
 
 	return contractData
 }

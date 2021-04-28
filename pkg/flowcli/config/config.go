@@ -232,7 +232,8 @@ func (c *Contracts) GetByNetwork(network string) Contracts {
 // AddOrUpdate add new or update if already present
 func (c *Contracts) AddOrUpdate(name string, contract Contract) {
 	for i, existingContract := range *c {
-		if existingContract.Name == name {
+		if existingContract.Name == name &&
+			existingContract.Network == contract.Network {
 			(*c)[i] = contract
 			return
 		}
