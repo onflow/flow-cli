@@ -1,7 +1,7 @@
 ---
 title: Manage Flow Configuration
 sidebar_title: Manage Configuration
-description: How to manage Flow Configuration using CLI
+description: How to configure the Flow CLI
 ---
 
 Configuration should be managed by using `config add` 
