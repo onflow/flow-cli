@@ -74,7 +74,7 @@ type Contract struct {
 type Account struct {
 	Name    string
 	Address flow.Address
-	Key     AccountKey
+	Keys    []AccountKey
 }
 
 // AccountKey defines the configuration for a Flow account key.
