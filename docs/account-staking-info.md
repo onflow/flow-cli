@@ -1,5 +1,5 @@
 ---
-title: Get Account Staking Info with the Fow CLI
+title: Get Account Staking Info with the Flow CLI
 sidebar_title: Staking Info
 description: How to get staking info
 ---

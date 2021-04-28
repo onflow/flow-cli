@@ -420,7 +420,7 @@ func (a *Accounts) prepareTransaction(
 	}
 
 	tx.SetBlockReference(block).
-		SetProposer(proposer, 0)
+		SetProposer(proposer, account.DefaultKey().Index())
 
 	tx, err = tx.Sign()
 	if err != nil {

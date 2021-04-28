@@ -1,5 +1,5 @@
 ---
-title: Update a Contract with the Fow CLI
+title: Update a Contract with the Flow CLI
 sidebar_title: Update a Contract
 ---
 
