@@ -134,24 +134,6 @@ func addressPrompt() string {
 	return address
 }
 
-func contractAliasPrompt(contractName string) (string, string) {
-	networks := []string{"", "emulator", "testnet"}
-
-	aliasesPrompt := promptui.Select{
-		Label: fmt.Sprintf(
-			"Does contract [%s] have any additional aliases: \nYou can read about aliases here: https://docs.onflow.org/flow-cli/project-contracts/", // todo check
-			contractName,
-		),
-		Items: []string{"No", "Yes, Emulator Alias", "Yes, Testnet Alias"},
-	}
-	i, answer, err := aliasesPrompt.Run()
-	if err == promptui.ErrInterrupt {
-		os.Exit(-1)
-	}
-
-	return answer, networks[i]
-}
-
 func contractPrompt(contractNames []string) string {
 	contractPrompt := promptui.Select{
 		Label: "Choose contract you wish to deploy",

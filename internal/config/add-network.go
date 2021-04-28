@@ -22,13 +22,13 @@ import (
 	"fmt"
 	"net/url"
 
-	"github.com/onflow/flow-cli/pkg/flowcli/project"
+	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/pkg/flowcli/config"
 	"github.com/onflow/flow-cli/pkg/flowcli/output"
+	"github.com/onflow/flow-cli/pkg/flowcli/project"
 	"github.com/onflow/flow-cli/pkg/flowcli/services"
-	"github.com/spf13/cobra"
 )
 
 type flagsAddNetwork struct {
