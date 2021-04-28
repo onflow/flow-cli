@@ -84,7 +84,7 @@ var AddContractCommand = &command.Command{
 		}
 
 		return &ConfigResult{
-			result: "contract added",
+			result: fmt.Sprintf("Contract %s added to the configuration", contractData["name"]),
 		}, nil
 	},
 }

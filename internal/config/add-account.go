@@ -94,7 +94,7 @@ var AddAccountCommand = &command.Command{
 		}
 
 		return &ConfigResult{
-			result: "account added",
+			result: fmt.Sprintf("Account %s added to the configuration", accountData["name"]),
 		}, nil
 
 	},

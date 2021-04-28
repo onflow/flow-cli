@@ -80,7 +80,7 @@ var AddDeploymentCommand = &command.Command{
 		}
 
 		return &ConfigResult{
-			result: "deploy added",
+			result: fmt.Sprintf("Deployment added to the configuration.\nYou can deploy using 'flow project deploy' command"),
 		}, nil
 	},
 }

@@ -75,7 +75,7 @@ var AddNetworkCommand = &command.Command{
 		}
 
 		return &ConfigResult{
-			result: "network added",
+			result: fmt.Sprintf("Network %s added to the configuration", networkData["name"]),
 		}, nil
 	},
 }
