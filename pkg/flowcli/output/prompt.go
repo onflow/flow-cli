@@ -21,6 +21,7 @@ package output
 import (
 	"fmt"
 	"net/url"
+	"os"
 
 	"github.com/onflow/flow-cli/pkg/flowcli/util"
 
@@ -108,7 +109,11 @@ func namePrompt() string {
 		},
 	}
 
-	name, _ := namePrompt.Run()
+	name, err := namePrompt.Run()
+	if err == promptui.ErrInterrupt {
+		os.Exit(-1)
+	}
+
 	return name
 }
 
@@ -121,7 +126,11 @@ func addressPrompt() string {
 		},
 	}
 
-	address, _ := addressPrompt.Run()
+	address, err := addressPrompt.Run()
+	if err == promptui.ErrInterrupt {
+		os.Exit(-1)
+	}
+
 	return address
 }
 
@@ -135,7 +144,11 @@ func contractAliasPrompt(contractName string) (string, string) {
 		),
 		Items: []string{"No", "Yes, Emulator Alias", "Yes, Testnet Alias"},
 	}
-	i, answer, _ := aliasesPrompt.Run()
+	i, answer, err := aliasesPrompt.Run()
+	if err == promptui.ErrInterrupt {
+		os.Exit(-1)
+	}
+
 	return answer, networks[i]
 }
 
@@ -144,7 +157,10 @@ func contractPrompt(contractNames []string) string {
 		Label: "Choose contract you wish to deploy",
 		Items: contractNames,
 	}
-	_, contractName, _ := contractPrompt.Run()
+	_, contractName, err := contractPrompt.Run()
+	if err == promptui.ErrInterrupt {
+		os.Exit(-1)
+	}
 
 	return contractName
 }
@@ -154,12 +170,17 @@ func addAnotherContractToDeploymentPrompt() bool {
 		Label: "Do you wish to add another contract for deployment?",
 		Items: []string{"No", "Yes"},
 	}
-	_, addMore, _ := addContractPrompt.Run()
+	_, addMore, err := addContractPrompt.Run()
+	if err == promptui.ErrInterrupt {
+		os.Exit(-1)
+	}
+
 	return addMore == "Yes"
 }
 
 func NewAccountPrompt() map[string]string {
 	accountData := make(map[string]string)
+	var err error
 
 	accountData["name"] = namePrompt()
 	accountData["address"] = addressPrompt()
@@ -168,13 +189,19 @@ func NewAccountPrompt() map[string]string {
 		Label: "Signature algorithm",
 		Items: []string{"ECDSA_P256", "ECDSA_secp256k1"},
 	}
-	_, accountData["sigAlgo"], _ = sigAlgoPrompt.Run()
+	_, accountData["sigAlgo"], err = sigAlgoPrompt.Run()
+	if err == promptui.ErrInterrupt {
+		os.Exit(-1)
+	}
 
 	hashAlgoPrompt := promptui.Select{
 		Label: "Hashing algorithm",
 		Items: []string{"SHA3_256", "SHA2_256"},
 	}
-	_, accountData["hashAlgo"], _ = hashAlgoPrompt.Run()
+	_, accountData["hashAlgo"], err = hashAlgoPrompt.Run()
+	if err == promptui.ErrInterrupt {
+		os.Exit(-1)
+	}
 
 	keyPrompt := promptui.Prompt{
 		Label: "Private key",
@@ -183,7 +210,10 @@ func NewAccountPrompt() map[string]string {
 			return err
 		},
 	}
-	accountData["key"], _ = keyPrompt.Run()
+	accountData["key"], err = keyPrompt.Run()
+	if err == promptui.ErrInterrupt {
+		os.Exit(-1)
+	}
 
 	keyIndexPrompt := promptui.Prompt{
 		Label:   "Key index (Default: 0)",
@@ -193,13 +223,18 @@ func NewAccountPrompt() map[string]string {
 			return err
 		},
 	}
-	accountData["keyIndex"], _ = keyIndexPrompt.Run()
+
+	accountData["keyIndex"], err = keyIndexPrompt.Run()
+	if err == promptui.ErrInterrupt {
+		os.Exit(-1)
+	}
 
 	return accountData
 }
 
 func NewContractPrompt() map[string]string {
 	contractData := make(map[string]string)
+	var err error
 
 	contractData["name"] = namePrompt()
 
@@ -213,7 +248,10 @@ func NewContractPrompt() map[string]string {
 			return nil
 		},
 	}
-	contractData["source"], _ = sourcePrompt.Run()
+	contractData["source"], err = sourcePrompt.Run()
+	if err == promptui.ErrInterrupt {
+		os.Exit(-1)
+	}
 
 	aliasAnswer, network := contractAliasPrompt(contractData["name"])
 	for aliasAnswer != "No" {
@@ -228,6 +266,8 @@ func NewContractPrompt() map[string]string {
 
 func NewNetworkPrompt() map[string]string {
 	networkData := make(map[string]string)
+	var err error
+
 	networkData["name"] = namePrompt()
 
 	hostPrompt := promptui.Prompt{
@@ -237,7 +277,10 @@ func NewNetworkPrompt() map[string]string {
 			return err
 		},
 	}
-	networkData["host"], _ = hostPrompt.Run()
+	networkData["host"], err = hostPrompt.Run()
+	if err == promptui.ErrInterrupt {
+		os.Exit(-1)
+	}
 
 	return networkData
 }
@@ -248,6 +291,7 @@ func NewDeploymentPrompt(
 	contracts config.Contracts,
 ) map[string]interface{} {
 	deploymentData := make(map[string]interface{})
+	var err error
 
 	networkNames := make([]string, 0)
 	for _, network := range networks {
@@ -258,7 +302,10 @@ func NewDeploymentPrompt(
 		Label: "Choose network for deployment",
 		Items: networkNames,
 	}
-	_, deploymentData["network"], _ = networkPrompt.Run()
+	_, deploymentData["network"], err = networkPrompt.Run()
+	if err == promptui.ErrInterrupt {
+		os.Exit(-1)
+	}
 
 	accountNames := make([]string, 0)
 	for _, account := range accounts {
@@ -269,7 +316,10 @@ func NewDeploymentPrompt(
 		Label: "Choose an account to deploy to",
 		Items: accountNames,
 	}
-	_, deploymentData["account"], _ = accountPrompt.Run()
+	_, deploymentData["account"], err = accountPrompt.Run()
+	if err == promptui.ErrInterrupt {
+		os.Exit(-1)
+	}
 
 	contractNames := make([]string, 0)
 	for _, contract := range contracts {
@@ -307,7 +357,10 @@ func RemoveAccountPrompt(accounts config.Accounts) string {
 		Items: accountNames,
 	}
 
-	_, name, _ := namePrompt.Run()
+	_, name, err := namePrompt.Run()
+	if err == promptui.ErrInterrupt {
+		os.Exit(-1)
+	}
 
 	return name
 }
@@ -337,7 +390,10 @@ func RemoveDeploymentPrompt(deployments config.Deployments) (account string, net
 		Items: deploymentNames,
 	}
 
-	index, _, _ := deployPrompt.Run()
+	index, _, err := deployPrompt.Run()
+	if err == promptui.ErrInterrupt {
+		os.Exit(-1)
+	}
 
 	return deployments[index].Account, deployments[index].Network
 }
@@ -354,7 +410,11 @@ func RemoveContractPrompt(contracts config.Contracts) string {
 		Items: contractNames,
 	}
 
-	_, name, _ := contractPrompt.Run()
+	_, name, err := contractPrompt.Run()
+	if err == promptui.ErrInterrupt {
+		os.Exit(-1)
+	}
+
 	return name
 }
 
@@ -370,6 +430,10 @@ func RemoveNetworkPrompt(networks config.Networks) string {
 		Items: networkNames,
 	}
 
-	_, name, _ := networkPrompt.Run()
+	_, name, err := networkPrompt.Run()
+	if err == promptui.ErrInterrupt {
+		os.Exit(-1)
+	}
+
 	return name
 }
