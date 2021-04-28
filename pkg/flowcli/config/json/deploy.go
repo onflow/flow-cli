@@ -22,6 +22,8 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/onflow/cadence"
+
 	jsoncdc "github.com/onflow/cadence/encoding/json"
 
 	"github.com/onflow/flow-cli/pkg/flowcli/config"
@@ -53,19 +55,11 @@ func (j jsonDeployments) transformToConfig() config.Deployments {
 						},
 					)
 				} else {
-					args := make([]config.ContractArgument, 0)
+					args := make([]cadence.Value, 0)
 					for _, arg := range contract.advanced.Args {
-						name := arg["name"]
-						delete(arg, "name")
-
-						// todo check if parser exists for better solution
 						b, _ := json.Marshal(arg)
 						cadenceArg, _ := jsoncdc.Decode(b)
-
-						args = append(args, config.ContractArgument{
-							Name: name,
-							Arg:  cadenceArg,
-						})
+						args = append(args, cadenceArg)
 					}
 
 					contractDeploys = append(
@@ -102,9 +96,8 @@ func transformDeploymentsToJSON(configDeployments config.Deployments) jsonDeploy
 				args := make([]map[string]string, 0)
 				for _, arg := range c.Args {
 					args = append(args, map[string]string{
-						"name":  arg.Name,
-						"type":  arg.Arg.Type().ID(),
-						"value": fmt.Sprintf("%v", arg.Arg.ToGoValue()),
+						"type":  arg.Type().ID(),
+						"value": fmt.Sprintf("%v", arg.ToGoValue()),
 					})
 				}
 

@@ -59,13 +59,7 @@ type Deploy struct {
 // ContractDeployment defines the deployment of the contract with possible args
 type ContractDeployment struct {
 	Name string
-	Args []ContractArgument
-}
-
-// ContractArgument defines contract init argument by name, type and value
-type ContractArgument struct {
-	Name string
-	Arg  cadence.Value
+	Args []cadence.Value
 }
 
 // Contract defines the configuration for a Cadence contract.

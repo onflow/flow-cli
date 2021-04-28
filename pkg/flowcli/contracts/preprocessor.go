@@ -21,7 +21,7 @@ package contracts
 import (
 	"fmt"
 
-	"github.com/onflow/flow-cli/pkg/flowcli/config"
+	"github.com/onflow/cadence"
 
 	"github.com/onflow/flow-go-sdk"
 )
@@ -46,7 +46,7 @@ func (p *Preprocessor) AddContractSource(
 	contractName,
 	contractSource string,
 	target flow.Address,
-	args []config.ContractArgument,
+	args []cadence.Value,
 ) error {
 	contractCode, err := p.loader.Load(contractSource)
 	if err != nil {

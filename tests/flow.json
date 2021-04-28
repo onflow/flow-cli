@@ -34,8 +34,8 @@
 				"NonFungibleToken", {
 					"name": "Bar",
 					"args": [
-						{ "name": "a", "type": "String", "value": "Hello World" },
-						{ "name": "b", "type": "UInt32", "value": "10" }
+						{ "type": "String", "value": "Hello World" },
+						{ "type": "String", "value": "10" }
 					]
 				}
 			]

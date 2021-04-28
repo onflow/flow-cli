@@ -23,7 +23,7 @@ import (
 	"path"
 	"strings"
 
-	"github.com/onflow/flow-cli/pkg/flowcli/config"
+	"github.com/onflow/cadence"
 
 	"github.com/onflow/cadence/runtime/ast"
 	"github.com/onflow/cadence/runtime/common"
@@ -40,7 +40,7 @@ type Contract struct {
 	source       string
 	target       flow.Address
 	code         string
-	args         []config.ContractArgument
+	args         []cadence.Value
 	program      *ast.Program
 	dependencies map[string]*Contract
 	aliases      map[string]flow.Address
@@ -52,7 +52,7 @@ func newContract(
 	contractSource,
 	contractCode string,
 	target flow.Address,
-	args []config.ContractArgument,
+	args []cadence.Value,
 ) (*Contract, error) {
 	program, err := parser2.ParseProgram(contractCode)
 	if err != nil {
@@ -84,7 +84,7 @@ func (c *Contract) Code() string {
 	return c.code
 }
 
-func (c *Contract) Args() []config.ContractArgument {
+func (c *Contract) Args() []cadence.Value {
 	return c.args
 }
 

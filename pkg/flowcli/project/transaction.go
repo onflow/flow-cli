@@ -27,8 +27,6 @@ import (
 
 	jsoncdc "github.com/onflow/cadence/encoding/json"
 
-	"github.com/onflow/flow-cli/pkg/flowcli/config"
-
 	"github.com/onflow/flow-go-sdk/templates"
 
 	"github.com/onflow/flow-cli/pkg/flowcli"
@@ -92,7 +90,7 @@ func NewAddAccountContractTransaction(
 	signer *Account,
 	name string,
 	source string,
-	args []config.ContractArgument,
+	args []cadence.Value,
 ) (*Transaction, error) {
 	return addAccountContractWithArgs(signer, templates.Contract{
 		Name:   name,
@@ -111,10 +109,10 @@ func NewRemoveAccountContractTransaction(signer *Account, name string) (*Transac
 func addAccountContractWithArgs(
 	signer *Account,
 	contract templates.Contract,
-	args []config.ContractArgument,
+	args []cadence.Value,
 ) (*Transaction, error) {
 	const addAccountContractTemplate = `
-	transaction(name: String, code: String%s) {
+	transaction(name: String, code: String) {
 		prepare(signer: AuthAccount) {
 			signer.contracts.add(name: name, code: code.decodeHex()%s)
 		}
@@ -128,14 +126,12 @@ func addAccountContractWithArgs(
 		AddRawArgument(jsoncdc.MustEncode(cadenceCode)).
 		AddAuthorizer(signer.Address())
 
-	txArgs, addArgs := "", ""
+	txArgs := ""
 	for _, arg := range args {
-		tx.AddRawArgument(jsoncdc.MustEncode(arg.Arg))
-		txArgs += fmt.Sprintf(",%s: %s", arg.Name, arg.Arg.Type().ID())
-		addArgs += fmt.Sprintf(",%s: %s", arg.Name, arg.Name)
+		txArgs += fmt.Sprintf(",%s", arg)
 	}
 
-	script := fmt.Sprintf(addAccountContractTemplate, txArgs, addArgs)
+	script := fmt.Sprintf(addAccountContractTemplate, txArgs)
 	tx.SetScript([]byte(script))
 
 	t := &Transaction{tx: tx}

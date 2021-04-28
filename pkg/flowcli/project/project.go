@@ -23,6 +23,8 @@ import (
 	"fmt"
 	"path"
 
+	"github.com/onflow/cadence"
+
 	"github.com/onflow/flow-cli/pkg/flowcli/util"
 
 	"github.com/onflow/flow-go-sdk"
@@ -46,7 +48,7 @@ type Contract struct {
 	Name   string
 	Source string
 	Target flow.Address
-	Args   []config.ContractArgument
+	Args   []cadence.Value
 }
 
 // Load loads a project configuration and returns the resulting project.
