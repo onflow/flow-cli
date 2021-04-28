@@ -122,7 +122,7 @@ func (a *Accounts) Create(
 	contracts []string,
 ) (*flow.Account, error) {
 	if a.project == nil {
-		return nil, fmt.Errorf("missing configuration, initialize it: flow init")
+		return nil, config.ErrDoesNotExist
 	}
 
 	// if more than one key is provided and at least one weight is specified, make sure there isn't a missmatch
@@ -225,7 +225,7 @@ func (a *Accounts) AddContract(
 	updateExisting bool,
 ) (*flow.Account, error) {
 	if a.project == nil {
-		return nil, fmt.Errorf("missing configuration, initialize it: flow init")
+		return nil, config.ErrDoesNotExist
 	}
 
 	account := a.project.AccountByName(accountName)

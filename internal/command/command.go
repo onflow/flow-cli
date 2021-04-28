@@ -232,17 +232,15 @@ func resolveHost(proj *project.Project, hostFlag string, networkFlag string) (st
 		}
 
 		return proj.NetworkByName(networkFlag).Host, nil
-	} else if networkFlag != config.DefaultEmulatorNetwork().Name {
-		return "", fmt.Errorf("network not found, make sure flow configuration exists")
 	}
 
 	networks := config.DefaultNetworks()
 	network := networks.GetByName(networkFlag)
-	
+
 	if network != nil {
 		return network.Host, nil
 	}
-	
+
 	return "", fmt.Errorf("invalid network with name %s", networkFlag)
 }
 

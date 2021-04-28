@@ -28,7 +28,7 @@ import (
 )
 
 // ErrDoesNotExist is error to be returned when config file does not exists
-var ErrDoesNotExist = errors.New("project config file does not exist")
+var ErrDoesNotExist = errors.New("missing configuration, initialize it: flow init")
 
 // Exists checks if file exists on the specified path
 func Exists(path string) bool {
@@ -140,7 +140,7 @@ func (l *Loader) Load(paths []string) (*Config, error) {
 
 	// if no config was loaded - neither local nor global return an error
 	if baseConf == nil {
-		return nil, fmt.Errorf("configuration not found, create one using `flow init`")
+		return nil, ErrDoesNotExist
 	}
 
 	baseConf, err := l.postprocess(baseConf)

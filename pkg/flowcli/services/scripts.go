@@ -21,6 +21,8 @@ package services
 import (
 	"fmt"
 
+	"github.com/onflow/flow-cli/pkg/flowcli/config"
+
 	"github.com/onflow/cadence"
 
 	"github.com/onflow/flow-cli/pkg/flowcli"
@@ -79,7 +81,7 @@ func (s *Scripts) execute(code []byte, args []string, argsJSON string, scriptPat
 
 	if resolver.HasFileImports() {
 		if s.project == nil {
-			return nil, fmt.Errorf("missing configuration, initialize it: flow init")
+			return nil, config.ErrDoesNotExist
 		}
 		if network == "" {
 			return nil, fmt.Errorf("missing network, specify which network to use to resolve imports in script code")
