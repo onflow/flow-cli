@@ -16,6 +16,7 @@ You can find the CLI documentation on the [Flow documentation website](https://d
 
 - Tag a new release and push it
 - Build the binaries: `make versioned-binaries`
+- Test built binaries locally
 - Upload the binaries: `make publish`
 - Update the Homebrew formula: e.g. `brew bump-formula-pr flow-cli --version=0.12.3`
 
