@@ -26,7 +26,6 @@ var AddCmd = &cobra.Command{
 	Use:              "add <account|contract|deployment|network>",
 	Short:            "Add resource to configuration",
 	Example:          "flow config add account",
-	ValidArgs:        []string{"account", "contract", "deployment", "network"},
 	Args:             cobra.ExactArgs(1),
 	TraverseChildren: true,
 }

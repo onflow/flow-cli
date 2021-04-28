@@ -26,7 +26,6 @@ var RemoveCmd = &cobra.Command{
 	Use:              "remove <account|contract|deployment|network>",
 	Short:            "Remove resource from configuration",
 	Example:          "flow config remove account",
-	ValidArgs:        []string{"account", "contract", "deployment", "network"},
 	Args:             cobra.ExactArgs(1),
 	TraverseChildren: true,
 }
