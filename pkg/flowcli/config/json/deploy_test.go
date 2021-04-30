@@ -91,8 +91,8 @@ func Test_TransformDeployToJSON(t *testing.T) {
 			"account-3":["KittyItems", {
 					"name": "Kibble",
 					"args": [
-						{ "name": "foo", "type": "String", "value": "Hello World" },
-						{ "name": "bar", "type": "Int8", "value": "10" }
+						{ "type": "String", "value": "Hello World" },
+						{ "type": "Int8", "value": "10" }
 					]
 			}],
 			"account-4":["FungibleToken","NonFungibleToken","Kibble","KittyItems","KittyItemsMarket"]
@@ -121,8 +121,8 @@ func Test_DeploymentAdvanced(t *testing.T) {
 				{
 					"name": "Kibble",
 					"args": [
-						{ "name": "foo", "type": "String", "value": "Hello World" },
-						{ "name": "bar", "type": "Int8", "value": "10" }
+						{ "type": "String", "value": "Hello World" },
+						{ "type": "Int8", "value": "10" }
 					]
 				},
 				"KittyItemsMarket"
@@ -141,10 +141,8 @@ func Test_DeploymentAdvanced(t *testing.T) {
 	assert.Len(t, alice[0].Contracts, 2)
 	assert.Equal(t, alice[0].Contracts[0].Name, "Kibble")
 	assert.Len(t, alice[0].Contracts[0].Args, 2)
-	assert.Equal(t, alice[0].Contracts[0].Args[0].Name, "foo")
-	assert.Equal(t, alice[0].Contracts[0].Args[0].Arg.String(), `"Hello World"`)
-	assert.Equal(t, alice[0].Contracts[0].Args[1].Name, "bar")
-	assert.Equal(t, alice[0].Contracts[0].Args[1].Arg.String(), "10")
+	assert.Equal(t, alice[0].Contracts[0].Args[0].String(), `"Hello World"`)
+	assert.Equal(t, alice[0].Contracts[0].Args[1].String(), "10")
 	assert.Equal(t, alice[0].Contracts[1].Name, "KittyItemsMarket")
 	assert.Len(t, alice[0].Contracts[1].Args, 0)
 }
