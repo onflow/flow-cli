@@ -69,8 +69,6 @@ func ParseArgumentsCommaSplit(input []string) ([]cadence.Value, error) {
 
 	for _, in := range input {
 		argInput := strings.Split(in, ":")
-		argType := argInput[0]
-		argValue := argInput[1]
 
 		if len(argInput) != 2 {
 			return nil, fmt.Errorf(
@@ -79,6 +77,8 @@ func ParseArgumentsCommaSplit(input []string) ([]cadence.Value, error) {
 			)
 		}
 
+		argType := argInput[0]
+		argValue := argInput[1]
 		args = append(args, map[string]interface{}{
 			"value": processValue(argType, argValue),
 			"type":  argType,
