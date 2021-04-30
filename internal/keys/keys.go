@@ -22,6 +22,7 @@ import (
 	"bytes"
 	"encoding/hex"
 	"fmt"
+
 	"github.com/onflow/flow-cli/pkg/flowcli/util"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
@@ -49,7 +50,10 @@ type KeyResult struct {
 func (k *KeyResult) JSON() interface{} {
 	result := make(map[string]string)
 	result["public"] = hex.EncodeToString(k.privateKey.PublicKey().Encode())
-	result["private"] = hex.EncodeToString(k.privateKey.Encode())
+
+	if k.privateKey != nil {
+		result["private"] = hex.EncodeToString(k.privateKey.Encode())
+	}
 
 	return result
 }
@@ -80,5 +84,11 @@ func (k *KeyResult) String() string {
 
 // Oneliner show result as one liner grep friendly
 func (k *KeyResult) Oneliner() string {
-	return fmt.Sprintf("Private Key: %x, Public Key: %x", k.privateKey.Encode(), k.publicKey.Encode())
+	result := fmt.Sprintf("Public Key: %x, ", k.publicKey.Encode())
+
+	if k.privateKey != nil {
+		result += fmt.Sprintf("Private Key: %x", k.privateKey.Encode())
+	}
+
+	return result
 }
