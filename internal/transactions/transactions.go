@@ -61,7 +61,10 @@ func (r *TransactionResult) JSON() interface{} {
 	if r.result != nil {
 		result["events"] = fmt.Sprintf("%s", r.result.Events)
 		result["status"] = r.result.Status.String()
-		result["error"] = r.result.Error.Error()
+
+		if r.result.Error != nil {
+			result["error"] = r.result.Error.Error()
+		}
 	}
 
 	return result
@@ -149,5 +152,13 @@ func (r *TransactionResult) String() string {
 
 // Oneliner show result as one liner grep friendly
 func (r *TransactionResult) Oneliner() string {
-	return fmt.Sprintf("ID: %s, Status: %s, Events: %s", r.tx.ID(), r.result.Status, r.result.Events)
+	result := fmt.Sprintf(
+		"ID: %s, Payer: %s, Authorizer: %s",
+		r.tx.ID(), r.tx.Payer, r.tx.Authorizers)
+
+	if r.result != nil {
+		result += fmt.Sprintf(", Status: %s, Events: %s", r.result.Status, r.result.Events)
+	}
+
+	return result
 }
