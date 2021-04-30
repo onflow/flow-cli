@@ -60,10 +60,10 @@ func (c *CollectionResult) String() string {
 	var b bytes.Buffer
 	writer := util.CreateTabWriter(&b)
 
-	fmt.Fprintf(writer, "Collection ID %s:\n", c.Collection.ID())
+	_, _ = fmt.Fprintf(writer, "Collection ID %s:\n", c.Collection.ID())
 
 	for _, tx := range c.Collection.TransactionIDs {
-		fmt.Fprintf(writer, "%s\n", tx.String())
+		_, _ = fmt.Fprintf(writer, "%s\n", tx.String())
 	}
 
 	writer.Flush()

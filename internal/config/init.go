@@ -83,9 +83,9 @@ func (r *InitResult) String() string {
 	writer := util.CreateTabWriter(&b)
 	account, _ := r.Project.EmulatorServiceAccount()
 
-	fmt.Fprintf(writer, "Configuration initialized\n")
-	fmt.Fprintf(writer, "Service account: %s\n\n", util.Bold("0x"+account.Address().String()))
-	fmt.Fprintf(writer,
+	_, _ = fmt.Fprintf(writer, "Configuration initialized\n")
+	_, _ = fmt.Fprintf(writer, "Service account: %s\n\n", util.Bold("0x"+account.Address().String()))
+	_, _ = fmt.Fprintf(writer,
 		"Start emulator by running: %s \nReset configuration using: %s\n",
 		util.Bold("'flow emulator'"),
 		util.Bold("'flow init --reset'"),

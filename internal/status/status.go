@@ -102,9 +102,9 @@ func (r *Result) String() string {
 	var b bytes.Buffer
 	writer := util.CreateTabWriter(&b)
 
-	fmt.Fprintf(writer, "Status:\t %s %s\n", r.getIcon(), r.getColoredStatus())
-	fmt.Fprintf(writer, "Network:\t %s\n", r.network)
-	fmt.Fprintf(writer, "Access Node:\t %s\n", r.accessNode)
+	_, _ = fmt.Fprintf(writer, "Status:\t %s %s\n", r.getIcon(), r.getColoredStatus())
+	_, _ = fmt.Fprintf(writer, "Network:\t %s\n", r.network)
+	_, _ = fmt.Fprintf(writer, "Access Node:\t %s\n", r.accessNode)
 
 	writer.Flush()
 	return b.String()

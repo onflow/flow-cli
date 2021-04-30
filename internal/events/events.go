@@ -71,9 +71,9 @@ func (e *EventResult) String() string {
 
 	for _, blockEvent := range e.BlockEvents {
 		if len(blockEvent.Events) > 0 {
-			fmt.Fprintf(writer, "Events Block #%v:", blockEvent.Height)
+			_, _ = fmt.Fprintf(writer, "Events Block #%v:", blockEvent.Height)
 			eventsString(writer, blockEvent.Events)
-			fmt.Fprintf(writer, "\n")
+			_, _ = fmt.Fprintf(writer, "\n")
 		}
 	}
 
@@ -110,10 +110,10 @@ func eventsString(writer io.Writer, events []flow.Event) {
 }
 
 func eventString(writer io.Writer, event flow.Event) {
-	fmt.Fprintf(writer, "\n    Index\t%d\n", event.EventIndex)
-	fmt.Fprintf(writer, "    Type\t%s\n", event.Type)
-	fmt.Fprintf(writer, "    Tx ID\t%s\n", event.TransactionID)
-	fmt.Fprintf(writer, "    Values\n")
+	_, _ = fmt.Fprintf(writer, "\n    Index\t%d\n", event.EventIndex)
+	_, _ = fmt.Fprintf(writer, "    Type\t%s\n", event.Type)
+	_, _ = fmt.Fprintf(writer, "    Tx ID\t%s\n", event.TransactionID)
+	_, _ = fmt.Fprintf(writer, "    Values\n")
 
 	for i, field := range event.Value.EventType.Fields {
 		value := event.Value.Fields[i]

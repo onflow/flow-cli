@@ -54,7 +54,7 @@ func (r *ScriptResult) String() string {
 	var b bytes.Buffer
 	writer := util.CreateTabWriter(&b)
 
-	fmt.Fprintf(writer, "Result: %s\n", r.Value)
+	_, _ = fmt.Fprintf(writer, "Result: %s\n", r.Value)
 
 	writer.Flush()
 

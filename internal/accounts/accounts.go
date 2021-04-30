@@ -86,17 +86,17 @@ func (r *AccountResult) String() string {
 	var b bytes.Buffer
 	writer := util.CreateTabWriter(&b)
 
-	fmt.Fprintf(writer, "Address\t 0x%s\n", r.Address)
-	fmt.Fprintf(writer, "Balance\t %s\n", cadence.UFix64(r.Balance))
+	_, _ = fmt.Fprintf(writer, "Address\t 0x%s\n", r.Address)
+	_, _ = fmt.Fprintf(writer, "Balance\t %s\n", cadence.UFix64(r.Balance))
 
-	fmt.Fprintf(writer, "Keys\t %d\n", len(r.Keys))
+	_, _ = fmt.Fprintf(writer, "Keys\t %d\n", len(r.Keys))
 
 	for i, key := range r.Keys {
-		fmt.Fprintf(writer, "\nKey %d\tPublic Key\t %x\n", i, key.PublicKey.Encode())
-		fmt.Fprintf(writer, "\tWeight\t %d\n", key.Weight)
-		fmt.Fprintf(writer, "\tSignature Algorithm\t %s\n", key.SigAlgo)
-		fmt.Fprintf(writer, "\tHash Algorithm\t %s\n", key.HashAlgo)
-		fmt.Fprintf(writer, "\tRevoked \t %t\n", key.Revoked)
+		_, _ = fmt.Fprintf(writer, "\nKey %d\tPublic Key\t %x\n", i, key.PublicKey.Encode())
+		_, _ = fmt.Fprintf(writer, "\tWeight\t %d\n", key.Weight)
+		_, _ = fmt.Fprintf(writer, "\tSignature Algorithm\t %s\n", key.SigAlgo)
+		_, _ = fmt.Fprintf(writer, "\tHash Algorithm\t %s\n", key.HashAlgo)
+		_, _ = fmt.Fprintf(writer, "\tRevoked \t %t\n", key.Revoked)
 		fmt.Fprintf(writer, "\tSequence Number \t %d\n", key.SequenceNumber)
 		fmt.Fprintf(writer, "\tIndex \t %d\n", key.Index)
 		fmt.Fprintf(writer, "\n")

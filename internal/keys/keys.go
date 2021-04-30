@@ -65,17 +65,17 @@ func (k *KeyResult) String() string {
 	writer := util.CreateTabWriter(&b)
 
 	if k.privateKey != nil {
-		fmt.Fprintf(writer, "🔴️ Store private key safely and don't share with anyone! \n")
-		fmt.Fprintf(writer, "Private Key \t %x \n", k.privateKey.Encode())
+		_, _ = fmt.Fprintf(writer, "🔴️ Store private key safely and don't share with anyone! \n")
+		_, _ = fmt.Fprintf(writer, "Private Key \t %x \n", k.privateKey.Encode())
 	}
 
-	fmt.Fprintf(writer, "Public Key \t %x \n", k.publicKey.Encode())
+	_, _ = fmt.Fprintf(writer, "Public Key \t %x \n", k.publicKey.Encode())
 
 	if k.accountKey != nil {
-		fmt.Fprintf(writer, "Signature algorithm \t %s\n", k.accountKey.SigAlgo)
-		fmt.Fprintf(writer, "Hash algorithm \t %s\n", k.accountKey.HashAlgo)
-		fmt.Fprintf(writer, "Weight \t %d\n", k.accountKey.Weight)
-		fmt.Fprintf(writer, "Revoked \t %t\n", k.accountKey.Revoked)
+		_, _ = fmt.Fprintf(writer, "Signature algorithm \t %s\n", k.accountKey.SigAlgo)
+		_, _ = fmt.Fprintf(writer, "Hash algorithm \t %s\n", k.accountKey.HashAlgo)
+		_, _ = fmt.Fprintf(writer, "Weight \t %d\n", k.accountKey.Weight)
+		_, _ = fmt.Fprintf(writer, "Revoked \t %t\n", k.accountKey.Revoked)
 	}
 
 	writer.Flush()
