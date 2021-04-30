@@ -22,6 +22,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/onflow/flow-cli/pkg/flowcli/config"
+
 	"github.com/onflow/flow-go-sdk/crypto"
 
 	"github.com/onflow/flow-cli/pkg/flowcli/contracts"
@@ -53,14 +55,20 @@ func NewProject(
 
 func (p *Project) Init(
 	reset bool,
+	global bool,
 	serviceKeySigAlgo string,
 	serviceKeyHashAlgo string,
 	servicePrivateKey string,
 ) (*project.Project, error) {
-	if project.Exists(project.DefaultConfigPath) && !reset {
+	path := config.DefaultPath
+	if global {
+		path = config.GlobalPath()
+	}
+
+	if project.Exists(path) && !reset {
 		return nil, fmt.Errorf(
 			"configuration already exists at: %s, if you want to reset configuration use the reset flag",
-			project.DefaultConfigPath,
+			path,
 		)
 	}
 
@@ -83,7 +91,7 @@ func (p *Project) Init(
 		proj.SetEmulatorServiceKey(serviceKey)
 	}
 
-	err = proj.Save(project.DefaultConfigPath)
+	err = proj.Save(path)
 	if err != nil {
 		return nil, err
 	}
@@ -93,23 +101,24 @@ func (p *Project) Init(
 
 func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, error) {
 	if p.project == nil {
-		return nil, fmt.Errorf("missing configuration, initialize it: flow init")
+		return nil, config.ErrDoesNotExist
 	}
 
 	// check there are not multiple accounts with same contract
-	// TODO: specify which contract by name is a problem
 	if p.project.ContractConflictExists(network) {
-		return nil, fmt.Errorf(
+		return nil, fmt.Errorf( // TODO: specify which contract by name is a problem
 			"the same contract cannot be deployed to multiple accounts on the same network",
 		)
 	}
 
+	// create new processor for contract
 	processor := contracts.NewPreprocessor(
 		contracts.FilesystemLoader{},
 		p.project.AliasesForNetwork(network),
 	)
 
-	contractsNetwork, err := p.project.ContractsByNetwork(network)
+	// add all contracts needed to deploy to processor
+	contractsNetwork, err := p.project.DeploymentContractsByNetwork(network)
 	if err != nil {
 		return nil, err
 	}
@@ -119,17 +128,20 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 			contract.Name,
 			contract.Source,
 			contract.Target,
+			contract.Args,
 		)
 		if err != nil {
 			return nil, err
 		}
 	}
 
+	// resolve imports assigns accounts to imports
 	err = processor.ResolveImports()
 	if err != nil {
 		return nil, err
 	}
 
+	// sort correct deployment order of contracts so we don't have import that is not yet deployed
 	orderedContracts, err := processor.ContractDeploymentOrder()
 	if err != nil {
 		return nil, err
@@ -155,28 +167,39 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 			return nil, fmt.Errorf("target account for deploying contract not found in configuration")
 		}
 
+		// get deployment account
 		targetAccountInfo, err := p.gateway.GetAccount(targetAccount.Address())
 		if err != nil {
 			return nil, fmt.Errorf("failed to fetch information for account %s with error %s", targetAccount.Address(), err.Error())
 		}
 
-		tx, err := project.NewAddAccountContractTransaction(targetAccount, contract.Name(), contract.TranspiledCode())
+		// create transaction to deploy new contract with args
+		tx, err := project.NewAddAccountContractTransaction(
+			targetAccount,
+			contract.Name(),
+			contract.TranspiledCode(),
+			contract.Args(),
+		)
 		if err != nil {
 			return nil, err
 		}
-
+		// check if contract exists on account
 		_, exists := targetAccountInfo.Contracts[contract.Name()]
-		if exists {
-			if !update {
-				p.logger.Error(fmt.Sprintf(
-					"contract %s is already deployed to this account. Use the --update flag to force update",
-					contract.Name(),
-				))
-
-				deployErr = true
-				continue
-			}
-
+		if exists && !update {
+			p.logger.Error(fmt.Sprintf(
+				"contract %s is already deployed to this account. Use the --update flag to force update",
+				contract.Name(),
+			))
+			deployErr = true
+			continue
+		} else if exists && len(contract.Args()) > 0 { // todo discuss we might better remove the contract and redeploy it - ux issue
+			p.logger.Error(fmt.Sprintf(
+				"contract %s is already deployed and can not be updated with initialization arguments",
+				contract.Name(),
+			))
+			deployErr = true
+			continue
+		} else if exists {
 			tx, err = project.NewUpdateAccountContractTransaction(targetAccount, contract.Name(), contract.TranspiledCode())
 			if err != nil {
 				return nil, err
@@ -184,7 +207,7 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 		}
 
 		tx.SetBlockReference(block).
-			SetProposer(targetAccountInfo, 0)
+			SetProposer(targetAccountInfo, targetAccount.DefaultKey().Index())
 
 		tx, err = tx.Sign()
 		if err != nil {

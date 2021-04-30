@@ -19,17 +19,25 @@ package json
 
 import (
 	"encoding/json"
+	"regexp"
+	"strings"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/stretchr/testify/assert"
 )
+
+func cleanSpecialChars(code []byte) string {
+	space := regexp.MustCompile(`\s+`)
+	return strings.ReplaceAll(space.ReplaceAllString(string(code), " "), " ", "")
+}
 
 func Test_ConfigDeploymentsSimple(t *testing.T) {
 	b := []byte(`{
 		"testnet": {
 			"account-1": ["FungibleToken", "NonFungibleToken", "Kibble", "KittyItems"]
-		}, 
+		},
 		"emulator": {
 			"account-2": ["KittyItems", "KittyItemsMarket"],
 			"account-3": ["FungibleToken", "NonFungibleToken", "Kibble", "KittyItems", "KittyItemsMarket"]
@@ -61,24 +69,38 @@ func Test_ConfigDeploymentsSimple(t *testing.T) {
 	assert.Equal(t, account2Name, account2Deployment[0].Account)
 	assert.Equal(t, account3Name, account3Deployment[0].Account)
 
-	assert.Equal(t,
-		[]string{"FungibleToken", "NonFungibleToken", "Kibble", "KittyItems"},
-		account1Deployment[0].Contracts,
-	)
+	assert.Len(t, account1Deployment[0].Contracts, 4)
 
-	assert.Equal(t,
-		[]string{"KittyItems", "KittyItemsMarket"},
-		account2Deployment[0].Contracts,
-	)
+	for i, name := range []string{"FungibleToken", "NonFungibleToken", "Kibble", "KittyItems"} {
+		assert.Equal(t, account1Deployment[0].Contracts[i].Name, name)
+	}
 
-	assert.Equal(t,
-		[]string{"FungibleToken", "NonFungibleToken", "Kibble", "KittyItems", "KittyItemsMarket"},
-		account3Deployment[0].Contracts,
-	)
+	for i, name := range []string{"KittyItems", "KittyItemsMarket"} {
+		assert.Equal(t, account2Deployment[0].Contracts[i].Name, name)
+	}
+
+	for i, name := range []string{"FungibleToken", "NonFungibleToken", "Kibble", "KittyItems", "KittyItemsMarket"} {
+		assert.Equal(t, account3Deployment[0].Contracts[i].Name, name)
+	}
+
 }
 
 func Test_TransformDeployToJSON(t *testing.T) {
-	b := []byte(`{"emulator":{"account-3":["KittyItems","KittyItemsMarket"],"account-4":["FungibleToken","NonFungibleToken","Kibble","KittyItems","KittyItemsMarket"]},"testnet":{"account-2":["FungibleToken","NonFungibleToken","Kibble","KittyItems"]}}`)
+	b := []byte(`{
+		"emulator":{
+			"account-3":["KittyItems", {
+					"name": "Kibble",
+					"args": [
+						{ "type": "String", "value": "Hello World" },
+						{ "type": "Int8", "value": "10" }
+					]
+			}],
+			"account-4":["FungibleToken","NonFungibleToken","Kibble","KittyItems","KittyItemsMarket"]
+		},
+		"testnet":{
+			"account-2":["FungibleToken","NonFungibleToken","Kibble","KittyItems"]
+		}
+	}`)
 
 	var jsonDeployments jsonDeployments
 	err := json.Unmarshal(b, &jsonDeployments)
@@ -89,5 +111,38 @@ func Test_TransformDeployToJSON(t *testing.T) {
 	j := transformDeploymentsToJSON(deployments)
 	x, _ := json.Marshal(j)
 
-	assert.Equal(t, string(b), string(x))
+	assert.Equal(t, cleanSpecialChars(b), cleanSpecialChars(x))
+}
+
+func Test_DeploymentAdvanced(t *testing.T) {
+	b := []byte(`{
+		"emulator": {
+			"alice": [
+				{
+					"name": "Kibble",
+					"args": [
+						{ "type": "String", "value": "Hello World" },
+						{ "type": "Int8", "value": "10" }
+					]
+				},
+				"KittyItemsMarket"
+			]
+		}
+	}`)
+
+	var jsonDeployments jsonDeployments
+	err := json.Unmarshal(b, &jsonDeployments)
+	assert.NoError(t, err)
+
+	deployments := jsonDeployments.transformToConfig()
+
+	alice := deployments.GetByAccountAndNetwork("alice", "emulator")
+	assert.Len(t, alice, 1)
+	assert.Len(t, alice[0].Contracts, 2)
+	assert.Equal(t, alice[0].Contracts[0].Name, "Kibble")
+	assert.Len(t, alice[0].Contracts[0].Args, 2)
+	assert.Equal(t, alice[0].Contracts[0].Args[0].String(), `"Hello World"`)
+	assert.Equal(t, alice[0].Contracts[0].Args[1].String(), "10")
+	assert.Equal(t, alice[0].Contracts[1].Name, "KittyItemsMarket")
+	assert.Len(t, alice[0].Contracts[1].Args, 0)
 }

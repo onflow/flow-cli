@@ -63,6 +63,10 @@ func (g *EmulatorGateway) GetTransaction(id flow.Identifier) (*flow.Transaction,
 	return g.emulator.GetTransaction(id)
 }
 
+func (g *EmulatorGateway) Ping() error {
+	return nil
+}
+
 func (g *EmulatorGateway) ExecuteScript(script []byte, arguments []cadence.Value) (cadence.Value, error) {
 	return nil, fmt.Errorf("Not Supported Yet")
 }

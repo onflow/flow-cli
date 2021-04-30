@@ -33,16 +33,12 @@ func Test_SimpleJSONConfig(t *testing.T) {
 		},
 		"contracts": {},
 		"networks": {
-			"emulator": {
-				"host": "127.0.0.1:3569",
-				"chain": "flow-emulator"
-			}
+			"emulator": "127.0.0.1:3569"
 		},
 		"accounts": {
 			"emulator-account": {
 				"address": "f8d6e0586b0a20c7",
-				"keys": "11c5dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7",
-				"chain": "flow-emulator"
+				"keys": "11c5dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7"
 			}
 		},
 		"deploys": {}

@@ -33,6 +33,7 @@ import (
 	"github.com/onflow/flow-cli/internal/keys"
 	"github.com/onflow/flow-cli/internal/project"
 	"github.com/onflow/flow-cli/internal/scripts"
+	"github.com/onflow/flow-cli/internal/status"
 	"github.com/onflow/flow-cli/internal/transactions"
 	"github.com/onflow/flow-cli/internal/version"
 	"github.com/onflow/flow-cli/pkg/flowcli/util"
@@ -46,6 +47,7 @@ func main() {
 
 	// hot commands
 	config.InitCommand.AddToParent(cmd)
+	status.Command.AddToParent(cmd)
 
 	// structured commands
 	cmd.AddCommand(cadence.Cmd)

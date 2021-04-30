@@ -20,24 +20,59 @@ package json
 
 import (
 	"encoding/json"
+	"fmt"
+
+	"github.com/onflow/cadence"
+
+	jsoncdc "github.com/onflow/cadence/encoding/json"
 
 	"github.com/onflow/flow-cli/pkg/flowcli/config"
 )
 
-type jsonDeployments map[string]jsonDeploy
+type jsonDeployments map[string]jsonDeployment
 
 // transformToConfig transforms json structures to config structure
 func (j jsonDeployments) transformToConfig() config.Deployments {
 	deployments := make(config.Deployments, 0)
 
-	for networkName, d := range j {
-		for accountName, contracts := range d.Simple {
-			deploy := config.Deploy{
-				Network:   networkName,
-				Account:   accountName,
-				Contracts: contracts,
+	for networkName, deploys := range j {
+
+		var deploy config.Deploy
+		for accountName, contracts := range deploys {
+			deploy = config.Deploy{
+				Network: networkName,
+				Account: accountName,
 			}
 
+			var contractDeploys []config.ContractDeployment
+			for _, contract := range contracts {
+				if contract.simple != "" {
+					contractDeploys = append(
+						contractDeploys,
+						config.ContractDeployment{
+							Name: contract.simple,
+							Args: nil,
+						},
+					)
+				} else {
+					args := make([]cadence.Value, 0)
+					for _, arg := range contract.advanced.Args {
+						b, _ := json.Marshal(arg)
+						cadenceArg, _ := jsoncdc.Decode(b)
+						args = append(args, cadenceArg)
+					}
+
+					contractDeploys = append(
+						contractDeploys,
+						config.ContractDeployment{
+							Name: contract.advanced.Name,
+							Args: args,
+						},
+					)
+				}
+			}
+
+			deploy.Contracts = contractDeploys
 			deployments = append(deployments, deploy)
 		}
 	}
@@ -46,42 +81,86 @@ func (j jsonDeployments) transformToConfig() config.Deployments {
 }
 
 // transformToJSON transforms config structure to json structures for saving
-func transformDeploymentsToJSON(deployments config.Deployments) jsonDeployments {
-	jsonDeployments := jsonDeployments{}
+func transformDeploymentsToJSON(configDeployments config.Deployments) jsonDeployments {
+	jsonDeploys := jsonDeployments{}
 
-	for _, d := range deployments {
-		if _, exists := jsonDeployments[d.Network]; exists {
-			jsonDeployments[d.Network].Simple[d.Account] = d.Contracts
-		} else {
-			jsonDeployments[d.Network] = jsonDeploy{
-				Simple: map[string][]string{
-					d.Account: d.Contracts,
-				},
+	for _, d := range configDeployments {
+
+		deployments := make([]deployment, 0)
+		for _, c := range d.Contracts {
+			if len(c.Args) == 0 {
+				deployments = append(deployments, deployment{
+					simple: c.Name,
+				})
+			} else {
+				args := make([]map[string]string, 0)
+				for _, arg := range c.Args {
+					args = append(args, map[string]string{
+						"type":  arg.Type().ID(),
+						"value": fmt.Sprintf("%v", arg.ToGoValue()),
+					})
+				}
+
+				deployments = append(deployments, deployment{
+					advanced: contractDeployment{
+						Name: c.Name,
+						Args: args,
+					},
+				})
 			}
 		}
+
+		if _, ok := jsonDeploys[d.Network]; ok {
+			jsonDeploys[d.Network][d.Account] = deployments
+		} else {
+			jsonDeploys[d.Network] = jsonDeployment{
+				d.Account: deployments,
+			}
+		}
+
 	}
 
-	return jsonDeployments
+	return jsonDeploys
 }
 
-type Simple map[string][]string
-
-type jsonDeploy struct {
-	Simple
+type contractDeployment struct {
+	Name string              `json:"name"`
+	Args []map[string]string `json:"args"`
 }
 
-func (j *jsonDeploy) UnmarshalJSON(b []byte) error {
-	var simple map[string][]string
+type deployment struct {
+	simple   string
+	advanced contractDeployment
+}
 
+type jsonDeployment map[string][]deployment
+
+func (d *deployment) UnmarshalJSON(b []byte) error {
+
+	// simple format
+	var simple string
 	err := json.Unmarshal(b, &simple)
-	if err != nil {
+	if err == nil {
+		d.simple = simple
+		return nil
+	}
+
+	// advanced format
+	var advanced contractDeployment
+	err = json.Unmarshal(b, &advanced)
+	if err == nil {
+		d.advanced = advanced
+	} else {
 		return err
 	}
-	j.Simple = simple
 
 	return nil
 }
 
-func (j jsonDeploy) MarshalJSON() ([]byte, error) {
-	return json.Marshal(j.Simple)
+func (d deployment) MarshalJSON() ([]byte, error) {
+	if d.simple != "" {
+		return json.Marshal(d.simple)
+	} else {
+		return json.Marshal(d.advanced)
+	}
 }

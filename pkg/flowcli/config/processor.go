@@ -22,6 +22,8 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/joho/godotenv"
+
 	"github.com/a8m/envsubst"
 )
 
@@ -41,6 +43,8 @@ func ProcessorRun(raw []byte) ([]byte, map[string]string) {
 
 // processEnv finds env variables and insert env values
 func processEnv(raw string) string {
+	_ = godotenv.Load() // try to load .env file
+
 	raw, _ = envsubst.String(raw)
 	return raw
 }

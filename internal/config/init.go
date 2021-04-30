@@ -21,7 +21,6 @@ package config
 import (
 	"bytes"
 	"fmt"
-	"text/tabwriter"
 
 	"github.com/spf13/cobra"
 
@@ -35,7 +34,8 @@ type FlagsInit struct {
 	ServicePrivateKey  string `flag:"service-private-key" info:"Service account private key"`
 	ServiceKeySigAlgo  string `default:"ECDSA_P256" flag:"service-sig-algo" info:"Service account key signature algorithm"`
 	ServiceKeyHashAlgo string `default:"SHA3_256" flag:"service-hash-algo" info:"Service account key hash algorithm"`
-	Reset              bool   `default:"false" flag:"reset" info:"Reset flow.json config file"`
+	Reset              bool   `default:"false" flag:"reset" info:"Reset configuration file"`
+	Global             bool   `default:"false" flag:"global" info:"Initialize global user configuration"`
 }
 
 var initFlag = FlagsInit{}
@@ -54,6 +54,7 @@ var InitCommand = &command.Command{
 	) (command.Result, error) {
 		proj, err := services.Project.Init(
 			initFlag.Reset,
+			initFlag.Global,
 			initFlag.ServiceKeySigAlgo,
 			initFlag.ServiceKeyHashAlgo,
 			initFlag.ServicePrivateKey,
@@ -79,12 +80,12 @@ func (r *InitResult) JSON() interface{} {
 // String convert result to string
 func (r *InitResult) String() string {
 	var b bytes.Buffer
-	writer := tabwriter.NewWriter(&b, 0, 8, 1, '\t', tabwriter.AlignRight)
+	writer := util.CreateTabWriter(&b)
 	account, _ := r.Project.EmulatorServiceAccount()
 
-	fmt.Fprintf(writer, "Configuration initialized\n")
-	fmt.Fprintf(writer, "Service account: %s\n\n", util.Bold("0x"+account.Address().String()))
-	fmt.Fprintf(writer,
+	_, _ = fmt.Fprintf(writer, "Configuration initialized\n")
+	_, _ = fmt.Fprintf(writer, "Service account: %s\n\n", util.Bold("0x"+account.Address().String()))
+	_, _ = fmt.Fprintf(writer,
 		"Start emulator by running: %s \nReset configuration using: %s\n",
 		util.Bold("'flow emulator'"),
 		util.Bold("'flow init --reset'"),

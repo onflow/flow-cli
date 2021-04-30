@@ -25,6 +25,8 @@ import (
 	"io/ioutil"
 	"strings"
 
+	jsoncdc "github.com/onflow/cadence/encoding/json"
+
 	"github.com/onflow/flow-go-sdk/templates"
 
 	"github.com/onflow/flow-cli/pkg/flowcli"
@@ -84,16 +86,16 @@ func NewUpdateAccountContractTransaction(signer *Account, name string, source st
 }
 
 // NewAddAccountContractTransaction add new contract to the account
-func NewAddAccountContractTransaction(signer *Account, name string, source string) (*Transaction, error) {
-	contract := templates.Contract{
+func NewAddAccountContractTransaction(
+	signer *Account,
+	name string,
+	source string,
+	args []cadence.Value,
+) (*Transaction, error) {
+	return addAccountContractWithArgs(signer, templates.Contract{
 		Name:   name,
 		Source: source,
-	}
-
-	return newTransactionFromTemplate(
-		templates.AddAccountContract(signer.Address(), contract),
-		signer,
-	)
+	}, args)
 }
 
 // NewRemoveAccountContractTransaction creates new transaction to remove contract
@@ -102,6 +104,50 @@ func NewRemoveAccountContractTransaction(signer *Account, name string) (*Transac
 		templates.RemoveAccountContract(signer.Address(), name),
 		signer,
 	)
+}
+
+func addAccountContractWithArgs(
+	signer *Account,
+	contract templates.Contract,
+	args []cadence.Value,
+) (*Transaction, error) {
+	const addAccountContractTemplate = `
+	transaction(name: String, code: String %s) {
+		prepare(signer: AuthAccount) {
+			signer.contracts.add(name: name, code: code.decodeHex() %s)
+		}
+	}`
+
+	cadenceName := cadence.NewString(contract.Name)
+	cadenceCode := cadence.NewString(contract.SourceHex())
+
+	tx := flow.NewTransaction().
+		AddRawArgument(jsoncdc.MustEncode(cadenceName)).
+		AddRawArgument(jsoncdc.MustEncode(cadenceCode)).
+		AddAuthorizer(signer.Address())
+
+	for _, arg := range args {
+		arg.Type().ID()
+		tx.AddRawArgument(jsoncdc.MustEncode(arg))
+	}
+
+	txArgs, addArgs := "", ""
+	for i, arg := range args {
+		txArgs += fmt.Sprintf(",arg%d:%s", i, arg.Type().ID())
+		addArgs += fmt.Sprintf(",arg%d", i)
+	}
+
+	script := fmt.Sprintf(addAccountContractTemplate, txArgs, addArgs)
+	tx.SetScript([]byte(script))
+
+	t := &Transaction{tx: tx}
+	err := t.SetSigner(signer)
+	if err != nil {
+		return nil, err
+	}
+	t.SetPayer(signer.Address())
+
+	return t, nil
 }
 
 // NewCreateAccountTransaction creates new transaction for account

@@ -47,6 +47,7 @@ var InitCommand = &command.Command{
 
 		proj, err := services.Project.Init(
 			initFlag.Reset,
+			initFlag.Global,
 			initFlag.ServiceKeySigAlgo,
 			initFlag.ServiceKeyHashAlgo,
 			initFlag.ServicePrivateKey,

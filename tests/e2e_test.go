@@ -36,6 +36,7 @@ import (
 const (
 	serviceAddress  = "f8d6e0586b0a20c7"
 	contractPath    = "./Hello.cdc"
+	contractPathV2  = "./HelloV2.cdc"
 	emulatorAccount = "emulator-account"
 	host            = "127.0.0.1:3569"
 	conf            = "./flow.json"
@@ -50,6 +51,7 @@ func TestAccount(t *testing.T) {
 	}
 
 	helloContract, _ := io.ReadFile(contractPath)
+	helloContractV2, _ := io.ReadFile(contractPathV2)
 
 	gw, err := gateway.NewGrpcGateway(host)
 	assert.NoError(t, err)
@@ -66,7 +68,7 @@ func TestAccount(t *testing.T) {
 		assert.Equal(t, account.Address.String(), serviceAddress)
 	})
 
-	t.Run("Creates an Account", func(t *testing.T) {
+	t.Run("Creates an Account With Single Key", func(t *testing.T) {
 		keys := []string{"0x640a5a359bf3536d15192f18d872d57c98a96cb871b92b70cecb0739c2d5c37b4be12548d3526933c2cda9b0b9c69412f45ffb6b85b6840d8569d969fe84e5b7"}
 		account, err := accounts.Create(
 			emulatorAccount,
@@ -79,7 +81,31 @@ func TestAccount(t *testing.T) {
 
 		assert.NoError(t, err)
 		assert.Equal(t, account.Keys[0].PublicKey.String(), keys[0])
-		assert.Equal(t, string(account.Code), "")
+	})
+
+	t.Run("Creates an Account With Three Keys", func(t *testing.T) {
+		keys := []string{
+			"0x7a2b681b34aa47c85a9a231a62db395ccd448abcba24dcea3243971b42bc47bc90eac75064a7fda218768efe17bfcc0909ad661f4748650ce812e9aeff8a60a2",
+			"0x49ce6f0a0f45514927849202db9f811e825c4a93324e0ce2a005e7180766a9f55e0ce503c954717f7f8108f90111a64aa4c6b83b261670da81ab5d26145be98e",
+			"0x9e7caa551ba5ba623b763f69ad76e62e0df071174a4a74077b3def6077652ec89a3b2c4855e0841b903eedc23aeb5f9b6d85f7aab6e41356884533cd44f4402d",
+		}
+
+		weights := []int{500, 500, 500}
+
+		account, err := accounts.Create(
+			emulatorAccount,
+			keys,
+			weights,
+			"ECDSA_P256",
+			"SHA3_256",
+			[]string{},
+		)
+
+		assert.NoError(t, err)
+		assert.Equal(t, account.Keys[0].PublicKey.String(), keys[0])
+		assert.Equal(t, account.Keys[1].PublicKey.String(), keys[1])
+		assert.Equal(t, account.Keys[2].PublicKey.String(), keys[2])
+		assert.Len(t, account.Keys, 3)
 	})
 
 	t.Run("Account Add Contract", func(t *testing.T) {
@@ -98,24 +124,12 @@ func TestAccount(t *testing.T) {
 		acc, err := accounts.AddContract(
 			emulatorAccount,
 			"Hello",
-			contractPath,
+			contractPathV2,
 			true,
 		)
 
 		assert.NoError(t, err)
-		assert.Equal(t, string(acc.Contracts["Hello"]), string(helloContract))
-	})
-
-	t.Run("Account Update Contract", func(t *testing.T) {
-		acc, err := accounts.AddContract(
-			emulatorAccount,
-			"Hello",
-			contractPath,
-			true,
-		)
-
-		assert.NoError(t, err)
-		assert.Equal(t, string(acc.Contracts["Hello"]), string(helloContract))
+		assert.Equal(t, string(acc.Contracts["Hello"]), string(helloContractV2))
 	})
 
 	t.Run("Account Remove Contract", func(t *testing.T) {
@@ -183,14 +197,14 @@ func TestProject(t *testing.T) {
 
 	projects := services.NewProject(gw, project, logger)
 
-	t.Run("Deploy project", func(t *testing.T) {
+	t.Run("Deploy Project with Args", func(t *testing.T) {
 		contracts, err := projects.Deploy("emulator", true)
 
 		assert.NoError(t, err)
 		assert.Equal(t, contracts[0].Name(), "NonFungibleToken")
 		assert.Equal(t, contracts[1].Name(), "Foo")
 		assert.Equal(t, contracts[1].Dependencies()["./NonFungibleToken.cdc"].Target(), contracts[0].Target())
-		assert.Equal(t, len(contracts), 2)
+		assert.Equal(t, len(contracts), 3)
 	})
 }
 
@@ -208,7 +222,12 @@ func TestScripts(t *testing.T) {
 	scripts := services.NewScripts(gateway, project, logger)
 
 	t.Run("Test Script", func(t *testing.T) {
-		val, err := scripts.Execute("./script.cdc", []string{"String:Mr G"}, "", "")
+		val, err := scripts.Execute(
+			"./script.cdc",
+			[]string{"String:Mr G"},
+			"",
+			"",
+		)
 
 		assert.NoError(t, err)
 		assert.Equal(t, val.String(), `"Hello Mr G"`)
@@ -224,6 +243,18 @@ func TestScripts(t *testing.T) {
 
 		assert.NoError(t, err)
 		assert.Equal(t, val.String(), `"Hello Mr G"`)
+	})
+
+	t.Run("Test Script with Imports", func(t *testing.T) {
+		val, err := scripts.Execute(
+			"./scriptImports.cdc",
+			[]string{},
+			"",
+			"emulator",
+		)
+
+		assert.NoError(t, err)
+		assert.Equal(t, val.String(), `"Hello"`)
 	})
 }
 
@@ -251,6 +282,19 @@ func TestTransactions(t *testing.T) {
 
 		assert.NoError(t, tr.Error)
 		assert.NoError(t, err)
+		assert.Equal(t, tx.Payer.String(), serviceAddress)
+		assert.Equal(t, tr.Status.String(), "SEALED")
+	})
+
+	t.Run("Test Transactions with Imports", func(t *testing.T) {
+		tx, tr, err := transactions.Send(
+			"./transactionImports.cdc",
+			emulatorAccount, []string{}, "",
+			"emulator",
+		)
+
+		assert.NoError(t, err)
+		assert.NoError(t, tr.Error)
 		assert.Equal(t, tx.Payer.String(), serviceAddress)
 		assert.Equal(t, tr.Status.String(), "SEALED")
 	})

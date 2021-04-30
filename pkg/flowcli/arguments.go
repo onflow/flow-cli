@@ -21,6 +21,7 @@ package flowcli
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/onflow/cadence"
@@ -60,7 +61,7 @@ func ParseArgumentsJSON(input string) ([]cadence.Value, error) {
 }
 
 func ParseArgumentsCommaSplit(input []string) ([]cadence.Value, error) {
-	args := make([]map[string]string, 0)
+	args := make([]map[string]interface{}, 0)
 
 	if len(input) == 0 {
 		return make([]cadence.Value, 0), nil
@@ -68,6 +69,7 @@ func ParseArgumentsCommaSplit(input []string) ([]cadence.Value, error) {
 
 	for _, in := range input {
 		argInput := strings.Split(in, ":")
+
 		if len(argInput) != 2 {
 			return nil, fmt.Errorf(
 				"argument not passed in correct format, correct format is: Type:Value, got %s",
@@ -75,11 +77,11 @@ func ParseArgumentsCommaSplit(input []string) ([]cadence.Value, error) {
 			)
 		}
 
-		argInput = sanitizeAddressArg(argInput)
-
-		args = append(args, map[string]string{
-			"value": argInput[1],
-			"type":  argInput[0],
+		argType := argInput[0]
+		argValue := argInput[1]
+		args = append(args, map[string]interface{}{
+			"value": processValue(argType, argValue),
+			"type":  argType,
 		})
 	}
 	jsonArgs, _ := json.Marshal(args)
@@ -89,12 +91,15 @@ func ParseArgumentsCommaSplit(input []string) ([]cadence.Value, error) {
 }
 
 // sanitizeAddressArg sanitize address and make sure it has 0x prefix
-func sanitizeAddressArg(argInput []string) []string {
-	if argInput[0] == "Address" && !strings.Contains(argInput[1], "0x") {
-		argInput[1] = fmt.Sprintf("0x%s", argInput[1])
+func processValue(argType string, argValue string) interface{} {
+	if argType == "Address" && !strings.Contains(argValue, "0x") {
+		return fmt.Sprintf("0x%s", argValue)
+	} else if argType == "Bool" {
+		converted, _ := strconv.ParseBool(argValue)
+		return converted
 	}
 
-	return argInput
+	return argValue
 }
 
 func ParseArguments(args []string, argsJSON string) (scriptArgs []cadence.Value, err error) {

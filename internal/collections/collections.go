@@ -22,10 +22,11 @@ import (
 	"bytes"
 	"fmt"
 	"strings"
-	"text/tabwriter"
 
 	"github.com/onflow/flow-go-sdk"
 	"github.com/spf13/cobra"
+
+	"github.com/onflow/flow-cli/pkg/flowcli/util"
 )
 
 var Cmd = &cobra.Command{
@@ -57,12 +58,12 @@ func (c *CollectionResult) JSON() interface{} {
 // String convert result to string
 func (c *CollectionResult) String() string {
 	var b bytes.Buffer
-	writer := tabwriter.NewWriter(&b, 0, 8, 1, '\t', tabwriter.AlignRight)
+	writer := util.CreateTabWriter(&b)
 
-	fmt.Fprintf(writer, "Collection ID %s:\n", c.Collection.ID())
+	_, _ = fmt.Fprintf(writer, "Collection ID %s:\n", c.Collection.ID())
 
 	for _, tx := range c.Collection.TransactionIDs {
-		fmt.Fprintf(writer, "%s\n", tx.String())
+		_, _ = fmt.Fprintf(writer, "%s\n", tx.String())
 	}
 
 	writer.Flush()

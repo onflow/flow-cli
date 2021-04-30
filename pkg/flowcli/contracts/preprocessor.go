@@ -21,19 +21,19 @@ package contracts
 import (
 	"fmt"
 
-	"github.com/onflow/flow-cli/pkg/flowcli/project"
+	"github.com/onflow/cadence"
 
 	"github.com/onflow/flow-go-sdk"
 )
 
 type Preprocessor struct {
 	loader            Loader
-	aliases           project.Aliases
+	aliases           map[string]string
 	contracts         []*Contract
 	contractsBySource map[string]*Contract
 }
 
-func NewPreprocessor(loader Loader, aliases project.Aliases) *Preprocessor {
+func NewPreprocessor(loader Loader, aliases map[string]string) *Preprocessor {
 	return &Preprocessor{
 		loader:            loader,
 		aliases:           aliases,
@@ -46,6 +46,7 @@ func (p *Preprocessor) AddContractSource(
 	contractName,
 	contractSource string,
 	target flow.Address,
+	args []cadence.Value,
 ) error {
 	contractCode, err := p.loader.Load(contractSource)
 	if err != nil {
@@ -58,6 +59,7 @@ func (p *Preprocessor) AddContractSource(
 		contractSource,
 		contractCode,
 		target,
+		args,
 	)
 	if err != nil {
 		return err

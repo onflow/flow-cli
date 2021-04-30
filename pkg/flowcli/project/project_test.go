@@ -67,22 +67,35 @@ func generateComplexProject() Project {
 			Network: "testnet",
 		}},
 		Deployments: config.Deployments{{
-			Network:   "emulator",
-			Account:   "emulator-account",
-			Contracts: []string{"KittyItems", "KittyItemsMarket"},
+			Network: "emulator",
+			Account: "emulator-account",
+			Contracts: []config.ContractDeployment{
+				{Name: "KittyItems", Args: nil},
+				{Name: "KittyItemsMarket", Args: nil},
+			},
 		}, {
-			Network:   "emulator",
-			Account:   "account-4",
-			Contracts: []string{"FungibleToken", "NonFungibleToken", "Kibble", "KittyItems", "KittyItemsMarket"},
+			Network: "emulator",
+			Account: "account-4",
+			Contracts: []config.ContractDeployment{
+				{Name: "FungibleToken", Args: nil},
+				{Name: "NonFungibleToken", Args: nil},
+				{Name: "Kibble", Args: nil},
+				{Name: "KittyItems", Args: nil},
+				{Name: "KittyItemsMarket", Args: nil},
+			},
 		}, {
-			Network:   "testnet",
-			Account:   "account-2",
-			Contracts: []string{"FungibleToken", "NonFungibleToken", "Kibble", "KittyItems"},
+			Network: "testnet",
+			Account: "account-2",
+			Contracts: []config.ContractDeployment{
+				{Name: "FungibleToken", Args: nil},
+				{Name: "NonFungibleToken", Args: nil},
+				{Name: "Kibble", Args: nil},
+				{Name: "KittyItems", Args: nil},
+			},
 		}},
 		Accounts: config.Accounts{{
 			Name:    "emulator-account",
 			Address: flow.ServiceAddress(flow.Emulator),
-			ChainID: flow.Emulator,
 			Keys: []config.AccountKey{{
 				Type:     config.KeyTypeHex,
 				Index:    0,
@@ -95,7 +108,6 @@ func generateComplexProject() Project {
 		}, {
 			Name:    "account-2",
 			Address: flow.HexToAddress("2c1162386b0a245f"),
-			ChainID: flow.Emulator,
 			Keys: []config.AccountKey{{
 				Type:     config.KeyTypeHex,
 				Index:    0,
@@ -108,7 +120,6 @@ func generateComplexProject() Project {
 		}, {
 			Name:    "account-4",
 			Address: flow.HexToAddress("f8d6e0586b0a20c1"),
-			ChainID: flow.Emulator,
 			Keys: []config.AccountKey{{
 				Type:     config.KeyTypeHex,
 				Index:    0,
@@ -120,9 +131,8 @@ func generateComplexProject() Project {
 			}},
 		}},
 		Networks: config.Networks{{
-			Name:    "emulator",
-			Host:    "127.0.0.1.3569",
-			ChainID: flow.Emulator,
+			Name: "emulator",
+			Host: "127.0.0.1.3569",
 		}},
 	}
 
@@ -147,14 +157,15 @@ func generateSimpleProject() Project {
 			Network: "emulator",
 		}},
 		Deployments: config.Deployments{{
-			Network:   "emulator",
-			Account:   "emulator-account",
-			Contracts: []string{"NonFungibleToken"},
+			Network: "emulator",
+			Account: "emulator-account",
+			Contracts: []config.ContractDeployment{
+				{Name: "NonFungibleToken", Args: nil},
+			},
 		}},
 		Accounts: config.Accounts{{
 			Name:    "emulator-account",
 			Address: flow.ServiceAddress(flow.Emulator),
-			ChainID: flow.Emulator,
 			Keys: []config.AccountKey{{
 				Type:     config.KeyTypeHex,
 				Index:    0,
@@ -166,9 +177,8 @@ func generateSimpleProject() Project {
 			}},
 		}},
 		Networks: config.Networks{{
-			Name:    "emulator",
-			Host:    "127.0.0.1.3569",
-			ChainID: flow.Emulator,
+			Name: "emulator",
+			Host: "127.0.0.1.3569",
 		}},
 	}
 
@@ -198,14 +208,15 @@ func generateAliasesProject() Project {
 			Alias:   "ee82856bf20e2aa6",
 		}},
 		Deployments: config.Deployments{{
-			Network:   "emulator",
-			Account:   "emulator-account",
-			Contracts: []string{"NonFungibleToken"},
+			Network: "emulator",
+			Account: "emulator-account",
+			Contracts: []config.ContractDeployment{
+				{Name: "NonFungibleToken", Args: nil},
+			},
 		}},
 		Accounts: config.Accounts{{
 			Name:    "emulator-account",
 			Address: flow.ServiceAddress(flow.Emulator),
-			ChainID: flow.Emulator,
 			Keys: []config.AccountKey{{
 				Type:     config.KeyTypeHex,
 				Index:    0,
@@ -217,9 +228,8 @@ func generateAliasesProject() Project {
 			}},
 		}},
 		Networks: config.Networks{{
-			Name:    "emulator",
-			Host:    "127.0.0.1.3569",
-			ChainID: flow.Emulator,
+			Name: "emulator",
+			Host: "127.0.0.1.3569",
 		}},
 	}
 
@@ -258,18 +268,22 @@ func generateAliasesComplexProject() Project {
 			Alias:   "ee82856bf20e2aa6",
 		}},
 		Deployments: config.Deployments{{
-			Network:   "emulator",
-			Account:   "emulator-account",
-			Contracts: []string{"NonFungibleToken"},
+			Network: "emulator",
+			Account: "emulator-account",
+			Contracts: []config.ContractDeployment{
+				{Name: "NonFungibleToken", Args: nil},
+			},
 		}, {
-			Network:   "testnet",
-			Account:   "testnet-account",
-			Contracts: []string{"NonFungibleToken", "FungibleToken"},
+			Network: "testnet",
+			Account: "testnet-account",
+			Contracts: []config.ContractDeployment{
+				{Name: "NonFungibleToken", Args: nil},
+				{Name: "FungibleToken", Args: nil},
+			},
 		}},
 		Accounts: config.Accounts{{
 			Name:    "emulator-account",
 			Address: flow.ServiceAddress(flow.Emulator),
-			ChainID: flow.Emulator,
 			Keys: []config.AccountKey{{
 				Type:     config.KeyTypeHex,
 				Index:    0,
@@ -282,7 +296,6 @@ func generateAliasesComplexProject() Project {
 		}, {
 			Name:    "testnet-account",
 			Address: flow.HexToAddress("1e82856bf20e2aa6"),
-			ChainID: flow.Testnet,
 			Keys: []config.AccountKey{{
 				Type:     config.KeyTypeHex,
 				Index:    0,
@@ -294,13 +307,11 @@ func generateAliasesComplexProject() Project {
 			}},
 		}},
 		Networks: config.Networks{{
-			Name:    "emulator",
-			Host:    "127.0.0.1.3569",
-			ChainID: flow.Emulator,
+			Name: "emulator",
+			Host: "127.0.0.1.3569",
 		}, {
-			Name:    "testnet",
-			Host:    "127.0.0.1.3569",
-			ChainID: flow.Testnet,
+			Name: "testnet",
+			Host: "127.0.0.1.3569",
 		}},
 	}
 
@@ -318,7 +329,7 @@ Project Tests
 func Test_GetContractsByNameSimple(t *testing.T) {
 	p := generateSimpleProject()
 
-	contracts, _ := p.ContractsByNetwork("emulator")
+	contracts, _ := p.DeploymentContractsByNetwork("emulator")
 
 	assert.Len(t, contracts, 1)
 	assert.Equal(t, contracts[0].Name, "NonFungibleToken")
@@ -360,7 +371,7 @@ func Test_HostSimple(t *testing.T) {
 func Test_GetContractsByNameComplex(t *testing.T) {
 	p := generateComplexProject()
 
-	contracts, _ := p.ContractsByNetwork("emulator")
+	contracts, _ := p.DeploymentContractsByNetwork("emulator")
 
 	assert.Equal(t, 7, len(contracts))
 
@@ -452,7 +463,7 @@ func Test_GetAliases(t *testing.T) {
 	p := generateAliasesProject()
 
 	aliases := p.AliasesForNetwork("emulator")
-	contracts, _ := p.ContractsByNetwork("emulator")
+	contracts, _ := p.DeploymentContractsByNetwork("emulator")
 
 	assert.Len(t, aliases, 1)
 	assert.Equal(t, aliases["../hungry-kitties/cadence/contracts/FungibleToken.cdc"], "ee82856bf20e2aa6")
@@ -464,10 +475,10 @@ func Test_GetAliasesComplex(t *testing.T) {
 	p := generateAliasesComplexProject()
 
 	aEmulator := p.AliasesForNetwork("emulator")
-	cEmulator, _ := p.ContractsByNetwork("emulator")
+	cEmulator, _ := p.DeploymentContractsByNetwork("emulator")
 
 	aTestnet := p.AliasesForNetwork("testnet")
-	cTestnet, _ := p.ContractsByNetwork("testnet")
+	cTestnet, _ := p.DeploymentContractsByNetwork("testnet")
 
 	assert.Len(t, cEmulator, 1)
 	assert.Equal(t, cEmulator[0].Name, "NonFungibleToken")

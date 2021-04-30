@@ -55,14 +55,14 @@ type Command struct {
 }
 
 type GlobalFlags struct {
-	Filter     string
-	Format     string
-	Save       string
-	Host       string
-	Log        string
-	Network    string
-	Yes        bool
-	ConfigPath []string
+	Filter      string
+	Format      string
+	Save        string
+	Host        string
+	Log         string
+	Network     string
+	Yes         bool
+	ConfigPaths []string
 }
 
 const (
@@ -79,14 +79,14 @@ const (
 )
 
 var Flags = GlobalFlags{
-	Filter:     "",
-	Format:     formatText,
-	Save:       "",
-	Host:       "",
-	Network:    config.DefaultEmulatorNetwork().Name,
-	Log:        logLevelInfo,
-	Yes:        false,
-	ConfigPath: project.DefaultConfigPaths,
+	Filter:      "",
+	Format:      formatText,
+	Save:        "",
+	Host:        "",
+	Network:     config.DefaultEmulatorNetwork().Name,
+	Log:         logLevelInfo,
+	Yes:         false,
+	ConfigPaths: config.DefaultPaths(),
 }
 
 // InitFlags init all the global persistent flags
@@ -132,10 +132,10 @@ func InitFlags(cmd *cobra.Command) {
 	)
 
 	cmd.PersistentFlags().StringSliceVarP(
-		&Flags.ConfigPath,
+		&Flags.ConfigPaths,
 		"config-path",
 		"f",
-		Flags.ConfigPath,
+		Flags.ConfigPaths,
 		"Path to flow configuration file",
 	)
 
@@ -163,7 +163,8 @@ func InitFlags(cmd *cobra.Command) {
 func (c Command) AddToParent(parent *cobra.Command) {
 	c.Cmd.Run = func(cmd *cobra.Command, args []string) {
 		// initialize project but ignore error since config can be missing
-		proj, err := project.Load(Flags.ConfigPath)
+		proj, err := project.Load(Flags.ConfigPaths)
+
 		// here we ignore if config does not exist as some commands don't require it
 		if !errors.Is(err, config.ErrDoesNotExist) && cmd.CommandPath() != "flow init" { // ignore configs errors if we are doing init config
 			handleError("Config Error", err)
@@ -207,6 +208,12 @@ func createGateway(host string) (gateway.Gateway, error) {
 }
 
 // resolveHost from the flags provided
+//
+// Resolve the network host in the following order:
+// 1. if host flag is provided resolve to that host
+// 2. if conf is initialized return host by network flag
+// 3. if conf is not initialized and network flag is provided resolve to coded value for that network
+// 4. default to emulator network
 func resolveHost(proj *project.Project, hostFlag string, networkFlag string) (string, error) {
 	// don't allow both network and host flag as the host might be different
 	if networkFlag != config.DefaultEmulatorNetwork().Name && hostFlag != "" {
@@ -226,8 +233,15 @@ func resolveHost(proj *project.Project, hostFlag string, networkFlag string) (st
 
 		return proj.NetworkByName(networkFlag).Host, nil
 	}
-	// default to emulator host
-	return config.DefaultEmulatorNetwork().Host, nil
+
+	networks := config.DefaultNetworks()
+	network := networks.GetByName(networkFlag)
+
+	if network != nil {
+		return network.Host, nil
+	}
+
+	return "", fmt.Errorf("invalid network with name %s", networkFlag)
 }
 
 // create logger utility
@@ -292,9 +306,9 @@ func outputResult(result string, saveFlag string, formatFlag string, filterFlag 
 	}
 
 	if formatFlag == formatInline || filterFlag != "" {
-		fmt.Fprintf(os.Stdout, "%s", result)
+		_, _ = fmt.Fprintf(os.Stdout, "%s", result)
 	} else { // default normal output
-		fmt.Fprintf(os.Stdout, "\n%s\n\n", result)
+		_, _ = fmt.Fprintf(os.Stdout, "\n%s\n\n", result)
 	}
 	return nil
 }
@@ -332,32 +346,32 @@ func handleError(description string, err error) {
 	// handle rpc error
 	switch t := err.(type) {
 	case *client.RPCError:
-		fmt.Fprintf(os.Stderr, "❌ Grpc Error: %s \n", t.GRPCStatus().Err().Error())
+		_, _ = fmt.Fprintf(os.Stderr, "❌ Grpc Error: %s \n", t.GRPCStatus().Err().Error())
 	default:
 		if errors.Is(err, config.ErrOutdatedFormat) {
-			fmt.Fprintf(os.Stderr, "❌ Config Error: %s \n", err.Error())
-			fmt.Fprintf(os.Stderr, "🙏 Please reset configuration using: 'flow init --reset'. Read more about new configuration here: https://github.com/onflow/flow-cli/releases/tag/v0.17.0")
+			_, _ = fmt.Fprintf(os.Stderr, "❌ Config Error: %s \n", err.Error())
+			_, _ = fmt.Fprintf(os.Stderr, "🙏 Please reset configuration using: 'flow init --reset'. Read more about new configuration here: https://github.com/onflow/flow-cli/releases/tag/v0.17.0")
 		} else if strings.Contains(err.Error(), "transport:") {
-			fmt.Fprintf(os.Stderr, "❌ %s \n", strings.Split(err.Error(), "transport:")[1])
-			fmt.Fprintf(os.Stderr, "🙏 Make sure your emulator is running or connection address is correct.")
+			_, _ = fmt.Fprintf(os.Stderr, "❌ %s \n", strings.Split(err.Error(), "transport:")[1])
+			_, _ = fmt.Fprintf(os.Stderr, "🙏 Make sure your emulator is running or connection address is correct.")
 		} else if strings.Contains(err.Error(), "NotFound desc =") {
-			fmt.Fprintf(os.Stderr, "❌ Not Found:%s \n", strings.Split(err.Error(), "NotFound desc =")[1])
+			_, _ = fmt.Fprintf(os.Stderr, "❌ Not Found:%s \n", strings.Split(err.Error(), "NotFound desc =")[1])
 		} else if strings.Contains(err.Error(), "code = InvalidArgument desc = ") {
 			desc := strings.Split(err.Error(), "code = InvalidArgument desc = ")
-			fmt.Fprintf(os.Stderr, "❌ Invalid argument: %s \n", desc[len(desc)-1])
+			_, _ = fmt.Fprintf(os.Stderr, "❌ Invalid argument: %s \n", desc[len(desc)-1])
 			if strings.Contains(err.Error(), "is invalid for chain") {
-				fmt.Fprintf(os.Stderr, "🙏 Check you are connecting to the correct network or account address you use is correct.")
+				_, _ = fmt.Fprintf(os.Stderr, "🙏 Check you are connecting to the correct network or account address you use is correct.")
 			} else {
-				fmt.Fprintf(os.Stderr, "🙏 Check your argument and flags value, you can use --help.")
+				_, _ = fmt.Fprintf(os.Stderr, "🙏 Check your argument and flags value, you can use --help.")
 			}
 		} else if strings.Contains(err.Error(), "invalid signature:") {
-			fmt.Fprintf(os.Stderr, "❌ Invalid signature: %s \n", strings.Split(err.Error(), "invalid signature:")[1])
-			fmt.Fprintf(os.Stderr, "🙏 Check the signer private key is provided or is in the correct format. If running emulator, make sure it's using the same configuration as this command.")
+			_, _ = fmt.Fprintf(os.Stderr, "❌ Invalid signature: %s \n", strings.Split(err.Error(), "invalid signature:")[1])
+			_, _ = fmt.Fprintf(os.Stderr, "🙏 Check the signer private key is provided or is in the correct format. If running emulator, make sure it's using the same configuration as this command.")
 		} else if strings.Contains(err.Error(), "signature could not be verified using public key with") {
-			fmt.Fprintf(os.Stderr, "❌ %s: %s \n", description, err)
-			fmt.Fprintf(os.Stderr, "🙏 If you are running emulator locally make sure that the emulator was started with the same config as used in this command. \nTry restarting the emulator.")
+			_, _ = fmt.Fprintf(os.Stderr, "❌ %s: %s \n", description, err)
+			_, _ = fmt.Fprintf(os.Stderr, "🙏 If you are running emulator locally make sure that the emulator was started with the same config as used in this command. \nTry restarting the emulator.")
 		} else {
-			fmt.Fprintf(os.Stderr, "❌ %s: %s", description, err)
+			_, _ = fmt.Fprintf(os.Stderr, "❌ %s: %s", description, err)
 		}
 	}
 

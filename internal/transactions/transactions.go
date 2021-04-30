@@ -21,12 +21,12 @@ package transactions
 import (
 	"bytes"
 	"fmt"
-	"text/tabwriter"
-
-	"github.com/onflow/flow-cli/internal/events"
 
 	"github.com/onflow/flow-go-sdk"
 	"github.com/spf13/cobra"
+
+	"github.com/onflow/flow-cli/internal/events"
+	"github.com/onflow/flow-cli/pkg/flowcli/util"
 )
 
 var Cmd = &cobra.Command{
@@ -61,7 +61,10 @@ func (r *TransactionResult) JSON() interface{} {
 	if r.result != nil {
 		result["events"] = fmt.Sprintf("%s", r.result.Events)
 		result["status"] = r.result.Status.String()
-		result["error"] = r.result.Error.Error()
+
+		if r.result.Error != nil {
+			result["error"] = r.result.Error.Error()
+		}
 	}
 
 	return result
@@ -70,49 +73,49 @@ func (r *TransactionResult) JSON() interface{} {
 // String convert result to string
 func (r *TransactionResult) String() string {
 	var b bytes.Buffer
-	writer := tabwriter.NewWriter(&b, 0, 8, 1, '\t', tabwriter.AlignRight)
+	writer := util.CreateTabWriter(&b)
 
 	if r.result != nil {
 		if r.result.Error != nil {
-			fmt.Fprintf(writer, "❌ Transaction Error \n%s\n\n\n", r.result.Error.Error())
+			_, _ = fmt.Fprintf(writer, "❌ Transaction Error \n%s\n\n\n", r.result.Error.Error())
 		}
 
 		statusBadge := ""
 		if r.result.Status == flow.TransactionStatusSealed {
 			statusBadge = "✅"
 		}
-		fmt.Fprintf(writer, "Status\t%s %s\n", statusBadge, r.result.Status)
+		_, _ = fmt.Fprintf(writer, "Status\t%s %s\n", statusBadge, r.result.Status)
 	}
 
-	fmt.Fprintf(writer, "ID\t%s\n", r.tx.ID())
-	fmt.Fprintf(writer, "Payer\t%s\n", r.tx.Payer.Hex())
-	fmt.Fprintf(writer, "Authorizers\t%s\n", r.tx.Authorizers)
+	_, _ = fmt.Fprintf(writer, "ID\t%s\n", r.tx.ID())
+	_, _ = fmt.Fprintf(writer, "Payer\t%s\n", r.tx.Payer.Hex())
+	_, _ = fmt.Fprintf(writer, "Authorizers\t%s\n", r.tx.Authorizers)
 
-	fmt.Fprintf(writer,
+	_, _ = fmt.Fprintf(writer,
 		"\nProposal Key:\t\n    Address\t%s\n    Index\t%v\n    Sequence\t%v\n",
 		r.tx.ProposalKey.Address, r.tx.ProposalKey.KeyIndex, r.tx.ProposalKey.SequenceNumber,
 	)
 
 	if len(r.tx.PayloadSignatures) == 0 {
-		fmt.Fprintf(writer, "\nNo Payload Signatures\n")
+		_, _ = fmt.Fprintf(writer, "\nNo Payload Signatures\n")
 	}
 
 	if len(r.tx.EnvelopeSignatures) == 0 {
-		fmt.Fprintf(writer, "\nNo Envelope Signatures\n")
+		_, _ = fmt.Fprintf(writer, "\nNo Envelope Signatures\n")
 	}
 
 	for i, e := range r.tx.PayloadSignatures {
-		fmt.Fprintf(writer, "\nPayload Signature %v:\n", i)
-		fmt.Fprintf(writer, "    Address\t%s\n", e.Address)
-		fmt.Fprintf(writer, "    Signature\t%x\n", e.Signature)
-		fmt.Fprintf(writer, "    Key Index\t%d\n", e.KeyIndex)
+		_, _ = fmt.Fprintf(writer, "\nPayload Signature %v:\n", i)
+		_, _ = fmt.Fprintf(writer, "    Address\t%s\n", e.Address)
+		_, _ = fmt.Fprintf(writer, "    Signature\t%x\n", e.Signature)
+		_, _ = fmt.Fprintf(writer, "    Key Index\t%d\n", e.KeyIndex)
 	}
 
 	for i, e := range r.tx.EnvelopeSignatures {
-		fmt.Fprintf(writer, "\nEnvelope Signature %v:\n", i)
-		fmt.Fprintf(writer, "    Address\t%s\n", e.Address)
-		fmt.Fprintf(writer, "    Signature\t%x\n", e.Signature)
-		fmt.Fprintf(writer, "    Key Index\t%d\n", e.KeyIndex)
+		_, _ = fmt.Fprintf(writer, "\nEnvelope Signature %v:\n", i)
+		_, _ = fmt.Fprintf(writer, "    Address\t%s\n", e.Address)
+		_, _ = fmt.Fprintf(writer, "    Signature\t%x\n", e.Signature)
+		_, _ = fmt.Fprintf(writer, "    Key Index\t%d\n", e.KeyIndex)
 	}
 
 	if r.result != nil {
@@ -125,29 +128,37 @@ func (r *TransactionResult) String() string {
 			eventsOutput = "None"
 		}
 
-		fmt.Fprintf(writer, "\n\nEvents:\t %s\n", eventsOutput)
+		_, _ = fmt.Fprintf(writer, "\n\nEvents:\t %s\n", eventsOutput)
 	}
 
 	if r.tx.Script != nil {
 		if len(r.tx.Arguments) == 0 {
-			fmt.Fprintf(writer, "\n\nArguments\tNo arguments\n")
+			_, _ = fmt.Fprintf(writer, "\n\nArguments\tNo arguments\n")
 		} else {
-			fmt.Fprintf(writer, "\n\nArguments (%d):\n", len(r.tx.Arguments))
+			_, _ = fmt.Fprintf(writer, "\n\nArguments (%d):\n", len(r.tx.Arguments))
 			for i, argument := range r.tx.Arguments {
-				fmt.Fprintf(writer, "    - Argument %d: %s\n", i, argument)
+				_, _ = fmt.Fprintf(writer, "    - Argument %d: %s\n", i, argument)
 			}
 		}
 
-		fmt.Fprintf(writer, "\nCode\n\n%s\n", r.tx.Script)
+		_, _ = fmt.Fprintf(writer, "\nCode\n\n%s\n", r.tx.Script)
 	}
 
-	fmt.Fprintf(writer, "\n\nPayload:\n%x", r.tx.Encode())
+	_, _ = fmt.Fprintf(writer, "\n\nPayload:\n%x", r.tx.Encode())
 
-	writer.Flush()
+	_ = writer.Flush()
 	return b.String()
 }
 
 // Oneliner show result as one liner grep friendly
 func (r *TransactionResult) Oneliner() string {
-	return fmt.Sprintf("ID: %s, Status: %s, Events: %s", r.tx.ID(), r.result.Status, r.result.Events)
+	result := fmt.Sprintf(
+		"ID: %s, Payer: %s, Authorizer: %s",
+		r.tx.ID(), r.tx.Payer, r.tx.Authorizers)
+
+	if r.result != nil {
+		result += fmt.Sprintf(", Status: %s, Events: %s", r.result.Status, r.result.Events)
+	}
+
+	return result
 }

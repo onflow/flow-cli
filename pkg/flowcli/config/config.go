@@ -20,6 +20,10 @@ package config
 
 import (
 	"errors"
+	"fmt"
+	"os"
+
+	"github.com/onflow/cadence"
 
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
@@ -41,16 +45,21 @@ type Emulators []Emulator
 
 // Network defines the configuration for a Flow network.
 type Network struct {
-	Name    string
-	Host    string
-	ChainID flow.ChainID
+	Name string
+	Host string
 }
 
 // Deploy defines the configuration for a contract deployment.
 type Deploy struct {
-	Network   string   // network name to deploy to
-	Account   string   // account name to which to deploy to
-	Contracts []string // contracts names to deploy
+	Network   string               // network name to deploy to
+	Account   string               // account name to which to deploy to
+	Contracts []ContractDeployment // contracts to deploy
+}
+
+// ContractDeployment defines the deployment of the contract with possible args
+type ContractDeployment struct {
+	Name string
+	Args []cadence.Value
 }
 
 // Contract defines the configuration for a Cadence contract.
@@ -65,7 +74,6 @@ type Contract struct {
 type Account struct {
 	Name    string
 	Address flow.Address
-	ChainID flow.ChainID
 	Keys    []AccountKey
 }
 
@@ -100,27 +108,24 @@ const (
 // DefaultEmulatorNetwork get default emulator network
 func DefaultEmulatorNetwork() Network {
 	return Network{
-		Name:    "emulator",
-		Host:    "127.0.0.1:3569",
-		ChainID: flow.Emulator,
+		Name: "emulator",
+		Host: "127.0.0.1:3569",
 	}
 }
 
 // DefaultTestnetNetwork get default testnet network
 func DefaultTestnetNetwork() Network {
 	return Network{
-		Name:    "testnet",
-		Host:    "access.devnet.nodes.onflow.org:9000",
-		ChainID: flow.Testnet,
+		Name: "testnet",
+		Host: "access.devnet.nodes.onflow.org:9000",
 	}
 }
 
 // DefaultMainnetNetwork get default mainnet network
 func DefaultMainnetNetwork() Network {
 	return Network{
-		Name:    "mainnet",
-		Host:    "access.mainnet.nodes.onflow.org:9000",
-		ChainID: flow.Mainnet,
+		Name: "mainnet",
+		Host: "access.mainnet.nodes.onflow.org:9000",
 	}
 }
 
@@ -157,6 +162,26 @@ func DefaultEmulators() Emulators {
 
 var ErrOutdatedFormat = errors.New("you are using old configuration format")
 
+const DefaultPath = "flow.json"
+
+// GlobalPath gets global path based on home dir
+func GlobalPath() string {
+	dirname, err := os.UserHomeDir()
+	if err != nil {
+		return ""
+	}
+
+	return fmt.Sprintf("%s/%s", dirname, DefaultPath)
+}
+
+// DefaultPaths determines default paths for configuration
+func DefaultPaths() []string {
+	return []string{
+		GlobalPath(),
+		DefaultPath,
+	}
+}
+
 // IsAlias checks if contract has an alias
 func (c *Contract) IsAlias() bool {
 	return c.Alias != ""
@@ -190,8 +215,6 @@ func (c *Contracts) GetByNameAndNetwork(name string, network string) *Contract {
 	return &contracts[0]
 }
 
-// TODO: this filtering can cause error if not found, better to refactor to returning
-
 // GetByName get contract by name
 func (c *Contracts) GetByName(name string) *Contract {
 	for _, contract := range *c {
@@ -219,13 +242,29 @@ func (c *Contracts) GetByNetwork(network string) Contracts {
 // AddOrUpdate add new or update if already present
 func (c *Contracts) AddOrUpdate(name string, contract Contract) {
 	for i, existingContract := range *c {
-		if existingContract.Name == name {
+		if existingContract.Name == name &&
+			existingContract.Network == contract.Network {
 			(*c)[i] = contract
 			return
 		}
 	}
 
 	*c = append(*c, contract)
+}
+
+func (c *Contracts) Remove(name string) error {
+	contract := c.GetByName(name)
+	if contract == nil {
+		return fmt.Errorf("contract named %s does not exist in configuration", name)
+	}
+
+	for i, contract := range *c {
+		if contract.Name == name {
+			*c = append((*c)[0:i], (*c)[i+1:]...) // remove item
+		}
+	}
+
+	return nil
 }
 
 // AccountByName get account by name
@@ -251,9 +290,25 @@ func (a *Accounts) AddOrUpdate(name string, account Account) {
 	*a = append(*a, account)
 }
 
+// Remove remove account by name
+func (a *Accounts) Remove(name string) error {
+	account := a.GetByName(name)
+	if account == nil {
+		return fmt.Errorf("account named %s does not exist in configuration", name)
+	}
+
+	for i, account := range *a {
+		if account.Name == name {
+			*a = append((*a)[0:i], (*a)[i+1:]...) // remove item
+		}
+	}
+
+	return nil
+}
+
 // GetByNetwork get all deployments by network
 func (d *Deployments) GetByNetwork(network string) Deployments {
-	var deployments []Deploy
+	var deployments Deployments
 
 	for _, deploy := range *d {
 		if deploy.Network == network {
@@ -265,8 +320,8 @@ func (d *Deployments) GetByNetwork(network string) Deployments {
 }
 
 // GetByAccountAndNetwork get deploy by account and network
-func (d *Deployments) GetByAccountAndNetwork(account string, network string) []Deploy {
-	var deployments []Deploy
+func (d *Deployments) GetByAccountAndNetwork(account string, network string) Deployments {
+	var deployments Deployments
 
 	for _, deploy := range *d {
 		if deploy.Network == network && deploy.Account == account {
@@ -280,13 +335,34 @@ func (d *Deployments) GetByAccountAndNetwork(account string, network string) []D
 // AddOrUpdate add new or update if already present
 func (d *Deployments) AddOrUpdate(deployment Deploy) {
 	for i, existingDeployment := range *d {
-		if existingDeployment.Account == deployment.Account {
+		if existingDeployment.Account == deployment.Account &&
+			existingDeployment.Network == deployment.Network {
 			(*d)[i] = deployment
 			return
 		}
 	}
 
 	*d = append(*d, deployment)
+}
+
+// Remove removes deployment by account and network
+func (d *Deployments) Remove(account string, network string) error {
+	deployment := d.GetByAccountAndNetwork(account, network)
+	if deployment == nil {
+		return fmt.Errorf(
+			"deployment for account %s on network %s does not exist in configuration",
+			account,
+			network,
+		)
+	}
+
+	for i, deployment := range *d {
+		if deployment.Network == network && deployment.Account == account {
+			*d = append((*d)[0:i], (*d)[i+1:]...) // remove item
+		}
+	}
+
+	return nil
 }
 
 // GetByName get network by name
@@ -310,6 +386,21 @@ func (n *Networks) AddOrUpdate(name string, network Network) {
 	}
 
 	*n = append(*n, network)
+}
+
+func (n *Networks) Remove(name string) error {
+	network := n.GetByName(name)
+	if network == nil {
+		return fmt.Errorf("network named %s does not exist in configuration", name)
+	}
+
+	for i, network := range *n {
+		if network.Name == name {
+			*n = append((*n)[0:i], (*n)[i+1:]...) // remove item
+		}
+	}
+
+	return nil
 }
 
 // Default gets default emulator

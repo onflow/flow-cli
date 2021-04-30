@@ -21,6 +21,8 @@ package services
 import (
 	"fmt"
 
+	"github.com/onflow/flow-cli/pkg/flowcli/config"
+
 	"github.com/onflow/cadence"
 
 	"github.com/onflow/flow-cli/pkg/flowcli"
@@ -61,7 +63,7 @@ func (s *Scripts) Execute(scriptPath string, args []string, argsJSON string, net
 	return s.execute(script, args, argsJSON, scriptPath, network)
 }
 
-// Execute executes a Cadence script from a source code string.
+// ExecuteWithCode executes a Cadence script from a source code string.
 func (s *Scripts) ExecuteWithCode(code []byte, args []string, argsJSON string) (cadence.Value, error) {
 	return s.execute(code, args, argsJSON, "", "")
 }
@@ -79,7 +81,7 @@ func (s *Scripts) execute(code []byte, args []string, argsJSON string, scriptPat
 
 	if resolver.HasFileImports() {
 		if s.project == nil {
-			return nil, fmt.Errorf("missing configuration, initialize it: flow init")
+			return nil, config.ErrDoesNotExist
 		}
 		if network == "" {
 			return nil, fmt.Errorf("missing network, specify which network to use to resolve imports in script code")
@@ -88,7 +90,7 @@ func (s *Scripts) execute(code []byte, args []string, argsJSON string, scriptPat
 			return nil, fmt.Errorf("resolving imports in scripts not supported")
 		}
 
-		contractsNetwork, err := s.project.ContractsByNetwork(network)
+		contractsNetwork, err := s.project.DeploymentContractsByNetwork(network)
 		if err != nil {
 			return nil, err
 		}

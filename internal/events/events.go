@@ -22,14 +22,13 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"text/tabwriter"
+
+	"github.com/onflow/flow-cli/pkg/flowcli/util"
 
 	"github.com/onflow/cadence"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/client"
 	"github.com/spf13/cobra"
-
-	"github.com/onflow/flow-cli/pkg/flowcli/util"
 )
 
 var Cmd = &cobra.Command{
@@ -49,15 +48,19 @@ type EventResult struct {
 }
 
 // JSON convert result to JSON
-func (k *EventResult) JSON() interface{} {
-	result := make(map[string]map[uint64]map[string]interface{})
-	for _, blockEvent := range k.BlockEvents {
+func (e *EventResult) JSON() interface{} {
+	result := make([]interface{}, 0)
+
+	for _, blockEvent := range e.BlockEvents {
 		if len(blockEvent.Events) > 0 {
 			for _, event := range blockEvent.Events {
-				result["blockId"][blockEvent.Height]["index"] = event.EventIndex
-				result["blockId"][blockEvent.Height]["type"] = event.Type
-				result["blockId"][blockEvent.Height]["transactionId"] = event.TransactionID
-				result["blockId"][blockEvent.Height]["values"] = event.Value
+				result = append(result, map[string]interface{}{
+					"blockID":       blockEvent.Height,
+					"index":         event.EventIndex,
+					"type":          event.Type,
+					"transactionId": event.TransactionID.String(),
+					"values":        event.Value.String(),
+				})
 			}
 		}
 	}
@@ -66,29 +69,29 @@ func (k *EventResult) JSON() interface{} {
 }
 
 // String convert result to string
-func (k *EventResult) String() string {
+func (e *EventResult) String() string {
 	var b bytes.Buffer
-	writer := tabwriter.NewWriter(&b, 0, 8, 1, '\t', tabwriter.AlignRight)
+	writer := util.CreateTabWriter(&b)
 
-	for _, blockEvent := range k.BlockEvents {
+	for _, blockEvent := range e.BlockEvents {
 		if len(blockEvent.Events) > 0 {
-			fmt.Fprintf(writer, "Events Block #%v:", blockEvent.Height)
+			_, _ = fmt.Fprintf(writer, "Events Block #%v:", blockEvent.Height)
 			eventsString(writer, blockEvent.Events)
-			fmt.Fprintf(writer, "\n")
+			_, _ = fmt.Fprintf(writer, "\n")
 		}
 	}
 
 	// if we have events passed directly and not in relation to block
-	eventsString(writer, k.Events)
+	eventsString(writer, e.Events)
 
 	writer.Flush()
 	return b.String()
 }
 
 // Oneliner show result as one liner grep friendly
-func (k *EventResult) Oneliner() string {
+func (e *EventResult) Oneliner() string {
 	result := ""
-	for _, blockEvent := range k.BlockEvents {
+	for _, blockEvent := range e.BlockEvents {
 		if len(blockEvent.Events) > 0 {
 			result += fmt.Sprintf("Events Block #%v: [", blockEvent.Height)
 			for _, event := range blockEvent.Events {
@@ -111,10 +114,10 @@ func eventsString(writer io.Writer, events []flow.Event) {
 }
 
 func eventString(writer io.Writer, event flow.Event) {
-	fmt.Fprintf(writer, "\n    Index\t%d\n", event.EventIndex)
-	fmt.Fprintf(writer, "    Type\t%s\n", event.Type)
-	fmt.Fprintf(writer, "    Tx ID\t%s\n", event.TransactionID)
-	fmt.Fprintf(writer, "    Values\n")
+	_, _ = fmt.Fprintf(writer, "\n    Index\t%d\n", event.EventIndex)
+	_, _ = fmt.Fprintf(writer, "    Type\t%s\n", event.Type)
+	_, _ = fmt.Fprintf(writer, "    Tx ID\t%s\n", event.TransactionID)
+	_, _ = fmt.Fprintf(writer, "    Values\n")
 
 	for i, field := range event.Value.EventType.Fields {
 		value := event.Value.Fields[i]

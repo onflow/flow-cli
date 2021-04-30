@@ -41,11 +41,7 @@ func Test_ConfigNetworkSimple(t *testing.T) {
 
 func Test_ConfigNetworkMultiple(t *testing.T) {
 	b := []byte(`{
-    "emulator": {
-      "host": "127.0.0.1:3569",
-			"chain": "flow-emulator",
-      "serviceAccount": "emulator-service"
-    },
+    "emulator": "127.0.0.1:3569",
     "testnet": "access.testnet.nodes.onflow.org:9000"
 	}`)
 
@@ -63,7 +59,7 @@ func Test_ConfigNetworkMultiple(t *testing.T) {
 }
 
 func Test_TransformNetworkToJSON(t *testing.T) {
-	b := []byte(`{"emulator":{"host":"127.0.0.1:3569","chain":"flow-emulator"},"testnet":"access.testnet.nodes.onflow.org:9000"}`)
+	b := []byte(`{"emulator":"127.0.0.1:3569","testnet":"access.testnet.nodes.onflow.org:9000"}`)
 
 	var jsonNetworks jsonNetworks
 	err := json.Unmarshal(b, &jsonNetworks)
@@ -75,4 +71,24 @@ func Test_TransformNetworkToJSON(t *testing.T) {
 	x, _ := json.Marshal(j)
 
 	assert.Equal(t, string(b), string(x))
+}
+
+func Test_IngoreOldFormat(t *testing.T) {
+	b := []byte(`{
+		"emulator":"127.0.0.1:3569",
+		"testnet":"access.testnet.nodes.onflow.org:9000",
+		"mainnet": {
+			"host": "access.mainnet.nodes.onflow.org:9000",
+			"chain": "flow-mainnet"
+		}
+	}`)
+
+	var jsonNetworks jsonNetworks
+	err := json.Unmarshal(b, &jsonNetworks)
+	assert.NoError(t, err)
+
+	conf := jsonNetworks.transformToConfig()
+	assert.Len(t, jsonNetworks, 3)
+	assert.Equal(t, conf.GetByName("testnet").Host, "access.testnet.nodes.onflow.org:9000")
+	assert.Equal(t, conf.GetByName("mainnet").Host, "access.mainnet.nodes.onflow.org:9000")
 }

@@ -61,13 +61,13 @@ func ConfiguredServiceKey(
 		if err != nil {
 			util.Exitf(1, err.Error())
 		} else {
-			err = proj.Save(project.DefaultConfigPath)
+			err = proj.SaveDefault()
 			if err != nil {
 				util.Exitf(1, err.Error())
 			}
 		}
 	} else {
-		proj, err = project.Load(command.Flags.ConfigPath)
+		proj, err = project.Load(command.Flags.ConfigPaths)
 		if err != nil {
 			if errors.Is(err, config.ErrDoesNotExist) {
 				util.Exitf(1, "🙏 Configuration is missing, initialize it with: 'flow init' and then rerun this command.")

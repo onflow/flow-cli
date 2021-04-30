@@ -145,7 +145,7 @@ func (t *Transactions) Build(
 			return nil, fmt.Errorf("resolving imports in transactions not supported")
 		}
 
-		contractsNetwork, err := t.project.ContractsByNetwork(network)
+		contractsNetwork, err := t.project.DeploymentContractsByNetwork(network)
 		if err != nil {
 			return nil, err
 		}
@@ -214,6 +214,9 @@ func (t *Transactions) SendSigned(
 		return nil, nil, err
 	}
 
+	t.logger.StartProgress(fmt.Sprintf("Sending Transaction with ID: %s", tx.FlowTransaction().ID()))
+	defer t.logger.StopProgress()
+
 	sentTx, err := t.gateway.SendSignedTransaction(tx)
 	if err != nil {
 		return nil, nil, err
@@ -244,11 +247,13 @@ func (t *Transactions) Send(
 		return nil, nil, fmt.Errorf("signer account: [%s] doesn't exists in configuration", signerName)
 	}
 
+	signerKeyIndex := signerAccount.DefaultKey().Index()
+
 	tx, err := t.Build(
 		signerName,
 		[]string{signerName},
 		signerName,
-		0, // default 0 key
+		signerKeyIndex,
 		transactionFilename,
 		args,
 		argsJSON,

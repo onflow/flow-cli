@@ -23,6 +23,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/onflow/cadence"
+
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/test"
 	"github.com/stretchr/testify/assert"
@@ -228,6 +230,7 @@ func TestResolveImports(t *testing.T) {
 					contract.name,
 					contract.source,
 					contract.target,
+					[]cadence.Value{nil},
 				)
 				assert.NoError(t, err)
 			}
@@ -276,6 +279,7 @@ func TestContractDeploymentOrder(t *testing.T) {
 					contract.name,
 					contract.source,
 					contract.target,
+					[]cadence.Value{nil},
 				)
 				assert.NoError(t, err)
 			}

@@ -22,6 +22,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/onflow/flow-cli/pkg/flowcli/config"
+
 	"github.com/onflow/flow-cli/pkg/flowcli"
 	"github.com/onflow/flow-cli/pkg/flowcli/gateway"
 	"github.com/onflow/flow-cli/pkg/flowcli/output"
@@ -120,7 +122,7 @@ func (a *Accounts) Create(
 	contracts []string,
 ) (*flow.Account, error) {
 	if a.project == nil {
-		return nil, fmt.Errorf("missing configuration, initialize it: flow init")
+		return nil, config.ErrDoesNotExist
 	}
 
 	// if more than one key is provided and at least one weight is specified, make sure there isn't a missmatch
@@ -223,7 +225,7 @@ func (a *Accounts) AddContract(
 	updateExisting bool,
 ) (*flow.Account, error) {
 	if a.project == nil {
-		return nil, fmt.Errorf("missing configuration, initialize it: flow init")
+		return nil, config.ErrDoesNotExist
 	}
 
 	account := a.project.AccountByName(accountName)
@@ -295,6 +297,7 @@ func (a *Accounts) addContract(
 		account,
 		contractName,
 		string(contractSource),
+		[]cadence.Value{}, // todo add support for args on account add-contract
 	)
 	if err != nil {
 		return nil, err
@@ -417,7 +420,7 @@ func (a *Accounts) prepareTransaction(
 	}
 
 	tx.SetBlockReference(block).
-		SetProposer(proposer, 0)
+		SetProposer(proposer, account.DefaultKey().Index())
 
 	tx, err = tx.Sign()
 	if err != nil {

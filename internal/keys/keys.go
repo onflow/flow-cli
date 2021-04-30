@@ -22,11 +22,12 @@ import (
 	"bytes"
 	"encoding/hex"
 	"fmt"
-	"text/tabwriter"
 
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/spf13/cobra"
+
+	"github.com/onflow/flow-cli/pkg/flowcli/util"
 )
 
 var Cmd = &cobra.Command{
@@ -50,7 +51,10 @@ type KeyResult struct {
 func (k *KeyResult) JSON() interface{} {
 	result := make(map[string]string)
 	result["public"] = hex.EncodeToString(k.privateKey.PublicKey().Encode())
-	result["private"] = hex.EncodeToString(k.privateKey.Encode())
+
+	if k.privateKey != nil {
+		result["private"] = hex.EncodeToString(k.privateKey.Encode())
+	}
 
 	return result
 }
@@ -58,20 +62,20 @@ func (k *KeyResult) JSON() interface{} {
 // String convert result to string
 func (k *KeyResult) String() string {
 	var b bytes.Buffer
-	writer := tabwriter.NewWriter(&b, 0, 8, 1, '\t', tabwriter.AlignRight)
+	writer := util.CreateTabWriter(&b)
 
 	if k.privateKey != nil {
-		fmt.Fprintf(writer, "🔴️ Store private key safely and don't share with anyone! \n")
-		fmt.Fprintf(writer, "Private Key \t %x \n", k.privateKey.Encode())
+		_, _ = fmt.Fprintf(writer, "🔴️ Store private key safely and don't share with anyone! \n")
+		_, _ = fmt.Fprintf(writer, "Private Key \t %x \n", k.privateKey.Encode())
 	}
 
-	fmt.Fprintf(writer, "Public Key \t %x \n", k.publicKey.Encode())
+	_, _ = fmt.Fprintf(writer, "Public Key \t %x \n", k.publicKey.Encode())
 
 	if k.accountKey != nil {
-		fmt.Fprintf(writer, "Signature algorithm \t %s\n", k.accountKey.SigAlgo)
-		fmt.Fprintf(writer, "Hash algorithm \t %s\n", k.accountKey.HashAlgo)
-		fmt.Fprintf(writer, "Weight \t %d\n", k.accountKey.Weight)
-		fmt.Fprintf(writer, "Revoked \t %t\n", k.accountKey.Revoked)
+		_, _ = fmt.Fprintf(writer, "Signature algorithm \t %s\n", k.accountKey.SigAlgo)
+		_, _ = fmt.Fprintf(writer, "Hash algorithm \t %s\n", k.accountKey.HashAlgo)
+		_, _ = fmt.Fprintf(writer, "Weight \t %d\n", k.accountKey.Weight)
+		_, _ = fmt.Fprintf(writer, "Revoked \t %t\n", k.accountKey.Revoked)
 	}
 
 	writer.Flush()
@@ -81,5 +85,11 @@ func (k *KeyResult) String() string {
 
 // Oneliner show result as one liner grep friendly
 func (k *KeyResult) Oneliner() string {
-	return fmt.Sprintf("Private Key: %x, Public Key: %x", k.privateKey.Encode(), k.publicKey.Encode())
+	result := fmt.Sprintf("Public Key: %x, ", k.publicKey.Encode())
+
+	if k.privateKey != nil {
+		result += fmt.Sprintf("Private Key: %x", k.privateKey.Encode())
+	}
+
+	return result
 }

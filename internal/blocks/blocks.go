@@ -21,13 +21,13 @@ package blocks
 import (
 	"bytes"
 	"fmt"
-	"text/tabwriter"
 
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/client"
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/events"
+	"github.com/onflow/flow-cli/pkg/flowcli/util"
 )
 
 var Cmd = &cobra.Command{
@@ -80,32 +80,32 @@ func (r *BlockResult) JSON() interface{} {
 // String convert result to string
 func (r *BlockResult) String() string {
 	var b bytes.Buffer
-	writer := tabwriter.NewWriter(&b, 0, 8, 1, '\t', tabwriter.AlignRight)
+	writer := util.CreateTabWriter(&b)
 
-	fmt.Fprintf(writer, "Block ID\t%s\n", r.block.ID)
-	fmt.Fprintf(writer, "Parent ID\t%s\n", r.block.ParentID)
-	fmt.Fprintf(writer, "Timestamp\t%s\n", r.block.Timestamp)
-	fmt.Fprintf(writer, "Height\t%v\n", r.block.Height)
+	_, _ = fmt.Fprintf(writer, "Block ID\t%s\n", r.block.ID)
+	_, _ = fmt.Fprintf(writer, "Parent ID\t%s\n", r.block.ParentID)
+	_, _ = fmt.Fprintf(writer, "Timestamp\t%s\n", r.block.Timestamp)
+	_, _ = fmt.Fprintf(writer, "Height\t%v\n", r.block.Height)
 
-	fmt.Fprintf(writer, "Total Seals\t%v\n", len(r.block.Seals))
+	_, _ = fmt.Fprintf(writer, "Total Seals\t%v\n", len(r.block.Seals))
 
-	fmt.Fprintf(writer, "Total Collections\t%v\n", len(r.block.CollectionGuarantees))
+	_, _ = fmt.Fprintf(writer, "Total Collections\t%v\n", len(r.block.CollectionGuarantees))
 
 	for i, guarantee := range r.block.CollectionGuarantees {
-		fmt.Fprintf(writer, "    Collection %d:\t%s\n", i, guarantee.CollectionID)
+		_, _ = fmt.Fprintf(writer, "    Collection %d:\t%s\n", i, guarantee.CollectionID)
 
 		if r.verbose {
 			for x, tx := range r.collections[i].TransactionIDs {
-				fmt.Fprintf(writer, "         Transaction %d: %s\n", x, tx)
+				_, _ = fmt.Fprintf(writer, "         Transaction %d: %s\n", x, tx)
 			}
 		}
 	}
 
 	if len(r.events) > 0 {
-		fmt.Fprintf(writer, "\n")
+		_, _ = fmt.Fprintf(writer, "\n")
 
 		e := events.EventResult{BlockEvents: r.events}
-		fmt.Fprintf(writer, "%s", e.String())
+		_, _ = fmt.Fprintf(writer, "%s", e.String())
 	}
 
 	writer.Flush()

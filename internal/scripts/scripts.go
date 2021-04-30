@@ -21,10 +21,11 @@ package scripts
 import (
 	"bytes"
 	"fmt"
-	"text/tabwriter"
 
 	"github.com/onflow/cadence"
 	"github.com/spf13/cobra"
+
+	"github.com/onflow/flow-cli/pkg/flowcli/util"
 )
 
 var Cmd = &cobra.Command{
@@ -44,16 +45,16 @@ type ScriptResult struct {
 // JSON convert result to JSON
 func (r *ScriptResult) JSON() interface{} {
 	result := make(map[string]interface{})
-	result["result"] = r.Value
+	result["result"] = r.Value.String()
 	return result
 }
 
 // String convert result to string
 func (r *ScriptResult) String() string {
 	var b bytes.Buffer
-	writer := tabwriter.NewWriter(&b, 0, 8, 1, '\t', tabwriter.AlignRight)
+	writer := util.CreateTabWriter(&b)
 
-	fmt.Fprintf(writer, "Result: %s\n", r.Value)
+	_, _ = fmt.Fprintf(writer, "Result: %s\n", r.Value)
 
 	writer.Flush()
 

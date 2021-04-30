@@ -38,16 +38,12 @@ func Test_JSONSimple(t *testing.T) {
 		},
 		"contracts": {},
 		"networks": {
-			"emulator": {
-				"host": "127.0.0.1:3569",
-				"chain": "flow-emulator"
-			}
+			"emulator": "127.0.0.1:3569"
 		},
 		"accounts": {
 			"emulator-account": {
 				"address": "f8d6e0586b0a20c7",
-				"keys": "21c5dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7",
-				"chain": "flow-emulator"
+				"keys": "21c5dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7"
 			}
 		},
 		"deployments": {}
@@ -257,8 +253,7 @@ func Test_JSONEnv(t *testing.T) {
 		"accounts": {
 			"emulator-account": {
 				"address": "f8d6e0586b0a20c7",
-				"keys": "$EMULATOR_KEY",
-				"chain": "flow-emulator"
+				"keys": "$EMULATOR_KEY"
 			}
 		}
 	}`)

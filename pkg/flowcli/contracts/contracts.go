@@ -23,6 +23,8 @@ import (
 	"path"
 	"strings"
 
+	"github.com/onflow/cadence"
+
 	"github.com/onflow/cadence/runtime/ast"
 	"github.com/onflow/cadence/runtime/common"
 	"github.com/onflow/cadence/runtime/parser2"
@@ -38,6 +40,7 @@ type Contract struct {
 	source       string
 	target       flow.Address
 	code         string
+	args         []cadence.Value
 	program      *ast.Program
 	dependencies map[string]*Contract
 	aliases      map[string]flow.Address
@@ -49,6 +52,7 @@ func newContract(
 	contractSource,
 	contractCode string,
 	target flow.Address,
+	args []cadence.Value,
 ) (*Contract, error) {
 	program, err := parser2.ParseProgram(contractCode)
 	if err != nil {
@@ -62,6 +66,7 @@ func newContract(
 		target:       target,
 		code:         contractCode,
 		program:      program,
+		args:         args,
 		dependencies: make(map[string]*Contract),
 		aliases:      make(map[string]flow.Address),
 	}, nil
@@ -77,6 +82,10 @@ func (c *Contract) Name() string {
 
 func (c *Contract) Code() string {
 	return c.code
+}
+
+func (c *Contract) Args() []cadence.Value {
+	return c.args
 }
 
 func (c *Contract) TranspiledCode() string {

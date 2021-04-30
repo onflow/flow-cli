@@ -28,7 +28,6 @@ func Test_ConfigAccountKeysSimple(t *testing.T) {
 	b := []byte(`{
 		"test": {
 			"address": "service",
-			"chain": "flow-emulator",
 			"keys": "2272967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47"
 		}
 	}`)
@@ -40,7 +39,6 @@ func Test_ConfigAccountKeysSimple(t *testing.T) {
 	accounts := jsonAccounts.transformToConfig()
 
 	assert.Equal(t, accounts.GetByName("test").Address.String(), "f8d6e0586b0a20c7")
-	assert.Equal(t, accounts.GetByName("test").ChainID.String(), "flow-emulator")
 	assert.Len(t, accounts.GetByName("test").Keys, 1)
 	assert.Equal(t, accounts.GetByName("test").Keys[0].HashAlgo.String(), "SHA3_256")
 	assert.Equal(t, accounts.GetByName("test").Keys[0].Index, 0)
@@ -52,7 +50,6 @@ func Test_ConfigAccountKeysAdvanced(t *testing.T) {
 	b := []byte(`{
 		"test": {
 			"address": "service",
-			"chain": "flow-emulator",
 			"keys": [
 				{
 					"type": "hex",
@@ -75,7 +72,6 @@ func Test_ConfigAccountKeysAdvanced(t *testing.T) {
 	account := accounts.GetByName("test")
 
 	assert.Equal(t, account.Address.String(), "f8d6e0586b0a20c7")
-	assert.Equal(t, account.ChainID.String(), "flow-emulator")
 	assert.Len(t, account.Keys, 1)
 	assert.Equal(t, account.Keys[0].HashAlgo.String(), "SHA3_256")
 	assert.Equal(t, account.Keys[0].Index, 0)
@@ -87,7 +83,6 @@ func Test_ConfigAccountKeysAdvancedMultiple(t *testing.T) {
 	b := []byte(`{
 		"test": {
 			"address": "service",
-			"chain": "flow-emulator",
 			"keys": [
 				{
 					"type": "hex",
@@ -119,7 +114,6 @@ func Test_ConfigAccountKeysAdvancedMultiple(t *testing.T) {
 	account := accounts.GetByName("test")
 
 	assert.Equal(t, account.Address.String(), "f8d6e0586b0a20c7")
-	assert.Equal(t, account.ChainID.String(), "flow-emulator")
 	assert.Len(t, account.Keys, 2)
 
 	assert.Equal(t, account.Keys[0].HashAlgo.String(), "SHA3_256")
@@ -137,12 +131,10 @@ func Test_ConfigMultipleAccountsSimple(t *testing.T) {
 	b := []byte(`{
 		"emulator-account": {
 			"address": "service-1",
-			"chain": "flow-emulator",
 			"keys": "dd72967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47"
 		},
 		"testnet-account": {
 			"address": "0x2c1162386b0a245f",
-			"chain": "testnet",
 			"keys": "1232967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47"
 		}
 	}`)
@@ -155,7 +147,6 @@ func Test_ConfigMultipleAccountsSimple(t *testing.T) {
 
 	assert.Equal(t, accounts.GetByName("emulator-account").Name, "emulator-account")
 	assert.Equal(t, accounts.GetByName("emulator-account").Address.String(), "0000000000000000")
-	assert.Equal(t, accounts.GetByName("emulator-account").ChainID.String(), "flow-emulator")
 	assert.Len(t, accounts.GetByName("emulator-account").Keys, 1)
 	assert.Equal(t, accounts.GetByName("emulator-account").Keys[0].HashAlgo.String(), "SHA3_256")
 	assert.Equal(t, accounts.GetByName("emulator-account").Keys[0].Index, 0)
@@ -163,7 +154,6 @@ func Test_ConfigMultipleAccountsSimple(t *testing.T) {
 	assert.Equal(t, accounts.GetByName("emulator-account").Keys[0].Context["privateKey"], "dd72967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47")
 
 	assert.Equal(t, accounts.GetByName("testnet-account").Address.String(), "2c1162386b0a245f")
-	assert.Equal(t, accounts.GetByName("testnet-account").ChainID.String(), "testnet")
 	assert.Len(t, accounts.GetByName("testnet-account").Keys, 1)
 	assert.Equal(t, accounts.GetByName("testnet-account").Keys[0].HashAlgo.String(), "SHA3_256")
 	assert.Equal(t, accounts.GetByName("testnet-account").Keys[0].Index, 0)
@@ -175,7 +165,6 @@ func Test_ConfigMultipleAccountsAdvanced(t *testing.T) {
 	b := []byte(`{
 		"emulator-account": {
 			"address": "service",
-			"chain": "flow-emulator",
 			"keys": [
 				{
 					"type": "hex",
@@ -190,7 +179,6 @@ func Test_ConfigMultipleAccountsAdvanced(t *testing.T) {
 		},
 		"testnet-account": {
 			"address": "1c1162386b0a245f",
-			"chain": "testnet",
 			"keys": [
 				{
 					"type": "0x18d6e0586b0a20c7",
@@ -212,7 +200,6 @@ func Test_ConfigMultipleAccountsAdvanced(t *testing.T) {
 	accounts := jsonAccounts.transformToConfig()
 
 	assert.Equal(t, accounts.GetByName("emulator-account").Address.String(), "f8d6e0586b0a20c7")
-	assert.Equal(t, accounts.GetByName("emulator-account").ChainID.String(), "flow-emulator")
 	assert.Len(t, accounts.GetByName("emulator-account").Keys, 1)
 	assert.Equal(t, accounts.GetByName("emulator-account").Keys[0].HashAlgo.String(), "SHA3_256")
 	assert.Equal(t, accounts.GetByName("emulator-account").Keys[0].Index, 0)
@@ -220,7 +207,6 @@ func Test_ConfigMultipleAccountsAdvanced(t *testing.T) {
 	assert.Equal(t, accounts.GetByName("emulator-account").Keys[0].Context["privateKey"], "1272967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47")
 
 	assert.Equal(t, accounts.GetByName("testnet-account").Address.String(), "1c1162386b0a245f")
-	assert.Equal(t, accounts.GetByName("testnet-account").ChainID.String(), "testnet")
 	assert.Len(t, accounts.GetByName("testnet-account").Keys, 1)
 	assert.Equal(t, accounts.GetByName("testnet-account").Keys[0].HashAlgo.String(), "SHA3_256")
 	assert.Equal(t, accounts.GetByName("testnet-account").Keys[0].Index, 0)
@@ -232,7 +218,6 @@ func Test_ConfigMixedAccounts(t *testing.T) {
 	b := []byte(`{
 		"emulator-account": {
 			"address": "service",
-			"chain": "flow-emulator",
 			"keys": [
 				{
 					"type": "hex",
@@ -247,7 +232,6 @@ func Test_ConfigMixedAccounts(t *testing.T) {
 		},
 		"testnet-account": {
 			"address": "3c1162386b0a245f",
-			"chain": "testnet",
 			"keys": "2272967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47"
 		}
 	}`)
@@ -259,7 +243,6 @@ func Test_ConfigMixedAccounts(t *testing.T) {
 	accounts := jsonAccounts.transformToConfig()
 
 	assert.Equal(t, accounts.GetByName("emulator-account").Address.String(), "f8d6e0586b0a20c7")
-	assert.Equal(t, accounts.GetByName("emulator-account").ChainID.String(), "flow-emulator")
 	assert.Len(t, accounts.GetByName("emulator-account").Keys, 1)
 	assert.Equal(t, accounts.GetByName("emulator-account").Keys[0].HashAlgo.String(), "SHA3_256")
 	assert.Equal(t, accounts.GetByName("emulator-account").Keys[0].Index, 0)
@@ -267,7 +250,6 @@ func Test_ConfigMixedAccounts(t *testing.T) {
 	assert.Equal(t, accounts.GetByName("emulator-account").Keys[0].Context["privateKey"], "1272967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47")
 
 	assert.Equal(t, accounts.GetByName("testnet-account").Address.String(), "3c1162386b0a245f")
-	assert.Equal(t, accounts.GetByName("testnet-account").ChainID.String(), "testnet")
 	assert.Len(t, accounts.GetByName("testnet-account").Keys, 1)
 	assert.Equal(t, accounts.GetByName("testnet-account").Keys[0].HashAlgo.String(), "SHA3_256")
 	assert.Equal(t, accounts.GetByName("testnet-account").Keys[0].Index, 0)
@@ -279,12 +261,10 @@ func Test_ConfigAccountsMap(t *testing.T) {
 	b := []byte(`{
 		"emulator-account": {
 			"address": "service-1",
-			"chain": "flow-emulator",
 			"keys": "dd72967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47"
 		},
 		"testnet-account": {
 			"address": "3c1162386b0a245f",
-			"chain": "testnet",
 			"keys": "1232967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47"
 		}
 	}`)
@@ -300,7 +280,7 @@ func Test_ConfigAccountsMap(t *testing.T) {
 }
 
 func Test_TransformDefaultAccountToJSON(t *testing.T) {
-	b := []byte(`{"emulator-account":{"address":"f8d6e0586b0a20c7","chain":"flow-emulator","keys":[{"type":"hex","index":0,"signatureAlgorithm":"ECDSA_P256","hashAlgorithm":"SHA3_256","context":{"privateKey":"1272967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47"}}]},"testnet-account":{"address":"3c1162386b0a245f","keys":"2272967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47","chain":"testnet"}}`)
+	b := []byte(`{"emulator-account":{"address":"f8d6e0586b0a20c7","keys":[{"type":"hex","index":0,"signatureAlgorithm":"ECDSA_P256","hashAlgorithm":"SHA3_256","context":{"privateKey":"1272967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47"}}]},"testnet-account":{"address":"3c1162386b0a245f","keys":"2272967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47"}}`)
 
 	var jsonAccounts jsonAccounts
 	err := json.Unmarshal(b, &jsonAccounts)
@@ -316,7 +296,7 @@ func Test_TransformDefaultAccountToJSON(t *testing.T) {
 }
 
 func Test_TransformAccountToJSON(t *testing.T) {
-	b := []byte(`{"emulator-account":{"address":"f8d6e0586b0a20c7","chain":"flow-emulator","keys":[{"type":"hex","index":1,"signatureAlgorithm":"ECDSA_P256","hashAlgorithm":"SHA3_256","context":{"privateKey":"1272967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47"}}]},"testnet-account":{"address":"3c1162386b0a245f","keys":"2272967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47","chain":"testnet"}}`)
+	b := []byte(`{"emulator-account":{"address":"f8d6e0586b0a20c7","keys":[{"type":"hex","index":1,"signatureAlgorithm":"ECDSA_P256","hashAlgorithm":"SHA3_256","context":{"privateKey":"1272967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47"}}]},"testnet-account":{"address":"3c1162386b0a245f","keys":"2272967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47"}}`)
 
 	var jsonAccounts jsonAccounts
 	err := json.Unmarshal(b, &jsonAccounts)

@@ -20,6 +20,8 @@ package config_test
 import (
 	"testing"
 
+	"github.com/onflow/cadence"
+
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/stretchr/testify/assert"
@@ -60,22 +62,35 @@ func generateComplexConfig() config.Config {
 			Network: "testnet",
 		}},
 		Deployments: config.Deployments{{
-			Network:   "emulator",
-			Account:   "emulator-account",
-			Contracts: []string{"KittyItems", "KittyItemsMarket"},
+			Network: "emulator",
+			Account: "emulator-account",
+			Contracts: []config.ContractDeployment{
+				{Name: "KittyItems", Args: []cadence.Value{}},
+				{Name: "KittyItemsMarket", Args: []cadence.Value{}},
+			},
 		}, {
-			Network:   "emulator",
-			Account:   "account-4",
-			Contracts: []string{"FungibleToken", "NonFungibleToken", "Kibble", "KittyItems", "KittyItemsMarket"},
+			Network: "emulator",
+			Account: "account-4",
+			Contracts: []config.ContractDeployment{
+				{Name: "FungibleToken", Args: []cadence.Value{}},
+				{Name: "NonFungibleToken", Args: []cadence.Value{}},
+				{Name: "Kibble", Args: []cadence.Value{}},
+				{Name: "KittyItems", Args: []cadence.Value{}},
+				{Name: "KittyItemsMarket", Args: []cadence.Value{}},
+			},
 		}, {
-			Network:   "testnet",
-			Account:   "account-2",
-			Contracts: []string{"FungibleToken", "NonFungibleToken", "Kibble", "KittyItems"},
+			Network: "testnet",
+			Account: "account-2",
+			Contracts: []config.ContractDeployment{
+				{Name: "FungibleToken", Args: []cadence.Value{}},
+				{Name: "NonFungibleToken", Args: []cadence.Value{}},
+				{Name: "Kibble", Args: []cadence.Value{}},
+				{Name: "KittyItems", Args: []cadence.Value{}},
+			},
 		}},
 		Accounts: config.Accounts{{
 			Name:    "emulator-account",
 			Address: flow.ServiceAddress(flow.Emulator),
-			ChainID: flow.Emulator,
 			Keys: []config.AccountKey{{
 				Type:     config.KeyTypeHex,
 				Index:    0,
@@ -88,7 +103,6 @@ func generateComplexConfig() config.Config {
 		}, {
 			Name:    "account-2",
 			Address: flow.HexToAddress("2c1162386b0a245f"),
-			ChainID: flow.Emulator,
 			Keys: []config.AccountKey{{
 				Type:     config.KeyTypeHex,
 				Index:    0,
@@ -101,7 +115,6 @@ func generateComplexConfig() config.Config {
 		}, {
 			Name:    "account-4",
 			Address: flow.HexToAddress("f8d6e0586b0a20c1"),
-			ChainID: flow.Emulator,
 			Keys: []config.AccountKey{{
 				Type:     config.KeyTypeHex,
 				Index:    0,
@@ -113,9 +126,8 @@ func generateComplexConfig() config.Config {
 			}},
 		}},
 		Networks: config.Networks{{
-			Name:    "emulator",
-			Host:    "127.0.0.1.3569",
-			ChainID: flow.Emulator,
+			Name: "emulator",
+			Host: "127.0.0.1.3569",
 		}},
 	}
 }
@@ -159,7 +171,12 @@ func Test_GetDeploymentsByNetworkComplex(t *testing.T) {
 	conf := generateComplexConfig()
 	deployments := conf.Deployments.GetByAccountAndNetwork("account-2", "testnet")
 
-	assert.Equal(t, deployments[0].Contracts, []string{"FungibleToken", "NonFungibleToken", "Kibble", "KittyItems"})
+	assert.Equal(t, deployments[0].Contracts, []config.ContractDeployment{
+		{Name: "FungibleToken", Args: []cadence.Value{}},
+		{Name: "NonFungibleToken", Args: []cadence.Value{}},
+		{Name: "Kibble", Args: []cadence.Value{}},
+		{Name: "KittyItems", Args: []cadence.Value{}},
+	})
 }
 
 func Test_GetNetworkByNameComplex(t *testing.T) {
