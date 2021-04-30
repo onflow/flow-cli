@@ -5,7 +5,7 @@ Follow the [Flow CLI installation guide](https://docs.onflow.org/flow-cli/instal
 ## ⭐ Features
 
 ### Project Deployment with Contract Initialization Arguments
-Project deployment was enhanced and it now supports providing initialization 
+Project deployment was improved, and it now supports providing initialization 
 arguments during the deployment of contracts. It is easy to specify all 
 the arguments in the configuration like so:
 
@@ -17,8 +17,8 @@ the arguments in the configuration like so:
         "NonFungibleToken", {
             "name": "Foo", 
             "args": [
-                { "name": "greeting", "type": "String", "value": "Hello World" },
-                { "name": "supply", "type": "UInt32", "value": "10" }
+                { "type": "String", "value": "Hello World" },
+                { "type": "UInt32", "value": "10" }
             ]
         }]
     }
@@ -91,11 +91,6 @@ having a configuration pre-initialized.
 Chain ID property was removed from the configuration as it is not needed anymore. 
 With this improvement, the new configuration is less complex and shorter.
 
-### Multiple Keys Removed
-Multiple keys were removed from the account configuration making it 
-less complex. Should you have a rare need of specifying multiple keys 
-on account you can specify multiple accounts with the same address and 
-different keys. This new functionality is backward compatible.
 
 ## 🐞 Bug Fixes
 
@@ -106,3 +101,11 @@ private and public keys.
 ### Account Key Index When Sending Transactions
 Account key index is now fetched from the configuration and 
 it doesn't default to 0 anymore.
+
+### Transaction Boolean Argument
+Transaction boolean argument wasn't parsed correctly when passed 
+in comma split format.
+
+### Transaction JSON Output
+Transaction JSON output caused a crash when the transaction 
+was successfully processed.
