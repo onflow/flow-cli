@@ -21,6 +21,7 @@ package config
 import (
 	"bytes"
 	"fmt"
+
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"

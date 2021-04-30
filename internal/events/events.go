@@ -21,13 +21,14 @@ package events
 import (
 	"bytes"
 	"fmt"
+	"io"
+
+	"github.com/onflow/flow-cli/pkg/flowcli/util"
+
 	"github.com/onflow/cadence"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/client"
 	"github.com/spf13/cobra"
-	"io"
-
-	"github.com/onflow/flow-cli/pkg/flowcli/util"
 )
 
 var Cmd = &cobra.Command{

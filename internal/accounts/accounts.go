@@ -23,9 +23,10 @@ import (
 	"fmt"
 
 	"github.com/onflow/cadence"
-	"github.com/onflow/flow-cli/pkg/flowcli/util"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/spf13/cobra"
+
+	"github.com/onflow/flow-cli/pkg/flowcli/util"
 )
 
 var Cmd = &cobra.Command{

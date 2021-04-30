@@ -148,4 +148,3 @@ func (g *GrpcGateway) GetCollection(id flow.Identifier) (*flow.Collection, error
 func (g *GrpcGateway) Ping() error {
 	return g.client.Ping(g.ctx)
 }
-

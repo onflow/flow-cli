@@ -5,8 +5,9 @@ import (
 	"os"
 	"os/exec"
 
-	"github.com/onflow/flow-cli/pkg/flowcli/output"
 	"github.com/spf13/cobra"
+
+	"github.com/onflow/flow-cli/pkg/flowcli/output"
 )
 
 var CompletionCmd = &cobra.Command{
@@ -22,24 +23,24 @@ var CompletionCmd = &cobra.Command{
 		}
 
 		if shell == "powershell" {
-			cmd.Root().GenPowerShellCompletion(os.Stdout)
+			_ = cmd.Root().GenPowerShellCompletion(os.Stdout)
 		} else {
 			shell, shellOS := output.AutocompletionPrompt()
 
 			if shell == "bash" && shellOS == "MacOS" {
-				cmd.Root().GenBashCompletionFile("/usr/local/etc/bash_completion.d/flow")
+				_ = cmd.Root().GenBashCompletionFile("/usr/local/etc/bash_completion.d/flow")
 
 				fmt.Printf("Flow command completions installed in: /usr/local/etc/bash_completion.d/flow\n")
 				fmt.Printf("You will need to start a new shell for this setup to take effect.\n\n")
 			} else if shell == "bash" && shellOS == "Linux" {
-				cmd.Root().GenBashCompletionFile("/etc/bash_completion.d/flow")
+				_ = cmd.Root().GenBashCompletionFile("/etc/bash_completion.d/flow")
 
 				fmt.Printf("Flow command completions installed in: /etc/bash_completion.d/flow\n")
 				fmt.Printf("You will need to start a new shell for this setup to take effect.\n\n")
 			} else if shell == "zsh" {
 				c := exec.Command("zsh", "-c ", `echo -n ${fpath[1]}`)
 				path, _ := c.Output()
-				cmd.Root().GenZshCompletionFile(fmt.Sprintf("%s/_flow", path))
+				_ = cmd.Root().GenZshCompletionFile(fmt.Sprintf("%s/_flow", path))
 
 				fmt.Printf("Flow command completions installed in: '%s/_flow'\n", path)
 				fmt.Printf("You will need to start a new shell for this setup to take effect.\n\n")

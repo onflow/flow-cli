@@ -40,7 +40,7 @@ type MockGateway struct {
 	GetCollectionMock             func(id flow.Identifier) (*flow.Collection, error)
 	GetBlockByHeightMock          func(uint64) (*flow.Block, error)
 	GetBlockByIDMock              func(flow.Identifier) (*flow.Block, error)
-	PingMock				 func() error
+	PingMock                      func() error
 }
 
 func NewMockGateway() gateway.Gateway {

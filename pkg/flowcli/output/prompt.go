@@ -115,7 +115,7 @@ func AutocompletionPrompt() (string, string) {
 		}
 		_, os, _ = prompt.Run()
 	case "powershell":
-		fmt.Printf(`PowerShell Instalation Guide:
+		fmt.Printf(`PowerShell Installation Guide:
 PS> flow config setup-completions powershell | Out-String | Invoke-Expression
 
 # To load completions for every new session, run:

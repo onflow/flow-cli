@@ -21,12 +21,13 @@ package blocks
 import (
 	"bytes"
 	"fmt"
-	"github.com/onflow/flow-cli/pkg/flowcli/util"
+
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/client"
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/events"
+	"github.com/onflow/flow-cli/pkg/flowcli/util"
 )
 
 var Cmd = &cobra.Command{
