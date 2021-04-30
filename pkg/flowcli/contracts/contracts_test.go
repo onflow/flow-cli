@@ -23,7 +23,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/onflow/flow-cli/pkg/flowcli/config"
+	"github.com/onflow/cadence"
 
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/test"
@@ -230,7 +230,7 @@ func TestResolveImports(t *testing.T) {
 					contract.name,
 					contract.source,
 					contract.target,
-					[]config.ContractArgument{},
+					[]cadence.Value{nil},
 				)
 				assert.NoError(t, err)
 			}
@@ -279,7 +279,7 @@ func TestContractDeploymentOrder(t *testing.T) {
 					contract.name,
 					contract.source,
 					contract.target,
-					[]config.ContractArgument{},
+					[]cadence.Value{nil},
 				)
 				assert.NoError(t, err)
 			}
