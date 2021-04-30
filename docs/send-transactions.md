@@ -14,9 +14,9 @@ flow transactions send <code filename>
 ## Example Usage
 
 ```shell
-> flow transactions send <code filename>
-    --signer my-testnet-account \
-    --host access.testnet.nodes.onflow.org:9000
+> flow transactions send ./transaction.cdc
+    --args-json --args-json '[{"type": "String","value": "Hello World"}]'
+    --signer my-testnet-account
     
 Status		✅ SEALED
 ID		b6430b35ba23849a8acb4fa1a4a1d5cce3ed4589111ecbb3984de1b6bd1ba39e
@@ -40,7 +40,7 @@ Events:	 None
 
 
 Arguments (1):
-    - Argument 0: {"type":"String","value":"Meow"}
+    - Argument 0: {"type":"String","value":"Hello World"}
 
 
 Code
@@ -119,9 +119,9 @@ The `Type` must be the same as type in the transaction source code for that argu
 - Flag: `--argsJSON`
 - Valid inputs: arguments in JSON-Cadence form.
 
-Arguments passed to the Cadence transaction in `Type:Value` format.
-The `Type` must be the same type as the corresponding parameter
-in the Cadence transaction code.
+Arguments passed to the Cadence transaction in Cadence JSON format.
+Cadence JSON format contains `type` and `value` keys and is 
+[documented here](https://docs.onflow.org/cadence/json-cadence-spec/).
 
 ### Host
 
