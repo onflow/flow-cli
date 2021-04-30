@@ -34,7 +34,7 @@ func StringToAccount(
 		return nil, err
 	}
 
-	accountKey := AccountKey{
+	accountKey := []AccountKey{{
 		Type:     KeyTypeHex,
 		Index:    parsedIndex,
 		SigAlgo:  crypto.StringToSignatureAlgorithm(sigAlgo),
@@ -42,12 +42,12 @@ func StringToAccount(
 		Context: map[string]string{
 			PrivateKeyField: strings.ReplaceAll(parsedKey.String(), "0x", ""),
 		},
-	}
+	}}
 
 	return &Account{
 		Name:    name,
 		Address: *parsedAddress,
-		Key:     accountKey,
+		Keys:    accountKey,
 	}, nil
 }
 

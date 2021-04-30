@@ -73,7 +73,9 @@ func AccountFromAddressAndKey(address flow.Address, privateKey crypto.PrivateKey
 	return &Account{
 		name:    "",
 		address: address,
-		keys:    []AccountKey{key},
+		keys: []AccountKey{
+			NewHexAccountKeyFromPrivateKey(0, crypto.SHA3_256, privateKey),
+		},
 	}
 }
 
