@@ -21,6 +21,7 @@ package scripts
 import (
 	"bytes"
 	"fmt"
+
 	"github.com/onflow/cadence"
 	"github.com/onflow/flow-cli/pkg/flowcli/util"
 	"github.com/spf13/cobra"
@@ -43,7 +44,7 @@ type ScriptResult struct {
 // JSON convert result to JSON
 func (r *ScriptResult) JSON() interface{} {
 	result := make(map[string]interface{})
-	result["result"] = r.Value
+	result["result"] = r.Value.String()
 	return result
 }
 
