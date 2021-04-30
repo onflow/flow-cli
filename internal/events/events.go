@@ -49,14 +49,18 @@ type EventResult struct {
 
 // JSON convert result to JSON
 func (e *EventResult) JSON() interface{} {
-	result := make(map[string]map[uint64]map[string]interface{})
+	result := make([]interface{}, 0)
+
 	for _, blockEvent := range e.BlockEvents {
 		if len(blockEvent.Events) > 0 {
 			for _, event := range blockEvent.Events {
-				result["blockId"][blockEvent.Height]["index"] = event.EventIndex
-				result["blockId"][blockEvent.Height]["type"] = event.Type
-				result["blockId"][blockEvent.Height]["transactionId"] = event.TransactionID
-				result["blockId"][blockEvent.Height]["values"] = event.Value
+				result = append(result, map[string]interface{}{
+					"blockID":       blockEvent.Height,
+					"index":         event.EventIndex,
+					"type":          event.Type,
+					"transactionId": event.TransactionID.String(),
+					"values":        event.Value.String(),
+				})
 			}
 		}
 	}
