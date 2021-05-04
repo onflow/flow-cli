@@ -31,9 +31,9 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowcli/project"
 )
 
-// MaxGRPCMessageSize 16mb, matching the value set in onflow/flow-go
+// maxGRPCMessageSize 16mb, matching the value set in onflow/flow-go
 // https://github.com/onflow/flow-go/blob/master/utils/grpc/grpc.go#L5
-const MaxGRPCMessageSize = 1024 * 1024 * 16
+const maxGRPCMessageSize = 1024 * 1024 * 16
 
 // GrpcGateway is a gateway implementation that uses the Flow Access gRPC API.
 type GrpcGateway struct {
@@ -47,7 +47,7 @@ func NewGrpcGateway(host string) (*GrpcGateway, error) {
 	gClient, err := client.New(
 		host,
 		grpc.WithInsecure(),
-		grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(MaxGRPCMessageSize)),
+		grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(maxGRPCMessageSize)),
 	)
 	ctx := context.Background()
 
