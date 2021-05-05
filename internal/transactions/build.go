@@ -31,6 +31,7 @@ type flagsBuild struct {
 	ProposerKeyIndex int      `default:"0" flag:"proposer-key-index" info:"proposer key index"`
 	Payer            string   `default:"emulator-account" flag:"payer" info:"transaction payer"`
 	Authorizer       []string `default:"emulator-account" flag:"authorizer" info:"transaction authorizer"`
+	GasLimit         uint64   `default:"1000" flag:"gas-limit" info:"transaction gas limit"`
 }
 
 var buildFlags = flagsBuild{}
@@ -52,12 +53,15 @@ var BuildCommand = &command.Command{
 
 		globalFlags.Filter = "payload"
 
+		codeFilename := args[0]
+
 		build, err := services.Transactions.Build(
 			buildFlags.Proposer,
 			buildFlags.Authorizer,
 			buildFlags.Payer,
 			buildFlags.ProposerKeyIndex,
-			args[0], // code filename
+			codeFilename,
+			buildFlags.GasLimit,
 			buildFlags.Args,
 			buildFlags.ArgsJSON,
 			globalFlags.Network,

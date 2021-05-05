@@ -257,9 +257,9 @@ func (t *Transaction) SetBlockReference(block *flow.Block) *Transaction {
 	return t
 }
 
-// SetDefaultGasLimit set the default gas limit for transaction
-func (t *Transaction) SetDefaultGasLimit() *Transaction {
-	t.tx.SetGasLimit(defaultGasLimit)
+// SetGasLimit sets the gas limit for transaction
+func (t *Transaction) SetGasLimit(gasLimit uint64) *Transaction {
+	t.tx.SetGasLimit(gasLimit)
 	return t
 }
 
