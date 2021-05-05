@@ -59,6 +59,6 @@ var GenerateCommand = &command.Command{
 		}
 
 		pubKey := privateKey.PublicKey()
-		return &KeyResult{privateKey: privateKey, publicKey: &pubKey}, nil
+		return &KeyResult{privateKey: privateKey, publicKey: pubKey}, nil
 	},
 }
