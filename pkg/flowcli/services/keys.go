@@ -52,7 +52,7 @@ func NewKeys(
 }
 
 // Generate generates a new private key from the given seed and signature algorithm.
-func (k *Keys) Generate(inputSeed string, signatureAlgo string) (*crypto.PrivateKey, error) {
+func (k *Keys) Generate(inputSeed string, signatureAlgo string) (crypto.PrivateKey, error) {
 	var seed []byte
 	var err error
 
@@ -75,7 +75,7 @@ func (k *Keys) Generate(inputSeed string, signatureAlgo string) (*crypto.Private
 		return nil, fmt.Errorf("failed to generate private key: %v", err)
 	}
 
-	return &privateKey, nil
+	return privateKey, nil
 }
 
 func (k *Keys) Decode(publicKey string) (*flow.AccountKey, error) {

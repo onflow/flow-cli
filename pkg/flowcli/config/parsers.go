@@ -93,7 +93,7 @@ func StringToAddress(value string) (*flow.Address, error) {
 	return &address, nil
 }
 
-func StringToHexKey(key string, sigAlgo string) (*crypto.PrivateKey, error) {
+func StringToHexKey(key string, sigAlgo string) (crypto.PrivateKey, error) {
 	privateKey, err := crypto.DecodePrivateKeyHex(
 		crypto.StringToSignatureAlgorithm(sigAlgo),
 		key,
@@ -102,7 +102,7 @@ func StringToHexKey(key string, sigAlgo string) (*crypto.PrivateKey, error) {
 		return nil, err
 	}
 
-	return &privateKey, nil
+	return privateKey, nil
 }
 
 func StringToContracts(
