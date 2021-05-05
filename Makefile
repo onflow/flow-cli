@@ -83,7 +83,7 @@ versioned-binary:
 
 .PHONY: publish
 publish:
-	gsutil cp cmd/flow/flow-*-$(VERSION) gs://flow-cli
+	gsutil -m cp cmd/flow/flow-*-$(VERSION) gs://flow-cli
 
 .PHONY: clean
 clean:
