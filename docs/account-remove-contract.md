@@ -12,7 +12,7 @@ flow accounts remove-contract <name>
 ## Example Usage
 
 ```shell
-> flow accounts remove-contract FungibleToken ./FungibleToken.cdc
+> flow accounts remove-contract FungibleToken
 
 Contract 'FungibleToken' removed from account '0xf8d6e0586b0a20c7'
 

@@ -14,8 +14,8 @@ flow transactions send <code filename>
 ## Example Usage
 
 ```shell
-> flow transactions send ./transaction.cdc
-    --args-json --args-json '[{"type": "String","value": "Hello World"}]'
+> flow transactions send ./transaction.cdc \
+    --args-json '[{"type": "String","value": "Hello World"}]' \
     --signer my-testnet-account
     
 Status		✅ SEALED
@@ -116,7 +116,7 @@ The `Type` must be the same as type in the transaction source code for that argu
 
 ### Arguments JSON
 
-- Flag: `--argsJSON`
+- Flag: `--args-json`
 - Valid inputs: arguments in JSON-Cadence form.
 
 Arguments passed to the Cadence transaction in Cadence JSON format.
