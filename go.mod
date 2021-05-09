@@ -10,7 +10,7 @@ require (
 	github.com/magiconair/properties v1.8.1 // indirect
 	github.com/manifoldco/promptui v0.8.0
 	github.com/onflow/cadence v0.15.1
-	github.com/onflow/cadence/languageserver v0.15.2-0.20210505062024-cb797539f41a
+	github.com/onflow/cadence/languageserver v0.15.2
 	github.com/onflow/flow-core-contracts/lib/go/templates v0.6.0
 	github.com/onflow/flow-emulator v0.19.0
 	github.com/onflow/flow-go-sdk v0.19.0
