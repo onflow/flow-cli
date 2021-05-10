@@ -44,9 +44,7 @@ type ScriptResult struct {
 
 // JSON convert result to JSON
 func (r *ScriptResult) JSON() interface{} {
-	result := make(map[string]interface{})
-	result["result"] = r.Value.String()
-	return result
+	return r.Value
 }
 
 // String convert result to string
