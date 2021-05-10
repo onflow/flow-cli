@@ -339,15 +339,10 @@ func (t *Transactions) SendForAddressWithCode(
 		return nil, nil, err
 	}
 
-	t.logger.StartProgress("Sending transaction...")
-	defer t.logger.StopProgress()
-
 	sentTx, err := t.gateway.SendSignedTransaction(tx)
 	if err != nil {
 		return nil, nil, err
 	}
-
-	t.logger.StartProgress("Waiting for transaction to be sealed...")
 
 	res, err := t.gateway.GetTransactionResult(sentTx, true)
 
