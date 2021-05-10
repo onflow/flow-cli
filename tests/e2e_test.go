@@ -299,6 +299,24 @@ func TestTransactions(t *testing.T) {
 		assert.Equal(t, tr.Status.String(), "SEALED")
 	})
 
+	t.Run("Send Transaction For Address With Code", func(t *testing.T) {
+		tx, tr, err := transactions.SendForAddressWithCode(
+			[]byte(`transaction() {
+			  prepare(authorizer: AuthAccount) {}
+			  execute {}
+			}`),
+			serviceAddress,
+			"12868d0829a38b31301394cba9cee25bf18833f1d436de2e39af86afa1c01afc",
+			nil,
+			"",
+		)
+
+		assert.NoError(t, err)
+		assert.NoError(t, tr.Error)
+		assert.Equal(t, tx.Payer.String(), serviceAddress)
+		assert.Equal(t, tr.Status.String(), "SEALED")
+	})
+
 	t.Run("Test Failed Transactions", func(t *testing.T) {
 		tx, tr, err := transactions.Send(
 			"./transactionErr.cdc",
