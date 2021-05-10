@@ -38,6 +38,7 @@ const (
 	contractPath    = "./Hello.cdc"
 	contractPathV2  = "./HelloV2.cdc"
 	emulatorAccount = "emulator-account"
+	gasLimit        = uint64(1000)
 	host            = "127.0.0.1:3569"
 	conf            = "./flow.json"
 )
@@ -275,7 +276,10 @@ func TestTransactions(t *testing.T) {
 	t.Run("Test Transactions", func(t *testing.T) {
 		tx, tr, err := transactions.Send(
 			"./transaction.cdc",
-			emulatorAccount, []string{"String:Hello"}, "",
+			emulatorAccount,
+			gasLimit,
+			[]string{"String:Hello"},
+			"",
 			"",
 		)
 		txID1 = tx.ID()
@@ -289,7 +293,10 @@ func TestTransactions(t *testing.T) {
 	t.Run("Test Transactions with Imports", func(t *testing.T) {
 		tx, tr, err := transactions.Send(
 			"./transactionImports.cdc",
-			emulatorAccount, []string{}, "",
+			emulatorAccount,
+			gasLimit,
+			[]string{},
+			"",
 			"emulator",
 		)
 
@@ -302,7 +309,10 @@ func TestTransactions(t *testing.T) {
 	t.Run("Test Failed Transactions", func(t *testing.T) {
 		tx, tr, err := transactions.Send(
 			"./transactionErr.cdc",
-			emulatorAccount, []string{}, "",
+			emulatorAccount,
+			gasLimit,
+			[]string{},
+			"",
 			"",
 		)
 
