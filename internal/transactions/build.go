@@ -51,8 +51,6 @@ var BuildCommand = &command.Command{
 		services *services.Services,
 	) (command.Result, error) {
 
-		globalFlags.Filter = "payload"
-
 		codeFilename := args[0]
 
 		build, err := services.Transactions.Build(
