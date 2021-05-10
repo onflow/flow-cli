@@ -23,7 +23,7 @@ flow transactions build <code filename>
 
 ```shell
 > flow transactions build ./transaction.cdc \
-  --signer alice \
+  --authorizer alice \
   --proposer bob \
   --payer charlie \
   --arg "String:Meow" \
