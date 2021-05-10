@@ -334,11 +334,6 @@ func (t *Transactions) SendForAddressWithCode(
 		return nil, nil, err
 	}
 
-	err = tx.SetScriptWithArgs(code, args, argsJSON)
-	if err != nil {
-		return nil, nil, err
-	}
-
 	tx, err = tx.Sign()
 	if err != nil {
 		return nil, nil, err
