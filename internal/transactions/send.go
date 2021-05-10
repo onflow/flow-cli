@@ -31,6 +31,7 @@ type flagsSend struct {
 	ArgsJSON string   `default:"" flag:"args-json" info:"arguments in JSON-Cadence format"`
 	Arg      []string `default:"" flag:"arg" info:"argument in Type:Value format"`
 	Signer   string   `default:"emulator-account" flag:"signer" info:"Account name from configuration used to sign the transaction"`
+	GasLimit uint64   `default:"1000" flag:"gas-limit" info:"transaction gas limit"`
 	Code     string   `default:"" flag:"code" info:"⚠️  Deprecated: use filename argument"`
 	Results  bool     `default:"" flag:"results" info:"⚠️  Deprecated: all transactions will provide result"`
 	Args     string   `default:"" flag:"args" info:"⚠️  Deprecated: use arg or args-json flag"`
@@ -64,17 +65,18 @@ var SendCommand = &command.Command{
 			}
 		}
 
-		filename := ""
+		codeFilename := ""
 		if len(args) == 1 {
-			filename = args[0]
+			codeFilename = args[0]
 		} else if sendFlags.Code != "" {
 			fmt.Println("⚠️  DEPRECATION WARNING: use filename as a command argument <filename>")
-			filename = sendFlags.Code
+			codeFilename = sendFlags.Code
 		}
 
 		tx, result, err := services.Transactions.Send(
-			filename,
+			codeFilename,
 			sendFlags.Signer,
+			sendFlags.GasLimit,
 			sendFlags.Arg,
 			sendFlags.ArgsJSON,
 			globalFlags.Network,

@@ -131,6 +131,14 @@ Arguments passed to the Cadence transaction in Cadence JSON format.
 Cadence JSON format contains `type` and `value` keys and is
 [documented here](https://docs.onflow.org/cadence/json-cadence-spec/).
 
+### Gas Limit
+
+- Flag: `--gas-limit`
+- Valid inputs: an integer greater than zero.
+- Default: `1000`
+
+Specify the gas limit for this transaction.
+
 ### Host
 
 - Flag: `--host`
