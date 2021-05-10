@@ -39,16 +39,16 @@ func TestKeys(t *testing.T) {
 
 	t.Run("Generate Keys", func(t *testing.T) {
 		key, err := keys.Generate("", "ECDSA_P256")
-
 		assert.NoError(t, err)
-		assert.Equal(t, len(key.PrivateKey.String()), 66)
+
+		assert.Equal(t, len(key.String()), 66)
 	})
 
 	t.Run("Generate Keys with seed", func(t *testing.T) {
 		key, err := keys.Generate("aaaaaaaaaaaaaaaaaaaaaaannndddddd_its_gone", "ECDSA_P256")
 
 		assert.NoError(t, err)
-		assert.Equal(t, key.PrivateKey.String(), "0x134f702d0872dba9c7aea15498aab9b2ffedd5aeebfd8ac3cf47c591f0d7ce52")
+		assert.Equal(t, key.String(), "0x134f702d0872dba9c7aea15498aab9b2ffedd5aeebfd8ac3cf47c591f0d7ce52")
 	})
 
 	t.Run("Fail generate keys, too short seed", func(t *testing.T) {
@@ -62,5 +62,4 @@ func TestKeys(t *testing.T) {
 
 		assert.Equal(t, err.Error(), "invalid signature algorithm: JUSTNO")
 	})
-
 }

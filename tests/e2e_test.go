@@ -19,11 +19,11 @@
 package tests
 
 import (
+	"io/ioutil"
 	"os"
 	"testing"
 
 	"github.com/onflow/flow-go-sdk"
-	"github.com/onflow/flow-go/utils/io"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -51,8 +51,8 @@ func TestAccount(t *testing.T) {
 		t.Skip("Skipping end-to-end tests")
 	}
 
-	helloContract, _ := io.ReadFile(contractPath)
-	helloContractV2, _ := io.ReadFile(contractPathV2)
+	helloContract, _ := ioutil.ReadFile(contractPath)
+	helloContractV2, _ := ioutil.ReadFile(contractPathV2)
 
 	gw, err := gateway.NewGrpcGateway(host)
 	assert.NoError(t, err)
