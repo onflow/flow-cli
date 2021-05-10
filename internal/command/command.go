@@ -27,6 +27,8 @@ import (
 	"os"
 	"strings"
 
+	"github.com/onflow/cadence"
+
 	"github.com/onflow/flow-cli/build"
 	"github.com/onflow/flow-cli/pkg/flowcli/config"
 	"github.com/onflow/flow-cli/pkg/flowcli/gateway"
@@ -35,6 +37,7 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowcli/services"
 	"github.com/onflow/flow-cli/pkg/flowcli/util"
 
+	cadenceJSON "github.com/onflow/cadence/encoding/json"
 	"github.com/onflow/flow-go-sdk/client"
 	"github.com/psiemens/sconfig"
 	"github.com/spf13/afero"
@@ -285,6 +288,12 @@ func formatResult(result Result, filterFlag string, formatFlag string) (string, 
 
 	switch strings.ToLower(formatFlag) {
 	case formatJSON:
+		// check if result is cadence value and if so use cadence encoder
+		v, ok := result.JSON().(cadence.Value)
+		if ok {
+			return string(cadenceJSON.MustEncode(v)), nil
+		}
+
 		jsonRes, _ := json.Marshal(result.JSON())
 		return string(jsonRes), nil
 	case formatInline:
@@ -315,12 +324,7 @@ func outputResult(result string, saveFlag string, formatFlag string, filterFlag 
 
 // filterResultValue returns a value by its name filtered from other result values
 func filterResultValue(result Result, filter string) (interface{}, error) {
-	var jsonResult map[string]interface{}
-	val, _ := json.Marshal(result.JSON())
-	err := json.Unmarshal(val, &jsonResult)
-	if err != nil {
-		return "", err
-	}
+	var jsonResult = result.JSON().(map[string]string)
 
 	possibleFilters := make([]string, 0)
 	for key := range jsonResult {
@@ -329,7 +333,7 @@ func filterResultValue(result Result, filter string) (interface{}, error) {
 
 	value := jsonResult[strings.ToLower(filter)]
 
-	if value == nil {
+	if value == "" {
 		return nil, fmt.Errorf("value for filter: '%s' doesn't exists, possible values to filter by: %s", filter, possibleFilters)
 	}
 
