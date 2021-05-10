@@ -37,10 +37,6 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowcli/util"
 )
 
-const (
-	defaultGasLimit = 1000
-)
-
 // NewTransaction create new instance of transaction
 func NewTransaction() *Transaction {
 	return &Transaction{
