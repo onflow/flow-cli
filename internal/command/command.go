@@ -315,7 +315,12 @@ func outputResult(result string, saveFlag string, formatFlag string, filterFlag 
 
 // filterResultValue returns a value by its name filtered from other result values
 func filterResultValue(result Result, filter string) (interface{}, error) {
-	var jsonResult = result.JSON().(map[string]string)
+	var jsonResult map[string]interface{}
+	val, _ := json.Marshal(result.JSON())
+	err := json.Unmarshal(val, &jsonResult)
+	if err != nil {
+		return "", err
+	}
 
 	possibleFilters := make([]string, 0)
 	for key := range jsonResult {
