@@ -37,10 +37,6 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowcli/util"
 )
 
-const (
-	defaultGasLimit = 1000
-)
-
 // NewTransaction create new instance of transaction
 func NewTransaction() *Transaction {
 	return &Transaction{
@@ -257,9 +253,9 @@ func (t *Transaction) SetBlockReference(block *flow.Block) *Transaction {
 	return t
 }
 
-// SetDefaultGasLimit set the default gas limit for transaction
-func (t *Transaction) SetDefaultGasLimit() *Transaction {
-	t.tx.SetGasLimit(defaultGasLimit)
+// SetGasLimit sets the gas limit for transaction
+func (t *Transaction) SetGasLimit(gasLimit uint64) *Transaction {
+	t.tx.SetGasLimit(gasLimit)
 	return t
 }
 

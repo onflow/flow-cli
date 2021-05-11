@@ -51,6 +51,6 @@ var DecodeCommand = &command.Command{
 		}
 
 		pubKey := accountKey.PublicKey
-		return &KeyResult{publicKey: &pubKey, accountKey: accountKey}, err
+		return &KeyResult{publicKey: pubKey, accountKey: accountKey}, err
 	},
 }

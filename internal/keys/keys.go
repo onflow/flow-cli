@@ -42,8 +42,8 @@ func init() {
 
 // KeyResult represent result from all account commands
 type KeyResult struct {
-	privateKey *crypto.PrivateKey
-	publicKey  *crypto.PublicKey
+	privateKey crypto.PrivateKey
+	publicKey  crypto.PublicKey
 	accountKey *flow.AccountKey
 }
 

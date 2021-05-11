@@ -30,6 +30,8 @@ import (
 	"github.com/onflow/flow-cli/tests"
 )
 
+const gasLimit = 1000
+
 func TestTransactions(t *testing.T) {
 	mock := &tests.MockGateway{}
 
@@ -93,6 +95,7 @@ func TestTransactions(t *testing.T) {
 		_, _, err := transactions.Send(
 			"../../../tests/transaction.cdc",
 			serviceName,
+			gasLimit,
 			[]string{"String:Bar"},
 			"",
 			"",
@@ -120,6 +123,7 @@ func TestTransactions(t *testing.T) {
 		_, _, err := transactions.Send(
 			"../../../tests/transaction.cdc",
 			serviceName,
+			gasLimit,
 			nil,
 			"[{\"type\": \"String\", \"value\": \"Bar\"}]",
 			"",
@@ -133,6 +137,7 @@ func TestTransactions(t *testing.T) {
 		_, _, err := transactions.Send(
 			"../../../tests/transaction.cdc",
 			serviceName,
+			gasLimit,
 			[]string{"Bar"},
 			"",
 			"",
@@ -144,6 +149,7 @@ func TestTransactions(t *testing.T) {
 		_, _, err := transactions.Send(
 			"nooo.cdc",
 			serviceName,
+			gasLimit,
 			[]string{"Bar"},
 			"",
 			"",
@@ -155,6 +161,7 @@ func TestTransactions(t *testing.T) {
 		_, _, err := transactions.Send(
 			"../../../tests/transaction.cdc",
 			serviceName,
+			gasLimit,
 			nil,
 			"[{\"Bar\":\"No\"}]",
 			"",
