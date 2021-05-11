@@ -308,13 +308,13 @@ func TestTransactions(t *testing.T) {
 
 	t.Run("Send Transaction For Address With Code", func(t *testing.T) {
 		tx, tr, err := transactions.SendForAddressWithCode(
-			[]byte(`transaction() {
+			[]byte(`transaction(greeting: String) {
 			  prepare(authorizer: AuthAccount) {}
 			  execute {}
 			}`),
 			serviceAddress,
 			"12868d0829a38b31301394cba9cee25bf18833f1d436de2e39af86afa1c01afc",
-			nil,
+			[]string{"String:Hello"},
 			"",
 		)
 
