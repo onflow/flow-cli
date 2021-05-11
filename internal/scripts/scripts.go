@@ -24,7 +24,7 @@ import (
 	"fmt"
 
 	"github.com/onflow/cadence"
-	jsonCadence "github.com/onflow/cadence/encoding/json"
+	jsoncdc "github.com/onflow/cadence/encoding/json"
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/pkg/flowcli/util"
@@ -47,7 +47,7 @@ type ScriptResult struct {
 // JSON convert result to JSON
 func (r *ScriptResult) JSON() interface{} {
 	return json.RawMessage(
-		jsonCadence.MustEncode(r.Value),
+		jsoncdc.MustEncode(r.Value),
 	)
 }
 

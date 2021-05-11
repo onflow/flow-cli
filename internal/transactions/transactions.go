@@ -23,7 +23,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	jsonCadence "github.com/onflow/cadence/encoding/json"
+	jsoncdc "github.com/onflow/cadence/encoding/json"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/spf13/cobra"
 
@@ -69,7 +69,7 @@ func (r *TransactionResult) JSON() interface{} {
 				"index": event.EventIndex,
 				"type":  event.Type,
 				"values": json.RawMessage(
-					jsonCadence.MustEncode(event.Value),
+					jsoncdc.MustEncode(event.Value),
 				),
 			})
 		}

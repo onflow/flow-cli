@@ -27,7 +27,7 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowcli/util"
 
 	"github.com/onflow/cadence"
-	jsonCadence "github.com/onflow/cadence/encoding/json"
+	jsoncdc "github.com/onflow/cadence/encoding/json"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/client"
 	"github.com/spf13/cobra"
@@ -62,7 +62,7 @@ func (e *EventResult) JSON() interface{} {
 					"type":          event.Type,
 					"transactionId": event.TransactionID.String(),
 					"values": json.RawMessage(
-						jsonCadence.MustEncode(event.Value),
+						jsoncdc.MustEncode(event.Value),
 					),
 				})
 			}
