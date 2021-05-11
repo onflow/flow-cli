@@ -20,9 +20,11 @@ package scripts
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 
 	"github.com/onflow/cadence"
+	jsoncdc "github.com/onflow/cadence/encoding/json"
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/pkg/flowcli/util"
@@ -44,9 +46,9 @@ type ScriptResult struct {
 
 // JSON convert result to JSON
 func (r *ScriptResult) JSON() interface{} {
-	result := make(map[string]interface{})
-	result["result"] = r.Value.String()
-	return result
+	return json.RawMessage(
+		jsoncdc.MustEncode(r.Value),
+	)
 }
 
 // String convert result to string

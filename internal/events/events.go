@@ -20,12 +20,14 @@ package events
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"io"
 
 	"github.com/onflow/flow-cli/pkg/flowcli/util"
 
 	"github.com/onflow/cadence"
+	jsoncdc "github.com/onflow/cadence/encoding/json"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/client"
 	"github.com/spf13/cobra"
@@ -59,7 +61,9 @@ func (e *EventResult) JSON() interface{} {
 					"index":         event.EventIndex,
 					"type":          event.Type,
 					"transactionId": event.TransactionID.String(),
-					"values":        event.Value.String(),
+					"values": json.RawMessage(
+						jsoncdc.MustEncode(event.Value),
+					),
 				})
 			}
 		}

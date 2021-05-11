@@ -316,10 +316,14 @@ func outputResult(result string, saveFlag string, formatFlag string, filterFlag 
 // filterResultValue returns a value by its name filtered from other result values
 func filterResultValue(result Result, filter string) (interface{}, error) {
 	var jsonResult map[string]interface{}
-	val, _ := json.Marshal(result.JSON())
-	err := json.Unmarshal(val, &jsonResult)
+	val, err := json.Marshal(result.JSON())
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("not possible to filter by the value")
+	}
+
+	err = json.Unmarshal(val, &jsonResult)
+	if err != nil {
+		return "", fmt.Errorf("not possible to filter by the value")
 	}
 
 	possibleFilters := make([]string, 0)
