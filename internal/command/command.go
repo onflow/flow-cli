@@ -27,8 +27,6 @@ import (
 	"os"
 	"strings"
 
-	"github.com/onflow/cadence"
-
 	"github.com/onflow/flow-cli/build"
 	"github.com/onflow/flow-cli/pkg/flowcli/config"
 	"github.com/onflow/flow-cli/pkg/flowcli/gateway"
@@ -37,7 +35,6 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowcli/services"
 	"github.com/onflow/flow-cli/pkg/flowcli/util"
 
-	cadenceJSON "github.com/onflow/cadence/encoding/json"
 	"github.com/onflow/flow-go-sdk/client"
 	"github.com/psiemens/sconfig"
 	"github.com/spf13/afero"
@@ -288,12 +285,6 @@ func formatResult(result Result, filterFlag string, formatFlag string) (string, 
 
 	switch strings.ToLower(formatFlag) {
 	case formatJSON:
-		// check if result is cadence value and if so use cadence encoder
-		v, ok := result.JSON().(cadence.Value)
-		if ok {
-			return string(cadenceJSON.MustEncode(v)), nil
-		}
-
 		jsonRes, _ := json.Marshal(result.JSON())
 		return string(jsonRes), nil
 	case formatInline:
