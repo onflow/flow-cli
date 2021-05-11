@@ -63,7 +63,7 @@ func (r *AccountResult) JSON() interface{} {
 
 	result["keys"] = keys
 
-	contracts := make([]string, 0)
+	contracts := make([]string, 0, len(r.Contracts))
 	for name := range r.Contracts {
 		contracts = append(contracts, name)
 	}
@@ -121,7 +121,7 @@ func (r *AccountResult) String() string {
 
 // Oneliner show result as one liner grep friendly
 func (r *AccountResult) Oneliner() string {
-	keys := make([]string, 0)
+	keys := make([]string, 0, len(r.Keys))
 	for _, key := range r.Keys {
 		keys = append(keys, key.PublicKey.String())
 	}

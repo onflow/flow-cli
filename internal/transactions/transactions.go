@@ -63,7 +63,7 @@ func (r *TransactionResult) JSON() interface{} {
 	if r.result != nil {
 		result["status"] = r.result.Status.String()
 
-		txEvents := make([]interface{}, 0)
+		txEvents := make([]interface{}, 0, len(r.result.Events))
 		for _, event := range r.result.Events {
 			txEvents = append(txEvents, map[string]interface{}{
 				"index": event.EventIndex,

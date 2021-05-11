@@ -57,7 +57,7 @@ func (r *BlockResult) JSON() interface{} {
 	result["totalSeals"] = len(r.block.Seals)
 	result["totalCollections"] = len(r.block.CollectionGuarantees)
 
-	collections := make([]interface{}, 0)
+	collections := make([]interface{}, 0, len(r.block.CollectionGuarantees))
 	for i, guarantee := range r.block.CollectionGuarantees {
 		collection := make(map[string]interface{})
 		collection["id"] = guarantee.CollectionID.String()
