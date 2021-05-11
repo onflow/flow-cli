@@ -324,7 +324,7 @@ func (t *Transactions) SendForAddressWithCode(
 		SetPayer(address).
 		SetProposer(proposerAccount, 0).
 		AddAuthorizers([]flow.Address{address}).
-		SetDefaultGasLimit().
+		SetGasLimit(1000).
 		SetBlockReference(latestBlock)
 
 	err = tx.SetScriptWithArgs(code, args, argsJSON)
