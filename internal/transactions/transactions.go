@@ -20,8 +20,10 @@ package transactions
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 
+	jsonCadence "github.com/onflow/cadence/encoding/json"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/spf13/cobra"
 
@@ -52,15 +54,26 @@ type TransactionResult struct {
 
 // JSON convert result to JSON
 func (r *TransactionResult) JSON() interface{} {
-	result := make(map[string]string)
+	result := make(map[string]interface{})
 	result["id"] = r.tx.ID().String()
 	result["payload"] = fmt.Sprintf("%x", r.tx.Encode())
 	result["authorizers"] = fmt.Sprintf("%s", r.tx.Authorizers)
 	result["payer"] = r.tx.Payer.String()
 
 	if r.result != nil {
-		result["events"] = fmt.Sprintf("%s", r.result.Events)
 		result["status"] = r.result.Status.String()
+
+		txEvents := make([]interface{}, 0)
+		for _, event := range r.result.Events {
+			txEvents = append(txEvents, map[string]interface{}{
+				"index": event.EventIndex,
+				"type":  event.Type,
+				"values": json.RawMessage(
+					jsonCadence.MustEncode(event.Value),
+				),
+			})
+		}
+		result["events"] = txEvents
 
 		if r.result.Error != nil {
 			result["error"] = r.result.Error.Error()
