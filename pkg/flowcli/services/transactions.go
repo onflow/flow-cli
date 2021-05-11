@@ -310,13 +310,29 @@ func (t *Transactions) SendForAddressWithCode(
 
 	signer := project.AccountFromAddressAndKey(address, privateKey)
 
-	tx := project.NewTransaction()
-	err = tx.SetSigner(signer)
+	latestBlock, err := t.gateway.GetLatestBlock()
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to get latest sealed block: %w", err)
+	}
+
+	proposerAccount, err := t.gateway.GetAccount(address)
 	if err != nil {
 		return nil, nil, err
 	}
 
+	tx := project.NewTransaction().
+		SetPayer(address).
+		SetProposer(proposerAccount, 0).
+		AddAuthorizers([]flow.Address{address}).
+		SetGasLimit(1000).
+		SetBlockReference(latestBlock)
+
 	err = tx.SetScriptWithArgs(code, args, argsJSON)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	err = tx.SetSigner(signer)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -326,15 +342,10 @@ func (t *Transactions) SendForAddressWithCode(
 		return nil, nil, err
 	}
 
-	t.logger.StartProgress("Sending transaction...")
-	defer t.logger.StopProgress()
-
 	sentTx, err := t.gateway.SendSignedTransaction(tx)
 	if err != nil {
 		return nil, nil, err
 	}
-
-	t.logger.StartProgress("Waiting for transaction to be sealed...")
 
 	res, err := t.gateway.GetTransactionResult(sentTx, true)
 

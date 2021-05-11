@@ -105,6 +105,36 @@ func TestTransactions(t *testing.T) {
 		assert.Equal(t, called, 2)
 	})
 
+	t.Run("Send For Address With Code", func(t *testing.T) {
+		called := 0
+
+		mock.GetTransactionResultMock = func(tx *flow.Transaction) (*flow.TransactionResult, error) {
+			called++
+			return tests.NewTransactionResult(nil), nil
+		}
+
+		mock.SendSignedTransactionMock = func(tx *project.Transaction) (*flow.Transaction, error) {
+			called++
+			assert.Equal(t, tx.Signer().Address().String(), serviceAddress)
+			assert.Equal(t, len(string(tx.FlowTransaction().Script)), 77)
+			return tests.NewTransaction(), nil
+		}
+
+		_, _, err := transactions.SendForAddressWithCode(
+			[]byte(`transaction() {
+			  prepare(authorizer: AuthAccount) {}
+			  execute {}
+			}`),
+			serviceAddress,
+			"36336f805b4eccf6857c9f411f3b1d682dabda23ddf85299f771dac1361a2ec6",
+			nil,
+			"",
+		)
+
+		assert.NoError(t, err)
+		assert.Equal(t, called, 2)
+	})
+
 	t.Run("Send Transaction JSON args", func(t *testing.T) {
 		called := 0
 
