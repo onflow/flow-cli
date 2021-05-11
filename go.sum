@@ -728,6 +728,8 @@ github.com/onflow/cadence/languageserver v0.15.2/go.mod h1:hQGE8dYH5CfQ1Oe0nXglc
 github.com/onflow/flow-core-contracts/lib/go/contracts v0.7.2 h1:6+zfvSv03ROULuq27BNC+1CYFQ7tkPtD9l52BwVQjq8=
 github.com/onflow/flow-core-contracts/lib/go/contracts v0.7.2/go.mod h1:IZ2e7UyLCYmpQ8Kd7k0A32uXqdqfiV1r2sKs5/riblo=
 github.com/onflow/flow-core-contracts/lib/go/templates v0.6.0 h1:2v10ZSCE4e3TyeDQvKplGJ4/d0X/+xgU2NmeXRmFYRw=
+github.com/onflow/flow-core-contracts/lib/go/templates v0.6.0 h1:2v10ZSCE4e3TyeDQvKplGJ4/d0X/+xgU2NmeXRmFYRw=
+github.com/onflow/flow-core-contracts/lib/go/templates v0.6.0/go.mod h1:fLJbjGUHrlHdrjaeRDgKG9nZJ6spiCScc+Q5SARgH38=
 github.com/onflow/flow-core-contracts/lib/go/templates v0.6.0/go.mod h1:fLJbjGUHrlHdrjaeRDgKG9nZJ6spiCScc+Q5SARgH38=
 github.com/onflow/flow-emulator v0.19.0 h1:q2/UTmMuK4zwVnnOak1owFTTS70pYK9qDgoQTI30yGE=
 github.com/onflow/flow-emulator v0.19.0/go.mod h1:k5un51XlFJavboagCqTxd6x8Gle7lxWlXdUepoNB5fA=
@@ -1129,6 +1131,7 @@ golang.org/x/sys v0.0.0-20200803210538-64077c9b5642/go.mod h1:h1NjWce9XRLGQEsW7w
 golang.org/x/sys v0.0.0-20200828194041-157a740278f4/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/sys v0.0.0-20200909081042-eff7692f9009/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/sys v0.0.0-20200918174421-af09f7315aff/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
+golang.org/x/sys v0.0.0-20201008064518-c1f3e3309c71/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/sys v0.0.0-20201008064518-c1f3e3309c71/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/sys v0.0.0-20201119102817-f84b799fce68/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/sys v0.0.0-20210223095934-7937bea0104d h1:u0GOGnBJ3EKE/tNqREhhGiCzE9jFXydDo2lf7hOwGuc=

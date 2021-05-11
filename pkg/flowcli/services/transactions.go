@@ -87,6 +87,7 @@ func (t *Transactions) Build(
 	payer string,
 	proposerKeyIndex int,
 	codeFilename string,
+	gasLimit uint64,
 	args []string,
 	argsJSON string,
 	network string,
@@ -124,7 +125,7 @@ func (t *Transactions) Build(
 		SetPayer(payerAddress).
 		SetProposer(proposerAccount, proposerKeyIndex).
 		AddAuthorizers(authorizerAddresses).
-		SetDefaultGasLimit().
+		SetGasLimit(gasLimit).
 		SetBlockReference(latestBlock)
 
 	code, err := util.LoadFile(codeFilename)
@@ -232,8 +233,9 @@ func (t *Transactions) SendSigned(
 
 // Send sends a transaction from a file.
 func (t *Transactions) Send(
-	transactionFilename string,
+	codeFilename string,
 	signerName string,
+	gasLimit uint64,
 	args []string,
 	argsJSON string,
 	network string,
@@ -254,7 +256,8 @@ func (t *Transactions) Send(
 		[]string{signerName},
 		signerName,
 		signerKeyIndex,
-		transactionFilename,
+		codeFilename,
+		gasLimit,
 		args,
 		argsJSON,
 		network,
