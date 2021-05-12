@@ -242,6 +242,9 @@ Default command response should be to the stdout and not saved to a file. Anytim
 the output to be saved to a file we should explicitly specify so by using `--save filename.txt`
 flag and providing the path.
 
+Result output should include only information that is commonly used and releavant, 
+don't use too much of user screen drowning what’s truly important, 
+instead provide a way to include that data when the user requests by having include, exclude flags.
 
 ```
 Address  179b6b1cb6755e31
