@@ -33,7 +33,7 @@ type flagsSend struct {
 	Signer   string   `default:"emulator-account" flag:"signer" info:"Account name from configuration used to sign the transaction"`
 	GasLimit uint64   `default:"1000" flag:"gas-limit" info:"transaction gas limit"`
 	Include  []string `default:"" flag:"include" info:"Fields to include in the output"`
-	Exclude  []string `default:"" flag:"exclude" info:"Fields to exclude from the output"`
+	Exclude  []string `default:"" flag:"exclude" info:"Fields to exclude from the output (events)"`
 	Code     string   `default:"" flag:"code" info:"⚠️  Deprecated: use filename argument"`
 	Results  bool     `default:"" flag:"results" info:"⚠️  Deprecated: all transactions will provide result"`
 	Args     string   `default:"" flag:"args" info:"⚠️  Deprecated: use arg or args-json flag"`
@@ -90,8 +90,8 @@ var SendCommand = &command.Command{
 		return &TransactionResult{
 			result:  result,
 			tx:      tx,
-			include: getFlags.Include,
-			exclude: getFlags.Exclude,
+			include: sendFlags.Include,
+			exclude: sendFlags.Exclude,
 		}, nil
 	},
 }

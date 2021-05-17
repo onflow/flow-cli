@@ -27,7 +27,7 @@ import (
 
 type flagsSendSigned struct {
 	Include []string `default:"" flag:"include" info:"Fields to include in the output"`
-	Exclude []string `default:"" flag:"exclude" info:"Fields to exclude from the output"`
+	Exclude []string `default:"" flag:"exclude" info:"Fields to exclude from the output (events)"`
 }
 
 var sendSignedFlags = flagsSendSigned{}
@@ -57,8 +57,8 @@ var SendSignedCommand = &command.Command{
 		return &TransactionResult{
 			result:  result,
 			tx:      tx,
-			include: getFlags.Include,
-			exclude: getFlags.Exclude,
+			include: sendSignedFlags.Include,
+			exclude: sendSignedFlags.Exclude,
 		}, nil
 	},
 }
