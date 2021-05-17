@@ -28,8 +28,9 @@ import (
 )
 
 type flagsGet struct {
-	Contracts bool `default:"false" flag:"contracts" info:"Display contracts deployed to the account"`
-	Code      bool `default:"false" flag:"code" info:"⚠️  Deprecated: use contracts flag instead"`
+	Contracts bool     `default:"false" flag:"contracts" info:"⚠️  Deprecated: use include flag instead"`
+	Code      bool     `default:"false" flag:"code" info:"⚠️  Deprecated: use contracts flag instead"`
+	Include   []string `default:"" flag:"include" info:"Fields to include in the output"`
 }
 
 var getFlags = flagsGet{}
@@ -52,6 +53,10 @@ var GetCommand = &command.Command{
 			fmt.Println("⚠️  DEPRECATION WARNING: use contracts flag instead")
 		}
 
+		if getFlags.Contracts {
+			fmt.Println("⚠️  DEPRECATION WARNING: use include contracts flag instead")
+		}
+
 		account, err := services.Accounts.Get(args[0]) // address
 		if err != nil {
 			return nil, err
@@ -60,6 +65,7 @@ var GetCommand = &command.Command{
 		return &AccountResult{
 			Account:  account,
 			showCode: getFlags.Contracts || getFlags.Code,
+			include:  getFlags.Include,
 		}, nil
 	},
 }
