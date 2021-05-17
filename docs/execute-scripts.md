@@ -42,7 +42,7 @@ The `Type` must be the same as type in the script source code for that argument.
 
 ### Arguments JSON
 
-- Flag: `--argsJSON`
+- Flag: `--args-json`
 - Valid inputs: arguments in JSON-Cadence form.
 
 Arguments passed to the Cadence script in `Type:Value` format.
