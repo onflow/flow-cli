@@ -121,8 +121,6 @@ func (r *TransactionResult) String() string {
 		_, _ = fmt.Fprintf(writer, "\nNo Envelope Signatures\n")
 	}
 
-	// todo add exclude flags
-
 	for i, e := range r.tx.PayloadSignatures {
 		if command.FieldIncluded(r.include, "signatures") {
 			_, _ = fmt.Fprintf(writer, "\nPayload Signature %v:\n", i)
@@ -163,7 +161,7 @@ func (r *TransactionResult) String() string {
 	}
 
 	if r.tx.Script != nil {
-		if command.FieldIncluded(r.include, "code") {
+		if command.FieldIncluded(r.include, "code") || r.code {
 			if len(r.tx.Arguments) == 0 {
 				_, _ = fmt.Fprintf(writer, "\n\nArguments\tNo arguments\n")
 			} else {
