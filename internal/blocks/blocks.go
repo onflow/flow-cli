@@ -22,6 +22,8 @@ import (
 	"bytes"
 	"fmt"
 
+	"github.com/onflow/flow-cli/internal/command"
+
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/client"
 	"github.com/spf13/cobra"
@@ -46,6 +48,7 @@ type BlockResult struct {
 	events      []client.BlockEvents
 	collections []*flow.Collection
 	verbose     bool
+	included    []string
 }
 
 // JSON convert result to JSON
@@ -94,7 +97,7 @@ func (r *BlockResult) String() string {
 	for i, guarantee := range r.block.CollectionGuarantees {
 		_, _ = fmt.Fprintf(writer, "    Collection %d:\t%s\n", i, guarantee.CollectionID)
 
-		if r.verbose {
+		if r.verbose || command.FieldIncluded(r.included, "transactions") {
 			for x, tx := range r.collections[i].TransactionIDs {
 				_, _ = fmt.Fprintf(writer, "         Transaction %d: %s\n", x, tx)
 			}
@@ -108,7 +111,7 @@ func (r *BlockResult) String() string {
 		_, _ = fmt.Fprintf(writer, "%s", e.String())
 	}
 
-	writer.Flush()
+	_ = writer.Flush()
 	return b.String()
 }
 
