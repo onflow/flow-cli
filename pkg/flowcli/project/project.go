@@ -219,7 +219,7 @@ func (p *Project) AccountNamesForNetwork(network string) []string {
 
 	for _, account := range p.accounts {
 		if len(p.conf.Deployments.GetByAccountAndNetwork(account.name, network)) > 0 {
-			if !util.StringContains(names, account.name) {
+			if !util.ContainsString(names, account.name) {
 				names = append(names, account.name)
 			}
 		}
