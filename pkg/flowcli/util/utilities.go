@@ -22,6 +22,7 @@ import (
 	"bytes"
 	"fmt"
 	"io/ioutil"
+	"strings"
 	"text/tabwriter"
 
 	"github.com/fatih/color"
@@ -80,10 +81,20 @@ func ConvertSigAndHashAlgo(
 	return sigAlgo, hashAlgo, nil
 }
 
-// StringContains returns true if the slice contains the given string.
-func StringContains(s []string, e string) bool {
+// ContainsString returns true if the slice contains the given string.
+func ContainsString(s []string, e string) bool {
 	for _, a := range s {
 		if a == e {
+			return true
+		}
+	}
+
+	return false
+}
+
+func ContainsStringInsensitive(haystack []string, needle string) bool {
+	for _, n := range haystack {
+		if strings.ToLower(n) == needle {
 			return true
 		}
 	}
@@ -109,15 +120,6 @@ func GetAddressNetwork(address flow.Address) (flow.ChainID, error) {
 
 func CreateTabWriter(b *bytes.Buffer) *tabwriter.Writer {
 	return tabwriter.NewWriter(b, 0, 8, 1, '\t', tabwriter.AlignRight)
-}
-
-func ContainsString(s []string, e string) bool {
-	for _, a := range s {
-		if a == e {
-			return true
-		}
-	}
-	return false
 }
 
 func ParseAddress(value string) (flow.Address, bool) {

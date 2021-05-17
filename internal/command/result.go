@@ -18,8 +18,22 @@
 
 package command
 
+import (
+	"github.com/onflow/flow-cli/pkg/flowcli/util"
+)
+
 type Result interface {
 	String() string
 	Oneliner() string
 	JSON() interface{}
+}
+
+// FieldIncluded checks if field should be included in the result by checking if included flags contains field
+func FieldIncluded(included []string, field string) bool {
+	return util.ContainsStringInsensitive(included, field)
+}
+
+// FieldExcluded checks if field should be excluded from the result by checking the flags
+func FieldExcluded(excluded []string, field string) bool {
+	return util.ContainsStringInsensitive(excluded, field)
 }
