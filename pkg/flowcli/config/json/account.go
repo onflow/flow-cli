@@ -139,6 +139,7 @@ func transformAccountsToJSON(accounts config.Accounts) jsonAccounts {
 	return jsonAccounts
 }
 
+// TODO(sideninja) refactor keys to use json.RawMessage and decide if unmarshal into simple or advance structure based on that field
 type jsonAccountSimple struct {
 	Address string `json:"address"`
 	Keys    string `json:"keys"`
