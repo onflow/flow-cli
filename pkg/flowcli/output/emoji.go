@@ -20,6 +20,10 @@ func StopEmoji() string {
 	return "🔴️"
 }
 
+func GoEmoji() string {
+	return "🟢"
+}
+
 func OkEmoji() string {
 	return "✅"
 }

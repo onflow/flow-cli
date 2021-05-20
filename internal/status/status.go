@@ -79,7 +79,7 @@ func (r *Result) getColoredStatus() string {
 		return output.Green(r.getStatus())
 	}
 
-	return util.Red(output.Red(r.getStatus()))
+	return output.Red(output.Red(r.getStatus()))
 }
 
 // getIcon returns emoji icon representing Flow network status.

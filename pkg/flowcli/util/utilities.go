@@ -25,15 +25,9 @@ import (
 	"strings"
 	"text/tabwriter"
 
-	"github.com/fatih/color"
-
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
 )
-
-var Green = color.New(color.FgGreen, color.Bold).SprintfFunc()
-var Red = color.New(color.FgRed, color.Bold).SprintfFunc()
-var Bold = color.New(color.FgCyan).SprintfFunc()
 
 // LoadFile loads a file by filename.
 func LoadFile(filename string) ([]byte, error) {

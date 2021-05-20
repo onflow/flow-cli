@@ -20,8 +20,6 @@ package output
 
 import (
 	"fmt"
-
-	"github.com/onflow/flow-cli/pkg/flowcli/util"
 )
 
 const (
@@ -69,7 +67,7 @@ func (s *StdoutLogger) Debug(msg string) {
 }
 
 func (s *StdoutLogger) Error(msg string) {
-	s.log(fmt.Sprintf("%s %s", ErrorEmoji(), util.Red(msg)), ErrorLog)
+	s.log(fmt.Sprintf("%s %s", ErrorEmoji(), output.Red(msg)), ErrorLog)
 }
 
 func (s *StdoutLogger) StartProgress(msg string) {
