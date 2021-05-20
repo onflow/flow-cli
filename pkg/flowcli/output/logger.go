@@ -67,7 +67,7 @@ func (s *StdoutLogger) Debug(msg string) {
 }
 
 func (s *StdoutLogger) Error(msg string) {
-	s.log(fmt.Sprintf("%s %s", ErrorEmoji(), output.Red(msg)), ErrorLog)
+	s.log(fmt.Sprintf("%s %s", ErrorEmoji(), Red(msg)), ErrorLog)
 }
 
 func (s *StdoutLogger) StartProgress(msg string) {
