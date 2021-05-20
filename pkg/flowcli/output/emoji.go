@@ -1,33 +1,43 @@
 package output
 
+import "runtime"
+
+func printEmoji(emoji string) string {
+	if runtime.GOOS == "windows" {
+		return ""
+	}
+
+	return emoji
+}
+
 func ErrorEmoji() string {
-	return "❌"
+	return printEmoji("❌")
 }
 
 func TryEmoji() string {
-	return "🙏"
+	return printEmoji("🙏")
 }
 
 func WarningEmoji() string {
-	return "⚠️"
+	return printEmoji("⚠️")
 }
 
 func SaveEmoji() string {
-	return "💾"
+	return printEmoji("💾")
 }
 
 func StopEmoji() string {
-	return "🔴️"
+	return printEmoji("🔴️")
 }
 
 func GoEmoji() string {
-	return "🟢"
+	return printEmoji("🟢")
 }
 
 func OkEmoji() string {
-	return "✅"
+	return printEmoji("✅")
 }
 
 func SuccessEmoji() string {
-	return "✨"
+	return printEmoji("✨")
 }
