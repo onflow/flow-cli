@@ -29,7 +29,6 @@ var Cmd = &cobra.Command{
 }
 
 func init() {
-	InitCommand.AddToParent(Cmd)
 	DeployCommand.AddToParent(Cmd)
 	Cmd.AddCommand(EmulatorCommand)
 }
