@@ -20,7 +20,6 @@
 package main
 
 import (
-	"github.com/onflow/flow-cli/internal/quick"
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/accounts"
@@ -33,6 +32,7 @@ import (
 	"github.com/onflow/flow-cli/internal/events"
 	"github.com/onflow/flow-cli/internal/keys"
 	"github.com/onflow/flow-cli/internal/project"
+	"github.com/onflow/flow-cli/internal/quick"
 	"github.com/onflow/flow-cli/internal/scripts"
 	"github.com/onflow/flow-cli/internal/status"
 	"github.com/onflow/flow-cli/internal/transactions"
@@ -47,7 +47,8 @@ func main() {
 	}
 
 	// quick commands
-	quick.InitHotCommand.AddToParent(cmd)
+	quick.InitCommand.AddToParent(cmd)
+	status.Command.AddToParent(cmd)
 
 	// structured commands
 	cmd.AddCommand(cadence.Cmd)
@@ -59,7 +60,6 @@ func main() {
 	cmd.AddCommand(keys.Cmd)
 	cmd.AddCommand(events.Cmd)
 	cmd.AddCommand(blocks.Cmd)
-	cmd.AddCommand(status.Cmd)
 	cmd.AddCommand(collections.Cmd)
 	cmd.AddCommand(project.Cmd)
 	cmd.AddCommand(config.Cmd)
