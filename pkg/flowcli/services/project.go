@@ -242,7 +242,7 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 	}
 
 	if !deployErr {
-		p.logger.Info("\n✨  All contracts deployed successfully")
+		p.logger.Info(fmt.Sprintf("\n%s All contracts deployed successfully", output.SuccessEmoji()))
 	} else {
 		err = fmt.Errorf("failed to deploy contracts")
 		p.logger.Error(err.Error())

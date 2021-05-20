@@ -23,6 +23,8 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/onflow/flow-cli/pkg/flowcli/output"
+
 	"github.com/onflow/flow-cli/internal/command"
 
 	jsoncdc "github.com/onflow/cadence/encoding/json"
@@ -94,12 +96,12 @@ func (r *TransactionResult) String() string {
 
 	if r.result != nil {
 		if r.result.Error != nil {
-			_, _ = fmt.Fprintf(writer, "❌ Transaction Error \n%s\n\n\n", r.result.Error.Error())
+			_, _ = fmt.Fprintf(writer, "%s Transaction Error \n%s\n\n\n", output.ErrorEmoji(), r.result.Error.Error())
 		}
 
 		statusBadge := ""
 		if r.result.Status == flow.TransactionStatusSealed {
-			statusBadge = "✅"
+			statusBadge = output.OkEmoji()
 		}
 		_, _ = fmt.Fprintf(writer, "Status\t%s %s\n", statusBadge, r.result.Status)
 	}
