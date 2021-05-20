@@ -22,6 +22,8 @@ import (
 	"bytes"
 	"fmt"
 
+	"github.com/onflow/flow-cli/pkg/flowcli/output"
+
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
@@ -84,11 +86,11 @@ func (r *InitResult) String() string {
 	account, _ := r.Project.EmulatorServiceAccount()
 
 	_, _ = fmt.Fprintf(writer, "Configuration initialized\n")
-	_, _ = fmt.Fprintf(writer, "Service account: %s\n\n", util.Bold("0x"+account.Address().String()))
+	_, _ = fmt.Fprintf(writer, "Service account: %s\n\n", output.Bold("0x"+account.Address().String()))
 	_, _ = fmt.Fprintf(writer,
 		"Start emulator by running: %s \nReset configuration using: %s\n",
-		util.Bold("'flow emulator'"),
-		util.Bold("'flow init --reset'"),
+		output.Bold("'flow emulator'"),
+		output.Bold("'flow init --reset'"),
 	)
 
 	writer.Flush()

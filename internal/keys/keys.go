@@ -23,6 +23,8 @@ import (
 	"encoding/hex"
 	"fmt"
 
+	"github.com/onflow/flow-cli/pkg/flowcli/output"
+
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/spf13/cobra"
@@ -65,7 +67,7 @@ func (k *KeyResult) String() string {
 	writer := util.CreateTabWriter(&b)
 
 	if k.privateKey != nil {
-		_, _ = fmt.Fprintf(writer, "🔴️ Store private key safely and don't share with anyone! \n")
+		_, _ = fmt.Fprintf(writer, "%s Store private key safely and don't share with anyone! \n", output.StopEmoji())
 		_, _ = fmt.Fprintf(writer, "Private Key \t %x \n", k.privateKey.Encode())
 	}
 

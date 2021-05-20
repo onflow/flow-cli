@@ -22,17 +22,12 @@ import (
 	"bytes"
 	"fmt"
 	"io/ioutil"
+	"strings"
 	"text/tabwriter"
-
-	"github.com/fatih/color"
 
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
 )
-
-var Green = color.New(color.FgGreen, color.Bold).SprintfFunc()
-var Red = color.New(color.FgRed, color.Bold).SprintfFunc()
-var Bold = color.New(color.FgCyan).SprintfFunc()
 
 // LoadFile loads a file by filename.
 func LoadFile(filename string) ([]byte, error) {
@@ -80,10 +75,20 @@ func ConvertSigAndHashAlgo(
 	return sigAlgo, hashAlgo, nil
 }
 
-// StringContains returns true if the slice contains the given string.
-func StringContains(s []string, e string) bool {
+// ContainsString returns true if the slice contains the given string.
+func ContainsString(s []string, e string) bool {
 	for _, a := range s {
 		if a == e {
+			return true
+		}
+	}
+
+	return false
+}
+
+func ContainsStringInsensitive(haystack []string, needle string) bool {
+	for _, n := range haystack {
+		if strings.ToLower(n) == needle {
 			return true
 		}
 	}
@@ -109,15 +114,6 @@ func GetAddressNetwork(address flow.Address) (flow.ChainID, error) {
 
 func CreateTabWriter(b *bytes.Buffer) *tabwriter.Writer {
 	return tabwriter.NewWriter(b, 0, 8, 1, '\t', tabwriter.AlignRight)
-}
-
-func ContainsString(s []string, e string) bool {
-	for _, a := range s {
-		if a == e {
-			return true
-		}
-	}
-	return false
 }
 
 func ParseAddress(value string) (flow.Address, bool) {

@@ -23,6 +23,10 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/onflow/flow-cli/pkg/flowcli/output"
+
+	"github.com/onflow/flow-cli/internal/command"
+
 	jsoncdc "github.com/onflow/cadence/encoding/json"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/spf13/cobra"
@@ -47,9 +51,11 @@ func init() {
 
 // TransactionResult represent result from all account commands
 type TransactionResult struct {
-	result *flow.TransactionResult
-	tx     *flow.Transaction
-	code   bool
+	result  *flow.TransactionResult
+	tx      *flow.Transaction
+	code    bool
+	include []string
+	exclude []string
 }
 
 // JSON convert result to JSON
@@ -90,12 +96,12 @@ func (r *TransactionResult) String() string {
 
 	if r.result != nil {
 		if r.result.Error != nil {
-			_, _ = fmt.Fprintf(writer, "❌ Transaction Error \n%s\n\n\n", r.result.Error.Error())
+			_, _ = fmt.Fprintf(writer, "%s Transaction Error \n%s\n\n\n", output.ErrorEmoji(), r.result.Error.Error())
 		}
 
 		statusBadge := ""
 		if r.result.Status == flow.TransactionStatusSealed {
-			statusBadge = "✅"
+			statusBadge = output.OkEmoji()
 		}
 		_, _ = fmt.Fprintf(writer, "Status\t%s %s\n", statusBadge, r.result.Status)
 	}
@@ -118,20 +124,32 @@ func (r *TransactionResult) String() string {
 	}
 
 	for i, e := range r.tx.PayloadSignatures {
-		_, _ = fmt.Fprintf(writer, "\nPayload Signature %v:\n", i)
-		_, _ = fmt.Fprintf(writer, "    Address\t%s\n", e.Address)
-		_, _ = fmt.Fprintf(writer, "    Signature\t%x\n", e.Signature)
-		_, _ = fmt.Fprintf(writer, "    Key Index\t%d\n", e.KeyIndex)
+		if command.FieldIncluded(r.include, "signatures") {
+			_, _ = fmt.Fprintf(writer, "\nPayload Signature %v:\n", i)
+			_, _ = fmt.Fprintf(writer, "    Address\t%s\n", e.Address)
+			_, _ = fmt.Fprintf(writer, "    Signature\t%x\n", e.Signature)
+			_, _ = fmt.Fprintf(writer, "    Key Index\t%d\n", e.KeyIndex)
+		} else {
+			_, _ = fmt.Fprintf(writer, "\nPayload Signature %v: %s", i, e.Address)
+		}
 	}
 
 	for i, e := range r.tx.EnvelopeSignatures {
-		_, _ = fmt.Fprintf(writer, "\nEnvelope Signature %v:\n", i)
-		_, _ = fmt.Fprintf(writer, "    Address\t%s\n", e.Address)
-		_, _ = fmt.Fprintf(writer, "    Signature\t%x\n", e.Signature)
-		_, _ = fmt.Fprintf(writer, "    Key Index\t%d\n", e.KeyIndex)
+		if command.FieldIncluded(r.include, "signatures") {
+			_, _ = fmt.Fprintf(writer, "\nEnvelope Signature %v:\n", i)
+			_, _ = fmt.Fprintf(writer, "    Address\t%s\n", e.Address)
+			_, _ = fmt.Fprintf(writer, "    Signature\t%x\n", e.Signature)
+			_, _ = fmt.Fprintf(writer, "    Key Index\t%d\n", e.KeyIndex)
+		} else {
+			_, _ = fmt.Fprintf(writer, "\nEnvelope Signature %v: %s", i, e.Address)
+		}
 	}
 
-	if r.result != nil {
+	if !command.FieldIncluded(r.include, "signatures") {
+		_, _ = fmt.Fprintf(writer, "\nSignatures (minimized, use --include signatures)")
+	}
+
+	if !command.FieldExcluded(r.exclude, "events") {
 		e := events.EventResult{
 			Events: r.result.Events,
 		}
@@ -145,19 +163,27 @@ func (r *TransactionResult) String() string {
 	}
 
 	if r.tx.Script != nil {
-		if len(r.tx.Arguments) == 0 {
-			_, _ = fmt.Fprintf(writer, "\n\nArguments\tNo arguments\n")
-		} else {
-			_, _ = fmt.Fprintf(writer, "\n\nArguments (%d):\n", len(r.tx.Arguments))
-			for i, argument := range r.tx.Arguments {
-				_, _ = fmt.Fprintf(writer, "    - Argument %d: %s\n", i, argument)
+		if command.FieldIncluded(r.include, "code") || r.code {
+			if len(r.tx.Arguments) == 0 {
+				_, _ = fmt.Fprintf(writer, "\n\nArguments\tNo arguments\n")
+			} else {
+				_, _ = fmt.Fprintf(writer, "\n\nArguments (%d):\n", len(r.tx.Arguments))
+				for i, argument := range r.tx.Arguments {
+					_, _ = fmt.Fprintf(writer, "    - Argument %d: %s\n", i, argument)
+				}
 			}
-		}
 
-		_, _ = fmt.Fprintf(writer, "\nCode\n\n%s\n", r.tx.Script)
+			_, _ = fmt.Fprintf(writer, "\nCode\n\n%s\n", r.tx.Script)
+		} else {
+			_, _ = fmt.Fprint(writer, "\n\nCode (hidden, use --include code)")
+		}
 	}
 
-	_, _ = fmt.Fprintf(writer, "\n\nPayload:\n%x", r.tx.Encode())
+	if command.FieldIncluded(r.include, "payload") {
+		_, _ = fmt.Fprintf(writer, "\n\nPayload:\n%x", r.tx.Encode())
+	} else {
+		_, _ = fmt.Fprint(writer, "\n\nPayload (hidden, use --include payload)")
+	}
 
 	_ = writer.Flush()
 	return b.String()

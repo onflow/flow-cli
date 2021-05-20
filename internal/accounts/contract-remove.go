@@ -28,8 +28,9 @@ import (
 )
 
 type flagsRemoveContract struct {
-	Signer  string `default:"emulator-account" flag:"signer" info:"Account name from configuration used to sign the transaction"`
-	Results bool   `default:"false" flag:"results" info:"⚠️  Deprecated: results are provided by default"`
+	Signer  string   `default:"emulator-account" flag:"signer" info:"Account name from configuration used to sign the transaction"`
+	Results bool     `default:"false" flag:"results" info:"⚠️  Deprecated: results are provided by default"`
+	Include []string `default:"" flag:"include" info:"Fields to include in the output"`
 }
 
 var flagsRemove = flagsRemoveContract{}
@@ -63,6 +64,7 @@ var RemoveCommand = &command.Command{
 		return &AccountResult{
 			Account:  account,
 			showCode: false,
+			include:  flagsRemove.Include,
 		}, nil
 	},
 }
