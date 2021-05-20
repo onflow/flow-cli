@@ -20,6 +20,7 @@
 package main
 
 import (
+	"github.com/onflow/flow-cli/internal/quick"
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/accounts"
@@ -44,8 +45,8 @@ func main() {
 		TraverseChildren: true,
 	}
 
-	// hot commands
-	config.InitCommand.AddToParent(cmd)
+	// quick commands
+	quick.InitHotCommand.AddToParent(cmd)
 
 	// structured commands
 	cmd.AddCommand(cadence.Cmd)

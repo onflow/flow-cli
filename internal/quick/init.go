@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package shortcuts
+package quick
 
 import (
 	"bytes"
