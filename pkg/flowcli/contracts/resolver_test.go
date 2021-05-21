@@ -53,6 +53,7 @@ func TestResolver(t *testing.T) {
 		"./tests/foo.cdc",
 		"./scripts/bar/foo.cdc",
 		"./scripts/bar/foo.cdc",
+		"./tests/foo.cdc",
 	}
 
 	scripts := [][]byte{
@@ -69,7 +70,7 @@ func TestResolver(t *testing.T) {
 			import NFT from "../../tests/NFT.cdc"
 			pub fun main() {}
     `), []byte(`
-			import Kibble from "../Kibble.cdc"
+			import Kibble from "./Kibble.cdc"
 			import crypto
 			import Foo from 0x0000000000000001
 			pub fun main() {}
@@ -89,7 +90,12 @@ func TestResolver(t *testing.T) {
 			import Kibble from 0x0000000000000001 
 			import NFT from 0x0000000000000004 
 			pub fun main() {}
-    `),
+    `), []byte(`
+			import Kibble from 0x0000000000000001
+			import crypto
+			import Foo from 0x0000000000000001
+			pub fun main() {}
+	`),
 	}
 
 	t.Run("Import exists", func(t *testing.T) {
@@ -120,7 +126,7 @@ func TestResolver(t *testing.T) {
 		resolver, err := NewResolver(scripts[3])
 		assert.NoError(t, err)
 		assert.Equal(t, resolver.getFileImports(), []string{
-			"../Kibble.cdc",
+			"./Kibble.cdc",
 		})
 	})
 
