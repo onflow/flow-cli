@@ -58,17 +58,22 @@ func TestResolver(t *testing.T) {
 	scripts := [][]byte{
 		[]byte(`
 			import Kibble from "./Kibble.cdc"
-      import FT from "./FT.cdc"
+			import FT from "./FT.cdc"
 			pub fun main() {}
     `), []byte(`
 			import Kibble from "../../tests/Kibble.cdc"
-      import FT from "../../tests/FT.cdc"
+			import FT from "../../tests/FT.cdc"
 			pub fun main() {}
     `), []byte(`
 			import Kibble from "../../tests/Kibble.cdc"
-      import NFT from "../../tests/NFT.cdc"
+			import NFT from "../../tests/NFT.cdc"
 			pub fun main() {}
-    `),
+    `), []byte(`
+			import Kibble from "../Kibble.cdc"
+			import crypto
+			import Foo from 0x0000000000000001
+			pub fun main() {}
+	`),
 	}
 
 	resolved := [][]byte{
@@ -89,33 +94,33 @@ func TestResolver(t *testing.T) {
 
 	t.Run("Import exists", func(t *testing.T) {
 		resolver, err := NewResolver([]byte(`
-      import Kibble from "./Kibble.cdc"
-      pub fun main() {}
-    `))
+			  import Kibble from "./Kibble.cdc"
+			  pub fun main() {}
+		`))
 		assert.NoError(t, err)
 		assert.True(t, resolver.HasFileImports())
 	})
 
 	t.Run("Import doesn't exists", func(t *testing.T) {
 		resolver, err := NewResolver([]byte(`
-      pub fun main() {}
-    `))
+		  	pub fun main() {}
+		`))
 		assert.NoError(t, err)
 		assert.False(t, resolver.HasFileImports())
 
 		resolver, err = NewResolver([]byte(`
 			import Foo from 0xf8d6e0586b0a20c7
-      pub fun main() {}
-    `))
+		  	pub fun main() {}
+		`))
 		assert.NoError(t, err)
 		assert.False(t, resolver.HasFileImports())
 	})
 
 	t.Run("Parse imports", func(t *testing.T) {
-		resolver, err := NewResolver(scripts[0])
+		resolver, err := NewResolver(scripts[3])
 		assert.NoError(t, err)
 		assert.Equal(t, resolver.getFileImports(), []string{
-			"./Kibble.cdc", "./FT.cdc",
+			"../Kibble.cdc",
 		})
 	})
 
