@@ -149,7 +149,7 @@ func (r *TransactionResult) String() string {
 		_, _ = fmt.Fprintf(writer, "\nSignatures (minimized, use --include signatures)")
 	}
 
-	if !command.ContainsFlag(r.exclude, "events") {
+	if r.result != nil && !command.ContainsFlag(r.exclude, "events") {
 		e := events.EventResult{
 			Events: r.result.Events,
 		}
