@@ -20,6 +20,7 @@ package gateway
 
 import (
 	"fmt"
+
 	"github.com/onflow/flow-go-sdk/client/convert"
 	flowGo "github.com/onflow/flow-go/model/flow"
 
@@ -62,9 +63,9 @@ func (g *EmulatorGateway) SendSignedTransaction(transaction *project.Transaction
 		return nil, fmt.Errorf("failed to submit transaction: %w", err)
 	}
 
-	g.emulator.ExecuteAndCommitBlock()
+	_, err = g.emulator.ExecuteNextTransaction()
 
-	return tx, nil
+	return tx, err
 }
 
 func (g *EmulatorGateway) GetTransactionResult(tx *flow.Transaction, waitSeal bool) (*flow.TransactionResult, error) {
