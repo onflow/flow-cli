@@ -40,6 +40,7 @@ var Cmd = &cobra.Command{
 
 func init() {
 	GenerateCommand.AddToParent(Cmd)
+	DecodeCommand.AddToParent(Cmd)
 }
 
 // KeyResult represent result from all account commands
