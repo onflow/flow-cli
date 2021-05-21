@@ -22,7 +22,6 @@ import (
 	"bytes"
 	"fmt"
 	"io/ioutil"
-	"strings"
 	"text/tabwriter"
 
 	"github.com/onflow/flow-go-sdk"
@@ -79,16 +78,6 @@ func ConvertSigAndHashAlgo(
 func ContainsString(s []string, e string) bool {
 	for _, a := range s {
 		if a == e {
-			return true
-		}
-	}
-
-	return false
-}
-
-func ContainsStringInsensitive(haystack []string, needle string) bool {
-	for _, n := range haystack {
-		if strings.ToLower(n) == needle {
 			return true
 		}
 	}

@@ -105,7 +105,7 @@ func (r *AccountResult) String() string {
 		_, _ = fmt.Fprintf(writer, "\n")
 
 		// only show up to 3 keys and then show label to expand more info
-		if i == 3 && !command.FieldIncluded(r.include, "keys") {
+		if i == 3 && !command.ContainsFlag(r.include, "keys") {
 			_, _ = fmt.Fprint(writer, "...keys minimized, use --include keys flag if you want to view all\n\n")
 			break
 		}
@@ -116,7 +116,7 @@ func (r *AccountResult) String() string {
 		_, _ = fmt.Fprintf(writer, "Contract: '%s'\n", name)
 	}
 
-	if r.showCode || command.FieldIncluded(r.include, "contracts") {
+	if r.showCode || command.ContainsFlag(r.include, "contracts") {
 		for name, code := range r.Contracts {
 			_, _ = fmt.Fprintf(writer, "Contracts '%s':\n", name)
 			_, _ = fmt.Fprintln(writer, string(code))

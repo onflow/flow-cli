@@ -124,7 +124,7 @@ func (r *TransactionResult) String() string {
 	}
 
 	for i, e := range r.tx.PayloadSignatures {
-		if command.FieldIncluded(r.include, "signatures") {
+		if command.ContainsFlag(r.include, "signatures") {
 			_, _ = fmt.Fprintf(writer, "\nPayload Signature %v:\n", i)
 			_, _ = fmt.Fprintf(writer, "    Address\t%s\n", e.Address)
 			_, _ = fmt.Fprintf(writer, "    Signature\t%x\n", e.Signature)
@@ -135,7 +135,7 @@ func (r *TransactionResult) String() string {
 	}
 
 	for i, e := range r.tx.EnvelopeSignatures {
-		if command.FieldIncluded(r.include, "signatures") {
+		if command.ContainsFlag(r.include, "signatures") {
 			_, _ = fmt.Fprintf(writer, "\nEnvelope Signature %v:\n", i)
 			_, _ = fmt.Fprintf(writer, "    Address\t%s\n", e.Address)
 			_, _ = fmt.Fprintf(writer, "    Signature\t%x\n", e.Signature)
@@ -145,11 +145,11 @@ func (r *TransactionResult) String() string {
 		}
 	}
 
-	if !command.FieldIncluded(r.include, "signatures") {
+	if !command.ContainsFlag(r.include, "signatures") {
 		_, _ = fmt.Fprintf(writer, "\nSignatures (minimized, use --include signatures)")
 	}
 
-	if !command.FieldExcluded(r.exclude, "events") {
+	if !command.ContainsFlag(r.exclude, "events") {
 		e := events.EventResult{
 			Events: r.result.Events,
 		}
@@ -163,7 +163,7 @@ func (r *TransactionResult) String() string {
 	}
 
 	if r.tx.Script != nil {
-		if command.FieldIncluded(r.include, "code") || r.code {
+		if command.ContainsFlag(r.include, "code") || r.code {
 			if len(r.tx.Arguments) == 0 {
 				_, _ = fmt.Fprintf(writer, "\n\nArguments\tNo arguments\n")
 			} else {
@@ -179,7 +179,7 @@ func (r *TransactionResult) String() string {
 		}
 	}
 
-	if command.FieldIncluded(r.include, "payload") {
+	if command.ContainsFlag(r.include, "payload") {
 		_, _ = fmt.Fprintf(writer, "\n\nPayload:\n%x", r.tx.Encode())
 	} else {
 		_, _ = fmt.Fprint(writer, "\n\nPayload (hidden, use --include payload)")

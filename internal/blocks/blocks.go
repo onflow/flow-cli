@@ -97,7 +97,7 @@ func (r *BlockResult) String() string {
 	for i, guarantee := range r.block.CollectionGuarantees {
 		_, _ = fmt.Fprintf(writer, "    Collection %d:\t%s\n", i, guarantee.CollectionID)
 
-		if r.verbose || command.FieldIncluded(r.included, "transactions") {
+		if r.verbose || command.ContainsFlag(r.included, "transactions") {
 			for x, tx := range r.collections[i].TransactionIDs {
 				_, _ = fmt.Fprintf(writer, "         Transaction %d: %s\n", x, tx)
 			}

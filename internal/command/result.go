@@ -19,7 +19,7 @@
 package command
 
 import (
-	"github.com/onflow/flow-cli/pkg/flowcli/util"
+	"strings"
 )
 
 type Result interface {
@@ -28,12 +28,13 @@ type Result interface {
 	JSON() interface{}
 }
 
-// FieldIncluded checks if field should be included in the result by checking if included flags contains field
-func FieldIncluded(included []string, field string) bool {
-	return util.ContainsStringInsensitive(included, field)
-}
+// ContainsFlag checks if output flag is present for the provided field
+func ContainsFlag(flags []string, field string) bool {
+	for _, n := range flags {
+		if strings.ToLower(n) == field {
+			return true
+		}
+	}
 
-// FieldExcluded checks if field should be excluded from the result by checking the flags
-func FieldExcluded(excluded []string, field string) bool {
-	return util.ContainsStringInsensitive(excluded, field)
+	return false
 }
