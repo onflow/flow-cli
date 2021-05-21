@@ -22,6 +22,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/onflow/flow-cli/pkg/flowcli/config"
+
 	"github.com/onflow/flow-go-sdk/client/convert"
 	flowGo "github.com/onflow/flow-go/model/flow"
 
@@ -37,14 +39,25 @@ type EmulatorGateway struct {
 	emulator *emulator.Blockchain
 }
 
-func NewEmulatorGateway() *EmulatorGateway {
+func NewEmulatorGateway(serviceAccount *project.Account) *EmulatorGateway {
 	return &EmulatorGateway{
-		emulator: newEmulator(),
+		emulator: newEmulator(serviceAccount),
 	}
 }
 
-func newEmulator() *emulator.Blockchain {
-	b, err := emulator.NewBlockchain()
+func newEmulator(serviceAccount *project.Account) *emulator.Blockchain {
+	var opts []emulator.Option
+	if serviceAccount != nil && serviceAccount.Key().Type() == config.KeyTypeHex {
+		privKey, _ := serviceAccount.Key().PrivateKey()
+
+		opts = append(opts, emulator.WithServicePublicKey(
+			privKey.PublicKey(),
+			serviceAccount.Key().SigAlgo(),
+			serviceAccount.Key().HashAlgo(),
+		))
+	}
+
+	b, err := emulator.NewBlockchain(opts...)
 	if err != nil {
 		panic(err)
 	}

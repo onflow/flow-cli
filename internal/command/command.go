@@ -175,7 +175,8 @@ func (c Command) AddToParent(parent *cobra.Command) {
 		host, err := resolveHost(proj, Flags.Host, Flags.Network)
 		handleError("Host Error", err)
 
-		clientGateway, err := createGateway(host, Flags.Network)
+		serviceAcc, _ := proj.EmulatorServiceAccount()
+		clientGateway, err := createGateway(host, Flags.Network, serviceAcc)
 		handleError("Gateway Error", err)
 
 		logger := createLogger(Flags.Log, Flags.Format)
@@ -202,9 +203,9 @@ func (c Command) AddToParent(parent *cobra.Command) {
 }
 
 // createGateway creates a gateway to be used, defaults to grpc but can support others
-func createGateway(host string, network string) (gateway.Gateway, error) {
+func createGateway(host string, network string, serviceAccount *project.Account) (gateway.Gateway, error) {
 	if network == "hosted" {
-		return gateway.NewEmulatorGateway(), nil
+		return gateway.NewEmulatorGateway(serviceAccount), nil
 	}
 
 	// create default grpc client
