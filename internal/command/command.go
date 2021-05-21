@@ -331,7 +331,7 @@ func filterResultValue(result Result, filter string) (interface{}, error) {
 		possibleFilters = append(possibleFilters, key)
 	}
 
-	value := jsonResult[strings.ToLower(filter)]
+	value := jsonResult[filter]
 
 	if value == nil {
 		return nil, fmt.Errorf("value for filter: '%s' doesn't exists, possible values to filter by: %s", filter, possibleFilters)
