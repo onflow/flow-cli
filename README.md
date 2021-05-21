@@ -1,3 +1,5 @@
+![](./logo-cli.svg)
+
 # Flow CLI
 
 The Flow CLI is a command-line interface that provides useful utilities for building Flow applications.
