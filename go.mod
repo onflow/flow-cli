@@ -7,12 +7,11 @@ require (
 	github.com/fatih/color v1.7.0
 	github.com/gosuri/uilive v0.0.4
 	github.com/joho/godotenv v1.3.0
-	github.com/magiconair/properties v1.8.1 // indirect
 	github.com/manifoldco/promptui v0.8.0
-	github.com/onflow/cadence v0.15.1
-	github.com/onflow/cadence/languageserver v0.15.2
+	github.com/onflow/cadence v0.16.0
+	github.com/onflow/cadence/languageserver v0.16.0
 	github.com/onflow/flow-core-contracts/lib/go/templates v0.6.0
-	github.com/onflow/flow-emulator v0.19.0
+	github.com/onflow/flow-emulator v0.20.1
 	github.com/onflow/flow-go-sdk v0.20.0-alpha.1
 	github.com/psiemens/sconfig v0.0.0-20190623041652-6e01eb1354fc
 	github.com/spf13/afero v1.1.2
