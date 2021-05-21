@@ -28,8 +28,10 @@ import (
 )
 
 type flagsGet struct {
-	Sealed bool `default:"true" flag:"sealed" info:"Wait for a sealed result"`
-	Code   bool `default:"false" flag:"code" info:"Display transaction code"`
+	Sealed  bool     `default:"true" flag:"sealed" info:"Wait for a sealed result"`
+	Code    bool     `default:"false" flag:"code" info:"⚠️  Deprecated: use include flag"`
+	Include []string `default:"" flag:"include" info:"Fields to include in the output"`
+	Exclude []string `default:"" flag:"exclude" info:"Fields to exclude from the output (events)"`
 }
 
 var getFlags = flagsGet{}
@@ -53,6 +55,10 @@ var GetCommand = &command.Command{
 			fmt.Println("⚠️  DEPRECATION WARNING: use \"flow transactions get\" instead")
 		}
 
+		if getFlags.Code {
+			fmt.Println("⚠️  DEPRECATION WARNING: use include flag instead")
+		}
+
 		tx, result, err := services.Transactions.GetStatus(
 			args[0], // transaction id
 			getFlags.Sealed,
@@ -62,9 +68,11 @@ var GetCommand = &command.Command{
 		}
 
 		return &TransactionResult{
-			result: result,
-			tx:     tx,
-			code:   getFlags.Code,
+			result:  result,
+			tx:      tx,
+			code:    getFlags.Code,
+			include: getFlags.Include,
+			exclude: getFlags.Exclude,
 		}, nil
 	},
 }

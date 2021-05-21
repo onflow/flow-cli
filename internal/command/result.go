@@ -18,8 +18,23 @@
 
 package command
 
+import (
+	"strings"
+)
+
 type Result interface {
 	String() string
 	Oneliner() string
 	JSON() interface{}
+}
+
+// ContainsFlag checks if output flag is present for the provided field
+func ContainsFlag(flags []string, field string) bool {
+	for _, n := range flags {
+		if strings.ToLower(n) == field {
+			return true
+		}
+	}
+
+	return false
 }

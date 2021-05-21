@@ -301,7 +301,7 @@ func outputResult(result string, saveFlag string, formatFlag string, filterFlag 
 			Fs: afero.NewOsFs(),
 		}
 
-		fmt.Printf("💾 result saved to: %s \n", saveFlag)
+		fmt.Printf("%s result saved to: %s \n", output.SaveEmoji(), saveFlag)
 		return af.WriteFile(saveFlag, []byte(result), 0644)
 	}
 
@@ -350,32 +350,32 @@ func handleError(description string, err error) {
 	// handle rpc error
 	switch t := err.(type) {
 	case *client.RPCError:
-		_, _ = fmt.Fprintf(os.Stderr, "❌ Grpc Error: %s \n", t.GRPCStatus().Err().Error())
+		_, _ = fmt.Fprintf(os.Stderr, "%s Grpc Error: %s \n", output.ErrorEmoji(), t.GRPCStatus().Err().Error())
 	default:
 		if errors.Is(err, config.ErrOutdatedFormat) {
-			_, _ = fmt.Fprintf(os.Stderr, "❌ Config Error: %s \n", err.Error())
-			_, _ = fmt.Fprintf(os.Stderr, "🙏 Please reset configuration using: 'flow init --reset'. Read more about new configuration here: https://github.com/onflow/flow-cli/releases/tag/v0.17.0")
+			_, _ = fmt.Fprintf(os.Stderr, "%s Config Error: %s \n", output.ErrorEmoji(), err.Error())
+			_, _ = fmt.Fprintf(os.Stderr, "%s Please reset configuration using: 'flow init --reset'. Read more about new configuration here: https://github.com/onflow/flow-cli/releases/tag/v0.17.0", output.TryEmoji())
 		} else if strings.Contains(err.Error(), "transport:") {
-			_, _ = fmt.Fprintf(os.Stderr, "❌ %s \n", strings.Split(err.Error(), "transport:")[1])
-			_, _ = fmt.Fprintf(os.Stderr, "🙏 Make sure your emulator is running or connection address is correct.")
+			_, _ = fmt.Fprintf(os.Stderr, "%s %s \n", output.ErrorEmoji(), strings.Split(err.Error(), "transport:")[1])
+			_, _ = fmt.Fprintf(os.Stderr, "%s Make sure your emulator is running or connection address is correct.", output.TryEmoji())
 		} else if strings.Contains(err.Error(), "NotFound desc =") {
-			_, _ = fmt.Fprintf(os.Stderr, "❌ Not Found:%s \n", strings.Split(err.Error(), "NotFound desc =")[1])
+			_, _ = fmt.Fprintf(os.Stderr, "%s Not Found:%s \n", output.ErrorEmoji(), strings.Split(err.Error(), "NotFound desc =")[1])
 		} else if strings.Contains(err.Error(), "code = InvalidArgument desc = ") {
 			desc := strings.Split(err.Error(), "code = InvalidArgument desc = ")
-			_, _ = fmt.Fprintf(os.Stderr, "❌ Invalid argument: %s \n", desc[len(desc)-1])
+			_, _ = fmt.Fprintf(os.Stderr, "%s Invalid argument: %s \n", output.ErrorEmoji(), desc[len(desc)-1])
 			if strings.Contains(err.Error(), "is invalid for chain") {
-				_, _ = fmt.Fprintf(os.Stderr, "🙏 Check you are connecting to the correct network or account address you use is correct.")
+				_, _ = fmt.Fprintf(os.Stderr, "%s Check you are connecting to the correct network or account address you use is correct.", output.TryEmoji())
 			} else {
-				_, _ = fmt.Fprintf(os.Stderr, "🙏 Check your argument and flags value, you can use --help.")
+				_, _ = fmt.Fprintf(os.Stderr, "%s Check your argument and flags value, you can use --help.", output.TryEmoji())
 			}
 		} else if strings.Contains(err.Error(), "invalid signature:") {
-			_, _ = fmt.Fprintf(os.Stderr, "❌ Invalid signature: %s \n", strings.Split(err.Error(), "invalid signature:")[1])
-			_, _ = fmt.Fprintf(os.Stderr, "🙏 Check the signer private key is provided or is in the correct format. If running emulator, make sure it's using the same configuration as this command.")
+			_, _ = fmt.Fprintf(os.Stderr, "%s Invalid signature: %s \n", output.ErrorEmoji(), strings.Split(err.Error(), "invalid signature:")[1])
+			_, _ = fmt.Fprintf(os.Stderr, "%s Check the signer private key is provided or is in the correct format. If running emulator, make sure it's using the same configuration as this command.", output.TryEmoji())
 		} else if strings.Contains(err.Error(), "signature could not be verified using public key with") {
-			_, _ = fmt.Fprintf(os.Stderr, "❌ %s: %s \n", description, err)
-			_, _ = fmt.Fprintf(os.Stderr, "🙏 If you are running emulator locally make sure that the emulator was started with the same config as used in this command. \nTry restarting the emulator.")
+			_, _ = fmt.Fprintf(os.Stderr, "%s %s: %s \n", output.ErrorEmoji(), description, err)
+			_, _ = fmt.Fprintf(os.Stderr, "%s If you are running emulator locally make sure that the emulator was started with the same config as used in this command. \nTry restarting the emulator.", output.TryEmoji())
 		} else {
-			_, _ = fmt.Fprintf(os.Stderr, "❌ %s: %s", description, err)
+			_, _ = fmt.Fprintf(os.Stderr, "%s %s: %s", output.ErrorEmoji(), description, err)
 		}
 	}
 
@@ -396,8 +396,9 @@ func checkVersion(logger output.Logger) {
 
 	if latestVersion != build.Semver() {
 		logger.Info(fmt.Sprintf(
-			"\n⚠️  Version warning: a new version of Flow CLI is available (%s).\n"+
-				"Read the installation guide for upgrade instructions: https://docs.onflow.org/flow-cli/install",
+			"\n%s  Version warning: a new version of Flow CLI is available (%s).\n"+
+				"   Read the installation guide for upgrade instructions: https://docs.onflow.org/flow-cli/install\n",
+			output.WarningEmoji(),
 			strings.ReplaceAll(string(latestVersion), "\n", ""),
 		))
 	}
