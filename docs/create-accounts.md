@@ -103,6 +103,13 @@ and pay the account creation fee.
 
 Specify one or more contracts to be deployed during account creation.
 
+### Include Fields
+
+- Flag: `--include`
+- Valid inputs: `contracts`
+
+Specify fields to include in the result output. Applies only to the text output.
+
 ### Host
 
 - Flag: `--host`

@@ -14,52 +14,28 @@ flow transactions send <code filename>
 ## Example Usage
 
 ```shell
-> flow transactions send ./transaction.cdc \
-    --args-json '[{"type": "String","value": "Hello World"}]' \
-    --signer my-testnet-account
+> flow transactions send ./tx.cdc --arg String:Hello
     
 Status		✅ SEALED
-ID		b6430b35ba23849a8acb4fa1a4a1d5cce3ed4589111ecbb3984de1b6bd1ba39e
-Payer		a2c4941b5f3c7151
-Authorizers	[a2c4941b5f3c7151]
+ID		b04b6bcc3164f5ee6b77fa502c3a682e0db57fc47e5b8a8ef3b56aae50ad49c8
+Payer		f8d6e0586b0a20c7
+Authorizers	[f8d6e0586b0a20c7]
 
 Proposal Key:	
-    Address	a2c4941b5f3c7151
+    Address	f8d6e0586b0a20c7
     Index	0
-    Sequence	9
+    Sequence	0
 
 No Payload Signatures
 
-Envelope Signature 0:
-    Address	a2c4941b5f3c7151
-    Signature	5391a6fed0fe...2742048166f9d5c925a8dcb78a6d8c710921d67
-    Key Index	0
-
+Envelope Signature 0: f8d6e0586b0a20c7
+Signatures (minimized, use --include signatures)
 
 Events:	 None
 
+Code (hidden, use --include code)
 
-Arguments (1):
-    - Argument 0: {"type":"String","value":"Hello World"}
-
-
-Code
-
-transaction(greeting: String) {
-  let guest: Address
-
-  prepare(authorizer: AuthAccount) {
-    self.guest = authorizer.address
-  }
-
-  execute {
-    log(greeting.concat(",").concat(self.guest.toString()))
-  }
-}
-
-
-Payload:
-f90184f90138...8a9462751237da2742048166f9d5c925a8dcb78a6d8c710921d67
+Payload (hidden, use --include payload)
 
 ```
 
@@ -87,6 +63,13 @@ transaction to be executed.
 
 ## Flags
 
+### Include Fields
+
+- Flag: `--include`
+- Valid inputs: `code`, `payload`
+
+Specify fields to include in the result output. Applies only to the text output.
+
 ### Code
 
 - Flag: `--code`
@@ -98,6 +81,13 @@ transaction to be executed.
 - Flag: `--results`
 
 ⚠️  No longer supported: all transactions will provide result.
+
+### Exclude Fields
+
+- Flag: `--exclude`
+- Valid inputs: `events`
+
+Specify fields to exclude from the result output. Applies only to the text output.
 
 ### Signer
 
