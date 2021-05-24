@@ -112,8 +112,9 @@ func (r *Resolver) getFileImports() []string {
 	imports := make([]string, 0)
 
 	for _, importDeclaration := range r.program.ImportDeclarations() {
-		_, ok := importDeclaration.Location.(common.AddressLocation)
-		if !ok {
+		_, isFileImport := importDeclaration.Location.(common.StringLocation)
+
+		if isFileImport {
 			imports = append(imports, importDeclaration.Location.String())
 		}
 	}

@@ -16,25 +16,46 @@
  * limitations under the License.
  */
 
-package command
+package output
 
-import (
-	"strings"
-)
+import "runtime"
 
-type Result interface {
-	String() string
-	Oneliner() string
-	JSON() interface{}
-}
-
-// ContainsFlag checks if output flag is present for the provided field
-func ContainsFlag(flags []string, field string) bool {
-	for _, n := range flags {
-		if strings.ToLower(n) == field {
-			return true
-		}
+func printEmoji(emoji string) string {
+	if runtime.GOOS == "windows" {
+		return ""
 	}
 
-	return false
+	return emoji
+}
+
+func ErrorEmoji() string {
+	return printEmoji("❌")
+}
+
+func TryEmoji() string {
+	return printEmoji("🙏")
+}
+
+func WarningEmoji() string {
+	return printEmoji("⚠️")
+}
+
+func SaveEmoji() string {
+	return printEmoji("💾")
+}
+
+func StopEmoji() string {
+	return printEmoji("🔴️")
+}
+
+func GoEmoji() string {
+	return printEmoji("🟢")
+}
+
+func OkEmoji() string {
+	return printEmoji("✅")
+}
+
+func SuccessEmoji() string {
+	return printEmoji("✨")
 }

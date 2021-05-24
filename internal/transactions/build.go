@@ -69,7 +69,8 @@ var BuildCommand = &command.Command{
 		}
 
 		return &TransactionResult{
-			tx: build.FlowTransaction(),
+			tx:      build.FlowTransaction(),
+			include: []string{"code", "payload", "signatures"},
 		}, nil
 	},
 }

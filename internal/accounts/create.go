@@ -35,6 +35,7 @@ type flagsCreate struct {
 	HashAlgo  string   `default:"SHA3_256" flag:"hash-algo" info:"Hash used for the digest"`
 	Contracts []string `flag:"contract" info:"Contract to be deployed during account creation. <name:filename>"`
 	Results   bool     `default:"false" flag:"results" info:"⚠️  Deprecated: results are provided by default"`
+	Include   []string `default:"" flag:"include" info:"Fields to include in the output"`
 }
 
 var createFlags = flagsCreate{}
@@ -71,6 +72,7 @@ var CreateCommand = &command.Command{
 
 		return &AccountResult{
 			Account: account,
+			include: createFlags.Include,
 		}, nil
 	},
 }

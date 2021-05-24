@@ -22,6 +22,8 @@ import (
 	"bytes"
 	"fmt"
 
+	"github.com/onflow/flow-cli/internal/command"
+
 	"github.com/onflow/cadence"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/spf13/cobra"
@@ -48,6 +50,7 @@ func init() {
 type AccountResult struct {
 	*flow.Account
 	showCode bool
+	include  []string
 }
 
 // JSON convert result to JSON
@@ -97,24 +100,32 @@ func (r *AccountResult) String() string {
 		_, _ = fmt.Fprintf(writer, "\tSignature Algorithm\t %s\n", key.SigAlgo)
 		_, _ = fmt.Fprintf(writer, "\tHash Algorithm\t %s\n", key.HashAlgo)
 		_, _ = fmt.Fprintf(writer, "\tRevoked \t %t\n", key.Revoked)
-		fmt.Fprintf(writer, "\tSequence Number \t %d\n", key.SequenceNumber)
-		fmt.Fprintf(writer, "\tIndex \t %d\n", key.Index)
-		fmt.Fprintf(writer, "\n")
-	}
+		_, _ = fmt.Fprintf(writer, "\tSequence Number \t %d\n", key.SequenceNumber)
+		_, _ = fmt.Fprintf(writer, "\tIndex \t %d\n", key.Index)
+		_, _ = fmt.Fprintf(writer, "\n")
 
-	fmt.Fprintf(writer, "Contracts Deployed: %d\n", len(r.Contracts))
-	for name := range r.Contracts {
-		fmt.Fprintf(writer, "Contract: '%s'\n", name)
-	}
-
-	if r.showCode {
-		for name, code := range r.Contracts {
-			fmt.Fprintf(writer, "Contracts '%s':\n", name)
-			fmt.Fprintln(writer, string(code))
+		// only show up to 3 keys and then show label to expand more info
+		if i == 3 && !command.ContainsFlag(r.include, "keys") {
+			_, _ = fmt.Fprint(writer, "...keys minimized, use --include keys flag if you want to view all\n\n")
+			break
 		}
 	}
 
-	writer.Flush()
+	_, _ = fmt.Fprintf(writer, "Contracts Deployed: %d\n", len(r.Contracts))
+	for name := range r.Contracts {
+		_, _ = fmt.Fprintf(writer, "Contract: '%s'\n", name)
+	}
+
+	if r.showCode || command.ContainsFlag(r.include, "contracts") {
+		for name, code := range r.Contracts {
+			_, _ = fmt.Fprintf(writer, "Contracts '%s':\n", name)
+			_, _ = fmt.Fprintln(writer, string(code))
+		}
+	} else {
+		_, _ = fmt.Fprint(writer, "\n\nContracts (hidden, use --include contracts)")
+	}
+
+	_ = writer.Flush()
 
 	return b.String()
 }

@@ -124,7 +124,7 @@ The `Type` must be the same as type in the transaction source code for that argu
 
 ### Arguments JSON
 
-- Flag: `--argsJSON`
+- Flag: `--args-json`
 - Valid inputs: arguments in JSON-Cadence form.
 
 Arguments passed to the Cadence transaction in Cadence JSON format.

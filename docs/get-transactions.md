@@ -14,24 +14,50 @@ flow transactions get <tx_id>
 ## Example Usage
 
 ```shell
-> flow transactions get ff35821007322405608c0d3da79312617f8d16e118afe63e764b5e68edc96dd5 --host access.mainnet.nodes.onflow.org:9000
+> flow transactions get 40bc4b100c1930c61381c22e0f4c10a7f5827975ee25715527c1061b8d71e5aa --network mainnet 
 
-ID	 ff35821007322405608c0d3da79312617f8d16e118afe63e764b5e68edc96dd5
-Status	 SEALED
-Payer	 12e354a23e4f791d
-Events	 
-	 Index	 0
-	 Type	 flow.AccountCreated
-	 Tx ID	 ff35821007322405608c0d3da79312617f8d16e118afe63e764b5e68edc96dd5
-	 Values
-		 address (Address)	18c4931b5f3c7151
+Status		✅ SEALED
+ID		40bc4b100c1930c61381c22e0f4c10a7f5827975ee25715527c1061b8d71e5aa
+Payer		18eb4ee6b3c026d2
+Authorizers	[18eb4ee6b3c026d2]
 
-	 Index	 1
-	 Type	 flow.AccountKeyAdded
-	 Tx ID	 ff35821007322405608c0d3da79312617f8d16e118afe63e764b5e68edc96dd5
-	 Values
-		 address (Address)	18c4931b5f3c7151
-		 publicKey (Unknown)	f847b8404c296679364d2...7b168678cc762bc08f342d8d92e0a36e6ecfdcf15850721821823e8
+Proposal Key:	
+    Address	18eb4ee6b3c026d2
+    Index	11
+    Sequence	17930
+
+Payload Signature 0: 18eb4ee6b3c026d2
+Payload Signature 1: 18eb4ee6b3c026d2
+Envelope Signature 0: 18eb4ee6b3c026d2
+Signatures (minimized, use --include signatures)
+
+Events:		 
+    Index	0
+    Type	A.1654653399040a61.FlowToken.TokensWithdrawn
+    Tx ID	40bc4b100c1930c61381c22e0f4c10a7f5827975ee25715527c1061b8d71e5aa
+    Values
+		- amount (UFix64):	0.00100000
+		- from ({}?):			18eb4ee6b3c026d2
+
+    Index	1
+    Type	A.1654653399040a61.FlowToken.TokensDeposited
+    Tx ID	40bc4b100c1930c61381c22e0f4c10a7f5827975ee25715527c1061b8d71e5aa
+    Values
+		- amount (UFix64):	0.00100000
+		- to ({}?):			5068e27f275c546c
+
+    Index	2
+    Type	A.18eb4ee6b3c026d2.PrivateReceiverForwarder.PrivateDeposit
+    Tx ID	40bc4b100c1930c61381c22e0f4c10a7f5827975ee25715527c1061b8d71e5aa
+    Values
+		- amount (UFix64):	0.00100000
+		- to ({}?):			5068e27f275c546c
+
+
+
+Code (hidden, use --include code)
+
+Payload (hidden, use --include payload)
 ```
 
 ## Arguments
@@ -45,12 +71,18 @@ The first argument is the ID (hash) of the transaction.
 
 ## Flags
     
-### Display Transaction Code
+### Include Fields
+
+- Flag: `--include`
+- Valid inputs: `code`, `payload`, `signatures`
+
+Specify fields to include in the result output. Applies only to the text output.
+
+### Code
 
 - Flag: `--code`
-- Default: `false`
 
-Indicate whether to print the transaction Cadence code.
+⚠️  Deprecated: use include flag.
 
 ### Wait for Seal
 
@@ -59,6 +91,13 @@ Indicate whether to print the transaction Cadence code.
 
 Indicate whether to wait for the transaction to be sealed
 before displaying the result.
+
+### Exclude Fields
+
+- Flag: `--exclude`
+- Valid inputs: `events`
+
+Specify fields to exclude from the result output. Applies only to the text output.
 
 ### Host
 

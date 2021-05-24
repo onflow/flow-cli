@@ -343,15 +343,17 @@ func (a *Accounts) addContract(
 
 	if updateExisting {
 		a.logger.Info(fmt.Sprintf(
-			"Contract '%s' updated on the account '%s'.",
+			"Contract '%s' updated on the account '%s'.\nTransaction ID: %s.",
 			contractName,
 			account.Address(),
+			sentTx.ID().String(),
 		))
 	} else {
 		a.logger.Info(fmt.Sprintf(
-			"Contract '%s' deployed to the account '%s'.",
+			"Contract '%s' deployed to the account '%s'.\nTransaction ID: %s.",
 			contractName,
 			account.Address(),
+			sentTx.ID().String(),
 		))
 	}
 
@@ -398,7 +400,12 @@ func (a *Accounts) RemoveContract(
 	}
 
 	a.logger.StopProgress()
-	a.logger.Info(fmt.Sprintf("Contract %s removed from account %s\n", contractName, account.Address()))
+	a.logger.Info(fmt.Sprintf(
+		"Contract %s removed from account %s.\nTransaction ID: %s.",
+		contractName,
+		account.Address(),
+		sentTx.ID().String(),
+	))
 
 	return a.gateway.GetAccount(account.Address())
 }

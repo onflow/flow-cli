@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package project
+package quick
 
 import (
 	"fmt"
@@ -27,6 +27,8 @@ import (
 	"github.com/onflow/flow-cli/internal/config"
 	"github.com/onflow/flow-cli/pkg/flowcli/services"
 )
+
+// TODO(sideninja) workaround - init needed to be copied in order to work else there is flag duplicate error
 
 var initFlag = config.FlagsInit{}
 

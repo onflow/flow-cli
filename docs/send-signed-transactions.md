@@ -22,47 +22,25 @@ flow transactions send-signed <signed transaction filename>
 > flow transactions send-signed ./signed.rlp
     
 Status		✅ SEALED
-ID		b6430b35ba23849a8acb4fa1a4a1d5cce3ed4589111ecbb3984de1b6bd1ba39e
-Payer		a2c4941b5f3c7151
-Authorizers	[a2c4941b5f3c7151]
+ID		528332aceb288cdfe4d11d6522aa27bed94fb3266b812cb350eb3526ed489d99
+Payer		f8d6e0586b0a20c7
+Authorizers	[f8d6e0586b0a20c7]
 
 Proposal Key:	
-    Address	a2c4941b5f3c7151
+    Address	f8d6e0586b0a20c7
     Index	0
-    Sequence	9
+    Sequence	0
 
 No Payload Signatures
 
-Envelope Signature 0:
-    Address	a2c4941b5f3c7151
-    Signature	5391a6fed0fe...2742048166f9d5c925a8dcb78a6d8c710921d67
-    Key Index	0
-
+Envelope Signature 0: f8d6e0586b0a20c7
+Signatures (minimized, use --include signatures)
 
 Events:	 None
 
+Code (hidden, use --include code)
 
-Arguments (1):
-    - Argument 0: {"type":"String","value":"Meow"}
-
-
-Code
-
-transaction(greeting: String) {
-  let guest: Address
-
-  prepare(authorizer: AuthAccount) {
-    self.guest = authorizer.address
-  }
-
-  execute {
-    log(greeting.concat(",").concat(self.guest.toString()))
-  }
-}
-
-
-Payload:
-f90184f90138...8a9462751237da2742048166f9d5c925a8dcb78a6d8c710921d67
+Payload (hidden, use --include payload)
 
 ```
 
@@ -77,6 +55,28 @@ The first argument is a path to a Cadence file containing the
 transaction to be executed.
 
 ## Flags
+
+### Include Fields
+
+- Flag: `--include`
+- Valid inputs: `code`, `payload`
+
+Specify fields to include in the result output. Applies only to the text output.
+
+### Exclude Fields
+
+- Flag: `--exclude`
+- Valid inputs: `events`
+
+Specify fields to exclude from the result output. Applies only to the text output.
+
+### Filter
+
+- Flag: `--filter`
+- Short Flag: `-x`
+- Valid inputs: a case-sensitive name of the result property.
+
+Specify any property name from the result you want to return as the only value.
 
 ### Host
 
@@ -96,14 +96,6 @@ any host defined by the `--network` flag.
 - Default: `emulator`
 
 Specify which network you want the command to use for execution.
-
-### Filter
-
-- Flag: `--filter`
-- Short Flag: `-x`
-- Valid inputs: a case-sensitive name of the result property.
-
-Specify any property name from the result you want to return as the only value.
 
 ### Output
 

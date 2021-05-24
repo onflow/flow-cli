@@ -22,6 +22,8 @@ import (
 	"bytes"
 	"fmt"
 
+	"github.com/onflow/flow-cli/pkg/flowcli/output"
+
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
@@ -62,39 +64,31 @@ type Result struct {
 	err        error
 }
 
-const (
-	OnlineIcon   = "🟢"
-	OnlineStatus = "ONLINE"
-
-	OfflineIcon   = "🔴"
-	OfflineStatus = "OFFLINE"
-)
-
 // getStatus returns string representation for Flow network status.
 func (r *Result) getStatus() string {
 	if r.err == nil {
-		return OnlineStatus
+		return "ONLINE"
 	}
 
-	return OfflineStatus
+	return "OFFLINE"
 }
 
 // getColoredStatus returns colored string representation for Flow network status.
 func (r *Result) getColoredStatus() string {
 	if r.err == nil {
-		return util.Green(OnlineStatus)
+		return output.Green(r.getStatus())
 	}
 
-	return util.Red(OfflineStatus)
+	return output.Red(output.Red(r.getStatus()))
 }
 
 // getIcon returns emoji icon representing Flow network status.
 func (r *Result) getIcon() string {
 	if r.err == nil {
-		return OnlineIcon
+		return output.GoEmoji()
 	}
 
-	return OfflineIcon
+	return output.StopEmoji()
 }
 
 // String converts result to a string.

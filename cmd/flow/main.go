@@ -32,6 +32,7 @@ import (
 	"github.com/onflow/flow-cli/internal/events"
 	"github.com/onflow/flow-cli/internal/keys"
 	"github.com/onflow/flow-cli/internal/project"
+	"github.com/onflow/flow-cli/internal/quick"
 	"github.com/onflow/flow-cli/internal/scripts"
 	"github.com/onflow/flow-cli/internal/status"
 	"github.com/onflow/flow-cli/internal/transactions"
@@ -45,8 +46,8 @@ func main() {
 		TraverseChildren: true,
 	}
 
-	// hot commands
-	config.InitCommand.AddToParent(cmd)
+	// quick commands
+	quick.InitCommand.AddToParent(cmd)
 	status.Command.AddToParent(cmd)
 
 	// structured commands
@@ -61,6 +62,7 @@ func main() {
 	cmd.AddCommand(blocks.Cmd)
 	cmd.AddCommand(collections.Cmd)
 	cmd.AddCommand(project.Cmd)
+	cmd.AddCommand(config.Cmd)
 
 	command.InitFlags(cmd)
 

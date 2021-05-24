@@ -49,11 +49,18 @@ Flow [account address](https://docs.onflow.org/concepts/accounts-and-keys/) (pre
 
 ## Flags
 
+### Include Fields
+
+- Flag: `--include`
+- Valid inputs: `contracts`
+
+Specify fields to include in the result output. Applies only to the text output.
+
 ### Contracts
 
 - Flag: `--contracts`
 
-Display contracts deployed to the account.
+⚠️  Deprecated: use include flag.
 
 ### Code 
 ⚠️  No longer supported: use contracts flag instead.
