@@ -97,13 +97,11 @@ type KmsAccountKey struct {
 
 func (a *KmsAccountKey) ToConfig() config.AccountKey {
 	return config.AccountKey{
-		Type:     a.keyType,
-		Index:    a.index,
-		SigAlgo:  a.sigAlgo,
-		HashAlgo: a.hashAlgo,
-		Context: map[string]string{
-			config.KMSContextField: a.kmsKey.ResourceID(),
-		},
+		Type:       a.keyType,
+		Index:      a.index,
+		SigAlgo:    a.sigAlgo,
+		HashAlgo:   a.hashAlgo,
+		PrivateKey: a.kmsKey.ResourceID(),
 	}
 }
 
@@ -126,7 +124,7 @@ func (a *KmsAccountKey) Signer(ctx context.Context) (crypto.Signer, error) {
 }
 
 func (a *KmsAccountKey) Validate() error {
-	resourceID := a.ToConfig().Context[config.KMSContextField]
+	resourceID := a.ToConfig().PrivateKey.(string)
 	return util.GcloudApplicationSignin(resourceID)
 }
 
@@ -135,7 +133,7 @@ func (a *KmsAccountKey) PrivateKey() (*crypto.PrivateKey, error) {
 }
 
 func newKmsAccountKey(key config.AccountKey) (AccountKey, error) {
-	accountKMSKey, err := cloudkms.KeyFromResourceID(key.Context[config.KMSContextField])
+	accountKMSKey, err := cloudkms.KeyFromResourceID(key.PrivateKey.(string))
 	if err != nil {
 		return nil, err
 	}
@@ -168,7 +166,7 @@ func NewHexAccountKeyFromPrivateKey(
 }
 
 func newHexAccountKey(accountKeyConf config.AccountKey) (*HexAccountKey, error) {
-	privateKeyHex, ok := accountKeyConf.Context[config.PrivateKeyField]
+	privateKeyHex, ok := accountKeyConf.PrivateKey.(string)
 	if !ok {
 		return nil, fmt.Errorf("\"%s\" field is required", config.PrivateKeyField)
 	}
@@ -199,13 +197,11 @@ func (a *HexAccountKey) PrivateKey() (*crypto.PrivateKey, error) {
 
 func (a *HexAccountKey) ToConfig() config.AccountKey {
 	return config.AccountKey{
-		Type:     a.keyType,
-		Index:    a.index,
-		SigAlgo:  a.sigAlgo,
-		HashAlgo: a.hashAlgo,
-		Context: map[string]string{
-			config.PrivateKeyField: a.PrivateKeyHex(),
-		},
+		Type:       a.keyType,
+		Index:      a.index,
+		SigAlgo:    a.sigAlgo,
+		HashAlgo:   a.hashAlgo,
+		PrivateKey: a.PrivateKeyHex(),
 	}
 }
 
