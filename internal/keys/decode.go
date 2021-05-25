@@ -31,10 +31,11 @@ var decodeFlags = flagsDecode{}
 
 var DecodeCommand = &command.Command{
 	Cmd: &cobra.Command{
-		Use:     "decode <rlp encoded account key>",
-		Short:   "Decode a rlp encoded account key",
-		Args:    cobra.ExactArgs(1),
-		Example: "flow keys decode f847b8408...2402038203e8",
+		Use:       "decode <rlp|pem> <encoded public key>",
+		Short:     "Decode an encoded public key",
+		Args:      cobra.ExactArgs(2),
+		ValidArgs: []string{"rlp", "pem"},
+		Example:   "flow keys decode rlp f847b8408...2402038203e8",
 	},
 	Flags: &decodeFlags,
 	Run: func(
@@ -43,9 +44,10 @@ var DecodeCommand = &command.Command{
 		globalFlags command.GlobalFlags,
 		services *services.Services,
 	) (command.Result, error) {
-		rlpEncoded := args[0]
+		encoded := args[1]
+		encoding := args[0]
 
-		accountKey, err := services.Keys.Decode(rlpEncoded)
+		accountKey, err := services.Keys.Decode(encoded, encoding)
 		if err != nil {
 			return nil, err
 		}

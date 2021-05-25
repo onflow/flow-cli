@@ -21,6 +21,7 @@ package services
 import (
 	"encoding/hex"
 	"fmt"
+	"strings"
 
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
@@ -51,6 +52,9 @@ func NewKeys(
 	}
 }
 
+const PEM string = "pem"
+const RLP string = "rlp"
+
 // Generate generates a new private key from the given seed and signature algorithm.
 func (k *Keys) Generate(inputSeed string, signatureAlgo string) (crypto.PrivateKey, error) {
 	var seed []byte
@@ -78,7 +82,18 @@ func (k *Keys) Generate(inputSeed string, signatureAlgo string) (crypto.PrivateK
 	return privateKey, nil
 }
 
-func (k *Keys) Decode(publicKey string) (*flow.AccountKey, error) {
+// Decode encoded public key for supported encoding type
+func (k *Keys) Decode(encoded string, encoding string) (*flow.AccountKey, error) {
+	if strings.ToLower(encoding) == PEM {
+		return decodePEM(encoded)
+	} else if strings.ToLower(encoding) == RLP {
+		return decodeRLP(encoded)
+	}
+
+	return nil, fmt.Errorf("encoding type not supported. Valid encoding: RLP and PEM")
+}
+
+func decodeRLP(publicKey string) (*flow.AccountKey, error) {
 	publicKeyBytes, err := hex.DecodeString(publicKey)
 	if err != nil {
 		return nil, fmt.Errorf("failed to decode public key: %v", err)
@@ -86,8 +101,26 @@ func (k *Keys) Decode(publicKey string) (*flow.AccountKey, error) {
 
 	accountKey, err := flow.DecodeAccountKey(publicKeyBytes)
 	if err != nil {
-		return nil, fmt.Errorf("failed to decode private key bytes: %v", err)
+		return nil, fmt.Errorf("failed to decode: %v", err)
 	}
 
 	return accountKey, nil
+}
+
+func decodePEM(publicKeyPath string) (*flow.AccountKey, error) {
+	fileContent, err := util.LoadFile(publicKeyPath)
+	if err != nil {
+		return nil, err
+	}
+
+	pk, err := crypto.DecodePublicKeyPEM(crypto.ECDSA_P256, string(fileContent))
+	if err != nil {
+		return nil, err
+	}
+
+	return &flow.AccountKey{
+		PublicKey: pk,
+		SigAlgo:   crypto.ECDSA_P256,
+		HashAlgo:  crypto.SHA3_256, // refactor
+	}, nil
 }
