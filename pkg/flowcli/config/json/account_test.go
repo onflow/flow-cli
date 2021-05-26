@@ -45,9 +45,9 @@ func Test_ConfigAccountKeysSimple(t *testing.T) {
 	assert.Equal(t, accounts.GetByName("test").Key.Context["privateKey"], "2272967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47")
 }
 
-func Test_ConfigAccountKeysAdvanced(t *testing.T) {
+func Test_ConfigAccountOldFormats(t *testing.T) {
 	b := []byte(`{
-		"test": {
+		"old-format-1": {
 			"address": "service",
 			"key": {
 				"type": "hex",
@@ -55,9 +55,21 @@ func Test_ConfigAccountKeysAdvanced(t *testing.T) {
 				"signatureAlgorithm": "ECDSA_P256",
 				"hashAlgorithm": "SHA3_256",
 				"context": {
-					"privateKey": "1272967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47"
+					"privateKey": "2222967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47"
 				}
 			}
+		},
+		"old-format-2": {
+			"address": "service",
+			"keys": [{
+				"type": "hex",
+				"index": 0,
+				"signatureAlgorithm": "ECDSA_P256",
+				"hashAlgorithm": "SHA3_256",
+				"context": {
+					"privateKey": "1272967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47"
+				}
+			}]
 		}
 	}`)
 
@@ -66,8 +78,15 @@ func Test_ConfigAccountKeysAdvanced(t *testing.T) {
 	assert.NoError(t, err)
 
 	accounts := jsonAccounts.transformToConfig()
-	account := accounts.GetByName("test")
 
+	account := accounts.GetByName("old-format-1")
+	assert.Equal(t, account.Address.String(), "f8d6e0586b0a20c7")
+	assert.Equal(t, account.Key.HashAlgo.String(), "SHA3_256")
+	assert.Equal(t, account.Key.Index, 0)
+	assert.Equal(t, account.Key.SigAlgo.String(), "ECDSA_P256")
+	assert.Equal(t, account.Key.Context["privateKey"], "2222967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47")
+
+	account = accounts.GetByName("old-format-2")
 	assert.Equal(t, account.Address.String(), "f8d6e0586b0a20c7")
 	assert.Equal(t, account.Key.HashAlgo.String(), "SHA3_256")
 	assert.Equal(t, account.Key.Index, 0)

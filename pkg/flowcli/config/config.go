@@ -83,11 +83,11 @@ type Account struct {
 
 // AccountKey defines the configuration for a Flow account key.
 type AccountKey struct {
-	Type       KeyType
-	Index      int
-	SigAlgo    crypto.SignatureAlgorithm
-	HashAlgo   crypto.HashAlgorithm
-	PrivateKey interface{}
+	Type     KeyType
+	Index    int
+	SigAlgo  crypto.SignatureAlgorithm
+	HashAlgo crypto.HashAlgorithm
+	Context  map[string]string
 }
 
 // Emulator defines the configuration for a Flow Emulator instance.
