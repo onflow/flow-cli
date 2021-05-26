@@ -121,6 +121,6 @@ func decodePEM(publicKeyPath string) (*flow.AccountKey, error) {
 	return &flow.AccountKey{
 		PublicKey: pk,
 		SigAlgo:   crypto.ECDSA_P256,
-		HashAlgo:  crypto.SHA3_256, // refactor
+		Weight:    -1,
 	}, nil
 }
