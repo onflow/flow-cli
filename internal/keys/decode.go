@@ -52,7 +52,9 @@ var DecodeCommand = &command.Command{
 			return nil, err
 		}
 
-		pubKey := accountKey.PublicKey
-		return &KeyResult{publicKey: pubKey, accountKey: accountKey}, err
+		return &KeyResult{
+			publicKey:  accountKey.PublicKey,
+			accountKey: accountKey,
+		}, err
 	},
 }
