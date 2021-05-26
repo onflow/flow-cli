@@ -189,6 +189,8 @@ func (a *Accounts) Create(
 		return nil, err
 	}
 
+	a.logger.Info(fmt.Sprintf("Transaction ID: %s", tx.FlowTransaction().ID()))
+
 	sentTx, err := a.gateway.SendSignedTransaction(tx)
 	if err != nil {
 		return nil, err
