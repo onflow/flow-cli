@@ -20,6 +20,7 @@ package json
 
 import (
 	"encoding/json"
+	"strings"
 
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
@@ -41,7 +42,10 @@ func transformAddress(address string) flow.Address {
 
 // transformSimpleToConfig transforms simple internal account to config account
 func transformSimpleToConfig(accountName string, a simpleAccount) config.Account {
-	pkey, _ := crypto.DecodePrivateKey(crypto.ECDSA_P256, []byte(a.Key))
+	pkey, _ := crypto.DecodePrivateKeyHex(
+		crypto.ECDSA_P256,
+		strings.ReplaceAll(a.Key, "0x", ""),
+	)
 
 	return config.Account{
 		Name:    accountName,
@@ -60,9 +64,24 @@ func transformSimpleToConfig(accountName string, a simpleAccount) config.Account
 // transformAdvancedToConfig transforms advanced internal account to config account
 func transformAdvancedToConfig(accountName string, a advanceAccount) config.Account {
 	sigAlgo := crypto.StringToSignatureAlgorithm(a.Key.SigAlgo)
-	var pkey crypto.PrivateKey
+	var pKey crypto.PrivateKey
+	resourceID := a.Key.ResourceID
+
+	// todo check both pkey and resource id if present and return error if both
+
 	if a.Key.PrivateKey != "" {
-		pkey, _ = crypto.DecodePrivateKeyHex(sigAlgo, a.Key.PrivateKey)
+		pKey, _ = crypto.DecodePrivateKeyHex(
+			sigAlgo,
+			strings.ReplaceAll(a.Key.PrivateKey, "0x", ""),
+		)
+	}
+
+	// pre v0.22 support
+	if a.Key.Context["privateKey"] != "" {
+		pKey, _ = crypto.DecodePrivateKeyHex(
+			sigAlgo,
+			strings.ReplaceAll(a.Key.Context["privateKey"], "0x", ""),
+		)
 	}
 
 	return config.Account{
@@ -73,8 +92,8 @@ func transformAdvancedToConfig(accountName string, a advanceAccount) config.Acco
 			Index:      a.Key.Index,
 			SigAlgo:    sigAlgo,
 			HashAlgo:   crypto.StringToHashAlgorithm(a.Key.HashAlgo),
-			ResourceID: a.Key.ResourceID,
-			PrivateKey: pkey,
+			ResourceID: resourceID,
+			PrivateKey: pKey,
 		},
 	}
 }
@@ -165,10 +184,12 @@ type advanceKey struct {
 	Index    int            `json:"index"`
 	SigAlgo  string         `json:"signatureAlgorithm"`
 	HashAlgo string         `json:"hashAlgorithm"`
-
-	ResourceID string `json:"resourceID"`
-
-	PrivateKey string `json:"privateKey"`
+	// hex key type
+	PrivateKey string `json:"privateKey,omitempty"`
+	// kms key type
+	ResourceID string `json:"resourceID,omitempty"`
+	// old key format
+	Context map[string]string `json:"context,omitempty"`
 }
 
 // support for pre v0.22 formats
