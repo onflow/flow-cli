@@ -78,16 +78,24 @@ type Contract struct {
 type Account struct {
 	Name    string
 	Address flow.Address
-	Key     AccountKey
+	Key     interface{}
 }
 
-// AccountKey defines the configuration for a Flow account key.
-type AccountKey struct {
+type AccountKeyBase struct {
 	Type     KeyType
 	Index    int
 	SigAlgo  crypto.SignatureAlgorithm
 	HashAlgo crypto.HashAlgorithm
-	Context  map[string]string
+}
+
+type AccountKeyHex struct {
+	AccountKeyBase
+	PrivateKey crypto.PrivateKey
+}
+
+type AccountKeyKMS struct {
+	AccountKeyBase
+	ResourceID string
 }
 
 // Emulator defines the configuration for a Flow Emulator instance.
