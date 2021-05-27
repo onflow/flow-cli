@@ -27,7 +27,7 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowcli/config"
 )
 
-type jsonAccounts map[string]jsonAccount
+type jsonAccounts map[string]account
 
 // transformAddress returns address based on address and chain id
 func transformAddress(address string) flow.Address {
@@ -87,20 +87,20 @@ func isDefaultKeyFormat(key config.AccountKey) bool {
 		key.HashAlgo == crypto.SHA3_256
 }
 
-func transformSimpleAccountToJSON(a config.Account) jsonAccount {
-	return jsonAccount{
-		Simple: jsonAccountSimple{
+func transformSimpleAccountToJSON(a config.Account) account {
+	return account{
+		Simple: accountSimple{
 			Address: a.Address.String(),
 			Key:     a.Key.Context[config.PrivateKeyField],
 		},
 	}
 }
 
-func transformAdvancedAccountToJSON(a config.Account) jsonAccount {
-	return jsonAccount{
-		Advanced: jsonAccountAdvanced{
+func transformAdvancedAccountToJSON(a config.Account) account {
+	return account{
+		Advanced: accountAdvanced{
 			Address: a.Address.String(),
-			Key: jsonKeyAdvanced{
+			Key: keyAdvanced{
 				Type:     a.Key.Type,
 				Index:    a.Key.Index,
 				SigAlgo:  a.Key.SigAlgo.String(),
@@ -127,39 +127,38 @@ func transformAccountsToJSON(accounts config.Accounts) jsonAccounts {
 	return jsonAccounts
 }
 
-type jsonAccount struct {
-	Simple   jsonAccountSimple
-	Advanced jsonAccountAdvanced
+type account struct {
+	Simple   accountSimple
+	Advanced accountAdvanced
 }
 
-type jsonAccountSimple struct {
+type accountSimple struct {
 	Address string `json:"address"`
 	Key     string `json:"key"`
 }
 
-type jsonAccountAdvanced struct {
-	Address string          `json:"address"`
-	Key     jsonKeyAdvanced `json:"key"`
+type accountAdvanced struct {
+	Address string `json:"address"`
+	Key     interface{}
 }
 
-type jsonKeyAdvanced struct {
-	Type     config.KeyType    `json:"type"`
-	Index    int               `json:"index"`
-	SigAlgo  string            `json:"signatureAlgorithm"`
-	HashAlgo string            `json:"hashAlgorithm"`
-	Context  map[string]string `json:"context"`
+type keyAdvancedBase struct {
+	Type     config.KeyType `json:"type"`
+	Index    int            `json:"index"`
+	SigAlgo  string         `json:"signatureAlgorithm"`
+	HashAlgo string         `json:"hashAlgorithm"`
 }
 
 // support for pre v0.22 formats
-type jsonAccountSimplePre022 struct {
+type accountSimplePre022 struct {
 	Address string `json:"address"`
 	Keys    string `json:"keys"`
 }
 
 // support for pre v0.22 formats
-type jsonAccountAdvancedPre022 struct {
-	Address string            `json:"address"`
-	Keys    []jsonKeyAdvanced `json:"keys"`
+type accountAdvancedPre022 struct {
+	Address string        `json:"address"`
+	Keys    []keyAdvanced `json:"keys"`
 }
 
 type FormatType int
@@ -195,7 +194,7 @@ func decideFormat(b []byte) (FormatType, error) {
 	}
 }
 
-func (j *jsonAccount) UnmarshalJSON(b []byte) error {
+func (j *account) UnmarshalJSON(b []byte) error {
 
 	format, err := decideFormat(b)
 	if err != nil {
@@ -204,28 +203,28 @@ func (j *jsonAccount) UnmarshalJSON(b []byte) error {
 
 	switch format {
 	case simpleFormat:
-		var simple jsonAccountSimple
+		var simple accountSimple
 		err = json.Unmarshal(b, &simple)
 		j.Simple = simple
 
 	case simpleFormatPre022:
-		var simpleOld jsonAccountSimplePre022
+		var simpleOld accountSimplePre022
 		err = json.Unmarshal(b, &simpleOld)
-		j.Simple = jsonAccountSimple{
+		j.Simple = accountSimple{
 			Address: simpleOld.Address,
 			Key:     simpleOld.Keys,
 		}
 
 	case advancedFormatPre022:
-		var advancedOld jsonAccountAdvancedPre022
+		var advancedOld accountAdvancedPre022
 		err = json.Unmarshal(b, &advancedOld)
-		j.Advanced = jsonAccountAdvanced{
+		j.Advanced = accountAdvanced{
 			Address: advancedOld.Address,
 			Key:     advancedOld.Keys[0],
 		}
 
 	case advancedFormat:
-		var advanced jsonAccountAdvanced
+		var advanced accountAdvanced
 		err = json.Unmarshal(b, &advanced)
 		if err != nil {
 			return err
@@ -247,8 +246,8 @@ func (j *jsonAccount) UnmarshalJSON(b []byte) error {
 	return err
 }
 
-func (j jsonAccount) MarshalJSON() ([]byte, error) {
-	if j.Simple != (jsonAccountSimple{}) {
+func (j account) MarshalJSON() ([]byte, error) {
+	if j.Simple != (accountSimple{}) {
 		return json.Marshal(j.Simple)
 	}
 
