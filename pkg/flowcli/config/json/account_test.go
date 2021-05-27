@@ -21,8 +21,6 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/onflow/flow-cli/pkg/flowcli/config"
-
 	"github.com/stretchr/testify/assert"
 )
 
@@ -41,13 +39,43 @@ func Test_ConfigAccountKeysSimple(t *testing.T) {
 	accounts := jsonAccounts.transformToConfig()
 
 	account := accounts.GetByName("test")
-	key := account.Key.(config.AccountKeyHex)
+	key := account.Key
 
 	assert.Equal(t, account.Address.String(), "f8d6e0586b0a20c7")
 	assert.Equal(t, key.HashAlgo.String(), "SHA3_256")
 	assert.Equal(t, key.Index, 0)
 	assert.Equal(t, key.SigAlgo.String(), "ECDSA_P256")
 	assert.Equal(t, key.PrivateKey.String(), "0xf988fd7a959d96d0e36ca13a240bbfc4a78098cc56cfd1fa6c918080c8a0f55c")
+}
+
+func Test_ConfigAccountKeysAdvancedHex(t *testing.T) {
+	b := []byte(`{
+		"test": {
+			"address": "service",
+			"key": {
+				"type": "hex",
+				"index": 1,
+				"signatureAlgorithm": "ECDSA_P256",
+				"hashAlgorithm": "SHA2_256",
+				"privateKey": "271cec6bb5221d12713759188166bdfa00079db5789c36b54dcf1d794d8d8cdf"
+			}
+		}
+	}`)
+
+	var jsonAccounts jsonAccounts
+	err := json.Unmarshal(b, &jsonAccounts)
+	assert.NoError(t, err)
+
+	accounts := jsonAccounts.transformToConfig()
+
+	account := accounts.GetByName("test")
+	key := account.Key
+
+	assert.Equal(t, account.Address.String(), "f8d6e0586b0a20c7")
+	assert.Equal(t, key.HashAlgo.String(), "SHA2_256")
+	assert.Equal(t, key.Index, 1)
+	assert.Equal(t, key.SigAlgo.String(), "ECDSA_P256")
+	assert.Equal(t, key.PrivateKey.String(), "0x271cec6bb5221d12713759188166bdfa00079db5789c36b54dcf1d794d8d8cdf")
 }
 
 func Test_ConfigAccountOldFormats(t *testing.T) {
@@ -58,9 +86,9 @@ func Test_ConfigAccountOldFormats(t *testing.T) {
 				"type": "hex",
 				"index": 0,
 				"signatureAlgorithm": "ECDSA_P256",
-				"hashAlgorithm": "SHA3_256",
+				"hashAlgorithm": "SHA2_256",
 				"context": {
-					"privateKey": "2222967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47"
+					"privateKey": "f988fd7a959d96d0e36ca13a240bbfc4a78098cc56cfd1fa6c918080c8a0f55c"
 				}
 			}
 		},
@@ -68,11 +96,11 @@ func Test_ConfigAccountOldFormats(t *testing.T) {
 			"address": "service",
 			"keys": [{
 				"type": "hex",
-				"index": 0,
+				"index": 1,
 				"signatureAlgorithm": "ECDSA_P256",
 				"hashAlgorithm": "SHA3_256",
 				"context": {
-					"privateKey": "1272967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47"
+					"privateKey": "271cec6bb5221d12713759188166bdfa00079db5789c36b54dcf1d794d8d8cdf"
 				}
 			}]
 		}
@@ -85,22 +113,22 @@ func Test_ConfigAccountOldFormats(t *testing.T) {
 	accounts := jsonAccounts.transformToConfig()
 
 	account := accounts.GetByName("old-format-1")
-	key := account.Key.(config.AccountKeyHex)
+	key := account.Key
 
 	assert.Equal(t, account.Address.String(), "f8d6e0586b0a20c7")
 	assert.Equal(t, key.HashAlgo.String(), "SHA3_256")
 	assert.Equal(t, key.Index, 0)
 	assert.Equal(t, key.SigAlgo.String(), "ECDSA_P256")
-	assert.Equal(t, key.PrivateKey, "2222967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47")
+	assert.Equal(t, key.PrivateKey, "f988fd7a959d96d0e36ca13a240bbfc4a78098cc56cfd1fa6c918080c8a0f55c")
 
 	account = accounts.GetByName("old-format-2")
-	key = account.Key.(config.AccountKeyHex)
+	key = account.Key
 
 	assert.Equal(t, account.Address.String(), "f8d6e0586b0a20c7")
-	assert.Equal(t, key.HashAlgo.String(), "SHA3_256")
+	assert.Equal(t, key.HashAlgo.String(), "SHA2_256")
 	assert.Equal(t, key.Index, 0)
 	assert.Equal(t, key.SigAlgo.String(), "ECDSA_P256")
-	assert.Equal(t, key.PrivateKey, "1272967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47")
+	assert.Equal(t, key.PrivateKey, "271cec6bb5221d12713759188166bdfa00079db5789c36b54dcf1d794d8d8cdf")
 }
 
 func Test_ConfigMultipleAccountsSimple(t *testing.T) {
@@ -122,7 +150,7 @@ func Test_ConfigMultipleAccountsSimple(t *testing.T) {
 	accounts := jsonAccounts.transformToConfig()
 
 	account := accounts.GetByName("emulator-account")
-	key := account.Key.(config.AccountKeyHex)
+	key := account.Key
 
 	assert.Equal(t, account.Name, "emulator-account")
 	assert.Equal(t, account.Address.String(), "0000000000000000")
@@ -132,7 +160,7 @@ func Test_ConfigMultipleAccountsSimple(t *testing.T) {
 	assert.Equal(t, key.PrivateKey, "dd72967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47")
 
 	account = accounts.GetByName("testnet-account")
-	key = account.Key.(config.AccountKeyHex)
+	key = account.Key
 
 	assert.Equal(t, account.Address.String(), "2c1162386b0a245f")
 	assert.Equal(t, key.HashAlgo.String(), "SHA3_256")
@@ -176,7 +204,7 @@ func Test_ConfigMultipleAccountsAdvanced(t *testing.T) {
 	accounts := jsonAccounts.transformToConfig()
 
 	account := accounts.GetByName("emulator-account")
-	key := account.Key.(config.AccountKeyHex)
+	key := account.Key
 
 	assert.Equal(t, account.Address.String(), "f8d6e0586b0a20c7")
 	assert.Equal(t, key.HashAlgo.String(), "SHA3_256")
@@ -185,7 +213,7 @@ func Test_ConfigMultipleAccountsAdvanced(t *testing.T) {
 	assert.Equal(t, key.PrivateKey, "1272967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47")
 
 	account = accounts.GetByName("testnet-account")
-	key = account.Key.(config.AccountKeyHex)
+	key = account.Key
 
 	assert.Equal(t, account.Address.String(), "1c1162386b0a245f")
 	assert.Equal(t, key.HashAlgo.String(), "SHA3_256")
@@ -221,7 +249,7 @@ func Test_ConfigMixedAccounts(t *testing.T) {
 	accounts := jsonAccounts.transformToConfig()
 
 	account := accounts.GetByName("emulator-account")
-	key := account.Key.(config.AccountKeyHex)
+	key := account.Key
 
 	assert.Equal(t, account.Address.String(), "f8d6e0586b0a20c7")
 	assert.Equal(t, key.HashAlgo.String(), "SHA3_256")
@@ -230,7 +258,7 @@ func Test_ConfigMixedAccounts(t *testing.T) {
 	assert.Equal(t, key.PrivateKey, "1272967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47")
 
 	account = accounts.GetByName("testnet-account")
-	key = account.Key.(config.AccountKeyHex)
+	key = account.Key
 
 	assert.Equal(t, account.Address.String(), "3c1162386b0a245f")
 	assert.Equal(t, key.HashAlgo.String(), "SHA3_256")
@@ -330,9 +358,9 @@ func Test_SupportForOldFormatWithMultipleKeys(t *testing.T) {
 
 	conf := jsonAccounts.transformToConfig()
 
-	key := conf.GetByName("testnet-account").Key.(config.AccountKeyHex)
+	key := conf.GetByName("testnet-account").Key
 	assert.Equal(t, key.PrivateKey, "1272967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47")
 
-	key = conf.GetByName("emulator-account").Key.(config.AccountKeyHex)
+	key = conf.GetByName("emulator-account").Key
 	assert.Equal(t, key.PrivateKey, "dd72967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47")
 }
