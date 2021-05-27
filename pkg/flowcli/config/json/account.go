@@ -22,6 +22,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
@@ -79,7 +80,10 @@ func (j jsonAccounts) transformToConfig() config.Accounts {
 		var account config.Account
 		// simple format
 		if a.Simple.Address != "" {
-			pkey, _ := crypto.DecodePrivateKeyHex(crypto.ECDSA_P256, a.Simple.Key)
+			pkey, _ := crypto.DecodePrivateKeyHex(
+				crypto.ECDSA_P256,
+				strings.ReplaceAll(a.Simple.Key, "0x", ""),
+			)
 			account = config.Account{
 				Name:    accountName,
 				Address: transformAddress(a.Simple.Address),
