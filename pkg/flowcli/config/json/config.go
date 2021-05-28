@@ -33,13 +33,40 @@ type jsonConfig struct {
 }
 
 func (j *jsonConfig) transformToConfig() (*config.Config, error) {
-	return &config.Config{
-		Emulators:   j.Emulators.transformToConfig(),
-		Contracts:   j.Contracts.transformToConfig(),
-		Networks:    j.Networks.transformToConfig(),
-		Accounts:    j.Accounts.transformToConfig(),
+	emulators, err := j.Emulators.transformToConfig()
+	if err != nil {
+		return nil, err
+	}
+
+	contracts, err := j.Contracts.transformToConfig()
+	if err != nil {
+		return nil, err
+	}
+
+	networks, err := j.Networks.transformToConfig()
+	if err != nil {
+		return nil, err
+	}
+
+	accounts, err := j.Accounts.transformToConfig()
+	if err != nil {
+		return nil, err
+	}
+
+	conf := &config.Config{
+		Emulators:   emulators,
+		Contracts:   contracts,
+		Networks:    networks,
+		Accounts:    accounts,
 		Deployments: j.Deployments.transformToConfig(),
-	}, nil
+	}
+
+	err = conf.Validate()
+	if err != nil {
+		return nil, err
+	}
+
+	return conf, nil
 }
 
 func transformConfigToJSON(config *config.Config) jsonConfig {
