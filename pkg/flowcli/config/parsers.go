@@ -21,7 +21,6 @@ package config
 import (
 	"fmt"
 	"strconv"
-	"strings"
 
 	"github.com/onflow/flow-go-sdk/crypto"
 
@@ -52,20 +51,18 @@ func StringToAccount(
 		return nil, err
 	}
 
-	accountKey := []AccountKey{{
-		Type:     KeyTypeHex,
-		Index:    parsedIndex,
-		SigAlgo:  crypto.StringToSignatureAlgorithm(sigAlgo),
-		HashAlgo: crypto.StringToHashAlgorithm(hashAlgo),
-		Context: map[string]string{
-			PrivateKeyField: strings.ReplaceAll(parsedKey.String(), "0x", ""),
-		},
-	}}
+	accountKey := AccountKey{
+		Type:       KeyTypeHex,
+		Index:      parsedIndex,
+		SigAlgo:    crypto.StringToSignatureAlgorithm(sigAlgo),
+		HashAlgo:   crypto.StringToHashAlgorithm(hashAlgo),
+		PrivateKey: parsedKey,
+	}
 
 	return &Account{
 		Name:    name,
 		Address: *parsedAddress,
-		Keys:    accountKey,
+		Key:     accountKey,
 	}, nil
 }
 
