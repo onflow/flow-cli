@@ -32,7 +32,7 @@ Flow configuration (`flow.json`) file will contain the following properties:
   "accounts": {
     "emulator-account": {
       "address": "f8d6e0586b0a20c7",
-      "keys": "ae1b44c0f5e8f6992ef2348898a35e50a8b0b9684000da8b1dade1b3bcd6ebee",
+      "key": "ae1b44c0f5e8f6992ef2348898a35e50a8b0b9684000da8b1dade1b3bcd6ebee",
     }
   },
   "deployments": {},
@@ -79,15 +79,15 @@ We'll walk through each property one by one.
   "accounts": {
     "admin-account": {
       "address": "3ae53cb6e3f42a79",
-      "keys": "12332967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad1111"
+      "key": "12332967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad1111"
     },
     "user-account": {
       "address": "e2a8b7f23e8b548f",
-      "keys": "22232967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad1111"
+      "key": "22232967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad1111"
     },
     "emulator-account": {
       "address": "f8d6e0586b0a20c7",
-      "keys": "2eae2f31cb5b756151fa11d82949c634b8f28796a711d7eb1e52cc301ed11111",
+      "key": "2eae2f31cb5b756151fa11d82949c634b8f28796a711d7eb1e52cc301ed11111",
     }
   },
 
@@ -167,7 +167,7 @@ private key.
 "accounts": {
   "admin-account": {
     "address": "3ae53cb6e3f42a79",
-    "keys": "12332967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad1111"
+    "key": "12332967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad1111"
   }
 }
 
@@ -186,28 +186,15 @@ value that is defined on the run time to the default service address on the emul
 ...
 
 "accounts": {
-  "admin-account-multiple-keys": {
+  "admin-account": {
     "address": "service",
-    "keys": [
-      {
+    "key":{
         "type": "hex",
         "index": 0,
         "signatureAlgorithm": "ECDSA_P256",
         "hashAlgorithm": "SHA3_256",
-        "context": {
-          "privateKey": "12332967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad1111"
-        }
-      },
-      {
-        "type": "hex",
-        "index": 1,
-        "signatureAlgorithm": "ECDSA_P256",
-        "hashAlgorithm": "SHA3_256",
-        "context": {
-          "privateKey": "333332967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad1111"
-        }
+        "privateKey": "12332967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad1111"
       }
-    ]
   }
 }
 

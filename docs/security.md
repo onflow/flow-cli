@@ -46,7 +46,7 @@ that is not checked into source control (e.g. excluded with `.gitignore`).
   "accounts": {
     "my-testnet-account": {
       "address": "3ae53cb6e3f42a79",
-      "keys": "334232967f52bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad1111"
+      "key": "334232967f52bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad1111"
     }
   }
 }
@@ -69,7 +69,7 @@ PRIVATE_KEY=key flow project deploy
   "accounts": {
     "my-testnet-account": {
       "address": "3ae53cb6e3f42a79",
-      "keys": "$PRIVATE_KEY"
+      "key": "$PRIVATE_KEY"
     }
   }
   ...
