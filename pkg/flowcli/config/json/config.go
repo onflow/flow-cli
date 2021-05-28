@@ -53,12 +53,17 @@ func (j *jsonConfig) transformToConfig() (*config.Config, error) {
 		return nil, err
 	}
 
+	deployments, err := j.Deployments.transformToConfig()
+	if err != nil {
+		return nil, err
+	}
+
 	conf := &config.Config{
 		Emulators:   emulators,
 		Contracts:   contracts,
 		Networks:    networks,
 		Accounts:    accounts,
-		Deployments: j.Deployments.transformToConfig(),
+		Deployments: deployments,
 	}
 
 	err = conf.Validate()
