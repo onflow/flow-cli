@@ -20,6 +20,7 @@ package json
 
 import (
 	"encoding/json"
+	"strings"
 
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
@@ -27,7 +28,7 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowcli/config"
 )
 
-type jsonAccounts map[string]jsonAccount
+type jsonAccounts map[string]account
 
 // transformAddress returns address based on address and chain id
 func transformAddress(address string) flow.Address {
@@ -39,45 +40,121 @@ func transformAddress(address string) flow.Address {
 	return flow.HexToAddress(address)
 }
 
+// transformSimpleToConfig transforms simple internal account to config account
+func transformSimpleToConfig(accountName string, a simpleAccount) config.Account {
+	pkey, _ := crypto.DecodePrivateKeyHex(
+		crypto.ECDSA_P256,
+		strings.ReplaceAll(a.Key, "0x", ""),
+	)
+
+	return config.Account{
+		Name:    accountName,
+		Address: transformAddress(a.Address),
+		Key: config.AccountKey{
+			Type:       config.KeyTypeHex,
+			Index:      0,
+			SigAlgo:    crypto.ECDSA_P256,
+			HashAlgo:   crypto.SHA3_256,
+			ResourceID: "",
+			PrivateKey: pkey,
+		},
+	}
+}
+
+// transformAdvancedToConfig transforms advanced internal account to config account
+func transformAdvancedToConfig(accountName string, a advanceAccount) config.Account {
+	sigAlgo := crypto.StringToSignatureAlgorithm(a.Key.SigAlgo)
+	var pKey crypto.PrivateKey
+	resourceID := a.Key.ResourceID
+
+	// todo check both pkey and resource id if present and return error if both
+
+	if a.Key.PrivateKey != "" {
+		pKey, _ = crypto.DecodePrivateKeyHex(
+			sigAlgo,
+			strings.ReplaceAll(a.Key.PrivateKey, "0x", ""),
+		)
+	}
+
+	// pre v0.22 support
+	if a.Key.Context["privateKey"] != "" {
+		pKey, _ = crypto.DecodePrivateKeyHex(
+			sigAlgo,
+			strings.ReplaceAll(a.Key.Context["privateKey"], "0x", ""),
+		)
+	}
+
+	return config.Account{
+		Name:    accountName,
+		Address: transformAddress(a.Address),
+		Key: config.AccountKey{
+			Type:       a.Key.Type,
+			Index:      a.Key.Index,
+			SigAlgo:    sigAlgo,
+			HashAlgo:   crypto.StringToHashAlgorithm(a.Key.HashAlgo),
+			ResourceID: resourceID,
+			PrivateKey: pKey,
+		},
+	}
+}
+
+// todo add error in return and do validation
 // transformToConfig transforms json structures to config structure
 func (j jsonAccounts) transformToConfig() config.Accounts {
 	accounts := make(config.Accounts, 0)
 
 	for accountName, a := range j {
 		var account config.Account
-		// simple format
 		if a.Simple.Address != "" {
-			account = config.Account{
-				Name:    accountName,
-				Address: transformAddress(a.Simple.Address),
-				Key: config.AccountKey{
-					Type:     config.KeyTypeHex,
-					Index:    0,
-					SigAlgo:  crypto.ECDSA_P256,
-					HashAlgo: crypto.SHA3_256,
-					Context: map[string]string{
-						config.PrivateKeyField: a.Simple.Key,
-					},
-				},
-			}
+			account = transformSimpleToConfig(accountName, a.Simple)
 		} else { // advanced format
-			account = config.Account{
-				Name:    accountName,
-				Address: transformAddress(a.Advanced.Address),
-				Key: config.AccountKey{
-					Type:     a.Advanced.Key.Type,
-					Index:    a.Advanced.Key.Index,
-					SigAlgo:  crypto.StringToSignatureAlgorithm(a.Advanced.Key.SigAlgo),
-					HashAlgo: crypto.StringToHashAlgorithm(a.Advanced.Key.HashAlgo),
-					Context:  a.Advanced.Key.Context,
-				},
-			}
+			account = transformAdvancedToConfig(accountName, a.Advanced)
 		}
 
 		accounts = append(accounts, account)
 	}
 
 	return accounts
+}
+
+// transformToJSON transforms config structure to json structures for saving
+func transformAccountsToJSON(accounts config.Accounts) jsonAccounts {
+	jsonAccounts := jsonAccounts{}
+
+	for _, a := range accounts {
+		if isDefaultKeyFormat(a.Key) {
+			jsonAccounts[a.Name] = transformSimpleAccountToJSON(a)
+		} else {
+			jsonAccounts[a.Name] = transformAdvancedAccountToJSON(a)
+		}
+	}
+
+	return jsonAccounts
+}
+
+func transformSimpleAccountToJSON(a config.Account) account {
+	return account{
+		Simple: simpleAccount{
+			Address: a.Address.String(),
+			Key:     strings.ReplaceAll(a.Key.PrivateKey.String(), "0x", ""),
+		},
+	}
+}
+
+func transformAdvancedAccountToJSON(a config.Account) account {
+	return account{
+		Advanced: advanceAccount{
+			Address: a.Address.String(),
+			Key: advanceKey{
+				Type:       a.Key.Type,
+				Index:      a.Key.Index,
+				SigAlgo:    a.Key.SigAlgo.String(),
+				HashAlgo:   a.Key.HashAlgo.String(),
+				ResourceID: a.Key.ResourceID,
+				PrivateKey: strings.ReplaceAll(a.Key.PrivateKey.String(), "0x", ""),
+			},
+		},
+	}
 }
 
 func isDefaultKeyFormat(key config.AccountKey) bool {
@@ -87,86 +164,53 @@ func isDefaultKeyFormat(key config.AccountKey) bool {
 		key.HashAlgo == crypto.SHA3_256
 }
 
-func transformSimpleAccountToJSON(a config.Account) jsonAccount {
-	return jsonAccount{
-		Simple: jsonAccountSimple{
-			Address: a.Address.String(),
-			Key:     a.Key.Context[config.PrivateKeyField],
-		},
-	}
+type account struct {
+	Simple   simpleAccount
+	Advanced advanceAccount
 }
 
-func transformAdvancedAccountToJSON(a config.Account) jsonAccount {
-	return jsonAccount{
-		Advanced: jsonAccountAdvanced{
-			Address: a.Address.String(),
-			Key: jsonAccountKey{
-				Type:     a.Key.Type,
-				Index:    a.Key.Index,
-				SigAlgo:  a.Key.SigAlgo.String(),
-				HashAlgo: a.Key.HashAlgo.String(),
-				Context:  a.Key.Context,
-			},
-		},
-	}
-}
-
-// transformToJSON transforms config structure to json structures for saving
-func transformAccountsToJSON(accounts config.Accounts) jsonAccounts {
-	jsonAccounts := jsonAccounts{}
-
-	for _, a := range accounts {
-		// if simple
-		if isDefaultKeyFormat(a.Key) {
-			jsonAccounts[a.Name] = transformSimpleAccountToJSON(a)
-		} else { // if advanced
-			jsonAccounts[a.Name] = transformAdvancedAccountToJSON(a)
-		}
-	}
-
-	return jsonAccounts
-}
-
-type jsonAccountSimple struct {
+type simpleAccount struct {
 	Address string `json:"address"`
 	Key     string `json:"key"`
 }
 
-type jsonAccountAdvanced struct {
-	Address string         `json:"address"`
-	Key     jsonAccountKey `json:"key"`
+type advanceAccount struct {
+	Address string     `json:"address"`
+	Key     advanceKey `json:"key"`
 }
 
-type jsonAccountKey struct {
-	Type     config.KeyType    `json:"type"`
-	Index    int               `json:"index"`
-	SigAlgo  string            `json:"signatureAlgorithm"`
-	HashAlgo string            `json:"hashAlgorithm"`
-	Context  map[string]string `json:"context"`
+type advanceKey struct {
+	Type     config.KeyType `json:"type"`
+	Index    int            `json:"index"`
+	SigAlgo  string         `json:"signatureAlgorithm"`
+	HashAlgo string         `json:"hashAlgorithm"`
+	// hex key type
+	PrivateKey string `json:"privateKey,omitempty"`
+	// kms key type
+	ResourceID string `json:"resourceID,omitempty"`
+	// old key format
+	Context map[string]string `json:"context,omitempty"`
 }
 
-type jsonAccountSimpleOld struct {
+// support for pre v0.22 formats
+type simpleAccountPre022 struct {
 	Address string `json:"address"`
 	Keys    string `json:"keys"`
 }
 
-type jsonAccountAdvancedOld struct {
-	Address string           `json:"address"`
-	Keys    []jsonAccountKey `json:"keys"`
-}
-
-type jsonAccount struct {
-	Simple   jsonAccountSimple
-	Advanced jsonAccountAdvanced
+// support for pre v0.22 formats
+type advanceAccountPre022 struct {
+	Address string       `json:"address"`
+	Keys    []advanceKey `json:"keys"`
 }
 
 type FormatType int
 
 const (
-	simpleFormat      FormatType = 0
-	advancedFormat    FormatType = 1
-	simpleOldFormat   FormatType = 2
-	advancedOldFormat FormatType = 3
+	simpleFormat         FormatType = 0
+	advancedFormat       FormatType = 1
+	simpleFormatPre022   FormatType = 2 // pre v.022 format
+	advancedFormatPre022 FormatType = 3 // pre v.022 format
 )
 
 func decideFormat(b []byte) (FormatType, error) {
@@ -179,9 +223,9 @@ func decideFormat(b []byte) (FormatType, error) {
 	if raw["keys"] != nil {
 		switch raw["keys"].(type) {
 		case string:
-			return simpleOldFormat, nil
+			return simpleFormatPre022, nil
 		default:
-			return advancedOldFormat, nil
+			return advancedFormatPre022, nil
 		}
 	}
 
@@ -193,46 +237,47 @@ func decideFormat(b []byte) (FormatType, error) {
 	}
 }
 
-func (j *jsonAccount) UnmarshalJSON(b []byte) error {
+func (j *account) UnmarshalJSON(b []byte) error {
 
 	format, err := decideFormat(b)
 	if err != nil {
 		return err
 	}
 
+	// todo refacto switch in array of parsers
 	switch format {
 	case simpleFormat:
-		var simple jsonAccountSimple
+		var simple simpleAccount
 		err = json.Unmarshal(b, &simple)
 		j.Simple = simple
 
-	case advancedFormat:
-		var advanced jsonAccountAdvanced
-		err = json.Unmarshal(b, &advanced)
-		j.Advanced = advanced
-
-	case simpleOldFormat:
-		var simpleOld jsonAccountSimpleOld
+	case simpleFormatPre022:
+		var simpleOld simpleAccountPre022
 		err = json.Unmarshal(b, &simpleOld)
-		j.Simple = jsonAccountSimple{
+		j.Simple = simpleAccount{
 			Address: simpleOld.Address,
 			Key:     simpleOld.Keys,
 		}
 
-	case advancedOldFormat:
-		var advancedOld jsonAccountAdvancedOld
+	case advancedFormatPre022:
+		var advancedOld advanceAccountPre022
 		err = json.Unmarshal(b, &advancedOld)
-		j.Advanced = jsonAccountAdvanced{
+		j.Advanced = advanceAccount{
 			Address: advancedOld.Address,
 			Key:     advancedOld.Keys[0],
 		}
+
+	case advancedFormat:
+		var advanced advanceAccount
+		err = json.Unmarshal(b, &advanced)
+		j.Advanced = advanced
 	}
 
 	return err
 }
 
-func (j jsonAccount) MarshalJSON() ([]byte, error) {
-	if j.Simple != (jsonAccountSimple{}) {
+func (j account) MarshalJSON() ([]byte, error) {
+	if j.Simple != (simpleAccount{}) {
 		return json.Marshal(j.Simple)
 	}
 

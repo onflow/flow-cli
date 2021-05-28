@@ -77,13 +77,13 @@ type Account struct {
 	Key     AccountKey
 }
 
-// AccountKey defines the configuration for a Flow account key.
 type AccountKey struct {
-	Type     KeyType
-	Index    int
-	SigAlgo  crypto.SignatureAlgorithm
-	HashAlgo crypto.HashAlgorithm
-	Context  map[string]string
+	Type       KeyType
+	Index      int
+	SigAlgo    crypto.SignatureAlgorithm
+	HashAlgo   crypto.HashAlgorithm
+	ResourceID string
+	PrivateKey crypto.PrivateKey
 }
 
 // Emulator defines the configuration for a Flow Emulator instance.
@@ -96,12 +96,9 @@ type Emulator struct {
 type KeyType string
 
 const (
-	KeyTypeHex                        KeyType = "hex"        // Hex private key with in memory signer
-	KeyTypeGoogleKMS                  KeyType = "google-kms" // Google KMS signer
-	KeyTypeShell                      KeyType = "shell"      // Exec out to a shell script
+	KeyTypeHex                        KeyType = "hex"
+	KeyTypeGoogleKMS                  KeyType = "google-kms"
 	DefaultEmulatorConfigName                 = "default"
-	PrivateKeyField                           = "privateKey"
-	KMSContextField                           = "resourceName"
 	DefaultEmulatorServiceAccountName         = "emulator-account"
 )
 

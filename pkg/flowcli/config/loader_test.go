@@ -60,7 +60,7 @@ func Test_JSONSimple(t *testing.T) {
 
 	assert.NoError(t, loadErr)
 	assert.Equal(t, 1, len(conf.Accounts))
-	assert.Equal(t, "21c5dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7", conf.Accounts[0].Key.Context["privateKey"])
+	assert.Equal(t, "0x21c5dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7", conf.Accounts[0].Key.PrivateKey.String())
 }
 
 func Test_ComposeJSON(t *testing.T) {
@@ -96,12 +96,12 @@ func Test_ComposeJSON(t *testing.T) {
 
 	assert.NoError(t, loadErr)
 	assert.Equal(t, 2, len(conf.Accounts))
-	assert.Equal(t, "21c5dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7",
-		conf.Accounts.GetByName("emulator-account").Key.Context["privateKey"],
+	assert.Equal(t, "0x21c5dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7",
+		conf.Accounts.GetByName("emulator-account").Key.PrivateKey.String(),
 	)
 	assert.NotNil(t, conf.Accounts.GetByName("admin-account"))
-	assert.Equal(t, "3335dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7",
-		conf.Accounts.GetByName("admin-account").Key.Context["privateKey"],
+	assert.Equal(t, "0x3335dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7",
+		conf.Accounts.GetByName("admin-account").Key.PrivateKey.String(),
 	)
 }
 
@@ -139,8 +139,8 @@ func Test_ComposeJSONOverwrite(t *testing.T) {
 	assert.NoError(t, loadErr)
 	assert.Equal(t, 1, len(conf.Accounts))
 	assert.NotNil(t, conf.Accounts.GetByName("admin-account"))
-	assert.Equal(t, "3335dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7",
-		conf.Accounts.GetByName("admin-account").Key.Context["privateKey"],
+	assert.Equal(t, "0x3335dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7",
+		conf.Accounts.GetByName("admin-account").Key.PrivateKey.String(),
 	)
 }
 
@@ -271,5 +271,5 @@ func Test_JSONEnv(t *testing.T) {
 
 	assert.NoError(t, loadErr)
 	assert.Equal(t, 1, len(conf.Accounts))
-	assert.Equal(t, "21c5dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7", conf.Accounts[0].Key.Context["privateKey"])
+	assert.Equal(t, "0x21c5dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7", conf.Accounts[0].Key.PrivateKey.String())
 }
