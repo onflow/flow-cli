@@ -43,7 +43,7 @@ type AccountKey struct {
 	PrivateKey crypto.PrivateKey
 }
 
-// AccountByName get account by name
+// GetByName get account by name
 func (a *Accounts) GetByName(name string) *Account {
 	for _, account := range *a {
 		if account.Name == name {
