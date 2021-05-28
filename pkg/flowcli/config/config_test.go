@@ -28,6 +28,14 @@ import (
 )
 
 func generateComplexConfig() config.Config {
+	var keys []crypto.PrivateKey
+	key, _ := crypto.DecodePrivateKeyHex(crypto.ECDSA_P256, "dd72967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47")
+	keys = append(keys, key)
+	key, _ = crypto.DecodePrivateKeyHex(crypto.ECDSA_P256, "388e3fbdc654b765942610679bb3a66b74212149ab9482187067ee116d9a8118")
+	keys = append(keys, key)
+	key, _ = crypto.DecodePrivateKeyHex(crypto.ECDSA_P256, "27bbeba308e501f8485ddaab77e285c0bc0d611096a79b4f0b4ccc927c6dbf04")
+	keys = append(keys, key)
+
 	return config.Config{
 		Emulators: config.Emulators{{
 			Name:           "default",
@@ -87,37 +95,31 @@ func generateComplexConfig() config.Config {
 			Name:    "emulator-account",
 			Address: flow.ServiceAddress(flow.Emulator),
 			Key: config.AccountKey{
-				Type:     config.KeyTypeHex,
-				Index:    0,
-				SigAlgo:  crypto.ECDSA_P256,
-				HashAlgo: crypto.SHA3_256,
-				Context: map[string]string{
-					"privateKey": "dd72967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47",
-				},
+				Type:       config.KeyTypeHex,
+				Index:      0,
+				SigAlgo:    crypto.ECDSA_P256,
+				HashAlgo:   crypto.SHA3_256,
+				PrivateKey: keys[0],
 			},
 		}, {
 			Name:    "account-2",
 			Address: flow.HexToAddress("2c1162386b0a245f"),
 			Key: config.AccountKey{
-				Type:     config.KeyTypeHex,
-				Index:    0,
-				SigAlgo:  crypto.ECDSA_P256,
-				HashAlgo: crypto.SHA3_256,
-				Context: map[string]string{
-					"privateKey": "dd72967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47",
-				},
+				Type:       config.KeyTypeHex,
+				Index:      0,
+				SigAlgo:    crypto.ECDSA_P256,
+				HashAlgo:   crypto.SHA3_256,
+				PrivateKey: keys[1],
 			},
 		}, {
 			Name:    "account-4",
 			Address: flow.HexToAddress("f8d6e0586b0a20c1"),
 			Key: config.AccountKey{
-				Type:     config.KeyTypeHex,
-				Index:    0,
-				SigAlgo:  crypto.ECDSA_P256,
-				HashAlgo: crypto.SHA3_256,
-				Context: map[string]string{
-					"privateKey": "dd72967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47",
-				},
+				Type:       config.KeyTypeHex,
+				Index:      0,
+				SigAlgo:    crypto.ECDSA_P256,
+				HashAlgo:   crypto.SHA3_256,
+				PrivateKey: keys[2],
 			},
 		}},
 		Networks: config.Networks{{

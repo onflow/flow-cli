@@ -34,6 +34,18 @@ import (
 
 var composer = config.NewLoader(afero.NewOsFs())
 
+func keys() []crypto.PrivateKey {
+	var keys []crypto.PrivateKey
+	key, _ := crypto.DecodePrivateKeyHex(crypto.ECDSA_P256, "dd72967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47")
+	keys = append(keys, key)
+	key, _ = crypto.DecodePrivateKeyHex(crypto.ECDSA_P256, "388e3fbdc654b765942610679bb3a66b74212149ab9482187067ee116d9a8118")
+	keys = append(keys, key)
+	key, _ = crypto.DecodePrivateKeyHex(crypto.ECDSA_P256, "27bbeba308e501f8485ddaab77e285c0bc0d611096a79b4f0b4ccc927c6dbf04")
+	keys = append(keys, key)
+
+	return keys
+}
+
 func generateComplexProject() Project {
 	config := config.Config{
 		Emulators: config.Emulators{{
@@ -97,37 +109,31 @@ func generateComplexProject() Project {
 			Name:    "emulator-account",
 			Address: flow.ServiceAddress(flow.Emulator),
 			Key: config.AccountKey{
-				Type:     config.KeyTypeHex,
-				Index:    0,
-				SigAlgo:  crypto.ECDSA_P256,
-				HashAlgo: crypto.SHA3_256,
-				Context: map[string]string{
-					"privateKey": "dd72967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47",
-				},
+				Type:       config.KeyTypeHex,
+				Index:      0,
+				SigAlgo:    crypto.ECDSA_P256,
+				HashAlgo:   crypto.SHA3_256,
+				PrivateKey: keys()[0],
 			},
 		}, {
 			Name:    "account-2",
 			Address: flow.HexToAddress("2c1162386b0a245f"),
 			Key: config.AccountKey{
-				Type:     config.KeyTypeHex,
-				Index:    0,
-				SigAlgo:  crypto.ECDSA_P256,
-				HashAlgo: crypto.SHA3_256,
-				Context: map[string]string{
-					"privateKey": "dd72967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47",
-				},
+				Type:       config.KeyTypeHex,
+				Index:      0,
+				SigAlgo:    crypto.ECDSA_P256,
+				HashAlgo:   crypto.SHA3_256,
+				PrivateKey: keys()[1],
 			},
 		}, {
 			Name:    "account-4",
 			Address: flow.HexToAddress("f8d6e0586b0a20c1"),
 			Key: config.AccountKey{
-				Type:     config.KeyTypeHex,
-				Index:    0,
-				SigAlgo:  crypto.ECDSA_P256,
-				HashAlgo: crypto.SHA3_256,
-				Context: map[string]string{
-					"privateKey": "dd72967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47",
-				},
+				Type:       config.KeyTypeHex,
+				Index:      0,
+				SigAlgo:    crypto.ECDSA_P256,
+				HashAlgo:   crypto.SHA3_256,
+				PrivateKey: keys()[2],
 			},
 		}},
 		Networks: config.Networks{{
@@ -167,13 +173,11 @@ func generateSimpleProject() Project {
 			Name:    "emulator-account",
 			Address: flow.ServiceAddress(flow.Emulator),
 			Key: config.AccountKey{
-				Type:     config.KeyTypeHex,
-				Index:    0,
-				SigAlgo:  crypto.ECDSA_P256,
-				HashAlgo: crypto.SHA3_256,
-				Context: map[string]string{
-					"privateKey": "dd72967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47",
-				},
+				Type:       config.KeyTypeHex,
+				Index:      0,
+				SigAlgo:    crypto.ECDSA_P256,
+				HashAlgo:   crypto.SHA3_256,
+				PrivateKey: keys()[0],
 			},
 		}},
 		Networks: config.Networks{{
@@ -218,13 +222,11 @@ func generateAliasesProject() Project {
 			Name:    "emulator-account",
 			Address: flow.ServiceAddress(flow.Emulator),
 			Key: config.AccountKey{
-				Type:     config.KeyTypeHex,
-				Index:    0,
-				SigAlgo:  crypto.ECDSA_P256,
-				HashAlgo: crypto.SHA3_256,
-				Context: map[string]string{
-					"privateKey": "dd72967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47",
-				},
+				Type:       config.KeyTypeHex,
+				Index:      0,
+				SigAlgo:    crypto.ECDSA_P256,
+				HashAlgo:   crypto.SHA3_256,
+				PrivateKey: keys()[0],
 			},
 		}},
 		Networks: config.Networks{{
@@ -285,25 +287,21 @@ func generateAliasesComplexProject() Project {
 			Name:    "emulator-account",
 			Address: flow.ServiceAddress(flow.Emulator),
 			Key: config.AccountKey{
-				Type:     config.KeyTypeHex,
-				Index:    0,
-				SigAlgo:  crypto.ECDSA_P256,
-				HashAlgo: crypto.SHA3_256,
-				Context: map[string]string{
-					"privateKey": "dd72967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47",
-				},
+				Type:       config.KeyTypeHex,
+				Index:      0,
+				SigAlgo:    crypto.ECDSA_P256,
+				HashAlgo:   crypto.SHA3_256,
+				PrivateKey: keys()[0],
 			},
 		}, {
 			Name:    "testnet-account",
 			Address: flow.HexToAddress("1e82856bf20e2aa6"),
 			Key: config.AccountKey{
-				Type:     config.KeyTypeHex,
-				Index:    0,
-				SigAlgo:  crypto.ECDSA_P256,
-				HashAlgo: crypto.SHA3_256,
-				Context: map[string]string{
-					"privateKey": "dd72967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47",
-				},
+				Type:       config.KeyTypeHex,
+				Index:      0,
+				SigAlgo:    crypto.ECDSA_P256,
+				HashAlgo:   crypto.SHA3_256,
+				PrivateKey: keys()[1],
 			},
 		}},
 		Networks: config.Networks{{
@@ -342,7 +340,7 @@ func Test_EmulatorConfigSimple(t *testing.T) {
 	emulatorServiceAccount, _ := p.EmulatorServiceAccount()
 
 	assert.Equal(t, emulatorServiceAccount.name, "emulator-account")
-	assert.Equal(t, emulatorServiceAccount.key.ToConfig().Context["privateKey"], "dd72967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47")
+	assert.Equal(t, emulatorServiceAccount.key.ToConfig().PrivateKey, keys()[0])
 	assert.Equal(t, flow.ServiceAddress("flow-emulator").String(), emulatorServiceAccount.Address().String())
 }
 
@@ -358,7 +356,7 @@ func Test_AccountByNameSimple(t *testing.T) {
 	acc := p.AccountByName("emulator-account")
 
 	assert.Equal(t, flow.ServiceAddress("flow-emulator").String(), acc.Address().String())
-	assert.Equal(t, acc.key.ToConfig().Context["privateKey"], "dd72967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47")
+	assert.Equal(t, acc.key.ToConfig().PrivateKey, keys()[0])
 }
 
 func Test_HostSimple(t *testing.T) {
@@ -421,7 +419,7 @@ func Test_EmulatorConfigComplex(t *testing.T) {
 	emulatorServiceAccount, _ := p.EmulatorServiceAccount()
 
 	assert.Equal(t, emulatorServiceAccount.name, "emulator-account")
-	assert.Equal(t, emulatorServiceAccount.key.ToConfig().Context["privateKey"], "dd72967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47")
+	assert.Equal(t, emulatorServiceAccount.key.ToConfig().PrivateKey, keys()[0])
 	assert.Equal(t, emulatorServiceAccount.Address().String(), flow.ServiceAddress("flow-emulator").String())
 }
 
@@ -439,7 +437,7 @@ func Test_AccountByNameComplex(t *testing.T) {
 	acc := p.AccountByName("account-2")
 
 	assert.Equal(t, acc.Address().String(), "2c1162386b0a245f")
-	assert.Equal(t, acc.key.ToConfig().Context["privateKey"], "dd72967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47")
+	assert.Equal(t, acc.key.ToConfig().PrivateKey, keys()[1])
 }
 
 func Test_HostComplex(t *testing.T) {
@@ -505,24 +503,25 @@ func Test_SDKParsing(t *testing.T) {
 		assert.True(t, addr2.IsValid(flow.Emulator))
 		assert.Equal(t, addr1.String(), addr2.String())
 	})
-	/* TODO test this after it is implemented in sdk
-	t.Run("Tx ID Parsing", func(t *testing.T) {
-		txid := "09f24d9dcde4c4d63d2f790e42905427ba04e6b0d601a7ec790b663f7cf2d942"
-		id1 := flow.HexToID(txid)
-		id2 := flow.HexToID("0x" + txid)
+	/*
+		// test this after 0x is uniformed
+		t.Run("Tx ID Parsing", func(t *testing.T) {
+			txid := "09f24d9dcde4c4d63d2f790e42905427ba04e6b0d601a7ec790b663f7cf2d942"
+			id1 := flow.HexToID(txid)
+			id2 := flow.HexToID("0x" + txid)
 
-		assert.Equal(t, id1.String(), id2.String())
-	})
+			assert.Equal(t, id1.String(), id2.String())
+		})
 
-	t.Run("Public Key Hex Parsing", func(t *testing.T) {
-		pubKey := "642fcceac4b0af1ea7b78c11d5ce2ed505bb41b13c9e3f57725246b75d828651d9387e0cd19c5ebb1a44d571ce58cc3a83f0d92a6d3a70a45fe359d5d25d15d7"
-		k1, err := crypto.DecodePublicKeyHex(crypto.ECDSA_P256, pubKey)
-		assert.NoError(t, err)
+		t.Run("Public Key Hex Parsing", func(t *testing.T) {
+			pubKey := "642fcceac4b0af1ea7b78c11d5ce2ed505bb41b13c9e3f57725246b75d828651d9387e0cd19c5ebb1a44d571ce58cc3a83f0d92a6d3a70a45fe359d5d25d15d7"
+			k1, err := crypto.DecodePublicKeyHex(crypto.ECDSA_P256, pubKey)
+			assert.NoError(t, err)
 
-		k2, err := crypto.DecodePublicKeyHex(crypto.ECDSA_P256, "0x"+pubKey)
-		assert.NoError(t, err)
+			k2, err := crypto.DecodePublicKeyHex(crypto.ECDSA_P256, "0x"+pubKey)
+			assert.NoError(t, err)
 
-		assert.Equal(t, k1.String(), k2.String())
-	})
+			assert.Equal(t, k1.String(), k2.String())
+		})
 	*/
 }
