@@ -21,6 +21,8 @@ import (
 	"encoding/json"
 	"testing"
 
+	"github.com/onflow/flow-go-sdk/crypto"
+
 	"github.com/stretchr/testify/assert"
 )
 
@@ -76,6 +78,38 @@ func Test_ConfigAccountKeysAdvancedHex(t *testing.T) {
 	assert.Equal(t, key.Index, 1)
 	assert.Equal(t, key.SigAlgo.String(), "ECDSA_P256")
 	assert.Equal(t, key.PrivateKey.String(), "0x271cec6bb5221d12713759188166bdfa00079db5789c36b54dcf1d794d8d8cdf")
+	assert.Equal(t, key.ResourceID, "")
+}
+
+func Test_ConfigAccountKeysAdvancedKMS(t *testing.T) {
+	b := []byte(`{
+		"test": {
+			"address": "service",
+			"key": {
+				"type": "kms",
+				"index": 1,
+				"signatureAlgorithm": "ECDSA_P256",
+				"hashAlgorithm": "SHA3_256",
+				"resourceID": "projects/flow/locations/us/keyRings/foo/bar/cryptoKeyVersions/1"
+			}
+		}
+	}`)
+
+	var jsonAccounts jsonAccounts
+	err := json.Unmarshal(b, &jsonAccounts)
+	assert.NoError(t, err)
+
+	accounts := jsonAccounts.transformToConfig()
+
+	account := accounts.GetByName("test")
+	key := account.Key
+
+	assert.Equal(t, account.Address.String(), "f8d6e0586b0a20c7")
+	assert.Equal(t, key.HashAlgo.String(), "SHA3_256")
+	assert.Equal(t, key.Index, 1)
+	assert.Equal(t, key.SigAlgo.String(), "ECDSA_P256")
+	assert.Equal(t, key.ResourceID, "projects/flow/locations/us/keyRings/foo/bar/cryptoKeyVersions/1")
+	assert.Equal(t, key.PrivateKey, crypto.PrivateKey{})
 }
 
 func Test_ConfigAccountOldFormats(t *testing.T) {
@@ -290,7 +324,7 @@ func Test_ConfigAccountsMap(t *testing.T) {
 }
 
 func Test_TransformDefaultAccountToJSON(t *testing.T) {
-	b := []byte(`{"emulator-account":{"address":"f8d6e0586b0a20c7","key":{"type":"hex","index":0,"signatureAlgorithm":"ECDSA_P256","hashAlgorithm":"SHA3_256","privateKey":"0x1272967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47"}},"testnet-account":{"address":"3c1162386b0a245f","key":"0x2272967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47"}}`)
+	b := []byte(`{"emulator-account":{"address":"f8d6e0586b0a20c7","key":{"type":"hex","index":0,"signatureAlgorithm":"ECDSA_P256","hashAlgorithm":"SHA3_256","privateKey":"1272967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47"}},"testnet-account":{"address":"3c1162386b0a245f","key":"2272967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47"}}`)
 
 	var jsonAccounts jsonAccounts
 	err := json.Unmarshal(b, &jsonAccounts)
@@ -306,7 +340,7 @@ func Test_TransformDefaultAccountToJSON(t *testing.T) {
 }
 
 func Test_TransformAccountToJSON(t *testing.T) {
-	b := []byte(`{"emulator-account":{"address":"f8d6e0586b0a20c7","key":{"type":"hex","index":1,"signatureAlgorithm":"ECDSA_P256","hashAlgorithm":"SHA3_256","privateKey":"0x1272967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47"}},"testnet-account":{"address":"3c1162386b0a245f","key":"0x2272967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47"}}`)
+	b := []byte(`{"emulator-account":{"address":"f8d6e0586b0a20c7","key":{"type":"hex","index":1,"signatureAlgorithm":"ECDSA_P256","hashAlgorithm":"SHA3_256","privateKey":"1272967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47"}},"testnet-account":{"address":"3c1162386b0a245f","key":"2272967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47"}}`)
 
 	var jsonAccounts jsonAccounts
 	err := json.Unmarshal(b, &jsonAccounts)

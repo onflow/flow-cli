@@ -136,7 +136,7 @@ func transformSimpleAccountToJSON(a config.Account) account {
 	return account{
 		Simple: simpleAccount{
 			Address: a.Address.String(),
-			Key:     a.Key.PrivateKey.String(),
+			Key:     strings.ReplaceAll(a.Key.PrivateKey.String(), "0x", ""),
 		},
 	}
 }
@@ -151,7 +151,7 @@ func transformAdvancedAccountToJSON(a config.Account) account {
 				SigAlgo:    a.Key.SigAlgo.String(),
 				HashAlgo:   a.Key.HashAlgo.String(),
 				ResourceID: a.Key.ResourceID,
-				PrivateKey: a.Key.PrivateKey.String(),
+				PrivateKey: strings.ReplaceAll(a.Key.PrivateKey.String(), "0x", ""),
 			},
 		},
 	}
