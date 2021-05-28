@@ -21,8 +21,6 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/onflow/flow-go-sdk/crypto"
-
 	"github.com/stretchr/testify/assert"
 )
 
@@ -109,7 +107,7 @@ func Test_ConfigAccountKeysAdvancedKMS(t *testing.T) {
 	assert.Equal(t, key.Index, 1)
 	assert.Equal(t, key.SigAlgo.String(), "ECDSA_P256")
 	assert.Equal(t, key.ResourceID, "projects/flow/locations/us/keyRings/foo/bar/cryptoKeyVersions/1")
-	assert.Equal(t, key.PrivateKey, crypto.PrivateKey{})
+	assert.Nil(t, key.PrivateKey)
 }
 
 func Test_ConfigAccountOldFormats(t *testing.T) {
