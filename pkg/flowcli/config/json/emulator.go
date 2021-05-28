@@ -19,16 +19,22 @@
 package json
 
 import (
+	"fmt"
+
 	"github.com/onflow/flow-cli/pkg/flowcli/config"
 )
 
 type jsonEmulators map[string]jsonEmulator
 
 // transformToConfig transforms json structures to config structure
-func (j jsonEmulators) transformToConfig() config.Emulators {
+func (j jsonEmulators) transformToConfig() (config.Emulators, error) {
 	emulators := make(config.Emulators, 0)
 
 	for name, e := range j {
+		if e.Port < 0 || e.Port > 65535 {
+			return nil, fmt.Errorf("invalid port value")
+		}
+
 		emulator := config.Emulator{
 			Name:           name,
 			Port:           e.Port,
@@ -38,7 +44,7 @@ func (j jsonEmulators) transformToConfig() config.Emulators {
 		emulators = append(emulators, emulator)
 	}
 
-	return emulators
+	return emulators, nil
 }
 
 // transformToJSON transforms config structure to json structures for saving
