@@ -55,7 +55,6 @@ func transformSimpleToConfig(accountName string, a simpleAccount) config.Account
 			Index:      0,
 			SigAlgo:    crypto.ECDSA_P256,
 			HashAlgo:   crypto.SHA3_256,
-			ResourceID: "",
 			PrivateKey: pkey,
 		},
 	}
@@ -68,19 +67,10 @@ func transformAdvancedToConfig(accountName string, a advanceAccount) config.Acco
 	resourceID := a.Key.ResourceID
 
 	// todo check both pkey and resource id if present and return error if both
-
 	if a.Key.PrivateKey != "" {
 		pKey, _ = crypto.DecodePrivateKeyHex(
 			sigAlgo,
 			strings.ReplaceAll(a.Key.PrivateKey, "0x", ""),
-		)
-	}
-
-	// pre v0.22 support
-	if a.Key.Context["privateKey"] != "" {
-		pKey, _ = crypto.DecodePrivateKeyHex(
-			sigAlgo,
-			strings.ReplaceAll(a.Key.Context["privateKey"], "0x", ""),
 		)
 	}
 
@@ -266,6 +256,7 @@ func (j *account) UnmarshalJSON(b []byte) error {
 			Address: advancedOld.Address,
 			Key:     advancedOld.Keys[0],
 		}
+		j.Advanced.Key.PrivateKey = advancedOld.Keys[0].Context["privateKey"]
 
 	case advancedFormat:
 		var advanced advanceAccount

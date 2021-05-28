@@ -32,14 +32,14 @@ type jsonConfig struct {
 	Deployments jsonDeployments `json:"deployments"`
 }
 
-func (j *jsonConfig) transformToConfig() *config.Config {
+func (j *jsonConfig) transformToConfig() (*config.Config, error) {
 	return &config.Config{
 		Emulators:   j.Emulators.transformToConfig(),
 		Contracts:   j.Contracts.transformToConfig(),
 		Networks:    j.Networks.transformToConfig(),
 		Accounts:    j.Accounts.transformToConfig(),
 		Deployments: j.Deployments.transformToConfig(),
-	}
+	}, nil
 }
 
 func transformConfigToJSON(config *config.Config) jsonConfig {
@@ -106,7 +106,7 @@ func (p *Parser) Deserialize(raw []byte) (*config.Config, error) {
 		return nil, err
 	}
 
-	return jsonConf.transformToConfig(), nil
+	return jsonConf.transformToConfig()
 }
 
 // SupportsFormat check if the file format is supported
