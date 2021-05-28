@@ -41,6 +41,32 @@ const (
 	DefaultEmulatorServiceAccountName         = "emulator-account"
 )
 
+func (c *Config) Validate() error {
+	for _, con := range c.Contracts {
+		if c.Networks.GetByName(con.Network) == nil {
+			return fmt.Errorf(fmt.Sprintf("contract %s contains nonexisting network %s", con.Name, con.Network))
+		}
+	}
+
+	for _, em := range c.Emulators {
+		if c.Accounts.GetByName(em.ServiceAccount) == nil {
+			return fmt.Errorf(fmt.Sprintf("emulator %s contains nonexisting service account %s", em.Name, em.ServiceAccount))
+		}
+	}
+
+	for _, d := range c.Deployments {
+		if c.Networks.GetByName(d.Network) == nil {
+			return fmt.Errorf(fmt.Sprintf("deployment contains nonexisting network %s", d.Network))
+		}
+
+		if c.Accounts.GetByName(d.Account) == nil {
+			return fmt.Errorf(fmt.Sprintf("deployment contains nonexisting account %s", d.Account))
+		}
+	}
+
+	return nil
+}
+
 // DefaultConfig gets default configuration
 func DefaultConfig() *Config {
 	return &Config{
