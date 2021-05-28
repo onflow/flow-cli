@@ -20,6 +20,7 @@ package json
 
 import (
 	"encoding/json"
+	"net/url"
 
 	"github.com/onflow/flow-cli/pkg/flowcli/config"
 )
@@ -27,10 +28,15 @@ import (
 type jsonNetworks map[string]jsonNetwork
 
 // transformToConfig transforms json structures to config structure
-func (j jsonNetworks) transformToConfig() config.Networks {
+func (j jsonNetworks) transformToConfig() (config.Networks, error) {
 	networks := make(config.Networks, 0)
 
 	for networkName, n := range j {
+		_, err := url.ParseRequestURI(n.Host)
+		if err != nil {
+			return nil, err
+		}
+
 		network := config.Network{
 			Name: networkName,
 			Host: n.Host,
@@ -39,7 +45,7 @@ func (j jsonNetworks) transformToConfig() config.Networks {
 		networks = append(networks, network)
 	}
 
-	return networks
+	return networks, nil
 }
 
 // transformToJSON transforms config structure to json structures for saving
