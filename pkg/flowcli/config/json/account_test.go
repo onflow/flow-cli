@@ -117,27 +117,19 @@ func Test_ConfigAccountOldFormats(t *testing.T) {
 	b := []byte(`{
 		"old-format-1": {
 			"address": "service",
-			"key": {
+			"keys": [{
 				"type": "hex",
-				"index": 0,
+				"index": 1,
 				"signatureAlgorithm": "ECDSA_P256",
 				"hashAlgorithm": "SHA2_256",
 				"context": {
 					"privateKey": "f988fd7a959d96d0e36ca13a240bbfc4a78098cc56cfd1fa6c918080c8a0f55c"
 				}
-			}
+			}]
 		},
 		"old-format-2": {
 			"address": "service",
-			"keys": [{
-				"type": "hex",
-				"index": 1,
-				"signatureAlgorithm": "ECDSA_P256",
-				"hashAlgorithm": "SHA3_256",
-				"context": {
-					"privateKey": "271cec6bb5221d12713759188166bdfa00079db5789c36b54dcf1d794d8d8cdf"
-				}
-			}]
+			"keys": "271cec6bb5221d12713759188166bdfa00079db5789c36b54dcf1d794d8d8cdf"
 		}
 	}`)
 
@@ -153,7 +145,7 @@ func Test_ConfigAccountOldFormats(t *testing.T) {
 
 	assert.Equal(t, account.Address.String(), "f8d6e0586b0a20c7")
 	assert.Equal(t, key.HashAlgo.String(), "SHA2_256")
-	assert.Equal(t, key.Index, 0)
+	assert.Equal(t, key.Index, 1)
 	assert.Equal(t, key.SigAlgo.String(), "ECDSA_P256")
 	assert.Equal(t, key.PrivateKey.String(), "0xf988fd7a959d96d0e36ca13a240bbfc4a78098cc56cfd1fa6c918080c8a0f55c")
 
@@ -162,7 +154,7 @@ func Test_ConfigAccountOldFormats(t *testing.T) {
 
 	assert.Equal(t, account.Address.String(), "f8d6e0586b0a20c7")
 	assert.Equal(t, key.HashAlgo.String(), "SHA3_256")
-	assert.Equal(t, key.Index, 1)
+	assert.Equal(t, key.Index, 0)
 	assert.Equal(t, key.SigAlgo.String(), "ECDSA_P256")
 	assert.Equal(t, key.PrivateKey.String(), "0x271cec6bb5221d12713759188166bdfa00079db5789c36b54dcf1d794d8d8cdf")
 }

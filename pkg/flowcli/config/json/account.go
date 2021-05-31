@@ -268,7 +268,6 @@ func (j *account) UnmarshalJSON(b []byte) error {
 		return err
 	}
 
-	// todo refacto switch in array of parsers
 	switch format {
 	case simpleFormat:
 		var simple simpleAccount
@@ -286,12 +285,12 @@ func (j *account) UnmarshalJSON(b []byte) error {
 	case advancedFormatPre022:
 		var advancedOld advanceAccountPre022
 		err = json.Unmarshal(b, &advancedOld)
+
 		j.Advanced = advanceAccount{
 			Address: advancedOld.Address,
 			Key:     advancedOld.Keys[0],
 		}
 		j.Advanced.Key.PrivateKey = advancedOld.Keys[0].Context["privateKey"]
-		fmt.Println("###", j.Advanced.Key.PrivateKey, advancedOld.Keys[0].Context)
 
 	case advancedFormat:
 		var advanced advanceAccount
