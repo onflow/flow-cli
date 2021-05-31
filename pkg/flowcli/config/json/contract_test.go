@@ -34,7 +34,8 @@ func Test_ConfigContractsSimple(t *testing.T) {
 	err := json.Unmarshal(b, &jsonContracts)
 	assert.NoError(t, err)
 
-	contracts := jsonContracts.transformToConfig()
+	contracts, err := jsonContracts.transformToConfig()
+	assert.NoError(t, err)
 
 	assert.Equal(t, "./cadence/kittyItems/contracts/KittyItems.cdc", contracts.GetByName("KittyItems").Source)
 	assert.Equal(t, "./cadence/kittyItems/contracts/KittyItemsMarket.cdc", contracts.GetByName("KittyItemsMarket").Source)
@@ -55,7 +56,8 @@ func Test_ConfigContractsComplex(t *testing.T) {
 	err := json.Unmarshal(b, &jsonContracts)
 	assert.NoError(t, err)
 
-	contracts := jsonContracts.transformToConfig()
+	contracts, err := jsonContracts.transformToConfig()
+	assert.NoError(t, err)
 
 	assert.Equal(t, len(contracts), 2)
 
@@ -92,7 +94,8 @@ func Test_ConfigContractsAliases(t *testing.T) {
 	err := json.Unmarshal(b, &jsonContracts)
 	assert.NoError(t, err)
 
-	contracts := jsonContracts.transformToConfig()
+	contracts, err := jsonContracts.transformToConfig()
+	assert.NoError(t, err)
 
 	assert.Equal(t, contracts.GetByName("FungibleToken").Network, "emulator")
 	assert.Equal(t, contracts.GetByName("FungibleToken").Alias, "2e82856bf20e2aa6")
@@ -128,7 +131,8 @@ func Test_TransformContractToJSON(t *testing.T) {
 	err := json.Unmarshal(b, &jsonContracts)
 	assert.NoError(t, err)
 
-	contracts := jsonContracts.transformToConfig()
+	contracts, err := jsonContracts.transformToConfig()
+	assert.NoError(t, err)
 
 	j := transformContractsToJSON(contracts)
 	x, _ := json.Marshal(j)
@@ -158,7 +162,8 @@ func Test_TransformComplexContractToJSON(t *testing.T) {
 	err := json.Unmarshal(b, &jsonContracts)
 	assert.NoError(t, err)
 
-	contracts := jsonContracts.transformToConfig()
+	contracts, err := jsonContracts.transformToConfig()
+	assert.NoError(t, err)
 
 	j := transformContractsToJSON(contracts)
 	x, _ := json.Marshal(j)

@@ -36,7 +36,8 @@ func Test_ConfigAccountKeysSimple(t *testing.T) {
 	err := json.Unmarshal(b, &jsonAccounts)
 	assert.NoError(t, err)
 
-	accounts := jsonAccounts.transformToConfig()
+	accounts, err := jsonAccounts.transformToConfig()
+	assert.NoError(t, err)
 
 	account := accounts.GetByName("test")
 	key := account.Key
@@ -66,7 +67,8 @@ func Test_ConfigAccountKeysAdvancedHex(t *testing.T) {
 	err := json.Unmarshal(b, &jsonAccounts)
 	assert.NoError(t, err)
 
-	accounts := jsonAccounts.transformToConfig()
+	accounts, err := jsonAccounts.transformToConfig()
+	assert.NoError(t, err)
 
 	account := accounts.GetByName("test")
 	key := account.Key
@@ -97,7 +99,8 @@ func Test_ConfigAccountKeysAdvancedKMS(t *testing.T) {
 	err := json.Unmarshal(b, &jsonAccounts)
 	assert.NoError(t, err)
 
-	accounts := jsonAccounts.transformToConfig()
+	accounts, err := jsonAccounts.transformToConfig()
+	assert.NoError(t, err)
 
 	account := accounts.GetByName("test")
 	key := account.Key
@@ -142,7 +145,8 @@ func Test_ConfigAccountOldFormats(t *testing.T) {
 	err := json.Unmarshal(b, &jsonAccounts)
 	assert.NoError(t, err)
 
-	accounts := jsonAccounts.transformToConfig()
+	accounts, err := jsonAccounts.transformToConfig()
+	assert.NoError(t, err)
 
 	account := accounts.GetByName("old-format-1")
 	key := account.Key
@@ -179,7 +183,8 @@ func Test_ConfigMultipleAccountsSimple(t *testing.T) {
 	err := json.Unmarshal(b, &jsonAccounts)
 	assert.NoError(t, err)
 
-	accounts := jsonAccounts.transformToConfig()
+	accounts, err := jsonAccounts.transformToConfig()
+	assert.NoError(t, err)
 
 	account := accounts.GetByName("emulator-account")
 	key := account.Key
@@ -233,7 +238,8 @@ func Test_ConfigMultipleAccountsAdvanced(t *testing.T) {
 	err := json.Unmarshal(b, &jsonAccounts)
 	assert.NoError(t, err)
 
-	accounts := jsonAccounts.transformToConfig()
+	accounts, err := jsonAccounts.transformToConfig()
+	assert.NoError(t, err)
 
 	account := accounts.GetByName("emulator-account")
 	key := account.Key
@@ -278,7 +284,8 @@ func Test_ConfigMixedAccounts(t *testing.T) {
 	err := json.Unmarshal(b, &jsonAccounts)
 	assert.NoError(t, err)
 
-	accounts := jsonAccounts.transformToConfig()
+	accounts, err := jsonAccounts.transformToConfig()
+	assert.NoError(t, err)
 
 	account := accounts.GetByName("emulator-account")
 	key := account.Key
@@ -315,7 +322,8 @@ func Test_ConfigAccountsMap(t *testing.T) {
 	err := json.Unmarshal(b, &jsonAccounts)
 	assert.NoError(t, err)
 
-	accounts := jsonAccounts.transformToConfig()
+	accounts, err := jsonAccounts.transformToConfig()
+	assert.NoError(t, err)
 
 	assert.Equal(t, accounts.GetByName("emulator-account").Address.String(), "0000000000000000")
 	assert.Equal(t, accounts.GetByName("emulator-account").Name, "emulator-account")
@@ -328,7 +336,8 @@ func Test_TransformDefaultAccountToJSON(t *testing.T) {
 	err := json.Unmarshal(b, &jsonAccounts)
 	assert.NoError(t, err)
 
-	accounts := jsonAccounts.transformToConfig()
+	accounts, err := jsonAccounts.transformToConfig()
+	assert.NoError(t, err)
 
 	j := transformAccountsToJSON(accounts)
 	x, _ := json.Marshal(j)
@@ -344,7 +353,8 @@ func Test_TransformAccountToJSON(t *testing.T) {
 	err := json.Unmarshal(b, &jsonAccounts)
 	assert.NoError(t, err)
 
-	accounts := jsonAccounts.transformToConfig()
+	accounts, err := jsonAccounts.transformToConfig()
+	assert.NoError(t, err)
 
 	j := transformAccountsToJSON(accounts)
 	x, _ := json.Marshal(j)
@@ -388,7 +398,8 @@ func Test_SupportForOldFormatWithMultipleKeys(t *testing.T) {
 	err := json.Unmarshal(b, &jsonAccounts)
 	assert.NoError(t, err)
 
-	conf := jsonAccounts.transformToConfig()
+	conf, err := jsonAccounts.transformToConfig()
+	assert.NoError(t, err)
 
 	key := conf.GetByName("testnet-account").Key
 	assert.Equal(t, key.PrivateKey.String(), "0x1272967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47")
