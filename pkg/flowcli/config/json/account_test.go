@@ -86,7 +86,7 @@ func Test_ConfigAccountKeysAdvancedKMS(t *testing.T) {
 		"test": {
 			"address": "service",
 			"key": {
-				"type": "kms",
+				"type": "google-kms",
 				"index": 1,
 				"signatureAlgorithm": "ECDSA_P256",
 				"hashAlgorithm": "SHA3_256",
@@ -207,21 +207,17 @@ func Test_ConfigMultipleAccountsAdvanced(t *testing.T) {
 				"index": 0,
 				"signatureAlgorithm": "ECDSA_P256",
 				"hashAlgorithm": "SHA3_256",
-				"context": {
-					"privateKey": "1272967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47"
-				}
+				"privateKey": "1272967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47"
 			}
 		},
 		"testnet-account": {
 			"address": "1c1162386b0a245f",
 			"key": {
-				"type": "0x18d6e0586b0a20c7",
+				"type": "hex",
 				"index": 0,
 				"signatureAlgorithm": "ECDSA_P256",
 				"hashAlgorithm": "SHA3_256",
-				"context": {
-					"privateKey": "2272967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47"
-				}
+				"privateKey": "2272967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47"
 			}
 		}
 	}`)
@@ -240,6 +236,7 @@ func Test_ConfigMultipleAccountsAdvanced(t *testing.T) {
 	assert.Equal(t, key.HashAlgo.String(), "SHA3_256")
 	assert.Equal(t, key.Index, 0)
 	assert.Equal(t, key.SigAlgo.String(), "ECDSA_P256")
+	assert.NotNil(t, key.PrivateKey)
 	assert.Equal(t, key.PrivateKey.String(), "0x1272967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47")
 
 	account = accounts.GetByName("testnet-account")
@@ -249,6 +246,7 @@ func Test_ConfigMultipleAccountsAdvanced(t *testing.T) {
 	assert.Equal(t, key.HashAlgo.String(), "SHA3_256")
 	assert.Equal(t, key.Index, 0)
 	assert.Equal(t, key.SigAlgo.String(), "ECDSA_P256")
+	assert.NotNil(t, key.PrivateKey)
 	assert.Equal(t, key.PrivateKey.String(), "0x2272967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47")
 }
 
@@ -261,9 +259,7 @@ func Test_ConfigMixedAccounts(t *testing.T) {
 				"index": 0,
 				"signatureAlgorithm": "ECDSA_P256",
 				"hashAlgorithm": "SHA3_256",
-				"context": {
-					"privateKey": "1272967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47"
-				}
+				"privateKey": "1272967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47"
 			}
 		},
 		"testnet-account": {

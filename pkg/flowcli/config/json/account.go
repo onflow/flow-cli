@@ -48,7 +48,7 @@ func transformSimpleToConfig(accountName string, a simpleAccount) (*config.Accou
 		strings.ReplaceAll(a.Key, "0x", ""),
 	)
 	if err != nil {
-		return nil, fmt.Errorf(fmt.Sprintf("invalid private key for account: %s", accountName))
+		return nil, fmt.Errorf("invalid private key for account: %s", accountName)
 	}
 
 	return &config.Account{
@@ -71,8 +71,12 @@ func transformAdvancedToConfig(accountName string, a advanceAccount) (*config.Ac
 	sigAlgo := crypto.StringToSignatureAlgorithm(a.Key.SigAlgo)
 	hashAlgo := crypto.StringToHashAlgorithm(a.Key.HashAlgo)
 
+	if a.Key.Type != config.KeyTypeHex && a.Key.Type != config.KeyTypeGoogleKMS {
+		return nil, fmt.Errorf("invalid key type for account %s", accountName)
+	}
+
 	if a.Key.ResourceID != "" && a.Key.PrivateKey != "" {
-		return nil, fmt.Errorf(fmt.Sprintf("only provide value for private key or resource ID on account %s", accountName))
+		return nil, fmt.Errorf("only provide value for private key or resource ID on account %s", accountName)
 	}
 
 	if a.Key.Type == config.KeyTypeHex {
@@ -85,21 +89,21 @@ func transformAdvancedToConfig(accountName string, a advanceAccount) (*config.Ac
 				return nil, err
 			}
 		} else {
-			return nil, fmt.Errorf(fmt.Sprintf("missing private key value for hex key type on account %s", accountName))
+			return nil, fmt.Errorf("missing private key value for hex key type on account %s", accountName)
 		}
 	}
 
 	if sigAlgo == crypto.UnknownSignatureAlgorithm {
-		return nil, fmt.Errorf(fmt.Sprintf("invalid signature algorithm for account %s", accountName))
+		return nil, fmt.Errorf("invalid signature algorithm for account %s", accountName)
 	}
 
 	if hashAlgo == crypto.UnknownHashAlgorithm {
-		return nil, fmt.Errorf(fmt.Sprintf("invalid hash algorithm for account %s", accountName))
+		return nil, fmt.Errorf("invalid hash algorithm for account %s", accountName)
 	}
 
 	address := transformAddress(a.Address)
 	if address == flow.EmptyAddress {
-		return nil, fmt.Errorf(fmt.Sprintf("invalid address for account %s", accountName))
+		return nil, fmt.Errorf("invalid address for account %s", accountName)
 	}
 
 	return &config.Account{
