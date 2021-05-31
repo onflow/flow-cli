@@ -32,13 +32,17 @@ import (
 type jsonAccounts map[string]account
 
 // transformAddress returns address based on address and chain id
-func transformAddress(address string) flow.Address {
+func transformAddress(address string) (flow.Address, error) {
 	// only allow service for emulator
 	if address == "service" {
-		return flow.ServiceAddress(flow.Emulator)
+		return flow.ServiceAddress(flow.Emulator), nil
 	}
 
-	return flow.HexToAddress(address)
+	if flow.HexToAddress(address) == flow.EmptyAddress {
+		return flow.EmptyAddress, fmt.Errorf("could not parse address: %s", address)
+	}
+
+	return flow.HexToAddress(address), nil
 }
 
 // transformSimpleToConfig transforms simple internal account to config account
@@ -51,9 +55,14 @@ func transformSimpleToConfig(accountName string, a simpleAccount) (*config.Accou
 		return nil, fmt.Errorf("invalid private key for account: %s", accountName)
 	}
 
+	address, err := transformAddress(a.Address)
+	if err != nil {
+		return nil, err
+	}
+
 	return &config.Account{
 		Name:    accountName,
-		Address: transformAddress(a.Address),
+		Address: address,
 		Key: config.AccountKey{
 			Type:       config.KeyTypeHex,
 			Index:      0,
@@ -101,9 +110,9 @@ func transformAdvancedToConfig(accountName string, a advanceAccount) (*config.Ac
 		return nil, fmt.Errorf("invalid hash algorithm for account %s", accountName)
 	}
 
-	address := transformAddress(a.Address)
-	if address == flow.EmptyAddress {
-		return nil, fmt.Errorf("invalid address for account %s", accountName)
+	address, err := transformAddress(a.Address)
+	if err != nil {
+		return nil, err
 	}
 
 	return &config.Account{

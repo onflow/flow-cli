@@ -43,7 +43,7 @@ const (
 
 func (c *Config) Validate() error {
 	for _, con := range c.Contracts {
-		if c.Networks.GetByName(con.Network) == nil {
+		if con.Network != "" && c.Networks.GetByName(con.Network) == nil {
 			return fmt.Errorf("contract %s contains nonexisting network %s", con.Name, con.Network)
 		}
 	}
@@ -57,6 +57,12 @@ func (c *Config) Validate() error {
 	for _, d := range c.Deployments {
 		if c.Networks.GetByName(d.Network) == nil {
 			return fmt.Errorf("deployment contains nonexisting network %s", d.Network)
+		}
+
+		for _, con := range d.Contracts {
+			if c.Contracts.GetByName(con.Name) == nil {
+				return fmt.Errorf("deployment contains nonexisting contract %s", con.Name)
+			}
 		}
 
 		if c.Accounts.GetByName(d.Account) == nil {

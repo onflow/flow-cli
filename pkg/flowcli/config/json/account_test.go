@@ -162,7 +162,7 @@ func Test_ConfigAccountOldFormats(t *testing.T) {
 func Test_ConfigMultipleAccountsSimple(t *testing.T) {
 	b := []byte(`{
 		"emulator-account": {
-			"address": "service-1",
+			"address": "service",
 			"key": "dd72967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47"
 		},
 		"testnet-account": {
@@ -182,7 +182,7 @@ func Test_ConfigMultipleAccountsSimple(t *testing.T) {
 	key := account.Key
 
 	assert.Equal(t, account.Name, "emulator-account")
-	assert.Equal(t, account.Address.String(), "0000000000000000")
+	assert.Equal(t, account.Address.String(), "f8d6e0586b0a20c7")
 	assert.Equal(t, key.HashAlgo.String(), "SHA3_256")
 	assert.Equal(t, key.Index, 0)
 	assert.Equal(t, key.SigAlgo.String(), "ECDSA_P256")
@@ -297,7 +297,7 @@ func Test_ConfigMixedAccounts(t *testing.T) {
 func Test_ConfigAccountsMap(t *testing.T) {
 	b := []byte(`{
 		"emulator-account": {
-			"address": "service-1",
+			"address": "service",
 			"key": "dd72967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47"
 		},
 		"testnet-account": {
@@ -313,7 +313,7 @@ func Test_ConfigAccountsMap(t *testing.T) {
 	accounts, err := jsonAccounts.transformToConfig()
 	assert.NoError(t, err)
 
-	assert.Equal(t, accounts.GetByName("emulator-account").Address.String(), "0000000000000000")
+	assert.Equal(t, accounts.GetByName("emulator-account").Address.String(), "f8d6e0586b0a20c7")
 	assert.Equal(t, accounts.GetByName("emulator-account").Name, "emulator-account")
 }
 
@@ -353,7 +353,7 @@ func Test_TransformAccountToJSON(t *testing.T) {
 func Test_SupportForOldFormatWithMultipleKeys(t *testing.T) {
 	b := []byte(`{
 		"emulator-account": {
-			"address": "service-1",
+			"address": "service",
 			"chain": "flow-emulator",
 			"keys": "dd72967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47"
 		},
@@ -394,4 +394,36 @@ func Test_SupportForOldFormatWithMultipleKeys(t *testing.T) {
 
 	key = conf.GetByName("emulator-account").Key
 	assert.Equal(t, key.PrivateKey.String(), "0xdd72967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47")
+}
+
+func Test_ConfigInvalidKey(t *testing.T) {
+	b := []byte(`{
+		"test": {
+			"address": "service",
+			"key": "z488ce86422698f1c13468b137d62de488e7e978d7090396f7883a60abdcf"
+		}
+	}`)
+
+	var jsonAccounts jsonAccounts
+	err := json.Unmarshal(b, &jsonAccounts)
+	assert.NoError(t, err)
+
+	_, err = jsonAccounts.transformToConfig()
+	assert.Equal(t, err.Error(), "invalid private key for account: test")
+}
+
+func Test_ConfigInvalidAddress(t *testing.T) {
+	b := []byte(`{
+		"test": {
+			"address": "zz",
+			"key": "2332967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b44"
+		}
+	}`)
+
+	var jsonAccounts jsonAccounts
+	err := json.Unmarshal(b, &jsonAccounts)
+	assert.NoError(t, err)
+
+	_, err = jsonAccounts.transformToConfig()
+	assert.Equal(t, err.Error(), "could not parse address: zz")
 }
