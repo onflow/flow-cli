@@ -99,7 +99,7 @@ func transformAdvancedToConfig(accountName string, a advanceAccount) (*config.Ac
 
 	address := transformAddress(a.Address)
 	if address == flow.EmptyAddress {
-		return nil, fmt.Errorf(fmt.Sprintf("invalid address for account %s"), accountName)
+		return nil, fmt.Errorf(fmt.Sprintf("invalid address for account %s", accountName))
 	}
 
 	return &config.Account{
@@ -291,6 +291,7 @@ func (j *account) UnmarshalJSON(b []byte) error {
 			Key:     advancedOld.Keys[0],
 		}
 		j.Advanced.Key.PrivateKey = advancedOld.Keys[0].Context["privateKey"]
+		fmt.Println("###", j.Advanced.Key.PrivateKey, advancedOld.Keys[0].Context)
 
 	case advancedFormat:
 		var advanced advanceAccount
