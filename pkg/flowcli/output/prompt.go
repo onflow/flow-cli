@@ -466,3 +466,17 @@ func RemoveNetworkPrompt(networks config.Networks) string {
 
 	return name
 }
+
+func SnapshotPrompt(snapshots []string) string {
+	networkPrompt := promptui.Select{
+		Label: "Select snapshot",
+		Items: snapshots,
+	}
+
+	_, name, err := networkPrompt.Run()
+	if err == promptui.ErrInterrupt {
+		os.Exit(-1)
+	}
+
+	return name
+}
