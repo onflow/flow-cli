@@ -103,6 +103,9 @@ const (
 	PrivateKeyField                           = "privateKey"
 	KMSContextField                           = "resourceName"
 	DefaultEmulatorServiceAccountName         = "emulator-account"
+
+	StateDir  = "./states"
+	MainState = "main"
 )
 
 // DefaultEmulatorNetwork get default emulator network
