@@ -22,6 +22,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/onflow/flow-go-sdk/crypto"
+
 	"github.com/onflow/flow-cli/pkg/flowcli/config"
 
 	"github.com/onflow/flow-go-sdk/client/convert"
@@ -47,13 +49,17 @@ func NewEmulatorGateway(serviceAccount *project.Account) *EmulatorGateway {
 
 func newEmulator(serviceAccount *project.Account) *emulator.Blockchain {
 	var opts []emulator.Option
-	if serviceAccount != nil && serviceAccount.Key().Type() == config.KeyTypeHex {
-		privKey, _ := serviceAccount.Key().PrivateKey()
+	if serviceAccount != nil && serviceAccount.DefaultKey().Type() == config.KeyTypeHex {
+		rawKey := serviceAccount.DefaultKey().ToConfig().Context[config.PrivateKeyField]
+		privKey, err := crypto.DecodePrivateKeyHex(serviceAccount.DefaultKey().SigAlgo(), rawKey)
+		if err != nil {
+			panic(err)
+		}
 
 		opts = append(opts, emulator.WithServicePublicKey(
 			privKey.PublicKey(),
-			serviceAccount.Key().SigAlgo(),
-			serviceAccount.Key().HashAlgo(),
+			serviceAccount.DefaultKey().SigAlgo(),
+			serviceAccount.DefaultKey().HashAlgo(),
 		))
 	}
 
