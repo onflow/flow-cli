@@ -22,6 +22,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/onflow/flow-emulator/storage/badger"
+
 	"github.com/onflow/flow-go-sdk/crypto"
 
 	"github.com/onflow/flow-cli/pkg/flowcli/config"
@@ -61,9 +63,17 @@ func newEmulator(serviceAccount *project.Account) *emulator.Blockchain {
 			serviceAccount.DefaultKey().SigAlgo(),
 			serviceAccount.DefaultKey().HashAlgo(),
 		))
+
+		store, err := badger.New(badger.WithPath("./store"))
+		if err != nil {
+			panic(err)
+		}
+
+		opts = append(opts, emulator.WithStore(store))
 	}
 
 	b, err := emulator.NewBlockchain(opts...)
+
 	if err != nil {
 		panic(err)
 	}
