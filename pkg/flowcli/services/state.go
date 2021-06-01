@@ -22,16 +22,17 @@ import (
 	"fmt"
 	"os"
 	"path"
-	"path/filepath"
-	"strings"
 
+	"github.com/otiai10/copy"
+	"github.com/spf13/afero"
+
+	"github.com/onflow/flow-cli/pkg/flowcli/config"
 	"github.com/onflow/flow-cli/pkg/flowcli/gateway"
 	"github.com/onflow/flow-cli/pkg/flowcli/output"
 	"github.com/onflow/flow-cli/pkg/flowcli/project"
-	"github.com/spf13/afero"
 )
 
-const stateDir = "./states"
+var mainPath = path.Join(config.StateDir, config.MainState)
 
 // State is a service that handles state
 type State struct {
@@ -53,58 +54,98 @@ func NewState(
 	}
 }
 
-func (s *State) Save(name string) error {
-	af := afero.Afero{ // todo refactor to pass instance as arg
-		Fs: afero.NewOsFs(),
-	}
-
-	currentStatePath := path.Join(stateDir, "main") // todo get from config
-	newStatePath := path.Join(stateDir, name)
-	newStateUsagePath := path.Join(newStatePath, "main")
-	newStateSnapshotPath := path.Join(newStatePath, "snapshot")
-
-	exists, err := af.DirExists(newStatePath)
-	if err != nil {
-		return err
-	} else if exists {
-		return fmt.Errorf("state named: %s already exists") // todo overwrite option
-	}
-
-	err = copy(currentStatePath, newStateUsagePath)
-	if err != nil {
-		return err
-	}
-	err = copy(currentStatePath, newStateSnapshotPath)
-	if err != nil {
-		return err
-	}
-
-	s.logger.Info(fmt.Sprintf("state [%s] saved, to load the state execute state use command"))
-
-	return nil
-}
-
-func copy(source, destination string) error {
+// Snapshot takes a snapshot of the current state
+func (s *State) Snapshot(name string) error {
+	// todo refactor to pass instance as arg
 	af := afero.Afero{
 		Fs: afero.NewOsFs(),
 	}
 
-	err := af.Walk(source, func(path string, info os.FileInfo, err error) error {
-		relPath := strings.Replace(path, source, "", 1)
-		if relPath == "" {
-			return nil
-		}
-		if info.IsDir() {
-			return af.Mkdir(filepath.Join(destination, relPath), 0755)
-		} else {
-			data, err := af.ReadFile(filepath.Join(source, relPath))
-			if err != nil {
-				return err
-			}
+	snapshotPath := path.Join(config.StateDir, name)
 
-			return af.WriteFile(filepath.Join(destination, relPath), data, 0777)
-		}
-	})
+	exists, err := af.DirExists(snapshotPath)
+	if err != nil {
+		return err
+	} else if exists {
+		return fmt.Errorf("snapshot named: %s already exist", name) // todo implement overwrite option
+	}
 
-	return err
+	err = copy.Copy(mainPath, snapshotPath)
+	if err != nil {
+		return err
+	}
+
+	s.logger.Info(fmt.Sprintf("snapshot of state [%s] saved, use restore command to restore from the snapshot", name))
+
+	return nil
+}
+
+// Restore restores the snapshot by the name
+func (s *State) Restore(name string) error {
+	// todo refactor to pass instance as arg
+	af := afero.Afero{
+		Fs: afero.NewOsFs(),
+	}
+
+	snapshotPath := path.Join(config.StateDir, name)
+
+	exists, err := af.DirExists(snapshotPath)
+	if err != nil {
+		return err
+	} else if !exists {
+		return fmt.Errorf("snapshot named: %s doesn't exist", name) // todo implement overwrite option
+	}
+
+	err = copy.Copy(snapshotPath, mainPath)
+	if err != nil {
+		return err
+	}
+
+	s.logger.Info(fmt.Sprintf("state was restored to the snapshot state with name: %s", name))
+
+	return nil
+}
+
+func (s *State) Remove(name string) error {
+	// todo refactor to pass instance as arg
+	af := afero.Afero{
+		Fs: afero.NewOsFs(),
+	}
+
+	snapshotPath := path.Join(config.StateDir, name)
+
+	exists, err := af.DirExists(snapshotPath)
+	if err != nil {
+		return err
+	} else if !exists {
+		return fmt.Errorf("snapshot named: %s doesn't exist", name) // todo implement overwrite option
+	}
+
+	err = os.RemoveAll(snapshotPath)
+	if err != nil {
+		return err
+	}
+
+	s.logger.Info(fmt.Sprintf("snapshot with name: %s was removed", name))
+
+	return nil
+}
+
+// List lists all snapshots
+func (s *State) List() ([]string, error) {
+	// todo refactor to pass instance as arg
+	af := afero.Afero{
+		Fs: afero.NewOsFs(),
+	}
+
+	var files []string
+	fileInfo, err := af.ReadDir(config.StateDir)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, file := range fileInfo {
+		files = append(files, file.Name())
+	}
+	return files, nil
 }
