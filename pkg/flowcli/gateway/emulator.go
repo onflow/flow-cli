@@ -20,23 +20,21 @@ package gateway
 
 import (
 	"fmt"
+	"os"
 	"time"
-
-	"github.com/onflow/flow-emulator/storage/badger"
-
-	"github.com/onflow/flow-go-sdk/crypto"
-
-	"github.com/onflow/flow-cli/pkg/flowcli/config"
-
-	"github.com/onflow/flow-go-sdk/client/convert"
-	flowGo "github.com/onflow/flow-go/model/flow"
 
 	"github.com/onflow/cadence"
 	emulator "github.com/onflow/flow-emulator"
+	"github.com/onflow/flow-emulator/storage/badger"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/client"
+	"github.com/onflow/flow-go-sdk/crypto"
+	flowGo "github.com/onflow/flow-go/model/flow"
+	"github.com/spf13/afero"
 
+	"github.com/onflow/flow-cli/pkg/flowcli/config"
 	"github.com/onflow/flow-cli/pkg/flowcli/project"
+	"github.com/onflow/flow-go-sdk/client/convert"
 )
 
 type EmulatorGateway struct {
@@ -55,7 +53,7 @@ func newEmulator(serviceAccount *project.Account) *emulator.Blockchain {
 		rawKey := serviceAccount.DefaultKey().ToConfig().Context[config.PrivateKeyField]
 		privKey, err := crypto.DecodePrivateKeyHex(serviceAccount.DefaultKey().SigAlgo(), rawKey)
 		if err != nil {
-			panic(err)
+			panic(err) // todo revisit panics
 		}
 
 		opts = append(opts, emulator.WithServicePublicKey(
@@ -64,9 +62,19 @@ func newEmulator(serviceAccount *project.Account) *emulator.Blockchain {
 			serviceAccount.DefaultKey().HashAlgo(),
 		))
 
-		store, err := badger.New(badger.WithPath("./store"))
+		exists, err := afero.DirExists(afero.NewOsFs(), config.StateDir)
+		if !exists {
+			err := os.Mkdir("./states/", os.FileMode(0755))
+			if err != nil {
+				panic(err) // todo revisit panics
+			}
+		}
+
+		store, err := badger.New(badger.WithPath(
+			fmt.Sprintf("%s/%s/", config.StateDir, config.MainState),
+		))
 		if err != nil {
-			panic(err)
+			panic(err) // todo revisit panics
 		}
 
 		opts = append(opts, emulator.WithStore(store))
