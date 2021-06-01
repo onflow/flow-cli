@@ -30,9 +30,9 @@ var saveFlags = flagsSave{}
 
 var SaveCommand = &command.Command{
 	Cmd: &cobra.Command{
-		Use:     "save <name>",
-		Short:   "Save current state",
-		Example: "flow state save hello",
+		Use:     "snapshot <name>",
+		Short:   "Snapshot current state",
+		Example: "flow state snapshot dapp-setup",
 		Args:    cobra.ExactArgs(1),
 	},
 	Flags: &saveFlags,
@@ -44,13 +44,13 @@ var SaveCommand = &command.Command{
 	) (command.Result, error) {
 		name := args[0]
 
-		err := services.State.Save(name)
+		err := services.State.Snapshot(name)
 		if err != nil {
 			return nil, err
 		}
 
 		return &StateResult{
-			result: "state saved",
+			result: "state snapshot",
 		}, nil
 	},
 }
