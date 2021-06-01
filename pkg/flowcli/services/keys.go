@@ -82,7 +82,7 @@ func (k *Keys) Generate(inputSeed string, signatureAlgo string) (crypto.PrivateK
 	return privateKey, nil
 }
 
-// Decode encoded public key for supported encoding type
+// Decode encoded public key using supported encoding type
 func (k *Keys) Decode(encoded string, encoding string) (*flow.AccountKey, error) {
 	if strings.ToLower(encoding) == PEM {
 		return decodePEM(encoded)
@@ -90,7 +90,7 @@ func (k *Keys) Decode(encoded string, encoding string) (*flow.AccountKey, error)
 		return decodeRLP(encoded)
 	}
 
-	return nil, fmt.Errorf("encoding type not supported. Valid encoding: RLP and PEM")
+	return nil, fmt.Errorf("encoding type not supported. Valid encodings: RLP, PEM")
 }
 
 func decodeRLP(publicKey string) (*flow.AccountKey, error) {
