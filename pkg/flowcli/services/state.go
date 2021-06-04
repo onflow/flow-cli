@@ -149,3 +149,18 @@ func (s *State) List() ([]string, error) {
 	}
 	return files, nil
 }
+
+// Logs outputs all logs for main state
+func (s *State) Logs() (string, error) {
+	// todo refactor to pass instance as arg
+	af := afero.Afero{
+		Fs: afero.NewOsFs(),
+	}
+
+	f, err := af.ReadFile(path.Join(config.StateDir, config.MainState, config.StateLog))
+	if err != nil {
+		return "", err
+	}
+
+	return string(f), nil
+}
