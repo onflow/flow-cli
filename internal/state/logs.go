@@ -17,3 +17,42 @@
  */
 
 package state
+
+import (
+	"github.com/onflow/flow-cli/internal/command"
+	"github.com/onflow/flow-cli/pkg/flowcli/services"
+	"github.com/spf13/cobra"
+)
+
+type flagsLogs struct{}
+
+var logFlags = flagsLogs{}
+
+var LogsCommand = &command.Command{
+	Cmd: &cobra.Command{
+		Use:     "logs",
+		Short:   "Output all logs for state",
+		Example: "flow state logs",
+		Args:    cobra.NoArgs,
+	},
+	Flags: &logFlags,
+	Run: func(
+		cmd *cobra.Command,
+		args []string,
+		globalFlags command.GlobalFlags,
+		services *services.Services,
+	) (command.Result, error) {
+		result, err := services.State.Logs()
+		if err != nil {
+			return nil, err
+		}
+
+		return &StateResult{
+			result: result,
+		}, nil
+	},
+}
+
+func init() {
+	LogsCommand.AddToParent(Cmd)
+}
