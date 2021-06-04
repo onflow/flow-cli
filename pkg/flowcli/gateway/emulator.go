@@ -20,12 +20,13 @@ package gateway
 
 import (
 	"context"
-	"fmt"
 	"os"
+	"path"
 	"time"
 
-	"github.com/onflow/flow-emulator/convert/sdk"
+	"github.com/sirupsen/logrus"
 
+	"github.com/onflow/flow-emulator/convert/sdk"
 	"github.com/onflow/flow-emulator/server/backend"
 
 	"github.com/onflow/cadence"
@@ -74,16 +75,21 @@ func newBackend(serviceAccount *project.Account) (*backend.Backend, error) {
 			serviceAccount.DefaultKey().HashAlgo(),
 		))
 
-		exists, err := afero.DirExists(afero.NewOsFs(), config.StateDir) // todo refactor
+		// todo refactor to pass instance
+		af := afero.Afero{
+			Fs: afero.NewOsFs(),
+		}
+
+		exists, err := afero.DirExists(af, config.StateDir) // todo refactor
 		if !exists {
-			err := os.Mkdir("./states/", os.FileMode(0755))
+			err := os.Mkdir(config.StateDir, os.FileMode(0755))
 			if err != nil {
 				return nil, err
 			}
 		}
 
 		store, err := badger.New(badger.WithPath(
-			fmt.Sprintf("%s/%s/", config.StateDir, config.MainState),
+			path.Join(config.StateDir, config.MainState),
 		))
 		if err != nil {
 			return nil, err
@@ -97,8 +103,21 @@ func newBackend(serviceAccount *project.Account) (*backend.Backend, error) {
 		return nil, err
 	}
 
-	// todo implement logger
-	b := backend.New(nil, em)
+	// todo does lorgus handle writer close
+	f, err := os.OpenFile(
+		path.Join(config.StateDir, config.MainState, config.StateLog),
+		os.O_APPEND|os.O_CREATE|os.O_WRONLY,
+		0644,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	log := logrus.New()
+	log.SetLevel(logrus.DebugLevel)
+	log.SetOutput(f)
+
+	b := backend.New(log, em)
 	b.EnableAutoMine()
 
 	return b, nil
