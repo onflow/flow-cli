@@ -10,9 +10,12 @@ require (
 	github.com/onflow/cadence v0.16.1
 	github.com/onflow/cadence/languageserver v0.16.0
 	github.com/onflow/flow-core-contracts/lib/go/templates v0.6.0
-	github.com/onflow/flow-emulator v0.20.2
+	github.com/onflow/flow-emulator v0.20.1
+	github.com/onflow/flow-go v0.17.3-0.20210528232438-721c8eaf59f9 // indirect
 	github.com/onflow/flow-go-sdk v0.20.0-alpha.1
+	github.com/otiai10/copy v1.6.0 // indirect
 	github.com/psiemens/sconfig v0.0.0-20190623041652-6e01eb1354fc
+	github.com/sirupsen/logrus v1.6.0 // indirect
 	github.com/spf13/afero v1.1.2
 	github.com/spf13/cobra v0.0.7
 	github.com/stretchr/testify v1.7.0
