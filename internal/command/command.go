@@ -63,6 +63,7 @@ type GlobalFlags struct {
 	Network     string
 	Yes         bool
 	ConfigPaths []string
+	Hosted      bool
 }
 
 const (
@@ -87,6 +88,7 @@ var Flags = GlobalFlags{
 	Log:         logLevelInfo,
 	Yes:         false,
 	ConfigPaths: config.DefaultPaths(),
+	Hosted:      false,
 }
 
 // InitFlags init all the global persistent flags
@@ -154,6 +156,14 @@ func InitFlags(cmd *cobra.Command) {
 		Flags.Yes,
 		"Approve any prompts",
 	)
+
+	cmd.PersistentFlags().BoolVarP(
+		&Flags.Hosted,
+		"hosted",
+		"",
+		Flags.Hosted,
+		"Hosted emulator",
+	)
 }
 
 // AddToParent add new command to main parent cmd
@@ -174,7 +184,7 @@ func (c Command) AddToParent(parent *cobra.Command) {
 		handleError("Host Error", err)
 
 		serviceAcc, _ := proj.EmulatorServiceAccount()
-		clientGateway, err := createGateway(host, Flags.Network, serviceAcc)
+		clientGateway, err := createGateway(host, Flags.Hosted, serviceAcc)
 		handleError("Gateway Error", err)
 
 		logger := createLogger(Flags.Log, Flags.Format)
@@ -201,9 +211,9 @@ func (c Command) AddToParent(parent *cobra.Command) {
 }
 
 // createGateway creates a gateway to be used, defaults to grpc but can support others
-func createGateway(host string, network string, serviceAccount *project.Account) (gateway.Gateway, error) {
-	if network == "hosted" {
-		return gateway.NewEmulatorGateway(serviceAccount), nil
+func createGateway(host string, hosted bool, serviceAccount *project.Account) (gateway.Gateway, error) {
+	if hosted {
+		return gateway.NewEmulatorGateway(serviceAccount)
 	}
 
 	// create default grpc client
