@@ -106,6 +106,7 @@ const (
 
 	StateDir  = "./states"
 	MainState = "main"
+	StateLog  = "out.log"
 )
 
 // DefaultEmulatorNetwork get default emulator network
