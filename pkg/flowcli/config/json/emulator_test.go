@@ -36,7 +36,8 @@ func Test_ConfigEmulatorSimple(t *testing.T) {
 	err := json.Unmarshal(b, &jsonEmulators)
 	assert.NoError(t, err)
 
-	emulators := jsonEmulators.transformToConfig()
+	emulators, err := jsonEmulators.transformToConfig()
+	assert.NoError(t, err)
 
 	assert.Equal(t, emulators[0].Name, "default")
 	assert.Equal(t, emulators[0].Port, 9000)

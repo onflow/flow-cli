@@ -32,14 +32,46 @@ type jsonConfig struct {
 	Deployments jsonDeployments `json:"deployments"`
 }
 
-func (j *jsonConfig) transformToConfig() *config.Config {
-	return &config.Config{
-		Emulators:   j.Emulators.transformToConfig(),
-		Contracts:   j.Contracts.transformToConfig(),
-		Networks:    j.Networks.transformToConfig(),
-		Accounts:    j.Accounts.transformToConfig(),
-		Deployments: j.Deployments.transformToConfig(),
+func (j *jsonConfig) transformToConfig() (*config.Config, error) {
+	emulators, err := j.Emulators.transformToConfig()
+	if err != nil {
+		return nil, err
 	}
+
+	contracts, err := j.Contracts.transformToConfig()
+	if err != nil {
+		return nil, err
+	}
+
+	networks, err := j.Networks.transformToConfig()
+	if err != nil {
+		return nil, err
+	}
+
+	accounts, err := j.Accounts.transformToConfig()
+	if err != nil {
+		return nil, err
+	}
+
+	deployments, err := j.Deployments.transformToConfig()
+	if err != nil {
+		return nil, err
+	}
+
+	conf := &config.Config{
+		Emulators:   emulators,
+		Contracts:   contracts,
+		Networks:    networks,
+		Accounts:    accounts,
+		Deployments: deployments,
+	}
+
+	err = conf.Validate()
+	if err != nil {
+		return nil, err
+	}
+
+	return conf, nil
 }
 
 func transformConfigToJSON(config *config.Config) jsonConfig {
@@ -106,7 +138,7 @@ func (p *Parser) Deserialize(raw []byte) (*config.Config, error) {
 		return nil, err
 	}
 
-	return jsonConf.transformToConfig(), nil
+	return jsonConf.transformToConfig()
 }
 
 // SupportsFormat check if the file format is supported

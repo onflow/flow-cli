@@ -41,7 +41,7 @@ func Test_SimpleJSONConfig(t *testing.T) {
 				"key": "11c5dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7"
 			}
 		},
-		"deploys": {}
+		"deployments": {}
 	}`)
 
 	parser := NewParser()
@@ -52,4 +52,97 @@ func Test_SimpleJSONConfig(t *testing.T) {
 	assert.Equal(t, "emulator-account", conf.Accounts[0].Name)
 	assert.Equal(t, "0x11c5dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7", conf.Accounts[0].Key.PrivateKey.String())
 	assert.Equal(t, "127.0.0.1:3569", conf.Networks.GetByName("emulator").Host)
+}
+
+func Test_NonExistingContractForDeployment(t *testing.T) {
+	b := []byte(`{
+		"contracts": {},
+		"accounts": {
+			"emulator-account": {
+				"address": "f8d6e0586b0a20c7",
+				"key": "11c5dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7"
+			}
+		},
+		"networks": {
+			"emulator": "127.0.0.1:3569"
+		},
+		"deployments": {
+			"emulator": {
+				"emulator-account": ["FungibleToken"]
+			}
+		}
+	}`)
+
+	parser := NewParser()
+	_, err := parser.Deserialize(b)
+
+	assert.Equal(t, err.Error(), "deployment contains nonexisting contract FungibleToken")
+}
+
+func Test_NonExistingAccountForDeployment(t *testing.T) {
+	b := []byte(`{
+		"contracts": {
+			"FungibleToken": "./test.cdc"
+		},
+		"accounts": {
+			"emulator-account": {
+				"address": "f8d6e0586b0a20c7",
+				"key": "11c5dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7"
+			}
+		},
+		"networks": {
+			"emulator": "127.0.0.1:3569"
+		},
+		"deployments": {
+			"emulator": {
+				"test-1": ["FungibleToken"]
+			}
+		}
+	}`)
+
+	parser := NewParser()
+	_, err := parser.Deserialize(b)
+
+	assert.Equal(t, err.Error(), "deployment contains nonexisting account test-1")
+}
+
+func Test_NonExistingNetworkForDeployment(t *testing.T) {
+	b := []byte(`{
+		"contracts": {
+			"FungibleToken": "./test.cdc"
+		},
+		"accounts": {
+			"emulator-account": {
+				"address": "f8d6e0586b0a20c7",
+				"key": "11c5dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7"
+			}
+		},
+		"networks": {},
+		"deployments": {
+			"foo": {
+				"test-1": ["FungibleToken"]
+			}
+		}
+	}`)
+
+	parser := NewParser()
+	_, err := parser.Deserialize(b)
+
+	assert.Equal(t, err.Error(), "deployment contains nonexisting network foo")
+}
+
+func Test_NonExistingAccountForEmulator(t *testing.T) {
+	b := []byte(`{
+		"emulators": {
+			"default": {
+				"port": 3569,
+				"serviceAccount": "emulator-account"
+			}
+		}
+	}`)
+
+	parser := NewParser()
+	_, err := parser.Deserialize(b)
+
+	assert.Equal(t, err.Error(), "emulator default contains nonexisting service account emulator-account")
 }

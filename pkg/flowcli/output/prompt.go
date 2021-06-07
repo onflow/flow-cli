@@ -20,7 +20,6 @@ package output
 
 import (
 	"fmt"
-	"net/url"
 	"os"
 
 	"github.com/onflow/flow-cli/pkg/flowcli/util"
@@ -302,8 +301,7 @@ func NewNetworkPrompt() map[string]string {
 	hostPrompt := promptui.Prompt{
 		Label: "Enter host location",
 		Validate: func(s string) error {
-			_, err := url.ParseRequestURI(s)
-			return err
+			return nil
 		},
 	}
 	networkData["host"], err = hostPrompt.Run()

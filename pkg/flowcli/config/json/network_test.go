@@ -33,7 +33,8 @@ func Test_ConfigNetworkSimple(t *testing.T) {
 	err := json.Unmarshal(b, &jsonNetworks)
 	assert.NoError(t, err)
 
-	networks := jsonNetworks.transformToConfig()
+	networks, err := jsonNetworks.transformToConfig()
+	assert.NoError(t, err)
 
 	assert.Equal(t, networks.GetByName("testnet").Host, "access.testnet.nodes.onflow.org:9000")
 	assert.Equal(t, networks.GetByName("testnet").Name, "testnet")
@@ -49,7 +50,8 @@ func Test_ConfigNetworkMultiple(t *testing.T) {
 	err := json.Unmarshal(b, &jsonNetworks)
 	assert.NoError(t, err)
 
-	networks := jsonNetworks.transformToConfig()
+	networks, err := jsonNetworks.transformToConfig()
+	assert.NoError(t, err)
 
 	assert.Equal(t, networks.GetByName("testnet").Host, "access.testnet.nodes.onflow.org:9000")
 	assert.Equal(t, networks.GetByName("testnet").Name, "testnet")
@@ -65,7 +67,8 @@ func Test_TransformNetworkToJSON(t *testing.T) {
 	err := json.Unmarshal(b, &jsonNetworks)
 	assert.NoError(t, err)
 
-	networks := jsonNetworks.transformToConfig()
+	networks, err := jsonNetworks.transformToConfig()
+	assert.NoError(t, err)
 
 	j := transformNetworksToJSON(networks)
 	x, _ := json.Marshal(j)
@@ -87,7 +90,9 @@ func Test_IngoreOldFormat(t *testing.T) {
 	err := json.Unmarshal(b, &jsonNetworks)
 	assert.NoError(t, err)
 
-	conf := jsonNetworks.transformToConfig()
+	conf, err := jsonNetworks.transformToConfig()
+	assert.NoError(t, err)
+
 	assert.Len(t, jsonNetworks, 3)
 	assert.Equal(t, conf.GetByName("testnet").Host, "access.testnet.nodes.onflow.org:9000")
 	assert.Equal(t, conf.GetByName("mainnet").Host, "access.mainnet.nodes.onflow.org:9000")
