@@ -82,7 +82,7 @@ func (k *Keys) Generate(inputSeed string, signatureAlgo string) (crypto.PrivateK
 	return privateKey, nil
 }
 
-// Decode encoded public key for supported encoding type
+// Decode encoded public key using supported encoding type
 func (k *Keys) Decode(encoded string, encoding string, fromFile string, sigAlgo string) (*flow.AccountKey, error) {
 	// todo refactor this to commands (as part of api refactor) and pass typed values
 	if encoded != "" && fromFile != "" {
