@@ -88,13 +88,16 @@ func (k *Keys) Decode(encoded string, encoding string, fromFile string, sigAlgo 
 	if encoded != "" && fromFile != "" {
 		return nil, fmt.Errorf("can not pass both command argument and from file flag")
 	}
+	if encoded == "" && fromFile == "" {
+		return nil, fmt.Errorf("provide argument for encoded key or use from file flag")
+	}
 
 	if fromFile != "" {
 		e, err := util.LoadFile(fromFile)
 		if err != nil {
 			return nil, err
 		}
-		encoded = string(e)
+		encoded = strings.TrimSpace(string(e))
 	}
 
 	switch strings.ToLower(encoding) {

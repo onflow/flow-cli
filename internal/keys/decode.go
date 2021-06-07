@@ -36,7 +36,7 @@ var DecodeCommand = &command.Command{
 	Cmd: &cobra.Command{
 		Use:       "decode <rlp|pem> <encoded public key>",
 		Short:     "Decode an encoded public key",
-		Args:      cobra.ExactArgs(2),
+		Args:      cobra.RangeArgs(1, 2),
 		ValidArgs: []string{"rlp", "pem"},
 		Example:   "flow keys decode rlp f847b8408...2402038203e8",
 	},
@@ -48,7 +48,11 @@ var DecodeCommand = &command.Command{
 		services *services.Services,
 	) (command.Result, error) {
 		encoding := args[0]
-		encoded := args[1]
+
+		var encoded string
+		if len(args) > 1 {
+			encoded = args[1]
+		}
 
 		accountKey, err := services.Keys.Decode(encoded, encoding, decodeFlags.FromFile, decodeFlags.SigAlgo)
 		if err != nil {
