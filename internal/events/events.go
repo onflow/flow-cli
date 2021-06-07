@@ -130,7 +130,5 @@ func eventString(writer io.Writer, event flow.Event) {
 }
 
 func printField(writer io.Writer, field cadence.Field, value cadence.Value) {
-	fmt.Fprintf(writer, "\t\t-")
-	fmt.Fprintf(writer, " %s (%s): %s", field.Identifier, field.Type.ID(), value.String())
-	fmt.Fprintf(writer, "\n")
+	_, _ = fmt.Fprintf(writer, "\t\t- %s (%s): %s \n", field.Identifier, field.Type.ID(), value.String())
 }
