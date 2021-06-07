@@ -78,7 +78,10 @@ func (k *KeyResult) String() string {
 		_, _ = fmt.Fprintf(writer, "Signature algorithm \t %s\n", k.accountKey.SigAlgo)
 		_, _ = fmt.Fprintf(writer, "Hash algorithm \t %s\n", k.accountKey.HashAlgo)
 		_, _ = fmt.Fprintf(writer, "Revoked \t %t\n", k.accountKey.Revoked)
-		_, _ = fmt.Fprintf(writer, "Weight \t %d\n", k.accountKey.Weight)
+
+		if k.accountKey.Weight >= 0 { // dont show invalid values
+			_, _ = fmt.Fprintf(writer, "Weight \t %d\n", k.accountKey.Weight)
+		}
 	}
 
 	writer.Flush()
