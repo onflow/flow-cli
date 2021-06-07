@@ -76,7 +76,7 @@ func (k *Keys) Generate(inputSeed string, signatureAlgo string) (crypto.PrivateK
 
 	privateKey, err := crypto.GeneratePrivateKey(sigAlgo, seed)
 	if err != nil {
-		return nil, fmt.Errorf("failed to generate private key: %v", err)
+		return nil, fmt.Errorf("failed to generate private key: %w", err)
 	}
 
 	return privateKey, nil
@@ -97,12 +97,12 @@ func (k *Keys) Decode(encoded string, encoding string) (*flow.AccountKey, error)
 func decodeRLP(publicKey string) (*flow.AccountKey, error) {
 	publicKeyBytes, err := hex.DecodeString(publicKey)
 	if err != nil {
-		return nil, fmt.Errorf("failed to decode public key: %v", err)
+		return nil, fmt.Errorf("failed to decode public key: %w", err)
 	}
 
 	accountKey, err := flow.DecodeAccountKey(publicKeyBytes)
 	if err != nil {
-		return nil, fmt.Errorf("failed to decode: %v", err)
+		return nil, fmt.Errorf("failed to decode: %w", err)
 	}
 
 	return accountKey, nil
