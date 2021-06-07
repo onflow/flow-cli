@@ -83,10 +83,23 @@ func (k *Keys) Generate(inputSeed string, signatureAlgo string) (crypto.PrivateK
 }
 
 // Decode encoded public key for supported encoding type
-func (k *Keys) Decode(encoded string, encoding string) (*flow.AccountKey, error) {
+func (k *Keys) Decode(encoded string, encoding string, fromFile string, sigAlgo string) (*flow.AccountKey, error) {
+	// todo refactor this to commands (as part of api refactor) and pass typed values
+	if encoded != "" && fromFile != "" {
+		return nil, fmt.Errorf("can not pass both command argument and from file flag")
+	}
+
+	if fromFile != "" {
+		e, err := util.LoadFile(fromFile)
+		if err != nil {
+			return nil, err
+		}
+		encoded = string(e)
+	}
+
 	switch strings.ToLower(encoding) {
 	case PEM:
-		return decodePEM(encoded)
+		return decodePEM(encoded, sigAlgo)
 	case RLP:
 		return decodeRLP(encoded)
 	default:
@@ -108,13 +121,11 @@ func decodeRLP(publicKey string) (*flow.AccountKey, error) {
 	return accountKey, nil
 }
 
-func decodePEM(publicKeyPath string) (*flow.AccountKey, error) {
-	fileContent, err := util.LoadFile(publicKeyPath)
-	if err != nil {
-		return nil, err
-	}
-
-	pk, err := crypto.DecodePublicKeyPEM(crypto.ECDSA_P256, string(fileContent))
+func decodePEM(key string, sigAlgo string) (*flow.AccountKey, error) {
+	pk, err := crypto.DecodePublicKeyPEM(
+		crypto.StringToSignatureAlgorithm(sigAlgo),
+		key,
+	)
 	if err != nil {
 		return nil, err
 	}

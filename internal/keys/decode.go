@@ -25,7 +25,10 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowcli/services"
 )
 
-type flagsDecode struct{}
+type flagsDecode struct {
+	SigAlgo  string `default:"ECDSA_P256" flag:"sig-algo" info:"Signature algorithm"`
+	FromFile string `default:"" flag:"from-file" info:"Load key from file"`
+}
 
 var decodeFlags = flagsDecode{}
 
@@ -44,10 +47,10 @@ var DecodeCommand = &command.Command{
 		globalFlags command.GlobalFlags,
 		services *services.Services,
 	) (command.Result, error) {
-		encoded := args[1]
 		encoding := args[0]
+		encoded := args[1]
 
-		accountKey, err := services.Keys.Decode(encoded, encoding)
+		accountKey, err := services.Keys.Decode(encoded, encoding, decodeFlags.FromFile, decodeFlags.SigAlgo)
 		if err != nil {
 			return nil, err
 		}
