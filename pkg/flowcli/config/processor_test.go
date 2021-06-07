@@ -32,7 +32,7 @@ func Test_PrivateKeyEnv(t *testing.T) {
 		"accounts": {
 			"emulator-account": {
 				"address": "f8d6e0586b0a20c7",
-				"keys": "$TEST"
+				"key": "$TEST"
 			}
 		}
 	}`)
@@ -43,7 +43,7 @@ func Test_PrivateKeyEnv(t *testing.T) {
 			"accounts": {
 				"emulator-account": {
 					"address": "f8d6e0586b0a20c7",
-					"keys": "123"
+					"key": "123"
 				}
 			}
 		}`, string(result))
@@ -57,7 +57,7 @@ func Test_PrivateKeyEnvMultipleAccounts(t *testing.T) {
 		"accounts": {
 			"emulator-account": {
 				"address": "f8d6e0586b0a20c7",
-				"keys": "$TEST"
+				"key": "$TEST"
 			}
 		}
 	}`)
@@ -68,7 +68,7 @@ func Test_PrivateKeyEnvMultipleAccounts(t *testing.T) {
 		"accounts": {
 			"emulator-account": {
 				"address": "f8d6e0586b0a20c7",
-				"keys": "123"
+				"key": "123"
 			}
 		}
 	}`, string(result))
@@ -79,7 +79,7 @@ func Test_PrivateConfigFileAccounts(t *testing.T) {
 		"accounts": {
 			"emulator-account": {
 				"address": "f8d6e0586b0a20c7",
-				"keys": "11c5dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7"
+				"key": "11c5dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7"
 			},
 			"admin-account": { "fromFile": "test.json" }
 		}
@@ -93,7 +93,7 @@ func Test_PrivateConfigFileAccounts(t *testing.T) {
 			"accounts": {
 				"emulator-account": {
 					"address": "f8d6e0586b0a20c7",
-					"keys": "11c5dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7"
+					"key": "11c5dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7"
 				}
 			}
 		}`, string(preprocessor))

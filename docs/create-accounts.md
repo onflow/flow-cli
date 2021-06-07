@@ -40,7 +40,7 @@ In the above example, the `flow.json` file would look something like this:
   "accounts": {
     "my-testnet-account": {
       "address": "a2c4941b5f3c7151",
-      "keys": "12c5dfde...bb2e542f1af710bd1d40b2"
+      "key": "12c5dfde...bb2e542f1af710bd1d40b2"
     }
   }
 }
