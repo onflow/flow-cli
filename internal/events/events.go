@@ -130,7 +130,19 @@ func eventString(writer io.Writer, event flow.Event) {
 }
 
 func printField(writer io.Writer, field cadence.Field, value cadence.Value) {
-	fmt.Fprintf(writer, "\t\t-")
-	fmt.Fprintf(writer, " %s (%s): %s", field.Identifier, field.Type.ID(), value.String())
-	fmt.Fprintf(writer, "\n")
+	// workaround fix for bug in cadence v0.15.1 not printing out optionals - fixed in v0.16.1
+	var typeId string
+	if field.Type != nil {
+		typeId = field.Type.ID()
+		if v, ok := field.Type.(cadence.OptionalType); ok {
+			typeId = fmt.Sprintf("%s?", v.Type.ID())
+		}
+	}
+
+	v := value.String()
+	if field.Identifier == "publicKey" {
+		v = fmt.Sprintf("%x", v)
+	}
+
+	_, _ = fmt.Fprintf(writer, "\t\t- %s (%s): %s \n", field.Identifier, typeId, v)
 }
