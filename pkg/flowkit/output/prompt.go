@@ -22,17 +22,17 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/onflow/flow-cli/pkg/flowkit"
+
 	"github.com/onflow/flow-cli/pkg/flowkit/util"
 
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
 
 	"github.com/gosuri/uilive"
 	"github.com/manifoldco/promptui"
-
-	"github.com/onflow/flow-cli/pkg/flowkit/project"
 )
 
-func ApproveTransactionPrompt(transaction *project.Transaction) bool {
+func ApproveTransactionPrompt(transaction *flowkit.Transaction) bool {
 	writer := uilive.New()
 	tx := transaction.FlowTransaction()
 

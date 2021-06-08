@@ -23,6 +23,8 @@ import (
 	"fmt"
 	"path"
 
+	"github.com/onflow/flow-cli/pkg/flowkit"
+
 	"github.com/onflow/cadence"
 
 	"github.com/onflow/flow-cli/pkg/flowkit/util"
@@ -40,7 +42,7 @@ import (
 type Project struct {
 	composer *config.Loader
 	conf     *config.Config
-	accounts []*Account
+	accounts []*flowkit.Account
 }
 
 // Contract is a Cadence contract definition for a project.
@@ -82,7 +84,7 @@ func (p *Project) SaveDefault() error {
 
 // Save saves the project configuration to the given path.
 func (p *Project) Save(path string) error {
-	p.conf.Accounts = accountsToConfig(p.accounts)
+	p.conf.Accounts = flowkit.accountsToConfig(p.accounts)
 	err := p.composer.Save(p.conf, path)
 
 	if err != nil {
@@ -99,7 +101,7 @@ func Exists(path string) bool {
 
 // Init initializes a new Flow project.
 func Init(sigAlgo crypto.SignatureAlgorithm, hashAlgo crypto.HashAlgorithm) (*Project, error) {
-	emulatorServiceAccount, err := generateEmulatorServiceAccount(sigAlgo, hashAlgo)
+	emulatorServiceAccount, err := flowkit.generateEmulatorServiceAccount(sigAlgo, hashAlgo)
 	if err != nil {
 		return nil, err
 	}
@@ -110,13 +112,13 @@ func Init(sigAlgo crypto.SignatureAlgorithm, hashAlgo crypto.HashAlgorithm) (*Pr
 	return &Project{
 		composer: composer,
 		conf:     config.DefaultConfig(),
-		accounts: []*Account{emulatorServiceAccount},
+		accounts: []*flowkit.Account{emulatorServiceAccount},
 	}, nil
 }
 
 // newProject creates a new project from a configuration object.
 func newProject(conf *config.Config, composer *config.Loader) (*Project, error) {
-	accounts, err := accountsFromConfig(conf)
+	accounts, err := flowkit.accountsFromConfig(conf)
 	if err != nil {
 		return nil, err
 	}
@@ -163,17 +165,17 @@ func (p *Project) Config() *config.Config {
 }
 
 // EmulatorServiceAccount returns the service account for the default emulator profilee.
-func (p *Project) EmulatorServiceAccount() (*Account, error) {
+func (p *Project) EmulatorServiceAccount() (*flowkit.Account, error) {
 	emulator := p.conf.Emulators.Default()
 	acc := p.conf.Accounts.GetByName(emulator.ServiceAccount)
-	return AccountFromConfig(*acc)
+	return flowkit.AccountFromConfig(*acc)
 }
 
 // SetEmulatorServiceKey sets the default emulator service account private key.
 func (p *Project) SetEmulatorServiceKey(privateKey crypto.PrivateKey) {
 	acc := p.AccountByName(config.DefaultEmulatorServiceAccountName)
 	acc.SetKey(
-		NewHexAccountKeyFromPrivateKey(
+		flowkit.NewHexAccountKeyFromPrivateKey(
 			acc.Key().Index(),
 			acc.Key().HashAlgo(),
 			privateKey,
@@ -229,7 +231,7 @@ func (p *Project) AccountNamesForNetwork(network string) []string {
 }
 
 // AddOrUpdateAccount adds or updates an account.
-func (p *Project) AddOrUpdateAccount(account *Account) {
+func (p *Project) AddOrUpdateAccount(account *flowkit.Account) {
 	for i, existingAccount := range p.accounts {
 		if existingAccount.name == account.name {
 			(*p).accounts[i] = account
@@ -257,7 +259,7 @@ func (p *Project) RemoveAccount(name string) error {
 }
 
 // AccountByAddress returns an account by address.
-func (p *Project) AccountByAddress(address string) *Account {
+func (p *Project) AccountByAddress(address string) *flowkit.Account {
 	for _, account := range p.accounts {
 		if account.address.String() == flow.HexToAddress(address).String() {
 			return account
@@ -268,8 +270,8 @@ func (p *Project) AccountByAddress(address string) *Account {
 }
 
 // AccountByName returns an account by name.
-func (p *Project) AccountByName(name string) *Account {
-	var account *Account
+func (p *Project) AccountByName(name string) *flowkit.Account {
+	var account *flowkit.Account
 
 	for _, acc := range p.accounts {
 		if acc.name == name {

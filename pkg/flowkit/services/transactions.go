@@ -21,6 +21,8 @@ package services
 import (
 	"fmt"
 
+	"github.com/onflow/flow-cli/pkg/flowkit"
+
 	"github.com/onflow/cadence"
 
 	"github.com/onflow/flow-cli/pkg/flowkit/contracts"
@@ -86,7 +88,7 @@ func (t *Transactions) Build(
 	gasLimit uint64,
 	args []cadence.Value,
 	network string,
-) (*project.Transaction, error) {
+) (*flowkit.Transaction, error) {
 
 	latestBlock, err := t.gateway.GetLatestBlock()
 	if err != nil {
@@ -98,7 +100,7 @@ func (t *Transactions) Build(
 		return nil, err
 	}
 
-	tx := project.NewTransaction().
+	tx := flowkit.NewTransaction().
 		SetPayer(payer).
 		SetProposer(proposerAccount, proposerKeyIndex).
 		AddAuthorizers(authorizers).
@@ -144,14 +146,14 @@ func (t *Transactions) Build(
 // Sign transaction
 func (t *Transactions) Sign(
 	payload []byte,
-	signer *project.Account,
+	signer *flowkit.Account,
 	approveSigning bool,
-) (*project.Transaction, error) {
+) (*flowkit.Transaction, error) {
 	if t.project == nil {
 		return nil, fmt.Errorf("missing configuration, initialize it: flow project init")
 	}
 
-	tx, err := project.NewTransactionFromPayload(payload)
+	tx, err := flowkit.NewTransactionFromPayload(payload)
 	if err != nil {
 		return nil, err
 	}
@@ -176,7 +178,7 @@ func (t *Transactions) Sign(
 func (t *Transactions) SendSigned(
 	payload []byte,
 ) (*flow.Transaction, *flow.TransactionResult, error) {
-	tx, err := project.NewTransactionFromPayload(payload)
+	tx, err := flowkit.NewTransactionFromPayload(payload)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -200,7 +202,7 @@ func (t *Transactions) SendSigned(
 // Send sends a transaction from a file.
 func (t *Transactions) Send(
 	code []byte,
-	signer *project.Account,
+	signer *flowkit.Account,
 	codeFilename string,
 	gasLimit uint64,
 	args []cadence.Value,

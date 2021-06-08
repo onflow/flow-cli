@@ -21,6 +21,8 @@ package config
 import (
 	"fmt"
 
+	"github.com/onflow/flow-cli/pkg/flowkit"
+
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
@@ -81,7 +83,7 @@ var AddAccountCommand = &command.Command{
 			return nil, err
 		}
 
-		acc, err := project.AccountFromConfig(*account)
+		acc, err := flowkit.AccountFromConfig(*account)
 		if err != nil {
 			return nil, err
 		}

@@ -21,6 +21,8 @@ package services
 import (
 	"testing"
 
+	"github.com/onflow/flow-cli/pkg/flowkit"
+
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/stretchr/testify/assert"
@@ -35,7 +37,7 @@ const gasLimit = 1000
 func TestTransactions(t *testing.T) {
 	mock := &tests.MockGateway{}
 
-	mock.SendSignedTransactionMock = func(tx *project.Transaction) (*flow.Transaction, error) {
+	mock.SendSignedTransactionMock = func(tx *flowkit.Transaction) (*flow.Transaction, error) {
 		return tx.FlowTransaction(), nil
 	}
 
@@ -81,7 +83,7 @@ func TestTransactions(t *testing.T) {
 			return tests.NewTransactionResult(nil), nil
 		}
 
-		mock.SendSignedTransactionMock = func(tx *project.Transaction) (*flow.Transaction, error) {
+		mock.SendSignedTransactionMock = func(tx *flowkit.Transaction) (*flow.Transaction, error) {
 			called++
 			arg, err := tx.FlowTransaction().Argument(0)
 
@@ -113,7 +115,7 @@ func TestTransactions(t *testing.T) {
 			return tests.NewTransactionResult(nil), nil
 		}
 
-		mock.SendSignedTransactionMock = func(tx *project.Transaction) (*flow.Transaction, error) {
+		mock.SendSignedTransactionMock = func(tx *flowkit.Transaction) (*flow.Transaction, error) {
 			called++
 			assert.Equal(t, tx.Signer().Address().String(), serviceAddress)
 			assert.Equal(t, len(string(tx.FlowTransaction().Script)), 77)
@@ -143,7 +145,7 @@ func TestTransactions(t *testing.T) {
 			return tests.NewTransactionResult(nil), nil
 		}
 
-		mock.SendSignedTransactionMock = func(tx *project.Transaction) (*flow.Transaction, error) {
+		mock.SendSignedTransactionMock = func(tx *flowkit.Transaction) (*flow.Transaction, error) {
 			called++
 			assert.Equal(t, tx.Signer().Address().String(), serviceAddress)
 			assert.Equal(t, len(string(tx.FlowTransaction().Script)), 209)

@@ -23,12 +23,12 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/onflow/flow-cli/pkg/flowkit"
+
 	"github.com/onflow/cadence"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/client"
 	"google.golang.org/grpc"
-
-	"github.com/onflow/flow-cli/pkg/flowkit/project"
 )
 
 // maxGRPCMessageSize 16mb, matching the value set in onflow/flow-go
@@ -72,7 +72,7 @@ func (g *GrpcGateway) GetAccount(address flow.Address) (*flow.Account, error) {
 }
 
 // SendSignedTransaction sends a transaction to flow that is already prepared and signed
-func (g *GrpcGateway) SendSignedTransaction(transaction *project.Transaction) (*flow.Transaction, error) {
+func (g *GrpcGateway) SendSignedTransaction(transaction *flowkit.Transaction) (*flow.Transaction, error) {
 	tx := transaction.FlowTransaction()
 
 	err := g.client.SendTransaction(g.ctx, *tx)

@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package project
+package flowkit
 
 import (
 	"context"

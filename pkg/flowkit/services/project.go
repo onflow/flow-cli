@@ -22,6 +22,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/onflow/flow-cli/pkg/flowkit"
+
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
 
 	"github.com/onflow/flow-go-sdk/crypto"
@@ -174,7 +176,7 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 		}
 
 		// create transaction to deploy new contract with args
-		tx, err := project.NewAddAccountContractTransaction(
+		tx, err := flowkit.NewAddAccountContractTransaction(
 			targetAccount,
 			contract.Name(),
 			contract.TranspiledCode(),
@@ -200,7 +202,7 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 			deployErr = true
 			continue
 		} else if exists {
-			tx, err = project.NewUpdateAccountContractTransaction(targetAccount, contract.Name(), contract.TranspiledCode())
+			tx, err = flowkit.NewUpdateAccountContractTransaction(targetAccount, contract.Name(), contract.TranspiledCode())
 			if err != nil {
 				return nil, err
 			}

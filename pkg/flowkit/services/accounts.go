@@ -109,7 +109,7 @@ func (a *Accounts) StakingInfo(address flow.Address) (*cadence.Value, *cadence.V
 //
 // The account creation transaction is signed by the specified signer.
 func (a *Accounts) Create(
-	signer *project.Account,
+	signer *flowkit.Account,
 	pubKeys []crypto.PublicKey,
 	keyWeights []int,
 	sigAlgo crypto.SignatureAlgorithm,
@@ -142,7 +142,7 @@ func (a *Accounts) Create(
 		accKeys = append(accKeys, accKey)
 	}
 
-	tx, err := project.NewCreateAccountTransaction(signer, accKeys, contracts)
+	tx, err := flowkit.NewCreateAccountTransaction(signer, accKeys, contracts)
 	if err != nil {
 		return nil, err
 	}
@@ -186,12 +186,12 @@ func (a *Accounts) Create(
 
 // AddContract deploys a contract code to the account provided with possible update flag.
 func (a *Accounts) AddContract(
-	account *project.Account,
+	account *flowkit.Account,
 	contractName string,
 	contractSource []byte,
 	updateExisting bool,
 ) (*flow.Account, error) {
-	tx, err := project.NewAddAccountContractTransaction(
+	tx, err := flowkit.NewAddAccountContractTransaction(
 		account,
 		contractName,
 		string(contractSource),
@@ -203,7 +203,7 @@ func (a *Accounts) AddContract(
 
 	// if we are updating contract
 	if updateExisting {
-		tx, err = project.NewUpdateAccountContractTransaction(
+		tx, err = flowkit.NewUpdateAccountContractTransaction(
 			account,
 			contractName,
 			string(contractSource),
@@ -275,9 +275,9 @@ func (a *Accounts) AddContract(
 // RemoveContract removes a contract from an account and returns the updated account.
 func (a *Accounts) RemoveContract(
 	contractName string,
-	account *project.Account,
+	account *flowkit.Account,
 ) (*flow.Account, error) {
-	tx, err := project.NewRemoveAccountContractTransaction(account, contractName)
+	tx, err := flowkit.NewRemoveAccountContractTransaction(account, contractName)
 	if err != nil {
 		return nil, err
 	}
@@ -319,9 +319,9 @@ func (a *Accounts) RemoveContract(
 
 // prepareTransaction prepares transaction for sending with data from network
 func (a *Accounts) prepareTransaction(
-	tx *project.Transaction,
-	account *project.Account,
-) (*project.Transaction, error) {
+	tx *flowkit.Transaction,
+	account *flowkit.Account,
+) (*flowkit.Transaction, error) {
 
 	block, err := a.gateway.GetLatestBlock()
 	if err != nil {
@@ -345,13 +345,13 @@ func (a *Accounts) prepareTransaction(
 }
 
 // AccountFromAddressAndKey get account from address and private key
-func accountFromAddressAndKey(address string, accountPrivateKey string) (*project.Account, error) {
+func accountFromAddressAndKey(address string, accountPrivateKey string) (*flowkit.Account, error) {
 	privateKey, err := crypto.DecodePrivateKeyHex(crypto.ECDSA_P256, accountPrivateKey)
 	if err != nil {
 		return nil, fmt.Errorf("private key is not correct")
 	}
 
-	return project.AccountFromAddressAndKey(
+	return flowkit.AccountFromAddressAndKey(
 		flow.HexToAddress(address),
 		privateKey,
 	), nil
