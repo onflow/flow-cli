@@ -21,15 +21,15 @@ package scripts
 import (
 	"fmt"
 
-	"github.com/onflow/flow-cli/pkg/flowcli"
+	"github.com/onflow/flow-cli/pkg/flowkit"
 
-	"github.com/onflow/flow-cli/pkg/flowcli/project"
-	"github.com/onflow/flow-cli/pkg/flowcli/util"
+	"github.com/onflow/flow-cli/pkg/flowkit/project"
+	"github.com/onflow/flow-cli/pkg/flowkit/util"
 
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
-	"github.com/onflow/flow-cli/pkg/flowcli/services"
+	"github.com/onflow/flow-cli/pkg/flowkit/services"
 )
 
 type flagsScripts struct {
@@ -79,7 +79,7 @@ var ExecuteCommand = &command.Command{
 			return nil, fmt.Errorf("error loading script file: %w", err)
 		}
 
-		scriptArgs, err := flowcli.ParseArguments(scriptFlags.Arg, scriptFlags.ArgsJSON)
+		scriptArgs, err := flowkit.ParseArguments(scriptFlags.Arg, scriptFlags.ArgsJSON)
 		if err != nil {
 			return nil, fmt.Errorf("error parsing script arguments: %w", err)
 		}
