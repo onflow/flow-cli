@@ -139,9 +139,6 @@ func (a *Accounts) Create(
 		return nil, fmt.Errorf("signer account: [%s] doesn't exists in configuration", signerName)
 	}
 
-	a.logger.StartProgress("Creating account...")
-	defer a.logger.StopProgress()
-
 	accountKeys := make([]*flow.AccountKey, len(keys))
 
 	sigAlgo, hashAlgo, err := util.ConvertSigAndHashAlgo(signatureAlgorithm, hashingAlgorithm)
@@ -188,6 +185,10 @@ func (a *Accounts) Create(
 	if err != nil {
 		return nil, err
 	}
+
+	a.logger.Info(fmt.Sprintf("Transaction ID: %s", tx.FlowTransaction().ID()))
+	a.logger.StartProgress("Creating account...")
+	defer a.logger.StopProgress()
 
 	sentTx, err := a.gateway.SendSignedTransaction(tx)
 	if err != nil {
@@ -284,15 +285,6 @@ func (a *Accounts) addContract(
 	contractSource []byte,
 	updateExisting bool,
 ) (*flow.Account, error) {
-	a.logger.StartProgress(
-		fmt.Sprintf(
-			"Adding contract '%s' to account '%s'...",
-			contractName,
-			account.Address(),
-		),
-	)
-	defer a.logger.StopProgress()
-
 	tx, err := project.NewAddAccountContractTransaction(
 		account,
 		contractName,
@@ -320,6 +312,22 @@ func (a *Accounts) addContract(
 		return nil, err
 	}
 
+	a.logger.Info(fmt.Sprintf("Transaction ID: %s", tx.FlowTransaction().ID()))
+
+	status := "Adding contract '%s' to account '%s'..."
+	if updateExisting {
+		status = "Updating contract '%s' on account '%s'..."
+	}
+
+	a.logger.StartProgress(
+		fmt.Sprintf(
+			status,
+			contractName,
+			account.Address(),
+		),
+	)
+	defer a.logger.StopProgress()
+
 	// send transaction with contract
 	sentTx, err := a.gateway.SendSignedTransaction(tx)
 	if err != nil {
@@ -343,17 +351,15 @@ func (a *Accounts) addContract(
 
 	if updateExisting {
 		a.logger.Info(fmt.Sprintf(
-			"Contract '%s' updated on the account '%s'.\nTransaction ID: %s.",
+			"Contract '%s' updated on the account '%s'.",
 			contractName,
 			account.Address(),
-			sentTx.ID().String(),
 		))
 	} else {
 		a.logger.Info(fmt.Sprintf(
-			"Contract '%s' deployed to the account '%s'.\nTransaction ID: %s.",
+			"Contract '%s' deployed to the account '%s'.",
 			contractName,
 			account.Address(),
-			sentTx.ID().String(),
 		))
 	}
 
@@ -370,11 +376,6 @@ func (a *Accounts) RemoveContract(
 		return nil, fmt.Errorf("account: [%s] doesn't exists in configuration", accountName)
 	}
 
-	a.logger.StartProgress(
-		fmt.Sprintf("Removing Contract %s from %s...", contractName, account.Address()),
-	)
-	defer a.logger.StopProgress()
-
 	tx, err := project.NewRemoveAccountContractTransaction(account, contractName)
 	if err != nil {
 		return nil, err
@@ -384,6 +385,12 @@ func (a *Accounts) RemoveContract(
 	if err != nil {
 		return nil, err
 	}
+
+	a.logger.Info(fmt.Sprintf("Transaction ID: %s", tx.FlowTransaction().ID().String()))
+	a.logger.StartProgress(
+		fmt.Sprintf("Removing Contract %s from %s...", contractName, account.Address()),
+	)
+	defer a.logger.StopProgress()
 
 	sentTx, err := a.gateway.SendSignedTransaction(tx)
 	if err != nil {
@@ -401,10 +408,9 @@ func (a *Accounts) RemoveContract(
 
 	a.logger.StopProgress()
 	a.logger.Info(fmt.Sprintf(
-		"Contract %s removed from account %s.\nTransaction ID: %s.",
+		"Contract %s removed from account %s.",
 		contractName,
 		account.Address(),
-		sentTx.ID().String(),
 	))
 
 	return a.gateway.GetAccount(account.Address())
