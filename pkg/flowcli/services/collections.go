@@ -47,7 +47,6 @@ func NewCollections(
 }
 
 // Get returns a collection by ID.
-func (c *Collections) Get(id string) (*flow.Collection, error) {
-	collectionID := flow.HexToID(id)
-	return c.gateway.GetCollection(collectionID)
+func (c *Collections) Get(id flow.Identifier) (*flow.Collection, error) {
+	return c.gateway.GetCollection(id)
 }
