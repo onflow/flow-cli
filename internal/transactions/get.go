@@ -20,6 +20,9 @@ package transactions
 
 import (
 	"fmt"
+	"strings"
+
+	"github.com/onflow/flow-go-sdk"
 
 	"github.com/spf13/cobra"
 
@@ -59,10 +62,9 @@ var GetCommand = &command.Command{
 			fmt.Println("⚠️  DEPRECATION WARNING: use include flag instead")
 		}
 
-		tx, result, err := services.Transactions.GetStatus(
-			args[0], // transaction id
-			getFlags.Sealed,
-		)
+		id := flow.HexToID(strings.ReplaceAll(args[0], "0x", ""))
+
+		tx, result, err := services.Transactions.GetStatus(id, getFlags.Sealed)
 		if err != nil {
 			return nil, err
 		}

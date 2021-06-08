@@ -21,6 +21,9 @@ package transactions
 import (
 	"fmt"
 
+	"github.com/onflow/flow-cli/pkg/flowcli"
+	"github.com/onflow/flow-cli/pkg/flowcli/util"
+
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
@@ -75,12 +78,27 @@ var SendCommand = &command.Command{
 			codeFilename = sendFlags.Code
 		}
 
+		signer := t.project.AccountByName(sendFlags.Signer) // todo refactor project
+		if signer == nil {
+			return nil, nil, fmt.Errorf("signer account: [%s] doesn't exists in configuration", sendFlags.Signer)
+		}
+
+		code, err := util.LoadFile(codeFilename)
+		if err != nil {
+			return nil, fmt.Errorf("error loading script file: %w", err)
+		}
+
+		txArgs, err := flowcli.ParseArguments(buildFlags.Args, buildFlags.ArgsJSON) // todo refactor flowcli
+		if err != nil {
+			return nil, err
+		}
+
 		tx, result, err := services.Transactions.Send(
+			code,
+			signer,
 			codeFilename,
-			sendFlags.Signer,
 			sendFlags.GasLimit,
-			sendFlags.Arg,
-			sendFlags.ArgsJSON,
+			txArgs,
 			globalFlags.Network,
 		)
 		if err != nil {

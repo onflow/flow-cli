@@ -18,6 +18,12 @@
 package transactions
 
 import (
+	"fmt"
+
+	"github.com/onflow/flow-cli/pkg/flowcli"
+
+	"github.com/onflow/flow-cli/pkg/flowcli/util"
+	"github.com/onflow/flow-go-sdk"
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
@@ -50,18 +56,46 @@ var BuildCommand = &command.Command{
 		globalFlags command.GlobalFlags,
 		services *services.Services,
 	) (command.Result, error) {
+		proposer := flow.HexToAddress(buildFlags.Proposer)
+		if proposer == flow.EmptyAddress {
+			// todo get from project
+		}
 
-		codeFilename := args[0]
+		// get all authorizers
+		var authorizers []flow.Address
+		for _, auth := range buildFlags.Authorizer {
+			addr := flow.HexToAddress(auth)
+			if addr == flow.EmptyAddress {
+				// todo get from project
+			}
+			authorizers = append(authorizers, addr)
+		}
+
+		payer := flow.HexToAddress(buildFlags.Payer)
+		if proposer == flow.EmptyAddress {
+			// todo get from project
+		}
+
+		filename := args[0]
+		code, err := util.LoadFile(filename)
+		if err != nil {
+			return nil, fmt.Errorf("error loading transaction file: %w", err)
+		}
+
+		txArgs, err := flowcli.ParseArguments(buildFlags.Args, buildFlags.ArgsJSON) // todo refactor flowcli
+		if err != nil {
+			return nil, err
+		}
 
 		build, err := services.Transactions.Build(
-			buildFlags.Proposer,
-			buildFlags.Authorizer,
-			buildFlags.Payer,
+			proposer,
+			authorizers,
+			payer,
 			buildFlags.ProposerKeyIndex,
-			codeFilename,
+			code,
+			filename,
 			buildFlags.GasLimit,
-			buildFlags.Args,
-			buildFlags.ArgsJSON,
+			txArgs,
 			globalFlags.Network,
 		)
 		if err != nil {

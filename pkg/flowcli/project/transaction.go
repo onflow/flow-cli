@@ -22,14 +22,11 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
-	"io/ioutil"
 	"strings"
 
 	jsoncdc "github.com/onflow/cadence/encoding/json"
 
 	"github.com/onflow/flow-go-sdk/templates"
-
-	"github.com/onflow/flow-cli/pkg/flowcli"
 
 	"github.com/onflow/cadence"
 	"github.com/onflow/flow-go-sdk"
@@ -45,20 +42,15 @@ func NewTransaction() *Transaction {
 }
 
 // NewTransactionFromPayload build transaction from payload
-func NewTransactionFromPayload(filename string) (*Transaction, error) {
-	partialTxHex, err := ioutil.ReadFile(filename)
+func NewTransactionFromPayload(payload []byte) (*Transaction, error) {
+	partialTxBytes, err := hex.DecodeString(string(payload))
 	if err != nil {
-		return nil, fmt.Errorf("failed to read partial transaction from %s: %v", filename, err)
-	}
-
-	partialTxBytes, err := hex.DecodeString(string(partialTxHex))
-	if err != nil {
-		return nil, fmt.Errorf("failed to decode partial transaction from %s: %v", filename, err)
+		return nil, fmt.Errorf("failed to decode partial transaction from %s: %v", payload, err)
 	}
 
 	decodedTx, err := flow.DecodeTransaction(partialTxBytes)
 	if err != nil {
-		return nil, fmt.Errorf("failed to decode transaction from %s: %v", filename, err)
+		return nil, fmt.Errorf("failed to decode transaction from %s: %v", payload, err)
 	}
 
 	tx := &Transaction{
@@ -191,13 +183,13 @@ func newTransactionFromTemplate(templateTx *flow.Transaction, signer *Account) (
 
 // Transaction builder of flow transactions
 type Transaction struct {
-	signer   *Account
+	signer   Account
 	proposer *flow.Account
 	tx       *flow.Transaction
 }
 
 // Signer get signer
-func (t *Transaction) Signer() *Account {
+func (t *Transaction) Signer() Account {
 	return t.signer
 }
 
@@ -211,13 +203,13 @@ func (t *Transaction) FlowTransaction() *flow.Transaction {
 	return t.tx
 }
 
-func (t *Transaction) SetScriptWithArgs(script []byte, args []string, argsJSON string) error {
+func (t *Transaction) SetScriptWithArgs(script []byte, args []cadence.Value) error {
 	t.tx.SetScript(script)
-	return t.AddRawArguments(args, argsJSON)
+	return t.AddArguments(args)
 }
 
 // SetSigner sets the signer for transaction
-func (t *Transaction) SetSigner(account *Account) error {
+func (t *Transaction) SetSigner(account Account) error {
 	err := account.Key().Validate()
 	if err != nil {
 		return err
@@ -257,16 +249,6 @@ func (t *Transaction) SetBlockReference(block *flow.Block) *Transaction {
 func (t *Transaction) SetGasLimit(gasLimit uint64) *Transaction {
 	t.tx.SetGasLimit(gasLimit)
 	return t
-}
-
-// AddRawArguments add raw arguments to tx
-func (t *Transaction) AddRawArguments(args []string, argsJSON string) error {
-	txArguments, err := flowcli.ParseArguments(args, argsJSON)
-	if err != nil {
-		return err
-	}
-
-	return t.AddArguments(txArguments)
 }
 
 // AddArguments add array of cadence arguments
