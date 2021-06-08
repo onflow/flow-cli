@@ -218,68 +218,8 @@ func (a *Accounts) Create(
 	return a.gateway.GetAccount(*newAccountAddress)
 }
 
-// AddContract adds a new contract to an account and returns the updated account.
+// AddContract deploys a contract code to the account provided with possible update flag
 func (a *Accounts) AddContract(
-	accountName string,
-	contractName string,
-	contractFilename string,
-	updateExisting bool,
-) (*flow.Account, error) {
-	if a.project == nil {
-		return nil, config.ErrDoesNotExist
-	}
-
-	account := a.project.AccountByName(accountName)
-	if account == nil {
-		return nil, fmt.Errorf("account: [%s] doesn't exists in configuration", accountName)
-	}
-
-	contractSource, err := util.LoadFile(contractFilename)
-	if err != nil {
-		return nil, err
-	}
-
-	return a.addContract(account, contractName, contractSource, updateExisting)
-}
-
-// AddContractForAddress adds a new contract to an address using private key specified
-func (a *Accounts) AddContractForAddress(
-	accountAddress string,
-	accountPrivateKey string,
-	contractName string,
-	contractFilename string,
-	updateExisting bool,
-) (*flow.Account, error) {
-	account, err := accountFromAddressAndKey(accountAddress, accountPrivateKey)
-	if err != nil {
-		return nil, err
-	}
-
-	contractSource, err := util.LoadFile(contractFilename)
-	if err != nil {
-		return nil, err
-	}
-
-	return a.addContract(account, contractName, contractSource, updateExisting)
-}
-
-// AddContractForAddressWithCode adds a new contract to an address using private key and code specified
-func (a *Accounts) AddContractForAddressWithCode(
-	accountAddress string,
-	accountPrivateKey string,
-	contractName string,
-	contractCode []byte,
-	updateExisting bool,
-) (*flow.Account, error) {
-	account, err := accountFromAddressAndKey(accountAddress, accountPrivateKey)
-	if err != nil {
-		return nil, err
-	}
-
-	return a.addContract(account, contractName, contractCode, updateExisting)
-}
-
-func (a *Accounts) addContract(
 	account *project.Account,
 	contractName string,
 	contractSource []byte,
