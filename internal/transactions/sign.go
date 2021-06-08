@@ -22,6 +22,8 @@ import (
 	"fmt"
 	"io/ioutil"
 
+	"github.com/onflow/flow-cli/pkg/flowcli/config"
+
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
@@ -50,6 +52,9 @@ var SignCommand = &command.Command{
 		services *services.Services,
 		proj *project.Project,
 	) (command.Result, error) {
+		if proj == nil {
+			return nil, config.ErrDoesNotExist
+		}
 
 		filename := args[0]
 		payload, err := ioutil.ReadFile(filename)
@@ -57,9 +62,9 @@ var SignCommand = &command.Command{
 			return nil, fmt.Errorf("failed to read partial transaction from %s: %v", filename, err)
 		}
 
-		signer := nil // todo refactor from project
+		signer := proj.AccountByName(signFlags.Signer)
 		if signer == nil {
-			return nil, fmt.Errorf("signer account: [%s] doesn't exists in configuration", signerName)
+			return nil, fmt.Errorf("signer account: [%s] doesn't exists in configuration", signFlags.Signer)
 		}
 
 		signed, err := services.Transactions.Sign(payload, signer, globalFlags.Yes)

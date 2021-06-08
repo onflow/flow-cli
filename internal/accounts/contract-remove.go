@@ -60,10 +60,10 @@ var RemoveCommand = &command.Command{
 
 		contractName := args[0]
 
-		if project == nil {
+		if proj == nil {
 			return nil, config.ErrDoesNotExist
 		}
-		from := project.AccountByName(flagsRemove.Signer)
+		from := proj.AccountByName(flagsRemove.Signer)
 
 		account, err := services.Accounts.RemoveContract(contractName, from)
 		if err != nil {

@@ -54,7 +54,7 @@ var AddContractCommand = &command.Command{
 		services *services.Services,
 		proj *project.Project,
 	) (command.Result, error) {
-		if project == nil {
+		if proj == nil {
 			return nil, config.ErrDoesNotExist
 		}
 
@@ -75,10 +75,10 @@ var AddContractCommand = &command.Command{
 		)
 
 		for _, contract := range contracts {
-			project.Config().Contracts.AddOrUpdate(contract.Name, contract)
+			proj.Config().Contracts.AddOrUpdate(contract.Name, contract)
 		}
 
-		err = project.SaveDefault()
+		err = proj.SaveDefault()
 		if err != nil {
 			return nil, err
 		}

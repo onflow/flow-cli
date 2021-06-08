@@ -65,10 +65,10 @@ var CreateCommand = &command.Command{
 			fmt.Println("⚠️ DEPRECATION WARNING: results flag is deprecated, results are by default included in all executions")
 		}
 
-		if project == nil {
+		if proj == nil {
 			return nil, config.ErrDoesNotExist
 		}
-		signer := project.AccountByName(addContractFlags.Signer)
+		signer := proj.AccountByName(addContractFlags.Signer)
 
 		sigAlgo := crypto.StringToSignatureAlgorithm(createFlags.SigAlgo)
 		if sigAlgo == crypto.UnknownSignatureAlgorithm {

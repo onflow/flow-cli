@@ -20,6 +20,8 @@ package transactions
 import (
 	"fmt"
 
+	"github.com/onflow/flow-cli/pkg/flowcli/config"
+
 	"github.com/onflow/flow-cli/pkg/flowcli"
 
 	"github.com/onflow/flow-cli/pkg/flowcli/project"
@@ -58,24 +60,28 @@ var BuildCommand = &command.Command{
 		services *services.Services,
 		proj *project.Project,
 	) (command.Result, error) {
-		proposer := flow.HexToAddress(buildFlags.Proposer)
-		if proposer == flow.EmptyAddress {
-			// todo get from project
+		if proj == nil {
+			return nil, config.ErrDoesNotExist
+		}
+
+		proposer, err := getAddress(buildFlags.Proposer, proj)
+		if err != nil {
+			return nil, err
 		}
 
 		// get all authorizers
 		var authorizers []flow.Address
 		for _, auth := range buildFlags.Authorizer {
-			addr := flow.HexToAddress(auth)
-			if addr == flow.EmptyAddress {
-				// todo get from project
+			addr, err := getAddress(auth, proj)
+			if err != nil {
+				return nil, err
 			}
 			authorizers = append(authorizers, addr)
 		}
 
-		payer := flow.HexToAddress(buildFlags.Payer)
-		if proposer == flow.EmptyAddress {
-			// todo get from project
+		payer, err := getAddress(buildFlags.Payer, proj)
+		if err != nil {
+			return nil, err
 		}
 
 		filename := args[0]
@@ -109,4 +115,17 @@ var BuildCommand = &command.Command{
 			include: []string{"code", "payload", "signatures"},
 		}, nil
 	},
+}
+
+func getAddress(address string, proj *project.Project) (flow.Address, error) {
+	addr := flow.HexToAddress(address)
+	if addr == flow.EmptyAddress {
+		acc := proj.AccountByName(address)
+		if acc == nil {
+			return flow.EmptyAddress, fmt.Errorf("account not found, make sure to pass valid account name from configuration or valid flow address")
+		}
+		addr = acc.Address()
+	}
+
+	return addr, nil
 }

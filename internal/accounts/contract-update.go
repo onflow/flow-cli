@@ -68,10 +68,10 @@ var UpdateCommand = &command.Command{
 			return nil, fmt.Errorf("error loading contract file: %w", err)
 		}
 
-		if project == nil {
+		if proj == nil {
 			return nil, config.ErrDoesNotExist
 		}
-		to := project.AccountByName(addContractFlags.Signer)
+		to := proj.AccountByName(addContractFlags.Signer)
 
 		account, err := services.Accounts.AddContract(to, name, code, false)
 		if err != nil {

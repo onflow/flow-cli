@@ -56,7 +56,7 @@ var AddAccountCommand = &command.Command{
 		services *services.Services,
 		proj *project.Project,
 	) (command.Result, error) {
-		if project == nil {
+		if proj == nil {
 			return nil, config.ErrDoesNotExist
 		}
 
@@ -86,9 +86,9 @@ var AddAccountCommand = &command.Command{
 			return nil, err
 		}
 
-		project.AddOrUpdateAccount(acc)
+		proj.AddOrUpdateAccount(acc)
 
-		err = project.SaveDefault()
+		err = proj.SaveDefault()
 		if err != nil {
 			return nil, err
 		}

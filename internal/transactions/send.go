@@ -21,6 +21,8 @@ package transactions
 import (
 	"fmt"
 
+	"github.com/onflow/flow-cli/pkg/flowcli/config"
+
 	"github.com/onflow/flow-cli/pkg/flowcli"
 	"github.com/onflow/flow-cli/pkg/flowcli/project"
 	"github.com/onflow/flow-cli/pkg/flowcli/util"
@@ -72,6 +74,10 @@ var SendCommand = &command.Command{
 			}
 		}
 
+		if proj == nil {
+			return nil, config.ErrDoesNotExist
+		}
+
 		codeFilename := ""
 		if len(args) == 1 {
 			codeFilename = args[0]
@@ -80,14 +86,14 @@ var SendCommand = &command.Command{
 			codeFilename = sendFlags.Code
 		}
 
-		signer := t.project.AccountByName(sendFlags.Signer) // todo refactor project
+		signer := proj.AccountByName(sendFlags.Signer)
 		if signer == nil {
-			return nil, nil, fmt.Errorf("signer account: [%s] doesn't exists in configuration", sendFlags.Signer)
+			return nil, fmt.Errorf("signer account: [%s] doesn't exists in configuration", sendFlags.Signer)
 		}
 
 		code, err := util.LoadFile(codeFilename)
 		if err != nil {
-			return nil, fmt.Errorf("error loading script file: %w", err)
+			return nil, fmt.Errorf("error loading transaction file: %w", err)
 		}
 
 		txArgs, err := flowcli.ParseArguments(buildFlags.Args, buildFlags.ArgsJSON) // todo refactor flowcli

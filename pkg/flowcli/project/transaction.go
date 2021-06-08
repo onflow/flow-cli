@@ -183,13 +183,13 @@ func newTransactionFromTemplate(templateTx *flow.Transaction, signer *Account) (
 
 // Transaction builder of flow transactions
 type Transaction struct {
-	signer   Account
+	signer   *Account
 	proposer *flow.Account
 	tx       *flow.Transaction
 }
 
 // Signer get signer
-func (t *Transaction) Signer() Account {
+func (t *Transaction) Signer() *Account {
 	return t.signer
 }
 
@@ -209,7 +209,7 @@ func (t *Transaction) SetScriptWithArgs(script []byte, args []cadence.Value) err
 }
 
 // SetSigner sets the signer for transaction
-func (t *Transaction) SetSigner(account Account) error {
+func (t *Transaction) SetSigner(account *Account) error {
 	err := account.Key().Validate()
 	if err != nil {
 		return err

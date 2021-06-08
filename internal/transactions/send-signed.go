@@ -19,6 +19,9 @@
 package transactions
 
 import (
+	"fmt"
+
+	"github.com/onflow/flow-cli/pkg/flowcli/util"
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
@@ -48,10 +51,14 @@ var SendSignedCommand = &command.Command{
 		services *services.Services,
 		proj *project.Project,
 	) (command.Result, error) {
+		filename := args[0]
 
-		tx, result, err := services.Transactions.SendSigned(
-			args[0], // signed filename
-		)
+		code, err := util.LoadFile(filename)
+		if err != nil {
+			return nil, fmt.Errorf("error loading transaction payload: %w", err)
+		}
+
+		tx, result, err := services.Transactions.SendSigned(code)
 		if err != nil {
 			return nil, err
 		}

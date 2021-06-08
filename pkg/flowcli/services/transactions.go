@@ -144,7 +144,7 @@ func (t *Transactions) Build(
 // Sign transaction
 func (t *Transactions) Sign(
 	payload []byte,
-	signer project.Account,
+	signer *project.Account,
 	approveSigning bool,
 ) (*project.Transaction, error) {
 	if t.project == nil {
@@ -200,7 +200,7 @@ func (t *Transactions) SendSigned(
 // Send sends a transaction from a file.
 func (t *Transactions) Send(
 	code []byte,
-	signer project.Account,
+	signer *project.Account,
 	codeFilename string,
 	gasLimit uint64,
 	args []cadence.Value,

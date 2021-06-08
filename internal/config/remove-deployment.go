@@ -19,7 +19,7 @@
 package config
 
 import (
-	"fmt"
+	"github.com/onflow/flow-cli/pkg/flowcli/config"
 
 	"github.com/spf13/cobra"
 
@@ -48,9 +48,8 @@ var RemoveDeploymentCommand = &command.Command{
 		services *services.Services,
 		proj *project.Project,
 	) (command.Result, error) {
-		p, err := project.Load(globalFlags.ConfigPaths)
-		if err != nil {
-			return nil, fmt.Errorf("configuration does not exists")
+		if proj == nil {
+			return nil, config.ErrDoesNotExist
 		}
 
 		account := ""
@@ -59,15 +58,15 @@ var RemoveDeploymentCommand = &command.Command{
 			account = args[0]
 			network = args[1]
 		} else {
-			account, network = output.RemoveDeploymentPrompt(p.Config().Deployments)
+			account, network = output.RemoveDeploymentPrompt(proj.Config().Deployments)
 		}
 
-		err = p.Config().Deployments.Remove(account, network)
+		err := proj.Config().Deployments.Remove(account, network)
 		if err != nil {
 			return nil, err
 		}
 
-		err = p.SaveDefault()
+		err = proj.SaveDefault()
 		if err != nil {
 			return nil, err
 		}
