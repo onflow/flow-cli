@@ -21,6 +21,8 @@ package accounts
 import (
 	"fmt"
 
+	"github.com/onflow/flow-cli/pkg/flowcli/config"
+
 	"github.com/onflow/flow-cli/pkg/flowcli/project"
 
 	"github.com/spf13/cobra"
@@ -57,7 +59,11 @@ var RemoveCommand = &command.Command{
 		}
 
 		contractName := args[0]
-		from := nil // todo refactor project
+
+		if project == nil {
+			return nil, config.ErrDoesNotExist
+		}
+		from := project.AccountByName(flagsRemove.Signer)
 
 		account, err := services.Accounts.RemoveContract(contractName, from)
 		if err != nil {

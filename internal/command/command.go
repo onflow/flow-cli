@@ -52,7 +52,7 @@ type RunCommand func(
 type Command struct {
 	Cmd   *cobra.Command
 	Flags interface{}
-	Run   RunCommand
+	Run   RunCommand // todo add run with project
 }
 
 type GlobalFlags struct {

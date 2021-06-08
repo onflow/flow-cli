@@ -22,6 +22,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/onflow/flow-cli/pkg/flowcli/config"
+
 	"github.com/onflow/flow-cli/pkg/flowcli/project"
 
 	"github.com/onflow/flow-go-sdk/crypto"
@@ -63,6 +65,11 @@ var CreateCommand = &command.Command{
 			fmt.Println("⚠️ DEPRECATION WARNING: results flag is deprecated, results are by default included in all executions")
 		}
 
+		if project == nil {
+			return nil, config.ErrDoesNotExist
+		}
+		signer := project.AccountByName(addContractFlags.Signer)
+
 		sigAlgo := crypto.StringToSignatureAlgorithm(createFlags.SigAlgo)
 		if sigAlgo == crypto.UnknownSignatureAlgorithm {
 			return nil, fmt.Errorf("invalid signature algorithm: %s", createFlags.SigAlgo)
@@ -74,8 +81,6 @@ var CreateCommand = &command.Command{
 		}
 
 		keyWeights := createFlags.Weights
-
-		signer := nil // todo refactor project
 
 		// decode public keys
 		var pubKeys []crypto.PublicKey
