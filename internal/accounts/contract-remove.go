@@ -52,7 +52,7 @@ var RemoveCommand = &command.Command{
 		args []string,
 		globalFlags command.GlobalFlags,
 		services *services.Services,
-		project *project.Project,
+		proj *project.Project,
 	) (command.Result, error) {
 		if flagsRemove.Results {
 			fmt.Println("⚠️ DEPRECATION WARNING: results flag is deprecated, results are by default included in all executions")

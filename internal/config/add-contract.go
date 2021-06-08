@@ -52,11 +52,10 @@ var AddContractCommand = &command.Command{
 		args []string,
 		globalFlags command.GlobalFlags,
 		services *services.Services,
-		project *project.Project,
+		proj *project.Project,
 	) (command.Result, error) {
-		p, err := project.Load(globalFlags.ConfigPaths)
-		if err != nil {
-			return nil, fmt.Errorf("configuration does not exists")
+		if project == nil {
+			return nil, config.ErrDoesNotExist
 		}
 
 		contractData, flagsProvided, err := flagsToContractData(addContractFlags)
@@ -76,10 +75,10 @@ var AddContractCommand = &command.Command{
 		)
 
 		for _, contract := range contracts {
-			p.Config().Contracts.AddOrUpdate(contract.Name, contract)
+			project.Config().Contracts.AddOrUpdate(contract.Name, contract)
 		}
 
-		err = p.SaveDefault()
+		err = project.SaveDefault()
 		if err != nil {
 			return nil, err
 		}

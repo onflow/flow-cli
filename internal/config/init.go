@@ -53,7 +53,7 @@ var InitCommand = &command.Command{
 		args []string,
 		globalFlags command.GlobalFlags,
 		services *services.Services,
-		project *project.Project,
+		proj *project.Project,
 	) (command.Result, error) {
 		proj, err := services.Project.Init(
 			initFlag.Reset,

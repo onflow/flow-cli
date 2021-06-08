@@ -58,7 +58,7 @@ var SendCommand = &command.Command{
 		args []string,
 		globalFlags command.GlobalFlags,
 		services *services.Services,
-		project *project.Project,
+		proj *project.Project,
 	) (command.Result, error) {
 		if sendFlags.Results {
 			fmt.Println("⚠️  DEPRECATION WARNING: all transactions will provide results")

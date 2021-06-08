@@ -45,7 +45,7 @@ var DeployCommand = &command.Command{
 		args []string,
 		globalFlags command.GlobalFlags,
 		services *services.Services,
-		project *project.Project,
+		proj *project.Project,
 	) (command.Result, error) {
 		c, err := services.Project.Deploy(globalFlags.Network, deployFlags.Update)
 		if err != nil {

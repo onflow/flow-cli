@@ -53,7 +53,7 @@ var GetCommand = &command.Command{
 		args []string,
 		globalFlags command.GlobalFlags,
 		services *services.Services,
-		project *project.Project,
+		proj *project.Project,
 	) (command.Result, error) {
 		if blockFlags.Latest || blockFlags.BlockID != "" || blockFlags.BlockHeight != 0 {
 			return nil, fmt.Errorf("⚠️  No longer supported: use command argument.")

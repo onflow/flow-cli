@@ -52,7 +52,7 @@ var GetCommand = &command.Command{
 		args []string,
 		globalFlags command.GlobalFlags,
 		services *services.Services,
-		project *project.Project,
+		proj *project.Project,
 	) (command.Result, error) {
 		if getFlags.Code {
 			fmt.Println("⚠️  DEPRECATION WARNING: use contracts flag instead")

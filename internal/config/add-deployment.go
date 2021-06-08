@@ -51,13 +51,12 @@ var AddDeploymentCommand = &command.Command{
 		args []string,
 		globalFlags command.GlobalFlags,
 		services *services.Services,
-		project *project.Project,
+		proj *project.Project,
 	) (command.Result, error) {
-		p, err := project.Load(globalFlags.ConfigPaths)
-		if err != nil {
-			return nil, fmt.Errorf("configuration does not exists")
+		if project == nil {
+			return nil, config.ErrDoesNotExist
 		}
-		conf := p.Config()
+		conf := project.Config()
 
 		deployData, flagsProvided, err := flagsToDeploymentData(addDeploymentFlags)
 		if err != nil {

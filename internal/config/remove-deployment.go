@@ -46,7 +46,7 @@ var RemoveDeploymentCommand = &command.Command{
 		args []string,
 		globalFlags command.GlobalFlags,
 		services *services.Services,
-		project *project.Project,
+		proj *project.Project,
 	) (command.Result, error) {
 		p, err := project.Load(globalFlags.ConfigPaths)
 		if err != nil {

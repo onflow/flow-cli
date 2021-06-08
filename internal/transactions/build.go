@@ -56,7 +56,7 @@ var BuildCommand = &command.Command{
 		args []string,
 		globalFlags command.GlobalFlags,
 		services *services.Services,
-		project *project.Project,
+		proj *project.Project,
 	) (command.Result, error) {
 		proposer := flow.HexToAddress(buildFlags.Proposer)
 		if proposer == flow.EmptyAddress {

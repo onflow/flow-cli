@@ -46,7 +46,7 @@ var SendSignedCommand = &command.Command{
 		args []string,
 		globalFlags command.GlobalFlags,
 		services *services.Services,
-		project *project.Project,
+		proj *project.Project,
 	) (command.Result, error) {
 
 		tx, result, err := services.Transactions.SendSigned(
