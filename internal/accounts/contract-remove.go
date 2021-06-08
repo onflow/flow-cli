@@ -53,10 +53,10 @@ var RemoveCommand = &command.Command{
 			fmt.Println("⚠️ DEPRECATION WARNING: results flag is deprecated, results are by default included in all executions")
 		}
 
-		account, err := services.Accounts.RemoveContract(
-			args[0], // name
-			flagsRemove.Signer,
-		)
+		contractName := args[0]
+		from := nil // todo refactor project
+
+		account, err := services.Accounts.RemoveContract(contractName, from)
 		if err != nil {
 			return nil, err
 		}

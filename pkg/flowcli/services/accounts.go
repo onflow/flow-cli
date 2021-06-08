@@ -20,7 +20,6 @@ package services
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/onflow/flow-cli/pkg/flowcli/config"
 
@@ -114,69 +113,40 @@ func (a *Accounts) StakingInfo(accountAddress string) (*cadence.Value, *cadence.
 //
 // The account creation transaction is signed by the specified signer.
 func (a *Accounts) Create(
-	signerName string,
-	keys []string,
+	signer *project.Account,
+	pubKeys []crypto.PublicKey,
 	keyWeights []int,
-	signatureAlgorithm string,
-	hashingAlgorithm string,
+	sigAlgo crypto.SignatureAlgorithm,
+	hashAlgo crypto.HashAlgorithm,
 	contracts []string,
 ) (*flow.Account, error) {
 	if a.project == nil {
 		return nil, config.ErrDoesNotExist
 	}
 
-	// if more than one key is provided and at least one weight is specified, make sure there isn't a missmatch
-	if len(keys) > 1 && len(keyWeights) > 0 && len(keys) != len(keyWeights) {
-		return nil, fmt.Errorf(
-			"number of keys and weights provided must match, number of provided keys: %d, number of provided key weights: %d",
-			len(keys),
-			len(keyWeights),
-		)
-	}
-
-	signer := a.project.AccountByName(signerName)
-	if signer == nil {
-		return nil, fmt.Errorf("signer account: [%s] doesn't exists in configuration", signerName)
-	}
-
-	accountKeys := make([]*flow.AccountKey, len(keys))
-
-	sigAlgo, hashAlgo, err := util.ConvertSigAndHashAlgo(signatureAlgorithm, hashingAlgorithm)
-	if err != nil {
-		return nil, err
-	}
-
-	for i, publicKeyHex := range keys {
-		publicKey, err := crypto.DecodePublicKeyHex(
-			sigAlgo,
-			strings.ReplaceAll(publicKeyHex, "0x", ""),
-		)
-		if err != nil {
-			return nil, fmt.Errorf(
-				"could not decode public key for key: %s, with signature algorith: %s",
-				publicKeyHex,
-				sigAlgo,
-			)
-		}
-
+	var accKeys []flow.AccountKey
+	for i, pubKey := range pubKeys {
 		weight := flow.AccountKeyWeightThreshold
-		if len(keyWeights) > i {
+		if len(keyWeights) > i { // if key weight is specified
 			weight = keyWeights[i]
-
-			if weight > flow.AccountKeyWeightThreshold || weight <= 0 {
-				return nil, fmt.Errorf("invalid key weight, valid range (0 - 1000)")
-			}
 		}
 
-		accountKeys[i] = &flow.AccountKey{
-			PublicKey: publicKey,
+		accKey := flow.AccountKey{
+			PublicKey: pubKey,
 			SigAlgo:   sigAlgo,
 			HashAlgo:  hashAlgo,
 			Weight:    weight,
 		}
+
+		err := accKey.Validate()
+		if err != nil {
+			return nil, fmt.Errorf("invalid account key: %w", err)
+		}
+
+		accKeys = append(accKeys, accKey)
 	}
 
-	tx, err := project.NewCreateAccountTransaction(signer, accountKeys, contracts)
+	tx, err := project.NewCreateAccountTransaction(signer, accKeys, contracts)
 	if err != nil {
 		return nil, err
 	}
@@ -218,7 +188,7 @@ func (a *Accounts) Create(
 	return a.gateway.GetAccount(*newAccountAddress)
 }
 
-// AddContract deploys a contract code to the account provided with possible update flag
+// AddContract deploys a contract code to the account provided with possible update flag.
 func (a *Accounts) AddContract(
 	account *project.Account,
 	contractName string,
@@ -306,16 +276,11 @@ func (a *Accounts) AddContract(
 	return update, err
 }
 
-// RemoveContracts removes a contract from an account and returns the updated account.
+// RemoveContract removes a contract from an account and returns the updated account.
 func (a *Accounts) RemoveContract(
 	contractName string,
-	accountName string,
+	account *project.Account,
 ) (*flow.Account, error) {
-	account := a.project.AccountByName(accountName)
-	if account == nil {
-		return nil, fmt.Errorf("account: [%s] doesn't exists in configuration", accountName)
-	}
-
 	tx, err := project.NewRemoveAccountContractTransaction(account, contractName)
 	if err != nil {
 		return nil, err

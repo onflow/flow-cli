@@ -20,6 +20,9 @@ package accounts
 
 import (
 	"fmt"
+	"strings"
+
+	"github.com/onflow/flow-go-sdk/crypto"
 
 	"github.com/spf13/cobra"
 
@@ -57,12 +60,45 @@ var CreateCommand = &command.Command{
 			fmt.Println("⚠️ DEPRECATION WARNING: results flag is deprecated, results are by default included in all executions")
 		}
 
+		sigAlgo := crypto.StringToSignatureAlgorithm(createFlags.SigAlgo)
+		if sigAlgo == crypto.UnknownSignatureAlgorithm {
+			return nil, fmt.Errorf("invalid signature algorithm: %s", createFlags.SigAlgo)
+		}
+
+		hashAlgo := crypto.StringToHashAlgorithm(createFlags.HashAlgo)
+		if hashAlgo == crypto.UnknownHashAlgorithm {
+			return nil, fmt.Errorf("invalid hash algorithm: %s", createFlags.HashAlgo)
+		}
+
+		keyWeights := createFlags.Weights
+
+		signer := nil // todo refactor project
+
+		var pubKeys []crypto.PublicKey
+		for _, k := range createFlags.Keys {
+			k = strings.ReplaceAll(k, "0x", "") // clear possible prefix
+			key, err := crypto.DecodePublicKeyHex(sigAlgo, k)
+			if err != nil {
+				return nil, fmt.Errorf("failed decoding public key: %s with error: %w", key, err)
+			}
+			pubKeys = append(pubKeys, key)
+		}
+
+		// if more than one key is provided and at least one weight is specified, make sure there isn't a mismatch
+		if len(pubKeys) > 1 && len(keyWeights) > 0 && len(pubKeys) != len(keyWeights) {
+			return nil, fmt.Errorf(
+				"number of keys and weights provided must match, number of provided keys: %d, number of provided key weights: %d",
+				len(pubKeys),
+				len(keyWeights),
+			)
+		}
+
 		account, err := services.Accounts.Create(
-			createFlags.Signer,
-			createFlags.Keys,
-			createFlags.Weights,
-			createFlags.SigAlgo,
-			createFlags.HashAlgo,
+			signer,
+			pubKeys,
+			keyWeights,
+			sigAlgo,
+			hashAlgo,
 			createFlags.Contracts,
 		)
 
