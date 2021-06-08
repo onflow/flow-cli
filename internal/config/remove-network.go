@@ -19,7 +19,7 @@
 package config
 
 import (
-	"fmt"
+	"github.com/onflow/flow-cli/pkg/flowcli/config"
 
 	"github.com/spf13/cobra"
 
@@ -48,24 +48,23 @@ var RemoveNetworkCommand = &command.Command{
 		services *services.Services,
 		proj *project.Project,
 	) (command.Result, error) {
-		p, err := project.Load(globalFlags.ConfigPaths)
-		if err != nil {
-			return nil, fmt.Errorf("configuration does not exists")
+		if proj == nil {
+			return nil, config.ErrDoesNotExist
 		}
 
 		name := ""
 		if len(args) == 1 {
 			name = args[0]
 		} else {
-			name = output.RemoveNetworkPrompt(p.Config().Networks)
+			name = output.RemoveNetworkPrompt(proj.Config().Networks)
 		}
 
-		err = p.Config().Networks.Remove(name)
+		err := proj.Config().Networks.Remove(name)
 		if err != nil {
 			return nil, err
 		}
 
-		err = p.SaveDefault()
+		err = proj.SaveDefault()
 		if err != nil {
 			return nil, err
 		}
