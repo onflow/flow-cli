@@ -23,6 +23,7 @@ import (
 	"fmt"
 
 	"github.com/onflow/flow-cli/pkg/flowcli/output"
+	"github.com/onflow/flow-cli/pkg/flowcli/project"
 
 	"github.com/spf13/cobra"
 
@@ -47,6 +48,7 @@ var Command = &command.Command{
 		args []string,
 		globalFlags command.GlobalFlags,
 		services *services.Services,
+		project *project.Project,
 	) (command.Result, error) {
 		accessNode, err := services.Status.Ping(globalFlags.Network)
 

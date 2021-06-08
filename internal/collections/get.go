@@ -19,6 +19,7 @@
 package collections
 
 import (
+	"github.com/onflow/flow-cli/pkg/flowcli/project"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/spf13/cobra"
 
@@ -43,6 +44,7 @@ var GetCommand = &command.Command{
 		args []string,
 		globalFlags command.GlobalFlags,
 		services *services.Services,
+		project *project.Project,
 	) (command.Result, error) {
 		id := flow.HexToID(args[0])
 

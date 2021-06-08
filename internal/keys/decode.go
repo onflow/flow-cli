@@ -26,6 +26,7 @@ import (
 
 	"github.com/onflow/flow-go-sdk/crypto"
 
+	"github.com/onflow/flow-cli/pkg/flowcli/project"
 	"github.com/onflow/flow-cli/pkg/flowcli/util"
 	"github.com/spf13/cobra"
 
@@ -54,6 +55,7 @@ var DecodeCommand = &command.Command{
 		args []string,
 		globalFlags command.GlobalFlags,
 		services *services.Services,
+		project *project.Project,
 	) (command.Result, error) {
 		encoding := args[0]
 		fromFile := decodeFlags.FromFile

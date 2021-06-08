@@ -22,6 +22,7 @@ import (
 
 	"github.com/onflow/flow-cli/pkg/flowcli"
 
+	"github.com/onflow/flow-cli/pkg/flowcli/project"
 	"github.com/onflow/flow-cli/pkg/flowcli/util"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/spf13/cobra"
@@ -55,6 +56,7 @@ var BuildCommand = &command.Command{
 		args []string,
 		globalFlags command.GlobalFlags,
 		services *services.Services,
+		project *project.Project,
 	) (command.Result, error) {
 		proposer := flow.HexToAddress(buildFlags.Proposer)
 		if proposer == flow.EmptyAddress {

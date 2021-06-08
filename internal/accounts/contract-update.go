@@ -21,6 +21,8 @@ package accounts
 import (
 	"fmt"
 
+	"github.com/onflow/flow-cli/pkg/flowcli/project"
+
 	"github.com/onflow/flow-cli/pkg/flowcli/util"
 
 	"github.com/spf13/cobra"
@@ -50,6 +52,7 @@ var UpdateCommand = &command.Command{
 		args []string,
 		globalFlags command.GlobalFlags,
 		services *services.Services,
+		project *project.Project,
 	) (command.Result, error) {
 		if updateFlags.Results {
 			fmt.Println("⚠️ DEPRECATION WARNING: results flag is deprecated, results are by default included in all executions")

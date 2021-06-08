@@ -22,6 +22,7 @@ import (
 	"fmt"
 
 	"github.com/onflow/flow-cli/pkg/flowcli"
+	"github.com/onflow/flow-cli/pkg/flowcli/project"
 	"github.com/onflow/flow-cli/pkg/flowcli/util"
 
 	"github.com/spf13/cobra"
@@ -57,6 +58,7 @@ var SendCommand = &command.Command{
 		args []string,
 		globalFlags command.GlobalFlags,
 		services *services.Services,
+		project *project.Project,
 	) (command.Result, error) {
 		if sendFlags.Results {
 			fmt.Println("⚠️  DEPRECATION WARNING: all transactions will provide results")

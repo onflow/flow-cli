@@ -46,6 +46,7 @@ type RunCommand func(
 	[]string,
 	GlobalFlags,
 	*services.Services,
+	*project.Project,
 ) (Result, error)
 
 type Command struct {
@@ -183,7 +184,7 @@ func (c Command) AddToParent(parent *cobra.Command) {
 		checkVersion(logger)
 
 		// run command
-		result, err := c.Run(cmd, args, Flags, service)
+		result, err := c.Run(cmd, args, Flags, service, proj)
 		handleError("Command Error", err)
 
 		// format output result
