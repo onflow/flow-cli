@@ -21,6 +21,10 @@ package scripts
 import (
 	"fmt"
 
+	"github.com/onflow/flow-cli/pkg/flowcli"
+
+	"github.com/onflow/flow-cli/pkg/flowcli/util"
+
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
@@ -68,10 +72,20 @@ var ExecuteCommand = &command.Command{
 			}
 		}
 
+		code, err := util.LoadFile(filename)
+		if err != nil {
+			return nil, fmt.Errorf("error loading script file: %w", err)
+		}
+
+		scriptArgs, err := flowcli.ParseArguments(scriptFlags.Arg, scriptFlags.ArgsJSON)
+		if err != nil {
+			return nil, fmt.Errorf("error parsing script arguments: %w", err)
+		}
+
 		value, err := services.Scripts.Execute(
+			code,
+			scriptArgs,
 			filename,
-			scriptFlags.Arg,
-			scriptFlags.ArgsJSON,
 			globalFlags.Network,
 		)
 		if err != nil {
