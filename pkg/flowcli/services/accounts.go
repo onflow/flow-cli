@@ -56,23 +56,19 @@ func NewAccounts(
 }
 
 // Get returns an account by on address.
-func (a *Accounts) Get(address string) (*flow.Account, error) {
+func (a *Accounts) Get(address flow.Address) (*flow.Account, error) {
 	a.logger.StartProgress(fmt.Sprintf("Loading %s...", address))
 
-	flowAddress := flow.HexToAddress(address)
-
-	account, err := a.gateway.GetAccount(flowAddress)
+	account, err := a.gateway.GetAccount(address)
 	a.logger.StopProgress()
 
 	return account, err
 }
 
 // StakingInfo returns the staking information for an account.
-func (a *Accounts) StakingInfo(accountAddress string) (*cadence.Value, *cadence.Value, error) {
-	a.logger.StartProgress(fmt.Sprintf("Fetching info for %s...", accountAddress))
+func (a *Accounts) StakingInfo(address flow.Address) (*cadence.Value, *cadence.Value, error) {
+	a.logger.StartProgress(fmt.Sprintf("Fetching info for %s...", address.String()))
 	defer a.logger.StopProgress()
-
-	address := flow.HexToAddress(accountAddress)
 
 	cadenceAddress := []cadence.Value{cadence.NewAddress(address)}
 

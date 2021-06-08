@@ -22,6 +22,8 @@ import (
 	"bytes"
 	"fmt"
 
+	"github.com/onflow/flow-go-sdk"
+
 	"github.com/onflow/cadence"
 	"github.com/spf13/cobra"
 
@@ -49,7 +51,9 @@ var StakingCommand = &command.Command{
 		globalFlags command.GlobalFlags,
 		services *services.Services,
 	) (command.Result, error) {
-		staking, delegation, err := services.Accounts.StakingInfo(args[0]) // address
+		address := flow.HexToAddress(args[0])
+
+		staking, delegation, err := services.Accounts.StakingInfo(address) // address
 		if err != nil {
 			return nil, err
 		}

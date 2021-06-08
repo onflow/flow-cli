@@ -74,6 +74,7 @@ var CreateCommand = &command.Command{
 
 		signer := nil // todo refactor project
 
+		// decode public keys
 		var pubKeys []crypto.PublicKey
 		for _, k := range createFlags.Keys {
 			k = strings.ReplaceAll(k, "0x", "") // clear possible prefix

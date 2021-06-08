@@ -21,6 +21,8 @@ package accounts
 import (
 	"fmt"
 
+	"github.com/onflow/flow-go-sdk"
+
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
@@ -57,7 +59,9 @@ var GetCommand = &command.Command{
 			fmt.Println("⚠️  DEPRECATION WARNING: use include contracts flag instead")
 		}
 
-		account, err := services.Accounts.Get(args[0]) // address
+		address := flow.HexToAddress(args[0])
+
+		account, err := services.Accounts.Get(address) // address
 		if err != nil {
 			return nil, err
 		}
