@@ -21,6 +21,8 @@ package keys
 import (
 	"fmt"
 
+	"github.com/onflow/flow-go-sdk/crypto"
+
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
@@ -53,7 +55,12 @@ var GenerateCommand = &command.Command{
 			generateFlags.KeySigAlgo = generateFlags.Algo
 		}
 
-		privateKey, err := services.Keys.Generate(generateFlags.Seed, generateFlags.KeySigAlgo)
+		sigAlgo := crypto.StringToSignatureAlgorithm(generateFlags.KeySigAlgo)
+		if sigAlgo == crypto.UnknownSignatureAlgorithm {
+			return nil, fmt.Errorf("invalid signature algorithm: %s", generateFlags.KeySigAlgo)
+		}
+
+		privateKey, err := services.Keys.Generate(generateFlags.Seed, sigAlgo)
 		if err != nil {
 			return nil, err
 		}
