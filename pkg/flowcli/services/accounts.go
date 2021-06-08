@@ -120,14 +120,14 @@ func (a *Accounts) Create(
 		return nil, config.ErrDoesNotExist
 	}
 
-	var accKeys []flow.AccountKey
+	var accKeys []*flow.AccountKey
 	for i, pubKey := range pubKeys {
 		weight := flow.AccountKeyWeightThreshold
 		if len(keyWeights) > i { // if key weight is specified
 			weight = keyWeights[i]
 		}
 
-		accKey := flow.AccountKey{
+		accKey := &flow.AccountKey{
 			PublicKey: pubKey,
 			SigAlgo:   sigAlgo,
 			HashAlgo:  hashAlgo,

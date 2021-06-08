@@ -210,7 +210,7 @@ func (t *Transactions) Send(
 		return nil, nil, fmt.Errorf("missing configuration, initialize it: flow project init")
 	}
 
-	signerKeyIndex := signerAccount.Key().Index()
+	signerKeyIndex := signer.Key().Index()
 
 	tx, err := t.Build(
 		signer.Address(),

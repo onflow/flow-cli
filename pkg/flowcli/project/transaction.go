@@ -141,7 +141,7 @@ func addAccountContractWithArgs(
 // NewCreateAccountTransaction creates new transaction for account
 func NewCreateAccountTransaction(
 	signer *Account,
-	keys []flow.AccountKey,
+	keys []*flow.AccountKey,
 	contractArgs []string,
 ) (*Transaction, error) {
 
