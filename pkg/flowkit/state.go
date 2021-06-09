@@ -186,6 +186,11 @@ func (p *State) Accounts() *Accounts {
 	return &p.accounts
 }
 
+// Config get underlying configuration for advanced usage.
+func (p *State) Config() *config.Config {
+	return p.conf
+}
+
 // EmulatorServiceAccount returns the service account for the default emulator profilee.
 func (p *State) EmulatorServiceAccount() (Account, error) {
 	emulator := p.conf.Emulators.Default()

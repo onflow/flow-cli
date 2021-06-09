@@ -119,7 +119,7 @@ var BuildCommand = &command.Command{
 func getAddress(address string, state *flowkit.State) (flow.Address, error) {
 	addr := flow.HexToAddress(address)
 	if addr == flow.EmptyAddress {
-		acc := state.AccountByName(address)
+		acc := state.Accounts().ByName(address)
 		if acc == nil {
 			return flow.EmptyAddress, fmt.Errorf("account not found, make sure to pass valid account name from configuration or valid flow address")
 		}

@@ -82,7 +82,7 @@ var AddAccountCommand = &command.Command{
 			return nil, err
 		}
 
-		state.Accounts().AddOrUpdate(account.Name, *account)
+		state.Config().Accounts.AddOrUpdate(account.Name, *account)
 
 		err = state.SaveDefault()
 		if err != nil {

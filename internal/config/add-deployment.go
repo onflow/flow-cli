@@ -64,7 +64,7 @@ var AddDeploymentCommand = &command.Command{
 		}
 
 		if !flagsProvided {
-			deployData = output.NewDeploymentPrompt(*state.Networks(), *state.Accounts(), *state.Contracts())
+			deployData = output.NewDeploymentPrompt(*state.Networks(), state.Config().Accounts, *state.Contracts())
 		}
 
 		deployment := config.StringToDeployment(

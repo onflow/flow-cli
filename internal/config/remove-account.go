@@ -56,10 +56,10 @@ var RemoveAccountCommand = &command.Command{
 		if len(args) == 1 {
 			name = args[0]
 		} else {
-			name = output.RemoveAccountPrompt(*state.Accounts())
+			name = output.RemoveAccountPrompt(state.Config().Accounts)
 		}
 
-		err := state.RemoveAccount(name)
+		err := state.Config().Accounts.Remove(name)
 		if err != nil {
 			return nil, err
 		}
