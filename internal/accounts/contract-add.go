@@ -71,7 +71,7 @@ var AddContractCommand = &command.Command{
 		if state == nil {
 			return nil, config.ErrDoesNotExist
 		}
-		to := state.AccountByName(addContractFlags.Signer)
+		to := state.Accounts().ByName(addContractFlags.Signer)
 
 		account, err := services.Accounts.AddContract(to, name, code, false)
 		if err != nil {

@@ -68,7 +68,7 @@ var CreateCommand = &command.Command{
 		if state == nil {
 			return nil, config.ErrDoesNotExist
 		}
-		signer := state.AccountByName(addContractFlags.Signer)
+		signer := state.Accounts().ByName(addContractFlags.Signer)
 
 		sigAlgo := crypto.StringToSignatureAlgorithm(createFlags.SigAlgo)
 		if sigAlgo == crypto.UnknownSignatureAlgorithm {

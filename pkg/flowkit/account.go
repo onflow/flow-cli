@@ -34,18 +34,22 @@ type Account struct {
 	key     AccountKey
 }
 
+// Address get account address.
 func (a *Account) Address() flow.Address {
 	return a.address
 }
 
+// Name get account name.
 func (a *Account) Name() string {
 	return a.name
 }
 
+// Key get account key.
 func (a *Account) Key() AccountKey {
 	return a.key
 }
 
+// SetKey sets account key.
 func (a *Account) SetKey(key AccountKey) {
 	a.key = key
 }
@@ -54,7 +58,7 @@ func accountsFromConfig(conf *config.Config) (Accounts, error) {
 	var accounts Accounts
 
 	for _, accountConf := range conf.Accounts {
-		acc, err := accountFromConfig(accountConf)
+		acc, err := fromConfig(accountConf)
 		if err != nil {
 			return nil, err
 		}
@@ -65,7 +69,17 @@ func accountsFromConfig(conf *config.Config) (Accounts, error) {
 	return accounts, nil
 }
 
-func accountFromConfig(account config.Account) (Account, error) {
+func accountsToConfig(accounts Accounts) config.Accounts {
+	accountConfs := make([]config.Account, 0)
+
+	for _, account := range accounts {
+		accountConfs = append(accountConfs, toConfig(account))
+	}
+
+	return accountConfs
+}
+
+func fromConfig(account config.Account) (Account, error) {
 	key, err := NewAccountKey(account.Key)
 	if err != nil {
 		return Account{}, err
@@ -78,17 +92,7 @@ func accountFromConfig(account config.Account) (Account, error) {
 	}, nil
 }
 
-func accountsToConfig(accounts Accounts) config.Accounts {
-	accountConfs := make([]config.Account, 0)
-
-	for _, account := range accounts {
-		accountConfs = append(accountConfs, accountToConfig(account))
-	}
-
-	return accountConfs
-}
-
-func accountToConfig(account Account) config.Account {
+func toConfig(account Account) config.Account {
 	return config.Account{
 		Name:    account.name,
 		Address: account.address,
@@ -117,9 +121,9 @@ func generateEmulatorServiceAccount(sigAlgo crypto.SignatureAlgorithm, hashAlgo 
 // Accounts is a collection of account.
 type Accounts []Account
 
-// RemoveAccount removes an account.
-func (a *Accounts) RemoveAccount(name string) error {
-	account := a.AccountByName(name)
+// Remove an account.
+func (a *Accounts) Remove(name string) error {
+	account := a.ByName(name)
 	if account == nil {
 		return fmt.Errorf("account named %s does not exist in configuration", name)
 	}
@@ -133,8 +137,8 @@ func (a *Accounts) RemoveAccount(name string) error {
 	return nil
 }
 
-// AccountByAddress returns an account by address.
-func (a *Accounts) AccountByAddress(address flow.Address) *Account {
+// ByAddress get an account by address.
+func (a *Accounts) ByAddress(address flow.Address) *Account {
 	for _, acc := range *a {
 		if acc.address == address {
 			return &acc
@@ -144,8 +148,8 @@ func (a *Accounts) AccountByAddress(address flow.Address) *Account {
 	return nil
 }
 
-// AccountByName returns an account by name.
-func (a *Accounts) AccountByName(name string) *Account {
+// ByName get an account by name.
+func (a *Accounts) ByName(name string) *Account {
 	for _, acc := range *a {
 		if acc.name == name {
 			return &acc
@@ -155,8 +159,8 @@ func (a *Accounts) AccountByName(name string) *Account {
 	return nil
 }
 
-// AddOrUpdateAccount adds or updates an account.
-func (a *Accounts) AddOrUpdateAccount(account *Account) {
+// AddOrUpdate add account if missing or updates if present.
+func (a *Accounts) AddOrUpdate(account *Account) {
 	for i, acc := range *a {
 		if acc.name == account.name {
 			(*a)[i] = acc
@@ -169,7 +173,7 @@ func (a *Accounts) AddOrUpdateAccount(account *Account) {
 
 // SetEmulatorKey sets the default emulator service account private key.
 func (a *Accounts) SetEmulatorKey(privateKey crypto.PrivateKey) {
-	acc := a.AccountByName(config.DefaultEmulatorServiceAccountName)
+	acc := a.ByName(config.DefaultEmulatorServiceAccountName)
 	acc.SetKey(
 		NewHexAccountKeyFromPrivateKey(
 			acc.Key().Index(),

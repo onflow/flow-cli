@@ -63,7 +63,7 @@ var SignCommand = &command.Command{
 			return nil, fmt.Errorf("failed to read partial transaction from %s: %v", filename, err)
 		}
 
-		signer := state.AccountByName(signFlags.Signer)
+		signer := state.Accounts().ByName(signFlags.Signer)
 		if signer == nil {
 			return nil, fmt.Errorf("signer account: [%s] doesn't exists in configuration", signFlags.Signer)
 		}

@@ -89,7 +89,7 @@ func (p *Project) Init(
 			return nil, fmt.Errorf("could not decode private key for a service account, provided private key: %s", servicePrivateKey)
 		}
 
-		state.SetEmulatorServiceKey(serviceKey)
+		state.Accounts().SetEmulatorKey(serviceKey)
 	}
 
 	err = state.Save(path)
@@ -162,7 +162,7 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 
 	deployErr := false
 	for _, contract := range orderedContracts {
-		targetAccount := p.project.AccountByAddress(contract.Target())
+		targetAccount := p.project.Accounts().ByAddress(contract.Target())
 
 		if targetAccount == nil {
 			return nil, fmt.Errorf("target account for deploying contract not found in configuration")

@@ -63,7 +63,7 @@ var RemoveCommand = &command.Command{
 		if state == nil {
 			return nil, config.ErrDoesNotExist
 		}
-		from := state.AccountByName(flagsRemove.Signer)
+		from := state.Accounts().ByName(flagsRemove.Signer)
 
 		account, err := services.Accounts.RemoveContract(contractName, from)
 		if err != nil {

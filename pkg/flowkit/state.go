@@ -190,7 +190,7 @@ func (p *State) Accounts() *Accounts {
 func (p *State) EmulatorServiceAccount() (Account, error) {
 	emulator := p.conf.Emulators.Default()
 	acc := p.conf.Accounts.GetByName(emulator.ServiceAccount)
-	return accountFromConfig(*acc)
+	return fromConfig(*acc)
 }
 
 // DeploymentContractsByNetwork returns all contracts for a network.
@@ -199,7 +199,7 @@ func (p *State) DeploymentContractsByNetwork(network string) ([]Contract, error)
 
 	// get deployments for the specified network
 	for _, deploy := range p.conf.Deployments.GetByNetwork(network) {
-		account := p.accounts.AccountByName(deploy.Account)
+		account := p.accounts.ByName(deploy.Account)
 		if account == nil {
 			return nil, fmt.Errorf("could not find account with name %s in the configuration", deploy.Account)
 		}

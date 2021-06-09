@@ -85,7 +85,7 @@ var SendCommand = &command.Command{
 			codeFilename = sendFlags.Code
 		}
 
-		signer := state.AccountByName(sendFlags.Signer)
+		signer := state.Accounts().ByName(sendFlags.Signer)
 		if signer == nil {
 			return nil, fmt.Errorf("signer account: [%s] doesn't exists in configuration", sendFlags.Signer)
 		}
