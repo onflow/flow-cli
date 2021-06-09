@@ -68,7 +68,7 @@ var AddNetworkCommand = &command.Command{
 		}
 
 		network := config.StringToNetwork(networkData["name"], networkData["host"])
-		state.Config().Networks.AddOrUpdate(network.Name, network)
+		state.Networks().AddOrUpdate(network.Name, network)
 
 		err = state.SaveDefault()
 		if err != nil {

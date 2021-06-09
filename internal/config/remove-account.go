@@ -52,13 +52,11 @@ var RemoveAccountCommand = &command.Command{
 			return nil, config.ErrDoesNotExist
 		}
 
-		conf := state.Config()
-
 		name := ""
 		if len(args) == 1 {
 			name = args[0]
 		} else {
-			name = output.RemoveAccountPrompt(conf.Accounts)
+			name = output.RemoveAccountPrompt(*state.Accounts())
 		}
 
 		err := state.RemoveAccount(name)

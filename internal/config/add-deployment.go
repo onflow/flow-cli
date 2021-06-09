@@ -57,7 +57,6 @@ var AddDeploymentCommand = &command.Command{
 		if state == nil {
 			return nil, config.ErrDoesNotExist
 		}
-		conf := state.Config()
 
 		deployData, flagsProvided, err := flagsToDeploymentData(addDeploymentFlags)
 		if err != nil {
@@ -65,7 +64,7 @@ var AddDeploymentCommand = &command.Command{
 		}
 
 		if !flagsProvided {
-			deployData = output.NewDeploymentPrompt(conf.Networks, conf.Accounts, conf.Contracts)
+			deployData = output.NewDeploymentPrompt(*state.Networks(), *state.Accounts(), *state.Contracts())
 		}
 
 		deployment := config.StringToDeployment(
@@ -74,7 +73,7 @@ var AddDeploymentCommand = &command.Command{
 			deployData["contracts"].([]string),
 		)
 
-		conf.Deployments.AddOrUpdate(deployment)
+		state.Deployments().AddOrUpdate(deployment)
 
 		err = state.SaveDefault()
 		if err != nil {

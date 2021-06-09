@@ -56,10 +56,10 @@ var RemoveContractCommand = &command.Command{
 		if len(args) == 1 {
 			name = args[0]
 		} else {
-			name = output.RemoveContractPrompt(state.Config().Contracts)
+			name = output.RemoveContractPrompt(*state.Contracts())
 		}
 
-		err := state.Config().Contracts.Remove(name)
+		err := state.Contracts().Remove(name)
 		if err != nil {
 			return nil, err
 		}

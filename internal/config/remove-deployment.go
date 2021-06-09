@@ -57,10 +57,10 @@ var RemoveDeploymentCommand = &command.Command{
 			account = args[0]
 			network = args[1]
 		} else {
-			account, network = output.RemoveDeploymentPrompt(state.Config().Deployments)
+			account, network = output.RemoveDeploymentPrompt(*state.Deployments())
 		}
 
-		err := state.Config().Deployments.Remove(account, network)
+		err := state.Deployments().Remove(account, network)
 		if err != nil {
 			return nil, err
 		}

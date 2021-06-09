@@ -55,10 +55,10 @@ var RemoveNetworkCommand = &command.Command{
 		if len(args) == 1 {
 			name = args[0]
 		} else {
-			name = output.RemoveNetworkPrompt(state.Config().Networks)
+			name = output.RemoveNetworkPrompt(*state.Networks())
 		}
 
-		err := state.Config().Networks.Remove(name)
+		err := state.Networks().Remove(name)
 		if err != nil {
 			return nil, err
 		}

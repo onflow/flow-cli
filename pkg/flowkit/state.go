@@ -40,7 +40,7 @@ import (
 type State struct {
 	loader   *config.Loader
 	conf     *config.Config
-	accounts []*Account
+	accounts Accounts
 }
 
 // Contract is a Cadence contract definition for a project.
@@ -120,7 +120,7 @@ func Init(sigAlgo crypto.SignatureAlgorithm, hashAlgo crypto.HashAlgorithm) (*St
 	return &State{
 		loader:   composer,
 		conf:     config.DefaultConfig(),
-		accounts: []*Account{emulatorServiceAccount},
+		accounts: Accounts{*emulatorServiceAccount},
 	}, nil
 }
 
@@ -142,7 +142,7 @@ func newProject(conf *config.Config, composer *config.Loader) (*State, error) {
 
 // refactor to contracts ?
 
-// CheckContractConflict returns true if the same contract is configured to deploy
+// ContractConflictExists returns true if the same contract is configured to deploy
 // to more than one account in the same network.
 //
 // The CLI currently does not allow the same contract to be deployed to multiple
@@ -181,30 +181,17 @@ func (p *State) Contracts() *config.Contracts {
 	return &p.conf.Contracts
 }
 
-// refactor to accounts ?
+// Accounts get accounts
+func (p *State) Accounts() *Accounts {
+	return &p.accounts
+}
 
 // EmulatorServiceAccount returns the service account for the default emulator profilee.
-func (p *State) EmulatorServiceAccount() (*Account, error) {
+func (p *State) EmulatorServiceAccount() (Account, error) {
 	emulator := p.conf.Emulators.Default()
 	acc := p.conf.Accounts.GetByName(emulator.ServiceAccount)
 	return accountFromConfig(*acc)
 }
-
-// refactor to accounts ?
-
-// SetEmulatorServiceKey sets the default emulator service account private key.
-func (p *State) SetEmulatorServiceKey(privateKey crypto.PrivateKey) {
-	acc := p.AccountByName(config.DefaultEmulatorServiceAccountName)
-	acc.SetKey(
-		NewHexAccountKeyFromPrivateKey(
-			acc.Key().Index(),
-			acc.Key().HashAlgo(),
-			privateKey,
-		),
-	)
-}
-
-// refactor ????
 
 // DeploymentContractsByNetwork returns all contracts for a network.
 func (p *State) DeploymentContractsByNetwork(network string) ([]Contract, error) {
@@ -212,7 +199,7 @@ func (p *State) DeploymentContractsByNetwork(network string) ([]Contract, error)
 
 	// get deployments for the specified network
 	for _, deploy := range p.conf.Deployments.GetByNetwork(network) {
-		account := p.AccountByName(deploy.Account)
+		account := p.accounts.AccountByName(deploy.Account)
 		if account == nil {
 			return nil, fmt.Errorf("could not find account with name %s in the configuration", deploy.Account)
 		}
@@ -238,8 +225,6 @@ func (p *State) DeploymentContractsByNetwork(network string) ([]Contract, error)
 	return contracts, nil
 }
 
-// refactor to config deployments
-
 // AccountNamesForNetwork returns all configured account names for a network.
 func (p *State) AccountNamesForNetwork(network string) []string {
 	names := make([]string, 0)
@@ -254,68 +239,6 @@ func (p *State) AccountNamesForNetwork(network string) []string {
 
 	return names
 }
-
-// refactor to accounts
-
-// AddOrUpdateAccount adds or updates an account.
-func (p *State) AddOrUpdateAccount(account *Account) {
-	for i, existingAccount := range p.accounts {
-		if existingAccount.name == account.name {
-			(*p).accounts[i] = account
-			return
-		}
-	}
-
-	p.accounts = append(p.accounts, account)
-}
-
-// refactor to accounts
-
-// RemoveAccount removes an account from configuration
-func (p *State) RemoveAccount(name string) error {
-	account := p.AccountByName(name)
-	if account == nil {
-		return fmt.Errorf("account named %s does not exist in configuration", name)
-	}
-
-	for i, account := range p.accounts {
-		if account.name == name {
-			(*p).accounts = append(p.accounts[0:i], p.accounts[i+1:]...) // remove item
-		}
-	}
-
-	return nil
-}
-
-// refactor to accounts
-
-// AccountByAddress returns an account by address.
-func (p *State) AccountByAddress(address string) *Account {
-	for _, account := range p.accounts {
-		if account.address.String() == flow.HexToAddress(address).String() {
-			return account
-		}
-	}
-
-	return nil
-}
-
-// refactor to accounts
-
-// AccountByName returns an account by name.
-func (p *State) AccountByName(name string) *Account {
-	var account *Account
-
-	for _, acc := range p.accounts {
-		if acc.name == name {
-			account = acc
-		}
-	}
-
-	return account
-}
-
-// refactor to contracts
 
 type Aliases map[string]string
 

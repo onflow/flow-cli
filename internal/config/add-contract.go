@@ -76,7 +76,7 @@ var AddContractCommand = &command.Command{
 		)
 
 		for _, contract := range contracts {
-			state.Config().Contracts.AddOrUpdate(contract.Name, contract)
+			state.Contracts().AddOrUpdate(contract.Name, contract)
 		}
 
 		err = state.SaveDefault()
