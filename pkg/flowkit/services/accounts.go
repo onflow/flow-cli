@@ -342,16 +342,3 @@ func (a *Accounts) prepareTransaction(
 
 	return tx, nil
 }
-
-// AccountFromAddressAndKey get account from address and private key
-func accountFromAddressAndKey(address string, accountPrivateKey string) (*flowkit.Account, error) {
-	privateKey, err := crypto.DecodePrivateKeyHex(crypto.ECDSA_P256, accountPrivateKey)
-	if err != nil {
-		return nil, fmt.Errorf("private key is not correct")
-	}
-
-	return flowkit.AccountFromAddressAndKey(
-		flow.HexToAddress(address),
-		privateKey,
-	), nil
-}
