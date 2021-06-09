@@ -24,8 +24,6 @@ import (
 
 	"github.com/onflow/flow-cli/pkg/flowkit"
 
-	"github.com/onflow/flow-cli/pkg/flowkit/config"
-
 	"github.com/onflow/flow-go-sdk/crypto"
 
 	"github.com/spf13/cobra"
@@ -54,7 +52,7 @@ var CreateCommand = &command.Command{
 		Example: `flow accounts create --key d651f1931a2...8745`,
 	},
 	Flags: &createFlags,
-	Run: func(
+	RunS: func(
 		cmd *cobra.Command,
 		args []string,
 		globalFlags command.GlobalFlags,
@@ -65,11 +63,9 @@ var CreateCommand = &command.Command{
 			fmt.Println("⚠️ DEPRECATION WARNING: results flag is deprecated, results are by default included in all executions")
 		}
 
-		if state == nil {
-			return nil, config.ErrDoesNotExist
-		}
 		signer := state.Accounts().ByName(addContractFlags.Signer)
 
+		// todo use parsers
 		sigAlgo := crypto.StringToSignatureAlgorithm(createFlags.SigAlgo)
 		if sigAlgo == crypto.UnknownSignatureAlgorithm {
 			return nil, fmt.Errorf("invalid signature algorithm: %s", createFlags.SigAlgo)

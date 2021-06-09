@@ -19,7 +19,6 @@
 package quick
 
 import (
-	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
@@ -43,7 +42,6 @@ var InitCommand = &command.Command{
 		args []string,
 		globalFlags command.GlobalFlags,
 		services *services.Services,
-		state *flowkit.State,
 	) (command.Result, error) {
 		state, err := services.Project.Init(
 			initFlag.Reset,

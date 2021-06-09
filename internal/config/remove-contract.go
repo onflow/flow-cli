@@ -41,7 +41,7 @@ var RemoveContractCommand = &command.Command{
 		Args:    cobra.MaximumNArgs(1),
 	},
 	Flags: &removeContractFlags,
-	Run: func(
+	RunS: func(
 		cmd *cobra.Command,
 		args []string,
 		globalFlags command.GlobalFlags,

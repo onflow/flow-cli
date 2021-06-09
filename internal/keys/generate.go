@@ -21,8 +21,6 @@ package keys
 import (
 	"fmt"
 
-	"github.com/onflow/flow-cli/pkg/flowkit"
-
 	"github.com/onflow/flow-go-sdk/crypto"
 
 	"github.com/spf13/cobra"
@@ -51,7 +49,6 @@ var GenerateCommand = &command.Command{
 		args []string,
 		globalFlags command.GlobalFlags,
 		services *services.Services,
-		state *flowkit.State,
 	) (command.Result, error) {
 		if generateFlags.Algo != "" {
 			fmt.Println("⚠️ DEPRECATION WARNING: flag no longer supported, use '--sig-algo' instead.")

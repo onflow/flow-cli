@@ -47,7 +47,7 @@ var AddDeploymentCommand = &command.Command{
 		Args:    cobra.NoArgs,
 	},
 	Flags: &addDeploymentFlags,
-	Run: func(
+	RunS: func(
 		cmd *cobra.Command,
 		args []string,
 		globalFlags command.GlobalFlags,

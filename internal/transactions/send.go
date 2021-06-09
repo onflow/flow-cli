@@ -21,8 +21,6 @@ package transactions
 import (
 	"fmt"
 
-	"github.com/onflow/flow-cli/pkg/flowkit/config"
-
 	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/util"
 
@@ -54,7 +52,7 @@ var SendCommand = &command.Command{
 		Example: `flow transactions send tx.cdc --arg String:"Hello world"`,
 	},
 	Flags: &sendFlags,
-	Run: func(
+	RunS: func(
 		cmd *cobra.Command,
 		args []string,
 		globalFlags command.GlobalFlags,
@@ -71,10 +69,6 @@ var SendCommand = &command.Command{
 			if len(sendFlags.Arg) == 0 && sendFlags.ArgsJSON == "" {
 				sendFlags.ArgsJSON = sendFlags.Args // backward compatible, args was in json format
 			}
-		}
-
-		if state == nil {
-			return nil, config.ErrDoesNotExist
 		}
 
 		codeFilename := ""

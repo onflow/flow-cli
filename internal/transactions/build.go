@@ -20,8 +20,6 @@ package transactions
 import (
 	"fmt"
 
-	"github.com/onflow/flow-cli/pkg/flowkit/config"
-
 	"github.com/onflow/flow-cli/pkg/flowkit"
 
 	"github.com/onflow/flow-cli/pkg/flowkit/util"
@@ -52,17 +50,13 @@ var BuildCommand = &command.Command{
 		Args:    cobra.ExactArgs(1),
 	},
 	Flags: &buildFlags,
-	Run: func(
+	RunS: func(
 		cmd *cobra.Command,
 		args []string,
 		globalFlags command.GlobalFlags,
 		services *services.Services,
 		state *flowkit.State,
 	) (command.Result, error) {
-		if state == nil {
-			return nil, config.ErrDoesNotExist
-		}
-
 		proposer, err := getAddress(buildFlags.Proposer, state)
 		if err != nil {
 			return nil, err

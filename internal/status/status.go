@@ -43,7 +43,7 @@ var Command = &command.Command{
 		Short: "Display the status of the Flow network",
 	},
 	Flags: &statusFlags,
-	Run: func(
+	RunS: func(
 		cmd *cobra.Command,
 		args []string,
 		globalFlags command.GlobalFlags,

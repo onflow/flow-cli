@@ -41,7 +41,7 @@ var RemoveAccountCommand = &command.Command{
 		Args:    cobra.MaximumNArgs(1),
 	},
 	Flags: &removeAccountFlags,
-	Run: func(
+	RunS: func(
 		cmd *cobra.Command,
 		args []string,
 		globalFlags command.GlobalFlags,

@@ -45,7 +45,7 @@ var SendSignedCommand = &command.Command{
 		Example: `flow transactions send-signed signed.rlp`,
 	},
 	Flags: &sendSignedFlags,
-	Run: func(
+	RunS: func(
 		cmd *cobra.Command,
 		args []string,
 		globalFlags command.GlobalFlags,

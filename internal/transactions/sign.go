@@ -24,8 +24,6 @@ import (
 
 	"github.com/onflow/flow-cli/pkg/flowkit"
 
-	"github.com/onflow/flow-cli/pkg/flowkit/config"
-
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
@@ -46,17 +44,13 @@ var SignCommand = &command.Command{
 		Args:    cobra.ExactArgs(1),
 	},
 	Flags: &signFlags,
-	Run: func(
+	RunS: func(
 		cmd *cobra.Command,
 		args []string,
 		globalFlags command.GlobalFlags,
 		services *services.Services,
 		state *flowkit.State,
 	) (command.Result, error) {
-		if state == nil {
-			return nil, config.ErrDoesNotExist
-		}
-
 		filename := args[0]
 		payload, err := ioutil.ReadFile(filename)
 		if err != nil {
