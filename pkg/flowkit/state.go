@@ -174,18 +174,18 @@ func (p *State) NetworkByName(name string) *config.Network {
 }
 
 // Networks get network configuration
-func (p *State) Networks() config.Networks {
-	return p.conf.Networks
+func (p *State) Networks() *config.Networks {
+	return &p.conf.Networks
 }
 
 // Deployments get deployments configuration
-func (p *State) Deployments() config.Deployments {
-	return p.conf.Deployments
+func (p *State) Deployments() *config.Deployments {
+	return &p.conf.Deployments
 }
 
 // Contracts get contracts configuration
-func (p *State) Contracts() config.Contracts {
-	return p.conf.Contracts
+func (p *State) Contracts() *config.Contracts {
+	return &p.conf.Contracts
 }
 
 // refactor to accounts ?
