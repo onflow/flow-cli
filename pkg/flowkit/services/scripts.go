@@ -21,6 +21,8 @@ package services
 import (
 	"fmt"
 
+	"github.com/onflow/flow-cli/pkg/flowkit"
+
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
 
 	"github.com/onflow/cadence"
@@ -28,20 +30,19 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowkit/contracts"
 	"github.com/onflow/flow-cli/pkg/flowkit/gateway"
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
-	"github.com/onflow/flow-cli/pkg/flowkit/project"
 )
 
 // Scripts is a service that handles all script-related interactions.
 type Scripts struct {
 	gateway gateway.Gateway
-	project *project.Project
+	project *flowkit.Project
 	logger  output.Logger
 }
 
 // NewScripts returns a new scripts service.
 func NewScripts(
 	gateway gateway.Gateway,
-	project *project.Project,
+	project *flowkit.Project,
 	logger output.Logger,
 ) *Scripts {
 	return &Scripts{

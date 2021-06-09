@@ -20,12 +20,12 @@ package config
 
 import (
 	"github.com/onflow/flow-cli/pkg/flowcli/config"
+	"github.com/onflow/flow-cli/pkg/flowkit"
 
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
-	"github.com/onflow/flow-cli/pkg/flowkit/project"
 	"github.com/onflow/flow-cli/pkg/flowkit/services"
 )
 
@@ -46,7 +46,7 @@ var RemoveNetworkCommand = &command.Command{
 		args []string,
 		globalFlags command.GlobalFlags,
 		services *services.Services,
-		proj *project.Project,
+		proj *flowkit.Project,
 	) (command.Result, error) {
 		if proj == nil {
 			return nil, config.ErrDoesNotExist

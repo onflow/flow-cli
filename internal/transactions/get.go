@@ -22,12 +22,13 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/onflow/flow-cli/pkg/flowkit"
+
 	"github.com/onflow/flow-go-sdk"
 
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
-	"github.com/onflow/flow-cli/pkg/flowkit/project"
 	"github.com/onflow/flow-cli/pkg/flowkit/services"
 )
 
@@ -54,7 +55,7 @@ var GetCommand = &command.Command{
 		args []string,
 		globalFlags command.GlobalFlags,
 		services *services.Services,
-		proj *project.Project,
+		proj *flowkit.Project,
 	) (command.Result, error) {
 		if cmd.CalledAs() == "status" {
 			fmt.Println("⚠️  DEPRECATION WARNING: use \"flow transactions get\" instead")

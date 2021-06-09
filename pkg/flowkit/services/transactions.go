@@ -31,20 +31,19 @@ import (
 
 	"github.com/onflow/flow-cli/pkg/flowkit/gateway"
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
-	"github.com/onflow/flow-cli/pkg/flowkit/project"
 )
 
 // Transactions is a service that handles all transaction-related interactions.
 type Transactions struct {
 	gateway gateway.Gateway
-	project *project.Project
+	project *flowkit.Project
 	logger  output.Logger
 }
 
 // NewTransactions returns a new transactions service.
 func NewTransactions(
 	gateway gateway.Gateway,
-	project *project.Project,
+	project *flowkit.Project,
 	logger output.Logger,
 ) *Transactions {
 	return &Transactions{

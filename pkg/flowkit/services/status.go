@@ -19,22 +19,22 @@
 package services
 
 import (
+	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/gateway"
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
-	"github.com/onflow/flow-cli/pkg/flowkit/project"
 )
 
 // Status is a service that handles status of access node.
 type Status struct {
 	gateway gateway.Gateway
-	project *project.Project
+	project *flowkit.Project
 	logger  output.Logger
 }
 
 // NewStatus returns a new status service.
 func NewStatus(
 	gateway gateway.Gateway,
-	project *project.Project,
+	project *flowkit.Project,
 	logger output.Logger,
 ) *Status {
 	return &Status{

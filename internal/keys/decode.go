@@ -22,11 +22,12 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/onflow/flow-cli/pkg/flowkit"
+
 	"github.com/onflow/flow-go-sdk"
 
 	"github.com/onflow/flow-go-sdk/crypto"
 
-	"github.com/onflow/flow-cli/pkg/flowkit/project"
 	"github.com/onflow/flow-cli/pkg/flowkit/util"
 	"github.com/spf13/cobra"
 
@@ -55,7 +56,7 @@ var DecodeCommand = &command.Command{
 		args []string,
 		globalFlags command.GlobalFlags,
 		services *services.Services,
-		proj *project.Project,
+		proj *flowkit.Project,
 	) (command.Result, error) {
 		encoding := args[0]
 		fromFile := decodeFlags.FromFile

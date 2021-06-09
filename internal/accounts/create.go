@@ -22,9 +22,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/onflow/flow-cli/pkg/flowkit/config"
+	"github.com/onflow/flow-cli/pkg/flowkit"
 
-	"github.com/onflow/flow-cli/pkg/flowkit/project"
+	"github.com/onflow/flow-cli/pkg/flowkit/config"
 
 	"github.com/onflow/flow-go-sdk/crypto"
 
@@ -59,7 +59,7 @@ var CreateCommand = &command.Command{
 		args []string,
 		globalFlags command.GlobalFlags,
 		services *services.Services,
-		proj *project.Project,
+		proj *flowkit.Project,
 	) (command.Result, error) {
 		if createFlags.Results {
 			fmt.Println("⚠️ DEPRECATION WARNING: results flag is deprecated, results are by default included in all executions")

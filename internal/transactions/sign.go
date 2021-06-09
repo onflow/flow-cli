@@ -22,12 +22,13 @@ import (
 	"fmt"
 	"io/ioutil"
 
+	"github.com/onflow/flow-cli/pkg/flowkit"
+
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
 
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
-	"github.com/onflow/flow-cli/pkg/flowkit/project"
 	"github.com/onflow/flow-cli/pkg/flowkit/services"
 )
 
@@ -50,7 +51,7 @@ var SignCommand = &command.Command{
 		args []string,
 		globalFlags command.GlobalFlags,
 		services *services.Services,
-		proj *project.Project,
+		proj *flowkit.Project,
 	) (command.Result, error) {
 		if proj == nil {
 			return nil, config.ErrDoesNotExist

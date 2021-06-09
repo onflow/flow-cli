@@ -22,25 +22,26 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/onflow/flow-cli/pkg/flowkit"
+
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/client"
 
 	"github.com/onflow/flow-cli/pkg/flowkit/gateway"
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
-	"github.com/onflow/flow-cli/pkg/flowkit/project"
 )
 
 // Blocks is a service that handles all block-related interactions.
 type Blocks struct {
 	gateway gateway.Gateway
-	project *project.Project
+	project *flowkit.Project
 	logger  output.Logger
 }
 
 // NewBlocks returns a new blocks service.
 func NewBlocks(
 	gateway gateway.Gateway,
-	project *project.Project,
+	project *flowkit.Project,
 	logger output.Logger,
 ) *Blocks {
 	return &Blocks{

@@ -27,11 +27,12 @@ import (
 	"os"
 	"strings"
 
+	"github.com/onflow/flow-cli/pkg/flowkit"
+
 	"github.com/onflow/flow-cli/build"
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
 	"github.com/onflow/flow-cli/pkg/flowkit/gateway"
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
-	"github.com/onflow/flow-cli/pkg/flowkit/project"
 	"github.com/onflow/flow-cli/pkg/flowkit/services"
 	"github.com/onflow/flow-cli/pkg/flowkit/util"
 
@@ -46,7 +47,7 @@ type RunCommand func(
 	[]string,
 	GlobalFlags,
 	*services.Services,
-	*project.Project,
+	*flowkit.Project,
 ) (Result, error)
 
 type Command struct {
@@ -164,7 +165,7 @@ func InitFlags(cmd *cobra.Command) {
 func (c Command) AddToParent(parent *cobra.Command) {
 	c.Cmd.Run = func(cmd *cobra.Command, args []string) {
 		// initialize project but ignore error since config can be missing
-		proj, err := project.Load(Flags.ConfigPaths)
+		proj, err := flowkit.Load(Flags.ConfigPaths)
 
 		// here we ignore if config does not exist as some commands don't require it
 		if !errors.Is(err, config.ErrDoesNotExist) && cmd.CommandPath() != "flow init" { // ignore configs errors if we are doing init config
@@ -215,7 +216,7 @@ func createGateway(host string) (gateway.Gateway, error) {
 // 2. if conf is initialized return host by network flag
 // 3. if conf is not initialized and network flag is provided resolve to coded value for that network
 // 4. default to emulator network
-func resolveHost(proj *project.Project, hostFlag string, networkFlag string) (string, error) {
+func resolveHost(proj *flowkit.Project, hostFlag string, networkFlag string) (string, error) {
 	// don't allow both network and host flag as the host might be different
 	if networkFlag != config.DefaultEmulatorNetwork().Name && hostFlag != "" {
 		return "", fmt.Errorf("shouldn't use both host and network flags, better to use network flag")

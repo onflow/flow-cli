@@ -22,8 +22,6 @@ import (
 	"bytes"
 	"fmt"
 
-	"github.com/onflow/flow-cli/pkg/flowkit/project"
-
 	"github.com/onflow/flow-go-sdk"
 
 	"github.com/onflow/cadence"
@@ -52,7 +50,7 @@ var StakingCommand = &command.Command{
 		args []string,
 		globalFlags command.GlobalFlags,
 		services *services.Services,
-		proj *project.Project,
+		proj *flowkit.Project,
 	) (command.Result, error) {
 		address := flow.HexToAddress(args[0])
 

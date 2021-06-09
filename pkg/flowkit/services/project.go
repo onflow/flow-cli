@@ -31,21 +31,20 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowkit/contracts"
 	"github.com/onflow/flow-cli/pkg/flowkit/gateway"
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
-	"github.com/onflow/flow-cli/pkg/flowkit/project"
 	"github.com/onflow/flow-cli/pkg/flowkit/util"
 )
 
 // Project is a service that handles all interactions for a project.
 type Project struct {
 	gateway gateway.Gateway
-	project *project.Project
+	project *flowkit.Project
 	logger  output.Logger
 }
 
 // NewProject returns a new project service.
 func NewProject(
 	gateway gateway.Gateway,
-	project *project.Project,
+	project *flowkit.Project,
 	logger output.Logger,
 ) *Project {
 	return &Project{
@@ -61,13 +60,13 @@ func (p *Project) Init(
 	serviceKeySigAlgo string,
 	serviceKeyHashAlgo string,
 	servicePrivateKey string,
-) (*project.Project, error) {
+) (*flowkit.Project, error) {
 	path := config.DefaultPath
 	if global {
 		path = config.GlobalPath()
 	}
 
-	if project.Exists(path) && !reset {
+	if flowkit.Exists(path) && !reset {
 		return nil, fmt.Errorf(
 			"configuration already exists at: %s, if you want to reset configuration use the reset flag",
 			path,
@@ -79,7 +78,7 @@ func (p *Project) Init(
 		return nil, err
 	}
 
-	proj, err := project.Init(sigAlgo, hashAlgo)
+	proj, err := flowkit.Init(sigAlgo, hashAlgo)
 	if err != nil {
 		return nil, err
 	}

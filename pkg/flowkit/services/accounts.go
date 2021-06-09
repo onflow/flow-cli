@@ -26,7 +26,6 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/gateway"
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
-	"github.com/onflow/flow-cli/pkg/flowkit/project"
 	"github.com/onflow/flow-cli/pkg/flowkit/util"
 
 	"github.com/onflow/cadence"
@@ -38,14 +37,14 @@ import (
 // Accounts is a service that handles all account-related interactions.
 type Accounts struct {
 	gateway gateway.Gateway
-	project *project.Project
+	project *flowkit.Project
 	logger  output.Logger
 }
 
 // NewAccounts returns a new accounts service.
 func NewAccounts(
 	gateway gateway.Gateway,
-	project *project.Project,
+	project *flowkit.Project,
 	logger output.Logger,
 ) *Accounts {
 	return &Accounts{

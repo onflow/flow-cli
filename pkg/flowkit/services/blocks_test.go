@@ -21,13 +21,14 @@ package services
 import (
 	"testing"
 
+	"github.com/onflow/flow-cli/pkg/flowkit"
+
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/client"
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
-	"github.com/onflow/flow-cli/pkg/flowkit/project"
 	"github.com/onflow/flow-cli/tests"
 )
 
@@ -35,7 +36,7 @@ func TestBlocks(t *testing.T) {
 
 	mock := &tests.MockGateway{}
 
-	project, err := project.Init(crypto.ECDSA_P256, crypto.SHA3_256)
+	project, err := flowkit.Init(crypto.ECDSA_P256, crypto.SHA3_256)
 	assert.NoError(t, err)
 
 	blocks := NewBlocks(mock, project, output.NewStdoutLogger(output.InfoLog))

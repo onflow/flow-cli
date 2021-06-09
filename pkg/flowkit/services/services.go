@@ -19,9 +19,9 @@
 package services
 
 import (
+	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/gateway"
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
-	"github.com/onflow/flow-cli/pkg/flowkit/project"
 )
 
 // Services is a collection of services that provide domain-specific functionality
@@ -42,7 +42,7 @@ type Services struct {
 // initialized with a gateway and logger.
 func NewServices(
 	gateway gateway.Gateway,
-	proj *project.Project,
+	proj *flowkit.Project,
 	logger output.Logger,
 ) *Services {
 	return &Services{

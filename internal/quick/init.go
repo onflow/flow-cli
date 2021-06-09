@@ -19,11 +19,11 @@
 package quick
 
 import (
+	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/internal/config"
-	"github.com/onflow/flow-cli/pkg/flowkit/project"
 	"github.com/onflow/flow-cli/pkg/flowkit/services"
 )
 
@@ -43,7 +43,7 @@ var InitCommand = &command.Command{
 		args []string,
 		globalFlags command.GlobalFlags,
 		services *services.Services,
-		proj *project.Project,
+		proj *flowkit.Project,
 	) (command.Result, error) {
 		proj, err := services.Project.Init(
 			initFlag.Reset,
