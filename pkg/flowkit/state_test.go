@@ -46,7 +46,7 @@ func keys() []crypto.PrivateKey {
 	return keys
 }
 
-func generateComplexProject() Project {
+func generateComplexProject() State {
 	config := config.Config{
 		Emulators: config.Emulators{{
 			Name:           "default",
@@ -150,7 +150,7 @@ func generateComplexProject() Project {
 	return *p
 }
 
-func generateSimpleProject() Project {
+func generateSimpleProject() State {
 	config := config.Config{
 		Emulators: config.Emulators{{
 			Name:           "default",
@@ -194,7 +194,7 @@ func generateSimpleProject() Project {
 	return *p
 }
 
-func generateAliasesProject() Project {
+func generateAliasesProject() State {
 	config := config.Config{
 		Emulators: config.Emulators{{
 			Name:           "default",
@@ -243,7 +243,7 @@ func generateAliasesProject() Project {
 	return *p
 }
 
-func generateAliasesComplexProject() Project {
+func generateAliasesComplexProject() State {
 	config := config.Config{
 		Emulators: config.Emulators{{
 			Name:           "default",
@@ -322,7 +322,7 @@ func generateAliasesComplexProject() Project {
 }
 
 /* ================================================================
-Project Tests
+State Tests
 ================================================================ */
 func Test_GetContractsByNameSimple(t *testing.T) {
 	p := generateSimpleProject()

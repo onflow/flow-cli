@@ -46,7 +46,7 @@ func ConfiguredServiceKey(
 	crypto.SignatureAlgorithm,
 	crypto.HashAlgorithm,
 ) {
-	var proj *flowkit.Project
+	var proj *flowkit.State
 	var err error
 
 	if init {

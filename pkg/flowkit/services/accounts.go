@@ -37,14 +37,14 @@ import (
 // Accounts is a service that handles all account-related interactions.
 type Accounts struct {
 	gateway gateway.Gateway
-	project *flowkit.Project
+	project *flowkit.State
 	logger  output.Logger
 }
 
 // NewAccounts returns a new accounts service.
 func NewAccounts(
 	gateway gateway.Gateway,
-	project *flowkit.Project,
+	project *flowkit.State,
 	logger output.Logger,
 ) *Accounts {
 	return &Accounts{

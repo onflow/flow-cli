@@ -42,7 +42,7 @@ type Services struct {
 // initialized with a gateway and logger.
 func NewServices(
 	gateway gateway.Gateway,
-	proj *flowkit.Project,
+	proj *flowkit.State,
 	logger output.Logger,
 ) *Services {
 	return &Services{

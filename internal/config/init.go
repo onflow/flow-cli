@@ -54,7 +54,7 @@ var InitCommand = &command.Command{
 		args []string,
 		globalFlags command.GlobalFlags,
 		services *services.Services,
-		proj *flowkit.Project,
+		proj *flowkit.State,
 	) (command.Result, error) {
 		proj, err := services.Project.Init(
 			initFlag.Reset,
@@ -73,7 +73,7 @@ var InitCommand = &command.Command{
 
 // InitResult result structure
 type InitResult struct {
-	*flowkit.Project
+	*flowkit.State
 }
 
 // JSON convert result to JSON
@@ -85,7 +85,7 @@ func (r *InitResult) JSON() interface{} {
 func (r *InitResult) String() string {
 	var b bytes.Buffer
 	writer := util.CreateTabWriter(&b)
-	account, _ := r.Project.EmulatorServiceAccount()
+	account, _ := r.State.EmulatorServiceAccount()
 
 	_, _ = fmt.Fprintf(writer, "Configuration initialized\n")
 	_, _ = fmt.Fprintf(writer, "Service account: %s\n\n", output.Bold("0x"+account.Address().String()))

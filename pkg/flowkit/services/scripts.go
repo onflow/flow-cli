@@ -35,14 +35,14 @@ import (
 // Scripts is a service that handles all script-related interactions.
 type Scripts struct {
 	gateway gateway.Gateway
-	project *flowkit.Project
+	project *flowkit.State
 	logger  output.Logger
 }
 
 // NewScripts returns a new scripts service.
 func NewScripts(
 	gateway gateway.Gateway,
-	project *flowkit.Project,
+	project *flowkit.State,
 	logger output.Logger,
 ) *Scripts {
 	return &Scripts{

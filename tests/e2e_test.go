@@ -199,7 +199,7 @@ func TestProject(t *testing.T) {
 
 	projects := services.NewProject(gw, project, logger)
 
-	t.Run("Deploy Project with Args", func(t *testing.T) {
+	t.Run("Deploy State with Args", func(t *testing.T) {
 		contracts, err := projects.Deploy("emulator", true)
 
 		assert.NoError(t, err)

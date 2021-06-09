@@ -44,7 +44,7 @@ var GetCommand = &command.Command{
 		args []string,
 		globalFlags command.GlobalFlags,
 		services *services.Services,
-		proj *flowkit.Project,
+		proj *flowkit.State,
 	) (command.Result, error) {
 		id := flow.HexToID(args[0])
 

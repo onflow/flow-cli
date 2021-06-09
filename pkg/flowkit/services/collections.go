@@ -29,14 +29,14 @@ import (
 // Collections is aa service that handles all collection-related interactions.
 type Collections struct {
 	gateway gateway.Gateway
-	project *flowkit.Project
+	project *flowkit.State
 	logger  output.Logger
 }
 
 // NewCollections returns a new collections service.
 func NewCollections(
 	gateway gateway.Gateway,
-	project *flowkit.Project,
+	project *flowkit.State,
 	logger output.Logger,
 ) *Collections {
 	return &Collections{

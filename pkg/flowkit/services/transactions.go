@@ -36,14 +36,14 @@ import (
 // Transactions is a service that handles all transaction-related interactions.
 type Transactions struct {
 	gateway gateway.Gateway
-	project *flowkit.Project
+	project *flowkit.State
 	logger  output.Logger
 }
 
 // NewTransactions returns a new transactions service.
 func NewTransactions(
 	gateway gateway.Gateway,
-	project *flowkit.Project,
+	project *flowkit.State,
 	logger output.Logger,
 ) *Transactions {
 	return &Transactions{

@@ -52,7 +52,7 @@ var AddDeploymentCommand = &command.Command{
 		args []string,
 		globalFlags command.GlobalFlags,
 		services *services.Services,
-		proj *flowkit.Project,
+		proj *flowkit.State,
 	) (command.Result, error) {
 		if proj == nil {
 			return nil, config.ErrDoesNotExist

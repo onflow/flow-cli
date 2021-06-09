@@ -47,7 +47,7 @@ type RunCommand func(
 	[]string,
 	GlobalFlags,
 	*services.Services,
-	*flowkit.Project,
+	*flowkit.State,
 ) (Result, error)
 
 type Command struct {
@@ -216,7 +216,7 @@ func createGateway(host string) (gateway.Gateway, error) {
 // 2. if conf is initialized return host by network flag
 // 3. if conf is not initialized and network flag is provided resolve to coded value for that network
 // 4. default to emulator network
-func resolveHost(proj *flowkit.Project, hostFlag string, networkFlag string) (string, error) {
+func resolveHost(proj *flowkit.State, hostFlag string, networkFlag string) (string, error) {
 	// don't allow both network and host flag as the host might be different
 	if networkFlag != config.DefaultEmulatorNetwork().Name && hostFlag != "" {
 		return "", fmt.Errorf("shouldn't use both host and network flags, better to use network flag")

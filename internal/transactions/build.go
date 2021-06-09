@@ -57,7 +57,7 @@ var BuildCommand = &command.Command{
 		args []string,
 		globalFlags command.GlobalFlags,
 		services *services.Services,
-		proj *flowkit.Project,
+		proj *flowkit.State,
 	) (command.Result, error) {
 		if proj == nil {
 			return nil, config.ErrDoesNotExist
@@ -116,7 +116,7 @@ var BuildCommand = &command.Command{
 	},
 }
 
-func getAddress(address string, proj *flowkit.Project) (flow.Address, error) {
+func getAddress(address string, proj *flowkit.State) (flow.Address, error) {
 	addr := flow.HexToAddress(address)
 	if addr == flow.EmptyAddress {
 		acc := proj.AccountByName(address)

@@ -27,14 +27,14 @@ import (
 // Status is a service that handles status of access node.
 type Status struct {
 	gateway gateway.Gateway
-	project *flowkit.Project
+	project *flowkit.State
 	logger  output.Logger
 }
 
 // NewStatus returns a new status service.
 func NewStatus(
 	gateway gateway.Gateway,
-	project *flowkit.Project,
+	project *flowkit.State,
 	logger output.Logger,
 ) *Status {
 	return &Status{

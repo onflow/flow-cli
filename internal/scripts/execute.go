@@ -53,7 +53,7 @@ var ExecuteCommand = &command.Command{
 		args []string,
 		globalFlags command.GlobalFlags,
 		services *services.Services,
-		proj *flowkit.Project,
+		proj *flowkit.State,
 	) (command.Result, error) {
 		filename := ""
 		if len(args) == 1 {

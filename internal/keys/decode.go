@@ -56,7 +56,7 @@ var DecodeCommand = &command.Command{
 		args []string,
 		globalFlags command.GlobalFlags,
 		services *services.Services,
-		proj *flowkit.Project,
+		proj *flowkit.State,
 	) (command.Result, error) {
 		encoding := args[0]
 		fromFile := decodeFlags.FromFile

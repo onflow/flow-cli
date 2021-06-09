@@ -45,7 +45,7 @@ var DeployCommand = &command.Command{
 		args []string,
 		globalFlags command.GlobalFlags,
 		services *services.Services,
-		proj *flowkit.Project,
+		proj *flowkit.State,
 	) (command.Result, error) {
 		c, err := services.Project.Deploy(globalFlags.Network, deployFlags.Update)
 		if err != nil {

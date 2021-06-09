@@ -59,7 +59,7 @@ var SendCommand = &command.Command{
 		args []string,
 		globalFlags command.GlobalFlags,
 		services *services.Services,
-		proj *flowkit.Project,
+		proj *flowkit.State,
 	) (command.Result, error) {
 		if sendFlags.Results {
 			fmt.Println("⚠️  DEPRECATION WARNING: all transactions will provide results")

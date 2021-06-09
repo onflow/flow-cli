@@ -37,14 +37,14 @@ import (
 // Project is a service that handles all interactions for a project.
 type Project struct {
 	gateway gateway.Gateway
-	project *flowkit.Project
+	project *flowkit.State
 	logger  output.Logger
 }
 
 // NewProject returns a new project service.
 func NewProject(
 	gateway gateway.Gateway,
-	project *flowkit.Project,
+	project *flowkit.State,
 	logger output.Logger,
 ) *Project {
 	return &Project{
@@ -60,7 +60,7 @@ func (p *Project) Init(
 	serviceKeySigAlgo string,
 	serviceKeyHashAlgo string,
 	servicePrivateKey string,
-) (*flowkit.Project, error) {
+) (*flowkit.State, error) {
 	path := config.DefaultPath
 	if global {
 		path = config.GlobalPath()

@@ -36,8 +36,8 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowkit/config/json"
 )
 
-// Project contains the configuration for a Flow project.
-type Project struct {
+// State contains the configuration for a Flow project.
+type State struct {
 	composer *config.Loader
 	conf     *config.Config
 	accounts []*Account
@@ -54,7 +54,7 @@ type Contract struct {
 // refactor to config loader
 
 // Load loads a project configuration and returns the resulting project.
-func Load(configFilePaths []string) (*Project, error) {
+func Load(configFilePaths []string) (*State, error) {
 	loader := config.NewLoader(afero.NewOsFs())
 
 	// here we add all available parsers (more to add yaml etc...)
@@ -80,14 +80,14 @@ func Load(configFilePaths []string) (*Project, error) {
 // refactor to config loader
 
 // SaveDefault saves configuration to default path
-func (p *Project) SaveDefault() error {
+func (p *State) SaveDefault() error {
 	return p.Save(config.DefaultPath)
 }
 
 // refactor to config loader
 
 // Save saves the project configuration to the given path.
-func (p *Project) Save(path string) error {
+func (p *State) Save(path string) error {
 	p.conf.Accounts = accountsToConfig(p.accounts)
 	err := p.composer.Save(p.conf, path)
 
@@ -108,7 +108,7 @@ func Exists(path string) bool {
 // refactor
 
 // Init initializes a new Flow project.
-func Init(sigAlgo crypto.SignatureAlgorithm, hashAlgo crypto.HashAlgorithm) (*Project, error) {
+func Init(sigAlgo crypto.SignatureAlgorithm, hashAlgo crypto.HashAlgorithm) (*State, error) {
 	emulatorServiceAccount, err := generateEmulatorServiceAccount(sigAlgo, hashAlgo)
 	if err != nil {
 		return nil, err
@@ -117,7 +117,7 @@ func Init(sigAlgo crypto.SignatureAlgorithm, hashAlgo crypto.HashAlgorithm) (*Pr
 	composer := config.NewLoader(afero.NewOsFs())
 	composer.AddConfigParser(json.NewParser())
 
-	return &Project{
+	return &State{
 		composer: composer,
 		conf:     config.DefaultConfig(),
 		accounts: []*Account{emulatorServiceAccount},
@@ -127,13 +127,13 @@ func Init(sigAlgo crypto.SignatureAlgorithm, hashAlgo crypto.HashAlgorithm) (*Pr
 // refactor to get config
 
 // newProject creates a new project from a configuration object.
-func newProject(conf *config.Config, composer *config.Loader) (*Project, error) {
+func newProject(conf *config.Config, composer *config.Loader) (*State, error) {
 	accounts, err := accountsFromConfig(conf)
 	if err != nil {
 		return nil, err
 	}
 
-	return &Project{
+	return &State{
 		composer: composer,
 		conf:     conf,
 		accounts: accounts,
@@ -147,7 +147,7 @@ func newProject(conf *config.Config, composer *config.Loader) (*Project, error) 
 //
 // The CLI currently does not allow the same contract to be deployed to multiple
 // accounts in the same network.
-func (p *Project) ContractConflictExists(network string) bool {
+func (p *State) ContractConflictExists(network string) bool {
 	contracts, err := p.DeploymentContractsByNetwork(network)
 	if err != nil {
 		return false
@@ -169,21 +169,21 @@ func (p *Project) ContractConflictExists(network string) bool {
 // refactor remove - included in config
 
 // NetworkByName returns a network by name.
-func (p *Project) NetworkByName(name string) *config.Network {
+func (p *State) NetworkByName(name string) *config.Network {
 	return p.conf.Networks.GetByName(name)
 }
 
 // refactor remove - included in config
 
 // Config get project configuration
-func (p *Project) Config() *config.Config {
+func (p *State) Config() *config.Config {
 	return p.conf
 }
 
 // refactor to accounts ?
 
 // EmulatorServiceAccount returns the service account for the default emulator profilee.
-func (p *Project) EmulatorServiceAccount() (*Account, error) {
+func (p *State) EmulatorServiceAccount() (*Account, error) {
 	emulator := p.conf.Emulators.Default()
 	acc := p.conf.Accounts.GetByName(emulator.ServiceAccount)
 	return AccountFromConfig(*acc)
@@ -192,7 +192,7 @@ func (p *Project) EmulatorServiceAccount() (*Account, error) {
 // refactor to accounts ?
 
 // SetEmulatorServiceKey sets the default emulator service account private key.
-func (p *Project) SetEmulatorServiceKey(privateKey crypto.PrivateKey) {
+func (p *State) SetEmulatorServiceKey(privateKey crypto.PrivateKey) {
 	acc := p.AccountByName(config.DefaultEmulatorServiceAccountName)
 	acc.SetKey(
 		NewHexAccountKeyFromPrivateKey(
@@ -206,7 +206,7 @@ func (p *Project) SetEmulatorServiceKey(privateKey crypto.PrivateKey) {
 // refactor ????
 
 // DeploymentContractsByNetwork returns all contracts for a network.
-func (p *Project) DeploymentContractsByNetwork(network string) ([]Contract, error) {
+func (p *State) DeploymentContractsByNetwork(network string) ([]Contract, error) {
 	contracts := make([]Contract, 0)
 
 	// get deployments for the specified network
@@ -240,7 +240,7 @@ func (p *Project) DeploymentContractsByNetwork(network string) ([]Contract, erro
 // refactor to config deployments
 
 // AccountNamesForNetwork returns all configured account names for a network.
-func (p *Project) AccountNamesForNetwork(network string) []string {
+func (p *State) AccountNamesForNetwork(network string) []string {
 	names := make([]string, 0)
 
 	for _, account := range p.accounts {
@@ -257,7 +257,7 @@ func (p *Project) AccountNamesForNetwork(network string) []string {
 // refactor to accounts
 
 // AddOrUpdateAccount adds or updates an account.
-func (p *Project) AddOrUpdateAccount(account *Account) {
+func (p *State) AddOrUpdateAccount(account *Account) {
 	for i, existingAccount := range p.accounts {
 		if existingAccount.name == account.name {
 			(*p).accounts[i] = account
@@ -271,7 +271,7 @@ func (p *Project) AddOrUpdateAccount(account *Account) {
 // refactor to accounts
 
 // RemoveAccount removes an account from configuration
-func (p *Project) RemoveAccount(name string) error {
+func (p *State) RemoveAccount(name string) error {
 	account := p.AccountByName(name)
 	if account == nil {
 		return fmt.Errorf("account named %s does not exist in configuration", name)
@@ -289,7 +289,7 @@ func (p *Project) RemoveAccount(name string) error {
 // refactor to accounts
 
 // AccountByAddress returns an account by address.
-func (p *Project) AccountByAddress(address string) *Account {
+func (p *State) AccountByAddress(address string) *Account {
 	for _, account := range p.accounts {
 		if account.address.String() == flow.HexToAddress(address).String() {
 			return account
@@ -302,7 +302,7 @@ func (p *Project) AccountByAddress(address string) *Account {
 // refactor to accounts
 
 // AccountByName returns an account by name.
-func (p *Project) AccountByName(name string) *Account {
+func (p *State) AccountByName(name string) *Account {
 	var account *Account
 
 	for _, acc := range p.accounts {
@@ -319,7 +319,7 @@ func (p *Project) AccountByName(name string) *Account {
 type Aliases map[string]string
 
 // AliasesForNetwork returns all deployment aliases for a network.
-func (p *Project) AliasesForNetwork(network string) Aliases {
+func (p *State) AliasesForNetwork(network string) Aliases {
 	aliases := make(Aliases)
 
 	// get all contracts for selected network and if any has an address as target make it an alias

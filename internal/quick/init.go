@@ -43,7 +43,7 @@ var InitCommand = &command.Command{
 		args []string,
 		globalFlags command.GlobalFlags,
 		services *services.Services,
-		proj *flowkit.Project,
+		proj *flowkit.State,
 	) (command.Result, error) {
 		proj, err := services.Project.Init(
 			initFlag.Reset,
@@ -56,6 +56,6 @@ var InitCommand = &command.Command{
 			return nil, err
 		}
 
-		return &config.InitResult{Project: proj}, nil
+		return &config.InitResult{State: proj}, nil
 	},
 }
