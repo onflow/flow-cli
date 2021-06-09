@@ -180,6 +180,21 @@ func (p *State) Config() *config.Config {
 	return p.conf
 }
 
+// Networks get network configuration
+func (p *State) Networks() config.Networks {
+	return p.conf.Networks
+}
+
+// Deployments get deployments configuration
+func (p *State) Deployments() config.Deployments {
+	return p.conf.Deployments
+}
+
+// Contracts get contracts configuration
+func (p *State) Contracts() config.Contracts {
+	return p.conf.Contracts
+}
+
 // refactor to accounts ?
 
 // EmulatorServiceAccount returns the service account for the default emulator profilee.
