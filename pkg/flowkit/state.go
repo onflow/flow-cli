@@ -166,13 +166,6 @@ func (p *State) ContractConflictExists(network string) bool {
 	return len(all) != len(uniq)
 }
 
-// refactor remove - included in config
-
-// NetworkByName returns a network by name.
-func (p *State) NetworkByName(name string) *config.Network {
-	return p.conf.Networks.GetByName(name)
-}
-
 // Networks get network configuration
 func (p *State) Networks() *config.Networks {
 	return &p.conf.Networks
