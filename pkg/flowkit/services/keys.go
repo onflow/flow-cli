@@ -35,19 +35,19 @@ import (
 // Keys is a service that handles all key-related interactions.
 type Keys struct {
 	gateway gateway.Gateway
-	project *flowkit.State
+	state   *flowkit.State
 	logger  output.Logger
 }
 
 // NewKeys returns a new keys service.
 func NewKeys(
 	gateway gateway.Gateway,
-	project *flowkit.State,
+	state *flowkit.State,
 	logger output.Logger,
 ) *Keys {
 	return &Keys{
 		gateway: gateway,
-		project: project,
+		state:   state,
 		logger:  logger,
 	}
 }

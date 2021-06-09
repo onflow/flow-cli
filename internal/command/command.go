@@ -164,7 +164,7 @@ func InitFlags(cmd *cobra.Command) {
 // we have one place to handle all errors and ensure commands have consistent results
 func (c Command) AddToParent(parent *cobra.Command) {
 	c.Cmd.Run = func(cmd *cobra.Command, args []string) {
-		// initialize project but ignore error since config can be missing
+		// initialize state but ignore error since config can be missing
 		proj, err := flowkit.Load(Flags.ConfigPaths)
 
 		// here we ignore if config does not exist as some commands don't require it

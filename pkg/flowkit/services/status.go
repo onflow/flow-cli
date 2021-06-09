@@ -27,19 +27,19 @@ import (
 // Status is a service that handles status of access node.
 type Status struct {
 	gateway gateway.Gateway
-	project *flowkit.State
+	state   *flowkit.State
 	logger  output.Logger
 }
 
 // NewStatus returns a new status service.
 func NewStatus(
 	gateway gateway.Gateway,
-	project *flowkit.State,
+	state *flowkit.State,
 	logger output.Logger,
 ) *Status {
 	return &Status{
 		gateway: gateway,
-		project: project,
+		state:   state,
 		logger:  logger,
 	}
 }
@@ -47,7 +47,7 @@ func NewStatus(
 // Ping sends Ping request to network.
 func (s *Status) Ping(network string) (string, error) {
 	err := s.gateway.Ping()
-	accessNode := s.project.Networks().GetByName(network).Host
+	accessNode := s.state.Networks().GetByName(network).Host
 
 	return accessNode, err
 }

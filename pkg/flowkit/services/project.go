@@ -34,14 +34,14 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowkit/util"
 )
 
-// Project is a service that handles all interactions for a project.
+// Project is a service that handles all interactions for a state.
 type Project struct {
 	gateway gateway.Gateway
 	project *flowkit.State
 	logger  output.Logger
 }
 
-// NewProject returns a new project service.
+// NewProject returns a new state service.
 func NewProject(
 	gateway gateway.Gateway,
 	project *flowkit.State,

@@ -37,19 +37,19 @@ import (
 // Accounts is a service that handles all account-related interactions.
 type Accounts struct {
 	gateway gateway.Gateway
-	project *flowkit.State
+	state   *flowkit.State
 	logger  output.Logger
 }
 
 // NewAccounts returns a new accounts service.
 func NewAccounts(
 	gateway gateway.Gateway,
-	project *flowkit.State,
+	state *flowkit.State,
 	logger output.Logger,
 ) *Accounts {
 	return &Accounts{
 		gateway: gateway,
-		project: project,
+		state:   state,
 		logger:  logger,
 	}
 }
@@ -115,7 +115,7 @@ func (a *Accounts) Create(
 	hashAlgo crypto.HashAlgorithm,
 	contracts []string,
 ) (*flow.Account, error) {
-	if a.project == nil {
+	if a.state == nil {
 		return nil, config.ErrDoesNotExist
 	}
 

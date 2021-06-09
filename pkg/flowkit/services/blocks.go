@@ -34,19 +34,19 @@ import (
 // Blocks is a service that handles all block-related interactions.
 type Blocks struct {
 	gateway gateway.Gateway
-	project *flowkit.State
+	state   *flowkit.State
 	logger  output.Logger
 }
 
 // NewBlocks returns a new blocks service.
 func NewBlocks(
 	gateway gateway.Gateway,
-	project *flowkit.State,
+	state *flowkit.State,
 	logger output.Logger,
 ) *Blocks {
 	return &Blocks{
 		gateway: gateway,
-		project: project,
+		state:   state,
 		logger:  logger,
 	}
 }

@@ -25,7 +25,7 @@ import (
 )
 
 // Services is a collection of services that provide domain-specific functionality
-// for the different components of a Flow project.
+// for the different components of a Flow state.
 type Services struct {
 	Accounts     *Accounts
 	Scripts      *Scripts
@@ -38,7 +38,7 @@ type Services struct {
 	Status       *Status
 }
 
-// NewServices returns a new services collection for a project,
+// NewServices returns a new services collection for a state,
 // initialized with a gateway and logger.
 func NewServices(
 	gateway gateway.Gateway,

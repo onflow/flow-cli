@@ -35,19 +35,19 @@ import (
 // Scripts is a service that handles all script-related interactions.
 type Scripts struct {
 	gateway gateway.Gateway
-	project *flowkit.State
+	state   *flowkit.State
 	logger  output.Logger
 }
 
 // NewScripts returns a new scripts service.
 func NewScripts(
 	gateway gateway.Gateway,
-	project *flowkit.State,
+	state *flowkit.State,
 	logger output.Logger,
 ) *Scripts {
 	return &Scripts{
 		gateway: gateway,
-		project: project,
+		state:   state,
 		logger:  logger,
 	}
 }
@@ -60,7 +60,7 @@ func (s *Scripts) Execute(code []byte, args []cadence.Value, scriptPath string, 
 	}
 
 	if resolver.HasFileImports() {
-		if s.project == nil {
+		if s.state == nil {
 			return nil, config.ErrDoesNotExist
 		}
 		if network == "" {
@@ -70,7 +70,7 @@ func (s *Scripts) Execute(code []byte, args []cadence.Value, scriptPath string, 
 			return nil, fmt.Errorf("resolving imports in scripts not supported")
 		}
 
-		contractsNetwork, err := s.project.DeploymentContractsByNetwork(network)
+		contractsNetwork, err := s.state.DeploymentContractsByNetwork(network)
 		if err != nil {
 			return nil, err
 		}
@@ -78,7 +78,7 @@ func (s *Scripts) Execute(code []byte, args []cadence.Value, scriptPath string, 
 		code, err = resolver.ResolveImports(
 			scriptPath,
 			contractsNetwork,
-			s.project.AliasesForNetwork(network),
+			s.state.AliasesForNetwork(network),
 		)
 		if err != nil {
 			return nil, err

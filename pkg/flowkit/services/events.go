@@ -33,19 +33,19 @@ import (
 // Events is a service that handles all event-related interactions.
 type Events struct {
 	gateway gateway.Gateway
-	project *flowkit.State
+	state   *flowkit.State
 	logger  output.Logger
 }
 
 // NewEvents returns a new events service.
 func NewEvents(
 	gateway gateway.Gateway,
-	project *flowkit.State,
+	state *flowkit.State,
 	logger output.Logger,
 ) *Events {
 	return &Events{
 		gateway: gateway,
-		project: project,
+		state:   state,
 		logger:  logger,
 	}
 }
