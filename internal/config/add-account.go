@@ -82,12 +82,7 @@ var AddAccountCommand = &command.Command{
 			return nil, err
 		}
 
-		acc, err := flowkit.AccountFromConfig(*account)
-		if err != nil {
-			return nil, err
-		}
-
-		state.AddOrUpdateAccount(acc)
+		state.Config().Accounts.AddOrUpdate(account.Name, *account)
 
 		err = state.SaveDefault()
 		if err != nil {

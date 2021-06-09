@@ -186,7 +186,7 @@ func (p *State) Config() *config.Config {
 func (p *State) EmulatorServiceAccount() (*Account, error) {
 	emulator := p.conf.Emulators.Default()
 	acc := p.conf.Accounts.GetByName(emulator.ServiceAccount)
-	return AccountFromConfig(*acc)
+	return accountFromConfig(*acc)
 }
 
 // refactor to accounts ?

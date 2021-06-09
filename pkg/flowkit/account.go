@@ -54,7 +54,7 @@ func accountsFromConfig(conf *config.Config) ([]*Account, error) {
 	accounts := make([]*Account, 0, len(conf.Accounts))
 
 	for _, accountConf := range conf.Accounts {
-		account, err := AccountFromConfig(accountConf)
+		account, err := accountFromConfig(accountConf)
 		if err != nil {
 			return nil, err
 		}
@@ -73,7 +73,7 @@ func AccountFromAddressAndKey(address flow.Address, privateKey crypto.PrivateKey
 	}
 }
 
-func AccountFromConfig(account config.Account) (*Account, error) {
+func accountFromConfig(account config.Account) (*Account, error) {
 	key, err := NewAccountKey(account.Key)
 	if err != nil {
 		return nil, err
