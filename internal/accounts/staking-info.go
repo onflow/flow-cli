@@ -50,7 +50,7 @@ var StakingCommand = &command.Command{
 		args []string,
 		globalFlags command.GlobalFlags,
 		services *services.Services,
-		proj *flowkit.State,
+		state *flowkit.State,
 	) (command.Result, error) {
 		address := flow.HexToAddress(args[0])
 

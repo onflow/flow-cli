@@ -53,9 +53,9 @@ var AddContractCommand = &command.Command{
 		args []string,
 		globalFlags command.GlobalFlags,
 		services *services.Services,
-		proj *flowkit.State,
+		state *flowkit.State,
 	) (command.Result, error) {
-		if proj == nil {
+		if state == nil {
 			return nil, config.ErrDoesNotExist
 		}
 
@@ -76,10 +76,10 @@ var AddContractCommand = &command.Command{
 		)
 
 		for _, contract := range contracts {
-			proj.Config().Contracts.AddOrUpdate(contract.Name, contract)
+			state.Config().Contracts.AddOrUpdate(contract.Name, contract)
 		}
 
-		err = proj.SaveDefault()
+		err = state.SaveDefault()
 		if err != nil {
 			return nil, err
 		}

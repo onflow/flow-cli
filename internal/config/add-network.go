@@ -52,9 +52,9 @@ var AddNetworkCommand = &command.Command{
 		args []string,
 		globalFlags command.GlobalFlags,
 		services *services.Services,
-		proj *flowkit.State,
+		state *flowkit.State,
 	) (command.Result, error) {
-		if proj == nil {
+		if state == nil {
 			return nil, config.ErrDoesNotExist
 		}
 
@@ -68,9 +68,9 @@ var AddNetworkCommand = &command.Command{
 		}
 
 		network := config.StringToNetwork(networkData["name"], networkData["host"])
-		proj.Config().Networks.AddOrUpdate(network.Name, network)
+		state.Config().Networks.AddOrUpdate(network.Name, network)
 
-		err = proj.SaveDefault()
+		err = state.SaveDefault()
 		if err != nil {
 			return nil, err
 		}

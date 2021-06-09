@@ -48,7 +48,7 @@ var GetCommand = &command.Command{
 		args []string,
 		globalFlags command.GlobalFlags,
 		services *services.Services,
-		proj *flowkit.State,
+		state *flowkit.State,
 	) (command.Result, error) {
 		if generateFlag.Verbose {
 			fmt.Println("⚠️  DEPRECATION WARNING: verbose flag is deprecated")

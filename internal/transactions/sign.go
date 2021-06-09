@@ -51,9 +51,9 @@ var SignCommand = &command.Command{
 		args []string,
 		globalFlags command.GlobalFlags,
 		services *services.Services,
-		proj *flowkit.State,
+		state *flowkit.State,
 	) (command.Result, error) {
-		if proj == nil {
+		if state == nil {
 			return nil, config.ErrDoesNotExist
 		}
 
@@ -63,7 +63,7 @@ var SignCommand = &command.Command{
 			return nil, fmt.Errorf("failed to read partial transaction from %s: %v", filename, err)
 		}
 
-		signer := proj.AccountByName(signFlags.Signer)
+		signer := state.AccountByName(signFlags.Signer)
 		if signer == nil {
 			return nil, fmt.Errorf("signer account: [%s] doesn't exists in configuration", signFlags.Signer)
 		}

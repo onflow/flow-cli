@@ -34,10 +34,10 @@ import (
 func TestCollections(t *testing.T) {
 	mock := &tests.MockGateway{}
 
-	proj, err := flowkit.Init(crypto.ECDSA_P256, crypto.SHA3_256)
+	state, err := flowkit.Init(crypto.ECDSA_P256, crypto.SHA3_256)
 	assert.NoError(t, err)
 
-	collections := NewCollections(mock, proj, output.NewStdoutLogger(output.InfoLog))
+	collections := NewCollections(mock, state, output.NewStdoutLogger(output.InfoLog))
 
 	t.Run("Get Collection", func(t *testing.T) {
 		called := false

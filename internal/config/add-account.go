@@ -55,9 +55,9 @@ var AddAccountCommand = &command.Command{
 		args []string,
 		globalFlags command.GlobalFlags,
 		services *services.Services,
-		proj *flowkit.State,
+		state *flowkit.State,
 	) (command.Result, error) {
-		if proj == nil {
+		if state == nil {
 			return nil, config.ErrDoesNotExist
 		}
 
@@ -87,9 +87,9 @@ var AddAccountCommand = &command.Command{
 			return nil, err
 		}
 
-		proj.AddOrUpdateAccount(acc)
+		state.AddOrUpdateAccount(acc)
 
-		err = proj.SaveDefault()
+		err = state.SaveDefault()
 		if err != nil {
 			return nil, err
 		}

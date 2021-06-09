@@ -59,16 +59,16 @@ var CreateCommand = &command.Command{
 		args []string,
 		globalFlags command.GlobalFlags,
 		services *services.Services,
-		proj *flowkit.State,
+		state *flowkit.State,
 	) (command.Result, error) {
 		if createFlags.Results {
 			fmt.Println("⚠️ DEPRECATION WARNING: results flag is deprecated, results are by default included in all executions")
 		}
 
-		if proj == nil {
+		if state == nil {
 			return nil, config.ErrDoesNotExist
 		}
-		signer := proj.AccountByName(addContractFlags.Signer)
+		signer := state.AccountByName(addContractFlags.Signer)
 
 		sigAlgo := crypto.StringToSignatureAlgorithm(createFlags.SigAlgo)
 		if sigAlgo == crypto.UnknownSignatureAlgorithm {

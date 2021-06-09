@@ -78,7 +78,7 @@ func (p *Project) Init(
 		return nil, err
 	}
 
-	proj, err := flowkit.Init(sigAlgo, hashAlgo)
+	state, err := flowkit.Init(sigAlgo, hashAlgo)
 	if err != nil {
 		return nil, err
 	}
@@ -89,15 +89,15 @@ func (p *Project) Init(
 			return nil, fmt.Errorf("could not decode private key for a service account, provided private key: %s", servicePrivateKey)
 		}
 
-		proj.SetEmulatorServiceKey(serviceKey)
+		state.SetEmulatorServiceKey(serviceKey)
 	}
 
-	err = proj.Save(path)
+	err = state.Save(path)
 	if err != nil {
 		return nil, err
 	}
 
-	return proj, nil
+	return state, nil
 }
 
 func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, error) {

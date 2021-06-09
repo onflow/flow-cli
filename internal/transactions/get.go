@@ -55,7 +55,7 @@ var GetCommand = &command.Command{
 		args []string,
 		globalFlags command.GlobalFlags,
 		services *services.Services,
-		proj *flowkit.State,
+		state *flowkit.State,
 	) (command.Result, error) {
 		if cmd.CalledAs() == "status" {
 			fmt.Println("⚠️  DEPRECATION WARNING: use \"flow transactions get\" instead")

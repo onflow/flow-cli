@@ -45,9 +45,9 @@ var RemoveDeploymentCommand = &command.Command{
 		args []string,
 		globalFlags command.GlobalFlags,
 		services *services.Services,
-		proj *flowkit.State,
+		state *flowkit.State,
 	) (command.Result, error) {
-		if proj == nil {
+		if state == nil {
 			return nil, config.ErrDoesNotExist
 		}
 
@@ -57,15 +57,15 @@ var RemoveDeploymentCommand = &command.Command{
 			account = args[0]
 			network = args[1]
 		} else {
-			account, network = output.RemoveDeploymentPrompt(proj.Config().Deployments)
+			account, network = output.RemoveDeploymentPrompt(state.Config().Deployments)
 		}
 
-		err := proj.Config().Deployments.Remove(account, network)
+		err := state.Config().Deployments.Remove(account, network)
 		if err != nil {
 			return nil, err
 		}
 
-		err = proj.SaveDefault()
+		err = state.SaveDefault()
 		if err != nil {
 			return nil, err
 		}

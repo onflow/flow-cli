@@ -42,18 +42,18 @@ type Services struct {
 // initialized with a gateway and logger.
 func NewServices(
 	gateway gateway.Gateway,
-	proj *flowkit.State,
+	state *flowkit.State,
 	logger output.Logger,
 ) *Services {
 	return &Services{
-		Accounts:     NewAccounts(gateway, proj, logger),
-		Scripts:      NewScripts(gateway, proj, logger),
-		Transactions: NewTransactions(gateway, proj, logger),
-		Keys:         NewKeys(gateway, proj, logger),
-		Events:       NewEvents(gateway, proj, logger),
-		Collections:  NewCollections(gateway, proj, logger),
-		Project:      NewProject(gateway, proj, logger),
-		Blocks:       NewBlocks(gateway, proj, logger),
-		Status:       NewStatus(gateway, proj, logger),
+		Accounts:     NewAccounts(gateway, state, logger),
+		Scripts:      NewScripts(gateway, state, logger),
+		Transactions: NewTransactions(gateway, state, logger),
+		Keys:         NewKeys(gateway, state, logger),
+		Events:       NewEvents(gateway, state, logger),
+		Collections:  NewCollections(gateway, state, logger),
+		Project:      NewProject(gateway, state, logger),
+		Blocks:       NewBlocks(gateway, state, logger),
+		Status:       NewStatus(gateway, state, logger),
 	}
 }

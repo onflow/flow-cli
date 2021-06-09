@@ -57,13 +57,13 @@ var BuildCommand = &command.Command{
 		args []string,
 		globalFlags command.GlobalFlags,
 		services *services.Services,
-		proj *flowkit.State,
+		state *flowkit.State,
 	) (command.Result, error) {
-		if proj == nil {
+		if state == nil {
 			return nil, config.ErrDoesNotExist
 		}
 
-		proposer, err := getAddress(buildFlags.Proposer, proj)
+		proposer, err := getAddress(buildFlags.Proposer, state)
 		if err != nil {
 			return nil, err
 		}
@@ -71,14 +71,14 @@ var BuildCommand = &command.Command{
 		// get all authorizers
 		var authorizers []flow.Address
 		for _, auth := range buildFlags.Authorizer {
-			addr, err := getAddress(auth, proj)
+			addr, err := getAddress(auth, state)
 			if err != nil {
 				return nil, err
 			}
 			authorizers = append(authorizers, addr)
 		}
 
-		payer, err := getAddress(buildFlags.Payer, proj)
+		payer, err := getAddress(buildFlags.Payer, state)
 		if err != nil {
 			return nil, err
 		}
@@ -116,10 +116,10 @@ var BuildCommand = &command.Command{
 	},
 }
 
-func getAddress(address string, proj *flowkit.State) (flow.Address, error) {
+func getAddress(address string, state *flowkit.State) (flow.Address, error) {
 	addr := flow.HexToAddress(address)
 	if addr == flow.EmptyAddress {
-		acc := proj.AccountByName(address)
+		acc := state.AccountByName(address)
 		if acc == nil {
 			return flow.EmptyAddress, fmt.Errorf("account not found, make sure to pass valid account name from configuration or valid flow address")
 		}

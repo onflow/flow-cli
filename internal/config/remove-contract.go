@@ -46,9 +46,9 @@ var RemoveContractCommand = &command.Command{
 		args []string,
 		globalFlags command.GlobalFlags,
 		services *services.Services,
-		proj *flowkit.State,
+		state *flowkit.State,
 	) (command.Result, error) {
-		if proj == nil {
+		if state == nil {
 			return nil, config.ErrDoesNotExist
 		}
 
@@ -56,15 +56,15 @@ var RemoveContractCommand = &command.Command{
 		if len(args) == 1 {
 			name = args[0]
 		} else {
-			name = output.RemoveContractPrompt(proj.Config().Contracts)
+			name = output.RemoveContractPrompt(state.Config().Contracts)
 		}
 
-		err := proj.Config().Contracts.Remove(name)
+		err := state.Config().Contracts.Remove(name)
 		if err != nil {
 			return nil, err
 		}
 
-		err = proj.SaveDefault()
+		err = state.SaveDefault()
 		if err != nil {
 			return nil, err
 		}

@@ -51,7 +51,7 @@ var GenerateCommand = &command.Command{
 		args []string,
 		globalFlags command.GlobalFlags,
 		services *services.Services,
-		proj *flowkit.State,
+		state *flowkit.State,
 	) (command.Result, error) {
 		if generateFlags.Algo != "" {
 			fmt.Println("⚠️ DEPRECATION WARNING: flag no longer supported, use '--sig-algo' instead.")

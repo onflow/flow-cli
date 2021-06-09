@@ -45,9 +45,9 @@ var RemoveNetworkCommand = &command.Command{
 		args []string,
 		globalFlags command.GlobalFlags,
 		services *services.Services,
-		proj *flowkit.State,
+		state *flowkit.State,
 	) (command.Result, error) {
-		if proj == nil {
+		if state == nil {
 			return nil, config.ErrDoesNotExist
 		}
 
@@ -55,15 +55,15 @@ var RemoveNetworkCommand = &command.Command{
 		if len(args) == 1 {
 			name = args[0]
 		} else {
-			name = output.RemoveNetworkPrompt(proj.Config().Networks)
+			name = output.RemoveNetworkPrompt(state.Config().Networks)
 		}
 
-		err := proj.Config().Networks.Remove(name)
+		err := state.Config().Networks.Remove(name)
 		if err != nil {
 			return nil, err
 		}
 
-		err = proj.SaveDefault()
+		err = state.SaveDefault()
 		if err != nil {
 			return nil, err
 		}

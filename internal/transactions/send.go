@@ -59,7 +59,7 @@ var SendCommand = &command.Command{
 		args []string,
 		globalFlags command.GlobalFlags,
 		services *services.Services,
-		proj *flowkit.State,
+		state *flowkit.State,
 	) (command.Result, error) {
 		if sendFlags.Results {
 			fmt.Println("⚠️  DEPRECATION WARNING: all transactions will provide results")
@@ -73,7 +73,7 @@ var SendCommand = &command.Command{
 			}
 		}
 
-		if proj == nil {
+		if state == nil {
 			return nil, config.ErrDoesNotExist
 		}
 
@@ -85,7 +85,7 @@ var SendCommand = &command.Command{
 			codeFilename = sendFlags.Code
 		}
 
-		signer := proj.AccountByName(sendFlags.Signer)
+		signer := state.AccountByName(sendFlags.Signer)
 		if signer == nil {
 			return nil, fmt.Errorf("signer account: [%s] doesn't exists in configuration", sendFlags.Signer)
 		}

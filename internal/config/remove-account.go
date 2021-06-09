@@ -46,13 +46,13 @@ var RemoveAccountCommand = &command.Command{
 		args []string,
 		globalFlags command.GlobalFlags,
 		services *services.Services,
-		proj *flowkit.State,
+		state *flowkit.State,
 	) (command.Result, error) {
-		if proj == nil {
+		if state == nil {
 			return nil, config.ErrDoesNotExist
 		}
 
-		conf := proj.Config()
+		conf := state.Config()
 
 		name := ""
 		if len(args) == 1 {
@@ -61,12 +61,12 @@ var RemoveAccountCommand = &command.Command{
 			name = output.RemoveAccountPrompt(conf.Accounts)
 		}
 
-		err := proj.RemoveAccount(name)
+		err := state.RemoveAccount(name)
 		if err != nil {
 			return nil, err
 		}
 
-		err = proj.SaveDefault()
+		err = state.SaveDefault()
 		if err != nil {
 			return nil, err
 		}

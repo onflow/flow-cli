@@ -52,12 +52,12 @@ var AddDeploymentCommand = &command.Command{
 		args []string,
 		globalFlags command.GlobalFlags,
 		services *services.Services,
-		proj *flowkit.State,
+		state *flowkit.State,
 	) (command.Result, error) {
-		if proj == nil {
+		if state == nil {
 			return nil, config.ErrDoesNotExist
 		}
-		conf := proj.Config()
+		conf := state.Config()
 
 		deployData, flagsProvided, err := flagsToDeploymentData(addDeploymentFlags)
 		if err != nil {
@@ -76,7 +76,7 @@ var AddDeploymentCommand = &command.Command{
 
 		conf.Deployments.AddOrUpdate(deployment)
 
-		err = proj.SaveDefault()
+		err = state.SaveDefault()
 		if err != nil {
 			return nil, err
 		}

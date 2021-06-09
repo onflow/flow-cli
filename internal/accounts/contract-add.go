@@ -54,7 +54,7 @@ var AddContractCommand = &command.Command{
 		args []string,
 		globalFlags command.GlobalFlags,
 		services *services.Services,
-		proj *flowkit.State,
+		state *flowkit.State,
 	) (command.Result, error) {
 		if createFlags.Results {
 			fmt.Println("⚠️ DEPRECATION WARNING: results flag is deprecated, results are by default included in all executions")
@@ -68,10 +68,10 @@ var AddContractCommand = &command.Command{
 			return nil, fmt.Errorf("error loading contract file: %w", err)
 		}
 
-		if proj == nil {
+		if state == nil {
 			return nil, config.ErrDoesNotExist
 		}
-		to := proj.AccountByName(addContractFlags.Signer)
+		to := state.AccountByName(addContractFlags.Signer)
 
 		account, err := services.Accounts.AddContract(to, name, code, false)
 		if err != nil {
