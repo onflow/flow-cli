@@ -173,13 +173,6 @@ func (p *State) NetworkByName(name string) *config.Network {
 	return p.conf.Networks.GetByName(name)
 }
 
-// refactor remove - included in config
-
-// Config get project configuration
-func (p *State) Config() *config.Config {
-	return p.conf
-}
-
 // Networks get network configuration
 func (p *State) Networks() config.Networks {
 	return p.conf.Networks
