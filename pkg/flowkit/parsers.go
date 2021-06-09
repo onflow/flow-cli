@@ -16,11 +16,13 @@
  * limitations under the License.
  */
 
-package config
+package flowkit
 
 import (
 	"fmt"
 	"strconv"
+
+	"github.com/onflow/flow-cli/pkg/flowkit/config"
 
 	"github.com/onflow/flow-go-sdk/crypto"
 
@@ -35,7 +37,7 @@ func StringToAccount(
 	sigAlgo string,
 	hashAlgo string,
 	key string,
-) (*Account, error) {
+) (*config.Account, error) {
 	parsedAddress, err := StringToAddress(address)
 	if err != nil {
 		return nil, err
@@ -51,15 +53,15 @@ func StringToAccount(
 		return nil, err
 	}
 
-	accountKey := AccountKey{
-		Type:       KeyTypeHex,
+	accountKey := config.AccountKey{
+		Type:       config.KeyTypeHex,
 		Index:      parsedIndex,
 		SigAlgo:    crypto.StringToSignatureAlgorithm(sigAlgo),
 		HashAlgo:   crypto.StringToHashAlgorithm(hashAlgo),
 		PrivateKey: parsedKey,
 	}
 
-	return &Account{
+	return &config.Account{
 		Name:    name,
 		Address: *parsedAddress,
 		Key:     accountKey,
@@ -107,29 +109,29 @@ func StringToContracts(
 	source string,
 	emulatorAlias string,
 	testnetAlias string,
-) []Contract {
-	contracts := make([]Contract, 0)
+) []config.Contract {
+	contracts := make([]config.Contract, 0)
 
 	if emulatorAlias != "" {
-		contracts = append(contracts, Contract{
+		contracts = append(contracts, config.Contract{
 			Name:    name,
 			Source:  source,
-			Network: DefaultEmulatorNetwork().Name,
+			Network: config.DefaultEmulatorNetwork().Name,
 			Alias:   emulatorAlias,
 		})
 	}
 
 	if testnetAlias != "" {
-		contracts = append(contracts, Contract{
+		contracts = append(contracts, config.Contract{
 			Name:    name,
 			Source:  source,
-			Network: DefaultTestnetNetwork().Name,
+			Network: config.DefaultTestnetNetwork().Name,
 			Alias:   testnetAlias,
 		})
 	}
 
 	if emulatorAlias == "" && testnetAlias == "" {
-		contracts = append(contracts, Contract{
+		contracts = append(contracts, config.Contract{
 			Name:    name,
 			Source:  source,
 			Network: "",
@@ -140,15 +142,15 @@ func StringToContracts(
 	return contracts
 }
 
-func StringToNetwork(name string, host string) Network {
-	return Network{
+func StringToNetwork(name string, host string) config.Network {
+	return config.Network{
 		Name: name,
 		Host: host,
 	}
 }
 
-func StringToDeployment(network string, account string, contracts []string) Deploy {
-	parsedContracts := make([]ContractDeployment, 0)
+func StringToDeployment(network string, account string, contracts []string) config.Deploy {
+	parsedContracts := make([]config.ContractDeployment, 0)
 
 	for _, c := range contracts {
 		// prevent adding multiple contracts with same name
@@ -164,13 +166,13 @@ func StringToDeployment(network string, account string, contracts []string) Depl
 
 		parsedContracts = append(
 			parsedContracts,
-			ContractDeployment{
+			config.ContractDeployment{
 				Name: c,
 				Args: nil,
 			})
 	}
 
-	return Deploy{
+	return config.Deploy{
 		Network:   network,
 		Account:   account,
 		Contracts: parsedContracts,

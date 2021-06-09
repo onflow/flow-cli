@@ -22,6 +22,8 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/onflow/flow-cli/pkg/flowkit"
+
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
 )
 
@@ -41,7 +43,7 @@ func (j jsonContracts) transformToConfig() (config.Contracts, error) {
 			contracts = append(contracts, contract)
 		} else {
 			for network, alias := range c.Advanced.Aliases {
-				_, err := config.StringToAddress(alias)
+				_, err := flowkit.StringToAddress(alias)
 				if err != nil {
 					return nil, fmt.Errorf("invalid alias address for a contract")
 				}
