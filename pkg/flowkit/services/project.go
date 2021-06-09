@@ -37,19 +37,19 @@ import (
 // Project is a service that handles all interactions for a state.
 type Project struct {
 	gateway gateway.Gateway
-	project *flowkit.State
+	state   *flowkit.State
 	logger  output.Logger
 }
 
 // NewProject returns a new state service.
 func NewProject(
 	gateway gateway.Gateway,
-	project *flowkit.State,
+	state *flowkit.State,
 	logger output.Logger,
 ) *Project {
 	return &Project{
 		gateway: gateway,
-		project: project,
+		state:   state,
 		logger:  logger,
 	}
 }
@@ -101,12 +101,12 @@ func (p *Project) Init(
 }
 
 func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, error) {
-	if p.project == nil {
+	if p.state == nil {
 		return nil, config.ErrDoesNotExist
 	}
 
 	// check there are not multiple accounts with same contract
-	if p.project.ContractConflictExists(network) {
+	if p.state.ContractConflictExists(network) {
 		return nil, fmt.Errorf( // TODO: specify which contract by name is a problem
 			"the same contract cannot be deployed to multiple accounts on the same network",
 		)
@@ -115,11 +115,11 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 	// create new processor for contract
 	processor := contracts.NewPreprocessor(
 		contracts.FilesystemLoader{},
-		p.project.AliasesForNetwork(network),
+		p.state.AliasesForNetwork(network),
 	)
 
 	// add all contracts needed to deploy to processor
-	contractsNetwork, err := p.project.DeploymentContractsByNetwork(network)
+	contractsNetwork, err := p.state.DeploymentContractsByNetwork(network)
 	if err != nil {
 		return nil, err
 	}
@@ -151,7 +151,7 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 	p.logger.Info(fmt.Sprintf(
 		"\nDeploying %d contracts for accounts: %s\n",
 		len(orderedContracts),
-		strings.Join(p.project.AccountNamesForNetwork(network), ","),
+		strings.Join(p.state.AccountNamesForNetwork(network), ","),
 	))
 	defer p.logger.StopProgress()
 
@@ -162,7 +162,7 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 
 	deployErr := false
 	for _, contract := range orderedContracts {
-		targetAccount := p.project.Accounts().ByAddress(contract.Target())
+		targetAccount := p.state.Accounts().ByAddress(contract.Target())
 
 		if targetAccount == nil {
 			return nil, fmt.Errorf("target account for deploying contract not found in configuration")
