@@ -36,7 +36,14 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type RunCommand func(
+type Run func(
+	*cobra.Command,
+	[]string,
+	GlobalFlags,
+	*services.Services,
+) (Result, error)
+
+type RunWithState func(
 	*cobra.Command,
 	[]string,
 	GlobalFlags,
@@ -47,7 +54,8 @@ type RunCommand func(
 type Command struct {
 	Cmd   *cobra.Command
 	Flags interface{}
-	Run   RunCommand
+	Run   Run
+	RunS  RunWithState
 }
 
 const (
@@ -69,15 +77,13 @@ const (
 // we have one place to handle all errors and ensure commands have consistent results
 func (c Command) AddToParent(parent *cobra.Command) {
 	c.Cmd.Run = func(cmd *cobra.Command, args []string) {
-		// initialize state but ignore error since config can be missing
-		proj, err := flowkit.Load(Flags.ConfigPaths)
-
-		// here we ignore if config does not exist as some commands don't require it
-		if !errors.Is(err, config.ErrDoesNotExist) && cmd.CommandPath() != "flow init" { // ignore configs errors if we are doing init config
-			handleError("Config Error", err)
+		// if we receive a config error that isn't missing config we should handle it
+		state, confErr := flowkit.Load(Flags.ConfigPaths)
+		if !errors.Is(confErr, config.ErrDoesNotExist) {
+			handleError("Config Error", confErr)
 		}
 
-		host, err := resolveHost(proj, Flags.Host, Flags.Network)
+		host, err := resolveHost(state, Flags.Host, Flags.Network)
 		handleError("Host Error", err)
 
 		clientGateway, err := createGateway(host)
@@ -85,12 +91,24 @@ func (c Command) AddToParent(parent *cobra.Command) {
 
 		logger := createLogger(Flags.Log, Flags.Format)
 
-		service := services.NewServices(clientGateway, proj, logger)
+		service := services.NewServices(clientGateway, state, logger)
 
 		checkVersion(logger)
 
-		// run command
-		result, err := c.Run(cmd, args, Flags, service, proj)
+		// run command based on requirements for state
+		var result Result
+		if c.Run != nil {
+			result, err = c.Run(cmd, args, Flags, service)
+		} else if c.RunS != nil {
+			if confErr != nil {
+				handleError("Config Error", confErr)
+			}
+
+			result, err = c.RunS(cmd, args, Flags, service, state)
+		} else {
+			panic("command implementation needs to provide run functionality")
+		}
+
 		handleError("Command Error", err)
 
 		// format output result
