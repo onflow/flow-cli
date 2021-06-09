@@ -21,8 +21,6 @@ package config
 import (
 	"fmt"
 
-	"github.com/onflow/flow-cli/pkg/flowkit"
-
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
@@ -68,7 +66,7 @@ var AddContractCommand = &command.Command{
 			contractData = output.NewContractPrompt()
 		}
 
-		contracts := flowkit.StringToContracts(
+		contracts := config.StringToContracts(
 			contractData["name"],
 			contractData["source"],
 			contractData["emulator"],
@@ -108,14 +106,14 @@ func flagsToContractData(flags flagsAddContract) (map[string]string, bool, error
 	}
 
 	if flags.EmulatorAlias != "" {
-		_, err := flowkit.StringToAddress(flags.EmulatorAlias)
+		_, err := config.StringToAddress(flags.EmulatorAlias)
 		if err != nil {
 			return nil, true, err
 		}
 	}
 
 	if flags.TestnetAlias != "" {
-		_, err := flowkit.StringToAddress(flags.TestnetAlias)
+		_, err := config.StringToAddress(flags.TestnetAlias)
 		if err != nil {
 			return nil, true, err
 		}

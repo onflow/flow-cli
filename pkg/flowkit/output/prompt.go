@@ -149,7 +149,7 @@ func addressPrompt() string {
 	addressPrompt := promptui.Prompt{
 		Label: "Address",
 		Validate: func(s string) error {
-			_, err := flowkit.StringToAddress(s)
+			_, err := config.StringToAddress(s)
 			return err
 		},
 	}
@@ -216,7 +216,7 @@ func NewAccountPrompt() map[string]string {
 	keyPrompt := promptui.Prompt{
 		Label: "Private key",
 		Validate: func(s string) error {
-			_, err := flowkit.StringToHexKey(s, accountData["sigAlgo"])
+			_, err := config.StringToHexKey(s, accountData["sigAlgo"])
 			return err
 		},
 	}
@@ -229,7 +229,7 @@ func NewAccountPrompt() map[string]string {
 		Label:   "Key index (Default: 0)",
 		Default: "0",
 		Validate: func(s string) error {
-			_, err := flowkit.StringToKeyIndex(s)
+			_, err := config.StringToKeyIndex(s)
 			return err
 		},
 	}
@@ -267,7 +267,7 @@ func NewContractPrompt() map[string]string {
 		Label: "Enter emulator alias, if exists",
 		Validate: func(s string) error {
 			if s != "" {
-				_, err := flowkit.StringToAddress(s)
+				_, err := config.StringToAddress(s)
 				return err
 			}
 
@@ -280,7 +280,7 @@ func NewContractPrompt() map[string]string {
 		Label: "Enter testnet alias, if exists",
 		Validate: func(s string) error {
 			if s != "" {
-				_, err := flowkit.StringToAddress(s)
+				_, err := config.StringToAddress(s)
 				return err
 			}
 

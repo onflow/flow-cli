@@ -70,7 +70,7 @@ var AddAccountCommand = &command.Command{
 			accountData = output.NewAccountPrompt()
 		}
 
-		account, err := flowkit.StringToAccount(
+		account, err := config.StringToAccount(
 			accountData["name"],
 			accountData["address"],
 			accountData["keyIndex"],
@@ -118,7 +118,7 @@ func flagsToAccountData(flags flagsAddAccount) (map[string]string, bool, error) 
 		return nil, true, fmt.Errorf("key must be provided")
 	}
 
-	_, err := flowkit.StringToAddress(flags.Address)
+	_, err := config.StringToAddress(flags.Address)
 	if err != nil {
 		return nil, true, err
 	}

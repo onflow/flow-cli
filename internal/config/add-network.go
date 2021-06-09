@@ -22,8 +22,6 @@ import (
 	"fmt"
 	"net/url"
 
-	"github.com/onflow/flow-cli/pkg/flowkit"
-
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
@@ -67,7 +65,7 @@ var AddNetworkCommand = &command.Command{
 			networkData = output.NewNetworkPrompt()
 		}
 
-		network := flowkit.StringToNetwork(networkData["name"], networkData["host"])
+		network := config.StringToNetwork(networkData["name"], networkData["host"])
 		proj.Config().Networks.AddOrUpdate(network.Name, network)
 
 		err = proj.SaveDefault()

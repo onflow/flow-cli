@@ -21,8 +21,6 @@ package config
 import (
 	"fmt"
 
-	"github.com/onflow/flow-cli/pkg/flowkit"
-
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
@@ -68,7 +66,7 @@ var AddDeploymentCommand = &command.Command{
 			deployData = output.NewDeploymentPrompt(conf.Networks, conf.Accounts, conf.Contracts)
 		}
 
-		deployment := flowkit.StringToDeployment(
+		deployment := config.StringToDeployment(
 			deployData["network"].(string),
 			deployData["account"].(string),
 			deployData["contracts"].([]string),
