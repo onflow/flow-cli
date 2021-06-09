@@ -38,7 +38,7 @@ import (
 
 // State contains the configuration for a Flow project.
 type State struct {
-	composer *config.Loader
+	loader   *config.Loader
 	conf     *config.Config
 	accounts []*Account
 }
@@ -89,7 +89,7 @@ func (p *State) SaveDefault() error {
 // Save saves the project configuration to the given path.
 func (p *State) Save(path string) error {
 	p.conf.Accounts = accountsToConfig(p.accounts)
-	err := p.composer.Save(p.conf, path)
+	err := p.loader.Save(p.conf, path)
 
 	if err != nil {
 		return fmt.Errorf("failed to save project configuration to: %s", path)
@@ -118,7 +118,7 @@ func Init(sigAlgo crypto.SignatureAlgorithm, hashAlgo crypto.HashAlgorithm) (*St
 	composer.AddConfigParser(json.NewParser())
 
 	return &State{
-		composer: composer,
+		loader:   composer,
 		conf:     config.DefaultConfig(),
 		accounts: []*Account{emulatorServiceAccount},
 	}, nil
@@ -134,7 +134,7 @@ func newProject(conf *config.Config, composer *config.Loader) (*State, error) {
 	}
 
 	return &State{
-		composer: composer,
+		loader:   composer,
 		conf:     conf,
 		accounts: accounts,
 	}, nil
