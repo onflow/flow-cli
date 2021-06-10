@@ -45,7 +45,6 @@ var RemoveAccountCommand = &command.Command{
 }
 
 func removeAccount(
-	cmd *cobra.Command,
 	args []string,
 	readerWriter flowkit.ReaderWriter,
 	globalFlags command.GlobalFlags,

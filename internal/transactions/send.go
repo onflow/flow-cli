@@ -54,7 +54,6 @@ var SendCommand = &command.Command{
 }
 
 func send(
-	cmd *cobra.Command,
 	args []string,
 	readerWriter flowkit.ReaderWriter,
 	globalFlags command.GlobalFlags,

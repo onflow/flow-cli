@@ -53,7 +53,6 @@ var BuildCommand = &command.Command{
 }
 
 func build(
-	cmd *cobra.Command,
 	args []string,
 	readerWriter flowkit.ReaderWriter,
 	globalFlags command.GlobalFlags,

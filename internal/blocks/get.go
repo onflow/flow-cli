@@ -51,7 +51,6 @@ var GetCommand = &command.Command{
 }
 
 func get(
-	cmd *cobra.Command,
 	args []string,
 	readerWriter flowkit.ReaderWriter,
 	globalFlags command.GlobalFlags,

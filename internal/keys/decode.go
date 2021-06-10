@@ -53,7 +53,6 @@ var DecodeCommand = &command.Command{
 }
 
 func decode(
-	cmd *cobra.Command,
 	args []string,
 	readerWriter flowkit.ReaderWriter,
 	globalFlags command.GlobalFlags,

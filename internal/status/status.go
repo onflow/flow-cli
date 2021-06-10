@@ -47,7 +47,6 @@ var Command = &command.Command{
 }
 
 func status(
-	cmd *cobra.Command,
 	args []string,
 	readerWriter flowkit.ReaderWriter,
 	globalFlags command.GlobalFlags,

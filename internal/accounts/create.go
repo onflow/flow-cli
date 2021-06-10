@@ -56,7 +56,6 @@ var CreateCommand = &command.Command{
 }
 
 func create(
-	cmd *cobra.Command,
 	args []string,
 	readerWriter flowkit.ReaderWriter,
 	globalFlags command.GlobalFlags,

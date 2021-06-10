@@ -52,7 +52,6 @@ var AddContractCommand = &command.Command{
 }
 
 func addContract(
-	cmd *cobra.Command,
 	args []string,
 	readerWriter flowkit.ReaderWriter,
 	globalFlags command.GlobalFlags,

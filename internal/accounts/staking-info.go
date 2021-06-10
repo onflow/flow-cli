@@ -49,7 +49,6 @@ var StakingCommand = &command.Command{
 }
 
 func stakingInfo(
-	cmd *cobra.Command,
 	args []string,
 	readerWriter flowkit.ReaderWriter,
 	globalFlags command.GlobalFlags,

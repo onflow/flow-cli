@@ -39,7 +39,6 @@ import (
 )
 
 type Run func(
-	cmd *cobra.Command,
 	args []string,
 	loader flowkit.ReaderWriter,
 	globalFlags GlobalFlags,
@@ -47,7 +46,6 @@ type Run func(
 ) (Result, error)
 
 type RunWithState func(
-	cmd *cobra.Command,
 	args []string,
 	loader flowkit.ReaderWriter,
 	globalFlags GlobalFlags,
@@ -106,13 +104,13 @@ func (c Command) AddToParent(parent *cobra.Command) {
 		// run command based on requirements for state
 		var result Result
 		if c.Run != nil {
-			result, err = c.Run(cmd, args, loader, Flags, service)
+			result, err = c.Run(args, loader, Flags, service)
 		} else if c.RunS != nil {
 			if confErr != nil {
 				handleError("Config Error", confErr)
 			}
 
-			result, err = c.RunS(cmd, args, loader, Flags, service, state)
+			result, err = c.RunS(args, loader, Flags, service, state)
 		} else {
 			panic("command implementation needs to provide run functionality")
 		}

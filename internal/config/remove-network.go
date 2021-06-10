@@ -44,7 +44,6 @@ var RemoveNetworkCommand = &command.Command{
 }
 
 func removeNetwork(
-	cmd *cobra.Command,
 	args []string,
 	readerWriter flowkit.ReaderWriter,
 	globalFlags command.GlobalFlags,

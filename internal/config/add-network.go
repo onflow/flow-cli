@@ -51,7 +51,6 @@ var AddNetworkCommand = &command.Command{
 }
 
 func addNetwork(
-	cmd *cobra.Command,
 	args []string,
 	readerWriter flowkit.ReaderWriter,
 	globalFlags command.GlobalFlags,

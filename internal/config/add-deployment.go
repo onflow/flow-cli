@@ -51,7 +51,6 @@ var AddDeploymentCommand = &command.Command{
 }
 
 func addDeployment(
-	cmd *cobra.Command,
 	args []string,
 	readerWriter flowkit.ReaderWriter,
 	globalFlags command.GlobalFlags,

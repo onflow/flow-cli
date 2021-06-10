@@ -44,7 +44,6 @@ var RemoveDeploymentCommand = &command.Command{
 }
 
 func removeDeployment(
-	cmd *cobra.Command,
 	args []string,
 	readerWriter flowkit.ReaderWriter,
 	globalFlags command.GlobalFlags,

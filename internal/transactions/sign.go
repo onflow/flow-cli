@@ -47,7 +47,6 @@ var SignCommand = &command.Command{
 }
 
 func sign(
-	cmd *cobra.Command,
 	args []string,
 	readerWriter flowkit.ReaderWriter,
 	globalFlags command.GlobalFlags,

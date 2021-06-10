@@ -45,7 +45,6 @@ var RemoveContractCommand = &command.Command{
 }
 
 func removeContract(
-	cmd *cobra.Command,
 	args []string,
 	readerWriter flowkit.ReaderWriter,
 	globalFlags command.GlobalFlags,

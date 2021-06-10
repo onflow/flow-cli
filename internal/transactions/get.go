@@ -53,16 +53,11 @@ var GetCommand = &command.Command{
 }
 
 func get(
-	cmd *cobra.Command,
 	args []string,
 	readerWriter flowkit.ReaderWriter,
 	globalFlags command.GlobalFlags,
 	services *services.Services,
 ) (command.Result, error) {
-	if cmd.CalledAs() == "status" {
-		fmt.Println("⚠️  DEPRECATION WARNING: use \"flow transactions get\" instead")
-	}
-
 	if getFlags.Code {
 		fmt.Println("⚠️  DEPRECATION WARNING: use include flag instead")
 	}

@@ -54,7 +54,6 @@ var AddAccountCommand = &command.Command{
 }
 
 func addAccount(
-	cmd *cobra.Command,
 	args []string,
 	readerWriter flowkit.ReaderWriter,
 	globalFlags command.GlobalFlags,
