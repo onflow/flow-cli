@@ -37,18 +37,20 @@ import (
 )
 
 type Run func(
-	*cobra.Command,
-	[]string,
-	GlobalFlags,
-	*services.Services,
+	cmd *cobra.Command,
+	args []string,
+	// todo add file loader
+	globalFlags GlobalFlags,
+	services *services.Services,
 ) (Result, error)
 
 type RunWithState func(
-	*cobra.Command,
-	[]string,
-	GlobalFlags,
-	*services.Services,
-	*flowkit.State,
+	cmd *cobra.Command,
+	args []string,
+	// todo add file loader
+	globalFlags GlobalFlags,
+	services *services.Services,
+	state *flowkit.State,
 ) (Result, error)
 
 type Command struct {
