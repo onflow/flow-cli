@@ -49,34 +49,36 @@ var GetCommand = &command.Command{
 		Args:    cobra.ExactArgs(1),
 	},
 	Flags: &getFlags,
-	Run: func(
-		cmd *cobra.Command,
-		args []string,
-		readerWriter flowkit.ReaderWriter,
-		globalFlags command.GlobalFlags,
-		services *services.Services,
-	) (command.Result, error) {
-		if cmd.CalledAs() == "status" {
-			fmt.Println("⚠️  DEPRECATION WARNING: use \"flow transactions get\" instead")
-		}
+	Run:   get,
+}
 
-		if getFlags.Code {
-			fmt.Println("⚠️  DEPRECATION WARNING: use include flag instead")
-		}
+func get(
+	cmd *cobra.Command,
+	args []string,
+	readerWriter flowkit.ReaderWriter,
+	globalFlags command.GlobalFlags,
+	services *services.Services,
+) (command.Result, error) {
+	if cmd.CalledAs() == "status" {
+		fmt.Println("⚠️  DEPRECATION WARNING: use \"flow transactions get\" instead")
+	}
 
-		id := flow.HexToID(strings.ReplaceAll(args[0], "0x", ""))
+	if getFlags.Code {
+		fmt.Println("⚠️  DEPRECATION WARNING: use include flag instead")
+	}
 
-		tx, result, err := services.Transactions.GetStatus(id, getFlags.Sealed)
-		if err != nil {
-			return nil, err
-		}
+	id := flow.HexToID(strings.ReplaceAll(args[0], "0x", ""))
 
-		return &TransactionResult{
-			result:  result,
-			tx:      tx,
-			code:    getFlags.Code,
-			include: getFlags.Include,
-			exclude: getFlags.Exclude,
-		}, nil
-	},
+	tx, result, err := services.Transactions.GetStatus(id, getFlags.Sealed)
+	if err != nil {
+		return nil, err
+	}
+
+	return &TransactionResult{
+		result:  result,
+		tx:      tx,
+		code:    getFlags.Code,
+		include: getFlags.Include,
+		exclude: getFlags.Exclude,
+	}, nil
 }

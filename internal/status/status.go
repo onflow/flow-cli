@@ -43,22 +43,24 @@ var Command = &command.Command{
 		Short: "Display the status of the Flow network",
 	},
 	Flags: &statusFlags,
-	RunS: func(
-		cmd *cobra.Command,
-		args []string,
-		readerWriter flowkit.ReaderWriter,
-		globalFlags command.GlobalFlags,
-		services *services.Services,
-		state *flowkit.State,
-	) (command.Result, error) {
-		accessNode, err := services.Status.Ping(globalFlags.Network)
+	RunS:  status,
+}
 
-		return &Result{
-			network:    globalFlags.Network,
-			accessNode: accessNode,
-			err:        err,
-		}, nil
-	},
+func status(
+	cmd *cobra.Command,
+	args []string,
+	readerWriter flowkit.ReaderWriter,
+	globalFlags command.GlobalFlags,
+	services *services.Services,
+	state *flowkit.State,
+) (command.Result, error) {
+	accessNode, err := services.Status.Ping(globalFlags.Network)
+
+	return &Result{
+		network:    globalFlags.Network,
+		accessNode: accessNode,
+		err:        err,
+	}, nil
 }
 
 type Result struct {

@@ -50,66 +50,68 @@ var SendCommand = &command.Command{
 		Example: `flow transactions send tx.cdc --arg String:"Hello world"`,
 	},
 	Flags: &sendFlags,
-	RunS: func(
-		cmd *cobra.Command,
-		args []string,
-		readerWriter flowkit.ReaderWriter,
-		globalFlags command.GlobalFlags,
-		services *services.Services,
-		state *flowkit.State,
-	) (command.Result, error) {
-		if sendFlags.Results {
-			fmt.Println("⚠️  DEPRECATION WARNING: all transactions will provide results")
+	RunS:  send,
+}
+
+func send(
+	cmd *cobra.Command,
+	args []string,
+	readerWriter flowkit.ReaderWriter,
+	globalFlags command.GlobalFlags,
+	services *services.Services,
+	state *flowkit.State,
+) (command.Result, error) {
+	if sendFlags.Results {
+		fmt.Println("⚠️  DEPRECATION WARNING: all transactions will provide results")
+	}
+
+	if sendFlags.Args != "" {
+		fmt.Println("⚠️  DEPRECATION WARNING: use arg flag in Type:Value format or arg-json for JSON format")
+
+		if len(sendFlags.Arg) == 0 && sendFlags.ArgsJSON == "" {
+			sendFlags.ArgsJSON = sendFlags.Args // backward compatible, args was in json format
 		}
+	}
 
-		if sendFlags.Args != "" {
-			fmt.Println("⚠️  DEPRECATION WARNING: use arg flag in Type:Value format or arg-json for JSON format")
+	codeFilename := ""
+	if len(args) == 1 {
+		codeFilename = args[0]
+	} else if sendFlags.Code != "" {
+		fmt.Println("⚠️  DEPRECATION WARNING: use filename as a command argument <filename>")
+		codeFilename = sendFlags.Code
+	}
 
-			if len(sendFlags.Arg) == 0 && sendFlags.ArgsJSON == "" {
-				sendFlags.ArgsJSON = sendFlags.Args // backward compatible, args was in json format
-			}
-		}
+	signer := state.Accounts().ByName(sendFlags.Signer)
+	if signer == nil {
+		return nil, fmt.Errorf("signer account: [%s] doesn't exists in configuration", sendFlags.Signer)
+	}
 
-		codeFilename := ""
-		if len(args) == 1 {
-			codeFilename = args[0]
-		} else if sendFlags.Code != "" {
-			fmt.Println("⚠️  DEPRECATION WARNING: use filename as a command argument <filename>")
-			codeFilename = sendFlags.Code
-		}
+	code, err := readerWriter.ReadFile(codeFilename)
+	if err != nil {
+		return nil, fmt.Errorf("error loading transaction file: %w", err)
+	}
 
-		signer := state.Accounts().ByName(sendFlags.Signer)
-		if signer == nil {
-			return nil, fmt.Errorf("signer account: [%s] doesn't exists in configuration", sendFlags.Signer)
-		}
+	txArgs, err := flowkit.ParseArguments(buildFlags.Args, buildFlags.ArgsJSON) // todo refactor flowkit
+	if err != nil {
+		return nil, err
+	}
 
-		code, err := readerWriter.ReadFile(codeFilename)
-		if err != nil {
-			return nil, fmt.Errorf("error loading transaction file: %w", err)
-		}
+	tx, result, err := services.Transactions.Send(
+		code,
+		signer,
+		codeFilename,
+		sendFlags.GasLimit,
+		txArgs,
+		globalFlags.Network,
+	)
+	if err != nil {
+		return nil, err
+	}
 
-		txArgs, err := flowkit.ParseArguments(buildFlags.Args, buildFlags.ArgsJSON) // todo refactor flowkit
-		if err != nil {
-			return nil, err
-		}
-
-		tx, result, err := services.Transactions.Send(
-			code,
-			signer,
-			codeFilename,
-			sendFlags.GasLimit,
-			txArgs,
-			globalFlags.Network,
-		)
-		if err != nil {
-			return nil, err
-		}
-
-		return &TransactionResult{
-			result:  result,
-			tx:      tx,
-			include: sendFlags.Include,
-			exclude: sendFlags.Exclude,
-		}, nil
-	},
+	return &TransactionResult{
+		result:  result,
+		tx:      tx,
+		include: sendFlags.Include,
+		exclude: sendFlags.Exclude,
+	}, nil
 }
