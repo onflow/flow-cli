@@ -76,8 +76,13 @@ func Load(configFilePaths []string) (*State, error) {
 	return proj, nil
 }
 
+// Loader retrieve current file loader
+func (p *State) Loader() Loader {
+	return p.fileLoader
+}
+
 // ReadFile exposes an injected file loader
-func (p State) ReadFile(source string) ([]byte, error) {
+func (p *State) ReadFile(source string) ([]byte, error) {
 	return p.fileLoader.ReadFile(source)
 }
 

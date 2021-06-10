@@ -31,7 +31,6 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowkit/contracts"
 	"github.com/onflow/flow-cli/pkg/flowkit/gateway"
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
-	"github.com/onflow/flow-cli/pkg/flowkit/util"
 )
 
 // Project is a service that handles all interactions for a state.
@@ -102,7 +101,9 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 
 	// create new processor for contract
 	processor := contracts.NewPreprocessor(
-		contracts.FilesystemLoader{},
+		contracts.FilesystemLoader{
+			Loader: p.state.Loader(),
+		},
 		p.state.AliasesForNetwork(network),
 	)
 
