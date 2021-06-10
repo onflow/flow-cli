@@ -24,7 +24,7 @@ import (
 	"github.com/onflow/cadence"
 )
 
-// ContractDeployment defines the deployment of the contract with possible args
+// ContractDeployment defines the deployment of the contract with possible args.
 type ContractDeployment struct {
 	Name string
 	Args []cadence.Value
@@ -39,7 +39,7 @@ type Deploy struct {
 	Contracts []ContractDeployment // contracts to deploy
 }
 
-// GetByNetwork get all deployments by network
+// GetByNetwork get all deployments by network.
 func (d *Deployments) GetByNetwork(network string) Deployments {
 	var deployments Deployments
 
@@ -52,7 +52,7 @@ func (d *Deployments) GetByNetwork(network string) Deployments {
 	return deployments
 }
 
-// GetByAccountAndNetwork get deploy by account and network
+// GetByAccountAndNetwork get deploy by account and network.
 func (d *Deployments) GetByAccountAndNetwork(account string, network string) Deployments {
 	var deployments Deployments
 
@@ -65,7 +65,7 @@ func (d *Deployments) GetByAccountAndNetwork(account string, network string) Dep
 	return deployments
 }
 
-// AddOrUpdate add new or update if already present
+// AddOrUpdate add new or update if already present.
 func (d *Deployments) AddOrUpdate(deployment Deploy) {
 	for i, existingDeployment := range *d {
 		if existingDeployment.Account == deployment.Account &&
@@ -78,7 +78,7 @@ func (d *Deployments) AddOrUpdate(deployment Deploy) {
 	*d = append(*d, deployment)
 }
 
-// Remove removes deployment by account and network
+// Remove removes deployment by account and network.
 func (d *Deployments) Remove(account string, network string) error {
 	deployment := d.GetByAccountAndNetwork(account, network)
 	if deployment == nil {

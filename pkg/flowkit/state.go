@@ -59,17 +59,17 @@ type State struct {
 	accounts     Accounts
 }
 
-// ReaderWriter retrieve current file reader writer
+// ReaderWriter retrieve current file reader writer.
 func (p *State) ReaderWriter() ReaderWriter {
 	return p.readerWriter
 }
 
-// ReadFile exposes an injected file loader
+// ReadFile exposes an injected file loader.
 func (p *State) ReadFile(source string) ([]byte, error) {
 	return p.readerWriter.ReadFile(source)
 }
 
-// SaveDefault saves configuration to default path
+// SaveDefault saves configuration to default path.
 func (p *State) SaveDefault() error {
 	return p.Save(config.DefaultPath)
 }
@@ -110,22 +110,22 @@ func (p *State) ContractConflictExists(network string) bool {
 	return len(all) != len(uniq)
 }
 
-// Networks get network configuration
+// Networks get network configuration.
 func (p *State) Networks() *config.Networks {
 	return &p.conf.Networks
 }
 
-// Deployments get deployments configuration
+// Deployments get deployments configuration.
 func (p *State) Deployments() *config.Deployments {
 	return &p.conf.Deployments
 }
 
-// Contracts get contracts configuration
+// Contracts get contracts configuration.
 func (p *State) Contracts() *config.Contracts {
 	return &p.conf.Contracts
 }
 
-// Accounts get accounts
+// Accounts get accounts.
 func (p *State) Accounts() *Accounts {
 	return &p.accounts
 }
@@ -135,7 +135,7 @@ func (p *State) Config() *config.Config {
 	return p.conf
 }
 
-// EmulatorServiceAccount returns the service account for the default emulator profilee.
+// EmulatorServiceAccount returns the service account for the default emulator profile.
 func (p *State) EmulatorServiceAccount() (Account, error) {
 	emulator := p.conf.Emulators.Default()
 	acc := p.conf.Accounts.GetByName(emulator.ServiceAccount)

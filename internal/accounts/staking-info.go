@@ -64,13 +64,11 @@ func stakingInfo(
 	return &StakingResult{*staking, *delegation}, nil
 }
 
-// StakingResult represent result from all account commands
 type StakingResult struct {
 	staking    cadence.Value
 	delegation cadence.Value
 }
 
-// JSON convert result to JSON
 func (r *StakingResult) JSON() interface{} {
 	result := make(map[string]interface{})
 	result["staking"] = flowkit.NewStakingInfoFromValue(r.staking)
@@ -79,7 +77,6 @@ func (r *StakingResult) JSON() interface{} {
 	return result
 }
 
-// String convert result to string
 func (r *StakingResult) String() string {
 	var b bytes.Buffer
 	writer := util.CreateTabWriter(&b)
@@ -117,7 +114,6 @@ func (r *StakingResult) String() string {
 	return b.String()
 }
 
-// Oneliner show result as one liner grep friendly
 func (r *StakingResult) Oneliner() string {
 	return ""
 }

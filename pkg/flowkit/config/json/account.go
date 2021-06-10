@@ -31,7 +31,7 @@ import (
 
 type jsonAccounts map[string]account
 
-// transformAddress returns address based on address and chain id
+// transformAddress returns address based on address and chain id.
 func transformAddress(address string) (flow.Address, error) {
 	// only allow service for emulator
 	if address == "service" {
@@ -45,7 +45,7 @@ func transformAddress(address string) (flow.Address, error) {
 	return flow.HexToAddress(address), nil
 }
 
-// transformSimpleToConfig transforms simple internal account to config account
+// transformSimpleToConfig transforms simple internal account to config account.
 func transformSimpleToConfig(accountName string, a simpleAccount) (*config.Account, error) {
 	pkey, err := crypto.DecodePrivateKeyHex(
 		crypto.ECDSA_P256,
@@ -73,7 +73,7 @@ func transformSimpleToConfig(accountName string, a simpleAccount) (*config.Accou
 	}, nil
 }
 
-// transformAdvancedToConfig transforms advanced internal account to config account
+// transformAdvancedToConfig transforms advanced internal account to config account.
 func transformAdvancedToConfig(accountName string, a advanceAccount) (*config.Account, error) {
 	var pKey crypto.PrivateKey
 	var err error
@@ -129,7 +129,7 @@ func transformAdvancedToConfig(accountName string, a advanceAccount) (*config.Ac
 	}, nil
 }
 
-// transformToConfig transforms json structures to config structure
+// transformToConfig transforms json structures to config structure.
 func (j jsonAccounts) transformToConfig() (config.Accounts, error) {
 	accounts := make(config.Accounts, 0)
 
@@ -154,7 +154,7 @@ func (j jsonAccounts) transformToConfig() (config.Accounts, error) {
 	return accounts, nil
 }
 
-// transformToJSON transforms config structure to json structures for saving
+// transformToJSON transforms config structure to json structures for saving.
 func transformAccountsToJSON(accounts config.Accounts) jsonAccounts {
 	jsonAccounts := jsonAccounts{}
 

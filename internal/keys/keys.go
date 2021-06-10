@@ -43,14 +43,12 @@ func init() {
 	DecodeCommand.AddToParent(Cmd)
 }
 
-// KeyResult represent result from all account commands
 type KeyResult struct {
 	privateKey crypto.PrivateKey
 	publicKey  crypto.PublicKey
 	accountKey *flow.AccountKey
 }
 
-// JSON convert result to JSON
 func (k *KeyResult) JSON() interface{} {
 	result := make(map[string]string)
 	result["public"] = hex.EncodeToString(k.privateKey.PublicKey().Encode())
@@ -62,7 +60,6 @@ func (k *KeyResult) JSON() interface{} {
 	return result
 }
 
-// String convert result to string
 func (k *KeyResult) String() string {
 	var b bytes.Buffer
 	writer := util.CreateTabWriter(&b)
@@ -89,7 +86,6 @@ func (k *KeyResult) String() string {
 	return b.String()
 }
 
-// Oneliner show result as one liner grep friendly
 func (k *KeyResult) Oneliner() string {
 	result := fmt.Sprintf("Public Key: %x, ", k.publicKey.Encode())
 

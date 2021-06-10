@@ -215,7 +215,7 @@ func (a *Accounts) AddContract(
 		account,
 		contractName,
 		string(contractSource),
-		[]cadence.Value{}, // todo add support for args on account add-contract
+		[]cadence.Value{}, // TODO(sideninja) add support for args on account add-contract
 	)
 	if err != nil {
 		return nil, err

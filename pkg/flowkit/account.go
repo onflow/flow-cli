@@ -28,6 +28,7 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowkit/util"
 )
 
+// Account is a flowkit specific account implementation.
 type Account struct {
 	name    string
 	address flow.Address

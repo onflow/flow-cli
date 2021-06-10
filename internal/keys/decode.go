@@ -66,7 +66,7 @@ func decode(
 		encoded = args[1]
 	}
 
-	/* todo from file flag should be remove and should be replaced with $(echo file)
+	/* TODO(sideninja) from file flag should be remove and should be replaced with $(echo file)
 	   but cobra has an issue with parsing pem content as it recognize it as flag due to ---- characters */
 	if encoded != "" && fromFile != "" {
 		return nil, fmt.Errorf("can not pass both command argument and from file flag")
@@ -76,7 +76,7 @@ func decode(
 	}
 
 	if fromFile != "" {
-		e, err := readerWriter.ReadFile(fromFile) // todo replace with file loader
+		e, err := readerWriter.ReadFile(fromFile)
 		if err != nil {
 			return nil, err
 		}

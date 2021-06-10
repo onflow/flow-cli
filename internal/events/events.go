@@ -43,13 +43,11 @@ func init() {
 	GetCommand.AddToParent(Cmd)
 }
 
-// EventResult result structure
 type EventResult struct {
 	BlockEvents []client.BlockEvents
 	Events      []flow.Event
 }
 
-// JSON convert result to JSON
 func (e *EventResult) JSON() interface{} {
 	result := make([]interface{}, 0)
 
@@ -72,7 +70,6 @@ func (e *EventResult) JSON() interface{} {
 	return result
 }
 
-// String convert result to string
 func (e *EventResult) String() string {
 	var b bytes.Buffer
 	writer := util.CreateTabWriter(&b)
@@ -92,7 +89,6 @@ func (e *EventResult) String() string {
 	return b.String()
 }
 
-// Oneliner show result as one liner grep friendly
 func (e *EventResult) Oneliner() string {
 	result := ""
 	for _, blockEvent := range e.BlockEvents {

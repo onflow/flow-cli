@@ -38,16 +38,18 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// Run the command with arguments.
 type Run func(
 	args []string,
-	loader flowkit.ReaderWriter,
+	readerWriter flowkit.ReaderWriter,
 	globalFlags GlobalFlags,
 	services *services.Services,
 ) (Result, error)
 
+// RunWithState runs the command with arguments and state.
 type RunWithState func(
 	args []string,
-	loader flowkit.ReaderWriter,
+	readerWriter flowkit.ReaderWriter,
 	globalFlags GlobalFlags,
 	services *services.Services,
 	state *flowkit.State,
@@ -76,7 +78,7 @@ const (
 // AddToParent add new command to main parent cmd
 // and initializes all necessary things as well as take care of errors and output
 // here we can do all boilerplate code that is else copied in each command and make sure
-// we have one place to handle all errors and ensure commands have consistent results
+// we have one place to handle all errors and ensure commands have consistent results.
 func (c Command) AddToParent(parent *cobra.Command) {
 	c.Cmd.Run = func(cmd *cobra.Command, args []string) {
 		// initialize file loader used in commands
@@ -130,15 +132,13 @@ func (c Command) AddToParent(parent *cobra.Command) {
 	parent.AddCommand(c.Cmd)
 }
 
-// createGateway creates a gateway to be used, defaults to grpc but can support others
+// createGateway creates a gateway to be used, defaults to grpc but can support others.
 func createGateway(host string) (gateway.Gateway, error) {
-	// TODO implement emulator gateway and check emulator flag here
-
 	// create default grpc client
 	return gateway.NewGrpcGateway(host)
 }
 
-// resolveHost from the flags provided
+// resolveHost from the flags provided.
 //
 // Resolve the network host in the following order:
 // 1. if host flag is provided resolve to that host
@@ -175,7 +175,7 @@ func resolveHost(state *flowkit.State, hostFlag string, networkFlag string) (str
 	return "", fmt.Errorf("invalid network with name %s", networkFlag)
 }
 
-// create logger utility
+// create logger utility.
 func createLogger(logFlag string, formatFlag string) output.Logger {
 	// disable logging if we user want a specific format like JSON
 	// (more common they will not want also to have logs)
@@ -199,7 +199,7 @@ func createLogger(logFlag string, formatFlag string) output.Logger {
 	return output.NewStdoutLogger(logLevel)
 }
 
-// checkVersion fetches latest version and compares it to local
+// checkVersion fetches latest version and compares it to local.
 func checkVersion(logger output.Logger) {
 	resp, err := http.Get("https://raw.githubusercontent.com/onflow/flow-cli/master/version.txt")
 	if err != nil || resp.StatusCode >= 400 {

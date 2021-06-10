@@ -27,12 +27,12 @@ type Emulator struct {
 
 type Emulators []Emulator
 
-// DefaultEmulators gets all default emulators
+// DefaultEmulators gets all default emulators.
 func DefaultEmulators() Emulators {
 	return Emulators{DefaultEmulator()}
 }
 
-// DefaultEmulator gets default emulator
+// DefaultEmulator gets default emulator.
 func DefaultEmulator() Emulator {
 	return Emulator{
 		Name:           "default",
@@ -41,7 +41,7 @@ func DefaultEmulator() Emulator {
 	}
 }
 
-// Default gets default emulator
+// Default gets default emulator.
 func (e *Emulators) Default() *Emulator {
 	for _, emulator := range *e {
 		if emulator.Name == DefaultEmulatorConfigName {
@@ -52,7 +52,7 @@ func (e *Emulators) Default() *Emulator {
 	return nil
 }
 
-// AddOrUpdate add new or update if already present
+// AddOrUpdate add new or update if already present.
 func (e *Emulators) AddOrUpdate(name string, emulator Emulator) {
 	for i, existingEmulator := range *e {
 		if existingEmulator.Name == name {

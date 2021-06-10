@@ -27,7 +27,7 @@ import (
 	"github.com/onflow/flow-go-sdk"
 )
 
-// StringToAccount converts string values to account
+// StringToAccount converts string values to account.
 func StringToAccount(
 	name string,
 	address string,
@@ -66,6 +66,7 @@ func StringToAccount(
 	}, nil
 }
 
+// StringToKeyIndex converts string key index to valid key index integer.
 func StringToKeyIndex(value string) (int, error) {
 	v, err := strconv.Atoi(value)
 	if err != nil {
@@ -78,6 +79,7 @@ func StringToKeyIndex(value string) (int, error) {
 	return v, nil
 }
 
+// StringToAddress converts string to valid Flow address.
 func StringToAddress(value string) (*flow.Address, error) {
 	address := flow.HexToAddress(value)
 
@@ -90,6 +92,7 @@ func StringToAddress(value string) (*flow.Address, error) {
 	return &address, nil
 }
 
+// StringToHexKey converts string private key and signature algorithm to private key.
 func StringToHexKey(key string, sigAlgo string) (crypto.PrivateKey, error) {
 	privateKey, err := crypto.DecodePrivateKeyHex(
 		crypto.StringToSignatureAlgorithm(sigAlgo),
@@ -102,6 +105,7 @@ func StringToHexKey(key string, sigAlgo string) (crypto.PrivateKey, error) {
 	return privateKey, nil
 }
 
+// StringToContracts converts strings to contracts.
 func StringToContracts(
 	name string,
 	source string,
@@ -140,6 +144,7 @@ func StringToContracts(
 	return contracts
 }
 
+// StringToNetwork converts string to network.
 func StringToNetwork(name string, host string) Network {
 	return Network{
 		Name: name,
@@ -147,6 +152,7 @@ func StringToNetwork(name string, host string) Network {
 	}
 }
 
+// StringToDeployment converts string to deployment.
 func StringToDeployment(network string, account string, contracts []string) Deploy {
 	parsedContracts := make([]ContractDeployment, 0)
 

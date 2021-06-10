@@ -54,17 +54,15 @@ func get(
 	if generateFlag.Verbose {
 		fmt.Println("⚠️  DEPRECATION WARNING: verbose flag is deprecated")
 	}
+	name := args[0]
+	start := args[1] // block height range start
+	end := ""        // block height range end
 
-	end := ""
 	if len(args) == 3 {
-		end = args[2] // block height range end
+		end = args[2]
 	}
 
-	events, err := services.Events.Get(
-		args[0], // event name
-		args[1], // block height range start
-		end,
-	)
+	events, err := services.Events.Get(name, start, end)
 	if err != nil {
 		return nil, err
 	}

@@ -51,10 +51,10 @@ var InitCommand = &command.Command{
 		Short: "Initialize a new configuration",
 	},
 	Flags: &initFlag,
-	Run:   initialise,
+	Run:   Initialise,
 }
 
-func initialise(
+func Initialise(
 	args []string,
 	readerWriter flowkit.ReaderWriter,
 	globalFlags command.GlobalFlags,
@@ -91,17 +91,14 @@ func initialise(
 	return &InitResult{State: s}, nil
 }
 
-// InitResult result structure
 type InitResult struct {
 	*flowkit.State
 }
 
-// JSON convert result to JSON
 func (r *InitResult) JSON() interface{} {
 	return r
 }
 
-// String convert result to string
 func (r *InitResult) String() string {
 	var b bytes.Buffer
 	writer := util.CreateTabWriter(&b)
@@ -119,7 +116,6 @@ func (r *InitResult) String() string {
 	return b.String()
 }
 
-// Oneliner show result as one liner grep friendly
 func (r *InitResult) Oneliner() string {
 	return ""
 }

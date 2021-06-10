@@ -53,7 +53,7 @@ func NewTransactions(
 	}
 }
 
-// GetStatus of transaction
+// GetStatus of transaction.
 func (t *Transactions) GetStatus(
 	id flow.Identifier,
 	waitSeal bool,
@@ -76,7 +76,7 @@ func (t *Transactions) GetStatus(
 	return tx, result, err
 }
 
-// Build builds a transaction with specified payer, proposer and authorizer
+// Build builds a transaction with specified payer, proposer and authorizer.
 func (t *Transactions) Build(
 	proposer flow.Address,
 	authorizers []flow.Address,
@@ -142,7 +142,7 @@ func (t *Transactions) Build(
 	return tx, nil
 }
 
-// Sign transaction
+// Sign transaction payload using the signer account.
 func (t *Transactions) Sign(
 	payload []byte,
 	signer *flowkit.Account,
@@ -173,7 +173,7 @@ func (t *Transactions) Sign(
 	return tx.Sign()
 }
 
-// SendSigned sends the transaction that is already signed
+// SendSigned sends the transaction that is already signed.
 func (t *Transactions) SendSigned(
 	payload []byte,
 ) (*flow.Transaction, *flow.TransactionResult, error) {
@@ -198,7 +198,7 @@ func (t *Transactions) SendSigned(
 	return sentTx, res, nil
 }
 
-// Send sends a transaction from a file.
+// Send a transaction code using the signer account and arguments for the specified network.
 func (t *Transactions) Send(
 	code []byte,
 	signer *flowkit.Account,

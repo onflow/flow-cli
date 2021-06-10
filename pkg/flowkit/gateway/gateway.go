@@ -25,6 +25,7 @@ import (
 	"github.com/onflow/flow-go-sdk/client"
 )
 
+// Gateway describes blockchain access interface
 type Gateway interface {
 	GetAccount(flow.Address) (*flow.Account, error)
 	SendSignedTransaction(*flowkit.Transaction) (*flow.Transaction, error)

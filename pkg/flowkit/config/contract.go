@@ -30,12 +30,12 @@ type Contract struct {
 
 type Contracts []Contract
 
-// IsAlias checks if contract has an alias
+// IsAlias checks if contract has an alias.
 func (c *Contract) IsAlias() bool {
 	return c.Alias != ""
 }
 
-// GetByNameAndNetwork get contract array for account and network
+// GetByNameAndNetwork get contract array for account and network.
 func (c *Contracts) GetByNameAndNetwork(name string, network string) *Contract {
 	contracts := make(Contracts, 0)
 
@@ -63,7 +63,7 @@ func (c *Contracts) GetByNameAndNetwork(name string, network string) *Contract {
 	return &contracts[0]
 }
 
-// GetByName get contract by name
+// GetByName get contract by name.
 func (c *Contracts) GetByName(name string) *Contract {
 	for _, contract := range *c {
 		if contract.Name == name {
@@ -74,7 +74,7 @@ func (c *Contracts) GetByName(name string) *Contract {
 	return nil
 }
 
-// GetByNetwork returns all contracts for specific network
+// GetByNetwork returns all contracts for specific network.
 func (c *Contracts) GetByNetwork(network string) Contracts {
 	var contracts []Contract
 
@@ -87,7 +87,7 @@ func (c *Contracts) GetByNetwork(network string) Contracts {
 	return contracts
 }
 
-// AddOrUpdate add new or update if already present
+// AddOrUpdate add new or update if already present.
 func (c *Contracts) AddOrUpdate(name string, contract Contract) {
 	for i, existingContract := range *c {
 		if existingContract.Name == name &&
@@ -100,6 +100,7 @@ func (c *Contracts) AddOrUpdate(name string, contract Contract) {
 	*c = append(*c, contract)
 }
 
+// Remove contract by its name.
 func (c *Contracts) Remove(name string) error {
 	contract := c.GetByName(name)
 	if contract == nil {

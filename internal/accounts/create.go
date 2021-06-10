@@ -68,7 +68,6 @@ func create(
 
 	signer := state.Accounts().ByName(addContractFlags.Signer)
 
-	// todo use parsers
 	sigAlgo := crypto.StringToSignatureAlgorithm(createFlags.SigAlgo)
 	if sigAlgo == crypto.UnknownSignatureAlgorithm {
 		return nil, fmt.Errorf("invalid signature algorithm: %s", createFlags.SigAlgo)

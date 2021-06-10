@@ -31,7 +31,7 @@ import (
 
 type jsonDeployments map[string]jsonDeployment
 
-// transformToConfig transforms json structures to config structure
+// transformToConfig transforms json structures to config structure.
 func (j jsonDeployments) transformToConfig() (config.Deployments, error) {
 	deployments := make(config.Deployments, 0)
 
@@ -88,7 +88,7 @@ func (j jsonDeployments) transformToConfig() (config.Deployments, error) {
 	return deployments, nil
 }
 
-// transformToJSON transforms config structure to json structures for saving
+// transformToJSON transforms config structure to json structures for saving.
 func transformDeploymentsToJSON(configDeployments config.Deployments) jsonDeployments {
 	jsonDeploys := jsonDeployments{}
 

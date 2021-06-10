@@ -31,13 +31,13 @@ import (
 	"github.com/onflow/flow-go-sdk"
 )
 
-// Resolver handles resolving imports in Cadence code
+// Resolver handles resolving imports in Cadence code.
 type Resolver struct {
 	code    []byte
 	program *ast.Program
 }
 
-// NewResolver creates a new resolver
+// NewResolver creates a new resolver.
 func NewResolver(code []byte) (*Resolver, error) {
 	program, err := parser2.ParseProgram(string(code))
 	if err != nil {
@@ -50,10 +50,10 @@ func NewResolver(code []byte) (*Resolver, error) {
 	}, nil
 }
 
-// ResolveImports resolves imports in code to addresses
+// ResolveImports resolves imports in code to addresses.
 //
 // resolving is done based on code file path and is resolved to
-// addresses defined in configuration for contracts or their aliases
+// addresses defined in configuration for contracts or their aliases.
 //
 func (r *Resolver) ResolveImports(
 	codePath string,
@@ -75,7 +75,7 @@ func (r *Resolver) ResolveImports(
 	return r.code, nil
 }
 
-// replaceImport replaces import from path to address
+// replaceImport replaces import from path to address.
 func (r *Resolver) replaceImport(from string, to string) []byte {
 	return []byte(strings.Replace(
 		string(r.code),
@@ -85,7 +85,7 @@ func (r *Resolver) replaceImport(from string, to string) []byte {
 	))
 }
 
-// getSourceTarget return a map with contract paths as keys and addresses as values
+// getSourceTarget return a map with contract paths as keys and addresses as values.
 func (r *Resolver) getSourceTarget(
 	contracts []flowkit.Contract,
 	aliases flowkit.Aliases,
@@ -102,12 +102,12 @@ func (r *Resolver) getSourceTarget(
 	return sourceTarget
 }
 
-// HasFileImports checks if there is a file import statement present in Cadence code
+// HasFileImports checks if there is a file import statement present in Cadence code.
 func (r *Resolver) HasFileImports() bool {
 	return len(r.getFileImports()) > 0
 }
 
-// getFileImports returns all cadence file imports from Cadence code as an array
+// getFileImports returns all cadence file imports from Cadence code as an array.
 func (r *Resolver) getFileImports() []string {
 	imports := make([]string, 0)
 

@@ -32,7 +32,7 @@ var (
 	trailingComma = regexp.MustCompile(`\,\s*}`)
 )
 
-// ProcessorRun all pre-processors
+// ProcessorRun all pre-processors.
 func ProcessorRun(raw []byte) ([]byte, map[string]string) {
 	rawString := string(raw)
 	rawString = processEnv(rawString)
@@ -41,7 +41,7 @@ func ProcessorRun(raw []byte) ([]byte, map[string]string) {
 	return []byte(rawString), accountFromFiles
 }
 
-// processEnv finds env variables and insert env values
+// processEnv finds env variables and insert env values.
 func processEnv(raw string) string {
 	_ = godotenv.Load() // try to load .env file
 
@@ -49,7 +49,7 @@ func processEnv(raw string) string {
 	return raw
 }
 
-// processFile finds file variables and insert content
+// processFile finds file variables and insert content.
 func processFile(raw string) (string, map[string]string) {
 	fileMatches := fileRegex.FindAllStringSubmatch(raw, -1)
 	accountFromFiles := map[string]string{}

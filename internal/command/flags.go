@@ -118,7 +118,7 @@ func InitFlags(cmd *cobra.Command) {
 	)
 }
 
-// bindFlags bind all the flags needed
+// bindFlags bind all the flags needed.
 func bindFlags(command Command) {
 	err := sconfig.New(command.Flags).
 		FromEnvironment(util.EnvPrefix).

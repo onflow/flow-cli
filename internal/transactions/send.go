@@ -90,7 +90,7 @@ func send(
 		return nil, fmt.Errorf("error loading transaction file: %w", err)
 	}
 
-	txArgs, err := flowkit.ParseArguments(buildFlags.Args, buildFlags.ArgsJSON) // todo refactor flowkit
+	txArgs, err := flowkit.ParseArguments(buildFlags.Args, buildFlags.ArgsJSON)
 	if err != nil {
 		return nil, err
 	}

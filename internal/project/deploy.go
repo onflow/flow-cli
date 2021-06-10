@@ -58,12 +58,10 @@ func deploy(
 	return &DeployResult{c}, nil
 }
 
-// DeployResult result structure
 type DeployResult struct {
 	contracts []*contracts.Contract
 }
 
-// JSON convert result to JSON
 func (r *DeployResult) JSON() interface{} {
 	result := make(map[string]string)
 
@@ -74,12 +72,10 @@ func (r *DeployResult) JSON() interface{} {
 	return result
 }
 
-// String convert result to string
 func (r *DeployResult) String() string {
 	return ""
 }
 
-// Oneliner show result as one liner grep friendly
 func (r *DeployResult) Oneliner() string {
 	return ""
 }

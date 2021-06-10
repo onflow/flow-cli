@@ -26,7 +26,7 @@ import (
 
 type jsonNetworks map[string]jsonNetwork
 
-// transformToConfig transforms json structures to config structure
+// transformToConfig transforms json structures to config structure.
 func (j jsonNetworks) transformToConfig() (config.Networks, error) {
 	var networks config.Networks
 
@@ -42,7 +42,7 @@ func (j jsonNetworks) transformToConfig() (config.Networks, error) {
 	return networks, nil
 }
 
-// transformToJSON transforms config structure to json structures for saving
+// transformToJSON transforms config structure to json structures for saving.
 func transformNetworksToJSON(networks config.Networks) jsonNetworks {
 	jsonNetworks := jsonNetworks{}
 

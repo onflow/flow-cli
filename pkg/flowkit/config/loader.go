@@ -25,10 +25,10 @@ import (
 	"path/filepath"
 )
 
-// ErrDoesNotExist is error to be returned when config file does not exists
+// ErrDoesNotExist is error to be returned when config file does not exists.
 var ErrDoesNotExist = errors.New("missing configuration, initialize it: flow init")
 
-// Exists checks if file exists on the specified path
+// Exists checks if file exists on the specified path.
 func Exists(path string) bool {
 	info, err := os.Stat(path)
 	if os.IsNotExist(err) {
@@ -37,7 +37,7 @@ func Exists(path string) bool {
 	return !info.IsDir()
 }
 
-// Parser is interface for any configuration format parser to implement
+// Parser is interface for any configuration format parser to implement.
 type Parser interface {
 	Serialize(*Config) ([]byte, error)
 	Deserialize([]byte) (*Config, error)
@@ -49,11 +49,11 @@ type ReaderWriter interface {
 	WriteFile(filename string, data []byte, perm os.FileMode) error
 }
 
-// ConfigParsers is a list of all configuration parsers.
-type ConfigParsers []Parser
+// Parsers is a list of all configuration parsers.
+type Parsers []Parser
 
-// FindForFormat finds a parser that can parse a specific format based on extension
-func (c *ConfigParsers) FindForFormat(extension string) Parser {
+// FindForFormat finds a parser that can parse a specific format based on extension.
+func (c *Parsers) FindForFormat(extension string) Parser {
 	for _, parser := range *c {
 		if parser.SupportsFormat(extension) {
 			return parser
@@ -66,7 +66,7 @@ func (c *ConfigParsers) FindForFormat(extension string) Parser {
 // Loader contains actions for composing and modifying configuration.
 type Loader struct {
 	readerWriter     ReaderWriter
-	configParsers    ConfigParsers
+	configParsers    Parsers
 	composedFromFile map[string]string
 }
 
@@ -83,7 +83,7 @@ func (l *Loader) AddConfigParser(format Parser) {
 	l.configParsers = append(l.configParsers, format)
 }
 
-// Save saves a configuration to a path with correct serializer
+// Save saves a configuration to a path with correct serializer.
 func (l *Loader) Save(conf *Config, path string) error {
 	configFormat := l.configParsers.FindForFormat(
 		filepath.Ext(path),
@@ -140,7 +140,7 @@ func (l *Loader) Load(paths []string) (*Config, error) {
 		l.composeConfig(baseConf, conf)
 	}
 
-	// if no config was loaded - neither local nor global return an error
+	// if no config was loaded - neither local nor global return an error.
 	if baseConf == nil {
 		return nil, ErrDoesNotExist
 	}
@@ -153,7 +153,7 @@ func (l *Loader) Load(paths []string) (*Config, error) {
 	return baseConf, nil
 }
 
-// preprocess configuration - all manipulations to the raw configuration format happens here
+// preprocess does all manipulations to the raw configuration format happens here.
 func (l *Loader) preprocess(raw []byte) []byte {
 	raw, accountsFromFile := ProcessorRun(raw)
 
@@ -163,7 +163,7 @@ func (l *Loader) preprocess(raw []byte) []byte {
 	return raw
 }
 
-// postprocess configuration - do all stateful changes to configuration structures here after it is parsed
+// postprocess does all stateful changes to configuration structures here after it is parsed.
 func (l *Loader) postprocess(baseConf *Config) (*Config, error) {
 	for name, path := range l.composedFromFile {
 		raw, err := l.loadFile(path)
@@ -192,7 +192,7 @@ func (l *Loader) postprocess(baseConf *Config) (*Config, error) {
 	return baseConf, nil
 }
 
-// composeConfig - here we merge multiple configuration files from right to left
+// composeConfig merges multiple configuration files from right to left.
 func (l *Loader) composeConfig(baseConf *Config, conf *Config) {
 	// if not first overwrite first with this one
 	for _, account := range conf.Accounts {
@@ -209,7 +209,7 @@ func (l *Loader) composeConfig(baseConf *Config, conf *Config) {
 	}
 }
 
-// simple file loader
+// loadFile simple file loader.
 func (l *Loader) loadFile(path string) ([]byte, error) {
 	raw, err := l.readerWriter.ReadFile(path)
 

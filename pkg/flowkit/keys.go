@@ -32,6 +32,8 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
 )
 
+// AccountKey is a flowkit specific account key implementation
+// allowing us to sign the transactions using different implemented methods.
 type AccountKey interface {
 	Type() config.KeyType
 	Index() int
@@ -90,11 +92,13 @@ func (a *baseAccountKey) Validate() error {
 	return nil
 }
 
+// KmsAccountKey implements Gcloud KMS system for signing.
 type KmsAccountKey struct {
 	*baseAccountKey
 	kmsKey cloudkms.Key
 }
 
+// ToConfig convert account key to configuration.
 func (a *KmsAccountKey) ToConfig() config.AccountKey {
 	return config.AccountKey{
 		Type:       a.keyType,
@@ -113,7 +117,7 @@ func (a *KmsAccountKey) Signer(ctx context.Context) (crypto.Signer, error) {
 
 	accountKMSSigner, err := kmsClient.SignerForKey(
 		ctx,
-		flow.Address{}, // TODO: this is temporary workaround as SignerForKey accepts address but never uses it so should be removed
+		flow.Address{}, // TODO(sideninja) temporary workaround for PR https://github.com/onflow/flow-go-sdk/pull/196
 		a.kmsKey,
 	)
 	if err != nil {
@@ -148,6 +152,12 @@ func newKmsAccountKey(key config.AccountKey) (AccountKey, error) {
 	}, nil
 }
 
+// HexAccountKey implements account key in hex representation.
+type HexAccountKey struct {
+	*baseAccountKey
+	privateKey crypto.PrivateKey
+}
+
 func NewHexAccountKeyFromPrivateKey(
 	index int,
 	hashAlgo crypto.HashAlgorithm,
@@ -169,11 +179,6 @@ func newHexAccountKey(accountKey config.AccountKey) (*HexAccountKey, error) {
 		baseAccountKey: newBaseAccountKey(accountKey),
 		privateKey:     accountKey.PrivateKey,
 	}, nil
-}
-
-type HexAccountKey struct {
-	*baseAccountKey
-	privateKey crypto.PrivateKey
 }
 
 func (a *HexAccountKey) Signer(ctx context.Context) (crypto.Signer, error) {

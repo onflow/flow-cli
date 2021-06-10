@@ -42,7 +42,6 @@ func init() {
 	GetCommand.AddToParent(Cmd)
 }
 
-// BlockResult
 type BlockResult struct {
 	block       *flow.Block
 	events      []client.BlockEvents
@@ -51,7 +50,6 @@ type BlockResult struct {
 	included    []string
 }
 
-// JSON convert result to JSON
 func (r *BlockResult) JSON() interface{} {
 	result := make(map[string]interface{})
 	result["blockId"] = r.block.ID.String()
@@ -80,7 +78,6 @@ func (r *BlockResult) JSON() interface{} {
 	return result
 }
 
-// String convert result to string
 func (r *BlockResult) String() string {
 	var b bytes.Buffer
 	writer := util.CreateTabWriter(&b)
@@ -115,7 +112,6 @@ func (r *BlockResult) String() string {
 	return b.String()
 }
 
-// Oneliner show result as one liner grep friendly
 func (r *BlockResult) Oneliner() string {
 	return r.block.ID.String()
 }
