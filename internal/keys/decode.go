@@ -27,7 +27,6 @@ import (
 	"github.com/onflow/flow-go-sdk/crypto"
 
 	"github.com/onflow/flow-cli/pkg/flowkit"
-	"github.com/onflow/flow-cli/pkg/flowkit/util"
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
@@ -75,7 +74,7 @@ var DecodeCommand = &command.Command{
 		}
 
 		if fromFile != "" {
-			e, err := util.LoadFile(fromFile) // todo replace with file loader
+			e, err := loader.ReadFile(fromFile) // todo replace with file loader
 			if err != nil {
 				return nil, err
 			}
