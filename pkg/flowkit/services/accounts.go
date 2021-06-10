@@ -20,6 +20,9 @@ package services
 
 import (
 	"fmt"
+	"strings"
+
+	"github.com/onflow/flow-go-sdk/templates"
 
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
 
@@ -113,7 +116,7 @@ func (a *Accounts) Create(
 	keyWeights []int,
 	sigAlgo crypto.SignatureAlgorithm,
 	hashAlgo crypto.HashAlgorithm,
-	contracts []string,
+	contractArgs []string,
 ) (*flow.Account, error) {
 	if a.state == nil {
 		return nil, config.ErrDoesNotExist
@@ -139,6 +142,24 @@ func (a *Accounts) Create(
 		}
 
 		accKeys = append(accKeys, accKey)
+	}
+
+	contracts := make([]templates.Contract, 0)
+	for _, contract := range contractArgs {
+		contractFlagContent := strings.SplitN(contract, ":", 2)
+		if len(contractFlagContent) != 2 {
+			return nil, fmt.Errorf("wrong format for contract. Correct format is name:path, but got: %s", contract)
+		}
+
+		contractSource, err := util.LoadFile(contractFlagContent[1])
+		if err != nil {
+			return nil, err
+		}
+
+		contracts = append(contracts, templates.Contract{
+			Name:   contractFlagContent[0],
+			Source: string(contractSource),
+		})
 	}
 
 	tx, err := flowkit.NewCreateAccountTransaction(signer, accKeys, contracts)

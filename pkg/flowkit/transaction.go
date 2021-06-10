@@ -22,7 +22,6 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
-	"strings"
 
 	jsoncdc "github.com/onflow/cadence/encoding/json"
 
@@ -30,8 +29,6 @@ import (
 
 	"github.com/onflow/cadence"
 	"github.com/onflow/flow-go-sdk"
-
-	"github.com/onflow/flow-cli/pkg/flowkit/util"
 )
 
 // NewTransaction create new instance of transaction
@@ -142,26 +139,8 @@ func addAccountContractWithArgs(
 func NewCreateAccountTransaction(
 	signer *Account,
 	keys []*flow.AccountKey,
-	contractargs []string,
+	contracts []templates.Contract,
 ) (*Transaction, error) {
-
-	contracts := make([]templates.Contract, 0)
-	for _, contract := range contractArgs {
-		contractFlagContent := strings.SplitN(contract, ":", 2)
-		if len(contractFlagContent) != 2 {
-			return nil, fmt.Errorf("wrong format for contract. Correct format is name:path, but got: %s", contract)
-		}
-
-		contractSource, err := util.LoadFile(contractFlagContent[1])
-		if err != nil {
-			return nil, err
-		}
-
-		contracts = append(contracts, templates.Contract{
-			Name:   contractFlagContent[0],
-			Source: string(contractSource),
-		})
-	}
 
 	return newTransactionFromTemplate(
 		templates.CreateAccount(keys, contracts, signer.Address()),
