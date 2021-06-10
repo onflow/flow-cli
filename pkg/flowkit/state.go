@@ -52,6 +52,10 @@ type Contract struct {
 	Args   []cadence.Value
 }
 
+type Loader interface {
+	ReadFile(source string) ([]byte, error)
+}
+
 // Load loads a project configuration and returns the resulting project.
 func Load(configFilePaths []string) (*State, error) {
 	loader := config.NewLoader(afero.NewOsFs())
