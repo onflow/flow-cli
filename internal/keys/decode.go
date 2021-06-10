@@ -49,61 +49,63 @@ var DecodeCommand = &command.Command{
 		Example:   "flow keys decode rlp f847b8408...2402038203e8",
 	},
 	Flags: &decodeFlags,
-	Run: func(
-		cmd *cobra.Command,
-		args []string,
-		readerWriter flowkit.ReaderWriter,
-		globalFlags command.GlobalFlags,
-		services *services.Services,
-	) (command.Result, error) {
-		encoding := args[0]
-		fromFile := decodeFlags.FromFile
+	Run:   decode,
+}
 
-		var encoded string
-		if len(args) > 1 {
-			encoded = args[1]
-		}
+func decode(
+	cmd *cobra.Command,
+	args []string,
+	readerWriter flowkit.ReaderWriter,
+	globalFlags command.GlobalFlags,
+	services *services.Services,
+) (command.Result, error) {
+	encoding := args[0]
+	fromFile := decodeFlags.FromFile
 
-		/* todo from file flag should be remove and should be replaced with $(echo file)
-		but cobra has an issue with parsing pem content as it recognize it as flag due to ---- characters */
-		if encoded != "" && fromFile != "" {
-			return nil, fmt.Errorf("can not pass both command argument and from file flag")
-		}
-		if encoded == "" && fromFile == "" {
-			return nil, fmt.Errorf("provide argument for encoded key or use from file flag")
-		}
+	var encoded string
+	if len(args) > 1 {
+		encoded = args[1]
+	}
 
-		if fromFile != "" {
-			e, err := readerWriter.ReadFile(fromFile) // todo replace with file loader
-			if err != nil {
-				return nil, err
-			}
-			encoded = strings.TrimSpace(string(e))
-		}
+	/* todo from file flag should be remove and should be replaced with $(echo file)
+	   but cobra has an issue with parsing pem content as it recognize it as flag due to ---- characters */
+	if encoded != "" && fromFile != "" {
+		return nil, fmt.Errorf("can not pass both command argument and from file flag")
+	}
+	if encoded == "" && fromFile == "" {
+		return nil, fmt.Errorf("provide argument for encoded key or use from file flag")
+	}
 
-		var accountKey *flow.AccountKey
-		var err error
-		switch strings.ToLower(encoding) {
-		case "pem":
-			sigAlgo := crypto.StringToSignatureAlgorithm(decodeFlags.SigAlgo)
-			if sigAlgo == crypto.UnknownSignatureAlgorithm {
-				return nil, fmt.Errorf("invalid signature algorithm: %s", decodeFlags.SigAlgo)
-			}
-
-			accountKey, err = services.Keys.DecodePEM(encoded, sigAlgo)
-		case "rlp":
-			accountKey, err = services.Keys.DecodeRLP(encoded)
-		default:
-			return nil, fmt.Errorf("encoding type not supported. Valid encoding: RLP and PEM")
-		}
-
+	if fromFile != "" {
+		e, err := readerWriter.ReadFile(fromFile) // todo replace with file loader
 		if err != nil {
 			return nil, err
 		}
+		encoded = strings.TrimSpace(string(e))
+	}
 
-		return &KeyResult{
-			publicKey:  accountKey.PublicKey,
-			accountKey: accountKey,
-		}, err
-	},
+	var accountKey *flow.AccountKey
+	var err error
+	switch strings.ToLower(encoding) {
+	case "pem":
+		sigAlgo := crypto.StringToSignatureAlgorithm(decodeFlags.SigAlgo)
+		if sigAlgo == crypto.UnknownSignatureAlgorithm {
+			return nil, fmt.Errorf("invalid signature algorithm: %s", decodeFlags.SigAlgo)
+		}
+
+		accountKey, err = services.Keys.DecodePEM(encoded, sigAlgo)
+	case "rlp":
+		accountKey, err = services.Keys.DecodeRLP(encoded)
+	default:
+		return nil, fmt.Errorf("encoding type not supported. Valid encoding: RLP and PEM")
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &KeyResult{
+		publicKey:  accountKey.PublicKey,
+		accountKey: accountKey,
+	}, err
 }
