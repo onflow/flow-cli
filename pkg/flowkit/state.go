@@ -40,6 +40,7 @@ import (
 type State struct {
 	conf       *config.Config
 	confLoader *config.Loader
+	fileLoader Loader
 	accounts   Accounts
 }
 
@@ -73,6 +74,11 @@ func Load(configFilePaths []string) (*State, error) {
 	}
 
 	return proj, nil
+}
+
+// LoadFile exposes an injected file loader
+func (p State) LoadFile(source string) ([]byte, error) {
+	return p.fileLoader.ReadFile(source)
 }
 
 // SaveDefault saves configuration to default path
