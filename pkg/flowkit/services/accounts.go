@@ -151,7 +151,7 @@ func (a *Accounts) Create(
 			return nil, fmt.Errorf("wrong format for contract. Correct format is name:path, but got: %s", contract)
 		}
 
-		contractSource, err := a.state.LoadFile(contractFlagContent[1])
+		contractSource, err := a.state.ReadFile(contractFlagContent[1])
 		if err != nil {
 			return nil, err
 		}
