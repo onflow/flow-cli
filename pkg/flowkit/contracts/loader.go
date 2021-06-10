@@ -21,19 +21,19 @@ package contracts
 import "io/ioutil"
 
 type Loader interface {
-	Load(source string) (string, error)
+	Load(source string) ([]byte, error)
 	Normalize(base, relative string) string
 }
 
 type FilesystemLoader struct{}
 
-func (f FilesystemLoader) Load(source string) (string, error) {
+func (f FilesystemLoader) Load(source string) ([]byte, error) {
 	codeBytes, err := ioutil.ReadFile(source)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	return string(codeBytes), nil
+	return codeBytes, nil
 }
 
 func (f FilesystemLoader) Normalize(base, relative string) string {

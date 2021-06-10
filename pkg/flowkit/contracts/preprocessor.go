@@ -57,7 +57,7 @@ func (p *Preprocessor) AddContractSource(
 		len(p.contracts),
 		contractName,
 		contractSource,
-		contractCode,
+		string(contractCode),
 		target,
 		args,
 	)
