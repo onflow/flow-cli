@@ -40,41 +40,39 @@ var RemoveNetworkCommand = &command.Command{
 		Args:    cobra.MaximumNArgs(1),
 	},
 	Flags: &removeNetworkFlags,
-	RunS: func(
-		cmd *cobra.Command,
-		args []string,
-		readerWriter flowkit.ReaderWriter,
-		globalFlags command.GlobalFlags,
-		services *services.Services,
-		state *flowkit.State,
-	) (command.Result, error) {
-		if state == nil {
-			return nil, config.ErrDoesNotExist
-		}
-
-		name := ""
-		if len(args) == 1 {
-			name = args[0]
-		} else {
-			name = output.RemoveNetworkPrompt(*state.Networks())
-		}
-
-		err := state.Networks().Remove(name)
-		if err != nil {
-			return nil, err
-		}
-
-		err = state.SaveDefault()
-		if err != nil {
-			return nil, err
-		}
-
-		return &ConfigResult{
-			result: "network removed",
-		}, nil
-	},
+	RunS:  removeNetwork,
 }
 
-func init() {
-	RemoveNetworkCommand.AddToParent(RemoveCmd)
+func removeNetwork(
+	cmd *cobra.Command,
+	args []string,
+	readerWriter flowkit.ReaderWriter,
+	globalFlags command.GlobalFlags,
+	services *services.Services,
+	state *flowkit.State,
+) (command.Result, error) {
+	if state == nil {
+		return nil, config.ErrDoesNotExist
+	}
+
+	name := ""
+	if len(args) == 1 {
+		name = args[0]
+	} else {
+		name = output.RemoveNetworkPrompt(*state.Networks())
+	}
+
+	err := state.Networks().Remove(name)
+	if err != nil {
+		return nil, err
+	}
+
+	err = state.SaveDefault()
+	if err != nil {
+		return nil, err
+	}
+
+	return &ConfigResult{
+		result: "network removed",
+	}, nil
 }

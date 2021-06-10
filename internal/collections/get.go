@@ -39,20 +39,22 @@ var GetCommand = &command.Command{
 		Args:    cobra.ExactArgs(1),
 	},
 	Flags: &collectionFlags,
-	Run: func(
-		cmd *cobra.Command,
-		args []string,
-		readerWriter flowkit.ReaderWriter,
-		globalFlags command.GlobalFlags,
-		services *services.Services,
-	) (command.Result, error) {
-		id := flow.HexToID(args[0])
+	Run:   get,
+}
 
-		collection, err := services.Collections.Get(id)
-		if err != nil {
-			return nil, err
-		}
+func get(
+	cmd *cobra.Command,
+	args []string,
+	readerWriter flowkit.ReaderWriter,
+	globalFlags command.GlobalFlags,
+	services *services.Services,
+) (command.Result, error) {
+	id := flow.HexToID(args[0])
 
-		return &CollectionResult{collection}, nil
-	},
+	collection, err := services.Collections.Get(id)
+	if err != nil {
+		return nil, err
+	}
+
+	return &CollectionResult{collection}, nil
 }

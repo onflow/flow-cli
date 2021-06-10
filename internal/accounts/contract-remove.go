@@ -45,31 +45,33 @@ var RemoveCommand = &command.Command{
 		Args:    cobra.ExactArgs(1),
 	},
 	Flags: &flagsRemove,
-	RunS: func(
-		cmd *cobra.Command,
-		args []string,
-		readerWriter flowkit.ReaderWriter,
-		globalFlags command.GlobalFlags,
-		services *services.Services,
-		state *flowkit.State,
-	) (command.Result, error) {
-		if flagsRemove.Results {
-			fmt.Println("⚠️ DEPRECATION WARNING: results flag is deprecated, results are by default included in all executions")
-		}
+	RunS:  removeContract,
+}
 
-		contractName := args[0]
+func removeContract(
+	cmd *cobra.Command,
+	args []string,
+	readerWriter flowkit.ReaderWriter,
+	globalFlags command.GlobalFlags,
+	services *services.Services,
+	state *flowkit.State,
+) (command.Result, error) {
+	if flagsRemove.Results {
+		fmt.Println("⚠️ DEPRECATION WARNING: results flag is deprecated, results are by default included in all executions")
+	}
 
-		from := state.Accounts().ByName(flagsRemove.Signer)
+	contractName := args[0]
 
-		account, err := services.Accounts.RemoveContract(contractName, from)
-		if err != nil {
-			return nil, err
-		}
+	from := state.Accounts().ByName(flagsRemove.Signer)
 
-		return &AccountResult{
-			Account:  account,
-			showCode: false,
-			include:  flagsRemove.Include,
-		}, nil
-	},
+	account, err := services.Accounts.RemoveContract(contractName, from)
+	if err != nil {
+		return nil, err
+	}
+
+	return &AccountResult{
+		Account:  account,
+		showCode: false,
+		include:  flagsRemove.Include,
+	}, nil
 }

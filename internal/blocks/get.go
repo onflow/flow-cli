@@ -47,35 +47,37 @@ var GetCommand = &command.Command{
 		Args:    cobra.ExactArgs(1),
 	},
 	Flags: &blockFlags,
-	Run: func(
-		cmd *cobra.Command,
-		args []string,
-		readerWriter flowkit.ReaderWriter,
-		globalFlags command.GlobalFlags,
-		services *services.Services,
-	) (command.Result, error) {
-		if blockFlags.Latest || blockFlags.BlockID != "" || blockFlags.BlockHeight != 0 {
-			return nil, fmt.Errorf("⚠️  No longer supported: use command argument.")
-		}
+	Run:   get,
+}
 
-		if blockFlags.Verbose {
-			fmt.Println("⚠️  DEPRECATION WARNING: use include transactions flag instead")
-		}
+func get(
+	cmd *cobra.Command,
+	args []string,
+	readerWriter flowkit.ReaderWriter,
+	globalFlags command.GlobalFlags,
+	services *services.Services,
+) (command.Result, error) {
+	if blockFlags.Latest || blockFlags.BlockID != "" || blockFlags.BlockHeight != 0 {
+		return nil, fmt.Errorf("⚠️  No longer supported: use command argument.")
+	}
 
-		block, events, collections, err := services.Blocks.GetBlock(
-			args[0], // block id
-			blockFlags.Events,
-			blockFlags.Verbose,
-		)
-		if err != nil {
-			return nil, err
-		}
+	if blockFlags.Verbose {
+		fmt.Println("⚠️  DEPRECATION WARNING: use include transactions flag instead")
+	}
 
-		return &BlockResult{
-			block:       block,
-			events:      events,
-			verbose:     blockFlags.Verbose,
-			collections: collections,
-		}, nil
-	},
+	block, events, collections, err := services.Blocks.GetBlock(
+		args[0], // block id
+		blockFlags.Events,
+		blockFlags.Verbose,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return &BlockResult{
+		block:       block,
+		events:      events,
+		verbose:     blockFlags.Verbose,
+		collections: collections,
+	}, nil
 }

@@ -45,22 +45,24 @@ var StakingCommand = &command.Command{
 		Args:    cobra.ExactArgs(1),
 	},
 	Flags: &stakingFlags,
-	Run: func(
-		cmd *cobra.Command,
-		args []string,
-		readerWriter flowkit.ReaderWriter,
-		globalFlags command.GlobalFlags,
-		services *services.Services,
-	) (command.Result, error) {
-		address := flow.HexToAddress(args[0])
+	Run:   stakingInfo,
+}
 
-		staking, delegation, err := services.Accounts.StakingInfo(address) // address
-		if err != nil {
-			return nil, err
-		}
+func stakingInfo(
+	cmd *cobra.Command,
+	args []string,
+	readerWriter flowkit.ReaderWriter,
+	globalFlags command.GlobalFlags,
+	services *services.Services,
+) (command.Result, error) {
+	address := flow.HexToAddress(args[0])
 
-		return &StakingResult{*staking, *delegation}, nil
-	},
+	staking, delegation, err := services.Accounts.StakingInfo(address) // address
+	if err != nil {
+		return nil, err
+	}
+
+	return &StakingResult{*staking, *delegation}, nil
 }
 
 // StakingResult represent result from all account commands

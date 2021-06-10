@@ -29,3 +29,10 @@ var RemoveCmd = &cobra.Command{
 	Args:             cobra.ExactArgs(1),
 	TraverseChildren: true,
 }
+
+func init() {
+	RemoveAccountCommand.AddToParent(RemoveCmd)
+	RemoveContractCommand.AddToParent(RemoveCmd)
+	RemoveDeploymentCommand.AddToParent(RemoveCmd)
+	RemoveNetworkCommand.AddToParent(RemoveCmd)
+}

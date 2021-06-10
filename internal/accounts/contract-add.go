@@ -45,37 +45,39 @@ var AddContractCommand = &command.Command{
 		Args:    cobra.ExactArgs(2),
 	},
 	Flags: &addContractFlags,
-	RunS: func(
-		cmd *cobra.Command,
-		args []string,
-		readerWriter flowkit.ReaderWriter,
-		globalFlags command.GlobalFlags,
-		services *services.Services,
-		state *flowkit.State,
-	) (command.Result, error) {
-		if createFlags.Results {
-			fmt.Println("⚠️ DEPRECATION WARNING: results flag is deprecated, results are by default included in all executions")
-		}
+	RunS:  addContract,
+}
 
-		name := args[0]
-		filename := args[1]
+func addContract(
+	cmd *cobra.Command,
+	args []string,
+	readerWriter flowkit.ReaderWriter,
+	globalFlags command.GlobalFlags,
+	services *services.Services,
+	state *flowkit.State,
+) (command.Result, error) {
+	if createFlags.Results {
+		fmt.Println("⚠️ DEPRECATION WARNING: results flag is deprecated, results are by default included in all executions")
+	}
 
-		code, err := readerWriter.ReadFile(filename)
-		if err != nil {
-			return nil, fmt.Errorf("error loading contract file: %w", err)
-		}
+	name := args[0]
+	filename := args[1]
 
-		to := state.Accounts().ByName(addContractFlags.Signer)
+	code, err := readerWriter.ReadFile(filename)
+	if err != nil {
+		return nil, fmt.Errorf("error loading contract file: %w", err)
+	}
 
-		account, err := services.Accounts.AddContract(to, name, code, false)
-		if err != nil {
-			return nil, err
-		}
+	to := state.Accounts().ByName(addContractFlags.Signer)
 
-		return &AccountResult{
-			Account:  account,
-			showCode: false,
-			include:  addContractFlags.Include,
-		}, nil
-	},
+	account, err := services.Accounts.AddContract(to, name, code, false)
+	if err != nil {
+		return nil, err
+	}
+
+	return &AccountResult{
+		Account:  account,
+		showCode: false,
+		include:  addContractFlags.Include,
+	}, nil
 }

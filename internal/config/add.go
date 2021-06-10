@@ -29,3 +29,10 @@ var AddCmd = &cobra.Command{
 	Args:             cobra.ExactArgs(1),
 	TraverseChildren: true,
 }
+
+func init() {
+	AddAccountCommand.AddToParent(AddCmd)
+	AddContractCommand.AddToParent(AddCmd)
+	AddDeploymentCommand.AddToParent(AddCmd)
+	AddNetworkCommand.AddToParent(AddCmd)
+}

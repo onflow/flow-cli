@@ -48,51 +48,49 @@ var AddContractCommand = &command.Command{
 		Args:    cobra.NoArgs,
 	},
 	Flags: &addContractFlags,
-	RunS: func(
-		cmd *cobra.Command,
-		args []string,
-		readerWriter flowkit.ReaderWriter,
-		globalFlags command.GlobalFlags,
-		services *services.Services,
-		state *flowkit.State,
-	) (command.Result, error) {
-		if state == nil {
-			return nil, config.ErrDoesNotExist
-		}
-
-		contractData, flagsProvided, err := flagsToContractData(addContractFlags)
-		if err != nil {
-			return nil, err
-		}
-
-		if !flagsProvided {
-			contractData = output.NewContractPrompt()
-		}
-
-		contracts := config.StringToContracts(
-			contractData["name"],
-			contractData["source"],
-			contractData["emulator"],
-			contractData["testnet"],
-		)
-
-		for _, contract := range contracts {
-			state.Contracts().AddOrUpdate(contract.Name, contract)
-		}
-
-		err = state.SaveDefault()
-		if err != nil {
-			return nil, err
-		}
-
-		return &ConfigResult{
-			result: fmt.Sprintf("Contract %s added to the configuration", contractData["name"]),
-		}, nil
-	},
+	RunS:  addContract,
 }
 
-func init() {
-	AddContractCommand.AddToParent(AddCmd)
+func addContract(
+	cmd *cobra.Command,
+	args []string,
+	readerWriter flowkit.ReaderWriter,
+	globalFlags command.GlobalFlags,
+	services *services.Services,
+	state *flowkit.State,
+) (command.Result, error) {
+	if state == nil {
+		return nil, config.ErrDoesNotExist
+	}
+
+	contractData, flagsProvided, err := flagsToContractData(addContractFlags)
+	if err != nil {
+		return nil, err
+	}
+
+	if !flagsProvided {
+		contractData = output.NewContractPrompt()
+	}
+
+	contracts := config.StringToContracts(
+		contractData["name"],
+		contractData["source"],
+		contractData["emulator"],
+		contractData["testnet"],
+	)
+
+	for _, contract := range contracts {
+		state.Contracts().AddOrUpdate(contract.Name, contract)
+	}
+
+	err = state.SaveDefault()
+	if err != nil {
+		return nil, err
+	}
+
+	return &ConfigResult{
+		result: fmt.Sprintf("Contract %s added to the configuration", contractData["name"]),
+	}, nil
 }
 
 func flagsToContractData(flags flagsAddContract) (map[string]string, bool, error) {
