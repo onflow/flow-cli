@@ -46,13 +46,13 @@ var SignCommand = &command.Command{
 	RunS: func(
 		cmd *cobra.Command,
 		args []string,
-		loader flowkit.Loader,
+		readerWriter flowkit.ReaderWriter,
 		globalFlags command.GlobalFlags,
 		services *services.Services,
 		state *flowkit.State,
 	) (command.Result, error) {
 		filename := args[0]
-		payload, err := loader.ReadFile(filename)
+		payload, err := readerWriter.ReadFile(filename)
 		if err != nil {
 			return nil, fmt.Errorf("failed to read partial transaction from %s: %v", filename, err)
 		}

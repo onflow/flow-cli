@@ -47,14 +47,14 @@ var SendSignedCommand = &command.Command{
 	RunS: func(
 		cmd *cobra.Command,
 		args []string,
-		loader flowkit.Loader,
+		readerWriter flowkit.ReaderWriter,
 		globalFlags command.GlobalFlags,
 		services *services.Services,
 		state *flowkit.State,
 	) (command.Result, error) {
 		filename := args[0]
 
-		code, err := loader.ReadFile(filename)
+		code, err := readerWriter.ReadFile(filename)
 		if err != nil {
 			return nil, fmt.Errorf("error loading transaction payload: %w", err)
 		}

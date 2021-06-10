@@ -50,7 +50,7 @@ var AddNetworkCommand = &command.Command{
 	RunS: func(
 		cmd *cobra.Command,
 		args []string,
-		loader flowkit.Loader,
+		readerWriter flowkit.ReaderWriter,
 		globalFlags command.GlobalFlags,
 		services *services.Services,
 		state *flowkit.State,
