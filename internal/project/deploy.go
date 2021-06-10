@@ -40,21 +40,23 @@ var DeployCommand = &command.Command{
 		Example: "flow project deploy --network testnet",
 	},
 	Flags: &deployFlags,
-	RunS: func(
-		cmd *cobra.Command,
-		args []string,
-		readerWriter flowkit.ReaderWriter,
-		globalFlags command.GlobalFlags,
-		services *services.Services,
-		state *flowkit.State,
-	) (command.Result, error) {
-		c, err := services.Project.Deploy(globalFlags.Network, deployFlags.Update)
-		if err != nil {
-			return nil, err
-		}
+	RunS:  deploy,
+}
 
-		return &DeployResult{c}, nil
-	},
+func deploy(
+	cmd *cobra.Command,
+	args []string,
+	readerWriter flowkit.ReaderWriter,
+	globalFlags command.GlobalFlags,
+	services *services.Services,
+	state *flowkit.State,
+) (command.Result, error) {
+	c, err := services.Project.Deploy(globalFlags.Network, deployFlags.Update)
+	if err != nil {
+		return nil, err
+	}
+
+	return &DeployResult{c}, nil
 }
 
 // DeployResult result structure
