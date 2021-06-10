@@ -23,8 +23,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-
-	"github.com/onflow/flow-cli/pkg/flowkit"
 )
 
 // ErrDoesNotExist is error to be returned when config file does not exists
@@ -46,6 +44,11 @@ type Parser interface {
 	SupportsFormat(string) bool
 }
 
+type ReaderWriter interface {
+	ReadFile(source string) ([]byte, error)
+	WriteFile(filename string, data []byte, perm os.FileMode) error
+}
+
 // ConfigParsers is a list of all configuration parsers.
 type ConfigParsers []Parser
 
@@ -62,13 +65,13 @@ func (c *ConfigParsers) FindForFormat(extension string) Parser {
 
 // Loader contains actions for composing and modifying configuration.
 type Loader struct {
-	readerWriter     flowkit.ReaderWriter
+	readerWriter     ReaderWriter
 	configParsers    ConfigParsers
 	composedFromFile map[string]string
 }
 
 // NewLoader returns a new loader.
-func NewLoader(readerWriter flowkit.ReaderWriter) *Loader {
+func NewLoader(readerWriter ReaderWriter) *Loader {
 	return &Loader{
 		readerWriter:     readerWriter,
 		composedFromFile: map[string]string{},
