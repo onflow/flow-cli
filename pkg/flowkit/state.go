@@ -21,6 +21,7 @@ package flowkit
 import (
 	"errors"
 	"fmt"
+	"os"
 	"path"
 
 	"github.com/onflow/cadence"
@@ -38,10 +39,10 @@ import (
 
 // State contains the configuration for a Flow project.
 type State struct {
-	conf       *config.Config
-	confLoader *config.Loader
-	fileLoader Loader
-	accounts   Accounts
+	conf         *config.Config
+	confLoader   *config.Loader
+	readerWriter ReaderWriter
+	accounts     Accounts
 }
 
 // Contract is a Cadence contract definition for a project.
@@ -52,8 +53,9 @@ type Contract struct {
 	Args   []cadence.Value
 }
 
-type Loader interface {
+type ReaderWriter interface {
 	ReadFile(source string) ([]byte, error)
+	WriteFile(filename string, data []byte, perm os.FileMode) error
 }
 
 // Load loads a project configuration and returns the resulting project.
@@ -80,14 +82,14 @@ func Load(configFilePaths []string) (*State, error) {
 	return proj, nil
 }
 
-// Loader retrieve current file loader
-func (p *State) Loader() Loader {
-	return p.fileLoader
+// ReaderWriter retrieve current file reader writer
+func (p *State) ReaderWriter() ReaderWriter {
+	return p.readerWriter
 }
 
 // ReadFile exposes an injected file loader
 func (p *State) ReadFile(source string) ([]byte, error) {
-	return p.fileLoader.ReadFile(source)
+	return p.readerWriter.ReadFile(source)
 }
 
 // SaveDefault saves configuration to default path

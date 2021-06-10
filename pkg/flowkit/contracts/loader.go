@@ -28,11 +28,11 @@ type Loader interface {
 }
 
 type FilesystemLoader struct {
-	Loader flowkit.Loader
+	Reader flowkit.ReaderWriter
 }
 
 func (f FilesystemLoader) Load(source string) ([]byte, error) {
-	codeBytes, err := f.Loader.ReadFile(source)
+	codeBytes, err := f.Reader.ReadFile(source)
 	if err != nil {
 		return nil, err
 	}

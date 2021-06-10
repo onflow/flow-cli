@@ -102,7 +102,7 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 	// create new processor for contract
 	processor := contracts.NewPreprocessor(
 		contracts.FilesystemLoader{
-			Loader: p.state.Loader(),
+			Reader: p.state.ReaderWriter(),
 		},
 		p.state.AliasesForNetwork(network),
 	)
