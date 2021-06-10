@@ -52,6 +52,7 @@ var InitCommand = &command.Command{
 	Run: func(
 		cmd *cobra.Command,
 		args []string,
+		loader flowkit.Loader,
 		globalFlags command.GlobalFlags,
 		services *services.Services,
 	) (command.Result, error) {

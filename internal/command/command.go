@@ -25,6 +25,8 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/spf13/afero"
+
 	"github.com/onflow/flow-cli/pkg/flowkit"
 
 	"github.com/onflow/flow-cli/build"
@@ -39,7 +41,7 @@ import (
 type Run func(
 	cmd *cobra.Command,
 	args []string,
-	// todo add file loader
+	loader flowkit.Loader,
 	globalFlags GlobalFlags,
 	services *services.Services,
 ) (Result, error)
@@ -47,7 +49,7 @@ type Run func(
 type RunWithState func(
 	cmd *cobra.Command,
 	args []string,
-	// todo add file loader
+	loader flowkit.Loader,
 	globalFlags GlobalFlags,
 	services *services.Services,
 	state *flowkit.State,
@@ -93,20 +95,24 @@ func (c Command) AddToParent(parent *cobra.Command) {
 
 		logger := createLogger(Flags.Log, Flags.Format)
 
+		// initialize services
 		service := services.NewServices(clientGateway, state, logger)
 
 		checkVersion(logger)
 
+		// initialize file loader used in commands
+		loader := &afero.Afero{Fs: afero.NewOsFs()}
+
 		// run command based on requirements for state
 		var result Result
 		if c.Run != nil {
-			result, err = c.Run(cmd, args, Flags, service)
+			result, err = c.Run(cmd, args, loader, Flags, service)
 		} else if c.RunS != nil {
 			if confErr != nil {
 				handleError("Config Error", confErr)
 			}
 
-			result, err = c.RunS(cmd, args, Flags, service, state)
+			result, err = c.RunS(cmd, args, loader, Flags, service, state)
 		} else {
 			panic("command implementation needs to provide run functionality")
 		}

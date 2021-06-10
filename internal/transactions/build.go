@@ -53,6 +53,7 @@ var BuildCommand = &command.Command{
 	RunS: func(
 		cmd *cobra.Command,
 		args []string,
+		loader flowkit.Loader,
 		globalFlags command.GlobalFlags,
 		services *services.Services,
 		state *flowkit.State,

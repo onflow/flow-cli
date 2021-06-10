@@ -23,6 +23,7 @@ import (
 
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/internal/config"
+	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/services"
 )
 
@@ -40,6 +41,7 @@ var InitCommand = &command.Command{
 	Run: func(
 		cmd *cobra.Command,
 		args []string,
+		loader flowkit.Loader,
 		globalFlags command.GlobalFlags,
 		services *services.Services,
 	) (command.Result, error) {

@@ -142,7 +142,7 @@ func addAccountContractWithArgs(
 func NewCreateAccountTransaction(
 	signer *Account,
 	keys []*flow.AccountKey,
-	contractArgs []string,
+	contractargs []string,
 ) (*Transaction, error) {
 
 	contracts := make([]templates.Contract, 0)

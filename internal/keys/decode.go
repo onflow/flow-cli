@@ -26,6 +26,7 @@ import (
 
 	"github.com/onflow/flow-go-sdk/crypto"
 
+	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/util"
 	"github.com/spf13/cobra"
 
@@ -52,6 +53,7 @@ var DecodeCommand = &command.Command{
 	Run: func(
 		cmd *cobra.Command,
 		args []string,
+		loader flowkit.Loader,
 		globalFlags command.GlobalFlags,
 		services *services.Services,
 	) (command.Result, error) {

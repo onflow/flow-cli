@@ -21,36 +21,11 @@ package util
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
 	"text/tabwriter"
 
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
 )
-
-// LoadFile loads a file by filename.
-func LoadFile(filename string) ([]byte, error) {
-	var code []byte
-	var err error
-
-	if filename != "" {
-		code, err = ioutil.ReadFile(filename)
-		if err != nil {
-			return nil, fmt.Errorf("Failed to load file: %s", filename)
-		}
-	}
-
-	return code, nil
-}
-
-func IsByteSlice(v interface{}) bool {
-	slice, isSlice := v.([]interface{})
-	if !isSlice {
-		return false
-	}
-	_, isBytes := slice[0].(byte)
-	return isBytes
-}
 
 // ConvertSigAndHashAlgo parses and validates a signature and hash algorithm pair.
 func ConvertSigAndHashAlgo(
