@@ -34,15 +34,15 @@ func init() {
 	Cmd.AddCommand(RemoveCmd)
 }
 
-type ConfigResult struct {
+type Result struct {
 	result string
 }
 
-func (r *ConfigResult) JSON() interface{} {
+func (r *Result) JSON() interface{} {
 	return nil
 }
 
-func (r *ConfigResult) String() string {
+func (r *Result) String() string {
 	if r.result != "" {
 		return r.result
 	}
@@ -50,6 +50,6 @@ func (r *ConfigResult) String() string {
 	return ""
 }
 
-func (r *ConfigResult) Oneliner() string {
+func (r *Result) Oneliner() string {
 	return ""
 }

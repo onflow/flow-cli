@@ -56,7 +56,7 @@ func (r *ScriptResult) String() string {
 
 	_, _ = fmt.Fprintf(writer, "Result: %s\n", r.Value)
 
-	writer.Flush()
+	_ = writer.Flush()
 
 	return b.String()
 }

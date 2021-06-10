@@ -35,7 +35,7 @@ import (
 type Result interface {
 	// String will output the result in human readable output.
 	String() string
-	// Oneliner will output the result in "grepable" format.
+	// Oneliner will output the result in "grep-able" format.
 	Oneliner() string
 	// JSON will output the result in JSON format
 	JSON() interface{}

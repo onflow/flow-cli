@@ -87,7 +87,7 @@ func (p *Preprocessor) ResolveImports() error {
 			} else if isAlias {
 				c.addAlias(location, flow.HexToAddress(importAlias))
 			} else {
-				return fmt.Errorf("Import from %s could not be found: %s, make sure import path is correct.", c.name, importPath)
+				return fmt.Errorf("import from %s could not be found: %s, make sure import path is correct.", c.name, importPath)
 			}
 		}
 	}

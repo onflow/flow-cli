@@ -51,7 +51,7 @@ var AddContractCommand = &command.Command{
 func addContract(
 	args []string,
 	readerWriter flowkit.ReaderWriter,
-	globalFlags command.GlobalFlags,
+	_ command.GlobalFlags,
 	services *services.Services,
 	state *flowkit.State,
 ) (command.Result, error) {

@@ -85,7 +85,7 @@ func (e *EventResult) String() string {
 	// if we have events passed directly and not in relation to block
 	eventsString(writer, e.Events)
 
-	writer.Flush()
+	_ = writer.Flush()
 	return b.String()
 }
 

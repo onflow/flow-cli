@@ -50,8 +50,8 @@ var StakingCommand = &command.Command{
 
 func stakingInfo(
 	args []string,
-	readerWriter flowkit.ReaderWriter,
-	globalFlags command.GlobalFlags,
+	_ flowkit.ReaderWriter,
+	_ command.GlobalFlags,
 	services *services.Services,
 ) (command.Result, error) {
 	address := flow.HexToAddress(args[0])

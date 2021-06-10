@@ -52,10 +52,10 @@ var AddContractCommand = &command.Command{
 }
 
 func addContract(
-	args []string,
-	readerWriter flowkit.ReaderWriter,
-	globalFlags command.GlobalFlags,
-	services *services.Services,
+	_ []string,
+	_ flowkit.ReaderWriter,
+	_ command.GlobalFlags,
+	_ *services.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
 	if state == nil {
@@ -87,7 +87,7 @@ func addContract(
 		return nil, err
 	}
 
-	return &ConfigResult{
+	return &Result{
 		result: fmt.Sprintf("Contract %s added to the configuration", contractData["name"]),
 	}, nil
 }

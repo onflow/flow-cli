@@ -81,7 +81,7 @@ func (k *KeyResult) String() string {
 		}
 	}
 
-	writer.Flush()
+	_ = writer.Flush()
 
 	return b.String()
 }

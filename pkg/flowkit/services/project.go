@@ -227,6 +227,11 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 			deployErr = true
 		}
 
+		if result == nil {
+			p.logger.Error("could not fetch the result of deployment, skipping")
+			continue
+		}
+
 		if result.Error == nil && !deployErr {
 			p.logger.StopProgress()
 			fmt.Printf("%s -> 0x%s\n", output.Green(contract.Name()), contract.Target())

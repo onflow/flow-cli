@@ -51,10 +51,10 @@ var AddDeploymentCommand = &command.Command{
 }
 
 func addDeployment(
-	args []string,
-	readerWriter flowkit.ReaderWriter,
-	globalFlags command.GlobalFlags,
-	services *services.Services,
+	_ []string,
+	_ flowkit.ReaderWriter,
+	_ command.GlobalFlags,
+	_ *services.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
 	if state == nil {
@@ -83,7 +83,7 @@ func addDeployment(
 		return nil, err
 	}
 
-	return &ConfigResult{
+	return &Result{
 		result: "Deployment added to the configuration.\nYou can deploy using 'flow project deploy' command",
 	}, nil
 }

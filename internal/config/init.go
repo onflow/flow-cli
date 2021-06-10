@@ -55,9 +55,9 @@ var InitCommand = &command.Command{
 }
 
 func Initialise(
-	args []string,
+	_ []string,
 	readerWriter flowkit.ReaderWriter,
-	globalFlags command.GlobalFlags,
+	_ command.GlobalFlags,
 	services *services.Services,
 ) (command.Result, error) {
 
@@ -112,7 +112,7 @@ func (r *InitResult) String() string {
 		output.Bold("'flow init --reset'"),
 	)
 
-	writer.Flush()
+	_ = writer.Flush()
 	return b.String()
 }
 

@@ -22,8 +22,9 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
-
-	"github.com/onflow/flow-cli/pkg/flowkit/util"
+	"os"
+	"os/exec"
+	"regexp"
 
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
@@ -128,11 +129,49 @@ func (a *KmsAccountKey) Signer(ctx context.Context) (crypto.Signer, error) {
 }
 
 func (a *KmsAccountKey) Validate() error {
-	return util.GcloudApplicationSignin(a.ToConfig().ResourceID)
+	return gcloudApplicationSignin(a.ToConfig().ResourceID)
 }
 
 func (a *KmsAccountKey) PrivateKey() (*crypto.PrivateKey, error) {
 	return nil, fmt.Errorf("private key not accessible")
+}
+
+// gcloudApplicationSignin signs in as an application user using gcloud command line tool
+// currently assumes gcloud is already installed on the machine
+// will by default pop a browser window to sign in
+func gcloudApplicationSignin(resourceID string) error {
+	googleAppCreds := os.Getenv("GOOGLE_APPLICATION_CREDENTIALS")
+	if len(googleAppCreds) > 0 {
+		return nil
+	}
+
+	kms, err := cloudkms.KeyFromResourceID(resourceID)
+	if err != nil {
+		return err
+	}
+
+	proj := kms.ProjectID
+	if len(proj) == 0 {
+		return fmt.Errorf(
+			"could not get GOOGLE_APPLICATION_CREDENTIALS, no google service account JSON provided but private key type is KMS",
+		)
+	}
+
+	loginCmd := exec.Command("gcloud", "auth", "application-default", "login", fmt.Sprintf("--project=%s", proj))
+
+	output, err := loginCmd.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("Failed to run %q: %s\n", loginCmd.String(), err)
+	}
+
+	squareBracketRegex := regexp.MustCompile(`(?s)\[(.*)\]`)
+	regexResult := squareBracketRegex.FindAllStringSubmatch(string(output), -1)
+	// Should only be one value. Second index since first index contains the square brackets
+	googleApplicationCreds := regexResult[0][1]
+
+	os.Setenv("GOOGLE_APPLICATION_CREDENTIALS", googleApplicationCreds)
+
+	return nil
 }
 
 func newKmsAccountKey(key config.AccountKey) (AccountKey, error) {

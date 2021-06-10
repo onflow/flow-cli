@@ -21,6 +21,7 @@ package command
 import (
 	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"strings"
@@ -206,7 +207,13 @@ func checkVersion(logger output.Logger) {
 		return
 	}
 
-	defer resp.Body.Close()
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+			logger.Error("error closing request")
+		}
+	}(resp.Body)
+
 	body, _ := ioutil.ReadAll(resp.Body)
 	latestVersion := strings.TrimSpace(string(body))
 
@@ -220,7 +227,7 @@ func checkVersion(logger output.Logger) {
 			"\n%s  Version warning: a new version of Flow CLI is available (%s).\n"+
 				"   Read the installation guide for upgrade instructions: https://docs.onflow.org/flow-cli/install\n",
 			output.WarningEmoji(),
-			strings.ReplaceAll(string(latestVersion), "\n", ""),
+			strings.ReplaceAll(latestVersion, "\n", ""),
 		))
 	}
 }

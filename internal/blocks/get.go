@@ -52,8 +52,8 @@ var GetCommand = &command.Command{
 
 func get(
 	args []string,
-	readerWriter flowkit.ReaderWriter,
-	globalFlags command.GlobalFlags,
+	_ flowkit.ReaderWriter,
+	_ command.GlobalFlags,
 	services *services.Services,
 ) (command.Result, error) {
 	if blockFlags.Latest || blockFlags.BlockID != "" || blockFlags.BlockHeight != 0 {

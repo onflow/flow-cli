@@ -51,7 +51,7 @@ var UpdateCommand = &command.Command{
 func updateContract(
 	args []string,
 	readerWriter flowkit.ReaderWriter,
-	globalFlags command.GlobalFlags,
+	_ command.GlobalFlags,
 	services *services.Services,
 	state *flowkit.State,
 ) (command.Result, error) {

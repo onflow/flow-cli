@@ -173,7 +173,7 @@ func (l *Loader) postprocess(baseConf *Config) (*Config, error) {
 
 		configParser := l.configParsers.FindForFormat(filepath.Ext(path))
 		if configParser == nil {
-			return nil, fmt.Errorf("Parser not found for config: %s", path)
+			return nil, fmt.Errorf("parser not found for config: %s", path)
 		}
 
 		conf, err := configParser.Deserialize(raw)

@@ -54,10 +54,10 @@ var AddAccountCommand = &command.Command{
 }
 
 func addAccount(
-	args []string,
-	readerWriter flowkit.ReaderWriter,
-	globalFlags command.GlobalFlags,
-	services *services.Services,
+	_ []string,
+	_ flowkit.ReaderWriter,
+	_ command.GlobalFlags,
+	_ *services.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
 	if state == nil {
@@ -92,7 +92,7 @@ func addAccount(
 		return nil, err
 	}
 
-	return &ConfigResult{
+	return &Result{
 		result: fmt.Sprintf("Account %s added to the configuration", accountData["name"]),
 	}, nil
 

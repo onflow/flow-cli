@@ -47,11 +47,11 @@ var Command = &command.Command{
 }
 
 func status(
-	args []string,
-	readerWriter flowkit.ReaderWriter,
+	_ []string,
+	_ flowkit.ReaderWriter,
 	globalFlags command.GlobalFlags,
 	services *services.Services,
-	state *flowkit.State,
+	_ *flowkit.State,
 ) (command.Result, error) {
 	accessNode, err := services.Status.Ping(globalFlags.Network)
 
@@ -104,7 +104,7 @@ func (r *Result) String() string {
 	_, _ = fmt.Fprintf(writer, "Network:\t %s\n", r.network)
 	_, _ = fmt.Fprintf(writer, "Access Node:\t %s\n", r.accessNode)
 
-	writer.Flush()
+	_ = writer.Flush()
 	return b.String()
 }
 

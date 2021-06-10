@@ -44,8 +44,8 @@ var GetCommand = &command.Command{
 
 func get(
 	args []string,
-	readerWriter flowkit.ReaderWriter,
-	globalFlags command.GlobalFlags,
+	_ flowkit.ReaderWriter,
+	_ command.GlobalFlags,
 	services *services.Services,
 ) (command.Result, error) {
 	id := flow.HexToID(args[0])

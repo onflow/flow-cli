@@ -51,10 +51,10 @@ var AddNetworkCommand = &command.Command{
 }
 
 func addNetwork(
-	args []string,
-	readerWriter flowkit.ReaderWriter,
-	globalFlags command.GlobalFlags,
-	services *services.Services,
+	_ []string,
+	_ flowkit.ReaderWriter,
+	_ command.GlobalFlags,
+	_ *services.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
 	if state == nil {
@@ -78,7 +78,7 @@ func addNetwork(
 		return nil, err
 	}
 
-	return &ConfigResult{
+	return &Result{
 		result: fmt.Sprintf("Network %s added to the configuration", networkData["name"]),
 	}, nil
 }

@@ -44,11 +44,11 @@ var DeployCommand = &command.Command{
 }
 
 func deploy(
-	args []string,
-	readerWriter flowkit.ReaderWriter,
+	_ []string,
+	_ flowkit.ReaderWriter,
 	globalFlags command.GlobalFlags,
 	services *services.Services,
-	state *flowkit.State,
+	_ *flowkit.State,
 ) (command.Result, error) {
 	c, err := services.Project.Deploy(globalFlags.Network, deployFlags.Update)
 	if err != nil {

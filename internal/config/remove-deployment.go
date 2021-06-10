@@ -45,9 +45,9 @@ var RemoveDeploymentCommand = &command.Command{
 
 func removeDeployment(
 	args []string,
-	readerWriter flowkit.ReaderWriter,
-	globalFlags command.GlobalFlags,
-	services *services.Services,
+	_ flowkit.ReaderWriter,
+	_ command.GlobalFlags,
+	_ *services.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
 	if state == nil {
@@ -73,7 +73,7 @@ func removeDeployment(
 		return nil, err
 	}
 
-	return &ConfigResult{
+	return &Result{
 		result: "deployment removed",
 	}, nil
 }

@@ -49,9 +49,9 @@ var GenerateCommand = &command.Command{
 }
 
 func generate(
-	args []string,
-	readerWriter flowkit.ReaderWriter,
-	globalFlags command.GlobalFlags,
+	_ []string,
+	_ flowkit.ReaderWriter,
+	_ command.GlobalFlags,
 	services *services.Services,
 ) (command.Result, error) {
 	if generateFlags.Algo != "" {

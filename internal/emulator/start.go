@@ -20,6 +20,8 @@ package emulator
 
 import (
 	"errors"
+	"fmt"
+	"os"
 
 	"github.com/spf13/afero"
 
@@ -63,20 +65,20 @@ func ConfiguredServiceKey(
 
 		state, err = flowkit.Init(loader, sigAlgo, hashAlgo)
 		if err != nil {
-			util.Exitf(1, err.Error())
+			Exitf(1, err.Error())
 		} else {
 			err = state.SaveDefault()
 			if err != nil {
-				util.Exitf(1, err.Error())
+				Exitf(1, err.Error())
 			}
 		}
 	} else {
 		state, err = flowkit.Load(command.Flags.ConfigPaths, loader)
 		if err != nil {
 			if errors.Is(err, config.ErrDoesNotExist) {
-				util.Exitf(1, "🙏 Configuration is missing, initialize it with: 'flow init' and then rerun this command.")
+				Exitf(1, "🙏 Configuration is missing, initialize it with: 'flow init' and then rerun this command.")
 			} else {
-				util.Exitf(1, err.Error())
+				Exitf(1, err.Error())
 			}
 		}
 	}
@@ -102,4 +104,9 @@ func ConfiguredServiceKey(
 func init() {
 	Cmd = start.Cmd(ConfiguredServiceKey)
 	Cmd.Use = "emulator"
+}
+
+func Exitf(code int, msg string, args ...interface{}) {
+	fmt.Printf(msg+"\n", args...)
+	os.Exit(code)
 }

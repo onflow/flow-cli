@@ -63,7 +63,7 @@ func (c *CollectionResult) String() string {
 		_, _ = fmt.Fprintf(writer, "%s\n", tx.String())
 	}
 
-	writer.Flush()
+	_ = writer.Flush()
 
 	return b.String()
 }
