@@ -83,7 +83,7 @@ var SendCommand = &command.Command{
 			return nil, fmt.Errorf("signer account: [%s] doesn't exists in configuration", sendFlags.Signer)
 		}
 
-		code, err := loader.ReadFile(codeFilename)
+		code, err := readerWriter.ReadFile(codeFilename)
 		if err != nil {
 			return nil, fmt.Errorf("error loading transaction file: %w", err)
 		}

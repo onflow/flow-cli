@@ -78,7 +78,7 @@ var BuildCommand = &command.Command{
 		}
 
 		filename := args[0]
-		code, err := loader.ReadFile(filename)
+		code, err := readerWriter.ReadFile(filename)
 		if err != nil {
 			return nil, fmt.Errorf("error loading transaction file: %w", err)
 		}

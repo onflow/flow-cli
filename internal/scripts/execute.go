@@ -71,7 +71,7 @@ var ExecuteCommand = &command.Command{
 			}
 		}
 
-		code, err := loader.ReadFile(filename)
+		code, err := readerWriter.ReadFile(filename)
 		if err != nil {
 			return nil, fmt.Errorf("error loading script file: %w", err)
 		}

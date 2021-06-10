@@ -74,7 +74,7 @@ var DecodeCommand = &command.Command{
 		}
 
 		if fromFile != "" {
-			e, err := loader.ReadFile(fromFile) // todo replace with file loader
+			e, err := readerWriter.ReadFile(fromFile) // todo replace with file loader
 			if err != nil {
 				return nil, err
 			}
