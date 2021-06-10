@@ -24,11 +24,9 @@ import (
 	"os"
 	"path"
 
+	"github.com/onflow/cadence"
 	"github.com/onflow/flow-cli/pkg/flowkit/config/json"
 	"github.com/onflow/flow-go-sdk/crypto"
-	"github.com/spf13/afero"
-
-	"github.com/onflow/cadence"
 
 	"github.com/onflow/flow-cli/pkg/flowkit/util"
 
@@ -237,13 +235,13 @@ func Exists(path string) bool {
 }
 
 // Init initializes a new Flow project.
-func Init(sigAlgo crypto.SignatureAlgorithm, hashAlgo crypto.HashAlgorithm) (*State, error) {
+func Init(readerWriter ReaderWriter, sigAlgo crypto.SignatureAlgorithm, hashAlgo crypto.HashAlgorithm) (*State, error) {
 	emulatorServiceAccount, err := generateEmulatorServiceAccount(sigAlgo, hashAlgo)
 	if err != nil {
 		return nil, err
 	}
 
-	loader := config.NewLoader(afero.NewOsFs())
+	loader := config.NewLoader(readerWriter)
 	loader.AddConfigParser(json.NewParser())
 
 	return &State{

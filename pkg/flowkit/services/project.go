@@ -54,6 +54,7 @@ func NewProject(
 }
 
 func (p *Project) Init(
+	readerWriter flowkit.ReaderWriter,
 	reset bool,
 	global bool,
 	sigAlgo crypto.SignatureAlgorithm,
@@ -72,7 +73,7 @@ func (p *Project) Init(
 		)
 	}
 
-	state, err := flowkit.Init(sigAlgo, hashAlgo)
+	state, err := flowkit.Init(readerWriter, sigAlgo, hashAlgo)
 	if err != nil {
 		return nil, err
 	}

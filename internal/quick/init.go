@@ -64,6 +64,7 @@ var InitCommand = &command.Command{
 		}
 
 		s, err := services.Project.Init(
+			readerWriter,
 			initFlag.Reset,
 			initFlag.Global,
 			sigAlgo,
