@@ -19,6 +19,9 @@
 package quick
 
 import (
+	"fmt"
+
+	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
@@ -43,17 +46,32 @@ var InitCommand = &command.Command{
 		globalFlags command.GlobalFlags,
 		services *services.Services,
 	) (command.Result, error) {
-		state, err := services.Project.Init(
+		sigAlgo := crypto.StringToSignatureAlgorithm(initFlag.ServiceKeySigAlgo)
+		if sigAlgo == crypto.UnknownSignatureAlgorithm {
+			return nil, fmt.Errorf("invalid signature algorithm: %s", initFlag.ServiceKeySigAlgo)
+		}
+
+		hashAlgo := crypto.StringToHashAlgorithm(initFlag.ServiceKeyHashAlgo)
+		if hashAlgo == crypto.UnknownHashAlgorithm {
+			return nil, fmt.Errorf("invalid hash algorithm: %s", initFlag.ServiceKeyHashAlgo)
+		}
+
+		privateKey, err := crypto.DecodePrivateKeyHex(sigAlgo, initFlag.ServicePrivateKey)
+		if err != nil {
+			return nil, fmt.Errorf("invalid private key: %w", err)
+		}
+
+		s, err := services.Project.Init(
 			initFlag.Reset,
 			initFlag.Global,
-			initFlag.ServiceKeySigAlgo,
-			initFlag.ServiceKeyHashAlgo,
-			initFlag.ServicePrivateKey,
+			sigAlgo,
+			hashAlgo,
+			privateKey,
 		)
 		if err != nil {
 			return nil, err
 		}
 
-		return &config.InitResult{State: state}, nil
+		return &config.InitResult{State: s}, nil
 	},
 }

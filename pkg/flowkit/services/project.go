@@ -57,9 +57,9 @@ func NewProject(
 func (p *Project) Init(
 	reset bool,
 	global bool,
-	serviceKeySigAlgo string,
-	serviceKeyHashAlgo string,
-	servicePrivateKey string,
+	sigAlgo crypto.SignatureAlgorithm,
+	hashAlgo crypto.HashAlgorithm,
+	serviceKey crypto.PrivateKey,
 ) (*flowkit.State, error) {
 	path := config.DefaultPath
 	if global {
@@ -73,24 +73,12 @@ func (p *Project) Init(
 		)
 	}
 
-	sigAlgo, hashAlgo, err := util.ConvertSigAndHashAlgo(serviceKeySigAlgo, serviceKeyHashAlgo)
-	if err != nil {
-		return nil, err
-	}
-
 	state, err := flowkit.Init(sigAlgo, hashAlgo)
 	if err != nil {
 		return nil, err
 	}
 
-	if len(servicePrivateKey) > 0 {
-		serviceKey, err := crypto.DecodePrivateKeyHex(sigAlgo, servicePrivateKey)
-		if err != nil {
-			return nil, fmt.Errorf("could not decode private key for a service account, provided private key: %s", servicePrivateKey)
-		}
-
-		state.Accounts().SetEmulatorKey(serviceKey)
-	}
+	state.SetEmulatorKey(serviceKey)
 
 	err = state.Save(path)
 	if err != nil {
