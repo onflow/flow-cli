@@ -41,7 +41,7 @@ import (
 type Run func(
 	cmd *cobra.Command,
 	args []string,
-	loader flowkit.Loader,
+	loader flowkit.ReaderWriter,
 	globalFlags GlobalFlags,
 	services *services.Services,
 ) (Result, error)
@@ -49,7 +49,7 @@ type Run func(
 type RunWithState func(
 	cmd *cobra.Command,
 	args []string,
-	loader flowkit.Loader,
+	loader flowkit.ReaderWriter,
 	globalFlags GlobalFlags,
 	services *services.Services,
 	state *flowkit.State,
@@ -81,8 +81,11 @@ const (
 // we have one place to handle all errors and ensure commands have consistent results
 func (c Command) AddToParent(parent *cobra.Command) {
 	c.Cmd.Run = func(cmd *cobra.Command, args []string) {
+		// initialize file loader used in commands
+		loader := &afero.Afero{Fs: afero.NewOsFs()}
+
 		// if we receive a config error that isn't missing config we should handle it
-		state, confErr := flowkit.Load(Flags.ConfigPaths)
+		state, confErr := flowkit.Load(Flags.ConfigPaths, loader)
 		if !errors.Is(confErr, config.ErrDoesNotExist) {
 			handleError("Config Error", confErr)
 		}
@@ -99,9 +102,6 @@ func (c Command) AddToParent(parent *cobra.Command) {
 		service := services.NewServices(clientGateway, state, logger)
 
 		checkVersion(logger)
-
-		// initialize file loader used in commands
-		loader := &afero.Afero{Fs: afero.NewOsFs()}
 
 		// run command based on requirements for state
 		var result Result
