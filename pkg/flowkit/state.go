@@ -38,9 +38,9 @@ import (
 
 // State contains the configuration for a Flow project.
 type State struct {
-	loader   *config.Loader
-	conf     *config.Config
-	accounts Accounts
+	conf       *config.Config
+	confLoader *config.Loader
+	accounts   Accounts
 }
 
 // Contract is a Cadence contract definition for a project.
@@ -50,8 +50,6 @@ type Contract struct {
 	Target flow.Address
 	Args   []cadence.Value
 }
-
-// refactor to config loader
 
 // Load loads a project configuration and returns the resulting project.
 func Load(configFilePaths []string) (*State, error) {
@@ -77,19 +75,15 @@ func Load(configFilePaths []string) (*State, error) {
 	return proj, nil
 }
 
-// refactor to config loader
-
 // SaveDefault saves configuration to default path
 func (p *State) SaveDefault() error {
 	return p.Save(config.DefaultPath)
 }
 
-// refactor to config loader
-
 // Save saves the project configuration to the given path.
 func (p *State) Save(path string) error {
 	p.conf.Accounts = accountsToConfig(p.accounts)
-	err := p.loader.Save(p.conf, path)
+	err := p.confLoader.Save(p.conf, path)
 
 	if err != nil {
 		return fmt.Errorf("failed to save project configuration to: %s", path)
@@ -98,14 +92,10 @@ func (p *State) Save(path string) error {
 	return nil
 }
 
-// refactor to config loader
-
 // Exists checks if a project configuration exists.
 func Exists(path string) bool {
 	return config.Exists(path)
 }
-
-// refactor
 
 // Init initializes a new Flow project.
 func Init(sigAlgo crypto.SignatureAlgorithm, hashAlgo crypto.HashAlgorithm) (*State, error) {
@@ -114,33 +104,29 @@ func Init(sigAlgo crypto.SignatureAlgorithm, hashAlgo crypto.HashAlgorithm) (*St
 		return nil, err
 	}
 
-	composer := config.NewLoader(afero.NewOsFs())
-	composer.AddConfigParser(json.NewParser())
+	loader := config.NewLoader(afero.NewOsFs())
+	loader.AddConfigParser(json.NewParser())
 
 	return &State{
-		loader:   composer,
-		conf:     config.DefaultConfig(),
-		accounts: Accounts{*emulatorServiceAccount},
+		confLoader: loader,
+		conf:       config.DefaultConfig(),
+		accounts:   Accounts{*emulatorServiceAccount},
 	}, nil
 }
 
-// refactor to get config
-
 // newProject creates a new project from a configuration object.
-func newProject(conf *config.Config, composer *config.Loader) (*State, error) {
+func newProject(conf *config.Config, loader *config.Loader) (*State, error) {
 	accounts, err := accountsFromConfig(conf)
 	if err != nil {
 		return nil, err
 	}
 
 	return &State{
-		loader:   composer,
-		conf:     conf,
-		accounts: accounts,
+		conf:       conf,
+		confLoader: loader,
+		accounts:   accounts,
 	}, nil
 }
-
-// refactor to contracts ?
 
 // ContractConflictExists returns true if the same contract is configured to deploy
 // to more than one account in the same network.
