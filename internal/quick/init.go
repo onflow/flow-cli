@@ -41,40 +41,42 @@ var InitCommand = &command.Command{
 		Example: "flow project init",
 	},
 	Flags: &initFlag,
-	Run: func(
-		cmd *cobra.Command,
-		args []string,
-		readerWriter flowkit.ReaderWriter,
-		globalFlags command.GlobalFlags,
-		services *services.Services,
-	) (command.Result, error) {
-		sigAlgo := crypto.StringToSignatureAlgorithm(initFlag.ServiceKeySigAlgo)
-		if sigAlgo == crypto.UnknownSignatureAlgorithm {
-			return nil, fmt.Errorf("invalid signature algorithm: %s", initFlag.ServiceKeySigAlgo)
-		}
+	Run:   initialise,
+}
 
-		hashAlgo := crypto.StringToHashAlgorithm(initFlag.ServiceKeyHashAlgo)
-		if hashAlgo == crypto.UnknownHashAlgorithm {
-			return nil, fmt.Errorf("invalid hash algorithm: %s", initFlag.ServiceKeyHashAlgo)
-		}
+func initialise(
+	cmd *cobra.Command,
+	args []string,
+	readerWriter flowkit.ReaderWriter,
+	globalFlags command.GlobalFlags,
+	services *services.Services,
+) (command.Result, error) {
+	sigAlgo := crypto.StringToSignatureAlgorithm(initFlag.ServiceKeySigAlgo)
+	if sigAlgo == crypto.UnknownSignatureAlgorithm {
+		return nil, fmt.Errorf("invalid signature algorithm: %s", initFlag.ServiceKeySigAlgo)
+	}
 
-		privateKey, err := crypto.DecodePrivateKeyHex(sigAlgo, initFlag.ServicePrivateKey)
-		if err != nil {
-			return nil, fmt.Errorf("invalid private key: %w", err)
-		}
+	hashAlgo := crypto.StringToHashAlgorithm(initFlag.ServiceKeyHashAlgo)
+	if hashAlgo == crypto.UnknownHashAlgorithm {
+		return nil, fmt.Errorf("invalid hash algorithm: %s", initFlag.ServiceKeyHashAlgo)
+	}
 
-		s, err := services.Project.Init(
-			readerWriter,
-			initFlag.Reset,
-			initFlag.Global,
-			sigAlgo,
-			hashAlgo,
-			privateKey,
-		)
-		if err != nil {
-			return nil, err
-		}
+	privateKey, err := crypto.DecodePrivateKeyHex(sigAlgo, initFlag.ServicePrivateKey)
+	if err != nil {
+		return nil, fmt.Errorf("invalid private key: %w", err)
+	}
 
-		return &config.InitResult{State: s}, nil
-	},
+	s, err := services.Project.Init(
+		readerWriter,
+		initFlag.Reset,
+		initFlag.Global,
+		sigAlgo,
+		hashAlgo,
+		privateKey,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return &config.InitResult{State: s}, nil
 }
