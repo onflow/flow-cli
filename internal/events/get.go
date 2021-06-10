@@ -42,31 +42,33 @@ var GetCommand = &command.Command{
 		Example: "flow events get A.1654653399040a61.FlowToken.TokensDeposited 11559500 11559600",
 	},
 	Flags: &generateFlag,
-	Run: func(
-		cmd *cobra.Command,
-		args []string,
-		readerWriter flowkit.ReaderWriter,
-		globalFlags command.GlobalFlags,
-		services *services.Services,
-	) (command.Result, error) {
-		if generateFlag.Verbose {
-			fmt.Println("⚠️  DEPRECATION WARNING: verbose flag is deprecated")
-		}
+	Run:   get,
+}
 
-		end := ""
-		if len(args) == 3 {
-			end = args[2] // block height range end
-		}
+func get(
+	cmd *cobra.Command,
+	args []string,
+	readerWriter flowkit.ReaderWriter,
+	globalFlags command.GlobalFlags,
+	services *services.Services,
+) (command.Result, error) {
+	if generateFlag.Verbose {
+		fmt.Println("⚠️  DEPRECATION WARNING: verbose flag is deprecated")
+	}
 
-		events, err := services.Events.Get(
-			args[0], // event name
-			args[1], // block height range start
-			end,
-		)
-		if err != nil {
-			return nil, err
-		}
+	end := ""
+	if len(args) == 3 {
+		end = args[2] // block height range end
+	}
 
-		return &EventResult{BlockEvents: events}, nil
-	},
+	events, err := services.Events.Get(
+		args[0], // event name
+		args[1], // block height range start
+		end,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return &EventResult{BlockEvents: events}, nil
 }
