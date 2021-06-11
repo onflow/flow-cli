@@ -21,8 +21,6 @@ package services
 import (
 	"testing"
 
-	"github.com/spf13/afero"
-
 	"github.com/onflow/flow-cli/pkg/flowkit"
 
 	"github.com/onflow/flow-go-sdk"
@@ -36,31 +34,14 @@ import (
 
 func TestBlocks(t *testing.T) {
 
-	mock := &tests.TestGateway{}
-	af := afero.Afero{afero.NewMemMapFs()}
-
-	project, err := flowkit.Init(af, crypto.ECDSA_P256, crypto.SHA3_256)
+	mock := tests.DefaultMockGateway()
+	readerWriter := tests.ReaderWriter()
+	project, err := flowkit.Init(readerWriter, crypto.ECDSA_P256, crypto.SHA3_256)
 	assert.NoError(t, err)
 
 	blocks := NewBlocks(mock, project, output.NewStdoutLogger(output.InfoLog))
 
 	t.Run("Get Latest Block", func(t *testing.T) {
-		called := false
-		mock.GetLatestBlockMock = func() (*flow.Block, error) {
-			called = true
-			return tests.NewBlock(), nil
-		}
-
-		mock.GetBlockByIDMock = func(identifier flow.Identifier) (*flow.Block, error) {
-			assert.Fail(t, "shouldn't be called")
-			return nil, nil
-		}
-
-		mock.GetBlockByHeightMock = func(height uint64) (*flow.Block, error) {
-			assert.Fail(t, "shouldn't be called")
-			return nil, nil
-		}
-
 		mock.GetEventsMock = func(name string, start uint64, end uint64) ([]client.BlockEvents, error) {
 			assert.Equal(t, name, "flow.AccountCreated")
 			return nil, nil
@@ -68,18 +49,12 @@ func TestBlocks(t *testing.T) {
 
 		_, _, _, err := blocks.GetBlock("latest", "flow.AccountCreated", false)
 
+		mock.AssertFuncsCalled(t, false, mock.GetLatestBlock)
+		mock.AssertFuncsNotCalled(t, true, mock.GetBlockByID, mock.GetBlockByHeight)
 		assert.NoError(t, err)
-		assert.True(t, called)
 	})
 
 	t.Run("Get Block by Height", func(t *testing.T) {
-		called := false
-		mock.GetBlockByHeightMock = func(height uint64) (*flow.Block, error) {
-			called = true
-			assert.Equal(t, height, uint64(10))
-			return tests.NewBlock(), nil
-		}
-
 		mock.GetBlockByIDMock = func(identifier flow.Identifier) (*flow.Block, error) {
 			assert.Fail(t, "shouldn't be called")
 			return nil, nil
@@ -88,6 +63,11 @@ func TestBlocks(t *testing.T) {
 		mock.GetLatestBlockMock = func() (*flow.Block, error) {
 			assert.Fail(t, "shouldn't be called")
 			return nil, nil
+		}
+
+		mock.GetBlockByHeightMock = func(height uint64) (*flow.Block, error) {
+			assert.Equal(t, height, uint64(10))
+			return tests.NewBlock(), nil
 		}
 
 		mock.GetEventsMock = func(name string, start uint64, end uint64) ([]client.BlockEvents, error) {
@@ -97,8 +77,8 @@ func TestBlocks(t *testing.T) {
 
 		_, _, _, err := blocks.GetBlock("10", "flow.AccountCreated", false)
 
+		mock.AssertFuncsCalled(t, false, mock.GetBlockByHeight, mock.GetEvents)
 		assert.NoError(t, err)
-		assert.True(t, called)
 	})
 
 	t.Run("Get Block by ID", func(t *testing.T) {

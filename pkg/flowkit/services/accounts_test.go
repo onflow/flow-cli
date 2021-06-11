@@ -35,20 +35,20 @@ import (
 func TestAccounts(t *testing.T) {
 
 	readerWriter := tests.ReaderWriter()
-	proj, err := flowkit.Init(readerWriter, crypto.ECDSA_P256, crypto.SHA3_256)
+	state, err := flowkit.Init(readerWriter, crypto.ECDSA_P256, crypto.SHA3_256)
 	assert.NoError(t, err)
 
 	mock := tests.DefaultMockGateway()
-	accounts := NewAccounts(mock, proj, output.NewStdoutLogger(output.NoneLog))
+	accounts := NewAccounts(mock, state, output.NewStdoutLogger(output.NoneLog))
 
 	pubKey, _ := crypto.DecodePublicKeyHex(crypto.ECDSA_P256, "858a7d978b25d61f348841a343f79131f4b9fab341dd8a476a6f4367c25510570bf69b795fc9c3d2b7191327d869bcf848508526a3c1cafd1af34f71c7765117")
-	serviceAcc, _ := proj.EmulatorServiceAccount()
+	serviceAcc, _ := state.EmulatorServiceAccount()
 	serviceAddress := serviceAcc.Address()
 
 	t.Run("Get an Account", func(t *testing.T) {
 		account, err := accounts.Get(serviceAddress)
 
-		mock.AssertFunctionsCalled(t, mock.GetAccount)
+		mock.AssertFuncsCalled(t, true, mock.GetAccount)
 		assert.NoError(t, err)
 		assert.Equal(t, account.Address, serviceAddress)
 	})
@@ -82,7 +82,7 @@ func TestAccounts(t *testing.T) {
 			nil,
 		)
 
-		mock.AssertFunctionsCalled(t, mock.SendSignedTransaction, mock.GetTransactionResult, mock.GetAccount)
+		mock.AssertFuncsCalled(t, true, mock.SendSignedTransaction, mock.GetTransactionResult, mock.GetAccount)
 		assert.NotNil(t, a)
 		assert.NoError(t, err)
 		assert.Equal(t, len(a.Address), 8)
@@ -116,7 +116,7 @@ func TestAccounts(t *testing.T) {
 			[]string{"Hello:hello.cdc"},
 		)
 
-		mock.AssertFunctionsCalled(t, mock.SendSignedTransaction, mock.GetTransactionResult, mock.GetAccount)
+		mock.AssertFuncsCalled(t, true, mock.SendSignedTransaction, mock.GetTransactionResult, mock.GetAccount)
 		assert.NotNil(t, a)
 		assert.NoError(t, err)
 		assert.Equal(t, len(a.Address), 8)
@@ -137,7 +137,7 @@ func TestAccounts(t *testing.T) {
 			false,
 		)
 
-		mock.AssertFunctionsCalled(t, mock.SendSignedTransaction)
+		mock.AssertFuncsCalled(t, true, mock.SendSignedTransaction)
 		assert.NotNil(t, a)
 		assert.NoError(t, err)
 		assert.Equal(t, len(a.Address), 8)
@@ -159,7 +159,7 @@ func TestAccounts(t *testing.T) {
 			true,
 		)
 
-		mock.AssertFunctionsCalled(t, mock.SendSignedTransaction)
+		mock.AssertFuncsCalled(t, true, mock.SendSignedTransaction)
 		assert.NotNil(t, account)
 		assert.Equal(t, len(account.Address), 8)
 		assert.NoError(t, err)
@@ -179,7 +179,7 @@ func TestAccounts(t *testing.T) {
 			tests.ContractHelloString.Name,
 		)
 
-		mock.AssertFunctionsCalled(t, mock.SendSignedTransaction)
+		mock.AssertFuncsCalled(t, true, mock.SendSignedTransaction)
 		assert.NotNil(t, account)
 		assert.Equal(t, len(account.Address), 8)
 		assert.NoError(t, err)
