@@ -55,20 +55,6 @@ var (
 
 func TestAccounts(t *testing.T) {
 
-	mock := &tests.TestGateway{}
-
-	mock.GetLatestBlockMock = func() (*flow.Block, error) {
-		return tests.NewBlock(), nil
-	}
-
-	mock.GetTransactionResultMock = func(tx *flow.Transaction) (*flow.TransactionResult, error) {
-		return tests.NewTransactionResult(nil), nil
-	}
-
-	mock.GetAccountMock = func(address flow.Address) (*flow.Account, error) {
-		return tests.NewAccountWithAddress(address.String()), nil
-	}
-
 	mockFS := afero.NewMemMapFs()
 	err := afero.WriteFile(mockFS, "hello.cdc", helloContract, 0644)
 	af := afero.Afero{mockFS}
@@ -76,6 +62,7 @@ func TestAccounts(t *testing.T) {
 	proj, err := flowkit.Init(af, crypto.ECDSA_P256, crypto.SHA3_256)
 	assert.NoError(t, err)
 
+	mock := tests.DefaultMockGateway()
 	accounts := NewAccounts(mock, proj, output.NewStdoutLogger(output.NoneLog))
 
 	serviceAcc := proj.Accounts().ByName(serviceName)
@@ -83,6 +70,7 @@ func TestAccounts(t *testing.T) {
 	t.Run("Get an Account", func(t *testing.T) {
 		account, err := accounts.Get(serviceAddress)
 
+		mock.AssertFunctionsCalled(t, mock.GetAccount)
 		assert.NoError(t, err)
 		assert.Equal(t, account.Address, serviceAddress)
 	})
@@ -93,7 +81,6 @@ func TestAccounts(t *testing.T) {
 		mock.SendSignedTransactionMock = func(tx *flowkit.Transaction) (*flow.Transaction, error) {
 			assert.Equal(t, tx.FlowTransaction().Authorizers[0], serviceAddress)
 			assert.Equal(t, tx.Signer().Address(), serviceAddress)
-
 			return tests.NewTransaction(), nil
 		}
 
@@ -105,7 +92,6 @@ func TestAccounts(t *testing.T) {
 		mock.GetAccountMock = func(address flow.Address) (*flow.Account, error) {
 			assert.Equal(t, address, compareAddress)
 			compareAddress = newAddress
-
 			return tests.NewAccountWithAddress(address.String()), nil
 		}
 
@@ -118,6 +104,7 @@ func TestAccounts(t *testing.T) {
 			nil,
 		)
 
+		mock.AssertFunctionsCalled(t, mock.SendSignedTransaction, mock.GetTransactionResult, mock.GetAccount)
 		assert.NotNil(t, a)
 		assert.NoError(t, err)
 		assert.Equal(t, len(a.Address), 8)
@@ -151,6 +138,7 @@ func TestAccounts(t *testing.T) {
 			[]string{"Hello:hello.cdc"},
 		)
 
+		mock.AssertFunctionsCalled(t, mock.SendSignedTransaction, mock.GetTransactionResult, mock.GetAccount)
 		assert.NotNil(t, a)
 		assert.NoError(t, err)
 		assert.Equal(t, len(a.Address), 8)
@@ -164,10 +152,9 @@ func TestAccounts(t *testing.T) {
 			return tests.NewTransaction(), nil
 		}
 
-		a, err := accounts.AddContract(
-			serviceAcc,
-			"Hello", helloContract, false)
+		a, err := accounts.AddContract(serviceAcc, "Hello", helloContract, false)
 
+		mock.AssertFunctionsCalled(t, mock.SendSignedTransaction)
 		assert.NotNil(t, a)
 		assert.NoError(t, err)
 		assert.Equal(t, len(a.Address), 8)
@@ -184,6 +171,7 @@ func TestAccounts(t *testing.T) {
 
 		account, err := accounts.AddContract(serviceAcc, "Hello", helloContract, true)
 
+		mock.AssertFunctionsCalled(t, mock.SendSignedTransaction)
 		assert.NotNil(t, account)
 		assert.Equal(t, len(account.Address), 8)
 		assert.NoError(t, err)
@@ -200,6 +188,7 @@ func TestAccounts(t *testing.T) {
 
 		account, err := accounts.RemoveContract(serviceAcc, "Hello")
 
+		mock.AssertFunctionsCalled(t, mock.SendSignedTransaction)
 		assert.NotNil(t, account)
 		assert.Equal(t, len(account.Address), 8)
 		assert.NoError(t, err)
