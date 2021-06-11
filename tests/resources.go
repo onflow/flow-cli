@@ -22,14 +22,32 @@ var ContractHelloString = resource{
 	`),
 }
 
-var Contracts = []resource{
+var TransactionArgString = resource{
+	Name: "transactionArg.cdc",
+	Source: []byte(`
+		transaction(greeting: String) {
+			let guest: Address
+			
+			prepare(authorizer: AuthAccount) {
+				self.guest = authorizer.address
+			}
+			
+			execute {
+				log(greeting.concat(",").concat(self.guest.toString()))
+			}
+		}
+	`),
+}
+
+var resources = []resource{
 	ContractHelloString,
+	TransactionArgString,
 }
 
 func ReaderWriter() afero.Afero {
 	var mockFS = afero.NewMemMapFs()
 
-	for _, c := range Contracts {
+	for _, c := range resources {
 		_ = afero.WriteFile(mockFS, c.Name, c.Source, 0644)
 	}
 
