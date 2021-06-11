@@ -142,6 +142,9 @@ func handleError(description string, err error) {
 		if errors.Is(err, config.ErrOutdatedFormat) {
 			_, _ = fmt.Fprintf(os.Stderr, "%s Config Error: %s \n", output.ErrorEmoji(), err.Error())
 			_, _ = fmt.Fprintf(os.Stderr, "%s Please reset configuration using: 'flow init --reset'. Read more about new configuration here: https://github.com/onflow/flow-cli/releases/tag/v0.17.0", output.TryEmoji())
+		} else if errors.Is(err, config.ErrDoesNotExist) {
+			_, _ = fmt.Fprintf(os.Stderr, "%s Config Error: %s \n", output.ErrorEmoji(), err.Error())
+			_, _ = fmt.Fprintf(os.Stderr, "%s Please create configuration using: flow init", output.TryEmoji())
 		} else if strings.Contains(err.Error(), "transport:") {
 			_, _ = fmt.Fprintf(os.Stderr, "%s %s \n", output.ErrorEmoji(), strings.Split(err.Error(), "transport:")[1])
 			_, _ = fmt.Fprintf(os.Stderr, "%s Make sure your emulator is running or connection address is correct.", output.TryEmoji())
