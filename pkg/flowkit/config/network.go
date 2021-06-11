@@ -12,8 +12,8 @@ type Network struct {
 	Host string
 }
 
-// GetByName get network by name.
-func (n *Networks) GetByName(name string) *Network {
+// ByName get network by name.
+func (n *Networks) ByName(name string) *Network {
 	for _, network := range *n {
 		if network.Name == name {
 			return &network
@@ -37,7 +37,7 @@ func (n *Networks) AddOrUpdate(name string, network Network) {
 
 // Remove network by the name.
 func (n *Networks) Remove(name string) error {
-	network := n.GetByName(name)
+	network := n.ByName(name)
 	if network == nil {
 		return fmt.Errorf("network named %s does not exist in configuration", name)
 	}

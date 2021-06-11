@@ -47,7 +47,7 @@ func NewStatus(
 // Ping sends Ping request to network.
 func (s *Status) Ping(network string) (string, error) {
 	err := s.gateway.Ping()
-	accessNode := s.state.Networks().GetByName(network).Host
+	accessNode := s.state.Networks().ByName(network).Host
 
 	return accessNode, err
 }

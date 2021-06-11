@@ -81,7 +81,7 @@ func NewTransactionResult(events []flow.Event) *flow.TransactionResult {
 	return &res
 }
 
-func NewAccountCreateResult(address string) *flow.TransactionResult {
+func NewAccountCreateResult(address flow.Address) *flow.TransactionResult {
 	events := []flow.Event{
 		*NewEvent(0,
 			"flow.AccountCreated",
@@ -90,7 +90,7 @@ func NewAccountCreateResult(address string) *flow.TransactionResult {
 				Type:       cadence.AddressType{},
 			}},
 			[]cadence.Value{
-				cadence.NewString(address),
+				cadence.NewString(address.String()),
 			},
 		),
 	}
