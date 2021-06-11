@@ -21,8 +21,6 @@ package services
 import (
 	"testing"
 
-	"github.com/spf13/afero"
-
 	"github.com/onflow/flow-cli/pkg/flowkit"
 
 	"github.com/onflow/flow-go-sdk"
@@ -35,60 +33,37 @@ import (
 
 const gasLimit = 1000
 
-var transactionCode = []byte(`
-	transaction(greeting: String) {
-	  let guest: Address
-	
-	  prepare(authorizer: AuthAccount) {
-		self.guest = authorizer.address
-	  }
-	
-	  execute {
-		log(greeting.concat(",").concat(self.guest.toString()))
-	  }
-	}
-`)
-
 func TestTransactions(t *testing.T) {
 	mock := tests.DefaultMockGateway()
+	readerWriter := tests.ReaderWriter()
 
-	af := afero.Afero{afero.NewMemMapFs()}
-	proj, err := flowkit.Init(af, crypto.ECDSA_P256, crypto.SHA3_256)
+	proj, err := flowkit.Init(readerWriter, crypto.ECDSA_P256, crypto.SHA3_256)
 	assert.NoError(t, err)
-	serviceAcc := proj.Accounts().ByName(serviceName)
+
+	serviceAcc, _ := proj.EmulatorServiceAccount()
+	serviceAddress := serviceAcc.Address()
 	transactions := NewTransactions(mock, proj, output.NewStdoutLogger(output.NoneLog))
 
 	t.Run("Get Transaction", func(t *testing.T) {
-		called := 0
 		txs := tests.NewTransaction()
 
 		mock.GetTransactionResultMock = func(tx *flow.Transaction) (*flow.TransactionResult, error) {
-			called++
 			assert.Equal(t, tx.ID(), txs.ID())
 			return tests.NewTransactionResult(nil), nil
 		}
 
 		mock.GetTransactionMock = func(id flow.Identifier) (*flow.Transaction, error) {
-			called++
 			return txs, nil
 		}
 
 		_, _, err := transactions.GetStatus(txs.ID(), true)
 
+		mock.AssertFuncsCalled(t, true, mock.GetTransactionResult, mock.GetTransaction)
 		assert.NoError(t, err)
-		assert.Equal(t, called, 2)
 	})
 
 	t.Run("Send Transaction args", func(t *testing.T) {
-		called := 0
-
-		mock.GetTransactionResultMock = func(tx *flow.Transaction) (*flow.TransactionResult, error) {
-			called++
-			return tests.NewTransactionResult(nil), nil
-		}
-
 		mock.SendSignedTransactionMock = func(tx *flowkit.Transaction) (*flow.Transaction, error) {
-			called++
 			arg, err := tx.FlowTransaction().Argument(0)
 
 			assert.NoError(t, err)
@@ -102,15 +77,15 @@ func TestTransactions(t *testing.T) {
 
 		_, _, err := transactions.Send(
 			serviceAcc,
-			transactionCode,
+			tests.TransactionArgString.Source,
 			"",
 			gasLimit,
 			args,
 			"",
 		)
 
+		mock.AssertFuncsCalled(t, true, mock.GetTransactionResult)
 		assert.NoError(t, err)
-		assert.Equal(t, called, 2)
 	})
 
 }
