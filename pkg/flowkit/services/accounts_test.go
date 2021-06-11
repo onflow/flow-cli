@@ -55,7 +55,7 @@ var (
 
 func TestAccounts(t *testing.T) {
 
-	mock := &tests.MockGateway{}
+	mock := &tests.TestGateway{}
 
 	mock.GetLatestBlockMock = func() (*flow.Block, error) {
 		return tests.NewBlock(), nil

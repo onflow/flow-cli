@@ -36,7 +36,7 @@ import (
 
 func TestBlocks(t *testing.T) {
 
-	mock := &tests.MockGateway{}
+	mock := &tests.TestGateway{}
 	af := afero.Afero{afero.NewMemMapFs()}
 
 	project, err := flowkit.Init(af, crypto.ECDSA_P256, crypto.SHA3_256)

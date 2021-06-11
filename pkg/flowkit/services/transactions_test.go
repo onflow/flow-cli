@@ -50,19 +50,7 @@ var transactionCode = []byte(`
 `)
 
 func TestTransactions(t *testing.T) {
-	mock := &tests.MockGateway{}
-
-	mock.SendSignedTransactionMock = func(tx *flowkit.Transaction) (*flow.Transaction, error) {
-		return tx.FlowTransaction(), nil
-	}
-
-	mock.GetLatestBlockMock = func() (*flow.Block, error) {
-		return tests.NewBlock(), nil
-	}
-
-	mock.GetAccountMock = func(address flow.Address) (*flow.Account, error) {
-		return tests.NewAccountWithAddress(address.String()), nil
-	}
+	mock := tests.DefaultMockGateway()
 
 	af := afero.Afero{afero.NewMemMapFs()}
 	proj, err := flowkit.Init(af, crypto.ECDSA_P256, crypto.SHA3_256)

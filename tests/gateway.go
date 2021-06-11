@@ -27,7 +27,7 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowkit/gateway"
 )
 
-type MockGateway struct {
+type TestGateway struct {
 	GetAccountMock                func(address flow.Address) (*flow.Account, error)
 	SendTransactionMock           func(tx *flowkit.Transaction) (*flow.Transaction, error)
 	PrepareTransactionPayloadMock func(tx *flowkit.Transaction) (*flowkit.Transaction, error)
@@ -43,50 +43,60 @@ type MockGateway struct {
 	PingMock                      func() error
 }
 
-func NewMockGateway() gateway.Gateway {
-	return &MockGateway{}
+func DefaultMockGateway() gateway.Gateway {
+	return &TestGateway{
+		SendSignedTransactionMock: func(tx *flowkit.Transaction) (*flow.Transaction, error) {
+			return tx.FlowTransaction(), nil
+		},
+		GetLatestBlockMock: func() (*flow.Block, error) {
+			return NewBlock(), nil
+		},
+		GetAccountMock: func(address flow.Address) (*flow.Account, error) {
+			return NewAccountWithAddress(address.String()), nil
+		},
+	}
 }
 
-func (g *MockGateway) GetAccount(address flow.Address) (*flow.Account, error) {
+func (g *TestGateway) GetAccount(address flow.Address) (*flow.Account, error) {
 	return g.GetAccountMock(address)
 }
 
-func (g *MockGateway) SendSignedTransaction(tx *flowkit.Transaction) (*flow.Transaction, error) {
+func (g *TestGateway) SendSignedTransaction(tx *flowkit.Transaction) (*flow.Transaction, error) {
 	return g.SendSignedTransactionMock(tx)
 }
 
-func (g *MockGateway) GetTransactionResult(tx *flow.Transaction, waitSeal bool) (*flow.TransactionResult, error) {
+func (g *TestGateway) GetTransactionResult(tx *flow.Transaction, waitSeal bool) (*flow.TransactionResult, error) {
 	return g.GetTransactionResultMock(tx)
 }
 
-func (g *MockGateway) GetTransaction(id flow.Identifier) (*flow.Transaction, error) {
+func (g *TestGateway) GetTransaction(id flow.Identifier) (*flow.Transaction, error) {
 	return g.GetTransactionMock(id)
 }
 
-func (g *MockGateway) ExecuteScript(script []byte, arguments []cadence.Value) (cadence.Value, error) {
+func (g *TestGateway) ExecuteScript(script []byte, arguments []cadence.Value) (cadence.Value, error) {
 	return g.ExecuteScriptMock(script, arguments)
 }
 
-func (g *MockGateway) GetLatestBlock() (*flow.Block, error) {
+func (g *TestGateway) GetLatestBlock() (*flow.Block, error) {
 	return g.GetLatestBlockMock()
 }
 
-func (g *MockGateway) GetBlockByID(id flow.Identifier) (*flow.Block, error) {
+func (g *TestGateway) GetBlockByID(id flow.Identifier) (*flow.Block, error) {
 	return g.GetBlockByIDMock(id)
 }
 
-func (g *MockGateway) GetBlockByHeight(height uint64) (*flow.Block, error) {
+func (g *TestGateway) GetBlockByHeight(height uint64) (*flow.Block, error) {
 	return g.GetBlockByHeightMock(height)
 }
 
-func (g *MockGateway) GetEvents(name string, start uint64, end uint64) ([]client.BlockEvents, error) {
+func (g *TestGateway) GetEvents(name string, start uint64, end uint64) ([]client.BlockEvents, error) {
 	return g.GetEventsMock(name, start, end)
 }
 
-func (g *MockGateway) GetCollection(id flow.Identifier) (*flow.Collection, error) {
+func (g *TestGateway) GetCollection(id flow.Identifier) (*flow.Collection, error) {
 	return g.GetCollectionMock(id)
 }
 
-func (g *MockGateway) Ping() error {
+func (g *TestGateway) Ping() error {
 	return nil
 }
