@@ -44,8 +44,8 @@ type AccountKey struct {
 	PrivateKey crypto.PrivateKey
 }
 
-// GetByName get account by name.
-func (a *Accounts) GetByName(name string) *Account {
+// ByName get account by name.
+func (a *Accounts) ByName(name string) *Account {
 	for _, account := range *a {
 		if account.Name == name {
 			return &account
@@ -69,7 +69,7 @@ func (a *Accounts) AddOrUpdate(name string, account Account) {
 
 // Remove remove account by name.
 func (a *Accounts) Remove(name string) error {
-	account := a.GetByName(name)
+	account := a.ByName(name)
 	if account == nil {
 		return fmt.Errorf("account named %s does not exist in configuration", name)
 	}

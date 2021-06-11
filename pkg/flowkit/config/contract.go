@@ -35,8 +35,8 @@ func (c *Contract) IsAlias() bool {
 	return c.Alias != ""
 }
 
-// GetByNameAndNetwork get contract array for account and network.
-func (c *Contracts) GetByNameAndNetwork(name string, network string) *Contract {
+// ByNameAndNetwork get contract array for account and network.
+func (c *Contracts) ByNameAndNetwork(name string, network string) *Contract {
 	contracts := make(Contracts, 0)
 
 	for _, contract := range *c {
@@ -48,7 +48,7 @@ func (c *Contracts) GetByNameAndNetwork(name string, network string) *Contract {
 	// if we don't find contract by name and network create a new contract
 	// and replace only name and source with existing
 	if len(contracts) == 0 {
-		cName := c.GetByName(name)
+		cName := c.ByName(name)
 		if cName == nil {
 			return nil
 		}
@@ -63,8 +63,8 @@ func (c *Contracts) GetByNameAndNetwork(name string, network string) *Contract {
 	return &contracts[0]
 }
 
-// GetByName get contract by name.
-func (c *Contracts) GetByName(name string) *Contract {
+// ByName get contract by name.
+func (c *Contracts) ByName(name string) *Contract {
 	for _, contract := range *c {
 		if contract.Name == name {
 			return &contract
@@ -74,8 +74,8 @@ func (c *Contracts) GetByName(name string) *Contract {
 	return nil
 }
 
-// GetByNetwork returns all contracts for specific network.
-func (c *Contracts) GetByNetwork(network string) Contracts {
+// ByNetwork returns all contracts for specific network.
+func (c *Contracts) ByNetwork(network string) Contracts {
 	var contracts []Contract
 
 	for _, contract := range *c {
@@ -102,7 +102,7 @@ func (c *Contracts) AddOrUpdate(name string, contract Contract) {
 
 // Remove contract by its name.
 func (c *Contracts) Remove(name string) error {
-	contract := c.GetByName(name)
+	contract := c.ByName(name)
 	if contract == nil {
 		return fmt.Errorf("contract named %s does not exist in configuration", name)
 	}

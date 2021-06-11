@@ -183,7 +183,7 @@ func (l *Loader) postprocess(baseConf *Config) (*Config, error) {
 
 		// create an empty config with single account so we don't include all accounts in file
 		accountConf := &Config{
-			Accounts: []Account{*conf.Accounts.GetByName(name)},
+			Accounts: []Account{*conf.Accounts.ByName(name)},
 		}
 
 		l.composeConfig(baseConf, accountConf)

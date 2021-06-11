@@ -138,7 +138,7 @@ func (p *State) Config() *config.Config {
 // EmulatorServiceAccount returns the service account for the default emulator profile.
 func (p *State) EmulatorServiceAccount() (Account, error) {
 	emulator := p.conf.Emulators.Default()
-	acc := p.conf.Accounts.GetByName(emulator.ServiceAccount)
+	acc := p.conf.Accounts.ByName(emulator.ServiceAccount)
 	return fromConfig(*acc)
 }
 
@@ -147,7 +147,7 @@ func (p *State) DeploymentContractsByNetwork(network string) ([]Contract, error)
 	contracts := make([]Contract, 0)
 
 	// get deployments for the specified network
-	for _, deploy := range p.conf.Deployments.GetByNetwork(network) {
+	for _, deploy := range p.conf.Deployments.ByNetwork(network) {
 		account := p.accounts.ByName(deploy.Account)
 		if account == nil {
 			return nil, fmt.Errorf("could not find account with name %s in the configuration", deploy.Account)
@@ -155,7 +155,7 @@ func (p *State) DeploymentContractsByNetwork(network string) ([]Contract, error)
 
 		// go through each contract in this deployment
 		for _, deploymentContract := range deploy.Contracts {
-			c := p.conf.Contracts.GetByNameAndNetwork(deploymentContract.Name, network)
+			c := p.conf.Contracts.ByNameAndNetwork(deploymentContract.Name, network)
 			if c == nil {
 				return nil, fmt.Errorf("could not find contract with name name %s in the configuration", deploymentContract.Name)
 			}
@@ -179,7 +179,7 @@ func (p *State) AccountNamesForNetwork(network string) []string {
 	names := make([]string, 0)
 
 	for _, account := range p.accounts {
-		if len(p.conf.Deployments.GetByAccountAndNetwork(account.name, network)) > 0 {
+		if len(p.conf.Deployments.ByAccountAndNetwork(account.name, network)) > 0 {
 			if !util.ContainsString(names, account.name) {
 				names = append(names, account.name)
 			}
@@ -196,7 +196,7 @@ func (p *State) AliasesForNetwork(network string) Aliases {
 	aliases := make(Aliases)
 
 	// get all contracts for selected network and if any has an address as target make it an alias
-	for _, contract := range p.conf.Contracts.GetByNetwork(network) {
+	for _, contract := range p.conf.Contracts.ByNetwork(network) {
 		if contract.IsAlias() {
 			aliases[path.Clean(contract.Source)] = contract.Alias
 		}
