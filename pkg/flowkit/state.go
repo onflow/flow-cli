@@ -66,6 +66,7 @@ func (p *State) ReaderWriter() ReaderWriter {
 
 // ReadFile exposes an injected file loader.
 func (p *State) ReadFile(source string) ([]byte, error) {
+	fmt.Println("#", p.readerWriter)
 	return p.readerWriter.ReadFile(source)
 }
 
@@ -245,9 +246,10 @@ func Init(readerWriter ReaderWriter, sigAlgo crypto.SignatureAlgorithm, hashAlgo
 	loader.AddConfigParser(json.NewParser())
 
 	return &State{
-		confLoader: loader,
-		conf:       config.DefaultConfig(),
-		accounts:   Accounts{*emulatorServiceAccount},
+		confLoader:   loader,
+		readerWriter: readerWriter,
+		conf:         config.DefaultConfig(),
+		accounts:     Accounts{*emulatorServiceAccount},
 	}, nil
 }
 
