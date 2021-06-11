@@ -64,7 +64,7 @@ func TestKeys(t *testing.T) {
 	t.Run("Fail generate keys, invalid sig algo", func(t *testing.T) {
 		_, err := keys.Generate("", crypto.StringToSignatureAlgorithm("JUSTNO"))
 
-		assert.Equal(t, err.Error(), "invalid signature algorithm: JUSTNO")
+		assert.Equal(t, err.Error(), "failed to generate private key: crypto: Go SDK does not support key generation for UNKNOWN algorithm")
 	})
 
 	t.Run("RLP decode keys", func(t *testing.T) {

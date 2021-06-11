@@ -66,7 +66,6 @@ func (p *State) ReaderWriter() ReaderWriter {
 
 // ReadFile exposes an injected file loader.
 func (p *State) ReadFile(source string) ([]byte, error) {
-	fmt.Println("#", p.readerWriter)
 	return p.readerWriter.ReadFile(source)
 }
 

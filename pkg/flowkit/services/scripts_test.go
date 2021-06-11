@@ -50,7 +50,7 @@ func TestScripts(t *testing.T) {
 
 	t.Run("Execute Script", func(t *testing.T) {
 		mock.ExecuteScriptMock = func(script []byte, arguments []cadence.Value) (cadence.Value, error) {
-			assert.Equal(t, len(string(script)), 69)
+			assert.Equal(t, len(string(script)), 74)
 			assert.Equal(t, arguments[0].String(), "\"Foo\"")
 			return arguments[0], nil
 		}

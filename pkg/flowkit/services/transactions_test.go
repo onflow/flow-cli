@@ -76,7 +76,7 @@ func TestTransactions(t *testing.T) {
 
 		mock.GetTransactionResultMock = func(tx *flow.Transaction) (*flow.TransactionResult, error) {
 			called++
-			assert.Equal(t, tx.ID().String(), txs.ID().String())
+			assert.Equal(t, tx.ID(), txs.ID())
 			return tests.NewTransactionResult(nil), nil
 		}
 
@@ -105,8 +105,8 @@ func TestTransactions(t *testing.T) {
 
 			assert.NoError(t, err)
 			assert.Equal(t, arg.String(), "\"Bar\"")
-			assert.Equal(t, tx.Signer().Address().String(), serviceAddress)
-			assert.Equal(t, len(string(tx.FlowTransaction().Script)), 209)
+			assert.Equal(t, tx.Signer().Address(), serviceAddress)
+			assert.Equal(t, len(string(tx.FlowTransaction().Script)), 216)
 			return tests.NewTransaction(), nil
 		}
 
@@ -123,20 +123,6 @@ func TestTransactions(t *testing.T) {
 
 		assert.NoError(t, err)
 		assert.Equal(t, called, 2)
-	})
-
-	t.Run("Send Transaction Fails wrong args", func(t *testing.T) {
-		args, _ := flowkit.ParseArgumentsCommaSplit([]string{"Bar:Foo"})
-
-		_, _, err := transactions.Send(
-			serviceAcc,
-			transactionCode,
-			"",
-			gasLimit,
-			args,
-			"",
-		)
-		assert.Equal(t, err.Error(), "argument not passed in correct format, correct format is: Type:Value, got Bar")
 	})
 
 }

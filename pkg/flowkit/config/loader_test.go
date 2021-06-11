@@ -91,7 +91,7 @@ func Test_ComposeJSON(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NoError(t, err2)
 
-	composer := config.NewLoader(af)
+	composer := config.NewLoader(afero.Afero{mockFS})
 	composer.AddConfigParser(json.NewParser())
 
 	conf, loadErr := composer.Load([]string{"flow.json", "flow-testnet.json"})
@@ -133,7 +133,7 @@ func Test_ComposeJSONOverwrite(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NoError(t, err2)
 
-	composer := config.NewLoader(af)
+	composer := config.NewLoader(afero.Afero{mockFS})
 	composer.AddConfigParser(json.NewParser())
 
 	conf, loadErr := composer.Load([]string{"flow.json", "flow-testnet.json"})
@@ -173,7 +173,7 @@ func Test_FromFileAccountSimple(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NoError(t, err2)
 
-	composer := config.NewLoader(af)
+	composer := config.NewLoader(afero.Afero{mockFS})
 	composer.AddConfigParser(json.NewParser())
 
 	conf, loadErr := composer.Load([]string{"flow.json", "private.json"})
@@ -233,7 +233,7 @@ func Test_FromFileAccountComplex(t *testing.T) {
 	assert.NoError(t, err2)
 	assert.NoError(t, err3)
 
-	composer := config.NewLoader(af)
+	composer := config.NewLoader(afero.Afero{mockFS})
 	composer.AddConfigParser(json.NewParser())
 
 	conf, loadErr := composer.Load([]string{"flow.json"})
@@ -267,7 +267,7 @@ func Test_JSONEnv(t *testing.T) {
 
 	assert.NoError(t, err)
 
-	composer := config.NewLoader(af)
+	composer := config.NewLoader(afero.Afero{mockFS})
 	composer.AddConfigParser(json.NewParser())
 	conf, loadErr := composer.Load([]string{"test2-flow.json"})
 
