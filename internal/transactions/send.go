@@ -96,8 +96,8 @@ func send(
 	}
 
 	tx, result, err := services.Transactions.Send(
-		code,
 		signer,
+		code,
 		codeFilename,
 		sendFlags.GasLimit,
 		txArgs,

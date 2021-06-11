@@ -144,8 +144,8 @@ func (t *Transactions) Build(
 
 // Sign transaction payload using the signer account.
 func (t *Transactions) Sign(
-	payload []byte,
 	signer *flowkit.Account,
+	payload []byte,
 	approveSigning bool,
 ) (*flowkit.Transaction, error) {
 	if t.state == nil {
@@ -200,8 +200,8 @@ func (t *Transactions) SendSigned(
 
 // Send a transaction code using the signer account and arguments for the specified network.
 func (t *Transactions) Send(
-	code []byte,
 	signer *flowkit.Account,
+	code []byte,
 	codeFilename string,
 	gasLimit uint64,
 	args []cadence.Value,

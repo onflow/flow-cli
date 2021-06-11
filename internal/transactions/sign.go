@@ -64,7 +64,7 @@ func sign(
 		return nil, fmt.Errorf("signer account: [%s] doesn't exists in configuration", signFlags.Signer)
 	}
 
-	signed, err := services.Transactions.Sign(payload, signer, globalFlags.Yes)
+	signed, err := services.Transactions.Sign(signer, payload, globalFlags.Yes)
 	if err != nil {
 		return nil, err
 	}

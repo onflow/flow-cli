@@ -63,7 +63,7 @@ func removeContract(
 
 	from := state.Accounts().ByName(flagsRemove.Signer)
 
-	account, err := services.Accounts.RemoveContract(contractName, from)
+	account, err := services.Accounts.RemoveContract(from, contractName)
 	if err != nil {
 		return nil, err
 	}

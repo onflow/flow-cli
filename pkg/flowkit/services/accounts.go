@@ -294,8 +294,8 @@ func (a *Accounts) AddContract(
 
 // RemoveContract removes a contract from an account and returns the updated account.
 func (a *Accounts) RemoveContract(
-	contractName string,
 	account *flowkit.Account,
+	contractName string,
 ) (*flow.Account, error) {
 	tx, err := flowkit.NewRemoveAccountContractTransaction(account, contractName)
 	if err != nil {
