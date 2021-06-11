@@ -3,13 +3,13 @@ package tests
 import "github.com/spf13/afero"
 
 type resource struct {
-	name   string
-	source []byte
+	Name   string
+	Source []byte
 }
 
 var ContractHelloString = resource{
-	name: "contractHello.cdc",
-	source: []byte(`
+	Name: "contractHello.cdc",
+	Source: []byte(`
 		pub contract Hello {
 			pub let greeting: String
 			init() {
@@ -30,7 +30,7 @@ func ReaderWriter() afero.Afero {
 	var mockFS = afero.NewMemMapFs()
 
 	for _, c := range Contracts {
-		_ = afero.WriteFile(mockFS, c.name, c.source, 0644)
+		_ = afero.WriteFile(mockFS, c.Name, c.Source, 0644)
 	}
 
 	return afero.Afero{mockFS}
