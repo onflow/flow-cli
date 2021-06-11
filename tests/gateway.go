@@ -19,6 +19,7 @@
 package tests
 
 import (
+	"fmt"
 	"reflect"
 	"runtime"
 	"testing"
@@ -63,19 +64,44 @@ func DefaultMockGateway() *TestGateway {
 	}
 }
 
-func (g *TestGateway) AssertFunctionsCalled(t *testing.T, funcs ...interface{}) {
+func (g *TestGateway) AssertFuncsCalled(t *testing.T, reset bool, funcs ...interface{}) {
 	if len(funcs) > len(g.functionsCalled) {
 		t.Error("not all required functions were called")
 	}
 
+	called, err := g.funcsCalled(funcs)
+	if reset {
+		g.functionsCalled = nil
+	}
+
+	if !called {
+		t.Error(err)
+	}
+}
+
+func (g *TestGateway) AssertFuncsNotCalled(t *testing.T, reset bool, funcs ...interface{}) {
+	called, err := g.funcsCalled(funcs)
+	if reset {
+		g.functionsCalled = nil
+	}
+
+	if called {
+		t.Error(err)
+	}
+}
+
+func (g *TestGateway) funcCall(f interface{}) {
+	g.functionsCalled = append(g.functionsCalled, f)
+}
+
+func (g *TestGateway) funcsCalled(funcs ...interface{}) (bool, error) {
 	for _, f := range funcs {
 		for x, c := range g.functionsCalled {
 			fp := reflect.ValueOf(f).Pointer()
 			if fp == reflect.ValueOf(c).Pointer() {
 				break
 			} else if x == len(g.functionsCalled)-1 {
-				g.functionsCalled = nil
-				t.Errorf(
+				return false, fmt.Errorf(
 					"required function %s not called",
 					runtime.FuncForPC(fp).Name(),
 				)
@@ -83,64 +109,60 @@ func (g *TestGateway) AssertFunctionsCalled(t *testing.T, funcs ...interface{}) 
 		}
 	}
 
-	g.functionsCalled = nil
-}
-
-func (g *TestGateway) funcCalled(f interface{}) {
-	g.functionsCalled = append(g.functionsCalled, f)
+	return true, nil
 }
 
 func (g *TestGateway) GetAccount(address flow.Address) (*flow.Account, error) {
-	g.funcCalled(g.GetAccount)
+	g.funcCall(g.GetAccount)
 	return g.GetAccountMock(address)
 }
 
 func (g *TestGateway) SendSignedTransaction(tx *flowkit.Transaction) (*flow.Transaction, error) {
-	g.funcCalled(g.SendSignedTransaction)
+	g.funcCall(g.SendSignedTransaction)
 	return g.SendSignedTransactionMock(tx)
 }
 
 func (g *TestGateway) GetTransactionResult(tx *flow.Transaction, waitSeal bool) (*flow.TransactionResult, error) {
-	g.funcCalled(g.GetTransactionResult)
+	g.funcCall(g.GetTransactionResult)
 	return g.GetTransactionResultMock(tx)
 }
 
 func (g *TestGateway) GetTransaction(id flow.Identifier) (*flow.Transaction, error) {
-	g.funcCalled(g.GetTransaction)
+	g.funcCall(g.GetTransaction)
 	return g.GetTransactionMock(id)
 }
 
 func (g *TestGateway) ExecuteScript(script []byte, arguments []cadence.Value) (cadence.Value, error) {
-	g.funcCalled(g.ExecuteScript)
+	g.funcCall(g.ExecuteScript)
 	return g.ExecuteScriptMock(script, arguments)
 }
 
 func (g *TestGateway) GetLatestBlock() (*flow.Block, error) {
-	g.funcCalled(g.GetLatestBlock)
+	g.funcCall(g.GetLatestBlock)
 	return g.GetLatestBlockMock()
 }
 
 func (g *TestGateway) GetBlockByID(id flow.Identifier) (*flow.Block, error) {
-	g.funcCalled(g.GetBlockByID)
+	g.funcCall(g.GetBlockByID)
 	return g.GetBlockByIDMock(id)
 }
 
 func (g *TestGateway) GetBlockByHeight(height uint64) (*flow.Block, error) {
-	g.funcCalled(g.GetBlockByHeight)
+	g.funcCall(g.GetBlockByHeight)
 	return g.GetBlockByHeightMock(height)
 }
 
 func (g *TestGateway) GetEvents(name string, start uint64, end uint64) ([]client.BlockEvents, error) {
-	g.funcCalled(g.GetEvents)
+	g.funcCall(g.GetEvents)
 	return g.GetEventsMock(name, start, end)
 }
 
 func (g *TestGateway) GetCollection(id flow.Identifier) (*flow.Collection, error) {
-	g.funcCalled(g.GetCollection)
+	g.funcCall(g.GetCollection)
 	return g.GetCollectionMock(id)
 }
 
 func (g *TestGateway) Ping() error {
-	g.funcCalled(g.Ping)
+	g.funcCall(g.Ping)
 	return nil
 }
