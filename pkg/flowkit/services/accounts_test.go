@@ -22,8 +22,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/spf13/afero"
-
 	"github.com/onflow/flow-cli/pkg/flowkit"
 
 	"github.com/onflow/flow-go-sdk"
@@ -34,38 +32,18 @@ import (
 	"github.com/onflow/flow-cli/tests"
 )
 
-var (
-	serviceAddress = flow.HexToAddress("f8d6e0586b0a20c7")
-	serviceName    = "emulator-account"
-	sigAlgo        = crypto.ECDSA_P256
-	hashAlgo       = crypto.SHA3_256
-	pubKey, _      = crypto.DecodePublicKeyHex(sigAlgo, "858a7d978b25d61f348841a343f79131f4b9fab341dd8a476a6f4367c25510570bf69b795fc9c3d2b7191327d869bcf848508526a3c1cafd1af34f71c7765117")
-	helloContract  = []byte(`
-		pub contract Hello {
-			pub let greeting: String
-			init() {
-				self.greeting = "Hello, World!"
-			}
-			pub fun hello(): String {
-				return self.greeting
-			}
-		}
-	`)
-)
-
 func TestAccounts(t *testing.T) {
 
-	mockFS := afero.NewMemMapFs()
-	err := afero.WriteFile(mockFS, "hello.cdc", helloContract, 0644)
-	af := afero.Afero{mockFS}
-
-	proj, err := flowkit.Init(af, crypto.ECDSA_P256, crypto.SHA3_256)
+	readerWriter := tests.ReaderWriter()
+	proj, err := flowkit.Init(readerWriter, crypto.ECDSA_P256, crypto.SHA3_256)
 	assert.NoError(t, err)
 
 	mock := tests.DefaultMockGateway()
 	accounts := NewAccounts(mock, proj, output.NewStdoutLogger(output.NoneLog))
 
-	serviceAcc := proj.Accounts().ByName(serviceName)
+	pubKey, _ := crypto.DecodePublicKeyHex(crypto.ECDSA_P256, "858a7d978b25d61f348841a343f79131f4b9fab341dd8a476a6f4367c25510570bf69b795fc9c3d2b7191327d869bcf848508526a3c1cafd1af34f71c7765117")
+	serviceAcc, _ := proj.EmulatorServiceAccount()
+	serviceAddress := serviceAcc.Address()
 
 	t.Run("Get an Account", func(t *testing.T) {
 		account, err := accounts.Get(serviceAddress)
@@ -99,8 +77,8 @@ func TestAccounts(t *testing.T) {
 			serviceAcc,
 			[]crypto.PublicKey{pubKey},
 			[]int{1000},
-			sigAlgo,
-			hashAlgo,
+			crypto.ECDSA_P256,
+			crypto.SHA3_256,
 			nil,
 		)
 
@@ -133,8 +111,8 @@ func TestAccounts(t *testing.T) {
 			serviceAcc,
 			[]crypto.PublicKey{pubKey},
 			[]int{1000},
-			sigAlgo,
-			hashAlgo,
+			crypto.ECDSA_P256,
+			crypto.SHA3_256,
 			[]string{"Hello:hello.cdc"},
 		)
 
@@ -152,7 +130,12 @@ func TestAccounts(t *testing.T) {
 			return tests.NewTransaction(), nil
 		}
 
-		a, err := accounts.AddContract(serviceAcc, "Hello", helloContract, false)
+		a, err := accounts.AddContract(
+			serviceAcc,
+			tests.ContractHelloString.Name,
+			tests.ContractHelloString.Source,
+			false,
+		)
 
 		mock.AssertFunctionsCalled(t, mock.SendSignedTransaction)
 		assert.NotNil(t, a)
@@ -169,7 +152,12 @@ func TestAccounts(t *testing.T) {
 			return tests.NewTransaction(), nil
 		}
 
-		account, err := accounts.AddContract(serviceAcc, "Hello", helloContract, true)
+		account, err := accounts.AddContract(
+			serviceAcc,
+			tests.ContractHelloString.Name,
+			tests.ContractHelloString.Source,
+			true,
+		)
 
 		mock.AssertFunctionsCalled(t, mock.SendSignedTransaction)
 		assert.NotNil(t, account)
@@ -186,7 +174,10 @@ func TestAccounts(t *testing.T) {
 			return tests.NewTransaction(), nil
 		}
 
-		account, err := accounts.RemoveContract(serviceAcc, "Hello")
+		account, err := accounts.RemoveContract(
+			serviceAcc,
+			tests.ContractHelloString.Name,
+		)
 
 		mock.AssertFunctionsCalled(t, mock.SendSignedTransaction)
 		assert.NotNil(t, account)
