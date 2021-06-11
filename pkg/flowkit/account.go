@@ -64,7 +64,7 @@ func accountsFromConfig(conf *config.Config) (Accounts, error) {
 			return nil, err
 		}
 
-		accounts = append(accounts, acc)
+		accounts = append(accounts, *acc)
 	}
 
 	return accounts, nil
@@ -80,13 +80,13 @@ func accountsToConfig(accounts Accounts) config.Accounts {
 	return accountConfs
 }
 
-func fromConfig(account config.Account) (Account, error) {
+func fromConfig(account config.Account) (*Account, error) {
 	key, err := NewAccountKey(account.Key)
 	if err != nil {
-		return Account{}, err
+		return nil, err
 	}
 
-	return Account{
+	return &Account{
 		name:    account.Name,
 		address: account.Address,
 		key:     key,
