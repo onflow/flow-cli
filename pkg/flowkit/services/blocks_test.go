@@ -21,6 +21,8 @@ package services
 import (
 	"testing"
 
+	"github.com/spf13/afero"
+
 	"github.com/onflow/flow-cli/pkg/flowkit"
 
 	"github.com/onflow/flow-go-sdk"
@@ -35,8 +37,9 @@ import (
 func TestBlocks(t *testing.T) {
 
 	mock := &tests.MockGateway{}
+	af := afero.Afero{afero.NewMemMapFs()}
 
-	project, err := flowkit.Init(crypto.ECDSA_P256, crypto.SHA3_256)
+	project, err := flowkit.Init(af, crypto.ECDSA_P256, crypto.SHA3_256)
 	assert.NoError(t, err)
 
 	blocks := NewBlocks(mock, project, output.NewStdoutLogger(output.InfoLog))

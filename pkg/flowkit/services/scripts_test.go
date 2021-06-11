@@ -21,6 +21,8 @@ package services
 import (
 	"testing"
 
+	"github.com/spf13/afero"
+
 	"github.com/onflow/flow-cli/pkg/flowkit"
 
 	"github.com/onflow/cadence"
@@ -31,10 +33,17 @@ import (
 	"github.com/onflow/flow-cli/tests"
 )
 
+var script = []byte(`
+	pub fun main(name: String): String {
+	  return "Hello ".concat(name)
+	}
+`)
+
 func TestScripts(t *testing.T) {
 	mock := &tests.MockGateway{}
 
-	proj, err := flowkit.Init(crypto.ECDSA_P256, crypto.SHA3_256)
+	af := afero.Afero{afero.NewMemMapFs()}
+	proj, err := flowkit.Init(af, crypto.ECDSA_P256, crypto.SHA3_256)
 	assert.NoError(t, err)
 
 	scripts := NewScripts(mock, proj, output.NewStdoutLogger(output.InfoLog))
@@ -46,7 +55,8 @@ func TestScripts(t *testing.T) {
 			return arguments[0], nil
 		}
 
-		_, err := scripts.Execute("../../../tests/script.cdc", []string{"String:Foo"}, "", "")
+		args, _ := flowkit.ParseArgumentsCommaSplit([]string{"String:Foo"})
+		_, err := scripts.Execute(script, args, "", "")
 
 		assert.NoError(t, err)
 	})

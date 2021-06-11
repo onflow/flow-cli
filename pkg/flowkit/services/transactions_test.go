@@ -21,6 +21,8 @@ package services
 import (
 	"testing"
 
+	"github.com/spf13/afero"
+
 	"github.com/onflow/flow-cli/pkg/flowkit"
 
 	"github.com/onflow/flow-go-sdk"
@@ -32,6 +34,20 @@ import (
 )
 
 const gasLimit = 1000
+
+var transactionCode = []byte(`
+	transaction(greeting: String) {
+	  let guest: Address
+	
+	  prepare(authorizer: AuthAccount) {
+		self.guest = authorizer.address
+	  }
+	
+	  execute {
+		log(greeting.concat(",").concat(self.guest.toString()))
+	  }
+	}
+`)
 
 func TestTransactions(t *testing.T) {
 	mock := &tests.MockGateway{}
@@ -48,9 +64,10 @@ func TestTransactions(t *testing.T) {
 		return tests.NewAccountWithAddress(address.String()), nil
 	}
 
-	proj, err := flowkit.Init(crypto.ECDSA_P256, crypto.SHA3_256)
+	af := afero.Afero{afero.NewMemMapFs()}
+	proj, err := flowkit.Init(af, crypto.ECDSA_P256, crypto.SHA3_256)
 	assert.NoError(t, err)
-
+	serviceAcc := proj.Accounts().ByName(serviceName)
 	transactions := NewTransactions(mock, proj, output.NewStdoutLogger(output.NoneLog))
 
 	t.Run("Get Transaction", func(t *testing.T) {
@@ -68,7 +85,7 @@ func TestTransactions(t *testing.T) {
 			return txs, nil
 		}
 
-		_, _, err := transactions.GetStatus(txs.ID().String(), true)
+		_, _, err := transactions.GetStatus(txs.ID(), true)
 
 		assert.NoError(t, err)
 		assert.Equal(t, called, 2)
@@ -93,70 +110,14 @@ func TestTransactions(t *testing.T) {
 			return tests.NewTransaction(), nil
 		}
 
-		_, _, err := transactions.Send(
-			"../../../tests/transaction.cdc",
-			serviceName,
-			gasLimit,
-			[]string{"String:Bar"},
-			"",
-			"",
-		)
-
-		assert.NoError(t, err)
-		assert.Equal(t, called, 2)
-	})
-
-	t.Run("Send For Address With Code", func(t *testing.T) {
-		called := 0
-
-		mock.GetTransactionResultMock = func(tx *flow.Transaction) (*flow.TransactionResult, error) {
-			called++
-			return tests.NewTransactionResult(nil), nil
-		}
-
-		mock.SendSignedTransactionMock = func(tx *flowkit.Transaction) (*flow.Transaction, error) {
-			called++
-			assert.Equal(t, tx.Signer().Address().String(), serviceAddress)
-			assert.Equal(t, len(string(tx.FlowTransaction().Script)), 77)
-			return tests.NewTransaction(), nil
-		}
-
-		_, _, err := transactions.SendForAddressWithCode(
-			[]byte(`transaction() {
-			  prepare(authorizer: AuthAccount) {}
-			  execute {}
-			}`),
-			serviceAddress,
-			"36336f805b4eccf6857c9f411f3b1d682dabda23ddf85299f771dac1361a2ec6",
-			nil,
-			"",
-		)
-
-		assert.NoError(t, err)
-		assert.Equal(t, called, 2)
-	})
-
-	t.Run("Send Transaction JSON args", func(t *testing.T) {
-		called := 0
-
-		mock.GetTransactionResultMock = func(tx *flow.Transaction) (*flow.TransactionResult, error) {
-			called++
-			return tests.NewTransactionResult(nil), nil
-		}
-
-		mock.SendSignedTransactionMock = func(tx *flowkit.Transaction) (*flow.Transaction, error) {
-			called++
-			assert.Equal(t, tx.Signer().Address().String(), serviceAddress)
-			assert.Equal(t, len(string(tx.FlowTransaction().Script)), 209)
-			return tests.NewTransaction(), nil
-		}
+		args, _ := flowkit.ParseArgumentsCommaSplit([]string{"String:Bar"})
 
 		_, _, err := transactions.Send(
-			"../../../tests/transaction.cdc",
-			serviceName,
+			serviceAcc,
+			transactionCode,
+			"",
 			gasLimit,
-			nil,
-			"[{\"type\": \"String\", \"value\": \"Bar\"}]",
+			args,
 			"",
 		)
 
@@ -165,38 +126,17 @@ func TestTransactions(t *testing.T) {
 	})
 
 	t.Run("Send Transaction Fails wrong args", func(t *testing.T) {
+		args, _ := flowkit.ParseArgumentsCommaSplit([]string{"Bar:Foo"})
+
 		_, _, err := transactions.Send(
-			"../../../tests/transaction.cdc",
-			serviceName,
-			gasLimit,
-			[]string{"Bar"},
+			serviceAcc,
+			transactionCode,
 			"",
+			gasLimit,
+			args,
 			"",
 		)
 		assert.Equal(t, err.Error(), "argument not passed in correct format, correct format is: Type:Value, got Bar")
 	})
 
-	t.Run("Send Transaction Fails wrong filename", func(t *testing.T) {
-		_, _, err := transactions.Send(
-			"nooo.cdc",
-			serviceName,
-			gasLimit,
-			[]string{"Bar"},
-			"",
-			"",
-		)
-		assert.Equal(t, err.Error(), "Failed to load file: nooo.cdc")
-	})
-
-	t.Run("Send Transaction Fails wrong args", func(t *testing.T) {
-		_, _, err := transactions.Send(
-			"../../../tests/transaction.cdc",
-			serviceName,
-			gasLimit,
-			nil,
-			"[{\"Bar\":\"No\"}]",
-			"",
-		)
-		assert.Equal(t, err.Error(), "failed to decode value: invalid JSON Cadence structure")
-	})
 }

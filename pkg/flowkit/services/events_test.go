@@ -21,6 +21,8 @@ package services
 import (
 	"testing"
 
+	"github.com/spf13/afero"
+
 	"github.com/onflow/flow-cli/pkg/flowkit"
 
 	"github.com/onflow/flow-go-sdk"
@@ -35,7 +37,8 @@ import (
 func TestEvents(t *testing.T) {
 	mock := &tests.MockGateway{}
 
-	proj, err := flowkit.Init(crypto.ECDSA_P256, crypto.SHA3_256)
+	af := afero.Afero{afero.NewMemMapFs()}
+	proj, err := flowkit.Init(af, crypto.ECDSA_P256, crypto.SHA3_256)
 	assert.NoError(t, err)
 
 	events := NewEvents(mock, proj, output.NewStdoutLogger(output.InfoLog))

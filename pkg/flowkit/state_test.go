@@ -32,7 +32,8 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
 )
 
-var composer = config.NewLoader(afero.NewOsFs())
+var af = afero.Afero{afero.NewMemMapFs()}
+var composer = config.NewLoader(af)
 
 func keys() []crypto.PrivateKey {
 	var keys []crypto.PrivateKey
@@ -321,9 +322,6 @@ func generateAliasesComplexProject() State {
 	return *p
 }
 
-/* ================================================================
-State Tests
-================================================================ */
 func Test_GetContractsByNameSimple(t *testing.T) {
 	p := generateSimpleProject()
 
@@ -332,7 +330,7 @@ func Test_GetContractsByNameSimple(t *testing.T) {
 	assert.Len(t, contracts, 1)
 	assert.Equal(t, contracts[0].Name, "NonFungibleToken")
 	assert.Equal(t, contracts[0].Source, "../hungry-kitties/cadence/contracts/NonFungibleToken.cdc")
-	assert.Equal(t, p.conf.Accounts.GetByName("emulator-account").Address, contracts[0].Target)
+	assert.Equal(t, p.conf.Accounts.ByName("emulator-account").Address, contracts[0].Target)
 }
 
 func Test_EmulatorConfigSimple(t *testing.T) {
@@ -341,27 +339,27 @@ func Test_EmulatorConfigSimple(t *testing.T) {
 
 	assert.Equal(t, emulatorServiceAccount.name, "emulator-account")
 	assert.Equal(t, emulatorServiceAccount.key.ToConfig().PrivateKey, keys()[0])
-	assert.Equal(t, flow.ServiceAddress("flow-emulator").String(), emulatorServiceAccount.Address().String())
+	assert.Equal(t, flow.ServiceAddress("flow-emulator"), emulatorServiceAccount.Address())
 }
 
 func Test_AccountByAddressSimple(t *testing.T) {
 	p := generateSimpleProject()
-	acc := p.AccountByAddress(flow.ServiceAddress("flow-emulator").String())
+	acc := p.Accounts().ByAddress(flow.ServiceAddress("flow-emulator"))
 
 	assert.Equal(t, acc.name, "emulator-account")
 }
 
 func Test_AccountByNameSimple(t *testing.T) {
 	p := generateSimpleProject()
-	acc := p.AccountByName("emulator-account")
+	acc := p.Accounts().ByName("emulator-account")
 
-	assert.Equal(t, flow.ServiceAddress("flow-emulator").String(), acc.Address().String())
+	assert.Equal(t, flow.ServiceAddress("flow-emulator"), acc.Address())
 	assert.Equal(t, acc.key.ToConfig().PrivateKey, keys()[0])
 }
 
 func Test_HostSimple(t *testing.T) {
 	p := generateSimpleProject()
-	host := p.NetworkByName("emulator").Host
+	host := p.Networks().ByName("emulator").Host
 
 	assert.Equal(t, host, "127.0.0.1.3569")
 }
@@ -420,13 +418,13 @@ func Test_EmulatorConfigComplex(t *testing.T) {
 
 	assert.Equal(t, emulatorServiceAccount.name, "emulator-account")
 	assert.Equal(t, emulatorServiceAccount.key.ToConfig().PrivateKey, keys()[0])
-	assert.Equal(t, emulatorServiceAccount.Address().String(), flow.ServiceAddress("flow-emulator").String())
+	assert.Equal(t, emulatorServiceAccount.Address(), flow.ServiceAddress("flow-emulator"))
 }
 
 func Test_AccountByAddressComplex(t *testing.T) {
 	p := generateComplexProject()
-	acc1 := p.AccountByAddress("f8d6e0586b0a20c1")
-	acc2 := p.AccountByAddress("0x2c1162386b0a245f")
+	acc1 := p.Accounts().ByAddress(flow.HexToAddress("f8d6e0586b0a20c1"))
+	acc2 := p.Accounts().ByAddress(flow.HexToAddress("0x2c1162386b0a245f"))
 
 	assert.Equal(t, acc1.name, "account-4")
 	assert.Equal(t, acc2.name, "account-2")
@@ -434,7 +432,7 @@ func Test_AccountByAddressComplex(t *testing.T) {
 
 func Test_AccountByNameComplex(t *testing.T) {
 	p := generateComplexProject()
-	acc := p.AccountByName("account-2")
+	acc := p.Accounts().ByName("account-2")
 
 	assert.Equal(t, acc.Address().String(), "2c1162386b0a245f")
 	assert.Equal(t, acc.key.ToConfig().PrivateKey, keys()[1])
@@ -442,7 +440,7 @@ func Test_AccountByNameComplex(t *testing.T) {
 
 func Test_HostComplex(t *testing.T) {
 	p := generateComplexProject()
-	host := p.NetworkByName("emulator").Host
+	host := p.Networks().ByName("emulator").Host
 
 	assert.Equal(t, host, "127.0.0.1.3569")
 }
@@ -491,37 +489,4 @@ func Test_GetAliasesComplex(t *testing.T) {
 	assert.Len(t, cTestnet, 2)
 	assert.Equal(t, cTestnet[0].Name, "NonFungibleToken")
 	assert.Equal(t, cTestnet[1].Name, "FungibleToken")
-}
-
-func Test_SDKParsing(t *testing.T) {
-
-	t.Run("Address Parsing", func(t *testing.T) {
-		addr1 := flow.HexToAddress("0xf8d6e0586b0a20c7")
-		addr2 := flow.HexToAddress("f8d6e0586b0a20c7")
-
-		assert.True(t, addr1.IsValid(flow.Emulator))
-		assert.True(t, addr2.IsValid(flow.Emulator))
-		assert.Equal(t, addr1.String(), addr2.String())
-	})
-	/*
-		// test this after 0x is uniformed
-		t.Run("Tx ID Parsing", func(t *testing.T) {
-			txid := "09f24d9dcde4c4d63d2f790e42905427ba04e6b0d601a7ec790b663f7cf2d942"
-			id1 := flow.HexToID(txid)
-			id2 := flow.HexToID("0x" + txid)
-
-			assert.Equal(t, id1.String(), id2.String())
-		})
-
-		t.Run("Public Key Hex Parsing", func(t *testing.T) {
-			pubKey := "642fcceac4b0af1ea7b78c11d5ce2ed505bb41b13c9e3f57725246b75d828651d9387e0cd19c5ebb1a44d571ce58cc3a83f0d92a6d3a70a45fe359d5d25d15d7"
-			k1, err := crypto.DecodePublicKeyHex(crypto.ECDSA_P256, pubKey)
-			assert.NoError(t, err)
-
-			k2, err := crypto.DecodePublicKeyHex(crypto.ECDSA_P256, "0x"+pubKey)
-			assert.NoError(t, err)
-
-			assert.Equal(t, k1.String(), k2.String())
-		})
-	*/
 }

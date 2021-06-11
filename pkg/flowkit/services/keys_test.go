@@ -21,6 +21,8 @@ package services
 import (
 	"testing"
 
+	"github.com/spf13/afero"
+
 	"github.com/onflow/flow-cli/pkg/flowkit"
 
 	"github.com/onflow/flow-go-sdk/crypto"
@@ -33,44 +35,40 @@ import (
 func TestKeys(t *testing.T) {
 	mock := &tests.MockGateway{}
 
-	proj, err := flowkit.Init(crypto.ECDSA_P256, crypto.SHA3_256)
+	af := afero.Afero{afero.NewMemMapFs()}
+	proj, err := flowkit.Init(af, crypto.ECDSA_P256, crypto.SHA3_256)
 	assert.NoError(t, err)
 
 	keys := NewKeys(mock, proj, output.NewStdoutLogger(output.InfoLog))
 
 	t.Run("Generate Keys", func(t *testing.T) {
-		key, err := keys.Generate("", "ECDSA_P256")
+		key, err := keys.Generate("", crypto.ECDSA_P256)
 		assert.NoError(t, err)
 
 		assert.Equal(t, len(key.String()), 66)
 	})
 
 	t.Run("Generate Keys with seed", func(t *testing.T) {
-		key, err := keys.Generate("aaaaaaaaaaaaaaaaaaaaaaannndddddd_its_gone", "ECDSA_P256")
+		key, err := keys.Generate("aaaaaaaaaaaaaaaaaaaaaaannndddddd_its_gone", crypto.ECDSA_P256)
 
 		assert.NoError(t, err)
 		assert.Equal(t, key.String(), "0x134f702d0872dba9c7aea15498aab9b2ffedd5aeebfd8ac3cf47c591f0d7ce52")
 	})
 
 	t.Run("Fail generate keys, too short seed", func(t *testing.T) {
-		_, err := keys.Generate("im_short", "ECDSA_P256")
+		_, err := keys.Generate("im_short", crypto.ECDSA_P256)
 
 		assert.Equal(t, err.Error(), "failed to generate private key: crypto: insufficient seed length 8, must be at least 32 bytes for ECDSA_P256")
 	})
 
 	t.Run("Fail generate keys, invalid sig algo", func(t *testing.T) {
-		_, err := keys.Generate("", "JUSTNO")
+		_, err := keys.Generate("", crypto.StringToSignatureAlgorithm("JUSTNO"))
 
 		assert.Equal(t, err.Error(), "invalid signature algorithm: JUSTNO")
 	})
 
 	t.Run("RLP decode keys", func(t *testing.T) {
-		dkey, err := keys.Decode(
-			"f847b84084d716c14b051ad6b001624f738f5d302636e6b07cc75e4530af7776a4368a2b586dbefc0564ee28384c2696f178cbed52e62811bcc9ecb59568c996d342db2402038203e8",
-			"rlp",
-			"",
-			crypto.ECDSA_P256.String(),
-		)
+		dkey, err := keys.DecodeRLP("f847b84084d716c14b051ad6b001624f738f5d302636e6b07cc75e4530af7776a4368a2b586dbefc0564ee28384c2696f178cbed52e62811bcc9ecb59568c996d342db2402038203e8")
 
 		assert.NoError(t, err)
 		assert.Equal(t, dkey.PublicKey.String(), "0x84d716c14b051ad6b001624f738f5d302636e6b07cc75e4530af7776a4368a2b586dbefc0564ee28384c2696f178cbed52e62811bcc9ecb59568c996d342db24")

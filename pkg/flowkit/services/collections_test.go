@@ -21,6 +21,8 @@ package services
 import (
 	"testing"
 
+	"github.com/spf13/afero"
+
 	"github.com/onflow/flow-cli/pkg/flowkit"
 
 	"github.com/onflow/flow-go-sdk"
@@ -33,8 +35,9 @@ import (
 
 func TestCollections(t *testing.T) {
 	mock := &tests.MockGateway{}
+	af := afero.Afero{afero.NewMemMapFs()}
 
-	state, err := flowkit.Init(crypto.ECDSA_P256, crypto.SHA3_256)
+	state, err := flowkit.Init(af, crypto.ECDSA_P256, crypto.SHA3_256)
 	assert.NoError(t, err)
 
 	collections := NewCollections(mock, state, output.NewStdoutLogger(output.InfoLog))
@@ -46,7 +49,7 @@ func TestCollections(t *testing.T) {
 			return tests.NewCollection(), nil
 		}
 
-		_, err := collections.Get("a310685082f0b09f2a148b2e8905f08ea458ed873596b53b200699e8e1f6536f")
+		_, err := collections.Get(flow.HexToID("a310685082f0b09f2a148b2e8905f08ea458ed873596b53b200699e8e1f6536f"))
 
 		assert.NoError(t, err)
 		assert.True(t, called)

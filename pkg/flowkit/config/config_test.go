@@ -136,8 +136,8 @@ func generateComplexConfig() config.Config {
 
 func Test_GetContractsForNetworkComplex(t *testing.T) {
 	conf := generateComplexConfig()
-	kitty := conf.Contracts.GetByName("KittyItems")
-	market := conf.Contracts.GetByName("KittyItemsMarket")
+	kitty := conf.Contracts.ByName("KittyItems")
+	market := conf.Contracts.ByName("KittyItemsMarket")
 
 	assert.Equal(t, kitty.Name, "KittyItems")
 	assert.Equal(t, market.Source, "./cadence/kittyItemsMarket/contracts/KittyItemsMarket.cdc")
@@ -145,14 +145,14 @@ func Test_GetContractsForNetworkComplex(t *testing.T) {
 
 func Test_GetContractsByNameAndNetworkComplex(t *testing.T) {
 	conf := generateComplexConfig()
-	market := conf.Contracts.GetByNameAndNetwork("KittyItemsMarket", "testnet")
+	market := conf.Contracts.ByNameAndNetwork("KittyItemsMarket", "testnet")
 
 	assert.Equal(t, market.Source, "0x123123123")
 }
 
 func Test_GetContractsByNetworkComplex(t *testing.T) {
 	conf := generateComplexConfig()
-	contracts := conf.Contracts.GetByNetwork("emulator")
+	contracts := conf.Contracts.ByNetwork("emulator")
 
 	assert.Equal(t, 5, len(contracts))
 	assert.Equal(t, contracts[0].Name, "NonFungibleToken")
@@ -164,14 +164,14 @@ func Test_GetContractsByNetworkComplex(t *testing.T) {
 
 func Test_GetAccountByNameComplex(t *testing.T) {
 	conf := generateComplexConfig()
-	acc := conf.Accounts.GetByName("account-4")
+	acc := conf.Accounts.ByName("account-4")
 
 	assert.Equal(t, acc.Address.String(), "f8d6e0586b0a20c1")
 }
 
 func Test_GetDeploymentsByNetworkComplex(t *testing.T) {
 	conf := generateComplexConfig()
-	deployments := conf.Deployments.GetByAccountAndNetwork("account-2", "testnet")
+	deployments := conf.Deployments.ByAccountAndNetwork("account-2", "testnet")
 
 	assert.Equal(t, deployments[0].Contracts, []config.ContractDeployment{
 		{Name: "FungibleToken", Args: []cadence.Value{}},
@@ -183,7 +183,7 @@ func Test_GetDeploymentsByNetworkComplex(t *testing.T) {
 
 func Test_GetNetworkByNameComplex(t *testing.T) {
 	conf := generateComplexConfig()
-	network := conf.Networks.GetByName("emulator")
+	network := conf.Networks.ByName("emulator")
 
 	assert.Equal(t, network.Host, "127.0.0.1.3569")
 }

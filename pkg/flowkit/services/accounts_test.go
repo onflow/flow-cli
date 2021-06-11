@@ -22,6 +22,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/spf13/afero"
+
 	"github.com/onflow/flow-cli/pkg/flowkit"
 
 	"github.com/onflow/flow-go-sdk"
@@ -32,12 +34,23 @@ import (
 	"github.com/onflow/flow-cli/tests"
 )
 
-const (
-	serviceAddress = "f8d6e0586b0a20c7"
+var (
+	serviceAddress = flow.HexToAddress("f8d6e0586b0a20c7")
 	serviceName    = "emulator-account"
-	pubKey         = "858a7d978b25d61f348841a343f79131f4b9fab341dd8a476a6f4367c25510570bf69b795fc9c3d2b7191327d869bcf848508526a3c1cafd1af34f71c7765117"
-	sigAlgo        = "ECDSA_P256"
-	hashAlgo       = "SHA3_256"
+	sigAlgo        = crypto.ECDSA_P256
+	hashAlgo       = crypto.SHA3_256
+	pubKey, _      = crypto.DecodePublicKeyHex(sigAlgo, "858a7d978b25d61f348841a343f79131f4b9fab341dd8a476a6f4367c25510570bf69b795fc9c3d2b7191327d869bcf848508526a3c1cafd1af34f71c7765117")
+	helloContract  = []byte(`
+		pub contract Hello {
+			pub let greeting: String
+			init() {
+				self.greeting = "Hello, World!"
+			}
+			pub fun hello(): String {
+				return self.greeting
+			}
+		}
+	`)
 )
 
 func TestAccounts(t *testing.T) {
@@ -56,24 +69,30 @@ func TestAccounts(t *testing.T) {
 		return tests.NewAccountWithAddress(address.String()), nil
 	}
 
-	proj, err := flowkit.Init(crypto.ECDSA_P256, crypto.SHA3_256)
+	mockFS := afero.NewMemMapFs()
+	af := afero.Afero{mockFS}
+	err := afero.WriteFile(mockFS, "hello.cdc", helloContract, 0644)
+
+	proj, err := flowkit.Init(af, crypto.ECDSA_P256, crypto.SHA3_256)
 	assert.NoError(t, err)
 
 	accounts := NewAccounts(mock, proj, output.NewStdoutLogger(output.NoneLog))
+
+	serviceAcc := proj.Accounts().ByName(serviceName)
 
 	t.Run("Get an Account", func(t *testing.T) {
 		account, err := accounts.Get(serviceAddress)
 
 		assert.NoError(t, err)
-		assert.Equal(t, account.Address.String(), serviceAddress)
+		assert.Equal(t, account.Address, serviceAddress)
 	})
 
 	t.Run("Create an Account", func(t *testing.T) {
-		newAddress := "192440c99cb17282"
+		newAddress := flow.HexToAddress("192440c99cb17282")
 
 		mock.SendSignedTransactionMock = func(tx *flowkit.Transaction) (*flow.Transaction, error) {
-			assert.Equal(t, tx.FlowTransaction().Authorizers[0].String(), serviceAddress)
-			assert.Equal(t, tx.Signer().Address().String(), serviceAddress)
+			assert.Equal(t, tx.FlowTransaction().Authorizers[0], serviceAddress)
+			assert.Equal(t, tx.Signer().Address(), serviceAddress)
 
 			return tests.NewTransaction(), nil
 		}
@@ -84,13 +103,20 @@ func TestAccounts(t *testing.T) {
 
 		compareAddress := serviceAddress
 		mock.GetAccountMock = func(address flow.Address) (*flow.Account, error) {
-			assert.Equal(t, address.String(), compareAddress)
+			assert.Equal(t, address, compareAddress)
 			compareAddress = newAddress
 
 			return tests.NewAccountWithAddress(address.String()), nil
 		}
 
-		a, err := accounts.Create(serviceName, []string{pubKey}, []int{1000}, sigAlgo, hashAlgo, nil)
+		a, err := accounts.Create(
+			serviceAcc,
+			[]crypto.PublicKey{pubKey},
+			[]int{1000},
+			sigAlgo,
+			hashAlgo,
+			nil,
+		)
 
 		assert.NotNil(t, a)
 		assert.NoError(t, err)
@@ -98,7 +124,7 @@ func TestAccounts(t *testing.T) {
 	})
 
 	t.Run("Create an Account with Contract", func(t *testing.T) {
-		newAddress := "192440c99cb17282"
+		newAddress := flow.HexToAddress("192440c99cb17282")
 
 		mock.SendSignedTransactionMock = func(tx *flowkit.Transaction) (*flow.Transaction, error) {
 			assert.Equal(t, tx.FlowTransaction().Authorizers[0].String(), serviceAddress)
@@ -116,7 +142,14 @@ func TestAccounts(t *testing.T) {
 			return tests.NewAccountWithAddress(address.String()), nil
 		}
 
-		a, err := accounts.Create(serviceName, []string{pubKey}, []int{1000}, sigAlgo, hashAlgo, []string{"Hello:../../../tests/Hello.cdc"})
+		a, err := accounts.Create(
+			serviceAcc,
+			[]crypto.PublicKey{pubKey},
+			[]int{1000},
+			sigAlgo,
+			hashAlgo,
+			[]string{"Hello:hello.cdc"},
+		)
 
 		assert.NotNil(t, a)
 		assert.NoError(t, err)
@@ -131,7 +164,9 @@ func TestAccounts(t *testing.T) {
 			return tests.NewTransaction(), nil
 		}
 
-		a, err := accounts.AddContract(serviceName, "Hello", "../../../tests/Hello.cdc", false)
+		a, err := accounts.AddContract(
+			serviceAcc,
+			"Hello", helloContract, false)
 
 		assert.NotNil(t, a)
 		assert.NoError(t, err)
@@ -147,7 +182,7 @@ func TestAccounts(t *testing.T) {
 			return tests.NewTransaction(), nil
 		}
 
-		account, err := accounts.AddContract(serviceName, "Hello", "../../../tests/Hello.cdc", true)
+		account, err := accounts.AddContract(serviceAcc, "Hello", helloContract, true)
 
 		assert.NotNil(t, account)
 		assert.Equal(t, len(account.Address), 8)
@@ -163,7 +198,7 @@ func TestAccounts(t *testing.T) {
 			return tests.NewTransaction(), nil
 		}
 
-		account, err := accounts.RemoveContract("Hello", serviceName)
+		account, err := accounts.RemoveContract(serviceAcc, "Hello")
 
 		assert.NotNil(t, account)
 		assert.Equal(t, len(account.Address), 8)

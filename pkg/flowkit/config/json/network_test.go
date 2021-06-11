@@ -36,8 +36,8 @@ func Test_ConfigNetworkSimple(t *testing.T) {
 	networks, err := jsonNetworks.transformToConfig()
 	assert.NoError(t, err)
 
-	assert.Equal(t, networks.GetByName("testnet").Host, "access.testnet.nodes.onflow.org:9000")
-	assert.Equal(t, networks.GetByName("testnet").Name, "testnet")
+	assert.Equal(t, networks.ByName("testnet").Host, "access.testnet.nodes.onflow.org:9000")
+	assert.Equal(t, networks.ByName("testnet").Name, "testnet")
 }
 
 func Test_ConfigNetworkMultiple(t *testing.T) {
@@ -53,11 +53,11 @@ func Test_ConfigNetworkMultiple(t *testing.T) {
 	networks, err := jsonNetworks.transformToConfig()
 	assert.NoError(t, err)
 
-	assert.Equal(t, networks.GetByName("testnet").Host, "access.testnet.nodes.onflow.org:9000")
-	assert.Equal(t, networks.GetByName("testnet").Name, "testnet")
+	assert.Equal(t, networks.ByName("testnet").Host, "access.testnet.nodes.onflow.org:9000")
+	assert.Equal(t, networks.ByName("testnet").Name, "testnet")
 
-	assert.Equal(t, networks.GetByName("emulator").Name, "emulator")
-	assert.Equal(t, networks.GetByName("emulator").Host, "127.0.0.1:3569")
+	assert.Equal(t, networks.ByName("emulator").Name, "emulator")
+	assert.Equal(t, networks.ByName("emulator").Host, "127.0.0.1:3569")
 }
 
 func Test_TransformNetworkToJSON(t *testing.T) {
@@ -94,6 +94,6 @@ func Test_IngoreOldFormat(t *testing.T) {
 	assert.NoError(t, err)
 
 	assert.Len(t, jsonNetworks, 3)
-	assert.Equal(t, conf.GetByName("testnet").Host, "access.testnet.nodes.onflow.org:9000")
-	assert.Equal(t, conf.GetByName("mainnet").Host, "access.mainnet.nodes.onflow.org:9000")
+	assert.Equal(t, conf.ByName("testnet").Host, "access.testnet.nodes.onflow.org:9000")
+	assert.Equal(t, conf.ByName("mainnet").Host, "access.mainnet.nodes.onflow.org:9000")
 }
