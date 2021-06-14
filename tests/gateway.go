@@ -94,7 +94,7 @@ func (g *TestGateway) funcCall(f interface{}) {
 	g.functionsCalled = append(g.functionsCalled, f)
 }
 
-func (g *TestGateway) funcsCalled(funcs ...interface{}) (bool, error) {
+func (g *TestGateway) funcsCalled(funcs []interface{}) (bool, error) {
 	for _, f := range funcs {
 		for x, c := range g.functionsCalled {
 			fp := reflect.ValueOf(f).Pointer()
