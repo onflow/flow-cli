@@ -113,13 +113,13 @@ func TestAccounts(t *testing.T) {
 			[]int{1000},
 			crypto.ECDSA_P256,
 			crypto.SHA3_256,
-			[]string{"Hello:hello.cdc"},
+			[]string{"Hello:contractHello.cdc"},
 		)
 
-		mock.AssertFuncsCalled(t, true, mock.SendSignedTransaction, mock.GetTransactionResult, mock.GetAccount)
 		assert.NotNil(t, a)
 		assert.NoError(t, err)
 		assert.Equal(t, len(a.Address), 8)
+		mock.AssertFuncsCalled(t, true, mock.SendSignedTransaction, mock.GetTransactionResult, mock.GetAccount)
 	})
 
 	t.Run("Contract Add for Account", func(t *testing.T) {
