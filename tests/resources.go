@@ -91,7 +91,8 @@ func Alice() *flowkit.Account {
 	a := &flowkit.Account{}
 	a.SetAddress(flow.HexToAddress("0x1"))
 	a.SetName("Alice")
-	pk, _ := crypto.GeneratePrivateKey(crypto.ECDSA_P256, []byte("seedseedseedseedseedseed"))
+	pk, _ := crypto.GeneratePrivateKey(crypto.ECDSA_P256, []byte("seedseedseedseedseedseedseedseedseedseedseedseed"))
+
 	a.SetKey(flowkit.NewHexAccountKeyFromPrivateKey(0, crypto.SHA3_256, pk))
 
 	return a
