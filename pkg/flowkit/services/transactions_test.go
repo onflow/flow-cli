@@ -63,14 +63,22 @@ func TestTransactions(t *testing.T) {
 	})
 
 	t.Run("Send Transaction args", func(t *testing.T) {
+		var txID flow.Identifier
 		mock.SendSignedTransactionMock = func(tx *flowkit.Transaction) (*flow.Transaction, error) {
 			arg, err := tx.FlowTransaction().Argument(0)
-
 			assert.NoError(t, err)
 			assert.Equal(t, arg.String(), "\"Bar\"")
 			assert.Equal(t, tx.Signer().Address(), serviceAddress)
 			assert.Equal(t, len(string(tx.FlowTransaction().Script)), 227)
-			return tests.NewTransaction(), nil
+
+			t := tests.NewTransaction()
+			txID = t.ID()
+			return t, nil
+		}
+
+		mock.GetTransactionResultMock = func(tx *flow.Transaction) (*flow.TransactionResult, error) {
+			assert.Equal(t, tx.ID(), txID)
+			return tests.NewTransactionResult(nil), nil
 		}
 
 		args, _ := flowkit.ParseArgumentsCommaSplit([]string{"String:Bar"})
@@ -84,7 +92,7 @@ func TestTransactions(t *testing.T) {
 			"",
 		)
 
-		mock.AssertFuncsCalled(t, true, mock.GetTransactionResult)
+		mock.AssertFuncsCalled(t, true, mock.GetTransactionResult, mock.SendSignedTransaction)
 		assert.NoError(t, err)
 	})
 
