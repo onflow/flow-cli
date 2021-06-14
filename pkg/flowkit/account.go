@@ -55,6 +55,16 @@ func (a *Account) SetKey(key AccountKey) {
 	a.key = key
 }
 
+// SetAddress sets account address.
+func (a *Account) SetAddress(address flow.Address) {
+	a.address = address
+}
+
+// SetName sets account name.
+func (a *Account) SetName(name string) {
+	a.name = name
+}
+
 func accountsFromConfig(conf *config.Config) (Accounts, error) {
 	var accounts Accounts
 
