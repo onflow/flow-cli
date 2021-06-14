@@ -69,7 +69,7 @@ func TestTransactions(t *testing.T) {
 			assert.NoError(t, err)
 			assert.Equal(t, arg.String(), "\"Bar\"")
 			assert.Equal(t, tx.Signer().Address(), serviceAddress)
-			assert.Equal(t, len(string(tx.FlowTransaction().Script)), 216)
+			assert.Equal(t, len(string(tx.FlowTransaction().Script)), 227)
 			return tests.NewTransaction(), nil
 		}
 

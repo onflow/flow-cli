@@ -21,8 +21,6 @@ package services
 import (
 	"testing"
 
-	"github.com/spf13/afero"
-
 	"github.com/onflow/flow-cli/pkg/flowkit"
 
 	"github.com/onflow/flow-go-sdk/crypto"
@@ -33,13 +31,12 @@ import (
 )
 
 func TestKeys(t *testing.T) {
-	mock := &tests.TestGateway{}
-
-	af := afero.Afero{afero.NewMemMapFs()}
-	proj, err := flowkit.Init(af, crypto.ECDSA_P256, crypto.SHA3_256)
+	mock := tests.DefaultMockGateway()
+	readerWriter := tests.ReaderWriter()
+	state, err := flowkit.Init(readerWriter, crypto.ECDSA_P256, crypto.SHA3_256)
 	assert.NoError(t, err)
 
-	keys := NewKeys(mock, proj, output.NewStdoutLogger(output.InfoLog))
+	keys := NewKeys(mock, state, output.NewStdoutLogger(output.InfoLog))
 
 	t.Run("Generate Keys", func(t *testing.T) {
 		key, err := keys.Generate("", crypto.ECDSA_P256)

@@ -36,10 +36,10 @@ func TestBlocks(t *testing.T) {
 
 	mock := tests.DefaultMockGateway()
 	readerWriter := tests.ReaderWriter()
-	project, err := flowkit.Init(readerWriter, crypto.ECDSA_P256, crypto.SHA3_256)
+	state, err := flowkit.Init(readerWriter, crypto.ECDSA_P256, crypto.SHA3_256)
 	assert.NoError(t, err)
 
-	blocks := NewBlocks(mock, project, output.NewStdoutLogger(output.InfoLog))
+	blocks := NewBlocks(mock, state, output.NewStdoutLogger(output.InfoLog))
 
 	t.Run("Get Latest Block", func(t *testing.T) {
 		mock.GetEventsMock = func(name string, start uint64, end uint64) ([]client.BlockEvents, error) {
@@ -55,16 +55,6 @@ func TestBlocks(t *testing.T) {
 	})
 
 	t.Run("Get Block by Height", func(t *testing.T) {
-		mock.GetBlockByIDMock = func(identifier flow.Identifier) (*flow.Block, error) {
-			assert.Fail(t, "shouldn't be called")
-			return nil, nil
-		}
-
-		mock.GetLatestBlockMock = func() (*flow.Block, error) {
-			assert.Fail(t, "shouldn't be called")
-			return nil, nil
-		}
-
 		mock.GetBlockByHeightMock = func(height uint64) (*flow.Block, error) {
 			assert.Equal(t, height, uint64(10))
 			return tests.NewBlock(), nil
@@ -78,6 +68,7 @@ func TestBlocks(t *testing.T) {
 		_, _, _, err := blocks.GetBlock("10", "flow.AccountCreated", false)
 
 		mock.AssertFuncsCalled(t, false, mock.GetBlockByHeight, mock.GetEvents)
+		mock.AssertFuncsNotCalled(t, true, mock.GetBlockByID, mock.GetLatestBlock)
 		assert.NoError(t, err)
 	})
 
@@ -90,16 +81,6 @@ func TestBlocks(t *testing.T) {
 			return tests.NewBlock(), nil
 		}
 
-		mock.GetBlockByHeightMock = func(u uint64) (*flow.Block, error) {
-			assert.Fail(t, "shouldn't be called")
-			return nil, nil
-		}
-
-		mock.GetLatestBlockMock = func() (*flow.Block, error) {
-			assert.Fail(t, "shouldn't be called")
-			return nil, nil
-		}
-
 		mock.GetEventsMock = func(name string, start uint64, end uint64) ([]client.BlockEvents, error) {
 			assert.Equal(t, name, "flow.AccountCreated")
 			return nil, nil
@@ -109,5 +90,7 @@ func TestBlocks(t *testing.T) {
 
 		assert.NoError(t, err)
 		assert.True(t, called)
+		mock.AssertFuncsNotCalled(t, false, mock.GetBlockByHeight, mock.GetLatestBlock)
+		mock.AssertFuncsCalled(t, true, mock.GetBlockByID, mock.GetEvents)
 	})
 }

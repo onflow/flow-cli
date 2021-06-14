@@ -21,8 +21,6 @@ package services
 import (
 	"testing"
 
-	"github.com/spf13/afero"
-
 	"github.com/onflow/flow-cli/pkg/flowkit"
 
 	"github.com/onflow/cadence"
@@ -33,30 +31,23 @@ import (
 	"github.com/onflow/flow-cli/tests"
 )
 
-var script = []byte(`
-	pub fun main(name: String): String {
-	  return "Hello ".concat(name)
-	}
-`)
-
 func TestScripts(t *testing.T) {
-	mock := &tests.TestGateway{}
-
-	af := afero.Afero{afero.NewMemMapFs()}
-	proj, err := flowkit.Init(af, crypto.ECDSA_P256, crypto.SHA3_256)
+	mock := tests.DefaultMockGateway()
+	readerWriter := tests.ReaderWriter()
+	state, err := flowkit.Init(readerWriter, crypto.ECDSA_P256, crypto.SHA3_256)
 	assert.NoError(t, err)
 
-	scripts := NewScripts(mock, proj, output.NewStdoutLogger(output.InfoLog))
+	scripts := NewScripts(mock, state, output.NewStdoutLogger(output.InfoLog))
 
 	t.Run("Execute Script", func(t *testing.T) {
 		mock.ExecuteScriptMock = func(script []byte, arguments []cadence.Value) (cadence.Value, error) {
-			assert.Equal(t, len(string(script)), 74)
+			assert.Equal(t, len(string(script)), 78)
 			assert.Equal(t, arguments[0].String(), "\"Foo\"")
 			return arguments[0], nil
 		}
 
 		args, _ := flowkit.ParseArgumentsCommaSplit([]string{"String:Foo"})
-		_, err := scripts.Execute(script, args, "", "")
+		_, err := scripts.Execute(tests.ScriptArgString.Source, args, "", "")
 
 		assert.NoError(t, err)
 	})
