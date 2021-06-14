@@ -39,10 +39,10 @@ type TestGateway struct {
 	GetTransactionMock            func(id flow.Identifier) (*flow.Transaction, error)
 	ExecuteScriptMock             func(script []byte, arguments []cadence.Value) (cadence.Value, error)
 	GetLatestBlockMock            func() (*flow.Block, error)
-	GetEventsMock                 func(string, uint64, uint64) ([]client.BlockEvents, error)
+	GetEventsMock                 func(name string, start uint64, end uint64) ([]client.BlockEvents, error)
 	GetCollectionMock             func(id flow.Identifier) (*flow.Collection, error)
-	GetBlockByHeightMock          func(uint64) (*flow.Block, error)
-	GetBlockByIDMock              func(flow.Identifier) (*flow.Block, error)
+	GetBlockByHeightMock          func(height uint64) (*flow.Block, error)
+	GetBlockByIDMock              func(id flow.Identifier) (*flow.Block, error)
 	PingMock                      func() error
 	functionsCalled               []interface{}
 }
@@ -60,6 +60,9 @@ func DefaultMockGateway() *TestGateway {
 		},
 		GetTransactionResultMock: func(tx *flow.Transaction) (*flow.TransactionResult, error) {
 			return NewTransactionResult(nil), nil
+		},
+		GetEventsMock: func(name string, start uint64, end uint64) ([]client.BlockEvents, error) {
+			return []client.BlockEvents{}, nil
 		},
 	}
 }
