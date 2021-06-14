@@ -21,22 +21,16 @@ package services
 import (
 	"testing"
 
-	"github.com/onflow/flow-cli/pkg/flowkit"
-
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/onflow/flow-cli/pkg/flowkit/output"
 	"github.com/onflow/flow-cli/tests"
 )
 
 func TestKeys(t *testing.T) {
-	mock := tests.DefaultMockGateway()
-	readerWriter := tests.ReaderWriter()
-	state, err := flowkit.Init(readerWriter, crypto.ECDSA_P256, crypto.SHA3_256)
+	s, _, _, err := tests.ServicesStateMock()
 	assert.NoError(t, err)
-
-	keys := NewKeys(mock, state, output.NewStdoutLogger(output.InfoLog))
+	keys := s.Keys
 
 	t.Run("Generate Keys", func(t *testing.T) {
 		key, err := keys.Generate("", crypto.ECDSA_P256)

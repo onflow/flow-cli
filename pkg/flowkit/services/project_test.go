@@ -24,22 +24,18 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
 
 	"github.com/onflow/flow-cli/pkg/flowkit"
-	"github.com/onflow/flow-cli/pkg/flowkit/output"
 	"github.com/onflow/flow-cli/tests"
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestProject(t *testing.T) {
-	mock := tests.DefaultMockGateway()
-	readerWriter := tests.ReaderWriter()
-	state, err := flowkit.Init(readerWriter, crypto.ECDSA_P256, crypto.SHA3_256)
+	s, state, _, err := tests.ServicesStateMock()
 	assert.NoError(t, err)
-
-	project := NewProject(mock, state, output.NewStdoutLogger(output.NoneLog))
+	project := s.Project
 
 	t.Run("Init Project", func(t *testing.T) {
-		s, err := flowkit.Init(readerWriter, crypto.ECDSA_P256, crypto.SHA3_256)
+		s, err := flowkit.Init(state.ReaderWriter(), crypto.ECDSA_P256, crypto.SHA3_256)
 		assert.NoError(t, err)
 
 		sacc, err := s.EmulatorServiceAccount()

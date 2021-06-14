@@ -20,6 +20,8 @@ package tests
 
 import (
 	"github.com/onflow/flow-cli/pkg/flowkit"
+	"github.com/onflow/flow-cli/pkg/flowkit/output"
+	"github.com/onflow/flow-cli/pkg/flowkit/services"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/spf13/afero"
@@ -96,4 +98,18 @@ func Alice() *flowkit.Account {
 	a.SetKey(flowkit.NewHexAccountKeyFromPrivateKey(0, crypto.SHA3_256, pk))
 
 	return a
+}
+
+func ServicesStateMock() (*services.Services, *flowkit.State, *TestGateway, error) {
+	readerWriter := ReaderWriter()
+	state, err := flowkit.Init(readerWriter, crypto.ECDSA_P256, crypto.SHA3_256)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+
+	mock := DefaultMockGateway()
+	s := services.NewServices(mock, state, output.NewStdoutLogger(output.NoneLog))
+
+	return s, state, mock, err
+
 }

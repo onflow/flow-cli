@@ -24,25 +24,20 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowkit"
 
 	"github.com/onflow/flow-go-sdk"
-	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/onflow/flow-cli/pkg/flowkit/output"
 	"github.com/onflow/flow-cli/tests"
 )
 
 const gasLimit = 1000
 
 func TestTransactions(t *testing.T) {
-	mock := tests.DefaultMockGateway()
-	readerWriter := tests.ReaderWriter()
-
-	proj, err := flowkit.Init(readerWriter, crypto.ECDSA_P256, crypto.SHA3_256)
+	s, state, mock, err := tests.ServicesStateMock()
 	assert.NoError(t, err)
+	transactions := s.Transactions
 
-	serviceAcc, _ := proj.EmulatorServiceAccount()
+	serviceAcc, _ := state.EmulatorServiceAccount()
 	serviceAddress := serviceAcc.Address()
-	transactions := NewTransactions(mock, proj, output.NewStdoutLogger(output.NoneLog))
 
 	t.Run("Get Transaction", func(t *testing.T) {
 		txs := tests.NewTransaction()

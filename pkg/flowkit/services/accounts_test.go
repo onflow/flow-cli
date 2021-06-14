@@ -28,18 +28,14 @@ import (
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/onflow/flow-cli/pkg/flowkit/output"
 	"github.com/onflow/flow-cli/tests"
 )
 
 func TestAccounts(t *testing.T) {
 
-	readerWriter := tests.ReaderWriter()
-	state, err := flowkit.Init(readerWriter, crypto.ECDSA_P256, crypto.SHA3_256)
+	s, state, mock, err := tests.ServicesStateMock()
 	assert.NoError(t, err)
-
-	mock := tests.DefaultMockGateway()
-	accounts := NewAccounts(mock, state, output.NewStdoutLogger(output.NoneLog))
+	accounts := s.Accounts
 
 	pubKey, _ := crypto.DecodePublicKeyHex(crypto.ECDSA_P256, "858a7d978b25d61f348841a343f79131f4b9fab341dd8a476a6f4367c25510570bf69b795fc9c3d2b7191327d869bcf848508526a3c1cafd1af34f71c7765117")
 	serviceAcc, _ := state.EmulatorServiceAccount()

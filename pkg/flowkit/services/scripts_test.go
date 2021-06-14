@@ -24,20 +24,15 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowkit"
 
 	"github.com/onflow/cadence"
-	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/onflow/flow-cli/pkg/flowkit/output"
 	"github.com/onflow/flow-cli/tests"
 )
 
 func TestScripts(t *testing.T) {
-	mock := tests.DefaultMockGateway()
-	readerWriter := tests.ReaderWriter()
-	state, err := flowkit.Init(readerWriter, crypto.ECDSA_P256, crypto.SHA3_256)
+	s, _, mock, err := tests.ServicesStateMock()
 	assert.NoError(t, err)
-
-	scripts := NewScripts(mock, state, output.NewStdoutLogger(output.InfoLog))
+	scripts := s.Scripts
 
 	t.Run("Execute Script", func(t *testing.T) {
 		mock.ExecuteScriptMock = func(script []byte, arguments []cadence.Value) (cadence.Value, error) {

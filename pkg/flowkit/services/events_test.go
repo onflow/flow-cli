@@ -21,22 +21,15 @@ package services
 import (
 	"testing"
 
-	"github.com/onflow/flow-cli/pkg/flowkit"
-
-	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/onflow/flow-cli/pkg/flowkit/output"
 	"github.com/onflow/flow-cli/tests"
 )
 
 func TestEvents(t *testing.T) {
-	mock := tests.DefaultMockGateway()
-	readerWriter := tests.ReaderWriter()
-	state, err := flowkit.Init(readerWriter, crypto.ECDSA_P256, crypto.SHA3_256)
+	s, _, mock, err := tests.ServicesStateMock()
 	assert.NoError(t, err)
-
-	events := NewEvents(mock, state, output.NewStdoutLogger(output.InfoLog))
+	events := s.Events
 
 	t.Run("Get Events", func(t *testing.T) {
 		_, err := events.Get("flow.CreateAccount", "0", "1")
