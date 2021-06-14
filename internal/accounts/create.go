@@ -66,7 +66,7 @@ func create(
 		fmt.Println("⚠️ DEPRECATION WARNING: results flag is deprecated, results are by default included in all executions")
 	}
 
-	signer := state.Accounts().ByName(addContractFlags.Signer)
+	signer := state.Accounts().ByName(createFlags.Signer)
 
 	sigAlgo := crypto.StringToSignatureAlgorithm(createFlags.SigAlgo)
 	if sigAlgo == crypto.UnknownSignatureAlgorithm {
