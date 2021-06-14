@@ -98,9 +98,11 @@ func (g *TestGateway) funcsCalled(funcs ...interface{}) (bool, error) {
 	for _, f := range funcs {
 		for x, c := range g.functionsCalled {
 			fp := reflect.ValueOf(f).Pointer()
-			if fp == reflect.ValueOf(c).Pointer() {
+			cp := reflect.ValueOf(c).Pointer()
+			// if function called is same as required func called
+			if fp == cp {
 				break
-			} else if x == len(g.functionsCalled)-1 {
+			} else if x == len(g.functionsCalled)-1 { // if last iteration without a match
 				return false, fmt.Errorf(
 					"required function %s not called",
 					runtime.FuncForPC(fp).Name(),
