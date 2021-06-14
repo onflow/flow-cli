@@ -20,14 +20,17 @@ package gateway
 
 import (
 	"fmt"
-	"github.com/onflow/flow-cli/pkg/flowkit/config"
+	"time"
 
 	"github.com/onflow/flow-cli/pkg/flowkit"
+	"github.com/onflow/flow-cli/pkg/flowkit/config"
 
 	"github.com/onflow/cadence"
 	emulator "github.com/onflow/flow-emulator"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/client"
+	"github.com/onflow/flow-go-sdk/client/convert"
+	flowGo "github.com/onflow/flow-go/model/flow"
 )
 
 type EmulatorGateway struct {
@@ -64,8 +67,9 @@ func (g *EmulatorGateway) GetAccount(address flow.Address) (*flow.Account, error
 	return g.emulator.GetAccount(address)
 }
 
-func (g *EmulatorGateway) SendSignedTransaction(tx *flow.Transaction) (*flow.Transaction, error) {
-	err := g.emulator.AddTransaction(*tx)
+func (g *EmulatorGateway) SendSignedTransaction(tx *flowkit.Transaction) (*flow.Transaction, error) {
+	t := tx.FlowTransaction()
+	err := g.emulator.AddTransaction(*t)
 	if err != nil {
 		return nil, fmt.Errorf("failed to submit transaction: %w", err)
 	}
@@ -73,7 +77,7 @@ func (g *EmulatorGateway) SendSignedTransaction(tx *flow.Transaction) (*flow.Tra
 	_, err = g.emulator.ExecuteNextTransaction()
 	_, _ = g.emulator.CommitBlock()
 
-	return tx, err
+	return t, err
 }
 
 func (g *EmulatorGateway) GetTransactionResult(tx *flow.Transaction, waitSeal bool) (*flow.TransactionResult, error) {
