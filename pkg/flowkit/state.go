@@ -137,13 +137,13 @@ func (p *State) Config() *config.Config {
 
 // EmulatorServiceAccount returns the service account for the default emulator profile.
 func (p *State) EmulatorServiceAccount() (*Account, error) {
+	fmt.Println(p.conf.Emulators, "####", p.conf.Accounts)
 	emulator := p.conf.Emulators.Default()
 	if emulator == nil {
 		return nil, fmt.Errorf("no default emulator account")
 	}
 
-	acc := p.conf.Accounts.ByName(emulator.ServiceAccount)
-	return fromConfig(*acc)
+	return p.accounts.ByName(emulator.ServiceAccount), nil
 }
 
 // DeploymentContractsByNetwork returns all contracts for a network.
