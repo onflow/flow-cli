@@ -19,23 +19,23 @@
 package services
 
 import (
+	"strings"
 	"testing"
 
-	"github.com/onflow/flow-cli/pkg/flowkit/config"
+	"github.com/stretchr/testify/mock"
 
 	"github.com/onflow/flow-cli/pkg/flowkit"
+	"github.com/onflow/flow-cli/pkg/flowkit/config"
 	"github.com/onflow/flow-cli/tests"
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestProject(t *testing.T) {
-	s, state, _, err := tests.ServicesStateMock()
-	assert.NoError(t, err)
-	project := s.Project
 
 	t.Run("Init Project", func(t *testing.T) {
-		s, err := flowkit.Init(state.ReaderWriter(), crypto.ECDSA_P256, crypto.SHA3_256)
+		st, _, _ := setup()
+		s, err := flowkit.Init(st.ReaderWriter(), crypto.ECDSA_P256, crypto.SHA3_256)
 		assert.NoError(t, err)
 
 		sacc, err := s.EmulatorServiceAccount()
@@ -44,6 +44,8 @@ func TestProject(t *testing.T) {
 	})
 
 	t.Run("Deploy Project", func(t *testing.T) {
+		state, s, gw := setup()
+
 		c := config.Contract{
 			Name:    "Hello",
 			Source:  tests.ContractHelloString.Name,
@@ -70,9 +72,21 @@ func TestProject(t *testing.T) {
 		}
 		state.Deployments().AddOrUpdate(d)
 
-		contracts, err := project.Deploy("emulator", false)
+		gw.SendSignedTransaction.Run(func(args mock.Arguments) {
+			tx := args.Get(0).(*flowkit.Transaction)
+			assert.Equal(t, tx.FlowTransaction().Payer, a.Address())
+			assert.True(t, strings.Contains(string(tx.FlowTransaction().Script), "signer.contracts.add"))
+
+			gw.SendSignedTransaction.Return(tests.NewTransaction(), nil)
+		})
+
+		contracts, err := s.Project.Deploy("emulator", false)
 
 		assert.NoError(t, err)
 		assert.Equal(t, len(contracts), 1)
+		gw.Mock.AssertCalled(t, tests.GetLatestBlockFunc)
+		gw.Mock.AssertCalled(t, tests.GetAccountFunc, a.Address())
+		gw.Mock.AssertNumberOfCalls(t, tests.GetTransactionResultFunc, 1)
 	})
+
 }

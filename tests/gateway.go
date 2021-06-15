@@ -19,6 +19,7 @@
 package tests
 
 import (
+	"github.com/onflow/cadence"
 	"github.com/onflow/flow-cli/tests/mocks"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/client"
@@ -34,6 +35,8 @@ const (
 	GetLatestBlockFunc        = "GetLatestBlock"
 	GetBlockByHeightFunc      = "GetBlockByHeight"
 	GetBlockByIDFunc          = "GetBlockByID"
+	ExecuteScriptFunc         = "ExecuteScript"
+	GetTransactionFunc        = "GetTransaction"
 )
 
 type TestGateway struct {
@@ -46,6 +49,8 @@ type TestGateway struct {
 	GetLatestBlock        *mock.Call
 	GetBlockByHeight      *mock.Call
 	GetBlockByID          *mock.Call
+	ExecuteScript         *mock.Call
+	GetTransaction        *mock.Call
 }
 
 func DefaultMockGateway() *TestGateway {
@@ -69,15 +74,24 @@ func DefaultMockGateway() *TestGateway {
 			mock.AnythingOfType("*flow.Transaction"),
 			mock.AnythingOfType("bool"),
 		),
+		GetTransaction: m.On(
+			GetTransactionFunc,
+			mock.AnythingOfType("flow.Identifier"),
+		),
 		GetEvents: m.On(
 			GetEventsFunc,
 			mock.AnythingOfType("string"),
 			mock.AnythingOfType("uint64"),
 			mock.AnythingOfType("uint64"),
 		),
-		GetLatestBlock:   m.On(GetLatestBlockFunc),
+		ExecuteScript: m.On(
+			ExecuteScriptFunc,
+			mock.Anything,
+			mock.Anything,
+		),
 		GetBlockByHeight: m.On(GetBlockByHeightFunc, mock.Anything),
 		GetBlockByID:     m.On(GetBlockByIDFunc, mock.Anything),
+		GetLatestBlock:   m.On(GetLatestBlockFunc),
 	}
 
 	// default return values
@@ -90,6 +104,11 @@ func DefaultMockGateway() *TestGateway {
 		t.GetAccount.Return(NewAccountWithAddress(addr.String()), nil)
 	})
 
+	t.ExecuteScript.Run(func(args mock.Arguments) {
+		t.ExecuteScript.Return(cadence.MustConvertValue(""), nil)
+	})
+
+	t.GetTransaction.Return(NewTransaction(), nil)
 	t.GetCollection.Return(NewCollection(), nil)
 	t.GetTransactionResult.Return(NewTransactionResult(nil), nil)
 	t.GetEvents.Return([]client.BlockEvents{}, nil)
