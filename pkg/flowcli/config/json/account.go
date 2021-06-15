@@ -62,7 +62,7 @@ func transformSimpleToConfig(accountName string, a simpleAccount) config.Account
 }
 
 // transformAdvancedToConfig transforms advanced internal account to config account
-func transformAdvancedToConfig(accountName string, a advanceAccount) config.Account {
+func transformAdvancedToConfig(accountName string, a advancedAccount) config.Account {
 	sigAlgo := crypto.StringToSignatureAlgorithm(a.Key.SigAlgo)
 	var pKey crypto.PrivateKey
 	resourceID := a.Key.ResourceID
