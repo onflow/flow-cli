@@ -21,45 +21,39 @@ package services
 import (
 	"testing"
 
-	"github.com/onflow/flow-cli/pkg/flowkit"
+	"github.com/stretchr/testify/mock"
 
+	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-go-sdk"
-	"github.com/stretchr/testify/assert"
 
 	"github.com/onflow/flow-cli/tests"
+	"github.com/stretchr/testify/assert"
 )
 
 const gasLimit = 1000
 
 func TestTransactions(t *testing.T) {
-	s, state, mock, err := tests.ServicesStateMock()
-	assert.NoError(t, err)
-	transactions := s.Transactions
-
+	state, _, _ := setup()
 	serviceAcc, _ := state.EmulatorServiceAccount()
 	serviceAddress := serviceAcc.Address()
 
 	t.Run("Get Transaction", func(t *testing.T) {
+		_, s, gw := setup()
 		txs := tests.NewTransaction()
 
-		mock.GetTransactionResultMock = func(tx *flow.Transaction) (*flow.TransactionResult, error) {
-			assert.Equal(t, tx.ID(), txs.ID())
-			return tests.NewTransactionResult(nil), nil
-		}
+		_, _, err := s.Transactions.GetStatus(txs.ID(), true)
 
-		mock.GetTransactionMock = func(id flow.Identifier) (*flow.Transaction, error) {
-			return txs, nil
-		}
-
-		_, _, err := transactions.GetStatus(txs.ID(), true)
-
-		mock.AssertFuncsCalled(t, true, mock.GetTransactionResult, mock.GetTransaction)
 		assert.NoError(t, err)
+		gw.Mock.AssertNumberOfCalls(t, tests.GetTransactionResultFunc, 1)
+		gw.Mock.AssertCalled(t, tests.GetTransactionFunc, txs.ID())
 	})
 
 	t.Run("Send Transaction args", func(t *testing.T) {
+		_, s, gw := setup()
+
 		var txID flow.Identifier
-		mock.SendSignedTransactionMock = func(tx *flowkit.Transaction) (*flow.Transaction, error) {
+		gw.SendSignedTransaction.Run(func(args mock.Arguments) {
+			tx := args.Get(0).(*flowkit.Transaction)
 			arg, err := tx.FlowTransaction().Argument(0)
 			assert.NoError(t, err)
 			assert.Equal(t, arg.String(), "\"Bar\"")
@@ -68,17 +62,17 @@ func TestTransactions(t *testing.T) {
 
 			t := tests.NewTransaction()
 			txID = t.ID()
-			return t, nil
-		}
+			gw.SendSignedTransaction.Return(t, nil)
+		})
 
-		mock.GetTransactionResultMock = func(tx *flow.Transaction) (*flow.TransactionResult, error) {
-			assert.Equal(t, tx.ID(), txID)
-			return tests.NewTransactionResult(nil), nil
-		}
+		gw.GetTransactionResult.Run(func(args mock.Arguments) {
+			assert.Equal(t, args.Get(0).(*flow.Transaction).ID(), txID)
+			gw.GetTransactionResult.Return(tests.NewTransactionResult(nil), nil)
+		})
 
 		args, _ := flowkit.ParseArgumentsCommaSplit([]string{"String:Bar"})
 
-		_, _, err := transactions.Send(
+		_, _, err := s.Transactions.Send(
 			serviceAcc,
 			tests.TransactionArgString.Source,
 			"",
@@ -87,8 +81,9 @@ func TestTransactions(t *testing.T) {
 			"",
 		)
 
-		mock.AssertFuncsCalled(t, true, mock.GetTransactionResult, mock.SendSignedTransaction)
 		assert.NoError(t, err)
+		gw.Mock.AssertNumberOfCalls(t, tests.SendSignedTransactionFunc, 1)
+		gw.Mock.AssertNumberOfCalls(t, tests.GetTransactionResultFunc, 1)
 	})
 
 }
