@@ -98,7 +98,7 @@ func transformAdvancedToConfig(accountName string, a advanceAccount) config.Acco
 	}
 }
 
-// todo add error in return and do validation
+// TODO: Add error in return and do validation
 // transformToConfig transforms json structures to config structure
 func (j jsonAccounts) transformToConfig() config.Accounts {
 	accounts := make(config.Accounts, 0)
