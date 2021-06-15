@@ -197,7 +197,7 @@ func (a *HexAccountKey) ToConfig() config.AccountKey {
 func (a *HexAccountKey) Validate() error {
 	_, err := crypto.DecodePrivateKeyHex(a.sigAlgo, a.PrivateKeyHex())
 	if err != nil {
-		return fmt.Errorf("invalid private key")
+		return fmt.Errorf("invalid private key: %w", err)
 	}
 
 	return nil
