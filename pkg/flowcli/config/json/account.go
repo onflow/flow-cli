@@ -244,7 +244,7 @@ func (j *account) UnmarshalJSON(b []byte) error {
 		return err
 	}
 
-	// todo refacto switch in array of parsers
+	// TODO: refactor switch in array of parsers
 	switch format {
 	case simpleFormat:
 		var simple simpleAccount
