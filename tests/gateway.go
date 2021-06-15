@@ -32,6 +32,8 @@ const (
 	GetTransactionResultFunc  = "GetTransactionResult"
 	GetEventsFunc             = "GetEvents"
 	GetLatestBlockFunc        = "GetLatestBlock"
+	GetBlockByHeightFunc      = "GetBlockByHeight"
+	GetBlockByIDFunc          = "GetBlockByID"
 )
 
 type TestGateway struct {
@@ -42,6 +44,8 @@ type TestGateway struct {
 	GetTransactionResult  *mock.Call
 	GetEvents             *mock.Call
 	GetLatestBlock        *mock.Call
+	GetBlockByHeight      *mock.Call
+	GetBlockByID          *mock.Call
 }
 
 func DefaultMockGateway() *TestGateway {
@@ -71,7 +75,9 @@ func DefaultMockGateway() *TestGateway {
 			mock.AnythingOfType("uint64"),
 			mock.AnythingOfType("uint64"),
 		),
-		GetLatestBlock: m.On(GetLatestBlockFunc),
+		GetLatestBlock:   m.On(GetLatestBlockFunc),
+		GetBlockByHeight: m.On(GetBlockByHeightFunc, mock.Anything),
+		GetBlockByID:     m.On(GetBlockByIDFunc, mock.Anything),
 	}
 
 	// default return values
@@ -88,6 +94,8 @@ func DefaultMockGateway() *TestGateway {
 	t.GetTransactionResult.Return(NewTransactionResult(nil), nil)
 	t.GetEvents.Return([]client.BlockEvents{}, nil)
 	t.GetLatestBlock.Return(NewBlock(), nil)
+	t.GetBlockByHeight.Return(NewBlock(), nil)
+	t.GetBlockByID.Return(NewBlock(), nil)
 
 	return t
 }
