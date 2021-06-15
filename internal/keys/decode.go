@@ -54,7 +54,7 @@ var DecodeCommand = &command.Command{
 			encoded = args[1]
 		}
 
-		/* todo from file flag should be remove and should be replaced with $(echo file)
+		/* TODO: --from-file flag should be removed and replaced with $(echo file)
 		but cobra has an issue with parsing pem content as it recognize it as flag due to ---- characters */
 		accountKey, err := services.Keys.Decode(encoded, encoding, decodeFlags.FromFile, decodeFlags.SigAlgo)
 		if err != nil {
