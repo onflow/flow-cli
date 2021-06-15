@@ -22,68 +22,52 @@ import (
 	"testing"
 
 	"github.com/onflow/flow-go-sdk"
-	"github.com/onflow/flow-go-sdk/client"
-	"github.com/stretchr/testify/assert"
 
 	"github.com/onflow/flow-cli/tests"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestBlocks(t *testing.T) {
 
-	s, _, mock, err := tests.ServicesStateMock()
-	assert.NoError(t, err)
-	blocks := s.Blocks
-
 	t.Run("Get Latest Block", func(t *testing.T) {
-		mock.GetEventsMock = func(name string, start uint64, end uint64) ([]client.BlockEvents, error) {
-			assert.Equal(t, name, "flow.AccountCreated")
-			return nil, nil
-		}
+		_, s, gw := setup()
 
-		_, _, _, err := blocks.GetBlock("latest", "flow.AccountCreated", false)
+		_, _, _, err := s.Blocks.GetBlock("latest", "flow.AccountCreated", false)
 
-		mock.AssertFuncsCalled(t, false, mock.GetLatestBlock)
-		mock.AssertFuncsNotCalled(t, true, mock.GetBlockByID, mock.GetBlockByHeight)
+		gw.Mock.AssertCalled(t, tests.GetLatestBlockFunc)
+		gw.Mock.AssertCalled(t, tests.GetEventsFunc, "flow.AccountCreated", uint64(1), uint64(1))
+		gw.Mock.AssertNotCalled(t, tests.GetBlockByHeightFunc)
+		gw.Mock.AssertNotCalled(t, tests.GetBlockByIDFunc)
 		assert.NoError(t, err)
 	})
 
 	t.Run("Get Block by Height", func(t *testing.T) {
-		mock.GetBlockByHeightMock = func(height uint64) (*flow.Block, error) {
-			assert.Equal(t, height, uint64(10))
-			return tests.NewBlock(), nil
-		}
+		_, s, gw := setup()
 
-		mock.GetEventsMock = func(name string, start uint64, end uint64) ([]client.BlockEvents, error) {
-			assert.Equal(t, name, "flow.AccountCreated")
-			return nil, nil
-		}
+		block := tests.NewBlock()
+		block.Height = 10
+		gw.GetBlockByHeight.Return(block, nil)
 
-		_, _, _, err := blocks.GetBlock("10", "flow.AccountCreated", false)
+		_, _, _, err := s.Blocks.GetBlock("10", "flow.AccountCreated", false)
 
-		mock.AssertFuncsCalled(t, false, mock.GetBlockByHeight, mock.GetEvents)
-		mock.AssertFuncsNotCalled(t, true, mock.GetBlockByID, mock.GetLatestBlock)
+		gw.Mock.AssertCalled(t, tests.GetBlockByHeightFunc, uint64(10))
+		gw.Mock.AssertCalled(t, tests.GetEventsFunc, "flow.AccountCreated", uint64(10), uint64(10))
+		gw.Mock.AssertNotCalled(t, tests.GetLatestBlockFunc)
+		gw.Mock.AssertNotCalled(t, tests.GetBlockByIDFunc)
 		assert.NoError(t, err)
 	})
 
 	t.Run("Get Block by ID", func(t *testing.T) {
-		called := false
-		mock.GetBlockByIDMock = func(id flow.Identifier) (*flow.Block, error) {
-			called = true
+		_, s, gw := setup()
+		ID := "a310685082f0b09f2a148b2e8905f08ea458ed873596b53b200699e8e1f6536f"
 
-			assert.Equal(t, id.String(), "a310685082f0b09f2a148b2e8905f08ea458ed873596b53b200699e8e1f6536f")
-			return tests.NewBlock(), nil
-		}
-
-		mock.GetEventsMock = func(name string, start uint64, end uint64) ([]client.BlockEvents, error) {
-			assert.Equal(t, name, "flow.AccountCreated")
-			return nil, nil
-		}
-
-		_, _, _, err := blocks.GetBlock("a310685082f0b09f2a148b2e8905f08ea458ed873596b53b200699e8e1f6536f", "flow.AccountCreated", false)
+		_, _, _, err := s.Blocks.GetBlock(ID, "flow.AccountCreated", false)
 
 		assert.NoError(t, err)
-		assert.True(t, called)
-		mock.AssertFuncsNotCalled(t, false, mock.GetBlockByHeight, mock.GetLatestBlock)
-		mock.AssertFuncsCalled(t, true, mock.GetBlockByID, mock.GetEvents)
+		gw.Mock.AssertCalled(t, tests.GetBlockByIDFunc, flow.HexToID(ID))
+		gw.Mock.AssertCalled(t, tests.GetEventsFunc, "flow.AccountCreated", uint64(1), uint64(1))
+		gw.Mock.AssertNotCalled(t, tests.GetBlockByHeightFunc)
+		gw.Mock.AssertNotCalled(t, tests.GetLatestBlockFunc)
 	})
+
 }
