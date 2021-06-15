@@ -22,6 +22,10 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/stretchr/testify/mock"
+
+	"github.com/onflow/flow-cli/pkg/flowkit/output"
+
 	"github.com/onflow/flow-cli/pkg/flowkit"
 
 	"github.com/onflow/flow-go-sdk"
@@ -31,45 +35,61 @@ import (
 	"github.com/onflow/flow-cli/tests"
 )
 
+func setup() (*flowkit.State, *Services, *tests.TestGateway) {
+	readerWriter := tests.ReaderWriter()
+	state, err := flowkit.Init(readerWriter, crypto.ECDSA_P256, crypto.SHA3_256)
+	if err != nil {
+		panic(err)
+	}
+
+	gw := tests.DefaultMockGateway()
+	s := NewServices(gw.Mock, state, output.NewStdoutLogger(output.NoneLog))
+
+	return state, s, gw
+}
+
 func TestAccounts(t *testing.T) {
-
-	s, state, mock, err := tests.ServicesStateMock()
-	assert.NoError(t, err)
-	accounts := s.Accounts
-
+	state, _, _ := setup()
 	pubKey, _ := crypto.DecodePublicKeyHex(crypto.ECDSA_P256, "858a7d978b25d61f348841a343f79131f4b9fab341dd8a476a6f4367c25510570bf69b795fc9c3d2b7191327d869bcf848508526a3c1cafd1af34f71c7765117")
 	serviceAcc, _ := state.EmulatorServiceAccount()
 	serviceAddress := serviceAcc.Address()
 
 	t.Run("Get an Account", func(t *testing.T) {
-		account, err := accounts.Get(serviceAddress)
+		_, s, gw := setup()
+		account, err := s.Accounts.Get(serviceAddress)
 
-		mock.AssertFuncsCalled(t, true, mock.GetAccount)
+		gw.Mock.AssertCalled(t, "GetAccount", serviceAddress)
 		assert.NoError(t, err)
 		assert.Equal(t, account.Address, serviceAddress)
 	})
 
 	t.Run("Create an Account", func(t *testing.T) {
+		_, s, gw := setup()
 		newAddress := flow.HexToAddress("192440c99cb17282")
 
-		mock.SendSignedTransactionMock = func(tx *flowkit.Transaction) (*flow.Transaction, error) {
+		gw.SendSignedTransaction.Run(func(args mock.Arguments) {
+			tx := args.Get(0).(*flowkit.Transaction)
 			assert.Equal(t, tx.FlowTransaction().Authorizers[0], serviceAddress)
 			assert.Equal(t, tx.Signer().Address(), serviceAddress)
-			return tests.NewTransaction(), nil
-		}
 
-		mock.GetTransactionResultMock = func(tx *flow.Transaction) (*flow.TransactionResult, error) {
-			return tests.NewAccountCreateResult(newAddress), nil
-		}
+			gw.SendSignedTransaction.Return(tests.NewTransaction(), nil)
+		})
 
 		compareAddress := serviceAddress
-		mock.GetAccountMock = func(address flow.Address) (*flow.Account, error) {
+		gw.GetAccount.Run(func(args mock.Arguments) {
+			address := args.Get(0).(flow.Address)
 			assert.Equal(t, address, compareAddress)
 			compareAddress = newAddress
-			return tests.NewAccountWithAddress(address.String()), nil
-		}
+			gw.GetAccount.Return(
+				tests.NewAccountWithAddress(address.String()), nil,
+			)
+		})
 
-		a, err := accounts.Create(
+		gw.GetTransactionResult.Return(
+			tests.NewAccountCreateResult(newAddress), nil,
+		)
+
+		account, err := s.Accounts.Create(
 			serviceAcc,
 			[]crypto.PublicKey{pubKey},
 			[]int{1000},
@@ -78,32 +98,34 @@ func TestAccounts(t *testing.T) {
 			nil,
 		)
 
-		mock.AssertFuncsCalled(t, true, mock.SendSignedTransaction, mock.GetTransactionResult, mock.GetAccount)
-		assert.NotNil(t, a)
+		gw.Mock.AssertCalled(t, tests.GetAccountFunc, serviceAddress)
+		gw.Mock.AssertCalled(t, tests.GetAccountFunc, newAddress)
+		gw.Mock.AssertNumberOfCalls(t, tests.GetAccountFunc, 2)
+		gw.Mock.AssertNumberOfCalls(t, tests.GetTransactionResultFunc, 1)
+		gw.Mock.AssertNumberOfCalls(t, tests.SendSignedTransactionFunc, 1)
+		assert.NotNil(t, account)
+		assert.Equal(t, account.Address, newAddress)
 		assert.NoError(t, err)
-		assert.Equal(t, len(a.Address), 8)
 	})
 
 	t.Run("Create an Account with Contract", func(t *testing.T) {
-		newAddress := flow.HexToAddress("192440c99cb17282")
+		_, s, gw := setup()
+		newAddress := flow.HexToAddress("192440c99cb17281")
 
-		mock.SendSignedTransactionMock = func(tx *flowkit.Transaction) (*flow.Transaction, error) {
+		gw.SendSignedTransaction.Run(func(args mock.Arguments) {
+			tx := args.Get(0).(*flowkit.Transaction)
 			assert.Equal(t, tx.FlowTransaction().Authorizers[0], serviceAddress)
 			assert.Equal(t, tx.Signer().Address(), serviceAddress)
 			assert.True(t, strings.Contains(string(tx.FlowTransaction().Script), "acct.contracts.add"))
 
-			return tests.NewTransaction(), nil
-		}
+			gw.SendSignedTransaction.Return(tests.NewTransaction(), nil)
+		})
 
-		mock.GetTransactionResultMock = func(tx *flow.Transaction) (*flow.TransactionResult, error) {
-			return tests.NewAccountCreateResult(newAddress), nil
-		}
+		gw.GetTransactionResult.Run(func(args mock.Arguments) {
+			gw.GetTransactionResult.Return(tests.NewAccountCreateResult(newAddress), nil)
+		})
 
-		mock.GetAccountMock = func(address flow.Address) (*flow.Account, error) {
-			return tests.NewAccountWithAddress(address.String()), nil
-		}
-
-		a, err := accounts.Create(
+		account, err := s.Accounts.Create(
 			serviceAcc,
 			[]crypto.PublicKey{pubKey},
 			[]int{1000},
@@ -112,72 +134,86 @@ func TestAccounts(t *testing.T) {
 			[]string{"Hello:contractHello.cdc"},
 		)
 
-		assert.NotNil(t, a)
+		gw.Mock.AssertCalled(t, tests.GetAccountFunc, serviceAddress)
+		gw.Mock.AssertCalled(t, tests.GetAccountFunc, newAddress)
+		gw.Mock.AssertNumberOfCalls(t, tests.GetAccountFunc, 2)
+		gw.Mock.AssertNumberOfCalls(t, tests.GetTransactionResultFunc, 1)
+		gw.Mock.AssertNumberOfCalls(t, tests.SendSignedTransactionFunc, 1)
+		assert.NotNil(t, account)
+		assert.Equal(t, account.Address, newAddress)
 		assert.NoError(t, err)
-		assert.Equal(t, len(a.Address), 8)
-		mock.AssertFuncsCalled(t, true, mock.SendSignedTransaction, mock.GetTransactionResult, mock.GetAccount)
 	})
 
 	t.Run("Contract Add for Account", func(t *testing.T) {
-		mock.SendSignedTransactionMock = func(tx *flowkit.Transaction) (*flow.Transaction, error) {
+		_, s, gw := setup()
+		gw.SendSignedTransaction.Run(func(args mock.Arguments) {
+			tx := args.Get(0).(*flowkit.Transaction)
 			assert.Equal(t, tx.Signer().Address(), serviceAddress)
 			assert.True(t, strings.Contains(string(tx.FlowTransaction().Script), "signer.contracts.add"))
 
-			return tests.NewTransaction(), nil
-		}
+			gw.SendSignedTransaction.Return(tests.NewTransaction(), nil)
+		})
 
-		a, err := accounts.AddContract(
+		account, err := s.Accounts.AddContract(
 			serviceAcc,
 			tests.ContractHelloString.Name,
 			tests.ContractHelloString.Source,
 			false,
 		)
 
-		mock.AssertFuncsCalled(t, true, mock.SendSignedTransaction)
-		assert.NotNil(t, a)
+		gw.Mock.AssertCalled(t, tests.GetAccountFunc, serviceAddress)
+		gw.Mock.AssertNumberOfCalls(t, tests.GetAccountFunc, 2)
+		gw.Mock.AssertNumberOfCalls(t, tests.GetTransactionResultFunc, 1)
+		gw.Mock.AssertNumberOfCalls(t, tests.SendSignedTransactionFunc, 1)
+		assert.NotNil(t, account)
 		assert.NoError(t, err)
-		assert.Equal(t, len(a.Address), 8)
 	})
 
 	t.Run("Contract Update for Account", func(t *testing.T) {
-		mock.SendSignedTransactionMock = func(tx *flowkit.Transaction) (*flow.Transaction, error) {
-			assert.Equal(t, tx.FlowTransaction().Authorizers[0], serviceAddress)
+		_, s, gw := setup()
+		gw.SendSignedTransaction.Run(func(args mock.Arguments) {
+			tx := args.Get(0).(*flowkit.Transaction)
 			assert.Equal(t, tx.Signer().Address(), serviceAddress)
 			assert.True(t, strings.Contains(string(tx.FlowTransaction().Script), "signer.contracts.update__experimental"))
 
-			return tests.NewTransaction(), nil
-		}
+			gw.SendSignedTransaction.Return(tests.NewTransaction(), nil)
+		})
 
-		account, err := accounts.AddContract(
+		account, err := s.Accounts.AddContract(
 			serviceAcc,
 			tests.ContractHelloString.Name,
 			tests.ContractHelloString.Source,
 			true,
 		)
 
-		mock.AssertFuncsCalled(t, true, mock.SendSignedTransaction)
+		gw.Mock.AssertCalled(t, tests.GetAccountFunc, serviceAddress)
+		gw.Mock.AssertNumberOfCalls(t, tests.GetAccountFunc, 2)
+		gw.Mock.AssertNumberOfCalls(t, tests.GetTransactionResultFunc, 1)
+		gw.Mock.AssertNumberOfCalls(t, tests.SendSignedTransactionFunc, 1)
 		assert.NotNil(t, account)
-		assert.Equal(t, len(account.Address), 8)
 		assert.NoError(t, err)
 	})
 
 	t.Run("Contract Remove for Account", func(t *testing.T) {
-		mock.SendSignedTransactionMock = func(tx *flowkit.Transaction) (*flow.Transaction, error) {
-			assert.Equal(t, tx.FlowTransaction().Authorizers[0], serviceAddress)
+		_, s, gw := setup()
+		gw.SendSignedTransaction.Run(func(args mock.Arguments) {
+			tx := args.Get(0).(*flowkit.Transaction)
 			assert.Equal(t, tx.Signer().Address(), serviceAddress)
 			assert.True(t, strings.Contains(string(tx.FlowTransaction().Script), "signer.contracts.remove"))
 
-			return tests.NewTransaction(), nil
-		}
+			gw.SendSignedTransaction.Return(tests.NewTransaction(), nil)
+		})
 
-		account, err := accounts.RemoveContract(
+		account, err := s.Accounts.RemoveContract(
 			serviceAcc,
 			tests.ContractHelloString.Name,
 		)
 
-		mock.AssertFuncsCalled(t, true, mock.SendSignedTransaction)
+		gw.Mock.AssertCalled(t, tests.GetAccountFunc, serviceAddress)
+		gw.Mock.AssertNumberOfCalls(t, tests.GetAccountFunc, 2)
+		gw.Mock.AssertNumberOfCalls(t, tests.GetTransactionResultFunc, 1)
+		gw.Mock.AssertNumberOfCalls(t, tests.SendSignedTransactionFunc, 1)
 		assert.NotNil(t, account)
-		assert.Equal(t, len(account.Address), 8)
 		assert.NoError(t, err)
 	})
 
