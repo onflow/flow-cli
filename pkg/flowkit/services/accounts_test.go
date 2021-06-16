@@ -19,8 +19,11 @@
 package services
 
 import (
+	"fmt"
 	"strings"
 	"testing"
+
+	"github.com/onflow/flow-cli/pkg/flowkit/gateway"
 
 	"github.com/stretchr/testify/mock"
 
@@ -215,6 +218,132 @@ func TestAccounts(t *testing.T) {
 		gw.Mock.AssertNumberOfCalls(t, tests.SendSignedTransactionFunc, 1)
 		assert.NotNil(t, account)
 		assert.NoError(t, err)
+	})
+
+}
+
+func setupIntegration() (*flowkit.State, *Services) {
+	readerWriter := tests.ReaderWriter()
+	state, err := flowkit.Init(readerWriter, crypto.ECDSA_P256, crypto.SHA3_256)
+	if err != nil {
+		panic(err)
+	}
+
+	acc, _ := state.EmulatorServiceAccount()
+	gw := gateway.NewEmulatorGateway(acc)
+	s := NewServices(gw, state, output.NewStdoutLogger(output.NoneLog))
+
+	return state, s
+}
+
+func TestAccountsIntegration(t *testing.T) {
+	t.Run("Create", func(t *testing.T) {
+		state, s := setupIntegration()
+		srvAcc, _ := state.EmulatorServiceAccount()
+
+		accountsIn := []struct {
+			account  *flowkit.Account
+			pubKeys  []crypto.PublicKey
+			weights  []int
+			sigAlgo  crypto.SignatureAlgorithm
+			hashAlgo crypto.HashAlgorithm
+			args     []string
+		}{{
+			account:  srvAcc,
+			sigAlgo:  crypto.ECDSA_P256,
+			hashAlgo: crypto.SHA3_256,
+			args:     nil,
+			pubKeys: []crypto.PublicKey{
+				tests.PubKeys()[0],
+			},
+			weights: []int{10000},
+		}, {
+			account:  srvAcc,
+			args:     nil,
+			sigAlgo:  crypto.ECDSA_P256,
+			hashAlgo: crypto.SHA3_256,
+			pubKeys: []crypto.PublicKey{
+				tests.PubKeys()[0],
+				tests.PubKeys()[1],
+			},
+			weights: []int{500, 500},
+		}, {
+			account: srvAcc,
+			args: []string{
+				fmt.Sprintf(
+					"Simple:%s",
+					tests.ContractSimple.Name,
+				),
+			},
+			sigAlgo:  crypto.ECDSA_P256,
+			hashAlgo: crypto.SHA3_256,
+			pubKeys: []crypto.PublicKey{
+				tests.PubKeys()[0],
+			},
+			weights: []int{1000},
+		}}
+
+		accountsOut := []struct {
+			address  string
+			code     []byte
+			balance  uint64
+			sigAlgo  crypto.SignatureAlgorithm
+			hashAlgo crypto.HashAlgorithm
+			pubKeys  []crypto.PublicKey
+			weights  []int
+		}{{
+			address:  "01cf0e2f2f715450",
+			code:     []byte(nil),
+			balance:  uint64(100000),
+			sigAlgo:  crypto.ECDSA_P256,
+			hashAlgo: crypto.SHA3_256,
+			pubKeys: []crypto.PublicKey{
+				tests.PubKeys()[0],
+			},
+			weights: []int{1000},
+		}, {
+			address:  "179b6b1cb6755e31",
+			code:     []byte(nil),
+			balance:  uint64(100000),
+			sigAlgo:  crypto.ECDSA_P256,
+			hashAlgo: crypto.SHA3_256,
+			pubKeys: []crypto.PublicKey{
+				tests.PubKeys()[0],
+				tests.PubKeys()[1],
+			},
+			weights: []int{500, 500},
+		}, {
+			address:  "f3fcd2c1a78f5eee",
+			code:     tests.ContractSimple.Source,
+			balance:  uint64(100000),
+			sigAlgo:  crypto.ECDSA_P256,
+			hashAlgo: crypto.SHA3_256,
+			pubKeys: []crypto.PublicKey{
+				tests.PubKeys()[0],
+			},
+			weights: []int{500, 500},
+		}}
+
+		for i, a := range accountsIn {
+			acc, err := s.Accounts.Create(a.account, a.pubKeys, a.weights, a.sigAlgo, a.hashAlgo, a.args)
+			c := accountsOut[i]
+
+			assert.NoError(t, err)
+			assert.NotNil(t, acc)
+			assert.Equal(t, acc.Address.String(), c.address)
+			assert.Equal(t, acc.Code, c.code)
+			assert.Equal(t, acc.Balance, c.balance)
+			assert.Len(t, acc.Keys, len(c.pubKeys))
+
+			for x, k := range acc.Keys {
+				assert.Equal(t, k.PublicKey, a.pubKeys[x])
+				assert.Equal(t, k.Weight, a.weights[x])
+				assert.Equal(t, k.SigAlgo, a.sigAlgo)
+				assert.Equal(t, k.HashAlgo, a.hashAlgo)
+			}
+
+		}
+
 	})
 
 }
