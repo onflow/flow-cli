@@ -248,7 +248,7 @@ func TestAccountsCreate_Integration(t *testing.T) {
 
 	type accountsOut struct {
 		address  string
-		code     []byte
+		code     map[string][]byte
 		balance  uint64
 		sigAlgo  crypto.SignatureAlgorithm
 		hashAlgo crypto.HashAlgorithm
@@ -297,7 +297,7 @@ func TestAccountsCreate_Integration(t *testing.T) {
 
 		accOut := []accountsOut{{
 			address:  "01cf0e2f2f715450",
-			code:     []byte(nil),
+			code:     map[string][]byte{},
 			balance:  uint64(100000),
 			sigAlgo:  crypto.ECDSA_P256,
 			hashAlgo: crypto.SHA3_256,
@@ -307,7 +307,7 @@ func TestAccountsCreate_Integration(t *testing.T) {
 			weights: []int{1000},
 		}, {
 			address:  "179b6b1cb6755e31",
-			code:     []byte(nil),
+			code:     map[string][]byte{},
 			balance:  uint64(100000),
 			sigAlgo:  crypto.ECDSA_P256,
 			hashAlgo: crypto.SHA3_256,
@@ -317,8 +317,10 @@ func TestAccountsCreate_Integration(t *testing.T) {
 			},
 			weights: []int{500, 500},
 		}, {
-			address:  "f3fcd2c1a78f5eee",
-			code:     tests.ContractSimple.Source,
+			address: "f3fcd2c1a78f5eee",
+			code: map[string][]byte{
+				tests.ContractSimple.Name: tests.ContractSimple.Source,
+			},
 			balance:  uint64(100000),
 			sigAlgo:  crypto.ECDSA_P256,
 			hashAlgo: crypto.SHA3_256,
@@ -335,7 +337,7 @@ func TestAccountsCreate_Integration(t *testing.T) {
 			assert.NoError(t, err)
 			assert.NotNil(t, acc)
 			assert.Equal(t, acc.Address.String(), c.address)
-			assert.Equal(t, acc.Code, c.code)
+			assert.Equal(t, acc.Contracts, c.code)
 			assert.Equal(t, acc.Balance, c.balance)
 			assert.Len(t, acc.Keys, len(c.pubKeys))
 
@@ -441,6 +443,66 @@ func TestAccountsAddContract_Integration(t *testing.T) {
 		state, s := setupIntegration()
 		srvAcc, _ := state.EmulatorServiceAccount()
 
-		s.Accounts.AddContract(srvAcc)
+		acc, err := s.Accounts.AddContract(srvAcc, tests.ContractSimple.Name, tests.ContractSimple.Source, false)
+
+		assert.NoError(t, err)
+		assert.NotNil(t, acc)
+		assert.Equal(t, acc.Contracts["Simple"], tests.ContractSimple.Source)
+
+		acc, err = s.Accounts.AddContract(srvAcc, tests.ContractSimpleUpdated.Name, tests.ContractSimpleUpdated.Source, true)
+
+		assert.NoError(t, err)
+		assert.NotNil(t, acc)
+		assert.Equal(t, acc.Contracts["Simple"], tests.ContractSimpleUpdated.Source)
+	})
+
+	t.Run("Add Contract Invalid", func(t *testing.T) {
+		state, s := setupIntegration()
+		srvAcc, _ := state.EmulatorServiceAccount()
+
+		// prepare existing contract
+		_, err := s.Accounts.AddContract(srvAcc, tests.ContractSimple.Name, tests.ContractSimple.Source, false)
+		assert.NoError(t, err)
+
+		_, err = s.Accounts.AddContract(srvAcc, tests.ContractSimple.Name, tests.ContractSimple.Source, false)
+		assert.True(t, strings.Contains(err.Error(), "cannot overwrite existing contract with name \"Simple\""))
+
+		_, err = s.Accounts.AddContract(srvAcc, tests.ContractHelloString.Name, tests.ContractHelloString.Source, true)
+		assert.True(t, strings.Contains(err.Error(), "cannot update non-existing contract with name \"Hello\""))
+	})
+}
+
+func TestAccountsRemoveContract_Integration(t *testing.T) {
+	state, s := setupIntegration()
+	srvAcc, _ := state.EmulatorServiceAccount()
+
+	// prepare existing contract
+	_, err := s.Accounts.AddContract(srvAcc, tests.ContractSimple.Name, tests.ContractSimple.Source, false)
+	assert.NoError(t, err)
+
+	t.Run("Remove Contract", func(t *testing.T) {
+		acc, err := s.Accounts.RemoveContract(srvAcc, tests.ContractSimple.Name)
+
+		assert.NoError(t, err)
+		assert.Equal(t, acc.Contracts[tests.ContractSimple.Name], []byte(nil))
+	})
+}
+
+func TestAccountsGet_Integration(t *testing.T) {
+	state, s := setupIntegration()
+	srvAcc, _ := state.EmulatorServiceAccount()
+
+	t.Run("Get Account", func(t *testing.T) {
+		acc, err := s.Accounts.Get(srvAcc.Address())
+
+		assert.NoError(t, err)
+		assert.NotNil(t, acc)
+		assert.Equal(t, acc.Address, srvAcc.Address())
+	})
+
+	t.Run("Get Account Invalid", func(t *testing.T) {
+		acc, err := s.Accounts.Get(flow.HexToAddress("0x1"))
+		assert.Nil(t, acc)
+		assert.Equal(t, err.Error(), "could not find account with address 0000000000000001")
 	})
 }
