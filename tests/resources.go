@@ -28,11 +28,13 @@ import (
 )
 
 type resource struct {
+	Name     string
 	Filename string
 	Source   []byte
 }
 
 var ContractHelloString = resource{
+	Name:     "Hello",
 	Filename: "contractHello.cdc",
 	Source: []byte(`
 		pub contract Hello {
@@ -48,9 +50,23 @@ var ContractHelloString = resource{
 }
 
 var ContractSimple = resource{
+	Name:     "Simple",
 	Filename: "contractSimple.cdc",
 	Source: []byte(`
 		pub contract Simple {}
+	`),
+}
+
+var ContractSimpleUpdated = resource{
+	Name:     "Simple",
+	Filename: "contractSimpleUpdated.cdc",
+	Source: []byte(`
+		pub contract Simple {
+			pub let greeting: String
+			init() {
+				self.greeting = "Foo"
+			}
+		}
 	`),
 }
 
@@ -85,6 +101,7 @@ var resources = []resource{
 	TransactionArgString,
 	ScriptArgString,
 	ContractSimple,
+	ContractSimpleUpdated,
 }
 
 func ReaderWriter() afero.Afero {
