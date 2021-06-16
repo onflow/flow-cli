@@ -91,15 +91,6 @@ func create(
 		pubKeys = append(pubKeys, key)
 	}
 
-	// if more than one key is provided and at least one weight is specified, make sure there isn't a mismatch
-	if len(pubKeys) > 1 && len(keyWeights) > 0 && len(pubKeys) != len(keyWeights) {
-		return nil, fmt.Errorf(
-			"number of keys and weights provided must match, number of provided keys: %d, number of provided key weights: %d",
-			len(pubKeys),
-			len(keyWeights),
-		)
-	}
-
 	account, err := services.Accounts.Create(
 		signer,
 		pubKeys,
