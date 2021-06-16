@@ -237,18 +237,30 @@ func setupIntegration() (*flowkit.State, *Services) {
 }
 
 func TestAccountsIntegration(t *testing.T) {
+	type accountsIn struct {
+		account  *flowkit.Account
+		pubKeys  []crypto.PublicKey
+		weights  []int
+		sigAlgo  crypto.SignatureAlgorithm
+		hashAlgo crypto.HashAlgorithm
+		args     []string
+	}
+
+	type accountsOut struct {
+		address  string
+		code     []byte
+		balance  uint64
+		sigAlgo  crypto.SignatureAlgorithm
+		hashAlgo crypto.HashAlgorithm
+		pubKeys  []crypto.PublicKey
+		weights  []int
+	}
+
 	t.Run("Create", func(t *testing.T) {
 		state, s := setupIntegration()
 		srvAcc, _ := state.EmulatorServiceAccount()
 
-		accountsIn := []struct {
-			account  *flowkit.Account
-			pubKeys  []crypto.PublicKey
-			weights  []int
-			sigAlgo  crypto.SignatureAlgorithm
-			hashAlgo crypto.HashAlgorithm
-			args     []string
-		}{{
+		accIn := []accountsIn{{
 			account:  srvAcc,
 			sigAlgo:  crypto.ECDSA_P256,
 			hashAlgo: crypto.SHA3_256,
@@ -283,15 +295,7 @@ func TestAccountsIntegration(t *testing.T) {
 			weights: []int{1000},
 		}}
 
-		accountsOut := []struct {
-			address  string
-			code     []byte
-			balance  uint64
-			sigAlgo  crypto.SignatureAlgorithm
-			hashAlgo crypto.HashAlgorithm
-			pubKeys  []crypto.PublicKey
-			weights  []int
-		}{{
+		accOut := []accountsOut{{
 			address:  "01cf0e2f2f715450",
 			code:     []byte(nil),
 			balance:  uint64(100000),
@@ -324,9 +328,9 @@ func TestAccountsIntegration(t *testing.T) {
 			weights: []int{500, 500},
 		}}
 
-		for i, a := range accountsIn {
+		for i, a := range accIn {
 			acc, err := s.Accounts.Create(a.account, a.pubKeys, a.weights, a.sigAlgo, a.hashAlgo, a.args)
-			c := accountsOut[i]
+			c := accOut[i]
 
 			assert.NoError(t, err)
 			assert.NotNil(t, acc)
@@ -344,6 +348,79 @@ func TestAccountsIntegration(t *testing.T) {
 
 		}
 
+	})
+
+	t.Run("Create Invalid", func(t *testing.T) {
+		state, s := setupIntegration()
+		srvAcc, _ := state.EmulatorServiceAccount()
+
+		accIn := []accountsIn{
+			{
+				account:  srvAcc,
+				sigAlgo:  crypto.ECDSA_P256,
+				hashAlgo: crypto.SHA3_256,
+				args:     []string{"Invalid:Invalid"},
+				pubKeys: []crypto.PublicKey{
+					tests.PubKeys()[0],
+				},
+				weights: []int{1000},
+			}, {
+				account:  srvAcc,
+				sigAlgo:  crypto.UnknownSignatureAlgorithm,
+				hashAlgo: crypto.SHA3_256,
+				args:     nil,
+				pubKeys: []crypto.PublicKey{
+					tests.PubKeys()[0],
+				},
+				weights: []int{1000},
+			}, {
+				account:  srvAcc,
+				sigAlgo:  crypto.UnknownSignatureAlgorithm,
+				hashAlgo: crypto.UnknownHashAlgorithm,
+				args:     nil,
+				pubKeys: []crypto.PublicKey{
+					tests.PubKeys()[0],
+				},
+				weights: []int{1000},
+			}, {
+				account:  srvAcc,
+				sigAlgo:  crypto.ECDSA_P256,
+				hashAlgo: crypto.SHA3_256,
+				args:     nil,
+				pubKeys: []crypto.PublicKey{
+					tests.PubKeys()[0],
+					tests.PubKeys()[1],
+				},
+				weights: []int{1000},
+			},
+			/*{
+			 	TODO(sideninja): uncomment this test case after https://github.com/onflow/flow-go-sdk/pull/199 is released
+				account:  srvAcc,
+				sigAlgo:  crypto.ECDSA_P256,
+				hashAlgo: crypto.SHA3_256,
+				args:     nil,
+				pubKeys: []crypto.PublicKey{
+					tests.PubKeys()[0],
+				},
+				weights: []int{-1},
+			}*/
+		}
+
+		errOut := []string{
+			"open Invalid: file does not exist",
+			"invalid account key: signing algorithm (UNKNOWN) is incompatible with hashing algorithm (SHA3_256)",
+			"invalid account key: signing algorithm (UNKNOWN) is incompatible with hashing algorithm (UNKNOWN)",
+			"",
+		}
+
+		for i, a := range accIn {
+			acc, err := s.Accounts.Create(a.account, a.pubKeys, a.weights, a.sigAlgo, a.hashAlgo, a.args)
+			errMsg := errOut[i]
+
+			assert.Nil(t, acc)
+			assert.Error(t, err)
+			assert.Equal(t, err.Error(), errMsg)
+		}
 	})
 
 }
