@@ -19,6 +19,8 @@
 package tests
 
 import (
+	"fmt"
+
 	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
@@ -96,4 +98,16 @@ func Alice() *flowkit.Account {
 	a.SetKey(flowkit.NewHexAccountKeyFromPrivateKey(0, crypto.SHA3_256, pk))
 
 	return a
+}
+
+func PubKeys() []crypto.PublicKey {
+	var pubKeys []crypto.PublicKey
+	for x := 0; x < 5; x++ {
+		pk, _ := crypto.GeneratePrivateKey(
+			crypto.ECDSA_P256,
+			[]byte(fmt.Sprintf("seedseedseedseedseedseedseedseedseedseedseedseed%d", x)),
+		)
+		pubKeys = append(pubKeys, pk.PublicKey())
+	}
+	return pubKeys
 }
