@@ -28,12 +28,12 @@ import (
 )
 
 type resource struct {
-	Name   string
-	Source []byte
+	Filename string
+	Source   []byte
 }
 
 var ContractHelloString = resource{
-	Name: "contractHello.cdc",
+	Filename: "contractHello.cdc",
 	Source: []byte(`
 		pub contract Hello {
 			pub let greeting: String
@@ -48,14 +48,14 @@ var ContractHelloString = resource{
 }
 
 var ContractSimple = resource{
-	Name: "contractSimple.cdc",
+	Filename: "contractSimple.cdc",
 	Source: []byte(`
 		pub contract Simple {}
 	`),
 }
 
 var TransactionArgString = resource{
-	Name: "transactionArg.cdc",
+	Filename: "transactionArg.cdc",
 	Source: []byte(`
 		transaction(greeting: String) {
 			let guest: Address
@@ -72,7 +72,7 @@ var TransactionArgString = resource{
 }
 
 var ScriptArgString = resource{
-	Name: "scriptArg.cdc",
+	Filename: "scriptArg.cdc",
 	Source: []byte(`
 		pub fun main(name: String): String {
 		  return "Hello ".concat(name)
@@ -91,7 +91,7 @@ func ReaderWriter() afero.Afero {
 	var mockFS = afero.NewMemMapFs()
 
 	for _, c := range resources {
-		_ = afero.WriteFile(mockFS, c.Name, c.Source, 0644)
+		_ = afero.WriteFile(mockFS, c.Filename, c.Source, 0644)
 	}
 
 	return afero.Afero{mockFS}

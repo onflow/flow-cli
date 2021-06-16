@@ -159,7 +159,7 @@ func TestAccounts(t *testing.T) {
 
 		account, err := s.Accounts.AddContract(
 			serviceAcc,
-			tests.ContractHelloString.Name,
+			tests.ContractHelloString.Filename,
 			tests.ContractHelloString.Source,
 			false,
 		)
@@ -184,7 +184,7 @@ func TestAccounts(t *testing.T) {
 
 		account, err := s.Accounts.AddContract(
 			serviceAcc,
-			tests.ContractHelloString.Name,
+			tests.ContractHelloString.Filename,
 			tests.ContractHelloString.Source,
 			true,
 		)
@@ -209,7 +209,7 @@ func TestAccounts(t *testing.T) {
 
 		account, err := s.Accounts.RemoveContract(
 			serviceAcc,
-			tests.ContractHelloString.Name,
+			tests.ContractHelloString.Filename,
 		)
 
 		gw.Mock.AssertCalled(t, tests.GetAccountFunc, serviceAddress)
@@ -236,7 +236,7 @@ func setupIntegration() (*flowkit.State, *Services) {
 	return state, s
 }
 
-func TestAccountsIntegration(t *testing.T) {
+func TestAccountsCreate_Integration(t *testing.T) {
 	type accountsIn struct {
 		account  *flowkit.Account
 		pubKeys  []crypto.PublicKey
@@ -284,7 +284,7 @@ func TestAccountsIntegration(t *testing.T) {
 			args: []string{
 				fmt.Sprintf(
 					"Simple:%s",
-					tests.ContractSimple.Name,
+					tests.ContractSimple.Filename,
 				),
 			},
 			sigAlgo:  crypto.ECDSA_P256,
@@ -433,4 +433,14 @@ func TestAccountsIntegration(t *testing.T) {
 		}
 	})
 
+}
+
+func TestAccountsAddContract_Integration(t *testing.T) {
+
+	t.Run("Add Contract", func(t *testing.T) {
+		state, s := setupIntegration()
+		srvAcc, _ := state.EmulatorServiceAccount()
+
+		s.Accounts.AddContract(srvAcc)
+	})
 }

@@ -48,7 +48,7 @@ func TestProject(t *testing.T) {
 
 		c := config.Contract{
 			Name:    "Hello",
-			Source:  tests.ContractHelloString.Name,
+			Source:  tests.ContractHelloString.Filename,
 			Network: "emulator",
 		}
 		state.Contracts().AddOrUpdate(c.Name, c)
