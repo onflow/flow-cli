@@ -354,6 +354,14 @@ func TestAccountsIntegration(t *testing.T) {
 		state, s := setupIntegration()
 		srvAcc, _ := state.EmulatorServiceAccount()
 
+		errOut := []string{
+			"open Invalid: file does not exist",
+			"invalid account key: signing algorithm (UNKNOWN) is incompatible with hashing algorithm (SHA3_256)",
+			"invalid account key: signing algorithm (UNKNOWN) is incompatible with hashing algorithm (UNKNOWN)",
+			"number of keys and weights provided must match, number of provided keys: 2, number of provided key weights: 1",
+			"number of keys and weights provided must match, number of provided keys: 1, number of provided key weights: 2",
+		}
+
 		accIn := []accountsIn{
 			{
 				account:  srvAcc,
@@ -392,6 +400,15 @@ func TestAccountsIntegration(t *testing.T) {
 					tests.PubKeys()[1],
 				},
 				weights: []int{1000},
+			}, {
+				account:  srvAcc,
+				sigAlgo:  crypto.ECDSA_P256,
+				hashAlgo: crypto.SHA3_256,
+				args:     nil,
+				pubKeys: []crypto.PublicKey{
+					tests.PubKeys()[0],
+				},
+				weights: []int{1000, 1000},
 			},
 			/*{
 			 	TODO(sideninja): uncomment this test case after https://github.com/onflow/flow-go-sdk/pull/199 is released
@@ -404,13 +421,6 @@ func TestAccountsIntegration(t *testing.T) {
 				},
 				weights: []int{-1},
 			}*/
-		}
-
-		errOut := []string{
-			"open Invalid: file does not exist",
-			"invalid account key: signing algorithm (UNKNOWN) is incompatible with hashing algorithm (SHA3_256)",
-			"invalid account key: signing algorithm (UNKNOWN) is incompatible with hashing algorithm (UNKNOWN)",
-			"",
 		}
 
 		for i, a := range accIn {
