@@ -60,6 +60,8 @@ func newEvent(event flow.Event) Event {
 	}
 }
 
+// TODO(sideninja): Refactor this to flow.Address and err as return value instead of returning nil.
+
 func (e *Events) GetAddress() *flow.Address {
 	addr := ""
 	for _, event := range *e {
