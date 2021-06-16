@@ -23,6 +23,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/onflow/cadence"
+
 	"github.com/onflow/flow-cli/pkg/flowkit/gateway"
 
 	"github.com/stretchr/testify/mock"
@@ -218,6 +220,20 @@ func TestAccounts(t *testing.T) {
 		gw.Mock.AssertNumberOfCalls(t, tests.SendSignedTransactionFunc, 1)
 		assert.NotNil(t, account)
 		assert.NoError(t, err)
+	})
+
+	t.Run("Staking Info for Account", func(t *testing.T) {
+		_, s, gw := setup()
+
+		gw.ExecuteScript.Run(func(args mock.Arguments) {
+			assert.True(t, strings.Contains(string(args.Get(0).([]byte)), "import FlowIDTableStaking from 0x9eca2b38b18b5dfe"))
+			gw.ExecuteScript.Return(cadence.NewValue(nil))
+		})
+
+		val1, val2, err := s.Accounts.StakingInfo(flow.HexToAddress("df9c30eb2252f1fa"))
+		assert.NoError(t, err)
+		assert.NotNil(t, val1)
+		assert.NotNil(t, val2)
 	})
 
 }
@@ -504,5 +520,15 @@ func TestAccountsGet_Integration(t *testing.T) {
 		acc, err := s.Accounts.Get(flow.HexToAddress("0x1"))
 		assert.Nil(t, acc)
 		assert.Equal(t, err.Error(), "could not find account with address 0000000000000001")
+	})
+}
+
+func TestAccountsStakingInfo_Integration(t *testing.T) {
+	state, s := setupIntegration()
+	srvAcc, _ := state.EmulatorServiceAccount()
+
+	t.Run("Get Staking Info", func(t *testing.T) {
+		_, _, err := s.Accounts.StakingInfo(srvAcc.Address()) // unfortunately can't do integration test
+		assert.Equal(t, err.Error(), "emulator chain not supported")
 	})
 }
