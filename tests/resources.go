@@ -47,6 +47,13 @@ var ContractHelloString = resource{
 	`),
 }
 
+var ContractSimple = resource{
+	Name: "contractSimple.cdc",
+	Source: []byte(`
+		pub contract Simple {}
+	`),
+}
+
 var TransactionArgString = resource{
 	Name: "transactionArg.cdc",
 	Source: []byte(`
@@ -77,6 +84,7 @@ var resources = []resource{
 	ContractHelloString,
 	TransactionArgString,
 	ScriptArgString,
+	ContractSimple,
 }
 
 func ReaderWriter() afero.Afero {
