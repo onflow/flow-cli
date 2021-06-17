@@ -19,6 +19,7 @@
 package services
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/onflow/flow-cli/tests"
@@ -62,6 +63,33 @@ func TestEvents(t *testing.T) {
 		for i, in := range inputs {
 			_, err := s.Events.Get(in[0], in[1], in[2])
 			assert.Equal(t, err.Error(), outputs[i])
+		}
+	})
+}
+
+func TestEvents_Integration(t *testing.T) {
+
+	t.Run("Get Events", func(t *testing.T) {
+		state, s := setupIntegration()
+		srvAcc, _ := state.EmulatorServiceAccount()
+
+		events, err := s.Events.Get("nonexisting", "0", "latest")
+		assert.NoError(t, err)
+		assert.Len(t, events, 1)
+		assert.Len(t, events[0].Events, 0)
+
+		// create events
+		_, err = s.Accounts.AddContract(srvAcc, tests.ContractEvents.Name, tests.ContractEvents.Source, false)
+		assert.NoError(t, err)
+
+		for x := 'A'; x <= 'J'; x++ { // test contract emits events named from A to J
+			eName := fmt.Sprintf("A.%s.ContractEvents.Event%c", srvAcc.Address().String(), x)
+			events, err = s.Events.Get(eName, "0", "latest")
+
+			assert.NoError(t, err)
+			assert.Len(t, events, 2)
+			assert.Len(t, events[1].Events, 1)
+			assert.Equal(t, events[1].Events[0].Type, eName)
 		}
 	})
 }
