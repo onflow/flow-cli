@@ -234,7 +234,7 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 
 		if result.Error == nil && !deployErr {
 			p.logger.StopProgress()
-			fmt.Printf("%s -> 0x%s\n", output.Green(contract.Name()), contract.Target())
+			fmt.Printf("%s -> 0x%s (%s)\n", output.Green(contract.Name()), contract.Target(), sentTx.ID().String())
 		} else {
 			p.logger.StopProgress()
 			p.logger.Error(
