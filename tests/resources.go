@@ -87,6 +87,13 @@ var TransactionArgString = resource{
 	`),
 }
 
+var TransactionSimple = resource{
+	Filename: "transactionSimple.cdc",
+	Source: []byte(`
+		transaction() {}
+	`),
+}
+
 var ScriptArgString = resource{
 	Filename: "scriptArg.cdc",
 	Source: []byte(`
@@ -102,6 +109,7 @@ var resources = []resource{
 	ScriptArgString,
 	ContractSimple,
 	ContractSimpleUpdated,
+	TransactionSimple,
 }
 
 func ReaderWriter() afero.Afero {
