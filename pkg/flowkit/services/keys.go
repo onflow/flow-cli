@@ -98,7 +98,7 @@ func (k *Keys) DecodePEM(key string, sigAlgo crypto.SignatureAlgorithm) (*flow.A
 
 	return &flow.AccountKey{
 		PublicKey: pk,
-		SigAlgo:   crypto.ECDSA_P256,
+		SigAlgo:   sigAlgo,
 		Weight:    -1,
 	}, nil
 }
