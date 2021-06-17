@@ -72,8 +72,10 @@ func (e *Blocks) GetBlock(
 		block, err = e.gateway.GetLatestBlock()
 	} else if height, ce := strconv.ParseUint(query, 10, 64); ce == nil {
 		block, err = e.gateway.GetBlockByHeight(height)
-	} else {
+	} else if flow.HexToID(query) != flow.EmptyID {
 		block, err = e.gateway.GetBlockByID(flow.HexToID(query))
+	} else {
+		return nil, nil, nil, fmt.Errorf("invalid query: %s, valid are: \"latest\", block height or block ID", query)
 	}
 
 	if err != nil {
