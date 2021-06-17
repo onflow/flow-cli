@@ -75,9 +75,16 @@ func (g *EmulatorGateway) SendSignedTransaction(tx *flowkit.Transaction) (*flow.
 	}
 
 	_, err = g.emulator.ExecuteNextTransaction()
-	_, _ = g.emulator.CommitBlock()
+	if err != nil {
+		return nil, fmt.Errorf("failed to submit transaction: %w", err)
+	}
 
-	return t, err
+	_, err = g.emulator.CommitBlock()
+	if err != nil {
+		return nil, fmt.Errorf("failed to submit transaction: %w", err)
+	}
+
+	return t, nil
 }
 
 func (g *EmulatorGateway) GetTransactionResult(tx *flow.Transaction, waitSeal bool) (*flow.TransactionResult, error) {
@@ -147,7 +154,7 @@ func (g *EmulatorGateway) GetEvents(
 ) ([]client.BlockEvents, error) {
 	events := make([]client.BlockEvents, 0)
 
-	for height := startHeight; height < endHeight; height++ {
+	for height := startHeight; height <= endHeight; height++ {
 		events = append(events, g.getBlockEvent(height, eventType))
 	}
 
