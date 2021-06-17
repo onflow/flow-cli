@@ -7,10 +7,10 @@ require (
 	github.com/gosuri/uilive v0.0.4
 	github.com/joho/godotenv v1.3.0
 	github.com/manifoldco/promptui v0.8.0
-	github.com/onflow/cadence v0.17.0
+	github.com/onflow/cadence v0.18.0
 	github.com/onflow/cadence/languageserver v0.16.0
 	github.com/onflow/flow-core-contracts/lib/go/templates v0.6.0
-	github.com/onflow/flow-emulator v0.20.3
+	github.com/onflow/flow-emulator v0.21.0
 	github.com/onflow/flow-go-sdk v0.20.0-alpha.1
 	github.com/psiemens/sconfig v0.0.0-20190623041652-6e01eb1354fc
 	github.com/spf13/afero v1.1.2
