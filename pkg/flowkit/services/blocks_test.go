@@ -104,6 +104,6 @@ func TestBlocksGet_Integration(t *testing.T) {
 		_, s := setupIntegration()
 
 		_, _, _, err := s.Blocks.GetBlock("foo", "flow.AccountCreated", true)
-		assert.Equal(t, err.Error(), "")
+		assert.Equal(t, err.Error(), "invalid query: foo, valid are: \"latest\", block height or block ID")
 	})
 }
