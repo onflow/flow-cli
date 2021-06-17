@@ -180,11 +180,11 @@ func TestProject_Integration(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Len(t, contracts, 3)
 		assert.Equal(t, contracts[0].Name(), tests.ContractA.Name)
-		assert.Equal(t, contracts[0].Code(), string(tests.ContractB.Source))
-		assert.Equal(t, contracts[1].Name(), tests.ContractA.Name)
+		assert.Equal(t, contracts[0].Code(), string(tests.ContractA.Source))
+		assert.Equal(t, contracts[1].Name(), tests.ContractB.Name)
 		assert.Equal(t, contracts[1].Code(), string(tests.ContractB.Source))
-		assert.Equal(t, contracts[2].Name(), tests.ContractA.Name)
-		assert.Equal(t, contracts[2].Code(), string(tests.ContractB.Source))
+		assert.Equal(t, contracts[2].Name(), tests.ContractC.Name)
+		assert.Equal(t, contracts[2].Code(), string(tests.ContractC.Source))
 	})
 
 }
