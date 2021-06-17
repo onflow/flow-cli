@@ -22,6 +22,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/onflow/flow-cli/pkg/flowkit/contracts"
+
 	"github.com/onflow/cadence"
 
 	"github.com/stretchr/testify/mock"
@@ -93,36 +95,41 @@ func TestProject(t *testing.T) {
 
 }
 
+// used for integration tests
+func simpleDeploy(state *flowkit.State, s *Services, update bool) ([]*contracts.Contract, error) {
+	srvAcc, _ := state.EmulatorServiceAccount()
+
+	c := config.Contract{
+		Name:    tests.ContractHelloString.Name,
+		Source:  tests.ContractHelloString.Filename,
+		Network: "emulator",
+	}
+	state.Contracts().AddOrUpdate(c.Name, c)
+
+	n := config.Network{
+		Name: "emulator",
+		Host: "127.0.0.1:3569",
+	}
+	state.Networks().AddOrUpdate(n.Name, n)
+
+	d := config.Deploy{
+		Network: n.Name,
+		Account: srvAcc.Name(),
+		Contracts: []config.ContractDeployment{{
+			Name: c.Name,
+			Args: nil,
+		}},
+	}
+	state.Deployments().AddOrUpdate(d)
+
+	return s.Project.Deploy(n.Name, update)
+}
+
 func TestProject_Integration(t *testing.T) {
 
 	t.Run("Deploy Project", func(t *testing.T) {
 		state, s := setupIntegration()
-		srvAcc, _ := state.EmulatorServiceAccount()
-
-		c := config.Contract{
-			Name:    tests.ContractHelloString.Name,
-			Source:  tests.ContractHelloString.Filename,
-			Network: "emulator",
-		}
-		state.Contracts().AddOrUpdate(c.Name, c)
-
-		n := config.Network{
-			Name: "emulator",
-			Host: "127.0.0.1:3569",
-		}
-		state.Networks().AddOrUpdate(n.Name, n)
-
-		d := config.Deploy{
-			Network: n.Name,
-			Account: srvAcc.Name(),
-			Contracts: []config.ContractDeployment{{
-				Name: c.Name,
-				Args: nil,
-			}},
-		}
-		state.Deployments().AddOrUpdate(d)
-
-		contracts, err := s.Project.Deploy(n.Name, false)
+		contracts, err := simpleDeploy(state, s, false)
 		assert.NoError(t, err)
 		assert.Len(t, contracts, 1)
 		assert.Equal(t, contracts[0].Name(), tests.ContractHelloString.Name)
@@ -185,6 +192,26 @@ func TestProject_Integration(t *testing.T) {
 		assert.Equal(t, contracts[1].Code(), string(tests.ContractB.Source))
 		assert.Equal(t, contracts[2].Name(), tests.ContractC.Name)
 		assert.Equal(t, contracts[2].Code(), string(tests.ContractC.Source))
+	})
+
+	t.Run("Deploy Project Invalid", func(t *testing.T) {
+		// setup
+		state, s := setupIntegration()
+		_, err := simpleDeploy(state, s, false)
+		assert.NoError(t, err)
+
+		_, err = simpleDeploy(state, s, false)
+		assert.Equal(t, err.Error(), "failed to deploy contracts")
+	})
+
+	t.Run("Deploy Project Update", func(t *testing.T) {
+		// setup
+		state, s := setupIntegration()
+		_, err := simpleDeploy(state, s, false)
+		assert.NoError(t, err)
+
+		_, err = simpleDeploy(state, s, true)
+		assert.NoError(t, err)
 	})
 
 }
