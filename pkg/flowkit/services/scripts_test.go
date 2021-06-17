@@ -21,6 +21,8 @@ package services
 import (
 	"testing"
 
+	"github.com/onflow/flow-cli/pkg/flowkit/config"
+
 	"github.com/onflow/cadence"
 
 	"github.com/stretchr/testify/mock"
@@ -42,10 +44,78 @@ func TestScripts(t *testing.T) {
 		})
 
 		args, _ := flowkit.ParseArgumentsCommaSplit([]string{"String:Foo"})
-
 		_, err := s.Scripts.Execute(tests.ScriptArgString.Source, args, "", "")
 
 		assert.NoError(t, err)
 	})
 
+}
+
+func TestScripts_Integration(t *testing.T) {
+
+	t.Run("Execute", func(t *testing.T) {
+		_, s := setupIntegration()
+
+		args, _ := flowkit.ParseArgumentsCommaSplit([]string{"String:Foo"})
+		res, err := s.Scripts.Execute(tests.ScriptArgString.Source, args, "", "")
+
+		assert.NoError(t, err)
+		assert.Equal(t, res.String(), "\"Hello Foo\"")
+	})
+
+	t.Run("Execute With Imports", func(t *testing.T) {
+		state, s := setupIntegration()
+		srvAcc, _ := state.EmulatorServiceAccount()
+
+		// setup
+		c := config.Contract{
+			Name:    tests.ContractHelloString.Name,
+			Source:  tests.ContractHelloString.Filename,
+			Network: "emulator",
+		}
+		state.Contracts().AddOrUpdate(c.Name, c)
+
+		n := config.Network{
+			Name: "emulator",
+			Host: "127.0.0.1:3569",
+		}
+		state.Networks().AddOrUpdate(n.Name, n)
+
+		d := config.Deploy{
+			Network: n.Name,
+			Account: srvAcc.Name(),
+			Contracts: []config.ContractDeployment{{
+				Name: c.Name,
+				Args: nil,
+			}},
+		}
+		state.Deployments().AddOrUpdate(d)
+		s.Accounts.AddContract(srvAcc, tests.ContractHelloString.Name, tests.ContractHelloString.Source, false)
+
+		res, err := s.Scripts.Execute(tests.ScriptImport.Source, nil, tests.ScriptImport.Filename, n.Name)
+		assert.NoError(t, err)
+		assert.Equal(t, res.String(), "\"Hello Hello, World!\"")
+	})
+
+	t.Run("Execute Script Invalid", func(t *testing.T) {
+		_, s := setupIntegration()
+		in := [][]string{
+			{tests.ScriptImport.Filename, ""},
+			{"", "emulator"},
+			{tests.ScriptImport.Filename, "foo"},
+		}
+
+		out := []string{
+			"missing network, specify which network to use to resolve imports in script code",
+			"resolving imports in scripts not supported",
+			"import ./contractHello.cdc could not be resolved from the configuration",
+		}
+
+		for x, i := range in {
+			_, err := s.Scripts.Execute(tests.ScriptImport.Source, nil, i[0], i[1])
+			assert.NotNil(t, err)
+			assert.Equal(t, err.Error(), out[x])
+		}
+
+	})
 }
