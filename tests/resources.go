@@ -176,6 +176,17 @@ var ScriptArgString = resource{
 	`),
 }
 
+var ScriptImport = resource{
+	Filename: "scriptImport.cdc",
+	Source: []byte(`
+		import Hello from "./contractHello.cdc"
+
+		pub fun main(): String {
+		  return "Hello ".concat(Hello.greeting)
+		}
+	`),
+}
+
 var resources = []resource{
 	ContractHelloString,
 	TransactionArgString,
@@ -183,6 +194,7 @@ var resources = []resource{
 	ContractSimple,
 	ContractSimpleUpdated,
 	TransactionSimple,
+	ScriptImport,
 	ContractA,
 	ContractB,
 	ContractC,
