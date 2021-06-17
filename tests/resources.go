@@ -112,6 +112,37 @@ var ContractEvents = resource{
 	`),
 }
 
+var ContractA = resource{
+	Name:     "ContractA",
+	Filename: "contractA.cdc",
+	Source:   []byte(`pub contract ContractA {}`),
+}
+
+var ContractB = resource{
+	Name:     "ContractB",
+	Filename: "contractB.cdc",
+	Source: []byte(`
+		import ContractA from "./contractA.cdc"
+		pub contract ContractB {}
+	`),
+}
+
+var ContractC = resource{
+	Name:     "ContractC",
+	Filename: "contractC.cdc",
+	Source: []byte(`
+		import ContractB from "./contractB.cdc"
+		import ContractA from "./contractA.cdc"
+
+		pub contract ContractC {
+			pub let x: String
+			init(x: String) {
+				self.x = x
+			}
+		}
+	`),
+}
+
 var TransactionArgString = resource{
 	Filename: "transactionArg.cdc",
 	Source: []byte(`
@@ -152,6 +183,9 @@ var resources = []resource{
 	ContractSimple,
 	ContractSimpleUpdated,
 	TransactionSimple,
+	ContractA,
+	ContractB,
+	ContractC,
 }
 
 func ReaderWriter() afero.Afero {
