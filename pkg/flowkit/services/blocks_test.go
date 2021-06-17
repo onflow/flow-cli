@@ -21,6 +21,8 @@ package services
 import (
 	"testing"
 
+	"github.com/onflow/flow-go-sdk/crypto"
+
 	"github.com/onflow/flow-go-sdk"
 
 	"github.com/onflow/flow-cli/tests"
@@ -70,4 +72,38 @@ func TestBlocks(t *testing.T) {
 		gw.Mock.AssertNotCalled(t, tests.GetLatestBlockFunc)
 	})
 
+}
+
+func TestBlocksGet_Integration(t *testing.T) {
+
+	t.Run("Get Block", func(t *testing.T) {
+		state, s := setupIntegration()
+		srvAcc, _ := state.EmulatorServiceAccount()
+
+		block, blockEvents, collection, err := s.Blocks.GetBlock("latest", "", true)
+
+		assert.NoError(t, err)
+		assert.Nil(t, blockEvents)
+		assert.Equal(t, collection, []*flow.Collection{})
+		assert.Equal(t, block.Height, uint64(0))
+		assert.Equal(t, block.ID.String(), "7bc42fe85d32ca513769a74f97f7e1a7bad6c9407f0d934c2aa645ef9cf613c7")
+
+		// create an event
+		s.Accounts.Create(srvAcc, tests.PubKeys(), nil, crypto.ECDSA_P256, crypto.SHA3_256, nil)
+
+		block, blockEvents, _, err = s.Blocks.GetBlock("latest", "flow.AccountCreated", true)
+
+		assert.NoError(t, err)
+		assert.NotNil(t, block)
+
+		assert.Len(t, blockEvents, 1)
+		assert.Len(t, blockEvents[0].Events, 1)
+	})
+
+	t.Run("Get Block Invalid", func(t *testing.T) {
+		_, s := setupIntegration()
+
+		_, _, _, err := s.Blocks.GetBlock("foo", "flow.AccountCreated", true)
+		assert.Equal(t, err.Error(), "")
+	})
 }
