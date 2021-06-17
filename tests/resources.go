@@ -70,6 +70,48 @@ var ContractSimpleUpdated = resource{
 	`),
 }
 
+var ContractEvents = resource{
+	Name:     "ContractEvents",
+	Filename: "contractEvents.cdc",
+	Source: []byte(`
+		pub contract ContractEvents {
+			pub struct S {
+				pub var x: Int
+				pub var y: String
+				
+				init(x: Int, y: String) {
+					self.x = x
+					self.y = y
+				}
+			}
+
+			pub event EventA(x: Int)
+			pub event EventB(x: Int, y: Int)
+			pub event EventC(x: UInt8)
+			pub event EventD(x: String)
+			pub event EventE(x: UFix64) 
+			pub event EventF(x: Address)
+			pub event EventG(x: [UInt8])
+			pub event EventH(x: [[UInt8]])
+			pub event EventI(x: {String: Int})
+			pub event EventJ(x: S)
+			
+			init() {
+				emit EventA(x: 1)				
+				emit EventB(x: 4, y: 2)	
+				emit EventC(x: 1)
+				emit EventD(x: "hello")
+				emit EventE(x: 10.2)
+				emit EventF(x: 0x436164656E636521)
+				emit EventG(x: "hello".utf8)
+				emit EventH(x: ["hello".utf8, "world".utf8])
+				emit EventI(x: { "hello": 1337 })
+				emit EventJ(x: S(x: 1, y: "hello world"))
+			}
+		}
+	`),
+}
+
 var TransactionArgString = resource{
 	Filename: "transactionArg.cdc",
 	Source: []byte(`
