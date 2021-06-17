@@ -151,13 +151,13 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 	))
 	defer p.logger.StopProgress()
 
-	block, err := p.gateway.GetLatestBlock()
-	if err != nil {
-		return nil, err
-	}
-
 	deployErr := false
 	for _, contract := range orderedContracts {
+		block, err := p.gateway.GetLatestBlock()
+		if err != nil {
+			return nil, err
+		}
+
 		targetAccount := p.state.Accounts().ByAddress(contract.Target())
 
 		if targetAccount == nil {
@@ -208,38 +208,44 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 
 		tx, err = tx.Sign()
 		if err != nil {
-			return nil, err
-		}
-
-		sentTx, err := p.gateway.SendSignedTransaction(tx)
-		if err != nil {
-			p.logger.Error(err.Error())
+			p.logger.Error(fmt.Sprintf("%s error: %s", contract.Name(), err))
 			deployErr = true
+			continue
 		}
 
 		p.logger.StartProgress(
 			fmt.Sprintf("%s deploying...", output.Bold(contract.Name())),
 		)
 
-		result, err := p.gateway.GetTransactionResult(sentTx, true)
+		sentTx, err := p.gateway.SendSignedTransaction(tx)
 		if err != nil {
-			p.logger.Error(err.Error())
+			p.logger.StopProgress()
+			p.logger.Error(fmt.Sprintf("%s error: %s", contract.Name(), err))
 			deployErr = true
+			continue
 		}
 
+		result, err := p.gateway.GetTransactionResult(sentTx, true)
+		if err != nil {
+			p.logger.StopProgress()
+			p.logger.Error(fmt.Sprintf("%s error: %s", contract.Name(), err))
+			deployErr = true
+			continue
+		}
 		if result == nil {
 			p.logger.Error("could not fetch the result of deployment, skipping")
+			deployErr = true
 			continue
 		}
 
 		if result.Error == nil && !deployErr {
 			p.logger.StopProgress()
-			fmt.Printf("%s -> 0x%s (%s)\n", output.Green(contract.Name()), contract.Target(), sentTx.ID().String())
-		} else {
-			p.logger.StopProgress()
-			p.logger.Error(
-				fmt.Sprintf("%s error: %s", contract.Name(), result.Error),
-			)
+			p.logger.Info(fmt.Sprintf(
+				"%s -> 0x%s (%s)\n",
+				output.Green(contract.Name()),
+				contract.Target(),
+				sentTx.ID().String(),
+			))
 		}
 	}
 
