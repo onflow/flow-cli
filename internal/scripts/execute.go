@@ -60,6 +60,8 @@ var ExecuteCommand = &command.Command{
 			return nil, fmt.Errorf("provide a valide filename command argument")
 		}
 
+		scriptFlags.Arg, _ = cmd.Flags().GetStringArray("arg")
+
 		if scriptFlags.Args != "" {
 			fmt.Println("⚠️  DEPRECATION WARNING: use arg flag in Type:Value format or args-json for JSON format")
 

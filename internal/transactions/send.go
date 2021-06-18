@@ -59,6 +59,8 @@ var SendCommand = &command.Command{
 			fmt.Println("⚠️  DEPRECATION WARNING: all transactions will provide results")
 		}
 
+		sendFlags.Arg, _ = cmd.Flags().GetStringArray("arg")
+
 		if sendFlags.Args != "" {
 			fmt.Println("⚠️  DEPRECATION WARNING: use arg flag in Type:Value format or arg-json for JSON format")
 
