@@ -52,7 +52,7 @@ var BuildCommand = &command.Command{
 	) (command.Result, error) {
 
 		codeFilename := args[0]
-		buildFlags.Arg, _ = cmd.Flags().GetStringArray("arg")
+		buildFlags.Args, _ = cmd.Flags().GetStringArray("arg")
 
 		build, err := services.Transactions.Build(
 			buildFlags.Proposer,
