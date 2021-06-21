@@ -253,6 +253,8 @@ func setupIntegration() (*flowkit.State, *Services) {
 }
 
 func TestAccountsCreate_Integration(t *testing.T) {
+	t.Parallel()
+
 	type accountsIn struct {
 		account  *flowkit.Account
 		pubKeys  []crypto.PublicKey
@@ -273,6 +275,8 @@ func TestAccountsCreate_Integration(t *testing.T) {
 	}
 
 	t.Run("Create", func(t *testing.T) {
+		t.Parallel()
+
 		state, s := setupIntegration()
 		srvAcc, _ := state.EmulatorServiceAccount()
 
@@ -369,6 +373,8 @@ func TestAccountsCreate_Integration(t *testing.T) {
 	})
 
 	t.Run("Create Invalid", func(t *testing.T) {
+		t.Parallel()
+
 		state, s := setupIntegration()
 		srvAcc, _ := state.EmulatorServiceAccount()
 
@@ -454,8 +460,11 @@ func TestAccountsCreate_Integration(t *testing.T) {
 }
 
 func TestAccountsAddContract_Integration(t *testing.T) {
+	t.Parallel()
 
 	t.Run("Add Contract", func(t *testing.T) {
+		t.Parallel()
+
 		state, s := setupIntegration()
 		srvAcc, _ := state.EmulatorServiceAccount()
 
@@ -473,6 +482,8 @@ func TestAccountsAddContract_Integration(t *testing.T) {
 	})
 
 	t.Run("Add Contract Invalid", func(t *testing.T) {
+		t.Parallel()
+
 		state, s := setupIntegration()
 		srvAcc, _ := state.EmulatorServiceAccount()
 
@@ -489,6 +500,8 @@ func TestAccountsAddContract_Integration(t *testing.T) {
 }
 
 func TestAccountsRemoveContract_Integration(t *testing.T) {
+	t.Parallel()
+
 	state, s := setupIntegration()
 	srvAcc, _ := state.EmulatorServiceAccount()
 
@@ -497,6 +510,8 @@ func TestAccountsRemoveContract_Integration(t *testing.T) {
 	assert.NoError(t, err)
 
 	t.Run("Remove Contract", func(t *testing.T) {
+		t.Parallel()
+
 		acc, err := s.Accounts.RemoveContract(srvAcc, tests.ContractSimple.Name)
 
 		assert.NoError(t, err)
@@ -505,10 +520,13 @@ func TestAccountsRemoveContract_Integration(t *testing.T) {
 }
 
 func TestAccountsGet_Integration(t *testing.T) {
+	t.Parallel()
+
 	state, s := setupIntegration()
 	srvAcc, _ := state.EmulatorServiceAccount()
 
 	t.Run("Get Account", func(t *testing.T) {
+		t.Parallel()
 		acc, err := s.Accounts.Get(srvAcc.Address())
 
 		assert.NoError(t, err)
@@ -517,6 +535,8 @@ func TestAccountsGet_Integration(t *testing.T) {
 	})
 
 	t.Run("Get Account Invalid", func(t *testing.T) {
+		t.Parallel()
+
 		acc, err := s.Accounts.Get(flow.HexToAddress("0x1"))
 		assert.Nil(t, acc)
 		assert.Equal(t, err.Error(), "could not find account with address 0000000000000001")
@@ -524,6 +544,7 @@ func TestAccountsGet_Integration(t *testing.T) {
 }
 
 func TestAccountsStakingInfo_Integration(t *testing.T) {
+	t.Parallel()
 	state, s := setupIntegration()
 	srvAcc, _ := state.EmulatorServiceAccount()
 

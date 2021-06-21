@@ -26,6 +26,7 @@ import (
 )
 
 func TestCollections(t *testing.T) {
+	t.Parallel()
 
 	t.Run("Get Collection", func(t *testing.T) {
 		_, s, gw := setup()

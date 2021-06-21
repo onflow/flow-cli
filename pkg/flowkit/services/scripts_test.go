@@ -27,12 +27,12 @@ import (
 
 	"github.com/stretchr/testify/mock"
 
-	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/tests"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestScripts(t *testing.T) {
+	t.Parallel()
 
 	t.Run("Execute Script", func(t *testing.T) {
 		_, s, gw := setup()
@@ -43,7 +43,9 @@ func TestScripts(t *testing.T) {
 			gw.ExecuteScript.Return(cadence.MustConvertValue(""), nil)
 		})
 
-		args, _ := flowkit.ParseArgumentsCommaSplit([]string{"String:Foo"})
+		args := []cadence.Value{
+			cadence.NewString("Foo"),
+		}
 		_, err := s.Scripts.Execute(tests.ScriptArgString.Source, args, "", "")
 
 		assert.NoError(t, err)
@@ -52,11 +54,15 @@ func TestScripts(t *testing.T) {
 }
 
 func TestScripts_Integration(t *testing.T) {
+	t.Parallel()
 
 	t.Run("Execute", func(t *testing.T) {
+		t.Parallel()
 		_, s := setupIntegration()
 
-		args, _ := flowkit.ParseArgumentsCommaSplit([]string{"String:Foo"})
+		args := []cadence.Value{
+			cadence.NewString("Foo"),
+		}
 		res, err := s.Scripts.Execute(tests.ScriptArgString.Source, args, "", "")
 
 		assert.NoError(t, err)
@@ -64,6 +70,7 @@ func TestScripts_Integration(t *testing.T) {
 	})
 
 	t.Run("Execute With Imports", func(t *testing.T) {
+		t.Parallel()
 		state, s := setupIntegration()
 		srvAcc, _ := state.EmulatorServiceAccount()
 
@@ -98,6 +105,7 @@ func TestScripts_Integration(t *testing.T) {
 	})
 
 	t.Run("Execute Script Invalid", func(t *testing.T) {
+		t.Parallel()
 		_, s := setupIntegration()
 		in := [][]string{
 			{tests.ScriptImport.Filename, ""},
