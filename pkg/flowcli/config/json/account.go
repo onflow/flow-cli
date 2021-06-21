@@ -143,7 +143,7 @@ func transformSimpleAccountToJSON(a config.Account) account {
 
 func transformAdvancedAccountToJSON(a config.Account) account {
 	return account{
-		Advanced: advanceAccount{
+		Advanced: advancedAccount{
 			Address: a.Address.String(),
 			Key: advanceKey{
 				Type:       a.Key.Type,
@@ -166,7 +166,7 @@ func isDefaultKeyFormat(key config.AccountKey) bool {
 
 type account struct {
 	Simple   simpleAccount
-	Advanced advanceAccount
+	Advanced advancedAccount
 }
 
 type simpleAccount struct {
@@ -174,7 +174,7 @@ type simpleAccount struct {
 	Key     string `json:"key"`
 }
 
-type advanceAccount struct {
+type advancedAccount struct {
 	Address string     `json:"address"`
 	Key     advanceKey `json:"key"`
 }
@@ -262,13 +262,13 @@ func (j *account) UnmarshalJSON(b []byte) error {
 	case advancedFormatPre022:
 		var advancedOld advanceAccountPre022
 		err = json.Unmarshal(b, &advancedOld)
-		j.Advanced = advanceAccount{
+		j.Advanced = advancedAccount{
 			Address: advancedOld.Address,
 			Key:     advancedOld.Keys[0],
 		}
 
 	case advancedFormat:
-		var advanced advanceAccount
+		var advanced advancedAccount
 		err = json.Unmarshal(b, &advanced)
 		j.Advanced = advanced
 	}
