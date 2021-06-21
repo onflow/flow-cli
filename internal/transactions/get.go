@@ -64,7 +64,7 @@ var GetCommand = &command.Command{
 			fmt.Println("⚠️  DEPRECATION WARNING: use include flag instead")
 		}
 
-		id := flow.HexToID(strings.ReplaceAll(args[0], "0x", ""))
+		id := flow.HexToID(strings.TrimPrefix(args[0], "0x"))
 
 		tx, result, err := services.Transactions.GetStatus(id, getFlags.Sealed)
 		if err != nil {

@@ -49,7 +49,7 @@ func transformAddress(address string) (flow.Address, error) {
 func transformSimpleToConfig(accountName string, a simpleAccount) (*config.Account, error) {
 	pkey, err := crypto.DecodePrivateKeyHex(
 		crypto.ECDSA_P256,
-		strings.ReplaceAll(a.Key, "0x", ""),
+		strings.TrimPrefix(a.Key, "0x"),
 	)
 	if err != nil {
 		return nil, fmt.Errorf("invalid private key for account: %s", accountName)
@@ -92,7 +92,7 @@ func transformAdvancedToConfig(accountName string, a advanceAccount) (*config.Ac
 		if a.Key.PrivateKey != "" {
 			pKey, err = crypto.DecodePrivateKeyHex(
 				sigAlgo,
-				strings.ReplaceAll(a.Key.PrivateKey, "0x", ""),
+				strings.TrimPrefix(a.Key.PrivateKey, "0x"),
 			)
 			if err != nil {
 				return nil, err
@@ -173,7 +173,7 @@ func transformSimpleAccountToJSON(a config.Account) account {
 	return account{
 		Simple: simpleAccount{
 			Address: a.Address.String(),
-			Key:     strings.ReplaceAll(a.Key.PrivateKey.String(), "0x", ""),
+			Key:     strings.TrimPrefix(a.Key.PrivateKey.String(), "0x"),
 		},
 	}
 }
@@ -188,7 +188,7 @@ func transformAdvancedAccountToJSON(a config.Account) account {
 				SigAlgo:    a.Key.SigAlgo.String(),
 				HashAlgo:   a.Key.HashAlgo.String(),
 				ResourceID: a.Key.ResourceID,
-				PrivateKey: strings.ReplaceAll(a.Key.PrivateKey.String(), "0x", ""),
+				PrivateKey: strings.TrimPrefix(a.Key.PrivateKey.String(), "0x"),
 			},
 		},
 	}

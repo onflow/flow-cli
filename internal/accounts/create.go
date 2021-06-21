@@ -85,7 +85,7 @@ var CreateCommand = &command.Command{
 		// decode public keys
 		var pubKeys []crypto.PublicKey
 		for _, k := range createFlags.Keys {
-			k = strings.ReplaceAll(k, "0x", "") // clear possible prefix
+			k = strings.TrimPrefix(k, "0x") // clear possible prefix
 			key, err := crypto.DecodePublicKeyHex(sigAlgo, k)
 			if err != nil {
 				return nil, fmt.Errorf("failed decoding public key: %s with error: %w", key, err)
