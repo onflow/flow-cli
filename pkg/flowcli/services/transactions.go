@@ -277,7 +277,7 @@ func (t *Transactions) Send(
 	}
 
 	t.logger.Info(fmt.Sprintf("Transaction ID: %s", signed.FlowTransaction().ID()))
-	t.logger.StartProgress("Sending Transaction...")
+	t.logger.StartProgress("Sending transaction...")
 	defer t.logger.StopProgress()
 
 	sentTx, err := t.gateway.SendSignedTransaction(signed)
