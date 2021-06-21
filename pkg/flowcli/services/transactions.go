@@ -215,7 +215,7 @@ func (t *Transactions) SendSigned(
 		return nil, nil, err
 	}
 
-	t.logger.StartProgress(fmt.Sprintf("Sending Transaction with ID: %s", tx.FlowTransaction().ID()))
+	t.logger.StartProgress(fmt.Sprintf("Sending transaction with ID: %s", tx.FlowTransaction().ID()))
 	defer t.logger.StopProgress()
 
 	sentTx, err := t.gateway.SendSignedTransaction(tx)
