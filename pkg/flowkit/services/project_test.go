@@ -66,7 +66,7 @@ func TestProject(t *testing.T) {
 		a := tests.Alice()
 		state.Accounts().AddOrUpdate(a)
 
-		d := config.Deploy{
+		d := config.Deployment{
 			Network: n.Name,
 			Account: a.Name(),
 			Contracts: []config.ContractDeployment{{
@@ -112,7 +112,7 @@ func simpleDeploy(state *flowkit.State, s *Services, update bool) ([]*contracts.
 	}
 	state.Networks().AddOrUpdate(n.Name, n)
 
-	d := config.Deploy{
+	d := config.Deployment{
 		Network: n.Name,
 		Account: srvAcc.Name(),
 		Contracts: []config.ContractDeployment{{
@@ -165,7 +165,7 @@ func TestProject_Integration(t *testing.T) {
 		}
 		state.Networks().AddOrUpdate(n.Name, n)
 
-		d := config.Deploy{
+		d := config.Deployment{
 			Network: n.Name,
 			Account: srvAcc.Name(),
 			Contracts: []config.ContractDeployment{{
