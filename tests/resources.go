@@ -19,6 +19,8 @@
 package tests
 
 import (
+	"fmt"
+
 	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
@@ -26,12 +28,14 @@ import (
 )
 
 type resource struct {
-	Name   string
-	Source []byte
+	Name     string
+	Filename string
+	Source   []byte
 }
 
 var ContractHelloString = resource{
-	Name: "contractHello.cdc",
+	Name:     "Hello",
+	Filename: "contractHello.cdc",
 	Source: []byte(`
 		pub contract Hello {
 			pub let greeting: String
@@ -45,8 +49,102 @@ var ContractHelloString = resource{
 	`),
 }
 
+var ContractSimple = resource{
+	Name:     "Simple",
+	Filename: "contractSimple.cdc",
+	Source: []byte(`
+		pub contract Simple {}
+	`),
+}
+
+var ContractSimpleUpdated = resource{
+	Name:     "Simple",
+	Filename: "contractSimpleUpdated.cdc",
+	Source: []byte(`
+		pub contract Simple {
+			pub let greeting: String
+			init() {
+				self.greeting = "Foo"
+			}
+		}
+	`),
+}
+
+var ContractEvents = resource{
+	Name:     "ContractEvents",
+	Filename: "contractEvents.cdc",
+	Source: []byte(`
+		pub contract ContractEvents {
+			pub struct S {
+				pub var x: Int
+				pub var y: String
+				
+				init(x: Int, y: String) {
+					self.x = x
+					self.y = y
+				}
+			}
+
+			pub event EventA(x: Int)
+			pub event EventB(x: Int, y: Int)
+			pub event EventC(x: UInt8)
+			pub event EventD(x: String)
+			pub event EventE(x: UFix64) 
+			pub event EventF(x: Address)
+			pub event EventG(x: [UInt8])
+			pub event EventH(x: [[UInt8]])
+			pub event EventI(x: {String: Int})
+			pub event EventJ(x: S)
+			
+			init() {
+				emit EventA(x: 1)				
+				emit EventB(x: 4, y: 2)	
+				emit EventC(x: 1)
+				emit EventD(x: "hello")
+				emit EventE(x: 10.2)
+				emit EventF(x: 0x436164656E636521)
+				emit EventG(x: "hello".utf8)
+				emit EventH(x: ["hello".utf8, "world".utf8])
+				emit EventI(x: { "hello": 1337 })
+				emit EventJ(x: S(x: 1, y: "hello world"))
+			}
+		}
+	`),
+}
+
+var ContractA = resource{
+	Name:     "ContractA",
+	Filename: "contractA.cdc",
+	Source:   []byte(`pub contract ContractA {}`),
+}
+
+var ContractB = resource{
+	Name:     "ContractB",
+	Filename: "contractB.cdc",
+	Source: []byte(`
+		import ContractA from "./contractA.cdc"
+		pub contract ContractB {}
+	`),
+}
+
+var ContractC = resource{
+	Name:     "ContractC",
+	Filename: "contractC.cdc",
+	Source: []byte(`
+		import ContractB from "./contractB.cdc"
+		import ContractA from "./contractA.cdc"
+
+		pub contract ContractC {
+			pub let x: String
+			init(x: String) {
+				self.x = x
+			}
+		}
+	`),
+}
+
 var TransactionArgString = resource{
-	Name: "transactionArg.cdc",
+	Filename: "transactionArg.cdc",
 	Source: []byte(`
 		transaction(greeting: String) {
 			let guest: Address
@@ -62,11 +160,29 @@ var TransactionArgString = resource{
 	`),
 }
 
+var TransactionSimple = resource{
+	Filename: "transactionSimple.cdc",
+	Source: []byte(`
+		transaction() {}
+	`),
+}
+
 var ScriptArgString = resource{
-	Name: "scriptArg.cdc",
+	Filename: "scriptArg.cdc",
 	Source: []byte(`
 		pub fun main(name: String): String {
 		  return "Hello ".concat(name)
+		}
+	`),
+}
+
+var ScriptImport = resource{
+	Filename: "scriptImport.cdc",
+	Source: []byte(`
+		import Hello from "./contractHello.cdc"
+
+		pub fun main(): String {
+		  return "Hello ".concat(Hello.greeting)
 		}
 	`),
 }
@@ -75,13 +191,20 @@ var resources = []resource{
 	ContractHelloString,
 	TransactionArgString,
 	ScriptArgString,
+	ContractSimple,
+	ContractSimpleUpdated,
+	TransactionSimple,
+	ScriptImport,
+	ContractA,
+	ContractB,
+	ContractC,
 }
 
 func ReaderWriter() afero.Afero {
 	var mockFS = afero.NewMemMapFs()
 
 	for _, c := range resources {
-		_ = afero.WriteFile(mockFS, c.Name, c.Source, 0644)
+		_ = afero.WriteFile(mockFS, c.Filename, c.Source, 0644)
 	}
 
 	return afero.Afero{mockFS}
@@ -96,4 +219,16 @@ func Alice() *flowkit.Account {
 	a.SetKey(flowkit.NewHexAccountKeyFromPrivateKey(0, crypto.SHA3_256, pk))
 
 	return a
+}
+
+func PubKeys() []crypto.PublicKey {
+	var pubKeys []crypto.PublicKey
+	for x := 0; x < 5; x++ {
+		pk, _ := crypto.GeneratePrivateKey(
+			crypto.ECDSA_P256,
+			[]byte(fmt.Sprintf("seedseedseedseedseedseedseedseedseedseedseedseed%d", x)),
+		)
+		pubKeys = append(pubKeys, pk.PublicKey())
+	}
+	return pubKeys
 }

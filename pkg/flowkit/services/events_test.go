@@ -19,6 +19,7 @@
 package services
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/onflow/flow-cli/tests"
@@ -45,25 +46,50 @@ func TestEvents(t *testing.T) {
 
 	t.Run("Fails to get events without name", func(t *testing.T) {
 		_, s, _ := setup()
-		_, err := s.Events.Get("", "0", "1")
-		assert.Equal(t, err.Error(), "cannot use empty string as event name")
-	})
+		inputs := [][]string{
+			{"", "0", "1"},
+			{"test", "-1", "1"},
+			{"test", "1", "-1"},
+			{"test", "10", "5"},
+		}
 
-	t.Run("Fails to get events with wrong height", func(t *testing.T) {
-		_, s, _ := setup()
-		_, err := s.Events.Get("test", "-1", "1")
-		assert.Equal(t, err.Error(), "failed to parse start height of block range: -1")
-	})
+		outputs := []string{
+			"cannot use empty string as event name",
+			"failed to parse start height of block range: -1",
+			"failed to parse end height of block range: -1",
+			"cannot have end height (5) of block range less that start height (10)",
+		}
 
-	t.Run("Fails to get events with wrong end height", func(t *testing.T) {
-		_, s, _ := setup()
-		_, err := s.Events.Get("test", "1", "-1")
-		assert.Equal(t, err.Error(), "failed to parse end height of block range: -1")
+		for i, in := range inputs {
+			_, err := s.Events.Get(in[0], in[1], in[2])
+			assert.Equal(t, err.Error(), outputs[i])
+		}
 	})
+}
 
-	t.Run("Fails to get events with wrong start height", func(t *testing.T) {
-		_, s, _ := setup()
-		_, err := s.Events.Get("test", "10", "5")
-		assert.Equal(t, err.Error(), "cannot have end height (5) of block range less that start height (10)")
+func TestEvents_Integration(t *testing.T) {
+
+	t.Run("Get Events", func(t *testing.T) {
+		state, s := setupIntegration()
+		srvAcc, _ := state.EmulatorServiceAccount()
+
+		events, err := s.Events.Get("nonexisting", "0", "latest")
+		assert.NoError(t, err)
+		assert.Len(t, events, 1)
+		assert.Len(t, events[0].Events, 0)
+
+		// create events
+		_, err = s.Accounts.AddContract(srvAcc, tests.ContractEvents.Name, tests.ContractEvents.Source, false)
+		assert.NoError(t, err)
+
+		for x := 'A'; x <= 'J'; x++ { // test contract emits events named from A to J
+			eName := fmt.Sprintf("A.%s.ContractEvents.Event%c", srvAcc.Address().String(), x)
+			events, err = s.Events.Get(eName, "0", "latest")
+
+			assert.NoError(t, err)
+			assert.Len(t, events, 2)
+			assert.Len(t, events[1].Events, 1)
+			assert.Equal(t, events[1].Events[0].Type, eName)
+		}
 	})
 }
