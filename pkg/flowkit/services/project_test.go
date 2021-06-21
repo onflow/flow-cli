@@ -22,17 +22,15 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/onflow/flow-cli/pkg/flowkit/contracts"
-
 	"github.com/onflow/cadence"
-
+	"github.com/onflow/flow-go-sdk/crypto"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 
 	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
+	"github.com/onflow/flow-cli/pkg/flowkit/contracts"
 	"github.com/onflow/flow-cli/tests"
-	"github.com/onflow/flow-go-sdk/crypto"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestProject(t *testing.T) {

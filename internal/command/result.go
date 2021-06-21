@@ -25,10 +25,11 @@ import (
 	"os"
 	"strings"
 
-	"github.com/onflow/flow-cli/pkg/flowkit/config"
-	"github.com/onflow/flow-cli/pkg/flowkit/output"
 	"github.com/onflow/flow-go-sdk/client"
 	"github.com/spf13/afero"
+
+	"github.com/onflow/flow-cli/pkg/flowkit/config"
+	"github.com/onflow/flow-cli/pkg/flowkit/output"
 )
 
 // Result interface describes all the formats for the result output.

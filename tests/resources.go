@@ -21,10 +21,11 @@ package tests
 import (
 	"fmt"
 
-	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/spf13/afero"
+
+	"github.com/onflow/flow-cli/pkg/flowkit"
 )
 
 type resource struct {
@@ -207,7 +208,7 @@ func ReaderWriter() afero.Afero {
 		_ = afero.WriteFile(mockFS, c.Filename, c.Source, 0644)
 	}
 
-	return afero.Afero{mockFS}
+	return afero.Afero{Fs: mockFS}
 }
 
 func Alice() *flowkit.Account {

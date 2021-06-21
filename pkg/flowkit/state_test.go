@@ -32,7 +32,7 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
 )
 
-var af = afero.Afero{afero.NewMemMapFs()}
+var af = afero.Afero{Fs: afero.NewMemMapFs()}
 var composer = config.NewLoader(af)
 
 func keys() []crypto.PrivateKey {

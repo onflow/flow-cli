@@ -21,14 +21,12 @@ package services
 import (
 	"testing"
 
-	"github.com/onflow/flow-cli/pkg/flowkit/config"
-
 	"github.com/onflow/cadence"
-
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 
+	"github.com/onflow/flow-cli/pkg/flowkit/config"
 	"github.com/onflow/flow-cli/tests"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestScripts(t *testing.T) {
@@ -97,7 +95,7 @@ func TestScripts_Integration(t *testing.T) {
 			}},
 		}
 		state.Deployments().AddOrUpdate(d)
-		s.Accounts.AddContract(srvAcc, tests.ContractHelloString.Name, tests.ContractHelloString.Source, false)
+		_, _ = s.Accounts.AddContract(srvAcc, tests.ContractHelloString.Name, tests.ContractHelloString.Source, false)
 
 		res, err := s.Scripts.Execute(tests.ScriptImport.Source, nil, tests.ScriptImport.Filename, n.Name)
 		assert.NoError(t, err)

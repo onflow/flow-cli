@@ -20,10 +20,11 @@ package tests
 
 import (
 	"github.com/onflow/cadence"
-	"github.com/onflow/flow-cli/tests/mocks"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/client"
 	"github.com/stretchr/testify/mock"
+
+	"github.com/onflow/flow-cli/tests/mocks"
 )
 
 const (

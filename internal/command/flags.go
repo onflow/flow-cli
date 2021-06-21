@@ -21,10 +21,11 @@ package command
 import (
 	"fmt"
 
-	"github.com/onflow/flow-cli/pkg/flowkit/config"
-	"github.com/onflow/flow-cli/pkg/flowkit/util"
 	"github.com/psiemens/sconfig"
 	"github.com/spf13/cobra"
+
+	"github.com/onflow/flow-cli/pkg/flowkit/config"
+	"github.com/onflow/flow-cli/pkg/flowkit/util"
 )
 
 // GlobalFlags contains all global flags definitions.

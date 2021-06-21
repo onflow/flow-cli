@@ -21,15 +21,15 @@ import (
 	"os"
 	"testing"
 
-	"github.com/spf13/afero"
-	"github.com/stretchr/testify/assert"
-
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
 	"github.com/onflow/flow-cli/pkg/flowkit/config/json"
+
+	"github.com/spf13/afero"
+	"github.com/stretchr/testify/assert"
 )
 
 var mockFS = afero.NewMemMapFs()
-var af = afero.Afero{mockFS}
+var af = afero.Afero{Fs: mockFS}
 
 func Test_JSONSimple(t *testing.T) {
 	b := []byte(`{
@@ -91,7 +91,7 @@ func Test_ComposeJSON(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NoError(t, err2)
 
-	composer := config.NewLoader(afero.Afero{mockFS})
+	composer := config.NewLoader(afero.Afero{Fs: mockFS})
 	composer.AddConfigParser(json.NewParser())
 
 	conf, loadErr := composer.Load([]string{"flow.json", "flow-testnet.json"})
@@ -133,7 +133,7 @@ func Test_ComposeJSONOverwrite(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NoError(t, err2)
 
-	composer := config.NewLoader(afero.Afero{mockFS})
+	composer := config.NewLoader(afero.Afero{Fs: mockFS})
 	composer.AddConfigParser(json.NewParser())
 
 	conf, loadErr := composer.Load([]string{"flow.json", "flow-testnet.json"})
@@ -173,7 +173,7 @@ func Test_FromFileAccountSimple(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NoError(t, err2)
 
-	composer := config.NewLoader(afero.Afero{mockFS})
+	composer := config.NewLoader(afero.Afero{Fs: mockFS})
 	composer.AddConfigParser(json.NewParser())
 
 	conf, loadErr := composer.Load([]string{"flow.json", "private.json"})
@@ -233,7 +233,7 @@ func Test_FromFileAccountComplex(t *testing.T) {
 	assert.NoError(t, err2)
 	assert.NoError(t, err3)
 
-	composer := config.NewLoader(afero.Afero{mockFS})
+	composer := config.NewLoader(afero.Afero{Fs: mockFS})
 	composer.AddConfigParser(json.NewParser())
 
 	conf, loadErr := composer.Load([]string{"flow.json"})
@@ -267,7 +267,7 @@ func Test_JSONEnv(t *testing.T) {
 
 	assert.NoError(t, err)
 
-	composer := config.NewLoader(afero.Afero{mockFS})
+	composer := config.NewLoader(afero.Afero{Fs: mockFS})
 	composer.AddConfigParser(json.NewParser())
 	conf, loadErr := composer.Load([]string{"test2-flow.json"})
 

@@ -19,8 +19,9 @@
 package gateway
 
 import (
-	"github.com/onflow/cadence"
 	"github.com/onflow/flow-cli/pkg/flowkit"
+
+	"github.com/onflow/cadence"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/client"
 )
