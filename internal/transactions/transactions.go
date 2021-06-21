@@ -49,7 +49,6 @@ func init() {
 	SendSignedCommand.AddToParent(Cmd)
 }
 
-// TransactionResult represent result from all account commands
 type TransactionResult struct {
 	result  *flow.TransactionResult
 	tx      *flow.Transaction
@@ -58,7 +57,6 @@ type TransactionResult struct {
 	exclude []string
 }
 
-// JSON convert result to JSON
 func (r *TransactionResult) JSON() interface{} {
 	result := make(map[string]interface{})
 	result["id"] = r.tx.ID().String()
@@ -89,7 +87,6 @@ func (r *TransactionResult) JSON() interface{} {
 	return result
 }
 
-// String convert result to string
 func (r *TransactionResult) String() string {
 	var b bytes.Buffer
 	writer := util.CreateTabWriter(&b)
@@ -189,7 +186,6 @@ func (r *TransactionResult) String() string {
 	return b.String()
 }
 
-// Oneliner show result as one liner grep friendly
 func (r *TransactionResult) Oneliner() string {
 	result := fmt.Sprintf(
 		"ID: %s, Payer: %s, Authorizer: %s",

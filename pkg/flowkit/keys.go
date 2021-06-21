@@ -22,8 +22,9 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
-
-	"github.com/onflow/flow-cli/pkg/flowkit/util"
+	"os"
+	"os/exec"
+	"regexp"
 
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
@@ -32,6 +33,8 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
 )
 
+// AccountKey is a flowkit specific account key implementation
+// allowing us to sign the transactions using different implemented methods.
 type AccountKey interface {
 	Type() config.KeyType
 	Index() int
@@ -90,11 +93,13 @@ func (a *baseAccountKey) Validate() error {
 	return nil
 }
 
+// KmsAccountKey implements Gcloud KMS system for signing.
 type KmsAccountKey struct {
 	*baseAccountKey
 	kmsKey cloudkms.Key
 }
 
+// ToConfig convert account key to configuration.
 func (a *KmsAccountKey) ToConfig() config.AccountKey {
 	return config.AccountKey{
 		Type:       a.keyType,
@@ -113,7 +118,7 @@ func (a *KmsAccountKey) Signer(ctx context.Context) (crypto.Signer, error) {
 
 	accountKMSSigner, err := kmsClient.SignerForKey(
 		ctx,
-		flow.Address{}, // TODO: this is temporary workaround as SignerForKey accepts address but never uses it so should be removed
+		flow.Address{}, // TODO(sideninja) temporary workaround for PR https://github.com/onflow/flow-go-sdk/pull/196
 		a.kmsKey,
 	)
 	if err != nil {
@@ -124,11 +129,49 @@ func (a *KmsAccountKey) Signer(ctx context.Context) (crypto.Signer, error) {
 }
 
 func (a *KmsAccountKey) Validate() error {
-	return util.GcloudApplicationSignin(a.kmsKey.ResourceID())
+	return gcloudApplicationSignin(a.kmsKey.ResourceID())
 }
 
 func (a *KmsAccountKey) PrivateKey() (*crypto.PrivateKey, error) {
 	return nil, fmt.Errorf("private key not accessible")
+}
+
+// gcloudApplicationSignin signs in as an application user using gcloud command line tool
+// currently assumes gcloud is already installed on the machine
+// will by default pop a browser window to sign in
+func gcloudApplicationSignin(resourceID string) error {
+	googleAppCreds := os.Getenv("GOOGLE_APPLICATION_CREDENTIALS")
+	if len(googleAppCreds) > 0 {
+		return nil
+	}
+
+	kms, err := cloudkms.KeyFromResourceID(resourceID)
+	if err != nil {
+		return err
+	}
+
+	proj := kms.ProjectID
+	if len(proj) == 0 {
+		return fmt.Errorf(
+			"could not get GOOGLE_APPLICATION_CREDENTIALS, no google service account JSON provided but private key type is KMS",
+		)
+	}
+
+	loginCmd := exec.Command("gcloud", "auth", "application-default", "login", fmt.Sprintf("--project=%s", proj))
+
+	output, err := loginCmd.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("Failed to run %q: %s\n", loginCmd.String(), err)
+	}
+
+	squareBracketRegex := regexp.MustCompile(`(?s)\[(.*)\]`)
+	regexResult := squareBracketRegex.FindAllStringSubmatch(string(output), -1)
+	// Should only be one value. Second index since first index contains the square brackets
+	googleApplicationCreds := regexResult[0][1]
+
+	os.Setenv("GOOGLE_APPLICATION_CREDENTIALS", googleApplicationCreds)
+
+	return nil
 }
 
 func newKmsAccountKey(key config.AccountKey) (AccountKey, error) {
@@ -146,6 +189,12 @@ func newKmsAccountKey(key config.AccountKey) (AccountKey, error) {
 		},
 		kmsKey: accountKMSKey,
 	}, nil
+}
+
+// HexAccountKey implements account key in hex representation.
+type HexAccountKey struct {
+	*baseAccountKey
+	privateKey crypto.PrivateKey
 }
 
 func NewHexAccountKeyFromPrivateKey(
@@ -169,11 +218,6 @@ func newHexAccountKey(accountKey config.AccountKey) (*HexAccountKey, error) {
 		baseAccountKey: newBaseAccountKey(accountKey),
 		privateKey:     accountKey.PrivateKey,
 	}, nil
-}
-
-type HexAccountKey struct {
-	*baseAccountKey
-	privateKey crypto.PrivateKey
 }
 
 func (a *HexAccountKey) Signer(ctx context.Context) (crypto.Signer, error) {

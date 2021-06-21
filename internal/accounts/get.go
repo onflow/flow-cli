@@ -46,32 +46,33 @@ var GetCommand = &command.Command{
 		Args:    cobra.ExactArgs(1),
 	},
 	Flags: &getFlags,
-	Run: func(
-		cmd *cobra.Command,
-		args []string,
-		readerWriter flowkit.ReaderWriter,
-		globalFlags command.GlobalFlags,
-		services *services.Services,
-	) (command.Result, error) {
-		if getFlags.Code {
-			fmt.Println("⚠️  DEPRECATION WARNING: use contracts flag instead")
-		}
+	Run:   get,
+}
 
-		if getFlags.Contracts {
-			fmt.Println("⚠️  DEPRECATION WARNING: use include contracts flag instead")
-		}
+func get(
+	args []string,
+	_ flowkit.ReaderWriter,
+	_ command.GlobalFlags,
+	services *services.Services,
+) (command.Result, error) {
+	if getFlags.Code {
+		fmt.Println("⚠️  DEPRECATION WARNING: use contracts flag instead")
+	}
 
-		address := flow.HexToAddress(args[0])
+	if getFlags.Contracts {
+		fmt.Println("⚠️  DEPRECATION WARNING: use include contracts flag instead")
+	}
 
-		account, err := services.Accounts.Get(address)
-		if err != nil {
-			return nil, err
-		}
+	address := flow.HexToAddress(args[0])
 
-		return &AccountResult{
-			Account:  account,
-			showCode: getFlags.Contracts || getFlags.Code,
-			include:  getFlags.Include,
-		}, nil
-	},
+	account, err := services.Accounts.Get(address)
+	if err != nil {
+		return nil, err
+	}
+
+	return &AccountResult{
+		Account:  account,
+		showCode: getFlags.Contracts || getFlags.Code,
+		include:  getFlags.Include,
+	}, nil
 }

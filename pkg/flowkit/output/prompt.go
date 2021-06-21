@@ -36,53 +36,53 @@ func ApproveTransactionPrompt(transaction *flowkit.Transaction) bool {
 	writer := uilive.New()
 	tx := transaction.FlowTransaction()
 
-	fmt.Fprintf(writer, "\n")
-	fmt.Fprintf(writer, "ID\t%s\n", tx.ID())
-	fmt.Fprintf(writer, "Payer\t%s\n", tx.Payer.Hex())
-	fmt.Fprintf(writer, "Authorizers\t%s\n", tx.Authorizers)
+	_, _ = fmt.Fprintf(writer, "\n")
+	_, _ = fmt.Fprintf(writer, "ID\t%s\n", tx.ID())
+	_, _ = fmt.Fprintf(writer, "Payer\t%s\n", tx.Payer.Hex())
+	_, _ = fmt.Fprintf(writer, "Authorizers\t%s\n", tx.Authorizers)
 
-	fmt.Fprintf(writer,
+	_, _ = fmt.Fprintf(writer,
 		"\nProposal Key:\t\n    Address\t%s\n    Index\t%v\n    Sequence\t%v\n",
 		tx.ProposalKey.Address, tx.ProposalKey.KeyIndex, tx.ProposalKey.SequenceNumber,
 	)
 
 	if len(tx.PayloadSignatures) == 0 {
-		fmt.Fprintf(writer, "\nNo Payload Signatures\n")
+		_, _ = fmt.Fprintf(writer, "\nNo Payload Signatures\n")
 	}
 
 	if len(tx.EnvelopeSignatures) == 0 {
-		fmt.Fprintf(writer, "\nNo Envelope Signatures\n")
+		_, _ = fmt.Fprintf(writer, "\nNo Envelope Signatures\n")
 	}
 
 	for i, e := range tx.PayloadSignatures {
-		fmt.Fprintf(writer, "\nPayload Signature %v:\n", i)
-		fmt.Fprintf(writer, "    Address\t%s\n", e.Address)
-		fmt.Fprintf(writer, "    Signature\t%x\n", e.Signature)
-		fmt.Fprintf(writer, "    Key Index\t%d\n", e.KeyIndex)
+		_, _ = fmt.Fprintf(writer, "\nPayload Signature %v:\n", i)
+		_, _ = fmt.Fprintf(writer, "    Address\t%s\n", e.Address)
+		_, _ = fmt.Fprintf(writer, "    Signature\t%x\n", e.Signature)
+		_, _ = fmt.Fprintf(writer, "    Key Index\t%d\n", e.KeyIndex)
 	}
 
 	for i, e := range tx.EnvelopeSignatures {
-		fmt.Fprintf(writer, "\nEnvelope Signature %v:\n", i)
-		fmt.Fprintf(writer, "    Address\t%s\n", e.Address)
-		fmt.Fprintf(writer, "    Signature\t%x\n", e.Signature)
-		fmt.Fprintf(writer, "    Key Index\t%d\n", e.KeyIndex)
+		_, _ = fmt.Fprintf(writer, "\nEnvelope Signature %v:\n", i)
+		_, _ = fmt.Fprintf(writer, "    Address\t%s\n", e.Address)
+		_, _ = fmt.Fprintf(writer, "    Signature\t%x\n", e.Signature)
+		_, _ = fmt.Fprintf(writer, "    Key Index\t%d\n", e.KeyIndex)
 	}
 
 	if tx.Script != nil {
 		if len(tx.Arguments) == 0 {
-			fmt.Fprintf(writer, "\n\nArguments\tNo arguments\n")
+			_, _ = fmt.Fprintf(writer, "\n\nArguments\tNo arguments\n")
 		} else {
-			fmt.Fprintf(writer, "\n\nArguments (%d):\n", len(tx.Arguments))
+			_, _ = fmt.Fprintf(writer, "\n\nArguments (%d):\n", len(tx.Arguments))
 			for i, argument := range tx.Arguments {
-				fmt.Fprintf(writer, "    - Argument %d: %s\n", i, argument)
+				_, _ = fmt.Fprintf(writer, "    - Argument %d: %s\n", i, argument)
 			}
 		}
 
-		fmt.Fprintf(writer, "\nCode\n\n%s\n", tx.Script)
+		_, _ = fmt.Fprintf(writer, "\nCode\n\n%s\n", tx.Script)
 	}
 
-	fmt.Fprintf(writer, "\n\n")
-	writer.Flush()
+	_, _ = fmt.Fprintf(writer, "\n\n")
+	_ = writer.Flush()
 
 	prompt := promptui.Select{
 		Label: "⚠️  Do you want to sign this transaction?",
@@ -91,8 +91,8 @@ func ApproveTransactionPrompt(transaction *flowkit.Transaction) bool {
 
 	_, result, _ := prompt.Run()
 
-	fmt.Fprintf(writer, "\r\r")
-	writer.Flush()
+	_, _ = fmt.Fprintf(writer, "\r\r")
+	_ = writer.Flush()
 
 	return result == "Yes"
 }
@@ -104,7 +104,7 @@ func AutocompletionPrompt() (string, string) {
 	}
 
 	_, shell, _ := prompt.Run()
-	os := ""
+	curOs := ""
 
 	switch shell {
 	case "bash":
@@ -112,7 +112,7 @@ func AutocompletionPrompt() (string, string) {
 			Label: "❓ Select operation system",
 			Items: []string{"MacOS", "Linux"},
 		}
-		_, os, _ = prompt.Run()
+		_, curOs, _ = prompt.Run()
 	case "powershell":
 		fmt.Printf(`PowerShell Installation Guide:
 PS> flow config setup-completions powershell | Out-String | Invoke-Expression
@@ -123,7 +123,7 @@ PS> flow config setup-completions powershell > flow.ps1
 `)
 	}
 
-	return shell, os
+	return shell, curOs
 }
 
 func namePrompt() string {

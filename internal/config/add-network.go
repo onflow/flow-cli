@@ -47,43 +47,40 @@ var AddNetworkCommand = &command.Command{
 		Args:    cobra.NoArgs,
 	},
 	Flags: &addNetworkFlags,
-	RunS: func(
-		cmd *cobra.Command,
-		args []string,
-		readerWriter flowkit.ReaderWriter,
-		globalFlags command.GlobalFlags,
-		services *services.Services,
-		state *flowkit.State,
-	) (command.Result, error) {
-		if state == nil {
-			return nil, config.ErrDoesNotExist
-		}
-
-		networkData, flagsProvided, err := flagsToNetworkData(addNetworkFlags)
-		if err != nil {
-			return nil, err
-		}
-
-		if !flagsProvided {
-			networkData = output.NewNetworkPrompt()
-		}
-
-		network := config.StringToNetwork(networkData["name"], networkData["host"])
-		state.Networks().AddOrUpdate(network.Name, network)
-
-		err = state.SaveDefault()
-		if err != nil {
-			return nil, err
-		}
-
-		return &ConfigResult{
-			result: fmt.Sprintf("Network %s added to the configuration", networkData["name"]),
-		}, nil
-	},
+	RunS:  addNetwork,
 }
 
-func init() {
-	AddNetworkCommand.AddToParent(AddCmd)
+func addNetwork(
+	_ []string,
+	_ flowkit.ReaderWriter,
+	_ command.GlobalFlags,
+	_ *services.Services,
+	state *flowkit.State,
+) (command.Result, error) {
+	if state == nil {
+		return nil, config.ErrDoesNotExist
+	}
+
+	networkData, flagsProvided, err := flagsToNetworkData(addNetworkFlags)
+	if err != nil {
+		return nil, err
+	}
+
+	if !flagsProvided {
+		networkData = output.NewNetworkPrompt()
+	}
+
+	network := config.StringToNetwork(networkData["name"], networkData["host"])
+	state.Networks().AddOrUpdate(network.Name, network)
+
+	err = state.SaveDefault()
+	if err != nil {
+		return nil, err
+	}
+
+	return &Result{
+		result: fmt.Sprintf("Network %s added to the configuration", networkData["name"]),
+	}, nil
 }
 
 func flagsToNetworkData(flags flagsAddNetwork) (map[string]string, bool, error) {

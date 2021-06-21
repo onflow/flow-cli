@@ -59,17 +59,17 @@ type State struct {
 	accounts     Accounts
 }
 
-// ReaderWriter retrieve current file reader writer
+// ReaderWriter retrieve current file reader writer.
 func (p *State) ReaderWriter() ReaderWriter {
 	return p.readerWriter
 }
 
-// ReadFile exposes an injected file loader
+// ReadFile exposes an injected file loader.
 func (p *State) ReadFile(source string) ([]byte, error) {
 	return p.readerWriter.ReadFile(source)
 }
 
-// SaveDefault saves configuration to default path
+// SaveDefault saves configuration to default path.
 func (p *State) SaveDefault() error {
 	return p.Save(config.DefaultPath)
 }
@@ -110,22 +110,22 @@ func (p *State) ContractConflictExists(network string) bool {
 	return len(all) != len(uniq)
 }
 
-// Networks get network configuration
+// Networks get network configuration.
 func (p *State) Networks() *config.Networks {
 	return &p.conf.Networks
 }
 
-// Deployments get deployments configuration
+// Deployments get deployments configuration.
 func (p *State) Deployments() *config.Deployments {
 	return &p.conf.Deployments
 }
 
-// Contracts get contracts configuration
+// Contracts get contracts configuration.
 func (p *State) Contracts() *config.Contracts {
 	return &p.conf.Contracts
 }
 
-// Accounts get accounts
+// Accounts get accounts.
 func (p *State) Accounts() *Accounts {
 	return &p.accounts
 }
@@ -135,10 +135,10 @@ func (p *State) Config() *config.Config {
 	return p.conf
 }
 
-// EmulatorServiceAccount returns the service account for the default emulator profilee.
+// EmulatorServiceAccount returns the service account for the default emulator profile.
 func (p *State) EmulatorServiceAccount() (Account, error) {
 	emulator := p.conf.Emulators.Default()
-	acc := p.conf.Accounts.GetByName(emulator.ServiceAccount)
+	acc := p.conf.Accounts.ByName(emulator.ServiceAccount)
 	return fromConfig(*acc)
 }
 
@@ -147,7 +147,7 @@ func (p *State) DeploymentContractsByNetwork(network string) ([]Contract, error)
 	contracts := make([]Contract, 0)
 
 	// get deployments for the specified network
-	for _, deploy := range p.conf.Deployments.GetByNetwork(network) {
+	for _, deploy := range p.conf.Deployments.ByNetwork(network) {
 		account := p.accounts.ByName(deploy.Account)
 		if account == nil {
 			return nil, fmt.Errorf("could not find account with name %s in the configuration", deploy.Account)
@@ -155,7 +155,7 @@ func (p *State) DeploymentContractsByNetwork(network string) ([]Contract, error)
 
 		// go through each contract in this deployment
 		for _, deploymentContract := range deploy.Contracts {
-			c := p.conf.Contracts.GetByNameAndNetwork(deploymentContract.Name, network)
+			c := p.conf.Contracts.ByNameAndNetwork(deploymentContract.Name, network)
 			if c == nil {
 				return nil, fmt.Errorf("could not find contract with name name %s in the configuration", deploymentContract.Name)
 			}
@@ -179,7 +179,7 @@ func (p *State) AccountNamesForNetwork(network string) []string {
 	names := make([]string, 0)
 
 	for _, account := range p.accounts {
-		if len(p.conf.Deployments.GetByAccountAndNetwork(account.name, network)) > 0 {
+		if len(p.conf.Deployments.ByAccountAndNetwork(account.name, network)) > 0 {
 			if !util.ContainsString(names, account.name) {
 				names = append(names, account.name)
 			}
@@ -196,7 +196,7 @@ func (p *State) AliasesForNetwork(network string) Aliases {
 	aliases := make(Aliases)
 
 	// get all contracts for selected network and if any has an address as target make it an alias
-	for _, contract := range p.conf.Contracts.GetByNetwork(network) {
+	for _, contract := range p.conf.Contracts.ByNetwork(network) {
 		if contract.IsAlias() {
 			aliases[path.Clean(contract.Source)] = contract.Alias
 		}

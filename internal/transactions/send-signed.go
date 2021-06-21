@@ -44,31 +44,32 @@ var SendSignedCommand = &command.Command{
 		Example: `flow transactions send-signed signed.rlp`,
 	},
 	Flags: &sendSignedFlags,
-	RunS: func(
-		cmd *cobra.Command,
-		args []string,
-		readerWriter flowkit.ReaderWriter,
-		globalFlags command.GlobalFlags,
-		services *services.Services,
-		state *flowkit.State,
-	) (command.Result, error) {
-		filename := args[0]
+	RunS:  sendSigned,
+}
 
-		code, err := readerWriter.ReadFile(filename)
-		if err != nil {
-			return nil, fmt.Errorf("error loading transaction payload: %w", err)
-		}
+func sendSigned(
+	args []string,
+	readerWriter flowkit.ReaderWriter,
+	_ command.GlobalFlags,
+	services *services.Services,
+	_ *flowkit.State,
+) (command.Result, error) {
+	filename := args[0]
 
-		tx, result, err := services.Transactions.SendSigned(code)
-		if err != nil {
-			return nil, err
-		}
+	code, err := readerWriter.ReadFile(filename)
+	if err != nil {
+		return nil, fmt.Errorf("error loading transaction payload: %w", err)
+	}
 
-		return &TransactionResult{
-			result:  result,
-			tx:      tx,
-			include: sendSignedFlags.Include,
-			exclude: sendSignedFlags.Exclude,
-		}, nil
-	},
+	tx, result, err := services.Transactions.SendSigned(code)
+	if err != nil {
+		return nil, err
+	}
+
+	return &TransactionResult{
+		result:  result,
+		tx:      tx,
+		include: sendSignedFlags.Include,
+		exclude: sendSignedFlags.Exclude,
+	}, nil
 }

@@ -45,29 +45,30 @@ var GenerateCommand = &command.Command{
 		Example: "flow keys generate",
 	},
 	Flags: &generateFlags,
-	Run: func(
-		cmd *cobra.Command,
-		args []string,
-		readerWriter flowkit.ReaderWriter,
-		globalFlags command.GlobalFlags,
-		services *services.Services,
-	) (command.Result, error) {
-		if generateFlags.Algo != "" {
-			fmt.Println("⚠️ DEPRECATION WARNING: flag no longer supported, use '--sig-algo' instead.")
-			generateFlags.KeySigAlgo = generateFlags.Algo
-		}
+	Run:   generate,
+}
 
-		sigAlgo := crypto.StringToSignatureAlgorithm(generateFlags.KeySigAlgo)
-		if sigAlgo == crypto.UnknownSignatureAlgorithm {
-			return nil, fmt.Errorf("invalid signature algorithm: %s", generateFlags.KeySigAlgo)
-		}
+func generate(
+	_ []string,
+	_ flowkit.ReaderWriter,
+	_ command.GlobalFlags,
+	services *services.Services,
+) (command.Result, error) {
+	if generateFlags.Algo != "" {
+		fmt.Println("⚠️ DEPRECATION WARNING: flag no longer supported, use '--sig-algo' instead.")
+		generateFlags.KeySigAlgo = generateFlags.Algo
+	}
 
-		privateKey, err := services.Keys.Generate(generateFlags.Seed, sigAlgo)
-		if err != nil {
-			return nil, err
-		}
+	sigAlgo := crypto.StringToSignatureAlgorithm(generateFlags.KeySigAlgo)
+	if sigAlgo == crypto.UnknownSignatureAlgorithm {
+		return nil, fmt.Errorf("invalid signature algorithm: %s", generateFlags.KeySigAlgo)
+	}
 
-		pubKey := privateKey.PublicKey()
-		return &KeyResult{privateKey: privateKey, publicKey: pubKey}, nil
-	},
+	privateKey, err := services.Keys.Generate(generateFlags.Seed, sigAlgo)
+	if err != nil {
+		return nil, err
+	}
+
+	pubKey := privateKey.PublicKey()
+	return &KeyResult{privateKey: privateKey, publicKey: pubKey}, nil
 }

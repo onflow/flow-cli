@@ -47,48 +47,45 @@ var AddDeploymentCommand = &command.Command{
 		Args:    cobra.NoArgs,
 	},
 	Flags: &addDeploymentFlags,
-	RunS: func(
-		cmd *cobra.Command,
-		args []string,
-		readerWriter flowkit.ReaderWriter,
-		globalFlags command.GlobalFlags,
-		services *services.Services,
-		state *flowkit.State,
-	) (command.Result, error) {
-		if state == nil {
-			return nil, config.ErrDoesNotExist
-		}
-
-		deployData, flagsProvided, err := flagsToDeploymentData(addDeploymentFlags)
-		if err != nil {
-			return nil, err
-		}
-
-		if !flagsProvided {
-			deployData = output.NewDeploymentPrompt(*state.Networks(), state.Config().Accounts, *state.Contracts())
-		}
-
-		deployment := config.StringToDeployment(
-			deployData["network"].(string),
-			deployData["account"].(string),
-			deployData["contracts"].([]string),
-		)
-
-		state.Deployments().AddOrUpdate(deployment)
-
-		err = state.SaveDefault()
-		if err != nil {
-			return nil, err
-		}
-
-		return &ConfigResult{
-			result: "Deployment added to the configuration.\nYou can deploy using 'flow project deploy' command",
-		}, nil
-	},
+	RunS:  addDeployment,
 }
 
-func init() {
-	AddDeploymentCommand.AddToParent(AddCmd)
+func addDeployment(
+	_ []string,
+	_ flowkit.ReaderWriter,
+	_ command.GlobalFlags,
+	_ *services.Services,
+	state *flowkit.State,
+) (command.Result, error) {
+	if state == nil {
+		return nil, config.ErrDoesNotExist
+	}
+
+	deployData, flagsProvided, err := flagsToDeploymentData(addDeploymentFlags)
+	if err != nil {
+		return nil, err
+	}
+
+	if !flagsProvided {
+		deployData = output.NewDeploymentPrompt(*state.Networks(), state.Config().Accounts, *state.Contracts())
+	}
+
+	deployment := config.StringToDeployment(
+		deployData["network"].(string),
+		deployData["account"].(string),
+		deployData["contracts"].([]string),
+	)
+
+	state.Deployments().AddOrUpdate(deployment)
+
+	err = state.SaveDefault()
+	if err != nil {
+		return nil, err
+	}
+
+	return &Result{
+		result: "Deployment added to the configuration.\nYou can deploy using 'flow project deploy' command",
+	}, nil
 }
 
 func flagsToDeploymentData(flags flagsAddDeployment) (map[string]interface{}, bool, error) {

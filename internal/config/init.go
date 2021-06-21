@@ -48,56 +48,54 @@ var InitCommand = &command.Command{
 		Short: "Initialize a new configuration",
 	},
 	Flags: &initFlag,
-	Run: func(
-		cmd *cobra.Command,
-		args []string,
-		readerWriter flowkit.ReaderWriter,
-		globalFlags command.GlobalFlags,
-		services *services.Services,
-	) (command.Result, error) {
-
-		sigAlgo := crypto.StringToSignatureAlgorithm(initFlag.ServiceKeySigAlgo)
-		if sigAlgo == crypto.UnknownSignatureAlgorithm {
-			return nil, fmt.Errorf("invalid signature algorithm: %s", initFlag.ServiceKeySigAlgo)
-		}
-
-		hashAlgo := crypto.StringToHashAlgorithm(initFlag.ServiceKeyHashAlgo)
-		if hashAlgo == crypto.UnknownHashAlgorithm {
-			return nil, fmt.Errorf("invalid hash algorithm: %s", initFlag.ServiceKeyHashAlgo)
-		}
-
-		privateKey, err := crypto.DecodePrivateKeyHex(sigAlgo, initFlag.ServicePrivateKey)
-		if err != nil {
-			return nil, fmt.Errorf("invalid private key: %w", err)
-		}
-
-		s, err := services.Project.Init(
-			readerWriter,
-			initFlag.Reset,
-			initFlag.Global,
-			sigAlgo,
-			hashAlgo,
-			privateKey,
-		)
-		if err != nil {
-			return nil, err
-		}
-
-		return &InitResult{State: s}, nil
-	},
+	Run:   Initialise,
 }
 
-// InitResult result structure
+func Initialise(
+	_ []string,
+	readerWriter flowkit.ReaderWriter,
+	_ command.GlobalFlags,
+	services *services.Services,
+) (command.Result, error) {
+
+	sigAlgo := crypto.StringToSignatureAlgorithm(initFlag.ServiceKeySigAlgo)
+	if sigAlgo == crypto.UnknownSignatureAlgorithm {
+		return nil, fmt.Errorf("invalid signature algorithm: %s", initFlag.ServiceKeySigAlgo)
+	}
+
+	hashAlgo := crypto.StringToHashAlgorithm(initFlag.ServiceKeyHashAlgo)
+	if hashAlgo == crypto.UnknownHashAlgorithm {
+		return nil, fmt.Errorf("invalid hash algorithm: %s", initFlag.ServiceKeyHashAlgo)
+	}
+
+	privateKey, err := crypto.DecodePrivateKeyHex(sigAlgo, initFlag.ServicePrivateKey)
+	if err != nil {
+		return nil, fmt.Errorf("invalid private key: %w", err)
+	}
+
+	s, err := services.Project.Init(
+		readerWriter,
+		initFlag.Reset,
+		initFlag.Global,
+		sigAlgo,
+		hashAlgo,
+		privateKey,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return &InitResult{State: s}, nil
+}
+
 type InitResult struct {
 	*flowkit.State
 }
 
-// JSON convert result to JSON
 func (r *InitResult) JSON() interface{} {
 	return r
 }
 
-// String convert result to string
 func (r *InitResult) String() string {
 	var b bytes.Buffer
 	writer := util.CreateTabWriter(&b)
@@ -111,11 +109,10 @@ func (r *InitResult) String() string {
 		output.Bold("'flow init --reset'"),
 	)
 
-	writer.Flush()
+	_ = writer.Flush()
 	return b.String()
 }
 
-// Oneliner show result as one liner grep friendly
 func (r *InitResult) Oneliner() string {
 	return ""
 }

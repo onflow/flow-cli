@@ -24,6 +24,14 @@ import (
 	"os"
 )
 
+// Config contains all the configuration for CLI and implements getters and setters for properties.
+// Config is agnostic to format from which it is built and it doesn't provide persistence functionality.
+//
+// Emulators contains all the emulator config
+// Contracts contains all contracts definitions and their sources
+// Networks defines all the Flow networks addresses
+// Accounts defines Flow accounts and their addresses, private key and more properties
+// Deployments describes which contracts should be deployed to which accounts
 type Config struct {
 	Emulators   Emulators
 	Contracts   Contracts
@@ -41,31 +49,32 @@ const (
 	DefaultEmulatorServiceAccountName         = "emulator-account"
 )
 
+// Validate the configuration values.
 func (c *Config) Validate() error {
 	for _, con := range c.Contracts {
-		if con.Network != "" && c.Networks.GetByName(con.Network) == nil {
+		if con.Network != "" && c.Networks.ByName(con.Network) == nil {
 			return fmt.Errorf("contract %s contains nonexisting network %s", con.Name, con.Network)
 		}
 	}
 
 	for _, em := range c.Emulators {
-		if c.Accounts.GetByName(em.ServiceAccount) == nil {
+		if c.Accounts.ByName(em.ServiceAccount) == nil {
 			return fmt.Errorf("emulator %s contains nonexisting service account %s", em.Name, em.ServiceAccount)
 		}
 	}
 
 	for _, d := range c.Deployments {
-		if c.Networks.GetByName(d.Network) == nil {
+		if c.Networks.ByName(d.Network) == nil {
 			return fmt.Errorf("deployment contains nonexisting network %s", d.Network)
 		}
 
 		for _, con := range d.Contracts {
-			if c.Contracts.GetByName(con.Name) == nil {
+			if c.Contracts.ByName(con.Name) == nil {
 				return fmt.Errorf("deployment contains nonexisting contract %s", con.Name)
 			}
 		}
 
-		if c.Accounts.GetByName(d.Account) == nil {
+		if c.Accounts.ByName(d.Account) == nil {
 			return fmt.Errorf("deployment contains nonexisting account %s", d.Account)
 		}
 	}
@@ -73,7 +82,7 @@ func (c *Config) Validate() error {
 	return nil
 }
 
-// DefaultConfig gets default configuration
+// DefaultConfig gets default configuration.
 func DefaultConfig() *Config {
 	return &Config{
 		Emulators: DefaultEmulators(),
@@ -85,7 +94,7 @@ var ErrOutdatedFormat = errors.New("you are using old configuration format")
 
 const DefaultPath = "flow.json"
 
-// GlobalPath gets global path based on home dir
+// GlobalPath gets global path based on home dir.
 func GlobalPath() string {
 	dirname, err := os.UserHomeDir()
 	if err != nil {
@@ -95,7 +104,7 @@ func GlobalPath() string {
 	return fmt.Sprintf("%s/%s", dirname, DefaultPath)
 }
 
-// DefaultPaths determines default paths for configuration
+// DefaultPaths determines default paths for configuration.
 func DefaultPaths() []string {
 	return []string{
 		GlobalPath(),

@@ -41,41 +41,38 @@ var RemoveContractCommand = &command.Command{
 		Args:    cobra.MaximumNArgs(1),
 	},
 	Flags: &removeContractFlags,
-	RunS: func(
-		cmd *cobra.Command,
-		args []string,
-		readerWriter flowkit.ReaderWriter,
-		globalFlags command.GlobalFlags,
-		services *services.Services,
-		state *flowkit.State,
-	) (command.Result, error) {
-		if state == nil {
-			return nil, config.ErrDoesNotExist
-		}
-
-		name := ""
-		if len(args) == 1 {
-			name = args[0]
-		} else {
-			name = output.RemoveContractPrompt(*state.Contracts())
-		}
-
-		err := state.Contracts().Remove(name)
-		if err != nil {
-			return nil, err
-		}
-
-		err = state.SaveDefault()
-		if err != nil {
-			return nil, err
-		}
-
-		return &ConfigResult{
-			result: "contract removed",
-		}, nil
-	},
+	RunS:  removeContract,
 }
 
-func init() {
-	RemoveContractCommand.AddToParent(RemoveCmd)
+func removeContract(
+	args []string,
+	_ flowkit.ReaderWriter,
+	_ command.GlobalFlags,
+	_ *services.Services,
+	state *flowkit.State,
+) (command.Result, error) {
+	if state == nil {
+		return nil, config.ErrDoesNotExist
+	}
+
+	name := ""
+	if len(args) == 1 {
+		name = args[0]
+	} else {
+		name = output.RemoveContractPrompt(*state.Contracts())
+	}
+
+	err := state.Contracts().Remove(name)
+	if err != nil {
+		return nil, err
+	}
+
+	err = state.SaveDefault()
+	if err != nil {
+		return nil, err
+	}
+
+	return &Result{
+		result: "contract removed",
+	}, nil
 }

@@ -53,6 +53,7 @@ func NewProject(
 	}
 }
 
+// Init initializes a new project using the properties provided.
 func (p *Project) Init(
 	readerWriter flowkit.ReaderWriter,
 	reset bool,
@@ -88,6 +89,11 @@ func (p *Project) Init(
 	return state, nil
 }
 
+// Deploy the project for the provided network.
+//
+// Retrieve all the contracts for specified network, sort them for deployment
+// deploy one by one and replace the imports in the contract source so it corresponds
+// to the account address the contract was deployed to.
 func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, error) {
 	if p.state == nil {
 		return nil, config.ErrDoesNotExist
@@ -95,7 +101,7 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 
 	// check there are not multiple accounts with same contract
 	if p.state.ContractConflictExists(network) {
-		return nil, fmt.Errorf( // TODO: specify which contract by name is a problem
+		return nil, fmt.Errorf( // TODO(sideninja) specify which contract by name is a problem
 			"the same contract cannot be deployed to multiple accounts on the same network",
 		)
 	}
@@ -183,7 +189,7 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 			))
 			deployErr = true
 			continue
-		} else if exists && len(contract.Args()) > 0 { // todo discuss we might better remove the contract and redeploy it - ux issue
+		} else if exists && len(contract.Args()) > 0 { // TODO(sideninja) discuss removing the contract and redeploying it
 			p.logger.Error(fmt.Sprintf(
 				"contract %s is already deployed and can not be updated with initialization arguments",
 				contract.Name(),
@@ -219,6 +225,11 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 		if err != nil {
 			p.logger.Error(err.Error())
 			deployErr = true
+		}
+
+		if result == nil {
+			p.logger.Error("could not fetch the result of deployment, skipping")
+			continue
 		}
 
 		if result.Error == nil && !deployErr {

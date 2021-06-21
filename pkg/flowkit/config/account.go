@@ -32,6 +32,7 @@ type Account struct {
 
 type Accounts []Account
 
+// AccountKey represents account key and all their possible configuration formats.
 type AccountKey struct {
 	Type       KeyType
 	Index      int
@@ -41,8 +42,8 @@ type AccountKey struct {
 	PrivateKey crypto.PrivateKey
 }
 
-// GetByName get account by name
-func (a *Accounts) GetByName(name string) *Account {
+// ByName get account by name.
+func (a *Accounts) ByName(name string) *Account {
 	for _, account := range *a {
 		if account.Name == name {
 			return &account
@@ -52,7 +53,7 @@ func (a *Accounts) GetByName(name string) *Account {
 	return nil
 }
 
-// AddOrUpdate add new or update if already present
+// AddOrUpdate add new or update if already present.
 func (a *Accounts) AddOrUpdate(name string, account Account) {
 	for i, existingAccount := range *a {
 		if existingAccount.Name == name {
@@ -64,7 +65,7 @@ func (a *Accounts) AddOrUpdate(name string, account Account) {
 	*a = append(*a, account)
 }
 
-// Remove remove account by name
+// Remove remove account by name.
 func (a *Accounts) Remove(name string) {
 	for i, account := range *a {
 		if account.Name == name {

@@ -43,32 +43,33 @@ var SignCommand = &command.Command{
 		Args:    cobra.ExactArgs(1),
 	},
 	Flags: &signFlags,
-	RunS: func(
-		cmd *cobra.Command,
-		args []string,
-		readerWriter flowkit.ReaderWriter,
-		globalFlags command.GlobalFlags,
-		services *services.Services,
-		state *flowkit.State,
-	) (command.Result, error) {
-		filename := args[0]
-		payload, err := readerWriter.ReadFile(filename)
-		if err != nil {
-			return nil, fmt.Errorf("failed to read partial transaction from %s: %v", filename, err)
-		}
+	RunS:  sign,
+}
 
-		signer := state.Accounts().ByName(signFlags.Signer)
-		if signer == nil {
-			return nil, fmt.Errorf("signer account: [%s] doesn't exists in configuration", signFlags.Signer)
-		}
+func sign(
+	args []string,
+	readerWriter flowkit.ReaderWriter,
+	globalFlags command.GlobalFlags,
+	services *services.Services,
+	state *flowkit.State,
+) (command.Result, error) {
+	filename := args[0]
+	payload, err := readerWriter.ReadFile(filename)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read partial transaction from %s: %v", filename, err)
+	}
 
-		signed, err := services.Transactions.Sign(payload, signer, globalFlags.Yes)
-		if err != nil {
-			return nil, err
-		}
+	signer := state.Accounts().ByName(signFlags.Signer)
+	if signer == nil {
+		return nil, fmt.Errorf("signer account: [%s] doesn't exists in configuration", signFlags.Signer)
+	}
 
-		return &TransactionResult{
-			tx: signed.FlowTransaction(),
-		}, nil
-	},
+	signed, err := services.Transactions.Sign(signer, payload, globalFlags.Yes)
+	if err != nil {
+		return nil, err
+	}
+
+	return &TransactionResult{
+		tx: signed.FlowTransaction(),
+	}, nil
 }

@@ -71,7 +71,7 @@ func (g *GrpcGateway) GetAccount(address flow.Address) (*flow.Account, error) {
 	return account, nil
 }
 
-// SendSignedTransaction sends a transaction to flow that is already prepared and signed
+// SendSignedTransaction sends a transaction to flow that is already prepared and signed.
 func (g *GrpcGateway) SendSignedTransaction(transaction *flowkit.Transaction) (*flow.Transaction, error) {
 	tx := transaction.FlowTransaction()
 
@@ -153,7 +153,7 @@ func (g *GrpcGateway) GetCollection(id flow.Identifier) (*flow.Collection, error
 	return g.client.GetCollection(g.ctx, id)
 }
 
-// Ping is used to check if the access node is alive and healthy
+// Ping is used to check if the access node is alive and healthy.
 func (g *GrpcGateway) Ping() error {
 	return g.client.Ping(g.ctx)
 }

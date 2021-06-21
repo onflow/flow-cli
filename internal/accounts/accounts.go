@@ -46,14 +46,13 @@ func init() {
 	GetCommand.AddToParent(Cmd)
 }
 
-// AccountResult represent result from all account commands
+// AccountResult represent result from all account commands.
 type AccountResult struct {
 	*flow.Account
 	showCode bool
 	include  []string
 }
 
-// JSON convert result to JSON
 func (r *AccountResult) JSON() interface{} {
 	result := make(map[string]interface{})
 	result["address"] = r.Address
@@ -84,7 +83,6 @@ func (r *AccountResult) JSON() interface{} {
 	return result
 }
 
-// String convert result to string
 func (r *AccountResult) String() string {
 	var b bytes.Buffer
 	writer := util.CreateTabWriter(&b)
@@ -130,7 +128,6 @@ func (r *AccountResult) String() string {
 	return b.String()
 }
 
-// Oneliner show result as one liner grep friendly
 func (r *AccountResult) Oneliner() string {
 	keys := make([]string, 0, len(r.Keys))
 	for _, key := range r.Keys {

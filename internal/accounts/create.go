@@ -52,69 +52,69 @@ var CreateCommand = &command.Command{
 		Example: `flow accounts create --key d651f1931a2...8745`,
 	},
 	Flags: &createFlags,
-	RunS: func(
-		cmd *cobra.Command,
-		args []string,
-		readerWriter flowkit.ReaderWriter,
-		globalFlags command.GlobalFlags,
-		services *services.Services,
-		state *flowkit.State,
-	) (command.Result, error) {
-		if createFlags.Results {
-			fmt.Println("⚠️ DEPRECATION WARNING: results flag is deprecated, results are by default included in all executions")
-		}
+	RunS:  create,
+}
 
-		signer := state.Accounts().ByName(addContractFlags.Signer)
+func create(
+	_ []string,
+	_ flowkit.ReaderWriter,
+	_ command.GlobalFlags,
+	services *services.Services,
+	state *flowkit.State,
+) (command.Result, error) {
+	if createFlags.Results {
+		fmt.Println("⚠️ DEPRECATION WARNING: results flag is deprecated, results are by default included in all executions")
+	}
 
-		// todo use parsers
-		sigAlgo := crypto.StringToSignatureAlgorithm(createFlags.SigAlgo)
-		if sigAlgo == crypto.UnknownSignatureAlgorithm {
-			return nil, fmt.Errorf("invalid signature algorithm: %s", createFlags.SigAlgo)
-		}
+	signer := state.Accounts().ByName(createFlags.Signer)
 
-		hashAlgo := crypto.StringToHashAlgorithm(createFlags.HashAlgo)
-		if hashAlgo == crypto.UnknownHashAlgorithm {
-			return nil, fmt.Errorf("invalid hash algorithm: %s", createFlags.HashAlgo)
-		}
+	sigAlgo := crypto.StringToSignatureAlgorithm(createFlags.SigAlgo)
+	if sigAlgo == crypto.UnknownSignatureAlgorithm {
+		return nil, fmt.Errorf("invalid signature algorithm: %s", createFlags.SigAlgo)
+	}
 
-		keyWeights := createFlags.Weights
+	hashAlgo := crypto.StringToHashAlgorithm(createFlags.HashAlgo)
+	if hashAlgo == crypto.UnknownHashAlgorithm {
+		return nil, fmt.Errorf("invalid hash algorithm: %s", createFlags.HashAlgo)
+	}
 
-		// decode public keys
-		var pubKeys []crypto.PublicKey
-		for _, k := range createFlags.Keys {
-			k = strings.TrimPrefix(k, "0x") // clear possible prefix
-			key, err := crypto.DecodePublicKeyHex(sigAlgo, k)
-			if err != nil {
-				return nil, fmt.Errorf("failed decoding public key: %s with error: %w", key, err)
-			}
-			pubKeys = append(pubKeys, key)
-		}
+	keyWeights := createFlags.Weights
 
-		// if more than one key is provided and at least one weight is specified, make sure there isn't a mismatch
-		if len(pubKeys) > 1 && len(keyWeights) > 0 && len(pubKeys) != len(keyWeights) {
-			return nil, fmt.Errorf(
-				"number of keys and weights provided must match, number of provided keys: %d, number of provided key weights: %d",
-				len(pubKeys),
-				len(keyWeights),
-			)
-		}
-
-		account, err := services.Accounts.Create(
-			signer,
-			pubKeys,
-			keyWeights,
-			sigAlgo,
-			hashAlgo,
-			createFlags.Contracts,
-		)
-
+	// decode public keys
+	var pubKeys []crypto.PublicKey
+	for _, k := range createFlags.Keys {
+		k = strings.TrimPrefix(k, "0x") // clear possible prefix
+		key, err := crypto.DecodePublicKeyHex(sigAlgo, k)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed decoding public key: %s with error: %w", key, err)
 		}
+		pubKeys = append(pubKeys, key)
+	}
 
-		return &AccountResult{
-			Account: account,
-			include: createFlags.Include,
-		}, nil
-	},
+	// if more than one key is provided and at least one weight is specified, make sure there isn't a mismatch
+	if len(pubKeys) > 1 && len(keyWeights) > 0 && len(pubKeys) != len(keyWeights) {
+		return nil, fmt.Errorf(
+			"number of keys and weights provided must match, number of provided keys: %d, number of provided key weights: %d",
+			len(pubKeys),
+			len(keyWeights),
+		)
+	}
+
+	account, err := services.Accounts.Create(
+		signer,
+		pubKeys,
+		keyWeights,
+		sigAlgo,
+		hashAlgo,
+		createFlags.Contracts,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &AccountResult{
+		Account: account,
+		include: createFlags.Include,
+	}, nil
 }

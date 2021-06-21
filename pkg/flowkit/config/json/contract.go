@@ -27,7 +27,7 @@ import (
 
 type jsonContracts map[string]jsonContract
 
-// transformToConfig transforms json structures to config structure
+// transformToConfig transforms json structures to config structure.
 func (j jsonContracts) transformToConfig() (config.Contracts, error) {
 	contracts := make(config.Contracts, 0)
 
@@ -61,7 +61,7 @@ func (j jsonContracts) transformToConfig() (config.Contracts, error) {
 	return contracts, nil
 }
 
-// transformToJSON transforms config structure to json structures for saving
+// transformToJSON transforms config structure to json structures for saving.
 func transformContractsToJSON(contracts config.Contracts) jsonContracts {
 	jsonContracts := jsonContracts{}
 
@@ -89,13 +89,13 @@ func transformContractsToJSON(contracts config.Contracts) jsonContracts {
 	return jsonContracts
 }
 
-// jsonContractAdvanced for json parsing advanced config
+// jsonContractAdvanced for json parsing advanced config.
 type jsonContractAdvanced struct {
 	Source  string            `json:"source"`
 	Aliases map[string]string `json:"aliases"`
 }
 
-// jsonContract structure for json parsing
+// jsonContract structure for json parsing.
 type jsonContract struct {
 	Simple   string
 	Advanced jsonContractAdvanced

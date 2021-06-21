@@ -22,11 +22,13 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowkit"
 )
 
+// Loader defines methods for loading contract resource.
 type Loader interface {
 	Load(source string) ([]byte, error)
 	Normalize(base, relative string) string
 }
 
+// FilesystemLoader defines contract loader from files.
 type FilesystemLoader struct {
 	Reader flowkit.ReaderWriter
 }

@@ -44,26 +44,23 @@ type ScriptResult struct {
 	cadence.Value
 }
 
-// JSON convert result to JSON
 func (r *ScriptResult) JSON() interface{} {
 	return json.RawMessage(
 		jsoncdc.MustEncode(r.Value),
 	)
 }
 
-// String convert result to string
 func (r *ScriptResult) String() string {
 	var b bytes.Buffer
 	writer := util.CreateTabWriter(&b)
 
 	_, _ = fmt.Fprintf(writer, "Result: %s\n", r.Value)
 
-	writer.Flush()
+	_ = writer.Flush()
 
 	return b.String()
 }
 
-// Oneliner show result as one liner grep friendly
 func (r *ScriptResult) Oneliner() string {
 	return r.Value.String()
 }

@@ -26,7 +26,7 @@ import (
 
 type jsonEmulators map[string]jsonEmulator
 
-// transformToConfig transforms json structures to config structure
+// transformToConfig transforms json structures to config structure.
 func (j jsonEmulators) transformToConfig() (config.Emulators, error) {
 	emulators := make(config.Emulators, 0)
 
@@ -47,7 +47,7 @@ func (j jsonEmulators) transformToConfig() (config.Emulators, error) {
 	return emulators, nil
 }
 
-// transformToJSON transforms config structure to json structures for saving
+// transformToJSON transforms config structure to json structures for saving.
 func transformEmulatorsToJSON(emulators config.Emulators) jsonEmulators {
 	jsonEmulators := jsonEmulators{}
 

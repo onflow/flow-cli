@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package transactions
 
 import (
@@ -49,65 +50,66 @@ var BuildCommand = &command.Command{
 		Args:    cobra.ExactArgs(1),
 	},
 	Flags: &buildFlags,
-	RunS: func(
-		cmd *cobra.Command,
-		args []string,
-		readerWriter flowkit.ReaderWriter,
-		globalFlags command.GlobalFlags,
-		services *services.Services,
-		state *flowkit.State,
-	) (command.Result, error) {
-		proposer, err := getAddress(buildFlags.Proposer, state)
+	RunS:  build,
+}
+
+func build(
+	args []string,
+	readerWriter flowkit.ReaderWriter,
+	globalFlags command.GlobalFlags,
+	services *services.Services,
+	state *flowkit.State,
+) (command.Result, error) {
+	proposer, err := getAddress(buildFlags.Proposer, state)
+	if err != nil {
+		return nil, err
+	}
+
+	// get all authorizers
+	var authorizers []flow.Address
+	for _, auth := range buildFlags.Authorizer {
+		addr, err := getAddress(auth, state)
 		if err != nil {
 			return nil, err
 		}
+		authorizers = append(authorizers, addr)
+	}
 
-		// get all authorizers
-		var authorizers []flow.Address
-		for _, auth := range buildFlags.Authorizer {
-			addr, err := getAddress(auth, state)
-			if err != nil {
-				return nil, err
-			}
-			authorizers = append(authorizers, addr)
-		}
+	payer, err := getAddress(buildFlags.Payer, state)
+	if err != nil {
+		return nil, err
+	}
 
-		payer, err := getAddress(buildFlags.Payer, state)
-		if err != nil {
-			return nil, err
-		}
+	filename := args[0]
+	code, err := readerWriter.ReadFile(filename)
+	if err != nil {
+		return nil, fmt.Errorf("error loading transaction file: %w", err)
+	}
 
-		filename := args[0]
-		code, err := readerWriter.ReadFile(filename)
-		if err != nil {
-			return nil, fmt.Errorf("error loading transaction file: %w", err)
-		}
+	txArgs, err := flowkit.ParseArguments(buildFlags.Args, buildFlags.ArgsJSON)
+	if err != nil {
+		return nil, err
+	}
 
-		txArgs, err := flowkit.ParseArguments(buildFlags.Args, buildFlags.ArgsJSON) // todo refactor flowkit
-		if err != nil {
-			return nil, err
-		}
+	build, err := services.Transactions.Build(
+		proposer,
+		authorizers,
+		payer,
+		buildFlags.ProposerKeyIndex,
+		code,
+		filename,
+		buildFlags.GasLimit,
+		txArgs,
+		globalFlags.Network,
+	)
+	if err != nil {
+		return nil, err
+	}
 
-		build, err := services.Transactions.Build(
-			proposer,
-			authorizers,
-			payer,
-			buildFlags.ProposerKeyIndex,
-			code,
-			filename,
-			buildFlags.GasLimit,
-			txArgs,
-			globalFlags.Network,
-		)
-		if err != nil {
-			return nil, err
-		}
-
-		return &TransactionResult{
-			tx:      build.FlowTransaction(),
-			include: []string{"code", "payload", "signatures"},
-		}, nil
-	},
+	return &TransactionResult{
+		tx:      build.FlowTransaction(),
+		include: []string{"code", "payload", "signatures"},
+	}, nil
 }
 
 func getAddress(address string, state *flowkit.State) (flow.Address, error) {

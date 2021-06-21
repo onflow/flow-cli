@@ -21,6 +21,7 @@ package command
 import (
 	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"strings"
@@ -38,18 +39,18 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// Run the command with arguments.
 type Run func(
-	cmd *cobra.Command,
 	args []string,
-	loader flowkit.ReaderWriter,
+	readerWriter flowkit.ReaderWriter,
 	globalFlags GlobalFlags,
 	services *services.Services,
 ) (Result, error)
 
+// RunWithState runs the command with arguments and state.
 type RunWithState func(
-	cmd *cobra.Command,
 	args []string,
-	loader flowkit.ReaderWriter,
+	readerWriter flowkit.ReaderWriter,
 	globalFlags GlobalFlags,
 	services *services.Services,
 	state *flowkit.State,
@@ -78,7 +79,7 @@ const (
 // AddToParent add new command to main parent cmd
 // and initializes all necessary things as well as take care of errors and output
 // here we can do all boilerplate code that is else copied in each command and make sure
-// we have one place to handle all errors and ensure commands have consistent results
+// we have one place to handle all errors and ensure commands have consistent results.
 func (c Command) AddToParent(parent *cobra.Command) {
 	c.Cmd.Run = func(cmd *cobra.Command, args []string) {
 		// initialize file loader used in commands
@@ -106,13 +107,13 @@ func (c Command) AddToParent(parent *cobra.Command) {
 		// run command based on requirements for state
 		var result Result
 		if c.Run != nil {
-			result, err = c.Run(cmd, args, loader, Flags, service)
+			result, err = c.Run(args, loader, Flags, service)
 		} else if c.RunS != nil {
 			if confErr != nil {
 				handleError("Config Error", confErr)
 			}
 
-			result, err = c.RunS(cmd, args, loader, Flags, service, state)
+			result, err = c.RunS(args, loader, Flags, service, state)
 		} else {
 			panic("command implementation needs to provide run functionality")
 		}
@@ -132,15 +133,13 @@ func (c Command) AddToParent(parent *cobra.Command) {
 	parent.AddCommand(c.Cmd)
 }
 
-// createGateway creates a gateway to be used, defaults to grpc but can support others
+// createGateway creates a gateway to be used, defaults to grpc but can support others.
 func createGateway(host string) (gateway.Gateway, error) {
-	// TODO implement emulator gateway and check emulator flag here
-
 	// create default grpc client
 	return gateway.NewGrpcGateway(host)
 }
 
-// resolveHost from the flags provided
+// resolveHost from the flags provided.
 //
 // Resolve the network host in the following order:
 // 1. if host flag is provided resolve to that host
@@ -159,16 +158,16 @@ func resolveHost(state *flowkit.State, hostFlag string, networkFlag string) (str
 	}
 	// network flag with project initialized is next
 	if state != nil {
-		check := state.Networks().GetByName(networkFlag)
+		check := state.Networks().ByName(networkFlag)
 		if check == nil {
 			return "", fmt.Errorf("network with name %s does not exist in configuration", networkFlag)
 		}
 
-		return state.Networks().GetByName(networkFlag).Host, nil
+		return state.Networks().ByName(networkFlag).Host, nil
 	}
 
 	networks := config.DefaultNetworks()
-	network := networks.GetByName(networkFlag)
+	network := networks.ByName(networkFlag)
 
 	if network != nil {
 		return network.Host, nil
@@ -177,7 +176,7 @@ func resolveHost(state *flowkit.State, hostFlag string, networkFlag string) (str
 	return "", fmt.Errorf("invalid network with name %s", networkFlag)
 }
 
-// create logger utility
+// create logger utility.
 func createLogger(logFlag string, formatFlag string) output.Logger {
 	// disable logging if we user want a specific format like JSON
 	// (more common they will not want also to have logs)
@@ -201,14 +200,20 @@ func createLogger(logFlag string, formatFlag string) output.Logger {
 	return output.NewStdoutLogger(logLevel)
 }
 
-// checkVersion fetches latest version and compares it to local
+// checkVersion fetches latest version and compares it to local.
 func checkVersion(logger output.Logger) {
 	resp, err := http.Get("https://raw.githubusercontent.com/onflow/flow-cli/master/version.txt")
 	if err != nil || resp.StatusCode >= 400 {
 		return
 	}
 
-	defer resp.Body.Close()
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+			logger.Error("error closing request")
+		}
+	}(resp.Body)
+
 	body, _ := ioutil.ReadAll(resp.Body)
 	latestVersion := strings.TrimSpace(string(body))
 
@@ -222,7 +227,7 @@ func checkVersion(logger output.Logger) {
 			"\n%s  Version warning: a new version of Flow CLI is available (%s).\n"+
 				"   Read the installation guide for upgrade instructions: https://docs.onflow.org/flow-cli/install\n",
 			output.WarningEmoji(),
-			strings.ReplaceAll(string(latestVersion), "\n", ""),
+			strings.ReplaceAll(latestVersion, "\n", ""),
 		))
 	}
 }

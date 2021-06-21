@@ -26,6 +26,7 @@ import (
 	"github.com/onflow/flow-go-sdk"
 )
 
+// Preprocessor loads the contract and replaces the imports with addresses.
 type Preprocessor struct {
 	loader            Loader
 	aliases           map[string]string
@@ -33,6 +34,7 @@ type Preprocessor struct {
 	contractsBySource map[string]*Contract
 }
 
+// NewPreprocessor creates a new preprocessor.
 func NewPreprocessor(loader Loader, aliases map[string]string) *Preprocessor {
 	return &Preprocessor{
 		loader:            loader,
@@ -42,6 +44,7 @@ func NewPreprocessor(loader Loader, aliases map[string]string) *Preprocessor {
 	}
 }
 
+// AddContractSource adds a new contract and the target to resolve the imports to.
 func (p *Preprocessor) AddContractSource(
 	contractName,
 	contractSource string,
@@ -71,6 +74,7 @@ func (p *Preprocessor) AddContractSource(
 	return nil
 }
 
+// ResolveImports for the contracts checking the import path and getting an alias or location of contract.
 func (p *Preprocessor) ResolveImports() error {
 	for _, c := range p.contracts {
 		for _, location := range c.imports() {
@@ -83,7 +87,7 @@ func (p *Preprocessor) ResolveImports() error {
 			} else if isAlias {
 				c.addAlias(location, flow.HexToAddress(importAlias))
 			} else {
-				return fmt.Errorf("Import from %s could not be found: %s, make sure import path is correct.", c.name, importPath)
+				return fmt.Errorf("import from %s could not be found: %s, make sure import path is correct.", c.name, importPath)
 			}
 		}
 	}

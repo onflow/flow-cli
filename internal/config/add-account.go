@@ -50,55 +50,52 @@ var AddAccountCommand = &command.Command{
 		Args:    cobra.NoArgs,
 	},
 	Flags: &addAccountFlags,
-	RunS: func(
-		cmd *cobra.Command,
-		args []string,
-		readerWriter flowkit.ReaderWriter,
-		globalFlags command.GlobalFlags,
-		services *services.Services,
-		state *flowkit.State,
-	) (command.Result, error) {
-		if state == nil {
-			return nil, config.ErrDoesNotExist
-		}
-
-		accountData, flagsProvided, err := flagsToAccountData(addAccountFlags)
-		if err != nil {
-			return nil, err
-		}
-
-		if !flagsProvided {
-			accountData = output.NewAccountPrompt()
-		}
-
-		account, err := config.StringToAccount(
-			accountData["name"],
-			accountData["address"],
-			accountData["keyIndex"],
-			accountData["sigAlgo"],
-			accountData["hashAlgo"],
-			accountData["key"],
-		)
-		if err != nil {
-			return nil, err
-		}
-
-		state.Config().Accounts.AddOrUpdate(account.Name, *account)
-
-		err = state.SaveDefault()
-		if err != nil {
-			return nil, err
-		}
-
-		return &ConfigResult{
-			result: fmt.Sprintf("Account %s added to the configuration", accountData["name"]),
-		}, nil
-
-	},
+	RunS:  addAccount,
 }
 
-func init() {
-	AddAccountCommand.AddToParent(AddCmd)
+func addAccount(
+	_ []string,
+	_ flowkit.ReaderWriter,
+	_ command.GlobalFlags,
+	_ *services.Services,
+	state *flowkit.State,
+) (command.Result, error) {
+	if state == nil {
+		return nil, config.ErrDoesNotExist
+	}
+
+	accountData, flagsProvided, err := flagsToAccountData(addAccountFlags)
+	if err != nil {
+		return nil, err
+	}
+
+	if !flagsProvided {
+		accountData = output.NewAccountPrompt()
+	}
+
+	account, err := config.StringToAccount(
+		accountData["name"],
+		accountData["address"],
+		accountData["keyIndex"],
+		accountData["sigAlgo"],
+		accountData["hashAlgo"],
+		accountData["key"],
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	state.Config().Accounts.AddOrUpdate(account.Name, *account)
+
+	err = state.SaveDefault()
+	if err != nil {
+		return nil, err
+	}
+
+	return &Result{
+		result: fmt.Sprintf("Account %s added to the configuration", accountData["name"]),
+	}, nil
+
 }
 
 func flagsToAccountData(flags flagsAddAccount) (map[string]string, bool, error) {

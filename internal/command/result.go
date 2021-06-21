@@ -31,13 +31,17 @@ import (
 	"github.com/spf13/afero"
 )
 
+// Result interface describes all the formats for the result output.
 type Result interface {
+	// String will output the result in human readable output.
 	String() string
+	// Oneliner will output the result in "grep-able" format.
 	Oneliner() string
+	// JSON will output the result in JSON format
 	JSON() interface{}
 }
 
-// ContainsFlag checks if output flag is present for the provided field
+// ContainsFlag checks if output flag is present for the provided field.
 func ContainsFlag(flags []string, field string) bool {
 	for _, n := range flags {
 		if strings.ToLower(n) == field {
@@ -74,7 +78,7 @@ func formatResult(result Result, filterFlag string, formatFlag string) (string, 
 	}
 }
 
-// outputResult to selected media
+// outputResult to selected media.
 func outputResult(result string, saveFlag string, formatFlag string, filterFlag string) error {
 	if saveFlag != "" {
 		af := afero.Afero{
@@ -93,7 +97,7 @@ func outputResult(result string, saveFlag string, formatFlag string, filterFlag 
 	return nil
 }
 
-// filterResultValue returns a value by its name filtered from other result values
+// filterResultValue returns a value by its name filtered from other result values.
 func filterResultValue(result Result, filter string) (interface{}, error) {
 	var jsonResult map[string]interface{}
 	val, err := json.Marshal(result.JSON())
@@ -123,13 +127,13 @@ func filterResultValue(result Result, filter string) (interface{}, error) {
 	return value, nil
 }
 
-// handleError handle errors
+// handleError handle errors returned from command execution, try to understand why error happens and offer help to the user.
 func handleError(description string, err error) {
 	if err == nil {
 		return
 	}
 
-	// TODO: refactor this to better handle errors not by string matching
+	// TODO(sideninja): refactor this to better handle errors not by string matching
 	// handle rpc error
 	switch t := err.(type) {
 	case *client.RPCError:

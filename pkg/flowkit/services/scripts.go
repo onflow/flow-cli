@@ -52,7 +52,7 @@ func NewScripts(
 	}
 }
 
-// Execute script code with passed arguments on the selected network
+// Execute script code with passed arguments on the selected network.
 func (s *Scripts) Execute(code []byte, args []cadence.Value, scriptPath string, network string) (cadence.Value, error) {
 	resolver, err := contracts.NewResolver(code)
 	if err != nil {

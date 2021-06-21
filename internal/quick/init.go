@@ -19,9 +19,6 @@
 package quick
 
 import (
-	"fmt"
-
-	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
@@ -40,40 +37,5 @@ var InitCommand = &command.Command{
 		Example: "flow project init",
 	},
 	Flags: &initFlag,
-	Run: func(
-		cmd *cobra.Command,
-		args []string,
-		readerWriter flowkit.ReaderWriter,
-		globalFlags command.GlobalFlags,
-		services *services.Services,
-	) (command.Result, error) {
-		sigAlgo := crypto.StringToSignatureAlgorithm(initFlag.ServiceKeySigAlgo)
-		if sigAlgo == crypto.UnknownSignatureAlgorithm {
-			return nil, fmt.Errorf("invalid signature algorithm: %s", initFlag.ServiceKeySigAlgo)
-		}
-
-		hashAlgo := crypto.StringToHashAlgorithm(initFlag.ServiceKeyHashAlgo)
-		if hashAlgo == crypto.UnknownHashAlgorithm {
-			return nil, fmt.Errorf("invalid hash algorithm: %s", initFlag.ServiceKeyHashAlgo)
-		}
-
-		privateKey, err := crypto.DecodePrivateKeyHex(sigAlgo, initFlag.ServicePrivateKey)
-		if err != nil {
-			return nil, fmt.Errorf("invalid private key: %w", err)
-		}
-
-		s, err := services.Project.Init(
-			readerWriter,
-			initFlag.Reset,
-			initFlag.Global,
-			sigAlgo,
-			hashAlgo,
-			privateKey,
-		)
-		if err != nil {
-			return nil, err
-		}
-
-		return &config.InitResult{State: s}, nil
-	},
+	Run:   config.Initialise, // TODO(sideninja) workaround - init needed to be copied in order to work else there is flag duplicate error
 }

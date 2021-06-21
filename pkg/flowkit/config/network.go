@@ -12,8 +12,8 @@ type Network struct {
 	Host string
 }
 
-// GetByName get network by name
-func (n *Networks) GetByName(name string) *Network {
+// ByName get network by name.
+func (n *Networks) ByName(name string) *Network {
 	for _, network := range *n {
 		if network.Name == name {
 			return &network
@@ -23,7 +23,7 @@ func (n *Networks) GetByName(name string) *Network {
 	return nil
 }
 
-// AddOrUpdate add new network or update if already present
+// AddOrUpdate add new network or update if already present.
 func (n *Networks) AddOrUpdate(name string, network Network) {
 	for i, existingNetwork := range *n {
 		if existingNetwork.Name == name {
@@ -35,8 +35,9 @@ func (n *Networks) AddOrUpdate(name string, network Network) {
 	*n = append(*n, network)
 }
 
+// Remove network by the name.
 func (n *Networks) Remove(name string) error {
-	network := n.GetByName(name)
+	network := n.ByName(name)
 	if network == nil {
 		return fmt.Errorf("network named %s does not exist in configuration", name)
 	}
@@ -50,7 +51,7 @@ func (n *Networks) Remove(name string) error {
 	return nil
 }
 
-// DefaultEmulatorNetwork get default emulator network
+// DefaultEmulatorNetwork get default emulator network.
 func DefaultEmulatorNetwork() Network {
 	return Network{
 		Name: "emulator",
@@ -58,7 +59,7 @@ func DefaultEmulatorNetwork() Network {
 	}
 }
 
-// DefaultTestnetNetwork get default testnet network
+// DefaultTestnetNetwork get default testnet network.
 func DefaultTestnetNetwork() Network {
 	return Network{
 		Name: "testnet",
@@ -66,7 +67,7 @@ func DefaultTestnetNetwork() Network {
 	}
 }
 
-// DefaultMainnetNetwork get default mainnet network
+// DefaultMainnetNetwork get default mainnet network.
 func DefaultMainnetNetwork() Network {
 	return Network{
 		Name: "mainnet",
@@ -74,7 +75,7 @@ func DefaultMainnetNetwork() Network {
 	}
 }
 
-// DefaultNetworks gets all default networks
+// DefaultNetworks gets all default networks.
 func DefaultNetworks() Networks {
 	return Networks{
 		DefaultEmulatorNetwork(),

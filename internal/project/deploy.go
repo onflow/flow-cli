@@ -40,29 +40,28 @@ var DeployCommand = &command.Command{
 		Example: "flow project deploy --network testnet",
 	},
 	Flags: &deployFlags,
-	RunS: func(
-		cmd *cobra.Command,
-		args []string,
-		readerWriter flowkit.ReaderWriter,
-		globalFlags command.GlobalFlags,
-		services *services.Services,
-		state *flowkit.State,
-	) (command.Result, error) {
-		c, err := services.Project.Deploy(globalFlags.Network, deployFlags.Update)
-		if err != nil {
-			return nil, err
-		}
-
-		return &DeployResult{c}, nil
-	},
+	RunS:  deploy,
 }
 
-// DeployResult result structure
+func deploy(
+	_ []string,
+	_ flowkit.ReaderWriter,
+	globalFlags command.GlobalFlags,
+	services *services.Services,
+	_ *flowkit.State,
+) (command.Result, error) {
+	c, err := services.Project.Deploy(globalFlags.Network, deployFlags.Update)
+	if err != nil {
+		return nil, err
+	}
+
+	return &DeployResult{c}, nil
+}
+
 type DeployResult struct {
 	contracts []*contracts.Contract
 }
 
-// JSON convert result to JSON
 func (r *DeployResult) JSON() interface{} {
 	result := make(map[string]string)
 
@@ -73,12 +72,10 @@ func (r *DeployResult) JSON() interface{} {
 	return result
 }
 
-// String convert result to string
 func (r *DeployResult) String() string {
 	return ""
 }
 
-// Oneliner show result as one liner grep friendly
 func (r *DeployResult) Oneliner() string {
 	return ""
 }

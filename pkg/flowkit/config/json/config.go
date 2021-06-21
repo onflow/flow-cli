@@ -24,6 +24,7 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
 )
 
+// jsonConfig implements JSON format for persisting and parsing configuration.
 type jsonConfig struct {
 	Emulators   jsonEmulators   `json:"emulators"`
 	Contracts   jsonContracts   `json:"contracts"`
@@ -104,15 +105,15 @@ func oldConfigFormat(raw []byte) bool {
 	return false
 }
 
-// Parsers for configuration
+// Parser for JSON configuration format.
 type Parser struct{}
 
-// NewParser returns a parser
+// NewParser returns a JSON parser.
 func NewParser() *Parser {
 	return &Parser{}
 }
 
-// Serialize configuration to raw
+// Serialize configuration to raw.
 func (p *Parser) Serialize(conf *config.Config) ([]byte, error) {
 	jsonConf := transformConfigToJSON(conf)
 
@@ -124,7 +125,7 @@ func (p *Parser) Serialize(conf *config.Config) ([]byte, error) {
 	return data, nil
 }
 
-// Deserialize configuration to config structure
+// Deserialize configuration to config structure.
 func (p *Parser) Deserialize(raw []byte) (*config.Config, error) {
 	// check if old format of config and return an error
 	if oldConfigFormat(raw) {
@@ -141,7 +142,7 @@ func (p *Parser) Deserialize(raw []byte) (*config.Config, error) {
 	return jsonConf.transformToConfig()
 }
 
-// SupportsFormat check if the file format is supported
+// SupportsFormat check if the file format is supported.
 func (p *Parser) SupportsFormat(extension string) bool {
 	return extension == ".json"
 }

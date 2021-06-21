@@ -40,43 +40,40 @@ var RemoveDeploymentCommand = &command.Command{
 		Args:    cobra.MaximumNArgs(2),
 	},
 	Flags: &removeDeploymentFlags,
-	RunS: func(
-		cmd *cobra.Command,
-		args []string,
-		readerWriter flowkit.ReaderWriter,
-		globalFlags command.GlobalFlags,
-		services *services.Services,
-		state *flowkit.State,
-	) (command.Result, error) {
-		if state == nil {
-			return nil, config.ErrDoesNotExist
-		}
-
-		account := ""
-		network := ""
-		if len(args) == 2 {
-			account = args[0]
-			network = args[1]
-		} else {
-			account, network = output.RemoveDeploymentPrompt(*state.Deployments())
-		}
-
-		err := state.Deployments().Remove(account, network)
-		if err != nil {
-			return nil, err
-		}
-
-		err = state.SaveDefault()
-		if err != nil {
-			return nil, err
-		}
-
-		return &ConfigResult{
-			result: "deployment removed",
-		}, nil
-	},
+	RunS:  removeDeployment,
 }
 
-func init() {
-	RemoveDeploymentCommand.AddToParent(RemoveCmd)
+func removeDeployment(
+	args []string,
+	_ flowkit.ReaderWriter,
+	_ command.GlobalFlags,
+	_ *services.Services,
+	state *flowkit.State,
+) (command.Result, error) {
+	if state == nil {
+		return nil, config.ErrDoesNotExist
+	}
+
+	account := ""
+	network := ""
+	if len(args) == 2 {
+		account = args[0]
+		network = args[1]
+	} else {
+		account, network = output.RemoveDeploymentPrompt(*state.Deployments())
+	}
+
+	err := state.Deployments().Remove(account, network)
+	if err != nil {
+		return nil, err
+	}
+
+	err = state.SaveDefault()
+	if err != nil {
+		return nil, err
+	}
+
+	return &Result{
+		result: "deployment removed",
+	}, nil
 }

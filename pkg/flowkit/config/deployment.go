@@ -24,7 +24,7 @@ import (
 	"github.com/onflow/cadence"
 )
 
-// ContractDeployment defines the deployment of the contract with possible args
+// ContractDeployment defines the deployment of the contract with possible args.
 type ContractDeployment struct {
 	Name string
 	Args []cadence.Value
@@ -39,8 +39,8 @@ type Deployment struct {
 	Contracts []ContractDeployment // contracts to deploy
 }
 
-// GetByNetwork get all deployments by network
-func (d *Deployments) GetByNetwork(network string) Deployments {
+// ByNetwork get all deployments by network.
+func (d *Deployments) ByNetwork(network string) Deployments {
 	var deployments Deployments
 
 	for _, deploy := range *d {
@@ -52,8 +52,8 @@ func (d *Deployments) GetByNetwork(network string) Deployments {
 	return deployments
 }
 
-// GetByAccountAndNetwork get deploy by account and network
-func (d *Deployments) GetByAccountAndNetwork(account string, network string) Deployments {
+// ByAccountAndNetwork get deploy by account and network.
+func (d *Deployments) ByAccountAndNetwork(account string, network string) Deployments {
 	var deployments Deployments
 
 	for _, deploy := range *d {
@@ -65,7 +65,7 @@ func (d *Deployments) GetByAccountAndNetwork(account string, network string) Dep
 	return deployments
 }
 
-// AddOrUpdate add new or update if already present
+// AddOrUpdate add new or update if already present.
 func (d *Deployments) AddOrUpdate(deployment Deployment) {
 	for i, existingDeployment := range *d {
 		if existingDeployment.Account == deployment.Account &&
@@ -78,9 +78,9 @@ func (d *Deployments) AddOrUpdate(deployment Deployment) {
 	*d = append(*d, deployment)
 }
 
-// Remove removes deployment by account and network
+// Remove removes deployment by account and network.
 func (d *Deployments) Remove(account string, network string) error {
-	deployment := d.GetByAccountAndNetwork(account, network)
+	deployment := d.ByAccountAndNetwork(account, network)
 	if deployment == nil {
 		return fmt.Errorf(
 			"deployment for account %s on network %s does not exist in configuration",

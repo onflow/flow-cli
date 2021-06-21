@@ -45,31 +45,30 @@ var StakingCommand = &command.Command{
 		Args:    cobra.ExactArgs(1),
 	},
 	Flags: &stakingFlags,
-	Run: func(
-		cmd *cobra.Command,
-		args []string,
-		readerWriter flowkit.ReaderWriter,
-		globalFlags command.GlobalFlags,
-		services *services.Services,
-	) (command.Result, error) {
-		address := flow.HexToAddress(args[0])
-
-		staking, delegation, err := services.Accounts.StakingInfo(address)
-		if err != nil {
-			return nil, err
-		}
-
-		return &StakingResult{*staking, *delegation}, nil
-	},
+	Run:   stakingInfo,
 }
 
-// StakingResult represent result from all account commands
+func stakingInfo(
+	args []string,
+	_ flowkit.ReaderWriter,
+	_ command.GlobalFlags,
+	services *services.Services,
+) (command.Result, error) {
+	address := flow.HexToAddress(args[0])
+
+	staking, delegation, err := services.Accounts.StakingInfo(address)
+	if err != nil {
+		return nil, err
+	}
+
+	return &StakingResult{*staking, *delegation}, nil
+}
+
 type StakingResult struct {
 	staking    cadence.Value
 	delegation cadence.Value
 }
 
-// JSON convert result to JSON
 func (r *StakingResult) JSON() interface{} {
 	result := make(map[string]interface{})
 	result["staking"] = flowkit.NewStakingInfoFromValue(r.staking)
@@ -78,7 +77,6 @@ func (r *StakingResult) JSON() interface{} {
 	return result
 }
 
-// String convert result to string
 func (r *StakingResult) String() string {
 	var b bytes.Buffer
 	writer := util.CreateTabWriter(&b)
@@ -116,7 +114,6 @@ func (r *StakingResult) String() string {
 	return b.String()
 }
 
-// Oneliner show result as one liner grep friendly
 func (r *StakingResult) Oneliner() string {
 	return ""
 }

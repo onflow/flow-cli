@@ -31,14 +31,14 @@ import (
 	"github.com/onflow/flow-go-sdk"
 )
 
-// NewTransaction create new instance of transaction
+// NewTransaction create new instance of transaction.
 func NewTransaction() *Transaction {
 	return &Transaction{
 		tx: flow.NewTransaction(),
 	}
 }
 
-// NewTransactionFromPayload build transaction from payload
+// NewTransactionFromPayload build transaction from payload.
 func NewTransactionFromPayload(payload []byte) (*Transaction, error) {
 	partialTxBytes, err := hex.DecodeString(string(payload))
 	if err != nil {
@@ -57,7 +57,7 @@ func NewTransactionFromPayload(payload []byte) (*Transaction, error) {
 	return tx, nil
 }
 
-// NewUpdateAccountContractTransaction update account contract
+// NewUpdateAccountContractTransaction update account contract.
 func NewUpdateAccountContractTransaction(signer *Account, name string, source string) (*Transaction, error) {
 	contract := templates.Contract{
 		Name:   name,
@@ -70,7 +70,7 @@ func NewUpdateAccountContractTransaction(signer *Account, name string, source st
 	)
 }
 
-// NewAddAccountContractTransaction add new contract to the account
+// NewAddAccountContractTransaction add new contract to the account.
 func NewAddAccountContractTransaction(
 	signer *Account,
 	name string,
@@ -83,7 +83,7 @@ func NewAddAccountContractTransaction(
 	}, args)
 }
 
-// NewRemoveAccountContractTransaction creates new transaction to remove contract
+// NewRemoveAccountContractTransaction creates new transaction to remove contract.
 func NewRemoveAccountContractTransaction(signer *Account, name string) (*Transaction, error) {
 	return newTransactionFromTemplate(
 		templates.RemoveAccountContract(signer.Address(), name),
@@ -135,7 +135,7 @@ func addAccountContractWithArgs(
 	return t, nil
 }
 
-// NewCreateAccountTransaction creates new transaction for account
+// NewCreateAccountTransaction creates new transaction for account.
 func NewCreateAccountTransaction(
 	signer *Account,
 	keys []*flow.AccountKey,
@@ -160,24 +160,24 @@ func newTransactionFromTemplate(templateTx *flow.Transaction, signer *Account) (
 	return tx, nil
 }
 
-// Transaction builder of flow transactions
+// Transaction builder of flow transactions.
 type Transaction struct {
 	signer   *Account
 	proposer *flow.Account
 	tx       *flow.Transaction
 }
 
-// Signer get signer
+// Signer get signer.
 func (t *Transaction) Signer() *Account {
 	return t.signer
 }
 
-// Proposer get proposer
+// Proposer get proposer.
 func (t *Transaction) Proposer() *flow.Account {
 	return t.proposer
 }
 
-// FlowTransaction get flow transaction
+// FlowTransaction get flow transaction.
 func (t *Transaction) FlowTransaction() *flow.Transaction {
 	return t.tx
 }
@@ -187,7 +187,7 @@ func (t *Transaction) SetScriptWithArgs(script []byte, args []cadence.Value) err
 	return t.AddArguments(args)
 }
 
-// SetSigner sets the signer for transaction
+// SetSigner sets the signer for transaction.
 func (t *Transaction) SetSigner(account *Account) error {
 	err := account.Key().Validate()
 	if err != nil {
@@ -198,7 +198,7 @@ func (t *Transaction) SetSigner(account *Account) error {
 	return nil
 }
 
-// SetProposer sets the proposer for transaction
+// SetProposer sets the proposer for transaction.
 func (t *Transaction) SetProposer(proposer *flow.Account, keyIndex int) *Transaction {
 	t.proposer = proposer
 	proposerKey := proposer.Keys[keyIndex]
@@ -212,25 +212,25 @@ func (t *Transaction) SetProposer(proposer *flow.Account, keyIndex int) *Transac
 	return t
 }
 
-// SetPayer sets the payer for transaction
+// SetPayer sets the payer for transaction.
 func (t *Transaction) SetPayer(address flow.Address) *Transaction {
 	t.tx.SetPayer(address)
 	return t
 }
 
-// SetBlockReference sets block reference for transaction
+// SetBlockReference sets block reference for transaction.
 func (t *Transaction) SetBlockReference(block *flow.Block) *Transaction {
 	t.tx.SetReferenceBlockID(block.ID)
 	return t
 }
 
-// SetGasLimit sets the gas limit for transaction
+// SetGasLimit sets the gas limit for transaction.
 func (t *Transaction) SetGasLimit(gasLimit uint64) *Transaction {
 	t.tx.SetGasLimit(gasLimit)
 	return t
 }
 
-// AddArguments add array of cadence arguments
+// AddArguments add array of cadence arguments.
 func (t *Transaction) AddArguments(args []cadence.Value) error {
 	for _, arg := range args {
 		err := t.AddArgument(arg)
@@ -242,12 +242,12 @@ func (t *Transaction) AddArguments(args []cadence.Value) error {
 	return nil
 }
 
-// AddArgument add cadence typed argument
+// AddArgument add cadence typed argument.
 func (t *Transaction) AddArgument(arg cadence.Value) error {
 	return t.tx.AddArgument(arg)
 }
 
-// AddAuthorizers add group of authorizers
+// AddAuthorizers add group of authorizers.
 func (t *Transaction) AddAuthorizers(authorizers []flow.Address) *Transaction {
 	for _, authorizer := range authorizers {
 		t.tx.AddAuthorizer(authorizer)
@@ -256,7 +256,7 @@ func (t *Transaction) AddAuthorizers(authorizers []flow.Address) *Transaction {
 	return t
 }
 
-// Sign signs transaction using signer account
+// Sign signs transaction using signer account.
 func (t *Transaction) Sign() (*Transaction, error) {
 	keyIndex := t.signer.Key().Index()
 	signer, err := t.signer.Key().Signer(context.Background())
@@ -281,6 +281,5 @@ func (t *Transaction) Sign() (*Transaction, error) {
 
 // shouldSignEnvelope checks if signer should sign envelope or payload
 func (t *Transaction) shouldSignEnvelope() bool {
-	// if signer is payer
-	return t.signer.address == t.tx.Payer // todo discuss
+	return t.signer.address == t.tx.Payer
 }

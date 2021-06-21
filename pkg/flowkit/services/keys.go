@@ -89,7 +89,7 @@ func (k *Keys) DecodeRLP(publicKey string) (*flow.AccountKey, error) {
 	return accountKey, nil
 }
 
-// DecodePEM decodes a PEM encoded public key with specified signature algorithm
+// DecodePEM decodes a PEM encoded public key with specified signature algorithm.
 func (k *Keys) DecodePEM(key string, sigAlgo crypto.SignatureAlgorithm) (*flow.AccountKey, error) {
 	pk, err := crypto.DecodePublicKeyPEM(sigAlgo, key)
 	if err != nil {
