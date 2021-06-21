@@ -81,7 +81,7 @@ func TestScripts_Integration(t *testing.T) {
 		}
 		state.Networks().AddOrUpdate(n.Name, n)
 
-		d := config.Deploy{
+		d := config.Deployment{
 			Network: n.Name,
 			Account: srvAcc.Name(),
 			Contracts: []config.ContractDeployment{{
