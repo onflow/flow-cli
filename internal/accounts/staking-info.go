@@ -56,7 +56,7 @@ var StakingCommand = &command.Command{
 	) (command.Result, error) {
 		address := flow.HexToAddress(args[0])
 
-		staking, delegation, err := services.Accounts.StakingInfo(address) // address
+		staking, delegation, err := services.Accounts.StakingInfo(address)
 		if err != nil {
 			return nil, err
 		}

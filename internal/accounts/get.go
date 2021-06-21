@@ -64,7 +64,7 @@ var GetCommand = &command.Command{
 
 		address := flow.HexToAddress(args[0])
 
-		account, err := services.Accounts.Get(address) // address
+		account, err := services.Accounts.Get(address)
 		if err != nil {
 			return nil, err
 		}
