@@ -284,7 +284,7 @@ func TestAccountsCreate_Integration(t *testing.T) {
 			pubKeys: []crypto.PublicKey{
 				tests.PubKeys()[0],
 			},
-			weights: []int{10000},
+			weights: []int{flow.AccountKeyWeightThreshold},
 		}, {
 			account:  srvAcc,
 			args:     nil,
@@ -308,7 +308,7 @@ func TestAccountsCreate_Integration(t *testing.T) {
 			pubKeys: []crypto.PublicKey{
 				tests.PubKeys()[0],
 			},
-			weights: []int{1000},
+			weights: []int{flow.AccountKeyWeightThreshold},
 		}}
 
 		accOut := []accountsOut{{
@@ -320,7 +320,7 @@ func TestAccountsCreate_Integration(t *testing.T) {
 			pubKeys: []crypto.PublicKey{
 				tests.PubKeys()[0],
 			},
-			weights: []int{1000},
+			weights: []int{flow.AccountKeyWeightThreshold},
 		}, {
 			address:  "179b6b1cb6755e31",
 			code:     map[string][]byte{},
