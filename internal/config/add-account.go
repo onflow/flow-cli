@@ -28,7 +28,6 @@ import (
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
-	"github.com/onflow/flow-cli/pkg/flowkit/project"
 	"github.com/onflow/flow-cli/pkg/flowkit/services"
 )
 
@@ -56,9 +55,9 @@ var AddAccountCommand = &command.Command{
 		args []string,
 		globalFlags command.GlobalFlags,
 		services *services.Services,
-		proj *project.Project,
+		state *flowkit.State,
 	) (command.Result, error) {
-		if proj == nil {
+		if state == nil {
 			return nil, config.ErrDoesNotExist
 		}
 
@@ -83,14 +82,9 @@ var AddAccountCommand = &command.Command{
 			return nil, err
 		}
 
-		acc, err := flowkit.AccountFromConfig(*account)
-		if err != nil {
-			return nil, err
-		}
+		state.Config().Accounts.AddOrUpdate(account.Name, *account)
 
-		proj.AddOrUpdateAccount(acc)
-
-		err = proj.SaveDefault()
+		err = state.SaveDefault()
 		if err != nil {
 			return nil, err
 		}

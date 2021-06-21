@@ -23,12 +23,12 @@ import (
 	"path"
 	"strings"
 
+	"github.com/onflow/flow-cli/pkg/flowkit"
+
 	"github.com/onflow/cadence/runtime/ast"
 	"github.com/onflow/cadence/runtime/common"
 	"github.com/onflow/cadence/runtime/parser2"
 	"github.com/onflow/flow-go-sdk"
-
-	"github.com/onflow/flow-cli/pkg/flowkit/project"
 )
 
 // Resolver handles resolving imports in Cadence code
@@ -57,8 +57,8 @@ func NewResolver(code []byte) (*Resolver, error) {
 //
 func (r *Resolver) ResolveImports(
 	codePath string,
-	contracts []project.Contract,
-	aliases project.Aliases,
+	contracts []flowkit.Contract,
+	aliases flowkit.Aliases,
 ) ([]byte, error) {
 	imports := r.getFileImports()
 	sourceTarget := r.getSourceTarget(contracts, aliases)
@@ -87,8 +87,8 @@ func (r *Resolver) replaceImport(from string, to string) []byte {
 
 // getSourceTarget return a map with contract paths as keys and addresses as values
 func (r *Resolver) getSourceTarget(
-	contracts []project.Contract,
-	aliases project.Aliases,
+	contracts []flowkit.Contract,
+	aliases flowkit.Aliases,
 ) map[string]string {
 	sourceTarget := make(map[string]string)
 	for _, contract := range contracts {

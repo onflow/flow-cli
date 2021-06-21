@@ -31,25 +31,24 @@ import (
 
 	"github.com/onflow/flow-cli/pkg/flowkit/gateway"
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
-	"github.com/onflow/flow-cli/pkg/flowkit/project"
 )
 
 // Transactions is a service that handles all transaction-related interactions.
 type Transactions struct {
 	gateway gateway.Gateway
-	project *project.Project
+	state   *flowkit.State
 	logger  output.Logger
 }
 
 // NewTransactions returns a new transactions service.
 func NewTransactions(
 	gateway gateway.Gateway,
-	project *project.Project,
+	state *flowkit.State,
 	logger output.Logger,
 ) *Transactions {
 	return &Transactions{
 		gateway: gateway,
-		project: project,
+		state:   state,
 		logger:  logger,
 	}
 }
@@ -120,7 +119,7 @@ func (t *Transactions) Build(
 			return nil, fmt.Errorf("resolving imports in transactions not supported")
 		}
 
-		contractsNetwork, err := t.project.DeploymentContractsByNetwork(network)
+		contractsNetwork, err := t.state.DeploymentContractsByNetwork(network)
 		if err != nil {
 			return nil, err
 		}
@@ -128,7 +127,7 @@ func (t *Transactions) Build(
 		code, err = resolver.ResolveImports(
 			codeFilename,
 			contractsNetwork,
-			t.project.AliasesForNetwork(network),
+			t.state.AliasesForNetwork(network),
 		)
 		if err != nil {
 			return nil, err
@@ -149,8 +148,8 @@ func (t *Transactions) Sign(
 	signer *flowkit.Account,
 	approveSigning bool,
 ) (*flowkit.Transaction, error) {
-	if t.project == nil {
-		return nil, fmt.Errorf("missing configuration, initialize it: flow project init")
+	if t.state == nil {
+		return nil, fmt.Errorf("missing configuration, initialize it: flow state init")
 	}
 
 	tx, err := flowkit.NewTransactionFromPayload(payload)
@@ -208,8 +207,8 @@ func (t *Transactions) Send(
 	args []cadence.Value,
 	network string,
 ) (*flow.Transaction, *flow.TransactionResult, error) {
-	if t.project == nil {
-		return nil, nil, fmt.Errorf("missing configuration, initialize it: flow project init")
+	if t.state == nil {
+		return nil, nil, fmt.Errorf("missing configuration, initialize it: flow state init")
 	}
 
 	signerKeyIndex := signer.Key().Index()

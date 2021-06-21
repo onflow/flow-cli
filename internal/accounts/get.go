@@ -21,7 +21,7 @@ package accounts
 import (
 	"fmt"
 
-	"github.com/onflow/flow-cli/pkg/flowkit/project"
+	"github.com/onflow/flow-cli/pkg/flowkit"
 
 	"github.com/onflow/flow-go-sdk"
 
@@ -52,7 +52,7 @@ var GetCommand = &command.Command{
 		args []string,
 		globalFlags command.GlobalFlags,
 		services *services.Services,
-		proj *project.Project,
+		state *flowkit.State,
 	) (command.Result, error) {
 		if getFlags.Code {
 			fmt.Println("⚠️  DEPRECATION WARNING: use contracts flag instead")

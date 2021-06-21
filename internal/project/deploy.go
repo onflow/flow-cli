@@ -19,11 +19,11 @@
 package project
 
 import (
+	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/pkg/flowkit/contracts"
-	"github.com/onflow/flow-cli/pkg/flowkit/project"
 	"github.com/onflow/flow-cli/pkg/flowkit/services"
 )
 
@@ -45,7 +45,7 @@ var DeployCommand = &command.Command{
 		args []string,
 		globalFlags command.GlobalFlags,
 		services *services.Services,
-		proj *project.Project,
+		state *flowkit.State,
 	) (command.Result, error) {
 		c, err := services.Project.Deploy(globalFlags.Network, deployFlags.Update)
 		if err != nil {

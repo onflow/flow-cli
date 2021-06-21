@@ -19,13 +19,13 @@
 package services
 
 import (
+	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/gateway"
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
-	"github.com/onflow/flow-cli/pkg/flowkit/project"
 )
 
 // Services is a collection of services that provide domain-specific functionality
-// for the different components of a Flow project.
+// for the different components of a Flow state.
 type Services struct {
 	Accounts     *Accounts
 	Scripts      *Scripts
@@ -38,22 +38,22 @@ type Services struct {
 	Status       *Status
 }
 
-// NewServices returns a new services collection for a project,
+// NewServices returns a new services collection for a state,
 // initialized with a gateway and logger.
 func NewServices(
 	gateway gateway.Gateway,
-	proj *project.Project,
+	state *flowkit.State,
 	logger output.Logger,
 ) *Services {
 	return &Services{
-		Accounts:     NewAccounts(gateway, proj, logger),
-		Scripts:      NewScripts(gateway, proj, logger),
-		Transactions: NewTransactions(gateway, proj, logger),
-		Keys:         NewKeys(gateway, proj, logger),
-		Events:       NewEvents(gateway, proj, logger),
-		Collections:  NewCollections(gateway, proj, logger),
-		Project:      NewProject(gateway, proj, logger),
-		Blocks:       NewBlocks(gateway, proj, logger),
-		Status:       NewStatus(gateway, proj, logger),
+		Accounts:     NewAccounts(gateway, state, logger),
+		Scripts:      NewScripts(gateway, state, logger),
+		Transactions: NewTransactions(gateway, state, logger),
+		Keys:         NewKeys(gateway, state, logger),
+		Events:       NewEvents(gateway, state, logger),
+		Collections:  NewCollections(gateway, state, logger),
+		Project:      NewProject(gateway, state, logger),
+		Blocks:       NewBlocks(gateway, state, logger),
+		Status:       NewStatus(gateway, state, logger),
 	}
 }

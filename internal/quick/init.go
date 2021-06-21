@@ -26,7 +26,7 @@ import (
 
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/internal/config"
-	"github.com/onflow/flow-cli/pkg/flowkit/project"
+	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/services"
 )
 
@@ -46,7 +46,7 @@ var InitCommand = &command.Command{
 		args []string,
 		globalFlags command.GlobalFlags,
 		services *services.Services,
-		proj *project.Project,
+		state *flowkit.State,
 	) (command.Result, error) {
 		sigAlgo := crypto.StringToSignatureAlgorithm(initFlag.ServiceKeySigAlgo)
 		if sigAlgo == crypto.UnknownSignatureAlgorithm {
@@ -63,7 +63,7 @@ var InitCommand = &command.Command{
 			return nil, fmt.Errorf("invalid private key: %w", err)
 		}
 
-		proj, err = services.Project.Init(
+		s, err := services.Project.Init(
 			initFlag.Reset,
 			initFlag.Global,
 			sigAlgo,
@@ -74,6 +74,6 @@ var InitCommand = &command.Command{
 			return nil, err
 		}
 
-		return &config.InitResult{Project: proj}, nil
+		return &config.InitResult{State: s}, nil
 	},
 }

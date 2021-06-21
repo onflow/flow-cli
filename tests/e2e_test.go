@@ -23,13 +23,14 @@ import (
 	"os"
 	"testing"
 
+	"github.com/onflow/flow-cli/pkg/flowkit"
+
 	"github.com/onflow/flow-go-sdk"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/onflow/flow-cli/pkg/flowkit/gateway"
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
-	"github.com/onflow/flow-cli/pkg/flowkit/project"
 	"github.com/onflow/flow-cli/pkg/flowkit/services"
 )
 
@@ -57,7 +58,7 @@ func TestAccount(t *testing.T) {
 	gw, err := gateway.NewGrpcGateway(host)
 	assert.NoError(t, err)
 
-	project, err := project.Load([]string{conf})
+	project, err := flowkit.Load([]string{conf})
 	assert.NoError(t, err)
 
 	accounts := services.NewAccounts(gw, project, logger)
@@ -150,7 +151,7 @@ func TestEvents(t *testing.T) {
 	gw, err := gateway.NewGrpcGateway(host)
 	assert.NoError(t, err)
 
-	project, err := project.Load([]string{conf})
+	project, err := flowkit.Load([]string{conf})
 	assert.NoError(t, err)
 
 	events := services.NewEvents(gw, project, logger)
@@ -171,7 +172,7 @@ func TestKeys(t *testing.T) {
 	gw, err := gateway.NewGrpcGateway(host)
 	assert.NoError(t, err)
 
-	proj, err := project.Load([]string{conf})
+	proj, err := flowkit.Load([]string{conf})
 	assert.NoError(t, err)
 
 	keys := services.NewKeys(gw, proj, logger)
@@ -193,12 +194,12 @@ func TestProject(t *testing.T) {
 	gw, err := gateway.NewGrpcGateway(host)
 	assert.NoError(t, err)
 
-	project, err := project.Load([]string{conf})
+	project, err := flowkit.Load([]string{conf})
 	assert.NoError(t, err)
 
 	projects := services.NewProject(gw, project, logger)
 
-	t.Run("Deploy Project with Args", func(t *testing.T) {
+	t.Run("Deploy State with Args", func(t *testing.T) {
 		contracts, err := projects.Deploy("emulator", true)
 
 		assert.NoError(t, err)
@@ -217,7 +218,7 @@ func TestScripts(t *testing.T) {
 	gateway, err := gateway.NewGrpcGateway(host)
 	assert.NoError(t, err)
 
-	project, err := project.Load([]string{conf})
+	project, err := flowkit.Load([]string{conf})
 	assert.NoError(t, err)
 
 	scripts := services.NewScripts(gateway, project, logger)
@@ -267,7 +268,7 @@ func TestTransactions(t *testing.T) {
 	gw, err := gateway.NewGrpcGateway(host)
 	assert.NoError(t, err)
 
-	project, err := project.Load([]string{conf})
+	project, err := flowkit.Load([]string{conf})
 	assert.NoError(t, err)
 
 	transactions := services.NewTransactions(gw, project, logger)

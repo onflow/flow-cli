@@ -21,22 +21,23 @@ package services
 import (
 	"testing"
 
+	"github.com/onflow/flow-cli/pkg/flowkit"
+
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
-	"github.com/onflow/flow-cli/pkg/flowkit/project"
 	"github.com/onflow/flow-cli/tests"
 )
 
 func TestCollections(t *testing.T) {
 	mock := &tests.MockGateway{}
 
-	proj, err := project.Init(crypto.ECDSA_P256, crypto.SHA3_256)
+	state, err := flowkit.Init(crypto.ECDSA_P256, crypto.SHA3_256)
 	assert.NoError(t, err)
 
-	collections := NewCollections(mock, proj, output.NewStdoutLogger(output.InfoLog))
+	collections := NewCollections(mock, state, output.NewStdoutLogger(output.InfoLog))
 
 	t.Run("Get Collection", func(t *testing.T) {
 		called := false

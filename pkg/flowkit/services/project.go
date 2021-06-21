@@ -31,25 +31,24 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowkit/contracts"
 	"github.com/onflow/flow-cli/pkg/flowkit/gateway"
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
-	"github.com/onflow/flow-cli/pkg/flowkit/project"
 )
 
-// Project is a service that handles all interactions for a project.
+// Project is a service that handles all interactions for a state.
 type Project struct {
 	gateway gateway.Gateway
-	project *project.Project
+	state   *flowkit.State
 	logger  output.Logger
 }
 
-// NewProject returns a new project service.
+// NewProject returns a new state service.
 func NewProject(
 	gateway gateway.Gateway,
-	project *project.Project,
+	state *flowkit.State,
 	logger output.Logger,
 ) *Project {
 	return &Project{
 		gateway: gateway,
-		project: project,
+		state:   state,
 		logger:  logger,
 	}
 }
@@ -60,41 +59,41 @@ func (p *Project) Init(
 	sigAlgo crypto.SignatureAlgorithm,
 	hashAlgo crypto.HashAlgorithm,
 	serviceKey crypto.PrivateKey,
-) (*project.Project, error) {
+) (*flowkit.State, error) {
 	path := config.DefaultPath
 	if global {
 		path = config.GlobalPath()
 	}
 
-	if project.Exists(path) && !reset {
+	if flowkit.Exists(path) && !reset {
 		return nil, fmt.Errorf(
 			"configuration already exists at: %s, if you want to reset configuration use the reset flag",
 			path,
 		)
 	}
 
-	proj, err := project.Init(sigAlgo, hashAlgo)
+	state, err := flowkit.Init(sigAlgo, hashAlgo)
 	if err != nil {
 		return nil, err
 	}
 
-	proj.SetEmulatorServiceKey(serviceKey)
+	state.SetEmulatorKey(serviceKey)
 
-	err = proj.Save(path)
+	err = state.Save(path)
 	if err != nil {
 		return nil, err
 	}
 
-	return proj, nil
+	return state, nil
 }
 
 func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, error) {
-	if p.project == nil {
+	if p.state == nil {
 		return nil, config.ErrDoesNotExist
 	}
 
 	// check there are not multiple accounts with same contract
-	if p.project.ContractConflictExists(network) {
+	if p.state.ContractConflictExists(network) {
 		return nil, fmt.Errorf( // TODO: specify which contract by name is a problem
 			"the same contract cannot be deployed to multiple accounts on the same network",
 		)
@@ -103,11 +102,11 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 	// create new processor for contract
 	processor := contracts.NewPreprocessor(
 		contracts.FilesystemLoader{},
-		p.project.AliasesForNetwork(network),
+		p.state.AliasesForNetwork(network),
 	)
 
 	// add all contracts needed to deploy to processor
-	contractsNetwork, err := p.project.DeploymentContractsByNetwork(network)
+	contractsNetwork, err := p.state.DeploymentContractsByNetwork(network)
 	if err != nil {
 		return nil, err
 	}
@@ -139,7 +138,7 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 	p.logger.Info(fmt.Sprintf(
 		"\nDeploying %d contracts for accounts: %s\n",
 		len(orderedContracts),
-		strings.Join(p.project.AccountNamesForNetwork(network), ","),
+		strings.Join(p.state.AccountNamesForNetwork(network), ","),
 	))
 	defer p.logger.StopProgress()
 
@@ -150,7 +149,7 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 
 	deployErr := false
 	for _, contract := range orderedContracts {
-		targetAccount := p.project.AccountByAddress(contract.Target().String())
+		targetAccount := p.state.Accounts().ByAddress(contract.Target())
 
 		if targetAccount == nil {
 			return nil, fmt.Errorf("target account for deploying contract not found in configuration")

@@ -21,6 +21,8 @@ package emulator
 import (
 	"errors"
 
+	"github.com/onflow/flow-cli/pkg/flowkit"
+
 	"github.com/onflow/flow-cli/internal/command"
 
 	emulator "github.com/onflow/flow-emulator"
@@ -30,7 +32,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
-	"github.com/onflow/flow-cli/pkg/flowkit/project"
 	"github.com/onflow/flow-cli/pkg/flowkit/util"
 )
 
@@ -45,7 +46,7 @@ func ConfiguredServiceKey(
 	crypto.SignatureAlgorithm,
 	crypto.HashAlgorithm,
 ) {
-	var proj *project.Project
+	var state *flowkit.State
 	var err error
 
 	if init {
@@ -57,17 +58,17 @@ func ConfiguredServiceKey(
 			hashAlgo = emulator.DefaultServiceKeyHashAlgo
 		}
 
-		proj, err = project.Init(sigAlgo, hashAlgo)
+		state, err = flowkit.Init(sigAlgo, hashAlgo)
 		if err != nil {
 			util.Exitf(1, err.Error())
 		} else {
-			err = proj.SaveDefault()
+			err = state.SaveDefault()
 			if err != nil {
 				util.Exitf(1, err.Error())
 			}
 		}
 	} else {
-		proj, err = project.Load(command.Flags.ConfigPaths)
+		state, err = flowkit.Load(command.Flags.ConfigPaths)
 		if err != nil {
 			if errors.Is(err, config.ErrDoesNotExist) {
 				util.Exitf(1, "🙏 Configuration is missing, initialize it with: 'flow init' and then rerun this command.")
@@ -77,7 +78,7 @@ func ConfiguredServiceKey(
 		}
 	}
 
-	serviceAccount, err := proj.EmulatorServiceAccount()
+	serviceAccount, err := state.EmulatorServiceAccount()
 	if err != nil {
 		util.Exit(1, err.Error())
 	}

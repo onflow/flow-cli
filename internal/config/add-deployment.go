@@ -21,12 +21,13 @@ package config
 import (
 	"fmt"
 
+	"github.com/onflow/flow-cli/pkg/flowkit"
+
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
-	"github.com/onflow/flow-cli/pkg/flowkit/project"
 	"github.com/onflow/flow-cli/pkg/flowkit/services"
 )
 
@@ -51,12 +52,11 @@ var AddDeploymentCommand = &command.Command{
 		args []string,
 		globalFlags command.GlobalFlags,
 		services *services.Services,
-		proj *project.Project,
+		state *flowkit.State,
 	) (command.Result, error) {
-		if proj == nil {
+		if state == nil {
 			return nil, config.ErrDoesNotExist
 		}
-		conf := proj.Config()
 
 		deployData, flagsProvided, err := flagsToDeploymentData(addDeploymentFlags)
 		if err != nil {
@@ -64,7 +64,7 @@ var AddDeploymentCommand = &command.Command{
 		}
 
 		if !flagsProvided {
-			deployData = output.NewDeploymentPrompt(conf.Networks, conf.Accounts, conf.Contracts)
+			deployData = output.NewDeploymentPrompt(*state.Networks(), state.Config().Accounts, *state.Contracts())
 		}
 
 		deployment := config.StringToDeployment(
@@ -73,9 +73,9 @@ var AddDeploymentCommand = &command.Command{
 			deployData["contracts"].([]string),
 		)
 
-		conf.Deployments.AddOrUpdate(deployment)
+		state.Deployments().AddOrUpdate(deployment)
 
-		err = proj.SaveDefault()
+		err = state.SaveDefault()
 		if err != nil {
 			return nil, err
 		}

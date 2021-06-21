@@ -26,7 +26,6 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/gateway"
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
-	"github.com/onflow/flow-cli/pkg/flowkit/project"
 	"github.com/onflow/flow-cli/pkg/flowkit/util"
 
 	"github.com/onflow/cadence"
@@ -38,19 +37,19 @@ import (
 // Accounts is a service that handles all account-related interactions.
 type Accounts struct {
 	gateway gateway.Gateway
-	project *project.Project
+	state   *flowkit.State
 	logger  output.Logger
 }
 
 // NewAccounts returns a new accounts service.
 func NewAccounts(
 	gateway gateway.Gateway,
-	project *project.Project,
+	state *flowkit.State,
 	logger output.Logger,
 ) *Accounts {
 	return &Accounts{
 		gateway: gateway,
-		project: project,
+		state:   state,
 		logger:  logger,
 	}
 }
@@ -116,7 +115,7 @@ func (a *Accounts) Create(
 	hashAlgo crypto.HashAlgorithm,
 	contracts []string,
 ) (*flow.Account, error) {
-	if a.project == nil {
+	if a.state == nil {
 		return nil, config.ErrDoesNotExist
 	}
 
@@ -342,17 +341,4 @@ func (a *Accounts) prepareTransaction(
 	}
 
 	return tx, nil
-}
-
-// AccountFromAddressAndKey get account from address and private key
-func accountFromAddressAndKey(address string, accountPrivateKey string) (*flowkit.Account, error) {
-	privateKey, err := crypto.DecodePrivateKeyHex(crypto.ECDSA_P256, accountPrivateKey)
-	if err != nil {
-		return nil, fmt.Errorf("private key is not correct")
-	}
-
-	return flowkit.AccountFromAddressAndKey(
-		flow.HexToAddress(address),
-		privateKey,
-	), nil
 }

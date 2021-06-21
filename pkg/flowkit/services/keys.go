@@ -22,31 +22,32 @@ import (
 	"encoding/hex"
 	"fmt"
 
+	"github.com/onflow/flow-cli/pkg/flowkit"
+
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
 
 	"github.com/onflow/flow-cli/pkg/flowkit/gateway"
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
-	"github.com/onflow/flow-cli/pkg/flowkit/project"
 	"github.com/onflow/flow-cli/pkg/flowkit/util"
 )
 
 // Keys is a service that handles all key-related interactions.
 type Keys struct {
 	gateway gateway.Gateway
-	project *project.Project
+	state   *flowkit.State
 	logger  output.Logger
 }
 
 // NewKeys returns a new keys service.
 func NewKeys(
 	gateway gateway.Gateway,
-	project *project.Project,
+	state *flowkit.State,
 	logger output.Logger,
 ) *Keys {
 	return &Keys{
 		gateway: gateway,
-		project: project,
+		state:   state,
 		logger:  logger,
 	}
 }

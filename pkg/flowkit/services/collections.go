@@ -19,29 +19,29 @@
 package services
 
 import (
+	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-go-sdk"
 
 	"github.com/onflow/flow-cli/pkg/flowkit/gateway"
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
-	"github.com/onflow/flow-cli/pkg/flowkit/project"
 )
 
 // Collections is aa service that handles all collection-related interactions.
 type Collections struct {
 	gateway gateway.Gateway
-	project *project.Project
+	state   *flowkit.State
 	logger  output.Logger
 }
 
 // NewCollections returns a new collections service.
 func NewCollections(
 	gateway gateway.Gateway,
-	project *project.Project,
+	state *flowkit.State,
 	logger output.Logger,
 ) *Collections {
 	return &Collections{
 		gateway: gateway,
-		project: project,
+		state:   state,
 		logger:  logger,
 	}
 }

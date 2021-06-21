@@ -16,14 +16,12 @@
  * limitations under the License.
  */
 
-package project
+package flowkit
 
 import (
 	"errors"
 	"fmt"
 	"path"
-
-	"github.com/onflow/flow-cli/pkg/flowkit"
 
 	"github.com/onflow/cadence"
 
@@ -38,11 +36,11 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowkit/config/json"
 )
 
-// Project contains the configuration for a Flow project.
-type Project struct {
-	composer *config.Loader
+// State contains the configuration for a Flow project.
+type State struct {
+	loader   *config.Loader
 	conf     *config.Config
-	accounts []*flowkit.Account
+	accounts Accounts
 }
 
 // Contract is a Cadence contract definition for a project.
@@ -53,8 +51,10 @@ type Contract struct {
 	Args   []cadence.Value
 }
 
+// refactor to config loader
+
 // Load loads a project configuration and returns the resulting project.
-func Load(configFilePaths []string) (*Project, error) {
+func Load(configFilePaths []string) (*State, error) {
 	loader := config.NewLoader(afero.NewOsFs())
 
 	// here we add all available parsers (more to add yaml etc...)
@@ -77,15 +77,19 @@ func Load(configFilePaths []string) (*Project, error) {
 	return proj, nil
 }
 
+// refactor to config loader
+
 // SaveDefault saves configuration to default path
-func (p *Project) SaveDefault() error {
+func (p *State) SaveDefault() error {
 	return p.Save(config.DefaultPath)
 }
 
+// refactor to config loader
+
 // Save saves the project configuration to the given path.
-func (p *Project) Save(path string) error {
-	p.conf.Accounts = flowkit.accountsToConfig(p.accounts)
-	err := p.composer.Save(p.conf, path)
+func (p *State) Save(path string) error {
+	p.conf.Accounts = accountsToConfig(p.accounts)
+	err := p.loader.Save(p.conf, path)
 
 	if err != nil {
 		return fmt.Errorf("failed to save project configuration to: %s", path)
@@ -94,14 +98,18 @@ func (p *Project) Save(path string) error {
 	return nil
 }
 
+// refactor to config loader
+
 // Exists checks if a project configuration exists.
 func Exists(path string) bool {
 	return config.Exists(path)
 }
 
+// refactor
+
 // Init initializes a new Flow project.
-func Init(sigAlgo crypto.SignatureAlgorithm, hashAlgo crypto.HashAlgorithm) (*Project, error) {
-	emulatorServiceAccount, err := flowkit.generateEmulatorServiceAccount(sigAlgo, hashAlgo)
+func Init(sigAlgo crypto.SignatureAlgorithm, hashAlgo crypto.HashAlgorithm) (*State, error) {
+	emulatorServiceAccount, err := generateEmulatorServiceAccount(sigAlgo, hashAlgo)
 	if err != nil {
 		return nil, err
 	}
@@ -109,33 +117,37 @@ func Init(sigAlgo crypto.SignatureAlgorithm, hashAlgo crypto.HashAlgorithm) (*Pr
 	composer := config.NewLoader(afero.NewOsFs())
 	composer.AddConfigParser(json.NewParser())
 
-	return &Project{
-		composer: composer,
+	return &State{
+		loader:   composer,
 		conf:     config.DefaultConfig(),
-		accounts: []*flowkit.Account{emulatorServiceAccount},
+		accounts: Accounts{*emulatorServiceAccount},
 	}, nil
 }
 
+// refactor to get config
+
 // newProject creates a new project from a configuration object.
-func newProject(conf *config.Config, composer *config.Loader) (*Project, error) {
-	accounts, err := flowkit.accountsFromConfig(conf)
+func newProject(conf *config.Config, composer *config.Loader) (*State, error) {
+	accounts, err := accountsFromConfig(conf)
 	if err != nil {
 		return nil, err
 	}
 
-	return &Project{
-		composer: composer,
+	return &State{
+		loader:   composer,
 		conf:     conf,
 		accounts: accounts,
 	}, nil
 }
 
-// CheckContractConflict returns true if the same contract is configured to deploy
+// refactor to contracts ?
+
+// ContractConflictExists returns true if the same contract is configured to deploy
 // to more than one account in the same network.
 //
 // The CLI currently does not allow the same contract to be deployed to multiple
 // accounts in the same network.
-func (p *Project) ContractConflictExists(network string) bool {
+func (p *State) ContractConflictExists(network string) bool {
 	contracts, err := p.DeploymentContractsByNetwork(network)
 	if err != nil {
 		return false
@@ -154,42 +166,45 @@ func (p *Project) ContractConflictExists(network string) bool {
 	return len(all) != len(uniq)
 }
 
-// NetworkByName returns a network by name.
-func (p *Project) NetworkByName(name string) *config.Network {
-	return p.conf.Networks.GetByName(name)
+// Networks get network configuration
+func (p *State) Networks() *config.Networks {
+	return &p.conf.Networks
 }
 
-// Config get project configuration
-func (p *Project) Config() *config.Config {
+// Deployments get deployments configuration
+func (p *State) Deployments() *config.Deployments {
+	return &p.conf.Deployments
+}
+
+// Contracts get contracts configuration
+func (p *State) Contracts() *config.Contracts {
+	return &p.conf.Contracts
+}
+
+// Accounts get accounts
+func (p *State) Accounts() *Accounts {
+	return &p.accounts
+}
+
+// Config get underlying configuration for advanced usage.
+func (p *State) Config() *config.Config {
 	return p.conf
 }
 
 // EmulatorServiceAccount returns the service account for the default emulator profilee.
-func (p *Project) EmulatorServiceAccount() (*flowkit.Account, error) {
+func (p *State) EmulatorServiceAccount() (Account, error) {
 	emulator := p.conf.Emulators.Default()
 	acc := p.conf.Accounts.GetByName(emulator.ServiceAccount)
-	return flowkit.AccountFromConfig(*acc)
-}
-
-// SetEmulatorServiceKey sets the default emulator service account private key.
-func (p *Project) SetEmulatorServiceKey(privateKey crypto.PrivateKey) {
-	acc := p.AccountByName(config.DefaultEmulatorServiceAccountName)
-	acc.SetKey(
-		flowkit.NewHexAccountKeyFromPrivateKey(
-			acc.Key().Index(),
-			acc.Key().HashAlgo(),
-			privateKey,
-		),
-	)
+	return fromConfig(*acc)
 }
 
 // DeploymentContractsByNetwork returns all contracts for a network.
-func (p *Project) DeploymentContractsByNetwork(network string) ([]Contract, error) {
+func (p *State) DeploymentContractsByNetwork(network string) ([]Contract, error) {
 	contracts := make([]Contract, 0)
 
 	// get deployments for the specified network
 	for _, deploy := range p.conf.Deployments.GetByNetwork(network) {
-		account := p.AccountByName(deploy.Account)
+		account := p.accounts.ByName(deploy.Account)
 		if account == nil {
 			return nil, fmt.Errorf("could not find account with name %s in the configuration", deploy.Account)
 		}
@@ -216,7 +231,7 @@ func (p *Project) DeploymentContractsByNetwork(network string) ([]Contract, erro
 }
 
 // AccountNamesForNetwork returns all configured account names for a network.
-func (p *Project) AccountNamesForNetwork(network string) []string {
+func (p *State) AccountNamesForNetwork(network string) []string {
 	names := make([]string, 0)
 
 	for _, account := range p.accounts {
@@ -230,62 +245,10 @@ func (p *Project) AccountNamesForNetwork(network string) []string {
 	return names
 }
 
-// AddOrUpdateAccount adds or updates an account.
-func (p *Project) AddOrUpdateAccount(account *flowkit.Account) {
-	for i, existingAccount := range p.accounts {
-		if existingAccount.name == account.name {
-			(*p).accounts[i] = account
-			return
-		}
-	}
-
-	p.accounts = append(p.accounts, account)
-}
-
-// RemoveAccount removes an account from configuration
-func (p *Project) RemoveAccount(name string) error {
-	account := p.AccountByName(name)
-	if account == nil {
-		return fmt.Errorf("account named %s does not exist in configuration", name)
-	}
-
-	for i, account := range p.accounts {
-		if account.name == name {
-			(*p).accounts = append(p.accounts[0:i], p.accounts[i+1:]...) // remove item
-		}
-	}
-
-	return nil
-}
-
-// AccountByAddress returns an account by address.
-func (p *Project) AccountByAddress(address string) *flowkit.Account {
-	for _, account := range p.accounts {
-		if account.address.String() == flow.HexToAddress(address).String() {
-			return account
-		}
-	}
-
-	return nil
-}
-
-// AccountByName returns an account by name.
-func (p *Project) AccountByName(name string) *flowkit.Account {
-	var account *flowkit.Account
-
-	for _, acc := range p.accounts {
-		if acc.name == name {
-			account = acc
-		}
-	}
-
-	return account
-}
-
 type Aliases map[string]string
 
 // AliasesForNetwork returns all deployment aliases for a network.
-func (p *Project) AliasesForNetwork(network string) Aliases {
+func (p *State) AliasesForNetwork(network string) Aliases {
 	aliases := make(Aliases)
 
 	// get all contracts for selected network and if any has an address as target make it an alias

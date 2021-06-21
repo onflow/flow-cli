@@ -19,13 +19,13 @@
 package config
 
 import (
+	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
 
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
-	"github.com/onflow/flow-cli/pkg/flowkit/project"
 	"github.com/onflow/flow-cli/pkg/flowkit/services"
 )
 
@@ -46,27 +46,25 @@ var RemoveAccountCommand = &command.Command{
 		args []string,
 		globalFlags command.GlobalFlags,
 		services *services.Services,
-		proj *project.Project,
+		state *flowkit.State,
 	) (command.Result, error) {
-		if proj == nil {
+		if state == nil {
 			return nil, config.ErrDoesNotExist
 		}
-
-		conf := proj.Config()
 
 		name := ""
 		if len(args) == 1 {
 			name = args[0]
 		} else {
-			name = output.RemoveAccountPrompt(conf.Accounts)
+			name = output.RemoveAccountPrompt(state.Config().Accounts)
 		}
 
-		err := proj.RemoveAccount(name)
+		err := state.Config().Accounts.Remove(name)
 		if err != nil {
 			return nil, err
 		}
 
-		err = proj.SaveDefault()
+		err = state.SaveDefault()
 		if err != nil {
 			return nil, err
 		}

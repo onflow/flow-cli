@@ -23,13 +23,10 @@ import (
 	"fmt"
 
 	"github.com/onflow/flow-go-sdk/crypto"
-
-	"github.com/onflow/flow-cli/pkg/flowkit/output"
-
 	"github.com/spf13/cobra"
 
+	"github.com/onflow/flow-cli/pkg/flowkit/output"
 	"github.com/onflow/flow-cli/internal/command"
-	"github.com/onflow/flow-cli/pkg/flowkit/project"
 	"github.com/onflow/flow-cli/pkg/flowkit/services"
 	"github.com/onflow/flow-cli/pkg/flowkit/util"
 )
@@ -55,7 +52,7 @@ var InitCommand = &command.Command{
 		args []string,
 		globalFlags command.GlobalFlags,
 		services *services.Services,
-		proj *project.Project,
+		state *flowkit.State,
 	) (command.Result, error) {
 
 		sigAlgo := crypto.StringToSignatureAlgorithm(initFlag.ServiceKeySigAlgo)
@@ -73,7 +70,7 @@ var InitCommand = &command.Command{
 			return nil, fmt.Errorf("invalid private key: %w", err)
 		}
 
-		proj, err = services.Project.Init(
+		s, err := services.Project.Init(
 			initFlag.Reset,
 			initFlag.Global,
 			sigAlgo,
@@ -84,13 +81,13 @@ var InitCommand = &command.Command{
 			return nil, err
 		}
 
-		return &InitResult{proj}, nil
+		return &InitResult{State: s}, nil
 	},
 }
 
 // InitResult result structure
 type InitResult struct {
-	*project.Project
+	*flowkit.State
 }
 
 // JSON convert result to JSON
@@ -102,7 +99,7 @@ func (r *InitResult) JSON() interface{} {
 func (r *InitResult) String() string {
 	var b bytes.Buffer
 	writer := util.CreateTabWriter(&b)
-	account, _ := r.Project.EmulatorServiceAccount()
+	account, _ := r.State.EmulatorServiceAccount()
 
 	_, _ = fmt.Fprintf(writer, "Configuration initialized\n")
 	_, _ = fmt.Fprintf(writer, "Service account: %s\n\n", output.Bold("0x"+account.Address().String()))

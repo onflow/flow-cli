@@ -22,12 +22,13 @@ import (
 	"fmt"
 	"net/url"
 
+	"github.com/onflow/flow-cli/pkg/flowkit"
+
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
-	"github.com/onflow/flow-cli/pkg/flowkit/project"
 	"github.com/onflow/flow-cli/pkg/flowkit/services"
 )
 
@@ -51,9 +52,9 @@ var AddNetworkCommand = &command.Command{
 		args []string,
 		globalFlags command.GlobalFlags,
 		services *services.Services,
-		proj *project.Project,
+		state *flowkit.State,
 	) (command.Result, error) {
-		if proj == nil {
+		if state == nil {
 			return nil, config.ErrDoesNotExist
 		}
 
@@ -67,9 +68,9 @@ var AddNetworkCommand = &command.Command{
 		}
 
 		network := config.StringToNetwork(networkData["name"], networkData["host"])
-		proj.Config().Networks.AddOrUpdate(network.Name, network)
+		state.Networks().AddOrUpdate(network.Name, network)
 
-		err = proj.SaveDefault()
+		err = state.SaveDefault()
 		if err != nil {
 			return nil, err
 		}

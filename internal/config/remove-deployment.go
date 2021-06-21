@@ -19,13 +19,12 @@
 package config
 
 import (
-	"github.com/onflow/flow-cli/pkg/flowkit/config"
-
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
+	"github.com/onflow/flow-cli/pkg/flowkit"
+	"github.com/onflow/flow-cli/pkg/flowkit/config"
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
-	"github.com/onflow/flow-cli/pkg/flowkit/project"
 	"github.com/onflow/flow-cli/pkg/flowkit/services"
 )
 
@@ -46,9 +45,9 @@ var RemoveDeploymentCommand = &command.Command{
 		args []string,
 		globalFlags command.GlobalFlags,
 		services *services.Services,
-		proj *project.Project,
+		state *flowkit.State,
 	) (command.Result, error) {
-		if proj == nil {
+		if state == nil {
 			return nil, config.ErrDoesNotExist
 		}
 
@@ -58,15 +57,15 @@ var RemoveDeploymentCommand = &command.Command{
 			account = args[0]
 			network = args[1]
 		} else {
-			account, network = output.RemoveDeploymentPrompt(proj.Config().Deployments)
+			account, network = output.RemoveDeploymentPrompt(*state.Deployments())
 		}
 
-		err := proj.Config().Deployments.Remove(account, network)
+		err := state.Deployments().Remove(account, network)
 		if err != nil {
 			return nil, err
 		}
 
-		err = proj.SaveDefault()
+		err = state.SaveDefault()
 		if err != nil {
 			return nil, err
 		}
