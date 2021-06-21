@@ -52,9 +52,9 @@ func TestKeys(t *testing.T) {
 		t.Parallel()
 
 		_, s, _ := setup()
-		inputs := map[string]crypto.SignatureAlgorithm{
-			"im_short": crypto.ECDSA_P256,
-			"":         crypto.StringToSignatureAlgorithm("JUSTNO"),
+		inputs := []map[string]crypto.SignatureAlgorithm{
+			{"im_short": crypto.ECDSA_P256},
+			{"": crypto.StringToSignatureAlgorithm("JUSTNO")},
 		}
 
 		errs := []string{
@@ -62,12 +62,14 @@ func TestKeys(t *testing.T) {
 			"failed to generate private key: crypto: Go SDK does not support key generation for UNKNOWN algorithm",
 		}
 
-		x := 0
-		for k, v := range inputs {
-			_, err := s.Keys.Generate(k, v)
-			assert.Equal(t, err.Error(), errs[x])
-			x++
+		for x, in := range inputs {
+			for k, v := range in {
+				_, err := s.Keys.Generate(k, v)
+				assert.Equal(t, err.Error(), errs[x])
+				x++
+			}
 		}
+
 	})
 
 	t.Run("Decode RLP Key", func(t *testing.T) {
