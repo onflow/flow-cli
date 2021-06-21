@@ -124,7 +124,7 @@ func (a *KmsAccountKey) Signer(ctx context.Context) (crypto.Signer, error) {
 }
 
 func (a *KmsAccountKey) Validate() error {
-	return util.GcloudApplicationSignin(a.ToConfig().ResourceID)
+	return util.GcloudApplicationSignin(a.kmsKey.ResourceID())
 }
 
 func (a *KmsAccountKey) PrivateKey() (*crypto.PrivateKey, error) {
