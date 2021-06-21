@@ -26,8 +26,11 @@ import (
 )
 
 func TestKeys(t *testing.T) {
+	t.Parallel()
 
 	t.Run("Generate Keys", func(t *testing.T) {
+		t.Parallel()
+
 		_, s, _ := setup()
 		key, err := s.Keys.Generate("", crypto.ECDSA_P256)
 		assert.NoError(t, err)
@@ -36,6 +39,8 @@ func TestKeys(t *testing.T) {
 	})
 
 	t.Run("Generate Keys with seed", func(t *testing.T) {
+		t.Parallel()
+
 		_, s, _ := setup()
 		key, err := s.Keys.Generate("aaaaaaaaaaaaaaaaaaaaaaannndddddd_its_gone", crypto.ECDSA_P256)
 
@@ -44,6 +49,8 @@ func TestKeys(t *testing.T) {
 	})
 
 	t.Run("Generate Keys Invalid", func(t *testing.T) {
+		t.Parallel()
+
 		_, s, _ := setup()
 		inputs := map[string]crypto.SignatureAlgorithm{
 			"im_short": crypto.ECDSA_P256,
@@ -64,6 +71,8 @@ func TestKeys(t *testing.T) {
 	})
 
 	t.Run("Decode RLP Key", func(t *testing.T) {
+		t.Parallel()
+
 		_, s, _ := setup()
 		dkey, err := s.Keys.DecodeRLP("f847b84084d716c14b051ad6b001624f738f5d302636e6b07cc75e4530af7776a4368a2b586dbefc0564ee28384c2696f178cbed52e62811bcc9ecb59568c996d342db2402038203e8")
 
@@ -73,12 +82,16 @@ func TestKeys(t *testing.T) {
 	})
 
 	t.Run("Decode RLP Key Invalid", func(t *testing.T) {
+		t.Parallel()
+
 		_, s, _ := setup()
 		_, err := s.Keys.DecodeRLP("aaa")
 		assert.Equal(t, err.Error(), "failed to decode public key: encoding/hex: odd length hex string")
 	})
 
 	t.Run("Decode PEM Key", func(t *testing.T) {
+		t.Parallel()
+
 		_, s, _ := setup()
 		dkey, err := s.Keys.DecodePEM("-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE1HmzzcntvdsZXLErNRYa3oJrAypk\nvdQGLMh/s7p+ccnPZG/yOZC7RTLKRcRFx+kIzvJ4ssRhU2ADmmZgo2apXw==\n-----END PUBLIC KEY-----", crypto.ECDSA_P256)
 
@@ -88,6 +101,8 @@ func TestKeys(t *testing.T) {
 	})
 
 	t.Run("Decode PEM Key Invalid", func(t *testing.T) {
+		t.Parallel()
+
 		_, s, _ := setup()
 		_, err := s.Keys.DecodePEM("nope", crypto.ECDSA_P256)
 		assert.Equal(t, err.Error(), "crypto: failed to parse PEM string, not all bytes in PEM key were decoded: 6e6f7065")

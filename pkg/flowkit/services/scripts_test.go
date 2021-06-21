@@ -32,6 +32,7 @@ import (
 )
 
 func TestScripts(t *testing.T) {
+	t.Parallel()
 
 	t.Run("Execute Script", func(t *testing.T) {
 		_, s, gw := setup()
@@ -53,8 +54,10 @@ func TestScripts(t *testing.T) {
 }
 
 func TestScripts_Integration(t *testing.T) {
+	t.Parallel()
 
 	t.Run("Execute", func(t *testing.T) {
+		t.Parallel()
 		_, s := setupIntegration()
 
 		args := []cadence.Value{
@@ -67,6 +70,7 @@ func TestScripts_Integration(t *testing.T) {
 	})
 
 	t.Run("Execute With Imports", func(t *testing.T) {
+		t.Parallel()
 		state, s := setupIntegration()
 		srvAcc, _ := state.EmulatorServiceAccount()
 
@@ -101,6 +105,7 @@ func TestScripts_Integration(t *testing.T) {
 	})
 
 	t.Run("Execute Script Invalid", func(t *testing.T) {
+		t.Parallel()
 		_, s := setupIntegration()
 		in := [][]string{
 			{tests.ScriptImport.Filename, ""},

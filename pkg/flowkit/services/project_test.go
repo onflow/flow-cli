@@ -36,8 +36,11 @@ import (
 )
 
 func TestProject(t *testing.T) {
+	t.Parallel()
 
 	t.Run("Init Project", func(t *testing.T) {
+		t.Parallel()
+
 		st, _, _ := setup()
 		s, err := flowkit.Init(st.ReaderWriter(), crypto.ECDSA_P256, crypto.SHA3_256)
 		assert.NoError(t, err)
@@ -48,6 +51,8 @@ func TestProject(t *testing.T) {
 	})
 
 	t.Run("Deploy Project", func(t *testing.T) {
+		t.Parallel()
+
 		state, s, gw := setup()
 
 		c := config.Contract{
@@ -126,8 +131,11 @@ func simpleDeploy(state *flowkit.State, s *Services, update bool) ([]*contracts.
 }
 
 func TestProject_Integration(t *testing.T) {
+	t.Parallel()
 
 	t.Run("Deploy Project", func(t *testing.T) {
+		t.Parallel()
+
 		state, s := setupIntegration()
 		contracts, err := simpleDeploy(state, s, false)
 		assert.NoError(t, err)
@@ -137,6 +145,8 @@ func TestProject_Integration(t *testing.T) {
 	})
 
 	t.Run("Deploy Complex Project", func(t *testing.T) {
+		t.Parallel()
+
 		state, s := setupIntegration()
 		srvAcc, _ := state.EmulatorServiceAccount()
 
@@ -195,6 +205,8 @@ func TestProject_Integration(t *testing.T) {
 	})
 
 	t.Run("Deploy Project Invalid", func(t *testing.T) {
+		t.Parallel()
+
 		// setup
 		state, s := setupIntegration()
 		_, err := simpleDeploy(state, s, false)
@@ -205,6 +217,8 @@ func TestProject_Integration(t *testing.T) {
 	})
 
 	t.Run("Deploy Project Update", func(t *testing.T) {
+		t.Parallel()
+
 		// setup
 		state, s := setupIntegration()
 		_, err := simpleDeploy(state, s, false)

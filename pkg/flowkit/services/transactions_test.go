@@ -35,11 +35,14 @@ import (
 const gasLimit = 1000
 
 func TestTransactions(t *testing.T) {
+	t.Parallel()
+
 	state, _, _ := setup()
 	serviceAcc, _ := state.EmulatorServiceAccount()
 	serviceAddress := serviceAcc.Address()
 
 	t.Run("Get Transaction", func(t *testing.T) {
+		t.Parallel()
 		_, s, gw := setup()
 		txs := tests.NewTransaction()
 
@@ -51,6 +54,7 @@ func TestTransactions(t *testing.T) {
 	})
 
 	t.Run("Send Transaction args", func(t *testing.T) {
+		t.Parallel()
 		_, s, gw := setup()
 
 		var txID flow.Identifier
