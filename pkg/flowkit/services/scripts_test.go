@@ -21,33 +21,31 @@ package services
 import (
 	"testing"
 
-	"github.com/onflow/flow-cli/pkg/flowkit"
-
 	"github.com/onflow/cadence"
-	"github.com/onflow/flow-go-sdk/crypto"
-	"github.com/stretchr/testify/assert"
 
-	"github.com/onflow/flow-cli/pkg/flowkit/output"
+	"github.com/stretchr/testify/mock"
+
+	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/tests"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestScripts(t *testing.T) {
-	mock := &tests.MockGateway{}
-
-	proj, err := flowkit.Init(crypto.ECDSA_P256, crypto.SHA3_256)
-	assert.NoError(t, err)
-
-	scripts := NewScripts(mock, proj, output.NewStdoutLogger(output.InfoLog))
 
 	t.Run("Execute Script", func(t *testing.T) {
-		mock.ExecuteScriptMock = func(script []byte, arguments []cadence.Value) (cadence.Value, error) {
-			assert.Equal(t, len(string(script)), 69)
-			assert.Equal(t, arguments[0].String(), "\"Foo\"")
-			return arguments[0], nil
-		}
+		_, s, gw := setup()
 
-		_, err := scripts.Execute("../../../tests/script.cdc", []string{"String:Foo"}, "", "")
+		gw.ExecuteScript.Run(func(args mock.Arguments) {
+			assert.Equal(t, len(string(args.Get(0).([]byte))), 78)
+			assert.Equal(t, args.Get(1).([]cadence.Value)[0].String(), "\"Foo\"")
+			gw.ExecuteScript.Return(cadence.MustConvertValue(""), nil)
+		})
+
+		args, _ := flowkit.ParseArgumentsCommaSplit([]string{"String:Foo"})
+
+		_, err := s.Scripts.Execute(tests.ScriptArgString.Source, args, "", "")
 
 		assert.NoError(t, err)
 	})
+
 }

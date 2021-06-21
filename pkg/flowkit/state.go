@@ -136,10 +136,13 @@ func (p *State) Config() *config.Config {
 }
 
 // EmulatorServiceAccount returns the service account for the default emulator profile.
-func (p *State) EmulatorServiceAccount() (Account, error) {
+func (p *State) EmulatorServiceAccount() (*Account, error) {
 	emulator := p.conf.Emulators.Default()
-	acc := p.conf.Accounts.ByName(emulator.ServiceAccount)
-	return fromConfig(*acc)
+	if emulator == nil {
+		return nil, fmt.Errorf("no default emulator account")
+	}
+
+	return p.accounts.ByName(emulator.ServiceAccount), nil
 }
 
 // DeploymentContractsByNetwork returns all contracts for a network.
@@ -245,9 +248,10 @@ func Init(readerWriter ReaderWriter, sigAlgo crypto.SignatureAlgorithm, hashAlgo
 	loader.AddConfigParser(json.NewParser())
 
 	return &State{
-		confLoader: loader,
-		conf:       config.DefaultConfig(),
-		accounts:   Accounts{*emulatorServiceAccount},
+		confLoader:   loader,
+		readerWriter: readerWriter,
+		conf:         config.DefaultConfig(),
+		accounts:     Accounts{*emulatorServiceAccount},
 	}, nil
 }
 

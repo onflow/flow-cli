@@ -55,12 +55,12 @@ func Test_ConfigDeploymentsSimple(t *testing.T) {
 	const account2Name = "account-2"
 	const account3Name = "account-3"
 
-	assert.Equal(t, 1, len(deployments.GetByNetwork("testnet")))
-	assert.Equal(t, 2, len(deployments.GetByNetwork("emulator")))
+	assert.Equal(t, 1, len(deployments.ByNetwork("testnet")))
+	assert.Equal(t, 2, len(deployments.ByNetwork("emulator")))
 
-	account1Deployment := deployments.GetByAccountAndNetwork(account1Name, "testnet")
-	account2Deployment := deployments.GetByAccountAndNetwork(account2Name, "emulator")
-	account3Deployment := deployments.GetByAccountAndNetwork(account3Name, "emulator")
+	account1Deployment := deployments.ByAccountAndNetwork(account1Name, "testnet")
+	account2Deployment := deployments.ByAccountAndNetwork(account2Name, "emulator")
+	account3Deployment := deployments.ByAccountAndNetwork(account3Name, "emulator")
 
 	require.Len(t, account1Deployment, 1)
 	require.Len(t, account2Deployment, 1)
@@ -139,7 +139,7 @@ func Test_DeploymentAdvanced(t *testing.T) {
 	deployments, err := jsonDeployments.transformToConfig()
 	assert.NoError(t, err)
 
-	alice := deployments.GetByAccountAndNetwork("alice", "emulator")
+	alice := deployments.ByAccountAndNetwork("alice", "emulator")
 	assert.Len(t, alice, 1)
 	assert.Len(t, alice[0].Contracts, 2)
 	assert.Equal(t, alice[0].Contracts[0].Name, "Kibble")

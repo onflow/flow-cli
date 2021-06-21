@@ -21,34 +21,19 @@ package services
 import (
 	"testing"
 
-	"github.com/onflow/flow-cli/pkg/flowkit"
-
 	"github.com/onflow/flow-go-sdk"
-	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/stretchr/testify/assert"
-
-	"github.com/onflow/flow-cli/pkg/flowkit/output"
-	"github.com/onflow/flow-cli/tests"
 )
 
 func TestCollections(t *testing.T) {
-	mock := &tests.MockGateway{}
-
-	state, err := flowkit.Init(crypto.ECDSA_P256, crypto.SHA3_256)
-	assert.NoError(t, err)
-
-	collections := NewCollections(mock, state, output.NewStdoutLogger(output.InfoLog))
 
 	t.Run("Get Collection", func(t *testing.T) {
-		called := false
-		mock.GetCollectionMock = func(id flow.Identifier) (*flow.Collection, error) {
-			called = true
-			return tests.NewCollection(), nil
-		}
+		_, s, gw := setup()
+		ID := flow.HexToID("a310685082f0b09f2a148b2e8905f08ea458ed873596b53b200699e8e1f6536f")
 
-		_, err := collections.Get("a310685082f0b09f2a148b2e8905f08ea458ed873596b53b200699e8e1f6536f")
+		_, err := s.Collections.Get(ID)
 
 		assert.NoError(t, err)
-		assert.True(t, called)
+		gw.Mock.AssertCalled(t, "GetCollection", ID)
 	})
 }

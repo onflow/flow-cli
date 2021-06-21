@@ -21,182 +21,69 @@ package services
 import (
 	"testing"
 
+	"github.com/stretchr/testify/mock"
+
 	"github.com/onflow/flow-cli/pkg/flowkit"
-
 	"github.com/onflow/flow-go-sdk"
-	"github.com/onflow/flow-go-sdk/crypto"
-	"github.com/stretchr/testify/assert"
 
-	"github.com/onflow/flow-cli/pkg/flowkit/output"
 	"github.com/onflow/flow-cli/tests"
+	"github.com/stretchr/testify/assert"
 )
 
 const gasLimit = 1000
 
 func TestTransactions(t *testing.T) {
-	mock := &tests.MockGateway{}
-
-	mock.SendSignedTransactionMock = func(tx *flowkit.Transaction) (*flow.Transaction, error) {
-		return tx.FlowTransaction(), nil
-	}
-
-	mock.GetLatestBlockMock = func() (*flow.Block, error) {
-		return tests.NewBlock(), nil
-	}
-
-	mock.GetAccountMock = func(address flow.Address) (*flow.Account, error) {
-		return tests.NewAccountWithAddress(address.String()), nil
-	}
-
-	proj, err := flowkit.Init(crypto.ECDSA_P256, crypto.SHA3_256)
-	assert.NoError(t, err)
-
-	transactions := NewTransactions(mock, proj, output.NewStdoutLogger(output.NoneLog))
+	state, _, _ := setup()
+	serviceAcc, _ := state.EmulatorServiceAccount()
+	serviceAddress := serviceAcc.Address()
 
 	t.Run("Get Transaction", func(t *testing.T) {
-		called := 0
+		_, s, gw := setup()
 		txs := tests.NewTransaction()
 
-		mock.GetTransactionResultMock = func(tx *flow.Transaction) (*flow.TransactionResult, error) {
-			called++
-			assert.Equal(t, tx.ID().String(), txs.ID().String())
-			return tests.NewTransactionResult(nil), nil
-		}
-
-		mock.GetTransactionMock = func(id flow.Identifier) (*flow.Transaction, error) {
-			called++
-			return txs, nil
-		}
-
-		_, _, err := transactions.GetStatus(txs.ID().String(), true)
+		_, _, err := s.Transactions.GetStatus(txs.ID(), true)
 
 		assert.NoError(t, err)
-		assert.Equal(t, called, 2)
+		gw.Mock.AssertNumberOfCalls(t, tests.GetTransactionResultFunc, 1)
+		gw.Mock.AssertCalled(t, tests.GetTransactionFunc, txs.ID())
 	})
 
 	t.Run("Send Transaction args", func(t *testing.T) {
-		called := 0
+		_, s, gw := setup()
 
-		mock.GetTransactionResultMock = func(tx *flow.Transaction) (*flow.TransactionResult, error) {
-			called++
-			return tests.NewTransactionResult(nil), nil
-		}
-
-		mock.SendSignedTransactionMock = func(tx *flowkit.Transaction) (*flow.Transaction, error) {
-			called++
+		var txID flow.Identifier
+		gw.SendSignedTransaction.Run(func(args mock.Arguments) {
+			tx := args.Get(0).(*flowkit.Transaction)
 			arg, err := tx.FlowTransaction().Argument(0)
-
 			assert.NoError(t, err)
 			assert.Equal(t, arg.String(), "\"Bar\"")
-			assert.Equal(t, tx.Signer().Address().String(), serviceAddress)
-			assert.Equal(t, len(string(tx.FlowTransaction().Script)), 209)
-			return tests.NewTransaction(), nil
-		}
+			assert.Equal(t, tx.Signer().Address(), serviceAddress)
+			assert.Equal(t, len(string(tx.FlowTransaction().Script)), 227)
 
-		_, _, err := transactions.Send(
-			"../../../tests/transaction.cdc",
-			serviceName,
-			gasLimit,
-			[]string{"String:Bar"},
+			t := tests.NewTransaction()
+			txID = t.ID()
+			gw.SendSignedTransaction.Return(t, nil)
+		})
+
+		gw.GetTransactionResult.Run(func(args mock.Arguments) {
+			assert.Equal(t, args.Get(0).(*flow.Transaction).ID(), txID)
+			gw.GetTransactionResult.Return(tests.NewTransactionResult(nil), nil)
+		})
+
+		args, _ := flowkit.ParseArgumentsCommaSplit([]string{"String:Bar"})
+
+		_, _, err := s.Transactions.Send(
+			serviceAcc,
+			tests.TransactionArgString.Source,
 			"",
+			gasLimit,
+			args,
 			"",
 		)
 
 		assert.NoError(t, err)
-		assert.Equal(t, called, 2)
+		gw.Mock.AssertNumberOfCalls(t, tests.SendSignedTransactionFunc, 1)
+		gw.Mock.AssertNumberOfCalls(t, tests.GetTransactionResultFunc, 1)
 	})
 
-	t.Run("Send For Address With Code", func(t *testing.T) {
-		called := 0
-
-		mock.GetTransactionResultMock = func(tx *flow.Transaction) (*flow.TransactionResult, error) {
-			called++
-			return tests.NewTransactionResult(nil), nil
-		}
-
-		mock.SendSignedTransactionMock = func(tx *flowkit.Transaction) (*flow.Transaction, error) {
-			called++
-			assert.Equal(t, tx.Signer().Address().String(), serviceAddress)
-			assert.Equal(t, len(string(tx.FlowTransaction().Script)), 77)
-			return tests.NewTransaction(), nil
-		}
-
-		_, _, err := transactions.SendForAddressWithCode(
-			[]byte(`transaction() {
-			  prepare(authorizer: AuthAccount) {}
-			  execute {}
-			}`),
-			serviceAddress,
-			"36336f805b4eccf6857c9f411f3b1d682dabda23ddf85299f771dac1361a2ec6",
-			nil,
-			"",
-		)
-
-		assert.NoError(t, err)
-		assert.Equal(t, called, 2)
-	})
-
-	t.Run("Send Transaction JSON args", func(t *testing.T) {
-		called := 0
-
-		mock.GetTransactionResultMock = func(tx *flow.Transaction) (*flow.TransactionResult, error) {
-			called++
-			return tests.NewTransactionResult(nil), nil
-		}
-
-		mock.SendSignedTransactionMock = func(tx *flowkit.Transaction) (*flow.Transaction, error) {
-			called++
-			assert.Equal(t, tx.Signer().Address().String(), serviceAddress)
-			assert.Equal(t, len(string(tx.FlowTransaction().Script)), 209)
-			return tests.NewTransaction(), nil
-		}
-
-		_, _, err := transactions.Send(
-			"../../../tests/transaction.cdc",
-			serviceName,
-			gasLimit,
-			nil,
-			"[{\"type\": \"String\", \"value\": \"Bar\"}]",
-			"",
-		)
-
-		assert.NoError(t, err)
-		assert.Equal(t, called, 2)
-	})
-
-	t.Run("Send Transaction Fails wrong args", func(t *testing.T) {
-		_, _, err := transactions.Send(
-			"../../../tests/transaction.cdc",
-			serviceName,
-			gasLimit,
-			[]string{"Bar"},
-			"",
-			"",
-		)
-		assert.Equal(t, err.Error(), "argument not passed in correct format, correct format is: Type:Value, got Bar")
-	})
-
-	t.Run("Send Transaction Fails wrong filename", func(t *testing.T) {
-		_, _, err := transactions.Send(
-			"nooo.cdc",
-			serviceName,
-			gasLimit,
-			[]string{"Bar"},
-			"",
-			"",
-		)
-		assert.Equal(t, err.Error(), "Failed to load file: nooo.cdc")
-	})
-
-	t.Run("Send Transaction Fails wrong args", func(t *testing.T) {
-		_, _, err := transactions.Send(
-			"../../../tests/transaction.cdc",
-			serviceName,
-			gasLimit,
-			nil,
-			"[{\"Bar\":\"No\"}]",
-			"",
-		)
-		assert.Equal(t, err.Error(), "failed to decode value: invalid JSON Cadence structure")
-	})
 }

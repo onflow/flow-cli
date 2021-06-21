@@ -26,7 +26,7 @@ import (
 )
 
 // ErrDoesNotExist is error to be returned when config file does not exists.
-var ErrDoesNotExist = errors.New("missing configuration, initialize it: flow init")
+var ErrDoesNotExist = errors.New("missing configuration")
 
 // Exists checks if file exists on the specified path.
 func Exists(path string) bool {

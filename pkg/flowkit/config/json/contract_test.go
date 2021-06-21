@@ -37,8 +37,8 @@ func Test_ConfigContractsSimple(t *testing.T) {
 	contracts, err := jsonContracts.transformToConfig()
 	assert.NoError(t, err)
 
-	assert.Equal(t, "./cadence/kittyItems/contracts/KittyItems.cdc", contracts.GetByName("KittyItems").Source)
-	assert.Equal(t, "./cadence/kittyItems/contracts/KittyItemsMarket.cdc", contracts.GetByName("KittyItemsMarket").Source)
+	assert.Equal(t, "./cadence/kittyItems/contracts/KittyItems.cdc", contracts.ByName("KittyItems").Source)
+	assert.Equal(t, "./cadence/kittyItems/contracts/KittyItemsMarket.cdc", contracts.ByName("KittyItemsMarket").Source)
 }
 
 func Test_ConfigContractsComplex(t *testing.T) {
@@ -61,15 +61,15 @@ func Test_ConfigContractsComplex(t *testing.T) {
 
 	assert.Equal(t, len(contracts), 2)
 
-	assert.Equal(t, contracts.GetByName("KittyItems").Source, "./cadence/kittyItems/contracts/KittyItems.cdc")
-	assert.Equal(t, contracts.GetByNameAndNetwork("KittyItemsMarket", "emulator").Source, "./cadence/kittyItemsMarket/contracts/KittyItemsMarket.cdc")
-	assert.Equal(t, contracts.GetByNameAndNetwork("KittyItemsMarket", "testnet").Source, "./cadence/kittyItemsMarket/contracts/KittyItemsMarket.cdc")
+	assert.Equal(t, contracts.ByName("KittyItems").Source, "./cadence/kittyItems/contracts/KittyItems.cdc")
+	assert.Equal(t, contracts.ByNameAndNetwork("KittyItemsMarket", "emulator").Source, "./cadence/kittyItemsMarket/contracts/KittyItemsMarket.cdc")
+	assert.Equal(t, contracts.ByNameAndNetwork("KittyItemsMarket", "testnet").Source, "./cadence/kittyItemsMarket/contracts/KittyItemsMarket.cdc")
 
-	assert.Equal(t, contracts.GetByNameAndNetwork("KittyItems", "emulator").Alias, "")
-	assert.Equal(t, contracts.GetByNameAndNetwork("KittyItems", "testnet").Alias, "")
+	assert.Equal(t, contracts.ByNameAndNetwork("KittyItems", "emulator").Alias, "")
+	assert.Equal(t, contracts.ByNameAndNetwork("KittyItems", "testnet").Alias, "")
 
-	assert.Equal(t, contracts.GetByNameAndNetwork("KittyItemsMarket", "testnet").Alias, "f8d6e0586b0a20c7")
-	assert.Equal(t, contracts.GetByNameAndNetwork("KittyItemsMarket", "emulator").Alias, "")
+	assert.Equal(t, contracts.ByNameAndNetwork("KittyItemsMarket", "testnet").Alias, "f8d6e0586b0a20c7")
+	assert.Equal(t, contracts.ByNameAndNetwork("KittyItemsMarket", "emulator").Alias, "")
 }
 
 func Test_ConfigContractsAliases(t *testing.T) {
@@ -97,23 +97,23 @@ func Test_ConfigContractsAliases(t *testing.T) {
 	contracts, err := jsonContracts.transformToConfig()
 	assert.NoError(t, err)
 
-	assert.Equal(t, contracts.GetByName("FungibleToken").Network, "emulator")
-	assert.Equal(t, contracts.GetByName("FungibleToken").Alias, "e5a8b7f23e8b548f")
-	assert.Equal(t, contracts.GetByName("FungibleToken").Source, "../hungry-kitties/cadence/contracts/FungibleToken.cdc")
-	assert.Equal(t, contracts.GetByNameAndNetwork("FungibleToken", "emulator").Alias, "e5a8b7f23e8b548f")
-	assert.Equal(t, contracts.GetByNameAndNetwork("FungibleToken", "testnet").Alias, "")
-	assert.Equal(t, contracts.GetByNameAndNetwork("FungibleToken", "testnet").Network, "testnet")
-	assert.Equal(t, contracts.GetByNameAndNetwork("FungibleToken", "testnet").Source, "../hungry-kitties/cadence/contracts/FungibleToken.cdc")
-	assert.Equal(t, contracts.GetByNameAndNetwork("FungibleToken", "emulator").Source, "../hungry-kitties/cadence/contracts/FungibleToken.cdc")
+	assert.Equal(t, contracts.ByName("FungibleToken").Network, "emulator")
+	assert.Equal(t, contracts.ByName("FungibleToken").Alias, "e5a8b7f23e8b548f")
+	assert.Equal(t, contracts.ByName("FungibleToken").Source, "../hungry-kitties/cadence/contracts/FungibleToken.cdc")
+	assert.Equal(t, contracts.ByNameAndNetwork("FungibleToken", "emulator").Alias, "e5a8b7f23e8b548f")
+	assert.Equal(t, contracts.ByNameAndNetwork("FungibleToken", "testnet").Alias, "")
+	assert.Equal(t, contracts.ByNameAndNetwork("FungibleToken", "testnet").Network, "testnet")
+	assert.Equal(t, contracts.ByNameAndNetwork("FungibleToken", "testnet").Source, "../hungry-kitties/cadence/contracts/FungibleToken.cdc")
+	assert.Equal(t, contracts.ByNameAndNetwork("FungibleToken", "emulator").Source, "../hungry-kitties/cadence/contracts/FungibleToken.cdc")
 
-	assert.Equal(t, contracts.GetByNameAndNetwork("Kibble", "testnet").Network, "testnet")
-	assert.Equal(t, contracts.GetByNameAndNetwork("Kibble", "testnet").Alias, "ead892083b3e2c6c")
-	assert.Equal(t, contracts.GetByNameAndNetwork("Kibble", "emulator").Alias, "f8d6e0586b0a20c7")
-	assert.Equal(t, contracts.GetByNameAndNetwork("Kibble", "testnet").Source, "../hungry-kitties/cadence/contracts/Kibble.cdc")
+	assert.Equal(t, contracts.ByNameAndNetwork("Kibble", "testnet").Network, "testnet")
+	assert.Equal(t, contracts.ByNameAndNetwork("Kibble", "testnet").Alias, "ead892083b3e2c6c")
+	assert.Equal(t, contracts.ByNameAndNetwork("Kibble", "emulator").Alias, "f8d6e0586b0a20c7")
+	assert.Equal(t, contracts.ByNameAndNetwork("Kibble", "testnet").Source, "../hungry-kitties/cadence/contracts/Kibble.cdc")
 
-	assert.Equal(t, contracts.GetByNameAndNetwork("NonFungibleToken", "testnet").Network, "testnet")
-	assert.Equal(t, contracts.GetByNameAndNetwork("NonFungibleToken", "testnet").Alias, "")
-	assert.Equal(t, contracts.GetByNameAndNetwork("NonFungibleToken", "testnet").Source, "../hungry-kitties/cadence/contracts/NonFungibleToken.cdc")
+	assert.Equal(t, contracts.ByNameAndNetwork("NonFungibleToken", "testnet").Network, "testnet")
+	assert.Equal(t, contracts.ByNameAndNetwork("NonFungibleToken", "testnet").Alias, "")
+	assert.Equal(t, contracts.ByNameAndNetwork("NonFungibleToken", "testnet").Source, "../hungry-kitties/cadence/contracts/NonFungibleToken.cdc")
 }
 
 func Test_TransformContractToJSON(t *testing.T) {

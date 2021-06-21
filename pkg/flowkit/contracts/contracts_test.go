@@ -36,7 +36,7 @@ import (
 type testContract struct {
 	name                 string
 	source               string
-	code                 string
+	code                 []byte
 	target               flow.Address
 	expectedDependencies []testContract
 }
@@ -46,7 +46,7 @@ var addresses = test.AddressGenerator()
 var testContractA = testContract{
 	name:                 "ContractA",
 	source:               "ContractA.cdc",
-	code:                 `pub contract ContractA {}`,
+	code:                 []byte(`pub contract ContractA {}`),
 	target:               addresses.New(),
 	expectedDependencies: nil,
 }
@@ -54,7 +54,7 @@ var testContractA = testContract{
 var testContractB = testContract{
 	name:                 "ContractB",
 	source:               "ContractB.cdc",
-	code:                 `pub contract ContractB {}`,
+	code:                 []byte(`pub contract ContractB {}`),
 	target:               addresses.New(),
 	expectedDependencies: nil,
 }
@@ -62,11 +62,11 @@ var testContractB = testContract{
 var testContractC = testContract{
 	name:   "ContractC",
 	source: "ContractC.cdc",
-	code: `
+	code: []byte(`
         import ContractA from "ContractA.cdc"
     
         pub contract ContractC {}
-    `,
+    `),
 	target:               addresses.New(),
 	expectedDependencies: []testContract{testContractA},
 }
@@ -74,11 +74,11 @@ var testContractC = testContract{
 var testContractD = testContract{
 	name:   "ContractD",
 	source: "ContractD.cdc",
-	code: `
+	code: []byte(`
         import ContractC from "ContractC.cdc"
 
         pub contract ContractD {}
-    `,
+    `),
 	target:               addresses.New(),
 	expectedDependencies: []testContract{testContractC},
 }
@@ -86,21 +86,21 @@ var testContractD = testContract{
 var testContractE = testContract{
 	name:   "ContractE",
 	source: "ContractE.cdc",
-	code: `
+	code: []byte(`
         import ContractF from "ContractF.cdc"
 
         pub contract ContractE {}
-    `,
+    `),
 }
 
 var testContractF = testContract{
 	name:   "ContractF",
 	source: "ContractF.cdc",
-	code: `
+	code: []byte(`
         import ContractE from "ContractE.cdc"
 
         pub contract ContractF {}
-    `,
+    `),
 	target: addresses.New(),
 }
 
@@ -113,12 +113,12 @@ func init() {
 var testContractG = testContract{
 	name:   "ContractG",
 	source: "ContractG.cdc",
-	code: `
+	code: []byte(`
         import ContractA from "ContractA.cdc"
         import ContractB from "ContractB.cdc"
 
         pub contract ContractG {}
-    `,
+    `),
 	target:               addresses.New(),
 	expectedDependencies: []testContract{testContractA, testContractB},
 }
@@ -126,11 +126,11 @@ var testContractG = testContract{
 var testContractH = testContract{
 	name:   "ContractH",
 	source: "ContractH.cdc",
-	code: `
+	code: []byte(`
         import ContractFoo from "Foo.cdc"
 
         pub contract ContractH {}
-    `,
+    `),
 	target:               addresses.New(),
 	expectedDependencies: nil,
 }
@@ -139,7 +139,7 @@ var noAliases = map[string]string{}
 
 type testLoader struct{}
 
-func (t testLoader) Load(source string) (string, error) {
+func (t testLoader) Load(source string) ([]byte, error) {
 	switch source {
 	case testContractA.source:
 		return testContractA.code, nil
@@ -159,7 +159,7 @@ func (t testLoader) Load(source string) (string, error) {
 		return testContractH.code, nil
 	}
 
-	return "", fmt.Errorf("failed to load %s", source)
+	return nil, fmt.Errorf("failed to load %s", source)
 }
 
 func (t testLoader) Normalize(base, relative string) string {
