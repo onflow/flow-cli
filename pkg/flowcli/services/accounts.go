@@ -388,7 +388,7 @@ func (a *Accounts) RemoveContract(
 
 	a.logger.Info(fmt.Sprintf("Transaction ID: %s", tx.FlowTransaction().ID().String()))
 	a.logger.StartProgress(
-		fmt.Sprintf("Removing Contract %s from %s...", contractName, account.Address()),
+		fmt.Sprintf("Removing contract %s from %s...", contractName, account.Address()),
 	)
 	defer a.logger.StopProgress()
 
