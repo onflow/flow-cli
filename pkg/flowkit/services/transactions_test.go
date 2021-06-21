@@ -21,6 +21,8 @@ package services
 import (
 	"testing"
 
+	"github.com/onflow/cadence"
+
 	"github.com/stretchr/testify/mock"
 
 	"github.com/onflow/flow-cli/pkg/flowkit"
@@ -70,7 +72,9 @@ func TestTransactions(t *testing.T) {
 			gw.GetTransactionResult.Return(tests.NewTransactionResult(nil), nil)
 		})
 
-		args, _ := flowkit.ParseArgumentsCommaSplit([]string{"String:Bar"})
+		args := []cadence.Value{
+			cadence.NewString("Bar"),
+		}
 
 		_, _, err := s.Transactions.Send(
 			serviceAcc,
