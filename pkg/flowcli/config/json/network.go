@@ -27,8 +27,8 @@ import (
 type jsonNetworks map[string]jsonNetwork
 
 // transformToConfig transforms json structures to config structure
-func (j jsonNetworks) transformToConfig() config.Networks {
-	networks := make(config.Networks, 0)
+func (j jsonNetworks) transformToConfig() (config.Networks, error) {
+	var networks config.Networks
 
 	for networkName, n := range j {
 		network := config.Network{
@@ -39,7 +39,7 @@ func (j jsonNetworks) transformToConfig() config.Networks {
 		networks = append(networks, network)
 	}
 
-	return networks
+	return networks, nil
 }
 
 // transformToJSON transforms config structure to json structures for saving

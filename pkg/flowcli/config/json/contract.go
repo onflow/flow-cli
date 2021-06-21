@@ -20,15 +20,15 @@ package json
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/onflow/flow-cli/pkg/flowcli/config"
 )
 
-// jsonContracts maping
 type jsonContracts map[string]jsonContract
 
 // transformToConfig transforms json structures to config structure
-func (j jsonContracts) transformToConfig() config.Contracts {
+func (j jsonContracts) transformToConfig() (config.Contracts, error) {
 	contracts := make(config.Contracts, 0)
 
 	for contractName, c := range j {
@@ -41,6 +41,11 @@ func (j jsonContracts) transformToConfig() config.Contracts {
 			contracts = append(contracts, contract)
 		} else {
 			for network, alias := range c.Advanced.Aliases {
+				_, err := config.StringToAddress(alias)
+				if err != nil {
+					return nil, fmt.Errorf("invalid alias address for a contract")
+				}
+
 				contract := config.Contract{
 					Name:    contractName,
 					Source:  c.Advanced.Source,
@@ -53,7 +58,7 @@ func (j jsonContracts) transformToConfig() config.Contracts {
 		}
 	}
 
-	return contracts
+	return contracts, nil
 }
 
 // transformToJSON transforms config structure to json structures for saving

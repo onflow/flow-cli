@@ -48,7 +48,8 @@ func Test_ConfigDeploymentsSimple(t *testing.T) {
 	err := json.Unmarshal(b, &jsonDeployments)
 	assert.NoError(t, err)
 
-	deployments := jsonDeployments.transformToConfig()
+	deployments, err := jsonDeployments.transformToConfig()
+	assert.NoError(t, err)
 
 	const account1Name = "account-1"
 	const account2Name = "account-2"
@@ -106,7 +107,8 @@ func Test_TransformDeployToJSON(t *testing.T) {
 	err := json.Unmarshal(b, &jsonDeployments)
 	assert.NoError(t, err)
 
-	deployments := jsonDeployments.transformToConfig()
+	deployments, err := jsonDeployments.transformToConfig()
+	assert.NoError(t, err)
 
 	j := transformDeploymentsToJSON(deployments)
 	x, _ := json.Marshal(j)
@@ -134,7 +136,8 @@ func Test_DeploymentAdvanced(t *testing.T) {
 	err := json.Unmarshal(b, &jsonDeployments)
 	assert.NoError(t, err)
 
-	deployments := jsonDeployments.transformToConfig()
+	deployments, err := jsonDeployments.transformToConfig()
+	assert.NoError(t, err)
 
 	alice := deployments.GetByAccountAndNetwork("alice", "emulator")
 	assert.Len(t, alice, 1)

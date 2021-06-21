@@ -32,14 +32,14 @@ import (
 type jsonDeployments map[string]jsonDeployment
 
 // transformToConfig transforms json structures to config structure
-func (j jsonDeployments) transformToConfig() config.Deployments {
+func (j jsonDeployments) transformToConfig() (config.Deployments, error) {
 	deployments := make(config.Deployments, 0)
 
 	for networkName, deploys := range j {
 
-		var deploy config.Deploy
+		var deploy config.Deployment
 		for accountName, contracts := range deploys {
-			deploy = config.Deploy{
+			deploy = config.Deployment{
 				Network: networkName,
 				Account: accountName,
 			}
@@ -57,8 +57,16 @@ func (j jsonDeployments) transformToConfig() config.Deployments {
 				} else {
 					args := make([]cadence.Value, 0)
 					for _, arg := range contract.advanced.Args {
-						b, _ := json.Marshal(arg)
-						cadenceArg, _ := jsoncdc.Decode(b)
+						b, err := json.Marshal(arg)
+						if err != nil {
+							return nil, err
+						}
+
+						cadenceArg, err := jsoncdc.Decode(b)
+						if err != nil {
+							return nil, err
+						}
+
 						args = append(args, cadenceArg)
 					}
 
@@ -77,7 +85,7 @@ func (j jsonDeployments) transformToConfig() config.Deployments {
 		}
 	}
 
-	return deployments
+	return deployments, nil
 }
 
 // transformToJSON transforms config structure to json structures for saving

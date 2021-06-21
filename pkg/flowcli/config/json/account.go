@@ -20,6 +20,7 @@ package json
 
 import (
 	"encoding/json"
+	"fmt"
 	"strings"
 
 	"github.com/onflow/flow-go-sdk"
@@ -31,90 +32,126 @@ import (
 type jsonAccounts map[string]account
 
 // transformAddress returns address based on address and chain id
-func transformAddress(address string) flow.Address {
+func transformAddress(address string) (flow.Address, error) {
 	// only allow service for emulator
 	if address == "service" {
-		return flow.ServiceAddress(flow.Emulator)
+		return flow.ServiceAddress(flow.Emulator), nil
 	}
 
-	return flow.HexToAddress(address)
+	if flow.HexToAddress(address) == flow.EmptyAddress {
+		return flow.EmptyAddress, fmt.Errorf("could not parse address: %s", address)
+	}
+
+	return flow.HexToAddress(address), nil
 }
 
 // transformSimpleToConfig transforms simple internal account to config account
-func transformSimpleToConfig(accountName string, a simpleAccount) config.Account {
-	pkey, _ := crypto.DecodePrivateKeyHex(
+func transformSimpleToConfig(accountName string, a simpleAccount) (*config.Account, error) {
+	pkey, err := crypto.DecodePrivateKeyHex(
 		crypto.ECDSA_P256,
 		strings.ReplaceAll(a.Key, "0x", ""),
 	)
+	if err != nil {
+		return nil, fmt.Errorf("invalid private key for account: %s", accountName)
+	}
 
-	return config.Account{
+	address, err := transformAddress(a.Address)
+	if err != nil {
+		return nil, err
+	}
+
+	return &config.Account{
 		Name:    accountName,
-		Address: transformAddress(a.Address),
+		Address: address,
 		Key: config.AccountKey{
 			Type:       config.KeyTypeHex,
 			Index:      0,
 			SigAlgo:    crypto.ECDSA_P256,
 			HashAlgo:   crypto.SHA3_256,
-			ResourceID: "",
 			PrivateKey: pkey,
 		},
-	}
+	}, nil
 }
 
 // transformAdvancedToConfig transforms advanced internal account to config account
-func transformAdvancedToConfig(accountName string, a advancedAccount) config.Account {
-	sigAlgo := crypto.StringToSignatureAlgorithm(a.Key.SigAlgo)
+func transformAdvancedToConfig(accountName string, a advancedAccount) (*config.Account, error) {
 	var pKey crypto.PrivateKey
-	resourceID := a.Key.ResourceID
+	var err error
+	sigAlgo := crypto.StringToSignatureAlgorithm(a.Key.SigAlgo)
+	hashAlgo := crypto.StringToHashAlgorithm(a.Key.HashAlgo)
 
-	// todo check both pkey and resource id if present and return error if both
-
-	if a.Key.PrivateKey != "" {
-		pKey, _ = crypto.DecodePrivateKeyHex(
-			sigAlgo,
-			strings.ReplaceAll(a.Key.PrivateKey, "0x", ""),
-		)
+	if a.Key.Type != config.KeyTypeHex && a.Key.Type != config.KeyTypeGoogleKMS {
+		return nil, fmt.Errorf("invalid key type for account %s", accountName)
 	}
 
-	// pre v0.22 support
-	if a.Key.Context["privateKey"] != "" {
-		pKey, _ = crypto.DecodePrivateKeyHex(
-			sigAlgo,
-			strings.ReplaceAll(a.Key.Context["privateKey"], "0x", ""),
-		)
+	if a.Key.ResourceID != "" && a.Key.PrivateKey != "" {
+		return nil, fmt.Errorf("only provide value for private key or resource ID on account %s", accountName)
 	}
 
-	return config.Account{
+	if a.Key.Type == config.KeyTypeHex {
+		if a.Key.PrivateKey != "" {
+			pKey, err = crypto.DecodePrivateKeyHex(
+				sigAlgo,
+				strings.ReplaceAll(a.Key.PrivateKey, "0x", ""),
+			)
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			return nil, fmt.Errorf("missing private key value for hex key type on account %s", accountName)
+		}
+	}
+
+	if sigAlgo == crypto.UnknownSignatureAlgorithm {
+		return nil, fmt.Errorf("invalid signature algorithm for account %s", accountName)
+	}
+
+	if hashAlgo == crypto.UnknownHashAlgorithm {
+		return nil, fmt.Errorf("invalid hash algorithm for account %s", accountName)
+	}
+
+	address, err := transformAddress(a.Address)
+	if err != nil {
+		return nil, err
+	}
+
+	return &config.Account{
 		Name:    accountName,
-		Address: transformAddress(a.Address),
+		Address: address,
 		Key: config.AccountKey{
 			Type:       a.Key.Type,
 			Index:      a.Key.Index,
 			SigAlgo:    sigAlgo,
-			HashAlgo:   crypto.StringToHashAlgorithm(a.Key.HashAlgo),
-			ResourceID: resourceID,
+			HashAlgo:   hashAlgo,
+			ResourceID: a.Key.ResourceID,
 			PrivateKey: pKey,
 		},
-	}
+	}, nil
 }
 
-// TODO: Add error in return and do validation
 // transformToConfig transforms json structures to config structure
-func (j jsonAccounts) transformToConfig() config.Accounts {
+func (j jsonAccounts) transformToConfig() (config.Accounts, error) {
 	accounts := make(config.Accounts, 0)
 
 	for accountName, a := range j {
-		var account config.Account
+		var account *config.Account
+		var err error
 		if a.Simple.Address != "" {
-			account = transformSimpleToConfig(accountName, a.Simple)
+			account, err = transformSimpleToConfig(accountName, a.Simple)
+			if err != nil {
+				return nil, err
+			}
 		} else { // advanced format
-			account = transformAdvancedToConfig(accountName, a.Advanced)
+			account, err = transformAdvancedToConfig(accountName, a.Advanced)
+			if err != nil {
+				return nil, err
+			}
 		}
 
-		accounts = append(accounts, account)
+		accounts = append(accounts, *account)
 	}
 
-	return accounts
+	return accounts, nil
 }
 
 // transformToJSON transforms config structure to json structures for saving
@@ -244,7 +281,6 @@ func (j *account) UnmarshalJSON(b []byte) error {
 		return err
 	}
 
-	// TODO: refactor switch in array of parsers
 	switch format {
 	case simpleFormat:
 		var simple simpleAccount
@@ -262,10 +298,12 @@ func (j *account) UnmarshalJSON(b []byte) error {
 	case advancedFormatPre022:
 		var advancedOld advanceAccountPre022
 		err = json.Unmarshal(b, &advancedOld)
+
 		j.Advanced = advancedAccount{
 			Address: advancedOld.Address,
 			Key:     advancedOld.Keys[0],
 		}
+		j.Advanced.Key.PrivateKey = advancedOld.Keys[0].Context["privateKey"]
 
 	case advancedFormat:
 		var advanced advancedAccount
