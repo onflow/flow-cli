@@ -95,11 +95,12 @@ func ConfiguredServiceKey(
 
 	err = serviceAccount.Key().Validate()
 	if err != nil {
-		util.Exitf(
+		util.Exit(
 			1,
-			err.Error(),
-			"Invalid private key in \"%s\" emulator configuration",
-			serviceAccount.Name(),
+			fmt.Sprintf("invalid private key in %s emulator configuration, %s",
+				serviceAccount.Name(),
+				err.Error(),
+			),
 		)
 	}
 
