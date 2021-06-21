@@ -6,6 +6,7 @@
 
 # Coverage artifacts
 coverage.zip
+coverage.txt
 cover.json
 cover-summary
 index.html
