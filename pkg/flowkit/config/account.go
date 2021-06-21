@@ -19,8 +19,6 @@
 package config
 
 import (
-	"fmt"
-
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
 )
@@ -67,17 +65,10 @@ func (a *Accounts) AddOrUpdate(name string, account Account) {
 }
 
 // Remove remove account by name
-func (a *Accounts) Remove(name string) error {
-	account := a.GetByName(name)
-	if account == nil {
-		return fmt.Errorf("account named %s does not exist in configuration", name)
-	}
-
+func (a *Accounts) Remove(name string) {
 	for i, account := range *a {
 		if account.Name == name {
 			*a = append((*a)[0:i], (*a)[i+1:]...) // remove item
 		}
 	}
-
-	return nil
 }
