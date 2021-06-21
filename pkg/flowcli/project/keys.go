@@ -40,6 +40,7 @@ type AccountKey interface {
 	Signer(ctx context.Context) (crypto.Signer, error)
 	ToConfig() config.AccountKey
 	Validate() error
+	PrivateKey() (*crypto.PrivateKey, error)
 }
 
 func NewAccountKey(accountKeyConf config.AccountKey) (AccountKey, error) {
@@ -96,13 +97,11 @@ type KmsAccountKey struct {
 
 func (a *KmsAccountKey) ToConfig() config.AccountKey {
 	return config.AccountKey{
-		Type:     a.keyType,
-		Index:    a.index,
-		SigAlgo:  a.sigAlgo,
-		HashAlgo: a.hashAlgo,
-		Context: map[string]string{
-			config.KMSContextField: a.kmsKey.ResourceID(),
-		},
+		Type:       a.keyType,
+		Index:      a.index,
+		SigAlgo:    a.sigAlgo,
+		HashAlgo:   a.hashAlgo,
+		ResourceID: a.kmsKey.ResourceID(),
 	}
 }
 
@@ -125,12 +124,15 @@ func (a *KmsAccountKey) Signer(ctx context.Context) (crypto.Signer, error) {
 }
 
 func (a *KmsAccountKey) Validate() error {
-	resourceID := a.ToConfig().Context[config.KMSContextField]
-	return util.GcloudApplicationSignin(resourceID)
+	return util.GcloudApplicationSignin(a.ToConfig().ResourceID)
+}
+
+func (a *KmsAccountKey) PrivateKey() (*crypto.PrivateKey, error) {
+	return nil, fmt.Errorf("private key not accessible")
 }
 
 func newKmsAccountKey(key config.AccountKey) (AccountKey, error) {
-	accountKMSKey, err := cloudkms.KeyFromResourceID(key.Context[config.KMSContextField])
+	accountKMSKey, err := cloudkms.KeyFromResourceID(key.ResourceID)
 	if err != nil {
 		return nil, err
 	}
@@ -162,20 +164,10 @@ func NewHexAccountKeyFromPrivateKey(
 	}
 }
 
-func newHexAccountKey(accountKeyConf config.AccountKey) (*HexAccountKey, error) {
-	privateKeyHex, ok := accountKeyConf.Context[config.PrivateKeyField]
-	if !ok {
-		return nil, fmt.Errorf("\"%s\" field is required", config.PrivateKeyField)
-	}
-
-	privateKey, err := crypto.DecodePrivateKeyHex(accountKeyConf.SigAlgo, privateKeyHex)
-	if err != nil {
-		return nil, err
-	}
-
+func newHexAccountKey(accountKey config.AccountKey) (*HexAccountKey, error) {
 	return &HexAccountKey{
-		baseAccountKey: newBaseAccountKey(accountKeyConf),
-		privateKey:     privateKey,
+		baseAccountKey: newBaseAccountKey(accountKey),
+		privateKey:     accountKey.PrivateKey,
 	}, nil
 }
 
@@ -188,20 +180,27 @@ func (a *HexAccountKey) Signer(ctx context.Context) (crypto.Signer, error) {
 	return crypto.NewInMemorySigner(a.privateKey, a.HashAlgo()), nil
 }
 
-func (a *HexAccountKey) PrivateKey() crypto.PrivateKey {
-	return a.privateKey
+func (a *HexAccountKey) PrivateKey() (*crypto.PrivateKey, error) {
+	return &a.privateKey, nil
 }
 
 func (a *HexAccountKey) ToConfig() config.AccountKey {
 	return config.AccountKey{
-		Type:     a.keyType,
-		Index:    a.index,
-		SigAlgo:  a.sigAlgo,
-		HashAlgo: a.hashAlgo,
-		Context: map[string]string{
-			config.PrivateKeyField: a.PrivateKeyHex(),
-		},
+		Type:       a.keyType,
+		Index:      a.index,
+		SigAlgo:    a.sigAlgo,
+		HashAlgo:   a.hashAlgo,
+		PrivateKey: a.privateKey,
 	}
+}
+
+func (a *HexAccountKey) Validate() error {
+	_, err := crypto.DecodePrivateKeyHex(a.sigAlgo, a.PrivateKeyHex())
+	if err != nil {
+		return fmt.Errorf("invalid private key: %w", err)
+	}
+
+	return nil
 }
 
 func (a *HexAccountKey) PrivateKeyHex() string {
