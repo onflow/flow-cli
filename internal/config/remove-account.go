@@ -62,12 +62,9 @@ func removeAccount(
 		name = output.RemoveAccountPrompt(state.Config().Accounts)
 	}
 
-	err := state.Config().Accounts.Remove(name)
-	if err != nil {
-		return nil, err
-	}
+	state.Config().Accounts.Remove(name)
 
-	err = state.SaveDefault()
+	err := state.SaveDefault()
 	if err != nil {
 		return nil, err
 	}
