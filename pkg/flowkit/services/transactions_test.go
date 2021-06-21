@@ -21,6 +21,8 @@ package services
 import (
 	"testing"
 
+	"github.com/onflow/cadence"
+
 	"github.com/stretchr/testify/mock"
 
 	"github.com/onflow/flow-cli/pkg/flowkit"
@@ -33,11 +35,14 @@ import (
 const gasLimit = 1000
 
 func TestTransactions(t *testing.T) {
+	t.Parallel()
+
 	state, _, _ := setup()
 	serviceAcc, _ := state.EmulatorServiceAccount()
 	serviceAddress := serviceAcc.Address()
 
 	t.Run("Get Transaction", func(t *testing.T) {
+		t.Parallel()
 		_, s, gw := setup()
 		txs := tests.NewTransaction()
 
@@ -49,6 +54,7 @@ func TestTransactions(t *testing.T) {
 	})
 
 	t.Run("Send Transaction args", func(t *testing.T) {
+		t.Parallel()
 		_, s, gw := setup()
 
 		var txID flow.Identifier
@@ -70,7 +76,9 @@ func TestTransactions(t *testing.T) {
 			gw.GetTransactionResult.Return(tests.NewTransactionResult(nil), nil)
 		})
 
-		args, _ := flowkit.ParseArgumentsCommaSplit([]string{"String:Bar"})
+		args := []cadence.Value{
+			cadence.NewString("Bar"),
+		}
 
 		_, _, err := s.Transactions.Send(
 			serviceAcc,

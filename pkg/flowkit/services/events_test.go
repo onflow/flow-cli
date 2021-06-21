@@ -27,7 +27,11 @@ import (
 )
 
 func TestEvents(t *testing.T) {
+	t.Parallel()
+
 	t.Run("Get Events", func(t *testing.T) {
+		t.Parallel()
+
 		_, s, gw := setup()
 		_, err := s.Events.Get("flow.CreateAccount", "0", "1")
 
@@ -36,6 +40,8 @@ func TestEvents(t *testing.T) {
 	})
 
 	t.Run("Get Events Latest", func(t *testing.T) {
+		t.Parallel()
+
 		_, s, gw := setup()
 		_, err := s.Events.Get("flow.CreateAccount", "0", "latest")
 
@@ -45,6 +51,8 @@ func TestEvents(t *testing.T) {
 	})
 
 	t.Run("Fails to get events without name", func(t *testing.T) {
+		t.Parallel()
+
 		_, s, _ := setup()
 		inputs := [][]string{
 			{"", "0", "1"},
@@ -68,8 +76,11 @@ func TestEvents(t *testing.T) {
 }
 
 func TestEvents_Integration(t *testing.T) {
+	t.Parallel()
 
 	t.Run("Get Events", func(t *testing.T) {
+		t.Parallel()
+
 		state, s := setupIntegration()
 		srvAcc, _ := state.EmulatorServiceAccount()
 

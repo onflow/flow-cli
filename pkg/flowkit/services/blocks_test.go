@@ -30,8 +30,11 @@ import (
 )
 
 func TestBlocks(t *testing.T) {
+	t.Parallel()
 
 	t.Run("Get Latest Block", func(t *testing.T) {
+		t.Parallel()
+
 		_, s, gw := setup()
 
 		_, _, _, err := s.Blocks.GetBlock("latest", "flow.AccountCreated", false)
@@ -44,6 +47,8 @@ func TestBlocks(t *testing.T) {
 	})
 
 	t.Run("Get Block by Height", func(t *testing.T) {
+		t.Parallel()
+
 		_, s, gw := setup()
 
 		block := tests.NewBlock()
@@ -60,6 +65,8 @@ func TestBlocks(t *testing.T) {
 	})
 
 	t.Run("Get Block by ID", func(t *testing.T) {
+		t.Parallel()
+
 		_, s, gw := setup()
 		ID := "a310685082f0b09f2a148b2e8905f08ea458ed873596b53b200699e8e1f6536f"
 
@@ -75,8 +82,11 @@ func TestBlocks(t *testing.T) {
 }
 
 func TestBlocksGet_Integration(t *testing.T) {
+	t.Parallel()
 
 	t.Run("Get Block", func(t *testing.T) {
+		t.Parallel()
+
 		state, s := setupIntegration()
 		srvAcc, _ := state.EmulatorServiceAccount()
 
@@ -101,6 +111,8 @@ func TestBlocksGet_Integration(t *testing.T) {
 	})
 
 	t.Run("Get Block Invalid", func(t *testing.T) {
+		t.Parallel()
+
 		_, s := setupIntegration()
 
 		_, _, _, err := s.Blocks.GetBlock("foo", "flow.AccountCreated", true)
