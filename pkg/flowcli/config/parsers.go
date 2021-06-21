@@ -147,7 +147,7 @@ func StringToNetwork(name string, host string) Network {
 	}
 }
 
-func StringToDeployment(network string, account string, contracts []string) Deploy {
+func StringToDeployment(network string, account string, contracts []string) Deployment {
 	parsedContracts := make([]ContractDeployment, 0)
 
 	for _, c := range contracts {
@@ -170,7 +170,7 @@ func StringToDeployment(network string, account string, contracts []string) Depl
 			})
 	}
 
-	return Deploy{
+	return Deployment{
 		Network:   network,
 		Account:   account,
 		Contracts: parsedContracts,

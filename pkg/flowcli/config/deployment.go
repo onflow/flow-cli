@@ -30,10 +30,10 @@ type ContractDeployment struct {
 	Args []cadence.Value
 }
 
-type Deployments []Deploy
+type Deployments []Deployment
 
-// Deploy defines the configuration for a contract deployment.
-type Deploy struct {
+// Deployment defines the configuration for a contract deployment.
+type Deployment struct {
 	Network   string               // network name to deploy to
 	Account   string               // account name to which to deploy to
 	Contracts []ContractDeployment // contracts to deploy
@@ -66,7 +66,7 @@ func (d *Deployments) GetByAccountAndNetwork(account string, network string) Dep
 }
 
 // AddOrUpdate add new or update if already present
-func (d *Deployments) AddOrUpdate(deployment Deploy) {
+func (d *Deployments) AddOrUpdate(deployment Deployment) {
 	for i, existingDeployment := range *d {
 		if existingDeployment.Account == deployment.Account &&
 			existingDeployment.Network == deployment.Network {

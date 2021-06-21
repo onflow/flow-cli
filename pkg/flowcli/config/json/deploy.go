@@ -37,9 +37,9 @@ func (j jsonDeployments) transformToConfig() (config.Deployments, error) {
 
 	for networkName, deploys := range j {
 
-		var deploy config.Deploy
+		var deploy config.Deployment
 		for accountName, contracts := range deploys {
-			deploy = config.Deploy{
+			deploy = config.Deployment{
 				Network: networkName,
 				Account: accountName,
 			}
