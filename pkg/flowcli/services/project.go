@@ -30,7 +30,6 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowcli/gateway"
 	"github.com/onflow/flow-cli/pkg/flowcli/output"
 	"github.com/onflow/flow-cli/pkg/flowcli/project"
-	"github.com/onflow/flow-cli/pkg/flowcli/util"
 )
 
 // Project is a service that handles all interactions for a project.
@@ -56,9 +55,9 @@ func NewProject(
 func (p *Project) Init(
 	reset bool,
 	global bool,
-	serviceKeySigAlgo string,
-	serviceKeyHashAlgo string,
-	servicePrivateKey string,
+	sigAlgo crypto.SignatureAlgorithm,
+	hashAlgo crypto.HashAlgorithm,
+	serviceKey crypto.PrivateKey,
 ) (*project.Project, error) {
 	path := config.DefaultPath
 	if global {
@@ -72,24 +71,12 @@ func (p *Project) Init(
 		)
 	}
 
-	sigAlgo, hashAlgo, err := util.ConvertSigAndHashAlgo(serviceKeySigAlgo, serviceKeyHashAlgo)
-	if err != nil {
-		return nil, err
-	}
-
 	proj, err := project.Init(sigAlgo, hashAlgo)
 	if err != nil {
 		return nil, err
 	}
 
-	if len(servicePrivateKey) > 0 {
-		serviceKey, err := crypto.DecodePrivateKeyHex(sigAlgo, servicePrivateKey)
-		if err != nil {
-			return nil, fmt.Errorf("could not decode private key for a service account, provided private key: %s", servicePrivateKey)
-		}
-
-		proj.SetEmulatorServiceKey(serviceKey)
-	}
+	proj.SetEmulatorServiceKey(serviceKey)
 
 	err = proj.Save(path)
 	if err != nil {

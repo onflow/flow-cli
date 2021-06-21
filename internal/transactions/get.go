@@ -20,10 +20,14 @@ package transactions
 
 import (
 	"fmt"
+	"strings"
+
+	"github.com/onflow/flow-go-sdk"
 
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
+	"github.com/onflow/flow-cli/pkg/flowcli/project"
 	"github.com/onflow/flow-cli/pkg/flowcli/services"
 )
 
@@ -50,6 +54,7 @@ var GetCommand = &command.Command{
 		args []string,
 		globalFlags command.GlobalFlags,
 		services *services.Services,
+		proj *project.Project,
 	) (command.Result, error) {
 		if cmd.CalledAs() == "status" {
 			fmt.Println("⚠️  DEPRECATION WARNING: use \"flow transactions get\" instead")
@@ -59,10 +64,9 @@ var GetCommand = &command.Command{
 			fmt.Println("⚠️  DEPRECATION WARNING: use include flag instead")
 		}
 
-		tx, result, err := services.Transactions.GetStatus(
-			args[0], // transaction id
-			getFlags.Sealed,
-		)
+		id := flow.HexToID(strings.TrimPrefix(args[0], "0x"))
+
+		tx, result, err := services.Transactions.GetStatus(id, getFlags.Sealed)
 		if err != nil {
 			return nil, err
 		}

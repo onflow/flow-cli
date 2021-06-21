@@ -21,6 +21,12 @@ package accounts
 import (
 	"fmt"
 
+	"github.com/onflow/flow-cli/pkg/flowcli/config"
+
+	"github.com/onflow/flow-cli/pkg/flowcli/project"
+
+	"github.com/onflow/flow-cli/pkg/flowcli/util"
+
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
@@ -48,18 +54,26 @@ var AddContractCommand = &command.Command{
 		args []string,
 		globalFlags command.GlobalFlags,
 		services *services.Services,
+		proj *project.Project,
 	) (command.Result, error) {
 		if createFlags.Results {
 			fmt.Println("⚠️ DEPRECATION WARNING: results flag is deprecated, results are by default included in all executions")
 		}
 
-		account, err := services.Accounts.AddContract(
-			addContractFlags.Signer,
-			args[0], // name
-			args[1], // filename
-			false,
-		)
+		name := args[0]
+		filename := args[1]
 
+		code, err := util.LoadFile(filename)
+		if err != nil {
+			return nil, fmt.Errorf("error loading contract file: %w", err)
+		}
+
+		if proj == nil {
+			return nil, config.ErrDoesNotExist
+		}
+		to := proj.AccountByName(addContractFlags.Signer)
+
+		account, err := services.Accounts.AddContract(to, name, code, false)
 		if err != nil {
 			return nil, err
 		}

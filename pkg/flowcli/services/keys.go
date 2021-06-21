@@ -21,7 +21,6 @@ package services
 import (
 	"encoding/hex"
 	"fmt"
-	"strings"
 
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
@@ -52,11 +51,8 @@ func NewKeys(
 	}
 }
 
-const PEM string = "pem"
-const RLP string = "rlp"
-
 // Generate generates a new private key from the given seed and signature algorithm.
-func (k *Keys) Generate(inputSeed string, signatureAlgo string) (crypto.PrivateKey, error) {
+func (k *Keys) Generate(inputSeed string, sigAlgo crypto.SignatureAlgorithm) (crypto.PrivateKey, error) {
 	var seed []byte
 	var err error
 
@@ -69,11 +65,6 @@ func (k *Keys) Generate(inputSeed string, signatureAlgo string) (crypto.PrivateK
 		seed = []byte(inputSeed)
 	}
 
-	sigAlgo := crypto.StringToSignatureAlgorithm(signatureAlgo)
-	if sigAlgo == crypto.UnknownSignatureAlgorithm {
-		return nil, fmt.Errorf("invalid signature algorithm: %s", signatureAlgo)
-	}
-
 	privateKey, err := crypto.GeneratePrivateKey(sigAlgo, seed)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate private key: %w", err)
@@ -82,35 +73,8 @@ func (k *Keys) Generate(inputSeed string, signatureAlgo string) (crypto.PrivateK
 	return privateKey, nil
 }
 
-// Decode encoded public key using supported encoding type
-func (k *Keys) Decode(encoded string, encoding string, fromFile string, sigAlgo string) (*flow.AccountKey, error) {
-	// todo refactor this to commands (as part of api refactor) and pass typed values
-	if encoded != "" && fromFile != "" {
-		return nil, fmt.Errorf("can not pass both command argument and from file flag")
-	}
-	if encoded == "" && fromFile == "" {
-		return nil, fmt.Errorf("provide argument for encoded key or use from file flag")
-	}
-
-	if fromFile != "" {
-		e, err := util.LoadFile(fromFile)
-		if err != nil {
-			return nil, err
-		}
-		encoded = strings.TrimSpace(string(e))
-	}
-
-	switch strings.ToLower(encoding) {
-	case PEM:
-		return decodePEM(encoded, sigAlgo)
-	case RLP:
-		return decodeRLP(encoded)
-	default:
-		return nil, fmt.Errorf("encoding type not supported. Valid encoding: RLP and PEM")
-	}
-}
-
-func decodeRLP(publicKey string) (*flow.AccountKey, error) {
+// DecodeRLP decodes an RLP encoded public key
+func (k *Keys) DecodeRLP(publicKey string) (*flow.AccountKey, error) {
 	publicKeyBytes, err := hex.DecodeString(publicKey)
 	if err != nil {
 		return nil, fmt.Errorf("failed to decode public key: %w", err)
@@ -124,11 +88,9 @@ func decodeRLP(publicKey string) (*flow.AccountKey, error) {
 	return accountKey, nil
 }
 
-func decodePEM(key string, sigAlgo string) (*flow.AccountKey, error) {
-	pk, err := crypto.DecodePublicKeyPEM(
-		crypto.StringToSignatureAlgorithm(sigAlgo),
-		key,
-	)
+// DecodePEM decodes a PEM encoded public key with specified signature algorithm
+func (k *Keys) DecodePEM(key string, sigAlgo crypto.SignatureAlgorithm) (*flow.AccountKey, error) {
+	pk, err := crypto.DecodePublicKeyPEM(sigAlgo, key)
 	if err != nil {
 		return nil, err
 	}

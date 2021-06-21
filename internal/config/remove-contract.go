@@ -19,7 +19,7 @@
 package config
 
 import (
-	"fmt"
+	"github.com/onflow/flow-cli/pkg/flowcli/config"
 
 	"github.com/spf13/cobra"
 
@@ -46,25 +46,25 @@ var RemoveContractCommand = &command.Command{
 		args []string,
 		globalFlags command.GlobalFlags,
 		services *services.Services,
+		proj *project.Project,
 	) (command.Result, error) {
-		p, err := project.Load(globalFlags.ConfigPaths)
-		if err != nil {
-			return nil, fmt.Errorf("configuration does not exists")
+		if proj == nil {
+			return nil, config.ErrDoesNotExist
 		}
 
 		name := ""
 		if len(args) == 1 {
 			name = args[0]
 		} else {
-			name = output.RemoveContractPrompt(p.Config().Contracts)
+			name = output.RemoveContractPrompt(proj.Config().Contracts)
 		}
 
-		err = p.Config().Contracts.Remove(name)
+		err := proj.Config().Contracts.Remove(name)
 		if err != nil {
 			return nil, err
 		}
 
-		err = p.SaveDefault()
+		err = proj.SaveDefault()
 		if err != nil {
 			return nil, err
 		}

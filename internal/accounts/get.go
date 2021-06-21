@@ -21,6 +21,10 @@ package accounts
 import (
 	"fmt"
 
+	"github.com/onflow/flow-cli/pkg/flowcli/project"
+
+	"github.com/onflow/flow-go-sdk"
+
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
@@ -48,6 +52,7 @@ var GetCommand = &command.Command{
 		args []string,
 		globalFlags command.GlobalFlags,
 		services *services.Services,
+		proj *project.Project,
 	) (command.Result, error) {
 		if getFlags.Code {
 			fmt.Println("⚠️  DEPRECATION WARNING: use contracts flag instead")
@@ -57,7 +62,9 @@ var GetCommand = &command.Command{
 			fmt.Println("⚠️  DEPRECATION WARNING: use include contracts flag instead")
 		}
 
-		account, err := services.Accounts.Get(args[0]) // address
+		address := flow.HexToAddress(args[0])
+
+		account, err := services.Accounts.Get(address)
 		if err != nil {
 			return nil, err
 		}

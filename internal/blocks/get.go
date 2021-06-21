@@ -21,6 +21,8 @@ package blocks
 import (
 	"fmt"
 
+	"github.com/onflow/flow-cli/pkg/flowcli/project"
+
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
@@ -51,6 +53,7 @@ var GetCommand = &command.Command{
 		args []string,
 		globalFlags command.GlobalFlags,
 		services *services.Services,
+		proj *project.Project,
 	) (command.Result, error) {
 		if blockFlags.Latest || blockFlags.BlockID != "" || blockFlags.BlockHeight != 0 {
 			return nil, fmt.Errorf("⚠️  No longer supported: use command argument.")

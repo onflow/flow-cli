@@ -54,10 +54,10 @@ var AddAccountCommand = &command.Command{
 		args []string,
 		globalFlags command.GlobalFlags,
 		services *services.Services,
+		proj *project.Project,
 	) (command.Result, error) {
-		p, err := project.Load(globalFlags.ConfigPaths)
-		if err != nil {
-			return nil, fmt.Errorf("configuration does not exists")
+		if proj == nil {
+			return nil, config.ErrDoesNotExist
 		}
 
 		accountData, flagsProvided, err := flagsToAccountData(addAccountFlags)
@@ -86,9 +86,9 @@ var AddAccountCommand = &command.Command{
 			return nil, err
 		}
 
-		p.AddOrUpdateAccount(acc)
+		proj.AddOrUpdateAccount(acc)
 
-		err = p.SaveDefault()
+		err = proj.SaveDefault()
 		if err != nil {
 			return nil, err
 		}

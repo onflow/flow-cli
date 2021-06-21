@@ -19,6 +19,15 @@
 package keys
 
 import (
+	"fmt"
+	"strings"
+
+	"github.com/onflow/flow-go-sdk"
+
+	"github.com/onflow/flow-go-sdk/crypto"
+
+	"github.com/onflow/flow-cli/pkg/flowcli/project"
+	"github.com/onflow/flow-cli/pkg/flowcli/util"
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
@@ -46,8 +55,10 @@ var DecodeCommand = &command.Command{
 		args []string,
 		globalFlags command.GlobalFlags,
 		services *services.Services,
+		proj *project.Project,
 	) (command.Result, error) {
 		encoding := args[0]
+		fromFile := decodeFlags.FromFile
 
 		var encoded string
 		if len(args) > 1 {
@@ -56,7 +67,37 @@ var DecodeCommand = &command.Command{
 
 		/* TODO: --from-file flag should be removed and replaced with $(echo file)
 		but cobra has an issue with parsing pem content as it recognize it as flag due to ---- characters */
-		accountKey, err := services.Keys.Decode(encoded, encoding, decodeFlags.FromFile, decodeFlags.SigAlgo)
+		if encoded != "" && fromFile != "" {
+			return nil, fmt.Errorf("can not pass both command argument and from file flag")
+		}
+		if encoded == "" && fromFile == "" {
+			return nil, fmt.Errorf("provide argument for encoded key or use from file flag")
+		}
+
+		if fromFile != "" {
+			e, err := util.LoadFile(fromFile) // todo replace with file loader
+			if err != nil {
+				return nil, err
+			}
+			encoded = strings.TrimSpace(string(e))
+		}
+
+		var accountKey *flow.AccountKey
+		var err error
+		switch strings.ToLower(encoding) {
+		case "pem":
+			sigAlgo := crypto.StringToSignatureAlgorithm(decodeFlags.SigAlgo)
+			if sigAlgo == crypto.UnknownSignatureAlgorithm {
+				return nil, fmt.Errorf("invalid signature algorithm: %s", decodeFlags.SigAlgo)
+			}
+
+			accountKey, err = services.Keys.DecodePEM(encoded, sigAlgo)
+		case "rlp":
+			accountKey, err = services.Keys.DecodeRLP(encoded)
+		default:
+			return nil, fmt.Errorf("encoding type not supported. Valid encoding: RLP and PEM")
+		}
+
 		if err != nil {
 			return nil, err
 		}

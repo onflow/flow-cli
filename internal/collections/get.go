@@ -19,6 +19,8 @@
 package collections
 
 import (
+	"github.com/onflow/flow-cli/pkg/flowcli/project"
+	"github.com/onflow/flow-go-sdk"
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
@@ -42,8 +44,11 @@ var GetCommand = &command.Command{
 		args []string,
 		globalFlags command.GlobalFlags,
 		services *services.Services,
+		proj *project.Project,
 	) (command.Result, error) {
-		collection, err := services.Collections.Get(args[0]) // collection id
+		id := flow.HexToID(args[0])
+
+		collection, err := services.Collections.Get(id)
 		if err != nil {
 			return nil, err
 		}

@@ -21,6 +21,10 @@ package accounts
 import (
 	"fmt"
 
+	"github.com/onflow/flow-cli/pkg/flowcli/config"
+
+	"github.com/onflow/flow-cli/pkg/flowcli/project"
+
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
@@ -48,15 +52,20 @@ var RemoveCommand = &command.Command{
 		args []string,
 		globalFlags command.GlobalFlags,
 		services *services.Services,
+		proj *project.Project,
 	) (command.Result, error) {
 		if flagsRemove.Results {
 			fmt.Println("⚠️ DEPRECATION WARNING: results flag is deprecated, results are by default included in all executions")
 		}
 
-		account, err := services.Accounts.RemoveContract(
-			args[0], // name
-			flagsRemove.Signer,
-		)
+		contractName := args[0]
+
+		if proj == nil {
+			return nil, config.ErrDoesNotExist
+		}
+		from := proj.AccountByName(flagsRemove.Signer)
+
+		account, err := services.Accounts.RemoveContract(contractName, from)
 		if err != nil {
 			return nil, err
 		}

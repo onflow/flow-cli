@@ -51,10 +51,10 @@ var AddNetworkCommand = &command.Command{
 		args []string,
 		globalFlags command.GlobalFlags,
 		services *services.Services,
+		proj *project.Project,
 	) (command.Result, error) {
-		p, err := project.Load(globalFlags.ConfigPaths)
-		if err != nil {
-			return nil, fmt.Errorf("configuration does not exists")
+		if proj == nil {
+			return nil, config.ErrDoesNotExist
 		}
 
 		networkData, flagsProvided, err := flagsToNetworkData(addNetworkFlags)
@@ -67,9 +67,9 @@ var AddNetworkCommand = &command.Command{
 		}
 
 		network := config.StringToNetwork(networkData["name"], networkData["host"])
-		p.Config().Networks.AddOrUpdate(network.Name, network)
+		proj.Config().Networks.AddOrUpdate(network.Name, network)
 
-		err = p.SaveDefault()
+		err = proj.SaveDefault()
 		if err != nil {
 			return nil, err
 		}

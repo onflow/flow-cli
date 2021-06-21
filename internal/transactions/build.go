@@ -18,6 +18,15 @@
 package transactions
 
 import (
+	"fmt"
+
+	"github.com/onflow/flow-cli/pkg/flowcli/config"
+
+	"github.com/onflow/flow-cli/pkg/flowcli"
+
+	"github.com/onflow/flow-cli/pkg/flowcli/project"
+	"github.com/onflow/flow-cli/pkg/flowcli/util"
+	"github.com/onflow/flow-go-sdk"
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
@@ -49,19 +58,52 @@ var BuildCommand = &command.Command{
 		args []string,
 		globalFlags command.GlobalFlags,
 		services *services.Services,
+		proj *project.Project,
 	) (command.Result, error) {
+		if proj == nil {
+			return nil, config.ErrDoesNotExist
+		}
 
-		codeFilename := args[0]
+		proposer, err := getAddress(buildFlags.Proposer, proj)
+		if err != nil {
+			return nil, err
+		}
+
+		// get all authorizers
+		var authorizers []flow.Address
+		for _, auth := range buildFlags.Authorizer {
+			addr, err := getAddress(auth, proj)
+			if err != nil {
+				return nil, err
+			}
+			authorizers = append(authorizers, addr)
+		}
+
+		payer, err := getAddress(buildFlags.Payer, proj)
+		if err != nil {
+			return nil, err
+		}
+
+		filename := args[0]
+		code, err := util.LoadFile(filename)
+		if err != nil {
+			return nil, fmt.Errorf("error loading transaction file: %w", err)
+		}
+
+		txArgs, err := flowcli.ParseArguments(buildFlags.Args, buildFlags.ArgsJSON) // todo refactor flowcli
+		if err != nil {
+			return nil, err
+		}
 
 		build, err := services.Transactions.Build(
-			buildFlags.Proposer,
-			buildFlags.Authorizer,
-			buildFlags.Payer,
+			proposer,
+			authorizers,
+			payer,
 			buildFlags.ProposerKeyIndex,
-			codeFilename,
+			code,
+			filename,
 			buildFlags.GasLimit,
-			buildFlags.Args,
-			buildFlags.ArgsJSON,
+			txArgs,
 			globalFlags.Network,
 		)
 		if err != nil {
@@ -73,4 +115,17 @@ var BuildCommand = &command.Command{
 			include: []string{"code", "payload", "signatures"},
 		}, nil
 	},
+}
+
+func getAddress(address string, proj *project.Project) (flow.Address, error) {
+	addr := flow.HexToAddress(address)
+	if addr == flow.EmptyAddress {
+		acc := proj.AccountByName(address)
+		if acc == nil {
+			return flow.EmptyAddress, fmt.Errorf("account not found, make sure to pass valid account name from configuration or valid flow address")
+		}
+		addr = acc.Address()
+	}
+
+	return addr, nil
 }

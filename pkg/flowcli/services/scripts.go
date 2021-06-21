@@ -25,12 +25,10 @@ import (
 
 	"github.com/onflow/cadence"
 
-	"github.com/onflow/flow-cli/pkg/flowcli"
 	"github.com/onflow/flow-cli/pkg/flowcli/contracts"
 	"github.com/onflow/flow-cli/pkg/flowcli/gateway"
 	"github.com/onflow/flow-cli/pkg/flowcli/output"
 	"github.com/onflow/flow-cli/pkg/flowcli/project"
-	"github.com/onflow/flow-cli/pkg/flowcli/util"
 )
 
 // Scripts is a service that handles all script-related interactions.
@@ -53,27 +51,8 @@ func NewScripts(
 	}
 }
 
-// Execute executes a Cadence script from a file.
-func (s *Scripts) Execute(scriptPath string, args []string, argsJSON string, network string) (cadence.Value, error) {
-	script, err := util.LoadFile(scriptPath)
-	if err != nil {
-		return nil, err
-	}
-
-	return s.execute(script, args, argsJSON, scriptPath, network)
-}
-
-// ExecuteWithCode executes a Cadence script from a source code string.
-func (s *Scripts) ExecuteWithCode(code []byte, args []string, argsJSON string) (cadence.Value, error) {
-	return s.execute(code, args, argsJSON, "", "")
-}
-
-func (s *Scripts) execute(code []byte, args []string, argsJSON string, scriptPath string, network string) (cadence.Value, error) {
-	scriptArgs, err := flowcli.ParseArguments(args, argsJSON)
-	if err != nil {
-		return nil, err
-	}
-
+// Execute script code with passed arguments on the selected network
+func (s *Scripts) Execute(code []byte, args []cadence.Value, scriptPath string, network string) (cadence.Value, error) {
 	resolver, err := contracts.NewResolver(code)
 	if err != nil {
 		return nil, err
@@ -86,7 +65,7 @@ func (s *Scripts) execute(code []byte, args []string, argsJSON string, scriptPat
 		if network == "" {
 			return nil, fmt.Errorf("missing network, specify which network to use to resolve imports in script code")
 		}
-		if scriptPath == "" { // when used as lib with code we don't support imports
+		if scriptPath == "" {
 			return nil, fmt.Errorf("resolving imports in scripts not supported")
 		}
 
@@ -105,5 +84,5 @@ func (s *Scripts) execute(code []byte, args []string, argsJSON string, scriptPat
 		}
 	}
 
-	return s.gateway.ExecuteScript(code, scriptArgs)
+	return s.gateway.ExecuteScript(code, args)
 }
