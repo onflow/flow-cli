@@ -130,29 +130,15 @@ func eventString(writer io.Writer, event flow.Event) {
 }
 
 func printField(writer io.Writer, field cadence.Field, value cadence.Value) {
-	v := value.ToGoValue()
-	typeInfo := "Unknown"
-
+	var typeId string
 	if field.Type != nil {
-		typeInfo = field.Type.ID()
-	} else if _, isAddress := v.([8]byte); isAddress {
-		typeInfo = "Address"
+		typeId = field.Type.ID()
 	}
 
-	fmt.Fprintf(writer, "\t\t-")
-	fmt.Fprintf(writer, " %s (%s):\t", field.Identifier, typeInfo)
-	// Try the two most obvious cases
-	if address, ok := v.([8]byte); ok {
-		fmt.Fprintf(writer, "%x", address)
-	} else if util.IsByteSlice(v) || field.Identifier == "publicKey" {
-		// make exception for public key, since it get's interpreted as []*big.Int
-		for _, b := range v.([]interface{}) {
-			fmt.Fprintf(writer, "%x", b)
-		}
-	} else if uintVal, ok := v.(uint64); typeInfo == "UFix64" && ok {
-		fmt.Fprintf(writer, "%v", cadence.UFix64(uintVal))
-	} else {
-		fmt.Fprintf(writer, "%v", v)
+	v := value.String()
+	if field.Identifier == "publicKey" {
+		v = fmt.Sprintf("%x", v)
 	}
-	fmt.Fprintf(writer, "\n")
+
+	_, _ = fmt.Fprintf(writer, "\t\t- %s (%s): %s \n", field.Identifier, typeId, v)
 }
