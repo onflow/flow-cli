@@ -40,7 +40,7 @@ var RemoveDeploymentCommand = &command.Command{
 		Args:    cobra.MaximumNArgs(2),
 	},
 	Flags: &removeDeploymentFlags,
-	Run: func(
+	RunS: func(
 		cmd *cobra.Command,
 		args []string,
 		globalFlags command.GlobalFlags,

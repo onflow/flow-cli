@@ -50,7 +50,7 @@ var AddAccountCommand = &command.Command{
 		Args:    cobra.NoArgs,
 	},
 	Flags: &addAccountFlags,
-	Run: func(
+	RunS: func(
 		cmd *cobra.Command,
 		args []string,
 		globalFlags command.GlobalFlags,

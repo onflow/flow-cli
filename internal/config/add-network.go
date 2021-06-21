@@ -47,7 +47,7 @@ var AddNetworkCommand = &command.Command{
 		Args:    cobra.NoArgs,
 	},
 	Flags: &addNetworkFlags,
-	Run: func(
+	RunS: func(
 		cmd *cobra.Command,
 		args []string,
 		globalFlags command.GlobalFlags,

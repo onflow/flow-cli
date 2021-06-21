@@ -40,7 +40,7 @@ var DeployCommand = &command.Command{
 		Example: "flow project deploy --network testnet",
 	},
 	Flags: &deployFlags,
-	Run: func(
+	RunS: func(
 		cmd *cobra.Command,
 		args []string,
 		globalFlags command.GlobalFlags,

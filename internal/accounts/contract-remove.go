@@ -23,8 +23,6 @@ import (
 
 	"github.com/onflow/flow-cli/pkg/flowkit"
 
-	"github.com/onflow/flow-cli/pkg/flowkit/config"
-
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
@@ -47,7 +45,7 @@ var RemoveCommand = &command.Command{
 		Args:    cobra.ExactArgs(1),
 	},
 	Flags: &flagsRemove,
-	Run: func(
+	RunS: func(
 		cmd *cobra.Command,
 		args []string,
 		globalFlags command.GlobalFlags,
@@ -60,9 +58,6 @@ var RemoveCommand = &command.Command{
 
 		contractName := args[0]
 
-		if state == nil {
-			return nil, config.ErrDoesNotExist
-		}
 		from := state.Accounts().ByName(flagsRemove.Signer)
 
 		account, err := services.Accounts.RemoveContract(contractName, from)

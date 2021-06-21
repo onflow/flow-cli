@@ -23,8 +23,6 @@ import (
 
 	"github.com/onflow/flow-cli/pkg/flowkit"
 
-	"github.com/onflow/flow-cli/pkg/flowkit/config"
-
 	"github.com/onflow/flow-cli/pkg/flowkit/util"
 
 	"github.com/spf13/cobra"
@@ -49,7 +47,7 @@ var UpdateCommand = &command.Command{
 		Args:    cobra.ExactArgs(2),
 	},
 	Flags: &updateFlags,
-	Run: func(
+	RunS: func(
 		cmd *cobra.Command,
 		args []string,
 		globalFlags command.GlobalFlags,
@@ -68,9 +66,6 @@ var UpdateCommand = &command.Command{
 			return nil, fmt.Errorf("error loading contract file: %w", err)
 		}
 
-		if state == nil {
-			return nil, config.ErrDoesNotExist
-		}
 		to := state.Accounts().ByName(addContractFlags.Signer)
 
 		account, err := services.Accounts.AddContract(to, name, code, false)

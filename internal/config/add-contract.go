@@ -48,7 +48,7 @@ var AddContractCommand = &command.Command{
 		Args:    cobra.NoArgs,
 	},
 	Flags: &addContractFlags,
-	Run: func(
+	RunS: func(
 		cmd *cobra.Command,
 		args []string,
 		globalFlags command.GlobalFlags,
