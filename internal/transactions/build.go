@@ -22,7 +22,6 @@ import (
 
 	"github.com/onflow/flow-cli/pkg/flowkit"
 
-	"github.com/onflow/flow-cli/pkg/flowkit/util"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/spf13/cobra"
 
@@ -53,6 +52,7 @@ var BuildCommand = &command.Command{
 	RunS: func(
 		cmd *cobra.Command,
 		args []string,
+		readerWriter flowkit.ReaderWriter,
 		globalFlags command.GlobalFlags,
 		services *services.Services,
 		state *flowkit.State,
@@ -78,7 +78,7 @@ var BuildCommand = &command.Command{
 		}
 
 		filename := args[0]
-		code, err := util.LoadFile(filename)
+		code, err := readerWriter.ReadFile(filename)
 		if err != nil {
 			return nil, fmt.Errorf("error loading transaction file: %w", err)
 		}

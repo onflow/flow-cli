@@ -20,7 +20,6 @@ package transactions
 
 import (
 	"fmt"
-	"io/ioutil"
 
 	"github.com/onflow/flow-cli/pkg/flowkit"
 
@@ -47,12 +46,13 @@ var SignCommand = &command.Command{
 	RunS: func(
 		cmd *cobra.Command,
 		args []string,
+		readerWriter flowkit.ReaderWriter,
 		globalFlags command.GlobalFlags,
 		services *services.Services,
 		state *flowkit.State,
 	) (command.Result, error) {
 		filename := args[0]
-		payload, err := ioutil.ReadFile(filename)
+		payload, err := readerWriter.ReadFile(filename)
 		if err != nil {
 			return nil, fmt.Errorf("failed to read partial transaction from %s: %v", filename, err)
 		}

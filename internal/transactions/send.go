@@ -22,8 +22,6 @@ import (
 	"fmt"
 
 	"github.com/onflow/flow-cli/pkg/flowkit"
-	"github.com/onflow/flow-cli/pkg/flowkit/util"
-
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
@@ -55,6 +53,7 @@ var SendCommand = &command.Command{
 	RunS: func(
 		cmd *cobra.Command,
 		args []string,
+		readerWriter flowkit.ReaderWriter,
 		globalFlags command.GlobalFlags,
 		services *services.Services,
 		state *flowkit.State,
@@ -84,7 +83,7 @@ var SendCommand = &command.Command{
 			return nil, fmt.Errorf("signer account: [%s] doesn't exists in configuration", sendFlags.Signer)
 		}
 
-		code, err := util.LoadFile(codeFilename)
+		code, err := readerWriter.ReadFile(codeFilename)
 		if err != nil {
 			return nil, fmt.Errorf("error loading transaction file: %w", err)
 		}

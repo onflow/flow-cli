@@ -21,6 +21,8 @@ package emulator
 import (
 	"errors"
 
+	"github.com/spf13/afero"
+
 	"github.com/onflow/flow-cli/pkg/flowkit"
 
 	"github.com/onflow/flow-cli/internal/command"
@@ -48,6 +50,7 @@ func ConfiguredServiceKey(
 ) {
 	var state *flowkit.State
 	var err error
+	loader := &afero.Afero{Fs: afero.NewOsFs()}
 
 	if init {
 		if sigAlgo == crypto.UnknownSignatureAlgorithm {
@@ -58,7 +61,7 @@ func ConfiguredServiceKey(
 			hashAlgo = emulator.DefaultServiceKeyHashAlgo
 		}
 
-		state, err = flowkit.Init(sigAlgo, hashAlgo)
+		state, err = flowkit.Init(loader, sigAlgo, hashAlgo)
 		if err != nil {
 			util.Exitf(1, err.Error())
 		} else {
@@ -68,7 +71,7 @@ func ConfiguredServiceKey(
 			}
 		}
 	} else {
-		state, err = flowkit.Load(command.Flags.ConfigPaths)
+		state, err = flowkit.Load(command.Flags.ConfigPaths, loader)
 		if err != nil {
 			if errors.Is(err, config.ErrDoesNotExist) {
 				util.Exitf(1, "🙏 Configuration is missing, initialize it with: 'flow init' and then rerun this command.")

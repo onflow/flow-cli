@@ -25,6 +25,8 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/spf13/afero"
+
 	"github.com/onflow/flow-cli/pkg/flowkit"
 
 	"github.com/onflow/flow-cli/build"
@@ -37,18 +39,20 @@ import (
 )
 
 type Run func(
-	*cobra.Command,
-	[]string,
-	GlobalFlags,
-	*services.Services,
+	cmd *cobra.Command,
+	args []string,
+	loader flowkit.ReaderWriter,
+	globalFlags GlobalFlags,
+	services *services.Services,
 ) (Result, error)
 
 type RunWithState func(
-	*cobra.Command,
-	[]string,
-	GlobalFlags,
-	*services.Services,
-	*flowkit.State,
+	cmd *cobra.Command,
+	args []string,
+	loader flowkit.ReaderWriter,
+	globalFlags GlobalFlags,
+	services *services.Services,
+	state *flowkit.State,
 ) (Result, error)
 
 type Command struct {
@@ -77,8 +81,11 @@ const (
 // we have one place to handle all errors and ensure commands have consistent results
 func (c Command) AddToParent(parent *cobra.Command) {
 	c.Cmd.Run = func(cmd *cobra.Command, args []string) {
+		// initialize file loader used in commands
+		loader := &afero.Afero{Fs: afero.NewOsFs()}
+
 		// if we receive a config error that isn't missing config we should handle it
-		state, confErr := flowkit.Load(Flags.ConfigPaths)
+		state, confErr := flowkit.Load(Flags.ConfigPaths, loader)
 		if !errors.Is(confErr, config.ErrDoesNotExist) {
 			handleError("Config Error", confErr)
 		}
@@ -91,6 +98,7 @@ func (c Command) AddToParent(parent *cobra.Command) {
 
 		logger := createLogger(Flags.Log, Flags.Format)
 
+		// initialize services
 		service := services.NewServices(clientGateway, state, logger)
 
 		checkVersion(logger)
@@ -98,13 +106,13 @@ func (c Command) AddToParent(parent *cobra.Command) {
 		// run command based on requirements for state
 		var result Result
 		if c.Run != nil {
-			result, err = c.Run(cmd, args, Flags, service)
+			result, err = c.Run(cmd, args, loader, Flags, service)
 		} else if c.RunS != nil {
 			if confErr != nil {
 				handleError("Config Error", confErr)
 			}
 
-			result, err = c.RunS(cmd, args, Flags, service, state)
+			result, err = c.RunS(cmd, args, loader, Flags, service, state)
 		} else {
 			panic("command implementation needs to provide run functionality")
 		}

@@ -18,22 +18,26 @@
 
 package contracts
 
-import "io/ioutil"
+import (
+	"github.com/onflow/flow-cli/pkg/flowkit"
+)
 
 type Loader interface {
-	Load(source string) (string, error)
+	Load(source string) ([]byte, error)
 	Normalize(base, relative string) string
 }
 
-type FilesystemLoader struct{}
+type FilesystemLoader struct {
+	Reader flowkit.ReaderWriter
+}
 
-func (f FilesystemLoader) Load(source string) (string, error) {
-	codeBytes, err := ioutil.ReadFile(source)
+func (f FilesystemLoader) Load(source string) ([]byte, error) {
+	codeBytes, err := f.Reader.ReadFile(source)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	return string(codeBytes), nil
+	return codeBytes, nil
 }
 
 func (f FilesystemLoader) Normalize(base, relative string) string {

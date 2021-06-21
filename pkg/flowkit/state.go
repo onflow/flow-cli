@@ -21,26 +21,26 @@ package flowkit
 import (
 	"errors"
 	"fmt"
+	"os"
 	"path"
 
 	"github.com/onflow/cadence"
+	"github.com/onflow/flow-cli/pkg/flowkit/config/json"
+	"github.com/onflow/flow-go-sdk/crypto"
 
 	"github.com/onflow/flow-cli/pkg/flowkit/util"
 
 	"github.com/onflow/flow-go-sdk"
-	"github.com/onflow/flow-go-sdk/crypto"
-	"github.com/spf13/afero"
 	"github.com/thoas/go-funk"
 
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
-	"github.com/onflow/flow-cli/pkg/flowkit/config/json"
 )
 
-// State contains the configuration for a Flow project.
-type State struct {
-	loader   *config.Loader
-	conf     *config.Config
-	accounts Accounts
+// ReaderWriter is implemented by any value that has ReadFile and WriteFile
+// and it is used to load and save files.
+type ReaderWriter interface {
+	ReadFile(source string) ([]byte, error)
+	WriteFile(filename string, data []byte, perm os.FileMode) error
 }
 
 // Contract is a Cadence contract definition for a project.
@@ -51,45 +51,33 @@ type Contract struct {
 	Args   []cadence.Value
 }
 
-// refactor to config loader
-
-// Load loads a project configuration and returns the resulting project.
-func Load(configFilePaths []string) (*State, error) {
-	loader := config.NewLoader(afero.NewOsFs())
-
-	// here we add all available parsers (more to add yaml etc...)
-	loader.AddConfigParser(json.NewParser())
-	conf, err := loader.Load(configFilePaths)
-
-	if err != nil {
-		if errors.Is(err, config.ErrDoesNotExist) {
-			return nil, err
-		}
-
-		return nil, err
-	}
-
-	proj, err := newProject(conf, loader)
-	if err != nil {
-		return nil, fmt.Errorf("invalid project configuration: %s", err)
-	}
-
-	return proj, nil
+// State manages the state for a Flow project.
+type State struct {
+	conf         *config.Config
+	confLoader   *config.Loader
+	readerWriter ReaderWriter
+	accounts     Accounts
 }
 
-// refactor to config loader
+// ReaderWriter retrieve current file reader writer
+func (p *State) ReaderWriter() ReaderWriter {
+	return p.readerWriter
+}
+
+// ReadFile exposes an injected file loader
+func (p *State) ReadFile(source string) ([]byte, error) {
+	return p.readerWriter.ReadFile(source)
+}
 
 // SaveDefault saves configuration to default path
 func (p *State) SaveDefault() error {
 	return p.Save(config.DefaultPath)
 }
 
-// refactor to config loader
-
 // Save saves the project configuration to the given path.
 func (p *State) Save(path string) error {
 	p.conf.Accounts = accountsToConfig(p.accounts)
-	err := p.loader.Save(p.conf, path)
+	err := p.confLoader.Save(p.conf, path)
 
 	if err != nil {
 		return fmt.Errorf("failed to save project configuration to: %s", path)
@@ -97,50 +85,6 @@ func (p *State) Save(path string) error {
 
 	return nil
 }
-
-// refactor to config loader
-
-// Exists checks if a project configuration exists.
-func Exists(path string) bool {
-	return config.Exists(path)
-}
-
-// refactor
-
-// Init initializes a new Flow project.
-func Init(sigAlgo crypto.SignatureAlgorithm, hashAlgo crypto.HashAlgorithm) (*State, error) {
-	emulatorServiceAccount, err := generateEmulatorServiceAccount(sigAlgo, hashAlgo)
-	if err != nil {
-		return nil, err
-	}
-
-	composer := config.NewLoader(afero.NewOsFs())
-	composer.AddConfigParser(json.NewParser())
-
-	return &State{
-		loader:   composer,
-		conf:     config.DefaultConfig(),
-		accounts: Accounts{*emulatorServiceAccount},
-	}, nil
-}
-
-// refactor to get config
-
-// newProject creates a new project from a configuration object.
-func newProject(conf *config.Config, composer *config.Loader) (*State, error) {
-	accounts, err := accountsFromConfig(conf)
-	if err != nil {
-		return nil, err
-	}
-
-	return &State{
-		loader:   composer,
-		conf:     conf,
-		accounts: accounts,
-	}, nil
-}
-
-// refactor to contracts ?
 
 // ContractConflictExists returns true if the same contract is configured to deploy
 // to more than one account in the same network.
@@ -259,4 +203,64 @@ func (p *State) AliasesForNetwork(network string) Aliases {
 	}
 
 	return aliases
+}
+
+// Load loads a project configuration and returns the resulting project.
+func Load(configFilePaths []string, readerWriter ReaderWriter) (*State, error) {
+	confLoader := config.NewLoader(readerWriter)
+
+	// here we add all available parsers (more to add yaml etc...)
+	confLoader.AddConfigParser(json.NewParser())
+	conf, err := confLoader.Load(configFilePaths)
+
+	if err != nil {
+		if errors.Is(err, config.ErrDoesNotExist) {
+			return nil, err
+		}
+
+		return nil, err
+	}
+
+	proj, err := newProject(conf, confLoader)
+	if err != nil {
+		return nil, fmt.Errorf("invalid project configuration: %s", err)
+	}
+
+	return proj, nil
+}
+
+// Exists checks if a project configuration exists.
+func Exists(path string) bool {
+	return config.Exists(path)
+}
+
+// Init initializes a new Flow project.
+func Init(readerWriter ReaderWriter, sigAlgo crypto.SignatureAlgorithm, hashAlgo crypto.HashAlgorithm) (*State, error) {
+	emulatorServiceAccount, err := generateEmulatorServiceAccount(sigAlgo, hashAlgo)
+	if err != nil {
+		return nil, err
+	}
+
+	loader := config.NewLoader(readerWriter)
+	loader.AddConfigParser(json.NewParser())
+
+	return &State{
+		confLoader: loader,
+		conf:       config.DefaultConfig(),
+		accounts:   Accounts{*emulatorServiceAccount},
+	}, nil
+}
+
+// newProject creates a new project from a configuration object.
+func newProject(conf *config.Config, loader *config.Loader) (*State, error) {
+	accounts, err := accountsFromConfig(conf)
+	if err != nil {
+		return nil, err
+	}
+
+	return &State{
+		conf:       conf,
+		confLoader: loader,
+		accounts:   accounts,
+	}, nil
 }

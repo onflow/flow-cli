@@ -23,8 +23,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-
-	"github.com/spf13/afero"
 )
 
 // ErrDoesNotExist is error to be returned when config file does not exists
@@ -46,6 +44,11 @@ type Parser interface {
 	SupportsFormat(string) bool
 }
 
+type ReaderWriter interface {
+	ReadFile(source string) ([]byte, error)
+	WriteFile(filename string, data []byte, perm os.FileMode) error
+}
+
 // ConfigParsers is a list of all configuration parsers.
 type ConfigParsers []Parser
 
@@ -62,16 +65,15 @@ func (c *ConfigParsers) FindForFormat(extension string) Parser {
 
 // Loader contains actions for composing and modifying configuration.
 type Loader struct {
-	af               *afero.Afero
+	readerWriter     ReaderWriter
 	configParsers    ConfigParsers
 	composedFromFile map[string]string
 }
 
 // NewLoader returns a new loader.
-func NewLoader(filesystem afero.Fs) *Loader {
-	af := &afero.Afero{Fs: filesystem}
+func NewLoader(readerWriter ReaderWriter) *Loader {
 	return &Loader{
-		af:               af,
+		readerWriter:     readerWriter,
 		composedFromFile: map[string]string{},
 	}
 }
@@ -92,7 +94,7 @@ func (l *Loader) Save(conf *Config, path string) error {
 		return err
 	}
 
-	err = l.af.WriteFile(path, data, 0644)
+	err = l.readerWriter.WriteFile(path, data, 0644)
 	if err != nil {
 		return err
 	}
@@ -209,7 +211,7 @@ func (l *Loader) composeConfig(baseConf *Config, conf *Config) {
 
 // simple file loader
 func (l *Loader) loadFile(path string) ([]byte, error) {
-	raw, err := l.af.ReadFile(path)
+	raw, err := l.readerWriter.ReadFile(path)
 
 	if err != nil {
 		if os.IsNotExist(err) {
