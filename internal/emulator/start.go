@@ -29,9 +29,9 @@ import (
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/spf13/cobra"
 
-	"github.com/onflow/flow-cli/pkg/flowcli/config"
-	"github.com/onflow/flow-cli/pkg/flowcli/project"
-	"github.com/onflow/flow-cli/pkg/flowcli/util"
+	"github.com/onflow/flow-cli/pkg/flowkit/config"
+	"github.com/onflow/flow-cli/pkg/flowkit/project"
+	"github.com/onflow/flow-cli/pkg/flowkit/util"
 )
 
 var Cmd *cobra.Command

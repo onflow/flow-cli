@@ -20,18 +20,18 @@ package tests
 
 import (
 	"github.com/onflow/cadence"
+	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/client"
 
-	"github.com/onflow/flow-cli/pkg/flowcli/gateway"
-	"github.com/onflow/flow-cli/pkg/flowcli/project"
+	"github.com/onflow/flow-cli/pkg/flowkit/gateway"
 )
 
 type MockGateway struct {
 	GetAccountMock                func(address flow.Address) (*flow.Account, error)
-	SendTransactionMock           func(tx *project.Transaction) (*flow.Transaction, error)
-	PrepareTransactionPayloadMock func(tx *project.Transaction) (*project.Transaction, error)
-	SendSignedTransactionMock     func(tx *project.Transaction) (*flow.Transaction, error)
+	SendTransactionMock           func(tx *flowkit.Transaction) (*flow.Transaction, error)
+	PrepareTransactionPayloadMock func(tx *flowkit.Transaction) (*flowkit.Transaction, error)
+	SendSignedTransactionMock     func(tx *flowkit.Transaction) (*flow.Transaction, error)
 	GetTransactionResultMock      func(tx *flow.Transaction) (*flow.TransactionResult, error)
 	GetTransactionMock            func(id flow.Identifier) (*flow.Transaction, error)
 	ExecuteScriptMock             func(script []byte, arguments []cadence.Value) (cadence.Value, error)
@@ -51,7 +51,7 @@ func (g *MockGateway) GetAccount(address flow.Address) (*flow.Account, error) {
 	return g.GetAccountMock(address)
 }
 
-func (g *MockGateway) SendSignedTransaction(tx *project.Transaction) (*flow.Transaction, error) {
+func (g *MockGateway) SendSignedTransaction(tx *flowkit.Transaction) (*flow.Transaction, error) {
 	return g.SendSignedTransactionMock(tx)
 }
 

@@ -22,16 +22,16 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/onflow/flow-cli/pkg/flowcli/config"
+	"github.com/onflow/flow-cli/pkg/flowkit/config"
 
-	"github.com/onflow/flow-cli/pkg/flowcli/project"
+	"github.com/onflow/flow-cli/pkg/flowkit/project"
 
 	"github.com/onflow/flow-go-sdk/crypto"
 
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
-	"github.com/onflow/flow-cli/pkg/flowcli/services"
+	"github.com/onflow/flow-cli/pkg/flowkit/services"
 )
 
 type flagsCreate struct {

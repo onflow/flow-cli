@@ -21,16 +21,16 @@ package transactions
 import (
 	"fmt"
 
-	"github.com/onflow/flow-cli/pkg/flowcli/config"
+	"github.com/onflow/flow-cli/pkg/flowkit/config"
 
-	"github.com/onflow/flow-cli/pkg/flowcli"
-	"github.com/onflow/flow-cli/pkg/flowcli/project"
-	"github.com/onflow/flow-cli/pkg/flowcli/util"
+	"github.com/onflow/flow-cli/pkg/flowkit"
+	"github.com/onflow/flow-cli/pkg/flowkit/project"
+	"github.com/onflow/flow-cli/pkg/flowkit/util"
 
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
-	"github.com/onflow/flow-cli/pkg/flowcli/services"
+	"github.com/onflow/flow-cli/pkg/flowkit/services"
 )
 
 type flagsSend struct {
@@ -96,7 +96,7 @@ var SendCommand = &command.Command{
 			return nil, fmt.Errorf("error loading transaction file: %w", err)
 		}
 
-		txArgs, err := flowcli.ParseArguments(buildFlags.Args, buildFlags.ArgsJSON) // todo refactor flowcli
+		txArgs, err := flowkit.ParseArguments(buildFlags.Args, buildFlags.ArgsJSON) // todo refactor flowkit
 		if err != nil {
 			return nil, err
 		}

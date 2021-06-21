@@ -28,12 +28,12 @@ import (
 	"strings"
 
 	"github.com/onflow/flow-cli/build"
-	"github.com/onflow/flow-cli/pkg/flowcli/config"
-	"github.com/onflow/flow-cli/pkg/flowcli/gateway"
-	"github.com/onflow/flow-cli/pkg/flowcli/output"
-	"github.com/onflow/flow-cli/pkg/flowcli/project"
-	"github.com/onflow/flow-cli/pkg/flowcli/services"
-	"github.com/onflow/flow-cli/pkg/flowcli/util"
+	"github.com/onflow/flow-cli/pkg/flowkit/config"
+	"github.com/onflow/flow-cli/pkg/flowkit/gateway"
+	"github.com/onflow/flow-cli/pkg/flowkit/output"
+	"github.com/onflow/flow-cli/pkg/flowkit/project"
+	"github.com/onflow/flow-cli/pkg/flowkit/services"
+	"github.com/onflow/flow-cli/pkg/flowkit/util"
 
 	"github.com/onflow/flow-go-sdk/client"
 	"github.com/psiemens/sconfig"
@@ -52,7 +52,7 @@ type RunCommand func(
 type Command struct {
 	Cmd   *cobra.Command
 	Flags interface{}
-	Run   RunCommand // todo add run with project
+	Run   RunCommand
 }
 
 type GlobalFlags struct {

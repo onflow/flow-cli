@@ -22,7 +22,7 @@ import (
 	"bytes"
 	"fmt"
 
-	"github.com/onflow/flow-cli/pkg/flowcli/project"
+	"github.com/onflow/flow-cli/pkg/flowkit/project"
 
 	"github.com/onflow/flow-go-sdk"
 
@@ -30,9 +30,9 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
-	"github.com/onflow/flow-cli/pkg/flowcli"
-	"github.com/onflow/flow-cli/pkg/flowcli/services"
-	"github.com/onflow/flow-cli/pkg/flowcli/util"
+	"github.com/onflow/flow-cli/pkg/flowkit"
+	"github.com/onflow/flow-cli/pkg/flowkit/services"
+	"github.com/onflow/flow-cli/pkg/flowkit/util"
 )
 
 type flagsStakingInfo struct{}
@@ -74,8 +74,8 @@ type StakingResult struct {
 // JSON convert result to JSON
 func (r *StakingResult) JSON() interface{} {
 	result := make(map[string]interface{})
-	result["staking"] = flowcli.NewStakingInfoFromValue(r.staking)
-	result["delegation"] = flowcli.NewStakingInfoFromValue(r.delegation)
+	result["staking"] = flowkit.NewStakingInfoFromValue(r.staking)
+	result["delegation"] = flowkit.NewStakingInfoFromValue(r.delegation)
 
 	return result
 }
@@ -87,7 +87,7 @@ func (r *StakingResult) String() string {
 
 	_, _ = fmt.Fprintf(writer, "Account Staking Info:\n")
 
-	stakingInfo := flowcli.NewStakingInfoFromValue(r.staking)
+	stakingInfo := flowkit.NewStakingInfoFromValue(r.staking)
 
 	_, _ = fmt.Fprintf(writer, "ID: \t %v\n", stakingInfo["id"])
 	_, _ = fmt.Fprintf(writer, "Initial Weight: \t %v\n", stakingInfo["initialWeight"])
@@ -103,7 +103,7 @@ func (r *StakingResult) String() string {
 	_, _ = fmt.Fprintf(writer, "Tokens Unstaking: \t %v\n", stakingInfo["tokensUnstaking"])
 	_, _ = fmt.Fprintf(writer, "Total Tokens Staked: \t %v\n", stakingInfo["totalTokensStaked"])
 
-	delegationStakingInfo := flowcli.NewStakingInfoFromValue(r.delegation)
+	delegationStakingInfo := flowkit.NewStakingInfoFromValue(r.delegation)
 
 	_, _ = fmt.Fprintf(writer, "\n\nAccount Delegation Info:\n")
 	_, _ = fmt.Fprintf(writer, "ID: \t %v\n", delegationStakingInfo["id"])
