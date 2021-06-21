@@ -339,7 +339,7 @@ func TestAccountsCreate_Integration(t *testing.T) {
 			pubKeys: []crypto.PublicKey{
 				tests.PubKeys()[0],
 			},
-			weights: []int{500, 500},
+			weights: []int{flow.AccountKeyWeightThreshold},
 		}}
 
 		for i, a := range accIn {
