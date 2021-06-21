@@ -37,30 +37,24 @@ func (c *Contract) IsAlias() bool {
 
 // GetByNameAndNetwork get contract array for account and network
 func (c *Contracts) GetByNameAndNetwork(name string, network string) *Contract {
-	contracts := make(Contracts, 0)
-
 	for _, contract := range *c {
 		if contract.Network == network && contract.Name == name {
-			contracts = append(contracts, contract)
+			return &contract
 		}
 	}
 
 	// if we don't find contract by name and network create a new contract
 	// and replace only name and source with existing
-	if len(contracts) == 0 {
-		cName := c.GetByName(name)
-		if cName == nil {
-			return nil
-		}
-
-		return &Contract{
-			Name:    cName.Name,
-			Network: network,
-			Source:  cName.Source,
-		}
+	cName := c.GetByName(name)
+	if cName == nil {
+		return nil
 	}
 
-	return &contracts[0]
+	return &Contract{
+		Name:    cName.Name,
+		Network: network,
+		Source:  cName.Source,
+	}
 }
 
 // GetByName get contract by name
