@@ -25,16 +25,20 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowcli/services"
 )
 
-type flagsDecode struct{}
+type flagsDecode struct {
+	SigAlgo  string `default:"ECDSA_P256" flag:"sig-algo" info:"Signature algorithm"`
+	FromFile string `default:"" flag:"from-file" info:"Load key from file"`
+}
 
 var decodeFlags = flagsDecode{}
 
 var DecodeCommand = &command.Command{
 	Cmd: &cobra.Command{
-		Use:     "decode <rlp encoded account key>",
-		Short:   "Decode a rlp encoded account key",
-		Args:    cobra.ExactArgs(1),
-		Example: "flow keys decode f847b8408...2402038203e8",
+		Use:       "decode <rlp|pem> <encoded public key>",
+		Short:     "Decode an encoded public key",
+		Args:      cobra.RangeArgs(1, 2),
+		ValidArgs: []string{"rlp", "pem"},
+		Example:   "flow keys decode rlp f847b8408...2402038203e8",
 	},
 	Flags: &decodeFlags,
 	Run: func(
@@ -43,14 +47,23 @@ var DecodeCommand = &command.Command{
 		globalFlags command.GlobalFlags,
 		services *services.Services,
 	) (command.Result, error) {
-		rlpEncoded := args[0]
+		encoding := args[0]
 
-		accountKey, err := services.Keys.Decode(rlpEncoded)
+		var encoded string
+		if len(args) > 1 {
+			encoded = args[1]
+		}
+
+		/* TODO: --from-file flag should be removed and replaced with $(echo file)
+		but cobra has an issue with parsing pem content as it recognize it as flag due to ---- characters */
+		accountKey, err := services.Keys.Decode(encoded, encoding, decodeFlags.FromFile, decodeFlags.SigAlgo)
 		if err != nil {
 			return nil, err
 		}
 
-		pubKey := accountKey.PublicKey
-		return &KeyResult{publicKey: pubKey, accountKey: accountKey}, err
+		return &KeyResult{
+			publicKey:  accountKey.PublicKey,
+			accountKey: accountKey,
+		}, err
 	},
 }

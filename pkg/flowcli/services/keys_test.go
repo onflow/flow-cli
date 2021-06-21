@@ -64,7 +64,12 @@ func TestKeys(t *testing.T) {
 	})
 
 	t.Run("RLP decode keys", func(t *testing.T) {
-		dkey, err := keys.Decode("f847b84084d716c14b051ad6b001624f738f5d302636e6b07cc75e4530af7776a4368a2b586dbefc0564ee28384c2696f178cbed52e62811bcc9ecb59568c996d342db2402038203e8")
+		dkey, err := keys.Decode(
+			"f847b84084d716c14b051ad6b001624f738f5d302636e6b07cc75e4530af7776a4368a2b586dbefc0564ee28384c2696f178cbed52e62811bcc9ecb59568c996d342db2402038203e8",
+			"rlp",
+			"",
+			crypto.ECDSA_P256.String(),
+		)
 
 		assert.NoError(t, err)
 		assert.Equal(t, dkey.PublicKey.String(), "0x84d716c14b051ad6b001624f738f5d302636e6b07cc75e4530af7776a4368a2b586dbefc0564ee28384c2696f178cbed52e62811bcc9ecb59568c996d342db24")
