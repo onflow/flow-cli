@@ -35,7 +35,7 @@ func (c *Contract) IsAlias() bool {
 	return c.Alias != ""
 }
 
-// GetByNameAndNetwork get contract array for account and network
+// GetByNameAndNetwork gets a contract array by account and network.
 func (c *Contracts) GetByNameAndNetwork(name string, network string) *Contract {
 	contracts := make(Contracts, 0)
 
