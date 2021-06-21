@@ -19,8 +19,6 @@
 package quick
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
@@ -45,8 +43,6 @@ var InitCommand = &command.Command{
 		globalFlags command.GlobalFlags,
 		services *services.Services,
 	) (command.Result, error) {
-		fmt.Println("⚠️  DEPRECATION WARNING: use \"flow init\" instead")
-
 		proj, err := services.Project.Init(
 			initFlag.Reset,
 			initFlag.Global,
