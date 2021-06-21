@@ -21,13 +21,13 @@ package transactions
 import (
 	"fmt"
 
-	"github.com/onflow/flow-cli/pkg/flowkit"
-
 	"github.com/onflow/flow-go-sdk"
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
+	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/services"
+	"github.com/onflow/flow-cli/pkg/flowkit/util"
 )
 
 type flagsBuild struct {
@@ -113,14 +113,15 @@ func build(
 }
 
 func getAddress(address string, state *flowkit.State) (flow.Address, error) {
-	addr := flow.HexToAddress(address)
-	if addr == flow.EmptyAddress {
-		acc := state.Accounts().ByName(address)
-		if acc == nil {
-			return flow.EmptyAddress, fmt.Errorf("account not found, make sure to pass valid account name from configuration or valid flow address")
-		}
-		addr = acc.Address()
+	addr, valid := util.ParseAddress(address)
+	if valid {
+		return addr, nil
 	}
 
-	return addr, nil
+	// if address is not valid then try using the string as an account name.
+	acc := state.Accounts().ByName(address)
+	if acc == nil {
+		return flow.EmptyAddress, fmt.Errorf("account not found, make sure to pass valid account name from configuration or valid flow address")
+	}
+	return acc.Address(), nil
 }
