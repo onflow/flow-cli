@@ -265,13 +265,11 @@ func TestAccountsCreate_Integration(t *testing.T) {
 	}
 
 	type accountsOut struct {
-		address  string
-		code     map[string][]byte
-		balance  uint64
-		sigAlgo  crypto.SignatureAlgorithm
-		hashAlgo crypto.HashAlgorithm
-		pubKeys  []crypto.PublicKey
-		weights  []int
+		address string
+		code    map[string][]byte
+		balance uint64
+		pubKeys []crypto.PublicKey
+		weights []int
 	}
 
 	t.Run("Create", func(t *testing.T) {
@@ -316,21 +314,17 @@ func TestAccountsCreate_Integration(t *testing.T) {
 		}}
 
 		accOut := []accountsOut{{
-			address:  "01cf0e2f2f715450",
-			code:     map[string][]byte{},
-			balance:  uint64(100000),
-			sigAlgo:  crypto.ECDSA_P256,
-			hashAlgo: crypto.SHA3_256,
+			address: "01cf0e2f2f715450",
+			code:    map[string][]byte{},
+			balance: uint64(100000),
 			pubKeys: []crypto.PublicKey{
 				tests.PubKeys()[0],
 			},
 			weights: []int{flow.AccountKeyWeightThreshold},
 		}, {
-			address:  "179b6b1cb6755e31",
-			code:     map[string][]byte{},
-			balance:  uint64(100000),
-			sigAlgo:  crypto.ECDSA_P256,
-			hashAlgo: crypto.SHA3_256,
+			address: "179b6b1cb6755e31",
+			code:    map[string][]byte{},
+			balance: uint64(100000),
 			pubKeys: []crypto.PublicKey{
 				tests.PubKeys()[0],
 				tests.PubKeys()[1],
@@ -341,9 +335,7 @@ func TestAccountsCreate_Integration(t *testing.T) {
 			code: map[string][]byte{
 				tests.ContractSimple.Name: tests.ContractSimple.Source,
 			},
-			balance:  uint64(100000),
-			sigAlgo:  crypto.ECDSA_P256,
-			hashAlgo: crypto.SHA3_256,
+			balance: uint64(100000),
 			pubKeys: []crypto.PublicKey{
 				tests.PubKeys()[0],
 			},
@@ -363,7 +355,7 @@ func TestAccountsCreate_Integration(t *testing.T) {
 
 			for x, k := range acc.Keys {
 				assert.Equal(t, k.PublicKey, a.pubKeys[x])
-				assert.Equal(t, k.Weight, a.weights[x])
+				assert.Equal(t, k.Weight, c.weights[x])
 				assert.Equal(t, k.SigAlgo, a.sigAlgo)
 				assert.Equal(t, k.HashAlgo, a.hashAlgo)
 			}
