@@ -23,7 +23,6 @@ import (
 
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/internal/config"
-	"github.com/onflow/flow-cli/pkg/flowkit/services"
 )
 
 // TODO(sideninja) workaround - init needed to be copied in order to work else there is flag duplicate error
