@@ -132,8 +132,8 @@ func printField(writer io.Writer, field cadence.Field, value cadence.Value) {
 	}
 
 	v := value.String()
-	if field.Identifier == "publicKey" {
-		v = fmt.Sprintf("%x", v)
+	if typeId == "" { // exception for not known typeId workaround for cadence arrays
+		v = fmt.Sprintf("%s\n\t\thex: %x", v, v)
 	}
 
 	_, _ = fmt.Fprintf(writer, "\t\t- %s (%s): %s \n", field.Identifier, typeId, v)
