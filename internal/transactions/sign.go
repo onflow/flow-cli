@@ -19,10 +19,14 @@
 package transactions
 
 import (
+	"fmt"
+
+	"github.com/onflow/flow-cli/pkg/flowkit"
+
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
-	"github.com/onflow/flow-cli/pkg/flowcli/services"
+	"github.com/onflow/flow-cli/pkg/flowkit/services"
 )
 
 type flagsSign struct {
@@ -39,24 +43,33 @@ var SignCommand = &command.Command{
 		Args:    cobra.ExactArgs(1),
 	},
 	Flags: &signFlags,
-	Run: func(
-		cmd *cobra.Command,
-		args []string,
-		globalFlags command.GlobalFlags,
-		services *services.Services,
-	) (command.Result, error) {
+	RunS:  sign,
+}
 
-		signed, err := services.Transactions.Sign(
-			args[0], // transaction payload
-			signFlags.Signer,
-			globalFlags.Yes,
-		)
-		if err != nil {
-			return nil, err
-		}
+func sign(
+	args []string,
+	readerWriter flowkit.ReaderWriter,
+	globalFlags command.GlobalFlags,
+	services *services.Services,
+	state *flowkit.State,
+) (command.Result, error) {
+	filename := args[0]
+	payload, err := readerWriter.ReadFile(filename)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read partial transaction from %s: %v", filename, err)
+	}
 
-		return &TransactionResult{
-			tx: signed.FlowTransaction(),
-		}, nil
-	},
+	signer := state.Accounts().ByName(signFlags.Signer)
+	if signer == nil {
+		return nil, fmt.Errorf("signer account: [%s] doesn't exists in configuration", signFlags.Signer)
+	}
+
+	signed, err := services.Transactions.Sign(signer, payload, globalFlags.Yes)
+	if err != nil {
+		return nil, err
+	}
+
+	return &TransactionResult{
+		tx: signed.FlowTransaction(),
+	}, nil
 }

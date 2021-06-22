@@ -22,13 +22,14 @@ import (
 	"fmt"
 	"net/url"
 
+	"github.com/onflow/flow-cli/pkg/flowkit"
+
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
-	"github.com/onflow/flow-cli/pkg/flowcli/config"
-	"github.com/onflow/flow-cli/pkg/flowcli/output"
-	"github.com/onflow/flow-cli/pkg/flowcli/project"
-	"github.com/onflow/flow-cli/pkg/flowcli/services"
+	"github.com/onflow/flow-cli/pkg/flowkit/config"
+	"github.com/onflow/flow-cli/pkg/flowkit/output"
+	"github.com/onflow/flow-cli/pkg/flowkit/services"
 )
 
 type flagsAddNetwork struct {
@@ -46,42 +47,40 @@ var AddNetworkCommand = &command.Command{
 		Args:    cobra.NoArgs,
 	},
 	Flags: &addNetworkFlags,
-	Run: func(
-		cmd *cobra.Command,
-		args []string,
-		globalFlags command.GlobalFlags,
-		services *services.Services,
-	) (command.Result, error) {
-		p, err := project.Load(globalFlags.ConfigPaths)
-		if err != nil {
-			return nil, fmt.Errorf("configuration does not exists")
-		}
-
-		networkData, flagsProvided, err := flagsToNetworkData(addNetworkFlags)
-		if err != nil {
-			return nil, err
-		}
-
-		if !flagsProvided {
-			networkData = output.NewNetworkPrompt()
-		}
-
-		network := config.StringToNetwork(networkData["name"], networkData["host"])
-		p.Config().Networks.AddOrUpdate(network.Name, network)
-
-		err = p.SaveDefault()
-		if err != nil {
-			return nil, err
-		}
-
-		return &ConfigResult{
-			result: fmt.Sprintf("Network %s added to the configuration", networkData["name"]),
-		}, nil
-	},
+	RunS:  addNetwork,
 }
 
-func init() {
-	AddNetworkCommand.AddToParent(AddCmd)
+func addNetwork(
+	_ []string,
+	_ flowkit.ReaderWriter,
+	_ command.GlobalFlags,
+	_ *services.Services,
+	state *flowkit.State,
+) (command.Result, error) {
+	if state == nil {
+		return nil, config.ErrDoesNotExist
+	}
+
+	networkData, flagsProvided, err := flagsToNetworkData(addNetworkFlags)
+	if err != nil {
+		return nil, err
+	}
+
+	if !flagsProvided {
+		networkData = output.NewNetworkPrompt()
+	}
+
+	network := config.StringToNetwork(networkData["name"], networkData["host"])
+	state.Networks().AddOrUpdate(network.Name, network)
+
+	err = state.SaveDefault()
+	if err != nil {
+		return nil, err
+	}
+
+	return &Result{
+		result: fmt.Sprintf("Network %s added to the configuration", networkData["name"]),
+	}, nil
 }
 
 func flagsToNetworkData(flags flagsAddNetwork) (map[string]string, bool, error) {

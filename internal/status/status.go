@@ -22,13 +22,13 @@ import (
 	"bytes"
 	"fmt"
 
-	"github.com/onflow/flow-cli/pkg/flowcli/output"
-
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
-	"github.com/onflow/flow-cli/pkg/flowcli/services"
-	"github.com/onflow/flow-cli/pkg/flowcli/util"
+	"github.com/onflow/flow-cli/pkg/flowkit"
+	"github.com/onflow/flow-cli/pkg/flowkit/output"
+	"github.com/onflow/flow-cli/pkg/flowkit/services"
+	"github.com/onflow/flow-cli/pkg/flowkit/util"
 )
 
 type FlagsStatus struct {
@@ -42,20 +42,23 @@ var Command = &command.Command{
 		Short: "Display the status of the Flow network",
 	},
 	Flags: &statusFlags,
-	Run: func(
-		cmd *cobra.Command,
-		args []string,
-		globalFlags command.GlobalFlags,
-		services *services.Services,
-	) (command.Result, error) {
-		accessNode, err := services.Status.Ping(globalFlags.Network)
+	RunS:  status,
+}
 
-		return &Result{
-			network:    globalFlags.Network,
-			accessNode: accessNode,
-			err:        err,
-		}, nil
-	},
+func status(
+	_ []string,
+	_ flowkit.ReaderWriter,
+	globalFlags command.GlobalFlags,
+	services *services.Services,
+	_ *flowkit.State,
+) (command.Result, error) {
+	accessNode, err := services.Status.Ping(globalFlags.Network)
+
+	return &Result{
+		network:    globalFlags.Network,
+		accessNode: accessNode,
+		err:        err,
+	}, nil
 }
 
 type Result struct {
@@ -100,7 +103,7 @@ func (r *Result) String() string {
 	_, _ = fmt.Fprintf(writer, "Network:\t %s\n", r.network)
 	_, _ = fmt.Fprintf(writer, "Access Node:\t %s\n", r.accessNode)
 
-	writer.Flush()
+	_ = writer.Flush()
 	return b.String()
 }
 

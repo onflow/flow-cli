@@ -24,7 +24,7 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/onflow/flow-cli/pkg/flowcli/util"
+	"github.com/onflow/flow-cli/pkg/flowkit/util"
 
 	"github.com/onflow/cadence"
 	jsoncdc "github.com/onflow/cadence/encoding/json"
@@ -43,13 +43,11 @@ func init() {
 	GetCommand.AddToParent(Cmd)
 }
 
-// EventResult result structure
 type EventResult struct {
 	BlockEvents []client.BlockEvents
 	Events      []flow.Event
 }
 
-// JSON convert result to JSON
 func (e *EventResult) JSON() interface{} {
 	result := make([]interface{}, 0)
 
@@ -72,7 +70,6 @@ func (e *EventResult) JSON() interface{} {
 	return result
 }
 
-// String convert result to string
 func (e *EventResult) String() string {
 	var b bytes.Buffer
 	writer := util.CreateTabWriter(&b)
@@ -88,11 +85,10 @@ func (e *EventResult) String() string {
 	// if we have events passed directly and not in relation to block
 	eventsString(writer, e.Events)
 
-	writer.Flush()
+	_ = writer.Flush()
 	return b.String()
 }
 
-// Oneliner show result as one liner grep friendly
 func (e *EventResult) Oneliner() string {
 	result := ""
 	for _, blockEvent := range e.BlockEvents {
@@ -130,29 +126,15 @@ func eventString(writer io.Writer, event flow.Event) {
 }
 
 func printField(writer io.Writer, field cadence.Field, value cadence.Value) {
-	v := value.ToGoValue()
-	typeInfo := "Unknown"
-
+	var typeId string
 	if field.Type != nil {
-		typeInfo = field.Type.ID()
-	} else if _, isAddress := v.([8]byte); isAddress {
-		typeInfo = "Address"
+		typeId = field.Type.ID()
 	}
 
-	fmt.Fprintf(writer, "\t\t-")
-	fmt.Fprintf(writer, " %s (%s):\t", field.Identifier, typeInfo)
-	// Try the two most obvious cases
-	if address, ok := v.([8]byte); ok {
-		fmt.Fprintf(writer, "%x", address)
-	} else if util.IsByteSlice(v) || field.Identifier == "publicKey" {
-		// make exception for public key, since it get's interpreted as []*big.Int
-		for _, b := range v.([]interface{}) {
-			fmt.Fprintf(writer, "%x", b)
-		}
-	} else if uintVal, ok := v.(uint64); typeInfo == "UFix64" && ok {
-		fmt.Fprintf(writer, "%v", cadence.UFix64(uintVal))
-	} else {
-		fmt.Fprintf(writer, "%v", v)
+	v := value.String()
+	if typeId == "" { // exception for not known typeId workaround for cadence arrays
+		v = fmt.Sprintf("%s\n\t\thex: %x", v, v)
 	}
-	fmt.Fprintf(writer, "\n")
+
+	_, _ = fmt.Fprintf(writer, "\t\t- %s (%s): %s \n", field.Identifier, typeId, v)
 }

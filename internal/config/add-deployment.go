@@ -21,13 +21,14 @@ package config
 import (
 	"fmt"
 
+	"github.com/onflow/flow-cli/pkg/flowkit"
+
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
-	"github.com/onflow/flow-cli/pkg/flowcli/config"
-	"github.com/onflow/flow-cli/pkg/flowcli/output"
-	"github.com/onflow/flow-cli/pkg/flowcli/project"
-	"github.com/onflow/flow-cli/pkg/flowcli/services"
+	"github.com/onflow/flow-cli/pkg/flowkit/config"
+	"github.com/onflow/flow-cli/pkg/flowkit/output"
+	"github.com/onflow/flow-cli/pkg/flowkit/services"
 )
 
 type flagsAddDeployment struct {
@@ -46,48 +47,45 @@ var AddDeploymentCommand = &command.Command{
 		Args:    cobra.NoArgs,
 	},
 	Flags: &addDeploymentFlags,
-	Run: func(
-		cmd *cobra.Command,
-		args []string,
-		globalFlags command.GlobalFlags,
-		services *services.Services,
-	) (command.Result, error) {
-		p, err := project.Load(globalFlags.ConfigPaths)
-		if err != nil {
-			return nil, fmt.Errorf("configuration does not exists")
-		}
-		conf := p.Config()
-
-		deployData, flagsProvided, err := flagsToDeploymentData(addDeploymentFlags)
-		if err != nil {
-			return nil, err
-		}
-
-		if !flagsProvided {
-			deployData = output.NewDeploymentPrompt(conf.Networks, conf.Accounts, conf.Contracts)
-		}
-
-		deployment := config.StringToDeployment(
-			deployData["network"].(string),
-			deployData["account"].(string),
-			deployData["contracts"].([]string),
-		)
-
-		conf.Deployments.AddOrUpdate(deployment)
-
-		err = p.SaveDefault()
-		if err != nil {
-			return nil, err
-		}
-
-		return &ConfigResult{
-			result: "Deployment added to the configuration.\nYou can deploy using 'flow project deploy' command",
-		}, nil
-	},
+	RunS:  addDeployment,
 }
 
-func init() {
-	AddDeploymentCommand.AddToParent(AddCmd)
+func addDeployment(
+	_ []string,
+	_ flowkit.ReaderWriter,
+	_ command.GlobalFlags,
+	_ *services.Services,
+	state *flowkit.State,
+) (command.Result, error) {
+	if state == nil {
+		return nil, config.ErrDoesNotExist
+	}
+
+	deployData, flagsProvided, err := flagsToDeploymentData(addDeploymentFlags)
+	if err != nil {
+		return nil, err
+	}
+
+	if !flagsProvided {
+		deployData = output.NewDeploymentPrompt(*state.Networks(), state.Config().Accounts, *state.Contracts())
+	}
+
+	deployment := config.StringToDeployment(
+		deployData["network"].(string),
+		deployData["account"].(string),
+		deployData["contracts"].([]string),
+	)
+
+	state.Deployments().AddOrUpdate(deployment)
+
+	err = state.SaveDefault()
+	if err != nil {
+		return nil, err
+	}
+
+	return &Result{
+		result: "Deployment added to the configuration.\nYou can deploy using 'flow project deploy' command",
+	}, nil
 }
 
 func flagsToDeploymentData(flags flagsAddDeployment) (map[string]interface{}, bool, error) {

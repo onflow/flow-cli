@@ -25,7 +25,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/onflow/flow-cli/pkg/flowcli/output"
+	"github.com/onflow/flow-cli/pkg/flowkit/output"
 )
 
 var CompletionCmd = &cobra.Command{

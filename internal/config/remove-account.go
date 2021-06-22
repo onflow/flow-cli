@@ -19,14 +19,14 @@
 package config
 
 import (
-	"fmt"
+	"github.com/onflow/flow-cli/pkg/flowkit"
+	"github.com/onflow/flow-cli/pkg/flowkit/config"
 
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
-	"github.com/onflow/flow-cli/pkg/flowcli/output"
-	"github.com/onflow/flow-cli/pkg/flowcli/project"
-	"github.com/onflow/flow-cli/pkg/flowcli/services"
+	"github.com/onflow/flow-cli/pkg/flowkit/output"
+	"github.com/onflow/flow-cli/pkg/flowkit/services"
 )
 
 type flagsRemoveAccount struct{}
@@ -41,41 +41,38 @@ var RemoveAccountCommand = &command.Command{
 		Args:    cobra.MaximumNArgs(1),
 	},
 	Flags: &removeAccountFlags,
-	Run: func(
-		cmd *cobra.Command,
-		args []string,
-		globalFlags command.GlobalFlags,
-		services *services.Services,
-	) (command.Result, error) {
-		p, err := project.Load(globalFlags.ConfigPaths)
-		if err != nil {
-			return nil, fmt.Errorf("configuration does not exists")
-		}
-		conf := p.Config()
-
-		name := ""
-		if len(args) == 1 {
-			name = args[0]
-		} else {
-			name = output.RemoveAccountPrompt(conf.Accounts)
-		}
-
-		err = p.RemoveAccount(name)
-		if err != nil {
-			return nil, err
-		}
-
-		err = p.SaveDefault()
-		if err != nil {
-			return nil, err
-		}
-
-		return &ConfigResult{
-			result: "account removed",
-		}, nil
-	},
+	RunS:  removeAccount,
 }
 
-func init() {
-	RemoveAccountCommand.AddToParent(RemoveCmd)
+func removeAccount(
+	args []string,
+	_ flowkit.ReaderWriter,
+	_ command.GlobalFlags,
+	_ *services.Services,
+	state *flowkit.State,
+) (command.Result, error) {
+	if state == nil {
+		return nil, config.ErrDoesNotExist
+	}
+
+	name := ""
+	if len(args) == 1 {
+		name = args[0]
+	} else {
+		name = output.RemoveAccountPrompt(state.Config().Accounts)
+	}
+
+	err := state.Accounts().Remove(name)
+	if err != nil {
+		return nil, err
+	}
+
+	err = state.SaveDefault()
+	if err != nil {
+		return nil, err
+	}
+
+	return &Result{
+		result: "account removed",
+	}, nil
 }

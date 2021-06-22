@@ -19,18 +19,13 @@
 package quick
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/internal/config"
-	"github.com/onflow/flow-cli/pkg/flowcli/services"
 )
 
 // TODO(sideninja) workaround - init needed to be copied in order to work else there is flag duplicate error
-
-var initFlag = config.FlagsInit{}
 
 var InitCommand = &command.Command{
 	Cmd: &cobra.Command{
@@ -38,26 +33,6 @@ var InitCommand = &command.Command{
 		Short:   "Initialize a new configuration",
 		Example: "flow project init",
 	},
-	Flags: &initFlag,
-	Run: func(
-		cmd *cobra.Command,
-		args []string,
-		globalFlags command.GlobalFlags,
-		services *services.Services,
-	) (command.Result, error) {
-		fmt.Println("⚠️  DEPRECATION WARNING: use \"flow init\" instead")
-
-		proj, err := services.Project.Init(
-			initFlag.Reset,
-			initFlag.Global,
-			initFlag.ServiceKeySigAlgo,
-			initFlag.ServiceKeyHashAlgo,
-			initFlag.ServicePrivateKey,
-		)
-		if err != nil {
-			return nil, err
-		}
-
-		return &config.InitResult{Project: proj}, nil
-	},
+	Flags: &config.InitFlag,
+	Run:   config.Initialise, // TODO(sideninja) workaround - init needed to be copied in order to work else there is flag duplicate error
 }

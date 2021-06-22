@@ -22,13 +22,15 @@ import (
 	"bytes"
 	"fmt"
 
+	"github.com/onflow/flow-go-sdk"
+
 	"github.com/onflow/cadence"
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
-	"github.com/onflow/flow-cli/pkg/flowcli"
-	"github.com/onflow/flow-cli/pkg/flowcli/services"
-	"github.com/onflow/flow-cli/pkg/flowcli/util"
+	"github.com/onflow/flow-cli/pkg/flowkit"
+	"github.com/onflow/flow-cli/pkg/flowkit/services"
+	"github.com/onflow/flow-cli/pkg/flowkit/util"
 )
 
 type flagsStakingInfo struct{}
@@ -43,44 +45,45 @@ var StakingCommand = &command.Command{
 		Args:    cobra.ExactArgs(1),
 	},
 	Flags: &stakingFlags,
-	Run: func(
-		cmd *cobra.Command,
-		args []string,
-		globalFlags command.GlobalFlags,
-		services *services.Services,
-	) (command.Result, error) {
-		staking, delegation, err := services.Accounts.StakingInfo(args[0]) // address
-		if err != nil {
-			return nil, err
-		}
-
-		return &StakingResult{*staking, *delegation}, nil
-	},
+	Run:   stakingInfo,
 }
 
-// StakingResult represent result from all account commands
+func stakingInfo(
+	args []string,
+	_ flowkit.ReaderWriter,
+	_ command.GlobalFlags,
+	services *services.Services,
+) (command.Result, error) {
+	address := flow.HexToAddress(args[0])
+
+	staking, delegation, err := services.Accounts.StakingInfo(address)
+	if err != nil {
+		return nil, err
+	}
+
+	return &StakingResult{*staking, *delegation}, nil
+}
+
 type StakingResult struct {
 	staking    cadence.Value
 	delegation cadence.Value
 }
 
-// JSON convert result to JSON
 func (r *StakingResult) JSON() interface{} {
 	result := make(map[string]interface{})
-	result["staking"] = flowcli.NewStakingInfoFromValue(r.staking)
-	result["delegation"] = flowcli.NewStakingInfoFromValue(r.delegation)
+	result["staking"] = flowkit.NewStakingInfoFromValue(r.staking)
+	result["delegation"] = flowkit.NewStakingInfoFromValue(r.delegation)
 
 	return result
 }
 
-// String convert result to string
 func (r *StakingResult) String() string {
 	var b bytes.Buffer
 	writer := util.CreateTabWriter(&b)
 
 	_, _ = fmt.Fprintf(writer, "Account Staking Info:\n")
 
-	stakingInfo := flowcli.NewStakingInfoFromValue(r.staking)
+	stakingInfo := flowkit.NewStakingInfoFromValue(r.staking)
 
 	_, _ = fmt.Fprintf(writer, "ID: \t %v\n", stakingInfo["id"])
 	_, _ = fmt.Fprintf(writer, "Initial Weight: \t %v\n", stakingInfo["initialWeight"])
@@ -96,7 +99,7 @@ func (r *StakingResult) String() string {
 	_, _ = fmt.Fprintf(writer, "Tokens Unstaking: \t %v\n", stakingInfo["tokensUnstaking"])
 	_, _ = fmt.Fprintf(writer, "Total Tokens Staked: \t %v\n", stakingInfo["totalTokensStaked"])
 
-	delegationStakingInfo := flowcli.NewStakingInfoFromValue(r.delegation)
+	delegationStakingInfo := flowkit.NewStakingInfoFromValue(r.delegation)
 
 	_, _ = fmt.Fprintf(writer, "\n\nAccount Delegation Info:\n")
 	_, _ = fmt.Fprintf(writer, "ID: \t %v\n", delegationStakingInfo["id"])
@@ -111,7 +114,6 @@ func (r *StakingResult) String() string {
 	return b.String()
 }
 
-// Oneliner show result as one liner grep friendly
 func (r *StakingResult) Oneliner() string {
 	return ""
 }

@@ -22,14 +22,14 @@ import (
 	"bytes"
 	"fmt"
 
-	"github.com/onflow/flow-cli/pkg/flowcli/output"
-
+	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
-	"github.com/onflow/flow-cli/pkg/flowcli/project"
-	"github.com/onflow/flow-cli/pkg/flowcli/services"
-	"github.com/onflow/flow-cli/pkg/flowcli/util"
+	"github.com/onflow/flow-cli/pkg/flowkit"
+	"github.com/onflow/flow-cli/pkg/flowkit/output"
+	"github.com/onflow/flow-cli/pkg/flowkit/services"
+	"github.com/onflow/flow-cli/pkg/flowkit/util"
 )
 
 type FlagsInit struct {
@@ -40,50 +40,70 @@ type FlagsInit struct {
 	Global             bool   `default:"false" flag:"global" info:"Initialize global user configuration"`
 }
 
-var initFlag = FlagsInit{}
+var InitFlag = FlagsInit{}
 
 var InitCommand = &command.Command{
 	Cmd: &cobra.Command{
 		Use:   "init",
 		Short: "Initialize a new configuration",
 	},
-	Flags: &initFlag,
-	Run: func(
-		cmd *cobra.Command,
-		args []string,
-		globalFlags command.GlobalFlags,
-		services *services.Services,
-	) (command.Result, error) {
-		proj, err := services.Project.Init(
-			initFlag.Reset,
-			initFlag.Global,
-			initFlag.ServiceKeySigAlgo,
-			initFlag.ServiceKeyHashAlgo,
-			initFlag.ServicePrivateKey,
-		)
+	Flags: &InitFlag,
+	Run:   Initialise,
+}
+
+func Initialise(
+	_ []string,
+	readerWriter flowkit.ReaderWriter,
+	_ command.GlobalFlags,
+	services *services.Services,
+) (command.Result, error) {
+
+	sigAlgo := crypto.StringToSignatureAlgorithm(InitFlag.ServiceKeySigAlgo)
+	if sigAlgo == crypto.UnknownSignatureAlgorithm {
+		return nil, fmt.Errorf("invalid signature algorithm: %s", InitFlag.ServiceKeySigAlgo)
+	}
+
+	hashAlgo := crypto.StringToHashAlgorithm(InitFlag.ServiceKeyHashAlgo)
+	if hashAlgo == crypto.UnknownHashAlgorithm {
+		return nil, fmt.Errorf("invalid hash algorithm: %s", InitFlag.ServiceKeyHashAlgo)
+	}
+
+	var privateKey crypto.PrivateKey
+	if InitFlag.ServicePrivateKey != "" {
+		var err error
+		privateKey, err = crypto.DecodePrivateKeyHex(sigAlgo, InitFlag.ServicePrivateKey)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("invalid private key: %w", err)
 		}
+	}
 
-		return &InitResult{proj}, nil
-	},
+	s, err := services.Project.Init(
+		readerWriter,
+		InitFlag.Reset,
+		InitFlag.Global,
+		sigAlgo,
+		hashAlgo,
+		privateKey,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return &InitResult{State: s}, nil
 }
 
-// InitResult result structure
 type InitResult struct {
-	*project.Project
+	*flowkit.State
 }
 
-// JSON convert result to JSON
 func (r *InitResult) JSON() interface{} {
 	return r
 }
 
-// String convert result to string
 func (r *InitResult) String() string {
 	var b bytes.Buffer
 	writer := util.CreateTabWriter(&b)
-	account, _ := r.Project.EmulatorServiceAccount()
+	account, _ := r.State.EmulatorServiceAccount()
 
 	_, _ = fmt.Fprintf(writer, "Configuration initialized\n")
 	_, _ = fmt.Fprintf(writer, "Service account: %s\n\n", output.Bold("0x"+account.Address().String()))
@@ -93,11 +113,10 @@ func (r *InitResult) String() string {
 		output.Bold("'flow init --reset'"),
 	)
 
-	writer.Flush()
+	_ = writer.Flush()
 	return b.String()
 }
 
-// Oneliner show result as one liner grep friendly
 func (r *InitResult) Oneliner() string {
 	return ""
 }

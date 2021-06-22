@@ -19,18 +19,17 @@
 package accounts
 
 import (
-	"fmt"
+	"github.com/onflow/flow-go-sdk"
 
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
-	"github.com/onflow/flow-cli/pkg/flowcli/services"
+	"github.com/onflow/flow-cli/pkg/flowkit"
+	"github.com/onflow/flow-cli/pkg/flowkit/services"
 )
 
 type flagsGet struct {
-	Contracts bool     `default:"false" flag:"contracts" info:"⚠️  Deprecated: use include flag instead"`
-	Code      bool     `default:"false" flag:"code" info:"⚠️  Deprecated: use contracts flag instead"`
-	Include   []string `default:"" flag:"include" info:"Fields to include in the output"`
+	Include []string `default:"" flag:"include" info:"Fields to include in the output"`
 }
 
 var getFlags = flagsGet{}
@@ -43,29 +42,24 @@ var GetCommand = &command.Command{
 		Args:    cobra.ExactArgs(1),
 	},
 	Flags: &getFlags,
-	Run: func(
-		cmd *cobra.Command,
-		args []string,
-		globalFlags command.GlobalFlags,
-		services *services.Services,
-	) (command.Result, error) {
-		if getFlags.Code {
-			fmt.Println("⚠️  DEPRECATION WARNING: use contracts flag instead")
-		}
+	Run:   get,
+}
 
-		if getFlags.Contracts {
-			fmt.Println("⚠️  DEPRECATION WARNING: use include contracts flag instead")
-		}
+func get(
+	args []string,
+	_ flowkit.ReaderWriter,
+	_ command.GlobalFlags,
+	services *services.Services,
+) (command.Result, error) {
+	address := flow.HexToAddress(args[0])
 
-		account, err := services.Accounts.Get(args[0]) // address
-		if err != nil {
-			return nil, err
-		}
+	account, err := services.Accounts.Get(address)
+	if err != nil {
+		return nil, err
+	}
 
-		return &AccountResult{
-			Account:  account,
-			showCode: getFlags.Contracts || getFlags.Code,
-			include:  getFlags.Include,
-		}, nil
-	},
+	return &AccountResult{
+		Account: account,
+		include: getFlags.Include,
+	}, nil
 }

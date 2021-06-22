@@ -26,7 +26,7 @@ import (
 	"github.com/onflow/flow-go-sdk"
 	"github.com/spf13/cobra"
 
-	"github.com/onflow/flow-cli/pkg/flowcli/util"
+	"github.com/onflow/flow-cli/pkg/flowkit/util"
 )
 
 var Cmd = &cobra.Command{
@@ -39,12 +39,10 @@ func init() {
 	GetCommand.AddToParent(Cmd)
 }
 
-// CollectionResult
 type CollectionResult struct {
 	*flow.Collection
 }
 
-// JSON convert result to JSON
 func (c *CollectionResult) JSON() interface{} {
 	txIDs := make([]string, 0)
 
@@ -55,7 +53,6 @@ func (c *CollectionResult) JSON() interface{} {
 	return txIDs
 }
 
-// String convert result to string
 func (c *CollectionResult) String() string {
 	var b bytes.Buffer
 	writer := util.CreateTabWriter(&b)
@@ -66,12 +63,11 @@ func (c *CollectionResult) String() string {
 		_, _ = fmt.Fprintf(writer, "%s\n", tx.String())
 	}
 
-	writer.Flush()
+	_ = writer.Flush()
 
 	return b.String()
 }
 
-// Oneliner show result as one liner grep friendly
 func (c *CollectionResult) Oneliner() string {
 	return strings.Join(c.JSON().([]string), ",")
 }

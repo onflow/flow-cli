@@ -22,8 +22,9 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
-	"github.com/onflow/flow-cli/pkg/flowcli/contracts"
-	"github.com/onflow/flow-cli/pkg/flowcli/services"
+	"github.com/onflow/flow-cli/pkg/flowkit"
+	"github.com/onflow/flow-cli/pkg/flowkit/contracts"
+	"github.com/onflow/flow-cli/pkg/flowkit/services"
 )
 
 type flagsDeploy struct {
@@ -39,27 +40,28 @@ var DeployCommand = &command.Command{
 		Example: "flow project deploy --network testnet",
 	},
 	Flags: &deployFlags,
-	Run: func(
-		cmd *cobra.Command,
-		args []string,
-		globalFlags command.GlobalFlags,
-		services *services.Services,
-	) (command.Result, error) {
-		c, err := services.Project.Deploy(globalFlags.Network, deployFlags.Update)
-		if err != nil {
-			return nil, err
-		}
-
-		return &DeployResult{c}, nil
-	},
+	RunS:  deploy,
 }
 
-// DeployResult result structure
+func deploy(
+	_ []string,
+	_ flowkit.ReaderWriter,
+	globalFlags command.GlobalFlags,
+	services *services.Services,
+	_ *flowkit.State,
+) (command.Result, error) {
+	c, err := services.Project.Deploy(globalFlags.Network, deployFlags.Update)
+	if err != nil {
+		return nil, err
+	}
+
+	return &DeployResult{c}, nil
+}
+
 type DeployResult struct {
 	contracts []*contracts.Contract
 }
 
-// JSON convert result to JSON
 func (r *DeployResult) JSON() interface{} {
 	result := make(map[string]string)
 
@@ -70,12 +72,10 @@ func (r *DeployResult) JSON() interface{} {
 	return result
 }
 
-// String convert result to string
 func (r *DeployResult) String() string {
 	return ""
 }
 
-// Oneliner show result as one liner grep friendly
 func (r *DeployResult) Oneliner() string {
 	return ""
 }

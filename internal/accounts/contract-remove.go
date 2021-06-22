@@ -19,17 +19,16 @@
 package accounts
 
 import (
-	"fmt"
+	"github.com/onflow/flow-cli/pkg/flowkit"
 
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
-	"github.com/onflow/flow-cli/pkg/flowcli/services"
+	"github.com/onflow/flow-cli/pkg/flowkit/services"
 )
 
 type flagsRemoveContract struct {
 	Signer  string   `default:"emulator-account" flag:"signer" info:"Account name from configuration used to sign the transaction"`
-	Results bool     `default:"false" flag:"results" info:"⚠️  Deprecated: results are provided by default"`
 	Include []string `default:"" flag:"include" info:"Fields to include in the output"`
 }
 
@@ -43,28 +42,26 @@ var RemoveCommand = &command.Command{
 		Args:    cobra.ExactArgs(1),
 	},
 	Flags: &flagsRemove,
-	Run: func(
-		cmd *cobra.Command,
-		args []string,
-		globalFlags command.GlobalFlags,
-		services *services.Services,
-	) (command.Result, error) {
-		if flagsRemove.Results {
-			fmt.Println("⚠️ DEPRECATION WARNING: results flag is deprecated, results are by default included in all executions")
-		}
+	RunS:  removeContract,
+}
 
-		account, err := services.Accounts.RemoveContract(
-			args[0], // name
-			flagsRemove.Signer,
-		)
-		if err != nil {
-			return nil, err
-		}
+func removeContract(
+	args []string,
+	_ flowkit.ReaderWriter,
+	_ command.GlobalFlags,
+	services *services.Services,
+	state *flowkit.State,
+) (command.Result, error) {
+	contractName := args[0]
 
-		return &AccountResult{
-			Account:  account,
-			showCode: false,
-			include:  flagsRemove.Include,
-		}, nil
-	},
+	from := state.Accounts().ByName(flagsRemove.Signer)
+	account, err := services.Accounts.RemoveContract(from, contractName)
+	if err != nil {
+		return nil, err
+	}
+
+	return &AccountResult{
+		Account: account,
+		include: flagsRemove.Include,
+	}, nil
 }

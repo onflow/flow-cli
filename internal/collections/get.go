@@ -19,10 +19,12 @@
 package collections
 
 import (
+	"github.com/onflow/flow-go-sdk"
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
-	"github.com/onflow/flow-cli/pkg/flowcli/services"
+	"github.com/onflow/flow-cli/pkg/flowkit"
+	"github.com/onflow/flow-cli/pkg/flowkit/services"
 )
 
 type flagsCollections struct{}
@@ -37,17 +39,21 @@ var GetCommand = &command.Command{
 		Args:    cobra.ExactArgs(1),
 	},
 	Flags: &collectionFlags,
-	Run: func(
-		cmd *cobra.Command,
-		args []string,
-		globalFlags command.GlobalFlags,
-		services *services.Services,
-	) (command.Result, error) {
-		collection, err := services.Collections.Get(args[0]) // collection id
-		if err != nil {
-			return nil, err
-		}
+	Run:   get,
+}
 
-		return &CollectionResult{collection}, nil
-	},
+func get(
+	args []string,
+	_ flowkit.ReaderWriter,
+	_ command.GlobalFlags,
+	services *services.Services,
+) (command.Result, error) {
+	id := flow.HexToID(args[0])
+
+	collection, err := services.Collections.Get(id)
+	if err != nil {
+		return nil, err
+	}
+
+	return &CollectionResult{collection}, nil
 }

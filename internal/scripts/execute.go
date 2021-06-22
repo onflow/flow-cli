@@ -21,17 +21,17 @@ package scripts
 import (
 	"fmt"
 
+	"github.com/onflow/flow-cli/pkg/flowkit"
+
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
-	"github.com/onflow/flow-cli/pkg/flowcli/services"
+	"github.com/onflow/flow-cli/pkg/flowkit/services"
 )
 
 type flagsScripts struct {
 	ArgsJSON string   `default:"" flag:"args-json" info:"arguments in JSON-Cadence format"`
 	Arg      []string `default:"" flag:"arg" info:"argument in Type:Value format"`
-	Code     string   `default:"" flag:"code" info:"⚠️  Deprecated: use filename argument"`
-	Args     string   `default:"" flag:"args" info:"⚠️  Deprecated: use arg or args-json flag"`
 }
 
 var scriptFlags = flagsScripts{}
@@ -41,43 +41,39 @@ var ExecuteCommand = &command.Command{
 		Use:     "execute <filename>",
 		Short:   "Execute a script",
 		Example: `flow scripts execute script.cdc --arg String:"Meow" --arg String:"Woof"`,
-		Args:    cobra.MaximumNArgs(1),
+		Args:    cobra.ExactArgs(1),
 	},
 	Flags: &scriptFlags,
-	Run: func(
-		cmd *cobra.Command,
-		args []string,
-		globalFlags command.GlobalFlags,
-		services *services.Services,
-	) (command.Result, error) {
-		filename := ""
-		if len(args) == 1 {
-			filename = args[0]
-		} else if scriptFlags.Code != "" {
-			fmt.Println("⚠️  DEPRECATION WARNING: use filename as a command argument <filename>")
-			filename = scriptFlags.Code
-		} else {
-			return nil, fmt.Errorf("provide a valide filename command argument")
-		}
+	Run:   execute,
+}
 
-		if scriptFlags.Args != "" {
-			fmt.Println("⚠️  DEPRECATION WARNING: use arg flag in Type:Value format or args-json for JSON format")
+func execute(
+	args []string,
+	readerWriter flowkit.ReaderWriter,
+	globalFlags command.GlobalFlags,
+	services *services.Services,
+) (command.Result, error) {
+	filename := args[0]
 
-			if len(scriptFlags.Arg) == 0 && scriptFlags.ArgsJSON == "" {
-				scriptFlags.ArgsJSON = scriptFlags.Args // backward compatible, args was in json format
-			}
-		}
+	code, err := readerWriter.ReadFile(filename)
+	if err != nil {
+		return nil, fmt.Errorf("error loading script file: %w", err)
+	}
 
-		value, err := services.Scripts.Execute(
-			filename,
-			scriptFlags.Arg,
-			scriptFlags.ArgsJSON,
-			globalFlags.Network,
-		)
-		if err != nil {
-			return nil, err
-		}
+	scriptArgs, err := flowkit.ParseArguments(scriptFlags.Arg, scriptFlags.ArgsJSON)
+	if err != nil {
+		return nil, fmt.Errorf("error parsing script arguments: %w", err)
+	}
 
-		return &ScriptResult{value}, nil
-	},
+	value, err := services.Scripts.Execute(
+		code,
+		scriptArgs,
+		filename,
+		globalFlags.Network,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return &ScriptResult{value}, nil
 }

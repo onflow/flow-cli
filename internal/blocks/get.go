@@ -19,21 +19,16 @@
 package blocks
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
-	"github.com/onflow/flow-cli/pkg/flowcli/services"
+	"github.com/onflow/flow-cli/pkg/flowkit"
+	"github.com/onflow/flow-cli/pkg/flowkit/services"
 )
 
 type flagsBlocks struct {
-	Events      string   `default:"" flag:"events" info:"List events of this type for the block"`
-	Include     []string `default:"" flag:"include" info:"Fields to include in the output"`
-	Verbose     bool     `default:"false" flag:"verbose" info:"⚠️  Deprecated: use include transactions flag instead"`
-	Latest      bool     `default:"false" flag:"latest" info:"⚠️  No longer supported: use command argument"`
-	BlockID     string   `default:"" flag:"id" info:"⚠️  No longer supported: use command argument"`
-	BlockHeight uint64   `default:"0" flag:"height" info:"⚠️  No longer supported: use command argument"`
+	Events  string   `default:"" flag:"events" info:"List events of this type for the block"`
+	Include []string `default:"" flag:"include" info:"Fields to include in the output"`
 }
 
 var blockFlags = flagsBlocks{}
@@ -46,34 +41,27 @@ var GetCommand = &command.Command{
 		Args:    cobra.ExactArgs(1),
 	},
 	Flags: &blockFlags,
-	Run: func(
-		cmd *cobra.Command,
-		args []string,
-		globalFlags command.GlobalFlags,
-		services *services.Services,
-	) (command.Result, error) {
-		if blockFlags.Latest || blockFlags.BlockID != "" || blockFlags.BlockHeight != 0 {
-			return nil, fmt.Errorf("⚠️  No longer supported: use command argument.")
-		}
+	Run:   get,
+}
 
-		if blockFlags.Verbose {
-			fmt.Println("⚠️  DEPRECATION WARNING: use include transactions flag instead")
-		}
+func get(
+	args []string,
+	_ flowkit.ReaderWriter,
+	_ command.GlobalFlags,
+	services *services.Services,
+) (command.Result, error) {
+	block, events, collections, err := services.Blocks.GetBlock(
+		args[0], // block id
+		blockFlags.Events,
+		command.ContainsFlag(blockFlags.Include, "transactions"),
+	)
+	if err != nil {
+		return nil, err
+	}
 
-		block, events, collections, err := services.Blocks.GetBlock(
-			args[0], // block id
-			blockFlags.Events,
-			blockFlags.Verbose,
-		)
-		if err != nil {
-			return nil, err
-		}
-
-		return &BlockResult{
-			block:       block,
-			events:      events,
-			verbose:     blockFlags.Verbose,
-			collections: collections,
-		}, nil
-	},
+	return &BlockResult{
+		block:       block,
+		events:      events,
+		collections: collections,
+	}, nil
 }

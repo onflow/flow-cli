@@ -23,7 +23,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/onflow/flow-cli/pkg/flowcli/output"
+	"github.com/onflow/flow-cli/pkg/flowkit/output"
 
 	"github.com/onflow/flow-cli/internal/command"
 
@@ -32,7 +32,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/events"
-	"github.com/onflow/flow-cli/pkg/flowcli/util"
+	"github.com/onflow/flow-cli/pkg/flowkit/util"
 )
 
 var Cmd = &cobra.Command{
@@ -49,16 +49,13 @@ func init() {
 	SendSignedCommand.AddToParent(Cmd)
 }
 
-// TransactionResult represent result from all account commands
 type TransactionResult struct {
 	result  *flow.TransactionResult
 	tx      *flow.Transaction
-	code    bool
 	include []string
 	exclude []string
 }
 
-// JSON convert result to JSON
 func (r *TransactionResult) JSON() interface{} {
 	result := make(map[string]interface{})
 	result["id"] = r.tx.ID().String()
@@ -89,7 +86,6 @@ func (r *TransactionResult) JSON() interface{} {
 	return result
 }
 
-// String convert result to string
 func (r *TransactionResult) String() string {
 	var b bytes.Buffer
 	writer := util.CreateTabWriter(&b)
@@ -163,7 +159,7 @@ func (r *TransactionResult) String() string {
 	}
 
 	if r.tx.Script != nil {
-		if command.ContainsFlag(r.include, "code") || r.code {
+		if command.ContainsFlag(r.include, "code") {
 			if len(r.tx.Arguments) == 0 {
 				_, _ = fmt.Fprintf(writer, "\n\nArguments\tNo arguments\n")
 			} else {
@@ -189,7 +185,6 @@ func (r *TransactionResult) String() string {
 	return b.String()
 }
 
-// Oneliner show result as one liner grep friendly
 func (r *TransactionResult) Oneliner() string {
 	result := fmt.Sprintf(
 		"ID: %s, Payer: %s, Authorizer: %s",

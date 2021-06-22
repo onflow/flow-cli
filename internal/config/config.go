@@ -34,17 +34,15 @@ func init() {
 	Cmd.AddCommand(RemoveCmd)
 }
 
-// ConfigResult result from configuration
-type ConfigResult struct {
+type Result struct {
 	result string
 }
 
-// JSON convert result to JSON
-func (r *ConfigResult) JSON() interface{} {
+func (r *Result) JSON() interface{} {
 	return nil
 }
 
-func (r *ConfigResult) String() string {
+func (r *Result) String() string {
 	if r.result != "" {
 		return r.result
 	}
@@ -52,7 +50,6 @@ func (r *ConfigResult) String() string {
 	return ""
 }
 
-// Oneliner show result as one liner grep friendly
-func (r *ConfigResult) Oneliner() string {
+func (r *Result) Oneliner() string {
 	return ""
 }

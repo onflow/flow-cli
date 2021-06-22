@@ -15,13 +15,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package transactions
 
 import (
+	"fmt"
+
+	"github.com/onflow/flow-go-sdk"
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
-	"github.com/onflow/flow-cli/pkg/flowcli/services"
+	"github.com/onflow/flow-cli/pkg/flowkit"
+	"github.com/onflow/flow-cli/pkg/flowkit/services"
+	"github.com/onflow/flow-cli/pkg/flowkit/util"
 )
 
 type flagsBuild struct {
@@ -44,33 +50,78 @@ var BuildCommand = &command.Command{
 		Args:    cobra.ExactArgs(1),
 	},
 	Flags: &buildFlags,
-	Run: func(
-		cmd *cobra.Command,
-		args []string,
-		globalFlags command.GlobalFlags,
-		services *services.Services,
-	) (command.Result, error) {
+	RunS:  build,
+}
 
-		codeFilename := args[0]
+func build(
+	args []string,
+	readerWriter flowkit.ReaderWriter,
+	globalFlags command.GlobalFlags,
+	services *services.Services,
+	state *flowkit.State,
+) (command.Result, error) {
+	proposer, err := getAddress(buildFlags.Proposer, state)
+	if err != nil {
+		return nil, err
+	}
 
-		build, err := services.Transactions.Build(
-			buildFlags.Proposer,
-			buildFlags.Authorizer,
-			buildFlags.Payer,
-			buildFlags.ProposerKeyIndex,
-			codeFilename,
-			buildFlags.GasLimit,
-			buildFlags.Args,
-			buildFlags.ArgsJSON,
-			globalFlags.Network,
-		)
+	// get all authorizers
+	var authorizers []flow.Address
+	for _, auth := range buildFlags.Authorizer {
+		addr, err := getAddress(auth, state)
 		if err != nil {
 			return nil, err
 		}
+		authorizers = append(authorizers, addr)
+	}
 
-		return &TransactionResult{
-			tx:      build.FlowTransaction(),
-			include: []string{"code", "payload", "signatures"},
-		}, nil
-	},
+	payer, err := getAddress(buildFlags.Payer, state)
+	if err != nil {
+		return nil, err
+	}
+
+	filename := args[0]
+	code, err := readerWriter.ReadFile(filename)
+	if err != nil {
+		return nil, fmt.Errorf("error loading transaction file: %w", err)
+	}
+
+	txArgs, err := flowkit.ParseArguments(buildFlags.Args, buildFlags.ArgsJSON)
+	if err != nil {
+		return nil, err
+	}
+
+	build, err := services.Transactions.Build(
+		proposer,
+		authorizers,
+		payer,
+		buildFlags.ProposerKeyIndex,
+		code,
+		filename,
+		buildFlags.GasLimit,
+		txArgs,
+		globalFlags.Network,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return &TransactionResult{
+		tx:      build.FlowTransaction(),
+		include: []string{"code", "payload", "signatures"},
+	}, nil
+}
+
+func getAddress(address string, state *flowkit.State) (flow.Address, error) {
+	addr, valid := util.ParseAddress(address)
+	if valid {
+		return addr, nil
+	}
+
+	// if address is not valid then try using the string as an account name.
+	acc := state.Accounts().ByName(address)
+	if acc == nil {
+		return flow.EmptyAddress, fmt.Errorf("account not found, make sure to pass valid account name from configuration or valid flow address")
+	}
+	return acc.Address(), nil
 }

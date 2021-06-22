@@ -21,15 +21,16 @@ package accounts
 import (
 	"fmt"
 
+	"github.com/onflow/flow-cli/pkg/flowkit"
+
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
-	"github.com/onflow/flow-cli/pkg/flowcli/services"
+	"github.com/onflow/flow-cli/pkg/flowkit/services"
 )
 
 type flagsUpdateContract struct {
 	Signer  string   `default:"emulator-account" flag:"signer" info:"Account name from configuration used to sign the transaction"`
-	Results bool     `default:"false" flag:"results" info:"⚠️  Deprecated: results are provided by default"`
 	Include []string `default:"" flag:"include" info:"Fields to include in the output"`
 }
 
@@ -43,30 +44,33 @@ var UpdateCommand = &command.Command{
 		Args:    cobra.ExactArgs(2),
 	},
 	Flags: &updateFlags,
-	Run: func(
-		cmd *cobra.Command,
-		args []string,
-		globalFlags command.GlobalFlags,
-		services *services.Services,
-	) (command.Result, error) {
-		if updateFlags.Results {
-			fmt.Println("⚠️ DEPRECATION WARNING: results flag is deprecated, results are by default included in all executions")
-		}
+	RunS:  updateContract,
+}
 
-		account, err := services.Accounts.AddContract(
-			updateFlags.Signer,
-			args[0], // name
-			args[1], // filename
-			true,
-		)
-		if err != nil {
-			return nil, err
-		}
+func updateContract(
+	args []string,
+	readerWriter flowkit.ReaderWriter,
+	_ command.GlobalFlags,
+	services *services.Services,
+	state *flowkit.State,
+) (command.Result, error) {
+	name := args[0]
+	filename := args[1]
 
-		return &AccountResult{
-			Account:  account,
-			showCode: false,
-			include:  updateFlags.Include,
-		}, nil
-	},
+	code, err := readerWriter.ReadFile(filename)
+	if err != nil {
+		return nil, fmt.Errorf("error loading contract file: %w", err)
+	}
+
+	to := state.Accounts().ByName(updateFlags.Signer)
+
+	account, err := services.Accounts.AddContract(to, name, code, false)
+	if err != nil {
+		return nil, err
+	}
+
+	return &AccountResult{
+		Account: account,
+		include: updateFlags.Include,
+	}, nil
 }

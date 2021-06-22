@@ -5,7 +5,7 @@ COMMIT := $(shell git rev-parse HEAD)
 # The tag of the current commit, otherwise empty
 VERSION := $(shell git describe --tags --abbrev=0 --exact-match 2>/dev/null)
 # Name of the cover profile
-COVER_PROFILE := cover.out
+COVER_PROFILE := coverage.txt
 # Disable go sum database lookup for private repos
 GOPRIVATE := github.com/dapperlabs/*
 # Ensure go bin path is in path (Especially for CI)
@@ -31,10 +31,6 @@ install-tools:
 .PHONY: test
 test:
 	GO111MODULE=on go test -coverprofile=$(COVER_PROFILE) $(if $(JSON_OUTPUT),-json,) ./...
-
-.PHONY: test-e2e
-test-e2e:
-	GO111MODULE=on E2E=1 go test tests/e2e_test.go
 
 .PHONY: test-e2e-emulator
 test-e2e-emulator:

@@ -19,10 +19,14 @@
 package transactions
 
 import (
+	"fmt"
+
+	"github.com/onflow/flow-cli/pkg/flowkit"
+
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
-	"github.com/onflow/flow-cli/pkg/flowcli/services"
+	"github.com/onflow/flow-cli/pkg/flowkit/services"
 )
 
 type flagsSendSigned struct {
@@ -40,25 +44,32 @@ var SendSignedCommand = &command.Command{
 		Example: `flow transactions send-signed signed.rlp`,
 	},
 	Flags: &sendSignedFlags,
-	Run: func(
-		cmd *cobra.Command,
-		args []string,
-		globalFlags command.GlobalFlags,
-		services *services.Services,
-	) (command.Result, error) {
+	RunS:  sendSigned,
+}
 
-		tx, result, err := services.Transactions.SendSigned(
-			args[0], // signed filename
-		)
-		if err != nil {
-			return nil, err
-		}
+func sendSigned(
+	args []string,
+	readerWriter flowkit.ReaderWriter,
+	_ command.GlobalFlags,
+	services *services.Services,
+	_ *flowkit.State,
+) (command.Result, error) {
+	filename := args[0]
 
-		return &TransactionResult{
-			result:  result,
-			tx:      tx,
-			include: sendSignedFlags.Include,
-			exclude: sendSignedFlags.Exclude,
-		}, nil
-	},
+	code, err := readerWriter.ReadFile(filename)
+	if err != nil {
+		return nil, fmt.Errorf("error loading transaction payload: %w", err)
+	}
+
+	tx, result, err := services.Transactions.SendSigned(code)
+	if err != nil {
+		return nil, err
+	}
+
+	return &TransactionResult{
+		result:  result,
+		tx:      tx,
+		include: sendSignedFlags.Include,
+		exclude: sendSignedFlags.Exclude,
+	}, nil
 }

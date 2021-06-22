@@ -28,7 +28,7 @@ import (
 	"github.com/onflow/flow-go-sdk"
 	"github.com/spf13/cobra"
 
-	"github.com/onflow/flow-cli/pkg/flowcli/util"
+	"github.com/onflow/flow-cli/pkg/flowkit/util"
 )
 
 var Cmd = &cobra.Command{
@@ -46,14 +46,12 @@ func init() {
 	GetCommand.AddToParent(Cmd)
 }
 
-// AccountResult represent result from all account commands
+// AccountResult represent result from all account commands.
 type AccountResult struct {
 	*flow.Account
-	showCode bool
-	include  []string
+	include []string
 }
 
-// JSON convert result to JSON
 func (r *AccountResult) JSON() interface{} {
 	result := make(map[string]interface{})
 	result["address"] = r.Address
@@ -73,7 +71,7 @@ func (r *AccountResult) JSON() interface{} {
 
 	result["contracts"] = contracts
 
-	if r.showCode {
+	if command.ContainsFlag(r.include, "contracts") {
 		c := make(map[string]string)
 		for name, code := range r.Contracts {
 			c[name] = string(code)
@@ -84,7 +82,6 @@ func (r *AccountResult) JSON() interface{} {
 	return result
 }
 
-// String convert result to string
 func (r *AccountResult) String() string {
 	var b bytes.Buffer
 	writer := util.CreateTabWriter(&b)
@@ -116,7 +113,7 @@ func (r *AccountResult) String() string {
 		_, _ = fmt.Fprintf(writer, "Contract: '%s'\n", name)
 	}
 
-	if r.showCode || command.ContainsFlag(r.include, "contracts") {
+	if command.ContainsFlag(r.include, "contracts") {
 		for name, code := range r.Contracts {
 			_, _ = fmt.Fprintf(writer, "Contracts '%s':\n", name)
 			_, _ = fmt.Fprintln(writer, string(code))
@@ -130,7 +127,6 @@ func (r *AccountResult) String() string {
 	return b.String()
 }
 
-// Oneliner show result as one liner grep friendly
 func (r *AccountResult) Oneliner() string {
 	keys := make([]string, 0, len(r.Keys))
 	for _, key := range r.Keys {

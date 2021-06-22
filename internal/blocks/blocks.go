@@ -29,7 +29,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/events"
-	"github.com/onflow/flow-cli/pkg/flowcli/util"
+	"github.com/onflow/flow-cli/pkg/flowkit/util"
 )
 
 var Cmd = &cobra.Command{
@@ -42,16 +42,13 @@ func init() {
 	GetCommand.AddToParent(Cmd)
 }
 
-// BlockResult
 type BlockResult struct {
 	block       *flow.Block
 	events      []client.BlockEvents
 	collections []*flow.Collection
-	verbose     bool
 	included    []string
 }
 
-// JSON convert result to JSON
 func (r *BlockResult) JSON() interface{} {
 	result := make(map[string]interface{})
 	result["blockId"] = r.block.ID.String()
@@ -65,7 +62,7 @@ func (r *BlockResult) JSON() interface{} {
 		collection := make(map[string]interface{})
 		collection["id"] = guarantee.CollectionID.String()
 
-		if r.verbose {
+		if command.ContainsFlag(r.included, "transactions") {
 			txs := make([]string, 0)
 			for _, tx := range r.collections[i].TransactionIDs {
 				txs = append(txs, tx.String())
@@ -80,7 +77,6 @@ func (r *BlockResult) JSON() interface{} {
 	return result
 }
 
-// String convert result to string
 func (r *BlockResult) String() string {
 	var b bytes.Buffer
 	writer := util.CreateTabWriter(&b)
@@ -97,7 +93,7 @@ func (r *BlockResult) String() string {
 	for i, guarantee := range r.block.CollectionGuarantees {
 		_, _ = fmt.Fprintf(writer, "    Collection %d:\t%s\n", i, guarantee.CollectionID)
 
-		if r.verbose || command.ContainsFlag(r.included, "transactions") {
+		if command.ContainsFlag(r.included, "transactions") {
 			for x, tx := range r.collections[i].TransactionIDs {
 				_, _ = fmt.Fprintf(writer, "         Transaction %d: %s\n", x, tx)
 			}
@@ -115,7 +111,6 @@ func (r *BlockResult) String() string {
 	return b.String()
 }
 
-// Oneliner show result as one liner grep friendly
 func (r *BlockResult) Oneliner() string {
 	return r.block.ID.String()
 }
