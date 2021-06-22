@@ -149,10 +149,10 @@ func (a *Accounts) Remove(name string) error {
 }
 
 // ByAddress get an account by address.
-func (a *Accounts) ByAddress(address flow.Address) *Account {
-	for _, acc := range *a {
-		if acc.address == address {
-			return &acc
+func (a Accounts) ByAddress(address flow.Address) *Account {
+	for i := range a {
+		if a[i].address == address {
+			return &a[i]
 		}
 	}
 
@@ -160,10 +160,10 @@ func (a *Accounts) ByAddress(address flow.Address) *Account {
 }
 
 // ByName get an account by name.
-func (a *Accounts) ByName(name string) *Account {
-	for _, acc := range *a {
-		if acc.name == name {
-			return &acc
+func (a Accounts) ByName(name string) *Account {
+	for i := range a {
+		if a[i].name == name {
+			return &a[i]
 		}
 	}
 

@@ -60,7 +60,7 @@ func (p *Project) Init(
 	global bool,
 	sigAlgo crypto.SignatureAlgorithm,
 	hashAlgo crypto.HashAlgorithm,
-	serviceKey crypto.PrivateKey,
+	serviceKey *crypto.PrivateKey,
 ) (*flowkit.State, error) {
 	path := config.DefaultPath
 	if global {
@@ -79,7 +79,9 @@ func (p *Project) Init(
 		return nil, err
 	}
 
-	state.Accounts().SetEmulatorKey(serviceKey)
+	if serviceKey != nil {
+		state.SetEmulatorKey(*serviceKey)
+	}
 
 	err = state.Save(path)
 	if err != nil {

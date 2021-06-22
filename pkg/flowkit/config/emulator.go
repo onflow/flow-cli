@@ -42,10 +42,10 @@ func DefaultEmulator() Emulator {
 }
 
 // Default gets default emulator.
-func (e *Emulators) Default() *Emulator {
-	for _, emulator := range *e {
-		if emulator.Name == DefaultEmulatorConfigName {
-			return &emulator
+func (e Emulators) Default() *Emulator {
+	for i := range e {
+		if e[i].Name == DefaultEmulatorConfigName {
+			return &e[i]
 		}
 	}
 

@@ -54,7 +54,7 @@ type State struct {
 	conf         *config.Config
 	confLoader   *config.Loader
 	readerWriter ReaderWriter
-	accounts     Accounts
+	accounts     *Accounts
 }
 
 // ReaderWriter retrieve current file reader writer.
@@ -74,7 +74,7 @@ func (p *State) SaveDefault() error {
 
 // Save saves the project configuration to the given path.
 func (p *State) Save(path string) error {
-	p.conf.Accounts = accountsToConfig(p.accounts)
+	p.conf.Accounts = accountsToConfig(*p.accounts)
 	err := p.confLoader.Save(p.conf, path)
 
 	if err != nil {
@@ -125,7 +125,7 @@ func (p *State) Contracts() *config.Contracts {
 
 // Accounts get accounts.
 func (p *State) Accounts() *Accounts {
-	return &p.accounts
+	return p.accounts
 }
 
 // Config get underlying configuration for advanced usage.
@@ -191,7 +191,7 @@ func (p *State) DeploymentContractsByNetwork(network string) ([]Contract, error)
 func (p *State) AccountNamesForNetwork(network string) []string {
 	names := make([]string, 0)
 
-	for _, account := range p.accounts {
+	for _, account := range *p.accounts {
 		if len(p.conf.Deployments.ByAccountAndNetwork(account.name, network)) > 0 {
 			if !util.ContainsString(names, account.name) {
 				names = append(names, account.name)
@@ -261,7 +261,7 @@ func Init(readerWriter ReaderWriter, sigAlgo crypto.SignatureAlgorithm, hashAlgo
 		confLoader:   loader,
 		readerWriter: readerWriter,
 		conf:         config.DefaultConfig(),
-		accounts:     Accounts{*emulatorServiceAccount},
+		accounts:     &Accounts{*emulatorServiceAccount},
 	}, nil
 }
 
@@ -275,6 +275,6 @@ func newProject(conf *config.Config, loader *config.Loader) (*State, error) {
 	return &State{
 		conf:       conf,
 		confLoader: loader,
-		accounts:   accounts,
+		accounts:   &accounts,
 	}, nil
 }

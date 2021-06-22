@@ -52,7 +52,7 @@ func TestProject(t *testing.T) {
 
 		p, err := sacc.Key().PrivateKey()
 		assert.NoError(t, err)
-		assert.Equal(t, p, pkey)
+		assert.Equal(t, (*p).String(), pkey.String())
 	})
 
 	t.Run("Deploy Project", func(t *testing.T) {
