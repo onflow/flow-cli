@@ -239,6 +239,15 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 			deployErr = true
 			continue
 		}
+		if result.Error != nil {
+			deployErr = true
+			p.logger.StopProgress()
+			p.logger.Error(fmt.Sprintf(
+				"Error deploying %s: (%s)\n",
+				output.Red(contract.Name()),
+				result.Error.Error(),
+			))
+		}
 
 		if result.Error == nil && !deployErr {
 			p.logger.StopProgress()
@@ -254,7 +263,7 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 	if !deployErr {
 		p.logger.Info(fmt.Sprintf("\n%s All contracts deployed successfully", output.SuccessEmoji()))
 	} else {
-		err = fmt.Errorf("failed to deploy contracts")
+		err = fmt.Errorf("failed to deploy all contracts")
 		p.logger.Error(err.Error())
 		return nil, err
 	}
