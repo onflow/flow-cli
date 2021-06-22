@@ -49,8 +49,7 @@ func init() {
 // AccountResult represent result from all account commands.
 type AccountResult struct {
 	*flow.Account
-	showCode bool
-	include  []string
+	include []string
 }
 
 func (r *AccountResult) JSON() interface{} {
@@ -72,7 +71,7 @@ func (r *AccountResult) JSON() interface{} {
 
 	result["contracts"] = contracts
 
-	if r.showCode {
+	if command.ContainsFlag(r.include, "contracts") {
 		c := make(map[string]string)
 		for name, code := range r.Contracts {
 			c[name] = string(code)
@@ -114,7 +113,7 @@ func (r *AccountResult) String() string {
 		_, _ = fmt.Fprintf(writer, "Contract: '%s'\n", name)
 	}
 
-	if r.showCode || command.ContainsFlag(r.include, "contracts") {
+	if command.ContainsFlag(r.include, "contracts") {
 		for name, code := range r.Contracts {
 			_, _ = fmt.Fprintf(writer, "Contracts '%s':\n", name)
 			_, _ = fmt.Fprintln(writer, string(code))

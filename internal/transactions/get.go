@@ -19,7 +19,6 @@
 package transactions
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/onflow/flow-go-sdk"
@@ -33,7 +32,6 @@ import (
 
 type flagsGet struct {
 	Sealed  bool     `default:"true" flag:"sealed" info:"Wait for a sealed result"`
-	Code    bool     `default:"false" flag:"code" info:"⚠️  Deprecated: use include flag"`
 	Include []string `default:"" flag:"include" info:"Fields to include in the output"`
 	Exclude []string `default:"" flag:"exclude" info:"Fields to exclude from the output (events)"`
 }
@@ -58,10 +56,6 @@ func get(
 	_ command.GlobalFlags,
 	services *services.Services,
 ) (command.Result, error) {
-	if getFlags.Code {
-		fmt.Println("⚠️  DEPRECATION WARNING: use include flag instead")
-	}
-
 	id := flow.HexToID(strings.TrimPrefix(args[0], "0x"))
 
 	tx, result, err := services.Transactions.GetStatus(id, getFlags.Sealed)
@@ -72,7 +66,6 @@ func get(
 	return &TransactionResult{
 		result:  result,
 		tx:      tx,
-		code:    getFlags.Code,
 		include: getFlags.Include,
 		exclude: getFlags.Exclude,
 	}, nil

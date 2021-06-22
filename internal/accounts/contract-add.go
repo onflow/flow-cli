@@ -31,7 +31,6 @@ import (
 
 type flagsAddContract struct {
 	Signer  string   `default:"emulator-account" flag:"signer" info:"Account name from configuration used to sign the transaction"`
-	Results bool     `default:"false" flag:"results" info:"⚠️  Deprecated: results are provided by default"`
 	Include []string `default:"" flag:"include" info:"Fields to include in the output"`
 }
 
@@ -55,10 +54,6 @@ func addContract(
 	services *services.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
-	if createFlags.Results {
-		fmt.Println("⚠️ DEPRECATION WARNING: results flag is deprecated, results are by default included in all executions")
-	}
-
 	name := args[0]
 	filename := args[1]
 
@@ -75,8 +70,7 @@ func addContract(
 	}
 
 	return &AccountResult{
-		Account:  account,
-		showCode: false,
-		include:  addContractFlags.Include,
+		Account: account,
+		include: addContractFlags.Include,
 	}, nil
 }

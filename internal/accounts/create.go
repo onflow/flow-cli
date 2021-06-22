@@ -39,7 +39,6 @@ type flagsCreate struct {
 	SigAlgo   string   `default:"ECDSA_P256" flag:"sig-algo" info:"Signature algorithm used to generate the keys"`
 	HashAlgo  string   `default:"SHA3_256" flag:"hash-algo" info:"Hash used for the digest"`
 	Contracts []string `flag:"contract" info:"Contract to be deployed during account creation. <name:filename>"`
-	Results   bool     `default:"false" flag:"results" info:"⚠️  Deprecated: results are provided by default"`
 	Include   []string `default:"" flag:"include" info:"Fields to include in the output"`
 }
 
@@ -62,10 +61,6 @@ func create(
 	services *services.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
-	if createFlags.Results {
-		fmt.Println("⚠️ DEPRECATION WARNING: results flag is deprecated, results are by default included in all executions")
-	}
-
 	signer := state.Accounts().ByName(createFlags.Signer)
 
 	sigAlgo := crypto.StringToSignatureAlgorithm(createFlags.SigAlgo)

@@ -32,8 +32,6 @@ import (
 type flagsScripts struct {
 	ArgsJSON string   `default:"" flag:"args-json" info:"arguments in JSON-Cadence format"`
 	Arg      []string `default:"" flag:"arg" info:"argument in Type:Value format"`
-	Code     string   `default:"" flag:"code" info:"⚠️  Deprecated: use filename argument"`
-	Args     string   `default:"" flag:"args" info:"⚠️  Deprecated: use arg or args-json flag"`
 }
 
 var scriptFlags = flagsScripts{}
@@ -43,7 +41,7 @@ var ExecuteCommand = &command.Command{
 		Use:     "execute <filename>",
 		Short:   "Execute a script",
 		Example: `flow scripts execute script.cdc --arg String:"Meow" --arg String:"Woof"`,
-		Args:    cobra.MaximumNArgs(1),
+		Args:    cobra.ExactArgs(1),
 	},
 	Flags: &scriptFlags,
 	Run:   execute,
@@ -55,23 +53,7 @@ func execute(
 	globalFlags command.GlobalFlags,
 	services *services.Services,
 ) (command.Result, error) {
-	filename := ""
-	if len(args) == 1 {
-		filename = args[0]
-	} else if scriptFlags.Code != "" {
-		fmt.Println("⚠️  DEPRECATION WARNING: use filename as a command argument <filename>")
-		filename = scriptFlags.Code
-	} else {
-		return nil, fmt.Errorf("provide a valide filename command argument")
-	}
-
-	if scriptFlags.Args != "" {
-		fmt.Println("⚠️  DEPRECATION WARNING: use arg flag in Type:Value format or args-json for JSON format")
-
-		if len(scriptFlags.Arg) == 0 && scriptFlags.ArgsJSON == "" {
-			scriptFlags.ArgsJSON = scriptFlags.Args // backward compatible, args was in json format
-		}
-	}
+	filename := args[0]
 
 	code, err := readerWriter.ReadFile(filename)
 	if err != nil {

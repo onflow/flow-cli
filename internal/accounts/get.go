@@ -19,8 +19,6 @@
 package accounts
 
 import (
-	"fmt"
-
 	"github.com/onflow/flow-go-sdk"
 
 	"github.com/spf13/cobra"
@@ -31,9 +29,7 @@ import (
 )
 
 type flagsGet struct {
-	Contracts bool     `default:"false" flag:"contracts" info:"⚠️  Deprecated: use include flag instead"`
-	Code      bool     `default:"false" flag:"code" info:"⚠️  Deprecated: use contracts flag instead"`
-	Include   []string `default:"" flag:"include" info:"Fields to include in the output"`
+	Include []string `default:"" flag:"include" info:"Fields to include in the output"`
 }
 
 var getFlags = flagsGet{}
@@ -55,14 +51,6 @@ func get(
 	_ command.GlobalFlags,
 	services *services.Services,
 ) (command.Result, error) {
-	if getFlags.Code {
-		fmt.Println("⚠️  DEPRECATION WARNING: use contracts flag instead")
-	}
-
-	if getFlags.Contracts {
-		fmt.Println("⚠️  DEPRECATION WARNING: use include contracts flag instead")
-	}
-
 	address := flow.HexToAddress(args[0])
 
 	account, err := services.Accounts.Get(address)
@@ -71,8 +59,7 @@ func get(
 	}
 
 	return &AccountResult{
-		Account:  account,
-		showCode: getFlags.Contracts || getFlags.Code,
-		include:  getFlags.Include,
+		Account: account,
+		include: getFlags.Include,
 	}, nil
 }

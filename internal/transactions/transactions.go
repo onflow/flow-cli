@@ -52,7 +52,6 @@ func init() {
 type TransactionResult struct {
 	result  *flow.TransactionResult
 	tx      *flow.Transaction
-	code    bool
 	include []string
 	exclude []string
 }
@@ -160,7 +159,7 @@ func (r *TransactionResult) String() string {
 	}
 
 	if r.tx.Script != nil {
-		if command.ContainsFlag(r.include, "code") || r.code {
+		if command.ContainsFlag(r.include, "code") {
 			if len(r.tx.Arguments) == 0 {
 				_, _ = fmt.Fprintf(writer, "\n\nArguments\tNo arguments\n")
 			} else {

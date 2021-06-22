@@ -33,7 +33,6 @@ import (
 type flagsGenerate struct {
 	Seed       string `flag:"seed" info:"Deterministic seed phrase"`
 	KeySigAlgo string `default:"ECDSA_P256" flag:"sig-algo" info:"Signature algorithm"`
-	Algo       string `default:"" flag:"algo" info:"⚠️  Deprecated: use sig-algo argument"`
 }
 
 var generateFlags = flagsGenerate{}
@@ -54,11 +53,6 @@ func generate(
 	_ command.GlobalFlags,
 	services *services.Services,
 ) (command.Result, error) {
-	if generateFlags.Algo != "" {
-		fmt.Println("⚠️ DEPRECATION WARNING: flag no longer supported, use '--sig-algo' instead.")
-		generateFlags.KeySigAlgo = generateFlags.Algo
-	}
-
 	sigAlgo := crypto.StringToSignatureAlgorithm(generateFlags.KeySigAlgo)
 	if sigAlgo == crypto.UnknownSignatureAlgorithm {
 		return nil, fmt.Errorf("invalid signature algorithm: %s", generateFlags.KeySigAlgo)

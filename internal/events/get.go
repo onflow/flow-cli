@@ -19,8 +19,6 @@
 package events
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
@@ -28,9 +26,7 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowkit/services"
 )
 
-type flagsGenerate struct {
-	Verbose bool `flag:"verbose" info:"⚠️  Deprecated"`
-}
+type flagsGenerate struct{}
 
 var generateFlag = flagsGenerate{}
 
@@ -51,9 +47,6 @@ func get(
 	_ command.GlobalFlags,
 	services *services.Services,
 ) (command.Result, error) {
-	if generateFlag.Verbose {
-		fmt.Println("⚠️  DEPRECATION WARNING: verbose flag is deprecated")
-	}
 	name := args[0]
 	start := args[1] // block height range start
 	end := ""        // block height range end

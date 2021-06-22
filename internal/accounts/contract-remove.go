@@ -19,8 +19,6 @@
 package accounts
 
 import (
-	"fmt"
-
 	"github.com/onflow/flow-cli/pkg/flowkit"
 
 	"github.com/spf13/cobra"
@@ -31,7 +29,6 @@ import (
 
 type flagsRemoveContract struct {
 	Signer  string   `default:"emulator-account" flag:"signer" info:"Account name from configuration used to sign the transaction"`
-	Results bool     `default:"false" flag:"results" info:"⚠️  Deprecated: results are provided by default"`
 	Include []string `default:"" flag:"include" info:"Fields to include in the output"`
 }
 
@@ -55,22 +52,16 @@ func removeContract(
 	services *services.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
-	if flagsRemove.Results {
-		fmt.Println("⚠️ DEPRECATION WARNING: results flag is deprecated, results are by default included in all executions")
-	}
-
 	contractName := args[0]
 
 	from := state.Accounts().ByName(flagsRemove.Signer)
-
 	account, err := services.Accounts.RemoveContract(from, contractName)
 	if err != nil {
 		return nil, err
 	}
 
 	return &AccountResult{
-		Account:  account,
-		showCode: false,
-		include:  flagsRemove.Include,
+		Account: account,
+		include: flagsRemove.Include,
 	}, nil
 }
