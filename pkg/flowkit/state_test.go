@@ -143,7 +143,7 @@ func generateComplexProject() State {
 		}},
 	}
 
-	p, err := newProject(&config, composer)
+	p, err := newProject(&config, composer, af)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -187,7 +187,7 @@ func generateSimpleProject() State {
 		}},
 	}
 
-	p, err := newProject(&config, composer)
+	p, err := newProject(&config, composer, af)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -236,7 +236,7 @@ func generateAliasesProject() State {
 		}},
 	}
 
-	p, err := newProject(&config, composer)
+	p, err := newProject(&config, composer, af)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -314,7 +314,7 @@ func generateAliasesComplexProject() State {
 		}},
 	}
 
-	p, err := newProject(&config, composer)
+	p, err := newProject(&config, composer, af)
 	if err != nil {
 		fmt.Println(err)
 	}

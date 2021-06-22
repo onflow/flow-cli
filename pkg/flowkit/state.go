@@ -234,7 +234,7 @@ func Load(configFilePaths []string, readerWriter ReaderWriter) (*State, error) {
 		return nil, err
 	}
 
-	proj, err := newProject(conf, confLoader)
+	proj, err := newProject(conf, confLoader, readerWriter)
 	if err != nil {
 		return nil, fmt.Errorf("invalid project configuration: %s", err)
 	}
@@ -266,15 +266,16 @@ func Init(readerWriter ReaderWriter, sigAlgo crypto.SignatureAlgorithm, hashAlgo
 }
 
 // newProject creates a new project from a configuration object.
-func newProject(conf *config.Config, loader *config.Loader) (*State, error) {
+func newProject(conf *config.Config, loader *config.Loader, readerWriter ReaderWriter) (*State, error) {
 	accounts, err := accountsFromConfig(conf)
 	if err != nil {
 		return nil, err
 	}
 
 	return &State{
-		conf:       conf,
-		confLoader: loader,
-		accounts:   &accounts,
+		conf:         conf,
+		readerWriter: readerWriter,
+		confLoader:   loader,
+		accounts:     &accounts,
 	}, nil
 }
