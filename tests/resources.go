@@ -245,3 +245,15 @@ func PubKeys() []crypto.PublicKey {
 	}
 	return pubKeys
 }
+
+func PrivKeys() []crypto.PrivateKey {
+	var privKeys []crypto.PrivateKey
+	for x := 0; x < 5; x++ {
+		pk, _ := crypto.GeneratePrivateKey(
+			crypto.ECDSA_P256,
+			[]byte(fmt.Sprintf("seedseedseedseedseedseedseedseedseedseedseedseed%d", x)),
+		)
+		privKeys = append(privKeys, pk)
+	}
+	return privKeys
+}
