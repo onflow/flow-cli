@@ -145,9 +145,7 @@ func (p *State) EmulatorServiceAccount() (*Account, error) {
 
 // SetEmulatorKey sets the default emulator service account private key.
 func (p *State) SetEmulatorKey(privateKey crypto.PrivateKey) {
-	emulator := p.conf.Emulators.Default()
-
-	acc := p.accounts.ByName(emulator.ServiceAccount)
+	acc, _ := p.EmulatorServiceAccount()
 	acc.SetKey(
 		NewHexAccountKeyFromPrivateKey(
 			acc.Key().Index(),
