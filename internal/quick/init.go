@@ -27,14 +27,12 @@ import (
 
 // TODO(sideninja) workaround - init needed to be copied in order to work else there is flag duplicate error
 
-var initFlag = config.FlagsInit{}
-
 var InitCommand = &command.Command{
 	Cmd: &cobra.Command{
 		Use:     "init",
 		Short:   "Initialize a new configuration",
 		Example: "flow project init",
 	},
-	Flags: &initFlag,
+	Flags: &config.InitFlag,
 	Run:   config.Initialise, // TODO(sideninja) workaround - init needed to be copied in order to work else there is flag duplicate error
 }

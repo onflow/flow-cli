@@ -40,14 +40,14 @@ type FlagsInit struct {
 	Global             bool   `default:"false" flag:"global" info:"Initialize global user configuration"`
 }
 
-var initFlag = FlagsInit{}
+var InitFlag = FlagsInit{}
 
 var InitCommand = &command.Command{
 	Cmd: &cobra.Command{
 		Use:   "init",
 		Short: "Initialize a new configuration",
 	},
-	Flags: &initFlag,
+	Flags: &InitFlag,
 	Run:   Initialise,
 }
 
@@ -58,28 +58,32 @@ func Initialise(
 	services *services.Services,
 ) (command.Result, error) {
 
-	sigAlgo := crypto.StringToSignatureAlgorithm(initFlag.ServiceKeySigAlgo)
+	sigAlgo := crypto.StringToSignatureAlgorithm(InitFlag.ServiceKeySigAlgo)
 	if sigAlgo == crypto.UnknownSignatureAlgorithm {
-		return nil, fmt.Errorf("invalid signature algorithm: %s", initFlag.ServiceKeySigAlgo)
+		return nil, fmt.Errorf("invalid signature algorithm: %s", InitFlag.ServiceKeySigAlgo)
 	}
 
-	hashAlgo := crypto.StringToHashAlgorithm(initFlag.ServiceKeyHashAlgo)
+	hashAlgo := crypto.StringToHashAlgorithm(InitFlag.ServiceKeyHashAlgo)
 	if hashAlgo == crypto.UnknownHashAlgorithm {
-		return nil, fmt.Errorf("invalid hash algorithm: %s", initFlag.ServiceKeyHashAlgo)
+		return nil, fmt.Errorf("invalid hash algorithm: %s", InitFlag.ServiceKeyHashAlgo)
 	}
 
-	privateKey, err := crypto.DecodePrivateKeyHex(sigAlgo, initFlag.ServicePrivateKey)
-	if err != nil {
-		return nil, fmt.Errorf("invalid private key: %w", err)
+	var privateKey crypto.PrivateKey
+	if InitFlag.ServicePrivateKey != "" {
+		var err error
+		privateKey, err = crypto.DecodePrivateKeyHex(sigAlgo, InitFlag.ServicePrivateKey)
+		if err != nil {
+			return nil, fmt.Errorf("invalid private key: %w", err)
+		}
 	}
 
 	s, err := services.Project.Init(
 		readerWriter,
-		initFlag.Reset,
-		initFlag.Global,
+		InitFlag.Reset,
+		InitFlag.Global,
 		sigAlgo,
 		hashAlgo,
-		privateKey,
+		&privateKey,
 	)
 	if err != nil {
 		return nil, err
