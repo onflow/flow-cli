@@ -39,13 +39,20 @@ func TestProject(t *testing.T) {
 	t.Run("Init Project", func(t *testing.T) {
 		t.Parallel()
 
-		st, _, _ := setup()
-		s, err := flowkit.Init(st.ReaderWriter(), crypto.ECDSA_P256, crypto.SHA3_256)
+		st, s, _ := setup()
+		pkey := tests.PrivKeys()[0]
+		init, err := s.Project.Init(st.ReaderWriter(), false, false, crypto.ECDSA_P256, crypto.SHA3_256, &pkey)
 		assert.NoError(t, err)
 
-		sacc, err := s.EmulatorServiceAccount()
+		sacc, err := init.EmulatorServiceAccount()
 		assert.NotNil(t, sacc)
 		assert.NoError(t, err)
+		assert.Equal(t, sacc.Name(), config.DefaultEmulatorServiceAccountName)
+		assert.Equal(t, sacc.Address().String(), "f8d6e0586b0a20c7")
+
+		p, err := sacc.Key().PrivateKey()
+		assert.NoError(t, err)
+		assert.Equal(t, p, pkey)
 	})
 
 	t.Run("Deploy Project", func(t *testing.T) {
