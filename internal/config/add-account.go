@@ -85,7 +85,12 @@ func addAccount(
 		return nil, err
 	}
 
-	state.Config().Accounts.AddOrUpdate(account.Name, *account)
+	acc := flowkit.Account{}
+	acc.SetName(account.Name)
+	acc.SetAddress(account.Address)
+	acc.SetKey(flowkit.NewHexAccountKeyFromPrivateKey(account.Key.Index, account.Key.HashAlgo, account.Key.PrivateKey))
+
+	state.Accounts().AddOrUpdate(&acc)
 
 	err = state.SaveDefault()
 	if err != nil {
