@@ -143,6 +143,20 @@ func (p *State) EmulatorServiceAccount() (*Account, error) {
 	return p.accounts.ByName(emulator.ServiceAccount), nil
 }
 
+// SetEmulatorKey sets the default emulator service account private key.
+func (p *State) SetEmulatorKey(privateKey crypto.PrivateKey) {
+	emulator := p.conf.Emulators.Default()
+
+	acc := p.accounts.ByName(emulator.ServiceAccount)
+	acc.SetKey(
+		NewHexAccountKeyFromPrivateKey(
+			acc.Key().Index(),
+			acc.Key().HashAlgo(),
+			privateKey,
+		),
+	)
+}
+
 // DeploymentContractsByNetwork returns all contracts for a network.
 func (p *State) DeploymentContractsByNetwork(network string) ([]Contract, error) {
 	contracts := make([]Contract, 0)

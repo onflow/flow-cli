@@ -181,15 +181,3 @@ func (a *Accounts) AddOrUpdate(account *Account) {
 
 	*a = append(*a, *account)
 }
-
-// SetEmulatorKey sets the default emulator service account private key.
-func (a *Accounts) SetEmulatorKey(privateKey crypto.PrivateKey) {
-	acc := a.ByName(config.DefaultEmulatorServiceAccountName)
-	acc.SetKey(
-		NewHexAccountKeyFromPrivateKey(
-			acc.Key().Index(),
-			acc.Key().HashAlgo(),
-			privateKey,
-		),
-	)
-}
