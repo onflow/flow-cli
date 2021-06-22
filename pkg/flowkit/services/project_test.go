@@ -41,7 +41,7 @@ func TestProject(t *testing.T) {
 
 		st, s, _ := setup()
 		pkey := tests.PrivKeys()[0]
-		init, err := s.Project.Init(st.ReaderWriter(), false, false, crypto.ECDSA_P256, crypto.SHA3_256, &pkey)
+		init, err := s.Project.Init(st.ReaderWriter(), false, false, crypto.ECDSA_P256, crypto.SHA3_256, pkey)
 		assert.NoError(t, err)
 
 		sacc, err := init.EmulatorServiceAccount()
@@ -52,7 +52,15 @@ func TestProject(t *testing.T) {
 
 		p, err := sacc.Key().PrivateKey()
 		assert.NoError(t, err)
-		assert.Equal(t, p, pkey)
+		assert.Equal(t, (*p).String(), pkey.String())
+
+		init, err = s.Project.Init(st.ReaderWriter(), false, false, crypto.ECDSA_P256, crypto.SHA3_256, nil)
+		assert.NoError(t, err)
+		em, err := init.EmulatorServiceAccount()
+		assert.NoError(t, err)
+		k, err := em.Key().PrivateKey()
+		assert.NoError(t, err)
+		assert.NotNil(t, (*k).String())
 	})
 
 	t.Run("Deploy Project", func(t *testing.T) {

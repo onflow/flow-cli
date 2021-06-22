@@ -490,3 +490,55 @@ func Test_GetAliasesComplex(t *testing.T) {
 	assert.Equal(t, cTestnet[0].Name, "NonFungibleToken")
 	assert.Equal(t, cTestnet[1].Name, "FungibleToken")
 }
+
+func Test_ChangingState(t *testing.T) {
+	p := generateSimpleProject()
+
+	em, err := p.EmulatorServiceAccount()
+	assert.NoError(t, err)
+
+	em.SetName("foo")
+	em.SetAddress(flow.HexToAddress("0x1"))
+
+	pk, _ := crypto.GeneratePrivateKey(
+		crypto.ECDSA_P256,
+		[]byte("seedseedseedseedseedseedseedseedseedseedseedseed"),
+	)
+	key := NewHexAccountKeyFromPrivateKey(em.Key().Index(), em.Key().HashAlgo(), pk)
+	em.SetKey(key)
+
+	foo := p.Accounts().ByName("foo")
+	assert.NotNil(t, foo)
+	assert.Equal(t, foo.Name(), "foo")
+	assert.Equal(t, foo.Address(), flow.HexToAddress("0x1"))
+
+	pkey, err := foo.Key().PrivateKey()
+	assert.NoError(t, err)
+	assert.Equal(t, (*pkey).String(), pk.String())
+
+	bar := p.Accounts().ByAddress(flow.HexToAddress("0x1"))
+	bar.SetName("zoo")
+
+	assert.NotNil(t, p.Accounts().ByName("zoo"))
+
+	a := Account{}
+	a.SetName("bobo")
+	p.Accounts().AddOrUpdate(&a)
+
+	assert.NotNil(t, p.Accounts().ByName("bobo"))
+
+	p.Accounts().
+		ByName("zoo").
+		SetName("emulator-account")
+
+	pk, _ = crypto.GeneratePrivateKey(
+		crypto.ECDSA_P256,
+		[]byte("seedseedseedseedseedseedseedseedseed123seedseedseed123"),
+	)
+
+	p.SetEmulatorKey(pk)
+	em, _ = p.EmulatorServiceAccount()
+	pkey, err = em.Key().PrivateKey()
+	assert.NoError(t, err)
+	assert.Equal(t, (*pkey).String(), pk.String())
+}

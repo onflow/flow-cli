@@ -79,7 +79,9 @@ func (p *Project) Init(
 		return nil, err
 	}
 
-	state.Accounts().SetEmulatorKey(serviceKey)
+	if serviceKey != nil {
+		state.SetEmulatorKey(serviceKey)
+	}
 
 	err = state.Save(path)
 	if err != nil {

@@ -83,7 +83,7 @@ func Initialise(
 		InitFlag.Global,
 		sigAlgo,
 		hashAlgo,
-		&privateKey,
+		privateKey,
 	)
 	if err != nil {
 		return nil, err
