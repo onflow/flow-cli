@@ -226,7 +226,7 @@ func TestProject_Integration(t *testing.T) {
 		assert.NoError(t, err)
 
 		_, err = simpleDeploy(state, s, false)
-		assert.Equal(t, err.Error(), "failed to deploy contracts")
+		assert.Equal(t, err.Error(), "failed to deploy all contracts")
 	})
 
 	t.Run("Deploy Project Update", func(t *testing.T) {
