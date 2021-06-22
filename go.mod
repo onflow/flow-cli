@@ -8,7 +8,7 @@ require (
 	github.com/joho/godotenv v1.3.0
 	github.com/manifoldco/promptui v0.8.0
 	github.com/onflow/cadence v0.18.1-0.20210621144040-64e6b6fb2337
-	github.com/onflow/cadence/languageserver v0.18.1-0.20210621144040-64e6b6fb2337
+	github.com/onflow/cadence/languageserver v0.18.2
 	github.com/onflow/flow-core-contracts/lib/go/templates v0.6.0
 	github.com/onflow/flow-emulator v0.21.0
 	github.com/onflow/flow-go v0.18.2-canary
