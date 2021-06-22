@@ -21,6 +21,8 @@ package services
 import (
 	"testing"
 
+	"github.com/onflow/flow-go-sdk/crypto"
+
 	"github.com/onflow/cadence"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/stretchr/testify/assert"
@@ -90,6 +92,95 @@ func TestTransactions(t *testing.T) {
 		assert.NoError(t, err)
 		gw.Mock.AssertNumberOfCalls(t, tests.SendSignedTransactionFunc, 1)
 		gw.Mock.AssertNumberOfCalls(t, tests.GetTransactionResultFunc, 1)
+	})
+
+}
+
+func setupAccounts(state *flowkit.State, s *Services) {
+	setupAccount(state, s, tests.Alice())
+	setupAccount(state, s, tests.Bob())
+	setupAccount(state, s, tests.Charlie())
+}
+
+func setupAccount(state *flowkit.State, s *Services, account *flowkit.Account) {
+	srv, _ := state.EmulatorServiceAccount()
+
+	key := account.Key()
+	pk, _ := key.PrivateKey()
+	acc, _ := s.Accounts.Create(srv,
+		[]crypto.PublicKey{(*pk).PublicKey()},
+		[]int{flow.AccountKeyWeightThreshold},
+		key.SigAlgo(),
+		key.HashAlgo(),
+		nil,
+	)
+
+	newAcc := &flowkit.Account{}
+	newAcc.SetName(account.Name())
+	newAcc.SetAddress(acc.Address)
+	newAcc.SetKey(key)
+
+	state.Accounts().AddOrUpdate(newAcc)
+}
+
+func TestTransactions_Integration(t *testing.T) {
+	t.Parallel()
+
+	t.Run("Build Transaction", func(t *testing.T) {
+		t.Parallel()
+		state, s := setupIntegration()
+		setupAccounts(state, s)
+
+		type txIn struct {
+			prop    flow.Address
+			auth    []flow.Address
+			payer   flow.Address
+			index   int
+			code    []byte
+			file    string
+			gas     uint64
+			args    []cadence.Value
+			network string
+		}
+
+		a := state.Accounts().ByName("Alice")
+		b := state.Accounts().ByName("Bob")
+		c := state.Accounts().ByName("Charlie")
+
+		txIns := []txIn{{
+			a.Address(),
+			[]flow.Address{a.Address()},
+			a.Address(),
+			0,
+			tests.TransactionSimple.Source,
+			tests.TransactionSimple.Filename,
+			1000,
+			nil,
+			"",
+		}, {
+			c.Address(),
+			[]flow.Address{a.Address(), b.Address()},
+			c.Address(),
+			0,
+			tests.TransactionSimple.Source,
+			tests.TransactionSimple.Filename,
+			1000,
+			nil,
+			"",
+		}}
+
+		for _, i := range txIns {
+			tx, err := s.Transactions.Build(i.prop, i.auth, i.payer, i.index, i.code, i.file, i.gas, i.args, i.network)
+
+			assert.NoError(t, err)
+			ftx := tx.FlowTransaction()
+			assert.Equal(t, ftx.Script, i.code)
+			assert.Equal(t, ftx.Payer, i.payer)
+			assert.Equal(t, ftx.Authorizers, i.auth)
+			assert.Equal(t, ftx.ProposalKey.Address, i.prop)
+			assert.Equal(t, ftx.ProposalKey.KeyIndex, i.index)
+		}
+
 	})
 
 }

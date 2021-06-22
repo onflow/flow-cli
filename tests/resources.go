@@ -212,10 +212,22 @@ func ReaderWriter() afero.Afero {
 }
 
 func Alice() *flowkit.Account {
+	return newAccount("Alice", "0x1", "seedseedseedseedseedseedseedseedseedseedseedseedAlice")
+}
+
+func Bob() *flowkit.Account {
+	return newAccount("Bob", "0x2", "seedseedseedseedseedseedseedseedseedseedseedseedBob")
+}
+
+func Charlie() *flowkit.Account {
+	return newAccount("Charlie", "0x3", "seedseedseedseedseedseedseedseedseedseedseedseedCharlie")
+}
+
+func newAccount(name string, address string, seed string) *flowkit.Account {
 	a := &flowkit.Account{}
-	a.SetAddress(flow.HexToAddress("0x1"))
-	a.SetName("Alice")
-	pk, _ := crypto.GeneratePrivateKey(crypto.ECDSA_P256, []byte("seedseedseedseedseedseedseedseedseedseedseedseed"))
+	a.SetAddress(flow.HexToAddress(address))
+	a.SetName(name)
+	pk, _ := crypto.GeneratePrivateKey(crypto.ECDSA_P256, []byte(seed))
 
 	a.SetKey(flowkit.NewHexAccountKeyFromPrivateKey(0, crypto.SHA3_256, pk))
 
