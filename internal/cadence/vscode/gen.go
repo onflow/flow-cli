@@ -18,4 +18,4 @@
 
 package vscode
 
-//go:generate go-bindata -o ./cadence_bin.go --nometadata --pkg vscode ./cadence.vsix
+//go:generate go run github.com/kevinburke/go-bindata/go-bindata -o ./cadence_bin.go --nometadata --pkg vscode ./cadence.vsix
