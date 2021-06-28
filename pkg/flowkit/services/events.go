@@ -21,6 +21,7 @@ package services
 import (
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/onflow/flow-cli/pkg/flowkit"
 
@@ -56,13 +57,35 @@ func (e *Events) Get(name string, start string, end string) ([]client.BlockEvent
 		return nil, fmt.Errorf("cannot use empty string as event name")
 	}
 
-	startHeight, err := strconv.ParseUint(start, 10, 64)
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse start height of block range: %v", start)
-	}
-
 	e.logger.StartProgress("Fetching Events...")
 	defer e.logger.StopProgress()
+
+	var err error
+	var startHeight uint64
+	if start == "latest" {
+		latestBlock, err := e.gateway.GetLatestBlock()
+		if err != nil {
+			return nil, err
+		}
+		startHeight = latestBlock.Height
+
+	} else if strings.HasPrefix(start, "-") {
+		offset, err := strconv.ParseInt(start, 10, 64)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse start height of block range: %v", start)
+		}
+
+		latestBlock, err := e.gateway.GetLatestBlock()
+		if err != nil {
+			return nil, err
+		}
+		startHeight = latestBlock.Height + uint64(offset)
+	} else {
+		startHeight, err = strconv.ParseUint(start, 10, 64)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse start height of block range: %v", start)
+		}
+	}
 
 	var endHeight uint64
 	if end == "" {

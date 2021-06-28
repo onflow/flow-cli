@@ -57,6 +57,7 @@ func TestEvents(t *testing.T) {
 		_, s, _ := setup()
 		inputs := [][]string{
 			{"", "0", "1"},
+			{"test", "-10", "latest"},
 			{"test", "-1", "1"},
 			{"test", "1", "-1"},
 			{"test", "10", "5"},
@@ -64,6 +65,7 @@ func TestEvents(t *testing.T) {
 
 		outputs := []string{
 			"cannot use empty string as event name",
+			"foobar",
 			"failed to parse start height of block range: -1",
 			"failed to parse end height of block range: -1",
 			"cannot have end height (5) of block range less that start height (10)",

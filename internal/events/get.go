@@ -19,6 +19,8 @@
 package events
 
 import (
+	"strings"
+
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
@@ -50,6 +52,10 @@ func get(
 	name := args[0]
 	start := args[1] // block height range start
 	end := ""        // block height range end
+
+	if len(args) == 2 && strings.HasPrefix(args[1], "-") {
+		end = "latest"
+	}
 
 	if len(args) == 3 {
 		end = args[2]
