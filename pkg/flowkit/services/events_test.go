@@ -40,6 +40,28 @@ func TestEvents(t *testing.T) {
 		gw.Mock.AssertCalled(t, tests.GetEventsFunc, "flow.CreateAccount", uint64(0), uint64(1))
 	})
 
+	t.Run("Get Events negative", func(t *testing.T) {
+		t.Parallel()
+
+		_, s, gw := setup()
+		_, err := s.Events.Get("flow.CreateAccount", "-1", "latest")
+
+		assert.NoError(t, err)
+		gw.Mock.AssertCalled(t, tests.GetLatestBlockFunc)
+		gw.Mock.AssertCalled(t, tests.GetEventsFunc, "flow.CreateAccount", uint64(0), uint64(1))
+	})
+
+	t.Run("Get Events Latest latest", func(t *testing.T) {
+		t.Parallel()
+
+		_, s, gw := setup()
+		_, err := s.Events.Get("flow.CreateAccount", "latest", "latest")
+
+		assert.NoError(t, err)
+		gw.Mock.AssertCalled(t, tests.GetLatestBlockFunc)
+		gw.Mock.AssertCalled(t, tests.GetEventsFunc, "flow.CreateAccount", uint64(1), uint64(1))
+	})
+
 	t.Run("Get Events Latest", func(t *testing.T) {
 		t.Parallel()
 
@@ -57,16 +79,29 @@ func TestEvents(t *testing.T) {
 		_, s, _ := setup()
 		inputs := [][]string{
 			{"", "0", "1"},
-			{"test", "-10", "latest"},
-			{"test", "-1", "1"},
+
+		}
+
+		outputs := []string{
+			"cannot use empty string as event name",
+		}
+
+		for i, in := range inputs {
+			_, err := s.Events.Get(in[0], in[1], in[2])
+			assert.Equal(t, err.Error(), outputs[i])
+		}
+	})
+
+	t.Run("Fails to get events with wrong index inputs", func(t *testing.T) {
+		t.Parallel()
+
+		_, s, _ := setup()
+		inputs := [][]string{
 			{"test", "1", "-1"},
 			{"test", "10", "5"},
 		}
 
 		outputs := []string{
-			"cannot use empty string as event name",
-			"foobar",
-			"failed to parse start height of block range: -1",
 			"failed to parse end height of block range: -1",
 			"cannot have end height (5) of block range less that start height (10)",
 		}
@@ -105,5 +140,7 @@ func TestEvents_Integration(t *testing.T) {
 			assert.Len(t, events[1].Events, 1)
 			assert.Equal(t, events[1].Events[0].Type, eName)
 		}
+
+
 	})
 }
