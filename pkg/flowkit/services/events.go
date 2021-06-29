@@ -175,7 +175,7 @@ func (e *Events) GetMany(events []string, start string, end string, blockCount u
 
 func (e *Events) eventWorker(jobChan <-chan client.EventRangeQuery, results chan<- EventWorkerResult) {
 	for q := range jobChan {
-		e.logger.StartProgress(fmt.Sprintf("Fetching events %v", q))
+		e.logger.Info(fmt.Sprintf("Fetching events %v", q))
 		blockEvents, err := e.gateway.GetEvents(q.Type, q.StartHeight, q.EndHeight)
 		if err != nil {
 			results <- EventWorkerResult{nil, err}
