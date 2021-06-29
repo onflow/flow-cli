@@ -4,6 +4,7 @@ go 1.13
 
 require (
 	github.com/a8m/envsubst v1.2.0
+	github.com/davecgh/go-spew v1.1.1
 	github.com/gosuri/uilive v0.0.4
 	github.com/joho/godotenv v1.3.0
 	github.com/manifoldco/promptui v0.8.0
