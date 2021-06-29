@@ -28,6 +28,7 @@ import (
 
 	"github.com/onflow/flow-go-sdk/client"
 
+	"github.com/davecgh/go-spew/spew"
 	"github.com/onflow/flow-cli/pkg/flowkit/gateway"
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
 )
@@ -58,13 +59,12 @@ func (e *Events) Get(name string, start string, end string) ([]client.BlockEvent
 		return nil, fmt.Errorf("cannot use empty string as event name")
 	}
 
+	e.logger.Info(fmt.Sprintf("Test fetching events with name %s block %s-%s", name, start, end))
+
 	startHeight, err := strconv.ParseUint(start, 10, 64)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse start height of block range: %v", start)
 	}
-
-	e.logger.StartProgress("Fetching Events...")
-	defer e.logger.StopProgress()
 
 	var endHeight uint64
 	if end == "" {
@@ -102,6 +102,7 @@ func (e *Events) Get(name string, start string, end string) ([]client.BlockEvent
 }
 
 func (e *Events) GetMany(events []string, start string, end string, blockCount uint64, workerCount int) ([]client.BlockEvents, error) {
+	e.logger.Info("Test")
 
 	var err error
 	var startHeight uint64
@@ -167,6 +168,7 @@ func (e *Events) GetMany(events []string, start string, end string, blockCount u
 		}
 		startHeight = suggestedEndHeight + 1
 	}
+	spew.Dump(queries)
 
 	jobChan := make(chan client.EventRangeQuery, workerCount)
 	results := make(chan EventWorkerResult)
