@@ -21,6 +21,8 @@ package services
 import (
 	"fmt"
 	"strconv"
+	"strings"
+	"sync"
 
 	"github.com/onflow/flow-cli/pkg/flowkit"
 
@@ -97,4 +99,126 @@ func (e *Events) Get(name string, start string, end string) ([]client.BlockEvent
 
 	e.logger.StopProgress()
 	return events, nil
+}
+
+func (e *Events) GetMany(events []string, start string, end string, blockCount uint64, workerCount int) ([]client.BlockEvents, error) {
+
+	var err error
+	var startHeight uint64
+	if start == "latest" {
+		latestBlock, err := e.gateway.GetLatestBlock()
+		if err != nil {
+			return nil, err
+		}
+		startHeight = latestBlock.Height
+
+	} else if strings.HasPrefix(start, "-") {
+		offset, err := strconv.ParseInt(start, 10, 64)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse start height of block range: %v", start)
+		}
+
+		latestBlock, err := e.gateway.GetLatestBlock()
+		if err != nil {
+			return nil, err
+		}
+		startHeight = latestBlock.Height + uint64(offset)
+	} else {
+		startHeight, err = strconv.ParseUint(start, 10, 64)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse start height of block range: %v", start)
+		}
+	}
+
+	var endHeight uint64
+	if end == "" {
+		endHeight = startHeight
+	} else if end == "latest" {
+		latestBlock, err := e.gateway.GetLatestBlock()
+		if err != nil {
+			return nil, err
+		}
+
+		endHeight = latestBlock.Height
+	} else {
+		endHeight, err = strconv.ParseUint(end, 10, 64)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse end height of block range: %s", end)
+		}
+	}
+
+	if endHeight < startHeight {
+		return nil, fmt.Errorf("cannot have end height (%d) of block range less that start height (%d)", endHeight, startHeight)
+	}
+
+	var queries []client.EventRangeQuery
+	for startHeight <= endHeight {
+		suggestedEndHeight := startHeight + blockCount
+		endHeight := endHeight
+		if suggestedEndHeight < endHeight {
+			endHeight = suggestedEndHeight
+		}
+		for _, event := range events {
+			queries = append(queries, client.EventRangeQuery{
+				Type:        event,
+				StartHeight: startHeight,
+				EndHeight:   endHeight,
+			})
+		}
+		startHeight = suggestedEndHeight + 1
+	}
+
+	jobChan := make(chan client.EventRangeQuery, workerCount)
+	results := make(chan EventWorkerResult)
+
+	var wg sync.WaitGroup
+
+	for i := 0; i < workerCount; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			eventWorker(jobChan, results, e)
+		}()
+	}
+
+	// wait on the workers to finish and close the result channel
+	// to signal downstream that all work is done
+	go func() {
+		defer close(results)
+		wg.Wait()
+	}()
+
+	go func() {
+		defer close(jobChan)
+		for _, query := range queries {
+			jobChan <- query
+		}
+	}()
+
+	var resultEvents []client.BlockEvents
+	for eventResult := range results {
+		if eventResult.Error != nil {
+			return nil, eventResult.Error
+		}
+
+		resultEvents = append(resultEvents, eventResult.Events...)
+	}
+	return resultEvents, nil
+
+}
+
+func eventWorker(jobChan <-chan client.EventRangeQuery, results chan<- EventWorkerResult, event *Events) {
+	for q := range jobChan {
+		blockEvents, err := event.Get(q.Type, strconv.FormatUint(q.StartHeight, 10), strconv.FormatUint(q.EndHeight, 10))
+		if err != nil {
+			results <- EventWorkerResult{nil, err}
+		}
+		results <- EventWorkerResult{blockEvents, nil}
+	}
+}
+
+
+type EventWorkerResult struct {
+	Events []client.BlockEvents
+	Error  error
 }

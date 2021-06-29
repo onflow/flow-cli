@@ -20,6 +20,7 @@ package events
 
 import (
 	"github.com/spf13/cobra"
+	"strings"
 
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/pkg/flowkit"
@@ -55,7 +56,9 @@ func get(
 		end = args[2]
 	}
 
-	events, err := services.Events.Get(name, start, end)
+
+	eventNames := strings.Split(name, ",")
+	events, err := services.Events.GetMany(eventNames, start, end, 250, 10)
 	if err != nil {
 		return nil, err
 	}
