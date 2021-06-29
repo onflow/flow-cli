@@ -21,7 +21,6 @@ package services
 import (
 	"fmt"
 	"strconv"
-	"strings"
 	"sync"
 
 	"github.com/onflow/flow-cli/pkg/flowkit"
@@ -57,36 +56,12 @@ func (e *Events) Get(name string, start string, end string) ([]client.BlockEvent
 	if name == "" {
 		return nil, fmt.Errorf("cannot use empty string as event name")
 	}
+	e.logger.StartProgress("Fetching Events...")
+	defer e.logger.StopProgress()
 
-	startHeight, err := strconv.ParseUint(start, 10, 64)
+	startHeight, endHeight, err := e.parseStartEnd(start, end)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse start height of block range: %v", start)
-	}
-
-	var endHeight uint64
-	if end == "" {
-		endHeight = startHeight
-	} else if end == "latest" {
-		latestBlock, err := e.gateway.GetLatestBlock()
-		if err != nil {
-			return nil, err
-		}
-
-		endHeight = latestBlock.Height
-	} else {
-		endHeight, err = strconv.ParseUint(end, 10, 64)
-		if err != nil {
-			return nil, fmt.Errorf("failed to parse end height of block range: %s", end)
-		}
-	}
-
-	if endHeight < startHeight {
-		return nil, fmt.Errorf("cannot have end height (%d) of block range less that start height (%d)", endHeight, startHeight)
-	}
-
-	maxBlockRange := uint64(10000)
-	if endHeight-startHeight > maxBlockRange {
-		return nil, fmt.Errorf("block range is too big: %d, maximum block range is %d", endHeight-startHeight, maxBlockRange)
+	  return nil, err
 	}
 
 	events, err := e.gateway.GetEvents(name, startHeight, endHeight)
@@ -98,32 +73,10 @@ func (e *Events) Get(name string, start string, end string) ([]client.BlockEvent
 	return events, nil
 }
 
-func (e *Events) GetMany(events []string, start string, end string, blockCount uint64, workerCount int) ([]client.BlockEvents, error) {
-	var err error
-	var startHeight uint64
-	if start == "latest" {
-		latestBlock, err := e.gateway.GetLatestBlock()
-		if err != nil {
-			return nil, err
-		}
-		startHeight = latestBlock.Height
-
-	} else if strings.HasPrefix(start, "-") {
-		offset, err := strconv.ParseInt(start, 10, 64)
-		if err != nil {
-			return nil, fmt.Errorf("failed to parse start height of block range: %v", start)
-		}
-
-		latestBlock, err := e.gateway.GetLatestBlock()
-		if err != nil {
-			return nil, err
-		}
-		startHeight = latestBlock.Height + uint64(offset)
-	} else {
-		startHeight, err = strconv.ParseUint(start, 10, 64)
-		if err != nil {
-			return nil, fmt.Errorf("failed to parse start height of block range: %v", start)
-		}
+func (e * Events) parseStartEnd(start string, end string) (uint64, uint64, error) {
+	startHeight, err := strconv.ParseUint(start, 10, 64)
+	if err != nil {
+		return 0,0, fmt.Errorf("failed to parse start height of block range: %v", start)
 	}
 
 	var endHeight uint64
@@ -132,21 +85,25 @@ func (e *Events) GetMany(events []string, start string, end string, blockCount u
 	} else if end == "latest" {
 		latestBlock, err := e.gateway.GetLatestBlock()
 		if err != nil {
-			return nil, err
+			return 0,0, err
 		}
 
 		endHeight = latestBlock.Height
 	} else {
 		endHeight, err = strconv.ParseUint(end, 10, 64)
 		if err != nil {
-			return nil, fmt.Errorf("failed to parse end height of block range: %s", end)
+			return 0,0, fmt.Errorf("failed to parse end height of block range: %s", end)
 		}
 	}
 
 	if endHeight < startHeight {
-		return nil, fmt.Errorf("cannot have end height (%d) of block range less that start height (%d)", endHeight, startHeight)
+		return 0,0, fmt.Errorf("cannot have end height (%d) of block range less that start height (%d)", endHeight, startHeight)
 	}
 
+	return startHeight, endHeight, nil
+}
+
+func makeEventQueryes(events[] string, startHeight uint64, endHeight uint64, blockCount uint64) []client.EventRangeQuery {
 	var queries []client.EventRangeQuery
 	for startHeight <= endHeight {
 		suggestedEndHeight := startHeight + blockCount
@@ -163,6 +120,19 @@ func (e *Events) GetMany(events []string, start string, end string, blockCount u
 		}
 		startHeight = suggestedEndHeight + 1
 	}
+	return queries
+
+}
+func (e *Events) GetMany(events []string, start string, end string, blockCount uint64, workerCount int) ([]client.BlockEvents, error) {
+	e.logger.StartProgress("Fetching Events...")
+	defer e.logger.StopProgress()
+
+	startHeight, endHeight, err := e.parseStartEnd(start, end)
+	if err != nil {
+		return nil, err
+	}
+
+	queries := makeEventQueryes(events, startHeight, endHeight, blockCount)
 
 	jobChan := make(chan client.EventRangeQuery, workerCount)
 	results := make(chan EventWorkerResult)
@@ -205,7 +175,7 @@ func (e *Events) GetMany(events []string, start string, end string, blockCount u
 
 func eventWorker(jobChan <-chan client.EventRangeQuery, results chan<- EventWorkerResult, event *Events) {
 	for q := range jobChan {
-		blockEvents, err := event.Get(q.Type, strconv.FormatUint(q.StartHeight, 10), strconv.FormatUint(q.EndHeight, 10))
+		blockEvents, err := event.gateway.GetEvents(q.Type, q.StartHeight, q.EndHeight)
 		if err != nil {
 			results <- EventWorkerResult{nil, err}
 		}
