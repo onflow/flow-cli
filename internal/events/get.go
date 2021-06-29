@@ -58,7 +58,7 @@ func get(
 
 
 	eventNames := strings.Split(name, ",")
-	events, err := services.Events.GetMany(eventNames, start, end, 250, 10)
+	events, err := services.Events.GetMany(eventNames, start, end, 249, 10)
 	if err != nil {
 		return nil, err
 	}
