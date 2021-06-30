@@ -84,6 +84,7 @@ func TestEvents_Integration(t *testing.T) {
 		srvAcc, _ := state.EmulatorServiceAccount()
 
 		// create events
+		//I need to event clock to tick here, but I do not think it works when running these in parallel, help?
 		_, err := s.Accounts.AddContract(srvAcc, tests.ContractEvents.Name, tests.ContractEvents.Source, false)
 		assert.NoError(t, err)
 
