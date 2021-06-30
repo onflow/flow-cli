@@ -75,7 +75,7 @@ func (e * Events) CalculateStartEnd(start uint64, end uint64, last uint64) (uint
 func makeEventQueries(events[] string, startHeight uint64, endHeight uint64, blockCount uint64) []client.EventRangeQuery {
 	var queries []client.EventRangeQuery
 	for startHeight <= endHeight {
-		suggestedEndHeight := startHeight + blockCount
+		suggestedEndHeight := startHeight + blockCount -1 //since we are inclusive
 		endHeight := endHeight
 		if suggestedEndHeight < endHeight {
 			endHeight = suggestedEndHeight
@@ -97,7 +97,7 @@ func (e *Events) Get(events []string, startHeight uint64, endHeight uint64, bloc
 	defer e.logger.StopProgress()
 
 	//why do I need to substract one here, because block searches are inclusive.
-	queries := makeEventQueries(events, startHeight, endHeight, blockCount-1)
+	queries := makeEventQueries(events, startHeight, endHeight, blockCount)
 
 	jobChan := make(chan client.EventRangeQuery, workerCount)
 	results := make(chan EventWorkerResult)
@@ -140,7 +140,7 @@ func (e *Events) Get(events []string, startHeight uint64, endHeight uint64, bloc
 
 func (e *Events) eventWorker(jobChan <-chan client.EventRangeQuery, results chan<- EventWorkerResult) {
 	for q := range jobChan {
-		e.logger.Info(fmt.Sprintf("Fetching events %v", q))
+		e.logger.Debug(fmt.Sprintf("Fetching events %v", q))
 		blockEvents, err := e.gateway.GetEvents(q.Type, q.StartHeight, q.EndHeight)
 		if err != nil {
 			results <- EventWorkerResult{nil, err}
