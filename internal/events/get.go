@@ -38,7 +38,7 @@ var eventsFlags = flagsEvents{}
 
 var GetCommand = &command.Command{
 	Cmd: &cobra.Command{
-		Use:   "get <event_name> <block_height_range_start> <optional:block_height_range_end|latest>",
+		Use:   "get <event_name> (<event_name> <event_name>)",
 		Short: "Get events in a block range",
 		Args:  cobra.MinimumNArgs(1),
 		Example: `#specify manual start and stop blocks
