@@ -69,6 +69,9 @@ func (e * Events) CalculateStartEnd(start uint64, end uint64, last uint64) (uint
 		return start, latestBlock.Height, nil
 	}
 
+	if end < start {
+		return 0,0, fmt.Errorf("cannot have end height (%d) of block range less that start height (%d)", end, start)
+	}
 	return start, end, nil
 }
 

@@ -34,44 +34,19 @@ func TestEvents(t *testing.T) {
 		t.Parallel()
 
 		_, s, gw := setup()
-		_, err := s.Events.Get([]string{"flow.CreateAccount"}, 0, 1, 250,1)
+		_, err := s.Events.Get([]string{"flow.CreateAccount"}, 0, 0, 250,1)
 
 		assert.NoError(t, err)
-		gw.Mock.AssertCalled(t, tests.GetEventsFunc, "flow.CreateAccount", uint64(0), uint64(1))
+		gw.Mock.AssertCalled(t, tests.GetEventsFunc, "flow.CreateAccount", uint64(0), uint64(0))
 	})
 
-	/*
 
-	t.Run("Fails to get events without name", func(t *testing.T) {
-		t.Parallel()
-
-		_, s, _ := setup()
-		inputs := [][]string{
-			{"", "0", "1"},
-			{"test", "-1", "1"},
-			{"test", "1", "-1"},
-			{"test", "10", "5"},
-		}
-
-		outputs := []string{
-			"cannot use empty string as event name",
-			"failed to parse start height of block range: -1",
-			"failed to parse end height of block range: -1",
-			"cannot have end height (5) of block range less that start height (10)",
-		}
-
-		for i, in := range inputs {
-			_, err := s.Events.Get(in[0], in[1], in[2])
-			assert.Equal(t, err.Error(), outputs[i])
-		}
-	})
-	 */
 }
 
 func TestEvents_Integration(t *testing.T) {
 	t.Parallel()
 
-	t.Run("Get Events", func(t *testing.T) {
+	t.Run("Get Events for non existant event", func(t *testing.T) {
 		t.Parallel()
 
 		_, s := setupIntegration()
@@ -82,7 +57,7 @@ func TestEvents_Integration(t *testing.T) {
 		assert.Len(t, events[0].Events, 0)
 	})
 
-	t.Run("Get Events", func(t *testing.T) {
+	t.Run("Get Events while adding contracts", func(t *testing.T) {
 			t.Parallel()
 
 			state, s := setupIntegration()
@@ -92,16 +67,43 @@ func TestEvents_Integration(t *testing.T) {
 		_, err := s.Accounts.AddContract(srvAcc, tests.ContractEvents.Name, tests.ContractEvents.Source, false)
 		assert.NoError(t, err)
 
-		var names []string
 		for x := 'A'; x <= 'J'; x++ { // test contract emits events named from A to J
-			names = append(names, fmt.Sprintf("A.%s.ContractEvents.Event%c", srvAcc.Address().String(), x))
+			eName := fmt.Sprintf("A.%s.ContractEvents.Event%c", srvAcc.Address().String(), x)
+			events, err := s.Events.Get([]string{ eName}, 0, 1, 250, 1)
+			assert.NoError(t, err)
+			assert.Len(t, events, 2)
+			assert.Len(t, events[1].Events, 1)
 
 		}
+	})
 
-		events, err := s.Events.Get(names, 0, 1, 250, 10)
+	t.Run("Parse event start stop", func(t *testing.T) {
+		t.Parallel()
+
+		state, s := setupIntegration()
+		srvAcc, _ := state.EmulatorServiceAccount()
+
+		// create events
+		_, err := s.Accounts.AddContract(srvAcc, tests.ContractEvents.Name, tests.ContractEvents.Source, false)
 		assert.NoError(t, err)
-		assert.Len(t, events, 2)
-		assert.Len(t, events[1].Events, 1)
-	//		assert.Equal(t, events[1].Events[0].Type, eName)
+
+		start, end, err := s.Events.CalculateStartEnd(1, 0, 1)
+		assert.Equal(t, start, uint64(1))
+		assert.Equal(t, end, uint64(1))
+		assert.NoError(t, err)
+
+
+		start, end, err = s.Events.CalculateStartEnd(1, 1, 1)
+		assert.Equal(t, start, uint64(1))
+		assert.Equal(t, end, uint64(1))
+		assert.NoError(t, err)
+
+		start, end, err = s.Events.CalculateStartEnd(0, 0, 1)
+		assert.Equal(t, start, uint64(0))
+		assert.Equal(t, end, uint64(1))
+		assert.NoError(t, err)
+
+		start, end, err = s.Events.CalculateStartEnd(2, 1, 1)
+		assert.Error(t, err)
 	})
 }
