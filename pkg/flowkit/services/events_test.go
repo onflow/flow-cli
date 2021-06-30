@@ -63,7 +63,7 @@ func TestEvents(t *testing.T) {
 		assert.Equal(t, end, uint64(1))
 		assert.NoError(t, err)
 
-		start, end, err = s.Events.CalculateStartEnd(2, 1, 1)
+		_, _, err = s.Events.CalculateStartEnd(2, 1, 1)
 		assert.Error(t, err)
 	})
 
