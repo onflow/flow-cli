@@ -64,7 +64,7 @@ func updateContract(
 
 	to := state.Accounts().ByName(updateFlags.Signer)
 
-	account, err := services.Accounts.AddContract(to, name, code, false)
+	account, err := services.Accounts.AddContract(to, name, code, true)
 	if err != nil {
 		return nil, err
 	}
