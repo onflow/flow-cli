@@ -63,7 +63,7 @@ func TestEvents(t *testing.T) {
 		assert.Equal(t, end, uint64(1))
 		assert.NoError(t, err)
 
-		_, _, err = s.Events.CalculateStartEnd(2, 1, 1)
+		start, end, err = s.Events.CalculateStartEnd(2, 1, 1)
 		assert.Error(t, err)
 	})
 
@@ -77,7 +77,7 @@ func TestEvents_Integration(t *testing.T) {
 
 		_, s := setupIntegration()
 
-		events, err := s.Events.Get([]string{"nonexisting"}, 0, 1, 250, 1)
+		events, err := s.Events.Get([]string{"nonexisting"}, 0, 0, 250, 1)
 		assert.NoError(t, err)
 		assert.Len(t, events, 1)
 		assert.Len(t, events[0].Events, 0)
@@ -93,9 +93,11 @@ func TestEvents_Integration(t *testing.T) {
 		_, err := s.Accounts.AddContract(srvAcc, tests.ContractEvents.Name, tests.ContractEvents.Source, false)
 		assert.NoError(t, err)
 
+		start, end, err := s.Events.CalculateStartEnd(0, 0, 1)
+		assert.NoError(t, err)
 		for x := 'A'; x <= 'J'; x++ { // test contract emits events named from A to J
 			eName := fmt.Sprintf("A.%s.ContractEvents.Event%c", srvAcc.Address().String(), x)
-			events, err := s.Events.Get([]string{eName}, 0, 1, 250, 1)
+			events, err := s.Events.Get([]string{eName}, start, end, 250, 1)
 			assert.NoError(t, err)
 			assert.Len(t, events, 2)
 			assert.Len(t, events[1].Events, 1)
