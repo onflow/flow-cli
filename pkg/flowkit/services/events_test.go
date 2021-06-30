@@ -79,7 +79,6 @@ func TestEvents(t *testing.T) {
 		_, s, _ := setup()
 		inputs := [][]string{
 			{"", "0", "1"},
-
 		}
 
 		outputs := []string{
@@ -140,7 +139,6 @@ func TestEvents_Integration(t *testing.T) {
 			assert.Len(t, events[1].Events, 1)
 			assert.Equal(t, events[1].Events[0].Type, eName)
 		}
-
 
 	})
 }
