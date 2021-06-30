@@ -20,7 +20,6 @@ package services
 
 import (
 	"fmt"
-	"strconv"
 	"sync"
 
 	"github.com/onflow/flow-cli/pkg/flowkit"
@@ -52,37 +51,28 @@ func NewEvents(
 }
 
 
-func (e * Events) parseStartEnd(start string, end string) (uint64, uint64, error) {
-	startHeight, err := strconv.ParseUint(start, 10, 64)
-	if err != nil {
-		return 0,0, fmt.Errorf("failed to parse start height of block range: %v", start)
-	}
+func (e * Events) CalculateStartEnd(start uint64, end uint64, last uint64) (uint64, uint64, error) {
 
-	var endHeight uint64
-	if end == "" {
-		endHeight = startHeight
-	} else if end == "latest" {
+	if start == 0 {
 		latestBlock, err := e.gateway.GetLatestBlock()
 		if err != nil {
 			return 0,0, err
 		}
+		return latestBlock.Height-last, latestBlock.Height, nil
+	}
 
-		endHeight = latestBlock.Height
-	} else {
-		endHeight, err = strconv.ParseUint(end, 10, 64)
+	if end == 0 {
+		latestBlock, err := e.gateway.GetLatestBlock()
 		if err != nil {
-			return 0,0, fmt.Errorf("failed to parse end height of block range: %s", end)
+			return 0,0, err
 		}
+		return start, latestBlock.Height, nil
 	}
 
-	if endHeight < startHeight {
-		return 0,0, fmt.Errorf("cannot have end height (%d) of block range less that start height (%d)", endHeight, startHeight)
-	}
-
-	return startHeight, endHeight, nil
+	return start, end, nil
 }
 
-func makeEventQueryes(events[] string, startHeight uint64, endHeight uint64, blockCount uint64) []client.EventRangeQuery {
+func makeEventQueries(events[] string, startHeight uint64, endHeight uint64, blockCount uint64) []client.EventRangeQuery {
 	var queries []client.EventRangeQuery
 	for startHeight <= endHeight {
 		suggestedEndHeight := startHeight + blockCount
@@ -102,17 +92,12 @@ func makeEventQueryes(events[] string, startHeight uint64, endHeight uint64, blo
 	return queries
 
 }
-func (e *Events) GetMany(events []string, start string, end string, blockCount uint64, workerCount int) ([]client.BlockEvents, error) {
+func (e *Events) Get(events []string, startHeight uint64, endHeight uint64, blockCount uint64, workerCount int) ([]client.BlockEvents, error) {
 	e.logger.StartProgress("Fetching Events...")
 	defer e.logger.StopProgress()
 
-	startHeight, endHeight, err := e.parseStartEnd(start, end)
-	if err != nil {
-		return nil, err
-	}
-
 	//why do I need to substract one here, because block searches are inclusive.
-	queries := makeEventQueryes(events, startHeight, endHeight, blockCount-1)
+	queries := makeEventQueries(events, startHeight, endHeight, blockCount-1)
 
 	jobChan := make(chan client.EventRangeQuery, workerCount)
 	results := make(chan EventWorkerResult)
