@@ -51,27 +51,6 @@ func NewEvents(
 	}
 }
 
-// Get queries for an event by name and block range.
-func (e *Events) Get(name string, start string, end string) ([]client.BlockEvents, error) {
-	if name == "" {
-		return nil, fmt.Errorf("cannot use empty string as event name")
-	}
-	e.logger.StartProgress("Fetching Events...")
-	defer e.logger.StopProgress()
-
-	startHeight, endHeight, err := e.parseStartEnd(start, end)
-	if err != nil {
-	  return nil, err
-	}
-
-	events, err := e.gateway.GetEvents(name, startHeight, endHeight)
-	if err != nil {
-		return nil, err
-	}
-
-	e.logger.StopProgress()
-	return events, nil
-}
 
 func (e * Events) parseStartEnd(start string, end string) (uint64, uint64, error) {
 	startHeight, err := strconv.ParseUint(start, 10, 64)
@@ -132,7 +111,8 @@ func (e *Events) GetMany(events []string, start string, end string, blockCount u
 		return nil, err
 	}
 
-	queries := makeEventQueryes(events, startHeight, endHeight, blockCount)
+	//why do I need to substract one here, because block searches are inclusive.
+	queries := makeEventQueryes(events, startHeight, endHeight, blockCount-1)
 
 	jobChan := make(chan client.EventRangeQuery, workerCount)
 	results := make(chan EventWorkerResult)
