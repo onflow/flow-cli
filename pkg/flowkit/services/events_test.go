@@ -40,6 +40,34 @@ func TestEvents(t *testing.T) {
 		gw.Mock.AssertCalled(t, tests.GetEventsFunc, "flow.CreateAccount", uint64(0), uint64(0))
 	})
 
+	t.Run("Parse event start stop", func(t *testing.T) {
+		t.Parallel()
+
+		_, s, gw := setup()
+
+		tests.NewBlock()
+		gw.Mock.On("GetLatestBlock").Return(tests.NewBlock())
+
+		start, end, err := s.Events.CalculateStartEnd(1, 0, 1)
+		assert.Equal(t, start, uint64(1))
+		assert.Equal(t, end, uint64(1))
+		assert.NoError(t, err)
+
+
+		start, end, err = s.Events.CalculateStartEnd(1, 1, 1)
+		assert.Equal(t, start, uint64(1))
+		assert.Equal(t, end, uint64(1))
+		assert.NoError(t, err)
+
+		start, end, err = s.Events.CalculateStartEnd(0, 0, 1)
+		assert.Equal(t, start, uint64(0))
+		assert.Equal(t, end, uint64(1))
+		assert.NoError(t, err)
+
+		start, end, err = s.Events.CalculateStartEnd(2, 1, 1)
+		assert.Error(t, err)
+	})
+
 
 }
 
@@ -75,36 +103,5 @@ func TestEvents_Integration(t *testing.T) {
 			assert.Len(t, events[1].Events, 1)
 
 		}
-	})
-
-	t.Run("Parse event start stop", func(t *testing.T) {
-		t.Parallel()
-
-		state, s := setupIntegration()
-		srvAcc, _ := state.EmulatorServiceAccount()
-
-		// create events
-		//I need to event clock to tick here, but I do not think it works when running these in parallel, help?
-		_, err := s.Accounts.AddContract(srvAcc, tests.ContractEvents.Name, tests.ContractEvents.Source, false)
-		assert.NoError(t, err)
-
-		start, end, err := s.Events.CalculateStartEnd(1, 0, 1)
-		assert.Equal(t, start, uint64(1))
-		assert.Equal(t, end, uint64(1))
-		assert.NoError(t, err)
-
-
-		start, end, err = s.Events.CalculateStartEnd(1, 1, 1)
-		assert.Equal(t, start, uint64(1))
-		assert.Equal(t, end, uint64(1))
-		assert.NoError(t, err)
-
-		start, end, err = s.Events.CalculateStartEnd(0, 0, 1)
-		assert.Equal(t, start, uint64(0))
-		assert.Equal(t, end, uint64(1))
-		assert.NoError(t, err)
-
-		start, end, err = s.Events.CalculateStartEnd(2, 1, 1)
-		assert.Error(t, err)
 	})
 }
