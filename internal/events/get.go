@@ -41,8 +41,11 @@ var GetCommand = &command.Command{
 		Use:   "get <event_name> <block_height_range_start> <optional:block_height_range_end|latest>",
 		Short: "Get events in a block range",
 		Args:  cobra.MinimumNArgs(1),
-		Example: `flow events get A.1654653399040a61.FlowToken.TokensDeposited --start 11559500 --end 11559600
-flow events get get A.1654653399040a61.FlowToken.TokensDeposited --last 10 --network mainnet
+		Example: `#specify manual start and stop blocks
+flow events get A.1654653399040a61.FlowToken.TokensDeposited --start 11559500 --end 11559600
+
+#in order to get and event from the 10 latest blocks on a network run
+flow events get A.1654653399040a61.FlowToken.TokensDeposited --last 10 --network mainnet
 	`,
 	},
 	Flags: &eventsFlags,
