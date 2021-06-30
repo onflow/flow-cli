@@ -129,7 +129,7 @@ The advanced format allows us to specify aliases for each network.
 
 Using advanced format we can define `aliases`. Aliases define an address where the contract is already deployed for that specific network. 
 In the example scenario below the contract `FungibleToken` would be imported from the address `9a0766d93b6608b7` when deploying to testnet network 
-and address `ee82856bf20e2aa6` when deploying to testnet. 
+and address `ee82856bf20e2aa6` when deploying to the Flow emulator. 
 We can specify aliases for each network we have defined. When deploying to testnet it is always a good idea to specify aliases for all the [common 
 contracts](https://docs.onflow.org/core-contracts) that have already been deployed to the testnet. 
 
@@ -139,7 +139,6 @@ Our example bellow should not include `FungibleToken` in  `deployment` section f
 
 ```json
 ...
-
 "FungibleToken": {
   "source": "./cadence/contracts/FungibleToken.cdc",
   "aliases": {
@@ -147,8 +146,18 @@ Our example bellow should not include `FungibleToken` in  `deployment` section f
     "emulator": "ee82856bf20e2aa6"
   }
 }
-
 ...
+```
+
+Format used to specify advanced contracts is:
+```json
+"CONTRACT NAME": {
+    "source": "CONTRACT SOURCE FILE LOCATION",
+    "aliases": {
+        "NETWORK NAME": "ADDRESS ON SPECIFIED NETWORK WITH DEPLOYED CONTRACT"
+        ...
+    }
+}
 ```
 
 ### Accounts
@@ -182,6 +191,7 @@ We can define the signature algorithm and hashing algorithm, as well as custom k
 Please note that we can use `service` for address in case the account is used on `emulator` network as this is a special 
 value that is defined on the run time to the default service address on the emulator network.
 
+**Example for advanced hex format:**
 ```json
 ...
 
@@ -201,11 +211,46 @@ value that is defined on the run time to the default service address on the emul
 ...
 ```
 
+You can also use a key management system (KMS) to sign the transactions. Currently, we only support Google KMS.
+
+**Example for Google KMS format:**
+```json
+...
+"accounts": {
+  "admin-account": {
+    "address": "service",
+    "key": {
+        "type": "google-kms",
+        "index": 0,
+        "signatureAlgorithm": "ECDSA_P256",
+        "hashAlgorithm": "SHA3_256",
+        "resourceID": "projects/flow/locations/us/keyRings/foo/bar/cryptoKeyVersions/1"
+    }
+  }
+}
+...
+```
+
 ### Deployments
 
 The deployments section defines where the `project deploy` command will deploy specified contracts. 
 This configuration property acts as the glue that ties together accounts, 
 contracts and networks, all of which are referenced by name.
+
+In the deployments section we specify the network, account name and list of contracts to be deployed to that account.
+
+Format specifying the deployment is:
+```json
+...
+"deployments": {
+  "NETWORK": {
+    "ACCOUNT NAME": ["CONTRACT NAME"]
+  }
+}
+
+...
+```
+
 
 ```json
 ...
@@ -234,7 +279,17 @@ contracts and networks, all of which are referenced by name.
 
 ### Networks
 
-Use this section to define networks and connection parameters for that specific network. 
+Use this section to define networks and connection parameters for that specific network.
+
+Format for networks is:
+
+```json
+...
+"networks": {
+  "NETWORK NAME": "ADDRESS"
+}
+...
+```
 
 ```json
 ...
