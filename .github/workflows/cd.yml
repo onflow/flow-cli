@@ -21,5 +21,5 @@ jobs:
         uses: google-github-actions/upload-cloud-storage@main
         with:
           credentials: ${{ secrets.FLOW_TEST_SA }}
-          path: cmd/flow/flow-*
+          path: ../../cmd/flow/flow-*
           destination: flow-cli-test/
