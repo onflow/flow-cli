@@ -34,7 +34,7 @@ func TestEvents(t *testing.T) {
 		t.Parallel()
 
 		_, s, gw := setup()
-		_, err := s.Events.Get([]string{"flow.CreateAccount"}, 0, 0, 250,1)
+		_, err := s.Events.Get([]string{"flow.CreateAccount"}, 0, 0, 250, 1)
 
 		assert.NoError(t, err)
 		gw.Mock.AssertCalled(t, tests.GetEventsFunc, "flow.CreateAccount", uint64(0), uint64(0))
@@ -53,7 +53,6 @@ func TestEvents(t *testing.T) {
 		assert.Equal(t, end, uint64(1))
 		assert.NoError(t, err)
 
-
 		start, end, err = s.Events.CalculateStartEnd(1, 1, 1)
 		assert.Equal(t, start, uint64(1))
 		assert.Equal(t, end, uint64(1))
@@ -67,7 +66,6 @@ func TestEvents(t *testing.T) {
 		start, end, err = s.Events.CalculateStartEnd(2, 1, 1)
 		assert.Error(t, err)
 	})
-
 
 }
 
@@ -86,10 +84,10 @@ func TestEvents_Integration(t *testing.T) {
 	})
 
 	t.Run("Get Events while adding contracts", func(t *testing.T) {
-			t.Parallel()
+		t.Parallel()
 
-			state, s := setupIntegration()
-			srvAcc, _ := state.EmulatorServiceAccount()
+		state, s := setupIntegration()
+		srvAcc, _ := state.EmulatorServiceAccount()
 
 		// create events
 		_, err := s.Accounts.AddContract(srvAcc, tests.ContractEvents.Name, tests.ContractEvents.Source, false)
@@ -97,7 +95,7 @@ func TestEvents_Integration(t *testing.T) {
 
 		for x := 'A'; x <= 'J'; x++ { // test contract emits events named from A to J
 			eName := fmt.Sprintf("A.%s.ContractEvents.Event%c", srvAcc.Address().String(), x)
-			events, err := s.Events.Get([]string{ eName}, 0, 1, 250, 1)
+			events, err := s.Events.Get([]string{eName}, 0, 1, 250, 1)
 			assert.NoError(t, err)
 			assert.Len(t, events, 2)
 			assert.Len(t, events[1].Events, 1)
