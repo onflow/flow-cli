@@ -99,7 +99,6 @@ func (e *Events) Get(events []string, startHeight uint64, endHeight uint64, bloc
 	e.logger.StartProgress("Fetching Events...")
 	defer e.logger.StopProgress()
 
-	//why do I need to substract one here, because block searches are inclusive.
 	queries := makeEventQueries(events, startHeight, endHeight, blockCount)
 
 	jobChan := make(chan client.EventRangeQuery, workerCount)

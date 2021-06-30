@@ -46,7 +46,7 @@ func TestEvents(t *testing.T) {
 func TestEvents_Integration(t *testing.T) {
 	t.Parallel()
 
-	t.Run("Get Events for non existant event", func(t *testing.T) {
+	t.Run("Get Events for non existent event", func(t *testing.T) {
 		t.Parallel()
 
 		_, s := setupIntegration()
