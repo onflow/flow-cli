@@ -104,4 +104,27 @@ func TestEvents_Integration(t *testing.T) {
 
 		}
 	})
+
+	t.Run("Get Events while adding contracts in paralell", func(t *testing.T) {
+		t.Parallel()
+
+		state, s := setupIntegration()
+		srvAcc, _ := state.EmulatorServiceAccount()
+
+		// create events
+		_, err := s.Accounts.AddContract(srvAcc, tests.ContractEvents.Name, tests.ContractEvents.Source, false)
+		assert.NoError(t, err)
+
+		start, end, err := s.Events.CalculateStartEnd(0, 0, 1)
+		assert.NoError(t, err)
+		var eventNames []string
+		for x := 'A'; x <= 'J'; x++ { // test contract emits events named from A to J
+			eName := fmt.Sprintf("A.%s.ContractEvents.Event%c", srvAcc.Address().String(), x)
+			eventNames = append(eventNames, eName)
+		}
+
+		events, err := s.Events.Get(eventNames, start, end, 250, 1)
+		assert.NoError(t, err)
+		assert.Len(t, events[1].Events, 1)
+	})
 }

@@ -38,14 +38,24 @@ var eventsFlags = flagsEvents{}
 
 var GetCommand = &command.Command{
 	Cmd: &cobra.Command{
-		Use:   "get <event_name> (<event_name> <event_name>)",
+		Use:   "get <event_name>",
 		Short: "Get events in a block range",
 		Args:  cobra.MinimumNArgs(1),
-		Example: `#specify manual start and stop blocks
+		Example: `#fetch events from the latest 10 blocks is the default behavior
+flow events get A.1654653399040a61.FlowToken.TokensDeposited
+
+#specify manual start and stop blocks
 flow events get A.1654653399040a61.FlowToken.TokensDeposited --start 11559500 --end 11559600
 
 #in order to get and event from the 10 latest blocks on a network run
 flow events get A.1654653399040a61.FlowToken.TokensDeposited --last 10 --network mainnet
+
+#if you want to fetch multiple event types that is done by sending in more events. Even fetching will be done in paralell.
+flow events get A.1654653399040a61.FlowToken.TokensDeposited flow events get A.1654653399040a61.FlowToken.TokensWithdrawn
+
+
+ 
+
 	`,
 	},
 	Flags: &eventsFlags,
