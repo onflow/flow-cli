@@ -27,7 +27,7 @@ import (
 )
 
 type flagsEvents struct {
-	Start   uint64 `flag:"start" info:"Block height start"`
+	Start   uint64 `flag:"start" info:"Start block height"`
 	End     uint64 `flag:"end" info:"Block height end"`
 	Last    uint64 `default:"1" flag:"last" info:"Fetch number of blocks relative to the last block. Ignored if the start flag is set. Used as a default if no flags are provided"`
 	Workers int    `default:"10" flag:"workers" info:"Number of workers to use when fetching events in parallel"`
