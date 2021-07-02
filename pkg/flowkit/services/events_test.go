@@ -25,6 +25,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/onflow/flow-cli/tests"
+	"github.com/onflow/flow-go-sdk/client"
 )
 
 func TestEvents(t *testing.T) {
@@ -67,6 +68,20 @@ func TestEvents(t *testing.T) {
 		assert.Error(t, err)
 	})
 
+	t.Run("Test create queries", func(t *testing.T) {
+
+		names := []string{"first", "second"}
+		queries := makeEventQueries(names, 0, 400, 250)
+		expected := []client.EventRangeQuery{
+			{Type: "first", StartHeight: 0, EndHeight: 249},
+			{Type: "second", StartHeight: 0, EndHeight: 249},
+			{Type: "first", StartHeight: 250, EndHeight: 400},
+			{Type: "second", StartHeight: 250, EndHeight: 400},
+		}
+		assert.Equal(t, expected, queries)
+
+	})
+
 }
 
 func TestEvents_Integration(t *testing.T) {
@@ -105,7 +120,7 @@ func TestEvents_Integration(t *testing.T) {
 		}
 	})
 
-	t.Run("Get Events while adding contracts in paralell", func(t *testing.T) {
+	t.Run("Get Events while adding contracts in parallel", func(t *testing.T) {
 		t.Parallel()
 
 		state, s := setupIntegration()
