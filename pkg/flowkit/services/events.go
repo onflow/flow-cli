@@ -50,11 +50,11 @@ func NewEvents(
 	}
 }
 
-
 func makeEventQueries(events []string, startHeight uint64, endHeight uint64, blockCount uint64) []client.EventRangeQuery {
 	var queries []client.EventRangeQuery
 	for startHeight <= endHeight {
 		suggestedEndHeight := startHeight + blockCount - 1 //since we are inclusive
+		endHeight := endHeight
 		if suggestedEndHeight < endHeight {
 			endHeight = suggestedEndHeight
 		}

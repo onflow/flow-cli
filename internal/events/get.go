@@ -20,6 +20,7 @@ package events
 
 import (
 	"fmt"
+
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
@@ -74,14 +75,14 @@ func get(
 		if err != nil {
 			return nil, err
 		}
-		start=latestBlockHeight - eventsFlags.Last
-		end=latestBlockHeight
+		start = latestBlockHeight - eventsFlags.Last
+		end = latestBlockHeight
 	} else if eventsFlags.End == 0 {
 		latestBlockHeight, err := services.Blocks.GetLatestBlockHeight()
 		if err != nil {
 			return nil, err
 		}
-		end=latestBlockHeight
+		end = latestBlockHeight
 	}
 
 	if end < start {
@@ -95,4 +96,3 @@ func get(
 
 	return &EventResult{BlockEvents: events}, nil
 }
-

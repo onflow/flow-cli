@@ -102,7 +102,6 @@ func TestEvents_Integration(t *testing.T) {
 		_, err := s.Accounts.AddContract(srvAcc, tests.ContractEvents.Name, tests.ContractEvents.Source, false)
 		assert.NoError(t, err)
 
-		start, end, err := s.Events.CalculateStartEnd(0, 0, 1)
 		assert.NoError(t, err)
 		var eventNames []string
 		for x := 'A'; x <= 'J'; x++ { // test contract emits events named from A to J
@@ -110,7 +109,7 @@ func TestEvents_Integration(t *testing.T) {
 			eventNames = append(eventNames, eName)
 		}
 
-		events, err := s.Events.Get(eventNames, start, end, 250, 1)
+		events, err := s.Events.Get(eventNames, 0, 1, 250, 1)
 		assert.NoError(t, err)
 		assert.Len(t, events[1].Events, 1)
 	})
