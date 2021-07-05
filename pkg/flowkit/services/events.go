@@ -54,15 +54,15 @@ func makeEventQueries(events []string, startHeight uint64, endHeight uint64, blo
 	var queries []client.EventRangeQuery
 	for startHeight <= endHeight {
 		suggestedEndHeight := startHeight + blockCount - 1 //since we are inclusive
-		endHeight := endHeight
+		end := endHeight
 		if suggestedEndHeight < endHeight {
-			endHeight = suggestedEndHeight
+			end = suggestedEndHeight
 		}
 		for _, event := range events {
 			queries = append(queries, client.EventRangeQuery{
 				Type:        event,
 				StartHeight: startHeight,
-				EndHeight:   endHeight,
+				EndHeight:   end,
 			})
 		}
 		startHeight = suggestedEndHeight + 1
