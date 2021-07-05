@@ -19,6 +19,7 @@
 package events
 
 import (
+	"fmt"
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
@@ -64,9 +65,27 @@ func get(
 	_ command.GlobalFlags,
 	services *services.Services,
 ) (command.Result, error) {
-	start, end, err := services.Events.CalculateStartEnd(eventsFlags.Start, eventsFlags.End, eventsFlags.Last)
-	if err != nil {
-		return nil, err
+
+	var start uint64
+	var end uint64
+	start = eventsFlags.Start
+	if eventsFlags.Start == 0 {
+		latestBlockHeight, err := services.Blocks.GetLatestBlockHeight()
+		if err != nil {
+			return nil, err
+		}
+		start=latestBlockHeight - eventsFlags.Last
+		end=latestBlockHeight
+	} else if eventsFlags.End == 0 {
+		latestBlockHeight, err := services.Blocks.GetLatestBlockHeight()
+		if err != nil {
+			return nil, err
+		}
+		end=latestBlockHeight
+	}
+
+	if end < start {
+		return nil, fmt.Errorf("cannot have end height (%d) of block range less that start height (%d)", end, start)
 	}
 
 	events, err := services.Events.Get(args, start, end, eventsFlags.Batch, eventsFlags.Workers)
@@ -76,3 +95,4 @@ func get(
 
 	return &EventResult{BlockEvents: events}, nil
 }
+

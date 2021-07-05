@@ -50,35 +50,11 @@ func NewEvents(
 	}
 }
 
-func (e *Events) CalculateStartEnd(start uint64, end uint64, last uint64) (uint64, uint64, error) {
-
-	if start == 0 {
-		latestBlock, err := e.gateway.GetLatestBlock()
-		if err != nil {
-			return 0, 0, err
-		}
-		return latestBlock.Height - last, latestBlock.Height, nil
-	}
-
-	if end == 0 {
-		latestBlock, err := e.gateway.GetLatestBlock()
-		if err != nil {
-			return 0, 0, err
-		}
-		return start, latestBlock.Height, nil
-	}
-
-	if end < start {
-		return 0, 0, fmt.Errorf("cannot have end height (%d) of block range less that start height (%d)", end, start)
-	}
-	return start, end, nil
-}
 
 func makeEventQueries(events []string, startHeight uint64, endHeight uint64, blockCount uint64) []client.EventRangeQuery {
 	var queries []client.EventRangeQuery
 	for startHeight <= endHeight {
 		suggestedEndHeight := startHeight + blockCount - 1 //since we are inclusive
-		endHeight := endHeight
 		if suggestedEndHeight < endHeight {
 			endHeight = suggestedEndHeight
 		}
