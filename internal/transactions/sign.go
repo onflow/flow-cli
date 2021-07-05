@@ -64,7 +64,12 @@ func sign(
 		return nil, fmt.Errorf("signer account: [%s] doesn't exists in configuration", signFlags.Signer)
 	}
 
-	signed, err := services.Transactions.Sign(signer, payload, globalFlags.Yes)
+	tx, err := flowkit.NewTransactionFromPayload(payload)
+	if err != nil {
+		return nil, err
+	}
+
+	signed, err := services.Transactions.Sign(signer, tx, globalFlags.Yes)
 	if err != nil {
 		return nil, err
 	}

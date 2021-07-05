@@ -145,19 +145,14 @@ func (t *Transactions) Build(
 // Sign transaction payload using the signer account.
 func (t *Transactions) Sign(
 	signer *flowkit.Account,
-	payload []byte,
+	tx *flowkit.Transaction,
 	approveSigning bool,
 ) (*flowkit.Transaction, error) {
 	if t.state == nil {
 		return nil, fmt.Errorf("missing configuration, initialize it: flow state init")
 	}
 
-	tx, err := flowkit.NewTransactionFromPayload(payload)
-	if err != nil {
-		return nil, err
-	}
-
-	err = tx.SetSigner(signer)
+	err := tx.SetSigner(signer)
 	if err != nil {
 		return nil, err
 	}
@@ -174,13 +169,7 @@ func (t *Transactions) Sign(
 }
 
 // SendSigned sends the transaction that is already signed.
-func (t *Transactions) SendSigned(
-	payload []byte,
-) (*flow.Transaction, *flow.TransactionResult, error) {
-	tx, err := flowkit.NewTransactionFromPayload(payload)
-	if err != nil {
-		return nil, nil, err
-	}
+func (t *Transactions) SendSigned(tx *flowkit.Transaction) (*flow.Transaction, *flow.TransactionResult, error) {
 
 	t.logger.StartProgress(fmt.Sprintf("Sending transaction with ID: %s", tx.FlowTransaction().ID()))
 	defer t.logger.StopProgress()

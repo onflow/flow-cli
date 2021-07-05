@@ -61,7 +61,13 @@ func sendSigned(
 		return nil, fmt.Errorf("error loading transaction payload: %w", err)
 	}
 
-	tx, result, err := services.Transactions.SendSigned(code)
+	transaction, err := flowkit.NewTransactionFromPayload(code)
+	if err != nil {
+		return nil, err
+
+	}
+
+	tx, result, err := services.Transactions.SendSigned(transaction)
 	if err != nil {
 		return nil, err
 	}
