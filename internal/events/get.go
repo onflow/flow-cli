@@ -47,8 +47,8 @@ flow events get A.1654653399040a61.FlowToken.TokensDeposited
 #specify manual start and stop blocks
 flow events get A.1654653399040a61.FlowToken.TokensDeposited --start 11559500 --end 11559600
 
-#in order to get and event from the 10 latest blocks on a network run
-flow events get A.1654653399040a61.FlowToken.TokensDeposited --last 10 --network mainnet
+#in order to get and event from the 20 latest blocks on a network run
+flow events get A.1654653399040a61.FlowToken.TokensDeposited --last 20 --network mainnet
 
 #if you want to fetch multiple event types that is done by sending in more events. Even fetching will be done in parallel.
 flow events get A.1654653399040a61.FlowToken.TokensDeposited A.1654653399040a61.FlowToken.TokensWithdrawn
