@@ -19,8 +19,6 @@
 package events
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
@@ -85,9 +83,6 @@ func get(
 		end = latestBlockHeight
 	}
 
-	if end < start {
-		return nil, fmt.Errorf("cannot have end height (%d) of block range less that start height (%d)", end, start)
-	}
 
 	events, err := services.Events.Get(args, start, end, eventsFlags.Batch, eventsFlags.Workers)
 	if err != nil {

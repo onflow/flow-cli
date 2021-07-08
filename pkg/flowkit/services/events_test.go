@@ -19,6 +19,7 @@
 package services
 
 import (
+	"errors"
 	"fmt"
 	"testing"
 
@@ -42,6 +43,14 @@ func TestEvents(t *testing.T) {
 		gw.Mock.AssertCalled(t, tests.GetEventsFunc, "flow.CreateAccount", uint64(0), uint64(0))
 	})
 
+	t.Run("Should have larger endHeight then startHeight", func(t *testing.T) {
+		t.Parallel()
+
+		_, s, _ := setup()
+		_, err := s.Events.Get([]string{"flow.CreateAccount"}, 10, 0, 250, 1)
+		assert.EqualError(t, err, "cannot have end height (0) of block range less that start height (10)")
+	})
+
 	t.Run("Test create queries", func(t *testing.T) {
 
 		names := []string{"first", "second"}
@@ -53,7 +62,17 @@ func TestEvents(t *testing.T) {
 			{Type: "second", StartHeight: 250, EndHeight: 400},
 		}
 		assert.Equal(t, expected, queries)
+	})
 
+	t.Run("Should handle error from get events in goroutine", func(t *testing.T) {
+		t.Parallel()
+
+		_, s, gw := setupMock()
+
+		gw.On(tests.GetEventsFunc, "flow.CreateAccount", uint64(0), uint64(1)).Return([]client.BlockEvents{}, errors.New("failed getting event"))
+		_, err := s.Events.Get([]string{"flow.CreateAccount"}, 0, 1 , 250, 1)
+
+		assert.EqualError(t, err, "failed getting event")
 	})
 
 }
@@ -109,8 +128,9 @@ func TestEvents_Integration(t *testing.T) {
 			eventNames = append(eventNames, eName)
 		}
 
-		events, err := s.Events.Get(eventNames, 0, 1, 250, 1)
+		events, err := s.Events.Get(eventNames, 0, 1, 250, 5)
 		assert.NoError(t, err)
+		assert.Len(t, events, 20)
 		assert.Len(t, events[1].Events, 1)
 	})
 }

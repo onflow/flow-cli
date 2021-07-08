@@ -20,6 +20,7 @@ package services
 
 import (
 	"fmt"
+	"github.com/onflow/flow-cli/tests/mocks"
 	"strings"
 	"testing"
 
@@ -39,6 +40,17 @@ import (
 
 	"github.com/onflow/flow-cli/tests"
 )
+
+func setupMock() (*flowkit.State, *Services, *mocks.Gateway) {
+	readerWriter := tests.ReaderWriter()
+	state, err := flowkit.Init(readerWriter, crypto.ECDSA_P256, crypto.SHA3_256)
+	if err != nil {
+		panic(err)
+	}
+	gw :=&mocks.Gateway{}
+	s := NewServices(gw, state, output.NewStdoutLogger(output.NoneLog))
+	return state, s, gw
+}
 
 func setup() (*flowkit.State, *Services, *tests.TestGateway) {
 	readerWriter := tests.ReaderWriter()

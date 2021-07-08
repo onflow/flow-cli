@@ -71,6 +71,10 @@ func makeEventQueries(events []string, startHeight uint64, endHeight uint64, blo
 
 }
 func (e *Events) Get(events []string, startHeight uint64, endHeight uint64, blockCount uint64, workerCount int) ([]client.BlockEvents, error) {
+	if endHeight < startHeight {
+		return nil, fmt.Errorf("cannot have end height (%d) of block range less that start height (%d)", endHeight, startHeight)
+	}
+
 	e.logger.StartProgress("Fetching Events...")
 	defer e.logger.StopProgress()
 
