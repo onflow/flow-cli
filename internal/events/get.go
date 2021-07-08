@@ -53,7 +53,7 @@ flow events get A.1654653399040a61.FlowToken.TokensDeposited --start 11559500 --
 flow events get A.1654653399040a61.FlowToken.TokensDeposited --last 10 --network mainnet
 
 #if you want to fetch multiple event types that is done by sending in more events. Even fetching will be done in parallel.
-flow events get A.1654653399040a61.FlowToken.TokensDeposited flow events get A.1654653399040a61.FlowToken.TokensWithdrawn
+flow events get A.1654653399040a61.FlowToken.TokensDeposited A.1654653399040a61.FlowToken.TokensWithdrawn
 	`,
 	},
 	Flags: &eventsFlags,
