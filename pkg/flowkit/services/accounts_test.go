@@ -20,9 +20,10 @@ package services
 
 import (
 	"fmt"
-	"github.com/onflow/flow-cli/tests/mocks"
 	"strings"
 	"testing"
+
+	"github.com/onflow/flow-cli/tests/mocks"
 
 	"github.com/onflow/cadence"
 
@@ -47,7 +48,7 @@ func setupMock() (*flowkit.State, *Services, *mocks.Gateway) {
 	if err != nil {
 		panic(err)
 	}
-	gw :=&mocks.Gateway{}
+	gw := &mocks.Gateway{}
 	s := NewServices(gw, state, output.NewStdoutLogger(output.NoneLog))
 	return state, s, gw
 }

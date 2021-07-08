@@ -83,7 +83,6 @@ func get(
 		end = latestBlockHeight
 	}
 
-
 	events, err := services.Events.Get(args, start, end, eventsFlags.Batch, eventsFlags.Workers)
 	if err != nil {
 		return nil, err

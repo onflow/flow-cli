@@ -70,7 +70,7 @@ func TestEvents(t *testing.T) {
 		_, s, gw := setupMock()
 
 		gw.On(tests.GetEventsFunc, "flow.CreateAccount", uint64(0), uint64(1)).Return([]client.BlockEvents{}, errors.New("failed getting event"))
-		_, err := s.Events.Get([]string{"flow.CreateAccount"}, 0, 1 , 250, 1)
+		_, err := s.Events.Get([]string{"flow.CreateAccount"}, 0, 1, 250, 1)
 
 		assert.EqualError(t, err, "failed getting event")
 	})
