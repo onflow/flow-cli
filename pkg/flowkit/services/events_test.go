@@ -69,7 +69,7 @@ func TestEvents(t *testing.T) {
 
 		_, s, gw := setup()
 
-    gw.GetEvents.Return([]client.BlockEvents{}, errors.New("failed getting event"))
+		gw.GetEvents.Return([]client.BlockEvents{}, errors.New("failed getting event"))
 
 		_, err := s.Events.Get([]string{"flow.CreateAccount"}, 0, 1, 250, 1)
 
