@@ -111,3 +111,12 @@ func (e *Blocks) GetBlock(
 
 	return block, events, collections, err
 }
+
+// GetLatestBlockHeight returns the latest block height
+func (e *Blocks) GetLatestBlockHeight() (uint64, error) {
+	block, err := e.gateway.GetLatestBlock()
+	if err != nil {
+		return 0, err
+	}
+	return block.Height, nil
+}
