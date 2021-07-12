@@ -67,9 +67,10 @@ func TestEvents(t *testing.T) {
 	t.Run("Should handle error from get events in goroutine", func(t *testing.T) {
 		t.Parallel()
 
-		_, s, gw := setupMock()
+		_, s, gw := setup()
 
-		gw.On(tests.GetEventsFunc, "flow.CreateAccount", uint64(0), uint64(1)).Return([]client.BlockEvents{}, errors.New("failed getting event"))
+    gw.GetEvents.Return([]client.BlockEvents{}, errors.New("failed getting event"))
+
 		_, err := s.Events.Get([]string{"flow.CreateAccount"}, 0, 1, 250, 1)
 
 		assert.EqualError(t, err, "failed getting event")
