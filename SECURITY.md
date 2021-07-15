@@ -76,6 +76,8 @@ To qualify, the bug must fall within our scope and rules and meet the following 
 2. **Material impact** - Demonstrable exploitability where, if exploited, the bug would materially affect the confidentiality, integrity, or availability of our services.
 3. **Requires action** - The bug requires some mitigation.  It is both valid and actionable.
 
+**Reward Limit:** a maximum of $1M of rewards per person or organization within any 12 consecutive months based on the reward value at time of payment.
+
 ## **Reporting Security Findings To Us**
 
 Reports are welcome! Please definitely reach out to us if you have a security concern.
