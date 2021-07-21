@@ -31,7 +31,7 @@ import (
 type flagsEvents struct {
 	Start   uint64 `flag:"start" info:"Start block height"`
 	End     uint64 `flag:"end" info:"End block height"`
-	Last    uint64 `default:"1" flag:"last" info:"Fetch number of blocks relative to the last block. Ignored if the start flag is set. Used as a default if no flags are provided"`
+	Last    uint64 `default:"10" flag:"last" info:"Fetch number of blocks relative to the last block. Ignored if the start flag is set. Used as a default if no flags are provided"`
 	Workers int    `default:"10" flag:"workers" info:"Number of workers to use when fetching events in parallel"`
 	Batch   uint64 `default:"250" flag:"batch" info:"Number of blocks each worker will fetch"`
 }
@@ -67,13 +67,15 @@ func get(
 	services *services.Services,
 ) (command.Result, error) {
 
+	var err error
 	start := eventsFlags.Start
 	end := eventsFlags.End
 	last := eventsFlags.Last
 
 	// handle if not passing start and end
 	if start == 0 && end == 0 {
-		end, err := services.Blocks.GetLatestBlockHeight()
+		//cannot use := here as it will not overrwrite end in the outer scope if you do
+		end, err = services.Blocks.GetLatestBlockHeight()
 		if err != nil {
 			return nil, err
 		}
