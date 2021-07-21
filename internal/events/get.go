@@ -19,6 +19,8 @@
 package events
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
@@ -75,10 +77,10 @@ func get(
 		if err != nil {
 			return nil, err
 		}
-		
+
 		start = end - last
 	} else if start == 0 || end == 0 {
-		return fmt.Errorf("please provide either both start and end for range or only last flag") 
+		return nil, fmt.Errorf("please provide either both start and end for range or only last flag")
 	}
 
 	events, err := services.Events.Get(args, start, end, eventsFlags.Batch, eventsFlags.Workers)
