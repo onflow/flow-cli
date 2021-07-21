@@ -65,22 +65,20 @@ func get(
 	services *services.Services,
 ) (command.Result, error) {
 
-	var start uint64
-	var end uint64
-	start = eventsFlags.Start
-	if eventsFlags.Start == 0 {
-		latestBlockHeight, err := services.Blocks.GetLatestBlockHeight()
+	start := eventsFlags.Start
+	end := eventsFlags.End
+	last := eventsFlags.Last
+
+	// handle if not passing start and end
+	if start == 0 && end == 0 {
+		end, err := services.Blocks.GetLatestBlockHeight()
 		if err != nil {
 			return nil, err
 		}
-		start = latestBlockHeight - eventsFlags.Last
-		end = latestBlockHeight
-	} else if eventsFlags.End == 0 {
-		latestBlockHeight, err := services.Blocks.GetLatestBlockHeight()
-		if err != nil {
-			return nil, err
-		}
-		end = latestBlockHeight
+		
+		start = end - last
+	} else if start == 0 || end == 0 {
+		return fmt.Errorf("please provide either both start and end for range or only last flag") 
 	}
 
 	events, err := services.Events.Get(args, start, end, eventsFlags.Batch, eventsFlags.Workers)
