@@ -121,6 +121,13 @@ func flagsToContractData(flags flagsAddContract) (map[string]string, bool, error
 		}
 	}
 
+	if flags.MainnetAlias != "" {
+		_, err := config.StringToAddress(flags.MainnetAlias)
+		if err != nil {
+			return nil, true, err
+		}
+	}
+
 	return map[string]string{
 		"name":     flags.Name,
 		"source":   flags.Filename,
