@@ -54,7 +54,7 @@ func removeContract(
 ) (command.Result, error) {
 	contractName := args[0]
 
-	from,err := state.Accounts().ByName(flagsRemove.Signer)
+	from, err := state.Accounts().ByName(flagsRemove.Signer)
 	if err != nil {
 		return nil, err
 	}

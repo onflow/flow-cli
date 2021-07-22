@@ -523,19 +523,19 @@ func Test_ChangingState(t *testing.T) {
 	bar, err := p.Accounts().ByAddress(flow.HexToAddress("0x1"))
 	assert.NoError(t, err)
 	bar.SetName("zoo")
-	zoo, err :=p.Accounts().ByName("zoo")
-	assert.NotNil(t, zoo )
+	zoo, err := p.Accounts().ByName("zoo")
+	assert.NotNil(t, zoo)
 	assert.NoError(t, err)
 
 	a := Account{}
 	a.SetName("bobo")
 	p.Accounts().AddOrUpdate(&a)
-	bobo, err :=p.Accounts().ByName("bobo")
-	assert.NotNil(t,bobo )
+	bobo, err := p.Accounts().ByName("bobo")
+	assert.NotNil(t, bobo)
 	assert.NoError(t, err)
 
-	zoo2, _ :=p.Accounts().ByName("zoo")
-    zoo2.SetName("emulator-account")
+	zoo2, _ := p.Accounts().ByName("zoo")
+	zoo2.SetName("emulator-account")
 	assert.Equal(t, "emulator-account", zoo2.name)
 
 	pk, _ = crypto.GeneratePrivateKey(
