@@ -111,6 +111,7 @@ func StringToContracts(
 	source string,
 	emulatorAlias string,
 	testnetAlias string,
+	mainnetAlias string,
 ) []Contract {
 	contracts := make([]Contract, 0)
 
@@ -120,6 +121,16 @@ func StringToContracts(
 			Source:  source,
 			Network: DefaultEmulatorNetwork().Name,
 			Alias:   emulatorAlias,
+		})
+	}
+
+
+	if mainnetAlias != "" {
+		contracts = append(contracts, Contract{
+			Name:    name,
+			Source:  source,
+			Network: DefaultMainnetNetwork().Name,
+			Alias:   mainnetAlias,
 		})
 	}
 
