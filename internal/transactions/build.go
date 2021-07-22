@@ -119,9 +119,9 @@ func getAddress(address string, state *flowkit.State) (flow.Address, error) {
 	}
 
 	// if address is not valid then try using the string as an account name.
-	acc := state.Accounts().ByName(address)
-	if acc == nil {
-		return flow.EmptyAddress, fmt.Errorf("account not found, make sure to pass valid account name from configuration or valid flow address")
+	acc, err := state.Accounts().ByName(address)
+	if err != nil {
+		return flow.EmptyAddress, err
 	}
 	return acc.Address(), nil
 }

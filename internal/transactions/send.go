@@ -59,9 +59,9 @@ func send(
 ) (command.Result, error) {
 	codeFilename := args[0]
 
-	signer := state.Accounts().ByName(sendFlags.Signer)
-	if signer == nil {
-		return nil, fmt.Errorf("signer account: [%s] doesn't exists in configuration", sendFlags.Signer)
+	signer, err := state.Accounts().ByName(sendFlags.Signer)
+	if err != nil {
+		return nil, err
 	}
 
 	code, err := readerWriter.ReadFile(codeFilename)

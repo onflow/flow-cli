@@ -59,8 +59,8 @@ func sign(
 		return nil, fmt.Errorf("failed to read partial transaction from %s: %v", filename, err)
 	}
 
-	signer := state.Accounts().ByName(signFlags.Signer)
-	if signer == nil {
+	signer, err := state.Accounts().ByName(signFlags.Signer)
+	if err != nil {
 		return nil, fmt.Errorf("signer account: [%s] doesn't exists in configuration", signFlags.Signer)
 	}
 

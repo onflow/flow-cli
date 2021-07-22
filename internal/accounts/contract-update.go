@@ -62,7 +62,10 @@ func updateContract(
 		return nil, fmt.Errorf("error loading contract file: %w", err)
 	}
 
-	to := state.Accounts().ByName(updateFlags.Signer)
+	to, err := state.Accounts().ByName(updateFlags.Signer)
+	if err != nil {
+		return nil, err
+	}
 
 	account, err := services.Accounts.AddContract(to, name, code, true)
 	if err != nil {

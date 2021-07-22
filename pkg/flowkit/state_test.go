@@ -344,14 +344,14 @@ func Test_EmulatorConfigSimple(t *testing.T) {
 
 func Test_AccountByAddressSimple(t *testing.T) {
 	p := generateSimpleProject()
-	acc := p.Accounts().ByAddress(flow.ServiceAddress("flow-emulator"))
+	acc, _ := p.Accounts().ByAddress(flow.ServiceAddress("flow-emulator"))
 
 	assert.Equal(t, acc.name, "emulator-account")
 }
 
 func Test_AccountByNameSimple(t *testing.T) {
 	p := generateSimpleProject()
-	acc := p.Accounts().ByName("emulator-account")
+	acc, _ := p.Accounts().ByName("emulator-account")
 
 	assert.Equal(t, flow.ServiceAddress("flow-emulator"), acc.Address())
 	assert.Equal(t, acc.key.ToConfig().PrivateKey, keys()[0])
@@ -423,8 +423,11 @@ func Test_EmulatorConfigComplex(t *testing.T) {
 
 func Test_AccountByAddressComplex(t *testing.T) {
 	p := generateComplexProject()
-	acc1 := p.Accounts().ByAddress(flow.HexToAddress("f8d6e0586b0a20c1"))
-	acc2 := p.Accounts().ByAddress(flow.HexToAddress("0x2c1162386b0a245f"))
+	acc1, err := p.Accounts().ByAddress(flow.HexToAddress("f8d6e0586b0a20c1"))
+
+	assert.NoError(t, err)
+	acc2, err := p.Accounts().ByAddress(flow.HexToAddress("0x2c1162386b0a245f"))
+	assert.NoError(t, err)
 
 	assert.Equal(t, acc1.name, "account-4")
 	assert.Equal(t, acc2.name, "account-2")
@@ -432,7 +435,7 @@ func Test_AccountByAddressComplex(t *testing.T) {
 
 func Test_AccountByNameComplex(t *testing.T) {
 	p := generateComplexProject()
-	acc := p.Accounts().ByName("account-2")
+	acc, _ := p.Accounts().ByName("account-2")
 
 	assert.Equal(t, acc.Address().String(), "2c1162386b0a245f")
 	assert.Equal(t, acc.key.ToConfig().PrivateKey, keys()[1])
@@ -507,7 +510,8 @@ func Test_ChangingState(t *testing.T) {
 	key := NewHexAccountKeyFromPrivateKey(em.Key().Index(), em.Key().HashAlgo(), pk)
 	em.SetKey(key)
 
-	foo := p.Accounts().ByName("foo")
+	foo, err := p.Accounts().ByName("foo")
+	assert.NoError(t, err)
 	assert.NotNil(t, foo)
 	assert.Equal(t, foo.Name(), "foo")
 	assert.Equal(t, foo.Address(), flow.HexToAddress("0x1"))
@@ -516,20 +520,23 @@ func Test_ChangingState(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, (*pkey).String(), pk.String())
 
-	bar := p.Accounts().ByAddress(flow.HexToAddress("0x1"))
+	bar, err := p.Accounts().ByAddress(flow.HexToAddress("0x1"))
+	assert.NoError(t, err)
 	bar.SetName("zoo")
-
-	assert.NotNil(t, p.Accounts().ByName("zoo"))
+	zoo, err :=p.Accounts().ByName("zoo")
+	assert.NotNil(t, zoo )
+	assert.NoError(t, err)
 
 	a := Account{}
 	a.SetName("bobo")
 	p.Accounts().AddOrUpdate(&a)
+	bobo, err :=p.Accounts().ByName("bobo")
+	assert.NotNil(t,bobo )
+	assert.NoError(t, err)
 
-	assert.NotNil(t, p.Accounts().ByName("bobo"))
-
-	p.Accounts().
-		ByName("zoo").
-		SetName("emulator-account")
+	zoo2, _ :=p.Accounts().ByName("zoo")
+    zoo2.SetName("emulator-account")
+	assert.Equal(t, "emulator-account", zoo2.name)
 
 	pk, _ = crypto.GeneratePrivateKey(
 		crypto.ECDSA_P256,
