@@ -19,10 +19,13 @@
 package services
 
 import (
+	"errors"
 	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+
+	"github.com/onflow/flow-go-sdk/client"
 
 	"github.com/onflow/flow-cli/tests"
 )
@@ -34,74 +37,101 @@ func TestEvents(t *testing.T) {
 		t.Parallel()
 
 		_, s, gw := setup()
-		_, err := s.Events.Get("flow.CreateAccount", "0", "1")
+		_, err := s.Events.Get([]string{"flow.CreateAccount"}, 0, 0, 250, 1)
 
 		assert.NoError(t, err)
-		gw.Mock.AssertCalled(t, tests.GetEventsFunc, "flow.CreateAccount", uint64(0), uint64(1))
+		gw.Mock.AssertCalled(t, tests.GetEventsFunc, "flow.CreateAccount", uint64(0), uint64(0))
 	})
 
-	t.Run("Get Events Latest", func(t *testing.T) {
-		t.Parallel()
-
-		_, s, gw := setup()
-		_, err := s.Events.Get("flow.CreateAccount", "0", "latest")
-
-		assert.NoError(t, err)
-		gw.Mock.AssertCalled(t, tests.GetLatestBlockFunc)
-		gw.Mock.AssertCalled(t, tests.GetEventsFunc, "flow.CreateAccount", uint64(0), uint64(1))
-	})
-
-	t.Run("Fails to get events without name", func(t *testing.T) {
+	t.Run("Should have larger endHeight then startHeight", func(t *testing.T) {
 		t.Parallel()
 
 		_, s, _ := setup()
-		inputs := [][]string{
-			{"", "0", "1"},
-			{"test", "-1", "1"},
-			{"test", "1", "-1"},
-			{"test", "10", "5"},
-		}
-
-		outputs := []string{
-			"cannot use empty string as event name",
-			"failed to parse start height of block range: -1",
-			"failed to parse end height of block range: -1",
-			"cannot have end height (5) of block range less that start height (10)",
-		}
-
-		for i, in := range inputs {
-			_, err := s.Events.Get(in[0], in[1], in[2])
-			assert.Equal(t, err.Error(), outputs[i])
-		}
+		_, err := s.Events.Get([]string{"flow.CreateAccount"}, 10, 0, 250, 1)
+		assert.EqualError(t, err, "cannot have end height (0) of block range less that start height (10)")
 	})
+
+	t.Run("Test create queries", func(t *testing.T) {
+
+		names := []string{"first", "second"}
+		queries := makeEventQueries(names, 0, 400, 250)
+		expected := []client.EventRangeQuery{
+			{Type: "first", StartHeight: 0, EndHeight: 249},
+			{Type: "second", StartHeight: 0, EndHeight: 249},
+			{Type: "first", StartHeight: 250, EndHeight: 400},
+			{Type: "second", StartHeight: 250, EndHeight: 400},
+		}
+		assert.Equal(t, expected, queries)
+	})
+
+	t.Run("Should handle error from get events in goroutine", func(t *testing.T) {
+		t.Parallel()
+
+		_, s, gw := setup()
+
+		gw.GetEvents.Return([]client.BlockEvents{}, errors.New("failed getting event"))
+
+		_, err := s.Events.Get([]string{"flow.CreateAccount"}, 0, 1, 250, 1)
+
+		assert.EqualError(t, err, "failed getting event")
+	})
+
 }
 
 func TestEvents_Integration(t *testing.T) {
 	t.Parallel()
 
-	t.Run("Get Events", func(t *testing.T) {
+	t.Run("Get Events for non existent event", func(t *testing.T) {
+		t.Parallel()
+
+		_, s := setupIntegration()
+
+		events, err := s.Events.Get([]string{"nonexisting"}, 0, 0, 250, 1)
+		assert.NoError(t, err)
+		assert.Len(t, events, 1)
+		assert.Len(t, events[0].Events, 0)
+	})
+
+	t.Run("Get Events while adding contracts", func(t *testing.T) {
 		t.Parallel()
 
 		state, s := setupIntegration()
 		srvAcc, _ := state.EmulatorServiceAccount()
 
-		events, err := s.Events.Get("nonexisting", "0", "latest")
-		assert.NoError(t, err)
-		assert.Len(t, events, 1)
-		assert.Len(t, events[0].Events, 0)
-
 		// create events
-		_, err = s.Accounts.AddContract(srvAcc, tests.ContractEvents.Name, tests.ContractEvents.Source, false)
+		_, err := s.Accounts.AddContract(srvAcc, tests.ContractEvents.Name, tests.ContractEvents.Source, false)
 		assert.NoError(t, err)
-
+		assert.NoError(t, err)
 		for x := 'A'; x <= 'J'; x++ { // test contract emits events named from A to J
 			eName := fmt.Sprintf("A.%s.ContractEvents.Event%c", srvAcc.Address().String(), x)
-			events, err = s.Events.Get(eName, "0", "latest")
-
+			events, err := s.Events.Get([]string{eName}, 0, 1, 250, 1)
 			assert.NoError(t, err)
 			assert.Len(t, events, 2)
 			assert.Len(t, events[1].Events, 1)
-			assert.Equal(t, events[1].Events[0].Type, eName)
+
 		}
+	})
+
+	t.Run("Get Events while adding contracts in parallel", func(t *testing.T) {
+		t.Parallel()
+
+		state, s := setupIntegration()
+		srvAcc, _ := state.EmulatorServiceAccount()
+
+		// create events
+		_, err := s.Accounts.AddContract(srvAcc, tests.ContractEvents.Name, tests.ContractEvents.Source, false)
+		assert.NoError(t, err)
+
+		assert.NoError(t, err)
+		var eventNames []string
+		for x := 'A'; x <= 'J'; x++ { // test contract emits events named from A to J
+			eName := fmt.Sprintf("A.%s.ContractEvents.Event%c", srvAcc.Address().String(), x)
+			eventNames = append(eventNames, eName)
+		}
+
+		events, err := s.Events.Get(eventNames, 0, 1, 250, 5)
+		assert.NoError(t, err)
+		assert.Len(t, events, 20)
+		assert.Len(t, events[1].Events, 1)
 	})
 }

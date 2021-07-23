@@ -45,6 +45,16 @@ func TestBlocks(t *testing.T) {
 		assert.NoError(t, err)
 	})
 
+	t.Run("Get latest block height", func(t *testing.T) {
+		t.Parallel()
+		_, s, gw := setup()
+		height, err := s.Blocks.GetLatestBlockHeight()
+		gw.Mock.AssertCalled(t, tests.GetLatestBlockFunc)
+		assert.NoError(t, err)
+		assert.Equal(t, height, uint64(1))
+
+	})
+
 	t.Run("Get Block by Height", func(t *testing.T) {
 		t.Parallel()
 
