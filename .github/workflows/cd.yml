@@ -24,3 +24,10 @@ jobs:
           path: ./cmd/flow/
           glob: 'flow-*'
           destination: flow-cli-test/
+      - name: Update Version
+        uses: google-github-actions/upload-cloud-storage@main
+        with:
+          credentials: ${{ secrets.FLOW_TEST_SA }}
+          path: ./
+          glob: 'version.txt'
+          destination: flow-cli-test/
