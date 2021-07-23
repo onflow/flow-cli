@@ -36,6 +36,7 @@ type flagsAddContract struct {
 	Filename      string `flag:"filename" info:"Filename of the contract source"`
 	EmulatorAlias string `flag:"emulator-alias" info:"Address for the emulator alias"`
 	TestnetAlias  string `flag:"testnet-alias" info:"Address for the testnet alias"`
+	MainnetAlias  string `flag:"mainnet-alias" info:"Address for the mainnet alias"`
 }
 
 var addContractFlags = flagsAddContract{}
@@ -76,6 +77,7 @@ func addContract(
 		contractData["source"],
 		contractData["emulator"],
 		contractData["testnet"],
+		contractData["mainnet"],
 	)
 
 	for _, contract := range contracts {
@@ -119,10 +121,18 @@ func flagsToContractData(flags flagsAddContract) (map[string]string, bool, error
 		}
 	}
 
+	if flags.MainnetAlias != "" {
+		_, err := config.StringToAddress(flags.MainnetAlias)
+		if err != nil {
+			return nil, true, err
+		}
+	}
+
 	return map[string]string{
 		"name":     flags.Name,
 		"source":   flags.Filename,
 		"emulator": flags.EmulatorAlias,
 		"testnet":  flags.TestnetAlias,
+		"mainnet":  flags.MainnetAlias,
 	}, true, nil
 }
