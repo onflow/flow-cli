@@ -19,15 +19,15 @@ jobs:
       - name: Uploading Binaries
         uses: google-github-actions/upload-cloud-storage@main
         with:
-          credentials: ${{ secrets.FLOW_TEST_SA }}
+          credentials: ${{ secrets.FLOW_HOSTING_PROD_SA }}
           path: ./cmd/flow/
           glob: 'flow-*'
-          destination: flow-cli-test/
+          destination: flow-cli/
           parent: false
       - name: Update Version
         uses: google-github-actions/upload-cloud-storage@main
         with:
-          credentials: ${{ secrets.FLOW_TEST_SA }}
+          credentials: ${{ secrets.FLOW_HOSTING_PROD_SA }}
           path: ./
           glob: 'version.txt'
-          destination: flow-cli-test/
+          destination: flow-cli/
