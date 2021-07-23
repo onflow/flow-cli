@@ -94,7 +94,7 @@ func get(
 				} else {
 					end, err = strconv.ParseUint(endV25, 10, 64)
 					if err != nil {
-						return nil, fmt.Errorf("failed to parse end height of block range: %s", end)
+						return nil, fmt.Errorf("failed to parse end height of block range: %s", endV25)
 					}
 				}
 			}
