@@ -75,6 +75,7 @@ func (e *Events) Get(events []string, startHeight uint64, endHeight uint64, bloc
 		return nil, fmt.Errorf("cannot have end height (%d) of block range less that start height (%d)", endHeight, startHeight)
 	}
 
+	e.logger.StartProgress("Fetching events...")
 	defer e.logger.StopProgress()
 
 	queries := makeEventQueries(events, startHeight, endHeight, blockCount)
