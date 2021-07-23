@@ -121,7 +121,7 @@ func (e *Events) Get(events []string, startHeight uint64, endHeight uint64, bloc
 func (e *Events) eventWorker(jobChan <-chan client.EventRangeQuery, results chan<- EventWorkerResult) {
 	for q := range jobChan {
 
-		e.logger.StartProgress(fmt.Sprintf("Fetching events %v", q))
+		e.logger.Debug(fmt.Sprintf("Fetching events %v", q))
 		blockEvents, err := e.gateway.GetEvents(q.Type, q.StartHeight, q.EndHeight)
 		if err != nil {
 			results <- EventWorkerResult{nil, err}
