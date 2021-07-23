@@ -124,7 +124,6 @@ func StringToContracts(
 		})
 	}
 
-
 	if mainnetAlias != "" {
 		contracts = append(contracts, Contract{
 			Name:    name,

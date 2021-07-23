@@ -133,6 +133,6 @@ func flagsToContractData(flags flagsAddContract) (map[string]string, bool, error
 		"source":   flags.Filename,
 		"emulator": flags.EmulatorAlias,
 		"testnet":  flags.TestnetAlias,
-		"mainnet": flags.MainnetAlias,
+		"mainnet":  flags.MainnetAlias,
 	}, true, nil
 }
