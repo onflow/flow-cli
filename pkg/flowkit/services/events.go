@@ -75,7 +75,6 @@ func (e *Events) Get(events []string, startHeight uint64, endHeight uint64, bloc
 		return nil, fmt.Errorf("cannot have end height (%d) of block range less that start height (%d)", endHeight, startHeight)
 	}
 
-	e.logger.StartProgress("Fetching events...")
 
 	queries := makeEventQueries(events, startHeight, endHeight, blockCount)
 
@@ -115,7 +114,6 @@ func (e *Events) Get(events []string, startHeight uint64, endHeight uint64, bloc
 		resultEvents = append(resultEvents, eventResult.Events...)
 	}
 
-	e.logger.StopProgress()
 	return resultEvents, nil
 
 }
@@ -123,12 +121,14 @@ func (e *Events) Get(events []string, startHeight uint64, endHeight uint64, bloc
 func (e *Events) eventWorker(jobChan <-chan client.EventRangeQuery, results chan<- EventWorkerResult) {
 	for q := range jobChan {
 
+		e.logger.StartProgress("Fetching events...")
 		e.logger.Debug(fmt.Sprintf("Fetching events %v", q))
 		blockEvents, err := e.gateway.GetEvents(q.Type, q.StartHeight, q.EndHeight)
 		if err != nil {
 			results <- EventWorkerResult{nil, err}
 		}
 		results <- EventWorkerResult{blockEvents, nil}
+		e.logger.StopProgress()
 	}
 }
 
