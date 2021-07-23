@@ -16,6 +16,9 @@ You can find the CLI documentation on the [Flow documentation website](https://d
 
 ### Releasing
 
+Releasing is automated by Github actions. Release action is triggered by creating a release on Github and publishing it.
+
+You can also release manually although this is not recommended:
 - Tag a new release and push it
 - Build the binaries: `make versioned-binaries`
 - Test built binaries locally
