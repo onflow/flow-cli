@@ -76,7 +76,6 @@ func (e *Events) Get(events []string, startHeight uint64, endHeight uint64, bloc
 	}
 
 	e.logger.StartProgress("Fetching events...")
-	defer e.logger.StopProgress()
 
 	queries := makeEventQueries(events, startHeight, endHeight, blockCount)
 
@@ -115,6 +114,8 @@ func (e *Events) Get(events []string, startHeight uint64, endHeight uint64, bloc
 
 		resultEvents = append(resultEvents, eventResult.Events...)
 	}
+
+	e.logger.StopProgress()
 	return resultEvents, nil
 
 }
