@@ -143,9 +143,9 @@ func TestTransactions_Integration(t *testing.T) {
 			network string
 		}
 
-		a := state.Accounts().ByName("Alice")
-		b := state.Accounts().ByName("Bob")
-		c := state.Accounts().ByName("Charlie")
+		a, _ := state.Accounts().ByName("Alice")
+		b, _ := state.Accounts().ByName("Bob")
+		c, _ := state.Accounts().ByName("Charlie")
 
 		txIns := []txIn{{
 			a.Address(),

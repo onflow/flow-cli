@@ -134,7 +134,11 @@ type Accounts []Account
 
 // Remove an account.
 func (a *Accounts) Remove(name string) error {
-	account := a.ByName(name)
+	account, err := a.ByName(name)
+	if err != nil {
+		return err
+	}
+
 	if account == nil {
 		return fmt.Errorf("account named %s does not exist in configuration", name)
 	}
@@ -149,25 +153,25 @@ func (a *Accounts) Remove(name string) error {
 }
 
 // ByAddress get an account by address.
-func (a Accounts) ByAddress(address flow.Address) *Account {
+func (a Accounts) ByAddress(address flow.Address) (*Account, error) {
 	for i := range a {
 		if a[i].address == address {
-			return &a[i]
+			return &a[i], nil
 		}
 	}
 
-	return nil
+	return nil, fmt.Errorf("could not find account with address %s in the configuration", address)
 }
 
-// ByName get an account by name.
-func (a Accounts) ByName(name string) *Account {
+// ByName get an account by name or returns and error if no account found
+func (a Accounts) ByName(name string) (*Account, error) {
 	for i := range a {
 		if a[i].name == name {
-			return &a[i]
+			return &a[i], nil
 		}
 	}
+	return nil, fmt.Errorf("could not find account with name %s in the configuration", name)
 
-	return nil
 }
 
 // AddOrUpdate add account if missing or updates if present.

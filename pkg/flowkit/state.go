@@ -140,7 +140,7 @@ func (p *State) EmulatorServiceAccount() (*Account, error) {
 		return nil, fmt.Errorf("no default emulator account")
 	}
 
-	return p.accounts.ByName(emulator.ServiceAccount), nil
+	return p.accounts.ByName(emulator.ServiceAccount)
 }
 
 // SetEmulatorKey sets the default emulator service account private key.
@@ -161,9 +161,9 @@ func (p *State) DeploymentContractsByNetwork(network string) ([]Contract, error)
 
 	// get deployments for the specified network
 	for _, deploy := range p.conf.Deployments.ByNetwork(network) {
-		account := p.accounts.ByName(deploy.Account)
-		if account == nil {
-			return nil, fmt.Errorf("could not find account with name %s in the configuration", deploy.Account)
+		account, err := p.accounts.ByName(deploy.Account)
+		if err != nil {
+			return nil, err
 		}
 
 		// go through each contract in this deployment

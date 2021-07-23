@@ -61,7 +61,10 @@ func create(
 	services *services.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
-	signer := state.Accounts().ByName(createFlags.Signer)
+	signer, err := state.Accounts().ByName(createFlags.Signer)
+	if err != nil {
+		return nil, err
+	}
 
 	sigAlgo := crypto.StringToSignatureAlgorithm(createFlags.SigAlgo)
 	if sigAlgo == crypto.UnknownSignatureAlgorithm {
