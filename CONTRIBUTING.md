@@ -127,6 +127,23 @@ We try to follow the coding guidelines from the Go community.
 - Code should be commented
 - Code should pass all tests: `make test`
 
+## Releasing
+
+Releasing is automated by Github actions. Release action is triggered by creating a release on Github and publishing it.
+
+You can also release manually although this is not recommended:
+- Tag a new release and push it
+- Build the binaries: `make versioned-binaries`
+- Test built binaries locally
+- Upload the binaries: `make publish`
+- Update the Homebrew formula: e.g. `brew bump-formula-pr flow-cli --version=0.12.3`
+
+To make the new version the default version that is installed
+
+- Change `version.txt` and commit it
+- Upload the version file: `gsutil cp version.txt gs://flow-cli`
+
+
 # CLI Guidelines
 This is a design guideline used for the development of the Flow CLI. The purpose of this guideline is to achieve consistency across new features and allow composability of commands that build the fundamentals of great CLI design.
 
