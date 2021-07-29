@@ -12,20 +12,13 @@ To install the Flow CLI, follow the [installation instructions](https://docs.onf
 
 You can find the CLI documentation on the [Flow documentation website](https://docs.onflow.org/flow-cli).
 
-## Development 
+## Features
+You can use the CLI to fetch accounts, get and send submitted transactions, execute scripts and much more. 
 
-### Releasing
+Read about all the commands in the [documentation](https://docs.onflow.org/flow-cli).
 
-Releasing is automated by Github actions. Release action is triggered by creating a release on Github and publishing it.
+![Alt Text](./cli.gif)
 
-You can also release manually although this is not recommended:
-- Tag a new release and push it
-- Build the binaries: `make versioned-binaries`
-- Test built binaries locally
-- Upload the binaries: `make publish`
-- Update the Homebrew formula: e.g. `brew bump-formula-pr flow-cli --version=0.12.3`
+## Contributing 
 
-To make the new version the default version that is installed 
-
-- Change `version.txt` and commit it
-- Upload the version file: `gsutil cp version.txt gs://flow-cli`
+Read [contributing](./CONTRIBUTING.md) document.
