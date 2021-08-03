@@ -147,7 +147,8 @@ func Test_GetContractsForNetworkComplex(t *testing.T) {
 
 func Test_GetContractsByNameAndNetworkComplex(t *testing.T) {
 	conf := generateComplexConfig()
-	market := conf.Contracts.ByNameAndNetwork("KittyItemsMarket", "testnet")
+	market, err := conf.Contracts.ByNameAndNetwork("KittyItemsMarket", "testnet")
+	assert.NoError(t, err)
 
 	assert.Equal(t, market.Source, "0x123123123")
 }

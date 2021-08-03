@@ -36,10 +36,10 @@ func (c *Contract) IsAlias() bool {
 }
 
 // ByNameAndNetwork get contract array for account and network.
-func (c *Contracts) ByNameAndNetwork(name string, network string) *Contract {
+func (c *Contracts) ByNameAndNetwork(name string, network string) (*Contract, error) {
 	for _, contract := range *c {
 		if contract.Network == network && contract.Name == name {
-			return &contract
+			return &contract, nil
 		}
 	}
 
@@ -47,14 +47,14 @@ func (c *Contracts) ByNameAndNetwork(name string, network string) *Contract {
 	// and replace only name and source with existing
 	cName, err := c.ByName(name)
 	if err != nil {
-		return nil
+		return nil, err
 	}
 
 	return &Contract{
 		Name:    cName.Name,
 		Network: network,
 		Source:  cName.Source,
-	}
+	}, nil
 }
 
 // ByName get contract by name.
