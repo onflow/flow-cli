@@ -183,7 +183,8 @@ func Test_GetDeploymentsByNetworkComplex(t *testing.T) {
 
 func Test_GetNetworkByNameComplex(t *testing.T) {
 	conf := generateComplexConfig()
-	network := conf.Networks.ByName("emulator")
+	network, err := conf.Networks.ByName("emulator")
 
+	assert.NoError(t, err)
 	assert.Equal(t, network.Host, "127.0.0.1.3569")
 }

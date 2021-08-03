@@ -359,9 +359,10 @@ func Test_AccountByNameSimple(t *testing.T) {
 
 func Test_HostSimple(t *testing.T) {
 	p := generateSimpleProject()
-	host := p.Networks().ByName("emulator").Host
+	network, err := p.Networks().ByName("emulator")
 
-	assert.Equal(t, host, "127.0.0.1.3569")
+	assert.NoError(t, err)
+	assert.Equal(t, network.Host, "127.0.0.1.3569")
 }
 
 func Test_GetContractsByNameComplex(t *testing.T) {
@@ -443,9 +444,11 @@ func Test_AccountByNameComplex(t *testing.T) {
 
 func Test_HostComplex(t *testing.T) {
 	p := generateComplexProject()
-	host := p.Networks().ByName("emulator").Host
+	network, err := p.Networks().ByName("emulator")
 
-	assert.Equal(t, host, "127.0.0.1.3569")
+	assert.NoError(t, err)
+
+	assert.Equal(t, network.Host, "127.0.0.1.3569")
 }
 
 func Test_ContractConflictComplex(t *testing.T) {
