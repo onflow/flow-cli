@@ -59,7 +59,8 @@ func (c *Config) Validate() error {
 	}
 
 	for _, em := range c.Emulators {
-		if c.Accounts.ByName(em.ServiceAccount) == nil {
+		_, err := c.Accounts.ByName(em.ServiceAccount)
+		if err != nil {
 			return fmt.Errorf("emulator %s contains nonexisting service account %s", em.Name, em.ServiceAccount)
 		}
 	}
@@ -77,7 +78,8 @@ func (c *Config) Validate() error {
 			}
 		}
 
-		if c.Accounts.ByName(d.Account) == nil {
+		_, err = c.Accounts.ByName(d.Account)
+		if err != nil {
 			return fmt.Errorf("deployment contains nonexisting account %s", d.Account)
 		}
 	}

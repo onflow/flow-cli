@@ -98,13 +98,16 @@ func Test_ComposeJSON(t *testing.T) {
 
 	assert.NoError(t, loadErr)
 	assert.Equal(t, 2, len(conf.Accounts))
-	assert.Equal(t, "0x21c5dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7",
-		conf.Accounts.ByName("emulator-account").Key.PrivateKey.String(),
-	)
-	assert.NotNil(t, conf.Accounts.ByName("admin-account"))
-	assert.Equal(t, "0x3335dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7",
-		conf.Accounts.ByName("admin-account").Key.PrivateKey.String(),
-	)
+
+	account, err := conf.Accounts.ByName("emulator-account")
+	assert.NoError(t, err)
+
+	adminAccount, err := conf.Accounts.ByName("admin-account")
+	assert.NoError(t, err)
+
+	assert.Equal(t, "0x21c5dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7", account.Key.PrivateKey.String())
+	assert.NotNil(t, adminAccount)
+	assert.Equal(t, "0x3335dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7", adminAccount.Key.PrivateKey.String())
 }
 
 func Test_ComposeJSONOverwrite(t *testing.T) {
@@ -139,11 +142,12 @@ func Test_ComposeJSONOverwrite(t *testing.T) {
 	conf, loadErr := composer.Load([]string{"flow.json", "flow-testnet.json"})
 
 	assert.NoError(t, loadErr)
+	account, err := conf.Accounts.ByName("admin-account")
+	assert.NoError(t, err)
+
 	assert.Equal(t, 1, len(conf.Accounts))
-	assert.NotNil(t, conf.Accounts.ByName("admin-account"))
-	assert.Equal(t, "0x3335dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7",
-		conf.Accounts.ByName("admin-account").Key.PrivateKey.String(),
-	)
+	assert.NotNil(t, account)
+	assert.Equal(t, "0x3335dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7", account.Key.PrivateKey.String())
 }
 
 func Test_FromFileAccountSimple(t *testing.T) {
@@ -180,9 +184,16 @@ func Test_FromFileAccountSimple(t *testing.T) {
 
 	assert.NoError(t, loadErr)
 	assert.Equal(t, 2, len(conf.Accounts))
-	assert.NotNil(t, conf.Accounts.ByName("admin-account"))
-	assert.Equal(t, conf.Accounts.ByName("admin-account").Address.String(), "f1d6e0586b0a20c7")
-	assert.Equal(t, conf.Accounts.ByName("service-account").Address.String(), "f8d6e0586b0a20c7")
+
+	account, err := conf.Accounts.ByName("admin-account")
+	assert.NoError(t, err)
+
+	serviceAccount, err := conf.Accounts.ByName("service-account")
+	assert.NoError(t, err)
+	assert.NotNil(t, account)
+	assert.Equal(t, account.Address.String(), "f1d6e0586b0a20c7")
+	assert.NotNil(t, serviceAccount)
+	assert.Equal(t, serviceAccount.Address.String(), "f8d6e0586b0a20c7")
 }
 
 func Test_FromFileAccountComplex(t *testing.T) {
@@ -237,17 +248,28 @@ func Test_FromFileAccountComplex(t *testing.T) {
 	composer.AddConfigParser(json.NewParser())
 
 	conf, loadErr := composer.Load([]string{"flow.json"})
-
 	assert.NoError(t, loadErr)
+	serviceAccount, err := conf.Accounts.ByName("service-account")
+	assert.NoError(t, err)
+
+	adminAccount1, err := conf.Accounts.ByName("admin-account-1")
+	assert.NoError(t, err)
+
+	adminAccount3, err := conf.Accounts.ByName("admin-account-3")
+	assert.NoError(t, err)
+
+	adminAccount5, err := conf.Accounts.ByName("admin-account-5")
+	assert.NoError(t, err)
+
 	assert.Equal(t, 4, len(conf.Accounts))
-	assert.NotNil(t, conf.Accounts.ByName("service-account"))
-	assert.NotNil(t, conf.Accounts.ByName("admin-account-1"))
-	assert.NotNil(t, conf.Accounts.ByName("admin-account-3"))
-	assert.NotNil(t, conf.Accounts.ByName("admin-account-5"))
-	assert.Equal(t, conf.Accounts.ByName("service-account").Address.String(), "f8d6e0586b0a20c7")
-	assert.Equal(t, conf.Accounts.ByName("admin-account-1").Address.String(), "f1d6e0586b0a20c7")
-	assert.Equal(t, conf.Accounts.ByName("admin-account-3").Address.String(), "f3d6e0586b0a20c7")
-	assert.Equal(t, conf.Accounts.ByName("admin-account-5").Address.String(), "f5d6e0586b0a20c7")
+	assert.NotNil(t, serviceAccount)
+	assert.NotNil(t, adminAccount1)
+	assert.NotNil(t, adminAccount3)
+	assert.NotNil(t, adminAccount5)
+	assert.Equal(t, serviceAccount.Address.String(), "f8d6e0586b0a20c7")
+	assert.Equal(t, adminAccount1.Address.String(), "f1d6e0586b0a20c7")
+	assert.Equal(t, adminAccount3.Address.String(), "f3d6e0586b0a20c7")
+	assert.Equal(t, adminAccount5.Address.String(), "f5d6e0586b0a20c7")
 }
 
 func Test_JSONEnv(t *testing.T) {

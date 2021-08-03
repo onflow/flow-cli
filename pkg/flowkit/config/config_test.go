@@ -166,7 +166,8 @@ func Test_GetContractsByNetworkComplex(t *testing.T) {
 
 func Test_GetAccountByNameComplex(t *testing.T) {
 	conf := generateComplexConfig()
-	acc := conf.Accounts.ByName("account-4")
+	acc, err := conf.Accounts.ByName("account-4")
+	assert.NoError(t, err)
 
 	assert.Equal(t, acc.Address.String(), "f8d6e0586b0a20c1")
 }

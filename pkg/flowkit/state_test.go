@@ -326,11 +326,12 @@ func Test_GetContractsByNameSimple(t *testing.T) {
 	p := generateSimpleProject()
 
 	contracts, _ := p.DeploymentContractsByNetwork("emulator")
-
+	account, err := p.conf.Accounts.ByName("emulator-account")
+	assert.NoError(t, err)
 	assert.Len(t, contracts, 1)
 	assert.Equal(t, contracts[0].Name, "NonFungibleToken")
 	assert.Equal(t, contracts[0].Source, "../hungry-kitties/cadence/contracts/NonFungibleToken.cdc")
-	assert.Equal(t, p.conf.Accounts.ByName("emulator-account").Address, contracts[0].Target)
+	assert.Equal(t, account.Address, contracts[0].Target)
 }
 
 func Test_EmulatorConfigSimple(t *testing.T) {
