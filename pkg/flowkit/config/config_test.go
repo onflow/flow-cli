@@ -136,8 +136,10 @@ func generateComplexConfig() config.Config {
 
 func Test_GetContractsForNetworkComplex(t *testing.T) {
 	conf := generateComplexConfig()
-	kitty := conf.Contracts.ByName("KittyItems")
-	market := conf.Contracts.ByName("KittyItemsMarket")
+	kitty, err := conf.Contracts.ByName("KittyItems")
+	assert.NoError(t, err)
+	market, err := conf.Contracts.ByName("KittyItemsMarket")
+	assert.NoError(t, err)
 
 	assert.Equal(t, kitty.Name, "KittyItems")
 	assert.Equal(t, market.Source, "./cadence/kittyItemsMarket/contracts/KittyItemsMarket.cdc")

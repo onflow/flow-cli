@@ -45,8 +45,8 @@ func (c *Contracts) ByNameAndNetwork(name string, network string) *Contract {
 
 	// if we don't find contract by name and network create a new contract
 	// and replace only name and source with existing
-	cName := c.ByName(name)
-	if cName == nil {
+	cName, err := c.ByName(name)
+	if err != nil {
 		return nil
 	}
 
@@ -58,14 +58,14 @@ func (c *Contracts) ByNameAndNetwork(name string, network string) *Contract {
 }
 
 // ByName get contract by name.
-func (c *Contracts) ByName(name string) *Contract {
+func (c *Contracts) ByName(name string) (*Contract, error) {
 	for _, contract := range *c {
 		if contract.Name == name {
-			return &contract
+			return &contract, nil
 		}
 	}
 
-	return nil
+	return nil, fmt.Errorf("contract named %s does not exist in configuration", name)
 }
 
 // ByNetwork returns all contracts for specific network.
@@ -96,9 +96,9 @@ func (c *Contracts) AddOrUpdate(name string, contract Contract) {
 
 // Remove contract by its name.
 func (c *Contracts) Remove(name string) error {
-	contract := c.ByName(name)
-	if contract == nil {
-		return fmt.Errorf("contract named %s does not exist in configuration", name)
+	_, err := c.ByName(name)
+	if err != nil {
+		return err
 	}
 
 	for i, contract := range *c {
