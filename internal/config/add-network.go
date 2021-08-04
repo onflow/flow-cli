@@ -59,7 +59,7 @@ func addNetwork(
 ) (command.Result, error) {
 
 	if !config.IsGlobalPath(globalFlags.ConfigPaths) && len(globalFlags.ConfigPaths) > 1 {
-		return nil, fmt.Errorf("specifing multiple paths to -f is not supported when updating configuration")
+		return nil, fmt.Errorf("specifying multiple paths to -f is not supported when updating configuration")
 	}
 
 	if state == nil {
