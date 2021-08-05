@@ -75,7 +75,7 @@ func Test_ErrorWhenMissingBothDefaultJsonFiles(t *testing.T) {
 	assert.Contains(t, loadErr.Error(), "missing configuration")
 }
 
-func Test_AllowMissingocalJson(t *testing.T) {
+func Test_AllowMissingLocalJson(t *testing.T) {
 	b := []byte(`{
 		"accounts": {
 			"emulator-account": {
