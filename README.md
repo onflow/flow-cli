@@ -38,6 +38,9 @@ Available Commands:
   version      View version and commit information
 ```
 
+The Flow CLI includes several commands to interact with Flow networks, such as querying account information, or sending transactions. It also includes the [Flow Emulator](https://docs.onflow.org/emulator/).
+
+
 ![Alt Text](./cli.gif)
 
 ## Contributing 
