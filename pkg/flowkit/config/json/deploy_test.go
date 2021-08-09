@@ -124,7 +124,8 @@ func Test_DeploymentAdvanced(t *testing.T) {
 					"name": "Kibble",
 					"args": [
 						{ "type": "String", "value": "Hello World" },
-						{ "type": "Int8", "value": "10" }
+						{ "type": "Int8", "value": "10" },
+						{ "type": "Bool", "value": false }
 					]
 				},
 				"KittyItemsMarket"
@@ -143,9 +144,11 @@ func Test_DeploymentAdvanced(t *testing.T) {
 	assert.Len(t, alice, 1)
 	assert.Len(t, alice[0].Contracts, 2)
 	assert.Equal(t, alice[0].Contracts[0].Name, "Kibble")
-	assert.Len(t, alice[0].Contracts[0].Args, 2)
+	assert.Len(t, alice[0].Contracts[0].Args, 3)
 	assert.Equal(t, alice[0].Contracts[0].Args[0].String(), `"Hello World"`)
 	assert.Equal(t, alice[0].Contracts[0].Args[1].String(), "10")
+	assert.Equal(t, alice[0].Contracts[0].Args[2].Type().ID(), "Bool")
+	assert.False(t, alice[0].Contracts[0].Args[2].ToGoValue().(bool))
 	assert.Equal(t, alice[0].Contracts[1].Name, "KittyItemsMarket")
 	assert.Len(t, alice[0].Contracts[1].Args, 0)
 }
