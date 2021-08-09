@@ -101,12 +101,20 @@ func transformDeploymentsToJSON(configDeployments config.Deployments) jsonDeploy
 					simple: c.Name,
 				})
 			} else {
-				args := make([]map[string]string, 0)
+				args := make([]map[string]interface{}, 0)
 				for _, arg := range c.Args {
-					args = append(args, map[string]string{
-						"type":  arg.Type().ID(),
-						"value": fmt.Sprintf("%v", arg.ToGoValue()),
-					})
+					switch arg.Type().ID() {
+					case "Bool":
+						args = append(args, map[string]interface{}{
+							"type":  arg.Type().ID(),
+							"value": arg.ToGoValue(),
+						})
+					default:
+						args = append(args, map[string]interface{}{
+							"type":  arg.Type().ID(),
+							"value": fmt.Sprintf("%v", arg.ToGoValue()),
+						})
+					}
 				}
 
 				deployments = append(deployments, deployment{
@@ -132,8 +140,8 @@ func transformDeploymentsToJSON(configDeployments config.Deployments) jsonDeploy
 }
 
 type contractDeployment struct {
-	Name string              `json:"name"`
-	Args []map[string]string `json:"args"`
+	Name string                   `json:"name"`
+	Args []map[string]interface{} `json:"args"`
 }
 
 type deployment struct {
