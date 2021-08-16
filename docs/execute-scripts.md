@@ -45,7 +45,7 @@ The `Type` must be the same as type in the script source code for that argument.
 - Flag: `--args-json`
 - Valid inputs: arguments in JSON-Cadence form.
 
-Arguments passed to the Cadence transaction in Cadence JSON format.
+Arguments passed to the Cadence script in the Cadence JSON format.
 Cadence JSON format contains `type` and `value` keys and is 
 [documented here](https://docs.onflow.org/cadence/json-cadence-spec/).
 
