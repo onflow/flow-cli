@@ -4,28 +4,45 @@
 
 The Flow CLI is a command-line interface that provides useful utilities for building Flow applications.
 
-## Installation
+### Installation
 
 To install the Flow CLI, follow the [installation instructions](https://docs.onflow.org/flow-cli/install) on the Flow documentation website.
 
-## Documentation
+### Documentation
 
-You can find the CLI documentation on the [Flow documentation website](https://docs.onflow.org/flow-cli).
+You can find the CLI documentation on the [CLI documentation website](https://docs.onflow.org/flow-cli).
 
-## Development 
+### Features
+The Flow CLI is a command line tool that allows you to interact with the Flow blockchain. 
+Read about supported commands in the [CLI documentation website](https://docs.onflow.org/flow-cli).
 
-### Releasing
+```
+Usage:
+  flow [command]
 
-Releasing is automated by Github actions. Release action is triggered by creating a release on Github and publishing it.
+Available Commands:
+  accounts     Utilities to manage accounts
+  blocks       Utilities to read blocks
+  cadence      Execute Cadence code
+  collections  Utilities to read collections
+  config       Utilities to manage configuration
+  emulator     Starts the Flow emulator server
+  events       Utilities to read events
+  help         Help about any command
+  init         Initialize a new configuration
+  keys         Utilities to manage keys
+  project      Manage your Cadence project
+  scripts      Utilities to execute scripts
+  status       Display the status of the Flow network
+  transactions Utilities to send transactions
+  version      View version and commit information
+```
 
-You can also release manually although this is not recommended:
-- Tag a new release and push it
-- Build the binaries: `make versioned-binaries`
-- Test built binaries locally
-- Upload the binaries: `make publish`
-- Update the Homebrew formula: e.g. `brew bump-formula-pr flow-cli --version=0.12.3`
+The Flow CLI includes several commands to interact with Flow networks, such as querying account information, or sending transactions. It also includes the [Flow Emulator](https://docs.onflow.org/emulator/).
 
-To make the new version the default version that is installed 
 
-- Change `version.txt` and commit it
-- Upload the version file: `gsutil cp version.txt gs://flow-cli`
+![Alt Text](./cli.gif)
+
+## Contributing 
+
+Read [contributing](./CONTRIBUTING.md) document.
