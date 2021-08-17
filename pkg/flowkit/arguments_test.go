@@ -28,7 +28,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TesArguments(t *testing.T) {
+func TestArguments(t *testing.T) {
 
 	var sampleValues []cadence.Value = []cadence.Value{
 		cadence.NewAddress([8]byte{0, 0, 0, 0, 0, 0, 0, 1}),
