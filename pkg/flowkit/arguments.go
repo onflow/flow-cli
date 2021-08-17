@@ -27,7 +27,6 @@ import (
 	"github.com/onflow/cadence"
 	jsoncdc "github.com/onflow/cadence/encoding/json"
 	"github.com/onflow/cadence/runtime"
-	"github.com/onflow/cadence/runtime/ast"
 	"github.com/onflow/cadence/runtime/cmd"
 	"github.com/onflow/cadence/runtime/common"
 	"github.com/onflow/cadence/runtime/sema"
@@ -128,20 +127,12 @@ func ParseArgumentsWithoutType(code []byte, args []string) (scriptArgs []cadence
 	codes := map[common.LocationID]string{}
 	location := common.StringLocation("")
 	program, must := cmd.PrepareProgram(string(code), location, codes)
-	checker, _ := cmd.PrepareChecker(nil, location, codes, nil, must)
+	checker, _ := cmd.PrepareChecker(program, location, codes, nil, must)
+	checker.Check()
 
-	var parameterList []*ast.Parameter
-
-	var transactionDeclaration *ast.TransactionDeclaration = program.SoleTransactionDeclaration()
-	if transactionDeclaration != nil {
-		parameterList = transactionDeclaration.ParameterList.Parameters
-	} else {
-		var functionDeclarations []*ast.FunctionDeclaration = program.FunctionDeclarations()
-		for _, functionDeclaration := range functionDeclarations {
-			if functionDeclaration.Identifier.String() == "main" {
-				parameterList = functionDeclaration.ParameterList.Parameters
-			}
-		}
+	var parameterList []*sema.Parameter = checker.EntryPointParameters()
+	if parameterList == nil {
+		return resultArgs, nil
 	}
 
 	if len(parameterList) != len(args) {
@@ -149,8 +140,7 @@ func ParseArgumentsWithoutType(code []byte, args []string) (scriptArgs []cadence
 	}
 
 	for index, argumentString := range args {
-		astType := parameterList[index].TypeAnnotation.Type
-		semaType := checker.ConvertType(astType)
+		semaType := parameterList[index].TypeAnnotation.Type
 
 		switch semaType {
 		case sema.StringType:
@@ -169,7 +159,7 @@ func ParseArgumentsWithoutType(code []byte, args []string) (scriptArgs []cadence
 
 		var value, err = runtime.ParseLiteral(argumentString, semaType)
 		if err != nil {
-			return nil, fmt.Errorf("argument `%s` is not expected type `%s`", parameterList[index].Identifier, astType)
+			return nil, fmt.Errorf("argument `%s` is not expected type `%s`", parameterList[index].Identifier, semaType)
 		}
 		resultArgs = append(resultArgs, value)
 	}
