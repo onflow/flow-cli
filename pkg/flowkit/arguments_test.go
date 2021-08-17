@@ -23,9 +23,9 @@ import (
 	"testing"
 
 	"github.com/onflow/cadence"
+	"github.com/stretchr/testify/assert"
 
 	"github.com/onflow/flow-cli/pkg/flowkit"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestArguments(t *testing.T) {
