@@ -28,6 +28,8 @@ import (
 	jsoncdc "github.com/onflow/cadence/encoding/json"
 	"github.com/onflow/cadence/runtime"
 	"github.com/onflow/cadence/runtime/ast"
+	"github.com/onflow/cadence/runtime/cmd"
+	"github.com/onflow/cadence/runtime/common"
 	"github.com/onflow/cadence/runtime/sema"
 )
 
@@ -121,9 +123,14 @@ func ParseArguments(args []string, argsJSON string) (scriptArgs []cadence.Value,
 	return
 }
 
-func ParseArgumentsWithoutType(args []string, program *ast.Program, checker *sema.Checker) (scriptArgs []cadence.Value, err error) {
+func ParseArgumentsWithoutType(code []byte, args []string) (scriptArgs []cadence.Value, err error) {
 
 	var resultArgs []cadence.Value = make([]cadence.Value, 0)
+
+	codes := map[common.LocationID]string{}
+	location := common.StringLocation("")
+	program, must := cmd.PrepareProgram(string(code), location, codes)
+	checker, _ := cmd.PrepareChecker(nil, location, codes, nil, must)
 
 	var parameterList []*ast.Parameter
 

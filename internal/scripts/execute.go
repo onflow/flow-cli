@@ -22,8 +22,6 @@ import (
 	"fmt"
 
 	"github.com/onflow/cadence"
-	"github.com/onflow/cadence/runtime/cmd"
-	"github.com/onflow/cadence/runtime/common"
 	"github.com/onflow/flow-cli/pkg/flowkit"
 
 	"github.com/spf13/cobra"
@@ -63,11 +61,6 @@ func execute(
 		return nil, fmt.Errorf("error loading script file: %w", err)
 	}
 
-	codes := map[common.LocationID]string{}
-	location := common.StringLocation(filename)
-	program, must := cmd.PrepareProgram(string(code), location, codes)
-	checker, _ := cmd.PrepareChecker(nil, location, codes, nil, must)
-
 	if len(scriptFlags.Arg) != 0 {
 		fmt.Println("⚠️  DEPRECATION WARNING: use script arguments as command arguments: execute <filename> [<argument> <argument> ...]")
 	}
@@ -76,7 +69,7 @@ func execute(
 	if scriptFlags.ArgsJSON != "" || len(scriptFlags.Arg) != 0 {
 		scriptArgs, err = flowkit.ParseArguments(scriptFlags.Arg, scriptFlags.ArgsJSON)
 	} else {
-		scriptArgs, err = flowkit.ParseArgumentsWithoutType(args[1:], program, checker)
+		scriptArgs, err = flowkit.ParseArgumentsWithoutType(code, args[1:])
 	}
 
 	if err != nil {

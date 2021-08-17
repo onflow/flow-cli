@@ -24,8 +24,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/cadence"
-	"github.com/onflow/cadence/runtime/cmd"
-	"github.com/onflow/cadence/runtime/common"
 
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/pkg/flowkit"
@@ -73,11 +71,6 @@ func send(
 		return nil, fmt.Errorf("error loading transaction file: %w", err)
 	}
 
-	codes := map[common.LocationID]string{}
-	location := common.StringLocation(codeFilename)
-	program, must := cmd.PrepareProgram(string(code), location, codes)
-	checker, _ := cmd.PrepareChecker(nil, location, codes, nil, must)
-
 	if len(sendFlags.Arg) != 0 {
 		fmt.Println("⚠️  DEPRECATION WARNING: use transaction arguments as command arguments: send <code filename> [<argument> <argument> ...]")
 	}
@@ -86,7 +79,7 @@ func send(
 	if sendFlags.ArgsJSON != "" || len(sendFlags.Arg) != 0 {
 		transactionArgs, err = flowkit.ParseArguments(sendFlags.Arg, sendFlags.ArgsJSON)
 	} else {
-		transactionArgs, err = flowkit.ParseArgumentsWithoutType(args[1:], program, checker)
+		transactionArgs, err = flowkit.ParseArgumentsWithoutType(code, args[1:])
 	}
 
 	if err != nil {
