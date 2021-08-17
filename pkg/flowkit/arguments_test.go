@@ -21,10 +21,10 @@ package flowkit_test
 import (
 	"fmt"
 	"testing"
-	"github.com/onflow/flow-cli/pkg/flowkit"
-	
 	"github.com/onflow/cadence"
 	"github.com/stretchr/testify/assert"
+	
+	"github.com/onflow/flow-cli/pkg/flowkit"
 )
 
 func TestArguments(t *testing.T) {
