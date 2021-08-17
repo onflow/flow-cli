@@ -26,6 +26,9 @@ import (
 
 	"github.com/onflow/cadence"
 	jsoncdc "github.com/onflow/cadence/encoding/json"
+	"github.com/onflow/cadence/runtime"
+	"github.com/onflow/cadence/runtime/ast"
+	"github.com/onflow/cadence/runtime/sema"
 )
 
 type CadenceArgument struct {
@@ -61,6 +64,7 @@ func ParseArgumentsJSON(input string) ([]cadence.Value, error) {
 }
 
 func ParseArgumentsCommaSplit(input []string) ([]cadence.Value, error) {
+	fmt.Println(input)
 	args := make([]map[string]interface{}, 0)
 
 	if len(input) == 0 {
@@ -84,7 +88,9 @@ func ParseArgumentsCommaSplit(input []string) ([]cadence.Value, error) {
 			"type":  argType,
 		})
 	}
+
 	jsonArgs, _ := json.Marshal(args)
+	fmt.Println(jsonArgs)
 	cadenceArgs, err := ParseArgumentsJSON(string(jsonArgs))
 
 	return cadenceArgs, err
@@ -113,4 +119,54 @@ func ParseArguments(args []string, argsJSON string) (scriptArgs []cadence.Value,
 	}
 
 	return
+}
+
+func ParseArgumentsWithoutType(args []string, program *ast.Program, checker *sema.Checker) (scriptArgs []cadence.Value, err error) {
+
+	var resultArgs []cadence.Value = make([]cadence.Value, 0)
+
+	var parameterList []*ast.Parameter
+
+	var transactionDeclaration *ast.TransactionDeclaration = program.SoleTransactionDeclaration()
+	if transactionDeclaration != nil {
+		parameterList = transactionDeclaration.ParameterList.Parameters
+	} else {
+		var functionDeclarations []*ast.FunctionDeclaration = program.FunctionDeclarations()
+		for _, functionDeclaration := range functionDeclarations {
+			if functionDeclaration.Identifier.String() == "main" {
+				parameterList = functionDeclaration.ParameterList.Parameters
+			}
+		}
+	}
+
+	if len(parameterList) != len(args) {
+		return nil, fmt.Errorf("argument count is %d, expected %d", len(args), len(parameterList))
+	}
+
+	for index, argumentString := range args {
+		astType := parameterList[index].TypeAnnotation.Type
+		semaType := checker.ConvertType(astType)
+
+		switch semaType {
+		case sema.StringType:
+			if len(argumentString) > 0 && !strings.HasPrefix(argumentString, "\"") {
+				argumentString = "\"" + argumentString + "\""
+			}
+		}
+
+		switch semaType.(type) {
+		case *sema.AddressType:
+			if !strings.Contains(argumentString, "0x") {
+				argumentString = fmt.Sprintf("0x%s", argumentString)
+			}
+
+		}
+
+		var value, err = runtime.ParseLiteral(argumentString, semaType)
+		if err != nil {
+			return nil, fmt.Errorf("argument `%s` is not expected type `%s`", parameterList[index].Identifier, astType)
+		}
+		resultArgs = append(resultArgs, value)
+	}
+	return resultArgs, nil
 }
