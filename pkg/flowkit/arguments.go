@@ -66,7 +66,6 @@ func ParseArgumentsJSON(input string) ([]cadence.Value, error) {
 }
 
 func ParseArgumentsCommaSplit(input []string) ([]cadence.Value, error) {
-	fmt.Println(input)
 	args := make([]map[string]interface{}, 0)
 
 	if len(input) == 0 {
@@ -92,7 +91,6 @@ func ParseArgumentsCommaSplit(input []string) ([]cadence.Value, error) {
 	}
 
 	jsonArgs, _ := json.Marshal(args)
-	fmt.Println(jsonArgs)
 	cadenceArgs, err := ParseArgumentsJSON(string(jsonArgs))
 
 	return cadenceArgs, err
