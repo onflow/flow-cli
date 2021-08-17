@@ -34,7 +34,7 @@ import (
 
 type flagsScripts struct {
 	ArgsJSON string   `default:"" flag:"args-json" info:"arguments in JSON-Cadence format"`
-	Arg      []string `default:"" flag:"arg" info:"argument in Type:Value format"`
+	Arg      []string `default:"" flag:"arg" info:"⚠️  Deprecated: use command arguments"`
 }
 
 var scriptFlags = flagsScripts{}
@@ -67,6 +67,10 @@ func execute(
 	location := common.StringLocation(filename)
 	program, must := cmd.PrepareProgram(string(code), location, codes)
 	checker, _ := cmd.PrepareChecker(nil, location, codes, nil, must)
+
+	if len(scriptFlags.Arg) != 0 {
+		fmt.Println("⚠️  DEPRECATION WARNING: use script arguments as command arguments: execute <filename> [<argument> <argument> ...]")
+	}
 
 	var scriptArgs []cadence.Value
 	if scriptFlags.ArgsJSON != "" || len(scriptFlags.Arg) != 0 {

@@ -34,7 +34,7 @@ import (
 
 type flagsSend struct {
 	ArgsJSON string   `default:"" flag:"args-json" info:"arguments in JSON-Cadence format"`
-	Arg      []string `default:"" flag:"arg" info:"argument in Type:Value format"`
+	Arg      []string `default:"" flag:"arg" info:"⚠️  Deprecated: use command arguments"`
 	Signer   string   `default:"emulator-account" flag:"signer" info:"Account name from configuration used to sign the transaction"`
 	GasLimit uint64   `default:"1000" flag:"gas-limit" info:"transaction gas limit"`
 	Include  []string `default:"" flag:"include" info:"Fields to include in the output"`
@@ -77,6 +77,10 @@ func send(
 	location := common.StringLocation(codeFilename)
 	program, must := cmd.PrepareProgram(string(code), location, codes)
 	checker, _ := cmd.PrepareChecker(nil, location, codes, nil, must)
+
+	if len(sendFlags.Arg) != 0 {
+		fmt.Println("⚠️  DEPRECATION WARNING: use transaction arguments as command arguments: send <code filename> [<argument> <argument> ...]")
+	}
 
 	var transactionArgs []cadence.Value
 	if sendFlags.ArgsJSON != "" || len(sendFlags.Arg) != 0 {
