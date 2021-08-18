@@ -128,10 +128,12 @@ func ParseArgumentsWithoutType(code []byte, args []string) (scriptArgs []cadence
 	location := common.StringLocation("")
 	program, must := cmd.PrepareProgram(string(code), location, codes)
 	checker, _ := cmd.PrepareChecker(program, location, codes, nil, must)
-	checker.Check()
 
+	err = checker.Check()
 	var parameterList []*sema.Parameter = checker.EntryPointParameters()
-	if parameterList == nil {
+
+	//return on checker error or no entry
+	if err != nil || parameterList == nil {
 		return resultArgs, nil
 	}
 
