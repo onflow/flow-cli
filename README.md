@@ -1,13 +1,11 @@
 <br />
 <p align="center">
   <a href="https://docs.onflow.org/flow-cli/install/">
-    <img src="./logo-cli.png" alt="Logo" width="700" height="auto">
+    <img src="./cli-banner.png" alt="Logo" width="290" height="auto">
   </a>
 
-  <h1 align="center">Flow CLI</h1>
-
   <p align="center">
-    Flow CLI brings Flow to your terminal. Easily interact with the network and build your dapps.
+    <i>Flow CLI brings Flow to your terminal. Easily interact with the network and build your dapps.</i>
     <br />
     <a href="https://docs.onflow.org/flow-cli/install/"><strong>Read the docs»</strong></a>
     <br />
