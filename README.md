@@ -1,18 +1,34 @@
-![](./logo-cli.svg)
+<br />
+<p align="center">
+  <a href="https://docs.onflow.org/flow-cli/install/">
+    <img src="./cli-banner.png" alt="Logo" width="290" height="auto">
+  </a>
 
-# Flow CLI
+  <p align="center">
+    <i>Flow CLI brings Flow to your terminal. Easily interact with the network and build your dapps.</i>
+    <br />
+    <a href="https://docs.onflow.org/flow-cli/install/"><strong>Read the docs»</strong></a>
+    <br />
+    <br />
+    <a href="https://github.com/onflow/flow-cli/issues">Report Bug</a>
+    ·
+    <a href="https://github.com/onflow/flow-cli/blob/master/CONTRIBUTING.md">Contribute</a>
+    ·
+    <a href="https://github.com/onflow/flow-cli/blob/master/CONTRIBUTING.md#cli-guidelines">Read Guidelines</a>
+  </p>
+</p>
+<br />
+<br />
 
-The Flow CLI is a command-line interface that provides useful utilities for building Flow applications.
-
-### Installation
+## Installation
 
 To install the Flow CLI, follow the [installation instructions](https://docs.onflow.org/flow-cli/install) on the Flow documentation website.
 
-### Documentation
+## Documentation
 
 You can find the CLI documentation on the [CLI documentation website](https://docs.onflow.org/flow-cli).
 
-### Features
+## Features
 The Flow CLI is a command line tool that allows you to interact with the Flow blockchain. 
 Read about supported commands in the [CLI documentation website](https://docs.onflow.org/flow-cli).
 
