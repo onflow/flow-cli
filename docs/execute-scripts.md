@@ -8,16 +8,23 @@ The Flow CLI provides a command to execute a Cadence script on
 the Flow execution state with any Flow Access API.
 
 ```shell
-flow scripts execute <filename>
+flow scripts execute <filename> [<argument> <argument>...] [flags]
 ```
 
 ## Example Usage
 
 ```shell
 # Execute a script on Flow Testnet
-> flow scripts execute script.cdc --arg String:"Hello" --arg String:"World"
+> flow scripts execute script.cdc "Hello" "World"
 
 "Hello World"
+```
+
+Script source code:
+```
+pub fun main(greeting: String, who: String): String {
+	return greeting.concat(" ").concat(who)
+}
 ```
 
 ## Arguments
@@ -30,6 +37,13 @@ flow scripts execute <filename>
 The first argument is a path to a Cadence file containing the 
 script to be executed.
 
+### Arguments
+- Name: `argument`
+- Valid inputs: valid [cadence values](https://docs.onflow.org/cadence/json-cadence-spec/)
+  matching argument type in script code.
+
+Input arguments values matching corresponding types in the source code and passed in the same order.
+
 ## Flags
 
 ### Arguments
@@ -39,6 +53,8 @@ script to be executed.
 
 Arguments passed to the Cadence script in `Type:Value` format. 
 The `Type` must be the same as type in the script source code for that argument.  
+
+⚠️  Deprecated: use command arguments instead.
 
 ### Arguments JSON
 
