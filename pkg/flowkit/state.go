@@ -78,6 +78,14 @@ func (p *State) SaveEdited(paths []string) error {
 	if !config.IsDefaultPath(paths) && len(paths) > 1 {
 		return fmt.Errorf("specifying multiple paths is not supported when updating configuration")
 	}
+	// if default paths and local config doesn't exist don't allow updating global config
+	if config.IsDefaultPath(paths) {
+		if !config.Exists(config.DefaultPath) {
+			return fmt.Errorf("default configuration not found, please initialize it first or specify another configuration file")
+		} else {
+			return p.SaveDefault()
+		}
+	}
 
 	return p.Save(paths[0])
 }
