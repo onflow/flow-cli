@@ -55,10 +55,15 @@ var AddContractCommand = &command.Command{
 func addContract(
 	_ []string,
 	_ flowkit.ReaderWriter,
-	_ command.GlobalFlags,
+	globalFlags command.GlobalFlags,
 	_ *services.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
+
+	if !config.IsGlobalPath(globalFlags.ConfigPaths) && len(globalFlags.ConfigPaths) > 1 {
+		return nil, fmt.Errorf("specifying multiple paths to -f is not supported when updating configuration")
+	}
+
 	if state == nil {
 		return nil, config.ErrDoesNotExist
 	}

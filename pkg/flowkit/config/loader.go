@@ -102,6 +102,24 @@ func (l *Loader) Save(conf *Config, path string) error {
 	return nil
 }
 
+func (l *Loader) LoadConfig(confPath string) (*Config, error) {
+	raw, err := l.loadFile(confPath)
+
+	if err != nil {
+		return nil, err
+	}
+
+	preProcessed := l.preprocess(raw)
+	configParser := l.configParsers.FindForFormat(filepath.Ext(confPath))
+	if configParser == nil {
+		return nil, fmt.Errorf("parser not found for config: %s", confPath)
+	}
+
+	conf, err := configParser.Deserialize(preProcessed)
+	return conf, err
+
+}
+
 // Load loads configuration from one or more file paths.
 //
 // If more than one path is specified, their contents are merged
@@ -109,35 +127,34 @@ func (l *Loader) Save(conf *Config, path string) error {
 func (l *Loader) Load(paths []string) (*Config, error) {
 	var baseConf *Config
 
-	for _, confPath := range paths {
-		raw, err := l.loadFile(confPath)
-		// if we don't find local config or global config skip as either may miss
-		if err != nil && (confPath == DefaultPath || confPath == GlobalPath()) {
-			continue
+	if IsGlobalPath(paths) {
+		var defaultConfigError error
+		var globalConfigError error
+		//try to load default flow.json
+		baseConf, defaultConfigError = l.LoadConfig(paths[1])
+		if defaultConfigError != nil {
+			//try to load global flow.json
+			baseConf, globalConfigError = l.LoadConfig(paths[0])
+			if globalConfigError != nil {
+				return nil, ErrDoesNotExist
+			}
 		}
+	} else {
 
-		if err != nil {
-			return nil, err
+		for _, confPath := range paths {
+
+			conf, err := l.LoadConfig(confPath)
+			if err != nil {
+				return nil, err
+			}
+			// if first conf just assign as baseConf
+			if baseConf == nil {
+				baseConf = conf
+				continue
+			}
+
+			l.composeConfig(baseConf, conf)
 		}
-
-		preProcessed := l.preprocess(raw)
-		configParser := l.configParsers.FindForFormat(filepath.Ext(confPath))
-		if configParser == nil {
-			return nil, fmt.Errorf("parser not found for config: %s", confPath)
-		}
-
-		conf, err := configParser.Deserialize(preProcessed)
-		if err != nil {
-			return nil, err
-		}
-
-		// if first conf just assign as baseConf
-		if baseConf == nil {
-			baseConf = conf
-			continue
-		}
-
-		l.composeConfig(baseConf, conf)
 	}
 
 	// if no config was loaded - neither local nor global return an error.

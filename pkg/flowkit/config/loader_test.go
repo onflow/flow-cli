@@ -65,6 +65,81 @@ func Test_JSONSimple(t *testing.T) {
 	assert.Equal(t, "0x21c5dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7", conf.Accounts[0].Key.PrivateKey.String())
 }
 
+func Test_ErrorWhenMissingBothDefaultJsonFiles(t *testing.T) {
+	composer := config.NewLoader(afero.Afero{Fs: mockFS})
+	composer.AddConfigParser(json.NewParser())
+
+	_, loadErr := composer.Load(config.DefaultPaths())
+
+	assert.Error(t, loadErr)
+	assert.Contains(t, loadErr.Error(), "missing configuration")
+}
+
+func Test_AllowMissingLocalJson(t *testing.T) {
+	b := []byte(`{
+		"accounts": {
+			"emulator-account": {
+				"address": "f8d6e0586b0a20c7",
+				"key": "21c5dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7"
+			}
+		}
+	}`)
+
+	mockFS := afero.NewMemMapFs()
+	err := afero.WriteFile(mockFS, config.GlobalPath(), b, 0644)
+
+	assert.NoError(t, err)
+
+	composer := config.NewLoader(afero.Afero{Fs: mockFS})
+	composer.AddConfigParser(json.NewParser())
+
+	conf, loadErr := composer.Load(config.DefaultPaths())
+
+	assert.NoError(t, loadErr)
+	assert.Equal(t, 1, len(conf.Accounts))
+	assert.Equal(t, "0x21c5dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7",
+		conf.Accounts.ByName("emulator-account").Key.PrivateKey.String(),
+	)
+}
+
+func Test_PreferLocalJson(t *testing.T) {
+	b := []byte(`{
+		"accounts": {
+			"emulator-account": {
+				"address": "f8d6e0586b0a20c7",
+				"key": "21c5dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7"
+			}
+		}
+	}`)
+
+	b2 := []byte(`{
+		 "accounts":{
+				"emulator-account":{
+					 "address":"f1d6e0586b0a20c7",
+					 "key":"3335dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7"
+				}
+		 }
+	}`)
+
+	mockFS := afero.NewMemMapFs()
+	err := afero.WriteFile(mockFS, "flow.json", b, 0644)
+	err2 := afero.WriteFile(mockFS, config.GlobalPath(), b2, 0644)
+
+	assert.NoError(t, err)
+	assert.NoError(t, err2)
+
+	composer := config.NewLoader(afero.Afero{Fs: mockFS})
+	composer.AddConfigParser(json.NewParser())
+
+	conf, loadErr := composer.Load(config.DefaultPaths())
+
+	assert.NoError(t, loadErr)
+	assert.Equal(t, 1, len(conf.Accounts))
+	assert.Equal(t, "0x21c5dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7",
+		conf.Accounts.ByName("emulator-account").Key.PrivateKey.String(),
+	)
+}
+
 func Test_ComposeJSON(t *testing.T) {
 	b := []byte(`{
 		"accounts": {

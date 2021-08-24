@@ -94,6 +94,10 @@ var ErrOutdatedFormat = errors.New("you are using old configuration format")
 
 const DefaultPath = "flow.json"
 
+func IsGlobalPath(paths []string) bool {
+	return len(paths) == 2 && paths[0] == GlobalPath() && paths[1] == DefaultPath
+}
+
 // GlobalPath gets global path based on home dir.
 func GlobalPath() string {
 	dirname, err := os.UserHomeDir()
