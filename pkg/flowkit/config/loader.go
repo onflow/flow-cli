@@ -140,6 +140,8 @@ func (l *Loader) Load(paths []string) (*Config, error) {
 		conf, err = l.LoadConfig(GlobalPath())
 		if err != nil {
 			return nil, ErrDoesNotExist
+		} else {
+			return l.postprocess(conf)
 		}
 	}
 
