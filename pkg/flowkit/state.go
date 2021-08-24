@@ -80,7 +80,8 @@ func (p *State) SaveEdited(paths []string) error {
 	}
 	// if default paths and local config doesn't exist don't allow updating global config
 	if config.IsDefaultPath(paths) {
-		if !config.Exists(config.DefaultPath) {
+		_, err := p.confLoader.Load([]string{config.DefaultPath}) // check if default is present
+		if err != nil {
 			return fmt.Errorf("default configuration not found, please initialize it first or specify another configuration file")
 		} else {
 			return p.SaveDefault()
