@@ -26,6 +26,10 @@ import (
 
 	"github.com/onflow/cadence"
 	jsoncdc "github.com/onflow/cadence/encoding/json"
+	"github.com/onflow/cadence/runtime"
+	"github.com/onflow/cadence/runtime/cmd"
+	"github.com/onflow/cadence/runtime/common"
+	"github.com/onflow/cadence/runtime/sema"
 )
 
 type CadenceArgument struct {
@@ -84,6 +88,7 @@ func ParseArgumentsCommaSplit(input []string) ([]cadence.Value, error) {
 			"type":  argType,
 		})
 	}
+
 	jsonArgs, _ := json.Marshal(args)
 	cadenceArgs, err := ParseArgumentsJSON(string(jsonArgs))
 
@@ -113,4 +118,52 @@ func ParseArguments(args []string, argsJSON string) (scriptArgs []cadence.Value,
 	}
 
 	return
+}
+
+func ParseArgumentsWithoutType(code []byte, args []string) (scriptArgs []cadence.Value, err error) {
+
+	var resultArgs []cadence.Value = make([]cadence.Value, 0)
+
+	codes := map[common.LocationID]string{}
+	location := common.StringLocation("")
+	program, must := cmd.PrepareProgram(string(code), location, codes)
+	checker, _ := cmd.PrepareChecker(program, location, codes, nil, must)
+
+	err = checker.Check()
+	var parameterList []*sema.Parameter = checker.EntryPointParameters()
+
+	//return on checker error or no entry
+	if err != nil || parameterList == nil {
+		return resultArgs, nil
+	}
+
+	if len(parameterList) != len(args) {
+		return nil, fmt.Errorf("argument count is %d, expected %d", len(args), len(parameterList))
+	}
+
+	for index, argumentString := range args {
+		semaType := parameterList[index].TypeAnnotation.Type
+
+		switch semaType {
+		case sema.StringType:
+			if len(argumentString) > 0 && !strings.HasPrefix(argumentString, "\"") {
+				argumentString = "\"" + argumentString + "\""
+			}
+		}
+
+		switch semaType.(type) {
+		case *sema.AddressType:
+			if !strings.Contains(argumentString, "0x") {
+				argumentString = fmt.Sprintf("0x%s", argumentString)
+			}
+
+		}
+
+		var value, err = runtime.ParseLiteral(argumentString, semaType)
+		if err != nil {
+			return nil, fmt.Errorf("argument `%s` is not expected type `%s`", parameterList[index].Identifier, semaType)
+		}
+		resultArgs = append(resultArgs, value)
+	}
+	return resultArgs, nil
 }

@@ -23,6 +23,8 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/onflow/cadence"
+
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/services"
@@ -30,7 +32,7 @@ import (
 
 type flagsSend struct {
 	ArgsJSON string   `default:"" flag:"args-json" info:"arguments in JSON-Cadence format"`
-	Arg      []string `default:"" flag:"arg" info:"argument in Type:Value format"`
+	Arg      []string `default:"" flag:"arg" info:"⚠️  Deprecated: use command arguments"`
 	Signer   string   `default:"emulator-account" flag:"signer" info:"Account name from configuration used to sign the transaction"`
 	GasLimit uint64   `default:"1000" flag:"gas-limit" info:"transaction gas limit"`
 	Include  []string `default:"" flag:"include" info:"Fields to include in the output"`
@@ -41,10 +43,10 @@ var sendFlags = flagsSend{}
 
 var SendCommand = &command.Command{
 	Cmd: &cobra.Command{
-		Use:     "send <code filename>",
+		Use:     "send <code filename> [<argument> <argument> ...]",
 		Short:   "Send a transaction",
-		Args:    cobra.ExactArgs(1),
-		Example: `flow transactions send tx.cdc --arg String:"Hello world"`,
+		Args:    cobra.MinimumNArgs(1),
+		Example: `flow transactions send tx.cdc "Hello world"`,
 	},
 	Flags: &sendFlags,
 	RunS:  send,
@@ -69,9 +71,19 @@ func send(
 		return nil, fmt.Errorf("error loading transaction file: %w", err)
 	}
 
-	txArgs, err := flowkit.ParseArguments(sendFlags.Arg, sendFlags.ArgsJSON)
+	if len(sendFlags.Arg) != 0 {
+		fmt.Println("⚠️  DEPRECATION WARNING: use transaction arguments as command arguments: send <code filename> [<argument> <argument> ...]")
+	}
+
+	var transactionArgs []cadence.Value
+	if sendFlags.ArgsJSON != "" || len(sendFlags.Arg) != 0 {
+		transactionArgs, err = flowkit.ParseArguments(sendFlags.Arg, sendFlags.ArgsJSON)
+	} else {
+		transactionArgs, err = flowkit.ParseArgumentsWithoutType(code, args[1:])
+	}
+
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error parsing transaction arguments: %w", err)
 	}
 
 	tx, result, err := services.Transactions.Send(
@@ -79,9 +91,10 @@ func send(
 		code,
 		codeFilename,
 		sendFlags.GasLimit,
-		txArgs,
+		transactionArgs,
 		globalFlags.Network,
 	)
+
 	if err != nil {
 		return nil, err
 	}

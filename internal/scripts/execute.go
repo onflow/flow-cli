@@ -21,27 +21,27 @@ package scripts
 import (
 	"fmt"
 
-	"github.com/onflow/flow-cli/pkg/flowkit"
-
+	"github.com/onflow/cadence"
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
+	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/services"
 )
 
 type flagsScripts struct {
 	ArgsJSON string   `default:"" flag:"args-json" info:"arguments in JSON-Cadence format"`
-	Arg      []string `default:"" flag:"arg" info:"argument in Type:Value format"`
+	Arg      []string `default:"" flag:"arg" info:"⚠️  Deprecated: use command arguments"`
 }
 
 var scriptFlags = flagsScripts{}
 
 var ExecuteCommand = &command.Command{
 	Cmd: &cobra.Command{
-		Use:     "execute <filename>",
+		Use:     "execute <filename> [<argument> <argument> ...]",
 		Short:   "Execute a script",
-		Example: `flow scripts execute script.cdc --arg String:"Meow" --arg String:"Woof"`,
-		Args:    cobra.ExactArgs(1),
+		Example: `flow scripts execute script.cdc "Meow" "Woof"`,
+		Args:    cobra.MinimumNArgs(1),
 	},
 	Flags: &scriptFlags,
 	Run:   execute,
@@ -60,7 +60,17 @@ func execute(
 		return nil, fmt.Errorf("error loading script file: %w", err)
 	}
 
-	scriptArgs, err := flowkit.ParseArguments(scriptFlags.Arg, scriptFlags.ArgsJSON)
+	if len(scriptFlags.Arg) != 0 {
+		fmt.Println("⚠️  DEPRECATION WARNING: use script arguments as command arguments: execute <filename> [<argument> <argument> ...]")
+	}
+
+	var scriptArgs []cadence.Value
+	if scriptFlags.ArgsJSON != "" || len(scriptFlags.Arg) != 0 {
+		scriptArgs, err = flowkit.ParseArguments(scriptFlags.Arg, scriptFlags.ArgsJSON)
+	} else {
+		scriptArgs, err = flowkit.ParseArgumentsWithoutType(code, args[1:])
+	}
+
 	if err != nil {
 		return nil, fmt.Errorf("error parsing script arguments: %w", err)
 	}
