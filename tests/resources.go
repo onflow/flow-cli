@@ -168,6 +168,15 @@ var TransactionSimple = resource{
 	`),
 }
 
+var ScriptWithError = resource{
+	Filename: "scriptError.cdc",
+	Source: []byte(`
+	    	pub fun main(name: String): Strin {
+		  return "Hello ".concat(name)
+		}
+	`),
+}
+
 var ScriptArgString = resource{
 	Filename: "scriptArg.cdc",
 	Source: []byte(`

@@ -67,6 +67,20 @@ func TestScripts_Integration(t *testing.T) {
 		assert.Equal(t, res.String(), "\"Hello Foo\"")
 	})
 
+	t.Run("Execute report error", func(t *testing.T) {
+		t.Parallel()
+		_, s := setupIntegration()
+		args := []cadence.Value{
+			cadence.NewString("Foo"),
+		}
+		res, err := s.Scripts.Execute(tests.ScriptWithError.Source, args, "", "")
+
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "cannot find type in this scope")
+		assert.Nil(t, res)
+
+	})
+
 	t.Run("Execute With Imports", func(t *testing.T) {
 		t.Parallel()
 		state, s := setupIntegration()
