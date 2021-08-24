@@ -60,15 +60,6 @@ func addAccount(
 	_ *services.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
-
-	if !config.IsGlobalPath(globalFlags.ConfigPaths) && len(globalFlags.ConfigPaths) > 1 {
-		return nil, fmt.Errorf("specifying multiple paths to -f is not supported when updating configuration")
-	}
-
-	if state == nil {
-		return nil, config.ErrDoesNotExist
-	}
-
 	accountData, flagsProvided, err := flagsToAccountData(addAccountFlags)
 	if err != nil {
 		return nil, err
@@ -97,7 +88,7 @@ func addAccount(
 
 	state.Accounts().AddOrUpdate(&acc)
 
-	err = state.SaveDefault()
+	err = state.SaveEdited(globalFlags.ConfigPaths)
 	if err != nil {
 		return nil, err
 	}
