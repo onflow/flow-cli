@@ -39,6 +39,17 @@ Payload (hidden, use --include payload)
 
 ```
 
+Multiple arguments example:
+```shell
+> flow transactions send tx1.cdc Foo 1 2 10.9 0x1 '[123,222]' '["a","b"]'
+```
+Transaction code:
+```
+transaction(a: String, b: Int, c: UInt16, d: UFix64, e: Address, f: [Int], g: [String]) {
+	prepare(authorizer: AuthAccount) {}
+}
+```
+
 In the above example, the `flow.json` file would look something like this:
 
 ```json
