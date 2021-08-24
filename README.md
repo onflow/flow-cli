@@ -1,7 +1,7 @@
 <br />
 <p align="center">
   <a href="https://docs.onflow.org/flow-cli/install/">
-    <img src="./cli-banner.png" alt="Logo" width="290" height="auto">
+    <img src="./cli-banner.svg" alt="Logo" width="290" height="auto">
   </a>
 
   <p align="center">
