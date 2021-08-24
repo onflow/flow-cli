@@ -63,5 +63,6 @@ func get(
 		block:       block,
 		events:      events,
 		collections: collections,
+		included:    blockFlags.Include,
 	}, nil
 }
