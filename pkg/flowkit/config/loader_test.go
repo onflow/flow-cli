@@ -94,11 +94,11 @@ func Test_AllowMissingLocalJson(t *testing.T) {
 	composer.AddConfigParser(json.NewParser())
 
 	conf, loadErr := composer.Load(config.DefaultPaths())
+	assert.NoError(t, loadErr)
 
 	acc, err := conf.Accounts.ByName("emulator-account")
 	assert.NoError(t, err)
 
-	assert.NoError(t, loadErr)
 	assert.Equal(t, 1, len(conf.Accounts))
 	assert.Equal(t, "0x21c5dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7",
 		acc.Key.PrivateKey.String(),
