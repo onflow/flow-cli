@@ -67,9 +67,19 @@ func (p *State) ReadFile(source string) ([]byte, error) {
 	return p.readerWriter.ReadFile(source)
 }
 
-// SaveDefault saves configuration to default path.
+// SaveDefault saves to default path.
 func (p *State) SaveDefault() error {
 	return p.Save(config.DefaultPath)
+}
+
+// SaveEdited saves configuration to valid path.
+func (p *State) SaveEdited(paths []string) error {
+	// if paths are not default only allow specifying one config
+	if !config.IsDefaultPath(paths) && len(paths) > 1 {
+		return fmt.Errorf("specifying multiple paths is not supported when updating configuration")
+	}
+
+	return p.Save(paths[0])
 }
 
 // Save saves the project configuration to the given path.
