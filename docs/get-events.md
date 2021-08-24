@@ -4,26 +4,22 @@ sidebar_title: Get Event
 description: How to get an event from the command line
 ---
 
-The Flow CLI provides a command to fetch any block from the Flow network.
-
-Events can be requested for a specific sealed block range via the 
-start and end block height fields and further filtered by event name.
+Use the event command to fetch a single or multiple events in a specific range of blocks. 
+You can provide start and end block height range, but also specify number of the latest blocks to 
+be used to search for specified event. Events are fetched concurrently by using multiple workers which 
+optionally you can also control by specifying the flags.
 
 ```shell
-flow events get <event_name> <block_height_range_start> <optional:block_height_range_end|latest>
+flow events get <event_name>
 ```
 
 ## Example Usage
 
+Get the event by name `A.0b2a3299cc857e29.TopShot.Deposit` from the last 20 blocks on mainnet.
 ```shell
-flow events get A.0b2a3299cc857e29.TopShot.Deposit 12913388 12913389 \
- --host access.mainnet.nodes.onflow.org:9000
-```
+> flow events get A.0b2a3299cc857e29.TopShot.Deposit --last 20 --network mainnet
 
-### Example response
-
-```shell
-Events Block #12913388:
+  Events Block #12913388:
 	 Index	 2
 	 Type	 A.0b2a3299cc857e29.TopShot.Deposit
 	 Tx ID	 0a1e6cdc4eeda0e23402193d7ad5ba01a175df4c08f48fa7ac8d53e811c5357c
@@ -48,6 +44,45 @@ Events Block #12913388:
 ...
 ```
 
+Get two events `A.1654653399040a61.FlowToken.TokensDeposited` 
+and `A.1654653399040a61.FlowToken.TokensWithdrawn` in the block height range on mainnet. 
+```shell
+> flow events get \
+  A.1654653399040a61.FlowToken.TokensDeposited \
+  A.1654653399040a61.FlowToken.TokensWithdrawn \ 
+  --start 11559500 --end 11559600 --network mainnet
+  
+  Events Block #17015045:
+    Index	0
+    Type	A.1654653399040a61.FlowToken.TokensWithdrawn
+    Tx ID	6dcf60d54036acb52b2e01e69890ce34c3146849998d64364200e4b21e9ac7f1
+    Values
+		- amount (UFix64): 0.00100000 
+		- from (Address?): 0x9e06eebf494e2d78 
+
+    Index	1
+    Type	A.1654653399040a61.FlowToken.TokensWithdrawn
+    Tx ID	6dcf60d54036acb52b2e01e69890ce34c3146849998d64364200e4b21e9ac7f1
+    Values
+		- amount (UFix64): 0.00100000 
+		- from (Never?): nil 
+
+  Events Block #17015047:
+    Index	0
+    Type	A.1654653399040a61.FlowToken.TokensWithdrawn
+    Tx ID	24979a3c0203f514f7f5822cc8ae7046e24f25d4a775bef697a654898fb7673e
+    Values
+		- amount (UFix64): 0.00100000 
+		- from (Address?): 0x18eb4ee6b3c026d2 
+
+    Index	1
+    Type	A.1654653399040a61.FlowToken.TokensWithdrawn
+    Tx ID	24979a3c0203f514f7f5822cc8ae7046e24f25d4a775bef697a654898fb7673e
+    Values
+		- amount (UFix64): 0.00100000 
+		- from (Never?): nil 
+```
+
 ## Arguments
 
 ### Event Name
@@ -56,22 +91,51 @@ Events Block #12913388:
 - Valid Input: String
 
 Fully-qualified identifier for the events.
-
-### Block Height Range Start
-
-- Name: `block_height_range_start`
-- Valid Input: Number (lower than `block_height_range_end` value)
-
-Height of the block in the chain.
-
-### Block Height Range End (optional)
-
-- Name: `block_height_range_end`
-- Valid Input: Number (higher than `block_height_range_end` value) or value `latest`
-
-Height of the block in the chain. Use `latest` for latest block.
+You can provide multiple event names separated by a space.
 
 ## Flags
+
+### Start
+
+- Flag: `--start`
+- Valid inputs: valid block height
+
+Specify the start block height used alongside the end flag. 
+This will define the lower boundary of the block range.
+
+### End
+
+- Flag: `--end`
+- Valid inputs: valid block height
+
+Specify the end block height used alongside the start flag.
+This will define the upper boundary of the block range.
+
+### Last
+
+- Flag: `--last`
+- Valid inputs: number
+- Default: `10`
+
+Specify the number of blocks relative to the last block. Ignored if the 
+start flag is set. Used as a default if no flags are provided.
+
+### Batch
+
+- Flag: `--batch`
+- Valid inputs: number
+- Default: `250`
+
+Number of blocks each worker will fetch.
+
+### Workers
+
+- Flag: `--workers`
+- Valid inputs: number
+- Default: `10`
+
+Number of workers to use when fetching events concurrently.
+
 
 ### Host
 
