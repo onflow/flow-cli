@@ -57,15 +57,6 @@ func addDeployment(
 	_ *services.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
-
-	if !config.IsGlobalPath(globalFlags.ConfigPaths) && len(globalFlags.ConfigPaths) > 1 {
-		return nil, fmt.Errorf("specifying multiple paths to -f is not supported when updating configuration")
-	}
-
-	if state == nil {
-		return nil, config.ErrDoesNotExist
-	}
-
 	deployData, flagsProvided, err := flagsToDeploymentData(addDeploymentFlags)
 	if err != nil {
 		return nil, err
@@ -83,7 +74,7 @@ func addDeployment(
 
 	state.Deployments().AddOrUpdate(deployment)
 
-	err = state.SaveDefault()
+	err = state.SaveEdited(globalFlags.ConfigPaths)
 	if err != nil {
 		return nil, err
 	}

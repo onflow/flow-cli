@@ -57,15 +57,6 @@ func addNetwork(
 	_ *services.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
-
-	if !config.IsGlobalPath(globalFlags.ConfigPaths) && len(globalFlags.ConfigPaths) > 1 {
-		return nil, fmt.Errorf("specifying multiple paths to -f is not supported when updating configuration")
-	}
-
-	if state == nil {
-		return nil, config.ErrDoesNotExist
-	}
-
 	networkData, flagsProvided, err := flagsToNetworkData(addNetworkFlags)
 	if err != nil {
 		return nil, err
@@ -78,7 +69,7 @@ func addNetwork(
 	network := config.StringToNetwork(networkData["name"], networkData["host"])
 	state.Networks().AddOrUpdate(network.Name, network)
 
-	err = state.SaveDefault()
+	err = state.SaveEdited(globalFlags.ConfigPaths)
 	if err != nil {
 		return nil, err
 	}
