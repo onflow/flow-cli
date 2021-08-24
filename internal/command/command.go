@@ -158,22 +158,23 @@ func resolveHost(state *flowkit.State, hostFlag string, networkFlag string) (str
 	}
 	// network flag with project initialized is next
 	if state != nil {
-		check := state.Networks().ByName(networkFlag)
-		if check == nil {
+		stateNetwork, err := state.Networks().ByName(networkFlag)
+		if err != nil {
 			return "", fmt.Errorf("network with name %s does not exist in configuration", networkFlag)
 		}
 
-		return state.Networks().ByName(networkFlag).Host, nil
+		return stateNetwork.Host, nil
 	}
 
 	networks := config.DefaultNetworks()
-	network := networks.ByName(networkFlag)
+	network, err := networks.ByName(networkFlag)
 
-	if network != nil {
-		return network.Host, nil
+	if err != nil {
+		return "", fmt.Errorf("invalid network with name %s", networkFlag)
 	}
 
-	return "", fmt.Errorf("invalid network with name %s", networkFlag)
+	return network.Host, nil
+
 }
 
 // create logger utility.

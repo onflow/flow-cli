@@ -39,7 +39,8 @@ func Test_ConfigAccountKeysSimple(t *testing.T) {
 	accounts, err := jsonAccounts.transformToConfig()
 	assert.NoError(t, err)
 
-	account := accounts.ByName("test")
+	account, err := accounts.ByName("test")
+	assert.NoError(t, err)
 	key := account.Key
 
 	assert.Equal(t, account.Address.String(), "f8d6e0586b0a20c7")
@@ -70,7 +71,8 @@ func Test_ConfigAccountKeysAdvancedHex(t *testing.T) {
 	accounts, err := jsonAccounts.transformToConfig()
 	assert.NoError(t, err)
 
-	account := accounts.ByName("test")
+	account, err := accounts.ByName("test")
+	assert.NoError(t, err)
 	key := account.Key
 
 	assert.Equal(t, account.Address.String(), "f8d6e0586b0a20c7")
@@ -102,7 +104,8 @@ func Test_ConfigAccountKeysAdvancedKMS(t *testing.T) {
 	accounts, err := jsonAccounts.transformToConfig()
 	assert.NoError(t, err)
 
-	account := accounts.ByName("test")
+	account, err := accounts.ByName("test")
+	assert.NoError(t, err)
 	key := account.Key
 
 	assert.Equal(t, account.Address.String(), "f8d6e0586b0a20c7")
@@ -140,7 +143,8 @@ func Test_ConfigAccountOldFormats(t *testing.T) {
 	accounts, err := jsonAccounts.transformToConfig()
 	assert.NoError(t, err)
 
-	account := accounts.ByName("old-format-1")
+	account, err := accounts.ByName("old-format-1")
+	assert.NoError(t, err)
 	key := account.Key
 
 	assert.Equal(t, account.Address.String(), "f8d6e0586b0a20c7")
@@ -149,7 +153,8 @@ func Test_ConfigAccountOldFormats(t *testing.T) {
 	assert.Equal(t, key.SigAlgo.String(), "ECDSA_P256")
 	assert.Equal(t, key.PrivateKey.String(), "0xf988fd7a959d96d0e36ca13a240bbfc4a78098cc56cfd1fa6c918080c8a0f55c")
 
-	account = accounts.ByName("old-format-2")
+	account, err = accounts.ByName("old-format-2")
+	assert.NoError(t, err)
 	key = account.Key
 
 	assert.Equal(t, account.Address.String(), "f8d6e0586b0a20c7")
@@ -178,7 +183,9 @@ func Test_ConfigMultipleAccountsSimple(t *testing.T) {
 	accounts, err := jsonAccounts.transformToConfig()
 	assert.NoError(t, err)
 
-	account := accounts.ByName("emulator-account")
+	account, err := accounts.ByName("emulator-account")
+	assert.NoError(t, err)
+
 	key := account.Key
 
 	assert.Equal(t, account.Name, "emulator-account")
@@ -188,7 +195,8 @@ func Test_ConfigMultipleAccountsSimple(t *testing.T) {
 	assert.Equal(t, key.SigAlgo.String(), "ECDSA_P256")
 	assert.Equal(t, key.PrivateKey.String(), "0xdd72967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47")
 
-	account = accounts.ByName("testnet-account")
+	account, err = accounts.ByName("testnet-account")
+	assert.NoError(t, err)
 	key = account.Key
 
 	assert.Equal(t, account.Address.String(), "2c1162386b0a245f")
@@ -229,7 +237,8 @@ func Test_ConfigMultipleAccountsAdvanced(t *testing.T) {
 	accounts, err := jsonAccounts.transformToConfig()
 	assert.NoError(t, err)
 
-	account := accounts.ByName("emulator-account")
+	account, err := accounts.ByName("emulator-account")
+	assert.NoError(t, err)
 	key := account.Key
 
 	assert.Equal(t, account.Address.String(), "f8d6e0586b0a20c7")
@@ -239,7 +248,8 @@ func Test_ConfigMultipleAccountsAdvanced(t *testing.T) {
 	assert.NotNil(t, key.PrivateKey)
 	assert.Equal(t, key.PrivateKey.String(), "0x1272967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47")
 
-	account = accounts.ByName("testnet-account")
+	account, err = accounts.ByName("testnet-account")
+	assert.NoError(t, err)
 	key = account.Key
 
 	assert.Equal(t, account.Address.String(), "1c1162386b0a245f")
@@ -275,7 +285,8 @@ func Test_ConfigMixedAccounts(t *testing.T) {
 	accounts, err := jsonAccounts.transformToConfig()
 	assert.NoError(t, err)
 
-	account := accounts.ByName("emulator-account")
+	account, err := accounts.ByName("emulator-account")
+	assert.NoError(t, err)
 	key := account.Key
 
 	assert.Equal(t, account.Address.String(), "f8d6e0586b0a20c7")
@@ -284,7 +295,8 @@ func Test_ConfigMixedAccounts(t *testing.T) {
 	assert.Equal(t, key.SigAlgo.String(), "ECDSA_P256")
 	assert.Equal(t, key.PrivateKey.String(), "0x1272967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47")
 
-	account = accounts.ByName("testnet-account")
+	account, err = accounts.ByName("testnet-account")
+	assert.NoError(t, err)
 	key = account.Key
 
 	assert.Equal(t, account.Address.String(), "3c1162386b0a245f")
@@ -312,9 +324,10 @@ func Test_ConfigAccountsMap(t *testing.T) {
 
 	accounts, err := jsonAccounts.transformToConfig()
 	assert.NoError(t, err)
-
-	assert.Equal(t, accounts.ByName("emulator-account").Address.String(), "f8d6e0586b0a20c7")
-	assert.Equal(t, accounts.ByName("emulator-account").Name, "emulator-account")
+	emulatorAccount, err := accounts.ByName("emulator-account")
+	assert.NoError(t, err)
+	assert.Equal(t, emulatorAccount.Address.String(), "f8d6e0586b0a20c7")
+	assert.Equal(t, emulatorAccount.Name, "emulator-account")
 }
 
 func Test_TransformDefaultAccountToJSON(t *testing.T) {
@@ -389,10 +402,14 @@ func Test_SupportForOldFormatWithMultipleKeys(t *testing.T) {
 	conf, err := jsonAccounts.transformToConfig()
 	assert.NoError(t, err)
 
-	key := conf.ByName("testnet-account").Key
+	account, err := conf.ByName("testnet-account")
+	assert.NoError(t, err)
+	key := account.Key
 	assert.Equal(t, key.PrivateKey.String(), "0x1272967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47")
 
-	key = conf.ByName("emulator-account").Key
+	emulatorAccount, err := conf.ByName("emulator-account")
+	assert.NoError(t, err)
+	key = emulatorAccount.Key
 	assert.Equal(t, key.PrivateKey.String(), "0xdd72967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47")
 }
 

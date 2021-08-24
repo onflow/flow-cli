@@ -2,6 +2,8 @@ module github.com/onflow/flow-cli
 
 go 1.13
 
+replace github.com/onflow/cadence/languageserver => github.com/bjartek/cadence/languageserver v0.9.5-0.20210804215405-0397187261d5
+
 require (
 	github.com/a8m/envsubst v1.2.0
 	github.com/gosuri/uilive v0.0.4

@@ -52,29 +52,34 @@ const (
 // Validate the configuration values.
 func (c *Config) Validate() error {
 	for _, con := range c.Contracts {
-		if con.Network != "" && c.Networks.ByName(con.Network) == nil {
+		_, err := c.Networks.ByName(con.Network)
+		if con.Network != "" && err != nil {
 			return fmt.Errorf("contract %s contains nonexisting network %s", con.Name, con.Network)
 		}
 	}
 
 	for _, em := range c.Emulators {
-		if c.Accounts.ByName(em.ServiceAccount) == nil {
+		_, err := c.Accounts.ByName(em.ServiceAccount)
+		if err != nil {
 			return fmt.Errorf("emulator %s contains nonexisting service account %s", em.Name, em.ServiceAccount)
 		}
 	}
 
 	for _, d := range c.Deployments {
-		if c.Networks.ByName(d.Network) == nil {
+		_, err := c.Networks.ByName(d.Network)
+		if err != nil {
 			return fmt.Errorf("deployment contains nonexisting network %s", d.Network)
 		}
 
 		for _, con := range d.Contracts {
-			if c.Contracts.ByName(con.Name) == nil {
+			_, err := c.Contracts.ByName(con.Name)
+			if err != nil {
 				return fmt.Errorf("deployment contains nonexisting contract %s", con.Name)
 			}
 		}
 
-		if c.Accounts.ByName(d.Account) == nil {
+		_, err = c.Accounts.ByName(d.Account)
+		if err != nil {
 			return fmt.Errorf("deployment contains nonexisting account %s", d.Account)
 		}
 	}

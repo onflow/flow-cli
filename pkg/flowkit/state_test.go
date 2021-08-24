@@ -326,11 +326,12 @@ func Test_GetContractsByNameSimple(t *testing.T) {
 	p := generateSimpleProject()
 
 	contracts, _ := p.DeploymentContractsByNetwork("emulator")
-
+	account, err := p.conf.Accounts.ByName("emulator-account")
+	assert.NoError(t, err)
 	assert.Len(t, contracts, 1)
 	assert.Equal(t, contracts[0].Name, "NonFungibleToken")
 	assert.Equal(t, contracts[0].Source, "../hungry-kitties/cadence/contracts/NonFungibleToken.cdc")
-	assert.Equal(t, p.conf.Accounts.ByName("emulator-account").Address, contracts[0].Target)
+	assert.Equal(t, account.Address, contracts[0].Target)
 }
 
 func Test_EmulatorConfigSimple(t *testing.T) {
@@ -359,9 +360,10 @@ func Test_AccountByNameSimple(t *testing.T) {
 
 func Test_HostSimple(t *testing.T) {
 	p := generateSimpleProject()
-	host := p.Networks().ByName("emulator").Host
+	network, err := p.Networks().ByName("emulator")
 
-	assert.Equal(t, host, "127.0.0.1.3569")
+	assert.NoError(t, err)
+	assert.Equal(t, network.Host, "127.0.0.1.3569")
 }
 
 func Test_GetContractsByNameComplex(t *testing.T) {
@@ -443,9 +445,11 @@ func Test_AccountByNameComplex(t *testing.T) {
 
 func Test_HostComplex(t *testing.T) {
 	p := generateComplexProject()
-	host := p.Networks().ByName("emulator").Host
+	network, err := p.Networks().ByName("emulator")
 
-	assert.Equal(t, host, "127.0.0.1.3569")
+	assert.NoError(t, err)
+
+	assert.Equal(t, network.Host, "127.0.0.1.3569")
 }
 
 func Test_ContractConflictComplex(t *testing.T) {
