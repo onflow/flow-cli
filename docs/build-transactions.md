@@ -81,6 +81,7 @@ transaction to be executed.
   matching argument type in transaction code.
 
 Input arguments values matching corresponding types in the source code and passed in the same order.
+For passing complex argument values see [send transaction](send-transactions.md) document. 
 
 ## Flags
 
