@@ -67,11 +67,6 @@ func (j *jsonConfig) transformToConfig() (*config.Config, error) {
 		Deployments: deployments,
 	}
 
-	err = conf.Validate()
-	if err != nil {
-		return nil, err
-	}
-
 	return conf, nil
 }
 
