@@ -119,9 +119,7 @@ func (l *Loader) LoadConfig(confPath string) (*Config, error) {
 		return nil, fmt.Errorf("parser not found for config: %s", confPath)
 	}
 
-	conf, err := configParser.Deserialize(preProcessed)
-	return conf, err
-
+	return configParser.Deserialize(preProcessed)
 }
 
 // Load loads configuration from one or more file paths.
@@ -207,6 +205,12 @@ func (l *Loader) postprocess(baseConf *Config) (*Config, error) {
 		}
 
 		l.composeConfig(baseConf, accountConf)
+	}
+
+	// validate as part of post processing
+	err := baseConf.Validate()
+	if err != nil {
+		return nil, err
 	}
 
 	return baseConf, nil
