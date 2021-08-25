@@ -1,4 +1,4 @@
-## ⬆️  Install or Upgrade
+## ⬆️ Install or Upgrade
 Follow the Flow CLI installation guide for instructions on how to install or upgrade the CLI.
 
 ## 🐞 Bug Fixes
