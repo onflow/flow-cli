@@ -135,7 +135,8 @@ func Test_PreferLocalJson(t *testing.T) {
 	composer.AddConfigParser(json.NewParser())
 
 	conf, loadErr := composer.Load(config.DefaultPaths())
-	assert.NotNil(t, err)
+	assert.NotNil(t, conf)
+	assert.NoError(t, err)
 
 	acc, err := conf.Accounts.ByName("emulator-account")
 	assert.NoError(t, err)
