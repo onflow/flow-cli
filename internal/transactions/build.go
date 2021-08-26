@@ -21,6 +21,7 @@ package transactions
 import (
 	"fmt"
 
+	"github.com/onflow/cadence"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/spf13/cobra"
 
@@ -32,7 +33,7 @@ import (
 
 type flagsBuild struct {
 	ArgsJSON         string   `default:"" flag:"args-json" info:"arguments in JSON-Cadence format"`
-	Args             []string `default:"" flag:"arg" info:"argument in Type:Value format"`
+	Args             []string `default:"" flag:"arg" info:"⚠️  Deprecated: use command arguments"`
 	Proposer         string   `default:"emulator-account" flag:"proposer" info:"transaction proposer"`
 	ProposerKeyIndex int      `default:"0" flag:"proposer-key-index" info:"proposer key index"`
 	Payer            string   `default:"emulator-account" flag:"payer" info:"transaction payer"`
@@ -44,10 +45,10 @@ var buildFlags = flagsBuild{}
 
 var BuildCommand = &command.Command{
 	Cmd: &cobra.Command{
-		Use:     "build <code filename>",
+		Use:     "build <code filename>  [<argument> <argument> ...]",
 		Short:   "Build an unsigned transaction",
-		Example: "flow transactions build ./transaction.cdc --proposer alice --authorizer alice --payer bob",
-		Args:    cobra.ExactArgs(1),
+		Example: `flow transactions build ./transaction.cdc "Hello" --proposer alice --authorizer alice --payer bob`,
+		Args:    cobra.MinimumNArgs(1),
 	},
 	Flags: &buildFlags,
 	RunS:  build,
@@ -86,9 +87,19 @@ func build(
 		return nil, fmt.Errorf("error loading transaction file: %w", err)
 	}
 
-	txArgs, err := flowkit.ParseArguments(buildFlags.Args, buildFlags.ArgsJSON)
+	if len(buildFlags.Args) != 0 {
+		fmt.Println("⚠️  DEPRECATION WARNING: use transaction arguments as command arguments: send <code filename> [<argument> <argument> ...]")
+	}
+
+	var transactionArgs []cadence.Value
+	if buildFlags.ArgsJSON != "" || len(buildFlags.Args) != 0 {
+		transactionArgs, err = flowkit.ParseArguments(buildFlags.Args, buildFlags.ArgsJSON)
+	} else {
+		transactionArgs, err = flowkit.ParseArgumentsWithoutType(filename, code, args[1:])
+	}
+
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error parsing transaction arguments: %w", err)
 	}
 
 	build, err := services.Transactions.Build(
@@ -99,7 +110,7 @@ func build(
 		code,
 		filename,
 		buildFlags.GasLimit,
-		txArgs,
+		transactionArgs,
 		globalFlags.Network,
 	)
 	if err != nil {
