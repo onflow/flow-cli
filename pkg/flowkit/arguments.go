@@ -27,6 +27,7 @@ import (
 	"github.com/onflow/cadence"
 	jsoncdc "github.com/onflow/cadence/encoding/json"
 	"github.com/onflow/cadence/runtime"
+	"github.com/onflow/cadence/runtime/ast"
 	"github.com/onflow/cadence/runtime/cmd"
 	"github.com/onflow/cadence/runtime/common"
 	"github.com/onflow/cadence/runtime/sema"
@@ -126,14 +127,22 @@ func ParseArgumentsWithoutType(fileName string, code []byte, args []string) (scr
 
 	codes := map[common.LocationID]string{}
 	location := common.StringLocation(fileName)
-	program, must := cmd.PrepareProgram(string(code), location, codes)
+	program, must := cmd.PrepareProgramFromFile(location, codes)
 	checker, _ := cmd.PrepareChecker(program, location, codes, nil, must)
 
-	err = checker.Check()
-	var parameterList []*sema.Parameter = checker.EntryPointParameters()
+	var parameterList []*ast.Parameter
 
-	//return on checker error or no entry
-	if err != nil || parameterList == nil {
+	transactionDeclaration := program.SoleTransactionDeclaration()
+	if transactionDeclaration != nil {
+		parameterList = transactionDeclaration.ParameterList.Parameters
+	}
+
+	functionDeclaration := sema.FunctionEntryPointDeclaration(program)
+	if functionDeclaration != nil {
+		parameterList = functionDeclaration.ParameterList.Parameters
+	}
+
+	if parameterList == nil {
 		return resultArgs, nil
 	}
 
@@ -142,7 +151,8 @@ func ParseArgumentsWithoutType(fileName string, code []byte, args []string) (scr
 	}
 
 	for index, argumentString := range args {
-		semaType := parameterList[index].TypeAnnotation.Type
+		astType := parameterList[index].TypeAnnotation.Type
+		semaType := checker.ConvertType(astType)
 
 		switch semaType {
 		case sema.StringType:
