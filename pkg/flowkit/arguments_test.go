@@ -50,6 +50,7 @@ func TestArguments(t *testing.T) {
 		var sampleType string = sample.Type().ID()
 
 		args, err := flowkit.ParseArgumentsWithoutType(
+			"",
 			[]byte(fmt.Sprintf(`
 			pub fun main(test: %s): Void {
 			}`, sampleType)),
