@@ -23,7 +23,6 @@ import (
 
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/pkg/flowkit"
-	"github.com/onflow/flow-cli/pkg/flowkit/config"
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
 	"github.com/onflow/flow-cli/pkg/flowkit/services"
 )
@@ -46,14 +45,10 @@ var RemoveDeploymentCommand = &command.Command{
 func removeDeployment(
 	args []string,
 	_ flowkit.ReaderWriter,
-	_ command.GlobalFlags,
+	globalFlags command.GlobalFlags,
 	_ *services.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
-	if state == nil {
-		return nil, config.ErrDoesNotExist
-	}
-
 	account := ""
 	network := ""
 	if len(args) == 2 {
@@ -68,7 +63,7 @@ func removeDeployment(
 		return nil, err
 	}
 
-	err = state.SaveDefault()
+	err = state.SaveEdited(globalFlags.ConfigPaths)
 	if err != nil {
 		return nil, err
 	}

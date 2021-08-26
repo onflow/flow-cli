@@ -67,9 +67,28 @@ func (p *State) ReadFile(source string) ([]byte, error) {
 	return p.readerWriter.ReadFile(source)
 }
 
-// SaveDefault saves configuration to default path.
+// SaveDefault saves to default path.
 func (p *State) SaveDefault() error {
 	return p.Save(config.DefaultPath)
+}
+
+// SaveEdited saves configuration to valid path.
+func (p *State) SaveEdited(paths []string) error {
+	// if paths are not default only allow specifying one config
+	if !config.IsDefaultPath(paths) && len(paths) > 1 {
+		return fmt.Errorf("specifying multiple paths is not supported when updating configuration")
+	}
+	// if default paths and local config doesn't exist don't allow updating global config
+	if config.IsDefaultPath(paths) {
+		_, err := p.confLoader.Load([]string{config.DefaultPath}) // check if default is present
+		if err != nil {
+			return fmt.Errorf("default configuration not found, please initialize it first or specify another configuration file")
+		} else {
+			return p.SaveDefault()
+		}
+	}
+
+	return p.Save(paths[0])
 }
 
 // Save saves the project configuration to the given path.
@@ -168,9 +187,9 @@ func (p *State) DeploymentContractsByNetwork(network string) ([]Contract, error)
 
 		// go through each contract in this deployment
 		for _, deploymentContract := range deploy.Contracts {
-			c := p.conf.Contracts.ByNameAndNetwork(deploymentContract.Name, network)
-			if c == nil {
-				return nil, fmt.Errorf("could not find contract with name name %s in the configuration", deploymentContract.Name)
+			c, err := p.conf.Contracts.ByNameAndNetwork(deploymentContract.Name, network)
+			if err != nil {
+				return nil, err
 			}
 
 			contract := Contract{

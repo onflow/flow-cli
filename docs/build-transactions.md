@@ -16,17 +16,16 @@ Use this functionality in the following order:
 3. Use the `send-signed` command to submit the signed transaction to the Flow network.
 
 ```shell
-flow transactions build <code filename>
+flow transactions build <code filename> [<argument> <argument>...] [flags]
 ```
 
 ## Example Usage
 
 ```shell
-> flow transactions build ./transaction.cdc \
+> flow transactions build ./transaction.cdc "Meow" \
   --authorizer alice \
   --proposer bob \
   --payer charlie \
-  --arg "String:Meow" \
   --filter payload --save built.rlp
 
 ID		e8c0a69952fbe50a66703985e220307c8d44b8fa36c76cbca03f8c43d0167847
@@ -76,6 +75,13 @@ f9013df90138b8d17472616e...73616374696f6e286eeec0c0
 The first argument is a path to a Cadence file containing the
 transaction to be executed.
 
+### Arguments
+- Name: `argument`
+- Valid inputs: valid [cadence values](https://docs.onflow.org/cadence/json-cadence-spec/)
+  matching argument type in transaction code.
+
+Input arguments values matching corresponding types in the source code and passed in the same order.
+For passing complex argument values see [send transaction](https://docs.onflow.org/flow-cli/send-transactions/#example-usage) document. 
 
 ## Flags
 
@@ -121,6 +127,8 @@ Read more about authorizers [here](https://docs.onflow.org/concepts/accounts-and
 
 Arguments passed to the Cadence transaction in `Type:Value` format.
 The `Type` must be the same as type in the transaction source code for that argument.
+
+⚠️  Deprecated: use command arguments instead.
 
 ### Arguments JSON
 

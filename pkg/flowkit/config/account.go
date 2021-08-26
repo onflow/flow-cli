@@ -19,6 +19,8 @@
 package config
 
 import (
+	"fmt"
+
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
 )
@@ -43,14 +45,14 @@ type AccountKey struct {
 }
 
 // ByName get account by name.
-func (a *Accounts) ByName(name string) *Account {
+func (a *Accounts) ByName(name string) (*Account, error) {
 	for _, account := range *a {
 		if account.Name == name {
-			return &account
+			return &account, nil
 		}
 	}
 
-	return nil
+	return nil, fmt.Errorf("account with name %s is not present in configuration", name)
 }
 
 // AddOrUpdate add new or update if already present.

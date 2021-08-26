@@ -53,14 +53,10 @@ var AddNetworkCommand = &command.Command{
 func addNetwork(
 	_ []string,
 	_ flowkit.ReaderWriter,
-	_ command.GlobalFlags,
+	globalFlags command.GlobalFlags,
 	_ *services.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
-	if state == nil {
-		return nil, config.ErrDoesNotExist
-	}
-
 	networkData, flagsProvided, err := flagsToNetworkData(addNetworkFlags)
 	if err != nil {
 		return nil, err
@@ -73,7 +69,7 @@ func addNetwork(
 	network := config.StringToNetwork(networkData["name"], networkData["host"])
 	state.Networks().AddOrUpdate(network.Name, network)
 
-	err = state.SaveDefault()
+	err = state.SaveEdited(globalFlags.ConfigPaths)
 	if err != nil {
 		return nil, err
 	}

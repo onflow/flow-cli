@@ -120,6 +120,10 @@ func (g *EmulatorGateway) ExecuteScript(script []byte, arguments []cadence.Value
 		return nil, err
 	}
 
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
 	return result.Value, nil
 }
 

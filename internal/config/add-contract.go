@@ -55,14 +55,10 @@ var AddContractCommand = &command.Command{
 func addContract(
 	_ []string,
 	_ flowkit.ReaderWriter,
-	_ command.GlobalFlags,
+	globalFlags command.GlobalFlags,
 	_ *services.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
-	if state == nil {
-		return nil, config.ErrDoesNotExist
-	}
-
 	contractData, flagsProvided, err := flagsToContractData(addContractFlags)
 	if err != nil {
 		return nil, err
@@ -84,7 +80,7 @@ func addContract(
 		state.Contracts().AddOrUpdate(contract.Name, contract)
 	}
 
-	err = state.SaveDefault()
+	err = state.SaveEdited(globalFlags.ConfigPaths)
 	if err != nil {
 		return nil, err
 	}
