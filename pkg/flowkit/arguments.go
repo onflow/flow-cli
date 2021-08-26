@@ -120,12 +120,12 @@ func ParseArguments(args []string, argsJSON string) (scriptArgs []cadence.Value,
 	return
 }
 
-func ParseArgumentsWithoutType(code []byte, args []string) (scriptArgs []cadence.Value, err error) {
+func ParseArgumentsWithoutType(fileName string, code []byte, args []string) (scriptArgs []cadence.Value, err error) {
 
 	var resultArgs []cadence.Value = make([]cadence.Value, 0)
 
 	codes := map[common.LocationID]string{}
-	location := common.StringLocation("")
+	location := common.StringLocation(fileName)
 	program, must := cmd.PrepareProgram(string(code), location, codes)
 	checker, _ := cmd.PrepareChecker(program, location, codes, nil, must)
 

@@ -68,7 +68,7 @@ func execute(
 	if scriptFlags.ArgsJSON != "" || len(scriptFlags.Arg) != 0 {
 		scriptArgs, err = flowkit.ParseArguments(scriptFlags.Arg, scriptFlags.ArgsJSON)
 	} else {
-		scriptArgs, err = flowkit.ParseArgumentsWithoutType(code, args[1:])
+		scriptArgs, err = flowkit.ParseArgumentsWithoutType(filename, code, args[1:])
 	}
 
 	if err != nil {

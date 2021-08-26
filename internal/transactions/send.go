@@ -79,7 +79,7 @@ func send(
 	if sendFlags.ArgsJSON != "" || len(sendFlags.Arg) != 0 {
 		transactionArgs, err = flowkit.ParseArguments(sendFlags.Arg, sendFlags.ArgsJSON)
 	} else {
-		transactionArgs, err = flowkit.ParseArgumentsWithoutType(code, args[1:])
+		transactionArgs, err = flowkit.ParseArgumentsWithoutType(codeFilename, code, args[1:])
 	}
 
 	if err != nil {
