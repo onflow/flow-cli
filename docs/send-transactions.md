@@ -8,13 +8,13 @@ The Flow CLI provides a command to sign and send transactions to
 any Flow Access API.
 
 ```shell
-flow transactions send <code filename>
+flow transactions send <code filename> [<argument> <argument>...] [flags]
 ```
 
 ## Example Usage
 
 ```shell
-> flow transactions send ./tx.cdc --arg String:Hello
+> flow transactions send ./tx.cdc "Hello"
     
 Status		✅ SEALED
 ID		b04b6bcc3164f5ee6b77fa502c3a682e0db57fc47e5b8a8ef3b56aae50ad49c8
@@ -39,6 +39,17 @@ Payload (hidden, use --include payload)
 
 ```
 
+Multiple arguments example:
+```shell
+> flow transactions send tx1.cdc Foo 1 2 10.9 0x1 '[123,222]' '["a","b"]'
+```
+Transaction code:
+```
+transaction(a: String, b: Int, c: UInt16, d: UFix64, e: Address, f: [Int], g: [String]) {
+	prepare(authorizer: AuthAccount) {}
+}
+```
+
 In the above example, the `flow.json` file would look something like this:
 
 ```json
@@ -60,6 +71,13 @@ In the above example, the `flow.json` file would look something like this:
 
 The first argument is a path to a Cadence file containing the
 transaction to be executed.
+
+### Arguments
+- Name: `argument`
+- Valid inputs: valid [cadence values](https://docs.onflow.org/cadence/json-cadence-spec/) 
+  matching argument type in transaction code.
+
+Input arguments values matching corresponding types in the source code and passed in the same order.
 
 ## Flags
 
@@ -103,6 +121,8 @@ Specify the name of the account that will be used to sign the transaction.
 
 Arguments passed to the Cadence transaction in `Type:Value` format.
 The `Type` must be the same as type in the transaction source code for that argument.
+
+⚠️  Deprecated: use command arguments instead.
 
 ### Arguments JSON
 

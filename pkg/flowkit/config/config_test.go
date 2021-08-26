@@ -136,8 +136,10 @@ func generateComplexConfig() config.Config {
 
 func Test_GetContractsForNetworkComplex(t *testing.T) {
 	conf := generateComplexConfig()
-	kitty := conf.Contracts.ByName("KittyItems")
-	market := conf.Contracts.ByName("KittyItemsMarket")
+	kitty, err := conf.Contracts.ByName("KittyItems")
+	assert.NoError(t, err)
+	market, err := conf.Contracts.ByName("KittyItemsMarket")
+	assert.NoError(t, err)
 
 	assert.Equal(t, kitty.Name, "KittyItems")
 	assert.Equal(t, market.Source, "./cadence/kittyItemsMarket/contracts/KittyItemsMarket.cdc")
@@ -145,7 +147,8 @@ func Test_GetContractsForNetworkComplex(t *testing.T) {
 
 func Test_GetContractsByNameAndNetworkComplex(t *testing.T) {
 	conf := generateComplexConfig()
-	market := conf.Contracts.ByNameAndNetwork("KittyItemsMarket", "testnet")
+	market, err := conf.Contracts.ByNameAndNetwork("KittyItemsMarket", "testnet")
+	assert.NoError(t, err)
 
 	assert.Equal(t, market.Source, "0x123123123")
 }
@@ -164,7 +167,8 @@ func Test_GetContractsByNetworkComplex(t *testing.T) {
 
 func Test_GetAccountByNameComplex(t *testing.T) {
 	conf := generateComplexConfig()
-	acc := conf.Accounts.ByName("account-4")
+	acc, err := conf.Accounts.ByName("account-4")
+	assert.NoError(t, err)
 
 	assert.Equal(t, acc.Address.String(), "f8d6e0586b0a20c1")
 }
@@ -183,7 +187,8 @@ func Test_GetDeploymentsByNetworkComplex(t *testing.T) {
 
 func Test_GetNetworkByNameComplex(t *testing.T) {
 	conf := generateComplexConfig()
-	network := conf.Networks.ByName("emulator")
+	network, err := conf.Networks.ByName("emulator")
 
+	assert.NoError(t, err)
 	assert.Equal(t, network.Host, "127.0.0.1.3569")
 }

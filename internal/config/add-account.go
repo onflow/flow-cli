@@ -56,14 +56,10 @@ var AddAccountCommand = &command.Command{
 func addAccount(
 	_ []string,
 	_ flowkit.ReaderWriter,
-	_ command.GlobalFlags,
+	globalFlags command.GlobalFlags,
 	_ *services.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
-	if state == nil {
-		return nil, config.ErrDoesNotExist
-	}
-
 	accountData, flagsProvided, err := flagsToAccountData(addAccountFlags)
 	if err != nil {
 		return nil, err
@@ -92,7 +88,7 @@ func addAccount(
 
 	state.Accounts().AddOrUpdate(&acc)
 
-	err = state.SaveDefault()
+	err = state.SaveEdited(globalFlags.ConfigPaths)
 	if err != nil {
 		return nil, err
 	}

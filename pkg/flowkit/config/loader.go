@@ -89,6 +89,10 @@ func (l *Loader) Save(conf *Config, path string) error {
 		filepath.Ext(path),
 	)
 
+	if configFormat == nil {
+		return fmt.Errorf("parser not found for format")
+	}
+
 	data, err := configFormat.Serialize(conf)
 	if err != nil {
 		return err
@@ -102,35 +106,49 @@ func (l *Loader) Save(conf *Config, path string) error {
 	return nil
 }
 
+func (l *Loader) LoadConfig(confPath string) (*Config, error) {
+	raw, err := l.loadFile(confPath)
+
+	if err != nil {
+		return nil, err
+	}
+
+	preProcessed := l.preprocess(raw)
+	configParser := l.configParsers.FindForFormat(filepath.Ext(confPath))
+	if configParser == nil {
+		return nil, fmt.Errorf("parser not found for config: %s", confPath)
+	}
+
+	return configParser.Deserialize(preProcessed)
+}
+
 // Load loads configuration from one or more file paths.
 //
 // If more than one path is specified, their contents are merged
 // together into on configuration object.
 func (l *Loader) Load(paths []string) (*Config, error) {
+	// special case for default configs
+	// try to load local config and only if not found try to load global config
+	if IsDefaultPath(paths) {
+		conf, err := l.LoadConfig(DefaultPath)
+		if err == nil {
+			return l.postprocess(conf)
+		}
+
+		conf, err = l.LoadConfig(GlobalPath())
+		if err != nil {
+			return nil, ErrDoesNotExist
+		} else {
+			return l.postprocess(conf)
+		}
+	}
+
 	var baseConf *Config
-
 	for _, confPath := range paths {
-		raw, err := l.loadFile(confPath)
-		// if we don't find local config or global config skip as either may miss
-		if err != nil && (confPath == DefaultPath || confPath == GlobalPath()) {
-			continue
-		}
-
+		conf, err := l.LoadConfig(confPath)
 		if err != nil {
 			return nil, err
 		}
-
-		preProcessed := l.preprocess(raw)
-		configParser := l.configParsers.FindForFormat(filepath.Ext(confPath))
-		if configParser == nil {
-			return nil, fmt.Errorf("parser not found for config: %s", confPath)
-		}
-
-		conf, err := configParser.Deserialize(preProcessed)
-		if err != nil {
-			return nil, err
-		}
-
 		// if first conf just assign as baseConf
 		if baseConf == nil {
 			baseConf = conf
@@ -145,12 +163,7 @@ func (l *Loader) Load(paths []string) (*Config, error) {
 		return nil, ErrDoesNotExist
 	}
 
-	baseConf, err := l.postprocess(baseConf)
-	if err != nil {
-		return nil, err
-	}
-
-	return baseConf, nil
+	return l.postprocess(baseConf)
 }
 
 // preprocess does all manipulations to the raw configuration format happens here.
@@ -181,12 +194,23 @@ func (l *Loader) postprocess(baseConf *Config) (*Config, error) {
 			return nil, err
 		}
 
+		account, err := conf.Accounts.ByName(name)
+		if err != nil {
+			return nil, err
+		}
+
 		// create an empty config with single account so we don't include all accounts in file
 		accountConf := &Config{
-			Accounts: []Account{*conf.Accounts.ByName(name)},
+			Accounts: []Account{*account},
 		}
 
 		l.composeConfig(baseConf, accountConf)
+	}
+
+	// validate as part of post processing
+	err := baseConf.Validate()
+	if err != nil {
+		return nil, err
 	}
 
 	return baseConf, nil

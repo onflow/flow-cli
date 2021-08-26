@@ -53,14 +53,10 @@ var AddDeploymentCommand = &command.Command{
 func addDeployment(
 	_ []string,
 	_ flowkit.ReaderWriter,
-	_ command.GlobalFlags,
+	globalFlags command.GlobalFlags,
 	_ *services.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
-	if state == nil {
-		return nil, config.ErrDoesNotExist
-	}
-
 	deployData, flagsProvided, err := flagsToDeploymentData(addDeploymentFlags)
 	if err != nil {
 		return nil, err
@@ -78,7 +74,7 @@ func addDeployment(
 
 	state.Deployments().AddOrUpdate(deployment)
 
-	err = state.SaveDefault()
+	err = state.SaveEdited(globalFlags.ConfigPaths)
 	if err != nil {
 		return nil, err
 	}

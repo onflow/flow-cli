@@ -23,6 +23,8 @@ import (
 	"sort"
 	"testing"
 
+	"github.com/onflow/flow-cli/pkg/flowkit/config/json"
+
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/spf13/afero"
@@ -187,6 +189,7 @@ func generateSimpleProject() State {
 		}},
 	}
 
+	composer.AddConfigParser(json.NewParser())
 	p, err := newProject(&config, composer, af)
 	if err != nil {
 		fmt.Println(err)
@@ -326,11 +329,12 @@ func Test_GetContractsByNameSimple(t *testing.T) {
 	p := generateSimpleProject()
 
 	contracts, _ := p.DeploymentContractsByNetwork("emulator")
-
+	account, err := p.conf.Accounts.ByName("emulator-account")
+	assert.NoError(t, err)
 	assert.Len(t, contracts, 1)
 	assert.Equal(t, contracts[0].Name, "NonFungibleToken")
 	assert.Equal(t, contracts[0].Source, "../hungry-kitties/cadence/contracts/NonFungibleToken.cdc")
-	assert.Equal(t, p.conf.Accounts.ByName("emulator-account").Address, contracts[0].Target)
+	assert.Equal(t, account.Address, contracts[0].Target)
 }
 
 func Test_EmulatorConfigSimple(t *testing.T) {
@@ -359,9 +363,10 @@ func Test_AccountByNameSimple(t *testing.T) {
 
 func Test_HostSimple(t *testing.T) {
 	p := generateSimpleProject()
-	host := p.Networks().ByName("emulator").Host
+	network, err := p.Networks().ByName("emulator")
 
-	assert.Equal(t, host, "127.0.0.1.3569")
+	assert.NoError(t, err)
+	assert.Equal(t, network.Host, "127.0.0.1.3569")
 }
 
 func Test_GetContractsByNameComplex(t *testing.T) {
@@ -443,9 +448,11 @@ func Test_AccountByNameComplex(t *testing.T) {
 
 func Test_HostComplex(t *testing.T) {
 	p := generateComplexProject()
-	host := p.Networks().ByName("emulator").Host
+	network, err := p.Networks().ByName("emulator")
 
-	assert.Equal(t, host, "127.0.0.1.3569")
+	assert.NoError(t, err)
+
+	assert.Equal(t, network.Host, "127.0.0.1.3569")
 }
 
 func Test_ContractConflictComplex(t *testing.T) {
@@ -548,4 +555,26 @@ func Test_ChangingState(t *testing.T) {
 	pkey, err = em.Key().PrivateKey()
 	assert.NoError(t, err)
 	assert.Equal(t, (*pkey).String(), pk.String())
+}
+
+func Test_Saving(t *testing.T) {
+	s := generateSimpleProject()
+
+	err := s.SaveEdited([]string{"a.json", "b.json"})
+	assert.EqualError(t, err, "specifying multiple paths is not supported when updating configuration")
+
+	err = s.SaveEdited([]string{config.GlobalPath(), config.DefaultPath})
+	assert.EqualError(t, err, "default configuration not found, please initialize it first or specify another configuration file")
+
+	err = s.SaveEdited([]string{"a.json"})
+	assert.NoError(t, err)
+
+	_ = afero.WriteFile(af.Fs, config.DefaultPath, []byte(`{
+		"networks": {
+			"foo": "localhost:3000"
+		}
+	}`), 0644)
+
+	err = s.SaveEdited([]string{config.GlobalPath(), config.DefaultPath})
+	assert.NoError(t, err)
 }
