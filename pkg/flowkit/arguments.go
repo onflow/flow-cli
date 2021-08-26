@@ -127,7 +127,7 @@ func ParseArgumentsWithoutType(fileName string, code []byte, args []string) (scr
 
 	codes := map[common.LocationID]string{}
 	location := common.StringLocation(fileName)
-	program, must := cmd.PrepareProgramFromFile(location, codes)
+	program, must := cmd.PrepareProgram(string(code), location, codes)
 	checker, _ := cmd.PrepareChecker(program, location, codes, nil, must)
 
 	var parameterList []*ast.Parameter
