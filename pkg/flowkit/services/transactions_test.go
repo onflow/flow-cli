@@ -19,7 +19,10 @@
 package services
 
 import (
+	"strings"
 	"testing"
+
+	"github.com/onflow/flow-cli/pkg/flowkit/config"
 
 	"github.com/onflow/flow-go-sdk/crypto"
 
@@ -181,6 +184,63 @@ func TestTransactions_Integration(t *testing.T) {
 			assert.Equal(t, ftx.ProposalKey.KeyIndex, i.index)
 		}
 
+	})
+
+	t.Run("Build Transaction with Imports", func(t *testing.T) {
+		t.Parallel()
+		state, s := setupIntegration()
+		setupAccounts(state, s)
+
+		srvAcc, _ := state.EmulatorServiceAccount()
+		signer := srvAcc.Address()
+
+		// setup
+		c := config.Contract{
+			Name:    tests.ContractHelloString.Name,
+			Source:  tests.ContractHelloString.Filename,
+			Network: "emulator",
+		}
+		state.Contracts().AddOrUpdate(c.Name, c)
+
+		n := config.Network{
+			Name: "emulator",
+			Host: "127.0.0.1:3569",
+		}
+		state.Networks().AddOrUpdate(n.Name, n)
+
+		d := config.Deployment{
+			Network: n.Name,
+			Account: srvAcc.Name(),
+			Contracts: []config.ContractDeployment{{
+				Name: c.Name,
+				Args: nil,
+			}},
+		}
+		state.Deployments().AddOrUpdate(d)
+		_, _ = s.Accounts.AddContract(srvAcc, tests.ContractHelloString.Name, tests.ContractHelloString.Source, false)
+
+		tx, err := s.Transactions.Build(
+			signer,
+			[]flow.Address{signer},
+			signer,
+			srvAcc.Key().Index(),
+			tests.TransactionImports.Source,
+			tests.TransactionImports.Filename,
+			1000,
+			nil,
+			n.Name,
+		)
+
+		assert.NoError(t, err)
+		ftx := tx.FlowTransaction()
+		assert.Equal(t,
+			string(ftx.Script),
+			strings.ReplaceAll(
+				string(tests.TransactionImports.Source),
+				"import Hello from \"./contractHello.cdc\"",
+				"import Hello from 0xf8d6e0586b0a20c7",
+			),
+		)
 	})
 
 }
