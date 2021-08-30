@@ -31,6 +31,8 @@ import (
 	"github.com/onflow/flow-go-sdk"
 )
 
+const maxGasLimit uint64 = 9999
+
 // NewTransaction create new instance of transaction.
 func NewTransaction() *Transaction {
 	return &Transaction{
@@ -124,6 +126,7 @@ func addAccountContractWithArgs(
 
 	script := fmt.Sprintf(addAccountContractTemplate, txArgs, addArgs)
 	tx.SetScript([]byte(script))
+	tx.SetGasLimit(maxGasLimit)
 
 	t := &Transaction{tx: tx}
 	err := t.SetSigner(signer)
@@ -156,6 +159,7 @@ func newTransactionFromTemplate(templateTx *flow.Transaction, signer *Account) (
 		return nil, err
 	}
 	tx.SetPayer(signer.Address())
+	tx.SetGasLimit(maxGasLimit) // todo change this to calculated limit
 
 	return tx, nil
 }
