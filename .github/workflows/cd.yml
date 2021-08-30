@@ -5,6 +5,14 @@ on:
     types: [published]
 
 jobs:
+  security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - name: Run Snyk to check for vulnerabilities
+        uses: snyk/actions/node@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
   build:
     runs-on: ubuntu-latest
     steps:
@@ -31,3 +39,12 @@ jobs:
           path: ./
           glob: 'version.txt'
           destination: flow-cli/
+  homebrew:
+      name: Bump Homebrew formula
+      runs-on: ubuntu-latest
+      steps:
+        - uses: mislav/bump-homebrew-formula-action@v1
+          with:
+            formula-name: flow-cli
+          env:
+            COMMITTER_TOKEN: ${{ secrets.COMMITTER_TOKEN }}
