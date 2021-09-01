@@ -106,7 +106,7 @@ func (l *Loader) Save(conf *Config, path string) error {
 	return nil
 }
 
-func (l *Loader) LoadConfig(confPath string) (*Config, error) {
+func (l *Loader) loadConfig(confPath string) (*Config, error) {
 	raw, err := l.loadFile(confPath)
 
 	if err != nil {
@@ -130,12 +130,15 @@ func (l *Loader) Load(paths []string) (*Config, error) {
 	// special case for default configs
 	// try to load local config and only if not found try to load global config
 	if IsDefaultPath(paths) {
-		conf, err := l.LoadConfig(DefaultPath)
-		if err == nil {
+		conf, err := l.loadConfig(DefaultPath)
+		if err == nil { // if we could load it then process it
 			return l.postprocess(conf)
 		}
+		if err != ErrDoesNotExist {
+			return nil, err
+		}
 
-		conf, err = l.LoadConfig(GlobalPath())
+		conf, err = l.loadConfig(GlobalPath())
 		if err != nil {
 			return nil, ErrDoesNotExist
 		} else {
@@ -145,7 +148,7 @@ func (l *Loader) Load(paths []string) (*Config, error) {
 
 	var baseConf *Config
 	for _, confPath := range paths {
-		conf, err := l.LoadConfig(confPath)
+		conf, err := l.loadConfig(confPath)
 		if err != nil {
 			return nil, err
 		}
