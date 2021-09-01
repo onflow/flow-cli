@@ -19,6 +19,7 @@
 package services
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 
@@ -238,7 +239,7 @@ func TestTransactions_Integration(t *testing.T) {
 			strings.ReplaceAll(
 				string(tests.TransactionImports.Source),
 				"import Hello from \"./contractHello.cdc\"",
-				"import Hello from 0xf8d6e0586b0a20c7",
+				fmt.Sprintf("import Hello from 0x%s", srvAcc.Address()),
 			),
 		)
 	})
