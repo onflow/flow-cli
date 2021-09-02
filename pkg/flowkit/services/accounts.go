@@ -178,8 +178,8 @@ func (a *Accounts) Create(
 	signer *flowkit.Account,
 	pubKeys []crypto.PublicKey,
 	keyWeights []int,
-	sigAlgo crypto.SignatureAlgorithm,
-	hashAlgo crypto.HashAlgorithm,
+	sigAlgo []crypto.SignatureAlgorithm,
+	hashAlgo []crypto.HashAlgorithm,
 	contractArgs []string,
 ) (*flow.Account, error) {
 	if a.state == nil {
@@ -204,8 +204,8 @@ func (a *Accounts) Create(
 
 		accKey := &flow.AccountKey{
 			PublicKey: pubKey,
-			SigAlgo:   sigAlgo,
-			HashAlgo:  hashAlgo,
+			SigAlgo:   sigAlgo[i],
+			HashAlgo:  hashAlgo[i],
 			Weight:    weight,
 		}
 

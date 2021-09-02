@@ -36,8 +36,8 @@ type flagsCreate struct {
 	Signer    string   `default:"emulator-account" flag:"signer" info:"Account name from configuration used to sign the transaction"`
 	Keys      []string `flag:"key" info:"Public keys to attach to account"`
 	Weights   []int    `flag:"key-weight" info:"Weight for the key"`
-	SigAlgo   string   `default:"ECDSA_P256" flag:"sig-algo" info:"Signature algorithm used to generate the keys"`
-	HashAlgo  string   `default:"SHA3_256" flag:"hash-algo" info:"Hash used for the digest"`
+	SigAlgo   []string `flag:"sig-algo" info:"Signature algorithm used to generate the keys"`
+	HashAlgo  []string `flag:"hash-algo" info:"Hash used for the digest"`
 	Contracts []string `flag:"contract" info:"Contract to be deployed during account creation. <name:filename>"`
 	Include   []string `default:"" flag:"include" info:"Fields to include in the output"`
 }
@@ -66,23 +66,33 @@ func create(
 		return nil, err
 	}
 
-	sigAlgo := crypto.StringToSignatureAlgorithm(createFlags.SigAlgo)
-	if sigAlgo == crypto.UnknownSignatureAlgorithm {
-		return nil, fmt.Errorf("invalid signature algorithm: %s", createFlags.SigAlgo)
+	sigAlgos := []crypto.SignatureAlgorithm{}
+	for _, sigAlgoStr := range createFlags.SigAlgo {
+		sigAlgo := crypto.StringToSignatureAlgorithm(sigAlgoStr)
+		if sigAlgo == crypto.UnknownSignatureAlgorithm {
+			return nil, fmt.Errorf("invalid signature algorithm: %s", createFlags.SigAlgo)
+		}
+		sigAlgos = append(sigAlgos, sigAlgo)
 	}
 
-	hashAlgo := crypto.StringToHashAlgorithm(createFlags.HashAlgo)
-	if hashAlgo == crypto.UnknownHashAlgorithm {
-		return nil, fmt.Errorf("invalid hash algorithm: %s", createFlags.HashAlgo)
+	hashAlgos := []crypto.HashAlgorithm{}
+	for _, hashAlgoStr := range createFlags.HashAlgo {
+
+		hashAlgo := crypto.StringToHashAlgorithm(hashAlgoStr)
+		if hashAlgo == crypto.UnknownHashAlgorithm {
+			return nil, fmt.Errorf("invalid hash algorithm: %s", createFlags.HashAlgo)
+		}
+		hashAlgos = append(hashAlgos, hashAlgo)
 	}
 
 	keyWeights := createFlags.Weights
 
 	// decode public keys
 	var pubKeys []crypto.PublicKey
-	for _, k := range createFlags.Keys {
+	fmt.Println(createFlags.Keys)
+	for i, k := range createFlags.Keys {
 		k = strings.TrimPrefix(k, "0x") // clear possible prefix
-		key, err := crypto.DecodePublicKeyHex(sigAlgo, k)
+		key, err := crypto.DecodePublicKeyHex(sigAlgos[i], k)
 		if err != nil {
 			return nil, fmt.Errorf("failed decoding public key: %s with error: %w", key, err)
 		}
@@ -93,8 +103,8 @@ func create(
 		signer,
 		pubKeys,
 		keyWeights,
-		sigAlgo,
-		hashAlgo,
+		sigAlgos,
+		hashAlgos,
 		createFlags.Contracts,
 	)
 
