@@ -23,7 +23,6 @@ import (
 
 	"github.com/onflow/flow-cli/pkg/flowkit/util"
 
-	"github.com/onflow/cadence/languageserver"
 	"github.com/psiemens/sconfig"
 	"github.com/spf13/cobra"
 )
@@ -38,7 +37,7 @@ var Cmd = &cobra.Command{
 	Use:   "language-server",
 	Short: "Start the Cadence language server",
 	Run: func(cmd *cobra.Command, args []string) {
-		languageserver.RunWithStdio(conf.EnableFlowClient)
+		// languageserver.RunWithStdio(conf.EnableFlowClient)
 	},
 }
 
