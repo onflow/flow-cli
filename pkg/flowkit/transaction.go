@@ -23,6 +23,9 @@ import (
 	"encoding/hex"
 	"fmt"
 
+	"github.com/onflow/cadence/runtime/cmd"
+	"github.com/onflow/cadence/runtime/common"
+
 	jsoncdc "github.com/onflow/cadence/encoding/json"
 
 	"github.com/onflow/flow-go-sdk/templates"
@@ -252,12 +255,32 @@ func (t *Transaction) AddArgument(arg cadence.Value) error {
 }
 
 // AddAuthorizers add group of authorizers.
-func (t *Transaction) AddAuthorizers(authorizers []flow.Address) *Transaction {
+func (t *Transaction) AddAuthorizers(authorizers []flow.Address) (*Transaction, error) {
+	program, _ := cmd.PrepareProgram(
+		string(t.tx.Script),
+		common.StringLocation(""),
+		map[common.LocationID]string{},
+	)
+
+	requiredAuths := program.SoleTransactionDeclaration().
+		Prepare.
+		FunctionDeclaration.
+		ParameterList.
+		Parameters
+
+	if len(requiredAuths) != len(authorizers) {
+		return nil, fmt.Errorf(
+			"provided authorizers length missmatch, required authorizers %d, but provided %d",
+			len(requiredAuths),
+			len(authorizers),
+		)
+	}
+
 	for _, authorizer := range authorizers {
 		t.tx.AddAuthorizer(authorizer)
 	}
 
-	return t
+	return t, nil
 }
 
 // Sign signs transaction using signer account.
