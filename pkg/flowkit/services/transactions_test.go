@@ -185,7 +185,39 @@ func TestTransactions_Integration(t *testing.T) {
 	})
 
 	t.Run("Sign transaction", func(t *testing.T) {
+		t.Parallel()
+		state, s := setupIntegration()
+		setupAccounts(state, s)
 
+		a, _ := state.Accounts().ByName("Alice")
+
+		tx, err := s.Transactions.Build(
+			a.Address(),
+			nil,
+			a.Address(),
+			0,
+			tests.TransactionSimple.Source,
+			tests.TransactionSimple.Filename,
+			1000,
+			nil,
+			"",
+		)
+
+		assert.Nil(t, err)
+		assert.NotNil(t, tx)
+
+		txSigned, err := s.Transactions.Sign(
+			a,
+			[]byte(fmt.Sprintf("%x", tx.FlowTransaction().Encode())),
+			true,
+		)
+		assert.Nil(t, err)
+		assert.NotNil(t, txSigned)
+		assert.Equal(t, len(txSigned.FlowTransaction().Authorizers), 0)
+		assert.Equal(t, txSigned.FlowTransaction().Payer, a.Address())
+		assert.Equal(t, txSigned.FlowTransaction().ProposalKey.Address, a.Address())
+		assert.Equal(t, txSigned.FlowTransaction().ProposalKey.KeyIndex, 0)
+		assert.Equal(t, txSigned.FlowTransaction().Script, tests.TransactionSimple.Source)
 	})
 
 	t.Run("Build, Sign and Send Transaction", func(t *testing.T) {
