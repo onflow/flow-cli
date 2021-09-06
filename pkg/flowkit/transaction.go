@@ -201,8 +201,36 @@ func (t *Transaction) SetSigner(account *Account) error {
 		return err
 	}
 
+	if !t.validSigner(account.Address()) {
+		return fmt.Errorf(
+			"not a valid signer %s, proposer: %s, payer: %s, authorizers: %s",
+			account.Address(),
+			t.tx.ProposalKey.Address,
+			t.tx.Payer,
+			t.tx.Authorizers,
+		)
+	}
+
 	t.signer = account
 	return nil
+}
+
+// validSigner checks whether the signer is valid for transaction
+func (t *Transaction) validSigner(s flow.Address) bool {
+	return t.tx.ProposalKey.Address == s ||
+		t.tx.Payer == s ||
+		t.authorizersContains(s)
+}
+
+// authorizersContains checks whether address is in the authorizer list
+func (t *Transaction) authorizersContains(address flow.Address) bool {
+	for _, a := range t.tx.Authorizers {
+		if address == a {
+			return true
+		}
+	}
+
+	return false
 }
 
 // SetProposer sets the proposer for transaction.
@@ -262,18 +290,21 @@ func (t *Transaction) AddAuthorizers(authorizers []flow.Address) (*Transaction, 
 		map[common.LocationID]string{},
 	)
 
-	requiredAuths := program.SoleTransactionDeclaration().
-		Prepare.
-		FunctionDeclaration.
-		ParameterList.
-		Parameters
+	// get authorizers param list if exists
+	if program.SoleTransactionDeclaration().Prepare != nil {
+		requiredAuths := program.SoleTransactionDeclaration().
+			Prepare.
+			FunctionDeclaration.
+			ParameterList.
+			Parameters
 
-	if len(requiredAuths) != len(authorizers) {
-		return nil, fmt.Errorf(
-			"provided authorizers length missmatch, required authorizers %d, but provided %d",
-			len(requiredAuths),
-			len(authorizers),
-		)
+		if len(requiredAuths) != len(authorizers) {
+			return nil, fmt.Errorf(
+				"provided authorizers length mismatch, required authorizers %d, but provided %d",
+				len(requiredAuths),
+				len(authorizers),
+			)
+		}
 	}
 
 	for _, authorizer := range authorizers {
