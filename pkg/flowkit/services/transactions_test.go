@@ -257,7 +257,7 @@ func TestTransactions_Integration(t *testing.T) {
 			[]byte(fmt.Sprintf("%x", tx.FlowTransaction().Encode())),
 			true,
 		)
-		assert.Error(t, err, "wrong signer for the transaction")
+		assert.EqualError(t, err, "not a valid signer 179b6b1cb6755e31, proposer: 01cf0e2f2f715450, payer: 01cf0e2f2f715450, authorizers: [01cf0e2f2f715450]")
 		assert.Nil(t, txSigned)
 	})
 
@@ -280,7 +280,7 @@ func TestTransactions_Integration(t *testing.T) {
 			"",
 		)
 
-		assert.EqualError(t, err, "provided authorizers length missmatch, required authorizers 2, but provided 1")
+		assert.EqualError(t, err, "provided authorizers length mismatch, required authorizers 2, but provided 1")
 		assert.Nil(t, tx)
 	})
 
