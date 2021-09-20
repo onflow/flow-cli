@@ -38,6 +38,7 @@ var Cmd = &cobra.Command{
 
 func init() {
 	ExecuteCommand.AddToParent(Cmd)
+	ExecuteTemplateCommand.AddToParent(Cmd)
 }
 
 type ScriptResult struct {
