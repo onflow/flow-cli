@@ -41,7 +41,7 @@ var ExecuteTemplateCommand = &command.Command{
 	Cmd: &cobra.Command{
 		Use:     "execute-template <template name> [<argument> <argument> ...]",
 		Short:   "Execute a script template",
-		Example: `flow scripts execute-template fusd-balance 0x1`,
+		Example: `flow scripts execute-template fusd-balance 0x01cf0e2f2f715450`,
 		Args:    cobra.MinimumNArgs(1),
 	},
 	Flags: &templateFlags,

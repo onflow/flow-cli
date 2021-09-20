@@ -27,7 +27,7 @@ var SendTemplateCommand = &command.Command{
 		Use:     "send-template <template name> [<argument> <argument> ...]",
 		Short:   "Send a template transaction",
 		Args:    cobra.MinimumNArgs(1),
-		Example: `flow transactions send-template transfer 10 0x1`,
+		Example: `flow transactions send-template fusd-transfer 10 0x01cf0e2f2f715450`,
 	},
 	Flags: &templateFlags,
 	RunS:  sendTemplate,
