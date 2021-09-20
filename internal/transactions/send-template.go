@@ -41,7 +41,7 @@ func sendTemplate(
 	state *flowkit.State,
 ) (command.Result, error) {
 	templateName := args[0]
-	template, err := templates.ByName(templateName)
+	template, err := templates.TransactionByName(templateName)
 	if err != nil {
 		return nil, err
 	}
