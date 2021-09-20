@@ -86,4 +86,43 @@ var collection = []*template{{
 				receiverRef.deposit(from: <-self.sentVault)
 			}
 		}`,
+}, {
+	name: "setupFUSD",
+	imports: map[string][]string{
+		testnet: {"0x9a0766d93b6608b7", "0xe223d8a629e49c68"},
+		mainnet: {"0xf233dcee88fe0abe", "0x3c5959b568896393"},
+		// todo(sideninja): add emulator network, but first add fusd to emulator bootstrap procedure
+	},
+	// source: https://github.com/onflow/fusd
+	source: `
+		import FungibleToken from 0xFUNGIBLETOKENADDRESS
+		import FUSD from 0xFUSDADDRESS
+		
+		transaction {
+		
+			prepare(signer: AuthAccount) {
+		
+				// It's OK if the account already has a Vault, but we don't want to replace it
+				if(signer.borrow<&FUSD.Vault>(from: /storage/fusdVault) != nil) {
+					return
+				}
+				
+				// Create a new FUSD Vault and put it in storage
+				signer.save(<-FUSD.createEmptyVault(), to: /storage/fusdVault)
+		
+				// Create a public capability to the Vault that only exposes
+				// the deposit function through the Receiver interface
+				signer.link<&FUSD.Vault{FungibleToken.Receiver}>(
+					/public/fusdReceiver,
+					target: /storage/fusdVault
+				)
+		
+				// Create a public capability to the Vault that only exposes
+				// the balance field through the Balance interface
+				signer.link<&FUSD.Vault{FungibleToken.Balance}>(
+					/public/fusdBalance,
+					target: /storage/fusdVault
+				)
+			}
+		}`,
 }}
