@@ -35,7 +35,7 @@ var SendTemplateCommand = &command.Command{
 
 func sendTemplate(
 	args []string,
-	readerWriter flowkit.ReaderWriter,
+	_ flowkit.ReaderWriter,
 	globalFlags command.GlobalFlags,
 	services *services.Services,
 	state *flowkit.State,
