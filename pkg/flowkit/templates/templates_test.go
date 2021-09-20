@@ -9,14 +9,20 @@ import (
 
 func TestTemplateCollection(t *testing.T) {
 
-	t.Run("Get by name", func(t *testing.T) {
-		tmp, err := ByName(collection[0].name)
+	t.Run("Get by name transaction", func(t *testing.T) {
+		tmp, err := TransactionByName(collection[0].name)
 		assert.NoError(t, err)
 		assert.Equal(t, tmp.Name(), collection[0].name)
 	})
 
+	t.Run("Get by name script", func(t *testing.T) {
+		tmp, err := ScriptByName(collection[2].name)
+		assert.NoError(t, err)
+		assert.Equal(t, tmp.Name(), collection[2].name)
+	})
+
 	t.Run("Get by name invalid", func(t *testing.T) {
-		tmp, err := ByName(collection[0].name + "invalid")
+		tmp, err := TransactionByName(collection[0].name + "invalid")
 		assert.EqualError(t, err, "template not found by name")
 		assert.Nil(t, tmp)
 	})
@@ -26,7 +32,7 @@ func TestTemplates(t *testing.T) {
 
 	t.Run("Template by name for network", func(t *testing.T) {
 		otmp := collection[0]
-		tmp, err := ByName(otmp.name)
+		tmp, err := TransactionByName(otmp.name)
 		assert.NoError(t, err)
 
 		for _, n := range []string{testnet, mainnet} {
@@ -41,7 +47,7 @@ func TestTemplates(t *testing.T) {
 
 	t.Run("Template by name for invalid network", func(t *testing.T) {
 		otmp := collection[0]
-		tmp, err := ByName(otmp.name)
+		tmp, err := TransactionByName(otmp.name)
 		assert.NoError(t, err)
 
 		src, err := tmp.Source("foo")

@@ -11,9 +11,17 @@ var emulator = config.DefaultEmulatorNetwork().Name
 var testnet = config.DefaultTestnetNetwork().Name
 var mainnet = config.DefaultMainnetNetwork().Name
 
+type templateKind uint8
+
+const (
+	tx templateKind = iota
+	script
+)
+
 type template struct {
 	name   string
 	source string
+	kind   templateKind
 	// imports matching order of imports in script
 	imports map[string][]string
 }
@@ -38,9 +46,9 @@ func (t *template) Source(network string) ([]byte, error) {
 	return []byte(fmt.Sprintf(t.source, replace...)), nil
 }
 
-func ByName(name string) (*template, error) {
+func byNameAndType(name string, kind templateKind) (*template, error) {
 	for _, c := range collection {
-		if strings.ToLower(c.name) == strings.ToLower(name) {
+		if strings.ToLower(c.name) == strings.ToLower(name) && c.kind == kind {
 			return c, nil
 		}
 	}
@@ -48,8 +56,17 @@ func ByName(name string) (*template, error) {
 	return nil, fmt.Errorf("template not found by name")
 }
 
+func TransactionByName(name string) (*template, error) {
+	return byNameAndType(name, tx)
+}
+
+func ScriptByName(name string) (*template, error) {
+	return byNameAndType(name, script)
+}
+
 var collection = []*template{{
-	name: "transferFUSD",
+	name: "fusd-transfer",
+	kind: tx,
 	imports: map[string][]string{
 		testnet: {"0x9a0766d93b6608b7", "0xe223d8a629e49c68"},
 		mainnet: {"0xf233dcee88fe0abe", "0x3c5959b568896393"},
@@ -87,7 +104,8 @@ var collection = []*template{{
 			}
 		}`,
 }, {
-	name: "setupFUSD",
+	name: "fusd-setup",
+	kind: tx,
 	imports: map[string][]string{
 		testnet: {"0x9a0766d93b6608b7", "0xe223d8a629e49c68"},
 		mainnet: {"0xf233dcee88fe0abe", "0x3c5959b568896393"},
@@ -124,5 +142,27 @@ var collection = []*template{{
 					target: /storage/fusdVault
 				)
 			}
+		}`,
+}, {
+	name: "fusd-balance",
+	kind: script,
+	imports: map[string][]string{
+		testnet: {"0x9a0766d93b6608b7", "0xe223d8a629e49c68"},
+		mainnet: {"0xf233dcee88fe0abe", "0x3c5959b568896393"},
+		// todo(sideninja): add emulator network, but first add fusd to emulator bootstrap procedure
+	},
+	// source: https://github.com/onflow/fusd
+	source: `
+		import FungibleToken from 0xFUNGIBLETOKENADDRESS
+		import FUSD from 0xFUSDADDRESS
+		
+		pub fun main(address: Address): UFix64 {
+			let account = getAccount(address)
+		
+			let vaultRef = account.getCapability(/public/fusdBalance)!
+				.borrow<&FUSD.Vault{FungibleToken.Balance}>()
+				?? panic("Could not borrow Balance reference to the Vault")
+		
+			return vaultRef.balance
 		}`,
 }}
