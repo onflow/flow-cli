@@ -1,6 +1,7 @@
 package templates
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 
@@ -31,16 +32,24 @@ func TestTemplateCollection(t *testing.T) {
 func TestTemplates(t *testing.T) {
 
 	t.Run("Template by name for network", func(t *testing.T) {
-		otmp := collection[0]
-		tmp, err := TransactionByName(otmp.name)
-		assert.NoError(t, err)
+		for _, c := range collection {
+			var tmp *template
+			var err error
+			if c.kind == tx {
+				tmp, err = TransactionByName(c.name)
+			} else if c.kind == script {
+				tmp, err = ScriptByName(c.name)
+			}
 
-		for _, n := range []string{testnet, mainnet} {
-			src, err := tmp.Source(n)
 			assert.NoError(t, err)
 
-			for _, i := range otmp.imports[n] {
-				assert.True(t, strings.Index(string(src), i) > 0)
+			for _, n := range []string{testnet, mainnet} {
+				src, err := tmp.Source(n)
+				assert.NoError(t, err)
+
+				for _, i := range c.imports[n] {
+					assert.True(t, strings.Index(string(src), fmt.Sprintf("from %s", i)) > 0, string(src))
+				}
 			}
 		}
 	})
