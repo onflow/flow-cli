@@ -113,8 +113,8 @@ var collection = []*template{{
 	},
 	// source: https://github.com/onflow/fusd
 	source: `
-		import FungibleToken from 0xFUNGIBLETOKENADDRESS
-		import FUSD from 0xFUSDADDRESS
+		import FungibleToken from %s
+		import FUSD from %s
 		
 		transaction {
 		
@@ -153,8 +153,8 @@ var collection = []*template{{
 	},
 	// source: https://github.com/onflow/fusd
 	source: `
-		import FungibleToken from 0xFUNGIBLETOKENADDRESS
-		import FUSD from 0xFUSDADDRESS
+		import FungibleToken from %s
+		import FUSD from %s
 		
 		pub fun main(address: Address): UFix64 {
 			let account = getAccount(address)
