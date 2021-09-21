@@ -97,10 +97,10 @@ func (s *SignatureResult) pubKey() string {
 func (s *SignatureResult) JSON() interface{} {
 	return map[string]string{
 		"signature": fmt.Sprintf("%x", s.result),
-		"payload":   fmt.Sprintf("%s", s.payload),
-		"hashAlgo":  fmt.Sprintf("%s", s.key.HashAlgo()),
-		"sigAlgo":   fmt.Sprintf("%s", s.key.SigAlgo()),
-		"pubKey":    fmt.Sprintf("%s", s.pubKey()),
+		"payload":   s.payload,
+		"hashAlgo":  s.key.HashAlgo().String(),
+		"sigAlgo":   s.key.SigAlgo().String(),
+		"pubKey":    s.pubKey(),
 	}
 }
 func (s *SignatureResult) String() string {
