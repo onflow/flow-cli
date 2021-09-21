@@ -11,6 +11,6 @@ var Cmd = &cobra.Command{
 }
 
 func init() {
-	SignCommand.AddToParent(Cmd)
+	GenerateCommand.AddToParent(Cmd)
 	VerifyCommand.AddToParent(Cmd)
 }

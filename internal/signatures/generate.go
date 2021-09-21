@@ -10,20 +10,20 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type flagsSign struct {
+type flagsGenerate struct {
 	Signer string `default:"emulator-account" flag:"signer" info:"name of the account used to sign"`
 }
 
-var signFlags = flagsSign{}
+var generateFlags = flagsGenerate{}
 
-var SignCommand = &command.Command{
+var GenerateCommand = &command.Command{
 	Cmd: &cobra.Command{
-		Use:     "sign <payload>",
-		Short:   "Sign the payload data",
-		Example: "flow signatures sign 'The quick brown fox jumps over the lazy dog' --signer alice",
+		Use:     "generate <payload>",
+		Short:   "Generate the payload signature",
+		Example: "flow signatures generate 'The quick brown fox jumps over the lazy dog' --signer alice",
 		Args:    cobra.ExactArgs(1),
 	},
-	Flags: &signFlags,
+	Flags: &generateFlags,
 	RunS:  sign,
 }
 
@@ -35,7 +35,7 @@ func sign(
 	state *flowkit.State,
 ) (command.Result, error) {
 	payload := []byte(args[0])
-	accountName := signFlags.Signer
+	accountName := generateFlags.Signer
 	acc, err := state.Accounts().ByName(accountName)
 	if err != nil {
 		return nil, err
@@ -66,9 +66,9 @@ func (s *SignatureResult) JSON() interface{} {
 	}
 }
 func (s *SignatureResult) String() string {
-	return fmt.Sprintf("%x", s.result)
+	return fmt.Sprintf("signature: \t%x\n", s.result)
 }
 
 func (s *SignatureResult) Oneliner() string {
-	return fmt.Sprintf("%x", s.result)
+	return fmt.Sprintf("signature: %x", s.result)
 }
