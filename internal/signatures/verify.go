@@ -32,7 +32,6 @@ import (
 )
 
 type flagsVerify struct {
-	Key      string `flag:"key" info:"Public keys for signature verification"`
 	SigAlgo  string `flag:"sig-algo" default:"ECDSA_P256" info:"Signature algorithm used to create the public key"`
 	HashAlgo string `flag:"hash-algo" default:"SHA3_256" info:"Hashing algorithm used to create signature"`
 }
@@ -41,10 +40,10 @@ var verifyFlags = flagsVerify{}
 
 var VerifyCommand = &command.Command{
 	Cmd: &cobra.Command{
-		Use:     "verify <payload> <signature>",
+		Use:     "verify <payload> <signature> <public key>",
 		Short:   "Verify the signature",
-		Example: "flow signatures verify 99fa...25b --key af3...52d",
-		Args:    cobra.ExactArgs(2),
+		Example: "flow signatures verify 'The quick brown fox jumps over the lazy dog' 99fa...25b af3...52d",
+		Args:    cobra.ExactArgs(3),
 	},
 	Flags: &verifyFlags,
 	RunS:  verify,
@@ -55,7 +54,7 @@ func verify(
 	_ flowkit.ReaderWriter,
 	_ command.GlobalFlags,
 	_ *services.Services,
-	state *flowkit.State,
+	_ *flowkit.State,
 ) (command.Result, error) {
 	payload := []byte(args[0])
 
@@ -64,7 +63,7 @@ func verify(
 		return nil, fmt.Errorf("invalid payload signature: %w", err)
 	}
 
-	key, err := hex.DecodeString(strings.ReplaceAll(verifyFlags.Key, "0x", ""))
+	key, err := hex.DecodeString(strings.ReplaceAll(args[2], "0x", ""))
 	if err != nil {
 		return nil, fmt.Errorf("invalid public key: %w", err)
 	}
