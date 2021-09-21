@@ -131,7 +131,7 @@ func (p *Parser) Deserialize(raw []byte) (*config.Config, error) {
 	var jsonConf jsonConfig
 	err := json.Unmarshal(raw, &jsonConf)
 	if err != nil {
-		return nil, fmt.Errorf("configuration syntax error: %v", err)
+		return nil, fmt.Errorf("configuration syntax error: %w", err)
 	}
 
 	return jsonConf.transformToConfig()
