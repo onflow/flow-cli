@@ -20,6 +20,7 @@
 package main
 
 import (
+	"github.com/onflow/flow-cli/internal/signatures"
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/accounts"
@@ -63,6 +64,7 @@ func main() {
 	cmd.AddCommand(collections.Cmd)
 	cmd.AddCommand(project.Cmd)
 	cmd.AddCommand(config.Cmd)
+	cmd.AddCommand(signatures.Cmd)
 
 	command.InitFlags(cmd)
 
