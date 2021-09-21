@@ -19,9 +19,12 @@
 package signatures
 
 import (
+	"bytes"
 	"encoding/hex"
 	"fmt"
 	"strings"
+
+	"github.com/onflow/flow-cli/pkg/flowkit/util"
 
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/spf13/cobra"
@@ -90,6 +93,9 @@ func verify(
 		valid:     valid,
 		payload:   payload,
 		signature: sig,
+		hashAlgo:  hashAlgo,
+		sigAlgo:   sigAlgo,
+		pubKey:    key,
 	}, nil
 }
 
@@ -97,25 +103,39 @@ type VerificationResult struct {
 	valid     bool
 	payload   []byte
 	signature []byte
+	pubKey    []byte
+	sigAlgo   crypto.SignatureAlgorithm
+	hashAlgo  crypto.HashAlgorithm
 }
 
 func (s *VerificationResult) JSON() interface{} {
 	return map[string]string{
 		"valid":     fmt.Sprintf("%v", s.valid),
-		"payload":   fmt.Sprintf("%s", s.payload),
-		"signature": fmt.Sprintf("%s", s.signature),
+		"payload":   string(s.payload),
+		"signature": string(s.signature),
+		"hashAlgo":  s.hashAlgo.String(),
+		"sigAlgo":   s.sigAlgo.String(),
+		"pubKey":    fmt.Sprintf("%x", s.pubKey),
 	}
 }
 func (s *VerificationResult) String() string {
-	return fmt.Sprintf(
-		"valid: \t\t%v\npayload: \t%s\nsignature: \t%x\n",
-		s.valid, s.payload, s.signature,
-	)
+	var b bytes.Buffer
+	writer := util.CreateTabWriter(&b)
+
+	_, _ = fmt.Fprintf(writer, "Valid \t %v\n", s.valid)
+	_, _ = fmt.Fprintf(writer, "Payload \t %s\n", s.payload)
+	_, _ = fmt.Fprintf(writer, "Signature \t %x\n", s.signature)
+	_, _ = fmt.Fprintf(writer, "Public Key \t %x\n", s.pubKey)
+	_, _ = fmt.Fprintf(writer, "Hash Algorithm \t %s\n", s.hashAlgo)
+	_, _ = fmt.Fprintf(writer, "Signature Algorithm \t %s\n", s.sigAlgo)
+
+	_ = writer.Flush()
+	return b.String()
 }
 
 func (s *VerificationResult) Oneliner() string {
 	return fmt.Sprintf(
-		"valid: %v, payload: %s, signature: %x",
-		s.valid, s.payload, s.signature,
+		"valid: %v, payload: %s, signature: %x, sigAlgo: %s, hashAlgo: %s, pubKey: %x",
+		s.valid, s.payload, s.signature, s.sigAlgo, s.hashAlgo, s.pubKey,
 	)
 }
