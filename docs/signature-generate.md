@@ -10,8 +10,8 @@ Generate a signature using the private key of the signer account.
 flow signatures generate <payload>  
 ```
 
-Make sure the account you want to use for signing is saved in the `flow.json` configuration. 
-The address of the account is not important, just the private key.
+⚠️ _Make sure the account you want to use for signing is saved in the `flow.json` configuration. 
+The address of the account is not important, just the private key._
 
 ## Example Usage
 
@@ -29,7 +29,8 @@ Signature Algorithm 	 ECDSA_P256
 
 ### Payload
 - Name: `payload`
-- Valid Input: Payload data used for signing
+
+Payload data used for signing.
 
 ## Flags
 
