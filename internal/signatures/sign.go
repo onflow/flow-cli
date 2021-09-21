@@ -2,6 +2,7 @@ package signatures
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/pkg/flowkit"
@@ -53,4 +54,21 @@ func sign(
 	return &SignatureResult{
 		result: string(signed),
 	}, nil
+}
+
+type SignatureResult struct {
+	result string
+}
+
+func (s *SignatureResult) JSON() interface{} {
+	return map[string]string{
+		"result": fmt.Sprintf("%x", s.result),
+	}
+}
+func (s *SignatureResult) String() string {
+	return fmt.Sprintf("%x", s.result)
+}
+
+func (s *SignatureResult) Oneliner() string {
+	return fmt.Sprintf("%x", s.result)
 }
