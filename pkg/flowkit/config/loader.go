@@ -134,7 +134,7 @@ func (l *Loader) Load(paths []string) (*Config, error) {
 		if err == nil { // if we could load it then process it
 			return l.postprocess(conf)
 		}
-		if err != ErrDoesNotExist {
+		if !errors.Is(err, ErrDoesNotExist) {
 			return nil, err
 		}
 
