@@ -77,7 +77,7 @@ Submit the signed transaction:
 Transaction content (`tx.cdc`):
 ```
 transaction {
-    preapre(signer1: AuthAccount, signer2: AuthAccount) {}
+    preapre(bob: AuthAccount, charlie: AuthAccount) {}
     execute { ... }
 }
 ```
