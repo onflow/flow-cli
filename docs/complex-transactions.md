@@ -14,7 +14,7 @@ The process of sending a complex transactions includes three steps:
 Read more about each command flags and arguments in the above links.
 
 ## Examples
-We will describe common examples for complex transactions. All examples are using an example configuration [defined here]().
+We will describe common examples for complex transactions. All examples are using an [example configuration](#configuration).
 
 ### Single payer, proposer and authorizer
 The simplest Flow transaction declares a single account as the proposer, payer and authorizer.
