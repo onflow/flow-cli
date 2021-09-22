@@ -116,7 +116,7 @@ Submit the signed transaction:
 Transaction content (`tx.cdc`):
 ```
 transaction {
-    preapre(signer: AuthAccount) {}
+    preapre(charlie: AuthAccount) {}
     execute { ... }
 }
 ```
