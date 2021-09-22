@@ -20,6 +20,7 @@ package json
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
 )
@@ -129,9 +130,8 @@ func (p *Parser) Deserialize(raw []byte) (*config.Config, error) {
 
 	var jsonConf jsonConfig
 	err := json.Unmarshal(raw, &jsonConf)
-
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("configuration syntax error: %w", err)
 	}
 
 	return jsonConf.transformToConfig()
