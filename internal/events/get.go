@@ -109,7 +109,11 @@ func get(
 			return nil, err
 		}
 
-		start = end - last
+		if last > end {
+			start = 0
+		} else {
+			start = end - last
+		}
 	} else if start == 0 || end == 0 {
 		return nil, fmt.Errorf("please provide either both start and end for range or only last flag")
 	}
