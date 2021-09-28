@@ -30,7 +30,7 @@ install-tools:
 
 .PHONY: test
 test:
-	GO111MODULE=on go test -coverprofile=$(COVER_PROFILE) $(if $(JSON_OUTPUT),-json,) ./...
+	GO111MODULE=on go test -coverprofile=$(COVER_PROFILE) $(if $(JSON_OUTPUT),-json,) ./... -coverpkg="./..."
 
 .PHONY: test-e2e-emulator
 test-e2e-emulator:
