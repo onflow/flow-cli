@@ -89,6 +89,7 @@ func addAccount(
 	state.Accounts().AddOrUpdate(&acc)
 
 	err = state.SaveEdited(globalFlags.ConfigPaths)
+
 	if err != nil {
 		return nil, err
 	}

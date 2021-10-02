@@ -22,35 +22,17 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var Cmd = &cobra.Command{
-	Use:              "config",
-	Short:            "Utilities to manage configuration",
+var ViewCmd = &cobra.Command{
+	Use:              "view <account|contract|deployment|network>",
+	Short:            "View the resources in the configuration",
+	Example:          "flow config view account",
+	Args:             cobra.ExactArgs(1),
 	TraverseChildren: true,
 }
 
 func init() {
-	InitCommand.AddToParent(Cmd)
-	Cmd.AddCommand(AddCmd)
-	Cmd.AddCommand(RemoveCmd)
-	Cmd.AddCommand(ViewCmd)
-}
-
-type Result struct {
-	result string
-}
-
-func (r *Result) JSON() interface{} {
-	return nil
-}
-
-func (r *Result) String() string {
-	if r.result != "" {
-		return r.result
-	}
-
-	return ""
-}
-
-func (r *Result) Oneliner() string {
-	return ""
+	ViewAccountCommand.AddToParent(ViewCmd)
+	//ViewContractCommand.AddToParent(ViewCmd)
+	//ViewDeploymentCommand.AddToParent(ViewCmd)
+	//ViewNetworkCommand.AddToParent(ViewCmd)
 }
