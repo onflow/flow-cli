@@ -28,44 +28,44 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowkit/services"
 )
 
-type flagsViewEmulator struct {
+type flagsViewNetwork struct {
 }
 
-var viewEmulatorFlags = flagsViewEmulator{}
+var viewNetworkFlags = flagsViewNetwork{}
 
-var ViewEmulatorCommand = &command.Command{
+var ViewNetworkCommand = &command.Command{
 	Cmd: &cobra.Command{
-		Use:     "emulator",
-		Short:   "View a list of emulators in configuration / View the properties of a paticular emulator",
-		Example: "flow config view emulator \nflow config view emulator <emulatorname>",
+		Use:     "network",
+		Short:   "View a list of networks in configuration / View the properties of a paticular network",
+		Example: "flow config view network \nflow config view network <networkname>",
 		Args:    cobra.MaximumNArgs(1),
 	},
-	Flags: &viewEmulatorFlags,
-	RunS:  viewEmulator,
+	Flags: &viewNetworkFlags,
+	RunS:  viewNetwork,
 }
 
-func viewEmulator(args []string,
+func viewNetwork(args []string,
 	_ flowkit.ReaderWriter,
 	globalFlags command.GlobalFlags,
 	_ *services.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
 
-	// Flag for marking emulator existence
+	// Flag for marking network existence
 	var flag int = 0
 	// Count variable for printing format
 	var count int = 0
 
 	// IF CONDITION:
-	// If there are zero arguments in the command i.e. command looks like --> flow config view emulator
-	// Then we print the list of all the present emulators in the configuration
+	// If there are zero arguments in the command i.e. command looks like --> flow config view network
+	// Then we print the list of all the present networks in the configuration
 	// ELSE IF CONDITION:
-	// If there are arguments == 1 i.e. command looks like --> flow config view emulator <emulatorname>
-	// Then we print all the details of the emulator "<emulatorname>"
-	// 	If the <emulatorname> doesn't exist in the configuration, then we print "Emulator <emulatorname> does not exist"
+	// If there are arguments == 1 i.e. command looks like --> flow config view network <networkname>
+	// Then we print all the details of the network "<networkname>"
+	// 	If the <networkname> doesn't exist in the configuration, then we print "Network <networkname> does not exist"
 	if len(args) == 0 {
-		fmt.Print("List of Emulators: ")
-		for _, value := range state.Config().Emulators {
+		fmt.Print("List of Networks: ")
+		for _, value := range *state.Networks() {
 			if count == 0 {
 				fmt.Print(value.Name)
 				count = count + 1
@@ -74,16 +74,15 @@ func viewEmulator(args []string,
 			}
 		}
 	} else if len(args) == 1 {
-		for _, value := range state.Config().Emulators {
+		for _, value := range state.Config().Networks {
 			if value.Name == args[0] {
-				fmt.Print("Emulator Name: ", value.Name, "\n")
-				fmt.Print("Port: ", value.Port, "\n")
-				fmt.Print("Service Account: ", value.ServiceAccount, "\n")
+				fmt.Print("Network Name: ", value.Name, "\n")
+				fmt.Print("Host: ", value.Host)
 				flag = 1
 			}
 		}
 		if flag == 0 {
-			fmt.Print("Emulator ", args[0], " does not exist")
+			fmt.Print("Network ", args[0], " does not exist")
 		}
 	}
 

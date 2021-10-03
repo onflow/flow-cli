@@ -23,16 +23,18 @@ import (
 )
 
 var ViewCmd = &cobra.Command{
-	Use:              "view <account|contract|deployment|network>",
+	Use:              "view <account|contract|emulator|network|deployment>",
 	Short:            "View the resources in the configuration",
-	Example:          "flow config view account",
+	Example:          "flow config view account \nflow config view account <accountname> \nflow config view contract \nflow config view contract <contractname> \nflow config view emulator \nflow config view emulator <emulatorname> \nflow config view network \nflow config view network <networkname> \nflow config view deployment \nflow config view deployment <networkname>",
 	Args:             cobra.ExactArgs(1),
 	TraverseChildren: true,
 }
 
 func init() {
 	ViewAccountCommand.AddToParent(ViewCmd)
-	//ViewContractCommand.AddToParent(ViewCmd)
-	//ViewDeploymentCommand.AddToParent(ViewCmd)
-	//ViewNetworkCommand.AddToParent(ViewCmd)
+	ViewEmulatorCommand.AddToParent(ViewCmd)
+	ViewContractCommand.AddToParent(ViewCmd)
+	ViewDeploymentCommand.AddToParent(ViewCmd)
+	ViewNetworkCommand.AddToParent(ViewCmd)
+
 }

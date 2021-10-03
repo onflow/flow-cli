@@ -28,44 +28,44 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowkit/services"
 )
 
-type flagsViewEmulator struct {
+type flagsViewContract struct {
 }
 
-var viewEmulatorFlags = flagsViewEmulator{}
+var viewContractFlags = flagsViewContract{}
 
-var ViewEmulatorCommand = &command.Command{
+var ViewContractCommand = &command.Command{
 	Cmd: &cobra.Command{
-		Use:     "emulator",
-		Short:   "View a list of emulators in configuration / View the properties of a paticular emulator",
-		Example: "flow config view emulator \nflow config view emulator <emulatorname>",
+		Use:     "contract",
+		Short:   "View a list of contracts in configuration / View the properties of a paticular contract",
+		Example: "flow config view contract \nflow config view contract <contractname>",
 		Args:    cobra.MaximumNArgs(1),
 	},
-	Flags: &viewEmulatorFlags,
-	RunS:  viewEmulator,
+	Flags: &viewContractFlags,
+	RunS:  viewContract,
 }
 
-func viewEmulator(args []string,
+func viewContract(args []string,
 	_ flowkit.ReaderWriter,
 	globalFlags command.GlobalFlags,
 	_ *services.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
 
-	// Flag for marking emulator existence
+	// Flag for marking contract existence
 	var flag int = 0
 	// Count variable for printing format
 	var count int = 0
 
 	// IF CONDITION:
-	// If there are zero arguments in the command i.e. command looks like --> flow config view emulator
-	// Then we print the list of all the present emulators in the configuration
+	// If there are zero arguments in the command i.e. command looks like --> flow config view contract
+	// Then we print the list of all the present contracts in the configuration
 	// ELSE IF CONDITION:
-	// If there are arguments == 1 i.e. command looks like --> flow config view emulator <emulatorname>
-	// Then we print all the details of the emulator "<emulatorname>"
-	// 	If the <emulatorname> doesn't exist in the configuration, then we print "Emulator <emulatorname> does not exist"
+	// If there are arguments == 1 i.e. command looks like --> flow config view contract <contractname>
+	// Then we print all the details of the contract "<contractname>"
+	// 	If the <contractname> doesn't exist in the configuration, then we print "Contract <contractname> does not exist"
 	if len(args) == 0 {
-		fmt.Print("List of Emulators: ")
-		for _, value := range state.Config().Emulators {
+		fmt.Print("List of Contracts: ")
+		for _, value := range *state.Contracts() {
 			if count == 0 {
 				fmt.Print(value.Name)
 				count = count + 1
@@ -74,16 +74,17 @@ func viewEmulator(args []string,
 			}
 		}
 	} else if len(args) == 1 {
-		for _, value := range state.Config().Emulators {
+		for _, value := range state.Config().Contracts {
 			if value.Name == args[0] {
-				fmt.Print("Emulator Name: ", value.Name, "\n")
-				fmt.Print("Port: ", value.Port, "\n")
-				fmt.Print("Service Account: ", value.ServiceAccount, "\n")
+				fmt.Print("Contract Name: ", value.Name, "\n")
+				fmt.Print("Source: ", value.Source, "\n")
+				fmt.Print("Network: ", value.Network, "\n")
+				fmt.Print("Alias: ", value.Alias)
 				flag = 1
 			}
 		}
 		if flag == 0 {
-			fmt.Print("Emulator ", args[0], " does not exist")
+			fmt.Print("Contract ", args[0], " does not exist")
 		}
 	}
 
