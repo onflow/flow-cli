@@ -36,7 +36,7 @@ var viewContractFlags = flagsViewContract{}
 var ViewContractCommand = &command.Command{
 	Cmd: &cobra.Command{
 		Use:     "contract",
-		Short:   "View a list of contracts in configuration / View the properties of a paticular contract",
+		Short:   "View a list of contracts in the configuration / View the properties of a particular contract",
 		Example: "flow config view contract \nflow config view contract <contractname>",
 		Args:    cobra.MaximumNArgs(1),
 	},
@@ -51,18 +51,18 @@ func viewContract(args []string,
 	state *flowkit.State,
 ) (command.Result, error) {
 
-	// Flag for marking contract existence
+	// Flag for marking contract existence.
 	var flag int = 0
-	// Count variable for printing format
+	// Count variable for printing format.
 	var count int = 0
 
 	// IF CONDITION:
-	// If there are zero arguments in the command i.e. command looks like --> flow config view contract
-	// Then we print the list of all the present contracts in the configuration
+	// If there are zero arguments in the command i.e. command looks like --> flow config view contract,
+	// Then we print the list of all the present contracts in the configuration.
 	// ELSE IF CONDITION:
-	// If there are arguments == 1 i.e. command looks like --> flow config view contract <contractname>
-	// Then we print all the details of the contract "<contractname>"
-	// 	If the <contractname> doesn't exist in the configuration, then we print "Contract <contractname> does not exist"
+	// If there are arguments == 1 i.e. command looks like --> flow config view contract <contractname>,
+	// Then we print all the details of the contract "<contractname>".
+	// 	If the <contractname> doesn't exist in the configuration, then we print "Contract <contractname> does not exist".
 	if len(args) == 0 {
 		fmt.Print("List of Contracts: ")
 		for _, value := range *state.Contracts() {

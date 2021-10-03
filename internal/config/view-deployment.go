@@ -36,7 +36,7 @@ var viewDeploymentFlags = flagsViewDeployment{}
 var ViewDeploymentCommand = &command.Command{
 	Cmd: &cobra.Command{
 		Use:     "deployment",
-		Short:   "View a list of networks deployed in configuration / View the properties of the deployed network",
+		Short:   "View a list of networks deployed in the configuration / View the properties of the deployed network",
 		Example: "flow config view deployment \nflow config view deployment <networkname>",
 		Args:    cobra.MaximumNArgs(1),
 	},
@@ -51,18 +51,18 @@ func viewDeployment(args []string,
 	state *flowkit.State,
 ) (command.Result, error) {
 
-	// Flag for marking deployed network existence
+	// Flag for marking deployed network existence.
 	var flag int = 0
-	// Count variable for printing format
+	// Count variable for printing format.
 	var count int = 0
 
 	// IF CONDITION:
-	// If there are zero arguments in the command i.e. command looks like --> flow config view deployment
-	// Then we print the list of all the deployed networks in the configuration
+	// If there are zero arguments in the command i.e. command looks like --> flow config view deployment,
+	// Then we print the list of all the deployed networks in the configuration.
 	// ELSE IF CONDITION:
-	// If there are arguments == 1 i.e. command looks like --> flow config view deployment <networkname>
-	// Then we print all the details of the deployed network "<networkname>"
-	// 	If the <networkname> isn't deployed in the configuration, then we print "Network <networkname> is not deployed"
+	// If there are arguments == 1 i.e. command looks like --> flow config view deployment <networkname>,
+	// Then we print all the details of the deployed network "<networkname>".
+	// 	If the <networkname> isn't deployed in the configuration, then we print "Network <networkname> is not deployed".
 	if len(args) == 0 {
 		fmt.Print("List of Networks Deployed: ")
 		for _, value := range *state.Deployments() {

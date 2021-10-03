@@ -36,7 +36,7 @@ var viewNetworkFlags = flagsViewNetwork{}
 var ViewNetworkCommand = &command.Command{
 	Cmd: &cobra.Command{
 		Use:     "network",
-		Short:   "View a list of networks in configuration / View the properties of a paticular network",
+		Short:   "View a list of networks in the configuration / View the properties of a particular network",
 		Example: "flow config view network \nflow config view network <networkname>",
 		Args:    cobra.MaximumNArgs(1),
 	},
@@ -51,18 +51,18 @@ func viewNetwork(args []string,
 	state *flowkit.State,
 ) (command.Result, error) {
 
-	// Flag for marking network existence
+	// Flag for marking network existence.
 	var flag int = 0
-	// Count variable for printing format
+	// Count variable for printing format.
 	var count int = 0
 
 	// IF CONDITION:
-	// If there are zero arguments in the command i.e. command looks like --> flow config view network
-	// Then we print the list of all the present networks in the configuration
+	// If there are zero arguments in the command i.e. command looks like --> flow config view network,
+	// Then we print the list of all the present networks in the configuration.
 	// ELSE IF CONDITION:
-	// If there are arguments == 1 i.e. command looks like --> flow config view network <networkname>
-	// Then we print all the details of the network "<networkname>"
-	// 	If the <networkname> doesn't exist in the configuration, then we print "Network <networkname> does not exist"
+	// If there are arguments == 1 i.e. command looks like --> flow config view network <networkname>,
+	// Then we print all the details of the network "<networkname>".
+	// 	If the <networkname> doesn't exist in the configuration, then we print "Network <networkname> does not exist".
 	if len(args) == 0 {
 		fmt.Print("List of Networks: ")
 		for _, value := range *state.Networks() {

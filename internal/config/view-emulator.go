@@ -36,7 +36,7 @@ var viewEmulatorFlags = flagsViewEmulator{}
 var ViewEmulatorCommand = &command.Command{
 	Cmd: &cobra.Command{
 		Use:     "emulator",
-		Short:   "View a list of emulators in configuration / View the properties of a paticular emulator",
+		Short:   "View a list of emulators in the configuration / View the properties of a particular emulator",
 		Example: "flow config view emulator \nflow config view emulator <emulatorname>",
 		Args:    cobra.MaximumNArgs(1),
 	},
@@ -51,18 +51,18 @@ func viewEmulator(args []string,
 	state *flowkit.State,
 ) (command.Result, error) {
 
-	// Flag for marking emulator existence
+	// Flag for marking emulator existence.
 	var flag int = 0
-	// Count variable for printing format
+	// Count variable for printing format.
 	var count int = 0
 
 	// IF CONDITION:
-	// If there are zero arguments in the command i.e. command looks like --> flow config view emulator
-	// Then we print the list of all the present emulators in the configuration
+	// If there are zero arguments in the command i.e. command looks like --> flow config view emulator,
+	// Then we print the list of all the present emulators in the configuration.
 	// ELSE IF CONDITION:
-	// If there are arguments == 1 i.e. command looks like --> flow config view emulator <emulatorname>
-	// Then we print all the details of the emulator "<emulatorname>"
-	// 	If the <emulatorname> doesn't exist in the configuration, then we print "Emulator <emulatorname> does not exist"
+	// If there are arguments == 1 i.e. command looks like --> flow config view emulator <emulatorname>,
+	// Then we print all the details of the emulator "<emulatorname>".
+	// 	If the <emulatorname> doesn't exist in the configuration, then we print "Emulator <emulatorname> does not exist".
 	if len(args) == 0 {
 		fmt.Print("List of Emulators: ")
 		for _, value := range state.Config().Emulators {

@@ -36,7 +36,7 @@ var viewAccountFlags = flagsViewAccount{}
 var ViewAccountCommand = &command.Command{
 	Cmd: &cobra.Command{
 		Use:     "account",
-		Short:   "View a list of accounts in configuration / View the properties of a paticular account",
+		Short:   "View a list of accounts in the configuration / View the properties of a particular account",
 		Example: "flow config view account \nflow config view account <accountname>",
 		Args:    cobra.MaximumNArgs(1),
 	},
@@ -51,18 +51,18 @@ func viewAccount(args []string,
 	state *flowkit.State,
 ) (command.Result, error) {
 
-	// Flag for marking account existence
+	// Flag for marking account existence.
 	var flag int = 0
-	// Count variable for printing format
+	// Count variable for printing format.
 	var count int = 0
 
 	// IF CONDITION:
-	// If there are zero arguments in the command i.e. command looks like --> flow config view account
-	// Then we print the list of all the present accounts in the configuration
+	// If there are zero arguments in the command i.e. command looks like --> flow config view account,
+	// Then we print the list of all the present accounts in the configuration.
 	// ELSE IF CONDITION:
-	// If there are arguments == 1 i.e. command looks like --> flow config view account <accountname>
-	// Then we print all the details of the account "<accountname>"
-	// 	If the <accountname> doesn't exist in the configuration, then we print "Account <accountname> does not exist"
+	// If there are arguments == 1 i.e. command looks like --> flow config view account <accountname>,
+	// Then we print all the details of the account "<accountname>".
+	// 	If the <accountname> doesn't exist in the configuration, then we print "Account <accountname> does not exist".
 	if len(args) == 0 {
 		fmt.Print("List of Accounts: ")
 		for _, value := range *state.Accounts() {
