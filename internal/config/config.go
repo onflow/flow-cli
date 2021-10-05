@@ -32,7 +32,7 @@ func init() {
 	InitCommand.AddToParent(Cmd)
 	Cmd.AddCommand(AddCmd)
 	Cmd.AddCommand(RemoveCmd)
-	Cmd.AddCommand(ViewCmd)
+	ViewCmd.AddToParent(Cmd)
 }
 
 type Result struct {
