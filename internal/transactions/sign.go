@@ -30,7 +30,8 @@ import (
 )
 
 type flagsSign struct {
-	Signer string `default:"emulator-account" flag:"signer" info:"name of the account used to sign"`
+	Signer  string   `default:"emulator-account" flag:"signer" info:"name of the account used to sign"`
+	Include []string `default:"" flag:"include" info:"Fields to include in the output"`
 }
 
 var signFlags = flagsSign{}
@@ -70,6 +71,7 @@ func sign(
 	}
 
 	return &TransactionResult{
-		tx: signed.FlowTransaction(),
+		tx:      signed.FlowTransaction(),
+		include: signFlags.Include,
 	}, nil
 }
