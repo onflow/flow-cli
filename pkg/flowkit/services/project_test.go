@@ -188,7 +188,6 @@ func TestProject_Integration(t *testing.T) {
 		}
 		state.Networks().AddOrUpdate(n.Name, n)
 
-		cadenceString, _ := cadence.NewString("foo")
 		d := config.Deployment{
 			Network: n.Name,
 			Account: srvAcc.Name(),
@@ -201,7 +200,7 @@ func TestProject_Integration(t *testing.T) {
 			}, {
 				Name: cC.Name,
 				Args: []cadence.Value{
-					cadenceString,
+					cadence.String("foo"),
 				},
 			}},
 		}

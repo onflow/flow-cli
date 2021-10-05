@@ -31,14 +31,13 @@ import (
 )
 
 func TestEvent(t *testing.T) {
-	cadenceString, _ := cadence.NewString("00c4fef62310c807")
 	flowEvent := tests.NewEvent(0,
 		"flow.AccountCreated",
 		[]cadence.Field{{
 			Identifier: "address",
 			Type:       cadence.AddressType{},
 		}},
-		[]cadence.Value{cadenceString},
+		[]cadence.Value{cadence.String("00c4fef62310c807")},
 	)
 	tx := tests.NewTransactionResult([]flow.Event{*flowEvent})
 	e := flowkit.EventsFromTransaction(tx)
