@@ -29,7 +29,7 @@ import (
 )
 
 func TestArguments(t *testing.T) {
-
+	cadenceString, _ := cadence.NewString("42")
 	var sampleValues []cadence.Value = []cadence.Value{
 		cadence.NewAddress([8]byte{0, 0, 0, 0, 0, 0, 0, 1}),
 		cadence.NewBool(true),
@@ -42,7 +42,7 @@ func TestArguments(t *testing.T) {
 		cadence.NewUInt32(42),
 		cadence.NewUInt64(42),
 		cadence.NewUInt8(42),
-		cadence.NewString("42"),
+		cadenceString,
 	}
 
 	for _, sample := range sampleValues {

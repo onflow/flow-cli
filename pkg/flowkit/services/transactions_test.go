@@ -76,9 +76,8 @@ func TestTransactions(t *testing.T) {
 			gw.GetTransactionResult.Return(tests.NewTransactionResult(nil), nil)
 		})
 
-		args := []cadence.Value{
-			cadence.NewString("Bar"),
-		}
+		cadenceString, _ := cadence.NewString("Bar")
+		args := []cadence.Value{cadenceString}
 
 		_, _, err := s.Transactions.Send(
 			serviceAcc,

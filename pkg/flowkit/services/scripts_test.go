@@ -29,6 +29,8 @@ import (
 	"github.com/onflow/flow-cli/tests"
 )
 
+var cadenceFooString, _ = cadence.NewString("Foo")
+
 func TestScripts(t *testing.T) {
 	t.Parallel()
 
@@ -41,9 +43,7 @@ func TestScripts(t *testing.T) {
 			gw.ExecuteScript.Return(cadence.MustConvertValue(""), nil)
 		})
 
-		args := []cadence.Value{
-			cadence.NewString("Foo"),
-		}
+		args := []cadence.Value{cadenceFooString}
 		_, err := s.Scripts.Execute(tests.ScriptArgString.Source, args, "", "")
 
 		assert.NoError(t, err)
@@ -58,9 +58,7 @@ func TestScripts_Integration(t *testing.T) {
 		t.Parallel()
 		_, s := setupIntegration()
 
-		args := []cadence.Value{
-			cadence.NewString("Foo"),
-		}
+		args := []cadence.Value{cadenceFooString}
 		res, err := s.Scripts.Execute(tests.ScriptArgString.Source, args, "", "")
 
 		assert.NoError(t, err)
@@ -70,9 +68,7 @@ func TestScripts_Integration(t *testing.T) {
 	t.Run("Execute report error", func(t *testing.T) {
 		t.Parallel()
 		_, s := setupIntegration()
-		args := []cadence.Value{
-			cadence.NewString("Foo"),
-		}
+		args := []cadence.Value{cadenceFooString}
 		res, err := s.Scripts.Execute(tests.ScriptWithError.Source, args, "", "")
 
 		assert.Error(t, err)
