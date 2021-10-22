@@ -4,10 +4,10 @@ sidebar_title: Verify Signature
 description: How to verify a signature from the command line 
 ---
 
-Verify validity of a signature based on provided payload and public key of the signature creator.
+Verify validity of a signature based on provided message and public key of the signature creator.
 
 ```shell
-flow signatures verify <payload> <signature> <public key>
+flow signatures verify <message> <signature> <public key>
 ```
 
 ## Example Usage
@@ -19,7 +19,7 @@ flow signatures verify <payload> <signature> <public key>
   0xc92a7c72a78f8f046a79f8a5fe1ef72424258a55eb869f13e6133301d64ad025d3362d5df9e7c82289637af1431042c4025d241fd430242368ce662d39636987
 
 Valid 			 true
-Payload 		 The quick brown fox jumps over the lazy dog
+Message 		 The quick brown fox jumps over the lazy dog
 Signature 		 b1c9eff5d829fdeaf2...7ce13c4b490eada485cb1d2e3f209be8d07
 Public Key 		 c92a7c72a78...1431042c4025d241fd430242368ce662d39636987
 Hash Algorithm 		 SHA3_256
@@ -28,15 +28,15 @@ Signature Algorithm 	 ECDSA_P256
 
 ## Arguments
 
-### Payload
-- Name: `payload`
+### Message
+- Name: `message`
 
-Payload data used for creating the signature.
+Message data used for creating the signature.
 
 ### Signature
 - Name: `signature`
 
-Payload signature that will be verified.
+Message signature that will be verified.
 
 ### Public Key
 - Name: `public key`

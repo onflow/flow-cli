@@ -43,7 +43,7 @@ var verifyFlags = flagsVerify{}
 
 var VerifyCommand = &command.Command{
 	Cmd: &cobra.Command{
-		Use:     "verify <payload> <signature> <public key>",
+		Use:     "verify <message> <signature> <public key>",
 		Short:   "Verify the signature",
 		Example: "flow signatures verify 'The quick brown fox jumps over the lazy dog' 99fa...25b af3...52d",
 		Args:    cobra.ExactArgs(3),
@@ -59,11 +59,11 @@ func verify(
 	_ *services.Services,
 	_ *flowkit.State,
 ) (command.Result, error) {
-	payload := []byte(args[0])
+	message := []byte(args[0])
 
 	sig, err := hex.DecodeString(strings.ReplaceAll(args[1], "0x", ""))
 	if err != nil {
-		return nil, fmt.Errorf("invalid payload signature: %w", err)
+		return nil, fmt.Errorf("invalid message signature: %w", err)
 	}
 
 	key, err := hex.DecodeString(strings.ReplaceAll(args[2], "0x", ""))
@@ -84,14 +84,14 @@ func verify(
 		return nil, err
 	}
 
-	valid, err := pkey.Verify(sig, payload, hasher)
+	valid, err := pkey.Verify(sig, message, hasher)
 	if err != nil {
 		return nil, err
 	}
 
 	return &VerificationResult{
 		valid:     valid,
-		payload:   payload,
+		message:   message,
 		signature: sig,
 		hashAlgo:  hashAlgo,
 		sigAlgo:   sigAlgo,
@@ -101,7 +101,7 @@ func verify(
 
 type VerificationResult struct {
 	valid     bool
-	payload   []byte
+	message   []byte
 	signature []byte
 	pubKey    []byte
 	sigAlgo   crypto.SignatureAlgorithm
@@ -111,7 +111,7 @@ type VerificationResult struct {
 func (s *VerificationResult) JSON() interface{} {
 	return map[string]string{
 		"valid":     fmt.Sprintf("%v", s.valid),
-		"payload":   string(s.payload),
+		"message":   string(s.message),
 		"signature": string(s.signature),
 		"hashAlgo":  s.hashAlgo.String(),
 		"sigAlgo":   s.sigAlgo.String(),
@@ -123,7 +123,7 @@ func (s *VerificationResult) String() string {
 	writer := util.CreateTabWriter(&b)
 
 	_, _ = fmt.Fprintf(writer, "Valid \t %v\n", s.valid)
-	_, _ = fmt.Fprintf(writer, "Payload \t %s\n", s.payload)
+	_, _ = fmt.Fprintf(writer, "Message \t %s\n", s.message)
 	_, _ = fmt.Fprintf(writer, "Signature \t %x\n", s.signature)
 	_, _ = fmt.Fprintf(writer, "Public Key \t %x\n", s.pubKey)
 	_, _ = fmt.Fprintf(writer, "Hash Algorithm \t %s\n", s.hashAlgo)
@@ -135,7 +135,7 @@ func (s *VerificationResult) String() string {
 
 func (s *VerificationResult) Oneliner() string {
 	return fmt.Sprintf(
-		"valid: %v, payload: %s, signature: %x, sigAlgo: %s, hashAlgo: %s, pubKey: %x",
-		s.valid, s.payload, s.signature, s.sigAlgo, s.hashAlgo, s.pubKey,
+		"valid: %v, message: %s, signature: %x, sigAlgo: %s, hashAlgo: %s, pubKey: %x",
+		s.valid, s.message, s.signature, s.sigAlgo, s.hashAlgo, s.pubKey,
 	)
 }

@@ -39,8 +39,8 @@ var generateFlags = flagsGenerate{}
 
 var GenerateCommand = &command.Command{
 	Cmd: &cobra.Command{
-		Use:     "generate <payload>",
-		Short:   "Generate the payload signature",
+		Use:     "generate <message>",
+		Short:   "Generate the message signature",
 		Example: "flow signatures generate 'The quick brown fox jumps over the lazy dog' --signer alice",
 		Args:    cobra.ExactArgs(1),
 	},
@@ -55,7 +55,7 @@ func sign(
 	_ *services.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
-	payload := []byte(args[0])
+	message := []byte(args[0])
 	accountName := generateFlags.Signer
 	acc, err := state.Accounts().ByName(accountName)
 	if err != nil {
@@ -67,21 +67,21 @@ func sign(
 		return nil, err
 	}
 
-	signed, err := s.Sign(payload)
+	signed, err := s.Sign(message)
 	if err != nil {
 		return nil, err
 	}
 
 	return &SignatureResult{
 		result:  string(signed),
-		payload: string(payload),
+		message: string(message),
 		key:     acc.Key(),
 	}, nil
 }
 
 type SignatureResult struct {
 	result  string
-	payload string
+	message string
 	key     flowkit.AccountKey
 }
 
@@ -97,7 +97,7 @@ func (s *SignatureResult) pubKey() string {
 func (s *SignatureResult) JSON() interface{} {
 	return map[string]string{
 		"signature": fmt.Sprintf("%x", s.result),
-		"payload":   s.payload,
+		"message":   s.message,
 		"hashAlgo":  s.key.HashAlgo().String(),
 		"sigAlgo":   s.key.SigAlgo().String(),
 		"pubKey":    s.pubKey(),
@@ -108,7 +108,7 @@ func (s *SignatureResult) String() string {
 	writer := util.CreateTabWriter(&b)
 
 	_, _ = fmt.Fprintf(writer, "Signature \t %x\n", s.result)
-	_, _ = fmt.Fprintf(writer, "Payload \t %s\n", s.payload)
+	_, _ = fmt.Fprintf(writer, "Message \t %s\n", s.message)
 	_, _ = fmt.Fprintf(writer, "Public Key \t %s\n", s.pubKey())
 	_, _ = fmt.Fprintf(writer, "Hash Algorithm \t %s\n", s.key.HashAlgo())
 	_, _ = fmt.Fprintf(writer, "Signature Algorithm \t %s\n", s.key.SigAlgo())
@@ -120,7 +120,7 @@ func (s *SignatureResult) String() string {
 func (s *SignatureResult) Oneliner() string {
 
 	return fmt.Sprintf(
-		"signature: %x, payload: %s, hashAlgo: %s, sigAlgo: %s, pubKey: %s",
-		s.result, s.payload, s.key.HashAlgo(), s.key.SigAlgo(), s.pubKey(),
+		"signature: %x, message: %s, hashAlgo: %s, sigAlgo: %s, pubKey: %s",
+		s.result, s.message, s.key.HashAlgo(), s.key.SigAlgo(), s.pubKey(),
 	)
 }

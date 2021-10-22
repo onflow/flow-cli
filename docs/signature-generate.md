@@ -7,7 +7,7 @@ description: How to generate a new signature from the command line
 Generate a signature using the private key of the signer account.
 
 ```shell
-flow signatures generate <payload>  
+flow signatures generate <message>  
 ```
 
 ⚠️ _Make sure the account you want to use for signing is saved in the `flow.json` configuration. 
@@ -19,7 +19,7 @@ The address of the account is not important, just the private key._
 > flow signatures generate 'The quick brown fox jumps over the lazy dog' --signer alice
 
 Signature 		 b33eabfb05d374b...f09929da96f5beec167fd1f123ec
-Payload 		 The quick brown fox jumps over the lazy dog
+Message 		 The quick brown fox jumps over the lazy dog
 Public Key 		 0xc92a7c...042c4025d241fd430242368ce662d39636987
 Hash Algorithm 		 SHA3_256
 Signature Algorithm 	 ECDSA_P256
@@ -27,10 +27,10 @@ Signature Algorithm 	 ECDSA_P256
 
 ## Arguments
 
-### Payload
-- Name: `payload`
+### Message
+- Name: `message`
 
-Payload data used for signing.
+Message used for signing.
 
 ## Flags
 
