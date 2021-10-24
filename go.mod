@@ -4,6 +4,7 @@ go 1.13
 
 require (
 	github.com/a8m/envsubst v1.2.0
+	github.com/go-git/go-git/v5 v5.4.2
 	github.com/gosuri/uilive v0.0.4
 	github.com/joho/godotenv v1.3.0
 	github.com/manifoldco/promptui v0.8.0
@@ -18,7 +19,6 @@ require (
 	github.com/spf13/cobra v1.1.3
 	github.com/stretchr/testify v1.7.0
 	github.com/thoas/go-funk v0.7.0
-	golang.org/x/tools v0.1.4 // indirect
 	gonum.org/v1/gonum v0.6.1
 	google.golang.org/grpc v1.37.0
 )
