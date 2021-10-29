@@ -48,6 +48,8 @@ func main() {
 
 	// quick commands
 	quick.InitCommand.AddToParent(cmd)
+	quick.DeployCommand.AddToParent(cmd)
+	cmd.AddCommand(quick.RunCommand)
 	status.Command.AddToParent(cmd)
 
 	// structured commands
