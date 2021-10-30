@@ -23,7 +23,7 @@ import (
 	"github.com/onflow/flow-cli/internal/project"
 	"github.com/spf13/cobra"
 )
-
+// add run command
 var RunCommand = &cobra.Command{
 	Use:     "run",
 	Short:   "Start emulator and deploy contracts",

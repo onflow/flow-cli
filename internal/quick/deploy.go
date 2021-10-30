@@ -24,7 +24,7 @@ import (
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/internal/project"
 )
-
+// add deploy command
 var DeployCommand = &command.Command{
 	Cmd: &cobra.Command{
 		Use:     "deploy",
