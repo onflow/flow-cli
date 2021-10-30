@@ -14,15 +14,15 @@
 * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 * See the License for the specific language governing permissions and
 * limitations under the License.
-*/
+ */
 
 package quick
 
 import (
-	 "github.com/spf13/cobra"
- 
-	 "github.com/onflow/flow-cli/internal/command"
-	 "github.com/onflow/flow-cli/internal/project"
+	"github.com/spf13/cobra"
+
+	"github.com/onflow/flow-cli/internal/command"
+	"github.com/onflow/flow-cli/internal/project"
 )
 
 var DeployCommand = &command.Command{
@@ -30,11 +30,10 @@ var DeployCommand = &command.Command{
 		Use:     "deploy",
 		Short:   "Deploy contracts",
 		Example: "flow deploy",
-		Annotations : map[string]string{
-			"HotCommand" : "true",
+		Annotations: map[string]string{
+			"HotCommand": "true",
 		},
 	},
-	Flags : project.DeployCommand.Flags,
-	RunS : project.DeployCommand.RunS,
+	Flags: project.DeployCommand.Flags,
+	RunS:  project.DeployCommand.RunS,
 }
-

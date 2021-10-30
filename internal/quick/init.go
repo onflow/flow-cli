@@ -32,8 +32,8 @@ var InitCommand = &command.Command{
 		Use:     "init",
 		Short:   "Initialize a new configuration",
 		Example: "flow project init",
-		Annotations : map[string]string{
-			"HotCommand" : "true",
+		Annotations: map[string]string{
+			"HotCommand": "true",
 		},
 	},
 	Flags: &config.InitFlag,

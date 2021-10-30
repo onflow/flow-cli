@@ -14,28 +14,25 @@
 * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 * See the License for the specific language governing permissions and
 * limitations under the License.
-*/
+ */
 
 package quick
 
 import (
-	 "github.com/spf13/cobra"
-	 "github.com/onflow/flow-cli/internal/emulator"
-	 "github.com/onflow/flow-cli/internal/project"
+	"github.com/onflow/flow-cli/internal/emulator"
+	"github.com/onflow/flow-cli/internal/project"
+	"github.com/spf13/cobra"
 )
 
 var RunCommand = &cobra.Command{
-		Use:     "run",
-		Short:   "Start emulator and deploy contracts",
-		Example: "flow run",
-		Annotations : map[string]string{
-			"HotCommand" : "true",
-		},
-		Run: func(cmd *cobra.Command, args []string){
-			project.DeployCommand.Cmd.Run(cmd, args)
-			emulator.Cmd.Run(cmd, args)
-		},
+	Use:     "run",
+	Short:   "Start emulator and deploy contracts",
+	Example: "flow run",
+	Annotations: map[string]string{
+		"HotCommand": "true",
+	},
+	Run: func(cmd *cobra.Command, args []string) {
+		project.DeployCommand.Cmd.Run(cmd, args)
+		emulator.Cmd.Run(cmd, args)
+	},
 }
-
-
-
