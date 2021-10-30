@@ -67,7 +67,7 @@ func main() {
 	cmd.AddCommand(config.Cmd)
 
 	command.InitFlags(cmd)
-
+	cmd.SetUsageTemplate("Usage:{{if .Runnable}}\n{{.UseLine}}{{end}}{{if .HasAvailableSubCommands}}\n{{.CommandPath}} [command]{{end}}{{if gt (len .Aliases) 0}}\n\nAliases:\n{{.NameAndAliases}}{{end}}{{if .HasExample}}\n\nExamples:\n{{.Example}}{{end}}{{if .HasAvailableSubCommands}}\n\nHot Commands:\n{{range .Commands}}{{if (and (.IsAvailableCommand)  (index .Annotations \"HotCommand\") )}}\n{{rpad .Name .NamePadding }} {{.Short}}{{end}}{{end}}{{end}}{{if .HasAvailableLocalFlags}}\n\nAvailable Commands:\n{{range .Commands}}{{if (and (or .IsAvailableCommand (eq .Name \"help\")) (not (index .Annotations \"HotCommand\")))}}\n{{rpad .Name .NamePadding }} {{.Short}}{{end}}{{end}}{{end}}{{if .HasAvailableLocalFlags}}\n\nFlags:\n{{.LocalFlags.FlagUsages | trimTrailingWhitespaces}}{{end}}{{if .HasAvailableInheritedFlags}}\n\nGlobal Flags:\n{{.InheritedFlags.FlagUsages | trimTrailingWhitespaces}}{{end}}{{if .HasHelpSubCommands}}\n\nAdditional help topics:\n{{range .Commands}}{{if .IsAdditionalHelpTopicCommand}}{{rpad .CommandPath .CommandPathPadding}} {{.Short}}{{end}}{{end}}{{end}}{{if .HasAvailableSubCommands}}\nUse \"{{.CommandPath}} [command] --help\" for more information about a command.{{end}}\n")
 	if err := cmd.Execute(); err != nil {
 		util.Exit(1, err.Error())
 	}

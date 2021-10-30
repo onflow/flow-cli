@@ -30,6 +30,9 @@ var DeployCommand = &command.Command{
 		Use:     "deploy",
 		Short:   "Deploy contracts",
 		Example: "flow deploy",
+		Annotations : map[string]string{
+			"HotCommand" : "true",
+		},
 	},
 	Flags : project.DeployCommand.Flags,
 	RunS : project.DeployCommand.RunS,

@@ -28,6 +28,9 @@ var RunCommand = &cobra.Command{
 		Use:     "run",
 		Short:   "Start emulator and deploy contracts",
 		Example: "flow run",
+		Annotations : map[string]string{
+			"HotCommand" : "true",
+		},
 		Run: func(cmd *cobra.Command, args []string){
 			project.DeployCommand.Cmd.Run(cmd, args)
 			emulator.Cmd.Run(cmd, args)
