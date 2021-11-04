@@ -68,25 +68,6 @@ If you start with a template, there will be 3 folder `api`, `cadence`, and `web`
 
 ## Flags
 
-### Host
-
-- Flag: `--host`
-- Valid inputs: an IP address or hostname.
-- Default: `127.0.0.1:3569` (Flow Emulator)
-
-Specify the hostname of the Access API that will be
-used to execute the command. This flag overrides
-any host defined by the `--network` flag.
-
-### Network
-
-- Flag: `--network`
-- Short Flag: `-n`
-- Valid inputs: the name of a network defined in the configuration (`flow.json`).
-- Default: `emulator`
-
-Specify which network you want the command to use for execution.
-
 ### Filter
 
 - Flag: `--filter`
