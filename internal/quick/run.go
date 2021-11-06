@@ -21,18 +21,77 @@ package quick
 import (
 	"github.com/onflow/flow-cli/internal/emulator"
 	"github.com/onflow/flow-cli/internal/project"
+	"github.com/onflow/flow-cli/internal/command"
+	"github.com/onflow/flow-cli/pkg/flowkit"
+	"github.com/onflow/flow-cli/pkg/flowkit/services"
 	"github.com/spf13/cobra"
+	"sync"
 )
-// add run command
-var RunCommand = &cobra.Command{
-	Use:     "run",
-	Short:   "Start emulator and deploy contracts",
-	Example: "flow run",
-	Annotations: map[string]string{
-		"HotCommand": "true",
+
+func DeployHelper(args []string, globalFlags command.GlobalFlags, services *services.Services, wg *sync.WaitGroup){
+
+	for true {
+		//check if the server has started
+		_, err := services.Status.Ping(globalFlags.Network)
+		if err == nil {
+			// if the emulator is running run the deploy command
+			project.DeployCommand.Cmd.Run(project.DeployCommand.Cmd,args)
+			break;
+		}
+	}
+
+	wg.Done()
+	
+}
+
+func EmulatorHelper(args []string, globalFlags command.GlobalFlags, services *services.Services, wg *sync.WaitGroup){
+	// run the emulator
+	emulator.Cmd.Run(emulator.Cmd, args)
+	wg.Done()
+}
+
+
+// This command will act as an alias for running the emulator and deploying the contracts
+var RunCommand = &command.Command{ 
+	Cmd: &cobra.Command{
+		Use:     "run",
+		Short:   "Start emulator and deploy all contracts",
+		Example: "flow run",
+		Annotations: map[string]string{
+			"HotCommand": "true",
+		},
 	},
-	Run: func(cmd *cobra.Command, args []string) {
-		project.DeployCommand.Cmd.Run(cmd, args)
-		emulator.Cmd.Run(cmd, args)
+	Run: func(
+		args []string,
+		_ flowkit.ReaderWriter,
+		globalFlags command.GlobalFlags,
+		services *services.Services,
+	)(command.Result, error){
+		var waitGroup sync.WaitGroup 
+		// set number of goroutines 
+		waitGroup.Add(2) 
+		go EmulatorHelper(args, globalFlags, services, &waitGroup)
+		go DeployHelper(args, globalFlags, services, &waitGroup)
+		// wait until completion of the goroutines
+		waitGroup.Wait() 
+
+		emulator.Cmd.Run(emulator.Cmd, args)
+		return &RunResult{},nil
 	},
+}
+
+type RunResult struct {
+}
+
+func (r *RunResult) JSON() interface{} {
+	result := make(map[string]string)
+	return result
+}
+
+func (r *RunResult) String() string {
+	return ""
+}
+
+func (r *RunResult) Oneliner() string {
+	return ""
 }

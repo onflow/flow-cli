@@ -28,7 +28,7 @@ import (
 var DeployCommand = &command.Command{
 	Cmd: &cobra.Command{
 		Use:     "deploy",
-		Short:   "Deploy contracts",
+		Short:   "Deploy all contracts",
 		Example: "flow deploy",
 		Annotations: map[string]string{
 			"HotCommand": "true",
