@@ -28,6 +28,10 @@ import (
 	"sync"
 )
 
+type flagsRun struct {
+}
+
+var runFlags = flagsRun{}
 func DeployHelper(args []string, globalFlags command.GlobalFlags, services *services.Services, wg *sync.WaitGroup) {
 
 	for true {
@@ -60,6 +64,7 @@ var RunCommand = &command.Command{
 			"HotCommand": "true",
 		},
 	},
+	Flags: &runFlags,
 	Run: func(
 		args []string,
 		_ flowkit.ReaderWriter,
