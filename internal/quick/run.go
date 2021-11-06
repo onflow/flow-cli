@@ -58,7 +58,7 @@ func EmulatorHelper(args []string, globalFlags command.GlobalFlags, services *se
 var RunCommand = &command.Command{
 	Cmd: &cobra.Command{
 		Use:     "run",
-		Short:   "Start emulator and deploy all contracts",
+		Short:   "Start emulator and deploy all project contracts",
 		Example: "flow run",
 		Annotations: map[string]string{
 			"HotCommand": "true",
