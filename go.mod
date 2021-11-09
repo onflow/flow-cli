@@ -8,16 +8,16 @@ require (
 	github.com/joho/godotenv v1.3.0
 	github.com/manifoldco/promptui v0.8.0
 	github.com/onflow/cadence v0.19.1
-	github.com/onflow/cadence/languageserver v0.18.3-0.20211005105715-3c618f0fcd10 // indirect
-	github.com/onflow/flow-core-contracts/lib/go/templates v0.7.7
-	github.com/onflow/flow-emulator v0.23.0
-	github.com/onflow/flow-go v0.21.3
-	github.com/onflow/flow-go-sdk v0.22.0
-	github.com/psiemens/sconfig v0.0.0-20190623041652-6e01eb1354fc
-	github.com/spf13/afero v1.1.2
-	github.com/spf13/cobra v1.1.3
+	github.com/onflow/cadence/languageserver v0.18.3-0.20211005105715-3c618f0fcd10
+	github.com/onflow/flow-core-contracts/lib/go/templates v0.7.9
+	github.com/onflow/flow-emulator v0.24.0
+	github.com/onflow/flow-go v0.22.9
+	github.com/onflow/flow-go-sdk v0.23.0
+	github.com/psiemens/sconfig v0.1.0
+	github.com/spf13/afero v1.6.0
+	github.com/spf13/cobra v1.2.1
 	github.com/stretchr/testify v1.7.0
 	github.com/thoas/go-funk v0.7.0
 	gonum.org/v1/gonum v0.8.2
-	google.golang.org/grpc v1.39.0
+	google.golang.org/grpc v1.40.0
 )
