@@ -19,7 +19,6 @@
 package flowkit
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"path"
@@ -244,12 +243,7 @@ func Load(configFilePaths []string, readerWriter ReaderWriter) (*State, error) {
 	// here we add all available parsers (more to add yaml etc...)
 	confLoader.AddConfigParser(json.NewParser())
 	conf, err := confLoader.Load(configFilePaths)
-
 	if err != nil {
-		if errors.Is(err, config.ErrDoesNotExist) {
-			return nil, err
-		}
-
 		return nil, err
 	}
 

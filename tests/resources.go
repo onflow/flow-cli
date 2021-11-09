@@ -161,6 +161,20 @@ var TransactionArgString = resource{
 	`),
 }
 
+var TransactionImports = resource{
+	Filename: "transactionImport.cdc",
+	Source: []byte(`
+		import Hello from "./contractHello.cdc"
+		
+		transaction() {
+			prepare(authorizer: AuthAccount) {}
+			execute {
+				Hello.hello()
+			}
+		}
+	`),
+}
+
 var TransactionSimple = resource{
 	Filename: "transactionSimple.cdc",
 	Source: []byte(`

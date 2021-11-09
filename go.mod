@@ -2,15 +2,13 @@ module github.com/onflow/flow-cli
 
 go 1.13
 
-replace github.com/onflow/cadence/languageserver => github.com/bjartek/cadence/languageserver v0.9.5-0.20210804215405-0397187261d5
-
 require (
 	github.com/a8m/envsubst v1.2.0
 	github.com/gosuri/uilive v0.0.4
 	github.com/joho/godotenv v1.3.0
 	github.com/manifoldco/promptui v0.8.0
 	github.com/onflow/cadence v0.18.1-0.20210621144040-64e6b6fb2337
-	github.com/onflow/cadence/languageserver v0.18.2
+	github.com/onflow/cadence/languageserver v0.18.3-0.20210922170423-869cc8faab9b
 	github.com/onflow/flow-core-contracts/lib/go/templates v0.6.0
 	github.com/onflow/flow-emulator v0.22.0
 	github.com/onflow/flow-go v0.18.4

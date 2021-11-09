@@ -148,6 +148,39 @@ func Test_PreferLocalJson(t *testing.T) {
 	)
 }
 
+func Test_MissingConfiguration(t *testing.T) {
+	composer := config.NewLoader(afero.Afero{Fs: mockFS})
+	composer.AddConfigParser(json.NewParser())
+
+	conf, err := composer.Load([]string{"flow.json"})
+
+	assert.Nil(t, conf)
+	assert.EqualError(t, err, "missing configuration")
+}
+
+func Test_ConfigurationWrongFormat(t *testing.T) {
+	b := []byte(`{
+		"deployments": {
+			"emulator-account": {
+				"address": "f8d6e0586b0a20c7",
+				"key": "21c5dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7"
+			}
+		}
+	}`)
+
+	mockFS := afero.NewMemMapFs()
+	err := afero.WriteFile(mockFS, "flow.json", b, 0644)
+
+	assert.NoError(t, err)
+
+	composer := config.NewLoader(afero.Afero{Fs: mockFS})
+	composer.AddConfigParser(json.NewParser())
+
+	conf, err := composer.Load(config.DefaultPaths())
+	assert.EqualError(t, err, "configuration syntax error: json: cannot unmarshal string into Go struct field jsonConfig.deployments of type []json.deployment")
+	assert.Nil(t, conf)
+}
+
 func Test_ComposeJSON(t *testing.T) {
 	b := []byte(`{
 		"accounts": {
