@@ -23,6 +23,9 @@ import (
 	"encoding/hex"
 	"fmt"
 
+	"github.com/onflow/cadence/runtime/cmd"
+	"github.com/onflow/cadence/runtime/common"
+
 	jsoncdc "github.com/onflow/cadence/encoding/json"
 
 	"github.com/onflow/flow-go-sdk/templates"
@@ -105,15 +108,8 @@ func addAccountContractWithArgs(
 		}
 	}`
 
-	cadenceName, err := cadence.NewString(contract.Name)
-	if err != nil {
-		return nil, err
-	}
-
-	cadenceCode, err := cadence.NewString(contract.SourceHex())
-	if err != nil {
-		return nil, err
-	}
+	cadenceName := cadence.String(contract.Name)
+	cadenceCode := cadence.String(contract.SourceHex())
 
 	tx := flow.NewTransaction().
 		AddRawArgument(jsoncdc.MustEncode(cadenceName)).
@@ -136,7 +132,7 @@ func addAccountContractWithArgs(
 	tx.SetGasLimit(maxGasLimit)
 
 	t := &Transaction{tx: tx}
-	err = t.SetSigner(signer)
+	err := t.SetSigner(signer)
 	if err != nil {
 		return nil, err
 	}
@@ -205,8 +201,36 @@ func (t *Transaction) SetSigner(account *Account) error {
 		return err
 	}
 
+	if !t.validSigner(account.Address()) {
+		return fmt.Errorf(
+			"not a valid signer %s, proposer: %s, payer: %s, authorizers: %s",
+			account.Address(),
+			t.tx.ProposalKey.Address,
+			t.tx.Payer,
+			t.tx.Authorizers,
+		)
+	}
+
 	t.signer = account
 	return nil
+}
+
+// validSigner checks whether the signer is valid for transaction
+func (t *Transaction) validSigner(s flow.Address) bool {
+	return t.tx.ProposalKey.Address == s ||
+		t.tx.Payer == s ||
+		t.authorizersContains(s)
+}
+
+// authorizersContains checks whether address is in the authorizer list
+func (t *Transaction) authorizersContains(address flow.Address) bool {
+	for _, a := range t.tx.Authorizers {
+		if address == a {
+			return true
+		}
+	}
+
+	return false
 }
 
 // SetProposer sets the proposer for transaction.
@@ -259,12 +283,35 @@ func (t *Transaction) AddArgument(arg cadence.Value) error {
 }
 
 // AddAuthorizers add group of authorizers.
-func (t *Transaction) AddAuthorizers(authorizers []flow.Address) *Transaction {
+func (t *Transaction) AddAuthorizers(authorizers []flow.Address) (*Transaction, error) {
+	program, _ := cmd.PrepareProgram(
+		string(t.tx.Script),
+		common.StringLocation(""),
+		map[common.LocationID]string{},
+	)
+
+	// get authorizers param list if exists
+	if program.SoleTransactionDeclaration().Prepare != nil {
+		requiredAuths := program.SoleTransactionDeclaration().
+			Prepare.
+			FunctionDeclaration.
+			ParameterList.
+			Parameters
+
+		if len(requiredAuths) != len(authorizers) {
+			return nil, fmt.Errorf(
+				"provided authorizers length mismatch, required authorizers %d, but provided %d",
+				len(requiredAuths),
+				len(authorizers),
+			)
+		}
+	}
+
 	for _, authorizer := range authorizers {
 		t.tx.AddAuthorizer(authorizer)
 	}
 
-	return t
+	return t, nil
 }
 
 // Sign signs transaction using signer account.

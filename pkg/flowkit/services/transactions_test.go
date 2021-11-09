@@ -241,4 +241,183 @@ func TestTransactions_Integration(t *testing.T) {
 		)
 	})
 
+	t.Run("Sign transaction", func(t *testing.T) {
+		t.Parallel()
+		state, s := setupIntegration()
+		setupAccounts(state, s)
+
+		a, _ := state.Accounts().ByName("Alice")
+
+		tx, err := s.Transactions.Build(
+			a.Address(),
+			nil,
+			a.Address(),
+			0,
+			tests.TransactionSimple.Source,
+			tests.TransactionSimple.Filename,
+			1000,
+			nil,
+			"",
+		)
+
+		assert.Nil(t, err)
+		assert.NotNil(t, tx)
+
+		txSigned, err := s.Transactions.Sign(
+			a,
+			[]byte(fmt.Sprintf("%x", tx.FlowTransaction().Encode())),
+			true,
+		)
+		assert.Nil(t, err)
+		assert.NotNil(t, txSigned)
+		assert.Equal(t, len(txSigned.FlowTransaction().Authorizers), 0)
+		assert.Equal(t, txSigned.FlowTransaction().Payer, a.Address())
+		assert.Equal(t, txSigned.FlowTransaction().ProposalKey.Address, a.Address())
+		assert.Equal(t, txSigned.FlowTransaction().ProposalKey.KeyIndex, 0)
+		assert.Equal(t, txSigned.FlowTransaction().Script, tests.TransactionSimple.Source)
+	})
+
+	t.Run("Build, Sign and Send Transaction", func(t *testing.T) {
+		t.Parallel()
+		state, s := setupIntegration()
+		setupAccounts(state, s)
+
+		a, _ := state.Accounts().ByName("Alice")
+
+		tx, err := s.Transactions.Build(
+			a.Address(),
+			[]flow.Address{a.Address()},
+			a.Address(),
+			0,
+			tests.TransactionSingleAuth.Source,
+			tests.TransactionSingleAuth.Filename,
+			1000,
+			nil,
+			"",
+		)
+
+		assert.Nil(t, err)
+		assert.NotNil(t, tx)
+
+		txSigned, err := s.Transactions.Sign(
+			a,
+			[]byte(fmt.Sprintf("%x", tx.FlowTransaction().Encode())),
+			true,
+		)
+		assert.Nil(t, err)
+		assert.NotNil(t, txSigned)
+
+		txSent, txResult, err := s.Transactions.SendSigned(
+			[]byte(fmt.Sprintf("%x", txSigned.FlowTransaction().Encode())),
+		)
+		assert.Nil(t, err)
+		assert.Equal(t, txResult.Status, flow.TransactionStatusSealed)
+		assert.NotNil(t, txSent.ID())
+
+	})
+
+	t.Run("Fails signing transaction, wrong account", func(t *testing.T) {
+		t.Parallel()
+		state, s := setupIntegration()
+		setupAccounts(state, s)
+
+		a, _ := state.Accounts().ByName("Alice")
+
+		tx, err := s.Transactions.Build(
+			a.Address(),
+			[]flow.Address{a.Address()},
+			a.Address(),
+			0,
+			tests.TransactionSingleAuth.Source,
+			tests.TransactionSingleAuth.Filename,
+			1000,
+			nil,
+			"",
+		)
+
+		assert.Nil(t, err)
+		assert.NotNil(t, tx)
+
+		// sign with wrong account
+		a, _ = state.Accounts().ByName("Bob")
+
+		txSigned, err := s.Transactions.Sign(
+			a,
+			[]byte(fmt.Sprintf("%x", tx.FlowTransaction().Encode())),
+			true,
+		)
+		assert.EqualError(t, err, "not a valid signer 179b6b1cb6755e31, proposer: 01cf0e2f2f715450, payer: 01cf0e2f2f715450, authorizers: [01cf0e2f2f715450]")
+		assert.Nil(t, txSigned)
+	})
+
+	t.Run("Fails building, authorizers mismatch", func(t *testing.T) {
+		t.Parallel()
+		state, s := setupIntegration()
+		setupAccounts(state, s)
+
+		a, _ := state.Accounts().ByName("Alice")
+
+		tx, err := s.Transactions.Build(
+			a.Address(),
+			[]flow.Address{a.Address()},
+			a.Address(),
+			0,
+			tests.TransactionTwoAuth.Source,
+			tests.TransactionTwoAuth.Filename,
+			1000,
+			nil,
+			"",
+		)
+
+		assert.EqualError(t, err, "provided authorizers length mismatch, required authorizers 2, but provided 1")
+		assert.Nil(t, tx)
+	})
+
+	t.Run("Send Transaction", func(t *testing.T) {
+		t.Parallel()
+		state, s := setupIntegration()
+		setupAccounts(state, s)
+
+		a, _ := state.Accounts().ByName("Alice")
+
+		tx, txr, err := s.Transactions.Send(
+			a,
+			tests.TransactionSingleAuth.Source,
+			tests.TransactionSingleAuth.Filename,
+			1000,
+			nil,
+			"",
+		)
+		assert.NoError(t, err)
+		assert.Equal(t, tx.Payer.String(), a.Address().String())
+		assert.Equal(t, tx.ProposalKey.KeyIndex, a.Key().Index())
+		assert.Nil(t, txr.Error)
+		assert.Equal(t, txr.Status, flow.TransactionStatusSealed)
+	})
+
+	t.Run("Send Transaction with arguments", func(t *testing.T) {
+		t.Parallel()
+		state, s := setupIntegration()
+		setupAccounts(state, s)
+
+		a, _ := state.Accounts().ByName("Alice")
+		args := []cadence.Value{
+			cadence.String("Bar"),
+		}
+
+		tx, txr, err := s.Transactions.Send(
+			a,
+			tests.TransactionArgString.Source,
+			tests.TransactionArgString.Filename,
+			1000,
+			args,
+			"",
+		)
+		assert.NoError(t, err)
+		assert.Equal(t, tx.Payer.String(), a.Address().String())
+		assert.Equal(t, tx.ProposalKey.KeyIndex, a.Key().Index())
+		assert.Equal(t, fmt.Sprintf("%x", tx.Arguments), "[7b2274797065223a22537472696e67222c2276616c7565223a22426172227d0a]")
+		assert.Nil(t, txr.Error)
+		assert.Equal(t, txr.Status, flow.TransactionStatusSealed)
+	})
 }
