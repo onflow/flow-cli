@@ -42,7 +42,7 @@ func TestScripts(t *testing.T) {
 		})
 
 		args := []cadence.Value{
-			cadence.NewString("Foo"),
+			cadence.String("Foo"),
 		}
 		_, err := s.Scripts.Execute(tests.ScriptArgString.Source, args, "", "")
 
@@ -59,7 +59,7 @@ func TestScripts_Integration(t *testing.T) {
 		_, s := setupIntegration()
 
 		args := []cadence.Value{
-			cadence.NewString("Foo"),
+			cadence.String("Foo"),
 		}
 		res, err := s.Scripts.Execute(tests.ScriptArgString.Source, args, "", "")
 
@@ -71,7 +71,7 @@ func TestScripts_Integration(t *testing.T) {
 		t.Parallel()
 		_, s := setupIntegration()
 		args := []cadence.Value{
-			cadence.NewString("Foo"),
+			cadence.String("Foo"),
 		}
 		res, err := s.Scripts.Execute(tests.ScriptWithError.Source, args, "", "")
 

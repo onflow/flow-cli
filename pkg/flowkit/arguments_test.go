@@ -42,7 +42,7 @@ func TestArguments(t *testing.T) {
 		cadence.NewUInt32(42),
 		cadence.NewUInt64(42),
 		cadence.NewUInt8(42),
-		cadence.NewString("42"),
+		cadence.String("42"),
 	}
 
 	for _, sample := range sampleValues {

@@ -38,7 +38,7 @@ func TestEvent(t *testing.T) {
 			Type:       cadence.AddressType{},
 		}},
 		[]cadence.Value{
-			cadence.NewString("00c4fef62310c807"),
+			cadence.String("00c4fef62310c807"),
 		},
 	)
 	tx := tests.NewTransactionResult([]flow.Event{*flowEvent})

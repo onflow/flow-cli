@@ -81,7 +81,7 @@ func TestTransactions(t *testing.T) {
 		})
 
 		args := []cadence.Value{
-			cadence.NewString("Bar"),
+			cadence.String("Bar"),
 		}
 
 		_, _, err := s.Transactions.Send(
@@ -405,7 +405,7 @@ func TestTransactions_Integration(t *testing.T) {
 
 		a, _ := state.Accounts().ByName("Alice")
 		args := []cadence.Value{
-			cadence.NewString("Bar"),
+			cadence.String("Bar"),
 		}
 
 		tx, txr, err := s.Transactions.Send(
