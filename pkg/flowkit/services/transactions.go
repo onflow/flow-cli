@@ -102,7 +102,6 @@ func (t *Transactions) Build(
 	tx := flowkit.NewTransaction().
 		SetPayer(payer).
 		SetProposer(proposerAccount, proposerKeyIndex).
-		AddAuthorizers(authorizers).
 		SetGasLimit(gasLimit).
 		SetBlockReference(latestBlock)
 
@@ -135,6 +134,11 @@ func (t *Transactions) Build(
 	}
 
 	err = tx.SetScriptWithArgs(code, args)
+	if err != nil {
+		return nil, err
+	}
+
+	tx, err = tx.AddAuthorizers(authorizers)
 	if err != nil {
 		return nil, err
 	}

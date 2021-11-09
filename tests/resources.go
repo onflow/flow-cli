@@ -182,6 +182,24 @@ var TransactionSimple = resource{
 	`),
 }
 
+var TransactionSingleAuth = resource{
+	Filename: "transactionAuth1.cdc",
+	Source: []byte(`
+		transaction() {
+			prepare(authorizer: AuthAccount) {}
+		}
+	`),
+}
+
+var TransactionTwoAuth = resource{
+	Filename: "transactionAuth2.cdc",
+	Source: []byte(`
+		transaction() {
+			prepare(auth1: AuthAccount, auth2: AuthAccount) {}
+		}
+	`),
+}
+
 var ScriptWithError = resource{
 	Filename: "scriptError.cdc",
 	Source: []byte(`
