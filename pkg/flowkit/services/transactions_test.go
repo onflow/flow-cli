@@ -20,6 +20,7 @@ package services
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
