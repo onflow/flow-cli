@@ -34,7 +34,7 @@ type flagsEvents struct {
 	End     uint64 `flag:"end" info:"End block height"`
 	Last    uint64 `default:"10" flag:"last" info:"Fetch number of blocks relative to the last block. Ignored if the start flag is set. Used as a default if no flags are provided"`
 	Workers int    `default:"10" flag:"workers" info:"Number of workers to use when fetching events in parallel"`
-	Batch   uint64 `default:"250" flag:"batch" info:"Number of blocks each worker will fetch"`
+	Batch   uint64 `default:"25" flag:"batch" info:"Number of blocks each worker will fetch"`
 }
 
 var eventsFlags = flagsEvents{}
@@ -109,7 +109,11 @@ func get(
 			return nil, err
 		}
 
-		start = end - last
+		if last > end {
+			start = 0
+		} else {
+			start = end - last
+		}
 	} else if start == 0 || end == 0 {
 		return nil, fmt.Errorf("please provide either both start and end for range or only last flag")
 	}

@@ -37,9 +37,7 @@ func TestEvent(t *testing.T) {
 			Identifier: "address",
 			Type:       cadence.AddressType{},
 		}},
-		[]cadence.Value{
-			cadence.String("00c4fef62310c807"),
-		},
+		[]cadence.Value{cadence.String("00c4fef62310c807")},
 	)
 	tx := tests.NewTransactionResult([]flow.Event{*flowEvent})
 	e := flowkit.EventsFromTransaction(tx)

@@ -108,8 +108,15 @@ func addAccountContractWithArgs(
 		}
 	}`
 
-	cadenceName := cadence.String(contract.Name)
-	cadenceCode := cadence.String(contract.SourceHex())
+	cadenceName, err := cadence.String(contract.Name)
+	if err != nil {
+		return nil, err
+	}
+
+	cadenceCode, err := cadence.String(contract.SourceHex())
+	if err != nil {
+		return nil, err
+	}
 
 	tx := flow.NewTransaction().
 		AddRawArgument(jsoncdc.MustEncode(cadenceName)).
@@ -132,7 +139,7 @@ func addAccountContractWithArgs(
 	tx.SetGasLimit(maxGasLimit)
 
 	t := &Transaction{tx: tx}
-	err := t.SetSigner(signer)
+	err = t.SetSigner(signer)
 	if err != nil {
 		return nil, err
 	}

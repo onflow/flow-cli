@@ -17,7 +17,7 @@ flow emulator
 ## Example Usage
 
 ```shell
-> flow emulator start
+> flow emulator
 
 INFO[0000] ⚙️   Using service account 0xf8d6e0586b0a20c7  serviceAddress=f8d6e0586b0a20c7 ...
 ...
@@ -26,6 +26,9 @@ INFO[0000] ⚙️   Using service account 0xf8d6e0586b0a20c7  serviceAddress=f8d
 To learn more about using the Emulator, have a look at the [README of the repository](https://github.com/onflow/flow-emulator).
 
 ## Flags
+
+### Emulator Flags
+You can specify any [emulator flags found here](https://github.com/onflow/flow-emulator#configuration) and they will be applied to the emulator service.
 
 ### Configuration
 
