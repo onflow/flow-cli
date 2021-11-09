@@ -105,8 +105,6 @@ github.com/beorn7/perks v1.0.0/go.mod h1:KWe93zE9D1o94FZ5RNwFwVgaQK1VOXiVxmqh+Ce
 github.com/beorn7/perks v1.0.1 h1:VlbKKnNfV8bJzeqoa4cOKqO6bYr3WgKZxO8Z16+hsOM=
 github.com/beorn7/perks v1.0.1/go.mod h1:G2ZrVWU2WbWT9wwq4/hrbKbnv/1ERSJQ0ibhJ6rlkpw=
 github.com/bgentry/speakeasy v0.1.0/go.mod h1:+zsyZBPWlz7T6j88CTgSN5bM796AkVf0kBD4zp0CCIs=
-github.com/bjartek/cadence/languageserver v0.9.5-0.20210804215405-0397187261d5 h1:cvvYlnRqub6a1+pACPcbGT1feVqPWYxye9bWoThufp0=
-github.com/bjartek/cadence/languageserver v0.9.5-0.20210804215405-0397187261d5/go.mod h1:aKM/5oADoro8Y90/9N7DzHeVwQWDK8lCUtUUWXwg2zY=
 github.com/bketelsen/crypt v0.0.3-0.20200106085610-5cbc8cc4026c/go.mod h1:MKsuJmJgSg28kpZDP6UIiPt0e0Oz0kqKNGyRaWEPv84=
 github.com/bradfitz/go-smtpd v0.0.0-20170404230938-deb6d6237625/go.mod h1:HYsPBTaaSFSlLx/70C2HPIMNZpVV8+vt/A+FMnYP11g=
 github.com/bsipos/thist v1.0.0/go.mod h1:7i0xwRua1/bmUxcxi2xAxaFL895rLtOpKUwnw3NrT8I=
@@ -820,7 +818,6 @@ github.com/onflow/cadence v0.18.1-0.20210621144040-64e6b6fb2337 h1:s5KgNVr8hUiNm
 github.com/onflow/cadence v0.18.1-0.20210621144040-64e6b6fb2337/go.mod h1:iR/tZpP+1YhM8iRnOBPiBIs7on5dE3hk2ZfunCRQswE=
 github.com/onflow/cadence/languageserver v0.15.2/go.mod h1:hQGE8dYH5CfQ1Oe0nXglchgURzZwR3JQhmuXtv4ROHs=
 github.com/onflow/cadence/languageserver v0.16.0/go.mod h1:UPV1so9LcMrhj27IegrTucoyS4TLRVjNr4DJqjqBhFA=
-github.com/onflow/cadence/languageserver v0.18.2 h1:qO7nCUUBzYWiM48iocmMMAYAnoQhYioSB5BNanZzr5A=
 github.com/onflow/cadence/languageserver v0.18.2/go.mod h1:ehuDCUevEEavUzgJqLevcZPjfmTzMBX7Sglbi5ur9uU=
 github.com/onflow/cadence/languageserver v0.18.3-0.20210922170423-869cc8faab9b h1:IO8hF8fvcWJZQLk5p7xw1p7OhFVKl+gJES3MwEehTOM=
 github.com/onflow/cadence/languageserver v0.18.3-0.20210922170423-869cc8faab9b/go.mod h1:6/eWErcmjSo1zxA8MKp6UDtTr3ntAv9qdh9ctMhzULU=
