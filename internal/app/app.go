@@ -38,23 +38,19 @@ func init() {
 }
 
 type CreateResult struct {
-	created string
-	example string
-	api     string
-	cadence string
-	web     string
+	created  string
+	example  string
+	template string
 }
 
 func (r *CreateResult) JSON() interface{} {
 	result := make(map[string]interface{})
 	result["created"] = r.created
 
-	if r.example == "" {
-		result["api"] = r.api
-		result["cadence"] = r.cadence
-		result["web"] = r.web
-	} else {
+	if r.example != "" {
 		result["example"] = r.example
+	} else {
+		result["template"] = r.template
 	}
 
 	return result
@@ -66,12 +62,10 @@ func (r *CreateResult) String() string {
 
 	_, _ = fmt.Fprintf(writer, "Created\t %s\n", r.created)
 
-	if r.example == "" {
-		_, _ = fmt.Fprintf(writer, "Api\t %s\n", r.api)
-		_, _ = fmt.Fprintf(writer, "Cadence\t %s\n", r.cadence)
-		_, _ = fmt.Fprintf(writer, "Web\t %s\n", r.web)
-	} else {
+	if r.example != "" {
 		_, _ = fmt.Fprintf(writer, "Example\t %s\n", r.example)
+	} else {
+		_, _ = fmt.Fprintf(writer, "Template\t %s\n", r.template)
 	}
 
 	_ = writer.Flush()
@@ -80,9 +74,9 @@ func (r *CreateResult) String() string {
 }
 
 func (r *CreateResult) Oneliner() string {
-	if r.example == "" {
-		return fmt.Sprintf("Created: %s, API: %s, Candence: %s, Web: %s", r.created, r.api, r.cadence, r.web)
-	} else {
+	if r.example != "" {
 		return fmt.Sprintf("Created: %s, Example: %s", r.created, r.example)
+	} else {
+		return fmt.Sprintf("Created: %s Template: %s", r.created, r.template)
 	}
 }

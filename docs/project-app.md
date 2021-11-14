@@ -49,22 +49,10 @@ If you start with a template, there will be 3 folder `api`, `cadence`, and `web`
 
 - `api`: Backend service will be put in here, you can provide functions which cannot be
   implemented in client side, such as draw, whitelist registration, KYC, or some works can be
-  offloaded from client side, such as DEX price, NFT lists. Following are some templates
-  included (may not up-to-date):
-  _ `default`: Leave it blank for you.
-  _ `express`: A popular web framework for node. Check out [Express.js](https://expressjs.com/)
-  for details.
-- `cadence`: Contracts will be put in here. Following are some templates included (may not
-  up-to-date):
-  - `default`: Leave it blank for you.
+  offloaded from client side, such as DEX price, NFT lists.
+- `cadence`: Contracts will be put in here.
 - `web`: Frontend app will be put in here, users will use the app to interact with your Cadence
-  contracts. Check out [fcl.js](https://github.com/onflow/fcl-js) to get more details. Following
-  are some templates included (may not up-to-date):
-  _ `default`: Leave it blank for you.
-  _ `react`: A popular frontend framework supported by Facebook. Check out
-  [React.js](https://reactjs.org/) for details.
-  _ `react-ts`: `react` and added TypeScript inside.
-  _ `vue`: A popular frontend framework. Check out [Vue.js](https://vuejs.org/) for details.
+  contracts. Check out [fcl.js](https://github.com/onflow/fcl-js) to get more details.
 
 ## Flags
 

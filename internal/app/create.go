@@ -19,12 +19,19 @@
 package app
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
+	"net/http"
 	"os"
 	"path"
+	"reflect"
+	"strings"
+	"time"
 
 	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
 
@@ -43,26 +50,12 @@ var CreateCommand = &command.Command{
 	Run: create,
 }
 
-type FileAction int
+const ScaffoldRepo = "https://github.com/onflow/flow-app-scaffold/"
 
-const (
-	RemoveAll = iota
-	RemoveFiles
-	Remove
-	Rename
-	MoveFiles
-)
-
-type Action struct {
-	action FileAction
-	path   string
-	value  string
-}
-
-type Template struct {
-	api     string
-	cadence string
-	web     string
+type Examples map[string]json.RawMessage
+type ExampleConfig struct {
+	Repo   string `json:"repo"`
+	Branch string `json:"branch"`
 }
 
 func create(
@@ -72,34 +65,12 @@ func create(
 	_ *services.Services,
 ) (command.Result, error) {
 	var example string
-	var template *Template
+	var template string
 
 	target, err := getTargetDirectory(args[0])
 	if err != nil {
 		return nil, err
 	}
-
-	_, err = git.PlainClone(target, false, &git.CloneOptions{
-		URL:      "https://github.com/flyinglimao/flow-app-scaffold",
-		Progress: os.Stdout,
-	})
-	if err != nil {
-		return nil, err
-	}
-	actions := []Action{{
-		action: Rename,
-		path:   "README.project.md",
-		value:  "README.md",
-	}, {
-		action: Remove,
-		path:   "CONTRIBUTING.md",
-	}, {
-		action: RemoveAll,
-		path:   ".git",
-	}, {
-		action: RemoveAll,
-		path:   ".github",
-	}}
 
 	typePrompt := promptui.Select{
 		Label: "Would you like to start from a full featured example or from a template without much code?",
@@ -111,34 +82,23 @@ func create(
 	}
 
 	if useTemplate == "Example" {
-		actions, example, err = createFromExample(actions, target)
+		example, err = createFromExample(target)
 	} else {
-		actions, template, err = createFromTemplate(actions, target)
+		template, err = createFromTemplate(target)
 	}
 	if err != nil {
 		return nil, err
 	}
-	actions = append(actions, Action{
-		action: RemoveAll,
-		path:   "example",
-	})
 
-	err = executeActions(actions, target)
-	if err != nil {
-		return nil, err
-	}
-
-	if template != nil {
-		return &CreateResult{
-			created: target,
-			api:     template.api,
-			cadence: template.cadence,
-			web:     template.web,
-		}, nil
-	} else {
+	if example != "" {
 		return &CreateResult{
 			created: target,
 			example: example,
+		}, nil
+	} else {
+		return &CreateResult{
+			created:  target,
+			template: template,
 		}, nil
 	}
 }
@@ -173,16 +133,17 @@ func getTargetDirectory(directory string) (string, error) {
 func askChoice(
 	target string,
 	message string,
-	pathName string,
 ) (string, error) {
-	folders, err := os.ReadDir(path.Join(target, pathName))
+	folders, err := os.ReadDir(target)
 	if err != nil {
 		return "", err
 	}
 
 	choices := []string{}
 	for _, folder := range folders {
-		choices = append(choices, folder.Name())
+		if folder.IsDir() && !strings.HasPrefix(folder.Name(), ".") {
+			choices = append(choices, folder.Name())
+		}
 	}
 
 	prompt := promptui.Select{
@@ -197,122 +158,123 @@ func askChoice(
 	return value, nil
 }
 
-func executeActions(actions []Action, target string) error {
-	for _, action := range actions {
-		switch action.action {
-		case RemoveAll:
-			err := os.RemoveAll(path.Join(target, action.path))
-			if err != nil {
-				return err
-			}
-		case RemoveFiles:
-			files, err := os.ReadDir(path.Join(target, action.path))
-			if err != nil {
-				return err
-			}
-			for _, file := range files {
-				if file.IsDir() {
-					continue
-				}
-				err := os.Remove(path.Join(target, action.path, file.Name()))
-				if err != nil {
-					return err
-				}
-			}
-		case Remove:
-			err := os.Remove(path.Join(target, action.path))
-			if err != nil {
-				return err
-			}
-		case Rename:
-			err := os.Rename(path.Join(target, action.path), path.Join(target, action.value))
-			if err != nil {
-				return err
-			}
-		case MoveFiles:
-			files, err := os.ReadDir(path.Join(target, action.path))
-			if err != nil {
-				return err
-			}
-			for _, file := range files {
-				err := os.Rename(path.Join(target, action.path, file.Name()), path.Join(target, action.value, file.Name()))
-				if err != nil {
-					return err
-				}
-			}
+func createFromExample(target string) (string, error) {
+	url := ScaffoldRepo + "blob/main/examples.json?raw=1"
+	httpClient := http.Client{
+		Timeout: time.Second * 5,
+	}
+
+	req, err := http.NewRequest(http.MethodGet, url, nil)
+	if err != nil {
+		return "", err
+	}
+
+	res, err := httpClient.Do(req)
+	if err != nil {
+		return "", err
+	}
+	if res.Body != nil {
+		defer res.Body.Close()
+	}
+
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return "", err
+	}
+
+	examples := Examples{}
+	err = json.Unmarshal(body, &examples)
+	if err != nil {
+		return "", err
+	}
+
+	options := reflect.ValueOf(examples).MapKeys()
+	prompt := promptui.Select{
+		Label: "Which example do you want to start with?",
+		Items: options,
+	}
+	_, option, err := prompt.Run()
+	if err != nil {
+		return "", err
+	}
+
+	config := ExampleConfig{}
+	err = json.Unmarshal(examples[option], &config)
+
+	if err != nil {
+		return "", err
+	}
+
+	_, err = git.PlainClone(target, false, &git.CloneOptions{
+		URL:           config.Repo,
+		ReferenceName: plumbing.ReferenceName(fmt.Sprintf("refs/heads/%s", config.Branch)),
+		SingleBranch:  true,
+		Progress:      os.Stdout,
+	})
+	if err != nil {
+		return "", err
+	}
+
+	return option, nil
+}
+
+func createFromTemplate(target string) (string, error) {
+	_, err := git.PlainClone(target, false, &git.CloneOptions{
+		URL:      ScaffoldRepo,
+		Progress: os.Stdout,
+	})
+	if err != nil {
+		return "", err
+	}
+
+	template, err := askChoice(target, "Which template do you want to start with?")
+	if err != nil {
+		return "", err
+	}
+
+	err = cleanUpProject(target, template)
+	if err != nil {
+		return "", err
+	}
+	return template, nil
+}
+
+func cleanUpProject(target string, template string) error {
+	entries, err := os.ReadDir(target)
+	if err != nil {
+		return err
+	}
+
+	for _, entry := range entries {
+		if entry.Name() == template {
+			continue
+		}
+
+		if entry.IsDir() {
+			err = os.RemoveAll(path.Join(target, entry.Name()))
+		} else {
+			err = os.Remove(path.Join(target, entry.Name()))
+		}
+		if err != nil {
+			return err
 		}
 	}
+
+	files, err := os.ReadDir(path.Join(target, template))
+	if err != nil {
+		return err
+	}
+	for _, file := range files {
+		err = os.Rename(path.Join(target, template, file.Name()), path.Join(target, file.Name()))
+		if err != nil {
+			return err
+		}
+	}
+
+	err = os.Remove(path.Join(target, template))
+	if err != nil {
+		return err
+	}
+
 	return nil
-}
-
-func createFromExample(actions []Action, target string) ([]Action, string, error) {
-	actions = append(actions, Action{
-		action: RemoveAll,
-		path:   "api",
-	}, Action{
-		action: RemoveAll,
-		path:   "cadence",
-	}, Action{
-		action: RemoveAll,
-		path:   "web",
-	}, Action{
-		action: RemoveFiles,
-		path:   ".",
-	})
-
-	example, err := askChoice(target, "Which example you want to start with?", "example")
-	if err != nil {
-		return nil, "", err
-	}
-
-	actions = append(actions, Action{
-		action: MoveFiles,
-		path:   fmt.Sprintf("example/%s", example),
-		value:  ".",
-	})
-	return actions, example, nil
-}
-
-func createFromTemplate(actions []Action, target string) ([]Action, *Template, error) {
-	api, err := askChoice(target, "Which API template you want to start with?", "api/templates")
-	if err != nil {
-		return nil, nil, err
-	}
-	cadence, err := askChoice(target, "Which Cadence template you want to start with?", "cadence/templates")
-	if err != nil {
-		return nil, nil, err
-	}
-	web, err := askChoice(target, "Which Web template you want to start with?", "web/templates")
-	if err != nil {
-		return nil, nil, err
-	}
-
-	actions = append(actions, Action{
-		action: MoveFiles,
-		path:   fmt.Sprintf("api/templates/%s", api),
-		value:  "api",
-	}, Action{
-		action: RemoveAll,
-		path:   "api/templates",
-	}, Action{
-		action: MoveFiles,
-		path:   fmt.Sprintf("cadence/templates/%s", cadence),
-		value:  "cadence",
-	}, Action{
-		action: RemoveAll,
-		path:   "cadence/templates",
-	}, Action{
-		action: MoveFiles,
-		path:   fmt.Sprintf("web/templates/%s", web),
-		value:  "web",
-	}, Action{
-		action: RemoveAll,
-		path:   "web/templates",
-	})
-
-	return actions, &Template{
-		api:     api,
-		cadence: cadence,
-		web:     web,
-	}, nil
 }
