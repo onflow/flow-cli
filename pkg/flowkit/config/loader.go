@@ -89,6 +89,10 @@ func (l *Loader) Save(conf *Config, path string) error {
 		filepath.Ext(path),
 	)
 
+	if configFormat == nil {
+		return fmt.Errorf("parser not found for format")
+	}
+
 	data, err := configFormat.Serialize(conf)
 	if err != nil {
 		return err
@@ -102,7 +106,7 @@ func (l *Loader) Save(conf *Config, path string) error {
 	return nil
 }
 
-func (l *Loader) LoadConfig(confPath string) (*Config, error) {
+func (l *Loader) loadConfig(confPath string) (*Config, error) {
 	raw, err := l.loadFile(confPath)
 
 	if err != nil {
@@ -115,9 +119,7 @@ func (l *Loader) LoadConfig(confPath string) (*Config, error) {
 		return nil, fmt.Errorf("parser not found for config: %s", confPath)
 	}
 
-	conf, err := configParser.Deserialize(preProcessed)
-	return conf, err
-
+	return configParser.Deserialize(preProcessed)
 }
 
 // Load loads configuration from one or more file paths.
@@ -125,36 +127,38 @@ func (l *Loader) LoadConfig(confPath string) (*Config, error) {
 // If more than one path is specified, their contents are merged
 // together into on configuration object.
 func (l *Loader) Load(paths []string) (*Config, error) {
+	// special case for default configs
+	// try to load local config and only if not found try to load global config
+	if IsDefaultPath(paths) {
+		conf, err := l.loadConfig(DefaultPath)
+		if err == nil { // if we could load it then process it
+			return l.postprocess(conf)
+		}
+		if !errors.Is(err, ErrDoesNotExist) {
+			return nil, err
+		}
+
+		conf, err = l.loadConfig(GlobalPath())
+		if err != nil {
+			return nil, ErrDoesNotExist
+		} else {
+			return l.postprocess(conf)
+		}
+	}
+
 	var baseConf *Config
-
-	if IsGlobalPath(paths) {
-		var defaultConfigError error
-		var globalConfigError error
-		//try to load default flow.json
-		baseConf, defaultConfigError = l.LoadConfig(paths[1])
-		if defaultConfigError != nil {
-			//try to load global flow.json
-			baseConf, globalConfigError = l.LoadConfig(paths[0])
-			if globalConfigError != nil {
-				return nil, ErrDoesNotExist
-			}
+	for _, confPath := range paths {
+		conf, err := l.loadConfig(confPath)
+		if err != nil {
+			return nil, err
 		}
-	} else {
-
-		for _, confPath := range paths {
-
-			conf, err := l.LoadConfig(confPath)
-			if err != nil {
-				return nil, err
-			}
-			// if first conf just assign as baseConf
-			if baseConf == nil {
-				baseConf = conf
-				continue
-			}
-
-			l.composeConfig(baseConf, conf)
+		// if first conf just assign as baseConf
+		if baseConf == nil {
+			baseConf = conf
+			continue
 		}
+
+		l.composeConfig(baseConf, conf)
 	}
 
 	// if no config was loaded - neither local nor global return an error.
@@ -162,12 +166,7 @@ func (l *Loader) Load(paths []string) (*Config, error) {
 		return nil, ErrDoesNotExist
 	}
 
-	baseConf, err := l.postprocess(baseConf)
-	if err != nil {
-		return nil, err
-	}
-
-	return baseConf, nil
+	return l.postprocess(baseConf)
 }
 
 // preprocess does all manipulations to the raw configuration format happens here.
@@ -209,6 +208,12 @@ func (l *Loader) postprocess(baseConf *Config) (*Config, error) {
 		}
 
 		l.composeConfig(baseConf, accountConf)
+	}
+
+	// validate as part of post processing
+	err := baseConf.Validate()
+	if err != nil {
+		return nil, err
 	}
 
 	return baseConf, nil

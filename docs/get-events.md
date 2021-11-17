@@ -124,7 +124,7 @@ start flag is set. Used as a default if no flags are provided.
 
 - Flag: `--batch`
 - Valid inputs: number
-- Default: `250`
+- Default: `25`
 
 Number of blocks each worker will fetch.
 

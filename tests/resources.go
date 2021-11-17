@@ -161,10 +161,42 @@ var TransactionArgString = resource{
 	`),
 }
 
+var TransactionImports = resource{
+	Filename: "transactionImport.cdc",
+	Source: []byte(`
+		import Hello from "./contractHello.cdc"
+		
+		transaction() {
+			prepare(authorizer: AuthAccount) {}
+			execute {
+				Hello.hello()
+			}
+		}
+	`),
+}
+
 var TransactionSimple = resource{
 	Filename: "transactionSimple.cdc",
 	Source: []byte(`
 		transaction() {}
+	`),
+}
+
+var TransactionSingleAuth = resource{
+	Filename: "transactionAuth1.cdc",
+	Source: []byte(`
+		transaction() {
+			prepare(authorizer: AuthAccount) {}
+		}
+	`),
+}
+
+var TransactionTwoAuth = resource{
+	Filename: "transactionAuth2.cdc",
+	Source: []byte(`
+		transaction() {
+			prepare(auth1: AuthAccount, auth2: AuthAccount) {}
+		}
 	`),
 }
 

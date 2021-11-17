@@ -27,6 +27,7 @@ import (
 	"github.com/onflow/cadence"
 	jsoncdc "github.com/onflow/cadence/encoding/json"
 	"github.com/onflow/cadence/runtime"
+	"github.com/onflow/cadence/runtime/ast"
 	"github.com/onflow/cadence/runtime/cmd"
 	"github.com/onflow/cadence/runtime/common"
 	"github.com/onflow/cadence/runtime/sema"
@@ -120,20 +121,32 @@ func ParseArguments(args []string, argsJSON string) (scriptArgs []cadence.Value,
 	return
 }
 
-func ParseArgumentsWithoutType(code []byte, args []string) (scriptArgs []cadence.Value, err error) {
+func ParseArgumentsWithoutType(fileName string, code []byte, args []string) (scriptArgs []cadence.Value, err error) {
 
 	var resultArgs []cadence.Value = make([]cadence.Value, 0)
 
 	codes := map[common.LocationID]string{}
-	location := common.StringLocation("")
+	location := common.StringLocation(fileName)
 	program, must := cmd.PrepareProgram(string(code), location, codes)
 	checker, _ := cmd.PrepareChecker(program, location, codes, nil, must)
 
-	err = checker.Check()
-	var parameterList []*sema.Parameter = checker.EntryPointParameters()
+	var parameterList []*ast.Parameter
 
-	//return on checker error or no entry
-	if err != nil || parameterList == nil {
+	transactionDeclaration := program.SoleTransactionDeclaration()
+	if transactionDeclaration != nil {
+		if transactionDeclaration.ParameterList != nil {
+			parameterList = transactionDeclaration.ParameterList.Parameters
+		}
+	}
+
+	functionDeclaration := sema.FunctionEntryPointDeclaration(program)
+	if functionDeclaration != nil {
+		if functionDeclaration.ParameterList != nil {
+			parameterList = functionDeclaration.ParameterList.Parameters
+		}
+	}
+
+	if parameterList == nil {
 		return resultArgs, nil
 	}
 
@@ -142,7 +155,8 @@ func ParseArgumentsWithoutType(code []byte, args []string) (scriptArgs []cadence
 	}
 
 	for index, argumentString := range args {
-		semaType := parameterList[index].TypeAnnotation.Type
+		astType := parameterList[index].TypeAnnotation.Type
+		semaType := checker.ConvertType(astType)
 
 		switch semaType {
 		case sema.StringType:

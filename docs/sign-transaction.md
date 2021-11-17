@@ -73,6 +73,13 @@ To be used with the `flow transaction build` command.
 
 ## Flags
 
+### Include Fields
+
+- Flag: `--include`
+- Valid inputs: `code`, `payload`, `signatures`
+
+Specify fields to include in the result output. Applies only to the text output.
+
 ### Signer
 
 - Flag: `--signer`

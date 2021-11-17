@@ -94,11 +94,11 @@ func Test_AllowMissingLocalJson(t *testing.T) {
 	composer.AddConfigParser(json.NewParser())
 
 	conf, loadErr := composer.Load(config.DefaultPaths())
+	assert.NoError(t, loadErr)
 
 	acc, err := conf.Accounts.ByName("emulator-account")
 	assert.NoError(t, err)
 
-	assert.NoError(t, loadErr)
 	assert.Equal(t, 1, len(conf.Accounts))
 	assert.Equal(t, "0x21c5dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7",
 		acc.Key.PrivateKey.String(),
@@ -135,6 +135,8 @@ func Test_PreferLocalJson(t *testing.T) {
 	composer.AddConfigParser(json.NewParser())
 
 	conf, loadErr := composer.Load(config.DefaultPaths())
+	assert.NotNil(t, conf)
+	assert.NoError(t, err)
 
 	acc, err := conf.Accounts.ByName("emulator-account")
 	assert.NoError(t, err)
@@ -144,6 +146,39 @@ func Test_PreferLocalJson(t *testing.T) {
 	assert.Equal(t, "0x21c5dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7",
 		acc.Key.PrivateKey.String(),
 	)
+}
+
+func Test_MissingConfiguration(t *testing.T) {
+	composer := config.NewLoader(afero.Afero{Fs: mockFS})
+	composer.AddConfigParser(json.NewParser())
+
+	conf, err := composer.Load([]string{"flow.json"})
+
+	assert.Nil(t, conf)
+	assert.EqualError(t, err, "missing configuration")
+}
+
+func Test_ConfigurationWrongFormat(t *testing.T) {
+	b := []byte(`{
+		"deployments": {
+			"emulator-account": {
+				"address": "f8d6e0586b0a20c7",
+				"key": "21c5dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7"
+			}
+		}
+	}`)
+
+	mockFS := afero.NewMemMapFs()
+	err := afero.WriteFile(mockFS, "flow.json", b, 0644)
+
+	assert.NoError(t, err)
+
+	composer := config.NewLoader(afero.Afero{Fs: mockFS})
+	composer.AddConfigParser(json.NewParser())
+
+	conf, err := composer.Load(config.DefaultPaths())
+	assert.EqualError(t, err, "configuration syntax error: json: cannot unmarshal string into Go struct field jsonConfig.deployments of type []json.deployment")
+	assert.Nil(t, conf)
 }
 
 func Test_ComposeJSON(t *testing.T) {
@@ -189,6 +224,49 @@ func Test_ComposeJSON(t *testing.T) {
 	assert.Equal(t, "0x21c5dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7", account.Key.PrivateKey.String())
 	assert.NotNil(t, adminAccount)
 	assert.Equal(t, "0x3335dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7", adminAccount.Key.PrivateKey.String())
+}
+
+func Test_ComposeCrossReference(t *testing.T) {
+	b := []byte(`{
+		"accounts": {
+			"test": {
+				"address":"f1d6e0586b0a20c7",
+				"key":"3335dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7"
+			}
+		},
+		"deployments": {
+			"testnet": {
+				"test": ["NFT"]
+			}
+		}
+	}`)
+
+	b2 := []byte(`{
+		"networks": {
+			"testnet": "access.devnet.nodes.onflow.org:9000"
+		},
+		"contracts": { "NFT": "./NFT.cdc" }
+	}`)
+
+	mockFS := afero.NewMemMapFs()
+	err := afero.WriteFile(mockFS, "flow.json", b, 0644)
+	err2 := afero.WriteFile(mockFS, "b.json", b2, 0644)
+
+	assert.NoError(t, err)
+	assert.NoError(t, err2)
+
+	composer := config.NewLoader(afero.Afero{Fs: mockFS})
+	composer.AddConfigParser(json.NewParser())
+
+	conf, loadErr := composer.Load([]string{"flow.json", "b.json"})
+
+	assert.NoError(t, loadErr)
+	account, err := conf.Accounts.ByName("test")
+	assert.NoError(t, err)
+	assert.NotNil(t, account)
+
+	deployments := conf.Deployments.ByAccountAndNetwork(account.Name, "testnet")
+	assert.NotNil(t, deployments)
 }
 
 func Test_ComposeJSONOverwrite(t *testing.T) {

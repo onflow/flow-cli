@@ -76,8 +76,10 @@ func Test_NonExistingContractForDeployment(t *testing.T) {
 	}`)
 
 	parser := NewParser()
-	_, err := parser.Deserialize(b)
+	config, err := parser.Deserialize(b)
+	assert.NoError(t, err)
 
+	err = config.Validate()
 	assert.Equal(t, err.Error(), "deployment contains nonexisting contract FungibleToken")
 }
 
@@ -103,8 +105,10 @@ func Test_NonExistingAccountForDeployment(t *testing.T) {
 	}`)
 
 	parser := NewParser()
-	_, err := parser.Deserialize(b)
+	conf, err := parser.Deserialize(b)
+	assert.NoError(t, err)
 
+	err = conf.Validate()
 	assert.Equal(t, err.Error(), "deployment contains nonexisting account test-1")
 }
 
@@ -128,8 +132,10 @@ func Test_NonExistingNetworkForDeployment(t *testing.T) {
 	}`)
 
 	parser := NewParser()
-	_, err := parser.Deserialize(b)
+	conf, err := parser.Deserialize(b)
+	assert.NoError(t, err)
 
+	err = conf.Validate()
 	assert.Equal(t, err.Error(), "deployment contains nonexisting network foo")
 }
 
@@ -144,7 +150,9 @@ func Test_NonExistingAccountForEmulator(t *testing.T) {
 	}`)
 
 	parser := NewParser()
-	_, err := parser.Deserialize(b)
+	conf, err := parser.Deserialize(b)
+	assert.NoError(t, err)
 
+	err = conf.Validate()
 	assert.Equal(t, err.Error(), "emulator default contains nonexisting service account emulator-account")
 }

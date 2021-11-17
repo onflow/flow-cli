@@ -59,15 +59,6 @@ func addContract(
 	_ *services.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
-
-	if !config.IsGlobalPath(globalFlags.ConfigPaths) && len(globalFlags.ConfigPaths) > 1 {
-		return nil, fmt.Errorf("specifying multiple paths to -f is not supported when updating configuration")
-	}
-
-	if state == nil {
-		return nil, config.ErrDoesNotExist
-	}
-
 	contractData, flagsProvided, err := flagsToContractData(addContractFlags)
 	if err != nil {
 		return nil, err
@@ -89,7 +80,7 @@ func addContract(
 		state.Contracts().AddOrUpdate(contract.Name, contract)
 	}
 
-	err = state.SaveDefault()
+	err = state.SaveEdited(globalFlags.ConfigPaths)
 	if err != nil {
 		return nil, err
 	}
