@@ -200,7 +200,7 @@ func TestProject_Integration(t *testing.T) {
 			}, {
 				Name: cC.Name,
 				Args: []cadence.Value{
-					cadence.NewString("foo"),
+					cadence.String("foo"),
 				},
 			}},
 		}

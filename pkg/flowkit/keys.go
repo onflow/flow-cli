@@ -26,7 +26,6 @@ import (
 	"os/exec"
 	"regexp"
 
-	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/onflow/flow-go-sdk/crypto/cloudkms"
 
@@ -118,7 +117,6 @@ func (a *KmsAccountKey) Signer(ctx context.Context) (crypto.Signer, error) {
 
 	accountKMSSigner, err := kmsClient.SignerForKey(
 		ctx,
-		flow.Address{}, // TODO(sideninja) temporary workaround for PR https://github.com/onflow/flow-go-sdk/pull/196
 		a.kmsKey,
 	)
 	if err != nil {

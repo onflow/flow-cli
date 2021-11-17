@@ -19,7 +19,6 @@
 package flowkit
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"path"
@@ -67,9 +66,28 @@ func (p *State) ReadFile(source string) ([]byte, error) {
 	return p.readerWriter.ReadFile(source)
 }
 
-// SaveDefault saves configuration to default path.
+// SaveDefault saves to default path.
 func (p *State) SaveDefault() error {
 	return p.Save(config.DefaultPath)
+}
+
+// SaveEdited saves configuration to valid path.
+func (p *State) SaveEdited(paths []string) error {
+	// if paths are not default only allow specifying one config
+	if !config.IsDefaultPath(paths) && len(paths) > 1 {
+		return fmt.Errorf("specifying multiple paths is not supported when updating configuration")
+	}
+	// if default paths and local config doesn't exist don't allow updating global config
+	if config.IsDefaultPath(paths) {
+		_, err := p.confLoader.Load([]string{config.DefaultPath}) // check if default is present
+		if err != nil {
+			return fmt.Errorf("default configuration not found, please initialize it first or specify another configuration file")
+		} else {
+			return p.SaveDefault()
+		}
+	}
+
+	return p.Save(paths[0])
 }
 
 // Save saves the project configuration to the given path.
@@ -225,12 +243,7 @@ func Load(configFilePaths []string, readerWriter ReaderWriter) (*State, error) {
 	// here we add all available parsers (more to add yaml etc...)
 	confLoader.AddConfigParser(json.NewParser())
 	conf, err := confLoader.Load(configFilePaths)
-
 	if err != nil {
-		if errors.Is(err, config.ErrDoesNotExist) {
-			return nil, err
-		}
-
 		return nil, err
 	}
 
