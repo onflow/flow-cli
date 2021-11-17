@@ -23,13 +23,13 @@ import (
 	"sort"
 	"testing"
 
+	"github.com/onflow/flow-cli/pkg/flowkit/config"
+
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 	"github.com/thoas/go-funk"
-
-	"github.com/onflow/flow-cli/pkg/flowkit/config"
 )
 
 var af = afero.Afero{Fs: afero.NewMemMapFs()}
