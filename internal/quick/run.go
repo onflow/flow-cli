@@ -19,22 +19,25 @@
 package quick
 
 import (
+	"sync"
+
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/internal/emulator"
 	"github.com/onflow/flow-cli/internal/project"
 	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/services"
+
 	"github.com/spf13/cobra"
-	"sync"
 )
 
 type flagsRun struct {
 }
 
 var runFlags = flagsRun{}
+
 func DeployHelper(args []string, globalFlags command.GlobalFlags, services *services.Services, wg *sync.WaitGroup) {
 
-	for true {
+	for {
 		//check if the server has started
 		_, err := services.Status.Ping(globalFlags.Network)
 		if err == nil {
@@ -54,7 +57,7 @@ func EmulatorHelper(args []string, globalFlags command.GlobalFlags, services *se
 	wg.Done()
 }
 
-// This command will act as an alias for running the emulator and deploying the contracts
+// RunCommand This command will act as an alias for running the emulator and deploying the contracts
 var RunCommand = &command.Command{
 	Cmd: &cobra.Command{
 		Use:     "run",
