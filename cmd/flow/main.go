@@ -49,6 +49,8 @@ func main() {
 
 	// quick commands
 	quick.InitCommand.AddToParent(cmd)
+	quick.DeployCommand.AddToParent(cmd)
+	quick.RunCommand.AddToParent(cmd)
 	status.Command.AddToParent(cmd)
 
 	// structured commands
@@ -67,7 +69,8 @@ func main() {
 	cmd.AddCommand(signatures.Cmd)
 
 	command.InitFlags(cmd)
-
+	// Set usage template to custom template
+	cmd.SetUsageTemplate("Usage:{{if .Runnable}}\n{{.UseLine}}{{end}}{{if .HasAvailableSubCommands}}\n{{.CommandPath}} [command]{{end}}{{if gt (len .Aliases) 0}}\n\nAliases:\n{{.NameAndAliases}}{{end}}{{if .HasExample}}\n\nExamples:\n{{.Example}}{{end}}{{if .HasAvailableSubCommands}}\n\n{{if (eq .Name \"flow\")}}Hot Commands:\n{{range .Commands}}{{if (and (.IsAvailableCommand)  (index .Annotations \"HotCommand\") )}}\n{{rpad .Name .NamePadding }} {{.Short}}{{end}}{{end}}{{end}}{{if .HasAvailableLocalFlags}}\n\n{{end}}Available Commands:\n{{range .Commands}}{{if (and (or .IsAvailableCommand (eq .Name \"help\")) (not (index .Annotations \"HotCommand\")))}}\n{{rpad .Name .NamePadding }} {{.Short}}{{end}}{{end}}{{end}}{{if .HasAvailableLocalFlags}}\n\nFlags:\n{{.LocalFlags.FlagUsages | trimTrailingWhitespaces}}{{end}}{{if .HasAvailableInheritedFlags}}\n\nGlobal Flags:\n{{.InheritedFlags.FlagUsages | trimTrailingWhitespaces}}{{end}}{{if .HasHelpSubCommands}}\n\nAdditional help topics:\n{{range .Commands}}{{if .IsAdditionalHelpTopicCommand}}{{rpad .CommandPath .CommandPathPadding}} {{.Short}}{{end}}{{end}}{{end}}{{if .HasAvailableSubCommands}}\nUse \"{{.CommandPath}} [command] --help\" for more information about a command.{{end}}\n")
 	if err := cmd.Execute(); err != nil {
 		util.Exit(1, err.Error())
 	}
