@@ -1,8 +1,8 @@
 name: CD Release
 
 on:
-  release:
-    types: [published]
+  push:
+    branches: "fix-flow-cli-gha"
 
 jobs:
   security:
