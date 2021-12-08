@@ -40,6 +40,10 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowkit/services"
 )
 
+type FlagsCreate struct{}
+
+var createFlags = FlagsCreate{}
+
 var CreateCommand = &command.Command{
 	Cmd: &cobra.Command{
 		Use:     "create <path>",
@@ -47,7 +51,8 @@ var CreateCommand = &command.Command{
 		Example: "flow app create my-app",
 		Args:    cobra.ExactArgs(1),
 	},
-	Run: create,
+	Flags: &createFlags,
+	Run:   create,
 }
 
 const ScaffoldRepo = "https://github.com/onflow/flow-app-scaffold/"
@@ -139,7 +144,7 @@ func askChoice(
 		return "", err
 	}
 
-	choices := []string{}
+	choices := make([]string, 0)
 	for _, folder := range folders {
 		if folder.IsDir() && !strings.HasPrefix(folder.Name(), ".") {
 			choices = append(choices, folder.Name())
