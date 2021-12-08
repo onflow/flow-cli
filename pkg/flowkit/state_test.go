@@ -23,6 +23,7 @@ import (
 	"sort"
 	"testing"
 
+	"github.com/onflow/flow-cli/pkg/flowkit/config"
 	"github.com/onflow/flow-cli/pkg/flowkit/config/json"
 
 	"github.com/onflow/flow-go-sdk"
@@ -30,8 +31,6 @@ import (
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 	"github.com/thoas/go-funk"
-
-	"github.com/onflow/flow-cli/pkg/flowkit/config"
 )
 
 var af = afero.Afero{Fs: afero.NewMemMapFs()}
@@ -555,6 +554,87 @@ func Test_ChangingState(t *testing.T) {
 	pkey, err = em.Key().PrivateKey()
 	assert.NoError(t, err)
 	assert.Equal(t, (*pkey).String(), pk.String())
+}
+
+func Test_LoadState(t *testing.T) {
+	b := []byte(`{
+		"accounts": {
+			"emulator-account": {
+				"address": "f8d6e0586b0a20c7",
+				"key": "21c5dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7"
+			}
+		}
+	}`)
+
+	af := afero.Afero{Fs: afero.NewMemMapFs()}
+	err := afero.WriteFile(af.Fs, "flow.json", b, 0644)
+	assert.NoError(t, err)
+
+	paths := []string{"flow.json"}
+	state, err := Load(paths, af)
+	assert.NoError(t, err)
+
+	acc, err := state.Accounts().ByName("emulator-account")
+	assert.NoError(t, err)
+	assert.Equal(t, acc.Name(), "emulator-account")
+}
+
+func Test_LoadStateMultiple(t *testing.T) {
+	b := []byte(`{
+		"accounts": {
+			"emulator-account": {
+				"address": "f8d6e0586b0a20c7",
+				"key": "21c5dfdeb0ff0347a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7"
+			},
+			"charlie": {
+				"address": "0xf3fcd2c1a78f5eee",
+				"key": "9463ceedf08627108ea0b394c96b18446d1370e7332c91ce332aba1594096ba0"
+			},
+			"bob": {
+				"address": "179b6b1cb6755e31",
+				"key": "748d21a762aa192976f4d264afe26379b8a63f5d1343773f813a37d4262b9f52"
+			}
+		}
+	}`)
+
+	a := []byte(`{
+		"accounts": {
+			"alice": {
+				"address": "179b6b1cb6755e31",
+				"key": "728d21a7622a29d976f4d264afe26379b8a63f5d1343773f813a37d4262b9f52"
+			},
+			"charlie": {
+				"address": "0xe03daebed8ca0615",
+				"key": "9463ceedf04427208ea0b394c96b18446d1370e7332c91ce332aba1594096ba0"
+			}
+		}
+	}`)
+
+	af := afero.Afero{Fs: afero.NewMemMapFs()}
+	err := afero.WriteFile(af.Fs, "flow.json", b, 0644)
+	assert.NoError(t, err)
+	err = afero.WriteFile(af.Fs, "a.json", a, 0644)
+	assert.NoError(t, err)
+
+	paths := []string{"flow.json", "a.json"}
+	state, err := Load(paths, af)
+	assert.NoError(t, err)
+
+	acc, err := state.Accounts().ByName("emulator-account")
+	assert.NoError(t, err)
+	assert.Equal(t, acc.Address().String(), "f8d6e0586b0a20c7")
+
+	acc, err = state.Accounts().ByName("charlie")
+	assert.NoError(t, err)
+	assert.Equal(t, acc.Address().String(), "e03daebed8ca0615")
+
+	acc, err = state.Accounts().ByName("bob")
+	assert.NoError(t, err)
+	assert.Equal(t, acc.Address().String(), "179b6b1cb6755e31")
+
+	acc, err = state.Accounts().ByName("alice")
+	assert.NoError(t, err)
+	assert.Equal(t, acc.Address().String(), "179b6b1cb6755e31")
 }
 
 func Test_Saving(t *testing.T) {

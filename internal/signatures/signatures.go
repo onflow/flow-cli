@@ -16,26 +16,19 @@
  * limitations under the License.
  */
 
-package quick
+package signatures
 
 import (
 	"github.com/spf13/cobra"
-
-	"github.com/onflow/flow-cli/internal/command"
-	"github.com/onflow/flow-cli/internal/config"
 )
 
-// TODO(sideninja) workaround - init needed to be copied in order to work else there is flag duplicate error
+var Cmd = &cobra.Command{
+	Use:              "signatures",
+	Short:            "Signature verification and creation",
+	TraverseChildren: true,
+}
 
-var InitCommand = &command.Command{
-	Cmd: &cobra.Command{
-		Use:     "init",
-		Short:   "Initialize a new configuration",
-		Example: "flow project init",
-		Annotations: map[string]string{
-			"HotCommand": "true",
-		},
-	},
-	Flags: &config.InitFlag,
-	Run:   config.Initialise, // TODO(sideninja) workaround - init needed to be copied in order to work else there is flag duplicate error
+func init() {
+	GenerateCommand.AddToParent(Cmd)
+	VerifyCommand.AddToParent(Cmd)
 }
