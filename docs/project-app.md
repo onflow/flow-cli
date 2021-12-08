@@ -16,19 +16,16 @@ flow app create
 ```shell
 > flow app create my-app
 
-Enumerating objects: 349, done.
-Counting objects: 100% (349/349), done.
-Compressing objects: 100% (261/261), done.
-Total 349 (delta 55), reused 347 (delta 53), pack-reused 0
-? Which do you want to start with? Template
-? Which API template you want to start with? express
-? Which Cadence template you want to start with? default
-? Which Web template you want to start with? react
+✔ Example
+✔ kitty-items
+Enumerating objects: 5632, done.
+Counting objects: 100% (1342/1342), done.
+Compressing objects: 100% (692/692), done.
+Total 5632 (delta 768), reused 708 (delta 649), pack-reused 4290
 
-Created  /path/to/my-app
-Api      express
-Cadence  default
-Web      react
+Created	 /Users/dapper/Dev/flyinglimao/flow-cli/test4
+Example	 kitty-items
+
 ```
 
 ## Arguments
@@ -39,20 +36,17 @@ Web      react
 - Valid Input: Path
 
 A relative path to the app location. Can be a new folder name or existing empty folder.  
-You can start with a full featured example or a custom template.
+You can start with a fully featured example or a custom template.
 
-If you start with an example, there are some exmples included (may not up-to-date):
+If you choose example, we will automatically clone a project for you from the list of possible examples: (may not up-to-date):
 
 - `kitty-items`: An app based on CryptoKitties. ([Repo](https://github.com/onflow/kitty-items))
 
-If you start with a template, there will be 3 folder `api`, `cadence`, and `web`.
+If you start with a template, three folders will be generated for you `api`, `cadence`, and `web`.
 
-- `api`: Backend service will be put in here, you can provide functions which cannot be
-  implemented in client side, such as draw, whitelist registration, KYC, or some works can be
-  offloaded from client side, such as DEX price, NFT lists.
-- `cadence`: Contracts will be put in here.
-- `web`: Frontend app will be put in here, users will use the app to interact with your Cadence
-  contracts. Check out [fcl.js](https://github.com/onflow/fcl-js) to get more details.
+- `api`: A place to put your files implementing the backend functionality.
+- `cadence`: Cadence contracts, transactions and scripts should be located in this folder.
+- `web`: Save your frontend files in this folder. You can use [fcl.js](https://github.com/onflow/fcl-js) to implement a frontend.
 
 ## Flags
 
