@@ -9,6 +9,9 @@ Remove an existing contract deployed to a Flow account using the Flow CLI.
 flow accounts remove-contract <name>
 ```
 
+⚠️ _This command is only available on Emulator. It is disabled on Canarynet, Testnet and Mainnet accounts._
+
+
 ## Example Usage
 
 ```shell
