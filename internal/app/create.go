@@ -139,7 +139,7 @@ func askChoice(
 		return "", err
 	}
 
-	choices := []string{}
+	choices := make([]string, 0)
 	for _, folder := range folders {
 		if folder.IsDir() && !strings.HasPrefix(folder.Name(), ".") {
 			choices = append(choices, folder.Name())
