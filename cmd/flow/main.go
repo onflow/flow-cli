@@ -23,6 +23,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/accounts"
+	"github.com/onflow/flow-cli/internal/app"
 	"github.com/onflow/flow-cli/internal/blocks"
 	"github.com/onflow/flow-cli/internal/cadence"
 	"github.com/onflow/flow-cli/internal/collections"
@@ -66,7 +67,9 @@ func main() {
 	cmd.AddCommand(collections.Cmd)
 	cmd.AddCommand(project.Cmd)
 	cmd.AddCommand(config.Cmd)
+	cmd.AddCommand(app.Cmd)
 	cmd.AddCommand(signatures.Cmd)
+
 
 	command.InitFlags(cmd)
 	// Set usage template to custom template
