@@ -11,7 +11,7 @@ The Flow Emulator is a lightweight tool that emulates the behaviour of the real 
 flow emulator
 ```
 
-⚠️ The emulator command expects configuration to be initialized. See [flow init](https://docs.onflow.org/flow-cli/initialize-configuration/) command.
+⚠️ The emulator command expects configuration to be initialized. See [flow init](initialize-configuration.md) command.
 
 
 ## Example Usage
