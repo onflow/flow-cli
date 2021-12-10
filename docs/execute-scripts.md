@@ -54,7 +54,7 @@ Input arguments values matching corresponding types in the source code and passe
 Arguments passed to the Cadence script in `Type:Value` format. 
 The `Type` must be the same as type in the script source code for that argument.  
 
-For passing complex argument values see [send transaction](send-transactions.md#example-usage) document. 
+For passing complex argument values see [send transaction](https://docs.onflow.org/flow-cli/send-transactions/#example-usage) document. 
 
 ⚠️  Deprecated: use command arguments instead.
 

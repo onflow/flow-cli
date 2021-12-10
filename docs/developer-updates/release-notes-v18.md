@@ -1,6 +1,6 @@
 ## ⬆️ Install or Upgrade
 
-Follow the [Flow CLI installation guide](../install.md) for instructions on how to install or upgrade the CLI.
+Follow the [Flow CLI installation guide](https://docs.onflow.org/flow-cli/install/) for instructions on how to install or upgrade the CLI.
 
 ## ⭐ Features
 
@@ -43,7 +43,7 @@ or address. Example:
 flow transactions build ./transaction.cdc --proposer alice --payer bob --authorizer bob --filter payload --save payload1.rlp
 ```
 
-Check more about [this functionality in docs](../build-transactions.md).
+Check more about [this functionality in docs](https://docs.onflow.org/flow-cli/build-transactions/).
 
 #### Sign Transaction
 After using build command and saving payload to a file you should sign the transaction 
@@ -66,7 +66,7 @@ Automatically checks if a new version exists and outputs a warning in case there
 is a newer version. Example:
 ```
 ⚠️  Version Warning: New version v0.18.0 of Flow CLI is available.
-Follow the Flow [CLI installation guide](../install.md) for instructions on how to install or upgrade the CLI
+Follow the Flow CLI installation guide for instructions on how to install or upgrade the CLI: https://docs.onflow.org/flow-cli/install
 ```
 
 
