@@ -12,7 +12,7 @@ This command automatically deploys your project's contracts based on the
 configuration defined in your `flow.json` file.
 
 Before using this command, read about how to 
-[configure project contracts and deployment targets](project-contracts.md).
+[configure project contracts and deployment targets](https://docs.onflow.org/flow-cli/project-contracts/).
 
 ## Example Usage
 
@@ -88,7 +88,7 @@ used during the deployment. Example:
 
 
 ⚠️ Warning: before proceeding, 
-we recommend reading the [Flow CLI security guidelines](security.md)
+we recommend reading the [Flow CLI security guidelines](https://docs.onflow.org/flow-cli/security/)
 to learn about the best practices for private key storage.
 
 ## Dependency Resolution

@@ -1,6 +1,6 @@
 ## ⬆️ Install or Upgrade
 
-Follow the [Flow CLI installation guide](../install.md) for instructions on how to install or upgrade the CLI.
+Follow the [Flow CLI installation guide](https://docs.onflow.org/flow-cli/install/) for instructions on how to install or upgrade the CLI.
 
 ## ⭐ Features
 
@@ -51,7 +51,7 @@ Global flow configuration is saved as:
 - Linux: `~/flow.json`
 - Windows: `C:\Users\$USER\flow.json`
 
-You can read more about it in [the docs](../initialize-configuration.md).
+You can read more about it in [the docs](https://docs.onflow.org/flow-cli/initialize-configuration/).
 
 ### Environment File Support
 
