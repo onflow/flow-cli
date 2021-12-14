@@ -9,5 +9,5 @@ or sending transactions. It also includes the [Flow Emulator](https://docs.onflo
 
 ## Installation
 
-Follow [these steps](https://docs.onflow.org/flow-cli/install) to install the Flow CLI on 
+Follow [these steps](install.md) to install the Flow CLI on 
 macOS, Linux, and Windows.
