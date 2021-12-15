@@ -13,6 +13,8 @@ The Flow CLI can be installed on macOS, Windows (7 or greater) and most Linux sy
 brew install flow-cli
 ```
 
+Note: it could take up to one hour for a new version to be propagated to Brew. In case you want to use the latest version immediately, follow the [instrcutions](#from-a-pre-built-binary) in the section below.
+
 ### From a pre-built binary
 
 _This installation method only works on x86-64._
