@@ -50,7 +50,7 @@ var SendSignedCommand = &command.Command{
 func sendSigned(
 	args []string,
 	readerWriter flowkit.ReaderWriter,
-	_ command.GlobalFlags,
+	globalFlags command.GlobalFlags,
 	services *services.Services,
 	_ *flowkit.State,
 ) (command.Result, error) {
@@ -61,7 +61,7 @@ func sendSigned(
 		return nil, fmt.Errorf("error loading transaction payload: %w", err)
 	}
 
-	tx, result, err := services.Transactions.SendSigned(code)
+	tx, result, err := services.Transactions.SendSigned(code, globalFlags.Yes)
 	if err != nil {
 		return nil, err
 	}
