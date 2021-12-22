@@ -89,7 +89,6 @@ func create(
 
 	// decode public keys
 	var pubKeys []crypto.PublicKey
-	fmt.Println(createFlags.Keys)
 	for i, k := range createFlags.Keys {
 		k = strings.TrimPrefix(k, "0x") // clear possible prefix
 		key, err := crypto.DecodePublicKeyHex(sigAlgos[i], k)
