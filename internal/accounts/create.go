@@ -36,8 +36,8 @@ type flagsCreate struct {
 	Signer    string   `default:"emulator-account" flag:"signer" info:"Account name from configuration used to sign the transaction"`
 	Keys      []string `flag:"key" info:"Public keys to attach to account"`
 	Weights   []int    `flag:"key-weight" info:"Weight for the key"`
-	SigAlgo   []string `flag:"sig-algo" info:"Signature algorithm used to generate the keys"`
-	HashAlgo  []string `flag:"hash-algo" info:"Hash used for the digest"`
+	SigAlgo   []string `default:"ECDSA_P256" flag:"sig-algo" info:"Signature algorithm used to generate the keys"`
+	HashAlgo  []string `default:"SHA3_256" flag:"hash-algo" info:"Hash used for the digest"`
 	Contracts []string `flag:"contract" info:"Contract to be deployed during account creation. <name:filename>"`
 	Include   []string `default:"" flag:"include" info:"Fields to include in the output"`
 }
@@ -66,6 +66,17 @@ func create(
 		return nil, err
 	}
 
+	if len(createFlags.SigAlgo) == 1 && len(createFlags.HashAlgo) == 1 {
+		// Fill up depending on size of key input
+		if len(createFlags.Keys) > 1 {
+			for range createFlags.Keys {
+				createFlags.SigAlgo = append(createFlags.SigAlgo, createFlags.SigAlgo[0])
+				createFlags.HashAlgo = append(createFlags.HashAlgo, createFlags.HashAlgo[0])
+			}
+			// Deprecated usage message?
+		}
+
+	} else
 	// double check matching array lengths on inputs
 	if len(createFlags.Keys) != len(createFlags.SigAlgo) || len(createFlags.SigAlgo) != len(createFlags.HashAlgo) {
 		return nil, fmt.Errorf("must provide a signature and hash algorithm for every key provided to --key: %d keys, %d signature algo, %d hash algo", len(createFlags.Keys), len(createFlags.SigAlgo), len(createFlags.HashAlgo))
