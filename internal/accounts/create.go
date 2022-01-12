@@ -69,7 +69,7 @@ func create(
 	if len(createFlags.SigAlgo) == 1 && len(createFlags.HashAlgo) == 1 {
 		// Fill up depending on size of key input
 		if len(createFlags.Keys) > 1 {
-			for range createFlags.Keys {
+			for i := 1; i < len(createFlags.Keys); i++ {
 				createFlags.SigAlgo = append(createFlags.SigAlgo, createFlags.SigAlgo[0])
 				createFlags.HashAlgo = append(createFlags.HashAlgo, createFlags.HashAlgo[0])
 			}
