@@ -195,10 +195,8 @@ func (t *Transactions) SendSigned(
 	if err != nil {
 		return nil, nil, err
 	}
-	if !approveSend {
-		if !output.ApproveTransactionForSendingPrompt(tx) {
-			return nil, nil, fmt.Errorf("transaction was not approved for sending")
-		}
+	if !approveSend && !output.ApproveTransactionForSendingPrompt(tx) {
+		return nil, nil, fmt.Errorf("transaction was not approved for sending")
 	}
 
 	t.logger.StartProgress(fmt.Sprintf("Sending transaction with ID: %s", tx.FlowTransaction().ID()))
