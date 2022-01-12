@@ -66,7 +66,13 @@ func create(
 		return nil, err
 	}
 
-	sigAlgos := []crypto.SignatureAlgorithm{}
+	// double check matching array lengths on inputs
+	if len(createFlags.Keys) != len(createFlags.SigAlgo) || len(createFlags.SigAlgo) != len(createFlags.HashAlgo) {
+		return nil, fmt.Errorf("must provide a signature and hash algorithm for every key provided to --key: %d keys, %d signature algo, %d hash algo", len(createFlags.Keys), len(createFlags.SigAlgo), len(createFlags.HashAlgo))
+	}
+
+	// read all signature algorithms
+	sigAlgos := make([]crypto.SignatureAlgorithm, 0, len(createFlags.SigAlgo))
 	for _, sigAlgoStr := range createFlags.SigAlgo {
 		sigAlgo := crypto.StringToSignatureAlgorithm(sigAlgoStr)
 		if sigAlgo == crypto.UnknownSignatureAlgorithm {
@@ -75,7 +81,8 @@ func create(
 		sigAlgos = append(sigAlgos, sigAlgo)
 	}
 
-	hashAlgos := []crypto.HashAlgorithm{}
+	// read all hash algorithms
+	hashAlgos := make([]crypto.HashAlgorithm, 0, len(createFlags.HashAlgo))
 	for _, hashAlgoStr := range createFlags.HashAlgo {
 
 		hashAlgo := crypto.StringToHashAlgorithm(hashAlgoStr)
@@ -88,7 +95,7 @@ func create(
 	keyWeights := createFlags.Weights
 
 	// decode public keys
-	var pubKeys []crypto.PublicKey
+	pubKeys := make([]crypto.PublicKey, 0, len(createFlags.Keys))
 	for i, k := range createFlags.Keys {
 		k = strings.TrimPrefix(k, "0x") // clear possible prefix
 		key, err := crypto.DecodePublicKeyHex(sigAlgos[i], k)
