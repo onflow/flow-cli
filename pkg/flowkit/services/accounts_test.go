@@ -236,6 +236,18 @@ func TestAccounts(t *testing.T) {
 		assert.NotNil(t, val2)
 	})
 
+	t.Run("Staking Info for Account", func(t *testing.T) {
+		_, s, gw := setup()
+
+		gw.ExecuteScript.Run(func(args mock.Arguments) {
+			assert.True(t, strings.Contains(string(args.Get(0).([]byte)), "import FlowIDTableStaking from 0x9eca2b38b18b5dfe"))
+			gw.ExecuteScript.Return(cadence.UFix64(1_0000_0000), nil)
+		})
+
+		val1, err := s.Accounts.NodeTotalStake("ccd5e456be83922268ee4a07841f7c6c2f009fac77b80828e08f7e7efd6e5278", flow.Testnet)
+		assert.NoError(t, err)
+		assert.NotNil(t, val1)
+	})
 }
 
 func setupIntegration() (*flowkit.State, *Services) {

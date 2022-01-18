@@ -22,21 +22,24 @@ import (
 	"github.com/onflow/cadence"
 )
 
-func NewStakingInfoFromValue(value cadence.Value) map[string]interface{} {
-	stakingInfo := make(map[string]interface{})
+func NewStakingInfoFromValue(value cadence.Value) []map[string]interface{} {
+	stakingInfo := make([]map[string]interface{}, 0)
 	arrayValue := value.(cadence.Array)
 
 	if len(arrayValue.Values) == 0 {
 		return stakingInfo
 	}
 
-	keys := make([]string, 0)
-	for _, field := range arrayValue.Values[0].(cadence.Struct).StructType.Fields {
-		keys = append(keys, field.Identifier)
-	}
-
-	for i, value := range arrayValue.Values[0].(cadence.Struct).Fields {
-		stakingInfo[keys[i]] = value
+	for _, v := range arrayValue.Values {
+		keys := make([]string, 0)
+		values := make(map[string]interface{})
+		for _, field := range v.(cadence.Struct).StructType.Fields {
+			keys = append(keys, field.Identifier)
+		}
+		for j, value := range v.(cadence.Struct).Fields {
+			values[keys[j]] = value
+		}
+		stakingInfo = append(stakingInfo, values)
 	}
 
 	return stakingInfo

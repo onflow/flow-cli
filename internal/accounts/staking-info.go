@@ -61,18 +61,61 @@ func stakingInfo(
 		return nil, err
 	}
 
-	return &StakingResult{*staking, *delegation}, nil
+	// get staking infos and delegation infos
+	stakingInfos := flowkit.NewStakingInfoFromValue(*staking)
+	delegationInfos := flowkit.NewStakingInfoFromValue(*delegation)
+
+	// get a set of node ids from all staking infos
+	nodeStakes := make(map[string]cadence.Value)
+	for _, stakingInfo := range stakingInfos {
+		nodeID, ok := stakingInfo["id"]
+		if ok {
+			nodeStakes[nodeIDToString(nodeID)] = nil
+		}
+	}
+
+	chain, err := util.GetAddressNetwork(address)
+	if err != nil {
+		return nil, err
+	}
+	// foreach node id, get the node total stake
+	for nodeID := range nodeStakes {
+		stake, err := services.Accounts.NodeTotalStake(nodeID, chain)
+		if err != nil {
+			return nil, err
+		}
+
+		nodeStakes[nodeID] = *stake
+	}
+
+	// foreach staking info, add the node total stake
+	for _, stakingInfo := range stakingInfos {
+		nodeID, ok := stakingInfo["id"]
+		if ok {
+			stakingInfo["nodeTotalStake"] = nodeStakes[nodeIDToString(nodeID)].(cadence.UFix64)
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &StakingResult{stakingInfos, delegationInfos}, nil
+}
+
+func nodeIDToString(value interface{}) string {
+	return value.(cadence.String).ToGoValue().(string)
 }
 
 type StakingResult struct {
-	staking    cadence.Value
-	delegation cadence.Value
+	staking    []map[string]interface{} // stake as FlowIDTableStaking.NodeInfo
+	delegation []map[string]interface{} // delegation as FlowIDTableStaking.DelegatorInfo
 }
 
 func (r *StakingResult) JSON() interface{} {
 	result := make(map[string]interface{})
-	result["staking"] = flowkit.NewStakingInfoFromValue(r.staking)
-	result["delegation"] = flowkit.NewStakingInfoFromValue(r.delegation)
+	result["staking"] = r.staking
+	result["delegation"] = r.delegation
 
 	return result
 }
@@ -81,34 +124,46 @@ func (r *StakingResult) String() string {
 	var b bytes.Buffer
 	writer := util.CreateTabWriter(&b)
 
-	_, _ = fmt.Fprintf(writer, "Account Staking Info:\n")
+	if len(r.staking) != 0 {
+		_, _ = fmt.Fprintf(writer, "Account staking info:\n")
 
-	stakingInfo := flowkit.NewStakingInfoFromValue(r.staking)
+		for _, stakingInfo := range r.staking {
+			_, _ = fmt.Fprintf(writer, "\tID: \t %v\n", stakingInfo["id"])
+			_, _ = fmt.Fprintf(writer, "\tInitial Weight: \t %v\n", stakingInfo["initialWeight"])
+			_, _ = fmt.Fprintf(writer, "\tNetworking Address: \t %v\n", stakingInfo["networkingAddress"])
+			_, _ = fmt.Fprintf(writer, "\tNetworking Key: \t %v\n", stakingInfo["networkingKey"])
+			_, _ = fmt.Fprintf(writer, "\tRole: \t %v\n", stakingInfo["role"])
+			_, _ = fmt.Fprintf(writer, "\tStaking Key: \t %v\n", stakingInfo["stakingKey"])
+			_, _ = fmt.Fprintf(writer, "\tTokens Committed: \t %v\n", stakingInfo["tokensCommitted"])
+			_, _ = fmt.Fprintf(writer, "\tTokens To Unstake: \t %v\n", stakingInfo["tokensRequestedToUnstake"])
+			_, _ = fmt.Fprintf(writer, "\tTokens Rewarded: \t %v\n", stakingInfo["tokensRewarded"])
+			_, _ = fmt.Fprintf(writer, "\tTokens Staked: \t %v\n", stakingInfo["tokensStaked"])
+			_, _ = fmt.Fprintf(writer, "\tTokens Unstaked: \t %v\n", stakingInfo["tokensUnstaked"])
+			_, _ = fmt.Fprintf(writer, "\tTokens Unstaking: \t %v\n", stakingInfo["tokensUnstaking"])
+			_, _ = fmt.Fprintf(writer, "\tNode Total Stake (including delegators): \t %v\n", stakingInfo["nodeTotalStake"])
+			_, _ = fmt.Fprintf(writer, "\n")
+		}
+	} else {
+		_, _ = fmt.Fprintf(writer, "Account has no stakes.\n")
+	}
 
-	_, _ = fmt.Fprintf(writer, "ID: \t %v\n", stakingInfo["id"])
-	_, _ = fmt.Fprintf(writer, "Initial Weight: \t %v\n", stakingInfo["initialWeight"])
-	_, _ = fmt.Fprintf(writer, "Networking Address: \t %v\n", stakingInfo["networkingAddress"])
-	_, _ = fmt.Fprintf(writer, "Networking Key: \t %v\n", stakingInfo["networkingKey"])
-	_, _ = fmt.Fprintf(writer, "Role: \t %v\n", stakingInfo["role"])
-	_, _ = fmt.Fprintf(writer, "Staking Key: \t %v\n", stakingInfo["stakingKey"])
-	_, _ = fmt.Fprintf(writer, "Tokens Committed: \t %v\n", stakingInfo["tokensCommitted"])
-	_, _ = fmt.Fprintf(writer, "Tokens To Unstake: \t %v\n", stakingInfo["tokensRequestedToUnstake"])
-	_, _ = fmt.Fprintf(writer, "Tokens Rewarded: \t %v\n", stakingInfo["tokensRewarded"])
-	_, _ = fmt.Fprintf(writer, "Tokens Staked: \t %v\n", stakingInfo["tokensStaked"])
-	_, _ = fmt.Fprintf(writer, "Tokens Unstaked: \t %v\n", stakingInfo["tokensUnstaked"])
-	_, _ = fmt.Fprintf(writer, "Tokens Unstaking: \t %v\n", stakingInfo["tokensUnstaking"])
-	_, _ = fmt.Fprintf(writer, "Total Tokens Staked: \t %v\n", stakingInfo["totalTokensStaked"])
+	if len(r.delegation) != 0 {
+		_, _ = fmt.Fprintf(writer, "\nAccount delegation info:\n")
 
-	delegationStakingInfo := flowkit.NewStakingInfoFromValue(r.delegation)
-
-	_, _ = fmt.Fprintf(writer, "\n\nAccount Delegation Info:\n")
-	_, _ = fmt.Fprintf(writer, "ID: \t %v\n", delegationStakingInfo["id"])
-	_, _ = fmt.Fprintf(writer, "Tokens Committed: \t %v\n", delegationStakingInfo["tokensCommitted"])
-	_, _ = fmt.Fprintf(writer, "Tokens To Unstake: \t %v\n", delegationStakingInfo["tokensRequestedToUnstake"])
-	_, _ = fmt.Fprintf(writer, "Tokens Rewarded: \t %v\n", delegationStakingInfo["tokensRewarded"])
-	_, _ = fmt.Fprintf(writer, "Tokens Staked: \t %v\n", delegationStakingInfo["tokensStaked"])
-	_, _ = fmt.Fprintf(writer, "Tokens Unstaked: \t %v\n", delegationStakingInfo["tokensUnstaked"])
-	_, _ = fmt.Fprintf(writer, "Tokens Unstaking: \t %v\n", delegationStakingInfo["tokensUnstaking"])
+		for _, delegationStakingInfo := range r.delegation {
+			_, _ = fmt.Fprintf(writer, "\tID: \t %v\n", delegationStakingInfo["id"])
+			_, _ = fmt.Fprintf(writer, "\tNode ID: \t %v\n", delegationStakingInfo["nodeID"])
+			_, _ = fmt.Fprintf(writer, "\tTokens Committed: \t %v\n", delegationStakingInfo["tokensCommitted"])
+			_, _ = fmt.Fprintf(writer, "\tTokens To Unstake: \t %v\n", delegationStakingInfo["tokensRequestedToUnstake"])
+			_, _ = fmt.Fprintf(writer, "\tTokens Rewarded: \t %v\n", delegationStakingInfo["tokensRewarded"])
+			_, _ = fmt.Fprintf(writer, "\tTokens Staked: \t %v\n", delegationStakingInfo["tokensStaked"])
+			_, _ = fmt.Fprintf(writer, "\tTokens Unstaked: \t %v\n", delegationStakingInfo["tokensUnstaked"])
+			_, _ = fmt.Fprintf(writer, "\tTokens Unstaking: \t %v\n", delegationStakingInfo["tokensUnstaking"])
+			_, _ = fmt.Fprintf(writer, "\n")
+		}
+	} else {
+		_, _ = fmt.Fprintf(writer, "Account has no delegations.\n")
+	}
 
 	writer.Flush()
 	return b.String()

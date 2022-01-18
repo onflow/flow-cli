@@ -67,7 +67,7 @@ func (a *Accounts) Get(address flow.Address) (*flow.Account, error) {
 	return account, err
 }
 
-// StakingInfo returns the staking information for an account.
+// StakingInfo returns the staking and delegation information for an account.
 func (a *Accounts) StakingInfo(address flow.Address) (*cadence.Value, *cadence.Value, error) {
 	a.logger.StartProgress(fmt.Sprintf("Fetching info for %s...", address.String()))
 	defer a.logger.StopProgress()
@@ -103,6 +103,28 @@ func (a *Accounts) StakingInfo(address flow.Address) (*cadence.Value, *cadence.V
 	a.logger.StopProgress()
 
 	return &stakingValue, &delegationValue, nil
+}
+
+// NodeTotalStake returns the total stake including delegations of a node.
+func (a *Accounts) NodeTotalStake(nodeId string, chain flow.ChainID) (*cadence.Value, error) {
+	a.logger.StartProgress(fmt.Sprintf("Fetching total stake for node id %s...", nodeId))
+	defer a.logger.StopProgress()
+
+	if chain == flow.Emulator {
+		return nil, fmt.Errorf("emulator chain not supported")
+	}
+
+	env := util.EnvFromNetwork(chain)
+
+	stakingInfoScript := tmpl.GenerateGetTotalCommitmentBalanceScript(env)
+	stakingValue, err := a.gateway.ExecuteScript(stakingInfoScript, []cadence.Value{cadence.String(nodeId)})
+	if err != nil {
+		return nil, fmt.Errorf("error getting total stake for node: %s", err.Error())
+	}
+
+	a.logger.StopProgress()
+
+	return &stakingValue, nil
 }
 
 // Create creates and returns a new account.
