@@ -87,8 +87,8 @@ func (a *Accounts) StakingInfo(address flow.Address) (*cadence.Value, *cadence.V
 
 	env := util.EnvFromNetwork(chain)
 
-	stakingInfoScript := tmpl.GenerateGetLockedStakerInfoScript(env)
-	delegationInfoScript := tmpl.GenerateGetLockedDelegatorInfoScript(env)
+	stakingInfoScript := tmpl.GenerateCollectionGetAllNodeInfoScript(env)
+	delegationInfoScript := tmpl.GenerateCollectionGetAllDelegatorInfoScript(env)
 
 	stakingValue, err := a.gateway.ExecuteScript(stakingInfoScript, cadenceAddress)
 	if err != nil {
