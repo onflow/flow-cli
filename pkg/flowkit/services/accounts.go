@@ -67,8 +67,8 @@ func (a *Accounts) Get(address flow.Address) (*flow.Account, error) {
 	return account, err
 }
 
-// StakingInfo returns the staking information for an account.
-func (a *Accounts) StakingInfo(address flow.Address) (*cadence.Value, *cadence.Value, error) {
+// StakingInfo returns the staking and delegation information for an account.
+func (a *Accounts) StakingInfo(address flow.Address) ([]map[string]interface{}, []map[string]interface{}, error) {
 	a.logger.StartProgress(fmt.Sprintf("Fetching info for %s...", address.String()))
 	defer a.logger.StopProgress()
 
@@ -87,8 +87,8 @@ func (a *Accounts) StakingInfo(address flow.Address) (*cadence.Value, *cadence.V
 
 	env := util.EnvFromNetwork(chain)
 
-	stakingInfoScript := tmpl.GenerateGetLockedStakerInfoScript(env)
-	delegationInfoScript := tmpl.GenerateGetLockedDelegatorInfoScript(env)
+	stakingInfoScript := tmpl.GenerateCollectionGetAllNodeInfoScript(env)
+	delegationInfoScript := tmpl.GenerateCollectionGetAllDelegatorInfoScript(env)
 
 	stakingValue, err := a.gateway.ExecuteScript(stakingInfoScript, cadenceAddress)
 	if err != nil {
@@ -100,9 +100,73 @@ func (a *Accounts) StakingInfo(address flow.Address) (*cadence.Value, *cadence.V
 		return nil, nil, fmt.Errorf("error getting delegation info: %s", err.Error())
 	}
 
+	// get staking infos and delegation infos
+	stakingInfos, err := flowkit.NewStakingInfoFromValue(stakingValue)
+	if err != nil {
+		return nil, nil, fmt.Errorf("error parsing staking info: %s", err.Error())
+	}
+	delegationInfos, err := flowkit.NewStakingInfoFromValue(delegationValue)
+	if err != nil {
+		return nil, nil, fmt.Errorf("error parsing delegation info: %s", err.Error())
+	}
+
+	// get a set of node ids from all staking infos
+	nodeStakes := make(map[string]cadence.Value)
+	for _, stakingInfo := range stakingInfos {
+		nodeID, ok := stakingInfo["id"]
+		if ok {
+			nodeStakes[nodeIDToString(nodeID)] = nil
+		}
+	}
+	totalCommitmentScript := tmpl.GenerateGetTotalCommitmentBalanceScript(env)
+
+	// foreach node id, get the node total stake
+	for nodeID := range nodeStakes {
+		stake, err := a.gateway.ExecuteScript(totalCommitmentScript, []cadence.Value{cadence.String(nodeID)})
+		if err != nil {
+			return nil, nil, fmt.Errorf("error getting total stake for node: %s", err.Error())
+		}
+
+		nodeStakes[nodeID] = stake
+	}
+
+	// foreach staking info, add the node total stake
+	for _, stakingInfo := range stakingInfos {
+		nodeID, ok := stakingInfo["id"]
+		if ok {
+			stakingInfo["nodeTotalStake"] = nodeStakes[nodeIDToString(nodeID)].(cadence.UFix64)
+		}
+	}
+
 	a.logger.StopProgress()
 
-	return &stakingValue, &delegationValue, nil
+	return stakingInfos, delegationInfos, nil
+}
+
+func nodeIDToString(value interface{}) string {
+	return value.(cadence.String).ToGoValue().(string)
+}
+
+// NodeTotalStake returns the total stake including delegations of a node.
+func (a *Accounts) NodeTotalStake(nodeId string, chain flow.ChainID) (*cadence.Value, error) {
+	a.logger.StartProgress(fmt.Sprintf("Fetching total stake for node id %s...", nodeId))
+	defer a.logger.StopProgress()
+
+	if chain == flow.Emulator {
+		return nil, fmt.Errorf("emulator chain not supported")
+	}
+
+	env := util.EnvFromNetwork(chain)
+
+	stakingInfoScript := tmpl.GenerateGetTotalCommitmentBalanceScript(env)
+	stakingValue, err := a.gateway.ExecuteScript(stakingInfoScript, []cadence.Value{cadence.String(nodeId)})
+	if err != nil {
+		return nil, fmt.Errorf("error getting total stake for node: %s", err.Error())
+	}
+
+	a.logger.StopProgress()
+
+	return &stakingValue, nil
 }
 
 // Create creates and returns a new account.
