@@ -101,8 +101,14 @@ func (a *Accounts) StakingInfo(address flow.Address) ([]map[string]interface{}, 
 	}
 
 	// get staking infos and delegation infos
-	stakingInfos := flowkit.NewStakingInfoFromValue(stakingValue)
-	delegationInfos := flowkit.NewStakingInfoFromValue(delegationValue)
+	stakingInfos, err := flowkit.NewStakingInfoFromValue(stakingValue)
+	if err != nil {
+		return nil, nil, fmt.Errorf("error parsing staking info: %s", err.Error())
+	}
+	delegationInfos, err := flowkit.NewStakingInfoFromValue(delegationValue)
+	if err != nil {
+		return nil, nil, fmt.Errorf("error parsing delegation info: %s", err.Error())
+	}
 
 	// get a set of node ids from all staking infos
 	nodeStakes := make(map[string]cadence.Value)
