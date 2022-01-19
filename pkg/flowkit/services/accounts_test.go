@@ -225,28 +225,53 @@ func TestAccounts(t *testing.T) {
 	t.Run("Staking Info for Account", func(t *testing.T) {
 		_, s, gw := setup()
 
+		count := 0
 		gw.ExecuteScript.Run(func(args mock.Arguments) {
+			count++
 			assert.True(t, strings.Contains(string(args.Get(0).([]byte)), "import FlowIDTableStaking from 0x9eca2b38b18b5dfe"))
-			gw.ExecuteScript.Return(cadence.NewValue(nil))
+			gw.ExecuteScript.Return(cadence.NewArray([]cadence.Value{}), nil)
 		})
 
 		val1, val2, err := s.Accounts.StakingInfo(flow.HexToAddress("df9c30eb2252f1fa"))
 		assert.NoError(t, err)
 		assert.NotNil(t, val1)
 		assert.NotNil(t, val2)
+		assert.Equal(t, 2, count)
 	})
-
-	t.Run("Staking Info for Account", func(t *testing.T) {
+	t.Run("Staking Info for Account fetches node total", func(t *testing.T) {
 		_, s, gw := setup()
 
+		count := 0
 		gw.ExecuteScript.Run(func(args mock.Arguments) {
 			assert.True(t, strings.Contains(string(args.Get(0).([]byte)), "import FlowIDTableStaking from 0x9eca2b38b18b5dfe"))
-			gw.ExecuteScript.Return(cadence.UFix64(1_0000_0000), nil)
+			if count < 2 {
+				gw.ExecuteScript.Return(cadence.NewArray(
+					[]cadence.Value{
+						cadence.Struct{
+							StructType: &cadence.StructType{
+								Fields: []cadence.Field{
+									{
+										Identifier: "id",
+									},
+								},
+							},
+							Fields: []cadence.Value{
+								cadence.String("8f4d09dae7918afbf62c48fa968a9e8b0891cee8442065fa47cc05f4bc9a8a91"),
+							},
+						},
+					}), nil)
+			} else {
+				assert.True(t, strings.Contains(args.Get(1).([]cadence.Value)[0].String(), "8f4d09dae7918afbf62c48fa968a9e8b0891cee8442065fa47cc05f4bc9a8a91"))
+				gw.ExecuteScript.Return(cadence.NewUFix64("1.0"))
+			}
+			count++
 		})
 
-		val1, err := s.Accounts.NodeTotalStake("ccd5e456be83922268ee4a07841f7c6c2f009fac77b80828e08f7e7efd6e5278", flow.Testnet)
+		val1, val2, err := s.Accounts.StakingInfo(flow.HexToAddress("df9c30eb2252f1fa"))
 		assert.NoError(t, err)
 		assert.NotNil(t, val1)
+		assert.NotNil(t, val2)
+		assert.Equal(t, 3, count)
 	})
 }
 

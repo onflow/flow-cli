@@ -68,7 +68,7 @@ func (a *Accounts) Get(address flow.Address) (*flow.Account, error) {
 }
 
 // StakingInfo returns the staking and delegation information for an account.
-func (a *Accounts) StakingInfo(address flow.Address) (*cadence.Value, *cadence.Value, error) {
+func (a *Accounts) StakingInfo(address flow.Address) ([]map[string]interface{}, []map[string]interface{}, error) {
 	a.logger.StartProgress(fmt.Sprintf("Fetching info for %s...", address.String()))
 	defer a.logger.StopProgress()
 
@@ -100,9 +100,45 @@ func (a *Accounts) StakingInfo(address flow.Address) (*cadence.Value, *cadence.V
 		return nil, nil, fmt.Errorf("error getting delegation info: %s", err.Error())
 	}
 
+	// get staking infos and delegation infos
+	stakingInfos := flowkit.NewStakingInfoFromValue(stakingValue)
+	delegationInfos := flowkit.NewStakingInfoFromValue(delegationValue)
+
+	// get a set of node ids from all staking infos
+	nodeStakes := make(map[string]cadence.Value)
+	for _, stakingInfo := range stakingInfos {
+		nodeID, ok := stakingInfo["id"]
+		if ok {
+			nodeStakes[nodeIDToString(nodeID)] = nil
+		}
+	}
+	totalCommitmentScript := tmpl.GenerateGetTotalCommitmentBalanceScript(env)
+
+	// foreach node id, get the node total stake
+	for nodeID := range nodeStakes {
+		stake, err := a.gateway.ExecuteScript(totalCommitmentScript, []cadence.Value{cadence.String(nodeID)})
+		if err != nil {
+			return nil, nil, fmt.Errorf("error getting total stake for node: %s", err.Error())
+		}
+
+		nodeStakes[nodeID] = stake
+	}
+
+	// foreach staking info, add the node total stake
+	for _, stakingInfo := range stakingInfos {
+		nodeID, ok := stakingInfo["id"]
+		if ok {
+			stakingInfo["nodeTotalStake"] = nodeStakes[nodeIDToString(nodeID)].(cadence.UFix64)
+		}
+	}
+
 	a.logger.StopProgress()
 
-	return &stakingValue, &delegationValue, nil
+	return stakingInfos, delegationInfos, nil
+}
+
+func nodeIDToString(value interface{}) string {
+	return value.(cadence.String).ToGoValue().(string)
 }
 
 // NodeTotalStake returns the total stake including delegations of a node.

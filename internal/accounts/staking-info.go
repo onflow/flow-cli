@@ -24,7 +24,6 @@ import (
 
 	"github.com/onflow/flow-go-sdk"
 
-	"github.com/onflow/cadence"
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
@@ -61,50 +60,7 @@ func stakingInfo(
 		return nil, err
 	}
 
-	// get staking infos and delegation infos
-	stakingInfos := flowkit.NewStakingInfoFromValue(*staking)
-	delegationInfos := flowkit.NewStakingInfoFromValue(*delegation)
-
-	// get a set of node ids from all staking infos
-	nodeStakes := make(map[string]cadence.Value)
-	for _, stakingInfo := range stakingInfos {
-		nodeID, ok := stakingInfo["id"]
-		if ok {
-			nodeStakes[nodeIDToString(nodeID)] = nil
-		}
-	}
-
-	chain, err := util.GetAddressNetwork(address)
-	if err != nil {
-		return nil, err
-	}
-	// foreach node id, get the node total stake
-	for nodeID := range nodeStakes {
-		stake, err := services.Accounts.NodeTotalStake(nodeID, chain)
-		if err != nil {
-			return nil, err
-		}
-
-		nodeStakes[nodeID] = *stake
-	}
-
-	// foreach staking info, add the node total stake
-	for _, stakingInfo := range stakingInfos {
-		nodeID, ok := stakingInfo["id"]
-		if ok {
-			stakingInfo["nodeTotalStake"] = nodeStakes[nodeIDToString(nodeID)].(cadence.UFix64)
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	return &StakingResult{stakingInfos, delegationInfos}, nil
-}
-
-func nodeIDToString(value interface{}) string {
-	return value.(cadence.String).ToGoValue().(string)
+	return &StakingResult{staking, delegation}, nil
 }
 
 type StakingResult struct {
