@@ -202,3 +202,8 @@ func (g *EmulatorGateway) GetBlockByHeight(height uint64) (*flow.Block, error) {
 	block, err := g.emulator.GetBlockByHeight(height)
 	return convertBlock(block), err
 }
+
+// GetLatestProtocolStateSnapshot placeholder func to complete gateway interface implementation
+func (g *EmulatorGateway) GetLatestProtocolStateSnapshot() ([]byte, error) {
+	return []byte{}, nil
+}
