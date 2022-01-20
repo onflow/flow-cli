@@ -20,6 +20,7 @@ package services
 
 import (
 	"fmt"
+
 	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/gateway"
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
@@ -47,7 +48,7 @@ func NewSnapshot(
 
 // GetLatestProtocolStateSnapshot returns the latest finalized protocol snapshot
 func (s *Snapshot) GetLatestProtocolStateSnapshot() ([]byte, error) {
-	s.logger.StartProgress(fmt.Sprintf("Downloading protocol snapshot..."))
+	s.logger.StartProgress("Downloading protocol snapshot...")
 
 	b, err := s.gateway.GetLatestProtocolStateSnapshot()
 	if err != nil {
@@ -58,4 +59,3 @@ func (s *Snapshot) GetLatestProtocolStateSnapshot() ([]byte, error) {
 
 	return b, nil
 }
-

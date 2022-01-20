@@ -46,7 +46,7 @@ func NewGrpcGateway(host string) (*GrpcGateway, error) {
 
 	gClient, err := client.New(
 		host,
-		grpc.WithInsecure(),
+		grpc.WithInsecure(), // nolint:staticcheck
 		grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(maxGRPCMessageSize)),
 	)
 	ctx := context.Background()

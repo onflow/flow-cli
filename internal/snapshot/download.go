@@ -20,9 +20,10 @@ package snapshot
 
 import (
 	"fmt"
-	"github.com/spf13/cobra"
 	"os"
 	"path/filepath"
+
+	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/pkg/flowkit"
@@ -30,8 +31,8 @@ import (
 )
 
 type flagsDownload struct {
-	OutputFileName string   `default:"root-protocol-state-snapshot.json" flag:"output-filename" info:"The name for the JSON output file"`
-	OutputDir      string   `default:"./" flag:"output-dir" info:"The directory to output the protocol state snapshot"`
+	OutputFileName string `default:"root-protocol-state-snapshot.json" flag:"output-filename" info:"The name for the JSON output file"`
+	OutputDir      string `default:"./" flag:"output-dir" info:"The directory to output the protocol state snapshot"`
 }
 
 var downloadFlags = flagsDownload{}
