@@ -29,6 +29,7 @@ import (
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/client"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 // maxGRPCMessageSize 16mb, matching the value set in onflow/flow-go
@@ -46,7 +47,7 @@ func NewGrpcGateway(host string) (*GrpcGateway, error) {
 
 	gClient, err := client.New(
 		host,
-		grpc.WithInsecure(), // nolint:staticcheck
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(maxGRPCMessageSize)),
 	)
 	ctx := context.Background()
