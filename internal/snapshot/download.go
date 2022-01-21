@@ -31,8 +31,7 @@ import (
 )
 
 type flagsDownload struct {
-	OutputFileName string `default:"root-protocol-state-snapshot.json" flag:"output-filename" info:"The name for the JSON output file"`
-	OutputDir      string `default:"./" flag:"output-dir" info:"The directory to output the protocol state snapshot"`
+	OutputFile string `default:"root-protocol-state-snapshot.json" flag:"output-file" info:"The name for the JSON output file"`
 }
 
 var downloadFlags = flagsDownload{}
@@ -41,7 +40,7 @@ var DownloadCommand = &command.Command{
 	Cmd: &cobra.Command{
 		Use:     "download",
 		Short:   "Get the latest finalized protocol snapshot",
-		Example: "flow snapshot download --output-dir /tmp/snapshot",
+		Example: "flow snapshot download --output-file /tmp/snapshot.json",
 	},
 	Flags: &downloadFlags,
 	Run:   download,
@@ -58,9 +57,9 @@ func download(
 		return nil, err
 	}
 
-	outputPath, err := filepath.Abs(filepath.Join(downloadFlags.OutputDir, downloadFlags.OutputFileName))
+	outputPath, err := filepath.Abs(downloadFlags.OutputFile)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get absolute output path of protocol snapshot")
+		return nil, fmt.Errorf("failed to get absolute output path for protocol snapshot")
 	}
 
 	err = readerWriter.WriteFile(outputPath, snapshotBytes, os.ModePerm)
