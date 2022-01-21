@@ -31,22 +31,22 @@ var Cmd = &cobra.Command{
 }
 
 func init() {
-	DownloadCommand.AddToParent(Cmd)
+	SaveCommand.AddToParent(Cmd)
 }
 
-// DownloadResult represent result snapshot download command.
-type DownloadResult struct {
+// SaveResult represents the result of the snapshot save command.
+type SaveResult struct {
 	OutputPath string
 }
 
-func (r *DownloadResult) JSON() interface{} {
+func (r *SaveResult) JSON() interface{} {
 	return map[string]string{"output-path": r.OutputPath}
 }
 
-func (r *DownloadResult) String() string {
+func (r *SaveResult) String() string {
 	return fmt.Sprintf("output path: %s", r.OutputPath)
 }
 
-func (r *DownloadResult) Oneliner() string {
+func (r *SaveResult) Oneliner() string {
 	return fmt.Sprintf("output path: %s", r.OutputPath)
 }

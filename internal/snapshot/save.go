@@ -30,34 +30,30 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowkit/services"
 )
 
-type flagsDownload struct {
-	OutputFile string `default:"root-protocol-state-snapshot.json" flag:"output-file" info:"The name for the JSON output file"`
-}
-
-var downloadFlags = flagsDownload{}
-
-var DownloadCommand = &command.Command{
+var SaveCommand = &command.Command{
 	Cmd: &cobra.Command{
-		Use:     "download",
+		Use:     "save",
 		Short:   "Get the latest finalized protocol snapshot",
-		Example: "flow snapshot download --output-file /tmp/snapshot.json",
+		Example: "flow snapshot save /tmp/snapshot.json",
 	},
-	Flags: &downloadFlags,
-	Run:   download,
+	Flags: &struct {}{},
+	Run:   save,
 }
 
-func download(
-	_ []string,
+func save(
+	args []string,
 	readerWriter flowkit.ReaderWriter,
 	_ command.GlobalFlags,
 	services *services.Services,
 ) (command.Result, error) {
+	fileName := args[0]
+
 	snapshotBytes, err := services.Snapshot.GetLatestProtocolStateSnapshot()
 	if err != nil {
 		return nil, err
 	}
 
-	outputPath, err := filepath.Abs(downloadFlags.OutputFile)
+	outputPath, err := filepath.Abs(fileName)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get absolute output path for protocol snapshot")
 	}
@@ -67,5 +63,5 @@ func download(
 		return nil, fmt.Errorf("failed to write protocol snapshot file to %s: %w", outputPath, err)
 	}
 
-	return &DownloadResult{OutputPath: outputPath}, nil
+	return &SaveResult{OutputPath: outputPath}, nil
 }
