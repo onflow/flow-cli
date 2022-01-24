@@ -40,13 +40,13 @@ type SaveResult struct {
 }
 
 func (r *SaveResult) JSON() interface{} {
-	return map[string]string{"output-path": r.OutputPath}
+	return map[string]string{"path": r.OutputPath}
 }
 
 func (r *SaveResult) String() string {
-	return fmt.Sprintf("output path: %s", r.OutputPath)
+	return fmt.Sprintf("snapshot saved: %s", r.OutputPath)
 }
 
 func (r *SaveResult) Oneliner() string {
-	return fmt.Sprintf("output path: %s", r.OutputPath)
+	return fmt.Sprintf("snapshot saved: %s", r.OutputPath)
 }

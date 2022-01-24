@@ -20,7 +20,6 @@ package snapshot
 
 import (
 	"fmt"
-	"os"
 	"path/filepath"
 
 	"github.com/onflow/flow-cli/internal/command"
@@ -58,7 +57,7 @@ func save(
 		return nil, fmt.Errorf("failed to get absolute output path for protocol snapshot")
 	}
 
-	err = readerWriter.WriteFile(outputPath, snapshotBytes, os.ModePerm)
+	err = readerWriter.WriteFile(outputPath, snapshotBytes, 0644)
 	if err != nil {
 		return nil, fmt.Errorf("failed to write protocol snapshot file to %s: %w", outputPath, err)
 	}
