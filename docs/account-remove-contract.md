@@ -52,6 +52,14 @@ Name of the contract as it is defined in the contract source code.
 
 Specify the name of the account that will be used to sign the transaction.
 
+### Include Fields
+
+- Flag: `--include`
+- Valid inputs: `contracts`
+
+Specify fields to include in the result output. Applies only to the text output.
+
+
 ### Host
 
 - Flag: `--host`
