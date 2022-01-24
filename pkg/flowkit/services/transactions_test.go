@@ -142,6 +142,7 @@ func TestTransactions_Integration(t *testing.T) {
 			gas     uint64
 			args    []cadence.Value
 			network string
+			yes     bool
 		}
 
 		a, _ := state.Accounts().ByName("Alice")
@@ -158,6 +159,7 @@ func TestTransactions_Integration(t *testing.T) {
 			1000,
 			nil,
 			"",
+			true,
 		}, {
 			c.Address(),
 			[]flow.Address{a.Address(), b.Address()},
@@ -168,10 +170,11 @@ func TestTransactions_Integration(t *testing.T) {
 			1000,
 			nil,
 			"",
+			true,
 		}}
 
 		for _, i := range txIns {
-			tx, err := s.Transactions.Build(i.prop, i.auth, i.payer, i.index, i.code, i.file, i.gas, i.args, i.network)
+			tx, err := s.Transactions.Build(i.prop, i.auth, i.payer, i.index, i.code, i.file, i.gas, i.args, i.network, i.yes)
 
 			assert.NoError(t, err)
 			ftx := tx.FlowTransaction()
@@ -227,6 +230,7 @@ func TestTransactions_Integration(t *testing.T) {
 			1000,
 			nil,
 			n.Name,
+			true,
 		)
 
 		assert.NoError(t, err)
@@ -258,6 +262,7 @@ func TestTransactions_Integration(t *testing.T) {
 			1000,
 			nil,
 			"",
+			true,
 		)
 
 		assert.Nil(t, err)
@@ -294,6 +299,7 @@ func TestTransactions_Integration(t *testing.T) {
 			1000,
 			nil,
 			"",
+			true,
 		)
 
 		assert.Nil(t, err)
@@ -309,6 +315,7 @@ func TestTransactions_Integration(t *testing.T) {
 
 		txSent, txResult, err := s.Transactions.SendSigned(
 			[]byte(fmt.Sprintf("%x", txSigned.FlowTransaction().Encode())),
+			true,
 		)
 		assert.Nil(t, err)
 		assert.Equal(t, txResult.Status, flow.TransactionStatusSealed)
@@ -333,6 +340,7 @@ func TestTransactions_Integration(t *testing.T) {
 			1000,
 			nil,
 			"",
+			true,
 		)
 
 		assert.Nil(t, err)
@@ -367,6 +375,7 @@ func TestTransactions_Integration(t *testing.T) {
 			1000,
 			nil,
 			"",
+			true,
 		)
 
 		assert.EqualError(t, err, "provided authorizers length mismatch, required authorizers 2, but provided 1")
