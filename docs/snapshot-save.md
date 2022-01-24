@@ -31,12 +31,6 @@ Output path where the protocol snapshot JSON file will be saved.
 
 ## Flags
 
-### Signer
-
-- Flag: `--signer`
-- Valid inputs: the name of an account defined in the configuration (`flow.json`)
-
-Specify the name of the account that will be used to sign the transaction.
 
 ### Host
 - Flag: `--host`
