@@ -31,7 +31,7 @@ import (
 
 type flagsUpdateContract struct {
 	Signer  string   `default:"emulator-account" flag:"signer" info:"Account name from configuration used to sign the transaction"`
-	Include []string `default:"" flag:"include" info:"Fields to include in the output"`
+	Include []string `default:"" flag:"include" info:"Fields to include in the output. Valid values: contracts."`
 }
 
 var updateFlags = flagsUpdateContract{}

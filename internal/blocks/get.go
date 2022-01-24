@@ -28,7 +28,7 @@ import (
 
 type flagsBlocks struct {
 	Events  string   `default:"" flag:"events" info:"List events of this type for the block"`
-	Include []string `default:"" flag:"include" info:"Fields to include in the output"`
+	Include []string `default:"" flag:"include" info:"Fields to include in the output. Valid values: transactions."`
 }
 
 var blockFlags = flagsBlocks{}

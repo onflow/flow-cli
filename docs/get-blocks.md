@@ -13,7 +13,7 @@ flow blocks get <block_id|latest|block_height>
 ## Example Usage
 
 ```shell
-flow blocks get 12884163 --host access.mainnet.nodes.onflow.org:9000 --verbose
+flow blocks get 12884163 --host access.mainnet.nodes.onflow.org:9000 --include transactions
 ```
 
 ### Example response
@@ -75,11 +75,12 @@ Flow [account address](https://docs.onflow.org/concepts/accounts-and-keys/) (pre
 
 List events of this type for the block.
 
-### Verbose
+### Include
 
-- Flag: `--verbose`
+- Flag: `--include`
+- Valid inputs: `transactions`
 
-Display transactions hashes in block.
+Include additional values in the response.
 
 ### Signer
 
