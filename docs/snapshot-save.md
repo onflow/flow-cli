@@ -71,31 +71,6 @@ Specify any property name from the result you want to return as the only value.
 
 Specify in which format you want to display the result.
 
-### Save
-
-- Flag: `--save`
-- Short Flag: `-s`
-- Valid inputs: valid filename
-
-Specify the filename where you want the result to be saved.
-
-### Log
-
-- Flag: `--log`
-- Short Flag: `-l`
-- Valid inputs: `none`, `error`, `debug`
-- Default: `info`
-
-Specify the log level. Control how much output you want to see while command execution.
-
-### Configuration
-
-- Flag: `--config-path`
-- Short Flag: `-f`
-- Valid inputs: valid filename
-
-Specify a filename for the configuration files, you can provide multiple configuration
-files by using `-f` flag multiple times.
 
 
 
