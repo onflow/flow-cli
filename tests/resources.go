@@ -200,6 +200,17 @@ var TransactionTwoAuth = resource{
 	`),
 }
 
+var TransactionMultipleDeclarations = resource{
+	Filename: "transactionMultipleDec.cdc",
+	Source: []byte(`
+		pub fun dummy(_ address: Address): Void {}
+
+		transaction() {
+			prepare(authorizer: AuthAccount) {}
+		}
+	`),
+}
+
 var ScriptWithError = resource{
 	Filename: "scriptError.cdc",
 	Source: []byte(`

@@ -420,4 +420,26 @@ func TestTransactions_Integration(t *testing.T) {
 		assert.Nil(t, txr.Error)
 		assert.Equal(t, txr.Status, flow.TransactionStatusSealed)
 	})
+
+	t.Run("Send transaction with multiple func declaration", func(t *testing.T) {
+		t.Parallel()
+		state, s := setupIntegration()
+		setupAccounts(state, s)
+
+		a, _ := state.Accounts().ByName("Alice")
+
+		tx, txr, err := s.Transactions.Send(
+			a,
+			tests.TransactionMultipleDeclarations.Source,
+			tests.TransactionMultipleDeclarations.Filename,
+			1000,
+			nil,
+			"",
+		)
+		assert.NoError(t, err)
+		assert.Equal(t, tx.Payer.String(), a.Address().String())
+		assert.Equal(t, tx.ProposalKey.KeyIndex, a.Key().Index())
+		assert.Nil(t, txr.Error)
+		assert.Equal(t, txr.Status, flow.TransactionStatusSealed)
+	})
 }
