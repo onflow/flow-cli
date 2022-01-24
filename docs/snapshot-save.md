@@ -7,7 +7,7 @@ description: How to save a protocol snapshot from the command line
 The FLOW CLI provides a command to save the latest finalized protocol state snapshot
 
 ```shell
-flow snapshot save <path_to_save_snapshot>
+flow snapshot save <output path>
 ```
 
 ## Example Usage
