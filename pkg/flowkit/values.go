@@ -19,25 +19,38 @@
 package flowkit
 
 import (
+	"fmt"
+
 	"github.com/onflow/cadence"
 )
 
-func NewStakingInfoFromValue(value cadence.Value) map[string]interface{} {
-	stakingInfo := make(map[string]interface{})
-	arrayValue := value.(cadence.Array)
+func NewStakingInfoFromValue(value cadence.Value) ([]map[string]interface{}, error) {
+	stakingInfo := make([]map[string]interface{}, 0)
+	arrayValue, ok := value.(cadence.Array)
+	if !ok {
+		return stakingInfo, fmt.Errorf("staking info must be a cadence array")
+	}
 
 	if len(arrayValue.Values) == 0 {
-		return stakingInfo
+		return stakingInfo, nil
 	}
 
-	keys := make([]string, 0)
-	for _, field := range arrayValue.Values[0].(cadence.Struct).StructType.Fields {
-		keys = append(keys, field.Identifier)
+	for _, v := range arrayValue.Values {
+		vs, ok := v.(cadence.Struct)
+		if !ok {
+			return stakingInfo, fmt.Errorf("staking info must be a cadence array of structs")
+		}
+
+		keys := make([]string, 0)
+		values := make(map[string]interface{})
+		for _, field := range vs.StructType.Fields {
+			keys = append(keys, field.Identifier)
+		}
+		for j, value := range vs.Fields {
+			values[keys[j]] = value
+		}
+		stakingInfo = append(stakingInfo, values)
 	}
 
-	for i, value := range arrayValue.Values[0].(cadence.Struct).Fields {
-		stakingInfo[keys[i]] = value
-	}
-
-	return stakingInfo
+	return stakingInfo, nil
 }

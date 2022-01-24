@@ -112,6 +112,7 @@ func build(
 		buildFlags.GasLimit,
 		transactionArgs,
 		globalFlags.Network,
+		globalFlags.Yes,
 	)
 	if err != nil {
 		return nil, err
