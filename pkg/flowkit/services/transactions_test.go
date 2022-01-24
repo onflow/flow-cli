@@ -111,8 +111,8 @@ func setupAccount(state *flowkit.State, s *Services, account *flowkit.Account) {
 	acc, _ := s.Accounts.Create(srv,
 		[]crypto.PublicKey{(*pk).PublicKey()},
 		[]int{flow.AccountKeyWeightThreshold},
-		[]crypto.SignatureAlgorithm{key.SigAlgo()},
-		[]crypto.HashAlgorithm{key.HashAlgo()},
+		key.SigAlgo(),
+		key.HashAlgo(),
 		nil,
 	)
 
