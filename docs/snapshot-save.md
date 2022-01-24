@@ -24,7 +24,7 @@ snapshot saved: /tmp/snapshot.json
 ## Arguments
 
 ### Output Path
-- OutputPath: `path to save the snapshot file`
+- Name: `output path`
 - Valid Input: any valid string path
 
 Output path where the protocol snapshot JSON file will be saved.
