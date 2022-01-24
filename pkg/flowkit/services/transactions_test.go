@@ -177,7 +177,7 @@ func TestTransactions_Integration(t *testing.T) {
 			ftx := tx.FlowTransaction()
 			assert.Equal(t, ftx.Script, i.code)
 			assert.Equal(t, ftx.Payer, i.payer)
-			assert.Equal(t, ftx.Authorizers, i.auth)
+			assert.Equal(t, len(ftx.Authorizers), 0) // make sure authorizers weren't added as tx input doesn't require them
 			assert.Equal(t, ftx.ProposalKey.Address, i.prop)
 			assert.Equal(t, ftx.ProposalKey.KeyIndex, i.index)
 		}

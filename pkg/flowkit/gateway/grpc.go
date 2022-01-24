@@ -21,7 +21,6 @@ package gateway
 import (
 	"context"
 	"fmt"
-	"google.golang.org/grpc/credentials/insecure"
 	"time"
 
 	"github.com/onflow/flow-cli/pkg/flowkit"
@@ -30,6 +29,7 @@ import (
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/client"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 // maxGRPCMessageSize 16mb, matching the value set in onflow/flow-go
