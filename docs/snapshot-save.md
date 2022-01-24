@@ -23,7 +23,7 @@ snapshot saved: /tmp/snapshot.json
 
 ## Arguments
 
-### OutputPath
+### Output Path
 - OutputPath: `path to save the snapshot file`
 - Valid Input: any valid string path
 
