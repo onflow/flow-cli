@@ -22,6 +22,7 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
+	"github.com/onflow/cadence/runtime/ast"
 
 	"github.com/onflow/cadence/runtime/cmd"
 	"github.com/onflow/cadence/runtime/common"
@@ -291,12 +292,20 @@ func (t *Transaction) AddAuthorizers(authorizers []flow.Address) (*Transaction, 
 	)
 
 	// get authorizers param list if exists
-	if program.SoleTransactionDeclaration().Prepare != nil {
-		requiredAuths := program.SoleTransactionDeclaration().
-			Prepare.
-			FunctionDeclaration.
-			ParameterList.
-			Parameters
+	if len(program.TransactionDeclarations()) == 1 {
+		declaration := program.TransactionDeclarations()[0]
+		requiredAuths := make([]*ast.Parameter, 0)
+
+		// if prepare block is missing set default authorizers to empty
+		if declaration.Prepare == nil {
+			authorizers = nil
+		} else { // if prepare block is present get authorizers
+			requiredAuths = declaration.
+				Prepare.
+				FunctionDeclaration.
+				ParameterList.
+				Parameters
+		}
 
 		if len(requiredAuths) != len(authorizers) {
 			return nil, fmt.Errorf(
@@ -305,6 +314,8 @@ func (t *Transaction) AddAuthorizers(authorizers []flow.Address) (*Transaction, 
 				len(authorizers),
 			)
 		}
+	} else {
+		return nil, fmt.Errorf("can only support one transaction declaration per file")
 	}
 
 	for _, authorizer := range authorizers {
