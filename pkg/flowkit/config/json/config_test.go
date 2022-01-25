@@ -33,7 +33,10 @@ func Test_SimpleJSONConfig(t *testing.T) {
 		},
 		"contracts": {},
 		"networks": {
-			"emulator": "127.0.0.1:3569"
+			"emulator": {
+				"host": "127.0.0.1:3569",
+				"network-key": ""
+			}
 		},
 		"accounts": {
 			"emulator-account": {
@@ -66,7 +69,10 @@ func Test_NonExistingContractForDeployment(t *testing.T) {
 			}
 		},
 		"networks": {
-			"emulator": "127.0.0.1:3569"
+			"emulator": {
+				"host": "127.0.0.1:3569",
+				"network-key": ""
+			}
 		},
 		"deployments": {
 			"emulator": {
@@ -95,7 +101,10 @@ func Test_NonExistingAccountForDeployment(t *testing.T) {
 			}
 		},
 		"networks": {
-			"emulator": "127.0.0.1:3569"
+			"emulator": {
+				"host": "127.0.0.1:3569",
+				"network-key": ""
+			}
 		},
 		"deployments": {
 			"emulator": {

@@ -26,7 +26,10 @@ import (
 
 func Test_ConfigNetworkSimple(t *testing.T) {
 	b := []byte(`{
-    "testnet": "access.testnet.nodes.onflow.org:9000"
+    "testnet": {
+			"host": "access.testnet.nodes.onflow.org:9000",
+			"network-key": ""
+		}
 	}`)
 
 	var jsonNetworks jsonNetworks
@@ -44,8 +47,14 @@ func Test_ConfigNetworkSimple(t *testing.T) {
 
 func Test_ConfigNetworkMultiple(t *testing.T) {
 	b := []byte(`{
-    "emulator": "127.0.0.1:3569",
-    "testnet": "access.testnet.nodes.onflow.org:9000"
+    		"emulator": {
+				"host": "127.0.0.1:3569",
+				"network-key": ""
+			},
+    		"testnet": {
+				"host": "access.testnet.nodes.onflow.org:9000",
+				"network-key": ""
+			}
 	}`)
 
 	var jsonNetworks jsonNetworks
@@ -67,7 +76,7 @@ func Test_ConfigNetworkMultiple(t *testing.T) {
 }
 
 func Test_TransformNetworkToJSON(t *testing.T) {
-	b := []byte(`{"emulator":"127.0.0.1:3569","testnet":"access.testnet.nodes.onflow.org:9000"}`)
+	b := []byte(`{"emulator":{"host":"127.0.0.1:3569","network-key":""},"testnet":{"host":"access.testnet.nodes.onflow.org:9000","network-key":""}}`)
 
 	var jsonNetworks jsonNetworks
 	err := json.Unmarshal(b, &jsonNetworks)
@@ -83,14 +92,7 @@ func Test_TransformNetworkToJSON(t *testing.T) {
 }
 
 func Test_IngoreOldFormat(t *testing.T) {
-	b := []byte(`{
-		"emulator":"127.0.0.1:3569",
-		"testnet":"access.testnet.nodes.onflow.org:9000",
-		"mainnet": {
-			"host": "access.mainnet.nodes.onflow.org:9000",
-			"chain": "flow-mainnet"
-		}
-	}`)
+	b := []byte(`{"emulator":{"host":"127.0.0.1:3569","network-key":""},"testnet":{"host":"access.testnet.nodes.onflow.org:9000","network-key":""},"mainnet":{"host": "access.mainnet.nodes.onflow.org:9000","chain":"flow-mainnet","network-key":""}}`)
 
 	var jsonNetworks jsonNetworks
 	err := json.Unmarshal(b, &jsonNetworks)

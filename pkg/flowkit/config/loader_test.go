@@ -41,7 +41,10 @@ func Test_JSONSimple(t *testing.T) {
 		},
 		"contracts": {},
 		"networks": {
-			"emulator": "127.0.0.1:3569"
+			"emulator": {
+				"host": "127.0.0.1:3569",
+				"network-key": ""
+			}
 		},
 		"accounts": {
 			"emulator-account": {
@@ -243,7 +246,10 @@ func Test_ComposeCrossReference(t *testing.T) {
 
 	b2 := []byte(`{
 		"networks": {
-			"testnet": "access.devnet.nodes.onflow.org:9000"
+			"testnet": {
+				"host": "access.devnet.nodes.onflow.org:9000",
+				"network-key": ""
+			}
 		},
 		"contracts": { "NFT": "./NFT.cdc" }
 	}`)
