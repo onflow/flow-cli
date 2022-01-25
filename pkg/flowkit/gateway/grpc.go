@@ -21,9 +21,11 @@ package gateway
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/onflow/flow-cli/pkg/flowkit"
+	"github.com/onflow/flow-go/utils/grpcutils"
 
 	"github.com/onflow/cadence"
 	"github.com/onflow/flow-go-sdk"
@@ -48,6 +50,30 @@ func NewGrpcGateway(host string) (*GrpcGateway, error) {
 	gClient, err := client.New(
 		host,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
+		grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(maxGRPCMessageSize)),
+	)
+	ctx := context.Background()
+
+	if err != nil || gClient == nil {
+		return nil, fmt.Errorf("failed to connect to host %s", host)
+	}
+
+	return &GrpcGateway{
+		client: gClient,
+		ctx:    ctx,
+	}, nil
+}
+
+// NewSecureGrpcGateway returns a new gRPC gateway with a secure client connection.
+func NewSecureGrpcGateway(host, hostNetworkKey string) (*GrpcGateway, error) {
+	secureDialOpts, err := grpcutils.SecureGRPCDialOpt(strings.TrimPrefix(hostNetworkKey, "0x"))
+	if err != nil {
+		return nil, fmt.Errorf("failed to create secure GRPC dial options with network key \"%s\": %w",hostNetworkKey, err)
+	}
+
+	gClient, err := client.New(
+		host,
+		secureDialOpts,
 		grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(maxGRPCMessageSize)),
 	)
 	ctx := context.Background()

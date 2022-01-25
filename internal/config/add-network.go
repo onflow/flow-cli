@@ -33,8 +33,9 @@ import (
 )
 
 type flagsAddNetwork struct {
-	Name string `flag:"name" info:"Network name"`
-	Host string `flag:"host" info:"Flow Access API host address"`
+	Name           string `flag:"name" info:"Network name"`
+	Host           string `flag:"host" info:"Flow Access API host address"`
+	HostNetworkKey string `flag:"network-key" info:"Flow Access API host network key for secure client connections"`
 }
 
 var addNetworkFlags = flagsAddNetwork{}
@@ -66,7 +67,7 @@ func addNetwork(
 		networkData = output.NewNetworkPrompt()
 	}
 
-	network := config.StringToNetwork(networkData["name"], networkData["host"])
+	network := config.StringToNetwork(networkData["name"], networkData["host"], networkData["key"])
 	state.Networks().AddOrUpdate(network.Name, network)
 
 	err = state.SaveEdited(globalFlags.ConfigPaths)
@@ -98,5 +99,6 @@ func flagsToNetworkData(flags flagsAddNetwork) (map[string]string, bool, error) 
 	return map[string]string{
 		"name": flags.Name,
 		"host": flags.Host,
+		"key":  flags.HostNetworkKey,
 	}, true, nil
 }

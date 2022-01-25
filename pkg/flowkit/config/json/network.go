@@ -32,8 +32,9 @@ func (j jsonNetworks) transformToConfig() (config.Networks, error) {
 
 	for networkName, n := range j {
 		network := config.Network{
-			Name: networkName,
-			Host: n.Host,
+			Name:           networkName,
+			Host:           n.Host,
+			HostNetworkKey: n.NetworkKey,
 		}
 
 		networks = append(networks, network)
@@ -48,7 +49,8 @@ func transformNetworksToJSON(networks config.Networks) jsonNetworks {
 
 	for _, n := range networks {
 		jsonNetworks[n.Name] = jsonNetwork{
-			Host: n.Host,
+			Host:       n.Host,
+			NetworkKey: n.HostNetworkKey,
 		}
 	}
 
@@ -56,7 +58,8 @@ func transformNetworksToJSON(networks config.Networks) jsonNetworks {
 }
 
 type jsonNetwork struct {
-	Host string
+	Host       string
+	NetworkKey string
 }
 
 type advancedNetwork struct {
@@ -65,10 +68,11 @@ type advancedNetwork struct {
 }
 
 func (j *jsonNetwork) UnmarshalJSON(b []byte) error {
-	var host string
-	err := json.Unmarshal(b, &host)
+	var m map[string]string
+	err := json.Unmarshal(b, &m)
 	if err == nil {
-		j.Host = host
+		j.Host = m["host"]
+		j.NetworkKey = m["network-key"]
 		return nil
 	}
 
@@ -83,5 +87,5 @@ func (j *jsonNetwork) UnmarshalJSON(b []byte) error {
 }
 
 func (j jsonNetwork) MarshalJSON() ([]byte, error) {
-	return json.Marshal(j.Host)
+	return json.Marshal(map[string]string{"host": j.Host, "network-key": j.NetworkKey})
 }

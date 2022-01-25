@@ -157,6 +157,22 @@ func namePrompt() string {
 	return name
 }
 
+func secureNetworkKeyPrompt() string {
+	hostPrompt := promptui.Prompt{
+		Label: "Enter host network key",
+		Validate: func(s string) error {
+			return nil
+		},
+	}
+	networkKey, err := hostPrompt.Run()
+	if err == promptui.ErrInterrupt {
+		os.Exit(-1)
+	}
+
+
+	return networkKey
+}
+
 func addressPrompt() string {
 	addressPrompt := promptui.Prompt{
 		Label: "Address",
@@ -320,6 +336,8 @@ func NewNetworkPrompt() map[string]string {
 	if err == promptui.ErrInterrupt {
 		os.Exit(-1)
 	}
+
+	networkData["key"] = secureNetworkKeyPrompt()
 
 	return networkData
 }

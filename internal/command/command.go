@@ -91,10 +91,10 @@ func (c Command) AddToParent(parent *cobra.Command) {
 			handleError("Config Error", confErr)
 		}
 
-		host, err := resolveHost(state, Flags.Host, Flags.Network)
+		host, hostNetworkKey, err := resolveHost(state, Flags.Host, Flags.HostNetworkKey,Flags.Network)
 		handleError("Host Error", err)
 
-		clientGateway, err := createGateway(host)
+		clientGateway, err := createGateway(host, hostNetworkKey)
 		handleError("Gateway Error", err)
 
 		logger := createLogger(Flags.Log, Flags.Format)
@@ -134,8 +134,11 @@ func (c Command) AddToParent(parent *cobra.Command) {
 }
 
 // createGateway creates a gateway to be used, defaults to grpc but can support others.
-func createGateway(host string) (gateway.Gateway, error) {
-	// create default grpc client
+func createGateway(host, hostNetworkKey string) (gateway.Gateway, error) {
+	// create secure grpc client if hostNetworkKey provided
+	if hostNetworkKey != "" {
+		return gateway.NewSecureGrpcGateway(host, hostNetworkKey)
+	}
 	return gateway.NewGrpcGateway(host)
 }
 
@@ -146,34 +149,34 @@ func createGateway(host string) (gateway.Gateway, error) {
 // 2. if conf is initialized return host by network flag
 // 3. if conf is not initialized and network flag is provided resolve to coded value for that network
 // 4. default to emulator network
-func resolveHost(state *flowkit.State, hostFlag string, networkFlag string) (string, error) {
+func resolveHost(state *flowkit.State, hostFlag, hostNetworkKeyFlag,networkFlag string) (string, string, error) {
 	// don't allow both network and host flag as the host might be different
 	if networkFlag != config.DefaultEmulatorNetwork().Name && hostFlag != "" {
-		return "", fmt.Errorf("shouldn't use both host and network flags, better to use network flag")
+		return "", "", fmt.Errorf("shouldn't use both host and network flags, better to use network flag")
 	}
 
 	// host flag has highest priority
 	if hostFlag != "" {
-		return hostFlag, nil
+		return hostFlag, hostNetworkKeyFlag, nil
 	}
 	// network flag with project initialized is next
 	if state != nil {
 		stateNetwork, err := state.Networks().ByName(networkFlag)
 		if err != nil {
-			return "", fmt.Errorf("network with name %s does not exist in configuration", networkFlag)
+			return "", "", fmt.Errorf("network with name %s does not exist in configuration", networkFlag)
 		}
 
-		return stateNetwork.Host, nil
+		return stateNetwork.Host, stateNetwork.HostNetworkKey, nil
 	}
 
 	networks := config.DefaultNetworks()
 	network, err := networks.ByName(networkFlag)
 
 	if err != nil {
-		return "", fmt.Errorf("invalid network with name %s", networkFlag)
+		return "", "", fmt.Errorf("invalid network with name %s", networkFlag)
 	}
 
-	return network.Host, nil
+	return network.Host, network.HostNetworkKey, nil
 
 }
 

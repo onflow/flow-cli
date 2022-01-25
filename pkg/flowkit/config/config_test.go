@@ -130,6 +130,10 @@ func generateComplexConfig() config.Config {
 		Networks: config.Networks{{
 			Name: "emulator",
 			Host: "127.0.0.1.3569",
+		}, {
+			Name: "testnet",
+			Host: "access.devnet.nodes.onflow.org:9000",
+			HostNetworkKey: "0xKey",
 		}},
 	}
 }
@@ -188,7 +192,11 @@ func Test_GetDeploymentsByNetworkComplex(t *testing.T) {
 func Test_GetNetworkByNameComplex(t *testing.T) {
 	conf := generateComplexConfig()
 	network, err := conf.Networks.ByName("emulator")
-
 	assert.NoError(t, err)
 	assert.Equal(t, network.Host, "127.0.0.1.3569")
+
+	network, err = conf.Networks.ByName("testnet")
+	assert.NoError(t, err)
+	assert.Equal(t, network.Host, "access.devnet.nodes.onflow.org:9000")
+	assert.Equal(t, network.HostNetworkKey, "0xKey")
 }
