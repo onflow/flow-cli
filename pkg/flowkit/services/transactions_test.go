@@ -180,7 +180,7 @@ func TestTransactions_Integration(t *testing.T) {
 			ftx := tx.FlowTransaction()
 			assert.Equal(t, ftx.Script, i.code)
 			assert.Equal(t, ftx.Payer, i.payer)
-			assert.Equal(t, ftx.Authorizers, i.auth)
+			assert.Equal(t, len(ftx.Authorizers), 0) // make sure authorizers weren't added as tx input doesn't require them
 			assert.Equal(t, ftx.ProposalKey.Address, i.prop)
 			assert.Equal(t, ftx.ProposalKey.KeyIndex, i.index)
 		}
@@ -426,6 +426,28 @@ func TestTransactions_Integration(t *testing.T) {
 		assert.Equal(t, tx.Payer.String(), a.Address().String())
 		assert.Equal(t, tx.ProposalKey.KeyIndex, a.Key().Index())
 		assert.Equal(t, fmt.Sprintf("%x", tx.Arguments), "[7b2274797065223a22537472696e67222c2276616c7565223a22426172227d0a]")
+		assert.Nil(t, txr.Error)
+		assert.Equal(t, txr.Status, flow.TransactionStatusSealed)
+	})
+
+	t.Run("Send transaction with multiple func declaration", func(t *testing.T) {
+		t.Parallel()
+		state, s := setupIntegration()
+		setupAccounts(state, s)
+
+		a, _ := state.Accounts().ByName("Alice")
+
+		tx, txr, err := s.Transactions.Send(
+			a,
+			tests.TransactionMultipleDeclarations.Source,
+			tests.TransactionMultipleDeclarations.Filename,
+			1000,
+			nil,
+			"",
+		)
+		assert.NoError(t, err)
+		assert.Equal(t, tx.Payer.String(), a.Address().String())
+		assert.Equal(t, tx.ProposalKey.KeyIndex, a.Key().Index())
 		assert.Nil(t, txr.Error)
 		assert.Equal(t, txr.Status, flow.TransactionStatusSealed)
 	})
