@@ -154,6 +154,11 @@ func (g *GrpcGateway) GetCollection(id flow.Identifier) (*flow.Collection, error
 	return g.client.GetCollection(g.ctx, id)
 }
 
+// GetLatestProtocolStateSnapshot gets the latest finalized protocol state snapshot
+func (g *GrpcGateway) GetLatestProtocolStateSnapshot() ([]byte, error) {
+	return g.client.GetLatestProtocolStateSnapshot(g.ctx)
+}
+
 // Ping is used to check if the access node is alive and healthy.
 func (g *GrpcGateway) Ping() error {
 	return g.client.Ping(g.ctx)

@@ -25,12 +25,13 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
 
-	"github.com/onflow/cadence"
 	emulator "github.com/onflow/flow-emulator"
+	flowGo "github.com/onflow/flow-go/model/flow"
+
+	"github.com/onflow/cadence"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/client"
 	"github.com/onflow/flow-go-sdk/client/convert"
-	flowGo "github.com/onflow/flow-go/model/flow"
 )
 
 type EmulatorGateway struct {
@@ -201,4 +202,9 @@ func (g *EmulatorGateway) GetBlockByID(id flow.Identifier) (*flow.Block, error) 
 func (g *EmulatorGateway) GetBlockByHeight(height uint64) (*flow.Block, error) {
 	block, err := g.emulator.GetBlockByHeight(height)
 	return convertBlock(block), err
+}
+
+// GetLatestProtocolStateSnapshot placeholder func to complete gateway interface implementation
+func (g *EmulatorGateway) GetLatestProtocolStateSnapshot() ([]byte, error) {
+	return []byte{}, nil
 }

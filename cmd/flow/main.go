@@ -34,6 +34,7 @@ import (
 	"github.com/onflow/flow-cli/internal/quick"
 	"github.com/onflow/flow-cli/internal/scripts"
 	"github.com/onflow/flow-cli/internal/signatures"
+	"github.com/onflow/flow-cli/internal/snapshot"
 	"github.com/onflow/flow-cli/internal/status"
 	"github.com/onflow/flow-cli/internal/transactions"
 	"github.com/onflow/flow-cli/internal/version"
@@ -69,6 +70,7 @@ func main() {
 	cmd.AddCommand(config.Cmd)
 	cmd.AddCommand(app.Cmd)
 	cmd.AddCommand(signatures.Cmd)
+	cmd.AddCommand(snapshot.Cmd)
 
 	command.InitFlags(cmd)
 	// Set usage template to custom template
