@@ -21,6 +21,7 @@ package gateway
 import (
 	"context"
 	"fmt"
+	"google.golang.org/grpc/credentials/insecure"
 	"time"
 
 	"github.com/onflow/flow-cli/pkg/flowkit"
@@ -46,7 +47,7 @@ func NewGrpcGateway(host string) (*GrpcGateway, error) {
 
 	gClient, err := client.New(
 		host,
-		grpc.WithInsecure(),
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(maxGRPCMessageSize)),
 	)
 	ctx := context.Background()
