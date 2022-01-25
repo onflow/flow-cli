@@ -9,9 +9,6 @@ Remove an existing contract deployed to a Flow account using the Flow CLI.
 flow accounts remove-contract <name>
 ```
 
-⚠️ _This command is only available on Emulator. It is disabled on Canarynet, Testnet and Mainnet accounts._
-
-
 ## Example Usage
 
 ```shell
@@ -33,6 +30,28 @@ Key 0	Public Key		 640a5a359bf3536d15192f18d872d57c98a96cb871b92b70cecb0739c2d5c
 
 Contracts Deployed: 0
 ```
+**Testnet Example**
+```
+> flow accounts remove-contract FungibleToken --signer alice --network testnet
+
+Contract 'FungibleToken' removed from account '0xf8d6e0586b0a20c7'
+
+Address	 0xf8d6e0586b0a20c7
+Balance	 99999999999.70000000
+Keys	 1
+
+Key 0	Public Key		 640a5a359bf3536d15192f18d872d57c98a96cb871b92b70cecb0739c2d5c37b4be12548d3526933c2cda9b0b9c69412f45ffb6b85b6840d8569d969fe84e5b7
+	Weight			 1000
+	Signature Algorithm	 ECDSA_P256
+	Hash Algorithm		 SHA3_256
+	Revoked 		 false
+	Sequence Number 	 6
+	Index 			 0
+
+Contracts Deployed: 0
+
+```
+*Make sure alice account is defined in flow.json*
 
 ## Arguments
 
@@ -51,6 +70,14 @@ Name of the contract as it is defined in the contract source code.
 - Valid inputs: the name of an account defined in the configuration (`flow.json`).
 
 Specify the name of the account that will be used to sign the transaction.
+
+### Include Fields
+
+- Flag: `--include`
+- Valid inputs: `contracts`
+
+Specify fields to include in the result output. Applies only to the text output.
+
 
 ### Host
 

@@ -29,7 +29,7 @@ import (
 )
 
 type flagsGet struct {
-	Include []string `default:"" flag:"include" info:"Fields to include in the output"`
+	Include []string `default:"" flag:"include" info:"Fields to include in the output. Valid values: contracts."`
 }
 
 var getFlags = flagsGet{}

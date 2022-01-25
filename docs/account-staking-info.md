@@ -53,6 +53,14 @@ Flow [account address](https://docs.onflow.org/concepts/accounts-and-keys/) (pre
 
 ## Flags
 
+### Include Fields
+
+- Flag: `--include`
+- Valid inputs: `contracts`
+
+Specify fields to include in the result output. Applies only to the text output.
+
+
 ### Host
 
 - Flag: `--host`

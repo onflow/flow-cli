@@ -30,7 +30,7 @@ import (
 )
 
 type flagsSendSigned struct {
-	Include []string `default:"" flag:"include" info:"Fields to include in the output"`
+	Include []string `default:"" flag:"include" info:"Fields to include in the output. Valid values: signatures, code, payload."`
 	Exclude []string `default:"" flag:"exclude" info:"Fields to exclude from the output (events)"`
 }
 

@@ -31,7 +31,7 @@ import (
 
 type flagsSign struct {
 	Signer  string   `default:"emulator-account" flag:"signer" info:"name of the account used to sign"`
-	Include []string `default:"" flag:"include" info:"Fields to include in the output"`
+	Include []string `default:"" flag:"include" info:"Fields to include in the output. Valid values: signatures, code, payload."`
 }
 
 var signFlags = flagsSign{}
