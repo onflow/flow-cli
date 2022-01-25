@@ -158,13 +158,13 @@ func namePrompt() string {
 }
 
 func secureNetworkKeyPrompt() string {
-	hostPrompt := promptui.Prompt{
+	networkKeyPrompt := promptui.Prompt{
 		Label: "Enter host network key",
 		Validate: func(s string) error {
 			return nil
 		},
 	}
-	networkKey, err := hostPrompt.Run()
+	networkKey, err := networkKeyPrompt.Run()
 	if err == promptui.ErrInterrupt {
 		os.Exit(-1)
 	}
