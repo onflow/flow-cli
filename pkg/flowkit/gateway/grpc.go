@@ -24,8 +24,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-go/utils/grpcutils"
+
+	"github.com/onflow/flow-cli/pkg/flowkit"
 
 	"github.com/onflow/cadence"
 	"github.com/onflow/flow-go-sdk"
@@ -68,7 +69,7 @@ func NewGrpcGateway(host string) (*GrpcGateway, error) {
 func NewSecureGrpcGateway(host, hostNetworkKey string) (*GrpcGateway, error) {
 	secureDialOpts, err := grpcutils.SecureGRPCDialOpt(strings.TrimPrefix(hostNetworkKey, "0x"))
 	if err != nil {
-		return nil, fmt.Errorf("failed to create secure GRPC dial options with network key \"%s\": %w",hostNetworkKey, err)
+		return nil, fmt.Errorf("failed to create secure GRPC dial options with network key \"%s\": %w", hostNetworkKey, err)
 	}
 
 	gClient, err := client.New(

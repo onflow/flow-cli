@@ -81,8 +81,8 @@ func DefaultEmulatorNetwork() Network {
 // DefaultTestnetNetwork get default testnet network.
 func DefaultTestnetNetwork() Network {
 	return Network{
-		Name: "testnet",
-		Host: "access.devnet.nodes.onflow.org:9000",
+		Name:           "testnet",
+		Host:           "access.devnet.nodes.onflow.org:9000",
 		HostNetworkKey: "",
 	}
 }
@@ -90,8 +90,8 @@ func DefaultTestnetNetwork() Network {
 // DefaultMainnetNetwork get default mainnet network.
 func DefaultMainnetNetwork() Network {
 	return Network{
-		Name: "mainnet",
-		Host: "access.mainnet.nodes.onflow.org:9000",
+		Name:           "mainnet",
+		Host:           "access.mainnet.nodes.onflow.org:9000",
 		HostNetworkKey: "",
 	}
 }

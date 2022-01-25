@@ -169,7 +169,6 @@ func secureNetworkKeyPrompt() string {
 		os.Exit(-1)
 	}
 
-
 	return networkKey
 }
 

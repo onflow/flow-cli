@@ -131,8 +131,8 @@ func generateComplexConfig() config.Config {
 			Name: "emulator",
 			Host: "127.0.0.1.3569",
 		}, {
-			Name: "testnet",
-			Host: "access.devnet.nodes.onflow.org:9000",
+			Name:           "testnet",
+			Host:           "access.devnet.nodes.onflow.org:9000",
 			HostNetworkKey: "0xKey",
 		}},
 	}

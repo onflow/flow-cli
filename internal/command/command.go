@@ -91,7 +91,7 @@ func (c Command) AddToParent(parent *cobra.Command) {
 			handleError("Config Error", confErr)
 		}
 
-		host, hostNetworkKey, err := resolveHost(state, Flags.Host, Flags.HostNetworkKey,Flags.Network)
+		host, hostNetworkKey, err := resolveHost(state, Flags.Host, Flags.HostNetworkKey, Flags.Network)
 		handleError("Host Error", err)
 
 		clientGateway, err := createGateway(host, hostNetworkKey)
@@ -149,7 +149,7 @@ func createGateway(host, hostNetworkKey string) (gateway.Gateway, error) {
 // 2. if conf is initialized return host by network flag
 // 3. if conf is not initialized and network flag is provided resolve to coded value for that network
 // 4. default to emulator network
-func resolveHost(state *flowkit.State, hostFlag, hostNetworkKeyFlag,networkFlag string) (string, string, error) {
+func resolveHost(state *flowkit.State, hostFlag, hostNetworkKeyFlag, networkFlag string) (string, string, error) {
 	// don't allow both network and host flag as the host might be different
 	if networkFlag != config.DefaultEmulatorNetwork().Name && hostFlag != "" {
 		return "", "", fmt.Errorf("shouldn't use both host and network flags, better to use network flag")
