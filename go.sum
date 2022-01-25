@@ -82,8 +82,8 @@ github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03
 github.com/BurntSushi/xgb v0.0.0-20160522181843-27f122750802/go.mod h1:IVnqGOEym/WlBOVXweHU+Q+/VP0lqqI8lqeDx9IjBqo=
 github.com/DataDog/datadog-go v3.2.0+incompatible/go.mod h1:LButxg5PwREeZtORoXG3tL4fMGNddJ+vMq1mwgfaqoQ=
 github.com/DataDog/zstd v1.4.1/go.mod h1:1jcaCB/ufaK+sKp1NBhlGmpz41jOoPQ35bpF36t7BBo=
-github.com/HdrHistogram/hdrhistogram-go v0.9.0 h1:dpujRju0R4M/QZzcnR1LH1qm+TVG3UzkWdp5tH1WMcg=
 github.com/HdrHistogram/hdrhistogram-go v0.9.0/go.mod h1:nxrse8/Tzg2tg3DZcZjm6qEclQKK70g0KxO61gFFZD4=
+github.com/HdrHistogram/hdrhistogram-go v1.1.0 h1:6dpdDPTRoo78HxAJ6T1HfMiKSnqhgRRqzCuPshRkQ7I=
 github.com/HdrHistogram/hdrhistogram-go v1.1.0/go.mod h1:yDgFjdqOqDEKOvasDdhWNXYg9BVp4O+o5f6V/ehm6Oo=
 github.com/Knetic/govaluate v3.0.1-0.20171022003610-9aa49832a739+incompatible/go.mod h1:r7JcOSlj0wfOMncg0iLm8Leh48TZaKVeNIfJntJ2wa0=
 github.com/Kubuxu/go-os-helper v0.0.1/go.mod h1:N8B+I7vPCT80IcP58r50u4+gEEcsZETFUpAzWW2ep1Y=
@@ -239,7 +239,6 @@ github.com/cncf/xds/go v0.0.0-20211130200136-a8f946100490 h1:KwaoQzs/WeUxxJqiJsZ
 github.com/cncf/xds/go v0.0.0-20211130200136-a8f946100490/go.mod h1:eXthEFrGJvWHgFFCl3hGmgk+/aYT6PnTQLykKQRLhEs=
 github.com/cockroachdb/datadriven v0.0.0-20190809214429-80d97fb3cbaa/go.mod h1:zn76sxSg3SzpJ0PPJaLDCu+Bu0Lg3sKTORVIj19EIF8=
 github.com/codahale/hdrhistogram v0.0.0-20161010025455-3a0bb77429bd/go.mod h1:sE/e/2PUdi/liOCUjSTXgM1o87ZssimdTWN964YiIeI=
-github.com/codahale/hdrhistogram v0.9.0 h1:9GjrtRI+mLEFPtTfR/AZhcxp+Ii8NZYWq5104FbZQY0=
 github.com/codahale/hdrhistogram v0.9.0/go.mod h1:sE/e/2PUdi/liOCUjSTXgM1o87ZssimdTWN964YiIeI=
 github.com/containerd/cgroups v0.0.0-20190919134610-bf292b21730f/go.mod h1:OApqhQ4XNSNC13gXIwDjhOQxjWa/NxkwZXJ1EvqT0ko=
 github.com/containerd/console v0.0.0-20180822173158-c12b1e7919c1/go.mod h1:Tj/on1eG8kiEhd0+fhSDzsPAFESxzBBvdyEgyryXffw=
@@ -1299,15 +1298,16 @@ github.com/onflow/cadence v0.20.2 h1:3YCv3BJoulHTNghpMSlr1fqvD/9NA0D6TWtkpeyGYZc
 github.com/onflow/cadence v0.20.2/go.mod h1:KBxn7AyO+R2RFpFHjsWKJFAokyJaCZXc9Hr9MlEOq9g=
 github.com/onflow/cadence/languageserver v0.15.2/go.mod h1:hQGE8dYH5CfQ1Oe0nXglchgURzZwR3JQhmuXtv4ROHs=
 github.com/onflow/cadence/languageserver v0.16.0/go.mod h1:UPV1so9LcMrhj27IegrTucoyS4TLRVjNr4DJqjqBhFA=
-github.com/onflow/cadence/languageserver v0.18.3-0.20211005105715-3c618f0fcd10 h1:NwuZwkATFQmdhpcymP2gYjNY6waZSS4RifKBT8HeYhA=
 github.com/onflow/cadence/languageserver v0.18.3-0.20211005105715-3c618f0fcd10/go.mod h1:kDadEzIbn14bKqIYA3yHMM1IKm2fyfOluH07Jl/SKGc=
-github.com/onflow/cadence/languageserver v0.18.3-0.20220112230301-45475c847ec7 h1:ObY2XcX9lMxohcbeC/QgzYrOvsQXaDn+VuaPAa4IW3Y=
 github.com/onflow/cadence/languageserver v0.18.3-0.20220112230301-45475c847ec7/go.mod h1:1i+YZLWlHB+UBCBGEGxcTqJ81qU1Su3GJ/9MJ+CmYYA=
+github.com/onflow/cadence/languageserver v0.18.3-0.20220125151111-e9027ef96789 h1:LX7CQPaKMpV2+sjX6CmJUm7gQ9CBdW5OD+KujxN1hcg=
+github.com/onflow/cadence/languageserver v0.18.3-0.20220125151111-e9027ef96789/go.mod h1:EI7KKCuiwxl1jOAOIZs0OxFvUIkzPEf5nJxD7fmsMVo=
 github.com/onflow/flow v0.2.3-0.20211103155021-9254a66368d5 h1:BtswF+9Qoc9QmexCTv7l9tX4YgurpXIsG5y2QIzYibw=
 github.com/onflow/flow v0.2.3-0.20211103155021-9254a66368d5/go.mod h1:lzyAYmbu1HfkZ9cfnL5/sjrrsnJiUU8fRL26CqLP7+c=
 github.com/onflow/flow-cli v0.20.3-0.20210512000809-474effb7e7db/go.mod h1:Yh4dgrNiZdXhbU+3UVUmo4gRM0TEBVvhW4ITKVo82dg=
 github.com/onflow/flow-cli v0.23.1-0.20210621124332-11c4cd22ffb4/go.mod h1:OD9UVPFIvktnO86dSLavf1tTVFIsKQ5By5KBBDLfC3Q=
 github.com/onflow/flow-cli v0.29.0/go.mod h1:slJqAWVVwwOtpJh65Bxtn5E3LslMmKD950YbV0sBues=
+github.com/onflow/flow-cli v0.30.3-0.20220125144640-34cd91e47b33/go.mod h1:2Hv4LSYa5EdyzXuPl8cO2RuktGwx9icSeUEjjAPOojQ=
 github.com/onflow/flow-core-contracts/lib/go/contracts v0.7.2/go.mod h1:IZ2e7UyLCYmpQ8Kd7k0A32uXqdqfiV1r2sKs5/riblo=
 github.com/onflow/flow-core-contracts/lib/go/contracts v0.7.3-0.20210527134022-58c25247091a/go.mod h1:IZ2e7UyLCYmpQ8Kd7k0A32uXqdqfiV1r2sKs5/riblo=
 github.com/onflow/flow-core-contracts/lib/go/contracts v0.7.3/go.mod h1:MSNt2rodpRXm1n0iGQWL6ltDoJCtXEzlPw9nhE/zQmk=
