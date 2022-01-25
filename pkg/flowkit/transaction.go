@@ -22,17 +22,14 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
-	"github.com/onflow/cadence/runtime/ast"
-
-	"github.com/onflow/cadence/runtime/cmd"
-	"github.com/onflow/cadence/runtime/common"
-
-	jsoncdc "github.com/onflow/cadence/encoding/json"
-
-	"github.com/onflow/flow-go-sdk/templates"
 
 	"github.com/onflow/cadence"
+	jsoncdc "github.com/onflow/cadence/encoding/json"
+	"github.com/onflow/cadence/runtime/ast"
+	"github.com/onflow/cadence/runtime/cmd"
+	"github.com/onflow/cadence/runtime/common"
 	"github.com/onflow/flow-go-sdk"
+	"github.com/onflow/flow-go-sdk/templates"
 )
 
 const maxGasLimit uint64 = 9999
