@@ -200,6 +200,17 @@ var TransactionTwoAuth = resource{
 	`),
 }
 
+var TransactionMultipleDeclarations = resource{
+	Filename: "transactionMultipleDec.cdc",
+	Source: []byte(`
+		pub fun dummy(_ address: Address): Void {}
+
+		transaction() {
+			prepare(authorizer: AuthAccount) {}
+		}
+	`),
+}
+
 var ScriptWithError = resource{
 	Filename: "scriptError.cdc",
 	Source: []byte(`
@@ -277,9 +288,12 @@ func newAccount(name string, address string, seed string) *flowkit.Account {
 
 func PubKeys() []crypto.PublicKey {
 	var pubKeys []crypto.PublicKey
-	privKeys := PrivKeys()
-	for _, priv := range privKeys {
-		pubKeys = append(pubKeys, priv.PublicKey())
+	for x := 0; x < 5; x++ {
+		pk, _ := crypto.GeneratePrivateKey(
+			crypto.ECDSA_P256,
+			[]byte(fmt.Sprintf("seedseedseedseedseedseedseedseedseedseedseedseed%d", x)),
+		)
+		pubKeys = append(pubKeys, pk.PublicKey())
 	}
 	return pubKeys
 }
@@ -294,21 +308,4 @@ func PrivKeys() []crypto.PrivateKey {
 		privKeys = append(privKeys, pk)
 	}
 	return privKeys
-}
-
-func SigAlgos() []crypto.SignatureAlgorithm {
-	var sigAlgos []crypto.SignatureAlgorithm
-	privKeys := PrivKeys()
-	for _, priv := range privKeys {
-		sigAlgos = append(sigAlgos, priv.Algorithm())
-	}
-	return sigAlgos
-}
-
-func HashAlgos() []crypto.HashAlgorithm {
-	var hashAlgos []crypto.HashAlgorithm
-	for x := 0; x < 5; x++ {
-		hashAlgos = append(hashAlgos, crypto.SHA3_256)
-	}
-	return hashAlgos
 }

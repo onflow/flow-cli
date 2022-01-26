@@ -22,6 +22,7 @@ import (
 	"testing"
 
 	"github.com/onflow/flow-go-sdk"
+	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/onflow/flow-cli/tests"
@@ -107,7 +108,7 @@ func TestBlocksGet_Integration(t *testing.T) {
 		assert.Equal(t, block.ID.String(), "7bc42fe85d32ca513769a74f97f7e1a7bad6c9407f0d934c2aa645ef9cf613c7")
 
 		// create an event
-		_, _ = s.Accounts.Create(srvAcc, tests.PubKeys(), nil, tests.SigAlgos(), tests.HashAlgos(), nil)
+		_, _ = s.Accounts.Create(srvAcc, tests.PubKeys(), nil, crypto.ECDSA_P256, crypto.SHA3_256, nil)
 
 		block, blockEvents, _, err = s.Blocks.GetBlock("latest", "flow.AccountCreated", true)
 

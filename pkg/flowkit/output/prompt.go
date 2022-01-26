@@ -32,7 +32,19 @@ import (
 	"github.com/manifoldco/promptui"
 )
 
-func ApproveTransactionPrompt(transaction *flowkit.Transaction) bool {
+func ApproveTransactionForSigningPrompt(transaction *flowkit.Transaction) bool {
+	return ApproveTransactionPrompt(transaction, "⚠️  Do you want to SIGN this transaction?")
+}
+
+func ApproveTransactionForBuildingPrompt(transaction *flowkit.Transaction) bool {
+	return ApproveTransactionPrompt(transaction, "⚠️  Do you want to BUILD this transaction?")
+}
+
+func ApproveTransactionForSendingPrompt(transaction *flowkit.Transaction) bool {
+	return ApproveTransactionPrompt(transaction, "⚠️  Do you want to SEND this transaction?")
+}
+
+func ApproveTransactionPrompt(transaction *flowkit.Transaction, promptMsg string) bool {
 	writer := uilive.New()
 	tx := transaction.FlowTransaction()
 
@@ -85,7 +97,7 @@ func ApproveTransactionPrompt(transaction *flowkit.Transaction) bool {
 	_ = writer.Flush()
 
 	prompt := promptui.Select{
-		Label: "⚠️  Do you want to sign this transaction?",
+		Label: promptMsg,
 		Items: []string{"No", "Yes"},
 	}
 

@@ -30,7 +30,7 @@ import (
 )
 
 type flagsSendSigned struct {
-	Include []string `default:"" flag:"include" info:"Fields to include in the output"`
+	Include []string `default:"" flag:"include" info:"Fields to include in the output. Valid values: signatures, code, payload."`
 	Exclude []string `default:"" flag:"exclude" info:"Fields to exclude from the output (events)"`
 }
 
@@ -50,7 +50,7 @@ var SendSignedCommand = &command.Command{
 func sendSigned(
 	args []string,
 	readerWriter flowkit.ReaderWriter,
-	_ command.GlobalFlags,
+	globalFlags command.GlobalFlags,
 	services *services.Services,
 	_ *flowkit.State,
 ) (command.Result, error) {
@@ -61,7 +61,7 @@ func sendSigned(
 		return nil, fmt.Errorf("error loading transaction payload: %w", err)
 	}
 
-	tx, result, err := services.Transactions.SendSigned(code)
+	tx, result, err := services.Transactions.SendSigned(code, globalFlags.Yes)
 	if err != nil {
 		return nil, err
 	}

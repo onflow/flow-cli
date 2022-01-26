@@ -36,6 +36,7 @@ type Services struct {
 	Project      *Project
 	Blocks       *Blocks
 	Status       *Status
+	Snapshot     *Snapshot
 }
 
 // NewServices returns a new services collection for a state,
@@ -55,5 +56,6 @@ func NewServices(
 		Project:      NewProject(gateway, state, logger),
 		Blocks:       NewBlocks(gateway, state, logger),
 		Status:       NewStatus(gateway, state, logger),
+		Snapshot:     NewSnapshot(gateway, state, logger),
 	}
 }

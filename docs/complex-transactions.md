@@ -4,7 +4,16 @@ sidebar_title: Build a Complex Transaction
 description: How to build and send a complex Flow transaction from the command line
 ---
 
-The Flow CLI provides commands to build, sign and send transactions allowing you to specify different authorizers, signers and proposers.  
+**Simple Transactions**
+
+Sending a transaction using the Flow CLI can simply be 
+achieved by using the [send command documented here](/send-transactions/).
+
+**Complex Transactions**
+
+If you would like to build more complex transactions the Flow CLI provides 
+commands to build, sign and send transactions allowing you to specify different 
+authorizers, signers and proposers.  
 
 The process of sending a complex transactions includes three steps:
 1. [build a transaction](/build-transactions/)

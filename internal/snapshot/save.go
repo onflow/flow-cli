@@ -1,7 +1,7 @@
 /*
  * Flow CLI
  *
- * Copyright 2019-2021 Dapper Labs, Inc.
+ * Copyright 2019-2022 Dapper Labs, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,50 +16,51 @@
  * limitations under the License.
  */
 
-package accounts
+package snapshot
 
 import (
-	"github.com/onflow/flow-go-sdk"
-
-	"github.com/spf13/cobra"
+	"fmt"
+	"path/filepath"
 
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/services"
+
+	"github.com/spf13/cobra"
 )
 
-type flagsGet struct {
-	Include []string `default:"" flag:"include" info:"Fields to include in the output. Valid values: contracts."`
-}
-
-var getFlags = flagsGet{}
-
-var GetCommand = &command.Command{
+var SaveCommand = &command.Command{
 	Cmd: &cobra.Command{
-		Use:     "get <address>",
-		Short:   "Gets an account by address",
-		Example: "flow accounts get f8d6e0586b0a20c7",
-		Args:    cobra.ExactArgs(1),
+		Use:     "save",
+		Short:   "Get the latest finalized protocol snapshot",
+		Example: "flow snapshot save /tmp/snapshot.json",
 	},
-	Flags: &getFlags,
-	Run:   get,
+	Flags: &struct{}{},
+	Run:   save,
 }
 
-func get(
+func save(
 	args []string,
-	_ flowkit.ReaderWriter,
+	readerWriter flowkit.ReaderWriter,
 	_ command.GlobalFlags,
 	services *services.Services,
 ) (command.Result, error) {
-	address := flow.HexToAddress(args[0])
+	fileName := args[0]
 
-	account, err := services.Accounts.Get(address)
+	snapshotBytes, err := services.Snapshot.GetLatestProtocolStateSnapshot()
 	if err != nil {
 		return nil, err
 	}
 
-	return &AccountResult{
-		Account: account,
-		include: getFlags.Include,
-	}, nil
+	outputPath, err := filepath.Abs(fileName)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get absolute output path for protocol snapshot")
+	}
+
+	err = readerWriter.WriteFile(outputPath, snapshotBytes, 0644)
+	if err != nil {
+		return nil, fmt.Errorf("failed to write protocol snapshot file to %s: %w", outputPath, err)
+	}
+
+	return &SaveResult{OutputPath: outputPath}, nil
 }

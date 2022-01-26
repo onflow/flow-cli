@@ -165,6 +165,13 @@ used to execute the commands.
 
 Specify which network you want the command to use for execution.
 
+### Include Fields
+
+- Flag: `--include`
+- Valid inputs: `code`, `payload`, `signatures`
+
+Specify fields to include in the result output. Applies only to the text output.
+
 ### Filter
 
 - Flag: `--filter`

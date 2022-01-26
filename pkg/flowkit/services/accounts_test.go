@@ -98,8 +98,8 @@ func TestAccounts(t *testing.T) {
 			serviceAcc,
 			[]crypto.PublicKey{pubKey},
 			[]int{1000},
-			[]crypto.SignatureAlgorithm{crypto.ECDSA_P256},
-			[]crypto.HashAlgorithm{crypto.SHA3_256},
+			crypto.ECDSA_P256,
+			crypto.SHA3_256,
 			nil,
 		)
 
@@ -134,8 +134,8 @@ func TestAccounts(t *testing.T) {
 			serviceAcc,
 			[]crypto.PublicKey{pubKey},
 			[]int{1000},
-			[]crypto.SignatureAlgorithm{crypto.ECDSA_P256},
-			[]crypto.HashAlgorithm{crypto.SHA3_256},
+			crypto.ECDSA_P256,
+			crypto.SHA3_256,
 			[]string{"Hello:contractHello.cdc"},
 		)
 
@@ -225,17 +225,54 @@ func TestAccounts(t *testing.T) {
 	t.Run("Staking Info for Account", func(t *testing.T) {
 		_, s, gw := setup()
 
+		count := 0
 		gw.ExecuteScript.Run(func(args mock.Arguments) {
+			count++
 			assert.True(t, strings.Contains(string(args.Get(0).([]byte)), "import FlowIDTableStaking from 0x9eca2b38b18b5dfe"))
-			gw.ExecuteScript.Return(cadence.NewValue(nil))
+			gw.ExecuteScript.Return(cadence.NewArray([]cadence.Value{}), nil)
 		})
 
 		val1, val2, err := s.Accounts.StakingInfo(flow.HexToAddress("df9c30eb2252f1fa"))
 		assert.NoError(t, err)
 		assert.NotNil(t, val1)
 		assert.NotNil(t, val2)
+		assert.Equal(t, 2, count)
 	})
+	t.Run("Staking Info for Account fetches node total", func(t *testing.T) {
+		_, s, gw := setup()
 
+		count := 0
+		gw.ExecuteScript.Run(func(args mock.Arguments) {
+			assert.True(t, strings.Contains(string(args.Get(0).([]byte)), "import FlowIDTableStaking from 0x9eca2b38b18b5dfe"))
+			if count < 2 {
+				gw.ExecuteScript.Return(cadence.NewArray(
+					[]cadence.Value{
+						cadence.Struct{
+							StructType: &cadence.StructType{
+								Fields: []cadence.Field{
+									{
+										Identifier: "id",
+									},
+								},
+							},
+							Fields: []cadence.Value{
+								cadence.String("8f4d09dae7918afbf62c48fa968a9e8b0891cee8442065fa47cc05f4bc9a8a91"),
+							},
+						},
+					}), nil)
+			} else {
+				assert.True(t, strings.Contains(args.Get(1).([]cadence.Value)[0].String(), "8f4d09dae7918afbf62c48fa968a9e8b0891cee8442065fa47cc05f4bc9a8a91"))
+				gw.ExecuteScript.Return(cadence.NewUFix64("1.0"))
+			}
+			count++
+		})
+
+		val1, val2, err := s.Accounts.StakingInfo(flow.HexToAddress("df9c30eb2252f1fa"))
+		assert.NoError(t, err)
+		assert.NotNil(t, val1)
+		assert.NotNil(t, val2)
+		assert.Equal(t, 3, count)
+	})
 }
 
 func setupIntegration() (*flowkit.State, *Services) {
@@ -259,8 +296,8 @@ func TestAccountsCreate_Integration(t *testing.T) {
 		account  *flowkit.Account
 		pubKeys  []crypto.PublicKey
 		weights  []int
-		sigAlgo  []crypto.SignatureAlgorithm
-		hashAlgo []crypto.HashAlgorithm
+		sigAlgo  crypto.SignatureAlgorithm
+		hashAlgo crypto.HashAlgorithm
 		args     []string
 	}
 
@@ -279,29 +316,19 @@ func TestAccountsCreate_Integration(t *testing.T) {
 		srvAcc, _ := state.EmulatorServiceAccount()
 
 		accIn := []accountsIn{{
-			account: srvAcc,
-			sigAlgo: []crypto.SignatureAlgorithm{
-				tests.SigAlgos()[0],
-			},
-			hashAlgo: []crypto.HashAlgorithm{
-				tests.HashAlgos()[0],
-			},
-			args: nil,
+			account:  srvAcc,
+			sigAlgo:  crypto.ECDSA_P256,
+			hashAlgo: crypto.SHA3_256,
+			args:     nil,
 			pubKeys: []crypto.PublicKey{
 				tests.PubKeys()[0],
 			},
 			weights: []int{flow.AccountKeyWeightThreshold},
 		}, {
-			account: srvAcc,
-			args:    nil,
-			sigAlgo: []crypto.SignatureAlgorithm{
-				tests.SigAlgos()[0],
-				tests.SigAlgos()[1],
-			},
-			hashAlgo: []crypto.HashAlgorithm{
-				tests.HashAlgos()[0],
-				tests.HashAlgos()[1],
-			},
+			account:  srvAcc,
+			args:     nil,
+			sigAlgo:  crypto.ECDSA_P256,
+			hashAlgo: crypto.SHA3_256,
 			pubKeys: []crypto.PublicKey{
 				tests.PubKeys()[0],
 				tests.PubKeys()[1],
@@ -315,12 +342,8 @@ func TestAccountsCreate_Integration(t *testing.T) {
 					tests.ContractSimple.Filename,
 				),
 			},
-			sigAlgo: []crypto.SignatureAlgorithm{
-				tests.SigAlgos()[0],
-			},
-			hashAlgo: []crypto.HashAlgorithm{
-				tests.HashAlgos()[0],
-			},
+			sigAlgo:  crypto.ECDSA_P256,
+			hashAlgo: crypto.SHA3_256,
 			pubKeys: []crypto.PublicKey{
 				tests.PubKeys()[0],
 			},
@@ -370,8 +393,8 @@ func TestAccountsCreate_Integration(t *testing.T) {
 			for x, k := range acc.Keys {
 				assert.Equal(t, k.PublicKey, a.pubKeys[x])
 				assert.Equal(t, k.Weight, c.weights[x])
-				assert.Equal(t, k.SigAlgo, a.sigAlgo[x])
-				assert.Equal(t, k.HashAlgo, a.hashAlgo[x])
+				assert.Equal(t, k.SigAlgo, a.sigAlgo)
+				assert.Equal(t, k.HashAlgo, a.hashAlgo)
 			}
 
 		}
@@ -395,8 +418,8 @@ func TestAccountsCreate_Integration(t *testing.T) {
 		accIn := []accountsIn{
 			{
 				account:  srvAcc,
-				sigAlgo:  []crypto.SignatureAlgorithm{crypto.ECDSA_P256},
-				hashAlgo: []crypto.HashAlgorithm{crypto.SHA3_256},
+				sigAlgo:  crypto.ECDSA_P256,
+				hashAlgo: crypto.SHA3_256,
 				args:     []string{"Invalid:Invalid"},
 				pubKeys: []crypto.PublicKey{
 					tests.PubKeys()[0],
@@ -404,8 +427,8 @@ func TestAccountsCreate_Integration(t *testing.T) {
 				weights: []int{1000},
 			}, {
 				account:  srvAcc,
-				sigAlgo:  []crypto.SignatureAlgorithm{crypto.UnknownSignatureAlgorithm},
-				hashAlgo: []crypto.HashAlgorithm{crypto.SHA3_256},
+				sigAlgo:  crypto.UnknownSignatureAlgorithm,
+				hashAlgo: crypto.SHA3_256,
 				args:     nil,
 				pubKeys: []crypto.PublicKey{
 					tests.PubKeys()[0],
@@ -413,8 +436,8 @@ func TestAccountsCreate_Integration(t *testing.T) {
 				weights: []int{1000},
 			}, {
 				account:  srvAcc,
-				sigAlgo:  []crypto.SignatureAlgorithm{crypto.UnknownSignatureAlgorithm},
-				hashAlgo: []crypto.HashAlgorithm{crypto.UnknownHashAlgorithm},
+				sigAlgo:  crypto.UnknownSignatureAlgorithm,
+				hashAlgo: crypto.UnknownHashAlgorithm,
 				args:     nil,
 				pubKeys: []crypto.PublicKey{
 					tests.PubKeys()[0],
@@ -422,8 +445,8 @@ func TestAccountsCreate_Integration(t *testing.T) {
 				weights: []int{1000},
 			}, {
 				account:  srvAcc,
-				sigAlgo:  []crypto.SignatureAlgorithm{crypto.ECDSA_P256},
-				hashAlgo: []crypto.HashAlgorithm{crypto.SHA3_256},
+				sigAlgo:  crypto.ECDSA_P256,
+				hashAlgo: crypto.SHA3_256,
 				args:     nil,
 				pubKeys: []crypto.PublicKey{
 					tests.PubKeys()[0],
@@ -432,8 +455,8 @@ func TestAccountsCreate_Integration(t *testing.T) {
 				weights: []int{1000},
 			}, {
 				account:  srvAcc,
-				sigAlgo:  []crypto.SignatureAlgorithm{crypto.ECDSA_P256},
-				hashAlgo: []crypto.HashAlgorithm{crypto.SHA3_256},
+				sigAlgo:  crypto.ECDSA_P256,
+				hashAlgo: crypto.SHA3_256,
 				args:     nil,
 				pubKeys: []crypto.PublicKey{
 					tests.PubKeys()[0],
