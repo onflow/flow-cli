@@ -99,6 +99,10 @@ func (t *Transactions) Build(
 	if err != nil {
 		return nil, err
 	}
+	
+	if len(proposerAccount.Keys) <= proposerKeyIndex {
+		return nil, fmt.Errorf("failed to retrieve proposer key at index %d", proposerKeyIndex)
+	}	
 
 	tx := flowkit.NewTransaction().
 		SetPayer(payer).
