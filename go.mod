@@ -4,6 +4,7 @@ go 1.13
 
 require (
 	github.com/a8m/envsubst v1.2.0
+	github.com/getsentry/sentry-go v0.12.0
 	github.com/go-git/go-git/v5 v5.4.2
 	github.com/gosuri/uilive v0.0.4
 	github.com/joho/godotenv v1.4.0
