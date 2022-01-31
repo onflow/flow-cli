@@ -26,9 +26,9 @@ type Networks []Network
 
 // Network defines the configuration for a Flow network.
 type Network struct {
-	Name           string
-	Host           string
-	HostNetworkKey string
+	Name       string
+	Host       string
+	NetworkKey string
 }
 
 // ByName get network by name.
@@ -81,18 +81,16 @@ func DefaultEmulatorNetwork() Network {
 // DefaultTestnetNetwork get default testnet network.
 func DefaultTestnetNetwork() Network {
 	return Network{
-		Name:           "testnet",
-		Host:           "access.devnet.nodes.onflow.org:9000",
-		HostNetworkKey: "",
+		Name: "testnet",
+		Host: "access.devnet.nodes.onflow.org:9000",
 	}
 }
 
 // DefaultMainnetNetwork get default mainnet network.
 func DefaultMainnetNetwork() Network {
 	return Network{
-		Name:           "mainnet",
-		Host:           "access.mainnet.nodes.onflow.org:9000",
-		HostNetworkKey: "",
+		Name: "mainnet",
+		Host: "access.mainnet.nodes.onflow.org:9000",
 	}
 }
 

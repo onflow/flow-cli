@@ -20,7 +20,9 @@ package util
 
 import (
 	"bytes"
+	"encoding/hex"
 	"fmt"
+	"strings"
 	"text/tabwriter"
 
 	"github.com/onflow/flow-go-sdk"
@@ -98,4 +100,19 @@ func RemoveFromStringArray(s []string, el string) []string {
 	}
 
 	return s
+}
+
+// ValidateECDSAP256Pub attempt to decode the hex string representation of a ECDSA P256 public key
+func ValidateECDSAP256Pub(key string) error {
+	b, err := hex.DecodeString(strings.TrimPrefix(key, "0x"))
+	if err != nil {
+		return fmt.Errorf("failed to decode public key hex string: %w", err)
+	}
+
+	_, err = crypto.DecodePublicKey(crypto.ECDSA_P256, b)
+	if err != nil {
+		return fmt.Errorf("failed to decode public key: %w", err)
+	}
+
+	return nil
 }

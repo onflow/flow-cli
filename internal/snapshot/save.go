@@ -34,6 +34,7 @@ var SaveCommand = &command.Command{
 		Use:     "save",
 		Short:   "Get the latest finalized protocol snapshot",
 		Example: "flow snapshot save /tmp/snapshot.json",
+		Args:    cobra.ExactArgs(1),
 	},
 	Flags: &struct{}{},
 	Run:   save,

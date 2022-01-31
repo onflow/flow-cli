@@ -41,8 +41,9 @@ const maxGRPCMessageSize = 1024 * 1024 * 16
 
 // GrpcGateway is a gateway implementation that uses the Flow Access gRPC API.
 type GrpcGateway struct {
-	client *client.Client
-	ctx    context.Context
+	client       *client.Client
+	ctx          context.Context
+	secureClient bool
 }
 
 // NewGrpcGateway returns a new gRPC gateway.
@@ -60,8 +61,9 @@ func NewGrpcGateway(host string) (*GrpcGateway, error) {
 	}
 
 	return &GrpcGateway{
-		client: gClient,
-		ctx:    ctx,
+		client:       gClient,
+		ctx:          ctx,
+		secureClient: false,
 	}, nil
 }
 
@@ -84,8 +86,9 @@ func NewSecureGrpcGateway(host, hostNetworkKey string) (*GrpcGateway, error) {
 	}
 
 	return &GrpcGateway{
-		client: gClient,
-		ctx:    ctx,
+		client:       gClient,
+		ctx:          ctx,
+		secureClient: true,
 	}, nil
 }
 
@@ -189,4 +192,9 @@ func (g *GrpcGateway) GetLatestProtocolStateSnapshot() ([]byte, error) {
 // Ping is used to check if the access node is alive and healthy.
 func (g *GrpcGateway) Ping() error {
 	return g.client.Ping(g.ctx)
+}
+
+// SecureConnection is used to log warning if a service should be using a secure client but is not
+func (g *GrpcGateway) SecureConnection() bool {
+	return g.secureClient
 }

@@ -20,6 +20,7 @@ package json
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
 )
@@ -28,51 +29,84 @@ type jsonNetworks map[string]jsonNetwork
 
 // transformToConfig transforms json structures to config structure.
 func (j jsonNetworks) transformToConfig() (config.Networks, error) {
-	var networks config.Networks
+	networks := make(config.Networks, 0)
 
 	for networkName, n := range j {
-		network := config.Network{
-			Name:           networkName,
-			Host:           n.Host,
-			HostNetworkKey: n.NetworkKey,
+		if n.Advanced.NetworkKey != "" && n.Advanced.Host != "" {
+			networks = append(networks, config.Network{
+				Name:       networkName,
+				Host:       n.Advanced.Host,
+				NetworkKey: n.Advanced.NetworkKey,
+			})
+		} else if n.Advanced.Host != "" {
+			networks = append(networks, config.Network{
+				Name: networkName,
+				Host: n.Advanced.Host,
+			})
+		} else if n.Simple.Host != "" {
+			networks = append(networks, config.Network{
+				Name: networkName,
+				Host: n.Simple.Host,
+			})
+		} else {
+			return nil, fmt.Errorf("failed to transform config missing network host")
 		}
-
-		networks = append(networks, network)
 	}
 
 	return networks, nil
 }
 
-// transformToJSON transforms config structure to json structures for saving.
+// transformNetworksToJSON transforms config structure to json structures for saving.
 func transformNetworksToJSON(networks config.Networks) jsonNetworks {
 	jsonNetworks := jsonNetworks{}
 
 	for _, n := range networks {
-		jsonNetworks[n.Name] = jsonNetwork{
-			Host:       n.Host,
-			NetworkKey: n.HostNetworkKey,
+		if n.NetworkKey != "" {
+			jsonNetworks[n.Name] = transformAdvancedNetworkToJSON(n)
+		} else {
+			jsonNetworks[n.Name] = transformSimpleNetworkToJSON(n)
 		}
 	}
 
 	return jsonNetworks
 }
 
+func transformSimpleNetworkToJSON(n config.Network) jsonNetwork {
+	return jsonNetwork{
+		Simple: simpleNetwork{
+			Host: n.Host,
+		},
+	}
+}
+
+func transformAdvancedNetworkToJSON(n config.Network) jsonNetwork {
+	return jsonNetwork{
+		Advanced: advancedNetwork{
+			Host:       n.Host,
+			NetworkKey: n.NetworkKey,
+		},
+	}
+}
+
 type jsonNetwork struct {
+	Simple   simpleNetwork
+	Advanced advancedNetwork
+}
+
+type simpleNetwork struct {
+	Host string
+}
+
+type advancedNetwork struct {
 	Host       string
 	NetworkKey string
 }
 
-type advancedNetwork struct {
-	Host  string
-	Chain string
-}
-
 func (j *jsonNetwork) UnmarshalJSON(b []byte) error {
-	var m map[string]string
-	err := json.Unmarshal(b, &m)
+	var host string
+	err := json.Unmarshal(b, &host)
 	if err == nil {
-		j.Host = m["host"]
-		j.NetworkKey = m["network-key"]
+		j.Simple.Host = host
 		return nil
 	}
 
@@ -80,12 +114,17 @@ func (j *jsonNetwork) UnmarshalJSON(b []byte) error {
 	var advanced advancedNetwork
 	err = json.Unmarshal(b, &advanced)
 	if err == nil {
-		j.Host = advanced.Host
+		j.Advanced.Host = advanced.Host
+		j.Advanced.NetworkKey = advanced.NetworkKey
 	}
 
 	return err
 }
 
 func (j jsonNetwork) MarshalJSON() ([]byte, error) {
-	return json.Marshal(map[string]string{"host": j.Host, "network-key": j.NetworkKey})
+	if j.Simple != (simpleNetwork{}) {
+		return json.Marshal(j.Simple.Host)
+	}
+
+	return json.Marshal(j.Advanced)
 }

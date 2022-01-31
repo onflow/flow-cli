@@ -23,6 +23,7 @@ import (
 	"net/url"
 
 	"github.com/onflow/flow-cli/pkg/flowkit"
+	"github.com/onflow/flow-cli/pkg/flowkit/util"
 
 	"github.com/spf13/cobra"
 
@@ -94,6 +95,11 @@ func flagsToNetworkData(flags flagsAddNetwork) (map[string]string, bool, error) 
 	_, err := url.ParseRequestURI(flags.Host)
 	if err != nil {
 		return nil, true, err
+	}
+
+	err = util.ValidateECDSAP256Pub(flags.HostNetworkKey)
+	if err != nil {
+		return nil, true, fmt.Errorf("invalid network-key provided")
 	}
 
 	return map[string]string{

@@ -161,7 +161,11 @@ func secureNetworkKeyPrompt() string {
 	networkKeyPrompt := promptui.Prompt{
 		Label: "Enter host network key",
 		Validate: func(s string) error {
-			return nil
+			if s == "" {
+				return nil
+			}
+
+			return util.ValidateECDSAP256Pub(s)
 		},
 	}
 	networkKey, err := networkKeyPrompt.Run()

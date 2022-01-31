@@ -262,6 +262,20 @@ func (_m *Gateway) Ping() error {
 	return r0
 }
 
+// SecureConnection provides a mock function with given fields:
+func (_m *Gateway) SecureConnection() bool {
+	ret := _m.Called()
+
+	var r0 bool
+	if rf, ok := ret.Get(0).(func() bool); ok {
+		r0 = rf()
+	} else {
+		r0 = ret.Get(0).(bool)
+	}
+
+	return r0
+}
+
 // SendSignedTransaction provides a mock function with given fields: _a0
 func (_m *Gateway) SendSignedTransaction(_a0 *flowkit.Transaction) (*flow.Transaction, error) {
 	ret := _m.Called(_a0)

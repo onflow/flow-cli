@@ -28,9 +28,8 @@ import (
 
 	"github.com/spf13/afero"
 
-	"github.com/onflow/flow-cli/pkg/flowkit"
-
 	"github.com/onflow/flow-cli/build"
+	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
 	"github.com/onflow/flow-cli/pkg/flowkit/gateway"
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
@@ -139,6 +138,7 @@ func createGateway(host, hostNetworkKey string) (gateway.Gateway, error) {
 	if hostNetworkKey != "" {
 		return gateway.NewSecureGrpcGateway(host, hostNetworkKey)
 	}
+
 	return gateway.NewGrpcGateway(host)
 }
 
@@ -159,6 +159,7 @@ func resolveHost(state *flowkit.State, hostFlag, hostNetworkKeyFlag, networkFlag
 	if hostFlag != "" {
 		return hostFlag, hostNetworkKeyFlag, nil
 	}
+
 	// network flag with project initialized is next
 	if state != nil {
 		stateNetwork, err := state.Networks().ByName(networkFlag)
@@ -166,7 +167,7 @@ func resolveHost(state *flowkit.State, hostFlag, hostNetworkKeyFlag, networkFlag
 			return "", "", fmt.Errorf("network with name %s does not exist in configuration", networkFlag)
 		}
 
-		return stateNetwork.Host, stateNetwork.HostNetworkKey, nil
+		return stateNetwork.Host, stateNetwork.NetworkKey, nil
 	}
 
 	networks := config.DefaultNetworks()
@@ -176,7 +177,7 @@ func resolveHost(state *flowkit.State, hostFlag, hostNetworkKeyFlag, networkFlag
 		return "", "", fmt.Errorf("invalid network with name %s", networkFlag)
 	}
 
-	return network.Host, network.HostNetworkKey, nil
+	return network.Host, network.NetworkKey, nil
 
 }
 
