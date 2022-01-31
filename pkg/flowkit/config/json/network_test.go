@@ -49,8 +49,8 @@ func Test_ConfigNetworkMultiple(t *testing.T) {
 	b := []byte(`{
     		"emulator": "127.0.0.1:3569",
     		"testnet": {
-				"Host": "access.testnet.nodes.onflow.org:9000",
-				"NetworkKey": "5000676131ad3e22d853a3f75a5b5d0db4236d08dd6612e2baad771014b5266a242bccecc3522ff7207ac357dbe4f225c709d9b273ac484fed5d13976a39bdcd"
+				"host": "access.testnet.nodes.onflow.org:9000",
+				"key": "5000676131ad3e22d853a3f75a5b5d0db4236d08dd6612e2baad771014b5266a242bccecc3522ff7207ac357dbe4f225c709d9b273ac484fed5d13976a39bdcd"
 			}
 	}`)
 
@@ -74,7 +74,7 @@ func Test_ConfigNetworkMultiple(t *testing.T) {
 }
 
 func Test_TransformNetworkToJSON(t *testing.T) {
-	b := []byte(`{"emulator":"127.0.0.1:3569","testnet":{"Host":"access.testnet.nodes.onflow.org:9000","NetworkKey":"5000676131ad3e22d853a3f75a5b5d0db4236d08dd6612e2baad771014b5266a242bccecc3522ff7207ac357dbe4f225c709d9b273ac484fed5d13976a39bdcd"}}`)
+	b := []byte(`{"emulator":"127.0.0.1:3569","testnet":{"host":"access.testnet.nodes.onflow.org:9000","key":"5000676131ad3e22d853a3f75a5b5d0db4236d08dd6612e2baad771014b5266a242bccecc3522ff7207ac357dbe4f225c709d9b273ac484fed5d13976a39bdcd"}}`)
 
 	var jsonNetworks jsonNetworks
 	err := json.Unmarshal(b, &jsonNetworks)
@@ -90,7 +90,7 @@ func Test_TransformNetworkToJSON(t *testing.T) {
 }
 
 func Test_IgnoreOldFormat(t *testing.T) {
-	b := []byte(`{"emulator":"127.0.0.1:3569","testnet":{"Host":"access.testnet.nodes.onflow.org:9000","NetworkKey":"5000676131ad3e22d853a3f75a5b5d0db4236d08dd6612e2baad771014b5266a242bccecc3522ff7207ac357dbe4f225c709d9b273ac484fed5d13976a39bdcd"},"mainnet":{"Host": "access.mainnet.nodes.onflow.org:9000","chain":"flow-mainnet","NetworkKey":"5000676131ad3e22d853a3f75a5b5d0db4236d08dd6612e2baad771014b5266a242bccecc3522ff7207ac357dbe4f225c709d9b273ac484fed5d13976a39bdcd"}}`)
+	b := []byte(`{"emulator":"127.0.0.1:3569","testnet":{"host":"access.testnet.nodes.onflow.org:9000","key":"5000676131ad3e22d853a3f75a5b5d0db4236d08dd6612e2baad771014b5266a242bccecc3522ff7207ac357dbe4f225c709d9b273ac484fed5d13976a39bdcd"},"mainnet":{"host": "access.mainnet.nodes.onflow.org:9000","chain":"flow-mainnet","key":"5000676131ad3e22d853a3f75a5b5d0db4236d08dd6612e2baad771014b5266a242bccecc3522ff7207ac357dbe4f225c709d9b273ac484fed5d13976a39bdcd"}}`)
 
 	var jsonNetworks jsonNetworks
 	err := json.Unmarshal(b, &jsonNetworks)
@@ -114,7 +114,7 @@ func Test_IgnoreOldFormat(t *testing.T) {
 }
 
 func Test_AdvancedConfigMissingKey(t *testing.T) {
-	b := []byte(`{"testnet":{"Host":"access.testnet.nodes.onflow.org:9000"}}`)
+	b := []byte(`{"testnet":{"host":"access.testnet.nodes.onflow.org:9000"}}`)
 	var jsonNetworks jsonNetworks
 	err := json.Unmarshal(b, &jsonNetworks)
 	assert.NoError(t, err)
@@ -132,7 +132,7 @@ func Test_AdvancedConfigMissingKey(t *testing.T) {
 }
 
 func Test_InvalidConfigMissingHost(t *testing.T) {
-	b := []byte(`{"testnet":{"Host":"access.testnet.nodes.onflow.org:9000"}, "supernet": {}}`)
+	b := []byte(`{"testnet":{"host":"access.testnet.nodes.onflow.org:9000"}, "supernet": {}}`)
 	var jsonNetworks jsonNetworks
 	err := json.Unmarshal(b, &jsonNetworks)
 	assert.NoError(t, err)

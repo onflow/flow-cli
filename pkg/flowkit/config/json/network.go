@@ -94,12 +94,12 @@ type jsonNetwork struct {
 }
 
 type simpleNetwork struct {
-	Host string
+	Host string `json:"host"`
 }
 
 type advancedNetwork struct {
-	Host       string
-	NetworkKey string
+	Host       string `json:"host"`
+	NetworkKey string `json:"key"`
 }
 
 func (j *jsonNetwork) UnmarshalJSON(b []byte) error {
