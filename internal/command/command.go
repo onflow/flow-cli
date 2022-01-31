@@ -21,10 +21,12 @@ package command
 import (
 	"errors"
 	"fmt"
+	"github.com/getsentry/sentry-go"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/spf13/afero"
 
@@ -81,7 +83,13 @@ const (
 // here we can do all boilerplate code that is else copied in each command and make sure
 // we have one place to handle all errors and ensure commands have consistent results.
 func (c Command) AddToParent(parent *cobra.Command) {
+	// initialize crash reporting for the CLI
+	initCrashReporting()
+	defer sentry.Recover()
+
 	c.Cmd.Run = func(cmd *cobra.Command, args []string) {
+		defer sentry.Recover()
+
 		// initialize file loader used in commands
 		loader := &afero.Afero{Fs: afero.NewOsFs()}
 
@@ -174,7 +182,6 @@ func resolveHost(state *flowkit.State, hostFlag string, networkFlag string) (str
 	}
 
 	return network.Host, nil
-
 }
 
 // create logger utility.
@@ -231,4 +238,33 @@ func checkVersion(logger output.Logger) {
 			strings.ReplaceAll(latestVersion, "\n", ""),
 		))
 	}
+}
+
+// initCrashReporting set-ups sentry as crash reporting tool, it also sets listener for panics
+// and asks before sending the error for a permission to do so from the user.
+func initCrashReporting() {
+	currentVersion := build.Semver()
+
+	err := sentry.Init(sentry.ClientOptions{
+		Dsn:              "https://a3d7d72b79ff49ce808e241ccc5bf111@o1129322.ingest.sentry.io/6173086",
+		Environment:      "Dev",
+		Release:          currentVersion,
+		AttachStacktrace: true,
+		Debug:            true,
+		BeforeSend: func(event *sentry.Event, hint *sentry.EventHint) *sentry.Event {
+			// ask for crash report permission
+			fmt.Printf("\n%s Crash detected! %s\n\n", output.ErrorEmoji(), event.Message)
+
+			if output.ReportCrash() {
+				return event
+			}
+
+			return nil
+		},
+	})
+	if err != nil {
+		fmt.Println(err) // safest output method at this point
+	}
+
+	defer sentry.Flush(2 * time.Second)
 }
