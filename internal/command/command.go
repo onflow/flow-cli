@@ -21,20 +21,21 @@ package command
 import (
 	"errors"
 	"fmt"
-	"github.com/getsentry/sentry-go"
-	"github.com/onflow/flow-cli/build"
-	"github.com/onflow/flow-cli/pkg/flowkit"
-	"github.com/onflow/flow-cli/pkg/flowkit/config"
-	"github.com/onflow/flow-cli/pkg/flowkit/gateway"
-	"github.com/onflow/flow-cli/pkg/flowkit/output"
-	"github.com/onflow/flow-cli/pkg/flowkit/services"
-	"github.com/spf13/afero"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"strings"
 	"time"
 
+	"github.com/onflow/flow-cli/build"
+	"github.com/onflow/flow-cli/pkg/flowkit"
+	"github.com/onflow/flow-cli/pkg/flowkit/config"
+	"github.com/onflow/flow-cli/pkg/flowkit/gateway"
+	"github.com/onflow/flow-cli/pkg/flowkit/output"
+	"github.com/onflow/flow-cli/pkg/flowkit/services"
+
+	"github.com/getsentry/sentry-go"
+	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
 )
 
