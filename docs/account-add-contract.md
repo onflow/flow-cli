@@ -97,6 +97,14 @@ Specify the hostname of the Access API that will be
 used to execute the command. This flag overrides
 any host defined by the `--network` flag.
 
+### Network Key
+
+- Flag: `--network-key`
+- Valid inputs: A valid network public key of the host in hex string format
+
+Specify the network public key of the Access API that will be
+used to create a secure GRPC client when executing the command.
+
 ### Network
 
 - Flag: `--network`
