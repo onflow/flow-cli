@@ -39,7 +39,6 @@ import (
 	"github.com/onflow/flow-cli/internal/transactions"
 	"github.com/onflow/flow-cli/internal/version"
 	"github.com/onflow/flow-cli/pkg/flowkit/util"
-
 	"github.com/spf13/cobra"
 )
 
