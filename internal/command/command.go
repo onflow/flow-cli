@@ -22,21 +22,18 @@ import (
 	"errors"
 	"fmt"
 	"github.com/getsentry/sentry-go"
+	"github.com/onflow/flow-cli/build"
+	"github.com/onflow/flow-cli/pkg/flowkit"
+	"github.com/onflow/flow-cli/pkg/flowkit/config"
+	"github.com/onflow/flow-cli/pkg/flowkit/gateway"
+	"github.com/onflow/flow-cli/pkg/flowkit/output"
+	"github.com/onflow/flow-cli/pkg/flowkit/services"
+	"github.com/spf13/afero"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"strings"
 	"time"
-
-	"github.com/spf13/afero"
-
-	"github.com/onflow/flow-cli/pkg/flowkit"
-
-	"github.com/onflow/flow-cli/build"
-	"github.com/onflow/flow-cli/pkg/flowkit/config"
-	"github.com/onflow/flow-cli/pkg/flowkit/gateway"
-	"github.com/onflow/flow-cli/pkg/flowkit/output"
-	"github.com/onflow/flow-cli/pkg/flowkit/services"
 
 	"github.com/spf13/cobra"
 )
@@ -85,9 +82,9 @@ const (
 func (c Command) AddToParent(parent *cobra.Command) {
 	// initialize crash reporting for the CLI
 	initCrashReporting()
-	defer sentry.Recover()
 
 	c.Cmd.Run = func(cmd *cobra.Command, args []string) {
+		defer sentry.Flush(2 * time.Second)
 		defer sentry.Recover()
 
 		// initialize file loader used in commands
@@ -250,7 +247,6 @@ func initCrashReporting() {
 		Environment:      "Dev",
 		Release:          currentVersion,
 		AttachStacktrace: true,
-		Debug:            true,
 		BeforeSend: func(event *sentry.Event, hint *sentry.EventHint) *sentry.Event {
 			// ask for crash report permission
 			fmt.Printf("\n%s Crash detected! %s\n\n", output.ErrorEmoji(), event.Message)
@@ -265,6 +261,4 @@ func initCrashReporting() {
 	if err != nil {
 		fmt.Println(err) // safest output method at this point
 	}
-
-	defer sentry.Flush(2 * time.Second)
 }
