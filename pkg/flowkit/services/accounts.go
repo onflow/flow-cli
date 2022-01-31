@@ -426,8 +426,12 @@ func (a *Accounts) prepareTransaction(
 		return nil, err
 	}
 
-	tx.SetBlockReference(block).
-		SetProposer(proposer, account.Key().Index())
+	tx.SetBlockReference(block)
+
+	tx, err = tx.SetProposer(proposer, account.Key().Index())
+	if err != nil {
+		return nil, err
+	}
 
 	tx, err = tx.Sign()
 	if err != nil {

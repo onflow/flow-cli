@@ -99,16 +99,16 @@ func (t *Transactions) Build(
 	if err != nil {
 		return nil, err
 	}
-	
-	if len(proposerAccount.Keys) <= proposerKeyIndex {
-		return nil, fmt.Errorf("failed to retrieve proposer key at index %d", proposerKeyIndex)
-	}	
 
-	tx := flowkit.NewTransaction().
+	rawTx := flowkit.NewTransaction().
 		SetPayer(payer).
-		SetProposer(proposerAccount, proposerKeyIndex).
 		SetGasLimit(gasLimit).
 		SetBlockReference(latestBlock)
+
+	tx, err := rawTx.SetProposer(proposerAccount, proposerKeyIndex)
+	if err != nil {
+		return nil, err
+	}
 
 	resolver, err := contracts.NewResolver(code)
 	if err != nil {
