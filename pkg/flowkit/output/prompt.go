@@ -497,3 +497,13 @@ func RemoveNetworkPrompt(networks config.Networks) string {
 
 	return name
 }
+
+func ReportCrash() bool {
+	prompt := promptui.Select{
+		Label: "🙏 Please report the crash so we can improve the CLI. Do you want to report it?",
+		Items: []string{"Yes, report the crash", "No"},
+	}
+	chosen, _, _ := prompt.Run()
+
+	return chosen == 0
+}

@@ -4,12 +4,13 @@ go 1.13
 
 require (
 	github.com/a8m/envsubst v1.2.0
+	github.com/getsentry/sentry-go v0.12.0
 	github.com/go-git/go-git/v5 v5.4.2
 	github.com/gosuri/uilive v0.0.4
 	github.com/joho/godotenv v1.4.0
 	github.com/manifoldco/promptui v0.9.0
 	github.com/onflow/cadence v0.20.2
-	github.com/onflow/cadence/languageserver v0.18.3-0.20211005105715-3c618f0fcd10
+	github.com/onflow/cadence/languageserver v0.18.3-0.20220126162456-79571a12b7ff
 	github.com/onflow/flow-core-contracts/lib/go/templates v0.7.9
 	github.com/onflow/flow-emulator v0.27.3
 	github.com/onflow/flow-go v0.23.4

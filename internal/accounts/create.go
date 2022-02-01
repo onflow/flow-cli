@@ -36,8 +36,8 @@ type flagsCreate struct {
 	Signer    string   `default:"emulator-account" flag:"signer" info:"Account name from configuration used to sign the transaction"`
 	Keys      []string `flag:"key" info:"Public keys to attach to account"`
 	Weights   []int    `flag:"key-weight" info:"Weight for the key"`
-	SigAlgo   string   `default:"ECDSA_P256" flag:"sig-algo" info:"Signature algorithm used to generate the keys"`
-	HashAlgo  string   `default:"SHA3_256" flag:"hash-algo" info:"Hash used for the digest"`
+	SigAlgo   []string `default:"ECDSA_P256" flag:"sig-algo" info:"Signature algorithm used to generate the keys"`
+	HashAlgo  []string `default:"SHA3_256" flag:"hash-algo" info:"Hash used for the digest"`
 	Contracts []string `flag:"contract" info:"Contract to be deployed during account creation. <name:filename>"`
 	Include   []string `default:"" flag:"include" info:"Fields to include in the output"`
 }
@@ -66,23 +66,50 @@ func create(
 		return nil, err
 	}
 
-	sigAlgo := crypto.StringToSignatureAlgorithm(createFlags.SigAlgo)
-	if sigAlgo == crypto.UnknownSignatureAlgorithm {
-		return nil, fmt.Errorf("invalid signature algorithm: %s", createFlags.SigAlgo)
+	if len(createFlags.SigAlgo) == 1 && len(createFlags.HashAlgo) == 1 {
+		// Fill up depending on size of key input
+		if len(createFlags.Keys) > 1 {
+			for i := 1; i < len(createFlags.Keys); i++ {
+				createFlags.SigAlgo = append(createFlags.SigAlgo, createFlags.SigAlgo[0])
+				createFlags.HashAlgo = append(createFlags.HashAlgo, createFlags.HashAlgo[0])
+			}
+			// Deprecated usage message?
+		}
+
+	} else
+	// double check matching array lengths on inputs
+	if len(createFlags.Keys) != len(createFlags.SigAlgo) || len(createFlags.SigAlgo) != len(createFlags.HashAlgo) {
+		return nil, fmt.Errorf("must provide a signature and hash algorithm for every key provided to --key: %d keys, %d signature algo, %d hash algo", len(createFlags.Keys), len(createFlags.SigAlgo), len(createFlags.HashAlgo))
 	}
 
-	hashAlgo := crypto.StringToHashAlgorithm(createFlags.HashAlgo)
-	if hashAlgo == crypto.UnknownHashAlgorithm {
-		return nil, fmt.Errorf("invalid hash algorithm: %s", createFlags.HashAlgo)
+	// read all signature algorithms
+	sigAlgos := make([]crypto.SignatureAlgorithm, 0, len(createFlags.SigAlgo))
+	for _, sigAlgoStr := range createFlags.SigAlgo {
+		sigAlgo := crypto.StringToSignatureAlgorithm(sigAlgoStr)
+		if sigAlgo == crypto.UnknownSignatureAlgorithm {
+			return nil, fmt.Errorf("invalid signature algorithm: %s", createFlags.SigAlgo)
+		}
+		sigAlgos = append(sigAlgos, sigAlgo)
+	}
+
+	// read all hash algorithms
+	hashAlgos := make([]crypto.HashAlgorithm, 0, len(createFlags.HashAlgo))
+	for _, hashAlgoStr := range createFlags.HashAlgo {
+
+		hashAlgo := crypto.StringToHashAlgorithm(hashAlgoStr)
+		if hashAlgo == crypto.UnknownHashAlgorithm {
+			return nil, fmt.Errorf("invalid hash algorithm: %s", createFlags.HashAlgo)
+		}
+		hashAlgos = append(hashAlgos, hashAlgo)
 	}
 
 	keyWeights := createFlags.Weights
 
 	// decode public keys
-	var pubKeys []crypto.PublicKey
-	for _, k := range createFlags.Keys {
+	pubKeys := make([]crypto.PublicKey, 0, len(createFlags.Keys))
+	for i, k := range createFlags.Keys {
 		k = strings.TrimPrefix(k, "0x") // clear possible prefix
-		key, err := crypto.DecodePublicKeyHex(sigAlgo, k)
+		key, err := crypto.DecodePublicKeyHex(sigAlgos[i], k)
 		if err != nil {
 			return nil, fmt.Errorf("failed decoding public key: %s with error: %w", key, err)
 		}
@@ -93,8 +120,8 @@ func create(
 		signer,
 		pubKeys,
 		keyWeights,
-		sigAlgo,
-		hashAlgo,
+		sigAlgos,
+		hashAlgos,
 		createFlags.Contracts,
 	)
 
