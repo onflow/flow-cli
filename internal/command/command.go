@@ -25,8 +25,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strings"
-
-	"github.com/spf13/afero"
+	"time"
 
 	"github.com/onflow/flow-cli/build"
 	"github.com/onflow/flow-cli/pkg/flowkit"
@@ -38,6 +37,7 @@ import (
 
 	"github.com/getsentry/sentry-go"
 	"github.com/spf13/afero"
+
 	"github.com/spf13/cobra"
 )
 

@@ -159,7 +159,7 @@ func namePrompt() string {
 
 func secureNetworkKeyPrompt() string {
 	networkKeyPrompt := promptui.Prompt{
-		Label: "Enter host network key",
+		Label: "Enter a valid host network key or leave blank",
 		Validate: func(s string) error {
 			if s == "" {
 				return nil
