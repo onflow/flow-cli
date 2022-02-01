@@ -32,6 +32,8 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowkit/util"
 )
 
+const faucetHost = "https://testnet-faucet.onflow.org/"
+
 var Cmd = &cobra.Command{
 	Use:              "keys",
 	Short:            "Utilities to manage keys",
@@ -66,7 +68,7 @@ func (k *KeyResult) String() string {
 
 	if k.privateKey != nil {
 		// build the faucet link
-		link := fmt.Sprintf("https://testnet-faucet.onflow.org/?key=%x", k.publicKey.Encode())
+		link := fmt.Sprintf("%s?key=%x", faucetHost, k.publicKey.Encode())
 		if k.privateKey.Algorithm() != crypto.ECDSA_P256 {
 			link = fmt.Sprintf("%s&sig-algo=%s", link, k.privateKey.Algorithm().String())
 		}
