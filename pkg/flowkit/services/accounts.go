@@ -428,8 +428,7 @@ func (a *Accounts) prepareTransaction(
 
 	tx.SetBlockReference(block)
 
-	tx, err = tx.SetProposer(proposer, account.Key().Index())
-	if err != nil {
+	if err = tx.SetProposer(proposer, account.Key().Index()); err != nil {
 		return nil, err
 	}
 

@@ -232,9 +232,9 @@ func (t *Transaction) authorizersContains(address flow.Address) bool {
 }
 
 // SetProposer sets the proposer for transaction.
-func (t *Transaction) SetProposer(proposer *flow.Account, keyIndex int) (*Transaction, error) {
+func (t *Transaction) SetProposer(proposer *flow.Account, keyIndex int) error {
 	if len(proposer.Keys) <= keyIndex {
-		return nil, fmt.Errorf("failed to retrieve proposer key at index %d", keyIndex)
+		return fmt.Errorf("failed to retrieve proposer key at index %d", keyIndex)
 	}
 
 	t.proposer = proposer
@@ -246,7 +246,7 @@ func (t *Transaction) SetProposer(proposer *flow.Account, keyIndex int) (*Transa
 		proposerKey.SequenceNumber,
 	)
 
-	return t, nil
+	return nil
 }
 
 // SetPayer sets the payer for transaction.
