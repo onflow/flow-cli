@@ -244,8 +244,8 @@ func initCrashReporting() {
 	currentVersion := build.Semver()
 
 	err := sentry.Init(sentry.ClientOptions{
-		Dsn:              "https://a3d7d72b79ff49ce808e241ccc5bf111@o1129322.ingest.sentry.io/6173086",
-		Environment:      "Dev",
+		Dsn:              "https://f4e84ec91b1645779765bbe249b42311@o114654.ingest.sentry.io/6178538",
+		Environment:      "Prod",
 		Release:          currentVersion,
 		AttachStacktrace: true,
 		BeforeSend: func(event *sentry.Event, hint *sentry.EventHint) *sentry.Event {
