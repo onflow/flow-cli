@@ -23,6 +23,7 @@ import (
 	"fmt"
 
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
+	"github.com/onflow/flow-cli/pkg/flowkit/util"
 )
 
 type jsonNetworks map[string]jsonNetwork
@@ -33,6 +34,11 @@ func (j jsonNetworks) transformToConfig() (config.Networks, error) {
 
 	for networkName, n := range j {
 		if n.Advanced.Key != "" && n.Advanced.Host != "" {
+			err := util.ValidateECDSAP256Pub(n.Advanced.Key)
+			if err != nil {
+				return nil, fmt.Errorf("invalid key %s for network with name %s", n.Advanced.Key, networkName)
+			}
+
 			networks = append(networks, config.Network{
 				Name: networkName,
 				Host: n.Advanced.Host,

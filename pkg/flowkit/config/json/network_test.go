@@ -141,4 +141,13 @@ func Test_TransformConfigAdvanced(t *testing.T) {
 
 		_, err = jsonNetworks.transformToConfig()
 	})
+	t.Run("should return error if advanced config provides invalid network key", func(t *testing.T) {
+		b := []byte(`{"testnet":{"host":"access.testnet.nodes.onflow.org:9000","key": "0xSUPERKEY"}}`)
+		var jsonNetworks jsonNetworks
+		err := json.Unmarshal(b, &jsonNetworks)
+		assert.NoError(t, err)
+
+		_, err = jsonNetworks.transformToConfig()
+		assert.Error(t, err)
+	})
 }

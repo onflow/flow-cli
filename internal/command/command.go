@@ -26,6 +26,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/onflow/flow-cli/pkg/flowkit/util"
 	"github.com/spf13/afero"
 
 	"github.com/onflow/flow-cli/build"
@@ -149,7 +150,7 @@ func createGateway(host, hostNetworkKey string) (gateway.Gateway, error) {
 // 2. if conf is initialized return host by network flag
 // 3. if conf is not initialized and network flag is provided resolve to coded value for that network
 // 4. default to emulator network
-func resolveHost(state *flowkit.State, hostFlag, hostNetworkKeyFlag, networkFlag string) (string, string, error) {
+func resolveHost(state *flowkit.State, hostFlag, networkKeyFlag, networkFlag string) (string, string, error) {
 	// don't allow both network and host flag as the host might be different
 	if networkFlag != config.DefaultEmulatorNetwork().Name && hostFlag != "" {
 		return "", "", fmt.Errorf("shouldn't use both host and network flags, better to use network flag")
@@ -157,7 +158,17 @@ func resolveHost(state *flowkit.State, hostFlag, hostNetworkKeyFlag, networkFlag
 
 	// host flag has highest priority
 	if hostFlag != "" {
-		return hostFlag, hostNetworkKeyFlag, nil
+		// if network-key was provided validate it
+		if networkKeyFlag != "" {
+			err := 	util.ValidateECDSAP256Pub(networkKeyFlag)
+			if err != nil {
+				return "", "", fmt.Errorf("invalid network key %s: %w", networkKeyFlag, err)
+			}
+
+			return hostFlag, networkKeyFlag, nil
+		}
+
+		return hostFlag, networkKeyFlag, nil
 	}
 
 	// network flag with project initialized is next
