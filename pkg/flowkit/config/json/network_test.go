@@ -26,10 +26,7 @@ import (
 
 func Test_ConfigNetworkSimple(t *testing.T) {
 	b := []byte(`{
-    "testnet": {
-			"host": "access.testnet.nodes.onflow.org:9000",
-			"network-key": ""
-		}
+    "testnet": "access.testnet.nodes.onflow.org:9000"
 	}`)
 
 	var jsonNetworks jsonNetworks
@@ -65,7 +62,7 @@ func Test_ConfigNetworkMultiple(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, network.Host, "access.testnet.nodes.onflow.org:9000")
 	assert.Equal(t, network.Name, "testnet")
-	assert.Equal(t, network.NetworkKey, "5000676131ad3e22d853a3f75a5b5d0db4236d08dd6612e2baad771014b5266a242bccecc3522ff7207ac357dbe4f225c709d9b273ac484fed5d13976a39bdcd")
+	assert.Equal(t, network.Key, "5000676131ad3e22d853a3f75a5b5d0db4236d08dd6612e2baad771014b5266a242bccecc3522ff7207ac357dbe4f225c709d9b273ac484fed5d13976a39bdcd")
 
 	emulator, err := networks.ByName("emulator")
 	assert.NoError(t, err)
@@ -108,35 +105,40 @@ func Test_IgnoreOldFormat(t *testing.T) {
 	assert.NoError(t, err)
 
 	assert.Equal(t, testnet.Host, "access.testnet.nodes.onflow.org:9000")
-	assert.Equal(t, testnet.NetworkKey, "5000676131ad3e22d853a3f75a5b5d0db4236d08dd6612e2baad771014b5266a242bccecc3522ff7207ac357dbe4f225c709d9b273ac484fed5d13976a39bdcd")
+	assert.Equal(t, testnet.Key, "5000676131ad3e22d853a3f75a5b5d0db4236d08dd6612e2baad771014b5266a242bccecc3522ff7207ac357dbe4f225c709d9b273ac484fed5d13976a39bdcd")
 	assert.Equal(t, mainnet.Host, "access.mainnet.nodes.onflow.org:9000")
-	assert.Equal(t, mainnet.NetworkKey, "5000676131ad3e22d853a3f75a5b5d0db4236d08dd6612e2baad771014b5266a242bccecc3522ff7207ac357dbe4f225c709d9b273ac484fed5d13976a39bdcd")
+	assert.Equal(t, mainnet.Key, "5000676131ad3e22d853a3f75a5b5d0db4236d08dd6612e2baad771014b5266a242bccecc3522ff7207ac357dbe4f225c709d9b273ac484fed5d13976a39bdcd")
 }
 
-func Test_AdvancedConfigMissingKey(t *testing.T) {
-	b := []byte(`{"testnet":{"host":"access.testnet.nodes.onflow.org:9000"}}`)
-	var jsonNetworks jsonNetworks
-	err := json.Unmarshal(b, &jsonNetworks)
-	assert.NoError(t, err)
+func Test_TransformConfigAdvanced(t *testing.T) {
+	t.Run("should returned advanced config with no errors", func(t *testing.T) {
+		b := []byte(`{"testnet":{"host":"access.testnet.nodes.onflow.org:9000", "key": "5000676131ad3e22d853a3f75a5b5d0db4236d08dd6612e2baad771014b5266a242bccecc3522ff7207ac357dbe4f225c709d9b273ac484fed5d13976a39bdcd"}}`)
+		var jsonNetworks jsonNetworks
+		err := json.Unmarshal(b, &jsonNetworks)
+		assert.NoError(t, err)
 
-	conf, err := jsonNetworks.transformToConfig()
-	assert.NoError(t, err)
+		conf, err := jsonNetworks.transformToConfig()
+		assert.NoError(t, err)
 
-	assert.Len(t, jsonNetworks, 1)
+		testnet, err := conf.ByName("testnet")
+		assert.NoError(t, err)
+		assert.Equal(t, testnet.Host, "access.testnet.nodes.onflow.org:9000")
+		assert.Equal(t, testnet.Key, "5000676131ad3e22d853a3f75a5b5d0db4236d08dd6612e2baad771014b5266a242bccecc3522ff7207ac357dbe4f225c709d9b273ac484fed5d13976a39bdcd")
+	})
+	t.Run("should return error if advanced config does not have key", func(t *testing.T) {
+		b := []byte(`{"testnet":{"host":"access.testnet.nodes.onflow.org:9000"}}`)
+		var jsonNetworks jsonNetworks
+		err := json.Unmarshal(b, &jsonNetworks)
+		assert.NoError(t, err)
 
-	network, err := conf.ByName("testnet")
-	assert.NoError(t, err)
-	assert.Equal(t, "access.testnet.nodes.onflow.org:9000", network.Host)
-	assert.Equal(t, "testnet", network.Name)
-	assert.Equal(t, "", network.NetworkKey)
-}
+		_, err = jsonNetworks.transformToConfig()
+	})
+	t.Run("should return error if advanced config does not have host", func(t *testing.T) {
+		b := []byte(`{"testnet":{"key": "5000676131ad3e22d853a3f75a5b5d0db4236d08dd6612e2baad771014b5266a242bccecc3522ff7207ac357dbe4f225c709d9b273ac484fed5d13976a39bdcd"}}`)
+		var jsonNetworks jsonNetworks
+		err := json.Unmarshal(b, &jsonNetworks)
+		assert.NoError(t, err)
 
-func Test_InvalidConfigMissingHost(t *testing.T) {
-	b := []byte(`{"testnet":{"host":"access.testnet.nodes.onflow.org:9000"}, "supernet": {}}`)
-	var jsonNetworks jsonNetworks
-	err := json.Unmarshal(b, &jsonNetworks)
-	assert.NoError(t, err)
-
-	_, err = jsonNetworks.transformToConfig()
-	assert.Error(t, err)
+		_, err = jsonNetworks.transformToConfig()
+	})
 }

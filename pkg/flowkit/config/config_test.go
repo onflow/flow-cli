@@ -131,9 +131,9 @@ func generateComplexConfig() config.Config {
 			Name: "emulator",
 			Host: "127.0.0.1.3569",
 		}, {
-			Name:       "testnet",
-			Host:       "access.devnet.nodes.onflow.org:9000",
-			NetworkKey: "5000676131ad3e22d853a3f75a5b5d0db4236d08dd6612e2baad771014b5266a242bccecc3522ff7207ac357dbe4f225c709d9b273ac484fed5d13976a39bdcd",
+			Name: "testnet",
+			Host: "access.devnet.nodes.onflow.org:9000",
+			Key:  "5000676131ad3e22d853a3f75a5b5d0db4236d08dd6612e2baad771014b5266a242bccecc3522ff7207ac357dbe4f225c709d9b273ac484fed5d13976a39bdcd",
 		}},
 	}
 }
@@ -198,5 +198,5 @@ func Test_GetNetworkByNameComplex(t *testing.T) {
 	network, err = conf.Networks.ByName("testnet")
 	assert.NoError(t, err)
 	assert.Equal(t, network.Host, "access.devnet.nodes.onflow.org:9000")
-	assert.Equal(t, network.NetworkKey, "5000676131ad3e22d853a3f75a5b5d0db4236d08dd6612e2baad771014b5266a242bccecc3522ff7207ac357dbe4f225c709d9b273ac484fed5d13976a39bdcd")
+	assert.Equal(t, network.Key, "5000676131ad3e22d853a3f75a5b5d0db4236d08dd6612e2baad771014b5266a242bccecc3522ff7207ac357dbe4f225c709d9b273ac484fed5d13976a39bdcd")
 }

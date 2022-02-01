@@ -26,9 +26,9 @@ type Networks []Network
 
 // Network defines the configuration for a Flow network.
 type Network struct {
-	Name       string
-	Host       string
-	NetworkKey string
+	Name string
+	Host string
+	Key  string
 }
 
 // ByName get network by name.

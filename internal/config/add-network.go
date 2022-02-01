@@ -34,9 +34,9 @@ import (
 )
 
 type flagsAddNetwork struct {
-	Name           string `flag:"name" info:"Network name"`
-	Host           string `flag:"host" info:"Flow Access API host address"`
-	HostNetworkKey string `flag:"network-key" info:"Flow Access API host network key for secure client connections"`
+	Name string `flag:"name" info:"Network name"`
+	Host string `flag:"host" info:"Flow Access API host address"`
+	Key  string `flag:"network-key" info:"Flow Access API host network key for secure client connections"`
 }
 
 var addNetworkFlags = flagsAddNetwork{}
@@ -97,7 +97,7 @@ func flagsToNetworkData(flags flagsAddNetwork) (map[string]string, bool, error) 
 		return nil, true, err
 	}
 
-	err = util.ValidateECDSAP256Pub(flags.HostNetworkKey)
+	err = util.ValidateECDSAP256Pub(flags.Key)
 	if err != nil {
 		return nil, true, fmt.Errorf("invalid network-key provided")
 	}
@@ -105,6 +105,6 @@ func flagsToNetworkData(flags flagsAddNetwork) (map[string]string, bool, error) 
 	return map[string]string{
 		"name": flags.Name,
 		"host": flags.Host,
-		"key":  flags.HostNetworkKey,
+		"key":  flags.Key,
 	}, true, nil
 }

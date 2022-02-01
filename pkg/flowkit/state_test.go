@@ -651,10 +651,7 @@ func Test_Saving(t *testing.T) {
 
 	_ = afero.WriteFile(af.Fs, config.DefaultPath, []byte(`{
 		"networks": {
-			"foo": {
-				"host": "localhost:3000",
-				"network-key": ""
-			}
+			"foo": "localhost:3000"
 		}
 	}`), 0644)
 

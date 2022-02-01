@@ -32,16 +32,11 @@ func (j jsonNetworks) transformToConfig() (config.Networks, error) {
 	networks := make(config.Networks, 0)
 
 	for networkName, n := range j {
-		if n.Advanced.NetworkKey != "" && n.Advanced.Host != "" {
-			networks = append(networks, config.Network{
-				Name:       networkName,
-				Host:       n.Advanced.Host,
-				NetworkKey: n.Advanced.NetworkKey,
-			})
-		} else if n.Advanced.Host != "" {
+		if n.Advanced.Key != "" && n.Advanced.Host != "" {
 			networks = append(networks, config.Network{
 				Name: networkName,
 				Host: n.Advanced.Host,
+				Key:  n.Advanced.Key,
 			})
 		} else if n.Simple.Host != "" {
 			networks = append(networks, config.Network{
@@ -49,7 +44,7 @@ func (j jsonNetworks) transformToConfig() (config.Networks, error) {
 				Host: n.Simple.Host,
 			})
 		} else {
-			return nil, fmt.Errorf("failed to transform config missing network host")
+			return nil, fmt.Errorf("failed to transform networks configuration")
 		}
 	}
 
@@ -61,7 +56,7 @@ func transformNetworksToJSON(networks config.Networks) jsonNetworks {
 	jsonNetworks := jsonNetworks{}
 
 	for _, n := range networks {
-		if n.NetworkKey != "" {
+		if n.Key != "" {
 			jsonNetworks[n.Name] = transformAdvancedNetworkToJSON(n)
 		} else {
 			jsonNetworks[n.Name] = transformSimpleNetworkToJSON(n)
@@ -82,8 +77,8 @@ func transformSimpleNetworkToJSON(n config.Network) jsonNetwork {
 func transformAdvancedNetworkToJSON(n config.Network) jsonNetwork {
 	return jsonNetwork{
 		Advanced: advancedNetwork{
-			Host:       n.Host,
-			NetworkKey: n.NetworkKey,
+			Host: n.Host,
+			Key:  n.Key,
 		},
 	}
 }
@@ -98,8 +93,8 @@ type simpleNetwork struct {
 }
 
 type advancedNetwork struct {
-	Host       string `json:"host"`
-	NetworkKey string `json:"key"`
+	Host string `json:"host"`
+	Key  string `json:"key"`
 }
 
 func (j *jsonNetwork) UnmarshalJSON(b []byte) error {
@@ -115,7 +110,7 @@ func (j *jsonNetwork) UnmarshalJSON(b []byte) error {
 	err = json.Unmarshal(b, &advanced)
 	if err == nil {
 		j.Advanced.Host = advanced.Host
-		j.Advanced.NetworkKey = advanced.NetworkKey
+		j.Advanced.Key = advanced.Key
 	}
 
 	return err

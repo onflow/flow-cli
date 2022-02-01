@@ -167,7 +167,7 @@ func resolveHost(state *flowkit.State, hostFlag, hostNetworkKeyFlag, networkFlag
 			return "", "", fmt.Errorf("network with name %s does not exist in configuration", networkFlag)
 		}
 
-		return stateNetwork.Host, stateNetwork.NetworkKey, nil
+		return stateNetwork.Host, stateNetwork.Key, nil
 	}
 
 	networks := config.DefaultNetworks()
@@ -177,7 +177,7 @@ func resolveHost(state *flowkit.State, hostFlag, hostNetworkKeyFlag, networkFlag
 		return "", "", fmt.Errorf("invalid network with name %s", networkFlag)
 	}
 
-	return network.Host, network.NetworkKey, nil
+	return network.Host, network.Key, nil
 
 }
 
