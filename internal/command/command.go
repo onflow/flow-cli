@@ -26,7 +26,6 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/onflow/flow-cli/pkg/flowkit/util"
 	"github.com/spf13/afero"
 
 	"github.com/onflow/flow-cli/build"
@@ -35,6 +34,7 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowkit/gateway"
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
 	"github.com/onflow/flow-cli/pkg/flowkit/services"
+	"github.com/onflow/flow-cli/pkg/flowkit/util"
 
 	"github.com/spf13/cobra"
 )
@@ -160,7 +160,7 @@ func resolveHost(state *flowkit.State, hostFlag, networkKeyFlag, networkFlag str
 	if hostFlag != "" {
 		// if network-key was provided validate it
 		if networkKeyFlag != "" {
-			err := 	util.ValidateECDSAP256Pub(networkKeyFlag)
+			err := util.ValidateECDSAP256Pub(networkKeyFlag)
 			if err != nil {
 				return "", "", fmt.Errorf("invalid network key %s: %w", networkKeyFlag, err)
 			}
