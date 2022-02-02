@@ -40,4 +40,5 @@ type Gateway interface {
 	GetCollection(flow.Identifier) (*flow.Collection, error)
 	GetLatestProtocolStateSnapshot() ([]byte, error)
 	Ping() error
+	SecureConnection() bool
 }

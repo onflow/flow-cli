@@ -50,6 +50,10 @@ func NewSnapshot(
 func (s *Snapshot) GetLatestProtocolStateSnapshot() ([]byte, error) {
 	s.logger.StartProgress("Downloading protocol snapshot...")
 
+	if !s.gateway.SecureConnection() {
+		s.logger.Info(fmt.Sprintf("%s warning: using insecure client connection to download snapshot, you should use a secure network configuration...", output.WarningEmoji()))
+	}
+
 	b, err := s.gateway.GetLatestProtocolStateSnapshot()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get latest finalized protocol snapshot from gateway: %w", err)

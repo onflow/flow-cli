@@ -28,6 +28,7 @@ type Networks []Network
 type Network struct {
 	Name string
 	Host string
+	Key  string
 }
 
 // ByName get network by name.

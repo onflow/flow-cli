@@ -94,7 +94,11 @@ We'll walk through each property one by one.
   "networks": {
     "emulator": "127.0.0.1:3569",
     "mainnet": "access.mainnet.nodes.onflow.org:9000",
-    "testnet": "access.devnet.nodes.onflow.org:9000"
+    "testnet": "access.devnet.nodes.onflow.org:9000",
+    "testnetSecure": {
+      "Host": "access-001.devnet30.nodes.onflow.org:9001",
+      "NetworkKey": "ba69f7d2e82b9edf25b103c195cd371cf0cc047ef8884a9bbe331e62982d46daeebf836f7445a2ac16741013b192959d8ad26998aff12f2adc67a99e1eb2988d"
+    }
   },
 
   "emulators": {
@@ -293,11 +297,26 @@ Format for networks is:
 
 ```json
 ...
+"networks": {
+  "NETWORK NAME": {
+    "host": "ADDRESS",
+    "key": "ACCESS NODE NETWORK KEY"    
+  }
+}
+...
+```
+
+```json
+...
 
 "networks": {
     "emulator": "127.0.0.1:3569",
     "mainnet": "access.mainnet.nodes.onflow.org:9000",
-    "testnet": "access.devnet.nodes.onflow.org:9000"
+    "testnet": "access.devnet.nodes.onflow.org:9000",
+    "testnetSecure": {
+        "host": "access-001.devnet30.nodes.onflow.org:9001",
+        "key": "ba69f7d2e82b9edf25b103c195cd371cf0cc047ef8884a9bbe331e62982d46daeebf836f7445a2ac16741013b192959d8ad26998aff12f2adc67a99e1eb2988d"
+    },
 }
 
 ...

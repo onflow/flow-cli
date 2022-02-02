@@ -208,3 +208,8 @@ func (g *EmulatorGateway) GetBlockByHeight(height uint64) (*flow.Block, error) {
 func (g *EmulatorGateway) GetLatestProtocolStateSnapshot() ([]byte, error) {
 	return []byte{}, nil
 }
+
+// SecureConnection placeholder func to complete gateway interface implementation
+func (g *EmulatorGateway) SecureConnection() bool {
+	return false
+}

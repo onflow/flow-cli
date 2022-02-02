@@ -40,6 +40,14 @@ Output path where the protocol snapshot JSON file will be saved.
 Specify the hostname of the Access API that will be
 used to execute the commands.
 
+### Network Key
+
+- Flag: `--network-key`
+- Valid inputs: A valid network public key of the host in hex string format
+
+Specify the network public key of the Access API that will be
+used to create a secure GRPC client when executing the command.
+
 ### Network
 
 - Flag: `--network`

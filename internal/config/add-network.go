@@ -23,6 +23,7 @@ import (
 	"net/url"
 
 	"github.com/onflow/flow-cli/pkg/flowkit"
+	"github.com/onflow/flow-cli/pkg/flowkit/util"
 
 	"github.com/spf13/cobra"
 
@@ -35,6 +36,7 @@ import (
 type flagsAddNetwork struct {
 	Name string `flag:"name" info:"Network name"`
 	Host string `flag:"host" info:"Flow Access API host address"`
+	Key  string `flag:"network-key" info:"Flow Access API host network key for secure client connections"`
 }
 
 var addNetworkFlags = flagsAddNetwork{}
@@ -66,7 +68,7 @@ func addNetwork(
 		networkData = output.NewNetworkPrompt()
 	}
 
-	network := config.StringToNetwork(networkData["name"], networkData["host"])
+	network := config.StringToNetwork(networkData["name"], networkData["host"], networkData["key"])
 	state.Networks().AddOrUpdate(network.Name, network)
 
 	err = state.SaveEdited(globalFlags.ConfigPaths)
@@ -95,8 +97,14 @@ func flagsToNetworkData(flags flagsAddNetwork) (map[string]string, bool, error) 
 		return nil, true, err
 	}
 
+	err = util.ValidateECDSAP256Pub(flags.Key)
+	if err != nil {
+		return nil, true, fmt.Errorf("invalid network-key provided")
+	}
+
 	return map[string]string{
 		"name": flags.Name,
 		"host": flags.Host,
+		"key":  flags.Key,
 	}, true, nil
 }

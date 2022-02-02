@@ -30,26 +30,28 @@ import (
 
 // GlobalFlags contains all global flags definitions.
 type GlobalFlags struct {
-	Filter      string
-	Format      string
-	Save        string
-	Host        string
-	Log         string
-	Network     string
-	Yes         bool
-	ConfigPaths []string
+	Filter         string
+	Format         string
+	Save           string
+	Host           string
+	HostNetworkKey string
+	Log            string
+	Network        string
+	Yes            bool
+	ConfigPaths    []string
 }
 
 // Flags initialized to default values.
 var Flags = GlobalFlags{
-	Filter:      "",
-	Format:      formatText,
-	Save:        "",
-	Host:        "",
-	Network:     config.DefaultEmulatorNetwork().Name,
-	Log:         logLevelInfo,
-	Yes:         false,
-	ConfigPaths: config.DefaultPaths(),
+	Filter:         "",
+	Format:         formatText,
+	Save:           "",
+	Host:           "",
+	HostNetworkKey: "",
+	Network:        config.DefaultEmulatorNetwork().Name,
+	Log:            logLevelInfo,
+	Yes:            false,
+	ConfigPaths:    config.DefaultPaths(),
 }
 
 // InitFlags init all the global persistent flags.
@@ -68,6 +70,14 @@ func InitFlags(cmd *cobra.Command) {
 		"",
 		Flags.Host,
 		"Flow Access API host address",
+	)
+
+	cmd.PersistentFlags().StringVarP(
+		&Flags.HostNetworkKey,
+		"network-key",
+		"",
+		Flags.HostNetworkKey,
+		"Flow Access API host network key for secure client connections",
 	)
 
 	cmd.PersistentFlags().StringVarP(

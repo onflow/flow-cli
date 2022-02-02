@@ -157,6 +157,25 @@ func namePrompt() string {
 	return name
 }
 
+func secureNetworkKeyPrompt() string {
+	networkKeyPrompt := promptui.Prompt{
+		Label: "Enter a valid host network key or leave blank",
+		Validate: func(s string) error {
+			if s == "" {
+				return nil
+			}
+
+			return util.ValidateECDSAP256Pub(s)
+		},
+	}
+	networkKey, err := networkKeyPrompt.Run()
+	if err == promptui.ErrInterrupt {
+		os.Exit(-1)
+	}
+
+	return networkKey
+}
+
 func addressPrompt() string {
 	addressPrompt := promptui.Prompt{
 		Label: "Address",
@@ -320,6 +339,8 @@ func NewNetworkPrompt() map[string]string {
 	if err == promptui.ErrInterrupt {
 		os.Exit(-1)
 	}
+
+	networkData["key"] = secureNetworkKeyPrompt()
 
 	return networkData
 }

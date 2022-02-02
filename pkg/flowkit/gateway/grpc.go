@@ -21,7 +21,10 @@ package gateway
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
+
+	"github.com/onflow/flow-go/utils/grpcutils"
 
 	"github.com/onflow/flow-cli/pkg/flowkit"
 
@@ -38,8 +41,9 @@ const maxGRPCMessageSize = 1024 * 1024 * 16
 
 // GrpcGateway is a gateway implementation that uses the Flow Access gRPC API.
 type GrpcGateway struct {
-	client *client.Client
-	ctx    context.Context
+	client       *client.Client
+	ctx          context.Context
+	secureClient bool
 }
 
 // NewGrpcGateway returns a new gRPC gateway.
@@ -57,8 +61,34 @@ func NewGrpcGateway(host string) (*GrpcGateway, error) {
 	}
 
 	return &GrpcGateway{
-		client: gClient,
-		ctx:    ctx,
+		client:       gClient,
+		ctx:          ctx,
+		secureClient: false,
+	}, nil
+}
+
+// NewSecureGrpcGateway returns a new gRPC gateway with a secure client connection.
+func NewSecureGrpcGateway(host, hostNetworkKey string) (*GrpcGateway, error) {
+	secureDialOpts, err := grpcutils.SecureGRPCDialOpt(strings.TrimPrefix(hostNetworkKey, "0x"))
+	if err != nil {
+		return nil, fmt.Errorf("failed to create secure GRPC dial options with network key \"%s\": %w", hostNetworkKey, err)
+	}
+
+	gClient, err := client.New(
+		host,
+		secureDialOpts,
+		grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(maxGRPCMessageSize)),
+	)
+	ctx := context.Background()
+
+	if err != nil || gClient == nil {
+		return nil, fmt.Errorf("failed to connect to host %s", host)
+	}
+
+	return &GrpcGateway{
+		client:       gClient,
+		ctx:          ctx,
+		secureClient: true,
 	}, nil
 }
 
@@ -162,4 +192,9 @@ func (g *GrpcGateway) GetLatestProtocolStateSnapshot() ([]byte, error) {
 // Ping is used to check if the access node is alive and healthy.
 func (g *GrpcGateway) Ping() error {
 	return g.client.Ping(g.ctx)
+}
+
+// SecureConnection is used to log warning if a service should be using a secure client but is not
+func (g *GrpcGateway) SecureConnection() bool {
+	return g.secureClient
 }

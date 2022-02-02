@@ -155,10 +155,11 @@ func StringToContracts(
 }
 
 // StringToNetwork converts string to network.
-func StringToNetwork(name string, host string) Network {
+func StringToNetwork(name, host, networkKey string) Network {
 	return Network{
 		Name: name,
 		Host: host,
+		Key:  networkKey,
 	}
 }
 
