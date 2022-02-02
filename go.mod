@@ -7,11 +7,10 @@ require (
 	github.com/getsentry/sentry-go v0.12.0
 	github.com/go-git/go-git/v5 v5.4.2
 	github.com/gosuri/uilive v0.0.4
-	github.com/ipfs/go-ipfs-blockstore v1.1.1 // indirect
 	github.com/joho/godotenv v1.4.0
 	github.com/manifoldco/promptui v0.9.0
 	github.com/onflow/cadence v0.21.0
-	github.com/onflow/cadence/languageserver v0.18.2
+	github.com/onflow/cadence/languageserver v0.18.3-0.20220202133308-207188a51831
 	github.com/onflow/flow-core-contracts/lib/go/templates v0.9.0
 	github.com/onflow/flow-emulator v0.28.1-0.20220202131242-21a2c6e3eac7
 	github.com/onflow/flow-go v0.23.2-0.20220201222302-cff34195a61a
