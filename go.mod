@@ -12,7 +12,7 @@ require (
 	github.com/onflow/cadence v0.21.0
 	github.com/onflow/cadence/languageserver v0.18.3-0.20220202133308-207188a51831
 	github.com/onflow/flow-core-contracts/lib/go/templates v0.9.0
-	github.com/onflow/flow-emulator v0.28.1-0.20220202131242-21a2c6e3eac7
+	github.com/onflow/flow-emulator v0.28.1
 	github.com/onflow/flow-go v0.23.2-0.20220201222302-cff34195a61a
 	github.com/onflow/flow-go-sdk v0.24.0
 	github.com/psiemens/sconfig v0.1.0
