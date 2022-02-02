@@ -102,9 +102,12 @@ func (t *Transactions) Build(
 
 	tx := flowkit.NewTransaction().
 		SetPayer(payer).
-		SetProposer(proposerAccount, proposerKeyIndex).
 		SetGasLimit(gasLimit).
 		SetBlockReference(latestBlock)
+
+	if err := tx.SetProposer(proposerAccount, proposerKeyIndex); err != nil {
+		return nil, err
+	}
 
 	resolver, err := contracts.NewResolver(code)
 	if err != nil {

@@ -205,8 +205,11 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 			}
 		}
 
-		tx.SetBlockReference(block).
-			SetProposer(targetAccountInfo, targetAccount.Key().Index())
+		tx.SetBlockReference(block)
+
+		if err = tx.SetProposer(targetAccountInfo, targetAccount.Key().Index()); err != nil {
+			return nil, err
+		}
 
 		tx, err = tx.Sign()
 		if err != nil {
