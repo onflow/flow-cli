@@ -9,7 +9,7 @@ require (
 	github.com/gosuri/uilive v0.0.4
 	github.com/joho/godotenv v1.4.0
 	github.com/manifoldco/promptui v0.9.0
-	github.com/onflow/cadence v0.21.0
+	github.com/onflow/cadence v0.21.1
 	github.com/onflow/cadence/languageserver v0.18.3-0.20220202133308-207188a51831
 	github.com/onflow/flow-core-contracts/lib/go/templates v0.10.1
 	github.com/onflow/flow-emulator v0.28.1
