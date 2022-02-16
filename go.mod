@@ -9,10 +9,10 @@ require (
 	github.com/gosuri/uilive v0.0.4
 	github.com/joho/godotenv v1.4.0
 	github.com/manifoldco/promptui v0.9.0
-	github.com/onflow/cadence v0.21.0
+	github.com/onflow/cadence v0.21.1
 	github.com/onflow/cadence/languageserver v0.18.3-0.20220202133308-207188a51831
 	github.com/onflow/flow-core-contracts/lib/go/templates v0.10.1
-	github.com/onflow/flow-emulator v0.28.1
+	github.com/onflow/flow-emulator v0.28.2
 	github.com/onflow/flow-go v0.23.2-0.20220203200919-d4d4cae0de36
 	github.com/onflow/flow-go-sdk v0.24.0
 	github.com/onflow/flow-go/crypto v0.24.3-0.20220203200919-d4d4cae0de36 // indirect
