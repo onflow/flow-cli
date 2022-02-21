@@ -140,7 +140,6 @@ func ParseArgumentsWithoutType(fileName string, code []byte, args []string) (scr
 	}
 
 	transactionDeclaration := program.TransactionDeclarations()
-	fmt.Println(transactionDeclaration)
 	if transactionDeclaration != nil {
 		if transactionDeclaration[0].ParameterList != nil {
 			parameterList = transactionDeclaration[0].ParameterList.Parameters
