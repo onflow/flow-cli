@@ -25,8 +25,8 @@ var DevWallet = &command.Command{
 func wallet(
 	_ []string,
 	_ flowkit.ReaderWriter,
-	globalFlags command.GlobalFlags,
-	services *services.Services,
+	_ command.GlobalFlags,
+	_ *services.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
 	service, err := state.EmulatorServiceAccount()
