@@ -11,7 +11,7 @@ import (
 )
 
 type FlagsWallet struct {
-	Port         uint `default:"8081" flag:"port" info:"Dev wallet port to listen on"`
+	Port         uint `default:"8701" flag:"port" info:"Dev wallet port to listen on"`
 	EmulatorPort uint `default:"3569" flag:"emulator-port" info:"The port emulator is listening on"`
 }
 

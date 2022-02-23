@@ -30,6 +30,7 @@ building a production grade wallet._
 
 - Flag: `--port`
 - Valid inputs: Number
+- Default: `8701`
 
 Port on which the dev wallet server will listen on. 
 
