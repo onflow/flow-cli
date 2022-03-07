@@ -11,7 +11,7 @@ require (
 	github.com/manifoldco/promptui v0.9.0
 	github.com/onflow/cadence v0.21.1
 	github.com/onflow/cadence/languageserver v0.18.3-0.20220202133308-207188a51831
-	github.com/onflow/fcl-dev-wallet v0.3.1-0.20220221111038-638595290db0 // indirect
+	github.com/onflow/fcl-dev-wallet v0.3.1-0.20220221111038-638595290db0
 	github.com/onflow/flow-core-contracts/lib/go/templates v0.10.1
 	github.com/onflow/flow-emulator v0.28.2
 	github.com/onflow/flow-go v0.23.2-0.20220203200919-d4d4cae0de36
@@ -25,3 +25,5 @@ require (
 	gonum.org/v1/gonum v0.9.3
 	google.golang.org/grpc v1.43.0
 )
+
+replace github.com/onflow/fcl-dev-wallet => /Users/dapper/Dev/fcl-dev-wallet
