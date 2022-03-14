@@ -4,11 +4,12 @@ import (
 	"fmt"
 	"strings"
 
-	devWallet "github.com/onflow/fcl-dev-wallet"
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
 	"github.com/onflow/flow-cli/pkg/flowkit/services"
+
+	devWallet "github.com/onflow/fcl-dev-wallet"
 	"github.com/spf13/cobra"
 )
 
@@ -47,7 +48,7 @@ func wallet(
 		Address:    fmt.Sprintf("0x%s", service.Address().String()),
 		PrivateKey: strings.TrimPrefix(key.PrivateKey.String(), "0x"),
 		PublicKey:  strings.TrimPrefix(key.PrivateKey.PublicKey().String(), "0x"),
-		AccessNode: fmt.Sprintf("http://localhost:8080"),
+		AccessNode: "http://localhost:8080",
 	}
 
 	srv, err := devWallet.NewHTTPServer(walletFlags.Port, &conf)
