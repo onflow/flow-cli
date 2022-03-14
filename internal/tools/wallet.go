@@ -2,6 +2,7 @@ package tools
 
 import (
 	"fmt"
+
 	devWallet "github.com/onflow/fcl-dev-wallet"
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/pkg/flowkit"
@@ -11,8 +12,7 @@ import (
 )
 
 type FlagsWallet struct {
-	Port         uint `default:"8701" flag:"port" info:"Dev wallet port to listen on"`
-	EmulatorPort uint `default:"3569" flag:"emulator-port" info:"The port emulator is listening on"`
+	Port uint `default:"8701" flag:"port" info:"Dev wallet port to listen on"`
 }
 
 var walletFlags = FlagsWallet{}
@@ -31,7 +31,7 @@ var DevWallet = &command.Command{
 func wallet(
 	_ []string,
 	_ flowkit.ReaderWriter,
-	global command.GlobalFlags,
+	_ command.GlobalFlags,
 	_ *services.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
@@ -45,7 +45,7 @@ func wallet(
 		Address:    service.Address().String(),
 		PrivateKey: key.PrivateKey.String(),
 		PublicKey:  key.PrivateKey.PublicKey().String(),
-		AccessNode: fmt.Sprintf("localhost:%d", walletFlags.EmulatorPort),
+		AccessNode: fmt.Sprintf("http://localhost:8080"),
 	}
 
 	srv, err := devWallet.NewHTTPServer(walletFlags.Port, &conf)
@@ -54,7 +54,7 @@ func wallet(
 	}
 
 	fmt.Printf("%s Starting dev wallet server on port %d\n", output.SuccessEmoji(), walletFlags.Port)
-	fmt.Printf("%s  Make sure the emulator is running and listening on port %d\n", output.WarningEmoji(), walletFlags.EmulatorPort)
+	fmt.Printf("%s  Make sure the emulator is running\n", output.WarningEmoji())
 
 	err = srv.Start()
 	if err != nil {
