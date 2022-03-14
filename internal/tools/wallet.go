@@ -2,6 +2,7 @@ package tools
 
 import (
 	"fmt"
+	"strings"
 
 	devWallet "github.com/onflow/fcl-dev-wallet"
 	"github.com/onflow/flow-cli/internal/command"
@@ -41,10 +42,11 @@ func wallet(
 	}
 
 	key := service.Key().ToConfig()
+	fmt.Println(key.PrivateKey.PublicKey().String(), key.PrivateKey.String(), key.PrivateKey.PublicKey().String())
 	conf := devWallet.Config{
-		Address:    service.Address().String(),
-		PrivateKey: key.PrivateKey.String(),
-		PublicKey:  key.PrivateKey.PublicKey().String(),
+		Address:    fmt.Sprintf("0x%s", service.Address().String()),
+		PrivateKey: strings.TrimPrefix(key.PrivateKey.String(), "0x"),
+		PublicKey:  strings.TrimPrefix(key.PrivateKey.PublicKey().String(), "0x"),
 		AccessNode: fmt.Sprintf("http://localhost:8080"),
 	}
 
