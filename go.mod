@@ -25,5 +25,3 @@ require (
 	gonum.org/v1/gonum v0.9.3
 	google.golang.org/grpc v1.43.0
 )
-
-replace github.com/onflow/fcl-dev-wallet => /Users/dapper/Dev/fcl-dev-wallet
