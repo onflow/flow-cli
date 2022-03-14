@@ -11,7 +11,8 @@ Currently the CLI supports starting:
 - [FCL Development Wallet](https://github.com/onflow/fcl-dev-wallet)
 
 
-### FCL Development Wallet
+## FCL Development Wallet
+
 The FCL dev wallet is a mock Flow wallet that simulates the protocols used by FCL to interact with the Flow blockchain on behalf of simulated user accounts.
 
 **Be sure you have the emulator running before starting this command**
@@ -23,6 +24,20 @@ flow dev-wallet
 _⚠️ This project implements an FCL compatible
 interface, but should **not** be used as a reference for
 building a production grade wallet._
+
+After starting dev-wallet, you can set your fcl config to use it like below:
+
+```javascript
+import * as fcl from "@onflow/fcl"
+
+fcl.config()
+  // Point App at Emulator
+  .put("accessNode.api", "http://localhost:8080") 
+  // Point FCL at dev-wallet (default port)
+  .put("discovery.wallet", "http://localhost:8701/fcl/authn") 
+```
+You can read more about setting up dev-wallet at [FCL Dev Wallet Project](https://github.com/onflow/fcl-dev-wallet)
+
 
 ## Flags
 
