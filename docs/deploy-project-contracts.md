@@ -110,12 +110,12 @@ source file location.
 The rewritten versions are then deployed to their respective targets,
 leaving the original contract files unchanged.
 
-In the example above, the `Bar` contract would be rewritten like this:
+In the example above, the `KittyItems` contract would be rewritten like this:
 
-```cadence:title=Bar.cdc
-import Foo from 0xf8d6e0586b0a20c7
+```cadence:title=KittyItems.cdc
+import NonFungibleToken from 0xf8d6e0586b0a20c7
 
-pub contract Bar { 
+pub contract KittyItems { 
   // ...
 }
 ```

@@ -139,7 +139,7 @@ contracts](https://docs.onflow.org/core-contracts) that have already been deploy
 
 ⚠️ If we use an alias for the contract we should not specify it in the `deployment` section for that network. 
 
-Our example bellow should not include `FungibleToken` in  `deployment` section for testnet and emulator network.
+Our example below should not include `FungibleToken` in  `deployment` section for testnet and emulator network.
 
 ```json
 ...
