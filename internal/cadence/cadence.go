@@ -31,7 +31,7 @@ var Cmd = &cobra.Command{
 	Short: "Execute Cadence code",
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) > 0 {
-			execute.Execute(args)
+			execute.Execute(args, nil)
 		} else {
 			execute.RunREPL()
 		}

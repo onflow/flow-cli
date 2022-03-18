@@ -173,7 +173,7 @@ func ParseArgumentsWithoutType(fileName string, code []byte, args []string) (scr
 
 		}
 
-		var value, err = runtime.ParseLiteral(argumentString, semaType)
+		var value, err = runtime.ParseLiteral(argumentString, semaType, nil)
 		if err != nil {
 			return nil, fmt.Errorf("argument `%s` is not expected type `%s`", parameterList[index].Identifier, semaType)
 		}
