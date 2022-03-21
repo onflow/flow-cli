@@ -27,8 +27,8 @@ Reset configuration using: 'flow init --reset'
 
 ### Error Handling
 
-Existing configuration will cause the error bellow. 
-You should initialize in an empty folder or reset configuration using `--reset` flag 
+Existing configuration will cause the error below.
+You should initialize in an empty folder or reset configuration using `--reset` flag
 or by removing the configuration file first.
 ```shell
 ❌ Command Error: configuration already exists at: flow.json, if you want to reset configuration use the reset flag

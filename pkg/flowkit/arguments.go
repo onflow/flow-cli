@@ -132,17 +132,17 @@ func ParseArgumentsWithoutType(fileName string, code []byte, args []string) (scr
 
 	var parameterList []*ast.Parameter
 
-	transactionDeclaration := program.SoleTransactionDeclaration()
-	if transactionDeclaration != nil {
-		if transactionDeclaration.ParameterList != nil {
-			parameterList = transactionDeclaration.ParameterList.Parameters
-		}
-	}
-
 	functionDeclaration := sema.FunctionEntryPointDeclaration(program)
 	if functionDeclaration != nil {
 		if functionDeclaration.ParameterList != nil {
 			parameterList = functionDeclaration.ParameterList.Parameters
+		}
+	}
+
+	transactionDeclaration := program.TransactionDeclarations()
+	if len(transactionDeclaration) == 1 {
+		if transactionDeclaration[0].ParameterList != nil {
+			parameterList = transactionDeclaration[0].ParameterList.Parameters
 		}
 	}
 

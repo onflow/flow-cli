@@ -259,12 +259,15 @@ func checkVersion(logger output.Logger) {
 // and asks before sending the error for a permission to do so from the user.
 func initCrashReporting() {
 	currentVersion := build.Semver()
+	sentrySyncTransport := sentry.NewHTTPSyncTransport()
+	sentrySyncTransport.Timeout = time.Second * 3
 
 	err := sentry.Init(sentry.ClientOptions{
 		Dsn:              "https://f4e84ec91b1645779765bbe249b42311@o114654.ingest.sentry.io/6178538",
 		Environment:      "Prod",
 		Release:          currentVersion,
 		AttachStacktrace: true,
+		Transport:        sentrySyncTransport,
 		BeforeSend: func(event *sentry.Event, hint *sentry.EventHint) *sentry.Event {
 			// ask for crash report permission
 			fmt.Printf("\n%s Crash detected! %s\n\n", output.ErrorEmoji(), event.Message)
