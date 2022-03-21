@@ -61,7 +61,6 @@ func wallet(
 	}
 
 	key := service.Key().ToConfig()
-	fmt.Println(key.PrivateKey.PublicKey().String(), key.PrivateKey.String(), key.PrivateKey.PublicKey().String())
 	conf := devWallet.Config{
 		Address:    fmt.Sprintf("0x%s", service.Address().String()),
 		PrivateKey: strings.TrimPrefix(key.PrivateKey.String(), "0x"),
