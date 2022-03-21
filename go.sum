@@ -1402,6 +1402,8 @@ github.com/onflow/cadence/languageserver v0.16.0/go.mod h1:UPV1so9LcMrhj27IegrTu
 github.com/onflow/cadence/languageserver v0.18.2/go.mod h1:ehuDCUevEEavUzgJqLevcZPjfmTzMBX7Sglbi5ur9uU=
 github.com/onflow/cadence/languageserver v0.18.3-0.20220202133308-207188a51831 h1:89apbCF/MbTL5ldqYKvwnt8OLN+NuCkdMMJN5clEgrE=
 github.com/onflow/cadence/languageserver v0.18.3-0.20220202133308-207188a51831/go.mod h1:sOABh+6LBUWgY6r5iYhu98mDgfiBVTXAKVYHPQV/nvo=
+github.com/onflow/fcl-dev-wallet v0.4.0 h1:lmjp4tO57m2LCbJ0P79u4BxpGca8bcFtBJrmtxV39LY=
+github.com/onflow/fcl-dev-wallet v0.4.0/go.mod h1:xWVEyGZgdDt4/+PLSlpuqhtzobjnWy5giceIGoErPzs=
 github.com/onflow/flow v0.2.3-0.20220131193101-d4e2ca43a621 h1:owMor9/wFpw3fua47UkUeDaFwyySK/dIPiNCCyhoO7c=
 github.com/onflow/flow v0.2.3-0.20220131193101-d4e2ca43a621/go.mod h1:lzyAYmbu1HfkZ9cfnL5/sjrrsnJiUU8fRL26CqLP7+c=
 github.com/onflow/flow-cli v0.20.3-0.20210512000809-474effb7e7db/go.mod h1:Yh4dgrNiZdXhbU+3UVUmo4gRM0TEBVvhW4ITKVo82dg=
@@ -1422,8 +1424,8 @@ github.com/onflow/flow-emulator v0.19.0/go.mod h1:k5un51XlFJavboagCqTxd6x8Gle7lx
 github.com/onflow/flow-emulator v0.20.3/go.mod h1:xNdVsrMJiAaYJ59Dwo+xvj0ENdvk/bI14zkGN4V0ozs=
 github.com/onflow/flow-emulator v0.21.0/go.mod h1:/2dNG6K4fKtpZsazdIeK8Fs0IWXUzqvO3qK5467pYsc=
 github.com/onflow/flow-emulator v0.28.1-0.20220202131242-21a2c6e3eac7/go.mod h1:75iLaCkteYi8VsRnPH7RC9jeKjOIXogFq4TkPU71r1c=
-github.com/onflow/flow-emulator v0.29.0 h1:YfTLD5mC/0mpwOkPu7pWx66EpwuMCseeYaWHuNnVCGQ=
-github.com/onflow/flow-emulator v0.29.0/go.mod h1:jhun5qkwgdkJnmJpG6ghNKbSMfPWZPDSMWhNzqCTuDA=
+github.com/onflow/flow-emulator v0.30.0 h1:czxxhtFWv5wYUiNG1KXWuwXrx2JaIHE+yDBsDKGSsuU=
+github.com/onflow/flow-emulator v0.30.0/go.mod h1:jhun5qkwgdkJnmJpG6ghNKbSMfPWZPDSMWhNzqCTuDA=
 github.com/onflow/flow-ft/lib/go/contracts v0.5.0 h1:Cg4gHGVblxcejfNNG5Mfj98Wf4zbY76O0Y28QB0766A=
 github.com/onflow/flow-ft/lib/go/contracts v0.5.0/go.mod h1:1zoTjp1KzNnOPkyqKmWKerUyf0gciw+e6tAEt0Ks3JE=
 github.com/onflow/flow-go v0.16.3-0.20210427194927-6050c2a3ae42/go.mod h1:9GUEbBhOGDVf91ZJB6QWqVNQkrM3INEudNyDtIttOu0=
