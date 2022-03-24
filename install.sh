@@ -10,7 +10,7 @@ VERSION="$1"
 ARCH=""
 
 # Get the architecture (CPU, OS) of the current system as a string.
-# Only MacOS/x86_64 and Linux/x86_64 architectures are supported.
+# Only MacOS/x86_64/ARM64 and Linux/x86_64 architectures are supported.
 get_architecture() {
     _ostype="$(uname -s)"
     _cputype="$(uname -m)"
@@ -37,6 +37,9 @@ get_architecture() {
     case "$_cputype" in
         x86_64 | x86-64 | x64 | amd64)
             _cputype=x86_64
+            ;;
+         arm64)
+            _cputype=arm64
             ;;
         *)
             echo "unknown CPU type: $_cputype"
