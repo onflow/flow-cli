@@ -54,7 +54,7 @@ func newContract(
 	target flow.Address,
 	args []cadence.Value,
 ) (*Contract, error) {
-	program, err := parser2.ParseProgram(contractCode)
+	program, err := parser2.ParseProgram(contractCode, nil)
 	if err != nil {
 		return nil, err
 	}
