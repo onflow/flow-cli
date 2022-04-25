@@ -15,7 +15,7 @@ require (
 	github.com/onflow/flow-core-contracts/lib/go/templates v0.11.2-0.20220422202806-92ad02a996cc
 	github.com/onflow/flow-emulator v0.31.2-0.20220425182052-d5f0dac75b48
 	github.com/onflow/flow-go v0.25.13-0.20220425181553-cc703db33529
-	github.com/onflow/flow-go-sdk v0.24.1-0.20220421152843-9ce4d554036e
+	github.com/onflow/flow-go-sdk v0.24.1-0.20220425190113-84f84420846b
 	github.com/psiemens/sconfig v0.1.0
 	github.com/spf13/afero v1.8.2
 	github.com/spf13/cobra v1.4.0
