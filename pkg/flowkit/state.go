@@ -42,10 +42,11 @@ type ReaderWriter interface {
 
 // Contract is a Cadence contract definition for a project.
 type Contract struct {
-	Name   string
-	Source string
-	Target flow.Address
-	Args   []cadence.Value
+	Name        string
+	Source      string
+	Target      flow.Address
+	AccountName string
+	Args        []cadence.Value
 }
 
 // State manages the state for a Flow project.
@@ -192,10 +193,11 @@ func (p *State) DeploymentContractsByNetwork(network string) ([]Contract, error)
 			}
 
 			contract := Contract{
-				Name:   c.Name,
-				Source: path.Clean(c.Source),
-				Target: account.address,
-				Args:   deploymentContract.Args,
+				Name:        c.Name,
+				Source:      path.Clean(c.Source),
+				Target:      account.address,
+				AccountName: account.name,
+				Args:        deploymentContract.Args,
 			}
 
 			contracts = append(contracts, contract)

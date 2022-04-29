@@ -38,6 +38,7 @@ type testContract struct {
 	source               string
 	code                 []byte
 	target               flow.Address
+	accountName          string
 	expectedDependencies []testContract
 }
 
@@ -230,6 +231,7 @@ func TestResolveImports(t *testing.T) {
 					contract.name,
 					contract.source,
 					contract.target,
+					contract.accountName,
 					[]cadence.Value{nil},
 				)
 				assert.NoError(t, err)
@@ -279,6 +281,7 @@ func TestContractDeploymentOrder(t *testing.T) {
 					contract.name,
 					contract.source,
 					contract.target,
+					contract.accountName,
 					[]cadence.Value{nil},
 				)
 				assert.NoError(t, err)

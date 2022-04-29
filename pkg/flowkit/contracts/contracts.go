@@ -39,6 +39,7 @@ type Contract struct {
 	name         string
 	source       string
 	target       flow.Address
+	accountName  string
 	code         string
 	args         []cadence.Value
 	program      *ast.Program
@@ -52,6 +53,7 @@ func newContract(
 	contractSource,
 	contractCode string,
 	target flow.Address,
+	accountName string,
 	args []cadence.Value,
 ) (*Contract, error) {
 	program, err := parser2.ParseProgram(contractCode)
@@ -64,6 +66,7 @@ func newContract(
 		name:         contractName,
 		source:       contractSource,
 		target:       target,
+		accountName:  accountName,
 		code:         contractCode,
 		program:      program,
 		args:         args,
@@ -111,7 +114,9 @@ func (c *Contract) TranspiledCode() string {
 
 	return code
 }
-
+func (c *Contract) AccountName() string {
+	return c.accountName
+}
 func (c *Contract) Target() flow.Address {
 	return c.target
 }

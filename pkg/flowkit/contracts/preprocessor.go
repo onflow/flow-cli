@@ -49,6 +49,7 @@ func (p *Preprocessor) AddContractSource(
 	contractName,
 	contractSource string,
 	target flow.Address,
+	accountName string,
 	args []cadence.Value,
 ) error {
 	contractCode, err := p.loader.Load(contractSource)
@@ -62,6 +63,7 @@ func (p *Preprocessor) AddContractSource(
 		contractSource,
 		string(contractCode),
 		target,
+		accountName,
 		args,
 	)
 	if err != nil {
