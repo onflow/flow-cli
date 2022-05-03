@@ -161,7 +161,7 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 			return nil, err
 		}
 
-		targetAccount, err := p.state.Accounts().ByAddressAndAccountName(contract.Target(), contract.AccountName())
+		targetAccount, err := p.state.Accounts().ByName(contract.AccountName())
 
 		if err != nil {
 			return nil, fmt.Errorf("target account for deploying contract not found in configuration")

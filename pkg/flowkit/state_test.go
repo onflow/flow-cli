@@ -455,7 +455,7 @@ func Test_AccountByAddressSimple(t *testing.T) {
 }
 func Test_AccountByAddressAndNameSimple(t *testing.T) {
 	p := generateSimpleProject()
-	acc, _ := p.Accounts().ByAddressAndAccountName(flow.ServiceAddress("flow-emulator"), "emulator-account")
+	acc, _ := p.Accounts().ByName("emulator-account")
 
 	assert.Equal(t, acc.name, "emulator-account")
 }
@@ -545,10 +545,10 @@ func Test_AccountByAddressComplex(t *testing.T) {
 }
 func Test_AccountByAddressAndAccountNameComplex(t *testing.T) {
 	p := generateComplexProjectSameAddress()
-	acc1, err := p.Accounts().ByAddressAndAccountName(flow.HexToAddress("f8d6e0586b0a20c7"), "emulator-account")
+	acc1, err := p.Accounts().ByName("emulator-account")
 
 	assert.NoError(t, err)
-	acc2, err := p.Accounts().ByAddressAndAccountName(flow.HexToAddress("4ada5fbd7073699b"), "testnet-account")
+	acc2, err := p.Accounts().ByName("testnet-account")
 	assert.NoError(t, err)
 
 	assert.Equal(t, acc1.name, "emulator-account")
@@ -643,7 +643,7 @@ func Test_ChangingState(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, (*pkey).String(), pk.String())
 
-	bar, err := p.Accounts().ByAddressAndAccountName(flow.HexToAddress("0x1"), "foo")
+	bar, err := p.Accounts().ByName("foo")
 	assert.NoError(t, err)
 	bar.SetName("zoo")
 	zoo, err := p.Accounts().ByName("zoo")

@@ -163,17 +163,6 @@ func (a Accounts) ByAddress(address flow.Address) (*Account, error) {
 	return nil, fmt.Errorf("could not find account with address %s in the configuration", address)
 }
 
-// ByAddress get an account by address.
-func (a Accounts) ByAddressAndAccountName(address flow.Address, accountName string) (*Account, error) {
-	for i := range a {
-		if a[i].address == address && a[i].name == accountName {
-			return &a[i], nil
-		}
-	}
-
-	return nil, fmt.Errorf("could not find account with address %s in the configuration", address)
-}
-
 // ByName get an account by name or returns and error if no account found
 func (a Accounts) ByName(name string) (*Account, error) {
 	for i := range a {
