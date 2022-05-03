@@ -126,7 +126,7 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 		err := processor.AddContractSource(
 			contract.Name,
 			contract.Source,
-			contract.Target,
+			contract.AccountAddress,
 			contract.AccountName,
 			contract.Args,
 		)

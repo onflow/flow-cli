@@ -191,16 +191,6 @@ func generateComplexProjectSameAddress() State {
 				{Name: "KittyItemsMarket", Args: nil},
 			},
 		}, {
-			Network: "emulator",
-			Account: "account-4",
-			Contracts: []config.ContractDeployment{
-				{Name: "FungibleToken", Args: nil},
-				{Name: "NonFungibleToken", Args: nil},
-				{Name: "Kibble", Args: nil},
-				{Name: "KittyItems", Args: nil},
-				{Name: "KittyItemsMarket", Args: nil},
-			},
-		}, {
 			Network: "testnet",
 			Account: "testnet-account",
 			Contracts: []config.ContractDeployment{
@@ -435,7 +425,7 @@ func Test_GetContractsByNameSimple(t *testing.T) {
 	assert.Len(t, contracts, 1)
 	assert.Equal(t, contracts[0].Name, "NonFungibleToken")
 	assert.Equal(t, contracts[0].Source, "../hungry-kitties/cadence/contracts/NonFungibleToken.cdc")
-	assert.Equal(t, account.Address, contracts[0].Target)
+	assert.Equal(t, account.Address, contracts[0].AccountAddress)
 }
 
 func Test_EmulatorConfigSimple(t *testing.T) {
@@ -450,12 +440,6 @@ func Test_EmulatorConfigSimple(t *testing.T) {
 func Test_AccountByAddressSimple(t *testing.T) {
 	p := generateSimpleProject()
 	acc, _ := p.Accounts().ByAddress(flow.ServiceAddress("flow-emulator"))
-
-	assert.Equal(t, acc.name, "emulator-account")
-}
-func Test_AccountByAddressAndNameSimple(t *testing.T) {
-	p := generateSimpleProject()
-	acc, _ := p.Accounts().ByName("emulator-account")
 
 	assert.Equal(t, acc.name, "emulator-account")
 }
@@ -494,7 +478,7 @@ func Test_GetContractsByNameComplex(t *testing.T) {
 	sort.Strings(sources)
 
 	targets := funk.Map(contracts, func(c Contract) string {
-		return c.Target.String()
+		return c.AccountAddress.String()
 	}).([]string)
 	sort.Strings(targets)
 
@@ -543,7 +527,7 @@ func Test_AccountByAddressComplex(t *testing.T) {
 	assert.Equal(t, acc1.name, "account-4")
 	assert.Equal(t, acc2.name, "account-2")
 }
-func Test_AccountByAddressAndAccountNameComplex(t *testing.T) {
+func Test_AccountByNameWithDuplicateAddress(t *testing.T) {
 	p := generateComplexProjectSameAddress()
 	acc1, err := p.Accounts().ByName("emulator-account")
 
