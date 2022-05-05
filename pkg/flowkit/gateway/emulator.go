@@ -56,7 +56,7 @@ func NewEmulatorGatewayWithLogger(logger *logrus.Logger, serviceAccount *flowkit
 	}
 }
 
-func (g *EmulatorGateway) WithContext(ctx context.Context) {
+func (g *EmulatorGateway) SetContext(ctx context.Context) {
 	g.ctx = ctx
 }
 
