@@ -116,7 +116,7 @@ func GlobalPath() string {
 // DefaultPaths determines default paths for configuration.
 func DefaultPaths() []string {
 	return []string{
-		GlobalPath(),
 		DefaultPath,
+		GlobalPath(),
 	}
 }

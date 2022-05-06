@@ -37,6 +37,17 @@ func Exists(path string) bool {
 	return !info.IsDir()
 }
 
+// AnyExists checks if any of the project configuration exists
+// and returns it. If none of the files exists, returns "".
+func AnyExists(paths []string) string {
+	for _, path := range paths {
+		if Exists(path) {
+			return path
+		}
+	}
+	return ""
+}
+
 // Parser is interface for any configuration format parser to implement.
 type Parser interface {
 	Serialize(*Config) ([]byte, error)
