@@ -23,7 +23,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/cadence/languageserver"
-	"github.com/onflow/flow-cli/internal/cadence/vscode"
 )
 
 var Cmd = &cobra.Command{
@@ -40,5 +39,4 @@ var Cmd = &cobra.Command{
 
 func init() {
 	Cmd.AddCommand(languageserver.Cmd)
-	Cmd.AddCommand(vscode.Cmd)
 }
