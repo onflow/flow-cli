@@ -23,6 +23,8 @@ import (
 
 	"github.com/onflow/cadence"
 	emulator "github.com/onflow/flow-emulator"
+	"github.com/onflow/flow-emulator/convert/sdk"
+
 	"github.com/onflow/flow-emulator/server/backend"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/client"
@@ -148,20 +150,6 @@ func convertBlock(block *flowGo.Block) *flow.Block {
 	}
 }
 
-func convertEvents(events []flowGo.Event) []flow.Event {
-	convertedEvents := make([]flow.Event, 0)
-	for _, event := range events {
-		convertedEvents = append(convertedEvents, flow.Event{
-			Type:             string(event.Type),
-			TransactionID:    flow.Identifier(event.TransactionID),
-			TransactionIndex: int(event.TransactionIndex),
-			EventIndex:       int(event.EventIndex),
-			Payload:          event.Payload,
-		})
-	}
-	return convertedEvents
-}
-
 func (g *EmulatorGateway) GetEvents(
 	eventType string,
 	startHeight uint64,
@@ -189,7 +177,7 @@ func (g *EmulatorGateway) getBlockEvent(height uint64, eventType string) client.
 
 	for _, e := range events {
 		if e.BlockID == block.ID() {
-			result.Events = convertEvents(e.Events)
+			result.Events, _ = sdk.FlowEventsToSDK(e.Events) //convertEvents(e.Events)
 			return result
 		}
 	}
