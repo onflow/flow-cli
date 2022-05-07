@@ -40,21 +40,38 @@ type EmulatorGateway struct {
 	emulator *emulator.Blockchain
 	backend  *backend.Backend
 	ctx      context.Context
+	logger   *logrus.Logger
 }
 
 func NewEmulatorGateway(serviceAccount *flowkit.Account) *EmulatorGateway {
-	return NewEmulatorGatewayWithLogger(logrus.New(), serviceAccount)
+	return NewEmulatorGatewayWithOpts(serviceAccount)
 }
 
-func NewEmulatorGatewayWithLogger(logger *logrus.Logger, serviceAccount *flowkit.Account) *EmulatorGateway {
-	emulator := newEmulator(serviceAccount)
-	backend := backend.New(logger, emulator)
-	backend.EnableAutoMine()
+func NewEmulatorGatewayWithOpts(serviceAccount *flowkit.Account, opts ...func(*EmulatorGateway)) *EmulatorGateway {
 
-	return &EmulatorGateway{
-		emulator: emulator,
-		backend:  backend,
-		ctx:      context.Background(),
+	gateway := &EmulatorGateway{
+		ctx:    context.Background(),
+		logger: logrus.New(),
+	}
+	for _, opt := range opts {
+		opt(gateway)
+	}
+	gateway.emulator = newEmulator(serviceAccount)
+	gateway.backend = backend.New(gateway.logger, gateway.emulator)
+	gateway.backend.EnableAutoMine()
+
+	return gateway
+}
+
+func WithLogger(logger *logrus.Logger) func(g *EmulatorGateway) {
+	return func(g *EmulatorGateway) {
+		g.logger = logger
+	}
+}
+
+func WithContext(ctx context.Context) func(g *EmulatorGateway) {
+	return func(g *EmulatorGateway) {
+		g.ctx = ctx
 	}
 }
 
