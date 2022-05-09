@@ -95,7 +95,7 @@ func (p *Project) Init(
 //
 // Retrieve all the contracts for specified network, sort them for deployment
 // deploy one by one and replace the imports in the contract source so it corresponds
-// to the account address the contract was deployed to.
+// to the account name the contract was deployed to.
 func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, error) {
 	if p.state == nil {
 		return nil, config.ErrDoesNotExist

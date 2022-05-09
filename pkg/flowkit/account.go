@@ -152,17 +152,6 @@ func (a *Accounts) Remove(name string) error {
 	return nil
 }
 
-// ByAddress get an account by address.
-func (a Accounts) ByAddress(address flow.Address) (*Account, error) {
-	for i := range a {
-		if a[i].address == address {
-			return &a[i], nil
-		}
-	}
-
-	return nil, fmt.Errorf("could not find account with address %s in the configuration", address)
-}
-
 // ByName get an account by name or returns and error if no account found
 func (a Accounts) ByName(name string) (*Account, error) {
 	for i := range a {

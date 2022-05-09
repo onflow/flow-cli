@@ -137,98 +137,15 @@ func generateComplexProject() State {
 				HashAlgo:   crypto.SHA3_256,
 				PrivateKey: keys()[2],
 			},
-		}},
-		Networks: config.Networks{{
-			Name: "emulator",
-			Host: "127.0.0.1.3569",
-		}},
-	}
-
-	p, err := newProject(&config, composer, af)
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	return *p
-}
-func generateComplexProjectSameAddress() State {
-	config := config.Config{
-		Emulators: config.Emulators{{
-			Name:           "default",
-			Port:           9000,
-			ServiceAccount: "emulator-account",
-		}},
-		Contracts: config.Contracts{{
-			Name:    "NonFungibleToken",
-			Source:  "../hungry-kitties/cadence/contracts/NonFungibleToken.cdc",
-			Network: "emulator",
-		}, {
-			Name:    "FungibleToken",
-			Source:  "../hungry-kitties/cadence/contracts/FungibleToken.cdc",
-			Network: "emulator",
-		}, {
-			Name:    "Kibble",
-			Source:  "./cadence/kibble/contracts/Kibble.cdc",
-			Network: "emulator",
-		}, {
-			Name:    "KittyItems",
-			Source:  "./cadence/kittyItems/contracts/KittyItems.cdc",
-			Network: "emulator",
-		}, {
-			Name:    "KittyItemsMarket",
-			Source:  "./cadence/kittyItemsMarket/contracts/KittyItemsMarket.cdc",
-			Network: "emulator",
-		}, {
-			Name:    "KittyItemsMarket",
-			Source:  "0x123123123",
-			Network: "testnet",
-		}},
-		Deployments: config.Deployments{{
-			Network: "emulator",
-			Account: "emulator-account",
-			Contracts: []config.ContractDeployment{
-				{Name: "KittyItems", Args: nil},
-				{Name: "KittyItemsMarket", Args: nil},
-			},
-		}, {
-			Network: "testnet",
-			Account: "testnet-account",
-			Contracts: []config.ContractDeployment{
-				{Name: "FungibleToken", Args: nil},
-				{Name: "NonFungibleToken", Args: nil},
-				{Name: "Kibble", Args: nil},
-				{Name: "KittyItems", Args: nil},
-			},
-		}},
-		Accounts: config.Accounts{{
-			Name:    "emulator-account",
-			Address: flow.HexToAddress("f8d6e0586b0a20c7"),
-			Key: config.AccountKey{
-				Type:       config.KeyTypeHex,
-				Index:      0,
-				SigAlgo:    crypto.ECDSA_P256,
-				HashAlgo:   crypto.SHA3_256,
-				PrivateKey: keys()[0],
-			},
 		}, {
 			Name:    "emulator-account-2",
-			Address: flow.HexToAddress("4ada5fbd7073699b"),
+			Address: flow.HexToAddress("2c1162386b0a245f"),
 			Key: config.AccountKey{
 				Type:       config.KeyTypeHex,
 				Index:      0,
 				SigAlgo:    crypto.ECDSA_P256,
 				HashAlgo:   crypto.SHA3_256,
 				PrivateKey: keys()[1],
-			},
-		}, {
-			Name:    "testnet-account",
-			Address: flow.HexToAddress("4ada5fbd7073699b"),
-			Key: config.AccountKey{
-				Type:       config.KeyTypeHex,
-				Index:      0,
-				SigAlgo:    crypto.ECDSA_P256,
-				HashAlgo:   crypto.SHA3_256,
-				PrivateKey: keys()[2],
 			},
 		}},
 		Networks: config.Networks{{
@@ -436,13 +353,6 @@ func Test_EmulatorConfigSimple(t *testing.T) {
 	assert.Equal(t, emulatorServiceAccount.key.ToConfig().PrivateKey, keys()[0])
 	assert.Equal(t, flow.ServiceAddress("flow-emulator"), emulatorServiceAccount.Address())
 }
-
-func Test_AccountByAddressSimple(t *testing.T) {
-	p := generateSimpleProject()
-	acc, _ := p.Accounts().ByAddress(flow.ServiceAddress("flow-emulator"))
-
-	assert.Equal(t, acc.name, "emulator-account")
-}
 func Test_AccountByNameSimple(t *testing.T) {
 	p := generateSimpleProject()
 	acc, _ := p.Accounts().ByName("emulator-account")
@@ -515,28 +425,16 @@ func Test_EmulatorConfigComplex(t *testing.T) {
 	assert.Equal(t, emulatorServiceAccount.key.ToConfig().PrivateKey, keys()[0])
 	assert.Equal(t, emulatorServiceAccount.Address(), flow.ServiceAddress("flow-emulator"))
 }
-
-func Test_AccountByAddressComplex(t *testing.T) {
-	p := generateComplexProject()
-	acc1, err := p.Accounts().ByAddress(flow.HexToAddress("f8d6e0586b0a20c1"))
-
-	assert.NoError(t, err)
-	acc2, err := p.Accounts().ByAddress(flow.HexToAddress("0x2c1162386b0a245f"))
-	assert.NoError(t, err)
-
-	assert.Equal(t, acc1.name, "account-4")
-	assert.Equal(t, acc2.name, "account-2")
-}
 func Test_AccountByNameWithDuplicateAddress(t *testing.T) {
-	p := generateComplexProjectSameAddress()
+	p := generateComplexProject()
 	acc1, err := p.Accounts().ByName("emulator-account")
 
 	assert.NoError(t, err)
-	acc2, err := p.Accounts().ByName("testnet-account")
+	acc2, err := p.Accounts().ByName("emulator-account-2")
 	assert.NoError(t, err)
 
 	assert.Equal(t, acc1.name, "emulator-account")
-	assert.Equal(t, acc2.name, "testnet-account")
+	assert.Equal(t, acc2.name, "emulator-account-2")
 }
 func Test_AccountByNameComplex(t *testing.T) {
 	p := generateComplexProject()
