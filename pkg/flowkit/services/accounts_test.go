@@ -582,7 +582,7 @@ func TestAccountsGet_Integration(t *testing.T) {
 
 		acc, err := s.Accounts.Get(flow.HexToAddress("0x1"))
 		assert.Nil(t, acc)
-		assert.Equal(t, err.Error(), "rpc error: code = NotFound desc = could not find account with address 0000000000000001")
+		assert.Equal(t, err.Error(), "could not find account with address 0000000000000001")
 	})
 }
 

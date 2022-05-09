@@ -20,10 +20,12 @@ package gateway
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/onflow/cadence"
 	emulator "github.com/onflow/flow-emulator"
 	"github.com/onflow/flow-emulator/convert/sdk"
+	"google.golang.org/grpc/status"
 
 	"github.com/onflow/flow-emulator/server/backend"
 	"github.com/onflow/flow-go-sdk"
@@ -41,6 +43,10 @@ type EmulatorGateway struct {
 	backend  *backend.Backend
 	ctx      context.Context
 	logger   *logrus.Logger
+}
+
+func UnwrapStatusError(err error) error {
+	return fmt.Errorf(status.Convert(err).Message())
 }
 
 func NewEmulatorGateway(serviceAccount *flowkit.Account) *EmulatorGateway {
@@ -100,44 +106,60 @@ func newEmulator(serviceAccount *flowkit.Account) *emulator.Blockchain {
 }
 
 func (g *EmulatorGateway) GetAccount(address flow.Address) (*flow.Account, error) {
-	return g.backend.GetAccount(g.ctx, address)
+	account, err := g.backend.GetAccount(g.ctx, address)
+	if err != nil {
+		return nil, UnwrapStatusError(err)
+	}
+	return account, nil
 }
 
 func (g *EmulatorGateway) SendSignedTransaction(tx *flowkit.Transaction) (*flow.Transaction, error) {
 	err := g.backend.SendTransaction(context.Background(), *tx.FlowTransaction())
 	if err != nil {
-		return nil, err
+		return nil, UnwrapStatusError(err)
 	}
 	return tx.FlowTransaction(), nil
 }
 
 func (g *EmulatorGateway) GetTransactionResult(tx *flow.Transaction, waitSeal bool) (*flow.TransactionResult, error) {
-	return g.backend.GetTransactionResult(g.ctx, tx.ID())
+	result, err := g.backend.GetTransactionResult(g.ctx, tx.ID())
+	if err != nil {
+		return nil, UnwrapStatusError(err)
+	}
+	return result, nil
 }
 
 func (g *EmulatorGateway) GetTransaction(id flow.Identifier) (*flow.Transaction, error) {
-	return g.backend.GetTransaction(g.ctx, id)
+	transaction, err := g.backend.GetTransaction(g.ctx, id)
+	if err != nil {
+		return nil, UnwrapStatusError(err)
+	}
+	return transaction, nil
 }
 
 func (g *EmulatorGateway) Ping() error {
-	return g.backend.Ping(g.ctx)
+	err := g.backend.Ping(g.ctx)
+	if err != nil {
+		return UnwrapStatusError(err)
+	}
+	return nil
 }
 
 func (g *EmulatorGateway) ExecuteScript(script []byte, arguments []cadence.Value) (cadence.Value, error) {
 
 	args, err := convert.CadenceValuesToMessages(arguments)
 	if err != nil {
-		return nil, err
+		return nil, UnwrapStatusError(err)
 	}
 
 	result, err := g.backend.ExecuteScriptAtLatestBlock(g.ctx, script, args)
 	if err != nil {
-		return nil, err
+		return nil, UnwrapStatusError(err)
 	}
 
 	value, err := convert.MessageToCadenceValue(result)
 	if err != nil {
-		return nil, err
+		return nil, UnwrapStatusError(err)
 	}
 
 	return value, nil
@@ -146,7 +168,7 @@ func (g *EmulatorGateway) ExecuteScript(script []byte, arguments []cadence.Value
 func (g *EmulatorGateway) GetLatestBlock() (*flow.Block, error) {
 	block, err := g.backend.GetLatestBlock(g.ctx, true)
 	if err != nil {
-		return nil, err
+		return nil, UnwrapStatusError(err)
 	}
 
 	return convertBlock(block), nil
@@ -194,7 +216,7 @@ func (g *EmulatorGateway) getBlockEvent(height uint64, eventType string) client.
 
 	for _, e := range events {
 		if e.BlockID == block.ID() {
-			result.Events, _ = sdk.FlowEventsToSDK(e.Events) //convertEvents(e.Events)
+			result.Events, _ = sdk.FlowEventsToSDK(e.Events)
 			return result
 		}
 	}
@@ -203,13 +225,17 @@ func (g *EmulatorGateway) getBlockEvent(height uint64, eventType string) client.
 }
 
 func (g *EmulatorGateway) GetCollection(id flow.Identifier) (*flow.Collection, error) {
-	return g.backend.GetCollectionByID(g.ctx, id)
+	collection, err := g.backend.GetCollectionByID(g.ctx, id)
+	if err != nil {
+		return nil, UnwrapStatusError(err)
+	}
+	return collection, nil
 }
 
 func (g *EmulatorGateway) GetBlockByID(id flow.Identifier) (*flow.Block, error) {
 	block, err := g.backend.GetBlockByID(g.ctx, id)
 	if err != nil {
-		return nil, err
+		return nil, UnwrapStatusError(err)
 	}
 	return convertBlock(block), nil
 }
@@ -217,13 +243,17 @@ func (g *EmulatorGateway) GetBlockByID(id flow.Identifier) (*flow.Block, error) 
 func (g *EmulatorGateway) GetBlockByHeight(height uint64) (*flow.Block, error) {
 	block, err := g.backend.GetBlockByHeight(g.ctx, height)
 	if err != nil {
-		return nil, err
+		return nil, UnwrapStatusError(err)
 	}
 	return convertBlock(block), nil
 }
 
 func (g *EmulatorGateway) GetLatestProtocolStateSnapshot() ([]byte, error) {
-	return g.backend.GetLatestProtocolStateSnapshot(g.ctx)
+	snapshot, err := g.backend.GetLatestProtocolStateSnapshot(g.ctx)
+	if err != nil {
+		return nil, UnwrapStatusError(err)
+	}
+	return snapshot, nil
 }
 
 // SecureConnection placeholder func to complete gateway interface implementation
