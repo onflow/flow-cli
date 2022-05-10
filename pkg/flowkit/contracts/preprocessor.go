@@ -48,7 +48,7 @@ func NewPreprocessor(loader Loader, aliases map[string]string) *Preprocessor {
 func (p *Preprocessor) AddContractSource(
 	contractName,
 	contractSource string,
-	target flow.Address,
+	accountAddress flow.Address,
 	accountName string,
 	args []cadence.Value,
 ) error {
@@ -62,7 +62,7 @@ func (p *Preprocessor) AddContractSource(
 		contractName,
 		contractSource,
 		string(contractCode),
-		target,
+		accountAddress,
 		accountName,
 		args,
 	)
