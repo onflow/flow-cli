@@ -353,6 +353,14 @@ func Test_EmulatorConfigSimple(t *testing.T) {
 	assert.Equal(t, emulatorServiceAccount.key.ToConfig().PrivateKey, keys()[0])
 	assert.Equal(t, flow.ServiceAddress("flow-emulator"), emulatorServiceAccount.Address())
 }
+
+func Test_AccountByAddressSimple(t *testing.T) {
+	p := generateSimpleProject()
+	acc, _ := p.Accounts().ByAddress(flow.ServiceAddress("flow-emulator"))
+
+	assert.Equal(t, acc.name, "emulator-account")
+}
+
 func Test_AccountByNameSimple(t *testing.T) {
 	p := generateSimpleProject()
 	acc, _ := p.Accounts().ByName("emulator-account")

@@ -35,16 +35,16 @@ import (
 )
 
 type Contract struct {
-	index        int64
-	name         string
-	source       string
-	target       flow.Address
-	accountName  string
-	code         string
-	args         []cadence.Value
-	program      *ast.Program
-	dependencies map[string]*Contract
-	aliases      map[string]flow.Address
+	index          int64
+	name           string
+	source         string
+	accountAddress flow.Address
+	accountName    string
+	code           string
+	args           []cadence.Value
+	program        *ast.Program
+	dependencies   map[string]*Contract
+	aliases        map[string]flow.Address
 }
 
 func newContract(
@@ -52,7 +52,7 @@ func newContract(
 	contractName,
 	contractSource,
 	contractCode string,
-	target flow.Address,
+	accountAddress flow.Address,
 	accountName string,
 	args []cadence.Value,
 ) (*Contract, error) {
@@ -62,16 +62,16 @@ func newContract(
 	}
 
 	return &Contract{
-		index:        int64(index),
-		name:         contractName,
-		source:       contractSource,
-		target:       target,
-		accountName:  accountName,
-		code:         contractCode,
-		program:      program,
-		args:         args,
-		dependencies: make(map[string]*Contract),
-		aliases:      make(map[string]flow.Address),
+		index:          int64(index),
+		name:           contractName,
+		source:         contractSource,
+		accountAddress: accountAddress,
+		accountName:    accountName,
+		code:           contractCode,
+		program:        program,
+		args:           args,
+		dependencies:   make(map[string]*Contract),
+		aliases:        make(map[string]flow.Address),
 	}, nil
 }
 
@@ -118,7 +118,7 @@ func (c *Contract) AccountName() string {
 	return c.accountName
 }
 func (c *Contract) Target() flow.Address {
-	return c.target
+	return c.accountAddress
 }
 
 func (c *Contract) Dependencies() map[string]*Contract {
