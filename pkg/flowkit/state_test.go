@@ -137,6 +137,16 @@ func generateComplexProject() State {
 				HashAlgo:   crypto.SHA3_256,
 				PrivateKey: keys()[2],
 			},
+		}, {
+			Name:    "emulator-account-2",
+			Address: flow.HexToAddress("2c1162386b0a245f"),
+			Key: config.AccountKey{
+				Type:       config.KeyTypeHex,
+				Index:      0,
+				SigAlgo:    crypto.ECDSA_P256,
+				HashAlgo:   crypto.SHA3_256,
+				PrivateKey: keys()[1],
+			},
 		}},
 		Networks: config.Networks{{
 			Name: "emulator",
@@ -151,7 +161,6 @@ func generateComplexProject() State {
 
 	return *p
 }
-
 func generateSimpleProject() State {
 	config := config.Config{
 		Emulators: config.Emulators{{
@@ -333,7 +342,7 @@ func Test_GetContractsByNameSimple(t *testing.T) {
 	assert.Len(t, contracts, 1)
 	assert.Equal(t, contracts[0].Name, "NonFungibleToken")
 	assert.Equal(t, contracts[0].Source, "../hungry-kitties/cadence/contracts/NonFungibleToken.cdc")
-	assert.Equal(t, account.Address, contracts[0].Target)
+	assert.Equal(t, account.Address, contracts[0].AccountAddress)
 }
 
 func Test_EmulatorConfigSimple(t *testing.T) {
@@ -387,7 +396,7 @@ func Test_GetContractsByNameComplex(t *testing.T) {
 	sort.Strings(sources)
 
 	targets := funk.Map(contracts, func(c Contract) string {
-		return c.Target.String()
+		return c.AccountAddress.String()
 	}).([]string)
 	sort.Strings(targets)
 
@@ -424,19 +433,17 @@ func Test_EmulatorConfigComplex(t *testing.T) {
 	assert.Equal(t, emulatorServiceAccount.key.ToConfig().PrivateKey, keys()[0])
 	assert.Equal(t, emulatorServiceAccount.Address(), flow.ServiceAddress("flow-emulator"))
 }
-
-func Test_AccountByAddressComplex(t *testing.T) {
+func Test_AccountByNameWithDuplicateAddress(t *testing.T) {
 	p := generateComplexProject()
-	acc1, err := p.Accounts().ByAddress(flow.HexToAddress("f8d6e0586b0a20c1"))
+	acc1, err := p.Accounts().ByName("emulator-account")
 
 	assert.NoError(t, err)
-	acc2, err := p.Accounts().ByAddress(flow.HexToAddress("0x2c1162386b0a245f"))
+	acc2, err := p.Accounts().ByName("emulator-account-2")
 	assert.NoError(t, err)
 
-	assert.Equal(t, acc1.name, "account-4")
-	assert.Equal(t, acc2.name, "account-2")
+	assert.Equal(t, acc1.name, "emulator-account")
+	assert.Equal(t, acc2.name, "emulator-account-2")
 }
-
 func Test_AccountByNameComplex(t *testing.T) {
 	p := generateComplexProject()
 	acc, _ := p.Accounts().ByName("account-2")
@@ -526,7 +533,7 @@ func Test_ChangingState(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, (*pkey).String(), pk.String())
 
-	bar, err := p.Accounts().ByAddress(flow.HexToAddress("0x1"))
+	bar, err := p.Accounts().ByName("foo")
 	assert.NoError(t, err)
 	bar.SetName("zoo")
 	zoo, err := p.Accounts().ByName("zoo")

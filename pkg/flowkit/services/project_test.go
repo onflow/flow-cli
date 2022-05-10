@@ -111,6 +111,55 @@ func TestProject(t *testing.T) {
 		gw.Mock.AssertNumberOfCalls(t, tests.GetTransactionResultFunc, 1)
 	})
 
+	t.Run("Deploy Project Duplicate Address", func(t *testing.T) {
+		t.Parallel()
+
+		state, s, gw := setup()
+
+		c := config.Contract{
+			Name:    "Hello",
+			Source:  tests.ContractHelloString.Filename,
+			Network: "emulator",
+		}
+		state.Contracts().AddOrUpdate(c.Name, c)
+
+		n := config.Network{
+			Name: "emulator",
+			Host: "127.0.0.1:3569",
+		}
+		state.Networks().AddOrUpdate(n.Name, n)
+
+		acct1 := tests.Charlie()
+		state.Accounts().AddOrUpdate(acct1)
+
+		acct2 := tests.Donald()
+		state.Accounts().AddOrUpdate(acct2)
+
+		d := config.Deployment{
+			Network: n.Name,
+			Account: acct2.Name(),
+			Contracts: []config.ContractDeployment{{
+				Name: c.Name,
+				Args: nil,
+			}},
+		}
+		state.Deployments().AddOrUpdate(d)
+
+		gw.SendSignedTransaction.Run(func(args mock.Arguments) {
+			tx := args.Get(0).(*flowkit.Transaction)
+			assert.Equal(t, tx.FlowTransaction().Payer, acct2.Address())
+			assert.True(t, strings.Contains(string(tx.FlowTransaction().Script), "signer.contracts.add"))
+
+			gw.SendSignedTransaction.Return(tests.NewTransaction(), nil)
+		})
+
+		contracts, err := s.Project.Deploy("emulator", false)
+
+		assert.NoError(t, err)
+		assert.Equal(t, len(contracts), 1)
+		assert.Equal(t, contracts[0].AccountName(), acct2.Name())
+	})
+
 }
 
 // used for integration tests

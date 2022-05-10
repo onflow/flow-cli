@@ -37,7 +37,8 @@ type testContract struct {
 	name                 string
 	source               string
 	code                 []byte
-	target               flow.Address
+	accountAddress       flow.Address
+	accountName          string
 	expectedDependencies []testContract
 }
 
@@ -47,7 +48,7 @@ var testContractA = testContract{
 	name:                 "ContractA",
 	source:               "ContractA.cdc",
 	code:                 []byte(`pub contract ContractA {}`),
-	target:               addresses.New(),
+	accountAddress:       addresses.New(),
 	expectedDependencies: nil,
 }
 
@@ -55,7 +56,7 @@ var testContractB = testContract{
 	name:                 "ContractB",
 	source:               "ContractB.cdc",
 	code:                 []byte(`pub contract ContractB {}`),
-	target:               addresses.New(),
+	accountAddress:       addresses.New(),
 	expectedDependencies: nil,
 }
 
@@ -67,7 +68,7 @@ var testContractC = testContract{
     
         pub contract ContractC {}
     `),
-	target:               addresses.New(),
+	accountAddress:       addresses.New(),
 	expectedDependencies: []testContract{testContractA},
 }
 
@@ -79,7 +80,7 @@ var testContractD = testContract{
 
         pub contract ContractD {}
     `),
-	target:               addresses.New(),
+	accountAddress:       addresses.New(),
 	expectedDependencies: []testContract{testContractC},
 }
 
@@ -101,7 +102,7 @@ var testContractF = testContract{
 
         pub contract ContractF {}
     `),
-	target: addresses.New(),
+	accountAddress: addresses.New(),
 }
 
 func init() {
@@ -119,7 +120,7 @@ var testContractG = testContract{
 
         pub contract ContractG {}
     `),
-	target:               addresses.New(),
+	accountAddress:       addresses.New(),
 	expectedDependencies: []testContract{testContractA, testContractB},
 }
 
@@ -131,7 +132,7 @@ var testContractH = testContract{
 
         pub contract ContractH {}
     `),
-	target:               addresses.New(),
+	accountAddress:       addresses.New(),
 	expectedDependencies: nil,
 }
 
@@ -229,7 +230,8 @@ func TestResolveImports(t *testing.T) {
 				err := p.AddContractSource(
 					contract.name,
 					contract.source,
-					contract.target,
+					contract.accountAddress,
+					contract.accountName,
 					[]cadence.Value{nil},
 				)
 				assert.NoError(t, err)
@@ -260,7 +262,7 @@ func TestResolveImports(t *testing.T) {
 
 					assert.Equal(t, contract.Dependencies()[dependency.source], contractDependency)
 
-					assert.Contains(t, contract.TranspiledCode(), dependency.target.Hex())
+					assert.Contains(t, contract.TranspiledCode(), dependency.accountAddress.Hex())
 				}
 			}
 		})
@@ -278,7 +280,8 @@ func TestContractDeploymentOrder(t *testing.T) {
 				err := p.AddContractSource(
 					contract.name,
 					contract.source,
-					contract.target,
+					contract.accountAddress,
+					contract.accountName,
 					[]cadence.Value{nil},
 				)
 				assert.NoError(t, err)

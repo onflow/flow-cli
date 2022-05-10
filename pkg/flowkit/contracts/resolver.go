@@ -92,7 +92,7 @@ func (r *Resolver) getSourceTarget(
 ) map[string]string {
 	sourceTarget := make(map[string]string)
 	for _, contract := range contracts {
-		sourceTarget[path.Clean(contract.Source)] = contract.Target.String()
+		sourceTarget[path.Clean(contract.Source)] = contract.AccountAddress.String()
 	}
 
 	for source, target := range aliases {
