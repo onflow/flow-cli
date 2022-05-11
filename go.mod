@@ -17,6 +17,7 @@ require (
 	github.com/onflow/flow-go v0.25.6
 	github.com/onflow/flow-go-sdk v0.24.0
 	github.com/psiemens/sconfig v0.1.0
+	github.com/sirupsen/logrus v1.6.0 // indirect
 	github.com/spf13/afero v1.8.2
 	github.com/spf13/cobra v1.4.0
 	github.com/stretchr/testify v1.7.1
