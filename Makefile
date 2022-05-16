@@ -24,9 +24,9 @@ binary: $(BINARY)
 install-tools:
 	cd ${GOPATH}; \
 	mkdir -p ${GOPATH}; \
-	GO111MODULE=on go install github.com/axw/gocov/gocov; \
-	GO111MODULE=on go install github.com/matm/gocov-html; \
-	GO111MODULE=on go install github.com/sanderhahn/gozip/cmd/gozip;
+	GO111MODULE=on go install github.com/axw/gocov/gocov@latest; \
+	GO111MODULE=on go install github.com/matm/gocov-html@latest; \
+	GO111MODULE=on go install github.com/sanderhahn/gozip/cmd/gozip@latest;
 
 .PHONY: test
 test:
