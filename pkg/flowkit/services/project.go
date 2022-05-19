@@ -95,7 +95,7 @@ func (p *Project) Init(
 //
 // Retrieve all the contracts for specified network, sort them for deployment
 // deploy one by one and replace the imports in the contract source so it corresponds
-// to the account address the contract was deployed to.
+// to the account name the contract was deployed to.
 func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, error) {
 	if p.state == nil {
 		return nil, config.ErrDoesNotExist
@@ -126,7 +126,8 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 		err := processor.AddContractSource(
 			contract.Name,
 			contract.Source,
-			contract.Target,
+			contract.AccountAddress,
+			contract.AccountName,
 			contract.Args,
 		)
 		if err != nil {
@@ -160,7 +161,7 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 			return nil, err
 		}
 
-		targetAccount, err := p.state.Accounts().ByAddress(contract.Target())
+		targetAccount, err := p.state.Accounts().ByName(contract.AccountName())
 
 		if err != nil {
 			return nil, fmt.Errorf("target account for deploying contract not found in configuration")

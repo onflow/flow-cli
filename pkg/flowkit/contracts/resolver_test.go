@@ -36,13 +36,13 @@ func cleanCode(code []byte) string {
 func TestResolver(t *testing.T) {
 
 	contracts := []flowkit.Contract{{
-		Name:   "Kibble",
-		Source: "./tests/Kibble.cdc",
-		Target: flow.HexToAddress("0x1"),
+		Name:           "Kibble",
+		Source:         "./tests/Kibble.cdc",
+		AccountAddress: flow.HexToAddress("0x1"),
 	}, {
-		Name:   "FT",
-		Source: "./tests/FT.cdc",
-		Target: flow.HexToAddress("0x2"),
+		Name:           "FT",
+		Source:         "./tests/FT.cdc",
+		AccountAddress: flow.HexToAddress("0x2"),
 	}}
 
 	aliases := map[string]string{

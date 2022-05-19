@@ -274,7 +274,9 @@ func Bob() *flowkit.Account {
 func Charlie() *flowkit.Account {
 	return newAccount("Charlie", "0x3", "seedseedseedseedseedseedseedseedseedseedseedseedCharlie")
 }
-
+func Donald() *flowkit.Account {
+	return newAccount("Donald", "0x3", "seedseedseedseedseedseedseedseedseedseedseedseedDonald")
+}
 func newAccount(name string, address string, seed string) *flowkit.Account {
 	a := &flowkit.Account{}
 	a.SetAddress(flow.HexToAddress(address))
