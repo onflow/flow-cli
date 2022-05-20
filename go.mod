@@ -10,7 +10,7 @@ require (
 	github.com/joho/godotenv v1.4.0
 	github.com/manifoldco/promptui v0.9.0
 	github.com/onflow/cadence v0.21.3-0.20220509200929-9a1afbeeb449
-	github.com/onflow/cadence/languageserver v0.23.1-0.20220425191753-ad890cbef43f
+	github.com/onflow/cadence/languageserver v0.23.5-0.20220520080030-2a9ba4e0aae7
 	github.com/onflow/fcl-dev-wallet v0.4.2
 	github.com/onflow/flow-core-contracts/lib/go/templates v0.11.2-0.20220422202806-92ad02a996cc
 	github.com/onflow/flow-emulator v0.31.2-0.20220510142414-4566e34c3d50
