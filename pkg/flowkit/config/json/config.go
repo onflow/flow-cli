@@ -73,7 +73,6 @@ func (j *jsonConfig) transformToConfig() (*config.Config, error) {
 
 func transformConfigToJSON(config *config.Config) jsonConfig {
 	return jsonConfig{
-		Emulators:   transformEmulatorsToJSON(config.Emulators),
 		Contracts:   transformContractsToJSON(config.Contracts),
 		Networks:    transformNetworksToJSON(config.Networks),
 		Accounts:    transformAccountsToJSON(config.Accounts),
