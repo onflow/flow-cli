@@ -33,6 +33,12 @@ type jsonConfig struct {
 	Accounts    jsonAccounts    `json:"accounts"`
 	Deployments jsonDeployments `json:"deployments"`
 }
+type defaultJsonConfig struct {
+	Contracts   jsonContracts   `json:"contracts"`
+	Networks    jsonNetworks    `json:"networks"`
+	Accounts    jsonAccounts    `json:"accounts"`
+	Deployments jsonDeployments `json:"deployments"`
+}
 
 func (j *jsonConfig) transformToConfig() (*config.Config, error) {
 	emulators, err := j.Emulators.transformToConfig()
@@ -70,9 +76,17 @@ func (j *jsonConfig) transformToConfig() (*config.Config, error) {
 
 	return conf, nil
 }
-
 func transformConfigToJSON(config *config.Config) jsonConfig {
 	return jsonConfig{
+		Emulators:   transformEmulatorsToJSON(config.Emulators),
+		Contracts:   transformContractsToJSON(config.Contracts),
+		Networks:    transformNetworksToJSON(config.Networks),
+		Accounts:    transformAccountsToJSON(config.Accounts),
+		Deployments: transformDeploymentsToJSON(config.Deployments),
+	}
+}
+func transformDefaultConfigToJSON(config *config.Config) defaultJsonConfig {
+	return defaultJsonConfig{
 		Contracts:   transformContractsToJSON(config.Contracts),
 		Networks:    transformNetworksToJSON(config.Networks),
 		Accounts:    transformAccountsToJSON(config.Accounts),
@@ -107,9 +121,25 @@ type Parser struct{}
 func NewParser() *Parser {
 	return &Parser{}
 }
+func emulatorIsDefault(emulator config.Emulator) bool {
+	if emulator.Name == config.DefaultEmulatorConfigName &&
+		emulator.ServiceAccount == config.DefaultEmulatorServiceAccountName &&
+		emulator.Port == config.DefaultEmulatorPort {
+		return true
+	}
+	return false
+}
 
 // Serialize configuration to raw.
 func (p *Parser) Serialize(conf *config.Config) ([]byte, error) {
+	if emulatorIsDefault(conf.Emulators[0]) {
+		defaultJsonConf := transformDefaultConfigToJSON(conf)
+		data, err := json.MarshalIndent(defaultJsonConf, "", "\t")
+		if err != nil {
+			return nil, err
+		}
+		return data, nil
+	}
 	jsonConf := transformConfigToJSON(conf)
 
 	data, err := json.MarshalIndent(jsonConf, "", "\t")

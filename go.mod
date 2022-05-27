@@ -9,6 +9,7 @@ require (
 	github.com/gosuri/uilive v0.0.4
 	github.com/joho/godotenv v1.4.0
 	github.com/manifoldco/promptui v0.9.0
+	github.com/nsf/jsondiff v0.0.0-20210926074059-1e845ec5d249
 	github.com/onflow/cadence v0.23.3
 	github.com/onflow/cadence/languageserver v0.18.3-0.20220202133308-207188a51831
 	github.com/onflow/fcl-dev-wallet v0.4.2
@@ -17,7 +18,7 @@ require (
 	github.com/onflow/flow-go v0.25.6
 	github.com/onflow/flow-go-sdk v0.24.0
 	github.com/psiemens/sconfig v0.1.0
-	github.com/sirupsen/logrus v1.6.0 // indirect
+	github.com/sirupsen/logrus v1.6.0
 	github.com/spf13/afero v1.8.2
 	github.com/spf13/cobra v1.4.0
 	github.com/stretchr/testify v1.7.1

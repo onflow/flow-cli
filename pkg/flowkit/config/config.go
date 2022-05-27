@@ -47,6 +47,7 @@ const (
 	KeyTypeGoogleKMS                  KeyType = "google-kms"
 	DefaultEmulatorConfigName                 = "default"
 	DefaultEmulatorServiceAccountName         = "emulator-account"
+	DefaultEmulatorPort                       = 3569
 )
 
 // Validate the configuration values.

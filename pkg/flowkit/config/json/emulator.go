@@ -30,6 +30,11 @@ type jsonEmulators map[string]jsonEmulator
 func (j jsonEmulators) transformToConfig() (config.Emulators, error) {
 	emulators := make(config.Emulators, 0)
 
+	if len(j) == 0 {
+		emulator := config.DefaultEmulator()
+		emulators = append(emulators, emulator)
+		return emulators, nil
+	}
 	for name, e := range j {
 		if e.Port < 0 || e.Port > 65535 {
 			return nil, fmt.Errorf("invalid port value")

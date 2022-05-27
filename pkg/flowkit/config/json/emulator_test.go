@@ -19,6 +19,7 @@ package json
 
 import (
 	"encoding/json"
+	"github.com/onflow/flow-cli/pkg/flowkit/config"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -41,4 +42,21 @@ func Test_ConfigEmulatorSimple(t *testing.T) {
 
 	assert.Equal(t, emulators[0].Name, "default")
 	assert.Equal(t, emulators[0].Port, 9000)
+}
+
+//Emulator config will be empty when first initialized, when parsed from json to config, config should contain default
+//emulator
+func Test_ConfigEmulatorDefault(t *testing.T) {
+	b := []byte(`{
+	 }`)
+
+	var jsonEmulators jsonEmulators
+	err := json.Unmarshal(b, &jsonEmulators)
+	assert.NoError(t, err)
+
+	emulators, err := jsonEmulators.transformToConfig()
+	assert.NoError(t, err)
+
+	assert.Equal(t, emulators[0].Name, config.DefaultEmulatorConfigName)
+	assert.Equal(t, emulators[0].Port, config.DefaultEmulatorPort)
 }
