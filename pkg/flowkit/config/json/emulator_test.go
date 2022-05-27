@@ -60,3 +60,21 @@ func Test_ConfigEmulatorDefault(t *testing.T) {
 	assert.Equal(t, emulators[0].Name, config.DefaultEmulatorConfigName)
 	assert.Equal(t, emulators[0].Port, config.DefaultEmulatorPort)
 }
+func Test_ConfigEmulatorBackwardCompatibility(t *testing.T) {
+	b := []byte(`{
+		 "default": {
+				"port": 3569,
+				"serviceAccount": "emulator-account"
+		 }
+	 }`)
+
+	var jsonEmulators jsonEmulators
+	err := json.Unmarshal(b, &jsonEmulators)
+	assert.NoError(t, err)
+
+	emulators, err := jsonEmulators.transformToConfig()
+	assert.NoError(t, err)
+
+	assert.Equal(t, emulators[0].Name, config.DefaultEmulatorConfigName)
+	assert.Equal(t, emulators[0].Port, config.DefaultEmulatorPort)
+}
