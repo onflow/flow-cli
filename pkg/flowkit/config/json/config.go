@@ -21,19 +21,12 @@ package json
 import (
 	"encoding/json"
 	"fmt"
-
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
 )
 
 // jsonConfig implements JSON format for persisting and parsing configuration.
 type jsonConfig struct {
-	Emulators   jsonEmulators   `json:"emulators"`
-	Contracts   jsonContracts   `json:"contracts"`
-	Networks    jsonNetworks    `json:"networks"`
-	Accounts    jsonAccounts    `json:"accounts"`
-	Deployments jsonDeployments `json:"deployments"`
-}
-type defaultJsonConfig struct {
+	Emulators   jsonEmulators   `json:"emulators,omitempty"`
 	Contracts   jsonContracts   `json:"contracts"`
 	Networks    jsonNetworks    `json:"networks"`
 	Accounts    jsonAccounts    `json:"accounts"`
@@ -85,14 +78,6 @@ func transformConfigToJSON(config *config.Config) jsonConfig {
 		Deployments: transformDeploymentsToJSON(config.Deployments),
 	}
 }
-func transformDefaultConfigToJSON(config *config.Config) defaultJsonConfig {
-	return defaultJsonConfig{
-		Contracts:   transformContractsToJSON(config.Contracts),
-		Networks:    transformNetworksToJSON(config.Networks),
-		Accounts:    transformAccountsToJSON(config.Accounts),
-		Deployments: transformDeploymentsToJSON(config.Deployments),
-	}
-}
 
 type oldFormat struct {
 	Host     interface{} `json:"host"`
@@ -121,27 +106,10 @@ type Parser struct{}
 func NewParser() *Parser {
 	return &Parser{}
 }
-func emulatorIsDefault(emulator config.Emulator) bool {
-	if emulator.Name == config.DefaultEmulatorConfigName &&
-		emulator.ServiceAccount == config.DefaultEmulatorServiceAccountName &&
-		emulator.Port == config.DefaultEmulatorPort {
-		return true
-	}
-	return false
-}
 
 // Serialize configuration to raw.
 func (p *Parser) Serialize(conf *config.Config) ([]byte, error) {
-	if emulatorIsDefault(conf.Emulators[0]) {
-		defaultJsonConf := transformDefaultConfigToJSON(conf)
-		data, err := json.MarshalIndent(defaultJsonConf, "", "\t")
-		if err != nil {
-			return nil, err
-		}
-		return data, nil
-	}
 	jsonConf := transformConfigToJSON(conf)
-
 	data, err := json.MarshalIndent(jsonConf, "", "\t")
 	if err != nil {
 		return nil, err

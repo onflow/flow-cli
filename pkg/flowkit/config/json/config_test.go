@@ -18,7 +18,6 @@
 package json
 
 import (
-	"github.com/nsf/jsondiff"
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
@@ -210,12 +209,7 @@ func Test_SerializeConfigToJsonEmulatorDefault(t *testing.T) {
 	}
 	parser := NewParser()
 	conf, _ := parser.Serialize(&config)
-	diffOpts := jsondiff.DefaultConsoleOptions()
-	res, diff := jsondiff.Compare(configJson, conf, &diffOpts)
-	if res != jsondiff.FullMatch {
-		t.Errorf("the expected result is not equal to what we have: %s", diff)
-
-	}
+	assert.JSONEq(t, string(configJson), string(conf))
 }
 func Test_SerializeConfigToJsonEmulatorNotDefault(t *testing.T) {
 	configJson := []byte(`{
@@ -264,10 +258,6 @@ func Test_SerializeConfigToJsonEmulatorNotDefault(t *testing.T) {
 	}
 	parser := NewParser()
 	conf, _ := parser.Serialize(&config)
-	diffOpts := jsondiff.DefaultConsoleOptions()
-	res, diff := jsondiff.Compare(configJson, conf, &diffOpts)
-	if res != jsondiff.FullMatch {
-		t.Errorf("the expected result is not equal to what we have: %s", diff)
+	assert.JSONEq(t, string(configJson), string(conf))
 
-	}
 }
