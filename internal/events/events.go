@@ -22,9 +22,8 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io"
-
 	"github.com/onflow/flow-cli/pkg/flowkit/util"
+	"io"
 
 	"github.com/onflow/cadence"
 	jsoncdc "github.com/onflow/cadence/encoding/json"
@@ -126,20 +125,25 @@ func eventString(writer io.Writer, event flow.Event) {
 }
 
 func printField(writer io.Writer, field cadence.Field, value cadence.Value) {
+	v := value.String()
 	var typeId string
-	if field.Type != nil {
-		// TODO: onflow/cadence issue #1672
-		// currently getting type info for cadence array will cause panic
-		if _, ok := field.Type.(cadence.OptionalType); ok {
-			typeId = "?"
-		} else {
-			typeId = field.Type.ID()
+
+	defer func() {
+		if err := recover(); err != nil {
+			v = fmt.Sprintf("%s\n\t\thex: %x", v, v)
+			_, _ = fmt.Fprintf(writer, "\t\t- %s (%s): %s \n", field.Identifier, "?", v)
 		}
+	}()
+
+	if field.Type != nil {
+		//TODO: onflow/cadence issue #1672
+		//currently getting ID for cadence array will cause panic
+		typeId = field.Type.ID()
 	}
 
-	v := value.String()
 	if typeId == "" { // exception for not known typeId workaround for cadence arrays
 		v = fmt.Sprintf("%s\n\t\thex: %x", v, v)
+		typeId = "?"
 	}
 
 	_, _ = fmt.Fprintf(writer, "\t\t- %s (%s): %s \n", field.Identifier, typeId, v)
