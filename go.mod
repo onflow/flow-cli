@@ -9,13 +9,13 @@ require (
 	github.com/gosuri/uilive v0.0.4
 	github.com/joho/godotenv v1.4.0
 	github.com/manifoldco/promptui v0.9.0
-	github.com/onflow/cadence v0.23.3
-	github.com/onflow/cadence/languageserver v0.18.3-0.20220202133308-207188a51831
+	github.com/onflow/cadence v0.21.3-0.20220509200929-9a1afbeeb449
+	github.com/onflow/cadence/languageserver v0.23.5-0.20220520080030-2a9ba4e0aae7
 	github.com/onflow/fcl-dev-wallet v0.4.2
-	github.com/onflow/flow-core-contracts/lib/go/templates v0.11.0
-	github.com/onflow/flow-emulator v0.31.1
-	github.com/onflow/flow-go v0.25.6
-	github.com/onflow/flow-go-sdk v0.24.0
+	github.com/onflow/flow-core-contracts/lib/go/templates v0.11.2-0.20220422202806-92ad02a996cc
+	github.com/onflow/flow-emulator v0.31.2-0.20220510142414-4566e34c3d50
+	github.com/onflow/flow-go v0.25.13-0.20220510140118-8f7942581efe
+	github.com/onflow/flow-go-sdk v0.24.1-0.20220421152843-9ce4d554036e
 	github.com/psiemens/sconfig v0.1.0
 	github.com/sirupsen/logrus v1.6.0 // indirect
 	github.com/spf13/afero v1.8.2

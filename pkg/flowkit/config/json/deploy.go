@@ -62,7 +62,7 @@ func (j jsonDeployments) transformToConfig() (config.Deployments, error) {
 							return nil, err
 						}
 
-						cadenceArg, err := jsoncdc.Decode(b)
+						cadenceArg, err := jsoncdc.Decode(nil, b)
 						if err != nil {
 							return nil, err
 						}

@@ -121,8 +121,7 @@ func TestAccounts(t *testing.T) {
 			tx := args.Get(0).(*flowkit.Transaction)
 			assert.Equal(t, tx.FlowTransaction().Authorizers[0], serviceAddress)
 			assert.Equal(t, tx.Signer().Address(), serviceAddress)
-			assert.True(t, strings.Contains(string(tx.FlowTransaction().Script), "acct.contracts.add"))
-
+			assert.True(t, strings.Contains(string(tx.FlowTransaction().Script), "account.contracts.add"))
 			gw.SendSignedTransaction.Return(tests.NewTransaction(), nil)
 		})
 
@@ -423,8 +422,8 @@ func TestAccountsCreate_Integration(t *testing.T) {
 
 		errOut := []string{
 			"open Invalid: file does not exist",
-			"invalid account key: signing algorithm (UNKNOWN) is incompatible with hashing algorithm (SHA3_256)",
-			"invalid account key: signing algorithm (UNKNOWN) is incompatible with hashing algorithm (UNKNOWN)",
+			"invalid account key: signing algorithm (UNKNOWN) and hashing algorithm (SHA3_256) are not a valid pair for a Flow account key",
+			"invalid account key: signing algorithm (UNKNOWN) and hashing algorithm (UNKNOWN) are not a valid pair for a Flow account key",
 			"number of keys and weights provided must match, number of provided keys: 2, number of provided key weights: 1",
 			"number of keys and weights provided must match, number of provided keys: 1, number of provided key weights: 2",
 		}
