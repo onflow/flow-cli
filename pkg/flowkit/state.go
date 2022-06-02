@@ -248,7 +248,9 @@ func Load(configFilePaths []string, readerWriter ReaderWriter) (*State, error) {
 	if err != nil {
 		return nil, err
 	}
-
+	if len(conf.Emulators) == 0 {
+		conf.Emulators.AddOrUpdate("", config.DefaultEmulator())
+	}
 	proj, err := newProject(conf, confLoader, readerWriter)
 	if err != nil {
 		return nil, fmt.Errorf("invalid project configuration: %s", err)
