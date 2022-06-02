@@ -60,7 +60,7 @@ func NewEvent(index int, eventId string, fields []cadence.Field, values []cadenc
 		NewEvent(values).
 		WithType(testEventType)
 
-	typeID := location.TypeID(eventId)
+	typeID := location.TypeID(nil, eventId)
 
 	event := flow.Event{
 		Type:             string(typeID),
