@@ -22,8 +22,9 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/onflow/flow-cli/pkg/flowkit/util"
 	"io"
+
+	"github.com/onflow/flow-cli/pkg/flowkit/util"
 
 	"github.com/onflow/cadence"
 	jsoncdc "github.com/onflow/cadence/encoding/json"
