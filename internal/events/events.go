@@ -124,15 +124,16 @@ func eventString(writer io.Writer, event flow.Event) {
 		printField(writer, field, value)
 	}
 }
-
+func printValues(writer io.Writer, fieldIdentifier, typedId, valueString string) {
+	_, _ = fmt.Fprintf(writer, "\t\t- %s (%s): %s \n", fieldIdentifier, typedId, valueString)
+}
 func printField(writer io.Writer, field cadence.Field, value cadence.Value) {
 	v := value.String()
 	var typeId string
 
 	defer func() {
 		if err := recover(); err != nil {
-			v = fmt.Sprintf("%s\n\t\thex: %x", v, v)
-			_, _ = fmt.Fprintf(writer, "\t\t- %s (%s): %s \n", field.Identifier, "?", v)
+			printValues(writer, field.Identifier, "?", v)
 		}
 	}()
 
@@ -146,6 +147,5 @@ func printField(writer io.Writer, field cadence.Field, value cadence.Value) {
 		v = fmt.Sprintf("%s\n\t\thex: %x", v, v)
 		typeId = "?"
 	}
-
-	_, _ = fmt.Fprintf(writer, "\t\t- %s (%s): %s \n", field.Identifier, typeId, v)
+	printValues(writer, field.Identifier, typeId, v)
 }
