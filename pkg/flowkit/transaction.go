@@ -145,11 +145,12 @@ func NewCreateAccountTransaction(
 	keys []*flow.AccountKey,
 	contracts []templates.Contract,
 ) (*Transaction, error) {
+	template, err := templates.CreateAccount(keys, contracts, signer.Address())
+	if err != nil {
+		return nil, err
+	}
 
-	return newTransactionFromTemplate(
-		templates.CreateAccount(keys, contracts, signer.Address()),
-		signer,
-	)
+	return newTransactionFromTemplate(template, signer)
 }
 
 func newTransactionFromTemplate(templateTx *flow.Transaction, signer *Account) (*Transaction, error) {
