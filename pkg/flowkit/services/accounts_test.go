@@ -121,8 +121,7 @@ func TestAccounts(t *testing.T) {
 			tx := args.Get(0).(*flowkit.Transaction)
 			assert.Equal(t, tx.FlowTransaction().Authorizers[0], serviceAddress)
 			assert.Equal(t, tx.Signer().Address(), serviceAddress)
-			assert.True(t, strings.Contains(string(tx.FlowTransaction().Script), "acct.contracts.add"))
-
+			assert.True(t, strings.Contains(string(tx.FlowTransaction().Script), "account.contracts.add"))
 			gw.SendSignedTransaction.Return(tests.NewTransaction(), nil)
 		})
 

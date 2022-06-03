@@ -39,7 +39,7 @@ type Resolver struct {
 
 // NewResolver creates a new resolver.
 func NewResolver(code []byte) (*Resolver, error) {
-	program, err := parser2.ParseProgram(string(code))
+	program, err := parser2.ParseProgram(string(code), nil)
 	if err != nil {
 		return nil, err
 	}
