@@ -20,8 +20,6 @@ package json
 
 import (
 	"fmt"
-	"reflect"
-
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
 )
 
@@ -47,16 +45,13 @@ func (j jsonEmulators) transformToConfig() (config.Emulators, error) {
 
 	return emulators, nil
 }
-func emulatorIsDefault(emulator config.Emulator) bool {
-	return reflect.DeepEqual(emulator, config.DefaultEmulator())
-}
 
 // transformToJSON transforms config structure to json structures for saving.
 func transformEmulatorsToJSON(emulators config.Emulators) jsonEmulators {
 	jsonEmulators := jsonEmulators{}
 
 	for _, e := range emulators {
-		if emulatorIsDefault(e) {
+		if e == config.DefaultEmulator() {
 			break
 		}
 		jsonEmulators[e.Name] = jsonEmulator{
