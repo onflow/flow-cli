@@ -124,17 +124,28 @@ func eventString(writer io.Writer, event flow.Event) {
 		printField(writer, field, value)
 	}
 }
-
+func printValues(writer io.Writer, fieldIdentifier, typedId, valueString string) {
+	_, _ = fmt.Fprintf(writer, "\t\t- %s (%s): %s \n", fieldIdentifier, typedId, valueString)
+}
 func printField(writer io.Writer, field cadence.Field, value cadence.Value) {
+	v := value.String()
 	var typeId string
+
+	defer func() {
+		if err := recover(); err != nil {
+			printValues(writer, field.Identifier, "?", v)
+		}
+	}()
+
 	if field.Type != nil {
+		//TODO: onflow/cadence issue #1672
+		//currently getting ID for cadence array will cause panic
 		typeId = field.Type.ID()
 	}
 
-	v := value.String()
 	if typeId == "" { // exception for not known typeId workaround for cadence arrays
 		v = fmt.Sprintf("%s\n\t\thex: %x", v, v)
+		typeId = "?"
 	}
-
-	_, _ = fmt.Fprintf(writer, "\t\t- %s (%s): %s \n", field.Identifier, typeId, v)
+	printValues(writer, field.Identifier, typeId, v)
 }
