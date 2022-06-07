@@ -18,12 +18,12 @@
 package json
 
 import (
-	"github.com/onflow/flow-cli/pkg/flowkit/config"
-	"github.com/onflow/flow-go-sdk"
-	"github.com/onflow/flow-go-sdk/crypto"
-
 	"testing"
 
+	"github.com/onflow/flow-cli/pkg/flowkit/config"
+
+	"github.com/onflow/flow-go-sdk"
+	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/stretchr/testify/assert"
 )
 
