@@ -759,12 +759,47 @@ func Test_DefaultEmulatorWithEmulatorAccountInConfig(t *testing.T) {
 		"deployments": {
 		}
 	}`)
+	testConfig := config.Config{
+		Emulators: config.Emulators{{
+			Name:           "default",
+			Port:           3569,
+			ServiceAccount: "emulator-account",
+		}},
+		Contracts:   config.Contracts{},
+		Deployments: config.Deployments{},
+		Accounts: config.Accounts{{
+			Name:    "testnet-account",
+			Address: flow.HexToAddress("1e82856bf20e2aa6"),
+			Key: config.AccountKey{
+				Type:       config.KeyTypeHex,
+				Index:      0,
+				SigAlgo:    crypto.ECDSA_P256,
+				HashAlgo:   crypto.SHA3_256,
+				PrivateKey: keys()[1],
+			},
+		}, {
+			Name:    "emulator-account",
+			Address: flow.ServiceAddress(flow.Emulator),
+			Key: config.AccountKey{
+				Type:       config.KeyTypeHex,
+				Index:      0,
+				SigAlgo:    crypto.ECDSA_P256,
+				HashAlgo:   crypto.SHA3_256,
+				PrivateKey: keys()[0],
+			},
+		}},
+		Networks: config.Networks{{
+			Name: "emulator",
+			Host: "127.0.0.1.3569",
+		}},
+	}
 	af := afero.Afero{Fs: afero.NewMemMapFs()}
 	err := afero.WriteFile(af.Fs, "flow.json", configJson, 0644)
 	assert.NoError(t, err)
 	paths := []string{"flow.json"}
 	state, err := Load(paths, af)
 	assert.Len(t, state.conf.Emulators, 1)
+	assert.Equal(t, *state.conf, testConfig)
 	assert.Equal(t, state.conf.Emulators, config.DefaultEmulators())
 }
 
