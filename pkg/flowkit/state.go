@@ -248,7 +248,7 @@ func Load(configFilePaths []string, readerWriter ReaderWriter) (*State, error) {
 	if err != nil {
 		return nil, err
 	}
-	//only add default emulator in config if emulator account in present in accounts in json
+	// only add a default emulator in the config if the emulator account is present in accounts
 	_, err = conf.Accounts.ByName(config.DefaultEmulatorServiceAccountName)
 	if err == nil && len(conf.Emulators) == 0 {
 		conf.Emulators.AddOrUpdate("", config.DefaultEmulator())

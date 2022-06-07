@@ -42,3 +42,29 @@ func Test_ConfigEmulatorSimple(t *testing.T) {
 	assert.Equal(t, emulators[0].Name, "default")
 	assert.Equal(t, emulators[0].Port, 9000)
 }
+func Test_ConfigMultipleEmulators(t *testing.T) {
+	b := []byte(`{
+		 "default": {
+				"port": 9000,
+				"serviceAccount": "emulator-account"
+		 }, 
+		 "custom-emulator": {
+				"port": 3000,
+				"serviceAccount": "custom-emulator-account"
+		 }
+	 }`)
+
+	var jsonEmulators jsonEmulators
+	err := json.Unmarshal(b, &jsonEmulators)
+	assert.NoError(t, err)
+
+	emulators, err := jsonEmulators.transformToConfig()
+	assert.NoError(t, err)
+	assert.Len(t, emulators, 2)
+	assert.Equal(t, emulators[0].Name, "default")
+	assert.Equal(t, emulators[0].Port, 9000)
+	assert.Equal(t, emulators[0].ServiceAccount, "emulator-account")
+	assert.Equal(t, emulators[1].Name, "custom-emulator")
+	assert.Equal(t, emulators[1].Port, 3000)
+	assert.Equal(t, emulators[1].ServiceAccount, "custom-emulator-account")
+}

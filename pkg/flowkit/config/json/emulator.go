@@ -20,6 +20,7 @@ package json
 
 import (
 	"fmt"
+
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
 )
 
@@ -52,7 +53,7 @@ func transformEmulatorsToJSON(emulators config.Emulators) jsonEmulators {
 
 	for _, e := range emulators {
 		if e == config.DefaultEmulator() {
-			break
+			continue
 		}
 		jsonEmulators[e.Name] = jsonEmulator{
 			Port:           e.Port,

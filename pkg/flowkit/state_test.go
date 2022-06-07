@@ -735,7 +735,7 @@ func Test_DefaultEmulatorWithoutEmulatorAccountInConfig(t *testing.T) {
 	err := afero.WriteFile(af.Fs, "flow.json", configJson, 0644)
 	assert.NoError(t, err)
 	paths := []string{"flow.json"}
-	state, err := Load(paths, af)
+	state, _ := Load(paths, af)
 	assert.Equal(t, config.Emulators{}, state.conf.Emulators)
 }
 
@@ -763,7 +763,7 @@ func Test_DefaultEmulatorWithEmulatorAccountInConfig(t *testing.T) {
 	err := afero.WriteFile(af.Fs, "flow.json", configJson, 0644)
 	assert.NoError(t, err)
 	paths := []string{"flow.json"}
-	state, err := Load(paths, af)
+	state, _ := Load(paths, af)
 	assert.Len(t, state.conf.Emulators, 1)
 	assert.Equal(t, state.conf.Emulators, config.DefaultEmulators())
 }
