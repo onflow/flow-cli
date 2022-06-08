@@ -22,6 +22,8 @@ import (
 	"context"
 	"fmt"
 
+	jsoncdc "github.com/onflow/cadence/encoding/json"
+
 	"github.com/onflow/cadence"
 	emulator "github.com/onflow/flow-emulator"
 	"github.com/onflow/flow-emulator/convert/sdk"
@@ -30,7 +32,6 @@ import (
 	"github.com/onflow/flow-emulator/server/backend"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/client"
-	"github.com/onflow/flow-go-sdk/client/convert"
 	flowGo "github.com/onflow/flow-go/model/flow"
 	"github.com/sirupsen/logrus"
 
@@ -147,7 +148,7 @@ func (g *EmulatorGateway) Ping() error {
 
 func (g *EmulatorGateway) ExecuteScript(script []byte, arguments []cadence.Value) (cadence.Value, error) {
 
-	args, err := convert.CadenceValuesToMessages(arguments)
+	args, err := cadenceValuesToMessages(arguments)
 	if err != nil {
 		return nil, UnwrapStatusError(err)
 	}
@@ -157,7 +158,7 @@ func (g *EmulatorGateway) ExecuteScript(script []byte, arguments []cadence.Value
 		return nil, UnwrapStatusError(err)
 	}
 
-	value, err := convert.MessageToCadenceValue(result)
+	value, err := messageToCadenceValue(result)
 	if err != nil {
 		return nil, UnwrapStatusError(err)
 	}
@@ -172,6 +173,27 @@ func (g *EmulatorGateway) GetLatestBlock() (*flow.Block, error) {
 	}
 
 	return convertBlock(block), nil
+}
+
+func cadenceValuesToMessages(values []cadence.Value) ([][]byte, error) {
+	msgs := make([][]byte, len(values))
+	for i, val := range values {
+		msg, err := jsoncdc.Encode(val)
+		if err != nil {
+			return nil, fmt.Errorf("convert: %w", err)
+		}
+		msgs[i] = msg
+	}
+	return msgs, nil
+}
+
+func messageToCadenceValue(m []byte) (cadence.Value, error) {
+	v, err := jsoncdc.Decode(nil, m)
+	if err != nil {
+		return nil, fmt.Errorf("convert: %w", err)
+	}
+
+	return v, nil
 }
 
 func convertBlock(block *flowGo.Block) *flow.Block {
