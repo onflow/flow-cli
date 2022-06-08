@@ -55,8 +55,8 @@ func Test_ConfigDeploymentsSimple(t *testing.T) {
 	const account2Name = "account-2"
 	const account3Name = "account-3"
 
-	assert.Equal(t, 1, len(deployments.ByNetwork("testnet")))
-	assert.Equal(t, 2, len(deployments.ByNetwork("emulator")))
+	assert.Len(t, deployments.ByNetwork("testnet"), 1)
+	assert.Len(t, deployments.ByNetwork("emulator"), 2)
 
 	account1Deployment := deployments.ByAccountAndNetwork(account1Name, "testnet")
 	account2Deployment := deployments.ByAccountAndNetwork(account2Name, "emulator")
@@ -143,12 +143,12 @@ func Test_DeploymentAdvanced(t *testing.T) {
 	alice := deployments.ByAccountAndNetwork("alice", "emulator")
 	assert.Len(t, alice, 1)
 	assert.Len(t, alice[0].Contracts, 2)
-	assert.Equal(t, alice[0].Contracts[0].Name, "Kibble")
+	assert.Equal(t, "Kibble", alice[0].Contracts[0].Name)
 	assert.Len(t, alice[0].Contracts[0].Args, 3)
-	assert.Equal(t, alice[0].Contracts[0].Args[0].String(), `"Hello World"`)
-	assert.Equal(t, alice[0].Contracts[0].Args[1].String(), "10")
-	assert.Equal(t, alice[0].Contracts[0].Args[2].Type().ID(), "Bool")
+	assert.Equal(t, `"Hello World"`, alice[0].Contracts[0].Args[0].String())
+	assert.Equal(t, "10", alice[0].Contracts[0].Args[1].String())
+	assert.Equal(t, "Bool", alice[0].Contracts[0].Args[2].Type().ID())
 	assert.False(t, alice[0].Contracts[0].Args[2].ToGoValue().(bool))
-	assert.Equal(t, alice[0].Contracts[1].Name, "KittyItemsMarket")
+	assert.Equal(t, "KittyItemsMarket", alice[0].Contracts[1].Name)
 	assert.Len(t, alice[0].Contracts[1].Args, 0)
 }

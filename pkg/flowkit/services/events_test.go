@@ -23,9 +23,9 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/onflow/flow-go-sdk"
+	"github.com/onflow/flow-go-sdk/access/grpc"
 	"github.com/stretchr/testify/assert"
-
-	"github.com/onflow/flow-go-sdk/client"
 
 	"github.com/onflow/flow-cli/tests"
 )
@@ -55,7 +55,7 @@ func TestEvents(t *testing.T) {
 
 		names := []string{"first", "second"}
 		queries := makeEventQueries(names, 0, 400, 250)
-		expected := []client.EventRangeQuery{
+		expected := []grpc.EventRangeQuery{
 			{Type: "first", StartHeight: 0, EndHeight: 249},
 			{Type: "second", StartHeight: 0, EndHeight: 249},
 			{Type: "first", StartHeight: 250, EndHeight: 400},
@@ -69,7 +69,7 @@ func TestEvents(t *testing.T) {
 
 		_, s, gw := setup()
 
-		gw.GetEvents.Return([]client.BlockEvents{}, errors.New("failed getting event"))
+		gw.GetEvents.Return([]flow.BlockEvents{}, errors.New("failed getting event"))
 
 		_, err := s.Events.Get([]string{"flow.CreateAccount"}, 0, 1, 250, 1)
 

@@ -22,16 +22,14 @@ import (
 	"context"
 	"fmt"
 
-	jsoncdc "github.com/onflow/cadence/encoding/json"
-
 	"github.com/onflow/cadence"
+	jsoncdc "github.com/onflow/cadence/encoding/json"
 	emulator "github.com/onflow/flow-emulator"
 	"github.com/onflow/flow-emulator/convert/sdk"
 	"google.golang.org/grpc/status"
 
 	"github.com/onflow/flow-emulator/server/backend"
 	"github.com/onflow/flow-go-sdk"
-	"github.com/onflow/flow-go-sdk/client"
 	flowGo "github.com/onflow/flow-go/model/flow"
 	"github.com/sirupsen/logrus"
 
@@ -215,8 +213,8 @@ func (g *EmulatorGateway) GetEvents(
 	eventType string,
 	startHeight uint64,
 	endHeight uint64,
-) ([]client.BlockEvents, error) {
-	events := make([]client.BlockEvents, 0)
+) ([]flow.BlockEvents, error) {
+	events := make([]flow.BlockEvents, 0)
 
 	for height := startHeight; height <= endHeight; height++ {
 		events = append(events, g.getBlockEvent(height, eventType))
@@ -225,13 +223,13 @@ func (g *EmulatorGateway) GetEvents(
 	return events, nil
 }
 
-func (g *EmulatorGateway) getBlockEvent(height uint64, eventType string) client.BlockEvents {
+func (g *EmulatorGateway) getBlockEvent(height uint64, eventType string) flow.BlockEvents {
 	block, _ := g.backend.GetBlockByHeight(g.ctx, height)
 	events, _ := g.backend.GetEventsForBlockIDs(g.ctx, eventType, []flow.Identifier{flow.Identifier(block.ID())})
 
-	result := client.BlockEvents{
+	result := flow.BlockEvents{
 		BlockID:        flow.Identifier(block.ID()),
-		Height:         uint64(block.Header.Height),
+		Height:         block.Header.Height,
 		BlockTimestamp: block.Header.Timestamp,
 		Events:         []flow.Event{},
 	}

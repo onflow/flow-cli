@@ -48,7 +48,7 @@ func Test_SimpleJSONConfig(t *testing.T) {
 	conf, err := parser.Deserialize(b)
 
 	assert.NoError(t, err)
-	assert.Equal(t, 1, len(conf.Accounts))
+	assert.Len(t, conf.Accounts, 1)
 	assert.Equal(t, "emulator-account", conf.Accounts[0].Name)
 	assert.Equal(t, "0x11c5dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7", conf.Accounts[0].Key.PrivateKey.String())
 	network, err := conf.Networks.ByName("emulator")
@@ -80,7 +80,7 @@ func Test_NonExistingContractForDeployment(t *testing.T) {
 	assert.NoError(t, err)
 
 	err = config.Validate()
-	assert.Equal(t, err.Error(), "deployment contains nonexisting contract FungibleToken")
+	assert.Equal(t, "deployment contains nonexisting contract FungibleToken", err.Error())
 }
 
 func Test_NonExistingAccountForDeployment(t *testing.T) {
@@ -109,7 +109,7 @@ func Test_NonExistingAccountForDeployment(t *testing.T) {
 	assert.NoError(t, err)
 
 	err = conf.Validate()
-	assert.Equal(t, err.Error(), "deployment contains nonexisting account test-1")
+	assert.Equal(t, "deployment contains nonexisting account test-1", err.Error())
 }
 
 func Test_NonExistingNetworkForDeployment(t *testing.T) {
@@ -136,7 +136,7 @@ func Test_NonExistingNetworkForDeployment(t *testing.T) {
 	assert.NoError(t, err)
 
 	err = conf.Validate()
-	assert.Equal(t, err.Error(), "deployment contains nonexisting network foo")
+	assert.Equal(t, "deployment contains nonexisting network foo", err.Error())
 }
 
 func Test_NonExistingAccountForEmulator(t *testing.T) {
@@ -154,5 +154,5 @@ func Test_NonExistingAccountForEmulator(t *testing.T) {
 	assert.NoError(t, err)
 
 	err = conf.Validate()
-	assert.Equal(t, err.Error(), "emulator default contains nonexisting service account emulator-account")
+	assert.Equal(t, "emulator default contains nonexisting service account emulator-account", err.Error())
 }

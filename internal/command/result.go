@@ -25,7 +25,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/onflow/flow-go-sdk/client"
+	"github.com/onflow/flow-go-sdk/access/grpc"
 	"github.com/spf13/afero"
 
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
@@ -137,7 +137,7 @@ func handleError(description string, err error) {
 	// TODO(sideninja): refactor this to better handle errors not by string matching
 	// handle rpc error
 	switch t := err.(type) {
-	case *client.RPCError:
+	case *grpc.RPCError:
 		_, _ = fmt.Fprintf(os.Stderr, "%s Grpc Error: %s \n", output.ErrorEmoji(), t.GRPCStatus().Err().Error())
 	default:
 		if errors.Is(err, config.ErrOutdatedFormat) {

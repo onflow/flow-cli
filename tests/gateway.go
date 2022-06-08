@@ -21,7 +21,6 @@ package tests
 import (
 	"github.com/onflow/cadence"
 	"github.com/onflow/flow-go-sdk"
-	"github.com/onflow/flow-go-sdk/client"
 	"github.com/stretchr/testify/mock"
 
 	"github.com/onflow/flow-cli/tests/mocks"
@@ -112,7 +111,7 @@ func DefaultMockGateway() *TestGateway {
 	t.GetTransaction.Return(NewTransaction(), nil)
 	t.GetCollection.Return(NewCollection(), nil)
 	t.GetTransactionResult.Return(NewTransactionResult(nil), nil)
-	t.GetEvents.Return([]client.BlockEvents{}, nil)
+	t.GetEvents.Return([]flow.BlockEvents{}, nil)
 	t.GetLatestBlock.Return(NewBlock(), nil)
 	t.GetBlockByHeight.Return(NewBlock(), nil)
 	t.GetBlockByID.Return(NewBlock(), nil)

@@ -340,8 +340,8 @@ func Test_GetContractsByNameSimple(t *testing.T) {
 	account, err := p.conf.Accounts.ByName("emulator-account")
 	assert.NoError(t, err)
 	assert.Len(t, contracts, 1)
-	assert.Equal(t, contracts[0].Name, "NonFungibleToken")
-	assert.Equal(t, contracts[0].Source, "../hungry-kitties/cadence/contracts/NonFungibleToken.cdc")
+	assert.Equal(t, "NonFungibleToken", contracts[0].Name)
+	assert.Equal(t, "../hungry-kitties/cadence/contracts/NonFungibleToken.cdc", contracts[0].Source)
 	assert.Equal(t, account.Address, contracts[0].AccountAddress)
 }
 
@@ -349,7 +349,7 @@ func Test_EmulatorConfigSimple(t *testing.T) {
 	p := generateSimpleProject()
 	emulatorServiceAccount, _ := p.EmulatorServiceAccount()
 
-	assert.Equal(t, emulatorServiceAccount.name, "emulator-account")
+	assert.Equal(t, "emulator-account", emulatorServiceAccount.name)
 	assert.Equal(t, emulatorServiceAccount.key.ToConfig().PrivateKey, keys()[0])
 	assert.Equal(t, flow.ServiceAddress("flow-emulator"), emulatorServiceAccount.Address())
 }
@@ -358,7 +358,7 @@ func Test_AccountByAddressSimple(t *testing.T) {
 	p := generateSimpleProject()
 	acc, _ := p.Accounts().ByAddress(flow.ServiceAddress("flow-emulator"))
 
-	assert.Equal(t, acc.name, "emulator-account")
+	assert.Equal(t, "emulator-account", acc.name)
 }
 
 func Test_AccountByNameSimple(t *testing.T) {
@@ -374,7 +374,7 @@ func Test_HostSimple(t *testing.T) {
 	network, err := p.Networks().ByName("emulator")
 
 	assert.NoError(t, err)
-	assert.Equal(t, network.Host, "127.0.0.1.3569")
+	assert.Equal(t, "127.0.0.1.3569", network.Host)
 }
 
 func Test_GetContractsByNameComplex(t *testing.T) {

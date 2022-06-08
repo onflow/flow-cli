@@ -29,7 +29,6 @@ import (
 	"github.com/onflow/cadence"
 	jsoncdc "github.com/onflow/cadence/encoding/json"
 	"github.com/onflow/flow-go-sdk"
-	"github.com/onflow/flow-go-sdk/client"
 	"github.com/spf13/cobra"
 )
 
@@ -44,7 +43,7 @@ func init() {
 }
 
 type EventResult struct {
-	BlockEvents []client.BlockEvents
+	BlockEvents []flow.BlockEvents
 	Events      []flow.Event
 }
 

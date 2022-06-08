@@ -24,13 +24,13 @@ import (
 	"strings"
 	"time"
 
+	grpcAccess "github.com/onflow/flow-go-sdk/access/grpc"
 	"github.com/onflow/flow-go/utils/grpcutils"
 
 	"github.com/onflow/flow-cli/pkg/flowkit"
 
 	"github.com/onflow/cadence"
 	"github.com/onflow/flow-go-sdk"
-	"github.com/onflow/flow-go-sdk/client"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
@@ -41,7 +41,7 @@ const maxGRPCMessageSize = 1024 * 1024 * 16
 
 // GrpcGateway is a gateway implementation that uses the Flow Access gRPC API.
 type GrpcGateway struct {
-	client       *client.Client
+	client       *grpcAccess.Client
 	ctx          context.Context
 	secureClient bool
 }
@@ -49,7 +49,7 @@ type GrpcGateway struct {
 // NewGrpcGateway returns a new gRPC gateway.
 func NewGrpcGateway(host string) (*GrpcGateway, error) {
 
-	gClient, err := client.New(
+	gClient, err := grpcAccess.NewClient(
 		host,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(maxGRPCMessageSize)),
@@ -74,7 +74,7 @@ func NewSecureGrpcGateway(host, hostNetworkKey string) (*GrpcGateway, error) {
 		return nil, fmt.Errorf("failed to create secure GRPC dial options with network key \"%s\": %w", hostNetworkKey, err)
 	}
 
-	gClient, err := client.New(
+	gClient, err := grpcAccess.NewClient(
 		host,
 		secureDialOpts,
 		grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(maxGRPCMessageSize)),
@@ -165,15 +165,13 @@ func (g *GrpcGateway) GetEvents(
 	eventType string,
 	startHeight uint64,
 	endHeight uint64,
-) ([]client.BlockEvents, error) {
+) ([]flow.BlockEvents, error) {
 
 	events, err := g.client.GetEventsForHeightRange(
 		g.ctx,
-		client.EventRangeQuery{
-			Type:        eventType,
-			StartHeight: startHeight,
-			EndHeight:   endHeight,
-		},
+		eventType,
+		startHeight,
+		endHeight,
 	)
 
 	return events, err

@@ -145,8 +145,8 @@ func Test_GetContractsForNetworkComplex(t *testing.T) {
 	market, err := conf.Contracts.ByName("KittyItemsMarket")
 	assert.NoError(t, err)
 
-	assert.Equal(t, kitty.Name, "KittyItems")
-	assert.Equal(t, market.Source, "./cadence/kittyItemsMarket/contracts/KittyItemsMarket.cdc")
+	assert.Equal(t, "KittyItems", kitty.Name)
+	assert.Equal(t, "./cadence/kittyItemsMarket/contracts/KittyItemsMarket.cdc", market.Source)
 }
 
 func Test_GetContractsByNameAndNetworkComplex(t *testing.T) {
@@ -154,19 +154,19 @@ func Test_GetContractsByNameAndNetworkComplex(t *testing.T) {
 	market, err := conf.Contracts.ByNameAndNetwork("KittyItemsMarket", "testnet")
 	assert.NoError(t, err)
 
-	assert.Equal(t, market.Source, "0x123123123")
+	assert.Equal(t, "0x123123123", market.Source)
 }
 
 func Test_GetContractsByNetworkComplex(t *testing.T) {
 	conf := generateComplexConfig()
 	contracts := conf.Contracts.ByNetwork("emulator")
 
-	assert.Equal(t, 5, len(contracts))
-	assert.Equal(t, contracts[0].Name, "NonFungibleToken")
-	assert.Equal(t, contracts[1].Name, "FungibleToken")
-	assert.Equal(t, contracts[2].Name, "Kibble")
-	assert.Equal(t, contracts[3].Name, "KittyItems")
-	assert.Equal(t, contracts[4].Name, "KittyItemsMarket")
+	assert.Len(t, contracts, 5)
+	assert.Equal(t, "NonFungibleToken", contracts[0].Name)
+	assert.Equal(t, "FungibleToken", contracts[1].Name)
+	assert.Equal(t, "Kibble", contracts[2].Name)
+	assert.Equal(t, "KittyItems", contracts[3].Name)
+	assert.Equal(t, "KittyItemsMarket", contracts[4].Name)
 }
 
 func Test_GetAccountByNameComplex(t *testing.T) {
@@ -174,26 +174,29 @@ func Test_GetAccountByNameComplex(t *testing.T) {
 	acc, err := conf.Accounts.ByName("account-4")
 	assert.NoError(t, err)
 
-	assert.Equal(t, acc.Address.String(), "f8d6e0586b0a20c1")
+	assert.Equal(t, "f8d6e0586b0a20c1", acc.Address.String())
 }
 
 func Test_GetDeploymentsByNetworkComplex(t *testing.T) {
 	conf := generateComplexConfig()
 	deployments := conf.Deployments.ByAccountAndNetwork("account-2", "testnet")
 
-	assert.Equal(t, deployments[0].Contracts, []config.ContractDeployment{
-		{Name: "FungibleToken", Args: []cadence.Value{}},
-		{Name: "NonFungibleToken", Args: []cadence.Value{}},
-		{Name: "Kibble", Args: []cadence.Value{}},
-		{Name: "KittyItems", Args: []cadence.Value{}},
-	})
+	assert.Equal(t,
+		[]config.ContractDeployment{
+			{Name: "FungibleToken", Args: []cadence.Value{}},
+			{Name: "NonFungibleToken", Args: []cadence.Value{}},
+			{Name: "Kibble", Args: []cadence.Value{}},
+			{Name: "KittyItems", Args: []cadence.Value{}},
+		},
+		deployments[0].Contracts,
+	)
 }
 
 func Test_GetNetworkByNameComplex(t *testing.T) {
 	conf := generateComplexConfig()
 	network, err := conf.Networks.ByName("emulator")
 	assert.NoError(t, err)
-	assert.Equal(t, network.Host, "127.0.0.1.3569")
+	assert.Equal(t, "127.0.0.1.3569", network.Host)
 
 	network, err = conf.Networks.ByName("testnet")
 	assert.NoError(t, err)

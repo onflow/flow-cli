@@ -23,7 +23,6 @@ import (
 
 	"github.com/onflow/cadence"
 	"github.com/onflow/flow-go-sdk"
-	"github.com/onflow/flow-go-sdk/client"
 )
 
 // Gateway describes blockchain access interface
@@ -36,7 +35,7 @@ type Gateway interface {
 	GetLatestBlock() (*flow.Block, error)
 	GetBlockByHeight(uint64) (*flow.Block, error)
 	GetBlockByID(flow.Identifier) (*flow.Block, error)
-	GetEvents(string, uint64, uint64) ([]client.BlockEvents, error)
+	GetEvents(string, uint64, uint64) ([]flow.BlockEvents, error)
 	GetCollection(flow.Identifier) (*flow.Collection, error)
 	GetLatestProtocolStateSnapshot() ([]byte, error)
 	Ping() error

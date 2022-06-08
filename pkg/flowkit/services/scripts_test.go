@@ -36,8 +36,8 @@ func TestScripts(t *testing.T) {
 		_, s, gw := setup()
 
 		gw.ExecuteScript.Run(func(args mock.Arguments) {
-			assert.Equal(t, len(string(args.Get(0).([]byte))), 78)
-			assert.Equal(t, args.Get(1).([]cadence.Value)[0].String(), "\"Foo\"")
+			assert.Len(t, string(args.Get(0).([]byte)), 78)
+			assert.Equal(t, "\"Foo\"", args.Get(1).([]cadence.Value)[0].String())
 			gw.ExecuteScript.Return(cadence.MustConvertValue(""), nil)
 		})
 
@@ -60,7 +60,7 @@ func TestScripts_Integration(t *testing.T) {
 		res, err := s.Scripts.Execute(tests.ScriptArgString.Source, args, "", "")
 
 		assert.NoError(t, err)
-		assert.Equal(t, res.String(), "\"Hello Foo\"")
+		assert.Equal(t, "\"Hello Foo\"", res.String())
 	})
 
 	t.Run("Execute report error", func(t *testing.T) {

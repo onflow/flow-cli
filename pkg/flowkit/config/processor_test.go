@@ -87,7 +87,7 @@ func Test_PrivateConfigFileAccounts(t *testing.T) {
 
 	preprocessor, accFromFile := ProcessorRun(b)
 
-	assert.Equal(t, len(accFromFile), 1)
+	assert.Len(t, accFromFile, 1)
 
 	assert.JSONEq(t, `{
 			"accounts": {
