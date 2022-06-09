@@ -219,7 +219,7 @@ func newHexAccountKey(accountKey config.AccountKey) (*HexAccountKey, error) {
 }
 
 func (a *HexAccountKey) Signer(ctx context.Context) (crypto.Signer, error) {
-	return crypto.NewInMemorySigner(a.privateKey, a.HashAlgo()), nil
+	return crypto.NewInMemorySigner(a.privateKey, a.HashAlgo())
 }
 
 func (a *HexAccountKey) PrivateKey() (*crypto.PrivateKey, error) {

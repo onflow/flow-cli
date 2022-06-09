@@ -57,7 +57,7 @@ func TestArguments(t *testing.T) {
 			[]string{sample.String()},
 		)
 		assert.NoError(t, err)
-		assert.Equal(t, 1, len(args))
+		assert.Len(t, args, 1)
 		assert.Equal(t, []cadence.Value{sample}, args)
 	}
 }

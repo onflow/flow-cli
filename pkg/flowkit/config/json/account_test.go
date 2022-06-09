@@ -43,11 +43,11 @@ func Test_ConfigAccountKeysSimple(t *testing.T) {
 	assert.NoError(t, err)
 	key := account.Key
 
-	assert.Equal(t, account.Address.String(), "f8d6e0586b0a20c7")
-	assert.Equal(t, key.HashAlgo.String(), "SHA3_256")
-	assert.Equal(t, key.Index, 0)
-	assert.Equal(t, key.SigAlgo.String(), "ECDSA_P256")
-	assert.Equal(t, key.PrivateKey.String(), "0x1fae488ce86422698f1c13468b137d62de488e7e978d7090396f7883a60abdcf")
+	assert.Equal(t, "f8d6e0586b0a20c7", account.Address.String())
+	assert.Equal(t, "SHA3_256", key.HashAlgo.String())
+	assert.Equal(t, 0, key.Index)
+	assert.Equal(t, "ECDSA_P256", key.SigAlgo.String())
+	assert.Equal(t, "0x1fae488ce86422698f1c13468b137d62de488e7e978d7090396f7883a60abdcf", key.PrivateKey.String())
 }
 
 func Test_ConfigAccountKeysAdvancedHex(t *testing.T) {
@@ -75,12 +75,12 @@ func Test_ConfigAccountKeysAdvancedHex(t *testing.T) {
 	assert.NoError(t, err)
 	key := account.Key
 
-	assert.Equal(t, account.Address.String(), "f8d6e0586b0a20c7")
-	assert.Equal(t, key.HashAlgo.String(), "SHA2_256")
-	assert.Equal(t, key.Index, 1)
-	assert.Equal(t, key.SigAlgo.String(), "ECDSA_P256")
-	assert.Equal(t, key.PrivateKey.String(), "0x271cec6bb5221d12713759188166bdfa00079db5789c36b54dcf1d794d8d8cdf")
-	assert.Equal(t, key.ResourceID, "")
+	assert.Equal(t, "f8d6e0586b0a20c7", account.Address.String())
+	assert.Equal(t, "SHA2_256", key.HashAlgo.String())
+	assert.Equal(t, 1, key.Index)
+	assert.Equal(t, "ECDSA_P256", key.SigAlgo.String())
+	assert.Equal(t, "0x271cec6bb5221d12713759188166bdfa00079db5789c36b54dcf1d794d8d8cdf", key.PrivateKey.String())
+	assert.Equal(t, "", key.ResourceID)
 }
 
 func Test_ConfigAccountKeysAdvancedKMS(t *testing.T) {
@@ -108,11 +108,11 @@ func Test_ConfigAccountKeysAdvancedKMS(t *testing.T) {
 	assert.NoError(t, err)
 	key := account.Key
 
-	assert.Equal(t, account.Address.String(), "f8d6e0586b0a20c7")
-	assert.Equal(t, key.HashAlgo.String(), "SHA3_256")
-	assert.Equal(t, key.Index, 1)
-	assert.Equal(t, key.SigAlgo.String(), "ECDSA_P256")
-	assert.Equal(t, key.ResourceID, "projects/flow/locations/us/keyRings/foo/bar/cryptoKeyVersions/1")
+	assert.Equal(t, "f8d6e0586b0a20c7", account.Address.String())
+	assert.Equal(t, "SHA3_256", key.HashAlgo.String())
+	assert.Equal(t, 1, key.Index)
+	assert.Equal(t, "ECDSA_P256", key.SigAlgo.String())
+	assert.Equal(t, "projects/flow/locations/us/keyRings/foo/bar/cryptoKeyVersions/1", key.ResourceID)
 	assert.Nil(t, key.PrivateKey)
 }
 

@@ -66,9 +66,9 @@ func TestTransactions(t *testing.T) {
 			tx := args.Get(0).(*flowkit.Transaction)
 			arg, err := tx.FlowTransaction().Argument(0)
 			assert.NoError(t, err)
-			assert.Equal(t, arg.String(), "\"Bar\"")
-			assert.Equal(t, tx.Signer().Address(), serviceAddress)
-			assert.Equal(t, len(string(tx.FlowTransaction().Script)), 227)
+			assert.Equal(t, "\"Bar\"", arg.String())
+			assert.Equal(t, serviceAddress, tx.Signer().Address())
+			assert.Len(t, string(tx.FlowTransaction().Script), 227)
 
 			t := tests.NewTransaction()
 			txID = t.ID()
@@ -76,7 +76,7 @@ func TestTransactions(t *testing.T) {
 		})
 
 		gw.GetTransactionResult.Run(func(args mock.Arguments) {
-			assert.Equal(t, args.Get(0).(*flow.Transaction).ID(), txID)
+			assert.Equal(t, txID, args.Get(0).(*flow.Transaction).ID())
 			gw.GetTransactionResult.Return(tests.NewTransactionResult(nil), nil)
 		})
 

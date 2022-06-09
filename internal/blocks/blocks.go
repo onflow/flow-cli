@@ -25,7 +25,6 @@ import (
 	"github.com/onflow/flow-cli/internal/command"
 
 	"github.com/onflow/flow-go-sdk"
-	"github.com/onflow/flow-go-sdk/client"
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/events"
@@ -44,7 +43,7 @@ func init() {
 
 type BlockResult struct {
 	block       *flow.Block
-	events      []client.BlockEvents
+	events      []flow.BlockEvents
 	collections []*flow.Collection
 	included    []string
 }

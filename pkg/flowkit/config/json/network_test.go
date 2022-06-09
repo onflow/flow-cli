@@ -38,8 +38,8 @@ func Test_ConfigNetworkSimple(t *testing.T) {
 
 	network, err := networks.ByName("testnet")
 	assert.NoError(t, err)
-	assert.Equal(t, network.Host, "access.testnet.nodes.onflow.org:9000")
-	assert.Equal(t, network.Name, "testnet")
+	assert.Equal(t, "access.testnet.nodes.onflow.org:9000", network.Host)
+	assert.Equal(t, "testnet", network.Name)
 }
 
 func Test_ConfigNetworkMultiple(t *testing.T) {
@@ -60,14 +60,14 @@ func Test_ConfigNetworkMultiple(t *testing.T) {
 
 	network, err := networks.ByName("testnet")
 	assert.NoError(t, err)
-	assert.Equal(t, network.Host, "access.testnet.nodes.onflow.org:9000")
-	assert.Equal(t, network.Name, "testnet")
-	assert.Equal(t, network.Key, "5000676131ad3e22d853a3f75a5b5d0db4236d08dd6612e2baad771014b5266a242bccecc3522ff7207ac357dbe4f225c709d9b273ac484fed5d13976a39bdcd")
+	assert.Equal(t, "access.testnet.nodes.onflow.org:9000", network.Host)
+	assert.Equal(t, "testnet", network.Name)
+	assert.Equal(t, "5000676131ad3e22d853a3f75a5b5d0db4236d08dd6612e2baad771014b5266a242bccecc3522ff7207ac357dbe4f225c709d9b273ac484fed5d13976a39bdcd", network.Key)
 
 	emulator, err := networks.ByName("emulator")
 	assert.NoError(t, err)
-	assert.Equal(t, emulator.Name, "emulator")
-	assert.Equal(t, emulator.Host, "127.0.0.1:3569")
+	assert.Equal(t, "emulator", emulator.Name)
+	assert.Equal(t, "127.0.0.1:3569", emulator.Host)
 }
 
 func Test_TransformNetworkToJSON(t *testing.T) {
@@ -104,10 +104,10 @@ func Test_IgnoreOldFormat(t *testing.T) {
 	mainnet, err := conf.ByName("mainnet")
 	assert.NoError(t, err)
 
-	assert.Equal(t, testnet.Host, "access.testnet.nodes.onflow.org:9000")
-	assert.Equal(t, testnet.Key, "5000676131ad3e22d853a3f75a5b5d0db4236d08dd6612e2baad771014b5266a242bccecc3522ff7207ac357dbe4f225c709d9b273ac484fed5d13976a39bdcd")
-	assert.Equal(t, mainnet.Host, "access.mainnet.nodes.onflow.org:9000")
-	assert.Equal(t, mainnet.Key, "5000676131ad3e22d853a3f75a5b5d0db4236d08dd6612e2baad771014b5266a242bccecc3522ff7207ac357dbe4f225c709d9b273ac484fed5d13976a39bdcd")
+	assert.Equal(t, "access.testnet.nodes.onflow.org:9000", testnet.Host)
+	assert.Equal(t, "5000676131ad3e22d853a3f75a5b5d0db4236d08dd6612e2baad771014b5266a242bccecc3522ff7207ac357dbe4f225c709d9b273ac484fed5d13976a39bdcd", testnet.Key)
+	assert.Equal(t, "access.mainnet.nodes.onflow.org:9000", mainnet.Host)
+	assert.Equal(t, "5000676131ad3e22d853a3f75a5b5d0db4236d08dd6612e2baad771014b5266a242bccecc3522ff7207ac357dbe4f225c709d9b273ac484fed5d13976a39bdcd", mainnet.Key)
 }
 
 func Test_TransformConfigAdvanced(t *testing.T) {
@@ -122,8 +122,8 @@ func Test_TransformConfigAdvanced(t *testing.T) {
 
 		testnet, err := conf.ByName("testnet")
 		assert.NoError(t, err)
-		assert.Equal(t, testnet.Host, "access.testnet.nodes.onflow.org:9000")
-		assert.Equal(t, testnet.Key, "5000676131ad3e22d853a3f75a5b5d0db4236d08dd6612e2baad771014b5266a242bccecc3522ff7207ac357dbe4f225c709d9b273ac484fed5d13976a39bdcd")
+		assert.Equal(t, "access.testnet.nodes.onflow.org:9000", testnet.Host)
+		assert.Equal(t, "5000676131ad3e22d853a3f75a5b5d0db4236d08dd6612e2baad771014b5266a242bccecc3522ff7207ac357dbe4f225c709d9b273ac484fed5d13976a39bdcd", testnet.Key)
 	})
 	t.Run("should return error if advanced config does not have key", func(t *testing.T) {
 		b := []byte(`{"testnet":{"host":"access.testnet.nodes.onflow.org:9000"}}`)

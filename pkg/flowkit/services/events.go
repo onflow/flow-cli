@@ -22,9 +22,10 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/onflow/flow-cli/pkg/flowkit"
+	"github.com/onflow/flow-go-sdk"
+	"github.com/onflow/flow-go-sdk/access/grpc"
 
-	"github.com/onflow/flow-go-sdk/client"
+	"github.com/onflow/flow-cli/pkg/flowkit"
 
 	"github.com/onflow/flow-cli/pkg/flowkit/gateway"
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
@@ -50,8 +51,8 @@ func NewEvents(
 	}
 }
 
-func makeEventQueries(events []string, startHeight uint64, endHeight uint64, blockCount uint64) []client.EventRangeQuery {
-	var queries []client.EventRangeQuery
+func makeEventQueries(events []string, startHeight uint64, endHeight uint64, blockCount uint64) []grpc.EventRangeQuery {
+	var queries []grpc.EventRangeQuery
 	for startHeight <= endHeight {
 		suggestedEndHeight := startHeight + blockCount - 1 //since we are inclusive
 		end := endHeight
@@ -59,7 +60,7 @@ func makeEventQueries(events []string, startHeight uint64, endHeight uint64, blo
 			end = suggestedEndHeight
 		}
 		for _, event := range events {
-			queries = append(queries, client.EventRangeQuery{
+			queries = append(queries, grpc.EventRangeQuery{
 				Type:        event,
 				StartHeight: startHeight,
 				EndHeight:   end,
@@ -70,7 +71,7 @@ func makeEventQueries(events []string, startHeight uint64, endHeight uint64, blo
 	return queries
 
 }
-func (e *Events) Get(events []string, startHeight uint64, endHeight uint64, blockCount uint64, workerCount int) ([]client.BlockEvents, error) {
+func (e *Events) Get(events []string, startHeight uint64, endHeight uint64, blockCount uint64, workerCount int) ([]flow.BlockEvents, error) {
 	if endHeight < startHeight {
 		return nil, fmt.Errorf("cannot have end height (%d) of block range less that start height (%d)", endHeight, startHeight)
 	}
@@ -80,7 +81,7 @@ func (e *Events) Get(events []string, startHeight uint64, endHeight uint64, bloc
 
 	queries := makeEventQueries(events, startHeight, endHeight, blockCount)
 
-	jobChan := make(chan client.EventRangeQuery, workerCount)
+	jobChan := make(chan grpc.EventRangeQuery, workerCount)
 	results := make(chan EventWorkerResult)
 
 	var wg sync.WaitGroup
@@ -107,7 +108,7 @@ func (e *Events) Get(events []string, startHeight uint64, endHeight uint64, bloc
 		}
 	}()
 
-	var resultEvents []client.BlockEvents
+	var resultEvents []flow.BlockEvents
 	for eventResult := range results {
 		if eventResult.Error != nil {
 			return nil, eventResult.Error
@@ -120,7 +121,7 @@ func (e *Events) Get(events []string, startHeight uint64, endHeight uint64, bloc
 
 }
 
-func (e *Events) eventWorker(jobChan <-chan client.EventRangeQuery, results chan<- EventWorkerResult) {
+func (e *Events) eventWorker(jobChan <-chan grpc.EventRangeQuery, results chan<- EventWorkerResult) {
 	for q := range jobChan {
 		//e.logger.Debug(fmt.Sprintf("Fetching events %v", q))
 		blockEvents, err := e.gateway.GetEvents(q.Type, q.StartHeight, q.EndHeight)
@@ -132,6 +133,6 @@ func (e *Events) eventWorker(jobChan <-chan client.EventRangeQuery, results chan
 }
 
 type EventWorkerResult struct {
-	Events []client.BlockEvents
+	Events []flow.BlockEvents
 	Error  error
 }

@@ -25,7 +25,6 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowkit"
 
 	"github.com/onflow/flow-go-sdk"
-	"github.com/onflow/flow-go-sdk/client"
 
 	"github.com/onflow/flow-cli/pkg/flowkit/gateway"
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
@@ -61,7 +60,7 @@ func (e *Blocks) GetBlock(
 	query string,
 	eventType string,
 	verbose bool,
-) (*flow.Block, []client.BlockEvents, []*flow.Collection, error) {
+) (*flow.Block, []flow.BlockEvents, []*flow.Collection, error) {
 	e.logger.StartProgress("Fetching Block...")
 	defer e.logger.StopProgress()
 
@@ -87,7 +86,7 @@ func (e *Blocks) GetBlock(
 	}
 
 	// if we specify event get events by the type
-	var events []client.BlockEvents
+	var events []flow.BlockEvents
 	if eventType != "" {
 		events, err = e.gateway.GetEvents(eventType, block.Height, block.Height)
 		if err != nil {

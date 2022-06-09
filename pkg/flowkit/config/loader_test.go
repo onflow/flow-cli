@@ -61,8 +61,11 @@ func Test_JSONSimple(t *testing.T) {
 	conf, loadErr := composer.Load([]string{"test2-flow.json"})
 
 	assert.NoError(t, loadErr)
-	assert.Equal(t, 1, len(conf.Accounts))
-	assert.Equal(t, "0x21c5dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7", conf.Accounts[0].Key.PrivateKey.String())
+	assert.Len(t, conf.Accounts, 1)
+	assert.Equal(t,
+		"0x21c5dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7",
+		conf.Accounts[0].Key.PrivateKey.String(),
+	)
 }
 
 func Test_ErrorWhenMissingBothDefaultJsonFiles(t *testing.T) {
@@ -99,8 +102,9 @@ func Test_AllowMissingLocalJson(t *testing.T) {
 	acc, err := conf.Accounts.ByName("emulator-account")
 	assert.NoError(t, err)
 
-	assert.Equal(t, 1, len(conf.Accounts))
-	assert.Equal(t, "0x21c5dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7",
+	assert.Len(t, conf.Accounts, 1)
+	assert.Equal(t,
+		"0x21c5dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7",
 		acc.Key.PrivateKey.String(),
 	)
 }
@@ -142,7 +146,7 @@ func Test_PreferLocalJson(t *testing.T) {
 	assert.NoError(t, err)
 
 	assert.NoError(t, loadErr)
-	assert.Equal(t, 1, len(conf.Accounts))
+	assert.Len(t, conf.Accounts, 1)
 	assert.Equal(t, "0x21c5dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7",
 		acc.Key.PrivateKey.String(),
 	)
@@ -213,7 +217,7 @@ func Test_ComposeJSON(t *testing.T) {
 	conf, loadErr := composer.Load([]string{"flow.json", "flow-testnet.json"})
 
 	assert.NoError(t, loadErr)
-	assert.Equal(t, 2, len(conf.Accounts))
+	assert.Len(t, conf.Accounts, 2)
 
 	account, err := conf.Accounts.ByName("emulator-account")
 	assert.NoError(t, err)
@@ -304,7 +308,7 @@ func Test_ComposeJSONOverwrite(t *testing.T) {
 	account, err := conf.Accounts.ByName("admin-account")
 	assert.NoError(t, err)
 
-	assert.Equal(t, 1, len(conf.Accounts))
+	assert.Len(t, conf.Accounts, 1)
 	assert.NotNil(t, account)
 	assert.Equal(t, "0x3335dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7", account.Key.PrivateKey.String())
 }

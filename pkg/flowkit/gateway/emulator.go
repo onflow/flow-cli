@@ -23,14 +23,13 @@ import (
 	"fmt"
 
 	"github.com/onflow/cadence"
+	jsoncdc "github.com/onflow/cadence/encoding/json"
 	emulator "github.com/onflow/flow-emulator"
 	"github.com/onflow/flow-emulator/convert/sdk"
 	"google.golang.org/grpc/status"
 
 	"github.com/onflow/flow-emulator/server/backend"
 	"github.com/onflow/flow-go-sdk"
-	"github.com/onflow/flow-go-sdk/client"
-	"github.com/onflow/flow-go-sdk/client/convert"
 	flowGo "github.com/onflow/flow-go/model/flow"
 	"github.com/sirupsen/logrus"
 
@@ -147,7 +146,7 @@ func (g *EmulatorGateway) Ping() error {
 
 func (g *EmulatorGateway) ExecuteScript(script []byte, arguments []cadence.Value) (cadence.Value, error) {
 
-	args, err := convert.CadenceValuesToMessages(arguments)
+	args, err := cadenceValuesToMessages(arguments)
 	if err != nil {
 		return nil, UnwrapStatusError(err)
 	}
@@ -157,7 +156,7 @@ func (g *EmulatorGateway) ExecuteScript(script []byte, arguments []cadence.Value
 		return nil, UnwrapStatusError(err)
 	}
 
-	value, err := convert.MessageToCadenceValue(result)
+	value, err := messageToCadenceValue(result)
 	if err != nil {
 		return nil, UnwrapStatusError(err)
 	}
@@ -172,6 +171,27 @@ func (g *EmulatorGateway) GetLatestBlock() (*flow.Block, error) {
 	}
 
 	return convertBlock(block), nil
+}
+
+func cadenceValuesToMessages(values []cadence.Value) ([][]byte, error) {
+	msgs := make([][]byte, len(values))
+	for i, val := range values {
+		msg, err := jsoncdc.Encode(val)
+		if err != nil {
+			return nil, fmt.Errorf("convert: %w", err)
+		}
+		msgs[i] = msg
+	}
+	return msgs, nil
+}
+
+func messageToCadenceValue(m []byte) (cadence.Value, error) {
+	v, err := jsoncdc.Decode(nil, m)
+	if err != nil {
+		return nil, fmt.Errorf("convert: %w", err)
+	}
+
+	return v, nil
 }
 
 func convertBlock(block *flowGo.Block) *flow.Block {
@@ -193,8 +213,8 @@ func (g *EmulatorGateway) GetEvents(
 	eventType string,
 	startHeight uint64,
 	endHeight uint64,
-) ([]client.BlockEvents, error) {
-	events := make([]client.BlockEvents, 0)
+) ([]flow.BlockEvents, error) {
+	events := make([]flow.BlockEvents, 0)
 
 	for height := startHeight; height <= endHeight; height++ {
 		events = append(events, g.getBlockEvent(height, eventType))
@@ -203,13 +223,13 @@ func (g *EmulatorGateway) GetEvents(
 	return events, nil
 }
 
-func (g *EmulatorGateway) getBlockEvent(height uint64, eventType string) client.BlockEvents {
+func (g *EmulatorGateway) getBlockEvent(height uint64, eventType string) flow.BlockEvents {
 	block, _ := g.backend.GetBlockByHeight(g.ctx, height)
 	events, _ := g.backend.GetEventsForBlockIDs(g.ctx, eventType, []flow.Identifier{flow.Identifier(block.ID())})
 
-	result := client.BlockEvents{
+	result := flow.BlockEvents{
 		BlockID:        flow.Identifier(block.ID()),
-		Height:         uint64(block.Header.Height),
+		Height:         block.Header.Height,
 		BlockTimestamp: block.Header.Timestamp,
 		Events:         []flow.Event{},
 	}
