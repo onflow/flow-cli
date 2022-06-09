@@ -32,13 +32,12 @@ import (
 )
 
 type flagsAddAccount struct {
-	Name       string `flag:"name" info:"Name for the account"`
-	Address    string `flag:"address" info:"Account address"`
-	KeyIndex   string `default:"0" flag:"key-index" info:"Account key index"`
-	SigAlgo    string `default:"ECDSA_P256" flag:"sig-algo" info:"Signature algorithm of this account key"`
-	HashAlgo   string `default:"SHA3_256" flag:"hash-algo" info:"Hash algorithm to pair with this account key"`
-	Key        string `flag:"private-key" info:"Account private key"`
-	SigAlgoNew string `default:"ECDSA_P256" flag:"sig-algo-new" info:"Signature algorithm of this account key"`
+	Name     string `flag:"name" info:"Name for the account"`
+	Address  string `flag:"address" info:"Account address"`
+	KeyIndex string `default:"0" flag:"key-index" info:"Account key index"`
+	SigAlgo  string `default:"ECDSA_P256" flag:"sig-algo" info:"Signature algorithm of this account key"`
+	HashAlgo string `default:"SHA3_256" flag:"hash-algo" info:"Hash algorithm to pair with this account key"`
+	Key      string `flag:"private-key" info:"Account private key"`
 }
 
 var addAccountFlags = flagsAddAccount{}
