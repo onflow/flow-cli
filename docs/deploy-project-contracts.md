@@ -118,7 +118,60 @@ import NonFungibleToken from 0xf8d6e0586b0a20c7
 pub contract KittyItems { 
   // ...
 }
+
 ```
+## Merging Multiple Configuration Files
+
+You can use the `-f` flag multiple times to merge several configuration files. 
+
+If there is an overlap in any of the fields in the configuration between two or more configuration files, the value of 
+the overlapped field in the resulting configuration will come from the configuration file that is on the further right 
+order in the list of configuration files specified in the -f flag 
+
+Let's look at an example of `deploy` commands with multiple configuration files below
+
+````cadence:title=flow.json
+{
+    "accounts": {
+        "admin-account": {
+            "address": "f8d6e0586b0a20c7",
+            "key": "21c5dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7"
+        }, 
+        "test-account": {
+            "address": "f8d6e0586b0a20c8",
+            "key": "52d5dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d51c9"
+        }
+    }
+}
+````
+````cadence:title=private.json
+{
+    "accounts":{
+		"admin-account":{
+			"address":"f1d6e0586b0a20c7",
+			"key":"3335dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7"
+	    }
+	}
+}
+````
+In the example above, when we try to use the `deploy` command with multiple configuration files and there is an overlap 
+in the `admin-account` account in `accounts` field of the configuration, the resulting configuration will be like this
+
+> flow project deploy -f flow.json -f private.json
+````
+{
+    "accounts":{
+	    "admin-account":{
+			"address":"f1d6e0586b0a20c7",
+			"key":"3335dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7"
+	    }, 
+	    "test-account":{
+			"address":"f8d6e0586b0a20c8",
+			"key":"52d5dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d51c9"
+	    }
+	}
+}
+````
 
 ## Flags
 
@@ -202,3 +255,4 @@ Specify the log level. Control how much output you want to see during command ex
 Specify the path to the `flow.json` configuration file.
 You can use the `-f` flag multiple times to merge
 several configuration files.
+
