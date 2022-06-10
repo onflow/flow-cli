@@ -33,7 +33,7 @@ import (
 
 type FlagsWallet struct {
 	Port uint   `default:"8701" flag:"port" info:"Dev wallet port to listen on"`
-	Host string `default:"http://localhost:8080" flag:"wallet-host" info:"Host for access node connection"`
+	Host string `default:"http://localhost:8080" flag:"emulator-host" info:"Host for access node connection"`
 }
 
 var walletFlags = FlagsWallet{}
