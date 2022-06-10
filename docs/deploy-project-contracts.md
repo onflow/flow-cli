@@ -118,7 +118,6 @@ import NonFungibleToken from 0xf8d6e0586b0a20c7
 pub contract KittyItems { 
   // ...
 }
-
 ```
 ## Merging Multiple Configuration Files
 
@@ -255,4 +254,3 @@ Specify the log level. Control how much output you want to see during command ex
 Specify the path to the `flow.json` configuration file.
 You can use the `-f` flag multiple times to merge
 several configuration files.
-
