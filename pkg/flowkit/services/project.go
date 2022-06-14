@@ -156,6 +156,7 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 	defer p.logger.StopProgress()
 
 	deployErr := false
+	numOfUpdates := 0
 	for _, contract := range orderedContracts {
 		block, err := p.gateway.GetLatestBlock()
 		if err != nil {
@@ -186,7 +187,7 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 		}
 		// check if contract exists on account
 		existingContract, exists := targetAccountInfo.Contracts[contract.Name()]
-		contractBytes := []byte(existingContract)
+		noDiffInContract := bytes.Equal([]byte(contract.Code()), existingContract)
 
 		if exists && !update {
 			p.logger.Error(fmt.Sprintf(
@@ -202,10 +203,20 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 			))
 			deployErr = true
 			continue
-		} else if exists && bytes.Equal(contract, existingContract) {
-			tx, err = flowkit.NewUpdateAccountContractTransaction(targetAccount, contract.Name(), contract.TranspiledCode())
-			if err != nil {
-				return nil, err
+		} else if exists {
+			//only update contract if there is diff
+			if noDiffInContract {
+				p.logger.Info(fmt.Sprintf(
+					"no diff found in %s, skipping update",
+					contract.Name(),
+				))
+				continue
+			} else {
+				tx, err = flowkit.NewUpdateAccountContractTransaction(targetAccount, contract.Name(), contract.TranspiledCode())
+				if err != nil {
+					return nil, err
+				}
+				numOfUpdates++
 			}
 		}
 
@@ -249,25 +260,41 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 		if result.Error != nil {
 			deployErr = true
 			p.logger.StopProgress()
-			p.logger.Error(fmt.Sprintf(
-				"Error deploying %s: (%s)\n",
-				output.Red(contract.Name()),
-				result.Error.Error(),
-			))
+			if exists && update {
+				p.logger.Error(fmt.Sprintf(
+					"Error updating %s: (%s)\n",
+					output.Red(contract.Name()),
+					result.Error.Error(),
+				))
+			} else {
+				p.logger.Error(fmt.Sprintf(
+					"Error deploying %s: (%s)\n",
+					output.Red(contract.Name()),
+					result.Error.Error(),
+				))
+			}
 		}
 
 		if result.Error == nil && !deployErr {
+			changeStatus := ""
+			if exists && update {
+				changeStatus = "(update)"
+			}
 			p.logger.StopProgress()
 			p.logger.Info(fmt.Sprintf(
-				"%s -> 0x%s (%s)\n",
+				"%s -> 0x%s (%s) %s\n",
 				output.Green(contract.Name()),
 				contract.Target(),
 				sentTx.ID().String(),
+				changeStatus,
 			))
 		}
 	}
 
 	if !deployErr {
+		if update && numOfUpdates > 0 {
+			p.logger.Info(fmt.Sprintf("%d contracts updated successfully", numOfUpdates))
+		}
 		p.logger.Info(fmt.Sprintf("\n%s All contracts deployed successfully", output.SuccessEmoji()))
 	} else {
 		err = fmt.Errorf("failed to deploy all contracts")
