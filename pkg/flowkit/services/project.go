@@ -19,6 +19,7 @@
 package services
 
 import (
+	"bytes"
 	"fmt"
 	"strings"
 
@@ -184,7 +185,9 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 			return nil, err
 		}
 		// check if contract exists on account
-		_, exists := targetAccountInfo.Contracts[contract.Name()]
+		existingContract, exists := targetAccountInfo.Contracts[contract.Name()]
+		contractBytes := []byte(existingContract)
+
 		if exists && !update {
 			p.logger.Error(fmt.Sprintf(
 				"contract %s is already deployed to this account. Use the --update flag to force update",
@@ -199,7 +202,7 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 			))
 			deployErr = true
 			continue
-		} else if exists {
+		} else if exists && bytes.Equal(contract, existingContract) {
 			tx, err = flowkit.NewUpdateAccountContractTransaction(targetAccount, contract.Name(), contract.TranspiledCode())
 			if err != nil {
 				return nil, err
