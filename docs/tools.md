@@ -47,14 +47,15 @@ You can read more about setting up dev-wallet at [FCL Dev Wallet Project](https:
 - Valid inputs: Number
 - Default: `8701`
 
-Port on which the dev wallet server will listen on. 
+Port on which the dev wallet server will listen on.
 
-### Emulator Port
+### Emulator Host
 
-- Flag: `--emulator-port`
-- Valid inputs: Number
+- Flag: `--emulator-host`
+- Valid inputs: a hostname
+- Default: `http://localhost:8080`
 
-Port on which the emulator is listening on.
+Specifies the host configuration for dev wallet
 
 ### Configuration
 
@@ -64,10 +65,6 @@ Port on which the emulator is listening on.
 
 Specify a filename for the configuration files, you can provide multiple configuration
 files by using `-f` flag multiple times.
-
-- Flag: `--config-path`
-- Short Flag: `-f`
-- Valid inputs: valid filename
 
 Specify a filename for the configuration files, you can provide multiple configuration
 files by using `-f` flag multiple times.
