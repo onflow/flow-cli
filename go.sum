@@ -1428,8 +1428,8 @@ github.com/onflow/flow-emulator v0.31.2-0.20220513151845-ef7513cb1cd0/go.mod h1:
 github.com/onflow/flow-emulator v0.32.1-0.20220608200416-af3f5ba3f673/go.mod h1:1HEDTQqXL2PUFRAJmKKs0/YgPUKgGSeIziwBeIBOTjM=
 github.com/onflow/flow-emulator v0.32.1-0.20220608220535-c3d005f9ac92/go.mod h1:LdwNLQPNOUlB5extFJohIOzsnhbZhPhC7HzrStex6L8=
 github.com/onflow/flow-emulator v0.33.0/go.mod h1:LdwNLQPNOUlB5extFJohIOzsnhbZhPhC7HzrStex6L8=
-github.com/onflow/flow-emulator v0.33.1 h1:OR4ZMKJKwTFD+INY5kICSmN16N1LFGzR0uDb+Qq92us=
-github.com/onflow/flow-emulator v0.33.1/go.mod h1:+nQeTdyc+mUtSVc182fOYBvgmjIQFRtUu0h1yf1R4Tk=
+github.com/onflow/flow-emulator v0.33.2 h1:yBv0yK50qjhQgzcAsew3EoZEmHvJ7cys/21fS2nARNw=
+github.com/onflow/flow-emulator v0.33.2/go.mod h1:rngaPAH/lFm0wHJDYnrRRS8hO8YUr0c86SGKZ9z4cUg=
 github.com/onflow/flow-ft/lib/go/contracts v0.5.0 h1:Cg4gHGVblxcejfNNG5Mfj98Wf4zbY76O0Y28QB0766A=
 github.com/onflow/flow-ft/lib/go/contracts v0.5.0/go.mod h1:1zoTjp1KzNnOPkyqKmWKerUyf0gciw+e6tAEt0Ks3JE=
 github.com/onflow/flow-go v0.16.3-0.20210427194927-6050c2a3ae42/go.mod h1:9GUEbBhOGDVf91ZJB6QWqVNQkrM3INEudNyDtIttOu0=
@@ -1463,8 +1463,9 @@ github.com/onflow/flow-go/crypto v0.21.4-0.20211125190211-7b31c986316e/go.mod h1
 github.com/onflow/flow-go/crypto v0.24.2/go.mod h1:dkVL98P6GHR48iD9zCB6XlnkJX8IQd00FKgt1reV90w=
 github.com/onflow/flow-go/crypto v0.24.3 h1:5puosmiy853m1GPmBLJr4PiLVcCzE4n5o60hRPo9kYA=
 github.com/onflow/flow-go/crypto v0.24.3/go.mod h1:dkVL98P6GHR48iD9zCB6XlnkJX8IQd00FKgt1reV90w=
-github.com/onflow/flow-nft/lib/go/contracts v0.0.0-20210915191154-12ee8c507a0e h1:svZJ1NydwvNGfkJfJXIeECcKecnYC1CtC/BMzdfEI0U=
 github.com/onflow/flow-nft/lib/go/contracts v0.0.0-20210915191154-12ee8c507a0e/go.mod h1:epgW8P53PDpHaqBQCmMgJqdet4h7ONaoIL3kVD/nnzU=
+github.com/onflow/flow-nft/lib/go/contracts v0.0.0-20220606143647-47126d1009e2 h1:66PsKbgLABrF6myr/i1H9ZfcN5VMkMb2862AWQb8EEE=
+github.com/onflow/flow-nft/lib/go/contracts v0.0.0-20220606143647-47126d1009e2/go.mod h1:YsvzYng4htDgRB9sa9jxdwoTuuhjK8WYWXTyLkIigZY=
 github.com/onflow/flow/protobuf/go/flow v0.1.9/go.mod h1:kRugbzZjwQqvevJhrnnCFMJZNmoSJmxlKt6hTGXZojM=
 github.com/onflow/flow/protobuf/go/flow v0.2.0/go.mod h1:kRugbzZjwQqvevJhrnnCFMJZNmoSJmxlKt6hTGXZojM=
 github.com/onflow/flow/protobuf/go/flow v0.2.2/go.mod h1:gQxYqCfkI8lpnKsmIjwtN2mV/N2PIwc1I+RUK4HPIc8=
