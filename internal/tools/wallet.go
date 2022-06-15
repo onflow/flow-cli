@@ -33,7 +33,7 @@ import (
 
 type FlagsWallet struct {
 	Port uint   `default:"8701" flag:"port" info:"Dev wallet port to listen on"`
-	Host string `default:"http://localhost:8888" flag:"emulator-host" info:"Host for access node connection"`
+	Host string `default:"http://localhost:8080" flag:"emulator-host" info:"Host for access node connection"`
 }
 
 var walletFlags = FlagsWallet{}
@@ -69,7 +69,6 @@ func wallet(
 		PublicKey:  strings.TrimPrefix(key.PrivateKey.PublicKey().String(), "0x"),
 		AccessNode: walletFlags.Host,
 	}
-
 	srv, err := devWallet.NewHTTPServer(walletFlags.Port, &conf)
 	if err != nil {
 		return nil, err

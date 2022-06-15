@@ -65,7 +65,11 @@ Port on which the emulator is listening on.
 Specify a filename for the configuration files, you can provide multiple configuration
 files by using `-f` flag multiple times.
 
+- Flag: `--config-path`
+- Short Flag: `-f`
+- Valid inputs: valid filename
 
-
+Specify a filename for the configuration files, you can provide multiple configuration
+files by using `-f` flag multiple times.
 
 
