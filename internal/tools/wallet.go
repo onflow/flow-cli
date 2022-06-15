@@ -69,6 +69,7 @@ func wallet(
 		PublicKey:  strings.TrimPrefix(key.PrivateKey.PublicKey().String(), "0x"),
 		AccessNode: walletFlags.Host,
 	}
+
 	srv, err := devWallet.NewHTTPServer(walletFlags.Port, &conf)
 	if err != nil {
 		return nil, err
