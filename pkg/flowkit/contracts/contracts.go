@@ -83,6 +83,10 @@ func (c *Contract) Name() string {
 	return c.name
 }
 
+func (c *Contract) Source() string {
+	return c.source
+}
+
 func (c *Contract) Code() string {
 	return c.code
 }

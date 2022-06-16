@@ -102,7 +102,7 @@ func TestProject(t *testing.T) {
 			gw.SendSignedTransaction.Return(tests.NewTransaction(), nil)
 		})
 
-		contracts, err := s.Project.Deploy("emulator", false)
+		contracts, err := s.Project.Deploy("emulator", false, false)
 
 		assert.NoError(t, err)
 		assert.Equal(t, len(contracts), 1)
@@ -153,7 +153,7 @@ func TestProject(t *testing.T) {
 			gw.SendSignedTransaction.Return(tests.NewTransaction(), nil)
 		})
 
-		contracts, err := s.Project.Deploy("emulator", false)
+		contracts, err := s.Project.Deploy("emulator", false, false)
 
 		assert.NoError(t, err)
 		assert.Equal(t, len(contracts), 1)
@@ -189,7 +189,7 @@ func simpleDeploy(state *flowkit.State, s *Services, update bool) ([]*contracts.
 	}
 	state.Deployments().AddOrUpdate(d)
 
-	return s.Project.Deploy(n.Name, update)
+	return s.Project.Deploy(n.Name, update, false)
 }
 
 func TestProject_Integration(t *testing.T) {
@@ -255,7 +255,7 @@ func TestProject_Integration(t *testing.T) {
 		}
 		state.Deployments().AddOrUpdate(d)
 
-		contracts, err := s.Project.Deploy(n.Name, false)
+		contracts, err := s.Project.Deploy(n.Name, false, false)
 		assert.NoError(t, err)
 		assert.Len(t, contracts, 3)
 		assert.Equal(t, contracts[0].Name(), tests.ContractA.Name)

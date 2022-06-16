@@ -29,6 +29,9 @@ import (
 
 	"github.com/onflow/flow-go-sdk/crypto"
 
+	"github.com/hexops/gotextdiff"
+	"github.com/hexops/gotextdiff/myers"
+	"github.com/hexops/gotextdiff/span"
 	"github.com/onflow/flow-cli/pkg/flowkit/contracts"
 	"github.com/onflow/flow-cli/pkg/flowkit/gateway"
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
@@ -97,7 +100,7 @@ func (p *Project) Init(
 // Retrieve all the contracts for specified network, sort them for deployment
 // deploy one by one and replace the imports in the contract source so it corresponds
 // to the account name the contract was deployed to.
-func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, error) {
+func (p *Project) Deploy(network string, update bool, force bool) ([]*contracts.Contract, error) {
 	if p.state == nil {
 		return nil, config.ErrDoesNotExist
 	}
@@ -212,6 +215,16 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 				))
 				continue
 			} else {
+				if !force {
+					edits := myers.ComputeEdits(span.URIFromPath(contract.Source()), string(existingContract), contract.Code())
+					diff := fmt.Sprint(gotextdiff.ToUnified("deployed", "changes", string(existingContract), edits))
+
+					fmt.Println("DIFF of " + contract.Name())
+					fmt.Println(diff)
+					fmt.Println("------------------------")
+					fmt.Println(" press <ENTER> to update")
+					fmt.Scanln()
+				}
 				tx, err = flowkit.NewUpdateAccountContractTransaction(targetAccount, contract.Name(), contract.TranspiledCode())
 				if err != nil {
 					return nil, err
