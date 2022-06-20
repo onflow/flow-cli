@@ -38,7 +38,7 @@ var decodeFlags = flagsDecode{}
 var DecodeCommand = &command.Command{
 	Cmd: &cobra.Command{
 		Use:     "decode <transaction filename>",
-		Short:   "Decode transaction",
+		Short:   "Decode a transaction",
 		Example: "flow transactions decode ./transaction.rlp",
 		Args:    cobra.ExactArgs(1),
 	},
