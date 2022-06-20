@@ -29,24 +29,24 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowkit/services"
 )
 
-type flagsView struct {
+type flagsDecode struct {
 	Include []string `default:"" flag:"include" info:"Fields to include in the output. Valid values: signatures, code, payload."`
 }
 
-var viewFlags = flagsView{}
+var decodeFlags = flagsDecode{}
 
-var ViewCommand = &command.Command{
+var DecodeCommand = &command.Command{
 	Cmd: &cobra.Command{
-		Use:     "view <transaction filename>",
-		Short:   "View transaction",
-		Example: "flow transactions view ./transaction.rlp",
+		Use:     "decode <transaction filename>",
+		Short:   "Decode transaction",
+		Example: "flow transactions decode ./transaction.rlp",
 		Args:    cobra.ExactArgs(1),
 	},
-	Flags: &viewFlags,
-	RunS:  view,
+	Flags: &decodeFlags,
+	RunS:  decode,
 }
 
-func view(
+func decode(
 	args []string,
 	readerWriter flowkit.ReaderWriter,
 	globalFlags command.GlobalFlags,
@@ -66,6 +66,6 @@ func view(
 
 	return &TransactionResult{
 		tx:      tx.FlowTransaction(),
-		include: viewFlags.Include,
+		include: decodeFlags.Include,
 	}, nil
 }
