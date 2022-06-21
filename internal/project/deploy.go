@@ -29,7 +29,6 @@ import (
 
 type flagsDeploy struct {
 	Update bool `flag:"update" default:"false" info:"use update flag to update existing contracts"`
-	Force  bool `flag:"force" default:"false" info:"use force flag to skip preview of contract diffs for update"`
 }
 
 var deployFlags = flagsDeploy{}
@@ -51,7 +50,7 @@ func deploy(
 	services *services.Services,
 	_ *flowkit.State,
 ) (command.Result, error) {
-	c, err := services.Project.Deploy(globalFlags.Network, deployFlags.Update, deployFlags.Force)
+	c, err := services.Project.Deploy(globalFlags.Network, deployFlags.Update)
 	if err != nil {
 		return nil, err
 	}
