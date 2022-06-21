@@ -10,7 +10,6 @@ Flow configuration (`flow.json`) file will contain the following properties:
 
 - A `networks` list pre-populated with the Flow emulator, testnet and mainnet connection configuration.
 - An `accounts` list pre-populated with the Flow Emulator service account.
-- An `emulators` list pre-populated with Flow Emulator configuration.
 - A `deployments` empty object where all [deployment targets](project-contracts.md) can be defined. 
 - A `contracts` empty object where you [define contracts](project-contracts.md) you wish to deploy.
 
@@ -18,12 +17,6 @@ Flow configuration (`flow.json`) file will contain the following properties:
 
 ```json
 {
-  "emulators": {
-    "default": {
-      "port": 3569,
-      "serviceAccount": "emulator-account"
-    }
-  },
   "networks": {
     "emulator": "127.0.0.1:3569",
     "mainnet": "access.mainnet.nodes.onflow.org:9000",
@@ -98,13 +91,6 @@ We'll walk through each property one by one.
     "testnetSecure": {
       "Host": "access-001.devnet30.nodes.onflow.org:9001",
       "NetworkKey": "ba69f7d2e82b9edf25b103c195cd371cf0cc047ef8884a9bbe331e62982d46daeebf836f7445a2ac16741013b192959d8ad26998aff12f2adc67a99e1eb2988d"
-    }
-  },
-
-  "emulators": {
-    "default": {
-      "port": 3569,
-      "serviceAccount": "emulator-account"
     }
   }
 }
@@ -317,6 +303,26 @@ Format for networks is:
         "host": "access-001.devnet30.nodes.onflow.org:9001",
         "key": "ba69f7d2e82b9edf25b103c195cd371cf0cc047ef8884a9bbe331e62982d46daeebf836f7445a2ac16741013b192959d8ad26998aff12f2adc67a99e1eb2988d"
     },
+}
+
+...
+```
+### Emulators
+
+The default emulator CLI is automatically configured with name being `"default"` and values of 
+`serviceAccount`: `"emulator-account"` and `port`: `"3569"`. The default emulator configuration will not show up on 
+flow.json.
+
+To customize emulator values, add emulator section like the example below: 
+
+```json
+...
+
+"emulators": {
+    "custom-emulator": {
+        "port": 3600,
+        "serviceAccount": "emulator-account"
+    }
 }
 
 ...
