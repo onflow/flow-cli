@@ -14,7 +14,7 @@ require (
 	github.com/onflow/fcl-dev-wallet v0.4.4
 	github.com/onflow/flow-core-contracts/lib/go/templates v0.11.2-0.20220513155751-c4c1f8d59f83
 	github.com/onflow/flow-emulator v0.33.2
-	github.com/onflow/flow-go v0.26.3
+	github.com/onflow/flow-go v0.26.12
 	github.com/onflow/flow-go-sdk v0.26.2
 	github.com/psiemens/sconfig v0.1.0
 	github.com/sirupsen/logrus v1.8.1
