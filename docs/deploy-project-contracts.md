@@ -180,9 +180,8 @@ in the `admin-account` account in `accounts` field of the configuration, the res
 - Valid inputs: `true`, `false`
 - Default: `false`
 
-Indicate whether to overwrite and upgrade existing contracts.
-
-⚠️ _Warning: contract upgrades are a dangerous experimental feature._
+Indicate whether to overwrite and upgrade existing contracts. Only contracts with difference with existing contracts
+will be overwritten.
 
 ### Host
 
