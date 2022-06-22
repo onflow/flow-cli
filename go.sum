@@ -656,8 +656,6 @@ github.com/hashicorp/memberlist v0.3.0/go.mod h1:MS2lj3INKhZjWNqd3N0m3J+Jxf3DAOn
 github.com/hashicorp/serf v0.8.2/go.mod h1:6hOLApaqBFA1NXqRQAsxw9QxuDEvNxSQRwA/JwenrHc=
 github.com/hashicorp/serf v0.9.5/go.mod h1:UWDWwZeL5cuWDJdl0C6wrvrUwEqtQ4ZKBKKENpqIUyk=
 github.com/hashicorp/serf v0.9.6/go.mod h1:TXZNMjZQijwlDvp+r0b63xZ45H7JmCmgg4gpTwn9UV4=
-github.com/hexops/gotextdiff v1.0.3 h1:gitA9+qJrrTCsiCl7+kh75nPqQt1cx4ZkudSTLoUqJM=
-github.com/hexops/gotextdiff v1.0.3/go.mod h1:pSWU5MAI3yDq+fZBTazCSJysOMbxWL1BSow5/V2vxeg=
 github.com/hpcloud/tail v1.0.0/go.mod h1:ab1qPbhIpdTxEkNHXyeSf5vhxWSCs/tWer42PpOxQnU=
 github.com/hudl/fargo v1.3.0/go.mod h1:y3CKSmjA+wD2gak7sUSXTAoopbhU08POFhmITJgmKTg=
 github.com/huin/goupnp v0.0.0-20161224104101-679507af18f3/go.mod h1:MZ2ZmwcBpvOoJ22IJsc7va19ZwoheaBk43rKg12SKag=
@@ -1388,8 +1386,9 @@ github.com/onflow/cadence v0.21.3-0.20220524232221-b4a37c41632f/go.mod h1:MfEvTq
 github.com/onflow/cadence v0.21.3-0.20220601002855-8b113c539a2c/go.mod h1:FliGP1FZLEuSemnSf8pKItDzW7E2cvPukx/SsE1+oCo=
 github.com/onflow/cadence v0.24.0/go.mod h1:tIJiQ4RIq1WUTXdBewv8p+gNUETN93Eb7jSFedjqs5w=
 github.com/onflow/cadence v0.24.1/go.mod h1:tIJiQ4RIq1WUTXdBewv8p+gNUETN93Eb7jSFedjqs5w=
-github.com/onflow/cadence v0.24.3 h1:UhggdTeTbxZraB9vkR7TlRv3i05nHDisFzo8SNzDZ0c=
 github.com/onflow/cadence v0.24.3/go.mod h1:tIJiQ4RIq1WUTXdBewv8p+gNUETN93Eb7jSFedjqs5w=
+github.com/onflow/cadence v0.24.4 h1:3f7wk1WFKvBlwjh3d1//5frJKFgECK2GxljoG4wzQqs=
+github.com/onflow/cadence v0.24.4/go.mod h1:tIJiQ4RIq1WUTXdBewv8p+gNUETN93Eb7jSFedjqs5w=
 github.com/onflow/cadence/languageserver v0.15.2/go.mod h1:hQGE8dYH5CfQ1Oe0nXglchgURzZwR3JQhmuXtv4ROHs=
 github.com/onflow/cadence/languageserver v0.16.0/go.mod h1:UPV1so9LcMrhj27IegrTucoyS4TLRVjNr4DJqjqBhFA=
 github.com/onflow/cadence/languageserver v0.18.2/go.mod h1:ehuDCUevEEavUzgJqLevcZPjfmTzMBX7Sglbi5ur9uU=
@@ -1465,8 +1464,9 @@ github.com/onflow/flow-go-sdk v0.24.1-0.20220512181452-dec47e8451bb/go.mod h1:KQ
 github.com/onflow/flow-go-sdk v0.24.1-0.20220513205729-d1f58d47c4e3/go.mod h1:cDUwD383pSyvlKueB7lxNI10/mfS+2EWeZOmeJaxZiE=
 github.com/onflow/flow-go-sdk v0.26.0/go.mod h1:PzRE6FkdcIEl10M3H/cRnsj8SRJzKgaXqQCvLO1cOL0=
 github.com/onflow/flow-go-sdk v0.26.1/go.mod h1:Z0SxMQgapt5aBgIdI3trG+IvAAux8WAvCKhgZ7tP6dQ=
-github.com/onflow/flow-go-sdk v0.26.2 h1:60wimtE4NX1poBtUiEYa2+FrtYGkwVd7Sl4L/GVgaiw=
 github.com/onflow/flow-go-sdk v0.26.2/go.mod h1:wjeLjPVcZ2z3xNwvtRDj3ojqnJEoqGoxQOa3eHHXo18=
+github.com/onflow/flow-go-sdk v0.26.3 h1:LEowsVrCp81fV1yzFGdL0CrT1V1iv+qy8QBONtP568U=
+github.com/onflow/flow-go-sdk v0.26.3/go.mod h1:lGce072IVVj1EWn6C8xPJcvaGyNwp4AdOMHYcJsORK8=
 github.com/onflow/flow-go/crypto v0.12.0/go.mod h1:oXuvU0Dr4lHKgye6nHEFbBXIWNv+dBQUzoVW5Go38+o=
 github.com/onflow/flow-go/crypto v0.18.0/go.mod h1:3Ah843iPyjIL+7nH9EillV3OWNptrL+DrQUbVKgg2E4=
 github.com/onflow/flow-go/crypto v0.21.3/go.mod h1:vI6V4CY3R6c4JKBxdcRiR/AnjBfL8OSD97bJc60cLuQ=
