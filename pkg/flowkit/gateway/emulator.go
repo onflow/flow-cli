@@ -26,6 +26,7 @@ import (
 	jsoncdc "github.com/onflow/cadence/encoding/json"
 	emulator "github.com/onflow/flow-emulator"
 	"github.com/onflow/flow-emulator/convert/sdk"
+	"github.com/rs/zerolog"
 	"google.golang.org/grpc/status"
 
 	"github.com/onflow/flow-emulator/server/backend"
@@ -38,10 +39,11 @@ import (
 )
 
 type EmulatorGateway struct {
-	emulator *emulator.Blockchain
-	backend  *backend.Backend
-	ctx      context.Context
-	logger   *logrus.Logger
+	emulator      *emulator.Blockchain
+	backend       *backend.Backend
+	ctx           context.Context
+	logger        *logrus.Logger
+	emultorLogger *zerolog.Logger
 }
 
 func UnwrapStatusError(err error) error {
@@ -54,14 +56,16 @@ func NewEmulatorGateway(serviceAccount *flowkit.Account) *EmulatorGateway {
 
 func NewEmulatorGatewayWithOpts(serviceAccount *flowkit.Account, opts ...func(*EmulatorGateway)) *EmulatorGateway {
 
+	defaultEmulatorLogger := zerolog.Nop()
 	gateway := &EmulatorGateway{
-		ctx:    context.Background(),
-		logger: logrus.New(),
+		ctx:           context.Background(),
+		logger:        logrus.New(),
+		emultorLogger: &defaultEmulatorLogger,
 	}
 	for _, opt := range opts {
 		opt(gateway)
 	}
-	gateway.emulator = newEmulator(serviceAccount)
+	gateway.emulator = newEmulator(serviceAccount, gateway.emultorLogger)
 	gateway.backend = backend.New(gateway.logger, gateway.emulator)
 	gateway.backend.EnableAutoMine()
 
@@ -71,6 +75,12 @@ func NewEmulatorGatewayWithOpts(serviceAccount *flowkit.Account, opts ...func(*E
 func WithLogger(logger *logrus.Logger) func(g *EmulatorGateway) {
 	return func(g *EmulatorGateway) {
 		g.logger = logger
+	}
+}
+
+func WithEmulatorLogger(logger *zerolog.Logger) func(g *EmulatorGateway) {
+	return func(g *EmulatorGateway) {
+		g.emultorLogger = logger
 	}
 }
 
@@ -84,7 +94,7 @@ func (g *EmulatorGateway) SetContext(ctx context.Context) {
 	g.ctx = ctx
 }
 
-func newEmulator(serviceAccount *flowkit.Account) *emulator.Blockchain {
+func newEmulator(serviceAccount *flowkit.Account, emulatorLogger *zerolog.Logger) *emulator.Blockchain {
 	var opts []emulator.Option
 	if serviceAccount != nil && serviceAccount.Key().Type() == config.KeyTypeHex {
 		privKey, _ := serviceAccount.Key().PrivateKey()
@@ -93,7 +103,7 @@ func newEmulator(serviceAccount *flowkit.Account) *emulator.Blockchain {
 			(*privKey).PublicKey(),
 			serviceAccount.Key().SigAlgo(),
 			serviceAccount.Key().HashAlgo(),
-		))
+		), emulator.WithLogger(*emulatorLogger))
 	}
 
 	b, err := emulator.NewBlockchain(opts...)
