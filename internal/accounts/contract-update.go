@@ -20,6 +20,7 @@ package accounts
 
 import (
 	"fmt"
+	"github.com/onflow/cadence"
 
 	"github.com/onflow/flow-cli/pkg/flowkit"
 
@@ -67,7 +68,7 @@ func updateContract(
 		return nil, err
 	}
 
-	account, err := services.Accounts.AddContract(to, name, code, true)
+	account, err := services.Accounts.AddContract(to, name, code, true, []cadence.Value{})
 	if err != nil {
 		return nil, err
 	}
