@@ -111,6 +111,33 @@ func toConfig(account Account) config.Account {
 	}
 }
 
+func AccountFromFlow(account *flow.Account, name string, key crypto.PrivateKey) (*Account, error) {
+	flowkitAccount := &Account{
+		name:    name,
+		address: account.Address,
+	}
+
+	if len(account.Keys) > 0 {
+		defaultKey := account.Keys[0]
+		confKey := config.AccountKey{
+			Type:       config.KeyTypeHex,
+			Index:      defaultKey.Index,
+			SigAlgo:    defaultKey.SigAlgo,
+			HashAlgo:   defaultKey.HashAlgo,
+			PrivateKey: key,
+		}
+
+		key, err := NewAccountKey(confKey)
+		if err != nil {
+			return nil, err
+		}
+
+		flowkitAccount.SetKey(key)
+	}
+
+	return flowkitAccount, nil
+}
+
 func generateEmulatorServiceAccount(sigAlgo crypto.SignatureAlgorithm, hashAlgo crypto.HashAlgorithm) (*Account, error) {
 	seed, err := util.RandomSeed(crypto.MinSeedLength)
 	if err != nil {
