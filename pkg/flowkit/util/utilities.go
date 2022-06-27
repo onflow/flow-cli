@@ -137,3 +137,14 @@ func OpenBrowserWindow(url string) error {
 	}
 	return nil
 }
+
+func TestnetFaucetURL(publicKey string, sigAlgo crypto.SignatureAlgorithm) string {
+	const testnetFaucetHost = "https://testnet-faucet.onflow.org/"
+
+	link := fmt.Sprintf("%s?key=%x", testnetFaucetHost, publicKey)
+	if sigAlgo != crypto.ECDSA_P256 {
+		link = fmt.Sprintf("%s&sig-algo=%s", link, sigAlgo)
+	}
+
+	return link
+}
