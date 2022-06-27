@@ -21,6 +21,17 @@ package accounts
 import (
 	"fmt"
 	"strings"
+	"time"
+
+	"github.com/onflow/flow-cli/pkg/flowkit/gateway"
+
+	"github.com/onflow/flow-cli/pkg/flowkit/util"
+
+	"github.com/onflow/flow-go-sdk"
+
+	"github.com/onflow/flow-cli/pkg/flowkit/config"
+
+	"github.com/onflow/flow-cli/pkg/flowkit/output"
 
 	"github.com/onflow/flow-cli/pkg/flowkit"
 
@@ -61,6 +72,14 @@ func create(
 	services *services.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
+	// if user doesn't provide any flags go into interactive mode
+	if len(createFlags.Keys) == 0 {
+		err := createInteractive(state)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	signer, err := state.Accounts().ByName(createFlags.Signer)
 	if err != nil {
 		return nil, err
@@ -131,4 +150,128 @@ func create(
 		Account: account,
 		include: createFlags.Include,
 	}, nil
+}
+
+func createInteractive(state *flowkit.State) error {
+	network := output.CreateAccountNetwork()
+
+	// create new gateway based on chosen network
+	gw, err := gateway.NewGrpcGateway(network.Host)
+	if err != nil {
+		return err
+	}
+
+	service := services.NewServices(gw, state, &output.NilLogger{})
+
+	key, err := service.Keys.Generate("", crypto.ECDSA_P256)
+	if err != nil {
+		return err
+	}
+
+	startHeight, err := service.Blocks.GetLatestBlockHeight()
+	if err != nil {
+		return err
+	}
+
+	stdLogger := &output.StdoutLogger{}
+	stdLogger.StartProgress("Waiting for your account to be created...")
+	defer stdLogger.StopProgress()
+
+	switch network {
+	case config.DefaultEmulatorNetwork():
+		signer, err := state.EmulatorServiceAccount()
+		if err != nil {
+			return err
+		}
+		account, err := service.Accounts.Create(
+			signer,
+			[]crypto.PublicKey{key.PublicKey()},
+			[]int{flow.AccountKeyWeightThreshold},
+			[]crypto.SignatureAlgorithm{crypto.ECDSA_P256},
+			[]crypto.HashAlgorithm{crypto.SHA3_256},
+			nil,
+		)
+		if err != nil {
+			return err
+		}
+
+		flowkitAccount, err := flowkit.AccountFromFlow(account, util.RandomName(), key)
+		if err != nil {
+			return err
+		}
+
+		state.Accounts().AddOrUpdate(flowkitAccount)
+		err = state.SaveDefault()
+		if err != nil {
+			return err
+		}
+
+		// todo log out a warning that account wont be persisted between emulator restarts, and about the emulator persist flag
+	case config.DefaultTestnetNetwork():
+		link := util.TestnetFaucetURL(key.PublicKey().String(), crypto.ECDSA_P256)
+		err := util.OpenBrowserWindow(link)
+		if err != nil {
+			return err
+		}
+
+		address, err := getAccountCreatedAddressWithPubKey(service, key.PublicKey(), startHeight)
+		if err != nil {
+			return err
+		}
+		flowkitAccount := &flowkit.Account{}
+		flowkitAccount.SetName(util.RandomName())
+		flowkitAccount.SetAddress(*address)
+
+		// todo: put real values instead of hardcoded - probably get an account for it
+		hexKey := flowkit.NewHexAccountKeyFromPrivateKey(0, crypto.SHA3_256, key)
+		flowkitAccount.SetKey(hexKey)
+
+		state.Accounts().AddOrUpdate(flowkitAccount)
+		err = state.SaveDefault()
+		if err != nil {
+			return err
+		}
+
+		return nil
+	case config.DefaultMainnetNetwork():
+		return nil
+	}
+
+	return nil
+}
+
+func getAccountCreatedAddressWithPubKey(
+	service *services.Services,
+	pubKey crypto.PublicKey,
+	startHeight uint64,
+) (*flow.Address, error) {
+	lastHeight, err := service.Blocks.GetLatestBlockHeight()
+	if err != nil {
+		return nil, err
+	}
+
+	flowEvents, err := service.Events.Get([]string{flow.EventAccountAdded}, startHeight, lastHeight, 20, 1)
+	if err != nil {
+		return nil, err
+	}
+
+	var address *flow.Address
+	for _, block := range flowEvents {
+		events := flowkit.NewEvents(block.Events)
+		address = events.GetAddressForKeyAdded(pubKey)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if address == nil {
+		time.Sleep(time.Second)
+		address, err = getAccountCreatedAddressWithPubKey(service, pubKey, startHeight)
+		if err != nil {
+			return nil, err
+		}
+		return address, nil
+	}
+
+	return address, nil
 }
