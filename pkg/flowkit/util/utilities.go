@@ -22,6 +22,8 @@ import (
 	"bytes"
 	"encoding/hex"
 	"fmt"
+	"os/exec"
+	"runtime"
 	"strings"
 	"text/tabwriter"
 
@@ -114,5 +116,24 @@ func ValidateECDSAP256Pub(key string) error {
 		return fmt.Errorf("failed to decode public key: %w", err)
 	}
 
+	return nil
+}
+
+func OpenBrowserWindow(url string) error {
+	var err error
+
+	switch runtime.GOOS {
+	case "linux":
+		err = exec.Command("xdg-open", url).Start()
+	case "windows":
+		err = exec.Command("rundll32", "url.dll,FileProtocolHandler", url).Start()
+	case "darwin":
+		err = exec.Command("open", url).Start()
+	default:
+		err = fmt.Errorf("unsupported platform")
+	}
+	if err != nil {
+		return fmt.Errorf("could not open a browser window, please navigate to %s manually: %w", url, err)
+	}
 	return nil
 }
