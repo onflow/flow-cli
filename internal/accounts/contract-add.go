@@ -51,7 +51,7 @@ var AddContractCommand = &command.Command{
 func addContract(
 	args []string,
 	readerWriter flowkit.ReaderWriter,
-	_ command.GlobalFlags,
+	globalFlags command.GlobalFlags,
 	services *services.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
@@ -67,8 +67,11 @@ func addContract(
 	if err != nil {
 		return nil, err
 	}
-
-	account, err := services.Accounts.AddContract(to, name, code, false, []cadence.Value{})
+	contractArgs := state.Config().Deployments.ByContractNameAndNetwork(name, globalFlags.Network).Args
+	if contractArgs == nil {
+		contractArgs = []cadence.Value{}
+	}
+	account, err := services.Accounts.AddContract(to, name, code, false, contractArgs)
 	if err != nil {
 		return nil, err
 	}
