@@ -44,6 +44,8 @@ func NewStdoutLogger(level int) *StdoutLogger {
 	}
 }
 
+var _ Logger = &StdoutLogger{}
+
 // StdoutLogger is a stdout logging implementation.
 type StdoutLogger struct {
 	level   int
@@ -92,4 +94,28 @@ func (s *StdoutLogger) StopProgress() {
 		s.spinner.Stop()
 		s.spinner = nil
 	}
+}
+
+var _ Logger = &NilLogger{}
+
+type NilLogger struct{}
+
+func (n NilLogger) Debug(s string) {
+	return
+}
+
+func (n NilLogger) Info(s string) {
+	return
+}
+
+func (n NilLogger) Error(s string) {
+	return
+}
+
+func (n NilLogger) StartProgress(s string) {
+	return
+}
+
+func (n NilLogger) StopProgress() {
+	return
 }
