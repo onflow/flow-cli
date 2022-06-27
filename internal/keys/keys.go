@@ -66,7 +66,7 @@ func (k *KeyResult) String() string {
 
 	if k.privateKey != nil {
 		// build the faucet link
-		link := TestnetFaucetURL(k.publicKey.String(), k.accountKey.SigAlgo)
+		link := util.TestnetFaucetURL(k.publicKey.String(), k.accountKey.SigAlgo)
 		fmt.Printf(
 			"%s If you want to create an account on testnet with the generated keys use this link:\n%s \n\n",
 			output.TryEmoji(),
@@ -102,15 +102,4 @@ func (k *KeyResult) Oneliner() string {
 	}
 
 	return result
-}
-
-func TestnetFaucetURL(publicKey string, sigAlgo crypto.SignatureAlgorithm) string {
-	const testnetFaucetHost = "https://testnet-faucet.onflow.org/"
-
-	link := fmt.Sprintf("%s?key=%x", testnetFaucetHost, publicKey)
-	if sigAlgo != crypto.ECDSA_P256 {
-		link = fmt.Sprintf("%s&sig-algo=%s", link, sigAlgo)
-	}
-
-	return link
 }
