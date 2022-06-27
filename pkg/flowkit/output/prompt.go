@@ -507,3 +507,22 @@ func ReportCrash() bool {
 
 	return chosen == 0
 }
+
+func CreateAccountNetwork() int {
+	networkNames := make([]string, len(config.DefaultNetworks()))
+	for i, net := range config.DefaultNetworks() {
+		networkNames[i] = net.Name
+	}
+
+	networkPrompt := promptui.Select{
+		Label: "Select the network to create an account",
+		Items: networkNames,
+	}
+
+	index, _, err := networkPrompt.Run()
+	if err == promptui.ErrInterrupt {
+		os.Exit(-1)
+	}
+
+	return index
+}
