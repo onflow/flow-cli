@@ -21,6 +21,8 @@ package output
 import (
 	"fmt"
 	"os"
+	"os/exec"
+	"runtime"
 
 	"github.com/onflow/flow-cli/pkg/flowkit"
 
@@ -508,7 +510,7 @@ func ReportCrash() bool {
 	return chosen == 0
 }
 
-func CreateAccountNetwork() int {
+func CreateAccountNetwork() config.Network {
 	networkNames := make([]string, len(config.DefaultNetworks()))
 	for i, net := range config.DefaultNetworks() {
 		networkNames[i] = net.Name
@@ -524,5 +526,24 @@ func CreateAccountNetwork() int {
 		os.Exit(-1)
 	}
 
-	return index
+	return config.DefaultNetworks()[index]
+}
+
+func openBrowserWindow(url string) error {
+	var err error
+
+	switch runtime.GOOS {
+	case "linux":
+		err = exec.Command("xdg-open", url).Start()
+	case "windows":
+		err = exec.Command("rundll32", "url.dll,FileProtocolHandler", url).Start()
+	case "darwin":
+		err = exec.Command("open", url).Start()
+	default:
+		err = fmt.Errorf("unsupported platform")
+	}
+	if err != nil {
+		return fmt.Errorf("could not open a browser window, please navigate to %s manually: %w", url, err)
+	}
+	return nil
 }
