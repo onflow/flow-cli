@@ -289,7 +289,7 @@ func (a *Accounts) AddContract(
 		account,
 		contractName,
 		string(contractSource),
-		contractArgs, // TODO(sideninja) add support for args on account add-contract
+		contractArgs,
 	)
 	if err != nil {
 		return nil, err

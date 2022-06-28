@@ -218,7 +218,7 @@ func TestTransactions_Integration(t *testing.T) {
 			}},
 		}
 		state.Deployments().AddOrUpdate(d)
-		_, _ = s.Accounts.AddContract(srvAcc, tests.ContractHelloString.Name, tests.ContractHelloString.Source, false)
+		_, _ = s.Accounts.AddContract(srvAcc, tests.ContractHelloString.Name, tests.ContractHelloString.Source, false, []cadence.Value{})
 
 		tx, err := s.Transactions.Build(
 			signer,

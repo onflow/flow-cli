@@ -54,13 +54,11 @@ func (d *Deployments) ByNetwork(network string) Deployments {
 
 // ByContractNameAndNetwork get deploy by contract name and network.
 func (d *Deployments) ByContractNameAndNetwork(contractName string, network string) ContractDeployment {
-	var deployment ContractDeployment
-
 	for _, deploy := range *d {
 		if deploy.Network == network {
-			for _, deployedContract := range deploy.Contracts {
+			for contractIndex, deployedContract := range deploy.Contracts {
 				if deployedContract.Name == contractName {
-					return deployment
+					return deploy.Contracts[contractIndex]
 				}
 			}
 		}

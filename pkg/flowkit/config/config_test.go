@@ -191,7 +191,14 @@ func Test_GetDeploymentsByNetworkComplex(t *testing.T) {
 		deployments[0].Contracts,
 	)
 }
+func Test_GetDeploymentsByContractNameAndNetworkComplex(t *testing.T) {
+	conf := generateComplexConfig()
+	deployment := conf.Deployments.ByContractNameAndNetwork("NonFungibleToken", "testnet")
+	assert.Equal(t, config.ContractDeployment{Name: "NonFungibleToken", Args: []cadence.Value{}}, deployment)
 
+	deployment = conf.Deployments.ByContractNameAndNetwork("KittyItemsMarket", "testnet")
+	assert.Equal(t, config.ContractDeployment{}, deployment)
+}
 func Test_GetNetworkByNameComplex(t *testing.T) {
 	conf := generateComplexConfig()
 	network, err := conf.Networks.ByName("emulator")
