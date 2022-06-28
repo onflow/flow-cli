@@ -76,11 +76,9 @@ func NewEvent(event flow.Event) Event {
 
 func (e *Events) GetAddress() *flow.Address {
 	for _, event := range *e {
-		if event.Type == flow.EventAccountCreated {
-			if a, ok := event.Values["address"].(cadence.Address); ok {
-				address := flow.HexToAddress(a.String())
-				return &address
-			}
+		if a, ok := event.Values["address"].(cadence.Address); ok {
+			address := flow.HexToAddress(a.String())
+			return &address
 		}
 	}
 
@@ -93,8 +91,6 @@ func (e *Events) GetAddressForKeyAdded(publicKey crypto.PublicKey) *flow.Address
 			if p, ok := event.Values["publicKey"].(cadence.Array); ok { // todo this is older format, support also new format and potentialy move to go sdk
 				var parsedKey []byte
 				_ = json.Unmarshal([]byte(p.String()), &parsedKey)
-
-				// todo for some reasons this is not yet returning true, or something else in above calls not working
 
 				if publicKey.String() == fmt.Sprintf("0x%x", parsedKey[4:len(parsedKey)-5]) {
 					return e.GetAddress()

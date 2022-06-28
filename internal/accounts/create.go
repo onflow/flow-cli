@@ -78,6 +78,10 @@ func create(
 		if err != nil {
 			return nil, err
 		}
+		return &AccountResult{
+			Account: account,
+			include: createFlags.Include,
+		}, nil
 	}
 
 	signer, err := state.Accounts().ByName(createFlags.Signer)
@@ -152,36 +156,33 @@ func create(
 	}, nil
 }
 
-func createInteractive(state *flowkit.State) error {
-	network := output.CreateAccountNetwork()
+func createInteractive(state *flowkit.State) (*flow.Account, error) {
+	network := output.CreateAccountNetworkPrompt()
 
 	// create new gateway based on chosen network
 	gw, err := gateway.NewGrpcGateway(network.Host)
 	if err != nil {
-		return err
+		return nil, err
 	}
-
 	service := services.NewServices(gw, state, &output.NilLogger{})
 
 	key, err := service.Keys.Generate("", crypto.ECDSA_P256)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	startHeight, err := service.Blocks.GetLatestBlockHeight()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	stdLogger := &output.StdoutLogger{}
-	stdLogger.StartProgress("Waiting for your account to be created...")
-	defer stdLogger.StopProgress()
+	var address flow.Address
 
 	switch network {
 	case config.DefaultEmulatorNetwork():
 		signer, err := state.EmulatorServiceAccount()
 		if err != nil {
-			return err
+			return nil, err
 		}
 		account, err := service.Accounts.Create(
 			signer,
@@ -192,52 +193,39 @@ func createInteractive(state *flowkit.State) error {
 			nil,
 		)
 		if err != nil {
-			return err
+			return nil, err
 		}
 
-		flowkitAccount, err := flowkit.AccountFromFlow(account, util.RandomName(), key)
-		if err != nil {
-			return err
-		}
-
-		state.Accounts().AddOrUpdate(flowkitAccount)
-		err = state.SaveDefault()
-		if err != nil {
-			return err
-		}
-
-		// todo log out a warning that account wont be persisted between emulator restarts, and about the emulator persist flag
+		address = account.Address // todo log out a warning that account wont be persisted between emulator restarts, and about the emulator persist flag
 	case config.DefaultTestnetNetwork():
 		link := util.TestnetFaucetURL(key.PublicKey().String(), crypto.ECDSA_P256)
 		err := util.OpenBrowserWindow(link)
 		if err != nil {
-			return err
+			return nil, err
 		}
 
-		address, err := getAccountCreatedAddressWithPubKey(service, key.PublicKey(), startHeight)
+		addr, err := getAccountCreatedAddressWithPubKey(service, key.PublicKey(), startHeight)
 		if err != nil {
-			return err
+			return nil, err
 		}
-		flowkitAccount := &flowkit.Account{}
-		flowkitAccount.SetName(util.RandomName())
-		flowkitAccount.SetAddress(*address)
-
-		// todo: put real values instead of hardcoded - probably get an account for it
-		hexKey := flowkit.NewHexAccountKeyFromPrivateKey(0, crypto.SHA3_256, key)
-		flowkitAccount.SetKey(hexKey)
-
-		state.Accounts().AddOrUpdate(flowkitAccount)
-		err = state.SaveDefault()
-		if err != nil {
-			return err
-		}
-
-		return nil
+		address = *addr
 	case config.DefaultMainnetNetwork():
-		return nil
+		// todo implement
 	}
 
-	return nil
+	account, err := service.Accounts.Get(address)
+	flowkitAccount, err := flowkit.AccountFromFlow(account, util.RandomName(), key)
+	if err != nil {
+		return nil, err
+	}
+
+	state.Accounts().AddOrUpdate(flowkitAccount)
+	err = state.SaveDefault()
+	if err != nil {
+		return nil, err
+	}
+
+	return account, nil
 }
 
 func getAccountCreatedAddressWithPubKey(
@@ -259,8 +247,8 @@ func getAccountCreatedAddressWithPubKey(
 	for _, block := range flowEvents {
 		events := flowkit.NewEvents(block.Events)
 		address = events.GetAddressForKeyAdded(pubKey)
-		if err != nil {
-			return nil, err
+		if address != nil {
+			break
 		}
 	}
 

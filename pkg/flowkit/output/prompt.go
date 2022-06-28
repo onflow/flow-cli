@@ -508,7 +508,7 @@ func ReportCrash() bool {
 	return chosen == 0
 }
 
-func CreateAccountNetwork() config.Network {
+func CreateAccountNetworkPrompt() config.Network {
 	networkNames := make([]string, len(config.DefaultNetworks()))
 	for i, net := range config.DefaultNetworks() {
 		networkNames[i] = net.Name
