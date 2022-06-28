@@ -74,7 +74,7 @@ func create(
 ) (command.Result, error) {
 	// if user doesn't provide any flags go into interactive mode
 	if len(createFlags.Keys) == 0 {
-		err := createInteractive(state)
+		account, err := createInteractive(state)
 		if err != nil {
 			return nil, err
 		}
