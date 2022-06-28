@@ -51,7 +51,7 @@ For example, here's how we'd deploy contracts `Foo` and `Bar` to the account `my
 ```
 ## Add a contract with argument initialization
 
-To add initialization arguments to a contract, the deployment part of flow.json can be configurd like below.
+To add initialization arguments to a contract, the deployment part of flow.json can be configured like below.
 ```json
 {
   "contracts": {
