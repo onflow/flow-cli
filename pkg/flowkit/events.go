@@ -94,6 +94,8 @@ func (e *Events) GetAddressForKeyAdded(publicKey crypto.PublicKey) *flow.Address
 				var parsedKey []byte
 				_ = json.Unmarshal([]byte(p.String()), &parsedKey)
 
+				// todo for some reasons this is not yet returning true, or something else in above calls not working
+
 				if publicKey.String() == fmt.Sprintf("0x%x", parsedKey[4:len(parsedKey)-5]) {
 					return e.GetAddress()
 				}

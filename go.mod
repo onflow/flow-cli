@@ -26,3 +26,5 @@ require (
 	gonum.org/v1/gonum v0.11.0
 	google.golang.org/grpc v1.45.0
 )
+
+replace github.com/onflow/cadence/languageserver => /Users/dapper/Dev/cadence/languageserver
