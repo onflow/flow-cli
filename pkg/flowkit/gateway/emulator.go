@@ -43,7 +43,7 @@ type EmulatorGateway struct {
 	backend       *backend.Backend
 	ctx           context.Context
 	logger        *logrus.Logger
-	emultorLogger *zerolog.Logger
+	emulatorLogger *zerolog.Logger
 }
 
 func UnwrapStatusError(err error) error {
