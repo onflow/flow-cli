@@ -26,4 +26,3 @@ require (
 	google.golang.org/grpc v1.45.0
 )
 
-replace github.com/onflow/cadence/languageserver => /Users/raymondsukanto/go/src/github.com/onflow/cadence/languageserver
