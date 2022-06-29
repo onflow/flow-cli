@@ -60,7 +60,7 @@ func NewEmulatorGatewayWithOpts(serviceAccount *flowkit.Account, opts ...func(*E
 	gateway := &EmulatorGateway{
 		ctx:           context.Background(),
 		logger:        logrus.New(),
-		emultorLogger: &defaultEmulatorLogger,
+		emulatorLogger: &defaultEmulatorLogger,
 	}
 	for _, opt := range opts {
 		opt(gateway)
