@@ -80,7 +80,7 @@ func WithLogger(logger *logrus.Logger) func(g *EmulatorGateway) {
 
 func WithEmulatorLogger(logger *zerolog.Logger) func(g *EmulatorGateway) {
 	return func(g *EmulatorGateway) {
-		g.emultorLogger = logger
+		g.emulatorLogger = logger
 	}
 }
 
