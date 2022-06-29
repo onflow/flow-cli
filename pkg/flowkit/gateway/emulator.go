@@ -65,7 +65,7 @@ func NewEmulatorGatewayWithOpts(serviceAccount *flowkit.Account, opts ...func(*E
 	for _, opt := range opts {
 		opt(gateway)
 	}
-	gateway.emulator = newEmulator(serviceAccount, gateway.emultorLogger)
+	gateway.emulator = newEmulator(serviceAccount, gateway.emulatorLogger)
 	gateway.backend = backend.New(gateway.logger, gateway.emulator)
 	gateway.backend.EnableAutoMine()
 
