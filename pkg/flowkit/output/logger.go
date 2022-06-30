@@ -95,27 +95,3 @@ func (s *StdoutLogger) StopProgress() {
 		s.spinner = nil
 	}
 }
-
-var _ Logger = &NilLogger{}
-
-type NilLogger struct{}
-
-func (n NilLogger) Debug(s string) {
-	return
-}
-
-func (n NilLogger) Info(s string) {
-	return
-}
-
-func (n NilLogger) Error(s string) {
-	return
-}
-
-func (n NilLogger) StartProgress(s string) {
-	return
-}
-
-func (n NilLogger) StopProgress() {
-	return
-}
