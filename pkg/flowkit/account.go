@@ -118,21 +118,34 @@ func AccountFromFlow(account *flow.Account, name string, key crypto.PrivateKey) 
 	}
 
 	if len(account.Keys) > 0 {
-		defaultKey := account.Keys[0]
-		confKey := config.AccountKey{
-			Type:       config.KeyTypeHex,
-			Index:      defaultKey.Index,
-			SigAlgo:    defaultKey.SigAlgo,
-			HashAlgo:   defaultKey.HashAlgo,
-			PrivateKey: key,
-		}
+		defaultKey := account.Keys[0] // todo check if ok to default
+		flowkitAccount.SetKey(
+			NewHexAccountKeyFromPrivateKey(defaultKey.Index, defaultKey.HashAlgo, key),
+		)
+	}
 
-		key, err := NewAccountKey(confKey)
+	return flowkitAccount, nil
+}
+
+func AccountFromFlowEncrypted(
+	account *flow.Account,
+	name string,
+	key crypto.PrivateKey,
+	password string,
+) (*Account, error) {
+	flowkitAccount := &Account{
+		name:    name,
+		address: account.Address,
+	}
+
+	if len(account.Keys) > 0 {
+		defaultKey := account.Keys[0] // todo check if ok to default
+		flowkitKey, err := CreateEncryptedAccountKey(defaultKey.Index, defaultKey.HashAlgo, key, password)
 		if err != nil {
 			return nil, err
 		}
 
-		flowkitAccount.SetKey(key)
+		flowkitAccount.SetKey(flowkitKey)
 	}
 
 	return flowkitAccount, nil

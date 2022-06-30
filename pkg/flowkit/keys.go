@@ -332,6 +332,28 @@ func (a *EncryptedAccountKey) decrypt() (crypto.PrivateKey, error) {
 	return crypto.DecodePrivateKey(a.sigAlgo, decryptedKey)
 }
 
+func (a *EncryptedAccountKey) PrivateKey() (*crypto.PrivateKey, error) {
+	return &a.privateKey, nil
+}
+
+func (a *EncryptedAccountKey) ToConfig() config.AccountKey {
+	return config.AccountKey{
+		Type:         a.keyType,
+		Index:        a.index,
+		SigAlgo:      a.sigAlgo,
+		HashAlgo:     a.hashAlgo,
+		EncryptedKey: a.encryptedKey,
+	}
+}
+
+func (a *EncryptedAccountKey) Validate() error {
+	//_, err := crypto.DecodePrivateKeyHex(a.sigAlgo, a.PrivateKeyHex())
+	//if err != nil {
+	//	return fmt.Errorf("invalid private key: %w", err)
+	//}
+	return nil
+}
+
 func encrypt(key, data []byte) ([]byte, error) {
 	key, salt, err := deriveKey(key, nil)
 	if err != nil {
@@ -401,26 +423,4 @@ func deriveKey(password, salt []byte) ([]byte, []byte, error) {
 	}
 
 	return key, salt, nil
-}
-
-func (a *EncryptedAccountKey) PrivateKey() (*crypto.PrivateKey, error) {
-	return &a.privateKey, nil
-}
-
-func (a *EncryptedAccountKey) ToConfig() config.AccountKey {
-	return config.AccountKey{
-		Type:         a.keyType,
-		Index:        a.index,
-		SigAlgo:      a.sigAlgo,
-		HashAlgo:     a.hashAlgo,
-		EncryptedKey: a.encryptedKey,
-	}
-}
-
-func (a *EncryptedAccountKey) Validate() error {
-	//_, err := crypto.DecodePrivateKeyHex(a.sigAlgo, a.PrivateKeyHex())
-	//if err != nil {
-	//	return fmt.Errorf("invalid private key: %w", err)
-	//}
-	return nil
 }

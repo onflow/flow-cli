@@ -217,10 +217,23 @@ func createInteractive(state *flowkit.State) (*flow.Account, error) {
 		address = *addr
 	}
 
+	var flowkitAccount *flowkit.Account
 	account, err := service.Accounts.Get(address)
-	flowkitAccount, err := flowkit.AccountFromFlow(account, util.RandomName(), key)
 	if err != nil {
 		return nil, err
+	}
+
+	if /*network == config.DefaultMainnetNetwork() &&*/ output.EnableKeyEncryptionPrompt() {
+		password, err := output.CreatePasswordPrompt()
+		if err != nil {
+			return nil, err
+		}
+		flowkitAccount, err = flowkit.AccountFromFlowEncrypted(account, util.RandomName(), key, password)
+	} else {
+		flowkitAccount, err = flowkit.AccountFromFlow(account, util.RandomName(), key)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	state.Accounts().AddOrUpdate(flowkitAccount)

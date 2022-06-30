@@ -7,7 +7,6 @@ require (
 	github.com/getsentry/sentry-go v0.13.0
 	github.com/go-git/go-git/v5 v5.4.2
 	github.com/gosuri/uilive v0.0.4
-	github.com/hexops/gotextdiff v1.0.3
 	github.com/joho/godotenv v1.4.0
 	github.com/manifoldco/promptui v0.9.0
 	github.com/onflow/cadence v0.24.3
@@ -23,6 +22,7 @@ require (
 	github.com/spf13/cobra v1.4.0
 	github.com/stretchr/testify v1.7.1
 	github.com/thoas/go-funk v0.9.2
+	golang.org/x/crypto v0.0.0-20220411220226-7b82a4e95df4
 	gonum.org/v1/gonum v0.11.0
 	google.golang.org/grpc v1.45.0
 )
