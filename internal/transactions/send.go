@@ -21,6 +21,8 @@ package transactions
 import (
 	"fmt"
 
+	"github.com/onflow/flow-cli/pkg/flowkit/output"
+
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
 
 	"github.com/spf13/cobra"
@@ -62,16 +64,20 @@ func send(
 	state *flowkit.State,
 ) (command.Result, error) {
 	codeFilename := args[0]
-	// if sendFlags.Signer != emulator-account, this means that user has specified a signer in command flag
-	// if user has not specified signer in flag, we will use service account of default emulator as specified
-	// in flow.json
+
 	transactionSigner := sendFlags.Signer
-	if sendFlags.Signer == config.DefaultEmulatorServiceAccountName {
+	if sendFlags.Signer == config.DefaultEmulatorServiceAccountName { // user service account by default
 		transactionSigner = state.Config().Emulators.Default().ServiceAccount
 	}
 	signer, err := state.Accounts().ByName(transactionSigner)
 	if err != nil {
 		return nil, err
+	}
+
+	if signer.Key().Type() == config.KeyTypeEncrypted {
+		password := output.EnterPasswordPrompt()
+		key := signer.Key().(*flowkit.EncryptedAccountKey)
+		key.SetPassword(password)
 	}
 
 	code, err := readerWriter.ReadFile(codeFilename)
