@@ -65,14 +65,6 @@ func (k *KeyResult) String() string {
 	writer := util.CreateTabWriter(&b)
 
 	if k.privateKey != nil {
-		// build the faucet link
-		link := util.TestnetFaucetURL(k.publicKey.String(), k.accountKey.SigAlgo)
-		fmt.Printf(
-			"%s If you want to create an account on testnet with the generated keys use this link:\n%s \n\n",
-			output.TryEmoji(),
-			link,
-		)
-
 		_, _ = fmt.Fprintf(writer, "%s Store private key safely and don't share with anyone! \n", output.StopEmoji())
 		_, _ = fmt.Fprintf(writer, "Private Key \t %x \n", k.privateKey.Encode())
 	}
