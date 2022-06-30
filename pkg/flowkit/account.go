@@ -84,7 +84,6 @@ func accountsToConfig(accounts Accounts) config.Accounts {
 	accountConfs := make([]config.Account, 0)
 
 	for _, account := range accounts {
-		fmt.Println(account)
 		accountConfs = append(accountConfs, toConfig(account))
 	}
 
@@ -105,7 +104,6 @@ func fromConfig(account config.Account) (*Account, error) {
 }
 
 func toConfig(account Account) config.Account {
-	fmt.Println("#acc key", account.key.ToConfig())
 	return config.Account{
 		Name:    account.name,
 		Address: account.address,

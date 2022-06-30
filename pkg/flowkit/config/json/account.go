@@ -185,7 +185,6 @@ func transformAccountsToJSON(accounts config.Accounts) jsonAccounts {
 			jsonAccounts[a.Name] = transformAdvancedAccountToJSON(a)
 		}
 	}
-	fmt.Println("###", jsonAccounts)
 
 	return jsonAccounts
 }
