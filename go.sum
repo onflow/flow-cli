@@ -1393,8 +1393,9 @@ github.com/onflow/cadence/languageserver v0.16.0/go.mod h1:UPV1so9LcMrhj27IegrTu
 github.com/onflow/cadence/languageserver v0.18.2/go.mod h1:ehuDCUevEEavUzgJqLevcZPjfmTzMBX7Sglbi5ur9uU=
 github.com/onflow/cadence/languageserver v0.18.3-0.20220202133308-207188a51831/go.mod h1:sOABh+6LBUWgY6r5iYhu98mDgfiBVTXAKVYHPQV/nvo=
 github.com/onflow/cadence/languageserver v0.23.5-0.20220608222314-31dcf01be513/go.mod h1:ZC1GZu2Eerl5lkyvCn7FT51GhPUWmuqX+cYfosms7AA=
-github.com/onflow/cadence/languageserver v0.24.0 h1:LufBiLHJt9LmWhVVpxaLHO/yRvVsPNpKKEdo6ykyB/U=
 github.com/onflow/cadence/languageserver v0.24.0/go.mod h1:5w1rJx0mvrto0EvWgZkbF4STuK2SggMyamwL1spTGlQ=
+github.com/onflow/cadence/languageserver v0.24.1-0.20220630145440-c7b2a47d847d h1:1Bz+cF3U5WqFJUarDCV58LSGqNaYCjNDeok7GfFCIoY=
+github.com/onflow/cadence/languageserver v0.24.1-0.20220630145440-c7b2a47d847d/go.mod h1:e9Yf9YBCqvUzP0MFcFYbTtya2AzL7Yz63tpKNTQT6Ng=
 github.com/onflow/fcl-dev-wallet v0.4.2/go.mod h1:xWVEyGZgdDt4/+PLSlpuqhtzobjnWy5giceIGoErPzs=
 github.com/onflow/fcl-dev-wallet v0.4.4 h1:SI4fHETrjt/m76XPYYMEbU8GhLBuFL5VMZ1JzpoiIu0=
 github.com/onflow/fcl-dev-wallet v0.4.4/go.mod h1:xWVEyGZgdDt4/+PLSlpuqhtzobjnWy5giceIGoErPzs=
@@ -1409,6 +1410,7 @@ github.com/onflow/flow-cli v0.23.1-0.20210621124332-11c4cd22ffb4/go.mod h1:OD9UV
 github.com/onflow/flow-cli v0.30.3-0.20220202132709-c9157226af28/go.mod h1:8g9X+IB3lALiTzMIRFkTJzuLcfYawMp2WzLhs90NJfU=
 github.com/onflow/flow-cli v0.35.1-0.20220608222158-caf50623fa2a/go.mod h1:S7HNLguG3yHk+gjtRdN/hmuOpNl+2cqCQahXpgCUTHs=
 github.com/onflow/flow-cli v0.35.1-0.20220608231110-c253ad512117/go.mod h1:0WJHxtoBaLl2/wfiwnCocTy2WADrbzeTwPO8etJZH4Q=
+github.com/onflow/flow-cli v0.37.2-0.20220630145041-83f2b3f1282e/go.mod h1:/dYLU1WTz0sEV4YpNq5ZMNe1TkucfT8V8WvSGUdV5bs=
 github.com/onflow/flow-core-contracts/lib/go/contracts v0.7.2/go.mod h1:IZ2e7UyLCYmpQ8Kd7k0A32uXqdqfiV1r2sKs5/riblo=
 github.com/onflow/flow-core-contracts/lib/go/contracts v0.7.3-0.20210527134022-58c25247091a/go.mod h1:IZ2e7UyLCYmpQ8Kd7k0A32uXqdqfiV1r2sKs5/riblo=
 github.com/onflow/flow-core-contracts/lib/go/contracts v0.7.3/go.mod h1:MSNt2rodpRXm1n0iGQWL6ltDoJCtXEzlPw9nhE/zQmk=

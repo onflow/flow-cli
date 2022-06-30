@@ -277,7 +277,7 @@ func getAccountCreatedAddressWithPubKey(
 		return nil, err
 	}
 
-	flowEvents, err := service.Events.Get([]string{flow.EventAccountAdded}, startHeight, lastHeight, 20, 1)
+	flowEvents, err := service.Events.Get([]string{flow.EventAccountKeyAdded}, startHeight, lastHeight, 20, 1)
 	if err != nil {
 		return nil, err
 	}
