@@ -20,11 +20,16 @@ package flowkit
 
 import (
 	"context"
+	"crypto/aes"
+	"crypto/cipher"
+	"crypto/rand"
 	"encoding/hex"
 	"fmt"
 	"os"
 	"os/exec"
 	"regexp"
+
+	"golang.org/x/crypto/scrypt"
 
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/onflow/flow-go-sdk/crypto/cloudkms"
@@ -247,4 +252,175 @@ func (a *HexAccountKey) Validate() error {
 
 func (a *HexAccountKey) PrivateKeyHex() string {
 	return hex.EncodeToString(a.privateKey.Encode())
+}
+
+func CreateEncryptedAccountKey(
+	index int,
+	hashAlgo crypto.HashAlgorithm,
+	privateKey crypto.PrivateKey,
+	password string,
+) (*EncryptedAccountKey, error) {
+	encryptedKey, err := encrypt([]byte(password), privateKey.Encode())
+	if err != nil {
+		return nil, err
+	}
+
+	key := &EncryptedAccountKey{
+		baseAccountKey: &baseAccountKey{
+			keyType:  config.KeyTypeEncrypted,
+			index:    index,
+			sigAlgo:  privateKey.Algorithm(),
+			hashAlgo: hashAlgo,
+		},
+		encryptedKey: encryptedKey,
+		privateKey:   privateKey,
+		password:     password,
+	}
+
+	return key, nil
+}
+
+// todo refactor this is for from config
+func NewEncryptedAccountKey(
+	index int,
+	hashAlgo crypto.HashAlgorithm,
+	encryptedKey []byte,
+) (*EncryptedAccountKey, error) {
+	return &EncryptedAccountKey{
+		baseAccountKey: &baseAccountKey{
+			keyType: config.KeyTypeEncrypted,
+			index:   index,
+			// sigAlgo:  privateKey.Algorithm(),
+			hashAlgo: hashAlgo,
+		},
+		encryptedKey: encryptedKey,
+	}, nil
+}
+
+type EncryptedAccountKey struct {
+	*baseAccountKey
+	encryptedKey []byte
+	privateKey   crypto.PrivateKey
+	password     string
+}
+
+func (a *EncryptedAccountKey) Signer(ctx context.Context) (crypto.Signer, error) {
+	// only decrypt it if needed
+	if a.privateKey == nil {
+		pkey, err := a.decrypt()
+		if err != nil {
+			return nil, err
+		}
+		a.privateKey = pkey
+	}
+
+	return crypto.NewInMemorySigner(a.privateKey, a.HashAlgo())
+}
+
+func (a *EncryptedAccountKey) decrypt() (crypto.PrivateKey, error) {
+	if a.password == "" {
+		return nil, fmt.Errorf("can not decrypt private key, the password was not set")
+	}
+
+	// todo validate and if not correct prompt for password again
+
+	decryptedKey, err := decrypt([]byte(a.password), a.encryptedKey)
+	if err != nil {
+		return nil, err
+	}
+
+	return crypto.DecodePrivateKey(a.sigAlgo, decryptedKey)
+}
+
+func encrypt(key, data []byte) ([]byte, error) {
+	key, salt, err := deriveKey(key, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	blockCipher, err := aes.NewCipher(key)
+	if err != nil {
+		return nil, err
+	}
+
+	gcm, err := cipher.NewGCM(blockCipher)
+	if err != nil {
+		return nil, err
+	}
+
+	nonce := make([]byte, gcm.NonceSize())
+	if _, err = rand.Read(nonce); err != nil {
+		return nil, err
+	}
+
+	ciphertext := gcm.Seal(nonce, nonce, data, nil)
+	ciphertext = append(ciphertext, salt...)
+
+	return ciphertext, nil
+}
+
+func decrypt(key, data []byte) ([]byte, error) {
+	salt, data := data[len(data)-32:], data[:len(data)-32]
+
+	key, _, err := deriveKey(key, salt)
+	if err != nil {
+		return nil, err
+	}
+
+	blockCipher, err := aes.NewCipher(key)
+	if err != nil {
+		return nil, err
+	}
+
+	gcm, err := cipher.NewGCM(blockCipher)
+	if err != nil {
+		return nil, err
+	}
+
+	nonce, ciphertext := data[:gcm.NonceSize()], data[gcm.NonceSize():]
+
+	plaintext, err := gcm.Open(nil, nonce, ciphertext, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return plaintext, nil
+}
+
+func deriveKey(password, salt []byte) ([]byte, []byte, error) {
+	if salt == nil {
+		salt = make([]byte, 32)
+		if _, err := rand.Read(salt); err != nil {
+			return nil, nil, err
+		}
+	}
+
+	key, err := scrypt.Key(password, salt, 1048576, 8, 1, 32)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return key, salt, nil
+}
+
+func (a *EncryptedAccountKey) PrivateKey() (*crypto.PrivateKey, error) {
+	return &a.privateKey, nil
+}
+
+func (a *EncryptedAccountKey) ToConfig() config.AccountKey {
+	return config.AccountKey{
+		Type:         a.keyType,
+		Index:        a.index,
+		SigAlgo:      a.sigAlgo,
+		HashAlgo:     a.hashAlgo,
+		EncryptedKey: a.encryptedKey,
+	}
+}
+
+func (a *EncryptedAccountKey) Validate() error {
+	//_, err := crypto.DecodePrivateKeyHex(a.sigAlgo, a.PrivateKeyHex())
+	//if err != nil {
+	//	return fmt.Errorf("invalid private key: %w", err)
+	//}
+	return nil
 }
