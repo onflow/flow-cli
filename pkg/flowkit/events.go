@@ -90,7 +90,7 @@ func (e *Events) GetAddress() *flow.Address {
 
 func (e *Events) GetAddressForKeyAdded(publicKey crypto.PublicKey) *flow.Address {
 	for _, event := range *e {
-		if event.Type == flow.EventAccountAdded {
+		if event.Type == flow.EventAccountKeyAdded {
 			// new format
 			if keyStruct, ok := event.Values["publicKey"].(cadence.Struct); ok {
 				if keyArray, ok := keyStruct.Fields[0].(cadence.Array); ok {
