@@ -158,13 +158,14 @@ func create(
 
 func createInteractive(state *flowkit.State) (*flow.Account, error) {
 	network := output.CreateAccountNetworkPrompt()
+	log := output.NewStdoutLogger(output.InfoLog)
 
 	// create new gateway based on chosen network
 	gw, err := gateway.NewGrpcGateway(network.Host)
 	if err != nil {
 		return nil, err
 	}
-	service := services.NewServices(gw, state, &output.NilLogger{})
+	service := services.NewServices(gw, state, output.NewStdoutLogger(output.NoneLog))
 
 	key, err := service.Keys.Generate("", crypto.ECDSA_P256)
 	if err != nil {
@@ -195,26 +196,35 @@ func createInteractive(state *flowkit.State) (*flow.Account, error) {
 			return nil, err
 		}
 
-		address = account.Address // todo log out a warning that account wont be persisted between emulator restarts, and about the emulator persist flag
+		log.Info("\nPlease note, that the newly created account will only be available until you keep the emulator service up and running, if you restart the emulator service all accounts will be reset. If you want to persist accounts between restarts you must use the '--persist' flag when starting the flow emulator.")
+
+		address = account.Address
 	} else {
 		var link string
 		switch network {
 		case config.DefaultTestnetNetwork():
+			log.Info("\nA testnet faucet website will open, follow the steps to create an account: \n 1. Fill in the captcha, \n 2. Click on 'Create Account' button.\n")
 			link = util.TestnetFaucetURL(key.PublicKey().String(), crypto.ECDSA_P256)
 		case config.DefaultMainnetNetwork():
+			log.Info("\nA Flow Port website will open, follow the steps to create an account: \n 1. Click on 'Submit' button, \n 2. Connect existing Blocto or create a new account first, \n 3. Click on confirm, \n 4. Click on approve. \n")
 			link = util.MainnetFlowPortURL(key.PublicKey().String())
 		}
 
+		time.Sleep(time.Second * 2)
 		err := util.OpenBrowserWindow(link)
 		if err != nil {
 			return nil, err
 		}
+
+		log.StartProgress("Waiting for an account to be created, please finish all the steps in the browser...")
 
 		addr, err := getAccountCreatedAddressWithPubKey(service, key.PublicKey(), startHeight)
 		if err != nil {
 			return nil, err
 		}
 		address = *addr
+
+		log.StopProgress()
 	}
 
 	var flowkitAccount *flowkit.Account
@@ -223,14 +233,18 @@ func createInteractive(state *flowkit.State) (*flow.Account, error) {
 		return nil, err
 	}
 
-	if /*network == config.DefaultMainnetNetwork() &&*/ output.EnableKeyEncryptionPrompt() {
+	name := output.NamePrompt()
+
+	if network == config.DefaultMainnetNetwork() && output.EnableKeyEncryptionPrompt() {
+		log.Info(output.WarningEmoji() + " Choose a secure password that will be used to secure your account, please note that if you forget the password you will not be able to use this account, as well as if you remove the 'flow.json' file where this account will be saved.")
+
 		password, err := output.CreatePasswordPrompt()
 		if err != nil {
 			return nil, err
 		}
-		flowkitAccount, err = flowkit.AccountFromFlowEncrypted(account, util.RandomName(), key, password)
+		flowkitAccount, err = flowkit.AccountFromFlowEncrypted(account, name, key, password)
 	} else {
-		flowkitAccount, err = flowkit.AccountFromFlow(account, util.RandomName(), key)
+		flowkitAccount, err = flowkit.AccountFromFlow(account, name, key)
 		if err != nil {
 			return nil, err
 		}
@@ -241,6 +255,8 @@ func createInteractive(state *flowkit.State) (*flow.Account, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	log.Info(fmt.Sprintf("%s Account %s created on the %s network and saved to 'flow.json' for later use.", output.SuccessEmoji(), address, network.Name))
 
 	return account, nil
 }
