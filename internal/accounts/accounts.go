@@ -44,6 +44,7 @@ func init() {
 	CreateCommand.AddToParent(Cmd)
 	StakingCommand.AddToParent(Cmd)
 	GetCommand.AddToParent(Cmd)
+	ListCommand.AddToParent(Cmd)
 }
 
 // AccountResult represent result from all account commands.

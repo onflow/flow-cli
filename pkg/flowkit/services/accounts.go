@@ -67,6 +67,17 @@ func (a *Accounts) Get(address flow.Address) (*flow.Account, error) {
 	return account, err
 }
 
+// Get returns an account by on address.
+func (a *Accounts) List() []string {
+	var accts []string
+	accounts := a.state.Accounts()
+	for _, a := range *accounts {
+		accts = append(accts, a.Name())
+	}
+
+	return accts
+}
+
 // StakingInfo returns the staking and delegation information for an account.
 func (a *Accounts) StakingInfo(address flow.Address) ([]map[string]interface{}, []map[string]interface{}, error) {
 	a.logger.StartProgress(fmt.Sprintf("Fetching info for %s...", address.String()))
