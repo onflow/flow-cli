@@ -50,6 +50,10 @@ type AccountKey interface {
 	PrivateKey() (*crypto.PrivateKey, error)
 }
 
+var _ AccountKey = &HexAccountKey{}
+var _ AccountKey = &KmsAccountKey{}
+var _ AccountKey = &EncryptedAccountKey{}
+
 func NewAccountKey(accountKeyConf config.AccountKey) (AccountKey, error) {
 	switch accountKeyConf.Type {
 	case config.KeyTypeHex:
@@ -275,7 +279,6 @@ func CreateEncryptedAccountKey(
 			hashAlgo: hashAlgo,
 		},
 		encryptedKey: encryptedKey,
-		privateKey:   privateKey,
 		password:     password,
 	}
 
@@ -314,11 +317,9 @@ func (a *EncryptedAccountKey) decrypt() (crypto.PrivateKey, error) {
 		return nil, fmt.Errorf("can not decrypt private key, the password was not set")
 	}
 
-	// todo validate and if not correct prompt for password again
-
 	decryptedKey, err := decrypt([]byte(a.password), a.encryptedKey)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("wrong password")
 	}
 
 	return crypto.DecodePrivateKey(a.sigAlgo, decryptedKey)
@@ -339,11 +340,12 @@ func (a *EncryptedAccountKey) ToConfig() config.AccountKey {
 }
 
 func (a *EncryptedAccountKey) Validate() error {
-	//_, err := crypto.DecodePrivateKeyHex(a.sigAlgo, a.PrivateKeyHex())
-	//if err != nil {
-	//	return fmt.Errorf("invalid private key: %w", err)
-	//}
-	return nil
+	_, err := a.decrypt()
+	return err
+}
+
+func (a *EncryptedAccountKey) SetPassword(password string) {
+	a.password = password
 }
 
 func encrypt(key, data []byte) ([]byte, error) {
