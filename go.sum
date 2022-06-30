@@ -1366,13 +1366,6 @@ github.com/onflow/cadence v0.24.0/go.mod h1:tIJiQ4RIq1WUTXdBewv8p+gNUETN93Eb7jSF
 github.com/onflow/cadence v0.24.3/go.mod h1:tIJiQ4RIq1WUTXdBewv8p+gNUETN93Eb7jSFedjqs5w=
 github.com/onflow/cadence v0.24.6 h1:8iBoU42+R4m/hWwEEW1N5BGndmOFu3EtEyBXO5mO5II=
 github.com/onflow/cadence v0.24.6/go.mod h1:tIJiQ4RIq1WUTXdBewv8p+gNUETN93Eb7jSFedjqs5w=
-github.com/onflow/cadence/languageserver v0.15.2/go.mod h1:hQGE8dYH5CfQ1Oe0nXglchgURzZwR3JQhmuXtv4ROHs=
-github.com/onflow/cadence/languageserver v0.16.0/go.mod h1:UPV1so9LcMrhj27IegrTucoyS4TLRVjNr4DJqjqBhFA=
-github.com/onflow/cadence/languageserver v0.18.2/go.mod h1:ehuDCUevEEavUzgJqLevcZPjfmTzMBX7Sglbi5ur9uU=
-github.com/onflow/cadence/languageserver v0.18.3-0.20220202133308-207188a51831/go.mod h1:sOABh+6LBUWgY6r5iYhu98mDgfiBVTXAKVYHPQV/nvo=
-github.com/onflow/cadence/languageserver v0.23.5-0.20220608222314-31dcf01be513/go.mod h1:ZC1GZu2Eerl5lkyvCn7FT51GhPUWmuqX+cYfosms7AA=
-github.com/onflow/cadence/languageserver v0.24.0 h1:LufBiLHJt9LmWhVVpxaLHO/yRvVsPNpKKEdo6ykyB/U=
-github.com/onflow/cadence/languageserver v0.24.0/go.mod h1:5w1rJx0mvrto0EvWgZkbF4STuK2SggMyamwL1spTGlQ=
 github.com/onflow/fcl-dev-wallet v0.4.2/go.mod h1:xWVEyGZgdDt4/+PLSlpuqhtzobjnWy5giceIGoErPzs=
 github.com/onflow/fcl-dev-wallet v0.4.4 h1:SI4fHETrjt/m76XPYYMEbU8GhLBuFL5VMZ1JzpoiIu0=
 github.com/onflow/fcl-dev-wallet v0.4.4/go.mod h1:xWVEyGZgdDt4/+PLSlpuqhtzobjnWy5giceIGoErPzs=
