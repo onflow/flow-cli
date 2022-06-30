@@ -178,8 +178,7 @@ func createInteractive(state *flowkit.State) (*flow.Account, error) {
 
 	var address flow.Address
 
-	switch network {
-	case config.DefaultEmulatorNetwork():
+	if network == config.DefaultEmulatorNetwork() {
 		signer, err := state.EmulatorServiceAccount()
 		if err != nil {
 			return nil, err
@@ -197,8 +196,15 @@ func createInteractive(state *flowkit.State) (*flow.Account, error) {
 		}
 
 		address = account.Address // todo log out a warning that account wont be persisted between emulator restarts, and about the emulator persist flag
-	case config.DefaultTestnetNetwork():
-		link := util.TestnetFaucetURL(key.PublicKey().String(), crypto.ECDSA_P256)
+	} else {
+		var link string
+		switch network {
+		case config.DefaultTestnetNetwork():
+			link = util.TestnetFaucetURL(key.PublicKey().String(), crypto.ECDSA_P256)
+		case config.DefaultMainnetNetwork():
+			link = util.MainnetFlowPortURL(key.PublicKey().String())
+		}
+
 		err := util.OpenBrowserWindow(link)
 		if err != nil {
 			return nil, err
@@ -209,8 +215,6 @@ func createInteractive(state *flowkit.State) (*flow.Account, error) {
 			return nil, err
 		}
 		address = *addr
-	case config.DefaultMainnetNetwork():
-		// todo implement
 	}
 
 	account, err := service.Accounts.Get(address)
@@ -253,7 +257,11 @@ func getAccountCreatedAddressWithPubKey(
 	}
 
 	if address == nil {
-		time.Sleep(time.Second)
+		if lastHeight-startHeight > 200 { // if something goes wrong don't keep waiting forever to avoid spamming network
+			return nil, fmt.Errorf("failed to get the account address due to time out")
+		}
+
+		time.Sleep(time.Second * 2)
 		address, err = getAccountCreatedAddressWithPubKey(service, pubKey, startHeight)
 		if err != nil {
 			return nil, err

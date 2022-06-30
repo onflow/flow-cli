@@ -19,6 +19,7 @@
 package flowkit
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 
@@ -72,7 +73,9 @@ func NewEvent(event flow.Event) Event {
 	}
 }
 
-// TODO(sideninja): Refactor this to flow.Address and err as return value instead of returning nil.
+// TODO(sideninja):
+// - Refactor this to flow.Address and err as return value instead of returning nil.
+// - This section should be improved to support all the core events parsing to better Go struct representation and should be extracted to Go SDK
 
 func (e *Events) GetAddress() *flow.Address {
 	for _, event := range *e {
@@ -88,7 +91,22 @@ func (e *Events) GetAddress() *flow.Address {
 func (e *Events) GetAddressForKeyAdded(publicKey crypto.PublicKey) *flow.Address {
 	for _, event := range *e {
 		if event.Type == flow.EventAccountAdded {
-			if p, ok := event.Values["publicKey"].(cadence.Array); ok { // todo this is older format, support also new format and potentialy move to go sdk
+			// new format
+			if keyStruct, ok := event.Values["publicKey"].(cadence.Struct); ok {
+				if keyArray, ok := keyStruct.Fields[0].(cadence.Array); ok {
+					parsedKey := make([]byte, len(keyArray.Values))
+					for i, val := range keyArray.Values {
+						parsedKey[i] = val.ToGoValue().(byte)
+					}
+
+					if bytes.Equal(parsedKey, publicKey.Encode()) {
+						return e.GetAddress()
+					}
+				}
+			}
+
+			// older format support
+			if p, ok := event.Values["publicKey"].(cadence.Array); ok {
 				var parsedKey []byte
 				_ = json.Unmarshal([]byte(p.String()), &parsedKey)
 
