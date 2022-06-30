@@ -19,6 +19,7 @@
 package json
 
 import (
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"strings"
@@ -75,12 +76,10 @@ func transformSimpleToConfig(accountName string, a simpleAccount) (*config.Accou
 
 // transformAdvancedToConfig transforms advanced internal account to config account.
 func transformAdvancedToConfig(accountName string, a advancedAccount) (*config.Account, error) {
-	var pKey crypto.PrivateKey
-	var err error
 	sigAlgo := crypto.StringToSignatureAlgorithm(a.Key.SigAlgo)
 	hashAlgo := crypto.StringToHashAlgorithm(a.Key.HashAlgo)
 
-	if a.Key.Type != config.KeyTypeHex && a.Key.Type != config.KeyTypeGoogleKMS {
+	if a.Key.Type != config.KeyTypeHex && a.Key.Type != config.KeyTypeGoogleKMS && a.Key.Type != config.KeyTypeEncrypted {
 		return nil, fmt.Errorf("invalid key type for account %s", accountName)
 	}
 
@@ -88,18 +87,8 @@ func transformAdvancedToConfig(accountName string, a advancedAccount) (*config.A
 		return nil, fmt.Errorf("only provide value for private key or resource ID on account %s", accountName)
 	}
 
-	if a.Key.Type == config.KeyTypeHex {
-		if a.Key.PrivateKey != "" {
-			pKey, err = crypto.DecodePrivateKeyHex(
-				sigAlgo,
-				strings.TrimPrefix(a.Key.PrivateKey, "0x"),
-			)
-			if err != nil {
-				return nil, err
-			}
-		} else {
-			return nil, fmt.Errorf("missing private key value for hex key type on account %s", accountName)
-		}
+	if a.Key.PrivateKey != "" && a.Key.EncryptedKey != "" {
+		return nil, fmt.Errorf("only provide encryped or plain private key on account %s", accountName)
 	}
 
 	if sigAlgo == crypto.UnknownSignatureAlgorithm {
@@ -115,17 +104,48 @@ func transformAdvancedToConfig(accountName string, a advancedAccount) (*config.A
 		return nil, err
 	}
 
+	key := config.AccountKey{
+		Type:     a.Key.Type,
+		Index:    a.Key.Index,
+		SigAlgo:  sigAlgo,
+		HashAlgo: hashAlgo,
+	}
+
+	switch a.Key.Type {
+	case config.KeyTypeEncrypted:
+		if a.Key.EncryptedKey == "" {
+			return nil, fmt.Errorf("missing encryped private key value for key on account %s", accountName)
+		}
+
+		decoded, err := hex.DecodeString(a.Key.EncryptedKey)
+		if err != nil {
+			return nil, err
+		}
+		key.EncryptedKey = decoded
+	case config.KeyTypeHex:
+		if a.Key.PrivateKey == "" {
+			return nil, fmt.Errorf("missing private key value for hex key type on account %s", accountName)
+		}
+		pKey, err := crypto.DecodePrivateKeyHex(
+			sigAlgo,
+			strings.TrimPrefix(a.Key.PrivateKey, "0x"),
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		key.PrivateKey = pKey
+	case config.KeyTypeGoogleKMS:
+		if a.Key.ResourceID == "" {
+			return nil, fmt.Errorf("missing resource ID value for key on account %s", accountName)
+		}
+		key.ResourceID = a.Key.ResourceID
+	}
+
 	return &config.Account{
 		Name:    accountName,
 		Address: address,
-		Key: config.AccountKey{
-			Type:       a.Key.Type,
-			Index:      a.Key.Index,
-			SigAlgo:    sigAlgo,
-			HashAlgo:   hashAlgo,
-			ResourceID: a.Key.ResourceID,
-			PrivateKey: pKey,
-		},
+		Key:     key,
 	}, nil
 }
 
@@ -165,6 +185,7 @@ func transformAccountsToJSON(accounts config.Accounts) jsonAccounts {
 			jsonAccounts[a.Name] = transformAdvancedAccountToJSON(a)
 		}
 	}
+	fmt.Println("###", jsonAccounts)
 
 	return jsonAccounts
 }
@@ -182,16 +203,29 @@ func transformAdvancedAccountToJSON(a config.Account) account {
 	return account{
 		Advanced: advancedAccount{
 			Address: a.Address.String(),
-			Key: advanceKey{
-				Type:       a.Key.Type,
-				Index:      a.Key.Index,
-				SigAlgo:    a.Key.SigAlgo.String(),
-				HashAlgo:   a.Key.HashAlgo.String(),
-				ResourceID: a.Key.ResourceID,
-				PrivateKey: strings.TrimPrefix(a.Key.PrivateKey.String(), "0x"),
-			},
+			Key:     transformAdvancedKeyToJSON(a.Key),
 		},
 	}
+}
+
+func transformAdvancedKeyToJSON(key config.AccountKey) advanceKey {
+	advancedKey := advanceKey{
+		Type:     key.Type,
+		Index:    key.Index,
+		SigAlgo:  key.SigAlgo.String(),
+		HashAlgo: key.HashAlgo.String(),
+	}
+
+	switch key.Type {
+	case config.KeyTypeHex:
+		advancedKey.PrivateKey = strings.TrimPrefix(key.PrivateKey.String(), "0x")
+	case config.KeyTypeGoogleKMS:
+		advancedKey.ResourceID = key.ResourceID
+	case config.KeyTypeEncrypted:
+		advancedKey.EncryptedKey = hex.EncodeToString(key.EncryptedKey)
+	}
+
+	return advancedKey
 }
 
 func isDefaultKeyFormat(key config.AccountKey) bool {
@@ -227,6 +261,8 @@ type advanceKey struct {
 	ResourceID string `json:"resourceID,omitempty"`
 	// old key format
 	Context map[string]string `json:"context,omitempty"`
+	// encrypted key
+	EncryptedKey string `json:"encryptedKey,omitempty"`
 }
 
 // support for pre v0.22 formats

@@ -56,6 +56,8 @@ func NewAccountKey(accountKeyConf config.AccountKey) (AccountKey, error) {
 		return newHexAccountKey(accountKeyConf)
 	case config.KeyTypeGoogleKMS:
 		return newKmsAccountKey(accountKeyConf)
+	case config.KeyTypeEncrypted:
+		return newEncryptedAccountKey(accountKeyConf)
 	}
 
 	return nil, fmt.Errorf(`invalid key type: "%s"`, accountKeyConf.Type)
@@ -280,20 +282,10 @@ func CreateEncryptedAccountKey(
 	return key, nil
 }
 
-// todo refactor this is for from config
-func NewEncryptedAccountKey(
-	index int,
-	hashAlgo crypto.HashAlgorithm,
-	encryptedKey []byte,
-) (*EncryptedAccountKey, error) {
+func newEncryptedAccountKey(accountKey config.AccountKey) (*EncryptedAccountKey, error) {
 	return &EncryptedAccountKey{
-		baseAccountKey: &baseAccountKey{
-			keyType: config.KeyTypeEncrypted,
-			index:   index,
-			// sigAlgo:  privateKey.Algorithm(),
-			hashAlgo: hashAlgo,
-		},
-		encryptedKey: encryptedKey,
+		baseAccountKey: newBaseAccountKey(accountKey),
+		encryptedKey:   accountKey.EncryptedKey,
 	}, nil
 }
 
