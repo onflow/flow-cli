@@ -20,6 +20,8 @@ package accounts
 
 import (
 	"github.com/onflow/flow-cli/pkg/flowkit"
+	"github.com/onflow/flow-cli/pkg/flowkit/config"
+	"github.com/onflow/flow-cli/pkg/flowkit/output"
 
 	"github.com/spf13/cobra"
 
@@ -57,6 +59,12 @@ func removeContract(
 	from, err := state.Accounts().ByName(flagsRemove.Signer)
 	if err != nil {
 		return nil, err
+	}
+
+	if from.Key().Type() == config.KeyTypeEncrypted {
+		password := output.EnterPasswordPrompt()
+		key := from.Key().(*flowkit.EncryptedAccountKey)
+		key.SetPassword(password)
 	}
 
 	account, err := services.Accounts.RemoveContract(from, contractName)

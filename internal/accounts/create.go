@@ -89,6 +89,12 @@ func create(
 		return nil, err
 	}
 
+	if signer.Key().Type() == config.KeyTypeEncrypted {
+		password := output.EnterPasswordPrompt()
+		key := signer.Key().(*flowkit.EncryptedAccountKey)
+		key.SetPassword(password)
+	}
+
 	if len(createFlags.SigAlgo) == 1 && len(createFlags.HashAlgo) == 1 {
 		// Fill up depending on size of key input
 		if len(createFlags.Keys) > 1 {
