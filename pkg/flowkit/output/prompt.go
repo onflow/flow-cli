@@ -526,3 +526,71 @@ func CreateAccountNetworkPrompt() config.Network {
 
 	return config.DefaultNetworks()[index]
 }
+
+func EnableKeyEncryptionPrompt() bool {
+	encryptPrompt := promptui.Select{
+		Label: "Do you want to encrypt the account key?",
+		Items: []string{"Yes", "No (not recommended)"},
+	}
+
+	index, _, err := encryptPrompt.Run()
+	if err == promptui.ErrInterrupt {
+		os.Exit(-1)
+	}
+
+	return index == 0
+}
+
+func CreatePasswordPrompt() (string, error) {
+	validate := func(input string) error {
+		if len(input) < 6 {
+			return fmt.Errorf("password must have more than 6 characters")
+		}
+		return nil
+	}
+
+	prompt := promptui.Prompt{
+		Label:    "Password",
+		Validate: validate,
+		Mask:     '*',
+	}
+
+	result, err := prompt.Run()
+	if err == promptui.ErrInterrupt {
+		os.Exit(-1)
+	}
+
+	validateRepeat := func(input string) error {
+		if result != input {
+			return fmt.Errorf("passwords do not match")
+		}
+		return nil
+	}
+
+	promptRepeat := promptui.Prompt{
+		Label:    "Repeat password",
+		Validate: validateRepeat,
+		Mask:     '*',
+	}
+
+	_, err = promptRepeat.Run()
+	if err == promptui.ErrInterrupt {
+		os.Exit(-1)
+	}
+
+	return result, nil
+}
+
+func EnterPasswordPrompt() string {
+	prompt := promptui.Prompt{
+		Label: "Enter password",
+		Mask:  '*',
+	}
+
+	result, err := prompt.Run()
+	if err == promptui.ErrInterrupt {
+		os.Exit(-1)
+	}
+
+	return result
+}
