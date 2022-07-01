@@ -88,7 +88,7 @@ func transformAdvancedToConfig(accountName string, a advancedAccount) (*config.A
 	}
 
 	if a.Key.PrivateKey != "" && a.Key.EncryptedKey != "" {
-		return nil, fmt.Errorf("only provide encryped or plain private key on account %s", accountName)
+		return nil, fmt.Errorf("cannot supply both an encrypted and plaintext private key on %s", accountName)
 	}
 
 	if sigAlgo == crypto.UnknownSignatureAlgorithm {
