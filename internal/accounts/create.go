@@ -72,7 +72,7 @@ func create(
 	services *services.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
-	// if user doesn't provide any flags go into interactive mode
+	// Enter interactive mode if the user does not provide any keys
 	if len(createFlags.Keys) == 0 {
 		account, err := createInteractive(state)
 		if err != nil {

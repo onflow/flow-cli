@@ -314,7 +314,7 @@ func (a *EncryptedAccountKey) Signer(ctx context.Context) (crypto.Signer, error)
 
 func (a *EncryptedAccountKey) decrypt() (crypto.PrivateKey, error) {
 	if a.password == "" {
-		return nil, fmt.Errorf("can not decrypt private key, the password was not set")
+		return nil, fmt.Errorf("cannot decrypt private key, the password was not set")
 	}
 
 	decryptedKey, err := decrypt([]byte(a.password), a.encryptedKey)
