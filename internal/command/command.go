@@ -282,7 +282,7 @@ func initCrashReporting() {
 			if output.ReportCrash() {
 				return event
 			} else {
-				fmt.Printf("\nPlease help us improve the Flow CLI by opening an issue on https://github.com/onflow/flow-cli/issues, \nand pasting the output as well as description of the actions you took to cause this crash.\n\n")
+				fmt.Printf("\nPlease help us improve the Flow CLI by opening an issue on https://github.com/onflow/flow-cli/issues, \nand pasting the output as well as description of the actions you took that resulted in this crash.\n\n")
 				fmt.Println(hint.RecoveredException)
 				fmt.Println(event.Threads, event.Fingerprint)
 				fmt.Println(event.Contexts)
