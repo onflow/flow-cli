@@ -20,8 +20,8 @@ package flowkit
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/onflow/cadence"
 
@@ -87,18 +87,20 @@ func (e *Events) GetAddress() *flow.Address {
 
 	return nil
 }
-
+func handleCadenceArrayValues(keyArray cadence.Array) []byte {
+	parsedKey := make([]byte, len(keyArray.Values))
+	for i, val := range keyArray.Values {
+		parsedKey[i] = val.ToGoValue().(byte)
+	}
+	return parsedKey
+}
 func (e *Events) GetAddressForKeyAdded(publicKey crypto.PublicKey) *flow.Address {
 	for _, event := range *e {
 		if event.Type == flow.EventAccountKeyAdded {
 			// new format
 			if keyStruct, ok := event.Values["publicKey"].(cadence.Struct); ok {
 				if keyArray, ok := keyStruct.Fields[0].(cadence.Array); ok {
-					parsedKey := make([]byte, len(keyArray.Values))
-					for i, val := range keyArray.Values {
-						parsedKey[i] = val.ToGoValue().(byte)
-					}
-
+					parsedKey := handleCadenceArrayValues(keyArray)
 					if bytes.Equal(parsedKey, publicKey.Encode()) {
 						return e.GetAddress()
 					}
@@ -107,10 +109,11 @@ func (e *Events) GetAddressForKeyAdded(publicKey crypto.PublicKey) *flow.Address
 
 			// older format support
 			if p, ok := event.Values["publicKey"].(cadence.Array); ok {
-				var parsedKey []byte
-				_ = json.Unmarshal([]byte(p.String()), &parsedKey)
-
-				if publicKey.String() == fmt.Sprintf("0x%x", parsedKey[4:len(parsedKey)-5]) {
+				parsedKey := handleCadenceArrayValues(p)
+				parsedKeyhex := fmt.Sprintf("%x", parsedKey)
+				publicKeyHex := publicKey.String()
+				//we have to remove 0x from beginning of publicKeyHex
+				if strings.Contains(parsedKeyhex, publicKeyHex[2:]) {
 					return e.GetAddress()
 				}
 			}
