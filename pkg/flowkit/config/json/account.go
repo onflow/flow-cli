@@ -114,7 +114,7 @@ func transformAdvancedToConfig(accountName string, a advancedAccount) (*config.A
 	switch a.Key.Type {
 	case config.KeyTypeEncrypted:
 		if a.Key.EncryptedKey == "" {
-			return nil, fmt.Errorf("missing encryped private key value for key on account %s", accountName)
+			return nil, fmt.Errorf("missing encrypted private key value for key on account %s", accountName)
 		}
 
 		decoded, err := hex.DecodeString(a.Key.EncryptedKey)
