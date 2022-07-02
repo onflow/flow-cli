@@ -20,6 +20,7 @@ package accounts
 
 import (
 	"fmt"
+	"os"
 	"strings"
 	"time"
 
@@ -241,19 +242,29 @@ func createInteractive(state *flowkit.State) (*flow.Account, error) {
 
 	name := output.NamePrompt()
 
-	if network == config.DefaultMainnetNetwork() && output.EnableKeyEncryptionPrompt() {
-		log.Info(output.WarningEmoji() + " Choose a secure password that will be used to secure your account, please note that if you forget the password you will not be able to use this account, as well as if you remove the 'flow.json' file where this account will be saved.")
+	flowkitAccount, err = flowkit.AccountFromFlow(account, name, key)
+	if err != nil {
+		return nil, err
+	}
+	privateKeyEnvKey := "PRIVATE_KEY_" + strings.ToUpper(strings.TrimPrefix(address.String(), "0x"))
+	os.Setenv(privateKeyEnvKey, key.String())
+	log.Info(output.SuccessEmoji() + privateKeyEnvKey + " = " + strings.TrimPrefix(key.String(), "0x"))
 
-		password, err := output.CreatePasswordPrompt()
+	if network == config.DefaultMainnetNetwork() && output.EnableSaveEnvPrompt() {
+		path, _ := os.Getwd()
+		envFilePath := path + "/private_keys.env"
+
+		f, err := os.OpenFile(envFilePath,
+			os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 		if err != nil {
-			return nil, err
+			fmt.Printf("Error with .env file: " + err.Error())
 		}
-		flowkitAccount, err = flowkit.AccountFromFlowEncrypted(account, name, key, password)
-	} else {
-		flowkitAccount, err = flowkit.AccountFromFlow(account, name, key)
-		if err != nil {
-			return nil, err
+		defer f.Close()
+		newPKeyEnvVar := privateKeyEnvKey + "=" + strings.TrimPrefix(key.String(), "0x")
+		if _, err := f.WriteString("\n" + newPKeyEnvVar); err != nil {
+			fmt.Printf("Error with writing to .env file:" + err.Error())
 		}
+		log.Info(output.SuccessEmoji() + "Private key env variable stored in cmd/flow/private_keys.env")
 	}
 
 	state.Accounts().AddOrUpdate(flowkitAccount)

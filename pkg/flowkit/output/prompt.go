@@ -526,7 +526,18 @@ func CreateAccountNetworkPrompt() config.Network {
 
 	return config.DefaultNetworks()[index]
 }
+func EnableSaveEnvPrompt() bool {
+	encryptPrompt := promptui.Select{
+		Label: "Do you want to save the private key into a .env file?",
+		Items: []string{"Yes(IMPORTANT: Don't commit created env file)", "No"},
+	}
+	index, _, err := encryptPrompt.Run()
+	if err == promptui.ErrInterrupt {
+		os.Exit(-1)
+	}
 
+	return index == 0
+}
 func EnableKeyEncryptionPrompt() bool {
 	encryptPrompt := promptui.Select{
 		Label: "Do you want to encrypt the account key?",

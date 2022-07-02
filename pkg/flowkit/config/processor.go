@@ -19,10 +19,10 @@
 package config
 
 import (
+	"github.com/joho/godotenv"
+	"os"
 	"regexp"
 	"strings"
-
-	"github.com/joho/godotenv"
 
 	"github.com/a8m/envsubst"
 )
@@ -43,8 +43,14 @@ func ProcessorRun(raw []byte) ([]byte, map[string]string) {
 
 // processEnv finds env variables and insert env values.
 func processEnv(raw string) string {
-	_ = godotenv.Load() // try to load .env file
-
+	path, _ := os.Getwd()
+	envFilePath := path + "/private_keys.env"
+	_, error := os.Stat(envFilePath)
+	// check if error is not "file not exists"
+	if error == nil {
+		godotenv.Load(envFilePath)
+	}
+	_ = godotenv.Load()
 	raw, _ = envsubst.String(raw)
 	return raw
 }

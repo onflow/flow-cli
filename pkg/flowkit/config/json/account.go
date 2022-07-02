@@ -22,6 +22,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/onflow/flow-go-sdk"
@@ -48,9 +49,21 @@ func transformAddress(address string) (flow.Address, error) {
 
 // transformSimpleToConfig transforms simple internal account to config account.
 func transformSimpleToConfig(accountName string, a simpleAccount) (*config.Account, error) {
+	configAccountKey := ""
+	pKeyEnvKey := "PRIVATE_KEY_" + strings.ToUpper(a.Address)
+	if strings.Contains(a.Key, pKeyEnvKey) {
+		privateKey, ok := os.LookupEnv(pKeyEnvKey)
+		if !ok {
+			return nil, fmt.Errorf("could not find value of environment variable %s", a.Key)
+		}
+		configAccountKey = privateKey
+	}
+	if configAccountKey == "" {
+		configAccountKey = a.Key
+	}
 	pkey, err := crypto.DecodePrivateKeyHex(
 		crypto.ECDSA_P256,
-		strings.TrimPrefix(a.Key, "0x"),
+		strings.TrimPrefix(configAccountKey, "0x"),
 	)
 	if err != nil {
 		return nil, fmt.Errorf("invalid private key for account: %s", accountName)
@@ -193,11 +206,20 @@ func transformSimpleAccountToJSON(a config.Account) account {
 	return account{
 		Simple: simpleAccount{
 			Address: a.Address.String(),
-			Key:     strings.TrimPrefix(a.Key.PrivateKey.String(), "0x"),
+			Key:     getEnvKeyVariable(a.Address.String(), a.Key.PrivateKey.String()),
 		},
 	}
 }
+func getEnvKeyVariable(address string, privateKey string) string {
+	privateKeyEnvKey := "PRIVATE_KEY_" + strings.ToUpper(strings.TrimPrefix(address, "0x"))
+	_, ok := os.LookupEnv(privateKeyEnvKey)
+	if !ok {
+		return strings.TrimPrefix(privateKey, "0x")
+	}
 
+	return "$" + privateKeyEnvKey
+
+}
 func transformAdvancedAccountToJSON(a config.Account) account {
 	return account{
 		Advanced: advancedAccount{
