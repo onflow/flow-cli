@@ -242,9 +242,9 @@ func createInteractive(state *flowkit.State, loader flowkit.ReaderWriter) (*flow
 		return nil, err
 	}
 
-	fromFileAccount := &flowkit.Account{}
-	fromFileAccount.SetName(name)
-	fromFileAccount.SetFromFile(filename)
+	fromFileAccount := flowkit.
+		NewAccount(name).
+		SetFromFile(filename)
 
 	state.Accounts().AddOrUpdate(fromFileAccount)
 	err = state.SaveDefault()

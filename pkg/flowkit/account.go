@@ -42,6 +42,12 @@ type Account struct {
 	// Ref: https://docs.onflow.org/flow-cli/security/#private-account-configuration-file
 	fromFile string
 }
+
+// NewAccount creates an empty account with the provided name.
+func NewAccount(name string) *Account {
+	return &Account{
+		name: name,
+	}
 }
 
 // Address get account address.
@@ -59,24 +65,28 @@ func (a *Account) Key() AccountKey {
 	return a.key
 }
 
-// SetKey sets account key.
-func (a *Account) SetKey(key AccountKey) {
-	a.key = key
-}
-
-// SetAddress sets account address.
-func (a *Account) SetAddress(address flow.Address) {
+// SetAddress sets the account address.
+func (a *Account) SetAddress(address flow.Address) *Account {
 	a.address = address
+	return a
 }
 
-// SetName sets account name.
-func (a *Account) SetName(name string) {
+// SetName sets the account name.
+func (a *Account) SetName(name string) *Account {
 	a.name = name
+	return a
+}
+
+// SetKey sets account key.
+func (a *Account) SetKey(key AccountKey) *Account {
+	a.key = key
+	return a
 }
 
 // SetFromFile sets the external configuration file.
-func (a *Account) SetFromFile(filename string) {
+func (a *Account) SetFromFile(filename string) *Account {
 	a.fromFile = filename
+	return a
 }
 
 func accountsFromConfig(conf *config.Config) (Accounts, error) {
