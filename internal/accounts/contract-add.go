@@ -21,9 +21,6 @@ package accounts
 import (
 	"fmt"
 
-	"github.com/onflow/flow-cli/pkg/flowkit/config"
-	"github.com/onflow/flow-cli/pkg/flowkit/output"
-
 	"github.com/onflow/flow-cli/pkg/flowkit"
 
 	"github.com/spf13/cobra"
@@ -68,12 +65,6 @@ func addContract(
 	to, err := state.Accounts().ByName(addContractFlags.Signer)
 	if err != nil {
 		return nil, err
-	}
-
-	if to.Key().Type() == config.KeyTypeEncrypted {
-		password := output.EnterPasswordPrompt()
-		key := to.Key().(*flowkit.EncryptedAccountKey)
-		key.SetPassword(password)
 	}
 
 	account, err := services.Accounts.AddContract(to, name, code, false)

@@ -19,7 +19,6 @@
 package json
 
 import (
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -92,16 +91,12 @@ func transformAdvancedToConfig(accountName string, a advancedAccount) (*config.A
 	sigAlgo := crypto.StringToSignatureAlgorithm(a.Key.SigAlgo)
 	hashAlgo := crypto.StringToHashAlgorithm(a.Key.HashAlgo)
 
-	if a.Key.Type != config.KeyTypeHex && a.Key.Type != config.KeyTypeGoogleKMS && a.Key.Type != config.KeyTypeEncrypted {
+	if a.Key.Type != config.KeyTypeHex && a.Key.Type != config.KeyTypeGoogleKMS {
 		return nil, fmt.Errorf("invalid key type for account %s", accountName)
 	}
 
 	if a.Key.ResourceID != "" && a.Key.PrivateKey != "" {
 		return nil, fmt.Errorf("only provide value for private key or resource ID on account %s", accountName)
-	}
-
-	if a.Key.PrivateKey != "" && a.Key.EncryptedKey != "" {
-		return nil, fmt.Errorf("cannot supply both an encrypted and plaintext private key on %s", accountName)
 	}
 
 	if sigAlgo == crypto.UnknownSignatureAlgorithm {
@@ -125,16 +120,6 @@ func transformAdvancedToConfig(accountName string, a advancedAccount) (*config.A
 	}
 
 	switch a.Key.Type {
-	case config.KeyTypeEncrypted:
-		if a.Key.EncryptedKey == "" {
-			return nil, fmt.Errorf("missing encrypted private key value for key on account %s", accountName)
-		}
-
-		decoded, err := hex.DecodeString(a.Key.EncryptedKey)
-		if err != nil {
-			return nil, err
-		}
-		key.EncryptedKey = decoded
 	case config.KeyTypeHex:
 		if a.Key.PrivateKey == "" {
 			return nil, fmt.Errorf("missing private key value for hex key type on account %s", accountName)
@@ -242,8 +227,6 @@ func transformAdvancedKeyToJSON(key config.AccountKey) advanceKey {
 		advancedKey.PrivateKey = strings.TrimPrefix(key.PrivateKey.String(), "0x")
 	case config.KeyTypeGoogleKMS:
 		advancedKey.ResourceID = key.ResourceID
-	case config.KeyTypeEncrypted:
-		advancedKey.EncryptedKey = hex.EncodeToString(key.EncryptedKey)
 	}
 
 	return advancedKey
@@ -282,8 +265,6 @@ type advanceKey struct {
 	ResourceID string `json:"resourceID,omitempty"`
 	// old key format
 	Context map[string]string `json:"context,omitempty"`
-	// encrypted key
-	EncryptedKey string `json:"encryptedKey,omitempty"`
 }
 
 // support for pre v0.22 formats

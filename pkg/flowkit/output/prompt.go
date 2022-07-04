@@ -22,14 +22,12 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/onflow/flow-cli/pkg/flowkit"
-
-	"github.com/onflow/flow-cli/pkg/flowkit/util"
-
-	"github.com/onflow/flow-cli/pkg/flowkit/config"
-
 	"github.com/gosuri/uilive"
 	"github.com/manifoldco/promptui"
+
+	"github.com/onflow/flow-cli/pkg/flowkit"
+	"github.com/onflow/flow-cli/pkg/flowkit/config"
+	"github.com/onflow/flow-cli/pkg/flowkit/util"
 )
 
 func ApproveTransactionForSigningPrompt(transaction *flowkit.Transaction) bool {
@@ -526,25 +524,13 @@ func CreateAccountNetworkPrompt() config.Network {
 
 	return config.DefaultNetworks()[index]
 }
+
 func EnableSaveEnvPrompt() bool {
-	encryptPrompt := promptui.Select{
+	prompt := promptui.Select{
 		Label: "Do you want to save the private key into a .env file?",
 		Items: []string{"Yes(IMPORTANT: Don't commit created env file)", "No"},
 	}
-	index, _, err := encryptPrompt.Run()
-	if err == promptui.ErrInterrupt {
-		os.Exit(-1)
-	}
-
-	return index == 0
-}
-func EnableKeyEncryptionPrompt() bool {
-	encryptPrompt := promptui.Select{
-		Label: "Do you want to encrypt the account key?",
-		Items: []string{"Yes", "No (not recommended)"},
-	}
-
-	index, _, err := encryptPrompt.Run()
+	index, _, err := prompt.Run()
 	if err == promptui.ErrInterrupt {
 		os.Exit(-1)
 	}

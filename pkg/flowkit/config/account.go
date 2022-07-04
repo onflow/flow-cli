@@ -36,13 +36,12 @@ type Accounts []Account
 
 // AccountKey represents account key and all their possible configuration formats.
 type AccountKey struct {
-	Type         KeyType
-	Index        int
-	SigAlgo      crypto.SignatureAlgorithm
-	HashAlgo     crypto.HashAlgorithm
-	ResourceID   string
-	EncryptedKey []byte
-	PrivateKey   crypto.PrivateKey
+	Type       KeyType
+	Index      int
+	SigAlgo    crypto.SignatureAlgorithm
+	HashAlgo   crypto.HashAlgorithm
+	ResourceID string
+	PrivateKey crypto.PrivateKey
 }
 
 // ByName get account by name.

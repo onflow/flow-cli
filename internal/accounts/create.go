@@ -20,28 +20,20 @@ package accounts
 
 import (
 	"fmt"
-	"os"
 	"strings"
 	"time"
 
-	"github.com/onflow/flow-cli/pkg/flowkit/gateway"
-
-	"github.com/onflow/flow-cli/pkg/flowkit/util"
-
 	"github.com/onflow/flow-go-sdk"
-
-	"github.com/onflow/flow-cli/pkg/flowkit/config"
-
-	"github.com/onflow/flow-cli/pkg/flowkit/output"
-
-	"github.com/onflow/flow-cli/pkg/flowkit"
-
 	"github.com/onflow/flow-go-sdk/crypto"
-
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
+	"github.com/onflow/flow-cli/pkg/flowkit"
+	"github.com/onflow/flow-cli/pkg/flowkit/config"
+	"github.com/onflow/flow-cli/pkg/flowkit/gateway"
+	"github.com/onflow/flow-cli/pkg/flowkit/output"
 	"github.com/onflow/flow-cli/pkg/flowkit/services"
+	"github.com/onflow/flow-cli/pkg/flowkit/util"
 )
 
 type flagsCreate struct {
@@ -73,7 +65,7 @@ func create(
 	services *services.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
-	// Enter interactive mode if the user does not provide any keys
+	// if user doesn't provide any flags go into interactive mode
 	if len(createFlags.Keys) == 0 {
 		account, err := createInteractive(state)
 		if err != nil {
@@ -88,12 +80,6 @@ func create(
 	signer, err := state.Accounts().ByName(createFlags.Signer)
 	if err != nil {
 		return nil, err
-	}
-
-	if signer.Key().Type() == config.KeyTypeEncrypted {
-		password := output.EnterPasswordPrompt()
-		key := signer.Key().(*flowkit.EncryptedAccountKey)
-		key.SetPassword(password)
 	}
 
 	if len(createFlags.SigAlgo) == 1 && len(createFlags.HashAlgo) == 1 {
@@ -246,26 +232,6 @@ func createInteractive(state *flowkit.State) (*flow.Account, error) {
 	if err != nil {
 		return nil, err
 	}
-	privateKeyEnvKey := "PRIVATE_KEY_" + strings.ToUpper(strings.TrimPrefix(address.String(), "0x"))
-	os.Setenv(privateKeyEnvKey, key.String())
-	log.Info(output.SuccessEmoji() + privateKeyEnvKey + " = " + strings.TrimPrefix(key.String(), "0x"))
-
-	if network == config.DefaultMainnetNetwork() && output.EnableSaveEnvPrompt() {
-		path, _ := os.Getwd()
-		envFilePath := path + "/private_keys.env"
-
-		f, err := os.OpenFile(envFilePath,
-			os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-		if err != nil {
-			fmt.Printf("Error with .env file: " + err.Error())
-		}
-		defer f.Close()
-		newPKeyEnvVar := privateKeyEnvKey + "=" + strings.TrimPrefix(key.String(), "0x")
-		if _, err := f.WriteString("\n" + newPKeyEnvVar); err != nil {
-			fmt.Printf("Error with writing to .env file:" + err.Error())
-		}
-		log.Info(output.SuccessEmoji() + "Private key env variable stored in cmd/flow/private_keys.env")
-	}
 
 	state.Accounts().AddOrUpdate(flowkitAccount)
 	err = state.SaveDefault()
@@ -312,6 +278,7 @@ func getAccountCreatedAddressWithPubKey(
 		if err != nil {
 			return nil, err
 		}
+
 		return address, nil
 	}
 

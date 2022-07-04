@@ -127,29 +127,6 @@ func AccountFromFlow(account *flow.Account, name string, key crypto.PrivateKey) 
 	return flowkitAccount, nil
 }
 
-func AccountFromFlowEncrypted(
-	account *flow.Account,
-	name string,
-	key crypto.PrivateKey,
-	password string,
-) (*Account, error) {
-	flowkitAccount := &Account{
-		name:    name,
-		address: account.Address,
-	}
-
-	if len(account.Keys) > 0 {
-		defaultKey := account.Keys[0] // todo check if ok to default
-		flowkitKey, err := CreateEncryptedAccountKey(defaultKey.Index, defaultKey.HashAlgo, key, password)
-		if err != nil {
-			return nil, err
-		}
-		flowkitAccount.SetKey(flowkitKey)
-	}
-
-	return flowkitAccount, nil
-}
-
 func generateEmulatorServiceAccount(sigAlgo crypto.SignatureAlgorithm, hashAlgo crypto.HashAlgorithm) (*Account, error) {
 	seed, err := util.RandomSeed(crypto.MinSeedLength)
 	if err != nil {

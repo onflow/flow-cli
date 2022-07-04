@@ -21,8 +21,6 @@ package transactions
 import (
 	"fmt"
 
-	"github.com/onflow/flow-cli/pkg/flowkit/output"
-
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
 
 	"github.com/spf13/cobra"
@@ -72,12 +70,6 @@ func send(
 	signer, err := state.Accounts().ByName(transactionSigner)
 	if err != nil {
 		return nil, err
-	}
-
-	if signer.Key().Type() == config.KeyTypeEncrypted {
-		password := output.EnterPasswordPrompt()
-		key := signer.Key().(*flowkit.EncryptedAccountKey)
-		key.SetPassword(password)
 	}
 
 	code, err := readerWriter.ReadFile(codeFilename)

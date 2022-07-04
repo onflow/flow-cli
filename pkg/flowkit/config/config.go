@@ -44,7 +44,6 @@ type KeyType string
 
 const (
 	KeyTypeHex                        KeyType = "hex"
-	KeyTypeEncrypted                  KeyType = "encrypted"
 	KeyTypeGoogleKMS                  KeyType = "google-kms"
 	DefaultEmulatorConfigName                 = "default"
 	DefaultEmulatorServiceAccountName         = "emulator-account"

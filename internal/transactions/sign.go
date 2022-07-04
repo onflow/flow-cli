@@ -21,9 +21,6 @@ package transactions
 import (
 	"fmt"
 
-	"github.com/onflow/flow-cli/pkg/flowkit/config"
-	"github.com/onflow/flow-cli/pkg/flowkit/output"
-
 	"github.com/onflow/flow-cli/pkg/flowkit"
 
 	"github.com/spf13/cobra"
@@ -66,12 +63,6 @@ func sign(
 	signer, err := state.Accounts().ByName(signFlags.Signer)
 	if err != nil {
 		return nil, fmt.Errorf("signer account: [%s] doesn't exists in configuration", signFlags.Signer)
-	}
-
-	if signer.Key().Type() == config.KeyTypeEncrypted {
-		password := output.EnterPasswordPrompt()
-		key := signer.Key().(*flowkit.EncryptedAccountKey)
-		key.SetPassword(password)
 	}
 
 	signed, err := services.Transactions.Sign(signer, payload, globalFlags.Yes)
