@@ -30,6 +30,14 @@ type Account struct {
 	Name    string
 	Address flow.Address
 	Key     AccountKey
+
+	// FromFile is the configuration file containing this account.
+	//
+	// This field is only set if the external "fromFile"
+	// syntax is used. Otherwise this field is empty.
+	//
+	// Ref: https://docs.onflow.org/flow-cli/security/#private-account-configuration-file
+	FromFile string
 }
 
 type Accounts []Account

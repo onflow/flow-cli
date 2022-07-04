@@ -202,6 +202,11 @@ func (l *Loader) postprocess(baseConf *Config) (*Config, error) {
 			return nil, err
 		}
 
+		// IMPORTANT: save the original filepath so that this account's
+		// key information is not saved to the default configuration file
+		// and potentially exposed to the public.
+		account.FromFile = path
+
 		// create an empty config with single account so we don't include all accounts in file
 		accountConf := &Config{
 			Accounts: []Account{*account},

@@ -28,11 +28,20 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowkit/util"
 )
 
-// Account is a flowkit specific account implementation.
+// Account is a flowkit-specific account implementation.
 type Account struct {
 	name    string
 	address flow.Address
 	key     AccountKey
+
+	// fromFile is the configuration file containing this account.
+	//
+	// This field is only set if the external "fromFile"
+	// syntax is used. Otherwise this field is empty.
+	//
+	// Ref: https://docs.onflow.org/flow-cli/security/#private-account-configuration-file
+	fromFile string
+}
 }
 
 // Address get account address.
@@ -63,6 +72,11 @@ func (a *Account) SetAddress(address flow.Address) {
 // SetName sets account name.
 func (a *Account) SetName(name string) {
 	a.name = name
+}
+
+// SetFromFile sets the external configuration file.
+func (a *Account) SetFromFile(filename string) {
+	a.fromFile = filename
 }
 
 func accountsFromConfig(conf *config.Config) (Accounts, error) {
@@ -97,13 +111,21 @@ func fromConfig(account config.Account) (*Account, error) {
 	}
 
 	return &Account{
-		name:    account.Name,
-		address: account.Address,
-		key:     key,
+		name:     account.Name,
+		address:  account.Address,
+		fromFile: account.FromFile,
+		key:      key,
 	}, nil
 }
 
 func toConfig(account Account) config.Account {
+	if account.fromFile != "" {
+		return config.Account{
+			Name:     account.name,
+			FromFile: account.fromFile,
+		}
+	}
+
 	return config.Account{
 		Name:    account.name,
 		Address: account.address,
@@ -111,20 +133,48 @@ func toConfig(account Account) config.Account {
 	}
 }
 
-func AccountFromFlow(account *flow.Account, name string, key crypto.PrivateKey) (*Account, error) {
-	flowkitAccount := &Account{
+// NewAccountFromOnChainAccount creates a new flowkit account definition
+// that mirrors an already-existing on-chain Flow account.
+//
+// This function requires the on-chain account to have exactly one public key
+// with full signing weight (1000). This ensures that the user has complete
+// and sole control over the on-chain account.
+func NewAccountFromOnChainAccount(
+	name string,
+	onChainAccount *flow.Account,
+	privateKey crypto.PrivateKey,
+) (*Account, error) {
+	account := &Account{
 		name:    name,
-		address: account.Address,
+		address: onChainAccount.Address,
 	}
 
-	if len(account.Keys) > 0 {
-		defaultKey := account.Keys[0] // todo check if ok to default
-		flowkitAccount.SetKey(
-			NewHexAccountKeyFromPrivateKey(defaultKey.Index, defaultKey.HashAlgo, key),
+	if len(onChainAccount.Keys) != 1 {
+		return nil, fmt.Errorf(
+			"expected on-chain account to have exactly one key, but got %d keys",
+			len(onChainAccount.Keys),
 		)
 	}
 
-	return flowkitAccount, nil
+	accountKey := onChainAccount.Keys[0]
+
+	if accountKey.Weight != flow.AccountKeyWeightThreshold {
+		return nil, fmt.Errorf(
+			"expected on-chain account to have full signing weight (%d), but got weight of %d",
+			flow.AccountKeyWeightThreshold,
+			accountKey.Weight,
+		)
+	}
+
+	account.SetKey(
+		NewHexAccountKeyFromPrivateKey(
+			accountKey.Index,
+			accountKey.HashAlgo,
+			privateKey,
+		),
+	)
+
+	return account, nil
 }
 
 func generateEmulatorServiceAccount(sigAlgo crypto.SignatureAlgorithm, hashAlgo crypto.HashAlgorithm) (*Account, error) {

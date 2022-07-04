@@ -57,6 +57,24 @@ type State struct {
 	accounts     *Accounts
 }
 
+// NewEmptyState creates an empty state instance.
+//
+// This function is useful when manually constructing
+// the state for a single configuration file.
+func NewEmptyState(readerWriter ReaderWriter) *State {
+	confLoader := config.NewLoader(readerWriter)
+	confLoader.AddConfigParser(json.NewParser())
+
+	accounts := make(Accounts, 0)
+
+	return &State{
+		conf:         config.Empty(),
+		confLoader:   confLoader,
+		readerWriter: readerWriter,
+		accounts:     &accounts,
+	}
+}
+
 // ReaderWriter retrieve current file reader writer.
 func (p *State) ReaderWriter() ReaderWriter {
 	return p.readerWriter
@@ -275,7 +293,7 @@ func Init(readerWriter ReaderWriter, sigAlgo crypto.SignatureAlgorithm, hashAlgo
 	return &State{
 		confLoader:   loader,
 		readerWriter: readerWriter,
-		conf:         config.DefaultConfig(),
+		conf:         config.Default(),
 		accounts:     &Accounts{*emulatorServiceAccount},
 	}, nil
 }

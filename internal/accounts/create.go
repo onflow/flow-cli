@@ -60,14 +60,14 @@ var CreateCommand = &command.Command{
 
 func create(
 	_ []string,
-	_ flowkit.ReaderWriter,
+	loader flowkit.ReaderWriter,
 	_ command.GlobalFlags,
 	services *services.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
 	// if user doesn't provide any flags go into interactive mode
 	if len(createFlags.Keys) == 0 {
-		account, err := createInteractive(state)
+		account, err := createInteractive(state, loader)
 		if err != nil {
 			return nil, err
 		}
@@ -149,7 +149,7 @@ func create(
 	}, nil
 }
 
-func createInteractive(state *flowkit.State) (*flow.Account, error) {
+func createInteractive(state *flowkit.State, loader flowkit.ReaderWriter) (*flow.Account, error) {
 	network := output.CreateAccountNetworkPrompt()
 	log := output.NewStdoutLogger(output.InfoLog)
 
@@ -220,28 +220,46 @@ func createInteractive(state *flowkit.State) (*flow.Account, error) {
 		log.StopProgress()
 	}
 
-	var flowkitAccount *flowkit.Account
-	account, err := service.Accounts.Get(address)
+	onChainAccount, err := service.Accounts.Get(address)
 	if err != nil {
 		return nil, err
 	}
 
 	name := output.NamePrompt()
 
-	flowkitAccount, err = flowkit.AccountFromFlow(account, name, key)
+	fullAccount, err := flowkit.NewAccountFromOnChainAccount(name, onChainAccount, key)
 	if err != nil {
 		return nil, err
 	}
 
-	state.Accounts().AddOrUpdate(flowkitAccount)
+	externalState := flowkit.NewEmptyState(loader)
+	externalState.Accounts().AddOrUpdate(fullAccount)
+
+	filename := fmt.Sprintf("%s.private.json", name)
+
+	err = externalState.Save(filename)
+	if err != nil {
+		return nil, err
+	}
+
+	fromFileAccount := &flowkit.Account{}
+	fromFileAccount.SetName(name)
+	fromFileAccount.SetFromFile(filename)
+
+	state.Accounts().AddOrUpdate(fromFileAccount)
 	err = state.SaveDefault()
 	if err != nil {
 		return nil, err
 	}
 
-	log.Info(fmt.Sprintf("%s Account %s created on the %s network and saved to 'flow.json' for later use.", output.SuccessEmoji(), address, network.Name))
+	log.Info(fmt.Sprintf(
+		"%s Account %s created on the %s network and saved to 'flow.json' for later use.",
+		output.SuccessEmoji(),
+		address,
+		network.Name,
+	))
 
-	return account, nil
+	return onChainAccount, nil
 }
 
 func getAccountCreatedAddressWithPubKey(

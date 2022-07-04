@@ -164,7 +164,9 @@ func transformAccountsToJSON(accounts config.Accounts) jsonAccounts {
 	jsonAccounts := jsonAccounts{}
 
 	for _, a := range accounts {
-		if isDefaultKeyFormat(a.Key) {
+		if a.FromFile != "" {
+			jsonAccounts[a.Name] = transformFromFileAccountToJSON(a)
+		} else if isDefaultKeyFormat(a.Key) {
 			jsonAccounts[a.Name] = transformSimpleAccountToJSON(a)
 		} else {
 			jsonAccounts[a.Name] = transformAdvancedAccountToJSON(a)
@@ -172,6 +174,14 @@ func transformAccountsToJSON(accounts config.Accounts) jsonAccounts {
 	}
 
 	return jsonAccounts
+}
+
+func transformFromFileAccountToJSON(a config.Account) account {
+	return account{
+		FromFile: fromFileAccount{
+			FromFile: a.FromFile,
+		},
+	}
 }
 
 func transformSimpleAccountToJSON(a config.Account) account {
@@ -218,8 +228,13 @@ func isDefaultKeyFormat(key config.AccountKey) bool {
 }
 
 type account struct {
+	FromFile fromFileAccount
 	Simple   simpleAccount
 	Advanced advancedAccount
+}
+
+type fromFileAccount struct {
+	FromFile string `json:"fromFile"`
 }
 
 type simpleAccount struct {
@@ -331,6 +346,10 @@ func (j *account) UnmarshalJSON(b []byte) error {
 }
 
 func (j account) MarshalJSON() ([]byte, error) {
+	if j.FromFile != (fromFileAccount{}) {
+		return json.Marshal(j.FromFile)
+	}
+
 	if j.Simple != (simpleAccount{}) {
 		return json.Marshal(j.Simple)
 	}
