@@ -159,11 +159,31 @@ func createInteractive(state *flowkit.State, loader flowkit.ReaderWriter) (*flow
 		return nil, err
 	}
 	service := services.NewServices(gw, state, output.NewStdoutLogger(output.NoneLog))
+	log.Info("\nSTARTING ACCOUNT CREATION PROCESS: ")
+	log.Info("\n------------------------")
+	log.Info(fmt.Sprintf("%s (1/3) Generate public and private keys", output.GoEmoji()))
+	log.Info(fmt.Sprintf("%s (2/3) Create account on %s with generated keys", output.GoEmoji(), network.Name))
+	log.Info(fmt.Sprintf("%s (3/3) Save newly created account on flow.json", output.GoEmoji()))
+	log.Info("\n------------------------")
+	time.Sleep(time.Second * 2)
 
+	log.Info(fmt.Sprintf("%s (1/3) GENERATING PUBLIC AND PRIVATE KEYS", output.WarningEmoji()))
+	log.Info("\n------------------------")
+	time.Sleep(time.Second * 3)
 	key, err := service.Keys.Generate("", crypto.ECDSA_P256)
 	if err != nil {
 		return nil, err
 	}
+	log.Info(fmt.Sprintf("%s (1/3) SUCCESSFULLY GENERATED PUBLIC AND PRIVATE KEYS", output.OkEmoji()))
+	log.Info(fmt.Sprintf("\n PUBLIC KEY: %s", key.PublicKey().String()))
+	log.Info(fmt.Sprintf("\n PRIVATE KEY: %s", key.String()))
+	log.Info("\n------------------------")
+	time.Sleep(time.Second * 2)
+
+	log.Info(fmt.Sprintf("%s (2/3) CREATING ACCOUNT ON %s WITH GENERATED KEYS", output.WarningEmoji(),
+		strings.ToUpper(network.Name)))
+	log.Info("\n------------------------")
+	time.Sleep(time.Second * 3)
 
 	startHeight, err := service.Blocks.GetLatestBlockHeight()
 	if err != nil {
@@ -231,6 +251,16 @@ func createInteractive(state *flowkit.State, loader flowkit.ReaderWriter) (*flow
 	if err != nil {
 		return nil, err
 	}
+	log.Info("\n------------------------")
+	log.Info(fmt.Sprintf("\n %s (2/3) SUCCESSFULLY CREATED ACCOUNT", output.OkEmoji()))
+	log.Info(fmt.Sprintf("\n ACCOUNT NAME: %s", strings.ToUpper(name)))
+	log.Info(fmt.Sprintf("\n ADDRESS: %s", fmt.Sprintf("0x%s", address.String())))
+	log.Info("\n------------------------")
+	time.Sleep(time.Second * 2)
+
+	log.Info(fmt.Sprintf("\n %s (3/3) SAVING CREATED ACCOUNT IN FLOW.JSON", output.WarningEmoji()))
+	time.Sleep(time.Second * 3)
+
 	//only save account's private key in fromFile format for testnet and mainnet
 	if network != config.DefaultEmulatorNetwork() {
 		err = saveAccountFromFile(loader, state, account)
@@ -240,13 +270,28 @@ func createInteractive(state *flowkit.State, loader flowkit.ReaderWriter) (*flow
 	if err != nil {
 		return nil, err
 	}
-	log.Info(fmt.Sprintf(
-		"%s Account %s created on the %s network and saved to 'flow.json' for later use.",
-		output.SuccessEmoji(),
-		address,
-		network.Name,
-	))
+	log.Info("\n------------------------")
+	log.Info(fmt.Sprintf("%s (3/3) SUCCESSFULLY SAVED ACCOUNT IN FLOW.JSON", output.OkEmoji()))
+	if network != config.DefaultEmulatorNetwork() {
+		log.Info(fmt.Sprintf("%s PRIVATE KEY FOR %s SUCCESSFULLY SAVED IN %s", output.OkEmoji(),
+			strings.ToUpper(name), strings.ToUpper(fmt.Sprintf("%s.private.json", name))))
+	}
+	log.Info("\n------------------------")
+	time.Sleep(time.Second * 2)
 
+	log.Info(fmt.Sprintf("%s ACCOUNT CREATION PROCESS COMPLETED!", output.SuccessEmoji()))
+	log.Info("\n------------------------")
+	log.Info(fmt.Sprintf("\n %s (1/3) Generated public and private keys", output.OkEmoji()))
+	log.Info(fmt.Sprintf("\n PUBLIC KEY: %s", key.PublicKey().String()))
+	log.Info(fmt.Sprintf("\n PRIVATE KEY: %s", key.String()))
+	log.Info(fmt.Sprintf("\n %s (2/3) Created account on %s with generated keys", output.OkEmoji(), network.Name))
+	log.Info(fmt.Sprintf("\n ACCOUNT NAME: %s", strings.ToUpper(name)))
+	log.Info(fmt.Sprintf("\n ADDRESS: %s", fmt.Sprintf("0x%s", address.String())))
+	log.Info(fmt.Sprintf("\n %s (3/3) Saved newly created account on flow.json", output.OkEmoji()))
+	log.Info("\n------------------------")
+	time.Sleep(time.Second * 3)
+	log.Info("\nACCOUNT CREATION SUMMARY")
+	log.Info("\n------------------------")
 	return onChainAccount, nil
 }
 
