@@ -232,7 +232,7 @@ func createInteractive(state *flowkit.State, loader flowkit.ReaderWriter) (*flow
 		return nil, err
 	}
 
-	err = saveAccount(loader, state, name, account)
+	err = saveAccount(loader, state, account)
 	if err != nil {
 		return nil, err
 	}
@@ -291,10 +291,9 @@ func getAccountCreatedAddressWithPubKey(
 func saveAccount(
 	loader flowkit.ReaderWriter,
 	state *flowkit.State,
-	name string,
 	account *flowkit.Account,
 ) error {
-	privateAccountFilename := fmt.Sprintf("%s.private.json", name)
+	privateAccountFilename := fmt.Sprintf("%s.private.json", account.Name())
 
 	// Step 1: save the private version of the account (incl. the private key)
 	// to a separate JSON file.
@@ -306,7 +305,7 @@ func saveAccount(
 	// Step 2: update the main configuration file to inlcude a reference
 	// to the private account file.
 	fromFileAccount := flowkit.
-		NewAccount(name).
+		NewAccount(account.Name()).
 		SetFromFile(privateAccountFilename)
 
 	state.Accounts().AddOrUpdate(fromFileAccount)
