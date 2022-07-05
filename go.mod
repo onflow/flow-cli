@@ -22,7 +22,6 @@ require (
 	github.com/spf13/cobra v1.4.0
 	github.com/stretchr/testify v1.7.1
 	github.com/thoas/go-funk v0.9.2
-	golang.org/x/crypto v0.0.0-20220411220226-7b82a4e95df4
 	gonum.org/v1/gonum v0.11.0
 	google.golang.org/grpc v1.45.0
 )
