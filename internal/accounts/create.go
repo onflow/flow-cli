@@ -227,27 +227,12 @@ func createInteractive(state *flowkit.State, loader flowkit.ReaderWriter) (*flow
 
 	name := output.NamePrompt()
 
-	fullAccount, err := flowkit.NewAccountFromOnChainAccount(name, onChainAccount, key)
+	account, err := flowkit.NewAccountFromOnChainAccount(name, onChainAccount, key)
 	if err != nil {
 		return nil, err
 	}
 
-	externalState := flowkit.NewEmptyState(loader)
-	externalState.Accounts().AddOrUpdate(fullAccount)
-
-	filename := fmt.Sprintf("%s.private.json", name)
-
-	err = externalState.Save(filename)
-	if err != nil {
-		return nil, err
-	}
-
-	fromFileAccount := flowkit.
-		NewAccount(name).
-		SetFromFile(filename)
-
-	state.Accounts().AddOrUpdate(fromFileAccount)
-	err = state.SaveDefault()
+	err = saveAccount(loader, state, name, account)
 	if err != nil {
 		return nil, err
 	}
@@ -301,4 +286,51 @@ func getAccountCreatedAddressWithPubKey(
 	}
 
 	return address, nil
+}
+
+func saveAccount(
+	loader flowkit.ReaderWriter,
+	state *flowkit.State,
+	name string,
+	account *flowkit.Account,
+) error {
+	privateAccountFilename := fmt.Sprintf("%s.private.json", name)
+
+	// Step 1: save the private version of the account (incl. the private key)
+	// to a separate JSON file.
+	err := savePrivateAccount(loader, privateAccountFilename, account)
+	if err != nil {
+		return err
+	}
+
+	// Step 2: update the main configuration file to inlcude a reference
+	// to the private account file.
+	fromFileAccount := flowkit.
+		NewAccount(name).
+		SetFromFile(privateAccountFilename)
+
+	state.Accounts().AddOrUpdate(fromFileAccount)
+
+	err = state.SaveDefault()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func savePrivateAccount(
+	loader flowkit.ReaderWriter,
+	filename string,
+	account *flowkit.Account,
+) error {
+	privateState := flowkit.NewEmptyState(loader)
+	privateState.Accounts().AddOrUpdate(account)
+
+	err := privateState.Save(filename)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

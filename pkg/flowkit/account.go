@@ -50,6 +50,58 @@ func NewAccount(name string) *Account {
 	}
 }
 
+// NewAccountFromOnChainAccount creates a new flowkit account definition
+// that mirrors an already-existing on-chain Flow account.
+//
+// This function requires the on-chain account to have exactly one public key
+// with full signing weight (1000). This ensures that the user has complete
+// and sole control over the on-chain account.
+func NewAccountFromOnChainAccount(
+	name string,
+	onChainAccount *flow.Account,
+	privateKey crypto.PrivateKey,
+) (*Account, error) {
+	if len(onChainAccount.Keys) != 1 {
+		return nil, fmt.Errorf(
+			"expected on-chain account to have exactly one key, but got %d keys",
+			len(onChainAccount.Keys),
+		)
+	}
+
+	accountKey := onChainAccount.Keys[0]
+
+	if accountKey.Weight != flow.AccountKeyWeightThreshold {
+		return nil, fmt.Errorf(
+			"expected on-chain account to have full signing weight (%d), but got weight of %d",
+			flow.AccountKeyWeightThreshold,
+			accountKey.Weight,
+		)
+	}
+
+	offChainPublicKey := privateKey.PublicKey()
+	onChainPublicKey := accountKey.PublicKey
+
+	if !offChainPublicKey.Equals(onChainPublicKey) {
+		return nil, fmt.Errorf(
+			"expected on-chain account public key to match (%s), but got %s",
+			offChainPublicKey.String(),
+			onChainPublicKey.String(),
+		)
+	}
+
+	account := NewAccount(name).
+		SetAddress(onChainAccount.Address).
+		SetKey(
+			NewHexAccountKeyFromPrivateKey(
+				accountKey.Index,
+				accountKey.HashAlgo,
+				privateKey,
+			),
+		)
+
+	return account, nil
+}
+
 // Address get account address.
 func (a *Account) Address() flow.Address {
 	return a.address
@@ -141,50 +193,6 @@ func toConfig(account Account) config.Account {
 		Address: account.address,
 		Key:     account.key.ToConfig(),
 	}
-}
-
-// NewAccountFromOnChainAccount creates a new flowkit account definition
-// that mirrors an already-existing on-chain Flow account.
-//
-// This function requires the on-chain account to have exactly one public key
-// with full signing weight (1000). This ensures that the user has complete
-// and sole control over the on-chain account.
-func NewAccountFromOnChainAccount(
-	name string,
-	onChainAccount *flow.Account,
-	privateKey crypto.PrivateKey,
-) (*Account, error) {
-	account := &Account{
-		name:    name,
-		address: onChainAccount.Address,
-	}
-
-	if len(onChainAccount.Keys) != 1 {
-		return nil, fmt.Errorf(
-			"expected on-chain account to have exactly one key, but got %d keys",
-			len(onChainAccount.Keys),
-		)
-	}
-
-	accountKey := onChainAccount.Keys[0]
-
-	if accountKey.Weight != flow.AccountKeyWeightThreshold {
-		return nil, fmt.Errorf(
-			"expected on-chain account to have full signing weight (%d), but got weight of %d",
-			flow.AccountKeyWeightThreshold,
-			accountKey.Weight,
-		)
-	}
-
-	account.SetKey(
-		NewHexAccountKeyFromPrivateKey(
-			accountKey.Index,
-			accountKey.HashAlgo,
-			privateKey,
-		),
-	)
-
-	return account, nil
 }
 
 func generateEmulatorServiceAccount(sigAlgo crypto.SignatureAlgorithm, hashAlgo crypto.HashAlgorithm) (*Account, error) {
