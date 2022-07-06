@@ -33,7 +33,7 @@ import (
 	"github.com/stretchr/testify/mock"
 
 	"github.com/onflow/flow-cli/pkg/flowkit"
-	"github.com/onflow/flow-cli/tests"
+	"github.com/onflow/flow-cli/pkg/flowkit/tests"
 )
 
 const gasLimit = 1000

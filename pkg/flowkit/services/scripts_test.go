@@ -26,7 +26,7 @@ import (
 	"github.com/stretchr/testify/mock"
 
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
-	"github.com/onflow/flow-cli/tests"
+	"github.com/onflow/flow-cli/pkg/flowkit/tests"
 )
 
 func TestScripts(t *testing.T) {

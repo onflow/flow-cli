@@ -30,7 +30,7 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
 	"github.com/onflow/flow-cli/pkg/flowkit/contracts"
-	"github.com/onflow/flow-cli/tests"
+	"github.com/onflow/flow-cli/pkg/flowkit/tests"
 )
 
 func TestProject(t *testing.T) {

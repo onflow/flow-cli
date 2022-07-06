@@ -37,7 +37,7 @@ import (
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/onflow/flow-cli/tests"
+	"github.com/onflow/flow-cli/pkg/flowkit/tests"
 )
 
 func setup() (*flowkit.State, *Services, *tests.TestGateway) {

@@ -23,7 +23,7 @@ import (
 	"github.com/onflow/flow-go-sdk"
 	"github.com/stretchr/testify/mock"
 
-	"github.com/onflow/flow-cli/tests/mocks"
+	"github.com/onflow/flow-cli/pkg/flowkit/tests/mocks"
 )
 
 const (
