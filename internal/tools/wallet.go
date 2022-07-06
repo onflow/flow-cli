@@ -68,7 +68,7 @@ func wallet(
 		PrivateKey: strings.TrimPrefix(key.PrivateKey.String(), "0x"),
 		PublicKey:  strings.TrimPrefix(key.PrivateKey.PublicKey().String(), "0x"),
 		AccessNode: walletFlags.Host,
-		BaseURL:    "/fcl/authz",
+		BaseURL:    "http://localhost:8701",
 	}
 
 	srv, err := devWallet.NewHTTPServer(walletFlags.Port, &conf)
