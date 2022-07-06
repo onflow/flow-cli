@@ -64,10 +64,12 @@ func wallet(
 	key := service.Key().ToConfig()
 
 	conf := devWallet.Config{
-		Address:    fmt.Sprintf("0x%s", service.Address().String()),
-		PrivateKey: strings.TrimPrefix(key.PrivateKey.String(), "0x"),
-		PublicKey:  strings.TrimPrefix(key.PrivateKey.PublicKey().String(), "0x"),
-		AccessNode: walletFlags.Host,
+		Address:      fmt.Sprintf("0x%s", service.Address().String()),
+		PrivateKey:   strings.TrimPrefix(key.PrivateKey.String(), "0x"),
+		PublicKey:    strings.TrimPrefix(key.PrivateKey.PublicKey().String(), "0x"),
+		AccessNode:   walletFlags.Host,
+		AccountKeyID: "0",
+		BaseURL:      "http://localhost:8701",
 	}
 
 	srv, err := devWallet.NewHTTPServer(walletFlags.Port, &conf)
