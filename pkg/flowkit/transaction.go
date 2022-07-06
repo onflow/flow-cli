@@ -290,7 +290,7 @@ func (t *Transaction) AddAuthorizers(authorizers []flow.Address) (*Transaction, 
 	program, _ := cmd.PrepareProgram(
 		string(t.tx.Script),
 		common.StringLocation(""),
-		map[common.LocationID]string{},
+		map[common.Location]string{},
 	)
 
 	// get authorizers param list if exists

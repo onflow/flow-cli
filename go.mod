@@ -9,7 +9,6 @@ require (
 	github.com/onflow/cadence v0.24.6
 	github.com/onflow/cadence/languageserver v0.24.0
 	github.com/onflow/fcl-dev-wallet v0.4.5
-	github.com/onflow/flow-cli/pkg/flowkit v0.0.0
 	github.com/onflow/flow-emulator v0.33.3
 	github.com/onflow/flow-go-sdk v0.26.4
 	github.com/psiemens/sconfig v0.1.0
@@ -98,6 +97,7 @@ require (
 	github.com/multiformats/go-multihash v0.1.0 // indirect
 	github.com/multiformats/go-varint v0.0.6 // indirect
 	github.com/onflow/atree v0.3.1-0.20220531231935-525fbc26f40a // indirect
+	github.com/onflow/flow-cli/pkg/flowkit v0.0.0-20220706175347-161c355e45d9 // indirect
 	github.com/onflow/flow-core-contracts/lib/go/contracts v0.11.2-0.20220513155751-c4c1f8d59f83 // indirect
 	github.com/onflow/flow-core-contracts/lib/go/templates v0.11.2-0.20220513155751-c4c1f8d59f83 // indirect
 	github.com/onflow/flow-ft/lib/go/contracts v0.5.0 // indirect
@@ -162,5 +162,3 @@ require (
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
 	lukechampine.com/blake3 v1.1.7 // indirect
 )
-
-replace github.com/onflow/flow-cli/pkg/flowkit => ./pkg/flowkit
