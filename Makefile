@@ -31,6 +31,7 @@ install-tools:
 .PHONY: test
 test:
 	GO111MODULE=on go test -coverprofile=$(COVER_PROFILE) $(if $(JSON_OUTPUT),-json,) ./...
+	cd pkg/flowkit; GO111MODULE=on go test -coverprofile=$(COVER_PROFILE) $(if $(JSON_OUTPUT),-json,) ./...
 
 .PHONY: test-e2e-emulator
 test-e2e-emulator:
@@ -104,3 +105,4 @@ check-headers:
 .PHONY: check-tidy
 check-tidy:
 	go mod tidy
+	cd pkg/flowkit; go mod tidy

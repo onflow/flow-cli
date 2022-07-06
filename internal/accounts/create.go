@@ -261,12 +261,7 @@ func createInteractive(state *flowkit.State, loader flowkit.ReaderWriter) (*flow
 	log.Info(fmt.Sprintf("\n %s (3/3) SAVING CREATED ACCOUNT IN FLOW.JSON", output.WarningEmoji()))
 	time.Sleep(time.Second * 3)
 
-	//only save account's private key in fromFile format for testnet and mainnet
-	if network != config.DefaultEmulatorNetwork() {
-		err = saveAccountFromFile(loader, state, account)
-	} else {
-		err = saveAccountEmulator(state, address, service, name, key)
-	}
+	err = saveAccount(loader, state, account, network)
 	if err != nil {
 		return nil, err
 	}
@@ -335,8 +330,21 @@ func getAccountCreatedAddressWithPubKey(
 
 	return address, nil
 }
+func saveAccount(
+	loader flowkit.ReaderWriter,
+	state *flowkit.State,
+	account *flowkit.Account,
+	network config.Network,
+) error {
+	// If using emulator, save account private key to main flow.json configuration file
+	if network == config.DefaultEmulatorNetwork() {
+		return saveAccountToMainConfigFile(state, account)
+	}
 
-func saveAccountFromFile(
+	// Otherwise, save to a separate {accountName}.private.jsonfile.
+	return saveAccountToPrivateConfigFile(loader, state, account)
+}
+func saveAccountToPrivateConfigFile(
 	loader flowkit.ReaderWriter,
 	state *flowkit.State,
 	account *flowkit.Account,
@@ -365,23 +373,12 @@ func saveAccountFromFile(
 
 	return nil
 }
-func saveAccountEmulator(
+func saveAccountToMainConfigFile(
 	state *flowkit.State,
-	address flow.Address,
-	service *services.Services,
-	name string,
-	key crypto.PrivateKey,
+	account *flowkit.Account,
 ) error {
-	account, err := service.Accounts.Get(address)
-	if err != nil {
-		return err
-	}
-	flowkitAccount, err := flowkit.AccountFromFlow(account, name, key)
-	if err != nil {
-		return err
-	}
-	state.Accounts().AddOrUpdate(flowkitAccount)
-	err = state.SaveDefault()
+	state.Accounts().AddOrUpdate(account)
+	err := state.SaveDefault()
 	if err != nil {
 		return err
 	}

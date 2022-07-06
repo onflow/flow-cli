@@ -24,7 +24,7 @@ import (
 	"github.com/onflow/flow-go-sdk"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/onflow/flow-cli/tests"
+	"github.com/onflow/flow-cli/pkg/flowkit/tests"
 )
 
 func TestBlocks(t *testing.T) {

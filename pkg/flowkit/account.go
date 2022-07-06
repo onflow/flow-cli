@@ -101,21 +101,6 @@ func NewAccountFromOnChainAccount(
 
 	return account, nil
 }
-func AccountFromFlow(account *flow.Account, name string, key crypto.PrivateKey) (*Account, error) {
-	flowkitAccount := &Account{
-		name:    name,
-		address: account.Address,
-	}
-
-	if len(account.Keys) > 0 {
-		defaultKey := account.Keys[0] // todo check if ok to default
-		flowkitAccount.SetKey(
-			NewHexAccountKeyFromPrivateKey(defaultKey.Index, defaultKey.HashAlgo, key),
-		)
-	}
-
-	return flowkitAccount, nil
-}
 
 // Address get account address.
 func (a *Account) Address() flow.Address {
