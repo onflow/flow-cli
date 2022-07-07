@@ -20,6 +20,7 @@ package accounts
 
 import (
 	"fmt"
+	"os"
 	"strings"
 	"time"
 
@@ -268,8 +269,10 @@ func createInteractive(state *flowkit.State, loader flowkit.ReaderWriter) (*flow
 	log.Info("\n------------------------")
 	log.Info(fmt.Sprintf("%s (3/3) SUCCESSFULLY SAVED ACCOUNT IN FLOW.JSON", output.OkEmoji()))
 	if network != config.DefaultEmulatorNetwork() {
+		fileName := strings.ToUpper(fmt.Sprintf("%s.private.json", name))
 		log.Info(fmt.Sprintf("%s PRIVATE KEY FOR %s SUCCESSFULLY SAVED IN %s", output.OkEmoji(),
-			strings.ToUpper(name), strings.ToUpper(fmt.Sprintf("%s.private.json", name))))
+			strings.ToUpper(name), fileName))
+		log.Info(fmt.Sprintf("%s %s ADDED TO .GITIGNORE", output.OkEmoji(), fileName))
 	}
 	log.Info("\n------------------------")
 	time.Sleep(time.Second * 2)
@@ -394,6 +397,26 @@ func savePrivateAccount(
 	privateState.Accounts().AddOrUpdate(account)
 
 	err := privateState.Save(filename)
+	if err != nil {
+		return err
+	}
+
+	currentWd, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+
+	flowCliDir := strings.TrimSuffix(currentWd, "cmd/flow")
+	gitIgnoreDir := flowCliDir + ".gitignore"
+
+	//opens .gitignore so that we can add {name}.private.json to .gitignore, will create .gitignore if it doesn't exist
+	file, err := os.OpenFile(gitIgnoreDir, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+	_, err = file.WriteString("\n" + filename)
 	if err != nil {
 		return err
 	}
