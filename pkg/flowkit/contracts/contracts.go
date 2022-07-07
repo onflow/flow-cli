@@ -27,7 +27,7 @@ import (
 
 	"github.com/onflow/cadence/runtime/ast"
 	"github.com/onflow/cadence/runtime/common"
-	"github.com/onflow/cadence/runtime/parser2"
+	"github.com/onflow/cadence/runtime/parser"
 	"github.com/onflow/flow-go-sdk"
 	"gonum.org/v1/gonum/graph"
 	"gonum.org/v1/gonum/graph/simple"
@@ -56,7 +56,7 @@ func newContract(
 	accountName string,
 	args []cadence.Value,
 ) (*Contract, error) {
-	program, err := parser2.ParseProgram(contractCode, nil)
+	program, err := parser.ParseProgram(contractCode, nil)
 	if err != nil {
 		return nil, err
 	}
