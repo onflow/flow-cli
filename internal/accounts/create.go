@@ -390,22 +390,27 @@ func saveAccountToMainConfigFile(
 }
 func savePrivateAccount(
 	loader flowkit.ReaderWriter,
-	filename string,
+	fileName string,
 	account *flowkit.Account,
 ) error {
 	privateState := flowkit.NewEmptyState(loader)
 	privateState.Accounts().AddOrUpdate(account)
 
-	err := privateState.Save(filename)
+	err := privateState.Save(fileName)
 	if err != nil {
 		return err
 	}
+	addToGitIgnore(fileName)
 
+	return nil
+}
+func addToGitIgnore(
+	filename string,
+) error {
 	currentWd, err := os.Getwd()
 	if err != nil {
 		return err
 	}
-
 	flowCliDir := strings.TrimSuffix(currentWd, "cmd/flow")
 	gitIgnoreDir := flowCliDir + ".gitignore"
 
@@ -421,5 +426,4 @@ func savePrivateAccount(
 		return err
 	}
 
-	return nil
 }
