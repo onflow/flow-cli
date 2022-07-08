@@ -537,3 +537,15 @@ func EnableSaveEnvPrompt() bool {
 
 	return index == 0
 }
+func AddToGitIgnorePrompt(filename string) bool {
+	prompt := promptui.Select{
+		Label: fmt.Sprintf("Do you want to add %s into a .gitignore?", filename),
+		Items: []string{"Yes(IMPORTANT: Don't commit created env file)", "No"},
+	}
+	index, _, err := prompt.Run()
+	if err == promptui.ErrInterrupt {
+		os.Exit(-1)
+	}
+
+	return index == 0
+}
