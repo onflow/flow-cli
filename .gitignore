@@ -28,3 +28,4 @@ git
 
 # Ignore built CLI
 main
+smith.private.json

@@ -21,6 +21,7 @@ package accounts
 import (
 	"fmt"
 	"os"
+	"path"
 	"strings"
 	"time"
 
@@ -272,7 +273,9 @@ func createInteractive(state *flowkit.State, loader flowkit.ReaderWriter) (*flow
 		fileName := strings.ToUpper(fmt.Sprintf("%s.private.json", name))
 		log.Info(fmt.Sprintf("%s PRIVATE KEY FOR %s SUCCESSFULLY SAVED IN %s", output.OkEmoji(),
 			strings.ToUpper(name), fileName))
-		log.Info(fmt.Sprintf("%s %s ADDED TO .GITIGNORE", output.OkEmoji(), fileName))
+		if output.AddToGitIgnorePrompt(fileName) {
+			log.Info(fmt.Sprintf("%s %s ADDED TO .GITIGNORE", output.OkEmoji(), fileName))
+		}
 	}
 	log.Info("\n------------------------")
 	time.Sleep(time.Second * 2)
@@ -333,6 +336,7 @@ func getAccountCreatedAddressWithPubKey(
 
 	return address, nil
 }
+
 func saveAccount(
 	loader flowkit.ReaderWriter,
 	state *flowkit.State,
@@ -400,7 +404,9 @@ func savePrivateAccount(
 	if err != nil {
 		return err
 	}
-	addToGitIgnore(fileName)
+	if output.AddToGitIgnorePrompt(fileName) {
+		addToGitIgnore(fileName)
+	}
 
 	return nil
 }
@@ -411,8 +417,7 @@ func addToGitIgnore(
 	if err != nil {
 		return err
 	}
-	flowCliDir := strings.TrimSuffix(currentWd, "cmd/flow")
-	gitIgnoreDir := flowCliDir + ".gitignore"
+	gitIgnoreDir := path.Join(currentWd, ".gitignore")
 
 	//opens .gitignore so that we can add {name}.private.json to .gitignore, will create .gitignore if it doesn't exist
 	file, err := os.OpenFile(gitIgnoreDir, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
@@ -425,5 +430,5 @@ func addToGitIgnore(
 	if err != nil {
 		return err
 	}
-
+	return nil
 }
