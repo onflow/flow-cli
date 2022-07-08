@@ -19,7 +19,7 @@
 package flowkit
 
 import (
-	"strings"
+	"github.com/onflow/cadence"
 
 	"github.com/onflow/flow-go-sdk"
 )
@@ -28,7 +28,7 @@ const addressLength = 16
 
 type Event struct {
 	Type   string
-	Values map[string]string
+	Values map[string]cadence.Value
 }
 
 type Events []Event
@@ -36,22 +36,29 @@ type Events []Event
 func EventsFromTransaction(tx *flow.TransactionResult) Events {
 	var events Events
 	for _, event := range tx.Events {
-		events = append(events, newEvent(event))
+		events = append(events, NewEvent(event))
 	}
 
 	return events
 }
 
-func newEvent(event flow.Event) Event {
+func NewEvents(events []flow.Event) Events {
+	flowkitEvents := make(Events, len(events))
+	for i, e := range events {
+		flowkitEvents[i] = NewEvent(e)
+	}
+	return flowkitEvents
+}
+
+func NewEvent(event flow.Event) Event {
 	var names []string
 
 	for _, eventType := range event.Value.EventType.Fields {
 		names = append(names, eventType.Identifier)
 	}
-	values := map[string]string{}
+	values := make(map[string]cadence.Value)
 	for id, field := range event.Value.Fields {
-		name := names[id]
-		values[name] = field.String()
+		values[names[id]] = field
 	}
 
 	return Event{
@@ -63,23 +70,12 @@ func newEvent(event flow.Event) Event {
 // TODO(sideninja): Refactor this to flow.Address and err as return value instead of returning nil.
 
 func (e *Events) GetAddress() *flow.Address {
-	addr := ""
 	for _, event := range *e {
-		if strings.Contains(event.Type, flow.EventAccountCreated) {
-			addr = event.Values["address"]
+		if a, ok := event.Values["address"].(cadence.Address); ok {
+			address := flow.HexToAddress(a.String())
+			return &address
 		}
 	}
 
-	if addr == "" {
-		return nil
-	}
-
-	// add 0 to beginning of address due to them being stripped
-	if len(addr) < addressLength {
-		addr = strings.Repeat("0", addressLength-len(addr)) + addr
-	}
-
-	address := flow.HexToAddress(strings.ReplaceAll(addr, `"`, ""))
-
-	return &address
+	return nil
 }
