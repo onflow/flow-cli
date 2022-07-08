@@ -90,7 +90,7 @@ func NewAccountCreateResult(address flow.Address) *flow.TransactionResult {
 				Type:       cadence.AddressType{},
 			}},
 			[]cadence.Value{
-				cadence.String(address.String()),
+				cadence.NewAddress(address),
 			},
 		),
 	}
