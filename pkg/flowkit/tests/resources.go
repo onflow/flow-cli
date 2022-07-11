@@ -85,7 +85,6 @@ var ContractEvents = resource{
 					self.y = y
 				}
 			}
-
 			pub event EventA(x: Int)
 			pub event EventB(x: Int, y: Int)
 			pub event EventC(x: UInt8)
@@ -134,7 +133,6 @@ var ContractC = resource{
 	Source: []byte(`
 		import ContractB from "./contractB.cdc"
 		import ContractA from "./contractA.cdc"
-
 		pub contract ContractC {
 			pub let x: String
 			init(x: String) {
@@ -204,7 +202,6 @@ var TransactionMultipleDeclarations = resource{
 	Filename: "transactionMultipleDec.cdc",
 	Source: []byte(`
 		pub fun dummy(_ address: Address): Void {}
-
 		transaction() {
 			prepare(authorizer: AuthAccount) {}
 		}
@@ -233,7 +230,6 @@ var ScriptImport = resource{
 	Filename: "scriptImport.cdc",
 	Source: []byte(`
 		import Hello from "./contractHello.cdc"
-
 		pub fun main(): String {
 		  return "Hello ".concat(Hello.greeting)
 		}
@@ -278,14 +274,16 @@ func Donald() *flowkit.Account {
 	return newAccount("Donald", "0x3", "seedseedseedseedseedseedseedseedseedseedseedseedDonald")
 }
 func newAccount(name string, address string, seed string) *flowkit.Account {
-	a := &flowkit.Account{}
-	a.SetAddress(flow.HexToAddress(address))
-	a.SetName(name)
-	pk, _ := crypto.GeneratePrivateKey(crypto.ECDSA_P256, []byte(seed))
+	privateKey, _ := crypto.GeneratePrivateKey(crypto.ECDSA_P256, []byte(seed))
 
-	a.SetKey(flowkit.NewHexAccountKeyFromPrivateKey(0, crypto.SHA3_256, pk))
+	account := flowkit.
+		NewAccount(name).
+		SetAddress(flow.HexToAddress(address)).
+		SetKey(
+			flowkit.NewHexAccountKeyFromPrivateKey(0, crypto.SHA3_256, privateKey),
+		)
 
-	return a
+	return account
 }
 
 func PubKeys() []crypto.PublicKey {

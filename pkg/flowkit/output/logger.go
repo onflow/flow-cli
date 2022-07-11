@@ -37,6 +37,8 @@ type Logger interface {
 	StopProgress()
 }
 
+var _ Logger = &StdoutLogger{}
+
 // NewStdoutLogger returns a new stdout logger.
 func NewStdoutLogger(level int) *StdoutLogger {
 	return &StdoutLogger{

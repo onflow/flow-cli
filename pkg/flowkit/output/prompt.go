@@ -22,14 +22,12 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/onflow/flow-cli/pkg/flowkit"
-
-	"github.com/onflow/flow-cli/pkg/flowkit/util"
-
-	"github.com/onflow/flow-cli/pkg/flowkit/config"
-
 	"github.com/gosuri/uilive"
 	"github.com/manifoldco/promptui"
+
+	"github.com/onflow/flow-cli/pkg/flowkit"
+	"github.com/onflow/flow-cli/pkg/flowkit/config"
+	"github.com/onflow/flow-cli/pkg/flowkit/util"
 )
 
 func ApproveTransactionForSigningPrompt(transaction *flowkit.Transaction) bool {
@@ -128,7 +126,6 @@ func AutocompletionPrompt() (string, string) {
 	case "powershell":
 		fmt.Printf(`PowerShell Installation Guide:
 PS> flow config setup-completions powershell | Out-String | Invoke-Expression
-
 # To load completions for every new session, run:
 PS> flow config setup-completions powershell > flow.ps1
 # and source this file from your PowerShell profile.
@@ -138,9 +135,9 @@ PS> flow config setup-completions powershell > flow.ps1
 	return shell, curOs
 }
 
-func namePrompt() string {
+func NamePrompt() string {
 	namePrompt := promptui.Prompt{
-		Label: "Name",
+		Label: "Enter name",
 		Validate: func(s string) error {
 			if len(s) < 1 {
 				return fmt.Errorf("invalid name")
@@ -178,7 +175,7 @@ func secureNetworkKeyPrompt() string {
 
 func addressPrompt() string {
 	addressPrompt := promptui.Prompt{
-		Label: "Address",
+		Label: "Enter address",
 		Validate: func(s string) error {
 			_, err := config.StringToAddress(s)
 			return err
@@ -223,11 +220,11 @@ func NewAccountPrompt() map[string]string {
 	accountData := make(map[string]string)
 	var err error
 
-	accountData["name"] = namePrompt()
+	accountData["name"] = NamePrompt()
 	accountData["address"] = addressPrompt()
 
 	sigAlgoPrompt := promptui.Select{
-		Label: "Signature algorithm",
+		Label: "Choose signature algorithm",
 		Items: []string{"ECDSA_P256", "ECDSA_secp256k1"},
 	}
 	_, accountData["sigAlgo"], err = sigAlgoPrompt.Run()
@@ -236,7 +233,7 @@ func NewAccountPrompt() map[string]string {
 	}
 
 	hashAlgoPrompt := promptui.Select{
-		Label: "Hashing algorithm",
+		Label: "Choose hashing algorithm",
 		Items: []string{"SHA3_256", "SHA2_256"},
 	}
 	_, accountData["hashAlgo"], err = hashAlgoPrompt.Run()
@@ -245,7 +242,7 @@ func NewAccountPrompt() map[string]string {
 	}
 
 	keyPrompt := promptui.Prompt{
-		Label: "Private key",
+		Label: "Enter private key",
 		Validate: func(s string) error {
 			_, err := config.StringToHexKey(s, accountData["sigAlgo"])
 			return err
@@ -257,7 +254,7 @@ func NewAccountPrompt() map[string]string {
 	}
 
 	keyIndexPrompt := promptui.Prompt{
-		Label:   "Key index (Default: 0)",
+		Label:   "Enter key index (Default: 0)",
 		Default: "0",
 		Validate: func(s string) error {
 			_, err := config.StringToKeyIndex(s)
@@ -277,10 +274,10 @@ func NewContractPrompt() map[string]string {
 	contractData := make(map[string]string)
 	var err error
 
-	contractData["name"] = namePrompt()
+	contractData["name"] = NamePrompt()
 
 	sourcePrompt := promptui.Prompt{
-		Label: "Contract file location",
+		Label: "Enter contract file location",
 		Validate: func(s string) error {
 			if !config.Exists(s) {
 				return fmt.Errorf("contract file doesn't exist: %s", s)
@@ -327,7 +324,7 @@ func NewNetworkPrompt() map[string]string {
 	networkData := make(map[string]string)
 	var err error
 
-	networkData["name"] = namePrompt()
+	networkData["name"] = NamePrompt()
 
 	hostPrompt := promptui.Prompt{
 		Label: "Enter host location",
@@ -413,7 +410,7 @@ func RemoveAccountPrompt(accounts config.Accounts) string {
 	}
 
 	namePrompt := promptui.Select{
-		Label: "Select an account name you wish to remove",
+		Label: "Choose an account name you wish to remove",
 		Items: accountNames,
 	}
 
@@ -446,7 +443,7 @@ func RemoveDeploymentPrompt(deployments config.Deployments) (account string, net
 	}
 
 	deployPrompt := promptui.Select{
-		Label: "Select deployment you wish to remove",
+		Label: "Choose deployment you wish to remove",
 		Items: deploymentNames,
 	}
 
@@ -466,7 +463,7 @@ func RemoveContractPrompt(contracts config.Contracts) string {
 	}
 
 	contractPrompt := promptui.Select{
-		Label: "Select contract you wish to remove",
+		Label: "Choose contract you wish to remove",
 		Items: contractNames,
 	}
 
@@ -486,7 +483,7 @@ func RemoveNetworkPrompt(networks config.Networks) string {
 	}
 
 	networkPrompt := promptui.Select{
-		Label: "Select network you wish to remove",
+		Label: "Choose network you wish to remove",
 		Items: networkNames,
 	}
 
@@ -506,4 +503,48 @@ func ReportCrash() bool {
 	chosen, _, _ := prompt.Run()
 
 	return chosen == 0
+}
+
+func CreateAccountNetworkPrompt() config.Network {
+	networkNames := make([]string, len(config.DefaultNetworks()))
+	for i, net := range config.DefaultNetworks() {
+		networkNames[i] = net.Name
+	}
+
+	networkPrompt := promptui.Select{
+		Label: "Choose the network to create an account",
+		Items: networkNames,
+	}
+
+	index, _, err := networkPrompt.Run()
+	if err == promptui.ErrInterrupt {
+		os.Exit(-1)
+	}
+
+	return config.DefaultNetworks()[index]
+}
+
+func EnableSaveEnvPrompt() bool {
+	prompt := promptui.Select{
+		Label: "Do you want to save the private key into a .env file?",
+		Items: []string{"Yes(IMPORTANT: Don't commit created env file)", "No"},
+	}
+	index, _, err := prompt.Run()
+	if err == promptui.ErrInterrupt {
+		os.Exit(-1)
+	}
+
+	return index == 0
+}
+func AddToGitIgnorePrompt(filename string) bool {
+	prompt := promptui.Select{
+		Label: fmt.Sprintf("Do you want to add %s into a .gitignore?", filename),
+		Items: []string{"Yes(recommended)", "No"},
+	}
+	index, _, err := prompt.Run()
+	if err == promptui.ErrInterrupt {
+		os.Exit(-1)
+	}
+
+	return index == 0
 }

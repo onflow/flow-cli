@@ -195,16 +195,27 @@ func transformAdvancedAccountToJSON(a config.Account) account {
 	return account{
 		Advanced: advancedAccount{
 			Address: a.Address.String(),
-			Key: advanceKey{
-				Type:       a.Key.Type,
-				Index:      a.Key.Index,
-				SigAlgo:    a.Key.SigAlgo.String(),
-				HashAlgo:   a.Key.HashAlgo.String(),
-				ResourceID: a.Key.ResourceID,
-				PrivateKey: strings.TrimPrefix(a.Key.PrivateKey.String(), "0x"),
-			},
+			Key:     transformAdvancedKeyToJSON(a.Key),
 		},
 	}
+}
+
+func transformAdvancedKeyToJSON(key config.AccountKey) advanceKey {
+	advancedKey := advanceKey{
+		Type:     key.Type,
+		Index:    key.Index,
+		SigAlgo:  key.SigAlgo.String(),
+		HashAlgo: key.HashAlgo.String(),
+	}
+
+	switch key.Type {
+	case config.KeyTypeHex:
+		advancedKey.PrivateKey = strings.TrimPrefix(key.PrivateKey.String(), "0x")
+	case config.KeyTypeGoogleKMS:
+		advancedKey.ResourceID = key.ResourceID
+	}
+
+	return advancedKey
 }
 
 func isDefaultKeyFormat(key config.AccountKey) bool {
@@ -215,8 +226,13 @@ func isDefaultKeyFormat(key config.AccountKey) bool {
 }
 
 type account struct {
+	FromFile fromFileAccount
 	Simple   simpleAccount
 	Advanced advancedAccount
+}
+
+type fromFileAccount struct {
+	FromFile string `json:"fromFile"`
 }
 
 type simpleAccount struct {
@@ -328,6 +344,10 @@ func (j *account) UnmarshalJSON(b []byte) error {
 }
 
 func (j account) MarshalJSON() ([]byte, error) {
+	if j.FromFile != (fromFileAccount{}) {
+		return json.Marshal(j.FromFile)
+	}
+
 	if j.Simple != (simpleAccount{}) {
 		return json.Marshal(j.Simple)
 	}

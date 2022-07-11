@@ -22,6 +22,8 @@ import (
 	"bytes"
 	"encoding/hex"
 	"fmt"
+	"os/exec"
+	"runtime"
 	"strings"
 	"text/tabwriter"
 
@@ -115,4 +117,39 @@ func ValidateECDSAP256Pub(key string) error {
 	}
 
 	return nil
+}
+
+func OpenBrowserWindow(url string) error {
+	var err error
+
+	switch runtime.GOOS {
+	case "linux":
+		err = exec.Command("xdg-open", url).Start()
+	case "windows":
+		err = exec.Command("rundll32", "url.dll,FileProtocolHandler", url).Start()
+	case "darwin":
+		err = exec.Command("open", url).Start()
+	default:
+		err = fmt.Errorf("unsupported platform")
+	}
+	if err != nil {
+		return fmt.Errorf("could not open a browser window, please navigate to %s manually: %w", url, err)
+	}
+	return nil
+}
+
+func TestnetFaucetURL(publicKey string, sigAlgo crypto.SignatureAlgorithm) string {
+	const testnetFaucetHost = "https://testnet-faucet.onflow.org/"
+
+	link := fmt.Sprintf("%s?key=%s", testnetFaucetHost, strings.TrimPrefix(publicKey, "0x"))
+	if sigAlgo != crypto.ECDSA_P256 {
+		link = fmt.Sprintf("%s&sig-algo=%s", link, sigAlgo)
+	}
+
+	return link
+}
+
+func MainnetFlowPortURL(publicKey string) string {
+	const flowPortURL = "https://port.onflow.org/transaction?hash=a0a78aa7821144efd5ebb974bb52ba04609ce76c3863af9d45348db93937cf98&showcode=false&consent=true&pk="
+	return fmt.Sprintf("%s%s", flowPortURL, strings.TrimPrefix(publicKey, "0x"))
 }

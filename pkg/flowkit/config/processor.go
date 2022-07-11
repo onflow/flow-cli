@@ -22,9 +22,8 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/joho/godotenv"
-
 	"github.com/a8m/envsubst"
+	"github.com/joho/godotenv"
 )
 
 var (
