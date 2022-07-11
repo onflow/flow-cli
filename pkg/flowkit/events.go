@@ -21,9 +21,8 @@ package flowkit
 import (
 	"bytes"
 	"fmt"
-	"strings"
-
 	"github.com/onflow/cadence"
+	"strings"
 
 	"github.com/onflow/flow-go-sdk/crypto"
 

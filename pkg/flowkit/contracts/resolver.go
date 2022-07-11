@@ -27,7 +27,7 @@ import (
 
 	"github.com/onflow/cadence/runtime/ast"
 	"github.com/onflow/cadence/runtime/common"
-	"github.com/onflow/cadence/runtime/parser2"
+	"github.com/onflow/cadence/runtime/parser"
 	"github.com/onflow/flow-go-sdk"
 )
 
@@ -39,7 +39,7 @@ type Resolver struct {
 
 // NewResolver creates a new resolver.
 func NewResolver(code []byte) (*Resolver, error) {
-	program, err := parser2.ParseProgram(string(code), nil)
+	program, err := parser.ParseProgram(string(code), nil)
 	if err != nil {
 		return nil, err
 	}
