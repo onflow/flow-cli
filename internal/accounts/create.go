@@ -321,6 +321,7 @@ func getAccountCreatedAddressWithPubKey(
 	}
 
 	if address == nil {
+		//TODO:sideninja 200 blocks might not be enough time for the user to sign into their wallet and create the account on mainnet
 		if lastHeight-startHeight > 200 { // if something goes wrong don't keep waiting forever to avoid spamming network
 			return nil, fmt.Errorf("failed to get the account address due to time out")
 		}
@@ -348,9 +349,10 @@ func saveAccount(
 		return saveAccountToMainConfigFile(state, account)
 	}
 
-	// Otherwise, save to a separate {accountName}.private.jsonfile.
+	// Otherwise, save to a separate {accountName}.private.json file.
 	return saveAccountToPrivateConfigFile(loader, state, account)
 }
+
 func saveAccountToPrivateConfigFile(
 	loader flowkit.ReaderWriter,
 	state *flowkit.State,
@@ -380,6 +382,7 @@ func saveAccountToPrivateConfigFile(
 
 	return nil
 }
+
 func saveAccountToMainConfigFile(
 	state *flowkit.State,
 	account *flowkit.Account,
@@ -392,6 +395,7 @@ func saveAccountToMainConfigFile(
 
 	return nil
 }
+
 func savePrivateAccount(
 	loader flowkit.ReaderWriter,
 	fileName string,
@@ -410,6 +414,7 @@ func savePrivateAccount(
 
 	return nil
 }
+
 func addToGitIgnore(
 	filename string,
 ) error {
