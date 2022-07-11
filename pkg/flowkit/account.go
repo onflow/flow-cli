@@ -28,11 +28,78 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowkit/util"
 )
 
-// Account is a flowkit specific account implementation.
+// Account is a flowkit-specific account implementation.
 type Account struct {
 	name    string
 	address flow.Address
 	key     AccountKey
+
+	// fromFile is the configuration file containing this account.
+	//
+	// This field is only set if the external "fromFile"
+	// syntax is used. Otherwise this field is empty.
+	//
+	// Ref: https://docs.onflow.org/flow-cli/security/#private-account-configuration-file
+	fromFile string
+}
+
+// NewAccount creates an empty account with the provided name.
+func NewAccount(name string) *Account {
+	return &Account{
+		name: name,
+	}
+}
+
+// NewAccountFromOnChainAccount creates a new flowkit account definition
+// that mirrors an already-existing on-chain Flow account.
+//
+// This function requires the on-chain account to have exactly one public key
+// with full signing weight (1000). This ensures that the user has complete
+// and sole control over the on-chain account.
+func NewAccountFromOnChainAccount(
+	name string,
+	onChainAccount *flow.Account,
+	privateKey crypto.PrivateKey,
+) (*Account, error) {
+	if len(onChainAccount.Keys) != 1 {
+		return nil, fmt.Errorf(
+			"expected on-chain account to have exactly one key, but got %d keys",
+			len(onChainAccount.Keys),
+		)
+	}
+
+	accountKey := onChainAccount.Keys[0]
+
+	if accountKey.Weight != flow.AccountKeyWeightThreshold {
+		return nil, fmt.Errorf(
+			"expected on-chain account to have full signing weight (%d), but got weight of %d",
+			flow.AccountKeyWeightThreshold,
+			accountKey.Weight,
+		)
+	}
+
+	offChainPublicKey := privateKey.PublicKey()
+	onChainPublicKey := accountKey.PublicKey
+
+	if !offChainPublicKey.Equals(onChainPublicKey) {
+		return nil, fmt.Errorf(
+			"expected on-chain account public key to match (%s), but got %s",
+			offChainPublicKey.String(),
+			onChainPublicKey.String(),
+		)
+	}
+
+	account := NewAccount(name).
+		SetAddress(onChainAccount.Address).
+		SetKey(
+			NewHexAccountKeyFromPrivateKey(
+				accountKey.Index,
+				accountKey.HashAlgo,
+				privateKey,
+			),
+		)
+
+	return account, nil
 }
 
 // Address get account address.
@@ -50,19 +117,28 @@ func (a *Account) Key() AccountKey {
 	return a.key
 }
 
-// SetKey sets account key.
-func (a *Account) SetKey(key AccountKey) {
-	a.key = key
-}
-
-// SetAddress sets account address.
-func (a *Account) SetAddress(address flow.Address) {
+// SetAddress sets the account address.
+func (a *Account) SetAddress(address flow.Address) *Account {
 	a.address = address
+	return a
 }
 
-// SetName sets account name.
-func (a *Account) SetName(name string) {
+// SetName sets the account name.
+func (a *Account) SetName(name string) *Account {
 	a.name = name
+	return a
+}
+
+// SetKey sets account key.
+func (a *Account) SetKey(key AccountKey) *Account {
+	a.key = key
+	return a
+}
+
+// SetFromFile sets the external configuration file.
+func (a *Account) SetFromFile(filename string) *Account {
+	a.fromFile = filename
+	return a
 }
 
 func accountsFromConfig(conf *config.Config) (Accounts, error) {
@@ -97,13 +173,21 @@ func fromConfig(account config.Account) (*Account, error) {
 	}
 
 	return &Account{
-		name:    account.Name,
-		address: account.Address,
-		key:     key,
+		name:     account.Name,
+		address:  account.Address,
+		fromFile: account.FromFile,
+		key:      key,
 	}, nil
 }
 
 func toConfig(account Account) config.Account {
+	if account.fromFile != "" {
+		return config.Account{
+			Name:     account.name,
+			FromFile: account.fromFile,
+		}
+	}
+
 	return config.Account{
 		Name:    account.name,
 		Address: account.address,
