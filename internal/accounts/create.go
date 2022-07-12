@@ -188,7 +188,7 @@ func createInteractive(state *flowkit.State, loader flowkit.ReaderWriter) (*flow
 
 	if network == config.DefaultEmulatorNetwork() {
 		log.Info(fmt.Sprintf("%s Creating the account on %s with generated keys", output.WarningEmoji(),
-			strings.ToUpper(network.Name)))
+			network.Name))
 		log.StartProgress("")
 		time.Sleep(time.Second * 3)
 
@@ -258,16 +258,16 @@ func createInteractive(state *flowkit.State, loader flowkit.ReaderWriter) (*flow
 	log.StartProgress("")
 	time.Sleep(time.Second * 3)
 	log.StopProgress()
-
+	
 	saveToGitIgnore, err := saveAccount(loader, state, account, network)
 	if err != nil {
 		return nil, err
 	}
 	log.Info(fmt.Sprintf("%s Successfully saved account in flow.json", output.OkEmoji()))
 	if network != config.DefaultEmulatorNetwork() {
-		fileName := strings.ToUpper(fmt.Sprintf("%s.private.json", name))
+		fileName := fmt.Sprintf("%s.private.json", name)
 		log.Info(fmt.Sprintf("%s private key for %s successfully saved in %s", output.OkEmoji(),
-			strings.ToUpper(name), fileName))
+			name, fileName))
 		if saveToGitIgnore {
 			log.Info(fmt.Sprintf("%s %s added to .gitignore", output.OkEmoji(), fileName))
 		}
@@ -281,13 +281,13 @@ func createInteractive(state *flowkit.State, loader flowkit.ReaderWriter) (*flow
 	log.Info("\n------------------------")
 	log.Info(fmt.Sprintf("\n %s (1/3) Generated public and private keys", output.OkEmoji()))
 	log.Info(fmt.Sprintf("\n %s (2/3) Created account on %s with generated keys", output.OkEmoji(), network.Name))
-	log.Info(fmt.Sprintf("\n Account name: %s", strings.ToUpper(name)))
+	log.Info(fmt.Sprintf("\n Account name: %s", name))
 	log.Info(fmt.Sprintf("\n Address: %s", fmt.Sprintf("0x%s", address.String())))
 	log.Info(fmt.Sprintf("\n %s (3/3) Saved newly created account on flow.json", output.OkEmoji()))
 	if network != config.DefaultEmulatorNetwork() {
-		fileName := strings.ToUpper(fmt.Sprintf("%s.private.json", name))
+		fileName := fmt.Sprintf("%s.private.json", name)
 		log.Info(fmt.Sprintf("%s private key for %s successfully saved in %s", output.OkEmoji(),
-			strings.ToUpper(name), fileName))
+			name, fileName))
 		if saveToGitIgnore {
 			log.Info(fmt.Sprintf("%s %s added to .gitignore", output.OkEmoji(), fileName))
 		}
@@ -363,7 +363,7 @@ func saveAccountToPrivateConfigFile(
 	account *flowkit.Account,
 ) (bool, error) {
 	privateAccountFilename := fmt.Sprintf("%s.private.json", account.Name())
-
+	account.SetAccountSaveAdvanced()
 	// Step 1: save the private version of the account (incl. the private key)
 	// to a separate JSON file.
 	saveToGitIgnore, err := savePrivateAccount(loader, privateAccountFilename, account)
@@ -406,6 +406,7 @@ func savePrivateAccount(
 	account *flowkit.Account,
 ) (bool, error) {
 	saveToGitIgnore := false
+	account.SetAccountSaveAdvanced()
 	privateState := flowkit.NewEmptyState(loader)
 	privateState.Accounts().AddOrUpdate(account)
 
