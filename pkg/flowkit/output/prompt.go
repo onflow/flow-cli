@@ -513,7 +513,7 @@ func CreateAccountNetworkPrompt() config.Network {
 	}
 
 	networkPrompt := promptui.Select{
-		Label: "Choose the network to create an account",
+		Label: "Which network do you want to create the new account in?",
 		Items: networkNames,
 	}
 
@@ -548,4 +548,15 @@ func AddToGitIgnorePrompt(filename string) bool {
 	}
 
 	return index == 0
+}
+func NextStepPrompt() {
+	prompt := promptui.Select{
+		Label: "Press <ENTER> to continue",
+		Items: []string{"CONTINUE"},
+	}
+	_, _, err := prompt.Run()
+	if err == promptui.ErrInterrupt {
+		os.Exit(-1)
+	}
+
 }

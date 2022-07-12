@@ -31,6 +31,9 @@ import (
 	"github.com/onflow/flow-go-sdk/crypto"
 )
 
+const TestnetFaucetHost = "https://testnet-faucet.onflow.org/"
+const FlowPortUrl = "https://port.onflow.org/transaction?hash=a0a78aa7821144efd5ebb974bb52ba04609ce76c3863af9d45348db93937cf98&showcode=false&consent=true&pk="
+
 // ConvertSigAndHashAlgo parses and validates a signature and hash algorithm pair.
 func ConvertSigAndHashAlgo(
 	signatureAlgorithm string,
@@ -139,9 +142,8 @@ func OpenBrowserWindow(url string) error {
 }
 
 func TestnetFaucetURL(publicKey string, sigAlgo crypto.SignatureAlgorithm) string {
-	const testnetFaucetHost = "https://testnet-faucet.onflow.org/"
 
-	link := fmt.Sprintf("%s?key=%s", testnetFaucetHost, strings.TrimPrefix(publicKey, "0x"))
+	link := fmt.Sprintf("%s?key=%s", TestnetFaucetHost, strings.TrimPrefix(publicKey, "0x"))
 	if sigAlgo != crypto.ECDSA_P256 {
 		link = fmt.Sprintf("%s&sig-algo=%s", link, sigAlgo)
 	}
@@ -150,6 +152,5 @@ func TestnetFaucetURL(publicKey string, sigAlgo crypto.SignatureAlgorithm) strin
 }
 
 func MainnetFlowPortURL(publicKey string) string {
-	const flowPortURL = "https://port.onflow.org/transaction?hash=a0a78aa7821144efd5ebb974bb52ba04609ce76c3863af9d45348db93937cf98&showcode=false&consent=true&pk="
-	return fmt.Sprintf("%s%s", flowPortURL, strings.TrimPrefix(publicKey, "0x"))
+	return fmt.Sprintf("%s%s", FlowPortUrl, strings.TrimPrefix(publicKey, "0x"))
 }
