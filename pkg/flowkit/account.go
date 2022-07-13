@@ -44,7 +44,7 @@ type Account struct {
 	// saveAdvancedFormat is to save an account in advanced format even if it has default values as defined
 	// in isDefaultKeyFormat() in flowkit/config/json/account.go
 	// defaults to false
-	saveAdvancedFormat bool
+	useAdvancedSaveFormat bool
 }
 
 // NewAccount creates an empty account with the provided name.
@@ -145,9 +145,9 @@ func (a *Account) SetFromFile(filename string) *Account {
 	return a
 }
 
-// SetAccountSaveAdvanced sets saveAdvancedFormat as true.
-func (a *Account) SetAccountSaveAdvanced() {
-	a.saveAdvancedFormat = true
+// EnableAdvancedSaveFormat sets saveAdvancedFormat as true.
+func (a *Account) EnableAdvancedSaveFormat() {
+	a.useAdvancedSaveFormat = true
 }
 func accountsFromConfig(conf *config.Config) (Accounts, error) {
 	var accounts Accounts
@@ -181,11 +181,11 @@ func fromConfig(account config.Account) (*Account, error) {
 	}
 
 	return &Account{
-		name:               account.Name,
-		address:            account.Address,
-		fromFile:           account.FromFile,
-		saveAdvancedFormat: account.SaveAdvancedFormat,
-		key:                key,
+		name:                  account.Name,
+		address:               account.Address,
+		fromFile:              account.FromFile,
+		useAdvancedSaveFormat: account.UseAdvancedSaveFormat,
+		key:                   key,
 	}, nil
 }
 
@@ -198,10 +198,10 @@ func toConfig(account Account) config.Account {
 	}
 
 	return config.Account{
-		Name:               account.name,
-		Address:            account.address,
-		Key:                account.key.ToConfig(),
-		SaveAdvancedFormat: account.saveAdvancedFormat,
+		Name:                  account.name,
+		Address:               account.address,
+		Key:                   account.key.ToConfig(),
+		UseAdvancedSaveFormat: account.useAdvancedSaveFormat,
 	}
 }
 

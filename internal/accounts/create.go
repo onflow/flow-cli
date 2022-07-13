@@ -69,14 +69,11 @@ func create(
 ) (command.Result, error) {
 	// if user doesn't provide any flags go into interactive mode
 	if len(createFlags.Keys) == 0 {
-		account, err := createInteractive(state, loader)
+		_, err := createInteractive(state, loader)
 		if err != nil {
 			return nil, err
 		}
-		return &AccountResult{
-			Account: account,
-			include: createFlags.Include,
-		}, nil
+		return nil, nil
 	}
 
 	signer, err := state.Accounts().ByName(createFlags.Signer)
@@ -258,7 +255,7 @@ func createInteractive(state *flowkit.State, loader flowkit.ReaderWriter) (*flow
 	log.StartProgress("")
 	time.Sleep(time.Second * 3)
 	log.StopProgress()
-	
+
 	saveToGitIgnore, err := saveAccount(loader, state, account, network)
 	if err != nil {
 		return nil, err
@@ -363,7 +360,6 @@ func saveAccountToPrivateConfigFile(
 	account *flowkit.Account,
 ) (bool, error) {
 	privateAccountFilename := fmt.Sprintf("%s.private.json", account.Name())
-	account.SetAccountSaveAdvanced()
 	// Step 1: save the private version of the account (incl. the private key)
 	// to a separate JSON file.
 	saveToGitIgnore, err := savePrivateAccount(loader, privateAccountFilename, account)
@@ -406,7 +402,7 @@ func savePrivateAccount(
 	account *flowkit.Account,
 ) (bool, error) {
 	saveToGitIgnore := false
-	account.SetAccountSaveAdvanced()
+	account.EnableAdvancedSaveFormat()
 	privateState := flowkit.NewEmptyState(loader)
 	privateState.Accounts().AddOrUpdate(account)
 

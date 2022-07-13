@@ -41,7 +41,7 @@ type Account struct {
 	// saveAdvancedFormat is to save an account in advanced format even if it has default values as defined
 	// in isDefaultKeyFormat() in flowkit/config/json/account.go
 	// defaults to false
-	SaveAdvancedFormat bool
+	UseAdvancedSaveFormat bool
 }
 
 type Accounts []Account

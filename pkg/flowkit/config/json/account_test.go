@@ -344,7 +344,7 @@ func Test_TransformDefaultAccountToJSON(t *testing.T) {
 	x, _ := json.Marshal(j)
 
 	// our output format is shorted - improve test
-	assert.NotEqual(t, string(b), string(x))
+	assert.Equal(t, string(b), string(x))
 }
 
 func Test_TransformAccountToJSON(t *testing.T) {
@@ -371,7 +371,7 @@ func Test_TransformDefaultAccountToJSONAdvanced(t *testing.T) {
 	accounts, err := jsonAccounts.transformToConfig()
 	assert.NoError(t, err)
 
-	accounts[0].SaveAdvancedFormat = true
+	accounts[0].UseAdvancedSaveFormat = true
 	j := transformAccountsToJSON(accounts)
 	x, _ := json.Marshal(j)
 

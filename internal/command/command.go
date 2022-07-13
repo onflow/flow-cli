@@ -130,6 +130,9 @@ func (c Command) AddToParent(parent *cobra.Command) {
 		}
 
 		handleError("Command Error", err)
+		if result == nil {
+			return
+		}
 
 		// format output result
 		formattedResult, err := formatResult(result, Flags.Filter, Flags.Format)

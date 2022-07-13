@@ -128,9 +128,10 @@ func transformAdvancedToConfig(accountName string, a advancedAccount) (*config.A
 	}
 
 	return &config.Account{
-		Name:    accountName,
-		Address: address,
-		Key:     key,
+		Name:                  accountName,
+		Address:               address,
+		Key:                   key,
+		UseAdvancedSaveFormat: true,
 	}, nil
 }
 
@@ -166,7 +167,7 @@ func transformAccountsToJSON(accounts config.Accounts) jsonAccounts {
 	for _, a := range accounts {
 		if a.FromFile != "" {
 			jsonAccounts[a.Name] = transformFromFileAccountToJSON(a)
-		} else if isDefaultKeyFormat(a.Key) && !a.SaveAdvancedFormat {
+		} else if isDefaultKeyFormat(a.Key) && !a.UseAdvancedSaveFormat {
 			jsonAccounts[a.Name] = transformSimpleAccountToJSON(a)
 		} else {
 			jsonAccounts[a.Name] = transformAdvancedAccountToJSON(a)
