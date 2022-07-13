@@ -506,23 +506,22 @@ func ReportCrash() bool {
 	return chosen == 0
 }
 
-func CreateAccountNetworkPrompt() config.Network {
+func CreateAccountNetworkPrompt() (string, config.Network) {
 	networkNames := make([]string, len(config.DefaultNetworks()))
 	for i, net := range config.DefaultNetworks() {
 		networkNames[i] = net.Name
 	}
 
 	networkPrompt := promptui.Select{
-		Label: "Which network do you want to create the new account in?",
-		Items: networkNames,
+		Label: "Which network do you want to create the account on?",
+		Items: []string{"Local Emulator", "Flow Testnet", "Flow Mainnet"},
 	}
 
-	index, _, err := networkPrompt.Run()
+	index, selectedNetwork, err := networkPrompt.Run()
 	if err == promptui.ErrInterrupt {
 		os.Exit(-1)
 	}
-
-	return config.DefaultNetworks()[index]
+	return selectedNetwork, config.DefaultNetworks()[index]
 }
 
 func EnableSaveEnvPrompt() bool {

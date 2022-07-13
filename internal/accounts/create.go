@@ -154,26 +154,41 @@ func createInteractive(state *flowkit.State, loader flowkit.ReaderWriter) (*flow
 	log.Info(fmt.Sprintf("%s What name would you like to give this new account?", output.GoEmoji()))
 	name := output.NamePrompt()
 
-	network := output.CreateAccountNetworkPrompt()
+	networkName, selectedNetwork := output.CreateAccountNetworkPrompt()
 	// create new gateway based on chosen network
-	gw, err := gateway.NewGrpcGateway(network.Host)
+	gw, err := gateway.NewGrpcGateway(selectedNetwork.Host)
 	if err != nil {
 		return nil, err
 	}
+	privateJsonFileName := ""
+	saveToGitIgnore := false
+	if selectedNetwork != config.DefaultEmulatorNetwork() {
+		privateJsonFileName = fmt.Sprintf("%s.private.json", name)
+		log.Info(fmt.Sprintf("%s For security purposes, the private key generated for this account will be "+
+			"stored in separate file: %s", output.WarningEmoji(), privateJsonFileName))
+		saveToGitIgnore = output.AddToGitIgnorePrompt(privateJsonFileName)
+	}
+	log.Info(fmt.Sprintf("%s This command will perform the following:\n", output.WarningEmoji()))
+	log.Info(fmt.Sprintf("- Generate a new ECDSA P-256 public and private key pair\n"))
+	if selectedNetwork != config.DefaultEmulatorNetwork() {
+		if saveToGitIgnore {
+			log.Info(fmt.Sprintf("- Save the private key to %s\n", privateJsonFileName))
+		}
+	}
+	log.Info(fmt.Sprintf("- Create a new account on %s and pair the public key with the new account\n", networkName))
+	log.Info(fmt.Sprintf("- Save the newly created account configuration to flow.json\n"))
+	output.NextStepPrompt()
+
 	service := services.NewServices(gw, state, output.NewStdoutLogger(output.NoneLog))
 
 	log.Info(fmt.Sprintf("%s Generating public and private keys for %s", output.WarningEmoji(), name))
-	log.StartProgress("")
-	time.Sleep(time.Second * 3)
 
 	key, err := service.Keys.Generate("", crypto.ECDSA_P256)
 	if err != nil {
 		return nil, err
 	}
 
-	log.StopProgress()
 	log.Info(fmt.Sprintf("%s Successfully generated public and private keys", output.OkEmoji()))
-	//time.Sleep(time.Second * 2)
 	output.NextStepPrompt()
 
 	startHeight, err := service.Blocks.GetLatestBlockHeight()
@@ -183,9 +198,9 @@ func createInteractive(state *flowkit.State, loader flowkit.ReaderWriter) (*flow
 
 	var address flow.Address
 
-	if network == config.DefaultEmulatorNetwork() {
+	if selectedNetwork == config.DefaultEmulatorNetwork() {
 		log.Info(fmt.Sprintf("%s Creating the account on %s with generated keys", output.WarningEmoji(),
-			network.Name))
+			networkName))
 		log.StartProgress("")
 		time.Sleep(time.Second * 3)
 
@@ -211,7 +226,7 @@ func createInteractive(state *flowkit.State, loader flowkit.ReaderWriter) (*flow
 		address = account.Address
 	} else {
 		var link string
-		switch network {
+		switch selectedNetwork {
 		case config.DefaultTestnetNetwork():
 			log.Info(fmt.Sprintf("%s We will be creating the account on testnet faucet website (%s), which has been prefilled with generated keys", output.WarningEmoji(), util.TestnetFaucetHost))
 			log.Info("\nPlease follow the steps: \n 1. Fill in the captcha, \n 2. Click on 'Create Account' button.\n")
@@ -248,7 +263,7 @@ func createInteractive(state *flowkit.State, loader flowkit.ReaderWriter) (*flow
 	if err != nil {
 		return nil, err
 	}
-	log.Info(fmt.Sprintf("\n %s Successfully created account on %s", output.OkEmoji(), network.Name))
+	log.Info(fmt.Sprintf("\n %s Successfully created account on %s", output.OkEmoji(), networkName))
 	output.NextStepPrompt()
 
 	log.Info(fmt.Sprintf("\n %s Saving created account in flow.json", output.WarningEmoji()))
@@ -256,17 +271,16 @@ func createInteractive(state *flowkit.State, loader flowkit.ReaderWriter) (*flow
 	time.Sleep(time.Second * 3)
 	log.StopProgress()
 
-	saveToGitIgnore, err := saveAccount(loader, state, account, network)
+	err = saveAccount(loader, state, account, selectedNetwork, saveToGitIgnore)
 	if err != nil {
 		return nil, err
 	}
 	log.Info(fmt.Sprintf("%s Successfully saved account in flow.json", output.OkEmoji()))
-	if network != config.DefaultEmulatorNetwork() {
-		fileName := fmt.Sprintf("%s.private.json", name)
+	if selectedNetwork != config.DefaultEmulatorNetwork() {
 		log.Info(fmt.Sprintf("%s private key for %s successfully saved in %s", output.OkEmoji(),
-			name, fileName))
+			name, privateJsonFileName))
 		if saveToGitIgnore {
-			log.Info(fmt.Sprintf("%s %s added to .gitignore", output.OkEmoji(), fileName))
+			log.Info(fmt.Sprintf("%s %s added to .gitignore", output.OkEmoji(), privateJsonFileName))
 		}
 	}
 
@@ -274,26 +288,16 @@ func createInteractive(state *flowkit.State, loader flowkit.ReaderWriter) (*flow
 	time.Sleep(time.Second * 5)
 	log.StopProgress()
 	log.Info("\n------------------------")
-	log.Info(fmt.Sprintf("%s Account creation process completed!", output.SuccessEmoji()))
-	log.Info("\n------------------------")
-	log.Info(fmt.Sprintf("\n %s (1/3) Generated public and private keys", output.OkEmoji()))
-	log.Info(fmt.Sprintf("\n %s (2/3) Created account on %s with generated keys", output.OkEmoji(), network.Name))
-	log.Info(fmt.Sprintf("\n Account name: %s", name))
-	log.Info(fmt.Sprintf("\n Address: %s", fmt.Sprintf("0x%s", address.String())))
-	log.Info(fmt.Sprintf("\n %s (3/3) Saved newly created account on flow.json", output.OkEmoji()))
-	if network != config.DefaultEmulatorNetwork() {
-		fileName := fmt.Sprintf("%s.private.json", name)
-		log.Info(fmt.Sprintf("%s private key for %s successfully saved in %s", output.OkEmoji(),
-			name, fileName))
-		if saveToGitIgnore {
-			log.Info(fmt.Sprintf("%s %s added to .gitignore", output.OkEmoji(), fileName))
-		}
+	log.Info(fmt.Sprintf("%s Account creation summary:", output.GoEmoji()))
+	log.Info(fmt.Sprintf("\n %s Generated a new ECDSA P-256 key pair", output.OkEmoji()))
+	if selectedNetwork != config.DefaultEmulatorNetwork() {
+		log.Info(fmt.Sprintf("\n %s Saved the private key to %s", output.OkEmoji(), privateJsonFileName))
+		log.Info(fmt.Sprintf("	- %s added to .gitignore", privateJsonFileName))
 	}
-
-	log.Info("\n------------------------")
-	time.Sleep(time.Second * 3)
-	log.Info("\nAccount Creation Summary")
-	log.Info("\n------------------------")
+	log.Info(fmt.Sprintf("\n %s Created a new account on %s and paired the public key with the new account", output.OkEmoji(), networkName))
+	log.Info(fmt.Sprintf("\n 	Account name: %s", name))
+	log.Info(fmt.Sprintf("\n 	Address: %s", fmt.Sprintf("0x%s", address.String())))
+	log.Info(fmt.Sprintf("\n %s Saved the newly created account configuration to flow.json", output.OkEmoji()))
 	return onChainAccount, nil
 }
 
@@ -344,27 +348,29 @@ func saveAccount(
 	state *flowkit.State,
 	account *flowkit.Account,
 	network config.Network,
-) (bool, error) {
+	saveToGitIgnore bool,
+) error {
 	// If using emulator, save account private key to main flow.json configuration file
 	if network == config.DefaultEmulatorNetwork() {
-		return false, saveAccountToMainConfigFile(state, account)
+		return saveAccountToMainConfigFile(state, account)
 	}
 
 	// Otherwise, save to a separate {accountName}.private.json file.
-	return saveAccountToPrivateConfigFile(loader, state, account)
+	return saveAccountToPrivateConfigFile(loader, state, account, saveToGitIgnore)
 }
 
 func saveAccountToPrivateConfigFile(
 	loader flowkit.ReaderWriter,
 	state *flowkit.State,
 	account *flowkit.Account,
-) (bool, error) {
+	saveToGitIgnore bool,
+) error {
 	privateAccountFilename := fmt.Sprintf("%s.private.json", account.Name())
 	// Step 1: save the private version of the account (incl. the private key)
 	// to a separate JSON file.
-	saveToGitIgnore, err := savePrivateAccount(loader, privateAccountFilename, account)
+	err := savePrivateAccount(loader, privateAccountFilename, account, saveToGitIgnore)
 	if err != nil {
-		return false, err
+		return err
 	}
 
 	// Step 2: update the main configuration file to inlcude a reference
@@ -377,10 +383,10 @@ func saveAccountToPrivateConfigFile(
 
 	err = state.SaveDefault()
 	if err != nil {
-		return saveToGitIgnore, err
+		return err
 	}
 
-	return saveToGitIgnore, nil
+	return nil
 }
 
 func saveAccountToMainConfigFile(
@@ -400,22 +406,21 @@ func savePrivateAccount(
 	loader flowkit.ReaderWriter,
 	fileName string,
 	account *flowkit.Account,
-) (bool, error) {
-	saveToGitIgnore := false
+	saveToGitIgnore bool,
+) error {
 	account.EnableAdvancedSaveFormat()
 	privateState := flowkit.NewEmptyState(loader)
 	privateState.Accounts().AddOrUpdate(account)
 
 	err := privateState.Save(fileName)
 	if err != nil {
-		return saveToGitIgnore, err
+		return err
 	}
-	if output.AddToGitIgnorePrompt(fileName) {
-		saveToGitIgnore = true
+	if saveToGitIgnore {
 		addToGitIgnore(fileName)
 	}
 
-	return saveToGitIgnore, nil
+	return nil
 }
 
 func addToGitIgnore(
