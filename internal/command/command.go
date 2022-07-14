@@ -24,6 +24,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"runtime/debug"
 	"strings"
 	"time"
 
@@ -87,8 +88,10 @@ func (c Command) AddToParent(parent *cobra.Command) {
 	initCrashReporting()
 
 	c.Cmd.Run = func(cmd *cobra.Command, args []string) {
-		defer sentry.Flush(2 * time.Second)
-		defer sentry.Recover()
+		if !isDevelopment() { // only report crashes in production
+			defer sentry.Flush(2 * time.Second)
+			defer sentry.Recover()
+		}
 
 		// initialize file loader used in commands
 		loader := &afero.Afero{Fs: afero.NewOsFs()}
@@ -241,7 +244,7 @@ func checkVersion(logger output.Logger) {
 	latestVersion := strings.TrimSpace(string(body))
 
 	currentVersion := build.Semver()
-	if currentVersion == "undefined" {
+	if isDevelopment() {
 		return // avoid warning in local development
 	}
 
@@ -253,6 +256,10 @@ func checkVersion(logger output.Logger) {
 			strings.ReplaceAll(latestVersion, "\n", ""),
 		))
 	}
+}
+
+func isDevelopment() bool {
+	return build.Semver() == "undefined"
 }
 
 // initCrashReporting set-ups sentry as crash reporting tool, it also sets listener for panics
@@ -274,6 +281,12 @@ func initCrashReporting() {
 
 			if output.ReportCrash() {
 				return event
+			} else {
+				fmt.Printf("\nPlease help us improve the Flow CLI by opening an issue on https://github.com/onflow/flow-cli/issues, \nand pasting the output as well as description of the actions you took to cause this crash.\n\n")
+				fmt.Println(hint.RecoveredException)
+				fmt.Println(event.Threads, event.Fingerprint)
+				fmt.Println(event.Contexts)
+				fmt.Println(string(debug.Stack()))
 			}
 
 			return nil
