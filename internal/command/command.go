@@ -130,6 +130,11 @@ func (c Command) AddToParent(parent *cobra.Command) {
 		}
 
 		handleError("Command Error", err)
+		
+		// Do not print a result if none is provided.
+		// 
+		// This is useful for interactive commands that do not 
+		// require a printed summary (e.g. flow accounts create).
 		if result == nil {
 			return
 		}
