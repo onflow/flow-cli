@@ -64,7 +64,7 @@ func send(
 	codeFilename := args[0]
 
 	transactionSigner := sendFlags.Signer
-	if sendFlags.Signer == config.DefaultEmulatorServiceAccountName { // user service account by default
+	if sendFlags.Signer == config.DefaultEmulatorServiceAccountName { // use service account by default
 		transactionSigner = state.Config().Emulators.Default().ServiceAccount
 	}
 	signer, err := state.Accounts().ByName(transactionSigner)
