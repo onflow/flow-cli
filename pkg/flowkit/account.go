@@ -41,7 +41,7 @@ type Account struct {
 	//
 	// Ref: https://docs.onflow.org/flow-cli/security/#private-account-configuration-file
 	fromFile string
-	// saveAdvancedFormat is to save an account in advanced format even if it has default values as defined
+	// useAdvancedSaveFormat is to save an account in advanced format even if it has default values as defined
 	// in isDefaultKeyFormat() in flowkit/config/json/account.go
 	// defaults to false
 	useAdvancedSaveFormat bool
