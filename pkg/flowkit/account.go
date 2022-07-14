@@ -145,7 +145,9 @@ func (a *Account) SetFromFile(filename string) *Account {
 	return a
 }
 
-// EnableAdvancedSaveFormat sets saveAdvancedFormat as true.
+// EnableAdvancedSaveFormat marks this account to be saved in advanced key format.
+//
+// Ref: https://docs.onflow.org/flow-cli/configuration/#advanced-format-1
 func (a *Account) EnableAdvancedSaveFormat() {
 	a.useAdvancedSaveFormat = true
 }
