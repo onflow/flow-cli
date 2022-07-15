@@ -40,7 +40,9 @@ sh -ci "$(curl -fsSL https://storage.googleapis.com/flow-cli/install.sh)"
 
 To update, simply re-run the installation command above.
 
-To install a specific version of flow-cli, the command below can be used (example below is to install flow-cli version v0.33.3):
+### Install a specific version
+
+To install a specific version of Flow CLI, append the version tag to the command (e.g. the command below installs CLI version v0.33.3).
 
 ```sh
 sh -ci "$(curl -fsSL https://storage.googleapis.com/flow-cli/install.sh)" -- v0.33.3
