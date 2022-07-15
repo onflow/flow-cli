@@ -507,55 +507,33 @@ func ReportCrash() bool {
 }
 
 func CreateAccountNetworkPrompt() (string, config.Network) {
-	networkNames := make([]string, len(config.DefaultNetworks()))
-	for i, net := range config.DefaultNetworks() {
-		networkNames[i] = net.Name
-	}
+	emulatorOption := "Local Emulator"
+	testnetOption := "Flow Testnet"
+	mainnetOption := "Flow Mainnet"
+
+	networkMap := map[string]config.Network{}
+	networkMap[emulatorOption] = config.DefaultNetworks()[0]
+	networkMap[testnetOption] = config.DefaultNetworks()[1]
+	networkMap[mainnetOption] = config.DefaultNetworks()[2]
 
 	networkPrompt := promptui.Select{
 		Label: "Which network do you want to create the account on?",
-		Items: []string{"Local Emulator", "Flow Testnet", "Flow Mainnet"},
+		Items: []string{emulatorOption, testnetOption, mainnetOption},
 	}
 
-	index, selectedNetwork, err := networkPrompt.Run()
+	_, selectedNetwork, err := networkPrompt.Run()
 	if err == promptui.ErrInterrupt {
 		os.Exit(-1)
 	}
-	return selectedNetwork, config.DefaultNetworks()[index]
+	return selectedNetwork, networkMap[selectedNetwork]
 }
 
-func EnableSaveEnvPrompt() bool {
-	prompt := promptui.Select{
-		Label: "Do you want to save the private key into a .env file?",
-		Items: []string{"Yes(IMPORTANT: Don't commit created env file)", "No"},
-	}
-	index, _, err := prompt.Run()
-	if err == promptui.ErrInterrupt {
-		os.Exit(-1)
-	}
-
-	return index == 0
-}
-func AddToGitIgnorePrompt(filename string) bool {
-	prompt := promptui.Select{
-		Label: fmt.Sprintf("Do you want to add %s into a .gitignore?", filename),
-		Items: []string{"Yes(recommended)", "No"},
-	}
-	index, _, err := prompt.Run()
-	if err == promptui.ErrInterrupt {
-		os.Exit(-1)
-	}
-
-	return index == 0
-}
 func NextStepPrompt() {
-	prompt := promptui.Select{
+	prompt := promptui.Prompt{
 		Label: "Press <ENTER> to continue",
-		Items: []string{"CONTINUE"},
 	}
-	_, _, err := prompt.Run()
+	_, err := prompt.Run()
 	if err == promptui.ErrInterrupt {
 		os.Exit(-1)
 	}
-
 }

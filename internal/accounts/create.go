@@ -151,7 +151,7 @@ func create(
 func createInteractive(state *flowkit.State, loader flowkit.ReaderWriter) (*flow.Account, error) {
 	log := output.NewStdoutLogger(output.InfoLog)
 
-	log.Info(fmt.Sprintf("%s What name would you like to give this new account?", output.GoEmoji()))
+	log.Info(fmt.Sprintf("What name would you like to give this new account?"))
 	name := output.NamePrompt()
 
 	networkName, selectedNetwork := output.CreateAccountNetworkPrompt()
@@ -161,27 +161,21 @@ func createInteractive(state *flowkit.State, loader flowkit.ReaderWriter) (*flow
 		return nil, err
 	}
 	privateJsonFileName := ""
-	saveToGitIgnore := false
 	if selectedNetwork != config.DefaultEmulatorNetwork() {
 		privateJsonFileName = fmt.Sprintf("%s.private.json", name)
 		log.Info(fmt.Sprintf("%s For security purposes, the private key generated for this account will be "+
 			"stored in separate file: %s", output.WarningEmoji(), privateJsonFileName))
-		saveToGitIgnore = output.AddToGitIgnorePrompt(privateJsonFileName)
 	}
-	log.Info(fmt.Sprintf("%s This command will perform the following:\n", output.WarningEmoji()))
-	log.Info(fmt.Sprintf("- Generate a new ECDSA P-256 public and private key pair\n"))
+	log.Info(fmt.Sprintf("\n This command will perform the following:"))
+	log.Info(fmt.Sprintf("- Generate a new ECDSA P-256 public and private key pair"))
 	if selectedNetwork != config.DefaultEmulatorNetwork() {
-		if saveToGitIgnore {
-			log.Info(fmt.Sprintf("- Save the private key to %s\n", privateJsonFileName))
-		}
+		log.Info(fmt.Sprintf("- Save the private key to %s", privateJsonFileName))
 	}
-	log.Info(fmt.Sprintf("- Create a new account on %s and pair the public key with the new account\n", networkName))
-	log.Info(fmt.Sprintf("- Save the newly created account configuration to flow.json\n"))
+	log.Info(fmt.Sprintf("- Create a new account on %s and pair the public key with the new account", networkName))
+	log.Info(fmt.Sprintf("- Save the newly created account configuration to flow.json"))
 	output.NextStepPrompt()
 
 	service := services.NewServices(gw, state, output.NewStdoutLogger(output.NoneLog))
-
-	log.Info(fmt.Sprintf("%s Generating public and private keys for %s", output.WarningEmoji(), name))
 
 	key, err := service.Keys.Generate("", crypto.ECDSA_P256)
 	if err != nil {
@@ -202,7 +196,6 @@ func createInteractive(state *flowkit.State, loader flowkit.ReaderWriter) (*flow
 		log.Info(fmt.Sprintf("%s Creating the account on %s with generated keys", output.WarningEmoji(),
 			networkName))
 		log.StartProgress("")
-		time.Sleep(time.Second * 3)
 
 		signer, err := state.EmulatorServiceAccount()
 		if err != nil {
@@ -266,12 +259,7 @@ func createInteractive(state *flowkit.State, loader flowkit.ReaderWriter) (*flow
 	log.Info(fmt.Sprintf("\n %s Successfully created account on %s", output.OkEmoji(), networkName))
 	output.NextStepPrompt()
 
-	log.Info(fmt.Sprintf("\n %s Saving created account in flow.json", output.WarningEmoji()))
-	log.StartProgress("")
-	time.Sleep(time.Second * 3)
-	log.StopProgress()
-
-	err = saveAccount(loader, state, account, selectedNetwork, saveToGitIgnore)
+	err = saveAccount(loader, state, account, selectedNetwork)
 	if err != nil {
 		return nil, err
 	}
@@ -279,25 +267,10 @@ func createInteractive(state *flowkit.State, loader flowkit.ReaderWriter) (*flow
 	if selectedNetwork != config.DefaultEmulatorNetwork() {
 		log.Info(fmt.Sprintf("%s private key for %s successfully saved in %s", output.OkEmoji(),
 			name, privateJsonFileName))
-		if saveToGitIgnore {
-			log.Info(fmt.Sprintf("%s %s added to .gitignore", output.OkEmoji(), privateJsonFileName))
-		}
+		log.Info(fmt.Sprintf("%s %s added to .gitignore", output.OkEmoji(), privateJsonFileName))
 	}
 
-	log.StartProgress("")
-	time.Sleep(time.Second * 5)
-	log.StopProgress()
-	log.Info("\n------------------------")
-	log.Info(fmt.Sprintf("%s Account creation summary:", output.GoEmoji()))
-	log.Info(fmt.Sprintf("\n %s Generated a new ECDSA P-256 key pair", output.OkEmoji()))
-	if selectedNetwork != config.DefaultEmulatorNetwork() {
-		log.Info(fmt.Sprintf("\n %s Saved the private key to %s", output.OkEmoji(), privateJsonFileName))
-		log.Info(fmt.Sprintf("	- %s added to .gitignore", privateJsonFileName))
-	}
-	log.Info(fmt.Sprintf("\n %s Created a new account on %s and paired the public key with the new account", output.OkEmoji(), networkName))
-	log.Info(fmt.Sprintf("\n 	Account name: %s", name))
-	log.Info(fmt.Sprintf("\n 	Address: %s", fmt.Sprintf("0x%s", address.String())))
-	log.Info(fmt.Sprintf("\n %s Saved the newly created account configuration to flow.json", output.OkEmoji()))
+	log.Info(fmt.Sprintf("\n Account creation completed!"))
 	return onChainAccount, nil
 }
 
@@ -348,7 +321,6 @@ func saveAccount(
 	state *flowkit.State,
 	account *flowkit.Account,
 	network config.Network,
-	saveToGitIgnore bool,
 ) error {
 	// If using emulator, save account private key to main flow.json configuration file
 	if network == config.DefaultEmulatorNetwork() {
@@ -356,19 +328,18 @@ func saveAccount(
 	}
 
 	// Otherwise, save to a separate {accountName}.private.json file.
-	return saveAccountToPrivateConfigFile(loader, state, account, saveToGitIgnore)
+	return saveAccountToPrivateConfigFile(loader, state, account)
 }
 
 func saveAccountToPrivateConfigFile(
 	loader flowkit.ReaderWriter,
 	state *flowkit.State,
 	account *flowkit.Account,
-	saveToGitIgnore bool,
 ) error {
 	privateAccountFilename := fmt.Sprintf("%s.private.json", account.Name())
 	// Step 1: save the private version of the account (incl. the private key)
 	// to a separate JSON file.
-	err := savePrivateAccount(loader, privateAccountFilename, account, saveToGitIgnore)
+	err := savePrivateAccount(loader, privateAccountFilename, account)
 	if err != nil {
 		return err
 	}
@@ -406,7 +377,6 @@ func savePrivateAccount(
 	loader flowkit.ReaderWriter,
 	fileName string,
 	account *flowkit.Account,
-	saveToGitIgnore bool,
 ) error {
 	account.EnableAdvancedSaveFormat()
 	privateState := flowkit.NewEmptyState(loader)
@@ -416,9 +386,7 @@ func savePrivateAccount(
 	if err != nil {
 		return err
 	}
-	if saveToGitIgnore {
-		addToGitIgnore(fileName)
-	}
+	addToGitIgnore(fileName)
 
 	return nil
 }
