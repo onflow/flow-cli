@@ -25,7 +25,7 @@ sh -ci "$(curl -fsSL https://storage.googleapis.com/flow-cli/install.sh)"
 
 To update, simply re-run the installation command above.
 
-Currently, there is no ability to install an earlier version of flow-cli on Homebrew.
+It is currently not possible to install earlier versions of the Flow CLI with Homebrew.
 ## Linux
 
 ### From a pre-built binary
