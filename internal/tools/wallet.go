@@ -74,6 +74,10 @@ func wallet(
 		ContractFlowToken:     "0x0ae53cb6e3f42a79",
 		ContractFUSD:          "0xf8d6e0586b0a20c7",
 		ContractFCLCrypto:     "0xf8d6e0586b0a20c7",
+		AvatarURL:             "https://avatars.onflow.org/avatar/",
+		FlowInitAccountsNo:    "0",
+		TokenAmountFLOW:       "100.0",
+		TokenAmountFUSD:       "100.0",
 	}
 
 	srv, err := devWallet.NewHTTPServer(walletFlags.Port, &conf)
