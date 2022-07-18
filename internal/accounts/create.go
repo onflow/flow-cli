@@ -386,8 +386,10 @@ func savePrivateAccount(
 	if err != nil {
 		return err
 	}
-	addToGitIgnore(fileName, loader)
-
+	err = addToGitIgnore(fileName, loader)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
