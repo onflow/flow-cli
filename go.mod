@@ -8,7 +8,7 @@ require (
 	github.com/manifoldco/promptui v0.9.0
 	github.com/onflow/cadence v0.24.2-0.20220627202951-5a06fec82b4a
 	github.com/onflow/cadence/languageserver v0.24.1-0.20220711194952-0826880b870a
-	github.com/onflow/fcl-dev-wallet v0.4.6
+	github.com/onflow/fcl-dev-wallet v0.4.7
 	github.com/onflow/flow-cli/pkg/flowkit v0.0.0-20220708202053-3b2866146b5f
 	github.com/onflow/flow-emulator v0.33.4-0.20220705151023-2cc6a4f25a20
 	github.com/onflow/flow-go-sdk v0.26.5-0.20220629191626-900f9f91bffc
