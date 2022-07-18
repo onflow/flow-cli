@@ -1,0 +1,14 @@
+{
+	"accounts": {
+		"dalio": {
+			"address": "5b9f67bab2b4d5eb",
+			"key": {
+				"type": "hex",
+				"index": 0,
+				"signatureAlgorithm": "ECDSA_P256",
+				"hashAlgorithm": "SHA3_256",
+				"privateKey": "3db2d58a0fbddec165f11d103e3c12aa28297dc57496a44932efa148346f8c8d"
+			}
+		}
+	}
+}

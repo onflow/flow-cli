@@ -386,13 +386,14 @@ func savePrivateAccount(
 	if err != nil {
 		return err
 	}
-	addToGitIgnore(fileName)
+	addToGitIgnore(fileName, loader)
 
 	return nil
 }
 
 func addToGitIgnore(
 	filename string,
+	loader flowkit.ReaderWriter,
 ) error {
 	currentWd, err := os.Getwd()
 	if err != nil {
@@ -400,14 +401,18 @@ func addToGitIgnore(
 	}
 	gitIgnoreDir := path.Join(currentWd, ".gitignore")
 
-	//opens .gitignore so that we can add {name}.private.json to .gitignore, will create .gitignore if it doesn't exist
-	file, err := os.OpenFile(gitIgnoreDir, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-
-	if err != nil {
-		return err
+	gitIgnoreFiles := ""
+	if flowkit.Exists(gitIgnoreDir) {
+		gitIgnoreFilesRaw, err := loader.ReadFile(gitIgnoreDir)
+		gitIgnoreFiles = string(gitIgnoreFilesRaw)
+		if err != nil {
+			return err
+		}
 	}
-	defer file.Close()
-	_, err = file.WriteString("\n" + filename)
+
+	newFileGitIgnoreByte := []byte(string(gitIgnoreFiles) + "\n" + filename)
+	err = loader.WriteFile(gitIgnoreDir, newFileGitIgnoreByte, 0644)
+
 	if err != nil {
 		return err
 	}
