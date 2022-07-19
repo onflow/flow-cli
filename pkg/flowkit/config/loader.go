@@ -105,6 +105,9 @@ func (l *Loader) Save(conf *Config, path string) error {
 
 	return nil
 }
+func (l *Loader) SetFileLocation(conf *Config, name, path string) {
+	conf.Accounts.SetFileLocation(name, path)
+}
 
 func (l *Loader) loadConfig(confPath string) (*Config, error) {
 	raw, err := l.loadFile(confPath)
@@ -205,7 +208,7 @@ func (l *Loader) postprocess(baseConf *Config) (*Config, error) {
 		// IMPORTANT: save the original filepath so that this account's
 		// key information is not saved to the default configuration file
 		// and potentially exposed to the public.
-		account.FromFile = path
+		//account.FromFile = path
 
 		// create an empty config with single account so we don't include all accounts in file
 		accountConf := &Config{

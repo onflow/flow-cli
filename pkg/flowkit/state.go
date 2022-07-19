@@ -170,6 +170,11 @@ func (p *State) Config() *config.Config {
 	return p.conf
 }
 
+// Config get underlying configuration for advanced usage.
+func (p *State) SetAccountFileLocation(name, path string) {
+	p.conf.Accounts.SetFileLocation(name, path)
+}
+
 // EmulatorServiceAccount returns the service account for the default emulator profile.
 func (p *State) EmulatorServiceAccount() (*Account, error) {
 	emulator := p.conf.Emulators.Default()

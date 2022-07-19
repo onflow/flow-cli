@@ -31,13 +31,13 @@ type Account struct {
 	Address flow.Address
 	Key     AccountKey
 
-	// FromFile is the configuration file containing this account.
+	// Location is the configuration file containing this account.
 	//
-	// This field is only set if the external "fromFile"
+	// This field is only set if the external "location"
 	// syntax is used. Otherwise this field is empty.
 	//
 	// Ref: https://docs.onflow.org/flow-cli/security/#private-account-configuration-file
-	FromFile string
+	Location string
 	// saveAdvancedFormat is to save an account in advanced format even if it has default values as defined
 	// in isDefaultKeyFormat() in flowkit/config/json/account.go
 	// defaults to false
@@ -84,6 +84,15 @@ func (a *Accounts) Remove(name string) {
 	for i, account := range *a {
 		if account.Name == name {
 			*a = append((*a)[0:i], (*a)[i+1:]...) // remove item
+		}
+	}
+}
+
+// Remove remove account by name.
+func (a *Accounts) SetFileLocation(name, path string) {
+	for _, account := range *a {
+		if account.Name == name {
+			account.Location = path
 		}
 	}
 }

@@ -165,7 +165,7 @@ func transformAccountsToJSON(accounts config.Accounts) jsonAccounts {
 	jsonAccounts := jsonAccounts{}
 
 	for _, a := range accounts {
-		if a.FromFile != "" {
+		if a.Location != "" {
 			jsonAccounts[a.Name] = transformFromFileAccountToJSON(a)
 		} else if isDefaultKeyFormat(a.Key) && !a.UseAdvancedSaveFormat {
 			jsonAccounts[a.Name] = transformSimpleAccountToJSON(a)
@@ -180,7 +180,7 @@ func transformAccountsToJSON(accounts config.Accounts) jsonAccounts {
 func transformFromFileAccountToJSON(a config.Account) account {
 	return account{
 		FromFile: fromFileAccount{
-			FromFile: a.FromFile,
+			FromFile: a.Location,
 		},
 	}
 }

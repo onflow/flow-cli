@@ -346,11 +346,10 @@ func saveAccountToPrivateConfigFile(
 
 	// Step 2: update the main configuration file to inlcude a reference
 	// to the private account file.
-	fromFileAccount := flowkit.
-		NewAccount(account.Name()).
-		SetFromFile(privateAccountFilename)
+	fromFileAccount := flowkit.NewAccount(account.Name())
 
 	state.Accounts().AddOrUpdate(fromFileAccount)
+	state.SetAccountFileLocation(account.Name(), privateAccountFilename)
 
 	err = state.SaveDefault()
 	if err != nil {

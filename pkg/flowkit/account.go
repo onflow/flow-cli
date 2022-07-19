@@ -33,14 +33,6 @@ type Account struct {
 	name    string
 	address flow.Address
 	key     AccountKey
-
-	// fromFile is the configuration file containing this account.
-	//
-	// This field is only set if the external "fromFile"
-	// syntax is used. Otherwise this field is empty.
-	//
-	// Ref: https://docs.onflow.org/flow-cli/security/#private-account-configuration-file
-	fromFile string
 	// useAdvancedSaveFormat is to save an account in advanced format even if it has default values as defined
 	// in isDefaultKeyFormat() in flowkit/config/json/account.go
 	// defaults to false
@@ -139,12 +131,6 @@ func (a *Account) SetKey(key AccountKey) *Account {
 	return a
 }
 
-// SetFromFile sets the external configuration file.
-func (a *Account) SetFromFile(filename string) *Account {
-	a.fromFile = filename
-	return a
-}
-
 // EnableAdvancedSaveFormat marks this account to be saved in advanced key format.
 //
 // Ref: https://docs.onflow.org/flow-cli/configuration/#advanced-format-1
@@ -185,19 +171,18 @@ func fromConfig(account config.Account) (*Account, error) {
 	return &Account{
 		name:                  account.Name,
 		address:               account.Address,
-		fromFile:              account.FromFile,
 		useAdvancedSaveFormat: account.UseAdvancedSaveFormat,
 		key:                   key,
 	}, nil
 }
 
 func toConfig(account Account) config.Account {
-	if account.fromFile != "" {
-		return config.Account{
-			Name:     account.name,
-			FromFile: account.fromFile,
-		}
-	}
+	//if account.fromFile != "" {
+	//	return config.Account{
+	//		Name:     account.name,
+	//		FromFile: account.fromFile,
+	//	}
+	//}
 
 	return config.Account{
 		Name:                  account.name,
