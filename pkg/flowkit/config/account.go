@@ -88,7 +88,7 @@ func (a *Accounts) Remove(name string) {
 	}
 }
 
-// Remove remove account by name.
+// SetFileLocation sets location of json containing private keys for testnet and mainnet accounts
 func (a *Accounts) SetFileLocation(name, path string) {
 	for _, account := range *a {
 		if account.Name == name {

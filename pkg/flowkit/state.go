@@ -51,10 +51,11 @@ type Contract struct {
 
 // State manages the state for a Flow project.
 type State struct {
-	conf         *config.Config
-	confLoader   *config.Loader
-	readerWriter ReaderWriter
-	accounts     *Accounts
+	conf             *config.Config
+	confLoader       *config.Loader
+	readerWriter     ReaderWriter
+	accounts         *Accounts
+	accountLocations map[string]string
 }
 
 // NewEmptyState creates an empty state instance.
@@ -87,7 +88,7 @@ func (p *State) ReadFile(source string) ([]byte, error) {
 
 // SaveDefault saves to default path.
 func (p *State) SaveDefault() error {
-	return p.Save(config.DefaultPath)
+	return p.Save(config.DefaultPath, p.accountLocations)
 }
 
 // SaveEdited saves configuration to valid path.
@@ -106,12 +107,12 @@ func (p *State) SaveEdited(paths []string) error {
 		}
 	}
 
-	return p.Save(paths[0])
+	return p.Save(paths[0], p.accountLocations)
 }
 
 // Save saves the project configuration to the given path.
-func (p *State) Save(path string) error {
-	p.conf.Accounts = accountsToConfig(*p.accounts)
+func (p *State) Save(path string, accountLocations map[string]string) error {
+	p.conf.Accounts = accountsToConfig(*p.accounts, accountLocations)
 	err := p.confLoader.Save(p.conf, path)
 
 	if err != nil {
@@ -170,9 +171,15 @@ func (p *State) Config() *config.Config {
 	return p.conf
 }
 
-// Config get underlying configuration for advanced usage.
+// AccountLocations get account locations.
+func (p *State) AccountLocations() map[string]string {
+	return p.accountLocations
+}
+
+// SetAccountFileLocation sets location of json containing private keys for testnet and mainnet accounts.
 func (p *State) SetAccountFileLocation(name, path string) {
 	p.conf.Accounts.SetFileLocation(name, path)
+	p.accountLocations[name] = path
 }
 
 // EmulatorServiceAccount returns the service account for the default emulator profile.
@@ -305,15 +312,16 @@ func Init(readerWriter ReaderWriter, sigAlgo crypto.SignatureAlgorithm, hashAlgo
 
 // newProject creates a new project from a configuration object.
 func newProject(conf *config.Config, loader *config.Loader, readerWriter ReaderWriter) (*State, error) {
-	accounts, err := accountsFromConfig(conf)
+	accounts, accountLocationsMap, err := accountsFromConfig(conf)
 	if err != nil {
 		return nil, err
 	}
 
 	return &State{
-		conf:         conf,
-		readerWriter: readerWriter,
-		confLoader:   loader,
-		accounts:     &accounts,
+		conf:             conf,
+		readerWriter:     readerWriter,
+		confLoader:       loader,
+		accounts:         &accounts,
+		accountLocations: accountLocationsMap,
 	}, nil
 }

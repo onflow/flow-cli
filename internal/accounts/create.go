@@ -381,7 +381,7 @@ func savePrivateAccount(
 	privateState := flowkit.NewEmptyState(loader)
 	privateState.Accounts().AddOrUpdate(account)
 
-	err := privateState.Save(fileName)
+	err := privateState.Save(fileName, nil)
 	if err != nil {
 		return err
 	}

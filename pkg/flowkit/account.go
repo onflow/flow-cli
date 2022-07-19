@@ -137,26 +137,28 @@ func (a *Account) SetKey(key AccountKey) *Account {
 func (a *Account) EnableAdvancedSaveFormat() {
 	a.useAdvancedSaveFormat = true
 }
-func accountsFromConfig(conf *config.Config) (Accounts, error) {
+func accountsFromConfig(conf *config.Config) (Accounts, map[string]string, error) {
 	var accounts Accounts
-
+	accountLocationsMap := map[string]string{}
 	for _, accountConf := range conf.Accounts {
 		acc, err := fromConfig(accountConf)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
-
+		if accountConf.Location != "" {
+			accountLocationsMap[accountConf.Name] = accountConf.Location
+		}
 		accounts = append(accounts, *acc)
 	}
 
-	return accounts, nil
+	return accounts, accountLocationsMap, nil
 }
 
-func accountsToConfig(accounts Accounts) config.Accounts {
+func accountsToConfig(accounts Accounts, accountLocations map[string]string) config.Accounts {
 	accountConfs := make([]config.Account, 0)
 
 	for _, account := range accounts {
-		accountConfs = append(accountConfs, toConfig(account))
+		accountConfs = append(accountConfs, toConfig(account, accountLocations))
 	}
 
 	return accountConfs
@@ -176,13 +178,13 @@ func fromConfig(account config.Account) (*Account, error) {
 	}, nil
 }
 
-func toConfig(account Account) config.Account {
-	//if account.fromFile != "" {
-	//	return config.Account{
-	//		Name:     account.name,
-	//		FromFile: account.fromFile,
-	//	}
-	//}
+func toConfig(account Account, accountLocations map[string]string) config.Account {
+	if accountLocation, ok := accountLocations[account.name]; ok {
+		return config.Account{
+			Name:     account.name,
+			Location: accountLocation,
+		}
+	}
 
 	return config.Account{
 		Name:                  account.name,
