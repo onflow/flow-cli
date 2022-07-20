@@ -114,7 +114,7 @@ func (p *State) Save(path string) error {
 	p.conf.Accounts = accountsToConfig(*p.accounts, p.confLoader.AccountsFromFile())
 	err := p.confLoader.Save(p.conf, path)
 
-	// if we have defined accounts to be saved to private file iterate over them and save them separately
+	// if we have defined accounts to be saved to an external file, iterate over them and save them separately
 	if len(p.confLoader.AccountsFromFile()) > 0 {
 		for name, location := range p.confLoader.AccountsFromFile() {
 			account, _ := p.accounts.ByName(name)
