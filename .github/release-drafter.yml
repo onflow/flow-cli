@@ -1,7 +1,10 @@
-name-template: 'v$NEXT_PATCH_VERSION'
+name-template: 'Version $NEXT_PATCH_VERSION'
 tag-template: 'v$NEXT_PATCH_VERSION'
 change-template: '- $TITLE (#$NUMBER) @$AUTHOR'
 template: |
+  ## ⬆️ Install or Upgrade
+  Follow the [Flow CLI installation guide](https://docs.onflow.org/flow-cli/install/) for instructions on how to install or upgrade the CLI.
+
   $CHANGES
 categories:
   - title: 💥 Breaking Changes
