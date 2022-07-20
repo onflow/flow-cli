@@ -264,7 +264,7 @@ func createInteractive(state *flowkit.State, loader flowkit.ReaderWriter) (*flow
 	log.Info(fmt.Sprintf("- Added the new account to %s.", output.Bold("flow.json")))
 	if selectedNetwork != config.DefaultEmulatorNetwork() {
 		log.Info(fmt.Sprintf("- Saved the private key to %s.", privateFile))
-		log.Info(fmt.Sprintf("- Added %s to %s.", privateFile, output.Bold(".gitignore.")))
+		log.Info(fmt.Sprintf("- Added %s to %s.", privateFile, output.Bold(".gitignore")))
 	}
 	log.Info("") // final new line
 
