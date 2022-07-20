@@ -37,7 +37,7 @@ func TryEmoji() string {
 }
 
 func WarningEmoji() string {
-	return printEmoji("⚠️")
+	return printEmoji("❗")
 }
 
 func SaveEmoji() string {
@@ -57,5 +57,5 @@ func OkEmoji() string {
 }
 
 func SuccessEmoji() string {
-	return printEmoji("✨")
+	return printEmoji("🎉")
 }

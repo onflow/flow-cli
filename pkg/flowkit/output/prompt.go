@@ -558,12 +558,12 @@ func WantToContinue() bool {
 		os.Exit(-1)
 	}
 
-	return selected == "n" // todo test
+	return selected == "y" // todo test
 }
 
 func ConfirmOpenBrowser() {
 	prompt := promptui.Prompt{
-		Label:       "Press <ENTER> to continue",
+		Label:       "Press <ENTER> to open in your browser...",
 		HideEntered: true,
 	}
 	_, err := prompt.Run()

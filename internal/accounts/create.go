@@ -166,7 +166,7 @@ func createInteractive(state *flowkit.State, loader flowkit.ReaderWriter) (*flow
 		log.Info(fmt.Sprintf("- Save the private key to %s.", privateFile))
 	}
 	log.Info(fmt.Sprintf("- Create a new account on %s paired with the public key.", output.Bold(networkName)))
-	log.Info(fmt.Sprintf("- Save the newly-created account to %s.", output.Bold("flow.json")))
+	log.Info(fmt.Sprintf("- Save the newly-created account to %s.\n", output.Bold("flow.json")))
 
 	if !output.WantToContinue() {
 		return nil, fmt.Errorf("process terminated")
@@ -212,7 +212,7 @@ func createInteractive(state *flowkit.State, loader flowkit.ReaderWriter) (*flow
 		switch selectedNetwork {
 		case config.DefaultTestnetNetwork():
 			log.Info("Please complete the following steps in the browser:")
-			log.Info("\n 1. Complete the captcha challenge. \n 2. Click the 'Create Account' button.\n 3. Return to this window.")
+			log.Info("\n 1. Complete the captcha challenge. \n 2. Click the 'Create Account' button.\n 3. Return to this window.\n")
 			link = util.TestnetFaucetURL(key.PublicKey().String(), crypto.ECDSA_P256)
 
 		case config.DefaultMainnetNetwork():
@@ -249,19 +249,25 @@ func createInteractive(state *flowkit.State, loader flowkit.ReaderWriter) (*flow
 		return nil, err
 	}
 
-	log.Info(fmt.Sprintf("%s New account created with address: %s, and name: %s", output.SuccessEmoji(), account.Address(), name))
+	log.Info(fmt.Sprintf(
+		"%s New account created with address: %s, and name: %s",
+		output.SuccessEmoji(),
+		output.Bold(account.Address().String()),
+		output.Bold(name)),
+	)
 
 	err = saveAccount(loader, state, account, selectedNetwork)
 	if err != nil {
 		return nil, err
 	}
 
-	log.Info("🎉 Here’s a summary of all the actions that were taken:")
+	log.Info("\nHere’s a summary of all the actions that were taken:")
 	log.Info(fmt.Sprintf("- Added the new account to %s.", output.Bold("flow.json")))
 	if selectedNetwork != config.DefaultEmulatorNetwork() {
 		log.Info(fmt.Sprintf("- Saved the private key to %s.", privateFile))
 		log.Info(fmt.Sprintf("- Added %s to %s.", privateFile, output.Bold(".gitignore.")))
 	}
+	log.Info("") // final new line
 
 	return onChainAccount, nil
 }
