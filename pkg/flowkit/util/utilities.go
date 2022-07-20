@@ -29,8 +29,6 @@ import (
 	"strings"
 	"text/tabwriter"
 
-	"github.com/onflow/flow-cli/pkg/flowkit"
-
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
 )
@@ -159,10 +157,23 @@ func MainnetFlowPortURL(publicKey string) string {
 	return fmt.Sprintf("%s%s", FlowPortUrl, strings.TrimPrefix(publicKey, "0x"))
 }
 
+func DirExists(path string) bool {
+	info, err := os.Stat(path)
+	if os.IsNotExist(err) {
+		return false
+	}
+	return !info.IsDir()
+}
+
+type ReaderWriter interface {
+	ReadFile(source string) ([]byte, error)
+	WriteFile(filename string, data []byte, perm os.FileMode) error
+}
+
 // AddToGitIgnore adds a new line to the .gitignore if one doesn't exist it creates it.
 func AddToGitIgnore(
 	filename string,
-	loader flowkit.ReaderWriter,
+	loader ReaderWriter,
 ) error {
 	currentWd, err := os.Getwd()
 	if err != nil {
@@ -171,7 +182,7 @@ func AddToGitIgnore(
 	gitIgnoreDir := path.Join(currentWd, ".gitignore")
 
 	gitIgnoreFiles := ""
-	if flowkit.Exists(gitIgnoreDir) {
+	if DirExists(gitIgnoreDir) {
 		gitIgnoreFilesRaw, err := loader.ReadFile(gitIgnoreDir)
 		gitIgnoreFiles = string(gitIgnoreFilesRaw)
 		if err != nil {

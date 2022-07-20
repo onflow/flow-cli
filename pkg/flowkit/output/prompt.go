@@ -155,6 +155,25 @@ func NamePrompt() string {
 	return name
 }
 
+func AccountNamePrompt() string {
+	namePrompt := promptui.Prompt{
+		Label: "Enter an account name",
+		Validate: func(s string) error {
+			if len(s) < 1 {
+				return fmt.Errorf("invalid name")
+			}
+			return nil
+		},
+	}
+
+	name, err := namePrompt.Run()
+	if err == promptui.ErrInterrupt {
+		os.Exit(-1)
+	}
+
+	return name
+}
+
 func secureNetworkKeyPrompt() string {
 	networkKeyPrompt := promptui.Prompt{
 		Label: "Enter a valid host network key or leave blank",
@@ -517,7 +536,7 @@ func CreateAccountNetworkPrompt() (string, config.Network) {
 	networkMap[mainnetOption] = config.DefaultNetworks()[2]
 
 	networkPrompt := promptui.Select{
-		Label: "Which network do you want to create the account on?",
+		Label: "Choose a network",
 		Items: []string{emulatorOption, testnetOption, mainnetOption},
 	}
 
@@ -528,9 +547,35 @@ func CreateAccountNetworkPrompt() (string, config.Network) {
 	return selectedNetwork, networkMap[selectedNetwork]
 }
 
+func WantToContinue() bool {
+	prompt := promptui.Prompt{
+		Label:       "Do you want to continue",
+		IsConfirm:   true,
+		HideEntered: true,
+	}
+	selected, err := prompt.Run()
+	if err == promptui.ErrInterrupt {
+		os.Exit(-1)
+	}
+
+	return selected == "n" // todo test
+}
+
+func ConfirmOpenBrowser() {
+	prompt := promptui.Prompt{
+		Label:       "Press <ENTER> to continue",
+		HideEntered: true,
+	}
+	_, err := prompt.Run()
+	if err == promptui.ErrInterrupt {
+		os.Exit(-1)
+	}
+}
+
 func NextStepPrompt() {
 	prompt := promptui.Prompt{
-		Label: "Press <ENTER> to continue",
+		Label:       "Press <ENTER> to continue",
+		HideEntered: true,
 	}
 	_, err := prompt.Run()
 	if err == promptui.ErrInterrupt {
