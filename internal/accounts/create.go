@@ -216,9 +216,8 @@ func createInteractive(state *flowkit.State, loader flowkit.ReaderWriter) (*flow
 			link = util.TestnetFaucetURL(key.PublicKey().String(), crypto.ECDSA_P256)
 
 		case config.DefaultMainnetNetwork():
-			log.Info(fmt.Sprintf("%s We will be creating the account on Flow Port website (%s), which has been prefilled with generated keys", output.WarningEmoji(), util.FlowPortUrl))
-			log.Info("\nPlease follow the steps: \n 1. Click on 'Submit' button, \n 2. Connect existing Blocto or create a new account first, \n 3. Click on confirm, \n 4. Click on approve. \n")
-			output.NextStepPrompt()
+			log.Info("Please complete the following steps in the browser:")
+			log.Info("\n 1. Click on 'Submit' button. \n 2. Connect existing Blocto account or create new.\n 3. Click on confirm and approve transaction.\n")
 			link = util.MainnetFlowPortURL(key.PublicKey().String())
 		}
 
