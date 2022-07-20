@@ -665,3 +665,218 @@ func Test_Saving(t *testing.T) {
 	err = s.SaveEdited([]string{config.GlobalPath(), config.DefaultPath})
 	assert.NoError(t, err)
 }
+
+//ensures that default emulator values are in config when no emulator is defined in flow.json
+func Test_DefaultEmulatorNotPresentInConfig(t *testing.T) {
+	configJson := []byte(`{
+		"contracts": {},
+		"accounts": {
+			"emulator-account": {
+				"address": "f8d6e0586b0a20c7",
+				"key": "dd72967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47"
+			}
+		},
+		"networks": {
+			"emulator": "127.0.0.1.3569"
+		},
+		"deployments": {
+		}
+	}`)
+	config := config.Config{
+		Emulators: config.Emulators{{
+			Name:           "default",
+			Port:           3569,
+			ServiceAccount: "emulator-account",
+		}},
+		Contracts:   config.Contracts{},
+		Deployments: config.Deployments{},
+		Accounts: config.Accounts{{
+			Name:    "emulator-account",
+			Address: flow.ServiceAddress(flow.Emulator),
+			Key: config.AccountKey{
+				Type:       config.KeyTypeHex,
+				Index:      0,
+				SigAlgo:    crypto.ECDSA_P256,
+				HashAlgo:   crypto.SHA3_256,
+				PrivateKey: keys()[0],
+			},
+		}},
+		Networks: config.Networks{{
+			Name: "emulator",
+			Host: "127.0.0.1.3569",
+		}},
+	}
+	af := afero.Afero{Fs: afero.NewMemMapFs()}
+	err := afero.WriteFile(af.Fs, "flow.json", configJson, 0644)
+	assert.NoError(t, err)
+	paths := []string{"flow.json"}
+	state, err := Load(paths, af)
+	assert.Equal(t, state.conf, &config)
+	assert.NoError(t, err)
+}
+
+//ensures that default emulator values are not in config when no emulator is defined in flow.json
+func Test_DefaultEmulatorWithoutEmulatorAccountInConfig(t *testing.T) {
+	configJson := []byte(`{
+		"contracts": {},
+		"accounts": {
+			"testnet-account": {
+      			"address": "1e82856bf20e2aa6",
+				"key": "388e3fbdc654b765942610679bb3a66b74212149ab9482187067ee116d9a8118"
+    		}
+		},
+		"networks": {
+			"emulator": "127.0.0.1.3569"
+		},
+		"deployments": {
+		}
+	}`)
+	af := afero.Afero{Fs: afero.NewMemMapFs()}
+	err := afero.WriteFile(af.Fs, "flow.json", configJson, 0644)
+	assert.NoError(t, err)
+	paths := []string{"flow.json"}
+	state, _ := Load(paths, af)
+	assert.Equal(t, config.Emulators{}, state.conf.Emulators)
+}
+
+//ensures that default emulator values are in config when emulator is defined in flow.json
+func Test_DefaultEmulatorWithEmulatorAccountInConfig(t *testing.T) {
+	configJson := []byte(`{
+		"contracts": {},
+		"accounts": {
+			"testnet-account": {
+      			"address": "1e82856bf20e2aa6",
+				"key": "388e3fbdc654b765942610679bb3a66b74212149ab9482187067ee116d9a8118"
+    		},
+			"emulator-account": {
+				"address": "f8d6e0586b0a20c7",
+				"key": "dd72967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47"
+			}
+		},
+		"networks": {
+			"emulator": "127.0.0.1.3569"
+		},
+		"deployments": {
+		}
+	}`)
+	af := afero.Afero{Fs: afero.NewMemMapFs()}
+	err := afero.WriteFile(af.Fs, "flow.json", configJson, 0644)
+	assert.NoError(t, err)
+	paths := []string{"flow.json"}
+	state, _ := Load(paths, af)
+	assert.Len(t, state.conf.Emulators, 1)
+	assert.Equal(t, state.conf.Emulators, config.DefaultEmulators())
+}
+
+//backward compatibility test to ensure that default emulator values are still observed in flow.json
+func Test_DefaultEmulatorPresentInConfig(t *testing.T) {
+	configJson := []byte(`{
+		"contracts": {},
+		"emulators": {
+			"default": {
+				"port": 3569,
+				"serviceAccount": "emulator-account"
+			}
+		},
+		"accounts": {
+			"emulator-account": {
+				"address": "f8d6e0586b0a20c7",
+				"key": "dd72967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47"
+			}
+		},
+		"networks": {
+			"emulator": "127.0.0.1.3569"
+		},
+		"deployments": {
+		}
+	}`)
+	config := config.Config{
+		Emulators: config.Emulators{{
+			Name:           "default",
+			Port:           3569,
+			ServiceAccount: "emulator-account",
+		}},
+		Contracts:   config.Contracts{},
+		Deployments: config.Deployments{},
+		Accounts: config.Accounts{{
+			Name:    "emulator-account",
+			Address: flow.ServiceAddress(flow.Emulator),
+			Key: config.AccountKey{
+				Type:       config.KeyTypeHex,
+				Index:      0,
+				SigAlgo:    crypto.ECDSA_P256,
+				HashAlgo:   crypto.SHA3_256,
+				PrivateKey: keys()[0],
+			},
+		}},
+		Networks: config.Networks{{
+			Name: "emulator",
+			Host: "127.0.0.1.3569",
+		}},
+	}
+	af := afero.Afero{Fs: afero.NewMemMapFs()}
+	err := afero.WriteFile(af.Fs, "flow.json", configJson, 0644)
+	assert.NoError(t, err)
+	paths := []string{"flow.json"}
+	state, err := Load(paths, af)
+	assert.Equal(t, 1, len(state.conf.Emulators))
+	assert.Equal(t, state.conf, &config)
+	assert.NoError(t, err)
+}
+
+//ensures that custom emulator values are still observed in flow.json
+func Test_CustomEmulatorValuesInConfig(t *testing.T) {
+	configJson := []byte(`{
+		"contracts": {},
+		"emulators": {
+			"custom-emulator": {
+				"port": 2000,
+				"serviceAccount": "emulator-account"
+			}
+		},
+		"accounts": {
+			"emulator-account": {
+				"address": "f8d6e0586b0a20c7",
+				"key": "dd72967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47"
+			}
+		},
+		"networks": {
+			"emulator": "127.0.0.1.3569"
+		},
+		"deployments": {
+		}
+	}`)
+	config := config.Config{
+		Emulators: config.Emulators{{
+			Name:           "custom-emulator",
+			Port:           2000,
+			ServiceAccount: "emulator-account",
+		}},
+		Contracts:   config.Contracts{},
+		Deployments: config.Deployments{},
+		Accounts: config.Accounts{{
+			Name:    "emulator-account",
+			Address: flow.ServiceAddress(flow.Emulator),
+			Key: config.AccountKey{
+				Type:       config.KeyTypeHex,
+				Index:      0,
+				SigAlgo:    crypto.ECDSA_P256,
+				HashAlgo:   crypto.SHA3_256,
+				PrivateKey: keys()[0],
+			},
+		}},
+		Networks: config.Networks{{
+			Name: "emulator",
+			Host: "127.0.0.1.3569",
+		}},
+	}
+	af := afero.Afero{Fs: afero.NewMemMapFs()}
+	err := afero.WriteFile(af.Fs, "flow.json", configJson, 0644)
+	assert.NoError(t, err)
+	paths := []string{"flow.json"}
+	state, err := Load(paths, af)
+	assert.Equal(t, "custom-emulator", state.conf.Emulators[0].Name)
+	assert.Equal(t, 1, len(state.conf.Emulators))
+	assert.Equal(t, state.conf, &config)
+	assert.NoError(t, err)
+}

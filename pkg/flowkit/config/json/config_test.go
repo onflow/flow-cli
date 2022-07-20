@@ -20,9 +20,19 @@ package json
 import (
 	"testing"
 
+	"github.com/onflow/flow-cli/pkg/flowkit/config"
+
+	"github.com/onflow/flow-go-sdk"
+	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/stretchr/testify/assert"
 )
 
+func keys() []crypto.PrivateKey {
+	var keys []crypto.PrivateKey
+	key, _ := crypto.DecodePrivateKeyHex(crypto.ECDSA_P256, "dd72967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47")
+	keys = append(keys, key)
+	return keys
+}
 func Test_SimpleJSONConfig(t *testing.T) {
 	b := []byte(`{
 		"emulators": {
@@ -155,4 +165,99 @@ func Test_NonExistingAccountForEmulator(t *testing.T) {
 
 	err = conf.Validate()
 	assert.Equal(t, "emulator default contains nonexisting service account emulator-account", err.Error())
+}
+
+//If config has default emulator values, it will not show up in flow.json
+func Test_SerializeConfigToJsonEmulatorDefault(t *testing.T) {
+	configJson := []byte(`{
+		"contracts": {},
+		"accounts": {
+			"emulator-account": {
+				"address": "f8d6e0586b0a20c7",
+				"key": "dd72967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47"
+			}
+		},
+		"networks": {
+			"emulator": "127.0.0.1.3569"
+		},
+		"deployments": {
+		}
+	}`)
+	config := config.Config{
+		Emulators: config.Emulators{{
+			Name:           "default",
+			Port:           3569,
+			ServiceAccount: "emulator-account",
+		}},
+		Contracts:   config.Contracts{},
+		Deployments: config.Deployments{},
+		Accounts: config.Accounts{{
+			Name:    "emulator-account",
+			Address: flow.ServiceAddress(flow.Emulator),
+			Key: config.AccountKey{
+				Type:       config.KeyTypeHex,
+				Index:      0,
+				SigAlgo:    crypto.ECDSA_P256,
+				HashAlgo:   crypto.SHA3_256,
+				PrivateKey: keys()[0],
+			},
+		}},
+		Networks: config.Networks{{
+			Name: "emulator",
+			Host: "127.0.0.1.3569",
+		}},
+	}
+	parser := NewParser()
+	conf, _ := parser.Serialize(&config)
+	assert.JSONEq(t, string(configJson), string(conf))
+}
+func Test_SerializeConfigToJsonEmulatorNotDefault(t *testing.T) {
+	configJson := []byte(`{
+		"contracts": {},
+		"emulators": {
+			"default": {
+				"port": 6000,
+				"serviceAccount": "emulator-account"
+			}
+		},
+		"accounts": {
+			"emulator-account": {
+				"address": "f8d6e0586b0a20c7",
+				"key": "dd72967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47"
+			}
+		},
+		"networks": {
+			"emulator": "127.0.0.1.3569"
+		},
+		"deployments": {
+		}
+	}`)
+	config := config.Config{
+		Emulators: config.Emulators{{
+			Name:           "default",
+			Port:           6000,
+			ServiceAccount: "emulator-account",
+		}},
+		Contracts:   config.Contracts{},
+		Deployments: config.Deployments{},
+		Accounts: config.Accounts{{
+			Name:    "emulator-account",
+			Address: flow.ServiceAddress(flow.Emulator),
+			Key: config.AccountKey{
+				Type:       config.KeyTypeHex,
+				Index:      0,
+				SigAlgo:    crypto.ECDSA_P256,
+				HashAlgo:   crypto.SHA3_256,
+				PrivateKey: keys()[0],
+			},
+		}},
+		Networks: config.Networks{{
+			Name: "emulator",
+			Host: "127.0.0.1.3569",
+		}},
+	}
+	parser := NewParser()
+	conf, _ := parser.Serialize(&config)
+	assert.JSONEq(t, string(configJson), string(conf))
+
 }

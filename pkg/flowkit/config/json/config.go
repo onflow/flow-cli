@@ -27,7 +27,7 @@ import (
 
 // jsonConfig implements JSON format for persisting and parsing configuration.
 type jsonConfig struct {
-	Emulators   jsonEmulators   `json:"emulators"`
+	Emulators   jsonEmulators   `json:"emulators,omitempty"`
 	Contracts   jsonContracts   `json:"contracts"`
 	Networks    jsonNetworks    `json:"networks"`
 	Accounts    jsonAccounts    `json:"accounts"`
@@ -70,7 +70,6 @@ func (j *jsonConfig) transformToConfig() (*config.Config, error) {
 
 	return conf, nil
 }
-
 func transformConfigToJSON(config *config.Config) jsonConfig {
 	return jsonConfig{
 		Emulators:   transformEmulatorsToJSON(config.Emulators),
@@ -112,7 +111,6 @@ func NewParser() *Parser {
 // Serialize configuration to raw.
 func (p *Parser) Serialize(conf *config.Config) ([]byte, error) {
 	jsonConf := transformConfigToJSON(conf)
-
 	data, err := json.MarshalIndent(jsonConf, "", "\t")
 	if err != nil {
 		return nil, err
