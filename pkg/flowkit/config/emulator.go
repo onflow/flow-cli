@@ -35,9 +35,9 @@ func DefaultEmulators() Emulators {
 // DefaultEmulator gets default emulator.
 func DefaultEmulator() Emulator {
 	return Emulator{
-		Name:           "default",
+		Name:           DefaultEmulatorConfigName,
 		ServiceAccount: DefaultEmulatorServiceAccountName,
-		Port:           3569,
+		Port:           DefaultEmulatorPort,
 	}
 }
 
