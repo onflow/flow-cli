@@ -322,74 +322,19 @@ func saveAccount(
 	account *flowkit.Account,
 	network config.Network,
 ) error {
-	// If using emulator, save account private key to main flow.json configuration file
-	if network == config.DefaultEmulatorNetwork() {
-		return saveAccountToMainConfigFile(state, account)
-	}
-
-	// Otherwise, save to a separate {accountName}.private.json file.
-	return saveAccountToPrivateConfigFile(loader, state, account)
-}
-
-func saveAccountToPrivateConfigFile(
-	loader flowkit.ReaderWriter,
-	state *flowkit.State,
-	account *flowkit.Account,
-) error {
-	privateAccountFilename := fmt.Sprintf("%s.private.json", account.Name())
-	// Step 1: save the private version of the account (incl. the private key)
-	// to a separate JSON file.
-	err := savePrivateAccount(loader, privateAccountFilename, account)
-	if err != nil {
-		return err
-	}
-
-	// Step 2: update the main configuration file to inlcude a reference
-	// to the private account file.
-	fromFileAccount := flowkit.NewAccount(account.Name())
-
-	state.Accounts().AddOrUpdate(fromFileAccount)
-	state.SetAccountFileLocation(account.Name(), privateAccountFilename)
-
-	err = state.SaveDefault()
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func saveAccountToMainConfigFile(
-	state *flowkit.State,
-	account *flowkit.Account,
-) error {
 	state.Accounts().AddOrUpdate(account)
-	err := state.SaveDefault()
-	if err != nil {
-		return err
+
+	// If not using emulator, save account private key private file for security.
+	if network != config.DefaultEmulatorNetwork() {
+		privateLocation := fmt.Sprintf("%s.private.json", account.Name())
+		state.SetAccountFileLocation(*account, privateLocation)
+		err := addToGitIgnore(privateLocation, loader)
+		if err != nil {
+			return err
+		}
 	}
 
-	return nil
-}
-
-func savePrivateAccount(
-	loader flowkit.ReaderWriter,
-	fileName string,
-	account *flowkit.Account,
-) error {
-	account.EnableAdvancedSaveFormat()
-	privateState := flowkit.NewEmptyState(loader)
-	privateState.Accounts().AddOrUpdate(account)
-
-	err := privateState.Save(fileName, nil)
-	if err != nil {
-		return err
-	}
-	err = addToGitIgnore(fileName, loader)
-	if err != nil {
-		return err
-	}
-	return nil
+	return state.SaveDefault()
 }
 
 func addToGitIgnore(

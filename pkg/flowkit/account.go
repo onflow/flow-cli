@@ -33,10 +33,6 @@ type Account struct {
 	name    string
 	address flow.Address
 	key     AccountKey
-	// useAdvancedSaveFormat is to save an account in advanced format even if it has default values as defined
-	// in isDefaultKeyFormat() in flowkit/config/json/account.go
-	// defaults to false
-	useAdvancedSaveFormat bool
 }
 
 // NewAccount creates an empty account with the provided name.
@@ -131,27 +127,17 @@ func (a *Account) SetKey(key AccountKey) *Account {
 	return a
 }
 
-// EnableAdvancedSaveFormat marks this account to be saved in advanced key format.
-//
-// Ref: https://docs.onflow.org/flow-cli/configuration/#advanced-format-1
-func (a *Account) EnableAdvancedSaveFormat() {
-	a.useAdvancedSaveFormat = true
-}
-func accountsFromConfig(conf *config.Config) (Accounts, map[string]string, error) {
+func accountsFromConfig(conf *config.Config) (Accounts, error) {
 	var accounts Accounts
-	accountLocationsMap := map[string]string{}
 	for _, accountConf := range conf.Accounts {
 		acc, err := fromConfig(accountConf)
 		if err != nil {
-			return nil, nil, err
-		}
-		if accountConf.Location != "" {
-			accountLocationsMap[accountConf.Name] = accountConf.Location
+			return nil, err
 		}
 		accounts = append(accounts, *acc)
 	}
 
-	return accounts, accountLocationsMap, nil
+	return accounts, nil
 }
 
 func accountsToConfig(accounts Accounts, accountLocations map[string]string) config.Accounts {
@@ -171,14 +157,14 @@ func fromConfig(account config.Account) (*Account, error) {
 	}
 
 	return &Account{
-		name:                  account.Name,
-		address:               account.Address,
-		useAdvancedSaveFormat: account.UseAdvancedSaveFormat,
-		key:                   key,
+		name:    account.Name,
+		address: account.Address,
+		key:     key,
 	}, nil
 }
 
 func toConfig(account Account, accountLocations map[string]string) config.Account {
+	// if account has a location specified we only store the account with a reference to that file location
 	if accountLocation, ok := accountLocations[account.name]; ok {
 		return config.Account{
 			Name:     account.name,
@@ -187,10 +173,9 @@ func toConfig(account Account, accountLocations map[string]string) config.Accoun
 	}
 
 	return config.Account{
-		Name:                  account.name,
-		Address:               account.address,
-		Key:                   account.key.ToConfig(),
-		UseAdvancedSaveFormat: account.useAdvancedSaveFormat,
+		Name:    account.name,
+		Address: account.address,
+		Key:     account.key.ToConfig(),
 	}
 }
 

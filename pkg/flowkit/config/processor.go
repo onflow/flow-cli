@@ -58,9 +58,10 @@ func processFile(raw string) (string, map[string]string) {
 			continue
 		}
 
+		// match 1 is the account name, match 2 is the file location
 		accountFromFiles[match[1]] = match[2]
 
-		// remove fromFile from config after we add that to composer
+		// remove whole fromFile part from config after we add that to composer
 		raw = strings.ReplaceAll(raw, match[0], "")
 
 		// remove possible trailing comma
