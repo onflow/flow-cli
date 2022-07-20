@@ -20,8 +20,6 @@ package accounts
 
 import (
 	"fmt"
-	"os"
-	"path"
 	"strings"
 	"time"
 
@@ -328,39 +326,11 @@ func saveAccount(
 	if network != config.DefaultEmulatorNetwork() {
 		privateLocation := fmt.Sprintf("%s.private.json", account.Name())
 		state.SetAccountFileLocation(*account, privateLocation)
-		err := addToGitIgnore(privateLocation, loader)
+		err := util.AddToGitIgnore(privateLocation, loader)
 		if err != nil {
 			return err
 		}
 	}
 
 	return state.SaveDefault()
-}
-
-func addToGitIgnore(
-	filename string,
-	loader flowkit.ReaderWriter,
-) error {
-	currentWd, err := os.Getwd()
-	if err != nil {
-		return err
-	}
-	gitIgnoreDir := path.Join(currentWd, ".gitignore")
-
-	gitIgnoreFiles := ""
-	if flowkit.Exists(gitIgnoreDir) {
-		gitIgnoreFilesRaw, err := loader.ReadFile(gitIgnoreDir)
-		gitIgnoreFiles = string(gitIgnoreFilesRaw)
-		if err != nil {
-			return err
-		}
-	}
-
-	newFileGitIgnoreByte := []byte(string(gitIgnoreFiles) + "\n" + filename)
-	err = loader.WriteFile(gitIgnoreDir, newFileGitIgnoreByte, 0644)
-
-	if err != nil {
-		return err
-	}
-	return nil
 }

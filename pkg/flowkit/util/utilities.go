@@ -22,10 +22,14 @@ import (
 	"bytes"
 	"encoding/hex"
 	"fmt"
+	"os"
 	"os/exec"
+	"path"
 	"runtime"
 	"strings"
 	"text/tabwriter"
+
+	"github.com/onflow/flow-cli/pkg/flowkit"
 
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
@@ -153,4 +157,33 @@ func TestnetFaucetURL(publicKey string, sigAlgo crypto.SignatureAlgorithm) strin
 
 func MainnetFlowPortURL(publicKey string) string {
 	return fmt.Sprintf("%s%s", FlowPortUrl, strings.TrimPrefix(publicKey, "0x"))
+}
+
+// AddToGitIgnore adds a new line to the .gitignore if one doesn't exist it creates it.
+func AddToGitIgnore(
+	filename string,
+	loader flowkit.ReaderWriter,
+) error {
+	currentWd, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+	gitIgnoreDir := path.Join(currentWd, ".gitignore")
+
+	gitIgnoreFiles := ""
+	if flowkit.Exists(gitIgnoreDir) {
+		gitIgnoreFilesRaw, err := loader.ReadFile(gitIgnoreDir)
+		gitIgnoreFiles = string(gitIgnoreFilesRaw)
+		if err != nil {
+			return err
+		}
+	}
+
+	newFileGitIgnoreByte := []byte(string(gitIgnoreFiles) + "\n" + filename)
+	err = loader.WriteFile(gitIgnoreDir, newFileGitIgnoreByte, 0644)
+
+	if err != nil {
+		return err
+	}
+	return nil
 }
