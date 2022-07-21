@@ -184,10 +184,10 @@ func AddToGitIgnore(
 	gitIgnoreFiles := ""
 	if PathExists(gitIgnorePath) {
 		gitIgnoreFilesRaw, err := loader.ReadFile(gitIgnoreDir)
-		gitIgnoreFiles = string(gitIgnoreFilesRaw)
 		if err != nil {
 			return err
 		}
+		gitIgnoreFiles = string(gitIgnoreFilesRaw)
 	}
 
 	newFileGitIgnoreByte := []byte(string(gitIgnoreFiles) + "\n" + filename)
