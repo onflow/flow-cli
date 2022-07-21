@@ -179,10 +179,10 @@ func AddToGitIgnore(
 	if err != nil {
 		return err
 	}
-	gitIgnoreDir := path.Join(currentWd, ".gitignore")
+	gitIgnorePath := path.Join(currentWd, ".gitignore")
 
 	gitIgnoreFiles := ""
-	if DirExists(gitIgnoreDir) {
+	if PathExists(gitIgnorePath) {
 		gitIgnoreFilesRaw, err := loader.ReadFile(gitIgnoreDir)
 		gitIgnoreFiles = string(gitIgnoreFilesRaw)
 		if err != nil {
