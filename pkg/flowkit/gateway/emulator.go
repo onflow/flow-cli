@@ -103,7 +103,7 @@ func newEmulator(serviceAccount *flowkit.Account, emulatorLogger *zerolog.Logger
 			(*privKey).PublicKey(),
 			serviceAccount.Key().SigAlgo(),
 			serviceAccount.Key().HashAlgo(),
-		), emulator.WithLogger(*emulatorLogger))
+		), emulator.WithLogger(*emulatorLogger), emulator.WithTransactionFeesEnabled())
 	}
 
 	b, err := emulator.NewBlockchain(opts...)
