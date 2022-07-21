@@ -23,6 +23,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"runtime/debug"
 	"strings"
@@ -92,7 +93,6 @@ func (c Command) AddToParent(parent *cobra.Command) {
 			defer sentry.Flush(2 * time.Second)
 			defer sentry.Recover()
 		}
-
 		// initialize file loader used in commands
 		loader := &afero.Afero{Fs: afero.NewOsFs()}
 
@@ -118,6 +118,9 @@ func (c Command) AddToParent(parent *cobra.Command) {
 		// run command based on requirements for state
 		var result Result
 		if c.Run != nil {
+			resultString := getFullCommand(c.Cmd)
+			log.Printf("result of full command %s \n", resultString)
+			trackCommandCount(c.Cmd.Use, c.Cmd.Name(), c.Cmd.Parent().Name(), c.Cmd.Parent().Parent().Name())
 			result, err = c.Run(args, loader, Flags, service)
 		} else if c.RunS != nil {
 			if confErr != nil {
@@ -142,6 +145,47 @@ func (c Command) AddToParent(parent *cobra.Command) {
 
 	bindFlags(c)
 	parent.AddCommand(c.Cmd)
+}
+func getFullCommand(command *cobra.Command) string {
+	parentCommand := command
+	//var commandSlice []string
+	fullCommand := ""
+
+	for {
+		if parentCommand.Name() == "flow" {
+			return fullCommand
+		} else {
+			//commandSlice = append(commandSlice, parentCommand.Name())
+			if fullCommand != "" {
+				fullCommand = "-" + fullCommand
+			}
+			fullCommand = parentCommand.Name() + fullCommand
+			parentCommand = parentCommand.Parent()
+		}
+	}
+	return ""
+}
+func trackCommandCount(command, name, parent, pparent string) {
+	fmt.Printf("tracking command for %s \n", command)
+	fmt.Printf("tracking name for %s \n", name)
+	fmt.Printf("tracking parent for %s \n", parent)
+	fmt.Printf("tracking supe parent for %s \n", pparent)
+
+	//url := "https://api.mixpanel.com/track"
+	//
+	//req, _ := http.NewRequest("POST", url, nil)
+	//
+	//req.Header.Add("Accept", "text/plain")
+	//req.Header.Add("Content-Type", "application/json")
+	//
+	//res, _ := http.DefaultClient.Do(req)
+	//
+	//defer res.Body.Close()
+	//body, _ := ioutil.ReadAll(res.Body)
+	//
+	//fmt.Println(res)
+	//fmt.Println(string(body))
+
 }
 
 // createGateway creates a gateway to be used, defaults to grpc but can support others.

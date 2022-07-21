@@ -3,6 +3,7 @@ module github.com/onflow/flow-cli
 go 1.18
 
 require (
+	github.com/dukex/mixpanel v1.0.1
 	github.com/getsentry/sentry-go v0.13.0
 	github.com/go-git/go-git/v5 v5.4.2
 	github.com/manifoldco/promptui v0.9.0
