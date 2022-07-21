@@ -161,7 +161,7 @@ func createInteractive(state *flowkit.State, loader flowkit.ReaderWriter) (*flow
 	privateFile := output.Bold(fmt.Sprintf("%s.private.json", name))
 
 	items := []string{
-		fmt.Sprintf("%s This command will perform the following", output.WarningEmoji()),
+		fmt.Sprintf("%sThis command will perform the following", output.WarningEmoji()),
 		"Generate a new ECDSA P-256 public and private key pair.",
 	}
 	if selectedNetwork != config.DefaultEmulatorNetwork() {
@@ -238,7 +238,7 @@ func createInteractive(state *flowkit.State, loader flowkit.ReaderWriter) (*flow
 
 		log.StartProgress("Waiting for your account to be created, please finish all the steps in the browser...\n")
 		_ = util.OpenBrowserWindow(link)
-		log.Info(output.Italic(fmt.Sprintf("You can also navigate to the link manually: %s", link)))
+		log.Info(output.Italic(fmt.Sprintf("You can also navigate to the link manually: %s\n", link)))
 
 		addr, err := getAccountCreatedAddressWithPubKey(service, key.PublicKey(), startHeight)
 		if err != nil {
@@ -313,8 +313,7 @@ func getAccountCreatedAddressWithPubKey(
 	}
 
 	if address == nil {
-		//TODO:sideninja 200 blocks might not be enough time for the user to sign into their wallet and create the account on mainnet
-		if lastHeight-startHeight > 200 { // if something goes wrong don't keep waiting forever to avoid spamming network
+		if lastHeight-startHeight > 400 { // if something goes wrong don't keep waiting forever to avoid spamming network
 			return nil, fmt.Errorf("failed to get the account address due to time out")
 		}
 
@@ -354,12 +353,13 @@ func saveAccount(
 // outputList helper for printing lists
 func outputList(log *output.StdoutLogger, items []string, numbered bool) {
 	log.Info(fmt.Sprintf("%s:", items[0]))
+	items = items[1:]
 	for n, item := range items {
 		sep := " -"
 		if numbered {
-			sep = fmt.Sprintf(" %d.", n)
+			sep = fmt.Sprintf(" %d.", n+1)
 		}
 		log.Info(fmt.Sprintf("%s %s", sep, item))
 	}
-	log.Info("") // new line
+	log.Info("")
 }

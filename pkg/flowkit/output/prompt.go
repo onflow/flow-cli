@@ -21,6 +21,7 @@ package output
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/gosuri/uilive"
 	"github.com/manifoldco/promptui"
@@ -544,6 +545,8 @@ func CreateAccountNetworkPrompt() (string, config.Network) {
 	if err == promptui.ErrInterrupt {
 		os.Exit(-1)
 	}
+	fmt.Println("")
+
 	return selectedNetwork, networkMap[selectedNetwork]
 }
 
@@ -558,7 +561,8 @@ func WantToContinue() bool {
 		os.Exit(-1)
 	}
 
-	return selected == "y" // todo test
+	fmt.Print("\033[1A\033[K")
+	return strings.ToLower(selected) == "y"
 }
 
 func ConfirmOpenBrowser() {
