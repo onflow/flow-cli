@@ -260,7 +260,7 @@ func createInteractive(state *flowkit.State, loader flowkit.ReaderWriter) (*flow
 	}
 
 	log.Info(fmt.Sprintf(
-		"%s New account created with address 0x%s and name %s",
+		"%s New account created with address 0x%s and name %s.\n",
 		output.SuccessEmoji(),
 		output.Bold(account.Address().String()),
 		output.Bold(name)),
