@@ -23,7 +23,6 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"runtime/debug"
 	"strings"
@@ -118,9 +117,6 @@ func (c Command) AddToParent(parent *cobra.Command) {
 		// run command based on requirements for state
 		var result Result
 		if c.Run != nil {
-			resultString := getFullCommand(c.Cmd)
-			log.Printf("result of full command %s \n", resultString)
-			trackCommandCount(c.Cmd.Use, c.Cmd.Name(), c.Cmd.Parent().Name(), c.Cmd.Parent().Parent().Name())
 			result, err = c.Run(args, loader, Flags, service)
 		} else if c.RunS != nil {
 			if confErr != nil {
@@ -134,6 +130,11 @@ func (c Command) AddToParent(parent *cobra.Command) {
 
 		handleError("Command Error", err)
 
+		resultString := getFullCommand(c.Cmd)
+		err = util.SendEvent(resultString)
+		if err != nil {
+			fmt.Printf(err.Error())
+		}
 		// format output result
 		formattedResult, err := formatResult(result, Flags.Filter, Flags.Format)
 		handleError("Result", err)
@@ -165,28 +166,89 @@ func getFullCommand(command *cobra.Command) string {
 	}
 	return ""
 }
-func trackCommandCount(command, name, parent, pparent string) {
-	fmt.Printf("tracking command for %s \n", command)
-	fmt.Printf("tracking name for %s \n", name)
-	fmt.Printf("tracking parent for %s \n", parent)
-	fmt.Printf("tracking supe parent for %s \n", pparent)
 
-	//url := "https://api.mixpanel.com/track"
-	//
-	//req, _ := http.NewRequest("POST", url, nil)
-	//
-	//req.Header.Add("Accept", "text/plain")
-	//req.Header.Add("Content-Type", "application/json")
-	//
-	//res, _ := http.DefaultClient.Do(req)
-	//
-	//defer res.Body.Close()
-	//body, _ := ioutil.ReadAll(res.Body)
-	//
-	//fmt.Println(res)
-	//fmt.Println(string(body))
+//type MixpanelEvent struct {
+//	Name       string                 `json:"event"`
+//	Properties map[string]interface{} `json:"properties"`
+//}
+//
+//func NewMixpanelEvent(name string) *MixpanelEvent {
+//	return &MixpanelEvent{
+//		name,
+//		make(map[string]interface{}),
+//	}
+//}
+//func (e *MixpanelEvent) setProjectToken(token string) {
+//	e.Properties["token"] = token
+//}
+//
+//func (e *MixpanelEvent) setCaller(caller string) {
+//	e.Properties["caller"] = caller
+//}
 
-}
+//func encodePayload(obj interface{}) (string, error) {
+//
+//	b, err := json.Marshal(obj)
+//	if err != nil {
+//		return "", err
+//	}
+//	//return base64.StdEncoding.EncodeToString(b), nil
+//	formattedString := "[" + string(b) + "]"
+//	fmt.Printf("mixpanel event payload:\n%v\n", formattedString)
+//	return formattedString, nil
+//}
+
+//func trackCommandCount(command string) {
+//	fmt.Printf("tracking command for %s \n", command)
+//	mixpanelev := NewMixpanelEvent()
+//	mixpanelev.setProjectToken("da53727e0435e12820c831098691f8e5")
+//	mixpanelev.setCaller("flow-cli")
+//	mixpanelev.setEventName(command)
+//	eventPayload, _ := encodePayload(mixpanelev)
+//	fmt.Printf("event payload is %s \n", eventPayload)
+//}
+
+//func trackCommandCount(command string) error {
+//	fmt.Printf("tracking command for %s \n", command)
+//	//mixpanelev := NewMixpanelEvent()
+//	//mixpanelev.setProjectToken("da53727e0435e12820c831098691f8e5")
+//	//mixpanelev.setCaller("flow-cli")
+//	//mixpanelev.setEventName(command)
+//	//eventPayload, err := encodePayload(mixpanelev)
+//	//if err != nil {
+//	//	return err
+//	//}
+//	mixpanelev := util.NewEvent(command)
+//
+//	//mixpanelev := NewMixpanelEvent(command)
+//	mixpanelev.SetUpEvent(util.MIXPANEL_PROJECT_TOKEN, util.FLOW_CLI)
+//	//mixpanelev.setProjectToken("da53727e0435e12820c831098691f8e5")
+//	//mixpanelev.setCaller("flow-cli")
+//	eventPayload, _ := encodePayload(mixpanelev)
+//	fmt.Printf("event payload is %s \n", eventPayload)
+//
+//	url := "https://api.mixpanel.com/track"
+//	//payload := strings.NewReader("[{\"properties\":{\"token\":\"da53727e0435e12820c831098691f8e5\",\"caller\":\"flow-cli\"},\"event\":\"account-get\"}]")
+//	payload := strings.NewReader(eventPayload)
+//	fmt.Printf("event payload  %s \n", payload)
+//
+//	req, _ := http.NewRequest("POST", url, payload)
+//
+//	req.Header.Add("Accept", "text/plain")
+//	req.Header.Add("Content-Type", "application/json")
+//
+//	res, _ := http.DefaultClient.Do(req)
+//
+//	defer res.Body.Close()
+//	body, err := ioutil.ReadAll(res.Body)
+//	if err != nil {
+//		return err
+//	}
+//	fmt.Printf("mixpanel result")
+//	fmt.Println(res)
+//	fmt.Println(string(body))
+//	return nil
+//}
 
 // createGateway creates a gateway to be used, defaults to grpc but can support others.
 func createGateway(host, hostNetworkKey string) (gateway.Gateway, error) {
