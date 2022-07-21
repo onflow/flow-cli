@@ -20,7 +20,6 @@ package util
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"strings"
@@ -36,9 +35,9 @@ type MixpanelClient struct {
 }
 
 func SendEvent(command string) error {
-	mixpanelev := NewEvent(command)
-	mixpanelev.SetUpEvent(MIXPANEL_PROJECT_TOKEN, FLOW_CLI)
-	eventPayload, _ := encodePayload(mixpanelev)
+	mixpanelEvent := NewEvent(command)
+	mixpanelEvent.SetUpEvent(MIXPANEL_PROJECT_TOKEN, FLOW_CLI)
+	eventPayload, _ := encodePayload(mixpanelEvent)
 	payload := strings.NewReader(eventPayload)
 	req, _ := http.NewRequest("POST", MIXPANEL_TRACK_URL, payload)
 	req.Header.Add("Accept", "text/plain")
@@ -46,28 +45,18 @@ func SendEvent(command string) error {
 	res, _ := http.DefaultClient.Do(req)
 
 	defer res.Body.Close()
-	body, err := ioutil.ReadAll(res.Body)
+	_, err := ioutil.ReadAll(res.Body)
 	if err != nil {
 		return err
 	}
-	fmt.Printf("mixpanel result")
-	fmt.Println(res)
-	fmt.Println(string(body))
 	return nil
 
 }
 func encodePayload(obj interface{}) (string, error) {
-	//b, err := json.MarshalIndent(obj, "", "  ")
-	//if err != nil {
-	//	return "", err
-	//}
-	//return base64.StdEncoding.EncodeToString(b), nil
 	b, err := json.Marshal(obj)
 	if err != nil {
 		return "", err
 	}
-	//return base64.StdEncoding.EncodeToString(b), nil
 	formattedString := "[" + string(b) + "]"
-	fmt.Printf("mixpanel event payload:\n%v\n", formattedString)
 	return formattedString, nil
 }

@@ -41,11 +41,3 @@ func (e *Event) SetUpEvent(token string, caller string) {
 	e.Properties[MIXPANEL_EVENT_PROJECT_TOKEN] = token
 	e.Properties[MIXPANEL_EVENT_CALLER] = caller
 }
-
-//func (e *Event) setProjectToken(token string) {
-//	e.Properties[MIXPANEL_EVENT_PROJECT_TOKEN] = token
-//}
-//
-//func (e *Event) setCaller(caller string) {
-//	e.Properties[MIXPANEL_EVENT_CALLER] = caller
-//}
