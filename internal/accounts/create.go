@@ -160,13 +160,18 @@ func createInteractive(state *flowkit.State, loader flowkit.ReaderWriter) (*flow
 
 	privateFile := output.Bold(fmt.Sprintf("%s.private.json", name))
 
-	log.Info(fmt.Sprintf("\n%s This command will perform the following:", output.WarningEmoji()))
-	log.Info(fmt.Sprintf("- Generate a new ECDSA P-256 public and private key pair."))
-	if selectedNetwork != config.DefaultEmulatorNetwork() {
-		log.Info(fmt.Sprintf("- Save the private key to %s.", privateFile))
+	items := []string{
+		fmt.Sprintf("%s This command will perform the following", output.WarningEmoji()),
+		"Generate a new ECDSA P-256 public and private key pair.",
 	}
-	log.Info(fmt.Sprintf("- Create a new account on %s paired with the public key.", output.Bold(networkName)))
-	log.Info(fmt.Sprintf("- Save the newly-created account to %s.\n", output.Bold("flow.json")))
+	if selectedNetwork != config.DefaultEmulatorNetwork() {
+		items = append(items, fmt.Sprintf("Save the private key to %s.", privateFile))
+	}
+	items = append(items,
+		fmt.Sprintf("Create a new account on %s paired with the public key.", output.Bold(networkName)),
+		fmt.Sprintf("Save the newly-created account to %s.\n", output.Bold("flow.json")),
+	)
+	outputList(log, items, false)
 
 	if !output.WantToContinue() {
 		return nil, fmt.Errorf("process terminated")
@@ -211,13 +216,21 @@ func createInteractive(state *flowkit.State, loader flowkit.ReaderWriter) (*flow
 		var link string
 		switch selectedNetwork {
 		case config.DefaultTestnetNetwork():
-			log.Info("Please complete the following steps in the browser:")
-			log.Info("\n 1. Complete the captcha challenge. \n 2. Click the 'Create Account' button.\n 3. Return to this window.\n")
+			outputList(log, []string{
+				"Please complete the following steps in the browser",
+				"Complete the captcha challenge.",
+				"Click the 'Create Account' button.",
+				"Return to this window.",
+			}, true)
 			link = util.TestnetFaucetURL(key.PublicKey().String(), crypto.ECDSA_P256)
 
 		case config.DefaultMainnetNetwork():
-			log.Info("Please complete the following steps in the browser:")
-			log.Info("\n 1. Click on 'Submit' button. \n 2. Connect existing Blocto account or create new.\n 3. Click on confirm and approve transaction.\n")
+			outputList(log, []string{
+				"Please complete the following steps in the browser",
+				"Click on 'Submit' button.",
+				"Connect existing Blocto account or create new.",
+				"Click on confirm and approve transaction.",
+			}, true)
 			link = util.MainnetFlowPortURL(key.PublicKey().String())
 		}
 
@@ -260,17 +273,23 @@ func createInteractive(state *flowkit.State, loader flowkit.ReaderWriter) (*flow
 		return nil, err
 	}
 
-	log.Info("\nHere’s a summary of all the actions that were taken:")
-	log.Info(fmt.Sprintf("- Added the new account to %s.", output.Bold("flow.json")))
-	if selectedNetwork != config.DefaultEmulatorNetwork() {
-		log.Info(fmt.Sprintf("- Saved the private key to %s.", privateFile))
-		log.Info(fmt.Sprintf("- Added %s to %s.", privateFile, output.Bold(".gitignore")))
+	items = []string{
+		"Here’s a summary of all the actions that were taken",
+		fmt.Sprintf("Added the new account to %s.", output.Bold("flow.json")),
 	}
-	log.Info("") // final new line
+	if selectedNetwork != config.DefaultEmulatorNetwork() {
+		items = append(items,
+			fmt.Sprintf("Saved the private key to %s.", privateFile),
+			fmt.Sprintf("Added %s to %s.", privateFile, output.Bold(".gitignore")),
+		)
+	}
+	outputList(log, items, false)
 
 	return onChainAccount, nil
 }
 
+// getAccountCreatedAddressWithPubKey monitors the network for account creation events, if the event
+// contains the public key we are interested in then it extracts the newly created address from the event payload.
 func getAccountCreatedAddressWithPubKey(
 	service *services.Services,
 	pubKey crypto.PublicKey,
@@ -332,4 +351,17 @@ func saveAccount(
 	}
 
 	return state.SaveDefault()
+}
+
+// outputList helper for printing lists
+func outputList(log *output.StdoutLogger, items []string, numbered bool) {
+	log.Info(fmt.Sprintf("%s:", items[0]))
+	for n, item := range items {
+		sep := " -"
+		if numbered {
+			sep = fmt.Sprintf(" %d.", n)
+		}
+		log.Info(fmt.Sprintf("%s %s", sep, item))
+	}
+	log.Info("") // new line
 }
