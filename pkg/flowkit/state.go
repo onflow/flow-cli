@@ -98,10 +98,12 @@ func (p *State) Save(path string) error {
 
 	// if we have defined accounts to be saved to an external file, iterate over them and save them separately
 	for name, location := range p.confLoader.AccountsFromFile() {
-		account, _ := p.accounts.ByName(name)
+		acc, _ := p.accounts.ByName(name)
+		account := toConfig(*acc, nil)
+		account.UseAdvanceFormat = true // in case where we save accounts to a separate file we use advance format even if default value
 
 		c := config.Empty()
-		c.Accounts.AddOrUpdate(name, toConfig(*account, nil))
+		c.Accounts.AddOrUpdate(name, account)
 		err = p.confLoader.Save(c, location)
 		if err != nil {
 			return err

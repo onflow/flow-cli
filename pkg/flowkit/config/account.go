@@ -37,7 +37,8 @@ type Account struct {
 	// syntax is used. Otherwise this field is empty.
 	//
 	// Ref: https://docs.onflow.org/flow-cli/security/#private-account-configuration-file
-	Location string
+	Location         string
+	UseAdvanceFormat bool
 }
 
 type Accounts []Account
