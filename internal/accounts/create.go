@@ -165,7 +165,7 @@ func createInteractive(state *flowkit.State, loader flowkit.ReaderWriter) (*flow
 		"Generate a new ECDSA P-256 public and private key pair.",
 	}
 	if selectedNetwork != config.DefaultEmulatorNetwork() {
-		items = append(items, fmt.Sprintf("Save the private key to %s.", privateFile))
+		items = append(items, fmt.Sprintf("Save the private key to %s and add it to .gitignore.", privateFile))
 	}
 	items = append(items,
 		fmt.Sprintf("Create a new account on %s paired with the public key.", output.Bold(networkName)),
