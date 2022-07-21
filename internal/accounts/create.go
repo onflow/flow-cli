@@ -209,7 +209,7 @@ func createInteractive(state *flowkit.State, loader flowkit.ReaderWriter) (*flow
 		}
 		log.StopProgress()
 
-		log.Info("\nPlease note, that the newly created account will only be available until you keep the emulator service up and running, if you restart the emulator service all accounts will be reset. If you want to persist accounts between restarts you must use the '--persist' flag when starting the flow emulator.")
+		log.Info(output.Italic("\nPlease note, that the newly created account will only be available until you keep the emulator service up and running, if you restart the emulator service all accounts will be reset. If you want to persist accounts between restarts you must use the '--persist' flag when starting the flow emulator."))
 
 		address = account.Address
 	} else {
@@ -237,10 +237,8 @@ func createInteractive(state *flowkit.State, loader flowkit.ReaderWriter) (*flow
 		output.ConfirmOpenBrowser()
 
 		log.StartProgress("Waiting for your account to be created, please finish all the steps in the browser...\n")
-		err := util.OpenBrowserWindow(link)
-		if err != nil {
-			log.Info(fmt.Sprintf("Could not open a browser window, please navigate to: %s manually", link))
-		}
+		_ = util.OpenBrowserWindow(link)
+		log.Info(output.Italic(fmt.Sprintf("You can also navigate to the link manually: %s", link)))
 
 		addr, err := getAccountCreatedAddressWithPubKey(service, key.PublicKey(), startHeight)
 		if err != nil {

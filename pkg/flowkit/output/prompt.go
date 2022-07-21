@@ -571,14 +571,3 @@ func ConfirmOpenBrowser() {
 		os.Exit(-1)
 	}
 }
-
-func NextStepPrompt() {
-	prompt := promptui.Prompt{
-		Label:       "Press <ENTER> to continue",
-		HideEntered: true,
-	}
-	_, err := prompt.Run()
-	if err == promptui.ErrInterrupt {
-		os.Exit(-1)
-	}
-}
