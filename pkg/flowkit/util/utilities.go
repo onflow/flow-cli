@@ -22,7 +22,9 @@ import (
 	"bytes"
 	"encoding/hex"
 	"fmt"
+	"os"
 	"os/exec"
+	"path"
 	"runtime"
 	"strings"
 	"text/tabwriter"
@@ -153,4 +155,34 @@ func TestnetFaucetURL(publicKey string, sigAlgo crypto.SignatureAlgorithm) strin
 
 func MainnetFlowPortURL(publicKey string) string {
 	return fmt.Sprintf("%s%s", FlowPortUrl, strings.TrimPrefix(publicKey, "0x"))
+}
+
+type ReaderWriter interface {
+	ReadFile(source string) ([]byte, error)
+	WriteFile(filename string, data []byte, perm os.FileMode) error
+}
+
+// AddToGitIgnore adds a new line to the .gitignore if one doesn't exist it creates it.
+func AddToGitIgnore(filename string, loader ReaderWriter) error {
+	currentWd, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+	gitIgnorePath := path.Join(currentWd, ".gitignore")
+	gitIgnoreFiles := ""
+
+	fileStat, err := os.Stat(gitIgnorePath)
+	if !os.IsNotExist(err) { // if gitignore exists
+		gitIgnoreFilesRaw, err := loader.ReadFile(gitIgnorePath)
+		if err != nil {
+			return err
+		}
+		gitIgnoreFiles = string(gitIgnoreFilesRaw)
+	}
+
+	return loader.WriteFile(
+		gitIgnorePath,
+		[]byte(fmt.Sprintf("%s\n%s", gitIgnoreFiles, filename)),
+		fileStat.Mode().Perm(),
+	)
 }

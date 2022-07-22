@@ -37,11 +37,8 @@ type Account struct {
 	// syntax is used. Otherwise this field is empty.
 	//
 	// Ref: https://docs.onflow.org/flow-cli/security/#private-account-configuration-file
-	Location string
-	// saveAdvancedFormat is to save an account in advanced format even if it has default values as defined
-	// in isDefaultKeyFormat() in flowkit/config/json/account.go
-	// defaults to false
-	UseAdvancedSaveFormat bool
+	Location         string
+	UseAdvanceFormat bool
 }
 
 type Accounts []Account
@@ -84,15 +81,6 @@ func (a *Accounts) Remove(name string) {
 	for i, account := range *a {
 		if account.Name == name {
 			*a = append((*a)[0:i], (*a)[i+1:]...) // remove item
-		}
-	}
-}
-
-// SetFileLocation sets location of json containing private keys for testnet and mainnet accounts
-func (a *Accounts) SetFileLocation(name, path string) {
-	for i, account := range *a {
-		if account.Name == name {
-			(*a)[i].Location = path
 		}
 	}
 }

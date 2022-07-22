@@ -21,6 +21,7 @@ package output
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/gosuri/uilive"
 	"github.com/manifoldco/promptui"
@@ -139,6 +140,25 @@ PS> flow config setup-completions powershell > flow.ps1
 func NamePrompt() string {
 	namePrompt := promptui.Prompt{
 		Label: "Enter name",
+		Validate: func(s string) error {
+			if len(s) < 1 {
+				return fmt.Errorf("invalid name")
+			}
+			return nil
+		},
+	}
+
+	name, err := namePrompt.Run()
+	if err == promptui.ErrInterrupt {
+		os.Exit(-1)
+	}
+
+	return name
+}
+
+func AccountNamePrompt() string {
+	namePrompt := promptui.Prompt{
+		Label: "Enter an account name",
 		Validate: func(s string) error {
 			if len(s) < 1 {
 				return fmt.Errorf("invalid name")
@@ -517,7 +537,7 @@ func CreateAccountNetworkPrompt() (string, config.Network) {
 	networkMap[mainnetOption] = config.DefaultNetworks()[2]
 
 	networkPrompt := promptui.Select{
-		Label: "Which network do you want to create the account on?",
+		Label: "Choose a network",
 		Items: []string{emulatorOption, testnetOption, mainnetOption},
 	}
 
@@ -525,12 +545,30 @@ func CreateAccountNetworkPrompt() (string, config.Network) {
 	if err == promptui.ErrInterrupt {
 		os.Exit(-1)
 	}
+	fmt.Println("")
+
 	return selectedNetwork, networkMap[selectedNetwork]
 }
 
-func NextStepPrompt() {
+func WantToContinue() bool {
 	prompt := promptui.Prompt{
-		Label: "Press <ENTER> to continue",
+		Label:       "Do you want to continue",
+		IsConfirm:   true,
+		HideEntered: true,
+	}
+	selected, err := prompt.Run()
+	if err == promptui.ErrInterrupt {
+		os.Exit(-1)
+	}
+
+	fmt.Print("\033[1A\033[K")
+	return strings.ToLower(selected) == "y"
+}
+
+func ConfirmOpenBrowser() {
+	prompt := promptui.Prompt{
+		Label:       "Press <ENTER> to open in your browser...",
+		HideEntered: true,
 	}
 	_, err := prompt.Run()
 	if err == promptui.ErrInterrupt {

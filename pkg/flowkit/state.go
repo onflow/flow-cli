@@ -51,29 +51,10 @@ type Contract struct {
 
 // State manages the state for a Flow project.
 type State struct {
-	conf             *config.Config
-	confLoader       *config.Loader
-	readerWriter     ReaderWriter
-	accounts         *Accounts
-	accountLocations map[string]string
-}
-
-// NewEmptyState creates an empty state instance.
-//
-// This function is useful when manually constructing
-// the state for a single configuration file.
-func NewEmptyState(readerWriter ReaderWriter) *State {
-	confLoader := config.NewLoader(readerWriter)
-	confLoader.AddConfigParser(json.NewParser())
-
-	accounts := make(Accounts, 0)
-
-	return &State{
-		conf:         config.Empty(),
-		confLoader:   confLoader,
-		readerWriter: readerWriter,
-		accounts:     &accounts,
-	}
+	conf         *config.Config
+	confLoader   *config.Loader
+	readerWriter ReaderWriter
+	accounts     *Accounts
 }
 
 // ReaderWriter retrieve current file reader writer.
@@ -88,7 +69,7 @@ func (p *State) ReadFile(source string) ([]byte, error) {
 
 // SaveDefault saves to default path.
 func (p *State) SaveDefault() error {
-	return p.Save(config.DefaultPath, p.accountLocations)
+	return p.Save(config.DefaultPath)
 }
 
 // SaveEdited saves configuration to valid path.
@@ -107,13 +88,27 @@ func (p *State) SaveEdited(paths []string) error {
 		}
 	}
 
-	return p.Save(paths[0], p.accountLocations)
+	return p.Save(paths[0])
 }
 
 // Save saves the project configuration to the given path.
-func (p *State) Save(path string, accountLocations map[string]string) error {
-	p.conf.Accounts = accountsToConfig(*p.accounts, accountLocations)
+func (p *State) Save(path string) error {
+	p.conf.Accounts = accountsToConfig(*p.accounts, p.confLoader.AccountsFromFile())
 	err := p.confLoader.Save(p.conf, path)
+
+	// if we have defined accounts to be saved to an external file, iterate over them and save them separately
+	for name, location := range p.confLoader.AccountsFromFile() {
+		acc, _ := p.accounts.ByName(name)
+		account := toConfig(*acc, nil)
+		account.UseAdvanceFormat = true // in case where we save accounts to a separate file we use advance format even if default value
+
+		c := config.Empty()
+		c.Accounts.AddOrUpdate(name, account)
+		err = p.confLoader.Save(c, location)
+		if err != nil {
+			return err
+		}
+	}
 
 	if err != nil {
 		return fmt.Errorf("failed to save project configuration to: %s", path)
@@ -171,15 +166,9 @@ func (p *State) Config() *config.Config {
 	return p.conf
 }
 
-// AccountLocations get account locations.
-func (p *State) AccountLocations() map[string]string {
-	return p.accountLocations
-}
-
-// SetAccountFileLocation sets location of json containing private keys for testnet and mainnet accounts.
-func (p *State) SetAccountFileLocation(name, path string) {
-	p.conf.Accounts.SetFileLocation(name, path)
-	p.accountLocations[name] = path
+// SetAccountFileLocation sets a private file location for the specified account.
+func (p *State) SetAccountFileLocation(account Account, location string) {
+	p.confLoader.SetAccountFromFile(account.name, location)
 }
 
 // EmulatorServiceAccount returns the service account for the default emulator profile.
@@ -312,16 +301,15 @@ func Init(readerWriter ReaderWriter, sigAlgo crypto.SignatureAlgorithm, hashAlgo
 
 // newProject creates a new project from a configuration object.
 func newProject(conf *config.Config, loader *config.Loader, readerWriter ReaderWriter) (*State, error) {
-	accounts, accountLocationsMap, err := accountsFromConfig(conf)
+	accounts, err := accountsFromConfig(conf)
 	if err != nil {
 		return nil, err
 	}
 
 	return &State{
-		conf:             conf,
-		readerWriter:     readerWriter,
-		confLoader:       loader,
-		accounts:         &accounts,
-		accountLocations: accountLocationsMap,
+		conf:         conf,
+		readerWriter: readerWriter,
+		confLoader:   loader,
+		accounts:     &accounts,
 	}, nil
 }

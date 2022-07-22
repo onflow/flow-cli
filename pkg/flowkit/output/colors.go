@@ -23,10 +23,13 @@ import (
 	"runtime"
 )
 
-var red = "\033[31m"
-var green = "\033[32m"
-var bold = "\033[1m"
-var reset = "\033[0m"
+const (
+	red    = "\033[31m"
+	green  = "\033[32m"
+	bold   = "\033[1m"
+	reset  = "\033[0m"
+	italic = "\033[3m"
+)
 
 func printColor(msg string, color string) string {
 	if runtime.GOOS == "windows" {
@@ -46,4 +49,8 @@ func Green(msg string) string {
 
 func Bold(msg string) string {
 	return printColor(msg, bold)
+}
+
+func Italic(msg string) string {
+	return printColor(msg, italic)
 }
