@@ -26,22 +26,24 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
+	"github.com/onflow/flow-cli/pkg/flowkit/output"
 	"github.com/onflow/flow-cli/pkg/flowkit/services"
 )
 
 type flagsSign struct {
-	Signer  string   `default:"emulator-account" flag:"signer" info:"name of the account used to sign"`
-	Include []string `default:"" flag:"include" info:"Fields to include in the output. Valid values: signatures, code, payload."`
+	Signer        string   `default:"emulator-account" flag:"signer" info:"name of the account used to sign"`
+	Include       []string `default:"" flag:"include" info:"Fields to include in the output. Valid values: signatures, code, payload."`
+	FromRemoteUrl string   `default:"" flag:"from-remote-url" info:"server URL where RLP can be fetched, signed RLP will be posted back to remote URL."`
 }
 
 var signFlags = flagsSign{}
 
 var SignCommand = &command.Command{
 	Cmd: &cobra.Command{
-		Use:     "sign <built transaction filename>",
+		Use:     "sign [<built transaction filename> | --from-remote-url <url>]",
 		Short:   "Sign built transaction",
 		Example: "flow transactions sign ./built.rlp --signer alice",
-		Args:    cobra.ExactArgs(1),
+		Args:    cobra.MaximumNArgs(1),
 	},
 	Flags: &signFlags,
 	RunS:  sign,
@@ -54,10 +56,26 @@ func sign(
 	services *services.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
-	filename := args[0]
-	payload, err := readerWriter.ReadFile(filename)
+	var payload []byte
+	var err error
+	var filenameOrUrl string
+
+	if signFlags.FromRemoteUrl != "" {
+		if globalFlags.Yes {
+			return nil, fmt.Errorf("--yes is not supported with this flag")
+		}
+		filenameOrUrl = signFlags.FromRemoteUrl
+		payload, err = services.Transactions.GetRLP(filenameOrUrl)
+	} else {
+		if len(args) == 0 {
+			return nil, fmt.Errorf("filename argument is required")
+		}
+		filenameOrUrl = args[0]
+		payload, err = readerWriter.ReadFile(filenameOrUrl)
+	}
+
 	if err != nil {
-		return nil, fmt.Errorf("failed to read partial transaction from %s: %v", filename, err)
+		return nil, fmt.Errorf("failed to read partial transaction from %s: %v", filenameOrUrl, err)
 	}
 
 	signer, err := state.Accounts().ByName(signFlags.Signer)
@@ -68,6 +86,16 @@ func sign(
 	signed, err := services.Transactions.Sign(signer, payload, globalFlags.Yes)
 	if err != nil {
 		return nil, err
+	}
+
+	if signFlags.FromRemoteUrl != "" {
+		tx := signed.FlowTransaction()
+		err = services.Transactions.PostRLP(filenameOrUrl, tx)
+
+		if err != nil {
+			return nil, err
+		}
+		fmt.Printf("%s Signed RLP Posted successfully\n", output.SuccessEmoji())
 	}
 
 	return &TransactionResult{
