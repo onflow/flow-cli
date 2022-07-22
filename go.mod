@@ -7,10 +7,10 @@ require (
 	github.com/go-git/go-git/v5 v5.4.2
 	github.com/manifoldco/promptui v0.9.0
 	github.com/onflow/cadence v0.24.2-0.20220627202951-5a06fec82b4a
-	github.com/onflow/cadence/languageserver v0.24.1-0.20220711194952-0826880b870a
-	github.com/onflow/fcl-dev-wallet v0.4.7
-	github.com/onflow/flow-cli/pkg/flowkit v0.0.0-20220708202053-3b2866146b5f
-	github.com/onflow/flow-emulator v0.33.4-0.20220705151023-2cc6a4f25a20
+	github.com/onflow/cadence/languageserver v0.25.0
+	github.com/onflow/fcl-dev-wallet v0.4.9
+	github.com/onflow/flow-cli/pkg/flowkit v0.0.0-20220720111814-01ff1795420a
+	github.com/onflow/flow-emulator v0.33.4-0.20220708173546-d2a99600c3fa
 	github.com/onflow/flow-go-sdk v0.26.5-0.20220629191626-900f9f91bffc
 	github.com/psiemens/sconfig v0.1.0
 	github.com/spf13/afero v1.8.2
@@ -145,6 +145,7 @@ require (
 	go.opencensus.io v0.23.0 // indirect
 	go.uber.org/atomic v1.9.0 // indirect
 	golang.org/x/crypto v0.0.0-20220622213112-05595931fe9d // indirect
+	golang.org/x/exp v0.0.0-20220706164943-b4a6d9510983 // indirect
 	golang.org/x/exp v0.0.0-20220706164943-b4a6d9510983 // indirect
 	golang.org/x/net v0.0.0-20220418201149-a630d4f3e7a2 // indirect
 	golang.org/x/oauth2 v0.0.0-20220223155221-ee480838109b // indirect

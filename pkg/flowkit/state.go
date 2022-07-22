@@ -267,7 +267,11 @@ func Load(configFilePaths []string, readerWriter ReaderWriter) (*State, error) {
 	if err != nil {
 		return nil, err
 	}
-
+	// only add a default emulator in the config if the emulator account is present in accounts
+	_, err = conf.Accounts.ByName(config.DefaultEmulatorServiceAccountName)
+	if err == nil && len(conf.Emulators) == 0 {
+		conf.Emulators.AddOrUpdate("", config.DefaultEmulator())
+	}
 	proj, err := newProject(conf, confLoader, readerWriter)
 	if err != nil {
 		return nil, fmt.Errorf("invalid project configuration: %s", err)

@@ -112,7 +112,6 @@ func NewParser() *Parser {
 // Serialize configuration to raw.
 func (p *Parser) Serialize(conf *config.Config) ([]byte, error) {
 	jsonConf := transformConfigToJSON(conf)
-
 	data, err := json.MarshalIndent(jsonConf, "", "\t")
 	if err != nil {
 		return nil, err
