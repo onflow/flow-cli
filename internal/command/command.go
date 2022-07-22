@@ -128,6 +128,11 @@ func (c Command) AddToParent(parent *cobra.Command) {
 			panic("command implementation needs to provide run functionality")
 		}
 
+		err = util.TrackCommandUsage(c.Cmd)
+		if err != nil {
+			sentry.CaptureException(err)
+		}
+
 		handleError("Command Error", err)
 
 		// format output result
