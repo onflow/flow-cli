@@ -19,41 +19,51 @@
 package util
 
 import (
+	"encoding/json"
+	"fmt"
 	"github.com/spf13/cobra"
+	"io/ioutil"
+	"net/http"
 	"strings"
 )
 
 const (
-	MIXPANEL_EVENT_PROJECT_TOKEN = "token"
-	MIXPANEL_EVENT_CALLER        = "caller"
-
-	FLOW_CLI               = "flow-cli"
-	MIXPANEL_PROJECT_TOKEN = "da53727e0435e12820c831098691f8e5"
+	MIXPANEL_TRACK_URL = "https://api.mixpanel.com/track"
 )
 
-type event struct {
-	Name       string                 `json:"event"`
-	Properties map[string]interface{} `json:"properties"`
+type MixpanelClient struct {
+	token   string
+	baseUrl string
 }
 
-func newEvent(command *cobra.Command) *event {
-	return &event{
-		processCommandName(command),
-		make(map[string]interface{}),
+func TrackCommandUsage(command *cobra.Command) error {
+	mixpanelEvent := newEvent(command)
+	mixpanelEvent.setUpEvent(MIXPANEL_PROJECT_TOKEN, FLOW_CLI)
+	eventPayload, _ := encodePayload(mixpanelEvent)
+	payload := strings.NewReader(eventPayload)
+	req, _ := http.NewRequest("POST", MIXPANEL_TRACK_URL, payload)
+	req.Header.Add("Accept", "text/plain")
+	req.Header.Add("Content-Type", "application/json")
+	res, _ := http.DefaultClient.Do(req)
+
+	defer res.Body.Close()
+	_, err := ioutil.ReadAll(res.Body)
+
+	if err != nil {
+		return err
 	}
-}
-
-//transform command path name e.g. flow accounts get -> accounts-get
-func processCommandName(command *cobra.Command) string {
-	commandName := ""
-	commands := strings.Fields(command.CommandPath())
-	if len(commands) > 1 && commands[0] == "flow" {
-		commandName = strings.Join(commands[1:], "-")
+	if res.StatusCode >= 400 {
+		return fmt.Errorf("invalid response status code %d for tracking command usage", res.StatusCode)
 	}
-	return commandName
-}
 
-func (e *event) setUpEvent(token string, caller string) {
-	e.Properties[MIXPANEL_EVENT_PROJECT_TOKEN] = token
-	e.Properties[MIXPANEL_EVENT_CALLER] = caller
+	return nil
+
+}
+func encodePayload(obj interface{}) (string, error) {
+	b, err := json.Marshal(obj)
+	if err != nil {
+		return "", err
+	}
+	formattedString := "[" + string(b) + "]"
+	return formattedString, nil
 }
