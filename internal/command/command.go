@@ -130,11 +130,6 @@ func (c Command) AddToParent(parent *cobra.Command) {
 
 		handleError("Command Error", err)
 
-		resultString := getFullCommand(c.Cmd)
-		err = util.SendEvent(resultString)
-		if err != nil {
-			fmt.Printf(err.Error())
-		}
 		// format output result
 		formattedResult, err := formatResult(result, Flags.Filter, Flags.Format)
 		handleError("Result", err)
@@ -146,25 +141,6 @@ func (c Command) AddToParent(parent *cobra.Command) {
 
 	bindFlags(c)
 	parent.AddCommand(c.Cmd)
-}
-func getFullCommand(command *cobra.Command) string {
-	parentCommand := command
-	//var commandSlice []string
-	fullCommand := ""
-
-	for {
-		if parentCommand.Name() == "flow" {
-			return fullCommand
-		} else {
-			//commandSlice = append(commandSlice, parentCommand.Name())
-			if fullCommand != "" {
-				fullCommand = "-" + fullCommand
-			}
-			fullCommand = parentCommand.Name() + fullCommand
-			parentCommand = parentCommand.Parent()
-		}
-	}
-	return ""
 }
 
 // createGateway creates a gateway to be used, defaults to grpc but can support others.

@@ -18,6 +18,11 @@
 
 package util
 
+import (
+	"github.com/spf13/cobra"
+	"strings"
+)
+
 const (
 	MIXPANEL_EVENT_PROJECT_TOKEN = "token"
 	MIXPANEL_EVENT_CALLER        = "caller"
@@ -26,18 +31,29 @@ const (
 	MIXPANEL_PROJECT_TOKEN = "da53727e0435e12820c831098691f8e5"
 )
 
-type Event struct {
+type event struct {
 	Name       string                 `json:"event"`
 	Properties map[string]interface{} `json:"properties"`
 }
 
-func NewEvent(name string) *Event {
-	return &Event{
-		name,
+func newEvent(command *cobra.Command) *event {
+	return &event{
+		processCommandName(command),
 		make(map[string]interface{}),
 	}
 }
-func (e *Event) SetUpEvent(token string, caller string) {
+
+//transform command path name e.g. flow accounts get -> accounts-get
+func processCommandName(command *cobra.Command) string {
+	commandName := ""
+	commands := strings.Fields(command.CommandPath())
+	if len(commands) > 1 && commands[0] == "flow" {
+		commandName = strings.Join(commands[1:], "-")
+	}
+	return commandName
+}
+
+func (e *event) setUpEvent(token string, caller string) {
 	e.Properties[MIXPANEL_EVENT_PROJECT_TOKEN] = token
 	e.Properties[MIXPANEL_EVENT_CALLER] = caller
 }
