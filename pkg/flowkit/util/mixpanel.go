@@ -39,15 +39,23 @@ type MixpanelClient struct {
 func TrackCommandUsage(command *cobra.Command) error {
 	mixpanelEvent := newEvent(command)
 	mixpanelEvent.setUpEvent(MIXPANEL_PROJECT_TOKEN, FLOW_CLI)
-	eventPayload, _ := encodePayload(mixpanelEvent)
+	eventPayload, err := encodePayload(mixpanelEvent)
+	if err != nil {
+		return err
+	}
 	payload := strings.NewReader(eventPayload)
-	req, _ := http.NewRequest("POST", MIXPANEL_TRACK_URL, payload)
+	req, err := http.NewRequest("POST", MIXPANEL_TRACK_URL, payload)
+	if err != nil {
+		return err
+	}
 	req.Header.Add("Accept", "text/plain")
 	req.Header.Add("Content-Type", "application/json")
-	res, _ := http.DefaultClient.Do(req)
-
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return err
+	}
 	defer res.Body.Close()
-	_, err := ioutil.ReadAll(res.Body)
+	_, err = ioutil.ReadAll(res.Body)
 
 	if err != nil {
 		return err
