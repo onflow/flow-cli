@@ -593,8 +593,6 @@ github.com/onflow/cadence/languageserver v0.25.0 h1:MBMughEWMbBKrLWkRks2mqmr4tm7
 github.com/onflow/cadence/languageserver v0.25.0/go.mod h1:3GvC02DOKzBM5dUi9M/GmvexoDTnEOTFuy3CWUemmlA=
 github.com/onflow/fcl-dev-wallet v0.4.9 h1:MxwyZPAO8dCWNuF7uGhyvuG8R64Kq0SonI4bZUerdHk=
 github.com/onflow/fcl-dev-wallet v0.4.9/go.mod h1:xWVEyGZgdDt4/+PLSlpuqhtzobjnWy5giceIGoErPzs=
-github.com/onflow/flow-cli/pkg/flowkit v0.0.0-20220720111814-01ff1795420a h1:AASPCYZu6TXYIzO3Goq2acRqkQ9EKsmoU9JJKvh3Kn0=
-github.com/onflow/flow-cli/pkg/flowkit v0.0.0-20220720111814-01ff1795420a/go.mod h1:2bJMmP5prrOuBRj/+oz/ErOY4n3t5Ec/9bpkflvIP8I=
 github.com/onflow/flow-core-contracts/lib/go/contracts v0.11.2-0.20220620142725-49b5accb2a84 h1:VKIZufzFyxfeMbKeDIyttN2CmFYCzHOimr4xNFimVpA=
 github.com/onflow/flow-core-contracts/lib/go/contracts v0.11.2-0.20220620142725-49b5accb2a84/go.mod h1:T6yhM+kWrFxiP6F3hh8lh9DcocHfmv48P4ITnjLhKSk=
 github.com/onflow/flow-core-contracts/lib/go/templates v0.11.2-0.20220513155751-c4c1f8d59f83 h1:w4uXFTvjQmLtA/X50H4YXVlzbdsoL3vDI3Y86jtJOMM=
