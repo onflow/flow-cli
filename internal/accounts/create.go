@@ -174,7 +174,7 @@ func createInteractive(state *flowkit.State, loader flowkit.ReaderWriter) (*flow
 	outputList(log, items, false)
 
 	if !output.WantToContinue() {
-		return nil, fmt.Errorf("process terminated")
+		return nil, fmt.Errorf("cancelled account creation")
 	}
 
 	service := services.NewServices(gw, state, output.NewStdoutLogger(output.NoneLog))
@@ -260,9 +260,9 @@ func createInteractive(state *flowkit.State, loader flowkit.ReaderWriter) (*flow
 	}
 
 	log.Info(fmt.Sprintf(
-		"%s New account created with address 0x%s and name %s.\n",
+		"%s New account created with address %s and name %s.\n",
 		output.SuccessEmoji(),
-		output.Bold(account.Address().String()),
+		output.Bold(fmt.Sprintf("0x%s", account.Address().String())),
 		output.Bold(name)),
 	)
 
