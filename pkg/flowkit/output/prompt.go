@@ -23,6 +23,8 @@ import (
 	"os"
 	"strings"
 
+	"golang.org/x/exp/slices"
+
 	"github.com/gosuri/uilive"
 	"github.com/manifoldco/promptui"
 
@@ -156,10 +158,18 @@ func NamePrompt() string {
 	return name
 }
 
-func AccountNamePrompt() string {
+func AccountNamePrompt(accounts *flowkit.Accounts) string {
+	existingNames := make([]string, len(*accounts))
+	for i, a := range *accounts {
+		existingNames[i] = a.Name()
+	}
+
 	namePrompt := promptui.Prompt{
 		Label: "Enter an account name",
 		Validate: func(s string) error {
+			if slices.Contains(existingNames, s) {
+				return fmt.Errorf("name already exists")
+			}
 			if len(s) < 1 {
 				return fmt.Errorf("invalid name")
 			}

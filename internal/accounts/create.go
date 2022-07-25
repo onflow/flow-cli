@@ -149,7 +149,7 @@ func create(
 func createInteractive(state *flowkit.State, loader flowkit.ReaderWriter) (*flow.Account, error) {
 	log := output.NewStdoutLogger(output.InfoLog)
 
-	name := output.AccountNamePrompt() // todo check for duplicate names
+	name := output.AccountNamePrompt(state.Accounts()) // todo check for duplicate names
 	networkName, selectedNetwork := output.CreateAccountNetworkPrompt()
 
 	// create new gateway based on chosen network
@@ -209,7 +209,7 @@ func createInteractive(state *flowkit.State, loader flowkit.ReaderWriter) (*flow
 		}
 		log.StopProgress()
 
-		log.Info(output.Italic("\nPlease note, that the newly created account will only be available until you keep the emulator service up and running, if you restart the emulator service all accounts will be reset. If you want to persist accounts between restarts you must use the '--persist' flag when starting the flow emulator."))
+		log.Info(output.Italic("\nPlease note, that the newly created account will only be available until you keep the emulator service up and running, if you restart the emulator service all accounts will be reset. If you want to persist accounts between restarts you must use the '--persist' flag when starting the flow emulator.\n"))
 
 		address = account.Address
 	} else {
