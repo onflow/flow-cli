@@ -21,8 +21,9 @@ package flowkit
 import (
 	"bytes"
 	"fmt"
-	"github.com/onflow/cadence"
 	"strings"
+
+	"github.com/onflow/cadence"
 
 	"github.com/onflow/flow-go-sdk/crypto"
 
@@ -34,6 +35,15 @@ const addressLength = 16
 type Event struct {
 	Type   string
 	Values map[string]cadence.Value
+}
+
+func (e *Event) GetAddress() *flow.Address {
+	if a, ok := e.Values["address"].(cadence.Address); ok {
+		address := flow.HexToAddress(a.String())
+		return &address
+	}
+
+	return nil
 }
 
 type Events []Event
@@ -86,6 +96,18 @@ func (e *Events) GetAddress() *flow.Address {
 
 	return nil
 }
+
+func (e *Events) GetCreatedAddresses() []*flow.Address {
+	addresses := make([]*flow.Address, 0)
+	for _, event := range *e {
+		if event.Type == flow.EventAccountCreated {
+			addresses = append(addresses, event.GetAddress())
+		}
+	}
+
+	return addresses
+}
+
 func handleCadenceArrayValues(keyArray cadence.Array) []byte {
 	parsedKey := make([]byte, len(keyArray.Values))
 	for i, val := range keyArray.Values {
@@ -93,6 +115,7 @@ func handleCadenceArrayValues(keyArray cadence.Array) []byte {
 	}
 	return parsedKey
 }
+
 func (e *Events) GetAddressForKeyAdded(publicKey crypto.PublicKey) *flow.Address {
 	for _, event := range *e {
 		if event.Type == flow.EventAccountKeyAdded {
@@ -101,19 +124,19 @@ func (e *Events) GetAddressForKeyAdded(publicKey crypto.PublicKey) *flow.Address
 				if keyArray, ok := keyStruct.Fields[0].(cadence.Array); ok {
 					parsedKey := handleCadenceArrayValues(keyArray)
 					if bytes.Equal(parsedKey, publicKey.Encode()) {
-						return e.GetAddress()
+						return event.GetAddress()
 					}
 				}
 			}
 
-			// older format support
+			// older format support, in previous versions of cadence the public key was encoded into an array containing other data beside the key
 			if p, ok := event.Values["publicKey"].(cadence.Array); ok {
 				parsedKey := handleCadenceArrayValues(p)
 				parsedKeyhex := fmt.Sprintf("%x", parsedKey)
 				publicKeyHex := publicKey.String()
 				//we have to remove 0x from beginning of publicKeyHex
 				if strings.Contains(parsedKeyhex, publicKeyHex[2:]) {
-					return e.GetAddress()
+					return event.GetAddress()
 				}
 			}
 		}

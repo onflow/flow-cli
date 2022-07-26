@@ -266,7 +266,7 @@ func (a *Accounts) Create(
 	}
 
 	events := flowkit.EventsFromTransaction(result)
-	newAccountAddress := events.GetAddress()
+	newAccountAddress := events.GetCreatedAddresses()[0] // we know there's a new address
 
 	if newAccountAddress == nil {
 		return nil, fmt.Errorf("new account address couldn't be fetched")
