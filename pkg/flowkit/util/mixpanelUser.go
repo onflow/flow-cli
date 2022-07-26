@@ -19,6 +19,7 @@
 package util
 
 import (
+	"crypto/sha256"
 	"encoding/base64"
 	"os/user"
 	"strings"
@@ -42,8 +43,8 @@ func getMixPanelUser() (*mixpanelUser, error) {
 	}, nil
 }
 
-func (e *mixpanelUser) disableUserTracking() {
-	e.Set["opt_in"] = false
+func (e *mixpanelUser) configureUserTracking(enable bool) {
+	e.Set["opt_in"] = enable
 }
 
 func generateNewDistinctId() (string, error) {
@@ -58,7 +59,9 @@ func generateNewDistinctId() (string, error) {
 	id := currentUser.Uid
 
 	combinedString := editedName + username + id
-	encodedString := base64.StdEncoding.EncodeToString([]byte(combinedString))
+
+	hashedString := sha256.Sum256([]byte(combinedString))
+	encodedString := base64.StdEncoding.EncodeToString(hashedString[:])
 
 	return encodedString, nil
 }

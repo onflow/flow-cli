@@ -19,6 +19,7 @@
 package settings
 
 import (
+	"fmt"
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/services"
@@ -26,32 +27,60 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type FlagsTrackingSettings struct {
-	Disabled bool `flag:"disabled" info:"Allow Flow CLI to track command usage statistics"`
+type flagsCommandTracking struct{}
+
+var commandTrackingFlags = flagsCommandTracking{}
+
+type Result struct {
+	result string
 }
 
-var TrackingSettingsFlags = FlagsTrackingSettings{}
+func (r *Result) JSON() interface{} {
+	return nil
+}
+
+func (r *Result) String() string {
+	if r.result != "" {
+		return r.result
+	}
+
+	return ""
+}
+
+func (r *Result) Oneliner() string {
+	return ""
+}
 
 var TrackingSettings = &command.Command{
 	Cmd: &cobra.Command{
 		Use:     "tracking",
 		Short:   "Configure command usage tracking settings",
-		Example: "flow tracking --disabled false",
-		Args:    cobra.ExactArgs(0),
+		Example: "flow tracking disable",
+		Args:    cobra.ExactArgs(1),
 	},
-	Flags: &TrackingSettingsFlags,
+	Flags: &commandTrackingFlags,
 	Run:   disableTrackingSettings,
 }
 
 func disableTrackingSettings(
-	_ []string,
+	args []string,
 	_ flowkit.ReaderWriter,
 	_ command.GlobalFlags,
 	_ *services.Services,
 ) (command.Result, error) {
-	err := util.SetUserTrackingSettings()
-	if err != nil {
-		return nil, err
+	if args[0] == "disable" {
+		err := util.SetUserTrackingSettings(false)
+		if err != nil {
+			return nil, err
+		}
+	} else if args[0] == "enable" {
+		err := util.SetUserTrackingSettings(true)
+		if err != nil {
+			return nil, err
+		}
 	}
-	return nil, nil
+
+	return &Result{
+		fmt.Sprintf("flow cli commands tracking %sd", args[0]),
+	}, nil
 }

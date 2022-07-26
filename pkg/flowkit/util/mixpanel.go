@@ -79,12 +79,12 @@ func encodePayload(obj interface{}) (string, error) {
 	return formattedString, nil
 }
 
-func SetUserTrackingSettings() error {
+func SetUserTrackingSettings(enable bool) error {
 	mixpanelUser, err := getMixPanelUser()
 	if err != nil {
 		return err
 	}
-	mixpanelUser.disableUserTracking()
+	mixpanelUser.configureUserTracking(enable)
 
 	userPayload, err := encodePayload(mixpanelUser)
 	if err != nil {
