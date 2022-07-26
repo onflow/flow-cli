@@ -298,10 +298,7 @@ func getAccountCreatedAddressWithPubKey(
 		return nil, err
 	}
 
-	flowEvents, err := service.Events.Get([]string{flow.EventAccountKeyAdded}, startHeight, lastHeight, 20, 1)
-	if err != nil && !strings.Contains(err.Error(), "context deadline exceeded") { // AN timeouts during high load, we should just retry if this happens
-		return nil, err
-	}
+	flowEvents, _ := service.Events.Get([]string{flow.EventAccountKeyAdded}, startHeight, lastHeight, 20, 1) // ignore AN errors since we will retry anyway
 
 	var address *flow.Address
 	for _, block := range flowEvents {
