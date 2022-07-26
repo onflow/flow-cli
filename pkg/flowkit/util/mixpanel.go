@@ -28,7 +28,10 @@ import (
 )
 
 const (
-	MIXPANEL_TRACK_URL = "https://api.mixpanel.com/track"
+	MIXPANEL_TRACK_URL     = "https://api.mixpanel.com/track"
+	MIXPANEL_QUERY_URL     = "https://mixpanel.com/api/2.0/engage"
+	MIXPANEL_PROFILE_URL   = "https://api.mixpanel.com/engage#profile-set"
+	MIXPANEL_PROJECT_TOKEN = "7af4e6f44df2c77935477ba103b3c529"
 )
 
 type MixpanelClient struct {
@@ -65,8 +68,8 @@ func TrackCommandUsage(command *cobra.Command) error {
 	}
 
 	return nil
-
 }
+
 func encodePayload(obj interface{}) (string, error) {
 	b, err := json.Marshal(obj)
 	if err != nil {
@@ -74,4 +77,39 @@ func encodePayload(obj interface{}) (string, error) {
 	}
 	formattedString := "[" + string(b) + "]"
 	return formattedString, nil
+}
+
+func SetUserTrackingSettings() error {
+	mixpanelUser, err := getMixPanelUser()
+	if err != nil {
+		return err
+	}
+	mixpanelUser.disableUserTracking()
+
+	userPayload, err := encodePayload(mixpanelUser)
+	if err != nil {
+		return err
+	}
+	payload := strings.NewReader(userPayload)
+	req, err := http.NewRequest("POST", MIXPANEL_PROFILE_URL, payload)
+	if err != nil {
+		return err
+	}
+	req.Header.Add("Accept", "text/plain")
+	req.Header.Add("Content-Type", "application/json")
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return err
+	}
+	defer res.Body.Close()
+	_, err = ioutil.ReadAll(res.Body)
+
+	if err != nil {
+		return err
+	}
+	if res.StatusCode >= 400 {
+		return fmt.Errorf("invalid response status code %d for tracking command usage", res.StatusCode)
+	}
+
+	return nil
 }

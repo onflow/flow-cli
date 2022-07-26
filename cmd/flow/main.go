@@ -33,6 +33,7 @@ import (
 	"github.com/onflow/flow-cli/internal/project"
 	"github.com/onflow/flow-cli/internal/quick"
 	"github.com/onflow/flow-cli/internal/scripts"
+	"github.com/onflow/flow-cli/internal/settings"
 	"github.com/onflow/flow-cli/internal/signatures"
 	"github.com/onflow/flow-cli/internal/snapshot"
 	"github.com/onflow/flow-cli/internal/status"
@@ -58,6 +59,7 @@ func main() {
 	// single commands
 	status.Command.AddToParent(cmd)
 	tools.DevWallet.AddToParent(cmd)
+	settings.TrackingSettings.AddToParent(cmd)
 
 	// structured commands
 	cmd.AddCommand(cadence.Cmd)

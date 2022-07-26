@@ -20,15 +20,12 @@ package util
 
 import (
 	"github.com/spf13/cobra"
-	"strings"
 )
 
 const (
 	MIXPANEL_EVENT_PROJECT_TOKEN = "token"
 	MIXPANEL_EVENT_CALLER        = "caller"
-
-	FLOW_CLI               = "flow-cli"
-	MIXPANEL_PROJECT_TOKEN = "da53727e0435e12820c831098691f8e5"
+	FLOW_CLI                     = "flow-cli"
 )
 
 type event struct {
@@ -38,19 +35,9 @@ type event struct {
 
 func newEvent(command *cobra.Command) *event {
 	return &event{
-		processCommandName(command),
+		command.CommandPath(),
 		make(map[string]interface{}),
 	}
-}
-
-//transform command path name e.g. flow accounts get -> accounts-get
-func processCommandName(command *cobra.Command) string {
-	commandName := ""
-	commands := strings.Fields(command.CommandPath())
-	if len(commands) > 1 && commands[0] == "flow" {
-		commandName = strings.Join(commands[1:], "-")
-	}
-	return commandName
 }
 
 func (e *event) setUpEvent(token string, caller string) {
