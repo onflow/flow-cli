@@ -24,14 +24,16 @@ import (
 	"github.com/spf13/cobra"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"strings"
 )
 
 const (
-	MIXPANEL_TRACK_URL     = "https://api.mixpanel.com/track"
-	MIXPANEL_QUERY_URL     = "https://mixpanel.com/api/2.0/engage"
-	MIXPANEL_PROFILE_URL   = "https://api.mixpanel.com/engage#profile-set"
-	MIXPANEL_PROJECT_TOKEN = "7af4e6f44df2c77935477ba103b3c529"
+	MIXPANEL_TRACK_URL              = "https://api.mixpanel.com/track"
+	MIXPANEL_QUERY_URL              = "https://mixpanel.com/api/2.0/engage?project_id=2763737"
+	MIXPANEL_PROFILE_URL            = "https://api.mixpanel.com/engage#profile-set"
+	MIXPANEL_PROJECT_TOKEN          = "7af4e6f44df2c77935477ba103b3c529"
+	MIXPANEL_SERVICE_ACCOUNT_SECRET = "Rmxvdy1jbGkuZTVkMTNjLm1wLXNlcnZpY2UtYWNjb3VudDp2TkZrVzhiWWNSY1ZuQmtMZFF4bXVzamdZa0dyc2FsMQ=="
 )
 
 type MixpanelClient struct {
@@ -113,30 +115,47 @@ func SetUserTrackingSettings(enable bool) error {
 
 	return nil
 }
-func userIsOptedIn() (bool, error) {
-	mixpanelQuery, err := newMixPanelQuery()
+
+type MixPanelResponse struct {
+	Results []struct {
+		DistinctId string `json:"$distinct_id"`
+		Properties struct {
+			City     interface{} `json:"$city"`
+			Region   interface{} `json:"$region"`
+			Timezone interface{} `json:"$timezone"`
+			OptIn    bool        `json:"opt_in"`
+		} `json:"$properties"`
+	} `json:"results"`
+}
+
+func UserIsOptedIn() (bool, error) {
+	distinctId, err := generateNewDistinctId()
 	if err != nil {
 		return false, err
 	}
-	queryPayload, err := encodePayload(mixpanelQuery)
-	if err != nil {
-		return false, err
-	}
+
+	queryPayload := "distinct_id=" + url.QueryEscape(distinctId)
 	payload := strings.NewReader(queryPayload)
 	req, err := http.NewRequest("POST", MIXPANEL_QUERY_URL, payload)
 	if err != nil {
 		return false, err
 	}
+
+	mixpanelAuth := "Basic " + MIXPANEL_SERVICE_ACCOUNT_SECRET
 	req.Header.Add("Accept", "application/json")
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-	req.Header.Add("Authorization", "Basic <Flow>:<serviceaccount_secret>")
+	req.Header.Add("Authorization", mixpanelAuth)
 
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return false, err
 	}
+
 	defer res.Body.Close()
-	_, err = ioutil.ReadAll(res.Body)
+	body, err := ioutil.ReadAll(res.Body)
+
+	var queryResponse MixPanelResponse
+	err = json.Unmarshal(body, &queryResponse)
 
 	if err != nil {
 		return false, err
@@ -144,6 +163,8 @@ func userIsOptedIn() (bool, error) {
 	if res.StatusCode >= 400 {
 		return false, fmt.Errorf("invalid response status code %d for tracking command usage", res.StatusCode)
 	}
-	userIsOptedIn := false
-	return userIsOptedIn, nil
+	if len(queryResponse.Results) == 0 {
+		return false, fmt.Errorf("invalid response from Mixpanel Query API")
+	}
+	return queryResponse.Results[0].Properties.OptIn, nil
 }

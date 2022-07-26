@@ -79,6 +79,19 @@ const (
 	logLevelNone  = "none"
 )
 
+func (c Command) handleUserTracking() {
+	optedIn, err := util.UserIsOptedIn()
+	if err != nil {
+		sentry.CaptureException(err)
+	}
+	if optedIn {
+		err = util.TrackCommandUsage(c.Cmd)
+		if err != nil {
+			sentry.CaptureException(err)
+		}
+	}
+}
+
 // AddToParent add new command to main parent cmd
 // and initializes all necessary things as well as take care of errors and output
 // here we can do all boilerplate code that is else copied in each command and make sure
@@ -127,11 +140,7 @@ func (c Command) AddToParent(parent *cobra.Command) {
 		} else {
 			panic("command implementation needs to provide run functionality")
 		}
-
-		err = util.TrackCommandUsage(c.Cmd)
-		if err != nil {
-			sentry.CaptureException(err)
-		}
+		c.handleUserTracking()
 
 		handleError("Command Error", err)
 
