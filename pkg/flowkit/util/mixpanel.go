@@ -113,3 +113,37 @@ func SetUserTrackingSettings(enable bool) error {
 
 	return nil
 }
+func userIsOptedIn() (bool, error) {
+	mixpanelQuery, err := newMixPanelQuery()
+	if err != nil {
+		return false, err
+	}
+	queryPayload, err := encodePayload(mixpanelQuery)
+	if err != nil {
+		return false, err
+	}
+	payload := strings.NewReader(queryPayload)
+	req, err := http.NewRequest("POST", MIXPANEL_QUERY_URL, payload)
+	if err != nil {
+		return false, err
+	}
+	req.Header.Add("Accept", "application/json")
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Add("Authorization", "Basic <Flow>:<serviceaccount_secret>")
+
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return false, err
+	}
+	defer res.Body.Close()
+	_, err = ioutil.ReadAll(res.Body)
+
+	if err != nil {
+		return false, err
+	}
+	if res.StatusCode >= 400 {
+		return false, fmt.Errorf("invalid response status code %d for tracking command usage", res.StatusCode)
+	}
+	userIsOptedIn := false
+	return userIsOptedIn, nil
+}

@@ -45,6 +45,11 @@ func getMixPanelUser() (*mixpanelUser, error) {
 
 func (e *mixpanelUser) configureUserTracking(enable bool) {
 	e.Set["opt_in"] = enable
+	e.Set["$city"] = nil
+	e.Set["$region"] = nil
+	e.Set["$country_code"] = nil
+	e.Set["$geo_source"] = nil
+	e.Set["$timezone"] = nil
 }
 
 func generateNewDistinctId() (string, error) {
