@@ -65,13 +65,13 @@ f90184f...a199bfd9b837a11a0885f9104b54014750f5e3e5bfe4a5795968b0df86769dd54c0
 ## Arguments
 
 ### Built Transaction Filename or Remote Server URL
-- Name: `built transaction filename | --remote-server-url <url>`
-- Valid inputs: Any filename and path valid on the system or fully qualified remote server url.
+- Name: `built transaction filename | --from-remote-url <url>`
+- Valid inputs: Any filename and path valid on the system or --from-remote-url flag and fully qualified remote server url.
 
 Specify the filename containing valid transaction payload that will be used for signing.
 To be used with the `flow transaction build` command.
 
-When --from-remote-url flag is used the argument needs to be a fully qualified url to transaction RLP
+When --from-remote-url flag is used the value needs to be a fully qualified url to transaction RLP
 Example: `flow transaction sign --from-remote-url https://fully/qualified/url --signer alice`
 ## Flags
 
@@ -80,7 +80,7 @@ Example: `flow transaction sign --from-remote-url https://fully/qualified/url --
 - Valid input: `http(s)://fully/qualified/server/url`
 
 Specify this flag with a fully qualified url to transaction RLP. The RLP will be fetched from server then signed. The resulting signed RLP is then posted to the remote url. This feature is to support protocol level multiple signature transaction coordination between multiple signers.
-Note: --yes flag is not supported and will fail `sign` command when this flag is used. 
+Note: --yes flag is not supported and will fail `sign` command when this flag is used. This forces the user to verify the cadence code.
 
 ### Include Fields
 
