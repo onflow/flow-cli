@@ -60,6 +60,10 @@ func sign(
 	var err error
 	var filenameOrUrl string
 
+	if signFlags.FromRemoteUrl != "" && len(args) > 0 {
+		return nil, fmt.Errorf("only use one, filename argument or --from-remote-url <url>")
+	}
+
 	if signFlags.FromRemoteUrl != "" {
 		if globalFlags.Yes {
 			return nil, fmt.Errorf("--yes is not supported with this flag")
