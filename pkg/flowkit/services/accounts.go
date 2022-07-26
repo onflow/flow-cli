@@ -266,15 +266,14 @@ func (a *Accounts) Create(
 	}
 
 	events := flowkit.EventsFromTransaction(result)
-	newAccountAddress := events.GetCreatedAddresses()[0] // we know there's a new address
-
-	if newAccountAddress == nil {
+	newAccountAddress := events.GetCreatedAddresses()
+	if len(newAccountAddress) == 0 {
 		return nil, fmt.Errorf("new account address couldn't be fetched")
 	}
 
 	a.logger.StopProgress()
 
-	return a.gateway.GetAccount(*newAccountAddress)
+	return a.gateway.GetAccount(*newAccountAddress[0]) // we know it's the only and first event
 }
 
 // AddContract deploys a contract code to the account provided with possible update flag.

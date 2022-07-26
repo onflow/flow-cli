@@ -170,7 +170,6 @@ func Test_NonExistingAccountForEmulator(t *testing.T) {
 //If config has default emulator values, it will not show up in flow.json
 func Test_SerializeConfigToJsonEmulatorDefault(t *testing.T) {
 	configJson := []byte(`{
-		"contracts": {},
 		"accounts": {
 			"emulator-account": {
 				"address": "f8d6e0586b0a20c7",
@@ -179,8 +178,6 @@ func Test_SerializeConfigToJsonEmulatorDefault(t *testing.T) {
 		},
 		"networks": {
 			"emulator": "127.0.0.1.3569"
-		},
-		"deployments": {
 		}
 	}`)
 	config := config.Config{
