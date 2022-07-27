@@ -226,7 +226,7 @@ func createInteractive(state *flowkit.State, loader flowkit.ReaderWriter) (*flow
 
 		case config.DefaultMainnetNetwork():
 			outputList(log, []string{
-				"Please complete the following steps in the browser",
+				"Please complete the following steps in a web browser",
 				"Click on 'Submit' button.",
 				"Connect existing Blocto account or create new.",
 				"Click on confirm and approve transaction.",
