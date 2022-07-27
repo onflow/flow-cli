@@ -34,7 +34,7 @@ type Services struct {
 	Events       *Events
 	Collections  *Collections
 	Project      *Project
-	Blocks       *Blocks
+	Blocks       IBlocks
 	Status       *Status
 	Snapshot     *Snapshot
 }

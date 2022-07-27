@@ -50,6 +50,15 @@ func NewBlocks(
 	}
 }
 
+type IBlocks interface {
+	GetBlock(
+		query string,
+		eventType string,
+		verbose bool,
+	) (*flow.Block, []flow.BlockEvents, []*flow.Collection, error)
+	GetLatestBlockHeight() (uint64, error)
+}
+
 // GetBlock returns a block based on the provided query string.
 //
 // Query string options:
