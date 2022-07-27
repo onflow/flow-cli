@@ -209,7 +209,7 @@ func createInteractive(state *flowkit.State, loader flowkit.ReaderWriter) (*flow
 		}
 		log.StopProgress()
 
-		log.Info(output.Italic("\nPlease note, that the newly created account will only be available until you keep the emulator service up and running, if you restart the emulator service all accounts will be reset. If you want to persist accounts between restarts you must use the '--persist' flag when starting the flow emulator.\n"))
+		log.Info(output.Italic("\nPlease note that the newly-created account will only be available while you keep the emulator service running. If you restart the emulator service, all accounts will be reset. If you want to persist accounts between restarts, please use the '--persist' flag when starting the flow emulator.\n"))
 
 		address = account.Address
 	} else {
