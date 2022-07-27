@@ -88,7 +88,7 @@ func NewAccountCreateResult(address flow.Address) *flow.TransactionResult {
 		TransactionIndex: 0,
 		EventIndex:       0,
 		Value: cadence.Event{
-			EventType: cadence.NewEventType(common.NewStringLocation(nil, ""), "", []cadence.Field{{
+			EventType: cadence.NewEventType(common.NewStringLocation(nil, flow.EventAccountCreated), "", []cadence.Field{{
 				Identifier: "address",
 				Type:       cadence.AddressType{},
 			}}, nil),
