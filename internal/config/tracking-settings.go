@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package settings
+package config
 
 import (
 	"fmt"
@@ -31,31 +31,11 @@ type flagsCommandTracking struct{}
 
 var commandTrackingFlags = flagsCommandTracking{}
 
-type Result struct {
-	result string
-}
-
-func (r *Result) JSON() interface{} {
-	return nil
-}
-
-func (r *Result) String() string {
-	if r.result != "" {
-		return r.result
-	}
-
-	return ""
-}
-
-func (r *Result) Oneliner() string {
-	return ""
-}
-
 var TrackingSettings = &command.Command{
 	Cmd: &cobra.Command{
 		Use:     "tracking",
 		Short:   "Configure command usage tracking settings",
-		Example: "flow tracking disable",
+		Example: "flow config tracking disable",
 		Args:    cobra.ExactArgs(1),
 	},
 	Flags: &commandTrackingFlags,

@@ -118,17 +118,13 @@ func SetUserTrackingSettings(enable bool) error {
 
 type MixPanelResponse struct {
 	Results []struct {
-		DistinctId string `json:"$distinct_id"`
 		Properties struct {
-			City     interface{} `json:"$city"`
-			Region   interface{} `json:"$region"`
-			Timezone interface{} `json:"$timezone"`
-			OptIn    bool        `json:"opt_in"`
+			OptIn bool `json:"opt_in"`
 		} `json:"$properties"`
 	} `json:"results"`
 }
 
-func UserIsOptedIn() (bool, error) {
+func IsUserOptedIn() (bool, error) {
 	distinctId, err := generateNewDistinctId()
 	if err != nil {
 		return false, err

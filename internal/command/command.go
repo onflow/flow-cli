@@ -80,7 +80,7 @@ const (
 )
 
 func (c Command) handleUserTracking() {
-	optedIn, err := util.UserIsOptedIn()
+	optedIn, err := util.IsUserOptedIn()
 	if err != nil {
 		sentry.CaptureException(err)
 	}
