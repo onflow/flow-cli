@@ -217,7 +217,7 @@ func createInteractive(state *flowkit.State, loader flowkit.ReaderWriter) (*flow
 		switch selectedNetwork {
 		case config.DefaultTestnetNetwork():
 			outputList(log, []string{
-				"Please complete the following steps in the browser",
+				"Please complete the following steps in a web browser",
 				"Complete the captcha challenge.",
 				"Click the 'Create Account' button.",
 				"Return to this window.",
