@@ -29,12 +29,13 @@ import (
 )
 
 const (
-	MIXPANEL_TRACK_URL              = "https://api.mixpanel.com/track"
-	MIXPANEL_QUERY_URL              = "https://mixpanel.com/api/2.0/engage?project_id=2763737"
-	MIXPANEL_PROFILE_URL            = "https://api.mixpanel.com/engage#profile-set"
-	MIXPANEL_PROJECT_TOKEN          = "7af4e6f44df2c77935477ba103b3c529"
-	MIXPANEL_SERVICE_ACCOUNT_SECRET = "Rmxvdy1jbGkuZTVkMTNjLm1wLXNlcnZpY2UtYWNjb3VudDp2TkZrVzhiWWNSY1ZuQmtMZFF4bXVzamdZa0dyc2FsMQ=="
+	MIXPANEL_TRACK_URL   = "https://api.mixpanel.com/track"
+	MIXPANEL_QUERY_URL   = "https://mixpanel.com/api/2.0/engage?project_id=2763737"
+	MIXPANEL_PROFILE_URL = "https://api.mixpanel.com/engage#profile-set"
 )
+
+var MIXPANEL_PROJECT_TOKEN = ""
+var MIXPANEL_SERVICE_ACCOUNT_SECRET = ""
 
 type MixpanelClient struct {
 	token   string
