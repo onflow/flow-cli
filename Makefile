@@ -88,7 +88,7 @@ clean:
 
 .PHONY: install-linter
 install-linter:
-	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b ${GOPATH}/bin v1.29.0
+	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b ${GOPATH}/bin v1.47.2
 
 .PHONY: lint
 lint:

@@ -39,7 +39,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      - uses: actions/setup-go@v1
+        with:
+          go-version: '1.18'
       - uses: golangci/golangci-lint-action@v3.2.0
         with:
-          version: v1.29.0
+          version: v1.47.2
           args: --timeout=3m

@@ -2,16 +2,12 @@ linters:
   disable-all: true
   enable:
     - govet
-    - gosimple
     - errcheck
-    - staticcheck
-    - structcheck
     - varcheck
     - ineffassign
     - typecheck
     - misspell
     - goimports
-    - unused
 linters-settings:
   goimports:
     # put imports beginning with prefix after 3rd-party package
