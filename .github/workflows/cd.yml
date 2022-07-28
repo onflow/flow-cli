@@ -16,6 +16,11 @@ jobs:
           go-version: '1.18'
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+          MIXPANEL_TRACK_URL: ${{ secrets.MIXPANEL_TRACK_URL }}
+          MIXPANEL_QUERY_URL: ${{ secrets.MIXPANEL_QUERY_URL }}
+          MIXPANEL_PROFILE_URL: ${{ secrets.MIXPANEL_PROFILE_URL }}
+          MIXPANEL_PROJECT_TOKEN: ${{ secrets.MIXPANEL_PROJECT_TOKEN }}
+          MIXPANEL_SERVICE_ACCOUNT_SECRET: ${{ secrets.MIXPANEL_SERVICE_ACCOUNT_SECRET }}
   build:
     runs-on: ubuntu-latest
     steps:
