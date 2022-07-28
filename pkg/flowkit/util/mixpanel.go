@@ -29,13 +29,17 @@ import (
 )
 
 const (
-	MIXPANEL_TRACK_URL   = "https://api.mixpanel.com/track"
-	MIXPANEL_QUERY_URL   = "https://mixpanel.com/api/2.0/engage?project_id=2763737"
+	MIXPANEL_TRACK_URL = "https://api.mixpanel.com/track"
+	MIXPANEL_QUERY_URL = "https://mixpanel.com/api/2.0/engage?project_id=2763737"
+	//MIXPANEL_QUERY_URL   = "https://mixpanel.com/api/2.0/engage?project_id=2154593"
 	MIXPANEL_PROFILE_URL = "https://api.mixpanel.com/engage#profile-set"
 )
 
-var MIXPANEL_PROJECT_TOKEN = ""
-var MIXPANEL_SERVICE_ACCOUNT_SECRET = ""
+//var MIXPANEL_PROJECT_TOKEN = ""
+//var MIXPANEL_SERVICE_ACCOUNT_SECRET = ""
+
+var MIXPANEL_PROJECT_TOKEN = "7af4e6f44df2c77935477ba103b3c529"
+var MIXPANEL_SERVICE_ACCOUNT_SECRET = "Rmxvdy1jbGkuZTVkMTNjLm1wLXNlcnZpY2UtYWNjb3VudDp2TkZrVzhiWWNSY1ZuQmtMZFF4bXVzamdZa0dyc2FsMQ=="
 
 type MixpanelClient struct {
 	token   string
@@ -125,6 +129,8 @@ type MixPanelResponse struct {
 	} `json:"results"`
 }
 
+//User is opted in by default
+//If distinct id can't be found through query api, return true to reflect that user is opted in
 func IsUserOptedIn() (bool, error) {
 	distinctId, err := generateNewDistinctId()
 	if err != nil {
@@ -161,7 +167,8 @@ func IsUserOptedIn() (bool, error) {
 		return false, fmt.Errorf("invalid response status code %d for tracking command usage", res.StatusCode)
 	}
 	if len(queryResponse.Results) == 0 {
-		return false, fmt.Errorf("invalid response from Mixpanel Query API")
+		fmt.Printf("no results on query")
+		return true, nil
 	}
 	return queryResponse.Results[0].Properties.OptIn, nil
 }
