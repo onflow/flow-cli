@@ -133,6 +133,7 @@ func printField(writer io.Writer, field cadence.Field, value cadence.Value) {
 	defer func() {
 		if err := recover(); err != nil {
 			printValues(writer, field.Identifier, "?", v)
+
 		}
 	}()
 
