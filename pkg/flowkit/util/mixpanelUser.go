@@ -59,11 +59,11 @@ func generateNewDistinctId() (string, error) {
 	}
 
 	name := currentUser.Name
-	editedName := strings.Replace(name, " ", "-", -1)
+	hyphenatedName := strings.Replace(name, " ", "-", -1)
 	username := currentUser.Username
 	id := currentUser.Uid
 
-	combinedString := editedName + username + id
+	combinedString := hyphenatedName + username + id
 
 	hashedString := sha256.Sum256([]byte(combinedString))
 	encodedString := base64.StdEncoding.EncodeToString(hashedString[:])
