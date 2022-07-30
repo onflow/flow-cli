@@ -30,8 +30,9 @@ import (
 )
 
 type flagsGenerate struct {
-	Seed       string `flag:"seed" info:"Deterministic seed phrase"`
-	KeySigAlgo string `default:"ECDSA_P256" flag:"sig-algo" info:"Signature algorithm"`
+	Seed           string `flag:"seed" info:"Deterministic seed phrase"`
+	FromPrivateKey string `flag:"from-private-key" info:"Private key to generate Public key"`
+	KeySigAlgo     string `default:"ECDSA_P256" flag:"sig-algo" info:"Signature algorithm"`
 }
 
 var generateFlags = flagsGenerate{}
@@ -57,7 +58,7 @@ func generate(
 		return nil, fmt.Errorf("invalid signature algorithm: %s", generateFlags.KeySigAlgo)
 	}
 
-	privateKey, err := services.Keys.Generate(generateFlags.Seed, sigAlgo)
+	privateKey, err := services.Keys.Generate(generateFlags.Seed, generateFlags.FromPrivateKey, sigAlgo)
 	if err != nil {
 		return nil, err
 	}

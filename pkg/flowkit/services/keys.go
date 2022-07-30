@@ -53,9 +53,13 @@ func NewKeys(
 }
 
 // Generate generates a new private key from the given seed and signature algorithm.
-func (k *Keys) Generate(inputSeed string, sigAlgo crypto.SignatureAlgorithm) (crypto.PrivateKey, error) {
+func (k *Keys) Generate(inputSeed string, inputPrivateKey string, sigAlgo crypto.SignatureAlgorithm) (crypto.PrivateKey, error) {
 	var seed []byte
 	var err error
+
+	if inputSeed != "" && inputPrivateKey != "" {
+		return nil, fmt.Errorf("seed and private key options are mutually exclusive")
+	}
 
 	if inputSeed == "" {
 		seed, err = util.RandomSeed(crypto.MinSeedLength)
@@ -64,6 +68,14 @@ func (k *Keys) Generate(inputSeed string, sigAlgo crypto.SignatureAlgorithm) (cr
 		}
 	} else {
 		seed = []byte(inputSeed)
+	}
+
+	if inputPrivateKey != "" {
+		privateKey, err := crypto.DecodePrivateKeyHex(sigAlgo, inputPrivateKey)
+		if err != nil {
+			return nil, fmt.Errorf("failed to decode private key: %w", err)
+		}
+		return privateKey, nil
 	}
 
 	privateKey, err := crypto.GeneratePrivateKey(sigAlgo, seed)
