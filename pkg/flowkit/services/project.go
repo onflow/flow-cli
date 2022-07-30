@@ -187,7 +187,7 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 		}
 		// check if contract exists on account
 		existingContract, exists := targetAccountInfo.Contracts[contract.Name()]
-		noDiffInContract := bytes.Equal([]byte(contract.Code()), existingContract)
+		noDiffInContract := bytes.Equal([]byte(contract.TranspiledCode()), existingContract)
 
 		if exists && !update {
 			p.logger.Error(fmt.Sprintf(
