@@ -31,7 +31,7 @@ import (
 
 type flagsGenerate struct {
 	Seed           string `flag:"seed" info:"Deterministic seed phrase"`
-	FromPrivateKey string `flag:"from-private-key" info:"Private key to generate Public key"`
+	FromPrivateKey string `flag:"from-private-key" info:"Use user private key instead of random"`
 	KeySigAlgo     string `default:"ECDSA_P256" flag:"sig-algo" info:"Signature algorithm"`
 }
 
