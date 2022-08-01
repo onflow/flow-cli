@@ -79,6 +79,16 @@ func prepareEvent(v cadence.Event) jsonValue {
 	return prepareComposite("Event", v.EventType.ID(), v.EventType.Fields, v.Fields)
 }
 
+/*
+   This function is a workaround for Cadence json-cdc lacking legacy Type kind.
+   Related issue: https://github.com/onflow/flow-cli/issues/530
+   Cadence fixed the decoding of the old format with PR: #1734
+   But as of this patch, encoding is still missing.
+
+   Only outermost Event is overridden, and if any field is TypeValue and old format,
+   replaced with alternate encoding here, other parts are encoded by Cadence.
+*/
+
 func prepareComposite(kind, id string, fieldTypes []cadence.Field, fields []cadence.Value) jsonValue {
 	nonFunctionFieldTypes := make([]cadence.Field, 0)
 
@@ -105,7 +115,7 @@ func prepareComposite(kind, id string, fieldTypes []cadence.Field, fields []cade
 
 		if v, ok := value.(cadence.TypeValue); ok {
 			if typeID, ok := v.StaticType.(cadence.TypeID); ok {
-				//we have old format of Type which cadence fails to encode for some reason
+				//we have old format of Type which cadence fails to encode.
 				encodedValue = jsonValueObject{Type: "Type", Value: jsonLegacyTypeValue{StaticType: typeID.ID()}}
 			} else {
 				encodedValue = jsoncdc.Prepare(value)
