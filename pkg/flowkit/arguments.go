@@ -147,10 +147,12 @@ func ParseArgumentsWithoutType(fileName string, code []byte, args []string) (scr
 	}
 
 	contractDeclaration := program.SoleContractDeclaration()
-	contractInitializer := contractDeclaration.Members.Initializers()
-	if len(contractInitializer) == 1 {
-		if contractInitializer[0].FunctionDeclaration.ParameterList != nil {
-			parameterList = contractInitializer[0].FunctionDeclaration.ParameterList.Parameters
+	if contractDeclaration != nil {
+		contractInitializer := contractDeclaration.Members.Initializers()
+		if len(contractInitializer) == 1 {
+			if contractInitializer[0].FunctionDeclaration.ParameterList != nil {
+				parameterList = contractInitializer[0].FunctionDeclaration.ParameterList.Parameters
+			}
 		}
 	}
 
