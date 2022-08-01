@@ -32,9 +32,8 @@ import (
 )
 
 type flagsAddContract struct {
-	ArgsJSON string   `default:"" flag:"args-json" info:"arguments in JSON-Cadence format"`
-	Signer   string   `default:"emulator-account" flag:"signer" info:"Account name from configuration used to sign the transaction"`
-	Include  []string `default:"" flag:"include" info:"Fields to include in the output. Valid values: contracts."`
+	Signer  string   `default:"emulator-account" flag:"signer" info:"Account name from configuration used to sign the transaction"`
+	Include []string `default:"" flag:"include" info:"Fields to include in the output. Valid values: contracts."`
 }
 
 var addContractFlags = flagsAddContract{}
@@ -70,10 +69,10 @@ func addContract(
 	if err != nil {
 		return nil, err
 	}
-	if addContractFlags.ArgsJSON != "" {
-		contractArgs, err = flowkit.ParseArgumentsJSON(addContractFlags.ArgsJSON)
+	if len(args) > 2 {
+		contractArgs, err = flowkit.ParseArgumentsWithoutType(filename, code, args[2:])
 	}
-	fmt.Printf("recorded contractArgs %s", contractArgs)
+
 	//contractArgs := state.Config().Deployments.ByContractNameAndNetwork(name, globalFlags.Network).Args
 	//if contractArgs == nil {
 	//	contractArgs = []cadence.Value{}
