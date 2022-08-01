@@ -45,7 +45,7 @@ Specify the ECDSA signature algorithm for the key pair.
 Flow supports the secp256k1 and P-256 curves.
 
 
-### From File
+### Filter
 
 - Flag: `--filter`
 - Short Flag: `-x`
