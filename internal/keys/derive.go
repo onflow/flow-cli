@@ -29,35 +29,36 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowkit/services"
 )
 
-type flagsGenerate struct {
-	Seed       string `flag:"seed" info:"Deterministic seed phrase"`
+type flagsDerive struct {
 	KeySigAlgo string `default:"ECDSA_P256" flag:"sig-algo" info:"Signature algorithm"`
 }
 
-var generateFlags = flagsGenerate{}
+var deriveFlags = flagsDerive{}
 
-var GenerateCommand = &command.Command{
+var DeriveCommand = &command.Command{
 	Cmd: &cobra.Command{
-		Use:     "generate",
-		Short:   "Generate a new key-pair",
-		Example: "flow keys generate",
+		Use:     "derive <encoded private key>",
+		Short:   "Derive public key from a private key",
+		Args:    cobra.ExactArgs(1),
+		Example: "flow keys derive 4247b8408...2402038203e8",
 	},
-	Flags: &generateFlags,
-	Run:   generate,
+	Flags: &deriveFlags,
+	Run:   derive,
 }
 
-func generate(
-	_ []string,
+func derive(
+	args []string,
 	_ flowkit.ReaderWriter,
 	_ command.GlobalFlags,
 	services *services.Services,
 ) (command.Result, error) {
-	sigAlgo := crypto.StringToSignatureAlgorithm(generateFlags.KeySigAlgo)
+
+	sigAlgo := crypto.StringToSignatureAlgorithm(deriveFlags.KeySigAlgo)
 	if sigAlgo == crypto.UnknownSignatureAlgorithm {
-		return nil, fmt.Errorf("invalid signature algorithm: %s", generateFlags.KeySigAlgo)
+		return nil, fmt.Errorf("invalid signature algorithm: %s", deriveFlags.KeySigAlgo)
 	}
 
-	privateKey, err := services.Keys.Generate(generateFlags.Seed, "", sigAlgo)
+	privateKey, err := services.Keys.Generate("", args[0], sigAlgo)
 	if err != nil {
 		return nil, err
 	}

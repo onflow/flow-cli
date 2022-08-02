@@ -43,6 +43,7 @@ var Cmd = &cobra.Command{
 func init() {
 	GenerateCommand.AddToParent(Cmd)
 	DecodeCommand.AddToParent(Cmd)
+	DeriveCommand.AddToParent(Cmd)
 }
 
 type KeyResult struct {
