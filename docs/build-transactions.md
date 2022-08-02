@@ -134,6 +134,7 @@ The `Type` must be the same as type in the transaction source code for that argu
 
 - Flag: `--args-json`
 - Valid inputs: arguments in JSON-Cadence form.
+- Example: `flow transactions build ./tx.cdc '[{"type": "String", "value": "Hello World"}]'`
 
 Arguments passed to the Cadence transaction in Cadence JSON format.
 Cadence JSON format contains `type` and `value` keys and is
