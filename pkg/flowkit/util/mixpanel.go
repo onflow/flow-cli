@@ -19,6 +19,7 @@
 package util
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"github.com/spf13/cobra"
@@ -49,7 +50,7 @@ func TrackCommandUsage(command *cobra.Command) error {
 	if err != nil {
 		return err
 	}
-	payload := strings.NewReader(eventPayload)
+	payload := bytes.NewReader(eventPayload)
 	req, err := http.NewRequest("POST", MIXPANEL_TRACK_URL, payload)
 	if err != nil {
 		return err
@@ -73,15 +74,13 @@ func TrackCommandUsage(command *cobra.Command) error {
 	return nil
 }
 
-func encodePayload(obj interface{}) (string, error) {
-	b, err := json.Marshal(obj)
+func encodePayload(obj any) ([]byte, error) {
+	b, err := json.Marshal([]any{obj})
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	formattedString := "[" + string(b) + "]"
-	return formattedString, nil
+	return b, nil
 }
-
 func SetUserMetricsSettings(enable bool) error {
 	mixpanelUser, err := getMixPanelUser()
 	if err != nil {
@@ -93,7 +92,8 @@ func SetUserMetricsSettings(enable bool) error {
 	if err != nil {
 		return err
 	}
-	payload := strings.NewReader(userPayload)
+
+	payload := bytes.NewReader(userPayload)
 	req, err := http.NewRequest("POST", MIXPANEL_PROFILE_URL, payload)
 	if err != nil {
 		return err
