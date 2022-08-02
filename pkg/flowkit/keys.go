@@ -45,6 +45,9 @@ type AccountKey interface {
 	PrivateKey() (*crypto.PrivateKey, error)
 }
 
+var _ AccountKey = &HexAccountKey{}
+var _ AccountKey = &KmsAccountKey{}
+
 func NewAccountKey(accountKeyConf config.AccountKey) (AccountKey, error) {
 	switch accountKeyConf.Type {
 	case config.KeyTypeHex:

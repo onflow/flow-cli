@@ -21,6 +21,10 @@ import (
 	"encoding/json"
 	"testing"
 
+	"github.com/onflow/flow-cli/pkg/flowkit/config"
+	"github.com/onflow/flow-go-sdk"
+	"github.com/onflow/flow-go-sdk/crypto"
+
 	"github.com/stretchr/testify/assert"
 )
 
@@ -331,20 +335,27 @@ func Test_ConfigAccountsMap(t *testing.T) {
 }
 
 func Test_TransformDefaultAccountToJSON(t *testing.T) {
-	b := []byte(`{"emulator-account":{"address":"f8d6e0586b0a20c7","key":{"type":"hex","index":0,"signatureAlgorithm":"ECDSA_P256","hashAlgorithm":"SHA3_256","privateKey":"1272967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47"}},"testnet-account":{"address":"3c1162386b0a245f","key":"2272967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47"}}`)
-
-	var jsonAccounts jsonAccounts
-	err := json.Unmarshal(b, &jsonAccounts)
+	privateKey, err := crypto.DecodePrivateKeyHex(crypto.ECDSA_P256, "1272967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47")
 	assert.NoError(t, err)
 
-	accounts, err := jsonAccounts.transformToConfig()
-	assert.NoError(t, err)
+	account := config.Account{
+		Name:    "emulator-account",
+		Address: flow.HexToAddress("f8d6e0586b0a20c7"),
+		Key: config.AccountKey{
+			Type:       config.KeyTypeHex,
+			Index:      0,
+			SigAlgo:    crypto.ECDSA_P256,
+			HashAlgo:   crypto.SHA3_256,
+			PrivateKey: privateKey},
+	}
+	accounts := []config.Account{account}
 
 	j := transformAccountsToJSON(accounts)
-	x, _ := json.Marshal(j)
+	result, err := json.Marshal(j)
+	assert.NoError(t, err)
 
-	// our output format is shorted - improve test
-	assert.NotEqual(t, string(b), string(x))
+	expected := []byte(`{"emulator-account":{"address":"f8d6e0586b0a20c7","key":"1272967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47"}}`)
+	assert.Equal(t, string(result), string(expected))
 }
 
 func Test_TransformAccountToJSON(t *testing.T) {
@@ -362,7 +373,21 @@ func Test_TransformAccountToJSON(t *testing.T) {
 
 	assert.Equal(t, string(b), string(x))
 }
+func Test_TransformDefaultAccountToJSONAdvanced(t *testing.T) {
+	b := []byte(`{"emulator-account":{"address":"f8d6e0586b0a20c7","key":"1272967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47"},"testnet-account":{"address":"3c1162386b0a245f","key":"2272967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47"}}`)
 
+	var jsonAccounts jsonAccounts
+	err := json.Unmarshal(b, &jsonAccounts)
+	assert.NoError(t, err)
+	accounts, err := jsonAccounts.transformToConfig()
+	assert.NoError(t, err)
+
+	j := transformAccountsToJSON(accounts)
+	x, _ := json.Marshal(j)
+
+	// our output format is shorted - improve test
+	assert.Equal(t, string(b), string(x))
+}
 func Test_SupportForOldFormatWithMultipleKeys(t *testing.T) {
 	b := []byte(`{
 		"emulator-account": {

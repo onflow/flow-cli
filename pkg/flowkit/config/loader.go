@@ -67,20 +67,28 @@ func (c *Parsers) FindForFormat(extension string) Parser {
 type Loader struct {
 	readerWriter     ReaderWriter
 	configParsers    Parsers
-	composedFromFile map[string]string
+	accountsFromFile map[string]string
 }
 
 // NewLoader returns a new loader.
 func NewLoader(readerWriter ReaderWriter) *Loader {
 	return &Loader{
 		readerWriter:     readerWriter,
-		composedFromFile: map[string]string{},
+		accountsFromFile: map[string]string{},
 	}
 }
 
 // AddConfigParser adds a new configuration parser.
 func (l *Loader) AddConfigParser(format Parser) {
 	l.configParsers = append(l.configParsers, format)
+}
+
+func (l *Loader) AccountsFromFile() map[string]string {
+	return l.accountsFromFile
+}
+
+func (l *Loader) SetAccountFromFile(name string, location string) {
+	l.accountsFromFile[name] = location
 }
 
 // Save saves a configuration to a path with correct serializer.
@@ -174,14 +182,14 @@ func (l *Loader) preprocess(raw []byte) []byte {
 	raw, accountsFromFile := ProcessorRun(raw)
 
 	// add all imports from files preprocessor detected for later processing
-	l.composedFromFile = accountsFromFile
+	l.accountsFromFile = accountsFromFile
 
 	return raw
 }
 
 // postprocess does all stateful changes to configuration structures here after it is parsed.
 func (l *Loader) postprocess(baseConf *Config) (*Config, error) {
-	for name, path := range l.composedFromFile {
+	for name, path := range l.accountsFromFile {
 		raw, err := l.loadFile(path)
 		if err != nil {
 			return nil, err
@@ -202,6 +210,11 @@ func (l *Loader) postprocess(baseConf *Config) (*Config, error) {
 			return nil, err
 		}
 
+		// IMPORTANT: save the original filepath so that this account's
+		// key information is not saved to the default configuration file
+		// and potentially exposed to the public.
+		account.Location = path
+
 		// create an empty config with single account so we don't include all accounts in file
 		accountConf := &Config{
 			Accounts: []Account{*account},
@@ -221,7 +234,7 @@ func (l *Loader) postprocess(baseConf *Config) (*Config, error) {
 
 // composeConfig merges multiple configuration files from right to left.
 func (l *Loader) composeConfig(baseConf *Config, conf *Config) {
-	// if not first overwrite first with this one
+	// overwrite base config with the provided one
 	for _, account := range conf.Accounts {
 		baseConf.Accounts.AddOrUpdate(account.Name, account)
 	}

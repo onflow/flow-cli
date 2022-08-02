@@ -158,19 +158,25 @@ func ParseArgumentsWithoutType(fileName string, code []byte, args []string) (scr
 		astType := parameterList[index].TypeAnnotation.Type
 		semaType := checker.ConvertType(astType)
 
-		switch semaType {
-		case sema.StringType:
-			if len(argumentString) > 0 && !strings.HasPrefix(argumentString, "\"") {
-				argumentString = "\"" + argumentString + "\""
-			}
-		}
+		for {
+			switch v := semaType.(type) {
+			case *sema.OptionalType:
+				semaType = v.Type
+				continue
 
-		switch semaType.(type) {
-		case *sema.AddressType:
-			if !strings.Contains(argumentString, "0x") {
-				argumentString = fmt.Sprintf("0x%s", argumentString)
-			}
+			case *sema.SimpleType:
+				if v == sema.StringType {
+					if len(argumentString) > 0 && !strings.HasPrefix(argumentString, "\"") {
+						argumentString = "\"" + argumentString + "\""
+					}
+				}
 
+			case *sema.AddressType:
+				if !strings.Contains(argumentString, "0x") {
+					argumentString = fmt.Sprintf("0x%s", argumentString)
+				}
+			}
+			break
 		}
 
 		var value, err = runtime.ParseLiteral(argumentString, semaType, nil)

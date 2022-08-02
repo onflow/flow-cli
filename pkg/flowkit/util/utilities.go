@@ -22,12 +22,19 @@ import (
 	"bytes"
 	"encoding/hex"
 	"fmt"
+	"os"
+	"os/exec"
+	"path"
+	"runtime"
 	"strings"
 	"text/tabwriter"
 
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
 )
+
+const TestnetFaucetHost = "https://testnet-faucet.onflow.org/"
+const FlowPortUrl = "https://port.onflow.org/transaction?hash=a0a78aa7821144efd5ebb974bb52ba04609ce76c3863af9d45348db93937cf98&showcode=false&consent=true&pk="
 
 // ConvertSigAndHashAlgo parses and validates a signature and hash algorithm pair.
 func ConvertSigAndHashAlgo(
@@ -115,4 +122,67 @@ func ValidateECDSAP256Pub(key string) error {
 	}
 
 	return nil
+}
+
+func OpenBrowserWindow(url string) error {
+	var err error
+
+	switch runtime.GOOS {
+	case "linux":
+		err = exec.Command("xdg-open", url).Start()
+	case "windows":
+		err = exec.Command("rundll32", "url.dll,FileProtocolHandler", url).Start()
+	case "darwin":
+		err = exec.Command("open", url).Start()
+	default:
+		err = fmt.Errorf("unsupported platform")
+	}
+	if err != nil {
+		return fmt.Errorf("could not open a browser window, please navigate to %s manually: %w", url, err)
+	}
+	return nil
+}
+
+func TestnetFaucetURL(publicKey string, sigAlgo crypto.SignatureAlgorithm) string {
+
+	link := fmt.Sprintf("%s?key=%s", TestnetFaucetHost, strings.TrimPrefix(publicKey, "0x"))
+	if sigAlgo != crypto.ECDSA_P256 {
+		link = fmt.Sprintf("%s&sig-algo=%s", link, sigAlgo)
+	}
+
+	return link
+}
+
+func MainnetFlowPortURL(publicKey string) string {
+	return fmt.Sprintf("%s%s", FlowPortUrl, strings.TrimPrefix(publicKey, "0x"))
+}
+
+type ReaderWriter interface {
+	ReadFile(source string) ([]byte, error)
+	WriteFile(filename string, data []byte, perm os.FileMode) error
+}
+
+// AddToGitIgnore adds a new line to the .gitignore if one doesn't exist it creates it.
+func AddToGitIgnore(filename string, loader ReaderWriter) error {
+	currentWd, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+	gitIgnorePath := path.Join(currentWd, ".gitignore")
+	gitIgnoreFiles := ""
+
+	fileStat, err := os.Stat(gitIgnorePath)
+	if !os.IsNotExist(err) { // if gitignore exists
+		gitIgnoreFilesRaw, err := loader.ReadFile(gitIgnorePath)
+		if err != nil {
+			return err
+		}
+		gitIgnoreFiles = string(gitIgnoreFilesRaw)
+	}
+
+	return loader.WriteFile(
+		gitIgnorePath,
+		[]byte(fmt.Sprintf("%s\n%s", gitIgnoreFiles, filename)),
+		fileStat.Mode().Perm(),
+	)
 }

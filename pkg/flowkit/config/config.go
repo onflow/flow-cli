@@ -88,12 +88,17 @@ func (c *Config) Validate() error {
 	return nil
 }
 
-// DefaultConfig gets default configuration.
-func DefaultConfig() *Config {
+// Default returns the default configuration.
+func Default() *Config {
 	return &Config{
 		Emulators: DefaultEmulators(),
 		Networks:  DefaultNetworks(),
 	}
+}
+
+// Empty returns an empty configuration.
+func Empty() *Config {
+	return &Config{}
 }
 
 var ErrOutdatedFormat = errors.New("you are using old configuration format")

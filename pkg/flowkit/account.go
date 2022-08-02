@@ -28,11 +28,70 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowkit/util"
 )
 
-// Account is a flowkit specific account implementation.
+// Account is a flowkit-specific account implementation.
 type Account struct {
 	name    string
 	address flow.Address
 	key     AccountKey
+}
+
+// NewAccount creates an empty account with the provided name.
+func NewAccount(name string) *Account {
+	return &Account{
+		name: name,
+	}
+}
+
+// NewAccountFromOnChainAccount creates a new flowkit account definition
+// that mirrors an already-existing on-chain Flow account.
+//
+// This function requires the on-chain account to have exactly one public key
+// with full signing weight (1000). This ensures that the user has complete
+// and sole control over the on-chain account.
+func NewAccountFromOnChainAccount(
+	name string,
+	onChainAccount *flow.Account,
+	privateKey crypto.PrivateKey,
+) (*Account, error) {
+	if len(onChainAccount.Keys) != 1 {
+		return nil, fmt.Errorf(
+			"expected on-chain account to have exactly one key, but got %d keys",
+			len(onChainAccount.Keys),
+		)
+	}
+
+	accountKey := onChainAccount.Keys[0]
+
+	if accountKey.Weight != flow.AccountKeyWeightThreshold {
+		return nil, fmt.Errorf(
+			"expected on-chain account to have full signing weight (%d), but got weight of %d",
+			flow.AccountKeyWeightThreshold,
+			accountKey.Weight,
+		)
+	}
+
+	offChainPublicKey := privateKey.PublicKey()
+	onChainPublicKey := accountKey.PublicKey
+
+	if !offChainPublicKey.Equals(onChainPublicKey) {
+		return nil, fmt.Errorf(
+			"expected on-chain account public key to match (%s), but got %s",
+			offChainPublicKey.String(),
+			onChainPublicKey.String(),
+		)
+	}
+
+	account := NewAccount(name).
+		SetAddress(onChainAccount.Address).
+		SetKey(
+			NewHexAccountKeyFromPrivateKey(
+				accountKey.Index,
+				accountKey.HashAlgo,
+				privateKey,
+			),
+		)
+
+	return account, nil
 }
 
 // Address get account address.
@@ -50,41 +109,42 @@ func (a *Account) Key() AccountKey {
 	return a.key
 }
 
-// SetKey sets account key.
-func (a *Account) SetKey(key AccountKey) {
-	a.key = key
-}
-
-// SetAddress sets account address.
-func (a *Account) SetAddress(address flow.Address) {
+// SetAddress sets the account address.
+func (a *Account) SetAddress(address flow.Address) *Account {
 	a.address = address
+	return a
 }
 
-// SetName sets account name.
-func (a *Account) SetName(name string) {
+// SetName sets the account name.
+func (a *Account) SetName(name string) *Account {
 	a.name = name
+	return a
+}
+
+// SetKey sets account key.
+func (a *Account) SetKey(key AccountKey) *Account {
+	a.key = key
+	return a
 }
 
 func accountsFromConfig(conf *config.Config) (Accounts, error) {
 	var accounts Accounts
-
 	for _, accountConf := range conf.Accounts {
 		acc, err := fromConfig(accountConf)
 		if err != nil {
 			return nil, err
 		}
-
 		accounts = append(accounts, *acc)
 	}
 
 	return accounts, nil
 }
 
-func accountsToConfig(accounts Accounts) config.Accounts {
+func accountsToConfig(accounts Accounts, accountLocations map[string]string) config.Accounts {
 	accountConfs := make([]config.Account, 0)
 
 	for _, account := range accounts {
-		accountConfs = append(accountConfs, toConfig(account))
+		accountConfs = append(accountConfs, toConfig(account, accountLocations))
 	}
 
 	return accountConfs
@@ -103,7 +163,15 @@ func fromConfig(account config.Account) (*Account, error) {
 	}, nil
 }
 
-func toConfig(account Account) config.Account {
+func toConfig(account Account, accountLocations map[string]string) config.Account {
+	// if account has a location specified we only store the account with a reference to that file location
+	if accountLocation, ok := accountLocations[account.name]; ok {
+		return config.Account{
+			Name:     account.name,
+			Location: accountLocation,
+		}
+	}
+
 	return config.Account{
 		Name:    account.name,
 		Address: account.address,

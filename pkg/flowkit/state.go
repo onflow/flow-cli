@@ -93,8 +93,22 @@ func (p *State) SaveEdited(paths []string) error {
 
 // Save saves the project configuration to the given path.
 func (p *State) Save(path string) error {
-	p.conf.Accounts = accountsToConfig(*p.accounts)
+	p.conf.Accounts = accountsToConfig(*p.accounts, p.confLoader.AccountsFromFile())
 	err := p.confLoader.Save(p.conf, path)
+
+	// if we have defined accounts to be saved to an external file, iterate over them and save them separately
+	for name, location := range p.confLoader.AccountsFromFile() {
+		acc, _ := p.accounts.ByName(name)
+		account := toConfig(*acc, nil)
+		account.UseAdvanceFormat = true // in case where we save accounts to a separate file we use advance format even if default value
+
+		c := config.Empty()
+		c.Accounts.AddOrUpdate(name, account)
+		err = p.confLoader.Save(c, location)
+		if err != nil {
+			return err
+		}
+	}
 
 	if err != nil {
 		return fmt.Errorf("failed to save project configuration to: %s", path)
@@ -150,6 +164,11 @@ func (p *State) Accounts() *Accounts {
 // Config get underlying configuration for advanced usage.
 func (p *State) Config() *config.Config {
 	return p.conf
+}
+
+// SetAccountFileLocation sets a private file location for the specified account.
+func (p *State) SetAccountFileLocation(account Account, location string) {
+	p.confLoader.SetAccountFromFile(account.name, location)
 }
 
 // EmulatorServiceAccount returns the service account for the default emulator profile.
@@ -279,7 +298,7 @@ func Init(readerWriter ReaderWriter, sigAlgo crypto.SignatureAlgorithm, hashAlgo
 	return &State{
 		confLoader:   loader,
 		readerWriter: readerWriter,
-		conf:         config.DefaultConfig(),
+		conf:         config.Default(),
 		accounts:     &Accounts{*emulatorServiceAccount},
 	}, nil
 }
