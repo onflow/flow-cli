@@ -116,10 +116,10 @@ func setupAccount(state *flowkit.State, s *Services, account *flowkit.Account) {
 		nil,
 	)
 
-	newAcc := &flowkit.Account{}
-	newAcc.SetName(account.Name())
-	newAcc.SetAddress(acc.Address)
-	newAcc.SetKey(key)
+	newAcc := flowkit.
+		NewAccount(account.Name()).
+		SetAddress(acc.Address).
+		SetKey(key)
 
 	state.Accounts().AddOrUpdate(newAcc)
 }

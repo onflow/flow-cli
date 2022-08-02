@@ -82,18 +82,22 @@ func NewTransactionResult(events []flow.Event) *flow.TransactionResult {
 }
 
 func NewAccountCreateResult(address flow.Address) *flow.TransactionResult {
-	events := []flow.Event{
-		*NewEvent(0,
-			"flow.AccountCreated",
-			[]cadence.Field{{
+	events := []flow.Event{{
+		Type:             flow.EventAccountCreated,
+		TransactionID:    flow.Identifier{},
+		TransactionIndex: 0,
+		EventIndex:       0,
+		Value: cadence.Event{
+			EventType: cadence.NewEventType(common.NewStringLocation(nil, flow.EventAccountCreated), "", []cadence.Field{{
 				Identifier: "address",
 				Type:       cadence.AddressType{},
-			}},
-			[]cadence.Value{
+			}}, nil),
+			Fields: []cadence.Value{
 				cadence.NewAddress(address),
 			},
-		),
-	}
+		},
+		Payload: nil,
+	}}
 
 	return NewTransactionResult(events)
 }

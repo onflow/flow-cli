@@ -12,10 +12,12 @@ require (
 	github.com/onflow/flow-emulator v0.33.4-0.20220708173546-d2a99600c3fa
 	github.com/onflow/flow-go v0.25.13-0.20220706165514-abf4535fe946
 	github.com/onflow/flow-go-sdk v0.26.5-0.20220629191626-900f9f91bffc
+	github.com/rs/zerolog v1.26.1
 	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/afero v1.8.2
 	github.com/stretchr/testify v1.7.5
 	github.com/thoas/go-funk v0.9.2
+	golang.org/x/exp v0.0.0-20220713135740-79cabaa25d75
 	gonum.org/v1/gonum v0.11.0
 	google.golang.org/grpc v1.45.0
 )
@@ -44,7 +46,7 @@ require (
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/golang/snappy v0.0.3 // indirect
-	github.com/google/go-cmp v0.5.7 // indirect
+	github.com/google/go-cmp v0.5.8 // indirect
 	github.com/googleapis/gax-go/v2 v2.1.1 // indirect
 	github.com/hashicorp/golang-lru v0.5.4 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
@@ -83,7 +85,6 @@ require (
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/psiemens/sconfig v0.1.0 // indirect
 	github.com/rivo/uniseg v0.2.1-0.20211004051800-57c86be7915a // indirect
-	github.com/rs/zerolog v1.26.1 // indirect
 	github.com/sethvargo/go-retry v0.2.3 // indirect
 	github.com/spacemonkeygo/spacelog v0.0.0-20180420211403-2296661a0572 // indirect
 	github.com/spaolacci/murmur3 v1.1.0 // indirect

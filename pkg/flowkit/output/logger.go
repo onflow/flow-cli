@@ -44,6 +44,8 @@ func NewStdoutLogger(level int) *StdoutLogger {
 	}
 }
 
+var _ Logger = &StdoutLogger{}
+
 // StdoutLogger is a stdout logging implementation.
 type StdoutLogger struct {
 	level   int

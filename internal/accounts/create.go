@@ -21,15 +21,19 @@ package accounts
 import (
 	"fmt"
 	"strings"
+	"time"
 
-	"github.com/onflow/flow-cli/pkg/flowkit"
-
+	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
-
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
+	"github.com/onflow/flow-cli/pkg/flowkit"
+	"github.com/onflow/flow-cli/pkg/flowkit/config"
+	"github.com/onflow/flow-cli/pkg/flowkit/gateway"
+	"github.com/onflow/flow-cli/pkg/flowkit/output"
 	"github.com/onflow/flow-cli/pkg/flowkit/services"
+	"github.com/onflow/flow-cli/pkg/flowkit/util"
 )
 
 type flagsCreate struct {
@@ -56,11 +60,20 @@ var CreateCommand = &command.Command{
 
 func create(
 	_ []string,
-	_ flowkit.ReaderWriter,
+	loader flowkit.ReaderWriter,
 	_ command.GlobalFlags,
 	services *services.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
+	// if user doesn't provide any flags go into interactive mode
+	if len(createFlags.Keys) == 0 {
+		_, err := createInteractive(state, loader)
+		if err != nil {
+			return nil, err
+		}
+		return nil, nil
+	}
+
 	signer, err := state.Accounts().ByName(createFlags.Signer)
 	if err != nil {
 		return nil, err
@@ -76,9 +89,7 @@ func create(
 			// Deprecated usage message?
 		}
 
-	} else
-	// double check matching array lengths on inputs
-	if len(createFlags.Keys) != len(createFlags.SigAlgo) || len(createFlags.SigAlgo) != len(createFlags.HashAlgo) {
+	} else if len(createFlags.Keys) != len(createFlags.SigAlgo) || len(createFlags.SigAlgo) != len(createFlags.HashAlgo) { // double check matching array lengths on inputs
 		return nil, fmt.Errorf("must provide a signature and hash algorithm for every key provided to --key: %d keys, %d signature algo, %d hash algo", len(createFlags.Keys), len(createFlags.SigAlgo), len(createFlags.HashAlgo))
 	}
 
@@ -133,4 +144,219 @@ func create(
 		Account: account,
 		include: createFlags.Include,
 	}, nil
+}
+
+func createInteractive(state *flowkit.State, loader flowkit.ReaderWriter) (*flow.Account, error) {
+	log := output.NewStdoutLogger(output.InfoLog)
+
+	name := output.AccountNamePrompt(state.Accounts()) // todo check for duplicate names
+	networkName, selectedNetwork := output.CreateAccountNetworkPrompt()
+
+	// create new gateway based on chosen network
+	gw, err := gateway.NewGrpcGateway(selectedNetwork.Host)
+	if err != nil {
+		return nil, err
+	}
+
+	privateFile := output.Bold(fmt.Sprintf("%s.private.json", name))
+
+	items := []string{
+		fmt.Sprintf("%sThis command will perform the following", output.WarningEmoji()),
+		"Generate a new ECDSA P-256 public and private key pair.",
+	}
+	if selectedNetwork != config.DefaultEmulatorNetwork() {
+		items = append(items, fmt.Sprintf("Save the private key to %s and add it to .gitignore.", privateFile))
+	}
+	items = append(items,
+		fmt.Sprintf("Create a new account on %s paired with the public key.", output.Bold(networkName)),
+		fmt.Sprintf("Save the newly-created account to %s.\n", output.Bold("flow.json")),
+	)
+	outputList(log, items, false)
+
+	if !output.WantToContinue() {
+		return nil, fmt.Errorf("cancelled account creation")
+	}
+
+	service := services.NewServices(gw, state, output.NewStdoutLogger(output.NoneLog))
+
+	key, err := service.Keys.Generate("", crypto.ECDSA_P256)
+	if err != nil {
+		return nil, err
+	}
+
+	startHeight, err := service.Blocks.GetLatestBlockHeight()
+	if err != nil {
+		return nil, err
+	}
+
+	var address flow.Address
+
+	if selectedNetwork == config.DefaultEmulatorNetwork() {
+		signer, err := state.EmulatorServiceAccount()
+		if err != nil {
+			return nil, err
+		}
+		account, err := service.Accounts.Create(
+			signer,
+			[]crypto.PublicKey{key.PublicKey()},
+			[]int{flow.AccountKeyWeightThreshold},
+			[]crypto.SignatureAlgorithm{crypto.ECDSA_P256},
+			[]crypto.HashAlgorithm{crypto.SHA3_256},
+			nil,
+		)
+		if err != nil {
+			return nil, err
+		}
+		log.StopProgress()
+
+		log.Info(output.Italic("\nPlease note that the newly-created account will only be available while you keep the emulator service running. If you restart the emulator service, all accounts will be reset. If you want to persist accounts between restarts, please use the '--persist' flag when starting the flow emulator.\n"))
+
+		address = account.Address
+	} else {
+		var link string
+		switch selectedNetwork {
+		case config.DefaultTestnetNetwork():
+			outputList(log, []string{
+				"Please complete the following steps in a web browser",
+				"Complete the captcha challenge.",
+				"Click the 'Create Account' button.",
+				"Return to this window.",
+			}, true)
+			link = util.TestnetFaucetURL(key.PublicKey().String(), crypto.ECDSA_P256)
+
+		case config.DefaultMainnetNetwork():
+			outputList(log, []string{
+				"Please complete the following steps in a web browser",
+				"Click on 'Submit' button.",
+				"Connect existing Blocto account or create new.",
+				"Click on confirm and approve transaction.",
+			}, true)
+			link = util.MainnetFlowPortURL(key.PublicKey().String())
+		}
+
+		output.ConfirmOpenBrowser()
+
+		log.StartProgress("Waiting for your account to be created, please finish all the steps in the browser...\n")
+		_ = util.OpenBrowserWindow(link)
+		log.Info(output.Italic(fmt.Sprintf("You can also navigate to the link manually: %s\n", link)))
+
+		addr, err := getAccountCreatedAddressWithPubKey(service, key.PublicKey(), startHeight)
+		if err != nil {
+			return nil, err
+		}
+		address = *addr
+
+		log.StopProgress()
+	}
+
+	onChainAccount, err := service.Accounts.Get(address)
+	if err != nil {
+		return nil, err
+	}
+
+	account, err := flowkit.NewAccountFromOnChainAccount(name, onChainAccount, key)
+	if err != nil {
+		return nil, err
+	}
+
+	log.Info(fmt.Sprintf(
+		"%s New account created with address %s and name %s.\n",
+		output.SuccessEmoji(),
+		output.Bold(fmt.Sprintf("0x%s", account.Address().String())),
+		output.Bold(name)),
+	)
+
+	err = saveAccount(loader, state, account, selectedNetwork)
+	if err != nil {
+		return nil, err
+	}
+
+	items = []string{
+		"Here’s a summary of all the actions that were taken",
+		fmt.Sprintf("Added the new account to %s.", output.Bold("flow.json")),
+	}
+	if selectedNetwork != config.DefaultEmulatorNetwork() {
+		items = append(items,
+			fmt.Sprintf("Saved the private key to %s.", privateFile),
+			fmt.Sprintf("Added %s to %s.", privateFile, output.Bold(".gitignore")),
+		)
+	}
+	outputList(log, items, false)
+
+	return onChainAccount, nil
+}
+
+// getAccountCreatedAddressWithPubKey monitors the network for account creation events, if the event
+// contains the public key we are interested in then it extracts the newly created address from the event payload.
+func getAccountCreatedAddressWithPubKey(
+	service *services.Services,
+	pubKey crypto.PublicKey,
+	startHeight uint64,
+) (*flow.Address, error) {
+	lastHeight, err := service.Blocks.GetLatestBlockHeight()
+	if err != nil {
+		return nil, err
+	}
+
+	flowEvents, _ := service.Events.Get([]string{flow.EventAccountKeyAdded}, startHeight, lastHeight, 20, 1) // ignore AN errors since we will retry anyway
+
+	var address *flow.Address
+	for _, block := range flowEvents {
+		events := flowkit.NewEvents(block.Events)
+		address = events.GetAddressForKeyAdded(pubKey)
+		if address != nil {
+			break
+		}
+	}
+
+	if address == nil {
+		if lastHeight-startHeight > 400 { // if something goes wrong don't keep waiting forever to avoid spamming network
+			return nil, fmt.Errorf("failed to get the account address due to time out")
+		}
+
+		time.Sleep(time.Second * 2)
+		address, err = getAccountCreatedAddressWithPubKey(service, pubKey, startHeight)
+		if err != nil {
+			return nil, err
+		}
+
+		return address, nil
+	}
+
+	return address, nil
+}
+
+func saveAccount(
+	loader flowkit.ReaderWriter,
+	state *flowkit.State,
+	account *flowkit.Account,
+	network config.Network,
+) error {
+	state.Accounts().AddOrUpdate(account)
+
+	// If not using emulator, save account private key private file for security.
+	if network != config.DefaultEmulatorNetwork() {
+		privateLocation := fmt.Sprintf("%s.private.json", account.Name())
+		state.SetAccountFileLocation(*account, privateLocation)
+		err := util.AddToGitIgnore(privateLocation, loader)
+		if err != nil {
+			return err
+		}
+	}
+
+	return state.SaveDefault()
+}
+
+// outputList helper for printing lists
+func outputList(log *output.StdoutLogger, items []string, numbered bool) {
+	log.Info(fmt.Sprintf("%s:", items[0]))
+	items = items[1:]
+	for n, item := range items {
+		sep := " -"
+		if numbered {
+			sep = fmt.Sprintf(" %d.", n+1)
+		}
+		log.Info(fmt.Sprintf("%s %s", sep, item))
+	}
+	log.Info("")
 }
