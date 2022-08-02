@@ -25,11 +25,12 @@ import (
 
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
 
-	"github.com/onflow/flow-cli/internal/command"
-
+	"github.com/onflow/cadence"
 	jsoncdc "github.com/onflow/cadence/encoding/json"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/spf13/cobra"
+
+	"github.com/onflow/flow-cli/internal/command"
 
 	"github.com/onflow/flow-cli/internal/events"
 	"github.com/onflow/flow-cli/pkg/flowkit/util"
@@ -57,6 +58,87 @@ type TransactionResult struct {
 	exclude []string
 }
 
+type jsonValue interface{}
+type jsonValueObject struct {
+	Type  string    `json:"type"`
+	Value jsonValue `json:"value"`
+}
+type jsonCompositeField struct {
+	Name  string    `json:"name"`
+	Value jsonValue `json:"value"`
+}
+type jsonCompositeValue struct {
+	ID     string               `json:"id"`
+	Fields []jsonCompositeField `json:"fields"`
+}
+type jsonLegacyTypeValue struct {
+	StaticType string `json:"staticType"`
+}
+
+func prepareEvent(v cadence.Event) jsonValue {
+	return prepareComposite("Event", v.EventType.ID(), v.EventType.Fields, v.Fields)
+}
+
+/*
+   This function is a workaround for Cadence json-cdc lacking legacy Type kind.
+   Related issue: https://github.com/onflow/flow-cli/issues/530
+   Cadence fixed the decoding of the old format with PR: #1734
+   But as of this patch, encoding is still missing.
+
+   Only outermost Event is overridden, and if any field is TypeValue and old format,
+   replaced with alternate encoding here, other parts are encoded by Cadence.
+*/
+
+func prepareComposite(kind, id string, fieldTypes []cadence.Field, fields []cadence.Value) jsonValue {
+	nonFunctionFieldTypes := make([]cadence.Field, 0)
+
+	for _, field := range fieldTypes {
+		if _, ok := field.Type.(*cadence.FunctionType); !ok {
+			nonFunctionFieldTypes = append(nonFunctionFieldTypes, field)
+		}
+	}
+
+	if len(nonFunctionFieldTypes) != len(fields) {
+		panic(fmt.Errorf(
+			"%s field count (%d) does not match declared type (%d)",
+			kind,
+			len(fields),
+			len(nonFunctionFieldTypes),
+		))
+	}
+
+	compositeFields := make([]jsonCompositeField, len(fields))
+
+	for i, value := range fields {
+		fieldType := nonFunctionFieldTypes[i]
+		var encodedValue jsonValue
+
+		if v, ok := value.(cadence.TypeValue); ok {
+			if typeID, ok := v.StaticType.(cadence.TypeID); ok {
+				//we have old format of Type which cadence fails to encode.
+				encodedValue = jsonValueObject{Type: "Type", Value: jsonLegacyTypeValue{StaticType: typeID.ID()}}
+			} else {
+				encodedValue = jsoncdc.Prepare(value)
+			}
+		} else {
+			encodedValue = jsoncdc.Prepare(value)
+		}
+
+		compositeFields[i] = jsonCompositeField{
+			Name:  fieldType.Identifier,
+			Value: encodedValue,
+		}
+	}
+
+	return jsonValueObject{
+		Type: kind,
+		Value: jsonCompositeValue{
+			ID:     id,
+			Fields: compositeFields,
+		},
+	}
+}
+
 func (r *TransactionResult) JSON() interface{} {
 	result := make(map[string]interface{})
 	result["id"] = r.tx.ID().String()
@@ -69,11 +151,13 @@ func (r *TransactionResult) JSON() interface{} {
 
 		txEvents := make([]interface{}, 0, len(r.result.Events))
 		for _, event := range r.result.Events {
+			encodedEvent, _ := json.Marshal(prepareEvent(event.Value))
+
 			txEvents = append(txEvents, map[string]interface{}{
 				"index": event.EventIndex,
 				"type":  event.Type,
 				"values": json.RawMessage(
-					jsoncdc.MustEncode(event.Value),
+					encodedEvent,
 				),
 			})
 		}
