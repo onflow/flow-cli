@@ -32,8 +32,9 @@ import (
 )
 
 type flagsAddContract struct {
-	Signer  string   `default:"emulator-account" flag:"signer" info:"Account name from configuration used to sign the transaction"`
-	Include []string `default:"" flag:"include" info:"Fields to include in the output. Valid values: contracts."`
+	ArgsJSON string   `default:"" flag:"args-json" info:"arguments in JSON-Cadence format"`
+	Signer   string   `default:"emulator-account" flag:"signer" info:"Account name from configuration used to sign the transaction"`
+	Include  []string `default:"" flag:"include" info:"Fields to include in the output. Valid values: contracts."`
 }
 
 var addContractFlags = flagsAddContract{}
@@ -69,8 +70,13 @@ func addContract(
 	if err != nil {
 		return nil, err
 	}
-	if len(args) > 2 {
-		contractArgs, err = flowkit.ParseArgumentsWithoutType(filename, code, args[2:])
+
+	if addContractFlags.ArgsJSON != "" {
+		contractArgs, err = flowkit.ParseArguments(nil, addContractFlags.ArgsJSON)
+	} else {
+		if len(args) > 2 {
+			contractArgs, err = flowkit.ParseArgumentsWithoutType(filename, code, args[2:])
+		}
 	}
 
 	account, err := services.Accounts.AddContract(to, name, code, false, contractArgs)

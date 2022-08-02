@@ -542,7 +542,20 @@ func TestAccountsAddContract_Integration(t *testing.T) {
 		assert.True(t, strings.Contains(err.Error(), "cannot update non-existing contract with name \"Hello\""))
 	})
 }
+func TestAccountsAddContractWithArgs(t *testing.T) {
+	state, s := setupIntegration()
+	srvAcc, _ := state.EmulatorServiceAccount()
 
+	//adding contract without argument should return an error
+	acc, err := s.Accounts.AddContract(srvAcc, tests.ContractSimpleWithArgs.Name, tests.ContractSimpleWithArgs.Source, false, nil)
+	assert.Error(t, err)
+	assert.True(t, strings.Contains(err.Error(), "invalid argument count, too few arguments: expected 1, got 0"))
+
+	acc, err = s.Accounts.AddContract(srvAcc, tests.ContractSimpleWithArgs.Name, tests.ContractSimpleWithArgs.Source, false, []cadence.Value{cadence.UInt64(4)})
+	assert.NoError(t, err)
+	assert.NotNil(t, acc)
+	assert.Equal(t, acc.Contracts["Simple"], tests.ContractSimpleWithArgs.Source)
+}
 func TestAccountsRemoveContract_Integration(t *testing.T) {
 	t.Parallel()
 
