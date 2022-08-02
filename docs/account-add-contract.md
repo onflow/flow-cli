@@ -6,7 +6,7 @@ sidebar_title: Deploy a Contract
 Deploy a new contract to a Flow account using the Flow CLI.   
 
 ```shell
-flow accounts add-contract <name> <filename>
+flow accounts add-contract <name> <filename> [<argument> <argument>...] [flags]
 ````
 
 ## Example Usage
@@ -70,6 +70,25 @@ Name of the contract as it is defined in the contract source code.
 
 Path to the file containing the contract source code.
 
+### Arguments
+- Name: `argument`
+- Valid inputs: valid [cadence values](https://docs.onflow.org/cadence/json-cadence-spec/)
+  matching argument type in transaction code.
+
+Input arguments values matching corresponding types in the source code and passed in the same order.
+
+Example:
+```shell
+> flow accounts add-contract HelloWorld ./contract.cdc Hello 2
+```
+Transaction code:
+```
+pub contract HelloWorld {
+    init(a:String, b:Int) {
+    }
+}
+```
+
 ## Flags
 
 ### Signer
@@ -78,6 +97,16 @@ Path to the file containing the contract source code.
 - Valid inputs: the name of an account defined in the configuration (`flow.json`)
 
 Specify the name of the account that will be used to sign the transaction.
+
+### Arguments JSON
+
+- Flag: `--args-json`
+- Valid inputs: arguments in JSON-Cadence form.
+- Example: `flow accounts add-contract HelloWorld ./tx.cdc '[{"type": "String", "value": "Hello"}]'`
+
+Arguments passed to the Cadence transaction in Cadence JSON format.
+Cadence JSON format contains `type` and `value` keys and is
+[documented here](https://docs.onflow.org/cadence/json-cadence-spec/).
 
 ### Include Fields
 
