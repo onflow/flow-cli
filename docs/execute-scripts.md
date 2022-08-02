@@ -62,6 +62,7 @@ For passing complex argument values see [send transaction](send-transactions.md#
 
 - Flag: `--args-json`
 - Valid inputs: arguments in JSON-Cadence form.
+- Example: `flow scripts execute script.cdc '[{"type": "String", "value": "Hello World"}]'`
 
 Arguments passed to the Cadence script in the Cadence JSON format.
 Cadence JSON format contains `type` and `value` keys and is 
