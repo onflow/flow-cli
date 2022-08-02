@@ -27,34 +27,34 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type flagsCommandTracking struct{}
+type flagsCommandMetrics struct{}
 
-var commandTrackingFlags = flagsCommandTracking{}
+var commandMetricsFlags = flagsCommandMetrics{}
 
-var TrackingSettings = &command.Command{
+var MetricsSettings = &command.Command{
 	Cmd: &cobra.Command{
-		Use:     "tracking",
-		Short:   "Configure command usage tracking settings",
-		Example: "flow config tracking disable",
+		Use:     "metrics",
+		Short:   "Configure command usage metrics settings",
+		Example: "flow config metrics disable",
 		Args:    cobra.ExactArgs(1),
 	},
-	Flags: &commandTrackingFlags,
-	Run:   disableTrackingSettings,
+	Flags: &commandMetricsFlags,
+	Run:   handleMetricsSettings,
 }
 
-func disableTrackingSettings(
+func handleMetricsSettings(
 	args []string,
 	_ flowkit.ReaderWriter,
 	_ command.GlobalFlags,
 	_ *services.Services,
 ) (command.Result, error) {
 	if args[0] == "disable" {
-		err := util.SetUserTrackingSettings(false)
+		err := util.SetUserMetricsSettings(false)
 		if err != nil {
 			return nil, err
 		}
 	} else if args[0] == "enable" {
-		err := util.SetUserTrackingSettings(true)
+		err := util.SetUserMetricsSettings(true)
 		if err != nil {
 			return nil, err
 		}

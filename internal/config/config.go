@@ -32,7 +32,7 @@ func init() {
 	InitCommand.AddToParent(Cmd)
 	Cmd.AddCommand(AddCmd)
 	Cmd.AddCommand(RemoveCmd)
-	TrackingSettings.AddToParent(Cmd)
+	MetricsSettings.AddToParent(Cmd)
 }
 
 type Result struct {

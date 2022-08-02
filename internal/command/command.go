@@ -109,6 +109,8 @@ func (c Command) AddToParent(parent *cobra.Command) {
 			defer sentry.Flush(2 * time.Second)
 			defer sentry.Recover()
 		}
+		c.handleUserTracking()
+
 		// initialize file loader used in commands
 		loader := &afero.Afero{Fs: afero.NewOsFs()}
 
@@ -144,7 +146,6 @@ func (c Command) AddToParent(parent *cobra.Command) {
 		} else {
 			panic("command implementation needs to provide run functionality")
 		}
-		c.handleUserTracking()
 
 		handleError("Command Error", err)
 

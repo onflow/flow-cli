@@ -82,7 +82,7 @@ func encodePayload(obj interface{}) (string, error) {
 	return formattedString, nil
 }
 
-func SetUserTrackingSettings(enable bool) error {
+func SetUserMetricsSettings(enable bool) error {
 	mixpanelUser, err := getMixPanelUser()
 	if err != nil {
 		return err
