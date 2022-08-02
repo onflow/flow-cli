@@ -8,8 +8,7 @@ pub contract HelloWorld {
         self.greeting = a
     }
 
-    pub fun hello(sampleWord: String): String {
-        self.greeting = sampleWord
+    pub fun hello(): String {
         return self.greeting
     }
 }

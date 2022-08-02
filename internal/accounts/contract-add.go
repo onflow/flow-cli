@@ -73,10 +73,6 @@ func addContract(
 		contractArgs, err = flowkit.ParseArgumentsWithoutType(filename, code, args[2:])
 	}
 
-	//contractArgs := state.Config().Deployments.ByContractNameAndNetwork(name, globalFlags.Network).Args
-	//if contractArgs == nil {
-	//	contractArgs = []cadence.Value{}
-	//}
 	account, err := services.Accounts.AddContract(to, name, code, false, contractArgs)
 	if err != nil {
 		return nil, err

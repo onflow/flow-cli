@@ -5,6 +5,6 @@ transaction(a: String) {
   prepare(acct: AuthAccount) {}
 
   execute {
-    log(HelloWorld.hello(sampleWord: a))
+    log(a)
   }
 }
