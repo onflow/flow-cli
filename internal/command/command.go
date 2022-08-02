@@ -38,7 +38,6 @@ import (
 
 	"github.com/getsentry/sentry-go"
 	"github.com/spf13/afero"
-
 	"github.com/spf13/cobra"
 )
 
@@ -130,6 +129,14 @@ func (c Command) AddToParent(parent *cobra.Command) {
 		}
 
 		handleError("Command Error", err)
+
+		// Do not print a result if none is provided.
+		//
+		// This is useful for interactive commands that do not
+		// require a printed summary (e.g. flow accounts create).
+		if result == nil {
+			return
+		}
 
 		// format output result
 		formattedResult, err := formatResult(result, Flags.Filter, Flags.Format)
@@ -282,7 +289,7 @@ func initCrashReporting() {
 			if output.ReportCrash() {
 				return event
 			} else {
-				fmt.Printf("\nPlease help us improve the Flow CLI by opening an issue on https://github.com/onflow/flow-cli/issues, \nand pasting the output as well as description of the actions you took to cause this crash.\n\n")
+				fmt.Printf("\nPlease help us improve the Flow CLI by opening an issue on https://github.com/onflow/flow-cli/issues, \nand pasting the output as well as a description of the actions you took that resulted in this crash.\n\n")
 				fmt.Println(hint.RecoveredException)
 				fmt.Println(event.Threads, event.Fingerprint)
 				fmt.Println(event.Contexts)

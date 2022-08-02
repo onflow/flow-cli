@@ -291,14 +291,16 @@ func Donald() *flowkit.Account {
 	return newAccount("Donald", "0x3", "seedseedseedseedseedseedseedseedseedseedseedseedDonald")
 }
 func newAccount(name string, address string, seed string) *flowkit.Account {
-	a := &flowkit.Account{}
-	a.SetAddress(flow.HexToAddress(address))
-	a.SetName(name)
-	pk, _ := crypto.GeneratePrivateKey(crypto.ECDSA_P256, []byte(seed))
+	privateKey, _ := crypto.GeneratePrivateKey(crypto.ECDSA_P256, []byte(seed))
 
-	a.SetKey(flowkit.NewHexAccountKeyFromPrivateKey(0, crypto.SHA3_256, pk))
+	account := flowkit.
+		NewAccount(name).
+		SetAddress(flow.HexToAddress(address)).
+		SetKey(
+			flowkit.NewHexAccountKeyFromPrivateKey(0, crypto.SHA3_256, privateKey),
+		)
 
-	return a
+	return account
 }
 
 func PubKeys() []crypto.PublicKey {

@@ -20,6 +20,8 @@
 package main
 
 import (
+	"github.com/spf13/cobra"
+
 	"github.com/onflow/flow-cli/internal/accounts"
 	"github.com/onflow/flow-cli/internal/app"
 	"github.com/onflow/flow-cli/internal/blocks"
@@ -40,8 +42,6 @@ import (
 	"github.com/onflow/flow-cli/internal/transactions"
 	"github.com/onflow/flow-cli/internal/version"
 	"github.com/onflow/flow-cli/pkg/flowkit/util"
-
-	"github.com/spf13/cobra"
 )
 
 func main() {

@@ -19,6 +19,7 @@ package json
 
 import (
 	"encoding/json"
+	"sort"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -42,6 +43,7 @@ func Test_ConfigEmulatorSimple(t *testing.T) {
 	assert.Equal(t, "default", emulators[0].Name)
 	assert.Equal(t, 9000, emulators[0].Port)
 }
+
 func Test_ConfigMultipleEmulators(t *testing.T) {
 	b := []byte(`{
 		 "default": {
@@ -61,6 +63,10 @@ func Test_ConfigMultipleEmulators(t *testing.T) {
 	emulators, err := jsonEmulators.transformToConfig()
 	assert.NoError(t, err)
 	assert.Len(t, emulators, 2)
+
+	sort.Slice(emulators, func(i, j int) bool {
+		return emulators[i].Port > emulators[j].Port
+	})
 	assert.Equal(t, emulators[0].Name, "default")
 	assert.Equal(t, emulators[0].Port, 9000)
 	assert.Equal(t, emulators[0].ServiceAccount, "emulator-account")

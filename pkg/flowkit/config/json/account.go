@@ -75,8 +75,6 @@ func transformSimpleToConfig(accountName string, a simpleAccount) (*config.Accou
 
 // transformAdvancedToConfig transforms advanced internal account to config account.
 func transformAdvancedToConfig(accountName string, a advancedAccount) (*config.Account, error) {
-	var pKey crypto.PrivateKey
-	var err error
 	sigAlgo := crypto.StringToSignatureAlgorithm(a.Key.SigAlgo)
 	hashAlgo := crypto.StringToHashAlgorithm(a.Key.HashAlgo)
 
@@ -86,20 +84,6 @@ func transformAdvancedToConfig(accountName string, a advancedAccount) (*config.A
 
 	if a.Key.ResourceID != "" && a.Key.PrivateKey != "" {
 		return nil, fmt.Errorf("only provide value for private key or resource ID on account %s", accountName)
-	}
-
-	if a.Key.Type == config.KeyTypeHex {
-		if a.Key.PrivateKey != "" {
-			pKey, err = crypto.DecodePrivateKeyHex(
-				sigAlgo,
-				strings.TrimPrefix(a.Key.PrivateKey, "0x"),
-			)
-			if err != nil {
-				return nil, err
-			}
-		} else {
-			return nil, fmt.Errorf("missing private key value for hex key type on account %s", accountName)
-		}
 	}
 
 	if sigAlgo == crypto.UnknownSignatureAlgorithm {
@@ -115,17 +99,38 @@ func transformAdvancedToConfig(accountName string, a advancedAccount) (*config.A
 		return nil, err
 	}
 
+	key := config.AccountKey{
+		Type:     a.Key.Type,
+		Index:    a.Key.Index,
+		SigAlgo:  sigAlgo,
+		HashAlgo: hashAlgo,
+	}
+
+	switch a.Key.Type {
+	case config.KeyTypeHex:
+		if a.Key.PrivateKey == "" {
+			return nil, fmt.Errorf("missing private key value for hex key type on account %s", accountName)
+		}
+		pKey, err := crypto.DecodePrivateKeyHex(
+			sigAlgo,
+			strings.TrimPrefix(a.Key.PrivateKey, "0x"),
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		key.PrivateKey = pKey
+	case config.KeyTypeGoogleKMS:
+		if a.Key.ResourceID == "" {
+			return nil, fmt.Errorf("missing resource ID value for key on account %s", accountName)
+		}
+		key.ResourceID = a.Key.ResourceID
+	}
+
 	return &config.Account{
 		Name:    accountName,
 		Address: address,
-		Key: config.AccountKey{
-			Type:       a.Key.Type,
-			Index:      a.Key.Index,
-			SigAlgo:    sigAlgo,
-			HashAlgo:   hashAlgo,
-			ResourceID: a.Key.ResourceID,
-			PrivateKey: pKey,
-		},
+		Key:     key,
 	}, nil
 }
 
@@ -159,7 +164,9 @@ func transformAccountsToJSON(accounts config.Accounts) jsonAccounts {
 	jsonAccounts := jsonAccounts{}
 
 	for _, a := range accounts {
-		if isDefaultKeyFormat(a.Key) {
+		if a.Location != "" {
+			jsonAccounts[a.Name] = transformFromFileAccountToJSON(a)
+		} else if isDefaultKeyFormat(a.Key) && !a.UseAdvanceFormat {
 			jsonAccounts[a.Name] = transformSimpleAccountToJSON(a)
 		} else {
 			jsonAccounts[a.Name] = transformAdvancedAccountToJSON(a)
@@ -167,6 +174,14 @@ func transformAccountsToJSON(accounts config.Accounts) jsonAccounts {
 	}
 
 	return jsonAccounts
+}
+
+func transformFromFileAccountToJSON(a config.Account) account {
+	return account{
+		FromFile: fromFileAccount{
+			FromFile: a.Location,
+		},
+	}
 }
 
 func transformSimpleAccountToJSON(a config.Account) account {
@@ -182,16 +197,27 @@ func transformAdvancedAccountToJSON(a config.Account) account {
 	return account{
 		Advanced: advancedAccount{
 			Address: a.Address.String(),
-			Key: advanceKey{
-				Type:       a.Key.Type,
-				Index:      a.Key.Index,
-				SigAlgo:    a.Key.SigAlgo.String(),
-				HashAlgo:   a.Key.HashAlgo.String(),
-				ResourceID: a.Key.ResourceID,
-				PrivateKey: strings.TrimPrefix(a.Key.PrivateKey.String(), "0x"),
-			},
+			Key:     transformAdvancedKeyToJSON(a.Key),
 		},
 	}
+}
+
+func transformAdvancedKeyToJSON(key config.AccountKey) advanceKey {
+	advancedKey := advanceKey{
+		Type:     key.Type,
+		Index:    key.Index,
+		SigAlgo:  key.SigAlgo.String(),
+		HashAlgo: key.HashAlgo.String(),
+	}
+
+	switch key.Type {
+	case config.KeyTypeHex:
+		advancedKey.PrivateKey = strings.TrimPrefix(key.PrivateKey.String(), "0x")
+	case config.KeyTypeGoogleKMS:
+		advancedKey.ResourceID = key.ResourceID
+	}
+
+	return advancedKey
 }
 
 func isDefaultKeyFormat(key config.AccountKey) bool {
@@ -202,8 +228,13 @@ func isDefaultKeyFormat(key config.AccountKey) bool {
 }
 
 type account struct {
+	FromFile fromFileAccount
 	Simple   simpleAccount
 	Advanced advancedAccount
+}
+
+type fromFileAccount struct {
+	FromFile string `json:"fromFile"`
 }
 
 type simpleAccount struct {
@@ -315,6 +346,10 @@ func (j *account) UnmarshalJSON(b []byte) error {
 }
 
 func (j account) MarshalJSON() ([]byte, error) {
+	if j.FromFile != (fromFileAccount{}) {
+		return json.Marshal(j.FromFile)
+	}
+
 	if j.Simple != (simpleAccount{}) {
 		return json.Marshal(j.Simple)
 	}

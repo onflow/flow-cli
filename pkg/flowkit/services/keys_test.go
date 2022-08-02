@@ -32,7 +32,7 @@ func TestKeys(t *testing.T) {
 		t.Parallel()
 
 		_, s, _ := setup()
-		key, err := s.Keys.Generate("", crypto.ECDSA_P256)
+		key, err := s.Keys.Generate("", "", crypto.ECDSA_P256)
 		assert.NoError(t, err)
 
 		assert.Equal(t, len(key.String()), 66)
@@ -42,10 +42,21 @@ func TestKeys(t *testing.T) {
 		t.Parallel()
 
 		_, s, _ := setup()
-		key, err := s.Keys.Generate("aaaaaaaaaaaaaaaaaaaaaaannndddddd_its_gone", crypto.ECDSA_P256)
+		key, err := s.Keys.Generate("aaaaaaaaaaaaaaaaaaaaaaannndddddd_its_gone", "", crypto.ECDSA_P256)
 
 		assert.NoError(t, err)
 		assert.Equal(t, key.String(), "0x134f702d0872dba9c7aea15498aab9b2ffedd5aeebfd8ac3cf47c591f0d7ce52")
+	})
+
+	t.Run("Generate Keys with private key", func(t *testing.T) {
+		t.Parallel()
+
+		_, s, _ := setup()
+		key, err := s.Keys.Generate("", "af232020ea7a7256eebdcebd609457d0dea51436a4377d2b577a3cf1f6d45c44", crypto.ECDSA_P256)
+
+		assert.NoError(t, err)
+		assert.Equal(t, key.String(), "0xaf232020ea7a7256eebdcebd609457d0dea51436a4377d2b577a3cf1f6d45c44")
+		assert.Equal(t, key.PublicKey().String(), "0x3da1d2eb3d9f1a0f57b434dca6bac2068216ccc5c69221a70f5c060152a39296ad28ad260536977f88eea45da9064b81a18c17f5cdc30e638752767359f0b496")
 	})
 
 	t.Run("Generate Keys Invalid", func(t *testing.T) {
@@ -64,7 +75,7 @@ func TestKeys(t *testing.T) {
 
 		for x, in := range inputs {
 			for k, v := range in {
-				_, err := s.Keys.Generate(k, v)
+				_, err := s.Keys.Generate(k, "", v)
 				assert.Equal(t, err.Error(), errs[x])
 				x++
 			}
