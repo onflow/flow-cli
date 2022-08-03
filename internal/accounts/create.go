@@ -179,7 +179,7 @@ func createInteractive(state *flowkit.State, loader flowkit.ReaderWriter) (*flow
 
 	service := services.NewServices(gw, state, output.NewStdoutLogger(output.NoneLog))
 
-	key, err := service.Keys.Generate("", crypto.ECDSA_P256)
+	key, err := service.Keys.Generate("", "", crypto.ECDSA_P256)
 	if err != nil {
 		return nil, err
 	}

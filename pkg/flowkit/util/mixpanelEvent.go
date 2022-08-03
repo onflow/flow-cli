@@ -16,41 +16,31 @@
  * limitations under the License.
  */
 
-package config
+package util
 
 import (
 	"github.com/spf13/cobra"
 )
 
-var Cmd = &cobra.Command{
-	Use:              "config",
-	Short:            "Utilities to manage configuration",
-	TraverseChildren: true,
+const (
+	MIXPANEL_EVENT_PROJECT_TOKEN = "token"
+	MIXPANEL_EVENT_CALLER        = "caller"
+	FLOW_CLI                     = "flow-cli"
+)
+
+type event struct {
+	Name       string                 `json:"event"`
+	Properties map[string]interface{} `json:"properties"`
 }
 
-func init() {
-	InitCommand.AddToParent(Cmd)
-	Cmd.AddCommand(AddCmd)
-	Cmd.AddCommand(RemoveCmd)
-	MetricsSettings.AddToParent(Cmd)
-}
-
-type Result struct {
-	result string
-}
-
-func (r *Result) JSON() interface{} {
-	return nil
-}
-
-func (r *Result) String() string {
-	if r.result != "" {
-		return r.result
+func newEvent(command *cobra.Command) *event {
+	return &event{
+		command.CommandPath(),
+		make(map[string]interface{}),
 	}
-
-	return ""
 }
 
-func (r *Result) Oneliner() string {
-	return ""
+func (e *event) setUpEvent(token string, caller string) {
+	e.Properties[MIXPANEL_EVENT_PROJECT_TOKEN] = token
+	e.Properties[MIXPANEL_EVENT_CALLER] = caller
 }

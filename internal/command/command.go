@@ -78,6 +78,22 @@ const (
 	logLevelNone  = "none"
 )
 
+func (c Command) handleUserTracking() {
+	if util.MIXPANEL_SERVICE_ACCOUNT_SECRET == "" || util.MIXPANEL_PROJECT_TOKEN == "" {
+		return
+	}
+	optedIn, err := util.IsUserOptedIn()
+	if err != nil {
+		sentry.CaptureException(err)
+	}
+	if optedIn {
+		err = util.TrackCommandUsage(c.Cmd)
+		if err != nil {
+			sentry.CaptureException(err)
+		}
+	}
+}
+
 // AddToParent add new command to main parent cmd
 // and initializes all necessary things as well as take care of errors and output
 // here we can do all boilerplate code that is else copied in each command and make sure
@@ -91,6 +107,7 @@ func (c Command) AddToParent(parent *cobra.Command) {
 			defer sentry.Flush(2 * time.Second)
 			defer sentry.Recover()
 		}
+		c.handleUserTracking()
 
 		// initialize file loader used in commands
 		loader := &afero.Afero{Fs: afero.NewOsFs()}
