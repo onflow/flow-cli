@@ -73,9 +73,15 @@ func addContract(
 
 	if addContractFlags.ArgsJSON != "" {
 		contractArgs, err = flowkit.ParseArguments(nil, addContractFlags.ArgsJSON)
+		if err != nil {
+			return nil, err
+		}
 	} else {
 		if len(args) > 2 {
 			contractArgs, err = flowkit.ParseArgumentsWithoutType(filename, code, args[2:])
+			if err != nil {
+				return nil, err
+			}
 		}
 	}
 
