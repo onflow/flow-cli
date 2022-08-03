@@ -99,7 +99,7 @@ func TestEvents_Integration(t *testing.T) {
 		srvAcc, _ := state.EmulatorServiceAccount()
 
 		// create events
-		_, err := s.Accounts.AddContract(srvAcc, tests.ContractEvents.Name, tests.ContractEvents.Source, false)
+		_, err := s.Accounts.AddContract(srvAcc, tests.ContractEvents.Name, tests.ContractEvents.Source, false, nil)
 		assert.NoError(t, err)
 		assert.NoError(t, err)
 		for x := 'A'; x <= 'J'; x++ { // test contract emits events named from A to J
@@ -119,7 +119,7 @@ func TestEvents_Integration(t *testing.T) {
 		srvAcc, _ := state.EmulatorServiceAccount()
 
 		// create events
-		_, err := s.Accounts.AddContract(srvAcc, tests.ContractEvents.Name, tests.ContractEvents.Source, false)
+		_, err := s.Accounts.AddContract(srvAcc, tests.ContractEvents.Name, tests.ContractEvents.Source, false, nil)
 		assert.NoError(t, err)
 
 		assert.NoError(t, err)

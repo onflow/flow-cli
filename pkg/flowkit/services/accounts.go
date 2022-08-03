@@ -282,12 +282,13 @@ func (a *Accounts) AddContract(
 	contractName string,
 	contractSource []byte,
 	updateExisting bool,
+	contractArgs []cadence.Value,
 ) (*flow.Account, error) {
 	tx, err := flowkit.NewAddAccountContractTransaction(
 		account,
 		contractName,
 		string(contractSource),
-		[]cadence.Value{}, // TODO(sideninja) add support for args on account add-contract
+		contractArgs,
 	)
 	if err != nil {
 		return nil, err

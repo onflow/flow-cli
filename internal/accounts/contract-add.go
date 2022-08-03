@@ -21,6 +21,8 @@ package accounts
 import (
 	"fmt"
 
+	"github.com/onflow/cadence"
+
 	"github.com/onflow/flow-cli/pkg/flowkit"
 
 	"github.com/spf13/cobra"
@@ -30,8 +32,9 @@ import (
 )
 
 type flagsAddContract struct {
-	Signer  string   `default:"emulator-account" flag:"signer" info:"Account name from configuration used to sign the transaction"`
-	Include []string `default:"" flag:"include" info:"Fields to include in the output. Valid values: contracts."`
+	ArgsJSON string   `default:"" flag:"args-json" info:"arguments in JSON-Cadence format"`
+	Signer   string   `default:"emulator-account" flag:"signer" info:"Account name from configuration used to sign the transaction"`
+	Include  []string `default:"" flag:"include" info:"Fields to include in the output. Valid values: contracts."`
 }
 
 var addContractFlags = flagsAddContract{}
@@ -41,7 +44,7 @@ var AddContractCommand = &command.Command{
 		Use:     "add-contract <name> <filename>",
 		Short:   "Deploy a new contract to an account",
 		Example: `flow accounts add-contract FungibleToken ./FungibleToken.cdc`,
-		Args:    cobra.ExactArgs(2),
+		Args:    cobra.MinimumNArgs(2),
 	},
 	Flags: &addContractFlags,
 	RunS:  addContract,
@@ -67,7 +70,18 @@ func addContract(
 		return nil, err
 	}
 
-	account, err := services.Accounts.AddContract(to, name, code, false)
+	var contractArgs []cadence.Value
+	if addContractFlags.ArgsJSON != "" {
+		contractArgs, err = flowkit.ParseArguments(nil, addContractFlags.ArgsJSON)
+	} else if len(args) > 2 {
+		contractArgs, err = flowkit.ParseArgumentsWithoutType(filename, code, args[2:])
+	}
+
+	if err != nil {
+		return nil, fmt.Errorf("error parsing transaction arguments: %w", err)
+	}
+
+	account, err := services.Accounts.AddContract(to, name, code, false, contractArgs)
 	if err != nil {
 		return nil, err
 	}
