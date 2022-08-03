@@ -48,17 +48,11 @@ func handleMetricsSettings(
 	_ command.GlobalFlags,
 	_ *services.Services,
 ) (command.Result, error) {
-	if args[0] == "disable" {
-		err := util.SetUserMetricsSettings(false)
+                disabled := args[0] == "disable"
+		err := util.SetUserMetricsSettings(disabled)
 		if err != nil {
 			return nil, err
-		}
-	} else if args[0] == "enable" {
-		err := util.SetUserMetricsSettings(true)
-		if err != nil {
-			return nil, err
-		}
-	}
+	        }
 
 	return &Result{
 		fmt.Sprintf("Metrics have been %sd", args[0]),
