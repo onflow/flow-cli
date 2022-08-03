@@ -59,7 +59,6 @@ func addContract(
 ) (command.Result, error) {
 	name := args[0]
 	filename := args[1]
-	var contractArgs []cadence.Value
 
 	code, err := readerWriter.ReadFile(filename)
 	if err != nil {
@@ -71,18 +70,17 @@ func addContract(
 		return nil, err
 	}
 
+	var contractArgs []cadence.Value
 	if addContractFlags.ArgsJSON != "" {
 		contractArgs, err = flowkit.ParseArguments(nil, addContractFlags.ArgsJSON)
-		if err != nil {
-			return nil, err
-		}
 	} else {
 		if len(args) > 2 {
 			contractArgs, err = flowkit.ParseArgumentsWithoutType(filename, code, args[2:])
-			if err != nil {
-				return nil, err
-			}
 		}
+	}
+
+	if err != nil {
+		return nil, fmt.Errorf("error parsing transaction arguments: %w", err)
 	}
 
 	account, err := services.Accounts.AddContract(to, name, code, false, contractArgs)
