@@ -34,7 +34,6 @@ ae8bfbc85ce994899a3f942072bfd3455823b1f7652106ac102d161c17fcb55c
 - Name: `collection_id`
 - Valid Input: SHA3-256 hash of the collection contents
 
-{argument general description}
 
 ## Arguments
 
