@@ -20,6 +20,7 @@ package config
 
 import (
 	"fmt"
+
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/services"
@@ -48,11 +49,11 @@ func handleMetricsSettings(
 	_ command.GlobalFlags,
 	_ *services.Services,
 ) (command.Result, error) {
-                disabled := args[0] == "disable"
-		err := util.SetUserMetricsSettings(disabled)
-		if err != nil {
-			return nil, err
-	        }
+	disabled := args[0] == "disable"
+	err := util.SetUserMetricsSettings(disabled)
+	if err != nil {
+		return nil, err
+	}
 
 	return &Result{
 		fmt.Sprintf("Metrics have been %sd", args[0]),
