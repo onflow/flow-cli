@@ -61,6 +61,6 @@ func handleMetricsSettings(
 	}
 
 	return &Result{
-		fmt.Sprintf("flow cli commands tracking %sd", args[0]),
+		fmt.Sprintf("Metrics have been %sd", args[0]),
 	}, nil
 }
