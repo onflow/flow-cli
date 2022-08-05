@@ -19,7 +19,11 @@
 package accounts
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"net/http"
 	"strings"
 	"time"
 
@@ -36,6 +40,12 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowkit/util"
 )
 
+const (
+	DefaultFlowAccountSigAlg  = "ECDSA_P256"
+	DefaultFlowAccountHashAlg = "SHA3_256"
+	AccountCreationAPIURL     = "https://openapi.lilico.org/v1/address"
+)
+
 type flagsCreate struct {
 	Signer    string   `default:"emulator-account" flag:"signer" info:"Account name from configuration used to sign the transaction"`
 	Keys      []string `flag:"key" info:"Public keys to attach to account"`
@@ -47,6 +57,11 @@ type flagsCreate struct {
 }
 
 var createFlags = flagsCreate{}
+var ACCOUNT_API_TOKEN = ""
+
+type AccountAPIResponse struct {
+	Data map[string]string `json:"data"`
+}
 
 var CreateCommand = &command.Command{
 	Cmd: &cobra.Command{
@@ -213,32 +228,12 @@ func createInteractive(state *flowkit.State, loader flowkit.ReaderWriter) (*flow
 
 		address = account.Address
 	} else {
-		var link string
-		switch selectedNetwork {
-		case config.DefaultTestnetNetwork():
-			outputList(log, []string{
-				"Please complete the following steps in a web browser",
-				"Complete the captcha challenge.",
-				"Click the 'Create Account' button.",
-				"Return to this window.",
-			}, true)
-			link = util.TestnetFaucetURL(key.PublicKey().String(), crypto.ECDSA_P256)
+		log.StartProgress("Please wait while we create your new account....\n")
 
-		case config.DefaultMainnetNetwork():
-			outputList(log, []string{
-				"Please complete the following steps in a web browser",
-				"Click on 'Submit' button.",
-				"Connect existing Blocto account or create new.",
-				"Click on confirm and approve transaction.",
-			}, true)
-			link = util.MainnetFlowPortURL(key.PublicKey().String())
+		err = createNewAccount(selectedNetwork.Name, key.PublicKey().String())
+		if err != nil {
+			return nil, err
 		}
-
-		output.ConfirmOpenBrowser()
-
-		log.StartProgress("Waiting for your account to be created, please finish all the steps in the browser...\n")
-		_ = util.OpenBrowserWindow(link)
-		log.Info(output.Italic(fmt.Sprintf("You can also navigate to the link manually: %s\n", link)))
 
 		addr, err := getAccountCreatedAddressWithPubKey(service, key.PublicKey(), startHeight)
 		if err != nil {
@@ -284,6 +279,46 @@ func createInteractive(state *flowkit.State, loader flowkit.ReaderWriter) (*flow
 	outputList(log, items, false)
 
 	return onChainAccount, nil
+}
+
+func createNewAccount(network, publicKey string) error {
+	newAccount := map[string]any{"publicKey": strings.TrimPrefix(publicKey, "0x"), "hashAlgorithm": DefaultFlowAccountHashAlg, "signatureAlgorithm": DefaultFlowAccountSigAlg, "weight": 1000}
+
+	newAccountJSON, err := json.Marshal(newAccount)
+	accountCreationURL := AccountCreationAPIURL
+	if network == "testnet" {
+		accountCreationURL = accountCreationURL + "/testnet"
+	}
+
+	req, err := http.NewRequest("POST", accountCreationURL, bytes.NewBuffer(newAccountJSON))
+	if err != nil {
+		return err
+	}
+
+	req.Header.Add("Content-Type", "application/json")
+	req.Header.Add("Authorization", ACCOUNT_API_TOKEN)
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return err
+	}
+
+	defer res.Body.Close()
+	body, err := ioutil.ReadAll(res.Body)
+
+	var apiResponse AccountAPIResponse
+	err = json.Unmarshal(body, &apiResponse)
+	if err != nil {
+		return err
+	}
+	if res.StatusCode >= 400 {
+		return fmt.Errorf("invalid response status code %d \n", res.StatusCode)
+	}
+
+	if _, ok := apiResponse.Data["txId"]; !ok {
+		return fmt.Errorf("transaction ID not found in API response")
+	}
+
+	return nil
 }
 
 // getAccountCreatedAddressWithPubKey monitors the network for account creation events, if the event
