@@ -35,7 +35,7 @@ func TestBlocks(t *testing.T) {
 
 		_, s, gw := setup()
 
-		_, _, _, err := s.Blocks.GetBlock("latest", "flow.AccountCreated", false)
+		_, _, _, err := s.GetBlock("latest", "flow.AccountCreated", false)
 
 		gw.Mock.AssertCalled(t, tests.GetLatestBlockFunc)
 		gw.Mock.AssertCalled(t, tests.GetEventsFunc, "flow.AccountCreated", uint64(1), uint64(1))
@@ -47,7 +47,7 @@ func TestBlocks(t *testing.T) {
 	t.Run("Get latest block height", func(t *testing.T) {
 		t.Parallel()
 		_, s, gw := setup()
-		height, err := s.Blocks.GetLatestBlockHeight()
+		height, err := s.GetLatestBlockHeight()
 		gw.Mock.AssertCalled(t, tests.GetLatestBlockFunc)
 		assert.NoError(t, err)
 		assert.Equal(t, height, uint64(1))
@@ -63,7 +63,7 @@ func TestBlocks(t *testing.T) {
 		block.Height = 10
 		gw.GetBlockByHeight.Return(block, nil)
 
-		_, _, _, err := s.Blocks.GetBlock("10", "flow.AccountCreated", false)
+		_, _, _, err := s.GetBlock("10", "flow.AccountCreated", false)
 
 		gw.Mock.AssertCalled(t, tests.GetBlockByHeightFunc, uint64(10))
 		gw.Mock.AssertCalled(t, tests.GetEventsFunc, "flow.AccountCreated", uint64(10), uint64(10))
@@ -78,7 +78,7 @@ func TestBlocks(t *testing.T) {
 		_, s, gw := setup()
 		ID := "a310685082f0b09f2a148b2e8905f08ea458ed873596b53b200699e8e1f6536f"
 
-		_, _, _, err := s.Blocks.GetBlock(ID, "flow.AccountCreated", false)
+		_, _, _, err := s.GetBlock(ID, "flow.AccountCreated", false)
 
 		assert.NoError(t, err)
 		gw.Mock.AssertCalled(t, tests.GetBlockByIDFunc, flow.HexToID(ID))
@@ -98,7 +98,7 @@ func TestBlocksGet_Integration(t *testing.T) {
 		state, s := setupIntegration()
 		srvAcc, _ := state.EmulatorServiceAccount()
 
-		block, blockEvents, collection, err := s.Blocks.GetBlock("latest", "", true)
+		block, blockEvents, collection, err := s.GetBlock("latest", "", true)
 
 		assert.NoError(t, err)
 		assert.Nil(t, blockEvents)
@@ -107,9 +107,9 @@ func TestBlocksGet_Integration(t *testing.T) {
 		assert.Equal(t, block.ID.String(), "13c7ff23bb65feb5757cc65fdd75cd243506518c126385fae530ddebdad10b17")
 
 		// create an event
-		_, _ = s.Accounts.Create(srvAcc, tests.PubKeys(), nil, tests.SigAlgos(), tests.HashAlgos(), nil)
+		_, _ = s.CreateAccount(srvAcc, tests.PubKeys(), nil, tests.SigAlgos(), tests.HashAlgos(), nil)
 
-		block, blockEvents, _, err = s.Blocks.GetBlock("latest", "flow.AccountCreated", true)
+		block, blockEvents, _, err = s.GetBlock("latest", "flow.AccountCreated", true)
 
 		assert.NoError(t, err)
 		assert.NotNil(t, block)
@@ -123,7 +123,7 @@ func TestBlocksGet_Integration(t *testing.T) {
 
 		_, s := setupIntegration()
 
-		_, _, _, err := s.Blocks.GetBlock("foo", "flow.AccountCreated", true)
+		_, _, _, err := s.GetBlock("foo", "flow.AccountCreated", true)
 		assert.Equal(t, err.Error(), "invalid query: foo, valid are: \"latest\", block height or block ID")
 	})
 }

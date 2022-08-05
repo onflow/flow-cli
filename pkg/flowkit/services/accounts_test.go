@@ -61,7 +61,7 @@ func TestAccounts(t *testing.T) {
 
 	t.Run("Get an Account", func(t *testing.T) {
 		_, s, gw := setup()
-		account, err := s.Accounts.Get(serviceAddress)
+		account, err := s.GetAccount(serviceAddress)
 
 		gw.Mock.AssertCalled(t, "GetAccount", serviceAddress)
 		assert.NoError(t, err)
@@ -94,7 +94,7 @@ func TestAccounts(t *testing.T) {
 			tests.NewAccountCreateResult(newAddress), nil,
 		)
 
-		account, err := s.Accounts.Create(
+		account, err := s.CreateAccount(
 			serviceAcc,
 			[]crypto.PublicKey{pubKey},
 			[]int{1000},
@@ -129,7 +129,7 @@ func TestAccounts(t *testing.T) {
 			gw.GetTransactionResult.Return(tests.NewAccountCreateResult(newAddress), nil)
 		})
 
-		account, err := s.Accounts.Create(
+		account, err := s.CreateAccount(
 			serviceAcc,
 			[]crypto.PublicKey{pubKey},
 			[]int{1000},
@@ -158,7 +158,7 @@ func TestAccounts(t *testing.T) {
 			gw.SendSignedTransaction.Return(tests.NewTransaction(), nil)
 		})
 
-		account, err := s.Accounts.AddContract(
+		account, err := s.AddContract(
 			serviceAcc,
 			tests.ContractHelloString.Filename,
 			tests.ContractHelloString.Source,
@@ -184,7 +184,7 @@ func TestAccounts(t *testing.T) {
 			gw.SendSignedTransaction.Return(tests.NewTransaction(), nil)
 		})
 
-		account, err := s.Accounts.AddContract(
+		account, err := s.AddContract(
 			serviceAcc,
 			tests.ContractHelloString.Filename,
 			tests.ContractHelloString.Source,
@@ -210,7 +210,7 @@ func TestAccounts(t *testing.T) {
 			gw.SendSignedTransaction.Return(tests.NewTransaction(), nil)
 		})
 
-		account, err := s.Accounts.RemoveContract(
+		account, err := s.RemoveContract(
 			serviceAcc,
 			tests.ContractHelloString.Filename,
 		)
@@ -233,7 +233,7 @@ func TestAccounts(t *testing.T) {
 			gw.ExecuteScript.Return(cadence.NewArray([]cadence.Value{}), nil)
 		})
 
-		val1, val2, err := s.Accounts.StakingInfo(flow.HexToAddress("df9c30eb2252f1fa"))
+		val1, val2, err := s.StakingInfo(flow.HexToAddress("df9c30eb2252f1fa"))
 		assert.NoError(t, err)
 		assert.NotNil(t, val1)
 		assert.NotNil(t, val2)
@@ -268,7 +268,7 @@ func TestAccounts(t *testing.T) {
 			count++
 		})
 
-		val1, val2, err := s.Accounts.StakingInfo(flow.HexToAddress("df9c30eb2252f1fa"))
+		val1, val2, err := s.StakingInfo(flow.HexToAddress("df9c30eb2252f1fa"))
 		assert.NoError(t, err)
 		assert.NotNil(t, val1)
 		assert.NotNil(t, val2)
@@ -395,7 +395,7 @@ func TestAccountsCreate_Integration(t *testing.T) {
 		}}
 
 		for i, a := range accIn {
-			acc, err := s.Accounts.Create(a.account, a.pubKeys, a.weights, a.sigAlgo, a.hashAlgo, a.args)
+			acc, err := s.CreateAccount(a.account, a.pubKeys, a.weights, a.sigAlgo, a.hashAlgo, a.args)
 			c := accOut[i]
 
 			assert.NoError(t, err)
@@ -492,7 +492,7 @@ func TestAccountsCreate_Integration(t *testing.T) {
 		}
 
 		for i, a := range accIn {
-			acc, err := s.Accounts.Create(a.account, a.pubKeys, a.weights, a.sigAlgo, a.hashAlgo, a.args)
+			acc, err := s.CreateAccount(a.account, a.pubKeys, a.weights, a.sigAlgo, a.hashAlgo, a.args)
 			errMsg := errOut[i]
 
 			assert.Nil(t, acc)
@@ -512,13 +512,13 @@ func TestAccountsAddContract_Integration(t *testing.T) {
 		state, s := setupIntegration()
 		srvAcc, _ := state.EmulatorServiceAccount()
 
-		acc, err := s.Accounts.AddContract(srvAcc, tests.ContractSimple.Name, tests.ContractSimple.Source, false, nil)
+		acc, err := s.AddContract(srvAcc, tests.ContractSimple.Name, tests.ContractSimple.Source, false, nil)
 
 		assert.NoError(t, err)
 		assert.NotNil(t, acc)
 		assert.Equal(t, acc.Contracts["Simple"], tests.ContractSimple.Source)
 
-		acc, err = s.Accounts.AddContract(srvAcc, tests.ContractSimpleUpdated.Name, tests.ContractSimpleUpdated.Source, true, nil)
+		acc, err = s.AddContract(srvAcc, tests.ContractSimpleUpdated.Name, tests.ContractSimpleUpdated.Source, true, nil)
 
 		assert.NoError(t, err)
 		assert.NotNil(t, acc)
@@ -532,13 +532,13 @@ func TestAccountsAddContract_Integration(t *testing.T) {
 		srvAcc, _ := state.EmulatorServiceAccount()
 
 		// prepare existing contract
-		_, err := s.Accounts.AddContract(srvAcc, tests.ContractSimple.Name, tests.ContractSimple.Source, false, nil)
+		_, err := s.AddContract(srvAcc, tests.ContractSimple.Name, tests.ContractSimple.Source, false, nil)
 		assert.NoError(t, err)
 
-		_, err = s.Accounts.AddContract(srvAcc, tests.ContractSimple.Name, tests.ContractSimple.Source, false, nil)
+		_, err = s.AddContract(srvAcc, tests.ContractSimple.Name, tests.ContractSimple.Source, false, nil)
 		assert.True(t, strings.Contains(err.Error(), "cannot overwrite existing contract with name \"Simple\""))
 
-		_, err = s.Accounts.AddContract(srvAcc, tests.ContractHelloString.Name, tests.ContractHelloString.Source, true, nil)
+		_, err = s.AddContract(srvAcc, tests.ContractHelloString.Name, tests.ContractHelloString.Source, true, nil)
 		assert.True(t, strings.Contains(err.Error(), "cannot update non-existing contract with name \"Hello\""))
 	})
 }
@@ -547,11 +547,11 @@ func TestAccountsAddContractWithArgs(t *testing.T) {
 	srvAcc, _ := state.EmulatorServiceAccount()
 
 	//adding contract without argument should return an error
-	acc, err := s.Accounts.AddContract(srvAcc, tests.ContractSimpleWithArgs.Name, tests.ContractSimpleWithArgs.Source, false, nil)
+	acc, err := s.AddContract(srvAcc, tests.ContractSimpleWithArgs.Name, tests.ContractSimpleWithArgs.Source, false, nil)
 	assert.Error(t, err)
 	assert.True(t, strings.Contains(err.Error(), "invalid argument count, too few arguments: expected 1, got 0"))
 
-	acc, err = s.Accounts.AddContract(srvAcc, tests.ContractSimpleWithArgs.Name, tests.ContractSimpleWithArgs.Source, false, []cadence.Value{cadence.UInt64(4)})
+	acc, err = s.AddContract(srvAcc, tests.ContractSimpleWithArgs.Name, tests.ContractSimpleWithArgs.Source, false, []cadence.Value{cadence.UInt64(4)})
 	assert.NoError(t, err)
 	assert.NotNil(t, acc)
 	assert.Equal(t, acc.Contracts["Simple"], tests.ContractSimpleWithArgs.Source)
@@ -563,13 +563,13 @@ func TestAccountsRemoveContract_Integration(t *testing.T) {
 	srvAcc, _ := state.EmulatorServiceAccount()
 
 	// prepare existing contract
-	_, err := s.Accounts.AddContract(srvAcc, tests.ContractSimple.Name, tests.ContractSimple.Source, false, nil)
+	_, err := s.AddContract(srvAcc, tests.ContractSimple.Name, tests.ContractSimple.Source, false, nil)
 	assert.NoError(t, err)
 
 	t.Run("Remove Contract", func(t *testing.T) {
 		t.Parallel()
 
-		acc, err := s.Accounts.RemoveContract(srvAcc, tests.ContractSimple.Name)
+		acc, err := s.RemoveContract(srvAcc, tests.ContractSimple.Name)
 
 		assert.NoError(t, err)
 		assert.Equal(t, acc.Contracts[tests.ContractSimple.Name], []byte(nil))
@@ -584,7 +584,7 @@ func TestAccountsGet_Integration(t *testing.T) {
 
 	t.Run("Get Account", func(t *testing.T) {
 		t.Parallel()
-		acc, err := s.Accounts.Get(srvAcc.Address())
+		acc, err := s.GetAccount(srvAcc.Address())
 
 		assert.NoError(t, err)
 		assert.NotNil(t, acc)
@@ -594,7 +594,7 @@ func TestAccountsGet_Integration(t *testing.T) {
 	t.Run("Get Account Invalid", func(t *testing.T) {
 		t.Parallel()
 
-		acc, err := s.Accounts.Get(flow.HexToAddress("0x1"))
+		acc, err := s.GetAccount(flow.HexToAddress("0x1"))
 		assert.Nil(t, acc)
 		assert.Equal(t, err.Error(), "could not find account with address 0000000000000001")
 	})
@@ -606,7 +606,7 @@ func TestAccountsStakingInfo_Integration(t *testing.T) {
 	srvAcc, _ := state.EmulatorServiceAccount()
 
 	t.Run("Get Staking Info", func(t *testing.T) {
-		_, _, err := s.Accounts.StakingInfo(srvAcc.Address()) // unfortunately can't do integration test
+		_, _, err := s.StakingInfo(srvAcc.Address()) // unfortunately can't do integration test
 		assert.Equal(t, err.Error(), "emulator chain not supported")
 	})
 }

@@ -19,24 +19,64 @@
 package services
 
 import (
+	"github.com/onflow/cadence"
 	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/gateway"
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
+	"github.com/onflow/flow-go-sdk"
+	"github.com/onflow/flow-go-sdk/crypto"
 )
 
 // Services is a collection of services that provide domain-specific functionality
 // for the different components of a Flow state.
+// type Services struct {
+// 	Accounts     *Accounts
+// 	Scripts      *Scripts
+// 	Transactions *Transactions
+// 	Keys         *Keys
+// 	Events       *Events
+// 	Collections  *Collections
+// 	Project      *Project
+// 	Blocks       *Blocks
+// 	Status       *Status
+// 	Snapshot     *Snapshot
+// }
+
 type Services struct {
-	Accounts     *Accounts
-	Scripts      *Scripts
-	Transactions *Transactions
-	Keys         *Keys
-	Events       *Events
-	Collections  *Collections
-	Project      *Project
-	Blocks       *Blocks
-	Status       *Status
-	Snapshot     *Snapshot
+	gateway gateway.Gateway
+	state   *flowkit.State
+	logger  output.Logger
+}
+
+type Flowkit interface {
+	GetAccount(address flow.Address) (*flow.Account, error)
+	StakingInfo(address flow.Address) ([]map[string]interface{}, []map[string]interface{}, error)
+	NodeTotalStake(nodeId string, chain flow.ChainID) (*cadence.Value, error)
+	CreateAddress(
+		signer *flowkit.Account,
+		pubKeys []crypto.PublicKey,
+		keyWeights []int,
+		sigAlgo []crypto.SignatureAlgorithm,
+		hashAlgo []crypto.HashAlgorithm,
+		contractArgs []string,
+	) (*flow.Account, error)
+	AddContract(
+		account *flowkit.Account,
+		contractName string,
+		contractSource []byte,
+		updateExisting bool,
+		contractArgs []cadence.Value,
+	) (*flow.Account, error)
+	RemoveContract(
+		account *flowkit.Account,
+		contractName string,
+	) (*flow.Account, error)
+	GetBlock(
+		query string,
+		eventType string,
+		verbose bool,
+	) (*flow.Block, []flow.BlockEvents, []*flow.Collection, error)
+	GetLatestBlockHeight() (uint64, error)
 }
 
 // NewServices returns a new services collection for a state,
@@ -47,15 +87,8 @@ func NewServices(
 	logger output.Logger,
 ) *Services {
 	return &Services{
-		Accounts:     NewAccounts(gateway, state, logger),
-		Scripts:      NewScripts(gateway, state, logger),
-		Transactions: NewTransactions(gateway, state, logger),
-		Keys:         NewKeys(gateway, state, logger),
-		Events:       NewEvents(gateway, state, logger),
-		Collections:  NewCollections(gateway, state, logger),
-		Project:      NewProject(gateway, state, logger),
-		Blocks:       NewBlocks(gateway, state, logger),
-		Status:       NewStatus(gateway, state, logger),
-		Snapshot:     NewSnapshot(gateway, state, logger),
+		gateway: gateway,
+		state:   state,
+		logger:  logger,
 	}
 }

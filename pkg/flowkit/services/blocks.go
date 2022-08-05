@@ -22,33 +22,8 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/onflow/flow-cli/pkg/flowkit"
-
 	"github.com/onflow/flow-go-sdk"
-
-	"github.com/onflow/flow-cli/pkg/flowkit/gateway"
-	"github.com/onflow/flow-cli/pkg/flowkit/output"
 )
-
-// Blocks is a service that handles all block-related interactions.
-type Blocks struct {
-	gateway gateway.Gateway
-	state   *flowkit.State
-	logger  output.Logger
-}
-
-// NewBlocks returns a new blocks service.
-func NewBlocks(
-	gateway gateway.Gateway,
-	state *flowkit.State,
-	logger output.Logger,
-) *Blocks {
-	return &Blocks{
-		gateway: gateway,
-		state:   state,
-		logger:  logger,
-	}
-}
 
 // GetBlock returns a block based on the provided query string.
 //
@@ -56,23 +31,23 @@ func NewBlocks(
 // - "latest"                : return the latest block
 // - height (e.g. 123456789) : return block at this height
 // - ID                      : return block with this ID
-func (e *Blocks) GetBlock(
+func (s *Services) GetBlock(
 	query string,
 	eventType string,
 	verbose bool,
 ) (*flow.Block, []flow.BlockEvents, []*flow.Collection, error) {
-	e.logger.StartProgress("Fetching Block...")
-	defer e.logger.StopProgress()
+	s.logger.StartProgress("Fetching Block...")
+	defer s.logger.StopProgress()
 
 	// smart parsing of query
 	var err error
 	var block *flow.Block
 	if query == "latest" {
-		block, err = e.gateway.GetLatestBlock()
+		block, err = s.gateway.GetLatestBlock()
 	} else if height, ce := strconv.ParseUint(query, 10, 64); ce == nil {
-		block, err = e.gateway.GetBlockByHeight(height)
+		block, err = s.gateway.GetBlockByHeight(height)
 	} else if flow.HexToID(query) != flow.EmptyID {
-		block, err = e.gateway.GetBlockByID(flow.HexToID(query))
+		block, err = s.gateway.GetBlockByID(flow.HexToID(query))
 	} else {
 		return nil, nil, nil, fmt.Errorf("invalid query: %s, valid are: \"latest\", block height or block ID", query)
 	}
@@ -88,7 +63,7 @@ func (e *Blocks) GetBlock(
 	// if we specify event get events by the type
 	var events []flow.BlockEvents
 	if eventType != "" {
-		events, err = e.gateway.GetEvents(eventType, block.Height, block.Height)
+		events, err = s.gateway.GetEvents(eventType, block.Height, block.Height)
 		if err != nil {
 			return nil, nil, nil, err
 		}
@@ -98,7 +73,7 @@ func (e *Blocks) GetBlock(
 	collections := make([]*flow.Collection, 0)
 	if verbose {
 		for _, guarantee := range block.CollectionGuarantees {
-			collection, err := e.gateway.GetCollection(guarantee.CollectionID)
+			collection, err := s.gateway.GetCollection(guarantee.CollectionID)
 			if err != nil {
 				return nil, nil, nil, err
 			}
@@ -106,14 +81,14 @@ func (e *Blocks) GetBlock(
 		}
 	}
 
-	e.logger.StopProgress()
+	s.logger.StopProgress()
 
 	return block, events, collections, err
 }
 
 // GetLatestBlockHeight returns the latest block height
-func (e *Blocks) GetLatestBlockHeight() (uint64, error) {
-	block, err := e.gateway.GetLatestBlock()
+func (s *Services) GetLatestBlockHeight() (uint64, error) {
+	block, err := s.gateway.GetLatestBlock()
 	if err != nil {
 		return 0, err
 	}
