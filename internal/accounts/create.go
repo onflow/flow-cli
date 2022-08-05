@@ -285,6 +285,10 @@ func createNewAccount(network, publicKey string) error {
 	newAccount := map[string]any{"publicKey": strings.TrimPrefix(publicKey, "0x"), "hashAlgorithm": DefaultFlowAccountHashAlg, "signatureAlgorithm": DefaultFlowAccountSigAlg, "weight": 1000}
 
 	newAccountJSON, err := json.Marshal(newAccount)
+	if err != nil {
+		return err
+	}
+
 	accountCreationURL := AccountCreationAPIURL
 	if network == "testnet" {
 		accountCreationURL = accountCreationURL + "/testnet"
@@ -304,6 +308,9 @@ func createNewAccount(network, publicKey string) error {
 
 	defer res.Body.Close()
 	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return err
+	}
 
 	var apiResponse AccountAPIResponse
 	err = json.Unmarshal(body, &apiResponse)
