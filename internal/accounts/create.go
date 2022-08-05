@@ -282,8 +282,12 @@ func createInteractive(state *flowkit.State, loader flowkit.ReaderWriter) (*flow
 }
 
 func createNewAccount(network, publicKey string) error {
-	newAccount := map[string]any{"publicKey": strings.TrimPrefix(publicKey, "0x"),
-		"hashAlgorithm": DefaultFlowAccountHashAlg, "signatureAlgorithm": DefaultFlowAccountSigAlg, "weight": 1000}
+	newAccount := map[string]any{
+		"publicKey":          strings.TrimPrefix(publicKey, "0x"),
+		"hashAlgorithm":      DefaultFlowAccountHashAlg,
+		"signatureAlgorithm": DefaultFlowAccountSigAlg,
+		"weight":             1000,
+	}
 
 	newAccountJSON, err := json.Marshal(newAccount)
 	if err != nil {
