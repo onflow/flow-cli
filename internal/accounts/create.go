@@ -252,6 +252,7 @@ func createInteractive(state *flowkit.State, loader flowkit.ReaderWriter) (*flow
 	onChainAccount, err := service.Accounts.Get(address)
 	if err != nil {
 		return nil, err
+
 	}
 
 	account, err := flowkit.NewAccountFromOnChainAccount(name, onChainAccount, key)
