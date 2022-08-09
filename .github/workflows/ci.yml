@@ -29,6 +29,9 @@ jobs:
         make ci
         make check-tidy
         make check-headers
+      env:
+        MIXPANEL_PROJECT_TOKEN: ${{ secrets.MIXPANEL_PROJECT_TOKEN }}
+        MIXPANEL_SERVICE_ACCOUNT_SECRET: ${{ secrets.MIXPANEL_SERVICE_ACCOUNT_SECRET }}
     - name: Upload coverage report
       uses: codecov/codecov-action@v1
       with:
