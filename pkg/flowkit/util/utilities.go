@@ -170,6 +170,7 @@ func AddToGitIgnore(filename string, loader ReaderWriter) error {
 	}
 	gitIgnorePath := path.Join(currentWd, ".gitignore")
 	gitIgnoreFiles := ""
+	filePermissions := os.FileMode(0644)
 
 	_, err = os.Stat(gitIgnorePath)
 	if !os.IsNotExist(err) { // if gitignore exists
@@ -178,11 +179,11 @@ func AddToGitIgnore(filename string, loader ReaderWriter) error {
 			return err
 		}
 		gitIgnoreFiles = string(gitIgnoreFilesRaw)
+		filePermissions = fileStat.Mode().Perm()
 	}
-
 	return loader.WriteFile(
 		gitIgnorePath,
 		[]byte(fmt.Sprintf("%s\n%s", gitIgnoreFiles, filename)),
-		0644,
+		filePermissions,
 	)
 }
