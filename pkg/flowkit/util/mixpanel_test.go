@@ -20,10 +20,11 @@ package util
 
 import (
 	"github.com/stretchr/testify/assert"
+	"os"
 	"testing"
 )
 
 func TestGitRepoSecret(t *testing.T) {
-	assert.True(t, MIXPANEL_PROJECT_TOKEN != "")
-	assert.True(t, MIXPANEL_SERVICE_ACCOUNT_SECRET != "")
+	assert.True(t, os.Getenv("MIXPANEL_PROJECT_TOKEN") != "")
+	assert.True(t, os.Getenv("MIXPANEL_SERVICE_ACCOUNT_SECRET") != "")
 }
