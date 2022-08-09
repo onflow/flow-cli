@@ -41,9 +41,7 @@ import (
 )
 
 const (
-	DefaultFlowAccountSigAlg  = "ECDSA_P256"
-	DefaultFlowAccountHashAlg = "SHA3_256"
-	AccountCreationAPIURL     = "https://openapi.lilico.org/v1/address"
+	AccountCreationAPIURL = "https://openapi.lilico.org/v1/address"
 )
 
 type flagsCreate struct {
@@ -282,10 +280,11 @@ func createInteractive(state *flowkit.State, loader flowkit.ReaderWriter) (*flow
 }
 
 func createNewAccount(network, publicKey string) error {
+	fmt.Printf("default algos %s, %s \n", createFlags.HashAlgo, createFlags.SigAlgo)
 	newAccount := map[string]any{
 		"publicKey":          strings.TrimPrefix(publicKey, "0x"),
-		"hashAlgorithm":      DefaultFlowAccountHashAlg,
-		"signatureAlgorithm": DefaultFlowAccountSigAlg,
+		"hashAlgorithm":      createFlags.HashAlgo[0],
+		"signatureAlgorithm": createFlags.SigAlgo[0],
 		"weight":             1000,
 	}
 
