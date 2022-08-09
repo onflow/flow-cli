@@ -6,13 +6,13 @@ require (
 	github.com/getsentry/sentry-go v0.13.0
 	github.com/go-git/go-git/v5 v5.4.2
 	github.com/manifoldco/promptui v0.9.0
-	github.com/onflow/cadence v0.25.0
-	github.com/onflow/cadence/languageserver v0.25.1-0.20220801183808-45a1c64f322c
-	github.com/onflow/cadence/test-framework v0.0.0-00010101000000-000000000000
+	github.com/onflow/cadence v0.25.1-0.20220809220516-35f2486ed7c3
+	github.com/onflow/cadence/languageserver v0.25.1-0.20220809223427-9b1a11a91fc8
+	github.com/onflow/cadence/test-framework v0.0.0-20220809220516-35f2486ed7c3
 	github.com/onflow/fcl-dev-wallet v0.4.9
-	github.com/onflow/flow-cli/pkg/flowkit v0.0.0-20220801183630-5a1cf826dd08
-	github.com/onflow/flow-emulator v0.33.4-0.20220804222756-7078200acbb7
-	github.com/onflow/flow-go-sdk v0.26.6-0.20220809211302-a3a7538c12c3
+	github.com/onflow/flow-cli/pkg/flowkit v0.0.0-20220809222724-13be2e93f6c4
+	github.com/onflow/flow-emulator v0.33.5-0.20220809221047-7847cba6d095
+	github.com/onflow/flow-go-sdk v0.26.6-0.20220809220713-766b76677a67
 	github.com/psiemens/sconfig v0.1.0
 	github.com/spf13/afero v1.9.0
 	github.com/spf13/cobra v1.5.0
@@ -108,7 +108,7 @@ require (
 	github.com/onflow/flow-core-contracts/lib/go/contracts v0.11.2-0.20220720151516-797b149ceaaa // indirect
 	github.com/onflow/flow-core-contracts/lib/go/templates v0.11.2-0.20220720151516-797b149ceaaa // indirect
 	github.com/onflow/flow-ft/lib/go/contracts v0.5.0 // indirect
-	github.com/onflow/flow-go v0.27.2-0.20220809212106-ebdffb96f5ca // indirect
+	github.com/onflow/flow-go v0.27.2-0.20220809220844-c4d2437a9d5b // indirect
 	github.com/onflow/flow-go/crypto v0.24.4 // indirect
 	github.com/onflow/flow-nft/lib/go/contracts v0.0.0-20220727161549-d59b1e547ac4 // indirect
 	github.com/onflow/flow/protobuf/go/flow v0.3.1 // indirect
