@@ -112,3 +112,6 @@ check-env:
 ifndef MIXPANEL_SERVICE_ACCOUNT_SECRET
 	$(error MIXPANEL_SERVICE_ACCOUNT_SECRET is undefined)
 endif
+ifndef MIXPANEL_PROJECT_TOKEN
+	$(error MIXPANEL_PROJECT_TOKEN is undefined)
+endif
