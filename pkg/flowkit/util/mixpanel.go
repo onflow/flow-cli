@@ -31,7 +31,7 @@ import (
 
 const (
 	MIXPANEL_TRACK_URL   = "https://api.mixpanel.com/track"
-	MIXPANEL_QUERY_URL   = "https://mixpanel.com/api/2.0/engage?project_id=2154593"
+	MIXPANEL_QUERY_URL   = "https://mixpanel.com/api/2.0/engage?project_id=2123215"
 	MIXPANEL_PROFILE_URL = "https://api.mixpanel.com/engage#profile-set"
 )
 
