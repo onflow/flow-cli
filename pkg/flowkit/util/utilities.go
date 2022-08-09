@@ -172,7 +172,7 @@ func AddToGitIgnore(filename string, loader ReaderWriter) error {
 	gitIgnoreFiles := ""
 	filePermissions := os.FileMode(0644)
 
-	_, err = os.Stat(gitIgnorePath)
+	fileStat, err := os.Stat(gitIgnorePath)
 	if !os.IsNotExist(err) { // if gitignore exists
 		gitIgnoreFilesRaw, err := loader.ReadFile(gitIgnorePath)
 		if err != nil {
