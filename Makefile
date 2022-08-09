@@ -106,3 +106,7 @@ check-headers:
 check-tidy:
 	go mod tidy
 	cd pkg/flowkit; go mod tidy
+check-env:
+ifndef MIXPANEL_SERVICE_ACCOUNT_SECRET
+	$(error MIXPANEL_SERVICE_ACCOUNT_SECRET is undefined)
+endif
