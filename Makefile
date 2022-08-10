@@ -49,7 +49,7 @@ ifeq ($(COVER), true)
 endif
 
 .PHONY: ci
-ci: install-tools check-env test coverage
+ci: install-tools test coverage
 
 .PHONY: install
 install:
@@ -106,12 +106,3 @@ check-headers:
 check-tidy:
 	go mod tidy
 	cd pkg/flowkit; go mod tidy
-
-.PHONY: check-env
-check-env:
-ifndef MIXPANEL_SERVICE_ACCOUNT_SECRET
-	$(error MIXPANEL_SERVICE_ACCOUNT_SECRET is undefined)
-endif
-ifndef MIXPANEL_PROJECT_TOKEN
-	$(error MIXPANEL_PROJECT_TOKEN is undefined)
-endif
