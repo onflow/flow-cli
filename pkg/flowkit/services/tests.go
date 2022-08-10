@@ -47,7 +47,7 @@ func NewTests(
 
 // Execute test scripts.
 //
-func (s *Tests) Execute(code []byte, scriptPath string, readerWriter flowkit.ReaderWriter) (test_framework.Results, error) {
+func (t *Tests) Execute(code []byte, scriptPath string, readerWriter flowkit.ReaderWriter) (test_framework.Results, error) {
 	runner := test_framework.NewTestRunner().
 		WithImportResolver(func(location common.Location) (string, error) {
 			stringLocation, isFileImport := location.(common.StringLocation)
@@ -65,7 +65,8 @@ func (s *Tests) Execute(code []byte, scriptPath string, readerWriter flowkit.Rea
 			return string(content), nil
 		})
 
-	s.logger.Info("Running tests....")
+	t.logger.Info("Running tests...")
+
 	return runner.RunTests(string(code))
 }
 

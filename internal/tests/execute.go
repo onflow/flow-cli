@@ -28,12 +28,11 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowkit/services"
 )
 
-type flagsScripts struct {
-	ArgsJSON string   `default:"" flag:"args-json" info:"arguments in JSON-Cadence format"`
-	Arg      []string `default:"" flag:"arg" info:"⚠️  Deprecated: use command arguments"`
+type flagsTests struct {
+	// Nothing for now
 }
 
-var scriptFlags = flagsScripts{}
+var testFlags = flagsTests{}
 
 var ExecuteCommand = &command.Command{
 	Cmd: &cobra.Command{
@@ -42,7 +41,7 @@ var ExecuteCommand = &command.Command{
 		Example: `flow tests run script.cdc`,
 		Args:    cobra.MinimumNArgs(1),
 	},
-	Flags: &scriptFlags,
+	Flags: &testFlags,
 	Run:   execute,
 }
 
@@ -52,19 +51,12 @@ func execute(
 	_ command.GlobalFlags,
 	services *services.Services,
 ) (command.Result, error) {
+
 	filename := args[0]
 
 	code, err := readerWriter.ReadFile(filename)
 	if err != nil {
 		return nil, fmt.Errorf("error loading script file: %w", err)
-	}
-
-	if len(scriptFlags.Arg) != 0 {
-		fmt.Println("⚠️  DEPRECATION WARNING: use script arguments as command arguments: execute <filename> [<argument> <argument> ...]")
-	}
-
-	if err != nil {
-		return nil, fmt.Errorf("error parsing script arguments: %w", err)
 	}
 
 	result, err := services.Tests.Execute(
@@ -77,5 +69,7 @@ func execute(
 		return nil, err
 	}
 
-	return &TestResult{result}, nil
+	return &TestResult{
+		Results: result,
+	}, nil
 }

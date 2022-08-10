@@ -20,12 +20,11 @@ package tests
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
-	"github.com/onflow/flow-cli/internal/command"
 
 	"github.com/spf13/cobra"
 
+	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/pkg/flowkit/util"
 
 	"github.com/onflow/cadence/test-framework"
@@ -47,10 +46,17 @@ type TestResult struct {
 	test_framework.Results
 }
 
-func (r *TestResult) JSON() interface{} {
-	return json.RawMessage(
-		r.Oneliner(),
-	)
+func (r *TestResult) JSON() any {
+	results := make([]map[string]string, 0, len(r.Results))
+
+	for _, result := range r.Results {
+		results = append(results, map[string]string{
+			"testName": result.TestName,
+			"error":    result.Error.Error(),
+		})
+	}
+
+	return results
 }
 
 func (r *TestResult) String() string {
