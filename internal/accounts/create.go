@@ -322,6 +322,9 @@ func createNewAccount(network, publicKey string) error {
 		return err
 	}
 	if res.StatusCode >= 400 {
+		if res.StatusCode == 429 {
+			return fmt.Errorf("api limit exceeded, please try again in a moment %d \n", res.StatusCode)
+		}
 		return fmt.Errorf("invalid response status code %d \n", res.StatusCode)
 	}
 
