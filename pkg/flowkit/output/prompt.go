@@ -559,7 +559,26 @@ func CreateAccountNetworkPrompt() (string, config.Network) {
 
 	return selectedNetwork, networkMap[selectedNetwork]
 }
+func AccountCreationMethodPrompt(selectedNetwork config.Network) int {
+	manualOption := "Create account with Faucet"
+	if selectedNetwork == config.DefaultMainnetNetwork() {
+		manualOption = "Create account with Flow Port"
+	}
+	apiOption := "Create account with API (no CAPTCHA required)"
 
+	createAccountPrompt := promptui.Select{
+		Label: "Choose a network",
+		Items: []string{manualOption, apiOption},
+	}
+
+	selectedOption, _, err := createAccountPrompt.Run()
+	if err == promptui.ErrInterrupt {
+		os.Exit(-1)
+	}
+	fmt.Println("")
+
+	return selectedOption
+}
 func WantToContinue() bool {
 	prompt := promptui.Prompt{
 		Label:       "Do you want to continue",

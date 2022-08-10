@@ -226,20 +226,20 @@ func createInteractive(state *flowkit.State, loader flowkit.ReaderWriter) (*flow
 
 		address = account.Address
 	} else {
-		log.StartProgress("Please wait while we create your new account....\n")
-
-		err = createNewAccount(selectedNetwork.Name, key.PublicKey().String())
-		if err != nil {
-			return nil, err
+		selectedOption := output.AccountCreationMethodPrompt(selectedNetwork)
+		if selectedOption == 0 {
+			addr, err := createAccountManually(log, selectedNetwork, key, service, startHeight)
+			if err != nil {
+				return nil, err
+			}
+			address = *addr
+		} else {
+			addr, err := createAccountWithAPI(log, selectedNetwork, key, service, startHeight)
+			if err != nil {
+				return nil, err
+			}
+			address = *addr
 		}
-
-		addr, err := getAccountCreatedAddressWithPubKey(service, key.PublicKey(), startHeight)
-		if err != nil {
-			return nil, err
-		}
-		address = *addr
-
-		log.StopProgress()
 	}
 
 	onChainAccount, err := service.Accounts.Get(address)
@@ -278,9 +278,60 @@ func createInteractive(state *flowkit.State, loader flowkit.ReaderWriter) (*flow
 
 	return onChainAccount, nil
 }
+func createAccountManually(log *output.StdoutLogger, selectedNetwork config.Network, key crypto.PrivateKey, service *services.Services, startHeight uint64) (*flow.Address, error) {
+	var link string
+	switch selectedNetwork {
+	case config.DefaultTestnetNetwork():
+		outputList(log, []string{
+			"Please complete the following steps in a web browser",
+			"Complete the captcha challenge.",
+			"Click the 'Create Account' button.",
+			"Return to this window.",
+		}, true)
+		link = util.TestnetFaucetURL(key.PublicKey().String(), crypto.ECDSA_P256)
 
+	case config.DefaultMainnetNetwork():
+		outputList(log, []string{
+			"Please complete the following steps in a web browser",
+			"Click on 'Submit' button.",
+			"Connect existing Blocto account or create new.",
+			"Click on confirm and approve transaction.",
+		}, true)
+		link = util.MainnetFlowPortURL(key.PublicKey().String())
+	}
+	output.ConfirmOpenBrowser()
+
+	log.StartProgress("Waiting for your account to be created, please finish all the steps in the browser...\n")
+	_ = util.OpenBrowserWindow(link)
+	log.Info(output.Italic(fmt.Sprintf("You can also navigate to the link manually: %s\n", link)))
+
+	addr, err := getAccountCreatedAddressWithPubKey(service, key.PublicKey(), startHeight)
+	if err != nil {
+		return nil, err
+	}
+
+	log.StopProgress()
+
+	return addr, nil
+}
+func createAccountWithAPI(log *output.StdoutLogger, selectedNetwork config.Network, key crypto.PrivateKey, service *services.Services, startHeight uint64) (*flow.Address, error) {
+	log.StartProgress("Please wait while we create your new account....\n")
+
+	err := createNewAccount(selectedNetwork.Name, key.PublicKey().String())
+	if err != nil {
+		return nil, err
+	}
+
+	addr, err := getAccountCreatedAddressWithPubKey(service, key.PublicKey(), startHeight)
+	if err != nil {
+		return nil, err
+	}
+
+	log.StopProgress()
+
+	return addr, nil
+}
 func createNewAccount(network, publicKey string) error {
-	fmt.Printf("default algos %s, %s \n", createFlags.HashAlgo, createFlags.SigAlgo)
 	newAccount := map[string]any{
 		"publicKey":          strings.TrimPrefix(publicKey, "0x"),
 		"hashAlgorithm":      createFlags.HashAlgo[0],
