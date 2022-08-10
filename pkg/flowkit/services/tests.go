@@ -19,17 +19,24 @@
 package services
 
 import (
+	"fmt"
+	"path"
+
+	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
 
+	"github.com/onflow/cadence/runtime/common"
 	"github.com/onflow/cadence/test-framework"
 )
 
 // Tests is a service that handles all tests-related interactions.
+//
 type Tests struct {
 	logger output.Logger
 }
 
 // NewTests returns a new tests service.
+//
 func NewTests(
 	logger output.Logger,
 ) *Tests {
@@ -39,7 +46,33 @@ func NewTests(
 }
 
 // Execute test scripts.
-func (s *Tests) Execute(code []byte) (test_framework.Results, error) {
-	runner := test_framework.NewTestRunner()
+//
+func (s *Tests) Execute(code []byte, scriptPath string, readerWriter flowkit.ReaderWriter) (test_framework.Results, error) {
+	runner := test_framework.NewTestRunner().
+		WithImportResolver(func(location common.Location) (string, error) {
+			stringLocation, isFileImport := location.(common.StringLocation)
+			if !isFileImport {
+				return "", fmt.Errorf("cannot import from %s", location)
+			}
+
+			importFilePath := absolutePath(scriptPath, stringLocation.String())
+
+			content, err := readerWriter.ReadFile(importFilePath)
+			if err != nil {
+				return "", err
+			}
+
+			return string(content), nil
+		})
+
+	s.logger.Info("Running tests....")
 	return runner.RunTests(string(code))
+}
+
+func absolutePath(basePath, filePath string) string {
+	if path.IsAbs(filePath) {
+		return filePath
+	}
+
+	return path.Join(path.Dir(basePath), filePath)
 }

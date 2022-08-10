@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package scripts
+package tests
 
 import (
 	"fmt"
@@ -37,7 +37,7 @@ var scriptFlags = flagsScripts{}
 
 var ExecuteCommand = &command.Command{
 	Cmd: &cobra.Command{
-		Use:     "test <filename>",
+		Use:     "run <filename>",
 		Short:   "Run a test script",
 		Example: `flow tests run script.cdc`,
 		Args:    cobra.MinimumNArgs(1),
@@ -49,7 +49,7 @@ var ExecuteCommand = &command.Command{
 func execute(
 	args []string,
 	readerWriter flowkit.ReaderWriter,
-	globalFlags command.GlobalFlags,
+	_ command.GlobalFlags,
 	services *services.Services,
 ) (command.Result, error) {
 	filename := args[0]
@@ -60,17 +60,8 @@ func execute(
 	}
 
 	if len(scriptFlags.Arg) != 0 {
-		// TODO: read dir path for imports resolver
-
 		fmt.Println("⚠️  DEPRECATION WARNING: use script arguments as command arguments: execute <filename> [<argument> <argument> ...]")
 	}
-
-	//var scriptArgs []cadence.Value
-	//if scriptFlags.ArgsJSON != "" || len(scriptFlags.Arg) != 0 {
-	//	scriptArgs, err = flowkit.ParseArguments(scriptFlags.Arg, scriptFlags.ArgsJSON)
-	//} else {
-	//	scriptArgs, err = flowkit.ParseArgumentsWithoutType(filename, code, args[1:])
-	//}
 
 	if err != nil {
 		return nil, fmt.Errorf("error parsing script arguments: %w", err)
@@ -78,7 +69,10 @@ func execute(
 
 	result, err := services.Tests.Execute(
 		code,
+		filename,
+		readerWriter,
 	)
+
 	if err != nil {
 		return nil, err
 	}
