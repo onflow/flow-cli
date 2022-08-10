@@ -51,8 +51,8 @@ func handleMetricsSettings(
 	_ command.GlobalFlags,
 	_ *services.Services,
 ) (command.Result, error) {
-	disabled := args[0] == "disable"
-	err := util.SetUserMetricsSettings(disabled)
+	enabled := args[0] == "enable"
+	err := util.SetUserMetricsSettings(enabled)
 	if err != nil {
 		return nil, err
 	}
