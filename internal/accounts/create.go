@@ -379,7 +379,7 @@ func createNewAccount(network, publicKey string) error {
 		return fmt.Errorf("invalid response status code %d \n", res.StatusCode)
 	}
 
-	if transactionID, ok := apiResponse.Data["txId"]; !ok {
+	if _, ok := apiResponse.Data["txId"]; !ok {
 		return fmt.Errorf("transaction ID not found in API response")
 	}
 
