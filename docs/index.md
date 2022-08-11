@@ -5,7 +5,7 @@ description: A command-line interface that provides useful utilities for buildin
 ---
 
 The Flow CLI includes several commands to interact with Flow networks, such as querying account information,
-or sending transactions. It also includes the [Flow Emulator](https://docs.onflow.org/emulator).
+or sending transactions. It also includes the [Flow Emulator](https://developers.flow.com/tools/flow-cli/start-emulator).
 
 ## Installation
 
