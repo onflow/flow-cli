@@ -379,7 +379,7 @@ func createNewAccount(network, publicKey string) error {
 		return fmt.Errorf("invalid response status code %d \n", res.StatusCode)
 	}
 
-	if _, ok := apiResponse.Data["txId"]; !ok {
+	if transactionID, ok := apiResponse.Data["txId"]; !ok {
 		return fmt.Errorf("transaction ID not found in API response")
 	}
 
@@ -426,6 +426,45 @@ func getAccountCreatedAddressWithPubKey(
 	return address, nil
 }
 
+// getAccountCreatedWithAPI gets the events from the transaction ID generated from the account creation API. If the event
+// contains the public key we are interested in then it extracts the newly created address from the event payload.
+func getAccountCreatedWithAPI(
+	service *services.Services,
+	pubKey crypto.PublicKey,
+	startHeight uint64,
+) (*flow.Address, error) {
+	lastHeight, err := service.Blocks.GetLatestBlockHeight()
+	if err != nil {
+		return nil, err
+	}
+
+	flowEvents, _ := service.Events.Get([]string{flow.EventAccountKeyAdded}, startHeight, lastHeight, 20, 1) // ignore AN errors since we will retry anyway
+
+	var address *flow.Address
+	for _, block := range flowEvents {
+		events := flowkit.NewEvents(block.Events)
+		address = events.GetAddressForKeyAdded(pubKey)
+		if address != nil {
+			break
+		}
+	}
+
+	if address == nil {
+		if lastHeight-startHeight > 400 { // if something goes wrong don't keep waiting forever to avoid spamming network
+			return nil, fmt.Errorf("failed to get the account address due to time out")
+		}
+
+		time.Sleep(time.Second * 2)
+		address, err = getAccountCreatedAddressWithPubKey(service, pubKey, startHeight)
+		if err != nil {
+			return nil, err
+		}
+
+		return address, nil
+	}
+
+	return address, nil
+}
 func saveAccount(
 	loader flowkit.ReaderWriter,
 	state *flowkit.State,

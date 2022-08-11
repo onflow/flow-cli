@@ -567,7 +567,7 @@ func AccountCreationMethodPrompt(selectedNetwork config.Network) int {
 	apiOption := "Create account with API (no CAPTCHA required)"
 
 	createAccountPrompt := promptui.Select{
-		Label: "Choose a network",
+		Label: "How do you want to create the account?",
 		Items: []string{manualOption, apiOption},
 	}
 
