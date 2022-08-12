@@ -25,8 +25,6 @@ import (
 	"github.com/spf13/cobra"
 	"io/ioutil"
 	"net/http"
-	"net/url"
-	"strings"
 )
 
 const (
@@ -123,51 +121,4 @@ type MixPanelResponse struct {
 			OptIn bool `json:"opt_in"`
 		} `json:"$properties"`
 	} `json:"results"`
-}
-
-//User is opted in by default
-//If distinct id can't be found through query api, return true to reflect that user is opted in
-func IsUserOptedIn() (bool, error) {
-	distinctId, err := generateNewDistinctId()
-	if err != nil {
-		return false, err
-	}
-
-	queryPayload := "distinct_id=" + url.QueryEscape(distinctId)
-	payload := strings.NewReader(queryPayload)
-	req, err := http.NewRequest("POST", MIXPANEL_QUERY_URL, payload)
-	if err != nil {
-		return false, err
-	}
-
-	mixpanelAuth := "Basic " + MIXPANEL_SERVICE_ACCOUNT_SECRET
-	req.Header.Add("Accept", "application/json")
-	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-	req.Header.Add("Authorization", mixpanelAuth)
-
-	res, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return false, err
-	}
-
-	defer res.Body.Close()
-	body, err := ioutil.ReadAll(res.Body)
-
-	var queryResponse MixPanelResponse
-	err = json.Unmarshal(body, &queryResponse)
-
-	if err != nil {
-		return false, err
-	}
-	if res.StatusCode >= 400 {
-		if res.StatusCode == 429 {
-			//tracking is enabled by default if there is rate limit error from mixpanel
-			return true, nil
-		}
-		return false, fmt.Errorf("invalid response status code %d for tracking command usage", res.StatusCode)
-	}
-	if len(queryResponse.Results) == 0 {
-		return true, nil
-	}
-	return queryResponse.Results[0].Properties.OptIn, nil
 }
