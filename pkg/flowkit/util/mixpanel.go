@@ -160,6 +160,10 @@ func IsUserOptedIn() (bool, error) {
 		return false, err
 	}
 	if res.StatusCode >= 400 {
+		if res.StatusCode == 429 {
+			//tracking is enabled by default if there is rate limit error from mixpanel
+			return true, nil
+		}
 		return false, fmt.Errorf("invalid response status code %d for tracking command usage", res.StatusCode)
 	}
 	if len(queryResponse.Results) == 0 {
