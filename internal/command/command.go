@@ -82,7 +82,7 @@ func (c Command) handleUserTracking() {
 	if util.MIXPANEL_SERVICE_ACCOUNT_SECRET == "" || util.MIXPANEL_PROJECT_TOKEN == "" {
 		return
 	}
-	util.TrackCommandUsage(c.Cmd)
+	_ = util.TrackCommandUsage(c.Cmd)
 }
 
 // AddToParent add new command to main parent cmd
