@@ -82,15 +82,9 @@ func (c Command) handleUserTracking() {
 	if util.MIXPANEL_SERVICE_ACCOUNT_SECRET == "" || util.MIXPANEL_PROJECT_TOKEN == "" {
 		return
 	}
-	optedIn, err := util.IsUserOptedIn()
-	if err != nil {
-		sentry.CaptureException(err)
-	}
+	optedIn, _ := util.IsUserOptedIn()
 	if optedIn {
-		err = util.TrackCommandUsage(c.Cmd)
-		if err != nil {
-			sentry.CaptureException(err)
-		}
+		util.TrackCommandUsage(c.Cmd)
 	}
 }
 
