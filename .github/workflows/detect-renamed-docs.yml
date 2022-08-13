@@ -23,7 +23,7 @@ jobs:
         with: 
           fetch-depth: 2
       - run: echo "$(git -P show ${{ github.sha }})"
-      - name: Run and process diff
+      - name: Fails if any doc files (.md) were renamed or deleted
         # grep exit code is 0 if a match found, for github actions 0 is success
         run: |
           ! git -P show ${{ github.sha }} --diff-filter=DR | grep 'deleted\|rename'
