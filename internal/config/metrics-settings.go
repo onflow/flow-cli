@@ -20,7 +20,6 @@ package config
 
 import (
 	"fmt"
-
 	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/services"
 	"github.com/onflow/flow-cli/pkg/flowkit/util"
@@ -52,12 +51,13 @@ func handleMetricsSettings(
 	_ *services.Services,
 ) (command.Result, error) {
 	enabled := args[0] == "enable"
-	err := util.AddToConfig(loader, enabled)
+	configPath, err := util.AddToConfig(loader, enabled)
 	if err != nil {
 		return nil, err
 	}
 
-	return &Result{
-		fmt.Sprintf("Metrics have been %sd", args[0]),
-	}, nil
+	output := fmt.Sprintf("Metrics tracking is %sd and its settings is stored in %s \n", args[0], configPath) +
+		"Please note that you will also need to opt out of metrics tracking on other devices that you also use flow-cli on \n"
+
+	return &Result{output}, nil
 }

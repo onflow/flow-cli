@@ -196,10 +196,10 @@ type jsonConfig struct {
 }
 
 // AddToConfig adds a new line to user's config dir stating the user's preference for command tracking
-func AddToConfig(loader ReaderWriter, metricsEnabled bool) error {
+func AddToConfig(loader ReaderWriter, metricsEnabled bool) (string, error) {
 	homeConfigDir, err := os.UserConfigDir()
 	if err != nil {
-		return err
+		return "", err
 	}
 	cliDir := filepath.Join(homeConfigDir, FLOW_CLI)
 	if _, err := os.Stat(cliDir); os.IsNotExist(err) {
@@ -217,7 +217,7 @@ func AddToConfig(loader ReaderWriter, metricsEnabled bool) error {
 	}
 	data, err := json.MarshalIndent(jsonConfig, "", " ")
 
-	return loader.WriteFile(cliConfigPath, data, filePermissions)
+	return cliConfigPath, loader.WriteFile(cliConfigPath, data, filePermissions)
 }
 
 // CheckMetricsEnabled checks if a user is opted in to have command tracked with Mixpanel
