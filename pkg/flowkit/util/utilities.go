@@ -21,10 +21,12 @@ package util
 import (
 	"bytes"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"os"
 	"os/exec"
 	"path"
+	"path/filepath"
 	"runtime"
 	"strings"
 	"text/tabwriter"
@@ -186,4 +188,32 @@ func AddToGitIgnore(filename string, loader ReaderWriter) error {
 		[]byte(fmt.Sprintf("%s\n%s", gitIgnoreFiles, filename)),
 		filePermissions,
 	)
+}
+
+type jsonConfig struct {
+	Metrics bool `json:"metrics"`
+}
+
+// AddToConfig adds a new line to user's config dir stating the user's preference for command tracking
+func AddToConfig(loader ReaderWriter, metricsEnabled bool) error {
+	homeConfigDir, err := os.UserConfigDir()
+	if err != nil {
+		return err
+	}
+	cliDir := filepath.Join(homeConfigDir, "flow-cli")
+	if _, err := os.Stat(cliDir); os.IsNotExist(err) {
+		os.Mkdir(cliDir, 0755)
+	}
+	cliConfigPath := filepath.Join(cliDir, "config.json")
+	filePermissions := os.FileMode(0644)
+
+	fileStat, err := os.Stat(cliConfigPath)
+	if !os.IsNotExist(err) { // if config.json exists
+		filePermissions = fileStat.Mode().Perm()
+	}
+	jsonConfig := jsonConfig{
+		Metrics: metricsEnabled,
+	}
+	data, err := json.MarshalIndent(jsonConfig, "", " ")
+	return loader.WriteFile(cliConfigPath, data, filePermissions)
 }

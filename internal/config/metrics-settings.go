@@ -47,12 +47,13 @@ var MetricsSettings = &command.Command{
 
 func handleMetricsSettings(
 	args []string,
-	_ flowkit.ReaderWriter,
+	loader flowkit.ReaderWriter,
 	_ command.GlobalFlags,
 	_ *services.Services,
 ) (command.Result, error) {
 	enabled := args[0] == "enable"
-	err := util.SetUserMetricsSettings(enabled)
+	//err := util.SetUserMetricsSettings(enabled)
+	err := util.AddToConfig(loader, enabled)
 	if err != nil {
 		return nil, err
 	}

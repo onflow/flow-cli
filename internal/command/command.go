@@ -98,6 +98,7 @@ func (c Command) AddToParent(parent *cobra.Command) {
 			defer sentry.Flush(2 * time.Second)
 			defer sentry.Recover()
 		}
+
 		c.handleUserTracking()
 
 		// initialize file loader used in commands
