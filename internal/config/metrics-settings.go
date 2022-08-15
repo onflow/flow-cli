@@ -52,7 +52,6 @@ func handleMetricsSettings(
 	_ *services.Services,
 ) (command.Result, error) {
 	enabled := args[0] == "enable"
-	//err := util.SetUserMetricsSettings(enabled)
 	err := util.AddToConfig(loader, enabled)
 	if err != nil {
 		return nil, err

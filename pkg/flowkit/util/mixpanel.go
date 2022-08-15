@@ -28,9 +28,7 @@ import (
 )
 
 const (
-	MIXPANEL_TRACK_URL   = "https://api.mixpanel.com/track"
-	MIXPANEL_QUERY_URL   = "https://mixpanel.com/api/2.0/engage?project_id=2123215"
-	MIXPANEL_PROFILE_URL = "https://api.mixpanel.com/engage#profile-set"
+	MIXPANEL_TRACK_URL = "https://api.mixpanel.com/track"
 )
 
 var MIXPANEL_PROJECT_TOKEN = ""
@@ -78,47 +76,4 @@ func encodePayload(obj any) ([]byte, error) {
 		return nil, err
 	}
 	return b, nil
-}
-func SetUserMetricsSettings(enable bool) error {
-	mixpanelUser, err := getMixPanelUser()
-	if err != nil {
-		return err
-	}
-	mixpanelUser.configureUserTracking(enable)
-
-	userPayload, err := encodePayload(mixpanelUser)
-	if err != nil {
-		return err
-	}
-
-	payload := bytes.NewReader(userPayload)
-	req, err := http.NewRequest("POST", MIXPANEL_PROFILE_URL, payload)
-	if err != nil {
-		return err
-	}
-	req.Header.Add("Accept", "text/plain")
-	req.Header.Add("Content-Type", "application/json")
-	res, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return err
-	}
-	defer res.Body.Close()
-	_, err = ioutil.ReadAll(res.Body)
-
-	if err != nil {
-		return err
-	}
-	if res.StatusCode >= 400 {
-		return fmt.Errorf("invalid response status code %d for tracking command usage", res.StatusCode)
-	}
-
-	return nil
-}
-
-type MixPanelResponse struct {
-	Results []struct {
-		Properties struct {
-			OptIn bool `json:"opt_in"`
-		} `json:"$properties"`
-	} `json:"results"`
 }
