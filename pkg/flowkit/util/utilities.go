@@ -37,6 +37,7 @@ import (
 
 const TestnetFaucetHost = "https://testnet-faucet.onflow.org/"
 const FlowPortUrl = "https://port.onflow.org/transaction?hash=a0a78aa7821144efd5ebb974bb52ba04609ce76c3863af9d45348db93937cf98&showcode=false&consent=true&pk="
+const FlowCLIConfigFile = "config.json"
 
 // ConvertSigAndHashAlgo parses and validates a signature and hash algorithm pair.
 func ConvertSigAndHashAlgo(
@@ -200,11 +201,11 @@ func AddToConfig(loader ReaderWriter, metricsEnabled bool) error {
 	if err != nil {
 		return err
 	}
-	cliDir := filepath.Join(homeConfigDir, "flow-cli")
+	cliDir := filepath.Join(homeConfigDir, FLOW_CLI)
 	if _, err := os.Stat(cliDir); os.IsNotExist(err) {
 		os.Mkdir(cliDir, 0755)
 	}
-	cliConfigPath := filepath.Join(cliDir, "config.json")
+	cliConfigPath := filepath.Join(cliDir, FlowCLIConfigFile)
 	filePermissions := os.FileMode(0644)
 
 	fileStat, err := os.Stat(cliConfigPath)
@@ -215,5 +216,31 @@ func AddToConfig(loader ReaderWriter, metricsEnabled bool) error {
 		Metrics: metricsEnabled,
 	}
 	data, err := json.MarshalIndent(jsonConfig, "", " ")
+
 	return loader.WriteFile(cliConfigPath, data, filePermissions)
+}
+
+// CheckMetricsEnabled checks if a user is opted in to have command tracked with Mixpanel
+// Returns true if user has not opted out before
+func CheckMetricsEnabled(loader ReaderWriter) (bool, error) {
+	var jsonConf jsonConfig
+	homeConfigDir, err := os.UserConfigDir()
+	if err != nil {
+		return false, err
+	}
+	cliDir := filepath.Join(homeConfigDir, FLOW_CLI)
+	cliConfigPath := filepath.Join(cliDir, FlowCLIConfigFile)
+
+	_, err = os.Stat(cliConfigPath)
+	if os.IsNotExist(err) { // if config.json exists, return metrics enabled by default
+		return true, nil
+	}
+
+	raw, err := loader.ReadFile(cliConfigPath)
+	err = json.Unmarshal(raw, &jsonConf)
+	if err != nil {
+		return false, err
+	}
+
+	return jsonConf.Metrics, nil
 }
