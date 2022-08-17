@@ -3,7 +3,7 @@
 # Exit as soon as any command fails
 set -e
 
-BASE_URL="https://storage.googleapis.com/flow-cli"
+BASE_URL="https://raw.githubusercontent.com/onflow/flow-cli/master/version.txt"
 # The version to download, set by get_version (defaults to args[1])
 VERSION="$1"
 # The architecture string, set by get_architecture
