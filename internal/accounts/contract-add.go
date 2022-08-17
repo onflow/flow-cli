@@ -53,7 +53,7 @@ var AddContractCommand = &command.Command{
 func addContract(
 	args []string,
 	readerWriter flowkit.ReaderWriter,
-	_ command.GlobalFlags,
+	globalFlags command.GlobalFlags,
 	services *services.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
@@ -81,7 +81,15 @@ func addContract(
 		return nil, fmt.Errorf("error parsing transaction arguments: %w", err)
 	}
 
-	account, err := services.Accounts.AddContract(to, name, code, false, contractArgs)
+	account, err := services.Accounts.AddContract(
+		to,
+		name,
+		code,
+		contractArgs,
+		filename,
+		globalFlags.Network,
+		false,
+	)
 	if err != nil {
 		return nil, err
 	}

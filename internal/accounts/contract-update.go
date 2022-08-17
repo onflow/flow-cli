@@ -81,7 +81,15 @@ func updateContract(
 		return nil, fmt.Errorf("error parsing transaction arguments: %w", err)
 	}
 
-	account, err := services.Accounts.AddContract(to, name, code, true, contractArgs)
+	account, err := services.Accounts.AddContract(
+		to,
+		name,
+		code,
+		contractArgs,
+		filename,
+		globalFlags.Network,
+		true,
+	)
 	if err != nil {
 		return nil, err
 	}

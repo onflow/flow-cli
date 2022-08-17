@@ -22,6 +22,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/onflow/flow-cli/pkg/flowkit/contracts"
+
 	"github.com/onflow/flow-go-sdk/templates"
 
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
@@ -281,9 +283,39 @@ func (a *Accounts) AddContract(
 	account *flowkit.Account,
 	contractName string,
 	contractSource []byte,
-	updateExisting bool,
 	contractArgs []cadence.Value,
+	contractFilename string,
+	network string,
+	updateExisting bool,
 ) (*flow.Account, error) {
+	resolver, err := contracts.NewResolver(contractSource)
+	if err != nil {
+		return nil, err
+	}
+
+	if resolver.HasFileImports() {
+		if network == "" {
+			return nil, fmt.Errorf("missing network, specify which network to use to resolve imports in transaction code")
+		}
+		if contractFilename == "" { // when used as lib with code we don't support imports
+			return nil, fmt.Errorf("resolving imports not supported")
+		}
+
+		contractsNetwork, err := a.state.DeploymentContractsByNetwork(network)
+		if err != nil {
+			return nil, err
+		}
+
+		contractSource, err = resolver.ResolveImports(
+			contractFilename,
+			contractsNetwork,
+			a.state.AliasesForNetwork(network),
+		)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	tx, err := flowkit.NewAddAccountContractTransaction(
 		account,
 		contractName,
