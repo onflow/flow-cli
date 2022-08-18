@@ -218,7 +218,15 @@ func TestTransactions_Integration(t *testing.T) {
 			}},
 		}
 		state.Deployments().AddOrUpdate(d)
-		_, _ = s.Accounts.AddContract(srvAcc, tests.ContractHelloString.Name, tests.ContractHelloString.Source, false, nil)
+		_, _ = s.Accounts.AddContract(
+			srvAcc,
+			tests.ContractHelloString.Name,
+			tests.ContractHelloString.Source,
+			nil,
+			tests.ContractHelloString.Filename,
+			"",
+			false,
+		)
 
 		tx, err := s.Transactions.Build(
 			signer,
