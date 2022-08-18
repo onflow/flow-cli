@@ -32,7 +32,7 @@ type mixpanelUser struct {
 }
 
 func getMixPanelUser() (*mixpanelUser, error) {
-	distinctId, err := generateNewDistinctId()
+	distinctId, err := GenerateNewDistinctId()
 	if err != nil {
 		return nil, err
 	}
@@ -52,7 +52,7 @@ func (e *mixpanelUser) configureUserTracking(enable bool) {
 	e.Set["$timezone"] = nil
 }
 
-func generateNewDistinctId() (string, error) {
+func GenerateNewDistinctId() (string, error) {
 	currentUser, err := user.Current()
 	if err != nil {
 		return "", err

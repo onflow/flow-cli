@@ -44,6 +44,11 @@ type MixpanelClient struct {
 func TrackCommandUsage(command *cobra.Command) error {
 	mixpanelEvent := newEvent(command)
 	mixpanelEvent.setUpEvent(MIXPANEL_PROJECT_TOKEN, FLOW_CLI)
+	distinctId, err := GenerateNewDistinctId()
+	if err != nil {
+		return err
+	}
+	mixpanelEvent.setEventDistinctId(distinctId)
 	eventPayload, err := encodePayload(mixpanelEvent)
 	if err != nil {
 		return err
