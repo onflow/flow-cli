@@ -22,9 +22,10 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/spf13/cobra"
 	"io/ioutil"
 	"net/http"
+
+	"github.com/spf13/cobra"
 )
 
 const (
