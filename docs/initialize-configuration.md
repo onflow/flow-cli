@@ -6,7 +6,7 @@ description: How to initialize Flow configuration using CLI
 
 Flow CLI uses a state to operate which is called configuration (usually `flow.json` file). 
 Before using commands that require this configuration we must initialize the project by 
-using the init command. Read more about [state configuration here](https://developers.flow.com/tools/flow-cli/configuration).
+using the init command. Read more about [state configuration here](/tools/flow-cli/configuration).
 
 ```shell
 flow init

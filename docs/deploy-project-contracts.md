@@ -12,7 +12,7 @@ This command automatically deploys your project's contracts based on the
 configuration defined in your `flow.json` file.
 
 Before using this command, read about how to 
-[configure project contracts and deployment targets](https://developers.flow.com/tools/flow-cli/project-contracts).
+[configure project contracts and deployment targets](/tools/flow-cli/project-contracts).
 
 ## Example Usage
 
