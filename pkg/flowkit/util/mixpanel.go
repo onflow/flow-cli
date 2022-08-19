@@ -22,9 +22,10 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/spf13/cobra"
 	"io/ioutil"
 	"net/http"
+
+	"github.com/spf13/cobra"
 )
 
 const (
@@ -44,6 +45,11 @@ type MixpanelClient struct {
 func TrackCommandUsage(command *cobra.Command) error {
 	mixpanelEvent := newEvent(command)
 	mixpanelEvent.setUpEvent(MIXPANEL_PROJECT_TOKEN, FLOW_CLI)
+	distinctId, err := uniqueUserID()
+	if err != nil {
+		return err
+	}
+	mixpanelEvent.setEventDistinctId(distinctId)
 	eventPayload, err := encodePayload(mixpanelEvent)
 	if err != nil {
 		return err
