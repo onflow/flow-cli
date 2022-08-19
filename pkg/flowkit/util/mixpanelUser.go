@@ -32,7 +32,7 @@ type mixpanelUser struct {
 }
 
 func getMixPanelUser() (*mixpanelUser, error) {
-	distinctId, err := GenerateNewDistinctId()
+	distinctId, err := uniqueUserID()
 	if err != nil {
 		return nil, err
 	}
