@@ -1,5 +1,5 @@
 ---
-title: Get Block with the Flow CLI
+title: Get Collection with the Flow CLI
 sidebar_title: Get Collection
 description: How to get a collection from the command line
 ---

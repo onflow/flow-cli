@@ -26,6 +26,7 @@ const (
 	MIXPANEL_EVENT_PROJECT_TOKEN = "token"
 	MIXPANEL_EVENT_CALLER        = "caller"
 	FLOW_CLI                     = "flow-cli"
+	MIXPANEL_EVENT_DISTINCT_ID   = "distinct_id"
 )
 
 type event struct {
@@ -43,4 +44,8 @@ func newEvent(command *cobra.Command) *event {
 func (e *event) setUpEvent(token string, caller string) {
 	e.Properties[MIXPANEL_EVENT_PROJECT_TOKEN] = token
 	e.Properties[MIXPANEL_EVENT_CALLER] = caller
+}
+
+func (e *event) setEventDistinctId(distinctId string) {
+	e.Properties[MIXPANEL_EVENT_DISTINCT_ID] = distinctId
 }
