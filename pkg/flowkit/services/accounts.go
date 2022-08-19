@@ -316,14 +316,13 @@ func (a *Accounts) AddContract(
 		return nil, err
 	}
 
-        hasFileImports = resolver.HasFileImports()
-        
+	hasFileImports := resolver.HasFileImports()
 	err = contract.validate(hasFileImports)
 	if err != nil {
 		return nil, err
 	}
 
-	if resolver.HasFileImports() {
+	if hasFileImports {
 		contractsNetwork, err := a.state.DeploymentContractsByNetwork(contract.Network)
 		if err != nil {
 			return nil, err
