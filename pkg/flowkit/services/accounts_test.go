@@ -53,6 +53,16 @@ func setup() (*flowkit.State, *Services, *tests.TestGateway) {
 	return state, s, gw
 }
 
+func resourceToContract(res tests.Resource) *Contract {
+	return &Contract{
+		Name:     res.Name,
+		Source:   res.Source,
+		Args:     nil,
+		Filename: res.Filename,
+		Network:  "",
+	}
+}
+
 func TestAccounts(t *testing.T) {
 	state, _, _ := setup()
 	pubKey, _ := crypto.DecodePublicKeyHex(crypto.ECDSA_P256, "858a7d978b25d61f348841a343f79131f4b9fab341dd8a476a6f4367c25510570bf69b795fc9c3d2b7191327d869bcf848508526a3c1cafd1af34f71c7765117")
@@ -160,10 +170,8 @@ func TestAccounts(t *testing.T) {
 
 		account, err := s.Accounts.AddContract(
 			serviceAcc,
-			tests.ContractHelloString.Filename,
-			tests.ContractHelloString.Source,
+			resourceToContract(tests.ContractHelloString),
 			false,
-			nil,
 		)
 
 		gw.Mock.AssertCalled(t, tests.GetAccountFunc, serviceAddress)
@@ -186,10 +194,8 @@ func TestAccounts(t *testing.T) {
 
 		account, err := s.Accounts.AddContract(
 			serviceAcc,
-			tests.ContractHelloString.Filename,
-			tests.ContractHelloString.Source,
+			resourceToContract(tests.ContractHelloString),
 			true,
-			nil,
 		)
 
 		gw.Mock.AssertCalled(t, tests.GetAccountFunc, serviceAddress)
@@ -512,13 +518,21 @@ func TestAccountsAddContract_Integration(t *testing.T) {
 		state, s := setupIntegration()
 		srvAcc, _ := state.EmulatorServiceAccount()
 
-		acc, err := s.Accounts.AddContract(srvAcc, tests.ContractSimple.Name, tests.ContractSimple.Source, false, nil)
+		acc, err := s.Accounts.AddContract(
+			srvAcc,
+			resourceToContract(tests.ContractSimple),
+			false,
+		)
 
 		assert.NoError(t, err)
 		assert.NotNil(t, acc)
 		assert.Equal(t, acc.Contracts["Simple"], tests.ContractSimple.Source)
 
-		acc, err = s.Accounts.AddContract(srvAcc, tests.ContractSimpleUpdated.Name, tests.ContractSimpleUpdated.Source, true, nil)
+		acc, err = s.Accounts.AddContract(
+			srvAcc,
+			resourceToContract(tests.ContractSimpleUpdated),
+			true,
+		)
 
 		assert.NoError(t, err)
 		assert.NotNil(t, acc)
@@ -532,13 +546,25 @@ func TestAccountsAddContract_Integration(t *testing.T) {
 		srvAcc, _ := state.EmulatorServiceAccount()
 
 		// prepare existing contract
-		_, err := s.Accounts.AddContract(srvAcc, tests.ContractSimple.Name, tests.ContractSimple.Source, false, nil)
+		_, err := s.Accounts.AddContract(
+			srvAcc,
+			resourceToContract(tests.ContractSimple),
+			false,
+		)
 		assert.NoError(t, err)
 
-		_, err = s.Accounts.AddContract(srvAcc, tests.ContractSimple.Name, tests.ContractSimple.Source, false, nil)
+		_, err = s.Accounts.AddContract(
+			srvAcc,
+			resourceToContract(tests.ContractSimple),
+			false,
+		)
 		assert.True(t, strings.Contains(err.Error(), "cannot overwrite existing contract with name \"Simple\""))
 
-		_, err = s.Accounts.AddContract(srvAcc, tests.ContractHelloString.Name, tests.ContractHelloString.Source, true, nil)
+		_, err = s.Accounts.AddContract(
+			srvAcc,
+			resourceToContract(tests.ContractHelloString),
+			true,
+		)
 		assert.True(t, strings.Contains(err.Error(), "cannot update non-existing contract with name \"Hello\""))
 	})
 }
@@ -547,11 +573,18 @@ func TestAccountsAddContractWithArgs(t *testing.T) {
 	srvAcc, _ := state.EmulatorServiceAccount()
 
 	//adding contract without argument should return an error
-	acc, err := s.Accounts.AddContract(srvAcc, tests.ContractSimpleWithArgs.Name, tests.ContractSimpleWithArgs.Source, false, nil)
+	acc, err := s.Accounts.AddContract(
+		srvAcc,
+		resourceToContract(tests.ContractSimpleWithArgs),
+		false,
+	)
 	assert.Error(t, err)
 	assert.True(t, strings.Contains(err.Error(), "invalid argument count, too few arguments: expected 1, got 0"))
 
-	acc, err = s.Accounts.AddContract(srvAcc, tests.ContractSimpleWithArgs.Name, tests.ContractSimpleWithArgs.Source, false, []cadence.Value{cadence.UInt64(4)})
+	c := resourceToContract(tests.ContractSimpleWithArgs)
+	c.Args = []cadence.Value{cadence.UInt64(4)}
+
+	acc, err = s.Accounts.AddContract(srvAcc, c, false)
 	assert.NoError(t, err)
 	assert.NotNil(t, acc)
 	assert.Equal(t, acc.Contracts["Simple"], tests.ContractSimpleWithArgs.Source)
@@ -562,8 +595,18 @@ func TestAccountsRemoveContract_Integration(t *testing.T) {
 	state, s := setupIntegration()
 	srvAcc, _ := state.EmulatorServiceAccount()
 
+	c := tests.ContractSimple
 	// prepare existing contract
-	_, err := s.Accounts.AddContract(srvAcc, tests.ContractSimple.Name, tests.ContractSimple.Source, false, nil)
+	_, err := s.Accounts.AddContract(
+		srvAcc,
+		&Contract{
+			Name:     c.Name,
+			Source:   c.Source,
+			Args:     nil,
+			Filename: c.Filename,
+		},
+		false,
+	)
 	assert.NoError(t, err)
 
 	t.Run("Remove Contract", func(t *testing.T) {

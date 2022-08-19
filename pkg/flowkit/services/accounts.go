@@ -22,6 +22,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/onflow/flow-cli/pkg/flowkit/contracts"
+
 	"github.com/onflow/flow-go-sdk/templates"
 
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
@@ -276,19 +278,71 @@ func (a *Accounts) Create(
 	return a.gateway.GetAccount(*newAccountAddress[0]) // we know it's the only and first event
 }
 
+// Contract defines properties of a contract like name of the contract,
+// source code, possible init arguments, the filename and network are only
+// required if a contract has imports that need resolving.
+type Contract struct {
+	Name     string
+	Source   []byte
+	Args     []cadence.Value
+	Filename string
+	Network  string
+}
+
+func (c *Contract) validate(hasImports bool) error {
+	if c.Source == nil {
+		return fmt.Errorf("must provide contract source code")
+	}
+	if c.Name == "" {
+		return fmt.Errorf("must provide contract name")
+	}
+	if hasImports && c.Network == "" {
+		return fmt.Errorf("missing network, specify which network to use to resolve imports in transaction code")
+	}
+	if hasImports && c.Filename == "" {
+		return fmt.Errorf("cannot resolve imports without specifying a contract filename")
+	}
+	return nil
+}
+
 // AddContract deploys a contract code to the account provided with possible update flag.
 func (a *Accounts) AddContract(
 	account *flowkit.Account,
-	contractName string,
-	contractSource []byte,
+	contract *Contract,
 	updateExisting bool,
-	contractArgs []cadence.Value,
 ) (*flow.Account, error) {
+	resolver, err := contracts.NewResolver(contract.Source)
+	if err != nil {
+		return nil, err
+	}
+
+	hasFileImports := resolver.HasFileImports()
+	err = contract.validate(hasFileImports)
+	if err != nil {
+		return nil, err
+	}
+
+	if hasFileImports {
+		contractsNetwork, err := a.state.DeploymentContractsByNetwork(contract.Network)
+		if err != nil {
+			return nil, err
+		}
+
+		contract.Source, err = resolver.ResolveImports(
+			contract.Filename,
+			contractsNetwork,
+			a.state.AliasesForNetwork(contract.Network),
+		)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	tx, err := flowkit.NewAddAccountContractTransaction(
 		account,
-		contractName,
-		string(contractSource),
-		contractArgs,
+		contract.Name,
+		string(contract.Source),
+		contract.Args,
 	)
 	if err != nil {
 		return nil, err
@@ -298,8 +352,8 @@ func (a *Accounts) AddContract(
 	if updateExisting {
 		tx, err = flowkit.NewUpdateAccountContractTransaction(
 			account,
-			contractName,
-			string(contractSource),
+			contract.Name,
+			string(contract.Source),
 		)
 		if err != nil {
 			return nil, err
@@ -321,7 +375,7 @@ func (a *Accounts) AddContract(
 	a.logger.StartProgress(
 		fmt.Sprintf(
 			status,
-			contractName,
+			contract.Name,
 			account.Address(),
 		),
 	)
@@ -351,13 +405,13 @@ func (a *Accounts) AddContract(
 	if updateExisting {
 		a.logger.Info(fmt.Sprintf(
 			"Contract '%s' updated on the account '%s'.",
-			contractName,
+			contract.Name,
 			account.Address(),
 		))
 	} else {
 		a.logger.Info(fmt.Sprintf(
 			"Contract '%s' deployed to the account '%s'.",
-			contractName,
+			contract.Name,
 			account.Address(),
 		))
 	}
