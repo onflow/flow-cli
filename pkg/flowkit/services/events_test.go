@@ -101,11 +101,7 @@ func TestEvents_Integration(t *testing.T) {
 		// create events
 		_, err := s.Accounts.AddContract(
 			srvAcc,
-			tests.ContractEvents.Name,
-			tests.ContractEvents.Source,
-			nil,
-			tests.ContractEvents.Filename,
-			"",
+			resourceToContract(tests.ContractEvents),
 			false,
 		)
 		assert.NoError(t, err)
@@ -129,11 +125,7 @@ func TestEvents_Integration(t *testing.T) {
 		// create events
 		_, err := s.Accounts.AddContract(
 			srvAcc,
-			tests.ContractEvents.Name,
-			tests.ContractEvents.Source,
-			nil,
-			tests.ContractEvents.Filename,
-			"",
+			resourceToContract(tests.ContractEvents),
 			false,
 		)
 		assert.NoError(t, err)

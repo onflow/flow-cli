@@ -28,13 +28,13 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowkit"
 )
 
-type resource struct {
+type Resource struct {
 	Name     string
 	Filename string
 	Source   []byte
 }
 
-var ContractHelloString = resource{
+var ContractHelloString = Resource{
 	Name:     "Hello",
 	Filename: "contractHello.cdc",
 	Source: []byte(`
@@ -50,7 +50,7 @@ var ContractHelloString = resource{
 	`),
 }
 
-var ContractSimple = resource{
+var ContractSimple = Resource{
 	Name:     "Simple",
 	Filename: "contractSimple.cdc",
 	Source: []byte(`
@@ -58,7 +58,7 @@ var ContractSimple = resource{
 	`),
 }
 
-var ContractSimpleUpdated = resource{
+var ContractSimpleUpdated = Resource{
 	Name:     "Simple",
 	Filename: "contractSimpleUpdated.cdc",
 	Source: []byte(`
@@ -71,7 +71,7 @@ var ContractSimpleUpdated = resource{
 	`),
 }
 
-var ContractSimpleWithArgs = resource{
+var ContractSimpleWithArgs = Resource{
 	Name:     "Simple",
 	Filename: "contractArgs.cdc",
 	Source: []byte(`
@@ -84,7 +84,7 @@ var ContractSimpleWithArgs = resource{
 	`),
 }
 
-var ContractEvents = resource{
+var ContractEvents = Resource{
 	Name:     "ContractEvents",
 	Filename: "contractEvents.cdc",
 	Source: []byte(`
@@ -126,13 +126,13 @@ var ContractEvents = resource{
 	`),
 }
 
-var ContractA = resource{
+var ContractA = Resource{
 	Name:     "ContractA",
 	Filename: "contractA.cdc",
 	Source:   []byte(`pub contract ContractA {}`),
 }
 
-var ContractB = resource{
+var ContractB = Resource{
 	Name:     "ContractB",
 	Filename: "contractB.cdc",
 	Source: []byte(`
@@ -141,7 +141,7 @@ var ContractB = resource{
 	`),
 }
 
-var ContractC = resource{
+var ContractC = Resource{
 	Name:     "ContractC",
 	Filename: "contractC.cdc",
 	Source: []byte(`
@@ -157,7 +157,7 @@ var ContractC = resource{
 	`),
 }
 
-var TransactionArgString = resource{
+var TransactionArgString = Resource{
 	Filename: "transactionArg.cdc",
 	Source: []byte(`
 		transaction(greeting: String) {
@@ -174,7 +174,7 @@ var TransactionArgString = resource{
 	`),
 }
 
-var TransactionImports = resource{
+var TransactionImports = Resource{
 	Filename: "transactionImport.cdc",
 	Source: []byte(`
 		import Hello from "./contractHello.cdc"
@@ -188,14 +188,14 @@ var TransactionImports = resource{
 	`),
 }
 
-var TransactionSimple = resource{
+var TransactionSimple = Resource{
 	Filename: "transactionSimple.cdc",
 	Source: []byte(`
 		transaction() {}
 	`),
 }
 
-var TransactionSingleAuth = resource{
+var TransactionSingleAuth = Resource{
 	Filename: "transactionAuth1.cdc",
 	Source: []byte(`
 		transaction() {
@@ -204,7 +204,7 @@ var TransactionSingleAuth = resource{
 	`),
 }
 
-var TransactionTwoAuth = resource{
+var TransactionTwoAuth = Resource{
 	Filename: "transactionAuth2.cdc",
 	Source: []byte(`
 		transaction() {
@@ -213,7 +213,7 @@ var TransactionTwoAuth = resource{
 	`),
 }
 
-var TransactionMultipleDeclarations = resource{
+var TransactionMultipleDeclarations = Resource{
 	Filename: "transactionMultipleDec.cdc",
 	Source: []byte(`
 		pub fun dummy(_ address: Address): Void {}
@@ -224,7 +224,7 @@ var TransactionMultipleDeclarations = resource{
 	`),
 }
 
-var ScriptWithError = resource{
+var ScriptWithError = Resource{
 	Filename: "scriptError.cdc",
 	Source: []byte(`
 	    	pub fun main(name: String): Strin {
@@ -233,7 +233,7 @@ var ScriptWithError = resource{
 	`),
 }
 
-var ScriptArgString = resource{
+var ScriptArgString = Resource{
 	Filename: "scriptArg.cdc",
 	Source: []byte(`
 		pub fun main(name: String): String {
@@ -242,7 +242,7 @@ var ScriptArgString = resource{
 	`),
 }
 
-var ScriptImport = resource{
+var ScriptImport = Resource{
 	Filename: "scriptImport.cdc",
 	Source: []byte(`
 		import Hello from "./contractHello.cdc"
@@ -253,7 +253,7 @@ var ScriptImport = resource{
 	`),
 }
 
-var resources = []resource{
+var resources = []Resource{
 	ContractHelloString,
 	TransactionArgString,
 	ScriptArgString,
