@@ -298,7 +298,7 @@ func (a *Accounts) AddContract(
 			return nil, fmt.Errorf("missing network, specify which network to use to resolve imports in transaction code")
 		}
 		if contractFilename == "" { // when used as lib with code we don't support imports
-			return nil, fmt.Errorf("resolving imports not supported")
+			return nil, fmt.Errorf("cannot resolve imports without specifying a contract filename")
 		}
 
 		contractsNetwork, err := a.state.DeploymentContractsByNetwork(network)
