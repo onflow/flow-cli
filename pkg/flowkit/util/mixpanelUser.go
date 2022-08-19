@@ -52,7 +52,7 @@ func (e *mixpanelUser) configureUserTracking(enable bool) {
 	e.Set["$timezone"] = nil
 }
 
-func GenerateNewDistinctId() (string, error) {
+func uniqueUserID() (string, error) {
 	currentUser, err := user.Current()
 	if err != nil {
 		return "", err
