@@ -316,7 +316,9 @@ func (a *Accounts) AddContract(
 		return nil, err
 	}
 
-	err = contract.validate(resolver.HasFileImports())
+        hasFileImports = resolver.HasFileImports()
+        
+	err = contract.validate(hasFileImports)
 	if err != nil {
 		return nil, err
 	}
