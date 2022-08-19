@@ -20,10 +20,14 @@ package util
 
 import (
 	"bytes"
+	"crypto/sha256"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os/user"
+	"strings"
 
 	"github.com/spf13/cobra"
 )
@@ -82,4 +86,23 @@ func encodePayload(obj any) ([]byte, error) {
 		return nil, err
 	}
 	return b, nil
+}
+
+func uniqueUserID() (string, error) {
+	currentUser, err := user.Current()
+	if err != nil {
+		return "", err
+	}
+
+	name := currentUser.Name
+	hyphenatedName := strings.Replace(name, " ", "-", -1)
+	username := currentUser.Username
+	id := currentUser.Uid
+
+	combinedString := hyphenatedName + username + id
+
+	hashedString := sha256.Sum256([]byte(combinedString))
+	encodedString := base64.StdEncoding.EncodeToString(hashedString[:])
+
+	return encodedString, nil
 }
