@@ -20,18 +20,20 @@ package util
 
 import (
 	"bytes"
+	"crypto/sha256"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os/user"
+	"strings"
 
 	"github.com/spf13/cobra"
 )
 
 const (
-	MIXPANEL_TRACK_URL   = "https://api.mixpanel.com/track"
-	MIXPANEL_QUERY_URL   = "https://mixpanel.com/api/2.0/engage?project_id=2123215"
-	MIXPANEL_PROFILE_URL = "https://api.mixpanel.com/engage#profile-set"
+	MIXPANEL_TRACK_URL = "https://api.mixpanel.com/track"
 )
 
 var MIXPANEL_PROJECT_TOKEN = ""
@@ -85,46 +87,22 @@ func encodePayload(obj any) ([]byte, error) {
 	}
 	return b, nil
 }
-func SetUserMetricsSettings(enable bool) error {
-	mixpanelUser, err := getMixPanelUser()
-	if err != nil {
-		return err
-	}
-	mixpanelUser.configureUserTracking(enable)
 
-	userPayload, err := encodePayload(mixpanelUser)
+func uniqueUserID() (string, error) {
+	currentUser, err := user.Current()
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	payload := bytes.NewReader(userPayload)
-	req, err := http.NewRequest("POST", MIXPANEL_PROFILE_URL, payload)
-	if err != nil {
-		return err
-	}
-	req.Header.Add("Accept", "text/plain")
-	req.Header.Add("Content-Type", "application/json")
-	res, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return err
-	}
-	defer res.Body.Close()
-	_, err = ioutil.ReadAll(res.Body)
+	name := currentUser.Name
+	hyphenatedName := strings.Replace(name, " ", "-", -1)
+	username := currentUser.Username
+	id := currentUser.Uid
 
-	if err != nil {
-		return err
-	}
-	if res.StatusCode >= 400 {
-		return fmt.Errorf("invalid response status code %d for tracking command usage", res.StatusCode)
-	}
+	combinedString := hyphenatedName + username + id
 
-	return nil
-}
+	hashedString := sha256.Sum256([]byte(combinedString))
+	encodedString := base64.StdEncoding.EncodeToString(hashedString[:])
 
-type MixPanelResponse struct {
-	Results []struct {
-		Properties struct {
-			OptIn bool `json:"opt_in"`
-		} `json:"$properties"`
-	} `json:"results"`
+	return encodedString, nil
 }
