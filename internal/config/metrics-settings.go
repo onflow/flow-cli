@@ -58,7 +58,7 @@ func handleMetricsSettings(
 	}
 
 	output := fmt.Sprintf("Command usage tracking is %sd. The preference was saved in a file located at %s \n", args[0], configPath) +
-		"Please be aware that your command tracking preference will only be set for your current user. \n"
+		"Please be aware that your command tracking preference will only be set for your current user."
 
 	return &Result{output}, nil
 }
