@@ -245,6 +245,28 @@ func (_m *Gateway) GetTransactionResult(_a0 *flow.Transaction, _a1 bool) (*flow.
 
 	return r0, r1
 }
+// GetTransactionResult provides a mock function with given fields: _a0, _a1
+func (_m *Gateway) GetTransactionResultByID(_a0 flow.Identifier, _a1 bool) (*flow.TransactionResult, error) {
+	ret := _m.Called(_a0, _a1)
+
+	var r0 *flow.TransactionResult
+	if rf, ok := ret.Get(0).(func(flow.Identifier, bool) *flow.TransactionResult); ok {
+		r0 = rf(_a0, _a1)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*flow.TransactionResult)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(flow.Identifier, bool) error); ok {
+		r1 = rf(_a0, _a1)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
 
 // Ping provides a mock function with given fields:
 func (_m *Gateway) Ping() error {

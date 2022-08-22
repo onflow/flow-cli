@@ -27,30 +27,32 @@ import (
 )
 
 const (
-	GetAccountFunc            = "GetAccount"
-	SendSignedTransactionFunc = "SendSignedTransaction"
-	GetCollectionFunc         = "GetCollection"
-	GetTransactionResultFunc  = "GetTransactionResult"
-	GetEventsFunc             = "GetEvents"
-	GetLatestBlockFunc        = "GetLatestBlock"
-	GetBlockByHeightFunc      = "GetBlockByHeight"
-	GetBlockByIDFunc          = "GetBlockByID"
-	ExecuteScriptFunc         = "ExecuteScript"
-	GetTransactionFunc        = "GetTransaction"
+	GetAccountFunc               = "GetAccount"
+	SendSignedTransactionFunc    = "SendSignedTransaction"
+	GetCollectionFunc            = "GetCollection"
+	GetTransactionResultFunc     = "GetTransactionResult"
+	GetTransactionResultByIDFunc = "GetTransactionResultByID"
+	GetEventsFunc                = "GetEvents"
+	GetLatestBlockFunc           = "GetLatestBlock"
+	GetBlockByHeightFunc         = "GetBlockByHeight"
+	GetBlockByIDFunc             = "GetBlockByID"
+	ExecuteScriptFunc            = "ExecuteScript"
+	GetTransactionFunc           = "GetTransaction"
 )
 
 type TestGateway struct {
-	Mock                  *mocks.Gateway
-	SendSignedTransaction *mock.Call
-	GetAccount            *mock.Call
-	GetCollection         *mock.Call
-	GetTransactionResult  *mock.Call
-	GetEvents             *mock.Call
-	GetLatestBlock        *mock.Call
-	GetBlockByHeight      *mock.Call
-	GetBlockByID          *mock.Call
-	ExecuteScript         *mock.Call
-	GetTransaction        *mock.Call
+	Mock                     *mocks.Gateway
+	SendSignedTransaction    *mock.Call
+	GetAccount               *mock.Call
+	GetCollection            *mock.Call
+	GetTransactionResult     *mock.Call
+	GetTransactionResultByID *mock.Call
+	GetEvents                *mock.Call
+	GetLatestBlock           *mock.Call
+	GetBlockByHeight         *mock.Call
+	GetBlockByID             *mock.Call
+	ExecuteScript            *mock.Call
+	GetTransaction           *mock.Call
 }
 
 func DefaultMockGateway() *TestGateway {
@@ -72,6 +74,11 @@ func DefaultMockGateway() *TestGateway {
 		GetTransactionResult: m.On(
 			GetTransactionResultFunc,
 			mock.AnythingOfType("*flow.Transaction"),
+			mock.AnythingOfType("bool"),
+		),
+		GetTransactionResultByID: m.On(
+			GetTransactionResultByIDFunc,
+			mock.AnythingOfType("flow.Identifier"),
 			mock.AnythingOfType("bool"),
 		),
 		GetTransaction: m.On(
@@ -111,6 +118,7 @@ func DefaultMockGateway() *TestGateway {
 	t.GetTransaction.Return(NewTransaction(), nil)
 	t.GetCollection.Return(NewCollection(), nil)
 	t.GetTransactionResult.Return(NewTransactionResult(nil), nil)
+	t.GetTransactionResultByID.Return(NewTransactionResult(nil), nil)
 	t.GetEvents.Return([]flow.BlockEvents{}, nil)
 	t.GetLatestBlock.Return(NewBlock(), nil)
 	t.GetBlockByHeight.Return(NewBlock(), nil)

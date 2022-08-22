@@ -53,7 +53,7 @@ func TestTransactions(t *testing.T) {
 		_, _, err := s.Transactions.GetStatus(txs.ID(), true)
 
 		assert.NoError(t, err)
-		gw.Mock.AssertNumberOfCalls(t, tests.GetTransactionResultFunc, 1)
+		gw.Mock.AssertNumberOfCalls(t, tests.GetTransactionResultByIDFunc, 1)
 		gw.Mock.AssertCalled(t, tests.GetTransactionFunc, txs.ID())
 	})
 
