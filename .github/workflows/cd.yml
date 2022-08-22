@@ -29,7 +29,6 @@ jobs:
         run: make versioned-binaries
         env:
           MIXPANEL_PROJECT_TOKEN: ${{ secrets.MIXPANEL_PROJECT_TOKEN }}
-          MIXPANEL_SERVICE_ACCOUNT_SECRET: ${{ secrets.MIXPANEL_SERVICE_ACCOUNT_SECRET }}
       - name: Uploading Binaries
         uses: google-github-actions/upload-cloud-storage@main
         with:
