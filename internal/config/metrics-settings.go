@@ -57,8 +57,8 @@ func handleMetricsSettings(
 		return nil, err
 	}
 
-	output := fmt.Sprintf("Metrics tracking is %sd and its settings is stored in %s \n", args[0], configPath) +
-		"Please note that you will also need to opt out of metrics tracking on other devices that you also use flow-cli on \n"
+	output := fmt.Sprintf("Command usage tracking is %sd. The preference was saved in a file located at %s \n", args[0], configPath) +
+		"Please be aware that your command tracking preference will only be set for your current user. \n"
 
 	return &Result{output}, nil
 }
