@@ -7,7 +7,7 @@ description: How to build and send a complex Flow transaction from the command l
 **Simple Transactions**
 
 Sending a transaction using the Flow CLI can simply be 
-achieved by using the [send command documented here](/flow-cli/send-transactions/).
+achieved by using the [send command documented here](/tools/flow-cli/send-transactions).
 
 **Complex Transactions**
 
@@ -16,14 +16,14 @@ commands to build, sign and send transactions allowing you to specify different
 authorizers, signers and proposers.  
 
 The process of sending a complex transactions includes three steps:
-1. [build a transaction](/flow-cli/build-transactions/)
-2. [sign the built transaction](/flow-cli/sign-transaction/)
-3. [send signed transaction](/flow-cli/send-signed-transactions/)
+1. [build a transaction](/tools/flow-cli/build-transactions)
+2. [sign the built transaction](/tools/flow-cli/sign-transaction)
+3. [send signed transaction](/tools/flow-cli/send-signed-transaction)
 
 Read more about each command flags and arguments in the above links.
 
 ## Examples
-We will describe common examples for complex transactions. All examples are using an [example configuration](#configuration).
+We will describe common examples for complex transactions. All examples are using an [example configuration](/tools/flow-cli/complex-transactions#configuration).
 
 ### Single payer, proposer and authorizer
 The simplest Flow transaction declares a single account as the proposer, payer and authorizer.
@@ -48,7 +48,7 @@ Submit the signed transaction:
 Transaction content (`tx.cdc`):
 ```
 transaction {
-    preapre(signer: AuthAccount) {}
+    prepare(signer: AuthAccount) {}
     execute { ... }
 }
 ```
@@ -86,7 +86,7 @@ Submit the signed transaction:
 Transaction content (`tx.cdc`):
 ```
 transaction {
-    preapre(bob: AuthAccount, charlie: AuthAccount) {}
+    prepare(bob: AuthAccount, charlie: AuthAccount) {}
     execute { ... }
 }
 ```
@@ -125,7 +125,7 @@ Submit the signed transaction:
 Transaction content (`tx.cdc`):
 ```
 transaction {
-    preapre(charlie: AuthAccount) {}
+    prepare(charlie: AuthAccount) {}
     execute { ... }
 }
 ```
@@ -159,7 +159,7 @@ Submit the signed transaction:
 Transaction content (`tx.cdc`):
 ```
 transaction {
-    preapre(signer: AuthAccount) {}
+    prepare(signer: AuthAccount) {}
     execute { ... }
 }
 ```

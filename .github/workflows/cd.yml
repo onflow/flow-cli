@@ -16,8 +16,6 @@ jobs:
           go-version: '1.18'
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-          MIXPANEL_PROJECT_TOKEN: ${{ secrets.MIXPANEL_PROJECT_TOKEN }}
-          MIXPANEL_SERVICE_ACCOUNT_SECRET: ${{ secrets.MIXPANEL_SERVICE_ACCOUNT_SECRET }}
   build:
     runs-on: ubuntu-latest
     steps:
@@ -31,6 +29,7 @@ jobs:
         run: make versioned-binaries
         env:
           ACCOUNT_CREATION_API_SECRET: ${{ secrets.ACCOUNT_CREATION_API_SECRET }}
+          MIXPANEL_PROJECT_TOKEN: ${{ secrets.MIXPANEL_PROJECT_TOKEN }}
       - name: Uploading Binaries
         uses: google-github-actions/upload-cloud-storage@main
         with:

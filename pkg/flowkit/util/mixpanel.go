@@ -20,23 +20,23 @@ package util
 
 import (
 	"bytes"
+	"crypto/sha256"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"github.com/spf13/cobra"
 	"io/ioutil"
 	"net/http"
-	"net/url"
+	"os/user"
 	"strings"
+
+	"github.com/spf13/cobra"
 )
 
 const (
-	MIXPANEL_TRACK_URL   = "https://api.mixpanel.com/track"
-	MIXPANEL_QUERY_URL   = "https://mixpanel.com/api/2.0/engage?project_id=2154593"
-	MIXPANEL_PROFILE_URL = "https://api.mixpanel.com/engage#profile-set"
+	MIXPANEL_TRACK_URL = "https://api.mixpanel.com/track"
 )
 
 var MIXPANEL_PROJECT_TOKEN = ""
-var MIXPANEL_SERVICE_ACCOUNT_SECRET = ""
 
 type MixpanelClient struct {
 	token   string
@@ -46,6 +46,11 @@ type MixpanelClient struct {
 func TrackCommandUsage(command *cobra.Command) error {
 	mixpanelEvent := newEvent(command)
 	mixpanelEvent.setUpEvent(MIXPANEL_PROJECT_TOKEN, FLOW_CLI)
+	distinctId, err := uniqueUserID()
+	if err != nil {
+		return err
+	}
+	mixpanelEvent.setEventDistinctId(distinctId)
 	eventPayload, err := encodePayload(mixpanelEvent)
 	if err != nil {
 		return err
@@ -81,89 +86,22 @@ func encodePayload(obj any) ([]byte, error) {
 	}
 	return b, nil
 }
-func SetUserMetricsSettings(enable bool) error {
-	mixpanelUser, err := getMixPanelUser()
+
+func uniqueUserID() (string, error) {
+	currentUser, err := user.Current()
 	if err != nil {
-		return err
-	}
-	mixpanelUser.configureUserTracking(enable)
-
-	userPayload, err := encodePayload(mixpanelUser)
-	if err != nil {
-		return err
+		return "", err
 	}
 
-	payload := bytes.NewReader(userPayload)
-	req, err := http.NewRequest("POST", MIXPANEL_PROFILE_URL, payload)
-	if err != nil {
-		return err
-	}
-	req.Header.Add("Accept", "text/plain")
-	req.Header.Add("Content-Type", "application/json")
-	res, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return err
-	}
-	defer res.Body.Close()
-	_, err = ioutil.ReadAll(res.Body)
+	name := currentUser.Name
+	hyphenatedName := strings.Replace(name, " ", "-", -1)
+	username := currentUser.Username
+	id := currentUser.Uid
 
-	if err != nil {
-		return err
-	}
-	if res.StatusCode >= 400 {
-		return fmt.Errorf("invalid response status code %d for tracking command usage", res.StatusCode)
-	}
+	combinedString := hyphenatedName + username + id
 
-	return nil
-}
+	hashedString := sha256.Sum256([]byte(combinedString))
+	encodedString := base64.StdEncoding.EncodeToString(hashedString[:])
 
-type MixPanelResponse struct {
-	Results []struct {
-		Properties struct {
-			OptIn bool `json:"opt_in"`
-		} `json:"$properties"`
-	} `json:"results"`
-}
-
-//User is opted in by default
-//If distinct id can't be found through query api, return true to reflect that user is opted in
-func IsUserOptedIn() (bool, error) {
-	distinctId, err := generateNewDistinctId()
-	if err != nil {
-		return false, err
-	}
-
-	queryPayload := "distinct_id=" + url.QueryEscape(distinctId)
-	payload := strings.NewReader(queryPayload)
-	req, err := http.NewRequest("POST", MIXPANEL_QUERY_URL, payload)
-	if err != nil {
-		return false, err
-	}
-
-	mixpanelAuth := "Basic " + MIXPANEL_SERVICE_ACCOUNT_SECRET
-	req.Header.Add("Accept", "application/json")
-	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-	req.Header.Add("Authorization", mixpanelAuth)
-
-	res, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return false, err
-	}
-
-	defer res.Body.Close()
-	body, err := ioutil.ReadAll(res.Body)
-
-	var queryResponse MixPanelResponse
-	err = json.Unmarshal(body, &queryResponse)
-
-	if err != nil {
-		return false, err
-	}
-	if res.StatusCode >= 400 {
-		return false, fmt.Errorf("invalid response status code %d for tracking command usage", res.StatusCode)
-	}
-	if len(queryResponse.Results) == 0 {
-		return true, nil
-	}
-	return queryResponse.Results[0].Properties.OptIn, nil
+	return encodedString, nil
 }

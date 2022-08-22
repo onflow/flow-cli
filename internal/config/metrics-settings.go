@@ -47,17 +47,18 @@ var MetricsSettings = &command.Command{
 
 func handleMetricsSettings(
 	args []string,
-	_ flowkit.ReaderWriter,
+	loader flowkit.ReaderWriter,
 	_ command.GlobalFlags,
 	_ *services.Services,
 ) (command.Result, error) {
-	disabled := args[0] == "disable"
-	err := util.SetUserMetricsSettings(disabled)
+	enabled := args[0] == "enable"
+	configPath, err := util.AddToConfig(loader, enabled)
 	if err != nil {
 		return nil, err
 	}
 
-	return &Result{
-		fmt.Sprintf("Metrics have been %sd", args[0]),
-	}, nil
+	output := fmt.Sprintf("Command usage tracking is %sd. The preference was saved in a file located at %s \n", args[0], configPath) +
+		"Please be aware that your command tracking preference will only be set for your current user."
+
+	return &Result{output}, nil
 }

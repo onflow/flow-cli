@@ -28,3 +28,6 @@ git
 
 # Ignore built CLI
 main
+test-a.private.json
+test-2.private.json
+testnet-alice.private.json
