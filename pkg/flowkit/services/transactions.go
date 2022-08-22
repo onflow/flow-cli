@@ -63,7 +63,6 @@ func (t *Transactions) GetStatus(
 	waitSeal bool,
 ) (*flow.Transaction, *flow.TransactionResult, error) {
 	t.logger.StartProgress("Fetching Transaction...")
-
 	tx, err := t.gateway.GetTransaction(id)
 	if err != nil {
 		return nil, nil, err
@@ -73,11 +72,19 @@ func (t *Transactions) GetStatus(
 		t.logger.StartProgress("Waiting for transaction to be sealed...")
 	}
 
-	result, err := t.gateway.GetTransactionResult(tx, waitSeal)
-
+	result, err := t.gateway.GetTransactionResultByID(id, waitSeal)
 	t.logger.StopProgress()
 
 	return tx, result, err
+}
+
+//GetTransactionResultByID gets transaction object through a transaction ID
+func (t *Transactions) GetTransactionResultByID(
+	id flow.Identifier,
+	waitSeal bool,
+) (*flow.TransactionResult, error) {
+	result, err := t.gateway.GetTransactionResultByID(id, waitSeal)
+	return result, err
 }
 
 // Build builds a transaction with specified payer, proposer and authorizer.

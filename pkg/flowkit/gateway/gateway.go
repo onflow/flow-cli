@@ -30,6 +30,7 @@ type Gateway interface {
 	GetAccount(flow.Address) (*flow.Account, error)
 	SendSignedTransaction(*flowkit.Transaction) (*flow.Transaction, error)
 	GetTransactionResult(*flow.Transaction, bool) (*flow.TransactionResult, error)
+	GetTransactionResultByID(flow.Identifier, bool) (*flow.TransactionResult, error)
 	GetTransaction(flow.Identifier) (*flow.Transaction, error)
 	ExecuteScript([]byte, []cadence.Value) (cadence.Value, error)
 	GetLatestBlock() (*flow.Block, error)

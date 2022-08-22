@@ -134,6 +134,21 @@ func (g *GrpcGateway) GetTransactionResult(tx *flow.Transaction, waitSeal bool) 
 	return result, nil
 }
 
+// GetTransactionResultByID gets a transaction result by ID from the Flow Access API.
+func (g *GrpcGateway) GetTransactionResultByID(txID flow.Identifier, waitSeal bool) (*flow.TransactionResult, error) {
+	result, err := g.client.GetTransactionResult(g.ctx, txID)
+	if err != nil {
+		return nil, err
+	}
+
+	if result.Status != flow.TransactionStatusSealed && waitSeal {
+		time.Sleep(time.Second)
+		return g.GetTransactionResultByID(txID, waitSeal)
+	}
+
+	return result, nil
+}
+
 // ExecuteScript execute a scripts on Flow through the Access API.
 func (g *GrpcGateway) ExecuteScript(script []byte, arguments []cadence.Value) (cadence.Value, error) {
 

@@ -21,6 +21,7 @@ package gateway
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/onflow/cadence"
 	jsoncdc "github.com/onflow/cadence/encoding/json"
@@ -146,6 +147,20 @@ func (g *EmulatorGateway) GetTransactionResult(tx *flow.Transaction, waitSeal bo
 	return result, nil
 }
 
+// GetTransactionResultByID gets a transaction result by ID from the Flow Access API.
+func (g *EmulatorGateway) GetTransactionResultByID(txID flow.Identifier, waitSeal bool) (*flow.TransactionResult, error) {
+	result, err := g.backend.GetTransactionResult(g.ctx, txID)
+	if err != nil {
+		return nil, UnwrapStatusError(err)
+	}
+
+	if result.Status != flow.TransactionStatusSealed && waitSeal {
+		time.Sleep(time.Second)
+		return g.GetTransactionResultByID(txID, waitSeal)
+	}
+
+	return result, nil
+}
 func (g *EmulatorGateway) GetTransaction(id flow.Identifier) (*flow.Transaction, error) {
 	transaction, err := g.backend.GetTransaction(g.ctx, id)
 	if err != nil {

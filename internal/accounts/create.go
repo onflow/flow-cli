@@ -315,23 +315,24 @@ func createAccountManually(log *output.StdoutLogger, selectedNetwork config.Netw
 	return addr, nil
 }
 func createAccountWithAPI(log *output.StdoutLogger, selectedNetwork config.Network, key crypto.PrivateKey, service *services.Services, startHeight uint64) (*flow.Address, error) {
-	log.StartProgress("Please wait while we create your new account....\n")
+	//log.StartProgress("Please wait while we create your new account....\n")
 
-	err := createNewAccount(selectedNetwork.Name, key.PublicKey().String())
+	txID, err := createNewAccount(selectedNetwork.Name, key.PublicKey().String())
 	if err != nil {
 		return nil, err
 	}
 
-	addr, err := getAccountCreatedAddressWithPubKey(service, key.PublicKey(), startHeight)
+	//addr, err := getAccountCreatedAddressWithPubKey(service, key.PublicKey(), startHeight)
+	addr, err := getAccountCreatedWithAPI(service, key.PublicKey(), txID)
 	if err != nil {
 		return nil, err
 	}
 
-	log.StopProgress()
+	//log.StopProgress()
 
 	return addr, nil
 }
-func createNewAccount(network, publicKey string) error {
+func createNewAccount(network, publicKey string) (string, error) {
 	newAccount := map[string]any{
 		"publicKey":          strings.TrimPrefix(publicKey, "0x"),
 		"hashAlgorithm":      createFlags.HashAlgo[0],
@@ -341,7 +342,7 @@ func createNewAccount(network, publicKey string) error {
 
 	newAccountJSON, err := json.Marshal(newAccount)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	accountCreationURL := AccountCreationAPIURL
@@ -351,39 +352,39 @@ func createNewAccount(network, publicKey string) error {
 
 	req, err := http.NewRequest("POST", accountCreationURL, bytes.NewBuffer(newAccountJSON))
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("Authorization", ACCOUNT_API_TOKEN)
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	defer res.Body.Close()
 	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	var apiResponse AccountAPIResponse
 	err = json.Unmarshal(body, &apiResponse)
 	if err != nil {
-		return err
+		return "", err
 	}
 	if res.StatusCode >= 400 {
 		if res.StatusCode == 429 {
-			return fmt.Errorf("api limit exceeded, please try again in a moment %d \n", res.StatusCode)
+			return "", fmt.Errorf("api limit exceeded, please try again in a moment %d \n", res.StatusCode)
 		}
-		return fmt.Errorf("invalid response status code %d \n", res.StatusCode)
+		return "", fmt.Errorf("invalid response status code %d \n", res.StatusCode)
 	}
 
 	if _, ok := apiResponse.Data["txId"]; !ok {
-		return fmt.Errorf("transaction ID not found in API response")
+		return "", fmt.Errorf("transaction ID not found in API response")
 	}
-
-	return nil
+	fmt.Printf("resulting txID from create.go is %s \n", apiResponse.Data["txId"])
+	return apiResponse.Data["txId"], nil
 }
 
 // getAccountCreatedAddressWithPubKey monitors the network for account creation events, if the event
@@ -426,44 +427,37 @@ func getAccountCreatedAddressWithPubKey(
 	return address, nil
 }
 
-// getAccountCreatedWithAPI gets the events from the transaction ID generated from the account creation API. If the event
-// contains the public key we are interested in then it extracts the newly created address from the event payload.
+// getAccountCreatedWithAPI gets the events from the transaction ID generated from the account creation API. It
+// extracts the newly created address from the account creation event payload.
 func getAccountCreatedWithAPI(
 	service *services.Services,
 	pubKey crypto.PublicKey,
-	startHeight uint64,
+	txID string,
 ) (*flow.Address, error) {
-	lastHeight, err := service.Blocks.GetLatestBlockHeight()
+	result, err := retry(txID, 10, time.Second, service.Transactions.GetTransactionResultByID)
 	if err != nil {
 		return nil, err
 	}
-
-	flowEvents, _ := service.Events.Get([]string{flow.EventAccountKeyAdded}, startHeight, lastHeight, 20, 1) // ignore AN errors since we will retry anyway
-
 	var address *flow.Address
-	for _, block := range flowEvents {
-		events := flowkit.NewEvents(block.Events)
-		address = events.GetAddressForKeyAdded(pubKey)
-		if address != nil {
-			break
-		}
-	}
-
+	events := flowkit.NewEvents(result.Events)
+	address = events.GetAddressForKeyAdded(pubKey)
 	if address == nil {
-		if lastHeight-startHeight > 400 { // if something goes wrong don't keep waiting forever to avoid spamming network
-			return nil, fmt.Errorf("failed to get the account address due to time out")
-		}
-
-		time.Sleep(time.Second * 2)
-		address, err = getAccountCreatedAddressWithPubKey(service, pubKey, startHeight)
-		if err != nil {
-			return nil, err
-		}
-
-		return address, nil
+		return nil, fmt.Errorf("failed to get the account address")
 	}
 
 	return address, nil
+}
+func retry(ID string, attempts int, sleep time.Duration, getTransaction func(flow.Identifier, bool) (*flow.TransactionResult, error)) (resultTx *flow.TransactionResult, err error) {
+	for i := 0; i < attempts; i++ {
+		if i > 0 {
+			sleep *= 2
+		}
+		result, err := getTransaction(flow.HexToID(ID), true)
+		if err == nil {
+			return result, nil
+		}
+	}
+	return nil, err
 }
 func saveAccount(
 	loader flowkit.ReaderWriter,
