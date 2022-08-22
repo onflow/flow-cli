@@ -37,7 +37,6 @@ const (
 )
 
 var MIXPANEL_PROJECT_TOKEN = ""
-var MIXPANEL_SERVICE_ACCOUNT_SECRET = ""
 
 type MixpanelClient struct {
 	token   string

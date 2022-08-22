@@ -79,7 +79,7 @@ const (
 )
 
 func (c Command) handleUserTracking(loader flowkit.ReaderWriter) {
-	if util.MIXPANEL_SERVICE_ACCOUNT_SECRET == "" || util.MIXPANEL_PROJECT_TOKEN == "" {
+	if util.MIXPANEL_PROJECT_TOKEN == "" {
 		return
 	}
 	metricsEnabled, err := util.CheckMetricsEnabled(loader)
