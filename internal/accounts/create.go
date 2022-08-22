@@ -383,7 +383,7 @@ func createNewAccount(network, publicKey string) (string, error) {
 	if _, ok := apiResponse.Data["txId"]; !ok {
 		return "", fmt.Errorf("transaction ID not found in API response")
 	}
-	fmt.Printf("resulting txID from create.go is %s \n", apiResponse.Data["txId"])
+
 	return apiResponse.Data["txId"], nil
 }
 
