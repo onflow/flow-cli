@@ -2,9 +2,11 @@ package e2e
 
 import (
 	"bytes"
+	"net"
 	"os"
 	"regexp"
 	"testing"
+	"time"
 
 	"gotest.tools/v3/assert"
 	"gotest.tools/v3/icmd"
@@ -22,6 +24,20 @@ func Test_cliCommands(t *testing.T) {
 	// start emulator
 	stopEmulator := e2e.StartEmulator(t)
 	defer stopEmulator()
+
+	// wait 5 seconds for emulator to start
+	timeout := 5 * time.Second
+	emulatorNotStarted := true
+	start := time.Now()
+	var elapsed time.Duration = 0
+	for emulatorNotStarted && elapsed.Seconds() <= 5 {
+		conn, _ := net.DialTimeout("tcp", "127.0.0.1:8888", timeout)
+		if conn != nil {
+			emulatorNotStarted = false
+		}
+		cur := time.Now()
+		elapsed = cur.Sub(start)
+	}
 
 	// ### KEYS ###
 	result = icmd.RunCmd(icmd.Command(FLOW_BINARY, "keys", "generate"))
