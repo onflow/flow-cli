@@ -53,7 +53,7 @@ func ConfiguredServiceKey(
 	var state *flowkit.State
 	var err error
 	loader := &afero.Afero{Fs: afero.NewOsFs()}
-
+	handleUserTracking(loader)
 	if init {
 		if sigAlgo == crypto.UnknownSignatureAlgorithm {
 			sigAlgo = emulator.DefaultServiceKeySigAlgo
@@ -110,6 +110,19 @@ func ConfiguredServiceKey(
 func init() {
 	Cmd = start.Cmd(ConfiguredServiceKey)
 	Cmd.Use = "emulator"
+}
+
+func handleUserTracking(loader flowkit.ReaderWriter) {
+	if util.MIXPANEL_PROJECT_TOKEN == "" {
+		return
+	}
+	metricsEnabled, err := util.CheckMetricsEnabled(loader)
+	if err != nil {
+		return
+	}
+	if metricsEnabled {
+		_ = util.TrackCommandUsage(Cmd)
+	}
 }
 
 func Exitf(code int, msg string, args ...interface{}) {
