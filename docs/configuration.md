@@ -201,6 +201,33 @@ value that is defined on the run time to the default service address on the emul
 ...
 ```
 
+You can also use BIP44 to derive keys from a mnemonic. For more details please see the [FLIP](https://github.com/onflow/flow/blob/master/flips/20201125-bip-44-multi-account.md)
+
+**Example for BIP44 format:**
+```json
+...
+
+"accounts": {
+  "admin-account": {
+    "address": "service",
+    "key":{
+        "type": "bip44",
+        "index": 0,
+        "signatureAlgorithm": "ECDSA_P256",
+        "hashAlgorithm": "SHA3_256",
+        "mnemonic": "skull design wagon top faith actor valley crystal subject volcano access join",
+        "derivationPath": "m/44'/539'/0'/0/0"
+      }
+  }
+}
+
+...
+```
+
+Note: Default value for `derivationPath` is `m/44'/539'/0'/0/0` if omitted. 
+
+
+
 You can also use a key management system (KMS) to sign the transactions. Currently, we only support Google KMS.
 
 **Example for Google KMS format:**
