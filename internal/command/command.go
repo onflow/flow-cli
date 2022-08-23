@@ -78,7 +78,7 @@ const (
 	logLevelNone  = "none"
 )
 
-func (c Command) handleUserTracking(loader flowkit.ReaderWriter) {
+func HandleUserTracking(command *cobra.Command, loader flowkit.ReaderWriter) {
 	if util.MIXPANEL_PROJECT_TOKEN == "" {
 		return
 	}
@@ -87,7 +87,7 @@ func (c Command) handleUserTracking(loader flowkit.ReaderWriter) {
 		return
 	}
 	if metricsEnabled {
-		_ = util.TrackCommandUsage(c.Cmd)
+		_ = util.TrackCommandUsage(command)
 	}
 }
 
@@ -108,7 +108,7 @@ func (c Command) AddToParent(parent *cobra.Command) {
 		// initialize file loader used in commands
 		loader := &afero.Afero{Fs: afero.NewOsFs()}
 
-		c.handleUserTracking(loader)
+		HandleUserTracking(c.Cmd, loader)
 
 		// if we receive a config error that isn't missing config we should handle it
 		state, confErr := flowkit.Load(Flags.ConfigPaths, loader)
