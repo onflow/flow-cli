@@ -6,9 +6,10 @@ import (
 	"regexp"
 	"testing"
 
-	e2e "github.com/onflow/flow-cli/e2e/utils"
 	"gotest.tools/v3/assert"
 	"gotest.tools/v3/icmd"
+
+	e2e "github.com/onflow/flow-cli/e2e/utils"
 )
 
 var FLOW_BINARY = "./flow"
