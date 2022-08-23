@@ -102,6 +102,12 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 		return nil, config.ErrDoesNotExist
 	}
 
+	// check for accidental standard contract deployments
+	err := p.state.CheckForStandardContractUsageOnMainnet()
+	if err != nil {
+		return nil, err
+	}
+
 	// check there are not multiple accounts with same contract
 	if p.state.ContractConflictExists(network) {
 		return nil, fmt.Errorf( // TODO(sideninja) specify which contract by name is a problem
