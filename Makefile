@@ -30,12 +30,13 @@ install-tools:
 
 .PHONY: test
 test:
+	GO111MODULE=on go build -o ./e2e/flow ./cmd/flow/main.go 
 	GO111MODULE=on go test -coverprofile=$(COVER_PROFILE) $(if $(JSON_OUTPUT),-json,) ./...
 	cd pkg/flowkit; GO111MODULE=on go test -coverprofile=$(COVER_PROFILE) $(if $(JSON_OUTPUT),-json,) ./...
+	rm ./e2e/flow*
 
-.PHONY: test-e2e-emulator
-test-e2e-emulator:
-	flow -f tests/flow.json emulator start
+.PHONY: e2e-test
+e2e-test: 
 
 .PHONY: coverage
 coverage:
