@@ -173,11 +173,13 @@ func (p *State) SetAccountFileLocation(account Account, location string) {
 
 // EmulatorServiceAccount returns the service account for the default emulator profile.
 func (p *State) EmulatorServiceAccount() (*Account, error) {
-	emulator := p.conf.Emulators.Default()
-	if emulator == nil {
-		return nil, fmt.Errorf("no default emulator account")
-	}
+	emulator := config.Emulator{}
 
+	if len(p.conf.Emulators) > 0 && p.conf.Emulators[0].Name != config.DefaultEmulatorConfigName {
+		emulator = p.conf.Emulators[0]
+	} else {
+		emulator = *p.conf.Emulators.Default()
+	}
 	return p.accounts.ByName(emulator.ServiceAccount)
 }
 
