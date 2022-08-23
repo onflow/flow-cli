@@ -2,105 +2,117 @@ package e2e
 
 import (
 	"bytes"
-	"fmt"
-	"os/exec"
+	"os"
 	"testing"
+
+	e2e "github.com/onflow/flow-cli/e2e/utils"
+	"gotest.tools/assert"
+	"gotest.tools/v3/icmd"
 )
 
-var PROMPT_UI_BUFFER_SIZE = 4096
-var ASCII_A byte = 97
-
-// PromptUI reads prompt inputs with 4096 length buffers so we pad
-// the rest of the bytes with some value after our input or else
-// PromptUI will throw us an unexpected EOF encountered error
-func pad(siz int, buf *bytes.Buffer) {
-	pu := make([]byte, PROMPT_UI_BUFFER_SIZE-siz)
-	for i := 0; i < PROMPT_UI_BUFFER_SIZE-siz; i++ {
-		pu[i] = ASCII_A // some arbitrary character for padding, in this case ascii 'a'
-	}
-	buf.Write(pu)
-}
-
 func Test_keys(t *testing.T) {
-	// defer icmd.RunCommand("rm", "flow")
+	result := icmd.RunCmd(icmd.Command("./flow", "init"))
+	result.Assert(t, icmd.Success)
+	defer os.Remove("./flow.json")
 
-	// result := icmd.RunCommand("./flow", "init")
-	// TODO: just run in background for now, leave as todo for later
-	// wait for port somehow, try script first then pm2, maybe run a script from go
-	// emulatorResult := icmd.RunCommand("./flow", "emulator", "init", "&")
+	// start emulator
+	// note: IS A race condition
+	stopEmulator := e2e.StartEmulator(t)
+	defer stopEmulator()
 
-	// NOTE: how to check this output as this is random
-	// sign something with the key
-	// TODO: extract key and name of account for later use
 	// ### KEYS ###
-	cmd := exec.Command("./flow", "keys", "generate")
-	res, err := cmd.CombinedOutput()
-	if err != nil {
-		panic(err)
-	}
-	fmt.Printf("%s\n", res)
+	result = icmd.RunCmd(icmd.Command("./flow", "keys", "generate"))
+	result.Assert(t, icmd.Success)
 
-	// ### ACCOUNTS AND KEYS ###
-	// TODO: defer method to remove this from flow.json or remove flow.json altogether
-	cmd = exec.Command("./flow", "accounts", "create")
+	// TODO: decode
+
+	// // ### ACCOUNTS AND SCRIPTS ###
+	cmd := icmd.Command("./flow", "accounts", "create")
 
 	buf := bytes.Buffer{}
 
-	// first input text
-	accountName := "gamer\r\n"
-	buf.WriteString(accountName)
-	pad(len(accountName), &buf)
+	// account name input text
+	accountName := "gamer"
+	acctInput := accountName + "\n"
+	buf.WriteString(acctInput)
+	e2e.Pad(len(acctInput), &buf)
 
 	// second input: enter key
 	buf.Write([]byte{10})
-	pad(1, &buf)
+	e2e.Pad(1, &buf)
 
 	// third input "y" for yes and enter key
 	buf.Write([]byte{121, 10})
-	pad(2, &buf)
+	e2e.Pad(2, &buf)
 
 	cmd.Stdin = &buf
 
-	res, err = cmd.CombinedOutput()
-	if err != nil {
-		panic(err)
-	}
-	fmt.Printf("%s\n", res)
+	result = icmd.RunCmd(cmd)
+	result.Assert(t, icmd.Success)
 
-	cmd = exec.Command("./flow", "accounts", "add-contract", "HelloWorld", "./files/HelloWorld.cdc")
-	res, err = cmd.CombinedOutput()
-	if err != nil {
-		panic(err)
-	}
-	fmt.Printf("%s\n", res)
+	result = icmd.RunCommand("./flow", "accounts", "add-contract", "HelloWorld", "./files/contract.cdc")
+	result.Assert(t, icmd.Success)
 
-	cmd = exec.Command("./flow", "scripts", "execute", "./files/script.cdc")
-	res, err = cmd.CombinedOutput()
-	if err != nil {
-		panic(err)
-	}
-	fmt.Printf("%s\n", res)
+	result = icmd.RunCommand("./flow", "scripts", "execute", "./files/script.cdc")
+	result.Assert(t, icmd.Success)
+	expected := "\nResult: \"Hello world!\"\n\n\n"
+	assert.Equal(t, result.Stdout(), expected, "Outputs of updated contract should be the same")
 
-	cmd = exec.Command("./flow", "accounts", "update-contract", "HelloWorld", "./files/HelloWorldUpdated.cdc")
-	res, err = cmd.CombinedOutput()
-	if err != nil {
-		panic(err)
-	}
-	fmt.Printf("%s\n", res)
+	result = icmd.RunCommand("./flow", "accounts", "update-contract", "HelloWorld", "./files/contractUpdated.cdc")
+	result.Assert(t, icmd.Success)
 
-	cmd = exec.Command("./flow", "scripts", "execute", "./files/script.cdc")
-	res, err = cmd.CombinedOutput()
-	if err != nil {
-		panic(err)
-	}
-	fmt.Printf("%s\n", res)
+	result = icmd.RunCommand("./flow", "scripts", "execute", "./files/script.cdc")
+	result.Assert(t, icmd.Success)
+	expected = "\nResult: \"Bonjour world!\"\n\n\n"
+	assert.Equal(t, result.Stdout(), expected, "Outputs of updated contract should be the same")
 
-	cmd = exec.Command("./flow", "accounts", "remove-contract", "HelloWorld")
-	res, err = cmd.CombinedOutput()
-	if err != nil {
-		panic(err)
-	}
-	fmt.Printf("%s\n", res)
+	result = icmd.RunCommand("./flow", "accounts", "remove-contract", "HelloWorld")
+	result.Assert(t, icmd.Success)
 
 	// ### TRANSACTIONS ###
+
+	cmd = icmd.Command("./flow", "transactions", "build", "./files/tx.cdc", "--filter", "payload", "--save", "./built.rlp")
+	defer icmd.RunCommand("rm", "built.rlp")
+
+	txBuf := bytes.Buffer{}
+
+	txBuf.Write([]byte{14, 10})
+	e2e.Pad(2, &txBuf)
+
+	cmd.Stdin = &txBuf
+
+	result = icmd.RunCmd(cmd)
+	result.Assert(t, icmd.Success)
+
+	// sign
+	cmd = icmd.Command("./flow", "transactions", "sign", "./built.rlp", "--filter", "payload", "--save", "./signed.rlp")
+	defer icmd.RunCommand("rm", "signed.rlp")
+
+	txBuf.Reset()
+
+	txBuf.Write([]byte{14, 10})
+	e2e.Pad(2, &txBuf)
+
+	cmd.Stdin = &txBuf
+
+	result = icmd.RunCmd(cmd)
+	result.Assert(t, icmd.Success)
+
+	// send
+	cmd = icmd.Command("./flow", "transactions", "send-signed", "./signed.rlp")
+
+	txBuf.Reset()
+
+	txBuf.Write([]byte{14, 10})
+	e2e.Pad(2, &txBuf)
+
+	cmd.Stdin = &txBuf
+
+	result = icmd.RunCmd(cmd)
+	result.Assert(t, icmd.Success)
+
+	// // // get
+	// result = icmd.Command("./flow", "transactions", "get", "LKJALKJLKDJFLJFOIJSDFJLKDSJFLKIOEJF")
+	// resp, err = cmd.CombinedOutput()
+	// assert.Nil(t, err, "Failed to sign transaction: ", err, resp)
 }
