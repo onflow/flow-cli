@@ -3,116 +3,90 @@ package e2e
 import (
 	"bytes"
 	"os"
+	"regexp"
 	"testing"
 
 	e2e "github.com/onflow/flow-cli/e2e/utils"
-	"gotest.tools/assert"
+	"gotest.tools/v3/assert"
 	"gotest.tools/v3/icmd"
 )
 
-func Test_keys(t *testing.T) {
-	result := icmd.RunCmd(icmd.Command("./flow", "init"))
+var FLOW_BINARY = "./flow"
+
+func Test_cliCommands(t *testing.T) {
+	result := icmd.RunCmd(icmd.Command(FLOW_BINARY, "init"))
 	result.Assert(t, icmd.Success)
 	defer os.Remove("./flow.json")
 
 	// start emulator
-	// note: IS A race condition
 	stopEmulator := e2e.StartEmulator(t)
 	defer stopEmulator()
 
 	// ### KEYS ###
-	result = icmd.RunCmd(icmd.Command("./flow", "keys", "generate"))
+	result = icmd.RunCmd(icmd.Command(FLOW_BINARY, "keys", "generate"))
 	result.Assert(t, icmd.Success)
 
-	// TODO: decode
-
 	// // ### ACCOUNTS AND SCRIPTS ###
-	cmd := icmd.Command("./flow", "accounts", "create")
+	cmd := icmd.Command(FLOW_BINARY, "accounts", "create")
 
 	buf := bytes.Buffer{}
 
-	// account name input text
-	accountName := "gamer"
+	accountName := "remy"
 	acctInput := accountName + "\n"
-	buf.WriteString(acctInput)
-	e2e.Pad(len(acctInput), &buf)
-
-	// second input: enter key
-	buf.Write([]byte{10})
-	e2e.Pad(1, &buf)
-
-	// third input "y" for yes and enter key
-	buf.Write([]byte{121, 10})
-	e2e.Pad(2, &buf)
-
+	e2e.RespondToPrompt([]byte(acctInput), &buf)
+	e2e.RespondToPrompt([]byte{10}, &buf)      // second input: enter key
+	e2e.RespondToPrompt([]byte{121, 10}, &buf) // "y" for yes and enter key
 	cmd.Stdin = &buf
 
 	result = icmd.RunCmd(cmd)
 	result.Assert(t, icmd.Success)
 
-	result = icmd.RunCommand("./flow", "accounts", "add-contract", "HelloWorld", "./files/contract.cdc")
+	result = icmd.RunCommand(FLOW_BINARY, "accounts", "add-contract", "HelloWorld", "./files/contract.cdc")
 	result.Assert(t, icmd.Success)
 
-	result = icmd.RunCommand("./flow", "scripts", "execute", "./files/script.cdc")
+	result = icmd.RunCommand(FLOW_BINARY, "scripts", "execute", "./files/script.cdc")
 	result.Assert(t, icmd.Success)
 	expected := "\nResult: \"Hello world!\"\n\n\n"
 	assert.Equal(t, result.Stdout(), expected, "Outputs of updated contract should be the same")
 
-	result = icmd.RunCommand("./flow", "accounts", "update-contract", "HelloWorld", "./files/contractUpdated.cdc")
+	result = icmd.RunCommand(FLOW_BINARY, "accounts", "update-contract", "HelloWorld", "./files/contractUpdated.cdc")
 	result.Assert(t, icmd.Success)
 
-	result = icmd.RunCommand("./flow", "scripts", "execute", "./files/script.cdc")
+	result = icmd.RunCommand(FLOW_BINARY, "scripts", "execute", "./files/script.cdc")
 	result.Assert(t, icmd.Success)
 	expected = "\nResult: \"Bonjour world!\"\n\n\n"
 	assert.Equal(t, result.Stdout(), expected, "Outputs of updated contract should be the same")
 
-	result = icmd.RunCommand("./flow", "accounts", "remove-contract", "HelloWorld")
-	result.Assert(t, icmd.Success)
-
-	// ### TRANSACTIONS ###
-
-	cmd = icmd.Command("./flow", "transactions", "build", "./files/tx.cdc", "--filter", "payload", "--save", "./built.rlp")
+	// ### TRANSACTIONS ### //
+	cmd = icmd.Command(FLOW_BINARY, "transactions", "build", "./files/tx.cdc", "--filter", "payload", "--save", "./built.rlp")
 	defer icmd.RunCommand("rm", "built.rlp")
-
 	txBuf := bytes.Buffer{}
-
-	txBuf.Write([]byte{14, 10})
-	e2e.Pad(2, &txBuf)
-
+	e2e.RespondToPrompt([]byte{14, 10}, &txBuf) // down arrow key and enter
 	cmd.Stdin = &txBuf
-
 	result = icmd.RunCmd(cmd)
 	result.Assert(t, icmd.Success)
 
-	// sign
-	cmd = icmd.Command("./flow", "transactions", "sign", "./built.rlp", "--filter", "payload", "--save", "./signed.rlp")
+	cmd = icmd.Command(FLOW_BINARY, "transactions", "sign", "./built.rlp", "--filter", "payload", "--save", "./signed.rlp")
 	defer icmd.RunCommand("rm", "signed.rlp")
-
 	txBuf.Reset()
-
-	txBuf.Write([]byte{14, 10})
-	e2e.Pad(2, &txBuf)
-
+	e2e.RespondToPrompt([]byte{14, 10}, &txBuf)
 	cmd.Stdin = &txBuf
-
 	result = icmd.RunCmd(cmd)
 	result.Assert(t, icmd.Success)
 
-	// send
-	cmd = icmd.Command("./flow", "transactions", "send-signed", "./signed.rlp")
-
+	cmd = icmd.Command(FLOW_BINARY, "transactions", "send-signed", "./signed.rlp")
 	txBuf.Reset()
-
-	txBuf.Write([]byte{14, 10})
-	e2e.Pad(2, &txBuf)
-
+	e2e.RespondToPrompt([]byte{14, 10}, &txBuf)
 	cmd.Stdin = &txBuf
-
 	result = icmd.RunCmd(cmd)
 	result.Assert(t, icmd.Success)
+	re := regexp.MustCompile("\nID\t(.*?)\n")
+	matches := re.FindStringSubmatch(result.Stdout())
+	txId := matches[1]
 
-	// // // get
-	// result = icmd.Command("./flow", "transactions", "get", "LKJALKJLKDJFLJFOIJSDFJLKDSJFLKIOEJF")
-	// resp, err = cmd.CombinedOutput()
-	// assert.Nil(t, err, "Failed to sign transaction: ", err, resp)
+	result = icmd.RunCmd(icmd.Command(FLOW_BINARY, "transactions", "get", txId))
+	result.Assert(t, icmd.Success)
+
+	result = icmd.RunCommand(FLOW_BINARY, "accounts", "remove-contract", "HelloWorld")
+	result.Assert(t, icmd.Success)
 }
