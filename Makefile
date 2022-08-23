@@ -35,9 +35,6 @@ test:
 	cd pkg/flowkit; GO111MODULE=on go test -coverprofile=$(COVER_PROFILE) $(if $(JSON_OUTPUT),-json,) ./...
 	rm ./e2e/flow*
 
-.PHONY: e2e-test
-e2e-test: 
-
 .PHONY: coverage
 coverage:
 ifeq ($(COVER), true)
