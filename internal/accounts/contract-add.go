@@ -20,6 +20,7 @@ package accounts
 
 import (
 	"fmt"
+	"github.com/onflow/flow-cli/pkg/flowkit/contracts"
 
 	"github.com/onflow/cadence"
 
@@ -41,10 +42,10 @@ var addContractFlags = flagsAddContract{}
 
 var AddContractCommand = &command.Command{
 	Cmd: &cobra.Command{
-		Use:     "add-contract <name> <filename>",
+		Use:     "add-contract <filename>",
 		Short:   "Deploy a new contract to an account",
-		Example: `flow accounts add-contract FungibleToken ./FungibleToken.cdc`,
-		Args:    cobra.MinimumNArgs(2),
+		Example: `flow accounts add-contract ./FungibleToken.cdc`,
+		Args:    cobra.MinimumNArgs(1),
 	},
 	Flags: &addContractFlags,
 	RunS:  addContract,
@@ -57,12 +58,17 @@ func addContract(
 	srv *services.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
-	name := args[0]
-	filename := args[1]
+	filename := args[0]
 
 	code, err := readerWriter.ReadFile(filename)
 	if err != nil {
 		return nil, fmt.Errorf("error loading contract file: %w", err)
+	}
+
+	resolver, err := contracts.NewResolver(code)
+	name, err := resolver.GetSourceContractName()
+	if err != nil {
+		return nil, err
 	}
 
 	to, err := state.Accounts().ByName(addContractFlags.Signer)

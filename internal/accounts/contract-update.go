@@ -20,6 +20,7 @@ package accounts
 
 import (
 	"fmt"
+	"github.com/onflow/flow-cli/pkg/flowkit/contracts"
 
 	"github.com/onflow/cadence"
 
@@ -41,10 +42,10 @@ var updateContractFlags = flagsUpdateContract{}
 
 var UpdateCommand = &command.Command{
 	Cmd: &cobra.Command{
-		Use:     "update-contract <name> <filename>",
+		Use:     "update-contract <filename>",
 		Short:   "Update a contract deployed to an account",
-		Example: `flow accounts update-contract FungibleToken ./FungibleToken.cdc`,
-		Args:    cobra.MinimumNArgs(2),
+		Example: `flow accounts update-contract ./FungibleToken.cdc`,
+		Args:    cobra.MinimumNArgs(1),
 	},
 	Flags: &updateContractFlags,
 	RunS:  updateContract,
@@ -57,12 +58,17 @@ func updateContract(
 	srv *services.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
-	name := args[0]
 	filename := args[1]
 
 	code, err := readerWriter.ReadFile(filename)
 	if err != nil {
 		return nil, fmt.Errorf("error loading contract file: %w", err)
+	}
+
+	resolver, err := contracts.NewResolver(code)
+	name, err := resolver.GetSourceContractName()
+	if err != nil {
+		return nil, err
 	}
 
 	to, err := state.Accounts().ByName(updateContractFlags.Signer)

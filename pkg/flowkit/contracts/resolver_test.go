@@ -141,5 +141,24 @@ func TestResolver(t *testing.T) {
 			assert.Equal(t, cleanCode(code), cleanCode(resolved[i]))
 		}
 	})
+	t.Run("Get Contract Name", func(t *testing.T) {
+		resolver, err := NewResolver([]byte(`
+			pub contract HelloWorld {}
+		`))
+		assert.NoError(t, err)
 
+		contractName, err := resolver.GetSourceContractName()
+		assert.NoError(t, err)
+		assert.Equal(t, "HelloWorld", contractName)
+	})
+	t.Run("Get Contract Name", func(t *testing.T) {
+		resolver, err := NewResolver([]byte(`
+			pub struct SomeStruct {}
+			pub contract HelloWorld {}
+		`))
+		assert.NoError(t, err)
+
+		_, err = resolver.GetSourceContractName()
+		assert.ErrorContains(t, err, "the code must declare exactly one contract or contract interface")
+	})
 }

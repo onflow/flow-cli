@@ -6,13 +6,13 @@ sidebar_title: Update a Contract
 Update an existing contract deployed to a Flow account using the Flow CLI.
 
 ```shell
-flow accounts update-contract <name> <filename> [<argument> <argument>...] [flags]
+flow accounts update-contract <filename> [<argument> <argument>...] [flags]
 ```
 
 ## Example Usage
 
 ```shell
-> flow accounts update-contract FungibleToken ./FungibleToken.cdc
+> flow accounts update-contract ./FungibleToken.cdc
 
 Contract 'FungibleToken' updated on account '0xf8d6e0586b0a20c7'
 
@@ -33,7 +33,7 @@ Contract: 'FungibleToken'
 ```
 **Testnet Example**
 ```
-> flow accounts update-contract FungibleToken ./FungibleToken.cdc --signer alice --network testnet
+> flow accounts update-contract ./FungibleToken.cdc --signer alice --network testnet
 
 Contract 'FungibleToken' updated on account '0xf8d6e0586b0a20c7'
 
@@ -77,7 +77,7 @@ Input arguments values matching corresponding types in the source code and passe
 
 Example:
 ```shell
-> flow accounts update-contract HelloWorld ./contract.cdc Hello 2
+> flow accounts update-contract ./contract.cdc Hello 2
 ```
 Transaction code:
 ```
@@ -100,7 +100,7 @@ Specify the name of the account that will be used to sign the transaction.
 
 - Flag: `--args-json`
 - Valid inputs: arguments in JSON-Cadence form.
-- Example: `flow accounts update-contract HelloWorld ./tx.cdc '[{"type": "String", "value": "Hello"}]'`
+- Example: `flow accounts update-contract ./tx.cdc '[{"type": "String", "value": "Hello"}]'`
 
 Arguments passed to the Cadence transaction in Cadence JSON format.
 Cadence JSON format contains `type` and `value` keys and is
