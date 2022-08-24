@@ -87,14 +87,14 @@ func (c Command) AddToParent(parent *cobra.Command) {
 	initCrashReporting()
 
 	c.Cmd.Run = func(cmd *cobra.Command, args []string) {
-		if !isDevelopment() { // only report crashes in production
+		// initialize file loader used in commands
+		loader := &afero.Afero{Fs: afero.NewOsFs()}
+
+		if !isDevelopment() { // only report crashes and track commands in production
 			defer sentry.Flush(2 * time.Second)
 			defer sentry.Recover()
 			RecordCommandUsage(c.Cmd, loader)
 		}
-
-		// initialize file loader used in commands
-		loader := &afero.Afero{Fs: afero.NewOsFs()}
 
 		// if we receive a config error that isn't missing config we should handle it
 		state, confErr := flowkit.Load(Flags.ConfigPaths, loader)
