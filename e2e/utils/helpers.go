@@ -27,17 +27,20 @@ import (
 const PROMPT_UI_BUFFER_SIZE = 4096
 const ASCII_A byte = 97
 
-// PromptUI (which is what makes the cli interactive)reads prompt
-// inputs with 4096 length buffers so we e2e.Pad the rest of the bytes
-// with some value after our input or else PromptUI will throw
-// us "unexpected EOF encountered" error
+// Appends a padded prompt response to a buffer that can be passed
+// to stdin for the CLI to read
+//
+// Padding is required because promptui reads prompt inputs with
+// 4096 length buffers so we pad the rest of the  bytes with
+// some value after our input or else PromptUI will throw us
+// "unexpected EOF encountered" error
 func RespondToPrompt(b []byte, buf *bytes.Buffer) {
 	buf.Write(b)
 	siz := len(b)
 
 	pu := make([]byte, PROMPT_UI_BUFFER_SIZE-siz)
 	for i := 0; i < PROMPT_UI_BUFFER_SIZE-siz; i++ {
-		pu[i] = ASCII_A // some arbitrary character for padding, in this case ascii 'a'
+		pu[i] = ASCII_A // some arbitrary character for padding
 	}
 	buf.Write(pu)
 }
