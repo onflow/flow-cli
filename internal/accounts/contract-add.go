@@ -67,6 +67,10 @@ func addContract(
 	}
 
 	resolver, err := contracts.NewResolver(code)
+	if err != nil {
+		return nil, err
+	}
+
 	name, err := resolver.GetSourceContractName()
 	if err != nil {
 		return nil, err
