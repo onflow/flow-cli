@@ -32,7 +32,7 @@ import (
 	e2e "github.com/onflow/flow-cli/e2e/utils"
 )
 
-var FLOW_BINARY = "./flow"
+const FLOW_BINARY = "./flow"
 
 func Test_cliCommands(t *testing.T) {
 	result := icmd.RunCmd(icmd.Command(FLOW_BINARY, "init"))
