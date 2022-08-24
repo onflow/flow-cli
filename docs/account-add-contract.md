@@ -9,6 +9,11 @@ Deploy a new contract to a Flow account using the Flow CLI.
 flow accounts add-contract <filename> [<argument> <argument>...] [flags]
 ````
 
+⚠️  Deprecation Notice: using name argument in adding contract command will be deprecated soon.
+```shell
+flow accounts add-contract <name> <filename> [<argument> <argument>...] [flags]
+```
+
 ## Example Usage
 
 ```shell
@@ -62,6 +67,8 @@ Contract: 'FungibleToken'
 - Valid inputs: any string value.
 
 Name of the contract as it is defined in the contract source code.
+
+⚠️  Deprecation Notice: use filename argument only, no need to use name argument.
 
 ### Filename
 
