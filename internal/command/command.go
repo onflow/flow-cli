@@ -90,12 +90,11 @@ func (c Command) AddToParent(parent *cobra.Command) {
 		if !isDevelopment() { // only report crashes in production
 			defer sentry.Flush(2 * time.Second)
 			defer sentry.Recover()
+			RecordCommandUsage(c.Cmd, loader)
 		}
 
 		// initialize file loader used in commands
 		loader := &afero.Afero{Fs: afero.NewOsFs()}
-
-		RecordCommandUsage(c.Cmd, loader)
 
 		// if we receive a config error that isn't missing config we should handle it
 		state, confErr := flowkit.Load(Flags.ConfigPaths, loader)
