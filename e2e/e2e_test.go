@@ -48,7 +48,7 @@ func Test_cliCommands(t *testing.T) {
 	emulatorNotStarted := true
 	start := time.Now()
 	var elapsed time.Duration = 0
-	for emulatorNotStarted && elapsed.Seconds() <= 5 {
+	for emulatorNotStarted && elapsed.Seconds() <= 30 {
 		conn, _ := net.DialTimeout("tcp", "127.0.0.1:8888", timeout)
 		if conn != nil {
 			emulatorNotStarted = false
