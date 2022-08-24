@@ -59,7 +59,14 @@ func updateContract(
 	srv *services.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
-	filename := args[1]
+	name := ""
+	filename := ""
+
+	if len(args) == 1 {
+		filename = args[0]
+	} else {
+		filename = args[1]
+	}
 
 	code, err := readerWriter.ReadFile(filename)
 	if err != nil {
@@ -71,9 +78,13 @@ func updateContract(
 		return nil, err
 	}
 
-	name, err := resolver.GetSourceContractName()
-	if err != nil {
-		return nil, err
+	if len(args) == 1 {
+		name, err = resolver.GetSourceContractName()
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		name = args[0]
 	}
 
 	to, err := state.Accounts().ByName(updateContractFlags.Signer)
