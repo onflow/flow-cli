@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package tests
+package test
 
 import (
 	"bytes"
@@ -25,26 +25,64 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
+	"github.com/onflow/flow-cli/pkg/flowkit"
+	"github.com/onflow/flow-cli/pkg/flowkit/services"
 	"github.com/onflow/flow-cli/pkg/flowkit/util"
 
 	testFramework "github.com/onflow/cadence/test-framework"
 )
 
-var Cmd = &cobra.Command{
-	Use:              "test",
-	Short:            "Utilities to run tests",
-	TraverseChildren: true,
+type flagsTests struct {
+	// Nothing for now
 }
 
-func init() {
-	ExecuteCommand.AddToParent(Cmd)
+var testFlags = flagsTests{}
+
+var TestCommand = &command.Command{
+	Cmd: &cobra.Command{
+		Use:     "test <filename>",
+		Short:   "Run Cadence tests",
+		Example: `flow test script.cdc`,
+		Args:    cobra.MinimumNArgs(1),
+	},
+	Flags: &testFlags,
+	Run:   run,
 }
 
-var _ command.Result = &TestResult{}
+func run(
+	args []string,
+	readerWriter flowkit.ReaderWriter,
+	_ command.GlobalFlags,
+	services *services.Services,
+) (command.Result, error) {
+
+	filename := args[0]
+
+	code, err := readerWriter.ReadFile(filename)
+	if err != nil {
+		return nil, fmt.Errorf("error loading script file: %w", err)
+	}
+
+	result, err := services.Tests.Execute(
+		code,
+		filename,
+		readerWriter,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &TestResult{
+		Results: result,
+	}, nil
+}
 
 type TestResult struct {
 	testFramework.Results
 }
+
+var _ command.Result = &TestResult{}
 
 func (r *TestResult) JSON() any {
 	results := make([]map[string]string, 0, len(r.Results))
