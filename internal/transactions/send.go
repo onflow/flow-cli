@@ -64,9 +64,19 @@ func send(
 	codeFilename := args[0]
 
 	transactionSigner := sendFlags.Signer
-	if sendFlags.Signer == config.DefaultEmulatorServiceAccountName { // use service account by default
-		transactionSigner = state.Config().Emulators.Default().ServiceAccount
+
+	if sendFlags.Signer == config.DefaultEmulatorServiceAccountName {
+		if state.Config().Emulators.Default() == nil {
+			if globalFlags.Network == config.DefaultEmulatorNetwork().Name {
+				return nil, fmt.Errorf("an emulator account is required in flow config")
+			} else {
+				return nil, fmt.Errorf("please specify a signer")
+			}
+		} else {
+			transactionSigner = state.Config().Emulators.Default().ServiceAccount
+		}
 	}
+
 	signer, err := state.Accounts().ByName(transactionSigner)
 	if err != nil {
 		return nil, err
