@@ -187,3 +187,11 @@ func AddToGitIgnore(filename string, loader ReaderWriter) error {
 		filePermissions,
 	)
 }
+
+func AbsolutePath(basePath, filePath string) string {
+	if path.IsAbs(filePath) {
+		return filePath
+	}
+
+	return path.Join(path.Dir(basePath), filePath)
+}

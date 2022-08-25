@@ -37,15 +37,15 @@ var testFlags = flagsTests{}
 var ExecuteCommand = &command.Command{
 	Cmd: &cobra.Command{
 		Use:     "run <filename>",
-		Short:   "Run a test script",
-		Example: `flow tests run script.cdc`,
+		Short:   "Run Cadence tests",
+		Example: `flow test run script.cdc`,
 		Args:    cobra.MinimumNArgs(1),
 	},
 	Flags: &testFlags,
-	Run:   execute,
+	Run:   run,
 }
 
-func execute(
+func run(
 	args []string,
 	readerWriter flowkit.ReaderWriter,
 	_ command.GlobalFlags,

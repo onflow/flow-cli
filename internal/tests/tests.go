@@ -27,11 +27,11 @@ import (
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/pkg/flowkit/util"
 
-	"github.com/onflow/cadence/test-framework"
+	testFramework "github.com/onflow/cadence/test-framework"
 )
 
 var Cmd = &cobra.Command{
-	Use:              "tests",
+	Use:              "test",
 	Short:            "Utilities to run tests",
 	TraverseChildren: true,
 }
@@ -43,7 +43,7 @@ func init() {
 var _ command.Result = &TestResult{}
 
 type TestResult struct {
-	test_framework.Results
+	testFramework.Results
 }
 
 func (r *TestResult) JSON() any {
@@ -63,7 +63,7 @@ func (r *TestResult) String() string {
 	var b bytes.Buffer
 	writer := util.CreateTabWriter(&b)
 
-	_, _ = fmt.Fprintf(writer, test_framework.PrettyPrintResults(r.Results))
+	_, _ = fmt.Fprintf(writer, testFramework.PrettyPrintResults(r.Results))
 
 	_ = writer.Flush()
 
@@ -71,5 +71,5 @@ func (r *TestResult) String() string {
 }
 
 func (r *TestResult) Oneliner() string {
-	return test_framework.PrettyPrintResults(r.Results)
+	return testFramework.PrettyPrintResults(r.Results)
 }
