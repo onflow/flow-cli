@@ -7,12 +7,12 @@ require (
 	github.com/gosuri/uilive v0.0.4
 	github.com/joho/godotenv v1.4.0
 	github.com/manifoldco/promptui v0.9.0
-	github.com/onflow/cadence v0.25.1-0.20220810221345-07a8b0d9a444
-	github.com/onflow/cadence/test-framework v0.0.0-20220810222826-4ac2e4c60cdb
+	github.com/onflow/cadence v0.24.2-0.20220823213124-7926e6ff3bf4
+	github.com/onflow/cadence/test-framework v0.0.0-20220825141904-288d6f41c89b
 	github.com/onflow/flow-core-contracts/lib/go/templates v0.11.2-0.20220720151516-797b149ceaaa
-	github.com/onflow/flow-emulator v0.33.5-0.20220810222614-bf662ef643bd
-	github.com/onflow/flow-go v0.27.2-0.20220810222325-02e60585a74a
-	github.com/onflow/flow-go-sdk v0.26.6-0.20220810222132-624cecf4dd40
+	github.com/onflow/flow-emulator v0.33.5-0.20220825140031-eb5e7c64d375
+	github.com/onflow/flow-go v0.27.2-0.20220824225855-76d6e9609457
+	github.com/onflow/flow-go-sdk v0.27.1-0.20220824225552-25513b198fed
 	github.com/rs/zerolog v1.26.1
 	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/afero v1.9.0
