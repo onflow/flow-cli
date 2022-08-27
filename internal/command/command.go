@@ -78,13 +78,6 @@ const (
 	logLevelNone  = "none"
 )
 
-func (c Command) handleUserTracking() {
-	if util.MIXPANEL_SERVICE_ACCOUNT_SECRET == "" || util.MIXPANEL_PROJECT_TOKEN == "" {
-		return
-	}
-	_ = util.TrackCommandUsage(c.Cmd)
-}
-
 // AddToParent add new command to main parent cmd
 // and initializes all necessary things as well as take care of errors and output
 // here we can do all boilerplate code that is else copied in each command and make sure
@@ -98,10 +91,11 @@ func (c Command) AddToParent(parent *cobra.Command) {
 			defer sentry.Flush(2 * time.Second)
 			defer sentry.Recover()
 		}
-		c.handleUserTracking()
 
 		// initialize file loader used in commands
 		loader := &afero.Afero{Fs: afero.NewOsFs()}
+
+		RecordCommandUsage(c.Cmd, loader)
 
 		// if we receive a config error that isn't missing config we should handle it
 		state, confErr := flowkit.Load(Flags.ConfigPaths, loader)
@@ -309,5 +303,18 @@ func initCrashReporting() {
 	})
 	if err != nil {
 		fmt.Println(err) // safest output method at this point
+	}
+}
+
+func RecordCommandUsage(command *cobra.Command, loader flowkit.ReaderWriter) {
+	if util.MIXPANEL_PROJECT_TOKEN == "" {
+		return
+	}
+	metricsEnabled, err := util.CheckMetricsEnabled(loader)
+	if err != nil {
+		return
+	}
+	if metricsEnabled {
+		_ = util.TrackCommandUsage(command)
 	}
 }

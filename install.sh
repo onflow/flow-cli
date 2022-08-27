@@ -4,6 +4,7 @@
 set -e
 
 BASE_URL="https://storage.googleapis.com/flow-cli"
+CLI_GIT_URL="https://raw.githubusercontent.com/onflow/flow-cli/master/version.txt"
 # The version to download, set by get_version (defaults to args[1])
 VERSION="$1"
 # The architecture string, set by get_architecture
@@ -55,7 +56,7 @@ get_architecture() {
 get_version() {
   if [ -z "$VERSION" ]
   then
-    VERSION=$(curl -s "$BASE_URL/version.txt")
+    VERSION=$(curl -s "$CLI_GIT_URL")
   fi
 }
 
