@@ -32,7 +32,7 @@ func TestKeys(t *testing.T) {
 		t.Parallel()
 
 		_, s, _ := setup()
-		key, err := s.Keys.Generate("", "", crypto.ECDSA_P256)
+		key, err := s.Keys.Generate("", crypto.ECDSA_P256)
 		assert.NoError(t, err)
 
 		assert.Equal(t, len(key.String()), 66)
@@ -42,7 +42,7 @@ func TestKeys(t *testing.T) {
 		t.Parallel()
 
 		_, s, _ := setup()
-		key, err := s.Keys.Generate("aaaaaaaaaaaaaaaaaaaaaaannndddddd_its_gone", "", crypto.ECDSA_P256)
+		key, err := s.Keys.Generate("aaaaaaaaaaaaaaaaaaaaaaannndddddd_its_gone", crypto.ECDSA_P256)
 
 		assert.NoError(t, err)
 		assert.Equal(t, key.String(), "0x134f702d0872dba9c7aea15498aab9b2ffedd5aeebfd8ac3cf47c591f0d7ce52")
@@ -52,7 +52,7 @@ func TestKeys(t *testing.T) {
 		t.Parallel()
 
 		_, s, _ := setup()
-		key, err := s.Keys.Generate("", "af232020ea7a7256eebdcebd609457d0dea51436a4377d2b577a3cf1f6d45c44", crypto.ECDSA_P256)
+		key, err := s.Keys.ParsePrivateKey("af232020ea7a7256eebdcebd609457d0dea51436a4377d2b577a3cf1f6d45c44", crypto.ECDSA_P256)
 
 		assert.NoError(t, err)
 		assert.Equal(t, key.String(), "0xaf232020ea7a7256eebdcebd609457d0dea51436a4377d2b577a3cf1f6d45c44")
@@ -75,7 +75,7 @@ func TestKeys(t *testing.T) {
 
 		for x, in := range inputs {
 			for k, v := range in {
-				_, err := s.Keys.Generate(k, "", v)
+				_, err := s.Keys.Generate(k, v)
 				assert.Equal(t, err.Error(), errs[x])
 				x++
 			}

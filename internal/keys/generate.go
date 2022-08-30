@@ -30,8 +30,10 @@ import (
 )
 
 type flagsGenerate struct {
-	Seed       string `flag:"seed" info:"Deterministic seed phrase"`
-	KeySigAlgo string `default:"ECDSA_P256" flag:"sig-algo" info:"Signature algorithm"`
+	Seed           string `flag:"seed" info:"Deterministic seed phrase (deprecated)"`
+	Mnemonic       string `flag:"mnemonic" info:"Mnemonic seed to use"`
+	DerivationPath string `default:"m/44'/539'/0'/0/0" flag:"derivationPath" info:"Derivation path"`
+	KeySigAlgo     string `default:"ECDSA_P256" flag:"sig-algo" info:"Signature algorithm"`
 }
 
 var generateFlags = flagsGenerate{}
@@ -57,11 +59,31 @@ func generate(
 		return nil, fmt.Errorf("invalid signature algorithm: %s", generateFlags.KeySigAlgo)
 	}
 
-	privateKey, err := services.Keys.Generate(generateFlags.Seed, "", sigAlgo)
+	//old generation with seed - deprecated
+	if generateFlags.Seed != "" {
+		privateKey, err := services.Keys.Generate(generateFlags.Seed, sigAlgo)
+		if err != nil {
+			return nil, err
+		}
+		pubKey := privateKey.PublicKey()
+		return &KeyResult{privateKey: privateKey, publicKey: pubKey}, nil
+	}
+
+	var err error
+	mnemonic := generateFlags.Mnemonic
+	if mnemonic == "" {
+		mnemonic, err = services.Keys.GetMnemonic()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	privateKey, err := services.Keys.DerivePrivateKeyFromMnemonic(mnemonic, sigAlgo, generateFlags.DerivationPath)
 	if err != nil {
 		return nil, err
 	}
 
 	pubKey := privateKey.PublicKey()
-	return &KeyResult{privateKey: privateKey, publicKey: pubKey}, nil
+	return &KeyResult{privateKey: privateKey, publicKey: pubKey, mnemonic: mnemonic, derivationPath: generateFlags.DerivationPath}, nil
+
 }
