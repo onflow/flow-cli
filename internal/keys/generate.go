@@ -26,11 +26,12 @@ import (
 
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/pkg/flowkit"
+	"github.com/onflow/flow-cli/pkg/flowkit/output"
 	"github.com/onflow/flow-cli/pkg/flowkit/services"
 )
 
 type flagsGenerate struct {
-	Seed           string `flag:"seed" info:"Deterministic seed phrase (deprecated)"`
+	Seed           string `flag:"seed" info:"⚠️  Deprecated: use mnemonic instead"`
 	Mnemonic       string `flag:"mnemonic" info:"Mnemonic seed to use"`
 	DerivationPath string `default:"m/44'/539'/0'/0/0" flag:"derivationPath" info:"Derivation path"`
 	KeySigAlgo     string `default:"ECDSA_P256" flag:"sig-algo" info:"Signature algorithm"`
@@ -61,6 +62,9 @@ func generate(
 
 	//old generation with seed - deprecated
 	if generateFlags.Seed != "" {
+
+		output.NewStdoutLogger(output.InfoLog).Info("\n⚠️  Flag `--seed` is deprecated. Please use `--mnemonic` flag instead to generate BIP44 compatible keys.\n")
+
 		privateKey, err := services.Keys.Generate(generateFlags.Seed, sigAlgo)
 		if err != nil {
 			return nil, err
