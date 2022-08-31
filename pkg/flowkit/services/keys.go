@@ -102,7 +102,6 @@ func (k *Keys) DerivePrivateKeyFromMnemonic(mnemonic string, sigAlgo crypto.Sign
 		return nil, err
 	}
 	return privateKey, nil
-
 }
 
 // Parses private key
