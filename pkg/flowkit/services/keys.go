@@ -79,7 +79,6 @@ func (k *Keys) DerivePrivateKeyFromMnemonic(mnemonic string, sigAlgo crypto.Sign
 	}
 
 	path, err := goeth.ParseDerivationPath(derivationPath)
-
 	if err != nil {
 		return nil, fmt.Errorf("invalid derivation path")
 	}
@@ -102,7 +101,6 @@ func (k *Keys) DerivePrivateKeyFromMnemonic(mnemonic string, sigAlgo crypto.Sign
 		return nil, err
 	}
 	return privateKey, nil
-
 }
 
 // Parses private key
