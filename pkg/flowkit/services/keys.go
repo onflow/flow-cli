@@ -30,6 +30,10 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowkit/gateway"
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
 	"github.com/onflow/flow-cli/pkg/flowkit/util"
+
+	goeth "github.com/ethereum/go-ethereum/accounts"
+	bip32 "github.com/tyler-smith/go-bip32"
+	bip39 "github.com/tyler-smith/go-bip39"
 )
 
 // Keys is a service that handles all key-related interactions.
@@ -52,14 +56,66 @@ func NewKeys(
 	}
 }
 
+func (k *Keys) GetMnemonic() (string, error) {
+	entropy, err := bip39.NewEntropy(128)
+	if err != nil {
+		return "", err
+	}
+	mnemonic, err := bip39.NewMnemonic(entropy)
+	if err != nil {
+		return "", err
+	}
+	return mnemonic, nil
+}
+
+func (k *Keys) DerivePrivateKeyFromMnemonic(mnemonic string, sigAlgo crypto.SignatureAlgorithm, derivationPath string) (crypto.PrivateKey, error) {
+
+	if derivationPath == "" {
+		derivationPath = "m/44'/539'/0'/0/0"
+	}
+
+	if !bip39.IsMnemonicValid(mnemonic) {
+		return nil, fmt.Errorf("invalid mnemonic")
+	}
+
+	path, err := goeth.ParseDerivationPath(derivationPath)
+	if err != nil {
+		return nil, fmt.Errorf("invalid derivation path")
+	}
+
+	seed := bip39.NewSeed(mnemonic, "")
+	accountKey, err := bip32.NewMasterKey(seed)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, n := range path {
+		accountKey, err = accountKey.NewChildKey(n)
+
+		if err != nil {
+			return nil, err
+		}
+	}
+	privateKey, err := crypto.DecodePrivateKey(sigAlgo, accountKey.Key)
+	if err != nil {
+		return nil, err
+	}
+	return privateKey, nil
+}
+
+// Parses private key
+func (k *Keys) ParsePrivateKey(inputPrivateKey string, sigAlgo crypto.SignatureAlgorithm) (crypto.PrivateKey, error) {
+	privateKey, err := crypto.DecodePrivateKeyHex(sigAlgo, inputPrivateKey)
+	if err != nil {
+		return nil, fmt.Errorf("failed to decode private key: %w", err)
+	}
+	return privateKey, nil
+}
+
 // Generate generates a new private key from the given seed and signature algorithm.
-func (k *Keys) Generate(inputSeed string, inputPrivateKey string, sigAlgo crypto.SignatureAlgorithm) (crypto.PrivateKey, error) {
+func (k *Keys) Generate(inputSeed string, sigAlgo crypto.SignatureAlgorithm) (crypto.PrivateKey, error) {
 	var seed []byte
 	var err error
-
-	if inputSeed != "" && inputPrivateKey != "" {
-		return nil, fmt.Errorf("seed and private key options are mutually exclusive")
-	}
 
 	if inputSeed == "" {
 		seed, err = util.RandomSeed(crypto.MinSeedLength)
@@ -68,14 +124,6 @@ func (k *Keys) Generate(inputSeed string, inputPrivateKey string, sigAlgo crypto
 		}
 	} else {
 		seed = []byte(inputSeed)
-	}
-
-	if inputPrivateKey != "" {
-		privateKey, err := crypto.DecodePrivateKeyHex(sigAlgo, inputPrivateKey)
-		if err != nil {
-			return nil, fmt.Errorf("failed to decode private key: %w", err)
-		}
-		return privateKey, nil
 	}
 
 	privateKey, err := crypto.GeneratePrivateKey(sigAlgo, seed)

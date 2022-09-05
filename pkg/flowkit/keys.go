@@ -306,7 +306,6 @@ func (a *Bip44AccountKey) Validate() error {
 	}
 
 	derivationPath, err := goeth.ParseDerivationPath(a.derivationPath)
-
 	if err != nil {
 		return fmt.Errorf("invalid derivation path defined for account in flow.json")
 	}
