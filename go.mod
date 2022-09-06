@@ -15,6 +15,7 @@ require (
 	github.com/psiemens/sconfig v0.1.0
 	github.com/spf13/afero v1.9.0
 	github.com/spf13/cobra v1.5.0
+	gotest.tools/v3 v3.3.0
 )
 
 require (
@@ -124,7 +125,7 @@ require (
 	github.com/prometheus/common v0.33.0 // indirect
 	github.com/prometheus/procfs v0.7.3 // indirect
 	github.com/psiemens/graceland v1.0.0 // indirect
-	github.com/rivo/uniseg v0.2.1-0.20211004051800-57c86be7915a // indirect
+	github.com/rivo/uniseg v0.3.4 // indirect
 	github.com/rs/cors v1.8.0 // indirect
 	github.com/rs/zerolog v1.26.1 // indirect
 	github.com/sergi/go-diff v1.1.0 // indirect
