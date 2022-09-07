@@ -19,6 +19,7 @@
 package services
 
 import (
+	"encoding/hex"
 	"testing"
 
 	"github.com/onflow/flow-go-sdk/crypto"
@@ -32,7 +33,7 @@ func TestKeys(t *testing.T) {
 		t.Parallel()
 
 		_, s, _ := setup()
-		key, err := s.Keys.Generate("", "", crypto.ECDSA_P256)
+		key, err := s.Keys.Generate("", crypto.ECDSA_P256)
 		assert.NoError(t, err)
 
 		assert.Equal(t, len(key.String()), 66)
@@ -42,17 +43,41 @@ func TestKeys(t *testing.T) {
 		t.Parallel()
 
 		_, s, _ := setup()
-		key, err := s.Keys.Generate("aaaaaaaaaaaaaaaaaaaaaaannndddddd_its_gone", "", crypto.ECDSA_P256)
+		key, err := s.Keys.Generate("aaaaaaaaaaaaaaaaaaaaaaannndddddd_its_gone", crypto.ECDSA_P256)
 
 		assert.NoError(t, err)
 		assert.Equal(t, key.String(), "0x134f702d0872dba9c7aea15498aab9b2ffedd5aeebfd8ac3cf47c591f0d7ce52")
+	})
+
+	t.Run("Generate Keys with mnemonic (default path)", func(t *testing.T) {
+		t.Parallel()
+
+		_, s, _ := setup()
+		key, err := s.Keys.DerivePrivateKeyFromMnemonic("isolate visa defy link gate ordinary notice desert punch zero please pistol", crypto.ECDSA_P256, "")
+
+		assert.NoError(t, err)
+		assert.Equal(t, key.String(), "0x04430b77d604b52815494a8e453e1ffa2483644c063a0b7a46eb5effb3dc7b0b")
+	})
+
+	//https://github.com/onflow/ledger-app-flow/blob/dc61213a9c3d73152b78b7391d04165d07f1ad89/tests_speculos/test-basic-show-address-expert.js#L28
+	t.Run("Generate Keys with mnemonic (custom path - Ledger)", func(t *testing.T) {
+		t.Parallel()
+
+		_, s, _ := setup()
+		//ledger test mnemonic: https://github.com/onflow/ledger-app-flow#using-a-real-device-for-integration-tests-nano-s-and-nano-s-plus
+		key, err := s.Keys.DerivePrivateKeyFromMnemonic("equip will roof matter pink blind book anxiety banner elbow sun young", crypto.ECDSA_secp256k1, "m/44'/539'/513'/0/0")
+
+		assert.NoError(t, err)
+		assert.Equal(t, key.String(), "0xd18d051afca7150781fef111f3387d132d31c4a6250268db0f61f836a205e0b8")
+
+		assert.Equal(t, hex.EncodeToString(key.PublicKey().Encode()), "d7482bbaff7827035d5b238df318b10604673dc613808723efbd23fbc4b9fad34a415828d924ec7b83ac0eddf22ef115b7c203ee39fb080572d7e51775ee54be")
 	})
 
 	t.Run("Generate Keys with private key", func(t *testing.T) {
 		t.Parallel()
 
 		_, s, _ := setup()
-		key, err := s.Keys.Generate("", "af232020ea7a7256eebdcebd609457d0dea51436a4377d2b577a3cf1f6d45c44", crypto.ECDSA_P256)
+		key, err := s.Keys.ParsePrivateKey("af232020ea7a7256eebdcebd609457d0dea51436a4377d2b577a3cf1f6d45c44", crypto.ECDSA_P256)
 
 		assert.NoError(t, err)
 		assert.Equal(t, key.String(), "0xaf232020ea7a7256eebdcebd609457d0dea51436a4377d2b577a3cf1f6d45c44")
@@ -75,7 +100,7 @@ func TestKeys(t *testing.T) {
 
 		for x, in := range inputs {
 			for k, v := range in {
-				_, err := s.Keys.Generate(k, "", v)
+				_, err := s.Keys.Generate(k, v)
 				assert.Equal(t, err.Error(), errs[x])
 				x++
 			}

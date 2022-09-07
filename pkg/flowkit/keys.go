@@ -29,7 +29,10 @@ import (
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/onflow/flow-go-sdk/crypto/cloudkms"
 
+	goeth "github.com/ethereum/go-ethereum/accounts"
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
+	bip32 "github.com/tyler-smith/go-bip32"
+	bip39 "github.com/tyler-smith/go-bip39"
 )
 
 // AccountKey is a flowkit specific account key implementation
@@ -47,11 +50,14 @@ type AccountKey interface {
 
 var _ AccountKey = &HexAccountKey{}
 var _ AccountKey = &KmsAccountKey{}
+var _ AccountKey = &Bip44AccountKey{}
 
 func NewAccountKey(accountKeyConf config.AccountKey) (AccountKey, error) {
 	switch accountKeyConf.Type {
 	case config.KeyTypeHex:
 		return newHexAccountKey(accountKeyConf)
+	case config.KeyTypeBip44:
+		return newBip44AccountKey(accountKeyConf)
 	case config.KeyTypeGoogleKMS:
 		return newKmsAccountKey(accountKeyConf)
 	}
@@ -249,5 +255,81 @@ func (a *HexAccountKey) Validate() error {
 }
 
 func (a *HexAccountKey) PrivateKeyHex() string {
+	return hex.EncodeToString(a.privateKey.Encode())
+}
+
+// Bip44AccountKey implements https://github.com/onflow/flow/blob/master/flips/20201125-bip-44-multi-account.md
+type Bip44AccountKey struct {
+	*baseAccountKey
+	privateKey     crypto.PrivateKey
+	mnemonic       string
+	derivationPath string
+}
+
+func newBip44AccountKey(key config.AccountKey) (AccountKey, error) {
+	return &Bip44AccountKey{
+		baseAccountKey: &baseAccountKey{
+			keyType:  config.KeyTypeBip44,
+			index:    key.Index,
+			sigAlgo:  key.SigAlgo,
+			hashAlgo: key.HashAlgo,
+		},
+		derivationPath: key.DerivationPath,
+		mnemonic:       key.Mnemonic,
+	}, nil
+}
+
+func (a *Bip44AccountKey) Signer(ctx context.Context) (crypto.Signer, error) {
+	return crypto.NewInMemorySigner(a.privateKey, a.HashAlgo())
+}
+
+func (a *Bip44AccountKey) PrivateKey() (*crypto.PrivateKey, error) {
+	return &a.privateKey, nil
+}
+
+func (a *Bip44AccountKey) ToConfig() config.AccountKey {
+	return config.AccountKey{
+		Type:           a.keyType,
+		Index:          a.index,
+		SigAlgo:        a.sigAlgo,
+		HashAlgo:       a.hashAlgo,
+		PrivateKey:     a.privateKey,
+		Mnemonic:       a.mnemonic,
+		DerivationPath: a.derivationPath,
+	}
+}
+
+func (a *Bip44AccountKey) Validate() error {
+
+	if !bip39.IsMnemonicValid(a.mnemonic) {
+		return fmt.Errorf("invalid mnemonic defined for account in flow.json")
+	}
+
+	derivationPath, err := goeth.ParseDerivationPath(a.derivationPath)
+	if err != nil {
+		return fmt.Errorf("invalid derivation path defined for account in flow.json")
+	}
+
+	seed := bip39.NewSeed(a.mnemonic, "")
+	accountKey, err := bip32.NewMasterKey(seed)
+	if err != nil {
+		return err
+	}
+
+	for _, n := range derivationPath {
+		accountKey, err = accountKey.NewChildKey(n)
+
+		if err != nil {
+			return err
+		}
+	}
+	a.privateKey, err = crypto.DecodePrivateKey(a.SigAlgo(), accountKey.Key)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (a *Bip44AccountKey) PrivateKeyHex() string {
 	return hex.EncodeToString(a.privateKey.Encode())
 }

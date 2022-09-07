@@ -30,12 +30,8 @@ install-tools:
 
 .PHONY: test
 test:
-	GO111MODULE=on go test -coverprofile=$(COVER_PROFILE) $(if $(JSON_OUTPUT),-json,) ./...
+	GO111MODULE=on go test $$(go list ./... | grep -v /e2e) -coverprofile=$(COVER_PROFILE) $(if $(JSON_OUTPUT),-json,)
 	cd pkg/flowkit; GO111MODULE=on go test -coverprofile=$(COVER_PROFILE) $(if $(JSON_OUTPUT),-json,) ./...
-
-.PHONY: test-e2e-emulator
-test-e2e-emulator:
-	flow -f tests/flow.json emulator start
 
 .PHONY: coverage
 coverage:
@@ -48,6 +44,11 @@ ifeq ($(COVER), true)
 	gozip -c coverage.zip index.html
 endif
 
+.PHONY: test-e2e
+test-e2e:
+	GO111MODULE=on go build -o ./e2e/flow ./cmd/flow/main.go 
+	cd ./e2e; go test
+
 .PHONY: ci
 ci: install-tools test coverage
 
@@ -56,14 +57,14 @@ install:
 	GO111MODULE=on go install \
 		-trimpath \
 		-ldflags \
-		"-X github.com/onflow/flow-cli/build.commit=$(COMMIT) -X github.com/onflow/flow-cli/build.semver=$(VERSION) -X github.com/onflow/flow-cli/pkg/flowkit/util.MIXPANEL_SERVICE_ACCOUNT_SECRET=${MIXPANEL_SERVICE_ACCOUNT_SECRET} -X github.com/onflow/flow-cli/pkg/flowkit/util.MIXPANEL_PROJECT_TOKEN=${MIXPANEL_PROJECT_TOKEN}" \
+		"-X github.com/onflow/flow-cli/build.commit=$(COMMIT) -X github.com/onflow/flow-cli/build.semver=$(VERSION) -X github.com/onflow/flow-cli/pkg/flowkit/util.MIXPANEL_PROJECT_TOKEN=${MIXPANEL_PROJECT_TOKEN}" \
 		./cmd/flow
 
 $(BINARY):
 	GO111MODULE=on go build \
 		-trimpath \
 		-ldflags \
-		"-X github.com/onflow/flow-cli/build.commit=$(COMMIT) -X github.com/onflow/flow-cli/build.semver=$(VERSION) -X github.com/onflow/flow-cli/pkg/flowkit/util.MIXPANEL_SERVICE_ACCOUNT_SECRET=${MIXPANEL_SERVICE_ACCOUNT_SECRET} -X github.com/onflow/flow-cli/pkg/flowkit/util.MIXPANEL_PROJECT_TOKEN=${MIXPANEL_PROJECT_TOKEN}"\
+		"-X github.com/onflow/flow-cli/build.commit=$(COMMIT) -X github.com/onflow/flow-cli/build.semver=$(VERSION) -X github.com/onflow/flow-cli/pkg/flowkit/util.MIXPANEL_PROJECT_TOKEN=${MIXPANEL_PROJECT_TOKEN}"\
 		-o $(BINARY) ./cmd/flow
 
 .PHONY: versioned-binaries
