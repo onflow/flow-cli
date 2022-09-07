@@ -21,9 +21,12 @@ package services
 import (
 	"bytes"
 	"fmt"
+	"github.com/manifoldco/promptui"
+	"os"
 	"strings"
 
 	"github.com/onflow/flow-cli/pkg/flowkit"
+	"github.com/onflow/flow-go-sdk"
 
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
 
@@ -92,6 +95,131 @@ func (p *Project) Init(
 	return state, nil
 }
 
+//Defines a Mainnet Standard Contract ( e.g Core Contracts, FungibleToken, NonFungibleToken )
+type StandardContract struct {
+	Name     string
+	Address  flow.Address
+	InfoLink string
+}
+
+func (p *Project) ReplaceStandardContractReferenceToAlias(standardContract StandardContract) error {
+	//replace contract with alias
+	c, err := p.state.Config().Contracts.ByNameAndNetwork(standardContract.Name, "mainnet")
+	if err != nil {
+		return err
+	}
+	c.Alias = standardContract.Address.String()
+
+	//remove from deploy
+	for di, d := range p.state.Config().Deployments {
+		if d.Network != "mainnet" {
+			continue
+		}
+		for ci, c := range d.Contracts {
+			if c.Name == standardContract.Name {
+				p.state.Config().Deployments[di].Contracts = append((d.Contracts)[0:ci], (d.Contracts)[ci+1:]...)
+				break
+			}
+		}
+	}
+	return nil
+}
+
+func (p *Project) CheckForStandardContractUsageOnMainnet() error {
+
+	mainnetContracts := map[string]StandardContract{
+		"FungibleToken": {
+			Name:     "FungibleToken",
+			Address:  flow.HexToAddress("0xf233dcee88fe0abe"),
+			InfoLink: "https://developers.flow.com/flow/core-contracts/fungible-token",
+		},
+		"FlowToken": {
+			Name:     "FlowToken",
+			Address:  flow.HexToAddress("0x1654653399040a61"),
+			InfoLink: "https://developers.flow.com/flow/core-contracts/flow-token",
+		},
+		"FlowFees": {
+			Name:     "FlowFees",
+			Address:  flow.HexToAddress("0xf919ee77447b7497"),
+			InfoLink: "https://developers.flow.com/flow/core-contracts/flow-fees",
+		},
+		"FlowServiceAccount": {
+			Name:     "FlowServiceAccount",
+			Address:  flow.HexToAddress("0xe467b9dd11fa00df"),
+			InfoLink: "https://developers.flow.com/flow/core-contracts/service-account",
+		},
+		"FlowStorageFees": {
+			Name:     "FlowStorageFees",
+			Address:  flow.HexToAddress("0xe467b9dd11fa00df"),
+			InfoLink: "https://developers.flow.com/flow/core-contracts/service-account",
+		},
+		"FlowIDTableStaking": {
+			Name:     "FlowIDTableStaking",
+			Address:  flow.HexToAddress("0x8624b52f9ddcd04a"),
+			InfoLink: "https://developers.flow.com/flow/core-contracts/staking-contract-reference",
+		},
+		"FlowEpoch": {
+			Name:     "FlowEpoch",
+			Address:  flow.HexToAddress("0x8624b52f9ddcd04a"),
+			InfoLink: "https://developers.flow.com/flow/core-contracts/epoch-contract-reference",
+		},
+		"FlowClusterQC": {
+			Name:     "FlowClusterQC",
+			Address:  flow.HexToAddress("0x8624b52f9ddcd04a"),
+			InfoLink: "https://developers.flow.com/flow/core-contracts/epoch-contract-reference",
+		},
+		"FlowDKG": {
+			Name:     "FlowDKG",
+			Address:  flow.HexToAddress("0x8624b52f9ddcd04a"),
+			InfoLink: "https://developers.flow.com/flow/core-contracts/epoch-contract-reference",
+		},
+		"NonFungibleToken": {
+			Name:     "NonFungibleToken",
+			Address:  flow.HexToAddress("0x1d7e57aa55817448"),
+			InfoLink: "https://developers.flow.com/flow/core-contracts/non-fungible-token",
+		},
+		"MetadataViews": {
+			Name:     "MetadataViews",
+			Address:  flow.HexToAddress("0x1d7e57aa55817448"),
+			InfoLink: "https://developers.flow.com/flow/core-contracts/nft-metadata",
+		},
+	}
+
+	contracts, err := p.state.DeploymentContractsByNetwork("mainnet")
+	if err != nil {
+		return err
+	}
+
+	for _, contract := range contracts {
+		standardContract, ok := mainnetContracts[contract.Name]
+
+		if !ok {
+			continue
+		}
+
+		p.logger.Info(fmt.Sprintf("It seems like you are trying to deploy %s to Mainnet \n", contract.Name))
+		p.logger.Info(fmt.Sprintf("It is a standard contract already deployed at address 0x%s \n", standardContract.Address.String()))
+		p.logger.Info(fmt.Sprintf("You can read more about it here: %s \n", standardContract.InfoLink))
+
+		useMainnetVersionPrompt := promptui.Select{
+			Label: "Do you wish to use Mainnet version instead? (y/n)",
+			Items: []string{"Yes", "No"},
+		}
+		_, useMainnetVersion, err := useMainnetVersionPrompt.Run()
+		if err == promptui.ErrInterrupt {
+			os.Exit(-1)
+		}
+
+		if useMainnetVersion == "Yes" {
+			err := p.ReplaceStandardContractReferenceToAlias(standardContract)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
 // Deploy the project for the provided network.
 //
 // Retrieve all the contracts for specified network, sort them for deployment
@@ -101,13 +229,6 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 	if p.state == nil {
 		return nil, config.ErrDoesNotExist
 	}
-
-	// check for accidental standard contract deployments
-	err := p.state.CheckForStandardContractUsageOnMainnet()
-	if err != nil {
-		return nil, err
-	}
-
 	// check there are not multiple accounts with same contract
 	if p.state.ContractConflictExists(network) {
 		return nil, fmt.Errorf( // TODO(sideninja) specify which contract by name is a problem

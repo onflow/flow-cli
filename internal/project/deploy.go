@@ -50,6 +50,16 @@ func deploy(
 	services *services.Services,
 	_ *flowkit.State,
 ) (command.Result, error) {
+
+	//precheck for standard contract on Mainnet
+	if globalFlags.Network == "mainnet" {
+		err := services.Project.CheckForStandardContractUsageOnMainnet()
+		if err != nil {
+			return nil, err
+		}
+
+	}
+
 	c, err := services.Project.Deploy(globalFlags.Network, deployFlags.Update)
 	if err != nil {
 		return nil, err

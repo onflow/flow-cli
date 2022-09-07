@@ -23,7 +23,6 @@ import (
 	"os"
 	"path"
 
-	"github.com/manifoldco/promptui"
 	"github.com/onflow/cadence"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
@@ -113,111 +112,6 @@ func (p *State) Save(path string) error {
 
 	if err != nil {
 		return fmt.Errorf("failed to save project configuration to: %s", path)
-	}
-
-	return nil
-}
-
-//Defines a Mainnet Standard Contract ( e.g Core Contracts, FungibleToken, NonFungibleToken )
-type StandardContract struct {
-	Address  flow.Address
-	InfoLink string
-}
-
-func (p *State) CheckForStandardContractUsageOnMainnet() error {
-
-	standardContracts := map[string]StandardContract{
-		"FungibleToken": {
-			Address:  flow.HexToAddress("0xf233dcee88fe0abe"),
-			InfoLink: "https://developers.flow.com/flow/core-contracts/fungible-token",
-		},
-		"FlowToken": {
-			Address:  flow.HexToAddress("0x1654653399040a61"),
-			InfoLink: "https://developers.flow.com/flow/core-contracts/flow-token",
-		},
-		"FlowFees": {
-			Address:  flow.HexToAddress("0xf919ee77447b7497"),
-			InfoLink: "https://developers.flow.com/flow/core-contracts/flow-fees",
-		},
-		"FlowServiceAccount": {
-			Address:  flow.HexToAddress("0xe467b9dd11fa00df"),
-			InfoLink: "https://developers.flow.com/flow/core-contracts/service-account",
-		},
-		"FlowStorageFees": {
-			Address:  flow.HexToAddress("0xe467b9dd11fa00df"),
-			InfoLink: "https://developers.flow.com/flow/core-contracts/service-account",
-		},
-		"FlowIDTableStaking": {
-			Address:  flow.HexToAddress("0x8624b52f9ddcd04a"),
-			InfoLink: "https://developers.flow.com/flow/core-contracts/staking-contract-reference",
-		},
-		"FlowEpoch": {
-			Address:  flow.HexToAddress("0x8624b52f9ddcd04a"),
-			InfoLink: "https://developers.flow.com/flow/core-contracts/epoch-contract-reference",
-		},
-		"FlowClusterQC": {
-			Address:  flow.HexToAddress("0x8624b52f9ddcd04a"),
-			InfoLink: "https://developers.flow.com/flow/core-contracts/epoch-contract-reference",
-		},
-		"FlowDKG": {
-			Address:  flow.HexToAddress("0x8624b52f9ddcd04a"),
-			InfoLink: "https://developers.flow.com/flow/core-contracts/epoch-contract-reference",
-		},
-		"NonFungibleToken": {
-			Address:  flow.HexToAddress("0x1d7e57aa55817448"),
-			InfoLink: "https://developers.flow.com/flow/core-contracts/non-fungible-token",
-		},
-		"MetadataViews": {
-			Address:  flow.HexToAddress("0x1d7e57aa55817448"),
-			InfoLink: "https://developers.flow.com/flow/core-contracts/nft-metadata",
-		},
-	}
-
-	contracts, err := p.DeploymentContractsByNetwork("mainnet")
-
-	if err != nil {
-		return err
-	}
-	for _, contract := range contracts {
-		standardContract, ok := standardContracts[contract.Name]
-		if ok {
-
-			fmt.Printf("It seems like you are trying to deploy %s to Mainnet \n", contract.Name)
-			fmt.Printf("It is a standard contract already deployed at address 0x%s \n", standardContract.Address.String())
-			fmt.Printf("You can read more about it here: %s \n", standardContract.InfoLink)
-
-			useMainnetVersionPrompt := promptui.Select{
-				Label: "Do you wish to use Mainnet version instead? (y/n)",
-				Items: []string{"Yes", "No"},
-			}
-			_, useMainnetVersion, err := useMainnetVersionPrompt.Run()
-			if err == promptui.ErrInterrupt {
-				os.Exit(-1)
-			}
-
-			if useMainnetVersion == "Yes" {
-
-				//replace contract with alias
-				c, err := p.conf.Contracts.ByNameAndNetwork(contract.Name, "mainnet")
-				if err != nil {
-					return err
-				}
-				c.Alias = standardContract.Address.String()
-
-				//remove from deploy
-				for di, d := range p.conf.Deployments {
-					if d.Network != "mainnet" {
-						continue
-					}
-					for ci, c := range d.Contracts {
-						if c.Name == contract.Name {
-							p.conf.Deployments[di].Contracts = append((d.Contracts)[0:ci], (d.Contracts)[ci+1:]...)
-							break
-						}
-					}
-				}
-			}
-		}
 	}
 
 	return nil
