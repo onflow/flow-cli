@@ -18,7 +18,7 @@ authorizers, signers and proposers.
 The process of sending a complex transactions includes three steps:
 1. [build a transaction](/tools/flow-cli/build-transactions)
 2. [sign the built transaction](/tools/flow-cli/sign-transaction)
-3. [send signed transaction](/tools/flow-cli/send-signed-transaction)
+3. [send signed transaction](/tools/flow-cli/send-signed-transactions)
 
 Read more about each command flags and arguments in the above links.
 

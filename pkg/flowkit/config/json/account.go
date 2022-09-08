@@ -78,7 +78,7 @@ func transformAdvancedToConfig(accountName string, a advancedAccount) (*config.A
 	sigAlgo := crypto.StringToSignatureAlgorithm(a.Key.SigAlgo)
 	hashAlgo := crypto.StringToHashAlgorithm(a.Key.HashAlgo)
 
-	if a.Key.Type != config.KeyTypeHex && a.Key.Type != config.KeyTypeGoogleKMS {
+	if a.Key.Type != config.KeyTypeHex && a.Key.Type != config.KeyTypeGoogleKMS && a.Key.Type != config.KeyTypeBip44 {
 		return nil, fmt.Errorf("invalid key type for account %s", accountName)
 	}
 
@@ -120,6 +120,16 @@ func transformAdvancedToConfig(accountName string, a advancedAccount) (*config.A
 		}
 
 		key.PrivateKey = pKey
+	case config.KeyTypeBip44:
+		if a.Key.Mnemonic == "" {
+			return nil, fmt.Errorf("missing mnemonic value for bip44 key type on account %s", accountName)
+		}
+		key.Mnemonic = a.Key.Mnemonic
+		key.DerivationPath = a.Key.DerivationPath
+		if key.DerivationPath == "" {
+			key.DerivationPath = "m/44'/539'/0'/0/0"
+		}
+
 	case config.KeyTypeGoogleKMS:
 		if a.Key.ResourceID == "" {
 			return nil, fmt.Errorf("missing resource ID value for key on account %s", accountName)
@@ -213,6 +223,9 @@ func transformAdvancedKeyToJSON(key config.AccountKey) advanceKey {
 	switch key.Type {
 	case config.KeyTypeHex:
 		advancedKey.PrivateKey = strings.TrimPrefix(key.PrivateKey.String(), "0x")
+	case config.KeyTypeBip44:
+		advancedKey.Mnemonic = key.Mnemonic
+		advancedKey.DerivationPath = key.DerivationPath
 	case config.KeyTypeGoogleKMS:
 		advancedKey.ResourceID = key.ResourceID
 	}
@@ -254,6 +267,9 @@ type advanceKey struct {
 	HashAlgo string         `json:"hashAlgorithm"`
 	// hex key type
 	PrivateKey string `json:"privateKey,omitempty"`
+	// bip44 key type
+	Mnemonic       string `json:"mnemonic,omitempty"`
+	DerivationPath string `json:"derivationPath,omitempty"`
 	// kms key type
 	ResourceID string `json:"resourceID,omitempty"`
 	// old key format

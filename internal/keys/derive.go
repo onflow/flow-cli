@@ -58,11 +58,10 @@ func derive(
 		return nil, fmt.Errorf("invalid signature algorithm: %s", deriveFlags.KeySigAlgo)
 	}
 
-	privateKey, err := services.Keys.Generate("", args[0], sigAlgo)
+	parsedPrivateKey, err := services.Keys.ParsePrivateKey(args[0], sigAlgo)
 	if err != nil {
 		return nil, err
 	}
 
-	pubKey := privateKey.PublicKey()
-	return &KeyResult{privateKey: privateKey, publicKey: pubKey}, nil
+	return &KeyResult{privateKey: parsedPrivateKey, publicKey: parsedPrivateKey.PublicKey()}, nil
 }
