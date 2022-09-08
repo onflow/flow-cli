@@ -30,8 +30,12 @@ install-tools:
 
 .PHONY: test
 test:
-	GO111MODULE=on go test $$(go list ./... | grep -v /e2e) -coverprofile=$(COVER_PROFILE) $(if $(JSON_OUTPUT),-json,)
+	GO111MODULE=on go test -coverprofile=$(COVER_PROFILE) $(if $(JSON_OUTPUT),-json,) ./...
 	cd pkg/flowkit; GO111MODULE=on go test -coverprofile=$(COVER_PROFILE) $(if $(JSON_OUTPUT),-json,) ./...
+
+.PHONY: test-e2e-emulator
+test-e2e-emulator:
+	flow -f tests/flow.json emulator start
 
 .PHONY: coverage
 coverage:
@@ -43,11 +47,6 @@ ifeq ($(COVER), true)
 	# coverage.zip will automatically be picked up by teamcity
 	gozip -c coverage.zip index.html
 endif
-
-.PHONY: test-e2e
-test-e2e:
-	GO111MODULE=on go build -o ./e2e/flow ./cmd/flow/main.go 
-	cd ./e2e; go test
 
 .PHONY: ci
 ci: install-tools test coverage
