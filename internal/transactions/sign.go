@@ -19,19 +19,20 @@
 package transactions
 
 import (
+	"encoding/hex"
 	"fmt"
-
-	"github.com/onflow/flow-cli/pkg/flowkit"
+	"sort"
 
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
+	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
 	"github.com/onflow/flow-cli/pkg/flowkit/services"
 )
 
 type flagsSign struct {
-	Signer        string   `default:"emulator-account" flag:"signer" info:"name of the account used to sign"`
+	Signer        []string `default:"emulator-account" flag:"signer" info:"name of the account used to sign"`
 	Include       []string `default:"" flag:"include" info:"Fields to include in the output. Valid values: signatures, code, payload."`
 	FromRemoteUrl string   `default:"" flag:"from-remote-url" info:"server URL where RLP can be fetched, signed RLP will be posted back to remote URL."`
 }
@@ -82,14 +83,33 @@ func sign(
 		return nil, fmt.Errorf("failed to read partial transaction from %s: %v", filenameOrUrl, err)
 	}
 
-	signer, err := state.Accounts().ByName(signFlags.Signer)
-	if err != nil {
-		return nil, fmt.Errorf("signer account: [%s] doesn't exists in configuration", signFlags.Signer)
-	}
-
-	signed, err := services.Transactions.Sign(signer, payload, globalFlags.Yes)
+	var signed *flowkit.Transaction
+	var signers []*flowkit.Account
+	tx, err := flowkit.NewTransactionFromPayload(payload)
 	if err != nil {
 		return nil, err
+	}
+
+	//validate all signers
+	for _, signerName := range signFlags.Signer {
+		signer, err := state.Accounts().ByName(signerName)
+		if err != nil {
+			return nil, fmt.Errorf("signer account: [%s] doesn't exists in configuration", signerName)
+		}
+		signers = append(signers, signer)
+	}
+
+	//payer signs last
+	sort.SliceStable(signers, func(i, j int) bool {
+		return signers[i].Address().String() != tx.FlowTransaction().Payer.Hex()
+	})
+
+	for _, signer := range signers {
+		signed, err = services.Transactions.Sign(signer, payload, globalFlags.Yes)
+		if err != nil {
+			return nil, err
+		}
+		payload = []byte(hex.EncodeToString(signed.FlowTransaction().Encode()))
 	}
 
 	if signFlags.FromRemoteUrl != "" {
