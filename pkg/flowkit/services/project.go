@@ -21,8 +21,6 @@ package services
 import (
 	"bytes"
 	"fmt"
-	"github.com/manifoldco/promptui"
-	"os"
 	"strings"
 
 	"github.com/onflow/flow-cli/pkg/flowkit"
@@ -192,7 +190,6 @@ func (p *Project) CheckForStandardContractUsageOnMainnet() error {
 
 	for _, contract := range contracts {
 		standardContract, ok := mainnetContracts[contract.Name]
-
 		if !ok {
 			continue
 		}
@@ -201,16 +198,7 @@ func (p *Project) CheckForStandardContractUsageOnMainnet() error {
 		p.logger.Info(fmt.Sprintf("It is a standard contract already deployed at address 0x%s \n", standardContract.Address.String()))
 		p.logger.Info(fmt.Sprintf("You can read more about it here: %s \n", standardContract.InfoLink))
 
-		useMainnetVersionPrompt := promptui.Select{
-			Label: "Do you wish to use Mainnet version instead? (y/n)",
-			Items: []string{"Yes", "No"},
-		}
-		_, useMainnetVersion, err := useMainnetVersionPrompt.Run()
-		if err == promptui.ErrInterrupt {
-			os.Exit(-1)
-		}
-
-		if useMainnetVersion == "Yes" {
+		if output.WantToUseMainnetVersionPrompt() {
 			err := p.ReplaceStandardContractReferenceToAlias(standardContract)
 			if err != nil {
 				return err

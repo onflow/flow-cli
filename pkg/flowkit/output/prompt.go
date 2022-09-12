@@ -585,3 +585,16 @@ func ConfirmOpenBrowser() {
 		os.Exit(-1)
 	}
 }
+
+func WantToUseMainnetVersionPrompt() bool {
+	useMainnetVersionPrompt := promptui.Select{
+		Label: "Do you wish to use Mainnet version instead? (y/n)",
+		Items: []string{"Yes", "No"},
+	}
+	_, useMainnetVersion, err := useMainnetVersionPrompt.Run()
+	if err == promptui.ErrInterrupt {
+		os.Exit(-1)
+	}
+
+	return useMainnetVersion == "Yes"
+}
