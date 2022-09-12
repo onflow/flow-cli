@@ -23,6 +23,7 @@ import (
 
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/pkg/flowkit"
+	"github.com/onflow/flow-cli/pkg/flowkit/config"
 	"github.com/onflow/flow-cli/pkg/flowkit/contracts"
 	"github.com/onflow/flow-cli/pkg/flowkit/services"
 )
@@ -52,7 +53,7 @@ func deploy(
 ) (command.Result, error) {
 
 	//precheck for standard contract on Mainnet
-	if globalFlags.Network == "mainnet" {
+	if globalFlags.Network == config.DefaultMainnetNetwork().Name {
 		err := services.Project.CheckForStandardContractUsageOnMainnet()
 		if err != nil {
 			return nil, err
