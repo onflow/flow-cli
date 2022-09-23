@@ -287,10 +287,15 @@ func (t *Transaction) AddArgument(arg cadence.Value) error {
 
 // AddAuthorizers add group of authorizers.
 func (t *Transaction) AddAuthorizers(authorizers []flow.Address) (*Transaction, error) {
+	location := common.TransactionLocation{}
+	script := t.tx.Script
+
 	program, _ := cmd.PrepareProgram(
-		string(t.tx.Script),
-		common.StringLocation(""),
-		map[common.Location]string{},
+		script,
+		location,
+		map[common.Location][]byte{
+			location: script,
+		},
 	)
 
 	// get authorizers param list if exists

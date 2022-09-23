@@ -24,6 +24,7 @@ import (
 	"testing"
 
 	"github.com/onflow/cadence"
+	"github.com/stretchr/testify/require"
 
 	"github.com/onflow/flow-cli/pkg/flowkit/gateway"
 
@@ -512,7 +513,7 @@ func TestAccountsCreate_Integration(t *testing.T) {
 func TestAccountsAddContract_Integration(t *testing.T) {
 	t.Parallel()
 
-	t.Run("Add Contract", func(t *testing.T) {
+	t.Run("Update Contract", func(t *testing.T) {
 		t.Parallel()
 
 		state, s := setupIntegration()
@@ -524,8 +525,8 @@ func TestAccountsAddContract_Integration(t *testing.T) {
 			false,
 		)
 
-		assert.NoError(t, err)
-		assert.NotNil(t, acc)
+		require.NoError(t, err)
+		require.NotNil(t, acc)
 		assert.Equal(t, acc.Contracts["Simple"], tests.ContractSimple.Source)
 
 		acc, err = s.Accounts.AddContract(
@@ -534,8 +535,8 @@ func TestAccountsAddContract_Integration(t *testing.T) {
 			true,
 		)
 
-		assert.NoError(t, err)
-		assert.NotNil(t, acc)
+		require.NoError(t, err)
+		require.NotNil(t, acc)
 		assert.Equal(t, acc.Contracts["Simple"], tests.ContractSimpleUpdated.Source)
 	})
 
@@ -558,6 +559,8 @@ func TestAccountsAddContract_Integration(t *testing.T) {
 			resourceToContract(tests.ContractSimple),
 			false,
 		)
+
+		require.Error(t, err)
 		assert.True(t, strings.Contains(err.Error(), "cannot overwrite existing contract with name \"Simple\""))
 
 		_, err = s.Accounts.AddContract(
@@ -565,9 +568,11 @@ func TestAccountsAddContract_Integration(t *testing.T) {
 			resourceToContract(tests.ContractHelloString),
 			true,
 		)
+		require.Error(t, err)
 		assert.True(t, strings.Contains(err.Error(), "cannot update non-existing contract with name \"Hello\""))
 	})
 }
+
 func TestAccountsAddContractWithArgs(t *testing.T) {
 	state, s := setupIntegration()
 	srvAcc, _ := state.EmulatorServiceAccount()
@@ -589,6 +594,7 @@ func TestAccountsAddContractWithArgs(t *testing.T) {
 	assert.NotNil(t, acc)
 	assert.Equal(t, acc.Contracts["Simple"], tests.ContractSimpleWithArgs.Source)
 }
+
 func TestAccountsRemoveContract_Integration(t *testing.T) {
 	t.Parallel()
 
