@@ -29,7 +29,7 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowkit/services"
 	"github.com/onflow/flow-cli/pkg/flowkit/util"
 
-	testFramework "github.com/onflow/cadence/test-framework"
+	cdcTests "github.com/onflow/cadence-tools/test"
 )
 
 type flagsTests struct {
@@ -79,7 +79,7 @@ func run(
 }
 
 type TestResult struct {
-	testFramework.Results
+	cdcTests.Results
 }
 
 var _ command.Result = &TestResult{}
@@ -101,7 +101,7 @@ func (r *TestResult) String() string {
 	var b bytes.Buffer
 	writer := util.CreateTabWriter(&b)
 
-	_, _ = fmt.Fprintf(writer, testFramework.PrettyPrintResults(r.Results))
+	_, _ = fmt.Fprintf(writer, cdcTests.PrettyPrintResults(r.Results))
 
 	_ = writer.Flush()
 
@@ -109,5 +109,5 @@ func (r *TestResult) String() string {
 }
 
 func (r *TestResult) Oneliner() string {
-	return testFramework.PrettyPrintResults(r.Results)
+	return cdcTests.PrettyPrintResults(r.Results)
 }

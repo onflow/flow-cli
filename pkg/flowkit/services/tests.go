@@ -1,7 +1,7 @@
 /*
  * Flow CLI
  *
- * Copyright 2019 Dapper Labs, Inc.
+ * Copyright 2022 Dapper Labs, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,56 +20,93 @@ package services
 
 import (
 	"fmt"
+
 	"github.com/onflow/flow-cli/pkg/flowkit"
+	"github.com/onflow/flow-cli/pkg/flowkit/config"
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
 	"github.com/onflow/flow-cli/pkg/flowkit/util"
 
+	cdcTests "github.com/onflow/cadence-tools/test"
 	"github.com/onflow/cadence/runtime/common"
-	testFramework "github.com/onflow/cadence/test-framework"
 )
 
 // Tests is a service that handles all tests-related interactions.
-//
 type Tests struct {
+	state  *flowkit.State
 	logger output.Logger
 }
 
 // NewTests returns a new tests service.
-//
 func NewTests(
+	state *flowkit.State,
 	logger output.Logger,
 ) *Tests {
 	return &Tests{
+		state:  state,
 		logger: logger,
 	}
 }
 
 // Execute test scripts.
-//
 func (t *Tests) Execute(
 	code []byte,
 	scriptPath string,
 	readerWriter flowkit.ReaderWriter,
-) (testFramework.Results, error) {
+) (cdcTests.Results, error) {
 
-	runner := testFramework.NewTestRunner().
-		WithImportResolver(func(location common.Location) (string, error) {
-			stringLocation, isFileImport := location.(common.StringLocation)
-			if !isFileImport {
-				return "", fmt.Errorf("cannot import from %s", location)
-			}
-
-			importFilePath := util.AbsolutePath(scriptPath, stringLocation.String())
-
-			content, err := readerWriter.ReadFile(importFilePath)
-			if err != nil {
-				return "", err
-			}
-
-			return string(content), nil
-		})
+	runner := cdcTests.NewTestRunner().
+		WithImportResolver(t.importResolver(scriptPath, readerWriter)).
+		WithFileResolver(t.fileResolver(scriptPath, readerWriter))
 
 	t.logger.Info("Running tests...")
 
 	return runner.RunTests(string(code))
+}
+
+func (t *Tests) importResolver(scriptPath string, readerWriter flowkit.ReaderWriter) cdcTests.ImportResolver {
+	return func(location common.Location) (string, error) {
+		stringLocation, isFileImport := location.(common.StringLocation)
+		if !isFileImport {
+			return "", fmt.Errorf("cannot import from %s", location)
+		}
+
+		importedContract, err := t.resolveContract(stringLocation)
+		if err != nil {
+			return "", err
+		}
+
+		importedContractFilePath := util.AbsolutePath(scriptPath, importedContract.Source)
+
+		contractCode, err := readerWriter.ReadFile(importedContractFilePath)
+		if err != nil {
+			return "", err
+		}
+
+		return string(contractCode), nil
+	}
+}
+
+func (t *Tests) resolveContract(stringLocation common.StringLocation) (config.Contract, error) {
+	relativePath := stringLocation.String()
+	for _, contract := range *t.state.Contracts() {
+		if contract.Source == relativePath {
+			return contract, nil
+		}
+	}
+
+	return config.Contract{},
+		fmt.Errorf("cannot find contract with location '%s' in configuration", relativePath)
+}
+
+func (t *Tests) fileResolver(scriptPath string, readerWriter flowkit.ReaderWriter) cdcTests.FileResolver {
+	return func(path string) (string, error) {
+		importFilePath := util.AbsolutePath(scriptPath, path)
+
+		content, err := readerWriter.ReadFile(importFilePath)
+		if err != nil {
+			return "", err
+		}
+
+		return string(content), nil
+	}
 }

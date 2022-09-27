@@ -58,6 +58,6 @@ func NewServices(
 		Blocks:       NewBlocks(gateway, state, logger),
 		Status:       NewStatus(gateway, state, logger),
 		Snapshot:     NewSnapshot(gateway, state, logger),
-		Tests:        NewTests(logger),
+		Tests:        NewTests(state, logger),
 	}
 }
