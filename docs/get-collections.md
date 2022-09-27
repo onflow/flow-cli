@@ -1,5 +1,5 @@
 ---
-title: Get Block with the Flow CLI
+title: Get Collection with the Flow CLI
 sidebar_title: Get Collection
 description: How to get a collection from the command line
 ---
@@ -33,8 +33,6 @@ ae8bfbc85ce994899a3f942072bfd3455823b1f7652106ac102d161c17fcb55c
 ### Collection ID
 - Name: `collection_id`
 - Valid Input: SHA3-256 hash of the collection contents
-
-{argument general description}
 
 ## Arguments
 

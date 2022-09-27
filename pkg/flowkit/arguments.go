@@ -30,6 +30,7 @@ import (
 	"github.com/onflow/cadence/runtime/ast"
 	"github.com/onflow/cadence/runtime/cmd"
 	"github.com/onflow/cadence/runtime/common"
+	"github.com/onflow/cadence/runtime/interpreter"
 	"github.com/onflow/cadence/runtime/sema"
 )
 
@@ -123,11 +124,11 @@ func ParseArguments(args []string, argsJSON string) (scriptArgs []cadence.Value,
 
 func ParseArgumentsWithoutType(fileName string, code []byte, args []string) (scriptArgs []cadence.Value, err error) {
 
-	var resultArgs []cadence.Value = make([]cadence.Value, 0)
+	resultArgs := make([]cadence.Value, 0, len(args))
 
-	codes := map[common.Location]string{}
+	codes := map[common.Location][]byte{}
 	location := common.StringLocation(fileName)
-	program, must := cmd.PrepareProgram(string(code), location, codes)
+	program, must := cmd.PrepareProgram(code, location, codes)
 	checker, _ := cmd.PrepareChecker(program, location, codes, nil, must)
 
 	var parameterList []*ast.Parameter
@@ -164,6 +165,11 @@ func ParseArgumentsWithoutType(fileName string, code []byte, args []string) (scr
 		return nil, fmt.Errorf("argument count is %d, expected %d", len(args), len(parameterList))
 	}
 
+	inter, err := interpreter.NewInterpreter(nil, nil, &interpreter.Config{})
+	if err != nil {
+		return nil, err
+	}
+
 	for index, argumentString := range args {
 		astType := parameterList[index].TypeAnnotation.Type
 		semaType := checker.ConvertType(astType)
@@ -189,9 +195,13 @@ func ParseArgumentsWithoutType(fileName string, code []byte, args []string) (scr
 			break
 		}
 
-		var value, err = runtime.ParseLiteral(argumentString, semaType, nil)
+		var value, err = runtime.ParseLiteral(argumentString, semaType, inter)
 		if err != nil {
-			return nil, fmt.Errorf("argument `%s` is not expected type `%s`", parameterList[index].Identifier, semaType)
+			return nil, fmt.Errorf(
+				"argument `%s` is not expected type `%s`",
+				parameterList[index].Identifier,
+				semaType.QualifiedString(),
+			)
 		}
 		resultArgs = append(resultArgs, value)
 	}

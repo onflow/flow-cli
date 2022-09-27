@@ -29,7 +29,7 @@ import (
 )
 
 func TestArguments(t *testing.T) {
-	var sampleValues []cadence.Value = []cadence.Value{
+	sampleValues := []cadence.Value{
 		cadence.NewAddress([8]byte{0, 0, 0, 0, 0, 0, 0, 1}),
 		cadence.NewBool(true),
 		cadence.NewInt(-42),
@@ -46,14 +46,11 @@ func TestArguments(t *testing.T) {
 
 	for _, sample := range sampleValues {
 
-		var sampleType string = sample.Type().ID()
+		sampleType := sample.Type().ID()
 
 		args, err := flowkit.ParseArgumentsWithoutType(
 			"",
-			[]byte(fmt.Sprintf(`
-			pub fun main(test: %s): Void {
-			}`, sampleType)),
-
+			[]byte(fmt.Sprintf(`pub fun main(test: %s): Void {}`, sampleType)),
 			[]string{sample.String()},
 		)
 		assert.NoError(t, err)

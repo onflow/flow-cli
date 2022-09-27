@@ -10,8 +10,8 @@ Flow configuration (`flow.json`) file will contain the following properties:
 
 - A `networks` list pre-populated with the Flow emulator, testnet and mainnet connection configuration.
 - An `accounts` list pre-populated with the Flow Emulator service account.
-- A `deployments` empty object where all [deployment targets](project-contracts.md) can be defined. 
-- A `contracts` empty object where you [define contracts](project-contracts.md) you wish to deploy.
+- A `deployments` empty object where all [deployment targets](/tools/flow-cli/project-contracts#define-contract-deployment-targets) can be defined. 
+- A `contracts` empty object where you [define contracts](/tools/flow-cli/project-contracts#add-a-contract) you wish to deploy.
 
 ## Example Project Configuration
 
@@ -200,6 +200,33 @@ value that is defined on the run time to the default service address on the emul
 
 ...
 ```
+
+You can also use BIP44 to derive keys from a mnemonic. For more details please see the [FLIP](https://github.com/onflow/flow/blob/master/flips/20201125-bip-44-multi-account.md)
+
+**Example for BIP44 format:**
+```json
+...
+
+"accounts": {
+  "admin-account": {
+    "address": "service",
+    "key":{
+        "type": "bip44",
+        "index": 0,
+        "signatureAlgorithm": "ECDSA_P256",
+        "hashAlgorithm": "SHA3_256",
+        "mnemonic": "skull design wagon top faith actor valley crystal subject volcano access join",
+        "derivationPath": "m/44'/539'/0'/0/0"
+      }
+  }
+}
+
+...
+```
+
+Note: Default value for `derivationPath` is `m/44'/539'/0'/0/0` if omitted. 
+
+
 
 You can also use a key management system (KMS) to sign the transactions. Currently, we only support Google KMS.
 

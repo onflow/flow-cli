@@ -33,9 +33,10 @@ Set-ItemProperty HKCU:\Console VirtualTerminalLevel -Type DWORD 1
 $ErrorActionPreference = "Stop"
 
 $baseURL = "https://storage.googleapis.com/flow-cli"
+$versionURL ="https://raw.githubusercontent.com/onflow/flow-cli/master/version.txt"
 
 if (!$version) {
-    $version = (Invoke-WebRequest -Uri "$baseURL/version.txt" -UseBasicParsing).Content.Trim()
+    $version = (Invoke-WebRequest -Uri "$versionURL" -UseBasicParsing).Content.Trim()
 }
 
 Write-Output("Installing version {0} ..." -f $version)

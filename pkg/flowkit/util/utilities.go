@@ -21,10 +21,12 @@ package util
 import (
 	"bytes"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"os"
 	"os/exec"
 	"path"
+	"path/filepath"
 	"runtime"
 	"strings"
 	"text/tabwriter"
@@ -35,6 +37,7 @@ import (
 
 const TestnetFaucetHost = "https://testnet-faucet.onflow.org/"
 const FlowPortUrl = "https://port.onflow.org/transaction?hash=a0a78aa7821144efd5ebb974bb52ba04609ce76c3863af9d45348db93937cf98&showcode=false&consent=true&pk="
+const FlowCLIConfigFile = "config.json"
 
 // ConvertSigAndHashAlgo parses and validates a signature and hash algorithm pair.
 func ConvertSigAndHashAlgo(
@@ -186,6 +189,60 @@ func AddToGitIgnore(filename string, loader ReaderWriter) error {
 		[]byte(fmt.Sprintf("%s\n%s", gitIgnoreFiles, filename)),
 		filePermissions,
 	)
+}
+
+type jsonConfig struct {
+	Metrics bool `json:"metrics"`
+}
+
+// AddToConfig adds a new line to user's config dir stating the user's preference for command tracking
+func AddToConfig(loader ReaderWriter, metricsEnabled bool) (string, error) {
+	homeConfigDir, err := os.UserConfigDir()
+	if err != nil {
+		return "", err
+	}
+	cliDir := filepath.Join(homeConfigDir, FLOW_CLI)
+	if _, err := os.Stat(cliDir); os.IsNotExist(err) {
+		os.Mkdir(cliDir, 0755)
+	}
+	cliConfigPath := filepath.Join(cliDir, FlowCLIConfigFile)
+	filePermissions := os.FileMode(0644)
+
+	fileStat, err := os.Stat(cliConfigPath)
+	if !os.IsNotExist(err) { // if config.json exists
+		filePermissions = fileStat.Mode().Perm()
+	}
+	jsonConfig := jsonConfig{
+		Metrics: metricsEnabled,
+	}
+	data, err := json.MarshalIndent(jsonConfig, "", " ")
+
+	return cliConfigPath, loader.WriteFile(cliConfigPath, data, filePermissions)
+}
+
+// CheckMetricsEnabled checks if a user is opted in to have command tracked with Mixpanel
+// Returns true if user has not opted out before
+func CheckMetricsEnabled(loader ReaderWriter) (bool, error) {
+	var jsonConf jsonConfig
+	homeConfigDir, err := os.UserConfigDir()
+	if err != nil {
+		return false, err
+	}
+	cliDir := filepath.Join(homeConfigDir, FLOW_CLI)
+	cliConfigPath := filepath.Join(cliDir, FlowCLIConfigFile)
+
+	_, err = os.Stat(cliConfigPath)
+	if os.IsNotExist(err) { // if config.json exists, return metrics enabled by default
+		return true, nil
+	}
+
+	raw, err := loader.ReadFile(cliConfigPath)
+	err = json.Unmarshal(raw, &jsonConf)
+	if err != nil {
+		return false, err
+	}
+
+	return jsonConf.Metrics, nil
 }
 
 func AbsolutePath(basePath, filePath string) string {

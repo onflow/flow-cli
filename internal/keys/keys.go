@@ -45,9 +45,11 @@ func init() {
 }
 
 type KeyResult struct {
-	privateKey crypto.PrivateKey
-	publicKey  crypto.PublicKey
-	accountKey *flow.AccountKey
+	privateKey     crypto.PrivateKey
+	publicKey      crypto.PublicKey
+	accountKey     *flow.AccountKey
+	mnemonic       string
+	derivationPath string
 }
 
 func (k *KeyResult) JSON() interface{} {
@@ -56,6 +58,14 @@ func (k *KeyResult) JSON() interface{} {
 
 	if k.privateKey != nil {
 		result["private"] = hex.EncodeToString(k.privateKey.Encode())
+	}
+
+	if k.mnemonic != "" {
+		result["mnemonic"] = k.mnemonic
+	}
+
+	if k.derivationPath != "" {
+		result["derivationPath"] = k.derivationPath
 	}
 
 	return result
@@ -71,6 +81,14 @@ func (k *KeyResult) String() string {
 	}
 
 	_, _ = fmt.Fprintf(writer, "Public Key \t %x \n", k.publicKey.Encode())
+
+	if k.mnemonic != "" {
+		_, _ = fmt.Fprintf(writer, "Mnemonic \t %s \n", k.mnemonic)
+	}
+
+	if k.derivationPath != "" {
+		_, _ = fmt.Fprintf(writer, "Derivation Path \t %s \n", k.derivationPath)
+	}
 
 	if k.accountKey != nil {
 		_, _ = fmt.Fprintf(writer, "Signature algorithm \t %s\n", k.accountKey.SigAlgo)
@@ -91,7 +109,15 @@ func (k *KeyResult) Oneliner() string {
 	result := fmt.Sprintf("Public Key: %x, ", k.publicKey.Encode())
 
 	if k.privateKey != nil {
-		result += fmt.Sprintf("Private Key: %x", k.privateKey.Encode())
+		result += fmt.Sprintf("Private Key: %x, ", k.privateKey.Encode())
+	}
+
+	if k.mnemonic != "" {
+		result += fmt.Sprintf("Mnemonic: %s, ", k.mnemonic)
+	}
+
+	if k.derivationPath != "" {
+		result += fmt.Sprintf("Derivation Path: %s", k.derivationPath)
 	}
 
 	return result
