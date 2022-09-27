@@ -63,10 +63,7 @@ var ContractSimpleUpdated = Resource{
 	Filename: "contractSimpleUpdated.cdc",
 	Source: []byte(`
 		pub contract Simple {
-			pub let greeting: String
-			init() {
-				self.greeting = "Foo"
-			}
+			pub fun newFunc() {}
 		}
 	`),
 }
