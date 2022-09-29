@@ -250,6 +250,53 @@ var ScriptImport = Resource{
 	`),
 }
 
+var TestScriptSimple = Resource{
+	Filename: "./testScriptSimple.cdc",
+	Source: []byte(`
+        pub fun testSimple() {
+            assert(true)
+        }
+    `),
+}
+
+var TestScriptSimpleFailing = Resource{
+	Filename: "./testScriptSimpleFailing.cdc",
+	Source: []byte(`
+        pub fun testSimple() {
+            assert(false)
+        }
+    `),
+}
+
+var TestScriptWithImport = Resource{
+	Filename: "testScriptWithImport.cdc",
+	Source: []byte(`
+        import Hello from "contractHello.cdc"
+
+        pub fun testSimple() {
+            let hello = Hello()
+            assert(hello.greeting == "Hello, World!")
+        }
+    `),
+}
+
+var TestScriptWithFileRead = Resource{
+	Filename: "testScriptWithFileRead.cdc",
+	Source: []byte(`
+        import Test
+
+        pub fun testSimple() {
+            let content = Test.readFile("./someFile.cdc")
+            assert(content == "This was read from a file!")
+        }
+    `),
+}
+
+var SomeFile = Resource{
+	Filename: "someFile.cdc",
+	Source:   []byte(`This was read from a file!`),
+}
+
 var resources = []Resource{
 	ContractHelloString,
 	TransactionArgString,
