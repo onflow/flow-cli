@@ -114,7 +114,10 @@ func (c Command) AddToParent(parent *cobra.Command) {
 		// initialize services
 		service := services.NewServices(clientGateway, state, logger)
 
-		checkVersion(logger)
+		// skip version check if flag is set
+		if !Flags.SkipVersionCheck {
+			checkVersion(logger)
+		}
 
 		// run command based on requirements for state
 		var result Result
