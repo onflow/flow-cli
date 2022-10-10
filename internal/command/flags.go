@@ -30,28 +30,30 @@ import (
 
 // GlobalFlags contains all global flags definitions.
 type GlobalFlags struct {
-	Filter         string
-	Format         string
-	Save           string
-	Host           string
-	HostNetworkKey string
-	Log            string
-	Network        string
-	Yes            bool
-	ConfigPaths    []string
+	Filter           string
+	Format           string
+	Save             string
+	Host             string
+	HostNetworkKey   string
+	Log              string
+	Network          string
+	Yes              bool
+	ConfigPaths      []string
+	SkipVersionCheck bool
 }
 
 // Flags initialized to default values.
 var Flags = GlobalFlags{
-	Filter:         "",
-	Format:         formatText,
-	Save:           "",
-	Host:           "",
-	HostNetworkKey: "",
-	Network:        config.DefaultEmulatorNetwork().Name,
-	Log:            logLevelInfo,
-	Yes:            false,
-	ConfigPaths:    config.DefaultPaths(),
+	Filter:           "",
+	Format:           formatText,
+	Save:             "",
+	Host:             "",
+	HostNetworkKey:   "",
+	Network:          config.DefaultEmulatorNetwork().Name,
+	Log:              logLevelInfo,
+	Yes:              false,
+	ConfigPaths:      config.DefaultPaths(),
+	SkipVersionCheck: false,
 }
 
 // InitFlags init all the global persistent flags.
@@ -126,6 +128,14 @@ func InitFlags(cmd *cobra.Command) {
 		"y",
 		Flags.Yes,
 		"Approve any prompts",
+	)
+
+	cmd.PersistentFlags().BoolVarP(
+		&Flags.SkipVersionCheck,
+		"skip-check",
+		"",
+		Flags.SkipVersionCheck,
+		"Skip version check during start up",
 	)
 }
 
