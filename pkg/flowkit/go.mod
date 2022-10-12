@@ -9,7 +9,7 @@ require (
 	github.com/joho/godotenv v1.4.0
 	github.com/manifoldco/promptui v0.9.0
 	github.com/onflow/cadence v0.28.0
-	github.com/onflow/cadence-tools/test v0.2.0
+	github.com/onflow/cadence-tools/test v0.2.1-0.20221012182900-f46efb551c55
 	github.com/onflow/flow-core-contracts/lib/go/templates v0.11.2-0.20220720151516-797b149ceaaa
 	github.com/onflow/flow-emulator v0.38.0
 	github.com/onflow/flow-go v0.26.14-test-synchronization.0.20221011174222-54840e416e81
