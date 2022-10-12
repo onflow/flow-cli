@@ -6,13 +6,13 @@ require (
 	github.com/getsentry/sentry-go v0.13.0
 	github.com/go-git/go-git/v5 v5.4.2
 	github.com/manifoldco/promptui v0.9.0
-	github.com/onflow/cadence v0.27.0
+	github.com/onflow/cadence v0.28.0
 	github.com/onflow/cadence-tools/languageserver v0.0.0-20220926202318-0d961fc5d7e7
 	github.com/onflow/cadence-tools/test v0.1.0
 	github.com/onflow/fcl-dev-wallet v0.5.1
 	github.com/onflow/flow-cli/pkg/flowkit v0.0.0-20220926143050-dfd5770b1cd7
 	github.com/onflow/flow-emulator v0.37.0
-	github.com/onflow/flow-go-sdk v0.28.0
+	github.com/onflow/flow-go-sdk v0.29.0
 	github.com/psiemens/sconfig v0.1.0
 	github.com/spf13/afero v1.9.0
 	github.com/spf13/cobra v1.5.0
