@@ -670,8 +670,6 @@ github.com/onflow/cadence v0.15.0/go.mod h1:KMzDF6cIv6nb5PJW9aITaqazbmJX8MMeibFc
 github.com/onflow/cadence v0.20.1/go.mod h1:7mzUvPZUIJztIbr9eTvs+fQjWWHTF8veC+yk4ihcNIA=
 github.com/onflow/cadence v0.28.0 h1:18A1V9xqGewibEhuzqBNEoNvqG6OwVqHg7gKu3UliaM=
 github.com/onflow/cadence v0.28.0/go.mod h1:h+SbY8RNl6Q6sT6l/2cvpUZUJNCbzJya+3Bkwe/0YwY=
-github.com/onflow/cadence-tools/languageserver v0.0.0-20221012192514-4e0425586c59 h1:VA++RyrHOxYp5m9YtioHs0YSx3Y7oNI0dOdr80IhEdc=
-github.com/onflow/cadence-tools/languageserver v0.0.0-20221012192514-4e0425586c59/go.mod h1:qCRa+S7sQ3cLIEgUu1d21Yft4oWEZAKadJ19ID4etzw=
 github.com/onflow/cadence-tools/languageserver v0.2.0 h1:DwBBk2zlbjjbuftEU2Tl/2T2GKU18a2/+BiS8Gawzxo=
 github.com/onflow/cadence-tools/languageserver v0.2.0/go.mod h1:qCRa+S7sQ3cLIEgUu1d21Yft4oWEZAKadJ19ID4etzw=
 github.com/onflow/cadence-tools/lint v0.2.0 h1:i+Mvht3hQQNNxe4jV8BRTr97wFWlJSRGTOM03BSyloQ=
