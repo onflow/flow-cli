@@ -11,7 +11,7 @@ require (
 	github.com/onflow/cadence-tools/test v0.2.1-0.20221012182900-f46efb551c55
 	github.com/onflow/fcl-dev-wallet v0.5.1
 	github.com/onflow/flow-cli/pkg/flowkit v0.0.0-20220926143050-dfd5770b1cd7
-	github.com/onflow/flow-emulator v0.38.0
+	github.com/onflow/flow-emulator v0.38.1
 	github.com/onflow/flow-go-sdk v0.29.0
 	github.com/psiemens/sconfig v0.1.0
 	github.com/spf13/afero v1.9.0
@@ -118,12 +118,11 @@ require (
 	github.com/multiformats/go-multihash v0.2.1 // indirect
 	github.com/multiformats/go-varint v0.0.6 // indirect
 	github.com/onflow/atree v0.4.0 // indirect
-	github.com/onflow/cadence-tools v0.2.0 // indirect
 	github.com/onflow/cadence-tools/lint v0.0.0-20220926195650-cd6d435f7146 // indirect
 	github.com/onflow/flow-core-contracts/lib/go/contracts v0.11.2-0.20220720151516-797b149ceaaa // indirect
 	github.com/onflow/flow-core-contracts/lib/go/templates v0.11.2-0.20220720151516-797b149ceaaa // indirect
 	github.com/onflow/flow-ft/lib/go/contracts v0.5.0 // indirect
-	github.com/onflow/flow-go v0.26.14-test-synchronization.0.20221011174222-54840e416e81 // indirect
+	github.com/onflow/flow-go v0.26.14-test-synchronization.0.20221012204608-ed91c80fee2b // indirect
 	github.com/onflow/flow-go/crypto v0.24.4 // indirect
 	github.com/onflow/flow-nft/lib/go/contracts v0.0.0-20220727161549-d59b1e547ac4 // indirect
 	github.com/onflow/flow/protobuf/go/flow v0.3.1 // indirect
