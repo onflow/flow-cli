@@ -122,9 +122,9 @@ func ParseArguments(args []string, argsJSON string) (scriptArgs []cadence.Value,
 }
 func GetAuthorizerCount(fileName string, code []byte) int {
 
-	codes := map[common.Location]string{}
+	codes := make(map[common.Location][]byte)
 	location := common.StringLocation(fileName)
-	program, _ := cmd.PrepareProgram(string(code), location, codes)
+	program, _ := cmd.PrepareProgram(code, location, codes)
 
 	transactionDeclaration := program.TransactionDeclarations()
 	if len(transactionDeclaration) == 1 {

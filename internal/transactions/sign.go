@@ -32,7 +32,7 @@ import (
 )
 
 type flagsSign struct {
-	Signer        []string `default:"emulator-account" flag:"signer" info:"name of the account used to sign"`
+	Signer        []string `default:"emulator-account" flag:"signer" info:"name of the account(s) used to sign"`
 	Include       []string `default:"" flag:"include" info:"Fields to include in the output. Valid values: signatures, code, payload."`
 	FromRemoteUrl string   `default:"" flag:"from-remote-url" info:"server URL where RLP can be fetched, signed RLP will be posted back to remote URL."`
 }

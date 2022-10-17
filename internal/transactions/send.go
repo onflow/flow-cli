@@ -36,7 +36,7 @@ import (
 type flagsSend struct {
 	ArgsJSON string   `default:"" flag:"args-json" info:"arguments in JSON-Cadence format"`
 	Arg      []string `default:"" flag:"arg" info:"⚠️  Deprecated: use command arguments"`
-	Signer   []string `default:"emulator-account" flag:"signer" info:"Account name from configuration used to sign the transaction"`
+	Signer   []string `default:"emulator-account" flag:"signer" info:"Account name(s) from configuration used to sign the transaction"`
 	GasLimit uint64   `default:"1000" flag:"gas-limit" info:"transaction gas limit"`
 	Include  []string `default:"" flag:"include" info:"Fields to include in the output"`
 	Exclude  []string `default:"" flag:"exclude" info:"Fields to exclude from the output (events)"`
@@ -68,7 +68,7 @@ func send(
 	var signers []*flowkit.Account
 
 	//validate all signers
-	for _, signerName := range signFlags.Signer {
+	for _, signerName := range sendFlags.Signer {
 		// use service account by default
 		if signerName == config.DefaultEmulatorServiceAccountName {
 			signerName = state.Config().Emulators.Default().ServiceAccount
@@ -101,11 +101,14 @@ func send(
 		return nil, fmt.Errorf("invalid number of authorizers, expected: %d", authorizerCount)
 	}
 
+	//remove extra signers
+	authorizers = authorizers[:authorizerCount]
+
 	//proposer is the first signer
-	proposer := signers[0].Address()
+	proposer := signers[0]
 
 	//payer signs last
-	payer := signers[len(signers)-1].Address()
+	payer := signers[len(signers)-1]
 
 	if len(sendFlags.Arg) != 0 {
 		fmt.Println("⚠️  DEPRECATION WARNING: use transaction arguments as command arguments: send <code filename> [<argument> <argument> ...]")
@@ -123,10 +126,10 @@ func send(
 
 	//payload generation
 	build, err := services.Transactions.Build(
-		proposer,
+		proposer.Address(),
 		authorizers,
-		payer,
-		buildFlags.ProposerKeyIndex,
+		payer.Address(),
+		proposer.Key().Index(),
 		code,
 		codeFilename,
 		buildFlags.GasLimit,
@@ -134,11 +137,15 @@ func send(
 		globalFlags.Network,
 		true,
 	)
+	if err != nil {
+		return nil, err
+	}
 
-	payload := build.FlowTransaction().Encode()
+	encoded := build.FlowTransaction().Encode()
+	payload := []byte(hex.EncodeToString(encoded))
 
 	for _, signer := range signers {
-		signed, err = services.Transactions.Sign(signer, payload, globalFlags.Yes)
+		signed, err = services.Transactions.Sign(signer, payload, true)
 		if err != nil {
 			return nil, err
 		}
