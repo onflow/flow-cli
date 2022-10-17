@@ -132,7 +132,7 @@ func send(
 		proposer.Key().Index(),
 		code,
 		codeFilename,
-		buildFlags.GasLimit,
+		sendFlags.GasLimit,
 		transactionArgs,
 		globalFlags.Network,
 		true,
