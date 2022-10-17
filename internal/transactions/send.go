@@ -19,9 +19,10 @@
 package transactions
 
 import (
+	"encoding/hex"
 	"fmt"
-
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
+	"github.com/onflow/flow-go-sdk"
 
 	"github.com/spf13/cobra"
 
@@ -34,7 +35,8 @@ import (
 
 type flagsSend struct {
 	ArgsJSON string   `default:"" flag:"args-json" info:"arguments in JSON-Cadence format"`
-	Signer   string   `default:"emulator-account" flag:"signer" info:"Account name from configuration used to sign the transaction"`
+	Arg      []string `default:"" flag:"arg" info:"⚠️  Deprecated: use command arguments"`
+	Signer   []string `default:"emulator-account" flag:"signer" info:"Account name from configuration used to sign the transaction"`
 	GasLimit uint64   `default:"1000" flag:"gas-limit" info:"transaction gas limit"`
 	Include  []string `default:"" flag:"include" info:"Fields to include in the output"`
 	Exclude  []string `default:"" flag:"exclude" info:"Fields to exclude from the output (events)"`
@@ -62,18 +64,51 @@ func send(
 ) (command.Result, error) {
 	codeFilename := args[0]
 
-	transactionSigner := sendFlags.Signer
-	if sendFlags.Signer == config.DefaultEmulatorServiceAccountName { // use service account by default
-		transactionSigner = state.Config().Emulators.Default().ServiceAccount
-	}
-	signer, err := state.Accounts().ByName(transactionSigner)
-	if err != nil {
-		return nil, err
+	var signed *flowkit.Transaction
+	var signers []*flowkit.Account
+
+	//validate all signers
+	for _, signerName := range signFlags.Signer {
+		// use service account by default
+		if signerName == config.DefaultEmulatorServiceAccountName {
+			signerName = state.Config().Emulators.Default().ServiceAccount
+		}
+		signer, err := state.Accounts().ByName(signerName)
+		if err != nil {
+			return nil, fmt.Errorf("signer account: [%s] doesn't exists in configuration", signerName)
+		}
+		signers = append(signers, signer)
 	}
 
 	code, err := readerWriter.ReadFile(codeFilename)
 	if err != nil {
 		return nil, fmt.Errorf("error loading transaction file: %w", err)
+	}
+
+	//find authorizer count from code
+	authorizerCount := flowkit.GetAuthorizerCount(codeFilename, code)
+
+	var seen map[flow.Address]any = make(map[flow.Address]any)
+	var authorizers []flow.Address
+	for _, auth := range signers {
+		if _, ok := seen[auth.Address()]; ok {
+			continue
+		}
+		authorizers = append(authorizers, auth.Address())
+	}
+
+	if len(authorizers) < authorizerCount {
+		return nil, fmt.Errorf("invalid number of authorizers, expected: %d", authorizerCount)
+	}
+
+	//proposer is the first signer
+	proposer := signers[0].Address()
+
+	//payer signs last
+	payer := signers[len(signers)-1].Address()
+
+	if len(sendFlags.Arg) != 0 {
+		fmt.Println("⚠️  DEPRECATION WARNING: use transaction arguments as command arguments: send <code filename> [<argument> <argument> ...]")
 	}
 
 	var transactionArgs []cadence.Value
@@ -86,15 +121,33 @@ func send(
 		return nil, fmt.Errorf("error parsing transaction arguments: %w", err)
 	}
 
-	tx, result, err := srv.Transactions.Send(
-		services.NewSingleTransactionAccount(signer),
-		&services.Script{
-			Code:     code,
-			Args:     transactionArgs,
-			Filename: codeFilename,
-		},
-		sendFlags.GasLimit,
+	//payload generation
+	build, err := services.Transactions.Build(
+		proposer,
+		authorizers,
+		payer,
+		buildFlags.ProposerKeyIndex,
+		code,
+		codeFilename,
+		buildFlags.GasLimit,
+		transactionArgs,
 		globalFlags.Network,
+		true,
+	)
+
+	payload := build.FlowTransaction().Encode()
+
+	for _, signer := range signers {
+		signed, err = services.Transactions.Sign(signer, payload, globalFlags.Yes)
+		if err != nil {
+			return nil, err
+		}
+		payload = []byte(hex.EncodeToString(signed.FlowTransaction().Encode()))
+	}
+
+	tx, result, err := services.Transactions.SendSigned(
+		payload,
+		true,
 	)
 
 	if err != nil {
