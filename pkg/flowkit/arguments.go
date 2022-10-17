@@ -65,6 +65,79 @@ func ParseArgumentsJSON(input string) ([]cadence.Value, error) {
 	return cadenceArgs, nil
 }
 
+func ParseArgumentsCommaSplit(input []string) ([]cadence.Value, error) {
+	args := make([]map[string]interface{}, 0)
+
+	if len(input) == 0 {
+		return make([]cadence.Value, 0), nil
+	}
+
+	for _, in := range input {
+		argInput := strings.Split(in, ":")
+
+		if len(argInput) != 2 {
+			return nil, fmt.Errorf(
+				"argument not passed in correct format, correct format is: Type:Value, got %s",
+				in,
+			)
+		}
+
+		argType := argInput[0]
+		argValue := argInput[1]
+		args = append(args, map[string]interface{}{
+			"value": processValue(argType, argValue),
+			"type":  argType,
+		})
+	}
+
+	jsonArgs, _ := json.Marshal(args)
+	cadenceArgs, err := ParseArgumentsJSON(string(jsonArgs))
+
+	return cadenceArgs, err
+}
+
+// sanitizeAddressArg sanitize address and make sure it has 0x prefix
+func processValue(argType string, argValue string) interface{} {
+	if argType == "Address" && !strings.Contains(argValue, "0x") {
+		return fmt.Sprintf("0x%s", argValue)
+	} else if argType == "Bool" {
+		converted, _ := strconv.ParseBool(argValue)
+		return converted
+	}
+
+	return argValue
+}
+
+func ParseArguments(args []string, argsJSON string) (scriptArgs []cadence.Value, err error) {
+	if argsJSON != "" {
+		scriptArgs, err = ParseArgumentsJSON(argsJSON)
+	} else {
+		scriptArgs, err = ParseArgumentsCommaSplit(args)
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	return
+}
+func GetAuthorizerCount(fileName string, code []byte) int {
+
+	codes := map[common.Location]string{}
+	location := common.StringLocation(fileName)
+	program, _ := cmd.PrepareProgram(string(code), location, codes)
+
+	transactionDeclaration := program.TransactionDeclarations()
+	if len(transactionDeclaration) == 1 {
+		if transactionDeclaration[0].Prepare != nil {
+			parameters := transactionDeclaration[0].Prepare.FunctionDeclaration.ParameterList
+			if parameters != nil {
+				return len(parameters.Parameters)
+			}
+		}
+	}
+	return 0
+}
+
 func ParseArgumentsWithoutType(fileName string, code []byte, args []string) (scriptArgs []cadence.Value, err error) {
 
 	resultArgs := make([]cadence.Value, 0, len(args))
