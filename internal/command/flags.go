@@ -132,7 +132,7 @@ func InitFlags(cmd *cobra.Command) {
 
 	cmd.PersistentFlags().BoolVarP(
 		&Flags.SkipVersionCheck,
-		"skip-check",
+		"skip-version-check",
 		"",
 		Flags.SkipVersionCheck,
 		"Skip version check during start up",
