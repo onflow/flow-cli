@@ -73,7 +73,7 @@ func DefaultMockGateway() *TestGateway {
 		),
 		GetTransactionResult: m.On(
 			GetTransactionResultFunc,
-			mock.AnythingOfType("*flow.Transaction"),
+			mock.AnythingOfType("flow.Identifier"),
 			mock.AnythingOfType("bool"),
 		),
 		GetTransaction: m.On(
