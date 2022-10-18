@@ -39,6 +39,8 @@ const (
 	GetTransactionFunc        = "GetTransaction"
 )
 
+// go:generate
+
 type TestGateway struct {
 	Mock                  *mocks.Gateway
 	SendSignedTransaction *mock.Call
