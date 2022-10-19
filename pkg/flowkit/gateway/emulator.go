@@ -138,8 +138,8 @@ func (g *EmulatorGateway) SendSignedTransaction(tx *flowkit.Transaction) (*flow.
 	return tx.FlowTransaction(), nil
 }
 
-func (g *EmulatorGateway) GetTransactionResult(tx *flow.Transaction, waitSeal bool) (*flow.TransactionResult, error) {
-	result, err := g.backend.GetTransactionResult(g.ctx, tx.ID())
+func (g *EmulatorGateway) GetTransactionResult(ID flow.Identifier, waitSeal bool) (*flow.TransactionResult, error) {
+	result, err := g.backend.GetTransactionResult(g.ctx, ID)
 	if err != nil {
 		return nil, UnwrapStatusError(err)
 	}

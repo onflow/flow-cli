@@ -93,7 +93,7 @@ func (p *Project) Init(
 	return state, nil
 }
 
-//Defines a Mainnet Standard Contract ( e.g Core Contracts, FungibleToken, NonFungibleToken )
+// Defines a Mainnet Standard Contract ( e.g Core Contracts, FungibleToken, NonFungibleToken )
 type StandardContract struct {
 	Name     string
 	Address  flow.Address
@@ -359,7 +359,7 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 			continue
 		}
 
-		result, err := p.gateway.GetTransactionResult(sentTx, true)
+		result, err := p.gateway.GetTransactionResult(sentTx.ID(), true)
 		if err != nil {
 			p.logger.StopProgress()
 			p.logger.Error(fmt.Sprintf("%s error: %s", contract.Name(), err))
