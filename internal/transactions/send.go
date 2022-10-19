@@ -21,15 +21,14 @@ package transactions
 import (
 	"encoding/hex"
 	"fmt"
-	"github.com/onflow/flow-cli/pkg/flowkit/config"
-
-	"github.com/spf13/cobra"
-
-	"github.com/onflow/cadence"
 
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/pkg/flowkit"
+	"github.com/onflow/flow-cli/pkg/flowkit/config"
 	"github.com/onflow/flow-cli/pkg/flowkit/services"
+
+	"github.com/onflow/cadence"
+	"github.com/spf13/cobra"
 )
 
 type flagsSend struct {
