@@ -20,6 +20,7 @@ package command
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/psiemens/sconfig"
 	"github.com/spf13/cobra"
@@ -136,6 +137,6 @@ func bindFlags(command Command) {
 		BindFlags(command.Cmd.PersistentFlags()).
 		Parse()
 	if err != nil {
-		fmt.Println(err)
+		fmt.Fprintln(os.Stderr, err)
 	}
 }
