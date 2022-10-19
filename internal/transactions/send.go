@@ -22,7 +22,6 @@ import (
 	"encoding/hex"
 	"fmt"
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
-	"github.com/onflow/flow-go-sdk"
 
 	"github.com/spf13/cobra"
 
@@ -85,31 +84,6 @@ func send(
 		return nil, fmt.Errorf("error loading transaction file: %w", err)
 	}
 
-	//find authorizer count from code
-	authorizerCount := flowkit.GetAuthorizerCount(codeFilename, code)
-
-	var seen map[flow.Address]any = make(map[flow.Address]any)
-	var authorizers []flow.Address
-	for _, auth := range signers {
-		if _, ok := seen[auth.Address()]; ok {
-			continue
-		}
-		authorizers = append(authorizers, auth.Address())
-	}
-
-	if len(authorizers) < authorizerCount {
-		return nil, fmt.Errorf("invalid number of authorizers, expected: %d", authorizerCount)
-	}
-
-	//remove extra signers
-	authorizers = authorizers[:authorizerCount]
-
-	//proposer is the first signer
-	proposer := signers[0]
-
-	//payer signs last
-	payer := signers[len(signers)-1]
-
 	if len(sendFlags.Arg) != 0 {
 		fmt.Println("⚠️  DEPRECATION WARNING: use transaction arguments as command arguments: send <code filename> [<argument> <argument> ...]")
 	}
@@ -124,12 +98,8 @@ func send(
 		return nil, fmt.Errorf("error parsing transaction arguments: %w", err)
 	}
 
-	//payload generation
-	build, err := services.Transactions.Build(
-		proposer.Address(),
-		authorizers,
-		payer.Address(),
-		proposer.Key().Index(),
+	build, err := services.Transactions.BuildWithSigners(
+		signers,
 		code,
 		codeFilename,
 		sendFlags.GasLimit,
