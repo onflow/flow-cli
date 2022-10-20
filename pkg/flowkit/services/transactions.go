@@ -90,7 +90,6 @@ func (t *Transactions) Build(
 	gasLimit uint64,
 	args []cadence.Value,
 	network string,
-	approveBuild bool,
 ) (*flowkit.Transaction, error) {
 
 	latestBlock, err := t.gateway.GetLatestBlock()
@@ -148,14 +147,6 @@ func (t *Transactions) Build(
 	tx, err = tx.AddAuthorizers(authorizers)
 	if err != nil {
 		return nil, err
-	}
-
-	if approveBuild {
-		return tx, nil
-	}
-
-	if !output.ApproveTransactionForBuildingPrompt(tx) {
-		return nil, fmt.Errorf("transaction was not approved")
 	}
 
 	return tx, nil
@@ -246,7 +237,6 @@ func (t *Transactions) Send(
 		gasLimit,
 		args,
 		network,
-		true,
 	)
 	if err != nil {
 		return nil, nil, err

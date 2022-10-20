@@ -21,6 +21,8 @@ package transactions
 import (
 	"fmt"
 
+	"github.com/onflow/flow-cli/pkg/flowkit/output"
+
 	"github.com/onflow/cadence"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/spf13/cobra"
@@ -102,7 +104,7 @@ func build(
 		return nil, fmt.Errorf("error parsing transaction arguments: %w", err)
 	}
 
-	build, err := services.Transactions.Build(
+	tx, err := services.Transactions.Build(
 		proposer,
 		authorizers,
 		payer,
@@ -112,14 +114,17 @@ func build(
 		buildFlags.GasLimit,
 		transactionArgs,
 		globalFlags.Network,
-		globalFlags.Yes,
 	)
 	if err != nil {
 		return nil, err
 	}
 
+	if !output.ApproveTransactionForBuildingPrompt(tx) {
+		return nil, fmt.Errorf("transaction was not approved")
+	}
+
 	return &TransactionResult{
-		tx:      build.FlowTransaction(),
+		tx:      tx.FlowTransaction(),
 		include: []string{"code", "payload", "signatures"},
 	}, nil
 }
