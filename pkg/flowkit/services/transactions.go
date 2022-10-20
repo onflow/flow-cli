@@ -79,16 +79,66 @@ func (t *Transactions) GetStatus(
 	return tx, result, err
 }
 
+// TransactionAccounts define all the accounts for different transaction roles.
+//
+// If all roles are defined by the same account you can only set the payer.
+// You can read more about roles here: https://developers.flow.com/learn/concepts/accounts-and-keys
+type TransactionAccounts struct {
+	Proposer    *flowkit.Account
+	Authorizers []*flowkit.Account
+	Payer       *flowkit.Account
+}
+
+func (t *TransactionAccounts) toAddresses() *TransactionAddresses {
+	auths := make([]flow.Address, len(t.Authorizers))
+	for i, a := range t.Authorizers {
+		auths[i] = a.Address()
+	}
+
+	return &TransactionAddresses{
+		Proposer:    t.Proposer.Address(),
+		Authorizers: auths,
+		Payer:       t.Payer.Address(),
+	}
+}
+
+// getSigners for signing the transaction, detect if all accounts are same so only return the one account.
+func (t *TransactionAccounts) getSigners() []*flowkit.Account {
+	if (t.Proposer.Address() == t.Payer.Address() &&
+		len(t.Authorizers) == 1 &&
+		t.Payer.Address() == t.Authorizers[0].Address()) ||
+		t.Payer != nil && t.Proposer == nil && t.Authorizers == nil {
+		return []*flowkit.Account{t.Payer}
+	}
+
+	signers := make([]*flowkit.Account, 0)
+	signers = append(signers, t.Proposer)
+	signers = append(signers, t.Authorizers...)
+	signers = append(signers, t.Payer)
+	return signers
+}
+
+type TransactionAddresses struct {
+	Proposer    flow.Address
+	Authorizers []flow.Address
+	Payer       flow.Address
+}
+
+// Script includes Cadence code and optional arguments and filename.
+//
+// Filename is only required to be passed if you want to resolve imports.
+type Script struct {
+	Code     []byte
+	Args     []cadence.Value
+	Filename string
+}
+
 // Build builds a transaction with specified payer, proposer and authorizer.
 func (t *Transactions) Build(
-	proposer flow.Address,
-	authorizers []flow.Address,
-	payer flow.Address,
+	addresses *TransactionAddresses,
 	proposerKeyIndex int,
-	code []byte,
-	codeFilename string,
+	script *Script,
 	gasLimit uint64,
-	args []cadence.Value,
 	network string,
 ) (*flowkit.Transaction, error) {
 	if t.state == nil {
@@ -100,13 +150,13 @@ func (t *Transactions) Build(
 		return nil, fmt.Errorf("failed to get latest sealed block: %w", err)
 	}
 
-	proposerAccount, err := t.gateway.GetAccount(proposer)
+	proposerAccount, err := t.gateway.GetAccount(addresses.Proposer)
 	if err != nil {
 		return nil, err
 	}
 
 	tx := flowkit.NewTransaction().
-		SetPayer(payer).
+		SetPayer(addresses.Payer).
 		SetGasLimit(gasLimit).
 		SetBlockReference(latestBlock)
 
@@ -114,7 +164,7 @@ func (t *Transactions) Build(
 		return nil, err
 	}
 
-	resolver, err := contracts.NewResolver(code)
+	resolver, err := contracts.NewResolver(script.Code)
 	if err != nil {
 		return nil, err
 	}
@@ -123,7 +173,7 @@ func (t *Transactions) Build(
 		if network == "" {
 			return nil, fmt.Errorf("missing network, specify which network to use to resolve imports in transaction code")
 		}
-		if codeFilename == "" { // when used as lib with code we don't support imports
+		if script.Filename == "" { // when used as lib with code we don't support imports
 			return nil, fmt.Errorf("resolving imports in transactions not supported")
 		}
 
@@ -132,8 +182,8 @@ func (t *Transactions) Build(
 			return nil, err
 		}
 
-		code, err = resolver.ResolveImports(
-			codeFilename,
+		script.Code, err = resolver.ResolveImports(
+			script.Filename,
 			contractsNetwork,
 			t.state.AliasesForNetwork(network),
 		)
@@ -142,12 +192,12 @@ func (t *Transactions) Build(
 		}
 	}
 
-	err = tx.SetScriptWithArgs(code, args)
+	err = tx.SetScriptWithArgs(script.Code, script.Args)
 	if err != nil {
 		return nil, err
 	}
 
-	tx, err = tx.AddAuthorizers(authorizers)
+	tx, err = tx.AddAuthorizers(addresses.Authorizers)
 	if err != nil {
 		return nil, err
 	}
@@ -208,58 +258,51 @@ func (t *Transactions) SendSigned(
 
 // Send a transaction code using the signer account and arguments for the specified network.
 func (t *Transactions) Send(
-	signer *flowkit.Account,
-	code []byte,
-	codeFilename string,
+	accounts *TransactionAccounts,
+	script *Script,
 	gasLimit uint64,
-	args []cadence.Value,
 	network string,
 ) (*flow.Transaction, *flow.TransactionResult, error) {
 	if t.state == nil {
 		return nil, nil, fmt.Errorf("missing configuration, initialize it: flow state init")
 	}
 
-	signerKeyIndex := signer.Key().Index()
-
 	tx, err := t.Build(
-		signer.Address(),
-		[]flow.Address{signer.Address()},
-		signer.Address(),
-		signerKeyIndex,
-		code,
-		codeFilename,
+		accounts.toAddresses(),
+		accounts.Proposer.Key().Index(),
+		script,
 		gasLimit,
-		args,
 		network,
 	)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	err = tx.SetSigner(signer)
-	if err != nil {
-		return nil, nil, err
+	for _, signer := range accounts.getSigners() {
+		err = tx.SetSigner(signer)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		tx, err = tx.Sign()
+		if err != nil {
+			return nil, nil, err
+		}
 	}
 
-	signed, err := tx.Sign()
-	if err != nil {
-		return nil, nil, err
-	}
-
-	t.logger.Info(fmt.Sprintf("Transaction ID: %s", signed.FlowTransaction().ID()))
+	t.logger.Info(fmt.Sprintf("Transaction ID: %s", tx.FlowTransaction().ID()))
 	t.logger.StartProgress("Sending transaction...")
-	defer t.logger.StopProgress()
 
-	sentTx, err := t.gateway.SendSignedTransaction(signed)
+	sentTx, err := t.gateway.SendSignedTransaction(tx)
 	if err != nil {
 		return nil, nil, err
 	}
-
-	t.logger.StartProgress("Waiting for transaction to be sealed...")
-
-	res, err := t.gateway.GetTransactionResult(sentTx.ID(), true)
 
 	t.logger.StopProgress()
+	t.logger.StartProgress("Waiting for transaction to be sealed...")
+	defer t.logger.StopProgress()
+
+	res, err := t.gateway.GetTransactionResult(sentTx.ID(), true)
 
 	return sentTx, res, err
 }

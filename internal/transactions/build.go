@@ -60,7 +60,7 @@ func build(
 	args []string,
 	readerWriter flowkit.ReaderWriter,
 	globalFlags command.GlobalFlags,
-	services *services.Services,
+	srv *services.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
 	proposer, err := getAddress(buildFlags.Proposer, state)
@@ -104,15 +104,19 @@ func build(
 		return nil, fmt.Errorf("error parsing transaction arguments: %w", err)
 	}
 
-	tx, err := services.Transactions.Build(
-		proposer,
-		authorizers,
-		payer,
-		buildFlags.ProposerKeyIndex,
-		code,
-		filename,
+	tx, err := srv.Transactions.Build(
+		&services.TransactionAccounts{
+			Proposer:         proposer,
+			ProposerKeyIndex: buildFlags.ProposerKeyIndex,
+			Authorizers:      authorizers,
+			Payer:            payer,
+		},
+		&services.Script{
+			Code:     code,
+			Args:     transactionArgs,
+			Filename: filename,
+		},
 		buildFlags.GasLimit,
-		transactionArgs,
 		globalFlags.Network,
 	)
 	if err != nil {
