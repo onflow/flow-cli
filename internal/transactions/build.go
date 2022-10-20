@@ -119,7 +119,7 @@ func build(
 		return nil, err
 	}
 
-	if !output.ApproveTransactionForBuildingPrompt(tx) {
+	if !globalFlags.Yes && !output.ApproveTransactionForBuildingPrompt(tx) {
 		return nil, fmt.Errorf("transaction was not approved")
 	}
 
