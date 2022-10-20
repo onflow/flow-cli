@@ -91,6 +91,9 @@ func (t *Transactions) Build(
 	args []cadence.Value,
 	network string,
 ) (*flowkit.Transaction, error) {
+	if t.state == nil {
+		return nil, fmt.Errorf("missing configuration, initialize it: flow state init")
+	}
 
 	latestBlock, err := t.gateway.GetLatestBlock()
 	if err != nil {
@@ -156,7 +159,6 @@ func (t *Transactions) Build(
 func (t *Transactions) Sign(
 	signer *flowkit.Account,
 	payload []byte,
-	approveSigning bool,
 ) (*flowkit.Transaction, error) {
 	if t.state == nil {
 		return nil, fmt.Errorf("missing configuration, initialize it: flow state init")
@@ -170,14 +172,6 @@ func (t *Transactions) Sign(
 	err = tx.SetSigner(signer)
 	if err != nil {
 		return nil, err
-	}
-
-	if approveSigning {
-		return tx.Sign()
-	}
-
-	if !output.ApproveTransactionForSigningPrompt(tx) {
-		return nil, fmt.Errorf("transaction was not approved for signing")
 	}
 
 	return tx.Sign()
