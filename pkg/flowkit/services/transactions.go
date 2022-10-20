@@ -228,18 +228,7 @@ func (t *Transactions) Sign(
 }
 
 // SendSigned sends the transaction that is already signed.
-func (t *Transactions) SendSigned(
-	payload []byte,
-	approveSend bool,
-) (*flow.Transaction, *flow.TransactionResult, error) {
-	tx, err := flowkit.NewTransactionFromPayload(payload)
-	if err != nil {
-		return nil, nil, err
-	}
-	if !approveSend && !output.ApproveTransactionForSendingPrompt(tx) {
-		return nil, nil, fmt.Errorf("transaction was not approved for sending")
-	}
-
+func (t *Transactions) SendSigned(tx *flowkit.Transaction) (*flow.Transaction, *flow.TransactionResult, error) {
 	t.logger.StartProgress(fmt.Sprintf("Sending transaction with ID: %s", tx.FlowTransaction().ID()))
 	defer t.logger.StopProgress()
 
