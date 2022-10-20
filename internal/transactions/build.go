@@ -99,18 +99,17 @@ func build(
 	} else {
 		transactionArgs, err = flowkit.ParseArgumentsWithoutType(filename, code, args[1:])
 	}
-
 	if err != nil {
 		return nil, fmt.Errorf("error parsing transaction arguments: %w", err)
 	}
 
 	tx, err := srv.Transactions.Build(
-		&services.TransactionAccounts{
-			Proposer:         proposer,
-			ProposerKeyIndex: buildFlags.ProposerKeyIndex,
-			Authorizers:      authorizers,
-			Payer:            payer,
+		&services.TransactionAddresses{
+			Proposer:    proposer,
+			Authorizers: authorizers,
+			Payer:       payer,
 		},
+		buildFlags.ProposerKeyIndex,
 		&services.Script{
 			Code:     code,
 			Args:     transactionArgs,
