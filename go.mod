@@ -10,7 +10,7 @@ require (
 	github.com/onflow/cadence-tools/languageserver v0.2.0
 	github.com/onflow/cadence-tools/test v0.2.1-0.20221012182900-f46efb551c55
 	github.com/onflow/fcl-dev-wallet v0.5.1
-	github.com/onflow/flow-cli/pkg/flowkit v0.0.0-20221012181819-8d43a4be0028
+	github.com/onflow/flow-cli/pkg/flowkit v0.0.0-20221018174202-3d8c71f83142
 	github.com/onflow/flow-emulator v0.38.1
 	github.com/onflow/flow-go-sdk v0.29.0
 	github.com/psiemens/sconfig v0.1.0
@@ -199,3 +199,5 @@ require (
 )
 
 replace github.com/onflow/flow-cli/pkg/flowkit => ./pkg/flowkit
+
+replace github.com/onflow/cadence-tools/languageserver => ../cadence-tools/languageserver
