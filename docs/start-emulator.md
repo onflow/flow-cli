@@ -46,3 +46,10 @@ files by using `-f` flag multiple times.
 ⚠️  Deprecated: use `flow init` instead.
 
 Initialize configuration during the command execution.
+
+### Version Check
+
+- Flag: `--skip-version-check`
+- Default: `false`
+
+Skip version check during start up to speed up process for slow connections.
