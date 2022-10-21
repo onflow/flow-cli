@@ -39,6 +39,8 @@ const (
 	GetTransactionFunc        = "GetTransaction"
 )
 
+// go:generate
+
 type TestGateway struct {
 	Mock                  *mocks.Gateway
 	SendSignedTransaction *mock.Call
@@ -71,7 +73,7 @@ func DefaultMockGateway() *TestGateway {
 		),
 		GetTransactionResult: m.On(
 			GetTransactionResultFunc,
-			mock.AnythingOfType("*flow.Transaction"),
+			mock.AnythingOfType("flow.Identifier"),
 			mock.AnythingOfType("bool"),
 		),
 		GetTransaction: m.On(

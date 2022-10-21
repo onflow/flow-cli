@@ -224,11 +224,11 @@ func (_m *Gateway) GetTransaction(_a0 flow.Identifier) (*flow.Transaction, error
 }
 
 // GetTransactionResult provides a mock function with given fields: _a0, _a1
-func (_m *Gateway) GetTransactionResult(_a0 *flow.Transaction, _a1 bool) (*flow.TransactionResult, error) {
+func (_m *Gateway) GetTransactionResult(_a0 flow.Identifier, _a1 bool) (*flow.TransactionResult, error) {
 	ret := _m.Called(_a0, _a1)
 
 	var r0 *flow.TransactionResult
-	if rf, ok := ret.Get(0).(func(*flow.Transaction, bool) *flow.TransactionResult); ok {
+	if rf, ok := ret.Get(0).(func(flow.Identifier, bool) *flow.TransactionResult); ok {
 		r0 = rf(_a0, _a1)
 	} else {
 		if ret.Get(0) != nil {
@@ -237,7 +237,7 @@ func (_m *Gateway) GetTransactionResult(_a0 *flow.Transaction, _a1 bool) (*flow.
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(*flow.Transaction, bool) error); ok {
+	if rf, ok := ret.Get(1).(func(flow.Identifier, bool) error); ok {
 		r1 = rf(_a0, _a1)
 	} else {
 		r1 = ret.Error(1)

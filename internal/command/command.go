@@ -24,6 +24,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"runtime/debug"
 	"strings"
 	"time"
@@ -305,7 +306,7 @@ func initCrashReporting() {
 		},
 	})
 	if err != nil {
-		fmt.Println(err) // safest output method at this point
+		fmt.Fprintln(os.Stderr, err) // safest output method at this point
 	}
 }
 

@@ -115,20 +115,20 @@ func (g *GrpcGateway) SendSignedTransaction(transaction *flowkit.Transaction) (*
 }
 
 // GetTransaction gets a transaction by ID from the Flow Access API.
-func (g *GrpcGateway) GetTransaction(id flow.Identifier) (*flow.Transaction, error) {
-	return g.client.GetTransaction(g.ctx, id)
+func (g *GrpcGateway) GetTransaction(ID flow.Identifier) (*flow.Transaction, error) {
+	return g.client.GetTransaction(g.ctx, ID)
 }
 
 // GetTransactionResult gets a transaction result by ID from the Flow Access API.
-func (g *GrpcGateway) GetTransactionResult(tx *flow.Transaction, waitSeal bool) (*flow.TransactionResult, error) {
-	result, err := g.client.GetTransactionResult(g.ctx, tx.ID())
+func (g *GrpcGateway) GetTransactionResult(ID flow.Identifier, waitSeal bool) (*flow.TransactionResult, error) {
+	result, err := g.client.GetTransactionResult(g.ctx, ID)
 	if err != nil {
 		return nil, err
 	}
 
 	if result.Status != flow.TransactionStatusSealed && waitSeal {
 		time.Sleep(time.Second)
-		return g.GetTransactionResult(tx, waitSeal)
+		return g.GetTransactionResult(ID, waitSeal)
 	}
 
 	return result, nil

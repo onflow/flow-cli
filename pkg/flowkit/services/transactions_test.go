@@ -76,7 +76,7 @@ func TestTransactions(t *testing.T) {
 		})
 
 		gw.GetTransactionResult.Run(func(args mock.Arguments) {
-			assert.Equal(t, txID, args.Get(0).(*flow.Transaction).ID())
+			assert.Equal(t, txID, args.Get(0).(flow.Identifier))
 			gw.GetTransactionResult.Return(tests.NewTransactionResult(nil), nil)
 		})
 
