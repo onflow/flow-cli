@@ -33,7 +33,6 @@ import (
 
 type flagsBuild struct {
 	ArgsJSON         string   `default:"" flag:"args-json" info:"arguments in JSON-Cadence format"`
-	Args             []string `default:"" flag:"arg" info:"⚠️  Deprecated: use command arguments"`
 	Proposer         string   `default:"emulator-account" flag:"proposer" info:"transaction proposer"`
 	ProposerKeyIndex int      `default:"0" flag:"proposer-key-index" info:"proposer key index"`
 	Payer            string   `default:"emulator-account" flag:"payer" info:"transaction payer"`
@@ -87,13 +86,9 @@ func build(
 		return nil, fmt.Errorf("error loading transaction file: %w", err)
 	}
 
-	if len(buildFlags.Args) != 0 {
-		fmt.Println("⚠️  DEPRECATION WARNING: use transaction arguments as command arguments: send <code filename> [<argument> <argument> ...]")
-	}
-
 	var transactionArgs []cadence.Value
-	if buildFlags.ArgsJSON != "" || len(buildFlags.Args) != 0 {
-		transactionArgs, err = flowkit.ParseArguments(buildFlags.Args, buildFlags.ArgsJSON)
+	if buildFlags.ArgsJSON != "" {
+		transactionArgs, err = flowkit.ParseArgumentsJSON(buildFlags.ArgsJSON)
 	} else {
 		transactionArgs, err = flowkit.ParseArgumentsWithoutType(filename, code, args[1:])
 	}

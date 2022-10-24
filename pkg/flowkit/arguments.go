@@ -109,19 +109,6 @@ func processValue(argType string, argValue string) interface{} {
 	return argValue
 }
 
-func ParseArguments(args []string, argsJSON string) (scriptArgs []cadence.Value, err error) {
-	if argsJSON != "" {
-		scriptArgs, err = ParseArgumentsJSON(argsJSON)
-	} else {
-		scriptArgs, err = ParseArgumentsCommaSplit(args)
-	}
-	if err != nil {
-		return nil, err
-	}
-
-	return
-}
-
 func ParseArgumentsWithoutType(fileName string, code []byte, args []string) (scriptArgs []cadence.Value, err error) {
 
 	resultArgs := make([]cadence.Value, 0, len(args))
