@@ -114,16 +114,6 @@ Specify fields to exclude from the result output. Applies only to the text outpu
 
 Specify the name of the account that will be used to sign the transaction.
 
-### Arguments
-
-- Flag: `--arg`
-- Valid inputs: argument in `Type:Value` format.
-
-Arguments passed to the Cadence transaction in `Type:Value` format.
-The `Type` must be the same as type in the transaction source code for that argument.
-
-⚠️  Deprecated: use command arguments instead.
-
 ### Arguments JSON
 
 - Flag: `--args-json`

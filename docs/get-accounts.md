@@ -56,15 +56,6 @@ Flow [account address](https://docs.onflow.org/concepts/accounts-and-keys/) (pre
 
 Specify fields to include in the result output. Applies only to the text output.
 
-### Contracts
-
-- Flag: `--contracts`
-
-⚠️  Deprecated: use include flag.
-
-### Code 
-⚠️  No longer supported: use contracts flag instead.
-
 ### Host
 
 - Flag: `--host`
