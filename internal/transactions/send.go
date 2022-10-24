@@ -87,15 +87,12 @@ func send(
 	} else {
 		transactionArgs, err = flowkit.ParseArgumentsWithoutType(codeFilename, code, args[1:])
 	}
-
 	if err != nil {
 		return nil, fmt.Errorf("error parsing transaction arguments: %w", err)
 	}
 
 	tx, result, err := srv.Transactions.Send(
-		&services.TransactionAccounts{
-			Payer: signer,
-		},
+		services.NewSingleTransactionAccount(signer),
 		&services.Script{
 			Code:     code,
 			Args:     transactionArgs,

@@ -81,7 +81,7 @@ func TestTransactions(t *testing.T) {
 		})
 
 		_, _, err := s.Transactions.Send(
-			&TransactionAccounts{
+			&transactionAccounts{
 				Payer: serviceAcc,
 			},
 			&Script{
@@ -177,7 +177,7 @@ func TestTransactions_Integration(t *testing.T) {
 
 		for _, i := range txIns {
 			tx, err := s.Transactions.Build(
-				&TransactionAddresses{
+				&transactionAddresses{
 					Proposer:    i.prop,
 					Authorizers: i.auth,
 					Payer:       i.payer,
@@ -241,7 +241,7 @@ func TestTransactions_Integration(t *testing.T) {
 		)
 
 		tx, err := s.Transactions.Build(
-			&TransactionAddresses{
+			&transactionAddresses{
 				Proposer:    signer,
 				Authorizers: []flow.Address{signer},
 				Payer:       signer,
@@ -275,7 +275,7 @@ func TestTransactions_Integration(t *testing.T) {
 		a, _ := state.Accounts().ByName("Alice")
 
 		tx, err := s.Transactions.Build(
-			&TransactionAddresses{
+			&transactionAddresses{
 				Proposer: a.Address(),
 				Payer:    a.Address(),
 			},
@@ -312,7 +312,7 @@ func TestTransactions_Integration(t *testing.T) {
 		a, _ := state.Accounts().ByName("Alice")
 
 		tx, err := s.Transactions.Build(
-			&TransactionAddresses{
+			&transactionAddresses{
 				Proposer:    a.Address(),
 				Authorizers: []flow.Address{a.Address()},
 				Payer:       a.Address(),
@@ -351,7 +351,7 @@ func TestTransactions_Integration(t *testing.T) {
 		a, _ := state.Accounts().ByName("Alice")
 
 		tx, err := s.Transactions.Build(
-			&TransactionAddresses{
+			&transactionAddresses{
 				Proposer:    a.Address(),
 				Authorizers: []flow.Address{a.Address()},
 				Payer:       a.Address(),
@@ -387,7 +387,7 @@ func TestTransactions_Integration(t *testing.T) {
 		a, _ := state.Accounts().ByName("Alice")
 
 		tx, err := s.Transactions.Build(
-			&TransactionAddresses{
+			&transactionAddresses{
 				Proposer:    a.Address(),
 				Authorizers: []flow.Address{a.Address()},
 				Payer:       a.Address(),
@@ -413,7 +413,7 @@ func TestTransactions_Integration(t *testing.T) {
 		a, _ := state.Accounts().ByName("Alice")
 
 		tx, txr, err := s.Transactions.Send(
-			&TransactionAccounts{
+			&transactionAccounts{
 				Payer: a,
 			},
 			&Script{
@@ -438,7 +438,7 @@ func TestTransactions_Integration(t *testing.T) {
 		a, _ := state.Accounts().ByName("Alice")
 
 		tx, txr, err := s.Transactions.Send(
-			&TransactionAccounts{
+			&transactionAccounts{
 				Payer: a,
 			},
 			&Script{
@@ -467,7 +467,7 @@ func TestTransactions_Integration(t *testing.T) {
 		a, _ := state.Accounts().ByName("Alice")
 
 		tx, txr, err := s.Transactions.Send(
-			&TransactionAccounts{
+			&transactionAccounts{
 				Payer: a,
 			},
 			&Script{
