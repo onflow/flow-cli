@@ -199,5 +199,3 @@ require (
 )
 
 replace github.com/onflow/flow-cli/pkg/flowkit => ./pkg/flowkit
-
-replace github.com/onflow/cadence-tools/languageserver => ../cadence-tools/languageserver
