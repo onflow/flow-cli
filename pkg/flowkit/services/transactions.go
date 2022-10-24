@@ -142,8 +142,8 @@ func (t *transactionAccounts) getSigners() []*flowkit.Account {
 // You can read more about roles here: https://developers.flow.com/learn/concepts/accounts-and-keys
 func NewTransactionAddresses(
 	proposer flow.Address,
-	authorizers []flow.Address,
 	payer flow.Address,
+	authorizers []flow.Address,
 ) *transactionAddresses {
 	return &transactionAddresses{
 		Proposer:    proposer,
