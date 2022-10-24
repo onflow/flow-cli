@@ -79,7 +79,7 @@ func (t *Transactions) GetStatus(
 	return tx, result, err
 }
 
-// NewTransactionAccounts create accounts defined by role for transaction.
+// NewTransactionAccounts defines transaction roles by accounts.
 //
 // You can read more about roles here: https://developers.flow.com/learn/concepts/accounts-and-keys
 func NewTransactionAccounts(
@@ -87,8 +87,8 @@ func NewTransactionAccounts(
 	payer *flowkit.Account,
 	authorizers []*flowkit.Account,
 ) (*transactionAccounts, error) {
-	if proposer == nil && payer == nil {
-		return nil, fmt.Errorf("must provide proposer and payer")
+	if proposer == nil || payer == nil {
+		return nil, fmt.Errorf("must provide both proposer and payer")
 	}
 
 	return &transactionAccounts{
@@ -115,17 +115,17 @@ type transactionAccounts struct {
 	Payer       *flowkit.Account
 }
 
-func (t *transactionAccounts) toAddresses() (*TransactionAddresses, error) {
+func (t *transactionAccounts) toAddresses() *transactionAddresses {
 	auths := make([]flow.Address, len(t.Authorizers))
 	for i, a := range t.Authorizers {
 		auths[i] = a.Address()
 	}
 
-	return &TransactionAddresses{
+	return &transactionAddresses{
 		Proposer:    t.Proposer.Address(),
 		Authorizers: auths,
 		Payer:       t.Payer.Address(),
-	}, nil
+	}
 }
 
 // getSigners for signing the transaction, detect if all accounts are same so only return the one account.
@@ -137,7 +137,22 @@ func (t *transactionAccounts) getSigners() []*flowkit.Account {
 	return signers
 }
 
-type TransactionAddresses struct {
+// NewTransactionAddresses defines transaction roles by account addresses.
+//
+// You can read more about roles here: https://developers.flow.com/learn/concepts/accounts-and-keys
+func NewTransactionAddresses(
+	proposer flow.Address,
+	authorizers []flow.Address,
+	payer flow.Address,
+) *transactionAddresses {
+	return &transactionAddresses{
+		Proposer:    proposer,
+		Authorizers: authorizers,
+		Payer:       payer,
+	}
+}
+
+type transactionAddresses struct {
 	Proposer    flow.Address
 	Authorizers []flow.Address
 	Payer       flow.Address
@@ -154,7 +169,7 @@ type Script struct {
 
 // Build builds a transaction with specified payer, proposer and authorizer.
 func (t *Transactions) Build(
-	addresses *TransactionAddresses,
+	addresses *transactionAddresses,
 	proposerKeyIndex int,
 	script *Script,
 	gasLimit uint64,
