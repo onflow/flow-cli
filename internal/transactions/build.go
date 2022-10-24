@@ -104,7 +104,7 @@ func build(
 	}
 
 	tx, err := srv.Transactions.Build(
-		services.NewTransactionAddresses(proposer, authorizers, payer),
+		services.NewTransactionAddresses(proposer, payer, authorizers),
 		buildFlags.ProposerKeyIndex,
 		&services.Script{
 			Code:     code,

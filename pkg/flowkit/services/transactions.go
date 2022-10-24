@@ -92,9 +92,9 @@ func NewTransactionAccounts(
 	}
 
 	return &transactionAccounts{
-		Proposer:    proposer,
-		Authorizers: authorizers,
-		Payer:       payer,
+		proposer:    proposer,
+		authorizers: authorizers,
+		payer:       payer,
 	}, nil
 }
 
@@ -102,38 +102,45 @@ func NewTransactionAccounts(
 // account fulfilling all the roles (proposer, payer, authorizer).
 func NewSingleTransactionAccount(account *flowkit.Account) *transactionAccounts {
 	return &transactionAccounts{
-		Proposer:    account,
-		Authorizers: []*flowkit.Account{account},
-		Payer:       account,
+		proposer:    account,
+		authorizers: []*flowkit.Account{account},
+		payer:       account,
 	}
 }
 
 // transactionAccounts define all the accounts for different transaction roles.
 type transactionAccounts struct {
-	Proposer    *flowkit.Account
-	Authorizers []*flowkit.Account
-	Payer       *flowkit.Account
+	proposer    *flowkit.Account
+	authorizers []*flowkit.Account
+	payer       *flowkit.Account
 }
 
 func (t *transactionAccounts) toAddresses() *transactionAddresses {
-	auths := make([]flow.Address, len(t.Authorizers))
-	for i, a := range t.Authorizers {
+	auths := make([]flow.Address, len(t.authorizers))
+	for i, a := range t.authorizers {
 		auths[i] = a.Address()
 	}
 
 	return &transactionAddresses{
-		Proposer:    t.Proposer.Address(),
-		Authorizers: auths,
-		Payer:       t.Payer.Address(),
+		proposer:    t.proposer.Address(),
+		authorizers: auths,
+		payer:       t.payer.Address(),
 	}
 }
 
 // getSigners for signing the transaction, detect if all accounts are same so only return the one account.
 func (t *transactionAccounts) getSigners() []*flowkit.Account {
+	// if proposer, payer and authorizer is all same account then only return that as a single signer
+	if t.proposer.Address() == t.payer.Address() &&
+		len(t.authorizers) == 1 &&
+		t.payer.Address() == t.authorizers[0].Address() {
+		return []*flowkit.Account{t.payer}
+	}
+
 	signers := make([]*flowkit.Account, 0)
-	signers = append(signers, t.Proposer)
-	signers = append(signers, t.Authorizers...)
-	signers = append(signers, t.Payer)
+	signers = append(signers, t.proposer)
+	signers = append(signers, t.authorizers...)
+	signers = append(signers, t.payer)
 	return signers
 }
 
@@ -146,16 +153,16 @@ func NewTransactionAddresses(
 	authorizers []flow.Address,
 ) *transactionAddresses {
 	return &transactionAddresses{
-		Proposer:    proposer,
-		Authorizers: authorizers,
-		Payer:       payer,
+		proposer:    proposer,
+		authorizers: authorizers,
+		payer:       payer,
 	}
 }
 
 type transactionAddresses struct {
-	Proposer    flow.Address
-	Authorizers []flow.Address
-	Payer       flow.Address
+	proposer    flow.Address
+	authorizers []flow.Address
+	payer       flow.Address
 }
 
 // Script includes Cadence code and optional arguments and filename.
@@ -184,13 +191,13 @@ func (t *Transactions) Build(
 		return nil, fmt.Errorf("failed to get latest sealed block: %w", err)
 	}
 
-	proposerAccount, err := t.gateway.GetAccount(addresses.Proposer)
+	proposerAccount, err := t.gateway.GetAccount(addresses.proposer)
 	if err != nil {
 		return nil, err
 	}
 
 	tx := flowkit.NewTransaction().
-		SetPayer(addresses.Payer).
+		SetPayer(addresses.payer).
 		SetGasLimit(gasLimit).
 		SetBlockReference(latestBlock)
 
@@ -231,7 +238,7 @@ func (t *Transactions) Build(
 		return nil, err
 	}
 
-	tx, err = tx.AddAuthorizers(addresses.Authorizers)
+	tx, err = tx.AddAuthorizers(addresses.authorizers)
 	if err != nil {
 		return nil, err
 	}
@@ -292,7 +299,7 @@ func (t *Transactions) Send(
 
 	tx, err := t.Build(
 		accounts.toAddresses(),
-		accounts.Proposer.Key().Index(),
+		accounts.proposer.Key().Index(),
 		script,
 		gasLimit,
 		network,
