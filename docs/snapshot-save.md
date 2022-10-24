@@ -73,7 +73,12 @@ Specify any property name from the result you want to return as the only value.
 
 Specify in which format you want to display the result.
 
+### Version Check
 
+- Flag: `--skip-version-check`
+- Default: `false`
+
+Skip version check during start up to speed up process for slow connections.
 
 
 
