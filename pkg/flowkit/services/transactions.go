@@ -79,17 +79,43 @@ func (t *Transactions) GetStatus(
 	return tx, result, err
 }
 
-// TransactionAccounts define all the accounts for different transaction roles.
+// NewTransactionAccounts create accounts defined by role for transaction.
 //
-// If all roles are defined by the same account you can only set the payer.
 // You can read more about roles here: https://developers.flow.com/learn/concepts/accounts-and-keys
-type TransactionAccounts struct {
+func NewTransactionAccounts(
+	proposer *flowkit.Account,
+	payer *flowkit.Account,
+	authorizers []*flowkit.Account,
+) (*transactionAccounts, error) {
+	if proposer == nil && payer == nil {
+		return nil, fmt.Errorf("must provide proposer and payer")
+	}
+
+	return &transactionAccounts{
+		Proposer:    proposer,
+		Authorizers: authorizers,
+		Payer:       payer,
+	}, nil
+}
+
+// NewSingleTransactionAccount creates transaction accounts from a single provided
+// account fulfilling all the roles (proposer, payer, authorizer).
+func NewSingleTransactionAccount(account *flowkit.Account) *transactionAccounts {
+	return &transactionAccounts{
+		Proposer:    account,
+		Authorizers: []*flowkit.Account{account},
+		Payer:       account,
+	}
+}
+
+// transactionAccounts define all the accounts for different transaction roles.
+type transactionAccounts struct {
 	Proposer    *flowkit.Account
 	Authorizers []*flowkit.Account
 	Payer       *flowkit.Account
 }
 
-func (t *TransactionAccounts) toAddresses() *TransactionAddresses {
+func (t *transactionAccounts) toAddresses() (*TransactionAddresses, error) {
 	auths := make([]flow.Address, len(t.Authorizers))
 	for i, a := range t.Authorizers {
 		auths[i] = a.Address()
@@ -99,18 +125,11 @@ func (t *TransactionAccounts) toAddresses() *TransactionAddresses {
 		Proposer:    t.Proposer.Address(),
 		Authorizers: auths,
 		Payer:       t.Payer.Address(),
-	}
+	}, nil
 }
 
 // getSigners for signing the transaction, detect if all accounts are same so only return the one account.
-func (t *TransactionAccounts) getSigners() []*flowkit.Account {
-	if (t.Proposer.Address() == t.Payer.Address() &&
-		len(t.Authorizers) == 1 &&
-		t.Payer.Address() == t.Authorizers[0].Address()) ||
-		t.Payer != nil && t.Proposer == nil && t.Authorizers == nil {
-		return []*flowkit.Account{t.Payer}
-	}
-
+func (t *transactionAccounts) getSigners() []*flowkit.Account {
 	signers := make([]*flowkit.Account, 0)
 	signers = append(signers, t.Proposer)
 	signers = append(signers, t.Authorizers...)
@@ -247,7 +266,7 @@ func (t *Transactions) SendSigned(tx *flowkit.Transaction) (*flow.Transaction, *
 
 // Send a transaction code using the signer account and arguments for the specified network.
 func (t *Transactions) Send(
-	accounts *TransactionAccounts,
+	accounts *transactionAccounts,
 	script *Script,
 	gasLimit uint64,
 	network string,
