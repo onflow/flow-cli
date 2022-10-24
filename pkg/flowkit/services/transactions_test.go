@@ -81,9 +81,7 @@ func TestTransactions(t *testing.T) {
 		})
 
 		_, _, err := s.Transactions.Send(
-			&transactionAccounts{
-				Payer: serviceAcc,
-			},
+			NewSingleTransactionAccount(serviceAcc),
 			&Script{
 				Code: tests.TransactionArgString.Source,
 				Args: []cadence.Value{cadence.String("Bar")},
@@ -177,11 +175,7 @@ func TestTransactions_Integration(t *testing.T) {
 
 		for _, i := range txIns {
 			tx, err := s.Transactions.Build(
-				&transactionAddresses{
-					Proposer:    i.prop,
-					Authorizers: i.auth,
-					Payer:       i.payer,
-				},
+				NewTransactionAddresses(i.prop, i.payer, i.auth),
 				i.index,
 				&Script{
 					Code:     i.code,
@@ -241,11 +235,7 @@ func TestTransactions_Integration(t *testing.T) {
 		)
 
 		tx, err := s.Transactions.Build(
-			&transactionAddresses{
-				Proposer:    signer,
-				Authorizers: []flow.Address{signer},
-				Payer:       signer,
-			},
+			NewTransactionAddresses(signer, signer, []flow.Address{signer}),
 			srvAcc.Key().Index(),
 			&Script{
 				Code:     tests.TransactionImports.Source,
@@ -275,10 +265,7 @@ func TestTransactions_Integration(t *testing.T) {
 		a, _ := state.Accounts().ByName("Alice")
 
 		tx, err := s.Transactions.Build(
-			&transactionAddresses{
-				Proposer: a.Address(),
-				Payer:    a.Address(),
-			},
+			NewTransactionAddresses(a.Address(), a.Address(), nil),
 			0,
 			&Script{
 				Code:     tests.TransactionSimple.Source,
@@ -312,11 +299,7 @@ func TestTransactions_Integration(t *testing.T) {
 		a, _ := state.Accounts().ByName("Alice")
 
 		tx, err := s.Transactions.Build(
-			&transactionAddresses{
-				Proposer:    a.Address(),
-				Authorizers: []flow.Address{a.Address()},
-				Payer:       a.Address(),
-			},
+			NewTransactionAddresses(a.Address(), a.Address(), []flow.Address{a.Address()}),
 			0,
 			&Script{
 				Code:     tests.TransactionSingleAuth.Source,
@@ -351,11 +334,7 @@ func TestTransactions_Integration(t *testing.T) {
 		a, _ := state.Accounts().ByName("Alice")
 
 		tx, err := s.Transactions.Build(
-			&transactionAddresses{
-				Proposer:    a.Address(),
-				Authorizers: []flow.Address{a.Address()},
-				Payer:       a.Address(),
-			},
+			NewTransactionAddresses(a.Address(), a.Address(), []flow.Address{a.Address()}),
 			0,
 			&Script{
 				Code:     tests.TransactionSingleAuth.Source,
@@ -387,11 +366,7 @@ func TestTransactions_Integration(t *testing.T) {
 		a, _ := state.Accounts().ByName("Alice")
 
 		tx, err := s.Transactions.Build(
-			&transactionAddresses{
-				Proposer:    a.Address(),
-				Authorizers: []flow.Address{a.Address()},
-				Payer:       a.Address(),
-			},
+			NewTransactionAddresses(a.Address(), a.Address(), []flow.Address{a.Address()}),
 			0,
 			&Script{
 				Code:     tests.TransactionTwoAuth.Source,
@@ -413,9 +388,7 @@ func TestTransactions_Integration(t *testing.T) {
 		a, _ := state.Accounts().ByName("Alice")
 
 		tx, txr, err := s.Transactions.Send(
-			&transactionAccounts{
-				Payer: a,
-			},
+			NewSingleTransactionAccount(a),
 			&Script{
 				Code:     tests.TransactionSingleAuth.Source,
 				Filename: tests.TransactionSingleAuth.Filename,
@@ -438,9 +411,7 @@ func TestTransactions_Integration(t *testing.T) {
 		a, _ := state.Accounts().ByName("Alice")
 
 		tx, txr, err := s.Transactions.Send(
-			&transactionAccounts{
-				Payer: a,
-			},
+			NewSingleTransactionAccount(a),
 			&Script{
 				Code:     tests.TransactionArgString.Source,
 				Filename: tests.TransactionArgString.Filename,
@@ -467,9 +438,7 @@ func TestTransactions_Integration(t *testing.T) {
 		a, _ := state.Accounts().ByName("Alice")
 
 		tx, txr, err := s.Transactions.Send(
-			&transactionAccounts{
-				Payer: a,
-			},
+			NewSingleTransactionAccount(a),
 			&Script{
 				Code:     tests.TransactionMultipleDeclarations.Source,
 				Filename: tests.TransactionMultipleDeclarations.Filename,
