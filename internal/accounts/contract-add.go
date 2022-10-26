@@ -88,7 +88,6 @@ func addContract(
 	account, err := srv.Accounts.AddContract(
 		to,
 		&services.Contract{
-			Name:     "", // Name is parsed by the resolver
 			Source:   code,
 			Args:     contractArgs,
 			Filename: filename,

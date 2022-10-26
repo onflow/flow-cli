@@ -33,6 +33,7 @@ import (
 
 // Resolver handles resolving imports in Cadence code.
 type Resolver struct {
+	name    string
 	code    []byte
 	program *ast.Program
 }
@@ -44,7 +45,13 @@ func NewResolver(code []byte) (*Resolver, error) {
 		return nil, err
 	}
 
+	name, err := ProgramName(program)
+	if err != nil {
+		return nil, err
+	}
+
 	return &Resolver{
+		name:    name,
 		code:    code,
 		program: program,
 	}, nil
@@ -122,18 +129,23 @@ func (r *Resolver) getFileImports() []string {
 	return imports
 }
 
-func (r *Resolver) GetSourceContractName() (string, error) {
-	if len(r.program.CompositeDeclarations())+len(r.program.InterfaceDeclarations()) != 1 {
+func (r *Resolver) Name() string {
+	return r.name
+}
+
+// ProgramName returns the name of the provided program
+func ProgramName(program *ast.Program) (string, error) {
+	if len(program.CompositeDeclarations())+len(program.InterfaceDeclarations()) != 1 {
 		return "", fmt.Errorf("the code must declare exactly one contract or contract interface")
 	}
 
-	for _, compositeDeclaration := range r.program.CompositeDeclarations() {
+	for _, compositeDeclaration := range program.CompositeDeclarations() {
 		if compositeDeclaration.CompositeKind == common.CompositeKindContract {
 			return compositeDeclaration.Identifier.Identifier, nil
 		}
 	}
 
-	for _, interfaceDeclaration := range r.program.InterfaceDeclarations() {
+	for _, interfaceDeclaration := range program.InterfaceDeclarations() {
 		if interfaceDeclaration.CompositeKind == common.CompositeKindContract {
 			return interfaceDeclaration.Identifier.Identifier, nil
 		}

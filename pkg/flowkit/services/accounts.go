@@ -316,11 +316,7 @@ func (a *Accounts) AddContract(
 		return nil, err
 	}
 
-	name, err := resolver.GetSourceContractName()
-	if err != nil {
-		return nil, err
-	}
-	contract.Name = name
+	contract.Name = resolver.Name()
 
 	hasFileImports := resolver.HasFileImports()
 	err = contract.validate(hasFileImports)
