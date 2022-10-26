@@ -27,7 +27,7 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
 	"github.com/onflow/flow-cli/pkg/flowkit/services"
 
-	devWallet "github.com/onflow/fcl-dev-wallet"
+	devWallet "github.com/onflow/fcl-dev-wallet/go/wallet"
 	"github.com/spf13/cobra"
 )
 
@@ -63,21 +63,11 @@ func wallet(
 
 	key := service.Key().ToConfig()
 
-	conf := devWallet.Config{
-		Address:               fmt.Sprintf("0x%s", service.Address().String()),
-		PrivateKey:            strings.TrimPrefix(key.PrivateKey.String(), "0x"),
-		PublicKey:             strings.TrimPrefix(key.PrivateKey.PublicKey().String(), "0x"),
-		AccessNode:            walletFlags.Host,
-		AccountKeyID:          "0",
-		BaseURL:               "http://localhost:8701",
-		ContractFungibleToken: "0xee82856bf20e2aa6",
-		ContractFlowToken:     "0x0ae53cb6e3f42a79",
-		ContractFUSD:          "0xf8d6e0586b0a20c7",
-		ContractFCLCrypto:     "0xf8d6e0586b0a20c7",
-		AvatarURL:             "https://avatars.onflow.org/avatar/",
-		FlowInitAccountsNo:    "0",
-		TokenAmountFLOW:       "100.0",
-		TokenAmountFUSD:       "100.0",
+	conf := devWallet.FlowConfig{
+		Address:    fmt.Sprintf("0x%s", service.Address().String()),
+		PrivateKey: strings.TrimPrefix(key.PrivateKey.String(), "0x"),
+		PublicKey:  strings.TrimPrefix(key.PrivateKey.PublicKey().String(), "0x"),
+		AccessNode: walletFlags.Host,
 	}
 
 	srv, err := devWallet.NewHTTPServer(walletFlags.Port, &conf)

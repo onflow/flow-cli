@@ -34,8 +34,6 @@ ae8bfbc85ce994899a3f942072bfd3455823b1f7652106ac102d161c17fcb55c
 - Name: `collection_id`
 - Valid Input: SHA3-256 hash of the collection contents
 
-{argument general description}
-
 ## Arguments
 
 ## Flags
@@ -110,3 +108,10 @@ Specify the log level. Control how much output you want to see during command ex
 Specify the path to the `flow.json` configuration file.
 You can use the `-f` flag multiple times to merge
 several configuration files.
+
+### Version Check
+
+- Flag: `--skip-version-check`
+- Default: `false`
+
+Skip version check during start up to speed up process for slow connections.

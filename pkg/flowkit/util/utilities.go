@@ -244,3 +244,11 @@ func CheckMetricsEnabled(loader ReaderWriter) (bool, error) {
 
 	return jsonConf.Metrics, nil
 }
+
+func AbsolutePath(basePath, filePath string) string {
+	if path.IsAbs(filePath) {
+		return filePath
+	}
+
+	return path.Join(path.Dir(basePath), filePath)
+}

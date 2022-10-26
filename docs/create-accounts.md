@@ -13,6 +13,9 @@ flow accounts create
 
 ⚠️ _This command requires an existing Testnet or Mainnet account._
 
+## Video Tutorial for Account Creation
+<iframe width="560" height="315" src="https://youtu.be/K9NtfFKcCa0" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+
 ## Example Usage
 
 ```shell
@@ -180,3 +183,10 @@ Specify the log level. Control how much output you want to see during command ex
 Specify the path to the `flow.json` configuration file.
 You can use the `-f` flag multiple times to merge
 several configuration files.
+
+### Version Check
+
+- Flag: `--skip-version-check`
+- Default: `false`
+
+Skip version check during start up to speed up process for slow connections.

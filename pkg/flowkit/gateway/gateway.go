@@ -29,8 +29,8 @@ import (
 type Gateway interface {
 	GetAccount(flow.Address) (*flow.Account, error)
 	SendSignedTransaction(*flowkit.Transaction) (*flow.Transaction, error)
-	GetTransactionResult(*flow.Transaction, bool) (*flow.TransactionResult, error)
 	GetTransaction(flow.Identifier) (*flow.Transaction, error)
+	GetTransactionResult(flow.Identifier, bool) (*flow.TransactionResult, error)
 	ExecuteScript([]byte, []cadence.Value) (cadence.Value, error)
 	GetLatestBlock() (*flow.Block, error)
 	GetBlockByHeight(uint64) (*flow.Block, error)

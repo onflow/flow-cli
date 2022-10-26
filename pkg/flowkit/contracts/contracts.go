@@ -56,7 +56,7 @@ func newContract(
 	accountName string,
 	args []cadence.Value,
 ) (*Contract, error) {
-	program, err := parser.ParseProgram(contractCode, nil)
+	program, err := parser.ParseProgram([]byte(contractCode), nil)
 	if err != nil {
 		return nil, err
 	}

@@ -24,6 +24,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"runtime/debug"
 	"strings"
 	"time"
@@ -114,7 +115,10 @@ func (c Command) AddToParent(parent *cobra.Command) {
 		// initialize services
 		service := services.NewServices(clientGateway, state, logger)
 
-		checkVersion(logger)
+		// skip version check if flag is set
+		if !Flags.SkipVersionCheck {
+			checkVersion(logger)
+		}
 
 		// run command based on requirements for state
 		var result Result
@@ -302,7 +306,7 @@ func initCrashReporting() {
 		},
 	})
 	if err != nil {
-		fmt.Println(err) // safest output method at this point
+		fmt.Fprintln(os.Stderr, err) // safest output method at this point
 	}
 }
 

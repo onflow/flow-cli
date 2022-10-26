@@ -30,7 +30,7 @@ const (
 )
 
 func Exit(code int, msg string) {
-	fmt.Println(msg)
+	fmt.Fprintln(os.Stderr, msg)
 	os.Exit(code)
 }
 

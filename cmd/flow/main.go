@@ -38,6 +38,7 @@ import (
 	"github.com/onflow/flow-cli/internal/signatures"
 	"github.com/onflow/flow-cli/internal/snapshot"
 	"github.com/onflow/flow-cli/internal/status"
+	"github.com/onflow/flow-cli/internal/test"
 	"github.com/onflow/flow-cli/internal/tools"
 	"github.com/onflow/flow-cli/internal/transactions"
 	"github.com/onflow/flow-cli/internal/version"
@@ -58,6 +59,7 @@ func main() {
 	// single commands
 	status.Command.AddToParent(cmd)
 	tools.DevWallet.AddToParent(cmd)
+	test.TestCommand.AddToParent(cmd)
 
 	// structured commands
 	cmd.AddCommand(cadence.Cmd)

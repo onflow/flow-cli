@@ -80,3 +80,10 @@ Specify the format of the command results.
 - Valid inputs: a path in the current filesystem.
 
 Specify the filename where you want the result to be saved
+
+### Version Check
+
+- Flag: `--skip-version-check`
+- Default: `false`
+
+Skip version check during start up to speed up process for slow connections.

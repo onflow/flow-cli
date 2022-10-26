@@ -20,6 +20,7 @@ package command
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/psiemens/sconfig"
 	"github.com/spf13/cobra"
@@ -30,28 +31,30 @@ import (
 
 // GlobalFlags contains all global flags definitions.
 type GlobalFlags struct {
-	Filter         string
-	Format         string
-	Save           string
-	Host           string
-	HostNetworkKey string
-	Log            string
-	Network        string
-	Yes            bool
-	ConfigPaths    []string
+	Filter           string
+	Format           string
+	Save             string
+	Host             string
+	HostNetworkKey   string
+	Log              string
+	Network          string
+	Yes              bool
+	ConfigPaths      []string
+	SkipVersionCheck bool
 }
 
 // Flags initialized to default values.
 var Flags = GlobalFlags{
-	Filter:         "",
-	Format:         formatText,
-	Save:           "",
-	Host:           "",
-	HostNetworkKey: "",
-	Network:        config.DefaultEmulatorNetwork().Name,
-	Log:            logLevelInfo,
-	Yes:            false,
-	ConfigPaths:    config.DefaultPaths(),
+	Filter:           "",
+	Format:           formatText,
+	Save:             "",
+	Host:             "",
+	HostNetworkKey:   "",
+	Network:          config.DefaultEmulatorNetwork().Name,
+	Log:              logLevelInfo,
+	Yes:              false,
+	ConfigPaths:      config.DefaultPaths(),
+	SkipVersionCheck: false,
 }
 
 // InitFlags init all the global persistent flags.
@@ -127,6 +130,14 @@ func InitFlags(cmd *cobra.Command) {
 		Flags.Yes,
 		"Approve any prompts",
 	)
+
+	cmd.PersistentFlags().BoolVarP(
+		&Flags.SkipVersionCheck,
+		"skip-version-check",
+		"",
+		Flags.SkipVersionCheck,
+		"Skip version check during start up",
+	)
 }
 
 // bindFlags bind all the flags needed.
@@ -136,6 +147,6 @@ func bindFlags(command Command) {
 		BindFlags(command.Cmd.PersistentFlags()).
 		Parse()
 	if err != nil {
-		fmt.Println(err)
+		fmt.Fprintln(os.Stderr, err)
 	}
 }
