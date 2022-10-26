@@ -147,7 +147,7 @@ func TestResolver(t *testing.T) {
 		`))
 		assert.NoError(t, err)
 
-		contractName, err := resolver.GetSourceContractName()
+		contractName, err := resolver.Name()
 		assert.NoError(t, err)
 		assert.Equal(t, "HelloWorld", contractName)
 	})
@@ -158,7 +158,7 @@ func TestResolver(t *testing.T) {
 		`))
 		assert.NoError(t, err)
 
-		_, err = resolver.GetSourceContractName()
+		_, err = resolver.Name()
 		assert.ErrorContains(t, err, "the code must declare exactly one contract or contract interface")
 	})
 }
