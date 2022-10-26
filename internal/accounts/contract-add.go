@@ -21,8 +21,6 @@ package accounts
 import (
 	"fmt"
 
-	"github.com/onflow/flow-cli/pkg/flowkit/contracts"
-
 	"github.com/onflow/cadence"
 
 	"github.com/onflow/flow-cli/pkg/flowkit"
@@ -59,9 +57,7 @@ func addContract(
 	srv *services.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
-	name := ""
 	filename := ""
-
 	if len(args) == 1 {
 		filename = args[0]
 	} else {
@@ -71,20 +67,6 @@ func addContract(
 	code, err := readerWriter.ReadFile(filename)
 	if err != nil {
 		return nil, fmt.Errorf("error loading contract file: %w", err)
-	}
-
-	resolver, err := contracts.NewResolver(code)
-	if err != nil {
-		return nil, err
-	}
-
-	if len(args) == 1 {
-		name, err = resolver.GetSourceContractName()
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		name = args[0]
 	}
 
 	to, err := state.Accounts().ByName(addContractFlags.Signer)
@@ -106,7 +88,7 @@ func addContract(
 	account, err := srv.Accounts.AddContract(
 		to,
 		&services.Contract{
-			Name:     name,
+			Name:     "", // Name is parsed by the resolver
 			Source:   code,
 			Args:     contractArgs,
 			Filename: filename,
