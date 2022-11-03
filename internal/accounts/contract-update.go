@@ -21,6 +21,8 @@ package accounts
 import (
 	"fmt"
 
+	"github.com/onflow/flow-cli/pkg/flowkit/output"
+
 	"github.com/onflow/cadence"
 
 	"github.com/onflow/flow-cli/pkg/flowkit"
@@ -62,6 +64,8 @@ func updateContract(
 	if len(args) == 1 {
 		filename = args[0]
 	} else {
+		output.NewStdoutLogger(output.InfoLog).Info("\n⚠️Deprecation notice: using name argument in update contract " +
+			"command will be deprecated soon.")
 		filename = args[1]
 	}
 
