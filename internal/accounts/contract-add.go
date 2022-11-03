@@ -62,7 +62,7 @@ func addContract(
 	if len(args) == 1 {
 		filename = args[0]
 	} else {
-		output.NewStdoutLogger(output.InfoLog).Info("\n⚠️Deprecation notice: using name argument in add contract " +
+		output.NewStdoutLogger(output.InfoLog).Info("⚠️Deprecation notice: using name argument in add contract " +
 			"command will be deprecated soon.")
 		filename = args[1]
 	}
