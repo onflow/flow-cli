@@ -20,6 +20,7 @@ package accounts
 
 import (
 	"fmt"
+
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
 
 	"github.com/onflow/cadence"
