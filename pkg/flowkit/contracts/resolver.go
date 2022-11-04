@@ -121,3 +121,24 @@ func (r *Resolver) getFileImports() []string {
 
 	return imports
 }
+
+// Name returns the name of the provided contract program
+func (r *Resolver) Name() (string, error) {
+	if len(r.program.CompositeDeclarations())+len(r.program.InterfaceDeclarations()) != 1 {
+		return "", fmt.Errorf("the code must declare exactly one contract or contract interface")
+	}
+
+	for _, compositeDeclaration := range r.program.CompositeDeclarations() {
+		if compositeDeclaration.CompositeKind == common.CompositeKindContract {
+			return compositeDeclaration.Identifier.Identifier, nil
+		}
+	}
+
+	for _, interfaceDeclaration := range r.program.InterfaceDeclarations() {
+		if interfaceDeclaration.CompositeKind == common.CompositeKindContract {
+			return interfaceDeclaration.Identifier.Identifier, nil
+		}
+	}
+
+	return "", fmt.Errorf("unable to determine contract name")
+}
