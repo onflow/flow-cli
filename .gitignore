@@ -31,3 +31,6 @@ main
 test-a.private.json
 test-2.private.json
 testnet-alice.private.json
+
+# CLI config file
+flow-cli.config.yaml

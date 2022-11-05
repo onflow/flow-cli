@@ -306,7 +306,7 @@ func initCrashReporting() {
 		},
 	})
 	if err != nil {
-		fmt.Fprintln(os.Stderr, err) // safest output method at this point
+		_, _ = fmt.Fprintln(os.Stderr, err) // safest output method at this point
 	}
 }
 
@@ -314,11 +314,17 @@ func RecordCommandUsage(command *cobra.Command, loader flowkit.ReaderWriter) {
 	if util.MIXPANEL_PROJECT_TOKEN == "" {
 		return
 	}
-	metricsEnabled, err := util.CheckMetricsEnabled(loader)
-	if err != nil {
-		return
+
+	if !util.GetConfigFile().MetricsEnabled {
+		loaderMetrics, err := util.CheckMetricsEnabled(loader)
+		if err != nil {
+			return
+		}
+		fmt.Println("LOADER METRICS ENABLED: ", loaderMetrics)
+		util.GetConfigFile().MetricsEnabled = loaderMetrics
 	}
-	if metricsEnabled {
+
+	if util.GetConfigFile().MetricsEnabled {
 		_ = util.TrackCommandUsage(command)
 	}
 }
