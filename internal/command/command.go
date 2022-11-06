@@ -21,7 +21,6 @@ package command
 import (
 	"errors"
 	"fmt"
-	settings "github.com/onflow/flow-cli/internal/settings/globalSettings"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -29,6 +28,8 @@ import (
 	"runtime/debug"
 	"strings"
 	"time"
+
+	settings "github.com/onflow/flow-cli/internal/settings/globalSettings"
 
 	"github.com/onflow/flow-cli/build"
 	"github.com/onflow/flow-cli/pkg/flowkit"

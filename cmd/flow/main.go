@@ -20,9 +20,10 @@
 package main
 
 import (
+	"github.com/spf13/cobra"
+
 	"github.com/onflow/flow-cli/internal/settings"
 	"github.com/onflow/flow-cli/internal/settings/globalSettings"
-	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/accounts"
 	"github.com/onflow/flow-cli/internal/app"
