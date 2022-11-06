@@ -53,10 +53,10 @@ func TestKeys(t *testing.T) {
 		t.Parallel()
 
 		_, s, _ := setup()
-		key, err := s.Keys.DerivePrivateKeyFromMnemonic("isolate visa defy link gate ordinary notice desert punch zero please pistol", crypto.ECDSA_P256, "")
+		key, err := s.Keys.DerivePrivateKeyFromMnemonic("normal dune pole key case cradle unfold require tornado mercy hospital buyer", crypto.ECDSA_P256, "")
 
 		assert.NoError(t, err)
-		assert.Equal(t, key.String(), "0x04430b77d604b52815494a8e453e1ffa2483644c063a0b7a46eb5effb3dc7b0b")
+		assert.Equal(t, key.String(), "0x638dc9ad0eee91d09249f0fd7c5323a11600e20d5b9105b66b782a96236e74cf")
 	})
 
 	//https://github.com/onflow/ledger-app-flow/blob/dc61213a9c3d73152b78b7391d04165d07f1ad89/tests_speculos/test-basic-show-address-expert.js#L28

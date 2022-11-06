@@ -32,7 +32,7 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowkit/util"
 
 	goeth "github.com/ethereum/go-ethereum/accounts"
-	bip32 "github.com/tyler-smith/go-bip32"
+	slip10 "github.com/lmars/go-slip10"
 	bip39 "github.com/tyler-smith/go-bip39"
 )
 
@@ -84,7 +84,12 @@ func (k *Keys) DerivePrivateKeyFromMnemonic(mnemonic string, sigAlgo crypto.Sign
 	}
 
 	seed := bip39.NewSeed(mnemonic, "")
-	accountKey, err := bip32.NewMasterKey(seed)
+	curve := slip10.CurveBitcoin
+	if sigAlgo == crypto.ECDSA_P256 {
+		curve = slip10.CurveP256
+	}
+
+	accountKey, err := slip10.NewMasterKeyWithCurve(seed, curve)
 	if err != nil {
 		return nil, err
 	}
