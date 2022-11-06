@@ -32,11 +32,15 @@ func init() {
 	InitCommand.AddToParent(Cmd)
 	Cmd.AddCommand(AddCmd)
 	Cmd.AddCommand(RemoveCmd)
-	MetricsSettings.AddToParent(Cmd)
 }
 
 type Result struct {
 	result string
+}
+
+func (r *Result) SetResult(result string) *Result {
+	r.result = result
+	return r
 }
 
 func (r *Result) JSON() interface{} {

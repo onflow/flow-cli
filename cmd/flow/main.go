@@ -20,6 +20,8 @@
 package main
 
 import (
+	"github.com/onflow/flow-cli/internal/settings"
+	"github.com/onflow/flow-cli/internal/settings/globalSettings"
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/accounts"
@@ -46,6 +48,8 @@ import (
 )
 
 func main() {
+	globalSettings.GlobalSettings.Import()
+
 	var cmd = &cobra.Command{
 		Use:              "flow",
 		TraverseChildren: true,
@@ -62,6 +66,7 @@ func main() {
 	test.TestCommand.AddToParent(cmd)
 
 	// structured commands
+	cmd.AddCommand(settings.Cmd)
 	cmd.AddCommand(cadence.Cmd)
 	cmd.AddCommand(version.Cmd)
 	cmd.AddCommand(emulator.Cmd)
@@ -86,5 +91,5 @@ func main() {
 		util.Exit(1, err.Error())
 	}
 
-	util.ExportConfigFile()
+	globalSettings.GlobalSettings.Export()
 }

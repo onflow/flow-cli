@@ -21,6 +21,7 @@ package command
 import (
 	"errors"
 	"fmt"
+	settings "github.com/onflow/flow-cli/internal/settings/globalSettings"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -96,7 +97,7 @@ func (c Command) AddToParent(parent *cobra.Command) {
 		// initialize file loader used in commands
 		loader := &afero.Afero{Fs: afero.NewOsFs()}
 
-		RecordCommandUsage(c.Cmd, loader)
+		RecordCommandUsage(c.Cmd)
 
 		// if we receive a config error that isn't missing config we should handle it
 		state, confErr := flowkit.Load(Flags.ConfigPaths, loader)
@@ -146,7 +147,7 @@ func (c Command) AddToParent(parent *cobra.Command) {
 
 		// format output result
 		formattedResult, err := formatResult(result, Flags.Filter, Flags.Format)
-		handleError("Result", err)
+		handleError("result", err)
 
 		// output result
 		err = outputResult(formattedResult, Flags.Save, Flags.Format, Flags.Filter)
@@ -310,21 +311,10 @@ func initCrashReporting() {
 	}
 }
 
-func RecordCommandUsage(command *cobra.Command, loader flowkit.ReaderWriter) {
-	if util.MIXPANEL_PROJECT_TOKEN == "" {
+func RecordCommandUsage(command *cobra.Command) {
+	if !settings.GlobalSettings.MetricsEnabled || util.MIXPANEL_PROJECT_TOKEN == "" {
 		return
 	}
 
-	if !util.GetConfigFile().MetricsEnabled {
-		loaderMetrics, err := util.CheckMetricsEnabled(loader)
-		if err != nil {
-			return
-		}
-		fmt.Println("LOADER METRICS ENABLED: ", loaderMetrics)
-		util.GetConfigFile().MetricsEnabled = loaderMetrics
-	}
-
-	if util.GetConfigFile().MetricsEnabled {
-		_ = util.TrackCommandUsage(command)
-	}
+	_ = util.TrackCommandUsage(command)
 }
