@@ -54,6 +54,7 @@ func (cfg *flowCliSettings) GetFilePath() string {
 func (cfg *flowCliSettings) Import() {
 	if err := cfg.importFile(); err != nil {
 		fmt.Println("No " + cfg.GetFileName() + " file found. Using default settings.")
+		cfg.Export()
 	}
 }
 
