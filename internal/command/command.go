@@ -313,7 +313,7 @@ func initCrashReporting() {
 }
 
 func RecordCommandUsage(command *cobra.Command) {
-	if !settings.GlobalSettings.MetricsEnabled || util.MIXPANEL_PROJECT_TOKEN == "" {
+	if !settings.GetBool(settings.MetricsEnabled) || util.MIXPANEL_PROJECT_TOKEN == "" {
 		return
 	}
 

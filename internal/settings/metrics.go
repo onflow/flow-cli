@@ -42,9 +42,9 @@ func handleMetricsSettings(
 	args []string,
 ) error {
 	if args[0] == "enable" {
-		settings.GlobalSettings.MetricsEnabled = true
+		settings.Set(settings.MetricsEnabled, true)
 	} else if args[0] == "disable" {
-		settings.GlobalSettings.MetricsEnabled = false
+		settings.Set(settings.MetricsEnabled, false)
 	} else {
 		return errors.New("Invalid metrics argument '" + args[0] + "'")
 	}
@@ -52,7 +52,7 @@ func handleMetricsSettings(
 	fmt.Println(fmt.Sprintf(
 		"Command usage tracking is %sd. Setting were updated in %s \n",
 		args[0],
-		settings.GlobalSettings.GetFileName()))
+		settings.SettingsFile()))
 
 	return nil
 }
