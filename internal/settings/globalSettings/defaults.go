@@ -20,6 +20,7 @@ package globalSettings
 
 const MetricsEnabled = "MetricsEnabled"
 
+// defaults holds the default values for global settings
 var defaults = map[string]interface{}{
 	MetricsEnabled: true,
 }

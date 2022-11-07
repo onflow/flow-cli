@@ -33,10 +33,12 @@ func SettingsFile() string {
 	return settingsFile + "." + settingsType
 }
 
+// Init is called to initialize global settings
 func Init() {
 	_ = viperInit()
 }
 
+// Set updates settings file with new value for provided key
 func Set(key string, val interface{}) {
 	viper.Set(key, val)
 	if err := viper.WriteConfig(); err != nil {
@@ -60,6 +62,7 @@ func GetInt(key string) int {
 	return viper.GetInt(key)
 }
 
+// viperInit initializes global settings with viper and reads in the settings file
 func viperInit() error {
 	viper.SetConfigName(settingsFile)
 	viper.SetConfigType(settingsType)
