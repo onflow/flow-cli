@@ -19,8 +19,9 @@
 package settings
 
 import (
-	settings "github.com/onflow/flow-cli/internal/settings/globalSettings"
 	"github.com/spf13/cobra"
+
+	settings "github.com/onflow/flow-cli/internal/settings/globalSettings"
 )
 
 var Cmd = &cobra.Command{
