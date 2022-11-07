@@ -22,9 +22,6 @@ package main
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/onflow/flow-cli/internal/settings"
-	"github.com/onflow/flow-cli/internal/settings/globalSettings"
-
 	"github.com/onflow/flow-cli/internal/accounts"
 	"github.com/onflow/flow-cli/internal/app"
 	"github.com/onflow/flow-cli/internal/blocks"
@@ -38,6 +35,7 @@ import (
 	"github.com/onflow/flow-cli/internal/project"
 	"github.com/onflow/flow-cli/internal/quick"
 	"github.com/onflow/flow-cli/internal/scripts"
+	"github.com/onflow/flow-cli/internal/settings"
 	"github.com/onflow/flow-cli/internal/signatures"
 	"github.com/onflow/flow-cli/internal/snapshot"
 	"github.com/onflow/flow-cli/internal/status"
@@ -49,8 +47,6 @@ import (
 )
 
 func main() {
-	globalSettings.GlobalSettings.Import()
-
 	var cmd = &cobra.Command{
 		Use:              "flow",
 		TraverseChildren: true,
@@ -91,6 +87,4 @@ func main() {
 	if err := cmd.Execute(); err != nil {
 		util.Exit(1, err.Error())
 	}
-
-	globalSettings.GlobalSettings.Export()
 }

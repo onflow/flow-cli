@@ -19,15 +19,22 @@
 package settings
 
 import (
+	settings "github.com/onflow/flow-cli/internal/settings/globalSettings"
 	"github.com/spf13/cobra"
 )
 
 var Cmd = &cobra.Command{
-	Use:              "settings",
-	Short:            "Manage persisted global settings",
-	TraverseChildren: true,
+	Use:               "settings",
+	Short:             "Manage persisted global settings",
+	PersistentPostRun: handleSettingsChanged,
+	TraverseChildren:  true,
 }
 
 func init() {
+	settings.GlobalSettings.Import()
 	Cmd.AddCommand(MetricsSettings)
+}
+
+func handleSettingsChanged(_ *cobra.Command, _ []string) {
+	settings.GlobalSettings.Export()
 }
