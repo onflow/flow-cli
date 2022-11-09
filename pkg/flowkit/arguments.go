@@ -21,7 +21,6 @@ package flowkit
 import (
 	"encoding/json"
 	"fmt"
-	"strconv"
 	"strings"
 
 	"github.com/onflow/cadence"
@@ -64,49 +63,6 @@ func ParseArgumentsJSON(input string) ([]cadence.Value, error) {
 		cadenceArgs[i] = arg.Value
 	}
 	return cadenceArgs, nil
-}
-
-func ParseArgumentsCommaSplit(input []string) ([]cadence.Value, error) {
-	args := make([]map[string]interface{}, 0)
-
-	if len(input) == 0 {
-		return make([]cadence.Value, 0), nil
-	}
-
-	for _, in := range input {
-		argInput := strings.Split(in, ":")
-
-		if len(argInput) != 2 {
-			return nil, fmt.Errorf(
-				"argument not passed in correct format, correct format is: Type:Value, got %s",
-				in,
-			)
-		}
-
-		argType := argInput[0]
-		argValue := argInput[1]
-		args = append(args, map[string]interface{}{
-			"value": processValue(argType, argValue),
-			"type":  argType,
-		})
-	}
-
-	jsonArgs, _ := json.Marshal(args)
-	cadenceArgs, err := ParseArgumentsJSON(string(jsonArgs))
-
-	return cadenceArgs, err
-}
-
-// sanitizeAddressArg sanitize address and make sure it has 0x prefix
-func processValue(argType string, argValue string) interface{} {
-	if argType == "Address" && !strings.Contains(argValue, "0x") {
-		return fmt.Sprintf("0x%s", argValue)
-	} else if argType == "Bool" {
-		converted, _ := strconv.ParseBool(argValue)
-		return converted
-	}
-
-	return argValue
 }
 
 func ParseArgumentsWithoutType(fileName string, code []byte, args []string) (scriptArgs []cadence.Value, err error) {
