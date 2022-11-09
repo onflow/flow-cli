@@ -6,13 +6,18 @@ sidebar_title: Deploy a Contract
 Deploy a new contract to a Flow account using the Flow CLI.   
 
 ```shell
-flow accounts add-contract <name> <filename> [<argument> <argument>...] [flags]
+flow accounts add-contract <filename> [<argument> <argument>...] [flags]
 ````
+
+⚠️  Deprecation notice: using name argument in adding contract command will be deprecated soon.
+```shell
+flow accounts add-contract <name> <filename> [<argument> <argument>...] [flags]
+```
 
 ## Example Usage
 
 ```shell
-> flow accounts add-contract FungibleToken ./FungibleToken.cdc
+> flow accounts add-contract ./FungibleToken.cdc
 
 Contract 'FungibleToken' deployed to the account 0xf8d6e0586b0a20c7
 
@@ -33,7 +38,7 @@ Contract: 'FungibleToken'
 ```
 **Testnet Example**
 ```
-> flow accounts add-contract FungibleToken ./FungibleToken.cdc --signer alice --network testnet
+> flow accounts add-contract ./FungibleToken.cdc --signer alice --network testnet
 
 Contract 'FungibleToken' deployed to the account 0xf8d6e0586b0a20c7
 
@@ -63,6 +68,8 @@ Contract: 'FungibleToken'
 
 Name of the contract as it is defined in the contract source code.
 
+⚠️  Deprecation notice: use filename argument only, no need to use name argument.
+
 ### Filename
 
 - Name: `filename`
@@ -79,7 +86,7 @@ Input arguments values matching corresponding types in the source code and passe
 
 Example:
 ```shell
-> flow accounts add-contract HelloWorld ./contract.cdc Hello 2
+> flow accounts add-contract ./contract.cdc Hello 2
 ```
 Transaction code:
 ```
@@ -102,7 +109,7 @@ Specify the name of the account that will be used to sign the transaction.
 
 - Flag: `--args-json`
 - Valid inputs: arguments in JSON-Cadence form.
-- Example: `flow accounts add-contract HelloWorld ./tx.cdc '[{"type": "String", "value": "Hello"}]'`
+- Example: `flow accounts add-contract ./tx.cdc '[{"type": "String", "value": "Hello"}]'`
 
 Arguments passed to the Cadence transaction in Cadence JSON format.
 Cadence JSON format contains `type` and `value` keys and is
