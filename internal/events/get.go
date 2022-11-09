@@ -20,7 +20,6 @@ package events
 
 import (
 	"fmt"
-	"strconv"
 
 	"github.com/spf13/cobra"
 
@@ -72,47 +71,16 @@ func get(
 	end := eventsFlags.End
 	last := eventsFlags.Last
 
-	// backward compatibility check
-	if len(args) >= 2 {
-		startV25, err := strconv.ParseUint(args[1], 10, 64)
-		// only do backward compatibility if second argument is a number
-		// since we can actually provide multiple arguments with the new format.
-		if err == nil {
-			fmt.Println("\n⚠️  DEPRECATION WARNING: use the new command format, see the get event command for help")
-			start = startV25
-			end = startV25
-
-			if len(args) == 3 {
-				endV25 := args[2]
-				if endV25 == "latest" {
-					latest, err := services.Blocks.GetLatestBlockHeight()
-					if err != nil {
-						return nil, err
-					}
-
-					end = latest
-				} else {
-					end, err = strconv.ParseUint(endV25, 10, 64)
-					if err != nil {
-						return nil, fmt.Errorf("failed to parse end height of block range: %s", endV25)
-					}
-				}
-			}
-		}
-	}
-
 	// handle if not passing start and end
 	if start == 0 && end == 0 {
-		//cannot use := here as it will not overrwrite end in the outer scope if you do
 		end, err = services.Blocks.GetLatestBlockHeight()
 		if err != nil {
 			return nil, err
 		}
 
-		if last > end {
-			start = 0
-		} else {
-			start = end - last
+		start = end - last
+		if start < 0 {
+			return nil, fmt.Errorf("value for 'last' is bigger than the latest height")
 		}
 	} else if start == 0 || end == 0 {
 		return nil, fmt.Errorf("please provide either both start and end for range or only last flag")

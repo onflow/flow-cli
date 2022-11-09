@@ -46,18 +46,6 @@ Input arguments values matching corresponding types in the source code and passe
 
 ## Flags
 
-### Arguments
-
-- Flag: `--arg`
-- Valid inputs: argument in `Type:Value` format.
-
-Arguments passed to the Cadence script in `Type:Value` format. 
-The `Type` must be the same as type in the script source code for that argument.  
-
-For passing complex argument values see [send transaction](send-transactions.md#example-usage) document. 
-
-⚠️  Deprecated: use command arguments instead.
-
 ### Arguments JSON
 
 - Flag: `--args-json`
@@ -67,12 +55,6 @@ For passing complex argument values see [send transaction](send-transactions.md#
 Arguments passed to the Cadence script in the Cadence JSON format.
 Cadence JSON format contains `type` and `value` keys and is 
 [documented here](https://docs.onflow.org/cadence/json-cadence-spec/).
-
-### Code
-
-- Flag: `--code`
-
-⚠️  No longer supported: use filename argument.
 
 ### Host
 

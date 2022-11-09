@@ -120,16 +120,6 @@ Specify key index for the proposer account.
 Additional authorizer addresses to add to the transaction.
 Read more about authorizers [here](https://docs.onflow.org/concepts/accounts-and-keys/).
 
-### Arguments
-
-- Flag: `--arg`
-- Valid inputs: argument in `Type:Value` format.
-
-Arguments passed to the Cadence transaction in `Type:Value` format.
-The `Type` must be the same as type in the transaction source code for that argument.
-
-⚠️  Deprecated: use command arguments instead.
-
 ### Arguments JSON
 
 - Flag: `--args-json`

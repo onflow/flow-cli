@@ -78,12 +78,6 @@ The first argument is the ID (hash) of the transaction.
 
 Specify fields to include in the result output. Applies only to the text output.
 
-### Code
-
-- Flag: `--code`
-
-⚠️  Deprecated: use include flag.
-
 ### Wait for Seal
 
 - Flag: `--sealed`
