@@ -29,7 +29,7 @@ import (
 	"strings"
 	"time"
 
-	settings "github.com/onflow/flow-cli/internal/settings/globalSettings"
+	"github.com/onflow/flow-cli/internal/settings"
 
 	"github.com/onflow/flow-cli/build"
 	"github.com/onflow/flow-cli/pkg/flowkit"
@@ -148,7 +148,7 @@ func (c Command) AddToParent(parent *cobra.Command) {
 
 		// format output result
 		formattedResult, err := formatResult(result, Flags.Filter, Flags.Format)
-		handleError("result", err)
+		handleError("Result", err)
 
 		// output result
 		err = outputResult(formattedResult, Flags.Save, Flags.Format, Flags.Filter)

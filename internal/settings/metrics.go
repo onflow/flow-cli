@@ -19,20 +19,20 @@
 package settings
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/spf13/cobra"
-
-	settings "github.com/onflow/flow-cli/internal/settings/globalSettings"
 )
+
+const enable = "enable"
+const disable = "disable"
 
 var MetricsSettings = &cobra.Command{
 	Use:       "metrics",
 	Short:     "Configure command usage metrics settings",
-	Example:   "flow config metrics disable \nflow config metrics enable",
-	Args:      cobra.ExactArgs(1),
-	ValidArgs: []string{"enable", "disable"},
+	Example:   "flow settings metrics disable \nflow settings metrics enable",
+	Args:      cobra.MatchAll(cobra.ExactArgs(1), cobra.OnlyValidArgs),
+	ValidArgs: []string{enable, disable},
 	RunE:      handleMetricsSettings,
 }
 
@@ -41,18 +41,13 @@ func handleMetricsSettings(
 	_ *cobra.Command,
 	args []string,
 ) error {
-	if args[0] == "enable" {
-		settings.Set(settings.MetricsEnabled, true)
-	} else if args[0] == "disable" {
-		settings.Set(settings.MetricsEnabled, false)
-	} else {
-		return errors.New("Invalid metrics argument '" + args[0] + "'")
-	}
+	enabled := args[0] == enable
+	Set(MetricsEnabled, enabled)
 
 	fmt.Println(fmt.Sprintf(
 		"Command usage tracking is %sd. Setting were updated in %s \n",
 		args[0],
-		settings.SettingsFile()))
+		FileName()))
 
 	return nil
 }

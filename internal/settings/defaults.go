@@ -18,19 +18,9 @@
 
 package settings
 
-import (
-	"github.com/spf13/cobra"
+const MetricsEnabled = "MetricsEnabled"
 
-	settings "github.com/onflow/flow-cli/internal/settings/globalSettings"
-)
-
-var Cmd = &cobra.Command{
-	Use:              "settings",
-	Short:            "Manage persisted global settings",
-	TraverseChildren: true,
-}
-
-func init() {
-	settings.Init()
-	Cmd.AddCommand(MetricsSettings)
+// defaults holds the default values for global settings
+var defaults = map[string]interface{}{
+	MetricsEnabled: true,
 }

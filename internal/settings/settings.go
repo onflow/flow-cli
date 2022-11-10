@@ -16,25 +16,39 @@
  * limitations under the License.
  */
 
-package globalSettings
+package settings
 
 import (
+	"errors"
 	"fmt"
 	"os"
+	"path"
 
 	"github.com/spf13/viper"
 )
 
 const settingsFile = "flow-cli.settings"
-const settingsDir = "/FlowCLI"
+const settingsDir = "flow-cli"
 const settingsType = "yaml"
 
-func SettingsFile() string {
-	return settingsFile + "." + settingsType
+func FileName() string {
+	return fmt.Sprintf("%s.%s", settingsFile, settingsType)
+}
+
+func FileDir() string {
+	dir, err := os.UserConfigDir()
+	if err != nil {
+		dir = "."
+	}
+	return path.Join(dir, settingsDir)
 }
 
 // Init is called to initialize global settings
 func Init() {
+	if _, err := os.Stat(FileDir()); errors.Is(err, os.ErrNotExist) {
+		_ = os.Mkdir(FileDir(), os.ModePerm)
+	}
+
 	_ = viperInit()
 }
 
@@ -42,7 +56,7 @@ func Init() {
 func Set(key string, val interface{}) {
 	viper.Set(key, val)
 	if err := viper.WriteConfig(); err != nil {
-		fmt.Println("Failed to update " + SettingsFile())
+		fmt.Println("Failed to update " + FileName())
 	}
 }
 
@@ -66,15 +80,9 @@ func GetInt(key string) int {
 func viperInit() error {
 	viper.SetConfigName(settingsFile)
 	viper.SetConfigType(settingsType)
+	viper.AddConfigPath(FileDir())
 
-	// Set path to settings file
-	dir, err := os.UserConfigDir()
-	if err != nil {
-		return err
-	}
-	viper.AddConfigPath(dir + settingsDir)
-
-	err = viper.MergeConfigMap(defaults)
+	err := viper.MergeConfigMap(defaults)
 	if err != nil {
 		fmt.Println("Failed to set default settings: ", err.Error())
 	}

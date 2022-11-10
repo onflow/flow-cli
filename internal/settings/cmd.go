@@ -16,11 +16,19 @@
  * limitations under the License.
  */
 
-package globalSettings
+package settings
 
-const MetricsEnabled = "MetricsEnabled"
+import (
+	"github.com/spf13/cobra"
+)
 
-// defaults holds the default values for global settings
-var defaults = map[string]interface{}{
-	MetricsEnabled: true,
+var Cmd = &cobra.Command{
+	Use:              "settings",
+	Short:            "Manage persisted global settings",
+	TraverseChildren: true,
+}
+
+func init() {
+	Init()
+	Cmd.AddCommand(MetricsSettings)
 }
