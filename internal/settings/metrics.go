@@ -21,6 +21,8 @@ package settings
 import (
 	"fmt"
 
+	"github.com/pkg/errors"
+
 	"github.com/spf13/cobra"
 )
 
@@ -42,7 +44,9 @@ func handleMetricsSettings(
 	args []string,
 ) error {
 	enabled := args[0] == enable
-	Set(MetricsEnabled, enabled)
+	if err := Set(MetricsEnabled, enabled); err != nil {
+		return errors.Wrap(err, "failed to update metrics setting")
+	}
 
 	fmt.Println(fmt.Sprintf(
 		"Command usage tracking is %sd. Setting were updated in %s \n",

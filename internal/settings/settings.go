@@ -31,6 +31,15 @@ const settingsFile = "flow-cli.settings"
 const settingsDir = "flow-cli"
 const settingsType = "yaml"
 
+// viperLoaded only load settings file once
+var viperLoaded = false
+
+func init() {
+	viper.SetConfigName(settingsFile)
+	viper.SetConfigType(settingsType)
+	viper.AddConfigPath(FileDir())
+}
+
 func FileName() string {
 	return fmt.Sprintf("%s.%s", settingsFile, settingsType)
 }
@@ -43,54 +52,87 @@ func FileDir() string {
 	return path.Join(dir, settingsDir)
 }
 
-// Init is called to initialize global settings
-func Init() {
-	if _, err := os.Stat(FileDir()); errors.Is(err, os.ErrNotExist) {
-		_ = os.Mkdir(FileDir(), os.ModePerm)
+// Set updates settings file with new value for provided key
+func Set(key string, val interface{}) error {
+	if err := loadViper(); err != nil {
+		return err
 	}
 
-	_ = viperInit()
-}
-
-// Set updates settings file with new value for provided key
-func Set(key string, val interface{}) {
 	viper.Set(key, val)
 	if err := viper.WriteConfig(); err != nil {
-		fmt.Println("Failed to update " + FileName())
+		return err
 	}
+
+	return nil
 }
 
-func Get(key string) interface{} {
-	return viper.Get(key)
+func Get(key string) (interface{}, error) {
+	if err := loadViper(); err != nil {
+		return nil, err
+	}
+	return viper.Get(key), nil
 }
 
-func GetBool(key string) bool {
-	return viper.GetBool(key)
+func GetBool(key string) (bool, error) {
+	if err := loadViper(); err != nil {
+		return false, err
+	}
+	return viper.GetBool(key), nil
 }
 
-func GetString(key string) string {
-	return viper.GetString(key)
+func GetString(key string) (string, error) {
+	if err := loadViper(); err != nil {
+		return "", err
+	}
+	return viper.GetString(key), nil
 }
 
-func GetInt(key string) int {
-	return viper.GetInt(key)
+func GetInt(key string) (int, error) {
+	if err := loadViper(); err != nil {
+		return 0, err
+	}
+	return viper.GetInt(key), nil
 }
 
-// viperInit initializes global settings with viper and reads in the settings file
-func viperInit() error {
-	viper.SetConfigName(settingsFile)
-	viper.SetConfigType(settingsType)
-	viper.AddConfigPath(FileDir())
+// loadViper loads the global settings file
+func loadViper() error {
+	if viperLoaded {
+		return nil
+	}
+	viperLoaded = true
+
+	if err := createSettingsDir(); err != nil {
+		return err
+	}
 
 	err := viper.MergeConfigMap(defaults)
 	if err != nil {
-		fmt.Println("Failed to set default settings: ", err.Error())
+		return err
 	}
 
+	// Load settings file
 	if err := viper.ReadInConfig(); err != nil {
-		fmt.Println("No " + settingsFile + " found. Using default settings")
-		_ = viper.SafeWriteConfig()
+		switch err.(type) {
+		case viper.ConfigFileNotFoundError:
+			// Create settings file for the first time
+			if err = viper.SafeWriteConfig(); err != nil {
+				return err
+			}
+		default:
+			return err
+		}
 	}
 
+	return nil
+}
+
+// createSettingsDir creates settings dir if it doesn't exist
+func createSettingsDir() error {
+	if _, err := os.Stat(FileDir()); errors.Is(err, os.ErrNotExist) {
+		err = os.Mkdir(FileDir(), os.ModePerm)
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }

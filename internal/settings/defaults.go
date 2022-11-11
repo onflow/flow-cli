@@ -18,7 +18,9 @@
 
 package settings
 
-const MetricsEnabled = "MetricsEnabled"
+const (
+	MetricsEnabled = "MetricsEnabled"
+)
 
 // defaults holds the default values for global settings
 var defaults = map[string]interface{}{

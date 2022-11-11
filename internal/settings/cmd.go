@@ -29,6 +29,5 @@ var Cmd = &cobra.Command{
 }
 
 func init() {
-	Init()
 	Cmd.AddCommand(MetricsSettings)
 }
