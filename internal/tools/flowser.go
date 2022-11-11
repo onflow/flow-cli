@@ -19,15 +19,18 @@
 package tools
 
 import (
+	"fmt"
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/pkg/flowkit"
+	"github.com/onflow/flow-cli/pkg/flowkit/output"
 	"github.com/onflow/flow-cli/pkg/flowkit/services"
+	"github.com/onflowser/flowser/pkg/flowser"
+	"os"
 
 	"github.com/spf13/cobra"
 )
 
-type FlagsFlowser struct {
-}
+type FlagsFlowser struct{}
 
 var flowserFlags = FlagsWallet{}
 
@@ -48,6 +51,44 @@ func runFlowser(
 	_ command.GlobalFlags,
 	_ *services.Services,
 	state *flowkit.State,
-) {
+) (command.Result, error) {
+	flowser := flowser.New()
 
+	// todo here we actually have to also check if non-default path was written in configuration
+	defaultPath, err := getDefaultInstallDir()
+	if err != nil {
+		return nil, err
+	}
+
+	if !flowser.Installed(defaultPath) {
+		fmt.Println("It looks like Flowser is not yet installed on your system.")
+		if !output.InstallPrompt() {
+			return nil, nil
+		}
+
+		installPath := output.InstallPathPrompt(defaultPath)
+
+		logger := output.NewStdoutLogger(output.InfoLog)
+		logger.StartProgress("Installing Flowser, please wait")
+
+		err := flowser.Install(installPath)
+		if err != nil {
+			logger.StopProgress()
+			return nil, fmt.Errorf("could not install Flowser: %w", err)
+		}
+
+		logger.StopProgress()
+	}
+
+	projectPath, err := os.Getwd()
+	if err != nil {
+		return nil, err
+	}
+
+	err = flowser.Run(defaultPath, projectPath)
+	if err != nil {
+		return nil, err
+	}
+
+	return nil, nil
 }

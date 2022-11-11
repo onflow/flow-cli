@@ -129,7 +129,7 @@ require (
 	github.com/onflow/fusd/lib/go/contracts v0.0.0-20211021081023-ae9de8fb2c7e // indirect
 	github.com/onflow/nft-storefront/lib/go/contracts v0.0.0-20220714155620-011db20fe754 // indirect
 	github.com/onflow/sdks v0.4.4 // indirect
-	github.com/onflowser/flowser v2.0.3-beta.0.20221111143608-df822b5b14a3+incompatible // indirect
+	github.com/onflowser/flowser v2.0.3-beta.0.20221111160349-64157fd2dd67+incompatible // indirect
 	github.com/opentracing/opentracing-go v1.2.0 // indirect
 	github.com/pelletier/go-toml v1.9.5 // indirect
 	github.com/pelletier/go-toml/v2 v2.0.2 // indirect

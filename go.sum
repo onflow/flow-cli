@@ -712,6 +712,12 @@ github.com/onflowser/flowser v2.0.3-beta.0.20221111134556-ac0de9cfd29d+incompati
 github.com/onflowser/flowser v2.0.3-beta.0.20221111134556-ac0de9cfd29d+incompatible/go.mod h1:STRNiMaL+okmsNCBuNUdVuFQ81pTGaKY0iuyLK/k0UU=
 github.com/onflowser/flowser v2.0.3-beta.0.20221111143608-df822b5b14a3+incompatible h1:28DfxzE9wWxyUsgQ1Q8cOqXqce3xJr5Rcm4OgZJbrmY=
 github.com/onflowser/flowser v2.0.3-beta.0.20221111143608-df822b5b14a3+incompatible/go.mod h1:STRNiMaL+okmsNCBuNUdVuFQ81pTGaKY0iuyLK/k0UU=
+github.com/onflowser/flowser v2.0.3-beta.0.20221111144037-7fa911bf7ddd+incompatible h1:DmPd1UYFQ8JOQVuPCeRKh2vsfyGgYySttGNPSXxKp6c=
+github.com/onflowser/flowser v2.0.3-beta.0.20221111144037-7fa911bf7ddd+incompatible/go.mod h1:STRNiMaL+okmsNCBuNUdVuFQ81pTGaKY0iuyLK/k0UU=
+github.com/onflowser/flowser v2.0.3-beta.0.20221111145658-3a40496e11c6+incompatible h1:YZAbdgPGVJxpLueupMtLPiEJqNmV3DEE2Ceg4VsNji8=
+github.com/onflowser/flowser v2.0.3-beta.0.20221111145658-3a40496e11c6+incompatible/go.mod h1:STRNiMaL+okmsNCBuNUdVuFQ81pTGaKY0iuyLK/k0UU=
+github.com/onflowser/flowser v2.0.3-beta.0.20221111160349-64157fd2dd67+incompatible h1:GMIc2MWhsjXD+sVlP90CVJtBpSaLvFZO7UsaviTaJ0Q=
+github.com/onflowser/flowser v2.0.3-beta.0.20221111160349-64157fd2dd67+incompatible/go.mod h1:STRNiMaL+okmsNCBuNUdVuFQ81pTGaKY0iuyLK/k0UU=
 github.com/onsi/ginkgo v1.6.0/go.mod h1:lLunBs/Ym6LB5Z9jYTR76FiuTmxDTDusOGeTQH+WWjE=
 github.com/onsi/ginkgo v1.7.0/go.mod h1:lLunBs/Ym6LB5Z9jYTR76FiuTmxDTDusOGeTQH+WWjE=
 github.com/onsi/gomega v1.4.3/go.mod h1:ex+gbHU/CVuBBDIJjb2X0qEXbFg53c61hWP/1CpauHY=
