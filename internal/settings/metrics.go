@@ -45,11 +45,11 @@ func handleMetricsSettings(
 ) error {
 	enabled := args[0] == enable
 	if err := Set(MetricsEnabled, enabled); err != nil {
-		return errors.Wrap(err, "failed to update metrics setting")
+		return errors.Wrap(err, "failed to update metrics settings")
 	}
 
 	fmt.Println(fmt.Sprintf(
-		"Command usage tracking is %sd. Setting were updated in %s \n",
+		"Command usage tracking is %sd. Settings were updated in %s \n",
 		args[0],
 		FileName()))
 
