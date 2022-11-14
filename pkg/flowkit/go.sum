@@ -621,8 +621,6 @@ github.com/onflow/atree v0.4.0/go.mod h1:7Qe1xaW0YewvouLXrugzMFUYXNoRQ8MT/UsVAWx
 github.com/onflow/cadence v0.15.0/go.mod h1:KMzDF6cIv6nb5PJW9aITaqazbmJX8MMeibFcpPP385M=
 github.com/onflow/cadence v0.28.0 h1:18A1V9xqGewibEhuzqBNEoNvqG6OwVqHg7gKu3UliaM=
 github.com/onflow/cadence v0.28.0/go.mod h1:h+SbY8RNl6Q6sT6l/2cvpUZUJNCbzJya+3Bkwe/0YwY=
-github.com/onflow/cadence-tools/test v0.2.0 h1:boHRwIVzA63oLothqQH+0y/DN7vsVqtq6zY92SCiL18=
-github.com/onflow/cadence-tools/test v0.2.0/go.mod h1:Gql0ehC9dQ61Ukbm9TXfTM0EZ1UNuYfIsuGrysZfRSE=
 github.com/onflow/cadence-tools/test v0.2.1-0.20221012182900-f46efb551c55 h1:l/JqX4qnukAf2rCfZ0afPvK13eNPeL6gbv2GAweuVuE=
 github.com/onflow/cadence-tools/test v0.2.1-0.20221012182900-f46efb551c55/go.mod h1:Gql0ehC9dQ61Ukbm9TXfTM0EZ1UNuYfIsuGrysZfRSE=
 github.com/onflow/flow-core-contracts/lib/go/contracts v0.11.2-0.20220720151516-797b149ceaaa h1:hcEp3INfkLh9jFODC9PHPQeisAd9rterujabee9il8w=
@@ -666,6 +664,8 @@ github.com/pelletier/go-toml/v2 v2.0.2 h1:+jQXlF3scKIcSEKkdHzXhCTDLPFi5r1wnK6yPS
 github.com/pelletier/go-toml/v2 v2.0.2/go.mod h1:MovirKjgVRESsAvNZlAjtFwV867yGuwRkXbG66OzopI=
 github.com/peterh/liner v1.1.1-0.20190123174540-a2c9a5303de7/go.mod h1:CRroGNssyjTd/qIG2FyxByd2S8JEAZXBl4qUrZf8GS0=
 github.com/pierrec/lz4 v2.6.1+incompatible h1:9UY3+iC23yxF0UfGaYrGplQ+79Rg+h/q9FV9ix19jjM=
+github.com/pingcap/errors v0.11.4 h1:lFuQV/oaUMGcD2tqt+01ROSmJs75VG1ToEOkZIZ4nE4=
+github.com/pingcap/errors v0.11.4/go.mod h1:Oi8TUi2kEtXXLMJk9l1cGmz20kV3TaQ0usTwv5KuLY8=
 github.com/pkg/diff v0.0.0-20210226163009-20ebb0f2a09e/go.mod h1:pJLUxLENpZxwdsKMEsNbx1VGcRFpLqf3715MtcvvzbA=
 github.com/pkg/errors v0.8.0/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
 github.com/pkg/errors v0.8.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
