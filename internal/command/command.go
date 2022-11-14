@@ -29,6 +29,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/onflow/flow-cli/internal/settings"
+
 	"github.com/onflow/flow-cli/build"
 	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
@@ -96,7 +98,7 @@ func (c Command) AddToParent(parent *cobra.Command) {
 		// initialize file loader used in commands
 		loader := &afero.Afero{Fs: afero.NewOsFs()}
 
-		RecordCommandUsage(c.Cmd, loader)
+		RecordCommandUsage(c.Cmd)
 
 		// if we receive a config error that isn't missing config we should handle it
 		state, confErr := flowkit.Load(Flags.ConfigPaths, loader)
@@ -306,19 +308,19 @@ func initCrashReporting() {
 		},
 	})
 	if err != nil {
-		fmt.Fprintln(os.Stderr, err) // safest output method at this point
+		_, _ = fmt.Fprintln(os.Stderr, err) // safest output method at this point
 	}
 }
 
-func RecordCommandUsage(command *cobra.Command, loader flowkit.ReaderWriter) {
-	if util.MIXPANEL_PROJECT_TOKEN == "" {
-		return
-	}
-	metricsEnabled, err := util.CheckMetricsEnabled(loader)
+func RecordCommandUsage(command *cobra.Command) {
+	metricsEnabled, err := settings.GetBool(settings.MetricsEnabled)
 	if err != nil {
 		return
 	}
-	if metricsEnabled {
-		_ = util.TrackCommandUsage(command)
+
+	if !metricsEnabled || util.MIXPANEL_PROJECT_TOKEN == "" {
+		return
 	}
+
+	_ = util.TrackCommandUsage(command)
 }
