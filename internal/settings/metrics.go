@@ -44,7 +44,7 @@ func handleMetricsSettings(
 	args []string,
 ) error {
 	enabled := args[0] == enable
-	if err := Set(MetricsEnabled, enabled); err != nil {
+	if err := Set(metricsEnabled, enabled); err != nil {
 		return errors.Wrap(err, "failed to update metrics settings")
 	}
 

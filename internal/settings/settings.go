@@ -136,3 +136,19 @@ func createSettingsDir() error {
 	}
 	return nil
 }
+
+// GetFlowserPath gets set Flowser install path with sensible default.
+func GetFlowserPath() (string, error) {
+	if err := loadViper(); err != nil {
+		return "", err
+	}
+	return viper.GetString(flowserPath), nil
+}
+
+// MetricsEnabled checks whether metric tracking is enabled.
+func MetricsEnabled() (bool, error) {
+	if err := loadViper(); err != nil {
+		return true, err
+	}
+	return viper.GetBool(metricsEnabled), nil
+}

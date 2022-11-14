@@ -15,8 +15,8 @@ const (
 	windows = "windows"
 )
 
-// getDefaultInstallDir returns default installation directory based on the OS.
-func getDefaultInstallDir() (string, error) {
+// GetDefaultInstallDir returns default installation directory based on the OS.
+func GetDefaultInstallDir() (string, error) {
 	switch runtime.GOOS {
 	case darwin:
 		return "/Applications", nil

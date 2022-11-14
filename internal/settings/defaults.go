@@ -18,11 +18,15 @@
 
 package settings
 
+import "github.com/onflow/flow-cli/internal/tools"
+
 const (
-	MetricsEnabled = "MetricsEnabled"
+	metricsEnabled = "MetricsEnabled"
+	flowserPath    = "FlowserPath"
 )
 
 // defaults holds the default values for global settings
 var defaults = map[string]interface{}{
-	MetricsEnabled: true,
+	metricsEnabled: true,
+	flowserPath:    tools.GetDefaultInstallDir(),
 }

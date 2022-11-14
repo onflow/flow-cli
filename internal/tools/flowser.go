@@ -21,6 +21,7 @@ package tools
 import (
 	"fmt"
 	"github.com/onflow/flow-cli/internal/command"
+	"github.com/onflow/flow-cli/internal/settings"
 	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
 	"github.com/onflow/flow-cli/pkg/flowkit/services"
@@ -30,6 +31,8 @@ import (
 
 	"github.com/spf13/cobra"
 )
+
+const flowserPath = "flowserPath"
 
 type FlagsFlowser struct{}
 
@@ -55,14 +58,13 @@ func runFlowser(
 ) (command.Result, error) {
 	flowser := flowser.New()
 
-	// todo here we actually have to also check if non-default path was written in configuration
-	defaultPath, err := getDefaultInstallDir()
+	installPath, err := settings.GetString(flowserPath)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failure reading setting: %w", err)
 	}
 
-	if !flowser.Installed(defaultPath) {
-		err := installFlowser(flowser, defaultPath)
+	if !flowser.Installed(installPath) {
+		err := installFlowser(flowser, installPath)
 		if err != nil {
 			return nil, err
 		}
@@ -81,7 +83,7 @@ func runFlowser(
 
 	fmt.Printf("%s Starting up Flowser, please wait...\n", output.SuccessEmoji())
 
-	err = flowser.Run(defaultPath, projectPath)
+	err = flowser.Run(installPath, projectPath)
 	if err != nil {
 		return nil, err
 	}
@@ -98,6 +100,7 @@ func installFlowser(flowser *flowser.App, installPath string) error {
 	// we only allow custom paths on Windows since on MacOS apps needs to be installed inside Application folder
 	if runtime.GOOS == windows {
 		installPath = output.InstallPathPrompt(installPath)
+		_ = settings.Set(flowserPath, installPath)
 	}
 
 	logger := output.NewStdoutLogger(output.InfoLog)
