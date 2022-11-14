@@ -18,7 +18,11 @@
 
 package settings
 
-import "github.com/onflow/flow-cli/internal/tools"
+import (
+	"os/user"
+	"path"
+	"runtime"
+)
 
 const (
 	metricsEnabled = "MetricsEnabled"
@@ -28,5 +32,25 @@ const (
 // defaults holds the default values for global settings
 var defaults = map[string]interface{}{
 	metricsEnabled: true,
-	flowserPath:    tools.GetDefaultInstallDir(),
+	flowserPath:    getDefaultInstallDir(),
+}
+
+const (
+	Darwin  = "darwin"
+	Windows = "windows"
+)
+
+// getDefaultInstallDir returns default installation directory based on the OS.
+func getDefaultInstallDir() string {
+	switch runtime.GOOS {
+	case Darwin:
+		return "/Applications"
+	case Windows:
+		// TODO: Search in common install directories
+		// https://superuser.com/questions/1327037/what-choices-do-i-have-about-where-to-install-software-on-windows-10
+		user, _ := user.Current() // safe to ignore cache errors
+		return path.Join(user.HomeDir, "AppData", "Local")
+	default:
+		return ""
+	}
 }
