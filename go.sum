@@ -644,8 +644,8 @@ github.com/onflow/flow-emulator v0.39.0-stable-cadence-3 h1:K157ln0RxiDpu1kwELbF
 github.com/onflow/flow-emulator v0.39.0-stable-cadence-3/go.mod h1:szEFc1dGWtVZYyHLwfVNKlF/704EJ7AtiK0YVT/xvzE=
 github.com/onflow/flow-ft/lib/go/contracts v0.5.0 h1:Cg4gHGVblxcejfNNG5Mfj98Wf4zbY76O0Y28QB0766A=
 github.com/onflow/flow-ft/lib/go/contracts v0.5.0/go.mod h1:1zoTjp1KzNnOPkyqKmWKerUyf0gciw+e6tAEt0Ks3JE=
-github.com/onflow/flow-go v0.28.1-0.20221108003644-e3042307b5e9 h1:iuoRrun+iIEHFGeuk6ybaeBmnf43PV+RVXZEn0KDfp8=
-github.com/onflow/flow-go v0.28.1-0.20221108003644-e3042307b5e9/go.mod h1:Rbvnwqt8g0XCjb9t9ZagRWqGd5BVSmNgmmzjQ9tntX0=
+github.com/onflow/flow-go v0.29.0-stable-cadence-3 h1:YSbe+baB2xxGhuS/3rW4RGIuYE0I2AxzJ0TYXpWjYVE=
+github.com/onflow/flow-go v0.29.0-stable-cadence-3/go.mod h1:Rbvnwqt8g0XCjb9t9ZagRWqGd5BVSmNgmmzjQ9tntX0=
 github.com/onflow/flow-go-sdk v0.24.0/go.mod h1:IoptMLPyFXWvyd9yYA6/4EmSeeozl6nJoIv4FaEMg74=
 github.com/onflow/flow-go-sdk v0.29.1-0.20221108002506-202a45f4bc82 h1:ZI5/EIraa7tzmi0JTkACKn8Ikmfjo5ijkW8WzDb366k=
 github.com/onflow/flow-go-sdk v0.29.1-0.20221108002506-202a45f4bc82/go.mod h1:9JVgT6EacYXsJ5ZsvQhjXcXMSjoKg0SSFoH2nNqxR/A=
