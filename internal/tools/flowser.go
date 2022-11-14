@@ -73,6 +73,12 @@ func runFlowser(
 		return nil, err
 	}
 
+	// check if current directory is existing flow project if not then don't pass project path to Flowser, so user can choose a project
+	_, err = state.ReadFile("foo")
+	if os.IsNotExist(err) {
+		projectPath = ""
+	}
+
 	fmt.Printf("%s Starting up Flowser, please wait...\n", output.SuccessEmoji())
 
 	err = flowser.Run(defaultPath, projectPath)
