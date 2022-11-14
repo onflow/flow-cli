@@ -601,7 +601,8 @@ func WantToUseMainnetVersionPrompt() bool {
 
 func InstallPrompt() bool {
 	prompt := promptui.Prompt{
-		Label:       "Do you want to install it",
+		Label:       "Do you wish to install it",
+		Default:     "Y",
 		IsConfirm:   true,
 		HideEntered: true,
 	}
@@ -610,7 +611,7 @@ func InstallPrompt() bool {
 		os.Exit(-1)
 	}
 
-	return strings.ToLower(selected) == "y"
+	return strings.ToLower(selected) == "y" || selected == ""
 }
 
 func InstallPathPrompt(defaultPath string) string {

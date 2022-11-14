@@ -73,6 +73,8 @@ func runFlowser(
 		return nil, err
 	}
 
+	fmt.Printf("%s Starting up Flowser, please wait...\n", output.SuccessEmoji())
+
 	err = flowser.Run(defaultPath, projectPath)
 	if err != nil {
 		return nil, err
@@ -93,7 +95,7 @@ func installFlowser(flowser *flowser.App, installPath string) error {
 	}
 
 	logger := output.NewStdoutLogger(output.InfoLog)
-	logger.StartProgress("Installing Flowser, please wait")
+	logger.StartProgress(fmt.Sprintf("Installing Flowser, this may take few minutes, please wait %s", output.TryEmoji()))
 	defer logger.StopProgress()
 
 	err := flowser.Install(installPath)
