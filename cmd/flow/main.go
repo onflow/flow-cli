@@ -59,6 +59,7 @@ func main() {
 	// single commands
 	status.Command.AddToParent(cmd)
 	tools.DevWallet.AddToParent(cmd)
+	tools.Flowser.AddToParent(cmd)
 	test.TestCommand.AddToParent(cmd)
 
 	// structured commands
