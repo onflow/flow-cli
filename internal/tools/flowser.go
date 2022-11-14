@@ -26,6 +26,7 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowkit/services"
 	"github.com/onflowser/flowser/pkg/flowser"
 	"os"
+	"runtime"
 
 	"github.com/spf13/cobra"
 )
@@ -61,23 +62,10 @@ func runFlowser(
 	}
 
 	if !flowser.Installed(defaultPath) {
-		fmt.Println("It looks like Flowser is not yet installed on your system.")
-		if !output.InstallPrompt() {
-			return nil, nil
-		}
-
-		installPath := output.InstallPathPrompt(defaultPath)
-
-		logger := output.NewStdoutLogger(output.InfoLog)
-		logger.StartProgress("Installing Flowser, please wait")
-
-		err := flowser.Install(installPath)
+		err := installFlowser(flowser, defaultPath)
 		if err != nil {
-			logger.StopProgress()
-			return nil, fmt.Errorf("could not install Flowser: %w", err)
+			return nil, err
 		}
-
-		logger.StopProgress()
 	}
 
 	projectPath, err := os.Getwd()
@@ -91,4 +79,27 @@ func runFlowser(
 	}
 
 	return nil, nil
+}
+
+func installFlowser(flowser *flowser.App, installPath string) error {
+	fmt.Println("It looks like Flowser is not yet installed on your system.")
+	if !output.InstallPrompt() {
+		return fmt.Errorf("user denied install")
+	}
+
+	// we only allow custom paths on Windows since on MacOS apps needs to be installed inside Application folder
+	if runtime.GOOS == windows {
+		installPath = output.InstallPathPrompt(installPath)
+	}
+
+	logger := output.NewStdoutLogger(output.InfoLog)
+	logger.StartProgress("Installing Flowser, please wait")
+	defer logger.StopProgress()
+
+	err := flowser.Install(installPath)
+	if err != nil {
+		return fmt.Errorf("could not install Flowser: %w", err)
+	}
+
+	return nil
 }
