@@ -24,6 +24,7 @@ import (
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/internal/settings"
 	"github.com/onflow/flow-cli/pkg/flowkit"
+	"github.com/onflow/flow-cli/pkg/flowkit/config"
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
 	"github.com/onflow/flow-cli/pkg/flowkit/services"
 	"github.com/onflowser/flowser/pkg/flowser"
@@ -82,7 +83,7 @@ func runFlowser(
 	}
 
 	// check if current directory is existing flow project if not then don't pass project path to Flowser, so user can choose a project
-	_, err = state.ReadFile("foo")
+	_, err = state.ReadFile(config.DefaultPath)
 	if os.IsNotExist(err) {
 		projectPath = ""
 	}
