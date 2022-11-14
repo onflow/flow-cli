@@ -204,5 +204,3 @@ require (
 )
 
 replace github.com/onflow/flow-cli/pkg/flowkit => ./pkg/flowkit
-
-replace github.com/onflowser/flowser => /Users/dapper/Dev/flowser
