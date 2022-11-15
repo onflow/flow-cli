@@ -303,7 +303,11 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 		noDiffInContract := bytes.Equal([]byte(contract.TranspiledCode()), existingContract)
 
 		if !update && exists {
-			deployErr.add(contract, err, "already deployed to this account")
+			deployErr.add(
+				contract,
+				fmt.Errorf("contract %s exists in account %s", contract.Name(), contract.AccountName()),
+				"already deployed to this account",
+			)
 			continue
 		}
 		if exists {
@@ -376,12 +380,6 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 	}
 
 	if len(deployErr.contracts) > 0 {
-		p.logger.Info(fmt.Sprintf(
-			"\n%s Failed to deploy all contracts: %s",
-			output.ErrorEmoji(),
-			deployErr.Error(),
-		))
-
 		return nil, deployErr
 	}
 
