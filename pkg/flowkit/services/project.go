@@ -275,7 +275,7 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 		return nil, err
 	}
 
-	deployErr := &DeployErr{}
+	deployErr := &ErrProjectDeploy{}
 	for _, contract := range orderedContracts {
 		targetAccount, err := p.state.Accounts().ByName(contract.AccountName())
 		if err != nil {
@@ -389,22 +389,22 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 	return orderedContracts, nil
 }
 
-type DeployErr struct {
+type ErrProjectDeploy struct {
 	contracts map[string]error
 }
 
-func (d *DeployErr) add(contract *contracts.Contract, err error, msg string) {
+func (d *ErrProjectDeploy) add(contract *contracts.Contract, err error, msg string) {
 	if d.contracts == nil {
 		d.contracts = make(map[string]error)
 	}
 	d.contracts[contract.Name()] = fmt.Errorf("%s: %w", msg, err)
 }
 
-func (d *DeployErr) Contracts() map[string]error {
+func (d *ErrProjectDeploy) Contracts() map[string]error {
 	return d.contracts
 }
 
-func (d *DeployErr) Error() string {
+func (d *ErrProjectDeploy) Error() string {
 	err := ""
 	for c, e := range d.contracts {
 		err = fmt.Sprintf("%s %s: %s,", err, c, e.Error())
