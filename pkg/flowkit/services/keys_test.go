@@ -22,6 +22,9 @@ import (
 	"encoding/hex"
 	"testing"
 
+	goeth "github.com/ethereum/go-ethereum/accounts"
+	slip10 "github.com/lmars/go-slip10"
+
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/stretchr/testify/assert"
 )
@@ -47,6 +50,36 @@ func TestKeys(t *testing.T) {
 
 		assert.NoError(t, err)
 		assert.Equal(t, key.String(), "0x134f702d0872dba9c7aea15498aab9b2ffedd5aeebfd8ac3cf47c591f0d7ce52")
+	})
+
+	t.Run("Test Slip10 - P256", func(t *testing.T) {
+		t.Parallel()
+
+		curve := slip10.CurveP256
+		sigAlgo := crypto.ECDSA_P256
+		seed := []byte{0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8, 0x9, 0xa, 0xb, 0xc, 0xd, 0x0e, 0x0f}
+		path, _ := goeth.ParseDerivationPath("m/0'/1/2'/2/1000000000")
+
+		accountKey, _ := slip10.NewMasterKeyWithCurve(seed, curve)
+		// https://github.com/satoshilabs/slips/blob/master/slip-0010.md#test-vector-1-for-nist256p1
+		privateKey, _ := crypto.DecodePrivateKey(sigAlgo, accountKey.Key)
+
+		assert.Equal(t, privateKey.String(), "0x612091aaa12e22dd2abef664f8a01a82cae99ad7441b7ef8110424915c268bc2")
+
+		expectedPrivateKeys := []string{
+			"0x6939694369114c67917a182c59ddb8cafc3004e63ca5d3b84403ba8613debc0c",
+			"0x284e9d38d07d21e4e281b645089a94f4cf5a5a81369acf151a1c3a57f18b2129",
+			"0x694596e8a54f252c960eb771a3c41e7e32496d03b954aeb90f61635b8e092aa7",
+			"0x5996c37fd3dd2679039b23ed6f70b506c6b56b3cb5e424681fb0fa64caf82aaa",
+			"0x21c4f269ef0a5fd1badf47eeacebeeaa3de22eb8e5b0adcd0f27dd99d34d0119",
+		}
+		for i, n := range path {
+			accountKey, _ = accountKey.NewChildKey(n)
+			privateKey, _ := crypto.DecodePrivateKey(sigAlgo, accountKey.Key)
+
+			assert.Equal(t, privateKey.String(), expectedPrivateKeys[i])
+
+		}
 	})
 
 	t.Run("Generate Keys with mnemonic (default path)", func(t *testing.T) {
