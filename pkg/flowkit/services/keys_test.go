@@ -82,6 +82,36 @@ func TestKeys(t *testing.T) {
 		}
 	})
 
+	t.Run("Test Slip10 - secp256k1", func(t *testing.T) {
+		t.Parallel()
+
+		curve := slip10.CurveBitcoin
+		sigAlgo := crypto.ECDSA_secp256k1
+		seed := []byte{0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8, 0x9, 0xa, 0xb, 0xc, 0xd, 0x0e, 0x0f}
+		path, _ := goeth.ParseDerivationPath("m/0'/1/2'/2/1000000000")
+
+		accountKey, _ := slip10.NewMasterKeyWithCurve(seed, curve)
+		// https://github.com/satoshilabs/slips/blob/master/slip-0010.md#test-vector-1-for-nist256p1
+		privateKey, _ := crypto.DecodePrivateKey(sigAlgo, accountKey.Key)
+
+		assert.Equal(t, privateKey.String(), "0xe8f32e723decf4051aefac8e2c93c9c5b214313817cdb01a1494b917c8436b35")
+
+		expectedPrivateKeys := []string{
+			"0xedb2e14f9ee77d26dd93b4ecede8d16ed408ce149b6cd80b0715a2d911a0afea",
+			"0x3c6cb8d0f6a264c91ea8b5030fadaa8e538b020f0a387421a12de9319dc93368",
+			"0xcbce0d719ecf7431d88e6a89fa1483e02e35092af60c042b1df2ff59fa424dca",
+			"0x0f479245fb19a38a1954c5c7c0ebab2f9bdfd96a17563ef28a6a4b1a2a764ef4",
+			"0x471b76e389e528d6de6d816857e012c5455051cad6660850e58372a6c3e6e7c8",
+		}
+		for i, n := range path {
+			accountKey, _ = accountKey.NewChildKey(n)
+			privateKey, _ := crypto.DecodePrivateKey(sigAlgo, accountKey.Key)
+
+			assert.Equal(t, privateKey.String(), expectedPrivateKeys[i])
+
+		}
+	})
+
 	t.Run("Generate Keys with mnemonic (default path)", func(t *testing.T) {
 		t.Parallel()
 
