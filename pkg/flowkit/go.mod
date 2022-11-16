@@ -25,7 +25,6 @@ require (
 	golang.org/x/exp v0.0.0-20220713135740-79cabaa25d75
 	gonum.org/v1/gonum v0.11.0
 	google.golang.org/grpc v1.46.2
-	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
@@ -173,5 +172,6 @@ require (
 	gopkg.in/ini.v1 v1.66.6 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
 	lukechampine.com/blake3 v1.1.7 // indirect
 )

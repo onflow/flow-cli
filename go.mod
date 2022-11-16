@@ -12,7 +12,8 @@ require (
 	github.com/onflow/fcl-dev-wallet v0.5.1
 	github.com/onflow/flow-cli/pkg/flowkit v0.0.0-20221012181819-8d43a4be0028
 	github.com/onflow/flow-emulator v0.38.1
-	github.com/onflow/flow-go-sdk v0.29.0
+	github.com/onflow/flow-go-sdk v0.29.1
+	github.com/pkg/errors v0.9.1
 	github.com/psiemens/sconfig v0.1.0
 	github.com/spf13/afero v1.9.2
 	github.com/spf13/cobra v1.5.0
@@ -135,7 +136,6 @@ require (
 	github.com/opentracing/opentracing-go v1.2.0 // indirect
 	github.com/pelletier/go-toml v1.9.5 // indirect
 	github.com/pelletier/go-toml/v2 v2.0.5 // indirect
-	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pkg/term v1.1.0 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/prometheus/client_golang v1.12.1 // indirect
