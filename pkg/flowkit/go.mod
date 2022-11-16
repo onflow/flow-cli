@@ -13,7 +13,7 @@ require (
 	github.com/onflow/flow-core-contracts/lib/go/templates v0.11.2-0.20220720151516-797b149ceaaa
 	github.com/onflow/flow-emulator v0.38.0
 	github.com/onflow/flow-go v0.26.14-test-synchronization.0.20221011174222-54840e416e81
-	github.com/onflow/flow-go-sdk v0.29.0
+	github.com/onflow/flow-go-sdk v0.29.1
 	github.com/rs/zerolog v1.26.1
 	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/afero v1.9.0
@@ -25,7 +25,6 @@ require (
 	golang.org/x/exp v0.0.0-20220713135740-79cabaa25d75
 	gonum.org/v1/gonum v0.11.0
 	google.golang.org/grpc v1.46.2
-	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
@@ -173,5 +172,6 @@ require (
 	gopkg.in/ini.v1 v1.66.6 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
 	lukechampine.com/blake3 v1.1.7 // indirect
 )

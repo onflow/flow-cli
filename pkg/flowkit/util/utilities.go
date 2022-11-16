@@ -75,6 +75,7 @@ func GetAddressNetwork(address flow.Address) (flow.ChainID, error) {
 		flow.Mainnet,
 		flow.Testnet,
 		flow.Emulator,
+		flow.Sandboxnet,
 	}
 	for _, net := range networks {
 		if address.IsValid(net) {
@@ -95,7 +96,8 @@ func ParseAddress(value string) (flow.Address, bool) {
 	// valid on any chain
 	return address, address.IsValid(flow.Mainnet) ||
 		address.IsValid(flow.Testnet) ||
-		address.IsValid(flow.Emulator)
+		address.IsValid(flow.Emulator) ||
+		address.IsValid(flow.Sandboxnet)
 }
 
 func RemoveFromStringArray(s []string, el string) []string {
