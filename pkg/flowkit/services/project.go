@@ -224,17 +224,20 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 		)
 	}
 
-	deploy := contracts.New(contracts.FilesystemLoader{
-		Reader: p.state.ReaderWriter(),
-	})
+	deploy := contracts.New(
+		contracts.FilesystemLoader{
+			Reader: p.state.ReaderWriter(),
+		},
+		p.state.AliasesForNetwork(network),
+	)
 
 	// add all contracts needed to deploy to processor
-	contractsNetwork, err := p.state.DeploymentContractsByNetwork(network)
+	confContracts, err := p.state.DeploymentContractsByNetwork(network)
 	if err != nil {
 		return nil, err
 	}
 
-	for _, contract := range contractsNetwork {
+	for _, contract := range confContracts {
 		if err := deploy.Add(
 			contract.Name,
 			contract.Source,

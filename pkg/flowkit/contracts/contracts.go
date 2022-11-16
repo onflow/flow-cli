@@ -159,30 +159,97 @@ func absolutePath(basePath, relativePath string) string {
 	return path.Join(path.Dir(basePath), relativePath)
 }
 
-type CyclicImportError struct {
-	Cycles [][]*Contract
+// Contracts is a collection of contracts to deploy.
+//
+// Containing functionality to build a dependency tree between contracts and sort them based on that.
+type Contracts struct {
+	contracts         []*Contract
+	loader            Loader
+	aliases           map[string]string
+	contractsBySource map[string]*Contract
 }
 
-func (e *CyclicImportError) contractNames() [][]string {
-	cycles := make([][]string, 0, len(e.Cycles))
+func New(loader Loader, aliases map[string]string) *Contracts {
+	return &Contracts{
+		loader:  loader,
+		aliases: aliases,
+	}
+}
 
-	for _, cycle := range e.Cycles {
-		contracts := make([]string, 0, len(cycle))
-		for _, contract := range cycle {
-			contracts = append(contracts, contract.Name())
-		}
+func (c *Contracts) Contracts() []*Contract {
+	return c.contracts
+}
 
-		cycles = append(cycles, contracts)
+// Sort contracts in order to be deployed on the network.
+//
+// Order of sorting is dependent on the possible imports contracts contains, since
+// any imported contract must be deployed before deploying the contract with that import.
+func (c *Contracts) Sort() error {
+	err := c.resolveImports()
+	if err != nil {
+		return err
 	}
 
-	return cycles
+	sorted, err := sortByDeploymentOrder(c.contracts)
+	if err != nil {
+		return err
+	}
+
+	c.contracts = sorted
+	return nil
 }
 
-func (e *CyclicImportError) Error() string {
-	return fmt.Sprintf(
-		"contracts: import cycle(s) detected: %v",
-		e.contractNames(),
+func (c *Contracts) Add(
+	name,
+	source string,
+	accountAddress flow.Address,
+	accountName string,
+	args []cadence.Value,
+) error {
+	contractCode, err := c.loader.Load(source)
+	if err != nil {
+		return err
+	}
+
+	contract, err := newContract(
+		len(c.contracts),
+		name,
+		source,
+		string(contractCode),
+		accountAddress,
+		accountName,
+		args,
 	)
+	if err != nil {
+		return err
+	}
+
+	c.contracts = append(c.contracts, contract)
+	c.contractsBySource[contract.source] = contract
+
+	return nil
+}
+
+// resolveImports checks every contract import and builds a dependency tree.
+func (c *Contracts) resolveImports() error {
+	for _, contract := range c.contracts {
+		for _, location := range contract.imports() {
+			importPath := c.loader.Normalize(contract.source, location)
+
+			importAlias, isAlias := c.aliases[importPath]
+			importContract, isContract := c.contractsBySource[importPath]
+
+			if isContract {
+				contract.addDependency(location, importContract)
+			} else if isAlias {
+				contract.addAlias(location, flow.HexToAddress(importAlias))
+			} else {
+				return fmt.Errorf("import from %s could not be found: %s, make sure import path is correct.", contract.name, importPath)
+			}
+		}
+	}
+
+	return nil
 }
 
 // sortByDeploymentOrder sorts the given set of contracts in order of deployment.
@@ -236,4 +303,32 @@ func nodesToContracts(nodes []graph.Node) []*Contract {
 	}
 
 	return contracts
+}
+
+// CyclicImportError is returned when contract contain cyclic imports one to the
+// other which is not possible to be resolved and deployed.
+type CyclicImportError struct {
+	Cycles [][]*Contract
+}
+
+func (e *CyclicImportError) contractNames() [][]string {
+	cycles := make([][]string, 0, len(e.Cycles))
+
+	for _, cycle := range e.Cycles {
+		contracts := make([]string, 0, len(cycle))
+		for _, contract := range cycle {
+			contracts = append(contracts, contract.Name())
+		}
+
+		cycles = append(cycles, contracts)
+	}
+
+	return cycles
+}
+
+func (e *CyclicImportError) Error() string {
+	return fmt.Sprintf(
+		"contracts: import cycle(s) detected: %v",
+		e.contractNames(),
+	)
 }
