@@ -194,6 +194,9 @@ func (p *State) SetEmulatorKey(privateKey crypto.PrivateKey) {
 }
 
 // DeploymentContractsByNetwork returns all contracts for a network.
+//
+// Build contract slice based on the network provided, check the deployment section for that network
+// and retrieve the account by name, then add the accounts address on the contract as a destination.
 func (p *State) DeploymentContractsByNetwork(network string) ([]Contract, error) {
 	contracts := make([]Contract, 0)
 
