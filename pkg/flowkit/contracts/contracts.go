@@ -103,10 +103,10 @@ func (c *Contract) Args() []cadence.Value {
 func (c *Contract) TranspiledCode() string {
 	code := c.code
 
-	for location, dep := range c.dependencies {
+	for source, dep := range c.dependencies {
 		code = strings.Replace(
 			code,
-			fmt.Sprintf(`"%s"`, location),
+			fmt.Sprintf(`"%s"`, source),
 			fmt.Sprintf("0x%s", dep.Target()),
 			1,
 		)
@@ -147,8 +147,8 @@ func (c *Contract) imports() []string {
 	return imports
 }
 
-func (c *Contract) addDependency(location string, dep *Contract) {
-	c.dependencies[location] = dep
+func (c *Contract) addDependency(source string, dep *Contract) {
+	c.dependencies[source] = dep
 }
 
 func (c *Contract) addAlias(location string, target flow.Address) {
@@ -234,16 +234,16 @@ func (c *Contracts) Add(
 // resolveImports checks every contract import and builds a dependency tree.
 func (c *Contracts) resolveImports() error {
 	for _, contract := range c.contracts {
-		for _, location := range contract.imports() {
-			importPath := c.loader.Normalize(contract.source, location)
+		for _, source := range contract.imports() {
+			importPath := c.loader.Normalize(contract.source, source)
 
 			importAlias, isAlias := c.aliases[importPath]
 			importContract, isContract := c.contractsBySource[importPath]
 
 			if isContract {
-				contract.addDependency(location, importContract)
+				contract.addDependency(source, importContract)
 			} else if isAlias {
-				contract.addAlias(location, flow.HexToAddress(importAlias))
+				contract.addAlias(source, flow.HexToAddress(importAlias))
 			} else {
 				return fmt.Errorf("import from %s could not be found: %s, make sure import path is correct.", contract.name, importPath)
 			}
