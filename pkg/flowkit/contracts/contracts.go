@@ -34,6 +34,11 @@ import (
 	"gonum.org/v1/gonum/graph/topo"
 )
 
+// Contract contains all the values a contract needs for deployment to the network.
+//
+// All the contract dependencies are defined here and later used when deploying on the network to
+// define the order of deployments. We also define the account to which the contract needs to be deployed,
+// and arguments used to deploy. Code contains replaced import statements with concrete addresses.
 type Contract struct {
 	index          int64
 	name           string
