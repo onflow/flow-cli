@@ -180,7 +180,7 @@ func (c *Contracts) Contracts() []*Contract {
 	return c.contracts
 }
 
-// Sort contracts in order to be deployed on the network.
+// Sort contracts by deployment order.
 //
 // Order of sorting is dependent on the possible imports contracts contains, since
 // any imported contract must be deployed before deploying the contract with that import.
