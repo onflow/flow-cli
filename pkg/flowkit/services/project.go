@@ -224,13 +224,9 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 		)
 	}
 
-	// create new processor for contract
-	processor := contracts.NewPreprocessor(
-		contracts.FilesystemLoader{
-			Reader: p.state.ReaderWriter(),
-		},
-		p.state.AliasesForNetwork(network),
-	)
+	deploy := contracts.New(contracts.FilesystemLoader{
+		Reader: p.state.ReaderWriter(),
+	})
 
 	// add all contracts needed to deploy to processor
 	contractsNetwork, err := p.state.DeploymentContractsByNetwork(network)
@@ -239,40 +235,31 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 	}
 
 	for _, contract := range contractsNetwork {
-		err := processor.AddContractSource(
+		if err := deploy.Add(
 			contract.Name,
 			contract.Source,
 			contract.AccountAddress,
 			contract.AccountName,
 			contract.Args,
-		)
-		if err != nil {
+		); err != nil {
 			return nil, err
 		}
 	}
 
-	// resolve imports assigns accounts to imports
-	err = processor.ResolveImports()
-	if err != nil {
-		return nil, err
-	}
-
-	// sort correct deployment order of contracts so we don't have import that is not yet deployed
-	orderedContracts, err := processor.ContractDeploymentOrder()
-	if err != nil {
+	if err := deploy.Sort(); err != nil {
 		return nil, err
 	}
 
 	p.logger.Info(fmt.Sprintf(
 		"\nDeploying %d contracts for accounts: %s\n",
-		len(orderedContracts),
+		len(deploy.Contracts()),
 		strings.Join(p.state.AccountNamesForNetwork(network), ","),
 	))
 	defer p.logger.StopProgress()
 
 	deployErr := false
 	numOfUpdates := 0
-	for _, contract := range orderedContracts {
+	for _, contract := range deploy.Contracts() {
 		block, err := p.gateway.GetLatestBlock()
 		if err != nil {
 			return nil, err
@@ -416,5 +403,5 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 		return nil, err
 	}
 
-	return orderedContracts, nil
+	return deploy.Contracts(), nil
 }
