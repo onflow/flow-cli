@@ -68,6 +68,7 @@ func wallet(
 		PrivateKey: strings.TrimPrefix(key.PrivateKey.String(), "0x"),
 		PublicKey:  strings.TrimPrefix(key.PrivateKey.PublicKey().String(), "0x"),
 		AccessNode: walletFlags.Host,
+		AvatarUrl: "https://avatars.onflow.org/avatar/",
 	}
 
 	srv, err := devWallet.NewHTTPServer(walletFlags.Port, &conf)
