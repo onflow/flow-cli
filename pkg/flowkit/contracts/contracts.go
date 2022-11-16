@@ -171,8 +171,9 @@ type Contracts struct {
 
 func New(loader Loader, aliases map[string]string) *Contracts {
 	return &Contracts{
-		loader:  loader,
-		aliases: aliases,
+		loader:            loader,
+		aliases:           aliases,
+		contractsBySource: make(map[string]*Contract),
 	}
 }
 

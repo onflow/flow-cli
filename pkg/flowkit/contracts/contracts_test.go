@@ -167,6 +167,16 @@ func (t testLoader) Normalize(base, relative string) string {
 	return relative
 }
 
+func contractBySource(all *contracts.Contracts, source string) *contracts.Contract {
+	for _, c := range all.Contracts() {
+		if c.Source() == source {
+			return c
+		}
+	}
+
+	return nil
+}
+
 type contractTestCase struct {
 	name                    string
 	contracts               []testContract
@@ -224,10 +234,10 @@ func TestResolveImports(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
-			p := contracts.NewPreprocessor(testLoader{}, noAliases)
+			c := contracts.New(testLoader{}, noAliases)
 
 			for _, contract := range testCase.contracts {
-				err := p.AddContractSource(
+				err := c.Add(
 					contract.name,
 					contract.source,
 					contract.accountAddress,
@@ -237,15 +247,15 @@ func TestResolveImports(t *testing.T) {
 				assert.NoError(t, err)
 			}
 
-			err := p.ResolveImports()
-			if !strings.Contains(testCase.name, "unresolved") {
+			err := c.Sort()
+			if !strings.Contains(testCase.name, "unresolved") && !strings.Contains(testCase.name, "cycle") {
 				assert.NoError(t, err)
 			}
 
 			for _, sourceContract := range testCase.contracts {
 
-				contract := p.ContractBySource(sourceContract.source)
-				require.NotNil(t, contract)
+				contract := contractBySource(c, sourceContract.source)
+				require.NotNil(t, sourceContract)
 
 				require.Equal(
 					t,
@@ -257,7 +267,7 @@ func TestResolveImports(t *testing.T) {
 				for _, dependency := range sourceContract.expectedDependencies {
 					require.Contains(t, contract.Dependencies(), dependency.source)
 
-					contractDependency := p.ContractBySource(dependency.source)
+					contractDependency := contractBySource(c, dependency.source)
 					require.NotNil(t, contractDependency)
 
 					assert.Equal(t, contract.Dependencies()[dependency.source], contractDependency)
@@ -274,10 +284,10 @@ func TestContractDeploymentOrder(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
-			p := contracts.NewPreprocessor(testLoader{}, noAliases)
+			c := contracts.New(testLoader{}, noAliases)
 
 			for _, contract := range testCase.contracts {
-				err := p.AddContractSource(
+				err := c.Add(
 					contract.name,
 					contract.source,
 					contract.accountAddress,
@@ -287,28 +297,31 @@ func TestContractDeploymentOrder(t *testing.T) {
 				assert.NoError(t, err)
 			}
 
-			err := p.ResolveImports()
-			if !strings.Contains(testCase.name, "unresolved") {
+			err := c.Sort()
+			if !strings.Contains(testCase.name, "unresolved") && !strings.Contains(testCase.name, "cycle") {
 				assert.NoError(t, err)
 			}
 
-			deployedContracts, err := p.ContractDeploymentOrder()
+			if strings.Contains(testCase.name, "unresolved") {
+				assert.EqualError(t, err, "import from ContractH could not be found: Foo.cdc, make sure import path is correct.")
+				return
+			}
 
 			if testCase.expectedDeploymentError != nil {
 				assert.IsType(t, testCase.expectedDeploymentError, err)
 				return
 			} else {
-				assert.NoError(t, err)
+				assert.NoError(t, err, testCase.name)
 			}
 
 			require.Equal(
 				t,
 				len(testCase.expectedDeploymentOrder),
-				len(deployedContracts),
+				len(c.Contracts()),
 				"deployed contract count does not match expected count",
 			)
 
-			for i, deployedContract := range deployedContracts {
+			for i, deployedContract := range c.Contracts() {
 				assert.Equal(t, testCase.expectedDeploymentOrder[i].name, deployedContract.Name())
 			}
 		})
