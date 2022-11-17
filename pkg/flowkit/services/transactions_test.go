@@ -80,13 +80,13 @@ func TestTransactions(t *testing.T) {
 			gw.GetTransactionResult.Return(tests.NewTransactionResult(nil), nil)
 		})
 
-		args := []cadence.Value{cadence.String("Bar")}
 		_, _, err := s.Transactions.Send(
-			serviceAcc,
-			tests.TransactionArgString.Source,
-			"",
+			NewSingleTransactionAccount(serviceAcc),
+			&Script{
+				Code: tests.TransactionArgString.Source,
+				Args: []cadence.Value{cadence.String("Bar")},
+			},
 			gasLimit,
-			args,
 			"",
 		)
 
@@ -156,7 +156,7 @@ func TestTransactions_Integration(t *testing.T) {
 			0,
 			tests.TransactionSimple.Source,
 			tests.TransactionSimple.Filename,
-			1000,
+			flow.DefaultTransactionGasLimit,
 			nil,
 			"",
 			true,
@@ -167,14 +167,24 @@ func TestTransactions_Integration(t *testing.T) {
 			0,
 			tests.TransactionSimple.Source,
 			tests.TransactionSimple.Filename,
-			1000,
+			flow.DefaultTransactionGasLimit,
 			nil,
 			"",
 			true,
 		}}
 
 		for _, i := range txIns {
-			tx, err := s.Transactions.Build(i.prop, i.auth, i.payer, i.index, i.code, i.file, i.gas, i.args, i.network, i.yes)
+			tx, err := s.Transactions.Build(
+				NewTransactionAddresses(i.prop, i.payer, i.auth),
+				i.index,
+				&Script{
+					Code:     i.code,
+					Args:     i.args,
+					Filename: i.file,
+				},
+				i.gas,
+				i.network,
+			)
 
 			assert.NoError(t, err)
 			ftx := tx.FlowTransaction()
@@ -225,16 +235,14 @@ func TestTransactions_Integration(t *testing.T) {
 		)
 
 		tx, err := s.Transactions.Build(
-			signer,
-			[]flow.Address{signer},
-			signer,
+			NewTransactionAddresses(signer, signer, []flow.Address{signer}),
 			srvAcc.Key().Index(),
-			tests.TransactionImports.Source,
-			tests.TransactionImports.Filename,
-			1000,
-			nil,
+			&Script{
+				Code:     tests.TransactionImports.Source,
+				Filename: tests.TransactionImports.Filename,
+			},
+			flow.DefaultTransactionGasLimit,
 			n.Name,
-			true,
 		)
 
 		assert.NoError(t, err)
@@ -257,16 +265,14 @@ func TestTransactions_Integration(t *testing.T) {
 		a, _ := state.Accounts().ByName("Alice")
 
 		tx, err := s.Transactions.Build(
-			a.Address(),
-			nil,
-			a.Address(),
+			NewTransactionAddresses(a.Address(), a.Address(), nil),
 			0,
-			tests.TransactionSimple.Source,
-			tests.TransactionSimple.Filename,
-			1000,
-			nil,
+			&Script{
+				Code:     tests.TransactionSimple.Source,
+				Filename: tests.TransactionSimple.Filename,
+			},
+			flow.DefaultTransactionGasLimit,
 			"",
-			true,
 		)
 
 		assert.Nil(t, err)
@@ -275,7 +281,6 @@ func TestTransactions_Integration(t *testing.T) {
 		txSigned, err := s.Transactions.Sign(
 			a,
 			[]byte(fmt.Sprintf("%x", tx.FlowTransaction().Encode())),
-			true,
 		)
 		assert.Nil(t, err)
 		assert.NotNil(t, txSigned)
@@ -294,16 +299,14 @@ func TestTransactions_Integration(t *testing.T) {
 		a, _ := state.Accounts().ByName("Alice")
 
 		tx, err := s.Transactions.Build(
-			a.Address(),
-			[]flow.Address{a.Address()},
-			a.Address(),
+			NewTransactionAddresses(a.Address(), a.Address(), []flow.Address{a.Address()}),
 			0,
-			tests.TransactionSingleAuth.Source,
-			tests.TransactionSingleAuth.Filename,
-			1000,
-			nil,
+			&Script{
+				Code:     tests.TransactionSingleAuth.Source,
+				Filename: tests.TransactionSingleAuth.Filename,
+			},
+			flow.DefaultTransactionGasLimit,
 			"",
-			true,
 		)
 
 		assert.Nil(t, err)
@@ -312,15 +315,11 @@ func TestTransactions_Integration(t *testing.T) {
 		txSigned, err := s.Transactions.Sign(
 			a,
 			[]byte(fmt.Sprintf("%x", tx.FlowTransaction().Encode())),
-			true,
 		)
 		assert.Nil(t, err)
 		assert.NotNil(t, txSigned)
 
-		txSent, txResult, err := s.Transactions.SendSigned(
-			[]byte(fmt.Sprintf("%x", txSigned.FlowTransaction().Encode())),
-			true,
-		)
+		txSent, txResult, err := s.Transactions.SendSigned(txSigned)
 		assert.Nil(t, err)
 		assert.Equal(t, txResult.Status, flow.TransactionStatusSealed)
 		assert.NotNil(t, txSent.ID())
@@ -335,16 +334,14 @@ func TestTransactions_Integration(t *testing.T) {
 		a, _ := state.Accounts().ByName("Alice")
 
 		tx, err := s.Transactions.Build(
-			a.Address(),
-			[]flow.Address{a.Address()},
-			a.Address(),
+			NewTransactionAddresses(a.Address(), a.Address(), []flow.Address{a.Address()}),
 			0,
-			tests.TransactionSingleAuth.Source,
-			tests.TransactionSingleAuth.Filename,
-			1000,
-			nil,
+			&Script{
+				Code:     tests.TransactionSingleAuth.Source,
+				Filename: tests.TransactionSingleAuth.Filename,
+			},
+			flow.DefaultTransactionGasLimit,
 			"",
-			true,
 		)
 
 		assert.Nil(t, err)
@@ -356,7 +353,6 @@ func TestTransactions_Integration(t *testing.T) {
 		txSigned, err := s.Transactions.Sign(
 			a,
 			[]byte(fmt.Sprintf("%x", tx.FlowTransaction().Encode())),
-			true,
 		)
 		assert.EqualError(t, err, "not a valid signer 179b6b1cb6755e31, proposer: 01cf0e2f2f715450, payer: 01cf0e2f2f715450, authorizers: [01cf0e2f2f715450]")
 		assert.Nil(t, txSigned)
@@ -370,16 +366,14 @@ func TestTransactions_Integration(t *testing.T) {
 		a, _ := state.Accounts().ByName("Alice")
 
 		tx, err := s.Transactions.Build(
-			a.Address(),
-			[]flow.Address{a.Address()},
-			a.Address(),
+			NewTransactionAddresses(a.Address(), a.Address(), []flow.Address{a.Address()}),
 			0,
-			tests.TransactionTwoAuth.Source,
-			tests.TransactionTwoAuth.Filename,
-			1000,
-			nil,
+			&Script{
+				Code:     tests.TransactionTwoAuth.Source,
+				Filename: tests.TransactionTwoAuth.Filename,
+			},
+			flow.DefaultTransactionGasLimit,
 			"",
-			true,
 		)
 
 		assert.EqualError(t, err, "provided authorizers length mismatch, required authorizers 2, but provided 1")
@@ -394,11 +388,12 @@ func TestTransactions_Integration(t *testing.T) {
 		a, _ := state.Accounts().ByName("Alice")
 
 		tx, txr, err := s.Transactions.Send(
-			a,
-			tests.TransactionSingleAuth.Source,
-			tests.TransactionSingleAuth.Filename,
-			1000,
-			nil,
+			NewSingleTransactionAccount(a),
+			&Script{
+				Code:     tests.TransactionSingleAuth.Source,
+				Filename: tests.TransactionSingleAuth.Filename,
+			},
+			flow.DefaultTransactionGasLimit,
 			"",
 		)
 		assert.NoError(t, err)
@@ -414,16 +409,17 @@ func TestTransactions_Integration(t *testing.T) {
 		setupAccounts(state, s)
 
 		a, _ := state.Accounts().ByName("Alice")
-		args := []cadence.Value{
-			cadence.String("Bar"),
-		}
 
 		tx, txr, err := s.Transactions.Send(
-			a,
-			tests.TransactionArgString.Source,
-			tests.TransactionArgString.Filename,
-			1000,
-			args,
+			NewSingleTransactionAccount(a),
+			&Script{
+				Code:     tests.TransactionArgString.Source,
+				Filename: tests.TransactionArgString.Filename,
+				Args: []cadence.Value{
+					cadence.String("Bar"),
+				},
+			},
+			flow.DefaultTransactionGasLimit,
 			"",
 		)
 		assert.NoError(t, err)
@@ -442,11 +438,12 @@ func TestTransactions_Integration(t *testing.T) {
 		a, _ := state.Accounts().ByName("Alice")
 
 		tx, txr, err := s.Transactions.Send(
-			a,
-			tests.TransactionMultipleDeclarations.Source,
-			tests.TransactionMultipleDeclarations.Filename,
-			1000,
-			nil,
+			NewSingleTransactionAccount(a),
+			&Script{
+				Code:     tests.TransactionMultipleDeclarations.Source,
+				Filename: tests.TransactionMultipleDeclarations.Filename,
+			},
+			flow.DefaultTransactionGasLimit,
 			"",
 		)
 		assert.NoError(t, err)

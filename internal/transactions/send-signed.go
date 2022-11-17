@@ -21,6 +21,8 @@ package transactions
 import (
 	"fmt"
 
+	"github.com/onflow/flow-cli/pkg/flowkit/output"
+
 	"github.com/onflow/flow-cli/pkg/flowkit"
 
 	"github.com/spf13/cobra"
@@ -61,14 +63,23 @@ func sendSigned(
 		return nil, fmt.Errorf("error loading transaction payload: %w", err)
 	}
 
-	tx, result, err := services.Transactions.SendSigned(code, globalFlags.Yes)
+	tx, err := flowkit.NewTransactionFromPayload(code)
+	if err != nil {
+		return nil, err
+	}
+
+	if !globalFlags.Yes && !output.ApproveTransactionForSendingPrompt(tx) {
+		return nil, fmt.Errorf("transaction was not approved for sending")
+	}
+
+	sentTx, result, err := services.Transactions.SendSigned(tx)
 	if err != nil {
 		return nil, err
 	}
 
 	return &TransactionResult{
 		result:  result,
-		tx:      tx,
+		tx:      sentTx,
 		include: sendSignedFlags.Include,
 		exclude: sendSignedFlags.Exclude,
 	}, nil
