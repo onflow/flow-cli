@@ -205,12 +205,20 @@ func (t *Transactions) Build(
 		return nil, err
 	}
 
-	resolver, err := resolver.NewResolver(script.Code)
+	programs := resolver.NewProgramImports(
+		resolver.FilesystemLoader{
+			Reader: t.state.ReaderWriter(),
+		},
+		t.state.AliasesForNetwork(network),
+	)
+
+	program, err := programs.AddProgram(script.Filename, addresses.proposer, "", script.Args)
 	if err != nil {
 		return nil, err
 	}
 
-	if resolver.HasFileImports() {
+	if program.HasImports() {
+		// todo should this be fetched from state
 		if network == "" {
 			return nil, fmt.Errorf("missing network, specify which network to use to resolve imports in transaction code")
 		}
@@ -218,22 +226,26 @@ func (t *Transactions) Build(
 			return nil, fmt.Errorf("resolving imports in transactions not supported")
 		}
 
-		contractsNetwork, err := t.state.DeploymentContractsByNetwork(network)
-		if err != nil {
-			return nil, err
+		// add all contracts for that network from configuration in order to resolve any needed imports
+		for _, c := range t.state.Contracts().ByNetwork(network) {
+			_, err := programs.AddProgram(
+				c.Location,
+				addresses.proposer,
+				"",
+				nil,
+			)
+			if err != nil {
+				return nil, err
+			}
 		}
 
-		script.Code, err = resolver.ResolveImports(
-			script.Filename,
-			contractsNetwork,
-			t.state.AliasesForNetwork(network),
-		)
+		err = programs.Resolve()
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("error resolving imports: %w", err)
 		}
 	}
 
-	err = tx.SetScriptWithArgs(script.Code, script.Args)
+	err = tx.SetScriptWithArgs([]byte(program.ReplacedImports()), script.Args)
 	if err != nil {
 		return nil, err
 	}

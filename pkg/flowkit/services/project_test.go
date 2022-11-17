@@ -157,7 +157,7 @@ func TestProject(t *testing.T) {
 
 		assert.NoError(t, err)
 		assert.Equal(t, len(contracts), 1)
-		assert.Equal(t, contracts[0].AccountName(), acct2.Name())
+		assert.Equal(t, contracts[0].Target(), acct2.Address())
 	})
 
 }
