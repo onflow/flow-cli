@@ -167,7 +167,7 @@ func (t testLoader) Normalize(base, relative string) string {
 	return relative
 }
 
-func contractBySource(all *contracts.Contracts, source string) *contracts.Contract {
+func contractBySource(all *contracts.Deployments, source string) *contracts.Contract {
 	for _, c := range all.Contracts() {
 		if c.Source() == source {
 			return c

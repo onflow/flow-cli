@@ -93,7 +93,7 @@ func (p *Project) Init(
 	return state, nil
 }
 
-// Defines a Mainnet Standard Contract ( e.g Core Contracts, FungibleToken, NonFungibleToken )
+// Defines a Mainnet Standard Contract ( e.g Core Deployments, FungibleToken, NonFungibleToken )
 type StandardContract struct {
 	Name     string
 	Address  flow.Address

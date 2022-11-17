@@ -159,25 +159,25 @@ func absolutePath(basePath, relativePath string) string {
 	return path.Join(path.Dir(basePath), relativePath)
 }
 
-// Contracts is a collection of contracts to deploy.
+// Deployments is a collection of contracts to deploy.
 //
 // Containing functionality to build a dependency tree between contracts and sort them based on that.
-type Contracts struct {
+type Deployments struct {
 	contracts         []*Contract
 	loader            Loader
 	aliases           map[string]string
 	contractsBySource map[string]*Contract
 }
 
-func New(loader Loader, aliases map[string]string) *Contracts {
-	return &Contracts{
+func New(loader Loader, aliases map[string]string) *Deployments {
+	return &Deployments{
 		loader:            loader,
 		aliases:           aliases,
 		contractsBySource: make(map[string]*Contract),
 	}
 }
 
-func (c *Contracts) Contracts() []*Contract {
+func (c *Deployments) Contracts() []*Contract {
 	return c.contracts
 }
 
@@ -185,7 +185,7 @@ func (c *Contracts) Contracts() []*Contract {
 //
 // Order of sorting is dependent on the possible imports contracts contains, since
 // any imported contract must be deployed before deploying the contract with that import.
-func (c *Contracts) Sort() error {
+func (c *Deployments) Sort() error {
 	err := c.resolveImports()
 	if err != nil {
 		return err
@@ -200,7 +200,7 @@ func (c *Contracts) Sort() error {
 	return nil
 }
 
-func (c *Contracts) Add(
+func (c *Deployments) Add(
 	name,
 	source string,
 	accountAddress flow.Address,
@@ -232,7 +232,7 @@ func (c *Contracts) Add(
 }
 
 // resolveImports checks every contract import and builds a dependency tree.
-func (c *Contracts) resolveImports() error {
+func (c *Deployments) resolveImports() error {
 	for _, contract := range c.contracts {
 		for _, source := range contract.imports() {
 			importPath := c.loader.Normalize(contract.source, source)
