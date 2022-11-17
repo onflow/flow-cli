@@ -137,6 +137,10 @@ func (c *Contract) Dependencies() map[string]*Contract {
 	return c.dependencies
 }
 
+func (c *Contract) HasImports() bool {
+	return len(c.imports()) > 0
+}
+
 func (c *Contract) imports() []string {
 	imports := make([]string, 0)
 
@@ -205,7 +209,7 @@ func (c *Deployments) Contracts() []*Contract {
 // Order of sorting is dependent on the possible imports contracts contains, since
 // any imported contract must be deployed before deploying the contract with that import.
 func (c *Deployments) Sort() error {
-	err := c.resolveImports()
+	err := c.ResolveImports()
 	if err != nil {
 		return err
 	}
@@ -224,10 +228,10 @@ func (c *Deployments) Add(
 	accountAddress flow.Address,
 	accountName string,
 	args []cadence.Value,
-) error {
+) (*Contract, error) {
 	contractCode, err := c.loader.Load(location)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	contract, err := newContract(
@@ -239,17 +243,17 @@ func (c *Deployments) Add(
 		args,
 	)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	c.contracts = append(c.contracts, contract)
 	c.contractsByLocation[contract.location] = contract
 
-	return nil
+	return contract, nil
 }
 
-// resolveImports checks every contract import and builds a dependency tree.
-func (c *Deployments) resolveImports() error {
+// ResolveImports checks every contract import and builds a dependency tree.
+func (c *Deployments) ResolveImports() error {
 	for _, contract := range c.contracts {
 		for _, location := range contract.imports() {
 			importPath := location // TODO: c.loader.Normalize(contract.source, source)
