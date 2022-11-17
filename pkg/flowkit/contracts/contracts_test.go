@@ -34,8 +34,7 @@ import (
 )
 
 type testContract struct {
-	name                 string
-	source               string
+	location             string
 	code                 []byte
 	accountAddress       flow.Address
 	accountName          string
@@ -45,24 +44,21 @@ type testContract struct {
 var addresses = test.AddressGenerator()
 
 var testContractA = testContract{
-	name:                 "ContractA",
-	source:               "ContractA.cdc",
+	location:             "ContractA.cdc",
 	code:                 []byte(`pub contract ContractA {}`),
 	accountAddress:       addresses.New(),
 	expectedDependencies: nil,
 }
 
 var testContractB = testContract{
-	name:                 "ContractB",
-	source:               "ContractB.cdc",
+	location:             "ContractB.cdc",
 	code:                 []byte(`pub contract ContractB {}`),
 	accountAddress:       addresses.New(),
 	expectedDependencies: nil,
 }
 
 var testContractC = testContract{
-	name:   "ContractC",
-	source: "ContractC.cdc",
+	location: "ContractC.cdc",
 	code: []byte(`
         import ContractA from "ContractA.cdc"
     
@@ -73,8 +69,7 @@ var testContractC = testContract{
 }
 
 var testContractD = testContract{
-	name:   "ContractD",
-	source: "ContractD.cdc",
+	location: "ContractD.cdc",
 	code: []byte(`
         import ContractC from "ContractC.cdc"
 
@@ -85,8 +80,7 @@ var testContractD = testContract{
 }
 
 var testContractE = testContract{
-	name:   "ContractE",
-	source: "ContractE.cdc",
+	location: "ContractE.cdc",
 	code: []byte(`
         import ContractF from "ContractF.cdc"
 
@@ -95,8 +89,7 @@ var testContractE = testContract{
 }
 
 var testContractF = testContract{
-	name:   "ContractF",
-	source: "ContractF.cdc",
+	location: "ContractF.cdc",
 	code: []byte(`
         import ContractE from "ContractE.cdc"
 
@@ -112,8 +105,7 @@ func init() {
 }
 
 var testContractG = testContract{
-	name:   "ContractG",
-	source: "ContractG.cdc",
+	location: "ContractG.cdc",
 	code: []byte(`
         import ContractA from "ContractA.cdc"
         import ContractB from "ContractB.cdc"
@@ -125,8 +117,7 @@ var testContractG = testContract{
 }
 
 var testContractH = testContract{
-	name:   "ContractH",
-	source: "ContractH.cdc",
+	location: "ContractH.cdc",
 	code: []byte(`
         import ContractFoo from "Foo.cdc"
 
@@ -142,21 +133,21 @@ type testLoader struct{}
 
 func (t testLoader) Load(source string) ([]byte, error) {
 	switch source {
-	case testContractA.source:
+	case testContractA.location:
 		return testContractA.code, nil
-	case testContractB.source:
+	case testContractB.location:
 		return testContractB.code, nil
-	case testContractC.source:
+	case testContractC.location:
 		return testContractC.code, nil
-	case testContractD.source:
+	case testContractD.location:
 		return testContractD.code, nil
-	case testContractE.source:
+	case testContractE.location:
 		return testContractE.code, nil
-	case testContractF.source:
+	case testContractF.location:
 		return testContractF.code, nil
-	case testContractG.source:
+	case testContractG.location:
 		return testContractG.code, nil
-	case testContractH.source:
+	case testContractH.location:
 		return testContractH.code, nil
 	}
 
@@ -237,9 +228,8 @@ func TestResolveImports(t *testing.T) {
 			c := contracts.NewDeployments(testLoader{}, noAliases)
 
 			for _, contract := range testCase.contracts {
-				err := c.Add(
-					contract.name,
-					contract.source,
+				_, err := c.Add(
+					contract.location,
 					contract.accountAddress,
 					contract.accountName,
 					[]cadence.Value{nil},
@@ -254,7 +244,7 @@ func TestResolveImports(t *testing.T) {
 
 			for _, sourceContract := range testCase.contracts {
 
-				contract := contractBySource(c, sourceContract.source)
+				contract := contractBySource(c, sourceContract.location)
 				require.NotNil(t, sourceContract)
 
 				require.Equal(
@@ -265,12 +255,12 @@ func TestResolveImports(t *testing.T) {
 				)
 
 				for _, dependency := range sourceContract.expectedDependencies {
-					require.Contains(t, contract.Dependencies(), dependency.source)
+					require.Contains(t, contract.Dependencies(), dependency.location)
 
-					contractDependency := contractBySource(c, dependency.source)
+					contractDependency := contractBySource(c, dependency.location)
 					require.NotNil(t, contractDependency)
 
-					assert.Equal(t, contract.Dependencies()[dependency.source], contractDependency)
+					assert.Equal(t, contract.Dependencies()[dependency.location], contractDependency)
 
 					assert.Contains(t, contract.TranspiledCode(), dependency.accountAddress.Hex())
 				}
@@ -287,9 +277,8 @@ func TestContractDeploymentOrder(t *testing.T) {
 			c := contracts.NewDeployments(testLoader{}, noAliases)
 
 			for _, contract := range testCase.contracts {
-				err := c.Add(
-					contract.name,
-					contract.source,
+				_, err := c.Add(
+					contract.location,
 					contract.accountAddress,
 					contract.accountName,
 					[]cadence.Value{nil},
@@ -322,7 +311,7 @@ func TestContractDeploymentOrder(t *testing.T) {
 			)
 
 			for i, deployedContract := range c.Contracts() {
-				assert.Equal(t, testCase.expectedDeploymentOrder[i].name, deployedContract.Name())
+				assert.Equal(t, testCase.expectedDeploymentOrder[i].location, deployedContract.Location())
 			}
 		})
 	}
