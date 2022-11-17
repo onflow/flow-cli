@@ -341,7 +341,7 @@ func Test_GetContractsByNameSimple(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Len(t, contracts, 1)
 	assert.Equal(t, "NonFungibleToken", contracts[0].Name)
-	assert.Equal(t, "../hungry-kitties/cadence/contracts/NonFungibleToken.cdc", contracts[0].Source)
+	assert.Equal(t, "../hungry-kitties/cadence/contracts/NonFungibleToken.cdc", contracts[0].Location)
 	assert.Equal(t, account.Address, contracts[0].AccountAddress)
 }
 
@@ -391,7 +391,7 @@ func Test_GetContractsByNameComplex(t *testing.T) {
 	sort.Strings(contractNames)
 
 	sources := funk.Map(contracts, func(c Contract) string {
-		return c.Source
+		return c.Location
 	}).([]string)
 	sort.Strings(sources)
 

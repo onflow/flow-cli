@@ -22,7 +22,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/onflow/flow-cli/pkg/flowkit/resolver"
+	"github.com/onflow/flow-cli/pkg/flowkit/resolvers"
 
 	"github.com/onflow/flow-go-sdk/templates"
 
@@ -308,8 +308,8 @@ func (a *Accounts) AddContract(
 	updateExisting bool,
 ) (*flow.Account, error) {
 
-	programs := resolver.NewProgramImports(
-		resolver.FilesystemLoader{
+	programs := resolvers.NewProgramImports(
+		resolvers.FilesystemLoader{
 			Reader: a.state.ReaderWriter(),
 		},
 		a.state.AliasesForNetwork(contract.Network),

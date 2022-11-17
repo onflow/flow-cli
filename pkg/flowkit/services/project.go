@@ -32,7 +32,7 @@ import (
 
 	"github.com/onflow/flow-cli/pkg/flowkit/gateway"
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
-	"github.com/onflow/flow-cli/pkg/flowkit/resolver"
+	"github.com/onflow/flow-cli/pkg/flowkit/resolvers"
 )
 
 // Project is a service that handles all interactions for a state.
@@ -213,62 +213,50 @@ func (p *Project) CheckForStandardContractUsageOnMainnet() error {
 // Retrieve all the contracts for specified network, sort them for deployment
 // deploy one by one and replace the imports in the contract source so it corresponds
 // to the account name the contract was deployed to.
-func (p *Project) Deploy(network string, update bool) ([]*resolver.Program, error) {
+func (p *Project) Deploy(network string, update bool) ([]*resolvers.Program, error) {
 	if p.state == nil {
 		return nil, config.ErrDoesNotExist
 	}
 	// check there are not multiple accounts with same contract
 	if p.state.ContractConflictExists(network) {
-		return nil, fmt.Errorf( // TODO(sideninja) specify which contract by name is a problem
-			"the same contract cannot be deployed to multiple accounts on the same network",
-		)
+		return nil, fmt.Errorf("the same contract cannot be deployed to multiple accounts on the same network") // TODO(sideninja) specify which contract by name is a problem
 	}
 
-	deployment := resolver.NewDeploymentImports(
-		resolver.FilesystemLoader{
-			Reader: p.state.ReaderWriter(),
-		},
-		p.state.AliasesForNetwork(network),
-	)
-
-	// add all contracts needed to deploy to processor
-	confContracts, err := p.state.DeploymentContractsByNetwork(network)
+	contracts, err := p.state.DeploymentContractsByNetwork(network)
 	if err != nil {
 		return nil, err
 	}
 
-	for _, contract := range confContracts {
-		_, err := deployment.AddProgram(
-			contract.Source,
-			contract.AccountAddress,
-			contract.AccountName,
-			contract.Args,
-		)
-		if err != nil {
-			return nil, err
-		}
+	deployment, err := resolvers.NewDeployment(
+		contracts,
+		resolvers.FilesystemLoader{
+			Reader: p.state.ReaderWriter(),
+		},
+	)
+	if err != nil {
+		return nil, err
 	}
 
-	if err := deployment.Sort(); err != nil {
+	sorted, err := deployment.Sort()
+	if err != nil {
 		return nil, err
 	}
 
 	p.logger.Info(fmt.Sprintf(
-		"\nDeploying %d contracts for accounts: %s\n",
-		len(deployment.Programs()),
+		"\nDeploying %d contracts for accounts: %s\n", len(sorted),
 		strings.Join(p.state.AccountNamesForNetwork(network), ","),
 	))
 	defer p.logger.StopProgress()
 
 	deployErr := false
 	numOfUpdates := 0
-	for _, contract := range deployment.Programs() {
+	for _, contract := range sorted {
 		block, err := p.gateway.GetLatestBlock()
 		if err != nil {
 			return nil, err
 		}
 
-		targetAccount, err := p.state.Accounts().ByName(contract.AccountName())
+		targetAccount, err := p.state.Accounts().ByName(contract.AccountName)
 
 		if err != nil {
 			return nil, fmt.Errorf("target account for deploying contract not found in configuration")
@@ -283,28 +271,28 @@ func (p *Project) Deploy(network string, update bool) ([]*resolver.Program, erro
 		// create transaction to deploy new contract with args
 		tx, err := flowkit.NewAddAccountContractTransaction(
 			targetAccount,
-			contract.Name(),
+			contract.Name,
 			contract.ReplacedImports(),
-			contract.Args(),
+			contract.Args,
 		)
 		if err != nil {
 			return nil, err
 		}
 		// check if contract exists on account
-		existingContract, exists := targetAccountInfo.Contracts[contract.Name()]
+		existingContract, exists := targetAccountInfo.Contracts[contract.Name]
 		noDiffInContract := bytes.Equal([]byte(contract.ReplacedImports()), existingContract)
 
 		if exists && !update {
 			p.logger.Error(fmt.Sprintf(
 				"contract %s is already deployed to this account. Use the --update flag to force update",
-				contract.Name(),
+				contract.Name,
 			))
 			deployErr = true
 			continue
 		} else if exists && len(contract.Args()) > 0 { // TODO(sideninja) discuss removing the contract and redeploying it
 			p.logger.Error(fmt.Sprintf(
 				"contract %s is already deployed and can not be updated with initialization arguments",
-				contract.Name(),
+				contract.Name,
 			))
 			deployErr = true
 			continue
@@ -313,11 +301,11 @@ func (p *Project) Deploy(network string, update bool) ([]*resolver.Program, erro
 			if noDiffInContract {
 				p.logger.Info(fmt.Sprintf(
 					"no diff found in %s, skipping update",
-					contract.Name(),
+					contract.Name,
 				))
 				continue
 			}
-			tx, err = flowkit.NewUpdateAccountContractTransaction(targetAccount, contract.Name(), contract.ReplacedImports())
+			tx, err = flowkit.NewUpdateAccountContractTransaction(targetAccount, contract.Name, contract.ReplacedImports())
 			if err != nil {
 				return nil, err
 			}
@@ -332,19 +320,19 @@ func (p *Project) Deploy(network string, update bool) ([]*resolver.Program, erro
 
 		tx, err = tx.Sign()
 		if err != nil {
-			p.logger.Error(fmt.Sprintf("%s error: %s", contract.Name(), err))
+			p.logger.Error(fmt.Sprintf("%s error: %s", contract.Name, err))
 			deployErr = true
 			continue
 		}
 
 		p.logger.StartProgress(
-			fmt.Sprintf("%s deploying...", output.Bold(contract.Name())),
+			fmt.Sprintf("%s deploying...", output.Bold(contract.Name)),
 		)
 
 		sentTx, err := p.gateway.SendSignedTransaction(tx)
 		if err != nil {
 			p.logger.StopProgress()
-			p.logger.Error(fmt.Sprintf("%s error: %s", contract.Name(), err))
+			p.logger.Error(fmt.Sprintf("%s error: %s", contract.Name, err))
 			deployErr = true
 			continue
 		}
@@ -352,7 +340,7 @@ func (p *Project) Deploy(network string, update bool) ([]*resolver.Program, erro
 		result, err := p.gateway.GetTransactionResult(sentTx.ID(), true)
 		if err != nil {
 			p.logger.StopProgress()
-			p.logger.Error(fmt.Sprintf("%s error: %s", contract.Name(), err))
+			p.logger.Error(fmt.Sprintf("%s error: %s", contract.Name, err))
 			deployErr = true
 			continue
 		}
@@ -367,13 +355,13 @@ func (p *Project) Deploy(network string, update bool) ([]*resolver.Program, erro
 			if exists && update {
 				p.logger.Error(fmt.Sprintf(
 					"Error updating %s: (%s)\n",
-					output.Red(contract.Name()),
+					output.Red(contract.Name),
 					result.Error.Error(),
 				))
 			} else {
 				p.logger.Error(fmt.Sprintf(
 					"Error deploying %s: (%s)\n",
-					output.Red(contract.Name()),
+					output.Red(contract.Name),
 					result.Error.Error(),
 				))
 			}
@@ -387,7 +375,7 @@ func (p *Project) Deploy(network string, update bool) ([]*resolver.Program, erro
 			p.logger.StopProgress()
 			p.logger.Info(fmt.Sprintf(
 				"%s -> 0x%s (%s) %s\n",
-				output.Green(contract.Name()),
+				output.Green(contract.Name),
 				contract.Target(),
 				sentTx.ID().String(),
 				changeStatus,

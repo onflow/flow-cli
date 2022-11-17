@@ -43,7 +43,7 @@ type ReaderWriter interface {
 // Contract is a Cadence contract definition for a project.
 type Contract struct {
 	Name           string
-	Source         string
+	Location       string
 	AccountAddress flow.Address
 	AccountName    string
 	Args           []cadence.Value
@@ -197,8 +197,8 @@ func (p *State) SetEmulatorKey(privateKey crypto.PrivateKey) {
 //
 // Build contract slice based on the network provided, check the deployment section for that network
 // and retrieve the account by name, then add the accounts address on the contract as a destination.
-func (p *State) DeploymentContractsByNetwork(network string) ([]Contract, error) {
-	contracts := make([]Contract, 0)
+func (p *State) DeploymentContractsByNetwork(network string) ([]*Contract, error) {
+	contracts := make([]*Contract, 0)
 
 	// get deployments for the specified network
 	for _, deploy := range p.conf.Deployments.ByNetwork(network) {
@@ -214,9 +214,9 @@ func (p *State) DeploymentContractsByNetwork(network string) ([]Contract, error)
 				return nil, err
 			}
 
-			contract := Contract{
+			contract := &Contract{
 				Name:           c.Name,
-				Source:         path.Clean(c.Location),
+				Location:       path.Clean(c.Location),
 				AccountAddress: account.address,
 				AccountName:    account.name,
 				Args:           deploymentContract.Args,

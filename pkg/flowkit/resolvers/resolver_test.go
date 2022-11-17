@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package resolver
+package resolvers
 
 import (
 	"regexp"
@@ -37,11 +37,11 @@ func TestResolver(t *testing.T) {
 
 	contracts := []flowkit.Contract{{
 		Name:           "Kibble",
-		Source:         "./tests/Kibble.cdc",
+		Location:       "./tests/Kibble.cdc",
 		AccountAddress: flow.HexToAddress("0x1"),
 	}, {
 		Name:           "FT",
-		Source:         "./tests/FT.cdc",
+		Location:       "./tests/FT.cdc",
 		AccountAddress: flow.HexToAddress("0x2"),
 	}}
 

@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package resolver_test
+package resolvers_test
 
 import (
 	"fmt"
@@ -30,7 +30,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/onflow/flow-cli/pkg/flowkit/resolver"
+	"github.com/onflow/flow-cli/pkg/flowkit/resolvers"
 )
 
 type testContract struct {
@@ -158,7 +158,7 @@ func (t testLoader) Normalize(base, relative string) string {
 	return relative
 }
 
-func contractBySource(all *resolver.DeploymentImports, source string) *resolver.Program {
+func contractBySource(all *resolvers.DeploymentImports, source string) *resolvers.Program {
 	for _, c := range all.Programs() {
 		if c.Location() == source {
 			return c
@@ -205,7 +205,7 @@ func getTestCases() []contractTestCase {
 		{
 			name:                    "Two contracts with import cycle",
 			contracts:               []testContract{testContractE, testContractF},
-			expectedDeploymentError: &resolver.CyclicImportError{},
+			expectedDeploymentError: &resolvers.CyclicImportError{},
 		},
 		{
 			name:                    "Single contract with two imports",
@@ -225,7 +225,7 @@ func TestResolveImports(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
-			c := resolver.NewDeploymentImports(testLoader{}, noAliases)
+			c := resolvers.NewDeploymentImports(testLoader{}, noAliases)
 
 			for _, contract := range testCase.contracts {
 				_, err := c.AddProgram(
@@ -274,7 +274,7 @@ func TestContractDeploymentOrder(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
-			c := resolver.NewDeploymentImports(testLoader{}, noAliases)
+			c := resolvers.NewDeploymentImports(testLoader{}, noAliases)
 
 			for _, contract := range testCase.contracts {
 				_, err := c.AddProgram(

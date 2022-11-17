@@ -29,7 +29,7 @@ import (
 
 	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
-	"github.com/onflow/flow-cli/pkg/flowkit/resolver"
+	"github.com/onflow/flow-cli/pkg/flowkit/resolvers"
 	"github.com/onflow/flow-cli/pkg/flowkit/tests"
 )
 
@@ -163,7 +163,7 @@ func TestProject(t *testing.T) {
 }
 
 // used for integration tests
-func simpleDeploy(state *flowkit.State, s *Services, update bool) ([]*resolver.Program, error) {
+func simpleDeploy(state *flowkit.State, s *Services, update bool) ([]*resolvers.Program, error) {
 	srvAcc, _ := state.EmulatorServiceAccount()
 
 	c := config.Contract{

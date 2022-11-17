@@ -29,7 +29,7 @@ import (
 
 	"github.com/onflow/cadence"
 
-	"github.com/onflow/flow-cli/pkg/flowkit/resolver"
+	"github.com/onflow/flow-cli/pkg/flowkit/resolvers"
 
 	"github.com/onflow/flow-go-sdk"
 
@@ -205,8 +205,8 @@ func (t *Transactions) Build(
 		return nil, err
 	}
 
-	programs := resolver.NewProgramImports(
-		resolver.FilesystemLoader{
+	programs := resolvers.NewProgramImports(
+		resolvers.FilesystemLoader{
 			Reader: t.state.ReaderWriter(),
 		},
 		t.state.AliasesForNetwork(network),

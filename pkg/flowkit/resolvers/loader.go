@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package resolver
+package resolvers
 
 import (
 	"github.com/onflow/flow-cli/pkg/flowkit"
