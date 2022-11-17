@@ -320,7 +320,6 @@ func (a *Accounts) AddContract(
 	)
 
 	err := deployment.Add(
-		contract.Name,
 		contract.Location,
 		account.Address(),
 		account.Name(),
