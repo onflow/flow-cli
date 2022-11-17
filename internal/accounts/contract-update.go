@@ -91,9 +91,9 @@ func updateContract(
 	account, err := srv.Accounts.AddContract(
 		to,
 		&services.Contract{
-			Source:   code,
+			Code:     code,
 			Args:     contractArgs,
-			Filename: filename,
+			Location: filename,
 			Network:  globalFlags.Network,
 		},
 		true,

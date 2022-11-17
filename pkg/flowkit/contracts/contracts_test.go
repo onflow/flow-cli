@@ -169,7 +169,7 @@ func (t testLoader) Normalize(base, relative string) string {
 
 func contractBySource(all *contracts.Deployments, source string) *contracts.Contract {
 	for _, c := range all.Contracts() {
-		if c.Source() == source {
+		if c.Location() == source {
 			return c
 		}
 	}

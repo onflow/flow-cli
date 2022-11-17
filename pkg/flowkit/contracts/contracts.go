@@ -41,8 +41,8 @@ import (
 // and arguments used to deploy. Code contains replaced import statements with concrete addresses.
 type Contract struct {
 	index          int64
+	location       string
 	name           string
-	source         string
 	accountAddress flow.Address
 	accountName    string
 	code           string
@@ -54,25 +54,28 @@ type Contract struct {
 
 func newContract(
 	index int,
-	contractName,
-	contractSource,
-	contractCode string,
+	location,
+	code string,
 	accountAddress flow.Address,
 	accountName string,
 	args []cadence.Value,
 ) (*Contract, error) {
-	program, err := parser.ParseProgram([]byte(contractCode), nil)
+	program, err := parser.ParseProgram([]byte(code), nil)
 	if err != nil {
 		return nil, err
 	}
 
+	if len(program.CompositeDeclarations())+len(program.InterfaceDeclarations()) != 1 {
+		return nil, fmt.Errorf("the code must declare exactly one contract or contract interface")
+	}
+
 	return &Contract{
 		index:          int64(index),
-		name:           contractName,
-		source:         contractSource,
+		location:       location,
+		name:           parseName(program),
 		accountAddress: accountAddress,
 		accountName:    accountName,
-		code:           contractCode,
+		code:           code,
 		program:        program,
 		args:           args,
 		dependencies:   make(map[string]*Contract),
@@ -88,8 +91,8 @@ func (c *Contract) Name() string {
 	return c.name
 }
 
-func (c *Contract) Source() string {
-	return c.source
+func (c *Contract) Location() string {
+	return c.location
 }
 
 func (c *Contract) Code() string {
@@ -103,10 +106,10 @@ func (c *Contract) Args() []cadence.Value {
 func (c *Contract) TranspiledCode() string {
 	code := c.code
 
-	for source, dep := range c.dependencies {
+	for location, dep := range c.dependencies {
 		code = strings.Replace(
 			code,
-			fmt.Sprintf(`"%s"`, source),
+			fmt.Sprintf(`"%s"`, location),
 			fmt.Sprintf("0x%s", dep.Target()),
 			1,
 		)
@@ -147,12 +150,28 @@ func (c *Contract) imports() []string {
 	return imports
 }
 
-func (c *Contract) addDependency(source string, dep *Contract) {
-	c.dependencies[source] = dep
+func (c *Contract) addDependency(location string, dep *Contract) {
+	c.dependencies[location] = dep
 }
 
 func (c *Contract) addAlias(location string, target flow.Address) {
 	c.aliases[location] = target
+}
+
+func parseName(program *ast.Program) string {
+	for _, compositeDeclaration := range program.CompositeDeclarations() {
+		if compositeDeclaration.CompositeKind == common.CompositeKindContract {
+			return compositeDeclaration.Identifier.Identifier
+		}
+	}
+
+	for _, interfaceDeclaration := range program.InterfaceDeclarations() {
+		if interfaceDeclaration.CompositeKind == common.CompositeKindContract {
+			return interfaceDeclaration.Identifier.Identifier
+		}
+	}
+
+	return ""
 }
 
 func absolutePath(basePath, relativePath string) string {
@@ -163,17 +182,17 @@ func absolutePath(basePath, relativePath string) string {
 //
 // Containing functionality to build a dependency tree between contracts and sort them based on that.
 type Deployments struct {
-	contracts         []*Contract
-	loader            Loader
-	aliases           map[string]string
-	contractsBySource map[string]*Contract
+	contracts           []*Contract
+	loader              Loader
+	aliases             map[string]string
+	contractsByLocation map[string]*Contract
 }
 
 func NewDeployments(loader Loader, aliases map[string]string) *Deployments {
 	return &Deployments{
-		loader:            loader,
-		aliases:           aliases,
-		contractsBySource: make(map[string]*Contract),
+		loader:              loader,
+		aliases:             aliases,
+		contractsByLocation: make(map[string]*Contract),
 	}
 }
 
@@ -201,21 +220,19 @@ func (c *Deployments) Sort() error {
 }
 
 func (c *Deployments) Add(
-	name,
-	source string,
+	location string,
 	accountAddress flow.Address,
 	accountName string,
 	args []cadence.Value,
 ) error {
-	contractCode, err := c.loader.Load(source)
+	contractCode, err := c.loader.Load(location)
 	if err != nil {
 		return err
 	}
 
 	contract, err := newContract(
 		len(c.contracts),
-		name,
-		source,
+		location,
 		string(contractCode),
 		accountAddress,
 		accountName,
@@ -226,7 +243,7 @@ func (c *Deployments) Add(
 	}
 
 	c.contracts = append(c.contracts, contract)
-	c.contractsBySource[contract.source] = contract
+	c.contractsByLocation[contract.location] = contract
 
 	return nil
 }
@@ -234,18 +251,17 @@ func (c *Deployments) Add(
 // resolveImports checks every contract import and builds a dependency tree.
 func (c *Deployments) resolveImports() error {
 	for _, contract := range c.contracts {
-		for _, source := range contract.imports() {
-			importPath := c.loader.Normalize(contract.source, source)
-
+		for _, location := range contract.imports() {
+			importPath := location // TODO: c.loader.Normalize(contract.source, source)
 			importAlias, isAlias := c.aliases[importPath]
-			importContract, isContract := c.contractsBySource[importPath]
+			importContract, isContract := c.contractsByLocation[importPath]
 
 			if isContract {
-				contract.addDependency(source, importContract)
+				contract.addDependency(location, importContract)
 			} else if isAlias {
-				contract.addAlias(source, flow.HexToAddress(importAlias))
+				contract.addAlias(location, flow.HexToAddress(importAlias))
 			} else {
-				return fmt.Errorf("import from %s could not be found: %s, make sure import path is correct.", contract.name, importPath)
+				return fmt.Errorf("import from %s could not be found: %s, make sure import path is correct", contract.Name(), importPath)
 			}
 		}
 	}
