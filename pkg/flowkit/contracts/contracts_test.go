@@ -234,7 +234,7 @@ func TestResolveImports(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
-			c := contracts.New(testLoader{}, noAliases)
+			c := contracts.NewDeployments(testLoader{}, noAliases)
 
 			for _, contract := range testCase.contracts {
 				err := c.Add(
@@ -284,7 +284,7 @@ func TestContractDeploymentOrder(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
-			c := contracts.New(testLoader{}, noAliases)
+			c := contracts.NewDeployments(testLoader{}, noAliases)
 
 			for _, contract := range testCase.contracts {
 				err := c.Add(

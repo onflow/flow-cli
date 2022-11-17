@@ -224,7 +224,7 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 		)
 	}
 
-	deploy := contracts.New(
+	deployment := contracts.NewDeployments(
 		contracts.FilesystemLoader{
 			Reader: p.state.ReaderWriter(),
 		},
@@ -238,7 +238,7 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 	}
 
 	for _, contract := range confContracts {
-		if err := deploy.Add(
+		if err := deployment.Add(
 			contract.Name,
 			contract.Source,
 			contract.AccountAddress,
@@ -249,20 +249,20 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 		}
 	}
 
-	if err := deploy.Sort(); err != nil {
+	if err := deployment.Sort(); err != nil {
 		return nil, err
 	}
 
 	p.logger.Info(fmt.Sprintf(
 		"\nDeploying %d contracts for accounts: %s\n",
-		len(deploy.Contracts()),
+		len(deployment.Contracts()),
 		strings.Join(p.state.AccountNamesForNetwork(network), ","),
 	))
 	defer p.logger.StopProgress()
 
 	deployErr := false
 	numOfUpdates := 0
-	for _, contract := range deploy.Contracts() {
+	for _, contract := range deployment.Contracts() {
 		block, err := p.gateway.GetLatestBlock()
 		if err != nil {
 			return nil, err
@@ -406,5 +406,5 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 		return nil, err
 	}
 
-	return deploy.Contracts(), nil
+	return deployment.Contracts(), nil
 }

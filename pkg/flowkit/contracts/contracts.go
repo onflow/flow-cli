@@ -169,7 +169,7 @@ type Deployments struct {
 	contractsBySource map[string]*Contract
 }
 
-func New(loader Loader, aliases map[string]string) *Deployments {
+func NewDeployments(loader Loader, aliases map[string]string) *Deployments {
 	return &Deployments{
 		loader:            loader,
 		aliases:           aliases,
