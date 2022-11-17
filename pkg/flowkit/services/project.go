@@ -238,13 +238,13 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 	}
 
 	for _, contract := range confContracts {
-		if err := deployment.Add(
-			contract.Name,
+		_, err := deployment.Add(
 			contract.Source,
 			contract.AccountAddress,
 			contract.AccountName,
 			contract.Args,
-		); err != nil {
+		)
+		if err != nil {
 			return nil, err
 		}
 	}
