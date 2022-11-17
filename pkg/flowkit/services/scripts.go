@@ -27,9 +27,9 @@ import (
 
 	"github.com/onflow/cadence"
 
-	"github.com/onflow/flow-cli/pkg/flowkit/contracts"
 	"github.com/onflow/flow-cli/pkg/flowkit/gateway"
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
+	"github.com/onflow/flow-cli/pkg/flowkit/resolvers"
 )
 
 // Scripts is a service that handles all script-related interactions.
@@ -54,7 +54,7 @@ func NewScripts(
 
 // Execute script code with passed arguments on the selected network.
 func (s *Scripts) Execute(code []byte, args []cadence.Value, scriptPath string, network string) (cadence.Value, error) {
-	resolver, err := contracts.NewResolver(code)
+	resolver, err := resolvers.NewResolver(code)
 	if err != nil {
 		return nil, err
 	}

@@ -30,9 +30,9 @@ import (
 
 	"github.com/onflow/flow-go-sdk/crypto"
 
-	"github.com/onflow/flow-cli/pkg/flowkit/contracts"
 	"github.com/onflow/flow-cli/pkg/flowkit/gateway"
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
+	"github.com/onflow/flow-cli/pkg/flowkit/resolvers"
 )
 
 // Project is a service that handles all interactions for a state.
@@ -213,7 +213,7 @@ func (p *Project) CheckForStandardContractUsageOnMainnet() error {
 // Retrieve all the contracts for specified network, sort them for deployment
 // deploy one by one and replace the imports in the contract source so it corresponds
 // to the account name the contract was deployed to.
-func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, error) {
+func (p *Project) Deploy(network string, update bool) ([]*resolvers.Contract, error) {
 	if p.state == nil {
 		return nil, config.ErrDoesNotExist
 	}
@@ -224,8 +224,8 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 		)
 	}
 
-	deployment := contracts.NewDeployments(
-		contracts.FilesystemLoader{
+	deployment := resolvers.NewDeployments(
+		resolvers.FilesystemLoader{
 			Reader: p.state.ReaderWriter(),
 		},
 		p.state.AliasesForNetwork(network),
