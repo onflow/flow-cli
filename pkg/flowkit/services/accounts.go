@@ -282,7 +282,6 @@ func (a *Accounts) Create(
 // source code, possible init arguments, the filename and network are only
 // required if a contract has imports that need resolving.
 type Contract struct {
-	Name     string
 	Code     []byte
 	Args     []cadence.Value
 	Location string
@@ -292,9 +291,6 @@ type Contract struct {
 func (c *Contract) validate(hasImports bool) error {
 	if c.Code == nil {
 		return fmt.Errorf("must provide contract source code")
-	}
-	if c.Name == "" {
-		return fmt.Errorf("must provide contract name")
 	}
 	if hasImports && c.Network == "" {
 		return fmt.Errorf("missing network, specify which network to use to resolve imports in transaction code")
@@ -319,7 +315,7 @@ func (a *Accounts) AddContract(
 		a.state.AliasesForNetwork(contract.Network),
 	)
 
-	err := deployment.Add(
+	deploy, err := deployment.Add(
 		contract.Location,
 		account.Address(),
 		account.Name(),
@@ -329,32 +325,29 @@ func (a *Accounts) AddContract(
 		return nil, fmt.Errorf("error adding contract: %w", err)
 	}
 
-	for _, c := range a.state.Contracts().ByNetwork(contract.Network) {
-		err := deployment.Add(
-			c.Location,
-			account.Address(),
-			account.Name(),
-			nil,
-		)
+	if err = contract.validate(deploy.HasImports()); err != nil {
+		return nil, err
+	}
+
+	if deploy.HasImports() {
+		// add all contracts for that network from configuration in order to resolve any needed imports
+		for _, c := range a.state.Contracts().ByNetwork(contract.Network) {
+			_, err := deployment.Add(
+				c.Location,
+				account.Address(),
+				account.Name(),
+				nil,
+			)
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		err = deployment.ResolveImports()
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("error resolving imports: %w", err)
 		}
 	}
-
-	err = deployment.Sort()
-	if err != nil {
-		return nil, fmt.Errorf("error sorting deployments: %w", err)
-	}
-
-	var deploy *contracts.Contract
-	for _, d := range deployment.Contracts() {
-		if d.Location() == contract.Location {
-			deploy = d
-			break
-		}
-	}
-
-	fmt.Println("deploying", deploy.TranspiledCode())
 
 	tx, err := flowkit.NewAddAccountContractTransaction(
 		account,
@@ -362,20 +355,15 @@ func (a *Accounts) AddContract(
 		deploy.TranspiledCode(),
 		deploy.Args(),
 	)
-	if err != nil {
-		return nil, err
-	}
-
-	// if we are updating contract
 	if updateExisting {
 		tx, err = flowkit.NewUpdateAccountContractTransaction(
 			account,
-			contract.Name,
+			deploy.Name(),
 			deploy.TranspiledCode(),
 		)
-		if err != nil {
-			return nil, err
-		}
+	}
+	if err != nil {
+		return nil, err
 	}
 
 	tx, err = a.prepareTransaction(tx, account)
@@ -384,16 +372,11 @@ func (a *Accounts) AddContract(
 	}
 
 	a.logger.Info(fmt.Sprintf("Transaction ID: %s", tx.FlowTransaction().ID()))
-
-	status := "Adding contract '%s' to account '%s'..."
-	if updateExisting {
-		status = "Updating contract '%s' on account '%s'..."
-	}
-
 	a.logger.StartProgress(
 		fmt.Sprintf(
-			status,
-			contract.Name,
+			"%s contract '%s' on account '%s'...",
+			map[bool]string{true: "Updating", false: "Creating"}[updateExisting],
+			deploy.Name(),
 			account.Address(),
 		),
 	)
@@ -402,7 +385,7 @@ func (a *Accounts) AddContract(
 	// send transaction with contract
 	sentTx, err := a.gateway.SendSignedTransaction(tx)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to send transaction to deploy a contract: %w", err)
 	}
 
 	// we wait for transaction to be sealed
@@ -410,29 +393,19 @@ func (a *Accounts) AddContract(
 	if err != nil {
 		return nil, err
 	}
-
 	if trx.Error != nil {
-		a.logger.Error("Failed to deploy contract")
-		return nil, trx.Error
+		return nil, fmt.Errorf("failed to deploy contract: %w", trx.Error)
 	}
 
 	update, err := a.gateway.GetAccount(account.Address())
 
 	a.logger.StopProgress()
-
-	if updateExisting {
-		a.logger.Info(fmt.Sprintf(
-			"Contract '%s' updated on the account '%s'.",
-			contract.Name,
-			account.Address(),
-		))
-	} else {
-		a.logger.Info(fmt.Sprintf(
-			"Contract '%s' deployed to the account '%s'.",
-			contract.Name,
-			account.Address(),
-		))
-	}
+	a.logger.Info(fmt.Sprintf(
+		"Contract '%s' %s on the account '%s'.",
+		deploy.Name(),
+		map[bool]string{true: "updated", false: "created"}[updateExisting],
+		account.Address(),
+	))
 
 	return update, err
 }
