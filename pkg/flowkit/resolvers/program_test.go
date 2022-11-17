@@ -158,8 +158,8 @@ func (t testLoader) Normalize(base, relative string) string {
 	return relative
 }
 
-func contractBySource(all *resolvers.Deployments, source string) *resolvers.Code {
-	for _, c := range all.Contracts() {
+func contractBySource(all *resolvers.ImportResolver, source string) *resolvers.Program {
+	for _, c := range all.Programs() {
 		if c.Location() == source {
 			return c
 		}
@@ -225,7 +225,7 @@ func TestResolveImports(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
-			c := resolvers.NewDeployments(testLoader{}, noAliases)
+			c := resolvers.NewImportResolver(testLoader{}, noAliases)
 
 			for _, contract := range testCase.contracts {
 				_, err := c.Add(
@@ -262,7 +262,7 @@ func TestResolveImports(t *testing.T) {
 
 					assert.Equal(t, contract.Dependencies()[dependency.location], contractDependency)
 
-					assert.Contains(t, contract.TranspiledCode(), dependency.accountAddress.Hex())
+					assert.Contains(t, contract.ReplacedImports(), dependency.accountAddress.Hex())
 				}
 			}
 		})
@@ -274,7 +274,7 @@ func TestContractDeploymentOrder(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
-			c := resolvers.NewDeployments(testLoader{}, noAliases)
+			c := resolvers.NewImportResolver(testLoader{}, noAliases)
 
 			for _, contract := range testCase.contracts {
 				_, err := c.Add(
@@ -306,11 +306,11 @@ func TestContractDeploymentOrder(t *testing.T) {
 			require.Equal(
 				t,
 				len(testCase.expectedDeploymentOrder),
-				len(c.Contracts()),
+				len(c.Programs()),
 				"deployed contract count does not match expected count",
 			)
 
-			for i, deployedContract := range c.Contracts() {
+			for i, deployedContract := range c.Programs() {
 				assert.Equal(t, testCase.expectedDeploymentOrder[i].location, deployedContract.Location())
 			}
 		})

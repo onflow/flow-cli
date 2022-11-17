@@ -308,7 +308,7 @@ func (a *Accounts) AddContract(
 	updateExisting bool,
 ) (*flow.Account, error) {
 
-	deployment := resolvers.NewDeployments(
+	deployment := resolvers.NewImportResolver(
 		resolvers.FilesystemLoader{
 			Reader: a.state.ReaderWriter(),
 		},
@@ -352,14 +352,14 @@ func (a *Accounts) AddContract(
 	tx, err := flowkit.NewAddAccountContractTransaction(
 		account,
 		deploy.Name(),
-		deploy.TranspiledCode(),
+		deploy.ReplacedImports(),
 		deploy.Args(),
 	)
 	if updateExisting {
 		tx, err = flowkit.NewUpdateAccountContractTransaction(
 			account,
 			deploy.Name(),
-			deploy.TranspiledCode(),
+			deploy.ReplacedImports(),
 		)
 	}
 	if err != nil {
