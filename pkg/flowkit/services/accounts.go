@@ -283,14 +283,14 @@ func (a *Accounts) Create(
 // required if a contract has imports that need resolving.
 type Contract struct {
 	Name     string
-	Source   []byte
+	Code     []byte
 	Args     []cadence.Value
-	Filename string
+	Location string
 	Network  string
 }
 
 func (c *Contract) validate(hasImports bool) error {
-	if c.Source == nil {
+	if c.Code == nil {
 		return fmt.Errorf("must provide contract source code")
 	}
 	if c.Name == "" {
@@ -299,7 +299,7 @@ func (c *Contract) validate(hasImports bool) error {
 	if hasImports && c.Network == "" {
 		return fmt.Errorf("missing network, specify which network to use to resolve imports in transaction code")
 	}
-	if hasImports && c.Filename == "" {
+	if hasImports && c.Location == "" {
 		return fmt.Errorf("cannot resolve imports without specifying a contract filename")
 	}
 	return nil
@@ -311,43 +311,58 @@ func (a *Accounts) AddContract(
 	contract *Contract,
 	updateExisting bool,
 ) (*flow.Account, error) {
-	resolver, err := contracts.NewResolver(contract.Source)
+
+	deployment := contracts.NewDeployments(
+		contracts.FilesystemLoader{
+			Reader: a.state.ReaderWriter(),
+		},
+		a.state.AliasesForNetwork(contract.Network),
+	)
+
+	err := deployment.Add(
+		contract.Name,
+		contract.Location,
+		account.Address(),
+		account.Name(),
+		contract.Args,
+	)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error adding contract: %w", err)
 	}
 
-	contract.Name, err = resolver.Name()
-	if err != nil {
-		return nil, err
-	}
-
-	hasFileImports := resolver.HasFileImports()
-	err = contract.validate(hasFileImports)
-	if err != nil {
-		return nil, err
-	}
-
-	if hasFileImports {
-		contractsNetwork, err := a.state.DeploymentContractsByNetwork(contract.Network)
-		if err != nil {
-			return nil, err
-		}
-
-		contract.Source, err = resolver.ResolveImports(
-			contract.Filename,
-			contractsNetwork,
-			a.state.AliasesForNetwork(contract.Network),
+	for _, c := range a.state.Contracts().ByNetwork(contract.Network) {
+		err := deployment.Add(
+			c.Name,
+			c.Source,
+			account.Address(),
+			account.Name(),
+			nil,
 		)
 		if err != nil {
 			return nil, err
 		}
 	}
 
+	err = deployment.Sort()
+	if err != nil {
+		return nil, fmt.Errorf("error sorting deployments: %w", err)
+	}
+
+	var deploy *contracts.Contract
+	for _, d := range deployment.Contracts() {
+		if d.Location() == contract.Location {
+			deploy = d
+			break
+		}
+	}
+
+	fmt.Println("deploying", deploy.TranspiledCode())
+
 	tx, err := flowkit.NewAddAccountContractTransaction(
 		account,
-		contract.Name,
-		string(contract.Source),
-		contract.Args,
+		deploy.Name(),
+		deploy.TranspiledCode(),
+		deploy.Args(),
 	)
 	if err != nil {
 		return nil, err
@@ -358,7 +373,7 @@ func (a *Accounts) AddContract(
 		tx, err = flowkit.NewUpdateAccountContractTransaction(
 			account,
 			contract.Name,
-			string(contract.Source),
+			deploy.TranspiledCode(),
 		)
 		if err != nil {
 			return nil, err
