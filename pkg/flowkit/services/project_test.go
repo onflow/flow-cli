@@ -163,7 +163,7 @@ func TestProject(t *testing.T) {
 }
 
 // used for integration tests
-func simpleDeploy(state *flowkit.State, s *Services, update bool) ([]*resolvers.Contract, error) {
+func simpleDeploy(state *flowkit.State, s *Services, update bool) ([]*resolvers.Code, error) {
 	srvAcc, _ := state.EmulatorServiceAccount()
 
 	c := config.Contract{

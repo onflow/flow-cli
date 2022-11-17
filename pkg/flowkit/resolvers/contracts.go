@@ -39,7 +39,7 @@ import (
 // All the contract dependencies are defined here and later used when deploying on the network to
 // define the order of deployments. We also define the account to which the contract needs to be deployed,
 // and arguments used to deploy. Code contains replaced import statements with concrete addresses.
-type Contract struct {
+type Code struct {
 	index          int64
 	location       string
 	name           string
@@ -48,7 +48,7 @@ type Contract struct {
 	code           string
 	args           []cadence.Value
 	program        *ast.Program
-	dependencies   map[string]*Contract
+	dependencies   map[string]*Code
 	aliases        map[string]flow.Address
 }
 
@@ -59,7 +59,7 @@ func newContract(
 	accountAddress flow.Address,
 	accountName string,
 	args []cadence.Value,
-) (*Contract, error) {
+) (*Code, error) {
 	program, err := parser.ParseProgram([]byte(code), nil)
 	if err != nil {
 		return nil, err
@@ -69,7 +69,7 @@ func newContract(
 		return nil, fmt.Errorf("the code must declare exactly one contract or contract interface")
 	}
 
-	return &Contract{
+	return &Code{
 		index:          int64(index),
 		location:       location,
 		name:           parseName(program),
@@ -78,32 +78,32 @@ func newContract(
 		code:           code,
 		program:        program,
 		args:           args,
-		dependencies:   make(map[string]*Contract),
+		dependencies:   make(map[string]*Code),
 		aliases:        make(map[string]flow.Address),
 	}, nil
 }
 
-func (c *Contract) ID() int64 {
+func (c *Code) ID() int64 {
 	return c.index
 }
 
-func (c *Contract) Name() string {
+func (c *Code) Name() string {
 	return c.name
 }
 
-func (c *Contract) Location() string {
+func (c *Code) Location() string {
 	return c.location
 }
 
-func (c *Contract) Code() string {
+func (c *Code) Code() string {
 	return c.code
 }
 
-func (c *Contract) Args() []cadence.Value {
+func (c *Code) Args() []cadence.Value {
 	return c.args
 }
 
-func (c *Contract) TranspiledCode() string {
+func (c *Code) TranspiledCode() string {
 	code := c.code
 
 	for location, dep := range c.dependencies {
@@ -126,22 +126,22 @@ func (c *Contract) TranspiledCode() string {
 
 	return code
 }
-func (c *Contract) AccountName() string {
+func (c *Code) AccountName() string {
 	return c.accountName
 }
-func (c *Contract) Target() flow.Address {
+func (c *Code) Target() flow.Address {
 	return c.accountAddress
 }
 
-func (c *Contract) Dependencies() map[string]*Contract {
+func (c *Code) Dependencies() map[string]*Code {
 	return c.dependencies
 }
 
-func (c *Contract) HasImports() bool {
+func (c *Code) HasImports() bool {
 	return len(c.imports()) > 0
 }
 
-func (c *Contract) imports() []string {
+func (c *Code) imports() []string {
 	imports := make([]string, 0)
 
 	for _, imp := range c.program.ImportDeclarations() {
@@ -154,11 +154,11 @@ func (c *Contract) imports() []string {
 	return imports
 }
 
-func (c *Contract) addDependency(location string, dep *Contract) {
+func (c *Code) addDependency(location string, dep *Code) {
 	c.dependencies[location] = dep
 }
 
-func (c *Contract) addAlias(location string, target flow.Address) {
+func (c *Code) addAlias(location string, target flow.Address) {
 	c.aliases[location] = target
 }
 
@@ -186,21 +186,21 @@ func absolutePath(basePath, relativePath string) string {
 //
 // Containing functionality to build a dependency tree between contracts and sort them based on that.
 type Deployments struct {
-	contracts           []*Contract
+	contracts           []*Code
 	loader              Loader
 	aliases             map[string]string
-	contractsByLocation map[string]*Contract
+	contractsByLocation map[string]*Code
 }
 
 func NewDeployments(loader Loader, aliases map[string]string) *Deployments {
 	return &Deployments{
 		loader:              loader,
 		aliases:             aliases,
-		contractsByLocation: make(map[string]*Contract),
+		contractsByLocation: make(map[string]*Code),
 	}
 }
 
-func (c *Deployments) Contracts() []*Contract {
+func (c *Deployments) Contracts() []*Code {
 	return c.contracts
 }
 
@@ -228,7 +228,7 @@ func (c *Deployments) Add(
 	accountAddress flow.Address,
 	accountName string,
 	args []cadence.Value,
-) (*Contract, error) {
+) (*Code, error) {
 	contractCode, err := c.loader.Load(location)
 	if err != nil {
 		return nil, err
@@ -280,7 +280,7 @@ func (c *Deployments) ResolveImports() error {
 //
 // This function constructs a directed graph in which contracts are nodes and imports are edges.
 // The ordering is computed by performing a topological sort on the constructed graph.
-func sortByDeploymentOrder(contracts []*Contract) ([]*Contract, error) {
+func sortByDeploymentOrder(contracts []*Code) ([]*Code, error) {
 	g := simple.NewDirectedGraph()
 
 	for _, c := range contracts {
@@ -306,8 +306,8 @@ func sortByDeploymentOrder(contracts []*Contract) ([]*Contract, error) {
 	return nodesToContracts(sorted), nil
 }
 
-func nodeSetsToContractSets(nodes [][]graph.Node) [][]*Contract {
-	contracts := make([][]*Contract, len(nodes))
+func nodeSetsToContractSets(nodes [][]graph.Node) [][]*Code {
+	contracts := make([][]*Code, len(nodes))
 
 	for i, s := range nodes {
 		contracts[i] = nodesToContracts(s)
@@ -316,11 +316,11 @@ func nodeSetsToContractSets(nodes [][]graph.Node) [][]*Contract {
 	return contracts
 }
 
-func nodesToContracts(nodes []graph.Node) []*Contract {
-	contracts := make([]*Contract, len(nodes))
+func nodesToContracts(nodes []graph.Node) []*Code {
+	contracts := make([]*Code, len(nodes))
 
 	for i, s := range nodes {
-		contracts[i] = s.(*Contract)
+		contracts[i] = s.(*Code)
 	}
 
 	return contracts
@@ -329,7 +329,7 @@ func nodesToContracts(nodes []graph.Node) []*Contract {
 // CyclicImportError is returned when contract contain cyclic imports one to the
 // other which is not possible to be resolved and deployed.
 type CyclicImportError struct {
-	Cycles [][]*Contract
+	Cycles [][]*Code
 }
 
 func (e *CyclicImportError) contractNames() [][]string {

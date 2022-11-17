@@ -70,7 +70,7 @@ func deploy(
 }
 
 type DeployResult struct {
-	contracts []*resolvers.Contract
+	contracts []*resolvers.Code
 }
 
 func (r *DeployResult) JSON() interface{} {
