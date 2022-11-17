@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package resolvers_test
+package resolver_test
 
 import (
 	"fmt"
@@ -30,7 +30,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/onflow/flow-cli/pkg/flowkit/resolvers"
+	"github.com/onflow/flow-cli/pkg/flowkit/resolver"
 )
 
 type testContract struct {
@@ -158,7 +158,7 @@ func (t testLoader) Normalize(base, relative string) string {
 	return relative
 }
 
-func contractBySource(all *resolvers.ImportResolver, source string) *resolvers.Program {
+func contractBySource(all *resolver.DeploymentImports, source string) *resolver.Program {
 	for _, c := range all.Programs() {
 		if c.Location() == source {
 			return c
@@ -205,7 +205,7 @@ func getTestCases() []contractTestCase {
 		{
 			name:                    "Two contracts with import cycle",
 			contracts:               []testContract{testContractE, testContractF},
-			expectedDeploymentError: &resolvers.CyclicImportError{},
+			expectedDeploymentError: &resolver.CyclicImportError{},
 		},
 		{
 			name:                    "Single contract with two imports",
@@ -225,10 +225,10 @@ func TestResolveImports(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
-			c := resolvers.NewImportResolver(testLoader{}, noAliases)
+			c := resolver.NewDeploymentImports(testLoader{}, noAliases)
 
 			for _, contract := range testCase.contracts {
-				_, err := c.Add(
+				_, err := c.AddProgram(
 					contract.location,
 					contract.accountAddress,
 					contract.accountName,
@@ -274,10 +274,10 @@ func TestContractDeploymentOrder(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
-			c := resolvers.NewImportResolver(testLoader{}, noAliases)
+			c := resolver.NewDeploymentImports(testLoader{}, noAliases)
 
 			for _, contract := range testCase.contracts {
-				_, err := c.Add(
+				_, err := c.AddProgram(
 					contract.location,
 					contract.accountAddress,
 					contract.accountName,

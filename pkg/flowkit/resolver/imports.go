@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package resolvers
+package resolver
 
 import (
 	"fmt"
@@ -27,67 +27,41 @@ import (
 	"gonum.org/v1/gonum/graph/topo"
 )
 
-// ImportResolver contains collection of Cadence programs and logic how to resolve imports.
+// ProgramImports contains collection of Cadence programs and logic how to resolve imports.
 //
 // Containing functionality to build a dependency tree between programs and sort them based on that.
-type ImportResolver struct {
+type ProgramImports struct {
 	programs           []*Program
 	loader             Loader
 	aliases            map[string]string
 	programsByLocation map[string]*Program
 }
 
-func NewImportResolver(loader Loader, aliases map[string]string) *ImportResolver {
-	return &ImportResolver{
+func NewProgramImports(loader Loader, aliases map[string]string) *ProgramImports {
+	return &ProgramImports{
 		loader:             loader,
 		aliases:            aliases,
 		programsByLocation: make(map[string]*Program),
 	}
 }
 
-func (c *ImportResolver) Programs() []*Program {
-	return c.programs
+func (i *ProgramImports) Programs() []*Program {
+	return i.programs
 }
 
-// Sort contracts by deployment order.
-//
-// Order of sorting is dependent on the possible imports contract contains, since
-// any imported contract must be deployed before deploying the contract with that import.
-// Only applicable to contracts.
-func (c *ImportResolver) Sort() error {
-	for _, p := range c.programs {
-		if !p.isContract() {
-			return fmt.Errorf("sorting is only possible for contracts")
-		}
-	}
-
-	err := c.ResolveImports()
-	if err != nil {
-		return err
-	}
-
-	sorted, err := sortByDeploymentOrder(c.programs)
-	if err != nil {
-		return err
-	}
-
-	c.programs = sorted
-	return nil
-}
-
-func (c *ImportResolver) Add(
+func (i *ProgramImports) AddProgram(
 	location string,
 	accountAddress flow.Address,
 	accountName string,
 	args []cadence.Value,
 ) (*Program, error) {
-	contractCode, err := c.loader.Load(location)
+	contractCode, err := i.loader.Load(location)
 	if err != nil {
 		return nil, err
 	}
 
-	contract, err := newProgram(
-		len(c.programs),
+	program, err := newProgram(
+		len(i.programs),
 		location,
 		string(contractCode),
 		accountAddress,
@@ -98,19 +72,19 @@ func (c *ImportResolver) Add(
 		return nil, err
 	}
 
-	c.programs = append(c.programs, contract)
-	c.programsByLocation[contract.location] = contract
+	i.programs = append(i.programs, program)
+	i.programsByLocation[program.location] = program
 
-	return contract, nil
+	return program, nil
 }
 
-// ResolveImports checks every program import and builds a dependency tree.
-func (c *ImportResolver) ResolveImports() error {
-	for _, program := range c.programs {
+// Resolve checks every program import and builds a dependency tree.
+func (i *ProgramImports) Resolve() error {
+	for _, program := range i.programs {
 		for _, location := range program.imports() {
-			importPath := location // TODO: c.loader.Normalize(program.source, source)
-			importAlias, isAlias := c.aliases[importPath]
-			importContract, isContract := c.programsByLocation[importPath]
+			importPath := location // TODO: i.loader.Normalize(program.source, source)
+			importAlias, isAlias := i.aliases[importPath]
+			importContract, isContract := i.programsByLocation[importPath]
 
 			if isContract {
 				program.addDependency(location, importContract)
@@ -122,6 +96,46 @@ func (c *ImportResolver) ResolveImports() error {
 		}
 	}
 
+	return nil
+}
+
+type DeploymentImports struct {
+	*ProgramImports
+}
+
+func NewDeploymentImports(loader Loader, aliases map[string]string) *DeploymentImports {
+	return &DeploymentImports{
+		&ProgramImports{
+			loader:             loader,
+			aliases:            aliases,
+			programsByLocation: make(map[string]*Program),
+		},
+	}
+}
+
+// Sort contracts by deployment order.
+//
+// Order of sorting is dependent on the possible imports contract contains, since
+// any imported contract must be deployed before deploying the contract with that import.
+// Only applicable to contracts.
+func (c *DeploymentImports) Sort() error {
+	for _, p := range c.programs {
+		if !p.isContract() {
+			return fmt.Errorf("sorting is only possible for contracts")
+		}
+	}
+
+	err := c.Resolve()
+	if err != nil {
+		return err
+	}
+
+	sorted, err := sortByDeploymentOrder(c.programs)
+	if err != nil {
+		return err
+	}
+
+	c.programs = sorted
 	return nil
 }
 

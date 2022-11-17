@@ -22,7 +22,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/onflow/flow-cli/pkg/flowkit/resolvers"
+	"github.com/onflow/flow-cli/pkg/flowkit/resolver"
 
 	"github.com/onflow/flow-go-sdk/templates"
 
@@ -308,14 +308,14 @@ func (a *Accounts) AddContract(
 	updateExisting bool,
 ) (*flow.Account, error) {
 
-	deployment := resolvers.NewImportResolver(
-		resolvers.FilesystemLoader{
+	programs := resolver.NewProgramImports(
+		resolver.FilesystemLoader{
 			Reader: a.state.ReaderWriter(),
 		},
 		a.state.AliasesForNetwork(contract.Network),
 	)
 
-	deploy, err := deployment.Add(
+	program, err := programs.AddProgram(
 		contract.Location,
 		account.Address(),
 		account.Name(),
@@ -325,14 +325,14 @@ func (a *Accounts) AddContract(
 		return nil, fmt.Errorf("error adding contract: %w", err)
 	}
 
-	if err = contract.validate(deploy.HasImports()); err != nil {
+	if err = contract.validate(program.HasImports()); err != nil {
 		return nil, err
 	}
 
-	if deploy.HasImports() {
+	if program.HasImports() {
 		// add all contracts for that network from configuration in order to resolve any needed imports
 		for _, c := range a.state.Contracts().ByNetwork(contract.Network) {
-			_, err := deployment.Add(
+			_, err := programs.AddProgram(
 				c.Location,
 				account.Address(),
 				account.Name(),
@@ -343,7 +343,7 @@ func (a *Accounts) AddContract(
 			}
 		}
 
-		err = deployment.ResolveImports()
+		err = programs.Resolve()
 		if err != nil {
 			return nil, fmt.Errorf("error resolving imports: %w", err)
 		}
@@ -351,15 +351,15 @@ func (a *Accounts) AddContract(
 
 	tx, err := flowkit.NewAddAccountContractTransaction(
 		account,
-		deploy.Name(),
-		deploy.ReplacedImports(),
-		deploy.Args(),
+		program.Name(),
+		program.ReplacedImports(),
+		program.Args(),
 	)
 	if updateExisting {
 		tx, err = flowkit.NewUpdateAccountContractTransaction(
 			account,
-			deploy.Name(),
-			deploy.ReplacedImports(),
+			program.Name(),
+			program.ReplacedImports(),
 		)
 	}
 	if err != nil {
@@ -376,7 +376,7 @@ func (a *Accounts) AddContract(
 		fmt.Sprintf(
 			"%s contract '%s' on account '%s'...",
 			map[bool]string{true: "Updating", false: "Creating"}[updateExisting],
-			deploy.Name(),
+			program.Name(),
 			account.Address(),
 		),
 	)
@@ -402,7 +402,7 @@ func (a *Accounts) AddContract(
 	a.logger.StopProgress()
 	a.logger.Info(fmt.Sprintf(
 		"Contract '%s' %s on the account '%s'.",
-		deploy.Name(),
+		program.Name(),
 		map[bool]string{true: "updated", false: "created"}[updateExisting],
 		account.Address(),
 	))

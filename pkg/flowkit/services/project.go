@@ -32,7 +32,7 @@ import (
 
 	"github.com/onflow/flow-cli/pkg/flowkit/gateway"
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
-	"github.com/onflow/flow-cli/pkg/flowkit/resolvers"
+	"github.com/onflow/flow-cli/pkg/flowkit/resolver"
 )
 
 // Project is a service that handles all interactions for a state.
@@ -213,7 +213,7 @@ func (p *Project) CheckForStandardContractUsageOnMainnet() error {
 // Retrieve all the contracts for specified network, sort them for deployment
 // deploy one by one and replace the imports in the contract source so it corresponds
 // to the account name the contract was deployed to.
-func (p *Project) Deploy(network string, update bool) ([]*resolvers.Program, error) {
+func (p *Project) Deploy(network string, update bool) ([]*resolver.Program, error) {
 	if p.state == nil {
 		return nil, config.ErrDoesNotExist
 	}
@@ -224,8 +224,8 @@ func (p *Project) Deploy(network string, update bool) ([]*resolvers.Program, err
 		)
 	}
 
-	deployment := resolvers.NewImportResolver(
-		resolvers.FilesystemLoader{
+	deployment := resolver.NewDeploymentImports(
+		resolver.FilesystemLoader{
 			Reader: p.state.ReaderWriter(),
 		},
 		p.state.AliasesForNetwork(network),
@@ -238,7 +238,7 @@ func (p *Project) Deploy(network string, update bool) ([]*resolvers.Program, err
 	}
 
 	for _, contract := range confContracts {
-		_, err := deployment.Add(
+		_, err := deployment.AddProgram(
 			contract.Source,
 			contract.AccountAddress,
 			contract.AccountName,

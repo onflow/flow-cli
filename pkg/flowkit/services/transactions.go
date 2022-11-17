@@ -29,7 +29,7 @@ import (
 
 	"github.com/onflow/cadence"
 
-	"github.com/onflow/flow-cli/pkg/flowkit/resolvers"
+	"github.com/onflow/flow-cli/pkg/flowkit/resolver"
 
 	"github.com/onflow/flow-go-sdk"
 
@@ -205,7 +205,7 @@ func (t *Transactions) Build(
 		return nil, err
 	}
 
-	resolver, err := resolvers.NewResolver(script.Code)
+	resolver, err := resolver.NewResolver(script.Code)
 	if err != nil {
 		return nil, err
 	}

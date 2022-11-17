@@ -29,7 +29,7 @@ import (
 
 	"github.com/onflow/flow-cli/pkg/flowkit/gateway"
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
-	"github.com/onflow/flow-cli/pkg/flowkit/resolvers"
+	"github.com/onflow/flow-cli/pkg/flowkit/resolver"
 )
 
 // Scripts is a service that handles all script-related interactions.
@@ -54,7 +54,7 @@ func NewScripts(
 
 // Execute script code with passed arguments on the selected network.
 func (s *Scripts) Execute(code []byte, args []cadence.Value, scriptPath string, network string) (cadence.Value, error) {
-	resolver, err := resolvers.NewResolver(code)
+	resolver, err := resolver.NewResolver(code)
 	if err != nil {
 		return nil, err
 	}
