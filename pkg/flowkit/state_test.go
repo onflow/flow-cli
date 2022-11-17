@@ -56,29 +56,29 @@ func generateComplexProject() State {
 			ServiceAccount: "emulator-account",
 		}},
 		Contracts: config.Contracts{{
-			Name:    "NonFungibleToken",
-			Source:  "../hungry-kitties/cadence/contracts/NonFungibleToken.cdc",
-			Network: "emulator",
+			Name:     "NonFungibleToken",
+			Location: "../hungry-kitties/cadence/contracts/NonFungibleToken.cdc",
+			Network:  "emulator",
 		}, {
-			Name:    "FungibleToken",
-			Source:  "../hungry-kitties/cadence/contracts/FungibleToken.cdc",
-			Network: "emulator",
+			Name:     "FungibleToken",
+			Location: "../hungry-kitties/cadence/contracts/FungibleToken.cdc",
+			Network:  "emulator",
 		}, {
-			Name:    "Kibble",
-			Source:  "./cadence/kibble/contracts/Kibble.cdc",
-			Network: "emulator",
+			Name:     "Kibble",
+			Location: "./cadence/kibble/contracts/Kibble.cdc",
+			Network:  "emulator",
 		}, {
-			Name:    "KittyItems",
-			Source:  "./cadence/kittyItems/contracts/KittyItems.cdc",
-			Network: "emulator",
+			Name:     "KittyItems",
+			Location: "./cadence/kittyItems/contracts/KittyItems.cdc",
+			Network:  "emulator",
 		}, {
-			Name:    "KittyItemsMarket",
-			Source:  "./cadence/kittyItemsMarket/contracts/KittyItemsMarket.cdc",
-			Network: "emulator",
+			Name:     "KittyItemsMarket",
+			Location: "./cadence/kittyItemsMarket/contracts/KittyItemsMarket.cdc",
+			Network:  "emulator",
 		}, {
-			Name:    "KittyItemsMarket",
-			Source:  "0x123123123",
-			Network: "testnet",
+			Name:     "KittyItemsMarket",
+			Location: "0x123123123",
+			Network:  "testnet",
 		}},
 		Deployments: config.Deployments{{
 			Network: "emulator",
@@ -169,9 +169,9 @@ func generateSimpleProject() State {
 			ServiceAccount: "emulator-account",
 		}},
 		Contracts: config.Contracts{{
-			Name:    "NonFungibleToken",
-			Source:  "../hungry-kitties/cadence/contracts/NonFungibleToken.cdc",
-			Network: "emulator",
+			Name:     "NonFungibleToken",
+			Location: "../hungry-kitties/cadence/contracts/NonFungibleToken.cdc",
+			Network:  "emulator",
 		}},
 		Deployments: config.Deployments{{
 			Network: "emulator",
@@ -214,14 +214,14 @@ func generateAliasesProject() State {
 			ServiceAccount: "emulator-account",
 		}},
 		Contracts: config.Contracts{{
-			Name:    "NonFungibleToken",
-			Source:  "../hungry-kitties/cadence/contracts/NonFungibleToken.cdc",
-			Network: "emulator",
+			Name:     "NonFungibleToken",
+			Location: "../hungry-kitties/cadence/contracts/NonFungibleToken.cdc",
+			Network:  "emulator",
 		}, {
-			Name:    "FungibleToken",
-			Source:  "../hungry-kitties/cadence/contracts/FungibleToken.cdc",
-			Network: "emulator",
-			Alias:   "ee82856bf20e2aa6",
+			Name:     "FungibleToken",
+			Location: "../hungry-kitties/cadence/contracts/FungibleToken.cdc",
+			Network:  "emulator",
+			Alias:    "ee82856bf20e2aa6",
 		}},
 		Deployments: config.Deployments{{
 			Network: "emulator",
@@ -263,23 +263,23 @@ func generateAliasesComplexProject() State {
 			ServiceAccount: "emulator-account",
 		}},
 		Contracts: config.Contracts{{
-			Name:   "NonFungibleToken",
-			Source: "../hungry-kitties/cadence/contracts/NonFungibleToken.cdc",
+			Name:     "NonFungibleToken",
+			Location: "../hungry-kitties/cadence/contracts/NonFungibleToken.cdc",
 		}, {
-			Name:    "FungibleToken",
-			Source:  "../hungry-kitties/cadence/contracts/FungibleToken.cdc",
-			Network: "emulator",
-			Alias:   "ee82856bf20e2aa6",
+			Name:     "FungibleToken",
+			Location: "../hungry-kitties/cadence/contracts/FungibleToken.cdc",
+			Network:  "emulator",
+			Alias:    "ee82856bf20e2aa6",
 		}, {
-			Name:    "Kibble",
-			Source:  "../hungry-kitties/cadence/contracts/Kibble.cdc",
-			Network: "testnet",
-			Alias:   "ee82856bf20e2aa6",
+			Name:     "Kibble",
+			Location: "../hungry-kitties/cadence/contracts/Kibble.cdc",
+			Network:  "testnet",
+			Alias:    "ee82856bf20e2aa6",
 		}, {
-			Name:    "Kibble",
-			Source:  "../hungry-kitties/cadence/contracts/Kibble.cdc",
-			Network: "emulator",
-			Alias:   "ee82856bf20e2aa6",
+			Name:     "Kibble",
+			Location: "../hungry-kitties/cadence/contracts/Kibble.cdc",
+			Network:  "emulator",
+			Alias:    "ee82856bf20e2aa6",
 		}},
 		Deployments: config.Deployments{{
 			Network: "emulator",
@@ -666,7 +666,7 @@ func Test_Saving(t *testing.T) {
 	assert.NoError(t, err)
 }
 
-//ensures that default emulator values are in config when no emulator is defined in flow.json
+// ensures that default emulator values are in config when no emulator is defined in flow.json
 func Test_DefaultEmulatorNotPresentInConfig(t *testing.T) {
 	configJson := []byte(`{
 		"contracts": {},
@@ -715,7 +715,7 @@ func Test_DefaultEmulatorNotPresentInConfig(t *testing.T) {
 	assert.NoError(t, err)
 }
 
-//ensures that default emulator values are not in config when no emulator is defined in flow.json
+// ensures that default emulator values are not in config when no emulator is defined in flow.json
 func Test_DefaultEmulatorWithoutEmulatorAccountInConfig(t *testing.T) {
 	configJson := []byte(`{
 		"contracts": {},
@@ -739,7 +739,7 @@ func Test_DefaultEmulatorWithoutEmulatorAccountInConfig(t *testing.T) {
 	assert.Equal(t, config.Emulators{}, state.conf.Emulators)
 }
 
-//ensures that default emulator values are in config when emulator is defined in flow.json
+// ensures that default emulator values are in config when emulator is defined in flow.json
 func Test_DefaultEmulatorWithEmulatorAccountInConfig(t *testing.T) {
 	configJson := []byte(`{
 		"contracts": {},
@@ -768,7 +768,7 @@ func Test_DefaultEmulatorWithEmulatorAccountInConfig(t *testing.T) {
 	assert.Equal(t, state.conf.Emulators, config.DefaultEmulators())
 }
 
-//backward compatibility test to ensure that default emulator values are still observed in flow.json
+// backward compatibility test to ensure that default emulator values are still observed in flow.json
 func Test_DefaultEmulatorPresentInConfig(t *testing.T) {
 	configJson := []byte(`{
 		"contracts": {},
@@ -824,7 +824,7 @@ func Test_DefaultEmulatorPresentInConfig(t *testing.T) {
 	assert.NoError(t, err)
 }
 
-//ensures that custom emulator values are still observed in flow.json
+// ensures that custom emulator values are still observed in flow.json
 func Test_CustomEmulatorValuesInConfig(t *testing.T) {
 	configJson := []byte(`{
 		"contracts": {},

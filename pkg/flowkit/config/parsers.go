@@ -117,37 +117,37 @@ func StringToContracts(
 
 	if emulatorAlias != "" {
 		contracts = append(contracts, Contract{
-			Name:    name,
-			Source:  source,
-			Network: DefaultEmulatorNetwork().Name,
-			Alias:   emulatorAlias,
+			Name:     name,
+			Location: source,
+			Network:  DefaultEmulatorNetwork().Name,
+			Alias:    emulatorAlias,
 		})
 	}
 
 	if mainnetAlias != "" {
 		contracts = append(contracts, Contract{
-			Name:    name,
-			Source:  source,
-			Network: DefaultMainnetNetwork().Name,
-			Alias:   mainnetAlias,
+			Name:     name,
+			Location: source,
+			Network:  DefaultMainnetNetwork().Name,
+			Alias:    mainnetAlias,
 		})
 	}
 
 	if testnetAlias != "" {
 		contracts = append(contracts, Contract{
-			Name:    name,
-			Source:  source,
-			Network: DefaultTestnetNetwork().Name,
-			Alias:   testnetAlias,
+			Name:     name,
+			Location: source,
+			Network:  DefaultTestnetNetwork().Name,
+			Alias:    testnetAlias,
 		})
 	}
 
 	if emulatorAlias == "" && testnetAlias == "" {
 		contracts = append(contracts, Contract{
-			Name:    name,
-			Source:  source,
-			Network: "",
-			Alias:   "",
+			Name:     name,
+			Location: source,
+			Network:  "",
+			Alias:    "",
 		})
 	}
 

@@ -69,9 +69,9 @@ func TestProject(t *testing.T) {
 		state, s, gw := setup()
 
 		c := config.Contract{
-			Name:    "Hello",
-			Source:  tests.ContractHelloString.Filename,
-			Network: "emulator",
+			Name:     "Hello",
+			Location: tests.ContractHelloString.Filename,
+			Network:  "emulator",
 		}
 		state.Contracts().AddOrUpdate(c.Name, c)
 
@@ -117,9 +117,9 @@ func TestProject(t *testing.T) {
 		state, s, gw := setup()
 
 		c := config.Contract{
-			Name:    "Hello",
-			Source:  tests.ContractHelloString.Filename,
-			Network: "emulator",
+			Name:     "Hello",
+			Location: tests.ContractHelloString.Filename,
+			Network:  "emulator",
 		}
 		state.Contracts().AddOrUpdate(c.Name, c)
 
@@ -167,9 +167,9 @@ func simpleDeploy(state *flowkit.State, s *Services, update bool) ([]*contracts.
 	srvAcc, _ := state.EmulatorServiceAccount()
 
 	c := config.Contract{
-		Name:    tests.ContractHelloString.Name,
-		Source:  tests.ContractHelloString.Filename,
-		Network: "emulator",
+		Name:     tests.ContractHelloString.Name,
+		Location: tests.ContractHelloString.Filename,
+		Network:  "emulator",
 	}
 	state.Contracts().AddOrUpdate(c.Name, c)
 
@@ -213,19 +213,19 @@ func TestProject_Integration(t *testing.T) {
 		srvAcc, _ := state.EmulatorServiceAccount()
 
 		cA := config.Contract{
-			Name:    tests.ContractA.Name,
-			Source:  tests.ContractA.Filename,
-			Network: "emulator",
+			Name:     tests.ContractA.Name,
+			Location: tests.ContractA.Filename,
+			Network:  "emulator",
 		}
 		cB := config.Contract{
-			Name:    tests.ContractB.Name,
-			Source:  tests.ContractB.Filename,
-			Network: "emulator",
+			Name:     tests.ContractB.Name,
+			Location: tests.ContractB.Filename,
+			Network:  "emulator",
 		}
 		cC := config.Contract{
-			Name:    tests.ContractC.Name,
-			Source:  tests.ContractC.Filename,
-			Network: "emulator",
+			Name:     tests.ContractC.Name,
+			Location: tests.ContractC.Filename,
+			Network:  "emulator",
 		}
 		state.Contracts().AddOrUpdate(cA.Name, cA)
 		state.Contracts().AddOrUpdate(cB.Name, cB)

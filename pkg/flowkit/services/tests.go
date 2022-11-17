@@ -75,7 +75,7 @@ func (t *Tests) importResolver(scriptPath string, readerWriter flowkit.ReaderWri
 			return "", err
 		}
 
-		importedContractFilePath := util.AbsolutePath(scriptPath, importedContract.Source)
+		importedContractFilePath := util.AbsolutePath(scriptPath, importedContract.Location)
 
 		contractCode, err := readerWriter.ReadFile(importedContractFilePath)
 		if err != nil {
@@ -89,7 +89,7 @@ func (t *Tests) importResolver(scriptPath string, readerWriter flowkit.ReaderWri
 func (t *Tests) resolveContract(stringLocation common.StringLocation) (config.Contract, error) {
 	relativePath := stringLocation.String()
 	for _, contract := range *t.state.Contracts() {
-		if contract.Source == relativePath {
+		if contract.Location == relativePath {
 			return contract, nil
 		}
 	}

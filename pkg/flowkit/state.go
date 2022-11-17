@@ -216,7 +216,7 @@ func (p *State) DeploymentContractsByNetwork(network string) ([]Contract, error)
 
 			contract := Contract{
 				Name:           c.Name,
-				Source:         path.Clean(c.Source),
+				Source:         path.Clean(c.Location),
 				AccountAddress: account.address,
 				AccountName:    account.name,
 				Args:           deploymentContract.Args,
@@ -253,7 +253,7 @@ func (p *State) AliasesForNetwork(network string) Aliases {
 	// get all contracts for selected network and if any has an address as target make it an alias
 	for _, contract := range p.conf.Contracts.ByNetwork(network) {
 		if contract.IsAlias() {
-			aliases[path.Clean(contract.Source)] = contract.Alias
+			aliases[path.Clean(contract.Location)] = contract.Alias
 		}
 	}
 

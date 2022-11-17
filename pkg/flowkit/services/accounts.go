@@ -332,8 +332,7 @@ func (a *Accounts) AddContract(
 
 	for _, c := range a.state.Contracts().ByNetwork(contract.Network) {
 		err := deployment.Add(
-			c.Name,
-			c.Source,
+			c.Location,
 			account.Address(),
 			account.Name(),
 			nil,

@@ -70,9 +70,9 @@ func TestExecutingTests(t *testing.T) {
 		st, s, _ := setup()
 
 		c := config.Contract{
-			Name:    tests.ContractHelloString.Name,
-			Source:  tests.ContractHelloString.Filename,
-			Network: "emulator",
+			Name:     tests.ContractHelloString.Name,
+			Location: tests.ContractHelloString.Filename,
+			Network:  "emulator",
 		}
 		st.Contracts().AddOrUpdate(c.Name, c)
 
