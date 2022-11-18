@@ -213,7 +213,7 @@ func (p *Project) CheckForStandardContractUsageOnMainnet() error {
 // Retrieve all the contracts for specified network, sort them for deployment
 // deploy one by one and replace the imports in the contract source so it corresponds
 // to the account name the contract was deployed to.
-func (p *Project) Deploy(network string, update bool) ([]*resolvers.Program, error) {
+func (p *Project) Deploy(network string, update bool) ([]*flowkit.Contract, error) {
 	if p.state == nil {
 		return nil, config.ErrDoesNotExist
 	}
@@ -227,12 +227,11 @@ func (p *Project) Deploy(network string, update bool) ([]*resolvers.Program, err
 		return nil, err
 	}
 
-	deployment, err := resolvers.NewDeployment(
-		contracts,
-		resolvers.FilesystemLoader{
-			Reader: p.state.ReaderWriter(),
-		},
-	)
+	loader := resolvers.FilesystemLoader{
+		Reader: p.state.ReaderWriter(),
+	}
+
+	deployment, err := resolvers.NewDeployment(contracts, loader)
 	if err != nil {
 		return nil, err
 	}
@@ -241,6 +240,9 @@ func (p *Project) Deploy(network string, update bool) ([]*resolvers.Program, err
 	if err != nil {
 		return nil, err
 	}
+
+	aliases := p.state.AliasesForNetwork(network)
+	importReplacer := resolvers.NewFileImports(contracts, aliases)
 
 	p.logger.Info(fmt.Sprintf(
 		"\nDeploying %d contracts for accounts: %s\n", len(sorted),
@@ -268,11 +270,20 @@ func (p *Project) Deploy(network string, update bool) ([]*resolvers.Program, err
 			return nil, fmt.Errorf("failed to fetch information for account %s with error %s", targetAccount.Address(), err.Error())
 		}
 
+		code, err := loader.Load(contract.Location)
+		if err != nil {
+			return nil, err
+		}
+		code, err = importReplacer.Replace(code, contract.Location)
+		if err != nil {
+			return nil, err
+		}
+
 		// create transaction to deploy new contract with args
 		tx, err := flowkit.NewAddAccountContractTransaction(
 			targetAccount,
 			contract.Name,
-			contract.ReplacedImports(),
+			string(code),
 			contract.Args,
 		)
 		if err != nil {
@@ -280,7 +291,7 @@ func (p *Project) Deploy(network string, update bool) ([]*resolvers.Program, err
 		}
 		// check if contract exists on account
 		existingContract, exists := targetAccountInfo.Contracts[contract.Name]
-		noDiffInContract := bytes.Equal([]byte(contract.ReplacedImports()), existingContract)
+		noDiffInContract := bytes.Equal(code, existingContract)
 
 		if exists && !update {
 			p.logger.Error(fmt.Sprintf(
@@ -289,7 +300,7 @@ func (p *Project) Deploy(network string, update bool) ([]*resolvers.Program, err
 			))
 			deployErr = true
 			continue
-		} else if exists && len(contract.Args()) > 0 { // TODO(sideninja) discuss removing the contract and redeploying it
+		} else if exists && len(contract.Args) > 0 { // TODO(sideninja) discuss removing the contract and redeploying it
 			p.logger.Error(fmt.Sprintf(
 				"contract %s is already deployed and can not be updated with initialization arguments",
 				contract.Name,
@@ -305,7 +316,7 @@ func (p *Project) Deploy(network string, update bool) ([]*resolvers.Program, err
 				))
 				continue
 			}
-			tx, err = flowkit.NewUpdateAccountContractTransaction(targetAccount, contract.Name, contract.ReplacedImports())
+			tx, err = flowkit.NewUpdateAccountContractTransaction(targetAccount, contract.Name, string(code))
 			if err != nil {
 				return nil, err
 			}
@@ -376,7 +387,7 @@ func (p *Project) Deploy(network string, update bool) ([]*resolvers.Program, err
 			p.logger.Info(fmt.Sprintf(
 				"%s -> 0x%s (%s) %s\n",
 				output.Green(contract.Name),
-				contract.Target(),
+				contract.AccountAddress,
 				sentTx.ID().String(),
 				changeStatus,
 			))
@@ -394,5 +405,5 @@ func (p *Project) Deploy(network string, update bool) ([]*resolvers.Program, err
 		return nil, err
 	}
 
-	return deployment.Programs(), nil
+	return sorted, nil
 }

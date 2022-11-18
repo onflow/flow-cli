@@ -26,6 +26,7 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-go-sdk"
 	"path"
+	"strings"
 )
 
 type ImportReplacer interface {
@@ -37,8 +38,11 @@ type FileImports struct {
 	aliases   flowkit.Aliases
 }
 
-func NewFileImports() *FileImports {
-
+func NewFileImports(contracts []*flowkit.Contract, aliases flowkit.Aliases) *FileImports {
+	return &FileImports{
+		contracts: contracts,
+		aliases:   aliases,
+	}
 }
 
 // getFileImports returns all cadence file imports from Cadence code as an array.
@@ -56,7 +60,7 @@ func (f *FileImports) getFileImports(program *ast.Program) []string {
 	return imports
 }
 
-func (f *FileImports) Replace(code []byte) ([]byte, error) {
+func (f *FileImports) Replace(code []byte, codePath string) ([]byte, error) {
 	program, err := parser.ParseProgram(code, nil)
 	if err != nil {
 		return nil, err
@@ -68,13 +72,23 @@ func (f *FileImports) Replace(code []byte) ([]byte, error) {
 	for _, imp := range imports {
 		target := sourceTarget[absolutePath(codePath, imp)]
 		if target != "" {
-			f.code = r.replaceImport(imp, target)
+			code = f.replaceImport(code, imp, target)
 		} else {
 			return nil, fmt.Errorf("import %s could not be resolved from the configuration", imp)
 		}
 	}
 
-	return f.code, nil
+	return code, nil
+}
+
+// replaceImport replaces import from path to address.
+func (f *FileImports) replaceImport(code []byte, from string, to string) []byte {
+	return []byte(strings.Replace(
+		string(code),
+		fmt.Sprintf(`"%s"`, from),
+		fmt.Sprintf("0x%s", to),
+		1,
+	))
 }
 
 // getSourceTarget return a map with contract paths as keys and addresses as values.
