@@ -70,12 +70,23 @@ func (k *Keys) GetMnemonic() (string, error) {
 
 func (k *Keys) DerivePrivateKeyFromMnemonic(mnemonic string, sigAlgo crypto.SignatureAlgorithm, derivationPath string) (crypto.PrivateKey, error) {
 
-	if derivationPath == "" {
-		derivationPath = "m/44'/539'/0'/0/0"
-	}
-
 	if !bip39.IsMnemonicValid(mnemonic) {
 		return nil, fmt.Errorf("invalid mnemonic")
+	}
+
+	seed := bip39.NewSeed(mnemonic, "")
+
+	return k.derivePrivateKeyFromSeed(seed, sigAlgo, derivationPath)
+}
+
+func (k *Keys) derivePrivateKeyFromSeed(seed []byte, sigAlgo crypto.SignatureAlgorithm, derivationPath string) (crypto.PrivateKey, error) {
+	// sanity check of seed length
+	if len(seed) < 16 {
+		return nil, fmt.Errorf("seed length should be at least 16 bytes, got %d", len(seed))
+	}
+
+	if derivationPath == "" {
+		derivationPath = "m/44'/539'/0'/0/0"
 	}
 
 	path, err := goeth.ParseDerivationPath(derivationPath)
@@ -83,10 +94,11 @@ func (k *Keys) DerivePrivateKeyFromMnemonic(mnemonic string, sigAlgo crypto.Sign
 		return nil, fmt.Errorf("invalid derivation path")
 	}
 
-	seed := bip39.NewSeed(mnemonic, "")
-	curve := slip10.CurveBitcoin
+	curve := slip10.CurveBitcoin // case ECDSA_secp256k1
 	if sigAlgo == crypto.ECDSA_P256 {
 		curve = slip10.CurveP256
+	} else if sigAlgo != crypto.ECDSA_secp256k1 {
+		return nil, fmt.Errorf("invalid signature algorithm")
 	}
 
 	accountKey, err := slip10.NewMasterKeyWithCurve(seed, curve)
