@@ -22,9 +22,6 @@ import (
 	"encoding/hex"
 	"testing"
 
-	goeth "github.com/ethereum/go-ethereum/accounts"
-	slip10 "github.com/lmars/go-slip10"
-
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/stretchr/testify/assert"
 )
@@ -52,63 +49,55 @@ func TestKeys(t *testing.T) {
 		assert.Equal(t, key.String(), "0x134f702d0872dba9c7aea15498aab9b2ffedd5aeebfd8ac3cf47c591f0d7ce52")
 	})
 
-	t.Run("Test Slip10 - P256", func(t *testing.T) {
+	t.Run("Test Vector SLIP-0010", func(t *testing.T) {
+		// test against SLIP-0010 test vector. All data are taken from:
+		//  https://github.com/satoshilabs/slips/blob/master/slip-0010.md#test-vectors
 		t.Parallel()
+		_, s, _ := setup()
 
-		curve := slip10.CurveP256
-		sigAlgo := crypto.ECDSA_P256
-		seed := []byte{0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8, 0x9, 0xa, 0xb, 0xc, 0xd, 0x0e, 0x0f}
-		path, _ := goeth.ParseDerivationPath("m/0'/1/2'/2/1000000000")
-
-		accountKey, _ := slip10.NewMasterKeyWithCurve(seed, curve)
-		// https://github.com/satoshilabs/slips/blob/master/slip-0010.md#test-vector-1-for-nist256p1
-		privateKey, _ := crypto.DecodePrivateKey(sigAlgo, accountKey.Key)
-
-		assert.Equal(t, privateKey.String(), "0x612091aaa12e22dd2abef664f8a01a82cae99ad7441b7ef8110424915c268bc2")
-
-		expectedPrivateKeys := []string{
-			"0x6939694369114c67917a182c59ddb8cafc3004e63ca5d3b84403ba8613debc0c",
-			"0x284e9d38d07d21e4e281b645089a94f4cf5a5a81369acf151a1c3a57f18b2129",
-			"0x694596e8a54f252c960eb771a3c41e7e32496d03b954aeb90f61635b8e092aa7",
-			"0x5996c37fd3dd2679039b23ed6f70b506c6b56b3cb5e424681fb0fa64caf82aaa",
-			"0x21c4f269ef0a5fd1badf47eeacebeeaa3de22eb8e5b0adcd0f27dd99d34d0119",
+		type testEntry struct {
+			sigAlgo    crypto.SignatureAlgorithm
+			seed       string
+			path       string
+			privateKey string
 		}
-		for i, n := range path {
-			accountKey, _ = accountKey.NewChildKey(n)
-			privateKey, _ := crypto.DecodePrivateKey(sigAlgo, accountKey.Key)
 
-			assert.Equal(t, privateKey.String(), expectedPrivateKeys[i])
-
+		testVector := []testEntry{
+			testEntry{
+				sigAlgo:    crypto.ECDSA_secp256k1,
+				seed:       "000102030405060708090a0b0c0d0e0f",
+				path:       "m/0'/1/2'/2/1000000000",
+				privateKey: "0x471b76e389e528d6de6d816857e012c5455051cad6660850e58372a6c3e6e7c8",
+			},
+			testEntry{
+				sigAlgo:    crypto.ECDSA_P256,
+				seed:       "000102030405060708090a0b0c0d0e0f",
+				path:       "m/0'/1/2'/2/1000000000",
+				privateKey: "0x21c4f269ef0a5fd1badf47eeacebeeaa3de22eb8e5b0adcd0f27dd99d34d0119",
+			},
+			testEntry{
+				sigAlgo:    crypto.ECDSA_secp256k1,
+				seed:       "fffcf9f6f3f0edeae7e4e1dedbd8d5d2cfccc9c6c3c0bdbab7b4b1aeaba8a5a29f9c999693908d8a8784817e7b7875726f6c696663605d5a5754514e4b484542",
+				path:       "m/0/2147483647'/1/2147483646'/2",
+				privateKey: "0xbb7d39bdb83ecf58f2fd82b6d918341cbef428661ef01ab97c28a4842125ac23",
+			},
+			testEntry{
+				sigAlgo:    crypto.ECDSA_P256,
+				seed:       "fffcf9f6f3f0edeae7e4e1dedbd8d5d2cfccc9c6c3c0bdbab7b4b1aeaba8a5a29f9c999693908d8a8784817e7b7875726f6c696663605d5a5754514e4b484542",
+				path:       "m/0/2147483647'/1/2147483646'/2",
+				privateKey: "0xbb0a77ba01cc31d77205d51d08bd313b979a71ef4de9b062f8958297e746bd67",
+			},
 		}
-	})
 
-	t.Run("Test Slip10 - secp256k1", func(t *testing.T) {
-		t.Parallel()
-
-		curve := slip10.CurveBitcoin
-		sigAlgo := crypto.ECDSA_secp256k1
-		seed := []byte{0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8, 0x9, 0xa, 0xb, 0xc, 0xd, 0x0e, 0x0f}
-		path, _ := goeth.ParseDerivationPath("m/0'/1/2'/2/1000000000")
-
-		accountKey, _ := slip10.NewMasterKeyWithCurve(seed, curve)
-		// https://github.com/satoshilabs/slips/blob/master/slip-0010.md#test-vector-1-for-nist256p1
-		privateKey, _ := crypto.DecodePrivateKey(sigAlgo, accountKey.Key)
-
-		assert.Equal(t, privateKey.String(), "0xe8f32e723decf4051aefac8e2c93c9c5b214313817cdb01a1494b917c8436b35")
-
-		expectedPrivateKeys := []string{
-			"0xedb2e14f9ee77d26dd93b4ecede8d16ed408ce149b6cd80b0715a2d911a0afea",
-			"0x3c6cb8d0f6a264c91ea8b5030fadaa8e538b020f0a387421a12de9319dc93368",
-			"0xcbce0d719ecf7431d88e6a89fa1483e02e35092af60c042b1df2ff59fa424dca",
-			"0x0f479245fb19a38a1954c5c7c0ebab2f9bdfd96a17563ef28a6a4b1a2a764ef4",
-			"0x471b76e389e528d6de6d816857e012c5455051cad6660850e58372a6c3e6e7c8",
-		}
-		for i, n := range path {
-			accountKey, _ = accountKey.NewChildKey(n)
-			privateKey, _ := crypto.DecodePrivateKey(sigAlgo, accountKey.Key)
-
-			assert.Equal(t, privateKey.String(), expectedPrivateKeys[i])
-
+		for _, test := range testVector {
+			seed, err := hex.DecodeString(test.seed)
+			assert.NoError(t, err)
+			// use derivePrivateKeyFromSeed to test instead of DerivePrivateKeyFromMnemonic
+			// because the test vector provides seeds, while it's not possible to derive mnemonics
+			// corresponding to seeds.
+			privateKey, err := s.Keys.derivePrivateKeyFromSeed(seed, test.sigAlgo, test.path)
+			assert.NoError(t, err)
+			assert.Equal(t, test.privateKey, privateKey.String())
 		}
 	})
 
