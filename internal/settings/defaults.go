@@ -19,8 +19,8 @@
 package settings
 
 import (
+	"fmt"
 	"os/user"
-	"path"
 	"runtime"
 )
 
@@ -46,10 +46,9 @@ func getDefaultInstallDir() string {
 	case Darwin:
 		return "/Applications"
 	case Windows:
-		// TODO: Search in common install directories
 		// https://superuser.com/questions/1327037/what-choices-do-i-have-about-where-to-install-software-on-windows-10
 		user, _ := user.Current() // safe to ignore cache errors
-		return path.Join(user.HomeDir, "AppData", "Local")
+		return fmt.Sprintf(`%s\AppData\Local`, user.HomeDir)
 	default:
 		return ""
 	}

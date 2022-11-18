@@ -21,6 +21,7 @@ package output
 import (
 	"fmt"
 	"os"
+	"path"
 	"strings"
 
 	"golang.org/x/exp/slices"
@@ -616,7 +617,7 @@ func InstallPrompt() bool {
 
 func InstallPathPrompt(defaultPath string) string {
 	prompt := promptui.Prompt{
-		Label:   "Install path:",
+		Label:   "Install path",
 		Default: defaultPath,
 		Validate: func(s string) error {
 			if s != "" {
@@ -633,5 +634,5 @@ func InstallPathPrompt(defaultPath string) string {
 		os.Exit(-1)
 	}
 
-	return install
+	return path.Clean(install)
 }

@@ -48,15 +48,14 @@ var Flowser = &command.Command{
 		Args:    cobra.ExactArgs(0),
 	},
 	Flags: &flowserFlags,
-	RunS:  runFlowser,
+	Run:   runFlowser,
 }
 
 func runFlowser(
 	_ []string,
-	_ flowkit.ReaderWriter,
+	reader flowkit.ReaderWriter,
 	_ command.GlobalFlags,
 	_ *services.Services,
-	state *flowkit.State,
 ) (command.Result, error) {
 	if runtime.GOOS != settings.Windows && runtime.GOOS != settings.Darwin {
 		fmt.Println("If you want Flowser to be supported on Linux please vote here: https://github.com/onflowser/flowser/discussions/142")
@@ -65,13 +64,13 @@ func runFlowser(
 
 	flowser := flowser.New()
 
-	installPath, err := settings.GetString(flowserPath)
+	installPath, err := settings.GetFlowserPath()
 	if err != nil {
 		return nil, fmt.Errorf("failure reading setting: %w", err)
 	}
 
 	if !flowser.Installed(installPath) {
-		err := installFlowser(flowser, installPath)
+		installPath, err = installFlowser(flowser, installPath)
 		if err != nil {
 			return nil, err
 		}
@@ -83,13 +82,12 @@ func runFlowser(
 	}
 
 	// check if current directory is existing flow project if not then don't pass project path to Flowser, so user can choose a project
-	_, err = state.ReadFile(config.DefaultPath)
+	_, err = reader.ReadFile(config.DefaultPath)
 	if os.IsNotExist(err) {
 		projectPath = ""
 	}
 
 	fmt.Printf("%s Starting up Flowser, please wait...\n", output.SuccessEmoji())
-
 	err = flowser.Run(installPath, projectPath)
 	if err != nil {
 		return nil, err
@@ -98,26 +96,26 @@ func runFlowser(
 	return nil, nil
 }
 
-func installFlowser(flowser *flowser.App, installPath string) error {
+func installFlowser(flowser *flowser.App, installPath string) (string, error) {
 	fmt.Println("It looks like Flowser is not yet installed on your system.")
 	if !output.InstallPrompt() {
-		return fmt.Errorf("user denied install")
+		return "", fmt.Errorf("user denied install")
 	}
 
 	// we only allow custom paths on Windows since on MacOS apps needs to be installed inside Application folder
 	if runtime.GOOS == settings.Windows {
 		installPath = output.InstallPathPrompt(installPath)
-		_ = settings.Set(flowserPath, installPath)
+		_ = settings.SetFlowserPath(installPath)
 	}
 
 	logger := output.NewStdoutLogger(output.InfoLog)
-	logger.StartProgress(fmt.Sprintf("Installing Flowser, this may take few minutes, please wait %s", output.TryEmoji()))
+	logger.StartProgress(fmt.Sprintf("%s Installing Flowser, this may take few minutes, please wait ", output.TryEmoji()))
 	defer logger.StopProgress()
 
 	err := flowser.Install(installPath)
 	if err != nil {
-		return fmt.Errorf("could not install Flowser: %w", err)
+		return "", fmt.Errorf("could not install Flowser: %w", err)
 	}
 
-	return nil
+	return installPath, nil
 }
