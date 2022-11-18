@@ -54,24 +54,17 @@ func NewScripts(
 
 // Execute script code with passed arguments on the selected network.
 func (s *Scripts) Execute(code []byte, args []cadence.Value, scriptPath string, network string) (cadence.Value, error) {
-	programs := resolvers.NewProgramImports(
-		resolvers.FilesystemLoader{
-			Reader: s.state.ReaderWriter(),
-		},
+	contracts, err := s.state.DeploymentContractsByNetwork(network)
+	if err != nil {
+		return nil, err
+	}
+
+	importReplacer := resolvers.NewFileImports(
+		contracts,
 		s.state.AliasesForNetwork(network),
 	)
 
-	program, err := programs.AddProgram(scriptPath, addresses.proposer, "", script.Args)
-	if err != nil {
-		return nil, err
-	}
-
-	resolver, err := resolvers.NewResolver(code)
-	if err != nil {
-		return nil, err
-	}
-
-	if resolver.HasFileImports() {
+	if importReplacer.HasImports(code) {
 		if s.state == nil {
 			return nil, config.ErrDoesNotExist
 		}
@@ -82,16 +75,7 @@ func (s *Scripts) Execute(code []byte, args []cadence.Value, scriptPath string, 
 			return nil, fmt.Errorf("resolving imports in scripts not supported")
 		}
 
-		contractsNetwork, err := s.state.DeploymentContractsByNetwork(network)
-		if err != nil {
-			return nil, err
-		}
-
-		code, err = resolver.ResolveImports(
-			scriptPath,
-			contractsNetwork,
-			s.state.AliasesForNetwork(network),
-		)
+		code, err = importReplacer.Replace(code, scriptPath)
 		if err != nil {
 			return nil, err
 		}

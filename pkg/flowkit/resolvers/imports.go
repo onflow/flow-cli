@@ -60,6 +60,16 @@ func (f *FileImports) getFileImports(program *ast.Program) []string {
 	return imports
 }
 
+func (f *FileImports) HasImports(code []byte) bool {
+	program, err := parser.ParseProgram(code, nil)
+	if err != nil {
+		return false
+	}
+
+	imports := f.getFileImports(program)
+	return len(imports) > 0
+}
+
 func (f *FileImports) Replace(code []byte, codePath string) ([]byte, error) {
 	program, err := parser.ParseProgram(code, nil)
 	if err != nil {
@@ -103,4 +113,8 @@ func (f *FileImports) getSourceTarget() map[string]string {
 	}
 
 	return sourceTarget
+}
+
+func absolutePath(basePath, relativePath string) string {
+	return path.Join(path.Dir(basePath), relativePath)
 }

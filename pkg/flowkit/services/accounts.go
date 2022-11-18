@@ -308,58 +308,39 @@ func (a *Accounts) AddContract(
 	updateExisting bool,
 ) (*flow.Account, error) {
 
-	programs := resolvers.NewProgramImports(
-		resolvers.FilesystemLoader{
-			Reader: a.state.ReaderWriter(),
-		},
-		a.state.AliasesForNetwork(contract.Network),
-	)
-
-	program, err := programs.AddProgram(
-		contract.Location,
-		account.Address(),
-		account.Name(),
-		contract.Args,
-	)
+	contracts, err := a.state.DeploymentContractsByNetwork(contract.Network)
 	if err != nil {
-		return nil, fmt.Errorf("error adding contract: %w", err)
-	}
-
-	if err = contract.validate(program.HasImports()); err != nil {
 		return nil, err
 	}
 
-	if program.HasImports() {
-		// add all contracts for that network from configuration in order to resolve any needed imports
-		for _, c := range a.state.Contracts().ByNetwork(contract.Network) {
-			_, err := programs.AddProgram(
-				c.Location,
-				account.Address(),
-				account.Name(),
-				nil,
-			)
-			if err != nil {
-				return nil, err
-			}
-		}
+	importReplacer := resolvers.NewFileImports(
+		contracts,
+		a.state.AliasesForNetwork(contract.Network),
+	)
 
-		err = programs.Resolve()
+	hasImports := importReplacer.HasImports(contract.Code)
+	if err = contract.validate(hasImports); err != nil {
+		return nil, err
+	}
+
+	if hasImports {
+		contract.Code, err = importReplacer.Replace(contract.Code, contract.Location)
 		if err != nil {
-			return nil, fmt.Errorf("error resolving imports: %w", err)
+			return nil, err
 		}
 	}
 
 	tx, err := flowkit.NewAddAccountContractTransaction(
 		account,
-		program.Name(),
-		program.ReplacedImports(),
-		program.Args(),
+		contract.Name(), // todo
+		string(contract.Code),
+		contract.Args,
 	)
 	if updateExisting {
 		tx, err = flowkit.NewUpdateAccountContractTransaction(
 			account,
-			program.Name(),
-			program.ReplacedImports(),
+			contract.Name(),
+			string(contract.Code),
 		)
 	}
 	if err != nil {
