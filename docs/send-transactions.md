@@ -114,16 +114,6 @@ Specify fields to exclude from the result output. Applies only to the text outpu
 
 Specify the name of the account that will be used to sign the transaction.
 
-### Arguments
-
-- Flag: `--arg`
-- Valid inputs: argument in `Type:Value` format.
-
-Arguments passed to the Cadence transaction in `Type:Value` format.
-The `Type` must be the same as type in the transaction source code for that argument.
-
-⚠️  Deprecated: use command arguments instead.
-
 ### Arguments JSON
 
 - Flag: `--args-json`
@@ -212,3 +202,10 @@ Specify the log level. Control how much output you want to see during command ex
 Specify the path to the `flow.json` configuration file.
 You can use the `-f` flag multiple times to merge
 several configuration files.
+
+### Version Check
+
+- Flag: `--skip-version-check`
+- Default: `false`
+
+Skip version check during start up to speed up process for slow connections.

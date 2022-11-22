@@ -78,12 +78,6 @@ The first argument is the ID (hash) of the transaction.
 
 Specify fields to include in the result output. Applies only to the text output.
 
-### Code
-
-- Flag: `--code`
-
-⚠️  Deprecated: use include flag.
-
 ### Wait for Seal
 
 - Flag: `--sealed`
@@ -169,3 +163,10 @@ Specify the log level. Control how much output you want to see during command ex
 Specify the path to the `flow.json` configuration file.
 You can use the `-f` flag multiple times to merge
 several configuration files.
+
+### Version Check
+
+- Flag: `--skip-version-check`
+- Default: `false`
+
+Skip version check during start up to speed up process for slow connections.

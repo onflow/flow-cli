@@ -30,8 +30,7 @@ import (
 )
 
 type flagsScripts struct {
-	ArgsJSON string   `default:"" flag:"args-json" info:"arguments in JSON-Cadence format"`
-	Arg      []string `default:"" flag:"arg" info:"⚠️  Deprecated: use command arguments"`
+	ArgsJSON string `default:"" flag:"args-json" info:"arguments in JSON-Cadence format"`
 }
 
 var scriptFlags = flagsScripts{}
@@ -60,13 +59,9 @@ func execute(
 		return nil, fmt.Errorf("error loading script file: %w", err)
 	}
 
-	if len(scriptFlags.Arg) != 0 {
-		fmt.Println("⚠️  DEPRECATION WARNING: use script arguments as command arguments: execute <filename> [<argument> <argument> ...]")
-	}
-
 	var scriptArgs []cadence.Value
-	if scriptFlags.ArgsJSON != "" || len(scriptFlags.Arg) != 0 {
-		scriptArgs, err = flowkit.ParseArguments(scriptFlags.Arg, scriptFlags.ArgsJSON)
+	if scriptFlags.ArgsJSON != "" {
+		scriptArgs, err = flowkit.ParseArgumentsJSON(scriptFlags.ArgsJSON)
 	} else {
 		scriptArgs, err = flowkit.ParseArgumentsWithoutType(filename, code, args[1:])
 	}

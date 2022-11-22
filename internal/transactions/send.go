@@ -34,7 +34,6 @@ import (
 
 type flagsSend struct {
 	ArgsJSON string   `default:"" flag:"args-json" info:"arguments in JSON-Cadence format"`
-	Arg      []string `default:"" flag:"arg" info:"⚠️  Deprecated: use command arguments"`
 	Signer   string   `default:"emulator-account" flag:"signer" info:"Account name from configuration used to sign the transaction"`
 	GasLimit uint64   `default:"1000" flag:"gas-limit" info:"transaction gas limit"`
 	Include  []string `default:"" flag:"include" info:"Fields to include in the output"`
@@ -77,13 +76,9 @@ func send(
 		return nil, fmt.Errorf("error loading transaction file: %w", err)
 	}
 
-	if len(sendFlags.Arg) != 0 {
-		fmt.Println("⚠️  DEPRECATION WARNING: use transaction arguments as command arguments: send <code filename> [<argument> <argument> ...]")
-	}
-
 	var transactionArgs []cadence.Value
-	if sendFlags.ArgsJSON != "" || len(sendFlags.Arg) != 0 {
-		transactionArgs, err = flowkit.ParseArguments(sendFlags.Arg, sendFlags.ArgsJSON)
+	if sendFlags.ArgsJSON != "" {
+		transactionArgs, err = flowkit.ParseArgumentsJSON(sendFlags.ArgsJSON)
 	} else {
 		transactionArgs, err = flowkit.ParseArgumentsWithoutType(codeFilename, code, args[1:])
 	}

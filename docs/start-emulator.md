@@ -39,10 +39,9 @@ You can specify any [emulator flags found here](https://github.com/onflow/flow-e
 Specify a filename for the configuration files, you can provide multiple configuration
 files by using `-f` flag multiple times.
 
-### Initialize
+### Version Check
 
-- Flag: `--init`
+- Flag: `--skip-version-check`
+- Default: `false`
 
-⚠️  Deprecated: use `flow init` instead.
-
-Initialize configuration during the command execution.
+Skip version check during start up to speed up process for slow connections.

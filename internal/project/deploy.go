@@ -19,12 +19,16 @@
 package project
 
 import (
+	"errors"
+	"fmt"
+
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
 	"github.com/onflow/flow-cli/pkg/flowkit/contracts"
+	"github.com/onflow/flow-cli/pkg/flowkit/output"
 	"github.com/onflow/flow-cli/pkg/flowkit/services"
 )
 
@@ -48,21 +52,34 @@ func deploy(
 	_ []string,
 	_ flowkit.ReaderWriter,
 	globalFlags command.GlobalFlags,
-	services *services.Services,
+	srv *services.Services,
 	_ *flowkit.State,
 ) (command.Result, error) {
 
 	//precheck for standard contract on Mainnet
 	if globalFlags.Network == config.DefaultMainnetNetwork().Name {
-		err := services.Project.CheckForStandardContractUsageOnMainnet()
+		err := srv.Project.CheckForStandardContractUsageOnMainnet()
 		if err != nil {
 			return nil, err
 		}
 
 	}
 
-	c, err := services.Project.Deploy(globalFlags.Network, deployFlags.Update)
+	c, err := srv.Project.Deploy(globalFlags.Network, deployFlags.Update)
 	if err != nil {
+		var projectErr *services.ErrProjectDeploy
+		if errors.As(err, &projectErr) {
+			for name, err := range projectErr.Contracts() {
+				fmt.Printf(
+					"%s Failed to deploy contract %s: %s\n",
+					output.ErrorEmoji(),
+					name,
+					err.Error(),
+				)
+
+			}
+			return nil, fmt.Errorf("failed deploying all contracts")
+		}
 		return nil, err
 	}
 

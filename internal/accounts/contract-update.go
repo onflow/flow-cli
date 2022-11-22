@@ -41,10 +41,10 @@ var updateContractFlags = flagsUpdateContract{}
 
 var UpdateCommand = &command.Command{
 	Cmd: &cobra.Command{
-		Use:     "update-contract <name> <filename>",
+		Use:     "update-contract <filename>",
 		Short:   "Update a contract deployed to an account",
-		Example: `flow accounts update-contract FungibleToken ./FungibleToken.cdc`,
-		Args:    cobra.MinimumNArgs(2),
+		Example: `flow accounts update-contract ./FungibleToken.cdc`,
+		Args:    cobra.MinimumNArgs(1),
 	},
 	Flags: &updateContractFlags,
 	RunS:  updateContract,
@@ -57,8 +57,15 @@ func updateContract(
 	srv *services.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
-	name := args[0]
-	filename := args[1]
+	filename := ""
+
+	if len(args) == 1 {
+		filename = args[0]
+	} else {
+		fmt.Println("⚠️Deprecation notice: using name argument in update contract " +
+			"command will be deprecated soon.")
+		filename = args[1]
+	}
 
 	code, err := readerWriter.ReadFile(filename)
 	if err != nil {
@@ -72,7 +79,7 @@ func updateContract(
 
 	var contractArgs []cadence.Value
 	if updateContractFlags.ArgsJSON != "" {
-		contractArgs, err = flowkit.ParseArguments(nil, updateContractFlags.ArgsJSON)
+		contractArgs, err = flowkit.ParseArgumentsJSON(updateContractFlags.ArgsJSON)
 	} else if len(args) > 2 {
 		contractArgs, err = flowkit.ParseArgumentsWithoutType(filename, code, args[2:])
 	}
@@ -84,7 +91,6 @@ func updateContract(
 	account, err := srv.Accounts.AddContract(
 		to,
 		&services.Contract{
-			Name:     name,
 			Source:   code,
 			Args:     contractArgs,
 			Filename: filename,

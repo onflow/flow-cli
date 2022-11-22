@@ -20,6 +20,7 @@ package services
 
 import (
 	"fmt"
+	emulator "github.com/onflow/flow-emulator"
 	"strings"
 	"testing"
 
@@ -291,7 +292,9 @@ func setupIntegration() (*flowkit.State, *Services) {
 	}
 
 	acc, _ := state.EmulatorServiceAccount()
-	gw := gateway.NewEmulatorGateway(acc)
+	gw := gateway.NewEmulatorGatewayWithOpts(acc, gateway.WithEmulatorOptions(
+		emulator.WithTransactionExpiry(10),
+	))
 	s := NewServices(gw, state, output.NewStdoutLogger(output.NoneLog))
 
 	return state, s

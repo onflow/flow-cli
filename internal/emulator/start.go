@@ -53,7 +53,7 @@ func ConfiguredServiceKey(
 	var state *flowkit.State
 	var err error
 	loader := &afero.Afero{Fs: afero.NewOsFs()}
-	command.RecordCommandUsage(Cmd, loader)
+	command.RecordCommandUsage(Cmd)
 
 	if init {
 		if sigAlgo == crypto.UnknownSignatureAlgorithm {
