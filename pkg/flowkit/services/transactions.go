@@ -22,10 +22,9 @@ import (
 	"bytes"
 	"encoding/hex"
 	"fmt"
+	"github.com/onflow/flow-cli/pkg/flowkit"
 	"io/ioutil"
 	"net/http"
-
-	"github.com/onflow/flow-cli/pkg/flowkit"
 
 	"github.com/onflow/cadence"
 
@@ -130,10 +129,14 @@ func (t *transactionAccountRoles) toAddresses() *transactionAddresses {
 
 // getSigners for signing the transaction, detect if all accounts are same so only return the one account.
 func (t *transactionAccountRoles) getSigners() []*flowkit.Account {
-	// if proposer, payer and authorizer is all same account then only return that as a single signer
+	// if proposer, payer and authorizer is all same account then only return that as a single signer https://developers.flow.com/learn/concepts/accounts-and-keys#authorization-envelope
 	if t.proposer.Address() == t.payer.Address() &&
-		len(t.authorizers) == 1 &&
-		t.payer.Address() == t.authorizers[0].Address() {
+		len(t.authorizers) == 1 && t.authorizers[0].Address() == t.payer.Address() {
+		return []*flowkit.Account{t.payer}
+	}
+
+	// if proposer and payer are same but no authorizers provided then only return that as a single signer
+	if t.proposer.Address() == t.payer.Address() && len(t.authorizers) == 0 {
 		return []*flowkit.Account{t.payer}
 	}
 
