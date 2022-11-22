@@ -42,7 +42,13 @@ func TestScripts(t *testing.T) {
 		})
 
 		args := []cadence.Value{cadence.String("Foo")}
-		_, err := s.Scripts.Execute(tests.ScriptArgString.Source, args, "", "")
+		_, err := s.Scripts.Execute(
+			&Script{
+				Code: tests.ScriptArgString.Source,
+				Args: args,
+			},
+			"",
+		)
 
 		assert.NoError(t, err)
 	})
@@ -57,7 +63,13 @@ func TestScripts_Integration(t *testing.T) {
 		_, s := setupIntegration()
 
 		args := []cadence.Value{cadence.String("Foo")}
-		res, err := s.Scripts.Execute(tests.ScriptArgString.Source, args, "", "")
+		res, err := s.Scripts.Execute(
+			&Script{
+				Code: tests.ScriptArgString.Source,
+				Args: args,
+			},
+			"",
+		)
 
 		assert.NoError(t, err)
 		assert.Equal(t, "\"Hello Foo\"", res.String())
@@ -67,7 +79,13 @@ func TestScripts_Integration(t *testing.T) {
 		t.Parallel()
 		_, s := setupIntegration()
 		args := []cadence.Value{cadence.String("Foo")}
-		res, err := s.Scripts.Execute(tests.ScriptWithError.Source, args, "", "")
+		res, err := s.Scripts.Execute(
+			&Script{
+				Code: tests.ScriptWithError.Source,
+				Args: args,
+			},
+			"",
+		)
 
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "cannot find type in this scope")
@@ -109,7 +127,13 @@ func TestScripts_Integration(t *testing.T) {
 			false,
 		)
 
-		res, err := s.Scripts.Execute(tests.ScriptImport.Source, nil, tests.ScriptImport.Filename, n.Name)
+		res, err := s.Scripts.Execute(
+			&Script{
+				Code:     tests.ScriptImport.Source,
+				Filename: tests.ScriptImport.Filename,
+			},
+			n.Name,
+		)
 		assert.NoError(t, err)
 		assert.Equal(t, res.String(), "\"Hello Hello, World!\"")
 	})
@@ -130,7 +154,13 @@ func TestScripts_Integration(t *testing.T) {
 		}
 
 		for x, i := range in {
-			_, err := s.Scripts.Execute(tests.ScriptImport.Source, nil, i[0], i[1])
+			_, err := s.Scripts.Execute(
+				&Script{
+					Code:     tests.ScriptImport.Source,
+					Filename: i[0],
+				},
+				i[1],
+			)
 			assert.NotNil(t, err)
 			assert.Equal(t, err.Error(), out[x])
 		}
