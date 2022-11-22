@@ -224,7 +224,7 @@ var TransactionMultipleDeclarations = Resource{
 var ScriptWithError = Resource{
 	Filename: "scriptError.cdc",
 	Source: []byte(`
-	    	pub fun main(name: String): Strin {
+	    	pub fun main(name: String): X {
 		  return "Hello ".concat(name)
 		}
 	`),
