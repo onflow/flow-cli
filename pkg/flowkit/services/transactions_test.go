@@ -125,6 +125,79 @@ func setupAccount(state *flowkit.State, s *Services, account *flowkit.Account) {
 	state.Accounts().AddOrUpdate(newAcc)
 }
 
+func Test_TransactionRoles(t *testing.T) {
+	t.Run("Building Signers", func(t *testing.T) {
+		state, s := setupIntegration()
+		setupAccounts(state, s)
+		a, _ := state.Accounts().ByName("Alice")
+		b, _ := state.Accounts().ByName("Bob")
+		c, _ := state.Accounts().ByName("Charlie")
+
+		tests := []struct {
+			*transactionAccountRoles
+			signerAddresses []flow.Address
+		}{{
+			transactionAccountRoles: &transactionAccountRoles{
+				proposer:    a,
+				authorizers: []*flowkit.Account{b},
+				payer:       c,
+			},
+			signerAddresses: []flow.Address{
+				a.Address(),
+				b.Address(),
+				c.Address(),
+			},
+		}, {
+			transactionAccountRoles: &transactionAccountRoles{
+				proposer:    a,
+				authorizers: []*flowkit.Account{a},
+				payer:       a,
+			},
+			signerAddresses: []flow.Address{
+				a.Address(),
+			},
+		}, {
+			transactionAccountRoles: &transactionAccountRoles{
+				proposer: a,
+				payer:    a,
+			},
+			signerAddresses: []flow.Address{
+				a.Address(),
+			},
+		}}
+
+		for _, test := range tests {
+			signerAccs := test.getSigners()
+			signerAddrs := make([]flow.Address, len(signerAccs))
+			for i, sig := range signerAccs {
+				signerAddrs[i] = sig.Address()
+			}
+
+			assert.Equal(t, test.signerAddresses, signerAddrs)
+		}
+	})
+
+	t.Run("Building Addresses", func(t *testing.T) {
+		state, s := setupIntegration()
+		setupAccounts(state, s)
+		a, _ := state.Accounts().ByName("Alice")
+		b, _ := state.Accounts().ByName("Bob")
+		c, _ := state.Accounts().ByName("Charlie")
+
+		roles := &transactionAccountRoles{
+			proposer:    a,
+			authorizers: []*flowkit.Account{b, c},
+			payer:       c,
+		}
+
+		addresses := roles.toAddresses()
+
+		assert.Equal(t, a.Address(), addresses.proposer)
+		assert.Equal(t, c.Address(), addresses.payer)
+		assert.Equal(t, []flow.Address{b.Address(), c.Address()}, addresses.authorizers)
+	})
+}
+
 func TestTransactions_Integration(t *testing.T) {
 	t.Parallel()
 
@@ -381,7 +454,35 @@ func TestTransactions_Integration(t *testing.T) {
 		assert.Nil(t, tx)
 	})
 
-	t.Run("Send Transaction", func(t *testing.T) {
+	// todo(sideninja) we should convert different variations of sending transaction to table tests
+
+	t.Run("Send Transaction No Auths", func(t *testing.T) {
+		t.Parallel()
+		state, s := setupIntegration()
+		setupAccounts(state, s)
+
+		a, _ := state.Accounts().ByName("Alice")
+
+		tx, txr, err := s.Transactions.Send(
+			&transactionAccountRoles{
+				proposer: a,
+				payer:    a,
+			},
+			&Script{
+				Code:     tests.TransactionSimple.Source,
+				Filename: tests.TransactionSimple.Filename,
+			},
+			flow.DefaultTransactionGasLimit,
+			"",
+		)
+		assert.NoError(t, err)
+		assert.Equal(t, tx.Payer.String(), a.Address().String())
+		assert.Equal(t, tx.ProposalKey.KeyIndex, a.Key().Index())
+		assert.Nil(t, txr.Error)
+		assert.Equal(t, txr.Status, flow.TransactionStatusSealed)
+	})
+
+	t.Run("Send Transaction With Auths", func(t *testing.T) {
 		t.Parallel()
 		state, s := setupIntegration()
 		setupAccounts(state, s)
