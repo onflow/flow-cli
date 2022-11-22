@@ -20,6 +20,7 @@ package services
 
 import (
 	"fmt"
+	"github.com/stretchr/testify/require"
 	"strings"
 	"testing"
 
@@ -398,6 +399,35 @@ func TestTransactions_Integration(t *testing.T) {
 		)
 		assert.NoError(t, err)
 		assert.Equal(t, tx.Payer.String(), a.Address().String())
+		assert.Equal(t, tx.ProposalKey.KeyIndex, a.Key().Index())
+		assert.Nil(t, txr.Error)
+		assert.Equal(t, txr.Status, flow.TransactionStatusSealed)
+	})
+
+	t.Run("Send Transaction multiple account roles", func(t *testing.T) {
+		t.Parallel()
+		state, s := setupIntegration()
+		setupAccounts(state, s)
+
+		a, _ := state.Accounts().ByName("Alice")
+		b, _ := state.Accounts().ByName("Bob")
+		c, _ := state.Accounts().ByName("Charlie")
+
+		roles, err := NewTransactionAccountRoles(a, b, []*flowkit.Account{c})
+		require.NoError(t, err)
+
+		tx, txr, err := s.Transactions.Send(
+			roles,
+			&Script{
+				Code:     tests.TransactionSingleAuth.Source,
+				Filename: tests.TransactionSingleAuth.Filename,
+			},
+			flow.DefaultTransactionGasLimit,
+			"",
+		)
+		assert.NoError(t, err)
+		assert.Equal(t, tx.Payer.String(), b.Address().String())
+		assert.Equal(t, tx.Authorizers[0].String(), c.Address().String())
 		assert.Equal(t, tx.ProposalKey.KeyIndex, a.Key().Index())
 		assert.Nil(t, txr.Error)
 		assert.Equal(t, txr.Status, flow.TransactionStatusSealed)
