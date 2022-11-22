@@ -10,7 +10,7 @@ require (
 	github.com/onflow/cadence-tools/test v0.2.1-0.20221012182900-f46efb551c55
 	github.com/onflow/fcl-dev-wallet v0.5.1
 	github.com/onflow/flow-emulator v0.38.1
-	github.com/onflow/flow-go-sdk v0.29.0
+	github.com/onflow/flow-go-sdk v0.29.1
 	github.com/pkg/errors v0.9.1
 	github.com/psiemens/sconfig v0.1.0
 	github.com/spf13/afero v1.9.2
