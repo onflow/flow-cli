@@ -21,6 +21,7 @@ package output
 import (
 	"fmt"
 	"os"
+	"path"
 	"strings"
 
 	"golang.org/x/exp/slices"
@@ -597,4 +598,41 @@ func WantToUseMainnetVersionPrompt() bool {
 	}
 
 	return useMainnetVersion == "Yes"
+}
+
+func InstallPrompt() bool {
+	prompt := promptui.Prompt{
+		Label:       "Do you wish to install it",
+		Default:     "Y",
+		IsConfirm:   true,
+		HideEntered: true,
+	}
+	selected, err := prompt.Run()
+	if err == promptui.ErrInterrupt {
+		os.Exit(-1)
+	}
+
+	return strings.ToLower(selected) == "y" || selected == ""
+}
+
+func InstallPathPrompt(defaultPath string) string {
+	prompt := promptui.Prompt{
+		Label:   "Install path",
+		Default: defaultPath,
+		Validate: func(s string) error {
+			if s != "" {
+				_, err := os.Stat(s)
+				return err
+			}
+
+			return nil
+		},
+	}
+
+	install, err := prompt.Run()
+	if err == promptui.ErrInterrupt {
+		os.Exit(-1)
+	}
+
+	return path.Clean(install)
 }

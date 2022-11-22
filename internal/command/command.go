@@ -313,11 +313,7 @@ func initCrashReporting() {
 }
 
 func RecordCommandUsage(command *cobra.Command) {
-	metricsEnabled, err := settings.GetBool(settings.MetricsEnabled)
-	if err != nil {
-		return
-	}
-
+	metricsEnabled, _ := settings.MetricsEnabled()
 	if !metricsEnabled || util.MIXPANEL_PROJECT_TOKEN == "" {
 		return
 	}
