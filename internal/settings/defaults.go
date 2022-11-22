@@ -16,40 +16,13 @@
  * limitations under the License.
  */
 
-package config
+package settings
 
-import (
-	"github.com/spf13/cobra"
+const (
+	MetricsEnabled = "MetricsEnabled"
 )
 
-var Cmd = &cobra.Command{
-	Use:              "config",
-	Short:            "Utilities to manage configuration",
-	TraverseChildren: true,
-}
-
-func init() {
-	InitCommand.AddToParent(Cmd)
-	Cmd.AddCommand(AddCmd)
-	Cmd.AddCommand(RemoveCmd)
-}
-
-type Result struct {
-	result string
-}
-
-func (r *Result) JSON() interface{} {
-	return nil
-}
-
-func (r *Result) String() string {
-	if r.result != "" {
-		return r.result
-	}
-
-	return ""
-}
-
-func (r *Result) Oneliner() string {
-	return ""
+// defaults holds the default values for global settings
+var defaults = map[string]interface{}{
+	MetricsEnabled: true,
 }
