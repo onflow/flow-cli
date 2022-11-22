@@ -13,7 +13,7 @@ require (
 	github.com/onflow/flow-core-contracts/lib/go/templates v0.11.2-0.20221110195343-f8d357b82aa9
 	github.com/onflow/flow-emulator v0.39.0-stable-cadence-5
 	github.com/onflow/flow-go v0.29.0-stable-cadence-4.0.20221122001252-19634238b555
-	github.com/onflow/flow-go-sdk v0.29.0-stable-cadence-5
+	github.com/onflow/flow-go-sdk v0.29.2-0.20221122172903-dc5ef87db5bd
 	github.com/rs/zerolog v1.26.1
 	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/afero v1.9.0
