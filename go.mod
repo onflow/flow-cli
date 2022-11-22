@@ -10,7 +10,7 @@ require (
 	github.com/onflow/cadence-tools/languageserver v0.3.0-stable-cadence-5
 	github.com/onflow/cadence-tools/test v0.3.0-stable-cadence-5
 	github.com/onflow/fcl-dev-wallet v0.5.1
-	github.com/onflow/flow-cli/pkg/flowkit v0.0.0-20221122004203-7ddbcfbf3781
+	github.com/onflow/flow-cli/pkg/flowkit v0.0.0-20221122170629-0fccf5f262b7
 	github.com/onflow/flow-emulator v0.39.0-stable-cadence-5
 	github.com/onflow/flow-go-sdk v0.29.0-stable-cadence-5
 	github.com/pkg/errors v0.9.1
