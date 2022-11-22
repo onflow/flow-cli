@@ -133,6 +133,13 @@ func Test_TransactionRoles(t *testing.T) {
 		b, _ := state.Accounts().ByName("Bob")
 		c, _ := state.Accounts().ByName("Charlie")
 
+		// we make copies with diffrerent names but same addresses for testing building signers,
+		// since if same addresses are present that's should be treated as same account
+		aCopy1 := *a
+		aCopy2 := *a
+		aCopy1.SetName("Boo")
+		aCopy2.SetName("Zoo")
+
 		tests := []struct {
 			*transactionAccountRoles
 			signerAddresses []flow.Address
@@ -160,6 +167,15 @@ func Test_TransactionRoles(t *testing.T) {
 			transactionAccountRoles: &transactionAccountRoles{
 				proposer: a,
 				payer:    a,
+			},
+			signerAddresses: []flow.Address{
+				a.Address(),
+			},
+		}, {
+			transactionAccountRoles: &transactionAccountRoles{
+				proposer:    &aCopy1,
+				payer:       &aCopy2,
+				authorizers: []*flowkit.Account{a},
 			},
 			signerAddresses: []flow.Address{
 				a.Address(),
