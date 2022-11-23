@@ -57,7 +57,7 @@ func send(
 	args []string,
 	readerWriter flowkit.ReaderWriter,
 	globalFlags command.GlobalFlags,
-	services *services.Services,
+	srv *services.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
 	codeFilename := args[0]
@@ -82,17 +82,18 @@ func send(
 	} else {
 		transactionArgs, err = flowkit.ParseArgumentsWithoutType(codeFilename, code, args[1:])
 	}
-
 	if err != nil {
 		return nil, fmt.Errorf("error parsing transaction arguments: %w", err)
 	}
 
-	tx, result, err := services.Transactions.Send(
-		signer,
-		code,
-		codeFilename,
+	tx, result, err := srv.Transactions.Send(
+		services.NewSingleTransactionAccount(signer),
+		&services.Script{
+			Code:     code,
+			Args:     transactionArgs,
+			Filename: codeFilename,
+		},
 		sendFlags.GasLimit,
-		transactionArgs,
 		globalFlags.Network,
 	)
 

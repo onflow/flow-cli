@@ -105,10 +105,15 @@ func sign(
 	})
 
 	for _, signer := range signers {
-		signed, err = services.Transactions.Sign(signer, payload, globalFlags.Yes)
+		if !globalFlags.Yes && !output.ApproveTransactionForSigningPrompt(tx) {
+			return nil, fmt.Errorf("transaction was not approved for signing")
+		}
+
+		signed, err = services.Transactions.Sign(signer, payload)
 		if err != nil {
 			return nil, err
 		}
+
 		payload = []byte(hex.EncodeToString(signed.FlowTransaction().Encode()))
 	}
 

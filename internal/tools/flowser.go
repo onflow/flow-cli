@@ -24,14 +24,15 @@ import (
 	"os"
 	"runtime"
 
+	"github.com/onflowser/flowser/v2/pkg/flowser"
+	"github.com/spf13/cobra"
+
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/internal/settings"
 	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
 	"github.com/onflow/flow-cli/pkg/flowkit/services"
-	"github.com/onflowser/flowser/v2/pkg/flowser"
-	"github.com/spf13/cobra"
 )
 
 type FlagsFlowser struct{}

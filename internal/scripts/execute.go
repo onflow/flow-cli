@@ -50,7 +50,7 @@ func execute(
 	args []string,
 	readerWriter flowkit.ReaderWriter,
 	globalFlags command.GlobalFlags,
-	services *services.Services,
+	srv *services.Services,
 ) (command.Result, error) {
 	filename := args[0]
 
@@ -70,10 +70,12 @@ func execute(
 		return nil, fmt.Errorf("error parsing script arguments: %w", err)
 	}
 
-	value, err := services.Scripts.Execute(
-		code,
-		scriptArgs,
-		filename,
+	value, err := srv.Scripts.Execute(
+		&services.Script{
+			Code:     code,
+			Args:     scriptArgs,
+			Filename: filename,
+		},
 		globalFlags.Network,
 	)
 	if err != nil {

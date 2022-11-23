@@ -22,12 +22,10 @@ import (
 	"bytes"
 	"encoding/hex"
 	"fmt"
+	"github.com/onflow/cadence"
+	"github.com/onflow/flow-cli/pkg/flowkit"
 	"io/ioutil"
 	"net/http"
-
-	"github.com/onflow/flow-cli/pkg/flowkit"
-
-	"github.com/onflow/cadence"
 
 	"github.com/onflow/flow-cli/pkg/flowkit/contracts"
 
@@ -79,32 +77,131 @@ func (t *Transactions) GetStatus(
 	return tx, result, err
 }
 
+// NewTransactionAccountRoles defines transaction roles by accounts.
+//
+// You can read more about roles here: https://developers.flow.com/learn/concepts/accounts-and-keys
+func NewTransactionAccountRoles(
+	proposer *flowkit.Account,
+	payer *flowkit.Account,
+	authorizers []*flowkit.Account,
+) (*transactionAccountRoles, error) {
+	if proposer == nil || payer == nil {
+		return nil, fmt.Errorf("must provide both proposer and payer")
+	}
+
+	return &transactionAccountRoles{
+		proposer:    proposer,
+		authorizers: authorizers,
+		payer:       payer,
+	}, nil
+}
+
+// NewSingleTransactionAccount creates transaction accounts from a single provided
+// account fulfilling all the roles (proposer, payer, authorizer).
+func NewSingleTransactionAccount(account *flowkit.Account) *transactionAccountRoles {
+	return &transactionAccountRoles{
+		proposer:    account,
+		authorizers: []*flowkit.Account{account},
+		payer:       account,
+	}
+}
+
+// transactionAccountRoles define all the accounts for different transaction roles.
+type transactionAccountRoles struct {
+	proposer    *flowkit.Account
+	authorizers []*flowkit.Account
+	payer       *flowkit.Account
+}
+
+func (t *transactionAccountRoles) toAddresses() *transactionAddresses {
+	auths := make([]flow.Address, len(t.authorizers))
+	for i, a := range t.authorizers {
+		auths[i] = a.Address()
+	}
+
+	return &transactionAddresses{
+		proposer:    t.proposer.Address(),
+		authorizers: auths,
+		payer:       t.payer.Address(),
+	}
+}
+
+// getSigners for signing the transaction, detect if all accounts are same so only return the one account.
+func (t *transactionAccountRoles) getSigners() []*flowkit.Account {
+	// build only unique accounts to sign, it's important payer account is last
+	sigs := make([]*flowkit.Account, 0)
+	addLastIfUnique := func(signer *flowkit.Account) {
+		for _, sig := range sigs {
+			if sig.Address() == signer.Address() {
+				return
+			}
+		}
+		sigs = append(sigs, signer)
+	}
+
+	addLastIfUnique(t.proposer)
+	for _, auth := range t.authorizers {
+		addLastIfUnique(auth)
+	}
+	addLastIfUnique(t.payer)
+
+	return sigs
+}
+
+// NewTransactionAddresses defines transaction roles by account addresses.
+//
+// You can read more about roles here: https://developers.flow.com/learn/concepts/accounts-and-keys
+func NewTransactionAddresses(
+	proposer flow.Address,
+	payer flow.Address,
+	authorizers []flow.Address,
+) *transactionAddresses {
+	return &transactionAddresses{
+		proposer:    proposer,
+		authorizers: authorizers,
+		payer:       payer,
+	}
+}
+
+type transactionAddresses struct {
+	proposer    flow.Address
+	authorizers []flow.Address
+	payer       flow.Address
+}
+
+// Script includes Cadence code and optional arguments and filename.
+//
+// Filename is only required to be passed if you want to resolve imports.
+type Script struct {
+	Code     []byte
+	Args     []cadence.Value
+	Filename string
+}
+
 // Build builds a transaction with specified payer, proposer and authorizer.
 func (t *Transactions) Build(
-	proposer flow.Address,
-	authorizers []flow.Address,
-	payer flow.Address,
+	addresses *transactionAddresses,
 	proposerKeyIndex int,
-	code []byte,
-	codeFilename string,
+	script *Script,
 	gasLimit uint64,
-	args []cadence.Value,
 	network string,
-	approveBuild bool,
 ) (*flowkit.Transaction, error) {
+	if t.state == nil {
+		return nil, fmt.Errorf("missing configuration, initialize it: flow state init")
+	}
 
 	latestBlock, err := t.gateway.GetLatestBlock()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get latest sealed block: %w", err)
 	}
 
-	proposerAccount, err := t.gateway.GetAccount(proposer)
+	proposerAccount, err := t.gateway.GetAccount(addresses.proposer)
 	if err != nil {
 		return nil, err
 	}
 
 	tx := flowkit.NewTransaction().
-		SetPayer(payer).
+		SetPayer(addresses.payer).
 		SetGasLimit(gasLimit).
 		SetBlockReference(latestBlock)
 
@@ -112,7 +209,7 @@ func (t *Transactions) Build(
 		return nil, err
 	}
 
-	resolver, err := contracts.NewResolver(code)
+	resolver, err := contracts.NewResolver(script.Code)
 	if err != nil {
 		return nil, err
 	}
@@ -121,7 +218,7 @@ func (t *Transactions) Build(
 		if network == "" {
 			return nil, fmt.Errorf("missing network, specify which network to use to resolve imports in transaction code")
 		}
-		if codeFilename == "" { // when used as lib with code we don't support imports
+		if script.Filename == "" { // when used as lib with code we don't support imports
 			return nil, fmt.Errorf("resolving imports in transactions not supported")
 		}
 
@@ -130,8 +227,8 @@ func (t *Transactions) Build(
 			return nil, err
 		}
 
-		code, err = resolver.ResolveImports(
-			codeFilename,
+		script.Code, err = resolver.ResolveImports(
+			script.Filename,
 			contractsNetwork,
 			t.state.AliasesForNetwork(network),
 		)
@@ -140,22 +237,14 @@ func (t *Transactions) Build(
 		}
 	}
 
-	err = tx.SetScriptWithArgs(code, args)
+	err = tx.SetScriptWithArgs(script.Code, script.Args)
 	if err != nil {
 		return nil, err
 	}
 
-	tx, err = tx.AddAuthorizers(authorizers)
+	tx, err = tx.AddAuthorizers(addresses.authorizers)
 	if err != nil {
 		return nil, err
-	}
-
-	if approveBuild {
-		return tx, nil
-	}
-
-	if !output.ApproveTransactionForBuildingPrompt(tx) {
-		return nil, fmt.Errorf("transaction was not approved")
 	}
 
 	return tx, nil
@@ -165,7 +254,6 @@ func (t *Transactions) Build(
 func (t *Transactions) Sign(
 	signer *flowkit.Account,
 	payload []byte,
-	approveSigning bool,
 ) (*flowkit.Transaction, error) {
 	if t.state == nil {
 		return nil, fmt.Errorf("missing configuration, initialize it: flow state init")
@@ -181,30 +269,11 @@ func (t *Transactions) Sign(
 		return nil, err
 	}
 
-	if approveSigning {
-		return tx.Sign()
-	}
-
-	if !output.ApproveTransactionForSigningPrompt(tx) {
-		return nil, fmt.Errorf("transaction was not approved for signing")
-	}
-
 	return tx.Sign()
 }
 
 // SendSigned sends the transaction that is already signed.
-func (t *Transactions) SendSigned(
-	payload []byte,
-	approveSend bool,
-) (*flow.Transaction, *flow.TransactionResult, error) {
-	tx, err := flowkit.NewTransactionFromPayload(payload)
-	if err != nil {
-		return nil, nil, err
-	}
-	if !approveSend && !output.ApproveTransactionForSendingPrompt(tx) {
-		return nil, nil, fmt.Errorf("transaction was not approved for sending")
-	}
-
+func (t *Transactions) SendSigned(tx *flowkit.Transaction) (*flow.Transaction, *flow.TransactionResult, error) {
 	t.logger.StartProgress(fmt.Sprintf("Sending transaction with ID: %s", tx.FlowTransaction().ID()))
 	defer t.logger.StopProgress()
 
@@ -223,59 +292,53 @@ func (t *Transactions) SendSigned(
 
 // Send a transaction code using the signer account and arguments for the specified network.
 func (t *Transactions) Send(
-	signer *flowkit.Account,
-	code []byte,
-	codeFilename string,
+	accounts *transactionAccountRoles,
+	script *Script,
 	gasLimit uint64,
-	args []cadence.Value,
 	network string,
 ) (*flow.Transaction, *flow.TransactionResult, error) {
 	if t.state == nil {
 		return nil, nil, fmt.Errorf("missing configuration, initialize it: flow state init")
 	}
 
-	signerKeyIndex := signer.Key().Index()
-
 	tx, err := t.Build(
-		signer.Address(),
-		[]flow.Address{signer.Address()},
-		signer.Address(),
-		signerKeyIndex,
-		code,
-		codeFilename,
+		accounts.toAddresses(),
+		accounts.proposer.Key().Index(),
+		script,
 		gasLimit,
-		args,
 		network,
-		true,
 	)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	err = tx.SetSigner(signer)
-	if err != nil {
-		return nil, nil, err
+	for _, signer := range accounts.getSigners() {
+		fmt.Println("signer ", signer.Address(), signer.Name())
+
+		err = tx.SetSigner(signer)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		tx, err = tx.Sign()
+		if err != nil {
+			return nil, nil, err
+		}
 	}
 
-	signed, err := tx.Sign()
-	if err != nil {
-		return nil, nil, err
-	}
-
-	t.logger.Info(fmt.Sprintf("Transaction ID: %s", signed.FlowTransaction().ID()))
+	t.logger.Info(fmt.Sprintf("Transaction ID: %s", tx.FlowTransaction().ID()))
 	t.logger.StartProgress("Sending transaction...")
-	defer t.logger.StopProgress()
 
-	sentTx, err := t.gateway.SendSignedTransaction(signed)
+	sentTx, err := t.gateway.SendSignedTransaction(tx)
 	if err != nil {
 		return nil, nil, err
 	}
-
-	t.logger.StartProgress("Waiting for transaction to be sealed...")
-
-	res, err := t.gateway.GetTransactionResult(sentTx.ID(), true)
 
 	t.logger.StopProgress()
+	t.logger.StartProgress("Waiting for transaction to be sealed...")
+	defer t.logger.StopProgress()
+
+	res, err := t.gateway.GetTransactionResult(sentTx.ID(), true)
 
 	return sentTx, res, err
 }
