@@ -86,6 +86,13 @@ func DefaultTestnetNetwork() Network {
 	}
 }
 
+func DefaultSandboxNetwork() Network {
+	return Network{
+		Name: "sandboxnet",
+		Host: "secure.sandboxnet.nodes.onflow.org",
+	}
+}
+
 // DefaultMainnetNetwork get default mainnet network.
 func DefaultMainnetNetwork() Network {
 	return Network{
@@ -99,6 +106,7 @@ func DefaultNetworks() Networks {
 	return Networks{
 		DefaultEmulatorNetwork(),
 		DefaultTestnetNetwork(),
+		DefaultSandboxNetwork(),
 		DefaultMainnetNetwork(),
 	}
 }
