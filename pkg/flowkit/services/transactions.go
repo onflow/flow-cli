@@ -22,11 +22,10 @@ import (
 	"bytes"
 	"encoding/hex"
 	"fmt"
+	"github.com/onflow/cadence"
 	"github.com/onflow/flow-cli/pkg/flowkit"
 	"io/ioutil"
 	"net/http"
-
-	"github.com/onflow/cadence"
 
 	"github.com/onflow/flow-cli/pkg/flowkit/contracts"
 
@@ -129,22 +128,19 @@ func (t *transactionAccountRoles) toAddresses() *transactionAddresses {
 
 // getSigners for signing the transaction, detect if all accounts are same so only return the one account.
 func (t *transactionAccountRoles) getSigners() []*flowkit.Account {
-	// if proposer, payer and authorizer is all same account then only return that as a single signer https://developers.flow.com/learn/concepts/accounts-and-keys#authorization-envelope
-	if t.proposer.Address() == t.payer.Address() &&
-		len(t.authorizers) == 1 && t.authorizers[0].Address() == t.payer.Address() {
-		return []*flowkit.Account{t.payer}
+	// build only unique accounts to sign
+	unique := make(map[flow.Address]*flowkit.Account)
+	unique[t.proposer.Address()] = t.proposer
+	unique[t.payer.Address()] = t.payer
+	for _, auth := range t.authorizers {
+		unique[auth.Address()] = auth
 	}
 
-	// if proposer and payer are same but no authorizers provided then only return that as a single signer
-	if t.proposer.Address() == t.payer.Address() && len(t.authorizers) == 0 {
-		return []*flowkit.Account{t.payer}
+	sigs := make([]*flowkit.Account, 0)
+	for _, sig := range unique {
+		sigs = append(sigs, sig)
 	}
-
-	signers := make([]*flowkit.Account, 0)
-	signers = append(signers, t.proposer)
-	signers = append(signers, t.authorizers...)
-	signers = append(signers, t.payer)
-	return signers
+	return sigs
 }
 
 // NewTransactionAddresses defines transaction roles by account addresses.

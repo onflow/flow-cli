@@ -165,6 +165,15 @@ func Test_TransactionRoles(t *testing.T) {
 			},
 		}, {
 			transactionAccountRoles: &transactionAccountRoles{
+				proposer:    a,
+				authorizers: []*flowkit.Account{a},
+				payer:       b,
+			},
+			signerAddresses: []flow.Address{
+				a.Address(), b.Address(),
+			},
+		}, {
+			transactionAccountRoles: &transactionAccountRoles{
 				proposer: a,
 				payer:    a,
 			},
@@ -182,14 +191,14 @@ func Test_TransactionRoles(t *testing.T) {
 			},
 		}}
 
-		for _, test := range tests {
+		for i, test := range tests {
 			signerAccs := test.getSigners()
 			signerAddrs := make([]flow.Address, len(signerAccs))
 			for i, sig := range signerAccs {
 				signerAddrs[i] = sig.Address()
 			}
 
-			assert.Equal(t, test.signerAddresses, signerAddrs)
+			assert.ElementsMatchf(t, test.signerAddresses, signerAddrs, fmt.Sprintf("test %d failed", i))
 		}
 	})
 
