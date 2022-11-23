@@ -282,15 +282,13 @@ func (a *Accounts) Create(
 // source code, possible init arguments, the filename and network are only
 // required if a contract has imports that need resolving.
 type Contract struct {
-	Name     string
-	Source   []byte
-	Args     []cadence.Value
-	Filename string
-	Network  string
+	*Script
+	Name    string
+	Network string
 }
 
 func (c *Contract) validate(hasImports bool) error {
-	if c.Source == nil {
+	if c.Code == nil {
 		return fmt.Errorf("must provide contract source code")
 	}
 	if c.Name == "" {
@@ -311,7 +309,7 @@ func (a *Accounts) AddContract(
 	contract *Contract,
 	updateExisting bool,
 ) (*flow.Account, error) {
-	resolver, err := contracts.NewResolver(contract.Source)
+	resolver, err := contracts.NewResolver(contract.Code)
 	if err != nil {
 		return nil, err
 	}
@@ -333,7 +331,7 @@ func (a *Accounts) AddContract(
 			return nil, err
 		}
 
-		contract.Source, err = resolver.ResolveImports(
+		contract.Code, err = resolver.ResolveImports(
 			contract.Filename,
 			contractsNetwork,
 			a.state.AliasesForNetwork(contract.Network),
@@ -346,7 +344,7 @@ func (a *Accounts) AddContract(
 	tx, err := flowkit.NewAddAccountContractTransaction(
 		account,
 		contract.Name,
-		string(contract.Source),
+		string(contract.Code),
 		contract.Args,
 	)
 	if err != nil {
@@ -358,7 +356,7 @@ func (a *Accounts) AddContract(
 		tx, err = flowkit.NewUpdateAccountContractTransaction(
 			account,
 			contract.Name,
-			string(contract.Source),
+			string(contract.Code),
 		)
 		if err != nil {
 			return nil, err
