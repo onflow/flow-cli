@@ -673,8 +673,8 @@ github.com/onflow/cadence v0.15.0/go.mod h1:KMzDF6cIv6nb5PJW9aITaqazbmJX8MMeibFc
 github.com/onflow/cadence v0.20.1/go.mod h1:7mzUvPZUIJztIbr9eTvs+fQjWWHTF8veC+yk4ihcNIA=
 github.com/onflow/cadence v0.28.0 h1:18A1V9xqGewibEhuzqBNEoNvqG6OwVqHg7gKu3UliaM=
 github.com/onflow/cadence v0.28.0/go.mod h1:h+SbY8RNl6Q6sT6l/2cvpUZUJNCbzJya+3Bkwe/0YwY=
-github.com/onflow/cadence-tools/languageserver v0.2.0 h1:DwBBk2zlbjjbuftEU2Tl/2T2GKU18a2/+BiS8Gawzxo=
-github.com/onflow/cadence-tools/languageserver v0.2.0/go.mod h1:qCRa+S7sQ3cLIEgUu1d21Yft4oWEZAKadJ19ID4etzw=
+github.com/onflow/cadence-tools/languageserver v0.3.1 h1:I9au/BQgpcOL+P4dm60zbKP01la/DPt0L5mn9JO1yIE=
+github.com/onflow/cadence-tools/languageserver v0.3.1/go.mod h1:Jo1JI07xkrl/WlCRvuMfp+x1VyUCsXEtHXGsCnBC9/E=
 github.com/onflow/cadence-tools/lint v0.2.0 h1:i+Mvht3hQQNNxe4jV8BRTr97wFWlJSRGTOM03BSyloQ=
 github.com/onflow/cadence-tools/lint v0.2.0/go.mod h1:r4kEtmZe4XuKcx/JXEU027i6+cpMtRc0GaLCAE6EvYs=
 github.com/onflow/cadence-tools/test v0.2.1-0.20221012182900-f46efb551c55 h1:l/JqX4qnukAf2rCfZ0afPvK13eNPeL6gbv2GAweuVuE=
@@ -711,12 +711,8 @@ github.com/onflow/nft-storefront/lib/go/contracts v0.0.0-20220714155620-011db20f
 github.com/onflow/nft-storefront/lib/go/contracts v0.0.0-20220714155620-011db20fe754/go.mod h1:E3ScfQb5XcWJCIAdtIeEnr5i5l2y60GT0BTXeIHseWg=
 github.com/onflow/sdks v0.4.4 h1:aJPGJJLAN+mlBWAQxsyuJXeRRMFeLwU6Mp4e/YL6bdU=
 github.com/onflow/sdks v0.4.4/go.mod h1:F0dj0EyHC55kknLkeD10js4mo14yTdMotnWMslPirrU=
-github.com/onflowser/flowser v0.0.0-20221121161613-0917f3b5badc h1:a8GADahSIOGu7GFQ/ncU5nibEV3J7VIMzogl/FxBOTQ=
-github.com/onflowser/flowser v0.0.0-20221121161613-0917f3b5badc/go.mod h1:6swcPho7NU+X8cs+1xnnvHl1OXsp8Vj6GqjHP6J66yY=
-github.com/onflowser/flowser v2.0.6-beta+incompatible h1:aff3Hme2zJN8J63n8NmBMJUs08I41X5iTlieGbrMAwA=
-github.com/onflowser/flowser v2.0.6-beta+incompatible/go.mod h1:STRNiMaL+okmsNCBuNUdVuFQ81pTGaKY0iuyLK/k0UU=
-github.com/onflowser/flowser/v2 v2.0.8-beta h1:cTnrn4OOsqwI1FrkSKBLs6D8xEHYTKV5q4pgADw2rV0=
-github.com/onflowser/flowser/v2 v2.0.8-beta/go.mod h1:g/nfelBOx0A4j60Twsr7GsmKapr2oxtRZQS0lwPHgZY=
+github.com/onflowser/flowser/v2 v2.0.9-beta h1:U59WUu/u0ZPDlbFcGs66fVjYektxqeunAPQLK0no2jA=
+github.com/onflowser/flowser/v2 v2.0.9-beta/go.mod h1:g/nfelBOx0A4j60Twsr7GsmKapr2oxtRZQS0lwPHgZY=
 github.com/onsi/ginkgo v1.6.0/go.mod h1:lLunBs/Ym6LB5Z9jYTR76FiuTmxDTDusOGeTQH+WWjE=
 github.com/onsi/ginkgo v1.7.0/go.mod h1:lLunBs/Ym6LB5Z9jYTR76FiuTmxDTDusOGeTQH+WWjE=
 github.com/onsi/gomega v1.4.3/go.mod h1:ex+gbHU/CVuBBDIJjb2X0qEXbFg53c61hWP/1CpauHY=
