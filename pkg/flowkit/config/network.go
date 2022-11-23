@@ -89,7 +89,7 @@ func DefaultTestnetNetwork() Network {
 func DefaultSandboxNetwork() Network {
 	return Network{
 		Name: "sandboxnet",
-		Host: "secure.sandboxnet.nodes.onflow.org:9000",
+		Host: "access.sandboxnet.nodes.onflow.org:9000",
 	}
 }
 
