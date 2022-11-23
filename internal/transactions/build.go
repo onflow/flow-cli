@@ -21,6 +21,8 @@ package transactions
 import (
 	"fmt"
 
+	"github.com/onflow/flow-cli/pkg/flowkit/output"
+
 	"github.com/onflow/cadence"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/spf13/cobra"
@@ -57,7 +59,7 @@ func build(
 	args []string,
 	readerWriter flowkit.ReaderWriter,
 	globalFlags command.GlobalFlags,
-	services *services.Services,
+	srv *services.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
 	proposer, err := getAddress(buildFlags.Proposer, state)
@@ -92,29 +94,31 @@ func build(
 	} else {
 		transactionArgs, err = flowkit.ParseArgumentsWithoutType(filename, code, args[1:])
 	}
-
 	if err != nil {
 		return nil, fmt.Errorf("error parsing transaction arguments: %w", err)
 	}
 
-	build, err := services.Transactions.Build(
-		proposer,
-		authorizers,
-		payer,
+	tx, err := srv.Transactions.Build(
+		services.NewTransactionAddresses(proposer, payer, authorizers),
 		buildFlags.ProposerKeyIndex,
-		code,
-		filename,
+		&services.Script{
+			Code:     code,
+			Args:     transactionArgs,
+			Filename: filename,
+		},
 		buildFlags.GasLimit,
-		transactionArgs,
 		globalFlags.Network,
-		globalFlags.Yes,
 	)
 	if err != nil {
 		return nil, err
 	}
 
+	if !globalFlags.Yes && !output.ApproveTransactionForBuildingPrompt(tx) {
+		return nil, fmt.Errorf("transaction was not approved")
+	}
+
 	return &TransactionResult{
-		tx:      build.FlowTransaction(),
+		tx:      tx.FlowTransaction(),
 		include: []string{"code", "payload", "signatures"},
 	}, nil
 }

@@ -57,12 +57,9 @@ func addContract(
 	srv *services.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
-	filename := ""
-	if len(args) == 1 {
-		filename = args[0]
-	} else {
-		fmt.Println("⚠️Deprecation notice: using name argument in add contract " +
-			"command will be deprecated soon.")
+	filename := args[0]
+	if len(args) > 1 {
+		fmt.Println("⚠️Deprecation notice: using name argument in add contract command will be deprecated soon.")
 		filename = args[1]
 	}
 
@@ -90,10 +87,12 @@ func addContract(
 	account, err := srv.Accounts.AddContract(
 		to,
 		&services.Contract{
-			Source:   code,
-			Args:     contractArgs,
-			Filename: filename,
-			Network:  globalFlags.Network,
+			Script: &services.Script{
+				Code:     code,
+				Args:     contractArgs,
+				Filename: filename,
+			},
+			Network: globalFlags.Network,
 		},
 		false,
 	)
