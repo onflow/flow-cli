@@ -480,6 +480,7 @@ func TestTransactions_Integration(t *testing.T) {
 	})
 
 	// todo(sideninja) we should convert different variations of sending transaction to table tests
+	// todo(sideninja) write complex transaction signing tests using the network
 
 	t.Run("Send Transaction No Auths", func(t *testing.T) {
 		t.Parallel()
