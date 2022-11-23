@@ -166,8 +166,8 @@ func Test_TransactionRoles(t *testing.T) {
 		}, {
 			transactionAccountRoles: &transactionAccountRoles{
 				proposer:    a,
-				authorizers: []*flowkit.Account{a},
 				payer:       b,
+				authorizers: []*flowkit.Account{a},
 			},
 			signerAddresses: []flow.Address{
 				a.Address(), b.Address(),
@@ -198,7 +198,7 @@ func Test_TransactionRoles(t *testing.T) {
 				signerAddrs[i] = sig.Address()
 			}
 
-			assert.ElementsMatchf(t, test.signerAddresses, signerAddrs, fmt.Sprintf("test %d failed", i))
+			assert.Equal(t, test.signerAddresses, signerAddrs, fmt.Sprintf("test %d failed", i))
 		}
 	})
 
@@ -480,7 +480,6 @@ func TestTransactions_Integration(t *testing.T) {
 	})
 
 	// todo(sideninja) we should convert different variations of sending transaction to table tests
-	// todo(sideninja) write complex transaction signing tests using the network
 
 	t.Run("Send Transaction No Auths", func(t *testing.T) {
 		t.Parallel()
@@ -555,6 +554,34 @@ func TestTransactions_Integration(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, tx.Payer.String(), b.Address().String())
 		assert.Equal(t, tx.Authorizers[0].String(), c.Address().String())
+		assert.Equal(t, tx.ProposalKey.KeyIndex, a.Key().Index())
+		assert.Nil(t, txr.Error)
+		assert.Equal(t, txr.Status, flow.TransactionStatusSealed)
+	})
+
+	t.Run("Send Transaction two account roles", func(t *testing.T) {
+		t.Parallel()
+		state, s := setupIntegration()
+		setupAccounts(state, s)
+
+		a, _ := state.Accounts().ByName("Alice")
+		b, _ := state.Accounts().ByName("Bob")
+
+		roles, err := NewTransactionAccountRoles(a, b, []*flowkit.Account{a})
+		require.NoError(t, err)
+
+		tx, txr, err := s.Transactions.Send(
+			roles,
+			&Script{
+				Code:     tests.TransactionSingleAuth.Source,
+				Filename: tests.TransactionSingleAuth.Filename,
+			},
+			flow.DefaultTransactionGasLimit,
+			"",
+		)
+		assert.NoError(t, err)
+		assert.Equal(t, tx.Payer.String(), b.Address().String())
+		assert.Equal(t, tx.Authorizers[0].String(), a.Address().String())
 		assert.Equal(t, tx.ProposalKey.KeyIndex, a.Key().Index())
 		assert.Nil(t, txr.Error)
 		assert.Equal(t, txr.Status, flow.TransactionStatusSealed)

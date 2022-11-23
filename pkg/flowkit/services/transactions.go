@@ -128,18 +128,23 @@ func (t *transactionAccountRoles) toAddresses() *transactionAddresses {
 
 // getSigners for signing the transaction, detect if all accounts are same so only return the one account.
 func (t *transactionAccountRoles) getSigners() []*flowkit.Account {
-	// build only unique accounts to sign
-	unique := make(map[flow.Address]*flowkit.Account)
-	unique[t.proposer.Address()] = t.proposer
-	unique[t.payer.Address()] = t.payer
-	for _, auth := range t.authorizers {
-		unique[auth.Address()] = auth
+	// build only unique accounts to sign, it's important payer account is last
+	sigs := make([]*flowkit.Account, 0)
+	addLastIfUnique := func(signer *flowkit.Account) {
+		for _, sig := range sigs {
+			if sig.Address() == signer.Address() {
+				return
+			}
+		}
+		sigs = append(sigs, signer)
 	}
 
-	sigs := make([]*flowkit.Account, 0)
-	for _, sig := range unique {
-		sigs = append(sigs, sig)
+	addLastIfUnique(t.proposer)
+	for _, auth := range t.authorizers {
+		addLastIfUnique(auth)
 	}
+	addLastIfUnique(t.payer)
+
 	return sigs
 }
 
@@ -308,6 +313,8 @@ func (t *Transactions) Send(
 	}
 
 	for _, signer := range accounts.getSigners() {
+		fmt.Println("signer ", signer.Address(), signer.Name())
+
 		err = tx.SetSigner(signer)
 		if err != nil {
 			return nil, nil, err
