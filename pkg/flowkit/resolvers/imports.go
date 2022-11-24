@@ -22,7 +22,6 @@ import (
 	"fmt"
 	"github.com/onflow/cadence/runtime/ast"
 	"github.com/onflow/cadence/runtime/common"
-	"github.com/onflow/cadence/runtime/parser"
 	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-go-sdk"
 	"path"
@@ -33,6 +32,7 @@ type ImportReplacer interface {
 	Replace()
 }
 
+// FileImports implements file import replacements functionality for the project contracts with optionally included aliases.
 type FileImports struct {
 	contracts []*flowkit.Contract
 	aliases   flowkit.Aliases
@@ -60,35 +60,19 @@ func (f *FileImports) getFileImports(program *ast.Program) []string {
 	return imports
 }
 
-func (f *FileImports) HasImports(code []byte) bool {
-	program, err := parser.ParseProgram(code, nil)
-	if err != nil {
-		return false
-	}
-
-	imports := f.getFileImports(program)
-	return len(imports) > 0
-}
-
-func (f *FileImports) Replace(code []byte, codePath string) ([]byte, error) {
-	program, err := parser.ParseProgram(code, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	imports := f.getFileImports(program)
+func (f *FileImports) Replace(program *flowkit.Program, codePath string) (*flowkit.Program, error) {
+	imports := program.Imports()
 	sourceTarget := f.getSourceTarget()
 
 	for _, imp := range imports {
-		target := sourceTarget[absolutePath(codePath, imp)]
-		if target != "" {
-			code = f.replaceImport(code, imp, target)
-		} else {
+		target, found := sourceTarget[absolutePath(codePath, imp)]
+		if !found {
 			return nil, fmt.Errorf("import %s could not be resolved from the configuration", imp)
 		}
+		program.ReplaceImport(imp, target)
 	}
 
-	return code, nil
+	return program, nil
 }
 
 // replaceImport replaces import from path to address.

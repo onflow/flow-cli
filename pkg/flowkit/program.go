@@ -72,7 +72,7 @@ func (p *Program) reload() {
 	p.astProgram = astProgram
 }
 
-func (p *Program) replaceImport(from string, to string) {
+func (p *Program) ReplaceImport(from string, to string) *Program {
 	p.code = []byte(strings.Replace(
 		string(p.code),
 		fmt.Sprintf(`"%s"`, from),
@@ -81,4 +81,5 @@ func (p *Program) replaceImport(from string, to string) {
 	))
 
 	p.reload()
+	return p
 }
