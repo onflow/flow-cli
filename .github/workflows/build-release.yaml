@@ -6,42 +6,40 @@ on:
       - "v*"
 
 jobs:
-  security:
+  releases-matrix:
+    name: Release Go Binary
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        # build and publish in parallel: linux/386, linux/amd64, linux/arm64, windows/386, windows/amd64, darwin/amd64, darwin/arm64
+        goos: [ linux, windows, darwin ]
+        goarch: [ "386", amd64, arm64 ]
+        exclude:
+          - goarch: "386"
+            goos: darwin
+          - goarch: arm64
+            goos: windows
     steps:
       - uses: actions/checkout@master
-      - name: Run Snyk to check for vulnerabilities
+      - name: Codebase security check
         continue-on-error: true
         uses: snyk/actions/golang@master
         with:
           go-version: '1.19'
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
-      - uses: actions/setup-go@v1
-        with:
-          go-version: '1.19'
-      - name: Build Binaries
-        run: make versioned-binaries
+      - uses: actions/checkout@v3
+      - uses: wangyoucao577/go-release-action@v1.33
         env:
           MIXPANEL_PROJECT_TOKEN: ${{ secrets.MIXPANEL_PROJECT_TOKEN }}
-      - name: Uploading Binaries
-        uses: google-github-actions/upload-cloud-storage@main
+          APP_VERSION: $(basename ${GITHUB_REF})
+          BUILD_TIME: $(date --iso-8601=seconds)
+          VERSION: ${{github.ref_name}}
+          COMMIT: ${{ github.sha }}
         with:
-          credentials: ${{ secrets.FLOW_HOSTING_PROD_SA }}
-          path: ./cmd/flow/
-          glob: 'flow-*'
-          destination: flow-cli/
-          parent: false
-      - name: Update Version
-        uses: google-github-actions/upload-cloud-storage@main
-        with:
-          credentials: ${{ secrets.FLOW_HOSTING_PROD_SA }}
-          path: ./
-          glob: 'version.txt'
-          destination: flow-cli/
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          goos: ${{ matrix.goos }}
+          goarch: ${{ matrix.goarch }}
+          goversion: "1.19"
+          project_path: "./cmd/flow"
+          ldflags: "-X github.com/onflow/flow-cli/build.commit=$(COMMIT) -X github.com/onflow/flow-cli/build.semver=$(VERSION) -X github.com/onflow/flow-cli/pkg/flowkit/util.MIXPANEL_PROJECT_TOKEN=${MIXPANEL_PROJECT_TOKEN}"
