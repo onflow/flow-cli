@@ -11,6 +11,14 @@ type Script struct {
 	location string
 }
 
+func NewScript(code []byte, args []cadence.Value, location string) *Script {
+	return &Script{
+		code:     code,
+		Args:     args,
+		location: location,
+	}
+}
+
 func (s *Script) Code() []byte {
 	return s.code
 }

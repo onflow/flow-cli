@@ -88,11 +88,7 @@ func send(
 
 	tx, result, err := srv.Transactions.Send(
 		services.NewSingleTransactionAccount(signer),
-		&flowkit.Script{
-			Code:     code,
-			Args:     transactionArgs,
-			Location: codeFilename,
-		},
+		flowkit.NewScript(code, transactionArgs, codeFilename),
 		sendFlags.GasLimit,
 		globalFlags.Network,
 	)

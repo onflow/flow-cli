@@ -71,11 +71,7 @@ func execute(
 	}
 
 	value, err := srv.Scripts.Execute(
-		&flowkit.Script{
-			Code:     code,
-			Args:     scriptArgs,
-			Location: filename,
-		},
+		flowkit.NewScript(code, scriptArgs, filename),
 		globalFlags.Network,
 	)
 	if err != nil {

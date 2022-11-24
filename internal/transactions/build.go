@@ -101,11 +101,7 @@ func build(
 	tx, err := srv.Transactions.Build(
 		services.NewTransactionAddresses(proposer, payer, authorizers),
 		buildFlags.ProposerKeyIndex,
-		&flowkit.Script{
-			Code:     code,
-			Args:     transactionArgs,
-			Location: filename,
-		},
+		flowkit.NewScript(code, transactionArgs, filename),
 		buildFlags.GasLimit,
 		globalFlags.Network,
 	)

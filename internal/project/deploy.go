@@ -87,14 +87,14 @@ func deploy(
 }
 
 type DeployResult struct {
-	contracts []*project.Program
+	contracts []*project.Contract
 }
 
 func (r *DeployResult) JSON() interface{} {
 	result := make(map[string]string)
 
 	for _, contract := range r.contracts {
-		result[contract.Name()] = contract.Target().String()
+		result[contract.Name] = contract.AccountAddress.String()
 	}
 
 	return result
