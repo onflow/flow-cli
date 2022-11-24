@@ -1,9 +1,8 @@
 name: Build Release
 
 on:
-  push:
-    tags:
-      - "test-*"
+  release:
+    types: [prereleased]
 
 jobs:
   releases-matrix:
