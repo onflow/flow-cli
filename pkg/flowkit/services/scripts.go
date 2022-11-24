@@ -29,7 +29,7 @@ import (
 
 	"github.com/onflow/flow-cli/pkg/flowkit/gateway"
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
-	"github.com/onflow/flow-cli/pkg/flowkit/resolvers"
+	"github.com/onflow/flow-cli/pkg/flowkit/project"
 )
 
 // Scripts is a service that handles all script-related interactions.
@@ -54,7 +54,7 @@ func NewScripts(
 
 // Execute script code with passed arguments on the selected network.
 func (s *Scripts) Execute(script *Script, network string) (cadence.Value, error) {
-	program, err := flowkit.NewProgram(script.Code)
+	program, err := flowkit.NewProgram(script)
 	if err != nil {
 		return nil, err
 	}
@@ -65,7 +65,7 @@ func (s *Scripts) Execute(script *Script, network string) (cadence.Value, error)
 			return nil, err
 		}
 
-		importReplacer := resolvers.NewFileImports(
+		importReplacer := project.NewFileImports(
 			contracts,
 			s.state.AliasesForNetwork(network),
 		)
@@ -80,7 +80,7 @@ func (s *Scripts) Execute(script *Script, network string) (cadence.Value, error)
 			return nil, fmt.Errorf("resolving imports in scripts not supported")
 		}
 
-		program, err = importReplacer.Replace(program, script.Filename)
+		program, err = importReplacer.Replace(program)
 		if err != nil {
 			return nil, err
 		}

@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package resolvers_test
+package project_test
 
 import (
 	"fmt"
@@ -29,7 +29,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/onflow/flow-cli/pkg/flowkit/resolvers"
+	"github.com/onflow/flow-cli/pkg/flowkit/project"
 )
 
 type testContract struct {
@@ -181,7 +181,7 @@ func getTestCases() []contractTestCase {
 		{
 			name:                    "Two contracts with import cycle",
 			contracts:               []testContract{testContractE, testContractF},
-			expectedDeploymentError: &resolvers.CyclicImportError{},
+			expectedDeploymentError: &project.CyclicImportError{},
 		},
 		{
 			name:                    "Single contract with two imports",
@@ -211,7 +211,7 @@ func TestContractDeploymentOrder(t *testing.T) {
 				}
 			}
 
-			deployment, err := resolvers.NewDeployment(contracts, testLoader{})
+			deployment, err := project.NewDeployment(contracts, testLoader{})
 
 			contracts, err = deployment.Sort()
 			if !strings.Contains(testCase.name, "unresolved") && !strings.Contains(testCase.name, "cycle") {

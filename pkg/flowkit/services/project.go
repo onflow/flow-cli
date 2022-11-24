@@ -32,7 +32,7 @@ import (
 
 	"github.com/onflow/flow-cli/pkg/flowkit/gateway"
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
-	"github.com/onflow/flow-cli/pkg/flowkit/resolvers"
+	"github.com/onflow/flow-cli/pkg/flowkit/project"
 )
 
 // Project is a service that handles all interactions for a state.
@@ -223,11 +223,11 @@ func (p *Project) Deploy(network string, update bool) ([]*flowkit.Contract, erro
 		return nil, err
 	}
 
-	loader := resolvers.FilesystemLoader{
+	loader := project.FilesystemLoader{
 		Reader: p.state.ReaderWriter(),
 	}
 
-	deployment, err := resolvers.NewDeployment(contracts, loader)
+	deployment, err := project.NewDeployment(contracts, loader)
 	if err != nil {
 		return nil, err
 	}
@@ -238,7 +238,7 @@ func (p *Project) Deploy(network string, update bool) ([]*flowkit.Contract, erro
 	}
 
 	aliases := p.state.AliasesForNetwork(network)
-	importReplacer := resolvers.NewFileImports(contracts, aliases)
+	importReplacer := project.NewFileImports(contracts, aliases)
 
 	p.logger.Info(fmt.Sprintf(
 		"\nDeploying %d contracts for accounts: %s\n", len(sorted),
@@ -271,12 +271,15 @@ func (p *Project) Deploy(network string, update bool) ([]*flowkit.Contract, erro
 			return nil, err
 		}
 
-		program, err := flowkit.NewProgram(code)
+		program, err := flowkit.NewProgram(&Script{
+			Code:     code,
+			Filename: contract.Location,
+		})
 		if err != nil {
 			return nil, err
 		}
 
-		program, err = importReplacer.Replace(program, contract.Location)
+		program, err = importReplacer.Replace(program)
 		if err != nil {
 			return nil, err
 		}

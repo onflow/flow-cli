@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package resolvers
+package project
 
 import (
 	"regexp"

@@ -27,7 +27,7 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/onflow/flow-cli/pkg/flowkit/resolvers"
+	"github.com/onflow/flow-cli/pkg/flowkit/project"
 
 	"github.com/onflow/flow-go-sdk"
 
@@ -205,7 +205,7 @@ func (t *Transactions) Build(
 		SetGasLimit(gasLimit).
 		SetBlockReference(latestBlock)
 
-	program, err := flowkit.NewProgram(script.Code)
+	program, err := flowkit.NewProgram(script)
 	if err != nil {
 		return nil, err
 	}
@@ -223,12 +223,12 @@ func (t *Transactions) Build(
 			return nil, err
 		}
 
-		importReplacer := resolvers.NewFileImports(
+		importReplacer := project.NewFileImports(
 			contracts,
 			t.state.AliasesForNetwork(network),
 		)
 
-		program, err = importReplacer.Replace(program, script.Filename)
+		program, err = importReplacer.Replace(program)
 		if err != nil {
 			return nil, fmt.Errorf("error resolving imports: %w", err)
 		}

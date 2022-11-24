@@ -5,22 +5,23 @@ import (
 	"github.com/onflow/cadence/runtime/ast"
 	"github.com/onflow/cadence/runtime/common"
 	"github.com/onflow/cadence/runtime/parser"
+	"github.com/onflow/flow-cli/pkg/flowkit/services"
 	"strings"
 )
 
 type Program struct {
-	code       []byte
+	script     *services.Script
 	astProgram *ast.Program
 }
 
-func NewProgram(code []byte) (*Program, error) {
-	astProgram, err := parser.ParseProgram(code, nil)
+func NewProgram(script *services.Script) (*Program, error) {
+	astProgram, err := parser.ParseProgram(script.Code, nil)
 	if err != nil {
 		return nil, err
 	}
 
 	return &Program{
-		code:       code,
+		script:     script,
 		astProgram: astProgram,
 	}, nil
 }
@@ -44,8 +45,8 @@ func (p *Program) HasImports() bool {
 }
 
 func (p *Program) ReplaceImport(from string, to string) *Program {
-	p.code = []byte(strings.Replace(
-		string(p.code),
+	p.script.Code = []byte(strings.Replace(
+		string(p.script.Code),
 		fmt.Sprintf(`"%s"`, from),
 		fmt.Sprintf("0x%s", to),
 		1,
@@ -55,8 +56,12 @@ func (p *Program) ReplaceImport(from string, to string) *Program {
 	return p
 }
 
+func (p *Program) Location() string {
+	return p.script.Filename
+}
+
 func (p *Program) Code() []byte {
-	return p.code
+	return p.script.Code
 }
 
 func (p *Program) Name() (string, error) {
@@ -80,7 +85,7 @@ func (p *Program) Name() (string, error) {
 }
 
 func (p *Program) reload() {
-	astProgram, err := parser.ParseProgram(p.code, nil)
+	astProgram, err := parser.ParseProgram(p.script.Code, nil)
 	if err != nil {
 		return
 	}

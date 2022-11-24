@@ -24,13 +24,11 @@ import (
 	"path"
 
 	"github.com/onflow/cadence"
-	"github.com/onflow/flow-go-sdk"
-	"github.com/onflow/flow-go-sdk/crypto"
-	"github.com/thoas/go-funk"
-
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
 	"github.com/onflow/flow-cli/pkg/flowkit/config/json"
 	"github.com/onflow/flow-cli/pkg/flowkit/util"
+	"github.com/onflow/flow-go-sdk"
+	"github.com/onflow/flow-go-sdk/crypto"
 )
 
 // ReaderWriter is implemented by any value that has ReadFile and WriteFile
@@ -115,30 +113,6 @@ func (p *State) Save(path string) error {
 	}
 
 	return nil
-}
-
-// ContractConflictExists returns true if the same contract is configured to deploy
-// to more than one account in the same network.
-//
-// The CLI currently does not allow the same contract to be deployed to multiple
-// accounts in the same network.
-func (p *State) ContractConflictExists(network string) bool {
-	contracts, err := p.DeploymentContractsByNetwork(network)
-	if err != nil {
-		return false
-	}
-
-	uniq := funk.Uniq(
-		funk.Map(contracts, func(c Contract) string {
-			return c.Name
-		}).([]string),
-	).([]string)
-
-	all := funk.Map(contracts, func(c Contract) string {
-		return c.Name
-	}).([]string)
-
-	return len(all) != len(uniq)
 }
 
 // Networks get network configuration.

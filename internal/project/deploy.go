@@ -28,7 +28,7 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
-	"github.com/onflow/flow-cli/pkg/flowkit/resolvers"
+	"github.com/onflow/flow-cli/pkg/flowkit/project"
 	"github.com/onflow/flow-cli/pkg/flowkit/services"
 )
 
@@ -87,7 +87,7 @@ func deploy(
 }
 
 type DeployResult struct {
-	contracts []*resolvers.Program
+	contracts []*project.Program
 }
 
 func (r *DeployResult) JSON() interface{} {

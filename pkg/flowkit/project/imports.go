@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package resolvers
+package project
 
 import (
 	"fmt"
@@ -42,12 +42,12 @@ func NewFileImports(contracts []*flowkit.Contract, aliases flowkit.Aliases) *Fil
 	}
 }
 
-func (f *FileImports) Replace(program *flowkit.Program, codePath string) (*flowkit.Program, error) {
+func (f *FileImports) Replace(program *flowkit.Program) (*flowkit.Program, error) {
 	imports := program.Imports()
 	sourceTarget := f.getSourceTarget()
 
 	for _, imp := range imports {
-		target, found := sourceTarget[absolutePath(codePath, imp)]
+		target, found := sourceTarget[absolutePath(program.Location(), imp)]
 		if !found {
 			return nil, fmt.Errorf("import %s could not be resolved from the configuration", imp)
 		}

@@ -16,11 +16,12 @@
  * limitations under the License.
  */
 
-package resolvers
+package project
 
 import (
 	"fmt"
 	"github.com/onflow/flow-cli/pkg/flowkit"
+	"github.com/onflow/flow-cli/pkg/flowkit/services"
 
 	"gonum.org/v1/gonum/graph"
 	"gonum.org/v1/gonum/graph/simple"
@@ -77,7 +78,10 @@ func (d *Deployment) add(contract *flowkit.Contract) error {
 		return err
 	}
 
-	program, err := flowkit.NewProgram(code)
+	program, err := flowkit.NewProgram(&services.Script{
+		Code:     code,
+		Filename: contract.Location,
+	})
 	if err != nil {
 		return err
 	}
