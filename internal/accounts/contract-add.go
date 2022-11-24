@@ -90,7 +90,7 @@ func addContract(
 			Script: &flowkit.Script{
 				Code:     code,
 				Args:     contractArgs,
-				Filename: filename,
+				Location: filename,
 			},
 			Network: globalFlags.Network,
 		},

@@ -294,7 +294,7 @@ func (c *Contract) validate(hasImports bool) error {
 	if hasImports && c.Network == "" {
 		return fmt.Errorf("missing network, specify which network to use to resolve imports in transaction code")
 	}
-	if hasImports && c.Filename == "" {
+	if hasImports && c.Location == "" {
 		return fmt.Errorf("cannot resolve imports without specifying a contract filename")
 	}
 	return nil

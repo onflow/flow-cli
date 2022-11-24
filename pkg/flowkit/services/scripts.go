@@ -76,7 +76,7 @@ func (s *Scripts) Execute(script *flowkit.Script, network string) (cadence.Value
 		if network == "" {
 			return nil, fmt.Errorf("missing network, specify which network to use to resolve imports in script code")
 		}
-		if script.Filename == "" {
+		if script.Location == "" {
 			return nil, fmt.Errorf("resolving imports in scripts not supported")
 		}
 

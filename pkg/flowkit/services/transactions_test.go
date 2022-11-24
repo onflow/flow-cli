@@ -279,7 +279,7 @@ func TestTransactions_Integration(t *testing.T) {
 				&flowkit.Script{
 					Code:     i.code,
 					Args:     i.args,
-					Filename: i.file,
+					Location: i.file,
 				},
 				i.gas,
 				i.network,
@@ -338,7 +338,7 @@ func TestTransactions_Integration(t *testing.T) {
 			srvAcc.Key().Index(),
 			&flowkit.Script{
 				Code:     tests.TransactionImports.Source,
-				Filename: tests.TransactionImports.Filename,
+				Location: tests.TransactionImports.Filename,
 			},
 			flow.DefaultTransactionGasLimit,
 			n.Name,
@@ -368,7 +368,7 @@ func TestTransactions_Integration(t *testing.T) {
 			0,
 			&flowkit.Script{
 				Code:     tests.TransactionSimple.Source,
-				Filename: tests.TransactionSimple.Filename,
+				Location: tests.TransactionSimple.Filename,
 			},
 			flow.DefaultTransactionGasLimit,
 			"",
@@ -402,7 +402,7 @@ func TestTransactions_Integration(t *testing.T) {
 			0,
 			&flowkit.Script{
 				Code:     tests.TransactionSingleAuth.Source,
-				Filename: tests.TransactionSingleAuth.Filename,
+				Location: tests.TransactionSingleAuth.Filename,
 			},
 			flow.DefaultTransactionGasLimit,
 			"",
@@ -437,7 +437,7 @@ func TestTransactions_Integration(t *testing.T) {
 			0,
 			&flowkit.Script{
 				Code:     tests.TransactionSingleAuth.Source,
-				Filename: tests.TransactionSingleAuth.Filename,
+				Location: tests.TransactionSingleAuth.Filename,
 			},
 			flow.DefaultTransactionGasLimit,
 			"",
@@ -469,7 +469,7 @@ func TestTransactions_Integration(t *testing.T) {
 			0,
 			&flowkit.Script{
 				Code:     tests.TransactionTwoAuth.Source,
-				Filename: tests.TransactionTwoAuth.Filename,
+				Location: tests.TransactionTwoAuth.Filename,
 			},
 			flow.DefaultTransactionGasLimit,
 			"",
@@ -495,7 +495,7 @@ func TestTransactions_Integration(t *testing.T) {
 			},
 			&flowkit.Script{
 				Code:     tests.TransactionSimple.Source,
-				Filename: tests.TransactionSimple.Filename,
+				Location: tests.TransactionSimple.Filename,
 			},
 			flow.DefaultTransactionGasLimit,
 			"",
@@ -518,7 +518,7 @@ func TestTransactions_Integration(t *testing.T) {
 			NewSingleTransactionAccount(a),
 			&flowkit.Script{
 				Code:     tests.TransactionSingleAuth.Source,
-				Filename: tests.TransactionSingleAuth.Filename,
+				Location: tests.TransactionSingleAuth.Filename,
 			},
 			flow.DefaultTransactionGasLimit,
 			"",
@@ -546,7 +546,7 @@ func TestTransactions_Integration(t *testing.T) {
 			roles,
 			&flowkit.Script{
 				Code:     tests.TransactionSingleAuth.Source,
-				Filename: tests.TransactionSingleAuth.Filename,
+				Location: tests.TransactionSingleAuth.Filename,
 			},
 			flow.DefaultTransactionGasLimit,
 			"",
@@ -574,7 +574,7 @@ func TestTransactions_Integration(t *testing.T) {
 			roles,
 			&flowkit.Script{
 				Code:     tests.TransactionSingleAuth.Source,
-				Filename: tests.TransactionSingleAuth.Filename,
+				Location: tests.TransactionSingleAuth.Filename,
 			},
 			flow.DefaultTransactionGasLimit,
 			"",
@@ -598,7 +598,7 @@ func TestTransactions_Integration(t *testing.T) {
 			NewSingleTransactionAccount(a),
 			&flowkit.Script{
 				Code:     tests.TransactionArgString.Source,
-				Filename: tests.TransactionArgString.Filename,
+				Location: tests.TransactionArgString.Filename,
 				Args: []cadence.Value{
 					cadence.String("Bar"),
 				},
@@ -625,7 +625,7 @@ func TestTransactions_Integration(t *testing.T) {
 			NewSingleTransactionAccount(a),
 			&flowkit.Script{
 				Code:     tests.TransactionMultipleDeclarations.Source,
-				Filename: tests.TransactionMultipleDeclarations.Filename,
+				Location: tests.TransactionMultipleDeclarations.Filename,
 			},
 			flow.DefaultTransactionGasLimit,
 			"",

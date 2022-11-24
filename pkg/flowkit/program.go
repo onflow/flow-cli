@@ -56,7 +56,7 @@ func (p *Program) ReplaceImport(from string, to string) *Program {
 }
 
 func (p *Program) Location() string {
-	return p.script.Filename
+	return p.script.Location
 }
 
 func (p *Program) Code() []byte {

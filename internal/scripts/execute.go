@@ -74,7 +74,7 @@ func execute(
 		&flowkit.Script{
 			Code:     code,
 			Args:     scriptArgs,
-			Filename: filename,
+			Location: filename,
 		},
 		globalFlags.Network,
 	)

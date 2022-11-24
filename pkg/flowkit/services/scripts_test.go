@@ -131,7 +131,7 @@ func TestScripts_Integration(t *testing.T) {
 		res, err := s.Scripts.Execute(
 			&flowkit.Script{
 				Code:     tests.ScriptImport.Source,
-				Filename: tests.ScriptImport.Filename,
+				Location: tests.ScriptImport.Filename,
 			},
 			n.Name,
 		)
@@ -158,7 +158,7 @@ func TestScripts_Integration(t *testing.T) {
 			_, err := s.Scripts.Execute(
 				&flowkit.Script{
 					Code:     tests.ScriptImport.Source,
-					Filename: i[0],
+					Location: i[0],
 				},
 				i[1],
 			)

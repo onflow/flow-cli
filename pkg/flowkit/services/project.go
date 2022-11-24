@@ -263,7 +263,7 @@ func (p *Project) Deploy(network string, update bool) ([]*project.Contract, erro
 
 		program, err := flowkit.NewProgram(&flowkit.Script{
 			Code:     contract.Code,
-			Filename: contract.Location,
+			Location: contract.Location,
 		})
 		if err != nil {
 			return nil, err

@@ -8,5 +8,5 @@ import "github.com/onflow/cadence"
 type Script struct {
 	Code     []byte
 	Args     []cadence.Value
-	Filename string
+	Location string
 }

@@ -71,7 +71,7 @@ func NewDeployment(contracts []*Contract) (*Deployment, error) {
 func (d *Deployment) add(contract *Contract) error {
 	program, err := flowkit.NewProgram(&flowkit.Script{
 		Code:     contract.Code,
-		Filename: contract.Location,
+		Location: contract.Location,
 	})
 	if err != nil {
 		return err

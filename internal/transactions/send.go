@@ -91,7 +91,7 @@ func send(
 		&flowkit.Script{
 			Code:     code,
 			Args:     transactionArgs,
-			Filename: codeFilename,
+			Location: codeFilename,
 		},
 		sendFlags.GasLimit,
 		globalFlags.Network,

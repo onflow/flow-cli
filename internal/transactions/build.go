@@ -104,7 +104,7 @@ func build(
 		&flowkit.Script{
 			Code:     code,
 			Args:     transactionArgs,
-			Filename: filename,
+			Location: filename,
 		},
 		buildFlags.GasLimit,
 		globalFlags.Network,
