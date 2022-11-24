@@ -20,7 +20,7 @@ jobs:
           - goarch: arm64
             goos: windows
     steps:
-      - uses: actions/checkout@master
+      - uses: actions/checkout@v3
       - name: Codebase security check
         continue-on-error: true
         uses: snyk/actions/golang@master
@@ -28,7 +28,6 @@ jobs:
           go-version: '1.19'
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-      - uses: actions/checkout@v3
       - uses: wangyoucao577/go-release-action@v1.33
         env:
           MIXPANEL_PROJECT_TOKEN: ${{ secrets.MIXPANEL_PROJECT_TOKEN }}
