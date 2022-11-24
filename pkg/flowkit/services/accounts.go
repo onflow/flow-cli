@@ -282,7 +282,7 @@ func (a *Accounts) Create(
 // source code, possible init arguments, the filename and network are only
 // required if a contract has imports that need resolving.
 type Contract struct {
-	*Script
+	*flowkit.Script
 	Name    string
 	Network string
 }

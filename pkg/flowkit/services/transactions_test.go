@@ -83,7 +83,7 @@ func TestTransactions(t *testing.T) {
 
 		_, _, err := s.Transactions.Send(
 			NewSingleTransactionAccount(serviceAcc),
-			&Script{
+			&flowkit.Script{
 				Code: tests.TransactionArgString.Source,
 				Args: []cadence.Value{cadence.String("Bar")},
 			},
@@ -276,7 +276,7 @@ func TestTransactions_Integration(t *testing.T) {
 			tx, err := s.Transactions.Build(
 				NewTransactionAddresses(i.prop, i.payer, i.auth),
 				i.index,
-				&Script{
+				&flowkit.Script{
 					Code:     i.code,
 					Args:     i.args,
 					Filename: i.file,
@@ -336,7 +336,7 @@ func TestTransactions_Integration(t *testing.T) {
 		tx, err := s.Transactions.Build(
 			NewTransactionAddresses(signer, signer, []flow.Address{signer}),
 			srvAcc.Key().Index(),
-			&Script{
+			&flowkit.Script{
 				Code:     tests.TransactionImports.Source,
 				Filename: tests.TransactionImports.Filename,
 			},
@@ -366,7 +366,7 @@ func TestTransactions_Integration(t *testing.T) {
 		tx, err := s.Transactions.Build(
 			NewTransactionAddresses(a.Address(), a.Address(), nil),
 			0,
-			&Script{
+			&flowkit.Script{
 				Code:     tests.TransactionSimple.Source,
 				Filename: tests.TransactionSimple.Filename,
 			},
@@ -400,7 +400,7 @@ func TestTransactions_Integration(t *testing.T) {
 		tx, err := s.Transactions.Build(
 			NewTransactionAddresses(a.Address(), a.Address(), []flow.Address{a.Address()}),
 			0,
-			&Script{
+			&flowkit.Script{
 				Code:     tests.TransactionSingleAuth.Source,
 				Filename: tests.TransactionSingleAuth.Filename,
 			},
@@ -435,7 +435,7 @@ func TestTransactions_Integration(t *testing.T) {
 		tx, err := s.Transactions.Build(
 			NewTransactionAddresses(a.Address(), a.Address(), []flow.Address{a.Address()}),
 			0,
-			&Script{
+			&flowkit.Script{
 				Code:     tests.TransactionSingleAuth.Source,
 				Filename: tests.TransactionSingleAuth.Filename,
 			},
@@ -467,7 +467,7 @@ func TestTransactions_Integration(t *testing.T) {
 		tx, err := s.Transactions.Build(
 			NewTransactionAddresses(a.Address(), a.Address(), []flow.Address{a.Address()}),
 			0,
-			&Script{
+			&flowkit.Script{
 				Code:     tests.TransactionTwoAuth.Source,
 				Filename: tests.TransactionTwoAuth.Filename,
 			},
@@ -493,7 +493,7 @@ func TestTransactions_Integration(t *testing.T) {
 				proposer: a,
 				payer:    a,
 			},
-			&Script{
+			&flowkit.Script{
 				Code:     tests.TransactionSimple.Source,
 				Filename: tests.TransactionSimple.Filename,
 			},
@@ -516,7 +516,7 @@ func TestTransactions_Integration(t *testing.T) {
 
 		tx, txr, err := s.Transactions.Send(
 			NewSingleTransactionAccount(a),
-			&Script{
+			&flowkit.Script{
 				Code:     tests.TransactionSingleAuth.Source,
 				Filename: tests.TransactionSingleAuth.Filename,
 			},
@@ -544,7 +544,7 @@ func TestTransactions_Integration(t *testing.T) {
 
 		tx, txr, err := s.Transactions.Send(
 			roles,
-			&Script{
+			&flowkit.Script{
 				Code:     tests.TransactionSingleAuth.Source,
 				Filename: tests.TransactionSingleAuth.Filename,
 			},
@@ -572,7 +572,7 @@ func TestTransactions_Integration(t *testing.T) {
 
 		tx, txr, err := s.Transactions.Send(
 			roles,
-			&Script{
+			&flowkit.Script{
 				Code:     tests.TransactionSingleAuth.Source,
 				Filename: tests.TransactionSingleAuth.Filename,
 			},
@@ -596,7 +596,7 @@ func TestTransactions_Integration(t *testing.T) {
 
 		tx, txr, err := s.Transactions.Send(
 			NewSingleTransactionAccount(a),
-			&Script{
+			&flowkit.Script{
 				Code:     tests.TransactionArgString.Source,
 				Filename: tests.TransactionArgString.Filename,
 				Args: []cadence.Value{
@@ -623,7 +623,7 @@ func TestTransactions_Integration(t *testing.T) {
 
 		tx, txr, err := s.Transactions.Send(
 			NewSingleTransactionAccount(a),
-			&Script{
+			&flowkit.Script{
 				Code:     tests.TransactionMultipleDeclarations.Source,
 				Filename: tests.TransactionMultipleDeclarations.Filename,
 			},

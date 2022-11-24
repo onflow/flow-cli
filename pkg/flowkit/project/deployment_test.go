@@ -20,7 +20,6 @@ package project_test
 
 import (
 	"fmt"
-	"github.com/onflow/flow-cli/pkg/flowkit"
 	"strings"
 	"testing"
 
@@ -202,9 +201,9 @@ func TestContractDeploymentOrder(t *testing.T) {
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
 
-			contracts := make([]*flowkit.Contract, len(testCase.contracts))
+			contracts := make([]*project.Contract, len(testCase.contracts))
 			for i, contract := range testCase.contracts {
-				contracts[i] = &flowkit.Contract{
+				contracts[i] = &project.Contract{
 					Location:       contract.location,
 					AccountAddress: contract.accountAddress,
 					AccountName:    contract.accountName,

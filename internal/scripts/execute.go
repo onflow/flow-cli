@@ -71,7 +71,7 @@ func execute(
 	}
 
 	value, err := srv.Scripts.Execute(
-		&services.Script{
+		&flowkit.Script{
 			Code:     code,
 			Args:     scriptArgs,
 			Filename: filename,

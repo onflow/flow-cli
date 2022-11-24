@@ -22,7 +22,6 @@ import (
 	"bytes"
 	"encoding/hex"
 	"fmt"
-	"github.com/onflow/cadence"
 	"github.com/onflow/flow-cli/pkg/flowkit"
 	"io/ioutil"
 	"net/http"
@@ -169,20 +168,11 @@ type transactionAddresses struct {
 	payer       flow.Address
 }
 
-// Script includes Cadence code and optional arguments and filename.
-//
-// Filename is only required to be passed if you want to resolve imports.
-type Script struct {
-	Code     []byte
-	Args     []cadence.Value
-	Filename string
-}
-
 // Build builds a transaction with specified payer, proposer and authorizer.
 func (t *Transactions) Build(
 	addresses *transactionAddresses,
 	proposerKeyIndex int,
-	script *Script,
+	script *flowkit.Script,
 	gasLimit uint64,
 	network string,
 ) (*flowkit.Transaction, error) {
@@ -293,7 +283,7 @@ func (t *Transactions) SendSigned(tx *flowkit.Transaction) (*flow.Transaction, *
 // Send a transaction code using the signer account and arguments for the specified network.
 func (t *Transactions) Send(
 	accounts *transactionAccountRoles,
-	script *Script,
+	script *flowkit.Script,
 	gasLimit uint64,
 	network string,
 ) (*flow.Transaction, *flow.TransactionResult, error) {

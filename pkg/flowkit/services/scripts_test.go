@@ -19,6 +19,7 @@
 package services
 
 import (
+	"github.com/onflow/flow-cli/pkg/flowkit"
 	"testing"
 
 	"github.com/onflow/cadence"
@@ -43,7 +44,7 @@ func TestScripts(t *testing.T) {
 
 		args := []cadence.Value{cadence.String("Foo")}
 		_, err := s.Scripts.Execute(
-			&Script{
+			&flowkit.Script{
 				Code: tests.ScriptArgString.Source,
 				Args: args,
 			},
@@ -64,7 +65,7 @@ func TestScripts_Integration(t *testing.T) {
 
 		args := []cadence.Value{cadence.String("Foo")}
 		res, err := s.Scripts.Execute(
-			&Script{
+			&flowkit.Script{
 				Code: tests.ScriptArgString.Source,
 				Args: args,
 			},
@@ -80,7 +81,7 @@ func TestScripts_Integration(t *testing.T) {
 		_, s := setupIntegration()
 		args := []cadence.Value{cadence.String("Foo")}
 		res, err := s.Scripts.Execute(
-			&Script{
+			&flowkit.Script{
 				Code: tests.ScriptWithError.Source,
 				Args: args,
 			},
@@ -128,7 +129,7 @@ func TestScripts_Integration(t *testing.T) {
 		)
 
 		res, err := s.Scripts.Execute(
-			&Script{
+			&flowkit.Script{
 				Code:     tests.ScriptImport.Source,
 				Filename: tests.ScriptImport.Filename,
 			},
@@ -155,7 +156,7 @@ func TestScripts_Integration(t *testing.T) {
 
 		for x, i := range in {
 			_, err := s.Scripts.Execute(
-				&Script{
+				&flowkit.Script{
 					Code:     tests.ScriptImport.Source,
 					Filename: i[0],
 				},

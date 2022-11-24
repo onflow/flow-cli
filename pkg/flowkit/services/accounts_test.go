@@ -57,7 +57,7 @@ func setup() (*flowkit.State, *Services, *tests.TestGateway) {
 
 func resourceToContract(res tests.Resource) *Contract {
 	return &Contract{
-		Script: &Script{
+		Script: &flowkit.Script{
 			Code: res.Source,
 
 			Location: res.Filename,
@@ -611,7 +611,7 @@ func TestAccountsRemoveContract_Integration(t *testing.T) {
 	_, err := s.Accounts.AddContract(
 		srvAcc,
 		&Contract{
-			Script: &Script{
+			Script: &flowkit.Script{
 				Code: c.Source,
 
 				Location: c.Filename,

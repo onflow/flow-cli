@@ -22,8 +22,6 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/onflow/flow-cli/pkg/flowkit"
-
 	"github.com/onflow/flow-go-sdk"
 	"github.com/stretchr/testify/assert"
 )
@@ -35,7 +33,7 @@ func cleanCode(code []byte) string {
 
 func TestResolver(t *testing.T) {
 
-	contracts := []flowkit.Contract{{
+	contracts := []Contract{{
 		Name:           "Kibble",
 		Location:       "./tests/Kibble.cdc",
 		AccountAddress: flow.HexToAddress("0x1"),

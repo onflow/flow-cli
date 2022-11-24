@@ -101,7 +101,7 @@ func build(
 	tx, err := srv.Transactions.Build(
 		services.NewTransactionAddresses(proposer, payer, authorizers),
 		buildFlags.ProposerKeyIndex,
-		&services.Script{
+		&flowkit.Script{
 			Code:     code,
 			Args:     transactionArgs,
 			Filename: filename,

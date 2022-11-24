@@ -213,7 +213,7 @@ func (p *Project) CheckForStandardContractUsageOnMainnet() error {
 // Retrieve all the contracts for specified network, sort them for deployment
 // deploy one by one and replace the imports in the contract source so it corresponds
 // to the account name the contract was deployed to.
-func (p *Project) Deploy(network string, update bool) ([]*flowkit.Contract, error) {
+func (p *Project) Deploy(network string, update bool) ([]*project.Contract, error) {
 	if p.state == nil {
 		return nil, config.ErrDoesNotExist
 	}
@@ -271,7 +271,7 @@ func (p *Project) Deploy(network string, update bool) ([]*flowkit.Contract, erro
 			return nil, err
 		}
 
-		program, err := flowkit.NewProgram(&Script{
+		program, err := flowkit.NewProgram(&flowkit.Script{
 			Code:     code,
 			Filename: contract.Location,
 		})
@@ -389,7 +389,7 @@ type ErrProjectDeploy struct {
 	contracts map[string]error
 }
 
-func (d *ErrProjectDeploy) add(contract *flowkit.Contract, err error, msg string) {
+func (d *ErrProjectDeploy) add(contract *project.Contract, err error, msg string) {
 	if d.contracts == nil {
 		d.contracts = make(map[string]error)
 	}

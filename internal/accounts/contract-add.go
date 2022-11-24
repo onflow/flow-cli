@@ -87,7 +87,7 @@ func addContract(
 	account, err := srv.Accounts.AddContract(
 		to,
 		&services.Contract{
-			Script: &services.Script{
+			Script: &flowkit.Script{
 				Code:     code,
 				Args:     contractArgs,
 				Filename: filename,

@@ -20,14 +20,13 @@ package flowkit
 
 import (
 	"fmt"
+	"github.com/onflow/flow-cli/pkg/flowkit/project"
 	"os"
 	"path"
 
-	"github.com/onflow/cadence"
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
 	"github.com/onflow/flow-cli/pkg/flowkit/config/json"
 	"github.com/onflow/flow-cli/pkg/flowkit/util"
-	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
 )
 
@@ -36,15 +35,6 @@ import (
 type ReaderWriter interface {
 	ReadFile(source string) ([]byte, error)
 	WriteFile(filename string, data []byte, perm os.FileMode) error
-}
-
-// Contract is a Cadence contract definition for a project.
-type Contract struct {
-	Name           string
-	Location       string
-	AccountAddress flow.Address
-	AccountName    string
-	Args           []cadence.Value
 }
 
 // State manages the state for a Flow project.
@@ -171,8 +161,8 @@ func (p *State) SetEmulatorKey(privateKey crypto.PrivateKey) {
 //
 // Build contract slice based on the network provided, check the deployment section for that network
 // and retrieve the account by name, then add the accounts address on the contract as a destination.
-func (p *State) DeploymentContractsByNetwork(network string) ([]*Contract, error) {
-	contracts := make([]*Contract, 0)
+func (p *State) DeploymentContractsByNetwork(network string) ([]*project.Contract, error) {
+	contracts := make([]*project.Contract, 0)
 
 	// get deployments for the specified network
 	for _, deploy := range p.conf.Deployments.ByNetwork(network) {
@@ -188,7 +178,7 @@ func (p *State) DeploymentContractsByNetwork(network string) ([]*Contract, error
 				return nil, err
 			}
 
-			contract := &Contract{
+			contract := &project.Contract{
 				Name:           c.Name,
 				Location:       path.Clean(c.Location),
 				AccountAddress: account.address,

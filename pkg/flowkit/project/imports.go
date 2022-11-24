@@ -31,11 +31,11 @@ type ImportReplacer interface {
 
 // FileImports implements file import replacements functionality for the project contracts with optionally included aliases.
 type FileImports struct {
-	contracts []*flowkit.Contract
+	contracts []*Contract
 	aliases   flowkit.Aliases
 }
 
-func NewFileImports(contracts []*flowkit.Contract, aliases flowkit.Aliases) *FileImports {
+func NewFileImports(contracts []*Contract, aliases flowkit.Aliases) *FileImports {
 	return &FileImports{
 		contracts: contracts,
 		aliases:   aliases,

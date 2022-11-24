@@ -20,6 +20,7 @@ package flowkit
 
 import (
 	"fmt"
+	"github.com/onflow/flow-cli/pkg/flowkit/project"
 	"sort"
 	"testing"
 
@@ -385,17 +386,17 @@ func Test_GetContractsByNameComplex(t *testing.T) {
 	assert.Equal(t, 7, len(contracts))
 
 	//sort names so tests are deterministic
-	contractNames := funk.Map(contracts, func(c Contract) string {
+	contractNames := funk.Map(contracts, func(c project.Contract) string {
 		return c.Name
 	}).([]string)
 	sort.Strings(contractNames)
 
-	sources := funk.Map(contracts, func(c Contract) string {
+	sources := funk.Map(contracts, func(c project.Contract) string {
 		return c.Location
 	}).([]string)
 	sort.Strings(sources)
 
-	targets := funk.Map(contracts, func(c Contract) string {
+	targets := funk.Map(contracts, func(c project.Contract) string {
 		return c.AccountAddress.String()
 	}).([]string)
 	sort.Strings(targets)

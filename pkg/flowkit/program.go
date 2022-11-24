@@ -5,16 +5,15 @@ import (
 	"github.com/onflow/cadence/runtime/ast"
 	"github.com/onflow/cadence/runtime/common"
 	"github.com/onflow/cadence/runtime/parser"
-	"github.com/onflow/flow-cli/pkg/flowkit/services"
 	"strings"
 )
 
 type Program struct {
-	script     *services.Script
+	script     *Script
 	astProgram *ast.Program
 }
 
-func NewProgram(script *services.Script) (*Program, error) {
+func NewProgram(script *Script) (*Program, error) {
 	astProgram, err := parser.ParseProgram(script.Code, nil)
 	if err != nil {
 		return nil, err

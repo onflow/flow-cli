@@ -21,8 +21,6 @@ package project
 import (
 	"fmt"
 	"github.com/onflow/flow-cli/pkg/flowkit"
-	"github.com/onflow/flow-cli/pkg/flowkit/services"
-
 	"gonum.org/v1/gonum/graph"
 	"gonum.org/v1/gonum/graph/simple"
 	"gonum.org/v1/gonum/graph/topo"
@@ -30,7 +28,7 @@ import (
 
 type deployContract struct {
 	index int64
-	*flowkit.Contract
+	*Contract
 	program      *flowkit.Program
 	dependencies map[string]*deployContract
 }
@@ -56,7 +54,7 @@ type Deployment struct {
 }
 
 // NewDeployment from the flowkit Contracts and loaded from the contract location using a loader.
-func NewDeployment(contracts []*flowkit.Contract, loader Loader) (*Deployment, error) {
+func NewDeployment(contracts []*Contract, loader Loader) (*Deployment, error) {
 	deployment := &Deployment{
 		loader:              loader,
 		contractsByLocation: make(map[string]*deployContract),
@@ -72,13 +70,13 @@ func NewDeployment(contracts []*flowkit.Contract, loader Loader) (*Deployment, e
 	return deployment, nil
 }
 
-func (d *Deployment) add(contract *flowkit.Contract) error {
+func (d *Deployment) add(contract *Contract) error {
 	code, err := d.loader.Load(contract.Location)
 	if err != nil {
 		return err
 	}
 
-	program, err := flowkit.NewProgram(&services.Script{
+	program, err := flowkit.NewProgram(&flowkit.Script{
 		Code:     code,
 		Filename: contract.Location,
 	})
@@ -103,7 +101,7 @@ func (d *Deployment) add(contract *flowkit.Contract) error {
 // Order of sorting is dependent on the possible imports contract contains, since
 // any imported contract must be deployed before deploying the contract with that import.
 // Only applicable to contracts.
-func (d *Deployment) Sort() ([]*flowkit.Contract, error) {
+func (d *Deployment) Sort() ([]*Contract, error) {
 	if d.conflictExists() {
 		return nil, fmt.Errorf("the same contract cannot be deployed to multiple accounts on the same network")
 	}
@@ -118,7 +116,7 @@ func (d *Deployment) Sort() ([]*flowkit.Contract, error) {
 		return nil, err
 	}
 
-	contracts := make([]*flowkit.Contract, len(d.contracts))
+	contracts := make([]*Contract, len(d.contracts))
 	for i, s := range sorted {
 		contracts[i] = s.Contract
 	}
