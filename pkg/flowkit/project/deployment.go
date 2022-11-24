@@ -50,13 +50,11 @@ type Deployment struct {
 	contracts []*deployContract
 	// map of contracts by their location specified in state
 	contractsByLocation map[string]*deployContract
-	loader              Loader
 }
 
 // NewDeployment from the flowkit Contracts and loaded from the contract location using a loader.
-func NewDeployment(contracts []*Contract, loader Loader) (*Deployment, error) {
+func NewDeployment(contracts []*Contract) (*Deployment, error) {
 	deployment := &Deployment{
-		loader:              loader,
 		contractsByLocation: make(map[string]*deployContract),
 	}
 
@@ -71,13 +69,8 @@ func NewDeployment(contracts []*Contract, loader Loader) (*Deployment, error) {
 }
 
 func (d *Deployment) add(contract *Contract) error {
-	code, err := d.loader.Load(contract.Location)
-	if err != nil {
-		return err
-	}
-
 	program, err := flowkit.NewProgram(&flowkit.Script{
-		Code:     code,
+		Code:     contract.Code,
 		Filename: contract.Location,
 	})
 	if err != nil {

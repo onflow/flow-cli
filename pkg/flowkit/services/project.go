@@ -223,11 +223,7 @@ func (p *Project) Deploy(network string, update bool) ([]*project.Contract, erro
 		return nil, err
 	}
 
-	loader := project.FilesystemLoader{
-		Reader: p.state.ReaderWriter(),
-	}
-
-	deployment, err := project.NewDeployment(contracts, loader)
+	deployment, err := project.NewDeployment(contracts)
 	if err != nil {
 		return nil, err
 	}
@@ -260,19 +256,13 @@ func (p *Project) Deploy(network string, update bool) ([]*project.Contract, erro
 			return nil, fmt.Errorf("target account for deploying contract not found in configuration")
 		}
 
-		// get deployment account
 		targetAccountInfo, err := p.gateway.GetAccount(targetAccount.Address())
 		if err != nil {
 			return nil, fmt.Errorf("failed to fetch information for account %s: %w", targetAccount.Address(), err)
 		}
 
-		code, err := loader.Load(contract.Location)
-		if err != nil {
-			return nil, err
-		}
-
 		program, err := flowkit.NewProgram(&flowkit.Script{
-			Code:     code,
+			Code:     contract.Code,
 			Filename: contract.Location,
 		})
 		if err != nil {
