@@ -20,10 +20,9 @@ package resolvers
 
 import (
 	"fmt"
-	"github.com/onflow/cadence/runtime/ast"
-	"github.com/onflow/cadence/runtime/common"
-	"github.com/onflow/cadence/runtime/parser"
+
 	"github.com/onflow/flow-cli/pkg/flowkit"
+
 	"gonum.org/v1/gonum/graph"
 	"gonum.org/v1/gonum/graph/simple"
 	"gonum.org/v1/gonum/graph/topo"
@@ -32,40 +31,12 @@ import (
 type deployContract struct {
 	index int64
 	*flowkit.Contract
-	program      *ast.Program
+	program      *flowkit.Program
 	dependencies map[string]*deployContract
-}
-
-func newContract(contract *flowkit.Contract, index int64, code []byte) (*deployContract, error) {
-	program, err := parser.ParseProgram(code, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return &deployContract{
-		index:    index,
-		Contract: contract,
-		program:  program,
-	}, nil
 }
 
 func (d *deployContract) ID() int64 {
 	return d.index
-}
-
-// imports returns a list of all imports found in contract.
-// todo use a resolver to find imports not direct implementation since imports can be in different formats
-func (d *deployContract) imports() []string {
-	imports := make([]string, 0)
-
-	for _, imp := range d.program.ImportDeclarations() {
-		location, ok := imp.Location.(common.StringLocation)
-		if ok {
-			imports = append(imports, location.String())
-		}
-	}
-
-	return imports
 }
 
 func (d *deployContract) addDependency(location string, dep *deployContract) {
@@ -102,15 +73,20 @@ func NewDeployment(contracts []*flowkit.Contract, loader Loader) (*Deployment, e
 }
 
 func (d *Deployment) add(contract *flowkit.Contract) error {
-	// TODO implement group of loaders detecting the location format and choosing the one supporting that format to load the contract - this will be relevant for multiple locations like flow, ifps, github etc
 	code, err := d.loader.Load(contract.Location)
 	if err != nil {
 		return err
 	}
 
-	c, err := newContract(contract, int64(len(d.contracts)), code)
+	program, err := flowkit.NewProgram(code)
 	if err != nil {
 		return err
+	}
+
+	c := &deployContract{
+		index:    int64(len(d.contracts)),
+		Contract: contract,
+		program:  program,
 	}
 
 	d.contracts = append(d.contracts, c)
@@ -146,7 +122,7 @@ func (d *Deployment) Sort() ([]*flowkit.Contract, error) {
 // buildDependencies iterates over all contracts and checks the imports which are added as its dependencies.
 func (d *Deployment) buildDependencies() error {
 	for _, contract := range d.contracts {
-		for _, location := range contract.imports() {
+		for _, location := range contract.program.Imports() {
 			importPath := location // TODO: i.loader.Normalize(program.source, source)
 			importContract, isContract := d.contractsByLocation[importPath]
 			// todo is it we removed aliases here?

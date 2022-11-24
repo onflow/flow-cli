@@ -253,6 +253,7 @@ func (p *Project) Deploy(network string, update bool) ([]*flowkit.Contract, erro
 	deployErr := &ErrProjectDeploy{}
 
 	for _, contract := range sorted {
+		// todo remove implementation for deployment of contract and just use the account service for deploying
 		block, err := p.gateway.GetLatestBlock()
 		if err != nil {
 			return nil, err
