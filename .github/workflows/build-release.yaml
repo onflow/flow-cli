@@ -2,7 +2,7 @@ name: Build Release
 
 on:
   release:
-    types: [prereleased]
+    types: [published]
 
 jobs:
   releases-matrix:
