@@ -621,12 +621,18 @@ func InstallPathPrompt(defaultPath string) string {
 		Label:   "Install path",
 		Default: defaultPath,
 		Validate: func(s string) error {
-			if s != "" {
-				_, err := os.Stat(s)
-				return err
+			if _, err := os.Stat(s); err == nil {
+				return nil
 			}
 
-			return nil
+			// Attempt to create it
+			var d []byte
+			if err := os.WriteFile(s, d, 0644); err == nil {
+				os.Remove(s) // And delete it
+				return nil
+			}
+
+			return fmt.Errorf("path is invalid")
 		},
 	}
 
