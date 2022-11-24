@@ -86,14 +86,12 @@ func addContract(
 
 	account, err := srv.Accounts.AddContract(
 		to,
-		&services.Contract{
-			Script: &flowkit.Script{
-				Code:     code,
-				Args:     contractArgs,
-				Location: filename,
-			},
-			Network: globalFlags.Network,
+		&flowkit.Script{
+			Code:     code,
+			Args:     contractArgs,
+			Location: filename,
 		},
+		globalFlags.Network,
 		false,
 	)
 	if err != nil {

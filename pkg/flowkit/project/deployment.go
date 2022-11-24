@@ -69,10 +69,7 @@ func NewDeployment(contracts []*Contract) (*Deployment, error) {
 }
 
 func (d *Deployment) add(contract *Contract) error {
-	program, err := flowkit.NewProgram(&flowkit.Script{
-		Code:     contract.Code,
-		Location: contract.Location,
-	})
+	program, err := flowkit.NewProgram(contract)
 	if err != nil {
 		return err
 	}
@@ -84,7 +81,7 @@ func (d *Deployment) add(contract *Contract) error {
 	}
 
 	d.contracts = append(d.contracts, c)
-	d.contractsByLocation[c.Location] = c
+	d.contractsByLocation[c.Location()] = c
 
 	return nil
 }

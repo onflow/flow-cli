@@ -9,12 +9,18 @@ import (
 )
 
 type Program struct {
-	script     *Script
+	script     Scripter
 	astProgram *ast.Program
 }
 
-func NewProgram(script *Script) (*Program, error) {
-	astProgram, err := parser.ParseProgram(script.Code, nil)
+type Scripter interface {
+	Code() []byte
+	SetCode([]byte)
+	Location() string
+}
+
+func NewProgram(script Scripter) (*Program, error) {
+	astProgram, err := parser.ParseProgram(script.Code(), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -44,23 +50,23 @@ func (p *Program) HasImports() bool {
 }
 
 func (p *Program) ReplaceImport(from string, to string) *Program {
-	p.script.Code = []byte(strings.Replace(
-		string(p.script.Code),
+	p.script.SetCode([]byte(strings.Replace(
+		string(p.script.Code()),
 		fmt.Sprintf(`"%s"`, from),
 		fmt.Sprintf("0x%s", to),
 		1,
-	))
+	)))
 
 	p.reload()
 	return p
 }
 
 func (p *Program) Location() string {
-	return p.script.Location
+	return p.script.Location()
 }
 
 func (p *Program) Code() []byte {
-	return p.script.Code
+	return p.script.Code()
 }
 
 func (p *Program) Name() (string, error) {
@@ -84,7 +90,7 @@ func (p *Program) Name() (string, error) {
 }
 
 func (p *Program) reload() {
-	astProgram, err := parser.ParseProgram(p.script.Code, nil)
+	astProgram, err := parser.ParseProgram(p.script.Code(), nil)
 	if err != nil {
 		return
 	}

@@ -278,53 +278,28 @@ func (a *Accounts) Create(
 	return a.gateway.GetAccount(*newAccountAddress[0]) // we know it's the only and first event
 }
 
-// Contract defines properties of a contract like name of the contract,
-// source code, possible init arguments, the filename and network are only
-// required if a contract has imports that need resolving.
-type Contract struct {
-	*flowkit.Script
-	Name    string
-	Network string
-}
-
-func (c *Contract) validate(hasImports bool) error {
-	if c.Code == nil {
-		return fmt.Errorf("must provide contract source code")
-	}
-	if hasImports && c.Network == "" {
-		return fmt.Errorf("missing network, specify which network to use to resolve imports in transaction code")
-	}
-	if hasImports && c.Location == "" {
-		return fmt.Errorf("cannot resolve imports without specifying a contract filename")
-	}
-	return nil
-}
-
 // AddContract deploys a contract code to the account provided with possible update flag.
 func (a *Accounts) AddContract(
 	account *flowkit.Account,
-	contract *Contract,
+	contract *flowkit.Script,
+	network string,
 	updateExisting bool,
 ) (*flow.Account, error) {
 
-	program, err := flowkit.NewProgram(contract.Script)
+	program, err := flowkit.NewProgram(contract)
 	if err != nil {
 		return nil, err
 	}
 
-	if err = contract.validate(program.HasImports()); err != nil {
-		return nil, err
-	}
-
 	if program.HasImports() {
-		contracts, err := a.state.DeploymentContractsByNetwork(contract.Network)
+		contracts, err := a.state.DeploymentContractsByNetwork(network)
 		if err != nil {
 			return nil, err
 		}
 
 		importReplacer := project.NewFileImports(
 			contracts,
-			a.state.AliasesForNetwork(contract.Network),
+			a.state.AliasesForNetwork(network),
 		)
 
 		program, err = importReplacer.Replace(program)

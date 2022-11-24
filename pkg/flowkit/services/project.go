@@ -261,10 +261,7 @@ func (p *Project) Deploy(network string, update bool) ([]*project.Contract, erro
 			return nil, fmt.Errorf("failed to fetch information for account %s: %w", targetAccount.Address(), err)
 		}
 
-		program, err := flowkit.NewProgram(&flowkit.Script{
-			Code:     contract.Code,
-			Location: contract.Location,
-		})
+		program, err := flowkit.NewProgram(contract)
 		if err != nil {
 			return nil, err
 		}
