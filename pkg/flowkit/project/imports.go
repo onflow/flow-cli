@@ -20,7 +20,6 @@ package project
 
 import (
 	"fmt"
-	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-go-sdk"
 	"path"
 )
@@ -28,17 +27,17 @@ import (
 // ImportReplacer implements file import replacements functionality for the project contracts with optionally included aliases.
 type ImportReplacer struct {
 	contracts []*Contract
-	aliases   flowkit.Aliases
+	aliases   Aliases
 }
 
-func NewImportReplacer(contracts []*Contract, aliases flowkit.Aliases) *ImportReplacer {
+func NewImportReplacer(contracts []*Contract, aliases Aliases) *ImportReplacer {
 	return &ImportReplacer{
 		contracts: contracts,
 		aliases:   aliases,
 	}
 }
 
-func (i *ImportReplacer) Replace(program *flowkit.Program) (*flowkit.Program, error) {
+func (i *ImportReplacer) Replace(program *Program) (*Program, error) {
 	imports := program.Imports()
 	sourceTarget := i.getSourceTarget()
 

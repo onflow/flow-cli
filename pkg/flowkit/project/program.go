@@ -1,4 +1,4 @@
-package flowkit
+package project
 
 import (
 	"fmt"

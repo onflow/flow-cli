@@ -54,7 +54,7 @@ func NewScripts(
 
 // Execute script code with passed arguments on the selected network.
 func (s *Scripts) Execute(script *flowkit.Script, network string) (cadence.Value, error) {
-	program, err := flowkit.NewProgram(script)
+	program, err := project.NewProgram(script)
 	if err != nil {
 		return nil, err
 	}

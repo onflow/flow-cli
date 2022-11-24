@@ -183,14 +183,14 @@ func (p *State) DeploymentContractsByNetwork(network string) ([]*project.Contrac
 				return nil, err
 			}
 
-			contract := &project.Contract{
-				Name:           c.Name,
-				Location:       path.Clean(c.Location),
-				Code:           code,
-				AccountAddress: account.address,
-				AccountName:    account.name,
-				Args:           deploymentContract.Args,
-			}
+			contract := project.NewContract(
+				c.Name,
+				path.Clean(c.Location),
+				code,
+				account.address,
+				account.name,
+				deploymentContract.Args,
+			)
 
 			contracts = append(contracts, contract)
 		}
@@ -214,11 +214,9 @@ func (p *State) AccountNamesForNetwork(network string) []string {
 	return names
 }
 
-type Aliases map[string]string
-
 // AliasesForNetwork returns all deployment aliases for a network.
-func (p *State) AliasesForNetwork(network string) Aliases {
-	aliases := make(Aliases)
+func (p *State) AliasesForNetwork(network string) project.Aliases {
+	aliases := make(project.Aliases)
 
 	// get all contracts for selected network and if any has an address as target make it an alias
 	for _, contract := range p.conf.Contracts.ByNetwork(network) {

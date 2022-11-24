@@ -195,7 +195,7 @@ func (t *Transactions) Build(
 		SetGasLimit(gasLimit).
 		SetBlockReference(latestBlock)
 
-	program, err := flowkit.NewProgram(script)
+	program, err := project.NewProgram(script)
 	if err != nil {
 		return nil, err
 	}
@@ -204,7 +204,7 @@ func (t *Transactions) Build(
 		if network == "" {
 			return nil, fmt.Errorf("missing network, specify which network to use to resolve imports in transaction code")
 		}
-		if script.Location == "" { // when used as lib with code we don't support imports
+		if script.Location() == "" { // when used as lib with code we don't support imports
 			return nil, fmt.Errorf("resolving imports in transactions not supported")
 		}
 

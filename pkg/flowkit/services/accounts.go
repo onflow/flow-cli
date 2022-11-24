@@ -286,7 +286,7 @@ func (a *Accounts) AddContract(
 	updateExisting bool,
 ) (*flow.Account, error) {
 
-	program, err := flowkit.NewProgram(contract)
+	program, err := project.NewProgram(contract)
 	if err != nil {
 		return nil, err
 	}

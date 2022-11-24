@@ -20,7 +20,6 @@ package project
 
 import (
 	"fmt"
-	"github.com/onflow/flow-cli/pkg/flowkit"
 	"gonum.org/v1/gonum/graph"
 	"gonum.org/v1/gonum/graph/simple"
 	"gonum.org/v1/gonum/graph/topo"
@@ -29,7 +28,7 @@ import (
 type deployContract struct {
 	index int64
 	*Contract
-	program      *flowkit.Program
+	program      *Program
 	dependencies map[string]*deployContract
 }
 
@@ -69,7 +68,7 @@ func NewDeployment(contracts []*Contract) (*Deployment, error) {
 }
 
 func (d *Deployment) add(contract *Contract) error {
-	program, err := flowkit.NewProgram(contract)
+	program, err := NewProgram(contract)
 	if err != nil {
 		return err
 	}
