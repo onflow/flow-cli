@@ -282,10 +282,9 @@ func (a *Accounts) Create(
 // source code, possible init arguments, the filename and network are only
 // required if a contract has imports that need resolving.
 type Contract struct {
-	Code     []byte
-	Args     []cadence.Value
-	Location string
-	Network  string
+	*Script
+	Name    string
+	Network string
 }
 
 func (c *Contract) validate(hasImports bool) error {

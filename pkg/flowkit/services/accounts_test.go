@@ -20,6 +20,7 @@ package services
 
 import (
 	"fmt"
+	emulator "github.com/onflow/flow-emulator"
 	"strings"
 	"testing"
 
@@ -56,11 +57,13 @@ func setup() (*flowkit.State, *Services, *tests.TestGateway) {
 
 func resourceToContract(res tests.Resource) *Contract {
 	return &Contract{
-		Name:     res.Name,
-		Code:     res.Source,
-		Args:     nil,
-		Location: res.Filename,
-		Network:  "",
+		Script: &Script{
+			Code:     res.Source,
+
+			Location: res.Filename,
+		},
+		Name:    res.Name,
+		Network: "",
 	}
 }
 
@@ -291,7 +294,9 @@ func setupIntegration() (*flowkit.State, *Services) {
 	}
 
 	acc, _ := state.EmulatorServiceAccount()
-	gw := gateway.NewEmulatorGateway(acc)
+	gw := gateway.NewEmulatorGatewayWithOpts(acc, gateway.WithEmulatorOptions(
+		emulator.WithTransactionExpiry(10),
+	))
 	s := NewServices(gw, state, output.NewStdoutLogger(output.NoneLog))
 
 	return state, s
@@ -606,10 +611,12 @@ func TestAccountsRemoveContract_Integration(t *testing.T) {
 	_, err := s.Accounts.AddContract(
 		srvAcc,
 		&Contract{
-			Name:     c.Name,
-			Code:     c.Source,
-			Args:     nil,
-			Location: c.Filename,
+			Script: &Script{
+				Code:     c.Source,
+
+				Location: c.Filename,
+			},
+			Name: c.Name,
 		},
 		false,
 	)

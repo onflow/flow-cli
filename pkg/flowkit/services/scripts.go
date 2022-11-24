@@ -53,7 +53,7 @@ func NewScripts(
 }
 
 // Execute script code with passed arguments on the selected network.
-func (s *Scripts) Execute(code []byte, args []cadence.Value, scriptPath string, network string) (cadence.Value, error) {
+func (s *Scripts) Execute(script *Script, network string) (cadence.Value, error) {
 	contracts, err := s.state.DeploymentContractsByNetwork(network)
 	if err != nil {
 		return nil, err
@@ -64,22 +64,22 @@ func (s *Scripts) Execute(code []byte, args []cadence.Value, scriptPath string, 
 		s.state.AliasesForNetwork(network),
 	)
 
-	if importReplacer.HasImports(code) {
+	if importReplacer.HasImports(script.Code) {
 		if s.state == nil {
 			return nil, config.ErrDoesNotExist
 		}
 		if network == "" {
 			return nil, fmt.Errorf("missing network, specify which network to use to resolve imports in script code")
 		}
-		if scriptPath == "" {
+		if script.Filename == "" {
 			return nil, fmt.Errorf("resolving imports in scripts not supported")
 		}
 
-		code, err = importReplacer.Replace(code, scriptPath)
+		script.Code, err = importReplacer.Replace(script.Code, script.Filename)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	return s.gateway.ExecuteScript(code, args)
+	return s.gateway.ExecuteScript(script.Code, script.Args)
 }
