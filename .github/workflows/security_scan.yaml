@@ -18,9 +18,9 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Running govulncheck
-        uses: Templum/govulncheck-action@latest
+        uses: Templum/govulncheck-action@v0.0.7
         with:
-          go-version: 1.18
+          go-version: 1.19
           vulncheck-version: latest
           package: ./...
           github-token: ${{ secrets.GITHUB_TOKEN }}
