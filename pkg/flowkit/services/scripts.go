@@ -80,11 +80,11 @@ func (s *Scripts) Execute(script *Script, network string) (cadence.Value, error)
 			return nil, fmt.Errorf("resolving imports in scripts not supported")
 		}
 
-		script.Code, err = importReplacer.Replace(script.Code, script.Filename)
+		program, err = importReplacer.Replace(program, script.Filename)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	return s.gateway.ExecuteScript(script.Code, script.Args)
+	return s.gateway.ExecuteScript(program.Code(), script.Args)
 }
