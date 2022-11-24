@@ -228,7 +228,7 @@ func (t *Transactions) Build(
 			t.state.AliasesForNetwork(network),
 		)
 
-		script.Code, err = importReplacer.Replace(script.Code, script.Filename)
+		program, err = importReplacer.Replace(program, script.Filename)
 		if err != nil {
 			return nil, fmt.Errorf("error resolving imports: %w", err)
 		}
@@ -243,7 +243,7 @@ func (t *Transactions) Build(
 		return nil, err
 	}
 
-	if err := tx.SetScriptWithArgs(script.Code, script.Args); err != nil {
+	if err := tx.SetScriptWithArgs(program.Code(), script.Args); err != nil {
 		return nil, err
 	}
 
