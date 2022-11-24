@@ -271,7 +271,17 @@ func (p *Project) Deploy(network string, update bool) ([]*flowkit.Contract, erro
 			return nil, err
 		}
 
-		code, err = importReplacer.Replace(code, contract.Location)
+		program, err := flowkit.NewProgram(code)
+		if err != nil {
+			return nil, err
+		}
+
+		program, err = importReplacer.Replace(program, contract.Location)
+		if err != nil {
+			return nil, err
+		}
+
+		name, err := program.Name()
 		if err != nil {
 			return nil, err
 		}
@@ -279,8 +289,8 @@ func (p *Project) Deploy(network string, update bool) ([]*flowkit.Contract, erro
 		// create transaction to deploy new contract with args
 		tx, err := flowkit.NewAddAccountContractTransaction(
 			targetAccount,
-			contract.Name,
-			code,
+			name,
+			program.Code(),
 			contract.Args,
 		)
 		if err != nil {
@@ -288,7 +298,7 @@ func (p *Project) Deploy(network string, update bool) ([]*flowkit.Contract, erro
 		}
 		// check if contract exists on account
 		existingContract, exists := targetAccountInfo.Contracts[contract.Name]
-		noDiffInContract := bytes.Equal(code, existingContract)
+		noDiffInContract := bytes.Equal(program.Code(), existingContract)
 
 		if !update && exists {
 			deployErr.add(
