@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package project_test
+package project
 
 import (
 	"fmt"
@@ -27,8 +27,6 @@ import (
 	"github.com/onflow/flow-go-sdk/test"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-
-	"github.com/onflow/flow-cli/pkg/flowkit/project"
 )
 
 type testContract struct {
@@ -180,7 +178,7 @@ func getTestCases() []contractTestCase {
 		{
 			name:                    "Two contracts with import cycle",
 			contracts:               []testContract{testContractE, testContractF},
-			expectedDeploymentError: &project.CyclicImportError{},
+			expectedDeploymentError: &CyclicImportError{},
 		},
 		{
 			name:                    "Single contract with two imports",
@@ -201,16 +199,19 @@ func TestContractDeploymentOrder(t *testing.T) {
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
 
-			contracts := make([]*project.Contract, len(testCase.contracts))
+			contracts := make([]*Contract, len(testCase.contracts))
 			for i, contract := range testCase.contracts {
-				contracts[i] = &project.Contract{
-					Location:       contract.location,
-					AccountAddress: contract.accountAddress,
-					AccountName:    contract.accountName,
-				}
+				contracts[i] = NewContract(
+					"",
+					contract.location,
+					nil,
+					contract.accountAddress,
+					contract.accountName,
+					nil,
+				)
 			}
 
-			deployment, err := project.NewDeployment(contracts, testLoader{})
+			deployment, err := NewDeployment(contracts)
 
 			contracts, err = deployment.Sort()
 			if !strings.Contains(testCase.name, "unresolved") && !strings.Contains(testCase.name, "cycle") {

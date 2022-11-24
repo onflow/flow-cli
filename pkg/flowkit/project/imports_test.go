@@ -16,14 +16,18 @@
  * limitations under the License.
  */
 
-package project
+package project_test
 
 import (
+	"fmt"
+	"github.com/onflow/flow-cli/pkg/flowkit"
+	"github.com/onflow/flow-cli/pkg/flowkit/project"
 	"regexp"
 	"testing"
 
 	"github.com/onflow/flow-go-sdk"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func cleanCode(code []byte) string {
@@ -32,16 +36,10 @@ func cleanCode(code []byte) string {
 }
 
 func TestResolver(t *testing.T) {
-
-	contracts := []Contract{{
-		Name:           "Kibble",
-		Location:       "./tests/Kibble.cdc",
-		AccountAddress: flow.HexToAddress("0x1"),
-	}, {
-		Name:           "FT",
-		Location:       "./tests/FT.cdc",
-		AccountAddress: flow.HexToAddress("0x2"),
-	}}
+	contracts := []*project.Contract{
+		project.NewContract("Kibble", "./tests/Kibble.cdc", nil, flow.HexToAddress("0x1"), "", nil),
+		project.NewContract("FT", "./tests/FT.cdc", nil, flow.HexToAddress("0x2"), "", nil),
+	}
 
 	aliases := map[string]string{
 		"./tests/NFT.cdc": flow.HexToAddress("0x4").String(),
@@ -97,66 +95,74 @@ func TestResolver(t *testing.T) {
 	}
 
 	t.Run("Import exists", func(t *testing.T) {
-		resolver, err := NewResolver([]byte(`
+		tests := []struct {
+			code       []byte
+			hasImports bool
+		}{{
+			code: []byte(`
 			  import Kibble from "./Kibble.cdc"
 			  pub fun main() {}
-		`))
-		assert.NoError(t, err)
-		assert.True(t, resolver.HasFileImports())
-	})
+			`),
+			hasImports: true,
+		}, {
+			code: []byte(`
+				pub fun main() {}
+			`),
+			hasImports: false,
+		}, {
+			code:       scripts[3],
+			hasImports: true,
+		}}
 
-	t.Run("Import doesn't exists", func(t *testing.T) {
-		resolver, err := NewResolver([]byte(`
-		  	pub fun main() {}
-		`))
-		assert.NoError(t, err)
-		assert.False(t, resolver.HasFileImports())
-
-		resolver, err = NewResolver([]byte(`
-			import Foo from 0xf8d6e0586b0a20c7
-		  	pub fun main() {}
-		`))
-		assert.NoError(t, err)
-		assert.False(t, resolver.HasFileImports())
+		for i, test := range tests {
+			program, err := project.NewProgram(flowkit.NewScript(test.code, nil, ""))
+			assert.NoError(t, err)
+			assert.Equal(t, test.hasImports, program.HasImports(), fmt.Sprintf("failed with test vector %d", i))
+		}
 	})
 
 	t.Run("Parse imports", func(t *testing.T) {
-		resolver, err := NewResolver(scripts[3])
+		program, err := project.NewProgram(flowkit.NewScript(scripts[3], nil, ""))
 		assert.NoError(t, err)
-		assert.Equal(t, resolver.getFileImports(), []string{
+		assert.Equal(t, program.Imports(), []string{
 			"./Kibble.cdc",
 		})
 	})
 
 	t.Run("Resolve imports", func(t *testing.T) {
+		replacer := project.NewImportReplacer(contracts, aliases)
 		for i, script := range scripts {
-			resolver, err := NewResolver(script)
-			assert.NoError(t, err)
+			program, err := project.NewProgram(flowkit.NewScript(script, nil, paths[i]))
+			require.NoError(t, err)
 
-			code, err := resolver.ResolveImports(paths[i], contracts, aliases)
-
+			program, err = replacer.Replace(program)
 			assert.NoError(t, err)
-			assert.Equal(t, cleanCode(code), cleanCode(resolved[i]))
+			assert.Equal(t, cleanCode(program.Code()), cleanCode(resolved[i]))
 		}
 	})
 	t.Run("Get Contract Name", func(t *testing.T) {
-		resolver, err := NewResolver([]byte(`
-			pub contract HelloWorld {}
-		`))
-		assert.NoError(t, err)
-
-		contractName, err := resolver.Name()
+		program, err := project.NewProgram(flowkit.NewScript(
+			[]byte(`
+				pub contract HelloWorld {}
+			`),
+			nil, "",
+		))
+		require.NoError(t, err)
+		contractName, err := program.Name()
 		assert.NoError(t, err)
 		assert.Equal(t, "HelloWorld", contractName)
 	})
 	t.Run("Get Contract Name", func(t *testing.T) {
-		resolver, err := NewResolver([]byte(`
-			pub struct SomeStruct {}
-			pub contract HelloWorld {}
-		`))
-		assert.NoError(t, err)
-
-		_, err = resolver.Name()
+		program, err := project.NewProgram(flowkit.NewScript(
+			[]byte(`
+				pub struct SomeStruct {}
+				pub contract HelloWorld {}
+			`),
+			nil, "",
+		))
+		require.NoError(t, err)
+		name, err := program.Name()
 		assert.ErrorContains(t, err, "the code must declare exactly one contract or contract interface")
+		assert.Equal(t, "", name)
 	})
 }
