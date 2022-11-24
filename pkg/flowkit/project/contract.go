@@ -9,6 +9,7 @@ import (
 type Contract struct {
 	Name           string
 	Location       string
+	Code           []byte
 	AccountAddress flow.Address
 	AccountName    string
 	Args           []cadence.Value

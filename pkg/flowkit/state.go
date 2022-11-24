@@ -178,9 +178,15 @@ func (p *State) DeploymentContractsByNetwork(network string) ([]*project.Contrac
 				return nil, err
 			}
 
+			code, err := p.readerWriter.ReadFile(c.Location)
+			if err != nil {
+				return nil, err
+			}
+
 			contract := &project.Contract{
 				Name:           c.Name,
 				Location:       path.Clean(c.Location),
+				Code:           code,
 				AccountAddress: account.address,
 				AccountName:    account.name,
 				Args:           deploymentContract.Args,
