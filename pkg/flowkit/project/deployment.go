@@ -117,7 +117,8 @@ func (d *Deployment) Sort() ([]*Contract, error) {
 func (d *Deployment) conflictExists() bool {
 	uniq := make(map[string]bool)
 	for _, c := range d.contracts {
-		if uniq[c.Name] {
+		fmt.Println()
+		if _, exists := uniq[c.Name]; exists {
 			return true
 		}
 		uniq[c.Name] = true

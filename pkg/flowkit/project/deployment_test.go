@@ -204,7 +204,7 @@ func TestContractDeploymentOrder(t *testing.T) {
 				contracts[i] = NewContract(
 					"",
 					contract.location,
-					nil,
+					contract.code,
 					contract.accountAddress,
 					contract.accountName,
 					nil,
@@ -238,7 +238,7 @@ func TestContractDeploymentOrder(t *testing.T) {
 			)
 
 			for i, deployedContract := range contracts {
-				assert.Equal(t, testCase.expectedDeploymentOrder[i].location, deployedContract.Location)
+				assert.Equal(t, testCase.expectedDeploymentOrder[i].location, deployedContract.Location())
 			}
 		})
 	}
