@@ -119,7 +119,13 @@ func installFlowser(flowser *flowser.App, installPath string) (string, error) {
 	logger.StartProgress(fmt.Sprintf("%s Installing Flowser, this may take few minutes, please wait ", output.TryEmoji()))
 	defer logger.StopProgress()
 
-	err := flowser.Install(installPath)
+	// create all folders if they don't exist, does nothing if they exist
+	err := os.MkdirAll(installPath, os.ModePerm)
+	if err != nil {
+		return "", err
+	}
+
+	err = flowser.Install(installPath)
 	if err != nil {
 		return "", fmt.Errorf("could not install Flowser: %w", err)
 	}
