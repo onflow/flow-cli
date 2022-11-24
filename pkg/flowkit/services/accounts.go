@@ -327,7 +327,7 @@ func (a *Accounts) AddContract(
 			a.state.AliasesForNetwork(contract.Network),
 		)
 
-		contract.Code, err = importReplacer.Replace(contract.Code, contract.Filename)
+		program, err = importReplacer.Replace(program, contract.Filename)
 		if err != nil {
 			return nil, err
 		}
@@ -338,9 +338,9 @@ func (a *Accounts) AddContract(
 		return nil, err
 	}
 
-	tx, err := flowkit.NewAddAccountContractTransaction(account, name, string(contract.Code), contract.Args)
+	tx, err := flowkit.NewAddAccountContractTransaction(account, name, program.Code(), contract.Args)
 	if updateExisting {
-		tx, err = flowkit.NewUpdateAccountContractTransaction(account, name, string(contract.Code))
+		tx, err = flowkit.NewUpdateAccountContractTransaction(account, name, program.Code())
 	}
 	if err != nil {
 		return nil, err

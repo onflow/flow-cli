@@ -43,6 +43,22 @@ func (p *Program) HasImports() bool {
 	return len(p.Imports()) > 0
 }
 
+func (p *Program) ReplaceImport(from string, to string) *Program {
+	p.code = []byte(strings.Replace(
+		string(p.code),
+		fmt.Sprintf(`"%s"`, from),
+		fmt.Sprintf("0x%s", to),
+		1,
+	))
+
+	p.reload()
+	return p
+}
+
+func (p *Program) Code() []byte {
+	return p.code
+}
+
 func (p *Program) Name() (string, error) {
 	if len(p.astProgram.CompositeDeclarations())+len(p.astProgram.InterfaceDeclarations()) != 1 {
 		return "", fmt.Errorf("the code must declare exactly one contract or contract interface")
@@ -70,16 +86,4 @@ func (p *Program) reload() {
 	}
 
 	p.astProgram = astProgram
-}
-
-func (p *Program) ReplaceImport(from string, to string) *Program {
-	p.code = []byte(strings.Replace(
-		string(p.code),
-		fmt.Sprintf(`"%s"`, from),
-		fmt.Sprintf("0x%s", to),
-		1,
-	))
-
-	p.reload()
-	return p
 }

@@ -280,7 +280,7 @@ func (p *Project) Deploy(network string, update bool) ([]*flowkit.Contract, erro
 		tx, err := flowkit.NewAddAccountContractTransaction(
 			targetAccount,
 			contract.Name,
-			string(code),
+			code,
 			contract.Args,
 		)
 		if err != nil {

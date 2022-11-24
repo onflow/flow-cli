@@ -61,10 +61,10 @@ func NewTransactionFromPayload(payload []byte) (*Transaction, error) {
 }
 
 // NewUpdateAccountContractTransaction update account contract.
-func NewUpdateAccountContractTransaction(signer *Account, name string, source string) (*Transaction, error) {
+func NewUpdateAccountContractTransaction(signer *Account, name string, source []byte) (*Transaction, error) {
 	contract := templates.Contract{
 		Name:   name,
-		Source: source,
+		Source: string(source),
 	}
 
 	return newTransactionFromTemplate(
@@ -77,12 +77,12 @@ func NewUpdateAccountContractTransaction(signer *Account, name string, source st
 func NewAddAccountContractTransaction(
 	signer *Account,
 	name string,
-	source string,
+	source []byte,
 	args []cadence.Value,
 ) (*Transaction, error) {
 	return addAccountContractWithArgs(signer, templates.Contract{
 		Name:   name,
-		Source: source,
+		Source: string(source),
 	}, args)
 }
 
