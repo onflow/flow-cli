@@ -20,12 +20,9 @@ package resolvers
 
 import (
 	"fmt"
-	"github.com/onflow/cadence/runtime/ast"
-	"github.com/onflow/cadence/runtime/common"
 	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-go-sdk"
 	"path"
-	"strings"
 )
 
 type ImportReplacer interface {
@@ -45,21 +42,6 @@ func NewFileImports(contracts []*flowkit.Contract, aliases flowkit.Aliases) *Fil
 	}
 }
 
-// getFileImports returns all cadence file imports from Cadence code as an array.
-func (f *FileImports) getFileImports(program *ast.Program) []string {
-	imports := make([]string, 0)
-
-	for _, importDeclaration := range program.ImportDeclarations() {
-		_, isFileImport := importDeclaration.Location.(common.StringLocation)
-
-		if isFileImport {
-			imports = append(imports, importDeclaration.Location.String())
-		}
-	}
-
-	return imports
-}
-
 func (f *FileImports) Replace(program *flowkit.Program, codePath string) (*flowkit.Program, error) {
 	imports := program.Imports()
 	sourceTarget := f.getSourceTarget()
@@ -73,16 +55,6 @@ func (f *FileImports) Replace(program *flowkit.Program, codePath string) (*flowk
 	}
 
 	return program, nil
-}
-
-// replaceImport replaces import from path to address.
-func (f *FileImports) replaceImport(code []byte, from string, to string) []byte {
-	return []byte(strings.Replace(
-		string(code),
-		fmt.Sprintf(`"%s"`, from),
-		fmt.Sprintf("0x%s", to),
-		1,
-	))
 }
 
 // getSourceTarget return a map with contract paths as keys and addresses as values.
