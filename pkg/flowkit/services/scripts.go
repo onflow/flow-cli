@@ -54,17 +54,22 @@ func NewScripts(
 
 // Execute script code with passed arguments on the selected network.
 func (s *Scripts) Execute(script *Script, network string) (cadence.Value, error) {
-	contracts, err := s.state.DeploymentContractsByNetwork(network)
+	program, err := flowkit.NewProgram(script.Code)
 	if err != nil {
 		return nil, err
 	}
 
-	importReplacer := resolvers.NewFileImports(
-		contracts,
-		s.state.AliasesForNetwork(network),
-	)
+	if program.HasImports() {
+		contracts, err := s.state.DeploymentContractsByNetwork(network)
+		if err != nil {
+			return nil, err
+		}
 
-	if importReplacer.HasImports(script.Code) {
+		importReplacer := resolvers.NewFileImports(
+			contracts,
+			s.state.AliasesForNetwork(network),
+		)
+
 		if s.state == nil {
 			return nil, config.ErrDoesNotExist
 		}

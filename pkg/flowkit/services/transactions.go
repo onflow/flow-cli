@@ -205,22 +205,12 @@ func (t *Transactions) Build(
 		SetGasLimit(gasLimit).
 		SetBlockReference(latestBlock)
 
-	if err := tx.SetProposer(proposerAccount, proposerKeyIndex); err != nil {
-		return nil, err
-	}
-
-	contracts, err := t.state.DeploymentContractsByNetwork(network)
+	program, err := flowkit.NewProgram(script.Code)
 	if err != nil {
 		return nil, err
 	}
 
-	importReplacer := resolvers.NewFileImports(
-		contracts,
-		t.state.AliasesForNetwork(network),
-	)
-
-	if importReplacer.HasImports(script.Code) {
-		// todo should this be fetched from state
+	if program.HasImports() {
 		if network == "" {
 			return nil, fmt.Errorf("missing network, specify which network to use to resolve imports in transaction code")
 		}
@@ -228,19 +218,32 @@ func (t *Transactions) Build(
 			return nil, fmt.Errorf("resolving imports in transactions not supported")
 		}
 
+		contracts, err := t.state.DeploymentContractsByNetwork(network)
+		if err != nil {
+			return nil, err
+		}
+
+		importReplacer := resolvers.NewFileImports(
+			contracts,
+			t.state.AliasesForNetwork(network),
+		)
+
 		script.Code, err = importReplacer.Replace(script.Code, script.Filename)
 		if err != nil {
 			return nil, fmt.Errorf("error resolving imports: %w", err)
 		}
 	}
 
-	err = tx.SetScriptWithArgs(script.Code, script.Args)
-	if err != nil {
+	if err := tx.SetProposer(proposerAccount, proposerKeyIndex); err != nil {
 		return nil, err
 	}
 
 	tx, err = tx.AddAuthorizers(addresses.authorizers)
 	if err != nil {
+		return nil, err
+	}
+
+	if err := tx.SetScriptWithArgs(script.Code, script.Args); err != nil {
 		return nil, err
 	}
 

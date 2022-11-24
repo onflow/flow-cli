@@ -253,7 +253,7 @@ func (p *Project) Deploy(network string, update bool) ([]*flowkit.Contract, erro
 	deployErr := &ErrProjectDeploy{}
 
 	for _, contract := range sorted {
-		// todo remove implementation for deployment of contract and just use the account service for deploying
+		// todo remove implementation for deployment of contract and just use the account add-contract func for deploying
 		block, err := p.gateway.GetLatestBlock()
 		if err != nil {
 			return nil, err
@@ -297,7 +297,7 @@ func (p *Project) Deploy(network string, update bool) ([]*flowkit.Contract, erro
 		if !update && exists {
 			deployErr.add(
 				contract,
-				fmt.Errorf("contract %s exists in account %s", contract.Name(), contract.AccountName()),
+				fmt.Errorf("contract %s exists in account %s", contract.Name, contract.AccountName),
 				"already deployed to this account",
 			)
 			continue
@@ -313,7 +313,7 @@ func (p *Project) Deploy(network string, update bool) ([]*flowkit.Contract, erro
 			}
 
 			// remove the contract first
-			remove, err := flowkit.NewRemoveAccountContractTransaction(targetAccount, contract.Name())
+			remove, err := flowkit.NewRemoveAccountContractTransaction(targetAccount, contract.Name)
 			remove.SetBlockReference(block)
 			if err = remove.SetProposer(targetAccountInfo, targetAccount.Key().Index()); err != nil {
 				return nil, err
@@ -383,11 +383,11 @@ type ErrProjectDeploy struct {
 	contracts map[string]error
 }
 
-func (d *ErrProjectDeploy) add(contract *contracts.Contract, err error, msg string) {
+func (d *ErrProjectDeploy) add(contract *flowkit.Contract, err error, msg string) {
 	if d.contracts == nil {
 		d.contracts = make(map[string]error)
 	}
-	d.contracts[contract.Name()] = fmt.Errorf("%s: %w", msg, err)
+	d.contracts[contract.Name] = fmt.Errorf("%s: %w", msg, err)
 }
 
 func (d *ErrProjectDeploy) Contracts() map[string]error {

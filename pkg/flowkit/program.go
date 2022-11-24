@@ -39,8 +39,28 @@ func (p *Program) Imports() []string {
 	return imports
 }
 
-func (p *Program) hasImports() bool {
+func (p *Program) HasImports() bool {
 	return len(p.Imports()) > 0
+}
+
+func (p *Program) Name() (string, error) {
+	if len(p.astProgram.CompositeDeclarations())+len(p.astProgram.InterfaceDeclarations()) != 1 {
+		return "", fmt.Errorf("the code must declare exactly one contract or contract interface")
+	}
+
+	for _, compositeDeclaration := range p.astProgram.CompositeDeclarations() {
+		if compositeDeclaration.CompositeKind == common.CompositeKindContract {
+			return compositeDeclaration.Identifier.Identifier, nil
+		}
+	}
+
+	for _, interfaceDeclaration := range p.astProgram.InterfaceDeclarations() {
+		if interfaceDeclaration.CompositeKind == common.CompositeKindContract {
+			return interfaceDeclaration.Identifier.Identifier, nil
+		}
+	}
+
+	return "", fmt.Errorf("unable to determine contract name")
 }
 
 func (p *Program) reload() {

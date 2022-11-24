@@ -294,7 +294,7 @@ func (c *Contract) validate(hasImports bool) error {
 	if hasImports && c.Network == "" {
 		return fmt.Errorf("missing network, specify which network to use to resolve imports in transaction code")
 	}
-	if hasImports && c.Location == "" {
+	if hasImports && c.Filename == "" {
 		return fmt.Errorf("cannot resolve imports without specifying a contract filename")
 	}
 	return nil
@@ -307,40 +307,40 @@ func (a *Accounts) AddContract(
 	updateExisting bool,
 ) (*flow.Account, error) {
 
-	contracts, err := a.state.DeploymentContractsByNetwork(contract.Network)
+	program, err := flowkit.NewProgram(contract.Code)
 	if err != nil {
 		return nil, err
 	}
 
-	importReplacer := resolvers.NewFileImports(
-		contracts,
-		a.state.AliasesForNetwork(contract.Network),
-	)
-
-	hasImports := importReplacer.HasImports(contract.Code)
-	if err = contract.validate(hasImports); err != nil {
+	if err = contract.validate(program.HasImports()); err != nil {
 		return nil, err
 	}
 
-	if hasImports {
-		contract.Code, err = importReplacer.Replace(contract.Code, contract.Location)
+	if program.HasImports() {
+		contracts, err := a.state.DeploymentContractsByNetwork(contract.Network)
+		if err != nil {
+			return nil, err
+		}
+
+		importReplacer := resolvers.NewFileImports(
+			contracts,
+			a.state.AliasesForNetwork(contract.Network),
+		)
+
+		contract.Code, err = importReplacer.Replace(contract.Code, contract.Filename)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	tx, err := flowkit.NewAddAccountContractTransaction(
-		account,
-		contract.Name(), // todo
-		string(contract.Code),
-		contract.Args,
-	)
+	name, err := program.Name()
+	if err != nil {
+		return nil, err
+	}
+
+	tx, err := flowkit.NewAddAccountContractTransaction(account, name, string(contract.Code), contract.Args)
 	if updateExisting {
-		tx, err = flowkit.NewUpdateAccountContractTransaction(
-			account,
-			contract.Name(),
-			string(contract.Code),
-		)
+		tx, err = flowkit.NewUpdateAccountContractTransaction(account, name, string(contract.Code))
 	}
 	if err != nil {
 		return nil, err
@@ -356,7 +356,7 @@ func (a *Accounts) AddContract(
 		fmt.Sprintf(
 			"%s contract '%s' on account '%s'...",
 			map[bool]string{true: "Updating", false: "Creating"}[updateExisting],
-			program.Name(),
+			name,
 			account.Address(),
 		),
 	)
@@ -382,7 +382,7 @@ func (a *Accounts) AddContract(
 	a.logger.StopProgress()
 	a.logger.Info(fmt.Sprintf(
 		"Contract '%s' %s on the account '%s'.",
-		program.Name(),
+		name,
 		map[bool]string{true: "updated", false: "created"}[updateExisting],
 		account.Address(),
 	))
