@@ -6,6 +6,7 @@ on:
 
 jobs:
   homebrew:
+      if: github.event_name == 'release' && github.event.action == 'published'
       name: Bump Homebrew formula
       runs-on: ubuntu-latest
       steps:
