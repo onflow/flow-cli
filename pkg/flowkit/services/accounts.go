@@ -297,7 +297,7 @@ func (a *Accounts) AddContract(
 			return nil, err
 		}
 
-		importReplacer := project.NewFileImports(
+		importReplacer := project.NewImportReplacer(
 			contracts,
 			a.state.AliasesForNetwork(network),
 		)

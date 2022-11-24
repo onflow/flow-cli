@@ -213,7 +213,7 @@ func (t *Transactions) Build(
 			return nil, err
 		}
 
-		importReplacer := project.NewFileImports(
+		importReplacer := project.NewImportReplacer(
 			contracts,
 			t.state.AliasesForNetwork(network),
 		)

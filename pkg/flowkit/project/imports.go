@@ -25,26 +25,22 @@ import (
 	"path"
 )
 
-type ImportReplacer interface {
-	Replace()
-}
-
-// FileImports implements file import replacements functionality for the project contracts with optionally included aliases.
-type FileImports struct {
+// ImportReplacer implements file import replacements functionality for the project contracts with optionally included aliases.
+type ImportReplacer struct {
 	contracts []*Contract
 	aliases   flowkit.Aliases
 }
 
-func NewFileImports(contracts []*Contract, aliases flowkit.Aliases) *FileImports {
-	return &FileImports{
+func NewImportReplacer(contracts []*Contract, aliases flowkit.Aliases) *ImportReplacer {
+	return &ImportReplacer{
 		contracts: contracts,
 		aliases:   aliases,
 	}
 }
 
-func (f *FileImports) Replace(program *flowkit.Program) (*flowkit.Program, error) {
+func (i *ImportReplacer) Replace(program *flowkit.Program) (*flowkit.Program, error) {
 	imports := program.Imports()
-	sourceTarget := f.getSourceTarget()
+	sourceTarget := i.getSourceTarget()
 
 	for _, imp := range imports {
 		target, found := sourceTarget[absolutePath(program.Location(), imp)]
@@ -58,13 +54,13 @@ func (f *FileImports) Replace(program *flowkit.Program) (*flowkit.Program, error
 }
 
 // getSourceTarget return a map with contract paths as keys and addresses as values.
-func (f *FileImports) getSourceTarget() map[string]string {
+func (i *ImportReplacer) getSourceTarget() map[string]string {
 	sourceTarget := make(map[string]string)
-	for _, contract := range f.contracts {
-		sourceTarget[path.Clean(contract.Location)] = contract.AccountAddress.String()
+	for _, contract := range i.contracts {
+		sourceTarget[path.Clean(contract.Location())] = contract.AccountAddress.String()
 	}
 
-	for source, target := range f.aliases {
+	for source, target := range i.aliases {
 		sourceTarget[path.Clean(source)] = flow.HexToAddress(target).String()
 	}
 

@@ -65,7 +65,7 @@ func (s *Scripts) Execute(script *flowkit.Script, network string) (cadence.Value
 			return nil, err
 		}
 
-		importReplacer := project.NewFileImports(
+		importReplacer := project.NewImportReplacer(
 			contracts,
 			s.state.AliasesForNetwork(network),
 		)

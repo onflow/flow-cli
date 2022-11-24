@@ -234,7 +234,7 @@ func (p *Project) Deploy(network string, update bool) ([]*project.Contract, erro
 	}
 
 	aliases := p.state.AliasesForNetwork(network)
-	importReplacer := project.NewFileImports(contracts, aliases)
+	importReplacer := project.NewImportReplacer(contracts, aliases)
 
 	p.logger.Info(fmt.Sprintf(
 		"\nDeploying %d contracts for accounts: %s\n", len(sorted),
