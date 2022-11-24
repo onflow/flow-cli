@@ -55,16 +55,8 @@ func setup() (*flowkit.State, *Services, *tests.TestGateway) {
 	return state, s, gw
 }
 
-func resourceToContract(res tests.Resource) *Contract {
-	return &Contract{
-		Script: &flowkit.Script{
-			Code: res.Source,
-
-			Location: res.Filename,
-		},
-		Name:    res.Name,
-		Network: "",
-	}
+func resourceToContract(res tests.Resource) *flowkit.Script {
+	return flowkit.NewScript(res.Source, nil, res.Filename)
 }
 
 func TestAccounts(t *testing.T) {
@@ -175,6 +167,7 @@ func TestAccounts(t *testing.T) {
 		account, err := s.Accounts.AddContract(
 			serviceAcc,
 			resourceToContract(tests.ContractHelloString),
+			"",
 			false,
 		)
 
@@ -199,6 +192,7 @@ func TestAccounts(t *testing.T) {
 		account, err := s.Accounts.AddContract(
 			serviceAcc,
 			resourceToContract(tests.ContractHelloString),
+			"",
 			true,
 		)
 
@@ -527,6 +521,7 @@ func TestAccountsAddContract_Integration(t *testing.T) {
 		acc, err := s.Accounts.AddContract(
 			srvAcc,
 			resourceToContract(tests.ContractSimple),
+			"",
 			false,
 		)
 
@@ -537,6 +532,7 @@ func TestAccountsAddContract_Integration(t *testing.T) {
 		acc, err = s.Accounts.AddContract(
 			srvAcc,
 			resourceToContract(tests.ContractSimpleUpdated),
+			"",
 			true,
 		)
 
@@ -555,6 +551,7 @@ func TestAccountsAddContract_Integration(t *testing.T) {
 		_, err := s.Accounts.AddContract(
 			srvAcc,
 			resourceToContract(tests.ContractSimple),
+			"",
 			false,
 		)
 		assert.NoError(t, err)
@@ -562,6 +559,7 @@ func TestAccountsAddContract_Integration(t *testing.T) {
 		_, err = s.Accounts.AddContract(
 			srvAcc,
 			resourceToContract(tests.ContractSimple),
+			"",
 			false,
 		)
 
@@ -571,6 +569,7 @@ func TestAccountsAddContract_Integration(t *testing.T) {
 		_, err = s.Accounts.AddContract(
 			srvAcc,
 			resourceToContract(tests.ContractHelloString),
+			"",
 			true,
 		)
 		require.Error(t, err)
@@ -586,6 +585,7 @@ func TestAccountsAddContractWithArgs(t *testing.T) {
 	acc, err := s.Accounts.AddContract(
 		srvAcc,
 		resourceToContract(tests.ContractSimpleWithArgs),
+		"",
 		false,
 	)
 	assert.Error(t, err)
@@ -594,7 +594,7 @@ func TestAccountsAddContractWithArgs(t *testing.T) {
 	c := resourceToContract(tests.ContractSimpleWithArgs)
 	c.Args = []cadence.Value{cadence.UInt64(4)}
 
-	acc, err = s.Accounts.AddContract(srvAcc, c, false)
+	acc, err = s.Accounts.AddContract(srvAcc, c, "", false)
 	assert.NoError(t, err)
 	assert.NotNil(t, acc)
 	assert.Equal(t, acc.Contracts["Simple"], tests.ContractSimpleWithArgs.Source)
@@ -610,14 +610,8 @@ func TestAccountsRemoveContract_Integration(t *testing.T) {
 	// prepare existing contract
 	_, err := s.Accounts.AddContract(
 		srvAcc,
-		&Contract{
-			Script: &flowkit.Script{
-				Code: c.Source,
-
-				Location: c.Filename,
-			},
-			Name: c.Name,
-		},
+		flowkit.NewScript(c.Source, nil, c.Filename),
+		"",
 		false,
 	)
 	assert.NoError(t, err)

@@ -330,6 +330,7 @@ func TestTransactions_Integration(t *testing.T) {
 		_, _ = s.Accounts.AddContract(
 			srvAcc,
 			resourceToContract(tests.ContractHelloString),
+			"",
 			false,
 		)
 
