@@ -20,7 +20,6 @@ package resolvers
 
 import (
 	"fmt"
-
 	"github.com/onflow/flow-cli/pkg/flowkit"
 
 	"gonum.org/v1/gonum/graph"
@@ -101,6 +100,10 @@ func (d *Deployment) add(contract *flowkit.Contract) error {
 // any imported contract must be deployed before deploying the contract with that import.
 // Only applicable to contracts.
 func (d *Deployment) Sort() ([]*flowkit.Contract, error) {
+	if d.conflictExists() {
+		return nil, fmt.Errorf("the same contract cannot be deployed to multiple accounts on the same network")
+	}
+
 	err := d.buildDependencies()
 	if err != nil {
 		return nil, err
@@ -117,6 +120,19 @@ func (d *Deployment) Sort() ([]*flowkit.Contract, error) {
 	}
 
 	return contracts, nil
+}
+
+// conflictExists returns true if the same contract is configured to deploy to more than one account for the same network.
+func (d *Deployment) conflictExists() bool {
+	uniq := make(map[string]bool)
+	for _, c := range d.contracts {
+		if uniq[c.Name] {
+			return true
+		}
+		uniq[c.Name] = true
+	}
+
+	return false
 }
 
 // buildDependencies iterates over all contracts and checks the imports which are added as its dependencies.

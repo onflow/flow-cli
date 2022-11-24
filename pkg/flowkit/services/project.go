@@ -217,10 +217,6 @@ func (p *Project) Deploy(network string, update bool) ([]*flowkit.Contract, erro
 	if p.state == nil {
 		return nil, config.ErrDoesNotExist
 	}
-	// check there are not multiple accounts with same contract
-	if p.state.ContractConflictExists(network) {
-		return nil, fmt.Errorf("the same contract cannot be deployed to multiple accounts on the same network") // TODO(sideninja) specify which contract by name is a problem
-	}
 
 	contracts, err := p.state.DeploymentContractsByNetwork(network)
 	if err != nil {
@@ -305,10 +301,7 @@ func (p *Project) Deploy(network string, update bool) ([]*flowkit.Contract, erro
 		if exists {
 			//only update contract if there is diff
 			if noDiffInContract {
-				p.logger.Info(fmt.Sprintf(
-					"no diff found in %s, skipping update",
-					contract.Name,
-				))
+				p.logger.Info(fmt.Sprintf("no diff found in %s, skipping update", contract.Name))
 				continue
 			}
 
