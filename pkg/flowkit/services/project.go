@@ -250,14 +250,14 @@ func (p *Project) Deploy(network string, update bool) ([]*flowkit.Contract, erro
 	))
 	defer p.logger.StopProgress()
 
+	deployErr := &ErrProjectDeploy{}
+
 	for _, contract := range sorted {
 		block, err := p.gateway.GetLatestBlock()
 		if err != nil {
 			return nil, err
 		}
 
-	deployErr := &ErrProjectDeploy{}
-	for _, contract := range orderedContracts {
 		targetAccount, err := p.state.Accounts().ByName(contract.AccountName)
 		if err != nil {
 			return nil, fmt.Errorf("target account for deploying contract not found in configuration")
@@ -273,6 +273,7 @@ func (p *Project) Deploy(network string, update bool) ([]*flowkit.Contract, erro
 		if err != nil {
 			return nil, err
 		}
+
 		code, err = importReplacer.Replace(code, contract.Location)
 		if err != nil {
 			return nil, err
