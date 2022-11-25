@@ -4,7 +4,6 @@
 set -e
 
 REPO="onflow/flow-cli"
-GITHUB_URL="https://api.github.com/repos/$REPO"
 ASSETS_URL="https://github.com/$REPO/releases/download/"
 # The version to download, set by get_version (defaults to args[1])
 VERSION="$1"
@@ -57,7 +56,7 @@ get_architecture() {
 get_version() {
   if [ -z "$VERSION" ]
   then
-    VERSION=$(curl -s "$GITHUB_URL/releases/latest" | grep -E 'tag_name' | cut -d '"' -f 4)
+    VERSION=$(curl -s "https://api.github.com/repos/$REPO/releases/latest" | grep -E 'tag_name' | cut -d '"' -f 4)
   fi
 }
 
