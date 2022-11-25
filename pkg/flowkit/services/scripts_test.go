@@ -44,10 +44,7 @@ func TestScripts(t *testing.T) {
 
 		args := []cadence.Value{cadence.String("Foo")}
 		_, err := s.Scripts.Execute(
-			&flowkit.Script{
-				Code: tests.ScriptArgString.Source,
-				Args: args,
-			},
+			flowkit.NewScript(tests.ScriptArgString.Source, args, ""),
 			"",
 		)
 
@@ -65,10 +62,7 @@ func TestScripts_Integration(t *testing.T) {
 
 		args := []cadence.Value{cadence.String("Foo")}
 		res, err := s.Scripts.Execute(
-			&flowkit.Script{
-				Code: tests.ScriptArgString.Source,
-				Args: args,
-			},
+			flowkit.NewScript(tests.ScriptArgString.Source, args, ""),
 			"",
 		)
 
@@ -81,10 +75,7 @@ func TestScripts_Integration(t *testing.T) {
 		_, s := setupIntegration()
 		args := []cadence.Value{cadence.String("Foo")}
 		res, err := s.Scripts.Execute(
-			&flowkit.Script{
-				Code: tests.ScriptWithError.Source,
-				Args: args,
-			},
+			flowkit.NewScript(tests.ScriptWithError.Source, args, ""),
 			"",
 		)
 
@@ -125,14 +116,12 @@ func TestScripts_Integration(t *testing.T) {
 		_, _ = s.Accounts.AddContract(
 			srvAcc,
 			resourceToContract(tests.ContractHelloString),
+			"",
 			false,
 		)
 
 		res, err := s.Scripts.Execute(
-			&flowkit.Script{
-				Code:     tests.ScriptImport.Source,
-				Location: tests.ScriptImport.Filename,
-			},
+			flowkit.NewScript(tests.ScriptImport.Source, nil, tests.ScriptImport.Filename),
 			n.Name,
 		)
 		assert.NoError(t, err)
@@ -156,10 +145,7 @@ func TestScripts_Integration(t *testing.T) {
 
 		for x, i := range in {
 			_, err := s.Scripts.Execute(
-				&flowkit.Script{
-					Code:     tests.ScriptImport.Source,
-					Location: i[0],
-				},
+				flowkit.NewScript(tests.ScriptImport.Source, nil, i[0]),
 				i[1],
 			)
 			assert.NotNil(t, err)

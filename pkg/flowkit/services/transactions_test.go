@@ -83,10 +83,11 @@ func TestTransactions(t *testing.T) {
 
 		_, _, err := s.Transactions.Send(
 			NewSingleTransactionAccount(serviceAcc),
-			&flowkit.Script{
-				Code: tests.TransactionArgString.Source,
-				Args: []cadence.Value{cadence.String("Bar")},
-			},
+			flowkit.NewScript(
+				tests.TransactionArgString.Source,
+				[]cadence.Value{cadence.String("Bar")},
+				"",
+			),
 			gasLimit,
 			"",
 		)
@@ -276,11 +277,7 @@ func TestTransactions_Integration(t *testing.T) {
 			tx, err := s.Transactions.Build(
 				NewTransactionAddresses(i.prop, i.payer, i.auth),
 				i.index,
-				&flowkit.Script{
-					Code:     i.code,
-					Args:     i.args,
-					Location: i.file,
-				},
+				flowkit.NewScript(i.code, i.args, i.file),
 				i.gas,
 				i.network,
 			)
@@ -337,10 +334,7 @@ func TestTransactions_Integration(t *testing.T) {
 		tx, err := s.Transactions.Build(
 			NewTransactionAddresses(signer, signer, []flow.Address{signer}),
 			srvAcc.Key().Index(),
-			&flowkit.Script{
-				Code:     tests.TransactionImports.Source,
-				Location: tests.TransactionImports.Filename,
-			},
+			flowkit.NewScript(tests.TransactionImports.Source, nil, tests.TransactionImports.Filename),
 			flow.DefaultTransactionGasLimit,
 			n.Name,
 		)
@@ -367,10 +361,7 @@ func TestTransactions_Integration(t *testing.T) {
 		tx, err := s.Transactions.Build(
 			NewTransactionAddresses(a.Address(), a.Address(), nil),
 			0,
-			&flowkit.Script{
-				Code:     tests.TransactionSimple.Source,
-				Location: tests.TransactionSimple.Filename,
-			},
+			flowkit.NewScript(tests.TransactionSimple.Source, nil, tests.TransactionSimple.Filename),
 			flow.DefaultTransactionGasLimit,
 			"",
 		)
@@ -401,10 +392,7 @@ func TestTransactions_Integration(t *testing.T) {
 		tx, err := s.Transactions.Build(
 			NewTransactionAddresses(a.Address(), a.Address(), []flow.Address{a.Address()}),
 			0,
-			&flowkit.Script{
-				Code:     tests.TransactionSingleAuth.Source,
-				Location: tests.TransactionSingleAuth.Filename,
-			},
+			flowkit.NewScript(tests.TransactionSingleAuth.Source, nil, tests.TransactionSingleAuth.Filename),
 			flow.DefaultTransactionGasLimit,
 			"",
 		)
@@ -436,10 +424,7 @@ func TestTransactions_Integration(t *testing.T) {
 		tx, err := s.Transactions.Build(
 			NewTransactionAddresses(a.Address(), a.Address(), []flow.Address{a.Address()}),
 			0,
-			&flowkit.Script{
-				Code:     tests.TransactionSingleAuth.Source,
-				Location: tests.TransactionSingleAuth.Filename,
-			},
+			flowkit.NewScript(tests.TransactionSingleAuth.Source, nil, tests.TransactionSingleAuth.Filename),
 			flow.DefaultTransactionGasLimit,
 			"",
 		)
@@ -468,10 +453,7 @@ func TestTransactions_Integration(t *testing.T) {
 		tx, err := s.Transactions.Build(
 			NewTransactionAddresses(a.Address(), a.Address(), []flow.Address{a.Address()}),
 			0,
-			&flowkit.Script{
-				Code:     tests.TransactionTwoAuth.Source,
-				Location: tests.TransactionTwoAuth.Filename,
-			},
+			flowkit.NewScript(tests.TransactionTwoAuth.Source, nil, tests.TransactionTwoAuth.Filename),
 			flow.DefaultTransactionGasLimit,
 			"",
 		)
@@ -494,10 +476,7 @@ func TestTransactions_Integration(t *testing.T) {
 				proposer: a,
 				payer:    a,
 			},
-			&flowkit.Script{
-				Code:     tests.TransactionSimple.Source,
-				Location: tests.TransactionSimple.Filename,
-			},
+			flowkit.NewScript(tests.TransactionSimple.Source, nil, tests.TransactionSimple.Filename),
 			flow.DefaultTransactionGasLimit,
 			"",
 		)
@@ -517,10 +496,7 @@ func TestTransactions_Integration(t *testing.T) {
 
 		tx, txr, err := s.Transactions.Send(
 			NewSingleTransactionAccount(a),
-			&flowkit.Script{
-				Code:     tests.TransactionSingleAuth.Source,
-				Location: tests.TransactionSingleAuth.Filename,
-			},
+			flowkit.NewScript(tests.TransactionSingleAuth.Source, nil, tests.TransactionSingleAuth.Filename),
 			flow.DefaultTransactionGasLimit,
 			"",
 		)
@@ -545,10 +521,7 @@ func TestTransactions_Integration(t *testing.T) {
 
 		tx, txr, err := s.Transactions.Send(
 			roles,
-			&flowkit.Script{
-				Code:     tests.TransactionSingleAuth.Source,
-				Location: tests.TransactionSingleAuth.Filename,
-			},
+			flowkit.NewScript(tests.TransactionSingleAuth.Source, nil, tests.TransactionSingleAuth.Filename),
 			flow.DefaultTransactionGasLimit,
 			"",
 		)
@@ -573,10 +546,7 @@ func TestTransactions_Integration(t *testing.T) {
 
 		tx, txr, err := s.Transactions.Send(
 			roles,
-			&flowkit.Script{
-				Code:     tests.TransactionSingleAuth.Source,
-				Location: tests.TransactionSingleAuth.Filename,
-			},
+			flowkit.NewScript(tests.TransactionSingleAuth.Source, nil, tests.TransactionSingleAuth.Filename),
 			flow.DefaultTransactionGasLimit,
 			"",
 		)
@@ -597,13 +567,13 @@ func TestTransactions_Integration(t *testing.T) {
 
 		tx, txr, err := s.Transactions.Send(
 			NewSingleTransactionAccount(a),
-			&flowkit.Script{
-				Code:     tests.TransactionArgString.Source,
-				Location: tests.TransactionArgString.Filename,
-				Args: []cadence.Value{
+			flowkit.NewScript(
+				tests.TransactionArgString.Source,
+				[]cadence.Value{
 					cadence.String("Bar"),
 				},
-			},
+				tests.TransactionArgString.Filename,
+			),
 			flow.DefaultTransactionGasLimit,
 			"",
 		)
@@ -624,10 +594,11 @@ func TestTransactions_Integration(t *testing.T) {
 
 		tx, txr, err := s.Transactions.Send(
 			NewSingleTransactionAccount(a),
-			&flowkit.Script{
-				Code:     tests.TransactionMultipleDeclarations.Source,
-				Location: tests.TransactionMultipleDeclarations.Filename,
-			},
+			flowkit.NewScript(
+				tests.TransactionMultipleDeclarations.Source,
+				nil,
+				tests.TransactionMultipleDeclarations.Filename,
+			),
 			flow.DefaultTransactionGasLimit,
 			"",
 		)

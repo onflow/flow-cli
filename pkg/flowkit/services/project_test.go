@@ -157,13 +157,13 @@ func TestProject(t *testing.T) {
 
 		assert.NoError(t, err)
 		assert.Equal(t, len(contracts), 1)
-		assert.Equal(t, contracts[0].Target(), acct2.Address())
+		assert.Equal(t, contracts[0].AccountAddress, acct2.Address())
 	})
 
 }
 
 // used for integration tests
-func simpleDeploy(state *flowkit.State, s *Services, update bool) ([]*project.Program, error) {
+func simpleDeploy(state *flowkit.State, s *Services, update bool) ([]*project.Contract, error) {
 	srvAcc, _ := state.EmulatorServiceAccount()
 
 	c := config.Contract{
@@ -202,7 +202,7 @@ func TestProject_Integration(t *testing.T) {
 		contracts, err := simpleDeploy(state, s, false)
 		assert.NoError(t, err)
 		assert.Len(t, contracts, 1)
-		assert.Equal(t, contracts[0].Name(), tests.ContractHelloString.Name)
+		assert.Equal(t, contracts[0].Name, tests.ContractHelloString.Name)
 		assert.Equal(t, contracts[0].Code(), string(tests.ContractHelloString.Source))
 	})
 
@@ -258,11 +258,11 @@ func TestProject_Integration(t *testing.T) {
 		contracts, err := s.Project.Deploy(n.Name, false)
 		assert.NoError(t, err)
 		assert.Len(t, contracts, 3)
-		assert.Equal(t, contracts[0].Name(), tests.ContractA.Name)
+		assert.Equal(t, contracts[0].Name, tests.ContractA.Name)
 		assert.Equal(t, contracts[0].Code(), string(tests.ContractA.Source))
-		assert.Equal(t, contracts[1].Name(), tests.ContractB.Name)
+		assert.Equal(t, contracts[1].Name, tests.ContractB.Name)
 		assert.Equal(t, contracts[1].Code(), string(tests.ContractB.Source))
-		assert.Equal(t, contracts[2].Name(), tests.ContractC.Name)
+		assert.Equal(t, contracts[2].Name, tests.ContractC.Name)
 		assert.Equal(t, contracts[2].Code(), string(tests.ContractC.Source))
 	})
 
