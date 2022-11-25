@@ -6,7 +6,7 @@ on:
 
 jobs:
   homebrew:
-      if: github.event_name == 'release' && github.event.action == 'published'
+      if: github.event_name == 'release' && github.event.action == 'published' # skip for pre-release
       name: Bump Homebrew formula
       runs-on: ubuntu-latest
       steps:
