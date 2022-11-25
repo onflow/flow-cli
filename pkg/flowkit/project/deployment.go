@@ -74,9 +74,10 @@ func (d *Deployment) add(contract *Contract) error {
 	}
 
 	c := &deployContract{
-		index:    int64(len(d.contracts)),
-		Contract: contract,
-		program:  program,
+		index:        int64(len(d.contracts)),
+		Contract:     contract,
+		program:      program,
+		dependencies: make(map[string]*deployContract),
 	}
 
 	d.contracts = append(d.contracts, c)
@@ -117,7 +118,6 @@ func (d *Deployment) Sort() ([]*Contract, error) {
 func (d *Deployment) conflictExists() bool {
 	uniq := make(map[string]bool)
 	for _, c := range d.contracts {
-		fmt.Println()
 		if _, exists := uniq[c.Name]; exists {
 			return true
 		}

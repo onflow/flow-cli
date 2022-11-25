@@ -392,7 +392,7 @@ func Test_GetContractsByNameComplex(t *testing.T) {
 	sort.Strings(contractNames)
 
 	sources := funk.Map(contracts, func(c project.Contract) string {
-		return c.Location
+		return c.Location()
 	}).([]string)
 	sort.Strings(sources)
 
@@ -460,16 +460,6 @@ func Test_HostComplex(t *testing.T) {
 	assert.NoError(t, err)
 
 	assert.Equal(t, network.Host, "127.0.0.1.3569")
-}
-
-func Test_ContractConflictComplex(t *testing.T) {
-	p := generateComplexProject()
-	exists := p.ContractConflictExists("emulator")
-	notexists := p.ContractConflictExists("testnet")
-
-	assert.True(t, exists)
-	assert.False(t, notexists)
-
 }
 
 func Test_GetAliases(t *testing.T) {
