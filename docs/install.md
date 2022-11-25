@@ -20,7 +20,7 @@ _This installation method only works on x86-64._
 This script downloads and installs the appropriate binary for your system:
 
 ```sh
-sh -ci "$(curl -fsSL https://storage.googleapis.com/flow-cli/install.sh)"
+sh -ci "$(curl -fsSL https://raw.githubusercontent.com/onflow/flow-cli/master/install.sh)"
 ```
 
 To update, simply re-run the installation command above.
@@ -35,7 +35,7 @@ _This installation method only works on x86-64._
 This script downloads and installs the appropriate binary for your system:
 
 ```sh
-sh -ci "$(curl -fsSL https://storage.googleapis.com/flow-cli/install.sh)"
+sh -ci "$(curl -fsSL https://raw.githubusercontent.com/onflow/flow-cli/master/install.sh)"
 ```
 
 To update, simply re-run the installation command above.
@@ -45,7 +45,7 @@ To update, simply re-run the installation command above.
 To install a specific version of Flow CLI, append the version tag to the command (e.g. the command below installs CLI version v0.33.3).
 
 ```sh
-sh -ci "$(curl -fsSL https://storage.googleapis.com/flow-cli/install.sh)" -- v0.33.3
+sh -ci "$(curl -fsSL https://raw.githubusercontent.com/onflow/flow-cli/master/install.sh)" -- v0.33.3
 ```
 
 ## Windows
@@ -58,7 +58,7 @@ _This installation method only works on Windows 10, 8.1, or 7 (SP1, with [PowerS
 2. In PowerShell, run:
 
     ```powershell
-    iex "& { $(irm 'https://storage.googleapis.com/flow-cli/install.ps1') }"
+    iex "& { $(irm 'https://raw.githubusercontent.com/onflow/flow-cli/master/install.ps1') }"
     ```
 
 To update, simply re-run the installation command above.
@@ -80,7 +80,7 @@ _This update method only works on x86-64._
 This script downloads and updates the appropriate binary for your system:
 
 ```sh
-sh -ci "$(curl -fsSL https://storage.googleapis.com/flow-cli/install.sh)"
+sh -ci "$(curl -fsSL https://raw.githubusercontent.com/onflow/flow-cli/master/install.sh)"
 ```
 
 ## Linux
@@ -92,7 +92,7 @@ _This update method only works on x86-64._
 This script downloads and updates the appropriate binary for your system:
 
 ```sh
-sh -ci "$(curl -fsSL https://storage.googleapis.com/flow-cli/install.sh)"
+sh -ci "$(curl -fsSL https://raw.githubusercontent.com/onflow/flow-cli/master/install.sh)"
 ```
 
 ## Windows
@@ -105,5 +105,14 @@ _This update method only works on Windows 10, 8.1, or 7 (SP1, with [PowerShell 3
 2. In PowerShell, run:
 
     ```powershell
-    iex "& { $(irm 'https://storage.googleapis.com/flow-cli/install.ps1') }"
+    iex "& { $(irm 'https://raw.githubusercontent.com/onflow/flow-cli/master/install.ps1') }"
     ```
+
+# Uninstalling Flow CLI
+To remove the flow CLI you can run the following command if it was previously installed using a pre-built binary. 
+
+- macOS: `rm /usr/local/bin/flow`
+- Linux: `rm ~/.local/bin/flow`
+- Windows: `rm ~/Users/{user}/AppData/Flow/flow.exe`
+
+If you installed it using Hombrew you can remove it using: `brew uninstall flow-cli`.
