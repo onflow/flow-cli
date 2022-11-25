@@ -1,12 +1,8 @@
 name: Publish Release
 
-on:
-  release:
-    types: [published]
-
+on: workflow_dispatch
 jobs:
   homebrew:
-      if: github.event_name == 'release' && github.event.action == 'published' # skip for pre-release
       name: Bump Homebrew formula
       runs-on: ubuntu-latest
       steps:
