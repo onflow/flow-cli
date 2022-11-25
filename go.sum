@@ -711,8 +711,8 @@ github.com/onflow/nft-storefront/lib/go/contracts v0.0.0-20220714155620-011db20f
 github.com/onflow/nft-storefront/lib/go/contracts v0.0.0-20220714155620-011db20fe754/go.mod h1:E3ScfQb5XcWJCIAdtIeEnr5i5l2y60GT0BTXeIHseWg=
 github.com/onflow/sdks v0.4.4 h1:aJPGJJLAN+mlBWAQxsyuJXeRRMFeLwU6Mp4e/YL6bdU=
 github.com/onflow/sdks v0.4.4/go.mod h1:F0dj0EyHC55kknLkeD10js4mo14yTdMotnWMslPirrU=
-github.com/onflowser/flowser/v2 v2.0.8-beta h1:cTnrn4OOsqwI1FrkSKBLs6D8xEHYTKV5q4pgADw2rV0=
-github.com/onflowser/flowser/v2 v2.0.8-beta/go.mod h1:g/nfelBOx0A4j60Twsr7GsmKapr2oxtRZQS0lwPHgZY=
+github.com/onflowser/flowser/v2 v2.0.9-beta h1:U59WUu/u0ZPDlbFcGs66fVjYektxqeunAPQLK0no2jA=
+github.com/onflowser/flowser/v2 v2.0.9-beta/go.mod h1:g/nfelBOx0A4j60Twsr7GsmKapr2oxtRZQS0lwPHgZY=
 github.com/onsi/ginkgo v1.6.0/go.mod h1:lLunBs/Ym6LB5Z9jYTR76FiuTmxDTDusOGeTQH+WWjE=
 github.com/onsi/ginkgo v1.7.0/go.mod h1:lLunBs/Ym6LB5Z9jYTR76FiuTmxDTDusOGeTQH+WWjE=
 github.com/onsi/gomega v1.4.3/go.mod h1:ex+gbHU/CVuBBDIJjb2X0qEXbFg53c61hWP/1CpauHY=

@@ -13,7 +13,7 @@ require (
 	github.com/onflow/flow-cli/pkg/flowkit v0.0.0-20221123090817-587405125c1f
 	github.com/onflow/flow-emulator v0.38.1
 	github.com/onflow/flow-go-sdk v0.29.1
-	github.com/onflowser/flowser/v2 v2.0.8-beta
+	github.com/onflowser/flowser/v2 v2.0.9-beta
 	github.com/pkg/errors v0.9.1
 	github.com/psiemens/sconfig v0.1.0
 	github.com/spf13/afero v1.9.2

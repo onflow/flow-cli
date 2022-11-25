@@ -48,7 +48,7 @@ func getDefaultInstallDir() string {
 	case Windows:
 		// https://superuser.com/questions/1327037/what-choices-do-i-have-about-where-to-install-software-on-windows-10
 		user, _ := user.Current() // safe to ignore cache errors
-		return fmt.Sprintf(`%s\AppData\Local`, user.HomeDir)
+		return fmt.Sprintf(`%s\AppData\Local\Programs`, user.HomeDir)
 	default:
 		return ""
 	}

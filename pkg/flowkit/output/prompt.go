@@ -600,19 +600,20 @@ func WantToUseMainnetVersionPrompt() bool {
 	return useMainnetVersion == "Yes"
 }
 
-func InstallPrompt() bool {
-	prompt := promptui.Prompt{
-		Label:       "Do you wish to install it",
-		Default:     "Y",
-		IsConfirm:   true,
-		HideEntered: true,
+const CancelInstall = 1
+const AlreadyInstalled = 2
+
+func InstallPrompt() int {
+	prompt := promptui.Select{
+		Label: "Do you wish to install it",
+		Items: []string{"Yes", "No", "I've already installed it"},
 	}
-	selected, err := prompt.Run()
+	index, _, err := prompt.Run()
 	if err == promptui.ErrInterrupt {
 		os.Exit(-1)
 	}
 
-	return strings.ToLower(selected) == "y" || selected == ""
+	return index
 }
 
 func InstallPathPrompt(defaultPath string) string {
@@ -620,12 +621,18 @@ func InstallPathPrompt(defaultPath string) string {
 		Label:   "Install path",
 		Default: defaultPath,
 		Validate: func(s string) error {
-			if s != "" {
-				_, err := os.Stat(s)
-				return err
+			if _, err := os.Stat(s); err == nil {
+				return nil
 			}
 
-			return nil
+			// Attempt to create it
+			var d []byte
+			if err := os.WriteFile(s, d, 0644); err == nil {
+				os.Remove(s) // And delete it
+				return nil
+			}
+
+			return fmt.Errorf("path is invalid")
 		},
 	}
 
