@@ -3,8 +3,10 @@
 # Exit as soon as any command fails
 set -e
 
+REPO="sideninja/flow-cli"
+GITHUB_URL="https://api.github.com/repos/$REPO"
 BASE_URL="https://storage.googleapis.com/flow-cli"
-CLI_GIT_URL="https://raw.githubusercontent.com/onflow/flow-cli/master/version.txt"
+ASSETS_URL="https://github.com/$REPO/releases/download/"
 # The version to download, set by get_version (defaults to args[1])
 VERSION="$1"
 # The architecture string, set by get_architecture
@@ -47,7 +49,7 @@ get_architecture() {
             return 1
             ;;
     esac
-    _arch="${_cputype}-${_ostype}"
+    _arch="${_ostype}-${_cputype}"
     ARCH="${_arch}"
     TARGET_PATH="${_targetpath}"
 }
@@ -56,7 +58,7 @@ get_architecture() {
 get_version() {
   if [ -z "$VERSION" ]
   then
-    VERSION=$(curl -s "$CLI_GIT_URL")
+    VERSION=$(curl -s "$GITHUB_URL/releases/latest" | grep -E 'tag_name' | cut -d '"' -f 4)
   fi
 }
 
@@ -71,21 +73,21 @@ main() {
   echo "Downloading version $VERSION ..."
 
   tmpfile=$(mktemp 2>/dev/null || mktemp -t flow)
-
-  url="$BASE_URL/flow-$ARCH-$VERSION"
-  curl --progress-bar "$url" -o $tmpfile
+  url="$ASSETS_URL$VERSION/flow-cli-$VERSION-$ARCH.tar.gz"
+  curl -L --progress-bar "$url" -o $tmpfile
 
   # Ensure we don't receive a not found error as response.
-  if grep -q "The specified key does not exist" $tmpfile
+  if grep -q "Not Found" $tmpfile
   then
     echo "Version $VERSION could not be found"
     exit 1
   fi
 
-  chmod +x $tmpfile
-
   [ -d $TARGET_PATH ] || mkdir -p $TARGET_PATH
-  mv $tmpfile $TARGET_PATH/flow
+
+  tar -xf $tmpfile -C $TARGET_PATH
+  mv $TARGET_PATH/flow-cli $TARGET_PATH/flow
+  chmod +x $TARGET_PATH/flow
 
   echo "Successfully installed the Flow CLI to $TARGET_PATH."
   echo "Make sure $TARGET_PATH is in your \$PATH environment variable."
