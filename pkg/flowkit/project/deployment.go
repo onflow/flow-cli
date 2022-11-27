@@ -131,9 +131,10 @@ func (d *Deployment) conflictExists() bool {
 func (d *Deployment) buildDependencies() error {
 	for _, contract := range d.contracts {
 		for _, location := range contract.program.Imports() {
-			importPath := location // TODO: i.loader.Normalize(program.source, source)
+			importPath := absolutePath(contract.location, location)
 			importContract, isContract := d.contractsByLocation[importPath]
-			// todo is it we removed aliases here?
+
+			// todo aliases?
 			if !isContract {
 				return fmt.Errorf(
 					"import from %s could not be found: %s, make sure import path is correct",

@@ -22,12 +22,10 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
-
 	"github.com/onflow/cadence"
 	jsoncdc "github.com/onflow/cadence/encoding/json"
 	"github.com/onflow/cadence/runtime/ast"
-	"github.com/onflow/cadence/runtime/cmd"
-	"github.com/onflow/cadence/runtime/common"
+	"github.com/onflow/cadence/runtime/parser"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/templates"
 )
@@ -287,42 +285,35 @@ func (t *Transaction) AddArgument(arg cadence.Value) error {
 
 // AddAuthorizers add group of authorizers.
 func (t *Transaction) AddAuthorizers(authorizers []flow.Address) (*Transaction, error) {
-	location := common.TransactionLocation{}
-	script := t.tx.Script
-
-	program, _ := cmd.PrepareProgram(
-		script,
-		location,
-		map[common.Location][]byte{
-			location: script,
-		},
-	)
+	program, err := parser.ParseProgram(t.tx.Script, nil)
+	if err != nil {
+		return nil, err
+	}
 
 	// get authorizers param list if exists
-	if len(program.TransactionDeclarations()) == 1 {
-		declaration := program.TransactionDeclarations()[0]
-		requiredAuths := make([]*ast.Parameter, 0)
+	declarations := program.TransactionDeclarations()
+	if len(declarations) != 1 {
+		return nil, fmt.Errorf("can only support one transaction declaration per file, found %d", len(declarations))
+	}
 
-		// if prepare block is missing set default authorizers to empty
-		if declaration.Prepare == nil {
-			authorizers = nil
-		} else { // if prepare block is present get authorizers
-			requiredAuths = declaration.
-				Prepare.
-				FunctionDeclaration.
-				ParameterList.
-				Parameters
-		}
+	requiredAuths := make([]*ast.Parameter, 0)
+	// if prepare block is missing set default authorizers to empty
+	if declarations[0].Prepare == nil {
+		authorizers = nil
+	} else { // if prepare block is present get authorizers
+		requiredAuths = declarations[0].
+			Prepare.
+			FunctionDeclaration.
+			ParameterList.
+			Parameters
+	}
 
-		if len(requiredAuths) != len(authorizers) {
-			return nil, fmt.Errorf(
-				"provided authorizers length mismatch, required authorizers %d, but provided %d",
-				len(requiredAuths),
-				len(authorizers),
-			)
-		}
-	} else {
-		return nil, fmt.Errorf("can only support one transaction declaration per file")
+	if len(requiredAuths) != len(authorizers) {
+		return nil, fmt.Errorf(
+			"provided authorizers length mismatch, required authorizers %d, but provided %d",
+			len(requiredAuths),
+			len(authorizers),
+		)
 	}
 
 	for _, authorizer := range authorizers {

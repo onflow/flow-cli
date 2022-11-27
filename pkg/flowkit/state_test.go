@@ -21,6 +21,8 @@ package flowkit
 import (
 	"fmt"
 	"github.com/onflow/flow-cli/pkg/flowkit/project"
+	"github.com/stretchr/testify/require"
+	"os"
 	"sort"
 	"testing"
 
@@ -336,13 +338,16 @@ func generateAliasesComplexProject() State {
 
 func Test_GetContractsByNameSimple(t *testing.T) {
 	p := generateSimpleProject()
+	path := "../hungry-kitties/cadence/contracts/NonFungibleToken.cdc"
+	af.WriteFile(path, []byte("pub contract{}"), os.ModePerm)
 
-	contracts, _ := p.DeploymentContractsByNetwork("emulator")
+	contracts, err := p.DeploymentContractsByNetwork("emulator")
+	require.NoError(t, err)
 	account, err := p.conf.Accounts.ByName("emulator-account")
-	assert.NoError(t, err)
-	assert.Len(t, contracts, 1)
+	require.NoError(t, err)
+	require.Len(t, contracts, 1)
 	assert.Equal(t, "NonFungibleToken", contracts[0].Name)
-	assert.Equal(t, "../hungry-kitties/cadence/contracts/NonFungibleToken.cdc", contracts[0].Location)
+	assert.Equal(t, path, contracts[0].Location())
 	assert.Equal(t, account.Address, contracts[0].AccountAddress)
 }
 
@@ -381,22 +386,26 @@ func Test_HostSimple(t *testing.T) {
 func Test_GetContractsByNameComplex(t *testing.T) {
 	p := generateComplexProject()
 
-	contracts, _ := p.DeploymentContractsByNetwork("emulator")
+	for _, c := range p.conf.Contracts {
+		_ = af.WriteFile(c.Location, []byte("pub contract{}"), os.ModePerm)
+	}
 
-	assert.Equal(t, 7, len(contracts))
+	contracts, err := p.DeploymentContractsByNetwork("emulator")
+	require.NoError(t, err)
+	require.Equal(t, 7, len(contracts))
 
 	//sort names so tests are deterministic
-	contractNames := funk.Map(contracts, func(c project.Contract) string {
+	contractNames := funk.Map(contracts, func(c *project.Contract) string {
 		return c.Name
 	}).([]string)
 	sort.Strings(contractNames)
 
-	sources := funk.Map(contracts, func(c project.Contract) string {
+	sources := funk.Map(contracts, func(c *project.Contract) string {
 		return c.Location()
 	}).([]string)
 	sort.Strings(sources)
 
-	targets := funk.Map(contracts, func(c project.Contract) string {
+	targets := funk.Map(contracts, func(c *project.Contract) string {
 		return c.AccountAddress.String()
 	}).([]string)
 	sort.Strings(targets)

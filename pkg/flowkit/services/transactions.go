@@ -228,12 +228,12 @@ func (t *Transactions) Build(
 		return nil, err
 	}
 
-	tx, err = tx.AddAuthorizers(addresses.authorizers)
-	if err != nil {
+	if err := tx.SetScriptWithArgs(program.Code(), script.Args); err != nil {
 		return nil, err
 	}
 
-	if err := tx.SetScriptWithArgs(program.Code(), script.Args); err != nil {
+	tx, err = tx.AddAuthorizers(addresses.authorizers)
+	if err != nil {
 		return nil, err
 	}
 

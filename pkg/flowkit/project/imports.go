@@ -42,7 +42,7 @@ func (i *ImportReplacer) Replace(program *Program) (*Program, error) {
 	sourceTarget := i.getSourceTarget()
 
 	for _, imp := range imports {
-		target, found := sourceTarget[absolutePath(program.Location(), imp)]
+		target, found := sourceTarget[path.Clean(absolutePath(program.Location(), imp))]
 		if !found {
 			return nil, fmt.Errorf("import %s could not be resolved from the configuration", imp)
 		}

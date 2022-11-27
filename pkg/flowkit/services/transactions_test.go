@@ -273,22 +273,22 @@ func TestTransactions_Integration(t *testing.T) {
 			true,
 		}}
 
-		for _, i := range txIns {
+		for i, txIn := range txIns {
 			tx, err := s.Transactions.Build(
-				NewTransactionAddresses(i.prop, i.payer, i.auth),
-				i.index,
-				flowkit.NewScript(i.code, i.args, i.file),
-				i.gas,
-				i.network,
+				NewTransactionAddresses(txIn.prop, txIn.payer, txIn.auth),
+				txIn.index,
+				flowkit.NewScript(txIn.code, txIn.args, txIn.file),
+				txIn.gas,
+				txIn.network,
 			)
 
-			assert.NoError(t, err)
+			require.NoError(t, err, fmt.Sprintf("test vector %d", i))
 			ftx := tx.FlowTransaction()
-			assert.Equal(t, ftx.Script, i.code)
-			assert.Equal(t, ftx.Payer, i.payer)
+			assert.Equal(t, ftx.Script, txIn.code)
+			assert.Equal(t, ftx.Payer, txIn.payer)
 			assert.Equal(t, len(ftx.Authorizers), 0) // make sure authorizers weren't added as tx input doesn't require them
-			assert.Equal(t, ftx.ProposalKey.Address, i.prop)
-			assert.Equal(t, ftx.ProposalKey.KeyIndex, i.index)
+			assert.Equal(t, ftx.ProposalKey.Address, txIn.prop)
+			assert.Equal(t, ftx.ProposalKey.KeyIndex, txIn.index)
 		}
 
 	})

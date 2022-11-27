@@ -188,7 +188,7 @@ var TransactionImports = Resource{
 var TransactionSimple = Resource{
 	Filename: "transactionSimple.cdc",
 	Source: []byte(`
-		transaction() {}
+		transaction() { }
 	`),
 }
 

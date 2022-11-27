@@ -19,6 +19,7 @@
 package services
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 
@@ -203,7 +204,7 @@ func TestProject_Integration(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Len(t, contracts, 1)
 		assert.Equal(t, contracts[0].Name, tests.ContractHelloString.Name)
-		assert.Equal(t, contracts[0].Code(), string(tests.ContractHelloString.Source))
+		assert.Equal(t, string(contracts[0].Code()), string(tests.ContractHelloString.Source))
 	})
 
 	t.Run("Deploy Complex Project", func(t *testing.T) {
@@ -255,15 +256,21 @@ func TestProject_Integration(t *testing.T) {
 		}
 		state.Deployments().AddOrUpdate(d)
 
+		addr := fmt.Sprintf("0x%s", srvAcc.Address())
+		// replace imports manually to assert that replacing worked in deploy service
+		contractBImports := strings.ReplaceAll(string(tests.ContractB.Source), `"./contractA.cdc"`, addr)
+		contractCImports := strings.ReplaceAll(string(tests.ContractC.Source), `"./contractA.cdc"`, addr)
+		contractCImports = strings.ReplaceAll(contractCImports, `"./contractB.cdc"`, addr)
+
 		contracts, err := s.Project.Deploy(n.Name, false)
 		assert.NoError(t, err)
 		assert.Len(t, contracts, 3)
-		assert.Equal(t, contracts[0].Name, tests.ContractA.Name)
-		assert.Equal(t, contracts[0].Code(), string(tests.ContractA.Source))
-		assert.Equal(t, contracts[1].Name, tests.ContractB.Name)
-		assert.Equal(t, contracts[1].Code(), string(tests.ContractB.Source))
-		assert.Equal(t, contracts[2].Name, tests.ContractC.Name)
-		assert.Equal(t, contracts[2].Code(), string(tests.ContractC.Source))
+		assert.Equal(t, tests.ContractA.Name, contracts[0].Name)
+		assert.Equal(t, string(tests.ContractA.Source), string(contracts[0].Code()))
+		assert.Equal(t, tests.ContractB.Name, contracts[1].Name)
+		assert.Equal(t, contractBImports, string(contracts[1].Code()))
+		assert.Equal(t, tests.ContractC.Name, contracts[2].Name)
+		assert.Equal(t, contractCImports, string(contracts[2].Code()))
 	})
 
 	t.Run("Deploy Project Invalid", func(t *testing.T) {

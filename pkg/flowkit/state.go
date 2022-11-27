@@ -178,7 +178,7 @@ func (p *State) DeploymentContractsByNetwork(network string) ([]*project.Contrac
 				return nil, err
 			}
 
-			code, err := p.readerWriter.ReadFile(c.Location)
+			code, _ := p.readerWriter.ReadFile(c.Location)
 			if err != nil {
 				return nil, err
 			}
