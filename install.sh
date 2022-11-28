@@ -37,7 +37,7 @@ get_architecture() {
     esac
     case "$_cputype" in
         x86_64 | x86-64 | x64 | amd64)
-            _cputype=x86_64
+            _cputype=amd64
             ;;
          arm64 | aarch64)
             _cputype=arm64
