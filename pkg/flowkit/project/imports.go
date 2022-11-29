@@ -39,10 +39,11 @@ func NewImportReplacer(contracts []*Contract, aliases Aliases) *ImportReplacer {
 
 func (i *ImportReplacer) Replace(program *Program) (*Program, error) {
 	imports := program.Imports()
-	sourceTarget := i.getSourceTarget()
+	contractsLocations := i.getContractsLocations()
 
 	for _, imp := range imports {
-		target, found := sourceTarget[path.Clean(absolutePath(program.Location(), imp))]
+		importLocation := path.Clean(absolutePath(program.Location(), imp))
+		target, found := contractsLocations[importLocation]
 		if !found {
 			return nil, fmt.Errorf("import %s could not be resolved from the configuration", imp)
 		}
@@ -52,8 +53,8 @@ func (i *ImportReplacer) Replace(program *Program) (*Program, error) {
 	return program, nil
 }
 
-// getSourceTarget return a map with contract paths as keys and addresses as values.
-func (i *ImportReplacer) getSourceTarget() map[string]string {
+// getContractsLocations return a map with contract locations as keys and addresses where they are deployed as values.
+func (i *ImportReplacer) getContractsLocations() map[string]string {
 	sourceTarget := make(map[string]string)
 	for _, contract := range i.contracts {
 		sourceTarget[path.Clean(contract.Location())] = contract.AccountAddress.String()
