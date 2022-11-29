@@ -270,13 +270,13 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 	))
 	defer p.logger.StopProgress()
 
-	block, err := p.gateway.GetLatestBlock()
-	if err != nil {
-		return nil, err
-	}
-
 	deployErr := &ErrProjectDeploy{}
 	for _, contract := range orderedContracts {
+		block, err := p.gateway.GetLatestBlock()
+		if err != nil {
+			return nil, err
+		}
+
 		targetAccount, err := p.state.Accounts().ByName(contract.AccountName())
 		if err != nil {
 			return nil, fmt.Errorf("target account for deploying contract not found in configuration")
