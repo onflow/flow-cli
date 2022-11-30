@@ -111,7 +111,7 @@ func loadViper() error {
 	}
 
 	// Load settings file
-	if err := viper.ReadInConfig(); err != nil {
+	if err := viper.MergeInConfig(); err != nil {
 		switch err.(type) {
 		case viper.ConfigFileNotFoundError:
 			// Create settings file for the first time
