@@ -313,8 +313,6 @@ func (t *Transactions) Send(
 	}
 
 	for _, signer := range accounts.getSigners() {
-		fmt.Println("signer ", signer.Address(), signer.Name())
-
 		err = tx.SetSigner(signer)
 		if err != nil {
 			return nil, nil, err
