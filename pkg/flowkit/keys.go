@@ -30,8 +30,8 @@ import (
 	"github.com/onflow/flow-go-sdk/crypto/cloudkms"
 
 	goeth "github.com/ethereum/go-ethereum/accounts"
+	slip10 "github.com/lmars/go-slip10"
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
-	bip32 "github.com/tyler-smith/go-bip32"
 	bip39 "github.com/tyler-smith/go-bip39"
 )
 
@@ -311,7 +311,11 @@ func (a *Bip44AccountKey) Validate() error {
 	}
 
 	seed := bip39.NewSeed(a.mnemonic, "")
-	accountKey, err := bip32.NewMasterKey(seed)
+	curve := slip10.CurveBitcoin
+	if a.sigAlgo == crypto.ECDSA_P256 {
+		curve = slip10.CurveP256
+	}
+	accountKey, err := slip10.NewMasterKeyWithCurve(seed, curve)
 	if err != nil {
 		return err
 	}
