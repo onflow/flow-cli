@@ -3,19 +3,7 @@ name: Publish Release
 on:
   release:
     types: [published]
-
 jobs:
-  security:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@master
-      - name: Run Snyk to check for vulnerabilities
-        continue-on-error: true
-        uses: snyk/actions/golang@master
-        with:
-          go-version: '1.19'
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
   homebrew:
       name: Bump Homebrew formula
       runs-on: ubuntu-latest

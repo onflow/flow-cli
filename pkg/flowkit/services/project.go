@@ -243,7 +243,6 @@ func (p *Project) Deploy(network string, update bool) ([]*project.Contract, erro
 	defer p.logger.StopProgress()
 
 	deployErr := &ErrProjectDeploy{}
-
 	for _, contract := range sorted {
 		// todo remove implementation for deployment of contract and just use the account add-contract func for deploying
 		block, err := p.gateway.GetLatestBlock()

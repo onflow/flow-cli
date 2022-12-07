@@ -97,8 +97,16 @@ func runFlowser(
 
 func installFlowser(flowser *flowser.App, installPath string) (string, error) {
 	fmt.Println("It looks like Flowser is not yet installed on your system.")
-	if !output.InstallPrompt() {
+	installChoice := output.InstallPrompt()
+	if installChoice == output.CancelInstall {
 		return "", fmt.Errorf("user denied install")
+	}
+
+	// if user says it already installed it we only ask for path and return it
+	if installChoice == output.AlreadyInstalled {
+		installPath = output.InstallPathPrompt(installPath)
+		_ = settings.SetFlowserPath(installPath)
+		return installPath, nil
 	}
 
 	// we only allow custom paths on Windows since on MacOS apps needs to be installed inside Application folder
@@ -111,7 +119,13 @@ func installFlowser(flowser *flowser.App, installPath string) (string, error) {
 	logger.StartProgress(fmt.Sprintf("%s Installing Flowser, this may take few minutes, please wait ", output.TryEmoji()))
 	defer logger.StopProgress()
 
-	err := flowser.Install(installPath)
+	// create all folders if they don't exist, does nothing if they exist
+	err := os.MkdirAll(installPath, os.ModePerm)
+	if err != nil {
+		return "", err
+	}
+
+	err = flowser.Install(installPath)
 	if err != nil {
 		return "", fmt.Errorf("could not install Flowser: %w", err)
 	}

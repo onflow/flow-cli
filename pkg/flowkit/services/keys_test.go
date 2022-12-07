@@ -49,14 +49,66 @@ func TestKeys(t *testing.T) {
 		assert.Equal(t, key.String(), "0x134f702d0872dba9c7aea15498aab9b2ffedd5aeebfd8ac3cf47c591f0d7ce52")
 	})
 
+	t.Run("Test Vector SLIP-0010", func(t *testing.T) {
+		// test against SLIP-0010 test vector. All data are taken from:
+		//  https://github.com/satoshilabs/slips/blob/master/slip-0010.md#test-vectors
+		t.Parallel()
+		_, s, _ := setup()
+
+		type testEntry struct {
+			sigAlgo    crypto.SignatureAlgorithm
+			seed       string
+			path       string
+			privateKey string
+		}
+
+		testVector := []testEntry{
+			testEntry{
+				sigAlgo:    crypto.ECDSA_secp256k1,
+				seed:       "000102030405060708090a0b0c0d0e0f",
+				path:       "m/0'/1/2'/2/1000000000",
+				privateKey: "0x471b76e389e528d6de6d816857e012c5455051cad6660850e58372a6c3e6e7c8",
+			},
+			testEntry{
+				sigAlgo:    crypto.ECDSA_P256,
+				seed:       "000102030405060708090a0b0c0d0e0f",
+				path:       "m/0'/1/2'/2/1000000000",
+				privateKey: "0x21c4f269ef0a5fd1badf47eeacebeeaa3de22eb8e5b0adcd0f27dd99d34d0119",
+			},
+			testEntry{
+				sigAlgo:    crypto.ECDSA_secp256k1,
+				seed:       "fffcf9f6f3f0edeae7e4e1dedbd8d5d2cfccc9c6c3c0bdbab7b4b1aeaba8a5a29f9c999693908d8a8784817e7b7875726f6c696663605d5a5754514e4b484542",
+				path:       "m/0/2147483647'/1/2147483646'/2",
+				privateKey: "0xbb7d39bdb83ecf58f2fd82b6d918341cbef428661ef01ab97c28a4842125ac23",
+			},
+			testEntry{
+				sigAlgo:    crypto.ECDSA_P256,
+				seed:       "fffcf9f6f3f0edeae7e4e1dedbd8d5d2cfccc9c6c3c0bdbab7b4b1aeaba8a5a29f9c999693908d8a8784817e7b7875726f6c696663605d5a5754514e4b484542",
+				path:       "m/0/2147483647'/1/2147483646'/2",
+				privateKey: "0xbb0a77ba01cc31d77205d51d08bd313b979a71ef4de9b062f8958297e746bd67",
+			},
+		}
+
+		for _, test := range testVector {
+			seed, err := hex.DecodeString(test.seed)
+			assert.NoError(t, err)
+			// use derivePrivateKeyFromSeed to test instead of DerivePrivateKeyFromMnemonic
+			// because the test vector provides seeds, while it's not possible to derive mnemonics
+			// corresponding to seeds.
+			privateKey, err := s.Keys.derivePrivateKeyFromSeed(seed, test.sigAlgo, test.path)
+			assert.NoError(t, err)
+			assert.Equal(t, test.privateKey, privateKey.String())
+		}
+	})
+
 	t.Run("Generate Keys with mnemonic (default path)", func(t *testing.T) {
 		t.Parallel()
 
 		_, s, _ := setup()
-		key, err := s.Keys.DerivePrivateKeyFromMnemonic("isolate visa defy link gate ordinary notice desert punch zero please pistol", crypto.ECDSA_P256, "")
+		key, err := s.Keys.DerivePrivateKeyFromMnemonic("normal dune pole key case cradle unfold require tornado mercy hospital buyer", crypto.ECDSA_P256, "")
 
 		assert.NoError(t, err)
-		assert.Equal(t, key.String(), "0x04430b77d604b52815494a8e453e1ffa2483644c063a0b7a46eb5effb3dc7b0b")
+		assert.Equal(t, key.String(), "0x638dc9ad0eee91d09249f0fd7c5323a11600e20d5b9105b66b782a96236e74cf")
 	})
 
 	//https://github.com/onflow/ledger-app-flow/blob/dc61213a9c3d73152b78b7391d04165d07f1ad89/tests_speculos/test-basic-show-address-expert.js#L28
