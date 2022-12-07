@@ -20,21 +20,19 @@ package services
 
 import (
 	"fmt"
-	"github.com/stretchr/testify/require"
 	"strings"
 	"testing"
 
+	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
-
-	"github.com/onflow/flow-go-sdk/crypto"
+	"github.com/onflow/flow-cli/pkg/flowkit/tests"
 
 	"github.com/onflow/cadence"
 	"github.com/onflow/flow-go-sdk"
+	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-
-	"github.com/onflow/flow-cli/pkg/flowkit"
-	"github.com/onflow/flow-cli/pkg/flowkit/tests"
+	"github.com/stretchr/testify/require"
 )
 
 const gasLimit = 1000
