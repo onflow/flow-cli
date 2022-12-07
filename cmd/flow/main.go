@@ -20,10 +20,10 @@
 package main
 
 import (
+	"github.com/onflow/flow-cli/internal/super"
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/accounts"
-	"github.com/onflow/flow-cli/internal/app"
 	"github.com/onflow/flow-cli/internal/blocks"
 	"github.com/onflow/flow-cli/internal/cadence"
 	"github.com/onflow/flow-cli/internal/collections"
@@ -57,6 +57,9 @@ func main() {
 	quick.DeployCommand.AddToParent(cmd)
 	quick.RunCommand.AddToParent(cmd)
 
+	// super commands
+	super.SetupCommand.AddToParent(cmd)
+
 	// single commands
 	status.Command.AddToParent(cmd)
 	tools.DevWallet.AddToParent(cmd)
@@ -77,7 +80,6 @@ func main() {
 	cmd.AddCommand(collections.Cmd)
 	cmd.AddCommand(project.Cmd)
 	cmd.AddCommand(config.Cmd)
-	cmd.AddCommand(app.Cmd)
 	cmd.AddCommand(signatures.Cmd)
 	cmd.AddCommand(snapshot.Cmd)
 
