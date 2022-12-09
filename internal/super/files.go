@@ -45,7 +45,9 @@ func (f *projectFiles) Accounts() ([]string, error) {
 		if path == dir || !d.IsDir() { // we only want to get directories
 			return nil
 		}
-		paths = append(paths, path)
+
+		// we only need the folder name
+		paths = append(paths, filepath.Base(path))
 		return nil
 	})
 	if err != nil {
@@ -69,7 +71,14 @@ func getFilePaths(dir string) ([]string, error) {
 		if path == dir || d.IsDir() { // we only want to get the files in the dir
 			return nil
 		}
-		paths = append(paths, path)
+
+		projectDir := filepath.Dir(dir) // we want to include the folder containing files in the path
+		rel, err := filepath.Rel(projectDir, path)
+		if err != nil {
+			return err
+		}
+
+		paths = append(paths, rel)
 		return nil
 	})
 	if err != nil {

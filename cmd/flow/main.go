@@ -20,6 +20,7 @@
 package main
 
 import (
+	"github.com/onflow/flow-cli/internal/super"
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/accounts"
@@ -62,6 +63,9 @@ func main() {
 	tools.DevWallet.AddToParent(cmd)
 	tools.Flowser.AddToParent(cmd)
 	test.TestCommand.AddToParent(cmd)
+
+	// super commands
+	super.DevCommand.AddToParent(cmd)
 
 	// structured commands
 	cmd.AddCommand(settings.Cmd)
