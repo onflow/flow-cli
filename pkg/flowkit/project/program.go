@@ -57,7 +57,7 @@ func (p *Program) HasImports() bool {
 	return len(p.Imports()) > 0
 }
 
-func (p *Program) ReplaceImport(from string, to string) *Program {
+func (p *Program) replaceImport(from string, to string) *Program {
 	code := string(p.Code())
 
 	pathRegex := regexp.MustCompile(fmt.Sprintf(`import (\w+) from "%s"`, from))
