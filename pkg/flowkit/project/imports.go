@@ -58,6 +58,8 @@ func (i *ImportReplacer) getContractsLocations() map[string]string {
 	sourceTarget := make(map[string]string)
 	for _, contract := range i.contracts {
 		sourceTarget[path.Clean(contract.Location())] = contract.AccountAddress.String()
+		// add also by name since we might use the new import schema
+		sourceTarget[contract.Name] = contract.AccountAddress.String()
 	}
 
 	for source, target := range i.aliases {
