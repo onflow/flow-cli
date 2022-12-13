@@ -5,7 +5,7 @@ import (
 	"github.com/onflow/cadence/runtime/ast"
 	"github.com/onflow/cadence/runtime/common"
 	"github.com/onflow/cadence/runtime/parser"
-	"strings"
+	"regexp"
 )
 
 type Program struct {
@@ -58,15 +58,16 @@ func (p *Program) HasImports() bool {
 }
 
 func (p *Program) ReplaceImport(from string, to string) *Program {
-	p.script.SetCode([]byte(strings.Replace(
-		string(p.script.Code()),
-		fmt.Sprintf(`"%s"`, from), // todo define better replacement to include import X from From so something elese is not replaced
-		fmt.Sprintf("0x%s", to),
-		1,
-	)))
+	code := string(p.Code())
 
-	// todo add identifier replacements
+	pathRegex := regexp.MustCompile(fmt.Sprintf(`import (\w+) from "%s"`, from))
+	identifierRegex := regexp.MustCompile(fmt.Sprintf("import (%s)", from))
 
+	replacement := fmt.Sprintf(`import $1 from 0x%s`, to)
+	code = pathRegex.ReplaceAllString(code, replacement)
+	code = identifierRegex.ReplaceAllString(code, replacement)
+
+	p.script.SetCode([]byte(code))
 	p.reload()
 	return p
 }
