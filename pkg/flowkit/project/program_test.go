@@ -16,18 +16,33 @@
  * limitations under the License.
  */
 
-package project_test // due to circular dependency
+package project
 
 import (
 	"fmt"
 	"testing"
 
-	"github.com/onflow/flow-cli/pkg/flowkit"
-	"github.com/onflow/flow-cli/pkg/flowkit/project"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+// limited test scripter implementation for running tests
+type testScript struct {
+	code     []byte
+	location string
+}
+
+func (t *testScript) Code() []byte {
+	return t.code
+}
+
+func (t *testScript) SetCode(code []byte) {
+	t.code = code
+}
+
+func (t *testScript) Location() string {
+	return t.location
+}
 
 func TestProgram(t *testing.T) {
 
@@ -76,10 +91,11 @@ func TestProgram(t *testing.T) {
 			if i+1 < len(tests) {
 				continue
 			} // todo remove
-			program, err := project.NewProgram(flowkit.NewScript(test.code, nil, ""))
+
+			program, err := NewProgram(&testScript{code: test.code})
 			require.NoError(t, err, fmt.Sprintf("import test %d failed", i))
 			assert.Equal(t, len(test.imports) > 0, program.HasImports(), fmt.Sprintf("import test %d failed", i))
-			assert.Equal(t, test.imports, program.Imports(), fmt.Sprintf("import test %d failed", i))
+			assert.Equal(t, test.imports, program.imports(), fmt.Sprintf("import test %d failed", i))
 		}
 	})
 
@@ -99,7 +115,7 @@ func TestProgram(t *testing.T) {
 		}}
 
 		for i, test := range tests {
-			program, err := project.NewProgram(flowkit.NewScript(test.code, nil, ""))
+			program, err := NewProgram(&testScript{code: test.code})
 			require.NoError(t, err, fmt.Sprintf("import test %d failed", i))
 			name, err := program.Name()
 			require.NoError(t, err)
@@ -122,14 +138,14 @@ func TestProgram(t *testing.T) {
 		}
 
 		for _, code := range failed {
-			program, err := project.NewProgram(flowkit.NewScript(code, nil, ""))
+			program, err := NewProgram(&testScript{code: code})
 			require.NoError(t, err)
 
 			_, err = program.Name()
 			assert.EqualError(t, err, "the code must declare exactly one contract or contract interface")
 		}
 
-		program, err := project.NewProgram(flowkit.NewScript([]byte(`pub fun main() {}`), nil, ""))
+		program, err := NewProgram(&testScript{code: []byte(`pub fun main() {}`)})
 		require.NoError(t, err)
 		_, err = program.Name()
 		assert.EqualError(t, err, "unable to determine contract name")
@@ -150,12 +166,12 @@ func TestProgram(t *testing.T) {
 			pub contract Foo {}
 		`)
 
-		program, err := project.NewProgram(flowkit.NewScript(code, nil, ""))
+		program, err := NewProgram(&testScript{code: code})
 		require.NoError(t, err)
 
 		program.
-			ReplaceImport("./Foo.cdc", "1").
-			ReplaceImport("Bar", "2")
+			replaceImport("./Foo.cdc", "1").
+			replaceImport("Bar", "2")
 
 		assert.Equal(t, string(replaced), string(program.Code()))
 	})
