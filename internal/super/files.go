@@ -19,54 +19,58 @@
 package super
 
 import (
+	"fmt"
 	"io/fs"
 	"path"
 	"path/filepath"
 )
 
 const (
+	cadenceDir     = "cadence"
 	contractDir    = "contracts"
 	scriptDir      = "scripts"
 	transactionDir = "transactions"
 	cadenceExt     = ".cdc"
 )
 
+func newProjectFiles(projectDir string) *projectFiles {
+	return &projectFiles{cadenceDir: path.Join(projectDir, cadenceDir)}
+}
+
 type projectFiles struct {
-	projectDir string
+	cadenceDir string
 }
 
 func (f *projectFiles) Contracts() ([]string, error) {
-	return getFilePaths(path.Join(f.projectDir, contractDir))
+	return getFilePaths(path.Join(f.cadenceDir, contractDir))
 }
 
-func (f *projectFiles) Accounts() ([]string, error) {
-	paths := make([]string, 0)
-	dir := filepath.Join(f.projectDir, contractDir)
-	err := filepath.WalkDir(dir, func(path string, d fs.DirEntry, err error) error {
-		if path == dir || !d.IsDir() { // we only want to get directories
-			return nil
-		}
-		if filepath.Ext(path) != cadenceExt {
-			return nil
-		}
+func (f *projectFiles) Deployments() (map[string][]string, error) {
+	deployments := make(map[string][]string)
 
-		// we only need the folder name
-		paths = append(paths, filepath.Base(path))
-		return nil
-	})
+	contracts, err := f.Contracts()
 	if err != nil {
 		return nil, err
 	}
 
-	return paths, nil
+	for _, file := range contracts {
+		accName := ""
+		subAccPattern := fmt.Sprintf("**/%s/**/*%s", contractDir, cadenceExt)
+		if match, _ := filepath.Match(subAccPattern, file); match {
+			accName = filepath.Base(filepath.Dir(file))
+		}
+		deployments[accName] = append(deployments[accName], file)
+	}
+
+	return deployments, nil
 }
 
 func (f *projectFiles) Scripts() ([]string, error) {
-	return getFilePaths(path.Join(f.projectDir, scriptDir))
+	return getFilePaths(path.Join(f.cadenceDir, scriptDir))
 }
 
 func (f *projectFiles) Transactions() ([]string, error) {
-	return getFilePaths(path.Join(f.projectDir, transactionDir))
+	return getFilePaths(path.Join(f.cadenceDir, transactionDir))
 }
 
 func getFilePaths(dir string) ([]string, error) {
@@ -79,8 +83,8 @@ func getFilePaths(dir string) ([]string, error) {
 			return nil
 		}
 
-		projectDir := filepath.Dir(dir) // we want to include the folder containing files in the path
-		rel, err := filepath.Rel(projectDir, path)
+		projectDir := filepath.Dir(filepath.Dir(dir)) // we want to include the cadence folder from the project path
+		rel, err := filepath.Rel(projectDir, path)    // this will get files relative to project folder including cadence folder
 		if err != nil {
 			return err
 		}
