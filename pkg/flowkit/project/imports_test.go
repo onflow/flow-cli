@@ -140,6 +140,7 @@ func TestResolver(t *testing.T) {
 			assert.Equal(t, cleanCode(program.Code()), cleanCode(resolved[i]))
 		}
 	})
+
 	t.Run("Get Contract Name", func(t *testing.T) {
 		program, err := project.NewProgram(flowkit.NewScript(
 			[]byte(`
@@ -152,6 +153,7 @@ func TestResolver(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, "HelloWorld", contractName)
 	})
+
 	t.Run("Get Contract Name", func(t *testing.T) {
 		program, err := project.NewProgram(flowkit.NewScript(
 			[]byte(`

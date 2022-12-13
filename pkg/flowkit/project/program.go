@@ -70,7 +70,8 @@ func (p *Program) Code() []byte {
 }
 
 func (p *Program) Name() (string, error) {
-	if len(p.astProgram.CompositeDeclarations())+len(p.astProgram.InterfaceDeclarations()) != 1 {
+	if len(p.astProgram.CompositeDeclarations()) > 1 || len(p.astProgram.InterfaceDeclarations()) > 1 ||
+		len(p.astProgram.CompositeDeclarations())+len(p.astProgram.InterfaceDeclarations()) > 1 {
 		return "", fmt.Errorf("the code must declare exactly one contract or contract interface")
 	}
 
