@@ -125,7 +125,31 @@ func TestProgram(t *testing.T) {
 			_, err = program.Name()
 			assert.EqualError(t, err, "the code must declare exactly one contract or contract interface")
 		}
+	})
 
+	t.Run("Replace", func(t *testing.T) {
+		code := []byte(`
+			import Foo from "./Foo.cdc"
+			import Bar
+
+			pub contract Foo {}
+		`)
+
+		replaced := []byte(`
+			import Foo from 0x1
+			import Bar from 0x2
+
+			pub contract Foo {}
+		`)
+
+		program, err := project.NewProgram(flowkit.NewScript(code, nil, ""))
+		require.NoError(t, err)
+
+		program.
+			ReplaceImport("./Foo.cdc", "1").
+			ReplaceImport("Bar", "2")
+
+		assert.Equal(t, string(replaced), string(program.Code()))
 	})
 
 }
