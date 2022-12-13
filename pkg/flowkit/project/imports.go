@@ -42,12 +42,21 @@ func (i *ImportReplacer) Replace(program *Program) (*Program, error) {
 	contractsLocations := i.getContractsLocations()
 
 	for _, imp := range imports {
+		// replace path imports
 		importLocation := path.Clean(absolutePath(program.Location(), imp))
-		target, found := contractsLocations[importLocation]
-		if !found {
-			return nil, fmt.Errorf("import %s could not be resolved from provided contracts", imp)
+		target, isPath := contractsLocations[importLocation]
+		if isPath {
+			program.replaceImport(imp, target)
+			continue
 		}
-		program.replaceImport(imp, target)
+		// replace identifier imports
+		target, isIdentifier := contractsLocations[imp]
+		if isIdentifier {
+			program.replaceImport(imp, target)
+			continue
+		}
+
+		return nil, fmt.Errorf("import %s could not be resolved from provided contracts", imp)
 	}
 
 	return program, nil
