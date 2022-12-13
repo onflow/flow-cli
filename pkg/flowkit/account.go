@@ -172,10 +172,15 @@ func toConfig(account Account, accountLocations map[string]string) config.Accoun
 		}
 	}
 
+	var key config.AccountKey
+	if account.key != nil {
+		key = account.key.ToConfig()
+	}
+
 	return config.Account{
 		Name:    account.name,
 		Address: account.address,
-		Key:     account.key.ToConfig(),
+		Key:     key,
 	}
 }
 
