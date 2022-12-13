@@ -39,6 +39,9 @@ func TestProgram(t *testing.T) {
 			code:    []byte(`pub contract Foo {}`),
 			imports: []string{},
 		}, {
+			code:    []byte(`pub fun main() {}`),
+			imports: []string{},
+		}, {
 			code: []byte(`
 				import Bar from "./Bar.cdc"
 				pub contract Foo {}
@@ -125,6 +128,11 @@ func TestProgram(t *testing.T) {
 			_, err = program.Name()
 			assert.EqualError(t, err, "the code must declare exactly one contract or contract interface")
 		}
+
+		program, err := project.NewProgram(flowkit.NewScript([]byte(`pub fun main() {}`), nil, ""))
+		require.NoError(t, err)
+		_, err = program.Name()
+		assert.EqualError(t, err, "unable to determine contract name")
 	})
 
 	t.Run("Replace", func(t *testing.T) {
