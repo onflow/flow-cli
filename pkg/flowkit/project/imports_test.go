@@ -22,8 +22,6 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/onflow/flow-cli/pkg/flowkit"
-
 	"github.com/onflow/flow-go-sdk"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -97,7 +95,10 @@ func TestResolver(t *testing.T) {
 
 		replacer := NewImportReplacer(contracts, aliases)
 		for i, script := range scripts {
-			program, err := NewProgram(flowkit.NewScript(script, nil, paths[i]))
+			program, err := NewProgram(&testScript{
+				code:     script,
+				location: paths[i],
+			})
 			require.NoError(t, err)
 
 			program, err = replacer.Replace(program)
@@ -127,13 +128,13 @@ func TestResolver(t *testing.T) {
 		require.NoError(t, err)
 
 		expected := []byte(`
-			import Foo from 0x1
-			import Bar from 0x2
-
+			import Foo from 0x0000000000000001
+			import Bar from 0x0000000000000002
+			
 			pub contract Zoo {}
 		`)
 
-		assert.Equal(t, expected, replaced.Code())
+		assert.Equal(t, string(expected), string(replaced.Code()))
 	})
 
 }
