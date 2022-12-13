@@ -31,7 +31,7 @@ func NewProgram(script Scripter) (*Program, error) {
 	}, nil
 }
 
-func (p *Program) Imports() []string {
+func (p *Program) imports() []string {
 	imports := make([]string, 0)
 
 	for _, importDeclaration := range p.astProgram.ImportDeclarations() {
@@ -54,7 +54,7 @@ func (p *Program) Imports() []string {
 }
 
 func (p *Program) HasImports() bool {
-	return len(p.Imports()) > 0
+	return len(p.imports()) > 0
 }
 
 func (p *Program) replaceImport(from string, to string) *Program {

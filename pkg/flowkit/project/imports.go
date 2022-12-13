@@ -38,7 +38,7 @@ func NewImportReplacer(contracts []*Contract, aliases Aliases) *ImportReplacer {
 }
 
 func (i *ImportReplacer) Replace(program *Program) (*Program, error) {
-	imports := program.Imports()
+	imports := program.imports()
 	contractsLocations := i.getContractsLocations()
 
 	for _, imp := range imports {
@@ -47,7 +47,7 @@ func (i *ImportReplacer) Replace(program *Program) (*Program, error) {
 		if !found {
 			return nil, fmt.Errorf("import %s could not be resolved from the configuration", imp)
 		}
-		program.ReplaceImport(imp, target)
+		program.replaceImport(imp, target)
 	}
 
 	return program, nil
