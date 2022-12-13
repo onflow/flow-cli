@@ -35,8 +35,16 @@ func (p *Program) Imports() []string {
 	imports := make([]string, 0)
 
 	for _, importDeclaration := range p.astProgram.ImportDeclarations() {
-		_, isFileImport := importDeclaration.Location.(common.StringLocation)
+		_, isIdentifierImport := importDeclaration.Location.(common.IdentifierLocation)
+		if isIdentifierImport {
+			location := importDeclaration.Location.String()
+			if location == "Crypto" { // skip core library
+				continue
+			}
+			imports = append(imports, location)
+		}
 
+		_, isFileImport := importDeclaration.Location.(common.StringLocation)
 		if isFileImport {
 			imports = append(imports, importDeclaration.Location.String())
 		}
@@ -52,10 +60,12 @@ func (p *Program) HasImports() bool {
 func (p *Program) ReplaceImport(from string, to string) *Program {
 	p.script.SetCode([]byte(strings.Replace(
 		string(p.script.Code()),
-		fmt.Sprintf(`"%s"`, from),
+		fmt.Sprintf(`"%s"`, from), // todo define better replacement to include import X from From so something elese is not replaced
 		fmt.Sprintf("0x%s", to),
 		1,
 	)))
+
+	// todo add identifier replacements
 
 	p.reload()
 	return p
