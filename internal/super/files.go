@@ -28,6 +28,7 @@ const (
 	contractDir    = "contracts"
 	scriptDir      = "scripts"
 	transactionDir = "transactions"
+	cadenceExt     = ".cdc"
 )
 
 type projectFiles struct {
@@ -43,6 +44,9 @@ func (f *projectFiles) Accounts() ([]string, error) {
 	dir := filepath.Join(f.projectDir, contractDir)
 	err := filepath.WalkDir(dir, func(path string, d fs.DirEntry, err error) error {
 		if path == dir || !d.IsDir() { // we only want to get directories
+			return nil
+		}
+		if filepath.Ext(path) != cadenceExt {
 			return nil
 		}
 
@@ -69,6 +73,9 @@ func getFilePaths(dir string) ([]string, error) {
 	paths := make([]string, 0)
 	err := filepath.WalkDir(dir, func(path string, d fs.DirEntry, err error) error {
 		if path == dir || d.IsDir() { // we only want to get the files in the dir
+			return nil
+		}
+		if filepath.Ext(path) != cadenceExt {
 			return nil
 		}
 

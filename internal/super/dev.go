@@ -53,7 +53,15 @@ func dev(
 	}
 
 	proj := projectFiles{projectDir: filepath.Join(dir, "cadence")}
-	fmt.Println(proj.Contracts())
+
+	c, _ := proj.Contracts()
+	fmt.Println("contracts", c)
+
+	a, _ := proj.Accounts()
+	fmt.Println("accounts", a)
+
+	s, _ := proj.Scripts()
+	fmt.Println("scripts", s)
 
 	return nil, nil
 }
