@@ -19,7 +19,6 @@
 package project_test
 
 import (
-	"fmt"
 	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/project"
 	"regexp"
@@ -94,41 +93,6 @@ func TestResolver(t *testing.T) {
 	`),
 	}
 
-	t.Run("Import exists", func(t *testing.T) {
-		tests := []struct {
-			code       []byte
-			hasImports bool
-		}{{
-			code: []byte(`
-			  import Kibble from "./Kibble.cdc"
-			  pub fun main() {}
-			`),
-			hasImports: true,
-		}, {
-			code: []byte(`
-				pub fun main() {}
-			`),
-			hasImports: false,
-		}, {
-			code:       scripts[3],
-			hasImports: true,
-		}}
-
-		for i, test := range tests {
-			program, err := project.NewProgram(flowkit.NewScript(test.code, nil, ""))
-			assert.NoError(t, err)
-			assert.Equal(t, test.hasImports, program.HasImports(), fmt.Sprintf("failed with test vector %d", i))
-		}
-	})
-
-	t.Run("Parse imports", func(t *testing.T) {
-		program, err := project.NewProgram(flowkit.NewScript(scripts[3], nil, ""))
-		assert.NoError(t, err)
-		assert.Equal(t, program.Imports(), []string{
-			"./Kibble.cdc",
-		})
-	})
-
 	t.Run("Resolve imports", func(t *testing.T) {
 		replacer := project.NewImportReplacer(contracts, aliases)
 		for i, script := range scripts {
@@ -141,30 +105,4 @@ func TestResolver(t *testing.T) {
 		}
 	})
 
-	t.Run("Get Contract Name", func(t *testing.T) {
-		program, err := project.NewProgram(flowkit.NewScript(
-			[]byte(`
-				pub contract HelloWorld {}
-			`),
-			nil, "",
-		))
-		require.NoError(t, err)
-		contractName, err := program.Name()
-		assert.NoError(t, err)
-		assert.Equal(t, "HelloWorld", contractName)
-	})
-
-	t.Run("Get Contract Name", func(t *testing.T) {
-		program, err := project.NewProgram(flowkit.NewScript(
-			[]byte(`
-				pub struct SomeStruct {}
-				pub contract HelloWorld {}
-			`),
-			nil, "",
-		))
-		require.NoError(t, err)
-		name, err := program.Name()
-		assert.ErrorContains(t, err, "the code must declare exactly one contract or contract interface")
-		assert.Equal(t, "", name)
-	})
 }
