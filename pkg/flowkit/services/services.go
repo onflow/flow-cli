@@ -61,3 +61,17 @@ func NewServices(
 		Tests:        NewTests(state, logger),
 	}
 }
+
+func (s *Services) SetLogger(logger output.Logger) {
+	s.Accounts.logger = logger
+	s.Scripts.logger = logger
+	s.Transactions.logger = logger
+	s.Keys.logger = logger
+	s.Events.logger = logger
+	s.Collections.logger = logger
+	s.Project.logger = logger
+	s.Blocks.logger = logger
+	s.Status.logger = logger
+	s.Snapshot.logger = logger
+	s.Tests.logger = logger
+}
