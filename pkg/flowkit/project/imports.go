@@ -45,7 +45,7 @@ func (i *ImportReplacer) Replace(program *Program) (*Program, error) {
 		importLocation := path.Clean(absolutePath(program.Location(), imp))
 		target, found := contractsLocations[importLocation]
 		if !found {
-			return nil, fmt.Errorf("import %s could not be resolved from the configuration", imp)
+			return nil, fmt.Errorf("import %s could not be resolved from provided contracts", imp)
 		}
 		program.replaceImport(imp, target)
 	}
