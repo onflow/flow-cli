@@ -19,6 +19,7 @@
 package super
 
 import (
+	"fmt"
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
@@ -59,6 +60,9 @@ func dev(
 		return nil, err
 	}
 
+	// todo get from flag
+	network := config.DefaultEmulatorNetwork().Name
+
 	// todo dev work if not run on top root directory - at least have a warning
 	// todo handle emulator running as part of this service or part of existing running emulator
 
@@ -67,8 +71,7 @@ func dev(
 		return nil, err
 	}
 
-	logger := output.NewStdoutLogger(output.NoneLog)
-	services.SetLogger(logger)
+	services.SetLogger(output.NewStdoutLogger(output.NoneLog))
 
 	// todo maybe not optimal, test how it performs otherwise we will just keep the state and update changes, especially the account section is problematic, creating accounts everytime might be time consuming
 	// create new state everytime, just keep the service key the same
@@ -110,7 +113,7 @@ func dev(
 		}
 
 		state.Deployments().AddOrUpdate(config.Deployment{
-			Network:   config.DefaultEmulatorNetwork().Name, // todo take in from flag
+			Network:   network,
 			Account:   accName,
 			Contracts: contractDeployments,
 		})
@@ -119,6 +122,15 @@ func dev(
 	err = state.SaveDefault()
 	if err != nil {
 		return nil, err
+	}
+
+	deployed, err := services.Project.Deploy(network, true)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, d := range deployed {
+		fmt.Printf("deployed [%s] on account [%s]\n", d.Name, d.AccountName)
 	}
 
 	return nil, nil
