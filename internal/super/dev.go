@@ -120,12 +120,19 @@ func dev(
 				}
 			}
 			if contract.status == removed {
-				name, err := contractName(contract.path, readerWriter)
+				err := removeContract(contract.path, contract.account, network, state, readerWriter)
 				if err != nil {
 					return nil, err
 				}
+			}
+			err := deploy(network, services)
+			if err != nil {
+				return nil, err
+			}
 
-				// todo remove
+			err = state.SaveDefault()
+			if err != nil {
+				return nil, err
 			}
 		}
 	}
@@ -248,7 +255,11 @@ func contractName(path string, readerWriter flowkit.ReaderWriter) (string, error
 	return name, nil
 }
 
-func addContract(path string, state *flowkit.State, readerWriter flowkit.ReaderWriter) (*config.Contract, error) {
+func addContract(
+	path string,
+	state *flowkit.State,
+	readerWriter flowkit.ReaderWriter,
+) (*config.Contract, error) {
 	name, err := contractName(path, readerWriter)
 	if err != nil {
 		return nil, err
@@ -260,4 +271,24 @@ func addContract(path string, state *flowkit.State, readerWriter flowkit.ReaderW
 	}
 	state.Contracts().AddOrUpdate(name, contract)
 	return &contract, nil
+}
+
+func removeContract(
+	path string,
+	accountName string,
+	network string,
+	state *flowkit.State,
+	readerWriter flowkit.ReaderWriter,
+) error {
+	name, err := contractName(path, readerWriter)
+	if err != nil {
+		return err
+	}
+
+	if accountName == "" {
+		accountName = config.DefaultEmulatorServiceAccountName
+	}
+
+	state.Deployments().RemoveContract(accountName, network, name)
+	return nil
 }

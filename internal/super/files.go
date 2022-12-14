@@ -115,18 +115,13 @@ func (f *projectFiles) watch() (<-chan accountChange, <-chan contractChange, err
 		for {
 			select {
 			case event := <-f.watcher.Event:
-				if event.IsDir() {
-					name, isValid := accountFromPath(f.cadenceDir, event.Path)
-					if !isValid {
-						continue
-					}
-
+				name, containsAccount := accountFromPath(f.cadenceDir, event.Path)
+				if event.IsDir() && containsAccount {
+					// todo handle rename and move
 					accounts <- accountChange{
 						status: status[event.Op],
 						name:   name,
 					}
-
-					// todo handle rename and move
 					continue
 				}
 
@@ -135,8 +130,9 @@ func (f *projectFiles) watch() (<-chan accountChange, <-chan contractChange, err
 				}
 
 				contracts <- contractChange{
-					status: status[event.Op],
-					path:   event.Path,
+					status:  status[event.Op],
+					path:    event.Path,
+					account: name,
 				}
 			case <-f.watcher.Closed:
 				close(contracts)
