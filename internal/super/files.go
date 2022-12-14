@@ -20,9 +20,11 @@ package super
 
 import (
 	"fmt"
+	"github.com/radovskyb/watcher"
 	"io/fs"
 	"path"
 	"path/filepath"
+	"time"
 )
 
 const (
@@ -31,46 +33,119 @@ const (
 	scriptDir      = "scripts"
 	transactionDir = "transactions"
 	cadenceExt     = ".cdc"
+	created        = 1
+	removed        = 2
+	changed        = 3
 )
 
+type accountChange struct {
+	status int
+	name   string
+}
+
+type contractChange struct {
+	status int
+	path   string
+}
+
 func newProjectFiles(projectDir string) *projectFiles {
-	return &projectFiles{cadenceDir: path.Join(projectDir, cadenceDir)}
+	return &projectFiles{
+		cadenceDir: path.Join(projectDir, cadenceDir),
+		watcher:    watcher.New(),
+	}
 }
 
 type projectFiles struct {
 	cadenceDir string
+	watcher    *watcher.Watcher
 }
 
-func (f *projectFiles) Contracts() ([]string, error) {
+func (f *projectFiles) contracts() ([]string, error) {
 	return getFilePaths(path.Join(f.cadenceDir, contractDir))
 }
 
-func (f *projectFiles) Deployments() (map[string][]string, error) {
+func (f *projectFiles) deployments() (map[string][]string, error) {
 	deployments := make(map[string][]string)
 
-	contracts, err := f.Contracts()
+	contracts, err := f.contracts()
 	if err != nil {
 		return nil, err
 	}
 
 	for _, file := range contracts {
-		accName := ""
-		subAccPattern := fmt.Sprintf("**/%s/**/*%s", contractDir, cadenceExt)
-		if match, _ := filepath.Match(subAccPattern, file); match {
-			accName = filepath.Base(filepath.Dir(file))
-		}
+		accName, _ := accountFromPath(file)
 		deployments[accName] = append(deployments[accName], file)
 	}
 
 	return deployments, nil
 }
 
-func (f *projectFiles) Scripts() ([]string, error) {
+func (f *projectFiles) scripts() ([]string, error) {
 	return getFilePaths(path.Join(f.cadenceDir, scriptDir))
 }
 
-func (f *projectFiles) Transactions() ([]string, error) {
+func (f *projectFiles) transactions() ([]string, error) {
 	return getFilePaths(path.Join(f.cadenceDir, transactionDir))
+}
+
+func (f *projectFiles) watch() (<-chan accountChange, <-chan contractChange, error) {
+	err := f.watcher.AddRecursive(path.Join(f.cadenceDir, contractDir))
+	if err != nil {
+		return nil, nil, err
+	}
+
+	go func() {
+		err = f.watcher.Start(500 * time.Millisecond)
+		if err != nil {
+			panic(err)
+		}
+	}()
+
+	accounts := make(chan accountChange)
+	contracts := make(chan contractChange)
+
+	go func() {
+		status := map[watcher.Op]int{
+			watcher.Create: created,
+			watcher.Remove: removed,
+			watcher.Write:  changed,
+		}
+
+		for {
+			select {
+			case event := <-f.watcher.Event:
+				if event.IsDir() {
+					name, isValid := accountFromPath(event.Path)
+					if !isValid {
+						continue
+					}
+
+					accounts <- accountChange{
+						status: status[event.Op],
+						name:   name,
+					}
+
+					// todo handle rename and move
+					continue
+				}
+
+				if filepath.Ext(event.Path) != cadenceExt { // skip any non cadence files
+					continue
+				}
+
+				contracts <- contractChange{
+					status: status[event.Op],
+					path:   event.Path,
+				}
+			case <-f.watcher.Closed:
+				close(contracts)
+				close(accounts)
+				return
+			}
+		}
+	}()
+
+	return accounts, contracts, nil
 }
 
 func getFilePaths(dir string) ([]string, error) {
@@ -97,4 +172,13 @@ func getFilePaths(dir string) ([]string, error) {
 	}
 
 	return paths, nil
+}
+
+func accountFromPath(path string) (string, bool) {
+	subAccPattern := fmt.Sprintf("**/%s/**/*%s", contractDir, cadenceExt)
+	if match, _ := filepath.Match(subAccPattern, path); match {
+		return filepath.Base(filepath.Dir(path)), true
+	}
+
+	return "", false
 }

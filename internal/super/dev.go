@@ -75,7 +75,7 @@ func dev(
 
 	proj := newProjectFiles(dir)
 
-	deployments, err := proj.Deployments()
+	deployments, err := proj.deployments()
 	if err != nil {
 		return nil, err
 	}
