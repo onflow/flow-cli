@@ -20,6 +20,7 @@ package super
 
 import (
 	"fmt"
+	"github.com/pkg/errors"
 	"github.com/radovskyb/watcher"
 	"io/fs"
 	"path"
@@ -70,7 +71,7 @@ func (f *projectFiles) deployments() (map[string][]string, error) {
 
 	contracts, err := f.contracts()
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "failed to get contracts in deployment")
 	}
 
 	for _, file := range contracts {
@@ -90,9 +91,9 @@ func (f *projectFiles) transactions() ([]string, error) {
 }
 
 func (f *projectFiles) watch() (<-chan accountChange, <-chan contractChange, error) {
-	err := f.watcher.AddRecursive(contractDir)
+	err := f.watcher.AddRecursive(path.Join(f.cadenceDir, contractDir))
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, errors.Wrap(err, "add recursive files failed")
 	}
 
 	go func() {
@@ -129,9 +130,14 @@ func (f *projectFiles) watch() (<-chan accountChange, <-chan contractChange, err
 					continue
 				}
 
+				rel, err := f.relProjectPath(event.Path)
+				if err != nil { // skip if failed
+					continue
+				}
+
 				contracts <- contractChange{
 					status:  status[event.Op],
-					path:    event.Path,
+					path:    rel,
 					account: name,
 				}
 			case <-f.watcher.Closed:
@@ -149,15 +155,11 @@ func (f *projectFiles) getFilePaths(dir string) ([]string, error) {
 	dir = path.Join(f.cadenceDir, dir)
 	paths := make([]string, 0)
 	err := filepath.WalkDir(dir, func(path string, d fs.DirEntry, err error) error {
-		if path == dir || d.IsDir() { // we only want to get the files in the dir
-			return nil
-		}
-		if filepath.Ext(path) != cadenceExt {
+		if path == dir || d.IsDir() || filepath.Ext(path) != cadenceExt { // we only want to get .cdc files in the dir
 			return nil
 		}
 
-		projectDir := filepath.Dir(filepath.Dir(dir)) // we want to include the cadence folder from the project path
-		rel, err := filepath.Rel(projectDir, path)    // this will get files relative to project folder including cadence folder
+		rel, err := f.relProjectPath(path)
 		if err != nil {
 			return err
 		}
@@ -177,7 +179,7 @@ func (f *projectFiles) getFilePaths(dir string) ([]string, error) {
 func (f *projectFiles) relProjectPath(file string) (string, error) {
 	rel, err := filepath.Rel(path.Dir(f.cadenceDir), file)
 	if err != nil {
-		return "", err
+		return "", errors.Wrap(err, "failed getting project relative path")
 	}
 	return rel, nil
 }

@@ -28,6 +28,7 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowkit/services"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
+	"github.com/pkg/errors"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -82,7 +83,7 @@ func dev(
 
 	err = startup(deployments, network, service, services, state, readerWriter)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "failure to startup")
 	}
 
 	err = deploy(network, services)
@@ -92,7 +93,7 @@ func dev(
 
 	accountChanges, contractChanges, err := proj.watch()
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "error watching files")
 	}
 
 	for {
@@ -106,15 +107,15 @@ func dev(
 				err = state.Accounts().Remove(account.name)
 			}
 			if err != nil {
-				return nil, err
+				return nil, errors.Wrap(err, "failed updating contracts")
 			}
 			err = state.SaveDefault()
 			if err != nil {
-				return nil, err
+				return nil, errors.Wrap(err, "failed saving configuration")
 			}
 		case contract := <-contractChanges:
 			if contract.status == created || contract.status == changed {
-				_, _ = addContract(contract.path, state, readerWriter) // if contract has errors, ignore it
+				_ = addContract(contract.path, contract.account, network, state, readerWriter) // if contract has errors, ignore it
 			}
 			if contract.status == removed {
 				err := removeContract(contract.path, contract.account, network, state, readerWriter) // todo what if contract got broken and then we want to delete it
@@ -130,7 +131,7 @@ func dev(
 
 			err = state.SaveDefault()
 			if err != nil {
-				return nil, err
+				return nil, errors.Wrap(err, "failed saving configuration")
 			}
 		}
 	}
@@ -140,7 +141,7 @@ func deploy(network string, services *services.Services) error {
 	fmt.Println("------- running deployment ---------")
 	deployed, err := services.Project.Deploy(network, true)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "failed to deploy project")
 	}
 
 	for _, d := range deployed {
@@ -169,20 +170,16 @@ func startup(
 			return err
 		}
 
-		contractDeployments := make([]config.ContractDeployment, len(contracts))
-		for i, path := range contracts {
-			contract, err := addContract(path, state, readerWriter)
+		state.Deployments().AddOrUpdate(config.Deployment{
+			Network: network,
+			Account: accName,
+		})
+		for _, path := range contracts {
+			err := addContract(path, accName, network, state, readerWriter)
 			if err != nil {
 				return err
 			}
-			contractDeployments[i] = config.ContractDeployment{Name: contract.Name}
 		}
-
-		state.Deployments().AddOrUpdate(config.Deployment{
-			Network:   network,
-			Account:   accName,
-			Contracts: contractDeployments,
-		})
 	}
 
 	return state.SaveDefault()
@@ -238,7 +235,7 @@ func contractName(path string, readerWriter flowkit.ReaderWriter) (string, error
 	// todo add warning if name of the file is not matching the name of the contract
 	content, err := readerWriter.ReadFile(path)
 	if err != nil {
-		return "", err
+		return "", errors.Wrap(err, "could not load contract to get the name")
 	}
 
 	program, err := project.NewProgram(flowkit.NewScript(content, nil, path))
@@ -256,12 +253,14 @@ func contractName(path string, readerWriter flowkit.ReaderWriter) (string, error
 
 func addContract(
 	path string,
+	account string,
+	network string,
 	state *flowkit.State,
 	readerWriter flowkit.ReaderWriter,
-) (*config.Contract, error) {
+) error {
 	name, err := contractName(path, readerWriter)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	contract := config.Contract{
@@ -269,7 +268,12 @@ func addContract(
 		Location: path,
 	}
 	state.Contracts().AddOrUpdate(name, contract)
-	return &contract, nil
+
+	state.Deployments().AddContract(account, network, config.ContractDeployment{
+		Name: contract.Name,
+	})
+
+	return nil
 }
 
 func removeContract(
@@ -281,7 +285,7 @@ func removeContract(
 ) error {
 	name, err := contractName(path, readerWriter)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "failed to remove contract")
 	}
 
 	if accountName == "" {
