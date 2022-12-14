@@ -90,7 +90,45 @@ func dev(
 		return nil, err
 	}
 
-	return nil, nil
+	accountChanges, contractChanges, err := proj.watch()
+	if err != nil {
+		return nil, err
+	}
+
+	for {
+		select {
+		case account := <-accountChanges:
+			var err error
+			if account.status == created {
+				err = addAccount(account.name, service, services, state)
+			}
+			if account.status == removed {
+				err = state.Accounts().Remove(account.name)
+			}
+			if err != nil {
+				return nil, err
+			}
+			err = state.SaveDefault()
+			if err != nil {
+				return nil, err
+			}
+		case contract := <-contractChanges:
+			if contract.status == created {
+				_, err := addContract(contract.path, state, readerWriter)
+				if err != nil {
+					return nil, err
+				}
+			}
+			if contract.status == removed {
+				name, err := contractName(contract.path, readerWriter)
+				if err != nil {
+					return nil, err
+				}
+
+				// todo remove
+			}
+		}
+	}
 }
 
 func deploy(network string, services *services.Services) error {
@@ -190,18 +228,28 @@ func addAccount(name string, service *flowkit.Account, services *services.Servic
 	return nil
 }
 
-func addContract(path string, state *flowkit.State, readerWriter flowkit.ReaderWriter) (*config.Contract, error) {
+func contractName(path string, readerWriter flowkit.ReaderWriter) (string, error) {
+	// todo add warning if name of the file is not matching the name of the contract
 	content, err := readerWriter.ReadFile(path)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
 	program, err := project.NewProgram(flowkit.NewScript(content, nil, path))
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
 	name, err := program.Name()
+	if err != nil {
+		return "", err
+	}
+
+	return name, nil
+}
+
+func addContract(path string, state *flowkit.State, readerWriter flowkit.ReaderWriter) (*config.Contract, error) {
+	name, err := contractName(path, readerWriter)
 	if err != nil {
 		return nil, err
 	}
