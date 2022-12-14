@@ -97,3 +97,16 @@ func (d *Deployments) Remove(account string, network string) error {
 
 	return nil
 }
+
+// RemoveContract removes a specific contract by name from an existing deployment identified by account name and network name.
+func (d *Deployments) RemoveContract(account string, network string, contractName string) {
+	for i, deploy := range *d {
+		if deploy.Network == network && deploy.Account == account {
+			for _, c := range deploy.Contracts {
+				if c.Name == contractName {
+					(*d)[i].Contracts = append(deploy.Contracts[0:i], deploy.Contracts[i+1:]...)
+				}
+			}
+		}
+	}
+}
