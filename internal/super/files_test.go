@@ -21,6 +21,7 @@ package super
 import (
 	"fmt"
 	"github.com/stretchr/testify/assert"
+	"path"
 	"testing"
 )
 
@@ -38,5 +39,25 @@ func Test_AccountFromPath(t *testing.T) {
 		name, ok := accountFromPath(cadenceDir, test[0])
 		assert.Equal(t, test[1] != "", ok) // if we don't provide a name we mean it shouldn't be returned
 		assert.Equal(t, test[1], name, fmt.Sprintf("failed test %d", i))
+	}
+}
+
+func Test_RelativeProjectPath(t *testing.T) {
+	cdcDir := "/Users/Mike/Dev/my-project/cadence"
+	paths := [][]string{
+		{path.Join(cdcDir, "/contracts/foo.cdc"), "cadence/contracts/foo.cdc"},
+		{path.Join(cdcDir, "/contracts/alice/foo.cdc"), "cadence/contracts/alice/foo.cdc"},
+		{path.Join(cdcDir, "/scripts/bar.cdc"), "cadence/scripts/bar.cdc"},
+		{path.Join(cdcDir, "/bar.cdc"), "cadence/bar.cdc"},
+	}
+
+	f := &projectFiles{
+		cadenceDir: cdcDir,
+	}
+
+	for i, test := range paths {
+		rel, err := f.relProjectPath(test[0])
+		assert.NoError(t, err)
+		assert.Equal(t, test[1], rel, fmt.Sprintf("test %d failed", i))
 	}
 }

@@ -62,7 +62,7 @@ type projectFiles struct {
 }
 
 func (f *projectFiles) contracts() ([]string, error) {
-	return getFilePaths(path.Join(f.cadenceDir, contractDir))
+	return f.getFilePaths(contractDir)
 }
 
 func (f *projectFiles) deployments() (map[string][]string, error) {
@@ -82,15 +82,15 @@ func (f *projectFiles) deployments() (map[string][]string, error) {
 }
 
 func (f *projectFiles) scripts() ([]string, error) {
-	return getFilePaths(path.Join(f.cadenceDir, scriptDir))
+	return f.getFilePaths(scriptDir)
 }
 
 func (f *projectFiles) transactions() ([]string, error) {
-	return getFilePaths(path.Join(f.cadenceDir, transactionDir))
+	return f.getFilePaths(transactionDir)
 }
 
 func (f *projectFiles) watch() (<-chan accountChange, <-chan contractChange, error) {
-	err := f.watcher.AddRecursive(path.Join(f.cadenceDir, contractDir))
+	err := f.watcher.AddRecursive(contractDir)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -145,7 +145,8 @@ func (f *projectFiles) watch() (<-chan accountChange, <-chan contractChange, err
 	return accounts, contracts, nil
 }
 
-func getFilePaths(dir string) ([]string, error) {
+func (f *projectFiles) getFilePaths(dir string) ([]string, error) {
+	dir = path.Join(f.cadenceDir, dir)
 	paths := make([]string, 0)
 	err := filepath.WalkDir(dir, func(path string, d fs.DirEntry, err error) error {
 		if path == dir || d.IsDir() { // we only want to get the files in the dir
@@ -169,6 +170,16 @@ func getFilePaths(dir string) ([]string, error) {
 	}
 
 	return paths, nil
+}
+
+// relProjectPath gets a filepath relative to the project directory including the base cadence directory.
+// eg. a path /Users/Mike/Dev/project/cadence/contracts/foo.cdc will become cadence/contracts/foo.cdc
+func (f *projectFiles) relProjectPath(file string) (string, error) {
+	rel, err := filepath.Rel(path.Dir(f.cadenceDir), file)
+	if err != nil {
+		return "", err
+	}
+	return rel, nil
 }
 
 // accountFromPath returns the account name from provided path if possible, otherwise returns empty and false.
