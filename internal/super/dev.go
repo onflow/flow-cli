@@ -60,7 +60,7 @@ func dev(
 		return nil, err
 	}
 
-	// todo get from flag
+	// only support emulator for now
 	network := config.DefaultEmulatorNetwork().Name
 
 	// todo dev work if not run on top root directory - at least have a warning
@@ -113,18 +113,16 @@ func dev(
 				return nil, err
 			}
 		case contract := <-contractChanges:
-			if contract.status == created {
-				_, err := addContract(contract.path, state, readerWriter)
-				if err != nil {
-					return nil, err
-				}
+			if contract.status == created || contract.status == changed {
+				_, _ = addContract(contract.path, state, readerWriter) // if contract has errors, ignore it
 			}
 			if contract.status == removed {
-				err := removeContract(contract.path, contract.account, network, state, readerWriter)
+				err := removeContract(contract.path, contract.account, network, state, readerWriter) // todo what if contract got broken and then we want to delete it
 				if err != nil {
 					return nil, err
 				}
 			}
+
 			err := deploy(network, services)
 			if err != nil {
 				return nil, err
@@ -139,6 +137,7 @@ func dev(
 }
 
 func deploy(network string, services *services.Services) error {
+	fmt.Println("------- running deployment ---------")
 	deployed, err := services.Project.Deploy(network, true)
 	if err != nil {
 		return err
