@@ -44,8 +44,9 @@ type accountChange struct {
 }
 
 type contractChange struct {
-	status int
-	path   string
+	status  int
+	path    string
+	account string
 }
 
 func newProjectFiles(projectDir string) *projectFiles {
@@ -73,7 +74,7 @@ func (f *projectFiles) deployments() (map[string][]string, error) {
 	}
 
 	for _, file := range contracts {
-		accName, _ := accountFromPath(file)
+		accName, _ := accountFromPath(f.cadenceDir, file)
 		deployments[accName] = append(deployments[accName], file)
 	}
 
@@ -115,7 +116,7 @@ func (f *projectFiles) watch() (<-chan accountChange, <-chan contractChange, err
 			select {
 			case event := <-f.watcher.Event:
 				if event.IsDir() {
-					name, isValid := accountFromPath(event.Path)
+					name, isValid := accountFromPath(f.cadenceDir, event.Path)
 					if !isValid {
 						continue
 					}
@@ -174,10 +175,22 @@ func getFilePaths(dir string) ([]string, error) {
 	return paths, nil
 }
 
-func accountFromPath(path string) (string, bool) {
-	subAccPattern := fmt.Sprintf("**/%s/**/*%s", contractDir, cadenceExt)
+// accountFromPath returns the account name from provided path if possible, otherwise returns empty and false.
+//
+// Account name can be extracted from path when the contract folder contains another folder, that in our syntax indicates account name.
+func accountFromPath(cadenceDir string, path string) (string, bool) {
+	// extract account from path if file path is provided e.g.: /Foo/contracts/[alice]/foo.cdc
+	subAccPattern := filepath.Clean(fmt.Sprintf("%s/%s/*/*%s", cadenceDir, contractDir, cadenceExt))
 	if match, _ := filepath.Match(subAccPattern, path); match {
 		return filepath.Base(filepath.Dir(path)), true
+	}
+	// extract account from path if dir path is provided e.g.: /Foo/contracts/[alice]
+	subAccPattern = filepath.Clean(fmt.Sprintf("%s/%s/*", cadenceDir, contractDir))
+	if match, _ := filepath.Match(subAccPattern, path); match {
+		if filepath.Ext(path) != "" { // might be a file
+			return "", false
+		}
+		return filepath.Base(path), true
 	}
 
 	return "", false
