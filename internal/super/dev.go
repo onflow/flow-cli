@@ -53,7 +53,7 @@ func dev(
 	readerWriter flowkit.ReaderWriter,
 	globalFlags command.GlobalFlags,
 	services *services.Services,
-	s *flowkit.State,
+	state *flowkit.State,
 ) (command.Result, error) {
 	dir, err := os.Getwd()
 	if err != nil {
@@ -66,25 +66,12 @@ func dev(
 	// todo dev work if not run on top root directory - at least have a warning
 	// todo handle emulator running as part of this service or part of existing running emulator
 
-	service, err := s.EmulatorServiceAccount()
+	service, err := state.EmulatorServiceAccount()
 	if err != nil {
 		return nil, err
 	}
 
 	services.SetLogger(output.NewStdoutLogger(output.NoneLog))
-
-	// todo maybe not optimal, test how it performs otherwise we will just keep the state and update changes, especially the account section is problematic, creating accounts everytime might be time consuming
-	// create new state everytime, just keep the service key the same
-	state, err := flowkit.Init(readerWriter, crypto.ECDSA_P256, crypto.SHA3_256)
-	if err != nil {
-		return nil, err
-	}
-
-	serviceKey, err := service.Key().PrivateKey()
-	if err != nil {
-		return nil, err
-	}
-	state.SetEmulatorKey(*serviceKey)
 
 	proj := newProjectFiles(dir)
 
@@ -93,21 +80,56 @@ func dev(
 		return nil, err
 	}
 
+	err = startup(deployments, network, service, services, state, readerWriter)
+	if err != nil {
+		return nil, err
+	}
+
+	err = deploy(network, services)
+	if err != nil {
+		return nil, err
+	}
+
+	return nil, nil
+}
+
+func deploy(network string, services *services.Services) error {
+	deployed, err := services.Project.Deploy(network, true)
+	if err != nil {
+		return err
+	}
+
+	for _, d := range deployed {
+		fmt.Printf("deployed [%s] on account [%s]\n", d.Name, d.AccountName)
+	}
+	return nil
+}
+
+func startup(
+	deployments map[string][]string,
+	network string,
+	service *flowkit.Account,
+	services *services.Services,
+	state *flowkit.State,
+	readerWriter flowkit.ReaderWriter,
+) error {
+	cleanState(state)
+
 	for accName, contracts := range deployments {
-		if accName == "" {
+		if accName == "" { // default to emulator account
 			accName = config.DefaultEmulatorServiceAccountName
 		}
 
 		err := addAccount(accName, service, services, state)
 		if err != nil {
-			return nil, err
+			return err
 		}
 
 		contractDeployments := make([]config.ContractDeployment, len(contracts))
 		for i, path := range contracts {
 			contract, err := addContract(path, state, readerWriter)
 			if err != nil {
-				return nil, err
+				return err
 			}
 			contractDeployments[i] = config.ContractDeployment{Name: contract.Name}
 		}
@@ -119,21 +141,26 @@ func dev(
 		})
 	}
 
-	err = state.SaveDefault()
-	if err != nil {
-		return nil, err
-	}
+	return state.SaveDefault()
+}
 
-	deployed, err := services.Project.Deploy(network, true)
-	if err != nil {
-		return nil, err
+// cleanState of existing contracts, deployments and non-service accounts as we will build it again.
+func cleanState(state *flowkit.State) {
+	for _, c := range *state.Contracts() {
+		_ = state.Contracts().Remove(c.Name)
 	}
-
-	for _, d := range deployed {
-		fmt.Printf("deployed [%s] on account [%s]\n", d.Name, d.AccountName)
+	for _, d := range *state.Deployments() {
+		_ = state.Deployments().Remove(d.Account, d.Network)
 	}
-
-	return nil, nil
+	// clean out non-service accounts
+	accs := make([]flowkit.Account, len(*state.Accounts()))
+	copy(accs, *state.Accounts()) // we need to make a copy otherwise when we remove order shifts
+	for _, a := range accs {
+		if a.Name() == config.DefaultEmulatorServiceAccountName {
+			continue
+		}
+		_ = state.Accounts().Remove(a.Name())
+	}
 }
 
 func addAccount(name string, service *flowkit.Account, services *services.Services, state *flowkit.State) error {
