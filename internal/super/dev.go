@@ -19,16 +19,10 @@
 package super
 
 import (
-	"fmt"
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/pkg/flowkit"
-	"github.com/onflow/flow-cli/pkg/flowkit/config"
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
-	"github.com/onflow/flow-cli/pkg/flowkit/project"
 	"github.com/onflow/flow-cli/pkg/flowkit/services"
-	"github.com/onflow/flow-go-sdk"
-	"github.com/onflow/flow-go-sdk/crypto"
-	"github.com/pkg/errors"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -61,9 +55,6 @@ func dev(
 		return nil, err
 	}
 
-	// only support emulator for now
-	network := config.DefaultEmulatorNetwork().Name
-
 	// todo dev work if not run on top root directory - at least have a warning
 	// todo handle emulator running as part of this service or part of existing running emulator
 	// todo possible bug, investigate when new account is created whether we deploy too soon before it was even founded. This is error: ommand Error: failure to startup: execution error code 1103: [Error Code: 1103] The account with address (120e725050340cab) uses 783 bytes of storage which is over its capacity (0 bytes). Capacity can be increased by adding FLOW tokens to the account.
@@ -75,230 +66,21 @@ func dev(
 
 	services.SetLogger(output.NewStdoutLogger(output.NoneLog))
 
-	proj := newProjectFiles(dir)
-
-	deployments, err := proj.deployments()
-	if err != nil {
-		return nil, err
-	}
-
-	err = startup(deployments, network, service, services, state, readerWriter)
-	if err != nil {
-		return nil, errors.Wrap(err, "failure to startup")
-	}
-
-	err = deploy(network, services)
-	if err != nil {
-		return nil, err
-	}
-
-	accountChanges, contractChanges, err := proj.watch()
-	if err != nil {
-		return nil, errors.Wrap(err, "error watching files")
-	}
-
-	for {
-		select {
-		case account := <-accountChanges:
-			var err error
-			if account.status == created {
-				err = addAccount(account.name, service, services, state)
-			}
-			if account.status == removed {
-				err = state.Accounts().Remove(account.name)
-			}
-			if err != nil {
-				return nil, errors.Wrap(err, "failed updating contracts")
-			}
-			err = state.SaveDefault()
-			if err != nil {
-				return nil, errors.Wrap(err, "failed saving configuration")
-			}
-		case contract := <-contractChanges:
-			if contract.account == "" {
-				contract.account = config.DefaultEmulatorServiceAccountName
-			}
-
-			if contract.status == created || contract.status == changed {
-				_ = addContract(contract.path, contract.account, network, state, readerWriter) // if contract has errors, ignore it
-			}
-			if contract.status == removed {
-				err := removeContract(contract.path, contract.account, network, state, readerWriter) // todo what if contract got broken and then we want to delete it
-				if err != nil {
-					return nil, err
-				}
-			}
-
-			err := deploy(network, services)
-			if err != nil {
-				return nil, err
-			}
-
-			err = state.SaveDefault()
-			if err != nil {
-				return nil, errors.Wrap(err, "failed saving configuration")
-			}
-		}
-	}
-}
-
-func deploy(network string, services *services.Services) error {
-	fmt.Println("------- running deployment ---------")
-	deployed, err := services.Project.Deploy(network, true)
-	if err != nil {
-		return errors.Wrap(err, "failed to deploy project")
-	}
-
-	for _, d := range deployed {
-		fmt.Printf("deployed [%s] on account [%s]\n", d.Name, d.AccountName)
-	}
-	return nil
-}
-
-func startup(
-	deployments map[string][]string,
-	network string,
-	service *flowkit.Account,
-	services *services.Services,
-	state *flowkit.State,
-	readerWriter flowkit.ReaderWriter,
-) error {
-	cleanState(state)
-
-	for accName, contracts := range deployments {
-		if accName == "" { // default to emulator account
-			accName = config.DefaultEmulatorServiceAccountName
-		}
-
-		err := addAccount(accName, service, services, state)
-		if err != nil {
-			return err
-		}
-
-		state.Deployments().AddOrUpdate(config.Deployment{
-			Network: network,
-			Account: accName,
-		})
-		for _, path := range contracts {
-			err := addContract(path, accName, network, state, readerWriter)
-			if err != nil {
-				return err
-			}
-		}
-	}
-
-	return state.SaveDefault()
-}
-
-// cleanState of existing contracts, deployments and non-service accounts as we will build it again.
-func cleanState(state *flowkit.State) {
-	for len(*state.Contracts()) > 0 { // get the first element, otherwise elements shift if using range
-		_ = state.Contracts().Remove((*state.Contracts())[0].Name)
-	}
-
-	for len(*state.Deployments()) > 0 {
-		d := (*state.Deployments())[0]
-		_ = state.Deployments().Remove(d.Account, d.Network)
-	}
-
-	accs := make([]flowkit.Account, len(*state.Accounts()))
-	copy(accs, *state.Accounts()) // we need to make a copy otherwise when we remove order shifts
-	for _, a := range accs {
-		if a.Name() == config.DefaultEmulatorServiceAccountName {
-			continue
-		}
-		_ = state.Accounts().Remove(a.Name())
-	}
-}
-
-func addAccount(name string, service *flowkit.Account, services *services.Services, state *flowkit.State) error {
-	pkey, err := services.Keys.Generate("", crypto.ECDSA_P256)
-	if err != nil {
-		return err
-	}
-
-	// create the account on the network and set the address
-	flowAcc, err := services.Accounts.Create(
+	project, err := newProject(
 		service,
-		[]crypto.PublicKey{pkey.PublicKey()},
-		[]int{flow.AccountKeyWeightThreshold},
-		[]crypto.SignatureAlgorithm{crypto.ECDSA_P256},
-		[]crypto.HashAlgorithm{crypto.SHA3_256},
-		nil,
+		services,
+		state,
+		readerWriter,
+		newProjectFiles(dir),
 	)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	account := flowkit.NewAccount(name)
-	account.SetAddress(flowAcc.Address)
-	account.SetKey(flowkit.NewHexAccountKeyFromPrivateKey(0, crypto.SHA3_256, pkey))
-
-	state.Accounts().AddOrUpdate(account)
-	return nil
-}
-
-func contractName(path string, readerWriter flowkit.ReaderWriter) (string, error) {
-	// todo add warning if name of the file is not matching the name of the contract
-	content, err := readerWriter.ReadFile(path)
+	err = project.watch()
 	if err != nil {
-		return "", errors.Wrap(err, "could not load contract to get the name")
+		return nil, err
 	}
 
-	program, err := project.NewProgram(flowkit.NewScript(content, nil, path))
-	if err != nil {
-		return "", err
-	}
-
-	name, err := program.Name()
-	if err != nil {
-		return "", err
-	}
-
-	return name, nil
-}
-
-func addContract(
-	path string,
-	account string,
-	network string,
-	state *flowkit.State,
-	readerWriter flowkit.ReaderWriter,
-) error {
-	name, err := contractName(path, readerWriter)
-	if err != nil {
-		return err
-	}
-
-	contract := config.Contract{
-		Name:     name,
-		Location: path,
-	}
-
-	state.Contracts().AddOrUpdate(name, contract)
-	state.Deployments().AddContract(account, network, config.ContractDeployment{
-		Name: contract.Name,
-	})
-
-	return nil
-}
-
-func removeContract(
-	path string,
-	accountName string,
-	network string,
-	state *flowkit.State,
-	readerWriter flowkit.ReaderWriter,
-) error {
-	name, err := contractName(path, readerWriter)
-	if err != nil {
-		return errors.Wrap(err, "failed to remove contract")
-	}
-
-	if accountName == "" {
-		accountName = config.DefaultEmulatorServiceAccountName
-	}
-
-	state.Deployments().RemoveContract(accountName, network, name)
-	return nil
+	return nil, nil
 }
