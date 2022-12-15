@@ -216,7 +216,6 @@ func (t *Transactions) Build(
 		importReplacer := project.NewImportReplacer(
 			contracts,
 			t.state.AliasesForNetwork(network),
-			nil,
 		)
 
 		program, err = importReplacer.Replace(program)

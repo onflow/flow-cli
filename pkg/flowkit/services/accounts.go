@@ -300,7 +300,6 @@ func (a *Accounts) AddContract(
 		importReplacer := project.NewImportReplacer(
 			contracts,
 			a.state.AliasesForNetwork(network),
-			nil,
 		)
 
 		program, err = importReplacer.Replace(program)
