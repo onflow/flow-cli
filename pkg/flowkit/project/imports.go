@@ -20,39 +20,53 @@ package project
 
 import (
 	"fmt"
-	"github.com/onflow/flow-go-sdk"
 	"path"
+
+	"github.com/onflow/flow-go-sdk"
 )
+
+type Account interface {
+	Name() string
+	Address() flow.Address
+}
 
 // ImportReplacer implements file import replacements functionality for the project contracts with optionally included aliases.
 type ImportReplacer struct {
 	contracts []*Contract
 	aliases   Aliases
+	accounts  []Account
 }
 
-func NewImportReplacer(contracts []*Contract, aliases Aliases) *ImportReplacer {
+func NewImportReplacer(contracts []*Contract, aliases Aliases, accounts []Account) *ImportReplacer {
 	return &ImportReplacer{
 		contracts: contracts,
 		aliases:   aliases,
+		accounts:  accounts,
 	}
 }
 
 func (i *ImportReplacer) Replace(program *Program) (*Program, error) {
 	imports := program.imports()
 	contractsLocations := i.getContractsLocations()
+	accountsLocations := i.getAccountsLocations()
 
 	for _, imp := range imports {
-		// replace path imports
 		importLocation := path.Clean(absolutePath(program.Location(), imp))
-		target, isPath := contractsLocations[importLocation]
+		address, isPath := contractsLocations[importLocation]
 		if isPath {
-			program.replaceImport(imp, target)
+			program.replaceImport(imp, address)
 			continue
 		}
 		// replace identifier imports
-		target, isIdentifier := contractsLocations[imp]
+		address, isIdentifier := contractsLocations[imp]
 		if isIdentifier {
-			program.replaceImport(imp, target)
+			program.replaceImport(imp, address)
+			continue
+		}
+		// replace account name imports
+		address, isName := accountsLocations[imp]
+		if isName {
+			program.replaceImport(imp, address)
 			continue
 		}
 
@@ -64,18 +78,26 @@ func (i *ImportReplacer) Replace(program *Program) (*Program, error) {
 
 // getContractsLocations return a map with contract locations as keys and addresses where they are deployed as values.
 func (i *ImportReplacer) getContractsLocations() map[string]string {
-	sourceTarget := make(map[string]string)
+	locationAddress := make(map[string]string)
 	for _, contract := range i.contracts {
-		sourceTarget[path.Clean(contract.Location())] = contract.AccountAddress.String()
+		locationAddress[path.Clean(contract.Location())] = contract.AccountAddress.String()
 		// add also by name since we might use the new import schema
-		sourceTarget[contract.Name] = contract.AccountAddress.String()
+		locationAddress[contract.Name] = contract.AccountAddress.String()
 	}
 
 	for source, target := range i.aliases {
-		sourceTarget[path.Clean(source)] = flow.HexToAddress(target).String()
+		locationAddress[path.Clean(source)] = flow.HexToAddress(target).String()
 	}
 
-	return sourceTarget
+	return locationAddress
+}
+
+func (i *ImportReplacer) getAccountsLocations() map[string]string {
+	accountAddress := make(map[string]string)
+	for _, account := range i.accounts {
+		accountAddress[account.Name()] = account.Address().String()
+	}
+	return accountAddress
 }
 
 func absolutePath(basePath, relativePath string) string {

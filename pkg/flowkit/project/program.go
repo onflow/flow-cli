@@ -31,10 +31,15 @@ func NewProgram(script Scripter) (*Program, error) {
 	}, nil
 }
 
+// imports builds an array of all the import locations
+//
+// It currently supports getting import locations as identifiers or as strings. Strings locations
+// can represent a file or an account name, whereas identifiers represent contract names.
 func (p *Program) imports() []string {
 	imports := make([]string, 0)
 
 	for _, importDeclaration := range p.astProgram.ImportDeclarations() {
+		// we parse all the identifier locations, that are all imports that look like "import X"
 		_, isIdentifierImport := importDeclaration.Location.(common.IdentifierLocation)
 		if isIdentifierImport {
 			location := importDeclaration.Location.String()
@@ -43,9 +48,9 @@ func (p *Program) imports() []string {
 			}
 			imports = append(imports, location)
 		}
-
-		_, isFileImport := importDeclaration.Location.(common.StringLocation)
-		if isFileImport {
+		// we parse all string locations, that are all imports that look like "import X from "Y""
+		_, isStringImport := importDeclaration.Location.(common.StringLocation)
+		if isStringImport {
 			imports = append(imports, importDeclaration.Location.String())
 		}
 	}

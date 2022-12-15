@@ -32,6 +32,19 @@ func cleanCode(code []byte) string {
 	return space.ReplaceAllString(string(code), " ")
 }
 
+type testAccount struct {
+	address flow.Address
+	name    string
+}
+
+func (t *testAccount) Name() string {
+	return t.name
+}
+
+func (t *testAccount) Address() flow.Address {
+	return t.address
+}
+
 func TestResolver(t *testing.T) {
 
 	t.Run("Resolve imports", func(t *testing.T) {
@@ -93,7 +106,7 @@ func TestResolver(t *testing.T) {
 	`),
 		}
 
-		replacer := NewImportReplacer(contracts, aliases)
+		replacer := NewImportReplacer(contracts, aliases, nil)
 		for i, script := range scripts {
 			program, err := NewProgram(&testScript{
 				code:     script,
@@ -111,13 +124,20 @@ func TestResolver(t *testing.T) {
 		contracts := []*Contract{
 			NewContract("Bar", "./Bar.cdc", nil, flow.HexToAddress("0x2"), "", nil),
 			NewContract("Foo", "./Foo.cdc", nil, flow.HexToAddress("0x1"), "", nil),
+			NewContract("Zoo", "./Zoo.cdc", nil, flow.HexToAddress("0x2"), "", nil),
 		}
 
-		replacer := NewImportReplacer(contracts, nil)
+		accounts := []Account{&testAccount{
+			address: flow.HexToAddress("0x03"),
+			name:    "alice",
+		}}
+
+		replacer := NewImportReplacer(contracts, nil, accounts)
 
 		code := []byte(`
 			import Foo from "./Foo.cdc"
 			import Bar
+			import Zoo from "alice"
 			
 			pub contract Zoo {}
 		`)
@@ -130,11 +150,12 @@ func TestResolver(t *testing.T) {
 		expected := []byte(`
 			import Foo from 0x0000000000000001
 			import Bar from 0x0000000000000002
+			import Zoo from 0x0000000000000003
 			
 			pub contract Zoo {}
 		`)
 
-		assert.Equal(t, string(expected), string(replaced.Code()))
+		assert.Equal(t, cleanCode(expected), cleanCode(replaced.Code()))
 	})
 
 }
