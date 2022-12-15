@@ -78,7 +78,7 @@ func (p *project) startup() error {
 		if accName == "" { // default to emulator account
 			accName = defaultAccount
 		}
-		fmt.Println("startup service account", p.service.Address())
+
 		err := p.addAccount(accName)
 		if err != nil {
 			return err
@@ -179,7 +179,6 @@ func (p *project) addAccount(name string) error {
 		return err
 	}
 
-	fmt.Println("add account service account", p.service.Address())
 	// create the account on the network and set the address
 	flowAcc, err := p.services.Accounts.Create(
 		p.service,
@@ -197,9 +196,7 @@ func (p *project) addAccount(name string) error {
 	account.SetAddress(flowAcc.Address)
 	account.SetKey(flowkit.NewHexAccountKeyFromPrivateKey(0, crypto.SHA3_256, pkey))
 
-	fmt.Println("startup service account 1", p.service.Address())
 	p.state.Accounts().AddOrUpdate(account)
-	fmt.Println("startup service account 2", p.service.Address())
 	return nil
 }
 

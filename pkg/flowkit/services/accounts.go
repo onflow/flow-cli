@@ -428,7 +428,6 @@ func (a *Accounts) prepareTransaction(
 	}
 
 	tx.SetBlockReference(block)
-	fmt.Println("preapre tx proposer", account.Address(), proposer.Address.String())
 	if err = tx.SetProposer(proposer, account.Key().Index()); err != nil {
 		return nil, err
 	}

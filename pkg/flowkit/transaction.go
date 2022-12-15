@@ -143,12 +143,10 @@ func NewCreateAccountTransaction(
 	keys []*flow.AccountKey,
 	contracts []templates.Contract,
 ) (*Transaction, error) {
-	fmt.Println("new create tx payer", signer.Address())
 	template, err := templates.CreateAccount(keys, contracts, signer.Address())
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println("new create tx signer", signer)
 	return newTransactionFromTemplate(template, signer)
 }
 
@@ -159,7 +157,6 @@ func newTransactionFromTemplate(templateTx *flow.Transaction, signer *Account) (
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println("new tx template payer", signer.Address())
 	tx.SetPayer(signer.Address())
 	tx.SetGasLimit(maxGasLimit) // todo change this to calculated limit
 
