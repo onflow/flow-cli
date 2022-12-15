@@ -20,7 +20,6 @@ package super
 
 import (
 	"fmt"
-	"github.com/gosuri/uilive"
 	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
@@ -33,15 +32,17 @@ import (
 
 var network = config.DefaultEmulatorNetwork().Name
 
+const defaultAccount = "default"
+
 func newProject(
-	serviceAccount *flowkit.Account,
+	serviceAccount flowkit.Account,
 	services *services.Services,
 	state *flowkit.State,
 	readerWriter flowkit.ReaderWriter,
 	files *projectFiles,
 ) (*project, error) {
 	proj := &project{
-		service:      serviceAccount,
+		service:      &serviceAccount,
 		services:     services,
 		state:        state,
 		readerWriter: readerWriter,
@@ -75,9 +76,9 @@ func (p *project) startup() error {
 
 	for accName, contracts := range deployments {
 		if accName == "" { // default to emulator account
-			accName = config.DefaultEmulatorServiceAccountName
+			accName = defaultAccount
 		}
-
+		fmt.Println("startup service account", p.service.Address())
 		err := p.addAccount(accName)
 		if err != nil {
 			return err
@@ -148,7 +149,7 @@ func (p *project) watch() error {
 			}
 		case contract := <-contractChanges:
 			if contract.account == "" {
-				contract.account = config.DefaultEmulatorServiceAccountName
+				contract.account = defaultAccount
 			}
 
 			if contract.status == created || contract.status == changed {
@@ -178,6 +179,7 @@ func (p *project) addAccount(name string) error {
 		return err
 	}
 
+	fmt.Println("add account service account", p.service.Address())
 	// create the account on the network and set the address
 	flowAcc, err := p.services.Accounts.Create(
 		p.service,
@@ -195,7 +197,9 @@ func (p *project) addAccount(name string) error {
 	account.SetAddress(flowAcc.Address)
 	account.SetKey(flowkit.NewHexAccountKeyFromPrivateKey(0, crypto.SHA3_256, pkey))
 
+	fmt.Println("startup service account 1", p.service.Address())
 	p.state.Accounts().AddOrUpdate(account)
+	fmt.Println("startup service account 2", p.service.Address())
 	return nil
 }
 
@@ -263,14 +267,12 @@ func (p *project) removeContract(
 }
 
 func (p *project) print(deployed []*flowkitProject.Contract, err error) {
-	writer := uilive.New()
-	writer.Start()
+	fmt.Println("The development environment will watch your Cadence files and automatically keep your project updated on the emulator.")
+	fmt.Println("Please add your contracts in the contracts folder, if you want to add a contract to a new account, create a folder")
+	fmt.Println("inside the contracts folder and we will automatically create an account for you and deploy everything inside that folder.")
 
-	_, _ = fmt.Fprint(writer, `
-		The development environment will watch your Cadence files and automatically keep your project updated on the emulator. 
-		Please add your contracts in the contracts folder, if you want to add a contract to a new account, create a folder \n 
-		inside the contracts folder and we will automatically create an account for you and deploy everything inside that folder.\n\n
-	`)
+	//writer := uilive.New()
+	//writer.Start()
 
 	accountContracts := make(map[string][]string)
 
@@ -285,11 +287,17 @@ func (p *project) print(deployed []*flowkitProject.Contract, err error) {
 	okFaces := []string{"😎", "😲", "😱", "😜"}
 
 	for account, contracts := range accountContracts {
-		_, _ = fmt.Fprint(writer.Newline(), fmt.Sprintf("%s %s\n", okFaces[0], output.Bold(account)))
+		fmt.Println(fmt.Sprintf("%s %s\n", okFaces[0], output.Bold(account)))
+		//_, _ = fmt.Fprint(writer.Newline(), fmt.Sprintf("%s %s\n", okFaces[0], output.Bold(account)))
 
 		for _, contract := range contracts {
-			_, _ = fmt.Fprint(writer.Newline(), contract)
+			//_, _ = fmt.Fprint(writer.Newline(), contract)
+			fmt.Println(contract)
 		}
+	}
+
+	if err != nil {
+		fmt.Println("error", err)
 	}
 
 	//writer.Stop()

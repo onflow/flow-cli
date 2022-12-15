@@ -19,6 +19,7 @@
 package super
 
 import (
+	"fmt"
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
@@ -64,10 +65,12 @@ func dev(
 		return nil, err
 	}
 
+	fmt.Println("starting with service account", service.Name(), service.Address())
+
 	services.SetLogger(output.NewStdoutLogger(output.NoneLog))
 
 	project, err := newProject(
-		service,
+		*service,
 		services,
 		state,
 		readerWriter,

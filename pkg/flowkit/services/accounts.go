@@ -20,6 +20,7 @@ package services
 
 import (
 	"fmt"
+	"github.com/pkg/errors"
 	"strings"
 
 	"github.com/onflow/flow-cli/pkg/flowkit/project"
@@ -253,7 +254,7 @@ func (a *Accounts) Create(
 
 	sentTx, err := a.gateway.SendSignedTransaction(tx)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "account creation transaction failed")
 	}
 
 	a.logger.StartProgress("Waiting for transaction to be sealed...")
@@ -427,7 +428,7 @@ func (a *Accounts) prepareTransaction(
 	}
 
 	tx.SetBlockReference(block)
-
+	fmt.Println("preapre tx proposer", account.Address(), proposer.Address.String())
 	if err = tx.SetProposer(proposer, account.Key().Index()); err != nil {
 		return nil, err
 	}
