@@ -26,17 +26,16 @@ import (
 )
 
 func Test_AccountFromPath(t *testing.T) {
-	cadenceDir := "/Foo/cadence/"
 	paths := [][]string{ // first is path, second is account name
-		{"/Foo/cadence/contracts/alice/foo.cdc", "alice"},
-		{"/Foo/cadence/contracts/alice", "alice"},
-		{"/Foo/cadence/contracts/alice/boo/foo.cdc", ""},
-		{"/Foo/cadence/contracts/foo.cdc", ""},
-		{"/Foo/cadence/contracts/foo/bar/goo/foo", ""},
+		{"cadence/contracts/alice/foo.cdc", "alice"},
+		{"cadence/contracts/alice", "alice"},
+		{"cadence/contracts/alice/boo/foo.cdc", ""},
+		{"cadence/contracts/foo.cdc", ""},
+		{"cadence/contracts/foo/bar/goo/foo", ""},
 	}
 
 	for i, test := range paths {
-		name, ok := accountFromPath(cadenceDir, test[0])
+		name, ok := accountFromPath(test[0])
 		assert.Equal(t, test[1] != "", ok) // if we don't provide a name we mean it shouldn't be returned
 		assert.Equal(t, test[1], name, fmt.Sprintf("failed test %d", i))
 	}
@@ -52,7 +51,7 @@ func Test_RelativeProjectPath(t *testing.T) {
 	}
 
 	f := &projectFiles{
-		cadenceDir: cdcDir,
+		cadencePath: cdcDir,
 	}
 
 	for i, test := range paths {
