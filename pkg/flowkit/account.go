@@ -20,7 +20,6 @@ package flowkit
 
 import (
 	"fmt"
-	"github.com/onflow/flow-cli/pkg/flowkit/project"
 	"strings"
 
 	"github.com/onflow/flow-go-sdk"
@@ -233,14 +232,6 @@ func (a *Accounts) String() string {
 		accNames = append(accNames, acc.name)
 	}
 	return strings.Join(accNames, ",")
-}
-
-func (a *Accounts) ToProject() []project.Account {
-	projAccs := make([]project.Account, 0)
-	for _, acc := range *a {
-		projAccs = append(projAccs, &acc)
-	}
-	return projAccs
 }
 
 // ByAddress get an account by address.

@@ -106,7 +106,7 @@ func TestResolver(t *testing.T) {
 	`),
 		}
 
-		replacer := NewImportReplacer(contracts, aliases, nil)
+		replacer := NewImportReplacer(contracts, aliases)
 		for i, script := range scripts {
 			program, err := NewProgram(&testScript{
 				code:     script,
@@ -127,17 +127,11 @@ func TestResolver(t *testing.T) {
 			NewContract("Zoo", "./Zoo.cdc", nil, flow.HexToAddress("0x2"), "", nil),
 		}
 
-		accounts := []Account{&testAccount{
-			address: flow.HexToAddress("0x03"),
-			name:    "alice",
-		}}
-
-		replacer := NewImportReplacer(contracts, nil, accounts)
+		replacer := NewImportReplacer(contracts, nil)
 
 		code := []byte(`
 			import Foo from "./Foo.cdc"
 			import Bar
-			import Zoo from "alice"
 			
 			pub contract Zoo {}
 		`)
@@ -150,7 +144,6 @@ func TestResolver(t *testing.T) {
 		expected := []byte(`
 			import Foo from 0x0000000000000001
 			import Bar from 0x0000000000000002
-			import Zoo from 0x0000000000000003
 			
 			pub contract Zoo {}
 		`)

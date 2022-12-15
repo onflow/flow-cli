@@ -153,7 +153,7 @@ func (d *Deployment) buildDependencies() error {
 			return fmt.Errorf(
 				"import from %s could not be found: %s, make sure import path is correct",
 				contract.Name,
-				importPath,
+				location,
 			)
 		}
 	}

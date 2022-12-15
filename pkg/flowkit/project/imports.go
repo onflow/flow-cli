@@ -34,21 +34,18 @@ type Account interface {
 type ImportReplacer struct {
 	contracts []*Contract
 	aliases   Aliases
-	accounts  []Account
 }
 
-func NewImportReplacer(contracts []*Contract, aliases Aliases, accounts []Account) *ImportReplacer {
+func NewImportReplacer(contracts []*Contract, aliases Aliases) *ImportReplacer {
 	return &ImportReplacer{
 		contracts: contracts,
 		aliases:   aliases,
-		accounts:  accounts,
 	}
 }
 
 func (i *ImportReplacer) Replace(program *Program) (*Program, error) {
 	imports := program.imports()
 	contractsLocations := i.getContractsLocations()
-	accountsLocations := i.getAccountsLocations()
 
 	for _, imp := range imports {
 		importLocation := path.Clean(absolutePath(program.Location(), imp))
@@ -60,12 +57,6 @@ func (i *ImportReplacer) Replace(program *Program) (*Program, error) {
 		// replace identifier imports
 		address, isIdentifier := contractsLocations[imp]
 		if isIdentifier {
-			program.replaceImport(imp, address)
-			continue
-		}
-		// replace account name imports
-		address, isName := accountsLocations[imp]
-		if isName {
 			program.replaceImport(imp, address)
 			continue
 		}
@@ -90,14 +81,6 @@ func (i *ImportReplacer) getContractsLocations() map[string]string {
 	}
 
 	return locationAddress
-}
-
-func (i *ImportReplacer) getAccountsLocations() map[string]string {
-	accountAddress := make(map[string]string)
-	for _, account := range i.accounts {
-		accountAddress[account.Name()] = account.Address().String()
-	}
-	return accountAddress
 }
 
 func absolutePath(basePath, relativePath string) string {

@@ -66,6 +66,7 @@ func dev(
 
 	// todo dev work if not run on top root directory - at least have a warning
 	// todo handle emulator running as part of this service or part of existing running emulator
+	// todo possible bug, investigate when new account is created whether we deploy too soon before it was even founded. This is error: ommand Error: failure to startup: execution error code 1103: [Error Code: 1103] The account with address (120e725050340cab) uses 783 bytes of storage which is over its capacity (0 bytes). Capacity can be increased by adding FLOW tokens to the account.
 
 	service, err := state.EmulatorServiceAccount()
 	if err != nil {
