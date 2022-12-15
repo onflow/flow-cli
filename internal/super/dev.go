@@ -114,6 +114,10 @@ func dev(
 				return nil, errors.Wrap(err, "failed saving configuration")
 			}
 		case contract := <-contractChanges:
+			if contract.account == "" {
+				contract.account = config.DefaultEmulatorServiceAccountName
+			}
+
 			if contract.status == created || contract.status == changed {
 				_ = addContract(contract.path, contract.account, network, state, readerWriter) // if contract has errors, ignore it
 			}
@@ -187,13 +191,15 @@ func startup(
 
 // cleanState of existing contracts, deployments and non-service accounts as we will build it again.
 func cleanState(state *flowkit.State) {
-	for _, c := range *state.Contracts() {
-		_ = state.Contracts().Remove(c.Name)
+	for len(*state.Contracts()) > 0 { // get the first element, otherwise elements shift if using range
+		_ = state.Contracts().Remove((*state.Contracts())[0].Name)
 	}
-	for _, d := range *state.Deployments() {
+
+	for len(*state.Deployments()) > 0 {
+		d := (*state.Deployments())[0]
 		_ = state.Deployments().Remove(d.Account, d.Network)
 	}
-	// clean out non-service accounts
+
 	accs := make([]flowkit.Account, len(*state.Accounts()))
 	copy(accs, *state.Accounts()) // we need to make a copy otherwise when we remove order shifts
 	for _, a := range accs {
@@ -267,8 +273,8 @@ func addContract(
 		Name:     name,
 		Location: path,
 	}
-	state.Contracts().AddOrUpdate(name, contract)
 
+	state.Contracts().AddOrUpdate(name, contract)
 	state.Deployments().AddContract(account, network, config.ContractDeployment{
 		Name: contract.Name,
 	})

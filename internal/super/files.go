@@ -76,7 +76,6 @@ func (f *projectFiles) deployments() (map[string][]string, error) {
 
 	for _, file := range contracts {
 		accName, _ := accountFromPath(file)
-		fmt.Println("account name", accName)
 		deployments[accName] = append(deployments[accName], file)
 	}
 
@@ -117,7 +116,12 @@ func (f *projectFiles) watch() (<-chan accountChange, <-chan contractChange, err
 		for {
 			select {
 			case event := <-f.watcher.Event:
-				name, containsAccount := accountFromPath(event.Path)
+				rel, err := f.relProjectPath(event.Path)
+				if err != nil { // skip if failed
+					continue
+				}
+
+				name, containsAccount := accountFromPath(rel)
 				if event.IsDir() && containsAccount {
 					// todo handle rename and move
 					accounts <- accountChange{
@@ -127,12 +131,7 @@ func (f *projectFiles) watch() (<-chan accountChange, <-chan contractChange, err
 					continue
 				}
 
-				if filepath.Ext(event.Path) != cadenceExt { // skip any non cadence files
-					continue
-				}
-
-				rel, err := f.relProjectPath(event.Path)
-				if err != nil { // skip if failed
+				if filepath.Ext(rel) != cadenceExt { // skip any non cadence files
 					continue
 				}
 
