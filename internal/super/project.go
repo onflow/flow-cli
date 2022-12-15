@@ -20,8 +20,10 @@ package super
 
 import (
 	"fmt"
+	"github.com/gosuri/uilive"
 	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
+	"github.com/onflow/flow-cli/pkg/flowkit/output"
 	flowkitProject "github.com/onflow/flow-cli/pkg/flowkit/project"
 	"github.com/onflow/flow-cli/pkg/flowkit/services"
 	"github.com/onflow/flow-go-sdk"
@@ -93,25 +95,15 @@ func (p *project) startup() error {
 		}
 	}
 
-	if err := p.deploy(); err != nil {
-		return err
-	}
+	p.deploy()
 
 	return p.state.SaveDefault()
 }
 
 // deploys all the contracts found in the state configuration.
-func (p *project) deploy() error {
-	fmt.Println("------- running deployment ---------")
+func (p *project) deploy() {
 	deployed, err := p.services.Project.Deploy(network, true)
-	if err != nil {
-		return errors.Wrap(err, "failed to deploy project")
-	}
-
-	for _, d := range deployed {
-		fmt.Printf("deployed [%s] on account [%s]\n", d.Name, d.AccountName)
-	}
-	return nil
+	p.print(deployed, err)
 }
 
 // cleanState of existing contracts, deployments and non-service accounts as we will build it again.
@@ -169,10 +161,7 @@ func (p *project) watch() error {
 				}
 			}
 
-			err = p.deploy()
-			if err != nil {
-				return err
-			}
+			p.deploy()
 		}
 
 		err = p.state.SaveDefault()
@@ -271,4 +260,37 @@ func (p *project) removeContract(
 
 	p.state.Deployments().RemoveContract(accountName, network, name)
 	return nil
+}
+
+func (p *project) print(deployed []*flowkitProject.Contract, err error) {
+	writer := uilive.New()
+	writer.Start()
+
+	_, _ = fmt.Fprint(writer, `
+		The development environment will watch your Cadence files and automatically keep your project updated on the emulator. 
+		Please add your contracts in the contracts folder, if you want to add a contract to a new account, create a folder \n 
+		inside the contracts folder and we will automatically create an account for you and deploy everything inside that folder.\n\n
+	`)
+
+	accountContracts := make(map[string][]string)
+
+	for _, deploy := range deployed {
+		account := accountContracts[deploy.AccountName]
+		if account == nil {
+			account = make([]string, 0)
+		}
+		account = append(account, fmt.Sprintf("|-\t%s\t%s", deploy.Name, output.Italic(deploy.Location())))
+	}
+
+	okFaces := []string{"😎", "😲", "😱", "😜"}
+
+	for account, contracts := range accountContracts {
+		_, _ = fmt.Fprint(writer.Newline(), fmt.Sprintf("%s %s\n", okFaces[0], output.Bold(account)))
+
+		for _, contract := range contracts {
+			_, _ = fmt.Fprint(writer.Newline(), contract)
+		}
+	}
+
+	//writer.Stop()
 }
