@@ -50,16 +50,16 @@ type contractChange struct {
 	account string
 }
 
-func newProjectFiles(projectDir string) *projectFiles {
+func newProjectFiles(projectPath string) *projectFiles {
 	return &projectFiles{
-		cadenceDir: path.Join(projectDir, cadenceDir),
-		watcher:    watcher.New(),
+		cadencePath: path.Join(projectPath, cadenceDir),
+		watcher:     watcher.New(),
 	}
 }
 
 type projectFiles struct {
-	cadenceDir string
-	watcher    *watcher.Watcher
+	cadencePath string
+	watcher     *watcher.Watcher
 }
 
 func (f *projectFiles) contracts() ([]string, error) {
@@ -75,7 +75,8 @@ func (f *projectFiles) deployments() (map[string][]string, error) {
 	}
 
 	for _, file := range contracts {
-		accName, _ := accountFromPath(f.cadenceDir, file)
+		accName, _ := accountFromPath(file)
+		fmt.Println("account name", accName)
 		deployments[accName] = append(deployments[accName], file)
 	}
 
@@ -91,7 +92,7 @@ func (f *projectFiles) transactions() ([]string, error) {
 }
 
 func (f *projectFiles) watch() (<-chan accountChange, <-chan contractChange, error) {
-	err := f.watcher.AddRecursive(path.Join(f.cadenceDir, contractDir))
+	err := f.watcher.AddRecursive(path.Join(f.cadencePath, contractDir))
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "add recursive files failed")
 	}
@@ -116,7 +117,7 @@ func (f *projectFiles) watch() (<-chan accountChange, <-chan contractChange, err
 		for {
 			select {
 			case event := <-f.watcher.Event:
-				name, containsAccount := accountFromPath(f.cadenceDir, event.Path)
+				name, containsAccount := accountFromPath(event.Path)
 				if event.IsDir() && containsAccount {
 					// todo handle rename and move
 					accounts <- accountChange{
@@ -152,7 +153,7 @@ func (f *projectFiles) watch() (<-chan accountChange, <-chan contractChange, err
 }
 
 func (f *projectFiles) getFilePaths(dir string) ([]string, error) {
-	dir = path.Join(f.cadenceDir, dir)
+	dir = path.Join(f.cadencePath, dir)
 	paths := make([]string, 0)
 	err := filepath.WalkDir(dir, func(path string, d fs.DirEntry, err error) error {
 		if path == dir || d.IsDir() || filepath.Ext(path) != cadenceExt { // we only want to get .cdc files in the dir
@@ -177,7 +178,7 @@ func (f *projectFiles) getFilePaths(dir string) ([]string, error) {
 // relProjectPath gets a filepath relative to the project directory including the base cadence directory.
 // eg. a path /Users/Mike/Dev/project/cadence/contracts/foo.cdc will become cadence/contracts/foo.cdc
 func (f *projectFiles) relProjectPath(file string) (string, error) {
-	rel, err := filepath.Rel(path.Dir(f.cadenceDir), file)
+	rel, err := filepath.Rel(path.Dir(f.cadencePath), file)
 	if err != nil {
 		return "", errors.Wrap(err, "failed getting project relative path")
 	}
@@ -187,13 +188,13 @@ func (f *projectFiles) relProjectPath(file string) (string, error) {
 // accountFromPath returns the account name from provided path if possible, otherwise returns empty and false.
 //
 // Account name can be extracted from path when the contract folder contains another folder, that in our syntax indicates account name.
-func accountFromPath(cadenceDir string, path string) (string, bool) {
-	// extract account from path if file path is provided e.g.: /Foo/contracts/[alice]/foo.cdc
+func accountFromPath(path string) (string, bool) {
+	// extract account from path if file path is provided e.g.: cadence/contracts/[alice]/foo.cdc
 	subAccPattern := filepath.Clean(fmt.Sprintf("%s/%s/*/*%s", cadenceDir, contractDir, cadenceExt))
 	if match, _ := filepath.Match(subAccPattern, path); match {
 		return filepath.Base(filepath.Dir(path)), true
 	}
-	// extract account from path if dir path is provided e.g.: /Foo/contracts/[alice]
+	// extract account from path if dir path is provided e.g.: cadence/contracts/[alice]
 	subAccPattern = filepath.Clean(fmt.Sprintf("%s/%s/*", cadenceDir, contractDir))
 	if match, _ := filepath.Match(subAccPattern, path); match {
 		if filepath.Ext(path) != "" { // might be a file
