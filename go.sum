@@ -786,6 +786,8 @@ github.com/psiemens/graceland v1.0.0/go.mod h1:1Tof+vt1LbmcZFE0lzgdwMN0QBymAChG3
 github.com/psiemens/sconfig v0.0.0-20190623041652-6e01eb1354fc/go.mod h1:+MLKqdledP/8G3rOBpknbLh0IclCf4WneJUtS26JB2U=
 github.com/psiemens/sconfig v0.1.0 h1:xfWqW+TRpih7mXZIqKYTmpRhlZLQ1kbxV8EjllPv76s=
 github.com/psiemens/sconfig v0.1.0/go.mod h1:+MLKqdledP/8G3rOBpknbLh0IclCf4WneJUtS26JB2U=
+github.com/radovskyb/watcher v1.0.7 h1:AYePLih6dpmS32vlHfhCeli8127LzkIgwJGcwwe8tUE=
+github.com/radovskyb/watcher v1.0.7/go.mod h1:78okwvY5wPdzcb1UYnip1pvrZNIVEIh/Cm+ZuvsUYIg=
 github.com/rivo/uniseg v0.1.0/go.mod h1:J6wj4VEh+S6ZtnVlnTBMWIodfgj8LQOQFoIToxlJtxc=
 github.com/rivo/uniseg v0.2.0/go.mod h1:J6wj4VEh+S6ZtnVlnTBMWIodfgj8LQOQFoIToxlJtxc=
 github.com/rivo/uniseg v0.2.1-0.20211004051800-57c86be7915a h1:s7GrsqeorVkFR1vGmQ6WVL9nup0eyQCC+YVUeSQLH/Q=

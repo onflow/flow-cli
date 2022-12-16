@@ -24,11 +24,12 @@ import (
 )
 
 const (
-	red    = "\033[31m"
-	green  = "\033[32m"
-	bold   = "\033[1m"
-	reset  = "\033[0m"
-	italic = "\033[3m"
+	red     = "\033[31m"
+	green   = "\033[32m"
+	magenta = "\033[35m"
+	bold    = "\033[1m"
+	reset   = "\033[0m"
+	italic  = "\033[3m"
 )
 
 func printColor(msg string, color string) string {
@@ -45,6 +46,10 @@ func Red(msg string) string {
 
 func Green(msg string) string {
 	return printColor(msg, green)
+}
+
+func Magenta(msg string) string {
+	return printColor(msg, magenta)
 }
 
 func Bold(msg string) string {

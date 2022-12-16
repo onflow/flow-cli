@@ -67,7 +67,7 @@ func deploy(
 
 	c, err := srv.Project.Deploy(globalFlags.Network, deployFlags.Update)
 	if err != nil {
-		var projectErr *services.ErrProjectDeploy
+		var projectErr *services.ProjectDeploymentError
 		if errors.As(err, &projectErr) {
 			for name, err := range projectErr.Contracts() {
 				fmt.Printf(

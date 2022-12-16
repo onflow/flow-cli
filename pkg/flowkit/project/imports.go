@@ -20,9 +20,15 @@ package project
 
 import (
 	"fmt"
-	"github.com/onflow/flow-go-sdk"
 	"path"
+
+	"github.com/onflow/flow-go-sdk"
 )
+
+type Account interface {
+	Name() string
+	Address() flow.Address
+}
 
 // ImportReplacer implements file import replacements functionality for the project contracts with optionally included aliases.
 type ImportReplacer struct {
@@ -38,16 +44,24 @@ func NewImportReplacer(contracts []*Contract, aliases Aliases) *ImportReplacer {
 }
 
 func (i *ImportReplacer) Replace(program *Program) (*Program, error) {
-	imports := program.Imports()
+	imports := program.imports()
 	contractsLocations := i.getContractsLocations()
 
 	for _, imp := range imports {
 		importLocation := path.Clean(absolutePath(program.Location(), imp))
-		target, found := contractsLocations[importLocation]
-		if !found {
-			return nil, fmt.Errorf("import %s could not be resolved from the configuration", imp)
+		address, isPath := contractsLocations[importLocation]
+		if isPath {
+			program.replaceImport(imp, address)
+			continue
 		}
-		program.ReplaceImport(imp, target)
+		// replace identifier imports
+		address, isIdentifier := contractsLocations[imp]
+		if isIdentifier {
+			program.replaceImport(imp, address)
+			continue
+		}
+
+		return nil, fmt.Errorf("import %s could not be resolved from provided contracts", imp)
 	}
 
 	return program, nil
@@ -55,16 +69,18 @@ func (i *ImportReplacer) Replace(program *Program) (*Program, error) {
 
 // getContractsLocations return a map with contract locations as keys and addresses where they are deployed as values.
 func (i *ImportReplacer) getContractsLocations() map[string]string {
-	sourceTarget := make(map[string]string)
+	locationAddress := make(map[string]string)
 	for _, contract := range i.contracts {
-		sourceTarget[path.Clean(contract.Location())] = contract.AccountAddress.String()
+		locationAddress[path.Clean(contract.Location())] = contract.AccountAddress.String()
+		// add also by name since we might use the new import schema
+		locationAddress[contract.Name] = contract.AccountAddress.String()
 	}
 
 	for source, target := range i.aliases {
-		sourceTarget[path.Clean(source)] = flow.HexToAddress(target).String()
+		locationAddress[path.Clean(source)] = flow.HexToAddress(target).String()
 	}
 
-	return sourceTarget
+	return locationAddress
 }
 
 func absolutePath(basePath, relativePath string) string {
