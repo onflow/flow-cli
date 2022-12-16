@@ -33,14 +33,14 @@ import (
 
 type flagsExec struct{}
 
-var execFlags = flagsDev{}
+var execFlags = flagsExec{}
 
 var ExecCommand = &command.Command{
 	Cmd: &cobra.Command{
-		Use:     "exec",
+		Use:     "exec <name>",
 		Short:   "Send a transaction or execute a script",
-		Args:    cobra.ExactArgs(0),
-		Example: "flow exec",
+		Args:    cobra.ExactArgs(1),
+		Example: "flow exec getResult",
 	},
 	Flags: &execFlags,
 	RunS:  exec,
@@ -77,7 +77,7 @@ func exec(
 		return nil, err
 	}
 
-	scriptRes, tx, txRes, error := project.exec(name)
+	scriptRes, tx, txRes, err := project.exec(name)
 	if err != nil {
 		return nil, err
 	}
@@ -87,7 +87,7 @@ func exec(
 	}
 
 	return &transactions.TransactionResult{
-		result: txRes,
-		tx:     tx,
+		Result: txRes,
+		Tx:     tx,
 	}, nil
 }
