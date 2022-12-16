@@ -63,7 +63,7 @@ type projectFiles struct {
 }
 
 func (f *projectFiles) contracts() ([]string, error) {
-	return f.getFilePaths(contractDir)
+	return f.getCadenceFilepaths(contractDir)
 }
 
 func (f *projectFiles) deployments() (map[string][]string, error) {
@@ -83,11 +83,11 @@ func (f *projectFiles) deployments() (map[string][]string, error) {
 }
 
 func (f *projectFiles) scripts() ([]string, error) {
-	return f.getFilePaths(scriptDir)
+	return f.getCadenceFilepaths(scriptDir)
 }
 
 func (f *projectFiles) transactions() ([]string, error) {
-	return f.getFilePaths(transactionDir)
+	return f.getCadenceFilepaths(transactionDir)
 }
 
 func (f *projectFiles) watch() (<-chan accountChange, <-chan contractChange, error) {
@@ -151,7 +151,7 @@ func (f *projectFiles) watch() (<-chan accountChange, <-chan contractChange, err
 	return accounts, contracts, nil
 }
 
-func (f *projectFiles) getFilePaths(dir string) ([]string, error) {
+func (f *projectFiles) getCadenceFilepaths(dir string) ([]string, error) {
 	dir = path.Join(f.cadencePath, dir)
 	paths := make([]string, 0)
 	err := filepath.WalkDir(dir, func(path string, d fs.DirEntry, err error) error {
