@@ -19,10 +19,8 @@
 package super
 
 import (
-	"fmt"
 	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
-	"github.com/onflow/flow-cli/pkg/flowkit/output"
 	flowkitProject "github.com/onflow/flow-cli/pkg/flowkit/project"
 	"github.com/onflow/flow-cli/pkg/flowkit/services"
 	"github.com/onflow/flow-go-sdk"
@@ -42,11 +40,12 @@ func newProject(
 	files *projectFiles,
 ) (*project, error) {
 	proj := &project{
-		service:      &serviceAccount,
-		services:     services,
-		state:        state,
-		readerWriter: readerWriter,
-		projectFiles: files,
+		service:        &serviceAccount,
+		services:       services,
+		state:          state,
+		readerWriter:   readerWriter,
+		projectFiles:   files,
+		pathNameLookup: make(map[string]string),
 	}
 
 	err := proj.startup()
@@ -58,11 +57,12 @@ func newProject(
 }
 
 type project struct {
-	service      *flowkit.Account
-	services     *services.Services
-	state        *flowkit.State
-	readerWriter flowkit.ReaderWriter
-	projectFiles *projectFiles
+	service        *flowkit.Account
+	services       *services.Services
+	state          *flowkit.State
+	readerWriter   flowkit.ReaderWriter
+	projectFiles   *projectFiles
+	pathNameLookup map[string]string
 }
 
 // startup cleans the state and then rebuilds it from the current folder state.
@@ -104,7 +104,7 @@ func (p *project) startup() error {
 // deploys all the contracts found in the state configuration.
 func (p *project) deploy() {
 	deployed, err := p.services.Project.Deploy(network, true)
-	p.print(deployed, err)
+	printDeployment(deployed, err, p.pathNameLookup)
 }
 
 // cleanState of existing contracts, deployments and non-service accounts as we will build it again.
@@ -142,10 +142,10 @@ func (p *project) watch() error {
 				err = p.addAccount(account.name)
 			}
 			if account.status == removed {
-				err = p.state.Accounts().Remove(account.name)
+				err = p.removeAccount(account.name)
 			}
 			if err != nil {
-				return errors.Wrap(err, "failed updating contracts")
+				return errors.Wrap(err, "failed updating accounts")
 			}
 		case contract := <-contractChanges:
 			if contract.account == "" {
@@ -197,11 +197,24 @@ func (p *project) addAccount(name string) error {
 	account.SetKey(flowkit.NewHexAccountKeyFromPrivateKey(0, crypto.SHA3_256, pkey))
 
 	p.state.Accounts().AddOrUpdate(account)
+	p.state.Deployments().AddOrUpdate(config.Deployment{ // init empty deployment
+		Network: network,
+		Account: name,
+	})
 	return nil
+}
+
+func (p *project) removeAccount(name string) error {
+	_ = p.state.Deployments().Remove(name, network)
+	return p.state.Accounts().Remove(name)
 }
 
 // contractName extracts contract name from the source code.
 func (p *project) contractName(path string) (string, error) {
+	if name, ok := p.pathNameLookup[path]; ok {
+		return name, nil
+	}
+
 	// todo add warning if name of the file is not matching the name of the contract
 	content, err := p.readerWriter.ReadFile(path)
 	if err != nil {
@@ -217,6 +230,8 @@ func (p *project) contractName(path string) (string, error) {
 	if err != nil {
 		return "", err
 	}
+
+	p.pathNameLookup[path] = name
 
 	return name, nil
 }
@@ -241,7 +256,6 @@ func (p *project) addContract(
 
 	p.state.Contracts().AddOrUpdate(name, contract)
 	p.state.Deployments().AddContract(account, network, deployment)
-
 	return nil
 }
 
@@ -256,46 +270,12 @@ func (p *project) removeContract(
 	}
 
 	if accountName == "" {
-		accountName = config.DefaultEmulatorServiceAccountName
+		accountName = defaultAccount
 	}
 
-	p.state.Deployments().RemoveContract(accountName, network, name)
+	if len(p.state.Deployments().ByAccountAndNetwork(accountName, network)) > 0 {
+		p.state.Deployments().RemoveContract(accountName, network, name) // we might delete account first
+	}
+
 	return nil
-}
-
-func (p *project) print(deployed []*flowkitProject.Contract, err error) {
-	fmt.Println("The development environment will watch your Cadence files and automatically keep your project updated on the emulator.")
-	fmt.Println("Please add your contracts in the contracts folder, if you want to add a contract to a new account, create a folder")
-	fmt.Println("inside the contracts folder and we will automatically create an account for you and deploy everything inside that folder.")
-
-	//writer := uilive.New()
-	//writer.Start()
-
-	accountContracts := make(map[string][]string)
-
-	for _, deploy := range deployed {
-		account := accountContracts[deploy.AccountName]
-		if account == nil {
-			account = make([]string, 0)
-		}
-		account = append(account, fmt.Sprintf("|-\t%s\t%s", deploy.Name, output.Italic(deploy.Location())))
-	}
-
-	okFaces := []string{"😎", "😲", "😱", "😜"}
-
-	for account, contracts := range accountContracts {
-		fmt.Println(fmt.Sprintf("%s %s\n", okFaces[0], output.Bold(account)))
-		//_, _ = fmt.Fprint(writer.Newline(), fmt.Sprintf("%s %s\n", okFaces[0], output.Bold(account)))
-
-		for _, contract := range contracts {
-			//_, _ = fmt.Fprint(writer.Newline(), contract)
-			fmt.Println(contract)
-		}
-	}
-
-	if err != nil {
-		fmt.Println("error", err)
-	}
-
-	//writer.Stop()
 }
