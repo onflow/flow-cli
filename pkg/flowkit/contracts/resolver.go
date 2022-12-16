@@ -39,7 +39,7 @@ type Resolver struct {
 
 // NewResolver creates a new resolver.
 func NewResolver(code []byte) (*Resolver, error) {
-	program, err := parser.ParseProgram(code, nil)
+	program, err := parser.ParseProgram(nil, code, parser.Config{})
 	if err != nil {
 		return nil, err
 	}
@@ -54,7 +54,6 @@ func NewResolver(code []byte) (*Resolver, error) {
 //
 // resolving is done based on code file path and is resolved to
 // addresses defined in configuration for contracts or their aliases.
-//
 func (r *Resolver) ResolveImports(
 	codePath string,
 	contracts []flowkit.Contract,
