@@ -239,7 +239,7 @@ func (p *Project) Deploy(network string, update bool) ([]*project.Contract, erro
 	p.logger.Info(fmt.Sprintf("\nDeploying %d contracts for accounts: %s\n", len(sorted), accounts.String()))
 	defer p.logger.StopProgress()
 
-	deployErr := &ErrProjectDeploy{}
+	deployErr := &ProjectDeploymentError{}
 	for _, contract := range sorted {
 		// todo remove implementation for deployment of contract and just use the account add-contract func for deploying
 		block, err := p.gateway.GetLatestBlock()
@@ -368,22 +368,22 @@ func (p *Project) Deploy(network string, update bool) ([]*project.Contract, erro
 	return sorted, nil
 }
 
-type ErrProjectDeploy struct {
+type ProjectDeploymentError struct {
 	contracts map[string]error
 }
 
-func (d *ErrProjectDeploy) add(contract *project.Contract, err error, msg string) {
+func (d *ProjectDeploymentError) add(contract *project.Contract, err error, msg string) {
 	if d.contracts == nil {
 		d.contracts = make(map[string]error)
 	}
 	d.contracts[contract.Name] = fmt.Errorf("%s: %w", msg, err)
 }
 
-func (d *ErrProjectDeploy) Contracts() map[string]error {
+func (d *ProjectDeploymentError) Contracts() map[string]error {
 	return d.contracts
 }
 
-func (d *ErrProjectDeploy) Error() string {
+func (d *ProjectDeploymentError) Error() string {
 	err := ""
 	for c, e := range d.contracts {
 		err = fmt.Sprintf("%s %s: %s,", err, c, e.Error())
