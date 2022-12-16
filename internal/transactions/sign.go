@@ -128,7 +128,7 @@ func sign(
 	}
 
 	return &TransactionResult{
-		tx:      signed.FlowTransaction(),
+		Tx:      signed.FlowTransaction(),
 		include: signFlags.Include,
 	}, nil
 }

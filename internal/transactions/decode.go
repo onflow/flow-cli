@@ -65,7 +65,7 @@ func decode(
 	}
 
 	return &TransactionResult{
-		tx:      tx.FlowTransaction(),
+		Tx:      tx.FlowTransaction(),
 		include: decodeFlags.Include,
 	}, nil
 }
