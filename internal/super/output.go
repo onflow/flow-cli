@@ -22,16 +22,17 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"github.com/onflow/flow-cli/pkg/flowkit/output"
-	flowkitProject "github.com/onflow/flow-cli/pkg/flowkit/project"
-	"github.com/onflow/flow-cli/pkg/flowkit/services"
 	"golang.org/x/exp/maps"
 	"math/rand"
 	"os"
-	"os/exec"
+	sysExec "os/exec"
 	"regexp"
 	"strings"
 	"time"
+
+	"github.com/onflow/flow-cli/pkg/flowkit/output"
+	flowkitProject "github.com/onflow/flow-cli/pkg/flowkit/project"
+	"github.com/onflow/flow-cli/pkg/flowkit/services"
 )
 
 func printDeployment(deployed []*flowkitProject.Contract, err error, contractPathNames map[string]string) {
@@ -142,7 +143,7 @@ func errorBanner() string {
 }
 
 func clearScreen() {
-	cmd := exec.Command("clear")
+	cmd := sysExec.Command("clear")
 	cmd.Stdout = os.Stdout
 	_ = cmd.Run()
 }
