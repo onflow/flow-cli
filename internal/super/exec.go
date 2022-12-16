@@ -66,7 +66,7 @@ func exec(
 
 	services.SetLogger(output.NewStdoutLogger(output.NoneLog))
 
-	project, err := newProject(
+	project := newProject(
 		*service,
 		services,
 		state,

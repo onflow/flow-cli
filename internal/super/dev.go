@@ -66,13 +66,18 @@ func dev(
 
 	services.SetLogger(output.NewStdoutLogger(output.NoneLog))
 
-	project, err := newProject(
+	project := newProject(
 		*service,
 		services,
 		state,
 		readerWriter,
 		newProjectFiles(dir),
 	)
+	if err != nil {
+		return nil, err
+	}
+
+	err = project.startup()
 	if err != nil {
 		return nil, err
 	}
