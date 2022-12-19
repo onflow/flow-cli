@@ -161,12 +161,12 @@ func (s *setupResult) String() string {
 	relDir, _ := filepath.Rel(wd, s.targetDir)
 	out := bytes.Buffer{}
 
-	out.WriteString(fmt.Sprintf("\n%s Your project was created.\n", output.SuccessEmoji()))
-	out.WriteString(fmt.Sprintf(
-		"\nUse `%s` to view your project files.\nOpen %s/README.md to learn how to get started!\n",
-		output.Bold(fmt.Sprintf("cd %s", relDir)),
-		relDir,
-	))
+	out.WriteString(fmt.Sprintf("%s Congrats! your project was created.\n\n", output.SuccessEmoji()))
+	out.WriteString("Start development by following these steps:\n")
+	out.WriteString(fmt.Sprintf("1. '%s' to change to your new project,\n", output.Bold(fmt.Sprintf("cd %s", relDir))))
+	out.WriteString(fmt.Sprintf("2. '%s' to start a Flow emulator,\n", output.Bold("flow emulator")))
+	out.WriteString(fmt.Sprintf("3. '%s' to start developing.\n\n", output.Bold("flow dev")))
+	out.WriteString(fmt.Sprintf("You should also read README.md to learn more about the development process!\n"))
 
 	return out.String()
 }
