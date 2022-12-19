@@ -42,8 +42,8 @@ func newProject(
 	state *flowkit.State,
 	readerWriter flowkit.ReaderWriter,
 	files *projectFiles,
-) *project {
-	return &project{
+) (*project, error) {
+	proj := &project{
 		service:        &serviceAccount,
 		services:       services,
 		state:          state,
@@ -51,6 +51,12 @@ func newProject(
 		projectFiles:   files,
 		pathNameLookup: make(map[string]string),
 	}
+
+	if err := proj.projectFiles.exist(); err != nil {
+		return nil, err
+	}
+
+	return proj, nil
 }
 
 type project struct {

@@ -20,9 +20,11 @@ package super
 
 import (
 	"fmt"
+	"github.com/onflow/flow-cli/pkg/flowkit/config"
 	"github.com/pkg/errors"
 	"github.com/radovskyb/watcher"
 	"io/fs"
+	"os"
 	"path"
 	"path/filepath"
 	"time"
@@ -62,10 +64,24 @@ type projectFiles struct {
 	watcher     *watcher.Watcher
 }
 
+// exist checks if current directory contains all project files required.
+func (f *projectFiles) exist() error {
+	if _, err := os.Stat(f.cadencePath); errors.Is(err, os.ErrNotExist) {
+		return fmt.Errorf("required cadence folder does not exist")
+	}
+	if _, err := os.Stat(config.DefaultPath); errors.Is(err, os.ErrNotExist) {
+		return fmt.Errorf("required project configuration ('flow.json') does not exist")
+	}
+
+	return nil
+}
+
+// contracts returns a list of contracts in project.
 func (f *projectFiles) contracts() ([]string, error) {
 	return f.getCadenceFilepaths(contractDir)
 }
 
+// contracts returns a map of deployments in project, mapping account name to all contracts saved to that account.
 func (f *projectFiles) deployments() (map[string][]string, error) {
 	deployments := make(map[string][]string)
 
@@ -82,14 +98,20 @@ func (f *projectFiles) deployments() (map[string][]string, error) {
 	return deployments, nil
 }
 
+// contracts returns a list of scripts in project.
 func (f *projectFiles) scripts() ([]string, error) {
 	return f.getCadenceFilepaths(scriptDir)
 }
 
+// contracts returns a list of transactions in project.
 func (f *projectFiles) transactions() ([]string, error) {
 	return f.getCadenceFilepaths(transactionDir)
 }
 
+// watch for file changes in the contract folder and signal any changes through channel.
+//
+// This function returns two channels, accountChange which reports any changes on the accounts folders and
+// contractChange which reports any changes to the contract files.
 func (f *projectFiles) watch() (<-chan accountChange, <-chan contractChange, error) {
 	err := f.watcher.AddRecursive(path.Join(f.cadencePath, contractDir))
 	if err != nil {
@@ -151,6 +173,7 @@ func (f *projectFiles) watch() (<-chan accountChange, <-chan contractChange, err
 	return accounts, contracts, nil
 }
 
+// getFilePaths returns a list of only Cadence files that are inside the provided directory.
 func (f *projectFiles) getCadenceFilepaths(dir string) ([]string, error) {
 	dir = path.Join(f.cadencePath, dir)
 	paths := make([]string, 0)
