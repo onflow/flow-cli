@@ -48,8 +48,7 @@ func newProject(
 		pathNameLookup: make(map[string]string),
 	}
 
-	err := proj.startup()
-	if err != nil {
+	if err := proj.projectFiles.exist(); err != nil {
 		return nil, err
 	}
 
