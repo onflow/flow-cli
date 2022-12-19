@@ -56,8 +56,6 @@ func dev(
 		return nil, err
 	}
 
-	// todo dev work if not run on top root directory - at least have a warning
-
 	_, err = services.Status.Ping(network)
 	if err != nil {
 		fmt.Printf("%s Error connecting to emulator. Make sure you started an emulator using 'flow emulator' command.\n", output.ErrorEmoji())
@@ -79,6 +77,11 @@ func dev(
 		readerWriter,
 		newProjectFiles(dir),
 	)
+	if err != nil {
+		return nil, err
+	}
+
+	err = project.startup()
 	if err != nil {
 		return nil, err
 	}
