@@ -71,7 +71,7 @@ func dev(
 
 	services.SetLogger(output.NewStdoutLogger(output.NoneLog))
 
-	project := newProject(
+	project, err := newProject(
 		*service,
 		services,
 		state,
