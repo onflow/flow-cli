@@ -25,6 +25,7 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
 	"github.com/onflow/flow-cli/pkg/flowkit/services"
 	"os"
+	"strings"
 
 	"github.com/spf13/cobra"
 )
@@ -59,7 +60,7 @@ func dev(
 	_, err = services.Status.Ping(network)
 	if err != nil {
 		fmt.Printf("%s Error connecting to emulator. Make sure you started an emulator using 'flow emulator' command.\n", output.ErrorEmoji())
-		fmt.Printf("%s This tool requires emulator to function. Emulator needs to be run inside the project root folder where the configuration file ('flow.json') exists.\n", output.TryEmoji())
+		fmt.Printf("%s This tool requires emulator to function. Emulator needs to be run inside the project root folder where the configuration file ('flow.json') exists.\n\n", output.TryEmoji())
 		return nil, nil
 	}
 
@@ -78,11 +79,15 @@ func dev(
 		newProjectFiles(dir),
 	)
 	if err != nil {
+		fmt.Printf("%s Failed to run the command, please make sure you ran 'flow setup' command first and that you are running this command inside the project ROOT folder.\n\n", output.TryEmoji())
 		return nil, err
 	}
 
 	err = project.startup()
 	if err != nil {
+		if strings.Contains(err.Error(), "does not have a valid signature") {
+			fmt.Printf("%s Failed to run the command, please make sure you started the emulator inside the project ROOT folder by running 'flow emulator'.\n\n", output.TryEmoji())
+		}
 		return nil, err
 	}
 
