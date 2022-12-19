@@ -73,6 +73,7 @@ func exec(
 		readerWriter,
 		newProjectFiles(dir),
 	)
+	// todo handle returning error on missing files
 	if err != nil {
 		return nil, err
 	}
