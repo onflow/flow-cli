@@ -49,24 +49,24 @@ func init() {
 }
 
 type TransactionResult struct {
-	result  *flow.TransactionResult
-	tx      *flow.Transaction
+	Result  *flow.TransactionResult
+	Tx      *flow.Transaction
 	include []string
 	exclude []string
 }
 
 func (r *TransactionResult) JSON() interface{} {
 	result := make(map[string]interface{})
-	result["id"] = r.tx.ID().String()
-	result["payload"] = fmt.Sprintf("%x", r.tx.Encode())
-	result["authorizers"] = fmt.Sprintf("%s", r.tx.Authorizers)
-	result["payer"] = r.tx.Payer.String()
+	result["id"] = r.Tx.ID().String()
+	result["payload"] = fmt.Sprintf("%x", r.Tx.Encode())
+	result["authorizers"] = fmt.Sprintf("%s", r.Tx.Authorizers)
+	result["payer"] = r.Tx.Payer.String()
 
-	if r.result != nil {
-		result["status"] = r.result.Status.String()
+	if r.Result != nil {
+		result["status"] = r.Result.Status.String()
 
-		txEvents := make([]interface{}, 0, len(r.result.Events))
-		for _, event := range r.result.Events {
+		txEvents := make([]interface{}, 0, len(r.Result.Events))
+		for _, event := range r.Result.Events {
 			txEvents = append(txEvents, map[string]interface{}{
 				"index": event.EventIndex,
 				"type":  event.Type,
@@ -77,8 +77,8 @@ func (r *TransactionResult) JSON() interface{} {
 		}
 		result["events"] = txEvents
 
-		if r.result.Error != nil {
-			result["error"] = r.result.Error.Error()
+		if r.Result.Error != nil {
+			result["error"] = r.Result.Error.Error()
 		}
 	}
 
@@ -89,36 +89,36 @@ func (r *TransactionResult) String() string {
 	var b bytes.Buffer
 	writer := util.CreateTabWriter(&b)
 
-	if r.result != nil {
-		if r.result.Error != nil {
-			_, _ = fmt.Fprintf(writer, "%s Transaction Error \n%s\n\n\n", output.ErrorEmoji(), r.result.Error.Error())
+	if r.Result != nil {
+		if r.Result.Error != nil {
+			_, _ = fmt.Fprintf(writer, "%s Transaction Error \n%s\n\n\n", output.ErrorEmoji(), r.Result.Error.Error())
 		}
 
 		statusBadge := ""
-		if r.result.Status == flow.TransactionStatusSealed {
+		if r.Result.Status == flow.TransactionStatusSealed {
 			statusBadge = output.OkEmoji()
 		}
-		_, _ = fmt.Fprintf(writer, "Status\t%s %s\n", statusBadge, r.result.Status)
+		_, _ = fmt.Fprintf(writer, "Status\t%s %s\n", statusBadge, r.Result.Status)
 	}
 
-	_, _ = fmt.Fprintf(writer, "ID\t%s\n", r.tx.ID())
-	_, _ = fmt.Fprintf(writer, "Payer\t%s\n", r.tx.Payer.Hex())
-	_, _ = fmt.Fprintf(writer, "Authorizers\t%s\n", r.tx.Authorizers)
+	_, _ = fmt.Fprintf(writer, "ID\t%s\n", r.Tx.ID())
+	_, _ = fmt.Fprintf(writer, "Payer\t%s\n", r.Tx.Payer.Hex())
+	_, _ = fmt.Fprintf(writer, "Authorizers\t%s\n", r.Tx.Authorizers)
 
 	_, _ = fmt.Fprintf(writer,
 		"\nProposal Key:\t\n    Address\t%s\n    Index\t%v\n    Sequence\t%v\n",
-		r.tx.ProposalKey.Address, r.tx.ProposalKey.KeyIndex, r.tx.ProposalKey.SequenceNumber,
+		r.Tx.ProposalKey.Address, r.Tx.ProposalKey.KeyIndex, r.Tx.ProposalKey.SequenceNumber,
 	)
 
-	if len(r.tx.PayloadSignatures) == 0 {
+	if len(r.Tx.PayloadSignatures) == 0 {
 		_, _ = fmt.Fprintf(writer, "\nNo Payload Signatures\n")
 	}
 
-	if len(r.tx.EnvelopeSignatures) == 0 {
+	if len(r.Tx.EnvelopeSignatures) == 0 {
 		_, _ = fmt.Fprintf(writer, "\nNo Envelope Signatures\n")
 	}
 
-	for i, e := range r.tx.PayloadSignatures {
+	for i, e := range r.Tx.PayloadSignatures {
 		if command.ContainsFlag(r.include, "signatures") {
 			_, _ = fmt.Fprintf(writer, "\nPayload Signature %v:\n", i)
 			_, _ = fmt.Fprintf(writer, "    Address\t%s\n", e.Address)
@@ -129,7 +129,7 @@ func (r *TransactionResult) String() string {
 		}
 	}
 
-	for i, e := range r.tx.EnvelopeSignatures {
+	for i, e := range r.Tx.EnvelopeSignatures {
 		if command.ContainsFlag(r.include, "signatures") {
 			_, _ = fmt.Fprintf(writer, "\nEnvelope Signature %v:\n", i)
 			_, _ = fmt.Fprintf(writer, "    Address\t%s\n", e.Address)
@@ -144,9 +144,9 @@ func (r *TransactionResult) String() string {
 		_, _ = fmt.Fprintf(writer, "\nSignatures (minimized, use --include signatures)")
 	}
 
-	if r.result != nil && !command.ContainsFlag(r.exclude, "events") {
+	if r.Result != nil && !command.ContainsFlag(r.exclude, "events") {
 		e := events.EventResult{
-			Events: r.result.Events,
+			Events: r.Result.Events,
 		}
 
 		eventsOutput := e.String()
@@ -157,25 +157,25 @@ func (r *TransactionResult) String() string {
 		_, _ = fmt.Fprintf(writer, "\n\nEvents:\t %s\n", eventsOutput)
 	}
 
-	if r.tx.Script != nil {
+	if r.Tx.Script != nil {
 		if command.ContainsFlag(r.include, "code") {
-			if len(r.tx.Arguments) == 0 {
+			if len(r.Tx.Arguments) == 0 {
 				_, _ = fmt.Fprintf(writer, "\n\nArguments\tNo arguments\n")
 			} else {
-				_, _ = fmt.Fprintf(writer, "\n\nArguments (%d):\n", len(r.tx.Arguments))
-				for i, argument := range r.tx.Arguments {
+				_, _ = fmt.Fprintf(writer, "\n\nArguments (%d):\n", len(r.Tx.Arguments))
+				for i, argument := range r.Tx.Arguments {
 					_, _ = fmt.Fprintf(writer, "    - Argument %d: %s\n", i, argument)
 				}
 			}
 
-			_, _ = fmt.Fprintf(writer, "\nCode\n\n%s\n", r.tx.Script)
+			_, _ = fmt.Fprintf(writer, "\nCode\n\n%s\n", r.Tx.Script)
 		} else {
 			_, _ = fmt.Fprint(writer, "\n\nCode (hidden, use --include code)")
 		}
 	}
 
 	if command.ContainsFlag(r.include, "payload") {
-		_, _ = fmt.Fprintf(writer, "\n\nPayload:\n%x", r.tx.Encode())
+		_, _ = fmt.Fprintf(writer, "\n\nPayload:\n%x", r.Tx.Encode())
 	} else {
 		_, _ = fmt.Fprint(writer, "\n\nPayload (hidden, use --include payload)")
 	}
@@ -187,10 +187,10 @@ func (r *TransactionResult) String() string {
 func (r *TransactionResult) Oneliner() string {
 	result := fmt.Sprintf(
 		"ID: %s, Payer: %s, Authorizer: %s",
-		r.tx.ID(), r.tx.Payer, r.tx.Authorizers)
+		r.Tx.ID(), r.Tx.Payer, r.Tx.Authorizers)
 
-	if r.result != nil {
-		result += fmt.Sprintf(", Status: %s, Events: %s", r.result.Status, r.result.Events)
+	if r.Result != nil {
+		result += fmt.Sprintf(", Status: %s, Events: %s", r.Result.Status, r.Result.Events)
 	}
 
 	return result

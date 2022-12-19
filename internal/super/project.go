@@ -19,6 +19,8 @@
 package super
 
 import (
+	"fmt"
+	"github.com/onflow/cadence"
 	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
 	flowkitProject "github.com/onflow/flow-cli/pkg/flowkit/project"
@@ -26,6 +28,8 @@ import (
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/pkg/errors"
+	"path/filepath"
+	"strings"
 )
 
 var network = config.DefaultEmulatorNetwork().Name
@@ -38,8 +42,8 @@ func newProject(
 	state *flowkit.State,
 	readerWriter flowkit.ReaderWriter,
 	files *projectFiles,
-) (*project, error) {
-	proj := &project{
+) *project {
+	return &project{
 		service:        &serviceAccount,
 		services:       services,
 		state:          state,
@@ -47,13 +51,6 @@ func newProject(
 		projectFiles:   files,
 		pathNameLookup: make(map[string]string),
 	}
-
-	err := proj.startup()
-	if err != nil {
-		return nil, err
-	}
-
-	return proj, nil
 }
 
 type project struct {
@@ -63,6 +60,70 @@ type project struct {
 	readerWriter   flowkit.ReaderWriter
 	projectFiles   *projectFiles
 	pathNameLookup map[string]string
+}
+
+func (p *project) exec(name string) (cadence.Value, *flow.Transaction, *flow.TransactionResult, error) {
+	scripts, err := p.projectFiles.scripts()
+	if err != nil {
+		return nil, nil, nil, err
+	}
+
+	txs, err := p.projectFiles.transactions()
+	if err != nil {
+		return nil, nil, nil, err
+	}
+
+	scriptNames := make(map[string]string)
+	txNames := make(map[string]string)
+	for _, path := range txs {
+		txNames[p.fileName(path)] = path
+	}
+	for _, path := range scripts {
+		scriptNames[p.fileName(path)] = path
+	}
+
+	pathTx, existTx := txNames[name]
+	pathScript, existScript := scriptNames[name]
+	if existTx && existScript {
+		return nil, nil, nil, fmt.Errorf(
+			"a name conflict between transaction and a script found, please keep your transaction and scripts named diferently to avoid confusion, the conflicting name is %s",
+			name,
+		)
+	}
+
+	if existTx {
+		tx, res, err := p.sendTransaction(pathTx)
+		return nil, tx, res, err
+	}
+	if existScript {
+		res, err := p.executeScript(pathScript)
+		return res, nil, nil, err
+	}
+
+	return nil, nil, nil, fmt.Errorf("failed to find transaction or a script with provided name")
+}
+
+func (p *project) sendTransaction(path string) (*flow.Transaction, *flow.TransactionResult, error) {
+	code, err := p.readerWriter.ReadFile(path)
+	if err != nil {
+		return nil, nil, errors.Wrap(err, "could not load transaction content")
+	}
+
+	return p.services.Transactions.Send(
+		services.NewSingleTransactionAccount(p.service),
+		flowkit.NewScript(code, nil, path),
+		flow.DefaultTransactionGasLimit,
+		network,
+	)
+}
+
+func (p *project) executeScript(path string) (cadence.Value, error) {
+	code, err := p.readerWriter.ReadFile(path)
+	if err != nil {
+		return nil, errors.Wrap(err, "could not load script content")
+	}
+
+	return p.services.Scripts.Execute(flowkit.NewScript(code, nil, path), network)
 }
 
 // startup cleans the state and then rebuilds it from the current folder state.
@@ -207,6 +268,12 @@ func (p *project) addAccount(name string) error {
 func (p *project) removeAccount(name string) error {
 	_ = p.state.Deployments().Remove(name, network)
 	return p.state.Accounts().Remove(name)
+}
+
+// fileName extract scripts or transaction name from a file path.
+func (p *project) fileName(path string) string {
+	file := filepath.Base(path)
+	return strings.ReplaceAll(file, cadenceExt, "")
 }
 
 // contractName extracts contract name from the source code.

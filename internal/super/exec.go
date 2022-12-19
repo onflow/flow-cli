@@ -19,31 +19,34 @@
 package super
 
 import (
+	"github.com/onflow/flow-cli/internal/scripts"
+	"github.com/onflow/flow-cli/internal/transactions"
+	"os"
+
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
 	"github.com/onflow/flow-cli/pkg/flowkit/services"
-	"os"
 
 	"github.com/spf13/cobra"
 )
 
-type flagsDev struct{}
+type flagsExec struct{}
 
-var devFlags = flagsDev{}
+var execFlags = flagsExec{}
 
-var DevCommand = &command.Command{
+var ExecCommand = &command.Command{
 	Cmd: &cobra.Command{
-		Use:     "dev",
-		Short:   "Monitor your project during development", // todo improve
-		Args:    cobra.ExactArgs(0),
-		Example: "flow dev",
+		Use:     "exec <name>",
+		Short:   "Send a transaction or execute a script",
+		Args:    cobra.ExactArgs(1),
+		Example: "flow exec getResult",
 	},
-	Flags: &devFlags,
-	RunS:  dev,
+	Flags: &execFlags,
+	RunS:  exec,
 }
 
-func dev(
+func exec(
 	args []string,
 	readerWriter flowkit.ReaderWriter,
 	globalFlags command.GlobalFlags,
@@ -54,10 +57,7 @@ func dev(
 	if err != nil {
 		return nil, err
 	}
-
-	// todo dev work if not run on top root directory - at least have a warning
-	// todo handle emulator running as part of this service or part of existing running emulator
-	// todo possible bug, investigate when new account is created whether we deploy too soon before it was even founded. This is error: ommand Error: failure to startup: execution error code 1103: [Error Code: 1103] The account with address (120e725050340cab) uses 783 bytes of storage which is over its capacity (0 bytes). Capacity can be increased by adding FLOW tokens to the account.
+	name := args[0]
 
 	service, err := state.EmulatorServiceAccount()
 	if err != nil {
@@ -77,15 +77,17 @@ func dev(
 		return nil, err
 	}
 
-	err = project.startup()
+	scriptRes, tx, txRes, err := project.exec(name)
 	if err != nil {
 		return nil, err
 	}
 
-	err = project.watch()
-	if err != nil {
-		return nil, err
+	if scriptRes != nil {
+		return &scripts.ScriptResult{Value: scriptRes}, nil
 	}
 
-	return nil, nil
+	return &transactions.TransactionResult{
+		Result: txRes,
+		Tx:     tx,
+	}, nil
 }
