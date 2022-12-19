@@ -100,7 +100,7 @@ func TestResolver(t *testing.T) {
 			pub fun main() {}
     `), []byte(`
 			import Kibble from 0x0000000000000001
-			import crypto
+			import Crypto
 			import Foo from 0x0000000000000001
 			pub fun main() {}
 	`),
