@@ -72,6 +72,10 @@ func (p *project) startup() error {
 	}
 
 	p.cleanState()
+	err = p.addAccount(defaultAccount)
+	if err != nil {
+		return err
+	}
 
 	for accName, contracts := range deployments {
 		if accName == "" { // default to emulator account
