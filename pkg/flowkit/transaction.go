@@ -284,7 +284,7 @@ func (t *Transaction) AddArgument(arg cadence.Value) error {
 
 // AddAuthorizers add group of authorizers.
 func (t *Transaction) AddAuthorizers(authorizers []flow.Address) (*Transaction, error) {
-	program, err := parser.ParseProgram(t.tx.Script, nil)
+	program, err := parser.ParseProgram(nil, t.tx.Script, parser.Config{})
 	if err != nil {
 		return nil, err
 	}
