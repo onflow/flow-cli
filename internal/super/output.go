@@ -102,7 +102,7 @@ func failureDeployment(err error, contractPathNames map[string]string) string {
 			fmt.Sprintf(" Error deploying your project. Import 'import %s' found in %s (%s) could not be resolved.\n", importName, contractName, contractPath),
 		))
 		out.WriteString(fmt.Sprintf(
-			"Only valid project imports are: %s. If you want to import a contract outside your project you need to import it by specifying an address of already deployed contract, or by first transfering the contract file inside the project and then importing.\n",
+			"Only valid project imports are: %s. If you want to import a contract outside your project you need to import it by specifying an address of already deployed contract, or by first transferring the contract file inside the project and then importing.\n",
 			strings.Join(maps.Values(contractPathNames), ", "),
 		))
 		return out.String()
