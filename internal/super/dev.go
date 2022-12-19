@@ -19,6 +19,7 @@
 package super
 
 import (
+	"fmt"
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
@@ -56,7 +57,13 @@ func dev(
 	}
 
 	// todo dev work if not run on top root directory - at least have a warning
-	// todo handle emulator running as part of this service or part of existing running emulator
+
+	_, err = services.Status.Ping(network)
+	if err != nil {
+		fmt.Printf("%s Error connecting to emulator. Make sure you started an emulator using 'flow emulator' command.\n", output.ErrorEmoji())
+		fmt.Printf("%s This tool requires emulator to function. Emulator needs to be run inside the project root folder where the configuration file ('flow.json') exists.\n", output.TryEmoji())
+		return nil, nil
+	}
 
 	service, err := state.EmulatorServiceAccount()
 	if err != nil {
