@@ -98,17 +98,20 @@ func failureDeployment(err error, contractPathNames map[string]string) string {
 			}
 		}
 
-		out.WriteString(output.ErrorEmoji() + output.Red(" Failed to sync your project, one of your imports is incorrect. Please fix the import detailed bellow.\n\n"))
-		out.WriteString(fmt.Sprintf("Contract with error:  %s.cdc %s\n", contractName, contractPath))
-		out.WriteString(fmt.Sprintf("Invalid import used:  import %s\n", importName))
-		out.WriteString(fmt.Sprintf("Only valid imports:   %s\n", strings.Join(maps.Values(contractPathNames), ", ")))
+		out.WriteString(output.ErrorEmoji() + output.Red(
+			fmt.Sprintf("Error deploying your project. Import 'import %s' found in %s (%s) could not be resolved.", importName, contractName, contractPath),
+		))
+		out.WriteString(fmt.Sprintf(
+			"Only valid project imports are: %s. If you want to import a contract outside your project you need to import it by specifying an address of already deployed contract, or by first transfering the contract file inside the project and then importing.\n",
+			strings.Join(maps.Values(contractPathNames), ", "),
+		))
 		return out.String()
 	}
 
 	// handle cadence runtime errors
 	var deployErr *services.ProjectDeploymentError
 	if errors.As(err, &deployErr) {
-		out.WriteString(output.ErrorEmoji() + output.Red(" Failed to deploy contracts due to runtime errors, this usually mean your code is incorrect. Check the detailed error bellow.\n\n"))
+		out.WriteString(output.ErrorEmoji() + " Error deploying your project. Runtime error encountered which means your code is incorrect, check details bellow. \n\n")
 
 		for name, err := range deployErr.Contracts() {
 			// remove transaction error as it confuses developer, the only important part is the actual code
