@@ -19,6 +19,7 @@
 package super
 
 import (
+	"fmt"
 	"github.com/onflow/flow-cli/internal/scripts"
 	"github.com/onflow/flow-cli/internal/transactions"
 	"os"
@@ -66,7 +67,7 @@ func exec(
 
 	services.SetLogger(output.NewStdoutLogger(output.NoneLog))
 
-	project := newProject(
+	project, err := newProject(
 		*service,
 		services,
 		state,
@@ -74,6 +75,7 @@ func exec(
 		newProjectFiles(dir),
 	)
 	if err != nil {
+		fmt.Printf("%s Failed to run the command, please make sure you ran 'flow setup' command first and that you are running this command inside the project ROOT folder.\n\n", output.TryEmoji())
 		return nil, err
 	}
 
