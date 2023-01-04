@@ -10,10 +10,10 @@ require (
 	github.com/lmars/go-slip10 v0.0.0-20190606092855-400ba44fee12
 	github.com/manifoldco/promptui v0.9.0
 	github.com/onflow/cadence v0.30.0-attachments
-	github.com/onflow/cadence-tools/test v0.3.0-cadence-attachments-2
+	github.com/onflow/cadence-tools/test v0.3.0-cadence-attachments-3
 	github.com/onflow/flow-core-contracts/lib/go/templates v0.11.2-0.20221205150827-c68044a2505c
-	github.com/onflow/flow-emulator v0.41.0-cadence-attachments
-	github.com/onflow/flow-go v0.28.1-0.20221215213522-3577617919c5
+	github.com/onflow/flow-emulator v0.41.0-cadence-attachments-2
+	github.com/onflow/flow-go v0.28.1-0.20230104183005-ff76d50986c7
 	github.com/onflow/flow-go-sdk v0.29.1
 	github.com/rs/zerolog v1.28.0
 	github.com/sirupsen/logrus v1.8.1
