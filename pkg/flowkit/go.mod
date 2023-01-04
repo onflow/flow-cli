@@ -9,12 +9,12 @@ require (
 	github.com/joho/godotenv v1.4.0
 	github.com/lmars/go-slip10 v0.0.0-20190606092855-400ba44fee12
 	github.com/manifoldco/promptui v0.9.0
-	github.com/onflow/cadence v0.30.0
-	github.com/onflow/cadence-tools/test v0.3.0
-	github.com/onflow/flow-core-contracts/lib/go/templates v0.11.2-0.20221205150827-c68044a2505c
-	github.com/onflow/flow-emulator v0.41.0
-	github.com/onflow/flow-go v0.28.1-0.20221214175701-076c0fd2a2f9
-	github.com/onflow/flow-go-sdk v0.30.0
+	github.com/onflow/cadence v0.31.0
+	github.com/onflow/cadence-tools/test v0.4.0
+	github.com/onflow/flow-core-contracts/lib/go/templates v0.11.2-0.20221214150253-cb74e7764c12
+	github.com/onflow/flow-emulator v0.42.0
+	github.com/onflow/flow-go v0.29.1
+	github.com/onflow/flow-go-sdk v0.31.0
 	github.com/rs/zerolog v1.28.0
 	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/afero v1.9.0
@@ -118,10 +118,10 @@ require (
 	github.com/multiformats/go-multihash v0.2.1 // indirect
 	github.com/multiformats/go-varint v0.0.6 // indirect
 	github.com/onflow/atree v0.4.0 // indirect
-	github.com/onflow/flow-core-contracts/lib/go/contracts v0.11.2-0.20221205150827-c68044a2505c // indirect
+	github.com/onflow/flow-core-contracts/lib/go/contracts v0.11.2-0.20221214150253-cb74e7764c12 // indirect
 	github.com/onflow/flow-ft/lib/go/contracts v0.5.0 // indirect
 	github.com/onflow/flow-go/crypto v0.24.4 // indirect
-	github.com/onflow/flow/protobuf/go/flow v0.3.2-0.20221130185733-92eb85ead310 // indirect
+	github.com/onflow/flow/protobuf/go/flow v0.3.2-0.20221202093946-932d1c70e288 // indirect
 	github.com/onflow/sdks v0.4.4 // indirect
 	github.com/opentracing/opentracing-go v1.2.0 // indirect
 	github.com/pbnjay/memory v0.0.0-20210728143218-7b4eea64cf58 // indirect
