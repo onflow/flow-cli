@@ -104,7 +104,7 @@ func TestBlocksGet_Integration(t *testing.T) {
 		assert.Nil(t, blockEvents)
 		assert.Equal(t, collection, []*flow.Collection{})
 		assert.Equal(t, block.Height, uint64(0))
-		assert.Equal(t, block.ID.String(), "13c7ff23bb65feb5757cc65fdd75cd243506518c126385fae530ddebdad10b17")
+		assert.Equal(t, "03d40910037d575d52831647b39814f445bc8cc7ba8653286c0eb1473778c34f", block.ID.String())
 
 		// create an event
 		_, _ = s.Accounts.Create(srvAcc, tests.PubKeys(), nil, tests.SigAlgos(), tests.HashAlgos(), nil)

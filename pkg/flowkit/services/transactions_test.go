@@ -609,7 +609,7 @@ func TestTransactions_Integration(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, tx.Payer.String(), a.Address().String())
 		assert.Equal(t, tx.ProposalKey.KeyIndex, a.Key().Index())
-		assert.Equal(t, fmt.Sprintf("%x", tx.Arguments), "[7b2274797065223a22537472696e67222c2276616c7565223a22426172227d]")
+		assert.Equal(t, "[7b2276616c7565223a22426172222c2274797065223a22537472696e67227d]", fmt.Sprintf("%x", tx.Arguments))
 		assert.Nil(t, txr.Error)
 		assert.Equal(t, txr.Status, flow.TransactionStatusSealed)
 	})
