@@ -23,6 +23,7 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowkit/project"
 	"os"
 	"path"
+	"path/filepath"
 
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
 	"github.com/onflow/flow-cli/pkg/flowkit/config/json"
@@ -42,6 +43,7 @@ type State struct {
 	confLoader   *config.Loader
 	readerWriter ReaderWriter
 	accounts     *Accounts
+	statePath    string
 }
 
 // ReaderWriter retrieve current file reader writer.
@@ -177,7 +179,7 @@ func (p *State) DeploymentContractsByNetwork(network string) ([]*project.Contrac
 				return nil, err
 			}
 
-			code, err := p.readerWriter.ReadFile(c.Location)
+			code, err := p.readerWriter.ReadFile(filepath.Join(p.statePath, c.Location))
 			if err != nil {
 				return nil, err
 			}
@@ -242,7 +244,7 @@ func Load(configFilePaths []string, readerWriter ReaderWriter) (*State, error) {
 	if err == nil && len(conf.Emulators) == 0 {
 		conf.Emulators.AddOrUpdate("", config.DefaultEmulator())
 	}
-	proj, err := newProject(conf, confLoader, readerWriter)
+	proj, err := newProject(conf, confLoader, readerWriter, path.Dir(configFilePaths[0])) // todo fix
 	if err != nil {
 		return nil, fmt.Errorf("invalid project configuration: %s", err)
 	}
@@ -256,7 +258,11 @@ func Exists(path string) bool {
 }
 
 // Init initializes a new Flow project.
-func Init(readerWriter ReaderWriter, sigAlgo crypto.SignatureAlgorithm, hashAlgo crypto.HashAlgorithm) (*State, error) {
+func Init(
+	readerWriter ReaderWriter,
+	sigAlgo crypto.SignatureAlgorithm,
+	hashAlgo crypto.HashAlgorithm,
+) (*State, error) {
 	emulatorServiceAccount, err := generateEmulatorServiceAccount(sigAlgo, hashAlgo)
 	if err != nil {
 		return nil, err
@@ -274,7 +280,12 @@ func Init(readerWriter ReaderWriter, sigAlgo crypto.SignatureAlgorithm, hashAlgo
 }
 
 // newProject creates a new project from a configuration object.
-func newProject(conf *config.Config, loader *config.Loader, readerWriter ReaderWriter) (*State, error) {
+func newProject(
+	conf *config.Config,
+	loader *config.Loader,
+	readerWriter ReaderWriter,
+	statePath string,
+) (*State, error) {
 	accounts, err := accountsFromConfig(conf)
 	if err != nil {
 		return nil, err
@@ -285,5 +296,6 @@ func newProject(conf *config.Config, loader *config.Loader, readerWriter ReaderW
 		readerWriter: readerWriter,
 		confLoader:   loader,
 		accounts:     &accounts,
+		statePath:    statePath,
 	}, nil
 }
