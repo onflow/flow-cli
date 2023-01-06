@@ -43,7 +43,7 @@ import (
 )
 
 func setup() (*flowkit.State, *Services, *tests.TestGateway) {
-	readerWriter := tests.ReaderWriter()
+	readerWriter, _ := tests.ReaderWriter()
 	state, err := flowkit.Init(readerWriter, crypto.ECDSA_P256, crypto.SHA3_256)
 	if err != nil {
 		panic(err)
@@ -286,7 +286,7 @@ func TestAccounts(t *testing.T) {
 }
 
 func setupIntegration() (*flowkit.State, *Services) {
-	readerWriter := tests.ReaderWriter()
+	readerWriter, _ := tests.ReaderWriter()
 	state, err := flowkit.Init(readerWriter, crypto.ECDSA_P256, crypto.SHA3_256)
 	if err != nil {
 		panic(err)
