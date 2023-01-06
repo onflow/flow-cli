@@ -373,7 +373,7 @@ func (a *Accounts) AddContract(
 	}
 
 	// if we are updating contract
-	if updateExisting {
+	if exists && updateExisting {
 		tx, err = flowkit.NewUpdateAccountContractTransaction(
 			account,
 			contract.Name,

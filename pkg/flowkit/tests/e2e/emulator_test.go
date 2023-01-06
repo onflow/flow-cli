@@ -26,6 +26,7 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
 	"github.com/onflow/flow-cli/pkg/flowkit/services"
 	"github.com/onflow/flow-cli/pkg/flowkit/tests"
+	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
@@ -35,7 +36,9 @@ import (
 
 var emulator = config.DefaultEmulatorNetwork().Name
 
-func initE2E(t *testing.T) (gateway.Gateway, *flowkit.State, *services.Services, afero.Fs) {
+type initNetwork func(*testing.T) (gateway.Gateway, *flowkit.State, *services.Services, afero.Fs)
+
+func initEmulator(t *testing.T) (gateway.Gateway, *flowkit.State, *services.Services, afero.Fs) {
 	readerWriter, mockFs := tests.ReaderWriter()
 
 	state, err := flowkit.Init(readerWriter, crypto.ECDSA_P256, crypto.SHA3_256)
@@ -51,56 +54,95 @@ func initE2E(t *testing.T) (gateway.Gateway, *flowkit.State, *services.Services,
 	return gw, state, srv, mockFs
 }
 
-func Test_ProjectDeploy(t *testing.T) {
-	_, state, srv, mockFs := initE2E(t)
+func initTestnet(t *testing.T) (gateway.Gateway, *flowkit.State, *services.Services, afero.Fs) {
+	readerWriter, mockFs := tests.ReaderWriter()
 
-	state.Contracts().AddOrUpdate(tests.ContractA.Name, config.Contract{
-		Name:    tests.ContractA.Name,
-		Source:  tests.ContractA.Filename,
-		Network: emulator,
-	})
-
-	state.Contracts().AddOrUpdate(tests.ContractB.Name, config.Contract{
-		Name:    tests.ContractB.Name,
-		Source:  tests.ContractB.Filename,
-		Network: emulator,
-	})
-
-	state.Contracts().AddOrUpdate(tests.ContractC.Name, config.Contract{
-		Name:    tests.ContractC.Name,
-		Source:  tests.ContractC.Filename,
-		Network: emulator,
-	})
-
-	serviceAcc, err := state.EmulatorServiceAccount()
+	state, err := flowkit.Init(readerWriter, crypto.ECDSA_P256, crypto.SHA3_256)
 	require.NoError(t, err)
 
-	initArg, _ := cadence.NewString("foo")
-	state.Deployments().AddOrUpdate(config.Deployment{
-		Network: emulator,
-		Account: serviceAcc.Name(),
-		Contracts: []config.ContractDeployment{
-			{Name: tests.ContractA.Name},
-			{Name: tests.ContractB.Name},
-			{Name: tests.ContractC.Name, Args: []cadence.Value{initArg}},
-		},
-	})
+	var testAccount = struct {
+		name    string
+		address string
+		key     string
+	}{
+		name:    "testnet-account",
+		address: "0x72ddb3d2cec14114",
+		key:     "4b2b6442fcbef2209bc1182af15d203a6195346cc8d95ebb433d3df1acb3910c",
+	}
 
-	contracts, err := srv.Project.Deploy(emulator, true)
-	assert.NoError(t, err)
-	assert.Len(t, contracts, 3)
-	assert.Equal(t, tests.ContractA.Name, contracts[0].Name())
-	assert.Equal(t, tests.ContractB.Name, contracts[1].Name())
-	assert.Equal(t, tests.ContractC.Name, contracts[2].Name())
+	key, err := crypto.DecodePrivateKeyHex(crypto.ECDSA_P256, testAccount.key)
+	require.NoError(t, err)
 
-	// make a change
-	tests.ContractA.Source = []byte(`pub contract ContractA { init() {} }`)
-	_ = afero.WriteFile(mockFs, tests.ContractA.Filename, tests.ContractA.Source, 0644)
+	accKey := flowkit.NewHexAccountKeyFromPrivateKey(0, crypto.SHA3_256, key)
+	acc := flowkit.NewAccount(testAccount.name).
+		SetAddress(flow.HexToAddress(testAccount.address)).
+		SetKey(accKey)
 
-	contracts, err = srv.Project.Deploy(emulator, true)
-	assert.NoError(t, err)
-	assert.Len(t, contracts, 3)
-	assert.Equal(t, tests.ContractA.Name, contracts[0].Name())
-	assert.Equal(t, tests.ContractB.Name, contracts[1].Name())
-	assert.Equal(t, tests.ContractC.Name, contracts[2].Name())
+	state.Accounts().AddOrUpdate(acc)
+
+	gw, err := gateway.NewGrpcGateway(config.DefaultTestnetNetwork().Host)
+	require.NoError(t, err)
+
+	logger := output.NewStdoutLogger(output.NoneLog)
+	srv := services.NewServices(gw, state, logger)
+
+	return gw, state, srv, mockFs
+}
+
+var initNetworks = []initNetwork{initEmulator, initTestnet}
+
+func Test_ProjectDeploy(t *testing.T) {
+	for _, init := range initNetworks {
+		_, state, srv, mockFs := init(t)
+
+		state.Contracts().AddOrUpdate(tests.ContractA.Name, config.Contract{
+			Name:    tests.ContractA.Name,
+			Source:  tests.ContractA.Filename,
+			Network: emulator,
+		})
+
+		state.Contracts().AddOrUpdate(tests.ContractB.Name, config.Contract{
+			Name:    tests.ContractB.Name,
+			Source:  tests.ContractB.Filename,
+			Network: emulator,
+		})
+
+		state.Contracts().AddOrUpdate(tests.ContractC.Name, config.Contract{
+			Name:    tests.ContractC.Name,
+			Source:  tests.ContractC.Filename,
+			Network: emulator,
+		})
+
+		serviceAcc, err := state.EmulatorServiceAccount()
+		require.NoError(t, err)
+
+		initArg, _ := cadence.NewString("foo")
+		state.Deployments().AddOrUpdate(config.Deployment{
+			Network: emulator,
+			Account: serviceAcc.Name(),
+			Contracts: []config.ContractDeployment{
+				{Name: tests.ContractA.Name},
+				{Name: tests.ContractB.Name},
+				{Name: tests.ContractC.Name, Args: []cadence.Value{initArg}},
+			},
+		})
+
+		contracts, err := srv.Project.Deploy(emulator, true)
+		assert.NoError(t, err)
+		assert.Len(t, contracts, 3)
+		assert.Equal(t, tests.ContractA.Name, contracts[0].Name())
+		assert.Equal(t, tests.ContractB.Name, contracts[1].Name())
+		assert.Equal(t, tests.ContractC.Name, contracts[2].Name())
+
+		// make a change
+		tests.ContractA.Source = []byte(`pub contract ContractA { init() {} }`)
+		_ = afero.WriteFile(mockFs, tests.ContractA.Filename, tests.ContractA.Source, 0644)
+
+		contracts, err = srv.Project.Deploy(emulator, true)
+		assert.NoError(t, err)
+		assert.Len(t, contracts, 3)
+		assert.Equal(t, tests.ContractA.Name, contracts[0].Name())
+		assert.Equal(t, tests.ContractB.Name, contracts[1].Name())
+		assert.Equal(t, tests.ContractC.Name, contracts[2].Name())
+	}
 }

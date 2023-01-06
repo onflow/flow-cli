@@ -284,8 +284,10 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 		// Updating contracts is limited as described in https://developers.flow.com/cadence/language/contract-updatability
 		if update && network == config.DefaultEmulatorNetwork().Name {
 			_, err = accounts.RemoveContract(targetAccount, contract.Name())
-			deployErr.add(contract, err, fmt.Sprintf("failed to remove the contract  %s before the update", contract.Name()))
-			continue
+			if err != nil {
+				deployErr.add(contract, err, fmt.Sprintf("failed to remove the contract %s before the update", contract.Name()))
+				continue
+			}
 		}
 
 		_, sentTx, updated, err := accounts.AddContract(targetAccount, &Contract{
