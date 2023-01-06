@@ -327,7 +327,19 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 				return nil, err
 			}
 			remove, err = remove.Sign()
-			_, _ = p.gateway.SendSignedTransaction(remove)
+			if err != nil {
+				deployErr.add(contract, err, "failed to sign transaction for contract removal")
+				continue
+			}
+
+			removeTx, err := p.gateway.SendSignedTransaction(remove)
+			if err != nil {
+				deployErr.add(contract, err, "failed to remove existing contract in order to update")
+				continue
+			}
+
+			_, _ = p.gateway.GetTransactionResult(removeTx.ID(), true)
+			// wait for previous transaction to be finalized before fetching account information
 			targetAccountInfo, _ = p.gateway.GetAccount(targetAccount.Address())
 		}
 
