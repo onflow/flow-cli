@@ -1,8 +1,9 @@
 name: Build Release
 
 on:
-  release:
-    types: [published]
+  push:
+    tags:
+      - v0.test.*
 
 jobs:
   releases-matrix:
@@ -38,4 +39,4 @@ jobs:
           goarch: ${{ matrix.goarch }}
           goversion: "1.19"
           project_path: "./cmd/flow"
-          ldflags: -X "build.commit=${{ env.COMMIT }}" -X "build.semver=${{ env.VERSION }}" -X "util.MIXPANEL_PROJECT_TOKEN=${{ env.MIXPANEL_PROJECT_TOKEN }}"
+          ldflags: -X "github.com/onflow/flow-cli/build.commit=${{ env.COMMIT }}" -X "github.com/onflow/flow-cli/build.semver=${{ env.VERSION }}" -X "github.com/onflow/flow-cli/pkg/flowkit/util.MIXPANEL_PROJECT_TOKEN=${{ env.MIXPANEL_PROJECT_TOKEN }}"
