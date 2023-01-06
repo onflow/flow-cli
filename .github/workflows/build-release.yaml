@@ -1,9 +1,8 @@
 name: Build Release
 
 on:
-  push:
-    tags:
-      - v0.test.*
+  release:
+    types: [published]
 
 jobs:
   releases-matrix:
