@@ -51,6 +51,8 @@ Invoke-WebRequest -Uri "$assetsURL/$version/flow-cli-$version-windows-amd64.zip"
 
 Expand-Archive -Path "$directory\flow.zip" -DestinationPath "$directory" -Force
 
+Remove-Item -Path "$directory\flow-cli.exe" -Force
+
 Move-Item -Path "$directory\flow-cli.exe" -Destination "$directory\flow.exe" -Force
 
 if ($addToPath) {
