@@ -53,6 +53,7 @@ Expand-Archive -Path "$directory\flow.zip" -DestinationPath "$directory" -Force
 
 try {
     Stop-Process -Name flow -Force
+    Start-Sleep -Seconds 1
 }
 catch {}
 
