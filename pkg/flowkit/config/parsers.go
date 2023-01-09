@@ -86,7 +86,8 @@ func StringToAddress(value string) (*flow.Address, error) {
 	if !address.IsValid(flow.Mainnet) &&
 		!address.IsValid(flow.Testnet) &&
 		!address.IsValid(flow.Sandboxnet) &&
-		!address.IsValid(flow.Emulator) {
+		!address.IsValid(flow.Emulator) &&
+		!address.IsValid(flow.MonotonicEmulator) {
 		return nil, fmt.Errorf("invalid address")
 	}
 
