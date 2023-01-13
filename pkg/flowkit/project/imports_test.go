@@ -131,7 +131,7 @@ func TestResolver(t *testing.T) {
 
 		code := []byte(`
 			import Foo from "./Foo.cdc"
-			import Bar
+			import "Bar"
 			
 			pub contract Zoo {}
 		`)

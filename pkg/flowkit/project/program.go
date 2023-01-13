@@ -57,16 +57,7 @@ func (p *Program) imports() []string {
 	imports := make([]string, 0)
 
 	for _, importDeclaration := range p.astProgram.ImportDeclarations() {
-		// we parse all the identifier locations, that are all imports that look like "import X"
-		_, isIdentifierImport := importDeclaration.Location.(common.IdentifierLocation)
-		if isIdentifierImport {
-			location := importDeclaration.Location.String()
-			if location == "Crypto" { // skip core library
-				continue
-			}
-			imports = append(imports, location)
-		}
-		// we parse all string locations, that are all imports that look like "import X from "Y""
+		// we parse all string locations, that are all imports that look like "import X from "Y"" or "import "X""
 		_, isStringImport := importDeclaration.Location.(common.StringLocation)
 		if isStringImport {
 			imports = append(imports, importDeclaration.Location.String())
@@ -84,7 +75,7 @@ func (p *Program) replaceImport(from string, to string) *Program {
 	code := string(p.Code())
 
 	pathRegex := regexp.MustCompile(fmt.Sprintf(`import (\w+) from "%s"`, from))
-	identifierRegex := regexp.MustCompile(fmt.Sprintf("import (%s)", from))
+	identifierRegex := regexp.MustCompile(fmt.Sprintf(`import "(%s)"`, from))
 
 	replacement := fmt.Sprintf(`import $1 from 0x%s`, to)
 	code = pathRegex.ReplaceAllString(code, replacement)
