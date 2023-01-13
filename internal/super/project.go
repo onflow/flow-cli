@@ -23,6 +23,7 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
 	flowkitProject "github.com/onflow/flow-cli/pkg/flowkit/project"
 	"github.com/onflow/flow-cli/pkg/flowkit/services"
+
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/pkg/errors"

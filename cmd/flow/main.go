@@ -20,7 +20,6 @@
 package main
 
 import (
-	"github.com/onflow/flow-cli/internal/super"
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/accounts"
@@ -40,6 +39,7 @@ import (
 	"github.com/onflow/flow-cli/internal/signatures"
 	"github.com/onflow/flow-cli/internal/snapshot"
 	"github.com/onflow/flow-cli/internal/status"
+	"github.com/onflow/flow-cli/internal/super"
 	"github.com/onflow/flow-cli/internal/test"
 	"github.com/onflow/flow-cli/internal/tools"
 	"github.com/onflow/flow-cli/internal/transactions"

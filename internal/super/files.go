@@ -20,14 +20,16 @@ package super
 
 import (
 	"fmt"
-	"github.com/onflow/flow-cli/pkg/flowkit/config"
-	"github.com/pkg/errors"
-	"github.com/radovskyb/watcher"
 	"io/fs"
 	"os"
 	"path"
 	"path/filepath"
 	"time"
+
+	"github.com/pkg/errors"
+	"github.com/radovskyb/watcher"
+
+	"github.com/onflow/flow-cli/pkg/flowkit/config"
 )
 
 const (
