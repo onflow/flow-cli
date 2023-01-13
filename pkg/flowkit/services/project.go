@@ -301,8 +301,9 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 		}, update)
 		if err != nil && errors.Is(err, errUpdateNoDiff) {
 			p.logger.Info(fmt.Sprintf(
-				"no diff found in %s, skipping update",
-				contract.Name(),
+				"%s -> 0x%s [skipping, no changes found]",
+				output.Italic(contract.Name()),
+				contract.Target(),
 			))
 			continue
 		} else if err != nil {
@@ -311,11 +312,11 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 		}
 
 		p.logger.Info(fmt.Sprintf(
-			"%s -> 0x%s (%s) %s\n",
+			"%s -> 0x%s (%s) %s",
 			output.Green(contract.Name()),
 			contract.Target(),
 			txID.String(),
-			map[bool]string{true: "(updated)", false: ""}[updated],
+			map[bool]string{true: "[updated]", false: ""}[updated],
 		))
 	}
 
