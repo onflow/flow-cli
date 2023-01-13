@@ -49,7 +49,13 @@ $progressPreference = 'silentlyContinue'
 
 Invoke-WebRequest -Uri "$assetsURL/$version/flow-cli-$version-windows-amd64.zip" -UseBasicParsing -OutFile "$directory\flow.zip"
 
-Expand-Archive -Path "$directory\flow.zip" -DestinationPath "$directory"
+Expand-Archive -Path "$directory\flow.zip" -DestinationPath "$directory" -Force
+
+try {
+    Stop-Process -Name flow -Force
+    Start-Sleep -Seconds 1
+}
+catch {}
 
 Move-Item -Path "$directory\flow-cli.exe" -Destination "$directory\flow.exe" -Force
 
