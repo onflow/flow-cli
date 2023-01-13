@@ -71,13 +71,13 @@ func TestProgram(t *testing.T) {
 			imports: []string{"./Bar.cdc", "./zoo/Zoo.cdc"},
 		}, { // new schema import
 			code: []byte(`
-				import Bar
+				import "Bar"
 				pub contract Foo {}
 			`),
 			imports: []string{"Bar"},
 		}, {
 			code: []byte(`
-				import Bar
+				import "Bar"
 				import Zoo from "./Zoo.cdc"
 				import Crypto
 				import Foo from 0x01
@@ -154,7 +154,7 @@ func TestProgram(t *testing.T) {
 	t.Run("Replace", func(t *testing.T) {
 		code := []byte(`
 			import Foo from "./Foo.cdc"
-			import Bar
+			import "Bar"
 
 			pub contract Foo {}
 		`)

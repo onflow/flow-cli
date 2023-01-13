@@ -48,13 +48,14 @@ func (i *ImportReplacer) Replace(program *Program) (*Program, error) {
 	contractsLocations := i.getContractsLocations()
 
 	for _, imp := range imports {
+		// check if import by path exists (e.g. import X from ["./X.cdc"])
 		importLocation := path.Clean(absolutePath(program.Location(), imp))
 		address, isPath := contractsLocations[importLocation]
 		if isPath {
 			program.replaceImport(imp, address)
 			continue
 		}
-		// replace identifier imports
+		// check if import by identifier exists (e.g. import ["X"])
 		address, isIdentifier := contractsLocations[imp]
 		if isIdentifier {
 			program.replaceImport(imp, address)
