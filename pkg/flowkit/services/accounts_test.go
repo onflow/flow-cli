@@ -185,30 +185,6 @@ func TestAccounts(t *testing.T) {
 		assert.NoError(t, err)
 	})
 
-	t.Run("Contract Update for Account", func(t *testing.T) {
-		_, s, gw := setup()
-		gw.SendSignedTransaction.Run(func(args mock.Arguments) {
-			tx := args.Get(0).(*flowkit.Transaction)
-			assert.Equal(t, tx.Signer().Address(), serviceAddress)
-			assert.True(t, strings.Contains(string(tx.FlowTransaction().Script), "signer.contracts.update__experimental"))
-
-			gw.SendSignedTransaction.Return(tests.NewTransaction(), nil)
-		})
-
-		ID, _, err := s.Accounts.AddContract(
-			serviceAcc,
-			resourceToContract(tests.ContractHelloString),
-			true,
-		)
-
-		gw.Mock.AssertCalled(t, tests.GetAccountFunc, serviceAddress)
-		gw.Mock.AssertNumberOfCalls(t, tests.GetAccountFunc, 2)
-		gw.Mock.AssertNumberOfCalls(t, tests.GetTransactionResultFunc, 1)
-		gw.Mock.AssertNumberOfCalls(t, tests.SendSignedTransactionFunc, 1)
-		assert.NotNil(t, ID)
-		assert.NoError(t, err)
-	})
-
 	t.Run("Contract Remove for Account", func(t *testing.T) {
 		_, s, gw := setup()
 		gw.SendSignedTransaction.Run(func(args mock.Arguments) {
@@ -225,7 +201,7 @@ func TestAccounts(t *testing.T) {
 		)
 
 		gw.Mock.AssertCalled(t, tests.GetAccountFunc, serviceAddress)
-		gw.Mock.AssertNumberOfCalls(t, tests.GetAccountFunc, 2)
+		gw.Mock.AssertNumberOfCalls(t, tests.GetAccountFunc, 1)
 		gw.Mock.AssertNumberOfCalls(t, tests.GetTransactionResultFunc, 1)
 		gw.Mock.AssertNumberOfCalls(t, tests.SendSignedTransactionFunc, 1)
 		assert.NotNil(t, account)
