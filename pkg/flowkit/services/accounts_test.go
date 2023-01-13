@@ -171,7 +171,7 @@ func TestAccounts(t *testing.T) {
 			gw.SendSignedTransaction.Return(tests.NewTransaction(), nil)
 		})
 
-		account, err := s.Accounts.AddContract(
+		ID, _, err := s.Accounts.AddContract(
 			serviceAcc,
 			resourceToContract(tests.ContractHelloString),
 			false,
@@ -181,7 +181,7 @@ func TestAccounts(t *testing.T) {
 		gw.Mock.AssertNumberOfCalls(t, tests.GetAccountFunc, 2)
 		gw.Mock.AssertNumberOfCalls(t, tests.GetTransactionResultFunc, 1)
 		gw.Mock.AssertNumberOfCalls(t, tests.SendSignedTransactionFunc, 1)
-		assert.NotNil(t, account)
+		assert.NotNil(t, ID)
 		assert.NoError(t, err)
 	})
 
@@ -195,7 +195,7 @@ func TestAccounts(t *testing.T) {
 			gw.SendSignedTransaction.Return(tests.NewTransaction(), nil)
 		})
 
-		account, err := s.Accounts.AddContract(
+		ID, _, err := s.Accounts.AddContract(
 			serviceAcc,
 			resourceToContract(tests.ContractHelloString),
 			true,
@@ -205,7 +205,7 @@ func TestAccounts(t *testing.T) {
 		gw.Mock.AssertNumberOfCalls(t, tests.GetAccountFunc, 2)
 		gw.Mock.AssertNumberOfCalls(t, tests.GetTransactionResultFunc, 1)
 		gw.Mock.AssertNumberOfCalls(t, tests.SendSignedTransactionFunc, 1)
-		assert.NotNil(t, account)
+		assert.NotNil(t, ID)
 		assert.NoError(t, err)
 	})
 
@@ -523,24 +523,28 @@ func TestAccountsAddContract_Integration(t *testing.T) {
 		state, s := setupIntegration()
 		srvAcc, _ := state.EmulatorServiceAccount()
 
-		acc, err := s.Accounts.AddContract(
+		ID, _, err := s.Accounts.AddContract(
 			srvAcc,
 			resourceToContract(tests.ContractSimple),
 			false,
 		)
+		require.NoError(t, err)
+		require.NotNil(t, ID)
 
+		acc, err := s.Accounts.Get(srvAcc.Address())
 		require.NoError(t, err)
 		require.NotNil(t, acc)
 		assert.Equal(t, acc.Contracts["Simple"], tests.ContractSimple.Source)
 
-		acc, err = s.Accounts.AddContract(
+		ID, _, err = s.Accounts.AddContract(
 			srvAcc,
 			resourceToContract(tests.ContractSimpleUpdated),
 			true,
 		)
-
 		require.NoError(t, err)
-		require.NotNil(t, acc)
+
+		acc, err = s.Accounts.Get(srvAcc.Address())
+		require.NoError(t, err)
 		assert.Equal(t, acc.Contracts["Simple"], tests.ContractSimpleUpdated.Source)
 	})
 
@@ -551,14 +555,14 @@ func TestAccountsAddContract_Integration(t *testing.T) {
 		srvAcc, _ := state.EmulatorServiceAccount()
 
 		// prepare existing contract
-		_, err := s.Accounts.AddContract(
+		_, _, err := s.Accounts.AddContract(
 			srvAcc,
 			resourceToContract(tests.ContractSimple),
 			false,
 		)
 		assert.NoError(t, err)
 
-		_, err = s.Accounts.AddContract(
+		_, _, err = s.Accounts.AddContract(
 			srvAcc,
 			resourceToContract(tests.ContractSimple),
 			false,
@@ -567,7 +571,7 @@ func TestAccountsAddContract_Integration(t *testing.T) {
 		require.Error(t, err)
 		assert.True(t, strings.Contains(err.Error(), "cannot overwrite existing contract with name \"Simple\""))
 
-		_, err = s.Accounts.AddContract(
+		_, _, err = s.Accounts.AddContract(
 			srvAcc,
 			resourceToContract(tests.ContractHelloString),
 			true,
@@ -582,7 +586,7 @@ func TestAccountsAddContractWithArgs(t *testing.T) {
 	srvAcc, _ := state.EmulatorServiceAccount()
 
 	//adding contract without argument should return an error
-	acc, err := s.Accounts.AddContract(
+	_, _, err := s.Accounts.AddContract(
 		srvAcc,
 		resourceToContract(tests.ContractSimpleWithArgs),
 		false,
@@ -593,8 +597,11 @@ func TestAccountsAddContractWithArgs(t *testing.T) {
 	c := resourceToContract(tests.ContractSimpleWithArgs)
 	c.Args = []cadence.Value{cadence.UInt64(4)}
 
-	acc, err = s.Accounts.AddContract(srvAcc, c, false)
+	_, _, err = s.Accounts.AddContract(srvAcc, c, false)
 	assert.NoError(t, err)
+
+	acc, err := s.Accounts.Get(srvAcc.Address())
+	require.NoError(t, err)
 	assert.NotNil(t, acc)
 	assert.Equal(t, acc.Contracts["Simple"], tests.ContractSimpleWithArgs.Source)
 }
@@ -607,7 +614,7 @@ func TestAccountsRemoveContract_Integration(t *testing.T) {
 
 	c := tests.ContractSimple
 	// prepare existing contract
-	_, err := s.Accounts.AddContract(
+	_, _, err := s.Accounts.AddContract(
 		srvAcc,
 		&Contract{
 			Script: &Script{
@@ -623,9 +630,11 @@ func TestAccountsRemoveContract_Integration(t *testing.T) {
 	t.Run("Remove Contract", func(t *testing.T) {
 		t.Parallel()
 
-		acc, err := s.Accounts.RemoveContract(srvAcc, tests.ContractSimple.Name)
+		_, err := s.Accounts.RemoveContract(srvAcc, tests.ContractSimple.Name)
+		require.NoError(t, err)
 
-		assert.NoError(t, err)
+		acc, err := s.Accounts.Get(srvAcc.Address())
+		require.NoError(t, err)
 		assert.Equal(t, acc.Contracts[tests.ContractSimple.Name], []byte(nil))
 	})
 }

@@ -84,7 +84,7 @@ func updateContract(
 		return nil, fmt.Errorf("error parsing transaction arguments: %w", err)
 	}
 
-	account, err := srv.Accounts.AddContract(
+	_, _, err = srv.Accounts.AddContract(
 		to,
 		&services.Contract{
 			Script: &services.Script{
@@ -96,6 +96,11 @@ func updateContract(
 		},
 		true,
 	)
+	if err != nil {
+		return nil, err
+	}
+
+	account, err := srv.Accounts.Get(to.Address())
 	if err != nil {
 		return nil, err
 	}

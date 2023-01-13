@@ -59,11 +59,15 @@ func removeContract(
 		return nil, err
 	}
 
-	account, err := services.Accounts.RemoveContract(from, contractName)
+	_, err = services.Accounts.RemoveContract(from, contractName)
 	if err != nil {
 		return nil, err
 	}
 
+	account, err := services.Accounts.Get(from.Address())
+	if err != nil {
+		return nil, err
+	}
 	return &AccountResult{
 		Account: account,
 		include: flagsRemove.Include,

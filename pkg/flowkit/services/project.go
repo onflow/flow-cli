@@ -290,7 +290,7 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 			}
 		}
 
-		_, sentTx, updated, err := accounts.AddContract(targetAccount, &Contract{
+		txID, updated, err := accounts.AddContract(targetAccount, &Contract{
 			Script: &Script{
 				Code:     []byte(contract.TranspiledCode()),
 				Args:     contract.Args(),
@@ -314,7 +314,7 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 			"%s -> 0x%s (%s) %s\n",
 			output.Green(contract.Name()),
 			contract.Target(),
-			sentTx.ID().String(),
+			txID.String(),
 			map[bool]string{true: "(updated)", false: ""}[updated],
 		))
 	}
