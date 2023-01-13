@@ -7,7 +7,7 @@ require (
 	github.com/go-git/go-git/v5 v5.4.2
 	github.com/manifoldco/promptui v0.9.0
 	github.com/onflow/cadence v0.31.0
-	github.com/onflow/cadence-tools/languageserver v0.5.1
+	github.com/onflow/cadence-tools/languageserver v0.5.2-0.20230113130744-a70dcc86f3b0
 	github.com/onflow/cadence-tools/test v0.4.0
 	github.com/onflow/fcl-dev-wallet v0.5.4
 	github.com/onflow/flow-cli/pkg/flowkit v0.0.0-20230104181525-98129cdbc9f3

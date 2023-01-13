@@ -19,7 +19,7 @@
 package services
 
 import (
-	"bytes"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -270,112 +270,53 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 	))
 	defer p.logger.StopProgress()
 
+	// todo refactor service layer so it can be shared
+	accounts := NewAccounts(p.gateway, p.state, output.NewStdoutLogger(output.NoneLog))
+
 	deployErr := &ErrProjectDeploy{}
 	for _, contract := range orderedContracts {
-		block, err := p.gateway.GetLatestBlock()
-		if err != nil {
-			return nil, err
-		}
-
 		targetAccount, err := p.state.Accounts().ByName(contract.AccountName())
 		if err != nil {
 			return nil, fmt.Errorf("target account for deploying contract not found in configuration")
 		}
 
-		// get deployment account
-		targetAccountInfo, err := p.gateway.GetAccount(targetAccount.Address())
-		if err != nil {
-			return nil, fmt.Errorf("failed to fetch information for account %s: %w", targetAccount.Address(), err)
-		}
-
-		// create transaction to deploy new contract with args
-		tx, err := flowkit.NewAddAccountContractTransaction(
-			targetAccount,
-			contract.Name(),
-			contract.TranspiledCode(),
-			contract.Args(),
-		)
-		if err != nil {
-			return nil, err
-		}
-		// check if contract exists on account
-		existingContract, exists := targetAccountInfo.Contracts[contract.Name()]
-		noDiffInContract := bytes.Equal([]byte(contract.TranspiledCode()), existingContract)
-
-		if !update && exists {
-			deployErr.add(
-				contract,
-				fmt.Errorf("contract %s exists in account %s", contract.Name(), contract.AccountName()),
-				"already deployed to this account",
-			)
-			continue
-		}
-		if exists {
-			//only update contract if there is diff
-			if noDiffInContract {
-				p.logger.Info(fmt.Sprintf(
-					"no diff found in %s, skipping update",
-					contract.Name(),
-				))
+		// special case for emulator updates, where we remove and add a contract because it allows us to have more freedom in changes.
+		// Updating contracts is limited as described in https://developers.flow.com/cadence/language/contract-updatability
+		if update && network == config.DefaultEmulatorNetwork().Name {
+			_, err = accounts.RemoveContract(targetAccount, contract.Name())
+			if err != nil {
+				deployErr.add(contract, err, fmt.Sprintf("failed to remove the contract %s before the update", contract.Name()))
 				continue
 			}
-
-			// remove the contract first
-			remove, err := flowkit.NewRemoveAccountContractTransaction(targetAccount, contract.Name())
-			remove.SetBlockReference(block)
-			if err = remove.SetProposer(targetAccountInfo, targetAccount.Key().Index()); err != nil {
-				return nil, err
-			}
-			remove, err = remove.Sign()
-			_, _ = p.gateway.SendSignedTransaction(remove)
-			targetAccountInfo, _ = p.gateway.GetAccount(targetAccount.Address())
 		}
 
-		tx.SetBlockReference(block)
-
-		err = tx.SetProposer(targetAccountInfo, targetAccount.Key().Index())
-		if err != nil {
-			deployErr.add(contract, err, "failed to set proposer")
+		txID, updated, err := accounts.AddContract(targetAccount, &Contract{
+			Script: &Script{
+				Code:     []byte(contract.TranspiledCode()),
+				Args:     contract.Args(),
+				Filename: contract.Source(),
+			},
+			Name:    contract.Name(),
+			Network: network,
+		}, update)
+		if err != nil && errors.Is(err, errUpdateNoDiff) {
+			p.logger.Info(fmt.Sprintf(
+				"%s -> 0x%s [skipping, no changes found]",
+				output.Italic(contract.Name()),
+				contract.Target(),
+			))
 			continue
-		}
-
-		tx, err = tx.Sign()
-		if err != nil {
-			deployErr.add(contract, err, "failed to sign deployment transaction")
+		} else if err != nil {
+			deployErr.add(contract, err, fmt.Sprintf("failed to deploy contract %s", contract.Name()))
 			continue
-		}
-
-		p.logger.StartProgress(fmt.Sprintf("%s deploying...", output.Bold(contract.Name())))
-
-		sentTx, err := p.gateway.SendSignedTransaction(tx)
-		if err != nil {
-			p.logger.StopProgress()
-			deployErr.add(contract, err, "failed to send deployment transaction")
-			continue
-		}
-
-		result, err := p.gateway.GetTransactionResult(sentTx.ID(), true)
-		p.logger.StopProgress()
-		if err != nil {
-			deployErr.add(contract, err, "could not retrieve deployment result")
-			continue
-		}
-		if result != nil && result.Error != nil {
-			deployErr.add(contract, result.Error, "failed deploying contract")
-			continue
-		}
-
-		changeStatus := ""
-		if exists && update {
-			changeStatus = "(updated)"
 		}
 
 		p.logger.Info(fmt.Sprintf(
-			"%s -> 0x%s (%s) %s\n",
+			"%s -> 0x%s (%s) %s",
 			output.Green(contract.Name()),
 			contract.Target(),
-			sentTx.ID().String(),
-			changeStatus,
+			txID.String(),
+			map[bool]string{true: "[updated]", false: ""}[updated],
 		))
 	}
 
