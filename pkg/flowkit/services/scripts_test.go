@@ -140,7 +140,7 @@ func TestScripts_Integration(t *testing.T) {
 		out := []string{
 			"missing network, specify which network to use to resolve imports in script code",
 			"resolving imports in scripts not supported",
-			"import ./contractHello.cdc could not be resolved from the configuration",
+			"import ./contractHello.cdc could not be resolved from provided contracts",
 		}
 
 		for x, i := range in {
