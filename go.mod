@@ -5,7 +5,6 @@ go 1.18
 require (
 	github.com/getsentry/sentry-go v0.13.0
 	github.com/go-git/go-git/v5 v5.4.2
-	github.com/manifoldco/promptui v0.9.0
 	github.com/onflow/cadence v0.28.0
 	github.com/onflow/cadence-tools/languageserver v0.3.1
 	github.com/onflow/cadence-tools/test v0.2.1-0.20221012182900-f46efb551c55
@@ -110,6 +109,7 @@ require (
 	github.com/lmars/go-slip10 v0.0.0-20190606092855-400ba44fee12 // indirect
 	github.com/logrusorgru/aurora v2.0.3+incompatible // indirect
 	github.com/magiconair/properties v1.8.6 // indirect
+	github.com/manifoldco/promptui v0.9.0 // indirect
 	github.com/mattn/go-colorable v0.1.12 // indirect
 	github.com/mattn/go-isatty v0.0.16 // indirect
 	github.com/mattn/go-pointer v0.0.1 // indirect
