@@ -312,27 +312,27 @@ func (a *Accounts) AddContract(
 	account *flowkit.Account,
 	contract *Contract,
 	updateExisting bool,
-) (*flow.Account, *flow.Transaction, bool, error) {
+) (flow.Identifier, bool, error) {
 	resolver, err := contracts.NewResolver(contract.Code)
 	if err != nil {
-		return nil, nil, false, err
+		return flow.EmptyID, false, err
 	}
 
 	contract.Name, err = resolver.Name()
 	if err != nil {
-		return nil, nil, false, err
+		return flow.EmptyID, false, err
 	}
 
 	hasFileImports := resolver.HasFileImports()
 	err = contract.validate(hasFileImports)
 	if err != nil {
-		return nil, nil, false, err
+		return flow.EmptyID, false, err
 	}
 
 	if hasFileImports {
 		contractsNetwork, err := a.state.DeploymentContractsByNetwork(contract.Network)
 		if err != nil {
-			return nil, nil, false, err
+			return flow.EmptyID, false, err
 		}
 
 		contract.Code, err = resolver.ResolveImports(
@@ -341,7 +341,7 @@ func (a *Accounts) AddContract(
 			a.state.AliasesForNetwork(contract.Network),
 		)
 		if err != nil {
-			return nil, nil, false, err
+			return flow.EmptyID, false, err
 		}
 	}
 
@@ -352,7 +352,7 @@ func (a *Accounts) AddContract(
 		contract.Args,
 	)
 	if err != nil {
-		return nil, nil, false, err
+		return flow.EmptyID, false, err
 	}
 
 	a.logger.StartProgress(fmt.Sprintf("Adding contract '%s' to account '%s'...", contract.Name, account.Address()))
@@ -364,12 +364,12 @@ func (a *Accounts) AddContract(
 	// check if contract exists on account
 	flowAccount, err := a.gateway.GetAccount(account.Address())
 	if err != nil {
-		return nil, nil, false, err
+		return flow.EmptyID, false, err
 	}
 	existingContract, exists := flowAccount.Contracts[contract.Name]
 	noDiffInContract := bytes.Equal(contract.Code, existingContract)
 	if exists && noDiffInContract {
-		return nil, nil, false, errUpdateNoDiff
+		return flow.EmptyID, false, errUpdateNoDiff
 	}
 
 	// if we are updating contract
@@ -380,13 +380,13 @@ func (a *Accounts) AddContract(
 			string(contract.Code),
 		)
 		if err != nil {
-			return nil, nil, false, err
+			return flow.EmptyID, false, err
 		}
 	}
 
 	tx, err = a.prepareTransaction(tx, account)
 	if err != nil {
-		return nil, nil, false, err
+		return flow.EmptyID, false, err
 	}
 
 	a.logger.Info(fmt.Sprintf("Transaction ID: %s", tx.FlowTransaction().ID()))
@@ -394,19 +394,17 @@ func (a *Accounts) AddContract(
 	// send transaction with contract
 	sentTx, err := a.gateway.SendSignedTransaction(tx)
 	if err != nil {
-		return nil, nil, false, err
+		return flow.EmptyID, false, err
 	}
 
 	// we wait for transaction to be sealed
 	trx, err := a.gateway.GetTransactionResult(sentTx.ID(), true)
 	if err != nil {
-		return nil, nil, false, err
+		return flow.EmptyID, false, err
 	}
 	if trx.Error != nil {
-		return nil, nil, false, trx.Error
+		return flow.EmptyID, false, trx.Error
 	}
-
-	update, err := a.gateway.GetAccount(account.Address())
 
 	a.logger.StopProgress()
 	if updateExisting {
@@ -415,22 +413,22 @@ func (a *Accounts) AddContract(
 		a.logger.Info(fmt.Sprintf("Contract '%s' deployed to the account '%s'.", contract.Name, account.Address()))
 	}
 
-	return update, sentTx, updateExisting, err
+	return sentTx.ID(), updateExisting, err
 }
 
 // RemoveContract removes a contract from an account and returns the updated account.
 func (a *Accounts) RemoveContract(
 	account *flowkit.Account,
 	contractName string,
-) (*flow.Account, error) {
+) (flow.Identifier, error) {
 	tx, err := flowkit.NewRemoveAccountContractTransaction(account, contractName)
 	if err != nil {
-		return nil, err
+		return flow.EmptyID, err
 	}
 
 	tx, err = a.prepareTransaction(tx, account)
 	if err != nil {
-		return nil, err
+		return flow.EmptyID, err
 	}
 
 	a.logger.Info(fmt.Sprintf("Transaction ID: %s", tx.FlowTransaction().ID().String()))
@@ -441,16 +439,15 @@ func (a *Accounts) RemoveContract(
 
 	sentTx, err := a.gateway.SendSignedTransaction(tx)
 	if err != nil {
-		return nil, err
+		return flow.EmptyID, err
 	}
 
 	txr, err := a.gateway.GetTransactionResult(sentTx.ID(), true)
 	if err != nil {
-		return nil, err
+		return flow.EmptyID, err
 	}
 	if txr != nil && txr.Error != nil {
-		a.logger.Error("Removing contract failed")
-		return nil, txr.Error
+		return flow.EmptyID, txr.Error
 	}
 
 	a.logger.StopProgress()
@@ -460,7 +457,7 @@ func (a *Accounts) RemoveContract(
 		account.Address(),
 	))
 
-	return a.gateway.GetAccount(account.Address())
+	return sentTx.ID(), nil
 }
 
 // prepareTransaction prepares transaction for sending with data from network
