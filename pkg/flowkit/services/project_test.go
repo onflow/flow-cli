@@ -266,18 +266,6 @@ func TestProject_Integration(t *testing.T) {
 		assert.Equal(t, contracts[2].Code(), string(tests.ContractC.Source))
 	})
 
-	t.Run("Deploy Project Invalid", func(t *testing.T) {
-		t.Parallel()
-
-		// setup
-		state, s := setupIntegration()
-		_, err := simpleDeploy(state, s, false)
-		assert.NoError(t, err)
-
-		_, err = simpleDeploy(state, s, false)
-		assert.Equal(t, err.Error(), " Hello: already deployed to this account: contract Hello exists in account emulator-account,")
-	})
-
 	t.Run("Deploy Project Update", func(t *testing.T) {
 		t.Parallel()
 

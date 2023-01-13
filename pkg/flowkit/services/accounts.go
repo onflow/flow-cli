@@ -371,6 +371,9 @@ func (a *Accounts) AddContract(
 	if exists && noDiffInContract {
 		return flow.EmptyID, false, errUpdateNoDiff
 	}
+	if exists && !updateExisting {
+		return flow.EmptyID, false, fmt.Errorf(fmt.Sprintf("contract %s exists in account %s", contract.Name, account.Name()))
+	}
 
 	// if we are updating contract
 	if exists && updateExisting {
