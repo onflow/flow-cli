@@ -15,6 +15,7 @@ require (
 	github.com/onflow/flow-emulator v0.41.0
 	github.com/onflow/flow-go v0.28.1-0.20221214175701-076c0fd2a2f9
 	github.com/onflow/flow-go-sdk v0.30.0
+	github.com/pkg/errors v0.9.1
 	github.com/rs/zerolog v1.28.0
 	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/afero v1.9.0
@@ -128,7 +129,6 @@ require (
 	github.com/pelletier/go-toml v1.9.5 // indirect
 	github.com/pelletier/go-toml/v2 v2.0.2 // indirect
 	github.com/pierrec/lz4 v2.6.1+incompatible // indirect
-	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/psiemens/sconfig v0.1.0 // indirect
 	github.com/rivo/uniseg v0.2.1-0.20211004051800-57c86be7915a // indirect
