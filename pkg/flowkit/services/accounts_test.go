@@ -569,7 +569,7 @@ func TestAccountsAddContract_Integration(t *testing.T) {
 		)
 
 		require.Error(t, err)
-		assert.True(t, strings.Contains(err.Error(), "cannot overwrite existing contract with name \"Simple\""))
+		assert.Error(t, err, "cannot overwrite existing contract with name \"Simple\"")
 	})
 }
 
