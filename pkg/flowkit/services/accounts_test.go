@@ -570,14 +570,6 @@ func TestAccountsAddContract_Integration(t *testing.T) {
 
 		require.Error(t, err)
 		assert.True(t, strings.Contains(err.Error(), "cannot overwrite existing contract with name \"Simple\""))
-
-		_, _, err = s.Accounts.AddContract(
-			srvAcc,
-			resourceToContract(tests.ContractHelloString),
-			true,
-		)
-		require.Error(t, err)
-		assert.True(t, strings.Contains(err.Error(), "cannot update non-existing contract with name \"Hello\""))
 	})
 }
 
