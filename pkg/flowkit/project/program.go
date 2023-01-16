@@ -20,12 +20,11 @@ package project
 
 import (
 	"fmt"
-	"strings"
+	"regexp"
 
 	"github.com/onflow/cadence/runtime/ast"
 	"github.com/onflow/cadence/runtime/common"
 	"github.com/onflow/cadence/runtime/parser"
-	"regexp"
 )
 
 type Program struct {

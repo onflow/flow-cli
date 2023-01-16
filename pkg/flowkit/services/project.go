@@ -21,7 +21,6 @@ package services
 import (
 	"errors"
 	"fmt"
-	"strings"
 
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
@@ -231,10 +230,7 @@ func (p *Project) Deploy(network string, update bool) ([]*project.Contract, erro
 		return nil, err
 	}
 
-	p.logger.Info(fmt.Sprintf(
-		"\nDeploying %d contracts for accounts: %s\n", len(sorted),
-		strings.Join(p.state.AccountNamesForNetwork(network), ","),
-	))
+	p.logger.Info(fmt.Sprintf("\nDeploying %d contracts for accounts: %s\n", len(sorted), p.state.AccountsForNetwork(network)))
 	defer p.logger.StopProgress()
 
 	// todo refactor service layer so it can be shared
