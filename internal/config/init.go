@@ -57,6 +57,7 @@ func Initialise(
 	_ command.GlobalFlags,
 	services *services.Services,
 ) (command.Result, error) {
+	fmt.Println("⚠️Notice: for starting a new project prefer using 'flow setup'.")
 
 	sigAlgo := crypto.StringToSignatureAlgorithm(InitFlag.ServiceKeySigAlgo)
 	if sigAlgo == crypto.UnknownSignatureAlgorithm {
