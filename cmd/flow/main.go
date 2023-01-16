@@ -57,9 +57,6 @@ func main() {
 	quick.DeployCommand.AddToParent(cmd)
 	quick.RunCommand.AddToParent(cmd)
 
-	// super commands
-	super.SetupCommand.AddToParent(cmd)
-
 	// single commands
 	status.Command.AddToParent(cmd)
 	tools.DevWallet.AddToParent(cmd)
@@ -67,6 +64,7 @@ func main() {
 	test.TestCommand.AddToParent(cmd)
 
 	// super commands
+	super.SetupCommand.AddToParent(cmd)
 	super.DevCommand.AddToParent(cmd)
 	super.ExecCommand.AddToParent(cmd)
 

@@ -41,6 +41,9 @@ var DevCommand = &command.Command{
 		Short:   "Monitor your project during development", // todo improve
 		Args:    cobra.ExactArgs(0),
 		Example: "flow dev",
+		Annotations: map[string]string{
+			"HotCommand": "true",
+		},
 	},
 	Flags: &devFlags,
 	RunS:  dev,

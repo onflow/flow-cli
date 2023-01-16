@@ -30,6 +30,9 @@ var SetupCommand = &command.Command{
 		Short:   "Setup a new Flow project",
 		Example: "flow setup my-project",
 		Args:    cobra.ExactArgs(1),
+		Annotations: map[string]string{
+			"HotCommand": "true",
+		},
 	},
 	Flags: &setupFlags,
 	Run:   create,
