@@ -27,7 +27,7 @@ var setupFlags = FlagsSetup{}
 var SetupCommand = &command.Command{
 	Cmd: &cobra.Command{
 		Use:     "setup <path>",
-		Short:   "Setup a new Flow project",
+		Short:   "Start a new Flow project",
 		Example: "flow setup my-project",
 		Args:    cobra.ExactArgs(1),
 		Annotations: map[string]string{
