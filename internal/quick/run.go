@@ -19,6 +19,7 @@
 package quick
 
 import (
+	"fmt"
 	"sync"
 
 	"github.com/onflow/flow-cli/internal/command"
@@ -63,9 +64,6 @@ var RunCommand = &command.Command{
 		Use:     "run",
 		Short:   "Start emulator and deploy all project contracts",
 		Example: "flow run",
-		Annotations: map[string]string{
-			"HotCommand": "true",
-		},
 	},
 	Flags: &runFlags,
 	Run: func(
@@ -74,21 +72,12 @@ var RunCommand = &command.Command{
 		globalFlags command.GlobalFlags,
 		services *services.Services,
 	) (command.Result, error) {
-		var waitGroup sync.WaitGroup
-		// set number of goroutines
-		waitGroup.Add(2)
-		go EmulatorHelper(args, globalFlags, services, &waitGroup)
-		go DeployHelper(args, globalFlags, services, &waitGroup)
-		// wait until completion of the goroutines
-		waitGroup.Wait()
-
-		emulator.Cmd.Run(emulator.Cmd, args)
+		fmt.Println("⚠️Deprecation notice: Use 'flow dev' command.")
 		return &RunResult{}, nil
 	},
 }
 
-type RunResult struct {
-}
+type RunResult struct{}
 
 func (r *RunResult) JSON() interface{} {
 	result := make(map[string]string)
