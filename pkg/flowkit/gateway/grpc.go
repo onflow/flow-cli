@@ -119,6 +119,14 @@ func (g *GrpcGateway) GetTransaction(ID flow.Identifier) (*flow.Transaction, err
 	return g.client.GetTransaction(g.ctx, ID)
 }
 
+func (g *GrpcGateway) GetTransactionResultsByBlockID(blockID flow.Identifier) ([]*flow.TransactionResult, error) {
+	return g.client.GetTransactionResultsByBlockID(g.ctx, blockID)
+}
+
+func (g *GrpcGateway) GetTransactionsByBlockID(blockID flow.Identifier) ([]*flow.Transaction, error) {
+	return g.client.GetTransactionsByBlockID(g.ctx, blockID)
+}
+
 // GetTransactionResult gets a transaction result by ID from the Flow Access API.
 func (g *GrpcGateway) GetTransactionResult(ID flow.Identifier, waitSeal bool) (*flow.TransactionResult, error) {
 	result, err := g.client.GetTransactionResult(g.ctx, ID)
