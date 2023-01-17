@@ -35,6 +35,7 @@ var Cmd = &cobra.Command{
 	Use:              "accounts",
 	Short:            "Utilities to manage accounts",
 	TraverseChildren: true,
+	GroupID:          "resources",
 }
 
 func init() {

@@ -34,6 +34,7 @@ var Cmd = &cobra.Command{
 	Use:              "scripts",
 	Short:            "Utilities to execute scripts",
 	TraverseChildren: true,
+	GroupID:          "interactions",
 }
 
 func init() {

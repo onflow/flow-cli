@@ -28,6 +28,7 @@ var Cmd = &cobra.Command{
 	Use:              "snapshot",
 	Short:            "Utilities to download the latest finalized protocol state snapshot",
 	TraverseChildren: true,
+	GroupID:          "utils",
 }
 
 func init() {

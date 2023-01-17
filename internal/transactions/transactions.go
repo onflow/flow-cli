@@ -37,6 +37,7 @@ var Cmd = &cobra.Command{
 	Use:              "transactions",
 	Short:            "Utilities to send transactions",
 	TraverseChildren: true,
+	GroupID:          "interactions",
 }
 
 func init() {

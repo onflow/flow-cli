@@ -41,9 +41,7 @@ var DevCommand = &command.Command{
 		Short:   "Build your Flow project",
 		Args:    cobra.ExactArgs(0),
 		Example: "flow dev",
-		Annotations: map[string]string{
-			"HotCommand": "true",
-		},
+		GroupID: "super",
 	},
 	Flags: &devFlags,
 	RunS:  dev,

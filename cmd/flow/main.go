@@ -86,14 +86,33 @@ func main() {
 	cmd.AddCommand(snapshot.Cmd)
 
 	command.InitFlags(cmd)
-
 	cmd.AddGroup(&cobra.Group{
-		ID:    "test-group",
-		Title: "Test Group",
+		ID:    "super",
+		Title: "🔥 Super Commands",
+	})
+	cmd.AddGroup(&cobra.Group{
+		ID:    "resources",
+		Title: "📦 Flow Entities",
+	})
+	cmd.AddGroup(&cobra.Group{
+		ID:    "interactions",
+		Title: "💬 Flow Interactions",
+	})
+	cmd.AddGroup(&cobra.Group{
+		ID:    "tools",
+		Title: "🔨 Flow Tools",
+	})
+	cmd.AddGroup(&cobra.Group{
+		ID:    "security",
+		Title: "🔒 Flow Security",
+	})
+	cmd.AddGroup(&cobra.Group{
+		ID:    "utils",
+		Title: "🌱 Flow Utilities",
 	})
 
-	// Set usage template to custom template
-	cmd.SetUsageTemplate("Usage:{{if .Runnable}}\n{{.UseLine}}{{end}}{{if .HasAvailableSubCommands}}\n{{.CommandPath}} [command]{{end}}{{if gt (len .Aliases) 0}}\n\nAliases:\n{{.NameAndAliases}}{{end}}{{if .HasExample}}\n\nExamples:\n{{.Example}}{{end}}{{if .HasAvailableSubCommands}}\n\n{{if (eq .Name \"flow\")}}👋 Welcome Flow developer!\nIf you are starting a new flow project use our super commands, start by running 'flow setup'.\n\n🔥 Super Commands:{{range .Commands}}{{if (and (.IsAvailableCommand)  (index .Annotations \"HotCommand\") )}}\n{{rpad .Name .NamePadding }} {{.Short}}{{end}}{{end}}{{end}}{{if .HasAvailableLocalFlags}}\n\n{{end}}Available Commands:\n{{range .Commands}}{{if (and (or .IsAvailableCommand (eq .Name \"help\")) (not (index .Annotations \"HotCommand\")))}}\n{{rpad .Name .NamePadding }} {{.Short}}{{end}}{{end}}{{end}}{{if .HasAvailableLocalFlags}}\n\nFlags:\n{{.LocalFlags.FlagUsages | trimTrailingWhitespaces}}{{end}}{{if .HasAvailableInheritedFlags}}\n\nGlobal Flags:\n{{.InheritedFlags.FlagUsages | trimTrailingWhitespaces}}{{end}}{{if .HasHelpSubCommands}}\n\nAdditional help topics:\n{{range .Commands}}{{if .IsAdditionalHelpTopicCommand}}{{rpad .CommandPath .CommandPathPadding}} {{.Short}}{{end}}{{end}}{{end}}{{if .HasAvailableSubCommands}}\nUse \"{{.CommandPath}} [command] --help\" for more information about a command.{{end}}\n")
+	cmd.SetUsageTemplate(command.UsageTemplate)
+
 	if err := cmd.Execute(); err != nil {
 		util.Exit(1, err.Error())
 	}

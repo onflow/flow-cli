@@ -36,6 +36,7 @@ var Cmd = &cobra.Command{
 	Use:              "events",
 	Short:            "Utilities to read events",
 	TraverseChildren: true,
+	GroupID:          "resources",
 }
 
 func init() {

@@ -27,8 +27,9 @@ import (
 )
 
 var Cmd = &cobra.Command{
-	Use:   "version",
-	Short: "View version and commit information",
+	Use:     "version",
+	Short:   "View version and commit information",
+	GroupID: "utils",
 	Run: func(cmd *cobra.Command, args []string) {
 		semver := build.Semver()
 		commit := build.Commit()

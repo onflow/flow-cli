@@ -35,7 +35,7 @@ var Cmd = &cobra.Command{
 	Use:              "blocks",
 	Short:            "Utilities to read blocks",
 	TraverseChildren: true,
-	GroupID:          "test-group",
+	GroupID:          "resources",
 }
 
 func init() {

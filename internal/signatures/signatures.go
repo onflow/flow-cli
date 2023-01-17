@@ -26,6 +26,7 @@ var Cmd = &cobra.Command{
 	Use:              "signatures",
 	Short:            "Signature verification and creation",
 	TraverseChildren: true,
+	GroupID:          "security",
 }
 
 func init() {

@@ -33,6 +33,7 @@ var Cmd = &cobra.Command{
 	Use:              "collections",
 	Short:            "Utilities to read collections",
 	TraverseChildren: true,
+	GroupID:          "resources",
 }
 
 func init() {

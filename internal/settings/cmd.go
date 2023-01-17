@@ -26,6 +26,7 @@ var Cmd = &cobra.Command{
 	Use:              "settings",
 	Short:            "Manage persisted global settings",
 	TraverseChildren: true,
+	GroupID:          "utils",
 }
 
 func init() {

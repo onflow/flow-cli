@@ -111,6 +111,7 @@ func ConfiguredServiceKey(
 func init() {
 	Cmd = start.Cmd(ConfiguredServiceKey)
 	Cmd.Use = "emulator"
+	Cmd.GroupID = "tools"
 }
 
 func Exitf(code int, msg string, args ...interface{}) {

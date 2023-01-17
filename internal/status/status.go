@@ -38,8 +38,9 @@ var statusFlags = FlagsStatus{}
 
 var Command = &command.Command{
 	Cmd: &cobra.Command{
-		Use:   "status",
-		Short: "Display the status of the Flow network",
+		Use:     "status",
+		Short:   "Display the status of the Flow network",
+		GroupID: "utils",
 	},
 	Flags: &statusFlags,
 	RunS:  status,

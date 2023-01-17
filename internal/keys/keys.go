@@ -36,6 +36,7 @@ var Cmd = &cobra.Command{
 	Use:              "keys",
 	Short:            "Utilities to manage keys",
 	TraverseChildren: true,
+	GroupID:          "security",
 }
 
 func init() {
