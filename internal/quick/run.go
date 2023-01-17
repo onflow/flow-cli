@@ -20,11 +20,7 @@ package quick
 
 import (
 	"fmt"
-	"sync"
-
 	"github.com/onflow/flow-cli/internal/command"
-	"github.com/onflow/flow-cli/internal/emulator"
-	"github.com/onflow/flow-cli/internal/project"
 	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/services"
 
@@ -36,34 +32,13 @@ type flagsRun struct {
 
 var runFlags = flagsRun{}
 
-func DeployHelper(args []string, globalFlags command.GlobalFlags, services *services.Services, wg *sync.WaitGroup) {
-
-	for {
-		//check if the server has started
-		_, err := services.Status.Ping(globalFlags.Network)
-		if err == nil {
-			// if the emulator is running run the deploy command
-			project.DeployCommand.Cmd.Run(project.DeployCommand.Cmd, args)
-			break
-		}
-	}
-
-	wg.Done()
-
-}
-
-func EmulatorHelper(args []string, globalFlags command.GlobalFlags, services *services.Services, wg *sync.WaitGroup) {
-	// run the emulator
-	emulator.Cmd.Run(emulator.Cmd, args)
-	wg.Done()
-}
-
 // RunCommand This command will act as an alias for running the emulator and deploying the contracts
 var RunCommand = &command.Command{
 	Cmd: &cobra.Command{
 		Use:     "run",
 		Short:   "Start emulator and deploy all project contracts",
 		Example: "flow run",
+		GroupID: "project",
 	},
 	Flags: &runFlags,
 	Run: func(

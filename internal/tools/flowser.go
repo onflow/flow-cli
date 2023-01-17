@@ -42,7 +42,7 @@ var flowserFlags = FlagsWallet{}
 var Flowser = &command.Command{
 	Cmd: &cobra.Command{
 		Use:     "flowser",
-		Short:   "Starts Flowser explorer",
+		Short:   "Run Flowser project explorer",
 		Example: "flow flowser",
 		Args:    cobra.ExactArgs(0),
 		GroupID: "tools",

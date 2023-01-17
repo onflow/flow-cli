@@ -33,7 +33,7 @@ import (
 
 var Cmd = &cobra.Command{
 	Use:              "blocks",
-	Short:            "Utilities to read blocks",
+	Short:            "Retrieve blocks",
 	TraverseChildren: true,
 	GroupID:          "resources",
 }

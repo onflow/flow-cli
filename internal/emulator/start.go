@@ -111,6 +111,7 @@ func ConfiguredServiceKey(
 func init() {
 	Cmd = start.Cmd(ConfiguredServiceKey)
 	Cmd.Use = "emulator"
+	Cmd.Short = "Run Flow network for development"
 	Cmd.GroupID = "tools"
 }
 

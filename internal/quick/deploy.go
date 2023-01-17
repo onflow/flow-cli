@@ -31,6 +31,7 @@ var DeployCommand = &command.Command{
 		Use:     "deploy",
 		Short:   "Deploy all project contracts",
 		Example: "flow deploy",
+		GroupID: "project",
 	},
 	Flags: project.DeployCommand.Flags,
 	RunS:  project.DeployCommand.RunS,

@@ -32,7 +32,7 @@ import (
 
 var Cmd = &cobra.Command{
 	Use:              "scripts",
-	Short:            "Utilities to execute scripts",
+	Short:            "Execute Cadence scripts",
 	TraverseChildren: true,
 	GroupID:          "interactions",
 }

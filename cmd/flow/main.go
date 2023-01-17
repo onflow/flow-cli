@@ -103,12 +103,12 @@ func main() {
 		Title: "🔨 Flow Tools",
 	})
 	cmd.AddGroup(&cobra.Group{
-		ID:    "security",
-		Title: "🔒 Flow Security",
+		ID:    "project",
+		Title: "🏄 Flow Project",
 	})
 	cmd.AddGroup(&cobra.Group{
-		ID:    "utils",
-		Title: "🌱 Flow Utilities",
+		ID:    "security",
+		Title: "🔒 Flow Security",
 	})
 
 	cmd.SetUsageTemplate(command.UsageTemplate)

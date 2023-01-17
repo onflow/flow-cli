@@ -41,7 +41,7 @@ var walletFlags = FlagsWallet{}
 var DevWallet = &command.Command{
 	Cmd: &cobra.Command{
 		Use:     "dev-wallet",
-		Short:   "Starts a dev wallet",
+		Short:   "Run a development wallet",
 		Example: "flow dev-wallet",
 		Args:    cobra.ExactArgs(0),
 		GroupID: "tools",
