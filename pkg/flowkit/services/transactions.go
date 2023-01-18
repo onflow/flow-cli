@@ -22,10 +22,11 @@ import (
 	"bytes"
 	"encoding/hex"
 	"fmt"
-	"github.com/onflow/cadence"
-	"github.com/onflow/flow-cli/pkg/flowkit"
 	"io/ioutil"
 	"net/http"
+
+	"github.com/onflow/cadence"
+	"github.com/onflow/flow-cli/pkg/flowkit"
 
 	"github.com/onflow/flow-cli/pkg/flowkit/contracts"
 
@@ -53,6 +54,23 @@ func NewTransactions(
 		state:   state,
 		logger:  logger,
 	}
+}
+
+func (t *Transactions) GetTransactionsByBlockID(id flow.Identifier) ([]*flow.Transaction, error) {
+	tx, err := t.gateway.GetTransactionsByBlockID(id)
+	if err != nil {
+		return nil, err
+	}
+	return tx, nil
+}
+
+func (t *Transactions) GetTransactionResultsByBlockID(id flow.Identifier) ([]*flow.TransactionResult, error) {
+
+	tx, err := t.gateway.GetTransactionResultsByBlockID(id)
+	if err != nil {
+		return nil, err
+	}
+	return tx, nil
 }
 
 // GetStatus of transaction.
