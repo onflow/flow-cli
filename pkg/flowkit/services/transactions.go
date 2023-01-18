@@ -56,17 +56,17 @@ func NewTransactions(
 	}
 }
 
-func (t *Transactions) GetTransactionsByBlockID(id flow.Identifier) ([]*flow.Transaction, error) {
-	tx, err := t.gateway.GetTransactionsByBlockID(id)
+func (t *Transactions) GetTransactionsByBlockID(id string) ([]*flow.Transaction, error) {
+	tx, err := t.gateway.GetTransactionsByBlockID(flow.HexToID(id))
 	if err != nil {
 		return nil, err
 	}
 	return tx, nil
 }
 
-func (t *Transactions) GetTransactionResultsByBlockID(id flow.Identifier) ([]*flow.TransactionResult, error) {
+func (t *Transactions) GetTransactionResultsByBlockID(id string) ([]*flow.TransactionResult, error) {
 
-	tx, err := t.gateway.GetTransactionResultsByBlockID(id)
+	tx, err := t.gateway.GetTransactionResultsByBlockID(flow.HexToID(id))
 	if err != nil {
 		return nil, err
 	}
