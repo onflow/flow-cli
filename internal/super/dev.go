@@ -88,8 +88,10 @@ func dev(
 	if err != nil {
 		if strings.Contains(err.Error(), "does not have a valid signature") {
 			fmt.Printf("%s Failed to run the command, please make sure you started the emulator inside the project ROOT folder by running 'flow emulator'.\n\n", output.TryEmoji())
+			return nil, nil
 		}
-		return nil, err
+
+		fmt.Println(err) // we just print the error but keep watching files for changes, since they might fix the error
 	}
 
 	err = project.watch()
