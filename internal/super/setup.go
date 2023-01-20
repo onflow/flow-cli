@@ -55,7 +55,7 @@ var SetupCommand = &command.Command{
 	Run:   create,
 }
 
-const scaffoldListURL = "https://raw.githubusercontent.com/onflow/flow-scaffold-list/main/scaffold-list.json"
+const scaffoldListURL = "https://raw.githubusercontent.com/onflow/flow-cli/master/scaffolds.json"
 
 type scaffoldConf struct {
 	Repo        string `json:"repo"`
