@@ -65,7 +65,7 @@ It is reccomended that you use VSCode as the IDE and run the command in the term
 The latest VSCode extension also supports resolution of the improved import syntax, more on that later.
 
 
-⚠️ Please note that this command only works on emulator network. It's meant for development only and hence 
+⚠️ Please note that this command only works on the emulator network. It's meant for development only and hence 
 it doesn't allow interacting with testnet or mainnet network. After your project is completed you will 
 be soon able to migrate it using a migration super command. Also, please note the command requires a 
 running emulator which you have to start. If you restart the emulator the command needs to be restarted as well. 
