@@ -10,7 +10,7 @@ and the commands will take care of the rest.
 
 
 ## Setup
-Flow setup is the initial command you run to start your new Flow project. By default, it will create 
+The initial command to start your new Flow project is `flow setup` . By default, it will create 
 basic folder structure and a flow.json configuration. 
 
 Running the command:
