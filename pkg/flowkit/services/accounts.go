@@ -22,6 +22,8 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"golang.org/x/exp/maps"
+	"golang.org/x/exp/slices"
 	"strings"
 
 	"github.com/onflow/flow-cli/pkg/flowkit/contracts"
@@ -424,6 +426,21 @@ func (a *Accounts) RemoveContract(
 	account *flowkit.Account,
 	contractName string,
 ) (flow.Identifier, error) {
+	// check if contracts exists on the account
+	flowAcc, err := a.gateway.GetAccount(account.Address())
+	if err != nil {
+		return flow.EmptyID, err
+	}
+
+	existingContracts := maps.Keys(flowAcc.Contracts)
+	if !slices.Contains(existingContracts, contractName) {
+		return flow.EmptyID, fmt.Errorf(
+			"can not remove a non-existing contract named '%s'. Account only contains the contracts: %v",
+			contractName,
+			strings.Join(existingContracts, ", "),
+		)
+	}
+
 	tx, err := flowkit.NewRemoveAccountContractTransaction(account, contractName)
 	if err != nil {
 		return flow.EmptyID, err
