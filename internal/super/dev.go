@@ -19,7 +19,9 @@
 package super
 
 import (
+	"errors"
 	"fmt"
+	"github.com/onflow/cadence/runtime/parser"
 	"os"
 	"strings"
 
@@ -91,7 +93,12 @@ func dev(
 			return nil, nil
 		}
 
-		fmt.Println(err) // we just print the error but keep watching files for changes, since they might fix the error
+		var parseErr parser.Error
+		if errors.As(err, &parseErr) {
+			fmt.Println(err) // we just print the error but keep watching files for changes, since they might fix the issue
+		} else {
+			return nil, err
+		}
 	}
 
 	err = project.watch()
