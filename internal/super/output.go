@@ -138,8 +138,8 @@ func failureDeployment(err error, contractPathNames map[string]string) string {
 func helpBanner() string {
 	var out bytes.Buffer
 	out.WriteString(output.Italic("The development environment will watch your Cadence files and automatically keep your project updated on the emulator.\n"))
-	out.WriteString(output.Italic("Please add your contracts in the contracts folder, if you want to add a contract to a new account, create a folder\n"))
-	out.WriteString(output.Italic("inside the contracts folder and we will automatically create an account for you and deploy everything inside that folder.\n\n"))
+	out.WriteString(output.Italic("Please add your contracts in the contracts folder. Read more about it here: https://developers.flow.com/tools/flow-cli/supercommands\n"))
+	out.WriteString(output.Italic("Be aware that resources stored in accounts might no longer be valid after contract code changes.\n\n"))
 	return out.String()
 }
 
