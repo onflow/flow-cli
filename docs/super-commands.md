@@ -38,7 +38,7 @@ list by opening a PR here. [TODO]
 
 
 ## Develop
-After creating the project using the flow setup command you should start the emulator in 
+After creating the project using the flow setup command you can start the emulator in 
 the project directory by running `flow emulator`. After emulator is started up you can continue by 
 running the flow develop command like so:
 ```
