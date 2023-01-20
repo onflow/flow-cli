@@ -168,8 +168,11 @@ func cloneScaffold(targetDir string, conf scaffoldConf) error {
 	_, err := git.PlainClone(targetDir, false, &git.CloneOptions{
 		URL: conf.Repo,
 	})
+	if err != nil {
+		return err
+	}
 
-	return err
+	return os.RemoveAll(filepath.Join(targetDir, ".git"))
 }
 
 type setupResult struct {
