@@ -18,7 +18,7 @@ Running the command:
 > flow setup
 ```
 
-It will contain the following resources:
+Will create the following folders and files:
 - `/contracts` folder should contain all your Cadence contracts,
 - `/scripts` folder should contain all your Cadence scripts,
 - `/transactions` folder should contain all your Cadence transactions,
