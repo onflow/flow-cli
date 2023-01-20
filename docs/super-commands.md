@@ -44,7 +44,7 @@ running the flow develop command like so:
 ```
 > flow dev
 ```
-This will continuously watch for your project Cadence files and keep the deployed on emulator. 
+This will continuously watch for your projects Cadence files for changes and keep them in sync with the deployed contracts on the emulator. 
 
 The output will look something like:
 ```
