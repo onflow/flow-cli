@@ -195,13 +195,24 @@ func TestAccounts(t *testing.T) {
 			gw.SendSignedTransaction.Return(tests.NewTransaction(), nil)
 		})
 
+		gw.GetAccount.Run(func(args mock.Arguments) {
+			addr := args.Get(0).(flow.Address)
+			assert.Equal(t, addr.String(), serviceAcc.Address().String())
+			racc := tests.NewAccountWithAddress(addr.String())
+			racc.Contracts = map[string][]byte{
+				tests.ContractHelloString.Name: tests.ContractHelloString.Source,
+			}
+
+			gw.GetAccount.Return(racc, nil)
+		})
+
 		account, err := s.Accounts.RemoveContract(
 			serviceAcc,
-			tests.ContractHelloString.Filename,
+			tests.ContractHelloString.Name,
 		)
 
 		gw.Mock.AssertCalled(t, tests.GetAccountFunc, serviceAddress)
-		gw.Mock.AssertNumberOfCalls(t, tests.GetAccountFunc, 1)
+		gw.Mock.AssertNumberOfCalls(t, tests.GetAccountFunc, 2)
 		gw.Mock.AssertNumberOfCalls(t, tests.GetTransactionResultFunc, 1)
 		gw.Mock.AssertNumberOfCalls(t, tests.SendSignedTransactionFunc, 1)
 		assert.NotNil(t, account)
