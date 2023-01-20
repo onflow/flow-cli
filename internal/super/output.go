@@ -115,13 +115,19 @@ func failureDeployment(err error, contractPathNames map[string]string) string {
 		out.WriteString(output.ErrorEmoji() + " Error deploying your project. Runtime error encountered which means your code is incorrect, check details bellow. \n\n")
 
 		for name, err := range deployErr.Contracts() {
+			out.WriteString(output.Bold(fmt.Sprintf("%s Errors:\n", name)))
+
+			if strings.Contains(err.Error(), "invalid argument count, too few arguments") {
+				// todo support initialization arguments in the deployment section of flow.json. We must find a good solution on how to provide those, it can be with pragma arguments or by having a prompt.
+				out.WriteString(output.Red(
+					"Deploying a contract failed because it requires initialization arguments. We currently don't support passing initialization arguments, so we suggest you hardcode the initialization arguments in the init function to be used during development.\n\n",
+				))
+				continue
+			}
+
 			// remove transaction error as it confuses developer, the only important part is the actual code
 			removeDeployOuput := regexp.MustCompile(`(?s)(failed deploying.*contracts\.add[^\n]*\n[^\n]*\n\nerror: )`)
-			out.WriteString(output.Bold(fmt.Sprintf("%s Errors:\n", name)))
 			out.WriteString(output.Red(removeDeployOuput.ReplaceAllString(err.Error(), "")))
-
-			fmt.Println("----")
-			fmt.Println(err.Error())
 		}
 		return out.String()
 	}
