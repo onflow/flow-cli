@@ -154,6 +154,16 @@ func (g *EmulatorGateway) GetTransaction(id flow.Identifier) (*flow.Transaction,
 	return transaction, nil
 }
 
+func (g *EmulatorGateway) GetTransactionResultsByBlockID(blockID flow.Identifier) ([]*flow.TransactionResult, error) {
+	// TODO: implement
+	panic("GetTransactionResultsByBlockID not implemented")
+}
+
+func (g *EmulatorGateway) GetTransactionsByBlockID(blockID flow.Identifier) ([]*flow.Transaction, error) {
+	// TODO: implement
+	panic("GetTransactionResultsByBlockID not implemented")
+}
+
 func (g *EmulatorGateway) Ping() error {
 	err := g.backend.Ping(g.ctx)
 	if err != nil {
