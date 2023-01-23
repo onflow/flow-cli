@@ -36,7 +36,7 @@ type flagsSend struct {
 	Signer    string   `default:"" flag:"signer" info:"Account name from configuration used to sign the transaction as proposer, payer and suthorizer"`
 	Proposer  string   `default:"" flag:"proposer" info:"Account name from configuration used as proposer"`
 	Payer     string   `default:"" flag:"payer" info:"Account name from configuration used as payer"`
-	Autorizer []string `default:"" flag:"authorizer" info:"Account name(s) from configuration used as authorizer(s)"`
+	Autorizer []string `default:"" flag:"authorizer" info:"Name of a single or multiple comma-separated accounts used as authorizers from configuration"`
 	Include   []string `default:"" flag:"include" info:"Fields to include in the output"`
 	Exclude   []string `default:"" flag:"exclude" info:"Fields to exclude from the output (events)"`
 }
