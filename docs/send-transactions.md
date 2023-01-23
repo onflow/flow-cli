@@ -114,6 +114,27 @@ Specify fields to exclude from the result output. Applies only to the text outpu
 
 Specify the name of the account that will be used to sign the transaction.
 
+### Proposer
+
+- Flag: `--proposer`
+- Valid inputs: the name of an account defined in the configuration (`flow.json`)
+
+Specify the name of the account that will be used as proposer in the transaction.
+
+### Payer
+
+- Flag: `--payer`
+- Valid inputs: the name of an account defined in the configuration (`flow.json`)
+
+Specify the name of the account that will be used as payer in the transaction.
+
+### Authorizer
+
+- Flag: `--authorizer`
+- Valid inputs: the name of an account defined in the configuration (`flow.json`)
+
+Specify the name of the account(s) that will be used as authorizer(s) in the transaction.
+
 ### Arguments JSON
 
 - Flag: `--args-json`
