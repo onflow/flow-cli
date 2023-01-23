@@ -23,7 +23,6 @@ import (
 
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/pkg/flowkit"
-	"github.com/onflow/flow-cli/pkg/flowkit/config"
 	"github.com/onflow/flow-cli/pkg/flowkit/services"
 	"github.com/onflow/flow-go-sdk"
 
@@ -32,12 +31,14 @@ import (
 )
 
 type flagsSend struct {
-	ArgsJSON string   `default:"" flag:"args-json" info:"arguments in JSON-Cadence format"`
-	Arg      []string `default:"" flag:"arg" info:"⚠️  Deprecated: use command arguments"`
-	Signer   []string `default:"emulator-account" flag:"signer" info:"Account name(s) from configuration used to sign the transaction"`
-	GasLimit uint64   `default:"1000" flag:"gas-limit" info:"transaction gas limit"`
-	Include  []string `default:"" flag:"include" info:"Fields to include in the output"`
-	Exclude  []string `default:"" flag:"exclude" info:"Fields to exclude from the output (events)"`
+	ArgsJSON  string   `default:"" flag:"args-json" info:"arguments in JSON-Cadence format"`
+	Arg       []string `default:"" flag:"arg" info:"⚠️  Deprecated: use command arguments"`
+	Signer    string   `default:"" flag:"signer" info:"Account name from configuration used to sign the transaction as proposer, payer and suthorizer"`
+	Proposer  string   `default:"" flag:"signer" info:"Account name from configuration used as proposer"`
+	Payer     string   `default:"" flag:"signer" info:"Account name from configuration used as payer"`
+	Autorizer []string `default:"" flag:"signer" info:"Account name(s) from configuration used as authorizer(s)"`
+	Include   []string `default:"" flag:"include" info:"Fields to include in the output"`
+	Exclude   []string `default:"" flag:"exclude" info:"Fields to exclude from the output (events)"`
 }
 
 var sendFlags = flagsSend{}
@@ -62,19 +63,48 @@ func send(
 ) (command.Result, error) {
 	codeFilename := args[0]
 
-	var signers []*flowkit.Account
+	var proposer *flowkit.Account
+	var payer *flowkit.Account
+	var authorizers []*flowkit.Account
+	var err error
 
-	//validate all signers
-	for _, signerName := range sendFlags.Signer {
-		// use service account by default
-		if signerName == config.DefaultEmulatorServiceAccountName {
-			signerName = state.Config().Emulators.Default().ServiceAccount
+	proposerName := sendFlags.Proposer
+	if proposerName != "" {
+		proposer, err = state.Accounts().ByName(proposerName)
+		if err != nil {
+			return nil, fmt.Errorf("proposer account: [%s] doesn't exists in configuration", proposerName)
+		}
+	}
+
+	payerName := buildFlags.Payer
+	if payerName != "" {
+		payer, err = state.Accounts().ByName(payerName)
+		if err != nil {
+			return nil, fmt.Errorf("payer account: [%s] doesn't exists in configuration", payerName)
+		}
+	}
+
+	for _, authorizerName := range sendFlags.Autorizer {
+		authorizer, err := state.Accounts().ByName(authorizerName)
+		if err != nil {
+			return nil, fmt.Errorf("authorizer account: [%s] doesn't exists in configuration", authorizerName)
+		}
+		authorizers = append(authorizers, authorizer)
+	}
+
+	signerName := sendFlags.Signer
+
+	if signerName != "" {
+		if proposer != nil || payer != nil || len(authorizers) > 0 {
+			return nil, fmt.Errorf("signer flag cannot be combined with payer/proposer/authorizer flags")
 		}
 		signer, err := state.Accounts().ByName(signerName)
 		if err != nil {
 			return nil, fmt.Errorf("signer account: [%s] doesn't exists in configuration", signerName)
 		}
-		signers = append(signers, signer)
+		proposer = signer
+		payer = signer
+		authorizers = append(authorizers, signer)
 	}
 
 	code, err := readerWriter.ReadFile(codeFilename)
@@ -96,9 +126,7 @@ func send(
 		return nil, fmt.Errorf("error parsing transaction arguments: %w", err)
 	}
 
-	proposer := signers[0]
-	payer := signers[len(signers)-1]
-	roles, err := services.NewTransactionAccountRoles(proposer, payer, signers)
+	roles, err := services.NewTransactionAccountRoles(proposer, payer, authorizers)
 	if err != nil {
 		return nil, fmt.Errorf("error parsing transaction roles: %w", err)
 	}
