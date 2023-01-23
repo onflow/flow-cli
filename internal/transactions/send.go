@@ -34,9 +34,9 @@ type flagsSend struct {
 	ArgsJSON  string   `default:"" flag:"args-json" info:"arguments in JSON-Cadence format"`
 	Arg       []string `default:"" flag:"arg" info:"⚠️  Deprecated: use command arguments"`
 	Signer    string   `default:"" flag:"signer" info:"Account name from configuration used to sign the transaction as proposer, payer and suthorizer"`
-	Proposer  string   `default:"" flag:"signer" info:"Account name from configuration used as proposer"`
-	Payer     string   `default:"" flag:"signer" info:"Account name from configuration used as payer"`
-	Autorizer []string `default:"" flag:"signer" info:"Account name(s) from configuration used as authorizer(s)"`
+	Proposer  string   `default:"" flag:"proposer" info:"Account name from configuration used as proposer"`
+	Payer     string   `default:"" flag:"payer" info:"Account name from configuration used as payer"`
+	Autorizer []string `default:"" flag:"authorizer" info:"Account name(s) from configuration used as authorizer(s)"`
 	Include   []string `default:"" flag:"include" info:"Fields to include in the output"`
 	Exclude   []string `default:"" flag:"exclude" info:"Fields to exclude from the output (events)"`
 }
@@ -76,7 +76,7 @@ func send(
 		}
 	}
 
-	payerName := buildFlags.Payer
+	payerName := sendFlags.Payer
 	if payerName != "" {
 		payer, err = state.Accounts().ByName(payerName)
 		if err != nil {
@@ -93,6 +93,10 @@ func send(
 	}
 
 	signerName := sendFlags.Signer
+
+	if signerName == "" && proposer == nil && payer == nil && len(authorizers) == 0 {
+		signerName = state.Config().Emulators.Default().ServiceAccount
+	}
 
 	if signerName != "" {
 		if proposer != nil || payer != nil || len(authorizers) > 0 {
