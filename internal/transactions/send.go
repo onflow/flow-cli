@@ -32,7 +32,6 @@ import (
 
 type flagsSend struct {
 	ArgsJSON  string   `default:"" flag:"args-json" info:"arguments in JSON-Cadence format"`
-	Arg       []string `default:"" flag:"arg" info:"⚠️  Deprecated: use command arguments"`
 	Signer    string   `default:"" flag:"signer" info:"Account name from configuration used to sign the transaction as proposer, payer and suthorizer"`
 	Proposer  string   `default:"" flag:"proposer" info:"Account name from configuration used as proposer"`
 	Payer     string   `default:"" flag:"payer" info:"Account name from configuration used as payer"`
@@ -60,15 +59,11 @@ func send(
 	globalFlags command.GlobalFlags,
 	srv *services.Services,
 	state *flowkit.State,
-) (command.Result, error) {
+) (result command.Result, err error) {
 	codeFilename := args[0]
 
-	var proposer *flowkit.Account
-	var payer *flowkit.Account
-	var authorizers []*flowkit.Account
-	var err error
-
 	proposerName := sendFlags.Proposer
+	var proposer *flowkit.Account
 	if proposerName != "" {
 		proposer, err = state.Accounts().ByName(proposerName)
 		if err != nil {
@@ -77,6 +72,7 @@ func send(
 	}
 
 	payerName := sendFlags.Payer
+	var payer *flowkit.Account
 	if payerName != "" {
 		payer, err = state.Accounts().ByName(payerName)
 		if err != nil {
@@ -84,6 +80,7 @@ func send(
 		}
 	}
 
+	var authorizers []*flowkit.Account
 	for _, authorizerName := range sendFlags.Autorizer {
 		authorizer, err := state.Accounts().ByName(authorizerName)
 		if err != nil {
@@ -116,10 +113,6 @@ func send(
 		return nil, fmt.Errorf("error loading transaction file: %w", err)
 	}
 
-	if len(sendFlags.Arg) != 0 {
-		fmt.Println("⚠️  DEPRECATION WARNING: use transaction arguments as command arguments: send <code filename> [<argument> <argument> ...]")
-	}
-
 	var transactionArgs []cadence.Value
 	if sendFlags.ArgsJSON != "" {
 		transactionArgs, err = flowkit.ParseArgumentsJSON(sendFlags.ArgsJSON)
@@ -135,7 +128,7 @@ func send(
 		return nil, fmt.Errorf("error parsing transaction roles: %w", err)
 	}
 
-	tx, result, err := srv.Transactions.Send(
+	tx, txResult, err := srv.Transactions.Send(
 		roles,
 		&services.Script{
 			Code:     code,
@@ -150,7 +143,7 @@ func send(
 	}
 
 	return &TransactionResult{
-		result:  result,
+		result:  txResult,
 		tx:      tx,
 		include: sendFlags.Include,
 		exclude: sendFlags.Exclude,

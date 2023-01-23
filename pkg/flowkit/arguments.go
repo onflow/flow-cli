@@ -66,37 +66,6 @@ func ParseArgumentsJSON(input string) ([]cadence.Value, error) {
 	return cadenceArgs, nil
 }
 
-func ParseArgumentsCommaSplit(input []string) ([]cadence.Value, error) {
-	args := make([]map[string]interface{}, 0)
-
-	if len(input) == 0 {
-		return make([]cadence.Value, 0), nil
-	}
-
-	for _, in := range input {
-		argInput := strings.Split(in, ":")
-
-		if len(argInput) != 2 {
-			return nil, fmt.Errorf(
-				"argument not passed in correct format, correct format is: Type:Value, got %s",
-				in,
-			)
-		}
-
-		argType := argInput[0]
-		argValue := argInput[1]
-		args = append(args, map[string]interface{}{
-			"value": processValue(argType, argValue),
-			"type":  argType,
-		})
-	}
-
-	jsonArgs, _ := json.Marshal(args)
-	cadenceArgs, err := ParseArgumentsJSON(string(jsonArgs))
-
-	return cadenceArgs, err
-}
-
 // sanitizeAddressArg sanitize address and make sure it has 0x prefix
 func processValue(argType string, argValue string) interface{} {
 	if argType == "Address" && !strings.Contains(argValue, "0x") {
@@ -109,18 +78,6 @@ func processValue(argType string, argValue string) interface{} {
 	return argValue
 }
 
-func ParseArguments(args []string, argsJSON string) (scriptArgs []cadence.Value, err error) {
-	if argsJSON != "" {
-		scriptArgs, err = ParseArgumentsJSON(argsJSON)
-	} else {
-		scriptArgs, err = ParseArgumentsCommaSplit(args)
-	}
-	if err != nil {
-		return nil, err
-	}
-
-	return
-}
 func GetAuthorizerCount(fileName string, code []byte) int {
 
 	codes := make(map[common.Location][]byte)
