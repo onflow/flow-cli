@@ -19,13 +19,13 @@
 package transactions
 
 import (
-	"encoding/hex"
 	"fmt"
 
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
 	"github.com/onflow/flow-cli/pkg/flowkit/services"
+	"github.com/onflow/flow-go-sdk"
 
 	"github.com/onflow/cadence"
 	"github.com/spf13/cobra"
@@ -62,7 +62,6 @@ func send(
 ) (command.Result, error) {
 	codeFilename := args[0]
 
-	var signed *flowkit.Transaction
 	var signers []*flowkit.Account
 
 	//validate all signers
@@ -97,34 +96,22 @@ func send(
 		return nil, fmt.Errorf("error parsing transaction arguments: %w", err)
 	}
 
-	build, err := services.Transactions.BuildWithSigners(
-		signers,
-		code,
-		codeFilename,
-		sendFlags.GasLimit,
-		transactionArgs,
-		globalFlags.Network,
-		true,
-	)
+	proposer := signers[0]
+	payer := signers[len(signers)-1]
+	roles, err := services.NewTransactionAccountRoles(proposer, payer, signers)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error parsing transaction roles: %w", err)
 	}
 
-	encoded := build.FlowTransaction().Encode()
-	payload := []byte(hex.EncodeToString(encoded))
-
-	for _, signer := range signers {
-		signed, err = services.Transactions.Sign(signer, payload, true)
-		if err != nil {
-			return nil, err
-		}
-		payload = []byte(hex.EncodeToString(signed.FlowTransaction().Encode()))
-	}
-
-	tx, result, err := services.Transactions.SendSigned(
-		payload,
-		true,
-	)
+	tx, result, err := srv.Transactions.Send(
+		roles,
+		&services.Script{
+			Code:     code,
+			Filename: codeFilename,
+			Args:     transactionArgs,
+		},
+		flow.DefaultTransactionGasLimit,
+		globalFlags.Network)
 
 	if err != nil {
 		return nil, err
