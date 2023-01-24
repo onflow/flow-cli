@@ -38,7 +38,7 @@ type Scripter interface {
 }
 
 func NewProgram(script Scripter) (*Program, error) {
-	astProgram, err := parser.ParseProgram(script.Code(), nil)
+	astProgram, err := parser.ParseProgram(nil, script.Code(), parser.Config{})
 	if err != nil {
 		return nil, err
 	}
@@ -108,7 +108,7 @@ func (p *Program) Name() (string, error) {
 }
 
 func (p *Program) reload() {
-	astProgram, err := parser.ParseProgram(p.script.Code(), nil)
+	astProgram, err := parser.ParseProgram(nil, p.script.Code(), parser.Config{})
 	if err != nil {
 		return
 	}
