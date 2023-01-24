@@ -643,8 +643,6 @@ github.com/onflow/cadence v0.31.0 h1:UJ+muzR8kfbSs+K1kqMwHmMRnwKKHhHQfNzktGfxl1k
 github.com/onflow/cadence v0.31.0/go.mod h1:oRgWkvau1RH15m3NuDlZCPHFQzwvC72jEstCGu8OJ98=
 github.com/onflow/cadence-tools/languageserver v0.5.2-0.20230124145747-6f45724ae91c h1:S4inMhzDhTNHr2vv7Ssmq1QWzBpb+W5dqTenk0eZIwQ=
 github.com/onflow/cadence-tools/languageserver v0.5.2-0.20230124145747-6f45724ae91c/go.mod h1:SIRTBk9XXYACLbr4cPKquW23QnTLC6vIgWWXa+jo8I0=
-github.com/onflow/cadence-tools/languageserver v0.6.1 h1:d2mQJOQYAV2DrpD9erbKIc//sxEB2WB33r5MqyJO8q4=
-github.com/onflow/cadence-tools/languageserver v0.6.1/go.mod h1:SfndFPsCpMHOdgrnxNfZSHIrMpApy+uXejD29YNTN+A=
 github.com/onflow/cadence-tools/lint v0.4.0 h1:wp2cQPsW+K3hhQHic3GSVUrmaGwRZref5ffDiwqefOA=
 github.com/onflow/cadence-tools/lint v0.4.0/go.mod h1:4Ki134gcUAWpSst/PkTuGf+SoC7uKgv+vekF5ehGJHw=
 github.com/onflow/cadence-tools/test v0.4.0 h1:vyw0acOHVduz4SFbcdjo4tbPQBgFfrP0p+bjSQXN74I=
@@ -678,8 +676,8 @@ github.com/onflow/nft-storefront/lib/go/contracts v0.0.0-20221222181731-14b90207
 github.com/onflow/nft-storefront/lib/go/contracts v0.0.0-20221222181731-14b90207cead/go.mod h1:E3ScfQb5XcWJCIAdtIeEnr5i5l2y60GT0BTXeIHseWg=
 github.com/onflow/sdks v0.4.4 h1:aJPGJJLAN+mlBWAQxsyuJXeRRMFeLwU6Mp4e/YL6bdU=
 github.com/onflow/sdks v0.4.4/go.mod h1:F0dj0EyHC55kknLkeD10js4mo14yTdMotnWMslPirrU=
-github.com/onflowser/flowser/v2 v2.0.9-beta h1:U59WUu/u0ZPDlbFcGs66fVjYektxqeunAPQLK0no2jA=
-github.com/onflowser/flowser/v2 v2.0.9-beta/go.mod h1:g/nfelBOx0A4j60Twsr7GsmKapr2oxtRZQS0lwPHgZY=
+github.com/onflowser/flowser/v2 v2.0.13-beta h1:sW0uQQx6LQFPupd0rb6G6sqD9W6D+HuvgnD3ewTY1EI=
+github.com/onflowser/flowser/v2 v2.0.13-beta/go.mod h1:g/nfelBOx0A4j60Twsr7GsmKapr2oxtRZQS0lwPHgZY=
 github.com/onsi/ginkgo v1.6.0/go.mod h1:lLunBs/Ym6LB5Z9jYTR76FiuTmxDTDusOGeTQH+WWjE=
 github.com/onsi/ginkgo v1.7.0/go.mod h1:lLunBs/Ym6LB5Z9jYTR76FiuTmxDTDusOGeTQH+WWjE=
 github.com/onsi/ginkgo v1.16.5 h1:8xi0RTUf59SOSfEtZMvwTvXYMzG4gV23XVHOZiXNtnE=
