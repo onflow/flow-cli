@@ -22,6 +22,7 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
+
 	"github.com/onflow/cadence"
 	jsoncdc "github.com/onflow/cadence/encoding/json"
 	"github.com/onflow/cadence/runtime/ast"
@@ -285,7 +286,7 @@ func (t *Transaction) AddArgument(arg cadence.Value) error {
 
 // AddAuthorizers add group of authorizers.
 func (t *Transaction) AddAuthorizers(authorizers []flow.Address) (*Transaction, error) {
-	program, err := parser.ParseProgram(t.tx.Script, nil)
+	program, err := parser.ParseProgram(nil, t.tx.Script, parser.Config{})
 	if err != nil {
 		return nil, err
 	}

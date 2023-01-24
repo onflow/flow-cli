@@ -22,11 +22,11 @@ import (
 	"fmt"
 
 	"github.com/pkg/errors"
-
 	"github.com/spf13/cobra"
 )
 
 const enable = "enable"
+
 const disable = "disable"
 
 var MetricsSettings = &cobra.Command{

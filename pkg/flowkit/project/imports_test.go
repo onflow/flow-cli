@@ -20,14 +20,15 @@ package project_test
 
 import (
 	"fmt"
-	"github.com/onflow/flow-cli/pkg/flowkit"
-	"github.com/onflow/flow-cli/pkg/flowkit/project"
 	"regexp"
 	"testing"
 
 	"github.com/onflow/flow-go-sdk"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/onflow/flow-cli/pkg/flowkit"
+	"github.com/onflow/flow-cli/pkg/flowkit/project"
 )
 
 func cleanCode(code []byte) string {

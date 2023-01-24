@@ -22,13 +22,13 @@ import (
 	"fmt"
 	"strings"
 
+	devWallet "github.com/onflow/fcl-dev-wallet/go/wallet"
+	"github.com/spf13/cobra"
+
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
 	"github.com/onflow/flow-cli/pkg/flowkit/services"
-
-	devWallet "github.com/onflow/fcl-dev-wallet/go/wallet"
-	"github.com/spf13/cobra"
 )
 
 type FlagsWallet struct {

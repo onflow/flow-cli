@@ -24,10 +24,8 @@ import (
 	"strings"
 
 	"github.com/onflow/cadence"
-
-	"github.com/onflow/flow-go-sdk/crypto"
-
 	"github.com/onflow/flow-go-sdk"
+	"github.com/onflow/flow-go-sdk/crypto"
 )
 
 const addressLength = 16

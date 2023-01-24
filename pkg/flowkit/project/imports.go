@@ -20,8 +20,9 @@ package project
 
 import (
 	"fmt"
-	"github.com/onflow/flow-go-sdk"
 	"path"
+
+	"github.com/onflow/flow-go-sdk"
 )
 
 // ImportReplacer implements file import replacements functionality for the project contracts with optionally included aliases.

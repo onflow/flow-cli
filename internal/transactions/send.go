@@ -21,11 +21,8 @@ package transactions
 import (
 	"fmt"
 
-	"github.com/onflow/flow-cli/pkg/flowkit/config"
-
-	"github.com/spf13/cobra"
-
 	"github.com/onflow/cadence"
+	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/pkg/flowkit"
@@ -33,11 +30,14 @@ import (
 )
 
 type flagsSend struct {
-	ArgsJSON string   `default:"" flag:"args-json" info:"arguments in JSON-Cadence format"`
-	Signer   string   `default:"emulator-account" flag:"signer" info:"Account name from configuration used to sign the transaction"`
-	GasLimit uint64   `default:"1000" flag:"gas-limit" info:"transaction gas limit"`
-	Include  []string `default:"" flag:"include" info:"Fields to include in the output"`
-	Exclude  []string `default:"" flag:"exclude" info:"Fields to exclude from the output (events)"`
+	ArgsJSON  string   `default:"" flag:"args-json" info:"arguments in JSON-Cadence format"`
+	Signer    string   `default:"" flag:"signer" info:"Account name from configuration used to sign the transaction as proposer, payer and suthorizer"`
+	Proposer  string   `default:"" flag:"proposer" info:"Account name from configuration used as proposer"`
+	Payer     string   `default:"" flag:"payer" info:"Account name from configuration used as payer"`
+	Autorizer []string `default:"" flag:"authorizer" info:"Name of a single or multiple comma-separated accounts used as authorizers from configuration"`
+	Include   []string `default:"" flag:"include" info:"Fields to include in the output"`
+	Exclude   []string `default:"" flag:"exclude" info:"Fields to exclude from the output (events)"`
+	GasLimit  uint64   `default:"1000" flag:"gas-limit" info:"transaction gas limit"`
 }
 
 var sendFlags = flagsSend{}
@@ -59,16 +59,53 @@ func send(
 	globalFlags command.GlobalFlags,
 	srv *services.Services,
 	state *flowkit.State,
-) (command.Result, error) {
+) (result command.Result, err error) {
 	codeFilename := args[0]
 
-	transactionSigner := sendFlags.Signer
-	if sendFlags.Signer == config.DefaultEmulatorServiceAccountName { // use service account by default
-		transactionSigner = state.Config().Emulators.Default().ServiceAccount
+	proposerName := sendFlags.Proposer
+	var proposer *flowkit.Account
+	if proposerName != "" {
+		proposer, err = state.Accounts().ByName(proposerName)
+		if err != nil {
+			return nil, fmt.Errorf("proposer account: [%s] doesn't exists in configuration", proposerName)
+		}
 	}
-	signer, err := state.Accounts().ByName(transactionSigner)
-	if err != nil {
-		return nil, err
+
+	payerName := sendFlags.Payer
+	var payer *flowkit.Account
+	if payerName != "" {
+		payer, err = state.Accounts().ByName(payerName)
+		if err != nil {
+			return nil, fmt.Errorf("payer account: [%s] doesn't exists in configuration", payerName)
+		}
+	}
+
+	var authorizers []*flowkit.Account
+	for _, authorizerName := range sendFlags.Autorizer {
+		authorizer, err := state.Accounts().ByName(authorizerName)
+		if err != nil {
+			return nil, fmt.Errorf("authorizer account: [%s] doesn't exists in configuration", authorizerName)
+		}
+		authorizers = append(authorizers, authorizer)
+	}
+
+	signerName := sendFlags.Signer
+
+	if signerName == "" && proposer == nil && payer == nil && len(authorizers) == 0 {
+		signerName = state.Config().Emulators.Default().ServiceAccount
+	}
+
+	if signerName != "" {
+		if proposer != nil || payer != nil || len(authorizers) > 0 {
+			return nil, fmt.Errorf("signer flag cannot be combined with payer/proposer/authorizer flags")
+		}
+		signer, err := state.Accounts().ByName(signerName)
+		if err != nil {
+			return nil, fmt.Errorf("signer account: [%s] doesn't exists in configuration", signerName)
+		}
+		proposer = signer
+		payer = signer
+		authorizers = append(authorizers, signer)
 	}
 
 	code, err := readerWriter.ReadFile(codeFilename)
@@ -86,19 +123,23 @@ func send(
 		return nil, fmt.Errorf("error parsing transaction arguments: %w", err)
 	}
 
-	tx, result, err := srv.Transactions.Send(
-		services.NewSingleTransactionAccount(signer),
+	roles, err := services.NewTransactionAccountRoles(proposer, payer, authorizers)
+	if err != nil {
+		return nil, fmt.Errorf("error parsing transaction roles: %w", err)
+	}
+
+	tx, txResult, err := srv.Transactions.Send(
+		roles,
 		flowkit.NewScript(code, transactionArgs, codeFilename),
 		sendFlags.GasLimit,
-		globalFlags.Network,
-	)
+		globalFlags.Network)
 
 	if err != nil {
 		return nil, err
 	}
 
 	return &TransactionResult{
-		result:  result,
+		result:  txResult,
 		tx:      tx,
 		include: sendFlags.Include,
 		exclude: sendFlags.Exclude,

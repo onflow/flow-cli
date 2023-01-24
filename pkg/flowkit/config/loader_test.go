@@ -21,14 +21,15 @@ import (
 	"os"
 	"testing"
 
-	"github.com/onflow/flow-cli/pkg/flowkit/config"
-	"github.com/onflow/flow-cli/pkg/flowkit/config/json"
-
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/onflow/flow-cli/pkg/flowkit/config"
+	"github.com/onflow/flow-cli/pkg/flowkit/config/json"
 )
 
 var mockFS = afero.NewMemMapFs()
+
 var af = afero.Afero{Fs: mockFS}
 
 func Test_JSONSimple(t *testing.T) {

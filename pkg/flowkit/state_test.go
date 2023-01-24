@@ -20,23 +20,24 @@ package flowkit
 
 import (
 	"fmt"
-	"github.com/onflow/flow-cli/pkg/flowkit/project"
-	"github.com/stretchr/testify/require"
 	"os"
 	"sort"
 	"testing"
-
-	"github.com/onflow/flow-cli/pkg/flowkit/config"
-	"github.com/onflow/flow-cli/pkg/flowkit/config/json"
 
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/thoas/go-funk"
+
+	"github.com/onflow/flow-cli/pkg/flowkit/config"
+	"github.com/onflow/flow-cli/pkg/flowkit/config/json"
+	"github.com/onflow/flow-cli/pkg/flowkit/project"
 )
 
 var af = afero.Afero{Fs: afero.NewMemMapFs()}
+
 var composer = config.NewLoader(af)
 
 func keys() []crypto.PrivateKey {
@@ -164,6 +165,7 @@ func generateComplexProject() State {
 
 	return *p
 }
+
 func generateSimpleProject() State {
 	config := config.Config{
 		Emulators: config.Emulators{{
@@ -443,6 +445,7 @@ func Test_EmulatorConfigComplex(t *testing.T) {
 	assert.Equal(t, emulatorServiceAccount.key.ToConfig().PrivateKey, keys()[0])
 	assert.Equal(t, emulatorServiceAccount.Address(), flow.ServiceAddress("flow-emulator"))
 }
+
 func Test_AccountByNameWithDuplicateAddress(t *testing.T) {
 	p := generateComplexProject()
 	acc1, err := p.Accounts().ByName("emulator-account")
@@ -454,6 +457,7 @@ func Test_AccountByNameWithDuplicateAddress(t *testing.T) {
 	assert.Equal(t, acc1.name, "emulator-account")
 	assert.Equal(t, acc2.name, "emulator-account-2")
 }
+
 func Test_AccountByNameComplex(t *testing.T) {
 	p := generateComplexProject()
 	acc, _ := p.Accounts().ByName("account-2")

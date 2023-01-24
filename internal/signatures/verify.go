@@ -24,14 +24,13 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/onflow/flow-cli/pkg/flowkit/util"
-
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/services"
+	"github.com/onflow/flow-cli/pkg/flowkit/util"
 )
 
 type flagsVerify struct {
@@ -118,6 +117,7 @@ func (s *VerificationResult) JSON() interface{} {
 		"pubKey":    fmt.Sprintf("%x", s.pubKey),
 	}
 }
+
 func (s *VerificationResult) String() string {
 	var b bytes.Buffer
 	writer := util.CreateTabWriter(&b)

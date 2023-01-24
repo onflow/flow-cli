@@ -21,11 +21,11 @@ package languageserver
 import (
 	"log"
 
-	"github.com/onflow/flow-cli/pkg/flowkit/util"
-
 	"github.com/onflow/cadence-tools/languageserver"
 	"github.com/psiemens/sconfig"
 	"github.com/spf13/cobra"
+
+	"github.com/onflow/flow-cli/pkg/flowkit/util"
 )
 
 type Config struct {

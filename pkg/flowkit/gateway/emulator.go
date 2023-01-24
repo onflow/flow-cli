@@ -26,13 +26,12 @@ import (
 	jsoncdc "github.com/onflow/cadence/encoding/json"
 	emulator "github.com/onflow/flow-emulator"
 	"github.com/onflow/flow-emulator/convert/sdk"
-	"github.com/rs/zerolog"
-	"google.golang.org/grpc/status"
-
 	"github.com/onflow/flow-emulator/server/backend"
 	"github.com/onflow/flow-go-sdk"
 	flowGo "github.com/onflow/flow-go/model/flow"
+	"github.com/rs/zerolog"
 	"github.com/sirupsen/logrus"
+	"google.golang.org/grpc/status"
 
 	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
@@ -154,6 +153,16 @@ func (g *EmulatorGateway) GetTransaction(id flow.Identifier) (*flow.Transaction,
 	return transaction, nil
 }
 
+func (g *EmulatorGateway) GetTransactionResultsByBlockID(blockID flow.Identifier) ([]*flow.TransactionResult, error) {
+	// TODO: implement
+	panic("GetTransactionResultsByBlockID not implemented")
+}
+
+func (g *EmulatorGateway) GetTransactionsByBlockID(blockID flow.Identifier) ([]*flow.Transaction, error) {
+	// TODO: implement
+	panic("GetTransactionResultsByBlockID not implemented")
+}
+
 func (g *EmulatorGateway) Ping() error {
 	err := g.backend.Ping(g.ctx)
 	if err != nil {
@@ -183,7 +192,7 @@ func (g *EmulatorGateway) ExecuteScript(script []byte, arguments []cadence.Value
 }
 
 func (g *EmulatorGateway) GetLatestBlock() (*flow.Block, error) {
-	block, err := g.backend.GetLatestBlock(g.ctx, true)
+	block, _, err := g.backend.GetLatestBlock(g.ctx, true)
 	if err != nil {
 		return nil, UnwrapStatusError(err)
 	}
@@ -242,7 +251,7 @@ func (g *EmulatorGateway) GetEvents(
 }
 
 func (g *EmulatorGateway) getBlockEvent(height uint64, eventType string) flow.BlockEvents {
-	block, _ := g.backend.GetBlockByHeight(g.ctx, height)
+	block, _, _ := g.backend.GetBlockByHeight(g.ctx, height)
 	events, _ := g.backend.GetEventsForBlockIDs(g.ctx, eventType, []flow.Identifier{flow.Identifier(block.ID())})
 
 	result := flow.BlockEvents{
@@ -271,7 +280,7 @@ func (g *EmulatorGateway) GetCollection(id flow.Identifier) (*flow.Collection, e
 }
 
 func (g *EmulatorGateway) GetBlockByID(id flow.Identifier) (*flow.Block, error) {
-	block, err := g.backend.GetBlockByID(g.ctx, id)
+	block, _, err := g.backend.GetBlockByID(g.ctx, id)
 	if err != nil {
 		return nil, UnwrapStatusError(err)
 	}
@@ -279,7 +288,7 @@ func (g *EmulatorGateway) GetBlockByID(id flow.Identifier) (*flow.Block, error) 
 }
 
 func (g *EmulatorGateway) GetBlockByHeight(height uint64) (*flow.Block, error) {
-	block, err := g.backend.GetBlockByHeight(g.ctx, height)
+	block, _, err := g.backend.GetBlockByHeight(g.ctx, height)
 	if err != nil {
 		return nil, UnwrapStatusError(err)
 	}
