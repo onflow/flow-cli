@@ -34,8 +34,9 @@ import (
 
 var Cmd = &cobra.Command{
 	Use:              "keys",
-	Short:            "Utilities to manage keys",
+	Short:            "Generate and decode Flow keys",
 	TraverseChildren: true,
+	GroupID:          "security",
 }
 
 func init() {

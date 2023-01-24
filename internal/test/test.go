@@ -44,6 +44,7 @@ var TestCommand = &command.Command{
 		Short:   "Run Cadence tests",
 		Example: `flow test script.cdc`,
 		Args:    cobra.MinimumNArgs(1),
+		GroupID: "tools",
 	},
 	Flags: &testFlags,
 	Run:   run,

@@ -33,8 +33,9 @@ import (
 
 var Cmd = &cobra.Command{
 	Use:              "accounts",
-	Short:            "Utilities to manage accounts",
+	Short:            "Create and retrieve accounts and deploy contracts",
 	TraverseChildren: true,
+	GroupID:          "resources",
 }
 
 func init() {
