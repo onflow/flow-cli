@@ -247,22 +247,12 @@ func (p *Project) Deploy(network string, update bool) ([]*project.Contract, erro
 			return nil, fmt.Errorf("target account for deploying contract not found in configuration")
 		}
 
-		program, err := project.NewProgram(contract)
-		if err != nil {
-			return nil, err
-		}
-
-		name, err := program.Name()
-		if err != nil {
-			return nil, err
-		}
-
 		// special case for emulator updates, where we remove and add a contract because it allows us to have more freedom in changes.
 		// Updating contracts is limited as described in https://developers.flow.com/cadence/language/contract-updatability
 		if update && network == config.DefaultEmulatorNetwork().Name {
-			_, err = accounts.RemoveContract(targetAccount, name)
+			_, err = accounts.RemoveContract(targetAccount, contract.Name)
 			if err != nil {
-				deployErr.add(contract, err, fmt.Sprintf("failed to remove the contract %s before the update", name))
+				deployErr.add(contract, err, fmt.Sprintf("failed to remove the contract %s before the update", contract.Name))
 				continue
 			}
 		}
@@ -276,12 +266,12 @@ func (p *Project) Deploy(network string, update bool) ([]*project.Contract, erro
 		if err != nil && errors.Is(err, errUpdateNoDiff) {
 			p.logger.Info(fmt.Sprintf(
 				"%s -> 0x%s [skipping, no changes found]",
-				output.Italic(name),
+				output.Italic(contract.Name),
 				contract.AccountAddress.String(),
 			))
 			continue
 		} else if err != nil {
-			deployErr.add(contract, err, fmt.Sprintf("failed to deploy contract %s", name))
+			deployErr.add(contract, err, fmt.Sprintf("failed to deploy contract %s", contract.Name))
 			continue
 		}
 
