@@ -20,20 +20,24 @@ package flowkit
 
 import (
 	"fmt"
+	"os"
 	"sort"
 	"testing"
-
-	"github.com/onflow/flow-cli/pkg/flowkit/config"
-	"github.com/onflow/flow-cli/pkg/flowkit/config/json"
 
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/thoas/go-funk"
+
+	"github.com/onflow/flow-cli/pkg/flowkit/config"
+	"github.com/onflow/flow-cli/pkg/flowkit/config/json"
+	"github.com/onflow/flow-cli/pkg/flowkit/project"
 )
 
 var af = afero.Afero{Fs: afero.NewMemMapFs()}
+
 var composer = config.NewLoader(af)
 
 func keys() []crypto.PrivateKey {
@@ -56,29 +60,29 @@ func generateComplexProject() State {
 			ServiceAccount: "emulator-account",
 		}},
 		Contracts: config.Contracts{{
-			Name:    "NonFungibleToken",
-			Source:  "../hungry-kitties/cadence/contracts/NonFungibleToken.cdc",
-			Network: "emulator",
+			Name:     "NonFungibleToken",
+			Location: "../hungry-kitties/cadence/contracts/NonFungibleToken.cdc",
+			Network:  "emulator",
 		}, {
-			Name:    "FungibleToken",
-			Source:  "../hungry-kitties/cadence/contracts/FungibleToken.cdc",
-			Network: "emulator",
+			Name:     "FungibleToken",
+			Location: "../hungry-kitties/cadence/contracts/FungibleToken.cdc",
+			Network:  "emulator",
 		}, {
-			Name:    "Kibble",
-			Source:  "./cadence/kibble/contracts/Kibble.cdc",
-			Network: "emulator",
+			Name:     "Kibble",
+			Location: "./cadence/kibble/contracts/Kibble.cdc",
+			Network:  "emulator",
 		}, {
-			Name:    "KittyItems",
-			Source:  "./cadence/kittyItems/contracts/KittyItems.cdc",
-			Network: "emulator",
+			Name:     "KittyItems",
+			Location: "./cadence/kittyItems/contracts/KittyItems.cdc",
+			Network:  "emulator",
 		}, {
-			Name:    "KittyItemsMarket",
-			Source:  "./cadence/kittyItemsMarket/contracts/KittyItemsMarket.cdc",
-			Network: "emulator",
+			Name:     "KittyItemsMarket",
+			Location: "./cadence/kittyItemsMarket/contracts/KittyItemsMarket.cdc",
+			Network:  "emulator",
 		}, {
-			Name:    "KittyItemsMarket",
-			Source:  "0x123123123",
-			Network: "testnet",
+			Name:     "KittyItemsMarket",
+			Location: "0x123123123",
+			Network:  "testnet",
 		}},
 		Deployments: config.Deployments{{
 			Network: "emulator",
@@ -161,6 +165,7 @@ func generateComplexProject() State {
 
 	return *p
 }
+
 func generateSimpleProject() State {
 	config := config.Config{
 		Emulators: config.Emulators{{
@@ -169,9 +174,9 @@ func generateSimpleProject() State {
 			ServiceAccount: "emulator-account",
 		}},
 		Contracts: config.Contracts{{
-			Name:    "NonFungibleToken",
-			Source:  "../hungry-kitties/cadence/contracts/NonFungibleToken.cdc",
-			Network: "emulator",
+			Name:     "NonFungibleToken",
+			Location: "../hungry-kitties/cadence/contracts/NonFungibleToken.cdc",
+			Network:  "emulator",
 		}},
 		Deployments: config.Deployments{{
 			Network: "emulator",
@@ -214,14 +219,14 @@ func generateAliasesProject() State {
 			ServiceAccount: "emulator-account",
 		}},
 		Contracts: config.Contracts{{
-			Name:    "NonFungibleToken",
-			Source:  "../hungry-kitties/cadence/contracts/NonFungibleToken.cdc",
-			Network: "emulator",
+			Name:     "NonFungibleToken",
+			Location: "../hungry-kitties/cadence/contracts/NonFungibleToken.cdc",
+			Network:  "emulator",
 		}, {
-			Name:    "FungibleToken",
-			Source:  "../hungry-kitties/cadence/contracts/FungibleToken.cdc",
-			Network: "emulator",
-			Alias:   "ee82856bf20e2aa6",
+			Name:     "FungibleToken",
+			Location: "../hungry-kitties/cadence/contracts/FungibleToken.cdc",
+			Network:  "emulator",
+			Alias:    "ee82856bf20e2aa6",
 		}},
 		Deployments: config.Deployments{{
 			Network: "emulator",
@@ -263,23 +268,23 @@ func generateAliasesComplexProject() State {
 			ServiceAccount: "emulator-account",
 		}},
 		Contracts: config.Contracts{{
-			Name:   "NonFungibleToken",
-			Source: "../hungry-kitties/cadence/contracts/NonFungibleToken.cdc",
+			Name:     "NonFungibleToken",
+			Location: "../hungry-kitties/cadence/contracts/NonFungibleToken.cdc",
 		}, {
-			Name:    "FungibleToken",
-			Source:  "../hungry-kitties/cadence/contracts/FungibleToken.cdc",
-			Network: "emulator",
-			Alias:   "ee82856bf20e2aa6",
+			Name:     "FungibleToken",
+			Location: "../hungry-kitties/cadence/contracts/FungibleToken.cdc",
+			Network:  "emulator",
+			Alias:    "ee82856bf20e2aa6",
 		}, {
-			Name:    "Kibble",
-			Source:  "../hungry-kitties/cadence/contracts/Kibble.cdc",
-			Network: "testnet",
-			Alias:   "ee82856bf20e2aa6",
+			Name:     "Kibble",
+			Location: "../hungry-kitties/cadence/contracts/Kibble.cdc",
+			Network:  "testnet",
+			Alias:    "ee82856bf20e2aa6",
 		}, {
-			Name:    "Kibble",
-			Source:  "../hungry-kitties/cadence/contracts/Kibble.cdc",
-			Network: "emulator",
-			Alias:   "ee82856bf20e2aa6",
+			Name:     "Kibble",
+			Location: "../hungry-kitties/cadence/contracts/Kibble.cdc",
+			Network:  "emulator",
+			Alias:    "ee82856bf20e2aa6",
 		}},
 		Deployments: config.Deployments{{
 			Network: "emulator",
@@ -335,13 +340,16 @@ func generateAliasesComplexProject() State {
 
 func Test_GetContractsByNameSimple(t *testing.T) {
 	p := generateSimpleProject()
+	path := "../hungry-kitties/cadence/contracts/NonFungibleToken.cdc"
+	af.WriteFile(path, []byte("pub contract{}"), os.ModePerm)
 
-	contracts, _ := p.DeploymentContractsByNetwork("emulator")
+	contracts, err := p.DeploymentContractsByNetwork("emulator")
+	require.NoError(t, err)
 	account, err := p.conf.Accounts.ByName("emulator-account")
-	assert.NoError(t, err)
-	assert.Len(t, contracts, 1)
+	require.NoError(t, err)
+	require.Len(t, contracts, 1)
 	assert.Equal(t, "NonFungibleToken", contracts[0].Name)
-	assert.Equal(t, "../hungry-kitties/cadence/contracts/NonFungibleToken.cdc", contracts[0].Source)
+	assert.Equal(t, path, contracts[0].Location())
 	assert.Equal(t, account.Address, contracts[0].AccountAddress)
 }
 
@@ -380,22 +388,26 @@ func Test_HostSimple(t *testing.T) {
 func Test_GetContractsByNameComplex(t *testing.T) {
 	p := generateComplexProject()
 
-	contracts, _ := p.DeploymentContractsByNetwork("emulator")
+	for _, c := range p.conf.Contracts {
+		_ = af.WriteFile(c.Location, []byte("pub contract{}"), os.ModePerm)
+	}
 
-	assert.Equal(t, 7, len(contracts))
+	contracts, err := p.DeploymentContractsByNetwork("emulator")
+	require.NoError(t, err)
+	require.Equal(t, 7, len(contracts))
 
 	//sort names so tests are deterministic
-	contractNames := funk.Map(contracts, func(c Contract) string {
+	contractNames := funk.Map(contracts, func(c *project.Contract) string {
 		return c.Name
 	}).([]string)
 	sort.Strings(contractNames)
 
-	sources := funk.Map(contracts, func(c Contract) string {
-		return c.Source
+	sources := funk.Map(contracts, func(c *project.Contract) string {
+		return c.Location()
 	}).([]string)
 	sort.Strings(sources)
 
-	targets := funk.Map(contracts, func(c Contract) string {
+	targets := funk.Map(contracts, func(c *project.Contract) string {
 		return c.AccountAddress.String()
 	}).([]string)
 	sort.Strings(targets)
@@ -433,6 +445,7 @@ func Test_EmulatorConfigComplex(t *testing.T) {
 	assert.Equal(t, emulatorServiceAccount.key.ToConfig().PrivateKey, keys()[0])
 	assert.Equal(t, emulatorServiceAccount.Address(), flow.ServiceAddress("flow-emulator"))
 }
+
 func Test_AccountByNameWithDuplicateAddress(t *testing.T) {
 	p := generateComplexProject()
 	acc1, err := p.Accounts().ByName("emulator-account")
@@ -444,6 +457,7 @@ func Test_AccountByNameWithDuplicateAddress(t *testing.T) {
 	assert.Equal(t, acc1.name, "emulator-account")
 	assert.Equal(t, acc2.name, "emulator-account-2")
 }
+
 func Test_AccountByNameComplex(t *testing.T) {
 	p := generateComplexProject()
 	acc, _ := p.Accounts().ByName("account-2")
@@ -459,16 +473,6 @@ func Test_HostComplex(t *testing.T) {
 	assert.NoError(t, err)
 
 	assert.Equal(t, network.Host, "127.0.0.1.3569")
-}
-
-func Test_ContractConflictComplex(t *testing.T) {
-	p := generateComplexProject()
-	exists := p.ContractConflictExists("emulator")
-	notexists := p.ContractConflictExists("testnet")
-
-	assert.True(t, exists)
-	assert.False(t, notexists)
-
 }
 
 func Test_GetAliases(t *testing.T) {
@@ -666,7 +670,7 @@ func Test_Saving(t *testing.T) {
 	assert.NoError(t, err)
 }
 
-//ensures that default emulator values are in config when no emulator is defined in flow.json
+// ensures that default emulator values are in config when no emulator is defined in flow.json
 func Test_DefaultEmulatorNotPresentInConfig(t *testing.T) {
 	configJson := []byte(`{
 		"contracts": {},
@@ -715,7 +719,7 @@ func Test_DefaultEmulatorNotPresentInConfig(t *testing.T) {
 	assert.NoError(t, err)
 }
 
-//ensures that default emulator values are not in config when no emulator is defined in flow.json
+// ensures that default emulator values are not in config when no emulator is defined in flow.json
 func Test_DefaultEmulatorWithoutEmulatorAccountInConfig(t *testing.T) {
 	configJson := []byte(`{
 		"contracts": {},
@@ -739,7 +743,7 @@ func Test_DefaultEmulatorWithoutEmulatorAccountInConfig(t *testing.T) {
 	assert.Equal(t, config.Emulators{}, state.conf.Emulators)
 }
 
-//ensures that default emulator values are in config when emulator is defined in flow.json
+// ensures that default emulator values are in config when emulator is defined in flow.json
 func Test_DefaultEmulatorWithEmulatorAccountInConfig(t *testing.T) {
 	configJson := []byte(`{
 		"contracts": {},
@@ -768,7 +772,7 @@ func Test_DefaultEmulatorWithEmulatorAccountInConfig(t *testing.T) {
 	assert.Equal(t, state.conf.Emulators, config.DefaultEmulators())
 }
 
-//backward compatibility test to ensure that default emulator values are still observed in flow.json
+// backward compatibility test to ensure that default emulator values are still observed in flow.json
 func Test_DefaultEmulatorPresentInConfig(t *testing.T) {
 	configJson := []byte(`{
 		"contracts": {},
@@ -824,7 +828,7 @@ func Test_DefaultEmulatorPresentInConfig(t *testing.T) {
 	assert.NoError(t, err)
 }
 
-//ensures that custom emulator values are still observed in flow.json
+// ensures that custom emulator values are still observed in flow.json
 func Test_CustomEmulatorValuesInConfig(t *testing.T) {
 	configJson := []byte(`{
 		"contracts": {},

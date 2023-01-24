@@ -24,15 +24,14 @@ import (
 	"strings"
 	"time"
 
-	grpcAccess "github.com/onflow/flow-go-sdk/access/grpc"
-	"github.com/onflow/flow-go/utils/grpcutils"
-
-	"github.com/onflow/flow-cli/pkg/flowkit"
-
 	"github.com/onflow/cadence"
 	"github.com/onflow/flow-go-sdk"
+	grpcAccess "github.com/onflow/flow-go-sdk/access/grpc"
+	"github.com/onflow/flow-go/utils/grpcutils"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+
+	"github.com/onflow/flow-cli/pkg/flowkit"
 )
 
 // maxGRPCMessageSize 20mb, matching the value set in onflow/flow-go

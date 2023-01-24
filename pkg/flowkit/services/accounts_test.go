@@ -20,25 +20,20 @@ package services
 
 import (
 	"fmt"
-	emulator "github.com/onflow/flow-emulator"
 	"strings"
 	"testing"
 
 	"github.com/onflow/cadence"
-	"github.com/stretchr/testify/require"
-
-	"github.com/onflow/flow-cli/pkg/flowkit/gateway"
-
-	"github.com/stretchr/testify/mock"
-
-	"github.com/onflow/flow-cli/pkg/flowkit/output"
-
-	"github.com/onflow/flow-cli/pkg/flowkit"
-
+	emulator "github.com/onflow/flow-emulator"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 
+	"github.com/onflow/flow-cli/pkg/flowkit"
+	"github.com/onflow/flow-cli/pkg/flowkit/gateway"
+	"github.com/onflow/flow-cli/pkg/flowkit/output"
 	"github.com/onflow/flow-cli/pkg/flowkit/tests"
 )
 
@@ -55,15 +50,8 @@ func setup() (*flowkit.State, *Services, *tests.TestGateway) {
 	return state, s, gw
 }
 
-func resourceToContract(res tests.Resource) *Contract {
-	return &Contract{
-		Script: &Script{
-			Code:     res.Source,
-			Filename: res.Filename,
-		},
-		Name:    res.Name,
-		Network: "",
-	}
+func resourceToContract(res tests.Resource) *flowkit.Script {
+	return flowkit.NewScript(res.Source, nil, res.Filename)
 }
 
 func TestAccounts(t *testing.T) {
@@ -174,6 +162,7 @@ func TestAccounts(t *testing.T) {
 		ID, _, err := s.Accounts.AddContract(
 			serviceAcc,
 			resourceToContract(tests.ContractHelloString),
+			"",
 			false,
 		)
 
@@ -513,6 +502,7 @@ func TestAccountsAddContract_Integration(t *testing.T) {
 		ID, _, err := s.Accounts.AddContract(
 			srvAcc,
 			resourceToContract(tests.ContractSimple),
+			"",
 			false,
 		)
 		require.NoError(t, err)
@@ -526,6 +516,7 @@ func TestAccountsAddContract_Integration(t *testing.T) {
 		ID, _, err = s.Accounts.AddContract(
 			srvAcc,
 			resourceToContract(tests.ContractSimpleUpdated),
+			"",
 			true,
 		)
 		require.NoError(t, err)
@@ -545,6 +536,7 @@ func TestAccountsAddContract_Integration(t *testing.T) {
 		_, _, err := s.Accounts.AddContract(
 			srvAcc,
 			resourceToContract(tests.ContractSimple),
+			"",
 			false,
 		)
 		assert.NoError(t, err)
@@ -552,6 +544,7 @@ func TestAccountsAddContract_Integration(t *testing.T) {
 		_, _, err = s.Accounts.AddContract(
 			srvAcc,
 			resourceToContract(tests.ContractSimple),
+			"",
 			false,
 		)
 
@@ -568,6 +561,7 @@ func TestAccountsAddContractWithArgs(t *testing.T) {
 	_, _, err := s.Accounts.AddContract(
 		srvAcc,
 		resourceToContract(tests.ContractSimpleWithArgs),
+		"",
 		false,
 	)
 	assert.Error(t, err)
@@ -576,7 +570,7 @@ func TestAccountsAddContractWithArgs(t *testing.T) {
 	c := resourceToContract(tests.ContractSimpleWithArgs)
 	c.Args = []cadence.Value{cadence.UInt64(4)}
 
-	_, _, err = s.Accounts.AddContract(srvAcc, c, false)
+	_, _, err = s.Accounts.AddContract(srvAcc, c, "", false)
 	assert.NoError(t, err)
 
 	acc, err := s.Accounts.Get(srvAcc.Address())
@@ -595,13 +589,8 @@ func TestAccountsRemoveContract_Integration(t *testing.T) {
 	// prepare existing contract
 	_, _, err := s.Accounts.AddContract(
 		srvAcc,
-		&Contract{
-			Script: &Script{
-				Code:     c.Source,
-				Filename: c.Filename,
-			},
-			Name: c.Name,
-		},
+		flowkit.NewScript(c.Source, nil, c.Filename),
+		"",
 		false,
 	)
 	assert.NoError(t, err)

@@ -25,14 +25,12 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/onflow/cadence"
-	"github.com/onflow/flow-cli/pkg/flowkit"
+	"github.com/onflow/flow-go-sdk"
 
-	"github.com/onflow/flow-cli/pkg/flowkit/contracts"
+	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/gateway"
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
-
-	"github.com/onflow/flow-go-sdk"
+	"github.com/onflow/flow-cli/pkg/flowkit/project"
 )
 
 // Transactions is a service that handles all transaction-related interactions.
@@ -186,20 +184,11 @@ type transactionAddresses struct {
 	payer       flow.Address
 }
 
-// Script includes Cadence code and optional arguments and filename.
-//
-// Filename is only required to be passed if you want to resolve imports.
-type Script struct {
-	Code     []byte
-	Args     []cadence.Value
-	Filename string
-}
-
 // Build builds a transaction with specified payer, proposer and authorizer.
 func (t *Transactions) Build(
 	addresses *transactionAddresses,
 	proposerKeyIndex int,
-	script *Script,
+	script *flowkit.Script,
 	gasLimit uint64,
 	network string,
 ) (*flowkit.Transaction, error) {
@@ -222,40 +211,40 @@ func (t *Transactions) Build(
 		SetGasLimit(gasLimit).
 		SetBlockReference(latestBlock)
 
+	program, err := project.NewProgram(script)
+	if err != nil {
+		return nil, err
+	}
+
+	if program.HasImports() {
+		if network == "" {
+			return nil, fmt.Errorf("missing network, specify which network to use to resolve imports in transaction code")
+		}
+		if script.Location() == "" { // when used as lib with code we don't support imports
+			return nil, fmt.Errorf("resolving imports in transactions not supported")
+		}
+
+		contracts, err := t.state.DeploymentContractsByNetwork(network)
+		if err != nil {
+			return nil, err
+		}
+
+		importReplacer := project.NewImportReplacer(
+			contracts,
+			t.state.AliasesForNetwork(network),
+		)
+
+		program, err = importReplacer.Replace(program)
+		if err != nil {
+			return nil, fmt.Errorf("error resolving imports: %w", err)
+		}
+	}
+
 	if err := tx.SetProposer(proposerAccount, proposerKeyIndex); err != nil {
 		return nil, err
 	}
 
-	resolver, err := contracts.NewResolver(script.Code)
-	if err != nil {
-		return nil, err
-	}
-
-	if resolver.HasFileImports() {
-		if network == "" {
-			return nil, fmt.Errorf("missing network, specify which network to use to resolve imports in transaction code")
-		}
-		if script.Filename == "" { // when used as lib with code we don't support imports
-			return nil, fmt.Errorf("resolving imports in transactions not supported")
-		}
-
-		contractsNetwork, err := t.state.DeploymentContractsByNetwork(network)
-		if err != nil {
-			return nil, err
-		}
-
-		script.Code, err = resolver.ResolveImports(
-			script.Filename,
-			contractsNetwork,
-			t.state.AliasesForNetwork(network),
-		)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	err = tx.SetScriptWithArgs(script.Code, script.Args)
-	if err != nil {
+	if err := tx.SetScriptWithArgs(program.Code(), script.Args); err != nil {
 		return nil, err
 	}
 
@@ -310,7 +299,7 @@ func (t *Transactions) SendSigned(tx *flowkit.Transaction) (*flow.Transaction, *
 // Send a transaction code using the signer account and arguments for the specified network.
 func (t *Transactions) Send(
 	accounts *transactionAccountRoles,
-	script *Script,
+	script *flowkit.Script,
 	gasLimit uint64,
 	network string,
 ) (*flow.Transaction, *flow.TransactionResult, error) {

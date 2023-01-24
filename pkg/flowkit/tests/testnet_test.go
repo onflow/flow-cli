@@ -19,18 +19,20 @@
 package tests
 
 import (
+	"testing"
+
 	"github.com/onflow/cadence"
-	"github.com/onflow/flow-cli/pkg/flowkit"
-	"github.com/onflow/flow-cli/pkg/flowkit/config"
-	"github.com/onflow/flow-cli/pkg/flowkit/gateway"
-	"github.com/onflow/flow-cli/pkg/flowkit/output"
-	"github.com/onflow/flow-cli/pkg/flowkit/services"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"testing"
+
+	"github.com/onflow/flow-cli/pkg/flowkit"
+	"github.com/onflow/flow-cli/pkg/flowkit/config"
+	"github.com/onflow/flow-cli/pkg/flowkit/gateway"
+	"github.com/onflow/flow-cli/pkg/flowkit/output"
+	"github.com/onflow/flow-cli/pkg/flowkit/services"
 )
 
 const testAccountName = "test-account"
@@ -110,10 +112,7 @@ func initTestnet(t *testing.T) (gateway.Gateway, *flowkit.State, *services.Servi
 	amount, _ := cadence.NewUFix64("0.01")
 	_, _, err = srv.Transactions.Send(
 		services.NewSingleTransactionAccount(funder),
-		&services.Script{
-			Code: transferTx,
-			Args: []cadence.Value{amount, cadence.NewAddress(testAccount.Address())},
-		},
+		flowkit.NewScript(transferTx, []cadence.Value{amount, cadence.NewAddress(testAccount.Address())}, ""),
 		flow.DefaultTransactionGasLimit,
 		testnet,
 	)
@@ -128,21 +127,21 @@ func Test_Testnet_ProjectDeploy(t *testing.T) {
 	_, state, srv, mockFs := initTestnet(t)
 
 	state.Contracts().AddOrUpdate(ContractA.Name, config.Contract{
-		Name:    ContractA.Name,
-		Source:  ContractA.Filename,
-		Network: testnet,
+		Name:     ContractA.Name,
+		Location: ContractA.Filename,
+		Network:  testnet,
 	})
 
 	state.Contracts().AddOrUpdate(ContractB.Name, config.Contract{
-		Name:    ContractB.Name,
-		Source:  ContractB.Filename,
-		Network: testnet,
+		Name:     ContractB.Name,
+		Location: ContractB.Filename,
+		Network:  testnet,
 	})
 
 	state.Contracts().AddOrUpdate(ContractC.Name, config.Contract{
-		Name:    ContractC.Name,
-		Source:  ContractC.Filename,
-		Network: testnet,
+		Name:     ContractC.Name,
+		Location: ContractC.Filename,
+		Network:  testnet,
 	})
 
 	initArg, _ := cadence.NewString("foo")
@@ -159,9 +158,9 @@ func Test_Testnet_ProjectDeploy(t *testing.T) {
 	contracts, err := srv.Project.Deploy(testnet, true)
 	assert.NoError(t, err)
 	assert.Len(t, contracts, 3)
-	assert.Equal(t, ContractA.Name, contracts[0].Name())
-	assert.Equal(t, ContractB.Name, contracts[1].Name())
-	assert.Equal(t, ContractC.Name, contracts[2].Name())
+	assert.Equal(t, ContractA.Name, contracts[0].Name)
+	assert.Equal(t, ContractB.Name, contracts[1].Name)
+	assert.Equal(t, ContractC.Name, contracts[2].Name)
 
 	// make a change
 	ContractA.Source = []byte(`pub contract ContractA { init() {} }`)
@@ -170,7 +169,7 @@ func Test_Testnet_ProjectDeploy(t *testing.T) {
 	contracts, err = srv.Project.Deploy(testnet, true)
 	assert.NoError(t, err)
 	assert.Len(t, contracts, 3)
-	assert.Equal(t, ContractA.Name, contracts[0].Name())
-	assert.Equal(t, ContractB.Name, contracts[1].Name())
-	assert.Equal(t, ContractC.Name, contracts[2].Name())
+	assert.Equal(t, ContractA.Name, contracts[0].Name)
+	assert.Equal(t, ContractB.Name, contracts[1].Name)
+	assert.Equal(t, ContractC.Name, contracts[2].Name)
 }

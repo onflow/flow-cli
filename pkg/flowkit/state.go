@@ -23,13 +23,11 @@ import (
 	"os"
 	"path"
 
-	"github.com/onflow/cadence"
-	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
-	"github.com/thoas/go-funk"
 
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
 	"github.com/onflow/flow-cli/pkg/flowkit/config/json"
+	"github.com/onflow/flow-cli/pkg/flowkit/project"
 	"github.com/onflow/flow-cli/pkg/flowkit/util"
 )
 
@@ -38,15 +36,6 @@ import (
 type ReaderWriter interface {
 	ReadFile(source string) ([]byte, error)
 	WriteFile(filename string, data []byte, perm os.FileMode) error
-}
-
-// Contract is a Cadence contract definition for a project.
-type Contract struct {
-	Name           string
-	Source         string
-	AccountAddress flow.Address
-	AccountName    string
-	Args           []cadence.Value
 }
 
 // State manages the state for a Flow project.
@@ -117,30 +106,6 @@ func (p *State) Save(path string) error {
 	return nil
 }
 
-// ContractConflictExists returns true if the same contract is configured to deploy
-// to more than one account in the same network.
-//
-// The CLI currently does not allow the same contract to be deployed to multiple
-// accounts in the same network.
-func (p *State) ContractConflictExists(network string) bool {
-	contracts, err := p.DeploymentContractsByNetwork(network)
-	if err != nil {
-		return false
-	}
-
-	uniq := funk.Uniq(
-		funk.Map(contracts, func(c Contract) string {
-			return c.Name
-		}).([]string),
-	).([]string)
-
-	all := funk.Map(contracts, func(c Contract) string {
-		return c.Name
-	}).([]string)
-
-	return len(all) != len(uniq)
-}
-
 // Networks get network configuration.
 func (p *State) Networks() *config.Networks {
 	return &p.conf.Networks
@@ -194,8 +159,11 @@ func (p *State) SetEmulatorKey(privateKey crypto.PrivateKey) {
 }
 
 // DeploymentContractsByNetwork returns all contracts for a network.
-func (p *State) DeploymentContractsByNetwork(network string) ([]Contract, error) {
-	contracts := make([]Contract, 0)
+//
+// Build contract slice based on the network provided, check the deployment section for that network
+// and retrieve the account by name, then add the accounts address on the contract as a destination.
+func (p *State) DeploymentContractsByNetwork(network string) ([]*project.Contract, error) {
+	contracts := make([]*project.Contract, 0)
 
 	// get deployments for the specified network
 	for _, deploy := range p.conf.Deployments.ByNetwork(network) {
@@ -211,13 +179,19 @@ func (p *State) DeploymentContractsByNetwork(network string) ([]Contract, error)
 				return nil, err
 			}
 
-			contract := Contract{
-				Name:           c.Name,
-				Source:         path.Clean(c.Source),
-				AccountAddress: account.address,
-				AccountName:    account.name,
-				Args:           deploymentContract.Args,
+			code, _ := p.readerWriter.ReadFile(c.Location)
+			if err != nil {
+				return nil, err
 			}
+
+			contract := project.NewContract(
+				c.Name,
+				path.Clean(c.Location),
+				code,
+				account.address,
+				account.name,
+				deploymentContract.Args,
+			)
 
 			contracts = append(contracts, contract)
 		}
@@ -241,16 +215,14 @@ func (p *State) AccountNamesForNetwork(network string) []string {
 	return names
 }
 
-type Aliases map[string]string
-
 // AliasesForNetwork returns all deployment aliases for a network.
-func (p *State) AliasesForNetwork(network string) Aliases {
-	aliases := make(Aliases)
+func (p *State) AliasesForNetwork(network string) project.Aliases {
+	aliases := make(project.Aliases)
 
 	// get all contracts for selected network and if any has an address as target make it an alias
 	for _, contract := range p.conf.Contracts.ByNetwork(network) {
 		if contract.IsAlias() {
-			aliases[path.Clean(contract.Source)] = contract.Alias
+			aliases[path.Clean(contract.Location)] = contract.Alias
 		}
 	}
 

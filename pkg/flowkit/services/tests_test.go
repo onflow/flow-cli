@@ -22,13 +22,12 @@ import (
 	"os"
 	"testing"
 
+	"github.com/onflow/cadence/runtime/stdlib"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
 	"github.com/onflow/flow-cli/pkg/flowkit/tests"
-
-	"github.com/onflow/cadence/runtime/stdlib"
 )
 
 func TestExecutingTests(t *testing.T) {
@@ -70,9 +69,9 @@ func TestExecutingTests(t *testing.T) {
 		st, s, _ := setup()
 
 		c := config.Contract{
-			Name:    tests.ContractHelloString.Name,
-			Source:  tests.ContractHelloString.Filename,
-			Network: "emulator",
+			Name:     tests.ContractHelloString.Name,
+			Location: tests.ContractHelloString.Filename,
+			Network:  "emulator",
 		}
 		st.Contracts().AddOrUpdate(c.Name, c)
 

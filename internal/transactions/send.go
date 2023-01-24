@@ -21,13 +21,12 @@ package transactions
 import (
 	"fmt"
 
+	"github.com/onflow/cadence"
+	"github.com/spf13/cobra"
+
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/services"
-
-	"github.com/onflow/cadence"
-	"github.com/onflow/flow-go-sdk"
-	"github.com/spf13/cobra"
 )
 
 type flagsSend struct {
@@ -38,6 +37,7 @@ type flagsSend struct {
 	Autorizer []string `default:"" flag:"authorizer" info:"Name of a single or multiple comma-separated accounts used as authorizers from configuration"`
 	Include   []string `default:"" flag:"include" info:"Fields to include in the output"`
 	Exclude   []string `default:"" flag:"exclude" info:"Fields to exclude from the output (events)"`
+	GasLimit  uint64   `default:"1000" flag:"gas-limit" info:"transaction gas limit"`
 }
 
 var sendFlags = flagsSend{}
@@ -130,12 +130,8 @@ func send(
 
 	tx, txResult, err := srv.Transactions.Send(
 		roles,
-		&services.Script{
-			Code:     code,
-			Filename: codeFilename,
-			Args:     transactionArgs,
-		},
-		flow.DefaultTransactionGasLimit,
+		flowkit.NewScript(code, transactionArgs, codeFilename),
+		sendFlags.GasLimit,
 		globalFlags.Network)
 
 	if err != nil {

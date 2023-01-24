@@ -22,12 +22,10 @@ import (
 	"fmt"
 
 	"github.com/onflow/cadence"
-
-	"github.com/onflow/flow-cli/pkg/flowkit"
-
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
+	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/services"
 )
 
@@ -86,14 +84,8 @@ func addContract(
 
 	_, _, err = srv.Accounts.AddContract(
 		to,
-		&services.Contract{
-			Script: &services.Script{
-				Code:     code,
-				Args:     contractArgs,
-				Filename: filename,
-			},
-			Network: globalFlags.Network,
-		},
+		flowkit.NewScript(code, contractArgs, filename),
+		globalFlags.Network,
 		false,
 	)
 	if err != nil {

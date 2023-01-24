@@ -22,25 +22,22 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"golang.org/x/exp/maps"
-	"golang.org/x/exp/slices"
 	"strings"
-
-	"github.com/onflow/flow-cli/pkg/flowkit/contracts"
-
-	"github.com/onflow/flow-go-sdk/templates"
-
-	"github.com/onflow/flow-cli/pkg/flowkit/config"
-
-	"github.com/onflow/flow-cli/pkg/flowkit"
-	"github.com/onflow/flow-cli/pkg/flowkit/gateway"
-	"github.com/onflow/flow-cli/pkg/flowkit/output"
-	"github.com/onflow/flow-cli/pkg/flowkit/util"
 
 	"github.com/onflow/cadence"
 	tmpl "github.com/onflow/flow-core-contracts/lib/go/templates"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
+	"github.com/onflow/flow-go-sdk/templates"
+	"golang.org/x/exp/maps"
+	"golang.org/x/exp/slices"
+
+	"github.com/onflow/flow-cli/pkg/flowkit"
+	"github.com/onflow/flow-cli/pkg/flowkit/config"
+	"github.com/onflow/flow-cli/pkg/flowkit/gateway"
+	"github.com/onflow/flow-cli/pkg/flowkit/output"
+	"github.com/onflow/flow-cli/pkg/flowkit/project"
+	"github.com/onflow/flow-cli/pkg/flowkit/util"
 )
 
 // Accounts is a service that handles all account-related interactions.
@@ -282,85 +279,61 @@ func (a *Accounts) Create(
 	return a.gateway.GetAccount(*newAccountAddress[0]) // we know it's the only and first event
 }
 
-// Contract defines properties of a contract like name of the contract,
-// source code, possible init arguments, the filename and network are only
-// required if a contract has imports that need resolving.
-type Contract struct {
-	*Script
-	Name    string
-	Network string
-}
-
-func (c *Contract) validate(hasImports bool) error {
-	if c.Code == nil {
-		return fmt.Errorf("must provide contract source code")
-	}
-	if c.Name == "" {
-		return fmt.Errorf("must provide contract name")
-	}
-	if hasImports && c.Network == "" {
-		return fmt.Errorf("missing network, specify which network to use to resolve imports in transaction code")
-	}
-	if hasImports && c.Filename == "" {
-		return fmt.Errorf("cannot resolve imports without specifying a contract filename")
-	}
-	return nil
-}
-
 var errUpdateNoDiff = errors.New("contract already exists and is the same as the contract provided for update")
 
 // AddContract deploys a contract code to the account provided with possible update flag.
 func (a *Accounts) AddContract(
 	account *flowkit.Account,
-	contract *Contract,
+	contract *flowkit.Script,
+	network string,
 	updateExisting bool,
 ) (flow.Identifier, bool, error) {
-	resolver, err := contracts.NewResolver(contract.Code)
+
+	program, err := project.NewProgram(contract)
 	if err != nil {
 		return flow.EmptyID, false, err
 	}
 
-	contract.Name, err = resolver.Name()
-	if err != nil {
-		return flow.EmptyID, false, err
-	}
-
-	hasFileImports := resolver.HasFileImports()
-	err = contract.validate(hasFileImports)
-	if err != nil {
-		return flow.EmptyID, false, err
-	}
-
-	if hasFileImports {
-		contractsNetwork, err := a.state.DeploymentContractsByNetwork(contract.Network)
+	if program.HasImports() {
+		contracts, err := a.state.DeploymentContractsByNetwork(network)
 		if err != nil {
 			return flow.EmptyID, false, err
 		}
 
-		contract.Code, err = resolver.ResolveImports(
-			contract.Filename,
-			contractsNetwork,
-			a.state.AliasesForNetwork(contract.Network),
+		importReplacer := project.NewImportReplacer(
+			contracts,
+			a.state.AliasesForNetwork(network),
 		)
+
+		program, err = importReplacer.Replace(program)
 		if err != nil {
 			return flow.EmptyID, false, err
 		}
+	}
+
+	name, err := program.Name()
+	if err != nil {
+		return flow.EmptyID, false, err
 	}
 
 	tx, err := flowkit.NewAddAccountContractTransaction(
 		account,
-		contract.Name,
-		string(contract.Code),
+		name,
+		program.Code(),
 		contract.Args,
 	)
 	if err != nil {
 		return flow.EmptyID, false, err
 	}
 
-	a.logger.StartProgress(fmt.Sprintf("Adding contract '%s' to account '%s'...", contract.Name, account.Address()))
-	if updateExisting {
-		a.logger.StartProgress(fmt.Sprintf("Updating contract '%s' on account '%s'...", contract.Name, account.Address()))
-	}
+	a.logger.StartProgress(
+		fmt.Sprintf(
+			"%s contract '%s' on account '%s'...",
+			map[bool]string{true: "Updating", false: "Creating"}[updateExisting],
+			name,
+			account.Address(),
+		),
+	)
 	defer a.logger.StopProgress()
 
 	// check if contract exists on account
@@ -368,21 +341,23 @@ func (a *Accounts) AddContract(
 	if err != nil {
 		return flow.EmptyID, false, err
 	}
-	existingContract, exists := flowAccount.Contracts[contract.Name]
-	noDiffInContract := bytes.Equal(contract.Code, existingContract)
+	existingContract, exists := flowAccount.Contracts[name]
+	noDiffInContract := bytes.Equal(program.Code(), existingContract)
 	if exists && noDiffInContract {
 		return flow.EmptyID, false, errUpdateNoDiff
 	}
 	if exists && !updateExisting {
-		return flow.EmptyID, false, fmt.Errorf(fmt.Sprintf("contract %s exists in account %s", contract.Name, account.Name()))
+		return flow.EmptyID, false, fmt.Errorf(
+			fmt.Sprintf("contract %s exists in account %s", name, account.Name()),
+		)
 	}
 
 	// if we are updating contract
 	if exists && updateExisting {
 		tx, err = flowkit.NewUpdateAccountContractTransaction(
 			account,
-			contract.Name,
-			string(contract.Code),
+			name,
+			contract.Code(),
 		)
 		if err != nil {
 			return flow.EmptyID, false, err
@@ -399,7 +374,7 @@ func (a *Accounts) AddContract(
 	// send transaction with contract
 	sentTx, err := a.gateway.SendSignedTransaction(tx)
 	if err != nil {
-		return flow.EmptyID, false, err
+		return flow.EmptyID, false, fmt.Errorf("failed to send transaction to deploy a contract: %w", err)
 	}
 
 	// we wait for transaction to be sealed
@@ -412,11 +387,12 @@ func (a *Accounts) AddContract(
 	}
 
 	a.logger.StopProgress()
-	if updateExisting {
-		a.logger.Info(fmt.Sprintf("Contract '%s' updated on the account '%s'.", contract.Name, account.Address()))
-	} else {
-		a.logger.Info(fmt.Sprintf("Contract '%s' deployed to the account '%s'.", contract.Name, account.Address()))
-	}
+	a.logger.Info(fmt.Sprintf(
+		"Contract '%s' %s on the account '%s'.",
+		name,
+		map[bool]string{true: "updated", false: "created"}[updateExisting],
+		account.Address(),
+	))
 
 	return sentTx.ID(), updateExisting, err
 }

@@ -34,8 +34,8 @@ func (j jsonContracts) transformToConfig() (config.Contracts, error) {
 	for contractName, c := range j {
 		if c.Simple != "" {
 			contract := config.Contract{
-				Name:   contractName,
-				Source: c.Simple,
+				Name:     contractName,
+				Location: c.Simple,
 			}
 
 			contracts = append(contracts, contract)
@@ -47,10 +47,10 @@ func (j jsonContracts) transformToConfig() (config.Contracts, error) {
 				}
 
 				contract := config.Contract{
-					Name:    contractName,
-					Source:  c.Advanced.Source,
-					Network: network,
-					Alias:   alias,
+					Name:     contractName,
+					Location: c.Advanced.Source,
+					Network:  network,
+					Alias:    alias,
 				}
 
 				contracts = append(contracts, contract)
@@ -69,7 +69,7 @@ func transformContractsToJSON(contracts config.Contracts) jsonContracts {
 		// if simple case
 		if c.Network == "" {
 			jsonContracts[c.Name] = jsonContract{
-				Simple: c.Source,
+				Simple: c.Location,
 			}
 		} else { // if advanced config
 			// check if we already created for this name then add or create
@@ -78,7 +78,7 @@ func transformContractsToJSON(contracts config.Contracts) jsonContracts {
 			} else {
 				jsonContracts[c.Name] = jsonContract{
 					Advanced: jsonContractAdvanced{
-						Source:  c.Source,
+						Source:  c.Location,
 						Aliases: map[string]string{c.Network: c.Alias},
 					},
 				}

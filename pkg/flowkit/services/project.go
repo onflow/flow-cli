@@ -23,16 +23,14 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-go-sdk"
-
-	"github.com/onflow/flow-cli/pkg/flowkit/config"
-
 	"github.com/onflow/flow-go-sdk/crypto"
 
-	"github.com/onflow/flow-cli/pkg/flowkit/contracts"
+	"github.com/onflow/flow-cli/pkg/flowkit"
+	"github.com/onflow/flow-cli/pkg/flowkit/config"
 	"github.com/onflow/flow-cli/pkg/flowkit/gateway"
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
+	"github.com/onflow/flow-cli/pkg/flowkit/project"
 )
 
 // Project is a service that handles all interactions for a state.
@@ -93,7 +91,7 @@ func (p *Project) Init(
 	return state, nil
 }
 
-// Defines a Mainnet Standard Contract ( e.g Core Contracts, FungibleToken, NonFungibleToken )
+// Defines a Mainnet Standard Contract ( e.g Core Deployments, FungibleToken, NonFungibleToken )
 type StandardContract struct {
 	Name     string
 	Address  flow.Address
@@ -213,59 +211,28 @@ func (p *Project) CheckForStandardContractUsageOnMainnet() error {
 // Retrieve all the contracts for specified network, sort them for deployment
 // deploy one by one and replace the imports in the contract source so it corresponds
 // to the account name the contract was deployed to.
-func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, error) {
+func (p *Project) Deploy(network string, update bool) ([]*project.Contract, error) {
 	if p.state == nil {
 		return nil, config.ErrDoesNotExist
 	}
-	// check there are not multiple accounts with same contract
-	if p.state.ContractConflictExists(network) {
-		return nil, fmt.Errorf( // TODO(sideninja) specify which contract by name is a problem
-			"the same contract cannot be deployed to multiple accounts on the same network",
-		)
-	}
 
-	// create new processor for contract
-	processor := contracts.NewPreprocessor(
-		contracts.FilesystemLoader{
-			Reader: p.state.ReaderWriter(),
-		},
-		p.state.AliasesForNetwork(network),
-	)
-
-	// add all contracts needed to deploy to processor
-	contractsNetwork, err := p.state.DeploymentContractsByNetwork(network)
+	contracts, err := p.state.DeploymentContractsByNetwork(network)
 	if err != nil {
 		return nil, err
 	}
 
-	for _, contract := range contractsNetwork {
-		err := processor.AddContractSource(
-			contract.Name,
-			contract.Source,
-			contract.AccountAddress,
-			contract.AccountName,
-			contract.Args,
-		)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	// resolve imports assigns accounts to imports
-	err = processor.ResolveImports()
+	deployment, err := project.NewDeployment(contracts)
 	if err != nil {
 		return nil, err
 	}
 
-	// sort correct deployment order of contracts so we don't have import that is not yet deployed
-	orderedContracts, err := processor.ContractDeploymentOrder()
+	sorted, err := deployment.Sort()
 	if err != nil {
 		return nil, err
 	}
 
 	p.logger.Info(fmt.Sprintf(
-		"\nDeploying %d contracts for accounts: %s\n",
-		len(orderedContracts),
+		"\nDeploying %d contracts for accounts: %s\n", len(sorted),
 		strings.Join(p.state.AccountNamesForNetwork(network), ","),
 	))
 	defer p.logger.StopProgress()
@@ -274,8 +241,8 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 	accounts := NewAccounts(p.gateway, p.state, output.NewStdoutLogger(output.NoneLog))
 
 	deployErr := &ErrProjectDeploy{}
-	for _, contract := range orderedContracts {
-		targetAccount, err := p.state.Accounts().ByName(contract.AccountName())
+	for _, contract := range sorted {
+		targetAccount, err := p.state.Accounts().ByName(contract.AccountName)
 		if err != nil {
 			return nil, fmt.Errorf("target account for deploying contract not found in configuration")
 		}
@@ -283,38 +250,35 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 		// special case for emulator updates, where we remove and add a contract because it allows us to have more freedom in changes.
 		// Updating contracts is limited as described in https://developers.flow.com/cadence/language/contract-updatability
 		if update && network == config.DefaultEmulatorNetwork().Name {
-			_, err = accounts.RemoveContract(targetAccount, contract.Name())
+			_, err = accounts.RemoveContract(targetAccount, contract.Name)
 			if err != nil {
-				deployErr.add(contract, err, fmt.Sprintf("failed to remove the contract %s before the update", contract.Name()))
+				deployErr.add(contract, err, fmt.Sprintf("failed to remove the contract %s before the update", contract.Name))
 				continue
 			}
 		}
 
-		txID, updated, err := accounts.AddContract(targetAccount, &Contract{
-			Script: &Script{
-				Code:     []byte(contract.TranspiledCode()),
-				Args:     contract.Args(),
-				Filename: contract.Source(),
-			},
-			Name:    contract.Name(),
-			Network: network,
-		}, update)
+		txID, updated, err := accounts.AddContract(
+			targetAccount,
+			flowkit.NewScript(contract.Code(), contract.Args, contract.Location()),
+			network,
+			update,
+		)
 		if err != nil && errors.Is(err, errUpdateNoDiff) {
 			p.logger.Info(fmt.Sprintf(
 				"%s -> 0x%s [skipping, no changes found]",
-				output.Italic(contract.Name()),
-				contract.Target(),
+				output.Italic(contract.Name),
+				contract.AccountAddress.String(),
 			))
 			continue
 		} else if err != nil {
-			deployErr.add(contract, err, fmt.Sprintf("failed to deploy contract %s", contract.Name()))
+			deployErr.add(contract, err, fmt.Sprintf("failed to deploy contract %s", contract.Name))
 			continue
 		}
 
 		p.logger.Info(fmt.Sprintf(
 			"%s -> 0x%s (%s) %s",
-			output.Green(contract.Name()),
-			contract.Target(),
+			output.Green(contract.Name),
+			contract.AccountAddress,
 			txID.String(),
 			map[bool]string{true: "[updated]", false: ""}[updated],
 		))
@@ -325,18 +289,18 @@ func (p *Project) Deploy(network string, update bool) ([]*contracts.Contract, er
 	}
 
 	p.logger.Info(fmt.Sprintf("\n%s All contracts deployed successfully", output.SuccessEmoji()))
-	return orderedContracts, nil
+	return sorted, nil
 }
 
 type ErrProjectDeploy struct {
 	contracts map[string]error
 }
 
-func (d *ErrProjectDeploy) add(contract *contracts.Contract, err error, msg string) {
+func (d *ErrProjectDeploy) add(contract *project.Contract, err error, msg string) {
 	if d.contracts == nil {
 		d.contracts = make(map[string]error)
 	}
-	d.contracts[contract.Name()] = fmt.Errorf("%s: %w", msg, err)
+	d.contracts[contract.Name] = fmt.Errorf("%s: %w", msg, err)
 }
 
 func (d *ErrProjectDeploy) Contracts() map[string]error {

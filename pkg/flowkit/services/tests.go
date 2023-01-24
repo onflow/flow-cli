@@ -21,13 +21,13 @@ package services
 import (
 	"fmt"
 
+	cdcTests "github.com/onflow/cadence-tools/test"
+	"github.com/onflow/cadence/runtime/common"
+
 	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
 	"github.com/onflow/flow-cli/pkg/flowkit/util"
-
-	cdcTests "github.com/onflow/cadence-tools/test"
-	"github.com/onflow/cadence/runtime/common"
 )
 
 // Tests is a service that handles all tests-related interactions.
@@ -75,7 +75,7 @@ func (t *Tests) importResolver(scriptPath string, readerWriter flowkit.ReaderWri
 			return "", err
 		}
 
-		importedContractFilePath := util.AbsolutePath(scriptPath, importedContract.Source)
+		importedContractFilePath := util.AbsolutePath(scriptPath, importedContract.Location)
 
 		contractCode, err := readerWriter.ReadFile(importedContractFilePath)
 		if err != nil {
@@ -89,7 +89,7 @@ func (t *Tests) importResolver(scriptPath string, readerWriter flowkit.ReaderWri
 func (t *Tests) resolveContract(stringLocation common.StringLocation) (config.Contract, error) {
 	relativePath := stringLocation.String()
 	for _, contract := range *t.state.Contracts() {
-		if contract.Source == relativePath {
+		if contract.Location == relativePath {
 			return contract, nil
 		}
 	}
