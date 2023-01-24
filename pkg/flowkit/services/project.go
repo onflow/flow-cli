@@ -233,9 +233,6 @@ func (p *Project) Deploy(network string, update bool) ([]*project.Contract, erro
 		return nil, err
 	}
 
-	aliases := p.state.AliasesForNetwork(network)
-	importReplacer := project.NewImportReplacer(contracts, aliases)
-
 	p.logger.Info(fmt.Sprintf(
 		"\nDeploying %d contracts for accounts: %s\n", len(sorted),
 		strings.Join(p.state.AccountNamesForNetwork(network), ","),
@@ -247,7 +244,6 @@ func (p *Project) Deploy(network string, update bool) ([]*project.Contract, erro
 
 	deployErr := &ErrProjectDeploy{}
 	for _, contract := range sorted {
-		// todo remove implementation for deployment of contract and just use the account add-contract func for deploying
 		targetAccount, err := p.state.Accounts().ByName(contract.AccountName)
 		if err != nil {
 			return nil, fmt.Errorf("target account for deploying contract not found in configuration")
@@ -268,29 +264,26 @@ func (p *Project) Deploy(network string, update bool) ([]*project.Contract, erro
 		if update && network == config.DefaultEmulatorNetwork().Name {
 			_, err = accounts.RemoveContract(targetAccount, name)
 			if err != nil {
-				deployErr.add(contract, err, fmt.Sprintf("failed to remove the contract %s before the update", contract.Name()))
+				deployErr.add(contract, err, fmt.Sprintf("failed to remove the contract %s before the update", name))
 				continue
 			}
 		}
 
-		txID, updated, err := accounts.AddContract(targetAccount, &Contract{
-			Script: &Script{
-				Code:     []byte(contract.TranspiledCode()),
-				Args:     contract.Args(),
-				Filename: contract.Source(),
-			},
-			Name:    contract.Name(),
-			Network: network,
-		}, update)
+		txID, updated, err := accounts.AddContract(
+			targetAccount,
+			flowkit.NewScript(contract.Code(), contract.Args, contract.Location()),
+			network,
+			update,
+		)
 		if err != nil && errors.Is(err, errUpdateNoDiff) {
 			p.logger.Info(fmt.Sprintf(
 				"%s -> 0x%s [skipping, no changes found]",
-				output.Italic(contract.Name()),
-				contract.Target(),
+				output.Italic(name),
+				contract.AccountAddress.String(),
 			))
 			continue
 		} else if err != nil {
-			deployErr.add(contract, err, fmt.Sprintf("failed to deploy contract %s", contract.Name()))
+			deployErr.add(contract, err, fmt.Sprintf("failed to deploy contract %s", name))
 			continue
 		}
 

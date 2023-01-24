@@ -22,25 +22,22 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"golang.org/x/exp/maps"
-	"golang.org/x/exp/slices"
 	"strings"
-
-	"github.com/onflow/flow-cli/pkg/flowkit/project"
-
-	"github.com/onflow/flow-go-sdk/templates"
-
-	"github.com/onflow/flow-cli/pkg/flowkit/config"
-
-	"github.com/onflow/flow-cli/pkg/flowkit"
-	"github.com/onflow/flow-cli/pkg/flowkit/gateway"
-	"github.com/onflow/flow-cli/pkg/flowkit/output"
-	"github.com/onflow/flow-cli/pkg/flowkit/util"
 
 	"github.com/onflow/cadence"
 	tmpl "github.com/onflow/flow-core-contracts/lib/go/templates"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
+	"github.com/onflow/flow-go-sdk/templates"
+	"golang.org/x/exp/maps"
+	"golang.org/x/exp/slices"
+
+	"github.com/onflow/flow-cli/pkg/flowkit"
+	"github.com/onflow/flow-cli/pkg/flowkit/config"
+	"github.com/onflow/flow-cli/pkg/flowkit/gateway"
+	"github.com/onflow/flow-cli/pkg/flowkit/output"
+	"github.com/onflow/flow-cli/pkg/flowkit/project"
+	"github.com/onflow/flow-cli/pkg/flowkit/util"
 )
 
 // Accounts is a service that handles all account-related interactions.
@@ -344,14 +341,14 @@ func (a *Accounts) AddContract(
 	if err != nil {
 		return flow.EmptyID, false, err
 	}
-	existingContract, exists := flowAccount.Contracts[contract.Name]
-	noDiffInContract := bytes.Equal(contract.Code, existingContract)
+	existingContract, exists := flowAccount.Contracts[name]
+	noDiffInContract := bytes.Equal(program.Code(), existingContract)
 	if exists && noDiffInContract {
 		return flow.EmptyID, false, errUpdateNoDiff
 	}
 	if exists && !updateExisting {
 		return flow.EmptyID, false, fmt.Errorf(
-			fmt.Sprintf("contract %s exists in account %s", contract.Name, account.Name()),
+			fmt.Sprintf("contract %s exists in account %s", name, account.Name()),
 		)
 	}
 
@@ -359,8 +356,8 @@ func (a *Accounts) AddContract(
 	if exists && updateExisting {
 		tx, err = flowkit.NewUpdateAccountContractTransaction(
 			account,
-			contract.Name,
-			string(contract.Code),
+			name,
+			contract.Code(),
 		)
 		if err != nil {
 			return flow.EmptyID, false, err
