@@ -3,7 +3,7 @@ module github.com/onflow/flow-cli
 go 1.18
 
 require (
-	github.com/getsentry/sentry-go v0.13.0
+	github.com/getsentry/sentry-go v0.17.0
 	github.com/go-git/go-git/v5 v5.4.2
 	github.com/onflow/cadence v0.31.0
 	github.com/onflow/cadence-tools/languageserver v0.5.2-0.20230124145747-6f45724ae91c
@@ -99,7 +99,7 @@ require (
 	github.com/joho/godotenv v1.4.0 // indirect
 	github.com/kevinburke/go-bindata v3.23.0+incompatible // indirect
 	github.com/kevinburke/ssh_config v0.0.0-20201106050909-4977a11b4351 // indirect
-	github.com/klauspost/compress v1.15.10 // indirect
+	github.com/klauspost/compress v1.15.11 // indirect
 	github.com/klauspost/cpuid/v2 v2.1.1 // indirect
 	github.com/libp2p/go-buffer-pool v0.1.0 // indirect
 	github.com/libp2p/go-libp2p v0.23.3 // indirect
@@ -156,7 +156,7 @@ require (
 	github.com/rs/zerolog v1.28.0 // indirect
 	github.com/sergi/go-diff v1.1.0 // indirect
 	github.com/sethvargo/go-retry v0.2.3 // indirect
-	github.com/sirupsen/logrus v1.8.1 // indirect
+	github.com/sirupsen/logrus v1.9.0 // indirect
 	github.com/sourcegraph/jsonrpc2 v0.1.0 // indirect
 	github.com/spacemonkeygo/spacelog v0.0.0-20180420211403-2296661a0572 // indirect
 	github.com/spaolacci/murmur3 v1.1.0 // indirect
