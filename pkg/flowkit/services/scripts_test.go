@@ -113,7 +113,7 @@ func TestScripts_Integration(t *testing.T) {
 			}},
 		}
 		state.Deployments().AddOrUpdate(d)
-		_, _ = s.Accounts.AddContract(
+		_, _, _ = s.Accounts.AddContract(
 			srvAcc,
 			resourceToContract(tests.ContractHelloString),
 			"",

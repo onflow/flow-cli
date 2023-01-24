@@ -35,9 +35,9 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
-// maxGRPCMessageSize 16mb, matching the value set in onflow/flow-go
+// maxGRPCMessageSize 20mb, matching the value set in onflow/flow-go
 // https://github.com/onflow/flow-go/blob/master/utils/grpc/grpc.go#L5
-const maxGRPCMessageSize = 1024 * 1024 * 16
+const maxGRPCMessageSize = 1024 * 1024 * 20
 
 // GrpcGateway is a gateway implementation that uses the Flow Access gRPC API.
 type GrpcGateway struct {
@@ -117,6 +117,14 @@ func (g *GrpcGateway) SendSignedTransaction(transaction *flowkit.Transaction) (*
 // GetTransaction gets a transaction by ID from the Flow Access API.
 func (g *GrpcGateway) GetTransaction(ID flow.Identifier) (*flow.Transaction, error) {
 	return g.client.GetTransaction(g.ctx, ID)
+}
+
+func (g *GrpcGateway) GetTransactionResultsByBlockID(blockID flow.Identifier) ([]*flow.TransactionResult, error) {
+	return g.client.GetTransactionResultsByBlockID(g.ctx, blockID)
+}
+
+func (g *GrpcGateway) GetTransactionsByBlockID(blockID flow.Identifier) ([]*flow.Transaction, error) {
+	return g.client.GetTransactionsByBlockID(g.ctx, blockID)
 }
 
 // GetTransactionResult gets a transaction result by ID from the Flow Access API.
