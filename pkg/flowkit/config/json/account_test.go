@@ -21,11 +21,11 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/onflow/flow-cli/pkg/flowkit/config"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
-
 	"github.com/stretchr/testify/assert"
+
+	"github.com/onflow/flow-cli/pkg/flowkit/config"
 )
 
 func Test_ConfigAccountKeysSimple(t *testing.T) {
@@ -373,6 +373,7 @@ func Test_TransformAccountToJSON(t *testing.T) {
 
 	assert.Equal(t, string(b), string(x))
 }
+
 func Test_TransformDefaultAccountToJSONAdvanced(t *testing.T) {
 	b := []byte(`{"emulator-account":{"address":"f8d6e0586b0a20c7","key":"1272967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47"},"testnet-account":{"address":"3c1162386b0a245f","key":"2272967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47"}}`)
 
@@ -388,6 +389,7 @@ func Test_TransformDefaultAccountToJSONAdvanced(t *testing.T) {
 	// our output format is shorted - improve test
 	assert.Equal(t, string(b), string(x))
 }
+
 func Test_SupportForOldFormatWithMultipleKeys(t *testing.T) {
 	b := []byte(`{
 		"emulator-account": {

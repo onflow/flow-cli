@@ -9,12 +9,12 @@ require (
 	github.com/joho/godotenv v1.4.0
 	github.com/lmars/go-slip10 v0.0.0-20190606092855-400ba44fee12
 	github.com/manifoldco/promptui v0.9.0
-	github.com/onflow/cadence v0.30.0
+	github.com/onflow/cadence v0.31.0
 	github.com/onflow/cadence-tools/test v0.3.0
 	github.com/onflow/flow-core-contracts/lib/go/templates v0.11.2-0.20221205150827-c68044a2505c
 	github.com/onflow/flow-emulator v0.41.0
 	github.com/onflow/flow-go v0.28.1-0.20221214175701-076c0fd2a2f9
-	github.com/onflow/flow-go-sdk v0.30.0
+	github.com/onflow/flow-go-sdk v0.31.0
 	github.com/rs/zerolog v1.28.0
 	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/afero v1.9.0

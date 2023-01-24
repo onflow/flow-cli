@@ -24,10 +24,9 @@ import (
 	"path"
 	"strings"
 
-	"golang.org/x/exp/slices"
-
 	"github.com/gosuri/uilive"
 	"github.com/manifoldco/promptui"
+	"golang.org/x/exp/slices"
 
 	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
@@ -601,6 +600,7 @@ func WantToUseMainnetVersionPrompt() bool {
 }
 
 const CancelInstall = 1
+
 const AlreadyInstalled = 2
 
 func InstallPrompt() int {
@@ -642,4 +642,18 @@ func InstallPathPrompt(defaultPath string) string {
 	}
 
 	return path.Clean(install)
+}
+
+func ScaffoldPrompt(availableScaffolds []string) int {
+	prompt := promptui.Select{
+		Label: "Which scaffold would you like to use",
+		Items: availableScaffolds,
+	}
+
+	index, _, err := prompt.Run()
+	if err == promptui.ErrInterrupt {
+		os.Exit(-1)
+	}
+
+	return index
 }

@@ -116,3 +116,18 @@ To remove the flow CLI you can run the following command if it was previously in
 - Windows: `rm ~/Users/{user}/AppData/Flow/flow.exe`
 
 If you installed it using Hombrew you can remove it using: `brew uninstall flow-cli`.
+
+## Installing versions before 0.42.0
+If you want to install versions before v0.42.0 you have to use a different install command. 
+
+**Linux/macOS**
+```
+https://raw.githubusercontent.com/onflow/flow-cli/v0.41.3/install.ps1
+
+sh -ci "$(curl -fsSL https://raw.githubusercontent.com/onflow/flow-cli/v0.41.3/install.sh)" -- v0.41.2
+```
+
+**Windows**
+```
+iex "& { $(irm 'https://raw.githubusercontent.com/onflow/flow-cli/master/install.ps1') }"
+```

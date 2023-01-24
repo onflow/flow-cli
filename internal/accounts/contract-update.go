@@ -22,12 +22,10 @@ import (
 	"fmt"
 
 	"github.com/onflow/cadence"
-
-	"github.com/onflow/flow-cli/pkg/flowkit"
-
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
+	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/services"
 )
 
@@ -84,18 +82,17 @@ func updateContract(
 		return nil, fmt.Errorf("error parsing transaction arguments: %w", err)
 	}
 
-	account, err := srv.Accounts.AddContract(
+	_, _, err = srv.Accounts.AddContract(
 		to,
-		&services.Contract{
-			Script: &services.Script{
-				Code:     code,
-				Args:     contractArgs,
-				Filename: filename,
-			},
-			Network: globalFlags.Network,
-		},
+		flowkit.NewScript(code, contractArgs, filename),
+		globalFlags.Network,
 		true,
 	)
+	if err != nil {
+		return nil, err
+	}
+
+	account, err := srv.Accounts.Get(to.Address())
 	if err != nil {
 		return nil, err
 	}

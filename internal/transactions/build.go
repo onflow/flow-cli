@@ -21,14 +21,13 @@ package transactions
 import (
 	"fmt"
 
-	"github.com/onflow/flow-cli/pkg/flowkit/output"
-
 	"github.com/onflow/cadence"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/pkg/flowkit"
+	"github.com/onflow/flow-cli/pkg/flowkit/output"
 	"github.com/onflow/flow-cli/pkg/flowkit/services"
 	"github.com/onflow/flow-cli/pkg/flowkit/util"
 )
@@ -101,11 +100,7 @@ func build(
 	tx, err := srv.Transactions.Build(
 		services.NewTransactionAddresses(proposer, payer, authorizers),
 		buildFlags.ProposerKeyIndex,
-		&services.Script{
-			Code:     code,
-			Args:     transactionArgs,
-			Filename: filename,
-		},
+		flowkit.NewScript(code, transactionArgs, filename),
 		buildFlags.GasLimit,
 		globalFlags.Network,
 	)

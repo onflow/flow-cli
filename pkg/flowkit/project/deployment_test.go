@@ -16,77 +16,62 @@
  * limitations under the License.
  */
 
-package contracts_test
+package project
 
 import (
 	"fmt"
 	"strings"
 	"testing"
 
-	"github.com/onflow/cadence"
-
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/test"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-
-	"github.com/onflow/flow-cli/pkg/flowkit/contracts"
 )
 
 type testContract struct {
-	name                 string
-	source               string
-	code                 []byte
-	accountAddress       flow.Address
-	accountName          string
-	expectedDependencies []testContract
+	location       string
+	code           []byte
+	accountAddress flow.Address
+	accountName    string
 }
 
 var addresses = test.AddressGenerator()
 
 var testContractA = testContract{
-	name:                 "ContractA",
-	source:               "ContractA.cdc",
-	code:                 []byte(`pub contract ContractA {}`),
-	accountAddress:       addresses.New(),
-	expectedDependencies: nil,
+	location:       "ContractA.cdc",
+	code:           []byte(`pub contract ContractA {}`),
+	accountAddress: addresses.New(),
 }
 
 var testContractB = testContract{
-	name:                 "ContractB",
-	source:               "ContractB.cdc",
-	code:                 []byte(`pub contract ContractB {}`),
-	accountAddress:       addresses.New(),
-	expectedDependencies: nil,
+	location:       "ContractB.cdc",
+	code:           []byte(`pub contract ContractB {}`),
+	accountAddress: addresses.New(),
 }
 
 var testContractC = testContract{
-	name:   "ContractC",
-	source: "ContractC.cdc",
+	location: "ContractC.cdc",
 	code: []byte(`
         import ContractA from "ContractA.cdc"
     
         pub contract ContractC {}
     `),
-	accountAddress:       addresses.New(),
-	expectedDependencies: []testContract{testContractA},
+	accountAddress: addresses.New(),
 }
 
 var testContractD = testContract{
-	name:   "ContractD",
-	source: "ContractD.cdc",
+	location: "ContractD.cdc",
 	code: []byte(`
         import ContractC from "ContractC.cdc"
 
         pub contract ContractD {}
     `),
-	accountAddress:       addresses.New(),
-	expectedDependencies: []testContract{testContractC},
+	accountAddress: addresses.New(),
 }
 
 var testContractE = testContract{
-	name:   "ContractE",
-	source: "ContractE.cdc",
+	location: "ContractE.cdc",
 	code: []byte(`
         import ContractF from "ContractF.cdc"
 
@@ -95,8 +80,7 @@ var testContractE = testContract{
 }
 
 var testContractF = testContract{
-	name:   "ContractF",
-	source: "ContractF.cdc",
+	location: "ContractF.cdc",
 	code: []byte(`
         import ContractE from "ContractE.cdc"
 
@@ -105,35 +89,25 @@ var testContractF = testContract{
 	accountAddress: addresses.New(),
 }
 
-func init() {
-	// create import cycle, cannot be done statically
-	testContractE.expectedDependencies = []testContract{testContractF}
-	testContractF.expectedDependencies = []testContract{testContractE}
-}
-
 var testContractG = testContract{
-	name:   "ContractG",
-	source: "ContractG.cdc",
+	location: "ContractG.cdc",
 	code: []byte(`
         import ContractA from "ContractA.cdc"
         import ContractB from "ContractB.cdc"
 
         pub contract ContractG {}
     `),
-	accountAddress:       addresses.New(),
-	expectedDependencies: []testContract{testContractA, testContractB},
+	accountAddress: addresses.New(),
 }
 
 var testContractH = testContract{
-	name:   "ContractH",
-	source: "ContractH.cdc",
+	location: "ContractH.cdc",
 	code: []byte(`
         import ContractFoo from "Foo.cdc"
 
         pub contract ContractH {}
     `),
-	accountAddress:       addresses.New(),
-	expectedDependencies: nil,
+	accountAddress: addresses.New(),
 }
 
 var noAliases = map[string]string{}
@@ -142,21 +116,21 @@ type testLoader struct{}
 
 func (t testLoader) Load(source string) ([]byte, error) {
 	switch source {
-	case testContractA.source:
+	case testContractA.location:
 		return testContractA.code, nil
-	case testContractB.source:
+	case testContractB.location:
 		return testContractB.code, nil
-	case testContractC.source:
+	case testContractC.location:
 		return testContractC.code, nil
-	case testContractD.source:
+	case testContractD.location:
 		return testContractD.code, nil
-	case testContractE.source:
+	case testContractE.location:
 		return testContractE.code, nil
-	case testContractF.source:
+	case testContractF.location:
 		return testContractF.code, nil
-	case testContractG.source:
+	case testContractG.location:
 		return testContractG.code, nil
-	case testContractH.source:
+	case testContractH.location:
 		return testContractH.code, nil
 	}
 
@@ -204,7 +178,7 @@ func getTestCases() []contractTestCase {
 		{
 			name:                    "Two contracts with import cycle",
 			contracts:               []testContract{testContractE, testContractF},
-			expectedDeploymentError: &contracts.CyclicImportError{},
+			expectedDeploymentError: &CyclicImportError{},
 		},
 		{
 			name:                    "Single contract with two imports",
@@ -219,97 +193,52 @@ func getTestCases() []contractTestCase {
 	}
 }
 
-func TestResolveImports(t *testing.T) {
-	testCases := getTestCases()
-
-	for _, testCase := range testCases {
-		t.Run(testCase.name, func(t *testing.T) {
-			p := contracts.NewPreprocessor(testLoader{}, noAliases)
-
-			for _, contract := range testCase.contracts {
-				err := p.AddContractSource(
-					contract.name,
-					contract.source,
-					contract.accountAddress,
-					contract.accountName,
-					[]cadence.Value{nil},
-				)
-				assert.NoError(t, err)
-			}
-
-			err := p.ResolveImports()
-			if !strings.Contains(testCase.name, "unresolved") {
-				assert.NoError(t, err)
-			}
-
-			for _, sourceContract := range testCase.contracts {
-
-				contract := p.ContractBySource(sourceContract.source)
-				require.NotNil(t, contract)
-
-				require.Equal(
-					t,
-					len(sourceContract.expectedDependencies),
-					len(contract.Dependencies()),
-					"resolved dependency count does not match expected count",
-				)
-
-				for _, dependency := range sourceContract.expectedDependencies {
-					require.Contains(t, contract.Dependencies(), dependency.source)
-
-					contractDependency := p.ContractBySource(dependency.source)
-					require.NotNil(t, contractDependency)
-
-					assert.Equal(t, contract.Dependencies()[dependency.source], contractDependency)
-
-					assert.Contains(t, contract.TranspiledCode(), dependency.accountAddress.Hex())
-				}
-			}
-		})
-	}
-}
-
 func TestContractDeploymentOrder(t *testing.T) {
 	testCases := getTestCases()
 
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
-			p := contracts.NewPreprocessor(testLoader{}, noAliases)
 
-			for _, contract := range testCase.contracts {
-				err := p.AddContractSource(
-					contract.name,
-					contract.source,
+			contracts := make([]*Contract, len(testCase.contracts))
+			for i, contract := range testCase.contracts {
+				contracts[i] = NewContract(
+					strings.Split(contract.location, ".")[0],
+					contract.location,
+					contract.code,
 					contract.accountAddress,
 					contract.accountName,
-					[]cadence.Value{nil},
+					nil,
 				)
+			}
+
+			deployment, err := NewDeployment(contracts)
+
+			contracts, err = deployment.Sort()
+			if !strings.Contains(testCase.name, "unresolved") && !strings.Contains(testCase.name, "cycle") {
 				assert.NoError(t, err)
 			}
 
-			err := p.ResolveImports()
-			if !strings.Contains(testCase.name, "unresolved") {
-				assert.NoError(t, err)
+			if strings.Contains(testCase.name, "unresolved") {
+				assert.EqualError(t, err, "import from ContractH could not be found: Foo.cdc, make sure import path is correct")
+				return
 			}
-
-			deployedContracts, err := p.ContractDeploymentOrder()
 
 			if testCase.expectedDeploymentError != nil {
 				assert.IsType(t, testCase.expectedDeploymentError, err)
 				return
 			} else {
-				assert.NoError(t, err)
+				assert.NoError(t, err, testCase.name)
 			}
 
 			require.Equal(
 				t,
 				len(testCase.expectedDeploymentOrder),
-				len(deployedContracts),
+				len(contracts),
 				"deployed contract count does not match expected count",
 			)
 
-			for i, deployedContract := range deployedContracts {
-				assert.Equal(t, testCase.expectedDeploymentOrder[i].name, deployedContract.Name())
+			for i, deployedContract := range contracts {
+				assert.Equal(t, testCase.expectedDeploymentOrder[i].location, deployedContract.Location())
 			}
 		})
 	}
