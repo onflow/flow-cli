@@ -213,64 +213,59 @@ func TestProject_Integration(t *testing.T) {
 		state, s := setupIntegration()
 		srvAcc, _ := state.EmulatorServiceAccount()
 
-		cA := config.Contract{
-			Name:     tests.ContractA.Name,
-			Location: tests.ContractA.Filename,
-			Network:  "emulator",
-		}
-		cB := config.Contract{
-			Name:     tests.ContractB.Name,
-			Location: tests.ContractB.Filename,
-			Network:  "emulator",
-		}
-		cC := config.Contract{
-			Name:     tests.ContractC.Name,
-			Location: tests.ContractC.Filename,
-			Network:  "emulator",
-		}
-		state.Contracts().AddOrUpdate(cA.Name, cA)
-		state.Contracts().AddOrUpdate(cB.Name, cB)
-		state.Contracts().AddOrUpdate(cC.Name, cC)
-
-		n := config.Network{
-			Name: "emulator",
-			Host: "127.0.0.1:3569",
-		}
+		n := config.DefaultEmulatorNetwork()
 		state.Networks().AddOrUpdate(n.Name, n)
 
-		d := config.Deployment{
+		contractFixtures := []tests.Resource{
+			tests.ContractA, tests.ContractB, tests.ContractC,
+		}
+
+		testContracts := make([]config.Contract, len(contractFixtures))
+		for i, c := range contractFixtures {
+			testContracts[i] = config.Contract{
+				Name:     c.Name,
+				Location: c.Filename,
+				Network:  n.Name,
+			}
+			state.Contracts().AddOrUpdate(c.Name, testContracts[i])
+		}
+
+		state.Deployments().AddOrUpdate(config.Deployment{
 			Network: n.Name,
 			Account: srvAcc.Name(),
 			Contracts: []config.ContractDeployment{{
-				Name: cA.Name,
+				Name: testContracts[0].Name,
 				Args: nil,
 			}, {
-				Name: cB.Name,
+				Name: testContracts[1].Name,
 				Args: nil,
 			}, {
-				Name: cC.Name,
+				Name: testContracts[2].Name,
 				Args: []cadence.Value{
 					cadence.String("foo"),
 				},
 			}},
-		}
-		state.Deployments().AddOrUpdate(d)
+		})
 
-		addr := fmt.Sprintf("0x%s", srvAcc.Address())
 		// replace imports manually to assert that replacing worked in deploy service
-		contractBImports := strings.ReplaceAll(string(tests.ContractB.Source), `"./contractA.cdc"`, addr)
-		contractCImports := strings.ReplaceAll(string(tests.ContractC.Source), `"./contractA.cdc"`, addr)
-		contractCImports = strings.ReplaceAll(contractCImports, `"./contractB.cdc"`, addr)
+		addr := fmt.Sprintf("0x%s", srvAcc.Address())
+		replacedContracts := make([]string, len(contractFixtures))
+		for i, c := range contractFixtures {
+			replacedContracts[i] = strings.ReplaceAll(string(c.Source), `"./contractA.cdc"`, addr)
+			replacedContracts[i] = strings.ReplaceAll(replacedContracts[i], `"./contractB.cdc"`, addr)
+		}
 
 		contracts, err := s.Project.Deploy(n.Name, false)
 		assert.NoError(t, err)
 		assert.Len(t, contracts, 3)
-		assert.Equal(t, tests.ContractA.Name, contracts[0].Name)
-		assert.Equal(t, string(tests.ContractA.Source), string(contracts[0].Code()))
-		assert.Equal(t, tests.ContractB.Name, contracts[1].Name)
-		assert.Equal(t, contractBImports, string(contracts[1].Code()))
-		assert.Equal(t, tests.ContractC.Name, contracts[2].Name)
-		assert.Equal(t, contractCImports, string(contracts[2].Code()))
+
+		account, err := s.Accounts.Get(srvAcc.Address())
+
+		for i, c := range testContracts {
+			code, exists := account.Contracts[c.Name]
+			assert.True(t, exists)
+			assert.Equal(t, replacedContracts[i], string(code))
+		}
 	})
 
 	t.Run("Deploy Project Update", func(t *testing.T) {
