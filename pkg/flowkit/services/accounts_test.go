@@ -20,25 +20,20 @@ package services
 
 import (
 	"fmt"
-	emulator "github.com/onflow/flow-emulator"
 	"strings"
 	"testing"
 
 	"github.com/onflow/cadence"
-	"github.com/stretchr/testify/require"
-
-	"github.com/onflow/flow-cli/pkg/flowkit/gateway"
-
-	"github.com/stretchr/testify/mock"
-
-	"github.com/onflow/flow-cli/pkg/flowkit/output"
-
-	"github.com/onflow/flow-cli/pkg/flowkit"
-
+	emulator "github.com/onflow/flow-emulator"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 
+	"github.com/onflow/flow-cli/pkg/flowkit"
+	"github.com/onflow/flow-cli/pkg/flowkit/gateway"
+	"github.com/onflow/flow-cli/pkg/flowkit/output"
 	"github.com/onflow/flow-cli/pkg/flowkit/tests"
 )
 

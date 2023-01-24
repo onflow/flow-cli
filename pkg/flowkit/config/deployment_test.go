@@ -19,9 +19,10 @@
 package config
 
 import (
+	"testing"
+
 	"github.com/onflow/cadence"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func Test_Deployment(t *testing.T) {

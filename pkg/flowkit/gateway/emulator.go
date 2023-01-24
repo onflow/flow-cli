@@ -26,13 +26,12 @@ import (
 	jsoncdc "github.com/onflow/cadence/encoding/json"
 	emulator "github.com/onflow/flow-emulator"
 	"github.com/onflow/flow-emulator/convert/sdk"
-	"github.com/rs/zerolog"
-	"google.golang.org/grpc/status"
-
 	"github.com/onflow/flow-emulator/server/backend"
 	"github.com/onflow/flow-go-sdk"
 	flowGo "github.com/onflow/flow-go/model/flow"
+	"github.com/rs/zerolog"
 	"github.com/sirupsen/logrus"
+	"google.golang.org/grpc/status"
 
 	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/config"

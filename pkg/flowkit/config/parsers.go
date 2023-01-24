@@ -23,9 +23,8 @@ import (
 	"regexp"
 	"strconv"
 
-	"github.com/onflow/flow-go-sdk/crypto"
-
 	"github.com/onflow/flow-go-sdk"
+	"github.com/onflow/flow-go-sdk/crypto"
 )
 
 // StringToAccount converts string values to account.

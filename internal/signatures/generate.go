@@ -103,6 +103,7 @@ func (s *SignatureResult) JSON() interface{} {
 		"pubKey":    s.pubKey(),
 	}
 }
+
 func (s *SignatureResult) String() string {
 	var b bytes.Buffer
 	writer := util.CreateTabWriter(&b)

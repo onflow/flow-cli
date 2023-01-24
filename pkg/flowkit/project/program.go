@@ -20,10 +20,11 @@ package project
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/onflow/cadence/runtime/ast"
 	"github.com/onflow/cadence/runtime/common"
 	"github.com/onflow/cadence/runtime/parser"
-	"strings"
 )
 
 type Program struct {

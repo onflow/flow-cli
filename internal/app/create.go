@@ -58,6 +58,7 @@ var CreateCommand = &command.Command{
 const ScaffoldRepo = "https://github.com/onflow/flow-app-scaffold/"
 
 type Examples map[string]json.RawMessage
+
 type ExampleConfig struct {
 	Repo   string `json:"repo"`
 	Branch string `json:"branch"`

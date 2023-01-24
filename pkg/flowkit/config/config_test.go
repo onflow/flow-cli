@@ -21,7 +21,6 @@ import (
 	"testing"
 
 	"github.com/onflow/cadence"
-
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/stretchr/testify/assert"
