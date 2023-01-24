@@ -5,13 +5,13 @@ go 1.18
 require (
 	github.com/getsentry/sentry-go v0.13.0
 	github.com/go-git/go-git/v5 v5.4.2
-	github.com/onflow/cadence v0.31.0
+	github.com/onflow/cadence v0.31.3
 	github.com/onflow/cadence-tools/languageserver v0.5.2-0.20230124145747-6f45724ae91c
 	github.com/onflow/cadence-tools/test v0.4.0
 	github.com/onflow/fcl-dev-wallet v0.5.4
 	github.com/onflow/flow-cli/pkg/flowkit v0.0.0-20230124145613-377ceb66696f
 	github.com/onflow/flow-emulator v0.42.0
-	github.com/onflow/flow-go-sdk v0.31.0
+	github.com/onflow/flow-go-sdk v0.31.3
 	github.com/onflowser/flowser/v2 v2.0.9-beta
 	github.com/pkg/errors v0.9.1
 	github.com/psiemens/sconfig v0.1.0

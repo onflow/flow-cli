@@ -639,12 +639,10 @@ github.com/onflow/atree v0.1.0-beta1.0.20211027184039-559ee654ece9/go.mod h1:+6x
 github.com/onflow/atree v0.4.0 h1:+TbNisavAkukAKhgQ4plWnvR9o5+SkwPIsi3jaeAqKs=
 github.com/onflow/atree v0.4.0/go.mod h1:7Qe1xaW0YewvouLXrugzMFUYXNoRQ8MT/UsVAWx1Ndo=
 github.com/onflow/cadence v0.20.1/go.mod h1:7mzUvPZUIJztIbr9eTvs+fQjWWHTF8veC+yk4ihcNIA=
-github.com/onflow/cadence v0.31.0 h1:UJ+muzR8kfbSs+K1kqMwHmMRnwKKHhHQfNzktGfxl1k=
-github.com/onflow/cadence v0.31.0/go.mod h1:oRgWkvau1RH15m3NuDlZCPHFQzwvC72jEstCGu8OJ98=
+github.com/onflow/cadence v0.31.3 h1:lTHTBnoFi/ahGk1cQ9JAC+tfYir4kjRVIqtTVCjbe6E=
+github.com/onflow/cadence v0.31.3/go.mod h1:oRgWkvau1RH15m3NuDlZCPHFQzwvC72jEstCGu8OJ98=
 github.com/onflow/cadence-tools/languageserver v0.5.2-0.20230124145747-6f45724ae91c h1:S4inMhzDhTNHr2vv7Ssmq1QWzBpb+W5dqTenk0eZIwQ=
 github.com/onflow/cadence-tools/languageserver v0.5.2-0.20230124145747-6f45724ae91c/go.mod h1:SIRTBk9XXYACLbr4cPKquW23QnTLC6vIgWWXa+jo8I0=
-github.com/onflow/cadence-tools/languageserver v0.6.1 h1:d2mQJOQYAV2DrpD9erbKIc//sxEB2WB33r5MqyJO8q4=
-github.com/onflow/cadence-tools/languageserver v0.6.1/go.mod h1:SfndFPsCpMHOdgrnxNfZSHIrMpApy+uXejD29YNTN+A=
 github.com/onflow/cadence-tools/lint v0.4.0 h1:wp2cQPsW+K3hhQHic3GSVUrmaGwRZref5ffDiwqefOA=
 github.com/onflow/cadence-tools/lint v0.4.0/go.mod h1:4Ki134gcUAWpSst/PkTuGf+SoC7uKgv+vekF5ehGJHw=
 github.com/onflow/cadence-tools/test v0.4.0 h1:vyw0acOHVduz4SFbcdjo4tbPQBgFfrP0p+bjSQXN74I=
@@ -662,8 +660,8 @@ github.com/onflow/flow-ft/lib/go/contracts v0.5.0/go.mod h1:1zoTjp1KzNnOPkyqKmWK
 github.com/onflow/flow-go v0.29.1 h1:a5tSSs0y+AD2hPFOeYRB9bEEZjhcuFFRgfWJDp+5raQ=
 github.com/onflow/flow-go v0.29.1/go.mod h1:Y5wviOlZ6ok2u3L1zL4TlfAp/2GUtj8mD2i1sj1RA1A=
 github.com/onflow/flow-go-sdk v0.24.0/go.mod h1:IoptMLPyFXWvyd9yYA6/4EmSeeozl6nJoIv4FaEMg74=
-github.com/onflow/flow-go-sdk v0.31.0 h1:iGkRf5/mgihngl9eRW0SttlV75nSULmm9x9dHjs4V54=
-github.com/onflow/flow-go-sdk v0.31.0/go.mod h1:u8WTV9hgnXcz7agKiuAKMgUt3GDE/R5XI3E4XmodUeI=
+github.com/onflow/flow-go-sdk v0.31.3 h1:CytMRiTayXRlkRNXQ9Cw6ZcKoOIK6+QtXk4iUb8f0zQ=
+github.com/onflow/flow-go-sdk v0.31.3/go.mod h1:cqj2QShwC4DqxWzrg0+U7KxE2k7OJDGBxh8XZrJ4v5E=
 github.com/onflow/flow-go/crypto v0.21.3/go.mod h1:vI6V4CY3R6c4JKBxdcRiR/AnjBfL8OSD97bJc60cLuQ=
 github.com/onflow/flow-go/crypto v0.24.4 h1:SwEtoVS2TidCIHYCZMgQ7U2YsqhI9upnw94fhdHTubM=
 github.com/onflow/flow-go/crypto v0.24.4/go.mod h1:dkVL98P6GHR48iD9zCB6XlnkJX8IQd00FKgt1reV90w=
