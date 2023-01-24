@@ -23,7 +23,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/accounts"
-	"github.com/onflow/flow-cli/internal/app"
 	"github.com/onflow/flow-cli/internal/blocks"
 	"github.com/onflow/flow-cli/internal/cadence"
 	"github.com/onflow/flow-cli/internal/collections"
@@ -39,6 +38,7 @@ import (
 	"github.com/onflow/flow-cli/internal/signatures"
 	"github.com/onflow/flow-cli/internal/snapshot"
 	"github.com/onflow/flow-cli/internal/status"
+	"github.com/onflow/flow-cli/internal/super"
 	"github.com/onflow/flow-cli/internal/test"
 	"github.com/onflow/flow-cli/internal/tools"
 	"github.com/onflow/flow-cli/internal/transactions"
@@ -56,6 +56,9 @@ func main() {
 	quick.InitCommand.AddToParent(cmd)
 	quick.DeployCommand.AddToParent(cmd)
 	quick.RunCommand.AddToParent(cmd)
+
+	// super commands
+	super.SetupCommand.AddToParent(cmd)
 
 	// single commands
 	status.Command.AddToParent(cmd)
@@ -77,7 +80,6 @@ func main() {
 	cmd.AddCommand(collections.Cmd)
 	cmd.AddCommand(project.Cmd)
 	cmd.AddCommand(config.Cmd)
-	cmd.AddCommand(app.Cmd)
 	cmd.AddCommand(signatures.Cmd)
 	cmd.AddCommand(snapshot.Cmd)
 

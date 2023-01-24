@@ -643,3 +643,17 @@ func InstallPathPrompt(defaultPath string) string {
 
 	return path.Clean(install)
 }
+
+func ScaffoldPrompt(availableScaffolds []string) int {
+	prompt := promptui.Select{
+		Label: "Which scaffold would you like to use",
+		Items: availableScaffolds,
+	}
+
+	index, _, err := prompt.Run()
+	if err == promptui.ErrInterrupt {
+		os.Exit(-1)
+	}
+
+	return index
+}
