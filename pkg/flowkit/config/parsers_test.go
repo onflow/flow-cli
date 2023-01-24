@@ -16,32 +16,28 @@
  * limitations under the License.
  */
 
-package contracts
+package config
 
 import (
-	"github.com/onflow/flow-cli/pkg/flowkit"
+	"strings"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
-// Loader defines methods for loading contract resource.
-type Loader interface {
-	Load(source string) ([]byte, error)
-	Normalize(base, relative string) string
-}
-
-// FilesystemLoader defines contract loader from files.
-type FilesystemLoader struct {
-	Reader flowkit.ReaderWriter
-}
-
-func (f FilesystemLoader) Load(source string) ([]byte, error) {
-	codeBytes, err := f.Reader.ReadFile(source)
-	if err != nil {
-		return nil, err
+func Test_ParseAddress(t *testing.T) {
+	tests := []string{
+		"0x0000000000000002",
+		"0x4c41cf317eec148e", // mainnet
+		"0x78b84cd3c394708c", // testnet
+		"0xf8d6e0586b0a20c7", // emulator
 	}
 
-	return codeBytes, nil
-}
+	for _, test := range tests {
+		addr, err := StringToAddress(test)
+		require.NoError(t, err)
+		assert.Equal(t, strings.TrimPrefix(test, "0x"), addr.Hex())
+	}
 
-func (f FilesystemLoader) Normalize(base, relative string) string {
-	return absolutePath(base, relative)
 }

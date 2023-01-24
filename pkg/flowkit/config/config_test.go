@@ -21,7 +21,6 @@ import (
 	"testing"
 
 	"github.com/onflow/cadence"
-
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/stretchr/testify/assert"
@@ -45,29 +44,29 @@ func generateComplexConfig() config.Config {
 			ServiceAccount: "emulator-account",
 		}},
 		Contracts: config.Contracts{{
-			Name:    "NonFungibleToken",
-			Source:  "../hungry-kitties/cadence/contracts/NonFungibleToken.cdc",
-			Network: "emulator",
+			Name:     "NonFungibleToken",
+			Location: "../hungry-kitties/cadence/contracts/NonFungibleToken.cdc",
+			Network:  "emulator",
 		}, {
-			Name:    "FungibleToken",
-			Source:  "../hungry-kitties/cadence/contracts/FungibleToken.cdc",
-			Network: "emulator",
+			Name:     "FungibleToken",
+			Location: "../hungry-kitties/cadence/contracts/FungibleToken.cdc",
+			Network:  "emulator",
 		}, {
-			Name:    "Kibble",
-			Source:  "./cadence/kibble/contracts/Kibble.cdc",
-			Network: "emulator",
+			Name:     "Kibble",
+			Location: "./cadence/kibble/contracts/Kibble.cdc",
+			Network:  "emulator",
 		}, {
-			Name:    "KittyItems",
-			Source:  "./cadence/kittyItems/contracts/KittyItems.cdc",
-			Network: "emulator",
+			Name:     "KittyItems",
+			Location: "./cadence/kittyItems/contracts/KittyItems.cdc",
+			Network:  "emulator",
 		}, {
-			Name:    "KittyItemsMarket",
-			Source:  "./cadence/kittyItemsMarket/contracts/KittyItemsMarket.cdc",
-			Network: "emulator",
+			Name:     "KittyItemsMarket",
+			Location: "./cadence/kittyItemsMarket/contracts/KittyItemsMarket.cdc",
+			Network:  "emulator",
 		}, {
-			Name:    "KittyItemsMarket",
-			Source:  "0x123123123",
-			Network: "testnet",
+			Name:     "KittyItemsMarket",
+			Location: "0x123123123",
+			Network:  "testnet",
 		}},
 		Deployments: config.Deployments{{
 			Network: "emulator",
@@ -146,7 +145,7 @@ func Test_GetContractsForNetworkComplex(t *testing.T) {
 	assert.NoError(t, err)
 
 	assert.Equal(t, "KittyItems", kitty.Name)
-	assert.Equal(t, "./cadence/kittyItemsMarket/contracts/KittyItemsMarket.cdc", market.Source)
+	assert.Equal(t, "./cadence/kittyItemsMarket/contracts/KittyItemsMarket.cdc", market.Location)
 }
 
 func Test_GetContractsByNameAndNetworkComplex(t *testing.T) {
@@ -154,7 +153,7 @@ func Test_GetContractsByNameAndNetworkComplex(t *testing.T) {
 	market, err := conf.Contracts.ByNameAndNetwork("KittyItemsMarket", "testnet")
 	assert.NoError(t, err)
 
-	assert.Equal(t, "0x123123123", market.Source)
+	assert.Equal(t, "0x123123123", market.Location)
 }
 
 func Test_GetContractsByNetworkComplex(t *testing.T) {

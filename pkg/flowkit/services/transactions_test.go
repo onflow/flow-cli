@@ -20,20 +20,18 @@ package services
 
 import (
 	"fmt"
-	"github.com/stretchr/testify/require"
 	"strings"
 	"testing"
 
-	"github.com/onflow/flow-cli/pkg/flowkit/config"
-
-	"github.com/onflow/flow-go-sdk/crypto"
-
 	"github.com/onflow/cadence"
 	"github.com/onflow/flow-go-sdk"
+	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 
 	"github.com/onflow/flow-cli/pkg/flowkit"
+	"github.com/onflow/flow-cli/pkg/flowkit/config"
 	"github.com/onflow/flow-cli/pkg/flowkit/tests"
 )
 
@@ -83,10 +81,11 @@ func TestTransactions(t *testing.T) {
 
 		_, _, err := s.Transactions.Send(
 			NewSingleTransactionAccount(serviceAcc),
-			&Script{
-				Code: tests.TransactionArgString.Source,
-				Args: []cadence.Value{cadence.String("Bar")},
-			},
+			flowkit.NewScript(
+				tests.TransactionArgString.Source,
+				[]cadence.Value{cadence.String("Bar")},
+				"",
+			),
 			gasLimit,
 			"",
 		)
@@ -272,26 +271,22 @@ func TestTransactions_Integration(t *testing.T) {
 			true,
 		}}
 
-		for _, i := range txIns {
+		for i, txIn := range txIns {
 			tx, err := s.Transactions.Build(
-				NewTransactionAddresses(i.prop, i.payer, i.auth),
-				i.index,
-				&Script{
-					Code:     i.code,
-					Args:     i.args,
-					Filename: i.file,
-				},
-				i.gas,
-				i.network,
+				NewTransactionAddresses(txIn.prop, txIn.payer, txIn.auth),
+				txIn.index,
+				flowkit.NewScript(txIn.code, txIn.args, txIn.file),
+				txIn.gas,
+				txIn.network,
 			)
 
-			assert.NoError(t, err)
+			require.NoError(t, err, fmt.Sprintf("test vector %d", i))
 			ftx := tx.FlowTransaction()
-			assert.Equal(t, ftx.Script, i.code)
-			assert.Equal(t, ftx.Payer, i.payer)
+			assert.Equal(t, ftx.Script, txIn.code)
+			assert.Equal(t, ftx.Payer, txIn.payer)
 			assert.Equal(t, len(ftx.Authorizers), 0) // make sure authorizers weren't added as tx input doesn't require them
-			assert.Equal(t, ftx.ProposalKey.Address, i.prop)
-			assert.Equal(t, ftx.ProposalKey.KeyIndex, i.index)
+			assert.Equal(t, ftx.ProposalKey.Address, txIn.prop)
+			assert.Equal(t, ftx.ProposalKey.KeyIndex, txIn.index)
 		}
 
 	})
@@ -306,9 +301,9 @@ func TestTransactions_Integration(t *testing.T) {
 
 		// setup
 		c := config.Contract{
-			Name:    tests.ContractHelloString.Name,
-			Source:  tests.ContractHelloString.Filename,
-			Network: "emulator",
+			Name:     tests.ContractHelloString.Name,
+			Location: tests.ContractHelloString.Filename,
+			Network:  "emulator",
 		}
 		state.Contracts().AddOrUpdate(c.Name, c)
 
@@ -327,19 +322,17 @@ func TestTransactions_Integration(t *testing.T) {
 			}},
 		}
 		state.Deployments().AddOrUpdate(d)
-		_, _ = s.Accounts.AddContract(
+		_, _, _ = s.Accounts.AddContract(
 			srvAcc,
 			resourceToContract(tests.ContractHelloString),
+			"",
 			false,
 		)
 
 		tx, err := s.Transactions.Build(
 			NewTransactionAddresses(signer, signer, []flow.Address{signer}),
 			srvAcc.Key().Index(),
-			&Script{
-				Code:     tests.TransactionImports.Source,
-				Filename: tests.TransactionImports.Filename,
-			},
+			flowkit.NewScript(tests.TransactionImports.Source, nil, tests.TransactionImports.Filename),
 			flow.DefaultTransactionGasLimit,
 			n.Name,
 		)
@@ -366,10 +359,7 @@ func TestTransactions_Integration(t *testing.T) {
 		tx, err := s.Transactions.Build(
 			NewTransactionAddresses(a.Address(), a.Address(), nil),
 			0,
-			&Script{
-				Code:     tests.TransactionSimple.Source,
-				Filename: tests.TransactionSimple.Filename,
-			},
+			flowkit.NewScript(tests.TransactionSimple.Source, nil, tests.TransactionSimple.Filename),
 			flow.DefaultTransactionGasLimit,
 			"",
 		)
@@ -400,10 +390,7 @@ func TestTransactions_Integration(t *testing.T) {
 		tx, err := s.Transactions.Build(
 			NewTransactionAddresses(a.Address(), a.Address(), []flow.Address{a.Address()}),
 			0,
-			&Script{
-				Code:     tests.TransactionSingleAuth.Source,
-				Filename: tests.TransactionSingleAuth.Filename,
-			},
+			flowkit.NewScript(tests.TransactionSingleAuth.Source, nil, tests.TransactionSingleAuth.Filename),
 			flow.DefaultTransactionGasLimit,
 			"",
 		)
@@ -435,10 +422,7 @@ func TestTransactions_Integration(t *testing.T) {
 		tx, err := s.Transactions.Build(
 			NewTransactionAddresses(a.Address(), a.Address(), []flow.Address{a.Address()}),
 			0,
-			&Script{
-				Code:     tests.TransactionSingleAuth.Source,
-				Filename: tests.TransactionSingleAuth.Filename,
-			},
+			flowkit.NewScript(tests.TransactionSingleAuth.Source, nil, tests.TransactionSingleAuth.Filename),
 			flow.DefaultTransactionGasLimit,
 			"",
 		)
@@ -467,10 +451,7 @@ func TestTransactions_Integration(t *testing.T) {
 		tx, err := s.Transactions.Build(
 			NewTransactionAddresses(a.Address(), a.Address(), []flow.Address{a.Address()}),
 			0,
-			&Script{
-				Code:     tests.TransactionTwoAuth.Source,
-				Filename: tests.TransactionTwoAuth.Filename,
-			},
+			flowkit.NewScript(tests.TransactionTwoAuth.Source, nil, tests.TransactionTwoAuth.Filename),
 			flow.DefaultTransactionGasLimit,
 			"",
 		)
@@ -493,10 +474,7 @@ func TestTransactions_Integration(t *testing.T) {
 				proposer: a,
 				payer:    a,
 			},
-			&Script{
-				Code:     tests.TransactionSimple.Source,
-				Filename: tests.TransactionSimple.Filename,
-			},
+			flowkit.NewScript(tests.TransactionSimple.Source, nil, tests.TransactionSimple.Filename),
 			flow.DefaultTransactionGasLimit,
 			"",
 		)
@@ -516,10 +494,7 @@ func TestTransactions_Integration(t *testing.T) {
 
 		tx, txr, err := s.Transactions.Send(
 			NewSingleTransactionAccount(a),
-			&Script{
-				Code:     tests.TransactionSingleAuth.Source,
-				Filename: tests.TransactionSingleAuth.Filename,
-			},
+			flowkit.NewScript(tests.TransactionSingleAuth.Source, nil, tests.TransactionSingleAuth.Filename),
 			flow.DefaultTransactionGasLimit,
 			"",
 		)
@@ -544,10 +519,7 @@ func TestTransactions_Integration(t *testing.T) {
 
 		tx, txr, err := s.Transactions.Send(
 			roles,
-			&Script{
-				Code:     tests.TransactionSingleAuth.Source,
-				Filename: tests.TransactionSingleAuth.Filename,
-			},
+			flowkit.NewScript(tests.TransactionSingleAuth.Source, nil, tests.TransactionSingleAuth.Filename),
 			flow.DefaultTransactionGasLimit,
 			"",
 		)
@@ -572,10 +544,7 @@ func TestTransactions_Integration(t *testing.T) {
 
 		tx, txr, err := s.Transactions.Send(
 			roles,
-			&Script{
-				Code:     tests.TransactionSingleAuth.Source,
-				Filename: tests.TransactionSingleAuth.Filename,
-			},
+			flowkit.NewScript(tests.TransactionSingleAuth.Source, nil, tests.TransactionSingleAuth.Filename),
 			flow.DefaultTransactionGasLimit,
 			"",
 		)
@@ -596,20 +565,20 @@ func TestTransactions_Integration(t *testing.T) {
 
 		tx, txr, err := s.Transactions.Send(
 			NewSingleTransactionAccount(a),
-			&Script{
-				Code:     tests.TransactionArgString.Source,
-				Filename: tests.TransactionArgString.Filename,
-				Args: []cadence.Value{
+			flowkit.NewScript(
+				tests.TransactionArgString.Source,
+				[]cadence.Value{
 					cadence.String("Bar"),
 				},
-			},
+				tests.TransactionArgString.Filename,
+			),
 			flow.DefaultTransactionGasLimit,
 			"",
 		)
 		assert.NoError(t, err)
 		assert.Equal(t, tx.Payer.String(), a.Address().String())
 		assert.Equal(t, tx.ProposalKey.KeyIndex, a.Key().Index())
-		assert.Equal(t, fmt.Sprintf("%x", tx.Arguments), "[7b2274797065223a22537472696e67222c2276616c7565223a22426172227d]")
+		assert.Equal(t, fmt.Sprintf("%x", tx.Arguments), "[7b2276616c7565223a22426172222c2274797065223a22537472696e67227d]")
 		assert.Nil(t, txr.Error)
 		assert.Equal(t, txr.Status, flow.TransactionStatusSealed)
 	})
@@ -623,10 +592,11 @@ func TestTransactions_Integration(t *testing.T) {
 
 		tx, txr, err := s.Transactions.Send(
 			NewSingleTransactionAccount(a),
-			&Script{
-				Code:     tests.TransactionMultipleDeclarations.Source,
-				Filename: tests.TransactionMultipleDeclarations.Filename,
-			},
+			flowkit.NewScript(
+				tests.TransactionMultipleDeclarations.Source,
+				nil,
+				tests.TransactionMultipleDeclarations.Filename,
+			),
 			flow.DefaultTransactionGasLimit,
 			"",
 		)

@@ -21,15 +21,13 @@ package services
 import (
 	"fmt"
 
-	"github.com/onflow/flow-cli/pkg/flowkit"
-
-	"github.com/onflow/flow-cli/pkg/flowkit/config"
-
 	"github.com/onflow/cadence"
 
-	"github.com/onflow/flow-cli/pkg/flowkit/contracts"
+	"github.com/onflow/flow-cli/pkg/flowkit"
+	"github.com/onflow/flow-cli/pkg/flowkit/config"
 	"github.com/onflow/flow-cli/pkg/flowkit/gateway"
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
+	"github.com/onflow/flow-cli/pkg/flowkit/project"
 )
 
 // Scripts is a service that handles all script-related interactions.
@@ -53,37 +51,38 @@ func NewScripts(
 }
 
 // Execute script code with passed arguments on the selected network.
-func (s *Scripts) Execute(script *Script, network string) (cadence.Value, error) {
-	resolver, err := contracts.NewResolver(script.Code)
+func (s *Scripts) Execute(script *flowkit.Script, network string) (cadence.Value, error) {
+	program, err := project.NewProgram(script)
 	if err != nil {
 		return nil, err
 	}
 
-	if resolver.HasFileImports() {
+	if program.HasImports() {
+		contracts, err := s.state.DeploymentContractsByNetwork(network)
+		if err != nil {
+			return nil, err
+		}
+
+		importReplacer := project.NewImportReplacer(
+			contracts,
+			s.state.AliasesForNetwork(network),
+		)
+
 		if s.state == nil {
 			return nil, config.ErrDoesNotExist
 		}
 		if network == "" {
 			return nil, fmt.Errorf("missing network, specify which network to use to resolve imports in script code")
 		}
-		if script.Filename == "" {
+		if script.Location() == "" {
 			return nil, fmt.Errorf("resolving imports in scripts not supported")
 		}
 
-		contractsNetwork, err := s.state.DeploymentContractsByNetwork(network)
-		if err != nil {
-			return nil, err
-		}
-
-		script.Code, err = resolver.ResolveImports(
-			script.Filename,
-			contractsNetwork,
-			s.state.AliasesForNetwork(network),
-		)
+		program, err = importReplacer.Replace(program)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	return s.gateway.ExecuteScript(script.Code, script.Args)
+	return s.gateway.ExecuteScript(program.Code(), script.Args)
 }

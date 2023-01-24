@@ -22,18 +22,16 @@ import (
 	"encoding/hex"
 	"fmt"
 
-	"github.com/onflow/flow-cli/pkg/flowkit"
-
+	goeth "github.com/ethereum/go-ethereum/accounts"
+	slip10 "github.com/lmars/go-slip10"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
+	bip39 "github.com/tyler-smith/go-bip39"
 
+	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/gateway"
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
 	"github.com/onflow/flow-cli/pkg/flowkit/util"
-
-	goeth "github.com/ethereum/go-ethereum/accounts"
-	slip10 "github.com/lmars/go-slip10"
-	bip39 "github.com/tyler-smith/go-bip39"
 )
 
 // Keys is a service that handles all key-related interactions.
