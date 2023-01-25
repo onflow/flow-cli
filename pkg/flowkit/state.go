@@ -22,7 +22,6 @@ import (
 	"fmt"
 	"os"
 	"path"
-	"path/filepath"
 
 	"github.com/onflow/flow-go-sdk/crypto"
 
@@ -44,7 +43,6 @@ type State struct {
 	confLoader   *config.Loader
 	readerWriter ReaderWriter
 	accounts     *Accounts
-	statePath    string
 }
 
 // ReaderWriter retrieve current file reader writer.
@@ -180,7 +178,7 @@ func (p *State) DeploymentContractsByNetwork(network string) ([]*project.Contrac
 				return nil, err
 			}
 
-			code, err := p.readerWriter.ReadFile(filepath.Join(p.statePath, c.Location))
+			code, err := p.readerWriter.ReadFile(c.Location)
 			if err != nil {
 				return nil, err
 			}
@@ -245,7 +243,7 @@ func Load(configFilePaths []string, readerWriter ReaderWriter) (*State, error) {
 	if err == nil && len(conf.Emulators) == 0 {
 		conf.Emulators.AddOrUpdate("", config.DefaultEmulator())
 	}
-	proj, err := newProject(conf, confLoader, readerWriter, path.Dir(configFilePaths[0])) // todo fix
+	proj, err := newProject(conf, confLoader, readerWriter)
 	if err != nil {
 		return nil, fmt.Errorf("invalid project configuration: %s", err)
 	}
@@ -285,7 +283,6 @@ func newProject(
 	conf *config.Config,
 	loader *config.Loader,
 	readerWriter ReaderWriter,
-	statePath string,
 ) (*State, error) {
 	accounts, err := accountsFromConfig(conf)
 	if err != nil {
@@ -297,6 +294,5 @@ func newProject(
 		readerWriter: readerWriter,
 		confLoader:   loader,
 		accounts:     &accounts,
-		statePath:    statePath,
 	}, nil
 }
