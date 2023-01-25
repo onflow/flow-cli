@@ -66,6 +66,9 @@ func main() {
 	tools.Flowser.AddToParent(cmd)
 	test.TestCommand.AddToParent(cmd)
 
+	// super commands
+	super.DevCommand.AddToParent(cmd)
+
 	// structured commands
 	cmd.AddCommand(settings.Cmd)
 	cmd.AddCommand(cadence.Cmd)

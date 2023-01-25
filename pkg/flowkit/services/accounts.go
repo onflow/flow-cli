@@ -20,7 +20,6 @@ package services
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"strings"
 
@@ -29,6 +28,7 @@ import (
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/onflow/flow-go-sdk/templates"
+	"github.com/pkg/errors"
 	"golang.org/x/exp/maps"
 	"golang.org/x/exp/slices"
 
@@ -254,7 +254,7 @@ func (a *Accounts) Create(
 
 	sentTx, err := a.gateway.SendSignedTransaction(tx)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "account creation transaction failed")
 	}
 
 	a.logger.StartProgress("Waiting for transaction to be sealed...")
@@ -473,7 +473,6 @@ func (a *Accounts) prepareTransaction(
 	}
 
 	tx.SetBlockReference(block)
-
 	if err = tx.SetProposer(proposer, account.Key().Index()); err != nil {
 		return nil, err
 	}

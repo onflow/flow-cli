@@ -50,12 +50,14 @@ type Deployment struct {
 	contracts []*deployContract
 	// map of contracts by their location specified in state
 	contractsByLocation map[string]*deployContract
+	contractsByName     map[string]*deployContract
 }
 
 // NewDeployment from the flowkit Contracts and loaded from the contract location using a loader.
 func NewDeployment(contracts []*Contract) (*Deployment, error) {
 	deployment := &Deployment{
 		contractsByLocation: make(map[string]*deployContract),
+		contractsByName:     make(map[string]*deployContract),
 	}
 
 	for _, contract := range contracts {
@@ -83,6 +85,7 @@ func (d *Deployment) add(contract *Contract) error {
 
 	d.contracts = append(d.contracts, c)
 	d.contractsByLocation[c.Location()] = c
+	d.contractsByName[c.Name] = c
 
 	return nil
 }
@@ -131,21 +134,28 @@ func (d *Deployment) conflictExists() bool {
 // buildDependencies iterates over all contracts and checks the imports which are added as its dependencies.
 func (d *Deployment) buildDependencies() error {
 	for _, contract := range d.contracts {
-		for _, location := range contract.program.Imports() {
+		for _, location := range contract.program.imports() {
+			// find contract by the path import
 			importPath := absolutePath(contract.location, location)
-			importContract, isContract := d.contractsByLocation[importPath]
-
-			// todo aliases?
-			if !isContract {
-				return fmt.Errorf(
-					"import from %s could not be found: %s, make sure import path is correct",
-					contract.Name,
-					importPath,
-				)
-
+			importContract, isPath := d.contractsByLocation[importPath]
+			if isPath {
+				contract.addDependency(location, importContract)
+				continue
+			}
+			// find contract by identifier import - new schema
+			importContract, isIdentifier := d.contractsByName[location]
+			if isIdentifier {
+				contract.addDependency(location, importContract)
+				continue
 			}
 
-			contract.addDependency(location, importContract)
+			// todo make sure aliases are resolved
+
+			return fmt.Errorf(
+				"import from %s could not be found: %s, make sure import path is correct",
+				contract.Name,
+				location,
+			)
 		}
 	}
 

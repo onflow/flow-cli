@@ -21,7 +21,6 @@ package services
 import (
 	"errors"
 	"fmt"
-	"strings"
 
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
@@ -232,15 +231,16 @@ func (p *Project) Deploy(network string, update bool) ([]*project.Contract, erro
 	}
 
 	p.logger.Info(fmt.Sprintf(
-		"\nDeploying %d contracts for accounts: %s\n", len(sorted),
-		strings.Join(p.state.AccountNamesForNetwork(network), ","),
+		"\nDeploying %d contracts for accounts: %s\n",
+		len(sorted),
+		p.state.AccountsForNetwork(network).String(),
 	))
 	defer p.logger.StopProgress()
 
 	// todo refactor service layer so it can be shared
 	accounts := NewAccounts(p.gateway, p.state, output.NewStdoutLogger(output.NoneLog))
 
-	deployErr := &ErrProjectDeploy{}
+	deployErr := &ProjectDeploymentError{}
 	for _, contract := range sorted {
 		targetAccount, err := p.state.Accounts().ByName(contract.AccountName)
 		if err != nil {
@@ -292,22 +292,22 @@ func (p *Project) Deploy(network string, update bool) ([]*project.Contract, erro
 	return sorted, nil
 }
 
-type ErrProjectDeploy struct {
+type ProjectDeploymentError struct {
 	contracts map[string]error
 }
 
-func (d *ErrProjectDeploy) add(contract *project.Contract, err error, msg string) {
+func (d *ProjectDeploymentError) add(contract *project.Contract, err error, msg string) {
 	if d.contracts == nil {
 		d.contracts = make(map[string]error)
 	}
 	d.contracts[contract.Name] = fmt.Errorf("%s: %w", msg, err)
 }
 
-func (d *ErrProjectDeploy) Contracts() map[string]error {
+func (d *ProjectDeploymentError) Contracts() map[string]error {
 	return d.contracts
 }
 
-func (d *ErrProjectDeploy) Error() string {
+func (d *ProjectDeploymentError) Error() string {
 	err := ""
 	for c, e := range d.contracts {
 		err = fmt.Sprintf("%s %s: %s,", err, c, e.Error())

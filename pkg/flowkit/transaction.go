@@ -148,7 +148,6 @@ func NewCreateAccountTransaction(
 	if err != nil {
 		return nil, err
 	}
-
 	return newTransactionFromTemplate(template, signer)
 }
 

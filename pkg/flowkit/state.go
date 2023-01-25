@@ -28,7 +28,6 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
 	"github.com/onflow/flow-cli/pkg/flowkit/config/json"
 	"github.com/onflow/flow-cli/pkg/flowkit/project"
-	"github.com/onflow/flow-cli/pkg/flowkit/util"
 )
 
 // ReaderWriter is implemented by any value that has ReadFile and WriteFile
@@ -179,7 +178,7 @@ func (p *State) DeploymentContractsByNetwork(network string) ([]*project.Contrac
 				return nil, err
 			}
 
-			code, _ := p.readerWriter.ReadFile(c.Location)
+			code, err := p.readerWriter.ReadFile(c.Location)
 			if err != nil {
 				return nil, err
 			}
@@ -200,19 +199,19 @@ func (p *State) DeploymentContractsByNetwork(network string) ([]*project.Contrac
 	return contracts, nil
 }
 
-// AccountNamesForNetwork returns all configured account names for a network.
-func (p *State) AccountNamesForNetwork(network string) []string {
-	names := make([]string, 0)
+// AccountsForNetwork returns all accounts used on a network defined by deployments.
+func (p *State) AccountsForNetwork(network string) Accounts {
+	exists := make(map[string]bool, 0)
+	accounts := make([]Account, 0)
 
 	for _, account := range *p.accounts {
 		if len(p.conf.Deployments.ByAccountAndNetwork(account.name, network)) > 0 {
-			if !util.ContainsString(names, account.name) {
-				names = append(names, account.name)
+			if !exists[account.name] {
+				accounts = append(accounts, account)
 			}
 		}
 	}
-
-	return names
+	return accounts
 }
 
 // AliasesForNetwork returns all deployment aliases for a network.

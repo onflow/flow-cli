@@ -641,10 +641,10 @@ github.com/onflow/atree v0.4.0/go.mod h1:7Qe1xaW0YewvouLXrugzMFUYXNoRQ8MT/UsVAWx
 github.com/onflow/cadence v0.20.1/go.mod h1:7mzUvPZUIJztIbr9eTvs+fQjWWHTF8veC+yk4ihcNIA=
 github.com/onflow/cadence v0.31.0 h1:UJ+muzR8kfbSs+K1kqMwHmMRnwKKHhHQfNzktGfxl1k=
 github.com/onflow/cadence v0.31.0/go.mod h1:oRgWkvau1RH15m3NuDlZCPHFQzwvC72jEstCGu8OJ98=
-github.com/onflow/cadence-tools/languageserver v0.5.2-0.20230124145747-6f45724ae91c h1:S4inMhzDhTNHr2vv7Ssmq1QWzBpb+W5dqTenk0eZIwQ=
-github.com/onflow/cadence-tools/languageserver v0.5.2-0.20230124145747-6f45724ae91c/go.mod h1:SIRTBk9XXYACLbr4cPKquW23QnTLC6vIgWWXa+jo8I0=
-github.com/onflow/cadence-tools/languageserver v0.6.1 h1:d2mQJOQYAV2DrpD9erbKIc//sxEB2WB33r5MqyJO8q4=
-github.com/onflow/cadence-tools/languageserver v0.6.1/go.mod h1:SfndFPsCpMHOdgrnxNfZSHIrMpApy+uXejD29YNTN+A=
+github.com/onflow/cadence-tools/languageserver v0.5.2-0.20230113144300-6ac71fc93033 h1:QtwBJPpHEVO0YHPyDQ/20mdDvwXMC8YULA1Rm2gdDwA=
+github.com/onflow/cadence-tools/languageserver v0.5.2-0.20230113144300-6ac71fc93033/go.mod h1:wuQ/dqLGVi2LriDc3G8FNRauOJTCiZcsUHyhDjzI2ro=
+github.com/onflow/cadence-tools/languageserver v0.5.2-0.20230125125748-8b93d6d964a9 h1:X1bbx4guBy37jCmcLhMeo/LnV/RJ2dGnxeTJ6TTHCRc=
+github.com/onflow/cadence-tools/languageserver v0.5.2-0.20230125125748-8b93d6d964a9/go.mod h1:GMZDum5DGKLHIbOsvWo/U9e3DoUe0Emp1gaBq6IMG78=
 github.com/onflow/cadence-tools/lint v0.4.0 h1:wp2cQPsW+K3hhQHic3GSVUrmaGwRZref5ffDiwqefOA=
 github.com/onflow/cadence-tools/lint v0.4.0/go.mod h1:4Ki134gcUAWpSst/PkTuGf+SoC7uKgv+vekF5ehGJHw=
 github.com/onflow/cadence-tools/test v0.4.0 h1:vyw0acOHVduz4SFbcdjo4tbPQBgFfrP0p+bjSQXN74I=
@@ -747,6 +747,8 @@ github.com/psiemens/graceland v1.0.0 h1:L580AVV4Q2XLcPpmvxJRH9UpEAYr/eu2jBKmMglh
 github.com/psiemens/graceland v1.0.0/go.mod h1:1Tof+vt1LbmcZFE0lzgdwMN0QBymAChG3FRgDx8XisU=
 github.com/psiemens/sconfig v0.1.0 h1:xfWqW+TRpih7mXZIqKYTmpRhlZLQ1kbxV8EjllPv76s=
 github.com/psiemens/sconfig v0.1.0/go.mod h1:+MLKqdledP/8G3rOBpknbLh0IclCf4WneJUtS26JB2U=
+github.com/radovskyb/watcher v1.0.7 h1:AYePLih6dpmS32vlHfhCeli8127LzkIgwJGcwwe8tUE=
+github.com/radovskyb/watcher v1.0.7/go.mod h1:78okwvY5wPdzcb1UYnip1pvrZNIVEIh/Cm+ZuvsUYIg=
 github.com/rivo/uniseg v0.2.0/go.mod h1:J6wj4VEh+S6ZtnVlnTBMWIodfgj8LQOQFoIToxlJtxc=
 github.com/rivo/uniseg v0.2.1-0.20211004051800-57c86be7915a h1:s7GrsqeorVkFR1vGmQ6WVL9nup0eyQCC+YVUeSQLH/Q=
 github.com/rivo/uniseg v0.2.1-0.20211004051800-57c86be7915a/go.mod h1:J6wj4VEh+S6ZtnVlnTBMWIodfgj8LQOQFoIToxlJtxc=

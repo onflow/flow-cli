@@ -16,19 +16,15 @@
  * limitations under the License.
  */
 
-package project_test
+package project
 
 import (
-	"fmt"
 	"regexp"
 	"testing"
 
 	"github.com/onflow/flow-go-sdk"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-
-	"github.com/onflow/flow-cli/pkg/flowkit"
-	"github.com/onflow/flow-cli/pkg/flowkit/project"
 )
 
 func cleanCode(code []byte) string {
@@ -36,25 +32,40 @@ func cleanCode(code []byte) string {
 	return space.ReplaceAllString(string(code), " ")
 }
 
+type testAccount struct {
+	address flow.Address
+	name    string
+}
+
+func (t *testAccount) Name() string {
+	return t.name
+}
+
+func (t *testAccount) Address() flow.Address {
+	return t.address
+}
+
 func TestResolver(t *testing.T) {
-	contracts := []*project.Contract{
-		project.NewContract("Kibble", "./tests/Kibble.cdc", nil, flow.HexToAddress("0x1"), "", nil),
-		project.NewContract("FT", "./tests/FT.cdc", nil, flow.HexToAddress("0x2"), "", nil),
-	}
 
-	aliases := map[string]string{
-		"./tests/NFT.cdc": flow.HexToAddress("0x4").String(),
-	}
+	t.Run("Resolve imports", func(t *testing.T) {
+		contracts := []*Contract{
+			NewContract("Kibble", "./tests/Kibble.cdc", nil, flow.HexToAddress("0x1"), "", nil),
+			NewContract("FT", "./tests/FT.cdc", nil, flow.HexToAddress("0x2"), "", nil),
+		}
 
-	paths := []string{
-		"./tests/foo.cdc",
-		"./scripts/bar/foo.cdc",
-		"./scripts/bar/foo.cdc",
-		"./tests/foo.cdc",
-	}
+		aliases := map[string]string{
+			"./tests/NFT.cdc": flow.HexToAddress("0x4").String(),
+		}
 
-	scripts := [][]byte{
-		[]byte(`
+		paths := []string{
+			"./tests/foo.cdc",
+			"./scripts/bar/foo.cdc",
+			"./scripts/bar/foo.cdc",
+			"./tests/foo.cdc",
+		}
+
+		scripts := [][]byte{
+			[]byte(`
 			import Kibble from "./Kibble.cdc"
 			import FT from "./FT.cdc"
 			pub fun main() {}
@@ -72,10 +83,10 @@ func TestResolver(t *testing.T) {
 			import Foo from 0x0000000000000001
 			pub fun main() {}
 	`),
-	}
+		}
 
-	resolved := [][]byte{
-		[]byte(`
+		resolved := [][]byte{
+			[]byte(`
 			import Kibble from 0x0000000000000001 
 			import FT from 0x0000000000000002 
 			pub fun main() {}
@@ -93,47 +104,14 @@ func TestResolver(t *testing.T) {
 			import Foo from 0x0000000000000001
 			pub fun main() {}
 	`),
-	}
-
-	t.Run("Import exists", func(t *testing.T) {
-		tests := []struct {
-			code       []byte
-			hasImports bool
-		}{{
-			code: []byte(`
-			  import Kibble from "./Kibble.cdc"
-			  pub fun main() {}
-			`),
-			hasImports: true,
-		}, {
-			code: []byte(`
-				pub fun main() {}
-			`),
-			hasImports: false,
-		}, {
-			code:       scripts[3],
-			hasImports: true,
-		}}
-
-		for i, test := range tests {
-			program, err := project.NewProgram(flowkit.NewScript(test.code, nil, ""))
-			assert.NoError(t, err)
-			assert.Equal(t, test.hasImports, program.HasImports(), fmt.Sprintf("failed with test vector %d", i))
 		}
-	})
 
-	t.Run("Parse imports", func(t *testing.T) {
-		program, err := project.NewProgram(flowkit.NewScript(scripts[3], nil, ""))
-		assert.NoError(t, err)
-		assert.Equal(t, program.Imports(), []string{
-			"./Kibble.cdc",
-		})
-	})
-
-	t.Run("Resolve imports", func(t *testing.T) {
-		replacer := project.NewImportReplacer(contracts, aliases)
+		replacer := NewImportReplacer(contracts, aliases)
 		for i, script := range scripts {
-			program, err := project.NewProgram(flowkit.NewScript(script, nil, paths[i]))
+			program, err := NewProgram(&testScript{
+				code:     script,
+				location: paths[i],
+			})
 			require.NoError(t, err)
 
 			program, err = replacer.Replace(program)
@@ -141,29 +119,36 @@ func TestResolver(t *testing.T) {
 			assert.Equal(t, cleanCode(program.Code()), cleanCode(resolved[i]))
 		}
 	})
-	t.Run("Get Contract Name", func(t *testing.T) {
-		program, err := project.NewProgram(flowkit.NewScript(
-			[]byte(`
-				pub contract HelloWorld {}
-			`),
-			nil, "",
-		))
+
+	t.Run("Resolve new schema", func(t *testing.T) {
+		contracts := []*Contract{
+			NewContract("Bar", "./Bar.cdc", nil, flow.HexToAddress("0x2"), "", nil),
+			NewContract("Foo", "./Foo.cdc", nil, flow.HexToAddress("0x1"), "", nil),
+			NewContract("Zoo", "./Zoo.cdc", nil, flow.HexToAddress("0x2"), "", nil),
+		}
+
+		replacer := NewImportReplacer(contracts, nil)
+
+		code := []byte(`
+			import Foo from "./Foo.cdc"
+			import "Bar"
+			
+			pub contract Zoo {}
+		`)
+		program, err := NewProgram(&testScript{code: code, location: "./Zoo.cdc"})
 		require.NoError(t, err)
-		contractName, err := program.Name()
-		assert.NoError(t, err)
-		assert.Equal(t, "HelloWorld", contractName)
-	})
-	t.Run("Get Contract Name", func(t *testing.T) {
-		program, err := project.NewProgram(flowkit.NewScript(
-			[]byte(`
-				pub struct SomeStruct {}
-				pub contract HelloWorld {}
-			`),
-			nil, "",
-		))
+
+		replaced, err := replacer.Replace(program)
 		require.NoError(t, err)
-		name, err := program.Name()
-		assert.ErrorContains(t, err, "the code must declare exactly one contract or contract interface")
-		assert.Equal(t, "", name)
+
+		expected := []byte(`
+			import Foo from 0x0000000000000001
+			import Bar from 0x0000000000000002
+			
+			pub contract Zoo {}
+		`)
+
+		assert.Equal(t, cleanCode(expected), cleanCode(replaced.Code()))
 	})
+
 }
