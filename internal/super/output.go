@@ -52,7 +52,7 @@ func printDeployment(deployed []*flowkitProject.Contract, err error, contractPat
 
 func successfulDeployment(deployed []*flowkitProject.Contract) string {
 	var out bytes.Buffer
-	okFaces := []string{"😎", "😲", "😱", "😜"}
+	okFaces := []string{"😎", "🤩", "🤠", "🤖", "🤡", "👽", "👾", "🥸", "🧐", "👻", "💩", "🤓", "🥳", "🤑", "😍", "👿"}
 
 	// build map of grouped contracts by account for easier output
 	deployOut := make(map[string][]string)
