@@ -20,11 +20,11 @@ package json
 import (
 	"testing"
 
-	"github.com/onflow/flow-cli/pkg/flowkit/config"
-
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/onflow/flow-cli/pkg/flowkit/config"
 )
 
 func keys() []crypto.PrivateKey {
@@ -33,6 +33,7 @@ func keys() []crypto.PrivateKey {
 	keys = append(keys, key)
 	return keys
 }
+
 func Test_SimpleJSONConfig(t *testing.T) {
 	b := []byte(`{
 		"emulators": {
@@ -167,7 +168,7 @@ func Test_NonExistingAccountForEmulator(t *testing.T) {
 	assert.Equal(t, "emulator default contains nonexisting service account emulator-account", err.Error())
 }
 
-//If config has default emulator values, it will not show up in flow.json
+// If config has default emulator values, it will not show up in flow.json
 func Test_SerializeConfigToJsonEmulatorDefault(t *testing.T) {
 	configJson := []byte(`{
 		"accounts": {
@@ -208,6 +209,7 @@ func Test_SerializeConfigToJsonEmulatorDefault(t *testing.T) {
 	conf, _ := parser.Serialize(&config)
 	assert.JSONEq(t, string(configJson), string(conf))
 }
+
 func Test_SerializeConfigToJsonEmulatorNotDefault(t *testing.T) {
 	configJson := []byte(`{
 		"emulators": {

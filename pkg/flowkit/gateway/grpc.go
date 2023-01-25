@@ -24,15 +24,14 @@ import (
 	"strings"
 	"time"
 
-	grpcAccess "github.com/onflow/flow-go-sdk/access/grpc"
-	"github.com/onflow/flow-go/utils/grpcutils"
-
-	"github.com/onflow/flow-cli/pkg/flowkit"
-
 	"github.com/onflow/cadence"
 	"github.com/onflow/flow-go-sdk"
+	grpcAccess "github.com/onflow/flow-go-sdk/access/grpc"
+	"github.com/onflow/flow-go/utils/grpcutils"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+
+	"github.com/onflow/flow-cli/pkg/flowkit"
 )
 
 // maxGRPCMessageSize 20mb, matching the value set in onflow/flow-go
@@ -117,6 +116,14 @@ func (g *GrpcGateway) SendSignedTransaction(transaction *flowkit.Transaction) (*
 // GetTransaction gets a transaction by ID from the Flow Access API.
 func (g *GrpcGateway) GetTransaction(ID flow.Identifier) (*flow.Transaction, error) {
 	return g.client.GetTransaction(g.ctx, ID)
+}
+
+func (g *GrpcGateway) GetTransactionResultsByBlockID(blockID flow.Identifier) ([]*flow.TransactionResult, error) {
+	return g.client.GetTransactionResultsByBlockID(g.ctx, blockID)
+}
+
+func (g *GrpcGateway) GetTransactionsByBlockID(blockID flow.Identifier) ([]*flow.Transaction, error) {
+	return g.client.GetTransactionsByBlockID(g.ctx, blockID)
 }
 
 // GetTransactionResult gets a transaction result by ID from the Flow Access API.

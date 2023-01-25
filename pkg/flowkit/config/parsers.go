@@ -20,11 +20,11 @@ package config
 
 import (
 	"fmt"
+	"regexp"
 	"strconv"
 
-	"github.com/onflow/flow-go-sdk/crypto"
-
 	"github.com/onflow/flow-go-sdk"
+	"github.com/onflow/flow-go-sdk/crypto"
 )
 
 // StringToAccount converts string values to account.
@@ -36,11 +36,6 @@ func StringToAccount(
 	hashAlgo string,
 	key string,
 ) (*Account, error) {
-	parsedAddress, err := StringToAddress(address)
-	if err != nil {
-		return nil, err
-	}
-
 	parsedIndex, err := StringToKeyIndex(index)
 	if err != nil {
 		return nil, err
@@ -61,7 +56,7 @@ func StringToAccount(
 
 	return &Account{
 		Name:    name,
-		Address: *parsedAddress,
+		Address: flow.HexToAddress(address),
 		Key:     accountKey,
 	}, nil
 }
@@ -80,17 +75,12 @@ func StringToKeyIndex(value string) (int, error) {
 }
 
 // StringToAddress converts string to valid Flow address.
-func StringToAddress(value string) (*flow.Address, error) {
-	address := flow.HexToAddress(value)
-
-	if !address.IsValid(flow.Mainnet) &&
-		!address.IsValid(flow.Testnet) &&
-		!address.IsValid(flow.Sandboxnet) &&
-		!address.IsValid(flow.Emulator) {
-		return nil, fmt.Errorf("invalid address")
+func StringToAddress(value string) (flow.Address, error) {
+	if valid, _ := regexp.MatchString("^(0x)?[0-9A-Fa-f]{0,16}$", value); !valid {
+		return flow.EmptyAddress, fmt.Errorf("invalid address")
 	}
 
-	return &address, nil
+	return flow.HexToAddress(value), nil
 }
 
 // StringToHexKey converts string private key and signature algorithm to private key.

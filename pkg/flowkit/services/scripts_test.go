@@ -19,13 +19,13 @@
 package services
 
 import (
-	"github.com/onflow/flow-cli/pkg/flowkit"
 	"testing"
 
 	"github.com/onflow/cadence"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 
+	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
 	"github.com/onflow/flow-cli/pkg/flowkit/tests"
 )
@@ -113,7 +113,7 @@ func TestScripts_Integration(t *testing.T) {
 			}},
 		}
 		state.Deployments().AddOrUpdate(d)
-		_, _ = s.Accounts.AddContract(
+		_, _, _ = s.Accounts.AddContract(
 			srvAcc,
 			resourceToContract(tests.ContractHelloString),
 			"",

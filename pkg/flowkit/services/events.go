@@ -26,7 +26,6 @@ import (
 	"github.com/onflow/flow-go-sdk/access/grpc"
 
 	"github.com/onflow/flow-cli/pkg/flowkit"
-
 	"github.com/onflow/flow-cli/pkg/flowkit/gateway"
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
 )

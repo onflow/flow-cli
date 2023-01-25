@@ -26,13 +26,13 @@ import (
 	"os/exec"
 	"regexp"
 
-	"github.com/onflow/flow-go-sdk/crypto"
-	"github.com/onflow/flow-go-sdk/crypto/cloudkms"
-
 	goeth "github.com/ethereum/go-ethereum/accounts"
 	slip10 "github.com/lmars/go-slip10"
-	"github.com/onflow/flow-cli/pkg/flowkit/config"
+	"github.com/onflow/flow-go-sdk/crypto"
+	"github.com/onflow/flow-go-sdk/crypto/cloudkms"
 	bip39 "github.com/tyler-smith/go-bip39"
+
+	"github.com/onflow/flow-cli/pkg/flowkit/config"
 )
 
 // AccountKey is a flowkit specific account key implementation
@@ -49,7 +49,9 @@ type AccountKey interface {
 }
 
 var _ AccountKey = &HexAccountKey{}
+
 var _ AccountKey = &KmsAccountKey{}
+
 var _ AccountKey = &Bip44AccountKey{}
 
 func NewAccountKey(accountKeyConf config.AccountKey) (AccountKey, error) {
