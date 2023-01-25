@@ -139,8 +139,8 @@ func send(
 	}
 
 	return &TransactionResult{
-		Result:  txResult,
-		Tx:      tx,
+		result:  txResult,
+		tx:      tx,
 		include: sendFlags.Include,
 		exclude: sendFlags.Exclude,
 	}, nil

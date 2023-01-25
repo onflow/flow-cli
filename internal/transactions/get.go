@@ -63,8 +63,8 @@ func get(
 	}
 
 	return &TransactionResult{
-		Result:  result,
-		Tx:      tx,
+		result:  result,
+		tx:      tx,
 		include: getFlags.Include,
 		exclude: getFlags.Exclude,
 	}, nil

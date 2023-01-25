@@ -113,7 +113,7 @@ func build(
 	}
 
 	return &TransactionResult{
-		Tx:      tx.FlowTransaction(),
+		tx:      tx.FlowTransaction(),
 		include: []string{"code", "payload", "signatures"},
 	}, nil
 }
