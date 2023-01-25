@@ -26,7 +26,7 @@ import (
 
 var Cmd = &cobra.Command{
 	Use:              "snapshot",
-	Short:            "Utilities to download the latest finalized protocol state snapshot",
+	Short:            "Retrieve the protocol state snapshot",
 	TraverseChildren: true,
 }
 

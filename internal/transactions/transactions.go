@@ -34,8 +34,9 @@ import (
 
 var Cmd = &cobra.Command{
 	Use:              "transactions",
-	Short:            "Utilities to send transactions",
+	Short:            "Build, sign, send and retrieve transactions",
 	TraverseChildren: true,
+	GroupID:          "interactions",
 }
 
 func init() {

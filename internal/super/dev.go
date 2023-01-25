@@ -40,9 +40,10 @@ var devFlags = flagsDev{}
 var DevCommand = &command.Command{
 	Cmd: &cobra.Command{
 		Use:     "dev",
-		Short:   "Monitor your project during development", // todo improve
+		Short:   "Build your Flow project",
 		Args:    cobra.ExactArgs(0),
 		Example: "flow dev",
+		GroupID: "super",
 	},
 	Flags: &devFlags,
 	RunS:  dev,
@@ -99,6 +100,11 @@ func dev(
 		} else {
 			return nil, err
 		}
+	}
+
+	err = project.startup()
+	if err != nil {
+		return nil, err
 	}
 
 	err = project.watch()

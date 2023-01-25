@@ -257,7 +257,11 @@ func Exists(path string) bool {
 }
 
 // Init initializes a new Flow project.
-func Init(readerWriter ReaderWriter, sigAlgo crypto.SignatureAlgorithm, hashAlgo crypto.HashAlgorithm) (*State, error) {
+func Init(
+	readerWriter ReaderWriter,
+	sigAlgo crypto.SignatureAlgorithm,
+	hashAlgo crypto.HashAlgorithm,
+) (*State, error) {
 	emulatorServiceAccount, err := generateEmulatorServiceAccount(sigAlgo, hashAlgo)
 	if err != nil {
 		return nil, err
@@ -275,7 +279,11 @@ func Init(readerWriter ReaderWriter, sigAlgo crypto.SignatureAlgorithm, hashAlgo
 }
 
 // newProject creates a new project from a configuration object.
-func newProject(conf *config.Config, loader *config.Loader, readerWriter ReaderWriter) (*State, error) {
+func newProject(
+	conf *config.Config,
+	loader *config.Loader,
+	readerWriter ReaderWriter,
+) (*State, error) {
 	accounts, err := accountsFromConfig(conf)
 	if err != nil {
 		return nil, err

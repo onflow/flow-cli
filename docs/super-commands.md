@@ -34,7 +34,7 @@ You can access the scaffolds by simply using the `--scaffold` flag like so:
 
 The list of scaffolds will continuously grow, and you are welcome to contribute to that. 
 You can contribute by creating your own scaffold repository which can then be added to the scaffold 
-list by opening a PR here. [TODO]
+list by [following instructions here](https://github.com/onflow/flow-cli/blob/master/CONTRIBUTING.md#adding-a-scaffold).
 
 
 ## Develop
@@ -61,7 +61,7 @@ After the command is started it will automatically watch any changes you make to
 Cadence files and make sure to continuously sync those changes on the emulator network. 
 If you make any mistakes it will report the errors as well. 
 
-It is reccomended that you use VSCode as the IDE and run the command in the terminal window of the IDE.
+It is recommended that you use VSCode as the IDE and run the command in the terminal window of the IDE.
 The latest VSCode extension also supports resolution of the improved import syntax, more on that later.
 
 

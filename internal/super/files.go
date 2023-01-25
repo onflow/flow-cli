@@ -80,7 +80,7 @@ func (f *projectFiles) exist() error {
 
 // contracts returns a list of contracts in project.
 func (f *projectFiles) contracts() ([]string, error) {
-	return f.getFilePaths(contractDir)
+	return f.getCadenceFilepaths(contractDir)
 }
 
 // contracts returns a map of deployments in project, mapping account name to all contracts saved to that account.
@@ -102,12 +102,12 @@ func (f *projectFiles) deployments() (map[string][]string, error) {
 
 // contracts returns a list of scripts in project.
 func (f *projectFiles) scripts() ([]string, error) {
-	return f.getFilePaths(scriptDir)
+	return f.getCadenceFilepaths(scriptDir)
 }
 
 // contracts returns a list of transactions in project.
 func (f *projectFiles) transactions() ([]string, error) {
-	return f.getFilePaths(transactionDir)
+	return f.getCadenceFilepaths(transactionDir)
 }
 
 // watch for file changes in the contract folder and signal any changes through channel.
@@ -176,7 +176,7 @@ func (f *projectFiles) watch() (<-chan accountChange, <-chan contractChange, err
 }
 
 // getFilePaths returns a list of only Cadence files that are inside the provided directory.
-func (f *projectFiles) getFilePaths(dir string) ([]string, error) {
+func (f *projectFiles) getCadenceFilepaths(dir string) ([]string, error) {
 	dir = path.Join(f.cadencePath, dir)
 	paths := make([]string, 0)
 	err := filepath.WalkDir(dir, func(path string, d fs.DirEntry, err error) error {

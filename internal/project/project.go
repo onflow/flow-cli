@@ -26,9 +26,9 @@ var Cmd = &cobra.Command{
 	Use:              "project",
 	Short:            "Manage your Cadence project",
 	TraverseChildren: true,
+	GroupID:          "project",
 }
 
 func init() {
 	DeployCommand.AddToParent(Cmd)
-	Cmd.AddCommand(EmulatorCommand)
 }
