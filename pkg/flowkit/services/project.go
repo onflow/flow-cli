@@ -230,7 +230,11 @@ func (p *Project) Deploy(network string, update bool) ([]*project.Contract, erro
 		return nil, err
 	}
 
-	p.logger.Info(fmt.Sprintf("\nDeploying %d contracts for accounts: %s\n", len(sorted), p.state.AccountsForNetwork(network)))
+	p.logger.Info(fmt.Sprintf(
+		"\nDeploying %d contracts for accounts: %s\n",
+		len(sorted),
+		p.state.AccountsForNetwork(network).String(),
+	))
 	defer p.logger.StopProgress()
 
 	// todo refactor service layer so it can be shared

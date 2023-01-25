@@ -226,9 +226,9 @@ func (a *Accounts) Remove(name string) error {
 	return nil
 }
 
-func (a *Accounts) String() string {
+func (a Accounts) String() string {
 	accNames := make([]string, 0)
-	for _, acc := range *a {
+	for _, acc := range a {
 		accNames = append(accNames, acc.name)
 	}
 	return strings.Join(accNames, ",")
