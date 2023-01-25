@@ -5,7 +5,6 @@ go 1.18
 require (
 	github.com/getsentry/sentry-go v0.13.0
 	github.com/go-git/go-git/v5 v5.4.2
-	github.com/manifoldco/promptui v0.9.0
 	github.com/onflow/cadence v0.31.0
 	github.com/onflow/cadence-tools/languageserver v0.5.2-0.20230113144300-6ac71fc93033
 	github.com/onflow/cadence-tools/test v0.4.0

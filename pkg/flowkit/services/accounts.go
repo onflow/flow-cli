@@ -20,9 +20,7 @@ package services
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
-	"github.com/pkg/errors"
 	"strings"
 
 	"github.com/onflow/cadence"
@@ -30,6 +28,7 @@ import (
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/onflow/flow-go-sdk/templates"
+	"github.com/pkg/errors"
 	"golang.org/x/exp/maps"
 	"golang.org/x/exp/slices"
 
