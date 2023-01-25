@@ -21,10 +21,10 @@ package super
 import (
 	"errors"
 	"fmt"
-	"github.com/onflow/cadence/runtime/parser"
 	"os"
 	"strings"
 
+	"github.com/onflow/cadence/runtime/parser"
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
