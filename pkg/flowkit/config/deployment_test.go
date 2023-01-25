@@ -19,9 +19,10 @@
 package config
 
 import (
+	"testing"
+
 	"github.com/onflow/cadence"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func Test_Deployment(t *testing.T) {
@@ -81,11 +82,14 @@ func Test_Deployment(t *testing.T) {
 	})
 
 	t.Run("Remove deployment contract", func(t *testing.T) {
+		copyContracts := make([]ContractDeployment, len(contracts))
+		copy(copyContracts, contracts)
+
 		deployments := &Deployments{
 			Deployment{
 				Network:   "test-network",
 				Account:   "test-account",
-				Contracts: contracts,
+				Contracts: copyContracts,
 			},
 		}
 

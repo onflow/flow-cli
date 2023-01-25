@@ -21,12 +21,10 @@ package services
 import (
 	"fmt"
 
-	"github.com/onflow/flow-cli/pkg/flowkit"
-
-	"github.com/onflow/flow-cli/pkg/flowkit/config"
-
 	"github.com/onflow/cadence"
 
+	"github.com/onflow/flow-cli/pkg/flowkit"
+	"github.com/onflow/flow-cli/pkg/flowkit/config"
 	"github.com/onflow/flow-cli/pkg/flowkit/gateway"
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
 	"github.com/onflow/flow-cli/pkg/flowkit/project"

@@ -29,19 +29,18 @@ import (
 	"strings"
 	"time"
 
-	"github.com/onflow/flow-cli/internal/settings"
+	"github.com/getsentry/sentry-go"
+	"github.com/spf13/afero"
+	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/build"
+	"github.com/onflow/flow-cli/internal/settings"
 	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
 	"github.com/onflow/flow-cli/pkg/flowkit/gateway"
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
 	"github.com/onflow/flow-cli/pkg/flowkit/services"
 	"github.com/onflow/flow-cli/pkg/flowkit/util"
-
-	"github.com/getsentry/sentry-go"
-	"github.com/spf13/afero"
-	"github.com/spf13/cobra"
 )
 
 // Run the command with arguments.

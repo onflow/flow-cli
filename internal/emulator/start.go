@@ -23,18 +23,14 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/spf13/afero"
-
-	"github.com/onflow/flow-cli/pkg/flowkit"
-
-	"github.com/onflow/flow-cli/internal/command"
-
 	emulator "github.com/onflow/flow-emulator"
-
 	"github.com/onflow/flow-emulator/cmd/emulator/start"
 	"github.com/onflow/flow-go-sdk/crypto"
+	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
 
+	"github.com/onflow/flow-cli/internal/command"
+	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
 	"github.com/onflow/flow-cli/pkg/flowkit/util"
 )

@@ -22,13 +22,12 @@ import (
 	"os"
 	"testing"
 
+	"github.com/onflow/cadence/runtime/stdlib"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
 	"github.com/onflow/flow-cli/pkg/flowkit/tests"
-
-	"github.com/onflow/cadence/runtime/stdlib"
 )
 
 func TestExecutingTests(t *testing.T) {

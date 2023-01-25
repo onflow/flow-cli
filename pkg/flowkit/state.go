@@ -20,14 +20,15 @@ package flowkit
 
 import (
 	"fmt"
-	"github.com/onflow/flow-cli/pkg/flowkit/project"
 	"os"
 	"path"
 	"path/filepath"
 
+	"github.com/onflow/flow-go-sdk/crypto"
+
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
 	"github.com/onflow/flow-cli/pkg/flowkit/config/json"
-	"github.com/onflow/flow-go-sdk/crypto"
+	"github.com/onflow/flow-cli/pkg/flowkit/project"
 )
 
 // ReaderWriter is implemented by any value that has ReadFile and WriteFile

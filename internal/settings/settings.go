@@ -28,7 +28,9 @@ import (
 )
 
 const settingsFile = "flow-cli.settings"
+
 const settingsDir = "flow-cli"
+
 const settingsType = "yaml"
 
 // viperLoaded only load settings file once

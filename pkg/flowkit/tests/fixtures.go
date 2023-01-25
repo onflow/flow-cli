@@ -26,7 +26,9 @@ import (
 )
 
 var accounts = test.AccountGenerator()
+
 var transactions = test.TransactionGenerator()
+
 var transactionResults = test.TransactionResultGenerator()
 
 func NewAccountWithAddress(address string) *flow.Account {

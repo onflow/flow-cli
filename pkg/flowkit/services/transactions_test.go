@@ -23,16 +23,16 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/onflow/flow-cli/pkg/flowkit"
-	"github.com/onflow/flow-cli/pkg/flowkit/config"
-	"github.com/onflow/flow-cli/pkg/flowkit/tests"
-
 	"github.com/onflow/cadence"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+
+	"github.com/onflow/flow-cli/pkg/flowkit"
+	"github.com/onflow/flow-cli/pkg/flowkit/config"
+	"github.com/onflow/flow-cli/pkg/flowkit/tests"
 )
 
 const gasLimit = 1000
@@ -322,7 +322,7 @@ func TestTransactions_Integration(t *testing.T) {
 			}},
 		}
 		state.Deployments().AddOrUpdate(d)
-		_, _ = s.Accounts.AddContract(
+		_, _, _ = s.Accounts.AddContract(
 			srvAcc,
 			resourceToContract(tests.ContractHelloString),
 			"",
@@ -578,7 +578,7 @@ func TestTransactions_Integration(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, tx.Payer.String(), a.Address().String())
 		assert.Equal(t, tx.ProposalKey.KeyIndex, a.Key().Index())
-		assert.Equal(t, fmt.Sprintf("%x", tx.Arguments), "[7b2274797065223a22537472696e67222c2276616c7565223a22426172227d]")
+		assert.Equal(t, fmt.Sprintf("%x", tx.Arguments), "[7b2276616c7565223a22426172222c2274797065223a22537472696e67227d]")
 		assert.Nil(t, txr.Error)
 		assert.Equal(t, txr.Status, flow.TransactionStatusSealed)
 	})

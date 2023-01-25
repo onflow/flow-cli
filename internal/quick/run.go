@@ -20,11 +20,12 @@ package quick
 
 import (
 	"fmt"
+
+	"github.com/spf13/cobra"
+
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/services"
-
-	"github.com/spf13/cobra"
 )
 
 type flagsRun struct {

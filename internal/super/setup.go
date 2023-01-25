@@ -1,21 +1,41 @@
+/*
+ * Flow CLI
+ *
+ * Copyright 2019 Dapper Labs, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package super
 
 import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/go-git/go-git/v5"
-	"github.com/onflow/flow-cli/internal/command"
-	"github.com/onflow/flow-cli/pkg/flowkit"
-	"github.com/onflow/flow-cli/pkg/flowkit/output"
-	"github.com/onflow/flow-cli/pkg/flowkit/services"
-	"github.com/spf13/cobra"
 	"io"
 	"net/http"
 	"os"
 	"path"
 	"path/filepath"
 	"time"
+
+	"github.com/go-git/go-git/v5"
+	"github.com/spf13/cobra"
+
+	"github.com/onflow/flow-cli/internal/command"
+	"github.com/onflow/flow-cli/pkg/flowkit"
+	"github.com/onflow/flow-cli/pkg/flowkit/output"
+	"github.com/onflow/flow-cli/pkg/flowkit/services"
 )
 
 type FlagsSetup struct {
@@ -26,7 +46,7 @@ var setupFlags = FlagsSetup{}
 
 var SetupCommand = &command.Command{
 	Cmd: &cobra.Command{
-		Use:     "setup <path>",
+		Use:     "setup <project name>",
 		Short:   "Start a new Flow project",
 		Example: "flow setup my-project",
 		Args:    cobra.ExactArgs(1),
@@ -36,7 +56,7 @@ var SetupCommand = &command.Command{
 	Run:   create,
 }
 
-const scaffoldListURL = "https://raw.githubusercontent.com/onflow/flow-scaffold-list/main/scaffold-list.json"
+const scaffoldListURL = "https://raw.githubusercontent.com/onflow/flow-cli/master/scaffolds.json"
 
 type scaffoldConf struct {
 	Repo        string `json:"repo"`
@@ -149,8 +169,11 @@ func cloneScaffold(targetDir string, conf scaffoldConf) error {
 	_, err := git.PlainClone(targetDir, false, &git.CloneOptions{
 		URL: conf.Repo,
 	})
+	if err != nil {
+		return err
+	}
 
-	return err
+	return os.RemoveAll(filepath.Join(targetDir, ".git"))
 }
 
 type setupResult struct {

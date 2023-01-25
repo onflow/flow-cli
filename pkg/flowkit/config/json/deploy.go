@@ -23,7 +23,6 @@ import (
 	"fmt"
 
 	"github.com/onflow/cadence"
-
 	jsoncdc "github.com/onflow/cadence/encoding/json"
 
 	"github.com/onflow/flow-cli/pkg/flowkit/config"

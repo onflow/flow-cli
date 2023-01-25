@@ -141,7 +141,20 @@ You can also release manually although this is not recommended:
 To make the new version the default version that is installed
 
 - Change `version.txt` and commit it
-- Upload the version file: `gsutil cp version.txt gs://flow-cli`
+
+## Adding a scaffold
+You can add your own scaffold by creating a GitHub repository containing the scaffold content and then making a PR 
+to update the `scaffolds.json` in the Flow CLI repository. You need to add an entry to the list 
+with the bellow content.
+
+```json
+{
+  "name": "name of the scaffold",
+  "repo": "HTTP URL to the repository containing the scaffold",
+  "branch": "scaffold repository branch",
+  "description": "user friendly description of the scaffold (what it contains, why it is used...)"
+}
+```
 
 
 # CLI Guidelines

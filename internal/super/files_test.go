@@ -20,9 +20,10 @@ package super
 
 import (
 	"fmt"
-	"github.com/stretchr/testify/assert"
 	"path"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func Test_AccountFromPath(t *testing.T) {

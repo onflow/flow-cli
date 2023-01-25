@@ -19,10 +19,12 @@
 package super
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"strings"
 
+	"github.com/onflow/cadence/runtime/parser"
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
@@ -89,8 +91,15 @@ func dev(
 	if err != nil {
 		if strings.Contains(err.Error(), "does not have a valid signature") {
 			fmt.Printf("%s Failed to run the command, please make sure you started the emulator inside the project ROOT folder by running 'flow emulator'.\n\n", output.TryEmoji())
+			return nil, nil
 		}
-		return nil, err
+
+		var parseErr parser.Error
+		if errors.As(err, &parseErr) {
+			fmt.Println(err) // we just print the error but keep watching files for changes, since they might fix the issue
+		} else {
+			return nil, err
+		}
 	}
 
 	err = project.startup()
