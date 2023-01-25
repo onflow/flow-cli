@@ -34,7 +34,7 @@ You can access the scaffolds by simply using the `--scaffold` flag like so:
 
 The list of scaffolds will continuously grow, and you are welcome to contribute to that. 
 You can contribute by creating your own scaffold repository which can then be added to the scaffold 
-list by opening a PR here. [TODO]
+list by [following instructions here](https://github.com/onflow/flow-cli/blob/master/CONTRIBUTING.md#adding-a-scaffold).
 
 
 ## Develop
