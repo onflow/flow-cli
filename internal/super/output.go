@@ -126,7 +126,7 @@ func failureDeployment(err error, contractPathNames map[string]string) string {
 			}
 
 			// remove transaction error as it confuses developer, the only important part is the actual code
-			removeDeployOuput := regexp.MustCompile(`(?s)(failed deploying.*contracts\.add[^\n]*\n[^\n]*\n\nerror: )`)
+			removeDeployOuput := regexp.MustCompile(`(?s)(failed to deploy.*contracts\.add[^\n]*\n[^\n]*\n\nerror: )`)
 			out.WriteString(output.Red(removeDeployOuput.ReplaceAllString(err.Error(), "")))
 		}
 		return out.String()
