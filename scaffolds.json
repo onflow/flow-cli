@@ -1,20 +1,8 @@
 [
   {
-    "name": "Empty Project",
+    "name": "Simple Cadence Project",
     "repo": "https://github.com/sideninja/flow-basic-scaffold.git",
     "branch": "main",
-    "description": "Empty project contains the standard empty Cadence folders structure as well as backend and frontend folders. Use this if you want to start from scratch."
-  },
-  {
-    "name": "FCL Dapp",
-    "repo": "https://github.com/chasefleming/fcl-next-scaffold.git",
-    "branch": "main",
-    "description": "Flow Dapp project with preconfigured FCL on the frontend as well as NextJS."
-  },
-  {
-    "name": "Kitty Items",
-    "repo": "https://github.com/onflow/kitty-items.git",
-    "branch": "master",
-    "description": "CryptoKitties Sample App is a complete NFT marketplace built with Cadence, Flow's resource-oriented smart contract programming language."
+    "description": "Scaffold contains required folder structure as well as some example Cadence code."
   }
 ]
