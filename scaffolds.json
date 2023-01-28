@@ -4,5 +4,11 @@
     "repo": "https://github.com/sideninja/flow-basic-scaffold.git",
     "branch": "main",
     "description": "Scaffold contains required folder structure as well as some example Cadence code."
+  },
+  {
+    "name": "NFT Standard Cadence Project",
+    "repo": "https://github.com/FelipeRibeiroLabs/flow-nft-scaffold.git",
+    "branch": "main",
+    "description": "Flow NFT Scaffold contains the NFT-Standards folder structure you will need to develop your NFT project. I provided some examples of contracts and transactions you can modify and take as an example."
   }
 ]
