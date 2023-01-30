@@ -162,10 +162,18 @@ func (f *projectFiles) watch() (<-chan accountChange, <-chan contractChange, err
 					continue
 				}
 
+				oldPath := ""
+				if event.Op == watcher.Rename { // add relative path in case of rename
+					oldPath, err = f.relProjectPath(event.OldPath)
+					if err != nil {
+						continue
+					}
+				}
+
 				contracts <- contractChange{
 					status:  status[event.Op],
 					path:    rel,
-					oldPath: event.OldPath,
+					oldPath: oldPath,
 					account: name,
 				}
 			case <-f.watcher.Closed:
