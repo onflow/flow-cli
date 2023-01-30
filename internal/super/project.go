@@ -117,9 +117,8 @@ func (p *project) cleanState() {
 		_ = p.state.Contracts().Remove((*p.state.Contracts())[0].Name)
 	}
 
-	for len(*p.state.Deployments()) > 0 {
-		d := (*p.state.Deployments())[0]
-		_ = p.state.Deployments().Remove(d.Account, d.Network)
+	for _, d := range p.state.Deployments().ByNetwork(emulator) {
+		_ = p.state.Deployments().Remove(d.Account, emulator)
 	}
 
 	accs := make([]flowkit.Account, len(*p.state.Accounts()))
