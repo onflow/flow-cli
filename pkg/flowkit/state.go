@@ -24,6 +24,7 @@ import (
 	"path"
 
 	"github.com/onflow/flow-go-sdk/crypto"
+	"github.com/pkg/errors"
 
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
 	"github.com/onflow/flow-cli/pkg/flowkit/config/json"
@@ -180,7 +181,7 @@ func (p *State) DeploymentContractsByNetwork(network string) ([]*project.Contrac
 
 			code, err := p.readerWriter.ReadFile(c.Location)
 			if err != nil {
-				return nil, err
+				return nil, errors.Wrap(err, "deployment by network failed to read contract code")
 			}
 
 			contract := project.NewContract(
