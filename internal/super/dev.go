@@ -61,7 +61,7 @@ func dev(
 		return nil, err
 	}
 
-	_, err = services.Status.Ping(network)
+	_, err = services.Status.Ping(emulator)
 	if err != nil {
 		fmt.Printf("%s Error connecting to emulator. Make sure you started an emulator using 'flow emulator' command.\n", output.ErrorEmoji())
 		fmt.Printf("%s This tool requires emulator to function. Emulator needs to be run inside the project root folder where the configuration file ('flow.json') exists.\n\n", output.TryEmoji())
