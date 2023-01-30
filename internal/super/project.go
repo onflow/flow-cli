@@ -19,7 +19,6 @@
 package super
 
 import (
-	"fmt"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/pkg/errors"
@@ -292,12 +291,9 @@ func (p *project) removeContract(
 // renameContract and update the location in the state
 func (p *project) renameContract(oldLocation string, newLocation string) {
 	for _, c := range *p.state.Contracts() {
-		fmt.Println(c.Location, oldLocation)
 		if c.Location == oldLocation {
 			c.Location = newLocation
 			p.state.Contracts().AddOrUpdate(c.Name, c)
-			fmt.Println("udpate", c)
 		}
 	}
-	fmt.Println("after", p.state.Contracts())
 }
