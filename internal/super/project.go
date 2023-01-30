@@ -19,6 +19,7 @@
 package super
 
 import (
+	"github.com/onflow/flow-cli/pkg/flowkit/util"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/pkg/errors"
@@ -29,7 +30,7 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowkit/services"
 )
 
-var network = config.DefaultEmulatorNetwork().Name
+var emulator = config.DefaultEmulatorNetwork().Name
 
 const defaultAccount = "default"
 
@@ -89,7 +90,7 @@ func (p *project) startup() error {
 		}
 
 		p.state.Deployments().AddOrUpdate(config.Deployment{
-			Network: network,
+			Network: emulator,
 			Account: accName,
 		})
 		for _, path := range contracts {
@@ -107,7 +108,7 @@ func (p *project) startup() error {
 
 // deploys all the contracts found in the state configuration.
 func (p *project) deploy() {
-	deployed, err := p.services.Project.Deploy(network, true)
+	deployed, err := p.services.Project.Deploy(emulator, true)
 	printDeployment(deployed, err, p.pathNameLookup)
 }
 
@@ -206,14 +207,14 @@ func (p *project) addAccount(name string) error {
 
 	p.state.Accounts().AddOrUpdate(account)
 	p.state.Deployments().AddOrUpdate(config.Deployment{ // init empty deployment
-		Network: network,
+		Network: emulator,
 		Account: name,
 	})
 	return nil
 }
 
 func (p *project) removeAccount(name string) error {
-	_ = p.state.Deployments().Remove(name, network)
+	_ = p.state.Deployments().Remove(name, emulator)
 	return p.state.Accounts().Remove(name)
 }
 
@@ -263,7 +264,7 @@ func (p *project) addContract(
 	}
 
 	p.state.Contracts().AddOrUpdate(name, contract)
-	p.state.Deployments().AddContract(account, network, deployment)
+	p.state.Deployments().AddContract(account, emulator, deployment)
 	return nil
 }
 
@@ -281,8 +282,8 @@ func (p *project) removeContract(
 		accountName = defaultAccount
 	}
 
-	if len(p.state.Deployments().ByAccountAndNetwork(accountName, network)) > 0 {
-		p.state.Deployments().RemoveContract(accountName, network, name) // we might delete account first
+	if len(p.state.Deployments().ByAccountAndNetwork(accountName, emulator)) > 0 {
+		p.state.Deployments().RemoveContract(accountName, emulator, name) // we might delete account first
 	}
 
 	return nil
