@@ -23,8 +23,6 @@ import (
 	"errors"
 	"fmt"
 	"math/rand"
-	"os"
-	sysExec "os/exec"
 	"regexp"
 	"strings"
 	"time"
@@ -156,7 +154,7 @@ func errorBanner() string {
 }
 
 func clearScreen() {
-	cmd := sysExec.Command("clear")
-	cmd.Stdout = os.Stdout
-	_ = cmd.Run()
+	//cmd := sysExec.Command("clear")
+	//cmd.Stdout = os.Stdout
+	//_ = cmd.Run()
 }

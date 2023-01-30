@@ -41,6 +41,7 @@ const (
 	created        = 1
 	removed        = 2
 	changed        = 3
+	renamed        = 4
 )
 
 type accountChange struct {
@@ -51,6 +52,7 @@ type accountChange struct {
 type contractChange struct {
 	status  int
 	path    string
+	oldPath string
 	account string
 }
 
@@ -135,6 +137,7 @@ func (f *projectFiles) watch() (<-chan accountChange, <-chan contractChange, err
 			watcher.Create: created,
 			watcher.Remove: removed,
 			watcher.Write:  changed,
+			watcher.Rename: renamed,
 		}
 
 		for {
@@ -162,6 +165,7 @@ func (f *projectFiles) watch() (<-chan accountChange, <-chan contractChange, err
 				contracts <- contractChange{
 					status:  status[event.Op],
 					path:    rel,
+					oldPath: event.OldPath,
 					account: name,
 				}
 			case <-f.watcher.Closed:
