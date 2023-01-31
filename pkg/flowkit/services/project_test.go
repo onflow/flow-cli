@@ -82,16 +82,73 @@ func TestProject(t *testing.T) {
 		}
 		state.Networks().AddOrUpdate(n.Name, n)
 
-		a := tests.Alice()
-		state.Accounts().AddOrUpdate(a)
+		acct2 := tests.Donald()
+		state.Accounts().AddOrUpdate(acct2)
 
 		d := config.Deployment{
 			Network: n.Name,
-			Account: a.Name(),
+			Account: acct2.Name(),
 			Contracts: []config.ContractDeployment{{
 				Name: c.Name,
 				Args: nil,
 			}},
+		}
+		state.Deployments().AddOrUpdate(d)
+
+		gw.SendSignedTransaction.Run(func(args mock.Arguments) {
+			tx := args.Get(0).(*flowkit.Transaction)
+			assert.Equal(t, tx.FlowTransaction().Payer, acct2.Address())
+			assert.True(t, strings.Contains(string(tx.FlowTransaction().Script), "signer.contracts.add"))
+
+			gw.SendSignedTransaction.Return(tests.NewTransaction(), nil)
+		})
+
+		contracts, err := s.Project.Deploy("emulator", false)
+
+		assert.NoError(t, err)
+		assert.Equal(t, len(contracts), 1)
+		assert.Equal(t, contracts[0].AccountAddress, acct2.Address())
+	})
+
+	t.Run("Deploy Project Using Aliases", func(t *testing.T) {
+		t.Parallel()
+
+		emulator := config.DefaultEmulatorNetwork().Name
+		state, s, gw := setup()
+
+		c1 := config.Contract{
+			Name:     "ContractB",
+			Location: tests.ContractB.Filename,
+			Network:  emulator,
+		}
+		state.Contracts().AddOrUpdate(c1.Name, c1)
+
+		c2 := config.Contract{
+			Name:     "Aliased",
+			Location: tests.ContractA.Filename,
+			Network:  emulator,
+			Alias:    tests.Donald().Address().String(),
+		}
+		state.Contracts().AddOrUpdate(c2.Name, c2)
+
+		c3 := config.Contract{
+			Name:     "ContractC",
+			Location: tests.ContractC.Filename,
+			Network:  emulator,
+		}
+		state.Contracts().AddOrUpdate(c3.Name, c3)
+
+		state.Networks().AddOrUpdate(emulator, config.DefaultEmulatorNetwork())
+
+		a := tests.Alice()
+		state.Accounts().AddOrUpdate(a)
+
+		d := config.Deployment{
+			Network: emulator,
+			Account: a.Name(),
+			Contracts: []config.ContractDeployment{
+				{Name: c1.Name}, {Name: c3.Name},
+			},
 		}
 		state.Deployments().AddOrUpdate(d)
 
@@ -103,7 +160,7 @@ func TestProject(t *testing.T) {
 			gw.SendSignedTransaction.Return(tests.NewTransaction(), nil)
 		})
 
-		contracts, err := s.Project.Deploy("emulator", false)
+		contracts, err := s.Project.Deploy(emulator, false)
 
 		assert.NoError(t, err)
 		assert.Equal(t, len(contracts), 1)
