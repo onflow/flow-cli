@@ -88,10 +88,6 @@ func TestProgram(t *testing.T) {
 		}}
 
 		for i, test := range tests {
-			if i+1 < len(tests) {
-				continue
-			} // todo remove
-
 			program, err := NewProgram(&testScript{code: test.code})
 			require.NoError(t, err, fmt.Sprintf("import test %d failed", i))
 			assert.Equal(t, len(test.imports) > 0, program.HasImports(), fmt.Sprintf("import test %d failed", i))

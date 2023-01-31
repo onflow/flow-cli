@@ -211,7 +211,7 @@ func TestContractDeploymentOrder(t *testing.T) {
 				)
 			}
 
-			deployment, err := NewDeployment(contracts)
+			deployment, err := NewDeployment(contracts, nil)
 
 			contracts, err = deployment.Sort()
 			if !strings.Contains(testCase.name, "unresolved") && !strings.Contains(testCase.name, "cycle") {
