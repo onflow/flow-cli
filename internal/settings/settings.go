@@ -154,7 +154,7 @@ func SetFlowserPath(path string) error {
 // MetricsEnabled checks whether metric tracking is enabled.
 func MetricsEnabled() bool {
 	if err := loadViper(); err != nil {
-		return false
+		return true
 	}
 	return viper.GetBool(metricsEnabled)
 }
