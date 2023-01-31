@@ -124,7 +124,7 @@ func (c Command) AddToParent(parent *cobra.Command) {
 		}
 
 		// record command usage
-		go usageMetrics(c.Cmd)
+		go UsageMetrics(c.Cmd)
 
 		// run command based on requirements for state
 		var result Result
@@ -319,7 +319,7 @@ func initCrashReporting() {
 // The token is injected at build-time using ldflags
 const mixpanelToken = ""
 
-func usageMetrics(command *cobra.Command) {
+func UsageMetrics(command *cobra.Command) {
 	if !settings.MetricsEnabled() || mixpanelToken == "" {
 		return
 	}
