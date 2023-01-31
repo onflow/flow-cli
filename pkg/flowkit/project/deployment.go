@@ -51,13 +51,15 @@ type Deployment struct {
 	// map of contracts by their location specified in state
 	contractsByLocation map[string]*deployContract
 	contractsByName     map[string]*deployContract
+	aliases             Aliases
 }
 
 // NewDeployment from the flowkit Contracts and loaded from the contract location using a loader.
-func NewDeployment(contracts []*Contract) (*Deployment, error) {
+func NewDeployment(contracts []*Contract, aliases Aliases) (*Deployment, error) {
 	deployment := &Deployment{
 		contractsByLocation: make(map[string]*deployContract),
 		contractsByName:     make(map[string]*deployContract),
+		aliases:             aliases,
 	}
 
 	for _, contract := range contracts {
@@ -149,10 +151,12 @@ func (d *Deployment) buildDependencies() error {
 				continue
 			}
 
-			// todo make sure aliases are resolved
+			if _, exists := d.aliases[location]; exists {
+				continue // if aliased then skip, not a dependency
+			}
 
 			return fmt.Errorf(
-				"import from %s could not be found: %s, make sure import path is correct",
+				"import from %s could not be found: %s, make sure import path is correct, and the contract is added to deployments or has an alias",
 				contract.Name,
 				location,
 			)
