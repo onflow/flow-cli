@@ -219,7 +219,7 @@ func TestContractDeploymentOrder(t *testing.T) {
 			}
 
 			if strings.Contains(testCase.name, "unresolved") {
-				assert.EqualError(t, err, "import from ContractH could not be found: Foo.cdc, make sure import path is correct")
+				assert.EqualError(t, err, "import from ContractH could not be found: Foo.cdc, make sure import path is correct, and the contract is added to deployments or has an alias")
 				return
 			}
 
