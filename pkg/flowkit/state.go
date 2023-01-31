@@ -222,7 +222,8 @@ func (p *State) AliasesForNetwork(network string) project.Aliases {
 	// get all contracts for selected network and if any has an address as target make it an alias
 	for _, contract := range p.conf.Contracts.ByNetwork(network) {
 		if contract.IsAlias() {
-			aliases[path.Clean(contract.Location)] = contract.Alias
+			aliases[path.Clean(contract.Location)] = contract.Alias // alias for import by file location
+			aliases[contract.Name] = contract.Alias                 // alias for import by name
 		}
 	}
 

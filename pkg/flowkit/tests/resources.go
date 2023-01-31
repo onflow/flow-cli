@@ -339,6 +339,9 @@ var resources = []Resource{
 	ContractA,
 	ContractB,
 	ContractC,
+	ContractAA,
+	ContractBB,
+	ContractCC,
 }
 
 func ReaderWriter() (afero.Afero, afero.Fs) {
