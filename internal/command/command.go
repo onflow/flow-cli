@@ -331,10 +331,10 @@ func usageMetrics(command *cobra.Command) {
 	hash := sha256.Sum256([]byte(fmt.Sprintf("%s%s", usr.Username, usr.Uid)))
 	userID := base64.StdEncoding.EncodeToString(hash[:])
 
-	_ = client.Track(userID, command.CommandPath(), &mixpanel.Event{
+	_ = client.Track(userID, "cli-command", &mixpanel.Event{
 		IP: "0", // do not track IPs
 		Properties: map[string]any{
-			"caller":  "flow-cli",
+			"command": command.CommandPath(),
 			"version": build.Semver(),
 		},
 	})
