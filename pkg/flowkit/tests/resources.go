@@ -154,6 +154,37 @@ var ContractC = Resource{
 	`),
 }
 
+var ContractAA = Resource{
+	Name:     "ContractAA",
+	Filename: "contractAA.cdc",
+	Source:   []byte(`pub contract ContractAA {}`),
+}
+
+var ContractBB = Resource{
+	Name:     "ContractBB",
+	Filename: "contractBB.cdc",
+	Source: []byte(`
+		import "ContractAA"
+		pub contract ContractB {}
+	`),
+}
+
+var ContractCC = Resource{
+	Name:     "ContractCC",
+	Filename: "contractCC.cdc",
+	Source: []byte(`
+		import "ContractBB"
+		import "ContractAA"
+
+		pub contract ContractC {
+			pub let x: String
+			init(x: String) {
+				self.x = x
+			}
+		}
+	`),
+}
+
 var TransactionArgString = Resource{
 	Filename: "transactionArg.cdc",
 	Source: []byte(`
@@ -308,6 +339,9 @@ var resources = []Resource{
 	ContractA,
 	ContractB,
 	ContractC,
+	ContractAA,
+	ContractBB,
+	ContractCC,
 }
 
 func ReaderWriter() (afero.Afero, afero.Fs) {

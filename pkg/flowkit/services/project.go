@@ -220,7 +220,7 @@ func (p *Project) Deploy(network string, update bool) ([]*project.Contract, erro
 		return nil, err
 	}
 
-	deployment, err := project.NewDeployment(contracts)
+	deployment, err := project.NewDeployment(contracts, p.state.AliasesForNetwork(network))
 	if err != nil {
 		return nil, err
 	}

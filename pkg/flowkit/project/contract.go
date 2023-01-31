@@ -63,4 +63,5 @@ func (c *Contract) Location() string {
 	return c.location
 }
 
+// Aliases map contract locations to fixed addresses on Flow network
 type Aliases map[string]string
