@@ -19,14 +19,17 @@
 package services
 
 import (
+	"encoding/hex"
 	"fmt"
 	"strings"
 	"testing"
 
 	"github.com/onflow/cadence"
+	jsoncdc "github.com/onflow/cadence/encoding/json"
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 
 	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
@@ -152,10 +155,29 @@ func TestProject(t *testing.T) {
 		}
 		state.Deployments().AddOrUpdate(d)
 
+		// for checking imports are correctly resolved
+		resolved := map[string]string{
+			tests.ContractB.Name: fmt.Sprintf(`import ContractA from 0x%s`, tests.Donald().Address().Hex()),
+			tests.ContractC.Name: fmt.Sprintf(`
+		import ContractB from 0x%s
+		import ContractA from 0x%s`, a.Address().Hex(), tests.Donald().Address().Hex()),
+		} // don't change formatting of the above code since it compares the strings with included formatting
+
 		gw.SendSignedTransaction.Run(func(args mock.Arguments) {
 			tx := args.Get(0).(*flowkit.Transaction)
 			assert.Equal(t, tx.FlowTransaction().Payer, a.Address())
 			assert.True(t, strings.Contains(string(tx.FlowTransaction().Script), "signer.contracts.add"))
+
+			argCode := tx.FlowTransaction().Arguments[1]
+			decodeCode, _ := jsoncdc.Decode(nil, argCode)
+			code, _ := hex.DecodeString(decodeCode.ToGoValue().(string))
+
+			argName := tx.FlowTransaction().Arguments[0]
+			decodeName, _ := jsoncdc.Decode(nil, argName)
+
+			testCode, found := resolved[decodeName.ToGoValue().(string)]
+			require.True(t, found)
+			assert.True(t, strings.Contains(string(code), testCode))
 
 			gw.SendSignedTransaction.Return(tests.NewTransaction(), nil)
 		})
@@ -163,10 +185,14 @@ func TestProject(t *testing.T) {
 		contracts, err := s.Project.Deploy(emulator, false)
 
 		assert.NoError(t, err)
-		assert.Equal(t, len(contracts), 1)
+		assert.Equal(t, len(contracts), 2)
 		gw.Mock.AssertCalled(t, tests.GetLatestBlockFunc)
 		gw.Mock.AssertCalled(t, tests.GetAccountFunc, a.Address())
-		gw.Mock.AssertNumberOfCalls(t, tests.GetTransactionResultFunc, 1)
+		gw.Mock.AssertNumberOfCalls(t, tests.GetTransactionResultFunc, 2)
+	})
+
+	t.Run("Deploy Project New Import Schema and Aliases", func(t *testing.T) {
+		// todo
 	})
 
 	t.Run("Deploy Project Duplicate Address", func(t *testing.T) {
