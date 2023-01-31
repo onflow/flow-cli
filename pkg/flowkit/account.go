@@ -20,6 +20,7 @@ package flowkit
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
@@ -172,10 +173,15 @@ func toConfig(account Account, accountLocations map[string]string) config.Accoun
 		}
 	}
 
+	var key config.AccountKey
+	if account.key != nil {
+		key = account.key.ToConfig()
+	}
+
 	return config.Account{
 		Name:    account.name,
 		Address: account.address,
-		Key:     account.key.ToConfig(),
+		Key:     key,
 	}
 }
 
@@ -218,6 +224,14 @@ func (a *Accounts) Remove(name string) error {
 	}
 
 	return nil
+}
+
+func (a Accounts) String() string {
+	accNames := make([]string, 0)
+	for _, acc := range a {
+		accNames = append(accNames, acc.name)
+	}
+	return strings.Join(accNames, ",")
 }
 
 // ByAddress get an account by address.

@@ -23,19 +23,19 @@ import (
 	"encoding/hex"
 	"fmt"
 
-	"github.com/onflow/flow-cli/pkg/flowkit/output"
-
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/spf13/cobra"
 
+	"github.com/onflow/flow-cli/pkg/flowkit/output"
 	"github.com/onflow/flow-cli/pkg/flowkit/util"
 )
 
 var Cmd = &cobra.Command{
 	Use:              "keys",
-	Short:            "Utilities to manage keys",
+	Short:            "Generate and decode Flow keys",
 	TraverseChildren: true,
+	GroupID:          "security",
 }
 
 func init() {

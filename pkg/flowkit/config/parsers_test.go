@@ -16,23 +16,28 @@
  * limitations under the License.
  */
 
-package project
+package config
 
 import (
-	"fmt"
+	"strings"
+	"testing"
 
-	"github.com/onflow/flow-emulator/cmd/emulator/start"
-	"github.com/spf13/cobra"
-
-	"github.com/onflow/flow-cli/internal/emulator"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
-var EmulatorCommand *cobra.Command
-
-func init() {
-	EmulatorCommand = start.Cmd(emulator.ConfiguredServiceKey)
-	EmulatorCommand.PreRun = func(cmd *cobra.Command, args []string) {
-		fmt.Printf("⚠️  DEPRECATION WARNING: use \"flow emulator\" instead\n\n")
+func Test_ParseAddress(t *testing.T) {
+	tests := []string{
+		"0x0000000000000002",
+		"0x4c41cf317eec148e", // mainnet
+		"0x78b84cd3c394708c", // testnet
+		"0xf8d6e0586b0a20c7", // emulator
 	}
-	EmulatorCommand.Use = "start-emulator"
+
+	for _, test := range tests {
+		addr, err := StringToAddress(test)
+		require.NoError(t, err)
+		assert.Equal(t, strings.TrimPrefix(test, "0x"), addr.Hex())
+	}
+
 }

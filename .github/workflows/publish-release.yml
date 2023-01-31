@@ -5,6 +5,7 @@ on:
     types: [published]
 jobs:
   homebrew:
+      if: "!github.event.release.prerelease"
       name: Bump Homebrew formula
       runs-on: ubuntu-latest
       steps:

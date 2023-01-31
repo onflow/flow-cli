@@ -26,8 +26,9 @@ import (
 )
 
 var Cmd = &cobra.Command{
-	Use:   "cadence",
-	Short: "Execute Cadence code",
+	Use:     "cadence",
+	Short:   "Execute Cadence code",
+	GroupID: "tools",
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) > 0 {
 			execute.Execute(args, nil)

@@ -24,18 +24,19 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/onflow/flow-cli/pkg/flowkit/util"
-
 	"github.com/onflow/cadence"
 	jsoncdc "github.com/onflow/cadence/encoding/json"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/spf13/cobra"
+
+	"github.com/onflow/flow-cli/pkg/flowkit/util"
 )
 
 var Cmd = &cobra.Command{
 	Use:              "events",
-	Short:            "Utilities to read events",
+	Short:            "Retrieve events",
 	TraverseChildren: true,
+	GroupID:          "resources",
 }
 
 func init() {
@@ -123,9 +124,11 @@ func eventString(writer io.Writer, event flow.Event) {
 		printField(writer, field, value)
 	}
 }
+
 func printValues(writer io.Writer, fieldIdentifier, typedId, valueString string) {
 	_, _ = fmt.Fprintf(writer, "\t\t- %s (%s): %s \n", fieldIdentifier, typedId, valueString)
 }
+
 func printField(writer io.Writer, field cadence.Field, value cadence.Value) {
 	v := value.String()
 	var typeId string

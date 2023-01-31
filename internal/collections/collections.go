@@ -31,8 +31,9 @@ import (
 
 var Cmd = &cobra.Command{
 	Use:              "collections",
-	Short:            "Utilities to read collections",
+	Short:            "Retrieve collections",
 	TraverseChildren: true,
+	GroupID:          "resources",
 }
 
 func init() {

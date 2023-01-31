@@ -19,11 +19,10 @@
 package accounts
 
 import (
-	"github.com/onflow/flow-cli/pkg/flowkit"
-
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
+	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/services"
 )
 
@@ -59,11 +58,15 @@ func removeContract(
 		return nil, err
 	}
 
-	account, err := services.Accounts.RemoveContract(from, contractName)
+	_, err = services.Accounts.RemoveContract(from, contractName)
 	if err != nil {
 		return nil, err
 	}
 
+	account, err := services.Accounts.Get(from.Address())
+	if err != nil {
+		return nil, err
+	}
 	return &AccountResult{
 		Account: account,
 		include: flagsRemove.Include,

@@ -154,6 +154,37 @@ var ContractC = Resource{
 	`),
 }
 
+var ContractAA = Resource{
+	Name:     "ContractAA",
+	Filename: "contractAA.cdc",
+	Source:   []byte(`pub contract ContractAA {}`),
+}
+
+var ContractBB = Resource{
+	Name:     "ContractBB",
+	Filename: "contractBB.cdc",
+	Source: []byte(`
+		import "ContractAA"
+		pub contract ContractB {}
+	`),
+}
+
+var ContractCC = Resource{
+	Name:     "ContractCC",
+	Filename: "contractCC.cdc",
+	Source: []byte(`
+		import "ContractBB"
+		import "ContractAA"
+
+		pub contract ContractC {
+			pub let x: String
+			init(x: String) {
+				self.x = x
+			}
+		}
+	`),
+}
+
 var TransactionArgString = Resource{
 	Filename: "transactionArg.cdc",
 	Source: []byte(`
@@ -188,7 +219,7 @@ var TransactionImports = Resource{
 var TransactionSimple = Resource{
 	Filename: "transactionSimple.cdc",
 	Source: []byte(`
-		transaction() {}
+		transaction() { }
 	`),
 }
 
@@ -308,16 +339,19 @@ var resources = []Resource{
 	ContractA,
 	ContractB,
 	ContractC,
+	ContractAA,
+	ContractBB,
+	ContractCC,
 }
 
-func ReaderWriter() afero.Afero {
+func ReaderWriter() (afero.Afero, afero.Fs) {
 	var mockFS = afero.NewMemMapFs()
 
 	for _, c := range resources {
 		_ = afero.WriteFile(mockFS, c.Filename, c.Source, 0644)
 	}
 
-	return afero.Afero{Fs: mockFS}
+	return afero.Afero{Fs: mockFS}, mockFS
 }
 
 func Alice() *flowkit.Account {
@@ -331,9 +365,11 @@ func Bob() *flowkit.Account {
 func Charlie() *flowkit.Account {
 	return newAccount("Charlie", "0x3", "seedseedseedseedseedseedseedseedseedseedseedseedCharlie")
 }
+
 func Donald() *flowkit.Account {
 	return newAccount("Donald", "0x3", "seedseedseedseedseedseedseedseedseedseedseedseedDonald")
 }
+
 func newAccount(name string, address string, seed string) *flowkit.Account {
 	privateKey, _ := crypto.GeneratePrivateKey(crypto.ECDSA_P256, []byte(seed))
 

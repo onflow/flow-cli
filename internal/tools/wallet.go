@@ -22,13 +22,13 @@ import (
 	"fmt"
 	"strings"
 
+	devWallet "github.com/onflow/fcl-dev-wallet/go/wallet"
+	"github.com/spf13/cobra"
+
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
 	"github.com/onflow/flow-cli/pkg/flowkit/services"
-
-	devWallet "github.com/onflow/fcl-dev-wallet/go/wallet"
-	"github.com/spf13/cobra"
 )
 
 type FlagsWallet struct {
@@ -41,9 +41,10 @@ var walletFlags = FlagsWallet{}
 var DevWallet = &command.Command{
 	Cmd: &cobra.Command{
 		Use:     "dev-wallet",
-		Short:   "Starts a dev wallet",
+		Short:   "Run a development wallet",
 		Example: "flow dev-wallet",
 		Args:    cobra.ExactArgs(0),
+		GroupID: "tools",
 	},
 	Flags: &walletFlags,
 	RunS:  wallet,

@@ -1,0 +1,8 @@
+[
+  {
+    "name": "Simple Cadence Project",
+    "repo": "https://github.com/sideninja/flow-basic-scaffold.git",
+    "branch": "main",
+    "description": "Scaffold contains required folder structure as well as some example Cadence code."
+  }
+]

@@ -16,32 +16,35 @@
  * limitations under the License.
  */
 
-package contracts
+package flowkit
 
-import (
-	"github.com/onflow/flow-cli/pkg/flowkit"
-)
+import "github.com/onflow/cadence"
 
-// Loader defines methods for loading contract resource.
-type Loader interface {
-	Load(source string) ([]byte, error)
-	Normalize(base, relative string) string
+// Script includes Cadence code and optional arguments and filename.
+//
+// Filename is only required to be passed if you want to resolve imports.
+type Script struct {
+	code     []byte
+	Args     []cadence.Value
+	location string
 }
 
-// FilesystemLoader defines contract loader from files.
-type FilesystemLoader struct {
-	Reader flowkit.ReaderWriter
-}
-
-func (f FilesystemLoader) Load(source string) ([]byte, error) {
-	codeBytes, err := f.Reader.ReadFile(source)
-	if err != nil {
-		return nil, err
+func NewScript(code []byte, args []cadence.Value, location string) *Script {
+	return &Script{
+		code:     code,
+		Args:     args,
+		location: location,
 	}
-
-	return codeBytes, nil
 }
 
-func (f FilesystemLoader) Normalize(base, relative string) string {
-	return absolutePath(base, relative)
+func (s *Script) Code() []byte {
+	return s.code
+}
+
+func (s *Script) SetCode(code []byte) {
+	s.code = code
+}
+
+func (s *Script) Location() string {
+	return s.location
 }

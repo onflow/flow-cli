@@ -97,3 +97,34 @@ func (d *Deployments) Remove(account string, network string) error {
 
 	return nil
 }
+
+// AddContract to deployment list on the account name and network name.
+//
+// Deployment needs to be previously created by calling AddOrUpdate otherwise the contract is not added.
+func (d *Deployments) AddContract(account string, network string, contract ContractDeployment) {
+	for i, deploy := range *d {
+		if deploy.Network != network || deploy.Account != account {
+			continue
+		}
+		for _, c := range deploy.Contracts {
+			if c.Name == contract.Name {
+				return // don't add if exists
+			}
+		}
+		(*d)[i].Contracts = append((*d)[i].Contracts, contract)
+	}
+}
+
+// RemoveContract removes a specific contract by name from an existing deployment identified by account name and network name.
+func (d *Deployments) RemoveContract(account string, network string, contractName string) {
+	for i, deploy := range *d {
+		if deploy.Network != network || deploy.Account != account {
+			continue
+		}
+		for j, c := range deploy.Contracts {
+			if c.Name == contractName {
+				(*d)[i].Contracts = append(deploy.Contracts[0:j], deploy.Contracts[j+1:]...)
+			}
+		}
+	}
+}

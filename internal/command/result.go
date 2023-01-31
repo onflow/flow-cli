@@ -27,6 +27,7 @@ import (
 
 	"github.com/onflow/flow-go-sdk/access/grpc"
 	"github.com/spf13/afero"
+	"golang.org/x/exp/maps"
 
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
@@ -65,7 +66,7 @@ func formatResult(result Result, filterFlag string, formatFlag string) (string, 
 			return "", err
 		}
 
-		return fmt.Sprintf("%v", value), nil
+		return fmt.Sprintf("%v\n", value), nil
 	}
 
 	switch strings.ToLower(formatFlag) {
@@ -100,29 +101,17 @@ func outputResult(result string, saveFlag string, formatFlag string, filterFlag 
 
 // filterResultValue returns a value by its name filtered from other result values.
 func filterResultValue(result Result, filter string) (interface{}, error) {
-	var jsonResult map[string]interface{}
-	val, err := json.Marshal(result.JSON())
-	if err != nil {
+	res, ok := result.JSON().(map[string]any)
+	if !ok {
 		return "", fmt.Errorf("not possible to filter by the value")
 	}
 
-	err = json.Unmarshal(val, &jsonResult)
-	if err != nil {
-		return "", fmt.Errorf("not possible to filter by the value")
-	}
-
-	possibleFilters := make([]string, 0)
-	for key := range jsonResult {
-		possibleFilters = append(possibleFilters, key)
-	}
-
-	value := jsonResult[filter]
+	value := res[filter]
 	if value == nil {
-		value = jsonResult[strings.ToLower(filter)]
+		value = res[strings.ToLower(filter)]
 	}
-
 	if value == nil {
-		return nil, fmt.Errorf("value for filter: '%s' doesn't exists, possible values to filter by: %s", filter, possibleFilters)
+		return nil, fmt.Errorf("value for filter: '%s' doesn't exists, possible values to filter by: %s", filter, maps.Keys(res))
 	}
 
 	return value, nil

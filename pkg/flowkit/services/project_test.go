@@ -19,17 +19,21 @@
 package services
 
 import (
+	"encoding/hex"
+	"fmt"
 	"strings"
 	"testing"
 
 	"github.com/onflow/cadence"
+	jsoncdc "github.com/onflow/cadence/encoding/json"
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 
 	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
-	"github.com/onflow/flow-cli/pkg/flowkit/contracts"
+	"github.com/onflow/flow-cli/pkg/flowkit/project"
 	"github.com/onflow/flow-cli/pkg/flowkit/tests"
 )
 
@@ -69,9 +73,9 @@ func TestProject(t *testing.T) {
 		state, s, gw := setup()
 
 		c := config.Contract{
-			Name:    "Hello",
-			Source:  tests.ContractHelloString.Filename,
-			Network: "emulator",
+			Name:     "Hello",
+			Location: tests.ContractHelloString.Filename,
+			Network:  "emulator",
 		}
 		state.Contracts().AddOrUpdate(c.Name, c)
 
@@ -81,12 +85,12 @@ func TestProject(t *testing.T) {
 		}
 		state.Networks().AddOrUpdate(n.Name, n)
 
-		a := tests.Alice()
-		state.Accounts().AddOrUpdate(a)
+		acct2 := tests.Donald()
+		state.Accounts().AddOrUpdate(acct2)
 
 		d := config.Deployment{
 			Network: n.Name,
-			Account: a.Name(),
+			Account: acct2.Name(),
 			Contracts: []config.ContractDeployment{{
 				Name: c.Name,
 				Args: nil,
@@ -96,7 +100,7 @@ func TestProject(t *testing.T) {
 
 		gw.SendSignedTransaction.Run(func(args mock.Arguments) {
 			tx := args.Get(0).(*flowkit.Transaction)
-			assert.Equal(t, tx.FlowTransaction().Payer, a.Address())
+			assert.Equal(t, tx.FlowTransaction().Payer, acct2.Address())
 			assert.True(t, strings.Contains(string(tx.FlowTransaction().Script), "signer.contracts.add"))
 
 			gw.SendSignedTransaction.Return(tests.NewTransaction(), nil)
@@ -106,9 +110,163 @@ func TestProject(t *testing.T) {
 
 		assert.NoError(t, err)
 		assert.Equal(t, len(contracts), 1)
+		assert.Equal(t, contracts[0].AccountAddress, acct2.Address())
+	})
+
+	t.Run("Deploy Project Using Aliases", func(t *testing.T) {
+		t.Parallel()
+
+		emulator := config.DefaultEmulatorNetwork().Name
+		state, s, gw := setup()
+
+		c1 := config.Contract{
+			Name:     "ContractB",
+			Location: tests.ContractB.Filename,
+			Network:  emulator,
+		}
+		state.Contracts().AddOrUpdate(c1.Name, c1)
+
+		c2 := config.Contract{
+			Name:     "Aliased",
+			Location: tests.ContractA.Filename,
+			Network:  emulator,
+			Alias:    tests.Donald().Address().String(),
+		}
+		state.Contracts().AddOrUpdate(c2.Name, c2)
+
+		c3 := config.Contract{
+			Name:     "ContractC",
+			Location: tests.ContractC.Filename,
+			Network:  emulator,
+		}
+		state.Contracts().AddOrUpdate(c3.Name, c3)
+
+		state.Networks().AddOrUpdate(emulator, config.DefaultEmulatorNetwork())
+
+		a := tests.Alice()
+		state.Accounts().AddOrUpdate(a)
+
+		d := config.Deployment{
+			Network: emulator,
+			Account: a.Name(),
+			Contracts: []config.ContractDeployment{
+				{Name: c1.Name}, {Name: c3.Name},
+			},
+		}
+		state.Deployments().AddOrUpdate(d)
+
+		// for checking imports are correctly resolved
+		resolved := map[string]string{
+			tests.ContractB.Name: fmt.Sprintf(`import ContractA from 0x%s`, tests.Donald().Address().Hex()),
+			tests.ContractC.Name: fmt.Sprintf(`
+		import ContractB from 0x%s
+		import ContractA from 0x%s`, a.Address().Hex(), tests.Donald().Address().Hex()),
+		} // don't change formatting of the above code since it compares the strings with included formatting
+
+		gw.SendSignedTransaction.Run(func(args mock.Arguments) {
+			tx := args.Get(0).(*flowkit.Transaction)
+			assert.Equal(t, tx.FlowTransaction().Payer, a.Address())
+			assert.True(t, strings.Contains(string(tx.FlowTransaction().Script), "signer.contracts.add"))
+
+			argCode := tx.FlowTransaction().Arguments[1]
+			decodeCode, _ := jsoncdc.Decode(nil, argCode)
+			code, _ := hex.DecodeString(decodeCode.ToGoValue().(string))
+
+			argName := tx.FlowTransaction().Arguments[0]
+			decodeName, _ := jsoncdc.Decode(nil, argName)
+
+			testCode, found := resolved[decodeName.ToGoValue().(string)]
+			require.True(t, found)
+			assert.True(t, strings.Contains(string(code), testCode))
+
+			gw.SendSignedTransaction.Return(tests.NewTransaction(), nil)
+		})
+
+		contracts, err := s.Project.Deploy(emulator, false)
+
+		assert.NoError(t, err)
+		assert.Equal(t, len(contracts), 2)
 		gw.Mock.AssertCalled(t, tests.GetLatestBlockFunc)
 		gw.Mock.AssertCalled(t, tests.GetAccountFunc, a.Address())
-		gw.Mock.AssertNumberOfCalls(t, tests.GetTransactionResultFunc, 1)
+		gw.Mock.AssertNumberOfCalls(t, tests.GetTransactionResultFunc, 2)
+	})
+
+	t.Run("Deploy Project New Import Schema and Aliases", func(t *testing.T) {
+		t.Parallel()
+
+		emulator := config.DefaultEmulatorNetwork().Name
+		state, s, gw := setup()
+
+		c1 := config.Contract{
+			Name:     "ContractBB",
+			Location: tests.ContractBB.Filename,
+			Network:  emulator,
+		}
+		state.Contracts().AddOrUpdate(c1.Name, c1)
+
+		c2 := config.Contract{
+			Name:     "ContractAA",
+			Location: tests.ContractAA.Filename,
+			Network:  emulator,
+			Alias:    tests.Donald().Address().String(),
+		}
+		state.Contracts().AddOrUpdate(c2.Name, c2)
+
+		c3 := config.Contract{
+			Name:     "ContractCC",
+			Location: tests.ContractCC.Filename,
+			Network:  emulator,
+		}
+		state.Contracts().AddOrUpdate(c3.Name, c3)
+
+		state.Networks().AddOrUpdate(emulator, config.DefaultEmulatorNetwork())
+
+		a := tests.Alice()
+		state.Accounts().AddOrUpdate(a)
+
+		d := config.Deployment{
+			Network: emulator,
+			Account: a.Name(),
+			Contracts: []config.ContractDeployment{
+				{Name: c1.Name}, {Name: c3.Name},
+			},
+		}
+		state.Deployments().AddOrUpdate(d)
+
+		// for checking imports are correctly resolved
+		resolved := map[string]string{
+			tests.ContractB.Name: fmt.Sprintf(`import ContractAA from 0x%s`, tests.Donald().Address().Hex()),
+			tests.ContractC.Name: fmt.Sprintf(`
+		import ContractBB from 0x%s
+		import ContractAA from 0x%s`, a.Address().Hex(), tests.Donald().Address().Hex()),
+		} // don't change formatting of the above code since it compares the strings with included formatting
+
+		gw.SendSignedTransaction.Run(func(args mock.Arguments) {
+			tx := args.Get(0).(*flowkit.Transaction)
+			assert.Equal(t, tx.FlowTransaction().Payer, a.Address())
+			assert.True(t, strings.Contains(string(tx.FlowTransaction().Script), "signer.contracts.add"))
+
+			argCode := tx.FlowTransaction().Arguments[1]
+			decodeCode, _ := jsoncdc.Decode(nil, argCode)
+			code, _ := hex.DecodeString(decodeCode.ToGoValue().(string))
+
+			argName := tx.FlowTransaction().Arguments[0]
+			decodeName, _ := jsoncdc.Decode(nil, argName)
+
+			testCode, found := resolved[decodeName.ToGoValue().(string)]
+			require.True(t, found)
+			assert.True(t, strings.Contains(string(code), testCode))
+
+			gw.SendSignedTransaction.Return(tests.NewTransaction(), nil)
+		})
+
+		contracts, err := s.Project.Deploy(emulator, false)
+
+		assert.NoError(t, err)
+		assert.Equal(t, len(contracts), 2)
+		gw.Mock.AssertCalled(t, tests.GetLatestBlockFunc)
+		gw.Mock.AssertCalled(t, tests.GetAccountFunc, a.Address())
+		gw.Mock.AssertNumberOfCalls(t, tests.GetTransactionResultFunc, 2)
 	})
 
 	t.Run("Deploy Project Duplicate Address", func(t *testing.T) {
@@ -117,9 +275,9 @@ func TestProject(t *testing.T) {
 		state, s, gw := setup()
 
 		c := config.Contract{
-			Name:    "Hello",
-			Source:  tests.ContractHelloString.Filename,
-			Network: "emulator",
+			Name:     "Hello",
+			Location: tests.ContractHelloString.Filename,
+			Network:  "emulator",
 		}
 		state.Contracts().AddOrUpdate(c.Name, c)
 
@@ -157,19 +315,19 @@ func TestProject(t *testing.T) {
 
 		assert.NoError(t, err)
 		assert.Equal(t, len(contracts), 1)
-		assert.Equal(t, contracts[0].AccountName(), acct2.Name())
+		assert.Equal(t, contracts[0].AccountAddress, acct2.Address())
 	})
 
 }
 
 // used for integration tests
-func simpleDeploy(state *flowkit.State, s *Services, update bool) ([]*contracts.Contract, error) {
+func simpleDeploy(state *flowkit.State, s *Services, update bool) ([]*project.Contract, error) {
 	srvAcc, _ := state.EmulatorServiceAccount()
 
 	c := config.Contract{
-		Name:    tests.ContractHelloString.Name,
-		Source:  tests.ContractHelloString.Filename,
-		Network: "emulator",
+		Name:     tests.ContractHelloString.Name,
+		Location: tests.ContractHelloString.Filename,
+		Network:  "emulator",
 	}
 	state.Contracts().AddOrUpdate(c.Name, c)
 
@@ -202,8 +360,8 @@ func TestProject_Integration(t *testing.T) {
 		contracts, err := simpleDeploy(state, s, false)
 		assert.NoError(t, err)
 		assert.Len(t, contracts, 1)
-		assert.Equal(t, contracts[0].Name(), tests.ContractHelloString.Name)
-		assert.Equal(t, contracts[0].Code(), string(tests.ContractHelloString.Source))
+		assert.Equal(t, contracts[0].Name, tests.ContractHelloString.Name)
+		assert.Equal(t, string(contracts[0].Code()), string(tests.ContractHelloString.Source))
 	})
 
 	t.Run("Deploy Complex Project", func(t *testing.T) {
@@ -212,70 +370,73 @@ func TestProject_Integration(t *testing.T) {
 		state, s := setupIntegration()
 		srvAcc, _ := state.EmulatorServiceAccount()
 
-		cA := config.Contract{
-			Name:    tests.ContractA.Name,
-			Source:  tests.ContractA.Filename,
-			Network: "emulator",
-		}
-		cB := config.Contract{
-			Name:    tests.ContractB.Name,
-			Source:  tests.ContractB.Filename,
-			Network: "emulator",
-		}
-		cC := config.Contract{
-			Name:    tests.ContractC.Name,
-			Source:  tests.ContractC.Filename,
-			Network: "emulator",
-		}
-		state.Contracts().AddOrUpdate(cA.Name, cA)
-		state.Contracts().AddOrUpdate(cB.Name, cB)
-		state.Contracts().AddOrUpdate(cC.Name, cC)
-
-		n := config.Network{
-			Name: "emulator",
-			Host: "127.0.0.1:3569",
-		}
+		n := config.DefaultEmulatorNetwork()
 		state.Networks().AddOrUpdate(n.Name, n)
 
-		d := config.Deployment{
+		contractFixtures := []tests.Resource{
+			tests.ContractB, tests.ContractC,
+		}
+
+		testContracts := make([]config.Contract, len(contractFixtures))
+		for i, c := range contractFixtures {
+			testContracts[i] = config.Contract{
+				Name:     c.Name,
+				Location: c.Filename,
+				Network:  n.Name,
+			}
+			state.Contracts().AddOrUpdate(c.Name, testContracts[i])
+		}
+
+		cA := tests.ContractA
+		state.Contracts().AddOrUpdate(cA.Name, config.Contract{
+			Name:     cA.Name,
+			Location: cA.Filename,
+			Network:  n.Name,
+			Alias:    srvAcc.Address().String(),
+		})
+
+		state.Deployments().AddOrUpdate(config.Deployment{
 			Network: n.Name,
 			Account: srvAcc.Name(),
 			Contracts: []config.ContractDeployment{{
-				Name: cA.Name,
+				Name: testContracts[0].Name,
 				Args: nil,
 			}, {
-				Name: cB.Name,
-				Args: nil,
-			}, {
-				Name: cC.Name,
+				Name: testContracts[1].Name,
 				Args: []cadence.Value{
 					cadence.String("foo"),
 				},
 			}},
+		})
+
+		// deploy contract imported as alias
+		_, _, err := s.Accounts.AddContract(
+			srvAcc,
+			flowkit.NewScript(tests.ContractA.Source, nil, tests.ContractA.Filename),
+			n.Name,
+			false,
+		)
+		require.NoError(t, err)
+
+		// replace imports manually to assert that replacing worked in deploy service
+		addr := fmt.Sprintf("0x%s", srvAcc.Address())
+		replacedContracts := make([]string, len(contractFixtures))
+		for i, c := range contractFixtures {
+			replacedContracts[i] = strings.ReplaceAll(string(c.Source), `"./contractA.cdc"`, addr)
+			replacedContracts[i] = strings.ReplaceAll(replacedContracts[i], `"./contractB.cdc"`, addr)
 		}
-		state.Deployments().AddOrUpdate(d)
 
 		contracts, err := s.Project.Deploy(n.Name, false)
 		assert.NoError(t, err)
-		assert.Len(t, contracts, 3)
-		assert.Equal(t, contracts[0].Name(), tests.ContractA.Name)
-		assert.Equal(t, contracts[0].Code(), string(tests.ContractA.Source))
-		assert.Equal(t, contracts[1].Name(), tests.ContractB.Name)
-		assert.Equal(t, contracts[1].Code(), string(tests.ContractB.Source))
-		assert.Equal(t, contracts[2].Name(), tests.ContractC.Name)
-		assert.Equal(t, contracts[2].Code(), string(tests.ContractC.Source))
-	})
+		assert.Len(t, contracts, 2)
 
-	t.Run("Deploy Project Invalid", func(t *testing.T) {
-		t.Parallel()
+		account, err := s.Accounts.Get(srvAcc.Address())
 
-		// setup
-		state, s := setupIntegration()
-		_, err := simpleDeploy(state, s, false)
-		assert.NoError(t, err)
-
-		_, err = simpleDeploy(state, s, false)
-		assert.Equal(t, err.Error(), " Hello: already deployed to this account: contract Hello exists in account emulator-account,")
+		for i, c := range testContracts {
+			code, exists := account.Contracts[c.Name]
+			assert.True(t, exists)
+			assert.Equal(t, replacedContracts[i], string(code))
+		}
 	})
 
 	t.Run("Deploy Project Update", func(t *testing.T) {

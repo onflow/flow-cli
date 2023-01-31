@@ -22,14 +22,13 @@ import (
 	"bytes"
 	"fmt"
 
+	cdcTests "github.com/onflow/cadence-tools/test"
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/services"
 	"github.com/onflow/flow-cli/pkg/flowkit/util"
-
-	cdcTests "github.com/onflow/cadence-tools/test"
 )
 
 type flagsTests struct {
@@ -44,6 +43,7 @@ var TestCommand = &command.Command{
 		Short:   "Run Cadence tests",
 		Example: `flow test script.cdc`,
 		Args:    cobra.MinimumNArgs(1),
+		GroupID: "tools",
 	},
 	Flags: &testFlags,
 	Run:   run,

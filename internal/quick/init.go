@@ -32,9 +32,7 @@ var InitCommand = &command.Command{
 		Use:     "init",
 		Short:   "Initialize a new configuration",
 		Example: "flow project init",
-		Annotations: map[string]string{
-			"HotCommand": "true",
-		},
+		GroupID: "project",
 	},
 	Flags: &config.InitFlag,
 	Run:   config.Initialise, // TODO(sideninja) workaround - init needed to be copied in order to work else there is flag duplicate error

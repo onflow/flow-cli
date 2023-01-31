@@ -22,10 +22,10 @@ import "fmt"
 
 // Contract defines the configuration for a Cadence contract.
 type Contract struct {
-	Name    string
-	Source  string
-	Network string
-	Alias   string
+	Name     string
+	Location string
+	Network  string
+	Alias    string
 }
 
 type Contracts []Contract
@@ -51,9 +51,9 @@ func (c *Contracts) ByNameAndNetwork(name string, network string) (*Contract, er
 	}
 
 	return &Contract{
-		Name:    cName.Name,
-		Network: network,
-		Source:  cName.Source,
+		Name:     cName.Name,
+		Network:  network,
+		Location: cName.Location,
 	}, nil
 }
 

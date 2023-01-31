@@ -19,15 +19,13 @@
 package quick
 
 import (
-	"sync"
-
-	"github.com/onflow/flow-cli/internal/command"
-	"github.com/onflow/flow-cli/internal/emulator"
-	"github.com/onflow/flow-cli/internal/project"
-	"github.com/onflow/flow-cli/pkg/flowkit"
-	"github.com/onflow/flow-cli/pkg/flowkit/services"
+	"fmt"
 
 	"github.com/spf13/cobra"
+
+	"github.com/onflow/flow-cli/internal/command"
+	"github.com/onflow/flow-cli/pkg/flowkit"
+	"github.com/onflow/flow-cli/pkg/flowkit/services"
 )
 
 type flagsRun struct {
@@ -35,37 +33,13 @@ type flagsRun struct {
 
 var runFlags = flagsRun{}
 
-func DeployHelper(args []string, globalFlags command.GlobalFlags, services *services.Services, wg *sync.WaitGroup) {
-
-	for {
-		//check if the server has started
-		_, err := services.Status.Ping(globalFlags.Network)
-		if err == nil {
-			// if the emulator is running run the deploy command
-			project.DeployCommand.Cmd.Run(project.DeployCommand.Cmd, args)
-			break
-		}
-	}
-
-	wg.Done()
-
-}
-
-func EmulatorHelper(args []string, globalFlags command.GlobalFlags, services *services.Services, wg *sync.WaitGroup) {
-	// run the emulator
-	emulator.Cmd.Run(emulator.Cmd, args)
-	wg.Done()
-}
-
 // RunCommand This command will act as an alias for running the emulator and deploying the contracts
 var RunCommand = &command.Command{
 	Cmd: &cobra.Command{
 		Use:     "run",
 		Short:   "Start emulator and deploy all project contracts",
 		Example: "flow run",
-		Annotations: map[string]string{
-			"HotCommand": "true",
-		},
+		GroupID: "project",
 	},
 	Flags: &runFlags,
 	Run: func(
@@ -74,21 +48,12 @@ var RunCommand = &command.Command{
 		globalFlags command.GlobalFlags,
 		services *services.Services,
 	) (command.Result, error) {
-		var waitGroup sync.WaitGroup
-		// set number of goroutines
-		waitGroup.Add(2)
-		go EmulatorHelper(args, globalFlags, services, &waitGroup)
-		go DeployHelper(args, globalFlags, services, &waitGroup)
-		// wait until completion of the goroutines
-		waitGroup.Wait()
-
-		emulator.Cmd.Run(emulator.Cmd, args)
+		fmt.Println("⚠️Deprecation notice: Use 'flow dev' command.")
 		return &RunResult{}, nil
 	},
 }
 
-type RunResult struct {
-}
+type RunResult struct{}
 
 func (r *RunResult) JSON() interface{} {
 	result := make(map[string]string)

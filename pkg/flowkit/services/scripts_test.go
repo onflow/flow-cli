@@ -25,6 +25,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 
+	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
 	"github.com/onflow/flow-cli/pkg/flowkit/tests"
 )
@@ -43,10 +44,7 @@ func TestScripts(t *testing.T) {
 
 		args := []cadence.Value{cadence.String("Foo")}
 		_, err := s.Scripts.Execute(
-			&Script{
-				Code: tests.ScriptArgString.Source,
-				Args: args,
-			},
+			flowkit.NewScript(tests.ScriptArgString.Source, args, ""),
 			"",
 		)
 
@@ -64,10 +62,7 @@ func TestScripts_Integration(t *testing.T) {
 
 		args := []cadence.Value{cadence.String("Foo")}
 		res, err := s.Scripts.Execute(
-			&Script{
-				Code: tests.ScriptArgString.Source,
-				Args: args,
-			},
+			flowkit.NewScript(tests.ScriptArgString.Source, args, ""),
 			"",
 		)
 
@@ -80,10 +75,7 @@ func TestScripts_Integration(t *testing.T) {
 		_, s := setupIntegration()
 		args := []cadence.Value{cadence.String("Foo")}
 		res, err := s.Scripts.Execute(
-			&Script{
-				Code: tests.ScriptWithError.Source,
-				Args: args,
-			},
+			flowkit.NewScript(tests.ScriptWithError.Source, args, ""),
 			"",
 		)
 
@@ -100,9 +92,9 @@ func TestScripts_Integration(t *testing.T) {
 
 		// setup
 		c := config.Contract{
-			Name:    tests.ContractHelloString.Name,
-			Source:  tests.ContractHelloString.Filename,
-			Network: "emulator",
+			Name:     tests.ContractHelloString.Name,
+			Location: tests.ContractHelloString.Filename,
+			Network:  "emulator",
 		}
 		state.Contracts().AddOrUpdate(c.Name, c)
 
@@ -121,17 +113,15 @@ func TestScripts_Integration(t *testing.T) {
 			}},
 		}
 		state.Deployments().AddOrUpdate(d)
-		_, _ = s.Accounts.AddContract(
+		_, _, _ = s.Accounts.AddContract(
 			srvAcc,
 			resourceToContract(tests.ContractHelloString),
+			"",
 			false,
 		)
 
 		res, err := s.Scripts.Execute(
-			&Script{
-				Code:     tests.ScriptImport.Source,
-				Filename: tests.ScriptImport.Filename,
-			},
+			flowkit.NewScript(tests.ScriptImport.Source, nil, tests.ScriptImport.Filename),
 			n.Name,
 		)
 		assert.NoError(t, err)
@@ -150,15 +140,12 @@ func TestScripts_Integration(t *testing.T) {
 		out := []string{
 			"missing network, specify which network to use to resolve imports in script code",
 			"resolving imports in scripts not supported",
-			"import ./contractHello.cdc could not be resolved from the configuration",
+			"import ./contractHello.cdc could not be resolved from provided contracts",
 		}
 
 		for x, i := range in {
 			_, err := s.Scripts.Execute(
-				&Script{
-					Code:     tests.ScriptImport.Source,
-					Filename: i[0],
-				},
+				flowkit.NewScript(tests.ScriptImport.Source, nil, i[0]),
 				i[1],
 			)
 			assert.NotNil(t, err)
