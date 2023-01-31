@@ -76,7 +76,6 @@ func deploy(
 					name,
 					err.Error(),
 				)
-
 			}
 			return nil, fmt.Errorf("failed deploying all contracts")
 		}

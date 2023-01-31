@@ -161,10 +161,14 @@ func (p *project) watch() error {
 				contract.account = defaultAccount
 			}
 
-			if contract.status == created || contract.status == changed {
-				_ = p.addContract(contract.path, contract.account) // if contract has errors, ignore it
-			}
-			if contract.status == removed {
+			switch contract.status {
+			case created:
+				_ = p.addContract(contract.path, contract.account)
+			case changed:
+				_ = p.addContract(contract.path, contract.account)
+			case renamed:
+				p.renameContract(contract.oldPath, contract.path)
+			case removed:
 				err = p.removeContract(contract.path, contract.account) // todo what if contract got broken and then we want to delete it
 				if err != nil {
 					return err
@@ -287,4 +291,14 @@ func (p *project) removeContract(
 	}
 
 	return nil
+}
+
+// renameContract and update the location in the state
+func (p *project) renameContract(oldLocation string, newLocation string) {
+	for _, c := range *p.state.Contracts() {
+		if c.Location == oldLocation {
+			c.Location = newLocation
+			p.state.Contracts().AddOrUpdate(c.Name, c)
+		}
+	}
 }
