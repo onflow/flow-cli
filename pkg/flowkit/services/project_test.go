@@ -374,7 +374,7 @@ func TestProject_Integration(t *testing.T) {
 		state.Networks().AddOrUpdate(n.Name, n)
 
 		contractFixtures := []tests.Resource{
-			tests.ContractA, tests.ContractB, tests.ContractC,
+			tests.ContractB, tests.ContractC,
 		}
 
 		testContracts := make([]config.Contract, len(contractFixtures))
@@ -387,6 +387,14 @@ func TestProject_Integration(t *testing.T) {
 			state.Contracts().AddOrUpdate(c.Name, testContracts[i])
 		}
 
+		cA := tests.ContractA
+		state.Contracts().AddOrUpdate(cA.Name, config.Contract{
+			Name:     cA.Name,
+			Location: cA.Filename,
+			Network:  n.Name,
+			Alias:    srvAcc.Address().String(),
+		})
+
 		state.Deployments().AddOrUpdate(config.Deployment{
 			Network: n.Name,
 			Account: srvAcc.Name(),
@@ -395,14 +403,20 @@ func TestProject_Integration(t *testing.T) {
 				Args: nil,
 			}, {
 				Name: testContracts[1].Name,
-				Args: nil,
-			}, {
-				Name: testContracts[2].Name,
 				Args: []cadence.Value{
 					cadence.String("foo"),
 				},
 			}},
 		})
+
+		// deploy contract imported as alias
+		_, _, err := s.Accounts.AddContract(
+			srvAcc,
+			flowkit.NewScript(tests.ContractA.Source, nil, tests.ContractA.Filename),
+			n.Name,
+			false,
+		)
+		require.NoError(t, err)
 
 		// replace imports manually to assert that replacing worked in deploy service
 		addr := fmt.Sprintf("0x%s", srvAcc.Address())
@@ -414,7 +428,7 @@ func TestProject_Integration(t *testing.T) {
 
 		contracts, err := s.Project.Deploy(n.Name, false)
 		assert.NoError(t, err)
-		assert.Len(t, contracts, 3)
+		assert.Len(t, contracts, 2)
 
 		account, err := s.Accounts.Get(srvAcc.Address())
 
