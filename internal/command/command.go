@@ -19,16 +19,20 @@
 package command
 
 import (
+	"crypto/sha256"
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"os"
+	"os/user"
 	"runtime/debug"
 	"strings"
 	"time"
 
+	"github.com/dukex/mixpanel"
 	"github.com/getsentry/sentry-go"
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
@@ -97,8 +101,6 @@ func (c Command) AddToParent(parent *cobra.Command) {
 		// initialize file loader used in commands
 		loader := &afero.Afero{Fs: afero.NewOsFs()}
 
-		RecordCommandUsage(c.Cmd)
-
 		// if we receive a config error that isn't missing config we should handle it
 		state, confErr := flowkit.Load(Flags.ConfigPaths, loader)
 		if !errors.Is(confErr, config.ErrDoesNotExist) {
@@ -120,6 +122,9 @@ func (c Command) AddToParent(parent *cobra.Command) {
 		if !Flags.SkipVersionCheck {
 			checkVersion(logger)
 		}
+
+		// record command usage
+		go usageMetrics(c.Cmd)
 
 		// run command based on requirements for state
 		var result Result
@@ -311,11 +316,25 @@ func initCrashReporting() {
 	}
 }
 
-func RecordCommandUsage(command *cobra.Command) {
-	metricsEnabled, _ := settings.MetricsEnabled()
-	if !metricsEnabled || util.MIXPANEL_PROJECT_TOKEN == "" {
+// The token is injected at build-time using ldflags
+const mixpanelToken = ""
+
+func usageMetrics(command *cobra.Command) {
+	if !settings.MetricsEnabled() || mixpanelToken == "" {
 		return
 	}
 
-	_ = util.TrackCommandUsage(command)
+	client := mixpanel.New(mixpanelToken, "")
+
+	// calculates a user ID that doesn't leak any personal information
+	usr, _ := user.Current() // ignore err, just use empty string
+	hash := sha256.Sum256([]byte(fmt.Sprintf("%s%s", usr.Username, usr.Uid)))
+	userID := base64.StdEncoding.EncodeToString(hash[:])
+
+	_ = client.Track(userID, command.CommandPath(), &mixpanel.Event{
+		IP: "0", // do not track IPs
+		Properties: map[string]any{
+			"caller": "flow-cli",
+		},
+	})
 }
