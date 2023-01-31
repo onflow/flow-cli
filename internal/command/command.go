@@ -334,7 +334,8 @@ func usageMetrics(command *cobra.Command) {
 	_ = client.Track(userID, command.CommandPath(), &mixpanel.Event{
 		IP: "0", // do not track IPs
 		Properties: map[string]any{
-			"caller": "flow-cli",
+			"caller":  "flow-cli",
+			"version": build.Semver(),
 		},
 	})
 }
