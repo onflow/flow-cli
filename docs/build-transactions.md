@@ -65,6 +65,11 @@ Payload:
 f9013df90138b8d17472616e...73616374696f6e286eeec0c0
 ```
 
+JSON arguments from a file example:
+```shell
+> flow transactions build tx1.cdc --args-json "$(cat args.json)"
+```
+
 ## Arguments
 
 ### Code Filename
