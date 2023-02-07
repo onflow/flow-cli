@@ -201,7 +201,7 @@ value that is defined on the run time to the default service address on the emul
 ...
 ```
 
-You can also use BIP44 to derive keys from a mnemonic. For more details please see the [FLIP](https://github.com/onflow/flow/blob/master/flips/20201125-bip-44-multi-account.md)
+You can also use BIP44 to derive keys from a mnemonic. For more details please see the [FLIP](https://github.com/onflow/flips/blob/main/flips/20201125-bip-44-multi-account.md)
 
 **Example for BIP44 format:**
 ```json
