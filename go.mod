@@ -3,12 +3,13 @@ module github.com/onflow/flow-cli
 go 1.18
 
 require (
+	github.com/dukex/mixpanel v1.0.1
 	github.com/getsentry/sentry-go v0.13.0
 	github.com/go-git/go-git/v5 v5.5.2
 	github.com/onflow/cadence v0.31.3
 	github.com/onflow/cadence-tools/languageserver v0.7.0
 	github.com/onflow/cadence-tools/test v0.4.0
-	github.com/onflow/fcl-dev-wallet v0.5.4
+	github.com/onflow/fcl-dev-wallet v0.5.5
 	github.com/onflow/flow-cli/pkg/flowkit v0.0.0-20230125123057-e0006d2ef2f6
 	github.com/onflow/flow-emulator v0.43.0
 	github.com/onflow/flow-go-sdk v0.31.3
@@ -52,7 +53,6 @@ require (
 	github.com/dgraph-io/ristretto v0.0.3-0.20200630154024-f66de99634de // indirect
 	github.com/dgryski/go-farm v0.0.0-20190423205320-6a90982ecee2 // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
-	github.com/dukex/mixpanel v1.0.1 // indirect
 	github.com/dustin/go-humanize v1.0.0 // indirect
 	github.com/ef-ds/deque v1.0.4 // indirect
 	github.com/emirpasic/gods v1.18.1 // indirect
