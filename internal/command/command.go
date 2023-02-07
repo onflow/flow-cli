@@ -320,22 +320,25 @@ func initCrashReporting() {
 const mixpanelToken = ""
 
 func UsageMetrics(command *cobra.Command) {
+	fmt.Println("Test", settings.MetricsEnabled(), mixpanelToken)
 	if !settings.MetricsEnabled() || mixpanelToken == "" {
 		return
 	}
-
+	fmt.Println("Tracking")
 	client := mixpanel.New(mixpanelToken, "")
 
 	// calculates a user ID that doesn't leak any personal information
-	usr, _ := user.Current() // ignore err, just use empty string
+	usr, err := user.Current() // ignore err, just use empty string
 	hash := sha256.Sum256([]byte(fmt.Sprintf("%s%s", usr.Username, usr.Uid)))
 	userID := base64.StdEncoding.EncodeToString(hash[:])
+	fmt.Println("ERR", err)
 
-	_ = client.Track(userID, "cli-command", &mixpanel.Event{
+	err = client.Track(userID, "cli-command", &mixpanel.Event{
 		IP: "0", // do not track IPs
 		Properties: map[string]any{
 			"command": command.CommandPath(),
 			"version": build.Semver(),
 		},
 	})
+	fmt.Println("ERR2", err)
 }
