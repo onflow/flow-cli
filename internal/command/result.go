@@ -66,7 +66,7 @@ func formatResult(result Result, filterFlag string, formatFlag string) (string, 
 			return "", err
 		}
 
-		return fmt.Sprintf("%v\n", value), nil
+		return fmt.Sprintf("%v", value), nil
 	}
 
 	switch strings.ToLower(formatFlag) {
