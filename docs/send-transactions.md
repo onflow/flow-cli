@@ -63,6 +63,11 @@ In the above example, the `flow.json` file would look something like this:
 }
 ```
 
+JSON arguments from a file example:
+```shell
+> flow transactions send tx1.cdc --args-json "$(cat args.json)"
+```
+
 ## Arguments
 
 ### Code Filename
