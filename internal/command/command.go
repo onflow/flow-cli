@@ -28,8 +28,10 @@ import (
 	"net/http"
 	"os"
 	"os/user"
+	"runtime"
 	"runtime/debug"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/dukex/mixpanel"
@@ -124,7 +126,8 @@ func (c Command) AddToParent(parent *cobra.Command) {
 		}
 
 		// record command usage
-		go UsageMetrics(c.Cmd)
+		wg := sync.WaitGroup{}
+		go UsageMetrics(c.Cmd, &wg)
 
 		// run command based on requirements for state
 		var result Result
@@ -157,6 +160,8 @@ func (c Command) AddToParent(parent *cobra.Command) {
 		// output result
 		err = outputResult(formattedResult, Flags.Save, Flags.Format, Flags.Filter)
 		handleError("Output Error", err)
+
+		wg.Wait()
 	}
 
 	bindFlags(c)
@@ -317,28 +322,27 @@ func initCrashReporting() {
 }
 
 // The token is injected at build-time using ldflags
-const mixpanelToken = ""
+var mixpanelToken = ""
 
-func UsageMetrics(command *cobra.Command) {
-	fmt.Println("Test", settings.MetricsEnabled(), mixpanelToken)
+func UsageMetrics(command *cobra.Command, wg *sync.WaitGroup) {
 	if !settings.MetricsEnabled() || mixpanelToken == "" {
 		return
 	}
-	fmt.Println("Tracking")
+	wg.Add(1)
 	client := mixpanel.New(mixpanelToken, "")
 
 	// calculates a user ID that doesn't leak any personal information
-	usr, err := user.Current() // ignore err, just use empty string
+	usr, _ := user.Current() // ignore err, just use empty string
 	hash := sha256.Sum256([]byte(fmt.Sprintf("%s%s", usr.Username, usr.Uid)))
 	userID := base64.StdEncoding.EncodeToString(hash[:])
-	fmt.Println("ERR", err)
 
-	err = client.Track(userID, "cli-command", &mixpanel.Event{
+	_ = client.Track(userID, "cli-command", &mixpanel.Event{
 		IP: "0", // do not track IPs
 		Properties: map[string]any{
 			"command": command.CommandPath(),
 			"version": build.Semver(),
+			"os":      runtime.GOOS,
 		},
 	})
-	fmt.Println("ERR2", err)
+	wg.Done()
 }

@@ -22,6 +22,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"sync"
 
 	emulator "github.com/onflow/flow-emulator"
 	"github.com/onflow/flow-emulator/cmd/emulator/start"
@@ -49,7 +50,7 @@ func ConfiguredServiceKey(
 	var state *flowkit.State
 	var err error
 	loader := &afero.Afero{Fs: afero.NewOsFs()}
-	go command.UsageMetrics(Cmd)
+	command.UsageMetrics(Cmd, &sync.WaitGroup{})
 
 	if init {
 		if sigAlgo == crypto.UnknownSignatureAlgorithm {
