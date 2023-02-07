@@ -19,16 +19,22 @@
 package command
 
 import (
+	"crypto/sha256"
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"os"
+	"os/user"
+	"runtime"
 	"runtime/debug"
 	"strings"
+	"sync"
 	"time"
 
+	"github.com/dukex/mixpanel"
 	"github.com/getsentry/sentry-go"
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
@@ -97,8 +103,6 @@ func (c Command) AddToParent(parent *cobra.Command) {
 		// initialize file loader used in commands
 		loader := &afero.Afero{Fs: afero.NewOsFs()}
 
-		RecordCommandUsage(c.Cmd)
-
 		// if we receive a config error that isn't missing config we should handle it
 		state, confErr := flowkit.Load(Flags.ConfigPaths, loader)
 		if !errors.Is(confErr, config.ErrDoesNotExist) {
@@ -120,6 +124,10 @@ func (c Command) AddToParent(parent *cobra.Command) {
 		if !Flags.SkipVersionCheck {
 			checkVersion(logger)
 		}
+
+		// record command usage
+		wg := sync.WaitGroup{}
+		go UsageMetrics(c.Cmd, &wg)
 
 		// run command based on requirements for state
 		var result Result
@@ -152,6 +160,8 @@ func (c Command) AddToParent(parent *cobra.Command) {
 		// output result
 		err = outputResult(formattedResult, Flags.Save, Flags.Format, Flags.Filter)
 		handleError("Output Error", err)
+
+		wg.Wait()
 	}
 
 	bindFlags(c)
@@ -311,11 +321,28 @@ func initCrashReporting() {
 	}
 }
 
-func RecordCommandUsage(command *cobra.Command) {
-	metricsEnabled, _ := settings.MetricsEnabled()
-	if !metricsEnabled || util.MIXPANEL_PROJECT_TOKEN == "" {
+// The token is injected at build-time using ldflags
+var mixpanelToken = ""
+
+func UsageMetrics(command *cobra.Command, wg *sync.WaitGroup) {
+	if !settings.MetricsEnabled() || mixpanelToken == "" {
 		return
 	}
+	wg.Add(1)
+	client := mixpanel.New(mixpanelToken, "")
 
-	_ = util.TrackCommandUsage(command)
+	// calculates a user ID that doesn't leak any personal information
+	usr, _ := user.Current() // ignore err, just use empty string
+	hash := sha256.Sum256([]byte(fmt.Sprintf("%s%s", usr.Username, usr.Uid)))
+	userID := base64.StdEncoding.EncodeToString(hash[:])
+
+	_ = client.Track(userID, "cli-command", &mixpanel.Event{
+		IP: "0", // do not track IPs
+		Properties: map[string]any{
+			"command": command.CommandPath(),
+			"version": build.Semver(),
+			"os":      runtime.GOOS,
+		},
+	})
+	wg.Done()
 }
