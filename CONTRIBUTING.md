@@ -6,7 +6,7 @@ Use your best judgment, and feel free to propose changes to this document in a p
 
 ## Table Of Contents
 
-[Getting Started](#project-overview)
+[Getting Started](#getting-started)
 
 [How Can I Contribute?](#how-can-i-contribute)
 
@@ -21,6 +21,20 @@ Use your best judgment, and feel free to propose changes to this document in a p
 - [Go Styleguide](#go-styleguide)
 
 [Additional Notes](#additional-notes)
+
+## Getting Started
+
+Install the necessary dependencies:
+
+```
+go get ./...
+```
+
+To run the repo:
+
+```
+go run cmd/main.go
+```
 
 ## How Can I Contribute?
 
