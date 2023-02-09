@@ -33,7 +33,7 @@ go get ./...
 To run the repo:
 
 ```
-go run cmd/main.go
+go run cmd/flow/main.go
 ```
 
 ## How Can I Contribute?
