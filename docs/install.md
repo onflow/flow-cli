@@ -42,10 +42,10 @@ To update, simply re-run the installation command above.
 
 ### Install a specific version
 
-To install a specific version of Flow CLI, append the version tag to the command (e.g. the command below installs CLI version v0.33.3).
+To install a specific version of Flow CLI, append the version tag to the command (e.g. the command below installs CLI version v0.41.2).
 
 ```sh
-sh -ci "$(curl -fsSL https://raw.githubusercontent.com/onflow/flow-cli/master/install.sh)" -- v0.33.3
+sh -ci "$(curl -fsSL https://raw.githubusercontent.com/onflow/flow-cli/50058df8aa5f999a85cfd7afae6fc2661090078a/install.sh)" -- v0.41.2
 ```
 
 ## Windows
