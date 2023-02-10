@@ -165,6 +165,7 @@ with the bellow content.
 {
   "name": "name of the scaffold",
   "repo": "HTTP URL to the repository containing the scaffold",
+  "commit": "Hash of the (latest) commit in your scaffold repository",
   "branch": "scaffold repository branch",
   "description": "user friendly description of the scaffold (what it contains, why it is used...)"
 }

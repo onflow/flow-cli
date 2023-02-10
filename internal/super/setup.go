@@ -30,6 +30,7 @@ import (
 	"time"
 
 	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
@@ -58,11 +59,12 @@ var SetupCommand = &command.Command{
 
 const scaffoldListURL = "https://raw.githubusercontent.com/onflow/flow-cli/master/scaffolds.json"
 
-type scaffoldConf struct {
+type scaffold struct {
 	Repo        string `json:"repo"`
 	Branch      string `json:"branch"`
 	Name        string `json:"name"`
 	Description string `json:"description"`
+	Commit      string `json:"commit"`
 }
 
 func create(
@@ -84,7 +86,7 @@ func create(
 	}
 
 	// default to first scaffold - basic scaffold
-	scaffold := scaffolds[0]
+	pickedScaffold := scaffolds[0]
 
 	if setupFlags.Scaffold {
 		scaffoldList := make([]string, len(scaffolds))
@@ -93,11 +95,11 @@ func create(
 		}
 
 		selected := output.ScaffoldPrompt(scaffoldList)
-		scaffold = scaffolds[selected]
+		pickedScaffold = scaffolds[selected]
 	}
 
 	logger.StartProgress(fmt.Sprintf("Creating your project %s", targetDir))
-	err = cloneScaffold(targetDir, scaffold)
+	err = cloneScaffold(targetDir, pickedScaffold)
 	if err != nil {
 		return nil, fmt.Errorf("failed creating scaffold %w", err)
 	}
@@ -133,7 +135,7 @@ func getTargetDirectory(directory string) (string, error) {
 	return target, nil
 }
 
-func getScaffolds() ([]scaffoldConf, error) {
+func getScaffolds() ([]scaffold, error) {
 	httpClient := http.Client{
 		Timeout: time.Second * 5,
 	}
@@ -156,21 +158,37 @@ func getScaffolds() ([]scaffoldConf, error) {
 		return nil, fmt.Errorf("failed reading scaffold list response: %w", err)
 	}
 
-	var confs []scaffoldConf
-	err = json.Unmarshal(body, &confs)
+	var all []scaffold
+	err = json.Unmarshal(body, &all)
 	if err != nil {
 		return nil, fmt.Errorf("failed parsing scaffold list response: %w", err)
 	}
 
-	return confs, nil
+	valid := make([]scaffold, 0)
+	for _, s := range all {
+		if s.Repo != "" && s.Description != "" && s.Name != "" && s.Commit != "" {
+			valid = append(valid, s)
+		}
+	}
+
+	return valid, nil
 }
 
-func cloneScaffold(targetDir string, conf scaffoldConf) error {
-	_, err := git.PlainClone(targetDir, false, &git.CloneOptions{
+func cloneScaffold(targetDir string, conf scaffold) error {
+	repo, err := git.PlainClone(targetDir, false, &git.CloneOptions{
 		URL: conf.Repo,
 	})
 	if err != nil {
-		return err
+		return fmt.Errorf("could not download the scaffold")
+	}
+
+	worktree, _ := repo.Worktree()
+	err = worktree.Checkout(&git.CheckoutOptions{
+		Hash:  plumbing.NewHash(conf.Commit),
+		Force: true,
+	})
+	if err != nil {
+		return fmt.Errorf("could not find the scaffold version")
 	}
 
 	return os.RemoveAll(filepath.Join(targetDir, ".git"))
