@@ -37,7 +37,6 @@ type Services struct {
 	Blocks       *Blocks
 	Status       *Status
 	Snapshot     *Snapshot
-	Tests        *Tests
 }
 
 // NewServices returns a new services collection for a state,
@@ -58,7 +57,6 @@ func NewServices(
 		Blocks:       NewBlocks(gateway, state, logger),
 		Status:       NewStatus(gateway, state, logger),
 		Snapshot:     NewSnapshot(gateway, state, logger),
-		Tests:        NewTests(state, logger),
 	}
 }
 
@@ -73,5 +71,4 @@ func (s *Services) SetLogger(logger output.Logger) {
 	s.Blocks.logger = logger
 	s.Status.logger = logger
 	s.Snapshot.logger = logger
-	s.Tests.logger = logger
 }

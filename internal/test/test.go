@@ -20,9 +20,8 @@ package test
 
 import (
 	"fmt"
-	"github.com/onflow/flow-cli/pkg/flowkit/output"
-
 	cdcTests "github.com/onflow/cadence-tools/test"
+	"github.com/onflow/flow-cli/pkg/flowkit/output"
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
@@ -43,14 +42,14 @@ var TestCommand = &command.Command{
 		GroupID: "tools",
 	},
 	Flags: &testFlags,
-	RunS:  run,
+	RunS:  testCommand,
 }
 
-func run(
+func testCommand(
 	args []string,
 	readerWriter flowkit.ReaderWriter,
 	_ command.GlobalFlags,
-	services *services.Services,
+	_ *services.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
 	filename := args[0]
@@ -60,6 +59,23 @@ func run(
 		return nil, fmt.Errorf("error loading script file: %w", err)
 	}
 
+	result, err := test(code, filename, state, readerWriter)
+	if err != nil {
+		return nil, err
+	}
+
+	return &TestResult{
+		Results: result,
+	}, nil
+}
+
+func test(
+	source []byte,
+	filename string,
+	state *flowkit.State,
+	readerWriter flowkit.ReaderWriter,
+) (cdcTests.Results, error) {
+
 	runner := cdcTests.NewTestRunner().
 		WithImportResolver(importResolver(filename, readerWriter, state.Contracts())).
 		WithFileResolver(fileResolver(filename, readerWriter))
@@ -68,12 +84,5 @@ func run(
 	log.StartProgress("Running tests")
 	defer log.StopProgress()
 
-	result, err := runner.RunTests(string(code))
-	if err != nil {
-		return nil, err
-	}
-
-	return &TestResult{
-		Results: result,
-	}, nil
+	return runner.RunTests(string(source))
 }

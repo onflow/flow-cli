@@ -19,7 +19,10 @@
 package test
 
 import (
+	"github.com/onflow/flow-cli/pkg/flowkit"
+	"github.com/onflow/flow-cli/pkg/flowkit/output"
 	"github.com/onflow/flow-cli/pkg/flowkit/services"
+	"github.com/onflow/flow-go-sdk/crypto"
 	"os"
 	"testing"
 
@@ -31,16 +34,29 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowkit/tests"
 )
 
+func setup() (*flowkit.State, *services.Services, *tests.TestGateway) {
+	readerWriter, _ := tests.ReaderWriter()
+	state, err := flowkit.Init(readerWriter, crypto.ECDSA_P256, crypto.SHA3_256)
+	if err != nil {
+		panic(err)
+	}
+
+	gw := tests.DefaultMockGateway()
+	s := services.NewServices(gw.Mock, state, output.NewStdoutLogger(output.NoneLog))
+
+	return state, s, gw
+}
+
 func TestExecutingTests(t *testing.T) {
 	t.Parallel()
 
 	t.Run("simple", func(t *testing.T) {
 		t.Parallel()
 
-		st, s, _ := services.setup()
+		st, _, _ := setup()
 
 		script := tests.TestScriptSimple
-		results, err := s.Tests.Execute(script.Source, script.Filename, st.ReaderWriter())
+		results, err := test(script.Source, script.Filename, st, st.ReaderWriter())
 
 		require.NoError(t, err)
 		require.Len(t, results, 1)
@@ -50,10 +66,10 @@ func TestExecutingTests(t *testing.T) {
 	t.Run("simple failing", func(t *testing.T) {
 		t.Parallel()
 
-		st, s, _ := services.setup()
+		st, _, _ := setup()
 
 		script := tests.TestScriptSimpleFailing
-		results, err := s.Tests.Execute(script.Source, script.Filename, st.ReaderWriter())
+		results, err := test(script.Source, script.Filename, st, st.ReaderWriter())
 
 		require.NoError(t, err)
 		require.Len(t, results, 1)
@@ -67,7 +83,7 @@ func TestExecutingTests(t *testing.T) {
 		t.Parallel()
 
 		// Setup
-		st, s, _ := services.setup()
+		st, _, _ := setup()
 
 		c := config.Contract{
 			Name:     tests.ContractHelloString.Name,
@@ -78,7 +94,7 @@ func TestExecutingTests(t *testing.T) {
 
 		// Execute script
 		script := tests.TestScriptWithImport
-		results, err := s.Tests.Execute(script.Source, script.Filename, st.ReaderWriter())
+		results, err := test(script.Source, script.Filename, st, st.ReaderWriter())
 
 		require.NoError(t, err)
 		require.Len(t, results, 1)
@@ -89,7 +105,7 @@ func TestExecutingTests(t *testing.T) {
 		t.Parallel()
 
 		// Setup
-		st, s, _ := services.setup()
+		st, _, _ := setup()
 		readerWriter := st.ReaderWriter()
 		readerWriter.WriteFile(
 			tests.SomeFile.Filename,
@@ -99,7 +115,7 @@ func TestExecutingTests(t *testing.T) {
 
 		// Execute script
 		script := tests.TestScriptWithFileRead
-		results, err := s.Tests.Execute(script.Source, script.Filename, readerWriter)
+		results, err := test(script.Source, script.Filename, st, readerWriter)
 
 		require.NoError(t, err)
 		require.Len(t, results, 1)
