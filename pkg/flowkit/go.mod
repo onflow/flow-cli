@@ -11,8 +11,8 @@ require (
 	github.com/manifoldco/promptui v0.9.0
 	github.com/onflow/cadence v0.31.0
 	github.com/onflow/flow-core-contracts/lib/go/templates v0.11.2-0.20221205150827-c68044a2505c
-	github.com/onflow/flow-emulator v0.41.0
-	github.com/onflow/flow-go v0.28.1-0.20221214175701-076c0fd2a2f9
+	github.com/onflow/flow-emulator v0.36.0
+	github.com/onflow/flow-go v0.27.6
 	github.com/onflow/flow-go-sdk v0.31.0
 	github.com/pkg/errors v0.9.1
 	github.com/rs/zerolog v1.28.0
@@ -96,14 +96,14 @@ require (
 	github.com/klauspost/compress v1.15.10 // indirect
 	github.com/klauspost/cpuid/v2 v2.1.1 // indirect
 	github.com/libp2p/go-buffer-pool v0.1.0 // indirect
-	github.com/libp2p/go-libp2p v0.23.3 // indirect
-	github.com/libp2p/go-libp2p-core v0.20.1 // indirect
+	github.com/libp2p/go-libp2p v0.21.0 // indirect
+	github.com/libp2p/go-libp2p-core v0.19.1 // indirect
 	github.com/libp2p/go-libp2p-tls v0.4.1 // indirect
 	github.com/libp2p/go-openssl v0.1.0 // indirect
 	github.com/logrusorgru/aurora v2.0.3+incompatible // indirect
 	github.com/magiconair/properties v1.8.6 // indirect
-	github.com/mattn/go-colorable v0.1.13 // indirect
-	github.com/mattn/go-isatty v0.0.16 // indirect
+	github.com/mattn/go-colorable v0.1.12 // indirect
+	github.com/mattn/go-isatty v0.0.14 // indirect
 	github.com/mattn/go-pointer v0.0.1 // indirect
 	github.com/minio/sha256-simd v1.0.0 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
