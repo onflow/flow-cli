@@ -10,7 +10,6 @@ require (
 	github.com/lmars/go-slip10 v0.0.0-20190606092855-400ba44fee12
 	github.com/manifoldco/promptui v0.9.0
 	github.com/onflow/cadence v0.31.0
-	github.com/onflow/cadence-tools/test v0.3.0
 	github.com/onflow/flow-core-contracts/lib/go/templates v0.11.2-0.20221205150827-c68044a2505c
 	github.com/onflow/flow-emulator v0.41.0
 	github.com/onflow/flow-go v0.28.1-0.20221214175701-076c0fd2a2f9
@@ -19,7 +18,6 @@ require (
 	github.com/rs/zerolog v1.28.0
 	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/afero v1.9.0
-	github.com/spf13/cobra v1.5.0
 	github.com/stretchr/testify v1.8.0
 	github.com/thoas/go-funk v0.9.2
 	github.com/tyler-smith/go-bip39 v1.0.1-0.20181017060643-dbb3b84ba2ef
@@ -41,7 +39,6 @@ require (
 	github.com/acomagu/bufpipe v1.0.3 // indirect
 	github.com/aristanetworks/goarista v0.0.0-20170210015632-ea17b1a17847 // indirect
 	github.com/bits-and-blooms/bitset v1.3.0 // indirect
-	github.com/btcsuite/btcd v0.22.1 // indirect
 	github.com/cenkalti/backoff/v4 v4.1.3 // indirect
 	github.com/cespare/xxhash v1.1.0 // indirect
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
@@ -59,7 +56,6 @@ require (
 	github.com/fsnotify/fsnotify v1.5.4 // indirect
 	github.com/fxamacker/cbor/v2 v2.4.1-0.20220515183430-ad2eae63303f // indirect
 	github.com/fxamacker/circlehash v0.3.0 // indirect
-	github.com/getsentry/sentry-go v0.13.0 // indirect
 	github.com/go-git/gcfg v1.5.0 // indirect
 	github.com/go-git/go-billy/v5 v5.3.1 // indirect
 	github.com/go-git/go-git/v5 v5.4.2 // indirect
@@ -120,8 +116,6 @@ require (
 	github.com/multiformats/go-multihash v0.2.1 // indirect
 	github.com/multiformats/go-varint v0.0.6 // indirect
 	github.com/onflow/atree v0.4.0 // indirect
-	github.com/onflow/cadence-tools/languageserver v0.4.1-0.20221219134250-a037455a25c7 // indirect
-	github.com/onflow/cadence-tools/lint v0.3.0 // indirect
 	github.com/onflow/flow-core-contracts/lib/go/contracts v0.11.2-0.20221205150827-c68044a2505c // indirect
 	github.com/onflow/flow-ft/lib/go/contracts v0.5.0 // indirect
 	github.com/onflow/flow-go/crypto v0.24.4 // indirect
@@ -138,10 +132,10 @@ require (
 	github.com/rogpeppe/go-internal v1.8.1 // indirect
 	github.com/sergi/go-diff v1.1.0 // indirect
 	github.com/sethvargo/go-retry v0.2.3 // indirect
-	github.com/sourcegraph/jsonrpc2 v0.1.0 // indirect
 	github.com/spacemonkeygo/spacelog v0.0.0-20180420211403-2296661a0572 // indirect
 	github.com/spaolacci/murmur3 v1.1.0 // indirect
 	github.com/spf13/cast v1.5.0 // indirect
+	github.com/spf13/cobra v1.5.0 // indirect
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/spf13/viper v1.12.0 // indirect

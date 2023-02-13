@@ -7,11 +7,11 @@ require (
 	github.com/getsentry/sentry-go v0.13.0
 	github.com/go-git/go-git/v5 v5.5.2
 	github.com/onflow/cadence v0.31.3
-	github.com/onflow/cadence-tools/languageserver v0.4.1-0.20221219134250-a037455a25c7
-	github.com/onflow/cadence-tools/test v0.3.0
+	github.com/onflow/cadence-tools/languageserver v0.7.0
+	github.com/onflow/cadence-tools/test v0.4.0
 	github.com/onflow/fcl-dev-wallet v0.5.5
 	github.com/onflow/flow-cli/pkg/flowkit v0.0.0-20230125123057-e0006d2ef2f6
-	github.com/onflow/flow-emulator v0.43.1-0.20230210183844-74ccf778a6ad
+	github.com/onflow/flow-emulator v0.42.0
 	github.com/onflow/flow-go-sdk v0.31.3
 	github.com/onflowser/flowser/v2 v2.0.9-beta
 	github.com/pkg/errors v0.9.1
@@ -61,7 +61,6 @@ require (
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
 	github.com/fxamacker/cbor/v2 v2.4.1-0.20220515183430-ad2eae63303f // indirect
 	github.com/fxamacker/circlehash v0.3.0 // indirect
-	github.com/glebarez/go-sqlite v1.20.3 // indirect
 	github.com/go-git/gcfg v1.5.0 // indirect
 	github.com/go-git/go-billy/v5 v5.4.0 // indirect
 	github.com/go-logr/logr v1.2.3 // indirect
@@ -73,7 +72,6 @@ require (
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/google/go-cmp v0.5.9 // indirect
-	github.com/google/go-dap v0.7.0 // indirect
 	github.com/google/go-github v17.0.0+incompatible // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/google/uuid v1.3.0 // indirect
@@ -134,7 +132,7 @@ require (
 	github.com/multiformats/go-multihash v0.2.1 // indirect
 	github.com/multiformats/go-varint v0.0.6 // indirect
 	github.com/onflow/atree v0.4.0 // indirect
-	github.com/onflow/cadence-tools/lint v0.3.0 // indirect
+	github.com/onflow/cadence-tools/lint v0.4.0 // indirect
 	github.com/onflow/flow-core-contracts/lib/go/contracts v0.11.2-0.20221216161720-c1b31d5a4722 // indirect
 	github.com/onflow/flow-core-contracts/lib/go/templates v0.11.2-0.20221216161720-c1b31d5a4722 // indirect
 	github.com/onflow/flow-ft/lib/go/contracts v0.5.0 // indirect
@@ -157,7 +155,6 @@ require (
 	github.com/prometheus/common v0.37.0 // indirect
 	github.com/prometheus/procfs v0.8.0 // indirect
 	github.com/psiemens/graceland v1.0.0 // indirect
-	github.com/remyoudompheng/bigfft v0.0.0-20230126093431-47fa9a501578 // indirect
 	github.com/rivo/uniseg v0.2.1-0.20211004051800-57c86be7915a // indirect
 	github.com/rs/cors v1.8.0 // indirect
 	github.com/rs/zerolog v1.29.0 // indirect
@@ -212,10 +209,6 @@ require (
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	lukechampine.com/blake3 v1.1.7 // indirect
-	modernc.org/libc v1.22.2 // indirect
-	modernc.org/mathutil v1.5.0 // indirect
-	modernc.org/memory v1.5.0 // indirect
-	modernc.org/sqlite v1.20.3 // indirect
 	nhooyr.io/websocket v1.8.6 // indirect
 )
 
