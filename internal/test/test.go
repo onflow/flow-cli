@@ -19,8 +19,8 @@
 package test
 
 import (
-	"bytes"
 	"fmt"
+	"github.com/onflow/flow-cli/pkg/flowkit/output"
 
 	cdcTests "github.com/onflow/cadence-tools/test"
 	"github.com/spf13/cobra"
@@ -28,12 +28,9 @@ import (
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/services"
-	"github.com/onflow/flow-cli/pkg/flowkit/util"
 )
 
-type flagsTests struct {
-	// Nothing for now
-}
+type flagsTests struct{}
 
 var testFlags = flagsTests{}
 
@@ -46,7 +43,7 @@ var TestCommand = &command.Command{
 		GroupID: "tools",
 	},
 	Flags: &testFlags,
-	Run:   run,
+	RunS:  run,
 }
 
 func run(
@@ -54,8 +51,8 @@ func run(
 	readerWriter flowkit.ReaderWriter,
 	_ command.GlobalFlags,
 	services *services.Services,
+	state *flowkit.State,
 ) (command.Result, error) {
-
 	filename := args[0]
 
 	code, err := readerWriter.ReadFile(filename)
@@ -63,12 +60,15 @@ func run(
 		return nil, fmt.Errorf("error loading script file: %w", err)
 	}
 
-	result, err := services.Tests.Execute(
-		code,
-		filename,
-		readerWriter,
-	)
+	runner := cdcTests.NewTestRunner().
+		WithImportResolver(importResolver(filename, readerWriter, state.Contracts())).
+		WithFileResolver(fileResolver(filename, readerWriter))
 
+	log := output.NewStdoutLogger(output.InfoLog)
+	log.StartProgress("Running tests")
+	defer log.StopProgress()
+
+	result, err := runner.RunTests(string(code))
 	if err != nil {
 		return nil, err
 	}
@@ -76,38 +76,4 @@ func run(
 	return &TestResult{
 		Results: result,
 	}, nil
-}
-
-type TestResult struct {
-	cdcTests.Results
-}
-
-var _ command.Result = &TestResult{}
-
-func (r *TestResult) JSON() any {
-	results := make([]map[string]string, 0, len(r.Results))
-
-	for _, result := range r.Results {
-		results = append(results, map[string]string{
-			"testName": result.TestName,
-			"error":    result.Error.Error(),
-		})
-	}
-
-	return results
-}
-
-func (r *TestResult) String() string {
-	var b bytes.Buffer
-	writer := util.CreateTabWriter(&b)
-
-	_, _ = fmt.Fprintf(writer, cdcTests.PrettyPrintResults(r.Results))
-
-	_ = writer.Flush()
-
-	return b.String()
-}
-
-func (r *TestResult) Oneliner() string {
-	return cdcTests.PrettyPrintResults(r.Results)
 }
