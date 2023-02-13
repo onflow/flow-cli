@@ -16,9 +16,10 @@
  * limitations under the License.
  */
 
-package services
+package test
 
 import (
+	"github.com/onflow/flow-cli/pkg/flowkit/services"
 	"os"
 	"testing"
 
@@ -36,7 +37,7 @@ func TestExecutingTests(t *testing.T) {
 	t.Run("simple", func(t *testing.T) {
 		t.Parallel()
 
-		st, s, _ := setup()
+		st, s, _ := services.setup()
 
 		script := tests.TestScriptSimple
 		results, err := s.Tests.Execute(script.Source, script.Filename, st.ReaderWriter())
@@ -49,7 +50,7 @@ func TestExecutingTests(t *testing.T) {
 	t.Run("simple failing", func(t *testing.T) {
 		t.Parallel()
 
-		st, s, _ := setup()
+		st, s, _ := services.setup()
 
 		script := tests.TestScriptSimpleFailing
 		results, err := s.Tests.Execute(script.Source, script.Filename, st.ReaderWriter())
@@ -66,7 +67,7 @@ func TestExecutingTests(t *testing.T) {
 		t.Parallel()
 
 		// Setup
-		st, s, _ := setup()
+		st, s, _ := services.setup()
 
 		c := config.Contract{
 			Name:     tests.ContractHelloString.Name,
@@ -88,7 +89,7 @@ func TestExecutingTests(t *testing.T) {
 		t.Parallel()
 
 		// Setup
-		st, s, _ := setup()
+		st, s, _ := services.setup()
 		readerWriter := st.ReaderWriter()
 		readerWriter.WriteFile(
 			tests.SomeFile.Filename,
