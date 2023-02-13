@@ -21,6 +21,7 @@ package gateway
 import (
 	"context"
 	"fmt"
+	"os"
 
 	"github.com/onflow/cadence"
 	jsoncdc "github.com/onflow/cadence/encoding/json"
@@ -41,7 +42,7 @@ type EmulatorGateway struct {
 	emulator        *emulator.Blockchain
 	backend         *backend.Backend
 	ctx             context.Context
-	logger          *logrus.Logger
+	logger          zerolog.Logger
 	emulatorOptions []emulator.Option
 }
 
@@ -54,10 +55,10 @@ func NewEmulatorGateway(serviceAccount *flowkit.Account) *EmulatorGateway {
 }
 
 func NewEmulatorGatewayWithOpts(serviceAccount *flowkit.Account, opts ...func(*EmulatorGateway)) *EmulatorGateway {
-
+	logger := zerolog.New(os.Stdout)
 	gateway := &EmulatorGateway{
 		ctx:             context.Background(),
-		logger:          logrus.New(),
+		logger:          logger,
 		emulatorOptions: []emulator.Option{},
 	}
 	for _, opt := range opts {
@@ -65,7 +66,7 @@ func NewEmulatorGatewayWithOpts(serviceAccount *flowkit.Account, opts ...func(*E
 	}
 
 	gateway.emulator = newEmulator(serviceAccount, gateway.emulatorOptions...)
-	gateway.backend = backend.New(gateway.logger, gateway.emulator)
+	gateway.backend = backend.New(&logger, gateway.emulator)
 	gateway.backend.EnableAutoMine()
 
 	return gateway
@@ -73,7 +74,7 @@ func NewEmulatorGatewayWithOpts(serviceAccount *flowkit.Account, opts ...func(*E
 
 func WithLogger(logger *logrus.Logger) func(g *EmulatorGateway) {
 	return func(g *EmulatorGateway) {
-		g.logger = logger
+		g.logger = zerolog.New(os.Stdout)
 	}
 }
 
