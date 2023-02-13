@@ -4,5 +4,11 @@
     "repo": "https://github.com/sideninja/flow-basic-scaffold.git",
     "description": "Scaffold contains required folder structure as well as some example Cadence code.",
     "commit": "0646fecc2f4da65aa5d7a7c8060c2bb741dcb879"
+  },
+    {
+    "name": "Scaffold-Flow Project",
+    "repo": "https://github.com/onflow/scaffold-flow.git",
+    "description": "Scaffold contains basic file structure to jumpstart your dApp!",
+    "commit": "4e28a54bdd82f4c44039397baaa535dc74325422"
   }
 ]
