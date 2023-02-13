@@ -21,7 +21,9 @@ package test
 import (
 	"bytes"
 	"fmt"
+
 	cdcTests "github.com/onflow/cadence-tools/test"
+
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/pkg/flowkit/util"
 )
