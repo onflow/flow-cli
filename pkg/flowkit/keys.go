@@ -62,6 +62,8 @@ func NewAccountKey(accountKeyConf config.AccountKey) (AccountKey, error) {
 		return newBip44AccountKey(accountKeyConf)
 	case config.KeyTypeGoogleKMS:
 		return newKmsAccountKey(accountKeyConf)
+	case config.KeyTypeFile:
+		return newFileAccountKey(accountKeyConf)
 	}
 
 	return nil, fmt.Errorf(`invalid key type: "%s"`, accountKeyConf.Type)
@@ -226,6 +228,23 @@ func newHexAccountKey(accountKey config.AccountKey) (*HexAccountKey, error) {
 	return &HexAccountKey{
 		baseAccountKey: newBaseAccountKey(accountKey),
 		privateKey:     accountKey.PrivateKey,
+	}, nil
+}
+
+// newFileAccountKey creates a hex account key from a file location
+func newFileAccountKey(accountKey config.AccountKey) (*HexAccountKey, error) {
+	key, err := os.ReadFile(accountKey.Location) // todo change to state reader writer instance
+	if err != nil {
+		return nil, fmt.Errorf("could not load the key for the account from passed location %s: %w", accountKey.Location, err)
+	}
+	pkey, err := crypto.DecodePrivateKeyHex(accountKey.SigAlgo, string(key))
+	if err != nil {
+		return nil, fmt.Errorf("could not decode the key from passd location %s: %w", accountKey.Location, err)
+	}
+
+	return &HexAccountKey{
+		baseAccountKey: newBaseAccountKey(accountKey),
+		privateKey:     pkey,
 	}, nil
 }
 
