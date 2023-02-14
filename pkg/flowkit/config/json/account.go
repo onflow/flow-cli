@@ -76,8 +76,23 @@ func transformSimpleToConfig(accountName string, a simpleAccount) (*config.Accou
 
 // transformAdvancedToConfig transforms advanced internal account to config account.
 func transformAdvancedToConfig(accountName string, a advancedAccount) (*config.Account, error) {
-	sigAlgo := crypto.StringToSignatureAlgorithm(a.Key.SigAlgo)
-	hashAlgo := crypto.StringToHashAlgorithm(a.Key.HashAlgo)
+	sigAlgo := crypto.ECDSA_P256 // default to ecdsa as default
+	if a.Key.SigAlgo != "" {
+		sigAlgo = crypto.StringToSignatureAlgorithm(a.Key.SigAlgo)
+	}
+
+	if sigAlgo == crypto.UnknownSignatureAlgorithm {
+		return nil, fmt.Errorf("invalid signature algorithm for account %s", accountName)
+	}
+
+	hashAlgo := crypto.SHA3_256 // default to sha3 as default
+	if a.Key.HashAlgo != "" {
+		hashAlgo = crypto.StringToHashAlgorithm(a.Key.HashAlgo)
+	}
+
+	if hashAlgo == crypto.UnknownHashAlgorithm {
+		return nil, fmt.Errorf("invalid hash algorithm for account %s", accountName)
+	}
 
 	validTypes := []config.KeyType{config.KeyTypeHex, config.KeyTypeFile, config.KeyTypeBip44, config.KeyTypeGoogleKMS}
 	if !slices.Contains(validTypes, a.Key.Type) {
@@ -94,14 +109,6 @@ func transformAdvancedToConfig(accountName string, a advancedAccount) (*config.A
 			return nil, fmt.Errorf("can only provide one property (resource ID, private key, location) on account %s", accountName)
 		}
 		set = true
-	}
-
-	if sigAlgo == crypto.UnknownSignatureAlgorithm {
-		return nil, fmt.Errorf("invalid signature algorithm for account %s", accountName)
-	}
-
-	if hashAlgo == crypto.UnknownHashAlgorithm {
-		return nil, fmt.Errorf("invalid hash algorithm for account %s", accountName)
 	}
 
 	address, err := transformAddress(a.Address)
