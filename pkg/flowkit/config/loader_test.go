@@ -23,6 +23,7 @@ import (
 
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
 	"github.com/onflow/flow-cli/pkg/flowkit/config/json"
@@ -460,4 +461,38 @@ func Test_JSONEnv(t *testing.T) {
 	assert.NoError(t, loadErr)
 	assert.Equal(t, 1, len(conf.Accounts))
 	assert.Equal(t, "0x21c5dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7", conf.Accounts[0].Key.PrivateKey.String())
+}
+
+func Test_LoadAccountFileType(t *testing.T) {
+	b := []byte(`{
+		"accounts": {
+			"emulator-account": {
+				"address": "f8d6e0586b0a20c7",
+				"key": {
+					"type": "file",
+					"location": "./test.pkey"
+				}
+			}
+		}
+	}`)
+
+	mockFS := afero.NewMemMapFs()
+	err := afero.WriteFile(mockFS, config.GlobalPath(), b, 0644)
+
+	assert.NoError(t, err)
+
+	composer := config.NewLoader(afero.Afero{Fs: mockFS})
+	composer.AddConfigParser(json.NewParser())
+
+	conf, loadErr := composer.Load(config.DefaultPaths())
+	require.NoError(t, loadErr)
+
+	acc, err := conf.Accounts.ByName("emulator-account")
+	assert.NoError(t, err)
+
+	assert.Len(t, conf.Accounts, 1)
+	assert.Equal(t,
+		"./test.pkey",
+		acc.Key.Location,
+	)
 }

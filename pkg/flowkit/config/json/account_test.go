@@ -114,6 +114,9 @@ func Test_ConfigAccountKeysAdvancedFile(t *testing.T) {
 	assert.Equal(t, "ECDSA_P256", key.SigAlgo.String())
 	assert.Equal(t, "./test.pkey", key.Location)
 	assert.Equal(t, "", key.ResourceID)
+
+	jsonAccs := transformAccountsToJSON(accounts)
+	assert.Equal(t, "./test.pkey", jsonAccs["test"].Advanced.Key.Location)
 }
 
 func Test_ConfigAccountKeysAdvancedKMS(t *testing.T) {
