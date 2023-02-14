@@ -20,21 +20,15 @@ package config
 
 import (
 	"encoding/json"
-	"regexp"
 
 	"github.com/a8m/envsubst"
 	"github.com/joho/godotenv"
 )
 
-var (
-	fileRegex     = regexp.MustCompile(`"([^"]*)"\s*:\s*{\s*"fromFile"\s*:\s*"([^"]*)"\s*},?`)
-	trailingComma = regexp.MustCompile(`,\s*}`)
-)
-
 // ProcessorRun all pre-processors.
 func ProcessorRun(raw []byte) ([]byte, map[string]string) {
 	raw = processEnv(raw)
-	raw, accountFromFiles := processFile(raw)
+	raw, accountFromFiles := processFromFile(raw)
 
 	return raw, accountFromFiles
 }
@@ -47,8 +41,8 @@ func processEnv(raw []byte) []byte {
 	return raw
 }
 
-// processFile finds file variables and insert content.
-func processFile(raw []byte) ([]byte, map[string]string) {
+// processFromFile finds file variables and insert content.
+func processFromFile(raw []byte) ([]byte, map[string]string) {
 	accountFromFiles := map[string]string{}
 
 	type config struct {
