@@ -84,8 +84,16 @@ func transformAdvancedToConfig(accountName string, a advancedAccount) (*config.A
 		return nil, fmt.Errorf("invalid key type for account %s", accountName)
 	}
 
-	if a.Key.ResourceID != "" && a.Key.PrivateKey != "" {
-		return nil, fmt.Errorf("only provide value for private key or resource ID on account %s", accountName)
+	// check that only one is provided because the values are mutually exclusive
+	set := false
+	for _, v := range []string{a.Key.ResourceID, a.Key.PrivateKey, a.Key.Location} {
+		if v == "" {
+			continue
+		}
+		if set {
+			return nil, fmt.Errorf("can only provide one property (resource ID, private key, location) on account %s", accountName)
+		}
+		set = true
 	}
 
 	if sigAlgo == crypto.UnknownSignatureAlgorithm {
@@ -236,6 +244,8 @@ func transformAdvancedKeyToJSON(key config.AccountKey) advanceKey {
 		advancedKey.DerivationPath = key.DerivationPath
 	case config.KeyTypeGoogleKMS:
 		advancedKey.ResourceID = key.ResourceID
+	case config.KeyTypeFile:
+		advancedKey.Location = key.Location
 	}
 
 	return advancedKey
