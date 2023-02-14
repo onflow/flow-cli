@@ -25,6 +25,7 @@ import (
 
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
+	"golang.org/x/exp/slices"
 
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
 )
@@ -78,7 +79,8 @@ func transformAdvancedToConfig(accountName string, a advancedAccount) (*config.A
 	sigAlgo := crypto.StringToSignatureAlgorithm(a.Key.SigAlgo)
 	hashAlgo := crypto.StringToHashAlgorithm(a.Key.HashAlgo)
 
-	if a.Key.Type != config.KeyTypeHex && a.Key.Type != config.KeyTypeGoogleKMS && a.Key.Type != config.KeyTypeBip44 {
+	validTypes := []config.KeyType{config.KeyTypeHex, config.KeyTypeFile, config.KeyTypeBip44, config.KeyTypeGoogleKMS}
+	if !slices.Contains(validTypes, a.Key.Type) {
 		return nil, fmt.Errorf("invalid key type for account %s", accountName)
 	}
 
@@ -135,6 +137,12 @@ func transformAdvancedToConfig(accountName string, a advancedAccount) (*config.A
 			return nil, fmt.Errorf("missing resource ID value for key on account %s", accountName)
 		}
 		key.ResourceID = a.Key.ResourceID
+
+	case config.KeyTypeFile:
+		if a.Key.Location == "" {
+			return nil, fmt.Errorf("missing location to a file containing the private key value for the account %s", accountName)
+		}
+		key.Location = a.Key.Location
 	}
 
 	return &config.Account{
@@ -272,6 +280,8 @@ type advanceKey struct {
 	DerivationPath string `json:"derivationPath,omitempty"`
 	// kms key type
 	ResourceID string `json:"resourceID,omitempty"`
+	// key location
+	Location string `json:"location"`
 	// old key format
 	Context map[string]string `json:"context,omitempty"`
 }
