@@ -20,6 +20,7 @@ package config
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/a8m/envsubst"
 	"github.com/joho/godotenv"
@@ -46,19 +47,20 @@ func processFromFile(raw []byte) ([]byte, map[string]string) {
 	accountFromFiles := map[string]string{}
 
 	type config struct {
-		Accounts    map[string]map[string]string `json:"accounts,omitempty"`
-		Contracts   any                          `json:"contracts,omitempty"`
-		Networks    any                          `json:"networks,omitempty"`
-		Deployments any                          `json:"deployments,omitempty"`
-		Emulators   any                          `json:"emulators,omitempty"`
+		Accounts    map[string]map[string]any `json:"accounts,omitempty"`
+		Contracts   any                       `json:"contracts,omitempty"`
+		Networks    any                       `json:"networks,omitempty"`
+		Deployments any                       `json:"deployments,omitempty"`
+		Emulators   any                       `json:"emulators,omitempty"`
 	}
 
 	var conf config
 	_ = json.Unmarshal(raw, &conf)
 
 	for name, val := range conf.Accounts {
-		if location := val["fromFile"]; location != "" {
-			accountFromFiles[name] = location
+		if location := val["fromFile"]; location != nil {
+			fmt.Println("DEPRECATED: the fromFile directive will be soon deprecated, please use key file type instead: https://developers.flow.com/tools/flow-cli/configuration#advanced-format-1")
+			accountFromFiles[name] = location.(string)
 			delete(conf.Accounts, name)
 		}
 	}
