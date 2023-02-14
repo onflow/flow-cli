@@ -19,8 +19,8 @@
 package config
 
 import (
+	"encoding/json"
 	"regexp"
-	"strings"
 
 	"github.com/a8m/envsubst"
 	"github.com/joho/godotenv"
@@ -33,40 +33,42 @@ var (
 
 // ProcessorRun all pre-processors.
 func ProcessorRun(raw []byte) ([]byte, map[string]string) {
-	rawString := string(raw)
-	rawString = processEnv(rawString)
-	rawString, accountFromFiles := processFile(rawString)
+	raw = processEnv(raw)
+	raw, accountFromFiles := processFile(raw)
 
-	return []byte(rawString), accountFromFiles
+	return raw, accountFromFiles
 }
 
 // processEnv finds env variables and insert env values.
-func processEnv(raw string) string {
+func processEnv(raw []byte) []byte {
 	_ = godotenv.Load() // try to load .env file
 
-	raw, _ = envsubst.String(raw)
+	raw, _ = envsubst.Bytes(raw)
 	return raw
 }
 
 // processFile finds file variables and insert content.
-func processFile(raw string) (string, map[string]string) {
-	fileMatches := fileRegex.FindAllStringSubmatch(raw, -1)
+func processFile(raw []byte) ([]byte, map[string]string) {
 	accountFromFiles := map[string]string{}
 
-	for _, match := range fileMatches {
-		if len(match) < 3 {
-			continue
-		}
-
-		// match 1 is the account name, match 2 is the file location
-		accountFromFiles[match[1]] = match[2]
-
-		// remove whole fromFile part from config after we add that to composer
-		raw = strings.ReplaceAll(raw, match[0], "")
-
-		// remove possible trailing comma
-		raw = trailingComma.ReplaceAllString(raw, "}")
+	type config struct {
+		Accounts    map[string]map[string]string `json:"accounts,omitempty"`
+		Contracts   any                          `json:"contracts,omitempty"`
+		Networks    any                          `json:"networks,omitempty"`
+		Deployments any                          `json:"deployments,omitempty"`
+		Emulators   any                          `json:"emulators,omitempty"`
 	}
 
+	var conf config
+	_ = json.Unmarshal(raw, &conf)
+
+	for name, val := range conf.Accounts {
+		if location := val["fromFile"]; location != "" {
+			accountFromFiles[name] = location
+			delete(conf.Accounts, name)
+		}
+	}
+
+	raw, _ = json.Marshal(conf)
 	return raw, accountFromFiles
 }
