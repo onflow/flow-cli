@@ -20,12 +20,10 @@ package accounts
 
 import (
 	"fmt"
-	"strings"
-	"time"
-
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/spf13/cobra"
+	"strings"
 
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/pkg/flowkit"
@@ -220,10 +218,11 @@ func createInteractive(state *flowkit.State, loader flowkit.ReaderWriter) error 
 	}
 
 	log.Info(fmt.Sprintf(
-		"%s New account created with address %s and name %s.\n",
+		"%s New account created with address %s and name %s on %s network.\n",
 		output.SuccessEmoji(),
 		output.Bold(fmt.Sprintf("0x%s", account.Address().String())),
-		output.Bold(name)),
+		output.Bold(name),
+		output.Bold(networkName)),
 	)
 
 	err = saveAccount(loader, state, account, selectedNetwork)
@@ -231,7 +230,7 @@ func createInteractive(state *flowkit.State, loader flowkit.ReaderWriter) error 
 		return err
 	}
 
-	items = []string{
+	items := []string{
 		"Here’s a summary of all the actions that were taken",
 		fmt.Sprintf("Added the new account to %s.", output.Bold("flow.json")),
 	}
@@ -244,46 +243,6 @@ func createInteractive(state *flowkit.State, loader flowkit.ReaderWriter) error 
 	outputList(log, items, false)
 
 	return nil
-}
-
-// getAccountCreatedAddressWithPubKey monitors the network for account creation events, if the event
-// contains the public key we are interested in then it extracts the newly created address from the event payload.
-func getAccountCreatedAddressWithPubKey(
-	service *services.Services,
-	pubKey crypto.PublicKey,
-	startHeight uint64,
-) (*flow.Address, error) {
-	lastHeight, err := service.Blocks.GetLatestBlockHeight()
-	if err != nil {
-		return nil, err
-	}
-
-	flowEvents, _ := service.Events.Get([]string{flow.EventAccountKeyAdded}, startHeight, lastHeight, 20, 1) // ignore AN errors since we will retry anyway
-
-	var address *flow.Address
-	for _, block := range flowEvents {
-		events := flowkit.NewEvents(block.Events)
-		address = events.GetAddressForKeyAdded(pubKey)
-		if address != nil {
-			break
-		}
-	}
-
-	if address == nil {
-		if lastHeight-startHeight > 400 { // if something goes wrong don't keep waiting forever to avoid spamming network
-			return nil, fmt.Errorf("failed to get the account address due to time out")
-		}
-
-		time.Sleep(time.Second * 2)
-		address, err = getAccountCreatedAddressWithPubKey(service, pubKey, startHeight)
-		if err != nil {
-			return nil, err
-		}
-
-		return address, nil
-	}
-
-	return address, nil
 }
 
 func saveAccount(
