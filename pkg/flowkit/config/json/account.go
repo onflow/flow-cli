@@ -298,7 +298,7 @@ type advanceKey struct {
 	// kms key type
 	ResourceID string `json:"resourceID,omitempty"`
 	// key location
-	Location string `json:"location"`
+	Location string `json:"location,omitempty"`
 	// old key format
 	Context map[string]string `json:"context,omitempty"`
 }
