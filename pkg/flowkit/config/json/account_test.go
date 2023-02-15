@@ -117,6 +117,7 @@ func Test_ConfigAccountKeysAdvancedFile(t *testing.T) {
 
 	jsonAccs := transformAccountsToJSON(accounts)
 	assert.Equal(t, "./test.pkey", jsonAccs["test"].Advanced.Key.Location)
+	assert.Equal(t, "", jsonAccs["test"].Advanced.Key.PrivateKey)
 }
 
 func Test_ConfigAccountKeysAdvancedKMS(t *testing.T) {
