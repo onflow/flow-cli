@@ -231,23 +231,6 @@ func newHexAccountKey(accountKey config.AccountKey) (*HexAccountKey, error) {
 	}, nil
 }
 
-// newFileAccountKey creates a hex account key from a file location
-func newFileAccountKey(accountKey config.AccountKey) (*HexAccountKey, error) {
-	key, err := os.ReadFile(accountKey.Location) // todo change to state reader writer instance
-	if err != nil {
-		return nil, fmt.Errorf("could not load the key for the account from passed location %s: %w", accountKey.Location, err)
-	}
-	pkey, err := crypto.DecodePrivateKeyHex(accountKey.SigAlgo, string(key))
-	if err != nil {
-		return nil, fmt.Errorf("could not decode the key from passd location %s: %w", accountKey.Location, err)
-	}
-
-	return &HexAccountKey{
-		baseAccountKey: newBaseAccountKey(accountKey),
-		privateKey:     pkey,
-	}, nil
-}
-
 func (a *HexAccountKey) Signer(ctx context.Context) (crypto.Signer, error) {
 	return crypto.NewInMemorySigner(a.privateKey, a.HashAlgo())
 }
@@ -277,6 +260,48 @@ func (a *HexAccountKey) Validate() error {
 
 func (a *HexAccountKey) PrivateKeyHex() string {
 	return hex.EncodeToString(a.privateKey.Encode())
+}
+
+// newFileAccountKey creates a hex account key from a file location
+func newFileAccountKey(accountKey config.AccountKey) (*FileAccountKey, error) {
+	return &FileAccountKey{
+		baseAccountKey: newBaseAccountKey(accountKey),
+		location:       accountKey.Location,
+	}, nil
+}
+
+type FileAccountKey struct {
+	*baseAccountKey
+	privateKey crypto.PrivateKey
+	location   string
+}
+
+func (f *FileAccountKey) Signer(ctx context.Context) (crypto.Signer, error) {
+	return crypto.NewInMemorySigner(f.privateKey, f.HashAlgo())
+}
+
+func (f *FileAccountKey) PrivateKey() (*crypto.PrivateKey, error) {
+	if f.privateKey == nil { // lazy load the key
+		key, err := os.ReadFile(f.location) // todo change to use state reader writer instance
+		if err != nil {
+			return nil, fmt.Errorf("could not load the key for the account from passed location %s: %w", f.location, err)
+		}
+		pkey, err := crypto.DecodePrivateKeyHex(f.sigAlgo, string(key))
+		if err != nil {
+			return nil, fmt.Errorf("could not decode the key from passd location %s: %w", f.location, err)
+		}
+		f.privateKey = pkey
+	}
+	return &f.privateKey, nil
+}
+
+func (f *FileAccountKey) ToConfig() config.AccountKey {
+	return config.AccountKey{
+		Type:     config.KeyTypeFile,
+		SigAlgo:  f.sigAlgo,
+		HashAlgo: f.hashAlgo,
+		Location: f.location,
+	}
 }
 
 // Bip44AccountKey implements https://github.com/onflow/flow/blob/master/flips/20201125-bip-44-multi-account.md
