@@ -19,10 +19,14 @@
 package accounts
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/spf13/cobra"
+	"io"
+	"net/http"
 	"strings"
 
 	"github.com/onflow/flow-cli/internal/command"
@@ -179,8 +183,9 @@ func createInteractive(state *flowkit.State, loader flowkit.ReaderWriter) error 
 		return err
 	}
 
-	var address flow.Address
+	log.StartProgress("Creating an account")
 
+	var address flow.Address
 	if selectedNetwork == config.DefaultEmulatorNetwork() {
 		signer, err := state.EmulatorServiceAccount()
 		if err != nil {
@@ -243,6 +248,66 @@ func createInteractive(state *flowkit.State, loader flowkit.ReaderWriter) error 
 	outputList(log, items, false)
 
 	return nil
+}
+
+func createFlowAccount(publicKey crypto.PublicKey, network config.Network) (flow.Address, error) {
+	req := &lilicoAccountRequest{
+		publicKey: publicKey.String(),
+	}
+
+	res, err := req.do(network.Name)
+	if err != nil {
+		return flow.EmptyAddress, err
+	}
+
+}
+
+type lilicoAccountRequest struct {
+	publicKey          string
+	signatureAlgorithm string
+	hashAlgorithm      string
+	weight             int
+}
+
+type lilicoAccountResponse struct {
+	txID      string
+	succeeded bool
+}
+
+func newLilicoResponse(res []byte) *lilicoAccountResponse {
+	return &lilicoAccountResponse{}
+}
+
+func (l *lilicoAccountRequest) do(network string) (*lilicoAccountResponse, error) {
+	// fix to the defaults as we don't support other values
+	l.hashAlgorithm = crypto.SHA3_256.String()
+	l.signatureAlgorithm = crypto.ECDSA_P256.String()
+	l.weight = flow.AccountKeyWeightThreshold
+
+	data, err := json.Marshal(l)
+	if err != nil {
+		return nil, err
+	}
+
+	if network == config.DefaultTestnetNetwork().Name {
+		network = "/testnet"
+	}
+	request, err := http.NewRequest(
+		http.MethodPost,
+		fmt.Sprintf("https://openapi.lilico.org/v1/address%s", network),
+		bytes.NewReader(data),
+	)
+	request.Header.Set("Content-Type", "application/json; charset=UTF-8")
+
+	client := &http.Client{}
+	res, err := client.Do(request)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
+
+	body, _ := io.ReadAll(res.Body)
+	return newLilicoResponse(body), nil
 }
 
 func saveAccount(
