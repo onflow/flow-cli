@@ -67,11 +67,8 @@ func create(
 ) (command.Result, error) {
 	// if user doesn't provide any flags go into interactive mode
 	if len(createFlags.Keys) == 0 {
-		_, err := createInteractive(state, loader)
-		if err != nil {
-			return nil, err
-		}
-		return nil, nil
+		err := createInteractive(state, loader)
+		return nil, err
 	}
 
 	signer, err := state.Accounts().ByName(createFlags.Signer)
@@ -93,38 +90,20 @@ func create(
 		return nil, fmt.Errorf("must provide a signature and hash algorithm for every key provided to --key: %d keys, %d signature algo, %d hash algo", len(createFlags.Keys), len(createFlags.SigAlgo), len(createFlags.HashAlgo))
 	}
 
-	// read all signature algorithms
-	sigAlgos := make([]crypto.SignatureAlgorithm, 0, len(createFlags.SigAlgo))
-	for _, sigAlgoStr := range createFlags.SigAlgo {
-		sigAlgo := crypto.StringToSignatureAlgorithm(sigAlgoStr)
-		if sigAlgo == crypto.UnknownSignatureAlgorithm {
-			return nil, fmt.Errorf("invalid signature algorithm: %s", createFlags.SigAlgo)
-		}
-		sigAlgos = append(sigAlgos, sigAlgo)
-	}
-
-	// read all hash algorithms
-	hashAlgos := make([]crypto.HashAlgorithm, 0, len(createFlags.HashAlgo))
-	for _, hashAlgoStr := range createFlags.HashAlgo {
-
-		hashAlgo := crypto.StringToHashAlgorithm(hashAlgoStr)
-		if hashAlgo == crypto.UnknownHashAlgorithm {
-			return nil, fmt.Errorf("invalid hash algorithm: %s", createFlags.HashAlgo)
-		}
-		hashAlgos = append(hashAlgos, hashAlgo)
-	}
-
 	keyWeights := createFlags.Weights
 
-	// decode public keys
-	pubKeys := make([]crypto.PublicKey, 0, len(createFlags.Keys))
-	for i, k := range createFlags.Keys {
-		k = strings.TrimPrefix(k, "0x") // clear possible prefix
-		key, err := crypto.DecodePublicKeyHex(sigAlgos[i], k)
-		if err != nil {
-			return nil, fmt.Errorf("failed decoding public key: %s with error: %w", key, err)
-		}
-		pubKeys = append(pubKeys, key)
+	sigAlgos, err := parseSignatureAlgorithms(createFlags.SigAlgo)
+	if err != nil {
+		return nil, err
+	}
+	hashAlgos, err := parseHashingAlgorithms(createFlags.HashAlgo)
+	if err != nil {
+		return nil, err
+	}
+
+	pubKeys, err := parsePublicKeys(createFlags.Keys, sigAlgos)
+	if err != nil {
+		return nil, err
 	}
 
 	account, err := services.Accounts.Create(
@@ -146,47 +125,60 @@ func create(
 	}, nil
 }
 
-func createInteractive(state *flowkit.State, loader flowkit.ReaderWriter) (*flow.Account, error) {
+func parseHashingAlgorithms(algorithms []string) ([]crypto.HashAlgorithm, error) {
+	hashAlgos := make([]crypto.HashAlgorithm, 0, len(createFlags.HashAlgo))
+	for _, hashAlgoStr := range createFlags.HashAlgo {
+		hashAlgo := crypto.StringToHashAlgorithm(hashAlgoStr)
+		if hashAlgo == crypto.UnknownHashAlgorithm {
+			return nil, fmt.Errorf("invalid hash algorithm: %s", createFlags.HashAlgo)
+		}
+		hashAlgos = append(hashAlgos, hashAlgo)
+	}
+	return hashAlgos, nil
+}
+
+func parseSignatureAlgorithms(algorithms []string) ([]crypto.SignatureAlgorithm, error) {
+	sigAlgos := make([]crypto.SignatureAlgorithm, 0, len(createFlags.SigAlgo))
+	for _, sigAlgoStr := range algorithms {
+		sigAlgo := crypto.StringToSignatureAlgorithm(sigAlgoStr)
+		if sigAlgo == crypto.UnknownSignatureAlgorithm {
+			return nil, fmt.Errorf("invalid signature algorithm: %s", createFlags.SigAlgo)
+		}
+		sigAlgos = append(sigAlgos, sigAlgo)
+	}
+	return sigAlgos, nil
+}
+
+func parsePublicKeys(publicKeys []string, sigAlgorithms []crypto.SignatureAlgorithm) ([]crypto.PublicKey, error) {
+	pubKeys := make([]crypto.PublicKey, 0, len(createFlags.Keys))
+	for i, k := range publicKeys {
+		k = strings.TrimPrefix(k, "0x") // clear possible prefix
+		key, err := crypto.DecodePublicKeyHex(sigAlgorithms[i], k)
+		if err != nil {
+			return nil, fmt.Errorf("failed decoding public key: %s with error: %w", key, err)
+		}
+		pubKeys = append(pubKeys, key)
+	}
+	return pubKeys, nil
+}
+
+func createInteractive(state *flowkit.State, loader flowkit.ReaderWriter) error {
 	log := output.NewStdoutLogger(output.InfoLog)
 
 	name := output.AccountNamePrompt(state.Accounts()) // todo check for duplicate names
 	networkName, selectedNetwork := output.CreateAccountNetworkPrompt()
+	privateFile := output.Bold(fmt.Sprintf("%s.private.json", name))
 
 	// create new gateway based on chosen network
 	gw, err := gateway.NewGrpcGateway(selectedNetwork.Host)
 	if err != nil {
-		return nil, err
+		return err
 	}
-
-	privateFile := output.Bold(fmt.Sprintf("%s.private.json", name))
-
-	items := []string{
-		fmt.Sprintf("%sThis command will perform the following", output.WarningEmoji()),
-		"Generate a new ECDSA P-256 public and private key pair.",
-	}
-	if selectedNetwork != config.DefaultEmulatorNetwork() {
-		items = append(items, fmt.Sprintf("Save the private key to %s and add it to .gitignore.", privateFile))
-	}
-	items = append(items,
-		fmt.Sprintf("Create a new account on %s paired with the public key.", output.Bold(networkName)),
-		fmt.Sprintf("Save the newly-created account to %s.\n", output.Bold("flow.json")),
-	)
-	outputList(log, items, false)
-
-	if !output.WantToContinue() {
-		return nil, fmt.Errorf("cancelled account creation")
-	}
-
 	service := services.NewServices(gw, state, output.NewStdoutLogger(output.NoneLog))
 
 	key, err := service.Keys.Generate("", crypto.ECDSA_P256)
 	if err != nil {
-		return nil, err
-	}
-
-	startHeight, err := service.Blocks.GetLatestBlockHeight()
-	if err != nil {
-		return nil, err
+		return err
 	}
 
 	var address flow.Address
@@ -194,7 +186,7 @@ func createInteractive(state *flowkit.State, loader flowkit.ReaderWriter) (*flow
 	if selectedNetwork == config.DefaultEmulatorNetwork() {
 		signer, err := state.EmulatorServiceAccount()
 		if err != nil {
-			return nil, err
+			return err
 		}
 		account, err := service.Accounts.Create(
 			signer,
@@ -205,7 +197,7 @@ func createInteractive(state *flowkit.State, loader flowkit.ReaderWriter) (*flow
 			nil,
 		)
 		if err != nil {
-			return nil, err
+			return err
 		}
 		log.StopProgress()
 
@@ -213,50 +205,18 @@ func createInteractive(state *flowkit.State, loader flowkit.ReaderWriter) (*flow
 
 		address = account.Address
 	} else {
-		var link string
-		switch selectedNetwork {
-		case config.DefaultTestnetNetwork():
-			outputList(log, []string{
-				"Please complete the following steps in a web browser",
-				"Complete the captcha challenge.",
-				"Click the 'Create Account' button.",
-				"Return to this window.",
-			}, true)
-			link = util.TestnetFaucetURL(key.PublicKey().String(), crypto.ECDSA_P256)
-
-		case config.DefaultMainnetNetwork():
-			outputList(log, []string{
-				"Please complete the following steps in a web browser",
-				"Click on 'Submit' button.",
-				"Connect existing Blocto account or create new.",
-				"Click on confirm and approve transaction.",
-			}, true)
-			link = util.MainnetFlowPortURL(key.PublicKey().String())
-		}
-
-		output.ConfirmOpenBrowser()
-
-		log.StartProgress("Waiting for your account to be created, please finish all the steps in the browser...\n")
-		_ = util.OpenBrowserWindow(link)
-		log.Info(output.Italic(fmt.Sprintf("You can also navigate to the link manually: %s\n", link)))
-
-		addr, err := getAccountCreatedAddressWithPubKey(service, key.PublicKey(), startHeight)
-		if err != nil {
-			return nil, err
-		}
-		address = *addr
 
 		log.StopProgress()
 	}
 
 	onChainAccount, err := service.Accounts.Get(address)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	account, err := flowkit.NewAccountFromOnChainAccount(name, onChainAccount, key)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	log.Info(fmt.Sprintf(
@@ -268,7 +228,7 @@ func createInteractive(state *flowkit.State, loader flowkit.ReaderWriter) (*flow
 
 	err = saveAccount(loader, state, account, selectedNetwork)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	items = []string{
@@ -283,7 +243,7 @@ func createInteractive(state *flowkit.State, loader flowkit.ReaderWriter) (*flow
 	}
 	outputList(log, items, false)
 
-	return onChainAccount, nil
+	return nil
 }
 
 // getAccountCreatedAddressWithPubKey monitors the network for account creation events, if the event
