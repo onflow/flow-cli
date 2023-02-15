@@ -251,34 +251,31 @@ func createInteractive(state *flowkit.State, loader flowkit.ReaderWriter) error 
 }
 
 func createFlowAccount(publicKey crypto.PublicKey, network config.Network) (flow.Address, error) {
-	req := &lilicoAccountRequest{
+	account := &lilicoAccount{
 		publicKey: publicKey.String(),
 	}
 
-	res, err := req.do(network.Name)
+	res, err := account.create(network.Name)
 	if err != nil {
 		return flow.EmptyAddress, err
 	}
 
 }
 
-type lilicoAccountRequest struct {
+type lilicoAccount struct {
 	publicKey          string
 	signatureAlgorithm string
 	hashAlgorithm      string
 	weight             int
 }
 
-type lilicoAccountResponse struct {
-	txID      string
-	succeeded bool
+type lilicoResponse struct {
+	data struct {
+		txId string
+	}
 }
 
-func newLilicoResponse(res []byte) *lilicoAccountResponse {
-	return &lilicoAccountResponse{}
-}
-
-func (l *lilicoAccountRequest) do(network string) (*lilicoAccountResponse, error) {
+func (l *lilicoAccount) create(network string) (flow.Identifier, error) {
 	// fix to the defaults as we don't support other values
 	l.hashAlgorithm = crypto.SHA3_256.String()
 	l.signatureAlgorithm = crypto.ECDSA_P256.String()
@@ -286,7 +283,7 @@ func (l *lilicoAccountRequest) do(network string) (*lilicoAccountResponse, error
 
 	data, err := json.Marshal(l)
 	if err != nil {
-		return nil, err
+		return flow.EmptyID, err
 	}
 
 	if network == config.DefaultTestnetNetwork().Name {
@@ -302,12 +299,18 @@ func (l *lilicoAccountRequest) do(network string) (*lilicoAccountResponse, error
 	client := &http.Client{}
 	res, err := client.Do(request)
 	if err != nil {
-		return nil, err
+		return flow.EmptyID, fmt.Errorf("could not create an account: %w", err)
 	}
 	defer res.Body.Close()
 
 	body, _ := io.ReadAll(res.Body)
-	return newLilicoResponse(body), nil
+	var lilicoRes lilicoResponse
+	err = json.Unmarshal(body, &lilicoRes)
+	if err != nil {
+		return flow.EmptyID, fmt.Errorf("could not create an account: %w", err)
+	}
+
+	return flow.HexToID(lilicoRes.data.txId), nil
 }
 
 func saveAccount(
