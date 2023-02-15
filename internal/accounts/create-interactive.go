@@ -20,6 +20,7 @@ package accounts
 
 import (
 	"bytes"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"github.com/onflow/flow-cli/pkg/flowkit"
@@ -32,6 +33,8 @@ import (
 	"github.com/onflow/flow-go-sdk/crypto"
 	"io"
 	"net/http"
+	"strings"
+	"time"
 )
 
 // createInteractive is used when user calls a default account create command without any provided values.
@@ -135,7 +138,7 @@ func createFlowAccount(
 	network config.Network,
 ) (*flow.Address, error) {
 	account := &lilicoAccount{
-		publicKey: publicKey.String(),
+		PublicKey: strings.TrimPrefix(publicKey.String(), "0x"),
 	}
 
 	id, err := account.create(network.Name)
@@ -143,6 +146,7 @@ func createFlowAccount(
 		return nil, err
 	}
 
+	time.Sleep(2 * time.Second) // artificial delay to wait for tx to be propagated on ANs todo find better way
 	_, result, err := services.Transactions.GetStatus(id, true)
 	if err != nil {
 		return nil, err
@@ -159,41 +163,51 @@ func createFlowAccount(
 
 // lilicoAccount contains all the data needed for interaction with lilico account creation API.
 type lilicoAccount struct {
-	publicKey          string
-	signatureAlgorithm string
-	hashAlgorithm      string
-	weight             int
+	PublicKey          string `json:"publicKey"`
+	SignatureAlgorithm string `json:"signatureAlgorithm"`
+	HashAlgorithm      string `json:"hashAlgorithm"`
+	Weight             int    `json:"weight"`
 }
 
 type lilicoResponse struct {
-	data struct {
-		txId string
-	}
+	Data struct {
+		TxId string `json:"txId"`
+	} `json:"data"`
 }
+
+// injected token to be used for API requests
+var lilicoToken = ""
 
 // create a new account using the lilico API and parsing the response, returning account creation transaction ID.
 func (l *lilicoAccount) create(network string) (flow.Identifier, error) {
 	// fix to the defaults as we don't support other values
-	l.hashAlgorithm = crypto.SHA3_256.String()
-	l.signatureAlgorithm = crypto.ECDSA_P256.String()
-	l.weight = flow.AccountKeyWeightThreshold
+	l.HashAlgorithm = crypto.SHA3_256.String()
+	l.SignatureAlgorithm = crypto.ECDSA_P256.String()
+	l.Weight = flow.AccountKeyWeightThreshold
 
 	data, err := json.Marshal(l)
 	if err != nil {
 		return flow.EmptyID, err
 	}
 
+	apiNetwork := ""
 	if network == config.DefaultTestnetNetwork().Name {
-		network = "/testnet"
+		apiNetwork = "/testnet"
 	}
+
 	request, err := http.NewRequest(
 		http.MethodPost,
-		fmt.Sprintf("https://openapi.lilico.org/v1/address%s", network),
+		fmt.Sprintf("https://openapi.lilico.org/v1/address%s", apiNetwork),
 		bytes.NewReader(data),
 	)
-	request.Header.Set("Content-Type", "application/json; charset=UTF-8")
+	request.Header.Add("Content-Type", "application/json; charset=UTF-8")
+	request.Header.Add("Authorization", lilicoToken)
 
-	client := &http.Client{}
+	client := &http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, // lilico api doesn't yet have a valid cert, todo reevaluate
+		},
+	}
 	res, err := client.Do(request)
 	if err != nil {
 		return flow.EmptyID, fmt.Errorf("could not create an account: %w", err)
@@ -207,7 +221,7 @@ func (l *lilicoAccount) create(network string) (flow.Identifier, error) {
 		return flow.EmptyID, fmt.Errorf("could not create an account: %w", err)
 	}
 
-	return flow.HexToID(lilicoRes.data.txId), nil
+	return flow.HexToID(lilicoRes.Data.TxId), nil
 }
 
 func saveAccount(
