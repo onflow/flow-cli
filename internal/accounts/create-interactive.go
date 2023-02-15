@@ -34,6 +34,10 @@ import (
 	"net/http"
 )
 
+// createInteractive is used when user calls a default account create command without any provided values.
+//
+// This process takes the user through couple of steps with prompts asking for them to provide name and network,
+// and it then uses account creation APIs to automatically create the account on the network as well as save it.
 func createInteractive(state *flowkit.State, loader flowkit.ReaderWriter) error {
 	log := output.NewStdoutLogger(output.InfoLog)
 
@@ -69,17 +73,21 @@ func createInteractive(state *flowkit.State, loader flowkit.ReaderWriter) error 
 			[]crypto.HashAlgorithm{crypto.SHA3_256},
 			nil,
 		)
+		log.StopProgress()
 		if err != nil {
 			return err
 		}
-		log.StopProgress()
 
 		log.Info(output.Italic("\nPlease note that the newly-created account will only be available while you keep the emulator service running. If you restart the emulator service, all accounts will be reset. If you want to persist accounts between restarts, please use the '--persist' flag when starting the flow emulator.\n"))
 
 		address = account.Address
 	} else {
-
+		addr, err := createFlowAccount(service, key.PublicKey(), selectedNetwork)
 		log.StopProgress()
+		if err != nil {
+			return err
+		}
+		address = *addr
 	}
 
 	onChainAccount, err := service.Accounts.Get(address)
@@ -120,18 +128,36 @@ func createInteractive(state *flowkit.State, loader flowkit.ReaderWriter) error 
 	return nil
 }
 
-func createFlowAccount(publicKey crypto.PublicKey, network config.Network) (flow.Address, error) {
+// createFlowAccount using the account creation API and return the newly created account address.
+func createFlowAccount(
+	services *services.Services,
+	publicKey crypto.PublicKey,
+	network config.Network,
+) (*flow.Address, error) {
 	account := &lilicoAccount{
 		publicKey: publicKey.String(),
 	}
 
-	res, err := account.create(network.Name)
+	id, err := account.create(network.Name)
 	if err != nil {
-		return flow.EmptyAddress, err
+		return nil, err
 	}
 
+	_, result, err := services.Transactions.GetStatus(id, true)
+	if err != nil {
+		return nil, err
+	}
+
+	events := flowkit.EventsFromTransaction(result)
+	address := events.GetCreatedAddresses()
+	if len(address) == 0 {
+		return nil, fmt.Errorf("account creation error")
+	}
+
+	return address[0], nil
 }
 
+// lilicoAccount contains all the data needed for interaction with lilico account creation API.
 type lilicoAccount struct {
 	publicKey          string
 	signatureAlgorithm string
@@ -145,6 +171,7 @@ type lilicoResponse struct {
 	}
 }
 
+// create a new account using the lilico API and parsing the response, returning account creation transaction ID.
 func (l *lilicoAccount) create(network string) (flow.Identifier, error) {
 	// fix to the defaults as we don't support other values
 	l.hashAlgorithm = crypto.SHA3_256.String()
