@@ -303,7 +303,12 @@ type FileAccountKey struct {
 }
 
 func (f *FileAccountKey) Signer(ctx context.Context) (crypto.Signer, error) {
-	return crypto.NewInMemorySigner(f.privateKey, f.HashAlgo())
+	key, err := f.PrivateKey()
+	if err != nil {
+		return nil, err
+	}
+
+	return crypto.NewInMemorySigner(*key, f.HashAlgo())
 }
 
 func (f *FileAccountKey) PrivateKey() (*crypto.PrivateKey, error) {
