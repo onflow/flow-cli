@@ -54,7 +54,7 @@ var _ AccountKey = &KmsAccountKey{}
 
 var _ AccountKey = &Bip44AccountKey{}
 
-func NewAccountKey(accountKeyConf config.AccountKey) (AccountKey, error) {
+func accountKeyFromConfig(accountKeyConf config.AccountKey) (AccountKey, error) {
 	switch accountKeyConf.Type {
 	case config.KeyTypeHex:
 		return hexKeyFromConfig(accountKeyConf)
@@ -90,15 +90,21 @@ func (a *baseAccountKey) Type() config.KeyType {
 }
 
 func (a *baseAccountKey) SigAlgo() crypto.SignatureAlgorithm {
+	if a.sigAlgo == crypto.UnknownSignatureAlgorithm {
+		return crypto.ECDSA_P256 // default value
+	}
 	return a.sigAlgo
 }
 
 func (a *baseAccountKey) HashAlgo() crypto.HashAlgorithm {
+	if a.hashAlgo == crypto.UnknownHashAlgorithm {
+		return crypto.SHA3_256 // default value
+	}
 	return a.hashAlgo
 }
 
 func (a *baseAccountKey) Index() int {
-	return a.index
+	return a.index // default to 0
 }
 
 func (a *baseAccountKey) Validate() error {
