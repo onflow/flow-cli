@@ -171,6 +171,9 @@ func createEmulatorAccount(
 		[]crypto.HashAlgorithm{crypto.SHA3_256},
 		nil,
 	)
+	if err != nil {
+		return nil, err
+	}
 
 	return flowkit.NewAccount(name).SetAddress(networkAccount.Address).SetKey(
 		flowkit.NewHexAccountKeyFromPrivateKey(0, crypto.SHA3_256, key),
@@ -229,6 +232,10 @@ func (l *lilicoAccount) create(network string) (flow.Identifier, error) {
 		fmt.Sprintf("https://openapi.lilico.org/v1/address%s", apiNetwork),
 		bytes.NewReader(data),
 	)
+	if err != nil {
+		return flow.EmptyID, fmt.Errorf("could not create an account: %w", err)
+	}
+
 	request.Header.Add("Content-Type", "application/json; charset=UTF-8")
 	request.Header.Add("Authorization", lilicoToken)
 
