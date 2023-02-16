@@ -46,7 +46,7 @@ import (
 //
 // This process takes the user through couple of steps with prompts asking for them to provide name and network,
 // and it then uses account creation APIs to automatically create the account on the network as well as save it.
-func createInteractive(state *flowkit.State, loader flowkit.ReaderWriter) error {
+func createInteractive(state *flowkit.State) error {
 	log := output.NewStdoutLogger(output.InfoLog)
 	name := output.AccountNamePrompt(state.Accounts()) // todo check for duplicate names
 	networkName, selectedNetwork := output.CreateAccountNetworkPrompt()

@@ -54,14 +54,14 @@ var CreateCommand = &command.Command{
 
 func create(
 	_ []string,
-	loader flowkit.ReaderWriter,
+	_ flowkit.ReaderWriter,
 	_ command.GlobalFlags,
 	services *services.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
 	// if user doesn't provide any flags go into interactive mode
 	if len(createFlags.Keys) == 0 {
-		err := createInteractive(state, loader)
+		err := createInteractive(state)
 		return nil, err
 	}
 
