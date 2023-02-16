@@ -276,6 +276,26 @@ func fileKeyFromConfig(accountKey config.AccountKey) (*FileAccountKey, error) {
 	}, nil
 }
 
+// NewFileAccountKey creates a new account key that is stored to a separate file in the provided location.
+//
+// This type of the key is a more secure way of storing accounts. The config only includes the location and not the key.
+func NewFileAccountKey(
+	location string,
+	index int,
+	sigAlgo crypto.SignatureAlgorithm,
+	hashAlgo crypto.HashAlgorithm,
+) *FileAccountKey {
+	return &FileAccountKey{
+		baseAccountKey: &baseAccountKey{
+			keyType:  config.KeyTypeFile,
+			index:    index,
+			sigAlgo:  sigAlgo,
+			hashAlgo: hashAlgo,
+		},
+		location: location,
+	}
+}
+
 type FileAccountKey struct {
 	*baseAccountKey
 	privateKey crypto.PrivateKey
