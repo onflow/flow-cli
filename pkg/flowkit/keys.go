@@ -25,6 +25,7 @@ import (
 	"os"
 	"os/exec"
 	"regexp"
+	"strings"
 
 	goeth "github.com/ethereum/go-ethereum/accounts"
 	slip10 "github.com/lmars/go-slip10"
@@ -317,7 +318,7 @@ func (f *FileAccountKey) PrivateKey() (*crypto.PrivateKey, error) {
 		if err != nil {
 			return nil, fmt.Errorf("could not load the key for the account from passed location %s: %w", f.location, err)
 		}
-		pkey, err := crypto.DecodePrivateKeyHex(f.sigAlgo, string(key))
+		pkey, err := crypto.DecodePrivateKeyHex(f.sigAlgo, strings.TrimPrefix("0x", string(key)))
 		if err != nil {
 			return nil, fmt.Errorf("could not decode the key from passd location %s: %w", f.location, err)
 		}
