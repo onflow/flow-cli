@@ -60,24 +60,20 @@ func createInteractive(state *flowkit.State, loader flowkit.ReaderWriter) error 
 		return err
 	}
 
-	log.StartProgress("Creating an account")
+	log.StartProgress("Creating an account ")
 
-	var address flow.Address
+	var account *flowkit.Account
 	if selectedNetwork == config.DefaultEmulatorNetwork() {
-		address, err = createEmulatorAccount(state, service, key)
+		account, err = createEmulatorAccount(state, service, name, key)
 		log.StopProgress()
 		log.Info(output.Italic("\nPlease note that the newly-created account will only be available while you keep the emulator service running. If you restart the emulator service, all accounts will be reset. If you want to persist accounts between restarts, please use the '--persist' flag when starting the flow emulator.\n"))
 	} else {
-		address, err = createNetworkAccount(state, service, key, privateFile, selectedNetwork)
+		account, err = createNetworkAccount(state, service, name, key, privateFile, selectedNetwork)
 		log.StopProgress()
 	}
 	if err != nil {
 		return err
 	}
-
-	account := flowkit.NewAccount(name).SetAddress(address).SetKey(
-		flowkit.NewFileAccountKey(privateFile, 0, crypto.ECDSA_P256, crypto.SHA3_256),
-	)
 
 	log.Info(fmt.Sprintf(
 		"%s New account created with address %s and name %s on %s network.\n",
@@ -87,6 +83,7 @@ func createInteractive(state *flowkit.State, loader flowkit.ReaderWriter) error 
 		output.Bold(networkName)),
 	)
 
+	state.Accounts().AddOrUpdate(account)
 	err = state.SaveDefault()
 	if err != nil {
 		return err
@@ -111,55 +108,59 @@ func createInteractive(state *flowkit.State, loader flowkit.ReaderWriter) error 
 func createNetworkAccount(
 	state *flowkit.State,
 	services *services.Services,
+	name string,
 	key crypto.PrivateKey,
 	privateFile string,
 	network config.Network,
-) (flow.Address, error) {
-	account := &lilicoAccount{
+) (*flowkit.Account, error) {
+	networkAccount := &lilicoAccount{
 		PublicKey: strings.TrimPrefix(key.PublicKey().String(), "0x"),
 	}
 
-	id, err := account.create(network.Name)
+	id, err := networkAccount.create(network.Name)
 	if err != nil {
-		return flow.EmptyAddress, err
+		return nil, err
 	}
 
 	time.Sleep(2 * time.Second) // artificial delay to wait for tx to be propagated on ANs todo find better way
 	_, result, err := services.Transactions.GetStatus(id, true)
 	if err != nil {
-		return flow.EmptyAddress, err
+		return nil, err
 	}
 
 	events := flowkit.EventsFromTransaction(result)
 	address := events.GetCreatedAddresses()
 	if len(address) == 0 {
-		return flow.EmptyAddress, fmt.Errorf("account creation error")
+		return nil, fmt.Errorf("account creation error")
 	}
 
 	err = util.AddToGitIgnore(privateFile, state.ReaderWriter())
 	if err != nil {
-		return flow.EmptyAddress, err
+		return nil, err
 	}
 
-	err = state.ReaderWriter().WriteFile(privateFile, key.Encode(), os.FileMode(0644))
+	err = state.ReaderWriter().WriteFile(privateFile, []byte(key.String()), os.FileMode(0644))
 	if err != nil {
-		return flow.EmptyAddress, fmt.Errorf("failed saving private key: %w", err)
+		return nil, fmt.Errorf("failed saving private key: %w", err)
 	}
 
-	return *address[0], nil
+	return flowkit.NewAccount(name).SetAddress(*address[0]).SetKey(
+		flowkit.NewFileAccountKey(privateFile, 0, crypto.ECDSA_P256, crypto.SHA3_256),
+	), nil
 }
 
 func createEmulatorAccount(
 	state *flowkit.State,
 	service *services.Services,
+	name string,
 	key crypto.PrivateKey,
-) (flow.Address, error) {
+) (*flowkit.Account, error) {
 	signer, err := state.EmulatorServiceAccount()
 	if err != nil {
-		return flow.EmptyAddress, err
+		return nil, err
 	}
 
-	account, err := service.Accounts.Create(
+	networkAccount, err := service.Accounts.Create(
 		signer,
 		[]crypto.PublicKey{key.PublicKey()},
 		[]int{flow.AccountKeyWeightThreshold},
@@ -168,7 +169,9 @@ func createEmulatorAccount(
 		nil,
 	)
 
-	return account.Address, nil
+	return flowkit.NewAccount(name).SetAddress(networkAccount.Address).SetKey(
+		flowkit.NewHexAccountKeyFromPrivateKey(0, crypto.SHA3_256, key),
+	), nil
 }
 
 // lilicoAccount contains all the data needed for interaction with lilico account creation API.
