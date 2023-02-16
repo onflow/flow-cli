@@ -121,7 +121,7 @@ func create(
 
 func parseHashingAlgorithms(algorithms []string) ([]crypto.HashAlgorithm, error) {
 	hashAlgos := make([]crypto.HashAlgorithm, 0, len(createFlags.HashAlgo))
-	for _, hashAlgoStr := range createFlags.HashAlgo {
+	for _, hashAlgoStr := range algorithms {
 		hashAlgo := crypto.StringToHashAlgorithm(hashAlgoStr)
 		if hashAlgo == crypto.UnknownHashAlgorithm {
 			return nil, fmt.Errorf("invalid hash algorithm: %s", createFlags.HashAlgo)
