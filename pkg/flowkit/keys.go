@@ -316,11 +316,11 @@ func (f *FileAccountKey) PrivateKey() (*crypto.PrivateKey, error) {
 	if f.privateKey == nil { // lazy load the key
 		key, err := os.ReadFile(f.location) // todo change to use state reader writer instance
 		if err != nil {
-			return nil, fmt.Errorf("could not load the key for the account from passed location %s: %w", f.location, err)
+			return nil, fmt.Errorf("could not load the key for the account from provided location %s: %w", f.location, err)
 		}
-		pkey, err := crypto.DecodePrivateKeyHex(f.sigAlgo, strings.TrimPrefix("0x", string(key)))
+		pkey, err := crypto.DecodePrivateKeyHex(f.sigAlgo, strings.TrimPrefix(string(key), "0x"))
 		if err != nil {
-			return nil, fmt.Errorf("could not decode the key from passd location %s: %w", f.location, err)
+			return nil, fmt.Errorf("could not decode the key from provided location %s: %w", f.location, err)
 		}
 		f.privateKey = pkey
 	}
