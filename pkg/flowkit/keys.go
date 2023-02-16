@@ -57,13 +57,13 @@ var _ AccountKey = &Bip44AccountKey{}
 func NewAccountKey(accountKeyConf config.AccountKey) (AccountKey, error) {
 	switch accountKeyConf.Type {
 	case config.KeyTypeHex:
-		return newHexAccountKey(accountKeyConf)
+		return hexKeyFromConfig(accountKeyConf)
 	case config.KeyTypeBip44:
-		return newBip44AccountKey(accountKeyConf)
+		return bip44KeyFromConfig(accountKeyConf)
 	case config.KeyTypeGoogleKMS:
-		return newKmsAccountKey(accountKeyConf)
+		return kmsKeyFromConfig(accountKeyConf)
 	case config.KeyTypeFile:
-		return newFileAccountKey(accountKeyConf)
+		return fileKeyFromConfig(accountKeyConf)
 	}
 
 	return nil, fmt.Errorf(`invalid key type: "%s"`, accountKeyConf.Type)
@@ -76,7 +76,7 @@ type baseAccountKey struct {
 	hashAlgo crypto.HashAlgorithm
 }
 
-func newBaseAccountKey(accountKeyConf config.AccountKey) *baseAccountKey {
+func baseKeyFromConfig(accountKeyConf config.AccountKey) *baseAccountKey {
 	return &baseAccountKey{
 		keyType:  accountKeyConf.Type,
 		index:    accountKeyConf.Index,
@@ -185,7 +185,7 @@ func gcloudApplicationSignin(resourceID string) error {
 	return nil
 }
 
-func newKmsAccountKey(key config.AccountKey) (AccountKey, error) {
+func kmsKeyFromConfig(key config.AccountKey) (AccountKey, error) {
 	accountKMSKey, err := cloudkms.KeyFromResourceID(key.ResourceID)
 	if err != nil {
 		return nil, err
@@ -224,9 +224,9 @@ func NewHexAccountKeyFromPrivateKey(
 	}
 }
 
-func newHexAccountKey(accountKey config.AccountKey) (*HexAccountKey, error) {
+func hexKeyFromConfig(accountKey config.AccountKey) (*HexAccountKey, error) {
 	return &HexAccountKey{
-		baseAccountKey: newBaseAccountKey(accountKey),
+		baseAccountKey: baseKeyFromConfig(accountKey),
 		privateKey:     accountKey.PrivateKey,
 	}, nil
 }
@@ -262,10 +262,10 @@ func (a *HexAccountKey) PrivateKeyHex() string {
 	return hex.EncodeToString(a.privateKey.Encode())
 }
 
-// newFileAccountKey creates a hex account key from a file location
-func newFileAccountKey(accountKey config.AccountKey) (*FileAccountKey, error) {
+// fileKeyFromConfig creates a hex account key from a file location
+func fileKeyFromConfig(accountKey config.AccountKey) (*FileAccountKey, error) {
 	return &FileAccountKey{
-		baseAccountKey: newBaseAccountKey(accountKey),
+		baseAccountKey: baseKeyFromConfig(accountKey),
 		location:       accountKey.Location,
 	}, nil
 }
@@ -312,7 +312,7 @@ type Bip44AccountKey struct {
 	derivationPath string
 }
 
-func newBip44AccountKey(key config.AccountKey) (AccountKey, error) {
+func bip44KeyFromConfig(key config.AccountKey) (AccountKey, error) {
 	return &Bip44AccountKey{
 		baseAccountKey: &baseAccountKey{
 			keyType:  config.KeyTypeBip44,
