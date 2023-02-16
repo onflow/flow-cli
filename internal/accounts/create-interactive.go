@@ -23,21 +23,23 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
+	"os"
+	"strings"
+	"time"
+
+	"github.com/onflow/flow-go-sdk"
+	"github.com/onflow/flow-go-sdk/crypto"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+
 	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
 	"github.com/onflow/flow-cli/pkg/flowkit/gateway"
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
 	"github.com/onflow/flow-cli/pkg/flowkit/services"
 	"github.com/onflow/flow-cli/pkg/flowkit/util"
-	"github.com/onflow/flow-go-sdk"
-	"github.com/onflow/flow-go-sdk/crypto"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
-	"io"
-	"net/http"
-	"os"
-	"strings"
-	"time"
 )
 
 // createInteractive is used when user calls a default account create command without any provided values.

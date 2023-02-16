@@ -20,13 +20,13 @@ package output
 
 import (
 	"fmt"
-	"golang.org/x/exp/maps"
 	"os"
 	"path"
 	"strings"
 
 	"github.com/gosuri/uilive"
 	"github.com/manifoldco/promptui"
+	"golang.org/x/exp/maps"
 	"golang.org/x/exp/slices"
 
 	"github.com/onflow/flow-cli/pkg/flowkit"
