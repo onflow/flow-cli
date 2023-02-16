@@ -300,9 +300,9 @@ type advancedAccount struct {
 
 type advanceKey struct {
 	Type     config.KeyType `json:"type"`
-	Index    int            `json:"index"`
-	SigAlgo  string         `json:"signatureAlgorithm"`
-	HashAlgo string         `json:"hashAlgorithm"`
+	Index    int            `json:"index,omitempty"`
+	SigAlgo  string         `json:"signatureAlgorithm,omitempty"`
+	HashAlgo string         `json:"hashAlgorithm,omitempty"`
 	// hex key type
 	PrivateKey string `json:"privateKey,omitempty"`
 	// bip44 key type
