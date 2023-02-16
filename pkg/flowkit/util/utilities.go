@@ -23,52 +23,13 @@ import (
 	"encoding/hex"
 	"fmt"
 	"os"
-	"os/exec"
 	"path"
-	"runtime"
 	"strings"
 	"text/tabwriter"
 
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
 )
-
-const TestnetFaucetHost = "https://testnet-faucet.onflow.org/"
-
-const FlowPortUrl = "https://port.onflow.org/transaction?hash=a0a78aa7821144efd5ebb974bb52ba04609ce76c3863af9d45348db93937cf98&showcode=false&consent=true&pk="
-
-// ConvertSigAndHashAlgo parses and validates a signature and hash algorithm pair.
-func ConvertSigAndHashAlgo(
-	signatureAlgorithm string,
-	hashingAlgorithm string,
-) (crypto.SignatureAlgorithm, crypto.HashAlgorithm, error) {
-	sigAlgo := crypto.StringToSignatureAlgorithm(signatureAlgorithm)
-	if sigAlgo == crypto.UnknownSignatureAlgorithm {
-		return crypto.UnknownSignatureAlgorithm,
-			crypto.UnknownHashAlgorithm,
-			fmt.Errorf("failed to determine signature algorithm from %s", sigAlgo)
-	}
-
-	hashAlgo := crypto.StringToHashAlgorithm(hashingAlgorithm)
-	if hashAlgo == crypto.UnknownHashAlgorithm {
-		return crypto.UnknownSignatureAlgorithm,
-			crypto.UnknownHashAlgorithm,
-			fmt.Errorf("failed to determine hash algorithm from %s", hashAlgo)
-	}
-
-	return sigAlgo, hashAlgo, nil
-}
-
-// ContainsString returns true if the slice contains the given string.
-func ContainsString(s []string, e string) bool {
-	for _, a := range s {
-		if a == e {
-			return true
-		}
-	}
-
-	return false
-}
 
 // GetAddressNetwork returns the chain ID for an address.
 func GetAddressNetwork(address flow.Address) (flow.ChainID, error) {
@@ -125,39 +86,6 @@ func ValidateECDSAP256Pub(key string) error {
 	}
 
 	return nil
-}
-
-func OpenBrowserWindow(url string) error {
-	var err error
-
-	switch runtime.GOOS {
-	case "linux":
-		err = exec.Command("xdg-open", url).Start()
-	case "windows":
-		err = exec.Command("rundll32", "url.dll,FileProtocolHandler", url).Start()
-	case "darwin":
-		err = exec.Command("open", url).Start()
-	default:
-		err = fmt.Errorf("unsupported platform")
-	}
-	if err != nil {
-		return fmt.Errorf("could not open a browser window, please navigate to %s manually: %w", url, err)
-	}
-	return nil
-}
-
-func TestnetFaucetURL(publicKey string, sigAlgo crypto.SignatureAlgorithm) string {
-
-	link := fmt.Sprintf("%s?key=%s", TestnetFaucetHost, strings.TrimPrefix(publicKey, "0x"))
-	if sigAlgo != crypto.ECDSA_P256 {
-		link = fmt.Sprintf("%s&sig-algo=%s", link, sigAlgo)
-	}
-
-	return link
-}
-
-func MainnetFlowPortURL(publicKey string) string {
-	return fmt.Sprintf("%s%s", FlowPortUrl, strings.TrimPrefix(publicKey, "0x"))
 }
 
 type ReaderWriter interface {
