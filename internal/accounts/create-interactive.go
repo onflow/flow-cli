@@ -33,6 +33,7 @@ import (
 	"github.com/onflow/flow-go-sdk/crypto"
 	"io"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 )
@@ -43,10 +44,9 @@ import (
 // and it then uses account creation APIs to automatically create the account on the network as well as save it.
 func createInteractive(state *flowkit.State, loader flowkit.ReaderWriter) error {
 	log := output.NewStdoutLogger(output.InfoLog)
-
 	name := output.AccountNamePrompt(state.Accounts()) // todo check for duplicate names
 	networkName, selectedNetwork := output.CreateAccountNetworkPrompt()
-	privateFile := output.Bold(fmt.Sprintf("%s.private.json", name))
+	privateFile := fmt.Sprintf("%s.pkey", name)
 
 	// create new gateway based on chosen network
 	gw, err := gateway.NewGrpcGateway(selectedNetwork.Host)
@@ -64,44 +64,20 @@ func createInteractive(state *flowkit.State, loader flowkit.ReaderWriter) error 
 
 	var address flow.Address
 	if selectedNetwork == config.DefaultEmulatorNetwork() {
-		signer, err := state.EmulatorServiceAccount()
-		if err != nil {
-			return err
-		}
-		account, err := service.Accounts.Create(
-			signer,
-			[]crypto.PublicKey{key.PublicKey()},
-			[]int{flow.AccountKeyWeightThreshold},
-			[]crypto.SignatureAlgorithm{crypto.ECDSA_P256},
-			[]crypto.HashAlgorithm{crypto.SHA3_256},
-			nil,
-		)
+		address, err = createEmulatorAccount(state, service, key)
 		log.StopProgress()
-		if err != nil {
-			return err
-		}
-
 		log.Info(output.Italic("\nPlease note that the newly-created account will only be available while you keep the emulator service running. If you restart the emulator service, all accounts will be reset. If you want to persist accounts between restarts, please use the '--persist' flag when starting the flow emulator.\n"))
-
-		address = account.Address
 	} else {
-		addr, err := createFlowAccount(service, key.PublicKey(), selectedNetwork)
+		address, err = createNetworkAccount(state, service, key, privateFile, selectedNetwork)
 		log.StopProgress()
-		if err != nil {
-			return err
-		}
-		address = *addr
 	}
-
-	onChainAccount, err := service.Accounts.Get(address)
 	if err != nil {
 		return err
 	}
 
-	account, err := flowkit.NewAccountFromOnChainAccount(name, onChainAccount, key)
-	if err != nil {
-		return err
-	}
+	account := flowkit.NewAccount(name).SetAddress(address).SetKey(
+		flowkit.NewFileAccountKey(privateFile, 0, crypto.ECDSA_P256, crypto.SHA3_256),
+	)
 
 	log.Info(fmt.Sprintf(
 		"%s New account created with address %s and name %s on %s network.\n",
@@ -111,7 +87,7 @@ func createInteractive(state *flowkit.State, loader flowkit.ReaderWriter) error 
 		output.Bold(networkName)),
 	)
 
-	err = saveAccount(loader, state, account, selectedNetwork)
+	err = state.SaveDefault()
 	if err != nil {
 		return err
 	}
@@ -122,8 +98,8 @@ func createInteractive(state *flowkit.State, loader flowkit.ReaderWriter) error 
 	}
 	if selectedNetwork != config.DefaultEmulatorNetwork() {
 		items = append(items,
-			fmt.Sprintf("Saved the private key to %s.", privateFile),
-			fmt.Sprintf("Added %s to %s.", privateFile, output.Bold(".gitignore")),
+			fmt.Sprintf("Saved the private key to %s.", output.Bold(privateFile)),
+			fmt.Sprintf("Added %s to %s.", output.Bold(privateFile), output.Bold(".gitignore")),
 		)
 	}
 	outputList(log, items, false)
@@ -131,34 +107,68 @@ func createInteractive(state *flowkit.State, loader flowkit.ReaderWriter) error 
 	return nil
 }
 
-// createFlowAccount using the account creation API and return the newly created account address.
-func createFlowAccount(
+// createNetworkAccount using the account creation API and return the newly created account address.
+func createNetworkAccount(
+	state *flowkit.State,
 	services *services.Services,
-	publicKey crypto.PublicKey,
+	key crypto.PrivateKey,
+	privateFile string,
 	network config.Network,
-) (*flow.Address, error) {
+) (flow.Address, error) {
 	account := &lilicoAccount{
-		PublicKey: strings.TrimPrefix(publicKey.String(), "0x"),
+		PublicKey: strings.TrimPrefix(key.PublicKey().String(), "0x"),
 	}
 
 	id, err := account.create(network.Name)
 	if err != nil {
-		return nil, err
+		return flow.EmptyAddress, err
 	}
 
 	time.Sleep(2 * time.Second) // artificial delay to wait for tx to be propagated on ANs todo find better way
 	_, result, err := services.Transactions.GetStatus(id, true)
 	if err != nil {
-		return nil, err
+		return flow.EmptyAddress, err
 	}
 
 	events := flowkit.EventsFromTransaction(result)
 	address := events.GetCreatedAddresses()
 	if len(address) == 0 {
-		return nil, fmt.Errorf("account creation error")
+		return flow.EmptyAddress, fmt.Errorf("account creation error")
 	}
 
-	return address[0], nil
+	err = util.AddToGitIgnore(privateFile, state.ReaderWriter())
+	if err != nil {
+		return flow.EmptyAddress, err
+	}
+
+	err = state.ReaderWriter().WriteFile(privateFile, key.Encode(), os.FileMode(0644))
+	if err != nil {
+		return flow.EmptyAddress, fmt.Errorf("failed saving private key: %w", err)
+	}
+
+	return *address[0], nil
+}
+
+func createEmulatorAccount(
+	state *flowkit.State,
+	service *services.Services,
+	key crypto.PrivateKey,
+) (flow.Address, error) {
+	signer, err := state.EmulatorServiceAccount()
+	if err != nil {
+		return flow.EmptyAddress, err
+	}
+
+	account, err := service.Accounts.Create(
+		signer,
+		[]crypto.PublicKey{key.PublicKey()},
+		[]int{flow.AccountKeyWeightThreshold},
+		[]crypto.SignatureAlgorithm{crypto.ECDSA_P256},
+		[]crypto.HashAlgorithm{crypto.SHA3_256},
+		nil,
+	)
+
+	return account.Address, nil
 }
 
 // lilicoAccount contains all the data needed for interaction with lilico account creation API.
@@ -222,27 +232,6 @@ func (l *lilicoAccount) create(network string) (flow.Identifier, error) {
 	}
 
 	return flow.HexToID(lilicoRes.Data.TxId), nil
-}
-
-func saveAccount(
-	loader flowkit.ReaderWriter,
-	state *flowkit.State,
-	account *flowkit.Account,
-	network config.Network,
-) error {
-	state.Accounts().AddOrUpdate(account)
-
-	// If not using emulator, save account private key private file for security.
-	if network != config.DefaultEmulatorNetwork() {
-		privateLocation := fmt.Sprintf("%s.private.json", account.Name())
-		state.SetAccountFileLocation(*account, privateLocation)
-		err := util.AddToGitIgnore(privateLocation, loader)
-		if err != nil {
-			return err
-		}
-	}
-
-	return state.SaveDefault()
 }
 
 // outputList helper for printing lists
