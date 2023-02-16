@@ -31,6 +31,8 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowkit/util"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"io"
 	"net/http"
 	"os"
@@ -122,8 +124,7 @@ func createNetworkAccount(
 		return nil, err
 	}
 
-	time.Sleep(2 * time.Second) // artificial delay to wait for tx to be propagated on ANs todo find better way
-	_, result, err := services.Transactions.GetStatus(id, true)
+	result, err := getAccountCreationResult(services, id)
 	if err != nil {
 		return nil, err
 	}
@@ -172,6 +173,19 @@ func createEmulatorAccount(
 	return flowkit.NewAccount(name).SetAddress(networkAccount.Address).SetKey(
 		flowkit.NewHexAccountKeyFromPrivateKey(0, crypto.SHA3_256, key),
 	), nil
+}
+
+func getAccountCreationResult(services *services.Services, id flow.Identifier) (*flow.TransactionResult, error) {
+	_, result, err := services.Transactions.GetStatus(id, true)
+	if err != nil {
+		if status.Code(err) == codes.NotFound { // if transaction not yet propagated, wait for it
+			time.Sleep(1 * time.Second)
+			return getAccountCreationResult(services, id)
+		}
+		return nil, err
+	}
+
+	return result, nil
 }
 
 // lilicoAccount contains all the data needed for interaction with lilico account creation API.
