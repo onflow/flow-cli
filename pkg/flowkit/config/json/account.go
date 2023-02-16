@@ -25,6 +25,7 @@ import (
 
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
+	"golang.org/x/exp/slices"
 
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
 )
@@ -75,23 +76,39 @@ func transformSimpleToConfig(accountName string, a simpleAccount) (*config.Accou
 
 // transformAdvancedToConfig transforms advanced internal account to config account.
 func transformAdvancedToConfig(accountName string, a advancedAccount) (*config.Account, error) {
-	sigAlgo := crypto.StringToSignatureAlgorithm(a.Key.SigAlgo)
-	hashAlgo := crypto.StringToHashAlgorithm(a.Key.HashAlgo)
-
-	if a.Key.Type != config.KeyTypeHex && a.Key.Type != config.KeyTypeGoogleKMS && a.Key.Type != config.KeyTypeBip44 {
-		return nil, fmt.Errorf("invalid key type for account %s", accountName)
-	}
-
-	if a.Key.ResourceID != "" && a.Key.PrivateKey != "" {
-		return nil, fmt.Errorf("only provide value for private key or resource ID on account %s", accountName)
+	sigAlgo := crypto.ECDSA_P256 // default to ecdsa as default
+	if a.Key.SigAlgo != "" {
+		sigAlgo = crypto.StringToSignatureAlgorithm(a.Key.SigAlgo)
 	}
 
 	if sigAlgo == crypto.UnknownSignatureAlgorithm {
 		return nil, fmt.Errorf("invalid signature algorithm for account %s", accountName)
 	}
 
+	hashAlgo := crypto.SHA3_256 // default to sha3 as default
+	if a.Key.HashAlgo != "" {
+		hashAlgo = crypto.StringToHashAlgorithm(a.Key.HashAlgo)
+	}
+
 	if hashAlgo == crypto.UnknownHashAlgorithm {
 		return nil, fmt.Errorf("invalid hash algorithm for account %s", accountName)
+	}
+
+	validTypes := []config.KeyType{config.KeyTypeHex, config.KeyTypeFile, config.KeyTypeBip44, config.KeyTypeGoogleKMS}
+	if !slices.Contains(validTypes, a.Key.Type) {
+		return nil, fmt.Errorf("invalid key type for account %s", accountName)
+	}
+
+	// check that only one is provided because the values are mutually exclusive
+	set := false
+	for _, v := range []string{a.Key.ResourceID, a.Key.PrivateKey, a.Key.Location} {
+		if v == "" {
+			continue
+		}
+		if set {
+			return nil, fmt.Errorf("can only provide one property (resource ID, private key, location) on account %s", accountName)
+		}
+		set = true
 	}
 
 	address, err := transformAddress(a.Address)
@@ -135,6 +152,12 @@ func transformAdvancedToConfig(accountName string, a advancedAccount) (*config.A
 			return nil, fmt.Errorf("missing resource ID value for key on account %s", accountName)
 		}
 		key.ResourceID = a.Key.ResourceID
+
+	case config.KeyTypeFile:
+		if a.Key.Location == "" {
+			return nil, fmt.Errorf("missing location to a file containing the private key value for the account %s", accountName)
+		}
+		key.Location = a.Key.Location
 	}
 
 	return &config.Account{
@@ -228,6 +251,8 @@ func transformAdvancedKeyToJSON(key config.AccountKey) advanceKey {
 		advancedKey.DerivationPath = key.DerivationPath
 	case config.KeyTypeGoogleKMS:
 		advancedKey.ResourceID = key.ResourceID
+	case config.KeyTypeFile:
+		advancedKey.Location = key.Location
 	}
 
 	return advancedKey
@@ -272,6 +297,8 @@ type advanceKey struct {
 	DerivationPath string `json:"derivationPath,omitempty"`
 	// kms key type
 	ResourceID string `json:"resourceID,omitempty"`
+	// key location
+	Location string `json:"location,omitempty"`
 	// old key format
 	Context map[string]string `json:"context,omitempty"`
 }

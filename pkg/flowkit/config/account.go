@@ -53,6 +53,7 @@ type AccountKey struct {
 	Mnemonic       string
 	DerivationPath string
 	PrivateKey     crypto.PrivateKey
+	Location       string
 }
 
 // ByName get account by name.
