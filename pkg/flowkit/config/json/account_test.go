@@ -392,7 +392,7 @@ func Test_TransformDefaultAccountToJSON(t *testing.T) {
 }
 
 func Test_TransformAccountToJSON(t *testing.T) {
-	b := []byte(`{"emulator-account":{"address":"f8d6e0586b0a20c7","key":{"type":"hex","index":1,"signatureAlgorithm":"ECDSA_P256","hashAlgorithm":"SHA3_256","privateKey":"1272967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47"}},"testnet-account":{"address":"3c1162386b0a245f","key":"2272967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47"}}`)
+	b := []byte(`{"emulator-account":{"address":"f8d6e0586b0a20c7","key":{"type":"hex","index":1,"privateKey":"1272967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47"}},"testnet-account":{"address":"3c1162386b0a245f","key":"2272967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47"}}`)
 
 	var jsonAccounts jsonAccounts
 	err := json.Unmarshal(b, &jsonAccounts)
