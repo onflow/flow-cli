@@ -20,6 +20,7 @@ package output
 
 import (
 	"fmt"
+	"golang.org/x/exp/maps"
 	"os"
 	"path"
 	"strings"
@@ -537,18 +538,15 @@ func ReportCrash() bool {
 }
 
 func CreateAccountNetworkPrompt() (string, config.Network) {
-	emulatorOption := "Local Emulator"
-	testnetOption := "Flow Testnet"
-	mainnetOption := "Flow Mainnet"
-
-	networkMap := map[string]config.Network{}
-	networkMap[emulatorOption] = config.DefaultNetworks()[0]
-	networkMap[testnetOption] = config.DefaultNetworks()[1]
-	networkMap[mainnetOption] = config.DefaultNetworks()[2]
+	networkMap := map[string]config.Network{
+		"Emulator": config.DefaultEmulatorNetwork(),
+		"Testnet":  config.DefaultTestnetNetwork(),
+		"Mainnet":  config.DefaultMainnetNetwork(),
+	}
 
 	networkPrompt := promptui.Select{
 		Label: "Choose a network",
-		Items: []string{emulatorOption, testnetOption, mainnetOption},
+		Items: maps.Keys(networkMap),
 	}
 
 	_, selectedNetwork, err := networkPrompt.Run()
