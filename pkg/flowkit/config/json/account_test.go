@@ -87,6 +87,39 @@ func Test_ConfigAccountKeysAdvancedHex(t *testing.T) {
 	assert.Equal(t, "", key.ResourceID)
 }
 
+func Test_ConfigAccountKeysAdvancedFile(t *testing.T) {
+	b := []byte(`{
+		"test": {
+			"address": "service",
+			"key": {
+				"type": "file",
+				"location": "./test.pkey"
+			}
+		}
+	}`)
+
+	var jsonAccounts jsonAccounts
+	err := json.Unmarshal(b, &jsonAccounts)
+	assert.NoError(t, err)
+
+	accounts, err := jsonAccounts.transformToConfig()
+	assert.NoError(t, err)
+
+	account, err := accounts.ByName("test")
+	assert.NoError(t, err)
+	key := account.Key
+
+	assert.Equal(t, "f8d6e0586b0a20c7", account.Address.String())
+	assert.Equal(t, "SHA3_256", key.HashAlgo.String())
+	assert.Equal(t, "ECDSA_P256", key.SigAlgo.String())
+	assert.Equal(t, "./test.pkey", key.Location)
+	assert.Equal(t, "", key.ResourceID)
+
+	jsonAccs := transformAccountsToJSON(accounts)
+	assert.Equal(t, "./test.pkey", jsonAccs["test"].Advanced.Key.Location)
+	assert.Equal(t, "", jsonAccs["test"].Advanced.Key.PrivateKey)
+}
+
 func Test_ConfigAccountKeysAdvancedKMS(t *testing.T) {
 	b := []byte(`{
 		"test": {
@@ -359,7 +392,7 @@ func Test_TransformDefaultAccountToJSON(t *testing.T) {
 }
 
 func Test_TransformAccountToJSON(t *testing.T) {
-	b := []byte(`{"emulator-account":{"address":"f8d6e0586b0a20c7","key":{"type":"hex","index":1,"signatureAlgorithm":"ECDSA_P256","hashAlgorithm":"SHA3_256","privateKey":"1272967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47"}},"testnet-account":{"address":"3c1162386b0a245f","key":"2272967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47"}}`)
+	b := []byte(`{"emulator-account":{"address":"f8d6e0586b0a20c7","key":{"type":"hex","index":1,"privateKey":"1272967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47"}},"testnet-account":{"address":"3c1162386b0a245f","key":"2272967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47"}}`)
 
 	var jsonAccounts jsonAccounts
 	err := json.Unmarshal(b, &jsonAccounts)

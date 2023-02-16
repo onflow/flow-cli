@@ -76,6 +76,17 @@ func Test_PrivateKeyEnvMultipleAccounts(t *testing.T) {
 
 func Test_PrivateConfigFileAccounts(t *testing.T) {
 	b := []byte(`{
+		"emulators": {
+			"default": {
+				"port": 3569,
+				"serviceAccount": "emulator-account"
+			}
+		},
+		"contracts": {},
+		"networks": {
+			"emulator": "127.0.0.1:3569"
+		},
+		"deployments": {},
 		"accounts": {
 			"emulator-account": {
 				"address": "f8d6e0586b0a20c7",
@@ -90,6 +101,17 @@ func Test_PrivateConfigFileAccounts(t *testing.T) {
 	assert.Len(t, accFromFile, 1)
 
 	assert.JSONEq(t, `{
+		"emulators": {
+			"default": {
+				"port": 3569,
+				"serviceAccount": "emulator-account"
+			}
+		},
+		"contracts": {},
+		"networks": {
+			"emulator": "127.0.0.1:3569"
+		},
+		"deployments": {},
 			"accounts": {
 				"emulator-account": {
 					"address": "f8d6e0586b0a20c7",

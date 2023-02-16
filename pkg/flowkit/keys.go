@@ -25,6 +25,7 @@ import (
 	"os"
 	"os/exec"
 	"regexp"
+	"strings"
 
 	goeth "github.com/ethereum/go-ethereum/accounts"
 	slip10 "github.com/lmars/go-slip10"
@@ -54,14 +55,16 @@ var _ AccountKey = &KmsAccountKey{}
 
 var _ AccountKey = &Bip44AccountKey{}
 
-func NewAccountKey(accountKeyConf config.AccountKey) (AccountKey, error) {
+func accountKeyFromConfig(accountKeyConf config.AccountKey) (AccountKey, error) {
 	switch accountKeyConf.Type {
 	case config.KeyTypeHex:
-		return newHexAccountKey(accountKeyConf)
+		return hexKeyFromConfig(accountKeyConf)
 	case config.KeyTypeBip44:
-		return newBip44AccountKey(accountKeyConf)
+		return bip44KeyFromConfig(accountKeyConf)
 	case config.KeyTypeGoogleKMS:
-		return newKmsAccountKey(accountKeyConf)
+		return kmsKeyFromConfig(accountKeyConf)
+	case config.KeyTypeFile:
+		return fileKeyFromConfig(accountKeyConf)
 	}
 
 	return nil, fmt.Errorf(`invalid key type: "%s"`, accountKeyConf.Type)
@@ -74,7 +77,7 @@ type baseAccountKey struct {
 	hashAlgo crypto.HashAlgorithm
 }
 
-func newBaseAccountKey(accountKeyConf config.AccountKey) *baseAccountKey {
+func baseKeyFromConfig(accountKeyConf config.AccountKey) *baseAccountKey {
 	return &baseAccountKey{
 		keyType:  accountKeyConf.Type,
 		index:    accountKeyConf.Index,
@@ -88,15 +91,21 @@ func (a *baseAccountKey) Type() config.KeyType {
 }
 
 func (a *baseAccountKey) SigAlgo() crypto.SignatureAlgorithm {
+	if a.sigAlgo == crypto.UnknownSignatureAlgorithm {
+		return crypto.ECDSA_P256 // default value
+	}
 	return a.sigAlgo
 }
 
 func (a *baseAccountKey) HashAlgo() crypto.HashAlgorithm {
+	if a.hashAlgo == crypto.UnknownHashAlgorithm {
+		return crypto.SHA3_256 // default value
+	}
 	return a.hashAlgo
 }
 
 func (a *baseAccountKey) Index() int {
-	return a.index
+	return a.index // default to 0
 }
 
 func (a *baseAccountKey) Validate() error {
@@ -183,7 +192,7 @@ func gcloudApplicationSignin(resourceID string) error {
 	return nil
 }
 
-func newKmsAccountKey(key config.AccountKey) (AccountKey, error) {
+func kmsKeyFromConfig(key config.AccountKey) (AccountKey, error) {
 	accountKMSKey, err := cloudkms.KeyFromResourceID(key.ResourceID)
 	if err != nil {
 		return nil, err
@@ -222,9 +231,9 @@ func NewHexAccountKeyFromPrivateKey(
 	}
 }
 
-func newHexAccountKey(accountKey config.AccountKey) (*HexAccountKey, error) {
+func hexKeyFromConfig(accountKey config.AccountKey) (*HexAccountKey, error) {
 	return &HexAccountKey{
-		baseAccountKey: newBaseAccountKey(accountKey),
+		baseAccountKey: baseKeyFromConfig(accountKey),
 		privateKey:     accountKey.PrivateKey,
 	}, nil
 }
@@ -260,6 +269,73 @@ func (a *HexAccountKey) PrivateKeyHex() string {
 	return hex.EncodeToString(a.privateKey.Encode())
 }
 
+// fileKeyFromConfig creates a hex account key from a file location
+func fileKeyFromConfig(accountKey config.AccountKey) (*FileAccountKey, error) {
+	return &FileAccountKey{
+		baseAccountKey: baseKeyFromConfig(accountKey),
+		location:       accountKey.Location,
+	}, nil
+}
+
+// NewFileAccountKey creates a new account key that is stored to a separate file in the provided location.
+//
+// This type of the key is a more secure way of storing accounts. The config only includes the location and not the key.
+func NewFileAccountKey(
+	location string,
+	index int,
+	sigAlgo crypto.SignatureAlgorithm,
+	hashAlgo crypto.HashAlgorithm,
+) *FileAccountKey {
+	return &FileAccountKey{
+		baseAccountKey: &baseAccountKey{
+			keyType:  config.KeyTypeFile,
+			index:    index,
+			sigAlgo:  sigAlgo,
+			hashAlgo: hashAlgo,
+		},
+		location: location,
+	}
+}
+
+type FileAccountKey struct {
+	*baseAccountKey
+	privateKey crypto.PrivateKey
+	location   string
+}
+
+func (f *FileAccountKey) Signer(ctx context.Context) (crypto.Signer, error) {
+	key, err := f.PrivateKey()
+	if err != nil {
+		return nil, err
+	}
+
+	return crypto.NewInMemorySigner(*key, f.HashAlgo())
+}
+
+func (f *FileAccountKey) PrivateKey() (*crypto.PrivateKey, error) {
+	if f.privateKey == nil { // lazy load the key
+		key, err := os.ReadFile(f.location) // todo change to use state reader writer instance
+		if err != nil {
+			return nil, fmt.Errorf("could not load the key for the account from provided location %s: %w", f.location, err)
+		}
+		pkey, err := crypto.DecodePrivateKeyHex(f.sigAlgo, strings.TrimPrefix(string(key), "0x"))
+		if err != nil {
+			return nil, fmt.Errorf("could not decode the key from provided location %s: %w", f.location, err)
+		}
+		f.privateKey = pkey
+	}
+	return &f.privateKey, nil
+}
+
+func (f *FileAccountKey) ToConfig() config.AccountKey {
+	return config.AccountKey{
+		Type:     config.KeyTypeFile,
+		SigAlgo:  f.sigAlgo,
+		HashAlgo: f.hashAlgo,
+		Location: f.location,
+	}
+}
+
 // Bip44AccountKey implements https://github.com/onflow/flow/blob/master/flips/20201125-bip-44-multi-account.md
 type Bip44AccountKey struct {
 	*baseAccountKey
@@ -268,7 +344,7 @@ type Bip44AccountKey struct {
 	derivationPath string
 }
 
-func newBip44AccountKey(key config.AccountKey) (AccountKey, error) {
+func bip44KeyFromConfig(key config.AccountKey) (AccountKey, error) {
 	return &Bip44AccountKey{
 		baseAccountKey: &baseAccountKey{
 			keyType:  config.KeyTypeBip44,

@@ -29,6 +29,8 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowkit/util"
 )
 
+// todo refactor to config
+
 // Account is a flowkit-specific account implementation.
 type Account struct {
 	name    string
@@ -152,7 +154,7 @@ func accountsToConfig(accounts Accounts, accountLocations map[string]string) con
 }
 
 func fromConfig(account config.Account) (*Account, error) {
-	key, err := NewAccountKey(account.Key)
+	key, err := accountKeyFromConfig(account.Key)
 	if err != nil {
 		return nil, err
 	}

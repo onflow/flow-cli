@@ -16,8 +16,36 @@ If private key data must be kept in text, we suggest using a separate file
 that is not checked into source control (e.g. excluded with `.gitignore`).
 
 ### Private Account Configuration File
+Storing an account key to a separate file which is not checked into source control (e.g. excluded with `.gitignore`) 
+can be the first step towards better security. 
 
 #### Main configuration file
+```json
+...
+"accounts": {
+  "my-testnet-account": { 
+    "address": "3ae53cb6e3f42a79",
+    "key": {
+      "type": "file",
+      "location": "./my-testnet-account.key"
+    } 
+  }
+}
+...
+```
+
+#### Separate account key file
+⚠️ Put this file in `.gitignore`
+
+The `my-testnet-account.key` file only contains the hex-encoded private key.
+```
+334232967f52bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad1111
+```
+---
+
+#### Main configuration file
+⚠️ DEPRECATED: please use the above method instead.
+
 ```json
 // flow.json
 {

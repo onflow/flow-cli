@@ -248,6 +248,24 @@ You can also use a key management system (KMS) to sign the transactions. Current
 ...
 ```
 
+You can store the account key to a separate file and provide the file location as part of the key configuration.
+
+**Example for separate key file:**
+```json
+...
+"accounts": {
+  "admin-account": {
+    "address": "service",
+    "key": {
+        "type": "file",
+        "location": "./test.key"
+    }
+  }
+}
+...
+```
+Inside the `test.key` file you should only put the hex key content (e.g. `12332967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad1111`)
+
 ### Deployments
 
 The deployments section defines where the `project deploy` command will deploy specified contracts. 

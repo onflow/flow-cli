@@ -25,11 +25,17 @@ import (
 
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
+	"golang.org/x/exp/slices"
 
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
 )
 
 type jsonAccounts map[string]account
+
+const (
+	defaultHashAlgo = crypto.SHA3_256
+	defaultSigAlgo  = crypto.ECDSA_P256
+)
 
 // transformAddress returns address based on address and chain id.
 func transformAddress(address string) (flow.Address, error) {
@@ -48,7 +54,7 @@ func transformAddress(address string) (flow.Address, error) {
 // transformSimpleToConfig transforms simple internal account to config account.
 func transformSimpleToConfig(accountName string, a simpleAccount) (*config.Account, error) {
 	pkey, err := crypto.DecodePrivateKeyHex(
-		crypto.ECDSA_P256,
+		defaultSigAlgo,
 		strings.TrimPrefix(a.Key, "0x"),
 	)
 	if err != nil {
@@ -65,9 +71,8 @@ func transformSimpleToConfig(accountName string, a simpleAccount) (*config.Accou
 		Address: address,
 		Key: config.AccountKey{
 			Type:       config.KeyTypeHex,
-			Index:      0,
-			SigAlgo:    crypto.ECDSA_P256,
-			HashAlgo:   crypto.SHA3_256,
+			SigAlgo:    defaultSigAlgo,
+			HashAlgo:   defaultHashAlgo,
 			PrivateKey: pkey,
 		},
 	}, nil
@@ -75,23 +80,39 @@ func transformSimpleToConfig(accountName string, a simpleAccount) (*config.Accou
 
 // transformAdvancedToConfig transforms advanced internal account to config account.
 func transformAdvancedToConfig(accountName string, a advancedAccount) (*config.Account, error) {
-	sigAlgo := crypto.StringToSignatureAlgorithm(a.Key.SigAlgo)
-	hashAlgo := crypto.StringToHashAlgorithm(a.Key.HashAlgo)
-
-	if a.Key.Type != config.KeyTypeHex && a.Key.Type != config.KeyTypeGoogleKMS && a.Key.Type != config.KeyTypeBip44 {
-		return nil, fmt.Errorf("invalid key type for account %s", accountName)
-	}
-
-	if a.Key.ResourceID != "" && a.Key.PrivateKey != "" {
-		return nil, fmt.Errorf("only provide value for private key or resource ID on account %s", accountName)
+	sigAlgo := defaultSigAlgo // default to ecdsa as default
+	if a.Key.SigAlgo != "" {
+		sigAlgo = crypto.StringToSignatureAlgorithm(a.Key.SigAlgo)
 	}
 
 	if sigAlgo == crypto.UnknownSignatureAlgorithm {
 		return nil, fmt.Errorf("invalid signature algorithm for account %s", accountName)
 	}
 
+	hashAlgo := defaultHashAlgo // default to sha3 as default
+	if a.Key.HashAlgo != "" {
+		hashAlgo = crypto.StringToHashAlgorithm(a.Key.HashAlgo)
+	}
+
 	if hashAlgo == crypto.UnknownHashAlgorithm {
 		return nil, fmt.Errorf("invalid hash algorithm for account %s", accountName)
+	}
+
+	validTypes := []config.KeyType{config.KeyTypeHex, config.KeyTypeFile, config.KeyTypeBip44, config.KeyTypeGoogleKMS}
+	if !slices.Contains(validTypes, a.Key.Type) {
+		return nil, fmt.Errorf("invalid key type for account %s", accountName)
+	}
+
+	// check that only one is provided because the values are mutually exclusive
+	set := false
+	for _, v := range []string{a.Key.ResourceID, a.Key.PrivateKey, a.Key.Location} {
+		if v == "" {
+			continue
+		}
+		if set {
+			return nil, fmt.Errorf("can only provide one property (resource ID, private key, location) on account %s", accountName)
+		}
+		set = true
 	}
 
 	address, err := transformAddress(a.Address)
@@ -135,6 +156,12 @@ func transformAdvancedToConfig(accountName string, a advancedAccount) (*config.A
 			return nil, fmt.Errorf("missing resource ID value for key on account %s", accountName)
 		}
 		key.ResourceID = a.Key.ResourceID
+
+	case config.KeyTypeFile:
+		if a.Key.Location == "" {
+			return nil, fmt.Errorf("missing location to a file containing the private key value for the account %s", accountName)
+		}
+		key.Location = a.Key.Location
 	}
 
 	return &config.Account{
@@ -214,10 +241,19 @@ func transformAdvancedAccountToJSON(a config.Account) account {
 
 func transformAdvancedKeyToJSON(key config.AccountKey) advanceKey {
 	advancedKey := advanceKey{
-		Type:     key.Type,
-		Index:    key.Index,
-		SigAlgo:  key.SigAlgo.String(),
-		HashAlgo: key.HashAlgo.String(),
+		Type: key.Type,
+	}
+
+	if key.Index != 0 { // only set if non-default
+		advancedKey.Index = key.Index
+	}
+
+	if key.SigAlgo != defaultSigAlgo { // only set if non-default
+		advancedKey.SigAlgo = key.SigAlgo.String()
+	}
+
+	if key.HashAlgo != defaultHashAlgo { // only set if non-default
+		advancedKey.HashAlgo = key.HashAlgo.String()
 	}
 
 	switch key.Type {
@@ -228,6 +264,8 @@ func transformAdvancedKeyToJSON(key config.AccountKey) advanceKey {
 		advancedKey.DerivationPath = key.DerivationPath
 	case config.KeyTypeGoogleKMS:
 		advancedKey.ResourceID = key.ResourceID
+	case config.KeyTypeFile:
+		advancedKey.Location = key.Location
 	}
 
 	return advancedKey
@@ -236,8 +274,8 @@ func transformAdvancedKeyToJSON(key config.AccountKey) advanceKey {
 func isDefaultKeyFormat(key config.AccountKey) bool {
 	return key.Index == 0 &&
 		key.Type == config.KeyTypeHex &&
-		key.SigAlgo == crypto.ECDSA_P256 &&
-		key.HashAlgo == crypto.SHA3_256
+		key.SigAlgo == defaultSigAlgo &&
+		key.HashAlgo == defaultHashAlgo
 }
 
 type account struct {
@@ -262,9 +300,9 @@ type advancedAccount struct {
 
 type advanceKey struct {
 	Type     config.KeyType `json:"type"`
-	Index    int            `json:"index"`
-	SigAlgo  string         `json:"signatureAlgorithm"`
-	HashAlgo string         `json:"hashAlgorithm"`
+	Index    int            `json:"index,omitempty"`
+	SigAlgo  string         `json:"signatureAlgorithm,omitempty"`
+	HashAlgo string         `json:"hashAlgorithm,omitempty"`
 	// hex key type
 	PrivateKey string `json:"privateKey,omitempty"`
 	// bip44 key type
@@ -272,6 +310,8 @@ type advanceKey struct {
 	DerivationPath string `json:"derivationPath,omitempty"`
 	// kms key type
 	ResourceID string `json:"resourceID,omitempty"`
+	// key location
+	Location string `json:"location,omitempty"`
 	// old key format
 	Context map[string]string `json:"context,omitempty"`
 }

@@ -43,12 +43,14 @@ type Config struct {
 type KeyType string
 
 const (
-	KeyTypeHex                        KeyType = "hex"
-	KeyTypeGoogleKMS                  KeyType = "google-kms"
-	KeyTypeBip44                      KeyType = "bip44"
-	DefaultEmulatorConfigName                 = "default"
-	DefaultEmulatorServiceAccountName         = "emulator-account"
-	DefaultEmulatorPort                       = 3569
+	KeyTypeHex       KeyType = "hex"
+	KeyTypeGoogleKMS KeyType = "google-kms"
+	KeyTypeBip44     KeyType = "bip44"
+	KeyTypeFile      KeyType = "file"
+
+	DefaultEmulatorConfigName         = "default"
+	DefaultEmulatorServiceAccountName = "emulator-account"
+	DefaultEmulatorPort               = 3569
 )
 
 // Validate the configuration values.
