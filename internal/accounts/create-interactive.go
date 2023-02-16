@@ -60,7 +60,7 @@ func createInteractive(state *flowkit.State, loader flowkit.ReaderWriter) error 
 		return err
 	}
 
-	log.StartProgress("Creating an account ")
+	log.StartProgress(fmt.Sprintf("Creating account %s on %s...", name, networkName))
 
 	var account *flowkit.Account
 	if selectedNetwork == config.DefaultEmulatorNetwork() {
