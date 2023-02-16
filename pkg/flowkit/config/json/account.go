@@ -32,6 +32,11 @@ import (
 
 type jsonAccounts map[string]account
 
+const (
+	defaultHashAlgo = crypto.SHA3_256
+	defaultSigAlgo  = crypto.ECDSA_P256
+)
+
 // transformAddress returns address based on address and chain id.
 func transformAddress(address string) (flow.Address, error) {
 	// only allow service for emulator
@@ -49,7 +54,7 @@ func transformAddress(address string) (flow.Address, error) {
 // transformSimpleToConfig transforms simple internal account to config account.
 func transformSimpleToConfig(accountName string, a simpleAccount) (*config.Account, error) {
 	pkey, err := crypto.DecodePrivateKeyHex(
-		crypto.ECDSA_P256,
+		defaultSigAlgo,
 		strings.TrimPrefix(a.Key, "0x"),
 	)
 	if err != nil {
@@ -66,9 +71,8 @@ func transformSimpleToConfig(accountName string, a simpleAccount) (*config.Accou
 		Address: address,
 		Key: config.AccountKey{
 			Type:       config.KeyTypeHex,
-			Index:      0,
-			SigAlgo:    crypto.ECDSA_P256,
-			HashAlgo:   crypto.SHA3_256,
+			SigAlgo:    defaultSigAlgo,
+			HashAlgo:   defaultHashAlgo,
 			PrivateKey: pkey,
 		},
 	}, nil
@@ -76,7 +80,7 @@ func transformSimpleToConfig(accountName string, a simpleAccount) (*config.Accou
 
 // transformAdvancedToConfig transforms advanced internal account to config account.
 func transformAdvancedToConfig(accountName string, a advancedAccount) (*config.Account, error) {
-	sigAlgo := crypto.ECDSA_P256 // default to ecdsa as default
+	sigAlgo := defaultSigAlgo // default to ecdsa as default
 	if a.Key.SigAlgo != "" {
 		sigAlgo = crypto.StringToSignatureAlgorithm(a.Key.SigAlgo)
 	}
@@ -85,7 +89,7 @@ func transformAdvancedToConfig(accountName string, a advancedAccount) (*config.A
 		return nil, fmt.Errorf("invalid signature algorithm for account %s", accountName)
 	}
 
-	hashAlgo := crypto.SHA3_256 // default to sha3 as default
+	hashAlgo := defaultHashAlgo // default to sha3 as default
 	if a.Key.HashAlgo != "" {
 		hashAlgo = crypto.StringToHashAlgorithm(a.Key.HashAlgo)
 	}
@@ -237,10 +241,19 @@ func transformAdvancedAccountToJSON(a config.Account) account {
 
 func transformAdvancedKeyToJSON(key config.AccountKey) advanceKey {
 	advancedKey := advanceKey{
-		Type:     key.Type,
-		Index:    key.Index,
-		SigAlgo:  key.SigAlgo.String(),
-		HashAlgo: key.HashAlgo.String(),
+		Type: key.Type,
+	}
+
+	if key.Index != 0 { // only set if non-default
+		advancedKey.Index = key.Index
+	}
+
+	if key.SigAlgo != defaultSigAlgo { // only set if non-default
+		advancedKey.SigAlgo = key.SigAlgo.String()
+	}
+
+	if key.HashAlgo != defaultHashAlgo { // only set if non-default
+		advancedKey.HashAlgo = key.HashAlgo.String()
 	}
 
 	switch key.Type {
@@ -261,8 +274,8 @@ func transformAdvancedKeyToJSON(key config.AccountKey) advanceKey {
 func isDefaultKeyFormat(key config.AccountKey) bool {
 	return key.Index == 0 &&
 		key.Type == config.KeyTypeHex &&
-		key.SigAlgo == crypto.ECDSA_P256 &&
-		key.HashAlgo == crypto.SHA3_256
+		key.SigAlgo == defaultSigAlgo &&
+		key.HashAlgo == defaultHashAlgo
 }
 
 type account struct {
