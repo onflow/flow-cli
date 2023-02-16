@@ -5,18 +5,36 @@ description: How to create a Flow account from the command line
 ---
 
 The Flow CLI provides a command to submit an account creation 
-transaction to any Flow Access API.
+transaction to any Flow Access API. There are two options how to create an account, you can use the 
+interactive mode which guides you through the process and creates the account for you or by using 
+the manual process which requires a pre-existing account on the network you chose.
+
+## Interactive Mode
+Creating the account in interactive mode prompts you for an account name and network selection. 
+After you enter the required information the account will be created for you and saved to `flow.json`. 
+If account creation is done on testnet or mainnet the account key will be saved to a separate key file, 
+which will also be put in `.gitignore`. You can [read more about key security here](https://developers.flow.com/tools/flow-cli/security).
+
+💡 _Please note that the account creation process can take up to a minute so please be patient._
 
 ```shell
 flow accounts create
+
+Enter an account name: mike
+✔ Testnet
+
+🎉 New account created with address 0x77e6ae4c8c2f1dd6 and name mike on Testnet network.
+
+Here’s a summary of all the actions that were taken:
+ - Added the new account to flow.json.
+ - Saved the private key to mike.pkey.
+ - Added mike.pkey to .gitignore.
 ```
 
-⚠️ _This command requires an existing Testnet or Mainnet account._
-
-## Video Tutorial for Account Creation
-<iframe width="560" height="315" src="https://youtu.be/K9NtfFKcCa0" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-
-## Example Usage
+## Manual Mode
+Manual mode requires you to have a pre-existing account on the network which you will have to provide as a signer. 
+That account must be added to `flow.json` for the command to work. You also have to generate a key pair, we 
+suggest using the `flow keys generate` command, [which you can read more about here](https://developers.flow.com/tools/flow-cli/generate-keys).
 
 ```shell
 # Create an account on Flow Testnet
