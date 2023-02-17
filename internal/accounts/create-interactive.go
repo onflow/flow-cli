@@ -20,21 +20,15 @@ package accounts
 
 import (
 	"fmt"
-	"os"
-	"strings"
-	"time"
-
-	"github.com/onflow/flow-go-sdk"
-	"github.com/onflow/flow-go-sdk/crypto"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
-
 	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
 	"github.com/onflow/flow-cli/pkg/flowkit/gateway"
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
 	"github.com/onflow/flow-cli/pkg/flowkit/services"
 	"github.com/onflow/flow-cli/pkg/flowkit/util"
+	"github.com/onflow/flow-go-sdk"
+	"github.com/onflow/flow-go-sdk/crypto"
+	"os"
 )
 
 // createInteractive is used when user calls a default account create command without any provided values.
@@ -61,32 +55,15 @@ func createInteractive(state *flowkit.State) error {
 
 	log.StartProgress(fmt.Sprintf("Creating account %s on %s...", name, networkName))
 
-	var account *flowkit.Account
-	if selectedNetwork == config.DefaultEmulatorNetwork() {
-		account, err = createEmulatorAccount(state, service, name, key)
-		log.StopProgress()
-		log.Info(output.Italic("\nPlease note that the newly-created account will only be available while you keep the emulator service running. If you restart the emulator service, all accounts will be reset. If you want to persist accounts between restarts, please use the '--persist' flag when starting the flow emulator.\n"))
-	} else {
-		account, err = createNetworkAccount(state, service, name, key, privateFile, selectedNetwork)
-		log.StopProgress()
-	}
-	if err != nil {
-		return err
-	}
-
-	log.Info(fmt.Sprintf(
-		"%s New account created with address %s and name %s on %s network.\n",
-		output.SuccessEmoji(),
-		output.Bold(fmt.Sprintf("0x%s", account.Address().String())),
-		output.Bold(name),
-		output.Bold(networkName)),
-	)
+	account, err := createAccount(name, key, selectedNetwork, state, service)
 
 	state.Accounts().AddOrUpdate(account)
 	err = state.SaveDefault()
 	if err != nil {
 		return err
 	}
+
+	log.StopProgress()
 
 	items := []string{
 		"Here’s a summary of all the actions that were taken",
@@ -97,63 +74,80 @@ func createInteractive(state *flowkit.State) error {
 			fmt.Sprintf("Saved the private key to %s.", output.Bold(privateFile)),
 			fmt.Sprintf("Added %s to %s.", output.Bold(privateFile), output.Bold(".gitignore")),
 		)
+	} else {
+		log.Info(output.Italic("\nPlease note that the newly-created account will only be available while you keep the emulator service running. If you restart the emulator service, all accounts will be reset. If you want to persist accounts between restarts, please use the '--persist' flag when starting the flow emulator.\n"))
 	}
+	log.Info(fmt.Sprintf(
+		"%s New account created with address %s and name %s on %s network.\n",
+		output.SuccessEmoji(),
+		output.Bold(fmt.Sprintf("0x%s", account.Address().String())),
+		output.Bold(name),
+		output.Bold(networkName)),
+	)
+
 	outputList(log, items, false)
 
 	return nil
 }
 
-// createNetworkAccount using the account creation API and return the newly created account address.
-func createNetworkAccount(
-	state *flowkit.State,
-	services *services.Services,
+const (
+	testAddress = ""
+	mainAddress = ""
+	testKey     = ""
+	mainKey     = ""
+)
+
+// createAccount on the network using the available signers
+func createAccount(
 	name string,
 	key crypto.PrivateKey,
-	privateFile string,
 	network config.Network,
-) (*flowkit.Account, error) {
-	networkAccount := &lilicoAccount{
-		PublicKey: strings.TrimPrefix(key.PublicKey().String(), "0x"),
-	}
-
-	id, err := networkAccount.create(network.Name)
-	if err != nil {
-		return nil, err
-	}
-
-	result, err := getAccountCreationResult(services, id)
-	if err != nil {
-		return nil, err
-	}
-
-	events := flowkit.EventsFromTransaction(result)
-	address := events.GetCreatedAddresses()
-	if len(address) == 0 {
-		return nil, fmt.Errorf("account creation error")
-	}
-
-	err = util.AddToGitIgnore(privateFile, state.ReaderWriter())
-	if err != nil {
-		return nil, err
-	}
-
-	err = state.ReaderWriter().WriteFile(privateFile, []byte(key.String()), os.FileMode(0644))
-	if err != nil {
-		return nil, fmt.Errorf("failed saving private key: %w", err)
-	}
-
-	return flowkit.NewAccount(name).SetAddress(*address[0]).SetKey(
-		flowkit.NewFileAccountKey(privateFile, 0, crypto.ECDSA_P256, crypto.SHA3_256),
-	), nil
-}
-
-func createEmulatorAccount(
 	state *flowkit.State,
 	service *services.Services,
-	name string,
-	key crypto.PrivateKey,
 ) (*flowkit.Account, error) {
-	signer, err := state.EmulatorServiceAccount()
+	privateFile := fmt.Sprintf("%s.pkey", name)
+
+	var (
+		accountKey flowkit.AccountKey
+		signer     *flowkit.Account
+		err        error
+	)
+
+	rawKey := map[string]string{
+		config.DefaultTestnetNetwork().Name: testKey,
+		config.DefaultMainnetNetwork().Name: mainKey,
+	}[network.Name]
+
+	rawAddr := map[string]string{
+		config.DefaultTestnetNetwork().Name: testAddress,
+		config.DefaultMainnetNetwork().Name: mainAddress,
+	}[network.Name]
+
+	if network == config.DefaultEmulatorNetwork() {
+		signer, err = state.EmulatorServiceAccount()
+		if err != nil {
+			return nil, err
+		}
+		accountKey = flowkit.NewHexAccountKeyFromPrivateKey(0, crypto.SHA3_256, key)
+
+	} else {
+		pk, _ := crypto.DecodePrivateKeyHex(crypto.ECDSA_P256, rawKey)
+		signer = flowkit.NewAccount("signer").
+			SetAddress(flow.HexToAddress(rawAddr)).
+			SetKey(flowkit.NewHexAccountKeyFromPrivateKey(0, crypto.SHA3_256, pk))
+
+		accountKey = flowkit.NewFileAccountKey(privateFile, 0, crypto.ECDSA_P256, crypto.SHA3_256)
+
+		err = util.AddToGitIgnore(privateFile, state.ReaderWriter())
+		if err != nil {
+			return nil, err
+		}
+		// create the private key file
+		err = state.ReaderWriter().WriteFile(privateFile, []byte(key.String()), os.FileMode(0644))
+		if err != nil {
+			return nil, fmt.Errorf("failed saving private key: %w", err)
+		}
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -170,22 +164,11 @@ func createEmulatorAccount(
 		return nil, err
 	}
 
-	return flowkit.NewAccount(name).SetAddress(networkAccount.Address).SetKey(
-		flowkit.NewHexAccountKeyFromPrivateKey(0, crypto.SHA3_256, key),
-	), nil
+	return flowkit.NewAccount(name).SetAddress(networkAccount.Address).SetKey(accountKey), nil
 }
 
-func getAccountCreationResult(services *services.Services, id flow.Identifier) (*flow.TransactionResult, error) {
-	_, result, err := services.Transactions.GetStatus(id, true)
-	if err != nil {
-		if status.Code(err) == codes.NotFound { // if transaction not yet propagated, wait for it
-			time.Sleep(1 * time.Second)
-			return getAccountCreationResult(services, id)
-		}
-		return nil, err
-	}
+func fundAccount() {
 
-	return result, nil
 }
 
 // outputList helper for printing lists
