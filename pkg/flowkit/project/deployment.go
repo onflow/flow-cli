@@ -151,9 +151,12 @@ func (d *Deployment) buildDependencies() error {
 				continue
 			}
 
-			// todo identifier aliases
+			// if aliased then skip, not a dependency
 			if _, exists := d.aliases[importPath]; exists {
-				continue // if aliased then skip, not a dependency
+				continue
+			}
+			if _, exists := d.aliases[location]; exists {
+				continue
 			}
 
 			return fmt.Errorf(
