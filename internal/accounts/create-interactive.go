@@ -177,7 +177,7 @@ func sendCreateAccountTransaction(
 
 	args := make([]cadence.Value, len(txFlow.Arguments))
 	for i := range txFlow.Arguments {
-		args[i], err = txFlow.Argument(i)
+		args[i], _ = txFlow.Argument(i)
 	}
 
 	_, result, err := service.Transactions.Send(
