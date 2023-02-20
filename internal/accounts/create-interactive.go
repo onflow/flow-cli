@@ -20,15 +20,18 @@ package accounts
 
 import (
 	"fmt"
+	"os"
+
+	"github.com/onflow/cadence"
+	"github.com/onflow/flow-go-sdk"
+	"github.com/onflow/flow-go-sdk/crypto"
+
 	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
 	"github.com/onflow/flow-cli/pkg/flowkit/gateway"
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
 	"github.com/onflow/flow-cli/pkg/flowkit/services"
 	"github.com/onflow/flow-cli/pkg/flowkit/util"
-	"github.com/onflow/flow-go-sdk"
-	"github.com/onflow/flow-go-sdk/crypto"
-	"os"
 )
 
 // createInteractive is used when user calls a default account create command without any provided values.
@@ -56,6 +59,9 @@ func createInteractive(state *flowkit.State) error {
 	log.StartProgress(fmt.Sprintf("Creating account %s on %s...", name, networkName))
 
 	account, err := createAccount(name, key, selectedNetwork, state, service)
+	if err != nil {
+		return fmt.Errorf("creating funded accounts is currently paused")
+	}
 
 	state.Accounts().AddOrUpdate(account)
 	err = state.SaveDefault()
@@ -113,16 +119,6 @@ func createAccount(
 		err        error
 	)
 
-	rawKey := map[string]string{
-		config.DefaultTestnetNetwork().Name: testKey,
-		config.DefaultMainnetNetwork().Name: mainKey,
-	}[network.Name]
-
-	rawAddr := map[string]string{
-		config.DefaultTestnetNetwork().Name: testAddress,
-		config.DefaultMainnetNetwork().Name: mainAddress,
-	}[network.Name]
-
 	if network == config.DefaultEmulatorNetwork() {
 		signer, err = state.EmulatorServiceAccount()
 		if err != nil {
@@ -131,13 +127,8 @@ func createAccount(
 		accountKey = flowkit.NewHexAccountKeyFromPrivateKey(0, crypto.SHA3_256, key)
 
 	} else {
-		pk, _ := crypto.DecodePrivateKeyHex(crypto.ECDSA_P256, rawKey)
-		signer = flowkit.NewAccount("signer").
-			SetAddress(flow.HexToAddress(rawAddr)).
-			SetKey(flowkit.NewHexAccountKeyFromPrivateKey(0, crypto.SHA3_256, pk))
-
+		signer = createSigner(network)
 		accountKey = flowkit.NewFileAccountKey(privateFile, 0, crypto.ECDSA_P256, crypto.SHA3_256)
-
 		err = util.AddToGitIgnore(privateFile, state.ReaderWriter())
 		if err != nil {
 			return nil, err
@@ -152,23 +143,82 @@ func createAccount(
 		return nil, err
 	}
 
-	networkAccount, err := service.Accounts.Create(
-		signer,
-		[]crypto.PublicKey{key.PublicKey()},
-		[]int{flow.AccountKeyWeightThreshold},
-		[]crypto.SignatureAlgorithm{crypto.ECDSA_P256},
-		[]crypto.HashAlgorithm{crypto.SHA3_256},
-		nil,
-	)
+	address, err := sendCreateAccountTransaction(signer, key, network, service)
 	if err != nil {
 		return nil, err
 	}
 
-	return flowkit.NewAccount(name).SetAddress(networkAccount.Address).SetKey(accountKey), nil
+	return flowkit.NewAccount(name).SetAddress(*address).SetKey(accountKey), nil
 }
 
-func fundAccount() {
+func sendCreateAccountTransaction(
+	signer *flowkit.Account,
+	key crypto.PrivateKey,
+	network config.Network,
+	service *services.Services,
+) (*flow.Address, error) {
+	rawNetwork := map[config.Network]flow.ChainID{
+		config.DefaultTestnetNetwork(): flow.Testnet,
+		config.DefaultMainnetNetwork(): flow.Mainnet,
+	}[network]
 
+	keys := []*flow.AccountKey{{
+		PublicKey: key.PublicKey(),
+		SigAlgo:   crypto.ECDSA_P256,
+		HashAlgo:  crypto.SHA3_256,
+		Weight:    flow.AccountKeyWeightThreshold,
+	}}
+
+	tx, err := flowkit.NewCreateAccountTransactionWithFunding(signer, keys, nil, "0.001", rawNetwork)
+	if err != nil {
+		return nil, err
+	}
+	txFlow := tx.FlowTransaction()
+
+	args := make([]cadence.Value, len(txFlow.Arguments))
+	for i := range txFlow.Arguments {
+		args[i], err = txFlow.Argument(i)
+	}
+
+	_, result, err := service.Transactions.Send(
+		services.NewSingleTransactionAccount(signer),
+		flowkit.NewScript(txFlow.Script, args, ""),
+		flow.DefaultTransactionGasLimit,
+		network.Name,
+	)
+	if err != nil {
+		return nil, err
+	}
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	events := flowkit.EventsFromTransaction(result)
+	newAccountAddress := events.GetCreatedAddresses()
+	if len(newAccountAddress) == 0 {
+		return nil, fmt.Errorf("new account address couldn't be fetched")
+	}
+
+	return newAccountAddress[0], nil
+}
+
+func createSigner(network config.Network) *flowkit.Account {
+	rawKey := map[config.Network]string{
+		config.DefaultTestnetNetwork(): testKey,
+		config.DefaultMainnetNetwork(): mainKey,
+	}[network]
+
+	rawAddr := map[config.Network]string{
+		config.DefaultTestnetNetwork(): testAddress,
+		config.DefaultMainnetNetwork(): mainAddress,
+	}[network]
+
+	pk, _ := crypto.DecodePrivateKeyHex(crypto.ECDSA_P256, rawKey)
+	signer := flowkit.NewAccount(network.Name).
+		SetAddress(flow.HexToAddress(rawAddr)).
+		SetKey(flowkit.NewHexAccountKeyFromPrivateKey(0, crypto.SHA3_256, pk))
+
+	return signer
 }
 
 // outputList helper for printing lists
