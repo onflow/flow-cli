@@ -25,7 +25,7 @@ jobs:
           go-version: '1.19'
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-      - uses: wangyoucao577/go-release-action@v1.35
+      - uses: wangyoucao577/go-release-action@v1.36
         env:
           MIXPANEL_PROJECT_TOKEN: ${{ secrets.MIXPANEL_PROJECT_TOKEN }}
           MAINNET_ADDRESS: ${{ secrets.MAINNET_ADDRESS }}
