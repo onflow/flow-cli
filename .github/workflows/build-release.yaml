@@ -25,9 +25,13 @@ jobs:
           go-version: '1.19'
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-      - uses: wangyoucao577/go-release-action@v1.33
+      - uses: wangyoucao577/go-release-action@v1.35
         env:
           MIXPANEL_PROJECT_TOKEN: ${{ secrets.MIXPANEL_PROJECT_TOKEN }}
+          MAINNET_ADDRESS: ${{ secrets.MAINNET_ADDRESS }}
+          MAINNET_KEY: ${{ secrets.MAINNET_KEY }}
+          TESTNET_ADDRESS: ${{ secrets.TESTNET_ADDRESS }}
+          TESTNET_KEY: ${{ secrets.TESTNET_KEY }}
           APP_VERSION: $(basename ${GITHUB_REF})
           BUILD_TIME: $(date --iso-8601=seconds)
           VERSION: ${{github.ref_name}}
@@ -38,4 +42,4 @@ jobs:
           goarch: ${{ matrix.goarch }}
           goversion: "1.19"
           project_path: "./cmd/flow"
-          ldflags: -X "github.com/onflow/flow-cli/build.commit=${{ env.COMMIT }}" -X "github.com/onflow/flow-cli/build.semver=${{ env.VERSION }}" -X "github.com/onflow/flow-cli/internal/command.mixpanelToken=${{ env.MIXPANEL_PROJECT_TOKEN }}"
+          ldflags: -X "github.com/onflow/flow-cli/build.commit=${{ env.COMMIT }}" -X "github.com/onflow/flow-cli/build.semver=${{ env.VERSION }}" -X "github.com/onflow/flow-cli/internal/command.mixpanelToken=${{ env.MIXPANEL_PROJECT_TOKEN }}" -X "github.com/onflow/flow-cli/internal/accounts.testAddress=${{ env.TESTNET_ADDRESS }}" -X "github.com/onflow/flow-cli/internal/accounts.mainAddress=${{ env.MAINNET_ADDRESS }}" -X "github.com/onflow/flow-cli/internal/accounts.testKey=${{ env.TESTNET_KEY }}" -X "github.com/onflow/flow-cli/internal/accounts.mainKey=${{ env.MAINNET_KEY }}"

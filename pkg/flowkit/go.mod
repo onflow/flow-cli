@@ -14,10 +14,10 @@ require (
 	github.com/onflow/flow-core-contracts/lib/go/templates v0.11.2-0.20221216161720-c1b31d5a4722
 	github.com/onflow/flow-emulator v0.44.1
 	github.com/onflow/flow-go v0.29.11
-	github.com/onflow/flow-go-sdk v0.31.3
+	github.com/onflow/flow-go-sdk v0.33.0
 	github.com/pkg/errors v0.9.1
 	github.com/rs/zerolog v1.29.0
-	github.com/sirupsen/logrus v1.8.1
+	github.com/sirupsen/logrus v1.9.0
 	github.com/spf13/afero v1.9.0
 	github.com/stretchr/testify v1.8.1
 	github.com/thoas/go-funk v0.9.2
@@ -114,7 +114,7 @@ require (
 	github.com/onflow/flow-ft/lib/go/contracts v0.5.0 // indirect
 	github.com/onflow/flow-go/crypto v0.24.4 // indirect
 	github.com/onflow/flow/protobuf/go/flow v0.3.2-0.20221202093946-932d1c70e288 // indirect
-	github.com/onflow/sdks v0.4.4 // indirect
+	github.com/onflow/sdks v0.5.0 // indirect
 	github.com/opentracing/opentracing-go v1.2.0 // indirect
 	github.com/pbnjay/memory v0.0.0-20210728143218-7b4eea64cf58 // indirect
 	github.com/pelletier/go-toml v1.9.5 // indirect
@@ -156,11 +156,11 @@ require (
 	go.uber.org/multierr v1.8.0 // indirect
 	go.uber.org/zap v1.23.0 // indirect
 	golang.org/x/crypto v0.3.0 // indirect
-	golang.org/x/net v0.5.0 // indirect
+	golang.org/x/net v0.7.0 // indirect
 	golang.org/x/oauth2 v0.4.0 // indirect
 	golang.org/x/sync v0.1.0 // indirect
-	golang.org/x/sys v0.4.0 // indirect
-	golang.org/x/text v0.6.0 // indirect
+	golang.org/x/sys v0.5.0 // indirect
+	golang.org/x/text v0.7.0 // indirect
 	golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2 // indirect
 	google.golang.org/api v0.103.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
