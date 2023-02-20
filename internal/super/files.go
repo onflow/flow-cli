@@ -71,7 +71,11 @@ type projectFiles struct {
 // exist checks if current directory contains all project files required.
 func (f *projectFiles) exist() error {
 	if _, err := os.Stat(f.cadencePath); errors.Is(err, os.ErrNotExist) {
-		return fmt.Errorf("required cadence folder does not exist")
+		if _, err := os.Stat(contractDir); errors.Is(err, os.ErrNotExist) {
+			return fmt.Errorf("required cadence folder or contract folder does not exist")
+		} else if err == nil {
+			f.cadencePath = "" // in case there's no cadence folder we just use contracts folder directly
+		}
 	}
 	if _, err := os.Stat(config.DefaultPath); errors.Is(err, os.ErrNotExist) {
 		return fmt.Errorf("required project configuration ('flow.json') does not exist")
