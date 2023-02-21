@@ -96,7 +96,7 @@ func createInteractive(state *flowkit.State) error {
 	return nil
 }
 
-const (
+var (
 	testAddress = ""
 	mainAddress = ""
 	testKey     = ""
