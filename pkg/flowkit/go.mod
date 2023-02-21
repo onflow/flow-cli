@@ -12,7 +12,7 @@ require (
 	github.com/onflow/cadence v0.31.3
 	github.com/onflow/cadence-tools/test v0.3.0
 	github.com/onflow/flow-core-contracts/lib/go/templates v0.11.2-0.20221216161720-c1b31d5a4722
-	github.com/onflow/flow-emulator v0.44.1
+	github.com/onflow/flow-emulator v0.44.2
 	github.com/onflow/flow-go v0.29.11
 	github.com/onflow/flow-go-sdk v0.33.0
 	github.com/pkg/errors v0.9.1

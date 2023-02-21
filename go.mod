@@ -11,7 +11,7 @@ require (
 	github.com/onflow/cadence-tools/test v0.4.0
 	github.com/onflow/fcl-dev-wallet v0.5.5
 	github.com/onflow/flow-cli/pkg/flowkit v0.0.0-20230125123057-e0006d2ef2f6
-	github.com/onflow/flow-emulator v0.44.1
+	github.com/onflow/flow-emulator v0.44.2
 	github.com/onflow/flow-go-sdk v0.33.0
 	github.com/onflowser/flowser/v2 v2.0.9-beta
 	github.com/pkg/errors v0.9.1
