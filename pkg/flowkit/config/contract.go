@@ -19,8 +19,6 @@
 package config
 
 import (
-	"fmt"
-
 	"github.com/onflow/flow-go-sdk"
 )
 
@@ -69,14 +67,14 @@ func (c *Contract) IsAliased() bool {
 }
 
 // ByName get contract by name.
-func (c *Contracts) ByName(name string) (*Contract, error) {
+func (c *Contracts) ByName(name string) *Contract {
 	for _, contract := range *c {
 		if contract.Name == name {
-			return &contract, nil
+			return &contract
 		}
 	}
 
-	return nil, fmt.Errorf("contract named %s does not exist in configuration", name)
+	return nil
 }
 
 // AddOrUpdate add new or update if already present.
