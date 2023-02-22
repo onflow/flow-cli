@@ -24,6 +24,11 @@ already part of the contract you are adding.
 - Package: `config`
 - Type: `Contracts`
 
+---
+Don't return error if contract by name not found but rather just a `nil`.
+- Method: `ByName`
+- Package: `config`
+- Type: `Contracts`
 
 ### Added
 
