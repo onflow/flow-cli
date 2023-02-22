@@ -64,7 +64,7 @@ func createInteractive(state *flowkit.State) error {
 		return err
 	}
 
-	log.StartProgress(fmt.Sprintf("Creating account %s on %s...", name, networkName))
+	//log.StartProgress(fmt.Sprintf("Creating account %s on %s...", name, networkName))
 
 	var account *flowkit.Account
 	if selectedNetwork == config.DefaultEmulatorNetwork() {
@@ -184,6 +184,7 @@ func getAccountCreationResult(services *services.Services, id flow.Identifier) (
 	_, result, err := services.Transactions.GetStatus(id, true)
 	if err != nil {
 		if status.Code(err) == codes.NotFound { // if transaction not yet propagated, wait for it
+			fmt.Println("WAITING FOR TX", id)
 			time.Sleep(1 * time.Second)
 			return getAccountCreationResult(services, id)
 		}
@@ -210,6 +211,7 @@ type lilicoResponse struct {
 var accountToken = ""
 
 const defaultHashAlgo = crypto.SHA3_256
+
 const defaultSignAlgo = crypto.ECDSA_P256
 
 // create a new account using the lilico API and parsing the response, returning account creation transaction ID.
@@ -254,11 +256,13 @@ func (l *lilicoAccount) create(network string) (flow.Identifier, error) {
 
 	body, _ := io.ReadAll(res.Body)
 	var lilicoRes lilicoResponse
+	fmt.Println("RESPONSE", string(body))
+
 	err = json.Unmarshal(body, &lilicoRes)
 	if err != nil {
 		return flow.EmptyID, fmt.Errorf("could not create an account: %w", err)
 	}
-
+	fmt.Println("ID", lilicoRes, lilicoRes.Data.TxId)
 	return flow.HexToID(lilicoRes.Data.TxId), nil
 }
 

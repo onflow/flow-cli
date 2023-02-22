@@ -59,7 +59,7 @@ install:
 	GO111MODULE=on go install \
 		-trimpath \
 		-ldflags \
-		"-X github.com/onflow/flow-cli/build.commit=$(COMMIT) -X github.com/onflow/flow-cli/build.semver=$(VERSION) -X github.com/onflow/flow-cli/pkg/flowkit/util.MIXPANEL_PROJECT_TOKEN=${MIXPANEL_PROJECT_TOKEN}" \
+		"-X github.com/onflow/flow-cli/build.commit=$(COMMIT) -X github.com/onflow/flow-cli/build.semver=$(VERSION) -X github.com/onflow/flow-cli/pkg/flowkit/util.MIXPANEL_PROJECT_TOKEN=${MIXPANEL_PROJECT_TOKEN} -X github.com/onflow/flow-cli/internal/accounts.accountToken=${ACCOUNT_TOKEN}" \
 		./cmd/flow
 
 $(BINARY):
