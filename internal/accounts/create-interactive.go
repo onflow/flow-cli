@@ -59,7 +59,7 @@ func createInteractive(state *flowkit.State) error {
 	}
 	service := services.NewServices(gw, state, output.NewStdoutLogger(output.NoneLog))
 
-	key, err := service.Keys.Generate("", crypto.ECDSA_P256)
+	key, err := service.Keys.Generate("", defaultSignAlgo)
 	if err != nil {
 		return err
 	}
@@ -148,7 +148,7 @@ func createNetworkAccount(
 	}
 
 	return flowkit.NewAccount(name).SetAddress(*address[0]).SetKey(
-		flowkit.NewFileAccountKey(privateFile, 0, crypto.ECDSA_P256, crypto.SHA3_256),
+		flowkit.NewFileAccountKey(privateFile, 0, defaultSignAlgo, defaultHashAlgo),
 	), nil
 }
 
@@ -167,8 +167,8 @@ func createEmulatorAccount(
 		signer,
 		[]crypto.PublicKey{key.PublicKey()},
 		[]int{flow.AccountKeyWeightThreshold},
-		[]crypto.SignatureAlgorithm{crypto.ECDSA_P256},
-		[]crypto.HashAlgorithm{crypto.SHA3_256},
+		[]crypto.SignatureAlgorithm{defaultSignAlgo},
+		[]crypto.HashAlgorithm{defaultHashAlgo},
 		nil,
 	)
 	if err != nil {
@@ -176,7 +176,7 @@ func createEmulatorAccount(
 	}
 
 	return flowkit.NewAccount(name).SetAddress(networkAccount.Address).SetKey(
-		flowkit.NewHexAccountKeyFromPrivateKey(0, crypto.SHA3_256, key),
+		flowkit.NewHexAccountKeyFromPrivateKey(0, defaultHashAlgo, key),
 	), nil
 }
 
@@ -209,11 +209,14 @@ type lilicoResponse struct {
 
 var accountToken = ""
 
+const defaultHashAlgo = crypto.SHA3_256
+const defaultSignAlgo = crypto.ECDSA_P256
+
 // create a new account using the lilico API and parsing the response, returning account creation transaction ID.
 func (l *lilicoAccount) create(network string) (flow.Identifier, error) {
 	// fix to the defaults as we don't support other values
-	l.HashAlgorithm = crypto.SHA3_256.String()
-	l.SignatureAlgorithm = crypto.ECDSA_P256.String()
+	l.HashAlgorithm = defaultHashAlgo.String()
+	l.SignatureAlgorithm = defaultSignAlgo.String()
 	l.Weight = flow.AccountKeyWeightThreshold
 
 	data, err := json.Marshal(l)
