@@ -78,8 +78,7 @@ func (c *Config) Validate() error {
 		}
 
 		for _, con := range d.Contracts {
-			_, err := c.Contracts.ByName(con.Name)
-			if err != nil {
+			if c.Contracts.ByName(con.Name) == nil {
 				return fmt.Errorf("deployment contains nonexisting contract %s", con.Name)
 			}
 		}

@@ -174,9 +174,9 @@ func (p *State) DeploymentContractsByNetwork(network string) ([]*project.Contrac
 
 		// go through each contract in this deployment
 		for _, deploymentContract := range deploy.Contracts {
-			c, err := p.conf.Contracts.ByName(deploymentContract.Name)
-			if err != nil {
-				return nil, err
+			c := p.conf.Contracts.ByName(deploymentContract.Name)
+			if c == nil {
+				return nil, fmt.Errorf("contract with name %s not found", deploymentContract.Name)
 			}
 
 			code, err := p.readerWriter.ReadFile(c.Location)

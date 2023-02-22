@@ -19,6 +19,8 @@
 package config
 
 import (
+	"fmt"
+
 	"github.com/onflow/flow-go-sdk"
 )
 
@@ -91,9 +93,8 @@ func (c *Contracts) AddOrUpdate(contract Contract) {
 
 // Remove contract by its name.
 func (c *Contracts) Remove(name string) error {
-	_, err := c.ByName(name)
-	if err != nil {
-		return err
+	if c.ByName(name) != nil {
+		return fmt.Errorf("contract by name %s doesn't exist", name)
 	}
 
 	for i, contract := range *c {
