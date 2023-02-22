@@ -71,9 +71,8 @@ func TestExecutingTests(t *testing.T) {
 		c := config.Contract{
 			Name:     tests.ContractHelloString.Name,
 			Location: tests.ContractHelloString.Filename,
-			Network:  "emulator",
 		}
-		st.Contracts().AddOrUpdate(c.Name, c)
+		st.Contracts().AddOrUpdate(c)
 
 		// Execute script
 		script := tests.TestScriptWithImport
