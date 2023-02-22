@@ -50,8 +50,8 @@ func (a *Aliases) ByNetwork(network string) *Alias {
 
 type Contracts []Contract
 
-// IsAlias checks if contract has an alias.
-func (c *Contract) IsAlias() bool {
+// IsAliased checks if contract has an alias.
+func (c *Contract) IsAliased() bool {
 	return len(c.Aliases) > 0
 }
 
