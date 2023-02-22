@@ -96,53 +96,41 @@ func StringToHexKey(key string, sigAlgo string) (crypto.PrivateKey, error) {
 	return privateKey, nil
 }
 
-// StringToContracts converts strings to contracts.
-func StringToContracts(
+// StringToContract converts strings to contracts.
+func StringToContract(
 	name string,
 	source string,
 	emulatorAlias string,
 	testnetAlias string,
 	mainnetAlias string,
-) []Contract {
-	contracts := make([]Contract, 0)
+) Contract {
+	contract := Contract{
+		Name:     name,
+		Location: source,
+	}
 
 	if emulatorAlias != "" {
-		contracts = append(contracts, Contract{
-			Name:     name,
-			Location: source,
-			Network:  DefaultEmulatorNetwork().Name,
-			Alias:    emulatorAlias,
-		})
+		contract.Aliases.Add(
+			DefaultEmulatorNetwork().Name,
+			flow.HexToAddress(emulatorAlias),
+		)
 	}
 
 	if mainnetAlias != "" {
-		contracts = append(contracts, Contract{
-			Name:     name,
-			Location: source,
-			Network:  DefaultMainnetNetwork().Name,
-			Alias:    mainnetAlias,
-		})
+		contract.Aliases.Add(
+			DefaultMainnetNetwork().Name,
+			flow.HexToAddress(mainnetAlias),
+		)
 	}
 
 	if testnetAlias != "" {
-		contracts = append(contracts, Contract{
-			Name:     name,
-			Location: source,
-			Network:  DefaultTestnetNetwork().Name,
-			Alias:    testnetAlias,
-		})
+		contract.Aliases.Add(
+			DefaultTestnetNetwork().Name,
+			flow.HexToAddress(testnetAlias),
+		)
 	}
 
-	if emulatorAlias == "" && testnetAlias == "" {
-		contracts = append(contracts, Contract{
-			Name:     name,
-			Location: source,
-			Network:  "",
-			Alias:    "",
-		})
-	}
-
-	return contracts
+	return contract
 }
 
 // StringToNetwork converts string to network.

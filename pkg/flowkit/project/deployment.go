@@ -51,11 +51,11 @@ type Deployment struct {
 	// map of contracts by their location specified in state
 	contractsByLocation map[string]*deployContract
 	contractsByName     map[string]*deployContract
-	aliases             Aliases
+	aliases             LocationAliases
 }
 
 // NewDeployment from the flowkit Contracts and loaded from the contract location using a loader.
-func NewDeployment(contracts []*Contract, aliases Aliases) (*Deployment, error) {
+func NewDeployment(contracts []*Contract, aliases LocationAliases) (*Deployment, error) {
 	deployment := &Deployment{
 		contractsByLocation: make(map[string]*deployContract),
 		contractsByName:     make(map[string]*deployContract),

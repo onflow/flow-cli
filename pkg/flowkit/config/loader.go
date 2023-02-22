@@ -242,7 +242,7 @@ func (l *Loader) composeConfig(baseConf *Config, conf *Config) {
 		baseConf.Networks.AddOrUpdate(network.Name, network)
 	}
 	for _, contract := range conf.Contracts {
-		baseConf.Contracts.AddOrUpdate(contract.Name, contract)
+		baseConf.Contracts.AddOrUpdate(contract)
 	}
 	for _, deployment := range conf.Deployments {
 		baseConf.Deployments.AddOrUpdate(deployment)

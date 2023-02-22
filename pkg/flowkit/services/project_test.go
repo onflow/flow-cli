@@ -75,9 +75,8 @@ func TestProject(t *testing.T) {
 		c := config.Contract{
 			Name:     "Hello",
 			Location: tests.ContractHelloString.Filename,
-			Network:  "emulator",
 		}
-		state.Contracts().AddOrUpdate(c.Name, c)
+		state.Contracts().AddOrUpdate(c)
 
 		n := config.Network{
 			Name: "emulator",
@@ -113,7 +112,7 @@ func TestProject(t *testing.T) {
 		assert.Equal(t, contracts[0].AccountAddress, acct2.Address())
 	})
 
-	t.Run("Deploy Project Using Aliases", func(t *testing.T) {
+	t.Run("Deploy Project Using LocationAliases", func(t *testing.T) {
 		t.Parallel()
 
 		emulator := config.DefaultEmulatorNetwork().Name
@@ -122,24 +121,24 @@ func TestProject(t *testing.T) {
 		c1 := config.Contract{
 			Name:     "ContractB",
 			Location: tests.ContractB.Filename,
-			Network:  emulator,
 		}
-		state.Contracts().AddOrUpdate(c1.Name, c1)
+		state.Contracts().AddOrUpdate(c1)
 
 		c2 := config.Contract{
 			Name:     "Aliased",
 			Location: tests.ContractA.Filename,
-			Network:  emulator,
-			Alias:    tests.Donald().Address().String(),
+			Aliases: []config.Alias{{
+				Network: emulator,
+				Address: tests.Donald().Address(),
+			}},
 		}
-		state.Contracts().AddOrUpdate(c2.Name, c2)
+		state.Contracts().AddOrUpdate(c2)
 
 		c3 := config.Contract{
 			Name:     "ContractC",
 			Location: tests.ContractC.Filename,
-			Network:  emulator,
 		}
-		state.Contracts().AddOrUpdate(c3.Name, c3)
+		state.Contracts().AddOrUpdate(c3)
 
 		state.Networks().AddOrUpdate(emulator, config.DefaultEmulatorNetwork())
 
@@ -191,7 +190,7 @@ func TestProject(t *testing.T) {
 		gw.Mock.AssertNumberOfCalls(t, tests.GetTransactionResultFunc, 2)
 	})
 
-	t.Run("Deploy Project New Import Schema and Aliases", func(t *testing.T) {
+	t.Run("Deploy Project New Import Schema and LocationAliases", func(t *testing.T) {
 		t.Parallel()
 
 		emulator := config.DefaultEmulatorNetwork().Name
@@ -200,24 +199,24 @@ func TestProject(t *testing.T) {
 		c1 := config.Contract{
 			Name:     "ContractBB",
 			Location: tests.ContractBB.Filename,
-			Network:  emulator,
 		}
-		state.Contracts().AddOrUpdate(c1.Name, c1)
+		state.Contracts().AddOrUpdate(c1)
 
 		c2 := config.Contract{
 			Name:     "ContractAA",
 			Location: tests.ContractAA.Filename,
-			Network:  emulator,
-			Alias:    tests.Donald().Address().String(),
+			Aliases: []config.Alias{{
+				Network: emulator,
+				Address: tests.Donald().Address(),
+			}},
 		}
-		state.Contracts().AddOrUpdate(c2.Name, c2)
+		state.Contracts().AddOrUpdate(c2)
 
 		c3 := config.Contract{
 			Name:     "ContractCC",
 			Location: tests.ContractCC.Filename,
-			Network:  emulator,
 		}
-		state.Contracts().AddOrUpdate(c3.Name, c3)
+		state.Contracts().AddOrUpdate(c3)
 
 		state.Networks().AddOrUpdate(emulator, config.DefaultEmulatorNetwork())
 
@@ -277,9 +276,8 @@ func TestProject(t *testing.T) {
 		c := config.Contract{
 			Name:     "Hello",
 			Location: tests.ContractHelloString.Filename,
-			Network:  "emulator",
 		}
-		state.Contracts().AddOrUpdate(c.Name, c)
+		state.Contracts().AddOrUpdate(c)
 
 		n := config.Network{
 			Name: "emulator",
@@ -327,9 +325,8 @@ func simpleDeploy(state *flowkit.State, s *Services, update bool) ([]*project.Co
 	c := config.Contract{
 		Name:     tests.ContractHelloString.Name,
 		Location: tests.ContractHelloString.Filename,
-		Network:  "emulator",
 	}
-	state.Contracts().AddOrUpdate(c.Name, c)
+	state.Contracts().AddOrUpdate(c)
 
 	n := config.Network{
 		Name: "emulator",
@@ -382,17 +379,18 @@ func TestProject_Integration(t *testing.T) {
 			testContracts[i] = config.Contract{
 				Name:     c.Name,
 				Location: c.Filename,
-				Network:  n.Name,
 			}
-			state.Contracts().AddOrUpdate(c.Name, testContracts[i])
+			state.Contracts().AddOrUpdate(testContracts[i])
 		}
 
 		cA := tests.ContractA
-		state.Contracts().AddOrUpdate(cA.Name, config.Contract{
+		state.Contracts().AddOrUpdate(config.Contract{
 			Name:     cA.Name,
 			Location: cA.Filename,
-			Network:  n.Name,
-			Alias:    srvAcc.Address().String(),
+			Aliases: []config.Alias{{
+				Network: n.Name,
+				Address: srvAcc.Address(),
+			}},
 		})
 
 		state.Deployments().AddOrUpdate(config.Deployment{

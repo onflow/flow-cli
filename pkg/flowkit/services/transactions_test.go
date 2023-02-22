@@ -303,9 +303,8 @@ func TestTransactions_Integration(t *testing.T) {
 		c := config.Contract{
 			Name:     tests.ContractHelloString.Name,
 			Location: tests.ContractHelloString.Filename,
-			Network:  "emulator",
 		}
-		state.Contracts().AddOrUpdate(c.Name, c)
+		state.Contracts().AddOrUpdate(c)
 
 		n := config.Network{
 			Name: "emulator",

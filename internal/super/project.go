@@ -267,7 +267,7 @@ func (p *project) addContract(
 		Name: contract.Name,
 	}
 
-	p.state.Contracts().AddOrUpdate(name, contract)
+	p.state.Contracts().AddOrUpdate(contract)
 	p.state.Deployments().AddContract(account, emulator, deployment)
 	return nil
 }
@@ -298,7 +298,7 @@ func (p *project) renameContract(oldLocation string, newLocation string) {
 	for _, c := range *p.state.Contracts() {
 		if c.Location == oldLocation {
 			c.Location = newLocation
-			p.state.Contracts().AddOrUpdate(c.Name, c)
+			p.state.Contracts().AddOrUpdate(c)
 		}
 	}
 }
