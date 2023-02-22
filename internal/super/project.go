@@ -298,7 +298,7 @@ func (p *project) renameContract(oldLocation string, newLocation string) {
 	for _, c := range *p.state.Contracts() {
 		if c.Location == oldLocation {
 			c.Location = newLocation
-			p.state.Contracts().AddOrUpdate(c.Name, c)
+			p.state.Contracts().AddOrUpdate(c)
 		}
 	}
 }
