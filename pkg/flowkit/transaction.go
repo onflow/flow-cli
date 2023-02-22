@@ -151,21 +151,6 @@ func NewCreateAccountTransaction(
 	return newTransactionFromTemplate(template, signer)
 }
 
-// NewCreateAccountTransactionWithFunding creates new transaction for account and funds the account by using signer Flow tokens.
-func NewCreateAccountTransactionWithFunding(
-	signer *Account,
-	keys []*flow.AccountKey,
-	contracts []templates.Contract,
-	amount string,
-	network flow.ChainID,
-) (*Transaction, error) {
-	template, err := templates.CreateAccountAndFund(keys, contracts, signer.Address(), amount, network)
-	if err != nil {
-		return nil, err
-	}
-	return newTransactionFromTemplate(template, signer)
-}
-
 func newTransactionFromTemplate(templateTx *flow.Transaction, signer *Account) (*Transaction, error) {
 	tx := &Transaction{tx: templateTx}
 
