@@ -62,27 +62,22 @@ func generateComplexProject() State {
 		Contracts: config.Contracts{{
 			Name:     "NonFungibleToken",
 			Location: "../hungry-kitties/cadence/contracts/NonFungibleToken.cdc",
-			Network:  "emulator",
 		}, {
 			Name:     "FungibleToken",
 			Location: "../hungry-kitties/cadence/contracts/FungibleToken.cdc",
-			Network:  "emulator",
 		}, {
 			Name:     "Kibble",
 			Location: "./cadence/kibble/contracts/Kibble.cdc",
-			Network:  "emulator",
 		}, {
 			Name:     "KittyItems",
 			Location: "./cadence/kittyItems/contracts/KittyItems.cdc",
-			Network:  "emulator",
 		}, {
 			Name:     "KittyItemsMarket",
 			Location: "./cadence/kittyItemsMarket/contracts/KittyItemsMarket.cdc",
-			Network:  "emulator",
-		}, {
-			Name:     "KittyItemsMarket",
-			Location: "0x123123123",
-			Network:  "testnet",
+			Aliases: config.Aliases{{
+				Network: "testnet",
+				Address: flow.HexToAddress("0x123123123"),
+			}},
 		}},
 		Deployments: config.Deployments{{
 			Network: "emulator",
@@ -176,7 +171,6 @@ func generateSimpleProject() State {
 		Contracts: config.Contracts{{
 			Name:     "NonFungibleToken",
 			Location: "../hungry-kitties/cadence/contracts/NonFungibleToken.cdc",
-			Network:  "emulator",
 		}},
 		Deployments: config.Deployments{{
 			Network: "emulator",
@@ -221,12 +215,13 @@ func generateAliasesProject() State {
 		Contracts: config.Contracts{{
 			Name:     "NonFungibleToken",
 			Location: "../hungry-kitties/cadence/contracts/NonFungibleToken.cdc",
-			Network:  "emulator",
 		}, {
 			Name:     "FungibleToken",
 			Location: "../hungry-kitties/cadence/contracts/FungibleToken.cdc",
-			Network:  "emulator",
-			Alias:    "ee82856bf20e2aa6",
+			Aliases: config.Aliases{{
+				Network: "emulator",
+				Address: flow.HexToAddress("ee82856bf20e2aa6"),
+			}},
 		}},
 		Deployments: config.Deployments{{
 			Network: "emulator",
@@ -273,18 +268,24 @@ func generateAliasesComplexProject() State {
 		}, {
 			Name:     "FungibleToken",
 			Location: "../hungry-kitties/cadence/contracts/FungibleToken.cdc",
-			Network:  "emulator",
-			Alias:    "ee82856bf20e2aa6",
+			Aliases: config.Aliases{{
+				Network: "emulator",
+				Address: flow.HexToAddress("ee82856bf20e2aa6"),
+			}},
 		}, {
 			Name:     "Kibble",
 			Location: "../hungry-kitties/cadence/contracts/Kibble.cdc",
-			Network:  "testnet",
-			Alias:    "ee82856bf20e2aa6",
+			Aliases: config.Aliases{{
+				Network: "testnet",
+				Address: flow.HexToAddress("ee82856bf20e2aa6"),
+			}},
 		}, {
 			Name:     "Kibble",
 			Location: "../hungry-kitties/cadence/contracts/Kibble.cdc",
-			Network:  "emulator",
-			Alias:    "ee82856bf20e2aa6",
+			Aliases: config.Aliases{{
+				Network: "emulator",
+				Address: flow.HexToAddress("ee82856bf20e2aa6"),
+			}},
 		}},
 		Deployments: config.Deployments{{
 			Network: "emulator",
