@@ -40,21 +40,19 @@ func (j jsonContracts) transformToConfig() (config.Contracts, error) {
 
 			contracts = append(contracts, contract)
 		} else {
+			contract := config.Contract{
+				Name:     contractName,
+				Location: c.Advanced.Source,
+			}
 			for network, alias := range c.Advanced.Aliases {
-				_, err := config.StringToAddress(alias)
+				address, err := config.StringToAddress(alias)
 				if err != nil {
 					return nil, fmt.Errorf("invalid alias address for a contract")
 				}
 
-				contract := config.Contract{
-					Name:     contractName,
-					Location: c.Advanced.Source,
-					Network:  network,
-					Alias:    alias,
-				}
-
-				contracts = append(contracts, contract)
+				contract.Aliases.Add(network, address)
 			}
+			contracts = append(contracts, contract)
 		}
 	}
 
@@ -67,21 +65,22 @@ func transformContractsToJSON(contracts config.Contracts) jsonContracts {
 
 	for _, c := range contracts {
 		// if simple case
-		if c.Network == "" {
+		if !c.IsAliased() {
 			jsonContracts[c.Name] = jsonContract{
 				Simple: c.Location,
 			}
 		} else { // if advanced config
 			// check if we already created for this name then add or create
-			if _, exists := jsonContracts[c.Name]; exists && jsonContracts[c.Name].Advanced.Aliases != nil {
-				jsonContracts[c.Name].Advanced.Aliases[c.Network] = c.Alias
-			} else {
-				jsonContracts[c.Name] = jsonContract{
-					Advanced: jsonContractAdvanced{
-						Source:  c.Location,
-						Aliases: map[string]string{c.Network: c.Alias},
-					},
-				}
+			aliases := make(map[string]string)
+			for _, alias := range c.Aliases {
+				aliases[alias.Network] = alias.Address.String()
+			}
+
+			jsonContracts[c.Name] = jsonContract{
+				Advanced: jsonContractAdvanced{
+					Source:  c.Location,
+					Aliases: aliases,
+				},
 			}
 		}
 	}

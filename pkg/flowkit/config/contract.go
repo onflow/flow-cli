@@ -18,43 +18,54 @@
 
 package config
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/onflow/flow-go-sdk"
+)
 
 // Contract defines the configuration for a Cadence contract.
 type Contract struct {
 	Name     string
 	Location string
-	Network  string
-	Alias    string
+	Aliases  Aliases
+}
+
+// Alias defines an existing pre-deployed contract address for specific network.
+type Alias struct {
+	Network string
+	Address flow.Address
+}
+
+type Aliases []Alias
+
+func (a *Aliases) ByNetwork(network string) *Alias {
+	for _, alias := range *a {
+		if alias.Network == network {
+			return &alias
+		}
+	}
+
+	return nil
+}
+
+func (a *Aliases) Add(network string, address flow.Address) {
+	for _, alias := range *a {
+		if alias.Network == network {
+			return // already exists
+		}
+	}
+	*a = append(*a, Alias{
+		Network: network,
+		Address: address,
+	})
 }
 
 type Contracts []Contract
 
-// IsAlias checks if contract has an alias.
-func (c *Contract) IsAlias() bool {
-	return c.Alias != ""
-}
-
-// ByNameAndNetwork get contract array for account and network.
-func (c *Contracts) ByNameAndNetwork(name string, network string) (*Contract, error) {
-	for _, contract := range *c {
-		if contract.Network == network && contract.Name == name {
-			return &contract, nil
-		}
-	}
-
-	// if we don't find contract by name and network create a new contract
-	// and replace only name and source with existing
-	cName, err := c.ByName(name)
-	if err != nil {
-		return nil, err
-	}
-
-	return &Contract{
-		Name:     cName.Name,
-		Network:  network,
-		Location: cName.Location,
-	}, nil
+// IsAliased checks if contract has an alias.
+func (c *Contract) IsAliased() bool {
+	return len(c.Aliases) > 0
 }
 
 // ByName get contract by name.
@@ -68,24 +79,10 @@ func (c *Contracts) ByName(name string) (*Contract, error) {
 	return nil, fmt.Errorf("contract named %s does not exist in configuration", name)
 }
 
-// ByNetwork returns all contracts for specific network.
-func (c *Contracts) ByNetwork(network string) Contracts {
-	var contracts []Contract
-
-	for _, contract := range *c {
-		if contract.Network == network || contract.Network == "" {
-			contracts = append(contracts, contract)
-		}
-	}
-
-	return contracts
-}
-
 // AddOrUpdate add new or update if already present.
-func (c *Contracts) AddOrUpdate(name string, contract Contract) {
+func (c *Contracts) AddOrUpdate(contract Contract) {
 	for i, existingContract := range *c {
-		if existingContract.Name == name &&
-			existingContract.Network == contract.Network {
+		if existingContract.Name == contract.Name {
 			(*c)[i] = contract
 			return
 		}

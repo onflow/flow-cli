@@ -33,10 +33,10 @@ type Account interface {
 // ImportReplacer implements file import replacements functionality for the project contracts with optionally included aliases.
 type ImportReplacer struct {
 	contracts []*Contract
-	aliases   Aliases
+	aliases   LocationAliases
 }
 
-func NewImportReplacer(contracts []*Contract, aliases Aliases) *ImportReplacer {
+func NewImportReplacer(contracts []*Contract, aliases LocationAliases) *ImportReplacer {
 	return &ImportReplacer{
 		contracts: contracts,
 		aliases:   aliases,

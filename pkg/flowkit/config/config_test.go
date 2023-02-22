@@ -46,27 +46,25 @@ func generateComplexConfig() config.Config {
 		Contracts: config.Contracts{{
 			Name:     "NonFungibleToken",
 			Location: "../hungry-kitties/cadence/contracts/NonFungibleToken.cdc",
-			Network:  "emulator",
 		}, {
 			Name:     "FungibleToken",
 			Location: "../hungry-kitties/cadence/contracts/FungibleToken.cdc",
-			Network:  "emulator",
 		}, {
 			Name:     "Kibble",
 			Location: "./cadence/kibble/contracts/Kibble.cdc",
-			Network:  "emulator",
 		}, {
 			Name:     "KittyItems",
 			Location: "./cadence/kittyItems/contracts/KittyItems.cdc",
-			Network:  "emulator",
 		}, {
 			Name:     "KittyItemsMarket",
 			Location: "./cadence/kittyItemsMarket/contracts/KittyItemsMarket.cdc",
-			Network:  "emulator",
+			Aliases: []config.Alias{{
+				Network: "testnet",
+				Address: flow.HexToAddress("0x123123123"),
+			}},
 		}, {
 			Name:     "KittyItemsMarket",
 			Location: "0x123123123",
-			Network:  "testnet",
 		}},
 		Deployments: config.Deployments{{
 			Network: "emulator",
@@ -150,22 +148,10 @@ func Test_GetContractsForNetworkComplex(t *testing.T) {
 
 func Test_GetContractsByNameAndNetworkComplex(t *testing.T) {
 	conf := generateComplexConfig()
-	market, err := conf.Contracts.ByNameAndNetwork("KittyItemsMarket", "testnet")
+	market, err := conf.Contracts.ByName("KittyItemsMarket")
 	assert.NoError(t, err)
 
-	assert.Equal(t, "0x123123123", market.Location)
-}
-
-func Test_GetContractsByNetworkComplex(t *testing.T) {
-	conf := generateComplexConfig()
-	contracts := conf.Contracts.ByNetwork("emulator")
-
-	assert.Len(t, contracts, 5)
-	assert.Equal(t, "NonFungibleToken", contracts[0].Name)
-	assert.Equal(t, "FungibleToken", contracts[1].Name)
-	assert.Equal(t, "Kibble", contracts[2].Name)
-	assert.Equal(t, "KittyItems", contracts[3].Name)
-	assert.Equal(t, "KittyItemsMarket", contracts[4].Name)
+	assert.Equal(t, "0000000123123123", market.Aliases.ByNetwork("testnet").Address.String())
 }
 
 func Test_GetAccountByNameComplex(t *testing.T) {
