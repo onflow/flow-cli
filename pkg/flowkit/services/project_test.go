@@ -122,7 +122,7 @@ func TestProject(t *testing.T) {
 			Name:     "ContractB",
 			Location: tests.ContractB.Filename,
 		}
-		state.Contracts().AddOrUpdate(c1.Name, c1)
+		state.Contracts().AddOrUpdate(c1)
 
 		c2 := config.Contract{
 			Name:     "Aliased",
@@ -132,13 +132,13 @@ func TestProject(t *testing.T) {
 				Address: tests.Donald().Address(),
 			}},
 		}
-		state.Contracts().AddOrUpdate(c2.Name, c2)
+		state.Contracts().AddOrUpdate(c2)
 
 		c3 := config.Contract{
 			Name:     "ContractC",
 			Location: tests.ContractC.Filename,
 		}
-		state.Contracts().AddOrUpdate(c3.Name, c3)
+		state.Contracts().AddOrUpdate(c3)
 
 		state.Networks().AddOrUpdate(emulator, config.DefaultEmulatorNetwork())
 
@@ -200,7 +200,7 @@ func TestProject(t *testing.T) {
 			Name:     "ContractBB",
 			Location: tests.ContractBB.Filename,
 		}
-		state.Contracts().AddOrUpdate(c1.Name, c1)
+		state.Contracts().AddOrUpdate(c1)
 
 		c2 := config.Contract{
 			Name:     "ContractAA",
@@ -210,13 +210,13 @@ func TestProject(t *testing.T) {
 				Address: tests.Donald().Address(),
 			}},
 		}
-		state.Contracts().AddOrUpdate(c2.Name, c2)
+		state.Contracts().AddOrUpdate(c2)
 
 		c3 := config.Contract{
 			Name:     "ContractCC",
 			Location: tests.ContractCC.Filename,
 		}
-		state.Contracts().AddOrUpdate(c3.Name, c3)
+		state.Contracts().AddOrUpdate(c3)
 
 		state.Networks().AddOrUpdate(emulator, config.DefaultEmulatorNetwork())
 
@@ -277,7 +277,7 @@ func TestProject(t *testing.T) {
 			Name:     "Hello",
 			Location: tests.ContractHelloString.Filename,
 		}
-		state.Contracts().AddOrUpdate(c.Name, c)
+		state.Contracts().AddOrUpdate(c)
 
 		n := config.Network{
 			Name: "emulator",
@@ -326,7 +326,7 @@ func simpleDeploy(state *flowkit.State, s *Services, update bool) ([]*project.Co
 		Name:     tests.ContractHelloString.Name,
 		Location: tests.ContractHelloString.Filename,
 	}
-	state.Contracts().AddOrUpdate(c.Name, c)
+	state.Contracts().AddOrUpdate(c)
 
 	n := config.Network{
 		Name: "emulator",
@@ -380,11 +380,11 @@ func TestProject_Integration(t *testing.T) {
 				Name:     c.Name,
 				Location: c.Filename,
 			}
-			state.Contracts().AddOrUpdate(c.Name, testContracts[i])
+			state.Contracts().AddOrUpdate(testContracts[i])
 		}
 
 		cA := tests.ContractA
-		state.Contracts().AddOrUpdate(cA.Name, config.Contract{
+		state.Contracts().AddOrUpdate(config.Contract{
 			Name:     cA.Name,
 			Location: cA.Filename,
 			Aliases: []config.Alias{{

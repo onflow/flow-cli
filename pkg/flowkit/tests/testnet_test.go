@@ -129,19 +129,16 @@ func Test_Testnet_ProjectDeploy(t *testing.T) {
 	state.Contracts().AddOrUpdate(config.Contract{
 		Name:     ContractA.Name,
 		Location: ContractA.Filename,
-		Network:  testnet,
 	})
 
-	state.Contracts().AddOrUpdate(ContractB.Name, config.Contract{
+	state.Contracts().AddOrUpdate(config.Contract{
 		Name:     ContractB.Name,
 		Location: ContractB.Filename,
-		Network:  testnet,
 	})
 
-	state.Contracts().AddOrUpdate(ContractC.Name, config.Contract{
+	state.Contracts().AddOrUpdate(config.Contract{
 		Name:     ContractC.Name,
 		Location: ContractC.Filename,
-		Network:  testnet,
 	})
 
 	initArg, _ := cadence.NewString("foo")

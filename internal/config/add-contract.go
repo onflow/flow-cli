@@ -75,7 +75,7 @@ func addContract(
 		contractData["mainnet"],
 	)
 
-	state.Contracts().AddOrUpdate(contract.Name, contract)
+	state.Contracts().AddOrUpdate(contract)
 
 	err = state.SaveEdited(globalFlags.ConfigPaths)
 	if err != nil {
