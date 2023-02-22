@@ -19,7 +19,12 @@
 package accounts
 
 import (
+	"bytes"
+	"crypto/tls"
+	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
 	"os"
 	"strings"
 	"time"
@@ -186,6 +191,73 @@ func getAccountCreationResult(services *services.Services, id flow.Identifier) (
 	}
 
 	return result, nil
+}
+
+// lilicoAccount contains all the data needed for interaction with lilico account creation API.
+type lilicoAccount struct {
+	PublicKey          string `json:"publicKey"`
+	SignatureAlgorithm string `json:"signatureAlgorithm"`
+	HashAlgorithm      string `json:"hashAlgorithm"`
+	Weight             int    `json:"weight"`
+}
+
+type lilicoResponse struct {
+	Data struct {
+		TxId string `json:"txId"`
+	} `json:"data"`
+}
+
+// injected token to be used for API requests
+var lilicoToken = ""
+
+// create a new account using the lilico API and parsing the response, returning account creation transaction ID.
+func (l *lilicoAccount) create(network string) (flow.Identifier, error) {
+	// fix to the defaults as we don't support other values
+	l.HashAlgorithm = crypto.SHA3_256.String()
+	l.SignatureAlgorithm = crypto.ECDSA_P256.String()
+	l.Weight = flow.AccountKeyWeightThreshold
+
+	data, err := json.Marshal(l)
+	if err != nil {
+		return flow.EmptyID, err
+	}
+
+	apiNetwork := ""
+	if network == config.DefaultTestnetNetwork().Name {
+		apiNetwork = "/testnet"
+	}
+
+	request, err := http.NewRequest(
+		http.MethodPost,
+		fmt.Sprintf("https://openapi.lilico.org/v1/address%s", apiNetwork),
+		bytes.NewReader(data),
+	)
+	if err != nil {
+		return flow.EmptyID, fmt.Errorf("could not create an account: %w", err)
+	}
+
+	request.Header.Add("Content-Type", "application/json; charset=UTF-8")
+	request.Header.Add("Authorization", lilicoToken)
+
+	client := &http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, // lilico api doesn't yet have a valid cert, todo reevaluate
+		},
+	}
+	res, err := client.Do(request)
+	if err != nil {
+		return flow.EmptyID, fmt.Errorf("could not create an account: %w", err)
+	}
+	defer res.Body.Close()
+
+	body, _ := io.ReadAll(res.Body)
+	var lilicoRes lilicoResponse
+	err = json.Unmarshal(body, &lilicoRes)
+	if err != nil {
+		return flow.EmptyID, fmt.Errorf("could not create an account: %w", err)
+	}
+
+	return flow.HexToID(lilicoRes.Data.TxId), nil
 }
 
 // outputList helper for printing lists
