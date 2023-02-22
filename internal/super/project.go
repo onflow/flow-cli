@@ -116,13 +116,11 @@ func (p *project) deploy() {
 
 // cleanState of existing contracts, deployments and non-service accounts as we will build it again.
 func (p *project) cleanState() {
-	aliased := make(map[string]bool)
 	contracts := make(config.Contracts, len(*p.state.Contracts()))
 	copy(contracts, *p.state.Contracts()) // we need to make a copy otherwise when we remove order shifts
 	for _, c := range contracts {
-		if c.IsAlias() || aliased[c.Name] {
-			aliased[c.Name] = true
-			continue
+		if c.IsAliased() {
+			continue // don't remove aliased contracts
 		}
 
 		_ = p.state.Contracts().Remove(c.Name)
