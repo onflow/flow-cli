@@ -275,12 +275,14 @@ func (p *project) addContract(
 		contract.Aliases = existing.Aliases
 	}
 
-	deployment := config.ContractDeployment{
-		Name: contract.Name,
+	if contract.Aliases.ByNetwork(emulator) == nil { // only add if not existing emulator alias
+		deployment := config.ContractDeployment{
+			Name: contract.Name,
+		}
+		p.state.Deployments().AddContract(account, emulator, deployment)
 	}
 
 	p.state.Contracts().AddOrUpdate(contract)
-	p.state.Deployments().AddContract(account, emulator, deployment)
 	return nil
 }
 
