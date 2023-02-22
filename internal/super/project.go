@@ -114,8 +114,16 @@ func (p *project) deploy() {
 
 // cleanState of existing contracts, deployments and non-service accounts as we will build it again.
 func (p *project) cleanState() {
-	for len(*p.state.Contracts()) > 0 { // get the first element, otherwise elements shift if using range
-		_ = p.state.Contracts().Remove((*p.state.Contracts())[0].Name)
+	aliased := make(map[string]bool)
+	contracts := make(config.Contracts, len(*p.state.Contracts()))
+	copy(contracts, *p.state.Contracts()) // we need to make a copy otherwise when we remove order shifts
+	for _, c := range contracts {
+		if c.IsAlias() || aliased[c.Name] {
+			aliased[c.Name] = true
+			continue
+		}
+
+		_ = p.state.Contracts().Remove(c.Name)
 	}
 
 	for _, d := range p.state.Deployments().ByNetwork(emulator) {
@@ -263,6 +271,13 @@ func (p *project) addContract(
 		Name:     name,
 		Location: path,
 	}
+
+	existing, _ := p.state.Contracts().ByNameAndNetwork(name, emulator)
+	if existing != nil && existing.IsAlias() {
+		contract.Alias = existing.Alias
+		contract.Network = emulator
+	}
+
 	deployment := config.ContractDeployment{
 		Name: contract.Name,
 	}
