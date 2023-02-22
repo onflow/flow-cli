@@ -80,9 +80,9 @@ func (c *Contracts) ByName(name string) (*Contract, error) {
 }
 
 // AddOrUpdate add new or update if already present.
-func (c *Contracts) AddOrUpdate(name string, contract Contract) {
+func (c *Contracts) AddOrUpdate(contract Contract) {
 	for i, existingContract := range *c {
-		if existingContract.Name == name {
+		if existingContract.Name == contract.Name {
 			(*c)[i] = contract
 			return
 		}

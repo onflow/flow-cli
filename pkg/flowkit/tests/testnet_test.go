@@ -126,7 +126,7 @@ var testnet = config.DefaultTestnetNetwork().Name
 func Test_Testnet_ProjectDeploy(t *testing.T) {
 	_, state, srv, mockFs := initTestnet(t)
 
-	state.Contracts().AddOrUpdate(ContractA.Name, config.Contract{
+	state.Contracts().AddOrUpdate(config.Contract{
 		Name:     ContractA.Name,
 		Location: ContractA.Filename,
 		Network:  testnet,

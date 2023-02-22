@@ -267,7 +267,7 @@ func (p *project) addContract(
 		Name: contract.Name,
 	}
 
-	p.state.Contracts().AddOrUpdate(name, contract)
+	p.state.Contracts().AddOrUpdate(contract)
 	p.state.Deployments().AddContract(account, emulator, deployment)
 	return nil
 }

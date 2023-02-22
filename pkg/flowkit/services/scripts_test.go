@@ -96,7 +96,7 @@ func TestScripts_Integration(t *testing.T) {
 			Location: tests.ContractHelloString.Filename,
 			Network:  "emulator",
 		}
-		state.Contracts().AddOrUpdate(c.Name, c)
+		state.Contracts().AddOrUpdate(c)
 
 		n := config.Network{
 			Name: "emulator",
