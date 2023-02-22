@@ -28,6 +28,7 @@ jobs:
       - uses: wangyoucao577/go-release-action@v1.33
         env:
           MIXPANEL_PROJECT_TOKEN: ${{ secrets.MIXPANEL_PROJECT_TOKEN }}
+          LILICO_TOKEN: ${{ secrets.LILICO_TOKEN }}
           APP_VERSION: $(basename ${GITHUB_REF})
           BUILD_TIME: $(date --iso-8601=seconds)
           VERSION: ${{github.ref_name}}
