@@ -210,6 +210,7 @@ type lilicoResponse struct {
 var accountToken = ""
 
 const defaultHashAlgo = crypto.SHA3_256
+
 const defaultSignAlgo = crypto.ECDSA_P256
 
 // create a new account using the lilico API and parsing the response, returning account creation transaction ID.
@@ -254,11 +255,11 @@ func (l *lilicoAccount) create(network string) (flow.Identifier, error) {
 
 	body, _ := io.ReadAll(res.Body)
 	var lilicoRes lilicoResponse
+
 	err = json.Unmarshal(body, &lilicoRes)
 	if err != nil {
 		return flow.EmptyID, fmt.Errorf("could not create an account: %w", err)
 	}
-
 	return flow.HexToID(lilicoRes.Data.TxId), nil
 }
 
