@@ -3,7 +3,7 @@
     "name": "Simple Cadence Project",
     "repo": "https://github.com/sideninja/flow-basic-scaffold.git",
     "description": "Scaffold contains required folder structure as well as some example Cadence code.",
-    "commit": "0646fecc2f4da65aa5d7a7c8060c2bb741dcb879"
+    "commit": "7455f4c2c1ed79a086c99faf77fae9276c25262e"
   },
     {
     "name": "Web Dapp using FCL",
