@@ -49,6 +49,18 @@ func (a *Aliases) ByNetwork(network string) *Alias {
 	return nil
 }
 
+func (a *Aliases) Add(network string, address flow.Address) {
+	for _, alias := range *a {
+		if alias.Network == network {
+			return // already exists
+		}
+	}
+	*a = append(*a, Alias{
+		Network: network,
+		Address: address,
+	})
+}
+
 type Contracts []Contract
 
 // IsAliased checks if contract has an alias.

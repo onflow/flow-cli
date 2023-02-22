@@ -56,9 +56,11 @@ const (
 // Validate the configuration values.
 func (c *Config) Validate() error {
 	for _, con := range c.Contracts {
-		_, err := c.Networks.ByName(con.Network)
-		if con.Network != "" && err != nil {
-			return fmt.Errorf("contract %s contains nonexisting network %s", con.Name, con.Network)
+		for _, alias := range con.Aliases {
+			_, err := c.Networks.ByName(alias.Network)
+			if alias.Network != "" && err != nil {
+				return fmt.Errorf("contract %s alias contains nonexisting network %s", con.Name, alias.Network)
+			}
 		}
 	}
 
