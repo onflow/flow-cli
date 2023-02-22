@@ -19,6 +19,8 @@
 package super
 
 import (
+	"fmt"
+
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/pkg/errors"
@@ -273,9 +275,11 @@ func (p *project) addContract(
 	}
 
 	existing, _ := p.state.Contracts().ByNameAndNetwork(name, emulator)
+	fmt.Println("contract: ", contract)
 	if existing != nil && existing.IsAlias() {
+		fmt.Println("existing: ", existing.Alias, existing.Network, existing)
 		contract.Alias = existing.Alias
-		contract.Network = emulator
+		contract.Network = existing.Network
 	}
 
 	deployment := config.ContractDeployment{
