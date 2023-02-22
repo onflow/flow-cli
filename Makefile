@@ -13,6 +13,9 @@ PATH := $(PATH):$(GOPATH)/bin
 # OS
 UNAME := $(shell uname)
 
+MIXPANEL_PROJECT_TOKEN := 3fae49de272be1ceb8cf34119f747073
+ACCOUNT_TOKEN := lilico:sF60s3wughJBmNh2
+
 GOPATH ?= $(HOME)/go
 
 BINARY ?= ./cmd/flow/flow
@@ -63,7 +66,7 @@ $(BINARY):
 	GO111MODULE=on go build \
 		-trimpath \
 		-ldflags \
-		"-X github.com/onflow/flow-cli/build.commit=$(COMMIT) -X github.com/onflow/flow-cli/build.semver=$(VERSION) -X github.com/onflow/flow-cli/pkg/flowkit/util.MIXPANEL_PROJECT_TOKEN=${MIXPANEL_PROJECT_TOKEN}"\
+		"-X github.com/onflow/flow-cli/build.commit=$(COMMIT) -X github.com/onflow/flow-cli/build.semver=$(VERSION) -X github.com/onflow/flow-cli/pkg/flowkit/util.MIXPANEL_PROJECT_TOKEN=${MIXPANEL_PROJECT_TOKEN} -X github.com/onflow/flow-cli/internal/accounts.accountToken=${ACCOUNT_TOKEN}"\
 		-o $(BINARY) ./cmd/flow
 
 .PHONY: versioned-binaries

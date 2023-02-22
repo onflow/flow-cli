@@ -207,8 +207,7 @@ type lilicoResponse struct {
 	} `json:"data"`
 }
 
-// injected token to be used for API requests
-var lilicoToken = ""
+var accountToken = ""
 
 // create a new account using the lilico API and parsing the response, returning account creation transaction ID.
 func (l *lilicoAccount) create(network string) (flow.Identifier, error) {
@@ -237,7 +236,7 @@ func (l *lilicoAccount) create(network string) (flow.Identifier, error) {
 	}
 
 	request.Header.Add("Content-Type", "application/json; charset=UTF-8")
-	request.Header.Add("Authorization", lilicoToken)
+	request.Header.Add("Authorization", accountToken)
 
 	client := &http.Client{
 		Transport: &http.Transport{
