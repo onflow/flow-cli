@@ -113,7 +113,7 @@ func TestProject(t *testing.T) {
 		assert.Equal(t, contracts[0].AccountAddress, acct2.Address())
 	})
 
-	t.Run("Deploy Project Using Aliases", func(t *testing.T) {
+	t.Run("Deploy Project Using LocationAliases", func(t *testing.T) {
 		t.Parallel()
 
 		emulator := config.DefaultEmulatorNetwork().Name
@@ -191,7 +191,7 @@ func TestProject(t *testing.T) {
 		gw.Mock.AssertNumberOfCalls(t, tests.GetTransactionResultFunc, 2)
 	})
 
-	t.Run("Deploy Project New Import Schema and Aliases", func(t *testing.T) {
+	t.Run("Deploy Project New Import Schema and LocationAliases", func(t *testing.T) {
 		t.Parallel()
 
 		emulator := config.DefaultEmulatorNetwork().Name
