@@ -137,10 +137,11 @@ func generateComplexConfig() config.Config {
 
 func Test_GetContractsForNetworkComplex(t *testing.T) {
 	conf := generateComplexConfig()
-	kitty, err := conf.Contracts.ByName("KittyItems")
-	assert.NoError(t, err)
-	market, err := conf.Contracts.ByName("KittyItemsMarket")
-	assert.NoError(t, err)
+	kitty := conf.Contracts.ByName("KittyItems")
+	assert.NotNil(t, kitty)
+
+	market := conf.Contracts.ByName("KittyItemsMarket")
+	assert.NotNil(t, market)
 
 	assert.Equal(t, "KittyItems", kitty.Name)
 	assert.Equal(t, "./cadence/kittyItemsMarket/contracts/KittyItemsMarket.cdc", market.Location)
@@ -148,8 +149,8 @@ func Test_GetContractsForNetworkComplex(t *testing.T) {
 
 func Test_GetContractsByNameAndNetworkComplex(t *testing.T) {
 	conf := generateComplexConfig()
-	market, err := conf.Contracts.ByName("KittyItemsMarket")
-	assert.NoError(t, err)
+	market := conf.Contracts.ByName("KittyItemsMarket")
+	assert.NotNil(t, market)
 
 	assert.Equal(t, "0000000123123123", market.Aliases.ByNetwork("testnet").Address.String())
 }

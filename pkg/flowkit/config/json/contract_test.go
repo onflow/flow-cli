@@ -37,11 +37,11 @@ func Test_ConfigContractsSimple(t *testing.T) {
 	contracts, err := jsonContracts.transformToConfig()
 	assert.NoError(t, err)
 
-	contract, err := contracts.ByName("KittyItems")
-	assert.NoError(t, err)
+	contract := contracts.ByName("KittyItems")
+	assert.NotNil(t, contract)
 
-	marketContract, err := contracts.ByName("KittyItemsMarket")
-	assert.NoError(t, err)
+	marketContract := contracts.ByName("KittyItemsMarket")
+	assert.NotNil(t, marketContract)
 
 	assert.Equal(t, "./cadence/kittyItems/contracts/KittyItems.cdc", contract.Location)
 	assert.Equal(t, "./cadence/kittyItems/contracts/KittyItemsMarket.cdc", marketContract.Location)
@@ -67,11 +67,11 @@ func Test_ConfigContractsComplex(t *testing.T) {
 
 	assert.Len(t, contracts, 2)
 
-	kittyItems, err := contracts.ByName("KittyItems")
-	assert.NoError(t, err)
+	kittyItems := contracts.ByName("KittyItems")
+	assert.NotNil(t, kittyItems)
 
-	kittyItemsMarket, err := contracts.ByName("KittyItemsMarket")
-	assert.NoError(t, err)
+	kittyItemsMarket := contracts.ByName("KittyItemsMarket")
+	assert.NotNil(t, kittyItemsMarket)
 
 	assert.Equal(t, "./cadence/kittyItems/contracts/KittyItems.cdc", kittyItems.Location)
 	assert.Equal(t, "./cadence/kittyItemsMarket/contracts/KittyItemsMarket.cdc", kittyItemsMarket.Location)
@@ -111,21 +111,21 @@ func Test_ConfigContractsAliases(t *testing.T) {
 	contracts, err := jsonContracts.transformToConfig()
 	assert.NoError(t, err)
 
-	fungibleToken, err := contracts.ByName("FungibleToken")
-	assert.NoError(t, err)
+	fungibleToken := contracts.ByName("FungibleToken")
+	assert.NotNil(t, fungibleToken)
 	assert.True(t, fungibleToken.IsAliased())
 	assert.Equal(t, "e5a8b7f23e8b548f", fungibleToken.Aliases.ByNetwork("emulator").Address.String())
 	assert.Equal(t, "../hungry-kitties/cadence/contracts/FungibleToken.cdc", fungibleToken.Location)
 
-	kibble, err := contracts.ByName("Kibble")
-	assert.NoError(t, err)
+	kibble := contracts.ByName("Kibble")
+	assert.NotNil(t, kibble)
 	assert.True(t, kibble.IsAliased())
 	assert.Equal(t, "../hungry-kitties/cadence/contracts/Kibble.cdc", kibble.Location)
 	assert.Equal(t, "ead892083b3e2c6c", kibble.Aliases.ByNetwork("testnet").Address.String())
 	assert.Equal(t, "f8d6e0586b0a20c7", kibble.Aliases.ByNetwork("emulator").Address.String())
 
-	nft, err := contracts.ByName("NonFungibleToken")
-	assert.NoError(t, err)
+	nft := contracts.ByName("NonFungibleToken")
+	assert.NotNil(t, nft)
 	assert.False(t, nft.IsAliased())
 	assert.Equal(t, nft.Location, "../hungry-kitties/cadence/contracts/NonFungibleToken.cdc")
 }

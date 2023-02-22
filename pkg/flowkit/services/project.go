@@ -100,11 +100,11 @@ type StandardContract struct {
 func (p *Project) ReplaceStandardContractReferenceToAlias(standardContract StandardContract) error {
 	//replace contract with alias
 	mainnet := config.DefaultMainnetNetwork().Name
-	c, err := p.state.Config().Contracts.ByName(standardContract.Name)
-	if err != nil {
-		return err
+	contract := p.state.Config().Contracts.ByName(standardContract.Name)
+	if contract == nil {
+		return fmt.Errorf("contract not found") // shouldn't occur
 	}
-	c.Aliases.Add(mainnet, standardContract.Address)
+	contract.Aliases.Add(mainnet, standardContract.Address)
 
 	//remove from deploy
 	for di, d := range p.state.Config().Deployments {
