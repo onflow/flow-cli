@@ -76,14 +76,14 @@ func Test_ConfigContractsComplex(t *testing.T) {
 	assert.Equal(t, "./cadence/kittyItems/contracts/KittyItems.cdc", kittyItems.Location)
 	assert.Equal(t, "./cadence/kittyItemsMarket/contracts/KittyItemsMarket.cdc", kittyItemsMarket.Location)
 
-	assert.Equal(t, "", kittyItemsMarket.Aliases.ByNetwork("emulator"))
+	assert.True(t, kittyItemsMarket.Aliases.ByNetwork("emulator") == nil)
 
 	assert.True(t, kittyItemsMarket.IsAliased())
-	assert.Equal(t, nil, kittyItemsMarket.Aliases.ByNetwork("emulator"))
+	assert.True(t, kittyItemsMarket.Aliases.ByNetwork("emulator") == nil)
 	assert.Equal(t, "f8d6e0586b0a20c7", kittyItemsMarket.Aliases.ByNetwork("testnet").Address.String())
 
 	assert.False(t, kittyItems.IsAliased())
-	assert.Equal(t, nil, kittyItems.Aliases.ByNetwork("emulator"))
+	assert.True(t, kittyItems.Aliases.ByNetwork("emulator") == nil)
 }
 
 func Test_ConfigContractsAliases(t *testing.T) {

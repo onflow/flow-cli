@@ -151,7 +151,7 @@ func Test_GetContractsByNameAndNetworkComplex(t *testing.T) {
 	market, err := conf.Contracts.ByName("KittyItemsMarket")
 	assert.NoError(t, err)
 
-	assert.Equal(t, "0x123123123", market.Aliases.ByNetwork("testnet").Address.String())
+	assert.Equal(t, "0000000123123123", market.Aliases.ByNetwork("testnet").Address.String())
 }
 
 func Test_GetAccountByNameComplex(t *testing.T) {
