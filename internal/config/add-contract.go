@@ -67,7 +67,7 @@ func addContract(
 		contractData = output.NewContractPrompt()
 	}
 
-	contracts := config.StringToContracts(
+	contract := config.StringToContract(
 		contractData["name"],
 		contractData["source"],
 		contractData["emulator"],
@@ -75,9 +75,7 @@ func addContract(
 		contractData["mainnet"],
 	)
 
-	for _, contract := range contracts {
-		state.Contracts().AddOrUpdate(contract.Name, contract)
-	}
+	state.Contracts().AddOrUpdate(contract.Name, contract)
 
 	err = state.SaveEdited(globalFlags.ConfigPaths)
 	if err != nil {
