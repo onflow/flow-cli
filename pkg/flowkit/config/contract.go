@@ -31,6 +31,7 @@ type Contract struct {
 	Aliases  Aliases
 }
 
+// Alias defines an existing pre-deployed contract address for specific network.
 type Alias struct {
 	Network string
 	Address flow.Address
