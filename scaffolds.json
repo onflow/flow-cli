@@ -3,13 +3,13 @@
     "name": "Empty Cadence Project",
     "repo": "https://github.com/sideninja/flow-empty-scaffold",
     "description": "Empty project containing only basic folder structure and flow.json configuration.",
-    "commit": "552754c8111c34423b78e614405250ed016e4e1f"
+    "commit": "b36b962875f10eb144faca381e13e8b09e240e1a"
   },
   {
     "name": "Simple Cadence Project",
     "repo": "https://github.com/sideninja/flow-basic-scaffold.git",
     "description": "Scaffold contains required folder structure as well as some example Cadence code.",
-    "commit": "7455f4c2c1ed79a086c99faf77fae9276c25262e"
+    "commit": "92fd86ce5f03d558ba37b3f794bd0cc61a37f440"
   },
   {
     "name": "Web Dapp using FCL",
