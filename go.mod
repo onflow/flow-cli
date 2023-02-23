@@ -8,7 +8,7 @@ require (
 	github.com/onflow/cadence v0.31.3-attachments-2
 	github.com/onflow/cadence-tools/languageserver v0.7.0-cadence-attachments-3
 	github.com/onflow/cadence-tools/test v0.4.0-cadence-attachments-5
-	github.com/onflow/fcl-dev-wallet v0.5.4
+	github.com/onflow/fcl-dev-wallet v0.6.0
 	github.com/onflow/flow-cli/pkg/flowkit v0.0.0-20230131215847-fac08f60ac4d
 	github.com/onflow/flow-emulator v0.43.0-cadence-attachments-3
 	github.com/onflow/flow-go-sdk v0.31.3-cadence-attachements
