@@ -10,7 +10,7 @@ require (
 	github.com/onflow/cadence-tools/languageserver v0.7.0
 	github.com/onflow/cadence-tools/test v0.4.0
 	github.com/onflow/fcl-dev-wallet v0.5.5
-	github.com/onflow/flow-cli/pkg/flowkit v0.0.0-20230125123057-e0006d2ef2f6
+	github.com/onflow/flow-cli/pkg/flowkit v0.0.0-20230223114609-50a273db7426
 	github.com/onflow/flow-emulator v0.44.2
 	github.com/onflow/flow-go-sdk v0.31.3
 	github.com/onflowser/flowser/v2 v2.0.9-beta
@@ -217,5 +217,3 @@ require (
 	modernc.org/sqlite v1.20.3 // indirect
 	nhooyr.io/websocket v1.8.6 // indirect
 )
-
-replace github.com/onflow/flow-cli/pkg/flowkit => ./pkg/flowkit
