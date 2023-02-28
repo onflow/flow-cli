@@ -34,7 +34,7 @@ type Flowkit struct {
 }
 
 func (f *Flowkit) Network() config.Network {
-	return f.network
+	return f.network // todo define empty network type in config config.EmptyNetwork
 }
 
 func (f *Flowkit) Ping() (config.Network, error) {
@@ -649,14 +649,59 @@ func (d *ProjectDeploymentError) Error() string {
 	return err
 }
 
+// ExecuteScript on the Flow network and return the Cadence value as a result.
 func (f *Flowkit) ExecuteScript(ctx context.Context, script *Script) (cadence.Value, error) {
-	//TODO implement me
-	panic("implement me")
+	program, err := project.NewProgram(script)
+	if err != nil {
+		return nil, err
+	}
+
+	if program.HasImports() {
+		contracts, err := f.state.DeploymentContractsByNetwork(f.network)
+		if err != nil {
+			return nil, err
+		}
+
+		importReplacer := project.NewImportReplacer(
+			contracts,
+			f.state.AliasesForNetwork(f.network),
+		)
+
+		if f.state == nil {
+			return nil, config.ErrDoesNotExist
+		}
+		if f.network.Name == "" { // todo define empty network
+			return nil, fmt.Errorf("missing network, specify which network to use to resolve imports in script code")
+		}
+		if script.Location() == "" {
+			return nil, fmt.Errorf("resolving imports in scripts not supported")
+		}
+
+		program, err = importReplacer.Replace(program)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return f.gateway.ExecuteScript(program.Code(), script.Args)
 }
 
 func (f *Flowkit) GetTransactionByID(ctx context.Context, ID flow.Identifier, waitSeal bool) (*flow.Transaction, *flow.TransactionResult, error) {
-	//TODO implement me
-	panic("implement me")
+	f.logger.StartProgress("Fetching Transaction...")
+
+	tx, err := f.gateway.GetTransaction(ID)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	if waitSeal {
+		f.logger.StartProgress("Waiting for transaction to be sealed...")
+	}
+
+	result, err := f.gateway.GetTransactionResult(ID, waitSeal)
+	f.logger.StopProgress()
+
+	return tx, result, err
 }
 
 func (f *Flowkit) GetTransactionsByBlockID(ctx context.Context, blockID flow.Identifier, waitSeal bool) ([]*flow.Transaction, []*flow.TransactionResult, error) {
