@@ -364,8 +364,7 @@ func (f *Flowkit) GetBlock(ctx context.Context, query BlockQuery) (*flow.Block, 
 }
 
 func (f *Flowkit) GetCollection(ctx context.Context, ID flow.Identifier) (*flow.Collection, error) {
-	//TODO implement me
-	panic("implement me")
+	return f.gateway.GetCollection(ID)
 }
 
 func (f *Flowkit) GetEvents(ctx context.Context, names []string, startHeight uint64, endHeight uint64, worker *EventWorker) ([]flow.BlockEvents, error) {
