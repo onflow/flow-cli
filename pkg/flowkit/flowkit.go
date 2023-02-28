@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	goeth "github.com/ethereum/go-ethereum/accounts"
+	"github.com/lmars/go-slip10"
 	"github.com/onflow/cadence"
 	"github.com/onflow/flow-cli/pkg/flowkit/gateway"
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
@@ -12,6 +14,7 @@ import (
 	"github.com/onflow/flow-go-sdk/access/grpc"
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/pkg/errors"
+	"github.com/tyler-smith/go-bip39"
 	"golang.org/x/exp/maps"
 	"golang.org/x/exp/slices"
 	"strings"
@@ -477,8 +480,59 @@ func (f *Flowkit) GenerateKey(ctx context.Context, inputSeed string, sigAlgo cry
 }
 
 func (f *Flowkit) GenerateMnemonicKey(ctx context.Context, derivationPath string, sigAlgo crypto.SignatureAlgorithm) (crypto.PrivateKey, string, error) {
-	//TODO implement me
-	panic("implement me")
+	entropy, err := bip39.NewEntropy(128)
+	if err != nil {
+		return nil, "", err
+	}
+	mnemonic, err := bip39.NewMnemonic(entropy)
+	if err != nil {
+		return nil, "", err
+	}
+
+	if !bip39.IsMnemonicValid(mnemonic) {
+		return nil, "", fmt.Errorf("invalid mnemonic")
+	}
+
+	seed := bip39.NewSeed(mnemonic, "")
+
+	// sanity check of seed length
+	if len(seed) < 16 {
+		return nil, "", fmt.Errorf("seed length should be at least 16 bytes, got %d", len(seed))
+	}
+
+	if derivationPath == "" {
+		derivationPath = "m/44'/539'/0'/0/0"
+	}
+
+	path, err := goeth.ParseDerivationPath(derivationPath)
+	if err != nil {
+		return nil, "", fmt.Errorf("invalid derivation path")
+	}
+
+	curve := slip10.CurveBitcoin // case ECDSA_secp256k1
+	if sigAlgo == crypto.ECDSA_P256 {
+		curve = slip10.CurveP256
+	} else if sigAlgo != crypto.ECDSA_secp256k1 {
+		return nil, "", fmt.Errorf("invalid signature algorithm")
+	}
+
+	accountKey, err := slip10.NewMasterKeyWithCurve(seed, curve)
+	if err != nil {
+		return nil, "", err
+	}
+
+	for _, n := range path {
+		accountKey, err = accountKey.NewChildKey(n)
+
+		if err != nil {
+			return nil, "", err
+		}
+	}
+	privateKey, err := crypto.DecodePrivateKey(sigAlgo, accountKey.Key)
+	if err != nil {
+		return nil, "", err
+	}
+	return privateKey, "", nil
 }
 
 func (f *Flowkit) DeployProject(ctx context.Context, update bool) ([]*project.Contract, error) {
