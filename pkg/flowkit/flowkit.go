@@ -1,0 +1,232 @@
+package flowkit
+
+import (
+	"context"
+	"fmt"
+	"github.com/onflow/cadence"
+	"github.com/onflow/flow-cli/pkg/flowkit/gateway"
+	"github.com/onflow/flow-cli/pkg/flowkit/output"
+	"github.com/onflow/flow-go-sdk"
+	"github.com/onflow/flow-go-sdk/crypto"
+	"github.com/pkg/errors"
+
+	"github.com/onflow/flow-cli/pkg/flowkit/config"
+	"github.com/onflow/flow-cli/pkg/flowkit/project"
+)
+
+var _ Services = &Flowkit{}
+
+type Flowkit struct {
+	state   *State
+	network *config.Network
+	gateway gateway.Gateway
+	logger  output.Logger
+}
+
+func (f *Flowkit) Network() *config.Network {
+	return f.network
+}
+
+func (f *Flowkit) Ping() (*config.Network, error) {
+	err := f.gateway.Ping()
+	if err != nil {
+		return nil, err
+	}
+
+	return f.network, nil
+}
+
+// GetAccount fetches account on the Flow network.
+func (f *Flowkit) GetAccount(ctx context.Context, address flow.Address) (*flow.Account, error) {
+	f.logger.StartProgress(fmt.Sprintf("Loading %s...", address))
+
+	account, err := f.gateway.GetAccount(address)
+	f.logger.StopProgress()
+
+	return account, err
+}
+
+// CreateAccount on the Flow network with the provided keys and using the signer for creation transaction.
+// Returns the newly created account as well as the ID of the transaction that created the account.
+//
+// Keys is a slice but only one can be passed as well. If the transaction fails or there are other issues an error is returned.
+func (f *Flowkit) CreateAccount(ctx context.Context, signer *Account, keys []Key) (*flow.Account, flow.Identifier, error) {
+	if f.state == nil {
+		return nil, flow.EmptyID, config.ErrDoesNotExist
+	}
+
+	var accKeys []*flow.AccountKey
+	for _, k := range keys {
+		if k.weight == 0 { // if key weight is specified
+			k.weight = flow.AccountKeyWeightThreshold
+		}
+
+		accKey := &flow.AccountKey{
+			PublicKey: k.public,
+			SigAlgo:   k.sigAlgo,
+			HashAlgo:  k.hashAlgo,
+			Weight:    k.weight,
+		}
+
+		err := accKey.Validate()
+		if err != nil {
+			return nil, flow.EmptyID, fmt.Errorf("invalid account key: %w", err)
+		}
+
+		accKeys = append(accKeys, accKey)
+	}
+
+	tx, err := NewCreateAccountTransaction(signer, accKeys, nil)
+	if err != nil {
+		return nil, flow.EmptyID, err
+	}
+
+	tx, err = f.prepareTransaction(tx, signer)
+	if err != nil {
+		return nil, flow.EmptyID, err
+	}
+
+	f.logger.Info(fmt.Sprintf("Transaction ID: %s", tx.FlowTransaction().ID()))
+	f.logger.StartProgress("Creating account...")
+	defer f.logger.StopProgress()
+
+	sentTx, err := f.gateway.SendSignedTransaction(tx)
+	if err != nil {
+		return nil, flow.EmptyID, errors.Wrap(err, "account creation transaction failed")
+	}
+
+	f.logger.StartProgress("Waiting for transaction to be sealed...")
+
+	result, err := f.gateway.GetTransactionResult(sentTx.ID(), true)
+	if err != nil {
+		return nil, flow.EmptyID, err
+	}
+
+	if result.Error != nil {
+		return nil, flow.EmptyID, result.Error
+	}
+
+	events := EventsFromTransaction(result)
+	newAccountAddress := events.GetCreatedAddresses()
+	if len(newAccountAddress) == 0 {
+		return nil, flow.EmptyID, fmt.Errorf("new account address couldn't be fetched")
+	}
+
+	f.logger.StopProgress()
+
+	account, err := f.gateway.GetAccount(*newAccountAddress[0])
+	if err != nil {
+		return nil, flow.EmptyID, err
+	}
+
+	return account, sentTx.ID(), nil // we know it's the only and first event
+}
+
+// prepareTransaction prepares transaction for sending with data from network
+func (f *Flowkit) prepareTransaction(
+	tx *Transaction,
+	account *Account,
+) (*Transaction, error) {
+
+	block, err := f.gateway.GetLatestBlock()
+	if err != nil {
+		return nil, err
+	}
+
+	proposer, err := f.gateway.GetAccount(account.Address())
+	if err != nil {
+		return nil, err
+	}
+
+	tx.SetBlockReference(block)
+	if err = tx.SetProposer(proposer, account.Key().Index()); err != nil {
+		return nil, err
+	}
+
+	tx, err = tx.Sign()
+	if err != nil {
+		return nil, err
+	}
+
+	return tx, nil
+}
+
+func (f *Flowkit) AddContract(ctx context.Context, account *Account, contract *Script) (*flow.Identifier, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (f *Flowkit) UpdateContract(ctx context.Context, account *Account, contract *Script) (*flow.Identifier, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (f *Flowkit) RemoveContract(ctx context.Context, account *Account, name string) (*flow.Identifier, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (f *Flowkit) GetBlock(ctx context.Context, query BlockQuery) (*flow.Block, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (f *Flowkit) GetCollection(ctx context.Context, ID flow.Identifier) (*flow.Collection, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (f *Flowkit) GetEvents(ctx context.Context, names []string, startHeight uint64, endHeight uint64, worker *EventWorker) ([]flow.BlockEvents, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (f *Flowkit) GenerateKey(ctx context.Context, inputSeed string, sigAlgo crypto.SignatureAlgorithm) (crypto.PrivateKey, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (f *Flowkit) GenerateMnemonicKey(ctx context.Context, derivationPath string, sigAlgo crypto.SignatureAlgorithm) (crypto.PrivateKey, string, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (f *Flowkit) DeployProject(ctx context.Context, update bool) ([]*project.Contract, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (f *Flowkit) ExecuteScript(ctx context.Context, script *Script) (cadence.Value, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (f *Flowkit) GetTransactionByID(ctx context.Context, ID flow.Identifier, waitSeal bool) (*flow.Transaction, *flow.TransactionResult, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (f *Flowkit) GetTransactionsByBlockID(ctx context.Context, blockID flow.Identifier, waitSeal bool) ([]*flow.Transaction, []*flow.TransactionResult, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (f *Flowkit) BuildTransaction(addresses *transactionAddresses, proposerKeyIndex int, script *Script, gasLimit uint64) (*Transaction, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (f *Flowkit) SignTransactionPayload(signer *Account, payload []byte) (*Transaction, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (f *Flowkit) SendSignedTransaction(tx *Transaction) (*flow.Transaction, *flow.TransactionResult, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (f *Flowkit) SendTransaction(accounts *transactionAccountRoles, script *Script, gasLimit uint64) (*flow.Transaction, *flow.TransactionResult, error) {
+	//TODO implement me
+	panic("implement me")
+}
