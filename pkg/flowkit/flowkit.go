@@ -10,6 +10,9 @@ import (
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/pkg/errors"
+	"golang.org/x/exp/maps"
+	"golang.org/x/exp/slices"
+	"strings"
 
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
 	"github.com/onflow/flow-cli/pkg/flowkit/project"
@@ -272,9 +275,59 @@ func (f *Flowkit) AddContract(
 	return sentTx.ID(), updateExisting, err
 }
 
-func (f *Flowkit) RemoveContract(ctx context.Context, account *Account, name string) (*flow.Identifier, error) {
-	//TODO implement me
-	panic("implement me")
+func (f *Flowkit) RemoveContract(ctx context.Context, account *Account, contractName string) (flow.Identifier, error) {
+	// check if contracts exists on the account
+	flowAcc, err := f.gateway.GetAccount(account.Address())
+	if err != nil {
+		return flow.EmptyID, err
+	}
+
+	existingContracts := maps.Keys(flowAcc.Contracts)
+	if !slices.Contains(existingContracts, contractName) {
+		return flow.EmptyID, fmt.Errorf(
+			"can not remove a non-existing contract named '%s'. Account only contains the contracts: %v",
+			contractName,
+			strings.Join(existingContracts, ", "),
+		)
+	}
+
+	tx, err := NewRemoveAccountContractTransaction(account, contractName)
+	if err != nil {
+		return flow.EmptyID, err
+	}
+
+	tx, err = f.prepareTransaction(tx, account)
+	if err != nil {
+		return flow.EmptyID, err
+	}
+
+	f.logger.Info(fmt.Sprintf("Transaction ID: %s", tx.FlowTransaction().ID().String()))
+	f.logger.StartProgress(
+		fmt.Sprintf("Removing Contract %s from %s...", contractName, account.Address()),
+	)
+	defer f.logger.StopProgress()
+
+	sentTx, err := f.gateway.SendSignedTransaction(tx)
+	if err != nil {
+		return flow.EmptyID, err
+	}
+
+	txr, err := f.gateway.GetTransactionResult(sentTx.ID(), true)
+	if err != nil {
+		return flow.EmptyID, err
+	}
+	if txr != nil && txr.Error != nil {
+		return flow.EmptyID, txr.Error
+	}
+
+	f.logger.StopProgress()
+	f.logger.Info(fmt.Sprintf(
+		"Contract %s removed from account %s.",
+		contractName,
+		account.Address(),
+	))
+
+	return sentTx.ID(), nil
 }
 
 func (f *Flowkit) GetBlock(ctx context.Context, query BlockQuery) (*flow.Block, error) {
