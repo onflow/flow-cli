@@ -35,8 +35,7 @@ type Services interface {
 
 	GetAccount(ctx context.Context, address flow.Address) (*flow.Account, error)
 	CreateAccount(ctx context.Context, signer *Account, key Key) (*flow.Account, flow.Identifier, error)
-	AddContract(ctx context.Context, account *Account, contract *Script) (flow.Identifier, error)
-	UpdateContract(ctx context.Context, account *Account, contract *Script) (flow.Identifier, error)
+	AddContract(ctx context.Context, account *Account, contract *Script, update bool) (flow.Identifier, bool, error)
 	RemoveContract(ctx context.Context, account *Account, name string) (flow.Identifier, error)
 	GetBlock(ctx context.Context, query BlockQuery) (*flow.Block, error)
 	GetCollection(ctx context.Context, ID flow.Identifier) (*flow.Collection, error)

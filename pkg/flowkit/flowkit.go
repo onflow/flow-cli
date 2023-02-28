@@ -1,6 +1,7 @@
 package flowkit
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"github.com/onflow/cadence"
@@ -151,14 +152,124 @@ func (f *Flowkit) prepareTransaction(
 	return tx, nil
 }
 
-func (f *Flowkit) AddContract(ctx context.Context, account *Account, contract *Script) (*flow.Identifier, error) {
-	//TODO implement me
-	panic("implement me")
-}
+var errUpdateNoDiff = errors.New("contract already exists and is the same as the contract provided for update")
 
-func (f *Flowkit) UpdateContract(ctx context.Context, account *Account, contract *Script) (*flow.Identifier, error) {
-	//TODO implement me
-	panic("implement me")
+// AddContract to the Flow account provided and return the transaction ID.
+//
+// If the contract already exists on the account the operation will fail and error will be returned.
+// Use UpdateContract method for such usage.
+func (f *Flowkit) AddContract(
+	ctx context.Context,
+	account *Account,
+	contract *Script,
+	updateExisting bool,
+) (flow.Identifier, bool, error) {
+	program, err := project.NewProgram(contract)
+	if err != nil {
+		return flow.EmptyID, false, err
+	}
+
+	if program.HasImports() {
+		contracts, err := f.state.DeploymentContractsByNetwork(f.network)
+		if err != nil {
+			return flow.EmptyID, false, err
+		}
+
+		importReplacer := project.NewImportReplacer(
+			contracts,
+			f.state.AliasesForNetwork(f.network),
+		)
+
+		program, err = importReplacer.Replace(program)
+		if err != nil {
+			return flow.EmptyID, false, err
+		}
+	}
+
+	name, err := program.Name()
+	if err != nil {
+		return flow.EmptyID, false, err
+	}
+
+	tx, err := NewAddAccountContractTransaction(
+		account,
+		name,
+		program.Code(),
+		contract.Args,
+	)
+	if err != nil {
+		return flow.EmptyID, false, err
+	}
+
+	f.logger.StartProgress(
+		fmt.Sprintf(
+			"%s contract '%s' on account '%s'...",
+			map[bool]string{true: "Updating", false: "Creating"}[updateExisting],
+			name,
+			account.Address(),
+		),
+	)
+	defer f.logger.StopProgress()
+
+	// check if contract exists on account
+	flowAccount, err := f.gateway.GetAccount(account.Address())
+	if err != nil {
+		return flow.EmptyID, false, err
+	}
+	existingContract, exists := flowAccount.Contracts[name]
+	noDiffInContract := bytes.Equal(program.Code(), existingContract)
+	if exists && noDiffInContract {
+		return flow.EmptyID, false, errUpdateNoDiff
+	}
+	if exists && !updateExisting {
+		return flow.EmptyID, false, fmt.Errorf(
+			fmt.Sprintf("contract %s exists in account %s", name, account.Name()),
+		)
+	}
+
+	// if we are updating contract
+	if exists && updateExisting {
+		tx, err = NewUpdateAccountContractTransaction(
+			account,
+			name,
+			contract.Code(),
+		)
+		if err != nil {
+			return flow.EmptyID, false, err
+		}
+	}
+
+	tx, err = f.prepareTransaction(tx, account)
+	if err != nil {
+		return flow.EmptyID, false, err
+	}
+
+	f.logger.Info(fmt.Sprintf("Transaction ID: %s", tx.FlowTransaction().ID()))
+
+	// send transaction with contract
+	sentTx, err := f.gateway.SendSignedTransaction(tx)
+	if err != nil {
+		return flow.EmptyID, false, fmt.Errorf("failed to send transaction to deploy a contract: %w", err)
+	}
+
+	// we wait for transaction to be sealed
+	trx, err := f.gateway.GetTransactionResult(sentTx.ID(), true)
+	if err != nil {
+		return flow.EmptyID, false, err
+	}
+	if trx.Error != nil {
+		return flow.EmptyID, false, trx.Error
+	}
+
+	f.logger.StopProgress()
+	f.logger.Info(fmt.Sprintf(
+		"Contract '%s' %s on the account '%s'.",
+		name,
+		map[bool]string{true: "updated", false: "created"}[updateExisting],
+		account.Address(),
+	))
+
+	return sentTx.ID(), updateExisting, err
 }
 
 func (f *Flowkit) RemoveContract(ctx context.Context, account *Account, name string) (*flow.Identifier, error) {
