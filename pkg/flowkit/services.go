@@ -26,7 +26,7 @@ type BlockQuery struct {
 
 type EventWorker struct {
 	count           int
-	blocksPerWorker int
+	blocksPerWorker uint64
 }
 
 type Services interface {

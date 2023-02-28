@@ -8,11 +8,13 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowkit/gateway"
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
 	"github.com/onflow/flow-go-sdk"
+	"github.com/onflow/flow-go-sdk/access/grpc"
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/pkg/errors"
 	"golang.org/x/exp/maps"
 	"golang.org/x/exp/slices"
 	"strings"
+	"sync"
 
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
 	"github.com/onflow/flow-cli/pkg/flowkit/project"
@@ -368,8 +370,88 @@ func (f *Flowkit) GetCollection(ctx context.Context, ID flow.Identifier) (*flow.
 }
 
 func (f *Flowkit) GetEvents(ctx context.Context, names []string, startHeight uint64, endHeight uint64, worker *EventWorker) ([]flow.BlockEvents, error) {
-	//TODO implement me
-	panic("implement me")
+	if endHeight < startHeight {
+		return nil, fmt.Errorf("cannot have end height (%d) of block range less that start height (%d)", endHeight, startHeight)
+	}
+
+	f.logger.StartProgress("Fetching events...")
+	defer f.logger.StopProgress()
+
+	queries := makeEventQueries(names, startHeight, endHeight, worker.blocksPerWorker)
+
+	jobChan := make(chan grpc.EventRangeQuery, worker.count)
+	results := make(chan EventWorkerResult)
+
+	var wg sync.WaitGroup
+
+	for i := 0; i < worker.count; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			f.eventWorker(jobChan, results)
+		}()
+	}
+
+	// wait on the workers to finish and close the result channel
+	// to signal downstream that all work is done
+	go func() {
+		defer close(results)
+		wg.Wait()
+	}()
+
+	go func() {
+		defer close(jobChan)
+		for _, query := range queries {
+			jobChan <- query
+		}
+	}()
+
+	var resultEvents []flow.BlockEvents
+	for eventResult := range results {
+		if eventResult.Error != nil {
+			return nil, eventResult.Error
+		}
+
+		resultEvents = append(resultEvents, eventResult.Events...)
+	}
+
+	return resultEvents, nil
+}
+
+func (f *Flowkit) eventWorker(jobChan <-chan grpc.EventRangeQuery, results chan<- EventWorkerResult) {
+	for q := range jobChan {
+		blockEvents, err := f.gateway.GetEvents(q.Type, q.StartHeight, q.EndHeight)
+		if err != nil {
+			results <- EventWorkerResult{nil, err}
+		}
+		results <- EventWorkerResult{blockEvents, nil}
+	}
+}
+
+type EventWorkerResult struct {
+	Events []flow.BlockEvents
+	Error  error
+}
+
+func makeEventQueries(events []string, startHeight uint64, endHeight uint64, blockCount uint64) []grpc.EventRangeQuery {
+	var queries []grpc.EventRangeQuery
+	for startHeight <= endHeight {
+		suggestedEndHeight := startHeight + blockCount - 1 //since we are inclusive
+		end := endHeight
+		if suggestedEndHeight < endHeight {
+			end = suggestedEndHeight
+		}
+		for _, event := range events {
+			queries = append(queries, grpc.EventRangeQuery{
+				Type:        event,
+				StartHeight: startHeight,
+				EndHeight:   end,
+			})
+		}
+		startHeight = suggestedEndHeight + 1
+	}
+	return queries
+
 }
 
 func (f *Flowkit) GenerateKey(ctx context.Context, inputSeed string, sigAlgo crypto.SignatureAlgorithm) (crypto.PrivateKey, error) {
