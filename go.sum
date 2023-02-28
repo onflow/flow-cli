@@ -769,8 +769,8 @@ github.com/onflow/cadence-tools/lint v0.4.0 h1:wp2cQPsW+K3hhQHic3GSVUrmaGwRZref5
 github.com/onflow/cadence-tools/lint v0.4.0/go.mod h1:4Ki134gcUAWpSst/PkTuGf+SoC7uKgv+vekF5ehGJHw=
 github.com/onflow/cadence-tools/test v0.4.0 h1:vyw0acOHVduz4SFbcdjo4tbPQBgFfrP0p+bjSQXN74I=
 github.com/onflow/cadence-tools/test v0.4.0/go.mod h1:SWmiz3MmcI3Myg/Ji0faZivhASabuo9corSabb6cUYU=
-github.com/onflow/fcl-dev-wallet v0.5.5 h1:6ZLthPBumCVN7LiD2ipirUNoqfDuy/aLuT5v9D+GEwI=
-github.com/onflow/fcl-dev-wallet v0.5.5/go.mod h1:55THZyyDEhl687BmGiuTNougMBOf5UbvfoVdGjCdLeE=
+github.com/onflow/fcl-dev-wallet v0.6.0 h1:6+kdcLjOPUCNfA8Spuw5jwcAo95MPkFJT776oRF12nQ=
+github.com/onflow/fcl-dev-wallet v0.6.0/go.mod h1:T6mVziJdcKaspIIwg9vMZcLIP6w16QXxfUcRWiOpNEE=
 github.com/onflow/flow-core-contracts/lib/go/contracts v0.11.2-0.20221216161720-c1b31d5a4722 h1:fH5e7L9xFXNOd3WLvMaPNkP1m7BngRTDP751zMNndws=
 github.com/onflow/flow-core-contracts/lib/go/contracts v0.11.2-0.20221216161720-c1b31d5a4722/go.mod h1:9nrgjIF/noY2jJ7LP8bKLHTpcdHOa2yO0ryCKTQpxvs=
 github.com/onflow/flow-core-contracts/lib/go/templates v0.11.2-0.20221216161720-c1b31d5a4722 h1:vgNS6I+MM/74pciIoKb7ZBs8XGF1ONsSdkAec36B9iU=
