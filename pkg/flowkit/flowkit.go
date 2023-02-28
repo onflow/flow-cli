@@ -334,8 +334,33 @@ func (f *Flowkit) RemoveContract(ctx context.Context, account *Account, contract
 }
 
 func (f *Flowkit) GetBlock(ctx context.Context, query BlockQuery) (*flow.Block, error) {
-	//TODO implement me
-	panic("implement me")
+	f.logger.StartProgress("Fetching Block...")
+	defer f.logger.StopProgress()
+
+	// smart parsing of query
+	var err error
+	var block *flow.Block
+	if query.Latest {
+		block, err = f.gateway.GetLatestBlock()
+	} else if query.Height > 0 {
+		block, err = f.gateway.GetBlockByHeight(query.Height)
+	} else if query.ID != nil {
+		block, err = f.gateway.GetBlockByID(*query.ID)
+	} else {
+		return nil, fmt.Errorf("invalid query, valid are: \"latest\", block height or block ID")
+	}
+
+	if err != nil {
+		return nil, fmt.Errorf("error fetching block: %s", err.Error())
+	}
+
+	if block == nil {
+		return nil, fmt.Errorf("block not found")
+	}
+
+	f.logger.StopProgress()
+
+	return block, err
 }
 
 func (f *Flowkit) GetCollection(ctx context.Context, ID flow.Identifier) (*flow.Collection, error) {
