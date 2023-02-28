@@ -339,6 +339,7 @@ func (f *Flowkit) RemoveContract(ctx context.Context, account *Account, contract
 	return sentTx.ID(), nil
 }
 
+// GetBlock by the query from Flow blockchain. Query can define a block by ID, block by height or require the latest block.
 func (f *Flowkit) GetBlock(ctx context.Context, query BlockQuery) (*flow.Block, error) {
 	f.logger.StartProgress("Fetching Block...")
 	defer f.logger.StopProgress()
@@ -369,10 +370,17 @@ func (f *Flowkit) GetBlock(ctx context.Context, query BlockQuery) (*flow.Block, 
 	return block, err
 }
 
+// GetCollection by the ID from Flow network.
 func (f *Flowkit) GetCollection(ctx context.Context, ID flow.Identifier) (*flow.Collection, error) {
 	return f.gateway.GetCollection(ID)
 }
 
+// GetEvents from Flow network by their event name in the specified height interval defined by start and end inclusive.
+// Optional worker defines parameters for how many concurrent workers do we want to fetch our events,
+// and how many blocks between the provided interval each worker fetches.
+//
+// Providing worker value will produce faster response as the interval will be scanned concurrently. This parameter is optional,
+// if not provided only a single worker will be used.
 func (f *Flowkit) GetEvents(ctx context.Context, names []string, startHeight uint64, endHeight uint64, worker *EventWorker) ([]flow.BlockEvents, error) {
 	if endHeight < startHeight {
 		return nil, fmt.Errorf("cannot have end height (%d) of block range less that start height (%d)", endHeight, startHeight)
@@ -458,7 +466,8 @@ func makeEventQueries(events []string, startHeight uint64, endHeight uint64, blo
 
 }
 
-func (f *Flowkit) GenerateKey(ctx context.Context, inputSeed string, sigAlgo crypto.SignatureAlgorithm) (crypto.PrivateKey, error) {
+// GenerateKey using the signature algorithm and optional seed. If seed is not provided a random safe seed will be generated.
+func (f *Flowkit) GenerateKey(ctx context.Context, sigAlgo crypto.SignatureAlgorithm, inputSeed string) (crypto.PrivateKey, error) {
 	var seed []byte
 	var err error
 
@@ -479,7 +488,10 @@ func (f *Flowkit) GenerateKey(ctx context.Context, inputSeed string, sigAlgo cry
 	return privateKey, nil
 }
 
-func (f *Flowkit) GenerateMnemonicKey(ctx context.Context, derivationPath string, sigAlgo crypto.SignatureAlgorithm) (crypto.PrivateKey, string, error) {
+// GenerateMnemonicKey will generate a new key with the signature algorithm and optional derivation path.
+//
+// If the derivation path is not provided a default "m/44'/539'/0'/0/0" will be used.
+func (f *Flowkit) GenerateMnemonicKey(ctx context.Context, sigAlgo crypto.SignatureAlgorithm, derivationPath string) (crypto.PrivateKey, string, error) {
 	entropy, err := bip39.NewEntropy(128)
 	if err != nil {
 		return nil, "", err
