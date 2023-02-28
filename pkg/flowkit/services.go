@@ -29,7 +29,7 @@ type EventWorker struct {
 	blocksPerWorker int
 }
 
-type Flowkit interface {
+type Services interface {
 	Network() config.Network // I think this would be good to have services in context of network
 	Ping() (string, error)
 

@@ -350,3 +350,95 @@ func (t *Transaction) Sign() (*Transaction, error) {
 func (t *Transaction) shouldSignEnvelope() bool {
 	return t.signer.address == t.tx.Payer
 }
+
+// NewTransactionAccountRoles defines transaction roles by accounts.
+//
+// You can read more about roles here: https://developers.flow.com/learn/concepts/accounts-and-keys
+func NewTransactionAccountRoles(
+	proposer *Account,
+	payer *Account,
+	authorizers []*Account,
+) (*transactionAccountRoles, error) {
+	if proposer == nil || payer == nil {
+		return nil, fmt.Errorf("must provide both proposer and payer")
+	}
+
+	return &transactionAccountRoles{
+		proposer:    proposer,
+		authorizers: authorizers,
+		payer:       payer,
+	}, nil
+}
+
+// NewSingleTransactionAccount creates transaction accounts from a single provided
+// account fulfilling all the roles (proposer, payer, authorizer).
+func NewSingleTransactionAccount(account *Account) *transactionAccountRoles {
+	return &transactionAccountRoles{
+		proposer:    account,
+		authorizers: []*Account{account},
+		payer:       account,
+	}
+}
+
+// transactionAccountRoles define all the accounts for different transaction roles.
+type transactionAccountRoles struct {
+	proposer    *Account
+	authorizers []*Account
+	payer       *Account
+}
+
+func (t *transactionAccountRoles) toAddresses() *transactionAddresses {
+	auths := make([]flow.Address, len(t.authorizers))
+	for i, a := range t.authorizers {
+		auths[i] = a.Address()
+	}
+
+	return &transactionAddresses{
+		proposer:    t.proposer.Address(),
+		authorizers: auths,
+		payer:       t.payer.Address(),
+	}
+}
+
+// getSigners for signing the transaction, detect if all accounts are same so only return the one account.
+func (t *transactionAccountRoles) getSigners() []*Account {
+	// build only unique accounts to sign, it's important payer account is last
+	sigs := make([]*Account, 0)
+	addLastIfUnique := func(signer *Account) {
+		for _, sig := range sigs {
+			if sig.Address() == signer.Address() {
+				return
+			}
+		}
+		sigs = append(sigs, signer)
+	}
+
+	addLastIfUnique(t.proposer)
+	for _, auth := range t.authorizers {
+		addLastIfUnique(auth)
+	}
+	addLastIfUnique(t.payer)
+
+	return sigs
+}
+
+// NewTransactionAddresses defines transaction roles by account addresses.
+//
+// You can read more about roles here: https://developers.flow.com/learn/concepts/accounts-and-keys
+func NewTransactionAddresses(
+	proposer flow.Address,
+	payer flow.Address,
+	authorizers []flow.Address,
+) *transactionAddresses {
+	return &transactionAddresses{
+		proposer:    proposer,
+		authorizers: authorizers,
+		payer:       payer,
+	}
+}
+
+type transactionAddresses struct {
+	proposer    flow.Address
+	authorizers []flow.Address
+	payer       flow.Address
+}
