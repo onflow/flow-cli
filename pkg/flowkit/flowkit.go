@@ -7,6 +7,7 @@ import (
 	"github.com/onflow/cadence"
 	"github.com/onflow/flow-cli/pkg/flowkit/gateway"
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
+	"github.com/onflow/flow-cli/pkg/flowkit/util"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/access/grpc"
 	"github.com/onflow/flow-go-sdk/crypto"
@@ -455,8 +456,24 @@ func makeEventQueries(events []string, startHeight uint64, endHeight uint64, blo
 }
 
 func (f *Flowkit) GenerateKey(ctx context.Context, inputSeed string, sigAlgo crypto.SignatureAlgorithm) (crypto.PrivateKey, error) {
-	//TODO implement me
-	panic("implement me")
+	var seed []byte
+	var err error
+
+	if inputSeed == "" {
+		seed, err = util.RandomSeed(crypto.MinSeedLength)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		seed = []byte(inputSeed)
+	}
+
+	privateKey, err := crypto.GeneratePrivateKey(sigAlgo, seed)
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate private key: %w", err)
+	}
+
+	return privateKey, nil
 }
 
 func (f *Flowkit) GenerateMnemonicKey(ctx context.Context, derivationPath string, sigAlgo crypto.SignatureAlgorithm) (crypto.PrivateKey, string, error) {
