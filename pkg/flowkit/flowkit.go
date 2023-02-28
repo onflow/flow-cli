@@ -28,19 +28,19 @@ var _ Services = &Flowkit{}
 
 type Flowkit struct {
 	state   *State
-	network *config.Network
+	network config.Network
 	gateway gateway.Gateway
 	logger  output.Logger
 }
 
-func (f *Flowkit) Network() *config.Network {
+func (f *Flowkit) Network() config.Network {
 	return f.network
 }
 
-func (f *Flowkit) Ping() (*config.Network, error) {
+func (f *Flowkit) Ping() (config.Network, error) {
 	err := f.gateway.Ping()
 	if err != nil {
-		return nil, err
+		return config.Network{}, err
 	}
 
 	return f.network, nil
@@ -547,9 +547,106 @@ func (f *Flowkit) GenerateMnemonicKey(ctx context.Context, sigAlgo crypto.Signat
 	return privateKey, "", nil
 }
 
+// DeployProject contracts to the Flow network or update if already exists and update is set to true.
+//
+// Retrieve all the contracts for specified network, sort them for deployment deploy one by one and replace
+// the imports in the contract source, so it corresponds to the account name the contract was deployed to.
 func (f *Flowkit) DeployProject(ctx context.Context, update bool) ([]*project.Contract, error) {
-	//TODO implement me
-	panic("implement me")
+	if f.state == nil {
+		return nil, config.ErrDoesNotExist
+	}
+
+	contracts, err := f.state.DeploymentContractsByNetwork(f.network)
+	if err != nil {
+		return nil, err
+	}
+
+	deployment, err := project.NewDeployment(contracts, f.state.AliasesForNetwork(f.network))
+	if err != nil {
+		return nil, err
+	}
+
+	sorted, err := deployment.Sort()
+	if err != nil {
+		return nil, err
+	}
+
+	f.logger.Info(fmt.Sprintf(
+		"\nDeploying %d contracts for accounts: %s\n",
+		len(sorted),
+		f.state.AccountsForNetwork(f.network).String(),
+	))
+	defer f.logger.StopProgress()
+
+	deployErr := &ProjectDeploymentError{}
+	for _, contract := range sorted {
+		targetAccount, err := f.state.Accounts().ByName(contract.AccountName)
+		if err != nil {
+			return nil, fmt.Errorf("target account for deploying contract not found in configuration")
+		}
+
+		// special case for emulator updates, where we remove and add a contract because it allows us to have more freedom in changes.
+		// Updating contracts is limited as described in https://developers.flow.com/cadence/language/contract-updatability
+		if update && f.network == config.DefaultEmulatorNetwork() {
+			_, _ = f.RemoveContract(ctx, targetAccount, contract.Name) // ignore failure as it's meant to be best-effort
+		}
+
+		txID, updated, err := f.AddContract(
+			ctx,
+			targetAccount,
+			NewScript(contract.Code(), contract.Args, contract.Location()),
+			update,
+		)
+		if err != nil && errors.Is(err, errUpdateNoDiff) {
+			f.logger.Info(fmt.Sprintf(
+				"%s -> 0x%s [skipping, no changes found]",
+				output.Italic(contract.Name),
+				contract.AccountAddress.String(),
+			))
+			continue
+		} else if err != nil {
+			deployErr.add(contract, err, fmt.Sprintf("failed to deploy contract %s", contract.Name))
+			continue
+		}
+
+		f.logger.Info(fmt.Sprintf(
+			"%s -> 0x%s (%s) %s",
+			output.Green(contract.Name),
+			contract.AccountAddress,
+			txID.String(),
+			map[bool]string{true: "[updated]", false: ""}[updated],
+		))
+	}
+
+	if len(deployErr.contracts) > 0 {
+		return nil, deployErr
+	}
+
+	f.logger.Info(fmt.Sprintf("\n%s All contracts deployed successfully", output.SuccessEmoji()))
+	return sorted, nil
+}
+
+type ProjectDeploymentError struct {
+	contracts map[string]error
+}
+
+func (d *ProjectDeploymentError) add(contract *project.Contract, err error, msg string) {
+	if d.contracts == nil {
+		d.contracts = make(map[string]error)
+	}
+	d.contracts[contract.Name] = fmt.Errorf("%s: %w", msg, err)
+}
+
+func (d *ProjectDeploymentError) Contracts() map[string]error {
+	return d.contracts
+}
+
+func (d *ProjectDeploymentError) Error() string {
+	err := ""
+	for c, e := range d.contracts {
+		err = fmt.Sprintf("%s %s: %s,", err, c, e.Error())
+	}
+	return err
 }
 
 func (f *Flowkit) ExecuteScript(ctx context.Context, script *Script) (cadence.Value, error) {
