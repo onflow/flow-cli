@@ -275,6 +275,9 @@ func (f *Flowkit) AddContract(
 	return sentTx.ID(), updateExisting, err
 }
 
+// RemoveContract from the provided account by its name.
+//
+// If removal is successful transaction ID is returned.
 func (f *Flowkit) RemoveContract(ctx context.Context, account *Account, contractName string) (flow.Identifier, error) {
 	// check if contracts exists on the account
 	flowAcc, err := f.gateway.GetAccount(account.Address())
