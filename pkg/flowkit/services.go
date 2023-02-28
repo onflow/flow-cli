@@ -46,7 +46,7 @@ type Services interface {
 	ExecuteScript(ctx context.Context, script *Script) (cadence.Value, error)
 	GetTransactionByID(ctx context.Context, ID flow.Identifier, waitSeal bool) (*flow.Transaction, *flow.TransactionResult, error)
 	GetTransactionsByBlockID(ctx context.Context, blockID flow.Identifier, waitSeal bool) ([]*flow.Transaction, []*flow.TransactionResult, error)
-	BuildTransaction(addresses *transactionAddresses, proposerKeyIndex int, script *Script, gasLimit uint64) (*Transaction, error)
+	BuildTransaction(addresses *TransactionAddressesRoles, proposerKeyIndex int, script *Script, gasLimit uint64) (*Transaction, error)
 	SignTransactionPayload(signer *Account, payload []byte) (*Transaction, error)
 	SendSignedTransaction(tx *Transaction) (*flow.Transaction, *flow.TransactionResult, error)
 	SendTransaction(accounts *transactionAccountRoles, script *Script, gasLimit uint64) (*flow.Transaction, *flow.TransactionResult, error)

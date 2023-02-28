@@ -686,6 +686,7 @@ func (f *Flowkit) ExecuteScript(ctx context.Context, script *Script) (cadence.Va
 	return f.gateway.ExecuteScript(program.Code(), script.Args)
 }
 
+// GetTransactionByID from the Flow network including the transaction result. Using the waitSeal we can wait for the transaction to be sealed.
 func (f *Flowkit) GetTransactionByID(ctx context.Context, ID flow.Identifier, waitSeal bool) (*flow.Transaction, *flow.TransactionResult, error) {
 	f.logger.StartProgress("Fetching Transaction...")
 
@@ -704,27 +705,170 @@ func (f *Flowkit) GetTransactionByID(ctx context.Context, ID flow.Identifier, wa
 	return tx, result, err
 }
 
-func (f *Flowkit) GetTransactionsByBlockID(ctx context.Context, blockID flow.Identifier, waitSeal bool) ([]*flow.Transaction, []*flow.TransactionResult, error) {
-	//TODO implement me
-	panic("implement me")
+func (f *Flowkit) GetTransactionsByBlockID(ctx context.Context, blockID flow.Identifier) ([]*flow.Transaction, []*flow.TransactionResult, error) {
+	tx, err := f.gateway.GetTransactionsByBlockID(blockID)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	txRes, err := f.gateway.GetTransactionResultsByBlockID(blockID)
+	if err != nil {
+		return nil, nil, err
+	}
+	return tx, txRes, nil
 }
 
-func (f *Flowkit) BuildTransaction(addresses *transactionAddresses, proposerKeyIndex int, script *Script, gasLimit uint64) (*Transaction, error) {
-	//TODO implement me
-	panic("implement me")
+// BuildTransaction builds a new transaction type for later signing and submitting to the network.
+//
+// TransactionAddressesRoles type defines the address for each role (payer, proposer, authorizers) and the script defines the transaction content.
+func (f *Flowkit) BuildTransaction(addresses *TransactionAddressesRoles, proposerKeyIndex int, script *Script, gasLimit uint64) (*Transaction, error) {
+	if f.state == nil {
+		return nil, fmt.Errorf("missing configuration, initialize it: flow state init")
+	}
+
+	latestBlock, err := f.gateway.GetLatestBlock()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get latest sealed block: %w", err)
+	}
+
+	proposerAccount, err := f.gateway.GetAccount(addresses.proposer)
+	if err != nil {
+		return nil, err
+	}
+
+	tx := NewTransaction().
+		SetPayer(addresses.payer).
+		SetGasLimit(gasLimit).
+		SetBlockReference(latestBlock)
+
+	program, err := project.NewProgram(script)
+	if err != nil {
+		return nil, err
+	}
+
+	if program.HasImports() {
+		if f.network.Name == "" { // todo replace with empty network type
+			return nil, fmt.Errorf("missing network, specify which network to use to resolve imports in transaction code")
+		}
+		if script.Location() == "" { // when used as lib with code we don't support imports
+			return nil, fmt.Errorf("resolving imports in transactions not supported")
+		}
+
+		contracts, err := f.state.DeploymentContractsByNetwork(f.network)
+		if err != nil {
+			return nil, err
+		}
+
+		importReplacer := project.NewImportReplacer(
+			contracts,
+			f.state.AliasesForNetwork(f.network),
+		)
+
+		program, err = importReplacer.Replace(program)
+		if err != nil {
+			return nil, fmt.Errorf("error resolving imports: %w", err)
+		}
+	}
+
+	if err := tx.SetProposer(proposerAccount, proposerKeyIndex); err != nil {
+		return nil, err
+	}
+
+	if err := tx.SetScriptWithArgs(program.Code(), script.Args); err != nil {
+		return nil, err
+	}
+
+	tx, err = tx.AddAuthorizers(addresses.authorizers)
+	if err != nil {
+		return nil, err
+	}
+
+	return tx, nil
 }
 
+// SignTransactionPayload will use the signer account provided and the payload raw byte content to sign it.
+//
+// The payload should be RLP encoded transaction payload and is suggested to be used in pair with BuildTransaction function.
 func (f *Flowkit) SignTransactionPayload(signer *Account, payload []byte) (*Transaction, error) {
-	//TODO implement me
-	panic("implement me")
+	if f.state == nil {
+		return nil, fmt.Errorf("missing configuration, initialize it: flow state init")
+	}
+
+	tx, err := NewTransactionFromPayload(payload)
+	if err != nil {
+		return nil, err
+	}
+
+	err = tx.SetSigner(signer)
+	if err != nil {
+		return nil, err
+	}
+
+	return tx.Sign()
 }
 
+// SendSignedTransaction will send a prebuilt and signed transaction to the Flow network.
+//
+// You can build the transaction using the BuildTransaction method and then sign it using the SignTranscation method.
 func (f *Flowkit) SendSignedTransaction(tx *Transaction) (*flow.Transaction, *flow.TransactionResult, error) {
-	//TODO implement me
-	panic("implement me")
+	f.logger.StartProgress(fmt.Sprintf("Sending transaction with ID: %s", tx.FlowTransaction().ID()))
+	defer f.logger.StopProgress()
+
+	sentTx, err := f.gateway.SendSignedTransaction(tx)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	res, err := f.gateway.GetTransactionResult(sentTx.ID(), true)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return sentTx, res, nil
 }
 
+// SendTransaction will build and send a transaction to the Flow network, using the accounts provided for each role and
+// contain the script. Transaction as well as transaction result will be returned in case the transaction is successfully submitted.
 func (f *Flowkit) SendTransaction(accounts *transactionAccountRoles, script *Script, gasLimit uint64) (*flow.Transaction, *flow.TransactionResult, error) {
-	//TODO implement me
-	panic("implement me")
+	if f.state == nil {
+		return nil, nil, fmt.Errorf("missing configuration, initialize it: flow state init")
+	}
+
+	tx, err := f.BuildTransaction(
+		accounts.toAddresses(),
+		accounts.proposer.Key().Index(),
+		script,
+		gasLimit,
+	)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	for _, signer := range accounts.getSigners() {
+		err = tx.SetSigner(signer)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		tx, err = tx.Sign()
+		if err != nil {
+			return nil, nil, err
+		}
+	}
+
+	f.logger.Info(fmt.Sprintf("Transaction ID: %s", tx.FlowTransaction().ID()))
+	f.logger.StartProgress("Sending transaction...")
+
+	sentTx, err := f.gateway.SendSignedTransaction(tx)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	f.logger.StopProgress()
+	f.logger.StartProgress("Waiting for transaction to be sealed...")
+	defer f.logger.StopProgress()
+
+	res, err := f.gateway.GetTransactionResult(sentTx.ID(), true)
+
+	return sentTx, res, err
 }

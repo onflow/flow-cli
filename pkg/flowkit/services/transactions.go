@@ -62,7 +62,6 @@ func (t *Transactions) GetTransactionsByBlockID(id flow.Identifier) ([]*flow.Tra
 }
 
 func (t *Transactions) GetTransactionResultsByBlockID(id flow.Identifier) ([]*flow.TransactionResult, error) {
-
 	tx, err := t.gateway.GetTransactionResultsByBlockID(id)
 	if err != nil {
 		return nil, err

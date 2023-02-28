@@ -387,13 +387,13 @@ type transactionAccountRoles struct {
 	payer       *Account
 }
 
-func (t *transactionAccountRoles) toAddresses() *transactionAddresses {
+func (t *transactionAccountRoles) toAddresses() *TransactionAddressesRoles {
 	auths := make([]flow.Address, len(t.authorizers))
 	for i, a := range t.authorizers {
 		auths[i] = a.Address()
 	}
 
-	return &transactionAddresses{
+	return &TransactionAddressesRoles{
 		proposer:    t.proposer.Address(),
 		authorizers: auths,
 		payer:       t.payer.Address(),
@@ -422,22 +422,10 @@ func (t *transactionAccountRoles) getSigners() []*Account {
 	return sigs
 }
 
-// NewTransactionAddresses defines transaction roles by account addresses.
+// TransactionAddressesRoles defines transaction roles by account addresses.
 //
 // You can read more about roles here: https://developers.flow.com/learn/concepts/accounts-and-keys
-func NewTransactionAddresses(
-	proposer flow.Address,
-	payer flow.Address,
-	authorizers []flow.Address,
-) *transactionAddresses {
-	return &transactionAddresses{
-		proposer:    proposer,
-		authorizers: authorizers,
-		payer:       payer,
-	}
-}
-
-type transactionAddresses struct {
+type TransactionAddressesRoles struct {
 	proposer    flow.Address
 	authorizers []flow.Address
 	payer       flow.Address
