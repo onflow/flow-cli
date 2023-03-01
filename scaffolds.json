@@ -19,8 +19,9 @@
   },
   {
     "name": "Mobile Unity Game",
-    "repo": "https://github.com/onflow/UnityFlowSDK/tree/main/Samples~/FlowWords",
+    "repo": "https://github.com/onflow/UnityFlowSDK.git",
     "description": "Example Unity game Flow words.",
-    "commit": "d01a4b14a98383c18b4d57e87624cb8dba6d0946"
+    "commit": "d01a4b14a98383c18b4d57e87624cb8dba6d0946",
+    "folder": "Samples~/FlowWords"
   }
 ]
