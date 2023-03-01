@@ -20,14 +20,14 @@
   {
     "name": "Simple Unity",
     "repo": "https://github.com/onflow/UnityFlowSDK.git",
-    "description": "Simple examples how to interact with Flow network using Unity SDK.",
+    "description": "Simple example demonstrating how to interact with the Flow network using Unity SDK.",
     "commit": "d01a4b14a98383c18b4d57e87624cb8dba6d0946",
     "folder": "Samples~/FlowControlQuickstartCodeSample"
   },
   {
     "name": "Mobile Unity Game",
     "repo": "https://github.com/onflow/UnityFlowSDK.git",
-    "description": "Example Unity words game built on Flow using the Unity SDK.",
+    "description": "Example words game built on Flow using the Unity SDK.",
     "commit": "d01a4b14a98383c18b4d57e87624cb8dba6d0946",
     "folder": "Samples~/FlowWords"
   }
