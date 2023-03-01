@@ -57,7 +57,7 @@ var SetupCommand = &command.Command{
 	Run:   create,
 }
 
-const scaffoldListURL = "https://raw.githubusercontent.com/onflow/flow-cli/7be54bad21bf52e38b91c5a4b5e21497f0f08af4/scaffolds.json"
+const scaffoldListURL = "https://raw.githubusercontent.com/onflow/flow-cli/master/scaffolds.json"
 
 type scaffold struct {
 	Repo        string `json:"repo"`
@@ -194,9 +194,11 @@ func cloneScaffold(targetDir string, conf scaffold) error {
 
 	// if we defined a folder remove everything else
 	if conf.Folder != "" {
-		folder := filepath.Join(targetDir, filepath.Dir(conf.Folder))
-
-		if err = os.Rename(folder, filepath.Join(targetDir, "../t")); err != nil {
+		err = os.Rename(
+			filepath.Join(targetDir, conf.Folder),
+			filepath.Join(targetDir, "../scaffold-temp"),
+		)
+		if err != nil {
 			return err
 		}
 
@@ -204,7 +206,7 @@ func cloneScaffold(targetDir string, conf scaffold) error {
 			return err
 		}
 
-		if err = os.Rename(filepath.Join(targetDir, "../t"), targetDir); err != nil {
+		if err = os.Rename(filepath.Join(targetDir, "../scaffold-temp"), targetDir); err != nil {
 			return err
 		}
 	}
