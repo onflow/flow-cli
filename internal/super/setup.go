@@ -57,7 +57,7 @@ var SetupCommand = &command.Command{
 	Run:   create,
 }
 
-const scaffoldListURL = "https://raw.githubusercontent.com/onflow/flow-cli/master/scaffolds.json"
+const scaffoldListURL = "https://raw.githubusercontent.com/onflow/flow-cli/7be54bad21bf52e38b91c5a4b5e21497f0f08af4/scaffolds.json"
 
 type scaffold struct {
 	Repo        string `json:"repo"`
@@ -65,6 +65,7 @@ type scaffold struct {
 	Name        string `json:"name"`
 	Description string `json:"description"`
 	Commit      string `json:"commit"`
+	Folder      string `json:"folder"`
 }
 
 func create(
@@ -179,7 +180,7 @@ func cloneScaffold(targetDir string, conf scaffold) error {
 		URL: conf.Repo,
 	})
 	if err != nil {
-		return fmt.Errorf("could not download the scaffold")
+		return fmt.Errorf("could not download the scaffold: %w", err)
 	}
 
 	worktree, _ := repo.Worktree()
@@ -189,6 +190,23 @@ func cloneScaffold(targetDir string, conf scaffold) error {
 	})
 	if err != nil {
 		return fmt.Errorf("could not find the scaffold version")
+	}
+
+	// if we defined a folder remove everything else
+	if conf.Folder != "" {
+		folder := filepath.Join(targetDir, filepath.Dir(conf.Folder))
+
+		if err = os.Rename(folder, filepath.Join(targetDir, "../t")); err != nil {
+			return err
+		}
+
+		if err = os.RemoveAll(targetDir); err != nil {
+			return err
+		}
+
+		if err = os.Rename(filepath.Join(targetDir, "../t"), targetDir); err != nil {
+			return err
+		}
 	}
 
 	return os.RemoveAll(filepath.Join(targetDir, ".git"))
