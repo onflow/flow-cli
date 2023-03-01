@@ -65,6 +65,7 @@ type scaffold struct {
 	Name        string `json:"name"`
 	Description string `json:"description"`
 	Commit      string `json:"commit"`
+	Folder      string `json:"folder"`
 }
 
 func create(
@@ -179,7 +180,7 @@ func cloneScaffold(targetDir string, conf scaffold) error {
 		URL: conf.Repo,
 	})
 	if err != nil {
-		return fmt.Errorf("could not download the scaffold")
+		return fmt.Errorf("could not download the scaffold: %w", err)
 	}
 
 	worktree, _ := repo.Worktree()
@@ -189,6 +190,25 @@ func cloneScaffold(targetDir string, conf scaffold) error {
 	})
 	if err != nil {
 		return fmt.Errorf("could not find the scaffold version")
+	}
+
+	// if we defined a folder remove everything else
+	if conf.Folder != "" {
+		err = os.Rename(
+			filepath.Join(targetDir, conf.Folder),
+			filepath.Join(targetDir, "../scaffold-temp"),
+		)
+		if err != nil {
+			return err
+		}
+
+		if err = os.RemoveAll(targetDir); err != nil {
+			return err
+		}
+
+		if err = os.Rename(filepath.Join(targetDir, "../scaffold-temp"), targetDir); err != nil {
+			return err
+		}
 	}
 
 	return os.RemoveAll(filepath.Join(targetDir, ".git"))
