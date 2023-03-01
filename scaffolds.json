@@ -16,5 +16,11 @@
     "repo": "https://github.com/onflow/scaffold-flow.git",
     "description": "Simple demo application using next.js and FCL with provided Cadence contracts.",
     "commit": "4158c5e11b6d2c9e1cbc99af597e3b42b2e6c193"
+  },
+  {
+    "name": "Mobile Unity Game",
+    "repo": "https://github.com/onflow/UnityFlowSDK/tree/main/Samples~/FlowWords",
+    "description": "Example Unity game Flow words.",
+    "commit": "d01a4b14a98383c18b4d57e87624cb8dba6d0946"
   }
 ]
