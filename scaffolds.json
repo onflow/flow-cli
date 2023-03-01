@@ -18,9 +18,16 @@
     "commit": "4158c5e11b6d2c9e1cbc99af597e3b42b2e6c193"
   },
   {
+    "name": "Simple Unity",
+    "repo": "https://github.com/onflow/UnityFlowSDK.git",
+    "description": "Simple examples how to interact with Flow network using Unity SDK.",
+    "commit": "d01a4b14a98383c18b4d57e87624cb8dba6d0946",
+    "folder": "Samples~/FlowControlQuickstartCodeSample"
+  },
+  {
     "name": "Mobile Unity Game",
     "repo": "https://github.com/onflow/UnityFlowSDK.git",
-    "description": "Example Unity game Flow words.",
+    "description": "Example Unity words game built on Flow using the Unity SDK.",
     "commit": "d01a4b14a98383c18b4d57e87624cb8dba6d0946",
     "folder": "Samples~/FlowWords"
   }
