@@ -3,6 +3,7 @@ package flowkit
 import (
 	"context"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"github.com/onflow/cadence"
 	jsoncdc "github.com/onflow/cadence/encoding/json"
@@ -694,7 +695,7 @@ func TestEvents(t *testing.T) {
 		t.Parallel()
 
 		_, flowkit, gw := setup()
-		_, err := s.Events.Get([]string{"flow.CreateAccount"}, 0, 0, 250, 1)
+		_, err := flowkit.GetEvents(ctx, []string{"flow.CreateAccount"}, 0, 0, nil)
 
 		assert.NoError(t, err)
 		gw.Mock.AssertCalled(t, tests.GetEventsFunc, "flow.CreateAccount", uint64(0), uint64(0))
@@ -703,8 +704,8 @@ func TestEvents(t *testing.T) {
 	t.Run("Should have larger endHeight then startHeight", func(t *testing.T) {
 		t.Parallel()
 
-		_, s, _ := setup()
-		_, err := s.Events.Get([]string{"flow.CreateAccount"}, 10, 0, 250, 1)
+		_, flowkit, _ := setup()
+		_, err := flowkit.GetEvents(ctx, []string{"flow.CreateAccount"}, 10, 0, nil)
 		assert.EqualError(t, err, "cannot have end height (0) of block range less that start height (10)")
 	})
 
@@ -728,7 +729,7 @@ func TestEvents(t *testing.T) {
 
 		gw.GetEvents.Return([]flow.BlockEvents{}, errors.New("failed getting event"))
 
-		_, err := s.Events.Get([]string{"flow.CreateAccount"}, 0, 1, 250, 1)
+		_, err := flowkit.GetEvents(ctx, []string{"flow.CreateAccount"}, 0, 1, nil)
 
 		assert.EqualError(t, err, "failed getting event")
 	})
