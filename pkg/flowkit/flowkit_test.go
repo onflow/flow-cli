@@ -501,18 +501,18 @@ func TestAccountsAddContract_Integration(t *testing.T) {
 		srvAcc, _ := state.EmulatorServiceAccount()
 
 		// prepare existing contract
-		_, _, err := s.Accounts.AddContract(
+		_, _, err := flowkit.AddContract(
+			ctx,
 			srvAcc,
 			resourceToContract(tests.ContractSimple),
-			"",
 			false,
 		)
 		assert.NoError(t, err)
 
-		_, _, err = s.Accounts.AddContract(
+		_, _, err = flowkit.AddContract(
+			ctx,
 			srvAcc,
 			resourceToContract(tests.ContractSimple),
-			"",
 			false,
 		)
 
@@ -526,10 +526,10 @@ func TestAccountsAddContractWithArgs(t *testing.T) {
 	srvAcc, _ := state.EmulatorServiceAccount()
 
 	//adding contract without argument should return an error
-	_, _, err := s.Accounts.AddContract(
+	_, _, err := flowkit.AddContract(
+		ctx,
 		srvAcc,
 		resourceToContract(tests.ContractSimpleWithArgs),
-		"",
 		false,
 	)
 	assert.Error(t, err)
@@ -538,10 +538,10 @@ func TestAccountsAddContractWithArgs(t *testing.T) {
 	c := resourceToContract(tests.ContractSimpleWithArgs)
 	c.Args = []cadence.Value{cadence.UInt64(4)}
 
-	_, _, err = s.Accounts.AddContract(srvAcc, c, "", false)
+	_, _, err = flowkit.AddContract(ctx, srvAcc, c, false)
 	assert.NoError(t, err)
 
-	acc, err := s.Accounts.Get(srvAcc.Address())
+	acc, err := flowkit.GetAccount(ctx, srvAcc.Address())
 	require.NoError(t, err)
 	assert.NotNil(t, acc)
 	assert.Equal(t, acc.Contracts["Simple"], tests.ContractSimpleWithArgs.Source)
@@ -555,10 +555,10 @@ func TestAccountsRemoveContract_Integration(t *testing.T) {
 
 	c := tests.ContractSimple
 	// prepare existing contract
-	_, _, err := s.Accounts.AddContract(
+	_, _, err := flowkit.AddContract(
+		ctx,
 		srvAcc,
 		NewScript(c.Source, nil, c.Filename),
-		"",
 		false,
 	)
 	assert.NoError(t, err)
@@ -566,10 +566,10 @@ func TestAccountsRemoveContract_Integration(t *testing.T) {
 	t.Run("Remove Contract", func(t *testing.T) {
 		t.Parallel()
 
-		_, err := s.Accounts.RemoveContract(srvAcc, tests.ContractSimple.Name)
+		_, err := flowkit.RemoveContract(ctx, srvAcc, tests.ContractSimple.Name)
 		require.NoError(t, err)
 
-		acc, err := s.Accounts.Get(srvAcc.Address())
+		acc, err := flowkit.GetAccount(ctx, srvAcc.Address())
 		require.NoError(t, err)
 		assert.Equal(t, acc.Contracts[tests.ContractSimple.Name], []byte(nil))
 	})
@@ -583,7 +583,7 @@ func TestAccountsGet_Integration(t *testing.T) {
 
 	t.Run("Get Account", func(t *testing.T) {
 		t.Parallel()
-		acc, err := s.Accounts.Get(srvAcc.Address())
+		acc, err := flowkit.GetAccount(ctx, srvAcc.Address())
 
 		assert.NoError(t, err)
 		assert.NotNil(t, acc)
@@ -593,7 +593,7 @@ func TestAccountsGet_Integration(t *testing.T) {
 	t.Run("Get Account Invalid", func(t *testing.T) {
 		t.Parallel()
 
-		acc, err := s.Accounts.Get(flow.HexToAddress("0x1"))
+		acc, err := flowkit.GetAccount(ctx, flow.HexToAddress("0x1"))
 		assert.Nil(t, acc)
 		assert.Equal(t, err.Error(), "could not find account with address 0000000000000001")
 	})
