@@ -1036,7 +1036,7 @@ func TestProject(t *testing.T) {
 			gw.SendSignedTransaction.Return(tests.NewTransaction(), nil)
 		})
 
-		contracts, err := s.Project.Deploy("emulator", false)
+		contracts, err := flowkit.DeployProject(ctx, false)
 
 		assert.NoError(t, err)
 		assert.Equal(t, len(contracts), 1)
@@ -1112,7 +1112,7 @@ func TestProject(t *testing.T) {
 			gw.SendSignedTransaction.Return(tests.NewTransaction(), nil)
 		})
 
-		contracts, err := s.Project.Deploy(emulator, false)
+		contracts, err := flowkit.DeployProject(ctx, false)
 
 		assert.NoError(t, err)
 		assert.Equal(t, len(contracts), 2)
@@ -1190,7 +1190,7 @@ func TestProject(t *testing.T) {
 			gw.SendSignedTransaction.Return(tests.NewTransaction(), nil)
 		})
 
-		contracts, err := s.Project.Deploy(emulator, false)
+		contracts, err := flowkit.DeployProject(ctx, false)
 
 		assert.NoError(t, err)
 		assert.Equal(t, len(contracts), 2)
@@ -1240,7 +1240,7 @@ func TestProject(t *testing.T) {
 			gw.SendSignedTransaction.Return(tests.NewTransaction(), nil)
 		})
 
-		contracts, err := s.Project.Deploy("emulator", false)
+		contracts, err := flowkit.DeployProject(ctx, false)
 
 		assert.NoError(t, err)
 		assert.Equal(t, len(contracts), 1)
@@ -1250,7 +1250,7 @@ func TestProject(t *testing.T) {
 }
 
 // used for integration tests
-func simpleDeploy(state *State, s *Services, update bool) ([]*project.Contract, error) {
+func simpleDeploy(state *State, flowkit Flowkit, update bool) ([]*project.Contract, error) {
 	srvAcc, _ := state.EmulatorServiceAccount()
 
 	c := config.Contract{
@@ -1275,7 +1275,7 @@ func simpleDeploy(state *State, s *Services, update bool) ([]*project.Contract, 
 	}
 	state.Deployments().AddOrUpdate(d)
 
-	return s.Project.Deploy(n.Name, update)
+	return flowkit.DeployProject(ctx, update)
 }
 
 func TestProject_Integration(t *testing.T) {
@@ -1285,7 +1285,7 @@ func TestProject_Integration(t *testing.T) {
 		t.Parallel()
 
 		state, flowkit := setupIntegration()
-		contracts, err := simpleDeploy(state, s, false)
+		contracts, err := simpleDeploy(state, flowkit, false)
 		assert.NoError(t, err)
 		assert.Len(t, contracts, 1)
 		assert.Equal(t, contracts[0].Name, tests.ContractHelloString.Name)
@@ -1339,10 +1339,10 @@ func TestProject_Integration(t *testing.T) {
 		})
 
 		// deploy contract imported as alias
-		_, _, err := s.Accounts.AddContract(
+		_, _, err := flowkit.AddContract(
+			ctx,
 			srvAcc,
 			NewScript(tests.ContractA.Source, nil, tests.ContractA.Filename),
-			n.Name,
 			false,
 		)
 		require.NoError(t, err)
@@ -1355,11 +1355,11 @@ func TestProject_Integration(t *testing.T) {
 			replacedContracts[i] = strings.ReplaceAll(replacedContracts[i], `"./contractB.cdc"`, addr)
 		}
 
-		contracts, err := s.Project.Deploy(n.Name, false)
+		contracts, err := flowkit.DeployProject(ctx, false)
 		assert.NoError(t, err)
 		assert.Len(t, contracts, 2)
 
-		account, err := s.Accounts.Get(srvAcc.Address())
+		account, err := flowkit.GetAccount(ctx, srvAcc.Address())
 
 		for i, c := range testContracts {
 			code, exists := account.Contracts[c.Name]
@@ -1373,10 +1373,10 @@ func TestProject_Integration(t *testing.T) {
 
 		// setup
 		state, flowkit := setupIntegration()
-		_, err := simpleDeploy(state, s, false)
+		_, err := simpleDeploy(state, flowkit, false)
 		assert.NoError(t, err)
 
-		_, err = simpleDeploy(state, s, true)
+		_, err = simpleDeploy(state, flowkit, true)
 		assert.NoError(t, err)
 	})
 
@@ -1395,9 +1395,9 @@ func TestScripts(t *testing.T) {
 		})
 
 		args := []cadence.Value{cadence.String("Foo")}
-		_, err := s.Scripts.Execute(
+		_, err := flowkit.ExecuteScript(
+			ctx,
 			NewScript(tests.ScriptArgString.Source, args, ""),
-			"",
 		)
 
 		assert.NoError(t, err)
@@ -1413,9 +1413,9 @@ func TestScripts_Integration(t *testing.T) {
 		_, flowkit := setupIntegration()
 
 		args := []cadence.Value{cadence.String("Foo")}
-		res, err := s.Scripts.Execute(
+		res, err := flowkit.ExecuteScript(
+			ctx,
 			NewScript(tests.ScriptArgString.Source, args, ""),
-			"",
 		)
 
 		assert.NoError(t, err)
@@ -1426,9 +1426,9 @@ func TestScripts_Integration(t *testing.T) {
 		t.Parallel()
 		_, flowkit := setupIntegration()
 		args := []cadence.Value{cadence.String("Foo")}
-		res, err := s.Scripts.Execute(
+		res, err := flowkit.ExecuteScript(
+			ctx,
 			NewScript(tests.ScriptWithError.Source, args, ""),
-			"",
 		)
 
 		assert.Error(t, err)
@@ -1464,16 +1464,16 @@ func TestScripts_Integration(t *testing.T) {
 			}},
 		}
 		state.Deployments().AddOrUpdate(d)
-		_, _, _ = s.Accounts.AddContract(
+		_, _, _ = flowkit.AddContract(
+			ctx,
 			srvAcc,
 			resourceToContract(tests.ContractHelloString),
-			"",
 			false,
 		)
 
-		res, err := s.Scripts.Execute(
+		res, err := flowkit.ExecuteScript(
+			ctx,
 			NewScript(tests.ScriptImport.Source, nil, tests.ScriptImport.Filename),
-			n.Name,
 		)
 		assert.NoError(t, err)
 		assert.Equal(t, res.String(), "\"Hello Hello, World!\"")
@@ -1482,22 +1482,17 @@ func TestScripts_Integration(t *testing.T) {
 	t.Run("Execute Script Invalid", func(t *testing.T) {
 		t.Parallel()
 		_, flowkit := setupIntegration()
-		in := [][]string{
-			{tests.ScriptImport.Filename, ""},
-			{"", "emulator"},
-			{tests.ScriptImport.Filename, "foo"},
-		}
+		in := []string{"", tests.ScriptImport.Filename}
 
 		out := []string{
-			"missing network, specify which network to use to resolve imports in script code",
 			"resolving imports in scripts not supported",
 			"import ./contractHello.cdc could not be resolved from provided contracts",
 		}
 
 		for x, i := range in {
-			_, err := s.Scripts.Execute(
-				NewScript(tests.ScriptImport.Source, nil, i[0]),
-				i[1],
+			_, err := flowkit.ExecuteScript(
+				ctx,
+				NewScript(tests.ScriptImport.Source, nil, i),
 			)
 			assert.NotNil(t, err)
 			assert.Equal(t, err.Error(), out[x])
@@ -1515,7 +1510,7 @@ func TestExecutingTests(t *testing.T) {
 		st, s, _ := setup()
 
 		script := tests.TestScriptSimple
-		results, err := s.Tests.Execute(script.Source, script.Filename, st.ReaderWriter())
+		results, err := flowkit.Execute(script.Source, script.Filename, st.ReaderWriter())
 
 		require.NoError(t, err)
 		require.Len(t, results, 1)
