@@ -1506,11 +1506,10 @@ func TestExecutingTests(t *testing.T) {
 
 	t.Run("simple", func(t *testing.T) {
 		t.Parallel()
-
-		st, s, _ := setup()
+		_, flowkit, _ := setup()
 
 		script := tests.TestScriptSimple
-		results, err := flowkit.Execute(script.Source, script.Filename, st.ReaderWriter())
+		results, err := flowkit.Test(ctx, script.Source, script.Filename)
 
 		require.NoError(t, err)
 		require.Len(t, results, 1)
@@ -1519,11 +1518,10 @@ func TestExecutingTests(t *testing.T) {
 
 	t.Run("simple failing", func(t *testing.T) {
 		t.Parallel()
-
-		st, s, _ := setup()
+		_, flowkit, _ := setup()
 
 		script := tests.TestScriptSimpleFailing
-		results, err := s.Tests.Execute(script.Source, script.Filename, st.ReaderWriter())
+		results, err := flowkit.Test(ctx, script.Source, script.Filename)
 
 		require.NoError(t, err)
 		require.Len(t, results, 1)
@@ -1535,9 +1533,7 @@ func TestExecutingTests(t *testing.T) {
 
 	t.Run("with import", func(t *testing.T) {
 		t.Parallel()
-
-		// Setup
-		st, s, _ := setup()
+		st, flowkit, _ := setup()
 
 		c := config.Contract{
 			Name:     tests.ContractHelloString.Name,
@@ -1547,7 +1543,7 @@ func TestExecutingTests(t *testing.T) {
 
 		// Execute script
 		script := tests.TestScriptWithImport
-		results, err := s.Tests.Execute(script.Source, script.Filename, st.ReaderWriter())
+		results, err := flowkit.Test(ctx, script.Source, script.Filename)
 
 		require.NoError(t, err)
 		require.Len(t, results, 1)
@@ -1556,9 +1552,8 @@ func TestExecutingTests(t *testing.T) {
 
 	t.Run("with file read", func(t *testing.T) {
 		t.Parallel()
+		st, flowkit, _ := setup()
 
-		// Setup
-		st, s, _ := setup()
 		readerWriter := st.ReaderWriter()
 		readerWriter.WriteFile(
 			tests.SomeFile.Filename,
@@ -1568,7 +1563,7 @@ func TestExecutingTests(t *testing.T) {
 
 		// Execute script
 		script := tests.TestScriptWithFileRead
-		results, err := s.Tests.Execute(script.Source, script.Filename, readerWriter)
+		results, err := flowkit.Test(ctx, script.Source, script.Filename)
 
 		require.NoError(t, err)
 		require.Len(t, results, 1)
