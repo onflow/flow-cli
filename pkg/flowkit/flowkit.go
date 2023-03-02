@@ -65,7 +65,7 @@ type Services interface {
 	SignTransactionPayload(signer *Account, payload []byte) (*Transaction, error)
 	SendSignedTransaction(tx *Transaction) (*flow.Transaction, *flow.TransactionResult, error)
 	SendTransaction(accounts *transactionAccountRoles, script *Script, gasLimit uint64) (*flow.Transaction, *flow.TransactionResult, error)
-	Test(code []byte, scriptPath string) (cdcTests.Results, error)
+	Test(ctx context.Context, code []byte, scriptPath string) (cdcTests.Results, error)
 }
 
 var _ Services = &Flowkit{}
@@ -951,7 +951,7 @@ func (f *Flowkit) SendTransaction(accounts *transactionAccountRoles, script *Scr
 }
 
 // Test Cadence code with the provided script path.
-func (f *Flowkit) Test(code []byte, scriptPath string) (cdcTests.Results, error) {
+func (f *Flowkit) Test(ctx context.Context, code []byte, scriptPath string) (cdcTests.Results, error) {
 	runner := cdcTests.NewTestRunner().
 		WithImportResolver(f.importResolver(scriptPath)).
 		WithFileResolver(f.fileResolver(scriptPath))
