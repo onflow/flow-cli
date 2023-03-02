@@ -618,23 +618,12 @@ func TestBlocks(t *testing.T) {
 
 		_, flowkit, gw := setup()
 
-		_, _, _, err := s.Blocks.GetBlock("latest", "flow.AccountCreated", false)
+		_, err := flowkit.GetBlock(ctx, BlockQuery{Latest: true})
 
 		gw.Mock.AssertCalled(t, tests.GetLatestBlockFunc)
-		gw.Mock.AssertCalled(t, tests.GetEventsFunc, "flow.AccountCreated", uint64(1), uint64(1))
 		gw.Mock.AssertNotCalled(t, tests.GetBlockByHeightFunc)
 		gw.Mock.AssertNotCalled(t, tests.GetBlockByIDFunc)
 		assert.NoError(t, err)
-	})
-
-	t.Run("Get latest block height", func(t *testing.T) {
-		t.Parallel()
-		_, flowkit, gw := setup()
-		height, err := s.Blocks.GetLatestBlockHeight()
-		gw.Mock.AssertCalled(t, tests.GetLatestBlockFunc)
-		assert.NoError(t, err)
-		assert.Equal(t, height, uint64(1))
-
 	})
 
 	t.Run("Get Block by Height", func(t *testing.T) {
@@ -646,10 +635,9 @@ func TestBlocks(t *testing.T) {
 		block.Height = 10
 		gw.GetBlockByHeight.Return(block, nil)
 
-		_, _, _, err := s.Blocks.GetBlock("10", "flow.AccountCreated", false)
+		_, err := flowkit.GetBlock(ctx, BlockQuery{Height: 10})
 
 		gw.Mock.AssertCalled(t, tests.GetBlockByHeightFunc, uint64(10))
-		gw.Mock.AssertCalled(t, tests.GetEventsFunc, "flow.AccountCreated", uint64(10), uint64(10))
 		gw.Mock.AssertNotCalled(t, tests.GetLatestBlockFunc)
 		gw.Mock.AssertNotCalled(t, tests.GetBlockByIDFunc)
 		assert.NoError(t, err)
@@ -657,15 +645,13 @@ func TestBlocks(t *testing.T) {
 
 	t.Run("Get Block by ID", func(t *testing.T) {
 		t.Parallel()
-
 		_, flowkit, gw := setup()
-		ID := "a310685082f0b09f2a148b2e8905f08ea458ed873596b53b200699e8e1f6536f"
 
-		_, _, _, err := s.Blocks.GetBlock(ID, "flow.AccountCreated", false)
+		ID := flow.HexToID("a310685082f0b09f2a148b2e8905f08ea458ed873596b53b200699e8e1f6536f")
+		_, err := flowkit.GetBlock(ctx, BlockQuery{ID: &ID})
 
 		assert.NoError(t, err)
-		gw.Mock.AssertCalled(t, tests.GetBlockByIDFunc, flow.HexToID(ID))
-		gw.Mock.AssertCalled(t, tests.GetEventsFunc, "flow.AccountCreated", uint64(1), uint64(1))
+		gw.Mock.AssertCalled(t, tests.GetBlockByIDFunc, ID)
 		gw.Mock.AssertNotCalled(t, tests.GetBlockByHeightFunc)
 		gw.Mock.AssertNotCalled(t, tests.GetLatestBlockFunc)
 	})
@@ -677,37 +663,13 @@ func TestBlocksGet_Integration(t *testing.T) {
 
 	t.Run("Get Block", func(t *testing.T) {
 		t.Parallel()
-
-		state, flowkit := setupIntegration()
-		srvAcc, _ := state.EmulatorServiceAccount()
-
-		block, blockEvents, collection, err := s.Blocks.GetBlock("latest", "", true)
-
-		assert.NoError(t, err)
-		assert.Nil(t, blockEvents)
-		assert.Equal(t, collection, []*flow.Collection{})
-		assert.Equal(t, block.Height, uint64(0))
-		assert.Equal(t, block.ID.String(), "03d40910037d575d52831647b39814f445bc8cc7ba8653286c0eb1473778c34f")
-
-		// create an event
-		_, _ = s.Accounts.Create(srvAcc, tests.PubKeys(), nil, tests.SigAlgos(), tests.HashAlgos(), nil)
-
-		block, blockEvents, _, err = s.Blocks.GetBlock("latest", "flow.AccountCreated", true)
-
-		assert.NoError(t, err)
-		assert.NotNil(t, block)
-
-		assert.Len(t, blockEvents, 1)
-		assert.Len(t, blockEvents[0].Events, 1)
-	})
-
-	t.Run("Get Block Invalid", func(t *testing.T) {
-		t.Parallel()
-
 		_, flowkit := setupIntegration()
 
-		_, _, _, err := s.Blocks.GetBlock("foo", "flow.AccountCreated", true)
-		assert.Equal(t, err.Error(), "invalid query: foo, valid are: \"latest\", block height or block ID")
+		block, err := flowkit.GetBlock(ctx, BlockQuery{Latest: true})
+
+		assert.NoError(t, err)
+		assert.Equal(t, block.Height, uint64(0))
+		assert.Equal(t, block.ID.String(), "03d40910037d575d52831647b39814f445bc8cc7ba8653286c0eb1473778c34f")
 	})
 }
 
@@ -718,7 +680,7 @@ func TestCollections(t *testing.T) {
 		_, flowkit, gw := setup()
 		ID := flow.HexToID("a310685082f0b09f2a148b2e8905f08ea458ed873596b53b200699e8e1f6536f")
 
-		_, err := s.Collections.Get(ID)
+		_, err := flowkit.GetCollection(ctx, ID)
 
 		assert.NoError(t, err)
 		gw.Mock.AssertCalled(t, "GetCollection", ID)
