@@ -744,7 +744,7 @@ func TestEvents_Integration(t *testing.T) {
 
 		_, flowkit := setupIntegration()
 
-		events, err := s.Events.Get([]string{"nonexisting"}, 0, 0, 250, 1)
+		events, err := flowkit.GetEvents(ctx, []string{"nonexisting"}, 0, 0, nil)
 		assert.NoError(t, err)
 		assert.Len(t, events, 1)
 		assert.Len(t, events[0].Events, 0)
@@ -757,17 +757,17 @@ func TestEvents_Integration(t *testing.T) {
 		srvAcc, _ := state.EmulatorServiceAccount()
 
 		// create events
-		_, _, err := s.Accounts.AddContract(
+		_, _, err := flowkit.AddContract(
+			ctx,
 			srvAcc,
 			resourceToContract(tests.ContractEvents),
-			"",
 			false,
 		)
 		assert.NoError(t, err)
 		assert.NoError(t, err)
 		for x := 'A'; x <= 'J'; x++ { // test contract emits events named from A to J
 			eName := fmt.Sprintf("A.%s.ContractEvents.Event%c", srvAcc.Address().String(), x)
-			events, err := s.Events.Get([]string{eName}, 0, 1, 250, 1)
+			events, err := flowkit.GetEvents(ctx, []string{eName}, 0, 1, nil)
 			assert.NoError(t, err)
 			assert.Len(t, events, 2)
 			assert.Len(t, events[1].Events, 1)
@@ -782,10 +782,10 @@ func TestEvents_Integration(t *testing.T) {
 		srvAcc, _ := state.EmulatorServiceAccount()
 
 		// create events
-		_, _, err := s.Accounts.AddContract(
+		_, _, err := flowkit.AddContract(
+			ctx,
 			srvAcc,
 			resourceToContract(tests.ContractEvents),
-			"",
 			false,
 		)
 		assert.NoError(t, err)
@@ -797,7 +797,10 @@ func TestEvents_Integration(t *testing.T) {
 			eventNames = append(eventNames, eName)
 		}
 
-		events, err := s.Events.Get(eventNames, 0, 1, 250, 5)
+		events, err := flowkit.GetEvents(ctx, eventNames, 0, 1, &EventWorker{
+			count:           5,
+			blocksPerWorker: 250,
+		})
 		assert.NoError(t, err)
 		assert.Len(t, events, 20)
 		assert.Len(t, events[1].Events, 1)
