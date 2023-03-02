@@ -56,6 +56,7 @@ type Services interface {
 	GetEvents(ctx context.Context, names []string, startHeight uint64, endHeight uint64, worker *EventWorker) ([]flow.BlockEvents, error)
 	GenerateKey(ctx context.Context, sigAlgo crypto.SignatureAlgorithm, inputSeed string) (crypto.PrivateKey, error)
 	GenerateMnemonicKey(ctx context.Context, sigAlgo crypto.SignatureAlgorithm, derivationPath string) (crypto.PrivateKey, string, error)
+	DerivePrivateKeyFromMnemonic(mnemonic string, sigAlgo crypto.SignatureAlgorithm, derivationPath string) (crypto.PrivateKey, error)
 	DeployProject(ctx context.Context, update bool) ([]*project.Contract, error)
 	ExecuteScript(ctx context.Context, script *Script) (cadence.Value, error)
 	GetTransactionByID(ctx context.Context, ID flow.Identifier, waitSeal bool) (*flow.Transaction, *flow.TransactionResult, error)
@@ -571,6 +572,16 @@ func (f *Flowkit) GenerateMnemonicKey(ctx context.Context, sigAlgo crypto.Signat
 	}
 
 	return key, mnemonic, nil
+}
+
+func (f *Flowkit) DerivePrivateKeyFromMnemonic(mnemonic string, sigAlgo crypto.SignatureAlgorithm, derivationPath string) (crypto.PrivateKey, error) {
+	if !bip39.IsMnemonicValid(mnemonic) {
+		return nil, fmt.Errorf("invalid mnemonic")
+	}
+
+	seed := bip39.NewSeed(mnemonic, "")
+
+	return f.derivePrivateKeyFromSeed(seed, sigAlgo, derivationPath)
 }
 
 func (f *Flowkit) derivePrivateKeyFromSeed(seed []byte, sigAlgo crypto.SignatureAlgorithm, derivationPath string) (crypto.PrivateKey, error) {
