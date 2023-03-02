@@ -1,6 +1,7 @@
 package services
 
 import (
+	"bytes"
 	"encoding/hex"
 	"fmt"
 	"github.com/onflow/cadence"
@@ -12,6 +13,8 @@ import (
 	tmpl "github.com/onflow/flow-core-contracts/lib/go/templates"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
+	"io"
+	"net/http"
 )
 
 // CLIServices interface defines functions that are used within the Flow CLI but are not useful to be
@@ -280,16 +283,53 @@ func (s *services) replaceStandardContractReferenceToAlias(standardContract stan
 }
 
 func (s *services) GetLatestProtocolStateSnapshot() ([]byte, error) {
-	//TODO implement me
-	panic("implement me")
+	s.logger.StartProgress("Downloading protocol snapshot...")
+
+	if !s.gateway.SecureConnection() {
+		s.logger.Info(fmt.Sprintf("%s warning: using insecure client connection to download snapshot, you should use a secure network configuration...", output.WarningEmoji()))
+	}
+
+	b, err := s.gateway.GetLatestProtocolStateSnapshot()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get latest finalized protocol snapshot from gateway: %w", err)
+	}
+
+	s.logger.StopProgress()
+
+	return b, nil
 }
 
 func (s *services) GetRLPTransaction(rlpUrl string) ([]byte, error) {
-	//TODO implement me
-	panic("implement me")
+	client := http.Client{
+		CheckRedirect: func(r *http.Request, via []*http.Request) error {
+			r.URL.Opaque = r.URL.Path
+			return nil
+		},
+	}
+	resp, err := client.Get(rlpUrl)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("error downloading RLP identifier")
+	}
+
+	return io.ReadAll(resp.Body)
 }
 
 func (s *services) PostRLPTransaction(rlpUrl string, tx *flow.Transaction) error {
-	//TODO implement me
-	panic("implement me")
+	signedRlp := hex.EncodeToString(tx.Encode())
+	resp, err := http.Post(rlpUrl, "application/text", bytes.NewBufferString(signedRlp))
+
+	if err != nil {
+		return err
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("error posting signed RLP")
+	}
+
+	return nil
 }
