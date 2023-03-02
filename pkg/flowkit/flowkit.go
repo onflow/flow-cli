@@ -37,6 +37,13 @@ func (f *Flowkit) Network() config.Network {
 	return f.network // todo define empty network type in config config.EmptyNetwork
 }
 
+func (f *Flowkit) State() (*State, error) {
+	if f.state == nil {
+		return nil, config.ErrDoesNotExist
+	}
+	return f.state, nil
+}
+
 func (f *Flowkit) Ping() (config.Network, error) {
 	err := f.gateway.Ping()
 	if err != nil {
@@ -61,10 +68,6 @@ func (f *Flowkit) GetAccount(ctx context.Context, address flow.Address) (*flow.A
 //
 // Keys is a slice but only one can be passed as well. If the transaction fails or there are other issues an error is returned.
 func (f *Flowkit) CreateAccount(ctx context.Context, signer *Account, keys []Key) (*flow.Account, flow.Identifier, error) {
-	if f.state == nil {
-		return nil, flow.EmptyID, config.ErrDoesNotExist
-	}
-
 	var accKeys []*flow.AccountKey
 	for _, k := range keys {
 		if k.weight == 0 { // if key weight is specified
@@ -173,20 +176,25 @@ func (f *Flowkit) AddContract(
 	contract *Script,
 	updateExisting bool,
 ) (flow.Identifier, bool, error) {
+	state, err := f.State()
+	if err != nil {
+		return flow.EmptyID, false, err
+	}
+
 	program, err := project.NewProgram(contract)
 	if err != nil {
 		return flow.EmptyID, false, err
 	}
 
 	if program.HasImports() {
-		contracts, err := f.state.DeploymentContractsByNetwork(f.network)
+		contracts, err := state.DeploymentContractsByNetwork(f.network)
 		if err != nil {
 			return flow.EmptyID, false, err
 		}
 
 		importReplacer := project.NewImportReplacer(
 			contracts,
-			f.state.AliasesForNetwork(f.network),
+			state.AliasesForNetwork(f.network),
 		)
 
 		program, err = importReplacer.Replace(program)
@@ -552,16 +560,17 @@ func (f *Flowkit) GenerateMnemonicKey(ctx context.Context, sigAlgo crypto.Signat
 // Retrieve all the contracts for specified network, sort them for deployment deploy one by one and replace
 // the imports in the contract source, so it corresponds to the account name the contract was deployed to.
 func (f *Flowkit) DeployProject(ctx context.Context, update bool) ([]*project.Contract, error) {
-	if f.state == nil {
-		return nil, config.ErrDoesNotExist
-	}
-
-	contracts, err := f.state.DeploymentContractsByNetwork(f.network)
+	state, err := f.State()
 	if err != nil {
 		return nil, err
 	}
 
-	deployment, err := project.NewDeployment(contracts, f.state.AliasesForNetwork(f.network))
+	contracts, err := state.DeploymentContractsByNetwork(f.network)
+	if err != nil {
+		return nil, err
+	}
+
+	deployment, err := project.NewDeployment(contracts, state.AliasesForNetwork(f.network))
 	if err != nil {
 		return nil, err
 	}
@@ -574,13 +583,13 @@ func (f *Flowkit) DeployProject(ctx context.Context, update bool) ([]*project.Co
 	f.logger.Info(fmt.Sprintf(
 		"\nDeploying %d contracts for accounts: %s\n",
 		len(sorted),
-		f.state.AccountsForNetwork(f.network).String(),
+		state.AccountsForNetwork(f.network).String(),
 	))
 	defer f.logger.StopProgress()
 
 	deployErr := &ProjectDeploymentError{}
 	for _, contract := range sorted {
-		targetAccount, err := f.state.Accounts().ByName(contract.AccountName)
+		targetAccount, err := state.Accounts().ByName(contract.AccountName)
 		if err != nil {
 			return nil, fmt.Errorf("target account for deploying contract not found in configuration")
 		}
@@ -651,23 +660,28 @@ func (d *ProjectDeploymentError) Error() string {
 
 // ExecuteScript on the Flow network and return the Cadence value as a result.
 func (f *Flowkit) ExecuteScript(ctx context.Context, script *Script) (cadence.Value, error) {
+	state, err := f.State()
+	if err != nil {
+		return nil, err
+	}
+
 	program, err := project.NewProgram(script)
 	if err != nil {
 		return nil, err
 	}
 
 	if program.HasImports() {
-		contracts, err := f.state.DeploymentContractsByNetwork(f.network)
+		contracts, err := state.DeploymentContractsByNetwork(f.network)
 		if err != nil {
 			return nil, err
 		}
 
 		importReplacer := project.NewImportReplacer(
 			contracts,
-			f.state.AliasesForNetwork(f.network),
+			state.AliasesForNetwork(f.network),
 		)
 
-		if f.state == nil {
+		if state == nil {
 			return nil, config.ErrDoesNotExist
 		}
 		if f.network.Name == "" { // todo define empty network
@@ -722,8 +736,9 @@ func (f *Flowkit) GetTransactionsByBlockID(ctx context.Context, blockID flow.Ide
 //
 // TransactionAddressesRoles type defines the address for each role (payer, proposer, authorizers) and the script defines the transaction content.
 func (f *Flowkit) BuildTransaction(addresses *TransactionAddressesRoles, proposerKeyIndex int, script *Script, gasLimit uint64) (*Transaction, error) {
-	if f.state == nil {
-		return nil, fmt.Errorf("missing configuration, initialize it: flow state init")
+	state, err := f.State()
+	if err != nil {
+		return nil, err
 	}
 
 	latestBlock, err := f.gateway.GetLatestBlock()
@@ -754,14 +769,14 @@ func (f *Flowkit) BuildTransaction(addresses *TransactionAddressesRoles, propose
 			return nil, fmt.Errorf("resolving imports in transactions not supported")
 		}
 
-		contracts, err := f.state.DeploymentContractsByNetwork(f.network)
+		contracts, err := state.DeploymentContractsByNetwork(f.network)
 		if err != nil {
 			return nil, err
 		}
 
 		importReplacer := project.NewImportReplacer(
 			contracts,
-			f.state.AliasesForNetwork(f.network),
+			state.AliasesForNetwork(f.network),
 		)
 
 		program, err = importReplacer.Replace(program)
@@ -790,10 +805,6 @@ func (f *Flowkit) BuildTransaction(addresses *TransactionAddressesRoles, propose
 //
 // The payload should be RLP encoded transaction payload and is suggested to be used in pair with BuildTransaction function.
 func (f *Flowkit) SignTransactionPayload(signer *Account, payload []byte) (*Transaction, error) {
-	if f.state == nil {
-		return nil, fmt.Errorf("missing configuration, initialize it: flow state init")
-	}
-
 	tx, err := NewTransactionFromPayload(payload)
 	if err != nil {
 		return nil, err
@@ -830,10 +841,6 @@ func (f *Flowkit) SendSignedTransaction(tx *Transaction) (*flow.Transaction, *fl
 // SendTransaction will build and send a transaction to the Flow network, using the accounts provided for each role and
 // contain the script. Transaction as well as transaction result will be returned in case the transaction is successfully submitted.
 func (f *Flowkit) SendTransaction(accounts *transactionAccountRoles, script *Script, gasLimit uint64) (*flow.Transaction, *flow.TransactionResult, error) {
-	if f.state == nil {
-		return nil, nil, fmt.Errorf("missing configuration, initialize it: flow state init")
-	}
-
 	tx, err := f.BuildTransaction(
 		accounts.toAddresses(),
 		accounts.proposer.Key().Index(),
