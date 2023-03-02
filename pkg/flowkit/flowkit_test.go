@@ -1585,7 +1585,7 @@ func TestTransactions(t *testing.T) {
 		_, flowkit, gw := setup()
 		txs := tests.NewTransaction()
 
-		_, _, err := s.Transactions.GetStatus(txs.ID(), true)
+		_, _, err := flowkit.GetTransactionByID(ctx, txs.ID(), true)
 
 		assert.NoError(t, err)
 		gw.Mock.AssertNumberOfCalls(t, tests.GetTransactionResultFunc, 1)
@@ -1615,7 +1615,8 @@ func TestTransactions(t *testing.T) {
 			gw.GetTransactionResult.Return(tests.NewTransactionResult(nil), nil)
 		})
 
-		_, _, err := s.Transactions.Send(
+		_, _, err := flowkit.SendTransaction(
+			ctx,
 			NewSingleTransactionAccount(serviceAcc),
 			NewScript(
 				tests.TransactionArgString.Source,
@@ -1623,7 +1624,6 @@ func TestTransactions(t *testing.T) {
 				"",
 			),
 			gasLimit,
-			"",
 		)
 
 		assert.NoError(t, err)
@@ -1633,29 +1633,31 @@ func TestTransactions(t *testing.T) {
 
 }
 
-func setupAccounts(state *State, s *Services) {
-	setupAccount(state, s, tests.Alice())
-	setupAccount(state, s, tests.Bob())
-	setupAccount(state, s, tests.Charlie())
+func setupAccounts(state *State, flowkit Flowkit) {
+	setupAccount(state, flowkit, tests.Alice())
+	setupAccount(state, flowkit, tests.Bob())
+	setupAccount(state, flowkit, tests.Charlie())
 }
 
-func setupAccount(state *State, s *Services, account *Account) {
+func setupAccount(state *State, flowkit Flowkit, account *Account) {
 	srv, _ := state.EmulatorServiceAccount()
 
 	key := account.Key()
 	pk, _ := key.PrivateKey()
-	acc, _ := s.Accounts.Create(srv,
-		[]crypto.PublicKey{(*pk).PublicKey()},
-		[]int{flow.AccountKeyWeightThreshold},
-		[]crypto.SignatureAlgorithm{key.SigAlgo()},
-		[]crypto.HashAlgorithm{key.HashAlgo()},
-		nil,
+	acc, _, _ := flowkit.CreateAccount(
+		ctx,
+		srv,
+		[]Key{{
+			(*pk).PublicKey(),
+			flow.AccountKeyWeightThreshold,
+			key.SigAlgo(),
+			key.HashAlgo(),
+		}},
 	)
 
-	newAcc :=
-		NewAccount(account.Name()).
-			SetAddress(acc.Address).
-			SetKey(key)
+	newAcc := NewAccount(account.Name()).
+		SetAddress(acc.Address).
+		SetKey(key)
 
 	state.Accounts().AddOrUpdate(newAcc)
 }
@@ -1663,7 +1665,7 @@ func setupAccount(state *State, s *Services, account *Account) {
 func Test_TransactionRoles(t *testing.T) {
 	t.Run("Building Signers", func(t *testing.T) {
 		state, flowkit := setupIntegration()
-		setupAccounts(state, s)
+		setupAccounts(state, flowkit)
 		a, _ := state.Accounts().ByName("Alice")
 		b, _ := state.Accounts().ByName("Bob")
 		c, _ := state.Accounts().ByName("Charlie")
@@ -1739,7 +1741,7 @@ func Test_TransactionRoles(t *testing.T) {
 
 	t.Run("Building Addresses", func(t *testing.T) {
 		state, flowkit := setupIntegration()
-		setupAccounts(state, s)
+		setupAccounts(state, flowkit)
 		a, _ := state.Accounts().ByName("Alice")
 		b, _ := state.Accounts().ByName("Bob")
 		c, _ := state.Accounts().ByName("Charlie")
@@ -1763,8 +1765,8 @@ func TestTransactions_Integration(t *testing.T) {
 
 	t.Run("Build Transaction", func(t *testing.T) {
 		t.Parallel()
-		state, flowkit := setupIntegration()
-		setupAccounts(state, s)
+		state, f := setupIntegration()
+		setupAccounts(state, f)
 
 		type txIn struct {
 			prop    flow.Address
@@ -1808,12 +1810,16 @@ func TestTransactions_Integration(t *testing.T) {
 		}}
 
 		for i, txIn := range txIns {
-			tx, err := s.Transactions.Build(
-				NewTransactionAddresses(txIn.prop, txIn.payer, txIn.auth),
+			tx, err := f.BuildTransaction(
+				ctx,
+				&TransactionAddressesRoles{
+					proposer:    txIn.prop,
+					authorizers: txIn.auth,
+					payer:       txIn.payer,
+				},
 				txIn.index,
 				NewScript(txIn.code, txIn.args, txIn.file),
 				txIn.gas,
-				txIn.network,
 			)
 
 			require.NoError(t, err, fmt.Sprintf("test vector %d", i))
@@ -1830,7 +1836,7 @@ func TestTransactions_Integration(t *testing.T) {
 	t.Run("Build Transaction with Imports", func(t *testing.T) {
 		t.Parallel()
 		state, flowkit := setupIntegration()
-		setupAccounts(state, s)
+		setupAccounts(state, flowkit)
 
 		srvAcc, _ := state.EmulatorServiceAccount()
 		signer := srvAcc.Address()
@@ -1857,19 +1863,23 @@ func TestTransactions_Integration(t *testing.T) {
 			}},
 		}
 		state.Deployments().AddOrUpdate(d)
-		_, _, _ = s.Accounts.AddContract(
+		_, _, _ = flowkit.AddContract(
+			ctx,
 			srvAcc,
 			resourceToContract(tests.ContractHelloString),
-			"",
 			false,
 		)
 
-		tx, err := s.Transactions.Build(
-			NewTransactionAddresses(signer, signer, []flow.Address{signer}),
+		tx, err := flowkit.BuildTransaction(
+			ctx,
+			&TransactionAddressesRoles{
+				signer,
+				[]flow.Address{signer},
+				signer,
+			},
 			srvAcc.Key().Index(),
 			NewScript(tests.TransactionImports.Source, nil, tests.TransactionImports.Filename),
 			flow.DefaultTransactionGasLimit,
-			n.Name,
 		)
 
 		assert.NoError(t, err)
@@ -1887,22 +1897,27 @@ func TestTransactions_Integration(t *testing.T) {
 	t.Run("Sign transaction", func(t *testing.T) {
 		t.Parallel()
 		state, flowkit := setupIntegration()
-		setupAccounts(state, s)
+		setupAccounts(state, flowkit)
 
 		a, _ := state.Accounts().ByName("Alice")
 
-		tx, err := s.Transactions.Build(
-			NewTransactionAddresses(a.Address(), a.Address(), nil),
+		tx, err := flowkit.BuildTransaction(
+			ctx,
+			&TransactionAddressesRoles{
+				a.Address(),
+				nil,
+				a.Address(),
+			},
 			0,
 			NewScript(tests.TransactionSimple.Source, nil, tests.TransactionSimple.Filename),
 			flow.DefaultTransactionGasLimit,
-			"",
 		)
 
 		assert.Nil(t, err)
 		assert.NotNil(t, tx)
 
-		txSigned, err := s.Transactions.Sign(
+		txSigned, err := flowkit.SignTransactionPayload(
+			ctx,
 			a,
 			[]byte(fmt.Sprintf("%x", tx.FlowTransaction().Encode())),
 		)
@@ -1918,29 +1933,34 @@ func TestTransactions_Integration(t *testing.T) {
 	t.Run("Build, Sign and Send Transaction", func(t *testing.T) {
 		t.Parallel()
 		state, flowkit := setupIntegration()
-		setupAccounts(state, s)
+		setupAccounts(state, flowkit)
 
 		a, _ := state.Accounts().ByName("Alice")
 
-		tx, err := s.Transactions.Build(
-			NewTransactionAddresses(a.Address(), a.Address(), []flow.Address{a.Address()}),
+		tx, err := flowkit.BuildTransaction(
+			ctx,
+			&TransactionAddressesRoles{
+				a.Address(),
+				[]flow.Address{a.Address()},
+				a.Address(),
+			},
 			0,
 			NewScript(tests.TransactionSingleAuth.Source, nil, tests.TransactionSingleAuth.Filename),
 			flow.DefaultTransactionGasLimit,
-			"",
 		)
 
 		assert.Nil(t, err)
 		assert.NotNil(t, tx)
 
-		txSigned, err := s.Transactions.Sign(
+		txSigned, err := flowkit.SignTransactionPayload(
+			ctx,
 			a,
 			[]byte(fmt.Sprintf("%x", tx.FlowTransaction().Encode())),
 		)
 		assert.Nil(t, err)
 		assert.NotNil(t, txSigned)
 
-		txSent, txResult, err := s.Transactions.SendSigned(txSigned)
+		txSent, txResult, err := flowkit.SendSignedTransaction(ctx, txSigned)
 		assert.Nil(t, err)
 		assert.Equal(t, txResult.Status, flow.TransactionStatusSealed)
 		assert.NotNil(t, txSent.ID())
@@ -1950,16 +1970,20 @@ func TestTransactions_Integration(t *testing.T) {
 	t.Run("Fails signing transaction, wrong account", func(t *testing.T) {
 		t.Parallel()
 		state, flowkit := setupIntegration()
-		setupAccounts(state, s)
+		setupAccounts(state, flowkit)
 
 		a, _ := state.Accounts().ByName("Alice")
 
-		tx, err := s.Transactions.Build(
-			NewTransactionAddresses(a.Address(), a.Address(), []flow.Address{a.Address()}),
+		tx, err := flowkit.BuildTransaction(
+			ctx,
+			&TransactionAddressesRoles{
+				a.Address(),
+				[]flow.Address{a.Address()},
+				a.Address(),
+			},
 			0,
 			NewScript(tests.TransactionSingleAuth.Source, nil, tests.TransactionSingleAuth.Filename),
 			flow.DefaultTransactionGasLimit,
-			"",
 		)
 
 		assert.Nil(t, err)
@@ -1968,7 +1992,8 @@ func TestTransactions_Integration(t *testing.T) {
 		// sign with wrong account
 		a, _ = state.Accounts().ByName("Bob")
 
-		txSigned, err := s.Transactions.Sign(
+		txSigned, err := flowkit.SignTransactionPayload(
+			ctx,
 			a,
 			[]byte(fmt.Sprintf("%x", tx.FlowTransaction().Encode())),
 		)
@@ -1979,16 +2004,20 @@ func TestTransactions_Integration(t *testing.T) {
 	t.Run("Fails building, authorizers mismatch", func(t *testing.T) {
 		t.Parallel()
 		state, flowkit := setupIntegration()
-		setupAccounts(state, s)
+		setupAccounts(state, flowkit)
 
 		a, _ := state.Accounts().ByName("Alice")
 
-		tx, err := s.Transactions.Build(
-			NewTransactionAddresses(a.Address(), a.Address(), []flow.Address{a.Address()}),
+		tx, err := flowkit.BuildTransaction(
+			ctx,
+			&TransactionAddressesRoles{
+				proposer:    a.Address(),
+				authorizers: []flow.Address{a.Address()},
+				payer:       a.Address(),
+			},
 			0,
 			NewScript(tests.TransactionTwoAuth.Source, nil, tests.TransactionTwoAuth.Filename),
 			flow.DefaultTransactionGasLimit,
-			"",
 		)
 
 		assert.EqualError(t, err, "provided authorizers length mismatch, required authorizers 2, but provided 1")
@@ -2000,18 +2029,18 @@ func TestTransactions_Integration(t *testing.T) {
 	t.Run("Send Transaction No Auths", func(t *testing.T) {
 		t.Parallel()
 		state, flowkit := setupIntegration()
-		setupAccounts(state, s)
+		setupAccounts(state, flowkit)
 
 		a, _ := state.Accounts().ByName("Alice")
 
-		tx, txr, err := s.Transactions.Send(
+		tx, txr, err := flowkit.SendTransaction(
+			ctx,
 			&transactionAccountRoles{
 				proposer: a,
 				payer:    a,
 			},
 			NewScript(tests.TransactionSimple.Source, nil, tests.TransactionSimple.Filename),
 			flow.DefaultTransactionGasLimit,
-			"",
 		)
 		assert.NoError(t, err)
 		assert.Equal(t, tx.Payer.String(), a.Address().String())
@@ -2023,15 +2052,15 @@ func TestTransactions_Integration(t *testing.T) {
 	t.Run("Send Transaction With Auths", func(t *testing.T) {
 		t.Parallel()
 		state, flowkit := setupIntegration()
-		setupAccounts(state, s)
+		setupAccounts(state, flowkit)
 
 		a, _ := state.Accounts().ByName("Alice")
 
-		tx, txr, err := s.Transactions.Send(
+		tx, txr, err := flowkit.SendTransaction(
+			ctx,
 			NewSingleTransactionAccount(a),
 			NewScript(tests.TransactionSingleAuth.Source, nil, tests.TransactionSingleAuth.Filename),
 			flow.DefaultTransactionGasLimit,
-			"",
 		)
 		assert.NoError(t, err)
 		assert.Equal(t, tx.Payer.String(), a.Address().String())
@@ -2043,7 +2072,7 @@ func TestTransactions_Integration(t *testing.T) {
 	t.Run("Send Transaction multiple account roles", func(t *testing.T) {
 		t.Parallel()
 		state, flowkit := setupIntegration()
-		setupAccounts(state, s)
+		setupAccounts(state, flowkit)
 
 		a, _ := state.Accounts().ByName("Alice")
 		b, _ := state.Accounts().ByName("Bob")
@@ -2052,11 +2081,11 @@ func TestTransactions_Integration(t *testing.T) {
 		roles, err := NewTransactionAccountRoles(a, b, []*Account{c})
 		require.NoError(t, err)
 
-		tx, txr, err := s.Transactions.Send(
+		tx, txr, err := flowkit.SendTransaction(
+			ctx,
 			roles,
 			NewScript(tests.TransactionSingleAuth.Source, nil, tests.TransactionSingleAuth.Filename),
 			flow.DefaultTransactionGasLimit,
-			"",
 		)
 		assert.NoError(t, err)
 		assert.Equal(t, tx.Payer.String(), b.Address().String())
@@ -2069,7 +2098,7 @@ func TestTransactions_Integration(t *testing.T) {
 	t.Run("Send Transaction two account roles", func(t *testing.T) {
 		t.Parallel()
 		state, flowkit := setupIntegration()
-		setupAccounts(state, s)
+		setupAccounts(state, flowkit)
 
 		a, _ := state.Accounts().ByName("Alice")
 		b, _ := state.Accounts().ByName("Bob")
@@ -2077,11 +2106,11 @@ func TestTransactions_Integration(t *testing.T) {
 		roles, err := NewTransactionAccountRoles(a, b, []*Account{a})
 		require.NoError(t, err)
 
-		tx, txr, err := s.Transactions.Send(
+		tx, txr, err := flowkit.SendTransaction(
+			ctx,
 			roles,
 			NewScript(tests.TransactionSingleAuth.Source, nil, tests.TransactionSingleAuth.Filename),
 			flow.DefaultTransactionGasLimit,
-			"",
 		)
 		assert.NoError(t, err)
 		assert.Equal(t, tx.Payer.String(), b.Address().String())
@@ -2094,11 +2123,12 @@ func TestTransactions_Integration(t *testing.T) {
 	t.Run("Send Transaction with arguments", func(t *testing.T) {
 		t.Parallel()
 		state, flowkit := setupIntegration()
-		setupAccounts(state, s)
+		setupAccounts(state, flowkit)
 
 		a, _ := state.Accounts().ByName("Alice")
 
-		tx, txr, err := s.Transactions.Send(
+		tx, txr, err := flowkit.SendTransaction(
+			ctx,
 			NewSingleTransactionAccount(a),
 			NewScript(
 				tests.TransactionArgString.Source,
@@ -2108,7 +2138,6 @@ func TestTransactions_Integration(t *testing.T) {
 				tests.TransactionArgString.Filename,
 			),
 			flow.DefaultTransactionGasLimit,
-			"",
 		)
 		assert.NoError(t, err)
 		assert.Equal(t, tx.Payer.String(), a.Address().String())
@@ -2121,11 +2150,12 @@ func TestTransactions_Integration(t *testing.T) {
 	t.Run("Send transaction with multiple func declaration", func(t *testing.T) {
 		t.Parallel()
 		state, flowkit := setupIntegration()
-		setupAccounts(state, s)
+		setupAccounts(state, flowkit)
 
 		a, _ := state.Accounts().ByName("Alice")
 
-		tx, txr, err := s.Transactions.Send(
+		tx, txr, err := flowkit.SendTransaction(
+			ctx,
 			NewSingleTransactionAccount(a),
 			NewScript(
 				tests.TransactionMultipleDeclarations.Source,
@@ -2133,7 +2163,6 @@ func TestTransactions_Integration(t *testing.T) {
 				tests.TransactionMultipleDeclarations.Filename,
 			),
 			flow.DefaultTransactionGasLimit,
-			"",
 		)
 		assert.NoError(t, err)
 		assert.Equal(t, tx.Payer.String(), a.Address().String())
