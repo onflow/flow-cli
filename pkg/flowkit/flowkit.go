@@ -440,6 +440,13 @@ func (f *Flowkit) GetEvents(ctx context.Context, names []string, startHeight uin
 	f.logger.StartProgress("Fetching events...")
 	defer f.logger.StopProgress()
 
+	if worker == nil { // if no worker is passed, create a default one
+		worker = &EventWorker{
+			count:           1,
+			blocksPerWorker: 250,
+		}
+	}
+
 	queries := makeEventQueries(names, startHeight, endHeight, worker.blocksPerWorker)
 
 	jobChan := make(chan grpc.EventRangeQuery, worker.count)
