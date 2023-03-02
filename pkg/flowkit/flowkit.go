@@ -61,10 +61,10 @@ type Services interface {
 	ExecuteScript(ctx context.Context, script *Script) (cadence.Value, error)
 	GetTransactionByID(ctx context.Context, ID flow.Identifier, waitSeal bool) (*flow.Transaction, *flow.TransactionResult, error)
 	GetTransactionsByBlockID(ctx context.Context, blockID flow.Identifier, waitSeal bool) ([]*flow.Transaction, []*flow.TransactionResult, error)
-	BuildTransaction(addresses *TransactionAddressesRoles, proposerKeyIndex int, script *Script, gasLimit uint64) (*Transaction, error)
-	SignTransactionPayload(signer *Account, payload []byte) (*Transaction, error)
-	SendSignedTransaction(tx *Transaction) (*flow.Transaction, *flow.TransactionResult, error)
-	SendTransaction(accounts *transactionAccountRoles, script *Script, gasLimit uint64) (*flow.Transaction, *flow.TransactionResult, error)
+	BuildTransaction(ctx context.Context, addresses *TransactionAddressesRoles, proposerKeyIndex int, script *Script, gasLimit uint64) (*Transaction, error)
+	SignTransactionPayload(ctx context.Context, signer *Account, payload []byte) (*Transaction, error)
+	SendSignedTransaction(ctx context.Context, tx *Transaction) (*flow.Transaction, *flow.TransactionResult, error)
+	SendTransaction(ctx context.Context, accounts *transactionAccountRoles, script *Script, gasLimit uint64) (*flow.Transaction, *flow.TransactionResult, error)
 	Test(ctx context.Context, code []byte, scriptPath string) (cdcTests.Results, error)
 }
 
@@ -805,7 +805,7 @@ func (f *Flowkit) GetTransactionsByBlockID(ctx context.Context, blockID flow.Ide
 // BuildTransaction builds a new transaction type for later signing and submitting to the network.
 //
 // TransactionAddressesRoles type defines the address for each role (payer, proposer, authorizers) and the script defines the transaction content.
-func (f *Flowkit) BuildTransaction(addresses *TransactionAddressesRoles, proposerKeyIndex int, script *Script, gasLimit uint64) (*Transaction, error) {
+func (f *Flowkit) BuildTransaction(ctx context.Context, addresses *TransactionAddressesRoles, proposerKeyIndex int, script *Script, gasLimit uint64) (*Transaction, error) {
 	state, err := f.State()
 	if err != nil {
 		return nil, err
@@ -874,7 +874,7 @@ func (f *Flowkit) BuildTransaction(addresses *TransactionAddressesRoles, propose
 // SignTransactionPayload will use the signer account provided and the payload raw byte content to sign it.
 //
 // The payload should be RLP encoded transaction payload and is suggested to be used in pair with BuildTransaction function.
-func (f *Flowkit) SignTransactionPayload(signer *Account, payload []byte) (*Transaction, error) {
+func (f *Flowkit) SignTransactionPayload(ctx context.Context, signer *Account, payload []byte) (*Transaction, error) {
 	tx, err := NewTransactionFromPayload(payload)
 	if err != nil {
 		return nil, err
@@ -891,7 +891,7 @@ func (f *Flowkit) SignTransactionPayload(signer *Account, payload []byte) (*Tran
 // SendSignedTransaction will send a prebuilt and signed transaction to the Flow network.
 //
 // You can build the transaction using the BuildTransaction method and then sign it using the SignTranscation method.
-func (f *Flowkit) SendSignedTransaction(tx *Transaction) (*flow.Transaction, *flow.TransactionResult, error) {
+func (f *Flowkit) SendSignedTransaction(ctx context.Context, tx *Transaction) (*flow.Transaction, *flow.TransactionResult, error) {
 	f.logger.StartProgress(fmt.Sprintf("Sending transaction with ID: %s", tx.FlowTransaction().ID()))
 	defer f.logger.StopProgress()
 
@@ -910,7 +910,7 @@ func (f *Flowkit) SendSignedTransaction(tx *Transaction) (*flow.Transaction, *fl
 
 // SendTransaction will build and send a transaction to the Flow network, using the accounts provided for each role and
 // contain the script. Transaction as well as transaction result will be returned in case the transaction is successfully submitted.
-func (f *Flowkit) SendTransaction(accounts *transactionAccountRoles, script *Script, gasLimit uint64) (*flow.Transaction, *flow.TransactionResult, error) {
+func (f *Flowkit) SendTransaction(ctx context.Context, accounts *transactionAccountRoles, script *Script, gasLimit uint64) (*flow.Transaction, *flow.TransactionResult, error) {
 	tx, err := f.BuildTransaction(
 		accounts.toAddresses(),
 		accounts.proposer.Key().Index(),
