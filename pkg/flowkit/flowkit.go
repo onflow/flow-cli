@@ -7,6 +7,8 @@ import (
 	goeth "github.com/ethereum/go-ethereum/accounts"
 	"github.com/lmars/go-slip10"
 	"github.com/onflow/cadence"
+	cdcTests "github.com/onflow/cadence-tools/test"
+	"github.com/onflow/cadence/runtime/common"
 	"github.com/onflow/flow-cli/pkg/flowkit/gateway"
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
 	"github.com/onflow/flow-cli/pkg/flowkit/util"
@@ -62,6 +64,7 @@ type Services interface {
 	SignTransactionPayload(signer *Account, payload []byte) (*Transaction, error)
 	SendSignedTransaction(tx *Transaction) (*flow.Transaction, *flow.TransactionResult, error)
 	SendTransaction(accounts *transactionAccountRoles, script *Script, gasLimit uint64) (*flow.Transaction, *flow.TransactionResult, error)
+	Test(code []byte, scriptPath string) (cdcTests.Results, error)
 }
 
 var _ Services = &Flowkit{}
@@ -918,4 +921,63 @@ func (f *Flowkit) SendTransaction(accounts *transactionAccountRoles, script *Scr
 	res, err := f.gateway.GetTransactionResult(sentTx.ID(), true)
 
 	return sentTx, res, err
+}
+
+// Test Cadence code with the provided script path.
+func (f *Flowkit) Test(code []byte, scriptPath string) (cdcTests.Results, error) {
+	runner := cdcTests.NewTestRunner().
+		WithImportResolver(f.importResolver(scriptPath)).
+		WithFileResolver(f.fileResolver(scriptPath))
+
+	f.logger.Info("Running tests...")
+
+	return runner.RunTests(string(code))
+}
+
+func (f *Flowkit) importResolver(scriptPath string) cdcTests.ImportResolver {
+	return func(location common.Location) (string, error) {
+		stringLocation, isFileImport := location.(common.StringLocation)
+		if !isFileImport {
+			return "", fmt.Errorf("cannot import from %s", location)
+		}
+
+		importedContract, err := f.resolveContract(stringLocation)
+		if err != nil {
+			return "", err
+		}
+
+		importedContractFilePath := util.AbsolutePath(scriptPath, importedContract.Location)
+
+		contractCode, err := f.state.ReaderWriter().ReadFile(importedContractFilePath)
+		if err != nil {
+			return "", err
+		}
+
+		return string(contractCode), nil
+	}
+}
+
+func (f *Flowkit) resolveContract(stringLocation common.StringLocation) (config.Contract, error) {
+	relativePath := stringLocation.String()
+	for _, contract := range *f.state.Contracts() {
+		if contract.Location == relativePath {
+			return contract, nil
+		}
+	}
+
+	return config.Contract{},
+		fmt.Errorf("cannot find contract with location '%s' in configuration", relativePath)
+}
+
+func (f *Flowkit) fileResolver(scriptPath string) cdcTests.FileResolver {
+	return func(path string) (string, error) {
+		importFilePath := util.AbsolutePath(scriptPath, path)
+
+		content, err := f.state.ReaderWriter().ReadFile(importFilePath)
+		if err != nil {
+			return "", err
+		}
+
+		return string(content), nil
+	}
 }
