@@ -565,9 +565,18 @@ func (f *Flowkit) GenerateMnemonicKey(ctx context.Context, sigAlgo crypto.Signat
 
 	seed := bip39.NewSeed(mnemonic, "")
 
+	key, err := f.derivePrivateKeyFromSeed(seed, sigAlgo, derivationPath)
+	if err != nil {
+		return nil, "", err
+	}
+
+	return key, mnemonic, nil
+}
+
+func (f *Flowkit) derivePrivateKeyFromSeed(seed []byte, sigAlgo crypto.SignatureAlgorithm, derivationPath string) (crypto.PrivateKey, error) {
 	// sanity check of seed length
 	if len(seed) < 16 {
-		return nil, "", fmt.Errorf("seed length should be at least 16 bytes, got %d", len(seed))
+		return nil, fmt.Errorf("seed length should be at least 16 bytes, got %d", len(seed))
 	}
 
 	if derivationPath == "" {
@@ -576,33 +585,33 @@ func (f *Flowkit) GenerateMnemonicKey(ctx context.Context, sigAlgo crypto.Signat
 
 	path, err := goeth.ParseDerivationPath(derivationPath)
 	if err != nil {
-		return nil, "", fmt.Errorf("invalid derivation path")
+		return nil, fmt.Errorf("invalid derivation path")
 	}
 
 	curve := slip10.CurveBitcoin // case ECDSA_secp256k1
 	if sigAlgo == crypto.ECDSA_P256 {
 		curve = slip10.CurveP256
 	} else if sigAlgo != crypto.ECDSA_secp256k1 {
-		return nil, "", fmt.Errorf("invalid signature algorithm")
+		return nil, fmt.Errorf("invalid signature algorithm")
 	}
 
 	accountKey, err := slip10.NewMasterKeyWithCurve(seed, curve)
 	if err != nil {
-		return nil, "", err
+		return nil, err
 	}
 
 	for _, n := range path {
 		accountKey, err = accountKey.NewChildKey(n)
 
 		if err != nil {
-			return nil, "", err
+			return nil, err
 		}
 	}
 	privateKey, err := crypto.DecodePrivateKey(sigAlgo, accountKey.Key)
 	if err != nil {
-		return nil, "", err
+		return nil, err
 	}
-	return privateKey, "", nil
+	return privateKey, nil
 }
 
 // DeployProject contracts to the Flow network or update if already exists and update is set to true.
