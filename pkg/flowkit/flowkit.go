@@ -698,7 +698,7 @@ func (f *Flowkit) DeployProject(ctx context.Context, update bool) ([]*project.Co
 
 		// special case for emulator updates, where we remove and add a contract because it allows us to have more freedom in changes.
 		// Updating contracts is limited as described in https://developers.flow.com/cadence/language/contract-updatability
-		if update && f.network == config.DefaultEmulatorNetwork() {
+		if update && f.network == config.EmulatorNetwork {
 			_, _ = f.RemoveContract(ctx, targetAccount, contract.Name) // ignore failure as it's meant to be best-effort
 		}
 

@@ -770,7 +770,7 @@ func Test_DefaultEmulatorWithEmulatorAccountInConfig(t *testing.T) {
 	paths := []string{"flow.json"}
 	state, _ := Load(paths, af)
 	assert.Len(t, state.conf.Emulators, 1)
-	assert.Equal(t, state.conf.Emulators, config.DefaultEmulators())
+	assert.Equal(t, state.conf.Emulators, config.DefaultEmulators)
 }
 
 // backward compatibility test to ensure that default emulator values are still observed in flow.json

@@ -221,8 +221,8 @@ func (p *State) AliasesForNetwork(network config.Network) project.LocationAliase
 
 	// get all contracts for selected network and if any has an address as target make it an alias
 	for _, contract := range p.conf.Contracts {
-		if contract.IsAliased() && contract.Aliases.ByNetwork(network) != nil {
-			alias := contract.Aliases.ByNetwork(network).Address.String()
+		if contract.IsAliased() && contract.Aliases.ByNetwork(network.Name) != nil {
+			alias := contract.Aliases.ByNetwork(network.Name).Address.String()
 			aliases[path.Clean(contract.Location)] = alias // alias for import by file location
 			aliases[contract.Name] = alias                 // alias for import by name
 		}
@@ -244,7 +244,7 @@ func Load(configFilePaths []string, readerWriter ReaderWriter) (*State, error) {
 	// only add a default emulator in the config if the emulator account is present in accounts
 	_, err = conf.Accounts.ByName(config.DefaultEmulatorServiceAccountName)
 	if err == nil && len(conf.Emulators) == 0 {
-		conf.Emulators.AddOrUpdate("", config.DefaultEmulator())
+		conf.Emulators.AddOrUpdate("", config.DefaultEmulator)
 	}
 	proj, err := newProject(conf, confLoader, readerWriter)
 	if err != nil {
