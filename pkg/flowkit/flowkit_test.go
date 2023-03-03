@@ -822,7 +822,7 @@ func TestKeys(t *testing.T) {
 		t.Parallel()
 
 		_, flowkit, _ := setup()
-		key, err := flowkit.DerivePrivateKeyFromMnemonic("normal dune pole key case cradle unfold require tornado mercy hospital buyer", crypto.ECDSA_P256, "")
+		key, err := flowkit.DerivePrivateKeyFromMnemonic(ctx, "normal dune pole key case cradle unfold require tornado mercy hospital buyer", crypto.ECDSA_P256, "")
 
 		assert.NoError(t, err)
 		assert.Equal(t, key.String(), "0x638dc9ad0eee91d09249f0fd7c5323a11600e20d5b9105b66b782a96236e74cf")
@@ -834,7 +834,7 @@ func TestKeys(t *testing.T) {
 
 		_, flowkit, _ := setup()
 		//ledger test mnemonic: https://github.com/onflow/ledger-app-flow#using-a-real-device-for-integration-tests-nano-s-and-nano-s-plus
-		key, err := flowkit.DerivePrivateKeyFromMnemonic("equip will roof matter pink blind book anxiety banner elbow sun young", crypto.ECDSA_secp256k1, "m/44'/539'/513'/0/0")
+		key, err := flowkit.DerivePrivateKeyFromMnemonic(ctx, "equip will roof matter pink blind book anxiety banner elbow sun young", crypto.ECDSA_secp256k1, "m/44'/539'/513'/0/0")
 
 		assert.NoError(t, err)
 		assert.Equal(t, key.String(), "0xd18d051afca7150781fef111f3387d132d31c4a6250268db0f61f836a205e0b8")
