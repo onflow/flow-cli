@@ -7,6 +7,8 @@ import (
 	goeth "github.com/ethereum/go-ethereum/accounts"
 	"github.com/lmars/go-slip10"
 	"github.com/onflow/cadence"
+	cdcTests "github.com/onflow/cadence-tools/test"
+	"github.com/onflow/cadence/runtime/common"
 	"github.com/onflow/flow-cli/pkg/flowkit/gateway"
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
 	"github.com/onflow/flow-cli/pkg/flowkit/util"
@@ -24,6 +26,48 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowkit/project"
 )
 
+type Key struct { // todo remove?
+	public   crypto.PublicKey
+	weight   int
+	sigAlgo  crypto.SignatureAlgorithm
+	hashAlgo crypto.HashAlgorithm
+}
+
+type BlockQuery struct {
+	ID     *flow.Identifier
+	Height uint64
+	Latest bool
+}
+
+type EventWorker struct {
+	count           int
+	blocksPerWorker uint64
+}
+
+type Services interface {
+	Network() config.Network
+	Ping() (string, error)
+	GetAccount(ctx context.Context, address flow.Address) (*flow.Account, error)
+	CreateAccount(ctx context.Context, signer *Account, key Key) (*flow.Account, flow.Identifier, error)
+	AddContract(ctx context.Context, account *Account, contract *Script, update bool) (flow.Identifier, bool, error)
+	RemoveContract(ctx context.Context, account *Account, name string) (flow.Identifier, error)
+	GetBlock(ctx context.Context, query BlockQuery) (*flow.Block, error)
+	GetCollection(ctx context.Context, ID flow.Identifier) (*flow.Collection, error)
+	GetEvents(ctx context.Context, names []string, startHeight uint64, endHeight uint64, worker *EventWorker) ([]flow.BlockEvents, error)
+	GenerateKey(ctx context.Context, sigAlgo crypto.SignatureAlgorithm, inputSeed string) (crypto.PrivateKey, error)
+	GenerateMnemonicKey(ctx context.Context, sigAlgo crypto.SignatureAlgorithm, derivationPath string) (crypto.PrivateKey, string, error)
+	DerivePrivateKeyFromMnemonic(mnemonic string, sigAlgo crypto.SignatureAlgorithm, derivationPath string) (crypto.PrivateKey, error)
+	DeployProject(ctx context.Context, update bool) ([]*project.Contract, error)
+	ExecuteScript(ctx context.Context, script *Script) (cadence.Value, error)
+	GetTransactionByID(ctx context.Context, ID flow.Identifier, waitSeal bool) (*flow.Transaction, *flow.TransactionResult, error)
+	GetTransactionsByBlockID(ctx context.Context, blockID flow.Identifier, waitSeal bool) ([]*flow.Transaction, []*flow.TransactionResult, error)
+	BuildTransaction(ctx context.Context, addresses *TransactionAddressesRoles, proposerKeyIndex int, script *Script, gasLimit uint64) (*Transaction, error)
+	SignTransactionPayload(ctx context.Context, signer *Account, payload []byte) (*Transaction, error)
+	SendSignedTransaction(ctx context.Context, tx *Transaction) (*flow.Transaction, *flow.TransactionResult, error)
+	SendTransaction(ctx context.Context, accounts *transactionAccountRoles, script *Script, gasLimit uint64) (*flow.Transaction, *flow.TransactionResult, error)
+	Test(ctx context.Context, code []byte, scriptPath string) (cdcTests.Results, error)
+}
+
 var _ Services = &Flowkit{}
 
 type Flowkit struct {
@@ -35,6 +79,13 @@ type Flowkit struct {
 
 func (f *Flowkit) Network() config.Network {
 	return f.network // todo define empty network type in config config.EmptyNetwork
+}
+
+func (f *Flowkit) State() (*State, error) {
+	if f.state == nil {
+		return nil, config.ErrDoesNotExist
+	}
+	return f.state, nil
 }
 
 func (f *Flowkit) Ping() (config.Network, error) {
@@ -61,10 +112,6 @@ func (f *Flowkit) GetAccount(ctx context.Context, address flow.Address) (*flow.A
 //
 // Keys is a slice but only one can be passed as well. If the transaction fails or there are other issues an error is returned.
 func (f *Flowkit) CreateAccount(ctx context.Context, signer *Account, keys []Key) (*flow.Account, flow.Identifier, error) {
-	if f.state == nil {
-		return nil, flow.EmptyID, config.ErrDoesNotExist
-	}
-
 	var accKeys []*flow.AccountKey
 	for _, k := range keys {
 		if k.weight == 0 { // if key weight is specified
@@ -173,20 +220,25 @@ func (f *Flowkit) AddContract(
 	contract *Script,
 	updateExisting bool,
 ) (flow.Identifier, bool, error) {
+	state, err := f.State()
+	if err != nil {
+		return flow.EmptyID, false, err
+	}
+
 	program, err := project.NewProgram(contract)
 	if err != nil {
 		return flow.EmptyID, false, err
 	}
 
 	if program.HasImports() {
-		contracts, err := f.state.DeploymentContractsByNetwork(f.network)
+		contracts, err := state.DeploymentContractsByNetwork(f.network)
 		if err != nil {
 			return flow.EmptyID, false, err
 		}
 
 		importReplacer := project.NewImportReplacer(
 			contracts,
-			f.state.AliasesForNetwork(f.network),
+			state.AliasesForNetwork(f.network),
 		)
 
 		program, err = importReplacer.Replace(program)
@@ -389,6 +441,13 @@ func (f *Flowkit) GetEvents(ctx context.Context, names []string, startHeight uin
 	f.logger.StartProgress("Fetching events...")
 	defer f.logger.StopProgress()
 
+	if worker == nil { // if no worker is passed, create a default one
+		worker = &EventWorker{
+			count:           1,
+			blocksPerWorker: 250,
+		}
+	}
+
 	queries := makeEventQueries(names, startHeight, endHeight, worker.blocksPerWorker)
 
 	jobChan := make(chan grpc.EventRangeQuery, worker.count)
@@ -507,9 +566,28 @@ func (f *Flowkit) GenerateMnemonicKey(ctx context.Context, sigAlgo crypto.Signat
 
 	seed := bip39.NewSeed(mnemonic, "")
 
+	key, err := f.derivePrivateKeyFromSeed(seed, sigAlgo, derivationPath)
+	if err != nil {
+		return nil, "", err
+	}
+
+	return key, mnemonic, nil
+}
+
+func (f *Flowkit) DerivePrivateKeyFromMnemonic(mnemonic string, sigAlgo crypto.SignatureAlgorithm, derivationPath string) (crypto.PrivateKey, error) {
+	if !bip39.IsMnemonicValid(mnemonic) {
+		return nil, fmt.Errorf("invalid mnemonic")
+	}
+
+	seed := bip39.NewSeed(mnemonic, "")
+
+	return f.derivePrivateKeyFromSeed(seed, sigAlgo, derivationPath)
+}
+
+func (f *Flowkit) derivePrivateKeyFromSeed(seed []byte, sigAlgo crypto.SignatureAlgorithm, derivationPath string) (crypto.PrivateKey, error) {
 	// sanity check of seed length
 	if len(seed) < 16 {
-		return nil, "", fmt.Errorf("seed length should be at least 16 bytes, got %d", len(seed))
+		return nil, fmt.Errorf("seed length should be at least 16 bytes, got %d", len(seed))
 	}
 
 	if derivationPath == "" {
@@ -518,33 +596,33 @@ func (f *Flowkit) GenerateMnemonicKey(ctx context.Context, sigAlgo crypto.Signat
 
 	path, err := goeth.ParseDerivationPath(derivationPath)
 	if err != nil {
-		return nil, "", fmt.Errorf("invalid derivation path")
+		return nil, fmt.Errorf("invalid derivation path")
 	}
 
 	curve := slip10.CurveBitcoin // case ECDSA_secp256k1
 	if sigAlgo == crypto.ECDSA_P256 {
 		curve = slip10.CurveP256
 	} else if sigAlgo != crypto.ECDSA_secp256k1 {
-		return nil, "", fmt.Errorf("invalid signature algorithm")
+		return nil, fmt.Errorf("invalid signature algorithm")
 	}
 
 	accountKey, err := slip10.NewMasterKeyWithCurve(seed, curve)
 	if err != nil {
-		return nil, "", err
+		return nil, err
 	}
 
 	for _, n := range path {
 		accountKey, err = accountKey.NewChildKey(n)
 
 		if err != nil {
-			return nil, "", err
+			return nil, err
 		}
 	}
 	privateKey, err := crypto.DecodePrivateKey(sigAlgo, accountKey.Key)
 	if err != nil {
-		return nil, "", err
+		return nil, err
 	}
-	return privateKey, "", nil
+	return privateKey, nil
 }
 
 // DeployProject contracts to the Flow network or update if already exists and update is set to true.
@@ -552,16 +630,17 @@ func (f *Flowkit) GenerateMnemonicKey(ctx context.Context, sigAlgo crypto.Signat
 // Retrieve all the contracts for specified network, sort them for deployment deploy one by one and replace
 // the imports in the contract source, so it corresponds to the account name the contract was deployed to.
 func (f *Flowkit) DeployProject(ctx context.Context, update bool) ([]*project.Contract, error) {
-	if f.state == nil {
-		return nil, config.ErrDoesNotExist
-	}
-
-	contracts, err := f.state.DeploymentContractsByNetwork(f.network)
+	state, err := f.State()
 	if err != nil {
 		return nil, err
 	}
 
-	deployment, err := project.NewDeployment(contracts, f.state.AliasesForNetwork(f.network))
+	contracts, err := state.DeploymentContractsByNetwork(f.network)
+	if err != nil {
+		return nil, err
+	}
+
+	deployment, err := project.NewDeployment(contracts, state.AliasesForNetwork(f.network))
 	if err != nil {
 		return nil, err
 	}
@@ -574,13 +653,13 @@ func (f *Flowkit) DeployProject(ctx context.Context, update bool) ([]*project.Co
 	f.logger.Info(fmt.Sprintf(
 		"\nDeploying %d contracts for accounts: %s\n",
 		len(sorted),
-		f.state.AccountsForNetwork(f.network).String(),
+		state.AccountsForNetwork(f.network).String(),
 	))
 	defer f.logger.StopProgress()
 
 	deployErr := &ProjectDeploymentError{}
 	for _, contract := range sorted {
-		targetAccount, err := f.state.Accounts().ByName(contract.AccountName)
+		targetAccount, err := state.Accounts().ByName(contract.AccountName)
 		if err != nil {
 			return nil, fmt.Errorf("target account for deploying contract not found in configuration")
 		}
@@ -651,23 +730,28 @@ func (d *ProjectDeploymentError) Error() string {
 
 // ExecuteScript on the Flow network and return the Cadence value as a result.
 func (f *Flowkit) ExecuteScript(ctx context.Context, script *Script) (cadence.Value, error) {
+	state, err := f.State()
+	if err != nil {
+		return nil, err
+	}
+
 	program, err := project.NewProgram(script)
 	if err != nil {
 		return nil, err
 	}
 
 	if program.HasImports() {
-		contracts, err := f.state.DeploymentContractsByNetwork(f.network)
+		contracts, err := state.DeploymentContractsByNetwork(f.network)
 		if err != nil {
 			return nil, err
 		}
 
 		importReplacer := project.NewImportReplacer(
 			contracts,
-			f.state.AliasesForNetwork(f.network),
+			state.AliasesForNetwork(f.network),
 		)
 
-		if f.state == nil {
+		if state == nil {
 			return nil, config.ErrDoesNotExist
 		}
 		if f.network.Name == "" { // todo define empty network
@@ -721,9 +805,10 @@ func (f *Flowkit) GetTransactionsByBlockID(ctx context.Context, blockID flow.Ide
 // BuildTransaction builds a new transaction type for later signing and submitting to the network.
 //
 // TransactionAddressesRoles type defines the address for each role (payer, proposer, authorizers) and the script defines the transaction content.
-func (f *Flowkit) BuildTransaction(addresses *TransactionAddressesRoles, proposerKeyIndex int, script *Script, gasLimit uint64) (*Transaction, error) {
-	if f.state == nil {
-		return nil, fmt.Errorf("missing configuration, initialize it: flow state init")
+func (f *Flowkit) BuildTransaction(ctx context.Context, addresses *TransactionAddressesRoles, proposerKeyIndex int, script *Script, gasLimit uint64) (*Transaction, error) {
+	state, err := f.State()
+	if err != nil {
+		return nil, err
 	}
 
 	latestBlock, err := f.gateway.GetLatestBlock()
@@ -754,14 +839,14 @@ func (f *Flowkit) BuildTransaction(addresses *TransactionAddressesRoles, propose
 			return nil, fmt.Errorf("resolving imports in transactions not supported")
 		}
 
-		contracts, err := f.state.DeploymentContractsByNetwork(f.network)
+		contracts, err := state.DeploymentContractsByNetwork(f.network)
 		if err != nil {
 			return nil, err
 		}
 
 		importReplacer := project.NewImportReplacer(
 			contracts,
-			f.state.AliasesForNetwork(f.network),
+			state.AliasesForNetwork(f.network),
 		)
 
 		program, err = importReplacer.Replace(program)
@@ -789,11 +874,7 @@ func (f *Flowkit) BuildTransaction(addresses *TransactionAddressesRoles, propose
 // SignTransactionPayload will use the signer account provided and the payload raw byte content to sign it.
 //
 // The payload should be RLP encoded transaction payload and is suggested to be used in pair with BuildTransaction function.
-func (f *Flowkit) SignTransactionPayload(signer *Account, payload []byte) (*Transaction, error) {
-	if f.state == nil {
-		return nil, fmt.Errorf("missing configuration, initialize it: flow state init")
-	}
-
+func (f *Flowkit) SignTransactionPayload(ctx context.Context, signer *Account, payload []byte) (*Transaction, error) {
 	tx, err := NewTransactionFromPayload(payload)
 	if err != nil {
 		return nil, err
@@ -810,7 +891,7 @@ func (f *Flowkit) SignTransactionPayload(signer *Account, payload []byte) (*Tran
 // SendSignedTransaction will send a prebuilt and signed transaction to the Flow network.
 //
 // You can build the transaction using the BuildTransaction method and then sign it using the SignTranscation method.
-func (f *Flowkit) SendSignedTransaction(tx *Transaction) (*flow.Transaction, *flow.TransactionResult, error) {
+func (f *Flowkit) SendSignedTransaction(ctx context.Context, tx *Transaction) (*flow.Transaction, *flow.TransactionResult, error) {
 	f.logger.StartProgress(fmt.Sprintf("Sending transaction with ID: %s", tx.FlowTransaction().ID()))
 	defer f.logger.StopProgress()
 
@@ -829,11 +910,7 @@ func (f *Flowkit) SendSignedTransaction(tx *Transaction) (*flow.Transaction, *fl
 
 // SendTransaction will build and send a transaction to the Flow network, using the accounts provided for each role and
 // contain the script. Transaction as well as transaction result will be returned in case the transaction is successfully submitted.
-func (f *Flowkit) SendTransaction(accounts *transactionAccountRoles, script *Script, gasLimit uint64) (*flow.Transaction, *flow.TransactionResult, error) {
-	if f.state == nil {
-		return nil, nil, fmt.Errorf("missing configuration, initialize it: flow state init")
-	}
-
+func (f *Flowkit) SendTransaction(ctx context.Context, accounts *transactionAccountRoles, script *Script, gasLimit uint64) (*flow.Transaction, *flow.TransactionResult, error) {
 	tx, err := f.BuildTransaction(
 		accounts.toAddresses(),
 		accounts.proposer.Key().Index(),
@@ -871,4 +948,63 @@ func (f *Flowkit) SendTransaction(accounts *transactionAccountRoles, script *Scr
 	res, err := f.gateway.GetTransactionResult(sentTx.ID(), true)
 
 	return sentTx, res, err
+}
+
+// Test Cadence code with the provided script path.
+func (f *Flowkit) Test(ctx context.Context, code []byte, scriptPath string) (cdcTests.Results, error) {
+	runner := cdcTests.NewTestRunner().
+		WithImportResolver(f.importResolver(scriptPath)).
+		WithFileResolver(f.fileResolver(scriptPath))
+
+	f.logger.Info("Running tests...")
+
+	return runner.RunTests(string(code))
+}
+
+func (f *Flowkit) importResolver(scriptPath string) cdcTests.ImportResolver {
+	return func(location common.Location) (string, error) {
+		stringLocation, isFileImport := location.(common.StringLocation)
+		if !isFileImport {
+			return "", fmt.Errorf("cannot import from %s", location)
+		}
+
+		importedContract, err := f.resolveContract(stringLocation)
+		if err != nil {
+			return "", err
+		}
+
+		importedContractFilePath := util.AbsolutePath(scriptPath, importedContract.Location)
+
+		contractCode, err := f.state.ReaderWriter().ReadFile(importedContractFilePath)
+		if err != nil {
+			return "", err
+		}
+
+		return string(contractCode), nil
+	}
+}
+
+func (f *Flowkit) resolveContract(stringLocation common.StringLocation) (config.Contract, error) {
+	relativePath := stringLocation.String()
+	for _, contract := range *f.state.Contracts() {
+		if contract.Location == relativePath {
+			return contract, nil
+		}
+	}
+
+	return config.Contract{},
+		fmt.Errorf("cannot find contract with location '%s' in configuration", relativePath)
+}
+
+func (f *Flowkit) fileResolver(scriptPath string) cdcTests.FileResolver {
+	return func(path string) (string, error) {
+		importFilePath := util.AbsolutePath(scriptPath, path)
+
+		content, err := f.state.ReaderWriter().ReadFile(importFilePath)
+		if err != nil {
+			return "", err
+		}
+
+		return string(content), nil
+	}
 }
