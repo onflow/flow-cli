@@ -18,6 +18,15 @@
 
 package config
 
+var (
+	DefaultEmulator = Emulator{
+		Name:           DefaultEmulatorConfigName,
+		ServiceAccount: DefaultEmulatorServiceAccountName,
+		Port:           DefaultEmulatorPort,
+	}
+	DefaultEmulators = Emulators{DefaultEmulator}
+)
+
 // Emulator defines the configuration for a Flow Emulator instance.
 type Emulator struct {
 	Name           string
@@ -26,20 +35,6 @@ type Emulator struct {
 }
 
 type Emulators []Emulator
-
-// DefaultEmulators gets all default emulators.
-func DefaultEmulators() Emulators {
-	return Emulators{DefaultEmulator()}
-}
-
-// DefaultEmulator gets default emulator.
-func DefaultEmulator() Emulator {
-	return Emulator{
-		Name:           DefaultEmulatorConfigName,
-		ServiceAccount: DefaultEmulatorServiceAccountName,
-		Port:           DefaultEmulatorPort,
-	}
-}
 
 // Default gets default emulator.
 func (e Emulators) Default() *Emulator {
