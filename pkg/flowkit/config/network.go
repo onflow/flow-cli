@@ -68,9 +68,9 @@ func (n *Networks) ByName(name string) (*Network, error) {
 }
 
 // AddOrUpdate add new network or update if already present.
-func (n *Networks) AddOrUpdate(name string, network Network) {
+func (n *Networks) AddOrUpdate(network Network) {
 	for i, existingNetwork := range *n {
-		if existingNetwork.Name == name {
+		if existingNetwork.Name == network.Name {
 			(*n)[i] = network
 			return
 		}
