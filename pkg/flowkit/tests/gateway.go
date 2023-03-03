@@ -39,20 +39,23 @@ const (
 	GetTransactionFunc        = "GetTransaction"
 )
 
-// go:generate
-
 type TestGateway struct {
-	Mock                  *mocks.Gateway
-	SendSignedTransaction *mock.Call
-	GetAccount            *mock.Call
-	GetCollection         *mock.Call
-	GetTransactionResult  *mock.Call
-	GetEvents             *mock.Call
-	GetLatestBlock        *mock.Call
-	GetBlockByHeight      *mock.Call
-	GetBlockByID          *mock.Call
-	ExecuteScript         *mock.Call
-	GetTransaction        *mock.Call
+	Mock                           *mocks.Gateway
+	SendSignedTransaction          *mock.Call
+	GetAccount                     *mock.Call
+	GetCollection                  *mock.Call
+	GetTransactionResult           *mock.Call
+	GetEvents                      *mock.Call
+	GetLatestBlock                 *mock.Call
+	GetBlockByHeight               *mock.Call
+	GetBlockByID                   *mock.Call
+	ExecuteScript                  *mock.Call
+	GetTransaction                 *mock.Call
+	GetTransactionResultsByBlockID *mock.Call
+	GetTransactionsByBlockID       *mock.Call
+	GetLatestProtocolStateSnapshot *mock.Call
+	Ping                           *mock.Call
+	SecureConnection               *mock.Call
 }
 
 func DefaultMockGateway() *TestGateway {
@@ -61,7 +64,7 @@ func DefaultMockGateway() *TestGateway {
 		Mock: m,
 		SendSignedTransaction: m.On(
 			SendSignedTransactionFunc,
-			mock.AnythingOfType("*flowkit.Transaction"),
+			mock.AnythingOfType("*flow.Transaction"),
 		),
 		GetAccount: m.On(
 			GetAccountFunc,

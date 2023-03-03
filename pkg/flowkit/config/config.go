@@ -95,8 +95,8 @@ func (c *Config) Validate() error {
 // Default returns the default configuration.
 func Default() *Config {
 	return &Config{
-		Emulators: DefaultEmulators(),
-		Networks:  DefaultNetworks(),
+		Emulators: DefaultEmulators,
+		Networks:  DefaultNetworks,
 	}
 }
 

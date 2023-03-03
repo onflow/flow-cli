@@ -26,29 +26,28 @@ import (
 
 	"github.com/gosuri/uilive"
 	"github.com/manifoldco/promptui"
+	"github.com/onflow/flow-go-sdk"
 	"golang.org/x/exp/maps"
 	"golang.org/x/exp/slices"
 
-	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
 	"github.com/onflow/flow-cli/pkg/flowkit/util"
 )
 
-func ApproveTransactionForSigningPrompt(transaction *flowkit.Transaction) bool {
+func ApproveTransactionForSigningPrompt(transaction *flow.Transaction) bool {
 	return ApproveTransactionPrompt(transaction, "⚠️  Do you want to SIGN this transaction?")
 }
 
-func ApproveTransactionForBuildingPrompt(transaction *flowkit.Transaction) bool {
+func ApproveTransactionForBuildingPrompt(transaction *flow.Transaction) bool {
 	return ApproveTransactionPrompt(transaction, "⚠️  Do you want to BUILD this transaction?")
 }
 
-func ApproveTransactionForSendingPrompt(transaction *flowkit.Transaction) bool {
+func ApproveTransactionForSendingPrompt(transaction *flow.Transaction) bool {
 	return ApproveTransactionPrompt(transaction, "⚠️  Do you want to SEND this transaction?")
 }
 
-func ApproveTransactionPrompt(transaction *flowkit.Transaction, promptMsg string) bool {
+func ApproveTransactionPrompt(tx *flow.Transaction, promptMsg string) bool {
 	writer := uilive.New()
-	tx := transaction.FlowTransaction()
 
 	_, _ = fmt.Fprintf(writer, "\n")
 	_, _ = fmt.Fprintf(writer, "ID\t%s\n", tx.ID())
@@ -159,16 +158,11 @@ func NamePrompt() string {
 	return name
 }
 
-func AccountNamePrompt(accounts *flowkit.Accounts) string {
-	existingNames := make([]string, len(*accounts))
-	for i, a := range *accounts {
-		existingNames[i] = a.Name()
-	}
-
+func AccountNamePrompt(accountNames []string) string {
 	namePrompt := promptui.Prompt{
 		Label: "Enter an account name",
 		Validate: func(s string) error {
-			if slices.Contains(existingNames, s) {
+			if slices.Contains(accountNames, s) {
 				return fmt.Errorf("name already exists")
 			}
 			if len(s) < 1 {
@@ -539,9 +533,9 @@ func ReportCrash() bool {
 
 func CreateAccountNetworkPrompt() (string, config.Network) {
 	networkMap := map[string]config.Network{
-		"Emulator": config.DefaultEmulatorNetwork(),
-		"Testnet":  config.DefaultTestnetNetwork(),
-		"Mainnet":  config.DefaultMainnetNetwork(),
+		"Emulator": config.EmulatorNetwork,
+		"Testnet":  config.TestnetNetwork,
+		"Mainnet":  config.MainnetNetwork,
 	}
 
 	networkPrompt := promptui.Select{

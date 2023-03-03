@@ -344,7 +344,7 @@ func Test_GetContractsByNameSimple(t *testing.T) {
 	path := "../hungry-kitties/cadence/contracts/NonFungibleToken.cdc"
 	af.WriteFile(path, []byte("pub contract{}"), os.ModePerm)
 
-	contracts, err := p.DeploymentContractsByNetwork("emulator")
+	contracts, err := p.DeploymentContractsByNetwork(config.EmulatorNetwork)
 	require.NoError(t, err)
 	account, err := p.conf.Accounts.ByName("emulator-account")
 	require.NoError(t, err)
@@ -393,7 +393,7 @@ func Test_GetContractsByNameComplex(t *testing.T) {
 		_ = af.WriteFile(c.Location, []byte("pub contract{}"), os.ModePerm)
 	}
 
-	contracts, err := p.DeploymentContractsByNetwork("emulator")
+	contracts, err := p.DeploymentContractsByNetwork(config.EmulatorNetwork)
 	require.NoError(t, err)
 	require.Equal(t, 7, len(contracts))
 
@@ -479,8 +479,8 @@ func Test_HostComplex(t *testing.T) {
 func Test_GetAliases(t *testing.T) {
 	p := generateAliasesProject()
 
-	aliases := p.AliasesForNetwork("emulator")
-	contracts, _ := p.DeploymentContractsByNetwork("emulator")
+	aliases := p.AliasesForNetwork(config.EmulatorNetwork)
+	contracts, _ := p.DeploymentContractsByNetwork(config.EmulatorNetwork)
 
 	assert.Len(t, aliases, 2)
 	assert.Equal(t, aliases["../hungry-kitties/cadence/contracts/FungibleToken.cdc"], "ee82856bf20e2aa6")
@@ -491,11 +491,11 @@ func Test_GetAliases(t *testing.T) {
 func Test_GetAliasesComplex(t *testing.T) {
 	p := generateAliasesComplexProject()
 
-	aEmulator := p.AliasesForNetwork("emulator")
-	cEmulator, _ := p.DeploymentContractsByNetwork("emulator")
+	aEmulator := p.AliasesForNetwork(config.EmulatorNetwork)
+	cEmulator, _ := p.DeploymentContractsByNetwork(config.EmulatorNetwork)
 
-	aTestnet := p.AliasesForNetwork("testnet")
-	cTestnet, _ := p.DeploymentContractsByNetwork("testnet")
+	aTestnet := p.AliasesForNetwork(config.TestnetNetwork)
+	cTestnet, _ := p.DeploymentContractsByNetwork(config.TestnetNetwork)
 
 	assert.Len(t, cEmulator, 1)
 	assert.Equal(t, cEmulator[0].Name, "NonFungibleToken")
@@ -770,7 +770,7 @@ func Test_DefaultEmulatorWithEmulatorAccountInConfig(t *testing.T) {
 	paths := []string{"flow.json"}
 	state, _ := Load(paths, af)
 	assert.Len(t, state.conf.Emulators, 1)
-	assert.Equal(t, state.conf.Emulators, config.DefaultEmulators())
+	assert.Equal(t, state.conf.Emulators, config.DefaultEmulators)
 }
 
 // backward compatibility test to ensure that default emulator values are still observed in flow.json

@@ -28,14 +28,18 @@ import (
 	"github.com/onflow/flow-emulator/convert/sdk"
 	"github.com/onflow/flow-emulator/server/backend"
 	"github.com/onflow/flow-go-sdk"
+	"github.com/onflow/flow-go-sdk/crypto"
 	flowGo "github.com/onflow/flow-go/model/flow"
 	"github.com/rs/zerolog"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc/status"
-
-	"github.com/onflow/flow-cli/pkg/flowkit"
-	"github.com/onflow/flow-cli/pkg/flowkit/config"
 )
+
+type EmulatorKey struct {
+	PublicKey crypto.PublicKey
+	SigAlgo   crypto.SignatureAlgorithm
+	HashAlgo  crypto.HashAlgorithm
+}
 
 type EmulatorGateway struct {
 	emulator        *emulator.Blockchain
@@ -49,11 +53,11 @@ func UnwrapStatusError(err error) error {
 	return fmt.Errorf(status.Convert(err).Message())
 }
 
-func NewEmulatorGateway(serviceAccount *flowkit.Account) *EmulatorGateway {
-	return NewEmulatorGatewayWithOpts(serviceAccount)
+func NewEmulatorGateway(key *EmulatorKey) *EmulatorGateway {
+	return NewEmulatorGatewayWithOpts(key)
 }
 
-func NewEmulatorGatewayWithOpts(serviceAccount *flowkit.Account, opts ...func(*EmulatorGateway)) *EmulatorGateway {
+func NewEmulatorGatewayWithOpts(key *EmulatorKey, opts ...func(*EmulatorGateway)) *EmulatorGateway {
 
 	gateway := &EmulatorGateway{
 		ctx:             context.Background(),
@@ -64,7 +68,7 @@ func NewEmulatorGatewayWithOpts(serviceAccount *flowkit.Account, opts ...func(*E
 		opt(gateway)
 	}
 
-	gateway.emulator = newEmulator(serviceAccount, gateway.emulatorOptions...)
+	gateway.emulator = newEmulator(key, gateway.emulatorOptions...)
 	gateway.backend = backend.New(&zerolog.Logger{}, gateway.emulator)
 	gateway.backend.EnableAutoMine()
 
@@ -99,19 +103,14 @@ func (g *EmulatorGateway) SetContext(ctx context.Context) {
 	g.ctx = ctx
 }
 
-func newEmulator(serviceAccount *flowkit.Account, emulatorOptions ...emulator.Option) *emulator.Blockchain {
+func newEmulator(key *EmulatorKey, emulatorOptions ...emulator.Option) *emulator.Blockchain {
 	var opts []emulator.Option
-	if serviceAccount != nil && serviceAccount.Key().Type() == config.KeyTypeHex {
-		privKey, _ := serviceAccount.Key().PrivateKey()
 
-		opts = append(opts, emulator.WithServicePublicKey(
-			(*privKey).PublicKey(),
-			serviceAccount.Key().SigAlgo(),
-			serviceAccount.Key().HashAlgo(),
-		))
-		opts = append(opts, emulatorOptions...)
-
+	if key != nil {
+		opts = append(opts, emulator.WithServicePublicKey(key.PublicKey, key.SigAlgo, key.HashAlgo))
 	}
+
+	opts = append(opts, emulatorOptions...)
 
 	b, err := emulator.NewBlockchain(opts...)
 	if err != nil {
@@ -129,12 +128,12 @@ func (g *EmulatorGateway) GetAccount(address flow.Address) (*flow.Account, error
 	return account, nil
 }
 
-func (g *EmulatorGateway) SendSignedTransaction(tx *flowkit.Transaction) (*flow.Transaction, error) {
-	err := g.backend.SendTransaction(context.Background(), *tx.FlowTransaction())
+func (g *EmulatorGateway) SendSignedTransaction(tx *flow.Transaction) (*flow.Transaction, error) {
+	err := g.backend.SendTransaction(context.Background(), *tx)
 	if err != nil {
 		return nil, UnwrapStatusError(err)
 	}
-	return tx.FlowTransaction(), nil
+	return tx, nil
 }
 
 func (g *EmulatorGateway) GetTransactionResult(ID flow.Identifier, waitSeal bool) (*flow.TransactionResult, error) {

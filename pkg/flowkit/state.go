@@ -162,11 +162,11 @@ func (p *State) SetEmulatorKey(privateKey crypto.PrivateKey) {
 //
 // Build contract slice based on the network provided, check the deployment section for that network
 // and retrieve the account by name, then add the accounts address on the contract as a destination.
-func (p *State) DeploymentContractsByNetwork(network string) ([]*project.Contract, error) {
+func (p *State) DeploymentContractsByNetwork(network config.Network) ([]*project.Contract, error) {
 	contracts := make([]*project.Contract, 0)
 
 	// get deployments for the specified network
-	for _, deploy := range p.conf.Deployments.ByNetwork(network) {
+	for _, deploy := range p.conf.Deployments.ByNetwork(network.Name) {
 		account, err := p.accounts.ByName(deploy.Account)
 		if err != nil {
 			return nil, err
@@ -201,12 +201,12 @@ func (p *State) DeploymentContractsByNetwork(network string) ([]*project.Contrac
 }
 
 // AccountsForNetwork returns all accounts used on a network defined by deployments.
-func (p *State) AccountsForNetwork(network string) Accounts {
+func (p *State) AccountsForNetwork(network config.Network) Accounts {
 	exists := make(map[string]bool, 0)
 	accounts := make([]Account, 0)
 
 	for _, account := range *p.accounts {
-		if len(p.conf.Deployments.ByAccountAndNetwork(account.name, network)) > 0 {
+		if len(p.conf.Deployments.ByAccountAndNetwork(account.name, network.Name)) > 0 {
 			if !exists[account.name] {
 				accounts = append(accounts, account)
 			}
@@ -216,13 +216,13 @@ func (p *State) AccountsForNetwork(network string) Accounts {
 }
 
 // AliasesForNetwork returns all deployment aliases for a network.
-func (p *State) AliasesForNetwork(network string) project.LocationAliases {
+func (p *State) AliasesForNetwork(network config.Network) project.LocationAliases {
 	aliases := make(project.LocationAliases)
 
 	// get all contracts for selected network and if any has an address as target make it an alias
 	for _, contract := range p.conf.Contracts {
-		if contract.IsAliased() && contract.Aliases.ByNetwork(network) != nil {
-			alias := contract.Aliases.ByNetwork(network).Address.String()
+		if contract.IsAliased() && contract.Aliases.ByNetwork(network.Name) != nil {
+			alias := contract.Aliases.ByNetwork(network.Name).Address.String()
 			aliases[path.Clean(contract.Location)] = alias // alias for import by file location
 			aliases[contract.Name] = alias                 // alias for import by name
 		}
@@ -244,7 +244,7 @@ func Load(configFilePaths []string, readerWriter ReaderWriter) (*State, error) {
 	// only add a default emulator in the config if the emulator account is present in accounts
 	_, err = conf.Accounts.ByName(config.DefaultEmulatorServiceAccountName)
 	if err == nil && len(conf.Emulators) == 0 {
-		conf.Emulators.AddOrUpdate("", config.DefaultEmulator())
+		conf.Emulators.AddOrUpdate("", config.DefaultEmulator)
 	}
 	proj, err := newProject(conf, confLoader, readerWriter)
 	if err != nil {

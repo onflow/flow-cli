@@ -5,14 +5,13 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"os"
+	"strings"
+	"testing"
+
 	"github.com/onflow/cadence"
 	jsoncdc "github.com/onflow/cadence/encoding/json"
 	"github.com/onflow/cadence/runtime/stdlib"
-	"github.com/onflow/flow-cli/pkg/flowkit/config"
-	"github.com/onflow/flow-cli/pkg/flowkit/gateway"
-	"github.com/onflow/flow-cli/pkg/flowkit/output"
-	"github.com/onflow/flow-cli/pkg/flowkit/project"
-	"github.com/onflow/flow-cli/pkg/flowkit/tests"
 	emulator "github.com/onflow/flow-emulator"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/access/grpc"
@@ -21,10 +20,40 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
-	"os"
-	"strings"
-	"testing"
+	"github.com/onflow/flow-cli/pkg/flowkit/config"
+	"github.com/onflow/flow-cli/pkg/flowkit/gateway"
+	"github.com/onflow/flow-cli/pkg/flowkit/output"
+	"github.com/onflow/flow-cli/pkg/flowkit/project"
+	"github.com/onflow/flow-cli/pkg/flowkit/tests"
 )
+
+func Alice() *Account {
+	return newAccount("Alice", "0x1", "seedseedseedseedseedseedseedseedseedseedseedseedAlice")
+}
+
+func Bob() *Account {
+	return newAccount("Bob", "0x2", "seedseedseedseedseedseedseedseedseedseedseedseedBob")
+}
+
+func Charlie() *Account {
+	return newAccount("Charlie", "0x3", "seedseedseedseedseedseedseedseedseedseedseedseedCharlie")
+}
+
+func Donald() *Account {
+	return newAccount("Donald", "0x3", "seedseedseedseedseedseedseedseedseedseedseedseedDonald")
+}
+
+func newAccount(name string, address string, seed string) *Account {
+	privateKey, _ := crypto.GeneratePrivateKey(crypto.ECDSA_P256, []byte(seed))
+
+	account := NewAccount(name).
+		SetAddress(flow.HexToAddress(address)).
+		SetKey(
+			NewHexAccountKeyFromPrivateKey(0, crypto.SHA3_256, privateKey),
+		)
+
+	return account
+}
 
 func setup() (*State, Flowkit, *tests.TestGateway) {
 	readerWriter, _ := tests.ReaderWriter()
@@ -36,8 +65,8 @@ func setup() (*State, Flowkit, *tests.TestGateway) {
 	gw := tests.DefaultMockGateway()
 	flowkit := Flowkit{
 		state:   state,
-		network: config.DefaultEmulatorNetwork(),
-		gateway: gw,
+		network: config.EmulatorNetwork,
+		gateway: gw.Mock,
 		logger:  output.NewStdoutLogger(output.NoneLog),
 	}
 
@@ -70,9 +99,9 @@ func TestAccounts(t *testing.T) {
 		newAddress := flow.HexToAddress("192440c99cb17282")
 
 		gw.SendSignedTransaction.Run(func(args mock.Arguments) {
-			tx := args.Get(0).(*Transaction)
-			assert.Equal(t, serviceAddress, tx.FlowTransaction().Authorizers[0])
-			assert.Equal(t, serviceAddress, tx.Signer().Address())
+			tx := args.Get(0).(*flow.Transaction)
+			assert.Equal(t, serviceAddress, tx.Authorizers[0])
+			assert.Equal(t, serviceAddress, tx.Payer)
 
 			gw.SendSignedTransaction.Return(tests.NewTransaction(), nil)
 		})
@@ -116,9 +145,9 @@ func TestAccounts(t *testing.T) {
 	t.Run("Contract Add for Account", func(t *testing.T) {
 		_, flowkit, gw := setup()
 		gw.SendSignedTransaction.Run(func(args mock.Arguments) {
-			tx := args.Get(0).(*Transaction)
-			assert.Equal(t, tx.Signer().Address(), serviceAddress)
-			assert.True(t, strings.Contains(string(tx.FlowTransaction().Script), "signer.contracts.add"))
+			tx := args.Get(0).(*flow.Transaction)
+			assert.Equal(t, tx.Payer, serviceAddress)
+			assert.True(t, strings.Contains(string(tx.Script), "signer.contracts.add"))
 
 			gw.SendSignedTransaction.Return(tests.NewTransaction(), nil)
 		})
@@ -141,9 +170,9 @@ func TestAccounts(t *testing.T) {
 	t.Run("Contract Remove for Account", func(t *testing.T) {
 		_, flowkit, gw := setup()
 		gw.SendSignedTransaction.Run(func(args mock.Arguments) {
-			tx := args.Get(0).(*Transaction)
-			assert.Equal(t, tx.Signer().Address(), serviceAddress)
-			assert.True(t, strings.Contains(string(tx.FlowTransaction().Script), "signer.contracts.remove"))
+			tx := args.Get(0).(*flow.Transaction)
+			assert.Equal(t, tx.Payer, serviceAddress)
+			assert.True(t, strings.Contains(string(tx.Script), "signer.contracts.remove"))
 
 			gw.SendSignedTransaction.Return(tests.NewTransaction(), nil)
 		})
@@ -182,13 +211,18 @@ func setupIntegration() (*State, Flowkit) {
 	}
 
 	acc, _ := state.EmulatorServiceAccount()
-	gw := gateway.NewEmulatorGatewayWithOpts(acc, gateway.WithEmulatorOptions(
+	pk, _ := acc.Key().PrivateKey()
+	gw := gateway.NewEmulatorGatewayWithOpts(&gateway.EmulatorKey{
+		PublicKey: (*pk).PublicKey(),
+		SigAlgo:   acc.Key().SigAlgo(),
+		HashAlgo:  acc.Key().HashAlgo(),
+	}, gateway.WithEmulatorOptions(
 		emulator.WithTransactionExpiry(10),
 	))
 
 	flowkit := Flowkit{
 		state:   state,
-		network: config.DefaultEmulatorNetwork(),
+		network: config.EmulatorNetwork,
 		gateway: gw,
 		logger:  output.NewStdoutLogger(output.NoneLog),
 	}
@@ -264,7 +298,6 @@ func TestAccountsCreate_Integration(t *testing.T) {
 
 		accOut := []accountsOut{{
 			address: "01cf0e2f2f715450",
-			code:    map[string][]byte{},
 			balance: uint64(100000),
 			pubKeys: []crypto.PublicKey{
 				tests.PubKeys()[0],
@@ -272,7 +305,6 @@ func TestAccountsCreate_Integration(t *testing.T) {
 			weights: []int{flow.AccountKeyWeightThreshold},
 		}, {
 			address: "179b6b1cb6755e31",
-			code:    map[string][]byte{},
 			balance: uint64(100000),
 			pubKeys: []crypto.PublicKey{
 				tests.PubKeys()[0],
@@ -281,9 +313,6 @@ func TestAccountsCreate_Integration(t *testing.T) {
 			weights: []int{500, 500},
 		}, {
 			address: "f3fcd2c1a78f5eee",
-			code: map[string][]byte{
-				tests.ContractSimple.Name: tests.ContractSimple.Source,
-			},
 			balance: uint64(100000),
 			pubKeys: []crypto.PublicKey{
 				tests.PubKeys()[0],
@@ -309,7 +338,6 @@ func TestAccountsCreate_Integration(t *testing.T) {
 			assert.NotNil(t, acc)
 			assert.NotNil(t, ID)
 			assert.Equal(t, acc.Address.String(), c.address)
-			assert.Equal(t, acc.Contracts, c.code)
 			assert.Equal(t, acc.Balance, c.balance)
 			assert.Len(t, acc.Keys, len(c.pubKeys))
 
@@ -333,8 +361,6 @@ func TestAccountsCreate_Integration(t *testing.T) {
 		errOut := []string{
 			"invalid account key: signing algorithm (UNKNOWN) and hashing algorithm (SHA3_256) are not a valid pair for a Flow account key",
 			"invalid account key: signing algorithm (UNKNOWN) and hashing algorithm (UNKNOWN) are not a valid pair for a Flow account key",
-			"number of keys and weights provided must match, number of provided keys: 2, number of provided key weights: 1",
-			"number of keys and weights provided must match, number of provided keys: 1, number of provided key weights: 2",
 		}
 
 		accIn := []accountsIn{
@@ -342,35 +368,14 @@ func TestAccountsCreate_Integration(t *testing.T) {
 				account:  srvAcc,
 				sigAlgo:  []crypto.SignatureAlgorithm{crypto.UnknownSignatureAlgorithm},
 				hashAlgo: []crypto.HashAlgorithm{crypto.SHA3_256},
-				pubKeys: []crypto.PublicKey{
-					tests.PubKeys()[0],
-				},
-				weights: []int{1000},
+				pubKeys:  []crypto.PublicKey{tests.PubKeys()[0]},
+				weights:  []int{1000},
 			}, {
 				account:  srvAcc,
 				sigAlgo:  []crypto.SignatureAlgorithm{crypto.UnknownSignatureAlgorithm},
 				hashAlgo: []crypto.HashAlgorithm{crypto.UnknownHashAlgorithm},
-				pubKeys: []crypto.PublicKey{
-					tests.PubKeys()[0],
-				},
-				weights: []int{1000},
-			}, {
-				account:  srvAcc,
-				sigAlgo:  []crypto.SignatureAlgorithm{crypto.ECDSA_P256},
-				hashAlgo: []crypto.HashAlgorithm{crypto.SHA3_256},
-				pubKeys: []crypto.PublicKey{
-					tests.PubKeys()[0],
-					tests.PubKeys()[1],
-				},
-				weights: []int{1000},
-			}, {
-				account:  srvAcc,
-				sigAlgo:  []crypto.SignatureAlgorithm{crypto.ECDSA_P256},
-				hashAlgo: []crypto.HashAlgorithm{crypto.SHA3_256},
-				pubKeys: []crypto.PublicKey{
-					tests.PubKeys()[0],
-				},
-				weights: []int{1000, 1000},
+				pubKeys:  []crypto.PublicKey{tests.PubKeys()[0]},
+				weights:  []int{1000},
 			},
 			/*{
 			 	TODO(sideninja): uncomment this test case after https://github.com/onflow/flow-go-sdk/pull/199 is released
@@ -399,7 +404,7 @@ func TestAccountsCreate_Integration(t *testing.T) {
 			errMsg := errOut[i]
 
 			assert.Nil(t, acc)
-			assert.Nil(t, ID)
+			assert.Equal(t, flow.EmptyID, ID)
 			assert.Error(t, err)
 			assert.Equal(t, errMsg, err.Error())
 		}
@@ -822,7 +827,7 @@ func TestKeys(t *testing.T) {
 		t.Parallel()
 
 		_, flowkit, _ := setup()
-		key, err := flowkit.DerivePrivateKeyFromMnemonic("normal dune pole key case cradle unfold require tornado mercy hospital buyer", crypto.ECDSA_P256, "")
+		key, err := flowkit.DerivePrivateKeyFromMnemonic(ctx, "normal dune pole key case cradle unfold require tornado mercy hospital buyer", crypto.ECDSA_P256, "")
 
 		assert.NoError(t, err)
 		assert.Equal(t, key.String(), "0x638dc9ad0eee91d09249f0fd7c5323a11600e20d5b9105b66b782a96236e74cf")
@@ -834,7 +839,7 @@ func TestKeys(t *testing.T) {
 
 		_, flowkit, _ := setup()
 		//ledger test mnemonic: https://github.com/onflow/ledger-app-flow#using-a-real-device-for-integration-tests-nano-s-and-nano-s-plus
-		key, err := flowkit.DerivePrivateKeyFromMnemonic("equip will roof matter pink blind book anxiety banner elbow sun young", crypto.ECDSA_secp256k1, "m/44'/539'/513'/0/0")
+		key, err := flowkit.DerivePrivateKeyFromMnemonic(ctx, "equip will roof matter pink blind book anxiety banner elbow sun young", crypto.ECDSA_secp256k1, "m/44'/539'/513'/0/0")
 
 		assert.NoError(t, err)
 		assert.Equal(t, key.String(), "0xd18d051afca7150781fef111f3387d132d31c4a6250268db0f61f836a205e0b8")
@@ -880,18 +885,13 @@ func TestProject(t *testing.T) {
 			Location: tests.ContractHelloString.Filename,
 		}
 		state.Contracts().AddOrUpdate(c)
+		state.Networks().AddOrUpdate(config.EmulatorNetwork)
 
-		n := config.Network{
-			Name: "emulator",
-			Host: "127.0.0.1:3569",
-		}
-		state.Networks().AddOrUpdate(n.Name, n)
-
-		acct2 := tests.Donald()
+		acct2 := Donald()
 		state.Accounts().AddOrUpdate(acct2)
 
 		d := config.Deployment{
-			Network: n.Name,
+			Network: config.EmulatorNetwork.Name,
 			Account: acct2.Name(),
 			Contracts: []config.ContractDeployment{{
 				Name: c.Name,
@@ -918,7 +918,6 @@ func TestProject(t *testing.T) {
 	t.Run("Deploy Project Using LocationAliases", func(t *testing.T) {
 		t.Parallel()
 
-		emulator := config.DefaultEmulatorNetwork().Name
 		state, flowkit, gw := setup()
 
 		c1 := config.Contract{
@@ -931,8 +930,8 @@ func TestProject(t *testing.T) {
 			Name:     "Aliased",
 			Location: tests.ContractA.Filename,
 			Aliases: []config.Alias{{
-				Network: emulator,
-				Address: tests.Donald().Address(),
+				Network: config.EmulatorNetwork.Name,
+				Address: Donald().Address(),
 			}},
 		}
 		state.Contracts().AddOrUpdate(c2)
@@ -943,13 +942,13 @@ func TestProject(t *testing.T) {
 		}
 		state.Contracts().AddOrUpdate(c3)
 
-		state.Networks().AddOrUpdate(emulator, config.DefaultEmulatorNetwork())
+		state.Networks().AddOrUpdate(config.EmulatorNetwork)
 
-		a := tests.Alice()
+		a := Alice()
 		state.Accounts().AddOrUpdate(a)
 
 		d := config.Deployment{
-			Network: emulator,
+			Network: config.EmulatorNetwork.Name,
 			Account: a.Name(),
 			Contracts: []config.ContractDeployment{
 				{Name: c1.Name}, {Name: c3.Name},
@@ -959,10 +958,10 @@ func TestProject(t *testing.T) {
 
 		// for checking imports are correctly resolved
 		resolved := map[string]string{
-			tests.ContractB.Name: fmt.Sprintf(`import ContractA from 0x%s`, tests.Donald().Address().Hex()),
+			tests.ContractB.Name: fmt.Sprintf(`import ContractA from 0x%s`, Donald().Address().Hex()),
 			tests.ContractC.Name: fmt.Sprintf(`
 		import ContractB from 0x%s
-		import ContractA from 0x%s`, a.Address().Hex(), tests.Donald().Address().Hex()),
+		import ContractA from 0x%s`, a.Address().Hex(), Donald().Address().Hex()),
 		} // don't change formatting of the above code since it compares the strings with included formatting
 
 		gw.SendSignedTransaction.Run(func(args mock.Arguments) {
@@ -996,7 +995,6 @@ func TestProject(t *testing.T) {
 	t.Run("Deploy Project New Import Schema and LocationAliases", func(t *testing.T) {
 		t.Parallel()
 
-		emulator := config.DefaultEmulatorNetwork().Name
 		state, flowkit, gw := setup()
 
 		c1 := config.Contract{
@@ -1009,8 +1007,8 @@ func TestProject(t *testing.T) {
 			Name:     "ContractAA",
 			Location: tests.ContractAA.Filename,
 			Aliases: []config.Alias{{
-				Network: emulator,
-				Address: tests.Donald().Address(),
+				Network: config.EmulatorNetwork.Name,
+				Address: Donald().Address(),
 			}},
 		}
 		state.Contracts().AddOrUpdate(c2)
@@ -1021,13 +1019,13 @@ func TestProject(t *testing.T) {
 		}
 		state.Contracts().AddOrUpdate(c3)
 
-		state.Networks().AddOrUpdate(emulator, config.DefaultEmulatorNetwork())
+		state.Networks().AddOrUpdate(config.EmulatorNetwork)
 
-		a := tests.Alice()
+		a := Alice()
 		state.Accounts().AddOrUpdate(a)
 
 		d := config.Deployment{
-			Network: emulator,
+			Network: config.EmulatorNetwork.Name,
 			Account: a.Name(),
 			Contracts: []config.ContractDeployment{
 				{Name: c1.Name}, {Name: c3.Name},
@@ -1037,10 +1035,10 @@ func TestProject(t *testing.T) {
 
 		// for checking imports are correctly resolved
 		resolved := map[string]string{
-			tests.ContractB.Name: fmt.Sprintf(`import ContractAA from 0x%s`, tests.Donald().Address().Hex()),
+			tests.ContractB.Name: fmt.Sprintf(`import ContractAA from 0x%s`, Donald().Address().Hex()),
 			tests.ContractC.Name: fmt.Sprintf(`
 		import ContractBB from 0x%s
-		import ContractAA from 0x%s`, a.Address().Hex(), tests.Donald().Address().Hex()),
+		import ContractAA from 0x%s`, a.Address().Hex(), Donald().Address().Hex()),
 		} // don't change formatting of the above code since it compares the strings with included formatting
 
 		gw.SendSignedTransaction.Run(func(args mock.Arguments) {
@@ -1081,21 +1079,16 @@ func TestProject(t *testing.T) {
 			Location: tests.ContractHelloString.Filename,
 		}
 		state.Contracts().AddOrUpdate(c)
+		state.Networks().AddOrUpdate(config.EmulatorNetwork)
 
-		n := config.Network{
-			Name: "emulator",
-			Host: "127.0.0.1:3569",
-		}
-		state.Networks().AddOrUpdate(n.Name, n)
-
-		acct1 := tests.Charlie()
+		acct1 := Charlie()
 		state.Accounts().AddOrUpdate(acct1)
 
-		acct2 := tests.Donald()
+		acct2 := Donald()
 		state.Accounts().AddOrUpdate(acct2)
 
 		d := config.Deployment{
-			Network: n.Name,
+			Network: config.EmulatorNetwork.Name,
 			Account: acct2.Name(),
 			Contracts: []config.ContractDeployment{{
 				Name: c.Name,
@@ -1131,14 +1124,10 @@ func simpleDeploy(state *State, flowkit Flowkit, update bool) ([]*project.Contra
 	}
 	state.Contracts().AddOrUpdate(c)
 
-	n := config.Network{
-		Name: "emulator",
-		Host: "127.0.0.1:3569",
-	}
-	state.Networks().AddOrUpdate(n.Name, n)
+	state.Networks().AddOrUpdate(config.EmulatorNetwork)
 
 	d := config.Deployment{
-		Network: n.Name,
+		Network: config.EmulatorNetwork.Name,
 		Account: srvAcc.Name(),
 		Contracts: []config.ContractDeployment{{
 			Name: c.Name,
@@ -1169,9 +1158,7 @@ func TestProject_Integration(t *testing.T) {
 
 		state, flowkit := setupIntegration()
 		srvAcc, _ := state.EmulatorServiceAccount()
-
-		n := config.DefaultEmulatorNetwork()
-		state.Networks().AddOrUpdate(n.Name, n)
+		state.Networks().AddOrUpdate(config.EmulatorNetwork)
 
 		contractFixtures := []tests.Resource{
 			tests.ContractB, tests.ContractC,
@@ -1191,13 +1178,13 @@ func TestProject_Integration(t *testing.T) {
 			Name:     cA.Name,
 			Location: cA.Filename,
 			Aliases: []config.Alias{{
-				Network: n.Name,
+				Network: config.EmulatorNetwork.Name,
 				Address: srvAcc.Address(),
 			}},
 		})
 
 		state.Deployments().AddOrUpdate(config.Deployment{
-			Network: n.Name,
+			Network: config.EmulatorNetwork.Name,
 			Account: srvAcc.Name(),
 			Contracts: []config.ContractDeployment{{
 				Name: testContracts[0].Name,
@@ -1320,15 +1307,10 @@ func TestScripts_Integration(t *testing.T) {
 			Location: tests.ContractHelloString.Filename,
 		}
 		state.Contracts().AddOrUpdate(c)
-
-		n := config.Network{
-			Name: "emulator",
-			Host: "127.0.0.1:3569",
-		}
-		state.Networks().AddOrUpdate(n.Name, n)
+		state.Networks().AddOrUpdate(config.EmulatorNetwork)
 
 		d := config.Deployment{
-			Network: n.Name,
+			Network: config.EmulatorNetwork.Name,
 			Account: srvAcc.Name(),
 			Contracts: []config.ContractDeployment{{
 				Name: c.Name,
@@ -1506,9 +1488,9 @@ func TestTransactions(t *testing.T) {
 }
 
 func setupAccounts(state *State, flowkit Flowkit) {
-	setupAccount(state, flowkit, tests.Alice())
-	setupAccount(state, flowkit, tests.Bob())
-	setupAccount(state, flowkit, tests.Charlie())
+	setupAccount(state, flowkit, Alice())
+	setupAccount(state, flowkit, Bob())
+	setupAccount(state, flowkit, Charlie())
 }
 
 func setupAccount(state *State, flowkit Flowkit, account *Account) {
@@ -1719,15 +1701,10 @@ func TestTransactions_Integration(t *testing.T) {
 			Location: tests.ContractHelloString.Filename,
 		}
 		state.Contracts().AddOrUpdate(c)
-
-		n := config.Network{
-			Name: "emulator",
-			Host: "127.0.0.1:3569",
-		}
-		state.Networks().AddOrUpdate(n.Name, n)
+		state.Networks().AddOrUpdate(config.EmulatorNetwork)
 
 		d := config.Deployment{
-			Network: n.Name,
+			Network: config.EmulatorNetwork.Name,
 			Account: srvAcc.Name(),
 			Contracts: []config.ContractDeployment{{
 				Name: c.Name,

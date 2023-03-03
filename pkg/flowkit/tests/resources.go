@@ -21,11 +21,8 @@ package tests
 import (
 	"fmt"
 
-	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/spf13/afero"
-
-	"github.com/onflow/flow-cli/pkg/flowkit"
 )
 
 type Resource struct {
@@ -352,35 +349,6 @@ func ReaderWriter() (afero.Afero, afero.Fs) {
 	}
 
 	return afero.Afero{Fs: mockFS}, mockFS
-}
-
-func Alice() *flowkit.Account {
-	return newAccount("Alice", "0x1", "seedseedseedseedseedseedseedseedseedseedseedseedAlice")
-}
-
-func Bob() *flowkit.Account {
-	return newAccount("Bob", "0x2", "seedseedseedseedseedseedseedseedseedseedseedseedBob")
-}
-
-func Charlie() *flowkit.Account {
-	return newAccount("Charlie", "0x3", "seedseedseedseedseedseedseedseedseedseedseedseedCharlie")
-}
-
-func Donald() *flowkit.Account {
-	return newAccount("Donald", "0x3", "seedseedseedseedseedseedseedseedseedseedseedseedDonald")
-}
-
-func newAccount(name string, address string, seed string) *flowkit.Account {
-	privateKey, _ := crypto.GeneratePrivateKey(crypto.ECDSA_P256, []byte(seed))
-
-	account := flowkit.
-		NewAccount(name).
-		SetAddress(flow.HexToAddress(address)).
-		SetKey(
-			flowkit.NewHexAccountKeyFromPrivateKey(0, crypto.SHA3_256, privateKey),
-		)
-
-	return account
 }
 
 func PubKeys() []crypto.PublicKey {
