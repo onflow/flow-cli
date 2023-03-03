@@ -21,14 +21,12 @@ package gateway
 import (
 	"github.com/onflow/cadence"
 	"github.com/onflow/flow-go-sdk"
-
-	"github.com/onflow/flow-cli/pkg/flowkit"
 )
 
 // Gateway describes blockchain access interface
 type Gateway interface {
 	GetAccount(flow.Address) (*flow.Account, error)
-	SendSignedTransaction(*flowkit.Transaction) (*flow.Transaction, error)
+	SendSignedTransaction(*flow.Transaction) (*flow.Transaction, error)
 	GetTransaction(flow.Identifier) (*flow.Transaction, error)
 	GetTransactionResultsByBlockID(blockID flow.Identifier) ([]*flow.TransactionResult, error)
 	GetTransactionResult(flow.Identifier, bool) (*flow.TransactionResult, error)

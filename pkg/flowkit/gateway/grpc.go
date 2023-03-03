@@ -30,8 +30,6 @@ import (
 	"github.com/onflow/flow-go/utils/grpcutils"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
-
-	"github.com/onflow/flow-cli/pkg/flowkit"
 )
 
 // maxGRPCMessageSize 20mb, matching the value set in onflow/flow-go
@@ -102,9 +100,7 @@ func (g *GrpcGateway) GetAccount(address flow.Address) (*flow.Account, error) {
 }
 
 // SendSignedTransaction sends a transaction to flow that is already prepared and signed.
-func (g *GrpcGateway) SendSignedTransaction(transaction *flowkit.Transaction) (*flow.Transaction, error) {
-	tx := transaction.FlowTransaction()
-
+func (g *GrpcGateway) SendSignedTransaction(tx *flow.Transaction) (*flow.Transaction, error) {
 	err := g.client.SendTransaction(g.ctx, *tx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to submit transaction: %w", err)

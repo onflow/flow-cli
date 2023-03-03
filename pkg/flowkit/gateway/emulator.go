@@ -129,12 +129,12 @@ func (g *EmulatorGateway) GetAccount(address flow.Address) (*flow.Account, error
 	return account, nil
 }
 
-func (g *EmulatorGateway) SendSignedTransaction(tx *flowkit.Transaction) (*flow.Transaction, error) {
-	err := g.backend.SendTransaction(context.Background(), *tx.FlowTransaction())
+func (g *EmulatorGateway) SendSignedTransaction(tx *flow.Transaction) (*flow.Transaction, error) {
+	err := g.backend.SendTransaction(context.Background(), *tx)
 	if err != nil {
 		return nil, UnwrapStatusError(err)
 	}
-	return tx.FlowTransaction(), nil
+	return tx, nil
 }
 
 func (g *EmulatorGateway) GetTransactionResult(ID flow.Identifier, waitSeal bool) (*flow.TransactionResult, error) {
