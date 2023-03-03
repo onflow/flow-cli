@@ -52,17 +52,15 @@ import (
 // Run the command with arguments.
 type Run func(
 	args []string,
-	readerWriter flowkit.ReaderWriter,
 	globalFlags GlobalFlags,
-	services *services.Services,
+	services flowkit.Flowkit,
 ) (Result, error)
 
 // RunWithState runs the command with arguments and state.
 type RunWithState func(
 	args []string,
-	readerWriter flowkit.ReaderWriter,
 	globalFlags GlobalFlags,
-	services *services.Services,
+	services flowkit.Flowkit,
 	state *flowkit.State,
 ) (Result, error)
 
