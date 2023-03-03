@@ -52,7 +52,7 @@ func transformEmulatorsToJSON(emulators config.Emulators) jsonEmulators {
 	jsonEmulators := jsonEmulators{}
 
 	for _, e := range emulators {
-		if e == config.DefaultEmulator() {
+		if e == config.DefaultEmulator {
 			continue
 		}
 		jsonEmulators[e.Name] = jsonEmulator{

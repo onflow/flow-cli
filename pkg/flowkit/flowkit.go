@@ -372,7 +372,7 @@ func (f *Flowkit) RemoveContract(
 	)
 	defer f.logger.StopProgress()
 
-	sentTx, err := f.gateway.SendSignedTransaction(tx)
+	sentTx, err := f.gateway.SendSignedTransaction(tx.FlowTransaction())
 	if err != nil {
 		return flow.EmptyID, err
 	}
@@ -947,7 +947,7 @@ func (f *Flowkit) SendSignedTransaction(
 	f.logger.StartProgress(fmt.Sprintf("Sending transaction with ID: %s", tx.FlowTransaction().ID()))
 	defer f.logger.StopProgress()
 
-	sentTx, err := f.gateway.SendSignedTransaction(tx)
+	sentTx, err := f.gateway.SendSignedTransaction(tx.FlowTransaction())
 	if err != nil {
 		return nil, nil, err
 	}
@@ -994,7 +994,7 @@ func (f *Flowkit) SendTransaction(
 	f.logger.Info(fmt.Sprintf("Transaction ID: %s", tx.FlowTransaction().ID()))
 	f.logger.StartProgress("Sending transaction...")
 
-	sentTx, err := f.gateway.SendSignedTransaction(tx)
+	sentTx, err := f.gateway.SendSignedTransaction(tx.FlowTransaction())
 	if err != nil {
 		return nil, nil, err
 	}

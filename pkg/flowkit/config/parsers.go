@@ -111,21 +111,21 @@ func StringToContract(
 
 	if emulatorAlias != "" {
 		contract.Aliases.Add(
-			DefaultEmulatorNetwork().Name,
+			EmulatorNetwork.Name,
 			flow.HexToAddress(emulatorAlias),
 		)
 	}
 
 	if mainnetAlias != "" {
 		contract.Aliases.Add(
-			DefaultMainnetNetwork().Name,
+			MainnetNetwork.Name,
 			flow.HexToAddress(mainnetAlias),
 		)
 	}
 
 	if testnetAlias != "" {
 		contract.Aliases.Add(
-			DefaultTestnetNetwork().Name,
+			TestnetNetwork.Name,
 			flow.HexToAddress(testnetAlias),
 		)
 	}

@@ -533,9 +533,9 @@ func ReportCrash() bool {
 
 func CreateAccountNetworkPrompt() (string, config.Network) {
 	networkMap := map[string]config.Network{
-		"Emulator": config.DefaultEmulatorNetwork(),
-		"Testnet":  config.DefaultTestnetNetwork(),
-		"Mainnet":  config.DefaultMainnetNetwork(),
+		"Emulator": config.EmulatorNetwork,
+		"Testnet":  config.TestnetNetwork,
+		"Mainnet":  config.MainnetNetwork,
 	}
 
 	networkPrompt := promptui.Select{
