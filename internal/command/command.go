@@ -45,7 +45,6 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
 	"github.com/onflow/flow-cli/pkg/flowkit/gateway"
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
-	"github.com/onflow/flow-cli/pkg/flowkit/services"
 	"github.com/onflow/flow-cli/pkg/flowkit/util"
 )
 
@@ -53,14 +52,14 @@ import (
 type Run func(
 	args []string,
 	globalFlags GlobalFlags,
-	services flowkit.Flowkit,
+	flow flowkit.Services,
 ) (Result, error)
 
 // RunWithState runs the command with arguments and state.
 type RunWithState func(
 	args []string,
 	globalFlags GlobalFlags,
-	services flowkit.Flowkit,
+	flow flowkit.Services,
 	state *flowkit.State,
 ) (Result, error)
 
@@ -107,16 +106,16 @@ func (c Command) AddToParent(parent *cobra.Command) {
 			handleError("Config Error", confErr)
 		}
 
-		host, hostNetworkKey, err := resolveHost(state, Flags.Host, Flags.HostNetworkKey, Flags.Network)
+		network, err := resolveHost(state, Flags.Host, Flags.HostNetworkKey, Flags.Network)
 		handleError("Host Error", err)
 
-		clientGateway, err := createGateway(host, hostNetworkKey)
+		clientGateway, err := createGateway(*network)
 		handleError("Gateway Error", err)
 
 		logger := createLogger(Flags.Log, Flags.Format)
 
 		// initialize services
-		service := services.NewServices(clientGateway, state, logger)
+		flow := flowkit.NewFlowkit(state, *network, clientGateway, logger)
 
 		// skip version check if flag is set
 		if !Flags.SkipVersionCheck {
@@ -130,13 +129,13 @@ func (c Command) AddToParent(parent *cobra.Command) {
 		// run command based on requirements for state
 		var result Result
 		if c.Run != nil {
-			result, err = c.Run(args, loader, Flags, service)
+			result, err = c.Run(args, Flags, flow)
 		} else if c.RunS != nil {
 			if confErr != nil {
 				handleError("Config Error", confErr)
 			}
 
-			result, err = c.RunS(args, loader, Flags, service, state)
+			result, err = c.RunS(args, Flags, flow, state)
 		} else {
 			panic("command implementation needs to provide run functionality")
 		}
@@ -167,13 +166,13 @@ func (c Command) AddToParent(parent *cobra.Command) {
 }
 
 // createGateway creates a gateway to be used, defaults to grpc but can support others.
-func createGateway(host, hostNetworkKey string) (gateway.Gateway, error) {
+func createGateway(network config.Network) (gateway.Gateway, error) {
 	// create secure grpc client if hostNetworkKey provided
-	if hostNetworkKey != "" {
-		return gateway.NewSecureGrpcGateway(host, hostNetworkKey)
+	if network.Key != "" {
+		return gateway.NewSecureGrpcGateway(network)
 	}
 
-	return gateway.NewGrpcGateway(host)
+	return gateway.NewGrpcGateway(network)
 }
 
 // resolveHost from the flags provided.
@@ -183,45 +182,42 @@ func createGateway(host, hostNetworkKey string) (gateway.Gateway, error) {
 // 2. if conf is initialized return host by network flag
 // 3. if conf is not initialized and network flag is provided resolve to coded value for that network
 // 4. default to emulator network
-func resolveHost(state *flowkit.State, hostFlag, networkKeyFlag, networkFlag string) (string, string, error) {
+func resolveHost(state *flowkit.State, hostFlag, networkKeyFlag, networkFlag string) (*config.Network, error) {
 	// don't allow both network and host flag as the host might be different
-	if networkFlag != config.DefaultEmulatorNetwork().Name && hostFlag != "" {
-		return "", "", fmt.Errorf("shouldn't use both host and network flags, better to use network flag")
+	if networkFlag != config.EmulatorNetwork.Name && hostFlag != "" {
+		return nil, fmt.Errorf("shouldn't use both host and network flags, better to use network flag")
 	}
 
-	// host flag has highest priority
+	// host flag has the highest priority
 	if hostFlag != "" {
 		// if network-key was provided validate it
 		if networkKeyFlag != "" {
 			err := util.ValidateECDSAP256Pub(networkKeyFlag)
 			if err != nil {
-				return "", "", fmt.Errorf("invalid network key %s: %w", networkKeyFlag, err)
+				return nil, fmt.Errorf("invalid network key %s: %w", networkKeyFlag, err)
 			}
-
-			return hostFlag, networkKeyFlag, nil
 		}
 
-		return hostFlag, networkKeyFlag, nil
+		return &config.Network{Name: "custom", Host: hostFlag, Key: networkKeyFlag}, nil
 	}
 
 	// network flag with project initialized is next
 	if state != nil {
 		stateNetwork, err := state.Networks().ByName(networkFlag)
 		if err != nil {
-			return "", "", fmt.Errorf("network with name %s does not exist in configuration", networkFlag)
+			return nil, fmt.Errorf("network with name %s does not exist in configuration", networkFlag)
 		}
 
-		return stateNetwork.Host, stateNetwork.Key, nil
+		return stateNetwork, nil
 	}
 
-	networks := config.DefaultNetworks()
+	networks := config.DefaultNetworks
 	network, err := networks.ByName(networkFlag)
-
 	if err != nil {
-		return "", "", fmt.Errorf("invalid network with name %s", networkFlag)
+		return nil, fmt.Errorf("invalid network with name %s", networkFlag)
 	}
 
-	return network.Host, network.Key, nil
+	return network, nil
 }
 
 // create logger utility.
