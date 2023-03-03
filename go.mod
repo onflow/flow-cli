@@ -163,7 +163,6 @@ require (
 	github.com/rs/zerolog v1.29.0 // indirect
 	github.com/sergi/go-diff v1.1.0 // indirect
 	github.com/sethvargo/go-retry v0.2.3 // indirect
-	github.com/sirupsen/logrus v1.9.0 // indirect
 	github.com/skeema/knownhosts v1.1.0 // indirect
 	github.com/sourcegraph/jsonrpc2 v0.1.0 // indirect
 	github.com/spacemonkeygo/spacelog v0.0.0-20180420211403-2296661a0572 // indirect
