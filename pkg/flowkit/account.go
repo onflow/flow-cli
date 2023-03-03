@@ -229,11 +229,15 @@ func (a *Accounts) Remove(name string) error {
 }
 
 func (a Accounts) String() string {
+	return strings.Join(a.Names(), ",")
+}
+
+func (a Accounts) Names() []string {
 	accNames := make([]string, 0)
 	for _, acc := range a {
 		accNames = append(accNames, acc.name)
 	}
-	return strings.Join(accNames, ",")
+	return accNames
 }
 
 // ByAddress get an account by address.

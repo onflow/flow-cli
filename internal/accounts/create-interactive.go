@@ -48,7 +48,7 @@ import (
 // and it then uses account creation APIs to automatically create the account on the network as well as save it.
 func createInteractive(state *flowkit.State) error {
 	log := output.NewStdoutLogger(output.InfoLog)
-	name := output.AccountNamePrompt(state.Accounts()) // todo check for duplicate names
+	name := output.AccountNamePrompt(state.Accounts().Names())
 	networkName, selectedNetwork := output.CreateAccountNetworkPrompt()
 	privateFile := fmt.Sprintf("%s.pkey", name)
 
