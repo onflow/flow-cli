@@ -211,7 +211,12 @@ func setupIntegration() (*State, Flowkit) {
 	}
 
 	acc, _ := state.EmulatorServiceAccount()
-	gw := gateway.NewEmulatorGatewayWithOpts(acc, gateway.WithEmulatorOptions(
+	pk, _ := acc.Key().PrivateKey()
+	gw := gateway.NewEmulatorGatewayWithOpts(&gateway.EmulatorKey{
+		PublicKey: (*pk).PublicKey(),
+		SigAlgo:   acc.Key().SigAlgo(),
+		HashAlgo:  acc.Key().HashAlgo(),
+	}, gateway.WithEmulatorOptions(
 		emulator.WithTransactionExpiry(10),
 	))
 
@@ -909,18 +914,13 @@ func TestProject(t *testing.T) {
 			Location: tests.ContractHelloString.Filename,
 		}
 		state.Contracts().AddOrUpdate(c)
-
-		n := config.Network{
-			Name: "emulator",
-			Host: "127.0.0.1:3569",
-		}
-		state.Networks().AddOrUpdate(n.Name, n)
+		state.Networks().AddOrUpdate(config.EmulatorNetwork)
 
 		acct2 := Donald()
 		state.Accounts().AddOrUpdate(acct2)
 
 		d := config.Deployment{
-			Network: n.Name,
+			Network: config.EmulatorNetwork.Name,
 			Account: acct2.Name(),
 			Contracts: []config.ContractDeployment{{
 				Name: c.Name,
@@ -947,7 +947,6 @@ func TestProject(t *testing.T) {
 	t.Run("Deploy Project Using LocationAliases", func(t *testing.T) {
 		t.Parallel()
 
-		emulator := config.DefaultEmulatorNetwork().Name
 		state, flowkit, gw := setup()
 
 		c1 := config.Contract{
@@ -960,7 +959,7 @@ func TestProject(t *testing.T) {
 			Name:     "Aliased",
 			Location: tests.ContractA.Filename,
 			Aliases: []config.Alias{{
-				Network: emulator,
+				Network: config.EmulatorNetwork.Name,
 				Address: Donald().Address(),
 			}},
 		}
@@ -972,13 +971,13 @@ func TestProject(t *testing.T) {
 		}
 		state.Contracts().AddOrUpdate(c3)
 
-		state.Networks().AddOrUpdate(emulator, config.DefaultEmulatorNetwork())
+		state.Networks().AddOrUpdate(config.EmulatorNetwork)
 
 		a := Alice()
 		state.Accounts().AddOrUpdate(a)
 
 		d := config.Deployment{
-			Network: emulator,
+			Network: config.EmulatorNetwork.Name,
 			Account: a.Name(),
 			Contracts: []config.ContractDeployment{
 				{Name: c1.Name}, {Name: c3.Name},
@@ -1025,7 +1024,6 @@ func TestProject(t *testing.T) {
 	t.Run("Deploy Project New Import Schema and LocationAliases", func(t *testing.T) {
 		t.Parallel()
 
-		emulator := config.DefaultEmulatorNetwork().Name
 		state, flowkit, gw := setup()
 
 		c1 := config.Contract{
@@ -1038,7 +1036,7 @@ func TestProject(t *testing.T) {
 			Name:     "ContractAA",
 			Location: tests.ContractAA.Filename,
 			Aliases: []config.Alias{{
-				Network: emulator,
+				Network: config.EmulatorNetwork.Name,
 				Address: Donald().Address(),
 			}},
 		}
@@ -1050,13 +1048,13 @@ func TestProject(t *testing.T) {
 		}
 		state.Contracts().AddOrUpdate(c3)
 
-		state.Networks().AddOrUpdate(emulator, config.DefaultEmulatorNetwork())
+		state.Networks().AddOrUpdate(config.EmulatorNetwork)
 
 		a := Alice()
 		state.Accounts().AddOrUpdate(a)
 
 		d := config.Deployment{
-			Network: emulator,
+			Network: config.EmulatorNetwork.Name,
 			Account: a.Name(),
 			Contracts: []config.ContractDeployment{
 				{Name: c1.Name}, {Name: c3.Name},
@@ -1110,12 +1108,7 @@ func TestProject(t *testing.T) {
 			Location: tests.ContractHelloString.Filename,
 		}
 		state.Contracts().AddOrUpdate(c)
-
-		n := config.Network{
-			Name: "emulator",
-			Host: "127.0.0.1:3569",
-		}
-		state.Networks().AddOrUpdate(n.Name, n)
+		state.Networks().AddOrUpdate(config.EmulatorNetwork)
 
 		acct1 := Charlie()
 		state.Accounts().AddOrUpdate(acct1)
@@ -1124,7 +1117,7 @@ func TestProject(t *testing.T) {
 		state.Accounts().AddOrUpdate(acct2)
 
 		d := config.Deployment{
-			Network: n.Name,
+			Network: config.EmulatorNetwork.Name,
 			Account: acct2.Name(),
 			Contracts: []config.ContractDeployment{{
 				Name: c.Name,
@@ -1160,14 +1153,10 @@ func simpleDeploy(state *State, flowkit Flowkit, update bool) ([]*project.Contra
 	}
 	state.Contracts().AddOrUpdate(c)
 
-	n := config.Network{
-		Name: "emulator",
-		Host: "127.0.0.1:3569",
-	}
-	state.Networks().AddOrUpdate(n.Name, n)
+	state.Networks().AddOrUpdate(config.EmulatorNetwork)
 
 	d := config.Deployment{
-		Network: n.Name,
+		Network: config.EmulatorNetwork.Name,
 		Account: srvAcc.Name(),
 		Contracts: []config.ContractDeployment{{
 			Name: c.Name,
@@ -1198,9 +1187,7 @@ func TestProject_Integration(t *testing.T) {
 
 		state, flowkit := setupIntegration()
 		srvAcc, _ := state.EmulatorServiceAccount()
-
-		n := config.DefaultEmulatorNetwork()
-		state.Networks().AddOrUpdate(n.Name, n)
+		state.Networks().AddOrUpdate(config.EmulatorNetwork)
 
 		contractFixtures := []tests.Resource{
 			tests.ContractB, tests.ContractC,
@@ -1220,13 +1207,13 @@ func TestProject_Integration(t *testing.T) {
 			Name:     cA.Name,
 			Location: cA.Filename,
 			Aliases: []config.Alias{{
-				Network: n.Name,
+				Network: config.EmulatorNetwork.Name,
 				Address: srvAcc.Address(),
 			}},
 		})
 
 		state.Deployments().AddOrUpdate(config.Deployment{
-			Network: n.Name,
+			Network: config.EmulatorNetwork.Name,
 			Account: srvAcc.Name(),
 			Contracts: []config.ContractDeployment{{
 				Name: testContracts[0].Name,
@@ -1349,15 +1336,10 @@ func TestScripts_Integration(t *testing.T) {
 			Location: tests.ContractHelloString.Filename,
 		}
 		state.Contracts().AddOrUpdate(c)
-
-		n := config.Network{
-			Name: "emulator",
-			Host: "127.0.0.1:3569",
-		}
-		state.Networks().AddOrUpdate(n.Name, n)
+		state.Networks().AddOrUpdate(config.EmulatorNetwork)
 
 		d := config.Deployment{
-			Network: n.Name,
+			Network: config.EmulatorNetwork.Name,
 			Account: srvAcc.Name(),
 			Contracts: []config.ContractDeployment{{
 				Name: c.Name,
@@ -1748,15 +1730,10 @@ func TestTransactions_Integration(t *testing.T) {
 			Location: tests.ContractHelloString.Filename,
 		}
 		state.Contracts().AddOrUpdate(c)
-
-		n := config.Network{
-			Name: "emulator",
-			Host: "127.0.0.1:3569",
-		}
-		state.Networks().AddOrUpdate(n.Name, n)
+		state.Networks().AddOrUpdate(config.EmulatorNetwork)
 
 		d := config.Deployment{
-			Network: n.Name,
+			Network: config.EmulatorNetwork.Name,
 			Account: srvAcc.Name(),
 			Contracts: []config.ContractDeployment{{
 				Name: c.Name,
