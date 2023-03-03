@@ -64,7 +64,7 @@ func DefaultMockGateway() *TestGateway {
 		Mock: m,
 		SendSignedTransaction: m.On(
 			SendSignedTransactionFunc,
-			mock.AnythingOfType("*flowkit.Transaction"),
+			mock.AnythingOfType("*flow.Transaction"),
 		),
 		GetAccount: m.On(
 			GetAccountFunc,
