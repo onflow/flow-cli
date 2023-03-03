@@ -46,26 +46,26 @@ type EventWorker struct {
 
 type Services interface {
 	Network() config.Network
-	Ping() (string, error)
-	GetAccount(ctx context.Context, address flow.Address) (*flow.Account, error)
-	CreateAccount(ctx context.Context, signer *Account, key Key) (*flow.Account, flow.Identifier, error)
-	AddContract(ctx context.Context, account *Account, contract *Script, update bool) (flow.Identifier, bool, error)
-	RemoveContract(ctx context.Context, account *Account, name string) (flow.Identifier, error)
-	GetBlock(ctx context.Context, query BlockQuery) (*flow.Block, error)
-	GetCollection(ctx context.Context, ID flow.Identifier) (*flow.Collection, error)
-	GetEvents(ctx context.Context, names []string, startHeight uint64, endHeight uint64, worker *EventWorker) ([]flow.BlockEvents, error)
-	GenerateKey(ctx context.Context, sigAlgo crypto.SignatureAlgorithm, inputSeed string) (crypto.PrivateKey, error)
-	GenerateMnemonicKey(ctx context.Context, sigAlgo crypto.SignatureAlgorithm, derivationPath string) (crypto.PrivateKey, string, error)
-	DerivePrivateKeyFromMnemonic(mnemonic string, sigAlgo crypto.SignatureAlgorithm, derivationPath string) (crypto.PrivateKey, error)
-	DeployProject(ctx context.Context, update bool) ([]*project.Contract, error)
-	ExecuteScript(ctx context.Context, script *Script) (cadence.Value, error)
-	GetTransactionByID(ctx context.Context, ID flow.Identifier, waitSeal bool) (*flow.Transaction, *flow.TransactionResult, error)
-	GetTransactionsByBlockID(ctx context.Context, blockID flow.Identifier, waitSeal bool) ([]*flow.Transaction, []*flow.TransactionResult, error)
-	BuildTransaction(ctx context.Context, addresses *TransactionAddressesRoles, proposerKeyIndex int, script *Script, gasLimit uint64) (*Transaction, error)
-	SignTransactionPayload(ctx context.Context, signer *Account, payload []byte) (*Transaction, error)
-	SendSignedTransaction(ctx context.Context, tx *Transaction) (*flow.Transaction, *flow.TransactionResult, error)
-	SendTransaction(ctx context.Context, accounts *transactionAccountRoles, script *Script, gasLimit uint64) (*flow.Transaction, *flow.TransactionResult, error)
-	Test(ctx context.Context, code []byte, scriptPath string) (cdcTests.Results, error)
+	Ping() error
+	GetAccount(context.Context, flow.Address) (*flow.Account, error)
+	CreateAccount(context.Context, *Account, []Key) (*flow.Account, flow.Identifier, error)
+	AddContract(context.Context, *Account, *Script, bool) (flow.Identifier, bool, error)
+	RemoveContract(context.Context, *Account, string) (flow.Identifier, error)
+	GetBlock(context.Context, BlockQuery) (*flow.Block, error)
+	GetCollection(context.Context, flow.Identifier) (*flow.Collection, error)
+	GetEvents(context.Context, []string, uint64, uint64, *EventWorker) ([]flow.BlockEvents, error)
+	GenerateKey(context.Context, crypto.SignatureAlgorithm, string) (crypto.PrivateKey, error)
+	GenerateMnemonicKey(context.Context, crypto.SignatureAlgorithm, string) (crypto.PrivateKey, string, error)
+	DerivePrivateKeyFromMnemonic(context.Context, string, crypto.SignatureAlgorithm, string) (crypto.PrivateKey, error)
+	DeployProject(context.Context, bool) ([]*project.Contract, error)
+	ExecuteScript(context.Context, *Script) (cadence.Value, error)
+	GetTransactionByID(context.Context, flow.Identifier, bool) (*flow.Transaction, *flow.TransactionResult, error)
+	GetTransactionsByBlockID(context.Context, flow.Identifier) ([]*flow.Transaction, []*flow.TransactionResult, error)
+	BuildTransaction(context.Context, *TransactionAddressesRoles, int, *Script, uint64) (*Transaction, error)
+	SignTransactionPayload(context.Context, *Account, []byte) (*Transaction, error)
+	SendSignedTransaction(context.Context, *Transaction) (*flow.Transaction, *flow.TransactionResult, error)
+	SendTransaction(context.Context, *transactionAccountRoles, *Script, uint64) (*flow.Transaction, *flow.TransactionResult, error)
+	Test(context.Context, []byte, string) (cdcTests.Results, error)
 }
 
 var _ Services = &Flowkit{}
@@ -88,13 +88,8 @@ func (f *Flowkit) State() (*State, error) {
 	return f.state, nil
 }
 
-func (f *Flowkit) Ping() (config.Network, error) {
-	err := f.gateway.Ping()
-	if err != nil {
-		return config.Network{}, err
-	}
-
-	return f.network, nil
+func (f *Flowkit) Ping() error {
+	return f.gateway.Ping()
 }
 
 // GetAccount fetches account on the Flow network.
@@ -574,7 +569,7 @@ func (f *Flowkit) GenerateMnemonicKey(ctx context.Context, sigAlgo crypto.Signat
 	return key, mnemonic, nil
 }
 
-func (f *Flowkit) DerivePrivateKeyFromMnemonic(mnemonic string, sigAlgo crypto.SignatureAlgorithm, derivationPath string) (crypto.PrivateKey, error) {
+func (f *Flowkit) DerivePrivateKeyFromMnemonic(ctx context.Context, mnemonic string, sigAlgo crypto.SignatureAlgorithm, derivationPath string) (crypto.PrivateKey, error) {
 	if !bip39.IsMnemonicValid(mnemonic) {
 		return nil, fmt.Errorf("invalid mnemonic")
 	}
