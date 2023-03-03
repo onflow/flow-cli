@@ -66,7 +66,7 @@ func setup() (*State, Flowkit, *tests.TestGateway) {
 	flowkit := Flowkit{
 		state:   state,
 		network: config.EmulatorNetwork,
-		gateway: gw,
+		gateway: gw.Mock,
 		logger:  output.NewStdoutLogger(output.NoneLog),
 	}
 
