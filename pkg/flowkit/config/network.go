@@ -22,6 +22,31 @@ import (
 	"fmt"
 )
 
+var (
+	EmulatorNetwork = Network{
+		Name: "emulator",
+		Host: "127.0.0.1:3569",
+	}
+	TestnetNetwork = Network{
+		Name: "testnet",
+		Host: "access.devnet.nodes.onflow.org:9000",
+	}
+	SandboxNetwork = Network{
+		Name: "sandboxnet",
+		Host: "access.sandboxnet.nodes.onflow.org:9000",
+	}
+	MainnetNetwork = Network{
+		Name: "mainnet",
+		Host: "access.mainnet.nodes.onflow.org:9000",
+	}
+	DefaultNetworks = Networks{
+		EmulatorNetwork,
+		TestnetNetwork,
+		SandboxNetwork,
+		MainnetNetwork,
+	}
+)
+
 type Networks []Network
 
 // Network defines the configuration for a Flow network.
@@ -68,45 +93,4 @@ func (n *Networks) Remove(name string) error {
 	}
 
 	return nil
-}
-
-// DefaultEmulatorNetwork get default emulator network.
-func DefaultEmulatorNetwork() Network {
-	return Network{
-		Name: "emulator",
-		Host: "127.0.0.1:3569",
-	}
-}
-
-// DefaultTestnetNetwork get default testnet network.
-func DefaultTestnetNetwork() Network {
-	return Network{
-		Name: "testnet",
-		Host: "access.devnet.nodes.onflow.org:9000",
-	}
-}
-
-func DefaultSandboxNetwork() Network {
-	return Network{
-		Name: "sandboxnet",
-		Host: "access.sandboxnet.nodes.onflow.org:9000",
-	}
-}
-
-// DefaultMainnetNetwork get default mainnet network.
-func DefaultMainnetNetwork() Network {
-	return Network{
-		Name: "mainnet",
-		Host: "access.mainnet.nodes.onflow.org:9000",
-	}
-}
-
-// DefaultNetworks gets all default networks.
-func DefaultNetworks() Networks {
-	return Networks{
-		DefaultEmulatorNetwork(),
-		DefaultTestnetNetwork(),
-		DefaultSandboxNetwork(),
-		DefaultMainnetNetwork(),
-	}
 }
