@@ -5,14 +5,13 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"os"
+	"strings"
+	"testing"
+
 	"github.com/onflow/cadence"
 	jsoncdc "github.com/onflow/cadence/encoding/json"
 	"github.com/onflow/cadence/runtime/stdlib"
-	"github.com/onflow/flow-cli/pkg/flowkit/config"
-	"github.com/onflow/flow-cli/pkg/flowkit/gateway"
-	"github.com/onflow/flow-cli/pkg/flowkit/output"
-	"github.com/onflow/flow-cli/pkg/flowkit/project"
-	"github.com/onflow/flow-cli/pkg/flowkit/tests"
 	emulator "github.com/onflow/flow-emulator"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/access/grpc"
@@ -21,10 +20,40 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
-	"os"
-	"strings"
-	"testing"
+	"github.com/onflow/flow-cli/pkg/flowkit/config"
+	"github.com/onflow/flow-cli/pkg/flowkit/gateway"
+	"github.com/onflow/flow-cli/pkg/flowkit/output"
+	"github.com/onflow/flow-cli/pkg/flowkit/project"
+	"github.com/onflow/flow-cli/pkg/flowkit/tests"
 )
+
+func Alice() *Account {
+	return newAccount("Alice", "0x1", "seedseedseedseedseedseedseedseedseedseedseedseedAlice")
+}
+
+func Bob() *Account {
+	return newAccount("Bob", "0x2", "seedseedseedseedseedseedseedseedseedseedseedseedBob")
+}
+
+func Charlie() *Account {
+	return newAccount("Charlie", "0x3", "seedseedseedseedseedseedseedseedseedseedseedseedCharlie")
+}
+
+func Donald() *Account {
+	return newAccount("Donald", "0x3", "seedseedseedseedseedseedseedseedseedseedseedseedDonald")
+}
+
+func newAccount(name string, address string, seed string) *Account {
+	privateKey, _ := crypto.GeneratePrivateKey(crypto.ECDSA_P256, []byte(seed))
+
+	account := NewAccount(name).
+		SetAddress(flow.HexToAddress(address)).
+		SetKey(
+			NewHexAccountKeyFromPrivateKey(0, crypto.SHA3_256, privateKey),
+		)
+
+	return account
+}
 
 func setup() (*State, Flowkit, *tests.TestGateway) {
 	readerWriter, _ := tests.ReaderWriter()
@@ -887,7 +916,7 @@ func TestProject(t *testing.T) {
 		}
 		state.Networks().AddOrUpdate(n.Name, n)
 
-		acct2 := tests.Donald()
+		acct2 := Donald()
 		state.Accounts().AddOrUpdate(acct2)
 
 		d := config.Deployment{
@@ -932,7 +961,7 @@ func TestProject(t *testing.T) {
 			Location: tests.ContractA.Filename,
 			Aliases: []config.Alias{{
 				Network: emulator,
-				Address: tests.Donald().Address(),
+				Address: Donald().Address(),
 			}},
 		}
 		state.Contracts().AddOrUpdate(c2)
@@ -945,7 +974,7 @@ func TestProject(t *testing.T) {
 
 		state.Networks().AddOrUpdate(emulator, config.DefaultEmulatorNetwork())
 
-		a := tests.Alice()
+		a := Alice()
 		state.Accounts().AddOrUpdate(a)
 
 		d := config.Deployment{
@@ -959,10 +988,10 @@ func TestProject(t *testing.T) {
 
 		// for checking imports are correctly resolved
 		resolved := map[string]string{
-			tests.ContractB.Name: fmt.Sprintf(`import ContractA from 0x%s`, tests.Donald().Address().Hex()),
+			tests.ContractB.Name: fmt.Sprintf(`import ContractA from 0x%s`, Donald().Address().Hex()),
 			tests.ContractC.Name: fmt.Sprintf(`
 		import ContractB from 0x%s
-		import ContractA from 0x%s`, a.Address().Hex(), tests.Donald().Address().Hex()),
+		import ContractA from 0x%s`, a.Address().Hex(), Donald().Address().Hex()),
 		} // don't change formatting of the above code since it compares the strings with included formatting
 
 		gw.SendSignedTransaction.Run(func(args mock.Arguments) {
@@ -1010,7 +1039,7 @@ func TestProject(t *testing.T) {
 			Location: tests.ContractAA.Filename,
 			Aliases: []config.Alias{{
 				Network: emulator,
-				Address: tests.Donald().Address(),
+				Address: Donald().Address(),
 			}},
 		}
 		state.Contracts().AddOrUpdate(c2)
@@ -1023,7 +1052,7 @@ func TestProject(t *testing.T) {
 
 		state.Networks().AddOrUpdate(emulator, config.DefaultEmulatorNetwork())
 
-		a := tests.Alice()
+		a := Alice()
 		state.Accounts().AddOrUpdate(a)
 
 		d := config.Deployment{
@@ -1037,10 +1066,10 @@ func TestProject(t *testing.T) {
 
 		// for checking imports are correctly resolved
 		resolved := map[string]string{
-			tests.ContractB.Name: fmt.Sprintf(`import ContractAA from 0x%s`, tests.Donald().Address().Hex()),
+			tests.ContractB.Name: fmt.Sprintf(`import ContractAA from 0x%s`, Donald().Address().Hex()),
 			tests.ContractC.Name: fmt.Sprintf(`
 		import ContractBB from 0x%s
-		import ContractAA from 0x%s`, a.Address().Hex(), tests.Donald().Address().Hex()),
+		import ContractAA from 0x%s`, a.Address().Hex(), Donald().Address().Hex()),
 		} // don't change formatting of the above code since it compares the strings with included formatting
 
 		gw.SendSignedTransaction.Run(func(args mock.Arguments) {
@@ -1088,10 +1117,10 @@ func TestProject(t *testing.T) {
 		}
 		state.Networks().AddOrUpdate(n.Name, n)
 
-		acct1 := tests.Charlie()
+		acct1 := Charlie()
 		state.Accounts().AddOrUpdate(acct1)
 
-		acct2 := tests.Donald()
+		acct2 := Donald()
 		state.Accounts().AddOrUpdate(acct2)
 
 		d := config.Deployment{
@@ -1506,9 +1535,9 @@ func TestTransactions(t *testing.T) {
 }
 
 func setupAccounts(state *State, flowkit Flowkit) {
-	setupAccount(state, flowkit, tests.Alice())
-	setupAccount(state, flowkit, tests.Bob())
-	setupAccount(state, flowkit, tests.Charlie())
+	setupAccount(state, flowkit, Alice())
+	setupAccount(state, flowkit, Bob())
+	setupAccount(state, flowkit, Charlie())
 }
 
 func setupAccount(state *State, flowkit Flowkit, account *Account) {

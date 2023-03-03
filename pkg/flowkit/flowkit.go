@@ -4,14 +4,14 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"strings"
+	"sync"
+
 	goeth "github.com/ethereum/go-ethereum/accounts"
 	"github.com/lmars/go-slip10"
 	"github.com/onflow/cadence"
 	cdcTests "github.com/onflow/cadence-tools/test"
 	"github.com/onflow/cadence/runtime/common"
-	"github.com/onflow/flow-cli/pkg/flowkit/gateway"
-	"github.com/onflow/flow-cli/pkg/flowkit/output"
-	"github.com/onflow/flow-cli/pkg/flowkit/util"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/access/grpc"
 	"github.com/onflow/flow-go-sdk/crypto"
@@ -19,11 +19,12 @@ import (
 	"github.com/tyler-smith/go-bip39"
 	"golang.org/x/exp/maps"
 	"golang.org/x/exp/slices"
-	"strings"
-	"sync"
 
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
+	"github.com/onflow/flow-cli/pkg/flowkit/gateway"
+	"github.com/onflow/flow-cli/pkg/flowkit/output"
 	"github.com/onflow/flow-cli/pkg/flowkit/project"
+	"github.com/onflow/flow-cli/pkg/flowkit/util"
 )
 
 type Key struct { // todo remove?
@@ -146,7 +147,7 @@ func (f *Flowkit) CreateAccount(
 	f.logger.StartProgress("Creating account...")
 	defer f.logger.StopProgress()
 
-	sentTx, err := f.gateway.SendSignedTransaction(tx)
+	sentTx, err := f.gateway.SendSignedTransaction(tx.FlowTransaction())
 	if err != nil {
 		return nil, flow.EmptyID, errors.Wrap(err, "account creation transaction failed")
 	}
@@ -307,7 +308,7 @@ func (f *Flowkit) AddContract(
 	f.logger.Info(fmt.Sprintf("Transaction ID: %s", tx.FlowTransaction().ID()))
 
 	// send transaction with contract
-	sentTx, err := f.gateway.SendSignedTransaction(tx)
+	sentTx, err := f.gateway.SendSignedTransaction(tx.FlowTransaction())
 	if err != nil {
 		return flow.EmptyID, false, fmt.Errorf("failed to send transaction to deploy a contract: %w", err)
 	}
