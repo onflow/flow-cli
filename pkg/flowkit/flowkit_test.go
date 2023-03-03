@@ -99,9 +99,9 @@ func TestAccounts(t *testing.T) {
 		newAddress := flow.HexToAddress("192440c99cb17282")
 
 		gw.SendSignedTransaction.Run(func(args mock.Arguments) {
-			tx := args.Get(0).(*Transaction)
-			assert.Equal(t, serviceAddress, tx.FlowTransaction().Authorizers[0])
-			assert.Equal(t, serviceAddress, tx.Signer().Address())
+			tx := args.Get(0).(*flow.Transaction)
+			assert.Equal(t, serviceAddress, tx.Authorizers[0])
+			assert.Equal(t, serviceAddress, tx.Payer)
 
 			gw.SendSignedTransaction.Return(tests.NewTransaction(), nil)
 		})
@@ -145,9 +145,9 @@ func TestAccounts(t *testing.T) {
 	t.Run("Contract Add for Account", func(t *testing.T) {
 		_, flowkit, gw := setup()
 		gw.SendSignedTransaction.Run(func(args mock.Arguments) {
-			tx := args.Get(0).(*Transaction)
-			assert.Equal(t, tx.Signer().Address(), serviceAddress)
-			assert.True(t, strings.Contains(string(tx.FlowTransaction().Script), "signer.contracts.add"))
+			tx := args.Get(0).(*flow.Transaction)
+			assert.Equal(t, tx.Payer, serviceAddress)
+			assert.True(t, strings.Contains(string(tx.Script), "signer.contracts.add"))
 
 			gw.SendSignedTransaction.Return(tests.NewTransaction(), nil)
 		})
@@ -170,9 +170,9 @@ func TestAccounts(t *testing.T) {
 	t.Run("Contract Remove for Account", func(t *testing.T) {
 		_, flowkit, gw := setup()
 		gw.SendSignedTransaction.Run(func(args mock.Arguments) {
-			tx := args.Get(0).(*Transaction)
-			assert.Equal(t, tx.Signer().Address(), serviceAddress)
-			assert.True(t, strings.Contains(string(tx.FlowTransaction().Script), "signer.contracts.remove"))
+			tx := args.Get(0).(*flow.Transaction)
+			assert.Equal(t, tx.Payer, serviceAddress)
+			assert.True(t, strings.Contains(string(tx.Script), "signer.contracts.remove"))
 
 			gw.SendSignedTransaction.Return(tests.NewTransaction(), nil)
 		})
@@ -298,7 +298,6 @@ func TestAccountsCreate_Integration(t *testing.T) {
 
 		accOut := []accountsOut{{
 			address: "01cf0e2f2f715450",
-			code:    map[string][]byte{},
 			balance: uint64(100000),
 			pubKeys: []crypto.PublicKey{
 				tests.PubKeys()[0],
@@ -306,7 +305,6 @@ func TestAccountsCreate_Integration(t *testing.T) {
 			weights: []int{flow.AccountKeyWeightThreshold},
 		}, {
 			address: "179b6b1cb6755e31",
-			code:    map[string][]byte{},
 			balance: uint64(100000),
 			pubKeys: []crypto.PublicKey{
 				tests.PubKeys()[0],
@@ -315,9 +313,6 @@ func TestAccountsCreate_Integration(t *testing.T) {
 			weights: []int{500, 500},
 		}, {
 			address: "f3fcd2c1a78f5eee",
-			code: map[string][]byte{
-				tests.ContractSimple.Name: tests.ContractSimple.Source,
-			},
 			balance: uint64(100000),
 			pubKeys: []crypto.PublicKey{
 				tests.PubKeys()[0],
@@ -343,7 +338,6 @@ func TestAccountsCreate_Integration(t *testing.T) {
 			assert.NotNil(t, acc)
 			assert.NotNil(t, ID)
 			assert.Equal(t, acc.Address.String(), c.address)
-			assert.Equal(t, acc.Contracts, c.code)
 			assert.Equal(t, acc.Balance, c.balance)
 			assert.Len(t, acc.Keys, len(c.pubKeys))
 
@@ -367,8 +361,6 @@ func TestAccountsCreate_Integration(t *testing.T) {
 		errOut := []string{
 			"invalid account key: signing algorithm (UNKNOWN) and hashing algorithm (SHA3_256) are not a valid pair for a Flow account key",
 			"invalid account key: signing algorithm (UNKNOWN) and hashing algorithm (UNKNOWN) are not a valid pair for a Flow account key",
-			"number of keys and weights provided must match, number of provided keys: 2, number of provided key weights: 1",
-			"number of keys and weights provided must match, number of provided keys: 1, number of provided key weights: 2",
 		}
 
 		accIn := []accountsIn{
@@ -376,35 +368,14 @@ func TestAccountsCreate_Integration(t *testing.T) {
 				account:  srvAcc,
 				sigAlgo:  []crypto.SignatureAlgorithm{crypto.UnknownSignatureAlgorithm},
 				hashAlgo: []crypto.HashAlgorithm{crypto.SHA3_256},
-				pubKeys: []crypto.PublicKey{
-					tests.PubKeys()[0],
-				},
-				weights: []int{1000},
+				pubKeys:  []crypto.PublicKey{tests.PubKeys()[0]},
+				weights:  []int{1000},
 			}, {
 				account:  srvAcc,
 				sigAlgo:  []crypto.SignatureAlgorithm{crypto.UnknownSignatureAlgorithm},
 				hashAlgo: []crypto.HashAlgorithm{crypto.UnknownHashAlgorithm},
-				pubKeys: []crypto.PublicKey{
-					tests.PubKeys()[0],
-				},
-				weights: []int{1000},
-			}, {
-				account:  srvAcc,
-				sigAlgo:  []crypto.SignatureAlgorithm{crypto.ECDSA_P256},
-				hashAlgo: []crypto.HashAlgorithm{crypto.SHA3_256},
-				pubKeys: []crypto.PublicKey{
-					tests.PubKeys()[0],
-					tests.PubKeys()[1],
-				},
-				weights: []int{1000},
-			}, {
-				account:  srvAcc,
-				sigAlgo:  []crypto.SignatureAlgorithm{crypto.ECDSA_P256},
-				hashAlgo: []crypto.HashAlgorithm{crypto.SHA3_256},
-				pubKeys: []crypto.PublicKey{
-					tests.PubKeys()[0],
-				},
-				weights: []int{1000, 1000},
+				pubKeys:  []crypto.PublicKey{tests.PubKeys()[0]},
+				weights:  []int{1000},
 			},
 			/*{
 			 	TODO(sideninja): uncomment this test case after https://github.com/onflow/flow-go-sdk/pull/199 is released
@@ -433,7 +404,7 @@ func TestAccountsCreate_Integration(t *testing.T) {
 			errMsg := errOut[i]
 
 			assert.Nil(t, acc)
-			assert.Nil(t, ID)
+			assert.Equal(t, flow.EmptyID, ID)
 			assert.Error(t, err)
 			assert.Equal(t, errMsg, err.Error())
 		}
