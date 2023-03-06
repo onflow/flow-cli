@@ -44,6 +44,7 @@ var RemoveContractCommand = &command.Command{
 func removeContract(
 	args []string,
 	globalFlags command.GlobalFlags,
+	_ output.Logger,
 	_ flowkit.Services,
 	state *flowkit.State,
 ) (command.Result, error) {

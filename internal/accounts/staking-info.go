@@ -53,6 +53,7 @@ func stakingInfo(
 	args []string,
 	_ command.GlobalFlags,
 	logger output.Logger,
+	_ flowkit.ReaderWriter,
 	flow flowkit.Services,
 ) (command.Result, error) {
 	address := flowsdk.HexToAddress(args[0])

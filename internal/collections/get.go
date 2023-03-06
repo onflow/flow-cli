@@ -26,6 +26,7 @@ import (
 
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/pkg/flowkit"
+	"github.com/onflow/flow-cli/pkg/flowkit/output"
 )
 
 type flagsCollections struct{}
@@ -46,6 +47,8 @@ var GetCommand = &command.Command{
 func get(
 	args []string,
 	_ command.GlobalFlags,
+	_ output.Logger,
+	_ flowkit.ReaderWriter,
 	flow flowkit.Services,
 ) (command.Result, error) {
 	id := flowsdk.HexToID(args[0])

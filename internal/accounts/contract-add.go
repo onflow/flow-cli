@@ -27,6 +27,7 @@ import (
 
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/pkg/flowkit"
+	"github.com/onflow/flow-cli/pkg/flowkit/output"
 )
 
 type flagsAddContract struct {
@@ -51,6 +52,7 @@ var AddContractCommand = &command.Command{
 func addContract(
 	args []string,
 	_ command.GlobalFlags,
+	_ output.Logger,
 	flow flowkit.Services,
 	state *flowkit.State,
 ) (command.Result, error) {

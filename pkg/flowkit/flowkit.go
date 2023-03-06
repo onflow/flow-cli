@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"strconv"
 	"strings"
 	"sync"
 
@@ -38,6 +39,20 @@ type BlockQuery struct {
 	ID     *flow.Identifier
 	Height uint64
 	Latest bool
+}
+
+func NewBlockQuery(query string) (BlockQuery, error) {
+	if query == "latest" {
+		return BlockQuery{Latest: true}, nil
+	}
+	if height, ce := strconv.ParseUint(query, 10, 64); ce == nil {
+		return BlockQuery{Height: height}, nil
+	}
+	if id := flow.HexToID(query); id != flow.EmptyID {
+		return BlockQuery{ID: &id}, nil
+	}
+
+	return BlockQuery{}, fmt.Errorf("invalid query: %s, valid are: \"latest\", block height or block ID", query)
 }
 
 type EventWorker struct {

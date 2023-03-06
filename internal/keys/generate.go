@@ -27,6 +27,7 @@ import (
 
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/pkg/flowkit"
+	"github.com/onflow/flow-cli/pkg/flowkit/output"
 )
 
 type flagsGenerate struct {
@@ -50,6 +51,8 @@ var GenerateCommand = &command.Command{
 func generate(
 	_ []string,
 	_ command.GlobalFlags,
+	_ output.Logger,
+	_ flowkit.ReaderWriter,
 	flow flowkit.Services,
 ) (command.Result, error) {
 	sigAlgo := crypto.StringToSignatureAlgorithm(generateFlags.KeySigAlgo)

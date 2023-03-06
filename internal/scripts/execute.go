@@ -19,6 +19,7 @@
 package scripts
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/onflow/cadence"
@@ -26,7 +27,7 @@ import (
 
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/pkg/flowkit"
-	"github.com/onflow/flow-cli/pkg/flowkit/services"
+	"github.com/onflow/flow-cli/pkg/flowkit/output"
 )
 
 type flagsScripts struct {
@@ -48,9 +49,10 @@ var ExecuteCommand = &command.Command{
 
 func execute(
 	args []string,
-	readerWriter flowkit.ReaderWriter,
 	globalFlags command.GlobalFlags,
-	srv *services.Services,
+	_ output.Logger,
+	readerWriter flowkit.ReaderWriter,
+	flow flowkit.Services,
 ) (command.Result, error) {
 	filename := args[0]
 
@@ -70,9 +72,9 @@ func execute(
 		return nil, fmt.Errorf("error parsing script arguments: %w", err)
 	}
 
-	value, err := srv.Scripts.Execute(
+	value, err := flow.ExecuteScript(
+		context.Background(),
 		flowkit.NewScript(code, scriptArgs, filename),
-		globalFlags.Network,
 	)
 	if err != nil {
 		return nil, err

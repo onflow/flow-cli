@@ -25,7 +25,7 @@ import (
 
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/pkg/flowkit"
-	"github.com/onflow/flow-cli/pkg/flowkit/services"
+	"github.com/onflow/flow-cli/pkg/flowkit/output"
 )
 
 type flagsRun struct {
@@ -43,10 +43,11 @@ var RunCommand = &command.Command{
 	},
 	Flags: &runFlags,
 	Run: func(
-		args []string,
+		_ []string,
+		_ command.GlobalFlags,
+		_ output.Logger,
 		_ flowkit.ReaderWriter,
-		globalFlags command.GlobalFlags,
-		services *services.Services,
+		_ flowkit.Services,
 	) (command.Result, error) {
 		fmt.Println("⚠️Deprecation notice: Use 'flow dev' command.")
 		return &RunResult{}, nil

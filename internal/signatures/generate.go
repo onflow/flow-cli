@@ -22,12 +22,12 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"github.com/onflow/flow-cli/pkg/flowkit/output"
 
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/pkg/flowkit"
-	"github.com/onflow/flow-cli/pkg/flowkit/services"
 	"github.com/onflow/flow-cli/pkg/flowkit/util"
 )
 
@@ -50,9 +50,9 @@ var GenerateCommand = &command.Command{
 
 func sign(
 	args []string,
-	_ flowkit.ReaderWriter,
 	_ command.GlobalFlags,
-	_ *services.Services,
+	_ output.Logger,
+	_ flowkit.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
 	message := []byte(args[0])

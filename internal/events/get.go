@@ -26,6 +26,7 @@ import (
 
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/pkg/flowkit"
+	"github.com/onflow/flow-cli/pkg/flowkit/output"
 )
 
 type flagsEvents struct {
@@ -63,6 +64,8 @@ flow events get A.1654653399040a61.FlowToken.TokensDeposited A.1654653399040a61.
 func get(
 	args []string,
 	_ command.GlobalFlags,
+	_ output.Logger,
+	_ flowkit.ReaderWriter,
 	flow flowkit.Services,
 ) (command.Result, error) {
 	var err error

@@ -44,6 +44,7 @@ var RemoveAccountCommand = &command.Command{
 func removeAccount(
 	args []string,
 	globalFlags command.GlobalFlags,
+	_ output.Logger,
 	_ flowkit.Services,
 	state *flowkit.State,
 ) (command.Result, error) {

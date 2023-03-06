@@ -54,8 +54,8 @@ var DecodeCommand = &command.Command{
 func decode(
 	args []string,
 	_ command.GlobalFlags,
-	reader flowkit.ReaderWriter,
 	_ output.Logger,
+	reader flowkit.ReaderWriter,
 	_ flowkit.Services,
 ) (command.Result, error) {
 	encoding := args[0]

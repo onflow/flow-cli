@@ -53,6 +53,7 @@ var AddNetworkCommand = &command.Command{
 func addNetwork(
 	_ []string,
 	globalFlags command.GlobalFlags,
+	_ output.Logger,
 	_ flowkit.Services,
 	state *flowkit.State,
 ) (command.Result, error) {

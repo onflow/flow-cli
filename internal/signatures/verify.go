@@ -29,7 +29,7 @@ import (
 
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/pkg/flowkit"
-	"github.com/onflow/flow-cli/pkg/flowkit/services"
+	"github.com/onflow/flow-cli/pkg/flowkit/output"
 	"github.com/onflow/flow-cli/pkg/flowkit/util"
 )
 
@@ -53,9 +53,9 @@ var VerifyCommand = &command.Command{
 
 func verify(
 	args []string,
-	_ flowkit.ReaderWriter,
 	_ command.GlobalFlags,
-	_ *services.Services,
+	_ output.Logger,
+	_ flowkit.Services,
 	_ *flowkit.State,
 ) (command.Result, error) {
 	message := []byte(args[0])
