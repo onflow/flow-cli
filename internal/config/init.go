@@ -28,7 +28,6 @@ import (
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
-	"github.com/onflow/flow-cli/pkg/flowkit/services"
 	"github.com/onflow/flow-cli/pkg/flowkit/util"
 )
 
@@ -53,9 +52,8 @@ var InitCommand = &command.Command{
 
 func Initialise(
 	_ []string,
-	readerWriter flowkit.ReaderWriter,
 	_ command.GlobalFlags,
-	services *services.Services,
+	services flowkit.Services,
 ) (command.Result, error) {
 	fmt.Println("⚠️Notice: for starting a new project prefer using 'flow setup'.")
 

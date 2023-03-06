@@ -20,6 +20,7 @@ package keys
 
 import (
 	"fmt"
+	"github.com/onflow/flow-cli/internal/services"
 	"strings"
 
 	"github.com/onflow/flow-go-sdk"
@@ -28,7 +29,6 @@ import (
 
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/pkg/flowkit"
-	"github.com/onflow/flow-cli/pkg/flowkit/services"
 )
 
 type flagsDecode struct {
@@ -47,14 +47,14 @@ var DecodeCommand = &command.Command{
 		Example:   "flow keys decode rlp f847b8408...2402038203e8",
 	},
 	Flags: &decodeFlags,
-	Run:   decode,
+	RunI:  decode,
 }
 
 func decode(
 	args []string,
 	readerWriter flowkit.ReaderWriter,
 	_ command.GlobalFlags,
-	services *services.Services,
+	internal services.CLIServices,
 ) (command.Result, error) {
 	encoding := args[0]
 	fromFile := decodeFlags.FromFile
@@ -90,9 +90,9 @@ func decode(
 			return nil, fmt.Errorf("invalid signature algorithm: %s", decodeFlags.SigAlgo)
 		}
 
-		accountKey, err = services.Keys.DecodePEM(encoded, sigAlgo)
+		accountKey, err = internal.DecodePEMKey(encoded, sigAlgo)
 	case "rlp":
-		accountKey, err = services.Keys.DecodeRLP(encoded)
+		accountKey, err = internal.DecodeRLPKey(encoded)
 	default:
 		return nil, fmt.Errorf("encoding type not supported. Valid encoding: RLP and PEM")
 	}

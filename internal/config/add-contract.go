@@ -27,7 +27,6 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
-	"github.com/onflow/flow-cli/pkg/flowkit/services"
 )
 
 type flagsAddContract struct {
@@ -53,9 +52,8 @@ var AddContractCommand = &command.Command{
 
 func addContract(
 	_ []string,
-	_ flowkit.ReaderWriter,
 	globalFlags command.GlobalFlags,
-	_ *services.Services,
+	_ flowkit.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
 	contractData, flagsProvided, err := flagsToContractData(addContractFlags)

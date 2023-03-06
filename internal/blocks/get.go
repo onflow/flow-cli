@@ -19,11 +19,11 @@
 package blocks
 
 import (
+	"context"
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/pkg/flowkit"
-	"github.com/onflow/flow-cli/pkg/flowkit/services"
 )
 
 type flagsBlocks struct {
@@ -48,9 +48,10 @@ func get(
 	args []string,
 	_ flowkit.ReaderWriter,
 	_ command.GlobalFlags,
-	services *services.Services,
+	flow flowkit.Services,
 ) (command.Result, error) {
-	block, events, collections, err := services.Blocks.GetBlock(
+	block, events, collections, err := flow.GetBlock(
+		context.Background(),
 		args[0], // block id
 		blockFlags.Events,
 		command.ContainsFlag(blockFlags.Include, "transactions"),

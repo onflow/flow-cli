@@ -24,7 +24,6 @@ import (
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
-	"github.com/onflow/flow-cli/pkg/flowkit/services"
 )
 
 type flagsRemoveNetwork struct{}
@@ -44,9 +43,8 @@ var RemoveNetworkCommand = &command.Command{
 
 func removeNetwork(
 	args []string,
-	_ flowkit.ReaderWriter,
 	globalFlags command.GlobalFlags,
-	_ *services.Services,
+	_ flowkit.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
 	name := ""

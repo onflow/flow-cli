@@ -67,6 +67,7 @@ type RunWithState func(
 // RunWithInternal runs the command with internal services.
 type RunWithInternal func(
 	args []string,
+	readerWriter flowkit.ReaderWriter,
 	globalFlags GlobalFlags,
 	internal services.CLIServices,
 ) (Result, error)

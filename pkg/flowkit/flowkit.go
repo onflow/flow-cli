@@ -41,8 +41,8 @@ type BlockQuery struct {
 }
 
 type EventWorker struct {
-	count           int
-	blocksPerWorker uint64
+	Count           int
+	BlocksPerWorker uint64
 }
 
 type Services interface {
@@ -462,19 +462,19 @@ func (f *Flowkit) GetEvents(
 
 	if worker == nil { // if no worker is passed, create a default one
 		worker = &EventWorker{
-			count:           1,
-			blocksPerWorker: 250,
+			Count:           1,
+			BlocksPerWorker: 250,
 		}
 	}
 
-	queries := makeEventQueries(names, startHeight, endHeight, worker.blocksPerWorker)
+	queries := makeEventQueries(names, startHeight, endHeight, worker.BlocksPerWorker)
 
-	jobChan := make(chan grpc.EventRangeQuery, worker.count)
+	jobChan := make(chan grpc.EventRangeQuery, worker.Count)
 	results := make(chan EventWorkerResult)
 
 	var wg sync.WaitGroup
 
-	for i := 0; i < worker.count; i++ {
+	for i := 0; i < worker.Count; i++ {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()

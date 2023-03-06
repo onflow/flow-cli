@@ -28,7 +28,6 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
-	"github.com/onflow/flow-cli/pkg/flowkit/services"
 	"github.com/onflow/flow-cli/pkg/flowkit/util"
 )
 
@@ -53,9 +52,8 @@ var AddNetworkCommand = &command.Command{
 
 func addNetwork(
 	_ []string,
-	_ flowkit.ReaderWriter,
 	globalFlags command.GlobalFlags,
-	_ *services.Services,
+	_ flowkit.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
 	networkData, flagsProvided, err := flagsToNetworkData(addNetworkFlags)
@@ -68,7 +66,7 @@ func addNetwork(
 	}
 
 	network := config.StringToNetwork(networkData["name"], networkData["host"], networkData["key"])
-	state.Networks().AddOrUpdate(network.Name, network)
+	state.Networks().AddOrUpdate(network)
 
 	err = state.SaveEdited(globalFlags.ConfigPaths)
 	if err != nil {

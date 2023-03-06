@@ -740,8 +740,8 @@ func TestEvents_Integration(t *testing.T) {
 		}
 
 		events, err := flowkit.GetEvents(ctx, eventNames, 0, 1, &EventWorker{
-			count:           5,
-			blocksPerWorker: 250,
+			Count:           5,
+			BlocksPerWorker: 250,
 		})
 		assert.NoError(t, err)
 		assert.Len(t, events, 20)

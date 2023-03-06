@@ -19,6 +19,7 @@
 package keys
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/onflow/flow-go-sdk/crypto"
@@ -26,7 +27,6 @@ import (
 
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/pkg/flowkit"
-	"github.com/onflow/flow-cli/pkg/flowkit/services"
 )
 
 type flagsGenerate struct {
@@ -49,9 +49,8 @@ var GenerateCommand = &command.Command{
 
 func generate(
 	_ []string,
-	_ flowkit.ReaderWriter,
 	_ command.GlobalFlags,
-	services *services.Services,
+	flow flowkit.Services,
 ) (command.Result, error) {
 	sigAlgo := crypto.StringToSignatureAlgorithm(generateFlags.KeySigAlgo)
 	if sigAlgo == crypto.UnknownSignatureAlgorithm {
@@ -61,18 +60,28 @@ func generate(
 	var err error
 	mnemonic := generateFlags.Mnemonic
 	if mnemonic == "" {
-		mnemonic, err = services.Keys.GetMnemonic()
+		_, mnemonic, err = flow.GenerateMnemonicKey(context.Background(), sigAlgo, generateFlags.Mnemonic)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	privateKey, err := services.Keys.DerivePrivateKeyFromMnemonic(mnemonic, sigAlgo, generateFlags.DerivationPath)
+	privateKey, err := flow.DerivePrivateKeyFromMnemonic(
+		context.Background(),
+		mnemonic,
+		sigAlgo,
+		generateFlags.DerivationPath,
+	)
 	if err != nil {
 		return nil, err
 	}
 
 	pubKey := privateKey.PublicKey()
-	return &KeyResult{privateKey: privateKey, publicKey: pubKey, mnemonic: mnemonic, derivationPath: generateFlags.DerivationPath}, nil
+	return &KeyResult{
+		privateKey:     privateKey,
+		publicKey:      pubKey,
+		mnemonic:       mnemonic,
+		derivationPath: generateFlags.DerivationPath,
+	}, nil
 
 }
