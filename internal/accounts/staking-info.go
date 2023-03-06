@@ -20,13 +20,17 @@ package accounts
 
 import (
 	"bytes"
+	"context"
 	"fmt"
-	"github.com/onflow/flow-cli/internal/services"
 
+	"github.com/onflow/cadence"
+	tmpl "github.com/onflow/flow-core-contracts/lib/go/templates"
 	flowsdk "github.com/onflow/flow-go-sdk"
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
+	"github.com/onflow/flow-cli/pkg/flowkit"
+	"github.com/onflow/flow-cli/pkg/flowkit/output"
 	"github.com/onflow/flow-cli/pkg/flowkit/util"
 )
 
@@ -42,22 +46,100 @@ var StakingCommand = &command.Command{
 		Args:    cobra.ExactArgs(1),
 	},
 	Flags: &stakingFlags,
-	RunI:  stakingInfo,
+	Run:   stakingInfo,
 }
 
 func stakingInfo(
 	args []string,
 	_ command.GlobalFlags,
-	services services.CLIServices,
+	logger output.Logger,
+	flow flowkit.Services,
 ) (command.Result, error) {
 	address := flowsdk.HexToAddress(args[0])
 
-	staking, delegation, err := services.StakingInfo(address)
+	logger.StartProgress(fmt.Sprintf("Fetching info for %s...", address.String()))
+	defer logger.StopProgress()
+
+	cadenceAddress := []cadence.Value{cadence.NewAddress(address)}
+
+	chain, err := util.GetAddressNetwork(address)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to determine network from address, check the address and network")
 	}
 
+	if chain == flowsdk.Emulator {
+		return nil, fmt.Errorf("emulator chain not supported")
+	}
+
+	env := util.EnvFromNetwork(chain)
+
+	stakingInfoScript := tmpl.GenerateCollectionGetAllNodeInfoScript(env)
+	delegationInfoScript := tmpl.GenerateCollectionGetAllDelegatorInfoScript(env)
+
+	stakingValue, err := flow.ExecuteScript(
+		context.Background(),
+		flowkit.NewScript(stakingInfoScript, cadenceAddress, ""),
+	)
+	if err != nil {
+		return nil, fmt.Errorf("error getting staking info: %s", err.Error())
+	}
+
+	delegationValue, err := flow.ExecuteScript(
+		context.Background(),
+		flowkit.NewScript(delegationInfoScript, cadenceAddress, ""),
+	)
+	if err != nil {
+		return nil, fmt.Errorf("error getting delegation info: %s", err.Error())
+	}
+
+	// get staking infos and delegation infos
+	staking, err := flowkit.NewStakingInfoFromValue(stakingValue)
+	if err != nil {
+		return nil, fmt.Errorf("error parsing staking info: %s", err.Error())
+	}
+	delegation, err := flowkit.NewStakingInfoFromValue(delegationValue)
+	if err != nil {
+		return nil, fmt.Errorf("error parsing delegation info: %s", err.Error())
+	}
+
+	// get a set of node ids from all staking infos
+	nodeStakes := make(map[string]cadence.Value)
+	for _, stakingInfo := range staking {
+		nodeID, ok := stakingInfo["id"]
+		if ok {
+			nodeStakes[nodeIDToString(nodeID)] = nil
+		}
+	}
+	totalCommitmentScript := tmpl.GenerateGetTotalCommitmentBalanceScript(env)
+
+	// foreach node id, get the node total stake
+	for nodeID := range nodeStakes {
+		stake, err := flow.ExecuteScript(
+			context.Background(),
+			flowkit.NewScript(totalCommitmentScript, []cadence.Value{cadence.String(nodeID)}, ""),
+		)
+		if err != nil {
+			return nil, fmt.Errorf("error getting total stake for node: %s", err.Error())
+		}
+
+		nodeStakes[nodeID] = stake
+	}
+
+	// foreach staking info, add the node total stake
+	for _, stakingInfo := range staking {
+		nodeID, ok := stakingInfo["id"]
+		if ok {
+			stakingInfo["nodeTotalStake"] = nodeStakes[nodeIDToString(nodeID)].(cadence.UFix64)
+		}
+	}
+
+	logger.StopProgress()
+
 	return &StakingResult{staking, delegation}, nil
+}
+
+func nodeIDToString(value interface{}) string {
+	return value.(cadence.String).ToGoValue().(string)
 }
 
 type StakingResult struct {

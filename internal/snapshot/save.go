@@ -26,7 +26,7 @@ import (
 
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/pkg/flowkit"
-	"github.com/onflow/flow-cli/pkg/flowkit/services"
+	"github.com/onflow/flow-cli/pkg/flowkit/output"
 )
 
 var SaveCommand = &command.Command{
@@ -42,23 +42,31 @@ var SaveCommand = &command.Command{
 
 func save(
 	args []string,
-	readerWriter flowkit.ReaderWriter,
 	_ command.GlobalFlags,
-	services *services.Services,
+	logger output.Logger,
+	writer flowkit.ReaderWriter,
+	_ flowkit.Services,
 ) (command.Result, error) {
 	fileName := args[0]
 
-	snapshotBytes, err := services.Snapshot.GetLatestProtocolStateSnapshot()
-	if err != nil {
-		return nil, err
+	logger.StartProgress("Downloading protocol snapshot...")
+	if !gateway.SecureConnection() {
+		logger.Info(fmt.Sprintf("%s warning: using insecure client connection to download snapshot, you should use a secure network configuration...", output.WarningEmoji()))
 	}
+
+	snapshotBytes, err := gateway.GetLatestProtocolStateSnapshot()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get latest finalized protocol snapshot from gateway: %w", err)
+	}
+
+	logger.StopProgress()
 
 	outputPath, err := filepath.Abs(fileName)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get absolute output path for protocol snapshot")
 	}
 
-	err = readerWriter.WriteFile(outputPath, snapshotBytes, 0644)
+	err = writer.WriteFile(outputPath, snapshotBytes, 0644)
 	if err != nil {
 		return nil, fmt.Errorf("failed to write protocol snapshot file to %s: %w", outputPath, err)
 	}
