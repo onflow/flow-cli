@@ -28,6 +28,7 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowkit/gateway"
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
 	"github.com/onflow/flow-cli/pkg/flowkit/project"
+	"github.com/onflow/flow-cli/pkg/flowkit/util"
 )
 
 // Scripts is a service that handles all script-related interactions.
@@ -51,7 +52,7 @@ func NewScripts(
 }
 
 // Execute script code with passed arguments on the selected network.
-func (s *Scripts) Execute(script *flowkit.Script, network string) (cadence.Value, error) {
+func (s *Scripts) Execute(script *flowkit.Script, network string, query *util.ScriptQuery) (cadence.Value, error) {
 	program, err := project.NewProgram(script)
 	if err != nil {
 		return nil, err
@@ -84,5 +85,5 @@ func (s *Scripts) Execute(script *flowkit.Script, network string) (cadence.Value
 		}
 	}
 
-	return s.gateway.ExecuteScript(program.Code(), script.Args)
+	return s.gateway.ExecuteScript(program.Code(), script.Args, query)
 }

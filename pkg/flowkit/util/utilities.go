@@ -126,3 +126,8 @@ func AbsolutePath(basePath, filePath string) string {
 
 	return path.Join(path.Dir(basePath), filePath)
 }
+
+type ScriptQuery struct {
+	ID     flow.Identifier
+	Height uint64
+}
