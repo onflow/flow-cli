@@ -22,6 +22,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"github.com/onflow/flow-cli/pkg/flowkit"
 	"math/rand"
 	"os"
 	sysExec "os/exec"
@@ -33,7 +34,6 @@ import (
 
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
 	flowkitProject "github.com/onflow/flow-cli/pkg/flowkit/project"
-	"github.com/onflow/flow-cli/pkg/flowkit/services"
 )
 
 func printDeployment(deployed []*flowkitProject.Contract, err error, contractPathNames map[string]string) {
@@ -110,7 +110,7 @@ func failureDeployment(err error, contractPathNames map[string]string) string {
 	}
 
 	// handle cadence runtime errors
-	var deployErr *services.ProjectDeploymentError
+	var deployErr *flowkit.ProjectDeploymentError
 	if errors.As(err, &deployErr) {
 		out.WriteString(output.ErrorEmoji() + " Error deploying your project. Runtime error encountered which means your code is incorrect, check details bellow. \n\n")
 

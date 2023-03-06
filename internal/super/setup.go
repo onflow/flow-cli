@@ -36,7 +36,6 @@ import (
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
-	"github.com/onflow/flow-cli/pkg/flowkit/services"
 )
 
 type FlagsSetup struct {
@@ -70,12 +69,11 @@ type scaffold struct {
 
 func create(
 	args []string,
-	_ flowkit.ReaderWriter,
 	_ command.GlobalFlags,
-	_ *services.Services,
+	logger output.Logger,
+	_ flowkit.ReaderWriter,
+	_ flowkit.Services,
 ) (command.Result, error) {
-	logger := output.NewStdoutLogger(output.InfoLog)
-
 	targetDir, err := getTargetDirectory(args[0])
 	if err != nil {
 		return nil, err
