@@ -32,7 +32,6 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
-	"github.com/onflow/flow-cli/pkg/flowkit/services"
 )
 
 type FlagsFlowser struct{}
@@ -53,9 +52,10 @@ var Flowser = &command.Command{
 
 func runFlowser(
 	_ []string,
-	reader flowkit.ReaderWriter,
 	_ command.GlobalFlags,
-	_ *services.Services,
+	_ output.Logger,
+	reader flowkit.ReaderWriter,
+	_ flowkit.Services,
 ) (command.Result, error) {
 	if runtime.GOOS != settings.Windows && runtime.GOOS != settings.Darwin {
 		fmt.Println("If you want Flowser to be supported on Linux please vote here: https://github.com/onflowser/flowser/discussions/142")

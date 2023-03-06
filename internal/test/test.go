@@ -20,6 +20,7 @@ package test
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 
 	cdcTests "github.com/onflow/cadence-tools/test"
@@ -27,7 +28,7 @@ import (
 
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/pkg/flowkit"
-	"github.com/onflow/flow-cli/pkg/flowkit/services"
+	"github.com/onflow/flow-cli/pkg/flowkit/output"
 	"github.com/onflow/flow-cli/pkg/flowkit/util"
 )
 
@@ -51,9 +52,10 @@ var TestCommand = &command.Command{
 
 func run(
 	args []string,
-	readerWriter flowkit.ReaderWriter,
 	_ command.GlobalFlags,
-	services *services.Services,
+	_ output.Logger,
+	readerWriter flowkit.ReaderWriter,
+	services flowkit.Services,
 ) (command.Result, error) {
 
 	filename := args[0]
@@ -63,10 +65,10 @@ func run(
 		return nil, fmt.Errorf("error loading script file: %w", err)
 	}
 
-	result, err := services.Tests.Execute(
+	result, err := services.Test(
+		context.Background(),
 		code,
 		filename,
-		readerWriter,
 	)
 
 	if err != nil {
