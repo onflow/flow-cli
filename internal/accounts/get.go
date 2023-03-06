@@ -19,12 +19,12 @@
 package accounts
 
 import (
-	"github.com/onflow/flow-go-sdk"
+	"context"
+	flowsdk "github.com/onflow/flow-go-sdk"
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/pkg/flowkit"
-	"github.com/onflow/flow-cli/pkg/flowkit/services"
 )
 
 type flagsGet struct {
@@ -46,13 +46,12 @@ var GetCommand = &command.Command{
 
 func get(
 	args []string,
-	_ flowkit.ReaderWriter,
 	_ command.GlobalFlags,
-	services *services.Services,
+	flow flowkit.Services,
 ) (command.Result, error) {
-	address := flow.HexToAddress(args[0])
+	address := flowsdk.HexToAddress(args[0])
 
-	account, err := services.Accounts.Get(address)
+	account, err := flow.GetAccount(context.Background(), address)
 	if err != nil {
 		return nil, err
 	}

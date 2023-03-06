@@ -40,6 +40,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/build"
+	"github.com/onflow/flow-cli/internal/services"
 	"github.com/onflow/flow-cli/internal/settings"
 	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
@@ -63,11 +64,19 @@ type RunWithState func(
 	state *flowkit.State,
 ) (Result, error)
 
+// RunWithInternal runs the command with internal services.
+type RunWithInternal func(
+	args []string,
+	globalFlags GlobalFlags,
+	internal services.CLIServices,
+) (Result, error)
+
 type Command struct {
 	Cmd   *cobra.Command
 	Flags interface{}
 	Run   Run
 	RunS  RunWithState
+	RunI  RunWithInternal
 }
 
 const (
@@ -116,6 +125,7 @@ func (c Command) AddToParent(parent *cobra.Command) {
 
 		// initialize services
 		flow := flowkit.NewFlowkit(state, *network, clientGateway, logger)
+		internal := services.NewInternal(state, clientGateway, logger)
 
 		// skip version check if flag is set
 		if !Flags.SkipVersionCheck {
@@ -136,6 +146,8 @@ func (c Command) AddToParent(parent *cobra.Command) {
 			}
 
 			result, err = c.RunS(args, Flags, flow, state)
+		} else if c.RunI != nil {
+			result, err = c.RunI(args, Flags, internal)
 		} else {
 			panic("command implementation needs to provide run functionality")
 		}

@@ -28,10 +28,10 @@ import (
 )
 
 type Key struct { // todo remove?
-	public   crypto.PublicKey
-	weight   int
-	sigAlgo  crypto.SignatureAlgorithm
-	hashAlgo crypto.HashAlgorithm
+	Public   crypto.PublicKey
+	Weight   int
+	SigAlgo  crypto.SignatureAlgorithm
+	HashAlgo crypto.HashAlgorithm
 }
 
 type BlockQuery struct {
@@ -70,6 +70,15 @@ type Services interface {
 }
 
 var _ Services = &Flowkit{}
+
+func NewFlowkit(
+	state *State,
+	network config.Network,
+	gateway gateway.Gateway,
+	logger output.Logger,
+) *Flowkit {
+	return &Flowkit{state, network, gateway, logger}
+}
 
 type Flowkit struct {
 	state   *State
@@ -114,15 +123,15 @@ func (f *Flowkit) CreateAccount(
 ) (*flow.Account, flow.Identifier, error) {
 	var accKeys []*flow.AccountKey
 	for _, k := range keys {
-		if k.weight == 0 { // if key weight is specified
-			k.weight = flow.AccountKeyWeightThreshold
+		if k.Weight == 0 { // if key weight is specified
+			k.Weight = flow.AccountKeyWeightThreshold
 		}
 
 		accKey := &flow.AccountKey{
-			PublicKey: k.public,
-			SigAlgo:   k.sigAlgo,
-			HashAlgo:  k.hashAlgo,
-			Weight:    k.weight,
+			PublicKey: k.Public,
+			SigAlgo:   k.SigAlgo,
+			HashAlgo:  k.HashAlgo,
+			Weight:    k.Weight,
 		}
 
 		err := accKey.Validate()

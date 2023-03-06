@@ -4,17 +4,19 @@ import (
 	"bytes"
 	"encoding/hex"
 	"fmt"
+	"io"
+	"net/http"
+
 	"github.com/onflow/cadence"
+	tmpl "github.com/onflow/flow-core-contracts/lib/go/templates"
+	"github.com/onflow/flow-go-sdk"
+	"github.com/onflow/flow-go-sdk/crypto"
+
 	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
 	"github.com/onflow/flow-cli/pkg/flowkit/gateway"
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
 	"github.com/onflow/flow-cli/pkg/flowkit/util"
-	tmpl "github.com/onflow/flow-core-contracts/lib/go/templates"
-	"github.com/onflow/flow-go-sdk"
-	"github.com/onflow/flow-go-sdk/crypto"
-	"io"
-	"net/http"
 )
 
 // CLIServices interface defines functions that are used within the Flow CLI but are not useful to be
@@ -32,16 +34,21 @@ type CLIServices interface {
 	PostRLPTransaction(rlpUrl string, tx *flow.Transaction) error
 }
 
-var _ CLIServices = &services{}
+var _ CLIServices = &Services{}
 
-type services struct {
+func NewInternal(state *flowkit.State, gateway gateway.Gateway, logger output.Logger) *Services {
+	return &Services{
+		state, gateway, logger,
+	}
+}
+
+type Services struct {
 	state   *flowkit.State
-	network config.Network
 	gateway gateway.Gateway
 	logger  output.Logger
 }
 
-func (s *services) StakingInfo(address flow.Address) ([]map[string]interface{}, []map[string]interface{}, error) {
+func (s *Services) StakingInfo(address flow.Address) ([]map[string]interface{}, []map[string]interface{}, error) {
 	s.logger.StartProgress(fmt.Sprintf("Fetching info for %s...", address.String()))
 	defer s.logger.StopProgress()
 
@@ -120,7 +127,7 @@ func nodeIDToString(value interface{}) string {
 	return value.(cadence.String).ToGoValue().(string)
 }
 
-func (s *services) NodeTotalStake(nodeId string, chain flow.ChainID) (*cadence.Value, error) {
+func (s *Services) NodeTotalStake(nodeId string, chain flow.ChainID) (*cadence.Value, error) {
 	s.logger.StartProgress(fmt.Sprintf("Fetching total stake for node id %s...", nodeId))
 	defer s.logger.StopProgress()
 
@@ -141,7 +148,7 @@ func (s *services) NodeTotalStake(nodeId string, chain flow.ChainID) (*cadence.V
 	return &stakingValue, nil
 }
 
-func (s *services) DecodePEMKey(key string, sigAlgo crypto.SignatureAlgorithm) (*flow.AccountKey, error) {
+func (s *Services) DecodePEMKey(key string, sigAlgo crypto.SignatureAlgorithm) (*flow.AccountKey, error) {
 	pk, err := crypto.DecodePublicKeyPEM(sigAlgo, key)
 	if err != nil {
 		return nil, err
@@ -154,7 +161,7 @@ func (s *services) DecodePEMKey(key string, sigAlgo crypto.SignatureAlgorithm) (
 	}, nil
 }
 
-func (s *services) DecodeRLPKey(publicKey string) (*flow.AccountKey, error) {
+func (s *Services) DecodeRLPKey(publicKey string) (*flow.AccountKey, error) {
 	publicKeyBytes, err := hex.DecodeString(publicKey)
 	if err != nil {
 		return nil, fmt.Errorf("failed to decode public key: %w", err)
@@ -168,7 +175,7 @@ func (s *services) DecodeRLPKey(publicKey string) (*flow.AccountKey, error) {
 	return accountKey, nil
 }
 
-func (s *services) CheckForStandardContractUsageOnMainnet() error {
+func (s *Services) CheckForStandardContractUsageOnMainnet() error {
 	mainnetContracts := map[string]standardContract{
 		"FungibleToken": {
 			name:     "FungibleToken",
@@ -227,7 +234,7 @@ func (s *services) CheckForStandardContractUsageOnMainnet() error {
 		},
 	}
 
-	contracts, err := s.state.DeploymentContractsByNetwork("mainnet")
+	contracts, err := s.state.DeploymentContractsByNetwork(config.MainnetNetwork)
 	if err != nil {
 		return err
 	}
@@ -258,18 +265,17 @@ type standardContract struct {
 	infoLink string
 }
 
-func (s *services) replaceStandardContractReferenceToAlias(standardContract standardContract) error {
+func (s *Services) replaceStandardContractReferenceToAlias(standardContract standardContract) error {
 	//replace contract with alias
-	mainnet := config.DefaultMainnetNetwork().Name
 	contract := s.state.Config().Contracts.ByName(standardContract.name)
 	if contract == nil {
 		return fmt.Errorf("contract not found") // shouldn't occur
 	}
-	contract.Aliases.Add(mainnet, standardContract.address)
+	contract.Aliases.Add(config.MainnetNetwork.Name, standardContract.address)
 
 	//remove from deploy
 	for di, d := range s.state.Config().Deployments {
-		if d.Network != config.DefaultMainnetNetwork().Name {
+		if d.Network != config.MainnetNetwork.Name {
 			continue
 		}
 		for ci, c := range d.Contracts {
@@ -282,7 +288,7 @@ func (s *services) replaceStandardContractReferenceToAlias(standardContract stan
 	return nil
 }
 
-func (s *services) GetLatestProtocolStateSnapshot() ([]byte, error) {
+func (s *Services) GetLatestProtocolStateSnapshot() ([]byte, error) {
 	s.logger.StartProgress("Downloading protocol snapshot...")
 
 	if !s.gateway.SecureConnection() {
@@ -299,7 +305,7 @@ func (s *services) GetLatestProtocolStateSnapshot() ([]byte, error) {
 	return b, nil
 }
 
-func (s *services) GetRLPTransaction(rlpUrl string) ([]byte, error) {
+func (s *Services) GetRLPTransaction(rlpUrl string) ([]byte, error) {
 	client := http.Client{
 		CheckRedirect: func(r *http.Request, via []*http.Request) error {
 			r.URL.Opaque = r.URL.Path
@@ -319,7 +325,7 @@ func (s *services) GetRLPTransaction(rlpUrl string) ([]byte, error) {
 	return io.ReadAll(resp.Body)
 }
 
-func (s *services) PostRLPTransaction(rlpUrl string, tx *flow.Transaction) error {
+func (s *Services) PostRLPTransaction(rlpUrl string, tx *flow.Transaction) error {
 	signedRlp := hex.EncodeToString(tx.Encode())
 	resp, err := http.Post(rlpUrl, "application/text", bytes.NewBufferString(signedRlp))
 

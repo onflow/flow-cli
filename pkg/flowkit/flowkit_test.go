@@ -324,10 +324,10 @@ func TestAccountsCreate_Integration(t *testing.T) {
 			keys := make([]Key, 0)
 			for j := range a.pubKeys {
 				keys = append(keys, Key{
-					public:   a.pubKeys[j],
-					weight:   a.weights[j],
-					sigAlgo:  a.sigAlgo[j],
-					hashAlgo: a.hashAlgo[j],
+					Public:   a.pubKeys[j],
+					Weight:   a.weights[j],
+					SigAlgo:  a.sigAlgo[j],
+					HashAlgo: a.hashAlgo[j],
 				})
 			}
 
@@ -394,10 +394,10 @@ func TestAccountsCreate_Integration(t *testing.T) {
 			keys := make([]Key, 0)
 			for i := range a.pubKeys {
 				keys = append(keys, Key{
-					public:   a.pubKeys[i],
-					weight:   a.weights[i],
-					sigAlgo:  a.sigAlgo[i],
-					hashAlgo: a.hashAlgo[i],
+					Public:   a.pubKeys[i],
+					Weight:   a.weights[i],
+					SigAlgo:  a.sigAlgo[i],
+					HashAlgo: a.hashAlgo[i],
 				})
 			}
 			acc, ID, err := flowkit.CreateAccount(ctx, a.account, keys)

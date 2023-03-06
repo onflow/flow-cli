@@ -127,7 +127,7 @@ func (e *Events) GetAddressForKeyAdded(publicKey crypto.PublicKey) *flow.Address
 				}
 			}
 
-			// older format support, in previous versions of cadence the public key was encoded into an array containing other data beside the key
+			// older format support, in previous versions of cadence the Public key was encoded into an array containing other data beside the key
 			if p, ok := event.Values["publicKey"].(cadence.Array); ok {
 				parsedKey := handleCadenceArrayValues(p)
 				parsedKeyhex := fmt.Sprintf("%x", parsedKey)

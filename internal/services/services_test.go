@@ -14,7 +14,7 @@ import (
 	"testing"
 )
 
-func setup() (*flowkit.State, services, *tests.TestGateway) {
+func setup() (*flowkit.State, Services, *tests.TestGateway) {
 	readerWriter, _ := tests.ReaderWriter()
 	state, err := flowkit.Init(readerWriter, crypto.ECDSA_P256, crypto.SHA3_256)
 	if err != nil {
@@ -22,7 +22,7 @@ func setup() (*flowkit.State, services, *tests.TestGateway) {
 	}
 
 	gw := tests.DefaultMockGateway()
-	srv := services{
+	srv := Services{
 		state:   state,
 		network: config.DefaultEmulatorNetwork(),
 		gateway: gw,

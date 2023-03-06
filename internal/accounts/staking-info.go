@@ -22,12 +22,11 @@ import (
 	"bytes"
 	"fmt"
 
-	"github.com/onflow/flow-go-sdk"
+	flowsdk "github.com/onflow/flow-go-sdk"
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/pkg/flowkit"
-	"github.com/onflow/flow-cli/pkg/flowkit/services"
 	"github.com/onflow/flow-cli/pkg/flowkit/util"
 )
 
@@ -48,13 +47,12 @@ var StakingCommand = &command.Command{
 
 func stakingInfo(
 	args []string,
-	_ flowkit.ReaderWriter,
 	_ command.GlobalFlags,
-	services *services.Services,
+	flow flowkit.Services,
 ) (command.Result, error) {
-	address := flow.HexToAddress(args[0])
+	address := flowsdk.HexToAddress(args[0])
 
-	staking, delegation, err := services.Accounts.StakingInfo(address)
+	staking, delegation, err := flow.StakingInfo(address)
 	if err != nil {
 		return nil, err
 	}

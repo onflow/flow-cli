@@ -19,6 +19,7 @@
 package accounts
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/onflow/cadence"
@@ -26,7 +27,6 @@ import (
 
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/pkg/flowkit"
-	"github.com/onflow/flow-cli/pkg/flowkit/services"
 )
 
 type flagsAddContract struct {
@@ -50,9 +50,8 @@ var AddContractCommand = &command.Command{
 
 func addContract(
 	args []string,
-	readerWriter flowkit.ReaderWriter,
-	globalFlags command.GlobalFlags,
-	srv *services.Services,
+	_ command.GlobalFlags,
+	flow flowkit.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
 	filename := args[0]
@@ -61,7 +60,7 @@ func addContract(
 		filename = args[1]
 	}
 
-	code, err := readerWriter.ReadFile(filename)
+	code, err := state.ReadFile(filename)
 	if err != nil {
 		return nil, fmt.Errorf("error loading contract file: %w", err)
 	}
@@ -82,17 +81,17 @@ func addContract(
 		return nil, fmt.Errorf("error parsing transaction arguments: %w", err)
 	}
 
-	_, _, err = srv.Accounts.AddContract(
+	_, _, err = flow.AddContract(
+		context.Background(),
 		to,
 		flowkit.NewScript(code, contractArgs, filename),
-		globalFlags.Network,
 		false,
 	)
 	if err != nil {
 		return nil, err
 	}
 
-	account, err := srv.Accounts.Get(to.Address())
+	account, err := flow.GetAccount(context.Background(), to.Address())
 	if err != nil {
 		return nil, err
 	}
