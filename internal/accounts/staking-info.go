@@ -21,12 +21,12 @@ package accounts
 import (
 	"bytes"
 	"fmt"
+	"github.com/onflow/flow-cli/internal/services"
 
 	flowsdk "github.com/onflow/flow-go-sdk"
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
-	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/util"
 )
 
@@ -42,17 +42,17 @@ var StakingCommand = &command.Command{
 		Args:    cobra.ExactArgs(1),
 	},
 	Flags: &stakingFlags,
-	Run:   stakingInfo,
+	RunI:  stakingInfo,
 }
 
 func stakingInfo(
 	args []string,
 	_ command.GlobalFlags,
-	flow flowkit.Services,
+	services services.CLIServices,
 ) (command.Result, error) {
 	address := flowsdk.HexToAddress(args[0])
 
-	staking, delegation, err := flow.StakingInfo(address)
+	staking, delegation, err := services.StakingInfo(address)
 	if err != nil {
 		return nil, err
 	}

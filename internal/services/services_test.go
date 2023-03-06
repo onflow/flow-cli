@@ -1,17 +1,18 @@
 package services
 
 import (
+	"strings"
+	"testing"
+
 	"github.com/onflow/cadence"
-	"github.com/onflow/flow-cli/pkg/flowkit"
-	"github.com/onflow/flow-cli/pkg/flowkit/config"
-	"github.com/onflow/flow-cli/pkg/flowkit/output"
-	"github.com/onflow/flow-cli/pkg/flowkit/tests"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"strings"
-	"testing"
+
+	"github.com/onflow/flow-cli/pkg/flowkit"
+	"github.com/onflow/flow-cli/pkg/flowkit/output"
+	"github.com/onflow/flow-cli/pkg/flowkit/tests"
 )
 
 func setup() (*flowkit.State, Services, *tests.TestGateway) {
@@ -24,8 +25,7 @@ func setup() (*flowkit.State, Services, *tests.TestGateway) {
 	gw := tests.DefaultMockGateway()
 	srv := Services{
 		state:   state,
-		network: config.DefaultEmulatorNetwork(),
-		gateway: gw,
+		gateway: gw.Mock,
 		logger:  output.NewStdoutLogger(output.NoneLog),
 	}
 
