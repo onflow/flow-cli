@@ -19,6 +19,7 @@
 package transactions
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/spf13/cobra"
@@ -26,7 +27,6 @@ import (
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
-	"github.com/onflow/flow-cli/pkg/flowkit/services"
 )
 
 type flagsSendSigned struct {
@@ -44,19 +44,19 @@ var SendSignedCommand = &command.Command{
 		Example: `flow transactions send-signed signed.rlp`,
 	},
 	Flags: &sendSignedFlags,
-	RunS:  sendSigned,
+	Run:   sendSigned,
 }
 
 func sendSigned(
 	args []string,
-	readerWriter flowkit.ReaderWriter,
 	globalFlags command.GlobalFlags,
-	services *services.Services,
-	_ *flowkit.State,
+	_ output.Logger,
+	reader flowkit.ReaderWriter,
+	flow flowkit.Services,
 ) (command.Result, error) {
 	filename := args[0]
 
-	code, err := readerWriter.ReadFile(filename)
+	code, err := reader.ReadFile(filename)
 	if err != nil {
 		return nil, fmt.Errorf("error loading transaction payload: %w", err)
 	}
@@ -66,11 +66,11 @@ func sendSigned(
 		return nil, err
 	}
 
-	if !globalFlags.Yes && !output.ApproveTransactionForSendingPrompt(tx) {
+	if !globalFlags.Yes && !output.ApproveTransactionForSendingPrompt(tx.FlowTransaction()) {
 		return nil, fmt.Errorf("transaction was not approved for sending")
 	}
 
-	sentTx, result, err := services.Transactions.SendSigned(tx)
+	sentTx, result, err := flow.SendSignedTransaction(context.Background(), tx)
 	if err != nil {
 		return nil, err
 	}

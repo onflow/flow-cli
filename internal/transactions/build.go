@@ -98,7 +98,11 @@ func build(
 
 	tx, err := flow.BuildTransaction(
 		context.Background(),
-		flowkit.NewTransactionAddressRoles(proposer, payer, authorizers),
+		&flowkit.TransactionAddressesRoles{
+			Proposer:    proposer,
+			Authorizers: authorizers,
+			Payer:       payer,
+		},
 		buildFlags.ProposerKeyIndex,
 		flowkit.NewScript(code, transactionArgs, filename),
 		buildFlags.GasLimit,

@@ -81,13 +81,13 @@ func send(
 		}
 	}
 
-	var authorizers []*flowkit.Account
+	var authorizers []flowkit.Account
 	for _, authorizerName := range sendFlags.Autorizer {
 		authorizer, err := state.Accounts().ByName(authorizerName)
 		if err != nil {
 			return nil, fmt.Errorf("authorizer account: [%s] doesn't exists in configuration", authorizerName)
 		}
-		authorizers = append(authorizers, authorizer)
+		authorizers = append(authorizers, *authorizer)
 	}
 
 	signerName := sendFlags.Signer
@@ -106,7 +106,7 @@ func send(
 		}
 		proposer = signer
 		payer = signer
-		authorizers = append(authorizers, signer)
+		authorizers = append(authorizers, *signer)
 	}
 
 	code, err := state.ReadFile(codeFilename)
@@ -124,14 +124,13 @@ func send(
 		return nil, fmt.Errorf("error parsing transaction arguments: %w", err)
 	}
 
-	roles, err := flowkit.NewTransactionAccountRoles(proposer, payer, authorizers)
-	if err != nil {
-		return nil, fmt.Errorf("error parsing transaction roles: %w", err)
-	}
-
 	tx, txResult, err := flow.SendTransaction(
 		context.Background(),
-		roles,
+		&flowkit.TransactionAccountRoles{
+			Proposer:    *proposer,
+			Authorizers: authorizers,
+			Payer:       *payer,
+		},
 		flowkit.NewScript(code, transactionArgs, codeFilename),
 		sendFlags.GasLimit,
 	)
