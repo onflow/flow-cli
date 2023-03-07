@@ -132,13 +132,13 @@ func (c Command) AddToParent(parent *cobra.Command) {
 		// run command based on requirements for state
 		var result Result
 		if c.Run != nil {
-			result, err = c.Run(args, Flags, flow)
+			result, err = c.Run(args, Flags, logger, loader, flow)
 		} else if c.RunS != nil {
 			if confErr != nil {
 				handleError("Config Error", confErr)
 			}
 
-			result, err = c.RunS(args, Flags, flow, state)
+			result, err = c.RunS(args, Flags, logger, flow, state)
 		} else {
 			panic("command implementation needs to provide run functionality")
 		}
