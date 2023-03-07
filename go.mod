@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	github.com/dukex/mixpanel v1.0.1
-	github.com/getsentry/sentry-go v0.18.0
+	github.com/getsentry/sentry-go v0.19.0
 	github.com/go-git/go-git/v5 v5.5.2
 	github.com/onflow/cadence v0.31.3
 	github.com/onflow/cadence-tools/languageserver v0.7.0
