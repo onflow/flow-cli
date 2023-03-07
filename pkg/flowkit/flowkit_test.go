@@ -231,8 +231,6 @@ func setupIntegration() (*State, Flowkit) {
 }
 
 func TestAccountsCreate_Integration(t *testing.T) {
-	t.Parallel()
-
 	type accountsIn struct {
 		account  *Account
 		pubKeys  []crypto.PublicKey
@@ -413,8 +411,6 @@ func TestAccountsCreate_Integration(t *testing.T) {
 }
 
 func TestAccountsAddContract_Integration(t *testing.T) {
-	t.Parallel()
-
 	t.Run("Update Contract", func(t *testing.T) {
 		t.Parallel()
 
@@ -502,8 +498,6 @@ func TestAccountsAddContractWithArgs(t *testing.T) {
 }
 
 func TestAccountsRemoveContract_Integration(t *testing.T) {
-	t.Parallel()
-
 	state, flowkit := setupIntegration()
 	srvAcc, _ := state.EmulatorServiceAccount()
 
@@ -518,8 +512,6 @@ func TestAccountsRemoveContract_Integration(t *testing.T) {
 	assert.NoError(t, err)
 
 	t.Run("Remove Contract", func(t *testing.T) {
-		t.Parallel()
-
 		_, err := flowkit.RemoveContract(ctx, srvAcc, tests.ContractSimple.Name)
 		require.NoError(t, err)
 
@@ -530,8 +522,6 @@ func TestAccountsRemoveContract_Integration(t *testing.T) {
 }
 
 func TestAccountsGet_Integration(t *testing.T) {
-	t.Parallel()
-
 	state, flowkit := setupIntegration()
 	srvAcc, _ := state.EmulatorServiceAccount()
 
@@ -554,8 +544,6 @@ func TestAccountsGet_Integration(t *testing.T) {
 }
 
 func TestBlocks(t *testing.T) {
-	t.Parallel()
-
 	t.Run("Get Latest Block", func(t *testing.T) {
 		t.Parallel()
 
@@ -602,8 +590,6 @@ func TestBlocks(t *testing.T) {
 }
 
 func TestBlocksGet_Integration(t *testing.T) {
-	t.Parallel()
-
 	t.Run("Get Block", func(t *testing.T) {
 		t.Parallel()
 		_, flowkit := setupIntegration()
@@ -617,8 +603,6 @@ func TestBlocksGet_Integration(t *testing.T) {
 }
 
 func TestCollections(t *testing.T) {
-	t.Parallel()
-
 	t.Run("Get Collection", func(t *testing.T) {
 		_, flowkit, gw := setup()
 		ID := flow.HexToID("a310685082f0b09f2a148b2e8905f08ea458ed873596b53b200699e8e1f6536f")
@@ -631,8 +615,6 @@ func TestCollections(t *testing.T) {
 }
 
 func TestEvents(t *testing.T) {
-	t.Parallel()
-
 	t.Run("Get Events", func(t *testing.T) {
 		t.Parallel()
 
@@ -679,8 +661,6 @@ func TestEvents(t *testing.T) {
 }
 
 func TestEvents_Integration(t *testing.T) {
-	t.Parallel()
-
 	t.Run("Get Events for non existent event", func(t *testing.T) {
 		t.Parallel()
 
@@ -750,8 +730,6 @@ func TestEvents_Integration(t *testing.T) {
 }
 
 func TestKeys(t *testing.T) {
-	t.Parallel()
-
 	t.Run("Generate Keys", func(t *testing.T) {
 		t.Parallel()
 
@@ -873,8 +851,6 @@ func TestKeys(t *testing.T) {
 }
 
 func TestProject(t *testing.T) {
-	t.Parallel()
-
 	t.Run("Deploy Project", func(t *testing.T) {
 		t.Parallel()
 
@@ -901,9 +877,9 @@ func TestProject(t *testing.T) {
 		state.Deployments().AddOrUpdate(d)
 
 		gw.SendSignedTransaction.Run(func(args mock.Arguments) {
-			tx := args.Get(0).(*Transaction)
-			assert.Equal(t, tx.FlowTransaction().Payer, acct2.Address())
-			assert.True(t, strings.Contains(string(tx.FlowTransaction().Script), "signer.contracts.add"))
+			tx := args.Get(0).(*flow.Transaction)
+			assert.Equal(t, tx.Payer, acct2.Address())
+			assert.True(t, strings.Contains(string(tx.Script), "signer.contracts.add"))
 
 			gw.SendSignedTransaction.Return(tests.NewTransaction(), nil)
 		})
@@ -965,15 +941,15 @@ func TestProject(t *testing.T) {
 		} // don't change formatting of the above code since it compares the strings with included formatting
 
 		gw.SendSignedTransaction.Run(func(args mock.Arguments) {
-			tx := args.Get(0).(*Transaction)
-			assert.Equal(t, tx.FlowTransaction().Payer, a.Address())
-			assert.True(t, strings.Contains(string(tx.FlowTransaction().Script), "signer.contracts.add"))
+			tx := args.Get(0).(*flow.Transaction)
+			assert.Equal(t, tx.Payer, a.Address())
+			assert.True(t, strings.Contains(string(tx.Script), "signer.contracts.add"))
 
-			argCode := tx.FlowTransaction().Arguments[1]
+			argCode := tx.Arguments[1]
 			decodeCode, _ := jsoncdc.Decode(nil, argCode)
 			code, _ := hex.DecodeString(decodeCode.ToGoValue().(string))
 
-			argName := tx.FlowTransaction().Arguments[0]
+			argName := tx.Arguments[0]
 			decodeName, _ := jsoncdc.Decode(nil, argName)
 
 			testCode, found := resolved[decodeName.ToGoValue().(string)]
@@ -1042,15 +1018,15 @@ func TestProject(t *testing.T) {
 		} // don't change formatting of the above code since it compares the strings with included formatting
 
 		gw.SendSignedTransaction.Run(func(args mock.Arguments) {
-			tx := args.Get(0).(*Transaction)
-			assert.Equal(t, tx.FlowTransaction().Payer, a.Address())
-			assert.True(t, strings.Contains(string(tx.FlowTransaction().Script), "signer.contracts.add"))
+			tx := args.Get(0).(*flow.Transaction)
+			assert.Equal(t, tx.Payer, a.Address())
+			assert.True(t, strings.Contains(string(tx.Script), "signer.contracts.add"))
 
-			argCode := tx.FlowTransaction().Arguments[1]
+			argCode := tx.Arguments[1]
 			decodeCode, _ := jsoncdc.Decode(nil, argCode)
 			code, _ := hex.DecodeString(decodeCode.ToGoValue().(string))
 
-			argName := tx.FlowTransaction().Arguments[0]
+			argName := tx.Arguments[0]
 			decodeName, _ := jsoncdc.Decode(nil, argName)
 
 			testCode, found := resolved[decodeName.ToGoValue().(string)]
@@ -1098,9 +1074,9 @@ func TestProject(t *testing.T) {
 		state.Deployments().AddOrUpdate(d)
 
 		gw.SendSignedTransaction.Run(func(args mock.Arguments) {
-			tx := args.Get(0).(*Transaction)
-			assert.Equal(t, tx.FlowTransaction().Payer, acct2.Address())
-			assert.True(t, strings.Contains(string(tx.FlowTransaction().Script), "signer.contracts.add"))
+			tx := args.Get(0).(*flow.Transaction)
+			assert.Equal(t, tx.Payer, acct2.Address())
+			assert.True(t, strings.Contains(string(tx.Script), "signer.contracts.add"))
 
 			gw.SendSignedTransaction.Return(tests.NewTransaction(), nil)
 		})
@@ -1140,8 +1116,6 @@ func simpleDeploy(state *State, flowkit Flowkit, update bool) ([]*project.Contra
 }
 
 func TestProject_Integration(t *testing.T) {
-	t.Parallel()
-
 	t.Run("Deploy Project", func(t *testing.T) {
 		t.Parallel()
 
@@ -1242,8 +1216,6 @@ func TestProject_Integration(t *testing.T) {
 }
 
 func TestScripts(t *testing.T) {
-	t.Parallel()
-
 	t.Run("Execute Script", func(t *testing.T) {
 		_, flowkit, gw := setup()
 
@@ -1265,8 +1237,6 @@ func TestScripts(t *testing.T) {
 }
 
 func TestScripts_Integration(t *testing.T) {
-	t.Parallel()
-
 	t.Run("Execute", func(t *testing.T) {
 		t.Parallel()
 		_, flowkit := setupIntegration()
@@ -1356,8 +1326,6 @@ func TestScripts_Integration(t *testing.T) {
 }
 
 func TestExecutingTests(t *testing.T) {
-	t.Parallel()
-
 	t.Run("simple", func(t *testing.T) {
 		t.Parallel()
 		_, flowkit, _ := setup()
@@ -1428,8 +1396,6 @@ func TestExecutingTests(t *testing.T) {
 const gasLimit = 1000
 
 func TestTransactions(t *testing.T) {
-	t.Parallel()
-
 	state, _, _ := setup()
 	serviceAcc, _ := state.EmulatorServiceAccount()
 	serviceAddress := serviceAcc.Address()
@@ -1452,12 +1418,12 @@ func TestTransactions(t *testing.T) {
 
 		var txID flow.Identifier
 		gw.SendSignedTransaction.Run(func(args mock.Arguments) {
-			tx := args.Get(0).(*Transaction)
-			arg, err := tx.FlowTransaction().Argument(0)
+			tx := args.Get(0).(*flow.Transaction)
+			arg, err := tx.Argument(0)
 			assert.NoError(t, err)
 			assert.Equal(t, "\"Bar\"", arg.String())
-			assert.Equal(t, serviceAddress, tx.Signer().Address())
-			assert.Len(t, string(tx.FlowTransaction().Script), 227)
+			assert.Equal(t, serviceAddress, tx.Payer)
+			assert.Len(t, string(tx.Script), 227)
 
 			t := tests.NewTransaction()
 			txID = t.ID()
@@ -1615,8 +1581,6 @@ func Test_TransactionRoles(t *testing.T) {
 }
 
 func TestTransactions_Integration(t *testing.T) {
-	t.Parallel()
-
 	t.Run("Build Transaction", func(t *testing.T) {
 		t.Parallel()
 		state, f := setupIntegration()
