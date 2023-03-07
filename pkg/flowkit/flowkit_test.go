@@ -1471,7 +1471,7 @@ func TestTransactions(t *testing.T) {
 
 		_, _, err := flowkit.SendTransaction(
 			ctx,
-			NewTransactionSingleAccountRole(serviceAcc),
+			NewTransactionSingleAccountRole(*serviceAcc),
 			NewScript(
 				tests.TransactionArgString.Source,
 				[]cadence.Value{cadence.String("Bar")},
@@ -1536,9 +1536,9 @@ func Test_TransactionRoles(t *testing.T) {
 			signerAddresses []flow.Address
 		}{{
 			TransactionAccountRoles: &TransactionAccountRoles{
-				Proposer:    a,
-				Authorizers: []*Account{b},
-				Payer:       c,
+				Proposer:    *a,
+				Authorizers: []Account{*b},
+				Payer:       *c,
 			},
 			signerAddresses: []flow.Address{
 				a.Address(),
@@ -1547,35 +1547,35 @@ func Test_TransactionRoles(t *testing.T) {
 			},
 		}, {
 			TransactionAccountRoles: &TransactionAccountRoles{
-				Proposer:    a,
-				Authorizers: []*Account{a},
-				Payer:       a,
+				Proposer:    *a,
+				Authorizers: []Account{*a},
+				Payer:       *a,
 			},
 			signerAddresses: []flow.Address{
 				a.Address(),
 			},
 		}, {
 			TransactionAccountRoles: &TransactionAccountRoles{
-				Proposer:    a,
-				Payer:       b,
-				Authorizers: []*Account{a},
+				Proposer:    *a,
+				Payer:       *b,
+				Authorizers: []Account{*a},
 			},
 			signerAddresses: []flow.Address{
 				a.Address(), b.Address(),
 			},
 		}, {
 			TransactionAccountRoles: &TransactionAccountRoles{
-				Proposer: a,
-				Payer:    a,
+				Proposer: *a,
+				Payer:    *a,
 			},
 			signerAddresses: []flow.Address{
 				a.Address(),
 			},
 		}, {
 			TransactionAccountRoles: &TransactionAccountRoles{
-				Proposer:    &aCopy1,
-				Payer:       &aCopy2,
-				Authorizers: []*Account{a},
+				Proposer:    aCopy1,
+				Payer:       aCopy2,
+				Authorizers: []Account{*a},
 			},
 			signerAddresses: []flow.Address{
 				a.Address(),
@@ -1601,9 +1601,9 @@ func Test_TransactionRoles(t *testing.T) {
 		c, _ := state.Accounts().ByName("Charlie")
 
 		roles := &TransactionAccountRoles{
-			Proposer:    a,
-			Authorizers: []*Account{b, c},
-			Payer:       c,
+			Proposer:    *a,
+			Authorizers: []Account{*b, *c},
+			Payer:       *c,
 		}
 
 		addresses := roles.toAddresses()
@@ -1885,8 +1885,8 @@ func TestTransactions_Integration(t *testing.T) {
 		tx, txr, err := flowkit.SendTransaction(
 			ctx,
 			&TransactionAccountRoles{
-				Proposer: a,
-				Payer:    a,
+				Proposer: *a,
+				Payer:    *a,
 			},
 			NewScript(tests.TransactionSimple.Source, nil, tests.TransactionSimple.Filename),
 			flow.DefaultTransactionGasLimit,
@@ -1907,7 +1907,7 @@ func TestTransactions_Integration(t *testing.T) {
 
 		tx, txr, err := flowkit.SendTransaction(
 			ctx,
-			NewTransactionSingleAccountRole(a),
+			NewTransactionSingleAccountRole(*a),
 			NewScript(tests.TransactionSingleAuth.Source, nil, tests.TransactionSingleAuth.Filename),
 			flow.DefaultTransactionGasLimit,
 		)
@@ -1927,12 +1927,13 @@ func TestTransactions_Integration(t *testing.T) {
 		b, _ := state.Accounts().ByName("Bob")
 		c, _ := state.Accounts().ByName("Charlie")
 
-		roles, err := NewTransactionAccountRoles(a, b, []*Account{c})
-		require.NoError(t, err)
-
 		tx, txr, err := flowkit.SendTransaction(
 			ctx,
-			roles,
+			&TransactionAccountRoles{
+				Proposer:    *a,
+				Authorizers: []Account{*c},
+				Payer:       *b,
+			},
 			NewScript(tests.TransactionSingleAuth.Source, nil, tests.TransactionSingleAuth.Filename),
 			flow.DefaultTransactionGasLimit,
 		)
@@ -1952,12 +1953,13 @@ func TestTransactions_Integration(t *testing.T) {
 		a, _ := state.Accounts().ByName("Alice")
 		b, _ := state.Accounts().ByName("Bob")
 
-		roles, err := NewTransactionAccountRoles(a, b, []*Account{a})
-		require.NoError(t, err)
-
 		tx, txr, err := flowkit.SendTransaction(
 			ctx,
-			roles,
+			&TransactionAccountRoles{
+				Proposer:    *a,
+				Authorizers: []Account{*a},
+				Payer:       *b,
+			},
 			NewScript(tests.TransactionSingleAuth.Source, nil, tests.TransactionSingleAuth.Filename),
 			flow.DefaultTransactionGasLimit,
 		)
@@ -1978,7 +1980,7 @@ func TestTransactions_Integration(t *testing.T) {
 
 		tx, txr, err := flowkit.SendTransaction(
 			ctx,
-			NewTransactionSingleAccountRole(a),
+			NewTransactionSingleAccountRole(*a),
 			NewScript(
 				tests.TransactionArgString.Source,
 				[]cadence.Value{
@@ -2005,7 +2007,7 @@ func TestTransactions_Integration(t *testing.T) {
 
 		tx, txr, err := flowkit.SendTransaction(
 			ctx,
-			NewTransactionSingleAccountRole(a),
+			NewTransactionSingleAccountRole(*a),
 			NewScript(
 				tests.TransactionMultipleDeclarations.Source,
 				nil,
