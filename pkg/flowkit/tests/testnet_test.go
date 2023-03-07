@@ -19,10 +19,11 @@
 package tests
 
 import (
+	"context"
 	"testing"
 
 	"github.com/onflow/cadence"
-	"github.com/onflow/flow-go-sdk"
+	flowsdk "github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
@@ -32,39 +33,40 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
 	"github.com/onflow/flow-cli/pkg/flowkit/gateway"
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
-	"github.com/onflow/flow-cli/pkg/flowkit/services"
 )
 
 const testAccountName = "test-account"
 
-func initTestnet(t *testing.T) (gateway.Gateway, *flowkit.State, *services.Services, afero.Fs) {
+func initTestnet(t *testing.T) (gateway.Gateway, *flowkit.State, flowkit.Services, afero.Fs) {
 	readerWriter, mockFs := ReaderWriter()
 
 	state, err := flowkit.Init(readerWriter, crypto.ECDSA_P256, crypto.SHA3_256)
 	require.NoError(t, err)
 
-	gw, err := gateway.NewGrpcGateway(config.DefaultTestnetNetwork().Host)
+	gw, err := gateway.NewGrpcGateway(config.TestnetNetwork)
 	require.NoError(t, err)
 
 	logger := output.NewStdoutLogger(output.NoneLog)
-	srv := services.NewServices(gw, state, logger)
+	flow := flowkit.NewFlowkit(state, config.TestnetNetwork, gw, logger)
 
 	key, err := crypto.DecodePrivateKeyHex(crypto.ECDSA_P256, "4b2b6442fcbef2209bc1182af15d203a6195346cc8d95ebb433d3df1acb3910c")
 	require.NoError(t, err)
 
 	funderKey := flowkit.NewHexAccountKeyFromPrivateKey(0, crypto.SHA3_256, key)
-	funder := flowkit.NewAccount("funder").SetKey(funderKey).SetAddress(flow.HexToAddress("0x72ddb3d2cec14114"))
+	funder := flowkit.NewAccount("funder").SetKey(funderKey).SetAddress(flowsdk.HexToAddress("0x72ddb3d2cec14114"))
 
-	testKey, err := srv.Keys.Generate("", crypto.ECDSA_P256)
+	testKey, err := flow.GenerateKey(context.Background(), crypto.ECDSA_P256, "")
 	require.NoError(t, err)
 
-	flowAccount, err := srv.Accounts.Create(
+	flowAccount, _, err := flow.CreateAccount(
+		context.Background(),
 		funder,
-		[]crypto.PublicKey{testKey.PublicKey()},
-		[]int{1000},
-		[]crypto.SignatureAlgorithm{crypto.ECDSA_P256},
-		[]crypto.HashAlgorithm{crypto.SHA3_256},
-		nil,
+		[]flowkit.Key{{
+			Public:   testKey.PublicKey(),
+			Weight:   1000,
+			SigAlgo:  crypto.ECDSA_P256,
+			HashAlgo: crypto.SHA3_256,
+		}},
 	)
 	require.NoError(t, err)
 
@@ -110,21 +112,21 @@ func initTestnet(t *testing.T) (gateway.Gateway, *flowkit.State, *services.Servi
 	}`)
 
 	amount, _ := cadence.NewUFix64("0.01")
-	_, _, err = srv.Transactions.Send(
-		services.NewSingleTransactionAccount(funder),
+	_, _, err = flow.SendTransaction(
+		context.Background(),
+		flowkit.NewTransactionSingleAccountRole(*funder),
 		flowkit.NewScript(transferTx, []cadence.Value{amount, cadence.NewAddress(testAccount.Address())}, ""),
-		flow.DefaultTransactionGasLimit,
-		testnet,
+		flowsdk.DefaultTransactionGasLimit,
 	)
 	require.NoError(t, err)
 
-	return gw, state, srv, mockFs
+	return gw, state, flow, mockFs
 }
 
-var testnet = config.DefaultTestnetNetwork().Name
+var testnet = config.TestnetNetwork.Name
 
 func Test_Testnet_ProjectDeploy(t *testing.T) {
-	_, state, srv, mockFs := initTestnet(t)
+	_, state, flow, mockFs := initTestnet(t)
 
 	state.Contracts().AddOrUpdate(config.Contract{
 		Name:     ContractA.Name,
@@ -152,7 +154,7 @@ func Test_Testnet_ProjectDeploy(t *testing.T) {
 		},
 	})
 
-	contracts, err := srv.Project.Deploy(testnet, true)
+	contracts, err := flow.DeployProject(context.Background(), true)
 	assert.NoError(t, err)
 	assert.Len(t, contracts, 3)
 	assert.Equal(t, ContractA.Name, contracts[0].Name)
@@ -163,7 +165,7 @@ func Test_Testnet_ProjectDeploy(t *testing.T) {
 	ContractA.Source = []byte(`pub contract ContractA { init() {} }`)
 	_ = afero.WriteFile(mockFs, ContractA.Filename, ContractA.Source, 0644)
 
-	contracts, err = srv.Project.Deploy(testnet, true)
+	contracts, err = flow.DeployProject(context.Background(), true)
 	assert.NoError(t, err)
 	assert.Len(t, contracts, 3)
 	assert.Equal(t, ContractA.Name, contracts[0].Name)
