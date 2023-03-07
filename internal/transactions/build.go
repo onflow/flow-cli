@@ -19,16 +19,15 @@
 package transactions
 
 import (
+	"context"
 	"fmt"
-
 	"github.com/onflow/cadence"
-	"github.com/onflow/flow-go-sdk"
+	flowsdk "github.com/onflow/flow-go-sdk"
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
-	"github.com/onflow/flow-cli/pkg/flowkit/services"
 	"github.com/onflow/flow-cli/pkg/flowkit/util"
 )
 
@@ -56,9 +55,9 @@ var BuildCommand = &command.Command{
 
 func build(
 	args []string,
-	readerWriter flowkit.ReaderWriter,
 	globalFlags command.GlobalFlags,
-	srv *services.Services,
+	_ output.Logger,
+	flow flowkit.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
 	proposer, err := getAddress(buildFlags.Proposer, state)
@@ -67,7 +66,7 @@ func build(
 	}
 
 	// get all authorizers
-	var authorizers []flow.Address
+	var authorizers []flowsdk.Address
 	for _, auth := range buildFlags.Authorizer {
 		addr, err := getAddress(auth, state)
 		if err != nil {
@@ -82,7 +81,7 @@ func build(
 	}
 
 	filename := args[0]
-	code, err := readerWriter.ReadFile(filename)
+	code, err := state.ReadFile(filename)
 	if err != nil {
 		return nil, fmt.Errorf("error loading transaction file: %w", err)
 	}
@@ -97,18 +96,18 @@ func build(
 		return nil, fmt.Errorf("error parsing transaction arguments: %w", err)
 	}
 
-	tx, err := srv.Transactions.Build(
-		services.NewTransactionAddresses(proposer, payer, authorizers),
+	tx, err := flow.BuildTransaction(
+		context.Background(),
+		flowkit.NewTransactionAddressRoles(proposer, payer, authorizers),
 		buildFlags.ProposerKeyIndex,
 		flowkit.NewScript(code, transactionArgs, filename),
 		buildFlags.GasLimit,
-		globalFlags.Network,
 	)
 	if err != nil {
 		return nil, err
 	}
 
-	if !globalFlags.Yes && !output.ApproveTransactionForBuildingPrompt(tx) {
+	if !globalFlags.Yes && !output.ApproveTransactionForBuildingPrompt(tx.FlowTransaction()) {
 		return nil, fmt.Errorf("transaction was not approved")
 	}
 
@@ -118,7 +117,7 @@ func build(
 	}, nil
 }
 
-func getAddress(address string, state *flowkit.State) (flow.Address, error) {
+func getAddress(address string, state *flowkit.State) (flowsdk.Address, error) {
 	addr, valid := util.ParseAddress(address)
 	if valid {
 		return addr, nil
@@ -127,7 +126,7 @@ func getAddress(address string, state *flowkit.State) (flow.Address, error) {
 	// if address is not valid then try using the string as an account name.
 	acc, err := state.Accounts().ByName(address)
 	if err != nil {
-		return flow.EmptyAddress, err
+		return flowsdk.EmptyAddress, err
 	}
 	return acc.Address(), nil
 }
