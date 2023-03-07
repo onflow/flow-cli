@@ -19,14 +19,15 @@
 package transactions
 
 import (
+	"context"
 	"fmt"
+	"github.com/onflow/flow-cli/pkg/flowkit/output"
 
 	"github.com/onflow/cadence"
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/pkg/flowkit"
-	"github.com/onflow/flow-cli/pkg/flowkit/services"
 )
 
 type flagsSend struct {
@@ -55,9 +56,9 @@ var SendCommand = &command.Command{
 
 func send(
 	args []string,
-	readerWriter flowkit.ReaderWriter,
 	globalFlags command.GlobalFlags,
-	srv *services.Services,
+	_ output.Logger,
+	flow flowkit.Services,
 	state *flowkit.State,
 ) (result command.Result, err error) {
 	codeFilename := args[0]
@@ -108,7 +109,7 @@ func send(
 		authorizers = append(authorizers, signer)
 	}
 
-	code, err := readerWriter.ReadFile(codeFilename)
+	code, err := state.ReadFile(codeFilename)
 	if err != nil {
 		return nil, fmt.Errorf("error loading transaction file: %w", err)
 	}
@@ -123,16 +124,17 @@ func send(
 		return nil, fmt.Errorf("error parsing transaction arguments: %w", err)
 	}
 
-	roles, err := services.NewTransactionAccountRoles(proposer, payer, authorizers)
+	roles, err := flowkit.NewTransactionAccountRoles(proposer, payer, authorizers)
 	if err != nil {
 		return nil, fmt.Errorf("error parsing transaction roles: %w", err)
 	}
 
-	tx, txResult, err := srv.Transactions.Send(
+	tx, txResult, err := flow.SendTransaction(
+		context.Background(),
 		roles,
 		flowkit.NewScript(code, transactionArgs, codeFilename),
 		sendFlags.GasLimit,
-		globalFlags.Network)
+	)
 
 	if err != nil {
 		return nil, err
