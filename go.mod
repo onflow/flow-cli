@@ -4,8 +4,8 @@ go 1.18
 
 require (
 	github.com/dukex/mixpanel v1.0.1
+	github.com/go-git/go-git/v5 v5.6.0
 	github.com/getsentry/sentry-go v0.19.0
-	github.com/go-git/go-git/v5 v5.5.2
 	github.com/onflow/cadence v0.31.3
 	github.com/onflow/cadence-tools/languageserver v0.7.0
 	github.com/onflow/cadence-tools/test v0.4.0
@@ -149,7 +149,7 @@ require (
 	github.com/pelletier/go-toml v1.9.5 // indirect
 	github.com/pelletier/go-toml/v2 v2.0.5 // indirect
 	github.com/pierrec/lz4 v2.6.1+incompatible // indirect
-	github.com/pjbgf/sha1cd v0.2.3 // indirect
+	github.com/pjbgf/sha1cd v0.3.0 // indirect
 	github.com/pkg/term v1.1.0 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/prometheus/client_golang v1.14.0 // indirect
