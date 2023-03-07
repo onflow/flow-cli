@@ -1532,13 +1532,13 @@ func Test_TransactionRoles(t *testing.T) {
 		aCopy2.SetName("Zoo")
 
 		tests := []struct {
-			*transactionAccountRoles
+			*TransactionAccountRoles
 			signerAddresses []flow.Address
 		}{{
-			transactionAccountRoles: &transactionAccountRoles{
-				proposer:    a,
-				authorizers: []*Account{b},
-				payer:       c,
+			TransactionAccountRoles: &TransactionAccountRoles{
+				Proposer:    a,
+				Authorizers: []*Account{b},
+				Payer:       c,
 			},
 			signerAddresses: []flow.Address{
 				a.Address(),
@@ -1546,36 +1546,36 @@ func Test_TransactionRoles(t *testing.T) {
 				c.Address(),
 			},
 		}, {
-			transactionAccountRoles: &transactionAccountRoles{
-				proposer:    a,
-				authorizers: []*Account{a},
-				payer:       a,
+			TransactionAccountRoles: &TransactionAccountRoles{
+				Proposer:    a,
+				Authorizers: []*Account{a},
+				Payer:       a,
 			},
 			signerAddresses: []flow.Address{
 				a.Address(),
 			},
 		}, {
-			transactionAccountRoles: &transactionAccountRoles{
-				proposer:    a,
-				payer:       b,
-				authorizers: []*Account{a},
+			TransactionAccountRoles: &TransactionAccountRoles{
+				Proposer:    a,
+				Payer:       b,
+				Authorizers: []*Account{a},
 			},
 			signerAddresses: []flow.Address{
 				a.Address(), b.Address(),
 			},
 		}, {
-			transactionAccountRoles: &transactionAccountRoles{
-				proposer: a,
-				payer:    a,
+			TransactionAccountRoles: &TransactionAccountRoles{
+				Proposer: a,
+				Payer:    a,
 			},
 			signerAddresses: []flow.Address{
 				a.Address(),
 			},
 		}, {
-			transactionAccountRoles: &transactionAccountRoles{
-				proposer:    &aCopy1,
-				payer:       &aCopy2,
-				authorizers: []*Account{a},
+			TransactionAccountRoles: &TransactionAccountRoles{
+				Proposer:    &aCopy1,
+				Payer:       &aCopy2,
+				Authorizers: []*Account{a},
 			},
 			signerAddresses: []flow.Address{
 				a.Address(),
@@ -1600,17 +1600,17 @@ func Test_TransactionRoles(t *testing.T) {
 		b, _ := state.Accounts().ByName("Bob")
 		c, _ := state.Accounts().ByName("Charlie")
 
-		roles := &transactionAccountRoles{
-			proposer:    a,
-			authorizers: []*Account{b, c},
-			payer:       c,
+		roles := &TransactionAccountRoles{
+			Proposer:    a,
+			Authorizers: []*Account{b, c},
+			Payer:       c,
 		}
 
 		addresses := roles.toAddresses()
 
-		assert.Equal(t, a.Address(), addresses.proposer)
-		assert.Equal(t, c.Address(), addresses.payer)
-		assert.Equal(t, []flow.Address{b.Address(), c.Address()}, addresses.authorizers)
+		assert.Equal(t, a.Address(), addresses.Proposer)
+		assert.Equal(t, c.Address(), addresses.Payer)
+		assert.Equal(t, []flow.Address{b.Address(), c.Address()}, addresses.Authorizers)
 	})
 }
 
@@ -1666,10 +1666,10 @@ func TestTransactions_Integration(t *testing.T) {
 		for i, txIn := range txIns {
 			tx, err := f.BuildTransaction(
 				ctx,
-				&transactionAddressesRoles{
-					proposer:    txIn.prop,
-					authorizers: txIn.auth,
-					payer:       txIn.payer,
+				&TransactionAddressesRoles{
+					Proposer:    txIn.prop,
+					Authorizers: txIn.auth,
+					Payer:       txIn.payer,
 				},
 				txIn.index,
 				NewScript(txIn.code, txIn.args, txIn.file),
@@ -1721,7 +1721,7 @@ func TestTransactions_Integration(t *testing.T) {
 
 		tx, err := flowkit.BuildTransaction(
 			ctx,
-			&transactionAddressesRoles{
+			&TransactionAddressesRoles{
 				signer,
 				[]flow.Address{signer},
 				signer,
@@ -1752,7 +1752,7 @@ func TestTransactions_Integration(t *testing.T) {
 
 		tx, err := flowkit.BuildTransaction(
 			ctx,
-			&transactionAddressesRoles{
+			&TransactionAddressesRoles{
 				a.Address(),
 				nil,
 				a.Address(),
@@ -1788,7 +1788,7 @@ func TestTransactions_Integration(t *testing.T) {
 
 		tx, err := flowkit.BuildTransaction(
 			ctx,
-			&transactionAddressesRoles{
+			&TransactionAddressesRoles{
 				a.Address(),
 				[]flow.Address{a.Address()},
 				a.Address(),
@@ -1825,7 +1825,7 @@ func TestTransactions_Integration(t *testing.T) {
 
 		tx, err := flowkit.BuildTransaction(
 			ctx,
-			&transactionAddressesRoles{
+			&TransactionAddressesRoles{
 				a.Address(),
 				[]flow.Address{a.Address()},
 				a.Address(),
@@ -1859,10 +1859,10 @@ func TestTransactions_Integration(t *testing.T) {
 
 		tx, err := flowkit.BuildTransaction(
 			ctx,
-			&transactionAddressesRoles{
-				proposer:    a.Address(),
-				authorizers: []flow.Address{a.Address()},
-				payer:       a.Address(),
+			&TransactionAddressesRoles{
+				Proposer:    a.Address(),
+				Authorizers: []flow.Address{a.Address()},
+				Payer:       a.Address(),
 			},
 			0,
 			NewScript(tests.TransactionTwoAuth.Source, nil, tests.TransactionTwoAuth.Filename),
@@ -1884,9 +1884,9 @@ func TestTransactions_Integration(t *testing.T) {
 
 		tx, txr, err := flowkit.SendTransaction(
 			ctx,
-			&transactionAccountRoles{
-				proposer: a,
-				payer:    a,
+			&TransactionAccountRoles{
+				Proposer: a,
+				Payer:    a,
 			},
 			NewScript(tests.TransactionSimple.Source, nil, tests.TransactionSimple.Filename),
 			flow.DefaultTransactionGasLimit,

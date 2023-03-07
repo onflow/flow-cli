@@ -78,10 +78,10 @@ type Services interface {
 	ExecuteScript(context.Context, *Script) (cadence.Value, error)
 	GetTransactionByID(context.Context, flow.Identifier, bool) (*flow.Transaction, *flow.TransactionResult, error)
 	GetTransactionsByBlockID(context.Context, flow.Identifier) ([]*flow.Transaction, []*flow.TransactionResult, error)
-	BuildTransaction(context.Context, *transactionAddressesRoles, int, *Script, uint64) (*Transaction, error)
+	BuildTransaction(context.Context, *TransactionAddressesRoles, int, *Script, uint64) (*Transaction, error)
 	SignTransactionPayload(context.Context, *Account, []byte) (*Transaction, error)
 	SendSignedTransaction(context.Context, *Transaction) (*flow.Transaction, *flow.TransactionResult, error)
-	SendTransaction(context.Context, *transactionAccountRoles, *Script, uint64) (*flow.Transaction, *flow.TransactionResult, error)
+	SendTransaction(context.Context, *TransactionAccountRoles, *Script, uint64) (*flow.Transaction, *flow.TransactionResult, error)
 	Test(context.Context, []byte, string) (cdcTests.Results, error)
 }
 
@@ -875,7 +875,7 @@ func (f *Flowkit) GetTransactionsByBlockID(
 // TransactionAddressesRoles type defines the address for each role (payer, proposer, authorizers) and the script defines the transaction content.
 func (f *Flowkit) BuildTransaction(
 	ctx context.Context,
-	addresses *transactionAddressesRoles,
+	addresses *TransactionAddressesRoles,
 	proposerKeyIndex int,
 	script *Script,
 	gasLimit uint64,
@@ -890,13 +890,13 @@ func (f *Flowkit) BuildTransaction(
 		return nil, fmt.Errorf("failed to get latest sealed block: %w", err)
 	}
 
-	proposerAccount, err := f.gateway.GetAccount(addresses.proposer)
+	proposerAccount, err := f.gateway.GetAccount(addresses.Proposer)
 	if err != nil {
 		return nil, err
 	}
 
 	tx := NewTransaction().
-		SetPayer(addresses.payer).
+		SetPayer(addresses.Payer).
 		SetGasLimit(gasLimit).
 		SetBlockReference(latestBlock)
 
@@ -937,7 +937,7 @@ func (f *Flowkit) BuildTransaction(
 		return nil, err
 	}
 
-	tx, err = tx.AddAuthorizers(addresses.authorizers)
+	tx, err = tx.AddAuthorizers(addresses.Authorizers)
 	if err != nil {
 		return nil, err
 	}
@@ -993,14 +993,14 @@ func (f *Flowkit) SendSignedTransaction(
 // contain the script. Transaction as well as transaction result will be returned in case the transaction is successfully submitted.
 func (f *Flowkit) SendTransaction(
 	ctx context.Context,
-	accounts *transactionAccountRoles,
+	accounts *TransactionAccountRoles,
 	script *Script,
 	gasLimit uint64,
 ) (*flow.Transaction, *flow.TransactionResult, error) {
 	tx, err := f.BuildTransaction(
 		ctx,
 		accounts.toAddresses(),
-		accounts.proposer.Key().Index(),
+		accounts.Proposer.Key().Index(),
 		script,
 		gasLimit,
 	)
