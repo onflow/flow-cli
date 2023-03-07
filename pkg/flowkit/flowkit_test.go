@@ -1471,7 +1471,7 @@ func TestTransactions(t *testing.T) {
 
 		_, _, err := flowkit.SendTransaction(
 			ctx,
-			NewSingleTransactionAccount(serviceAcc),
+			NewTransactionSingleAccountRole(serviceAcc),
 			NewScript(
 				tests.TransactionArgString.Source,
 				[]cadence.Value{cadence.String("Bar")},
@@ -1666,7 +1666,7 @@ func TestTransactions_Integration(t *testing.T) {
 		for i, txIn := range txIns {
 			tx, err := f.BuildTransaction(
 				ctx,
-				&TransactionAddressesRoles{
+				&transactionAddressesRoles{
 					proposer:    txIn.prop,
 					authorizers: txIn.auth,
 					payer:       txIn.payer,
@@ -1721,7 +1721,7 @@ func TestTransactions_Integration(t *testing.T) {
 
 		tx, err := flowkit.BuildTransaction(
 			ctx,
-			&TransactionAddressesRoles{
+			&transactionAddressesRoles{
 				signer,
 				[]flow.Address{signer},
 				signer,
@@ -1752,7 +1752,7 @@ func TestTransactions_Integration(t *testing.T) {
 
 		tx, err := flowkit.BuildTransaction(
 			ctx,
-			&TransactionAddressesRoles{
+			&transactionAddressesRoles{
 				a.Address(),
 				nil,
 				a.Address(),
@@ -1788,7 +1788,7 @@ func TestTransactions_Integration(t *testing.T) {
 
 		tx, err := flowkit.BuildTransaction(
 			ctx,
-			&TransactionAddressesRoles{
+			&transactionAddressesRoles{
 				a.Address(),
 				[]flow.Address{a.Address()},
 				a.Address(),
@@ -1825,7 +1825,7 @@ func TestTransactions_Integration(t *testing.T) {
 
 		tx, err := flowkit.BuildTransaction(
 			ctx,
-			&TransactionAddressesRoles{
+			&transactionAddressesRoles{
 				a.Address(),
 				[]flow.Address{a.Address()},
 				a.Address(),
@@ -1859,7 +1859,7 @@ func TestTransactions_Integration(t *testing.T) {
 
 		tx, err := flowkit.BuildTransaction(
 			ctx,
-			&TransactionAddressesRoles{
+			&transactionAddressesRoles{
 				proposer:    a.Address(),
 				authorizers: []flow.Address{a.Address()},
 				payer:       a.Address(),
@@ -1907,7 +1907,7 @@ func TestTransactions_Integration(t *testing.T) {
 
 		tx, txr, err := flowkit.SendTransaction(
 			ctx,
-			NewSingleTransactionAccount(a),
+			NewTransactionSingleAccountRole(a),
 			NewScript(tests.TransactionSingleAuth.Source, nil, tests.TransactionSingleAuth.Filename),
 			flow.DefaultTransactionGasLimit,
 		)
@@ -1978,7 +1978,7 @@ func TestTransactions_Integration(t *testing.T) {
 
 		tx, txr, err := flowkit.SendTransaction(
 			ctx,
-			NewSingleTransactionAccount(a),
+			NewTransactionSingleAccountRole(a),
 			NewScript(
 				tests.TransactionArgString.Source,
 				[]cadence.Value{
@@ -2005,7 +2005,7 @@ func TestTransactions_Integration(t *testing.T) {
 
 		tx, txr, err := flowkit.SendTransaction(
 			ctx,
-			NewSingleTransactionAccount(a),
+			NewTransactionSingleAccountRole(a),
 			NewScript(
 				tests.TransactionMultipleDeclarations.Source,
 				nil,

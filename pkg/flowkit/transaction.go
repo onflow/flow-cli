@@ -370,9 +370,9 @@ func NewTransactionAccountRoles(
 	}, nil
 }
 
-// NewSingleTransactionAccount creates transaction accounts from a single provided
+// NewTransactionSingleAccountRole creates transaction accounts from a single provided
 // account fulfilling all the roles (proposer, payer, authorizer).
-func NewSingleTransactionAccount(account *Account) *transactionAccountRoles {
+func NewTransactionSingleAccountRole(account *Account) *transactionAccountRoles {
 	return &transactionAccountRoles{
 		proposer:    account,
 		authorizers: []*Account{account},
@@ -387,13 +387,13 @@ type transactionAccountRoles struct {
 	payer       *Account
 }
 
-func (t *transactionAccountRoles) toAddresses() *TransactionAddressesRoles {
+func (t *transactionAccountRoles) toAddresses() *transactionAddressesRoles {
 	auths := make([]flow.Address, len(t.authorizers))
 	for i, a := range t.authorizers {
 		auths[i] = a.Address()
 	}
 
-	return &TransactionAddressesRoles{
+	return &transactionAddressesRoles{
 		proposer:    t.proposer.Address(),
 		authorizers: auths,
 		payer:       t.payer.Address(),
@@ -422,11 +422,24 @@ func (t *transactionAccountRoles) getSigners() []*Account {
 	return sigs
 }
 
-// TransactionAddressesRoles defines transaction roles by account addresses.
-//
-// You can read more about roles here: https://developers.flow.com/learn/concepts/accounts-and-keys
-type TransactionAddressesRoles struct {
+// transactionAddressesRoles defines transaction roles by account addresses.
+type transactionAddressesRoles struct {
 	proposer    flow.Address
 	authorizers []flow.Address
 	payer       flow.Address
+}
+
+// NewTransactionAddressRoles defines transaction roles by account addresses.
+//
+// You can read more about roles here: https://developers.flow.com/learn/concepts/accounts-and-keys
+func NewTransactionAddressRoles(
+	proposer flow.Address,
+	payer flow.Address,
+	authorizers []flow.Address,
+) *transactionAddressesRoles {
+	return &transactionAddressesRoles{
+		proposer:    proposer,
+		authorizers: authorizers,
+		payer:       payer,
+	}
 }
