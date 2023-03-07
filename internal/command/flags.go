@@ -50,7 +50,7 @@ var Flags = GlobalFlags{
 	Save:             "",
 	Host:             "",
 	HostNetworkKey:   "",
-	Network:          config.DefaultEmulatorNetwork().Name,
+	Network:          config.EmulatorNetwork.Name,
 	Log:              logLevelInfo,
 	Yes:              false,
 	ConfigPaths:      config.DefaultPaths(),
