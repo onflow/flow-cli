@@ -45,16 +45,16 @@ func save(
 	_ command.GlobalFlags,
 	logger output.Logger,
 	writer flowkit.ReaderWriter,
-	_ flowkit.Services,
+	flow flowkit.Services,
 ) (command.Result, error) {
 	fileName := args[0]
 
 	logger.StartProgress("Downloading protocol snapshot...")
-	if !gateway.SecureConnection() {
+	if !flow.Gateway().SecureConnection() {
 		logger.Info(fmt.Sprintf("%s warning: using insecure client connection to download snapshot, you should use a secure network configuration...", output.WarningEmoji()))
 	}
 
-	snapshotBytes, err := gateway.GetLatestProtocolStateSnapshot()
+	snapshotBytes, err := flow.Gateway().GetLatestProtocolStateSnapshot()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get latest finalized protocol snapshot from gateway: %w", err)
 	}

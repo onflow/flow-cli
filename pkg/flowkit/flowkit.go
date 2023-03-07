@@ -63,6 +63,7 @@ type EventWorker struct {
 type Services interface {
 	Network() config.Network
 	Ping() error
+	Gateway() gateway.Gateway
 	SetLogger(output.Logger)
 	GetAccount(context.Context, flow.Address) (*flow.Account, error)
 	CreateAccount(context.Context, *Account, []Key) (*flow.Account, flow.Identifier, error)
@@ -105,6 +106,10 @@ type Flowkit struct {
 
 func (f *Flowkit) Network() config.Network {
 	return f.network // todo define empty network type in config config.EmptyNetwork
+}
+
+func (f *Flowkit) Gateway() gateway.Gateway {
+	return f.gateway
 }
 
 func (f *Flowkit) SetLogger(logger output.Logger) {
