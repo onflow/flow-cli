@@ -49,7 +49,7 @@ var GetCommand = &command.Command{
 func get(
 	args []string,
 	_ command.GlobalFlags,
-	_ output.Logger,
+	logger output.Logger,
 	_ flowkit.ReaderWriter,
 	flow flowkit.Services,
 ) (command.Result, error) {
@@ -59,6 +59,8 @@ func get(
 		return nil, err
 	}
 
+	logger.StartProgress("Fetching Block...")
+	defer logger.StopProgress()
 	block, err := flow.GetBlock(
 		context.Background(),
 		query,

@@ -182,6 +182,7 @@ func (f *Flowkit) CreateAccount(
 	}
 
 	f.logger.StartProgress("Waiting for transaction to be sealed...")
+	defer f.logger.StopProgress()
 
 	result, err := f.gateway.GetTransactionResult(sentTx.ID(), true)
 	if err != nil {
@@ -198,14 +199,12 @@ func (f *Flowkit) CreateAccount(
 		return nil, flow.EmptyID, fmt.Errorf("new account address couldn't be fetched")
 	}
 
-	f.logger.StopProgress()
-
-	account, err := f.gateway.GetAccount(*newAccountAddress[0])
+	account, err := f.gateway.GetAccount(*newAccountAddress[0]) // we know it's the only and first event
 	if err != nil {
 		return nil, flow.EmptyID, err
 	}
 
-	return account, sentTx.ID(), nil // we know it's the only and first event
+	return account, sentTx.ID(), nil
 }
 
 // prepareTransaction prepares transaction for sending with data from network
@@ -426,10 +425,6 @@ func (f *Flowkit) RemoveContract(
 
 // GetBlock by the query from Flow blockchain. Query can define a block by ID, block by height or require the latest block.
 func (f *Flowkit) GetBlock(ctx context.Context, query BlockQuery) (*flow.Block, error) {
-	f.logger.StartProgress("Fetching Block...")
-	defer f.logger.StopProgress()
-
-	// smart parsing of query
 	var err error
 	var block *flow.Block
 	if query.Latest {
