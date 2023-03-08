@@ -53,11 +53,10 @@ var TestCommand = &command.Command{
 func run(
 	args []string,
 	_ command.GlobalFlags,
-	_ output.Logger,
+	logger output.Logger,
 	readerWriter flowkit.ReaderWriter,
 	services flowkit.Services,
 ) (command.Result, error) {
-
 	filename := args[0]
 
 	code, err := readerWriter.ReadFile(filename)
@@ -65,12 +64,14 @@ func run(
 		return nil, fmt.Errorf("error loading script file: %w", err)
 	}
 
+	logger.StartProgress("Running tests...")
+	defer logger.StopProgress()
+
 	result, err := services.Test(
 		context.Background(),
 		code,
 		filename,
 	)
-
 	if err != nil {
 		return nil, err
 	}

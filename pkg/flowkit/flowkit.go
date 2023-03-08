@@ -964,9 +964,6 @@ func (f *Flowkit) SendSignedTransaction(
 	ctx context.Context,
 	tx *Transaction,
 ) (*flow.Transaction, *flow.TransactionResult, error) {
-	f.logger.StartProgress(fmt.Sprintf("Sending transaction with ID: %s", tx.FlowTransaction().ID()))
-	defer f.logger.StopProgress()
-
 	sentTx, err := f.gateway.SendSignedTransaction(tx.FlowTransaction())
 	if err != nil {
 		return nil, nil, err
@@ -1033,8 +1030,6 @@ func (f *Flowkit) Test(ctx context.Context, code []byte, scriptPath string) (cdc
 	runner := cdcTests.NewTestRunner().
 		WithImportResolver(f.importResolver(scriptPath)).
 		WithFileResolver(f.fileResolver(scriptPath))
-
-	f.logger.Info("Running tests...")
 
 	return runner.RunTests(string(code))
 }

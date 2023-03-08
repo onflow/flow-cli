@@ -50,7 +50,7 @@ var SendSignedCommand = &command.Command{
 func sendSigned(
 	args []string,
 	globalFlags command.GlobalFlags,
-	_ output.Logger,
+	logger output.Logger,
 	reader flowkit.ReaderWriter,
 	flow flowkit.Services,
 ) (command.Result, error) {
@@ -69,6 +69,9 @@ func sendSigned(
 	if !globalFlags.Yes && !output.ApproveTransactionForSendingPrompt(tx.FlowTransaction()) {
 		return nil, fmt.Errorf("transaction was not approved for sending")
 	}
+
+	logger.StartProgress(fmt.Sprintf("Sending transaction with ID: %s", tx.FlowTransaction().ID()))
+	defer logger.StopProgress()
 
 	sentTx, result, err := flow.SendSignedTransaction(context.Background(), tx)
 	if err != nil {
