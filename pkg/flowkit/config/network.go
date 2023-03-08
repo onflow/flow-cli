@@ -23,6 +23,7 @@ import (
 )
 
 var (
+	EmptyNetwork    = Network{}
 	EmulatorNetwork = Network{
 		Name: "emulator",
 		Host: "127.0.0.1:3569",

@@ -807,7 +807,7 @@ func (f *Flowkit) ExecuteScript(ctx context.Context, script *Script) (cadence.Va
 		if state == nil {
 			return nil, config.ErrDoesNotExist
 		}
-		if f.network.Name == "" { // todo define empty network
+		if f.network == config.EmptyNetwork {
 			return nil, fmt.Errorf("missing network, specify which network to use to resolve imports in script code")
 		}
 		if script.Location() == "" {
