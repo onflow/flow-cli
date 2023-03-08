@@ -472,9 +472,6 @@ func (f *Flowkit) GetEvents(
 		return nil, fmt.Errorf("cannot have end height (%d) of block range less that start height (%d)", endHeight, startHeight)
 	}
 
-	f.logger.StartProgress("Fetching events...")
-	defer f.logger.StopProgress()
-
 	if worker == nil { // if no worker is passed, create a default one
 		worker = &EventWorker{
 			Count:           1,

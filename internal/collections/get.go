@@ -20,6 +20,7 @@ package collections
 
 import (
 	"context"
+	"fmt"
 
 	flowsdk "github.com/onflow/flow-go-sdk"
 	"github.com/spf13/cobra"
@@ -47,11 +48,14 @@ var GetCommand = &command.Command{
 func get(
 	args []string,
 	_ command.GlobalFlags,
-	_ output.Logger,
+	logger output.Logger,
 	_ flowkit.ReaderWriter,
 	flow flowkit.Services,
 ) (command.Result, error) {
 	id := flowsdk.HexToID(args[0])
+
+	logger.StartProgress(fmt.Sprintf("Loading collection %s", id))
+	defer logger.StopProgress()
 
 	collection, err := flow.GetCollection(context.Background(), id)
 	if err != nil {

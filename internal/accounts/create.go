@@ -108,6 +108,7 @@ func create(
 		}
 	}
 
+	// todo if contracts are provided we should also deploy as seperate action
 	account, _, err := flow.CreateAccount(
 		context.Background(),
 		signer,
