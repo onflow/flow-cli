@@ -20,6 +20,7 @@ package accounts
 
 import (
 	"context"
+	"fmt"
 
 	flowsdk "github.com/onflow/flow-go-sdk"
 	"github.com/spf13/cobra"
@@ -49,11 +50,14 @@ var GetCommand = &command.Command{
 func get(
 	args []string,
 	_ command.GlobalFlags,
-	_ output.Logger,
+	logger output.Logger,
 	_ flowkit.ReaderWriter,
 	flow flowkit.Services,
 ) (command.Result, error) {
 	address := flowsdk.HexToAddress(args[0])
+
+	logger.StartProgress(fmt.Sprintf("Loading account %s...", address))
+	defer logger.StopProgress()
 
 	account, err := flow.GetAccount(context.Background(), address)
 	if err != nil {

@@ -129,12 +129,7 @@ func (f *Flowkit) Ping() error {
 
 // GetAccount fetches account on the Flow network.
 func (f *Flowkit) GetAccount(ctx context.Context, address flow.Address) (*flow.Account, error) {
-	f.logger.StartProgress(fmt.Sprintf("Loading %s...", address))
-
-	account, err := f.gateway.GetAccount(address)
-	f.logger.StopProgress()
-
-	return account, err
+	return f.gateway.GetAccount(address)
 }
 
 // CreateAccount on the Flow network with the provided keys and using the signer for creation transaction.
