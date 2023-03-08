@@ -830,6 +830,7 @@ func (f *Flowkit) GetTransactionByID(
 	waitSeal bool,
 ) (*flow.Transaction, *flow.TransactionResult, error) {
 	f.logger.StartProgress("Fetching Transaction...")
+	defer f.logger.StopProgress()
 
 	tx, err := f.gateway.GetTransaction(ID)
 	if err != nil {
@@ -841,8 +842,6 @@ func (f *Flowkit) GetTransactionByID(
 	}
 
 	result, err := f.gateway.GetTransactionResult(ID, waitSeal)
-	f.logger.StopProgress()
-
 	return tx, result, err
 }
 
@@ -898,7 +897,7 @@ func (f *Flowkit) BuildTransaction(
 	}
 
 	if program.HasImports() {
-		if f.network.Name == "" { // todo replace with empty network type
+		if f.network == config.EmptyNetwork {
 			return nil, fmt.Errorf("missing network, specify which network to use to resolve imports in transaction code")
 		}
 		if script.Location() == "" { // when used as lib with code we don't support imports
