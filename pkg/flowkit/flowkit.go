@@ -60,6 +60,8 @@ type EventWorker struct {
 	BlocksPerWorker uint64
 }
 
+// go:generate  mockery --name=Services ==output=test/mocks
+
 type Services interface {
 	Network() config.Network
 	Ping() error
