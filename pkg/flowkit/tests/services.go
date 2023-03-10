@@ -1,0 +1,196 @@
+package tests
+
+import (
+	"github.com/onflow/cadence"
+	"github.com/onflow/flow-cli/pkg/flowkit/tests/mocks"
+	"github.com/onflow/flow-go-sdk"
+	"github.com/stretchr/testify/mock"
+)
+
+const (
+	AddContractFunc                  = "AddContract"
+	BuildTransactionFunc             = "BuildTransaction"
+	CreateAccountFunc                = "CreateAccount"
+	DeployProjectFunc                = "DeployProject"
+	DerivePrivateKeyFromMnemonicFunc = "DerivePrivateKeyFromMnemonic"
+	GatewayFunc                      = "Gateway"
+	GenerateKeyFunc                  = "GenerateKey"
+	GenerateMnemonicKeyFunc          = "GenerateMnemonicKey"
+	GetBlockFunc                     = "GetBlock"
+	GetTransactionByIDFunc           = "GetTransactionByID"
+	GetTransactionsByBlockIDFunc     = "GetTransactionsByBlockID"
+	NetworkFunc                      = "Network"
+	PingFunc                         = "Ping"
+	RemoveContractFunc               = "RemoveContract"
+	SendTransactionFunc              = "SendTransaction"
+	SetLoggerFunc                    = "SetLogger"
+	SignTransactionPayloadFunc       = "SignTransactionPayload"
+	TestFunc                         = "Test"
+)
+
+type TestServices struct {
+	Mock                         *mocks.Services
+	AddContract                  *mock.Call
+	BuildTransaction             *mock.Call
+	CreateAccount                *mock.Call
+	DeployProject                *mock.Call
+	DerivePrivateKeyFromMnemonic *mock.Call
+	Gateway                      *mock.Call
+	GenerateKey                  *mock.Call
+	GenerateMnemonicKey          *mock.Call
+	GetBlock                     *mock.Call
+	GetTransactionByID           *mock.Call
+	GetTransactionsByBlockID     *mock.Call
+	Network                      *mock.Call
+	Ping                         *mock.Call
+	RemoveContract               *mock.Call
+	SendTransaction              *mock.Call
+	SetLogger                    *mock.Call
+	SignTransactionPayload       *mock.Call
+	Test                         *mock.Call
+	GetAccount                   *mock.Call
+	ExecuteScript                *mock.Call
+	SendSignedTransaction        *mock.Call
+	GetEvents                    *mock.Call
+	GetCollection                *mock.Call
+}
+
+func DefaultMockServices() *TestServices {
+	m := &mocks.Services{}
+	t := &TestServices{
+		Mock: m,
+		GetAccount: m.On(
+			GetAccountFunc,
+			mock.AnythingOfType("flow.Address"),
+		),
+		ExecuteScript: m.On(
+			ExecuteScriptFunc,
+			mock.Anything,
+			mock.AnythingOfType("*flowkit.Script"),
+		),
+		SendSignedTransaction: m.On(
+			SendSignedTransactionFunc,
+			mock.Anything,
+			mock.AnythingOfType("*flowkit.Transaction"),
+		),
+		AddContract: m.On(
+			AddContractFunc,
+			mock.Anything,
+			mock.AnythingOfType("*flowkit.Account"),
+			mock.AnythingOfType("*flowkit.Script"),
+			mock.AnythingOfType("bool"),
+		),
+		GetCollection: m.On(
+			GetCollectionFunc,
+			mock.Anything,
+			mock.AnythingOfType("flow.Identifier"),
+		),
+		GetEvents: m.On(
+			GetEventsFunc,
+			mock.Anything,
+			mock.AnythingOfType("[]string"),
+			mock.AnythingOfType("uint64"),
+			mock.AnythingOfType("uint64"),
+			mock.AnythingOfType("*flowkit.EventWorker"),
+		),
+		BuildTransaction: m.On(
+			BuildTransactionFunc,
+			mock.Anything,
+			mock.AnythingOfType("*flowkit.TransactionAddressRoles"),
+			mock.AnythingOfType("int"),
+			mock.AnythingOfType("*flowkit.Script"),
+			mock.AnythingOfType("uint64"),
+		),
+		CreateAccount: m.On(
+			CreateAccountFunc,
+			mock.Anything,
+			mock.AnythingOfType("*flowkit.Account"),
+			mock.AnythingOfType("[]flowkit.Key"),
+		),
+		DeployProject: m.On(
+			DeployProjectFunc,
+			mock.Anything,
+			mock.AnythingOfType("bool"),
+		),
+		DerivePrivateKeyFromMnemonic: m.On(
+			DerivePrivateKeyFromMnemonicFunc,
+			mock.Anything,
+			mock.AnythingOfType("string"),
+			mock.AnythingOfType("crypto.SignatureAlgorithm"),
+			mock.AnythingOfType("string"),
+		),
+		Gateway: m.On(GatewayFunc),
+		GenerateKey: m.On(
+			GenerateKeyFunc,
+			mock.Anything,
+			mock.AnythingOfType("crypto.SignatureAlgorithm"),
+			mock.AnythingOfType("string"),
+		),
+		GenerateMnemonicKey: m.On(
+			GenerateMnemonicKeyFunc,
+			mock.Anything,
+			mock.AnythingOfType("crypto.SignatureAlgorithm"),
+			mock.AnythingOfType("string"),
+		),
+		GetBlock: m.On(
+			GetBlockFunc,
+			mock.Anything,
+			mock.AnythingOfType("flowkit.BlockQuery"),
+		),
+		GetTransactionByID: m.On(
+			GetTransactionByIDFunc,
+			mock.Anything,
+			mock.AnythingOfType("flow.Identifier"),
+			mock.AnythingOfType("bool"),
+		),
+		GetTransactionsByBlockID: m.On(
+			GetTransactionsByBlockIDFunc,
+			mock.Anything,
+			mock.AnythingOfType("flow.Identifier"),
+		),
+		RemoveContract: m.On(
+			RemoveContractFunc,
+			mock.Anything,
+			mock.AnythingOfType("*flowkit.Account"),
+			mock.AnythingOfType("string"),
+		),
+		SendTransaction: m.On(
+			SendTransactionFunc,
+			mock.Anything,
+			mock.AnythingOfType("*flowkit.TransactionAccountRoles"),
+			mock.AnythingOfType("*flowkit.Script"),
+			mock.AnythingOfType("uint64"),
+		),
+		SignTransactionPayload: m.On(
+			SignTransactionPayloadFunc,
+			mock.Anything,
+			mock.AnythingOfType("*flowkit.Account"),
+			mock.AnythingOfType("[]byte"),
+		),
+		Test: m.On(
+			TestFunc,
+			mock.Anything,
+			mock.AnythingOfType("[]byte"),
+			mock.AnythingOfType("string"),
+		),
+		Network:   m.On(NetworkFunc),
+		Ping:      m.On(PingFunc),
+		SetLogger: m.On(SetLoggerFunc, mock.AnythingOfType("output.Logger")),
+	}
+
+	t.GetAccount.Run(func(args mock.Arguments) {
+		addr := args.Get(0).(flow.Address)
+		t.GetAccount.Return(NewAccountWithAddress(addr.String()), nil)
+	})
+
+	t.ExecuteScript.Run(func(args mock.Arguments) {
+		t.ExecuteScript.Return(cadence.MustConvertValue(""), nil)
+	})
+
+	t.GetTransactionByID.Return(NewTransaction(), nil)
+	t.GetCollection.Return(NewCollection(), nil)
+	t.GetEvents.Return([]flow.BlockEvents{}, nil)
+	t.GetBlock.Return(NewBlock(), nil)
+
+	return t
+}
