@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"path/filepath"
 
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/pkg/errors"
@@ -179,14 +180,24 @@ func (p *State) DeploymentContractsByNetwork(network string) ([]*project.Contrac
 				return nil, fmt.Errorf("contract with name %s not found", deploymentContract.Name)
 			}
 
-			code, err := p.readerWriter.ReadFile(c.Location)
+			location := c.Location
+			// if we loaded config from a single location, we should make the path of contracts defined in config relative to
+			// config path we have provided, this will make cases where we execute loading in different path than config work
+			if len(p.confLoader.LoadedLocations) == 1 {
+				location, err = filepath.Rel(p.confLoader.LoadedLocations[0], location)
+				if err != nil {
+					return nil, err
+				}
+			}
+
+			code, err := p.readerWriter.ReadFile(location)
 			if err != nil {
 				return nil, errors.Wrap(err, "deployment by network failed to read contract code")
 			}
 
 			contract := project.NewContract(
 				c.Name,
-				path.Clean(c.Location),
+				path.Clean(location),
 				code,
 				account.address,
 				account.name,
