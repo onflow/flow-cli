@@ -193,6 +193,7 @@ func DefaultMockServices() *MockServices {
 	t.GetCollection.Return(tests.NewCollection(), nil)
 	t.GetEvents.Return([]flow.BlockEvents{}, nil)
 	t.GetBlock.Return(tests.NewBlock(), nil)
+	t.AddContract.Return(flow.EmptyID, false, nil)
 
 	return t
 }

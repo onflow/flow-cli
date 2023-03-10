@@ -6,7 +6,6 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowkit/mocks"
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
 	"github.com/onflow/flow-cli/pkg/flowkit/tests"
-	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -36,7 +35,6 @@ func Test_AddContract(t *testing.T) {
 			assert.Len(t, script.Args, 1)
 			assert.Equal(t, "1", script.Args[0].String())
 		})
-		srv.AddContract.Return(flow.EmptyID, false, nil)
 
 		args := []string{tests.ContractSimpleWithArgs.Filename, "1"}
 		result, err := addContract(args, NoFlags, NoLogger, srv.Mock, state)
@@ -52,7 +50,6 @@ func Test_AddContract(t *testing.T) {
 			assert.Len(t, script.Args, 1)
 			assert.Equal(t, "1", script.Args[0].String())
 		})
-		srv.AddContract.Return(flow.EmptyID, false, nil)
 
 		addContractFlags.ArgsJSON = `[{"type": "UInt64", "value": "1"}]`
 		args := []string{tests.ContractSimpleWithArgs.Filename}
@@ -88,4 +85,10 @@ func Test_AddContract(t *testing.T) {
 		assert.EqualError(t, err, "could not find account with name invalid in the configuration")
 	})
 
+}
+
+func Test_RemoveContract(t *testing.T) {
+	t.Run("Success", func(t *testing.T) {
+
+	})
 }
