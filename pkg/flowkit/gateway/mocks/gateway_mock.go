@@ -16,14 +16,13 @@
  * limitations under the License.
  */
 
-package tests
+package mocks
 
 import (
 	"github.com/onflow/cadence"
+	"github.com/onflow/flow-cli/pkg/flowkit/tests"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/stretchr/testify/mock"
-
-	"github.com/onflow/flow-cli/pkg/flowkit/tests/mocks"
 )
 
 const (
@@ -40,7 +39,7 @@ const (
 )
 
 type TestGateway struct {
-	Mock                           *mocks.Gateway
+	Mock                           *Gateway
 	SendSignedTransaction          *mock.Call
 	GetAccount                     *mock.Call
 	GetCollection                  *mock.Call
@@ -59,7 +58,7 @@ type TestGateway struct {
 }
 
 func DefaultMockGateway() *TestGateway {
-	m := &mocks.Gateway{}
+	m := &Gateway{}
 	t := &TestGateway{
 		Mock: m,
 		SendSignedTransaction: m.On(
@@ -101,25 +100,25 @@ func DefaultMockGateway() *TestGateway {
 
 	// default return values
 	t.SendSignedTransaction.Run(func(args mock.Arguments) {
-		t.SendSignedTransaction.Return(NewTransaction(), nil)
+		t.SendSignedTransaction.Return(tests.NewTransaction(), nil)
 	})
 
 	t.GetAccount.Run(func(args mock.Arguments) {
 		addr := args.Get(0).(flow.Address)
-		t.GetAccount.Return(NewAccountWithAddress(addr.String()), nil)
+		t.GetAccount.Return(tests.NewAccountWithAddress(addr.String()), nil)
 	})
 
 	t.ExecuteScript.Run(func(args mock.Arguments) {
 		t.ExecuteScript.Return(cadence.MustConvertValue(""), nil)
 	})
 
-	t.GetTransaction.Return(NewTransaction(), nil)
-	t.GetCollection.Return(NewCollection(), nil)
-	t.GetTransactionResult.Return(NewTransactionResult(nil), nil)
+	t.GetTransaction.Return(tests.NewTransaction(), nil)
+	t.GetCollection.Return(tests.NewCollection(), nil)
+	t.GetTransactionResult.Return(tests.NewTransactionResult(nil), nil)
 	t.GetEvents.Return([]flow.BlockEvents{}, nil)
-	t.GetLatestBlock.Return(NewBlock(), nil)
-	t.GetBlockByHeight.Return(NewBlock(), nil)
-	t.GetBlockByID.Return(NewBlock(), nil)
+	t.GetLatestBlock.Return(tests.NewBlock(), nil)
+	t.GetBlockByHeight.Return(tests.NewBlock(), nil)
+	t.GetBlockByID.Return(tests.NewBlock(), nil)
 
 	return t
 }

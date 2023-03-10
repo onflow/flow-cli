@@ -1,8 +1,9 @@
-package tests
+package mocks
 
 import (
 	"github.com/onflow/cadence"
-	"github.com/onflow/flow-cli/pkg/flowkit/tests/mocks"
+	"github.com/onflow/flow-cli/pkg/flowkit/gateway/mocks"
+	"github.com/onflow/flow-cli/pkg/flowkit/tests"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/stretchr/testify/mock"
 )
@@ -28,8 +29,8 @@ const (
 	TestFunc                         = "Test"
 )
 
-type TestServices struct {
-	Mock                         *mocks.Services
+type MockServices struct {
+	Mock                         *Services
 	AddContract                  *mock.Call
 	BuildTransaction             *mock.Call
 	CreateAccount                *mock.Call
@@ -55,22 +56,22 @@ type TestServices struct {
 	GetCollection                *mock.Call
 }
 
-func DefaultMockServices() *TestServices {
-	m := &mocks.Services{}
-	t := &TestServices{
+func DefaultMockServices() *MockServices {
+	m := &Services{}
+	t := &MockServices{
 		Mock: m,
 		GetAccount: m.On(
-			GetAccountFunc,
+			mocks.GetAccountFunc,
 			mock.Anything,
 			mock.AnythingOfType("flow.Address"),
 		),
 		ExecuteScript: m.On(
-			ExecuteScriptFunc,
+			mocks.ExecuteScriptFunc,
 			mock.Anything,
 			mock.AnythingOfType("*flowkit.Script"),
 		),
 		SendSignedTransaction: m.On(
-			SendSignedTransactionFunc,
+			mocks.SendSignedTransactionFunc,
 			mock.Anything,
 			mock.AnythingOfType("*flowkit.Transaction"),
 		),
@@ -82,12 +83,12 @@ func DefaultMockServices() *TestServices {
 			mock.AnythingOfType("bool"),
 		),
 		GetCollection: m.On(
-			GetCollectionFunc,
+			mocks.GetCollectionFunc,
 			mock.Anything,
 			mock.AnythingOfType("flow.Identifier"),
 		),
 		GetEvents: m.On(
-			GetEventsFunc,
+			mocks.GetEventsFunc,
 			mock.Anything,
 			mock.AnythingOfType("[]string"),
 			mock.AnythingOfType("uint64"),
@@ -181,17 +182,17 @@ func DefaultMockServices() *TestServices {
 
 	t.GetAccount.Run(func(args mock.Arguments) {
 		addr := args.Get(1).(flow.Address)
-		t.GetAccount.Return(NewAccountWithAddress(addr.String()), nil)
+		t.GetAccount.Return(tests.NewAccountWithAddress(addr.String()), nil)
 	})
 
 	t.ExecuteScript.Run(func(args mock.Arguments) {
 		t.ExecuteScript.Return(cadence.MustConvertValue(""), nil)
 	})
 
-	t.GetTransactionByID.Return(NewTransaction(), nil)
-	t.GetCollection.Return(NewCollection(), nil)
+	t.GetTransactionByID.Return(tests.NewTransaction(), nil)
+	t.GetCollection.Return(tests.NewCollection(), nil)
 	t.GetEvents.Return([]flow.BlockEvents{}, nil)
-	t.GetBlock.Return(NewBlock(), nil)
+	t.GetBlock.Return(tests.NewBlock(), nil)
 
 	return t
 }

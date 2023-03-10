@@ -23,6 +23,8 @@ import (
 	"github.com/onflow/flow-go-sdk"
 )
 
+//go:generate  mockery --name=Gateway
+
 // Gateway describes blockchain access interface
 type Gateway interface {
 	GetAccount(flow.Address) (*flow.Account, error)
