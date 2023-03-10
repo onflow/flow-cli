@@ -333,6 +333,7 @@ var resources = []Resource{
 	TransactionArgString,
 	ScriptArgString,
 	ContractSimple,
+	ContractSimpleWithArgs,
 	ContractSimpleUpdated,
 	TransactionSimple,
 	ScriptImport,
