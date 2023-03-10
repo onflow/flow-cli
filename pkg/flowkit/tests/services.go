@@ -61,6 +61,7 @@ func DefaultMockServices() *TestServices {
 		Mock: m,
 		GetAccount: m.On(
 			GetAccountFunc,
+			mock.Anything,
 			mock.AnythingOfType("flow.Address"),
 		),
 		ExecuteScript: m.On(
@@ -179,7 +180,7 @@ func DefaultMockServices() *TestServices {
 	}
 
 	t.GetAccount.Run(func(args mock.Arguments) {
-		addr := args.Get(0).(flow.Address)
+		addr := args.Get(1).(flow.Address)
 		t.GetAccount.Return(NewAccountWithAddress(addr.String()), nil)
 	})
 
