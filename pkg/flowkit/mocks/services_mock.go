@@ -194,6 +194,7 @@ func DefaultMockServices() *MockServices {
 	t.GetEvents.Return([]flow.BlockEvents{}, nil)
 	t.GetBlock.Return(tests.NewBlock(), nil)
 	t.AddContract.Return(flow.EmptyID, false, nil)
+	t.RemoveContract.Return(flow.EmptyID, nil)
 
 	return t
 }

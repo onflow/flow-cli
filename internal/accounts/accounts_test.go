@@ -29,15 +29,16 @@ func Test_AddContract(t *testing.T) {
 	srv, state, _ := CommandWithState(t)
 
 	t.Run("Success", func(t *testing.T) {
+		inArgs := []string{tests.ContractSimpleWithArgs.Filename, "1"}
+
 		srv.AddContract.Run(func(args mock.Arguments) {
 			script := args.Get(2).(*flowkit.Script)
 			assert.Equal(t, tests.ContractSimpleWithArgs.Filename, script.Location())
 			assert.Len(t, script.Args, 1)
-			assert.Equal(t, "1", script.Args[0].String())
+			assert.Equal(t, inArgs[1], script.Args[0].String())
 		})
 
-		args := []string{tests.ContractSimpleWithArgs.Filename, "1"}
-		result, err := addContract(args, NoFlags, NoLogger, srv.Mock, state)
+		result, err := addContract(inArgs, NoFlags, NoLogger, srv.Mock, state)
 
 		require.NoError(t, err)
 		assert.NotNil(t, result)
@@ -88,7 +89,17 @@ func Test_AddContract(t *testing.T) {
 }
 
 func Test_RemoveContract(t *testing.T) {
-	t.Run("Success", func(t *testing.T) {
+	srv, state, _ := CommandWithState(t)
 
+	t.Run("Success", func(t *testing.T) {
+		inArgs := []string{"test"}
+
+		srv.RemoveContract.Run(func(args mock.Arguments) {
+			assert.Equal(t, inArgs[0], args.Get(2).(string))
+		})
+
+		result, err := removeContract(inArgs, NoFlags, NoLogger, srv.Mock, state)
+		assert.NoError(t, err)
+		assert.NotNil(t, result)
 	})
 }
