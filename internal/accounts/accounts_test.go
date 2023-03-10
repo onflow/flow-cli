@@ -3,46 +3,89 @@ package accounts
 import (
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/pkg/flowkit"
+	"github.com/onflow/flow-cli/pkg/flowkit/mocks"
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
 	"github.com/onflow/flow-cli/pkg/flowkit/tests"
-	"github.com/onflow/flow-cli/pkg/flowkit/tests/mocks"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
-	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"testing"
 )
 
-var noFlags = command.GlobalFlags{}
-var noLogger = output.NewStdoutLogger(output.NoneLog)
-var services = &mocks.Services{}
+var NoFlags = command.GlobalFlags{}
+var NoLogger = output.NewStdoutLogger(output.NoneLog)
 
-func Test_AddContract(t *testing.T) {
-	args := []string{tests.ContractA.Filename}
-
-	rw, mockFs := tests.ReaderWriter()
-	_ = afero.WriteFile(mockFs, tests.ContractA.Filename, tests.ContractA.Source, 0644)
-
+func CommandWithState(t *testing.T) (*mocks.MockServices, *flowkit.State, flowkit.ReaderWriter) {
+	services := mocks.DefaultMockServices()
+	rw, _ := tests.ReaderWriter()
 	state, err := flowkit.Init(rw, crypto.ECDSA_P256, crypto.SHA3_256)
 	require.NoError(t, err)
 
-	services.
-		On("GetAccount", mock.Anything, mock.AnythingOfType("flow.Address")).
-		Return(tests.NewAccountWithAddress("0x01"), nil)
+	return services, state, rw
+}
 
-	services.On(
-		"AddContract",
-		mock.Anything,
-		mock.AnythingOfType("*flowkit.Account"),
-		mock.AnythingOfType("*flowkit.Script"),
-		false,
-	).Return(flow.EmptyID, false, nil)
+func Test_AddContract(t *testing.T) {
+	srv, state, _ := CommandWithState(t)
 
-	result, err := addContract(args, noFlags, noLogger, services, state)
+	t.Run("Success", func(t *testing.T) {
+		srv.AddContract.Run(func(args mock.Arguments) {
+			script := args.Get(2).(*flowkit.Script)
+			assert.Equal(t, tests.ContractSimpleWithArgs.Filename, script.Location())
+			assert.Len(t, script.Args, 1)
+			assert.Equal(t, "1", script.Args[0].String())
+		})
+		srv.AddContract.Return(flow.EmptyID, false, nil)
 
-	require.NoError(t, err)
-	assert.Equal(t, "Address: 0x0000000000000001, Balance: 0.00000010, Public Keys: [0x8da60bd98a827c87e21622c5070ae3ee440abf0927d5db33f9652cb1303eb8a04dfe41dea2c9ea64ee83ee8d7c8d068db8386c7bab98694af956e0fdae37184e 0xc8a2a318b9099cc6c872a0ec3dcd9f59d17837e4ffd6cd8a1f913ddfa769559605e1ad6ad603ebb511f5a6c8125f863abc2e9c600216edaa07104a0fe320dba7]", result.Oneliner())
+		args := []string{tests.ContractSimpleWithArgs.Filename, "1"}
+		result, err := addContract(args, NoFlags, NoLogger, srv.Mock, state)
+
+		require.NoError(t, err)
+		assert.NotNil(t, result)
+	})
+
+	t.Run("Success JSON arg", func(t *testing.T) {
+		srv.AddContract.Run(func(args mock.Arguments) {
+			script := args.Get(2).(*flowkit.Script)
+			assert.Equal(t, tests.ContractSimpleWithArgs.Filename, script.Location())
+			assert.Len(t, script.Args, 1)
+			assert.Equal(t, "1", script.Args[0].String())
+		})
+		srv.AddContract.Return(flow.EmptyID, false, nil)
+
+		addContractFlags.ArgsJSON = `[{"type": "UInt64", "value": "1"}]`
+		args := []string{tests.ContractSimpleWithArgs.Filename}
+		result, err := addContract(args, NoFlags, NoLogger, srv.Mock, state)
+
+		require.NoError(t, err)
+		assert.NotNil(t, result)
+	})
+
+	t.Run("Fail non-existing file", func(t *testing.T) {
+		args := []string{"non-existing"}
+		result, err := addContract(args, NoFlags, NoLogger, srv.Mock, state)
+
+		assert.Nil(t, result)
+		assert.EqualError(t, err, "error loading contract file: open non-existing: file does not exist")
+	})
+
+	t.Run("Fail invalid-json", func(t *testing.T) {
+		args := []string{tests.ContractA.Filename}
+		addContractFlags.ArgsJSON = "invalid"
+		result, err := addContract(args, NoFlags, NoLogger, srv.Mock, state)
+
+		assert.Nil(t, result)
+		assert.EqualError(t, err, "error parsing transaction arguments: invalid character 'i' looking for beginning of value")
+	})
+
+	t.Run("Fail invalid signer", func(t *testing.T) {
+		args := []string{tests.ContractA.Filename}
+		addContractFlags.Signer = "invalid"
+		result, err := addContract(args, NoFlags, NoLogger, srv.Mock, state)
+
+		assert.Nil(t, result)
+		assert.EqualError(t, err, "could not find account with name invalid in the configuration")
+	})
 
 }
