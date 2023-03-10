@@ -32,6 +32,7 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 
 	"github.com/onflow/flow-cli/pkg/flowkit"
+	"github.com/onflow/flow-cli/pkg/flowkit/util"
 )
 
 // maxGRPCMessageSize 20mb, matching the value set in onflow/flow-go
@@ -141,10 +142,19 @@ func (g *GrpcGateway) GetTransactionResult(ID flow.Identifier, waitSeal bool) (*
 	return result, nil
 }
 
-// ExecuteScript execute a scripts on Flow through the Access API.
-func (g *GrpcGateway) ExecuteScript(script []byte, arguments []cadence.Value) (cadence.Value, error) {
+// ExecuteScript executes a script on Flow through the Access API.
+func (g *GrpcGateway) ExecuteScript(script []byte, arguments []cadence.Value, query *util.ScriptQuery) (cadence.Value, error) {
+	var value cadence.Value
+	var err error
 
-	value, err := g.client.ExecuteScriptAtLatestBlock(g.ctx, script, arguments)
+	if query.ID != flow.EmptyID {
+		value, err = g.client.ExecuteScriptAtBlockID(g.ctx, query.ID, script, arguments)
+	} else if query.Height > 0 {
+		value, err = g.client.ExecuteScriptAtBlockHeight(g.ctx, query.Height, script, arguments)
+	} else {
+		value, err = g.client.ExecuteScriptAtLatestBlock(g.ctx, script, arguments)
+	}
+
 	if err != nil {
 		return nil, fmt.Errorf("failed to submit executable script: %w", err)
 	}
