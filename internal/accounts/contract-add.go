@@ -57,10 +57,6 @@ func addContract(
 	state *flowkit.State,
 ) (command.Result, error) {
 	filename := args[0]
-	if len(args) > 1 {
-		fmt.Println("⚠️Deprecation notice: using name argument in add contract command will be deprecated soon.")
-		filename = args[1]
-	}
 
 	code, err := state.ReadFile(filename)
 	if err != nil {
