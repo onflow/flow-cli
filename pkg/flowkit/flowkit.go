@@ -60,7 +60,7 @@ type EventWorker struct {
 	BlocksPerWorker uint64
 }
 
-// go:generate  mockery --name=Services ==output=tests/mocks
+//go:generate  mockery --name=Services --output=tests/mocks
 
 type Services interface {
 	Network() config.Network
