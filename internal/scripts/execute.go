@@ -22,15 +22,19 @@ import (
 	"fmt"
 
 	"github.com/onflow/cadence"
+	"github.com/onflow/flow-go-sdk"
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/services"
+	"github.com/onflow/flow-cli/pkg/flowkit/util"
 )
 
 type flagsScripts struct {
-	ArgsJSON string `default:"" flag:"args-json" info:"arguments in JSON-Cadence format"`
+	ArgsJSON    string `default:"" flag:"args-json" info:"arguments in JSON-Cadence format"`
+	BlockID     string `default:"" flag:"block-id" info:"block ID to execute the script at"`
+	BlockHeight uint64 `default:"" flag:"block-height" info:"block height to execute the script at"`
 }
 
 var scriptFlags = flagsScripts{}
@@ -73,6 +77,10 @@ func execute(
 	value, err := srv.Scripts.Execute(
 		flowkit.NewScript(code, scriptArgs, filename),
 		globalFlags.Network,
+		&util.ScriptQuery{
+			ID:     flow.HexToID(scriptFlags.BlockID),
+			Height: scriptFlags.BlockHeight,
+		},
 	)
 	if err != nil {
 		return nil, err

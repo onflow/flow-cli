@@ -35,6 +35,7 @@ import (
 
 	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
+	"github.com/onflow/flow-cli/pkg/flowkit/util"
 )
 
 type EmulatorGateway struct {
@@ -171,14 +172,22 @@ func (g *EmulatorGateway) Ping() error {
 	return nil
 }
 
-func (g *EmulatorGateway) ExecuteScript(script []byte, arguments []cadence.Value) (cadence.Value, error) {
+func (g *EmulatorGateway) ExecuteScript(script []byte, arguments []cadence.Value, query *util.ScriptQuery) (cadence.Value, error) {
 
 	args, err := cadenceValuesToMessages(arguments)
 	if err != nil {
 		return nil, UnwrapStatusError(err)
 	}
 
-	result, err := g.backend.ExecuteScriptAtLatestBlock(g.ctx, script, args)
+	var result []byte
+	if query.ID != flow.EmptyID {
+		result, err = g.backend.ExecuteScriptAtBlockID(g.ctx, query.ID, script, args)
+	} else if query.Height > 0 {
+		result, err = g.backend.ExecuteScriptAtBlockHeight(g.ctx, query.Height, script, args)
+	} else {
+		result, err = g.backend.ExecuteScriptAtLatestBlock(g.ctx, script, args)
+	}
+
 	if err != nil {
 		return nil, UnwrapStatusError(err)
 	}
