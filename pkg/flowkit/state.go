@@ -184,10 +184,10 @@ func (p *State) DeploymentContractsByNetwork(network string) ([]*project.Contrac
 			// if we loaded config from a single location, we should make the path of contracts defined in config relative to
 			// config path we have provided, this will make cases where we execute loading in different path than config work
 			if len(p.confLoader.LoadedLocations) == 1 {
-				location, err = filepath.Rel(p.confLoader.LoadedLocations[0], location)
-				if err != nil {
-					return nil, err
-				}
+				location = filepath.Join(
+					filepath.Dir(p.confLoader.LoadedLocations[0]),
+					location,
+				)
 			}
 
 			code, err := p.readerWriter.ReadFile(location)
