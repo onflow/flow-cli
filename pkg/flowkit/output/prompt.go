@@ -248,6 +248,10 @@ func addAnotherContractToDeploymentPrompt() bool {
 	return addMore == "Yes"
 }
 
+func ShowContractDiffPrompt(newContract []byte, existingContract []byte) bool {
+	return true
+}
+
 func NewAccountPrompt() map[string]string {
 	accountData := make(map[string]string)
 	var err error

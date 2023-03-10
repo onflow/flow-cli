@@ -413,6 +413,7 @@ func TestProject_Integration(t *testing.T) {
 			flowkit.NewScript(tests.ContractA.Source, nil, tests.ContractA.Filename),
 			n.Name,
 			false,
+			true,
 		)
 		require.NoError(t, err)
 

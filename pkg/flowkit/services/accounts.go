@@ -303,6 +303,7 @@ func (a *Accounts) AddContract(
 	contract *flowkit.Script,
 	network string,
 	updateExisting bool,
+	showDiff bool,
 ) (flow.Identifier, bool, error) {
 
 	program, err := project.NewProgram(contract)
@@ -368,8 +369,23 @@ func (a *Accounts) AddContract(
 		)
 	}
 
+	if exists && updateExisting && showDiff {
+		accepted := output.ShowContractDiffPrompt(program.Code(), existingContract)
+
+		if accepted {
+			tx, err = flowkit.NewUpdateAccountContractTransaction(
+				account,
+				name,
+				contract.Code(),
+			)
+			if err != nil {
+				return flow.EmptyID, false, err
+			}
+		}
+	}
+
 	// if we are updating contract
-	if exists && updateExisting {
+	if exists && updateExisting && !showDiff {
 		tx, err = flowkit.NewUpdateAccountContractTransaction(
 			account,
 			name,
