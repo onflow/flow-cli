@@ -15,20 +15,39 @@
     "name": "Web Dapp using FCL",
     "repo": "https://github.com/onflow/scaffold-flow.git",
     "description": "Simple demo application using next.js and FCL with provided Cadence contracts.",
-    "commit": "4158c5e11b6d2c9e1cbc99af597e3b42b2e6c193"
+    "commit": "4158c5e11b6d2c9e1cbc99af597e3b42b2e6c193",
+    "type": "web"
   },
   {
     "name": "Simple Unity",
     "repo": "https://github.com/onflow/UnityFlowSDK.git",
     "description": "Simple example demonstrating how to interact with the Flow network using Unity SDK.",
     "commit": "d01a4b14a98383c18b4d57e87624cb8dba6d0946",
-    "folder": "Samples~/FlowControlQuickstartCodeSample"
+    "folder": "Samples~/FlowControlQuickstartCodeSample",
+    "type": "unity"
   },
   {
     "name": "Mobile Unity Game",
     "repo": "https://github.com/onflow/UnityFlowSDK.git",
     "description": "Example words game built on Flow using the Unity SDK.",
     "commit": "d01a4b14a98383c18b4d57e87624cb8dba6d0946",
-    "folder": "Samples~/FlowWords"
+    "folder": "Samples~/FlowWords",
+    "type": "unity"
+  },
+  {
+    "name": "Swift iOS simple example",
+    "repo": "https://github.com/Outblock/fcl-swift",
+    "description": "iOS example demonstrating usage of FCL and Flow interactions.",
+    "commit": "393783732f0eef171469b8239683536df73b7450",
+    "folder": "Example/FCLDemo",
+    "type": "mobile"
+  },
+  {
+    "name": "Android simple example",
+    "repo": "https://github.com/Outblock/fcl-android",
+    "description": "Android example demonstrating usage of FCL and Flow interactions.",
+    "commit": "5c68d818e9bccf22409feb9759021e090c055e48",
+    "folder": "example",
+    "type": "mobile"
   }
 ]
