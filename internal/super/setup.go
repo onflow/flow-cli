@@ -66,6 +66,7 @@ type scaffold struct {
 	Description string `json:"description"`
 	Commit      string `json:"commit"`
 	Folder      string `json:"folder"`
+	Type        string `json:"type"`
 }
 
 func create(
