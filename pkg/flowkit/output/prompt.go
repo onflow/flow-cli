@@ -646,24 +646,23 @@ func InstallPathPrompt(defaultPath string) string {
 func ScaffoldPrompt(logger Logger, availableScaffolds map[string][]string) int {
 	index := 0
 	for t, items := range availableScaffolds {
-		logger.Info(t)
+		logger.Info(Bold(Magenta(t)))
 		for _, item := range items {
 			index++
-			logger.Info(fmt.Sprintf("  [%d] %s", index, item))
+			logger.Info(fmt.Sprintf("   [%d] %s", index, item))
 		}
 		logger.Info("") // new line
 	}
 
 	prompt := promptui.Prompt{
-		Label:   "Enter the scaffold number",
-		Default: "1",
+		Label: "Enter the scaffold number",
 		Validate: func(s string) error {
 			n, err := strconv.Atoi(s)
 			if err != nil {
 				return fmt.Errorf("input must be a number")
 			}
 
-			if n > len(availableScaffolds) {
+			if n < 0 && n > index {
 				return fmt.Errorf("not a valid number")
 			}
 			return nil
