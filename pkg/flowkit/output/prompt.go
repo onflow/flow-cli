@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"strconv"
 	"strings"
 
 	"github.com/gosuri/uilive"
@@ -642,16 +643,38 @@ func InstallPathPrompt(defaultPath string) string {
 	return path.Clean(install)
 }
 
-func ScaffoldPrompt(availableScaffolds []string) int {
-	prompt := promptui.Select{
-		Label: "Which scaffold would you like to use",
-		Items: availableScaffolds,
+func ScaffoldPrompt(logger Logger, availableScaffolds map[string][]string) int {
+	index := 0
+	for t, items := range availableScaffolds {
+		logger.Info(t)
+		for _, item := range items {
+			index++
+			logger.Info(fmt.Sprintf("  [%d] %s", index, item))
+		}
+		logger.Info("") // new line
 	}
 
-	index, _, err := prompt.Run()
+	prompt := promptui.Prompt{
+		Label:   "Enter the scaffold number",
+		Default: "1",
+		Validate: func(s string) error {
+			n, err := strconv.Atoi(s)
+			if err != nil {
+				return fmt.Errorf("input must be a number")
+			}
+
+			if n > len(availableScaffolds) {
+				return fmt.Errorf("not a valid number")
+			}
+			return nil
+		},
+	}
+
+	input, err := prompt.Run()
 	if err == promptui.ErrInterrupt {
 		os.Exit(-1)
 	}
 
-	return index
+	num, _ := strconv.Atoi(input)
+	return num
 }
