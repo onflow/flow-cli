@@ -69,6 +69,12 @@ type scaffold struct {
 	Type        string `json:"type"`
 }
 
+const (
+	mobileType = "mobile"
+	webType    = "web"
+	unityType  = "unity"
+)
+
 func create(
 	args []string,
 	_ flowkit.ReaderWriter,
