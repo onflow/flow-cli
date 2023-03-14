@@ -87,7 +87,7 @@ func create(
 	}
 
 	if len(keysFlag) != len(weightFlag) {
-		return nil, fmt.Errorf("must provide a key weight for each key provided, keys provided: %d, weights provided: %s", len(keysFlag), len(weightFlag))
+		return nil, fmt.Errorf("must provide a key weight for each key provided, keys provided: %d, weights provided: %d", len(keysFlag), len(weightFlag))
 	}
 
 	sigAlgos, err := parseSignatureAlgorithms(sigsFlag)
@@ -130,11 +130,11 @@ func create(
 }
 
 func parseHashingAlgorithms(algorithms []string) ([]crypto.HashAlgorithm, error) {
-	hashAlgos := make([]crypto.HashAlgorithm, 0, len(createFlags.HashAlgo))
+	hashAlgos := make([]crypto.HashAlgorithm, 0, len(algorithms))
 	for _, hashAlgoStr := range algorithms {
 		hashAlgo := crypto.StringToHashAlgorithm(hashAlgoStr)
 		if hashAlgo == crypto.UnknownHashAlgorithm {
-			return nil, fmt.Errorf("invalid hash algorithm: %s", createFlags.HashAlgo)
+			return nil, fmt.Errorf("invalid hash algorithm: %s", hashAlgoStr)
 		}
 		hashAlgos = append(hashAlgos, hashAlgo)
 	}
@@ -142,11 +142,11 @@ func parseHashingAlgorithms(algorithms []string) ([]crypto.HashAlgorithm, error)
 }
 
 func parseSignatureAlgorithms(algorithms []string) ([]crypto.SignatureAlgorithm, error) {
-	sigAlgos := make([]crypto.SignatureAlgorithm, 0, len(createFlags.SigAlgo))
+	sigAlgos := make([]crypto.SignatureAlgorithm, 0, len(algorithms))
 	for _, sigAlgoStr := range algorithms {
 		sigAlgo := crypto.StringToSignatureAlgorithm(sigAlgoStr)
 		if sigAlgo == crypto.UnknownSignatureAlgorithm {
-			return nil, fmt.Errorf("invalid signature algorithm: %s", createFlags.SigAlgo)
+			return nil, fmt.Errorf("invalid signature algorithm: %s", sigAlgoStr)
 		}
 		sigAlgos = append(sigAlgos, sigAlgo)
 	}
@@ -159,7 +159,7 @@ func parsePublicKeys(publicKeys []string, sigAlgorithms []crypto.SignatureAlgori
 		k = strings.TrimPrefix(k, "0x") // clear possible prefix
 		key, err := crypto.DecodePublicKeyHex(sigAlgorithms[i], k)
 		if err != nil {
-			return nil, fmt.Errorf("failed decoding public key: %s with error: %w", key, err)
+			return nil, fmt.Errorf("failed decoding public key: %s with error: %w", k, err)
 		}
 		pubKeys = append(pubKeys, key)
 	}
