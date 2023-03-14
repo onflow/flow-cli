@@ -86,7 +86,7 @@ func get(
 
 		start = end - last
 		if start < 0 {
-			return nil, fmt.Errorf("value for 'last' is bigger than the latest height")
+			start = 0
 		}
 	} else if start == 0 || end == 0 {
 		return nil, fmt.Errorf("please provide either both start and end for range or only last flag")
