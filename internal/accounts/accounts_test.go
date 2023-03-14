@@ -95,11 +95,49 @@ func Test_RemoveContract(t *testing.T) {
 		inArgs := []string{"test"}
 
 		srv.RemoveContract.Run(func(args mock.Arguments) {
+			acc := args.Get(1).(*flowkit.Account)
+			assert.Equal(t, "emulator-account", acc.Name())
 			assert.Equal(t, inArgs[0], args.Get(2).(string))
 		})
 
 		result, err := removeContract(inArgs, NoFlags, NoLogger, srv.Mock, state)
 		assert.NoError(t, err)
 		assert.NotNil(t, result)
+	})
+
+	t.Run("Fail non-existing account", func(t *testing.T) {
+		inArgs := []string{"test"}
+		flagsRemove.Signer = "invalid"
+
+		_, err := removeContract(inArgs, NoFlags, NoLogger, srv.Mock, state)
+		assert.EqualError(t, err, "could not find account with name invalid in the configuration")
+	})
+}
+
+func Test_UpdateContract(t *testing.T) {
+	srv, state, _ := CommandWithState(t)
+
+	t.Run("Success", func(t *testing.T) {
+		inArgs := []string{tests.ContractSimpleWithArgs.Filename, "1"}
+
+		srv.AddContract.Run(func(args mock.Arguments) {
+			script := args.Get(2).(*flowkit.Script)
+			assert.Equal(t, tests.ContractSimpleWithArgs.Filename, script.Location())
+			assert.Len(t, script.Args, 1)
+			assert.Equal(t, "1", script.Args[0].String())
+		})
+
+		result, err := removeContract(inArgs, NoFlags, NoLogger, srv.Mock, state)
+
+		require.NoError(t, err)
+		assert.NotNil(t, result)
+	})
+
+	t.Run("Fail non-existing file", func(t *testing.T) {
+		args := []string{"non-existing"}
+		result, err := updateContract(args, NoFlags, NoLogger, srv.Mock, state)
+
+		assert.Nil(t, result)
+		assert.EqualError(t, err, "error loading contract file: open non-existing: file does not exist")
 	})
 }
