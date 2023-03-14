@@ -195,6 +195,7 @@ func DefaultMockServices() *MockServices {
 	t.GetBlock.Return(tests.NewBlock(), nil)
 	t.AddContract.Return(flow.EmptyID, false, nil)
 	t.RemoveContract.Return(flow.EmptyID, nil)
+	t.CreateAccount.Return(tests.NewAccountWithAddress("0x01"), flow.EmptyID, nil)
 
 	return t
 }
