@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-func TestDecodeKeys(t *testing.T) {
+func Test_DecodeKeys(t *testing.T) {
 	t.Run("Decode RLP Key", func(t *testing.T) {
 		t.Parallel()
 		dkey, err := decodeRLP("f847b84084d716c14b051ad6b001624f738f5d302636e6b07cc75e4530af7776a4368a2b586dbefc0564ee28384c2696f178cbed52e62811bcc9ecb59568c996d342db2402038203e8")
