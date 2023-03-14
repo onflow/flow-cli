@@ -7,6 +7,7 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowkit/mocks"
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
 	"github.com/onflow/flow-cli/pkg/flowkit/tests"
+	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -220,5 +221,23 @@ func Test_Create(t *testing.T) {
 	t.Run("Fail parse signature algorithm", func(t *testing.T) {
 		_, err := parseSignatureAlgorithms([]string{"invalid"})
 		assert.EqualError(t, err, "invalid signature algorithm: invalid")
+	})
+}
+
+func Test_Get(t *testing.T) {
+	srv, _, _ := CommandWithState(t)
+
+	t.Run("Success", func(t *testing.T) {
+		inArgs := []string{"0x01"}
+
+		srv.GetAccount.Run(func(args mock.Arguments) {
+			addr := args.Get(1).(flow.Address)
+			assert.Equal(t, "0000000000000001", addr.String())
+			srv.GetAccount.Return(tests.NewAccountWithAddress(inArgs[0]), nil)
+		})
+
+		result, err := get(inArgs, NoFlags, NoLogger, nil, srv.Mock)
+		assert.NoError(t, err)
+		assert.NotNil(t, result)
 	})
 }
