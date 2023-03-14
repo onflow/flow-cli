@@ -63,7 +63,7 @@ func generate(
 	var err error
 	mnemonic := generateFlags.Mnemonic
 	if mnemonic == "" {
-		_, mnemonic, err = flow.GenerateMnemonicKey(context.Background(), sigAlgo, generateFlags.Mnemonic)
+		_, mnemonic, err = flow.GenerateMnemonicKey(context.Background(), sigAlgo, generateFlags.DerivationPath)
 		if err != nil {
 			return nil, err
 		}
