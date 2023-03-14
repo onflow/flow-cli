@@ -1,6 +1,7 @@
 package keys
 
 import (
+	"github.com/onflow/flow-cli/internal/util"
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/stretchr/testify/assert"
 	"testing"
@@ -38,5 +39,33 @@ func TestDecodeKeys(t *testing.T) {
 
 		_, err := decodePEM("nope", crypto.ECDSA_P256)
 		assert.EqualError(t, err, "crypto: failed to parse PEM string, not all bytes in PEM key were decoded: 6e6f7065")
+	})
+}
+
+func Test_DeriveKeys(t *testing.T) {
+	srv, _, rw := util.TestMocks(t)
+
+	t.Run("Success", func(t *testing.T) {
+		inArgs := []string{"cf3178b20a73846dc8bf6255c79be47178b0744dd8244bcff099e449a9700d7f"}
+		result, err := derive(inArgs, util.NoFlags, util.NoLogger, rw, srv.Mock)
+		assert.NoError(t, err)
+		assert.NotNil(t, result)
+	})
+
+	t.Run("Fail invalid key", func(t *testing.T) {
+		inArgs := []string{"invalid"}
+
+		result, err := derive(inArgs, util.NoFlags, util.NoLogger, rw, srv.Mock)
+		assert.EqualError(t, err, "failed to decode private key: encoding/hex: invalid byte: U+0069 'i'")
+		assert.Nil(t, result)
+	})
+
+	t.Run("Fail invalid signature algorithm", func(t *testing.T) {
+		inArgs := []string{"cf3178b20a73846dc8bf6255c79be47178b0744dd8244bcff099e449a9700d7f"}
+		deriveFlags.KeySigAlgo = "invalid"
+
+		result, err := derive(inArgs, util.NoFlags, util.NoLogger, rw, srv.Mock)
+		assert.EqualError(t, err, "invalid signature algorithm: invalid")
+		assert.Nil(t, result)
 	})
 }
