@@ -332,6 +332,7 @@ var resources = []Resource{
 	ContractHelloString,
 	TransactionArgString,
 	ScriptArgString,
+	TestScriptSimple,
 	ContractSimple,
 	ContractSimpleWithArgs,
 	ContractSimpleUpdated,
