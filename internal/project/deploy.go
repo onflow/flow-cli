@@ -69,12 +69,12 @@ func deploy(
 		var projectErr *flowkit.ProjectDeploymentError
 		if errors.As(err, &projectErr) {
 			for name, err := range projectErr.Contracts() {
-				fmt.Printf(
-					"%s Failed to deploy contract %s: %s\n",
+				logger.Info(fmt.Sprintf(
+					"%s Failed to deploy contract %s: %s",
 					output.ErrorEmoji(),
 					name,
 					err.Error(),
-				)
+				))
 			}
 			return nil, fmt.Errorf("failed deploying all contracts")
 		}
