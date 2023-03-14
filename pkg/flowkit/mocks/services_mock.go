@@ -2,6 +2,7 @@ package mocks
 
 import (
 	"github.com/onflow/cadence"
+	"github.com/onflow/flow-cli/pkg/flowkit/config"
 	"github.com/onflow/flow-cli/pkg/flowkit/gateway/mocks"
 	"github.com/onflow/flow-cli/pkg/flowkit/tests"
 	"github.com/onflow/flow-go-sdk"
@@ -196,6 +197,7 @@ func DefaultMockServices() *MockServices {
 	t.AddContract.Return(flow.EmptyID, false, nil)
 	t.RemoveContract.Return(flow.EmptyID, nil)
 	t.CreateAccount.Return(tests.NewAccountWithAddress("0x01"), flow.EmptyID, nil)
+	t.Network.Return(config.EmulatorNetwork)
 
 	return t
 }
