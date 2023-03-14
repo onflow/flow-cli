@@ -20,7 +20,6 @@ package accounts
 
 import (
 	"fmt"
-
 	"github.com/onflow/cadence"
 	"github.com/spf13/cobra"
 
@@ -86,7 +85,7 @@ func addContract(
 		to,
 		flowkit.NewScript(code, contractArgs, filename),
 		globalFlags.Network,
-		false,
+		services.UpdateExistingContract(false),
 	)
 	if err != nil {
 		return nil, err

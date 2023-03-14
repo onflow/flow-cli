@@ -163,7 +163,7 @@ func TestAccounts(t *testing.T) {
 			serviceAcc,
 			resourceToContract(tests.ContractHelloString),
 			"",
-			false,
+			UpdateExistingContract(false),
 		)
 
 		gw.Mock.AssertCalled(t, tests.GetAccountFunc, serviceAddress)
@@ -503,7 +503,7 @@ func TestAccountsAddContract_Integration(t *testing.T) {
 			srvAcc,
 			resourceToContract(tests.ContractSimple),
 			"",
-			false,
+			UpdateExistingContract(false),
 		)
 		require.NoError(t, err)
 		require.NotNil(t, ID)
@@ -517,7 +517,7 @@ func TestAccountsAddContract_Integration(t *testing.T) {
 			srvAcc,
 			resourceToContract(tests.ContractSimpleUpdated),
 			"",
-			true,
+			UpdateExistingContract(true),
 		)
 		require.NoError(t, err)
 
@@ -537,7 +537,7 @@ func TestAccountsAddContract_Integration(t *testing.T) {
 			srvAcc,
 			resourceToContract(tests.ContractSimple),
 			"",
-			false,
+			UpdateExistingContract(false),
 		)
 		assert.NoError(t, err)
 
@@ -545,7 +545,7 @@ func TestAccountsAddContract_Integration(t *testing.T) {
 			srvAcc,
 			resourceToContract(tests.ContractSimple),
 			"",
-			false,
+			UpdateExistingContract(false),
 		)
 
 		require.Error(t, err)
@@ -562,7 +562,7 @@ func TestAccountsAddContractWithArgs(t *testing.T) {
 		srvAcc,
 		resourceToContract(tests.ContractSimpleWithArgs),
 		"",
-		false,
+		UpdateExistingContract(false),
 	)
 	assert.Error(t, err)
 	assert.True(t, strings.Contains(err.Error(), "invalid argument count, too few arguments: expected 1, got 0"))
@@ -570,7 +570,7 @@ func TestAccountsAddContractWithArgs(t *testing.T) {
 	c := resourceToContract(tests.ContractSimpleWithArgs)
 	c.Args = []cadence.Value{cadence.UInt64(4)}
 
-	_, _, err = s.Accounts.AddContract(srvAcc, c, "", false)
+	_, _, err = s.Accounts.AddContract(srvAcc, c, "", UpdateExistingContract(false))
 	assert.NoError(t, err)
 
 	acc, err := s.Accounts.Get(srvAcc.Address())
@@ -591,7 +591,7 @@ func TestAccountsRemoveContract_Integration(t *testing.T) {
 		srvAcc,
 		flowkit.NewScript(c.Source, nil, c.Filename),
 		"",
-		false,
+		UpdateExistingContract(false),
 	)
 	assert.NoError(t, err)
 

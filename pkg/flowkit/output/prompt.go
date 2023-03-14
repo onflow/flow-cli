@@ -20,6 +20,7 @@ package output
 
 import (
 	"fmt"
+	"github.com/sergi/go-diff/diffmatchpatch"
 	"os"
 	"path"
 	"strings"
@@ -248,8 +249,26 @@ func addAnotherContractToDeploymentPrompt() bool {
 	return addMore == "Yes"
 }
 
+// ShowContractDiffPrompt shows a diff between the new contract and the existing contract
+// and asks the user if they wish to continue with the deployment
+// returns true if the user wishes to continue with the deployment and false otherwise
 func ShowContractDiffPrompt(newContract []byte, existingContract []byte) bool {
-	return true
+	dmp := diffmatchpatch.New()
+	diffs := dmp.DiffMain(string(existingContract), string(newContract), false)
+	diffString := dmp.DiffPrettyText(diffs)
+	fmt.Println(diffString)
+
+	deployPrompt := promptui.Prompt{
+		Label:     "Do you wish to deploy this contract?",
+		IsConfirm: true,
+	}
+
+	deploy, err := deployPrompt.Run()
+	if err == promptui.ErrInterrupt {
+		os.Exit(-1)
+	}
+
+	return strings.ToLower(deploy) == "y"
 }
 
 func NewAccountPrompt() map[string]string {

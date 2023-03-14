@@ -325,7 +325,7 @@ func TestTransactions_Integration(t *testing.T) {
 			srvAcc,
 			resourceToContract(tests.ContractHelloString),
 			"",
-			false,
+			UpdateExistingContract(false),
 		)
 
 		tx, err := s.Transactions.Build(

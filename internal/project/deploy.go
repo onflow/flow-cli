@@ -33,7 +33,8 @@ import (
 )
 
 type flagsDeploy struct {
-	Update bool `flag:"update" default:"false" info:"use update flag to update existing contracts"`
+	Update   bool `flag:"update" default:"false" info:"use update flag to update existing contracts"`
+	ShowDiff bool `flag:"show-diff" default:"false" info:"use show-diff flag to show diff between existing and new contracts on update"`
 }
 
 var deployFlags = flagsDeploy{}
@@ -46,6 +47,10 @@ var DeployCommand = &command.Command{
 	},
 	Flags: &deployFlags,
 	RunS:  deploy,
+}
+
+func updateWithPrompt(existing []byte, new []byte) bool {
+	return output.ShowContractDiffPrompt(existing, new)
 }
 
 func deploy(
@@ -65,7 +70,14 @@ func deploy(
 
 	}
 
-	c, err := srv.Project.Deploy(globalFlags.Network, deployFlags.Update)
+	var deployFunc services.Update
+	if deployFlags.ShowDiff {
+		deployFunc = updateWithPrompt
+	} else {
+		deployFunc = services.UpdateExistingContract(deployFlags.Update)
+	}
+
+	c, err := srv.Project.Deploy(globalFlags.Network, deployFunc)
 	if err != nil {
 		var projectErr *services.ProjectDeploymentError
 		if errors.As(err, &projectErr) {

@@ -108,7 +108,7 @@ func (p *project) startup() error {
 
 // deploys all the contracts found in the state configuration.
 func (p *project) deploy() {
-	deployed, err := p.services.Project.Deploy(emulator, true)
+	deployed, err := p.services.Project.Deploy(emulator, services.UpdateExistingContract(true))
 	printDeployment(deployed, err, p.pathNameLookup)
 }
 

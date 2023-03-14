@@ -4,8 +4,8 @@ go 1.18
 
 require (
 	github.com/dukex/mixpanel v1.0.1
-	github.com/go-git/go-git/v5 v5.6.0
 	github.com/getsentry/sentry-go v0.19.0
+	github.com/go-git/go-git/v5 v5.6.0
 	github.com/onflow/cadence v0.31.3
 	github.com/onflow/cadence-tools/languageserver v0.7.1
 	github.com/onflow/cadence-tools/test v0.4.0
@@ -161,7 +161,7 @@ require (
 	github.com/rivo/uniseg v0.2.1-0.20211004051800-57c86be7915a // indirect
 	github.com/rs/cors v1.8.0 // indirect
 	github.com/rs/zerolog v1.29.0 // indirect
-	github.com/sergi/go-diff v1.1.0 // indirect
+	github.com/sergi/go-diff v1.3.1 // indirect
 	github.com/sethvargo/go-retry v0.2.3 // indirect
 	github.com/sirupsen/logrus v1.9.0 // indirect
 	github.com/skeema/knownhosts v1.1.0 // indirect
