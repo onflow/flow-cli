@@ -1,10 +1,9 @@
 package keys
 
 import (
-	"testing"
-
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/stretchr/testify/assert"
+	"testing"
 )
 
 func TestDecodeKeys(t *testing.T) {
