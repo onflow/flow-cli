@@ -69,3 +69,13 @@ func Test_DeriveKeys(t *testing.T) {
 		assert.Nil(t, result)
 	})
 }
+
+func Test_Generate(t *testing.T) {
+	srv, _, rw := util.TestMocks(t)
+
+	t.Run("Fail invalid signature algorithm", func(t *testing.T) {
+		generateFlags.KeySigAlgo = "invalid"
+		_, err := generate([]string{}, util.NoFlags, util.NoLogger, rw, srv.Mock)
+		assert.EqualError(t, err, "invalid signature algorithm: invalid")
+	})
+}
