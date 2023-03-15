@@ -22,6 +22,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"golang.org/x/exp/slices"
 
 	flowsdk "github.com/onflow/flow-go-sdk"
 	"github.com/spf13/cobra"
@@ -204,7 +205,14 @@ func replaceContractWithAlias(state *flowkit.State, standardContract standardCon
 	if contract == nil {
 		return fmt.Errorf("contract not found") // shouldn't occur
 	}
+	if contract.Aliases == nil {
+		contract.Aliases = &config.Aliases{}
+	}
 	contract.Aliases.Add(config.MainnetNetwork.Name, standardContract.address) // replace contract with an alias
+	contract.Name = "foo"
+
+	s := state.Config().Contracts
+	fmt.Println(s)
 
 	for di, d := range state.Config().Deployments {
 		if d.Network != config.MainnetNetwork.Name {
@@ -212,7 +220,10 @@ func replaceContractWithAlias(state *flowkit.State, standardContract standardCon
 		}
 		for ci, c := range d.Contracts {
 			if c.Name == standardContract.name {
-				state.Config().Deployments[di].Contracts = append((d.Contracts)[0:ci], (d.Contracts)[ci+1:]...)
+				slices.Delete(state.Config().Deployments[di].Contracts, ci, ci+1)
+				if len(state.Config().Deployments[di].Contracts) == 0 {
+					slices.Delete(state.Config().Deployments, di, di+1) // remove deployment if it doesn't have contracts anymore
+				}
 				break
 			}
 		}
