@@ -99,7 +99,7 @@ func DefaultMockServices() *MockServices {
 		BuildTransaction: m.On(
 			BuildTransactionFunc,
 			mock.Anything,
-			mock.AnythingOfType("*flowkit.TransactionAddressRoles"),
+			mock.AnythingOfType("*flowkit.TransactionAddressesRoles"),
 			mock.AnythingOfType("int"),
 			mock.AnythingOfType("*flowkit.Script"),
 			mock.AnythingOfType("uint64"),
