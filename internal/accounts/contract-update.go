@@ -85,7 +85,7 @@ func updateContract(
 		to,
 		flowkit.NewScript(code, contractArgs, filename),
 		globalFlags.Network,
-		services.UpdateExistingContract(true),
+		services.UpdateExisting(true),
 	)
 	if err != nil {
 		return nil, err

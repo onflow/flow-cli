@@ -126,7 +126,7 @@ func TestScripts_Integration(t *testing.T) {
 			srvAcc,
 			resourceToContract(tests.ContractHelloString),
 			"",
-			UpdateExistingContract(false),
+			UpdateExisting(false),
 		)
 
 		res, err := s.Scripts.Execute(

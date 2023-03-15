@@ -70,7 +70,7 @@ func deploy(
 
 	}
 
-	deployFunc := services.UpdateExistingContract(deployFlags.Update)
+	deployFunc := services.UpdateExisting(deployFlags.Update)
 	if deployFlags.ShowDiff {
 		deployFunc = updateWithPrompt
 	}

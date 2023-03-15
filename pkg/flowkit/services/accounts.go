@@ -299,7 +299,7 @@ var errUpdateNoDiff = errors.New("contract already exists and is the same as the
 
 type Update func(existing []byte, new []byte) bool
 
-func UpdateExistingContract(updateExisting bool) Update {
+func UpdateExisting(updateExisting bool) Update {
 	return func(existing []byte, new []byte) bool {
 		return updateExisting
 	}
