@@ -71,7 +71,7 @@ func updateContract(
 	var contractArgs []cadence.Value
 	if updateContractFlags.ArgsJSON != "" {
 		contractArgs, err = flowkit.ParseArgumentsJSON(updateContractFlags.ArgsJSON)
-	} else if len(args) > 2 {
+	} else if len(args) > 1 {
 		contractArgs, err = flowkit.ParseArgumentsWithoutType(filename, code, args[1:])
 	}
 
