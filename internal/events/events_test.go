@@ -2,7 +2,10 @@ package events
 
 import (
 	"github.com/onflow/flow-cli/internal/util"
+	"github.com/onflow/flow-cli/pkg/flowkit"
+	"github.com/onflow/flow-cli/pkg/flowkit/tests"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"testing"
 )
 
@@ -13,6 +16,21 @@ func Test_Get(t *testing.T) {
 		inArgs := []string{"test.event"}
 		eventsFlags.Start = 10
 		eventsFlags.End = 20
+
+		result, err := get(inArgs, util.NoFlags, util.NoLogger, rw, srv.Mock)
+		assert.NoError(t, err)
+		assert.NotNil(t, result)
+	})
+
+	t.Run("Success not passed start end", func(t *testing.T) {
+		inArgs := []string{"test.event"}
+		eventsFlags.Start = 0
+		eventsFlags.End = 0
+
+		srv.GetBlock.Run(func(args mock.Arguments) {
+			query := args.Get(1).(flowkit.BlockQuery)
+			assert.True(t, query.Latest)
+		}).Return(tests.NewBlock(), nil)
 
 		result, err := get(inArgs, util.NoFlags, util.NoLogger, rw, srv.Mock)
 		assert.NoError(t, err)
