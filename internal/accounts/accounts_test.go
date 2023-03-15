@@ -136,15 +136,17 @@ func Test_UpdateContract(t *testing.T) {
 
 		require.NoError(t, err)
 		assert.NotNil(t, result)
+		updateContractFlags.ArgsJSON = "" // reset
 	})
 
 	t.Run("Fail invalid-json", func(t *testing.T) {
 		args := []string{tests.ContractA.Filename}
-		addContractFlags.ArgsJSON = "invalid"
+		updateContractFlags.ArgsJSON = "invalid"
 		result, err := updateContract(args, util.NoFlags, util.NoLogger, srv.Mock, state)
 
 		assert.Nil(t, result)
 		assert.EqualError(t, err, "error parsing transaction arguments: invalid character 'i' looking for beginning of value")
+		updateContractFlags.ArgsJSON = "" // reset
 	})
 
 	t.Run("Fail non-existing file", func(t *testing.T) {

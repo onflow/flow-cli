@@ -63,6 +63,7 @@ func Test_DecodeKeys(t *testing.T) {
 		result, err := decode(inArgs, util.NoFlags, util.NoLogger, rw, srv.Mock)
 		assert.NoError(t, err)
 		assert.NotNil(t, result)
+		decodeFlags.FromFile = "" // reset to default
 	})
 
 	t.Run("Fail invalid args", func(t *testing.T) {
