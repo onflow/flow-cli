@@ -5,6 +5,7 @@ import (
 	"github.com/onflow/flow-cli/internal/util"
 	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/tests"
+	"github.com/onflow/flow-go-sdk"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"testing"
@@ -62,5 +63,48 @@ func Test_Build(t *testing.T) {
 }
 
 func Test_Decode(t *testing.T) {
+	srv, _, rw := util.TestMocks(t)
 
+	t.Run("Success", func(t *testing.T) {
+		inArgs := []string{"test"}
+		payload := []byte("f8aaf8a6b8617472616e73616374696f6e2829207b0a097072657061726528617574686f72697a65723a20417574684163636f756e7429207b7d0a0965786563757465207b0a09096c65742078203d20310a090970616e696328227465737422290a097d0a7d0ac0a003d40910037d575d52831647b39814f445bc8cc7ba8653286c0eb1473778c34f8203e888f8d6e0586b0a20c7808088f8d6e0586b0a20c7c988f8d6e0586b0a20c7c0c0")
+		_ = rw.WriteFile(inArgs[0], payload, 0677)
+
+		result, err := decode(inArgs, util.NoFlags, util.NoLogger, rw, srv.Mock)
+		assert.NoError(t, err)
+		assert.NotNil(t, result)
+	})
+
+	t.Run("Fail decode", func(t *testing.T) {
+		inArgs := []string{"test"}
+		_ = rw.WriteFile(inArgs[0], []byte("invalid"), 0677)
+
+		result, err := decode(inArgs, util.NoFlags, util.NoLogger, rw, srv.Mock)
+		assert.EqualError(t, err, "failed to decode partial transaction from invalid: encoding/hex: invalid byte: U+0069 'i'")
+		assert.Nil(t, result)
+	})
+
+	t.Run("Fail to read file", func(t *testing.T) {
+		inArgs := []string{"invalid"}
+		result, err := decode(inArgs, util.NoFlags, util.NoLogger, rw, srv.Mock)
+		assert.EqualError(t, err, "failed to read transaction from invalid: open invalid: file does not exist")
+		assert.Nil(t, result)
+	})
+}
+
+func Test_Get(t *testing.T) {
+	srv, _, rw := util.TestMocks(t)
+
+	t.Run("Success", func(t *testing.T) {
+		inArgs := []string{"0x01"}
+
+		srv.GetTransactionByID.Run(func(args mock.Arguments) {
+			id := args.Get(1).(flow.Identifier)
+			assert.Equal(t, "0100000000000000000000000000000000000000000000000000000000000000", id.String())
+		}).Return(nil, nil, nil)
+
+		result, err := get(inArgs, util.NoFlags, util.NoLogger, rw, srv.Mock)
+		assert.NoError(t, err)
+		assert.NotNil(t, result)
+	})
 }
