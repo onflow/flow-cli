@@ -49,10 +49,6 @@ var DeployCommand = &command.Command{
 	RunS:  deploy,
 }
 
-func updateWithPrompt(existing []byte, new []byte) bool {
-	return output.ShowContractDiffPrompt(existing, new)
-}
-
 func deploy(
 	_ []string,
 	_ flowkit.ReaderWriter,
@@ -72,7 +68,7 @@ func deploy(
 
 	deployFunc := services.UpdateExisting(deployFlags.Update)
 	if deployFlags.ShowDiff {
-		deployFunc = updateWithPrompt
+		deployFunc = output.ShowContractDiffPrompt
 	}
 
 	c, err := srv.Project.Deploy(globalFlags.Network, deployFunc)
