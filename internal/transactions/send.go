@@ -31,14 +31,14 @@ import (
 )
 
 type flagsSend struct {
-	ArgsJSON  string   `default:"" flag:"args-json" info:"arguments in JSON-Cadence format"`
-	Signer    string   `default:"" flag:"signer" info:"Account name from configuration used to sign the transaction as proposer, payer and suthorizer"`
-	Proposer  string   `default:"" flag:"proposer" info:"Account name from configuration used as proposer"`
-	Payer     string   `default:"" flag:"payer" info:"Account name from configuration used as payer"`
-	Autorizer []string `default:"" flag:"authorizer" info:"Name of a single or multiple comma-separated accounts used as authorizers from configuration"`
-	Include   []string `default:"" flag:"include" info:"Fields to include in the output"`
-	Exclude   []string `default:"" flag:"exclude" info:"Fields to exclude from the output (events)"`
-	GasLimit  uint64   `default:"1000" flag:"gas-limit" info:"transaction gas limit"`
+	ArgsJSON    string   `default:"" flag:"args-json" info:"arguments in JSON-Cadence format"`
+	Signer      string   `default:"" flag:"signer" info:"Account name from configuration used to sign the transaction as proposer, payer and suthorizer"`
+	Proposer    string   `default:"" flag:"proposer" info:"Account name from configuration used as proposer"`
+	Payer       string   `default:"" flag:"payer" info:"Account name from configuration used as payer"`
+	Authorizers []string `default:"" flag:"authorizer" info:"Name of a single or multiple comma-separated accounts used as authorizers from configuration"`
+	Include     []string `default:"" flag:"include" info:"Fields to include in the output"`
+	Exclude     []string `default:"" flag:"exclude" info:"Fields to exclude from the output (events)"`
+	GasLimit    uint64   `default:"1000" flag:"gas-limit" info:"transaction gas limit"`
 }
 
 var sendFlags = flagsSend{}
@@ -82,7 +82,7 @@ func send(
 	}
 
 	var authorizers []flowkit.Account
-	for _, authorizerName := range sendFlags.Autorizer {
+	for _, authorizerName := range sendFlags.Authorizers {
 		authorizer, err := state.Accounts().ByName(authorizerName)
 		if err != nil {
 			return nil, fmt.Errorf("authorizer account: [%s] doesn't exists in configuration", authorizerName)
