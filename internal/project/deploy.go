@@ -205,14 +205,7 @@ func replaceContractWithAlias(state *flowkit.State, standardContract standardCon
 	if contract == nil {
 		return fmt.Errorf("contract not found") // shouldn't occur
 	}
-	if contract.Aliases == nil {
-		contract.Aliases = &config.Aliases{}
-	}
 	contract.Aliases.Add(config.MainnetNetwork.Name, standardContract.address) // replace contract with an alias
-	contract.Name = "foo"
-
-	s := state.Config().Contracts
-	fmt.Println(s)
 
 	for di, d := range state.Config().Deployments {
 		if d.Network != config.MainnetNetwork.Name {

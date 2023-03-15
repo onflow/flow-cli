@@ -37,7 +37,7 @@ func Test_ProjectDeploy(t *testing.T) {
 
 		assert.Len(t, state.Deployments().ByNetwork(config.EmulatorNetwork.Name), 0) // should remove it
 		assert.NotNil(t, state.Contracts().ByName(ft).Aliases)
-		assert.Equal(t, "", state.Contracts().ByName(ft).Aliases.ByNetwork(config.MainnetNetwork.Name).Address)
+		assert.Equal(t, "f233dcee88fe0abe", state.Contracts().ByName(ft).Aliases.ByNetwork(config.MainnetNetwork.Name).Address.String())
 	})
 
 }
