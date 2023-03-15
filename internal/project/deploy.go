@@ -70,11 +70,9 @@ func deploy(
 
 	}
 
-	var deployFunc services.Update
+	deployFunc := services.UpdateExistingContract(deployFlags.Update)
 	if deployFlags.ShowDiff {
 		deployFunc = updateWithPrompt
-	} else {
-		deployFunc = services.UpdateExistingContract(deployFlags.Update)
 	}
 
 	c, err := srv.Project.Deploy(globalFlags.Network, deployFunc)
