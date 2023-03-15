@@ -56,7 +56,7 @@ var SendCommand = &command.Command{
 
 func send(
 	args []string,
-	globalFlags command.GlobalFlags,
+	_ command.GlobalFlags,
 	_ output.Logger,
 	flow flowkit.Services,
 	state *flowkit.State,
