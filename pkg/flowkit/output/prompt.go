@@ -254,7 +254,7 @@ func addAnotherContractToDeploymentPrompt() bool {
 // returns true if the user wishes to continue with the deployment and false otherwise
 func ShowContractDiffPrompt(newContract []byte, existingContract []byte) bool {
 	dmp := diffmatchpatch.New()
-	diffs := dmp.DiffMain(string(existingContract), string(newContract), false)
+	diffs := dmp.DiffMain(string(newContract), string(existingContract), false)
 	diffString := dmp.DiffPrettyText(diffs)
 	fmt.Println(diffString)
 
