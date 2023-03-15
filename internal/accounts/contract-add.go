@@ -40,9 +40,9 @@ var addContractFlags = flagsAddContract{}
 
 var AddContractCommand = &command.Command{
 	Cmd: &cobra.Command{
-		Use:     "add-contract <filename>",
+		Use:     "add-contract <filename> <args>",
 		Short:   "Deploy a new contract to an account",
-		Example: `flow accounts add-contract ./FungibleToken.cdc`,
+		Example: `flow accounts add-contract ./FungibleToken.cdc helloArg`,
 		Args:    cobra.MinimumNArgs(1),
 	},
 	Flags: &addContractFlags,

@@ -40,9 +40,9 @@ var updateContractFlags = flagsUpdateContract{}
 
 var UpdateCommand = &command.Command{
 	Cmd: &cobra.Command{
-		Use:     "update-contract <filename>",
+		Use:     "update-contract <filename> <args>",
 		Short:   "Update a contract deployed to an account",
-		Example: `flow accounts update-contract ./FungibleToken.cdc`,
+		Example: `flow accounts update-contract ./FungibleToken.cdc helloArg`,
 		Args:    cobra.MinimumNArgs(1),
 	},
 	Flags: &updateContractFlags,
@@ -72,7 +72,7 @@ func updateContract(
 	if updateContractFlags.ArgsJSON != "" {
 		contractArgs, err = flowkit.ParseArgumentsJSON(updateContractFlags.ArgsJSON)
 	} else if len(args) > 2 {
-		contractArgs, err = flowkit.ParseArgumentsWithoutType(filename, code, args[2:])
+		contractArgs, err = flowkit.ParseArgumentsWithoutType(filename, code, args[1:])
 	}
 
 	if err != nil {
