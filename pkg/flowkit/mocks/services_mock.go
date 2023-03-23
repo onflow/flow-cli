@@ -168,7 +168,7 @@ func DefaultMockServices() *MockServices {
 			SignTransactionPayloadFunc,
 			mock.Anything,
 			mock.AnythingOfType("*flowkit.Account"),
-			mock.AnythingOfType("[]byte"),
+			mock.AnythingOfType("[]uint8"),
 		),
 		Test: m.On(
 			TestFunc,

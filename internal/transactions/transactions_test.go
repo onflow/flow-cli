@@ -207,8 +207,39 @@ func Test_Sign(t *testing.T) {
 	srv, state, rw := util.TestMocks(t)
 
 	t.Run("Success", func(t *testing.T) {
+		inArgs := []string{"t1.rlp"}
+		built := []byte("f884f880b83b7472616e73616374696f6e2829207b0a0909097072657061726528617574686f72697a65723a20417574684163636f756e7429207b7d0a09097d0ac0a003d40910037d575d52831647b39814f445bc8cc7ba8653286c0eb1473778c34f8203e888f8d6e0586b0a20c7808088f8d6e0586b0a20c7c988f8d6e0586b0a20c7c0c0")
+		_ = rw.WriteFile(inArgs[0], built, 0677)
 
-		sign(inArgs, util.NoFlags, util.NoLogger, srv.Mock, state)
+		srv.SignTransactionPayload.Run(func(args mock.Arguments) {
+			assert.Equal(t, "emulator-account", args.Get(1).(*flowkit.Account).Name())
+			assert.Equal(t, built, args.Get(2).([]byte))
+		}).Return(flowkit.NewTransaction(), nil)
+
+		result, err := sign(inArgs, command.GlobalFlags{Yes: true}, util.NoLogger, srv.Mock, state)
+		assert.NoError(t, err)
+		assert.NotNil(t, result)
 	})
 
+	t.Run("Fail filename arg required", func(t *testing.T) {
+		_, err := sign([]string{}, command.GlobalFlags{Yes: true}, util.NoLogger, srv.Mock, state)
+		assert.EqualError(t, err, "filename argument is required")
+	})
+
+	t.Run("Fail only use filename", func(t *testing.T) {
+		signFlags.FromRemoteUrl = "foo"
+		_, err := sign([]string{"test"}, command.GlobalFlags{Yes: true}, util.NoLogger, srv.Mock, state)
+		assert.EqualError(t, err, "only use one, filename argument or --from-remote-url <url>")
+		signFlags.FromRemoteUrl = ""
+	})
+
+	t.Run("Fail invalid signer", func(t *testing.T) {
+		inArgs := []string{"t1.rlp"}
+		built := []byte("f884f880b83b7472616e73616374696f6e2829207b0a0909097072657061726528617574686f72697a65723a20417574684163636f756e7429207b7d0a09097d0ac0a003d40910037d575d52831647b39814f445bc8cc7ba8653286c0eb1473778c34f8203e888f8d6e0586b0a20c7808088f8d6e0586b0a20c7c988f8d6e0586b0a20c7c0c0")
+		_ = rw.WriteFile(inArgs[0], built, 0677)
+		signFlags.Signer = []string{"invalid"}
+		_, err := sign(inArgs, command.GlobalFlags{Yes: true}, util.NoLogger, srv.Mock, state)
+		assert.EqualError(t, err, "signer account: [invalid] doesn't exists in configuration")
+		signFlags.Signer = []string{}
+	})
 }
