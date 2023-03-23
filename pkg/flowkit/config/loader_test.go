@@ -444,11 +444,23 @@ func Test_JSONEnv(t *testing.T) {
 			"emulator-account": {
 				"address": "f8d6e0586b0a20c7",
 				"key": "$EMULATOR_KEY"
+			},
+			"advanced": {
+				"address": "f8d6e0586b0a20c7",
+				"key": {
+					"type": "hex",
+					"index": 0,
+					"signatureAlgorithm": "ECDSA_P256",
+					"hashAlgorithm": "SHA3_256",
+					"privateKey": "$ADVANCED_KEY"
+				}
 			}
 		}
 	}`)
-	const key = "21c5dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7"
-	os.Setenv("EMULATOR_KEY", key)
+	const key1 = "21c5dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7"
+	const key2 = "21c5dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7"
+	os.Setenv("EMULATOR_KEY", key1)
+	os.Setenv("ADVANCED_KEY", key2)
 	mockFS := afero.NewMemMapFs()
 	err := afero.WriteFile(mockFS, "test2-flow.json", b, 0644)
 	require.NoError(t, err)
@@ -459,8 +471,9 @@ func Test_JSONEnv(t *testing.T) {
 		conf, loadErr := composer.Load([]string{"test2-flow.json"})
 
 		assert.NoError(t, loadErr)
-		assert.Equal(t, 1, len(conf.Accounts))
-		assert.Equal(t, fmt.Sprintf("0x%s", key), conf.Accounts[0].Key.PrivateKey.String())
+		assert.Equal(t, 2, len(conf.Accounts))
+		assert.Equal(t, fmt.Sprintf("0x%s", key1), conf.Accounts[0].Key.PrivateKey.String())
+		assert.Equal(t, fmt.Sprintf("0x%s", key2), conf.Accounts[1].Key.PrivateKey.String())
 	})
 
 	t.Run("Save and remove replaced env variable", func(t *testing.T) {
@@ -475,8 +488,29 @@ func Test_JSONEnv(t *testing.T) {
 
 		content, err := afero.ReadFile(mockFS, testConf)
 		require.NoError(t, err)
-		assert.NotContains(t, string(content), key)
+		assert.NotContains(t, string(content), key1)
+		assert.NotContains(t, string(content), key2)
 		assert.Contains(t, string(content), "$EMULATOR_KEY")
+		assert.Contains(t, string(content), "$ADVANCED_KEY")
+	})
+
+	t.Run("Fail not present env variable", func(t *testing.T) {
+		b := []byte(`{
+			"accounts": {
+				"emulator-account": {
+					"address": "f8d6e0586b0a20c7",
+					"key": "$NOT_EXISTS"
+				}
+			}
+		}`)
+
+		mockFS := afero.NewMemMapFs()
+		_ = afero.WriteFile(mockFS, "test.json", b, 0644)
+		composer := config.NewLoader(afero.Afero{Fs: mockFS})
+		composer.AddConfigParser(json.NewParser())
+
+		_, err = composer.Load([]string{"test.json"})
+		assert.EqualError(t, err, "required environment variable $NOT_EXISTS not set")
 	})
 
 }
@@ -493,7 +527,6 @@ func Test_LoadAccountFileType(t *testing.T) {
 			}
 		}
 	}`)
-
 	mockFS := afero.NewMemMapFs()
 	err := afero.WriteFile(mockFS, config.GlobalPath(), b, 0644)
 

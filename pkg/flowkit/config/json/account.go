@@ -63,6 +63,10 @@ func transformSimpleToConfig(accountName string, a simpleAccount) (*config.Accou
 
 	envPresent, _ := regexp.MatchString("^\\$\\w+", a.Key) // detect if env variable is used
 	if envPresent {
+		if os.Getenv(a.Key) == "" {
+			return nil, fmt.Errorf("required environment variable %s not set", a.Key)
+		}
+
 		key.Env = a.Key             // set env variable
 		a.Key = os.ExpandEnv(a.Key) // replace with provided env
 	}
@@ -232,10 +236,15 @@ func transformFromFileAccountToJSON(a config.Account) account {
 }
 
 func transformSimpleAccountToJSON(a config.Account) account {
+	key := strings.TrimPrefix(a.Key.PrivateKey.String(), "0x")
+	if a.Key.Env != "" {
+		key = a.Key.Env // if we used env vars then use it when saving
+	}
+
 	return account{
 		Simple: simpleAccount{
 			Address: a.Address.String(),
-			Key:     strings.TrimPrefix(a.Key.PrivateKey.String(), "0x"),
+			Key:     key,
 		},
 	}
 }
