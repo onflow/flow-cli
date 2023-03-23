@@ -21,6 +21,8 @@ package json
 import (
 	"encoding/json"
 	"fmt"
+	"os"
+	"regexp"
 	"strings"
 
 	"github.com/onflow/flow-go-sdk"
@@ -53,6 +55,18 @@ func transformAddress(address string) (flow.Address, error) {
 
 // transformSimpleToConfig transforms simple internal account to config account.
 func transformSimpleToConfig(accountName string, a simpleAccount) (*config.Account, error) {
+	key := config.AccountKey{
+		Type:     config.KeyTypeHex,
+		SigAlgo:  defaultSigAlgo,
+		HashAlgo: defaultHashAlgo,
+	}
+
+	envPresent, _ := regexp.MatchString("^\\$\\w+", a.Key) // detect if env variable is used
+	if envPresent {
+		key.Env = a.Key             // set env variable
+		a.Key = os.ExpandEnv(a.Key) // replace with provided env
+	}
+
 	pkey, err := crypto.DecodePrivateKeyHex(
 		defaultSigAlgo,
 		strings.TrimPrefix(a.Key, "0x"),
@@ -60,6 +74,7 @@ func transformSimpleToConfig(accountName string, a simpleAccount) (*config.Accou
 	if err != nil {
 		return nil, fmt.Errorf("invalid private key for account: %s", accountName)
 	}
+	key.PrivateKey = pkey
 
 	address, err := transformAddress(a.Address)
 	if err != nil {
@@ -69,12 +84,7 @@ func transformSimpleToConfig(accountName string, a simpleAccount) (*config.Accou
 	return &config.Account{
 		Name:    accountName,
 		Address: address,
-		Key: config.AccountKey{
-			Type:       config.KeyTypeHex,
-			SigAlgo:    defaultSigAlgo,
-			HashAlgo:   defaultHashAlgo,
-			PrivateKey: pkey,
-		},
+		Key:     key,
 	}, nil
 }
 
