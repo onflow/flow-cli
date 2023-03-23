@@ -20,7 +20,6 @@ package keys
 
 import (
 	"fmt"
-
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/spf13/cobra"
 
@@ -73,6 +72,6 @@ func generate(
 	}
 
 	pubKey := privateKey.PublicKey()
-	return &KeyResult{privateKey: privateKey, publicKey: pubKey, mnemonic: mnemonic, derivationPath: generateFlags.DerivationPath}, nil
 
+	return &KeyResult{privateKey: privateKey, publicKey: pubKey, sigAlgo: sigAlgo, mnemonic: mnemonic, derivationPath: generateFlags.DerivationPath}, nil
 }

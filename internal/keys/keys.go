@@ -23,7 +23,6 @@ import (
 	"encoding/hex"
 	"fmt"
 
-	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/spf13/cobra"
 
@@ -47,7 +46,9 @@ func init() {
 type KeyResult struct {
 	privateKey     crypto.PrivateKey
 	publicKey      crypto.PublicKey
-	accountKey     *flow.AccountKey
+	sigAlgo        crypto.SignatureAlgorithm
+	hashAlgo       crypto.HashAlgorithm
+	weight         int
 	mnemonic       string
 	derivationPath string
 }
@@ -90,14 +91,16 @@ func (k *KeyResult) String() string {
 		_, _ = fmt.Fprintf(writer, "Derivation Path \t %s \n", k.derivationPath)
 	}
 
-	if k.accountKey != nil {
-		_, _ = fmt.Fprintf(writer, "Signature algorithm \t %s\n", k.accountKey.SigAlgo)
-		_, _ = fmt.Fprintf(writer, "Hash algorithm \t %s\n", k.accountKey.HashAlgo)
-		_, _ = fmt.Fprintf(writer, "Revoked \t %t\n", k.accountKey.Revoked)
+	if k.sigAlgo != crypto.UnknownSignatureAlgorithm {
+		_, _ = fmt.Fprintf(writer, "Signature Algorithm \t %s\n", k.sigAlgo)
+	}
 
-		if k.accountKey.Weight >= 0 { // dont show empty value
-			_, _ = fmt.Fprintf(writer, "Weight \t %d\n", k.accountKey.Weight)
-		}
+	if k.hashAlgo != crypto.UnknownHashAlgorithm {
+		_, _ = fmt.Fprintf(writer, "Hash Algorithm \t %s\n", k.hashAlgo)
+	}
+
+	if k.weight > 0 {
+		_, _ = fmt.Fprintf(writer, "Weight \t %d\n", k.weight)
 	}
 
 	_ = writer.Flush()
