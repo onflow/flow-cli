@@ -54,6 +54,7 @@ type AccountKey struct {
 	DerivationPath string
 	PrivateKey     crypto.PrivateKey
 	Location       string
+	Env            string
 }
 
 // ByName get account by name.
