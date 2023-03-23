@@ -458,7 +458,7 @@ func Test_JSONEnv(t *testing.T) {
 		}
 	}`)
 	const key1 = "21c5dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7"
-	const key2 = "21c5dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7"
+	const key2 = "11c5dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7"
 	os.Setenv("EMULATOR_KEY", key1)
 	os.Setenv("ADVANCED_KEY", key2)
 	mockFS := afero.NewMemMapFs()
@@ -472,8 +472,12 @@ func Test_JSONEnv(t *testing.T) {
 
 		assert.NoError(t, loadErr)
 		assert.Equal(t, 2, len(conf.Accounts))
-		assert.Equal(t, fmt.Sprintf("0x%s", key1), conf.Accounts[0].Key.PrivateKey.String())
-		assert.Equal(t, fmt.Sprintf("0x%s", key2), conf.Accounts[1].Key.PrivateKey.String())
+
+		acc1, _ := conf.Accounts.ByName("advanced")
+		assert.Equal(t, fmt.Sprintf("0x%s", key2), acc1.Key.PrivateKey.String())
+
+		acc2, _ := conf.Accounts.ByName("emulator-account")
+		assert.Equal(t, fmt.Sprintf("0x%s", key1), acc2.Key.PrivateKey.String())
 	})
 
 	t.Run("Save and remove replaced env variable", func(t *testing.T) {
