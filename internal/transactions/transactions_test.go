@@ -197,9 +197,11 @@ func Test_SendSigned(t *testing.T) {
 	})
 
 	t.Run("Fail not approved", func(t *testing.T) {
-		inArgs := []string{tests.TransactionSimple.Filename}
+		inArgs := []string{"test"}
+		payload := []byte("f8aaf8a6b8617472616e73616374696f6e2829207b0a097072657061726528617574686f72697a65723a20417574684163636f756e7429207b7d0a0965786563757465207b0a09096c65742078203d20310a090970616e696328227465737422290a097d0a7d0ac0a003d40910037d575d52831647b39814f445bc8cc7ba8653286c0eb1473778c34f8203e888f8d6e0586b0a20c7808088f8d6e0586b0a20c7c988f8d6e0586b0a20c7c0c0")
+		_ = rw.WriteFile(inArgs[0], payload, 0677)
 		_, err := sendSigned(inArgs, util.NoFlags, util.NoLogger, rw, srv.Mock)
-		assert.EqualError(t, err, "error loading transaction payload: open invalid: file does not exist")
+		assert.EqualError(t, err, "transaction was not approved for sending")
 	})
 }
 
