@@ -61,14 +61,13 @@ func transformSimpleToConfig(accountName string, a simpleAccount) (*config.Accou
 		HashAlgo: defaultHashAlgo,
 	}
 
-	envPresent, _ := regexp.MatchString("^\\$\\w+", a.Key) // detect if env variable is used
-	if envPresent {
-		if os.Getenv(a.Key) == "" {
-			return nil, fmt.Errorf("required environment variable %s not set", a.Key)
-		}
-
-		key.Env = a.Key             // set env variable
-		a.Key = os.ExpandEnv(a.Key) // replace with provided env
+	replaced, original, err := tryReplaceEnv(a.Key)
+	if err != nil {
+		return nil, err
+	}
+	if replaced != "" {
+		key.Env = original
+		a.Key = replaced
 	}
 
 	pkey, err := crypto.DecodePrivateKeyHex(
@@ -90,6 +89,22 @@ func transformSimpleToConfig(accountName string, a simpleAccount) (*config.Accou
 		Address: address,
 		Key:     key,
 	}, nil
+}
+
+// tryReplaceEnv checks if value matches env regex, if it does it check whether the value was set in env,
+// if not set then it errors, otherwise it replaces the value with set env variable, and also returns the original key.
+func tryReplaceEnv(value string) (replaced string, original string, err error) {
+	if envPresent, _ := regexp.MatchString("^\\$\\w+", value); !envPresent {
+		return
+	}
+	if os.Getenv(strings.ReplaceAll(value, "$", "")) == "" {
+		return "", "", fmt.Errorf("required environment variable %s not set", value)
+	}
+
+	original = value
+	replaced = os.ExpandEnv(value)
+
+	return
 }
 
 // transformAdvancedToConfig transforms advanced internal account to config account.
@@ -146,6 +161,16 @@ func transformAdvancedToConfig(accountName string, a advancedAccount) (*config.A
 		if a.Key.PrivateKey == "" {
 			return nil, fmt.Errorf("missing private key value for hex key type on account %s", accountName)
 		}
+
+		replaced, original, err := tryReplaceEnv(a.Key.PrivateKey)
+		if err != nil {
+			return nil, err
+		}
+		if replaced != "" {
+			key.Env = original
+			a.Key.PrivateKey = replaced
+		}
+
 		pKey, err := crypto.DecodePrivateKeyHex(
 			sigAlgo,
 			strings.TrimPrefix(a.Key.PrivateKey, "0x"),
@@ -278,6 +303,9 @@ func transformAdvancedKeyToJSON(key config.AccountKey) advanceKey {
 	switch key.Type {
 	case config.KeyTypeHex:
 		advancedKey.PrivateKey = strings.TrimPrefix(key.PrivateKey.String(), "0x")
+		if key.Env != "" {
+			advancedKey.PrivateKey = key.Env // if we used env vars then use it when saving
+		}
 	case config.KeyTypeBip44:
 		advancedKey.Mnemonic = key.Mnemonic
 		advancedKey.DerivationPath = key.DerivationPath
