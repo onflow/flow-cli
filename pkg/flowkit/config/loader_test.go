@@ -18,6 +18,7 @@
 package config_test
 
 import (
+	"fmt"
 	"os"
 	"testing"
 
@@ -446,21 +447,38 @@ func Test_JSONEnv(t *testing.T) {
 			}
 		}
 	}`)
-
-	os.Setenv("EMULATOR_KEY", "21c5dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7")
-
+	const key = "21c5dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7"
+	os.Setenv("EMULATOR_KEY", key)
 	mockFS := afero.NewMemMapFs()
 	err := afero.WriteFile(mockFS, "test2-flow.json", b, 0644)
+	require.NoError(t, err)
 
-	assert.NoError(t, err)
+	t.Run("Load and replace env variable", func(t *testing.T) {
+		composer := config.NewLoader(afero.Afero{Fs: mockFS})
+		composer.AddConfigParser(json.NewParser())
+		conf, loadErr := composer.Load([]string{"test2-flow.json"})
 
-	composer := config.NewLoader(afero.Afero{Fs: mockFS})
-	composer.AddConfigParser(json.NewParser())
-	conf, loadErr := composer.Load([]string{"test2-flow.json"})
+		assert.NoError(t, loadErr)
+		assert.Equal(t, 1, len(conf.Accounts))
+		assert.Equal(t, fmt.Sprintf("0x%s", key), conf.Accounts[0].Key.PrivateKey.String())
+	})
 
-	assert.NoError(t, loadErr)
-	assert.Equal(t, 1, len(conf.Accounts))
-	assert.Equal(t, "0x21c5dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7", conf.Accounts[0].Key.PrivateKey.String())
+	t.Run("Save and remove replaced env variable", func(t *testing.T) {
+		composer := config.NewLoader(afero.Afero{Fs: mockFS})
+		composer.AddConfigParser(json.NewParser())
+		conf, err := composer.Load([]string{"test2-flow.json"})
+		require.NoError(t, err)
+
+		testConf := "test-flow.json"
+		err = composer.Save(conf, testConf)
+		require.NoError(t, err)
+
+		content, err := afero.ReadFile(mockFS, testConf)
+		require.NoError(t, err)
+		assert.NotContains(t, string(content), key)
+		assert.Contains(t, string(content), "$EMULATOR_KEY")
+	})
+
 }
 
 func Test_LoadAccountFileType(t *testing.T) {
@@ -491,8 +509,5 @@ func Test_LoadAccountFileType(t *testing.T) {
 	assert.NoError(t, err)
 
 	assert.Len(t, conf.Accounts, 1)
-	assert.Equal(t,
-		"./test.pkey",
-		acc.Key.Location,
-	)
+	assert.Equal(t, "./test.pkey", acc.Key.Location)
 }
