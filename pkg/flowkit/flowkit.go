@@ -129,12 +129,7 @@ func (f *Flowkit) Ping() error {
 
 // GetAccount fetches account on the Flow network.
 func (f *Flowkit) GetAccount(ctx context.Context, address flow.Address) (*flow.Account, error) {
-	f.logger.StartProgress(fmt.Sprintf("Loading %s...", address))
-
-	account, err := f.gateway.GetAccount(address)
-	f.logger.StopProgress()
-
-	return account, err
+	return f.gateway.GetAccount(address)
 }
 
 // CreateAccount on the Flow network with the provided keys and using the signer for creation transaction.
@@ -187,6 +182,7 @@ func (f *Flowkit) CreateAccount(
 	}
 
 	f.logger.StartProgress("Waiting for transaction to be sealed...")
+	defer f.logger.StopProgress()
 
 	result, err := f.gateway.GetTransactionResult(sentTx.ID(), true)
 	if err != nil {
@@ -203,14 +199,12 @@ func (f *Flowkit) CreateAccount(
 		return nil, flow.EmptyID, fmt.Errorf("new account address couldn't be fetched")
 	}
 
-	f.logger.StopProgress()
-
-	account, err := f.gateway.GetAccount(*newAccountAddress[0])
+	account, err := f.gateway.GetAccount(*newAccountAddress[0]) // we know it's the only and first event
 	if err != nil {
 		return nil, flow.EmptyID, err
 	}
 
-	return account, sentTx.ID(), nil // we know it's the only and first event
+	return account, sentTx.ID(), nil
 }
 
 // prepareTransaction prepares transaction for sending with data from network
@@ -431,10 +425,6 @@ func (f *Flowkit) RemoveContract(
 
 // GetBlock by the query from Flow blockchain. Query can define a block by ID, block by height or require the latest block.
 func (f *Flowkit) GetBlock(ctx context.Context, query BlockQuery) (*flow.Block, error) {
-	f.logger.StartProgress("Fetching Block...")
-	defer f.logger.StopProgress()
-
-	// smart parsing of query
 	var err error
 	var block *flow.Block
 	if query.Latest {
@@ -481,9 +471,6 @@ func (f *Flowkit) GetEvents(
 	if endHeight < startHeight {
 		return nil, fmt.Errorf("cannot have end height (%d) of block range less that start height (%d)", endHeight, startHeight)
 	}
-
-	f.logger.StartProgress("Fetching events...")
-	defer f.logger.StopProgress()
 
 	if worker == nil { // if no worker is passed, create a default one
 		worker = &EventWorker{
@@ -820,7 +807,7 @@ func (f *Flowkit) ExecuteScript(ctx context.Context, script *Script) (cadence.Va
 		if state == nil {
 			return nil, config.ErrDoesNotExist
 		}
-		if f.network.Name == "" { // todo define empty network
+		if f.network == config.EmptyNetwork {
 			return nil, fmt.Errorf("missing network, specify which network to use to resolve imports in script code")
 		}
 		if script.Location() == "" {
@@ -843,6 +830,7 @@ func (f *Flowkit) GetTransactionByID(
 	waitSeal bool,
 ) (*flow.Transaction, *flow.TransactionResult, error) {
 	f.logger.StartProgress("Fetching Transaction...")
+	defer f.logger.StopProgress()
 
 	tx, err := f.gateway.GetTransaction(ID)
 	if err != nil {
@@ -854,8 +842,6 @@ func (f *Flowkit) GetTransactionByID(
 	}
 
 	result, err := f.gateway.GetTransactionResult(ID, waitSeal)
-	f.logger.StopProgress()
-
 	return tx, result, err
 }
 
@@ -911,7 +897,7 @@ func (f *Flowkit) BuildTransaction(
 	}
 
 	if program.HasImports() {
-		if f.network.Name == "" { // todo replace with empty network type
+		if f.network == config.EmptyNetwork {
 			return nil, fmt.Errorf("missing network, specify which network to use to resolve imports in transaction code")
 		}
 		if script.Location() == "" { // when used as lib with code we don't support imports
@@ -978,9 +964,6 @@ func (f *Flowkit) SendSignedTransaction(
 	ctx context.Context,
 	tx *Transaction,
 ) (*flow.Transaction, *flow.TransactionResult, error) {
-	f.logger.StartProgress(fmt.Sprintf("Sending transaction with ID: %s", tx.FlowTransaction().ID()))
-	defer f.logger.StopProgress()
-
 	sentTx, err := f.gateway.SendSignedTransaction(tx.FlowTransaction())
 	if err != nil {
 		return nil, nil, err
@@ -1047,8 +1030,6 @@ func (f *Flowkit) Test(ctx context.Context, code []byte, scriptPath string) (cdc
 	runner := cdcTests.NewTestRunner().
 		WithImportResolver(f.importResolver(scriptPath)).
 		WithFileResolver(f.fileResolver(scriptPath))
-
-	f.logger.Info("Running tests...")
 
 	return runner.RunTests(string(code))
 }

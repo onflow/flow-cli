@@ -64,7 +64,7 @@ flow events get A.1654653399040a61.FlowToken.TokensDeposited A.1654653399040a61.
 func get(
 	args []string,
 	_ command.GlobalFlags,
-	_ output.Logger,
+	logger output.Logger,
 	_ flowkit.ReaderWriter,
 	flow flowkit.Services,
 ) (command.Result, error) {
@@ -91,6 +91,9 @@ func get(
 	} else if start == 0 || end == 0 {
 		return nil, fmt.Errorf("please provide either both start and end for range or only last flag")
 	}
+
+	logger.StartProgress("Fetching events...")
+	defer logger.StopProgress()
 
 	events, err := flow.GetEvents(
 		context.Background(),
