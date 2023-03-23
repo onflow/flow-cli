@@ -20,12 +20,12 @@ package transactions
 
 import (
 	"fmt"
+	"github.com/onflow/flow-cli/pkg/flowkit/output"
 
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/pkg/flowkit"
-	"github.com/onflow/flow-cli/pkg/flowkit/services"
 )
 
 type flagsDecode struct {
@@ -42,18 +42,18 @@ var DecodeCommand = &command.Command{
 		Args:    cobra.ExactArgs(1),
 	},
 	Flags: &decodeFlags,
-	RunS:  decode,
+	Run:   decode,
 }
 
 func decode(
 	args []string,
-	readerWriter flowkit.ReaderWriter,
-	globalFlags command.GlobalFlags,
-	services *services.Services,
-	state *flowkit.State,
+	_ command.GlobalFlags,
+	_ output.Logger,
+	reader flowkit.ReaderWriter,
+	_ flowkit.Services,
 ) (command.Result, error) {
 	filename := args[0]
-	payload, err := readerWriter.ReadFile(filename)
+	payload, err := reader.ReadFile(filename)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read transaction from %s: %v", filename, err)
 	}

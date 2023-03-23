@@ -27,7 +27,6 @@ import (
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
-	"github.com/onflow/flow-cli/pkg/flowkit/services"
 	"github.com/onflow/flow-cli/pkg/flowkit/util"
 )
 
@@ -47,16 +46,16 @@ var Command = &command.Command{
 
 func status(
 	_ []string,
-	_ flowkit.ReaderWriter,
-	globalFlags command.GlobalFlags,
-	services *services.Services,
+	_ command.GlobalFlags,
+	_ output.Logger,
+	flow flowkit.Services,
 	_ *flowkit.State,
 ) (command.Result, error) {
-	accessNode, err := services.Status.Ping(globalFlags.Network)
+	err := flow.Ping()
 
 	return &Result{
-		network:    globalFlags.Network,
-		accessNode: accessNode,
+		network:    flow.Network().Name,
+		accessNode: flow.Network().Host,
 		err:        err,
 	}, nil
 }

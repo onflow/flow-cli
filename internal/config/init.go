@@ -21,6 +21,7 @@ package config
 import (
 	"bytes"
 	"fmt"
+	"github.com/onflow/flow-cli/pkg/flowkit/config"
 
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/spf13/cobra"
@@ -28,7 +29,6 @@ import (
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
-	"github.com/onflow/flow-cli/pkg/flowkit/services"
 	"github.com/onflow/flow-cli/pkg/flowkit/util"
 )
 
@@ -53,11 +53,12 @@ var InitCommand = &command.Command{
 
 func Initialise(
 	_ []string,
-	readerWriter flowkit.ReaderWriter,
 	_ command.GlobalFlags,
-	services *services.Services,
+	logger output.Logger,
+	readerWriter flowkit.ReaderWriter,
+	_ flowkit.Services,
 ) (command.Result, error) {
-	fmt.Println("⚠️Notice: for starting a new project prefer using 'flow setup'.")
+	logger.Info("⚠️Notice: for starting a new project prefer using 'flow setup'.")
 
 	sigAlgo := crypto.StringToSignatureAlgorithm(InitFlag.ServiceKeySigAlgo)
 	if sigAlgo == crypto.UnknownSignatureAlgorithm {
@@ -69,28 +70,38 @@ func Initialise(
 		return nil, fmt.Errorf("invalid hash algorithm: %s", InitFlag.ServiceKeyHashAlgo)
 	}
 
-	var privateKey crypto.PrivateKey
-	if InitFlag.ServicePrivateKey != "" {
-		var err error
-		privateKey, err = crypto.DecodePrivateKeyHex(sigAlgo, InitFlag.ServicePrivateKey)
-		if err != nil {
-			return nil, fmt.Errorf("invalid private key: %w", err)
-		}
-	}
-
-	s, err := services.Project.Init(
-		readerWriter,
-		InitFlag.Reset,
-		InitFlag.Global,
-		sigAlgo,
-		hashAlgo,
-		privateKey,
-	)
+	state, err := flowkit.Init(readerWriter, sigAlgo, hashAlgo)
 	if err != nil {
 		return nil, err
 	}
 
-	return &InitResult{State: s}, nil
+	if InitFlag.ServicePrivateKey != "" {
+		privateKey, err := crypto.DecodePrivateKeyHex(sigAlgo, InitFlag.ServicePrivateKey)
+		if err != nil {
+			return nil, fmt.Errorf("invalid private key: %w", err)
+		}
+
+		state.SetEmulatorKey(privateKey)
+	}
+
+	path := config.DefaultPath
+	if InitFlag.Global {
+		path = config.GlobalPath()
+	}
+
+	if flowkit.Exists(path) && !InitFlag.Reset {
+		return nil, fmt.Errorf(
+			"configuration already exists at: %s, if you want to reset configuration use the reset flag",
+			path,
+		)
+	}
+
+	err = state.Save(path)
+	if err != nil {
+		return nil, err
+	}
+
+	return &InitResult{State: state}, nil
 }
 
 type InitResult struct {

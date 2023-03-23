@@ -19,8 +19,13 @@
 package transactions
 
 import (
+	"bytes"
+	"context"
 	"encoding/hex"
 	"fmt"
+	flowsdk "github.com/onflow/flow-go-sdk"
+	"io"
+	"net/http"
 	"sort"
 
 	"github.com/spf13/cobra"
@@ -28,7 +33,6 @@ import (
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
-	"github.com/onflow/flow-cli/pkg/flowkit/services"
 )
 
 type flagsSign struct {
@@ -52,9 +56,9 @@ var SignCommand = &command.Command{
 
 func sign(
 	args []string,
-	readerWriter flowkit.ReaderWriter,
 	globalFlags command.GlobalFlags,
-	services *services.Services,
+	_ output.Logger,
+	flow flowkit.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
 	var payload []byte
@@ -70,13 +74,13 @@ func sign(
 			return nil, fmt.Errorf("--yes is not supported with this flag")
 		}
 		filenameOrUrl = signFlags.FromRemoteUrl
-		payload, err = services.Transactions.GetRLP(filenameOrUrl)
+		payload, err = getRLPTransaction(filenameOrUrl)
 	} else {
 		if len(args) == 0 {
 			return nil, fmt.Errorf("filename argument is required")
 		}
 		filenameOrUrl = args[0]
-		payload, err = readerWriter.ReadFile(filenameOrUrl)
+		payload, err = state.ReadFile(filenameOrUrl)
 	}
 
 	if err != nil {
@@ -90,7 +94,7 @@ func sign(
 		return nil, err
 	}
 
-	//validate all signers
+	// validate all signers
 	for _, signerName := range signFlags.Signer {
 		signer, err := state.Accounts().ByName(signerName)
 		if err != nil {
@@ -105,11 +109,11 @@ func sign(
 	})
 
 	for _, signer := range signers {
-		if !globalFlags.Yes && !output.ApproveTransactionForSigningPrompt(tx) {
+		if !globalFlags.Yes && !output.ApproveTransactionForSigningPrompt(tx.FlowTransaction()) {
 			return nil, fmt.Errorf("transaction was not approved for signing")
 		}
 
-		signed, err = services.Transactions.Sign(signer, payload)
+		signed, err = flow.SignTransactionPayload(context.Background(), signer, payload)
 		if err != nil {
 			return nil, err
 		}
@@ -119,7 +123,7 @@ func sign(
 
 	if signFlags.FromRemoteUrl != "" {
 		tx := signed.FlowTransaction()
-		err = services.Transactions.PostRLP(filenameOrUrl, tx)
+		err = postRLPTransaction(filenameOrUrl, tx)
 
 		if err != nil {
 			return nil, err
@@ -131,4 +135,41 @@ func sign(
 		tx:      signed.FlowTransaction(),
 		include: signFlags.Include,
 	}, nil
+}
+
+// getRLPTransaction payload from a remote server.
+func getRLPTransaction(rlpUrl string) ([]byte, error) {
+	client := http.Client{
+		CheckRedirect: func(r *http.Request, via []*http.Request) error {
+			r.URL.Opaque = r.URL.Path
+			return nil
+		},
+	}
+	resp, err := client.Get(rlpUrl)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("error downloading RLP identifier")
+	}
+
+	return io.ReadAll(resp.Body)
+}
+
+// postRLPTransaction signed payload to a remote server.
+func postRLPTransaction(rlpUrl string, tx *flowsdk.Transaction) error {
+	signedRlp := hex.EncodeToString(tx.Encode())
+	resp, err := http.Post(rlpUrl, "application/text", bytes.NewBufferString(signedRlp))
+
+	if err != nil {
+		return err
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("error posting signed RLP")
+	}
+
+	return nil
 }

@@ -19,6 +19,7 @@
 package accounts
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
@@ -27,7 +28,7 @@ import (
 
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/pkg/flowkit"
-	"github.com/onflow/flow-cli/pkg/flowkit/services"
+	"github.com/onflow/flow-cli/pkg/flowkit/output"
 )
 
 type flagsCreate struct {
@@ -54,9 +55,9 @@ var CreateCommand = &command.Command{
 
 func create(
 	_ []string,
-	_ flowkit.ReaderWriter,
 	_ command.GlobalFlags,
-	services *services.Services,
+	logger output.Logger,
+	flow flowkit.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
 	// if user doesn't provide any flags go into interactive mode
@@ -89,6 +90,7 @@ func create(
 	if err != nil {
 		return nil, err
 	}
+
 	hashAlgos, err := parseHashingAlgorithms(createFlags.HashAlgo)
 	if err != nil {
 		return nil, err
@@ -99,13 +101,17 @@ func create(
 		return nil, err
 	}
 
-	account, err := services.Accounts.Create(
+	keys := make([]flowkit.Key, len(pubKeys))
+	for i, key := range pubKeys {
+		keys[i] = flowkit.Key{
+			Public: key, Weight: keyWeights[i], SigAlgo: sigAlgos[i], HashAlgo: hashAlgos[i],
+		}
+	}
+
+	account, _, err := flow.CreateAccount(
+		context.Background(),
 		signer,
-		pubKeys,
-		keyWeights,
-		sigAlgos,
-		hashAlgos,
-		createFlags.Contracts,
+		keys,
 	)
 
 	if err != nil {

@@ -19,9 +19,11 @@
 package project
 
 import (
+	"context"
 	"errors"
 	"fmt"
 
+	flowsdk "github.com/onflow/flow-go-sdk"
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
@@ -29,7 +31,6 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
 	"github.com/onflow/flow-cli/pkg/flowkit/project"
-	"github.com/onflow/flow-cli/pkg/flowkit/services"
 )
 
 type flagsDeploy struct {
@@ -50,24 +51,22 @@ var DeployCommand = &command.Command{
 
 func deploy(
 	_ []string,
-	_ flowkit.ReaderWriter,
-	globalFlags command.GlobalFlags,
-	srv *services.Services,
-	_ *flowkit.State,
+	_ command.GlobalFlags,
+	logger output.Logger,
+	flow flowkit.Services,
+	state *flowkit.State,
 ) (command.Result, error) {
 
-	//precheck for standard contract on Mainnet
-	if globalFlags.Network == config.DefaultMainnetNetwork().Name {
-		err := srv.Project.CheckForStandardContractUsageOnMainnet()
+	if flow.Network() == config.MainnetNetwork { // if using mainnet check for standard contract usage
+		err := checkForStandardContractUsageOnMainnet(state, logger)
 		if err != nil {
 			return nil, err
 		}
-
 	}
 
-	c, err := srv.Project.Deploy(globalFlags.Network, deployFlags.Update)
+	c, err := flow.DeployProject(context.Background(), deployFlags.Update)
 	if err != nil {
-		var projectErr *services.ProjectDeploymentError
+		var projectErr *flowkit.ProjectDeploymentError
 		if errors.As(err, &projectErr) {
 			for name, err := range projectErr.Contracts() {
 				fmt.Printf(
@@ -105,4 +104,118 @@ func (r *DeployResult) String() string {
 
 func (r *DeployResult) Oneliner() string {
 	return ""
+}
+
+// checkForStandardContractUsageOnMainnet checks if any contract defined to be used on mainnet
+// are referencing standard contract and if so warn the use that they should use the already
+// deployed contracts as an alias on mainnet instead of deploying their own copy.
+func checkForStandardContractUsageOnMainnet(state *flowkit.State, logger output.Logger) error {
+	mainnetContracts := map[string]standardContract{
+		"FungibleToken": {
+			name:     "FungibleToken",
+			address:  flowsdk.HexToAddress("0xf233dcee88fe0abe"),
+			infoLink: "https://developers.flow.com/flow/core-contracts/fungible-token",
+		},
+		"FlowToken": {
+			name:     "FlowToken",
+			address:  flowsdk.HexToAddress("0x1654653399040a61"),
+			infoLink: "https://developers.flow.com/flow/core-contracts/flow-token",
+		},
+		"FlowFees": {
+			name:     "FlowFees",
+			address:  flowsdk.HexToAddress("0xf919ee77447b7497"),
+			infoLink: "https://developers.flow.com/flow/core-contracts/flow-fees",
+		},
+		"FlowServiceAccount": {
+			name:     "FlowServiceAccount",
+			address:  flowsdk.HexToAddress("0xe467b9dd11fa00df"),
+			infoLink: "https://developers.flow.com/flow/core-contracts/service-account",
+		},
+		"FlowStorageFees": {
+			name:     "FlowStorageFees",
+			address:  flowsdk.HexToAddress("0xe467b9dd11fa00df"),
+			infoLink: "https://developers.flow.com/flow/core-contracts/service-account",
+		},
+		"FlowIDTableStaking": {
+			name:     "FlowIDTableStaking",
+			address:  flowsdk.HexToAddress("0x8624b52f9ddcd04a"),
+			infoLink: "https://developers.flow.com/flow/core-contracts/staking-contract-reference",
+		},
+		"FlowEpoch": {
+			name:     "FlowEpoch",
+			address:  flowsdk.HexToAddress("0x8624b52f9ddcd04a"),
+			infoLink: "https://developers.flow.com/flow/core-contracts/epoch-contract-reference",
+		},
+		"FlowClusterQC": {
+			name:     "FlowClusterQC",
+			address:  flowsdk.HexToAddress("0x8624b52f9ddcd04a"),
+			infoLink: "https://developers.flow.com/flow/core-contracts/epoch-contract-reference",
+		},
+		"FlowDKG": {
+			name:     "FlowDKG",
+			address:  flowsdk.HexToAddress("0x8624b52f9ddcd04a"),
+			infoLink: "https://developers.flow.com/flow/core-contracts/epoch-contract-reference",
+		},
+		"NonFungibleToken": {
+			name:     "NonFungibleToken",
+			address:  flowsdk.HexToAddress("0x1d7e57aa55817448"),
+			infoLink: "https://developers.flow.com/flow/core-contracts/non-fungible-token",
+		},
+		"MetadataViews": {
+			name:     "MetadataViews",
+			address:  flowsdk.HexToAddress("0x1d7e57aa55817448"),
+			infoLink: "https://developers.flow.com/flow/core-contracts/nft-metadata",
+		},
+	}
+
+	contracts, err := state.DeploymentContractsByNetwork(config.MainnetNetwork)
+	if err != nil {
+		return err
+	}
+
+	for _, contract := range contracts {
+		standardContract, ok := mainnetContracts[contract.Name]
+		if !ok {
+			continue
+		}
+
+		logger.Info(fmt.Sprintf("It seems like you are trying to deploy %s to Mainnet \n", contract.Name))
+		logger.Info(fmt.Sprintf("It is a standard contract already deployed at address 0x%s \n", standardContract.address.String()))
+		logger.Info(fmt.Sprintf("You can read more about it here: %s \n", standardContract.infoLink))
+
+		if output.WantToUseMainnetVersionPrompt() {
+			err := replaceContractWithAlias(state, standardContract)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+type standardContract struct {
+	name     string
+	address  flowsdk.Address
+	infoLink string
+}
+
+func replaceContractWithAlias(state *flowkit.State, standardContract standardContract) error {
+	contract := state.Config().Contracts.ByName(standardContract.name)
+	if contract == nil {
+		return fmt.Errorf("contract not found") // shouldn't occur
+	}
+	contract.Aliases.Add(config.MainnetNetwork.Name, standardContract.address) // replace contract with an alias
+
+	for di, d := range state.Config().Deployments {
+		if d.Network != config.MainnetNetwork.Name {
+			continue
+		}
+		for ci, c := range d.Contracts {
+			if c.Name == standardContract.name {
+				state.Config().Deployments[di].Contracts = append((d.Contracts)[0:ci], (d.Contracts)[ci+1:]...)
+				break
+			}
+		}
+	}
+	return nil
 }

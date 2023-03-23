@@ -26,7 +26,7 @@ import (
 
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/pkg/flowkit"
-	"github.com/onflow/flow-cli/pkg/flowkit/services"
+	"github.com/onflow/flow-cli/pkg/flowkit/output"
 )
 
 type flagsDerive struct {
@@ -48,9 +48,10 @@ var DeriveCommand = &command.Command{
 
 func derive(
 	args []string,
-	_ flowkit.ReaderWriter,
 	_ command.GlobalFlags,
-	services *services.Services,
+	_ output.Logger,
+	_ flowkit.ReaderWriter,
+	_ flowkit.Services,
 ) (command.Result, error) {
 
 	sigAlgo := crypto.StringToSignatureAlgorithm(deriveFlags.KeySigAlgo)
@@ -58,9 +59,9 @@ func derive(
 		return nil, fmt.Errorf("invalid signature algorithm: %s", deriveFlags.KeySigAlgo)
 	}
 
-	parsedPrivateKey, err := services.Keys.ParsePrivateKey(args[0], sigAlgo)
+	parsedPrivateKey, err := crypto.DecodePrivateKeyHex(sigAlgo, args[0])
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to decode private key: %w", err)
 	}
 
 	return &KeyResult{privateKey: parsedPrivateKey, publicKey: parsedPrivateKey.PublicKey()}, nil

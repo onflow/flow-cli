@@ -19,14 +19,15 @@
 package transactions
 
 import (
+	"context"
+	"github.com/onflow/flow-cli/pkg/flowkit/output"
+	flowsdk "github.com/onflow/flow-go-sdk"
 	"strings"
 
-	"github.com/onflow/flow-go-sdk"
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/pkg/flowkit"
-	"github.com/onflow/flow-cli/pkg/flowkit/services"
 )
 
 type flagsGet struct {
@@ -51,13 +52,14 @@ var GetCommand = &command.Command{
 
 func get(
 	args []string,
-	_ flowkit.ReaderWriter,
 	_ command.GlobalFlags,
-	services *services.Services,
+	_ output.Logger,
+	_ flowkit.ReaderWriter,
+	flow flowkit.Services,
 ) (command.Result, error) {
-	id := flow.HexToID(strings.TrimPrefix(args[0], "0x"))
+	id := flowsdk.HexToID(strings.TrimPrefix(args[0], "0x"))
 
-	tx, result, err := services.Transactions.GetStatus(id, getFlags.Sealed)
+	tx, result, err := flow.GetTransactionByID(context.Background(), id, getFlags.Sealed)
 	if err != nil {
 		return nil, err
 	}

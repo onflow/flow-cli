@@ -19,13 +19,14 @@
 package events
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/pkg/flowkit"
-	"github.com/onflow/flow-cli/pkg/flowkit/services"
+	"github.com/onflow/flow-cli/pkg/flowkit/output"
 )
 
 type flagsEvents struct {
@@ -62,9 +63,10 @@ flow events get A.1654653399040a61.FlowToken.TokensDeposited A.1654653399040a61.
 
 func get(
 	args []string,
-	_ flowkit.ReaderWriter,
 	_ command.GlobalFlags,
-	services *services.Services,
+	_ output.Logger,
+	_ flowkit.ReaderWriter,
+	flow flowkit.Services,
 ) (command.Result, error) {
 	var err error
 	start := eventsFlags.Start
@@ -73,10 +75,14 @@ func get(
 
 	// handle if not passing start and end
 	if start == 0 && end == 0 {
-		end, err = services.Blocks.GetLatestBlockHeight()
+		latest, err := flow.GetBlock(
+			context.Background(),
+			flowkit.BlockQuery{Latest: true},
+		)
 		if err != nil {
 			return nil, err
 		}
+		end = latest.Height
 
 		start = end - last
 		if start < 0 {
@@ -86,7 +92,16 @@ func get(
 		return nil, fmt.Errorf("please provide either both start and end for range or only last flag")
 	}
 
-	events, err := services.Events.Get(args, start, end, eventsFlags.Batch, eventsFlags.Workers)
+	events, err := flow.GetEvents(
+		context.Background(),
+		args,
+		start,
+		end,
+		&flowkit.EventWorker{
+			Count:           eventsFlags.Workers,
+			BlocksPerWorker: eventsFlags.Batch,
+		},
+	)
 	if err != nil {
 		return nil, err
 	}

@@ -27,7 +27,6 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
-	"github.com/onflow/flow-cli/pkg/flowkit/services"
 )
 
 type flagsAddDeployment struct {
@@ -51,9 +50,9 @@ var AddDeploymentCommand = &command.Command{
 
 func addDeployment(
 	_ []string,
-	_ flowkit.ReaderWriter,
 	globalFlags command.GlobalFlags,
-	_ *services.Services,
+	_ output.Logger,
+	_ flowkit.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
 	deployData, flagsProvided, err := flagsToDeploymentData(addDeploymentFlags)

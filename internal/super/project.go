@@ -19,6 +19,7 @@
 package super
 
 import (
+	"context"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/pkg/errors"
@@ -26,26 +27,23 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
 	flowkitProject "github.com/onflow/flow-cli/pkg/flowkit/project"
-	"github.com/onflow/flow-cli/pkg/flowkit/services"
 	"github.com/onflow/flow-cli/pkg/flowkit/util"
 )
 
-var emulator = config.DefaultEmulatorNetwork().Name
+var emulator = config.EmulatorNetwork.Name
 
 const defaultAccount = "default"
 
 func newProject(
 	serviceAccount flowkit.Account,
-	services *services.Services,
+	flow flowkit.Services,
 	state *flowkit.State,
-	readerWriter flowkit.ReaderWriter,
 	files *projectFiles,
 ) (*project, error) {
 	proj := &project{
 		service:        &serviceAccount,
-		services:       services,
+		flow:           flow,
 		state:          state,
-		readerWriter:   readerWriter,
 		projectFiles:   files,
 		pathNameLookup: make(map[string]string),
 	}
@@ -59,9 +57,8 @@ func newProject(
 
 type project struct {
 	service        *flowkit.Account
-	services       *services.Services
+	flow           flowkit.Services
 	state          *flowkit.State
-	readerWriter   flowkit.ReaderWriter
 	projectFiles   *projectFiles
 	pathNameLookup map[string]string
 }
@@ -108,7 +105,7 @@ func (p *project) startup() error {
 
 // deploys all the contracts found in the state configuration.
 func (p *project) deploy() {
-	deployed, err := p.services.Project.Deploy(emulator, true)
+	deployed, err := p.flow.DeployProject(context.Background(), true)
 	printDeployment(deployed, err, p.pathNameLookup)
 }
 
@@ -193,19 +190,21 @@ func (p *project) watch() error {
 
 // addAccount to the state and create it on the network.
 func (p *project) addAccount(name string) error {
-	pkey, err := p.services.Keys.Generate("", crypto.ECDSA_P256)
+	pkey, err := p.flow.GenerateKey(context.Background(), crypto.ECDSA_P256, "")
 	if err != nil {
 		return err
 	}
 
 	// create the account on the network and set the address
-	flowAcc, err := p.services.Accounts.Create(
+	flowAcc, _, err := p.flow.CreateAccount(
+		context.Background(),
 		p.service,
-		[]crypto.PublicKey{pkey.PublicKey()},
-		[]int{flow.AccountKeyWeightThreshold},
-		[]crypto.SignatureAlgorithm{crypto.ECDSA_P256},
-		[]crypto.HashAlgorithm{crypto.SHA3_256},
-		nil,
+		[]flowkit.Key{{
+			Public:   pkey.PublicKey(),
+			Weight:   flow.AccountKeyWeightThreshold,
+			SigAlgo:  crypto.ECDSA_P256,
+			HashAlgo: crypto.SHA3_256,
+		}},
 	)
 	if err != nil {
 		return err
@@ -235,7 +234,7 @@ func (p *project) contractName(path string) (string, error) {
 	}
 
 	// todo add warning if name of the file is not matching the name of the contract
-	content, err := p.readerWriter.ReadFile(path)
+	content, err := p.state.ReadFile(path)
 	if err != nil {
 		return "", errors.Wrap(err, "could not load contract to get the name")
 	}

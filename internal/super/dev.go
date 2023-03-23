@@ -30,7 +30,6 @@ import (
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
-	"github.com/onflow/flow-cli/pkg/flowkit/services"
 )
 
 type flagsDev struct{}
@@ -50,10 +49,10 @@ var DevCommand = &command.Command{
 }
 
 func dev(
-	args []string,
-	readerWriter flowkit.ReaderWriter,
-	globalFlags command.GlobalFlags,
-	services *services.Services,
+	_ []string,
+	_ command.GlobalFlags,
+	logger output.Logger,
+	flow flowkit.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
 	dir, err := os.Getwd()
@@ -61,10 +60,10 @@ func dev(
 		return nil, err
 	}
 
-	_, err = services.Status.Ping(emulator)
+	err = flow.Ping()
 	if err != nil {
-		fmt.Printf("%s Error connecting to emulator. Make sure you started an emulator using 'flow emulator' command.\n", output.ErrorEmoji())
-		fmt.Printf("%s This tool requires emulator to function. Emulator needs to be run inside the project root folder where the configuration file ('flow.json') exists.\n\n", output.TryEmoji())
+		logger.Error("Error connecting to emulator. Make sure you started an emulator using 'flow emulator' command.")
+		logger.Info(fmt.Sprintf("%s This tool requires emulator to function. Emulator needs to be run inside the project root folder where the configuration file ('flow.json') exists.\n\n", output.TryEmoji()))
 		return nil, nil
 	}
 
@@ -73,13 +72,12 @@ func dev(
 		return nil, err
 	}
 
-	services.SetLogger(output.NewStdoutLogger(output.NoneLog))
+	flow.SetLogger(output.NewStdoutLogger(output.NoneLog))
 
 	project, err := newProject(
 		*service,
-		services,
+		flow,
 		state,
-		readerWriter,
 		newProjectFiles(dir),
 	)
 	if err != nil {

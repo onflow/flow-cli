@@ -19,14 +19,15 @@
 package transactions
 
 import (
+	"context"
 	"fmt"
+	"github.com/onflow/flow-cli/pkg/flowkit/output"
 
 	"github.com/onflow/cadence"
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/pkg/flowkit"
-	"github.com/onflow/flow-cli/pkg/flowkit/services"
 )
 
 type flagsSend struct {
@@ -55,9 +56,9 @@ var SendCommand = &command.Command{
 
 func send(
 	args []string,
-	readerWriter flowkit.ReaderWriter,
 	globalFlags command.GlobalFlags,
-	srv *services.Services,
+	_ output.Logger,
+	flow flowkit.Services,
 	state *flowkit.State,
 ) (result command.Result, err error) {
 	codeFilename := args[0]
@@ -80,13 +81,13 @@ func send(
 		}
 	}
 
-	var authorizers []*flowkit.Account
+	var authorizers []flowkit.Account
 	for _, authorizerName := range sendFlags.Autorizer {
 		authorizer, err := state.Accounts().ByName(authorizerName)
 		if err != nil {
 			return nil, fmt.Errorf("authorizer account: [%s] doesn't exists in configuration", authorizerName)
 		}
-		authorizers = append(authorizers, authorizer)
+		authorizers = append(authorizers, *authorizer)
 	}
 
 	signerName := sendFlags.Signer
@@ -105,10 +106,10 @@ func send(
 		}
 		proposer = signer
 		payer = signer
-		authorizers = append(authorizers, signer)
+		authorizers = append(authorizers, *signer)
 	}
 
-	code, err := readerWriter.ReadFile(codeFilename)
+	code, err := state.ReadFile(codeFilename)
 	if err != nil {
 		return nil, fmt.Errorf("error loading transaction file: %w", err)
 	}
@@ -123,16 +124,16 @@ func send(
 		return nil, fmt.Errorf("error parsing transaction arguments: %w", err)
 	}
 
-	roles, err := services.NewTransactionAccountRoles(proposer, payer, authorizers)
-	if err != nil {
-		return nil, fmt.Errorf("error parsing transaction roles: %w", err)
-	}
-
-	tx, txResult, err := srv.Transactions.Send(
-		roles,
+	tx, txResult, err := flow.SendTransaction(
+		context.Background(),
+		&flowkit.TransactionAccountRoles{
+			Proposer:    *proposer,
+			Authorizers: authorizers,
+			Payer:       *payer,
+		},
 		flowkit.NewScript(code, transactionArgs, codeFilename),
 		sendFlags.GasLimit,
-		globalFlags.Network)
+	)
 
 	if err != nil {
 		return nil, err

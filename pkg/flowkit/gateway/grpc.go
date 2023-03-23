@@ -30,6 +30,8 @@ import (
 	"github.com/onflow/flow-go/utils/grpcutils"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+
+	"github.com/onflow/flow-cli/pkg/flowkit/config"
 )
 
 // maxGRPCMessageSize 20mb, matching the value set in onflow/flow-go
@@ -44,17 +46,17 @@ type GrpcGateway struct {
 }
 
 // NewGrpcGateway returns a new gRPC gateway.
-func NewGrpcGateway(host string) (*GrpcGateway, error) {
+func NewGrpcGateway(network config.Network) (*GrpcGateway, error) {
 
 	gClient, err := grpcAccess.NewClient(
-		host,
+		network.Host,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(maxGRPCMessageSize)),
 	)
 	ctx := context.Background()
 
 	if err != nil || gClient == nil {
-		return nil, fmt.Errorf("failed to connect to host %s", host)
+		return nil, fmt.Errorf("failed to connect to host %s", network.Host)
 	}
 
 	return &GrpcGateway{
@@ -65,21 +67,21 @@ func NewGrpcGateway(host string) (*GrpcGateway, error) {
 }
 
 // NewSecureGrpcGateway returns a new gRPC gateway with a secure client connection.
-func NewSecureGrpcGateway(host, hostNetworkKey string) (*GrpcGateway, error) {
-	secureDialOpts, err := grpcutils.SecureGRPCDialOpt(strings.TrimPrefix(hostNetworkKey, "0x"))
+func NewSecureGrpcGateway(network config.Network) (*GrpcGateway, error) {
+	secureDialOpts, err := grpcutils.SecureGRPCDialOpt(strings.TrimPrefix(network.Key, "0x"))
 	if err != nil {
-		return nil, fmt.Errorf("failed to create secure GRPC dial options with network key \"%s\": %w", hostNetworkKey, err)
+		return nil, fmt.Errorf("failed to create secure GRPC dial options with network key \"%s\": %w", network.Key, err)
 	}
 
 	gClient, err := grpcAccess.NewClient(
-		host,
+		network.Host,
 		secureDialOpts,
 		grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(maxGRPCMessageSize)),
 	)
 	ctx := context.Background()
 
 	if err != nil || gClient == nil {
-		return nil, fmt.Errorf("failed to connect to host %s", host)
+		return nil, fmt.Errorf("failed to connect to host %s", network.Host)
 	}
 
 	return &GrpcGateway{

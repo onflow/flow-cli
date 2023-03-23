@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"strconv"
 	"strings"
 	"sync"
 
@@ -28,10 +29,10 @@ import (
 )
 
 type Key struct { // todo remove?
-	public   crypto.PublicKey
-	weight   int
-	sigAlgo  crypto.SignatureAlgorithm
-	hashAlgo crypto.HashAlgorithm
+	Public   crypto.PublicKey
+	Weight   int
+	SigAlgo  crypto.SignatureAlgorithm
+	HashAlgo crypto.HashAlgorithm
 }
 
 type BlockQuery struct {
@@ -40,14 +41,30 @@ type BlockQuery struct {
 	Latest bool
 }
 
+func NewBlockQuery(query string) (BlockQuery, error) {
+	if query == "latest" {
+		return BlockQuery{Latest: true}, nil
+	}
+	if height, ce := strconv.ParseUint(query, 10, 64); ce == nil {
+		return BlockQuery{Height: height}, nil
+	}
+	if id := flow.HexToID(query); id != flow.EmptyID {
+		return BlockQuery{ID: &id}, nil
+	}
+
+	return BlockQuery{}, fmt.Errorf("invalid query: %s, valid are: \"latest\", block height or block ID", query)
+}
+
 type EventWorker struct {
-	count           int
-	blocksPerWorker uint64
+	Count           int
+	BlocksPerWorker uint64
 }
 
 type Services interface {
 	Network() config.Network
 	Ping() error
+	Gateway() gateway.Gateway
+	SetLogger(output.Logger)
 	GetAccount(context.Context, flow.Address) (*flow.Account, error)
 	CreateAccount(context.Context, *Account, []Key) (*flow.Account, flow.Identifier, error)
 	AddContract(context.Context, *Account, *Script, bool) (flow.Identifier, bool, error)
@@ -65,11 +82,20 @@ type Services interface {
 	BuildTransaction(context.Context, *TransactionAddressesRoles, int, *Script, uint64) (*Transaction, error)
 	SignTransactionPayload(context.Context, *Account, []byte) (*Transaction, error)
 	SendSignedTransaction(context.Context, *Transaction) (*flow.Transaction, *flow.TransactionResult, error)
-	SendTransaction(context.Context, *transactionAccountRoles, *Script, uint64) (*flow.Transaction, *flow.TransactionResult, error)
+	SendTransaction(context.Context, *TransactionAccountRoles, *Script, uint64) (*flow.Transaction, *flow.TransactionResult, error)
 	Test(context.Context, []byte, string) (cdcTests.Results, error)
 }
 
 var _ Services = &Flowkit{}
+
+func NewFlowkit(
+	state *State,
+	network config.Network,
+	gateway gateway.Gateway,
+	logger output.Logger,
+) *Flowkit {
+	return &Flowkit{state, network, gateway, logger}
+}
 
 type Flowkit struct {
 	state   *State
@@ -80,6 +106,14 @@ type Flowkit struct {
 
 func (f *Flowkit) Network() config.Network {
 	return f.network // todo define empty network type in config config.EmptyNetwork
+}
+
+func (f *Flowkit) Gateway() gateway.Gateway {
+	return f.gateway
+}
+
+func (f *Flowkit) SetLogger(logger output.Logger) {
+	f.logger = logger
 }
 
 func (f *Flowkit) State() (*State, error) {
@@ -114,15 +148,15 @@ func (f *Flowkit) CreateAccount(
 ) (*flow.Account, flow.Identifier, error) {
 	var accKeys []*flow.AccountKey
 	for _, k := range keys {
-		if k.weight == 0 { // if key weight is specified
-			k.weight = flow.AccountKeyWeightThreshold
+		if k.Weight == 0 { // if key weight is specified
+			k.Weight = flow.AccountKeyWeightThreshold
 		}
 
 		accKey := &flow.AccountKey{
-			PublicKey: k.public,
-			SigAlgo:   k.sigAlgo,
-			HashAlgo:  k.hashAlgo,
-			Weight:    k.weight,
+			PublicKey: k.Public,
+			SigAlgo:   k.SigAlgo,
+			HashAlgo:  k.HashAlgo,
+			Weight:    k.Weight,
 		}
 
 		err := accKey.Validate()
@@ -453,19 +487,19 @@ func (f *Flowkit) GetEvents(
 
 	if worker == nil { // if no worker is passed, create a default one
 		worker = &EventWorker{
-			count:           1,
-			blocksPerWorker: 250,
+			Count:           1,
+			BlocksPerWorker: 250,
 		}
 	}
 
-	queries := makeEventQueries(names, startHeight, endHeight, worker.blocksPerWorker)
+	queries := makeEventQueries(names, startHeight, endHeight, worker.BlocksPerWorker)
 
-	jobChan := make(chan grpc.EventRangeQuery, worker.count)
+	jobChan := make(chan grpc.EventRangeQuery, worker.Count)
 	results := make(chan EventWorkerResult)
 
 	var wg sync.WaitGroup
 
-	for i := 0; i < worker.count; i++ {
+	for i := 0; i < worker.Count; i++ {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
@@ -861,13 +895,13 @@ func (f *Flowkit) BuildTransaction(
 		return nil, fmt.Errorf("failed to get latest sealed block: %w", err)
 	}
 
-	proposerAccount, err := f.gateway.GetAccount(addresses.proposer)
+	proposerAccount, err := f.gateway.GetAccount(addresses.Proposer)
 	if err != nil {
 		return nil, err
 	}
 
 	tx := NewTransaction().
-		SetPayer(addresses.payer).
+		SetPayer(addresses.Payer).
 		SetGasLimit(gasLimit).
 		SetBlockReference(latestBlock)
 
@@ -908,7 +942,7 @@ func (f *Flowkit) BuildTransaction(
 		return nil, err
 	}
 
-	tx, err = tx.AddAuthorizers(addresses.authorizers)
+	tx, err = tx.AddAuthorizers(addresses.Authorizers)
 	if err != nil {
 		return nil, err
 	}
@@ -964,14 +998,14 @@ func (f *Flowkit) SendSignedTransaction(
 // contain the script. Transaction as well as transaction result will be returned in case the transaction is successfully submitted.
 func (f *Flowkit) SendTransaction(
 	ctx context.Context,
-	accounts *transactionAccountRoles,
+	accounts *TransactionAccountRoles,
 	script *Script,
 	gasLimit uint64,
 ) (*flow.Transaction, *flow.TransactionResult, error) {
 	tx, err := f.BuildTransaction(
 		ctx,
 		accounts.toAddresses(),
-		accounts.proposer.Key().Index(),
+		accounts.Proposer.Key().Index(),
 		script,
 		gasLimit,
 	)

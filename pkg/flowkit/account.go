@@ -48,7 +48,7 @@ func NewAccount(name string) *Account {
 // NewAccountFromOnChainAccount creates a new flowkit account definition
 // that mirrors an already-existing on-chain Flow account.
 //
-// This function requires the on-chain account to have exactly one public key
+// This function requires the on-chain account to have exactly one Public key
 // with full signing weight (1000). This ensures that the user has complete
 // and sole control over the on-chain account.
 func NewAccountFromOnChainAccount(
@@ -78,7 +78,7 @@ func NewAccountFromOnChainAccount(
 
 	if !offChainPublicKey.Equals(onChainPublicKey) {
 		return nil, fmt.Errorf(
-			"expected on-chain account public key to match (%s), but got %s",
+			"expected on-chain account Public key to match (%s), but got %s",
 			offChainPublicKey.String(),
 			onChainPublicKey.String(),
 		)
