@@ -788,8 +788,8 @@ github.com/onflow/nft-storefront/lib/go/contracts v0.0.0-20221222181731-14b90207
 github.com/onflow/nft-storefront/lib/go/contracts v0.0.0-20221222181731-14b90207cead/go.mod h1:E3ScfQb5XcWJCIAdtIeEnr5i5l2y60GT0BTXeIHseWg=
 github.com/onflow/sdks v0.5.0 h1:2HCRibwqDaQ1c9oUApnkZtEAhWiNY2GTpRD5+ftdkN8=
 github.com/onflow/sdks v0.5.0/go.mod h1:F0dj0EyHC55kknLkeD10js4mo14yTdMotnWMslPirrU=
-github.com/onflowser/flowser/v2 v2.0.9-beta h1:U59WUu/u0ZPDlbFcGs66fVjYektxqeunAPQLK0no2jA=
-github.com/onflowser/flowser/v2 v2.0.9-beta/go.mod h1:g/nfelBOx0A4j60Twsr7GsmKapr2oxtRZQS0lwPHgZY=
+github.com/onflowser/flowser/v2 v2.0.14-beta h1:yvmXyGUkR7e0+Z1t7Gyn+p2Q+CpUmgsqF01M7EtNr3k=
+github.com/onflowser/flowser/v2 v2.0.14-beta/go.mod h1:g/nfelBOx0A4j60Twsr7GsmKapr2oxtRZQS0lwPHgZY=
 github.com/onsi/ginkgo v1.6.0/go.mod h1:lLunBs/Ym6LB5Z9jYTR76FiuTmxDTDusOGeTQH+WWjE=
 github.com/onsi/ginkgo v1.7.0/go.mod h1:lLunBs/Ym6LB5Z9jYTR76FiuTmxDTDusOGeTQH+WWjE=
 github.com/onsi/ginkgo v1.16.5 h1:8xi0RTUf59SOSfEtZMvwTvXYMzG4gV23XVHOZiXNtnE=
