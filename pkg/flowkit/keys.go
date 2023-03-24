@@ -28,10 +28,10 @@ import (
 	"strings"
 
 	goeth "github.com/ethereum/go-ethereum/accounts"
-	slip10 "github.com/lmars/go-slip10"
+	"github.com/lmars/go-slip10"
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/onflow/flow-go-sdk/crypto/cloudkms"
-	bip39 "github.com/tyler-smith/go-bip39"
+	"github.com/tyler-smith/go-bip39"
 
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
 )

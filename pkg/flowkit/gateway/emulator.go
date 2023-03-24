@@ -75,27 +75,9 @@ func NewEmulatorGatewayWithOpts(key *EmulatorKey, opts ...func(*EmulatorGateway)
 	return gateway
 }
 
-func WithLogger(logger *logrus.Logger) func(g *EmulatorGateway) {
-	return func(g *EmulatorGateway) {
-		g.logger = logger
-	}
-}
-
 func WithEmulatorOptions(options ...emulator.Option) func(g *EmulatorGateway) {
 	return func(g *EmulatorGateway) {
 		g.emulatorOptions = append(g.emulatorOptions, options...)
-	}
-}
-
-func WithEmulatorLogger(logger *zerolog.Logger) func(g *EmulatorGateway) {
-	return func(g *EmulatorGateway) {
-		g.emulatorOptions = append(g.emulatorOptions, emulator.WithLogger(*logger))
-	}
-}
-
-func WithContext(ctx context.Context) func(g *EmulatorGateway) {
-	return func(g *EmulatorGateway) {
-		g.ctx = ctx
 	}
 }
 

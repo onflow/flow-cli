@@ -20,15 +20,13 @@ package output
 
 import (
 	"fmt"
-	"os"
-	"path"
-	"strings"
-
 	"github.com/gosuri/uilive"
 	"github.com/manifoldco/promptui"
 	"github.com/onflow/flow-go-sdk"
 	"golang.org/x/exp/maps"
 	"golang.org/x/exp/slices"
+	"os"
+	"path"
 
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
 	"github.com/onflow/flow-cli/pkg/flowkit/util"
@@ -550,32 +548,6 @@ func CreateAccountNetworkPrompt() (string, config.Network) {
 	fmt.Println("")
 
 	return selectedNetwork, networkMap[selectedNetwork]
-}
-
-func WantToContinue() bool {
-	prompt := promptui.Prompt{
-		Label:       "Do you want to continue",
-		IsConfirm:   true,
-		HideEntered: true,
-	}
-	selected, err := prompt.Run()
-	if err == promptui.ErrInterrupt {
-		os.Exit(-1)
-	}
-
-	fmt.Print("\033[1A\033[K")
-	return strings.ToLower(selected) == "y"
-}
-
-func ConfirmOpenBrowser() {
-	prompt := promptui.Prompt{
-		Label:       "Press <ENTER> to open in your browser...",
-		HideEntered: true,
-	}
-	_, err := prompt.Run()
-	if err == promptui.ErrInterrupt {
-		os.Exit(-1)
-	}
 }
 
 func WantToUseMainnetVersionPrompt() bool {

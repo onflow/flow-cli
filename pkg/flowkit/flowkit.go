@@ -110,12 +110,12 @@ func (f *Flowkit) Ping() error {
 	return f.gateway.Ping()
 }
 
-func (f *Flowkit) GetAccount(ctx context.Context, address flow.Address) (*flow.Account, error) {
+func (f *Flowkit) GetAccount(_ context.Context, address flow.Address) (*flow.Account, error) {
 	return f.gateway.GetAccount(address)
 }
 
 func (f *Flowkit) CreateAccount(
-	ctx context.Context,
+	_ context.Context,
 	signer *Account,
 	keys []AccountPublicKey,
 ) (*flow.Account, flow.Identifier, error) {
@@ -217,7 +217,7 @@ func (f *Flowkit) prepareTransaction(
 var errUpdateNoDiff = errors.New("contract already exists and is the same as the contract provided for update")
 
 func (f *Flowkit) AddContract(
-	ctx context.Context,
+	_ context.Context,
 	account *Account,
 	contract *Script,
 	updateExisting bool,
@@ -336,7 +336,7 @@ func (f *Flowkit) AddContract(
 }
 
 func (f *Flowkit) RemoveContract(
-	ctx context.Context,
+	_ context.Context,
 	account *Account,
 	contractName string,
 ) (flow.Identifier, error) {
@@ -394,7 +394,7 @@ func (f *Flowkit) RemoveContract(
 	return sentTx.ID(), nil
 }
 
-func (f *Flowkit) GetBlock(ctx context.Context, query BlockQuery) (*flow.Block, error) {
+func (f *Flowkit) GetBlock(_ context.Context, query BlockQuery) (*flow.Block, error) {
 	var err error
 	var block *flow.Block
 	if query.Latest {
@@ -420,12 +420,12 @@ func (f *Flowkit) GetBlock(ctx context.Context, query BlockQuery) (*flow.Block, 
 	return block, err
 }
 
-func (f *Flowkit) GetCollection(ctx context.Context, ID flow.Identifier) (*flow.Collection, error) {
+func (f *Flowkit) GetCollection(_ context.Context, ID flow.Identifier) (*flow.Collection, error) {
 	return f.gateway.GetCollection(ID)
 }
 
 func (f *Flowkit) GetEvents(
-	ctx context.Context,
+	_ context.Context,
 	names []string,
 	startHeight uint64,
 	endHeight uint64,
@@ -525,7 +525,7 @@ func makeEventQueries(
 }
 
 func (f *Flowkit) GenerateKey(
-	ctx context.Context,
+	_ context.Context,
 	sigAlgo crypto.SignatureAlgorithm,
 	inputSeed string,
 ) (crypto.PrivateKey, error) {
@@ -550,7 +550,7 @@ func (f *Flowkit) GenerateKey(
 }
 
 func (f *Flowkit) GenerateMnemonicKey(
-	ctx context.Context,
+	_ context.Context,
 	sigAlgo crypto.SignatureAlgorithm,
 	derivationPath string,
 ) (crypto.PrivateKey, string, error) {
@@ -578,7 +578,7 @@ func (f *Flowkit) GenerateMnemonicKey(
 }
 
 func (f *Flowkit) DerivePrivateKeyFromMnemonic(
-	ctx context.Context,
+	_ context.Context,
 	mnemonic string,
 	sigAlgo crypto.SignatureAlgorithm,
 	derivationPath string,
@@ -736,7 +736,7 @@ func (d *ProjectDeploymentError) Error() string {
 	return err
 }
 
-func (f *Flowkit) ExecuteScript(ctx context.Context, script *Script) (cadence.Value, error) {
+func (f *Flowkit) ExecuteScript(_ context.Context, script *Script) (cadence.Value, error) {
 	state, err := f.State()
 	if err != nil {
 		return nil, err
@@ -778,7 +778,7 @@ func (f *Flowkit) ExecuteScript(ctx context.Context, script *Script) (cadence.Va
 }
 
 func (f *Flowkit) GetTransactionByID(
-	ctx context.Context,
+	_ context.Context,
 	ID flow.Identifier,
 	waitSeal bool,
 ) (*flow.Transaction, *flow.TransactionResult, error) {
@@ -799,7 +799,7 @@ func (f *Flowkit) GetTransactionByID(
 }
 
 func (f *Flowkit) GetTransactionsByBlockID(
-	ctx context.Context,
+	_ context.Context,
 	blockID flow.Identifier,
 ) ([]*flow.Transaction, []*flow.TransactionResult, error) {
 	tx, err := f.gateway.GetTransactionsByBlockID(blockID)
@@ -815,7 +815,7 @@ func (f *Flowkit) GetTransactionsByBlockID(
 }
 
 func (f *Flowkit) BuildTransaction(
-	ctx context.Context,
+	_ context.Context,
 	addresses *TransactionAddressesRoles,
 	proposerKeyIndex int,
 	script *Script,
@@ -887,7 +887,7 @@ func (f *Flowkit) BuildTransaction(
 }
 
 func (f *Flowkit) SignTransactionPayload(
-	ctx context.Context,
+	_ context.Context,
 	signer *Account,
 	payload []byte,
 ) (*Transaction, error) {
@@ -905,7 +905,7 @@ func (f *Flowkit) SignTransactionPayload(
 }
 
 func (f *Flowkit) SendSignedTransaction(
-	ctx context.Context,
+	_ context.Context,
 	tx *Transaction,
 ) (*flow.Transaction, *flow.TransactionResult, error) {
 	sentTx, err := f.gateway.SendSignedTransaction(tx.FlowTransaction())
@@ -967,7 +967,7 @@ func (f *Flowkit) SendTransaction(
 	return sentTx, res, err
 }
 
-func (f *Flowkit) Test(ctx context.Context, code []byte, scriptPath string) (cdcTests.Results, error) {
+func (f *Flowkit) Test(_ context.Context, code []byte, scriptPath string) (cdcTests.Results, error) {
 	runner := cdcTests.NewTestRunner().
 		WithImportResolver(f.importResolver(scriptPath)).
 		WithFileResolver(f.fileResolver(scriptPath))

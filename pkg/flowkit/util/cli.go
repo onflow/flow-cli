@@ -16,7 +16,6 @@
  * limitations under the License.
  */
 
-// Package cli defines constants, configurations, and utilities that are used across the Flow CLI.
 package util
 
 import (

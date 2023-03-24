@@ -28,8 +28,6 @@ import (
 	"github.com/onflow/flow-go-sdk/crypto"
 )
 
-const addressLength = 16
-
 type Event struct {
 	Type   string
 	Values map[string]cadence.Value
@@ -53,14 +51,6 @@ func EventsFromTransaction(tx *flow.TransactionResult) Events {
 	}
 
 	return events
-}
-
-func NewEvents(events []flow.Event) Events {
-	flowkitEvents := make(Events, len(events))
-	for i, e := range events {
-		flowkitEvents[i] = NewEvent(e)
-	}
-	return flowkitEvents
 }
 
 func NewEvent(event flow.Event) Event {
