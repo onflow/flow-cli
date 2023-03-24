@@ -20,8 +20,11 @@ package tests
 
 import (
 	"fmt"
-
+	"github.com/onflow/cadence"
+	"github.com/onflow/cadence/runtime/common"
+	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
+	"github.com/onflow/flow-go-sdk/test"
 	"github.com/spf13/afero"
 )
 
@@ -329,7 +332,9 @@ var resources = []Resource{
 	ContractHelloString,
 	TransactionArgString,
 	ScriptArgString,
+	TestScriptSimple,
 	ContractSimple,
+	ContractSimpleWithArgs,
 	ContractSimpleUpdated,
 	TransactionSimple,
 	ScriptImport,
@@ -387,4 +392,83 @@ func HashAlgos() []crypto.HashAlgorithm {
 		hashAlgos = append(hashAlgos, crypto.SHA3_256)
 	}
 	return hashAlgos
+}
+
+var accounts = test.AccountGenerator()
+
+var transactions = test.TransactionGenerator()
+
+var transactionResults = test.TransactionResultGenerator()
+
+func NewAccountWithAddress(address string) *flow.Account {
+	account := accounts.New()
+	account.Address = flow.HexToAddress(address)
+	return account
+}
+
+func NewTransaction() *flow.Transaction {
+	return transactions.New()
+}
+
+func NewBlock() *flow.Block {
+	return test.BlockGenerator().New()
+}
+
+func NewCollection() *flow.Collection {
+	return test.CollectionGenerator().New()
+}
+
+func NewEvent(index int, eventId string, fields []cadence.Field, values []cadence.Value) *flow.Event {
+	location := common.StringLocation("test")
+
+	testEventType := &cadence.EventType{
+		Location:            location,
+		QualifiedIdentifier: eventId,
+		Fields:              fields,
+	}
+
+	testEvent := cadence.
+		NewEvent(values).
+		WithType(testEventType)
+
+	typeID := location.TypeID(nil, eventId)
+
+	event := flow.Event{
+		Type:             string(typeID),
+		TransactionID:    flow.Identifier{},
+		TransactionIndex: index,
+		EventIndex:       index,
+		Value:            testEvent,
+	}
+
+	return &event
+}
+
+func NewTransactionResult(events []flow.Event) *flow.TransactionResult {
+	res := transactionResults.New()
+	res.Events = events
+	res.Error = nil
+
+	return &res
+}
+
+func NewAccountCreateResult(address flow.Address) *flow.TransactionResult {
+	events := []flow.Event{{
+		Type:             flow.EventAccountCreated,
+		TransactionID:    flow.Identifier{},
+		TransactionIndex: 0,
+		EventIndex:       0,
+		Value: cadence.Event{
+			EventType: cadence.NewEventType(common.NewStringLocation(nil, flow.EventAccountCreated), "", []cadence.Field{{
+				Identifier: "address",
+				Type:       cadence.AddressType{},
+			}}, nil),
+			Fields: []cadence.Value{
+				cadence.NewAddress(address),
+			},
+		},
+		Payload: nil,
+	}}
+
+	return NewTransactionResult(events)
 }

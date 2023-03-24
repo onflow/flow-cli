@@ -22,6 +22,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"golang.org/x/exp/slices"
 
 	flowsdk "github.com/onflow/flow-go-sdk"
 	"github.com/spf13/cobra"
@@ -51,14 +52,14 @@ var DeployCommand = &command.Command{
 
 func deploy(
 	_ []string,
-	_ command.GlobalFlags,
+	global command.GlobalFlags,
 	logger output.Logger,
 	flow flowkit.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
 
 	if flow.Network() == config.MainnetNetwork { // if using mainnet check for standard contract usage
-		err := checkForStandardContractUsageOnMainnet(state, logger)
+		err := checkForStandardContractUsageOnMainnet(state, logger, global.Yes)
 		if err != nil {
 			return nil, err
 		}
@@ -69,12 +70,12 @@ func deploy(
 		var projectErr *flowkit.ProjectDeploymentError
 		if errors.As(err, &projectErr) {
 			for name, err := range projectErr.Contracts() {
-				fmt.Printf(
-					"%s Failed to deploy contract %s: %s\n",
+				logger.Info(fmt.Sprintf(
+					"%s Failed to deploy contract %s: %s",
 					output.ErrorEmoji(),
 					name,
 					err.Error(),
-				)
+				))
 			}
 			return nil, fmt.Errorf("failed deploying all contracts")
 		}
@@ -109,7 +110,7 @@ func (r *DeployResult) Oneliner() string {
 // checkForStandardContractUsageOnMainnet checks if any contract defined to be used on mainnet
 // are referencing standard contract and if so warn the use that they should use the already
 // deployed contracts as an alias on mainnet instead of deploying their own copy.
-func checkForStandardContractUsageOnMainnet(state *flowkit.State, logger output.Logger) error {
+func checkForStandardContractUsageOnMainnet(state *flowkit.State, logger output.Logger, replace bool) error {
 	mainnetContracts := map[string]standardContract{
 		"FungibleToken": {
 			name:     "FungibleToken",
@@ -183,7 +184,7 @@ func checkForStandardContractUsageOnMainnet(state *flowkit.State, logger output.
 		logger.Info(fmt.Sprintf("It is a standard contract already deployed at address 0x%s \n", standardContract.address.String()))
 		logger.Info(fmt.Sprintf("You can read more about it here: %s \n", standardContract.infoLink))
 
-		if output.WantToUseMainnetVersionPrompt() {
+		if replace || output.WantToUseMainnetVersionPrompt() {
 			err := replaceContractWithAlias(state, standardContract)
 			if err != nil {
 				return err
@@ -212,7 +213,10 @@ func replaceContractWithAlias(state *flowkit.State, standardContract standardCon
 		}
 		for ci, c := range d.Contracts {
 			if c.Name == standardContract.name {
-				state.Config().Deployments[di].Contracts = append((d.Contracts)[0:ci], (d.Contracts)[ci+1:]...)
+				slices.Delete(state.Config().Deployments[di].Contracts, ci, ci+1)
+				if len(state.Config().Deployments[di].Contracts) == 0 {
+					slices.Delete(state.Config().Deployments, di, di+1) // remove deployment if it doesn't have contracts anymore
+				}
 				break
 			}
 		}

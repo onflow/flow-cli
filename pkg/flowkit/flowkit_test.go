@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"github.com/onflow/flow-cli/pkg/flowkit/gateway/mocks"
 	"os"
 	"strings"
 	"testing"
@@ -55,14 +56,14 @@ func newAccount(name string, address string, seed string) *Account {
 	return account
 }
 
-func setup() (*State, Flowkit, *tests.TestGateway) {
+func setup() (*State, Flowkit, *mocks.TestGateway) {
 	readerWriter, _ := tests.ReaderWriter()
 	state, err := Init(readerWriter, crypto.ECDSA_P256, crypto.SHA3_256)
 	if err != nil {
 		panic(err)
 	}
 
-	gw := tests.DefaultMockGateway()
+	gw := mocks.DefaultMockGateway()
 	flowkit := Flowkit{
 		state:   state,
 		network: config.EmulatorNetwork,
@@ -131,11 +132,11 @@ func TestAccounts(t *testing.T) {
 			}},
 		)
 
-		gw.Mock.AssertCalled(t, tests.GetAccountFunc, serviceAddress)
-		gw.Mock.AssertCalled(t, tests.GetAccountFunc, newAddress)
-		gw.Mock.AssertNumberOfCalls(t, tests.GetAccountFunc, 2)
-		gw.Mock.AssertNumberOfCalls(t, tests.GetTransactionResultFunc, 1)
-		gw.Mock.AssertNumberOfCalls(t, tests.SendSignedTransactionFunc, 1)
+		gw.Mock.AssertCalled(t, mocks.GetAccountFunc, serviceAddress)
+		gw.Mock.AssertCalled(t, mocks.GetAccountFunc, newAddress)
+		gw.Mock.AssertNumberOfCalls(t, mocks.GetAccountFunc, 2)
+		gw.Mock.AssertNumberOfCalls(t, mocks.GetTransactionResultFunc, 1)
+		gw.Mock.AssertNumberOfCalls(t, mocks.SendSignedTransactionFunc, 1)
 		assert.NotNil(t, account)
 		assert.NotNil(t, ID)
 		assert.Equal(t, account.Address, newAddress)
@@ -159,10 +160,10 @@ func TestAccounts(t *testing.T) {
 			false,
 		)
 
-		gw.Mock.AssertCalled(t, tests.GetAccountFunc, serviceAddress)
-		gw.Mock.AssertNumberOfCalls(t, tests.GetAccountFunc, 2)
-		gw.Mock.AssertNumberOfCalls(t, tests.GetTransactionResultFunc, 1)
-		gw.Mock.AssertNumberOfCalls(t, tests.SendSignedTransactionFunc, 1)
+		gw.Mock.AssertCalled(t, mocks.GetAccountFunc, serviceAddress)
+		gw.Mock.AssertNumberOfCalls(t, mocks.GetAccountFunc, 2)
+		gw.Mock.AssertNumberOfCalls(t, mocks.GetTransactionResultFunc, 1)
+		gw.Mock.AssertNumberOfCalls(t, mocks.SendSignedTransactionFunc, 1)
 		assert.NotNil(t, ID)
 		assert.NoError(t, err)
 	})
@@ -194,10 +195,10 @@ func TestAccounts(t *testing.T) {
 			tests.ContractHelloString.Name,
 		)
 
-		gw.Mock.AssertCalled(t, tests.GetAccountFunc, serviceAddress)
-		gw.Mock.AssertNumberOfCalls(t, tests.GetAccountFunc, 2)
-		gw.Mock.AssertNumberOfCalls(t, tests.GetTransactionResultFunc, 1)
-		gw.Mock.AssertNumberOfCalls(t, tests.SendSignedTransactionFunc, 1)
+		gw.Mock.AssertCalled(t, mocks.GetAccountFunc, serviceAddress)
+		gw.Mock.AssertNumberOfCalls(t, mocks.GetAccountFunc, 2)
+		gw.Mock.AssertNumberOfCalls(t, mocks.GetTransactionResultFunc, 1)
+		gw.Mock.AssertNumberOfCalls(t, mocks.SendSignedTransactionFunc, 1)
 		assert.NotNil(t, account)
 		assert.NoError(t, err)
 	})
@@ -551,9 +552,9 @@ func TestBlocks(t *testing.T) {
 
 		_, err := flowkit.GetBlock(ctx, BlockQuery{Latest: true})
 
-		gw.Mock.AssertCalled(t, tests.GetLatestBlockFunc)
-		gw.Mock.AssertNotCalled(t, tests.GetBlockByHeightFunc)
-		gw.Mock.AssertNotCalled(t, tests.GetBlockByIDFunc)
+		gw.Mock.AssertCalled(t, mocks.GetLatestBlockFunc)
+		gw.Mock.AssertNotCalled(t, mocks.GetBlockByHeightFunc)
+		gw.Mock.AssertNotCalled(t, mocks.GetBlockByIDFunc)
 		assert.NoError(t, err)
 	})
 
@@ -568,9 +569,9 @@ func TestBlocks(t *testing.T) {
 
 		_, err := flowkit.GetBlock(ctx, BlockQuery{Height: 10})
 
-		gw.Mock.AssertCalled(t, tests.GetBlockByHeightFunc, uint64(10))
-		gw.Mock.AssertNotCalled(t, tests.GetLatestBlockFunc)
-		gw.Mock.AssertNotCalled(t, tests.GetBlockByIDFunc)
+		gw.Mock.AssertCalled(t, mocks.GetBlockByHeightFunc, uint64(10))
+		gw.Mock.AssertNotCalled(t, mocks.GetLatestBlockFunc)
+		gw.Mock.AssertNotCalled(t, mocks.GetBlockByIDFunc)
 		assert.NoError(t, err)
 	})
 
@@ -582,9 +583,9 @@ func TestBlocks(t *testing.T) {
 		_, err := flowkit.GetBlock(ctx, BlockQuery{ID: &ID})
 
 		assert.NoError(t, err)
-		gw.Mock.AssertCalled(t, tests.GetBlockByIDFunc, ID)
-		gw.Mock.AssertNotCalled(t, tests.GetBlockByHeightFunc)
-		gw.Mock.AssertNotCalled(t, tests.GetLatestBlockFunc)
+		gw.Mock.AssertCalled(t, mocks.GetBlockByIDFunc, ID)
+		gw.Mock.AssertNotCalled(t, mocks.GetBlockByHeightFunc)
+		gw.Mock.AssertNotCalled(t, mocks.GetLatestBlockFunc)
 	})
 
 }
@@ -622,7 +623,7 @@ func TestEvents(t *testing.T) {
 		_, err := flowkit.GetEvents(ctx, []string{"flow.CreateAccount"}, 0, 0, nil)
 
 		assert.NoError(t, err)
-		gw.Mock.AssertCalled(t, tests.GetEventsFunc, "flow.CreateAccount", uint64(0), uint64(0))
+		gw.Mock.AssertCalled(t, mocks.GetEventsFunc, "flow.CreateAccount", uint64(0), uint64(0))
 	})
 
 	t.Run("Should have larger endHeight then startHeight", func(t *testing.T) {
@@ -963,9 +964,9 @@ func TestProject(t *testing.T) {
 
 		assert.NoError(t, err)
 		assert.Equal(t, len(contracts), 2)
-		gw.Mock.AssertCalled(t, tests.GetLatestBlockFunc)
-		gw.Mock.AssertCalled(t, tests.GetAccountFunc, a.Address())
-		gw.Mock.AssertNumberOfCalls(t, tests.GetTransactionResultFunc, 2)
+		gw.Mock.AssertCalled(t, mocks.GetLatestBlockFunc)
+		gw.Mock.AssertCalled(t, mocks.GetAccountFunc, a.Address())
+		gw.Mock.AssertNumberOfCalls(t, mocks.GetTransactionResultFunc, 2)
 	})
 
 	t.Run("Deploy Project New Import Schema and LocationAliases", func(t *testing.T) {
@@ -1040,9 +1041,9 @@ func TestProject(t *testing.T) {
 
 		assert.NoError(t, err)
 		assert.Equal(t, len(contracts), 2)
-		gw.Mock.AssertCalled(t, tests.GetLatestBlockFunc)
-		gw.Mock.AssertCalled(t, tests.GetAccountFunc, a.Address())
-		gw.Mock.AssertNumberOfCalls(t, tests.GetTransactionResultFunc, 2)
+		gw.Mock.AssertCalled(t, mocks.GetLatestBlockFunc)
+		gw.Mock.AssertCalled(t, mocks.GetAccountFunc, a.Address())
+		gw.Mock.AssertNumberOfCalls(t, mocks.GetTransactionResultFunc, 2)
 	})
 
 	t.Run("Deploy Project Duplicate Address", func(t *testing.T) {
@@ -1408,8 +1409,8 @@ func TestTransactions(t *testing.T) {
 		_, _, err := flowkit.GetTransactionByID(ctx, txs.ID(), true)
 
 		assert.NoError(t, err)
-		gw.Mock.AssertNumberOfCalls(t, tests.GetTransactionResultFunc, 1)
-		gw.Mock.AssertCalled(t, tests.GetTransactionFunc, txs.ID())
+		gw.Mock.AssertNumberOfCalls(t, mocks.GetTransactionResultFunc, 1)
+		gw.Mock.AssertCalled(t, mocks.GetTransactionFunc, txs.ID())
 	})
 
 	t.Run("Send Transaction args", func(t *testing.T) {
@@ -1447,8 +1448,8 @@ func TestTransactions(t *testing.T) {
 		)
 
 		assert.NoError(t, err)
-		gw.Mock.AssertNumberOfCalls(t, tests.SendSignedTransactionFunc, 1)
-		gw.Mock.AssertNumberOfCalls(t, tests.GetTransactionResultFunc, 1)
+		gw.Mock.AssertNumberOfCalls(t, mocks.SendSignedTransactionFunc, 1)
+		gw.Mock.AssertNumberOfCalls(t, mocks.GetTransactionResultFunc, 1)
 	})
 
 }

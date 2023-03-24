@@ -49,7 +49,7 @@ var ExecuteCommand = &command.Command{
 
 func execute(
 	args []string,
-	globalFlags command.GlobalFlags,
+	_ command.GlobalFlags,
 	_ output.Logger,
 	readerWriter flowkit.ReaderWriter,
 	flow flowkit.Services,

@@ -34,7 +34,7 @@ import (
 type flagsCreate struct {
 	Signer    string   `default:"emulator-account" flag:"signer" info:"Account name from configuration used to sign the transaction"`
 	Keys      []string `flag:"key" info:"Public keys to attach to account"`
-	Weights   []int    `flag:"key-weight" info:"Weight for the key"`
+	Weights   []int    `default:"1000" flag:"key-weight" info:"Weight for the key"`
 	SigAlgo   []string `default:"ECDSA_P256" flag:"sig-algo" info:"Signature algorithm used to generate the keys"`
 	HashAlgo  []string `default:"SHA3_256" flag:"hash-algo" info:"Hash used for the digest"`
 	Contracts []string `flag:"contract" info:"Contract to be deployed during account creation. <name:filename>"`
@@ -56,12 +56,16 @@ var CreateCommand = &command.Command{
 func create(
 	_ []string,
 	_ command.GlobalFlags,
-	logger output.Logger,
+	_ output.Logger,
 	flow flowkit.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
-	// if user doesn't provide any flags go into interactive mode
-	if len(createFlags.Keys) == 0 {
+	sigsFlag := createFlags.SigAlgo
+	hashFlag := createFlags.HashAlgo
+	keysFlag := createFlags.Keys
+	weightFlag := createFlags.Weights
+
+	if len(keysFlag) == 0 { // if user doesn't provide any flags go into interactive mode
 		return nil, createInteractive(state)
 	}
 
@@ -70,33 +74,33 @@ func create(
 		return nil, err
 	}
 
-	if len(createFlags.SigAlgo) == 1 && len(createFlags.HashAlgo) == 1 {
+	if len(sigsFlag) == 1 && len(hashFlag) == 1 {
 		// Fill up depending on size of key input
 		if len(createFlags.Keys) > 1 {
 			for i := 1; i < len(createFlags.Keys); i++ {
-				createFlags.SigAlgo = append(createFlags.SigAlgo, createFlags.SigAlgo[0])
-				createFlags.HashAlgo = append(createFlags.HashAlgo, createFlags.HashAlgo[0])
+				sigsFlag = append(sigsFlag, sigsFlag[0])
+				hashFlag = append(hashFlag, hashFlag[0])
 			}
-			// Deprecated usage message?
 		}
-
-	} else if len(createFlags.Keys) != len(createFlags.SigAlgo) || len(createFlags.SigAlgo) != len(createFlags.HashAlgo) { // double check matching array lengths on inputs
-		return nil, fmt.Errorf("must provide a signature and hash algorithm for every key provided to --key: %d keys, %d signature algo, %d hash algo", len(createFlags.Keys), len(createFlags.SigAlgo), len(createFlags.HashAlgo))
+	} else if len(keysFlag) != len(sigsFlag) || len(sigsFlag) != len(hashFlag) { // double check matching array lengths on inputs
+		return nil, fmt.Errorf("must provide a signature and hash algorithm for every key provided to --key: %d keys, %d signature algo, %d hash algo", len(keysFlag), len(sigsFlag), len(hashFlag))
 	}
 
-	keyWeights := createFlags.Weights
+	if len(keysFlag) != len(weightFlag) {
+		return nil, fmt.Errorf("must provide a key weight for each key provided, keys provided: %d, weights provided: %d", len(keysFlag), len(weightFlag))
+	}
 
-	sigAlgos, err := parseSignatureAlgorithms(createFlags.SigAlgo)
+	sigAlgos, err := parseSignatureAlgorithms(sigsFlag)
 	if err != nil {
 		return nil, err
 	}
 
-	hashAlgos, err := parseHashingAlgorithms(createFlags.HashAlgo)
+	hashAlgos, err := parseHashingAlgorithms(hashFlag)
 	if err != nil {
 		return nil, err
 	}
 
-	pubKeys, err := parsePublicKeys(createFlags.Keys, sigAlgos)
+	pubKeys, err := parsePublicKeys(keysFlag, sigAlgos)
 	if err != nil {
 		return nil, err
 	}
@@ -104,7 +108,7 @@ func create(
 	keys := make([]flowkit.Key, len(pubKeys))
 	for i, key := range pubKeys {
 		keys[i] = flowkit.Key{
-			Public: key, Weight: keyWeights[i], SigAlgo: sigAlgos[i], HashAlgo: hashAlgos[i],
+			Public: key, Weight: weightFlag[i], SigAlgo: sigAlgos[i], HashAlgo: hashAlgos[i],
 		}
 	}
 
@@ -126,11 +130,11 @@ func create(
 }
 
 func parseHashingAlgorithms(algorithms []string) ([]crypto.HashAlgorithm, error) {
-	hashAlgos := make([]crypto.HashAlgorithm, 0, len(createFlags.HashAlgo))
+	hashAlgos := make([]crypto.HashAlgorithm, 0, len(algorithms))
 	for _, hashAlgoStr := range algorithms {
 		hashAlgo := crypto.StringToHashAlgorithm(hashAlgoStr)
 		if hashAlgo == crypto.UnknownHashAlgorithm {
-			return nil, fmt.Errorf("invalid hash algorithm: %s", createFlags.HashAlgo)
+			return nil, fmt.Errorf("invalid hash algorithm: %s", hashAlgoStr)
 		}
 		hashAlgos = append(hashAlgos, hashAlgo)
 	}
@@ -138,11 +142,11 @@ func parseHashingAlgorithms(algorithms []string) ([]crypto.HashAlgorithm, error)
 }
 
 func parseSignatureAlgorithms(algorithms []string) ([]crypto.SignatureAlgorithm, error) {
-	sigAlgos := make([]crypto.SignatureAlgorithm, 0, len(createFlags.SigAlgo))
+	sigAlgos := make([]crypto.SignatureAlgorithm, 0, len(algorithms))
 	for _, sigAlgoStr := range algorithms {
 		sigAlgo := crypto.StringToSignatureAlgorithm(sigAlgoStr)
 		if sigAlgo == crypto.UnknownSignatureAlgorithm {
-			return nil, fmt.Errorf("invalid signature algorithm: %s", createFlags.SigAlgo)
+			return nil, fmt.Errorf("invalid signature algorithm: %s", sigAlgoStr)
 		}
 		sigAlgos = append(sigAlgos, sigAlgo)
 	}
@@ -155,7 +159,7 @@ func parsePublicKeys(publicKeys []string, sigAlgorithms []crypto.SignatureAlgori
 		k = strings.TrimPrefix(k, "0x") // clear possible prefix
 		key, err := crypto.DecodePublicKeyHex(sigAlgorithms[i], k)
 		if err != nil {
-			return nil, fmt.Errorf("failed decoding public key: %s with error: %w", key, err)
+			return nil, fmt.Errorf("failed decoding public key: %s with error: %w", k, err)
 		}
 		pubKeys = append(pubKeys, key)
 	}

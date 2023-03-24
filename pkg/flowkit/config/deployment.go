@@ -113,6 +113,14 @@ func (d *Deployments) AddContract(account string, network string, contract Contr
 		}
 		(*d)[i].Contracts = append((*d)[i].Contracts, contract)
 	}
+
+	if *d == nil { // if not yet initialized create the first one
+		*d = append(*d, Deployment{
+			Network:   network,
+			Account:   account,
+			Contracts: []ContractDeployment{contract},
+		})
+	}
 }
 
 // RemoveContract removes a specific contract by name from an existing deployment identified by account name and network name.

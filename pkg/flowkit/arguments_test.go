@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package flowkit_test
+package flowkit
 
 import (
 	"fmt"
@@ -24,8 +24,6 @@ import (
 
 	"github.com/onflow/cadence"
 	"github.com/stretchr/testify/assert"
-
-	"github.com/onflow/flow-cli/pkg/flowkit"
 )
 
 func TestArguments(t *testing.T) {
@@ -48,7 +46,7 @@ func TestArguments(t *testing.T) {
 
 		sampleType := sample.Type().ID()
 
-		args, err := flowkit.ParseArgumentsWithoutType(
+		args, err := ParseArgumentsWithoutType(
 			"",
 			[]byte(fmt.Sprintf(`pub fun main(test: %s): Void {}`, sampleType)),
 			[]string{sample.String()},

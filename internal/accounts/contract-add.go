@@ -40,9 +40,9 @@ var addContractFlags = flagsAddContract{}
 
 var AddContractCommand = &command.Command{
 	Cmd: &cobra.Command{
-		Use:     "add-contract <filename>",
+		Use:     "add-contract <filename> <args>",
 		Short:   "Deploy a new contract to an account",
-		Example: `flow accounts add-contract ./FungibleToken.cdc`,
+		Example: `flow accounts add-contract ./FungibleToken.cdc helloArg`,
 		Args:    cobra.MinimumNArgs(1),
 	},
 	Flags: &addContractFlags,
@@ -57,10 +57,6 @@ func addContract(
 	state *flowkit.State,
 ) (command.Result, error) {
 	filename := args[0]
-	if len(args) > 1 {
-		fmt.Println("⚠️Deprecation notice: using name argument in add contract command will be deprecated soon.")
-		filename = args[1]
-	}
 
 	code, err := state.ReadFile(filename)
 	if err != nil {
@@ -75,8 +71,8 @@ func addContract(
 	var contractArgs []cadence.Value
 	if addContractFlags.ArgsJSON != "" {
 		contractArgs, err = flowkit.ParseArgumentsJSON(addContractFlags.ArgsJSON)
-	} else if len(args) > 2 {
-		contractArgs, err = flowkit.ParseArgumentsWithoutType(filename, code, args[2:])
+	} else if len(args) > 1 {
+		contractArgs, err = flowkit.ParseArgumentsWithoutType(filename, code, args[1:])
 	}
 
 	if err != nil {
