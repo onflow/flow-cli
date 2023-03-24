@@ -131,11 +131,6 @@ func (p *State) Config() *config.Config {
 	return p.conf
 }
 
-// SetAccountFileLocation sets a private file location for the specified account.
-func (p *State) SetAccountFileLocation(account Account, location string) {
-	p.confLoader.SetAccountFromFile(account.name, location)
-}
-
 // EmulatorServiceAccount returns the service account for the default emulator profile.
 func (p *State) EmulatorServiceAccount() (*Account, error) {
 	emulator := p.conf.Emulators.Default()
