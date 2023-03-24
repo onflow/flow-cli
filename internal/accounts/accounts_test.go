@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+	"strings"
 	"testing"
 )
 
@@ -266,4 +267,48 @@ func Test_Get(t *testing.T) {
 		assert.NoError(t, err)
 		assert.NotNil(t, result)
 	})
+}
+
+func Test_Result(t *testing.T) {
+	result := AccountResult{
+		Account: tests.NewAccountWithAddress("0x01"),
+	}
+
+	assert.Equal(t, strings.TrimPrefix(`
+Address	 0x0000000000000001
+Balance	 0.00000010
+Keys	 2
+
+Key 0	Public Key		 8da60bd98a827c87e21622c5070ae3ee440abf0927d5db33f9652cb1303eb8a04dfe41dea2c9ea64ee83ee8d7c8d068db8386c7bab98694af956e0fdae37184e
+	Weight			 1000
+	Signature Algorithm	 ECDSA_P256
+	Hash Algorithm		 SHA3_256
+	Revoked 		 false
+	Sequence Number 	 42
+	Index 			 1
+
+
+Key 1	Public Key		 c8a2a318b9099cc6c872a0ec3dcd9f59d17837e4ffd6cd8a1f913ddfa769559605e1ad6ad603ebb511f5a6c8125f863abc2e9c600216edaa07104a0fe320dba7
+	Weight			 1000
+	Signature Algorithm	 ECDSA_P256
+	Hash Algorithm		 SHA3_256
+	Revoked 		 false
+	Sequence Number 	 42
+	Index 			 2
+
+Contracts Deployed: 0
+
+
+Contracts (hidden, use --include contracts)`, "\n"), result.String())
+
+	assert.Equal(t, map[string]interface{}{
+		"address":   flow.Address{0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x1},
+		"balance":   "0.00000010",
+		"contracts": []string{},
+		"keys": []string{
+			"8da60bd98a827c87e21622c5070ae3ee440abf0927d5db33f9652cb1303eb8a04dfe41dea2c9ea64ee83ee8d7c8d068db8386c7bab98694af956e0fdae37184e",
+			"c8a2a318b9099cc6c872a0ec3dcd9f59d17837e4ffd6cd8a1f913ddfa769559605e1ad6ad603ebb511f5a6c8125f863abc2e9c600216edaa07104a0fe320dba7",
+		},
+	}, result.JSON())
+
 }
