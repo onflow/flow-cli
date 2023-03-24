@@ -269,13 +269,8 @@ func isDefaultKeyFormat(key config.AccountKey) bool {
 }
 
 type account struct {
-	FromFile fromFileAccount
 	Simple   simpleAccount
 	Advanced advancedAccount
-}
-
-type fromFileAccount struct {
-	FromFile string `json:"fromFile"`
 }
 
 type simpleAccount struct {
@@ -391,11 +386,7 @@ func (j *account) UnmarshalJSON(b []byte) error {
 	return err
 }
 
-func (j account) MarshalJSON() ([]byte, error) {
-	if j.FromFile != (fromFileAccount{}) {
-		return json.Marshal(j.FromFile)
-	}
-
+func (j *account) MarshalJSON() ([]byte, error) {
 	if j.Simple != (simpleAccount{}) {
 		return json.Marshal(j.Simple)
 	}
