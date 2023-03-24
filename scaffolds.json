@@ -12,6 +12,12 @@
     "commit": "f14d43b951400b95e850c07023735538ff836ac6"
   },
   {
+    "name": "Cadence NFT Project",
+    "repo": "https://github.com/nvdtf/flow-nft-scaffold.git",
+    "description": "Scaffold contains the ExampleNFT sample NFT contract.",
+    "commit": "624ffd71bd2f86faf954d251f69d346ddff1446a"
+  },
+  {
     "name": "Web Dapp using FCL",
     "repo": "https://github.com/onflow/scaffold-flow.git",
     "description": "Simple demo application using next.js and FCL with provided Cadence contracts.",
