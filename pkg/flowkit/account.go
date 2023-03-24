@@ -143,11 +143,11 @@ func accountsFromConfig(conf *config.Config) (Accounts, error) {
 	return accounts, nil
 }
 
-func accountsToConfig(accounts Accounts, accountLocations map[string]string) config.Accounts {
+func accountsToConfig(accounts Accounts) config.Accounts {
 	accountConfs := make([]config.Account, 0)
 
 	for _, account := range accounts {
-		accountConfs = append(accountConfs, toConfig(account, accountLocations))
+		accountConfs = append(accountConfs, toConfig(account))
 	}
 
 	return accountConfs
@@ -166,15 +166,7 @@ func fromConfig(account config.Account) (*Account, error) {
 	}, nil
 }
 
-func toConfig(account Account, accountLocations map[string]string) config.Account {
-	// if account has a location specified we only store the account with a reference to that file location
-	if accountLocation, ok := accountLocations[account.name]; ok {
-		return config.Account{
-			Name:     account.name,
-			Location: accountLocation,
-		}
-	}
-
+func toConfig(account Account) config.Account {
 	var key config.AccountKey
 	if account.key != nil {
 		key = account.key.ToConfig()

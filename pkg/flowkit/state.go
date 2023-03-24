@@ -82,22 +82,8 @@ func (p *State) SaveEdited(paths []string) error {
 
 // Save saves the project configuration to the given path.
 func (p *State) Save(path string) error {
-	p.conf.Accounts = accountsToConfig(*p.accounts, p.confLoader.AccountsFromFile())
+	p.conf.Accounts = accountsToConfig(*p.accounts)
 	err := p.confLoader.Save(p.conf, path)
-
-	// if we have defined accounts to be saved to an external file, iterate over them and save them separately
-	for name, location := range p.confLoader.AccountsFromFile() {
-		acc, _ := p.accounts.ByName(name)
-		account := toConfig(*acc, nil)
-		account.UseAdvanceFormat = true // in case where we save accounts to a separate file we use advance format even if default value
-
-		c := config.Empty()
-		c.Accounts.AddOrUpdate(name, account)
-		err = p.confLoader.Save(c, location)
-		if err != nil {
-			return err
-		}
-	}
 
 	if err != nil {
 		return fmt.Errorf("failed to save project configuration to: %s", path)

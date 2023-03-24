@@ -79,7 +79,7 @@ func (a *Accounts) AddOrUpdate(name string, account Account) {
 	*a = append(*a, account)
 }
 
-// Remove remove account by name.
+// Remove account by name.
 func (a *Accounts) Remove(name string) {
 	for i, account := range *a {
 		if account.Name == name {
