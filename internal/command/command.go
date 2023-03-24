@@ -24,7 +24,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"os/user"
@@ -261,7 +260,7 @@ func checkVersion(logger output.Logger) {
 		}
 	}(resp.Body)
 
-	body, _ := ioutil.ReadAll(resp.Body)
+	body, _ := io.ReadAll(resp.Body)
 	latestVersion := strings.TrimSpace(string(body))
 
 	currentVersion := build.Semver()
