@@ -23,10 +23,6 @@ import (
 	"fmt"
 )
 
-const (
-	EnvPrefix = "FLOW"
-)
-
 func RandomSeed(n int) ([]byte, error) {
 	seed := make([]byte, n)
 
