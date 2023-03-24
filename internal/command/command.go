@@ -23,7 +23,8 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
-	output2 "github.com/onflow/flow-cli/internal/output"
+	"github.com/onflow/flow-cli/internal/prompt"
+	"github.com/onflow/flow-cli/internal/util"
 	"io"
 	"net/http"
 	"os"
@@ -45,7 +46,6 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
 	"github.com/onflow/flow-cli/pkg/flowkit/gateway"
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
-	"github.com/onflow/flow-cli/pkg/flowkit/util"
 )
 
 // Run the command with arguments.
@@ -300,7 +300,7 @@ func initCrashReporting() {
 			// ask for crash report permission
 			fmt.Printf("\n%s Crash detected! %s\n\n", output.ErrorEmoji(), event.Message)
 
-			if output2.ReportCrash() {
+			if prompt.ReportCrash() {
 				return event
 			} else {
 				fmt.Printf("\nPlease help us improve the Flow CLI by opening an issue on https://github.com/onflow/flow-cli/issues, \nand pasting the output as well as a description of the actions you took that resulted in this crash.\n\n")

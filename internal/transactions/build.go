@@ -22,7 +22,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/onflow/cadence"
-	output2 "github.com/onflow/flow-cli/internal/output"
+	"github.com/onflow/flow-cli/internal/prompt"
 	flowsdk "github.com/onflow/flow-go-sdk"
 	"github.com/spf13/cobra"
 
@@ -111,7 +111,7 @@ func build(
 		return nil, err
 	}
 
-	if !globalFlags.Yes && !output2.ApproveTransactionForBuildingPrompt(tx.FlowTransaction()) {
+	if !globalFlags.Yes && !prompt.ApproveTransactionForBuildingPrompt(tx.FlowTransaction()) {
 		return nil, fmt.Errorf("transaction was not approved")
 	}
 

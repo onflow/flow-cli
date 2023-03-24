@@ -21,7 +21,7 @@ package tools
 import (
 	"errors"
 	"fmt"
-	output2 "github.com/onflow/flow-cli/internal/output"
+	"github.com/onflow/flow-cli/internal/prompt"
 	"os"
 	"runtime"
 
@@ -99,21 +99,21 @@ func runFlowser(
 
 func installFlowser(flowser *flowser.App, installPath string) (string, error) {
 	fmt.Println("It looks like Flowser is not yet installed on your system.")
-	installChoice := output2.InstallPrompt()
-	if installChoice == output2.CancelInstall {
+	installChoice := prompt.InstallPrompt()
+	if installChoice == prompt.CancelInstall {
 		return "", fmt.Errorf("user denied install")
 	}
 
 	// if user says it already installed it we only ask for path and return it
-	if installChoice == output2.AlreadyInstalled {
-		installPath = output2.InstallPathPrompt(installPath)
+	if installChoice == prompt.AlreadyInstalled {
+		installPath = prompt.InstallPathPrompt(installPath)
 		_ = settings.SetFlowserPath(installPath)
 		return installPath, nil
 	}
 
 	// we only allow custom paths on Windows since on MacOS apps needs to be installed inside Application folder
 	if runtime.GOOS == settings.Windows {
-		installPath = output2.InstallPathPrompt(installPath)
+		installPath = prompt.InstallPathPrompt(installPath)
 		_ = settings.SetFlowserPath(installPath)
 	}
 

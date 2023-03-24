@@ -20,7 +20,8 @@ package config
 
 import (
 	"fmt"
-	output2 "github.com/onflow/flow-cli/internal/output"
+	"github.com/onflow/flow-cli/internal/prompt"
+	"github.com/onflow/flow-cli/internal/util"
 	"net/url"
 
 	"github.com/spf13/cobra"
@@ -29,7 +30,6 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
-	"github.com/onflow/flow-cli/pkg/flowkit/util"
 )
 
 type flagsAddNetwork struct {
@@ -64,7 +64,7 @@ func addNetwork(
 	}
 
 	if !flagsProvided {
-		networkData = output2.NewNetworkPrompt()
+		networkData = prompt.NewNetworkPrompt()
 	}
 
 	network := config.StringToNetwork(networkData["name"], networkData["host"], networkData["key"])

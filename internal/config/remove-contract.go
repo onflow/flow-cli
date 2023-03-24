@@ -19,10 +19,10 @@
 package config
 
 import (
-	output2 "github.com/onflow/flow-cli/internal/output"
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
+	"github.com/onflow/flow-cli/internal/prompt"
 	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
 )
@@ -53,7 +53,7 @@ func removeContract(
 	if len(args) == 1 {
 		name = args[0]
 	} else {
-		name = output2.RemoveContractPrompt(*state.Contracts())
+		name = prompt.RemoveContractPrompt(*state.Contracts())
 	}
 
 	err := state.Contracts().Remove(name)

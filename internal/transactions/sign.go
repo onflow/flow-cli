@@ -23,7 +23,7 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
-	output2 "github.com/onflow/flow-cli/internal/output"
+	"github.com/onflow/flow-cli/internal/prompt"
 	flowsdk "github.com/onflow/flow-go-sdk"
 	"io"
 	"net/http"
@@ -110,7 +110,7 @@ func sign(
 	})
 
 	for _, signer := range signers {
-		if !globalFlags.Yes && !output2.ApproveTransactionForSigningPrompt(tx.FlowTransaction()) {
+		if !globalFlags.Yes && !prompt.ApproveTransactionForSigningPrompt(tx.FlowTransaction()) {
 			return nil, fmt.Errorf("transaction was not approved for signing")
 		}
 
