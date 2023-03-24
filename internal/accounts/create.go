@@ -118,7 +118,6 @@ func create(
 		signer,
 		keys,
 	)
-
 	if err != nil {
 		return nil, err
 	}

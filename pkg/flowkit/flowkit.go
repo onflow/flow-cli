@@ -69,34 +69,6 @@ type EventWorker struct {
 	BlocksPerWorker uint64
 }
 
-//go:generate  mockery --name=Services
-
-type Services interface {
-	Network() config.Network
-	Ping() error
-	Gateway() gateway.Gateway
-	SetLogger(output.Logger)
-	GetAccount(context.Context, flow.Address) (*flow.Account, error)
-	CreateAccount(context.Context, *Account, []AccountPublicKey) (*flow.Account, flow.Identifier, error)
-	AddContract(context.Context, *Account, *Script, bool) (flow.Identifier, bool, error)
-	RemoveContract(context.Context, *Account, string) (flow.Identifier, error)
-	GetBlock(context.Context, BlockQuery) (*flow.Block, error)
-	GetCollection(context.Context, flow.Identifier) (*flow.Collection, error)
-	GetEvents(context.Context, []string, uint64, uint64, *EventWorker) ([]flow.BlockEvents, error)
-	GenerateKey(context.Context, crypto.SignatureAlgorithm, string) (crypto.PrivateKey, error)
-	GenerateMnemonicKey(context.Context, crypto.SignatureAlgorithm, string) (crypto.PrivateKey, string, error)
-	DerivePrivateKeyFromMnemonic(context.Context, string, crypto.SignatureAlgorithm, string) (crypto.PrivateKey, error)
-	DeployProject(context.Context, bool) ([]*project.Contract, error)
-	ExecuteScript(context.Context, *Script) (cadence.Value, error)
-	GetTransactionByID(context.Context, flow.Identifier, bool) (*flow.Transaction, *flow.TransactionResult, error)
-	GetTransactionsByBlockID(context.Context, flow.Identifier) ([]*flow.Transaction, []*flow.TransactionResult, error)
-	BuildTransaction(context.Context, *TransactionAddressesRoles, int, *Script, uint64) (*Transaction, error)
-	SignTransactionPayload(context.Context, *Account, []byte) (*Transaction, error)
-	SendSignedTransaction(context.Context, *Transaction) (*flow.Transaction, *flow.TransactionResult, error)
-	SendTransaction(context.Context, *TransactionAccountRoles, *Script, uint64) (*flow.Transaction, *flow.TransactionResult, error)
-	Test(context.Context, []byte, string) (cdcTests.Results, error)
-}
-
 var _ Services = &Flowkit{}
 
 func NewFlowkit(
@@ -138,15 +110,10 @@ func (f *Flowkit) Ping() error {
 	return f.gateway.Ping()
 }
 
-// GetAccount fetches account on the Flow network.
 func (f *Flowkit) GetAccount(ctx context.Context, address flow.Address) (*flow.Account, error) {
 	return f.gateway.GetAccount(address)
 }
 
-// CreateAccount on the Flow network with the provided keys and using the signer for creation transaction.
-// Returns the newly created account as well as the ID of the transaction that created the account.
-//
-// Keys is a slice but only one can be passed as well. If the transaction fails or there are other issues an error is returned.
 func (f *Flowkit) CreateAccount(
 	ctx context.Context,
 	signer *Account,
@@ -249,10 +216,6 @@ func (f *Flowkit) prepareTransaction(
 
 var errUpdateNoDiff = errors.New("contract already exists and is the same as the contract provided for update")
 
-// AddContract to the Flow account provided and return the transaction ID.
-//
-// If the contract already exists on the account the operation will fail and error will be returned.
-// Use UpdateContract method for such usage.
 func (f *Flowkit) AddContract(
 	ctx context.Context,
 	account *Account,
@@ -372,9 +335,6 @@ func (f *Flowkit) AddContract(
 	return sentTx.ID(), updateExisting, err
 }
 
-// RemoveContract from the provided account by its name.
-//
-// If removal is successful transaction ID is returned.
 func (f *Flowkit) RemoveContract(
 	ctx context.Context,
 	account *Account,
@@ -434,7 +394,6 @@ func (f *Flowkit) RemoveContract(
 	return sentTx.ID(), nil
 }
 
-// GetBlock by the query from Flow blockchain. Query can define a block by ID, block by height or require the latest block.
 func (f *Flowkit) GetBlock(ctx context.Context, query BlockQuery) (*flow.Block, error) {
 	var err error
 	var block *flow.Block
@@ -461,17 +420,10 @@ func (f *Flowkit) GetBlock(ctx context.Context, query BlockQuery) (*flow.Block, 
 	return block, err
 }
 
-// GetCollection by the ID from Flow network.
 func (f *Flowkit) GetCollection(ctx context.Context, ID flow.Identifier) (*flow.Collection, error) {
 	return f.gateway.GetCollection(ID)
 }
 
-// GetEvents from Flow network by their event name in the specified height interval defined by start and end inclusive.
-// Optional worker defines parameters for how many concurrent workers do we want to fetch our events,
-// and how many blocks between the provided interval each worker fetches.
-//
-// Providing worker value will produce faster response as the interval will be scanned concurrently. This parameter is optional,
-// if not provided only a single worker will be used.
 func (f *Flowkit) GetEvents(
 	ctx context.Context,
 	names []string,
@@ -572,7 +524,6 @@ func makeEventQueries(
 
 }
 
-// GenerateKey using the signature algorithm and optional seed. If seed is not provided a random safe seed will be generated.
 func (f *Flowkit) GenerateKey(
 	ctx context.Context,
 	sigAlgo crypto.SignatureAlgorithm,
@@ -598,9 +549,6 @@ func (f *Flowkit) GenerateKey(
 	return privateKey, nil
 }
 
-// GenerateMnemonicKey will generate a new key with the signature algorithm and optional derivation path.
-//
-// If the derivation path is not provided a default "m/44'/539'/0'/0/0" will be used.
 func (f *Flowkit) GenerateMnemonicKey(
 	ctx context.Context,
 	sigAlgo crypto.SignatureAlgorithm,
@@ -689,10 +637,6 @@ func (f *Flowkit) derivePrivateKeyFromSeed(
 	return privateKey, nil
 }
 
-// DeployProject contracts to the Flow network or update if already exists and update is set to true.
-//
-// Retrieve all the contracts for specified network, sort them for deployment deploy one by one and replace
-// the imports in the contract source, so it corresponds to the account name the contract was deployed to.
 func (f *Flowkit) DeployProject(ctx context.Context, update bool) ([]*project.Contract, error) {
 	state, err := f.State()
 	if err != nil {
@@ -792,7 +736,6 @@ func (d *ProjectDeploymentError) Error() string {
 	return err
 }
 
-// ExecuteScript on the Flow network and return the Cadence value as a result.
 func (f *Flowkit) ExecuteScript(ctx context.Context, script *Script) (cadence.Value, error) {
 	state, err := f.State()
 	if err != nil {
@@ -834,7 +777,6 @@ func (f *Flowkit) ExecuteScript(ctx context.Context, script *Script) (cadence.Va
 	return f.gateway.ExecuteScript(program.Code(), script.Args)
 }
 
-// GetTransactionByID from the Flow network including the transaction result. Using the waitSeal we can wait for the transaction to be sealed.
 func (f *Flowkit) GetTransactionByID(
 	ctx context.Context,
 	ID flow.Identifier,
@@ -872,9 +814,6 @@ func (f *Flowkit) GetTransactionsByBlockID(
 	return tx, txRes, nil
 }
 
-// BuildTransaction builds a new transaction type for later signing and submitting to the network.
-//
-// TransactionAddressesRoles type defines the address for each role (payer, proposer, authorizers) and the script defines the transaction content.
 func (f *Flowkit) BuildTransaction(
 	ctx context.Context,
 	addresses *TransactionAddressesRoles,
@@ -947,9 +886,6 @@ func (f *Flowkit) BuildTransaction(
 	return tx, nil
 }
 
-// SignTransactionPayload will use the signer account provided and the payload raw byte content to sign it.
-//
-// The payload should be RLP encoded transaction payload and is suggested to be used in pair with BuildTransaction function.
 func (f *Flowkit) SignTransactionPayload(
 	ctx context.Context,
 	signer *Account,
@@ -968,9 +904,6 @@ func (f *Flowkit) SignTransactionPayload(
 	return tx.Sign()
 }
 
-// SendSignedTransaction will send a prebuilt and signed transaction to the Flow network.
-//
-// You can build the transaction using the BuildTransaction method and then sign it using the SignTranscation method.
 func (f *Flowkit) SendSignedTransaction(
 	ctx context.Context,
 	tx *Transaction,
@@ -988,8 +921,6 @@ func (f *Flowkit) SendSignedTransaction(
 	return sentTx, res, nil
 }
 
-// SendTransaction will build and send a transaction to the Flow network, using the accounts provided for each role and
-// contain the script. Transaction as well as transaction result will be returned in case the transaction is successfully submitted.
 func (f *Flowkit) SendTransaction(
 	ctx context.Context,
 	accounts *TransactionAccountRoles,
@@ -1036,7 +967,6 @@ func (f *Flowkit) SendTransaction(
 	return sentTx, res, err
 }
 
-// Test Cadence code with the provided script path.
 func (f *Flowkit) Test(ctx context.Context, code []byte, scriptPath string) (cdcTests.Results, error) {
 	runner := cdcTests.NewTestRunner().
 		WithImportResolver(f.importResolver(scriptPath)).
