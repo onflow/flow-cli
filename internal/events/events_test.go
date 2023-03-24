@@ -92,7 +92,7 @@ func Test_Result(t *testing.T) {
 	assert.Equal(t, strings.TrimPrefix(`
 Events Block #1:
     Index	0
-    Type	S.test.A.foo
+    Type	S.A.foo
     Tx ID	0000000000000000000000000000000000000000000000000000000000000000
     Values
 		- bar (String): 1 

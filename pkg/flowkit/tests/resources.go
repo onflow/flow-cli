@@ -419,10 +419,8 @@ func NewCollection() *flow.Collection {
 }
 
 func NewEvent(index int, eventId string, fields []cadence.Field, values []cadence.Value) *flow.Event {
-	location := common.StringLocation("test")
-
 	testEventType := &cadence.EventType{
-		Location:            location,
+		Location:            nil,
 		QualifiedIdentifier: eventId,
 		Fields:              fields,
 	}
@@ -431,10 +429,8 @@ func NewEvent(index int, eventId string, fields []cadence.Field, values []cadenc
 		NewEvent(values).
 		WithType(testEventType)
 
-	typeID := location.TypeID(nil, eventId)
-
 	event := flow.Event{
-		Type:             string(typeID),
+		Type:             eventId,
 		TransactionID:    flow.Identifier{},
 		TransactionIndex: index,
 		EventIndex:       index,
