@@ -20,6 +20,7 @@ package blocks
 
 import (
 	"context"
+	flowsdk "github.com/onflow/flow-go-sdk"
 
 	"github.com/spf13/cobra"
 
@@ -61,21 +62,40 @@ func get(
 
 	logger.StartProgress("Fetching Block...")
 	defer logger.StopProgress()
-	block, err := flow.GetBlock(
-		context.Background(),
-		query,
-		// TODO implement the events and transactions
-		//blockFlags.Events,
-		//command.ContainsFlag(blockFlags.Include, "transactions"),
-	)
+	block, err := flow.GetBlock(context.Background(), query)
 	if err != nil {
 		return nil, err
 	}
 
+	var events []flowsdk.BlockEvents
+	if blockFlags.Events != "" {
+		events, err = flow.GetEvents(
+			context.Background(),
+			[]string{blockFlags.Events},
+			block.Height,
+			block.Height,
+			nil,
+		)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	collections := make([]*flowsdk.Collection, 0)
+	if command.ContainsFlag(blockFlags.Include, "transactions") {
+		for _, guarantee := range block.CollectionGuarantees {
+			collection, err := flow.GetCollection(context.Background(), guarantee.CollectionID)
+			if err != nil {
+				return nil, err
+			}
+			collections = append(collections, collection)
+		}
+	}
+
 	return &BlockResult{
-		block: block,
-		// events:      events,
-		// collections: collections,
-		included: blockFlags.Include,
+		block:       block,
+		events:      events,
+		collections: collections,
+		included:    blockFlags.Include,
 	}, nil
 }
