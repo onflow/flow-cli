@@ -31,8 +31,7 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowkit/project"
 )
 
-// ReaderWriter is implemented by any value that has ReadFile and WriteFile
-// and it is used to load and save files.
+// ReaderWriter defines read file and write file methods.
 type ReaderWriter interface {
 	ReadFile(source string) ([]byte, error)
 	WriteFile(filename string, data []byte, perm os.FileMode) error
