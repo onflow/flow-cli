@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"path"
 	"strconv"
 	"strings"
 	"sync"
@@ -12,8 +11,6 @@ import (
 	goeth "github.com/ethereum/go-ethereum/accounts"
 	"github.com/lmars/go-slip10"
 	"github.com/onflow/cadence"
-	cdcTests "github.com/onflow/cadence-tools/test"
-	"github.com/onflow/cadence/runtime/common"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/access/grpc"
 	"github.com/onflow/flow-go-sdk/crypto"
@@ -963,67 +960,4 @@ func (f *Flowkit) SendTransaction(
 	res, err := f.gateway.GetTransactionResult(sentTx.ID(), true)
 
 	return sentTx, res, err
-}
-
-func (f *Flowkit) Test(_ context.Context, code []byte, scriptPath string) (cdcTests.Results, error) {
-	runner := cdcTests.NewTestRunner().
-		WithImportResolver(f.importResolver(scriptPath)).
-		WithFileResolver(f.fileResolver(scriptPath))
-
-	return runner.RunTests(string(code))
-}
-
-func (f *Flowkit) importResolver(scriptPath string) cdcTests.ImportResolver {
-	return func(location common.Location) (string, error) {
-		stringLocation, isFileImport := location.(common.StringLocation)
-		if !isFileImport {
-			return "", fmt.Errorf("cannot import from %s", location)
-		}
-
-		importedContract, err := f.resolveContract(stringLocation)
-		if err != nil {
-			return "", err
-		}
-
-		importedContractFilePath := absolutePath(scriptPath, importedContract.Location)
-
-		contractCode, err := f.state.ReaderWriter().ReadFile(importedContractFilePath)
-		if err != nil {
-			return "", err
-		}
-
-		return string(contractCode), nil
-	}
-}
-
-func (f *Flowkit) resolveContract(stringLocation common.StringLocation) (config.Contract, error) {
-	relativePath := stringLocation.String()
-	for _, contract := range *f.state.Contracts() {
-		if contract.Location == relativePath {
-			return contract, nil
-		}
-	}
-
-	return config.Contract{}, fmt.Errorf("cannot find contract with location '%s' in configuration", relativePath)
-}
-
-func (f *Flowkit) fileResolver(scriptPath string) cdcTests.FileResolver {
-	return func(path string) (string, error) {
-		importFilePath := absolutePath(scriptPath, path)
-
-		content, err := f.state.ReaderWriter().ReadFile(importFilePath)
-		if err != nil {
-			return "", err
-		}
-
-		return string(content), nil
-	}
-}
-
-func absolutePath(basePath, filePath string) string {
-	if path.IsAbs(filePath) {
-		return filePath
-	}
-
-	return path.Join(path.Dir(basePath), filePath)
 }

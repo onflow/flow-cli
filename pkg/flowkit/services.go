@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/onflow/cadence"
-	cdcTests "github.com/onflow/cadence-tools/test"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
 
@@ -98,7 +97,4 @@ type Services interface {
 	// SendTransaction will build and send a transaction to the Flow network, using the accounts provided for each role and
 	// contain the script. Transaction as well as transaction result will be returned in case the transaction is successfully submitted.
 	SendTransaction(context.Context, *TransactionAccountRoles, *Script, uint64) (*flow.Transaction, *flow.TransactionResult, error)
-
-	// Test Cadence code with the provided script path.
-	Test(context.Context, []byte, string) (cdcTests.Results, error)
 }
