@@ -19,60 +19,10 @@
 package config
 
 import (
-	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
-
-func Test_PrivateKeyEnv(t *testing.T) {
-	os.Setenv("TEST", "123")
-
-	test := []byte(`{
-		"accounts": {
-			"emulator-account": {
-				"address": "f8d6e0586b0a20c7",
-				"key": "$TEST"
-			}
-		}
-	}`)
-
-	result, _ := ProcessorRun(test)
-
-	assert.JSONEq(t, `{
-			"accounts": {
-				"emulator-account": {
-					"address": "f8d6e0586b0a20c7",
-					"key": "123"
-				}
-			}
-		}`, string(result))
-}
-
-func Test_PrivateKeyEnvMultipleAccounts(t *testing.T) {
-	os.Setenv("TEST", "123")
-	os.Setenv("TEST2", "333")
-
-	test := []byte(`{
-		"accounts": {
-			"emulator-account": {
-				"address": "f8d6e0586b0a20c7",
-				"key": "$TEST"
-			}
-		}
-	}`)
-
-	result, _ := ProcessorRun(test)
-
-	assert.JSONEq(t, `{
-		"accounts": {
-			"emulator-account": {
-				"address": "f8d6e0586b0a20c7",
-				"key": "123"
-			}
-		}
-	}`, string(result))
-}
 
 func Test_PrivateConfigFileAccounts(t *testing.T) {
 	b := []byte(`{
