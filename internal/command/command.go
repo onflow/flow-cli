@@ -23,6 +23,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	output2 "github.com/onflow/flow-cli/internal/output"
 	"io"
 	"net/http"
 	"os"
@@ -299,7 +300,7 @@ func initCrashReporting() {
 			// ask for crash report permission
 			fmt.Printf("\n%s Crash detected! %s\n\n", output.ErrorEmoji(), event.Message)
 
-			if output.ReportCrash() {
+			if output2.ReportCrash() {
 				return event
 			} else {
 				fmt.Printf("\nPlease help us improve the Flow CLI by opening an issue on https://github.com/onflow/flow-cli/issues, \nand pasting the output as well as a description of the actions you took that resulted in this crash.\n\n")

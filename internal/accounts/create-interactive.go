@@ -24,6 +24,7 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
+	output2 "github.com/onflow/flow-cli/internal/output"
 	"github.com/onflow/flow-cli/internal/util"
 	"io"
 	"net/http"
@@ -48,8 +49,8 @@ import (
 // and it then uses account creation APIs to automatically create the account on the network as well as save it.
 func createInteractive(state *flowkit.State) error {
 	log := output.NewStdoutLogger(output.InfoLog)
-	name := output.AccountNamePrompt(state.Accounts().Names())
-	networkName, selectedNetwork := output.CreateAccountNetworkPrompt()
+	name := output2.AccountNamePrompt(state.Accounts().Names())
+	networkName, selectedNetwork := output2.CreateAccountNetworkPrompt()
 	privateFile := fmt.Sprintf("%s.pkey", name)
 
 	// create new gateway based on chosen network

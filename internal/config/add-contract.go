@@ -20,6 +20,7 @@ package config
 
 import (
 	"fmt"
+	output2 "github.com/onflow/flow-cli/internal/output"
 
 	"github.com/spf13/cobra"
 
@@ -63,7 +64,7 @@ func addContract(
 	}
 
 	if !flagsProvided {
-		contractData = output.NewContractPrompt()
+		contractData = output2.NewContractPrompt()
 	}
 
 	contract := config.StringToContract(

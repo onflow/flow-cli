@@ -20,6 +20,7 @@ package flowkit
 
 import (
 	"context"
+	"crypto/rand"
 	"encoding/hex"
 	"fmt"
 	"os"
@@ -414,4 +415,15 @@ func (a *Bip44AccountKey) Validate() error {
 
 func (a *Bip44AccountKey) PrivateKeyHex() string {
 	return hex.EncodeToString(a.privateKey.Encode())
+}
+
+func randomSeed(n int) ([]byte, error) {
+	seed := make([]byte, n)
+
+	_, err := rand.Read(seed)
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate random seed: %v", err)
+	}
+
+	return seed, nil
 }

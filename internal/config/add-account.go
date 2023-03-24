@@ -20,6 +20,7 @@ package config
 
 import (
 	"fmt"
+	output2 "github.com/onflow/flow-cli/internal/output"
 
 	"github.com/spf13/cobra"
 
@@ -64,7 +65,7 @@ func addAccount(
 	}
 
 	if !flagsProvided {
-		accountData = output.NewAccountPrompt()
+		accountData = output2.NewAccountPrompt()
 	}
 
 	account, err := config.StringToAccount(

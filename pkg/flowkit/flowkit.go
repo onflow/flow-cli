@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"path"
 	"strconv"
 	"strings"
 	"sync"
@@ -25,7 +26,6 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowkit/gateway"
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
 	"github.com/onflow/flow-cli/pkg/flowkit/project"
-	"github.com/onflow/flow-cli/pkg/flowkit/util"
 )
 
 // AccountPublicKey holds information about the account key.
@@ -533,7 +533,7 @@ func (f *Flowkit) GenerateKey(
 	var err error
 
 	if inputSeed == "" {
-		seed, err = util.RandomSeed(crypto.MinSeedLength)
+		seed, err = randomSeed(crypto.MinSeedLength)
 		if err != nil {
 			return nil, err
 		}
@@ -987,7 +987,7 @@ func (f *Flowkit) importResolver(scriptPath string) cdcTests.ImportResolver {
 			return "", err
 		}
 
-		importedContractFilePath := util.AbsolutePath(scriptPath, importedContract.Location)
+		importedContractFilePath := absolutePath(scriptPath, importedContract.Location)
 
 		contractCode, err := f.state.ReaderWriter().ReadFile(importedContractFilePath)
 		if err != nil {
@@ -1011,7 +1011,7 @@ func (f *Flowkit) resolveContract(stringLocation common.StringLocation) (config.
 
 func (f *Flowkit) fileResolver(scriptPath string) cdcTests.FileResolver {
 	return func(path string) (string, error) {
-		importFilePath := util.AbsolutePath(scriptPath, path)
+		importFilePath := absolutePath(scriptPath, path)
 
 		content, err := f.state.ReaderWriter().ReadFile(importFilePath)
 		if err != nil {
@@ -1020,4 +1020,12 @@ func (f *Flowkit) fileResolver(scriptPath string) cdcTests.FileResolver {
 
 		return string(content), nil
 	}
+}
+
+func absolutePath(basePath, filePath string) string {
+	if path.IsAbs(filePath) {
+		return filePath
+	}
+
+	return path.Join(path.Dir(basePath), filePath)
 }

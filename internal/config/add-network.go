@@ -20,6 +20,7 @@ package config
 
 import (
 	"fmt"
+	output2 "github.com/onflow/flow-cli/internal/output"
 	"net/url"
 
 	"github.com/spf13/cobra"
@@ -63,7 +64,7 @@ func addNetwork(
 	}
 
 	if !flagsProvided {
-		networkData = output.NewNetworkPrompt()
+		networkData = output2.NewNetworkPrompt()
 	}
 
 	network := config.StringToNetwork(networkData["name"], networkData["host"], networkData["key"])

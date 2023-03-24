@@ -2,11 +2,14 @@ package util
 
 import (
 	"bytes"
+	"encoding/hex"
 	"fmt"
 	"github.com/onflow/flow-cli/pkg/flowkit"
 	flowsdk "github.com/onflow/flow-go-sdk"
+	"github.com/onflow/flow-go-sdk/crypto"
 	"os"
 	"path"
+	"strings"
 	"text/tabwriter"
 )
 
@@ -77,4 +80,15 @@ func ValidateECDSAP256Pub(key string) error {
 	}
 
 	return nil
+}
+
+func RemoveFromStringArray(s []string, el string) []string {
+	for i, v := range s {
+		if v == el {
+			s = append(s[:i], s[i+1:]...)
+			break
+		}
+	}
+
+	return s
 }

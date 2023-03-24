@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"github.com/gosuri/uilive"
 	"github.com/manifoldco/promptui"
+	"github.com/onflow/flow-cli/internal/util"
 	"github.com/onflow/flow-go-sdk"
 	"golang.org/x/exp/maps"
 	"golang.org/x/exp/slices"
@@ -29,7 +30,6 @@ import (
 	"path"
 
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
-	"github.com/onflow/flow-cli/pkg/flowkit/util"
 )
 
 func ApproveTransactionForSigningPrompt(transaction *flow.Transaction) bool {

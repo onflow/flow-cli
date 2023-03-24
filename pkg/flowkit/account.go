@@ -26,7 +26,6 @@ import (
 	"github.com/onflow/flow-go-sdk/crypto"
 
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
-	"github.com/onflow/flow-cli/pkg/flowkit/util"
 )
 
 // Account is a flowkit-specific account implementation.
@@ -126,7 +125,7 @@ func toConfig(account Account) config.Account {
 }
 
 func generateEmulatorServiceAccount(sigAlgo crypto.SignatureAlgorithm, hashAlgo crypto.HashAlgorithm) (*Account, error) {
-	seed, err := util.RandomSeed(crypto.MinSeedLength)
+	seed, err := randomSeed(crypto.MinSeedLength)
 	if err != nil {
 		return nil, err
 	}

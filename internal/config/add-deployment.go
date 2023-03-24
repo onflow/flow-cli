@@ -20,6 +20,7 @@ package config
 
 import (
 	"fmt"
+	output2 "github.com/onflow/flow-cli/internal/output"
 
 	"github.com/spf13/cobra"
 
@@ -61,7 +62,7 @@ func addDeployment(
 	}
 
 	if !flagsProvided {
-		deployData = output.NewDeploymentPrompt(*state.Networks(), state.Config().Accounts, *state.Contracts())
+		deployData = output2.NewDeploymentPrompt(*state.Networks(), state.Config().Accounts, *state.Contracts())
 	}
 
 	deployment := config.StringToDeployment(

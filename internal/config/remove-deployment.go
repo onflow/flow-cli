@@ -19,6 +19,7 @@
 package config
 
 import (
+	output2 "github.com/onflow/flow-cli/internal/output"
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
@@ -54,7 +55,7 @@ func removeDeployment(
 		account = args[0]
 		network = args[1]
 	} else {
-		account, network = output.RemoveDeploymentPrompt(*state.Deployments())
+		account, network = output2.RemoveDeploymentPrompt(*state.Deployments())
 	}
 
 	err := state.Deployments().Remove(account, network)
