@@ -178,10 +178,10 @@ func (a *Accounts) Names() []string {
 }
 
 // ByAddress get an account by address.
-func (a *Accounts) ByAddress(address flow.Address) (*Account, error) {
-	for _, acc := range *a {
-		if acc.address == address {
-			return &acc, nil
+func (a Accounts) ByAddress(address flow.Address) (*Account, error) {
+	for i := range a {
+		if a[i].address == address {
+			return &a[i], nil
 		}
 	}
 
@@ -189,14 +189,14 @@ func (a *Accounts) ByAddress(address flow.Address) (*Account, error) {
 }
 
 // ByName get an account by name or returns and error if no account found
-func (a *Accounts) ByName(name string) (*Account, error) {
-	for _, acc := range *a {
-		if acc.name == name {
-			return &acc, nil
+func (a Accounts) ByName(name string) (*Account, error) {
+	for i := range a {
+		if a[i].name == name {
+			return &a[i], nil
 		}
 	}
-	return nil, fmt.Errorf("could not find account with name %s in the configuration", name)
 
+	return nil, fmt.Errorf("could not find account with name %s in the configuration", name)
 }
 
 // AddOrUpdate add account if missing or updates if present.

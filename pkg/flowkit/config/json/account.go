@@ -369,7 +369,7 @@ func (j *account) UnmarshalJSON(b []byte) error {
 	return err
 }
 
-func (j *account) MarshalJSON() ([]byte, error) {
+func (j account) MarshalJSON() ([]byte, error) {
 	if j.Simple != (simpleAccount{}) {
 		return json.Marshal(j.Simple)
 	}
