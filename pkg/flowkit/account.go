@@ -29,8 +29,6 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowkit/util"
 )
 
-// todo refactor to config
-
 // Account is a flowkit-specific account implementation.
 type Account struct {
 	name    string

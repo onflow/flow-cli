@@ -30,15 +30,6 @@ type Account struct {
 	Name    string
 	Address flow.Address
 	Key     AccountKey
-
-	// Location is the configuration file containing this account.
-	//
-	// This field is only set if the external "location"
-	// syntax is used. Otherwise this field is empty.
-	//
-	// Ref: https://docs.onflow.org/flow-cli/security/#private-account-configuration-file
-	Location         string
-	UseAdvanceFormat bool
 }
 
 type Accounts []Account
