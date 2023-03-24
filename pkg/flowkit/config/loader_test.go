@@ -369,8 +369,5 @@ func Test_LoadAccountFileType(t *testing.T) {
 	assert.NoError(t, err)
 
 	assert.Len(t, conf.Accounts, 1)
-	assert.Equal(t,
-		"./test.pkey",
-		acc.Key.Location,
-	)
+	assert.Equal(t, "./test.pkey", acc.Key.Location)
 }
