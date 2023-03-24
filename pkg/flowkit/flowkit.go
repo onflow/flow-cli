@@ -116,7 +116,7 @@ type Flowkit struct {
 }
 
 func (f *Flowkit) Network() config.Network {
-	return f.network // todo define empty network type in config config.EmptyNetwork
+	return f.network
 }
 
 func (f *Flowkit) Gateway() gateway.Gateway {
