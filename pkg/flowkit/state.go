@@ -182,9 +182,9 @@ func (p *State) DeploymentContractsByNetwork(network config.Network) ([]*project
 }
 
 // AccountsForNetwork returns all accounts used on a network defined by deployments.
-func (p *State) AccountsForNetwork(network config.Network) Accounts {
+func (p *State) AccountsForNetwork(network config.Network) *Accounts {
 	exists := make(map[string]bool, 0)
-	accounts := make([]Account, 0)
+	accounts := make(Accounts, 0)
 
 	for _, account := range *p.accounts {
 		if len(p.conf.Deployments.ByAccountAndNetwork(account.name, network.Name)) > 0 {
@@ -193,7 +193,7 @@ func (p *State) AccountsForNetwork(network config.Network) Accounts {
 			}
 		}
 	}
-	return accounts
+	return &accounts
 }
 
 // AliasesForNetwork returns all deployment aliases for a network.
