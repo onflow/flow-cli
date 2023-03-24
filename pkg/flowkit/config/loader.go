@@ -87,10 +87,6 @@ func (l *Loader) AccountsFromFile() map[string]string {
 	return l.accountsFromFile
 }
 
-func (l *Loader) SetAccountFromFile(name string, location string) {
-	l.accountsFromFile[name] = location
-}
-
 // Save saves a configuration to a path with correct serializer.
 func (l *Loader) Save(conf *Config, path string) error {
 	configFormat := l.configParsers.FindForFormat(
