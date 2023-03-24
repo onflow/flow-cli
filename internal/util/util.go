@@ -1,10 +1,13 @@
 package util
 
 import (
+	"bytes"
 	"fmt"
 	"github.com/onflow/flow-cli/pkg/flowkit"
+	flowsdk "github.com/onflow/flow-go-sdk"
 	"os"
 	"path"
+	"text/tabwriter"
 )
 
 const EnvPrefix = "FLOW"
@@ -38,4 +41,40 @@ func AddToGitIgnore(filename string, loader flowkit.ReaderWriter) error {
 		[]byte(fmt.Sprintf("%s\n%s", gitIgnoreFiles, filename)),
 		filePermissions,
 	)
+}
+
+// GetAddressNetwork returns the chain ID for an address.
+func GetAddressNetwork(address flowsdk.Address) (flowsdk.ChainID, error) {
+	networks := []flowsdk.ChainID{
+		flowsdk.Mainnet,
+		flowsdk.Testnet,
+		flowsdk.Emulator,
+		flowsdk.Sandboxnet,
+	}
+	for _, net := range networks {
+		if address.IsValid(net) {
+			return net, nil
+		}
+	}
+
+	return "", fmt.Errorf("address not valid for any known chain: %s", address)
+}
+
+func CreateTabWriter(b *bytes.Buffer) *tabwriter.Writer {
+	return tabwriter.NewWriter(b, 0, 8, 1, '\t', tabwriter.AlignRight)
+}
+
+// ValidateECDSAP256Pub attempt to decode the hex string representation of a ECDSA P256 public key
+func ValidateECDSAP256Pub(key string) error {
+	b, err := hex.DecodeString(strings.TrimPrefix(key, "0x"))
+	if err != nil {
+		return fmt.Errorf("failed to decode public key hex string: %w", err)
+	}
+
+	_, err = crypto.DecodePublicKey(crypto.ECDSA_P256, b)
+	if err != nil {
+		return fmt.Errorf("failed to decode public key: %w", err)
+	}
+
+	return nil
 }

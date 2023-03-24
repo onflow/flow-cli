@@ -19,37 +19,8 @@
 package util
 
 import (
-	"bytes"
-	"encoding/hex"
-	"fmt"
 	"path"
-	"strings"
-	"text/tabwriter"
-
-	"github.com/onflow/flow-go-sdk"
-	"github.com/onflow/flow-go-sdk/crypto"
 )
-
-// GetAddressNetwork returns the chain ID for an address.
-func GetAddressNetwork(address flow.Address) (flow.ChainID, error) {
-	networks := []flow.ChainID{
-		flow.Mainnet,
-		flow.Testnet,
-		flow.Emulator,
-		flow.Sandboxnet,
-	}
-	for _, net := range networks {
-		if address.IsValid(net) {
-			return net, nil
-		}
-	}
-
-	return "", fmt.Errorf("address not valid for any known chain: %s", address)
-}
-
-func CreateTabWriter(b *bytes.Buffer) *tabwriter.Writer {
-	return tabwriter.NewWriter(b, 0, 8, 1, '\t', tabwriter.AlignRight)
-}
 
 func RemoveFromStringArray(s []string, el string) []string {
 	for i, v := range s {
@@ -60,21 +31,6 @@ func RemoveFromStringArray(s []string, el string) []string {
 	}
 
 	return s
-}
-
-// ValidateECDSAP256Pub attempt to decode the hex string representation of a ECDSA P256 public key
-func ValidateECDSAP256Pub(key string) error {
-	b, err := hex.DecodeString(strings.TrimPrefix(key, "0x"))
-	if err != nil {
-		return fmt.Errorf("failed to decode public key hex string: %w", err)
-	}
-
-	_, err = crypto.DecodePublicKey(crypto.ECDSA_P256, b)
-	if err != nil {
-		return fmt.Errorf("failed to decode public key: %w", err)
-	}
-
-	return nil
 }
 
 func AbsolutePath(basePath, filePath string) string {
