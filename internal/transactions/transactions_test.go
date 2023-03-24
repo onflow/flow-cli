@@ -9,6 +9,7 @@ import (
 	"github.com/onflow/flow-go-sdk"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"strings"
 	"testing"
 )
 
@@ -244,4 +245,36 @@ func Test_Sign(t *testing.T) {
 		assert.EqualError(t, err, "signer account: [invalid] doesn't exists in configuration")
 		signFlags.Signer = []string{}
 	})
+}
+
+func Test_Result(t *testing.T) {
+	result := TransactionResult{
+		tx: tests.NewTransaction(),
+	}
+
+	assert.Equal(t, strings.TrimPrefix(`
+ID		6cde7f812897d22ee7633b82b059070be24faccdc47997bc0f765420e6e28bb6
+Payer		ee82856bf20e2aa6
+Authorizers	[f8d6e0586b0a20c7]
+
+Proposal Key:	
+    Address	f8d6e0586b0a20c7
+    Index	1
+    Sequence	42
+
+Payload Signature 0: f8d6e0586b0a20c7
+Payload Signature 1: f8d6e0586b0a20c7
+Envelope Signature 0: ee82856bf20e2aa6
+Signatures (minimized, use --include signatures)
+
+Code (hidden, use --include code)
+
+Payload (hidden, use --include payload)`, "\n"), result.String())
+
+	assert.Equal(t, map[string]interface{}{
+		"authorizers": "[f8d6e0586b0a20c7]",
+		"id":          "6cde7f812897d22ee7633b82b059070be24faccdc47997bc0f765420e6e28bb6",
+		"payer":       "ee82856bf20e2aa6",
+		"payload":     "f8dcf8bcb85a0a7472616e73616374696f6e286772656574696e673a20537472696e6729207b0a202065786563757465207b200a202020206c6f67286772656574696e672e636f6e63617428222c20576f726c6421222929200a20207d0a7d0adf9e7b2276616c7565223a224869222c2274797065223a22537472696e67227da002020202020202020202020202020202020202020202020202020202020202022a88f8d6e0586b0a20c7012a88ee82856bf20e2aa6c988f8d6e0586b0a20c7d0cb808088f8d6e0586b0a20c7c3800101cccb018088ee82856bf20e2aa6",
+	}, result.JSON())
 }
