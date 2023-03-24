@@ -122,7 +122,7 @@ func (j *jsonNetwork) UnmarshalJSON(b []byte) error {
 	return err
 }
 
-func (j jsonNetwork) MarshalJSON() ([]byte, error) {
+func (j *jsonNetwork) MarshalJSON() ([]byte, error) {
 	if j.Simple != (simpleNetwork{}) {
 		return json.Marshal(j.Simple.Host)
 	}

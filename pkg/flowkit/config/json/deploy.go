@@ -172,7 +172,7 @@ func (d *deployment) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
-func (d deployment) MarshalJSON() ([]byte, error) {
+func (d *deployment) MarshalJSON() ([]byte, error) {
 	if d.simple != "" {
 		return json.Marshal(d.simple)
 	} else {

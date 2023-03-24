@@ -1502,7 +1502,7 @@ func Test_TransactionRoles(t *testing.T) {
 		aCopy1.SetName("Boo")
 		aCopy2.SetName("Zoo")
 
-		tests := []struct {
+		testVector := []struct {
 			*TransactionAccountRoles
 			signerAddresses []flow.Address
 		}{{
@@ -1553,7 +1553,7 @@ func Test_TransactionRoles(t *testing.T) {
 			},
 		}}
 
-		for i, test := range tests {
+		for i, test := range testVector {
 			signerAccs := test.getSigners()
 			signerAddrs := make([]flow.Address, len(signerAccs))
 			for i, sig := range signerAccs {

@@ -122,7 +122,7 @@ func (j *jsonContract) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
-func (j jsonContract) MarshalJSON() ([]byte, error) {
+func (j *jsonContract) MarshalJSON() ([]byte, error) {
 	if j.Simple != "" {
 		return json.Marshal(j.Simple)
 	} else {
