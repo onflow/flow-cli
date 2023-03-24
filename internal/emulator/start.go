@@ -21,6 +21,7 @@ package emulator
 import (
 	"errors"
 	"fmt"
+	"github.com/onflow/flow-cli/internal/util"
 	"os"
 	"sync"
 
@@ -33,7 +34,6 @@ import (
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
-	"github.com/onflow/flow-cli/pkg/flowkit/util"
 )
 
 var Cmd *cobra.Command

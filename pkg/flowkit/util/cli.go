@@ -21,17 +21,11 @@ package util
 import (
 	"crypto/rand"
 	"fmt"
-	"os"
 )
 
 const (
 	EnvPrefix = "FLOW"
 )
-
-func Exit(code int, msg string) {
-	fmt.Fprintln(os.Stderr, msg)
-	os.Exit(code)
-}
 
 func RandomSeed(n int) ([]byte, error) {
 	seed := make([]byte, n)
