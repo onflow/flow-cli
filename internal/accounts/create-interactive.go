@@ -166,7 +166,7 @@ func createEmulatorAccount(
 	networkAccount, _, err := flow.CreateAccount(
 		context.Background(),
 		signer,
-		[]flowkit.Key{{
+		[]flowkit.PublicKey{{
 			Public:   key.PublicKey(),
 			Weight:   flowsdk.AccountKeyWeightThreshold,
 			SigAlgo:  defaultSignAlgo,

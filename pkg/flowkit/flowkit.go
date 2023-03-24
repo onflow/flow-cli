@@ -28,19 +28,26 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowkit/util"
 )
 
-type Key struct { // todo remove?
+// PublicKey holds information about the account key.
+type PublicKey struct {
 	Public   crypto.PublicKey
 	Weight   int
 	SigAlgo  crypto.SignatureAlgorithm
 	HashAlgo crypto.HashAlgorithm
 }
 
+// BlockQuery defines possible queries for block.
 type BlockQuery struct {
 	ID     *flow.Identifier
 	Height uint64
 	Latest bool
 }
 
+// NewBlockQuery creates block query based on the passed query string which can have values:
+// - "latest" to query the latest block
+// - uint value to provide block height
+// - ID to query by block ID
+// if none of the valid values are passed an error is returned.
 func NewBlockQuery(query string) (BlockQuery, error) {
 	if query == "latest" {
 		return BlockQuery{Latest: true}, nil
@@ -55,6 +62,8 @@ func NewBlockQuery(query string) (BlockQuery, error) {
 	return BlockQuery{}, fmt.Errorf("invalid query: %s, valid are: \"latest\", block height or block ID", query)
 }
 
+// EventWorker defines how many workers do we want to start, each in its own subroutine, and how many blocks
+// each worker fetches from the network. This is used to process the event requests concurrently.
 type EventWorker struct {
 	Count           int
 	BlocksPerWorker uint64
@@ -68,7 +77,7 @@ type Services interface {
 	Gateway() gateway.Gateway
 	SetLogger(output.Logger)
 	GetAccount(context.Context, flow.Address) (*flow.Account, error)
-	CreateAccount(context.Context, *Account, []Key) (*flow.Account, flow.Identifier, error)
+	CreateAccount(context.Context, *Account, []PublicKey) (*flow.Account, flow.Identifier, error)
 	AddContract(context.Context, *Account, *Script, bool) (flow.Identifier, bool, error)
 	RemoveContract(context.Context, *Account, string) (flow.Identifier, error)
 	GetBlock(context.Context, BlockQuery) (*flow.Block, error)
@@ -141,7 +150,7 @@ func (f *Flowkit) GetAccount(ctx context.Context, address flow.Address) (*flow.A
 func (f *Flowkit) CreateAccount(
 	ctx context.Context,
 	signer *Account,
-	keys []Key,
+	keys []PublicKey,
 ) (*flow.Account, flow.Identifier, error) {
 	var accKeys []*flow.AccountKey
 	for _, k := range keys {

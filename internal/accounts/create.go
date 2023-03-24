@@ -105,9 +105,9 @@ func create(
 		return nil, err
 	}
 
-	keys := make([]flowkit.Key, len(pubKeys))
+	keys := make([]flowkit.PublicKey, len(pubKeys))
 	for i, key := range pubKeys {
-		keys[i] = flowkit.Key{
+		keys[i] = flowkit.PublicKey{
 			Public: key, Weight: weightFlag[i], SigAlgo: sigAlgos[i], HashAlgo: hashAlgos[i],
 		}
 	}
