@@ -51,16 +51,6 @@ func CreateTabWriter(b *bytes.Buffer) *tabwriter.Writer {
 	return tabwriter.NewWriter(b, 0, 8, 1, '\t', tabwriter.AlignRight)
 }
 
-func ParseAddress(value string) (flow.Address, bool) {
-	address := flow.HexToAddress(value)
-
-	// valid on any chain
-	return address, address.IsValid(flow.Mainnet) ||
-		address.IsValid(flow.Testnet) ||
-		address.IsValid(flow.Emulator) ||
-		address.IsValid(flow.Sandboxnet)
-}
-
 func RemoveFromStringArray(s []string, el string) []string {
 	for i, v := range s {
 		if v == el {

@@ -28,7 +28,6 @@ import (
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
-	"github.com/onflow/flow-cli/pkg/flowkit/util"
 )
 
 type flagsBuild struct {
@@ -122,7 +121,7 @@ func build(
 }
 
 func getAddress(address string, state *flowkit.State) (flowsdk.Address, error) {
-	addr, valid := util.ParseAddress(address)
+	addr, valid := parseAddress(address)
 	if valid {
 		return addr, nil
 	}
@@ -133,4 +132,14 @@ func getAddress(address string, state *flowkit.State) (flowsdk.Address, error) {
 		return flowsdk.EmptyAddress, err
 	}
 	return acc.Address(), nil
+}
+
+func parseAddress(value string) (flowsdk.Address, bool) {
+	address := flowsdk.HexToAddress(value)
+
+	// valid on any chain
+	return address, address.IsValid(flowsdk.Mainnet) ||
+		address.IsValid(flowsdk.Testnet) ||
+		address.IsValid(flowsdk.Emulator) ||
+		address.IsValid(flowsdk.Sandboxnet)
 }
