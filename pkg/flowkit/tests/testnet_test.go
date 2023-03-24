@@ -61,7 +61,7 @@ func initTestnet(t *testing.T) (gateway.Gateway, *flowkit.State, flowkit.Service
 	flowAccount, _, err := flow.CreateAccount(
 		context.Background(),
 		funder,
-		[]flowkit.PublicKey{{
+		[]flowkit.AccountPublicKey{{
 			Public:   testKey.PublicKey(),
 			Weight:   1000,
 			SigAlgo:  crypto.ECDSA_P256,

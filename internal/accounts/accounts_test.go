@@ -168,7 +168,7 @@ func Test_Create(t *testing.T) {
 
 		srv.CreateAccount.Run(func(args mock.Arguments) {
 			acc := args.Get(1).(*flowkit.Account)
-			keys := args.Get(2).([]flowkit.PublicKey)
+			keys := args.Get(2).([]flowkit.AccountPublicKey)
 			assert.Equal(t, "emulator-account", acc.Name())
 			assert.Len(t, keys, 1)
 			assert.Equal(t, fmt.Sprintf("0x%s", pkey), keys[0].Public.String())
@@ -191,7 +191,7 @@ func Test_Create(t *testing.T) {
 
 		srv.CreateAccount.Run(func(args mock.Arguments) {
 			acc := args.Get(1).(*flowkit.Account)
-			keys := args.Get(2).([]flowkit.PublicKey)
+			keys := args.Get(2).([]flowkit.AccountPublicKey)
 			assert.Equal(t, "emulator-account", acc.Name())
 			assert.Len(t, keys, 2)
 

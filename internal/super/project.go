@@ -199,7 +199,7 @@ func (p *project) addAccount(name string) error {
 	flowAcc, _, err := p.flow.CreateAccount(
 		context.Background(),
 		p.service,
-		[]flowkit.PublicKey{{
+		[]flowkit.AccountPublicKey{{
 			Public:   pkey.PublicKey(),
 			Weight:   flow.AccountKeyWeightThreshold,
 			SigAlgo:  crypto.ECDSA_P256,

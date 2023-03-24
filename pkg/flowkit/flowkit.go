@@ -28,8 +28,8 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowkit/util"
 )
 
-// PublicKey holds information about the account key.
-type PublicKey struct {
+// AccountPublicKey holds information about the account key.
+type AccountPublicKey struct {
 	Public   crypto.PublicKey
 	Weight   int
 	SigAlgo  crypto.SignatureAlgorithm
@@ -77,7 +77,7 @@ type Services interface {
 	Gateway() gateway.Gateway
 	SetLogger(output.Logger)
 	GetAccount(context.Context, flow.Address) (*flow.Account, error)
-	CreateAccount(context.Context, *Account, []PublicKey) (*flow.Account, flow.Identifier, error)
+	CreateAccount(context.Context, *Account, []AccountPublicKey) (*flow.Account, flow.Identifier, error)
 	AddContract(context.Context, *Account, *Script, bool) (flow.Identifier, bool, error)
 	RemoveContract(context.Context, *Account, string) (flow.Identifier, error)
 	GetBlock(context.Context, BlockQuery) (*flow.Block, error)
@@ -150,7 +150,7 @@ func (f *Flowkit) GetAccount(ctx context.Context, address flow.Address) (*flow.A
 func (f *Flowkit) CreateAccount(
 	ctx context.Context,
 	signer *Account,
-	keys []PublicKey,
+	keys []AccountPublicKey,
 ) (*flow.Account, flow.Identifier, error) {
 	var accKeys []*flow.AccountKey
 	for _, k := range keys {
