@@ -1,3 +1,21 @@
+/*
+ * Flow CLI
+ *
+ * Copyright 2019 Dapper Labs, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package flowkit
 
 import (
@@ -445,7 +463,7 @@ func TestAccountsAddContract_Integration(t *testing.T) {
 		assert.Equal(t, acc.Contracts["Simple"], tests.ContractSimpleUpdated.Source)
 	})
 
-	t.Run("Add Contract Invalid", func(t *testing.T) {
+	t.Run("Add Contract Invalid Same Content", func(t *testing.T) {
 		t.Parallel()
 
 		state, flowkit := setupIntegration()
@@ -468,7 +486,35 @@ func TestAccountsAddContract_Integration(t *testing.T) {
 		)
 
 		require.Error(t, err)
-		assert.Error(t, err, "cannot overwrite existing contract with name \"Simple\"")
+		assert.EqualError(t, err, "contract already exists and is the same as the contract provided for update")
+	})
+
+	t.Run("Add Contract Invalid Same Content", func(t *testing.T) {
+		t.Parallel()
+
+		state, flowkit := setupIntegration()
+		srvAcc, _ := state.EmulatorServiceAccount()
+
+		// prepare existing contract
+		_, _, err := flowkit.AddContract(
+			ctx,
+			srvAcc,
+			resourceToContract(tests.ContractSimple),
+			false,
+		)
+		assert.NoError(t, err)
+
+		updated := tests.ContractSimple
+		updated.Source = []byte(`pub contract Simple { init() {} }`)
+		_, _, err = flowkit.AddContract(
+			ctx,
+			srvAcc,
+			resourceToContract(updated),
+			false,
+		)
+
+		require.Error(t, err)
+		assert.EqualError(t, err, "contract Simple exists in account emulator-account")
 	})
 }
 
@@ -519,6 +565,11 @@ func TestAccountsRemoveContract_Integration(t *testing.T) {
 		acc, err := flowkit.GetAccount(ctx, srvAcc.Address())
 		require.NoError(t, err)
 		assert.Equal(t, acc.Contracts[tests.ContractSimple.Name], []byte(nil))
+	})
+
+	t.Run("Remove Contract", func(t *testing.T) {
+		_, err := flowkit.RemoveContract(ctx, srvAcc, "invalid")
+		require.True(t, strings.Contains(err.Error(), "can not remove a non-existing contract named 'invalid'"))
 	})
 }
 
@@ -1104,7 +1155,6 @@ func simpleDeploy(state *State, flowkit Flowkit, update bool) ([]*project.Contra
 		Location: tests.ContractHelloString.Filename,
 	}
 	state.Contracts().AddOrUpdate(c)
-
 	state.Networks().AddOrUpdate(config.EmulatorNetwork)
 
 	d := config.Deployment{
@@ -1990,4 +2040,23 @@ func TestTransactions_Integration(t *testing.T) {
 		assert.Nil(t, txr.Error)
 		assert.Equal(t, txr.Status, flow.TransactionStatusSealed)
 	})
+}
+
+func Test_BlockQuery(t *testing.T) {
+	q, err := NewBlockQuery("latest")
+	assert.True(t, q.Latest)
+	assert.NoError(t, err)
+
+	q, err = NewBlockQuery("100")
+	assert.Equal(t, uint64(100), q.Height)
+	assert.NoError(t, err)
+
+	id := flow.HexToID("cba22b8c0830d0c86f83a187911a8a82ebd17e8dd95e5212ede0f8e5e2d4a908")
+	q, err = NewBlockQuery(id.String())
+	assert.Equal(t, id, *q.ID)
+	assert.NoError(t, err)
+
+	_, err = NewBlockQuery("invalid")
+	assert.EqualError(t, err, "invalid query: invalid, valid are: \"latest\", block height or block ID")
+
 }
