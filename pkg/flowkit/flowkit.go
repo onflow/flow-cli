@@ -121,7 +121,7 @@ func (f *Flowkit) CreateAccount(
 ) (*flow.Account, flow.Identifier, error) {
 	var accKeys []*flow.AccountKey
 	for _, k := range keys {
-		if k.Weight == 0 { // if key weight is specified
+		if k.Weight == 0 { // if key weight is not specified
 			k.Weight = flow.AccountKeyWeightThreshold
 		}
 
@@ -414,8 +414,6 @@ func (f *Flowkit) GetBlock(_ context.Context, query BlockQuery) (*flow.Block, er
 	if block == nil {
 		return nil, fmt.Errorf("block not found")
 	}
-
-	f.logger.StopProgress()
 
 	return block, err
 }
