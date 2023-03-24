@@ -493,7 +493,7 @@ func (f *Flowkit) GetEvents(
 	queries := makeEventQueries(names, startHeight, endHeight, worker.BlocksPerWorker)
 
 	jobChan := make(chan grpc.EventRangeQuery, worker.Count)
-	results := make(chan EventWorkerResult)
+	results := make(chan eventWorkerResult)
 
 	var wg sync.WaitGroup
 
@@ -521,29 +521,29 @@ func (f *Flowkit) GetEvents(
 
 	var resultEvents []flow.BlockEvents
 	for eventResult := range results {
-		if eventResult.Error != nil {
-			return nil, eventResult.Error
+		if eventResult.err != nil {
+			return nil, eventResult.err
 		}
 
-		resultEvents = append(resultEvents, eventResult.Events...)
+		resultEvents = append(resultEvents, eventResult.events...)
 	}
 
 	return resultEvents, nil
 }
 
-func (f *Flowkit) eventWorker(jobChan <-chan grpc.EventRangeQuery, results chan<- EventWorkerResult) {
+func (f *Flowkit) eventWorker(jobChan <-chan grpc.EventRangeQuery, results chan<- eventWorkerResult) {
 	for q := range jobChan {
 		blockEvents, err := f.gateway.GetEvents(q.Type, q.StartHeight, q.EndHeight)
 		if err != nil {
-			results <- EventWorkerResult{nil, err}
+			results <- eventWorkerResult{nil, err}
 		}
-		results <- EventWorkerResult{blockEvents, nil}
+		results <- eventWorkerResult{blockEvents, nil}
 	}
 }
 
-type EventWorkerResult struct {
-	Events []flow.BlockEvents
-	Error  error
+type eventWorkerResult struct {
+	events []flow.BlockEvents
+	err    error
 }
 
 func makeEventQueries(
