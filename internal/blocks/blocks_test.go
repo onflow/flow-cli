@@ -21,14 +21,14 @@ func Test_GetBlock(t *testing.T) {
 
 		srv.GetEvents.Run(func(args mock.Arguments) {
 			assert.Equal(t, "A.foo", args.Get(1).([]string)[0])
-			assert.Equal(t, 100, args.Get(2).(uint64))
-			assert.Equal(t, 100, args.Get(3).(uint64))
+			assert.Equal(t, uint64(100), args.Get(2).(uint64))
+			assert.Equal(t, uint64(100), args.Get(3).(uint64))
 		}).Return(nil, nil)
 
 		srv.GetCollection.Return(nil, nil)
 
 		srv.GetBlock.Run(func(args mock.Arguments) {
-			assert.Equal(t, 100, args.Get(1).(flowkit.BlockQuery).Height)
+			assert.Equal(t, uint64(100), args.Get(1).(flowkit.BlockQuery).Height)
 		}).Return(tests.NewBlock(), nil)
 
 		result, err := get(inArgs, util.NoFlags, util.NoLogger, rw, srv.Mock)

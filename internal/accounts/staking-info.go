@@ -94,11 +94,11 @@ func stakingInfo(
 	}
 
 	// get staking infos and delegation infos
-	staking, err := flowkit.NewStakingInfoFromValue(stakingValue)
+	staking, err := newStakingInfoFromValue(stakingValue)
 	if err != nil {
 		return nil, fmt.Errorf("error parsing staking info: %s", err.Error())
 	}
-	delegation, err := flowkit.NewStakingInfoFromValue(delegationValue)
+	delegation, err := newStakingInfoFromValue(delegationValue)
 	if err != nil {
 		return nil, fmt.Errorf("error parsing delegation info: %s", err.Error())
 	}
@@ -141,6 +141,37 @@ func stakingInfo(
 
 func nodeIDToString(value interface{}) string {
 	return value.(cadence.String).ToGoValue().(string)
+}
+
+func newStakingInfoFromValue(value cadence.Value) ([]map[string]interface{}, error) {
+	stakingInfo := make([]map[string]interface{}, 0)
+	arrayValue, ok := value.(cadence.Array)
+	if !ok {
+		return stakingInfo, fmt.Errorf("staking info must be a cadence array")
+	}
+
+	if len(arrayValue.Values) == 0 {
+		return stakingInfo, nil
+	}
+
+	for _, v := range arrayValue.Values {
+		vs, ok := v.(cadence.Struct)
+		if !ok {
+			return stakingInfo, fmt.Errorf("staking info must be a cadence array of structs")
+		}
+
+		keys := make([]string, 0)
+		values := make(map[string]interface{})
+		for _, field := range vs.StructType.Fields {
+			keys = append(keys, field.Identifier)
+		}
+		for j, value := range vs.Fields {
+			values[keys[j]] = value
+		}
+		stakingInfo = append(stakingInfo, values)
+	}
+
+	return stakingInfo, nil
 }
 
 type StakingResult struct {
