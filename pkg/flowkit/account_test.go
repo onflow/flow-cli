@@ -104,7 +104,7 @@ func Test_Accounts(t *testing.T) {
 		assert.EqualError(t, err, "could not find account with name bob in the configuration")
 
 		_, err = accs.ByAddress(flow.HexToAddress("0x01"))
-		assert.EqualError(t, err, "ould not find account with address 0000000000000001 in the configuration")
+		assert.EqualError(t, err, "could not find account with address 0000000000000001 in the configuration")
 	})
 
 }
