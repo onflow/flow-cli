@@ -1067,8 +1067,7 @@ func (f *Flowkit) resolveContract(stringLocation common.StringLocation) (config.
 		}
 	}
 
-	return config.Contract{},
-		fmt.Errorf("cannot find contract with location '%s' in configuration", relativePath)
+	return config.Contract{}, fmt.Errorf("cannot find contract with location '%s' in configuration", relativePath)
 }
 
 func (f *Flowkit) fileResolver(scriptPath string) cdcTests.FileResolver {

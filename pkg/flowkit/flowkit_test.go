@@ -763,32 +763,27 @@ func TestKeys(t *testing.T) {
 			privateKey string
 		}
 
-		testVector := []testEntry{
-			testEntry{
-				sigAlgo:    crypto.ECDSA_secp256k1,
-				seed:       "000102030405060708090a0b0c0d0e0f",
-				path:       "m/0'/1/2'/2/1000000000",
-				privateKey: "0x471b76e389e528d6de6d816857e012c5455051cad6660850e58372a6c3e6e7c8",
-			},
-			testEntry{
-				sigAlgo:    crypto.ECDSA_P256,
-				seed:       "000102030405060708090a0b0c0d0e0f",
-				path:       "m/0'/1/2'/2/1000000000",
-				privateKey: "0x21c4f269ef0a5fd1badf47eeacebeeaa3de22eb8e5b0adcd0f27dd99d34d0119",
-			},
-			testEntry{
-				sigAlgo:    crypto.ECDSA_secp256k1,
-				seed:       "fffcf9f6f3f0edeae7e4e1dedbd8d5d2cfccc9c6c3c0bdbab7b4b1aeaba8a5a29f9c999693908d8a8784817e7b7875726f6c696663605d5a5754514e4b484542",
-				path:       "m/0/2147483647'/1/2147483646'/2",
-				privateKey: "0xbb7d39bdb83ecf58f2fd82b6d918341cbef428661ef01ab97c28a4842125ac23",
-			},
-			testEntry{
-				sigAlgo:    crypto.ECDSA_P256,
-				seed:       "fffcf9f6f3f0edeae7e4e1dedbd8d5d2cfccc9c6c3c0bdbab7b4b1aeaba8a5a29f9c999693908d8a8784817e7b7875726f6c696663605d5a5754514e4b484542",
-				path:       "m/0/2147483647'/1/2147483646'/2",
-				privateKey: "0xbb0a77ba01cc31d77205d51d08bd313b979a71ef4de9b062f8958297e746bd67",
-			},
-		}
+		testVector := []testEntry{{
+			sigAlgo:    crypto.ECDSA_secp256k1,
+			seed:       "000102030405060708090a0b0c0d0e0f",
+			path:       "m/0'/1/2'/2/1000000000",
+			privateKey: "0x471b76e389e528d6de6d816857e012c5455051cad6660850e58372a6c3e6e7c8",
+		}, {
+			sigAlgo:    crypto.ECDSA_P256,
+			seed:       "000102030405060708090a0b0c0d0e0f",
+			path:       "m/0'/1/2'/2/1000000000",
+			privateKey: "0x21c4f269ef0a5fd1badf47eeacebeeaa3de22eb8e5b0adcd0f27dd99d34d0119",
+		}, {
+			sigAlgo:    crypto.ECDSA_secp256k1,
+			seed:       "fffcf9f6f3f0edeae7e4e1dedbd8d5d2cfccc9c6c3c0bdbab7b4b1aeaba8a5a29f9c999693908d8a8784817e7b7875726f6c696663605d5a5754514e4b484542",
+			path:       "m/0/2147483647'/1/2147483646'/2",
+			privateKey: "0xbb7d39bdb83ecf58f2fd82b6d918341cbef428661ef01ab97c28a4842125ac23",
+		}, {
+			sigAlgo:    crypto.ECDSA_P256,
+			seed:       "fffcf9f6f3f0edeae7e4e1dedbd8d5d2cfccc9c6c3c0bdbab7b4b1aeaba8a5a29f9c999693908d8a8784817e7b7875726f6c696663605d5a5754514e4b484542",
+			path:       "m/0/2147483647'/1/2147483646'/2",
+			privateKey: "0xbb0a77ba01cc31d77205d51d08bd313b979a71ef4de9b062f8958297e746bd67",
+		}}
 
 		for _, test := range testVector {
 			seed, err := hex.DecodeString(test.seed)
@@ -824,6 +819,15 @@ func TestKeys(t *testing.T) {
 		assert.Equal(t, key.String(), "0xd18d051afca7150781fef111f3387d132d31c4a6250268db0f61f836a205e0b8")
 
 		assert.Equal(t, hex.EncodeToString(key.PublicKey().Encode()), "d7482bbaff7827035d5b238df318b10604673dc613808723efbd23fbc4b9fad34a415828d924ec7b83ac0eddf22ef115b7c203ee39fb080572d7e51775ee54be")
+	})
+
+	t.Run("Generate mnemonic key", func(t *testing.T) {
+		_, flowkit, _ := setup()
+
+		pkey, path, err := flowkit.GenerateMnemonicKey(context.Background(), crypto.ECDSA_P256, "")
+		assert.NoError(t, err)
+		assert.NotNil(t, pkey)
+		assert.NotNil(t, path)
 	})
 
 	t.Run("Generate Keys Invalid", func(t *testing.T) {
