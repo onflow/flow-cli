@@ -25,6 +25,11 @@ import (
 	"github.com/onflow/flow-go-sdk/crypto"
 )
 
+const (
+	DefaultHashAlgo = crypto.SHA3_256
+	DefaultSigAlgo  = crypto.ECDSA_P256
+)
+
 // Account defines the configuration for a Flow account.
 type Account struct {
 	Name    string
@@ -45,6 +50,22 @@ type AccountKey struct {
 	DerivationPath string
 	PrivateKey     crypto.PrivateKey
 	Location       string
+}
+
+func NewDefaultAccountKey(pkey crypto.PrivateKey) AccountKey {
+	return AccountKey{
+		Type:       KeyTypeHex,
+		SigAlgo:    DefaultSigAlgo,
+		HashAlgo:   DefaultHashAlgo,
+		PrivateKey: pkey,
+	}
+}
+
+func (a *AccountKey) IsDefault() bool {
+	return a.Index == 0 &&
+		a.Type == KeyTypeHex &&
+		a.SigAlgo == DefaultSigAlgo &&
+		a.HashAlgo == DefaultHashAlgo
 }
 
 // ByName get account by name.

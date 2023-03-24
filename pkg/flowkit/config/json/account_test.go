@@ -388,7 +388,7 @@ func Test_TransformDefaultAccountToJSON(t *testing.T) {
 	assert.NoError(t, err)
 
 	expected := []byte(`{"emulator-account":{"address":"f8d6e0586b0a20c7","key":"1272967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47"}}`)
-	assert.Equal(t, string(result), string(expected))
+	assert.Equal(t, string(expected), string(result))
 }
 
 func Test_TransformAccountToJSON(t *testing.T) {
