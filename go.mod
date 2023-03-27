@@ -7,10 +7,10 @@ require (
 	github.com/getsentry/sentry-go v0.19.0
 	github.com/go-git/go-git/v5 v5.6.1
 	github.com/onflow/cadence v0.37.0
-	github.com/onflow/cadence-tools/languageserver v0.8.0
+	github.com/onflow/cadence-tools/languageserver v0.8.1-0.20230327102606-6be626d07eb8
 	github.com/onflow/cadence-tools/test v0.5.0
 	github.com/onflow/fcl-dev-wallet v0.6.0
-	github.com/onflow/flow-cli/pkg/flowkit v0.0.0-20230322200203-77e0eb7b5219
+	github.com/onflow/flow-cli/pkg/flowkit v0.0.0-20230327102447-8c34a92f8cbb
 	github.com/onflow/flow-emulator v0.45.0
 	github.com/onflow/flow-go-sdk v0.37.0
 	github.com/onflowser/flowser/v2 v2.0.14-beta
