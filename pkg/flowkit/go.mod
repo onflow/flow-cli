@@ -3,10 +3,8 @@ module github.com/onflow/flow-cli/pkg/flowkit
 go 1.18
 
 require (
-	github.com/a8m/envsubst v1.3.0
 	github.com/ethereum/go-ethereum v1.10.21
 	github.com/gosuri/uilive v0.0.4
-	github.com/joho/godotenv v1.4.0
 	github.com/lmars/go-slip10 v0.0.0-20190606092855-400ba44fee12
 	github.com/manifoldco/promptui v0.9.0
 	github.com/onflow/cadence v0.36.0
@@ -15,6 +13,7 @@ require (
 	github.com/onflow/flow-emulator v0.45.0
 	github.com/onflow/flow-go v0.29.6-with-pr-3835.0.20230310185646-540256588e78
 	github.com/onflow/flow-go-sdk v0.35.0
+	github.com/onflow/flow-go/crypto v0.24.4
 	github.com/pkg/errors v0.9.1
 	github.com/rs/zerolog v1.29.0
 	github.com/sergi/go-diff v1.1.0
@@ -109,7 +108,6 @@ require (
 	github.com/onflow/atree v0.5.0 // indirect
 	github.com/onflow/flow-core-contracts/lib/go/contracts v0.12.1 // indirect
 	github.com/onflow/flow-ft/lib/go/contracts v0.5.0 // indirect
-	github.com/onflow/flow-go/crypto v0.24.4 // indirect
 	github.com/onflow/flow/protobuf/go/flow v0.3.2-0.20221202093946-932d1c70e288 // indirect
 	github.com/onflow/sdks v0.5.0 // indirect
 	github.com/opentracing/opentracing-go v1.2.0 // indirect
