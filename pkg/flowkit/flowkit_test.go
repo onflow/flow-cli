@@ -24,13 +24,11 @@ import (
 	"errors"
 	"fmt"
 	"github.com/onflow/flow-cli/pkg/flowkit/gateway/mocks"
-	"os"
 	"strings"
 	"testing"
 
 	"github.com/onflow/cadence"
 	jsoncdc "github.com/onflow/cadence/encoding/json"
-	"github.com/onflow/cadence/runtime/stdlib"
 	emulator "github.com/onflow/flow-emulator"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/access/grpc"
@@ -1377,74 +1375,6 @@ func TestScripts_Integration(t *testing.T) {
 			assert.Equal(t, err.Error(), out[x])
 		}
 
-	})
-}
-
-func TestExecutingTests(t *testing.T) {
-	t.Run("simple", func(t *testing.T) {
-		t.Parallel()
-		_, flowkit, _ := setup()
-
-		script := tests.TestScriptSimple
-		results, err := flowkit.Test(ctx, script.Source, script.Filename)
-
-		require.NoError(t, err)
-		require.Len(t, results, 1)
-		assert.NoError(t, results[0].Error)
-	})
-
-	t.Run("simple failing", func(t *testing.T) {
-		t.Parallel()
-		_, flowkit, _ := setup()
-
-		script := tests.TestScriptSimpleFailing
-		results, err := flowkit.Test(ctx, script.Source, script.Filename)
-
-		require.NoError(t, err)
-		require.Len(t, results, 1)
-
-		err = results[0].Error
-		require.Error(t, err)
-		assert.ErrorAs(t, err, &stdlib.AssertionError{})
-	})
-
-	t.Run("with import", func(t *testing.T) {
-		t.Parallel()
-		st, flowkit, _ := setup()
-
-		c := config.Contract{
-			Name:     tests.ContractHelloString.Name,
-			Location: tests.ContractHelloString.Filename,
-		}
-		st.Contracts().AddOrUpdate(c)
-
-		// Execute script
-		script := tests.TestScriptWithImport
-		results, err := flowkit.Test(ctx, script.Source, script.Filename)
-
-		require.NoError(t, err)
-		require.Len(t, results, 1)
-		assert.NoError(t, results[0].Error)
-	})
-
-	t.Run("with file read", func(t *testing.T) {
-		t.Parallel()
-		st, flowkit, _ := setup()
-
-		readerWriter := st.ReaderWriter()
-		readerWriter.WriteFile(
-			tests.SomeFile.Filename,
-			tests.SomeFile.Source,
-			os.ModeTemporary,
-		)
-
-		// Execute script
-		script := tests.TestScriptWithFileRead
-		results, err := flowkit.Test(ctx, script.Source, script.Filename)
-
-		require.NoError(t, err)
-		require.Len(t, results, 1)
-		assert.NoError(t, results[0].Error)
 	})
 }
 

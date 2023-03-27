@@ -4,13 +4,14 @@ import (
 	"bytes"
 	"encoding/hex"
 	"fmt"
-	"github.com/onflow/flow-cli/pkg/flowkit"
-	flowsdk "github.com/onflow/flow-go-sdk"
-	"github.com/onflow/flow-go-sdk/crypto"
 	"os"
 	"path"
 	"strings"
 	"text/tabwriter"
+
+	"github.com/onflow/flow-cli/pkg/flowkit"
+	flowsdk "github.com/onflow/flow-go-sdk"
+	"github.com/onflow/flow-go-sdk/crypto"
 )
 
 const EnvPrefix = "FLOW"
