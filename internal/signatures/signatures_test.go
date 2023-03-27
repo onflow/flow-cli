@@ -19,6 +19,7 @@
 package signatures
 
 import (
+	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/internal/util"
 	"github.com/stretchr/testify/assert"
 	"testing"
@@ -34,7 +35,7 @@ func Test_Verify(t *testing.T) {
 			"0xab70e9e341a38861fd7f9fb1cda4c560465cfeb3ce4abcd2be552550c85ebbef9a2a9cac731c6bfa73b10c701c93038f0c18253487d4962d3bc6d5291f9c5eae",
 		}
 
-		result, err := verify(inArgs, util.NoFlags, util.NoLogger, srv.Mock, state)
+		result, err := verify(inArgs, command.GlobalFlags{}, util.NoLogger, srv.Mock, state)
 		assert.NoError(t, err)
 		assert.NotNil(t, result)
 	})
@@ -55,7 +56,7 @@ func Test_Verify(t *testing.T) {
 		}}
 
 		for _, test := range inArgsTests {
-			result, err := verify(test.args, util.NoFlags, util.NoLogger, srv.Mock, state)
+			result, err := verify(test.args, command.GlobalFlags{}, util.NoLogger, srv.Mock, state)
 			assert.EqualError(t, err, test.err)
 			assert.Nil(t, result)
 		}
@@ -69,7 +70,7 @@ func Test_Sign(t *testing.T) {
 	t.Run("Success", func(t *testing.T) {
 		inArgs := []string{"test message"}
 
-		result, err := sign(inArgs, util.NoFlags, util.NoLogger, srv.Mock, state)
+		result, err := sign(inArgs, command.GlobalFlags{}, util.NoLogger, srv.Mock, state)
 		assert.NoError(t, err)
 		assert.NotNil(t, result)
 	})
@@ -77,7 +78,7 @@ func Test_Sign(t *testing.T) {
 	t.Run("Fail unknown signer", func(t *testing.T) {
 		inArgs := []string{"test message"}
 		generateFlags.Signer = "invalid"
-		result, err := sign(inArgs, util.NoFlags, util.NoLogger, srv.Mock, state)
+		result, err := sign(inArgs, command.GlobalFlags{}, util.NoLogger, srv.Mock, state)
 		assert.EqualError(t, err, "could not find account with name invalid in the configuration")
 		assert.Nil(t, result)
 	})

@@ -21,6 +21,7 @@ package events
 import (
 	"encoding/json"
 	"github.com/onflow/cadence"
+	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/internal/util"
 	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/tests"
@@ -39,7 +40,7 @@ func Test_Get(t *testing.T) {
 		eventsFlags.Start = 10
 		eventsFlags.End = 20
 
-		result, err := get(inArgs, util.NoFlags, util.NoLogger, rw, srv.Mock)
+		result, err := get(inArgs, command.GlobalFlags{}, util.NoLogger, rw, srv.Mock)
 		assert.NoError(t, err)
 		assert.NotNil(t, result)
 	})
@@ -54,7 +55,7 @@ func Test_Get(t *testing.T) {
 			assert.True(t, query.Latest)
 		}).Return(tests.NewBlock(), nil)
 
-		result, err := get(inArgs, util.NoFlags, util.NoLogger, rw, srv.Mock)
+		result, err := get(inArgs, command.GlobalFlags{}, util.NoLogger, rw, srv.Mock)
 		assert.NoError(t, err)
 		assert.NotNil(t, result)
 	})
@@ -64,7 +65,7 @@ func Test_Get(t *testing.T) {
 		eventsFlags.Start = 20
 		eventsFlags.End = 0
 
-		result, err := get(inArgs, util.NoFlags, util.NoLogger, rw, srv.Mock)
+		result, err := get(inArgs, command.GlobalFlags{}, util.NoLogger, rw, srv.Mock)
 		assert.EqualError(t, err, "please provide either both start and end for range or only last flag")
 		assert.Nil(t, result)
 	})

@@ -19,6 +19,7 @@
 package blocks
 
 import (
+	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/internal/util"
 	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/tests"
@@ -49,7 +50,7 @@ func Test_GetBlock(t *testing.T) {
 			assert.Equal(t, uint64(100), args.Get(1).(flowkit.BlockQuery).Height)
 		}).Return(tests.NewBlock(), nil)
 
-		result, err := get(inArgs, util.NoFlags, util.NoLogger, rw, srv.Mock)
+		result, err := get(inArgs, command.GlobalFlags{}, util.NoLogger, rw, srv.Mock)
 		assert.NotNil(t, result)
 		assert.NoError(t, err)
 	})

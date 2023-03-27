@@ -20,6 +20,7 @@ package accounts
 
 import (
 	"fmt"
+	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/internal/util"
 	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/tests"
@@ -45,7 +46,7 @@ func Test_AddContract(t *testing.T) {
 			assert.Equal(t, inArgs[1], script.Args[0].String())
 		})
 
-		result, err := addContract(inArgs, util.NoFlags, util.NoLogger, srv.Mock, state)
+		result, err := addContract(inArgs, command.GlobalFlags{}, util.NoLogger, srv.Mock, state)
 
 		require.NoError(t, err)
 		assert.NotNil(t, result)
@@ -61,7 +62,7 @@ func Test_AddContract(t *testing.T) {
 
 		addContractFlags.ArgsJSON = `[{"type": "UInt64", "value": "1"}]`
 		args := []string{tests.ContractSimpleWithArgs.Filename}
-		result, err := addContract(args, util.NoFlags, util.NoLogger, srv.Mock, state)
+		result, err := addContract(args, command.GlobalFlags{}, util.NoLogger, srv.Mock, state)
 
 		require.NoError(t, err)
 		assert.NotNil(t, result)
@@ -69,7 +70,7 @@ func Test_AddContract(t *testing.T) {
 
 	t.Run("Fail non-existing file", func(t *testing.T) {
 		args := []string{"non-existing"}
-		result, err := addContract(args, util.NoFlags, util.NoLogger, srv.Mock, state)
+		result, err := addContract(args, command.GlobalFlags{}, util.NoLogger, srv.Mock, state)
 
 		assert.Nil(t, result)
 		assert.EqualError(t, err, "error loading contract file: open non-existing: file does not exist")
@@ -78,7 +79,7 @@ func Test_AddContract(t *testing.T) {
 	t.Run("Fail invalid-json", func(t *testing.T) {
 		args := []string{tests.ContractA.Filename}
 		addContractFlags.ArgsJSON = "invalid"
-		result, err := addContract(args, util.NoFlags, util.NoLogger, srv.Mock, state)
+		result, err := addContract(args, command.GlobalFlags{}, util.NoLogger, srv.Mock, state)
 
 		assert.Nil(t, result)
 		assert.EqualError(t, err, "error parsing transaction arguments: invalid character 'i' looking for beginning of value")
@@ -87,7 +88,7 @@ func Test_AddContract(t *testing.T) {
 	t.Run("Fail invalid signer", func(t *testing.T) {
 		args := []string{tests.ContractA.Filename}
 		addContractFlags.Signer = "invalid"
-		result, err := addContract(args, util.NoFlags, util.NoLogger, srv.Mock, state)
+		result, err := addContract(args, command.GlobalFlags{}, util.NoLogger, srv.Mock, state)
 
 		assert.Nil(t, result)
 		assert.EqualError(t, err, "could not find account with name invalid in the configuration")
@@ -107,7 +108,7 @@ func Test_RemoveContract(t *testing.T) {
 			assert.Equal(t, inArgs[0], args.Get(2).(string))
 		})
 
-		result, err := removeContract(inArgs, util.NoFlags, util.NoLogger, srv.Mock, state)
+		result, err := removeContract(inArgs, command.GlobalFlags{}, util.NoLogger, srv.Mock, state)
 		assert.NoError(t, err)
 		assert.NotNil(t, result)
 	})
@@ -116,7 +117,7 @@ func Test_RemoveContract(t *testing.T) {
 		inArgs := []string{"test"}
 		flagsRemove.Signer = "invalid"
 
-		_, err := removeContract(inArgs, util.NoFlags, util.NoLogger, srv.Mock, state)
+		_, err := removeContract(inArgs, command.GlobalFlags{}, util.NoLogger, srv.Mock, state)
 		assert.EqualError(t, err, "could not find account with name invalid in the configuration")
 	})
 }
@@ -134,7 +135,7 @@ func Test_UpdateContract(t *testing.T) {
 			assert.Equal(t, inArgs[1], script.Args[0].String())
 		})
 
-		result, err := updateContract(inArgs, util.NoFlags, util.NoLogger, srv.Mock, state)
+		result, err := updateContract(inArgs, command.GlobalFlags{}, util.NoLogger, srv.Mock, state)
 
 		require.NoError(t, err)
 		assert.NotNil(t, result)
@@ -151,7 +152,7 @@ func Test_UpdateContract(t *testing.T) {
 			assert.Equal(t, "1", script.Args[0].String())
 		})
 
-		result, err := updateContract(inArgs, util.NoFlags, util.NoLogger, srv.Mock, state)
+		result, err := updateContract(inArgs, command.GlobalFlags{}, util.NoLogger, srv.Mock, state)
 
 		require.NoError(t, err)
 		assert.NotNil(t, result)
@@ -161,7 +162,7 @@ func Test_UpdateContract(t *testing.T) {
 	t.Run("Fail invalid-json", func(t *testing.T) {
 		args := []string{tests.ContractA.Filename}
 		updateContractFlags.ArgsJSON = "invalid"
-		result, err := updateContract(args, util.NoFlags, util.NoLogger, srv.Mock, state)
+		result, err := updateContract(args, command.GlobalFlags{}, util.NoLogger, srv.Mock, state)
 
 		assert.Nil(t, result)
 		assert.EqualError(t, err, "error parsing transaction arguments: invalid character 'i' looking for beginning of value")
@@ -170,7 +171,7 @@ func Test_UpdateContract(t *testing.T) {
 
 	t.Run("Fail non-existing file", func(t *testing.T) {
 		args := []string{"non-existing"}
-		result, err := updateContract(args, util.NoFlags, util.NoLogger, srv.Mock, state)
+		result, err := updateContract(args, command.GlobalFlags{}, util.NoLogger, srv.Mock, state)
 
 		assert.Nil(t, result)
 		assert.EqualError(t, err, "error loading contract file: open non-existing: file does not exist")
@@ -194,7 +195,7 @@ func Test_Create(t *testing.T) {
 			assert.Equal(t, crypto.SHA3_256, keys[0].HashAlgo)
 		})
 
-		result, err := create([]string{}, util.NoFlags, util.NoLogger, srv.Mock, state)
+		result, err := create([]string{}, command.GlobalFlags{}, util.NoLogger, srv.Mock, state)
 		require.NoError(t, err)
 		require.NotNil(t, result)
 	})
@@ -223,7 +224,7 @@ func Test_Create(t *testing.T) {
 			assert.Equal(t, 500, keys[1].Weight)
 		})
 
-		result, err := create([]string{}, util.NoFlags, util.NoLogger, srv.Mock, state)
+		result, err := create([]string{}, command.GlobalFlags{}, util.NoLogger, srv.Mock, state)
 		require.NoError(t, err)
 		require.NotNil(t, result)
 	})
@@ -236,7 +237,7 @@ func Test_Create(t *testing.T) {
 		createFlags.HashAlgo = []string{"SHA3_256", "SHA2_256"}
 		createFlags.Weights = []int{1000}
 
-		result, err := create([]string{}, util.NoFlags, util.NoLogger, srv.Mock, state)
+		result, err := create([]string{}, command.GlobalFlags{}, util.NoLogger, srv.Mock, state)
 		require.EqualError(t, err, "must provide a key weight for each key provided, keys provided: 2, weights provided: 1")
 		require.Nil(t, result)
 	})
@@ -248,7 +249,7 @@ func Test_Create(t *testing.T) {
 		createFlags.HashAlgo = []string{"SHA3_256"}
 		createFlags.Weights = []int{1000}
 
-		result, err := create([]string{}, util.NoFlags, util.NoLogger, srv.Mock, state)
+		result, err := create([]string{}, command.GlobalFlags{}, util.NoLogger, srv.Mock, state)
 		require.EqualError(t, err, "must provide a signature and hash algorithm for every key provided to --key: 1 keys, 2 signature algo, 1 hash algo")
 		require.Nil(t, result)
 	})
@@ -281,7 +282,7 @@ func Test_Get(t *testing.T) {
 			srv.GetAccount.Return(tests.NewAccountWithAddress(inArgs[0]), nil)
 		})
 
-		result, err := get(inArgs, util.NoFlags, util.NoLogger, nil, srv.Mock)
+		result, err := get(inArgs, command.GlobalFlags{}, util.NoLogger, nil, srv.Mock)
 		assert.NoError(t, err)
 		assert.NotNil(t, result)
 	})
