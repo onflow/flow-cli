@@ -6,13 +6,13 @@ require (
 	github.com/dukex/mixpanel v1.0.1
 	github.com/getsentry/sentry-go v0.19.0
 	github.com/go-git/go-git/v5 v5.6.1
-	github.com/onflow/cadence v0.36.0
+	github.com/onflow/cadence v0.37.0
 	github.com/onflow/cadence-tools/languageserver v0.8.0
 	github.com/onflow/cadence-tools/test v0.5.0
 	github.com/onflow/fcl-dev-wallet v0.6.0
 	github.com/onflow/flow-cli/pkg/flowkit v0.0.0-20230322200203-77e0eb7b5219
 	github.com/onflow/flow-emulator v0.45.0
-	github.com/onflow/flow-go-sdk v0.35.0
+	github.com/onflow/flow-go-sdk v0.37.0
 	github.com/onflowser/flowser/v2 v2.0.14-beta
 	github.com/pkg/errors v0.9.1
 	github.com/psiemens/sconfig v0.1.0
@@ -34,12 +34,10 @@ require (
 	github.com/FactomProject/btcutilecc v0.0.0-20130527213604-d3a63a5752ec // indirect
 	github.com/Microsoft/go-winio v0.5.2 // indirect
 	github.com/ProtonMail/go-crypto v0.0.0-20230217124315-7d5c6f04bbb8 // indirect
-	github.com/a8m/envsubst v1.3.0 // indirect
 	github.com/acomagu/bufpipe v1.0.4 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bits-and-blooms/bitset v1.3.0 // indirect
-	github.com/btcsuite/btcd v0.22.1 // indirect
-	github.com/btcsuite/btcd/btcec/v2 v2.2.0 // indirect
+	github.com/btcsuite/btcd/btcec/v2 v2.2.1 // indirect
 	github.com/c-bata/go-prompt v0.2.5 // indirect
 	github.com/cenkalti/backoff/v4 v4.1.3 // indirect
 	github.com/cespare/xxhash v1.1.0 // indirect
@@ -139,7 +137,7 @@ require (
 	github.com/onflow/flow-core-contracts/lib/go/templates v0.12.1 // indirect
 	github.com/onflow/flow-ft/lib/go/contracts v0.5.0 // indirect
 	github.com/onflow/flow-go v0.29.6-with-pr-3835.0.20230310185646-540256588e78 // indirect
-	github.com/onflow/flow-go/crypto v0.24.4 // indirect
+	github.com/onflow/flow-go/crypto v0.24.7 // indirect
 	github.com/onflow/flow-nft/lib/go/contracts v0.0.0-20220727161549-d59b1e547ac4 // indirect
 	github.com/onflow/flow/protobuf/go/flow v0.3.2-0.20221202093946-932d1c70e288 // indirect
 	github.com/onflow/fusd/lib/go/contracts v0.0.0-20211021081023-ae9de8fb2c7e // indirect
