@@ -359,10 +359,21 @@ func bip44KeyFromConfig(key config.AccountKey) (AccountKey, error) {
 }
 
 func (a *Bip44AccountKey) Signer(ctx context.Context) (crypto.Signer, error) {
-	return crypto.NewInMemorySigner(a.privateKey, a.HashAlgo())
+	pkey, err := a.PrivateKey()
+	if err != nil {
+		return nil, err
+	}
+
+	return crypto.NewInMemorySigner(*pkey, a.HashAlgo())
 }
 
 func (a *Bip44AccountKey) PrivateKey() (*crypto.PrivateKey, error) {
+	if a.privateKey == nil { // lazy load
+		err := a.Validate()
+		if err != nil {
+			return nil, err
+		}
+	}
 	return &a.privateKey, nil
 }
 

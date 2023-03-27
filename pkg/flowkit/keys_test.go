@@ -18,8 +18,67 @@
 
 package flowkit
 
-import "testing"
+import (
+	"context"
+	"github.com/onflow/flow-cli/pkg/flowkit/config"
+	"github.com/stretchr/testify/assert"
+	"testing"
+)
 
 func Test_KMS_Keys(t *testing.T) {
+	confKey := config.AccountKey{
+		Type:       config.KeyTypeGoogleKMS,
+		Index:      0,
+		SigAlgo:    config.DefaultSigAlgo,
+		HashAlgo:   config.DefaultHashAlgo,
+		ResourceID: "projects/my-project/locations/global/keyRings/flow/cryptoKeys/my-account/cryptoKeyVersions/1",
+	}
 
+	kmsKey, err := kmsKeyFromConfig(confKey)
+	assert.NoError(t, err)
+
+	_, err = kmsKey.PrivateKey()
+	assert.EqualError(t, err, "private key not accessible")
+	assert.Equal(t, confKey, kmsKey.ToConfig())
+}
+
+func Test_File_key(t *testing.T) {
+	confKey := config.AccountKey{
+		Type:     config.KeyTypeFile,
+		Index:    0,
+		SigAlgo:  config.DefaultSigAlgo,
+		HashAlgo: config.DefaultHashAlgo,
+		Location: "./test.pkey",
+	}
+
+	fileKey, err := fileKeyFromConfig(confKey)
+	assert.NoError(t, err)
+
+	cKey := fileKey.ToConfig()
+	assert.Equal(t, cKey, confKey)
+	assert.Equal(t, confKey, NewFileAccountKey(confKey.Location, confKey.Index, confKey.SigAlgo, confKey.HashAlgo))
+}
+
+func Test_BIP44(t *testing.T) {
+	confKey := config.AccountKey{
+		Type:           config.KeyTypeBip44,
+		Index:          0,
+		SigAlgo:        config.DefaultSigAlgo,
+		HashAlgo:       config.DefaultHashAlgo,
+		Mnemonic:       "version field tornado move level pretty inject stereo ten catalog salon swallow",
+		DerivationPath: "m/44'/539'/0'/0/0",
+	}
+
+	key, err := bip44KeyFromConfig(confKey)
+	assert.NoError(t, err)
+
+	const pubKey = "0x2d6daea8b0ba5b1d5935f7846ccdd7e6f9f981e34d3c0a02a927cc79c837eba56c0f9a979195e41143495b72314ffcab60da6b7031060c80dc12f01f7f2096be"
+	assert.Equal(t, confKey, key.ToConfig())
+	pkey, err := key.PrivateKey()
+	assert.NoError(t, err)
+	assert.Equal(t, pubKey, (*pkey).PublicKey().String())
+
+	sig, err := key.Signer(context.Background())
+	assert.NoError(t, err)
+	assert.Equal(t, pubKey, sig.PublicKey().String())
 }
