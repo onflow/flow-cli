@@ -22,7 +22,7 @@ require (
 	github.com/spf13/viper v1.14.0
 	github.com/stretchr/testify v1.8.2
 	golang.org/x/exp v0.0.0-20221217163422-3c43f8badb15
-	google.golang.org/grpc v1.53.0
+	google.golang.org/grpc v1.54.0
 )
 
 require (
@@ -34,7 +34,6 @@ require (
 	github.com/FactomProject/btcutilecc v0.0.0-20130527213604-d3a63a5752ec // indirect
 	github.com/Microsoft/go-winio v0.5.2 // indirect
 	github.com/ProtonMail/go-crypto v0.0.0-20230217124315-7d5c6f04bbb8 // indirect
-	github.com/a8m/envsubst v1.3.0 // indirect
 	github.com/acomagu/bufpipe v1.0.4 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bits-and-blooms/bitset v1.3.0 // indirect
@@ -197,11 +196,11 @@ require (
 	go.uber.org/multierr v1.9.0 // indirect
 	go.uber.org/zap v1.24.0 // indirect
 	golang.org/x/crypto v0.6.0 // indirect
-	golang.org/x/net v0.7.0 // indirect
+	golang.org/x/net v0.8.0 // indirect
 	golang.org/x/oauth2 v0.4.0 // indirect
 	golang.org/x/sync v0.1.0 // indirect
-	golang.org/x/sys v0.5.0 // indirect
-	golang.org/x/text v0.7.0 // indirect
+	golang.org/x/sys v0.6.0 // indirect
+	golang.org/x/text v0.8.0 // indirect
 	golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2 // indirect
 	gonum.org/v1/gonum v0.11.0 // indirect
 	google.golang.org/api v0.103.0 // indirect
