@@ -151,6 +151,8 @@ func TestProgram(t *testing.T) {
 		code := []byte(`
 			import Foo from "./Foo.cdc"
 			import "Bar"
+			import  FooSpace  from  "./FooSpace.cdc"
+			import   "BarSpace"
 
 			pub contract Foo {}
 		`)
@@ -158,6 +160,8 @@ func TestProgram(t *testing.T) {
 		replaced := []byte(`
 			import Foo from 0x1
 			import Bar from 0x2
+			import FooSpace from 0x3
+			import BarSpace from 0x4
 
 			pub contract Foo {}
 		`)
@@ -167,7 +171,9 @@ func TestProgram(t *testing.T) {
 
 		program.
 			replaceImport("./Foo.cdc", "1").
-			replaceImport("Bar", "2")
+			replaceImport("Bar", "2").
+			replaceImport("./FooSpace.cdc", "3").
+			replaceImport("BarSpace", "4")
 
 		assert.Equal(t, string(replaced), string(program.Code()))
 	})

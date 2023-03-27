@@ -75,8 +75,8 @@ func (p *Program) HasImports() bool {
 func (p *Program) replaceImport(from string, to string) *Program {
 	code := string(p.Code())
 
-	pathRegex := regexp.MustCompile(fmt.Sprintf(`import (\w+) from "%s"`, from))
-	identifierRegex := regexp.MustCompile(fmt.Sprintf(`import "(%s)"`, from))
+	pathRegex := regexp.MustCompile(fmt.Sprintf(`import\s+(\w+)\s+from\s+"%s"`, from))
+	identifierRegex := regexp.MustCompile(fmt.Sprintf(`import\s+"(%s)"`, from))
 
 	replacement := fmt.Sprintf(`import $1 from 0x%s`, to)
 	code = pathRegex.ReplaceAllString(code, replacement)
