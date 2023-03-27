@@ -57,17 +57,20 @@ func addNetwork(
 	_ flowkit.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
-	networkData, flagsProvided, err := flagsToNetworkData(addNetworkFlags)
+	raw, flagsProvided, err := flagsToNetworkData(addNetworkFlags)
 	if err != nil {
 		return nil, err
 	}
 
 	if !flagsProvided {
-		networkData = util.NewNetworkPrompt()
+		raw = util.NewNetworkPrompt()
 	}
 
-	network := config.StringToNetwork(networkData["name"], networkData["host"], networkData["key"])
-	state.Networks().AddOrUpdate(network)
+	state.Networks().AddOrUpdate(config.Network{
+		Name: raw["name"],
+		Host: raw["host"],
+		Key:  raw["key"],
+	})
 
 	err = state.SaveEdited(globalFlags.ConfigPaths)
 	if err != nil {
@@ -75,7 +78,7 @@ func addNetwork(
 	}
 
 	return &Result{
-		result: fmt.Sprintf("Network %s added to the configuration", networkData["name"]),
+		result: fmt.Sprintf("Network %s added to the configuration", raw["name"]),
 	}, nil
 }
 

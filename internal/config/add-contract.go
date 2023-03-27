@@ -21,6 +21,7 @@ package config
 import (
 	"fmt"
 	"github.com/onflow/flow-cli/internal/util"
+	"github.com/onflow/flow-go-sdk"
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
@@ -57,22 +58,40 @@ func addContract(
 	_ flowkit.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
-	contractData, flagsProvided, err := flagsToContractData(addContractFlags)
+	raw, flagsProvided, err := flagsToContractData(addContractFlags)
 	if err != nil {
 		return nil, err
 	}
 
 	if !flagsProvided {
-		contractData = util.NewContractPrompt()
+		raw = util.NewContractPrompt()
 	}
 
-	contract := config.StringToContract(
-		contractData["name"],
-		contractData["source"],
-		contractData["emulator"],
-		contractData["testnet"],
-		contractData["mainnet"],
-	)
+	contract := config.Contract{
+		Name:     raw.Name,
+		Location: raw.Source,
+	}
+
+	if raw.Emulator != "" {
+		contract.Aliases.Add(
+			config.EmulatorNetwork.Name,
+			flow.HexToAddress(raw.Emulator),
+		)
+	}
+
+	if raw.Mainnet != "" {
+		contract.Aliases.Add(
+			config.MainnetNetwork.Name,
+			flow.HexToAddress(raw.Mainnet),
+		)
+	}
+
+	if raw.Testnet != "" {
+		contract.Aliases.Add(
+			config.TestnetNetwork.Name,
+			flow.HexToAddress(raw.Testnet),
+		)
+	}
 
 	state.Contracts().AddOrUpdate(contract)
 
@@ -82,11 +101,11 @@ func addContract(
 	}
 
 	return &Result{
-		result: fmt.Sprintf("Contract %s added to the configuration", contractData["name"]),
+		result: fmt.Sprintf("Contract %s added to the configuration", raw.Name),
 	}, nil
 }
 
-func flagsToContractData(flags flagsAddContract) (map[string]string, bool, error) {
+func flagsToContractData(flags flagsAddContract) (*util.ContractData, bool, error) {
 	if flags.Name == "" && flags.Filename == "" {
 		return nil, false, nil
 	}
@@ -100,31 +119,31 @@ func flagsToContractData(flags flagsAddContract) (map[string]string, bool, error
 	}
 
 	if flags.EmulatorAlias != "" {
-		_, err := config.StringToAddress(flags.EmulatorAlias)
+		_, err := flowkit.ParseAddress(flags.EmulatorAlias)
 		if err != nil {
 			return nil, true, err
 		}
 	}
 
 	if flags.TestnetAlias != "" {
-		_, err := config.StringToAddress(flags.TestnetAlias)
+		_, err := flowkit.ParseAddress(flags.TestnetAlias)
 		if err != nil {
 			return nil, true, err
 		}
 	}
 
 	if flags.MainnetAlias != "" {
-		_, err := config.StringToAddress(flags.MainnetAlias)
+		_, err := flowkit.ParseAddress(flags.MainnetAlias)
 		if err != nil {
 			return nil, true, err
 		}
 	}
 
-	return map[string]string{
-		"name":     flags.Name,
-		"source":   flags.Filename,
-		"emulator": flags.EmulatorAlias,
-		"testnet":  flags.TestnetAlias,
-		"mainnet":  flags.MainnetAlias,
+	return &util.ContractData{
+		Name:     flags.Name,
+		Source:   flags.Filename,
+		Emulator: flags.EmulatorAlias,
+		Testnet:  flags.TestnetAlias,
+		Mainnet:  flags.MainnetAlias,
 	}, true, nil
 }

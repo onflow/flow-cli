@@ -22,11 +22,14 @@ import (
 	"fmt"
 	"github.com/gosuri/uilive"
 	"github.com/manifoldco/promptui"
+	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-go-sdk"
+	"github.com/onflow/flow-go-sdk/crypto"
 	"golang.org/x/exp/maps"
 	"golang.org/x/exp/slices"
 	"os"
 	"path"
+	"strconv"
 
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
 )
@@ -200,7 +203,7 @@ func addressPrompt() string {
 	addressPrompt := promptui.Prompt{
 		Label: "Enter address",
 		Validate: func(s string) error {
-			_, err := config.StringToAddress(s)
+			_, err := flowkit.ParseAddress(s)
 			return err
 		},
 	}
@@ -239,18 +242,27 @@ func addAnotherContractToDeploymentPrompt() bool {
 	return addMore == "Yes"
 }
 
-func NewAccountPrompt() map[string]string {
-	accountData := make(map[string]string)
-	var err error
+type AccountData struct {
+	Name     string
+	Address  string
+	SigAlgo  string
+	HashAlgo string
+	Key      string
+	KeyIndex string
+}
 
-	accountData["name"] = NamePrompt()
-	accountData["address"] = addressPrompt()
+func NewAccountPrompt() *AccountData {
+	var err error
+	account := &AccountData{
+		Name:    NamePrompt(),
+		Address: addressPrompt(),
+	}
 
 	sigAlgoPrompt := promptui.Select{
 		Label: "Choose signature algorithm",
 		Items: []string{"ECDSA_P256", "ECDSA_secp256k1"},
 	}
-	_, accountData["sigAlgo"], err = sigAlgoPrompt.Run()
+	_, account.SigAlgo, err = sigAlgoPrompt.Run()
 	if err == promptui.ErrInterrupt {
 		os.Exit(-1)
 	}
@@ -259,7 +271,7 @@ func NewAccountPrompt() map[string]string {
 		Label: "Choose hashing algorithm",
 		Items: []string{"SHA3_256", "SHA2_256"},
 	}
-	_, accountData["hashAlgo"], err = hashAlgoPrompt.Run()
+	_, account.HashAlgo, err = hashAlgoPrompt.Run()
 	if err == promptui.ErrInterrupt {
 		os.Exit(-1)
 	}
@@ -267,11 +279,11 @@ func NewAccountPrompt() map[string]string {
 	keyPrompt := promptui.Prompt{
 		Label: "Enter private key",
 		Validate: func(s string) error {
-			_, err := config.StringToHexKey(s, accountData["sigAlgo"])
+			_, err := crypto.DecodePrivateKeyHex(crypto.StringToSignatureAlgorithm(account.SigAlgo), s)
 			return err
 		},
 	}
-	accountData["key"], err = keyPrompt.Run()
+	account.Key, err = keyPrompt.Run()
 	if err == promptui.ErrInterrupt {
 		os.Exit(-1)
 	}
@@ -280,24 +292,38 @@ func NewAccountPrompt() map[string]string {
 		Label:   "Enter key index (Default: 0)",
 		Default: "0",
 		Validate: func(s string) error {
-			_, err := config.StringToKeyIndex(s)
-			return err
+			v, err := strconv.Atoi(s)
+			if err != nil {
+				return fmt.Errorf("invalid index, must be a number")
+			}
+			if v < 0 {
+				return fmt.Errorf("invalid index, must be positive")
+			}
+			return nil
 		},
 	}
 
-	accountData["keyIndex"], err = keyIndexPrompt.Run()
+	account.KeyIndex, err = keyIndexPrompt.Run()
 	if err == promptui.ErrInterrupt {
 		os.Exit(-1)
 	}
 
-	return accountData
+	return account
 }
 
-func NewContractPrompt() map[string]string {
-	contractData := make(map[string]string)
-	var err error
+type ContractData struct {
+	Name     string
+	Source   string
+	Emulator string
+	Testnet  string
+	Mainnet  string
+}
 
-	contractData["name"] = NamePrompt()
+func NewContractPrompt() *ContractData {
+	contract := &ContractData{
+		Name: NamePrompt(),
+	}
+	var err error
 
 	sourcePrompt := promptui.Prompt{
 		Label: "Enter contract file location",
@@ -309,7 +335,7 @@ func NewContractPrompt() map[string]string {
 			return nil
 		},
 	}
-	contractData["source"], err = sourcePrompt.Run()
+	contract.Source, err = sourcePrompt.Run()
 	if err == promptui.ErrInterrupt {
 		os.Exit(-1)
 	}
@@ -318,29 +344,42 @@ func NewContractPrompt() map[string]string {
 		Label: "Enter emulator alias, if exists",
 		Validate: func(s string) error {
 			if s != "" {
-				_, err := config.StringToAddress(s)
+				_, err := flowkit.ParseAddress(s)
 				return err
 			}
 
 			return nil
 		},
 	}
-	contractData["emulator"], _ = emulatorAliasPrompt.Run()
+	contract.Emulator, _ = emulatorAliasPrompt.Run()
 
 	testnetAliasPrompt := promptui.Prompt{
 		Label: "Enter testnet alias, if exists",
 		Validate: func(s string) error {
 			if s != "" {
-				_, err := config.StringToAddress(s)
+				_, err := flowkit.ParseAddress(s)
 				return err
 			}
 
 			return nil
 		},
 	}
-	contractData["testnet"], _ = testnetAliasPrompt.Run()
+	contract.Testnet, _ = testnetAliasPrompt.Run()
 
-	return contractData
+	mainnetAliasPrompt := promptui.Prompt{
+		Label: "Enter mainnet alias, if exists",
+		Validate: func(s string) error {
+			if s != "" {
+				_, err := flowkit.ParseAddress(s)
+				return err
+			}
+
+			return nil
+		},
+	}
+	contract.Mainnet, _ = mainnetAliasPrompt.Run()
+
+	return contract
 }
 
 func NewNetworkPrompt() map[string]string {
@@ -365,12 +404,18 @@ func NewNetworkPrompt() map[string]string {
 	return networkData
 }
 
+type DeploymentData struct {
+	Network   string
+	Account   string
+	Contracts []string
+}
+
 func NewDeploymentPrompt(
 	networks config.Networks,
 	accounts config.Accounts,
 	contracts config.Contracts,
-) map[string]interface{} {
-	deploymentData := make(map[string]interface{})
+) *DeploymentData {
+	deploymentData := &DeploymentData{}
 	var err error
 
 	networkNames := make([]string, 0)
@@ -382,7 +427,7 @@ func NewDeploymentPrompt(
 		Label: "Choose network for deployment",
 		Items: networkNames,
 	}
-	_, deploymentData["network"], err = networkPrompt.Run()
+	_, deploymentData.Network, err = networkPrompt.Run()
 	if err == promptui.ErrInterrupt {
 		os.Exit(-1)
 	}
@@ -396,7 +441,7 @@ func NewDeploymentPrompt(
 		Label: "Choose an account to deploy to",
 		Items: accountNames,
 	}
-	_, deploymentData["account"], err = accountPrompt.Run()
+	_, deploymentData.Account, err = accountPrompt.Run()
 	if err == promptui.ErrInterrupt {
 		os.Exit(-1)
 	}
@@ -406,15 +451,15 @@ func NewDeploymentPrompt(
 		contractNames = append(contractNames, contract.Name)
 	}
 
-	deploymentData["contracts"] = make([]string, 0)
+	deploymentData.Contracts = make([]string, 0)
 
 	contractName := contractPrompt(contractNames)
-	deploymentData["contracts"] = append(deploymentData["contracts"].([]string), contractName)
+	deploymentData.Contracts = append(deploymentData.Contracts, contractName)
 	contractNames = RemoveFromStringArray(contractNames, contractName)
 
 	for addAnotherContractToDeploymentPrompt() {
 		contractName := contractPrompt(contractNames)
-		deploymentData["contracts"] = append(deploymentData["contracts"].([]string), contractName)
+		deploymentData.Contracts = append(deploymentData.Contracts, contractName)
 		contractNames = RemoveFromStringArray(contractNames, contractName)
 
 		if len(contractNames) == 0 {

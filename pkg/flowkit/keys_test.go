@@ -56,7 +56,9 @@ func Test_File_key(t *testing.T) {
 
 	cKey := fileKey.ToConfig()
 	assert.Equal(t, cKey, confKey)
-	assert.Equal(t, confKey, NewFileAccountKey(confKey.Location, confKey.Index, confKey.SigAlgo, confKey.HashAlgo))
+
+	key := NewFileAccountKey(confKey.Location, confKey.Index, confKey.SigAlgo, confKey.HashAlgo)
+	assert.Equal(t, confKey, key.ToConfig())
 }
 
 func Test_BIP44(t *testing.T) {
