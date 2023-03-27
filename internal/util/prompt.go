@@ -16,13 +16,12 @@
  * limitations under the License.
  */
 
-package prompt
+package util
 
 import (
 	"fmt"
 	"github.com/gosuri/uilive"
 	"github.com/manifoldco/promptui"
-	"github.com/onflow/flow-cli/internal/util"
 	"github.com/onflow/flow-go-sdk"
 	"golang.org/x/exp/maps"
 	"golang.org/x/exp/slices"
@@ -186,7 +185,7 @@ func secureNetworkKeyPrompt() string {
 				return nil
 			}
 
-			return util.ValidateECDSAP256Pub(s)
+			return ValidateECDSAP256Pub(s)
 		},
 	}
 	networkKey, err := networkKeyPrompt.Run()
@@ -411,12 +410,12 @@ func NewDeploymentPrompt(
 
 	contractName := contractPrompt(contractNames)
 	deploymentData["contracts"] = append(deploymentData["contracts"].([]string), contractName)
-	contractNames = util.RemoveFromStringArray(contractNames, contractName)
+	contractNames = RemoveFromStringArray(contractNames, contractName)
 
 	for addAnotherContractToDeploymentPrompt() {
 		contractName := contractPrompt(contractNames)
 		deploymentData["contracts"] = append(deploymentData["contracts"].([]string), contractName)
-		contractNames = util.RemoveFromStringArray(contractNames, contractName)
+		contractNames = RemoveFromStringArray(contractNames, contractName)
 
 		if len(contractNames) == 0 {
 			break

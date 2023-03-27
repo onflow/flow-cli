@@ -29,20 +29,6 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
 )
 
-// GlobalFlags contains all global flags definitions.
-type GlobalFlags struct {
-	Filter           string
-	Format           string
-	Save             string
-	Host             string
-	HostNetworkKey   string
-	Log              string
-	Network          string
-	Yes              bool
-	ConfigPaths      []string
-	SkipVersionCheck bool
-}
-
 // Flags initialized to default values.
 var Flags = GlobalFlags{
 	Filter:           "",

@@ -20,7 +20,6 @@ package config
 
 import (
 	"fmt"
-	"github.com/onflow/flow-cli/internal/prompt"
 	"github.com/onflow/flow-cli/internal/util"
 	"net/url"
 
@@ -64,7 +63,7 @@ func addNetwork(
 	}
 
 	if !flagsProvided {
-		networkData = prompt.NewNetworkPrompt()
+		networkData = util.NewNetworkPrompt()
 	}
 
 	network := config.StringToNetwork(networkData["name"], networkData["host"], networkData["key"])

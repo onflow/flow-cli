@@ -22,13 +22,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/onflow/flow-cli/internal/util"
 	"golang.org/x/exp/slices"
 
 	flowsdk "github.com/onflow/flow-go-sdk"
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
-	"github.com/onflow/flow-cli/internal/prompt"
 	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
@@ -185,7 +185,7 @@ func checkForStandardContractUsageOnMainnet(state *flowkit.State, logger output.
 		logger.Info(fmt.Sprintf("It is a standard contract already deployed at address 0x%s \n", standardContract.address.String()))
 		logger.Info(fmt.Sprintf("You can read more about it here: %s \n", standardContract.infoLink))
 
-		if replace || prompt.WantToUseMainnetVersionPrompt() {
+		if replace || util.WantToUseMainnetVersionPrompt() {
 			err := replaceContractWithAlias(state, standardContract)
 			if err != nil {
 				return err

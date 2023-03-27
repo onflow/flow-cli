@@ -21,7 +21,7 @@ package transactions
 import (
 	"context"
 	"fmt"
-	"github.com/onflow/flow-cli/internal/prompt"
+	"github.com/onflow/flow-cli/internal/util"
 
 	"github.com/spf13/cobra"
 
@@ -67,7 +67,7 @@ func sendSigned(
 		return nil, err
 	}
 
-	if !globalFlags.Yes && !prompt.ApproveTransactionForSendingPrompt(tx.FlowTransaction()) {
+	if !globalFlags.Yes && !util.ApproveTransactionForSendingPrompt(tx.FlowTransaction()) {
 		return nil, fmt.Errorf("transaction was not approved for sending")
 	}
 
