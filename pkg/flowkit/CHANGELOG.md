@@ -133,6 +133,7 @@ The `GetBlock` API doesn't return the `[]flow.BlockEvents, []*flow.Collection` a
 
 ---
 
+The `GetLatestBlockHeight` method was removed, you should instead use `GetBlock(LatestBlockQuery)`.
 
 
 
