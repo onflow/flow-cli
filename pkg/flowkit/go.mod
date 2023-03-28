@@ -8,7 +8,7 @@ require (
 	github.com/lmars/go-slip10 v0.0.0-20190606092855-400ba44fee12
 	github.com/manifoldco/promptui v0.9.0
 	github.com/onflow/cadence v0.36.0
-	github.com/onflow/cadence-tools/test v0.5.0
+	github.com/onflow/cadence-tools/test v0.6.0
 	github.com/onflow/flow-core-contracts/lib/go/templates v0.12.1
 	github.com/onflow/flow-emulator v0.45.0
 	github.com/onflow/flow-go v0.29.6-with-pr-3835.0.20230310185646-540256588e78

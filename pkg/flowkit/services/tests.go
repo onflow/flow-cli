@@ -22,6 +22,7 @@ import (
 	"fmt"
 
 	cdcTests "github.com/onflow/cadence-tools/test"
+	"github.com/onflow/cadence/runtime"
 	"github.com/onflow/cadence/runtime/common"
 
 	"github.com/onflow/flow-cli/pkg/flowkit"
@@ -49,18 +50,31 @@ func NewTests(
 
 // Execute test scripts.
 func (t *Tests) Execute(
-	code []byte,
-	scriptPath string,
+	testFiles map[string][]byte,
 	readerWriter flowkit.ReaderWriter,
-) (cdcTests.Results, error) {
-
-	runner := cdcTests.NewTestRunner().
-		WithImportResolver(t.importResolver(scriptPath, readerWriter)).
-		WithFileResolver(t.fileResolver(scriptPath, readerWriter))
+	coverageEnabled bool,
+) (map[string]cdcTests.Results, *runtime.CoverageReport, error) {
+	var coverageReport *runtime.CoverageReport
+	runner := cdcTests.NewTestRunner()
+	if coverageEnabled {
+		coverageReport = runtime.NewCoverageReport()
+		runner = runner.WithCoverageReport(coverageReport)
+	}
 
 	t.logger.Info("Running tests...")
 
-	return runner.RunTests(string(code))
+	testResults := make(map[string]cdcTests.Results, 0)
+	for scriptPath, code := range testFiles {
+		runner := runner.
+			WithImportResolver(t.importResolver(scriptPath, readerWriter)).
+			WithFileResolver(t.fileResolver(scriptPath, readerWriter))
+		results, err := runner.RunTests(string(code))
+		if err != nil {
+			return nil, nil, err
+		}
+		testResults[scriptPath] = results
+	}
+	return testResults, coverageReport, nil
 }
 
 func (t *Tests) importResolver(scriptPath string, readerWriter flowkit.ReaderWriter) cdcTests.ImportResolver {
