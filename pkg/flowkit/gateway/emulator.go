@@ -55,9 +55,10 @@ func NewEmulatorGateway(serviceAccount *flowkit.Account) *EmulatorGateway {
 
 func NewEmulatorGatewayWithOpts(serviceAccount *flowkit.Account, opts ...func(*EmulatorGateway)) *EmulatorGateway {
 
+	noopLogger := zerolog.Nop()
 	gateway := &EmulatorGateway{
 		ctx:             context.Background(),
-		logger:          &zerolog.Nop(),
+		logger:          &noopLogger,
 		emulatorOptions: []emulator.Option{},
 	}
 	for _, opt := range opts {
