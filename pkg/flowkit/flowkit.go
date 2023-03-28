@@ -43,10 +43,12 @@ type BlockQuery struct {
 // LatestBlockQuery specifies the latest block.
 var LatestBlockQuery = BlockQuery{Latest: true}
 
-// NewBlockQuery creates block query based on the passed query string which can have values:
-// - "latest" to query the latest block
-// - uint value to provide block height
-// - ID to query by block ID
+// NewBlockQuery creates block query based on the passed query value.
+//
+// Query string options:
+// - "latest"                : return the latest block
+// - height (e.g. 123456789) : return block at this height
+// - ID                      : return block with this ID
 // if none of the valid values are passed an error is returned.
 func NewBlockQuery(query string) (BlockQuery, error) {
 	if query == "latest" {
