@@ -21,7 +21,6 @@ package flowkit
 import (
 	"encoding/json"
 	"fmt"
-	"strconv"
 	"strings"
 
 	"github.com/onflow/cadence"
@@ -38,7 +37,7 @@ type CadenceArgument struct {
 	Value cadence.Value
 }
 
-func (v CadenceArgument) MarshalJSON() ([]byte, error) {
+func (v *CadenceArgument) MarshalJSON() ([]byte, error) {
 	return jsoncdc.Encode(v.Value)
 }
 
@@ -64,36 +63,6 @@ func ParseArgumentsJSON(input string) ([]cadence.Value, error) {
 		cadenceArgs[i] = arg.Value
 	}
 	return cadenceArgs, nil
-}
-
-// sanitizeAddressArg sanitize address and make sure it has 0x prefix
-func processValue(argType string, argValue string) interface{} {
-	if argType == "Address" && !strings.Contains(argValue, "0x") {
-		return fmt.Sprintf("0x%s", argValue)
-	} else if argType == "Bool" {
-		converted, _ := strconv.ParseBool(argValue)
-		return converted
-	}
-
-	return argValue
-}
-
-func GetAuthorizerCount(fileName string, code []byte) int {
-
-	codes := make(map[common.Location][]byte)
-	location := common.StringLocation(fileName)
-	program, _ := cmd.PrepareProgram(code, location, codes)
-
-	transactionDeclaration := program.TransactionDeclarations()
-	if len(transactionDeclaration) == 1 {
-		if transactionDeclaration[0].Prepare != nil {
-			parameters := transactionDeclaration[0].Prepare.FunctionDeclaration.ParameterList
-			if parameters != nil {
-				return len(parameters.Parameters)
-			}
-		}
-	}
-	return 0
 }
 
 func ParseArgumentsWithoutType(fileName string, code []byte, args []string) (scriptArgs []cadence.Value, err error) {

@@ -21,12 +21,11 @@ package collections
 import (
 	"bytes"
 	"fmt"
+	"github.com/onflow/flow-cli/internal/util"
 	"strings"
 
 	"github.com/onflow/flow-go-sdk"
 	"github.com/spf13/cobra"
-
-	"github.com/onflow/flow-cli/pkg/flowkit/util"
 )
 
 var Cmd = &cobra.Command{

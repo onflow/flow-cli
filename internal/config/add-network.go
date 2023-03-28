@@ -20,6 +20,7 @@ package config
 
 import (
 	"fmt"
+	"github.com/onflow/flow-cli/internal/util"
 	"net/url"
 
 	"github.com/spf13/cobra"
@@ -28,7 +29,6 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
-	"github.com/onflow/flow-cli/pkg/flowkit/util"
 )
 
 type flagsAddNetwork struct {
@@ -57,17 +57,20 @@ func addNetwork(
 	_ flowkit.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
-	networkData, flagsProvided, err := flagsToNetworkData(addNetworkFlags)
+	raw, flagsProvided, err := flagsToNetworkData(addNetworkFlags)
 	if err != nil {
 		return nil, err
 	}
 
 	if !flagsProvided {
-		networkData = output.NewNetworkPrompt()
+		raw = util.NewNetworkPrompt()
 	}
 
-	network := config.StringToNetwork(networkData["name"], networkData["host"], networkData["key"])
-	state.Networks().AddOrUpdate(network)
+	state.Networks().AddOrUpdate(config.Network{
+		Name: raw["name"],
+		Host: raw["host"],
+		Key:  raw["key"],
+	})
 
 	err = state.SaveEdited(globalFlags.ConfigPaths)
 	if err != nil {
@@ -75,7 +78,7 @@ func addNetwork(
 	}
 
 	return &Result{
-		result: fmt.Sprintf("Network %s added to the configuration", networkData["name"]),
+		result: fmt.Sprintf("Network %s added to the configuration", raw["name"]),
 	}, nil
 }
 

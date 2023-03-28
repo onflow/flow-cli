@@ -65,30 +65,20 @@ func (c *Parsers) FindForFormat(extension string) Parser {
 
 // Loader contains actions for composing and modifying configuration.
 type Loader struct {
-	readerWriter     ReaderWriter
-	configParsers    Parsers
-	accountsFromFile map[string]string
+	readerWriter  ReaderWriter
+	configParsers Parsers
 }
 
 // NewLoader returns a new loader.
 func NewLoader(readerWriter ReaderWriter) *Loader {
 	return &Loader{
-		readerWriter:     readerWriter,
-		accountsFromFile: map[string]string{},
+		readerWriter: readerWriter,
 	}
 }
 
 // AddConfigParser adds a new configuration parser.
 func (l *Loader) AddConfigParser(format Parser) {
 	l.configParsers = append(l.configParsers, format)
-}
-
-func (l *Loader) AccountsFromFile() map[string]string {
-	return l.accountsFromFile
-}
-
-func (l *Loader) SetAccountFromFile(name string, location string) {
-	l.accountsFromFile[name] = location
 }
 
 // Save saves a configuration to a path with correct serializer.
@@ -179,51 +169,12 @@ func (l *Loader) Load(paths []string) (*Config, error) {
 
 // preprocess does all manipulations to the raw configuration format happens here.
 func (l *Loader) preprocess(raw []byte) []byte {
-	raw, accountsFromFile := ProcessorRun(raw)
-
-	// add all imports from files preprocessor detected for later processing
-	l.accountsFromFile = accountsFromFile
-
-	return raw
+	return ProcessorRun(raw)
 }
 
 // postprocess does all stateful changes to configuration structures here after it is parsed.
 func (l *Loader) postprocess(baseConf *Config) (*Config, error) {
-	for name, path := range l.accountsFromFile {
-		raw, err := l.loadFile(path)
-		if err != nil {
-			return nil, err
-		}
-
-		configParser := l.configParsers.FindForFormat(filepath.Ext(path))
-		if configParser == nil {
-			return nil, fmt.Errorf("parser not found for config: %s", path)
-		}
-
-		conf, err := configParser.Deserialize(raw)
-		if err != nil {
-			return nil, err
-		}
-
-		account, err := conf.Accounts.ByName(name)
-		if err != nil {
-			return nil, err
-		}
-
-		// IMPORTANT: save the original filepath so that this account's
-		// key information is not saved to the default configuration file
-		// and potentially exposed to the public.
-		account.Location = path
-
-		// create an empty config with single account so we don't include all accounts in file
-		accountConf := &Config{
-			Accounts: []Account{*account},
-		}
-
-		l.composeConfig(baseConf, accountConf)
-	}
-
-	// validate as part of post processing
+	// validate as part of post-processing
 	err := baseConf.Validate()
 	if err != nil {
 		return nil, err

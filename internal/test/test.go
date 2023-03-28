@@ -20,25 +20,25 @@ package test
 
 import (
 	"bytes"
-	"context"
 	"fmt"
+	"github.com/onflow/cadence/runtime/common"
+	"github.com/onflow/flow-cli/pkg/flowkit/config"
+	"path"
 
 	cdcTests "github.com/onflow/cadence-tools/test"
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
+	"github.com/onflow/flow-cli/internal/util"
 	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
-	"github.com/onflow/flow-cli/pkg/flowkit/util"
 )
 
-type flagsTests struct {
-	// Nothing for now
-}
+type flagsTests struct{}
 
 var testFlags = flagsTests{}
 
-var TestCommand = &command.Command{
+var Command = &command.Command{
 	Cmd: &cobra.Command{
 		Use:     "test <filename>",
 		Short:   "Run Cadence tests",
@@ -47,19 +47,19 @@ var TestCommand = &command.Command{
 		GroupID: "tools",
 	},
 	Flags: &testFlags,
-	Run:   run,
+	RunS:  run,
 }
 
 func run(
 	args []string,
 	_ command.GlobalFlags,
 	logger output.Logger,
-	readerWriter flowkit.ReaderWriter,
-	services flowkit.Services,
+	_ flowkit.Services,
+	state *flowkit.State,
 ) (command.Result, error) {
 	filename := args[0]
 
-	code, err := readerWriter.ReadFile(filename)
+	code, err := state.ReadFile(filename)
 	if err != nil {
 		return nil, fmt.Errorf("error loading script file: %w", err)
 	}
@@ -67,27 +67,86 @@ func run(
 	logger.StartProgress("Running tests...")
 	defer logger.StopProgress()
 
-	result, err := services.Test(
-		context.Background(),
-		code,
-		filename,
-	)
+	result, err := testCode(code, filename, state)
 	if err != nil {
 		return nil, err
 	}
 
-	return &TestResult{
+	return &Result{
 		Results: result,
 	}, nil
 }
 
-type TestResult struct {
+func testCode(code []byte, scriptPath string, state *flowkit.State) (cdcTests.Results, error) {
+	runner := cdcTests.NewTestRunner().
+		WithImportResolver(importResolver(scriptPath, state)).
+		WithFileResolver(fileResolver(scriptPath, state))
+
+	return runner.RunTests(string(code))
+}
+
+func importResolver(scriptPath string, state *flowkit.State) cdcTests.ImportResolver {
+	return func(location common.Location) (string, error) {
+		stringLocation, isFileImport := location.(common.StringLocation)
+		if !isFileImport {
+			return "", fmt.Errorf("cannot import from %s", location)
+		}
+
+		importedContract, err := resolveContract(stringLocation, state)
+		if err != nil {
+			return "", err
+		}
+
+		importedContractFilePath := absolutePath(scriptPath, importedContract.Location)
+
+		contractCode, err := state.ReadFile(importedContractFilePath)
+		if err != nil {
+			return "", err
+		}
+
+		return string(contractCode), nil
+	}
+}
+
+func resolveContract(stringLocation common.StringLocation, state *flowkit.State) (config.Contract, error) {
+	relativePath := stringLocation.String()
+	for _, contract := range *state.Contracts() {
+		if contract.Location == relativePath {
+			return contract, nil
+		}
+	}
+
+	return config.Contract{}, fmt.Errorf("cannot find contract with location '%s' in configuration", relativePath)
+}
+
+func fileResolver(scriptPath string, state *flowkit.State) cdcTests.FileResolver {
+	return func(path string) (string, error) {
+		importFilePath := absolutePath(scriptPath, path)
+
+		content, err := state.ReadFile(importFilePath)
+		if err != nil {
+			return "", err
+		}
+
+		return string(content), nil
+	}
+}
+
+func absolutePath(basePath, filePath string) string {
+	if path.IsAbs(filePath) {
+		return filePath
+	}
+
+	return path.Join(path.Dir(basePath), filePath)
+}
+
+type Result struct {
 	cdcTests.Results
 }
 
-var _ command.Result = &TestResult{}
+var _ command.Result = &Result{}
 
-func (r *TestResult) JSON() any {
+func (r *Result) JSON() any {
 	results := make([]map[string]string, 0, len(r.Results))
 
 	for _, result := range r.Results {
@@ -100,7 +159,7 @@ func (r *TestResult) JSON() any {
 	return results
 }
 
-func (r *TestResult) String() string {
+func (r *Result) String() string {
 	var b bytes.Buffer
 	writer := util.CreateTabWriter(&b)
 
@@ -111,6 +170,6 @@ func (r *TestResult) String() string {
 	return b.String()
 }
 
-func (r *TestResult) Oneliner() string {
+func (r *Result) Oneliner() string {
 	return cdcTests.PrettyPrintResults(r.Results)
 }

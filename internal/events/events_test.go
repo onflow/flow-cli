@@ -1,8 +1,27 @@
+/*
+ * Flow CLI
+ *
+ * Copyright 2019 Dapper Labs, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package events
 
 import (
 	"encoding/json"
 	"github.com/onflow/cadence"
+	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/internal/util"
 	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/tests"
@@ -21,7 +40,7 @@ func Test_Get(t *testing.T) {
 		eventsFlags.Start = 10
 		eventsFlags.End = 20
 
-		result, err := get(inArgs, util.NoFlags, util.NoLogger, rw, srv.Mock)
+		result, err := get(inArgs, command.GlobalFlags{}, util.NoLogger, rw, srv.Mock)
 		assert.NoError(t, err)
 		assert.NotNil(t, result)
 	})
@@ -36,7 +55,7 @@ func Test_Get(t *testing.T) {
 			assert.True(t, query.Latest)
 		}).Return(tests.NewBlock(), nil)
 
-		result, err := get(inArgs, util.NoFlags, util.NoLogger, rw, srv.Mock)
+		result, err := get(inArgs, command.GlobalFlags{}, util.NoLogger, rw, srv.Mock)
 		assert.NoError(t, err)
 		assert.NotNil(t, result)
 	})
@@ -46,7 +65,7 @@ func Test_Get(t *testing.T) {
 		eventsFlags.Start = 20
 		eventsFlags.End = 0
 
-		result, err := get(inArgs, util.NoFlags, util.NoLogger, rw, srv.Mock)
+		result, err := get(inArgs, command.GlobalFlags{}, util.NoLogger, rw, srv.Mock)
 		assert.EqualError(t, err, "please provide either both start and end for range or only last flag")
 		assert.Nil(t, result)
 	})
@@ -74,7 +93,7 @@ func Test_Result(t *testing.T) {
 	assert.Equal(t, strings.TrimPrefix(`
 Events Block #1:
     Index	0
-    Type	S.test.A.foo
+    Type	S.A.foo
     Tx ID	0000000000000000000000000000000000000000000000000000000000000000
     Values
 		- bar (String): 1 

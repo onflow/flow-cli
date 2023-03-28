@@ -1,6 +1,25 @@
+/*
+ * Flow CLI
+ *
+ * Copyright 2019 Dapper Labs, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package blocks
 
 import (
+	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/internal/util"
 	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/tests"
@@ -21,17 +40,17 @@ func Test_GetBlock(t *testing.T) {
 
 		srv.GetEvents.Run(func(args mock.Arguments) {
 			assert.Equal(t, "A.foo", args.Get(1).([]string)[0])
-			assert.Equal(t, 100, args.Get(2).(uint64))
-			assert.Equal(t, 100, args.Get(3).(uint64))
+			assert.Equal(t, uint64(100), args.Get(2).(uint64))
+			assert.Equal(t, uint64(100), args.Get(3).(uint64))
 		}).Return(nil, nil)
 
 		srv.GetCollection.Return(nil, nil)
 
 		srv.GetBlock.Run(func(args mock.Arguments) {
-			assert.Equal(t, 100, args.Get(1).(flowkit.BlockQuery).Height)
+			assert.Equal(t, uint64(100), args.Get(1).(flowkit.BlockQuery).Height)
 		}).Return(tests.NewBlock(), nil)
 
-		result, err := get(inArgs, util.NoFlags, util.NoLogger, rw, srv.Mock)
+		result, err := get(inArgs, command.GlobalFlags{}, util.NoLogger, rw, srv.Mock)
 		assert.NotNil(t, result)
 		assert.NoError(t, err)
 	})

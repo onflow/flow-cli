@@ -24,7 +24,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"os/user"
@@ -41,11 +40,11 @@ import (
 
 	"github.com/onflow/flow-cli/build"
 	"github.com/onflow/flow-cli/internal/settings"
+	"github.com/onflow/flow-cli/internal/util"
 	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
 	"github.com/onflow/flow-cli/pkg/flowkit/gateway"
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
-	"github.com/onflow/flow-cli/pkg/flowkit/util"
 )
 
 // Run the command with arguments.
@@ -261,7 +260,7 @@ func checkVersion(logger output.Logger) {
 		}
 	}(resp.Body)
 
-	body, _ := ioutil.ReadAll(resp.Body)
+	body, _ := io.ReadAll(resp.Body)
 	latestVersion := strings.TrimSpace(string(body))
 
 	currentVersion := build.Semver()
@@ -300,7 +299,7 @@ func initCrashReporting() {
 			// ask for crash report permission
 			fmt.Printf("\n%s Crash detected! %s\n\n", output.ErrorEmoji(), event.Message)
 
-			if output.ReportCrash() {
+			if util.ReportCrash() {
 				return event
 			} else {
 				fmt.Printf("\nPlease help us improve the Flow CLI by opening an issue on https://github.com/onflow/flow-cli/issues, \nand pasting the output as well as a description of the actions you took that resulted in this crash.\n\n")
@@ -342,4 +341,18 @@ func UsageMetrics(command *cobra.Command, wg *sync.WaitGroup) {
 		},
 	})
 	wg.Done()
+}
+
+// GlobalFlags contains all global flags definitions.
+type GlobalFlags struct {
+	Filter           string
+	Format           string
+	Save             string
+	Host             string
+	HostNetworkKey   string
+	Log              string
+	Network          string
+	Yes              bool
+	ConfigPaths      []string
+	SkipVersionCheck bool
 }

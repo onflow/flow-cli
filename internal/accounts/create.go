@@ -32,13 +32,12 @@ import (
 )
 
 type flagsCreate struct {
-	Signer    string   `default:"emulator-account" flag:"signer" info:"Account name from configuration used to sign the transaction"`
-	Keys      []string `flag:"key" info:"Public keys to attach to account"`
-	Weights   []int    `default:"1000" flag:"key-weight" info:"Weight for the key"`
-	SigAlgo   []string `default:"ECDSA_P256" flag:"sig-algo" info:"Signature algorithm used to generate the keys"`
-	HashAlgo  []string `default:"SHA3_256" flag:"hash-algo" info:"Hash used for the digest"`
-	Contracts []string `flag:"contract" info:"Contract to be deployed during account creation. <name:filename>"`
-	Include   []string `default:"" flag:"include" info:"Fields to include in the output"`
+	Signer   string   `default:"emulator-account" flag:"signer" info:"Account name from configuration used to sign the transaction"`
+	Keys     []string `flag:"key" info:"Public keys to attach to account"`
+	Weights  []int    `default:"1000" flag:"key-weight" info:"Weight for the key"`
+	SigAlgo  []string `default:"ECDSA_P256" flag:"sig-algo" info:"Signature algorithm used to generate the keys"`
+	HashAlgo []string `default:"SHA3_256" flag:"hash-algo" info:"Hash used for the digest"`
+	Include  []string `default:"" flag:"include" info:"Fields to include in the output"`
 }
 
 var createFlags = flagsCreate{}
@@ -105,20 +104,18 @@ func create(
 		return nil, err
 	}
 
-	keys := make([]flowkit.Key, len(pubKeys))
+	keys := make([]flowkit.AccountPublicKey, len(pubKeys))
 	for i, key := range pubKeys {
-		keys[i] = flowkit.Key{
+		keys[i] = flowkit.AccountPublicKey{
 			Public: key, Weight: weightFlag[i], SigAlgo: sigAlgos[i], HashAlgo: hashAlgos[i],
 		}
 	}
 
-	// todo if contracts are provided we should also deploy as seperate action
 	account, _, err := flow.CreateAccount(
 		context.Background(),
 		signer,
 		keys,
 	)
-
 	if err != nil {
 		return nil, err
 	}

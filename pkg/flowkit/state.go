@@ -31,8 +31,7 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowkit/project"
 )
 
-// ReaderWriter is implemented by any value that has ReadFile and WriteFile
-// and it is used to load and save files.
+// ReaderWriter defines read file and write file methods.
 type ReaderWriter interface {
 	ReadFile(source string) ([]byte, error)
 	WriteFile(filename string, data []byte, perm os.FileMode) error
@@ -82,22 +81,8 @@ func (p *State) SaveEdited(paths []string) error {
 
 // Save saves the project configuration to the given path.
 func (p *State) Save(path string) error {
-	p.conf.Accounts = accountsToConfig(*p.accounts, p.confLoader.AccountsFromFile())
+	p.conf.Accounts = accountsToConfig(*p.accounts)
 	err := p.confLoader.Save(p.conf, path)
-
-	// if we have defined accounts to be saved to an external file, iterate over them and save them separately
-	for name, location := range p.confLoader.AccountsFromFile() {
-		acc, _ := p.accounts.ByName(name)
-		account := toConfig(*acc, nil)
-		account.UseAdvanceFormat = true // in case where we save accounts to a separate file we use advance format even if default value
-
-		c := config.Empty()
-		c.Accounts.AddOrUpdate(name, account)
-		err = p.confLoader.Save(c, location)
-		if err != nil {
-			return err
-		}
-	}
 
 	if err != nil {
 		return fmt.Errorf("failed to save project configuration to: %s", path)
@@ -129,11 +114,6 @@ func (p *State) Accounts() *Accounts {
 // Config get underlying configuration for advanced usage.
 func (p *State) Config() *config.Config {
 	return p.conf
-}
-
-// SetAccountFileLocation sets a private file location for the specified account.
-func (p *State) SetAccountFileLocation(account Account, location string) {
-	p.confLoader.SetAccountFromFile(account.name, location)
 }
 
 // EmulatorServiceAccount returns the service account for the default emulator profile.
@@ -201,9 +181,9 @@ func (p *State) DeploymentContractsByNetwork(network config.Network) ([]*project
 }
 
 // AccountsForNetwork returns all accounts used on a network defined by deployments.
-func (p *State) AccountsForNetwork(network config.Network) Accounts {
+func (p *State) AccountsForNetwork(network config.Network) *Accounts {
 	exists := make(map[string]bool, 0)
-	accounts := make([]Account, 0)
+	accounts := make(Accounts, 0)
 
 	for _, account := range *p.accounts {
 		if len(p.conf.Deployments.ByAccountAndNetwork(account.name, network.Name)) > 0 {
@@ -212,7 +192,7 @@ func (p *State) AccountsForNetwork(network config.Network) Accounts {
 			}
 		}
 	}
-	return accounts
+	return &accounts
 }
 
 // AliasesForNetwork returns all deployment aliases for a network.

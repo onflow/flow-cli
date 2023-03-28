@@ -75,27 +75,9 @@ func NewEmulatorGatewayWithOpts(key *EmulatorKey, opts ...func(*EmulatorGateway)
 	return gateway
 }
 
-func WithLogger(logger *logrus.Logger) func(g *EmulatorGateway) {
-	return func(g *EmulatorGateway) {
-		g.logger = logger
-	}
-}
-
 func WithEmulatorOptions(options ...emulator.Option) func(g *EmulatorGateway) {
 	return func(g *EmulatorGateway) {
 		g.emulatorOptions = append(g.emulatorOptions, options...)
-	}
-}
-
-func WithEmulatorLogger(logger *zerolog.Logger) func(g *EmulatorGateway) {
-	return func(g *EmulatorGateway) {
-		g.emulatorOptions = append(g.emulatorOptions, emulator.WithLogger(*logger))
-	}
-}
-
-func WithContext(ctx context.Context) func(g *EmulatorGateway) {
-	return func(g *EmulatorGateway) {
-		g.ctx = ctx
 	}
 }
 
@@ -136,7 +118,7 @@ func (g *EmulatorGateway) SendSignedTransaction(tx *flow.Transaction) (*flow.Tra
 	return tx, nil
 }
 
-func (g *EmulatorGateway) GetTransactionResult(ID flow.Identifier, waitSeal bool) (*flow.TransactionResult, error) {
+func (g *EmulatorGateway) GetTransactionResult(ID flow.Identifier, _ bool) (*flow.TransactionResult, error) {
 	result, err := g.backend.GetTransactionResult(g.ctx, ID)
 	if err != nil {
 		return nil, UnwrapStatusError(err)
@@ -152,12 +134,12 @@ func (g *EmulatorGateway) GetTransaction(id flow.Identifier) (*flow.Transaction,
 	return transaction, nil
 }
 
-func (g *EmulatorGateway) GetTransactionResultsByBlockID(blockID flow.Identifier) ([]*flow.TransactionResult, error) {
+func (g *EmulatorGateway) GetTransactionResultsByBlockID(_ flow.Identifier) ([]*flow.TransactionResult, error) {
 	// TODO: implement
 	panic("GetTransactionResultsByBlockID not implemented")
 }
 
-func (g *EmulatorGateway) GetTransactionsByBlockID(blockID flow.Identifier) ([]*flow.Transaction, error) {
+func (g *EmulatorGateway) GetTransactionsByBlockID(_ flow.Identifier) ([]*flow.Transaction, error) {
 	// TODO: implement
 	panic("GetTransactionResultsByBlockID not implemented")
 }

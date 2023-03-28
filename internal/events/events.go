@@ -22,14 +22,13 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/onflow/flow-cli/internal/util"
 	"io"
 
 	"github.com/onflow/cadence"
 	jsoncdc "github.com/onflow/cadence/encoding/json"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/spf13/cobra"
-
-	"github.com/onflow/flow-cli/pkg/flowkit/util"
 )
 
 var Cmd = &cobra.Command{

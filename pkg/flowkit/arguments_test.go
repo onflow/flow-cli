@@ -26,7 +26,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestArguments(t *testing.T) {
+func Test_WithoutType(t *testing.T) {
 	sampleValues := []cadence.Value{
 		cadence.NewAddress([8]byte{0, 0, 0, 0, 0, 0, 0, 1}),
 		cadence.NewBool(true),
@@ -55,4 +55,31 @@ func TestArguments(t *testing.T) {
 		assert.Len(t, args, 1)
 		assert.Equal(t, []cadence.Value{sample}, args)
 	}
+}
+
+func Test_WithoutTypeContracts(t *testing.T) {
+	template := []string{
+		`pub fun main(foo: String): Void {}`,
+		`pub contract Foo { init(foo: String) {} }`,
+		`transaction(foo: String) {}`,
+	}
+
+	for _, tmp := range template {
+		args, err := ParseArgumentsWithoutType("", []byte(tmp), []string{"hello"})
+		assert.NoError(t, err)
+		assert.Len(t, args, 1)
+		v, _ := cadence.NewString("hello")
+		assert.Equal(t, []cadence.Value{v}, args)
+	}
+
+}
+
+func Test_ParseJSON(t *testing.T) {
+	jsonInput := `[{"type": "String", "value": "Hello World"}]`
+
+	values, err := ParseArgumentsJSON(jsonInput)
+	assert.NoError(t, err)
+	assert.Len(t, values, 1)
+	assert.Equal(t, `"Hello World"`, values[0].String())
+	assert.Equal(t, "String", values[0].Type().ID())
 }

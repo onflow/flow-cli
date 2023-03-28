@@ -20,16 +20,14 @@ package flowkit
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
 
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
-	"github.com/onflow/flow-cli/pkg/flowkit/util"
 )
-
-// todo refactor to config
 
 // Account is a flowkit-specific account implementation.
 type Account struct {
@@ -43,58 +41,6 @@ func NewAccount(name string) *Account {
 	return &Account{
 		name: name,
 	}
-}
-
-// NewAccountFromOnChainAccount creates a new flowkit account definition
-// that mirrors an already-existing on-chain Flow account.
-//
-// This function requires the on-chain account to have exactly one Public key
-// with full signing weight (1000). This ensures that the user has complete
-// and sole control over the on-chain account.
-func NewAccountFromOnChainAccount(
-	name string,
-	onChainAccount *flow.Account,
-	privateKey crypto.PrivateKey,
-) (*Account, error) {
-	if len(onChainAccount.Keys) != 1 {
-		return nil, fmt.Errorf(
-			"expected on-chain account to have exactly one key, but got %d keys",
-			len(onChainAccount.Keys),
-		)
-	}
-
-	accountKey := onChainAccount.Keys[0]
-
-	if accountKey.Weight != flow.AccountKeyWeightThreshold {
-		return nil, fmt.Errorf(
-			"expected on-chain account to have full signing weight (%d), but got weight of %d",
-			flow.AccountKeyWeightThreshold,
-			accountKey.Weight,
-		)
-	}
-
-	offChainPublicKey := privateKey.PublicKey()
-	onChainPublicKey := accountKey.PublicKey
-
-	if !offChainPublicKey.Equals(onChainPublicKey) {
-		return nil, fmt.Errorf(
-			"expected on-chain account Public key to match (%s), but got %s",
-			offChainPublicKey.String(),
-			onChainPublicKey.String(),
-		)
-	}
-
-	account := NewAccount(name).
-		SetAddress(onChainAccount.Address).
-		SetKey(
-			NewHexAccountKeyFromPrivateKey(
-				accountKey.Index,
-				accountKey.HashAlgo,
-				privateKey,
-			),
-		)
-
-	return account, nil
 }
 
 // Address get account address.
@@ -143,11 +89,11 @@ func accountsFromConfig(conf *config.Config) (Accounts, error) {
 	return accounts, nil
 }
 
-func accountsToConfig(accounts Accounts, accountLocations map[string]string) config.Accounts {
+func accountsToConfig(accounts Accounts) config.Accounts {
 	accountConfs := make([]config.Account, 0)
 
 	for _, account := range accounts {
-		accountConfs = append(accountConfs, toConfig(account, accountLocations))
+		accountConfs = append(accountConfs, toConfig(account))
 	}
 
 	return accountConfs
@@ -166,15 +112,7 @@ func fromConfig(account config.Account) (*Account, error) {
 	}, nil
 }
 
-func toConfig(account Account, accountLocations map[string]string) config.Account {
-	// if account has a location specified we only store the account with a reference to that file location
-	if accountLocation, ok := accountLocations[account.name]; ok {
-		return config.Account{
-			Name:     account.name,
-			Location: accountLocation,
-		}
-	}
-
+func toConfig(account Account) config.Account {
 	var key config.AccountKey
 	if account.key != nil {
 		key = account.key.ToConfig()
@@ -188,7 +126,7 @@ func toConfig(account Account, accountLocations map[string]string) config.Accoun
 }
 
 func generateEmulatorServiceAccount(sigAlgo crypto.SignatureAlgorithm, hashAlgo crypto.HashAlgorithm) (*Account, error) {
-	seed, err := util.RandomSeed(crypto.MinSeedLength)
+	seed, err := randomSeed(crypto.MinSeedLength)
 	if err != nil {
 		return nil, err
 	}
@@ -228,13 +166,13 @@ func (a *Accounts) Remove(name string) error {
 	return nil
 }
 
-func (a Accounts) String() string {
+func (a *Accounts) String() string {
 	return strings.Join(a.Names(), ",")
 }
 
-func (a Accounts) Names() []string {
+func (a *Accounts) Names() []string {
 	accNames := make([]string, 0)
-	for _, acc := range a {
+	for _, acc := range *a {
 		accNames = append(accNames, acc.name)
 	}
 	return accNames
@@ -258,8 +196,8 @@ func (a Accounts) ByName(name string) (*Account, error) {
 			return &a[i], nil
 		}
 	}
-	return nil, fmt.Errorf("could not find account with name %s in the configuration", name)
 
+	return nil, fmt.Errorf("could not find account with name %s in the configuration", name)
 }
 
 // AddOrUpdate add account if missing or updates if present.
@@ -272,4 +210,13 @@ func (a *Accounts) AddOrUpdate(account *Account) {
 	}
 
 	*a = append(*a, *account)
+}
+
+// ParseAddress converts string to valid Flow address.
+func ParseAddress(value string) (flow.Address, error) {
+	if valid, _ := regexp.MatchString("^(0x)?[0-9A-Fa-f]{0,16}$", value); !valid {
+		return flow.EmptyAddress, fmt.Errorf("invalid address")
+	}
+
+	return flow.HexToAddress(value), nil
 }

@@ -19,11 +19,13 @@
 package json
 
 import (
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"github.com/onflow/flow-go-sdk/crypto"
+	"strings"
 
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
-	"github.com/onflow/flow-cli/pkg/flowkit/util"
 )
 
 type jsonNetworks map[string]jsonNetwork
@@ -34,7 +36,7 @@ func (j jsonNetworks) transformToConfig() (config.Networks, error) {
 
 	for networkName, n := range j {
 		if n.Advanced.Key != "" && n.Advanced.Host != "" {
-			err := util.ValidateECDSAP256Pub(n.Advanced.Key)
+			err := validateECDSAP256Pub(n.Advanced.Key)
 			if err != nil {
 				return nil, fmt.Errorf("invalid key %s for network with name %s", n.Advanced.Key, networkName)
 			}
@@ -128,4 +130,19 @@ func (j jsonNetwork) MarshalJSON() ([]byte, error) {
 	}
 
 	return json.Marshal(j.Advanced)
+}
+
+// validateECDSAP256Pub attempt to decode the hex string representation of a ECDSA P256 public key
+func validateECDSAP256Pub(key string) error {
+	b, err := hex.DecodeString(strings.TrimPrefix(key, "0x"))
+	if err != nil {
+		return fmt.Errorf("failed to decode public key hex string: %w", err)
+	}
+
+	_, err = crypto.DecodePublicKey(crypto.ECDSA_P256, b)
+	if err != nil {
+		return fmt.Errorf("failed to decode public key: %w", err)
+	}
+
+	return nil
 }

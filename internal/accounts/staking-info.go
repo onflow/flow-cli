@@ -22,8 +22,8 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-
 	"github.com/onflow/cadence"
+	"github.com/onflow/flow-cli/internal/util"
 	tmpl "github.com/onflow/flow-core-contracts/lib/go/templates"
 	flowsdk "github.com/onflow/flow-go-sdk"
 	"github.com/spf13/cobra"
@@ -31,7 +31,6 @@ import (
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
-	"github.com/onflow/flow-cli/pkg/flowkit/util"
 )
 
 type flagsStakingInfo struct{}
@@ -72,7 +71,7 @@ func stakingInfo(
 		return nil, fmt.Errorf("emulator chain not supported")
 	}
 
-	env := util.EnvFromNetwork(chain)
+	env := envFromNetwork(chain)
 
 	stakingInfoScript := tmpl.GenerateCollectionGetAllNodeInfoScript(env)
 	delegationInfoScript := tmpl.GenerateCollectionGetAllDelegatorInfoScript(env)
@@ -94,11 +93,11 @@ func stakingInfo(
 	}
 
 	// get staking infos and delegation infos
-	staking, err := flowkit.NewStakingInfoFromValue(stakingValue)
+	staking, err := newStakingInfoFromValue(stakingValue)
 	if err != nil {
 		return nil, fmt.Errorf("error parsing staking info: %s", err.Error())
 	}
-	delegation, err := flowkit.NewStakingInfoFromValue(delegationValue)
+	delegation, err := newStakingInfoFromValue(delegationValue)
 	if err != nil {
 		return nil, fmt.Errorf("error parsing delegation info: %s", err.Error())
 	}
@@ -139,8 +138,63 @@ func stakingInfo(
 	return &StakingResult{staking, delegation}, nil
 }
 
+func envFromNetwork(network flowsdk.ChainID) tmpl.Environment {
+	if network == flowsdk.Mainnet {
+		return tmpl.Environment{
+			IDTableAddress:       "8624b52f9ddcd04a",
+			FungibleTokenAddress: "f233dcee88fe0abe",
+			FlowTokenAddress:     "1654653399040a61",
+			LockedTokensAddress:  "8d0e87b65159ae63",
+			StakingProxyAddress:  "62430cf28c26d095",
+		}
+	}
+
+	if network == flowsdk.Testnet {
+		return tmpl.Environment{
+			IDTableAddress:       "9eca2b38b18b5dfe",
+			FungibleTokenAddress: "9a0766d93b6608b7",
+			FlowTokenAddress:     "7e60df042a9c0868",
+			LockedTokensAddress:  "95e019a17d0e23d7",
+			StakingProxyAddress:  "7aad92e5a0715d21",
+		}
+	}
+
+	return tmpl.Environment{}
+}
+
 func nodeIDToString(value interface{}) string {
 	return value.(cadence.String).ToGoValue().(string)
+}
+
+func newStakingInfoFromValue(value cadence.Value) ([]map[string]interface{}, error) {
+	stakingInfo := make([]map[string]interface{}, 0)
+	arrayValue, ok := value.(cadence.Array)
+	if !ok {
+		return stakingInfo, fmt.Errorf("staking info must be a cadence array")
+	}
+
+	if len(arrayValue.Values) == 0 {
+		return stakingInfo, nil
+	}
+
+	for _, v := range arrayValue.Values {
+		vs, ok := v.(cadence.Struct)
+		if !ok {
+			return stakingInfo, fmt.Errorf("staking info must be a cadence array of structs")
+		}
+
+		keys := make([]string, 0)
+		values := make(map[string]interface{})
+		for _, field := range vs.StructType.Fields {
+			keys = append(keys, field.Identifier)
+		}
+		for j, value := range vs.Fields {
+			values[keys[j]] = value
+		}
+		stakingInfo = append(stakingInfo, values)
+	}
+
+	return stakingInfo, nil
 }
 
 type StakingResult struct {

@@ -100,11 +100,6 @@ func Default() *Config {
 	}
 }
 
-// Empty returns an empty configuration.
-func Empty() *Config {
-	return &Config{}
-}
-
 var ErrOutdatedFormat = errors.New("you are using old configuration format")
 
 const DefaultPath = "flow.json"

@@ -24,6 +24,7 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
+	"github.com/onflow/flow-cli/internal/util"
 	"io"
 	"net/http"
 	"os"
@@ -39,7 +40,6 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
 	"github.com/onflow/flow-cli/pkg/flowkit/gateway"
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
-	"github.com/onflow/flow-cli/pkg/flowkit/util"
 )
 
 // createInteractive is used when user calls a default account create command without any provided values.
@@ -48,8 +48,8 @@ import (
 // and it then uses account creation APIs to automatically create the account on the network as well as save it.
 func createInteractive(state *flowkit.State) error {
 	log := output.NewStdoutLogger(output.InfoLog)
-	name := output.AccountNamePrompt(state.Accounts().Names())
-	networkName, selectedNetwork := output.CreateAccountNetworkPrompt()
+	name := util.AccountNamePrompt(state.Accounts().Names())
+	networkName, selectedNetwork := util.CreateAccountNetworkPrompt()
 	privateFile := fmt.Sprintf("%s.pkey", name)
 
 	// create new gateway based on chosen network
@@ -166,7 +166,7 @@ func createEmulatorAccount(
 	networkAccount, _, err := flow.CreateAccount(
 		context.Background(),
 		signer,
-		[]flowkit.Key{{
+		[]flowkit.AccountPublicKey{{
 			Public:   key.PublicKey(),
 			Weight:   flowsdk.AccountKeyWeightThreshold,
 			SigAlgo:  defaultSignAlgo,

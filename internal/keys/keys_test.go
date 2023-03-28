@@ -1,6 +1,25 @@
+/*
+ * Flow CLI
+ *
+ * Copyright 2019 Dapper Labs, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package keys
 
 import (
+	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/internal/util"
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/stretchr/testify/assert"
@@ -49,7 +68,7 @@ func Test_DecodeKeys(t *testing.T) {
 		}
 
 		for _, inArgs := range inArgsTests {
-			result, err := decode(inArgs, util.NoFlags, util.NoLogger, rw, srv.Mock)
+			result, err := decode(inArgs, command.GlobalFlags{}, util.NoLogger, rw, srv.Mock)
 			assert.NoError(t, err)
 			assert.NotNil(t, result)
 		}
@@ -60,7 +79,7 @@ func Test_DecodeKeys(t *testing.T) {
 		_ = rw.WriteFile("test", []byte("f847b84084d716c14b051ad6b001624f738f5d302636e6b07cc75e4530af7776a4368a2b586dbefc0564ee28384c2696f178cbed52e62811bcc9ecb59568c996d342db2402038203e8"), 0677)
 		decodeFlags.FromFile = "test"
 
-		result, err := decode(inArgs, util.NoFlags, util.NoLogger, rw, srv.Mock)
+		result, err := decode(inArgs, command.GlobalFlags{}, util.NoLogger, rw, srv.Mock)
 		assert.NoError(t, err)
 		assert.NotNil(t, result)
 		decodeFlags.FromFile = "" // reset to default
@@ -68,14 +87,14 @@ func Test_DecodeKeys(t *testing.T) {
 
 	t.Run("Fail invalid args", func(t *testing.T) {
 		inArgs := []string{"invalid", "invalid"}
-		result, err := decode(inArgs, util.NoFlags, util.NoLogger, rw, srv.Mock)
+		result, err := decode(inArgs, command.GlobalFlags{}, util.NoLogger, rw, srv.Mock)
 		assert.EqualError(t, err, "encoding type not supported. Valid encoding: RLP and PEM")
 		assert.Nil(t, result)
 	})
 
 	t.Run("Fail invalid args", func(t *testing.T) {
 		inArgs := []string{"", ""}
-		result, err := decode(inArgs, util.NoFlags, util.NoLogger, rw, srv.Mock)
+		result, err := decode(inArgs, command.GlobalFlags{}, util.NoLogger, rw, srv.Mock)
 		assert.EqualError(t, err, "provide argument for encoded key or use from file flag")
 		assert.Nil(t, result)
 	})
@@ -84,7 +103,7 @@ func Test_DecodeKeys(t *testing.T) {
 		inArgs := []string{"rlp", "some public key"}
 		decodeFlags.FromFile = "from file"
 
-		result, err := decode(inArgs, util.NoFlags, util.NoLogger, rw, srv.Mock)
+		result, err := decode(inArgs, command.GlobalFlags{}, util.NoLogger, rw, srv.Mock)
 		assert.EqualError(t, err, "can not pass both command argument and from file flag")
 		assert.Nil(t, result)
 	})
@@ -95,7 +114,7 @@ func Test_DeriveKeys(t *testing.T) {
 
 	t.Run("Success", func(t *testing.T) {
 		inArgs := []string{"cf3178b20a73846dc8bf6255c79be47178b0744dd8244bcff099e449a9700d7f"}
-		result, err := derive(inArgs, util.NoFlags, util.NoLogger, rw, srv.Mock)
+		result, err := derive(inArgs, command.GlobalFlags{}, util.NoLogger, rw, srv.Mock)
 		assert.NoError(t, err)
 		assert.NotNil(t, result)
 	})
@@ -103,7 +122,7 @@ func Test_DeriveKeys(t *testing.T) {
 	t.Run("Fail invalid key", func(t *testing.T) {
 		inArgs := []string{"invalid"}
 
-		result, err := derive(inArgs, util.NoFlags, util.NoLogger, rw, srv.Mock)
+		result, err := derive(inArgs, command.GlobalFlags{}, util.NoLogger, rw, srv.Mock)
 		assert.EqualError(t, err, "failed to decode private key: encoding/hex: invalid byte: U+0069 'i'")
 		assert.Nil(t, result)
 	})
@@ -112,7 +131,7 @@ func Test_DeriveKeys(t *testing.T) {
 		inArgs := []string{"cf3178b20a73846dc8bf6255c79be47178b0744dd8244bcff099e449a9700d7f"}
 		deriveFlags.KeySigAlgo = "invalid"
 
-		result, err := derive(inArgs, util.NoFlags, util.NoLogger, rw, srv.Mock)
+		result, err := derive(inArgs, command.GlobalFlags{}, util.NoLogger, rw, srv.Mock)
 		assert.EqualError(t, err, "invalid signature algorithm: invalid")
 		assert.Nil(t, result)
 	})
@@ -123,7 +142,7 @@ func Test_Generate(t *testing.T) {
 
 	t.Run("Fail invalid signature algorithm", func(t *testing.T) {
 		generateFlags.KeySigAlgo = "invalid"
-		_, err := generate([]string{}, util.NoFlags, util.NoLogger, rw, srv.Mock)
+		_, err := generate([]string{}, command.GlobalFlags{}, util.NoLogger, rw, srv.Mock)
 		assert.EqualError(t, err, "invalid signature algorithm: invalid")
 	})
 }

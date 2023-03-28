@@ -1,7 +1,6 @@
 package util
 
 import (
-	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/mocks"
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
@@ -12,7 +11,6 @@ import (
 	"testing"
 )
 
-var NoFlags = command.GlobalFlags{}
 var NoLogger = output.NewStdoutLogger(output.NoneLog)
 var TestID = flow.HexToID("24993fc99f81641c45c0afa307e683b4f08d407d90041aa9439f487acb33d633")
 

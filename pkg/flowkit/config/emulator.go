@@ -37,10 +37,10 @@ type Emulator struct {
 type Emulators []Emulator
 
 // Default gets default emulator.
-func (e Emulators) Default() *Emulator {
-	for i := range e {
-		if e[i].Name == DefaultEmulatorConfigName {
-			return &e[i]
+func (e *Emulators) Default() *Emulator {
+	for _, em := range *e {
+		if em.Name == DefaultEmulatorConfigName {
+			return &em
 		}
 	}
 

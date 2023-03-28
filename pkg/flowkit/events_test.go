@@ -19,7 +19,6 @@
 package flowkit_test
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/onflow/cadence"
@@ -30,20 +29,25 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowkit/tests"
 )
 
-func TestEvent(t *testing.T) {
+func Test_AccountCreatedEvent(t *testing.T) {
+	address := flow.HexToAddress("00c4fef62310c807")
 	flowEvent := tests.NewEvent(0,
-		"flow.AccountCreated",
+		flow.EventAccountCreated,
 		[]cadence.Field{{
 			Identifier: "address",
 			Type:       cadence.AddressType{},
 		}},
-		[]cadence.Value{cadence.String("00c4fef62310c807")},
+		[]cadence.Value{cadence.NewAddress(address)},
 	)
 	tx := tests.NewTransactionResult([]flow.Event{*flowEvent})
-	e := flowkit.EventsFromTransaction(tx)
+	events := flowkit.EventsFromTransaction(tx)
 
-	fmt.Println(e.GetAddress())
-	fmt.Println(flowEvent.Value.String())
+	assert.Len(t, events.GetCreatedAddresses(), 1)
+	assert.Equal(t, address, *events.GetCreatedAddresses()[0])
+
+	assert.Len(t, events, 1)
+	assert.Equal(t, address, *events[0].GetAddress())
+	assert.Equal(t, `flow.AccountCreated(address: 0x00c4fef62310c807)`, flowEvent.Value.String())
 }
 
 func TestAddress(t *testing.T) {

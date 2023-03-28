@@ -20,18 +20,16 @@ package config
 
 import (
 	"encoding/json"
-	"fmt"
-
 	"github.com/a8m/envsubst"
 	"github.com/joho/godotenv"
 )
 
 // ProcessorRun all pre-processors.
-func ProcessorRun(raw []byte) ([]byte, map[string]string) {
+func ProcessorRun(raw []byte) []byte {
 	raw = processEnv(raw)
-	raw, accountFromFiles := processFromFile(raw)
+	raw = processFromFile(raw)
 
-	return raw, accountFromFiles
+	return raw
 }
 
 // processEnv finds env variables and insert env values.
@@ -43,9 +41,7 @@ func processEnv(raw []byte) []byte {
 }
 
 // processFromFile finds file variables and insert content.
-func processFromFile(raw []byte) ([]byte, map[string]string) {
-	accountFromFiles := map[string]string{}
-
+func processFromFile(raw []byte) []byte {
 	type config struct {
 		Accounts    map[string]map[string]any `json:"accounts,omitempty"`
 		Contracts   any                       `json:"contracts,omitempty"`
@@ -57,14 +53,6 @@ func processFromFile(raw []byte) ([]byte, map[string]string) {
 	var conf config
 	_ = json.Unmarshal(raw, &conf)
 
-	for name, val := range conf.Accounts {
-		if location := val["fromFile"]; location != nil {
-			fmt.Println("DEPRECATED: the fromFile directive will be soon deprecated, please use key file type instead: https://developers.flow.com/tools/flow-cli/configuration#advanced-format-1")
-			accountFromFiles[name] = location.(string)
-			delete(conf.Accounts, name)
-		}
-	}
-
 	raw, _ = json.Marshal(conf)
-	return raw, accountFromFiles
+	return raw
 }

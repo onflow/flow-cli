@@ -20,6 +20,7 @@ package flowkit
 
 import (
 	"context"
+	"crypto/rand"
 	"encoding/hex"
 	"fmt"
 	"os"
@@ -28,10 +29,10 @@ import (
 	"strings"
 
 	goeth "github.com/ethereum/go-ethereum/accounts"
-	slip10 "github.com/lmars/go-slip10"
+	"github.com/lmars/go-slip10"
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/onflow/flow-go-sdk/crypto/cloudkms"
-	bip39 "github.com/tyler-smith/go-bip39"
+	"github.com/tyler-smith/go-bip39"
 
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
 )
@@ -358,10 +359,21 @@ func bip44KeyFromConfig(key config.AccountKey) (AccountKey, error) {
 }
 
 func (a *Bip44AccountKey) Signer(ctx context.Context) (crypto.Signer, error) {
-	return crypto.NewInMemorySigner(a.privateKey, a.HashAlgo())
+	pkey, err := a.PrivateKey()
+	if err != nil {
+		return nil, err
+	}
+
+	return crypto.NewInMemorySigner(*pkey, a.HashAlgo())
 }
 
 func (a *Bip44AccountKey) PrivateKey() (*crypto.PrivateKey, error) {
+	if a.privateKey == nil { // lazy load
+		err := a.Validate()
+		if err != nil {
+			return nil, err
+		}
+	}
 	return &a.privateKey, nil
 }
 
@@ -414,4 +426,15 @@ func (a *Bip44AccountKey) Validate() error {
 
 func (a *Bip44AccountKey) PrivateKeyHex() string {
 	return hex.EncodeToString(a.privateKey.Encode())
+}
+
+func randomSeed(n int) ([]byte, error) {
+	seed := make([]byte, n)
+
+	_, err := rand.Read(seed)
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate random seed: %v", err)
+	}
+
+	return seed, nil
 }

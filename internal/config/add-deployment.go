@@ -20,7 +20,7 @@ package config
 
 import (
 	"fmt"
-
+	"github.com/onflow/flow-cli/internal/util"
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
@@ -55,22 +55,25 @@ func addDeployment(
 	_ flowkit.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
-	deployData, flagsProvided, err := flagsToDeploymentData(addDeploymentFlags)
+	raw, flagsProvided, err := flagsToDeploymentData(addDeploymentFlags)
 	if err != nil {
 		return nil, err
 	}
 
 	if !flagsProvided {
-		deployData = output.NewDeploymentPrompt(*state.Networks(), state.Config().Accounts, *state.Contracts())
+		raw = util.NewDeploymentPrompt(*state.Networks(), state.Config().Accounts, *state.Contracts())
 	}
 
-	deployment := config.StringToDeployment(
-		deployData["network"].(string),
-		deployData["account"].(string),
-		deployData["contracts"].([]string),
-	)
+	contracts := make([]config.ContractDeployment, len(raw.Contracts))
+	for i, c := range raw.Contracts {
+		contracts[i] = config.ContractDeployment{Name: c}
+	}
 
-	state.Deployments().AddOrUpdate(deployment)
+	state.Deployments().AddOrUpdate(config.Deployment{
+		Network:   raw.Network,
+		Account:   raw.Account,
+		Contracts: contracts,
+	})
 
 	err = state.SaveEdited(globalFlags.ConfigPaths)
 	if err != nil {
@@ -82,7 +85,7 @@ func addDeployment(
 	}, nil
 }
 
-func flagsToDeploymentData(flags flagsAddDeployment) (map[string]interface{}, bool, error) {
+func flagsToDeploymentData(flags flagsAddDeployment) (*util.DeploymentData, bool, error) {
 	if flags.Network == "" && flags.Account == "" && len(flags.Contracts) == 0 {
 		return nil, false, nil
 	}
@@ -95,9 +98,9 @@ func flagsToDeploymentData(flags flagsAddDeployment) (map[string]interface{}, bo
 		return nil, true, fmt.Errorf("at least one contract name must be provided")
 	}
 
-	return map[string]interface{}{
-		"network":   flags.Network,
-		"account":   flags.Account,
-		"contracts": flags.Contracts,
+	return &util.DeploymentData{
+		Network:   flags.Network,
+		Account:   flags.Account,
+		Contracts: flags.Contracts,
 	}, true, nil
 }

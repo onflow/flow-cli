@@ -1,3 +1,21 @@
+/*
+ * Flow CLI
+ *
+ * Copyright 2019 Dapper Labs, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package flowkit
 
 import (
@@ -6,13 +24,11 @@ import (
 	"errors"
 	"fmt"
 	"github.com/onflow/flow-cli/pkg/flowkit/gateway/mocks"
-	"os"
 	"strings"
 	"testing"
 
 	"github.com/onflow/cadence"
 	jsoncdc "github.com/onflow/cadence/encoding/json"
-	"github.com/onflow/cadence/runtime/stdlib"
 	emulator "github.com/onflow/flow-emulator"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/access/grpc"
@@ -124,7 +140,7 @@ func TestAccounts(t *testing.T) {
 		account, ID, err := flowkit.CreateAccount(
 			ctx,
 			serviceAcc,
-			[]Key{{
+			[]AccountPublicKey{{
 				pubKey,
 				flow.AccountKeyWeightThreshold,
 				crypto.ECDSA_P256,
@@ -320,9 +336,9 @@ func TestAccountsCreate_Integration(t *testing.T) {
 		}}
 
 		for i, a := range accIn {
-			keys := make([]Key, 0)
+			keys := make([]AccountPublicKey, 0)
 			for j := range a.pubKeys {
-				keys = append(keys, Key{
+				keys = append(keys, AccountPublicKey{
 					Public:   a.pubKeys[j],
 					Weight:   a.weights[j],
 					SigAlgo:  a.sigAlgo[j],
@@ -382,7 +398,7 @@ func TestAccountsCreate_Integration(t *testing.T) {
 				sigAlgo:  crypto.ECDSA_P256,
 				hashAlgo: crypto.SHA3_256,
 				args:     nil,
-				pubKeys: []crypto.PublicKey{
+				pubKeys: []crypto.AccountPublicKey{
 					tests.PubKeys()[0],
 				},
 				weights: []int{-1},
@@ -390,9 +406,9 @@ func TestAccountsCreate_Integration(t *testing.T) {
 		}
 
 		for i, a := range accIn {
-			keys := make([]Key, 0)
+			keys := make([]AccountPublicKey, 0)
 			for i := range a.pubKeys {
-				keys = append(keys, Key{
+				keys = append(keys, AccountPublicKey{
 					Public:   a.pubKeys[i],
 					Weight:   a.weights[i],
 					SigAlgo:  a.sigAlgo[i],
@@ -445,7 +461,7 @@ func TestAccountsAddContract_Integration(t *testing.T) {
 		assert.Equal(t, acc.Contracts["Simple"], tests.ContractSimpleUpdated.Source)
 	})
 
-	t.Run("Add Contract Invalid", func(t *testing.T) {
+	t.Run("Add Contract Invalid Same Content", func(t *testing.T) {
 		t.Parallel()
 
 		state, flowkit := setupIntegration()
@@ -468,7 +484,35 @@ func TestAccountsAddContract_Integration(t *testing.T) {
 		)
 
 		require.Error(t, err)
-		assert.Error(t, err, "cannot overwrite existing contract with name \"Simple\"")
+		assert.EqualError(t, err, "contract already exists and is the same as the contract provided for update")
+	})
+
+	t.Run("Add Contract Invalid Same Content", func(t *testing.T) {
+		t.Parallel()
+
+		state, flowkit := setupIntegration()
+		srvAcc, _ := state.EmulatorServiceAccount()
+
+		// prepare existing contract
+		_, _, err := flowkit.AddContract(
+			ctx,
+			srvAcc,
+			resourceToContract(tests.ContractSimple),
+			false,
+		)
+		assert.NoError(t, err)
+
+		updated := tests.ContractSimple
+		updated.Source = []byte(`pub contract Simple { init() {} }`)
+		_, _, err = flowkit.AddContract(
+			ctx,
+			srvAcc,
+			resourceToContract(updated),
+			false,
+		)
+
+		require.Error(t, err)
+		assert.EqualError(t, err, "contract Simple exists in account emulator-account")
 	})
 }
 
@@ -519,6 +563,11 @@ func TestAccountsRemoveContract_Integration(t *testing.T) {
 		acc, err := flowkit.GetAccount(ctx, srvAcc.Address())
 		require.NoError(t, err)
 		assert.Equal(t, acc.Contracts[tests.ContractSimple.Name], []byte(nil))
+	})
+
+	t.Run("Remove Contract", func(t *testing.T) {
+		_, err := flowkit.RemoveContract(ctx, srvAcc, "invalid")
+		require.True(t, strings.Contains(err.Error(), "can not remove a non-existing contract named 'invalid'"))
 	})
 }
 
@@ -763,32 +812,27 @@ func TestKeys(t *testing.T) {
 			privateKey string
 		}
 
-		testVector := []testEntry{
-			testEntry{
-				sigAlgo:    crypto.ECDSA_secp256k1,
-				seed:       "000102030405060708090a0b0c0d0e0f",
-				path:       "m/0'/1/2'/2/1000000000",
-				privateKey: "0x471b76e389e528d6de6d816857e012c5455051cad6660850e58372a6c3e6e7c8",
-			},
-			testEntry{
-				sigAlgo:    crypto.ECDSA_P256,
-				seed:       "000102030405060708090a0b0c0d0e0f",
-				path:       "m/0'/1/2'/2/1000000000",
-				privateKey: "0x21c4f269ef0a5fd1badf47eeacebeeaa3de22eb8e5b0adcd0f27dd99d34d0119",
-			},
-			testEntry{
-				sigAlgo:    crypto.ECDSA_secp256k1,
-				seed:       "fffcf9f6f3f0edeae7e4e1dedbd8d5d2cfccc9c6c3c0bdbab7b4b1aeaba8a5a29f9c999693908d8a8784817e7b7875726f6c696663605d5a5754514e4b484542",
-				path:       "m/0/2147483647'/1/2147483646'/2",
-				privateKey: "0xbb7d39bdb83ecf58f2fd82b6d918341cbef428661ef01ab97c28a4842125ac23",
-			},
-			testEntry{
-				sigAlgo:    crypto.ECDSA_P256,
-				seed:       "fffcf9f6f3f0edeae7e4e1dedbd8d5d2cfccc9c6c3c0bdbab7b4b1aeaba8a5a29f9c999693908d8a8784817e7b7875726f6c696663605d5a5754514e4b484542",
-				path:       "m/0/2147483647'/1/2147483646'/2",
-				privateKey: "0xbb0a77ba01cc31d77205d51d08bd313b979a71ef4de9b062f8958297e746bd67",
-			},
-		}
+		testVector := []testEntry{{
+			sigAlgo:    crypto.ECDSA_secp256k1,
+			seed:       "000102030405060708090a0b0c0d0e0f",
+			path:       "m/0'/1/2'/2/1000000000",
+			privateKey: "0x471b76e389e528d6de6d816857e012c5455051cad6660850e58372a6c3e6e7c8",
+		}, {
+			sigAlgo:    crypto.ECDSA_P256,
+			seed:       "000102030405060708090a0b0c0d0e0f",
+			path:       "m/0'/1/2'/2/1000000000",
+			privateKey: "0x21c4f269ef0a5fd1badf47eeacebeeaa3de22eb8e5b0adcd0f27dd99d34d0119",
+		}, {
+			sigAlgo:    crypto.ECDSA_secp256k1,
+			seed:       "fffcf9f6f3f0edeae7e4e1dedbd8d5d2cfccc9c6c3c0bdbab7b4b1aeaba8a5a29f9c999693908d8a8784817e7b7875726f6c696663605d5a5754514e4b484542",
+			path:       "m/0/2147483647'/1/2147483646'/2",
+			privateKey: "0xbb7d39bdb83ecf58f2fd82b6d918341cbef428661ef01ab97c28a4842125ac23",
+		}, {
+			sigAlgo:    crypto.ECDSA_P256,
+			seed:       "fffcf9f6f3f0edeae7e4e1dedbd8d5d2cfccc9c6c3c0bdbab7b4b1aeaba8a5a29f9c999693908d8a8784817e7b7875726f6c696663605d5a5754514e4b484542",
+			path:       "m/0/2147483647'/1/2147483646'/2",
+			privateKey: "0xbb0a77ba01cc31d77205d51d08bd313b979a71ef4de9b062f8958297e746bd67",
+		}}
 
 		for _, test := range testVector {
 			seed, err := hex.DecodeString(test.seed)
@@ -824,6 +868,15 @@ func TestKeys(t *testing.T) {
 		assert.Equal(t, key.String(), "0xd18d051afca7150781fef111f3387d132d31c4a6250268db0f61f836a205e0b8")
 
 		assert.Equal(t, hex.EncodeToString(key.PublicKey().Encode()), "d7482bbaff7827035d5b238df318b10604673dc613808723efbd23fbc4b9fad34a415828d924ec7b83ac0eddf22ef115b7c203ee39fb080572d7e51775ee54be")
+	})
+
+	t.Run("Generate mnemonic key", func(t *testing.T) {
+		_, flowkit, _ := setup()
+
+		pkey, path, err := flowkit.GenerateMnemonicKey(context.Background(), crypto.ECDSA_P256, "")
+		assert.NoError(t, err)
+		assert.NotNil(t, pkey)
+		assert.NotNil(t, path)
 	})
 
 	t.Run("Generate Keys Invalid", func(t *testing.T) {
@@ -1100,7 +1153,6 @@ func simpleDeploy(state *State, flowkit Flowkit, update bool) ([]*project.Contra
 		Location: tests.ContractHelloString.Filename,
 	}
 	state.Contracts().AddOrUpdate(c)
-
 	state.Networks().AddOrUpdate(config.EmulatorNetwork)
 
 	d := config.Deployment{
@@ -1326,74 +1378,6 @@ func TestScripts_Integration(t *testing.T) {
 	})
 }
 
-func TestExecutingTests(t *testing.T) {
-	t.Run("simple", func(t *testing.T) {
-		t.Parallel()
-		_, flowkit, _ := setup()
-
-		script := tests.TestScriptSimple
-		results, err := flowkit.Test(ctx, script.Source, script.Filename)
-
-		require.NoError(t, err)
-		require.Len(t, results, 1)
-		assert.NoError(t, results[0].Error)
-	})
-
-	t.Run("simple failing", func(t *testing.T) {
-		t.Parallel()
-		_, flowkit, _ := setup()
-
-		script := tests.TestScriptSimpleFailing
-		results, err := flowkit.Test(ctx, script.Source, script.Filename)
-
-		require.NoError(t, err)
-		require.Len(t, results, 1)
-
-		err = results[0].Error
-		require.Error(t, err)
-		assert.ErrorAs(t, err, &stdlib.AssertionError{})
-	})
-
-	t.Run("with import", func(t *testing.T) {
-		t.Parallel()
-		st, flowkit, _ := setup()
-
-		c := config.Contract{
-			Name:     tests.ContractHelloString.Name,
-			Location: tests.ContractHelloString.Filename,
-		}
-		st.Contracts().AddOrUpdate(c)
-
-		// Execute script
-		script := tests.TestScriptWithImport
-		results, err := flowkit.Test(ctx, script.Source, script.Filename)
-
-		require.NoError(t, err)
-		require.Len(t, results, 1)
-		assert.NoError(t, results[0].Error)
-	})
-
-	t.Run("with file read", func(t *testing.T) {
-		t.Parallel()
-		st, flowkit, _ := setup()
-
-		readerWriter := st.ReaderWriter()
-		readerWriter.WriteFile(
-			tests.SomeFile.Filename,
-			tests.SomeFile.Source,
-			os.ModeTemporary,
-		)
-
-		// Execute script
-		script := tests.TestScriptWithFileRead
-		results, err := flowkit.Test(ctx, script.Source, script.Filename)
-
-		require.NoError(t, err)
-		require.Len(t, results, 1)
-		assert.NoError(t, results[0].Error)
-	})
-}
-
 const gasLimit = 1000
 
 func TestTransactions(t *testing.T) {
@@ -1468,7 +1452,7 @@ func setupAccount(state *State, flowkit Flowkit, account *Account) {
 	acc, _, _ := flowkit.CreateAccount(
 		ctx,
 		srv,
-		[]Key{{
+		[]AccountPublicKey{{
 			(*pk).PublicKey(),
 			flow.AccountKeyWeightThreshold,
 			key.SigAlgo(),
@@ -1498,7 +1482,7 @@ func Test_TransactionRoles(t *testing.T) {
 		aCopy1.SetName("Boo")
 		aCopy2.SetName("Zoo")
 
-		tests := []struct {
+		testVector := []struct {
 			*TransactionAccountRoles
 			signerAddresses []flow.Address
 		}{{
@@ -1549,7 +1533,7 @@ func Test_TransactionRoles(t *testing.T) {
 			},
 		}}
 
-		for i, test := range tests {
+		for i, test := range testVector {
 			signerAccs := test.getSigners()
 			signerAddrs := make([]flow.Address, len(signerAccs))
 			for i, sig := range signerAccs {
@@ -1986,4 +1970,23 @@ func TestTransactions_Integration(t *testing.T) {
 		assert.Nil(t, txr.Error)
 		assert.Equal(t, txr.Status, flow.TransactionStatusSealed)
 	})
+}
+
+func Test_BlockQuery(t *testing.T) {
+	q, err := NewBlockQuery("latest")
+	assert.True(t, q.Latest)
+	assert.NoError(t, err)
+
+	q, err = NewBlockQuery("100")
+	assert.Equal(t, uint64(100), q.Height)
+	assert.NoError(t, err)
+
+	id := flow.HexToID("cba22b8c0830d0c86f83a187911a8a82ebd17e8dd95e5212ede0f8e5e2d4a908")
+	q, err = NewBlockQuery(id.String())
+	assert.Equal(t, id, *q.ID)
+	assert.NoError(t, err)
+
+	_, err = NewBlockQuery("invalid")
+	assert.EqualError(t, err, "invalid query: invalid, valid are: \"latest\", block height or block ID")
+
 }

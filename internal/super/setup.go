@@ -22,6 +22,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/onflow/flow-cli/internal/util"
 	"io"
 	"net/http"
 	"os"
@@ -93,7 +94,7 @@ func create(
 			scaffoldList[i] = fmt.Sprintf("%s - %s", output.Bold(s.Name), s.Description)
 		}
 
-		selected := output.ScaffoldPrompt(scaffoldList)
+		selected := util.ScaffoldPrompt(scaffoldList)
 		pickedScaffold = scaffolds[selected]
 	}
 

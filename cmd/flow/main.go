@@ -20,6 +20,7 @@
 package main
 
 import (
+	"github.com/onflow/flow-cli/internal/util"
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/accounts"
@@ -43,7 +44,6 @@ import (
 	"github.com/onflow/flow-cli/internal/tools"
 	"github.com/onflow/flow-cli/internal/transactions"
 	"github.com/onflow/flow-cli/internal/version"
-	"github.com/onflow/flow-cli/pkg/flowkit/util"
 )
 
 func main() {
@@ -61,7 +61,7 @@ func main() {
 	status.Command.AddToParent(cmd)
 	tools.DevWallet.AddToParent(cmd)
 	tools.Flowser.AddToParent(cmd)
-	test.TestCommand.AddToParent(cmd)
+	test.Command.AddToParent(cmd)
 
 	// super commands
 	super.SetupCommand.AddToParent(cmd)

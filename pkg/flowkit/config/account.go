@@ -25,20 +25,16 @@ import (
 	"github.com/onflow/flow-go-sdk/crypto"
 )
 
+const (
+	DefaultHashAlgo = crypto.SHA3_256
+	DefaultSigAlgo  = crypto.ECDSA_P256
+)
+
 // Account defines the configuration for a Flow account.
 type Account struct {
 	Name    string
 	Address flow.Address
 	Key     AccountKey
-
-	// Location is the configuration file containing this account.
-	//
-	// This field is only set if the external "location"
-	// syntax is used. Otherwise this field is empty.
-	//
-	// Ref: https://docs.onflow.org/flow-cli/security/#private-account-configuration-file
-	Location         string
-	UseAdvanceFormat bool
 }
 
 type Accounts []Account
@@ -54,6 +50,22 @@ type AccountKey struct {
 	DerivationPath string
 	PrivateKey     crypto.PrivateKey
 	Location       string
+}
+
+func NewDefaultAccountKey(pkey crypto.PrivateKey) AccountKey {
+	return AccountKey{
+		Type:       KeyTypeHex,
+		SigAlgo:    DefaultSigAlgo,
+		HashAlgo:   DefaultHashAlgo,
+		PrivateKey: pkey,
+	}
+}
+
+func (a *AccountKey) IsDefault() bool {
+	return a.Index == 0 &&
+		a.Type == KeyTypeHex &&
+		a.SigAlgo == DefaultSigAlgo &&
+		a.HashAlgo == DefaultHashAlgo
 }
 
 // ByName get account by name.
@@ -79,7 +91,7 @@ func (a *Accounts) AddOrUpdate(name string, account Account) {
 	*a = append(*a, account)
 }
 
-// Remove remove account by name.
+// Remove account by name.
 func (a *Accounts) Remove(name string) {
 	for i, account := range *a {
 		if account.Name == name {

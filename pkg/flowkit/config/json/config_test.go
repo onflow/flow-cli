@@ -87,10 +87,10 @@ func Test_NonExistingContractForDeployment(t *testing.T) {
 	}`)
 
 	parser := NewParser()
-	config, err := parser.Deserialize(b)
+	conf, err := parser.Deserialize(b)
 	assert.NoError(t, err)
 
-	err = config.Validate()
+	err = conf.Validate()
 	assert.Equal(t, "deployment contains nonexisting contract FungibleToken", err.Error())
 }
 

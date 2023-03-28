@@ -110,8 +110,6 @@ var testContractH = testContract{
 	accountAddress: addresses.New(),
 }
 
-var noAliases = map[string]string{}
-
 type testLoader struct{}
 
 func (t testLoader) Load(source string) ([]byte, error) {

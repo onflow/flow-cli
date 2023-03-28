@@ -22,13 +22,13 @@ import (
 	"context"
 	"fmt"
 	"github.com/onflow/cadence"
+	"github.com/onflow/flow-cli/internal/util"
 	flowsdk "github.com/onflow/flow-go-sdk"
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
-	"github.com/onflow/flow-cli/pkg/flowkit/util"
 )
 
 type flagsBuild struct {
@@ -111,7 +111,7 @@ func build(
 		return nil, err
 	}
 
-	if !globalFlags.Yes && !output.ApproveTransactionForBuildingPrompt(tx.FlowTransaction()) {
+	if !globalFlags.Yes && !util.ApproveTransactionForBuildingPrompt(tx.FlowTransaction()) {
 		return nil, fmt.Errorf("transaction was not approved")
 	}
 
@@ -122,7 +122,7 @@ func build(
 }
 
 func getAddress(address string, state *flowkit.State) (flowsdk.Address, error) {
-	addr, valid := util.ParseAddress(address)
+	addr, valid := parseAddress(address)
 	if valid {
 		return addr, nil
 	}
@@ -133,4 +133,14 @@ func getAddress(address string, state *flowkit.State) (flowsdk.Address, error) {
 		return flowsdk.EmptyAddress, err
 	}
 	return acc.Address(), nil
+}
+
+func parseAddress(value string) (flowsdk.Address, bool) {
+	address := flowsdk.HexToAddress(value)
+
+	// valid on any chain
+	return address, address.IsValid(flowsdk.Mainnet) ||
+		address.IsValid(flowsdk.Testnet) ||
+		address.IsValid(flowsdk.Emulator) ||
+		address.IsValid(flowsdk.Sandboxnet)
 }
