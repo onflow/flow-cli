@@ -69,13 +69,6 @@ type scaffold struct {
 	Type        string `json:"type"`
 }
 
-const (
-	defaultType = ""
-	mobileType  = "mobile"
-	webType     = "web"
-	unityType   = "unity"
-)
-
 func create(
 	args []string,
 	_ flowkit.ReaderWriter,
@@ -90,6 +83,7 @@ func create(
 	}
 
 	scaffolds, err := getScaffolds()
+
 	if err != nil {
 		return nil, err
 	}
@@ -98,16 +92,10 @@ func create(
 	pickedScaffold := scaffolds[0]
 
 	if setupFlags.Scaffold {
-		outputType := map[string]string{
-			defaultType: "🔨 General Scaffolds",
-			mobileType:  "📱 Mobile Scaffolds",
-			webType:     "💻 Web Scaffolds",
-			unityType:   "🏀 Unity Scaffolds",
-		}
 		scaffoldList := make(map[string][]string)
 		for _, s := range scaffolds {
-			scaffoldList[outputType[s.Type]] = append(
-				scaffoldList[outputType[s.Type]],
+			scaffoldList[s.Type] = append(
+				scaffoldList[s.Type],
 				fmt.Sprintf("%s - %s", output.Bold(s.Name), s.Description),
 			)
 		}
