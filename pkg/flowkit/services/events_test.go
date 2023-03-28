@@ -103,7 +103,7 @@ func TestEvents_Integration(t *testing.T) {
 			srvAcc,
 			resourceToContract(tests.ContractEvents),
 			"",
-			false,
+			UpdateExisting(false),
 		)
 		assert.NoError(t, err)
 		assert.NoError(t, err)
@@ -128,7 +128,7 @@ func TestEvents_Integration(t *testing.T) {
 			srvAcc,
 			resourceToContract(tests.ContractEvents),
 			"",
-			false,
+			UpdateExisting(false),
 		)
 		assert.NoError(t, err)
 

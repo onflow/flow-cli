@@ -105,7 +105,7 @@ func TestProject(t *testing.T) {
 			gw.SendSignedTransaction.Return(tests.NewTransaction(), nil)
 		})
 
-		contracts, err := s.Project.Deploy("emulator", false)
+		contracts, err := s.Project.Deploy("emulator", UpdateExisting(false))
 
 		assert.NoError(t, err)
 		assert.Equal(t, len(contracts), 1)
@@ -181,7 +181,7 @@ func TestProject(t *testing.T) {
 			gw.SendSignedTransaction.Return(tests.NewTransaction(), nil)
 		})
 
-		contracts, err := s.Project.Deploy(emulator, false)
+		contracts, err := s.Project.Deploy(emulator, UpdateExisting(false))
 
 		assert.NoError(t, err)
 		assert.Equal(t, len(contracts), 2)
@@ -259,7 +259,7 @@ func TestProject(t *testing.T) {
 			gw.SendSignedTransaction.Return(tests.NewTransaction(), nil)
 		})
 
-		contracts, err := s.Project.Deploy(emulator, false)
+		contracts, err := s.Project.Deploy(emulator, UpdateExisting(false))
 
 		assert.NoError(t, err)
 		assert.Equal(t, len(contracts), 2)
@@ -309,7 +309,7 @@ func TestProject(t *testing.T) {
 			gw.SendSignedTransaction.Return(tests.NewTransaction(), nil)
 		})
 
-		contracts, err := s.Project.Deploy("emulator", false)
+		contracts, err := s.Project.Deploy("emulator", UpdateExisting(false))
 
 		assert.NoError(t, err)
 		assert.Equal(t, len(contracts), 1)
@@ -344,7 +344,7 @@ func simpleDeploy(state *flowkit.State, s *Services, update bool) ([]*project.Co
 	}
 	state.Deployments().AddOrUpdate(d)
 
-	return s.Project.Deploy(n.Name, update)
+	return s.Project.Deploy(n.Name, UpdateExisting(update))
 }
 
 func TestProject_Integration(t *testing.T) {
@@ -412,7 +412,7 @@ func TestProject_Integration(t *testing.T) {
 			srvAcc,
 			flowkit.NewScript(tests.ContractA.Source, nil, tests.ContractA.Filename),
 			n.Name,
-			false,
+			UpdateExisting(false),
 		)
 		require.NoError(t, err)
 
@@ -424,7 +424,7 @@ func TestProject_Integration(t *testing.T) {
 			replacedContracts[i] = strings.ReplaceAll(replacedContracts[i], `"./contractB.cdc"`, addr)
 		}
 
-		contracts, err := s.Project.Deploy(n.Name, false)
+		contracts, err := s.Project.Deploy(n.Name, UpdateExisting(false))
 		assert.NoError(t, err)
 		assert.Len(t, contracts, 2)
 
