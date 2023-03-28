@@ -68,6 +68,7 @@ type Loader struct {
 	readerWriter     ReaderWriter
 	configParsers    Parsers
 	accountsFromFile map[string]string
+	LoadedLocations  []string
 }
 
 // NewLoader returns a new loader.
@@ -115,6 +116,7 @@ func (l *Loader) Save(conf *Config, path string) error {
 }
 
 func (l *Loader) loadConfig(confPath string) (*Config, error) {
+	l.LoadedLocations = append(l.LoadedLocations, confPath)
 	raw, err := l.loadFile(confPath)
 
 	if err != nil {

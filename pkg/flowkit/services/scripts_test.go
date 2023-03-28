@@ -22,12 +22,14 @@ import (
 	"testing"
 
 	"github.com/onflow/cadence"
+	"github.com/onflow/flow-go-sdk"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 
 	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
 	"github.com/onflow/flow-cli/pkg/flowkit/tests"
+	"github.com/onflow/flow-cli/pkg/flowkit/util"
 )
 
 func TestScripts(t *testing.T) {
@@ -39,6 +41,8 @@ func TestScripts(t *testing.T) {
 		gw.ExecuteScript.Run(func(args mock.Arguments) {
 			assert.Len(t, string(args.Get(0).([]byte)), 78)
 			assert.Equal(t, "\"Foo\"", args.Get(1).([]cadence.Value)[0].String())
+			assert.Equal(t, flow.EmptyID, args.Get(2).(*util.ScriptQuery).ID)
+			assert.Equal(t, uint64(0x0), args.Get(2).(*util.ScriptQuery).Height)
 			gw.ExecuteScript.Return(cadence.MustConvertValue(""), nil)
 		})
 
@@ -46,6 +50,10 @@ func TestScripts(t *testing.T) {
 		_, err := s.Scripts.Execute(
 			flowkit.NewScript(tests.ScriptArgString.Source, args, ""),
 			"",
+			&util.ScriptQuery{
+				ID:     flow.EmptyID,
+				Height: 0,
+			},
 		)
 
 		assert.NoError(t, err)
@@ -64,6 +72,7 @@ func TestScripts_Integration(t *testing.T) {
 		res, err := s.Scripts.Execute(
 			flowkit.NewScript(tests.ScriptArgString.Source, args, ""),
 			"",
+			&util.ScriptQuery{},
 		)
 
 		assert.NoError(t, err)
@@ -77,6 +86,7 @@ func TestScripts_Integration(t *testing.T) {
 		res, err := s.Scripts.Execute(
 			flowkit.NewScript(tests.ScriptWithError.Source, args, ""),
 			"",
+			&util.ScriptQuery{},
 		)
 
 		assert.Error(t, err)
@@ -116,12 +126,13 @@ func TestScripts_Integration(t *testing.T) {
 			srvAcc,
 			resourceToContract(tests.ContractHelloString),
 			"",
-			false,
+			UpdateExisting(false),
 		)
 
 		res, err := s.Scripts.Execute(
 			flowkit.NewScript(tests.ScriptImport.Source, nil, tests.ScriptImport.Filename),
 			n.Name,
+			&util.ScriptQuery{},
 		)
 		assert.NoError(t, err)
 		assert.Equal(t, res.String(), "\"Hello Hello, World!\"")
@@ -146,6 +157,7 @@ func TestScripts_Integration(t *testing.T) {
 			_, err := s.Scripts.Execute(
 				flowkit.NewScript(tests.ScriptImport.Source, nil, i[0]),
 				i[1],
+				&util.ScriptQuery{},
 			)
 			assert.NotNil(t, err)
 			assert.Equal(t, err.Error(), out[x])

@@ -211,7 +211,7 @@ func (p *Project) CheckForStandardContractUsageOnMainnet() error {
 // Retrieve all the contracts for specified network, sort them for deployment
 // deploy one by one and replace the imports in the contract source so it corresponds
 // to the account name the contract was deployed to.
-func (p *Project) Deploy(network string, update bool) ([]*project.Contract, error) {
+func (p *Project) Deploy(network string, update Update) ([]*project.Contract, error) {
 	if p.state == nil {
 		return nil, config.ErrDoesNotExist
 	}
@@ -246,12 +246,6 @@ func (p *Project) Deploy(network string, update bool) ([]*project.Contract, erro
 		targetAccount, err := p.state.Accounts().ByName(contract.AccountName)
 		if err != nil {
 			return nil, fmt.Errorf("target account for deploying contract not found in configuration")
-		}
-
-		// special case for emulator updates, where we remove and add a contract because it allows us to have more freedom in changes.
-		// Updating contracts is limited as described in https://developers.flow.com/cadence/language/contract-updatability
-		if update && network == config.DefaultEmulatorNetwork().Name {
-			_, _ = accounts.RemoveContract(targetAccount, contract.Name) // ignore failure as it's meant to be best-effort
 		}
 
 		txID, updated, err := accounts.AddContract(

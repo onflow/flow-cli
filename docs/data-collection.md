@@ -5,8 +5,8 @@ description: Data collected from Flow CLI usage
 
 Flow CLI tracks flow command usage count using Mixpanel.
 
-Data collection is enabled by default. Users can opt out of our data collection through running `flow config metrics disable`. 
-To opt back in, users can run `flow config metrics enable`.
+Data collection is enabled by default. Users can opt out of our data collection through running `flow settings metrics disable`. 
+To opt back in, users can run `flow settings metrics enable`.
 
 ## Why do we collect data about flow cli usage?
 

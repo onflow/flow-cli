@@ -102,7 +102,9 @@ func decode(
 	}
 
 	return &KeyResult{
-		publicKey:  accountKey.PublicKey,
-		accountKey: accountKey,
+		publicKey: accountKey.PublicKey,
+		sigAlgo:   accountKey.SigAlgo,
+		hashAlgo:  accountKey.HashAlgo,
+		weight:    accountKey.Weight,
 	}, err
 }
