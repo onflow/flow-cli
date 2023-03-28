@@ -667,15 +667,33 @@ func InstallPathPrompt(defaultPath string) string {
 }
 
 func ScaffoldPrompt(logger Logger, availableScaffolds map[string][]string) int {
-	index := 0
-	for t, items := range availableScaffolds {
-		logger.Info(Bold(Magenta(t)))
-		for _, item := range items {
-			index++
-			logger.Info(fmt.Sprintf("   [%d] %s", index, item))
-		}
-		logger.Info("") // new line
+	const (
+		general = ""
+		mobile  = "mobile"
+		web     = "web"
+		unity   = "unity"
+	)
+	outputType := map[string]string{
+		general: "🔨 General Scaffolds",
+		mobile:  "📱 Mobile Scaffolds",
+		web:     "💻 Web Scaffolds",
+		unity:   "🏀 Unity Scaffolds",
 	}
+
+	index := 0
+	outputCategory := func(category string, items []string) {
+		logger.Info(Bold(Magenta(category)))
+		for _, item := range items {
+			logger.Info(fmt.Sprintf("   [%d] %s", index+1, item))
+			index++
+		}
+		logger.Info("")
+	}
+
+	outputCategory(outputType[general], availableScaffolds[general])
+	outputCategory(outputType[web], availableScaffolds[web])
+	outputCategory(outputType[mobile], availableScaffolds[mobile])
+	outputCategory(outputType[unity], availableScaffolds[unity])
 
 	prompt := promptui.Prompt{
 		Label: "Enter the scaffold number",
@@ -698,5 +716,5 @@ func ScaffoldPrompt(logger Logger, availableScaffolds map[string][]string) int {
 	}
 
 	num, _ := strconv.Atoi(input)
-	return num
+	return num - 1
 }
