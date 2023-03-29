@@ -22,8 +22,10 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"golang.org/x/exp/slices"
 	"io"
 	"net/http"
+	"strings"
 
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/pkg/flowkit"
@@ -40,13 +42,36 @@ var snapshotFlag = SnapshotFlag{}
 
 var SnapshotCmd = &command.Command{
 	Cmd: &cobra.Command{
-		Use:     "snapshot <snapshotName>",
-		Short:   "Save/Load a emulator snapshot",
-		Example: "flow emulator snapshot testSnapshot",
-		Args:    cobra.ExactArgs(1),
+		Use:     "snapshot <create|load|list> [snapshotName]",
+		Short:   "Create/Load/List emulator snapshots",
+		Example: "flow emulator snapshot create testSnapshot",
+		Args:    cobra.RangeArgs(1, 2),
 	},
 	Flags: &snapshotFlag,
 	Run:   snapshot,
+}
+
+type SnapshotList struct {
+	Snapshots []string
+}
+
+func (s *SnapshotList) JSON() interface{} {
+	return s.Snapshots
+}
+
+func (s *SnapshotList) String() string {
+	var b bytes.Buffer
+	writer := util.CreateTabWriter(&b)
+	_, _ = fmt.Fprintf(writer, "Snapshots:\n")
+	for _, snapshotName := range s.Snapshots {
+		_, _ = fmt.Fprintf(writer, "\t%s\n", snapshotName)
+	}
+	_ = writer.Flush()
+	return b.String()
+}
+
+func (s *SnapshotList) Oneliner() string {
+	return strings.Join(s.Snapshots, ",")
 }
 
 type SnapShotResult struct {
@@ -86,29 +111,78 @@ func (r *SnapShotResult) Oneliner() string {
 	return fmt.Sprintf("%s : %s (%d) %s", r.Name, r.BlockID, r.Height, r.Result)
 }
 
+const SnapshotEndpoint = "http://localhost:8080/emulator/snapshots"
+
+func makeRequest(r *http.Request, v any) error {
+	resp, err := http.DefaultClient.Do(r)
+	if err != nil {
+		return fmt.Errorf("emulator snapshot request error: %w", err)
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("emulator snapshot request error: status_code=%d", resp.StatusCode)
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(body, v)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func requestListSnapshots() (*http.Request, error) {
+	request, err := http.NewRequest("GET", SnapshotEndpoint, nil)
+	if err != nil {
+		return nil, err
+	}
+	return request, nil
+}
+
+func requestCreateSnapshot(name string) (*http.Request, error) {
+	requestBody := bytes.NewBufferString(fmt.Sprintf("name=%s", name))
+	request, err := http.NewRequest("POST", SnapshotEndpoint, requestBody)
+	request.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	if err != nil {
+		return nil, err
+	}
+	return request, nil
+}
+
+func requestLoadSnapshot(name string) (*http.Request, error) {
+	request, err := http.NewRequest("PUT", fmt.Sprintf("%s/%s", SnapshotEndpoint, name), nil)
+	if err != nil {
+		return nil, err
+	}
+	return request, nil
+}
+
 func listSnapshot() (result []string, err error) {
-
-	snapshots, err := http.Get("http://localhost:8080/emulator/snapshots")
+	req, err := requestListSnapshots()
 	if err != nil {
 		return []string{}, err
 	}
 
-	if snapshots.StatusCode != http.StatusOK {
-		return []string{}, fmt.Errorf("unable to list snapshots on the emulator")
-	}
-
-	body, err := io.ReadAll(snapshots.Body)
-	if err != nil {
-		return []string{}, err
-	}
-
-	err = json.Unmarshal(body, &result)
+	err = makeRequest(req, &result)
 	if err != nil {
 		return []string{}, err
 	}
 
 	return result, nil
 }
+
+type SnapshotCommand string
+
+const (
+	SnapshotCommandList   SnapshotCommand = "list"
+	SnapshotCommandCreate SnapshotCommand = "create"
+	SnapshotCommandLoad   SnapshotCommand = "load"
+)
 
 func snapshot(
 	args []string,
@@ -117,80 +191,63 @@ func snapshot(
 	_ *services.Services,
 ) (command.Result, error) {
 
-	name := args[0]
+	subCommand := args[0]
 
 	snapshots, err := listSnapshot()
 	if err != nil {
 		return nil, err
 	}
 
-	exists := false
-	for _, snapshotName := range snapshots {
-		if name == snapshotName {
-			exists = true
-			break
+	switch SnapshotCommand(subCommand) {
+	case SnapshotCommandList:
+		return &SnapshotList{Snapshots: snapshots}, nil
+
+	case SnapshotCommandCreate:
+		if len(args) < 2 {
+			return nil, fmt.Errorf("snapshot create command requires name argument")
 		}
-	}
-
-	if exists {
-		//load snapshot
-		requestBody := bytes.NewBufferString("")
-		request, err := http.NewRequest("PUT",
-			fmt.Sprintf("http://localhost:8080/emulator/snapshots/%s", name),
-			requestBody)
-
-		if err != nil {
-			return nil, err
-		}
-		resp, err := http.DefaultClient.Do(request)
-
-		if err != nil {
-			return nil, err
-		}
-
-		body, err := io.ReadAll(resp.Body)
-		if err != nil {
-			return nil, err
-		}
-
-		if resp.StatusCode != http.StatusOK {
-			return nil, fmt.Errorf("unable to create snapshot on the emulator")
+		name := args[1]
+		exists := slices.Contains(snapshots, name)
+		if exists {
+			return nil, fmt.Errorf("snapshot '%s' already exists", name)
 		}
 
 		var result SnapShotResult
-		err = json.Unmarshal(body, &result)
+		req, err := requestCreateSnapshot(name)
 		if err != nil {
 			return nil, err
 		}
-		result.Result = "Snapshot loaded"
-		return &result, nil
-	} else {
-		//save snapshot
-		requestBody := bytes.NewBufferString(fmt.Sprintf("name=%s", name))
-		resp, err := http.Post("http://localhost:8080/emulator/snapshots",
-			"application/x-www-form-urlencoded",
-			requestBody)
-
-		if err != nil {
-			return nil, err
-		}
-
-		body, err := io.ReadAll(resp.Body)
-		if err != nil {
-			return nil, err
-		}
-
-		if resp.StatusCode != http.StatusOK {
-			return nil, fmt.Errorf("unable to create snapshot on the emulator")
-		}
-
-		var result SnapShotResult
-		err = json.Unmarshal(body, &result)
+		err = makeRequest(req, &result)
 		if err != nil {
 			return nil, err
 		}
 		result.Result = "Snapshot created"
 		return &result, nil
+
+	case SnapshotCommandLoad:
+		if len(args) < 2 {
+			return nil, fmt.Errorf("snapshot load command requires name argument")
+		}
+		name := args[1]
+		exists := slices.Contains(snapshots, name)
+		if !exists {
+			return nil, fmt.Errorf("snapshot '%s' does not exist", name)
+		}
+
+		var result SnapShotResult
+		req, err := requestLoadSnapshot(name)
+		if err != nil {
+			return nil, err
+		}
+		err = makeRequest(req, &result)
+		if err != nil {
+			return nil, err
+		}
+		result.Result = "Snapshot loaded"
+		return &result, nil
+
+	default:
+		return nil, fmt.Errorf("invalid snapshot command: valid commands are: 'list', 'create', 'load'")
 	}
 
 }
