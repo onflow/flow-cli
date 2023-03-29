@@ -266,23 +266,43 @@ func Test_Sign(t *testing.T) {
 }
 
 func Test_Result(t *testing.T) {
-	result := TransactionResult{
-		tx: tests.NewTransaction(),
+	tx := &flow.Transaction{
+		Script:           []byte(`transaction {}`),
+		ReferenceBlockID: flow.HexToID("6cde7f812897d22ee7633b82b059070be24faccdc47997bc0f765420e6e28bb6"),
+		GasLimit:         flow.DefaultTransactionGasLimit,
+		ProposalKey: flow.ProposalKey{
+			Address:        flow.HexToAddress("0x01"),
+			KeyIndex:       0,
+			SequenceNumber: 1,
+		},
+		Payer: flow.HexToAddress("0x02"),
+		PayloadSignatures: []flow.TransactionSignature{{
+			Address:     flow.HexToAddress("0x01"),
+			SignerIndex: 0,
+			KeyIndex:    0,
+			Signature:   []byte("6cde7f812897d22ee7633b82b059070be24faccdc47997bc0f765420e6e28bb6"),
+		}},
+		EnvelopeSignatures: []flow.TransactionSignature{{
+			Address:     flow.HexToAddress("0x01"),
+			SignerIndex: 0,
+			KeyIndex:    0,
+			Signature:   []byte("6cde7f812897d22ee7633b82b059070be24faccdc47997bc0f765420e6e28bb6"),
+		}},
 	}
+	result := TransactionResult{tx: tx}
 
 	assert.Equal(t, strings.TrimPrefix(`
-ID		6cde7f812897d22ee7633b82b059070be24faccdc47997bc0f765420e6e28bb6
-Payer		ee82856bf20e2aa6
-Authorizers	[f8d6e0586b0a20c7]
+ID		e913d1f3e431c7df49c99845bea9ebff9db11bbf25d507b9ad0fad45652d515f
+Payer		0000000000000002
+Authorizers	[]
 
 Proposal Key:	
-    Address	f8d6e0586b0a20c7
-    Index	1
-    Sequence	42
+    Address	0000000000000001
+    Index	0
+    Sequence	1
 
-Payload Signature 0: f8d6e0586b0a20c7
-Payload Signature 1: f8d6e0586b0a20c7
-Envelope Signature 0: ee82856bf20e2aa6
+Payload Signature 0: 0000000000000001
+Envelope Signature 0: 0000000000000001
 Signatures (minimized, use --include signatures)
 
 Code (hidden, use --include code)
@@ -290,9 +310,9 @@ Code (hidden, use --include code)
 Payload (hidden, use --include payload)`, "\n"), result.String())
 
 	assert.Equal(t, map[string]interface{}{
-		"authorizers": "[f8d6e0586b0a20c7]",
-		"id":          "6cde7f812897d22ee7633b82b059070be24faccdc47997bc0f765420e6e28bb6",
-		"payer":       "ee82856bf20e2aa6",
-		"payload":     "f8dcf8bcb85a0a7472616e73616374696f6e286772656574696e673a20537472696e6729207b0a202065786563757465207b200a202020206c6f67286772656574696e672e636f6e63617428222c20576f726c6421222929200a20207d0a7d0adf9e7b2276616c7565223a224869222c2274797065223a22537472696e67227da002020202020202020202020202020202020202020202020202020202020202022a88f8d6e0586b0a20c7012a88ee82856bf20e2aa6c988f8d6e0586b0a20c7d0cb808088f8d6e0586b0a20c7c3800101cccb018088ee82856bf20e2aa6",
+		"authorizers": "[]",
+		"id":          "e913d1f3e431c7df49c99845bea9ebff9db11bbf25d507b9ad0fad45652d515f",
+		"payer":       "0000000000000002",
+		"payload":     "f8dbf8498e7472616e73616374696f6e207b7dc0a06cde7f812897d22ee7633b82b059070be24faccdc47997bc0f765420e6e28bb682270f8800000000000000018001880000000000000002c0f846f8448080b84036636465376638313238393764323265653736333362383262303539303730626532346661636364633437393937626330663736353432306536653238626236f846f8448080b84036636465376638313238393764323265653736333362383262303539303730626532346661636364633437393937626330663736353432306536653238626236",
 	}, result.JSON())
 }
