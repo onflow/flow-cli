@@ -112,31 +112,26 @@ func flagsToContractData(flags flagsAddContract) (*util.ContractData, bool, erro
 
 	if flags.Name == "" {
 		return nil, true, fmt.Errorf("name must be provided")
-	} else if flags.Filename == "" {
+	}
+
+	if flags.Filename == "" {
 		return nil, true, fmt.Errorf("contract file name must be provided")
-	} else if !config.Exists(flags.Filename) {
+	}
+
+	if !config.Exists(flags.Filename) {
 		return nil, true, fmt.Errorf("contract file doesn't exist: %s", flags.Filename)
 	}
 
-	if flags.EmulatorAlias != "" {
-		_, err := flowkit.ParseAddress(flags.EmulatorAlias)
-		if err != nil {
-			return nil, true, err
-		}
+	if flags.EmulatorAlias != "" && flow.HexToAddress(flags.EmulatorAlias) == flow.EmptyAddress {
+		return nil, true, fmt.Errorf("invalid emulator alias address")
 	}
 
-	if flags.TestnetAlias != "" {
-		_, err := flowkit.ParseAddress(flags.TestnetAlias)
-		if err != nil {
-			return nil, true, err
-		}
+	if flags.TestnetAlias != "" && flow.HexToAddress(flags.TestnetAlias) == flow.EmptyAddress {
+		return nil, true, fmt.Errorf("invalid testnet alias address")
 	}
 
-	if flags.MainnetAlias != "" {
-		_, err := flowkit.ParseAddress(flags.MainnetAlias)
-		if err != nil {
-			return nil, true, err
-		}
+	if flags.MainnetAlias != "" && flow.HexToAddress(flags.MainnetAlias) == flow.EmptyAddress {
+		return nil, true, fmt.Errorf("invalid mainnnet alias address")
 	}
 
 	return &util.ContractData{

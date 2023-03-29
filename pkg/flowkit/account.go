@@ -20,7 +20,6 @@ package flowkit
 
 import (
 	"fmt"
-	"regexp"
 	"strings"
 
 	"github.com/onflow/flow-go-sdk"
@@ -210,13 +209,4 @@ func (a *Accounts) AddOrUpdate(account *Account) {
 	}
 
 	*a = append(*a, *account)
-}
-
-// ParseAddress converts string to valid Flow address.
-func ParseAddress(value string) (flow.Address, error) {
-	if valid, _ := regexp.MatchString("^(0x)?[0-9A-Fa-f]{0,16}$", value); !valid {
-		return flow.EmptyAddress, fmt.Errorf("invalid address")
-	}
-
-	return flow.HexToAddress(value), nil
 }

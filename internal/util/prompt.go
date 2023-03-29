@@ -22,7 +22,6 @@ import (
 	"fmt"
 	"github.com/gosuri/uilive"
 	"github.com/manifoldco/promptui"
-	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
 	"golang.org/x/exp/maps"
@@ -203,8 +202,10 @@ func addressPrompt() string {
 	addressPrompt := promptui.Prompt{
 		Label: "Enter address",
 		Validate: func(s string) error {
-			_, err := flowkit.ParseAddress(s)
-			return err
+			if flow.HexToAddress(s) == flow.EmptyAddress {
+				return fmt.Errorf("invalid address")
+			}
+			return nil
 		},
 	}
 
@@ -343,9 +344,8 @@ func NewContractPrompt() *ContractData {
 	emulatorAliasPrompt := promptui.Prompt{
 		Label: "Enter emulator alias, if exists",
 		Validate: func(s string) error {
-			if s != "" {
-				_, err := flowkit.ParseAddress(s)
-				return err
+			if s != "" && flow.HexToAddress(s) == flow.EmptyAddress {
+				return fmt.Errorf("invalid alias address")
 			}
 
 			return nil
@@ -356,9 +356,8 @@ func NewContractPrompt() *ContractData {
 	testnetAliasPrompt := promptui.Prompt{
 		Label: "Enter testnet alias, if exists",
 		Validate: func(s string) error {
-			if s != "" {
-				_, err := flowkit.ParseAddress(s)
-				return err
+			if s != "" && flow.HexToAddress(s) == flow.EmptyAddress {
+				return fmt.Errorf("invalid testnet address")
 			}
 
 			return nil
@@ -369,9 +368,8 @@ func NewContractPrompt() *ContractData {
 	mainnetAliasPrompt := promptui.Prompt{
 		Label: "Enter mainnet alias, if exists",
 		Validate: func(s string) error {
-			if s != "" {
-				_, err := flowkit.ParseAddress(s)
-				return err
+			if s != "" && flow.HexToAddress(s) == flow.EmptyAddress {
+				return fmt.Errorf("invalid mainnet address")
 			}
 
 			return nil

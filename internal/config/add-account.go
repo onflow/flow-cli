@@ -150,9 +150,8 @@ func flagsToAccountData(flags flagsAddAccount) (*util.AccountData, bool, error) 
 		return nil, true, fmt.Errorf("key must be provided")
 	}
 
-	_, err := flowkit.ParseAddress(flags.Address)
-	if err != nil {
-		return nil, true, err
+	if flow.HexToAddress(flags.Address) == flow.EmptyAddress {
+		return nil, true, fmt.Errorf("invalid address")
 	}
 
 	return &util.AccountData{
