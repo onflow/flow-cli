@@ -22,7 +22,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"golang.org/x/exp/slices"
 	"io"
 	"net/http"
 	"strings"
@@ -33,6 +32,7 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowkit/util"
 
 	"github.com/spf13/cobra"
+	"golang.org/x/exp/slices"
 )
 
 type SnapshotFlag struct {
