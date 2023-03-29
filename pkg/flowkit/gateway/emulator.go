@@ -30,7 +30,6 @@ import (
 	"github.com/onflow/flow-go-sdk"
 	flowGo "github.com/onflow/flow-go/model/flow"
 	"github.com/rs/zerolog"
-	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc/status"
 
 	"github.com/onflow/flow-cli/pkg/flowkit"
@@ -42,7 +41,7 @@ type EmulatorGateway struct {
 	emulator        *emulator.Blockchain
 	backend         *backend.Backend
 	ctx             context.Context
-	logger          *logrus.Logger
+	logger          *zerolog.Logger
 	emulatorOptions []emulator.Option
 }
 
@@ -56,9 +55,10 @@ func NewEmulatorGateway(serviceAccount *flowkit.Account) *EmulatorGateway {
 
 func NewEmulatorGatewayWithOpts(serviceAccount *flowkit.Account, opts ...func(*EmulatorGateway)) *EmulatorGateway {
 
+	noopLogger := zerolog.Nop()
 	gateway := &EmulatorGateway{
 		ctx:             context.Background(),
-		logger:          logrus.New(),
+		logger:          &noopLogger,
 		emulatorOptions: []emulator.Option{},
 	}
 	for _, opt := range opts {
@@ -66,13 +66,13 @@ func NewEmulatorGatewayWithOpts(serviceAccount *flowkit.Account, opts ...func(*E
 	}
 
 	gateway.emulator = newEmulator(serviceAccount, gateway.emulatorOptions...)
-	gateway.backend = backend.New(&zerolog.Logger{}, gateway.emulator)
+	gateway.backend = backend.New(gateway.logger, gateway.emulator)
 	gateway.backend.EnableAutoMine()
 
 	return gateway
 }
 
-func WithLogger(logger *logrus.Logger) func(g *EmulatorGateway) {
+func WithLogger(logger *zerolog.Logger) func(g *EmulatorGateway) {
 	return func(g *EmulatorGateway) {
 		g.logger = logger
 	}
