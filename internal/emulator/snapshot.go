@@ -22,13 +22,15 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
+
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/services"
 	"github.com/onflow/flow-cli/pkg/flowkit/util"
+
 	"github.com/spf13/cobra"
-	"io"
-	"net/http"
 )
 
 type SnapshotFlag struct {
@@ -51,7 +53,7 @@ type SnapShotResult struct {
 	Name    string `json:"context"`
 	BlockID string `json:"blockId"`
 	Height  uint64 `json:"height"`
-	Result  string `json:"height,omitempty"`
+	Result  string `json:"result,omitempty"`
 }
 
 func (r *SnapShotResult) JSON() interface{} {
