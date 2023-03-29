@@ -43,27 +43,6 @@ The `my-testnet-account.key` file only contains the hex-encoded private key.
 ```
 ---
 
-#### Main configuration file
-⚠️ DEPRECATED: please use the above method instead.
-
-```json
-// flow.json
-{
-  "contracts": {
-    "NonFungibleToken": "./cadence/contracts/NonFungibleToken.cdc",
-    "KittyItems": "./cadence/contracts/KittyItems.cdc"
-  },
-  "deployments": {
-    "testnet": {
-      "my-testnet-account": ["KittyItems", "NonFungibleToken"]
-    }
-  },
-  "accounts": {
-    "my-testnet-account": { "fromFile": "./flow.testnet.json" }
-  }
-}
-```
-
 #### Private configuration file
 
 ⚠️ Put this file in `.gitignore`:
