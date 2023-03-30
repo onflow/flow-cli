@@ -3,17 +3,17 @@ module github.com/onflow/flow-cli/pkg/flowkit
 go 1.18
 
 require (
-	github.com/ethereum/go-ethereum v1.10.21
+	github.com/ethereum/go-ethereum v1.10.22
 	github.com/gosuri/uilive v0.0.4
 	github.com/lmars/go-slip10 v0.0.0-20190606092855-400ba44fee12
 	github.com/manifoldco/promptui v0.9.0
-	github.com/onflow/cadence v0.36.0
+	github.com/onflow/cadence v0.37.0
 	github.com/onflow/cadence-tools/test v0.6.0
 	github.com/onflow/flow-core-contracts/lib/go/templates v0.12.1
 	github.com/onflow/flow-emulator v0.45.0
 	github.com/onflow/flow-go v0.29.6-with-pr-3835.0.20230310185646-540256588e78
-	github.com/onflow/flow-go-sdk v0.35.0
-	github.com/onflow/flow-go/crypto v0.24.4
+	github.com/onflow/flow-go-sdk v0.38.0
+	github.com/onflow/flow-go/crypto v0.24.7
 	github.com/pkg/errors v0.9.1
 	github.com/rs/zerolog v1.29.0
 	github.com/sergi/go-diff v1.1.0
@@ -36,7 +36,7 @@ require (
 	github.com/FactomProject/btcutilecc v0.0.0-20130527213604-d3a63a5752ec // indirect
 	github.com/bits-and-blooms/bitset v1.3.0 // indirect
 	github.com/btcsuite/btcd v0.22.1 // indirect
-	github.com/btcsuite/btcd/btcec/v2 v2.2.0 // indirect
+	github.com/btcsuite/btcd/btcec/v2 v2.2.1 // indirect
 	github.com/cenkalti/backoff/v4 v4.1.3 // indirect
 	github.com/cespare/xxhash v1.1.0 // indirect
 	github.com/chzyer/readline v0.0.0-20180603132655-2972be24d48e // indirect
