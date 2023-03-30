@@ -208,15 +208,12 @@ func replaceContractWithAlias(state *flowkit.State, standardContract standardCon
 	}
 	contract.Aliases.Add(config.MainnetNetwork.Name, standardContract.address) // replace contract with an alias
 
-	for di, d := range state.Config().Deployments {
-		if d.Network != config.MainnetNetwork.Name {
-			continue
-		}
+	for di, d := range state.Config().Deployments.ByNetwork(config.MainnetNetwork.Name) {
 		for ci, c := range d.Contracts {
 			if c.Name == standardContract.name {
-				slices.Delete(state.Config().Deployments[di].Contracts, ci, ci+1)
+				state.Config().Deployments[di].Contracts = slices.Delete(state.Config().Deployments[di].Contracts, ci, ci+1)
 				if len(state.Config().Deployments[di].Contracts) == 0 {
-					slices.Delete(state.Config().Deployments, di, di+1) // remove deployment if it doesn't have contracts anymore
+					_ = state.Config().Deployments.Remove(d.Account, d.Network)
 				}
 				break
 			}

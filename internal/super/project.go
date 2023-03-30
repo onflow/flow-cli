@@ -275,10 +275,11 @@ func (p *project) addContract(
 	}
 
 	if contract.Aliases.ByNetwork(emulator) == nil { // only add if not existing emulator alias
-		deployment := config.ContractDeployment{
-			Name: contract.Name,
-		}
-		p.state.Deployments().AddContract(account, emulator, deployment)
+		p.state.Deployments().
+			ByAccountAndNetwork(account, emulator).
+			AddContract(config.ContractDeployment{
+				Name: contract.Name,
+			})
 	}
 
 	p.state.Contracts().AddOrUpdate(contract)
@@ -299,8 +300,10 @@ func (p *project) removeContract(
 		accountName = defaultAccount
 	}
 
-	if len(p.state.Deployments().ByAccountAndNetwork(accountName, emulator)) > 0 {
-		p.state.Deployments().RemoveContract(accountName, emulator, name) // we might delete account first
+	if p.state.Deployments().ByAccountAndNetwork(accountName, emulator) != nil {
+		p.state.Deployments().
+			ByAccountAndNetwork(accountName, emulator).
+			RemoveContract(name) // we might delete account first
 	}
 
 	return nil

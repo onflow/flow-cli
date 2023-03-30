@@ -20,6 +20,7 @@ package flowkit
 
 import (
 	"fmt"
+	"golang.org/x/exp/slices"
 	"os"
 	"path"
 
@@ -186,7 +187,10 @@ func (p *State) AccountsForNetwork(network config.Network) *Accounts {
 	accounts := make(Accounts, 0)
 
 	for _, account := range *p.accounts {
-		if len(p.conf.Deployments.ByAccountAndNetwork(account.name, network.Name)) > 0 {
+		if p.conf.Deployments.ByAccountAndNetwork(account.name, network.Name) != nil {
+			slices.ContainsFunc(accounts, func(a Account) bool {
+				return a.name == account.name
+			})
 			if !exists[account.name] {
 				accounts = append(accounts, account)
 			}

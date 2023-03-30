@@ -6,6 +6,8 @@ require (
 	github.com/dukex/mixpanel v1.0.1
 	github.com/getsentry/sentry-go v0.18.0
 	github.com/go-git/go-git/v5 v5.5.2
+	github.com/gosuri/uilive v0.0.4
+	github.com/manifoldco/promptui v0.9.0
 	github.com/onflow/cadence v0.31.3
 	github.com/onflow/cadence-tools/languageserver v0.7.0
 	github.com/onflow/cadence-tools/test v0.4.0
@@ -22,7 +24,7 @@ require (
 	github.com/spf13/cobra v1.6.1
 	github.com/spf13/viper v1.14.0
 	github.com/stretchr/testify v1.8.2
-	golang.org/x/exp v0.0.0-20221126150942-6ab00d035af9
+	golang.org/x/exp v0.0.0-20230321023759-10a507213a29
 	google.golang.org/grpc v1.53.0
 )
 
@@ -80,7 +82,6 @@ require (
 	github.com/googleapis/enterprise-certificate-proxy v0.2.0 // indirect
 	github.com/googleapis/gax-go/v2 v2.7.0 // indirect
 	github.com/gorilla/mux v1.8.0 // indirect
-	github.com/gosuri/uilive v0.0.4 // indirect
 	github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.7.0 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
@@ -116,7 +117,6 @@ require (
 	github.com/lmars/go-slip10 v0.0.0-20190606092855-400ba44fee12 // indirect
 	github.com/logrusorgru/aurora v2.0.3+incompatible // indirect
 	github.com/magiconair/properties v1.8.6 // indirect
-	github.com/manifoldco/promptui v0.9.0 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.17 // indirect
 	github.com/mattn/go-pointer v0.0.1 // indirect

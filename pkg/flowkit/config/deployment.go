@@ -20,8 +20,8 @@ package config
 
 import (
 	"fmt"
-
 	"github.com/onflow/cadence"
+	"golang.org/x/exp/slices"
 )
 
 // ContractDeployment defines the deployment of the contract with possible args.
@@ -30,14 +30,28 @@ type ContractDeployment struct {
 	Args []cadence.Value
 }
 
-type Deployments []Deployment
-
 // Deployment defines the configuration for a contract deployment.
 type Deployment struct {
 	Network   string               // network name to deploy to
 	Account   string               // account name to which to deploy to
 	Contracts []ContractDeployment // contracts to deploy
 }
+
+// AddContract to deployment list on the account name and network name.
+func (d *Deployment) AddContract(contract ContractDeployment) {
+	d.Contracts = append(d.Contracts, contract)
+}
+
+// RemoveContract removes a specific contract by name from an existing deployment identified by account name and network name.
+func (d *Deployment) RemoveContract(contractName string) {
+	for i, contract := range d.Contracts {
+		if contract.Name == contractName {
+			d.Contracts = slices.Delete(d.Contracts, i, i+1)
+		}
+	}
+}
+
+type Deployments []Deployment
 
 // ByNetwork get all deployments by network.
 func (d *Deployments) ByNetwork(network string) Deployments {
@@ -53,16 +67,14 @@ func (d *Deployments) ByNetwork(network string) Deployments {
 }
 
 // ByAccountAndNetwork get deploy by account and network.
-func (d *Deployments) ByAccountAndNetwork(account string, network string) Deployments {
-	var deployments Deployments
-
-	for _, deploy := range *d {
+func (d *Deployments) ByAccountAndNetwork(account string, network string) *Deployment {
+	for i, deploy := range *d {
 		if deploy.Network == network && deploy.Account == account {
-			deployments = append(deployments, deploy)
+			return &(*d)[i]
 		}
 	}
 
-	return deployments
+	return nil
 }
 
 // AddOrUpdate add new or update if already present.
@@ -96,43 +108,4 @@ func (d *Deployments) Remove(account string, network string) error {
 	}
 
 	return nil
-}
-
-// AddContract to deployment list on the account name and network name.
-//
-// Deployment needs to be previously created by calling AddOrUpdate otherwise the contract is not added.
-func (d *Deployments) AddContract(account string, network string, contract ContractDeployment) {
-	for i, deploy := range *d {
-		if deploy.Network != network || deploy.Account != account {
-			continue
-		}
-		for _, c := range deploy.Contracts {
-			if c.Name == contract.Name {
-				return // don't add if exists
-			}
-		}
-		(*d)[i].Contracts = append((*d)[i].Contracts, contract)
-	}
-
-	if *d == nil { // if not yet initialized create the first one
-		*d = append(*d, Deployment{
-			Network:   network,
-			Account:   account,
-			Contracts: []ContractDeployment{contract},
-		})
-	}
-}
-
-// RemoveContract removes a specific contract by name from an existing deployment identified by account name and network name.
-func (d *Deployments) RemoveContract(account string, network string, contractName string) {
-	for i, deploy := range *d {
-		if deploy.Network != network || deploy.Account != account {
-			continue
-		}
-		for j, c := range deploy.Contracts {
-			if c.Name == contractName {
-				(*d)[i].Contracts = append(deploy.Contracts[0:j], deploy.Contracts[j+1:]...)
-			}
-		}
-	}
 }

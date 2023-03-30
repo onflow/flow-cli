@@ -108,7 +108,7 @@ func DefaultMockServices() *MockServices {
 			CreateAccountFunc,
 			mock.Anything,
 			mock.AnythingOfType("*flowkit.Account"),
-			mock.AnythingOfType("[]flowkit.Key"),
+			mock.AnythingOfType("[]flowkit.AccountPublicKey"),
 		),
 		DeployProject: m.On(
 			DeployProjectFunc,

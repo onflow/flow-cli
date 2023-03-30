@@ -84,16 +84,18 @@ func Test_Deployment(t *testing.T) {
 	t.Run("Remove deployment contract", func(t *testing.T) {
 		copyContracts := make([]ContractDeployment, len(contracts))
 		copy(copyContracts, contracts)
+		const acc = "test"
+		const net = "testnet"
 
 		deployments := &Deployments{
 			Deployment{
-				Network:   "test-network",
-				Account:   "test-account",
+				Network:   net,
+				Account:   acc,
 				Contracts: copyContracts,
 			},
 		}
 
-		deployments.RemoveContract("test-account", "test-network", contracts[0].Name)
+		deployments.ByAccountAndNetwork(acc, net).RemoveContract(contracts[0].Name)
 
 		assert.Len(t, *deployments, 1)
 		assert.Len(t, (*deployments)[0].Contracts, 1)
@@ -101,19 +103,19 @@ func Test_Deployment(t *testing.T) {
 	})
 
 	t.Run("Add deployment contract", func(t *testing.T) {
+		const acc = "test"
+		const net = "testnet"
 		deployments := &Deployments{
-			Deployment{
-				Network:   "test-network",
-				Account:   "test-account",
-				Contracts: []ContractDeployment{contracts[0]},
-			},
+			Deployment{Network: net, Account: acc},
 		}
 
-		deployments.AddContract("test-account", "test-network", contracts[1])
+		deployments.ByAccountAndNetwork(acc, net).AddContract(contracts[0])
+		deployments.ByAccountAndNetwork(acc, net).AddContract(contracts[1])
 
 		assert.Len(t, *deployments, 1)
 		assert.Len(t, (*deployments)[0].Contracts, 2)
 		assert.Equal(t, (*deployments)[0].Contracts[1], contracts[1])
+		assert.Equal(t, (*deployments)[0].Contracts[0], contracts[0])
 	})
 
 }

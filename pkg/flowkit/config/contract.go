@@ -70,9 +70,9 @@ func (c *Contract) IsAliased() bool {
 
 // ByName get contract by name.
 func (c *Contracts) ByName(name string) *Contract {
-	for _, contract := range *c {
+	for i, contract := range *c {
 		if contract.Name == name {
-			return &contract
+			return &(*c)[i]
 		}
 	}
 

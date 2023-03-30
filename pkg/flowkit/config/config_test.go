@@ -165,7 +165,7 @@ func Test_GetAccountByNameComplex(t *testing.T) {
 
 func Test_GetDeploymentsByNetworkComplex(t *testing.T) {
 	conf := generateComplexConfig()
-	deployments := conf.Deployments.ByAccountAndNetwork("account-2", "testnet")
+	deployment := conf.Deployments.ByAccountAndNetwork("account-2", "testnet")
 
 	assert.Equal(t,
 		[]config.ContractDeployment{
@@ -174,7 +174,7 @@ func Test_GetDeploymentsByNetworkComplex(t *testing.T) {
 			{Name: "Kibble", Args: []cadence.Value{}},
 			{Name: "KittyItems", Args: []cadence.Value{}},
 		},
-		deployments[0].Contracts,
+		deployment.Contracts,
 	)
 }
 

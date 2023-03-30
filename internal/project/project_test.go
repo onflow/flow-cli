@@ -23,6 +23,7 @@ import (
 	"github.com/onflow/flow-cli/internal/util"
 	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
+	"github.com/onflow/flow-go-sdk"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"testing"
@@ -39,22 +40,31 @@ func Test_ProjectDeploy(t *testing.T) {
 
 	t.Run("Success replace standard contracts", func(t *testing.T) {
 		const ft = "FungibleToken"
+		const acc = "mainnet-account"
 		state.Contracts().AddOrUpdate(config.Contract{
 			Name:     ft,
 			Location: "./ft.cdc",
 		})
 		_ = rw.WriteFile("./ft.cdc", []byte("test"), 0677) // mock the file
+		state.Accounts().AddOrUpdate(flowkit.NewAccount(acc).SetAddress(flow.HexToAddress("0x01")))
 
-		state.Deployments().AddContract(
-			config.DefaultEmulatorServiceAccountName,
-			config.MainnetNetwork.Name,
-			config.ContractDeployment{Name: "FungibleToken"},
-		)
+		state.Deployments().AddOrUpdate(config.Deployment{
+			Network:   config.MainnetNetwork.Name,
+			Account:   acc,
+			Contracts: []config.ContractDeployment{{Name: ft}},
+		})
+
+		state.Deployments().AddOrUpdate(config.Deployment{
+			Network:   config.EmulatorNetwork.Name,
+			Account:   config.DefaultEmulator.ServiceAccount,
+			Contracts: []config.ContractDeployment{{Name: ft}},
+		})
 
 		err := checkForStandardContractUsageOnMainnet(state, util.NoLogger, true)
 		require.NoError(t, err)
 
-		assert.Len(t, state.Deployments().ByNetwork(config.EmulatorNetwork.Name), 0) // should remove it
+		assert.Len(t, state.Deployments().ByNetwork(config.MainnetNetwork.Name), 0)  // should remove it
+		assert.Len(t, state.Deployments().ByNetwork(config.EmulatorNetwork.Name), 1) // should not remove it
 		assert.NotNil(t, state.Contracts().ByName(ft).Aliases)
 		assert.Equal(t, "f233dcee88fe0abe", state.Contracts().ByName(ft).Aliases.ByNetwork(config.MainnetNetwork.Name).Address.String())
 	})

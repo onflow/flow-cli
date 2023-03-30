@@ -21,7 +21,7 @@ require (
 	github.com/stretchr/testify v1.8.1
 	github.com/thoas/go-funk v0.9.2
 	github.com/tyler-smith/go-bip39 v1.0.1-0.20181017060643-dbb3b84ba2ef
-	golang.org/x/exp v0.0.0-20221126150942-6ab00d035af9
+	golang.org/x/exp v0.0.0-20230321023759-10a507213a29
 	gonum.org/v1/gonum v0.11.0
 	google.golang.org/grpc v1.53.0
 )
