@@ -65,22 +65,22 @@ func Test_ConfigDeploymentsSimple(t *testing.T) {
 	require.Len(t, account2Deployment, 1)
 	require.Len(t, account3Deployment, 1)
 
-	assert.Equal(t, account1Name, account1Deployment[0].Account)
-	assert.Equal(t, account2Name, account2Deployment[0].Account)
-	assert.Equal(t, account3Name, account3Deployment[0].Account)
+	assert.Equal(t, account1Name, account1Deployment.Account)
+	assert.Equal(t, account2Name, account2Deployment.Account)
+	assert.Equal(t, account3Name, account3Deployment.Account)
 
-	assert.Len(t, account1Deployment[0].Contracts, 4)
+	assert.Len(t, account1Deployment.Contracts, 4)
 
 	for i, name := range []string{"FungibleToken", "NonFungibleToken", "Kibble", "KittyItems"} {
-		assert.Equal(t, account1Deployment[0].Contracts[i].Name, name)
+		assert.Equal(t, account1Deployment.Contracts[i].Name, name)
 	}
 
 	for i, name := range []string{"KittyItems", "KittyItemsMarket"} {
-		assert.Equal(t, account2Deployment[0].Contracts[i].Name, name)
+		assert.Equal(t, account2Deployment.Contracts[i].Name, name)
 	}
 
 	for i, name := range []string{"FungibleToken", "NonFungibleToken", "Kibble", "KittyItems", "KittyItemsMarket"} {
-		assert.Equal(t, account3Deployment[0].Contracts[i].Name, name)
+		assert.Equal(t, account3Deployment.Contracts[i].Name, name)
 	}
 
 }
@@ -141,13 +141,13 @@ func Test_DeploymentAdvanced(t *testing.T) {
 
 	alice := deployments.ByAccountAndNetwork("alice", "emulator")
 	assert.Len(t, alice, 1)
-	assert.Len(t, alice[0].Contracts, 2)
-	assert.Equal(t, "Kibble", alice[0].Contracts[0].Name)
-	assert.Len(t, alice[0].Contracts[0].Args, 3)
-	assert.Equal(t, `"Hello World"`, alice[0].Contracts[0].Args[0].String())
-	assert.Equal(t, "10", alice[0].Contracts[0].Args[1].String())
-	assert.Equal(t, "Bool", alice[0].Contracts[0].Args[2].Type().ID())
-	assert.False(t, alice[0].Contracts[0].Args[2].ToGoValue().(bool))
-	assert.Equal(t, "KittyItemsMarket", alice[0].Contracts[1].Name)
-	assert.Len(t, alice[0].Contracts[1].Args, 0)
+	assert.Len(t, alice.Contracts, 2)
+	assert.Equal(t, "Kibble", alice.Contracts[0].Name)
+	assert.Len(t, alice.Contracts[0].Args, 3)
+	assert.Equal(t, `"Hello World"`, alice.Contracts[0].Args[0].String())
+	assert.Equal(t, "10", alice.Contracts[0].Args[1].String())
+	assert.Equal(t, "Bool", alice.Contracts[0].Args[2].Type().ID())
+	assert.False(t, alice.Contracts[0].Args[2].ToGoValue().(bool))
+	assert.Equal(t, "KittyItemsMarket", alice.Contracts[1].Name)
+	assert.Len(t, alice.Contracts[1].Args, 0)
 }
