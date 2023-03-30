@@ -183,6 +183,14 @@ in the `admin-account` account in `accounts` field of the configuration, the res
 Indicate whether to overwrite and upgrade existing contracts. Only contracts with difference with existing contracts
 will be overwritten.
 
+### Show Update Diff
+
+- Flag: `--show-diff`
+- Valid inputs: `true`, `false`
+- Default: `false`
+
+Shows a diff to approve before updating between deployed contract and new contract updates.
+
 ### Host
 
 - Flag: `--host`
