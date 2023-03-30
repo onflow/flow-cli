@@ -193,7 +193,7 @@ func (t *Transaction) SetScriptWithArgs(script []byte, args []cadence.Value) err
 
 // SetSigner sets the signer for transaction.
 func (t *Transaction) SetSigner(account *Account) error {
-	err := account.Key().Validate()
+	err := account.Key.Validate()
 	if err != nil {
 		return err
 	}

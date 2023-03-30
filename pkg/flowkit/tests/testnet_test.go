@@ -119,7 +119,7 @@ func initTestnet(t *testing.T) (gateway.Gateway, *flowkit.State, flowkit.Service
 	_, _, err = flow.SendTransaction(
 		context.Background(),
 		flowkit.NewTransactionSingleAccountRole(*funder),
-		flowkit.NewScript(transferTx, []cadence.Value{amount, cadence.NewAddress(testAccount.Address())}, ""),
+		flowkit.NewScript(transferTx, []cadence.Value{amount, cadence.NewAddress(testAccount.Address)}, ""),
 		flowsdk.DefaultTransactionGasLimit,
 	)
 	require.NoError(t, err)

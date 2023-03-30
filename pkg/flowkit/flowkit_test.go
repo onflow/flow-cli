@@ -66,7 +66,7 @@ func newAccount(name string, address string, seed string) *Account {
 	return &Account{
 		Name:    name,
 		Address: flow.HexToAddress(address),
-		Key:     NewHexAccountKeyFromPrivateKey(0, crypto.SHA3_256, privateKey),,
+		Key:     NewHexAccountKeyFromPrivateKey(0, crypto.SHA3_256, privateKey),
 	}
 }
 
