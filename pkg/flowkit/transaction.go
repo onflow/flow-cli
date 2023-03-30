@@ -67,7 +67,7 @@ func NewUpdateAccountContractTransaction(signer *Account, name string, source []
 	}
 
 	return newTransactionFromTemplate(
-		templates.UpdateAccountContract(signer.Address(), contract),
+		templates.UpdateAccountContract(signer.Address, contract),
 		signer,
 	)
 }
@@ -88,7 +88,7 @@ func NewAddAccountContractTransaction(
 // NewRemoveAccountContractTransaction creates new transaction to remove contract.
 func NewRemoveAccountContractTransaction(signer *Account, name string) (*Transaction, error) {
 	return newTransactionFromTemplate(
-		templates.RemoveAccountContract(signer.Address(), name),
+		templates.RemoveAccountContract(signer.Address, name),
 		signer,
 	)
 }
@@ -111,7 +111,7 @@ func addAccountContractWithArgs(
 	tx := flow.NewTransaction().
 		AddRawArgument(jsoncdc.MustEncode(cadenceName)).
 		AddRawArgument(jsoncdc.MustEncode(cadenceCode)).
-		AddAuthorizer(signer.Address())
+		AddAuthorizer(signer.Address)
 
 	for _, arg := range args {
 		arg.Type().ID()
@@ -133,7 +133,7 @@ func addAccountContractWithArgs(
 	if err != nil {
 		return nil, err
 	}
-	t.SetPayer(signer.Address())
+	t.SetPayer(signer.Address)
 
 	return t, nil
 }
@@ -144,7 +144,7 @@ func NewCreateAccountTransaction(
 	keys []*flow.AccountKey,
 	contracts []templates.Contract,
 ) (*Transaction, error) {
-	template, err := templates.CreateAccount(keys, contracts, signer.Address())
+	template, err := templates.CreateAccount(keys, contracts, signer.Address)
 	if err != nil {
 		return nil, err
 	}
@@ -158,7 +158,7 @@ func newTransactionFromTemplate(templateTx *flow.Transaction, signer *Account) (
 	if err != nil {
 		return nil, err
 	}
-	tx.SetPayer(signer.Address())
+	tx.SetPayer(signer.Address)
 	tx.SetGasLimit(maxGasLimit) // todo change this to calculated limit
 
 	return tx, nil
@@ -198,10 +198,10 @@ func (t *Transaction) SetSigner(account *Account) error {
 		return err
 	}
 
-	if !t.validSigner(account.Address()) {
+	if !t.validSigner(account.Address) {
 		return fmt.Errorf(
 			"not a valid signer %s, proposer: %s, payer: %s, authorizers: %s",
-			account.Address(),
+			account.Address,
 			t.tx.ProposalKey.Address,
 			t.tx.Payer,
 			t.tx.Authorizers,
@@ -325,19 +325,19 @@ func (t *Transaction) AddAuthorizers(authorizers []flow.Address) (*Transaction, 
 
 // Sign signs transaction using signer account.
 func (t *Transaction) Sign() (*Transaction, error) {
-	keyIndex := t.signer.Key().Index()
-	signer, err := t.signer.Key().Signer(context.Background())
+	keyIndex := t.signer.Key.Index()
+	signer, err := t.signer.Key.Signer(context.Background())
 	if err != nil {
 		return nil, err
 	}
 
 	if t.shouldSignEnvelope() {
-		err = t.tx.SignEnvelope(t.signer.address, keyIndex, signer)
+		err = t.tx.SignEnvelope(t.signer.Address, keyIndex, signer)
 		if err != nil {
 			return nil, fmt.Errorf("failed to sign transaction: %s", err)
 		}
 	} else {
-		err = t.tx.SignPayload(t.signer.address, keyIndex, signer)
+		err = t.tx.SignPayload(t.signer.Address, keyIndex, signer)
 		if err != nil {
 			return nil, fmt.Errorf("failed to sign transaction: %s", err)
 		}
@@ -348,7 +348,7 @@ func (t *Transaction) Sign() (*Transaction, error) {
 
 // shouldSignEnvelope checks if signer should sign envelope or payload
 func (t *Transaction) shouldSignEnvelope() bool {
-	return t.signer.address == t.tx.Payer
+	return t.signer.Address == t.tx.Payer
 }
 
 // NewTransactionSingleAccountRole creates transaction accounts from a single provided
@@ -373,13 +373,13 @@ type TransactionAccountRoles struct {
 func (t *TransactionAccountRoles) toAddresses() *TransactionAddressesRoles {
 	auths := make([]flow.Address, len(t.Authorizers))
 	for i, a := range t.Authorizers {
-		auths[i] = a.Address()
+		auths[i] = a.Address
 	}
 
 	return &TransactionAddressesRoles{
-		Proposer:    t.Proposer.Address(),
+		Proposer:    t.Proposer.Address,
 		Authorizers: auths,
-		Payer:       t.Payer.Address(),
+		Payer:       t.Payer.Address,
 	}
 }
 
@@ -389,7 +389,7 @@ func (t *TransactionAccountRoles) getSigners() []*Account {
 	sigs := make([]*Account, 0)
 	addLastIfUnique := func(signer Account) {
 		for _, sig := range sigs {
-			if sig.Address() == signer.Address() {
+			if sig.Address == signer.Address {
 				return
 			}
 		}

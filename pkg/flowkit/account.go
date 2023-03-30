@@ -28,51 +28,11 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
 )
 
-// Account is a flowkit-specific account implementation.
+// Account is defined by an address and name and contains an AccountKey which can be used for signing.
 type Account struct {
-	name    string
-	address flow.Address
-	key     AccountKey
-}
-
-// NewAccount creates an empty account with the provided name.
-func NewAccount(name string) *Account {
-	return &Account{
-		name: name,
-	}
-}
-
-// Address get account address.
-func (a *Account) Address() flow.Address {
-	return a.address
-}
-
-// Name get account name.
-func (a *Account) Name() string {
-	return a.name
-}
-
-// Key get account key.
-func (a *Account) Key() AccountKey {
-	return a.key
-}
-
-// SetAddress sets the account address.
-func (a *Account) SetAddress(address flow.Address) *Account {
-	a.address = address
-	return a
-}
-
-// SetName sets the account name.
-func (a *Account) SetName(name string) *Account {
-	a.name = name
-	return a
-}
-
-// SetKey sets account key.
-func (a *Account) SetKey(key AccountKey) *Account {
-	a.key = key
-	return a
+	Name    string
+	Address flow.Address
+	Key     AccountKey
 }
 
 func accountsFromConfig(conf *config.Config) (Accounts, error) {
@@ -105,21 +65,21 @@ func fromConfig(account config.Account) (*Account, error) {
 	}
 
 	return &Account{
-		name:    account.Name,
-		address: account.Address,
-		key:     key,
+		Name:    account.Name,
+		Address: account.Address,
+		Key:     key,
 	}, nil
 }
 
 func toConfig(account Account) config.Account {
 	var key config.AccountKey
-	if account.key != nil {
-		key = account.key.ToConfig()
+	if account.Key != nil {
+		key = account.Key.ToConfig()
 	}
 
 	return config.Account{
-		Name:    account.name,
-		Address: account.address,
+		Name:    account.Name,
+		Address: account.Address,
 		Key:     key,
 	}
 }
@@ -136,9 +96,9 @@ func generateEmulatorServiceAccount(sigAlgo crypto.SignatureAlgorithm, hashAlgo 
 	}
 
 	return &Account{
-		name:    config.DefaultEmulator.ServiceAccount,
-		address: flow.ServiceAddress(flow.Emulator),
-		key:     NewHexAccountKeyFromPrivateKey(0, hashAlgo, privateKey),
+		Name:    config.DefaultEmulator.ServiceAccount,
+		Address: flow.ServiceAddress(flow.Emulator),
+		Key:     NewHexAccountKeyFromPrivateKey(0, hashAlgo, privateKey),
 	}, nil
 }
 
@@ -157,7 +117,7 @@ func (a *Accounts) Remove(name string) error {
 	}
 
 	for i, acc := range *a {
-		if acc.name == name {
+		if acc.Name == name {
 			*a = append((*a)[0:i], (*a)[i+1:]...) // remove item
 		}
 	}
@@ -172,7 +132,7 @@ func (a *Accounts) String() string {
 func (a *Accounts) Names() []string {
 	accNames := make([]string, 0)
 	for _, acc := range *a {
-		accNames = append(accNames, acc.name)
+		accNames = append(accNames, acc.Name)
 	}
 	return accNames
 }
@@ -180,7 +140,7 @@ func (a *Accounts) Names() []string {
 // ByAddress get an account by address.
 func (a Accounts) ByAddress(address flow.Address) (*Account, error) {
 	for i := range a {
-		if a[i].address == address {
+		if a[i].Address == address {
 			return &a[i], nil
 		}
 	}
@@ -191,7 +151,7 @@ func (a Accounts) ByAddress(address flow.Address) (*Account, error) {
 // ByName get an account by name or returns and error if no account found
 func (a Accounts) ByName(name string) (*Account, error) {
 	for i := range a {
-		if a[i].name == name {
+		if a[i].Name == name {
 			return &a[i], nil
 		}
 	}
@@ -202,7 +162,7 @@ func (a Accounts) ByName(name string) (*Account, error) {
 // AddOrUpdate add account if missing or updates if present.
 func (a *Accounts) AddOrUpdate(account *Account) {
 	for i, acc := range *a {
-		if acc.name == account.name {
+		if acc.Name == account.Name {
 			(*a)[i] = acc
 			return
 		}

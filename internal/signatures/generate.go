@@ -62,7 +62,7 @@ func sign(
 		return nil, err
 	}
 
-	s, err := acc.Key().Signer(context.Background())
+	s, err := acc.Key.Signer(context.Background())
 	if err != nil {
 		return nil, err
 	}
@@ -75,7 +75,7 @@ func sign(
 	return &SignatureResult{
 		result:  string(signed),
 		message: string(message),
-		key:     acc.Key(),
+		key:     acc.Key,
 	}, nil
 }
 

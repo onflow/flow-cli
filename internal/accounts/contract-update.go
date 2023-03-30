@@ -89,7 +89,7 @@ func updateContract(
 		return nil, err
 	}
 
-	account, err := flow.GetAccount(context.Background(), to.Address())
+	account, err := flow.GetAccount(context.Background(), to.Address)
 	if err != nil {
 		return nil, err
 	}

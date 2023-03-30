@@ -118,7 +118,7 @@ func (r *InitResult) String() string {
 	account, _ := r.State.EmulatorServiceAccount()
 
 	_, _ = fmt.Fprintf(writer, "Configuration initialized\n")
-	_, _ = fmt.Fprintf(writer, "Service account: %s\n\n", output.Bold("0x"+account.Address().String()))
+	_, _ = fmt.Fprintf(writer, "Service account: %s\n\n", output.Bold("0x"+account.Address.String()))
 	_, _ = fmt.Fprintf(writer,
 		"Start emulator by running: %s \nReset configuration using: %s\n",
 		output.Bold("'flow emulator'"),

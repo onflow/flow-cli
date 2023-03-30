@@ -132,7 +132,7 @@ func getAddress(address string, state *flowkit.State) (flowsdk.Address, error) {
 	if err != nil {
 		return flowsdk.EmptyAddress, err
 	}
-	return acc.Address(), nil
+	return acc.Address, nil
 }
 
 func parseAddress(value string) (flowsdk.Address, bool) {

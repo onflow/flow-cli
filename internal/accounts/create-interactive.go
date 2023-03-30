@@ -82,7 +82,7 @@ func createInteractive(state *flowkit.State) error {
 	log.Info(fmt.Sprintf(
 		"%s New account created with address %s and name %s on %s network.\n",
 		output.SuccessEmoji(),
-		output.Bold(fmt.Sprintf("0x%s", account.Address().String())),
+		output.Bold(fmt.Sprintf("0x%s", account.Address.String())),
 		output.Bold(name),
 		output.Bold(networkName)),
 	)
@@ -147,9 +147,11 @@ func createNetworkAccount(
 		return nil, fmt.Errorf("failed saving private key: %w", err)
 	}
 
-	return flowkit.NewAccount(name).SetAddress(*address[0]).SetKey(
-		flowkit.NewFileAccountKey(privateFile, 0, defaultSignAlgo, defaultHashAlgo),
-	), nil
+	return &flowkit.Account{
+		Name:    name,
+		Address: *address[0],
+		Key:     flowkit.NewFileAccountKey(privateFile, 0, defaultSignAlgo, defaultHashAlgo),
+	}, nil
 }
 
 func createEmulatorAccount(
@@ -177,9 +179,11 @@ func createEmulatorAccount(
 		return nil, err
 	}
 
-	return flowkit.NewAccount(name).SetAddress(networkAccount.Address).SetKey(
-		flowkit.NewHexAccountKeyFromPrivateKey(0, defaultHashAlgo, key),
-	), nil
+	return &flowkit.Account{
+		Name:    name,
+		Address: networkAccount.Address,
+		Key:     flowkit.NewHexAccountKeyFromPrivateKey(0, defaultHashAlgo, key),
+	}, nil
 }
 
 func getAccountCreationResult(flow flowkit.Services, id flowsdk.Identifier) (*flowsdk.TransactionResult, error) {

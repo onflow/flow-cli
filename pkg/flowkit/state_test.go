@@ -358,24 +358,24 @@ func Test_EmulatorConfigSimple(t *testing.T) {
 	p := generateSimpleProject()
 	emulatorServiceAccount, _ := p.EmulatorServiceAccount()
 
-	assert.Equal(t, "emulator-account", emulatorServiceAccount.name)
-	assert.Equal(t, emulatorServiceAccount.key.ToConfig().PrivateKey, keys()[0])
-	assert.Equal(t, flow.ServiceAddress("flow-emulator"), emulatorServiceAccount.Address())
+	assert.Equal(t, "emulator-account", emulatorServiceAccount.Name)
+	assert.Equal(t, emulatorServiceAccount.Key.ToConfig().PrivateKey, keys()[0])
+	assert.Equal(t, flow.ServiceAddress("flow-emulator"), emulatorServiceAccount.Address)
 }
 
 func Test_AccountByAddressSimple(t *testing.T) {
 	p := generateSimpleProject()
 	acc, _ := p.Accounts().ByAddress(flow.ServiceAddress("flow-emulator"))
 
-	assert.Equal(t, "emulator-account", acc.name)
+	assert.Equal(t, "emulator-account", acc.Name)
 }
 
 func Test_AccountByNameSimple(t *testing.T) {
 	p := generateSimpleProject()
 	acc, _ := p.Accounts().ByName("emulator-account")
 
-	assert.Equal(t, flow.ServiceAddress("flow-emulator"), acc.Address())
-	assert.Equal(t, acc.key.ToConfig().PrivateKey, keys()[0])
+	assert.Equal(t, flow.ServiceAddress("flow-emulator"), acc.Address)
+	assert.Equal(t, acc.Key.ToConfig().PrivateKey, keys()[0])
 }
 
 func Test_HostSimple(t *testing.T) {
@@ -442,9 +442,9 @@ func Test_EmulatorConfigComplex(t *testing.T) {
 	p := generateComplexProject()
 	emulatorServiceAccount, _ := p.EmulatorServiceAccount()
 
-	assert.Equal(t, emulatorServiceAccount.name, "emulator-account")
-	assert.Equal(t, emulatorServiceAccount.key.ToConfig().PrivateKey, keys()[0])
-	assert.Equal(t, emulatorServiceAccount.Address(), flow.ServiceAddress("flow-emulator"))
+	assert.Equal(t, emulatorServiceAccount.Name, "emulator-account")
+	assert.Equal(t, emulatorServiceAccount.Key.ToConfig().PrivateKey, keys()[0])
+	assert.Equal(t, emulatorServiceAccount.Address, flow.ServiceAddress("flow-emulator"))
 }
 
 func Test_AccountByNameWithDuplicateAddress(t *testing.T) {
@@ -455,16 +455,16 @@ func Test_AccountByNameWithDuplicateAddress(t *testing.T) {
 	acc2, err := p.Accounts().ByName("emulator-account-2")
 	assert.NoError(t, err)
 
-	assert.Equal(t, acc1.name, "emulator-account")
-	assert.Equal(t, acc2.name, "emulator-account-2")
+	assert.Equal(t, acc1.Name, "emulator-account")
+	assert.Equal(t, acc2.Name, "emulator-account-2")
 }
 
 func Test_AccountByNameComplex(t *testing.T) {
 	p := generateComplexProject()
 	acc, _ := p.Accounts().ByName("account-2")
 
-	assert.Equal(t, acc.Address().String(), "2c1162386b0a245f")
-	assert.Equal(t, acc.key.ToConfig().PrivateKey, keys()[1])
+	assert.Equal(t, acc.Address.String(), "2c1162386b0a245f")
+	assert.Equal(t, acc.Key.ToConfig().PrivateKey, keys()[1])
 }
 
 func Test_HostComplex(t *testing.T) {
@@ -518,43 +518,43 @@ func Test_ChangingState(t *testing.T) {
 	em, err := p.EmulatorServiceAccount()
 	assert.NoError(t, err)
 
-	em.SetName("foo")
-	em.SetAddress(flow.HexToAddress("0x1"))
+	em.Name = "foo"
+	em.Address = flow.HexToAddress("0x1")
 
 	pk, _ := crypto.GeneratePrivateKey(
 		crypto.ECDSA_P256,
 		[]byte("seedseedseedseedseedseedseedseedseedseedseedseed"),
 	)
-	key := NewHexAccountKeyFromPrivateKey(em.Key().Index(), em.Key().HashAlgo(), pk)
-	em.SetKey(key)
+	key := NewHexAccountKeyFromPrivateKey(em.Key.Index(), em.Key.HashAlgo(), pk)
+	em.Key = key
 
 	foo, err := p.Accounts().ByName("foo")
 	assert.NoError(t, err)
 	assert.NotNil(t, foo)
-	assert.Equal(t, foo.Name(), "foo")
-	assert.Equal(t, foo.Address(), flow.HexToAddress("0x1"))
+	assert.Equal(t, foo.Name, "foo")
+	assert.Equal(t, foo.Address, flow.HexToAddress("0x1"))
 
-	pkey, err := foo.Key().PrivateKey()
+	pkey, err := foo.Key.PrivateKey()
 	assert.NoError(t, err)
 	assert.Equal(t, (*pkey).String(), pk.String())
 
 	bar, err := p.Accounts().ByName("foo")
 	assert.NoError(t, err)
-	bar.SetName("zoo")
+	bar.Name = "zoo"
 	zoo, err := p.Accounts().ByName("zoo")
 	assert.NotNil(t, zoo)
 	assert.NoError(t, err)
 
 	a := Account{}
-	a.SetName("bobo")
+	a.Name = "bobo"
 	p.Accounts().AddOrUpdate(&a)
 	bobo, err := p.Accounts().ByName("bobo")
 	assert.NotNil(t, bobo)
 	assert.NoError(t, err)
 
 	zoo2, _ := p.Accounts().ByName("zoo")
-	zoo2.SetName("emulator-account")
-	assert.Equal(t, "emulator-account", zoo2.name)
+	zoo2.Name = "emulator-account"
+	assert.Equal(t, "emulator-account", zoo2.Name)
 
 	pk, _ = crypto.GeneratePrivateKey(
 		crypto.ECDSA_P256,
@@ -563,7 +563,7 @@ func Test_ChangingState(t *testing.T) {
 
 	p.SetEmulatorKey(pk)
 	em, _ = p.EmulatorServiceAccount()
-	pkey, err = em.Key().PrivateKey()
+	pkey, err = em.Key.PrivateKey()
 	assert.NoError(t, err)
 	assert.Equal(t, (*pkey).String(), pk.String())
 }
@@ -588,7 +588,7 @@ func Test_LoadState(t *testing.T) {
 
 	acc, err := state.Accounts().ByName("emulator-account")
 	assert.NoError(t, err)
-	assert.Equal(t, acc.Name(), "emulator-account")
+	assert.Equal(t, acc.Name, "emulator-account")
 }
 
 func Test_LoadStateMultiple(t *testing.T) {
@@ -634,19 +634,19 @@ func Test_LoadStateMultiple(t *testing.T) {
 
 	acc, err := state.Accounts().ByName("emulator-account")
 	assert.NoError(t, err)
-	assert.Equal(t, acc.Address().String(), "f8d6e0586b0a20c7")
+	assert.Equal(t, acc.Address.String(), "f8d6e0586b0a20c7")
 
 	acc, err = state.Accounts().ByName("charlie")
 	assert.NoError(t, err)
-	assert.Equal(t, acc.Address().String(), "e03daebed8ca0615")
+	assert.Equal(t, acc.Address.String(), "e03daebed8ca0615")
 
 	acc, err = state.Accounts().ByName("bob")
 	assert.NoError(t, err)
-	assert.Equal(t, acc.Address().String(), "179b6b1cb6755e31")
+	assert.Equal(t, acc.Address.String(), "179b6b1cb6755e31")
 
 	acc, err = state.Accounts().ByName("alice")
 	assert.NoError(t, err)
-	assert.Equal(t, acc.Address().String(), "179b6b1cb6755e31")
+	assert.Equal(t, acc.Address.String(), "179b6b1cb6755e31")
 }
 
 func Test_Saving(t *testing.T) {

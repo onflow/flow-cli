@@ -130,13 +130,7 @@ func (p *State) EmulatorServiceAccount() (*Account, error) {
 // SetEmulatorKey sets the default emulator service account private key.
 func (p *State) SetEmulatorKey(privateKey crypto.PrivateKey) {
 	acc, _ := p.EmulatorServiceAccount()
-	acc.SetKey(
-		NewHexAccountKeyFromPrivateKey(
-			acc.Key().Index(),
-			acc.Key().HashAlgo(),
-			privateKey,
-		),
-	)
+	acc.Key = NewHexAccountKeyFromPrivateKey(acc.Key.Index(), acc.Key.HashAlgo(), privateKey)
 }
 
 // DeploymentContractsByNetwork returns all contracts for a network.
@@ -169,8 +163,8 @@ func (p *State) DeploymentContractsByNetwork(network config.Network) ([]*project
 				c.Name,
 				path.Clean(c.Location),
 				code,
-				account.address,
-				account.name,
+				account.Address,
+				account.Name,
 				deploymentContract.Args,
 			)
 
@@ -187,11 +181,11 @@ func (p *State) AccountsForNetwork(network config.Network) *Accounts {
 	accounts := make(Accounts, 0)
 
 	for _, account := range *p.accounts {
-		if p.conf.Deployments.ByAccountAndNetwork(account.name, network.Name) != nil {
+		if p.conf.Deployments.ByAccountAndNetwork(account.Name, network.Name) != nil {
 			slices.ContainsFunc(accounts, func(a Account) bool {
-				return a.name == account.name
+				return a.Name == account.Name
 			})
-			if !exists[account.name] {
+			if !exists[account.Name] {
 				accounts = append(accounts, account)
 			}
 		}

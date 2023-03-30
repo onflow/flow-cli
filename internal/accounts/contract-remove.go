@@ -65,7 +65,7 @@ func removeContract(
 		return nil, err
 	}
 
-	account, err := flow.GetAccount(context.Background(), from.Address())
+	account, err := flow.GetAccount(context.Background(), from.Address)
 	if err != nil {
 		return nil, err
 	}

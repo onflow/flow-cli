@@ -140,9 +140,9 @@ func Test_Send(t *testing.T) {
 		srv.SendTransaction.Run(func(args mock.Arguments) {
 			roles := args.Get(1).(*flowkit.TransactionAccountRoles)
 			acc := config.DefaultEmulator.ServiceAccount
-			assert.Equal(t, acc, roles.Payer.Name())
-			assert.Equal(t, acc, roles.Proposer.Name())
-			assert.Equal(t, acc, roles.Authorizers[0].Name())
+			assert.Equal(t, acc, roles.Payer.Name)
+			assert.Equal(t, acc, roles.Proposer.Name)
+			assert.Equal(t, acc, roles.Authorizers[0].Name)
 			script := args.Get(2).(*flowkit.Script)
 			assert.Equal(t, tests.TransactionArgString.Filename, script.Location())
 			assert.Equal(t, args.Get(3).(uint64), gas)
@@ -233,7 +233,7 @@ func Test_Sign(t *testing.T) {
 		_ = rw.WriteFile(inArgs[0], built, 0677)
 
 		srv.SignTransactionPayload.Run(func(args mock.Arguments) {
-			assert.Equal(t, "emulator-account", args.Get(1).(*flowkit.Account).Name())
+			assert.Equal(t, "emulator-account", args.Get(1).(*flowkit.Account).Name)
 			assert.Equal(t, built, args.Get(2).([]byte))
 		}).Return(flowkit.NewTransaction(), nil)
 

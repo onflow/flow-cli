@@ -106,7 +106,7 @@ func sign(
 
 	//payer signs last
 	sort.SliceStable(signers, func(i, j int) bool {
-		return signers[i].Address().String() != tx.FlowTransaction().Payer.Hex()
+		return signers[i].Address.String() != tx.FlowTransaction().Payer.Hex()
 	})
 
 	for _, signer := range signers {

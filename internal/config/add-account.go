@@ -96,11 +96,11 @@ func addAccount(
 	}
 
 	hexKey := flowkit.NewHexAccountKeyFromPrivateKey(account.Key.Index, account.Key.HashAlgo, account.Key.PrivateKey)
-	acc := flowkit.
-		NewAccount(account.Name).
-		SetAddress(account.Address).
-		SetKey(hexKey)
-	state.Accounts().AddOrUpdate(acc)
+	state.Accounts().AddOrUpdate(&flowkit.Account{
+		Name:    account.Name,
+		Address: account.Address,
+		Key:     hexKey,
+	})
 
 	err = state.SaveEdited(globalFlags.ConfigPaths)
 	if err != nil {

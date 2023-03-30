@@ -46,7 +46,7 @@ func Test_ProjectDeploy(t *testing.T) {
 			Location: "./ft.cdc",
 		})
 		_ = rw.WriteFile("./ft.cdc", []byte("test"), 0677) // mock the file
-		state.Accounts().AddOrUpdate(flowkit.NewAccount(acc).SetAddress(flow.HexToAddress("0x01")))
+		state.Accounts().AddOrUpdate(&flowkit.Account{Name: acc, Address: flow.HexToAddress("0x01")})
 
 		state.Deployments().AddOrUpdate(config.Deployment{
 			Network:   config.MainnetNetwork.Name,

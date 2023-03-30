@@ -198,13 +198,13 @@ func (f *Flowkit) prepareTransaction(
 		return nil, err
 	}
 
-	proposer, err := f.gateway.GetAccount(account.Address())
+	proposer, err := f.gateway.GetAccount(account.Address)
 	if err != nil {
 		return nil, err
 	}
 
 	tx.SetBlockReference(block)
-	if err = tx.SetProposer(proposer, account.Key().Index()); err != nil {
+	if err = tx.SetProposer(proposer, account.Key.Index()); err != nil {
 		return nil, err
 	}
 
@@ -271,13 +271,13 @@ func (f *Flowkit) AddContract(
 			"%s contract '%s' on account '%s'...",
 			map[bool]string{true: "Updating", false: "Creating"}[updateExisting],
 			name,
-			account.Address(),
+			account.Address,
 		),
 	)
 	defer f.logger.StopProgress()
 
 	// check if contract exists on account
-	flowAccount, err := f.gateway.GetAccount(account.Address())
+	flowAccount, err := f.gateway.GetAccount(account.Address)
 	if err != nil {
 		return flow.EmptyID, false, err
 	}
@@ -288,7 +288,7 @@ func (f *Flowkit) AddContract(
 	}
 	if exists && !updateExisting {
 		return flow.EmptyID, false, fmt.Errorf(
-			fmt.Sprintf("contract %s exists in account %s", name, account.Name()),
+			fmt.Sprintf("contract %s exists in account %s", name, account.Name),
 		)
 	}
 
@@ -331,7 +331,7 @@ func (f *Flowkit) AddContract(
 		"Contract '%s' %s on the account '%s'.",
 		name,
 		map[bool]string{true: "updated", false: "created"}[updateExisting],
-		account.Address(),
+		account.Address,
 	))
 
 	return sentTx.ID(), updateExisting, err
@@ -343,7 +343,7 @@ func (f *Flowkit) RemoveContract(
 	contractName string,
 ) (flow.Identifier, error) {
 	// check if contracts exists on the account
-	flowAcc, err := f.gateway.GetAccount(account.Address())
+	flowAcc, err := f.gateway.GetAccount(account.Address)
 	if err != nil {
 		return flow.EmptyID, err
 	}
@@ -369,7 +369,7 @@ func (f *Flowkit) RemoveContract(
 
 	f.logger.Info(fmt.Sprintf("Transaction ID: %s", tx.FlowTransaction().ID().String()))
 	f.logger.StartProgress(
-		fmt.Sprintf("Removing Contract %s from %s...", contractName, account.Address()),
+		fmt.Sprintf("Removing Contract %s from %s...", contractName, account.Address),
 	)
 	defer f.logger.StopProgress()
 
@@ -390,7 +390,7 @@ func (f *Flowkit) RemoveContract(
 	f.logger.Info(fmt.Sprintf(
 		"Contract %s removed from account %s.",
 		contractName,
-		account.Address(),
+		account.Address,
 	))
 
 	return sentTx.ID(), nil
@@ -930,7 +930,7 @@ func (f *Flowkit) SendTransaction(
 	tx, err := f.BuildTransaction(
 		ctx,
 		accounts.toAddresses(),
-		accounts.Proposer.Key().Index(),
+		accounts.Proposer.Key.Index(),
 		script,
 		gasLimit,
 	)

@@ -128,15 +128,15 @@ func (p *project) cleanState() {
 	accs := make([]flowkit.Account, len(*p.state.Accounts()))
 	copy(accs, *p.state.Accounts()) // we need to make a copy otherwise when we remove order shifts
 	for _, a := range accs {
-		chain, err := util.GetAddressNetwork(a.Address())
+		chain, err := util.GetAddressNetwork(a.Address)
 		if err != nil || chain != flow.Emulator {
 			continue // don't remove non-emulator accounts
 		}
 
-		if a.Name() == config.DefaultEmulator.ServiceAccount {
+		if a.Name == config.DefaultEmulator.ServiceAccount {
 			continue
 		}
-		_ = p.state.Accounts().Remove(a.Name())
+		_ = p.state.Accounts().Remove(a.Name)
 	}
 }
 
@@ -210,11 +210,11 @@ func (p *project) addAccount(name string) error {
 		return err
 	}
 
-	account := flowkit.NewAccount(name)
-	account.SetAddress(flowAcc.Address)
-	account.SetKey(flowkit.NewHexAccountKeyFromPrivateKey(0, crypto.SHA3_256, pkey))
-
-	p.state.Accounts().AddOrUpdate(account)
+	p.state.Accounts().AddOrUpdate(&flowkit.Account{
+		Name:    name,
+		Address: flowAcc.Address,
+		Key:     flowkit.NewHexAccountKeyFromPrivateKey(0, crypto.SHA3_256, pkey),
+	})
 	p.state.Deployments().AddOrUpdate(config.Deployment{ // init empty deployment
 		Network: emulator,
 		Account: name,

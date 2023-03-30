@@ -86,12 +86,12 @@ func ConfiguredServiceKey(
 		util.Exit(1, err.Error())
 	}
 
-	privateKey, err := serviceAccount.Key().PrivateKey()
+	privateKey, err := serviceAccount.Key.PrivateKey()
 	if err != nil {
 		util.Exit(1, "Only hexadecimal keys can be used as the emulator service account key.")
 	}
 
-	err = serviceAccount.Key().Validate()
+	err = serviceAccount.Key.Validate()
 	if err != nil {
 		util.Exit(
 			1,
@@ -102,7 +102,7 @@ func ConfiguredServiceKey(
 		)
 	}
 
-	return *privateKey, serviceAccount.Key().SigAlgo(), serviceAccount.Key().HashAlgo()
+	return *privateKey, serviceAccount.Key.SigAlgo(), serviceAccount.Key.HashAlgo()
 }
 
 func init() {

@@ -61,10 +61,10 @@ func wallet(
 		return nil, err
 	}
 
-	key := service.Key().ToConfig()
+	key := service.Key.ToConfig()
 
 	conf := devWallet.FlowConfig{
-		Address:    fmt.Sprintf("0x%s", service.Address().String()),
+		Address:    fmt.Sprintf("0x%s", service.Address.String()),
 		PrivateKey: strings.TrimPrefix(key.PrivateKey.String(), "0x"),
 		PublicKey:  strings.TrimPrefix(key.PrivateKey.PublicKey().String(), "0x"),
 		AccessNode: walletFlags.Host,
