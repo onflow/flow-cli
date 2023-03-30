@@ -133,7 +133,7 @@ func (p *project) cleanState() {
 			continue // don't remove non-emulator accounts
 		}
 
-		if a.Name() == config.DefaultEmulatorServiceAccountName {
+		if a.Name() == config.DefaultEmulator.ServiceAccount {
 			continue
 		}
 		_ = p.state.Accounts().Remove(a.Name())

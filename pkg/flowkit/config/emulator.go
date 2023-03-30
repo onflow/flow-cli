@@ -20,9 +20,9 @@ package config
 
 var (
 	DefaultEmulator = Emulator{
-		Name:           DefaultEmulatorConfigName,
-		ServiceAccount: DefaultEmulatorServiceAccountName,
-		Port:           DefaultEmulatorPort,
+		Name:           "default",
+		ServiceAccount: "emulator-account",
+		Port:           3569,
 	}
 	DefaultEmulators = Emulators{DefaultEmulator}
 )
@@ -39,7 +39,7 @@ type Emulators []Emulator
 // Default gets default emulator.
 func (e *Emulators) Default() *Emulator {
 	for _, em := range *e {
-		if em.Name == DefaultEmulatorConfigName {
+		if em.Name == DefaultEmulator.Name {
 			return &em
 		}
 	}

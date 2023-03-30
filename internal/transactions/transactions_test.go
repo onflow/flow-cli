@@ -139,7 +139,7 @@ func Test_Send(t *testing.T) {
 
 		srv.SendTransaction.Run(func(args mock.Arguments) {
 			roles := args.Get(1).(*flowkit.TransactionAccountRoles)
-			acc := config.DefaultEmulatorServiceAccountName
+			acc := config.DefaultEmulator.ServiceAccount
 			assert.Equal(t, acc, roles.Payer.Name())
 			assert.Equal(t, acc, roles.Proposer.Name())
 			assert.Equal(t, acc, roles.Authorizers[0].Name())
@@ -176,8 +176,8 @@ func Test_Send(t *testing.T) {
 	})
 
 	t.Run("Fail signer and payer flag", func(t *testing.T) {
-		sendFlags.Proposer = config.DefaultEmulatorServiceAccountName
-		sendFlags.Signer = config.DefaultEmulatorServiceAccountName
+		sendFlags.Proposer = config.DefaultEmulator.ServiceAccount
+		sendFlags.Signer = config.DefaultEmulator.ServiceAccount
 		_, err := send([]string{""}, command.GlobalFlags{}, util.NoLogger, srv.Mock, state)
 		assert.EqualError(t, err, "signer flag cannot be combined with payer/proposer/authorizer flags")
 		sendFlags.Signer = "" // reset

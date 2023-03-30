@@ -47,10 +47,6 @@ const (
 	KeyTypeGoogleKMS KeyType = "google-kms"
 	KeyTypeBip44     KeyType = "bip44"
 	KeyTypeFile      KeyType = "file"
-
-	DefaultEmulatorConfigName         = "default"
-	DefaultEmulatorServiceAccountName = "emulator-account"
-	DefaultEmulatorPort               = 3569
 )
 
 // Validate the configuration values.

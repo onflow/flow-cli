@@ -136,7 +136,7 @@ func generateEmulatorServiceAccount(sigAlgo crypto.SignatureAlgorithm, hashAlgo 
 	}
 
 	return &Account{
-		name:    config.DefaultEmulatorServiceAccountName,
+		name:    config.DefaultEmulator.ServiceAccount,
 		address: flow.ServiceAddress(flow.Emulator),
 		key:     NewHexAccountKeyFromPrivateKey(0, hashAlgo, privateKey),
 	}, nil
