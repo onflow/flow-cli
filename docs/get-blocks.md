@@ -23,7 +23,7 @@ Block ID		2fb7571a6ccf02f3ac42f27c14ce0a4cb119060e4fbd7af36fd51894465e7002
 Prent ID		1c5a6267ba9512e141e4e90630cb326cecfbf6113818487449efeb37fc98ca18
 Timestamp		2021-03-19 17:46:15.973305066 +0000 UTC
 Height			12884163
-Status          2 (Sealed)
+Status		        2 (Sealed)
 Total Seals		2
 Total Collections	8
     Collection 0:	3e694588e789a72489667a36dd73104dea4579bcd400959d47aedccd7f930eeb
