@@ -19,6 +19,7 @@ package json
 
 import (
 	"encoding/json"
+	"os"
 	"testing"
 
 	"github.com/onflow/flow-go-sdk"
@@ -503,4 +504,23 @@ func Test_ConfigInvalidAddress(t *testing.T) {
 
 	_, err = jsonAccounts.transformToConfig()
 	assert.Equal(t, err.Error(), "could not parse address: zz")
+}
+
+func Test_ReplaceENV(t *testing.T) {
+	t.Run("Valid ENV set vars", func(t *testing.T) {
+		os.Setenv("TEST", "foo")
+
+		tests := []string{"$TEST", "${TEST}"}
+		for _, test := range tests {
+			replaced, original, err := tryReplaceEnv(test)
+			assert.NoError(t, err)
+			assert.Equal(t, "foo", replaced)
+			assert.Equal(t, test, original)
+		}
+	})
+
+	t.Run("ENV not set", func(t *testing.T) {
+		_, _, err := tryReplaceEnv("$NOT_SET")
+		assert.EqualError(t, err, "required environment variable NOT_SET not set")
+	})
 }
