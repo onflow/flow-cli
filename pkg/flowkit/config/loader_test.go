@@ -514,7 +514,7 @@ func Test_JSONEnv(t *testing.T) {
 		composer.AddConfigParser(json.NewParser())
 
 		_, err = composer.Load([]string{"test.json"})
-		assert.EqualError(t, err, "required environment variable $NOT_EXISTS not set")
+		assert.EqualError(t, err, "required environment variable NOT_EXISTS not set")
 	})
 
 }

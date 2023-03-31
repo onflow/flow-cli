@@ -94,11 +94,26 @@ func transformSimpleToConfig(accountName string, a simpleAccount) (*config.Accou
 // tryReplaceEnv checks if value matches env regex, if it does it check whether the value was set in env,
 // if not set then it errors, otherwise it replaces the value with set env variable, and also returns the original key.
 func tryReplaceEnv(value string) (replaced string, original string, err error) {
-	if envPresent, _ := regexp.MatchString("^\\$\\w+", value); !envPresent {
+	envRegex, err := regexp.Compile(`^\$(\w+)$|\{(\w+)\}$`)
+	if err != nil {
+		return "", "", err
+	}
+
+	if !envRegex.MatchString(value) {
 		return
 	}
-	if os.Getenv(strings.ReplaceAll(value, "$", "")) == "" {
-		return "", "", fmt.Errorf("required environment variable %s not set", value)
+
+	found := envRegex.FindAllStringSubmatch(value, -1)
+	if len(found) == 0 {
+		return // should not happen
+	}
+
+	envVar := found[0][1]
+	if found[0][2] != "" { // second regex
+		envVar = found[0][2]
+	}
+	if os.Getenv(envVar) == "" {
+		return "", "", fmt.Errorf("required environment variable %s not set", envVar)
 	}
 
 	original = value
