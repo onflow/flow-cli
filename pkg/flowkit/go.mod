@@ -3,21 +3,19 @@ module github.com/onflow/flow-cli/pkg/flowkit
 go 1.18
 
 require (
-	github.com/ethereum/go-ethereum v1.10.21
+	github.com/ethereum/go-ethereum v1.10.22
 	github.com/gosuri/uilive v0.0.4
 	github.com/lmars/go-slip10 v0.0.0-20190606092855-400ba44fee12
 	github.com/manifoldco/promptui v0.9.0
-	github.com/onflow/cadence v0.36.0
+	github.com/onflow/cadence v0.37.0
 	github.com/onflow/cadence-tools/test v0.6.0
 	github.com/onflow/flow-core-contracts/lib/go/templates v0.12.1
 	github.com/onflow/flow-emulator v0.45.0
-	github.com/onflow/flow-go v0.29.6-with-pr-3835.0.20230310185646-540256588e78
-	github.com/onflow/flow-go-sdk v0.35.0
-	github.com/onflow/flow-go/crypto v0.24.4
+	github.com/onflow/flow-go v0.29.6-with-pr-3835.0.20230324174649-2f1a1d0f6fc4
+	github.com/onflow/flow-go-sdk v0.38.0
 	github.com/pkg/errors v0.9.1
 	github.com/rs/zerolog v1.29.0
 	github.com/sergi/go-diff v1.1.0
-	github.com/sirupsen/logrus v1.9.0
 	github.com/spf13/afero v1.9.4
 	github.com/stretchr/testify v1.8.2
 	github.com/thoas/go-funk v0.9.2
@@ -35,8 +33,7 @@ require (
 	github.com/FactomProject/basen v0.0.0-20150613233007-fe3947df716e // indirect
 	github.com/FactomProject/btcutilecc v0.0.0-20130527213604-d3a63a5752ec // indirect
 	github.com/bits-and-blooms/bitset v1.3.0 // indirect
-	github.com/btcsuite/btcd v0.22.1 // indirect
-	github.com/btcsuite/btcd/btcec/v2 v2.2.0 // indirect
+	github.com/btcsuite/btcd/btcec/v2 v2.2.1 // indirect
 	github.com/cenkalti/backoff/v4 v4.1.3 // indirect
 	github.com/cespare/xxhash v1.1.0 // indirect
 	github.com/chzyer/readline v0.0.0-20180603132655-2972be24d48e // indirect
@@ -108,6 +105,7 @@ require (
 	github.com/onflow/atree v0.5.0 // indirect
 	github.com/onflow/flow-core-contracts/lib/go/contracts v0.12.1 // indirect
 	github.com/onflow/flow-ft/lib/go/contracts v0.5.0 // indirect
+	github.com/onflow/flow-go/crypto v0.24.7 // indirect
 	github.com/onflow/flow/protobuf/go/flow v0.3.2-0.20221202093946-932d1c70e288 // indirect
 	github.com/onflow/sdks v0.5.0 // indirect
 	github.com/opentracing/opentracing-go v1.2.0 // indirect
@@ -121,6 +119,7 @@ require (
 	github.com/rivo/uniseg v0.2.1-0.20211004051800-57c86be7915a // indirect
 	github.com/rogpeppe/go-internal v1.8.1 // indirect
 	github.com/sethvargo/go-retry v0.2.3 // indirect
+	github.com/sirupsen/logrus v1.9.0 // indirect
 	github.com/spacemonkeygo/spacelog v0.0.0-20180420211403-2296661a0572 // indirect
 	github.com/spaolacci/murmur3 v1.1.0 // indirect
 	github.com/spf13/cast v1.5.0 // indirect
