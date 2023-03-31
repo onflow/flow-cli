@@ -96,7 +96,7 @@ func (r *BlockResult) String() string {
 	_, _ = fmt.Fprintf(writer, "Proposal Timestamp\t%s\n", r.block.Timestamp)
 	_, _ = fmt.Fprintf(writer, "Proposal Timestamp Unix\t%d\n", r.block.Timestamp.Unix())
 	_, _ = fmt.Fprintf(writer, "Height\t%v\n", r.block.Height)
-	_, _ = fmt.Fprintf(writer, "Status\t%v (%v)\n", r.block.Status, blockStatusToString(r.block.Status))
+	_, _ = fmt.Fprintf(writer, "Status\t%s\n", blockStatusToString(r.block.Status))
 
 	_, _ = fmt.Fprintf(writer, "Total Seals\t%v\n", len(r.block.Seals))
 
