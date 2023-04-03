@@ -76,6 +76,17 @@ func (r *BlockResult) JSON() interface{} {
 	return result
 }
 
+func blockStatusToString(code flow.BlockStatus) string {
+	switch code {
+	case 1:
+		return "Finalized"
+	case 2:
+		return "Sealed"
+	default:
+		return "Unknown"
+	}
+}
+
 func (r *BlockResult) String() string {
 	var b bytes.Buffer
 	writer := util.CreateTabWriter(&b)
@@ -85,6 +96,7 @@ func (r *BlockResult) String() string {
 	_, _ = fmt.Fprintf(writer, "Proposal Timestamp\t%s\n", r.block.Timestamp)
 	_, _ = fmt.Fprintf(writer, "Proposal Timestamp Unix\t%d\n", r.block.Timestamp.Unix())
 	_, _ = fmt.Fprintf(writer, "Height\t%v\n", r.block.Height)
+	_, _ = fmt.Fprintf(writer, "Status\t%s\n", blockStatusToString(r.block.Status))
 
 	_, _ = fmt.Fprintf(writer, "Total Seals\t%v\n", len(r.block.Seals))
 

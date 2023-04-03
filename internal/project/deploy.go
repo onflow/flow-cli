@@ -36,7 +36,8 @@ import (
 )
 
 type flagsDeploy struct {
-	Update bool `flag:"update" default:"false" info:"use update flag to update existing contracts"`
+	Update   bool `flag:"update" default:"false" info:"use update flag to update existing contracts"`
+	ShowDiff bool `flag:"show-diff" default:"false" info:"use show-diff flag to show diff between existing and new contracts on update"`
 }
 
 var deployFlags = flagsDeploy{}
@@ -66,7 +67,12 @@ func deploy(
 		}
 	}
 
-	c, err := flow.DeployProject(context.Background(), deployFlags.Update)
+	deployFunc := services.UpdateExisting(deployFlags.Update)
+	if deployFlags.ShowDiff {
+		deployFunc = output.ShowContractDiffPrompt
+	}
+
+	c, err := flow.DeployProject(context.Background(), deployFunc)
 	if err != nil {
 		var projectErr *flowkit.ProjectDeploymentError
 		if errors.As(err, &projectErr) {

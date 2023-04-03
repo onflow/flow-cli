@@ -19,6 +19,7 @@
 package test
 
 import (
+	"encoding/json"
 	"os"
 	"testing"
 
@@ -37,11 +38,13 @@ func TestExecutingTests(t *testing.T) {
 		_, state, _ := util.TestMocks(t)
 
 		script := tests.TestScriptSimple
+		testFiles := make(map[string][]byte, 0)
+		testFiles[script.Filename] = script.Source
 		results, err := testCode(script.Source, script.Filename, state)
 
 		require.NoError(t, err)
 		require.Len(t, results, 1)
-		assert.NoError(t, results[0].Error)
+		assert.NoError(t, results[script.Filename][0].Error)
 	})
 
 	t.Run("simple failing", func(t *testing.T) {
@@ -49,12 +52,14 @@ func TestExecutingTests(t *testing.T) {
 		_, state, _ := util.TestMocks(t)
 
 		script := tests.TestScriptSimpleFailing
+		testFiles := make(map[string][]byte, 0)
+		testFiles[script.Filename] = script.Source
 		results, err := testCode(script.Source, script.Filename, state)
 
 		require.NoError(t, err)
 		require.Len(t, results, 1)
 
-		err = results[0].Error
+		err = results[script.Filename][0].Error
 		require.Error(t, err)
 		assert.ErrorAs(t, err, &stdlib.AssertionError{})
 	})
@@ -71,11 +76,13 @@ func TestExecutingTests(t *testing.T) {
 
 		// Execute script
 		script := tests.TestScriptWithImport
+		testFiles := make(map[string][]byte, 0)
+		testFiles[script.Filename] = script.Source
 		results, err := testCode(script.Source, script.Filename, state)
 
 		require.NoError(t, err)
 		require.Len(t, results, 1)
-		assert.NoError(t, results[0].Error)
+		assert.NoError(t, results[script.Filename][0].Error)
 	})
 
 	t.Run("with file read", func(t *testing.T) {
@@ -90,10 +97,75 @@ func TestExecutingTests(t *testing.T) {
 
 		// Execute script
 		script := tests.TestScriptWithFileRead
+		testFiles := make(map[string][]byte, 0)
+		testFiles[script.Filename] = script.Source
 		results, err := testCode(script.Source, script.Filename, state)
 
 		require.NoError(t, err)
 		require.Len(t, results, 1)
-		assert.NoError(t, results[0].Error)
+		assert.NoError(t, results[script.Filename][0].Error)
+	})
+
+	t.Run("with code coverage", func(t *testing.T) {
+		t.Parallel()
+
+		// Setup
+		st, s, _ := setup()
+
+		c := config.Contract{
+			Name:     tests.ContractFooCoverage.Name,
+			Location: tests.ContractFooCoverage.Filename,
+		}
+		st.Contracts().AddOrUpdate(c)
+
+		// Execute script
+		script := tests.TestScriptWithCoverage
+		testFiles := make(map[string][]byte, 0)
+		testFiles[script.Filename] = script.Source
+		results, coverageReport, err := s.Tests.Execute(testFiles, st.ReaderWriter(), true)
+
+		require.NoError(t, err)
+		require.Len(t, results, 1)
+		assert.NoError(t, results[script.Filename][0].Error)
+
+		actual, err := json.Marshal(coverageReport)
+		require.NoError(t, err)
+
+		expected := `
+		  {
+		    "coverage": {
+		      "S.FooContract.cdc": {
+		        "line_hits": {
+		          "14": 1,
+		          "18": 10,
+		          "19": 1,
+		          "20": 9,
+		          "21": 1,
+		          "22": 8,
+		          "23": 1,
+		          "24": 7,
+		          "25": 1,
+		          "26": 6,
+		          "27": 1,
+		          "30": 5,
+		          "31": 4,
+		          "34": 1,
+		          "6": 1
+		        },
+		        "missed_lines": [],
+		        "statements": 15,
+		        "percentage": "100.0%"
+		      }
+		    }
+		  }
+		`
+
+		require.JSONEq(t, expected, string(actual))
+
+		assert.Equal(
+			t,
+			"Coverage: 100.0% of statements",
+			coverageReport.CoveredStatementsPercentage(),
+		)
 	})
 }

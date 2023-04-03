@@ -154,6 +154,48 @@ var ContractC = Resource{
 	`),
 }
 
+var ContractFooCoverage = Resource{
+	Name:     "FooContract",
+	Filename: "FooContract.cdc",
+	Source: []byte(`
+		pub contract FooContract {
+			pub let specialNumbers: {Int: String}
+
+			init() {
+				self.specialNumbers = {
+					1729: "Harshad",
+					8128: "Harmonic",
+					41041: "Carmichael"
+				}
+			}
+
+			pub fun addSpecialNumber(_ n: Int, _ trait: String) {
+				self.specialNumbers[n] = trait
+			}
+
+			pub fun getIntegerTrait(_ n: Int): String {
+				if n < 0 {
+					return "Negative"
+				} else if n == 0 {
+					return "Zero"
+				} else if n < 10 {
+					return "Small"
+				} else if n < 100 {
+					return "Big"
+				} else if n < 1000 {
+					return "Huge"
+				}
+
+				if self.specialNumbers.containsKey(n) {
+					return self.specialNumbers[n]!
+				}
+
+				return "Enormous"
+			}
+		}
+	`),
+}
+
 var ContractAA = Resource{
 	Name:     "ContractAA",
 	Filename: "contractAA.cdc",
@@ -323,6 +365,46 @@ var TestScriptWithFileRead = Resource{
     `),
 }
 
+var TestScriptWithCoverage = Resource{
+	Filename: "testScriptWithCoverage.cdc",
+	Source: []byte(`
+		import FooContract from "FooContract.cdc"
+
+		pub let foo = FooContract()
+
+		pub fun testGetIntegerTrait() {
+			// Arrange
+			let testInputs: {Int: String} = {
+				-1: "Negative",
+				0: "Zero",
+				9: "Small",
+				99: "Big",
+				999: "Huge",
+				1001: "Enormous",
+				1729: "Harshad",
+				8128: "Harmonic",
+				41041: "Carmichael"
+			}
+
+			for input in testInputs.keys {
+				// Act
+				let result = foo.getIntegerTrait(input)
+
+				// Assert
+				assert(result == testInputs[input])
+			}
+		}
+
+		pub fun testAddSpecialNumber() {
+			// Act
+			foo.addSpecialNumber(78557, "Sierpinski")
+
+			// Assert
+			assert("Sierpinski" == foo.getIntegerTrait(78557))
+		}
+    `),
+}
+
 var SomeFile = Resource{
 	Filename: "someFile.cdc",
 	Source:   []byte(`This was read from a file!`),
@@ -344,6 +426,7 @@ var resources = []Resource{
 	ContractAA,
 	ContractBB,
 	ContractCC,
+	ContractFooCoverage,
 }
 
 func ReaderWriter() (afero.Afero, afero.Fs) {

@@ -66,6 +66,7 @@ type scaffold struct {
 	Description string `json:"description"`
 	Commit      string `json:"commit"`
 	Folder      string `json:"folder"`
+	Type        string `json:"type"`
 }
 
 func create(
@@ -81,6 +82,7 @@ func create(
 	}
 
 	scaffolds, err := getScaffolds()
+
 	if err != nil {
 		return nil, err
 	}
@@ -89,12 +91,15 @@ func create(
 	pickedScaffold := scaffolds[0]
 
 	if setupFlags.Scaffold {
-		scaffoldList := make([]string, len(scaffolds))
-		for i, s := range scaffolds {
-			scaffoldList[i] = fmt.Sprintf("%s - %s", output.Bold(s.Name), s.Description)
+		scaffoldList := make(map[string][]string)
+		for _, s := range scaffolds {
+			scaffoldList[s.Type] = append(
+				scaffoldList[s.Type],
+				fmt.Sprintf("%s - %s", output.Bold(s.Name), s.Description),
+			)
 		}
 
-		selected := util.ScaffoldPrompt(scaffoldList)
+		selected := util.ScaffoldPrompt(logger, scaffoldList)
 		pickedScaffold = scaffolds[selected]
 	}
 

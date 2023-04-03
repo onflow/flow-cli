@@ -31,7 +31,6 @@ import (
 	"github.com/onflow/flow-go-sdk/crypto"
 	flowGo "github.com/onflow/flow-go/model/flow"
 	"github.com/rs/zerolog"
-	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc/status"
 )
 
@@ -45,7 +44,7 @@ type EmulatorGateway struct {
 	emulator        *emulator.Blockchain
 	backend         *backend.Backend
 	ctx             context.Context
-	logger          *logrus.Logger
+	logger          *zerolog.Logger
 	emulatorOptions []emulator.Option
 }
 
@@ -59,9 +58,10 @@ func NewEmulatorGateway(key *EmulatorKey) *EmulatorGateway {
 
 func NewEmulatorGatewayWithOpts(key *EmulatorKey, opts ...func(*EmulatorGateway)) *EmulatorGateway {
 
+	noopLogger := zerolog.Nop()
 	gateway := &EmulatorGateway{
 		ctx:             context.Background(),
-		logger:          logrus.New(),
+		logger:          &noopLogger,
 		emulatorOptions: []emulator.Option{},
 	}
 	for _, opt := range opts {
@@ -69,10 +69,16 @@ func NewEmulatorGatewayWithOpts(key *EmulatorKey, opts ...func(*EmulatorGateway)
 	}
 
 	gateway.emulator = newEmulator(key, gateway.emulatorOptions...)
-	gateway.backend = backend.New(&zerolog.Logger{}, gateway.emulator)
+	gateway.backend = backend.New(gateway.logger, gateway.emulator)
 	gateway.backend.EnableAutoMine()
 
 	return gateway
+}
+
+func WithLogger(logger *zerolog.Logger) func(g *EmulatorGateway) {
+	return func(g *EmulatorGateway) {
+		g.logger = logger
+	}
 }
 
 func WithEmulatorOptions(options ...emulator.Option) func(g *EmulatorGateway) {
@@ -152,14 +158,22 @@ func (g *EmulatorGateway) Ping() error {
 	return nil
 }
 
-func (g *EmulatorGateway) ExecuteScript(script []byte, arguments []cadence.Value) (cadence.Value, error) {
+func (g *EmulatorGateway) ExecuteScript(script []byte, arguments []cadence.Value, query *util.ScriptQuery) (cadence.Value, error) {
 
 	args, err := cadenceValuesToMessages(arguments)
 	if err != nil {
 		return nil, UnwrapStatusError(err)
 	}
 
-	result, err := g.backend.ExecuteScriptAtLatestBlock(g.ctx, script, args)
+	var result []byte
+	if query.ID != flow.EmptyID {
+		result, err = g.backend.ExecuteScriptAtBlockID(g.ctx, query.ID, script, args)
+	} else if query.Height > 0 {
+		result, err = g.backend.ExecuteScriptAtBlockHeight(g.ctx, query.Height, script, args)
+	} else {
+		result, err = g.backend.ExecuteScriptAtLatestBlock(g.ctx, script, args)
+	}
+
 	if err != nil {
 		return nil, UnwrapStatusError(err)
 	}

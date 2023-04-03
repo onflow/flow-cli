@@ -21,6 +21,8 @@ package json
 import (
 	"encoding/json"
 	"fmt"
+	"os"
+	"regexp"
 	"strings"
 
 	"github.com/onflow/flow-go-sdk"
@@ -48,6 +50,21 @@ func transformAddress(address string) (flow.Address, error) {
 
 // transformSimpleToConfig transforms simple internal account to config account.
 func transformSimpleToConfig(accountName string, a simpleAccount) (*config.Account, error) {
+	key := config.AccountKey{
+		Type:     config.KeyTypeHex,
+		SigAlgo:  defaultSigAlgo,
+		HashAlgo: defaultHashAlgo,
+	}
+
+	replaced, original, err := tryReplaceEnv(a.Key)
+	if err != nil {
+		return nil, err
+	}
+	if replaced != "" {
+		key.Env = original
+		a.Key = replaced
+	}
+
 	pkey, err := crypto.DecodePrivateKeyHex(
 		config.DefaultSigAlgo,
 		strings.TrimPrefix(a.Key, "0x"),
@@ -55,6 +72,7 @@ func transformSimpleToConfig(accountName string, a simpleAccount) (*config.Accou
 	if err != nil {
 		return nil, fmt.Errorf("invalid private key for account: %s", accountName)
 	}
+	key.PrivateKey = pkey
 
 	address, err := transformAddress(a.Address)
 	if err != nil {
@@ -66,6 +84,37 @@ func transformSimpleToConfig(accountName string, a simpleAccount) (*config.Accou
 		Address: address,
 		Key:     config.NewDefaultAccountKey(pkey),
 	}, nil
+}
+
+// tryReplaceEnv checks if value matches env regex, if it does it check whether the value was set in env,
+// if not set then it errors, otherwise it replaces the value with set env variable, and also returns the original key.
+func tryReplaceEnv(value string) (replaced string, original string, err error) {
+	envRegex, err := regexp.Compile(`^\$(\w+)$|\{(\w+)\}$`)
+	if err != nil {
+		return "", "", err
+	}
+
+	if !envRegex.MatchString(value) {
+		return
+	}
+
+	found := envRegex.FindAllStringSubmatch(value, -1)
+	if len(found) == 0 {
+		return // should not happen
+	}
+
+	envVar := found[0][1]
+	if found[0][2] != "" { // second regex
+		envVar = found[0][2]
+	}
+	if os.Getenv(envVar) == "" {
+		return "", "", fmt.Errorf("required environment variable %s not set", envVar)
+	}
+
+	original = value
+	replaced = os.ExpandEnv(value)
+
+	return
 }
 
 // transformAdvancedToConfig transforms advanced internal account to config account.
@@ -122,6 +171,16 @@ func transformAdvancedToConfig(accountName string, a advancedAccount) (*config.A
 		if a.Key.PrivateKey == "" {
 			return nil, fmt.Errorf("missing private key value for hex key type on account %s", accountName)
 		}
+
+		replaced, original, err := tryReplaceEnv(a.Key.PrivateKey)
+		if err != nil {
+			return nil, err
+		}
+		if replaced != "" {
+			key.Env = original
+			a.Key.PrivateKey = replaced
+		}
+
 		pKey, err := crypto.DecodePrivateKeyHex(
 			sigAlgo,
 			strings.TrimPrefix(a.Key.PrivateKey, "0x"),
@@ -202,10 +261,15 @@ func transformAccountsToJSON(accounts config.Accounts) jsonAccounts {
 }
 
 func transformSimpleAccountToJSON(a config.Account) account {
+	key := strings.TrimPrefix(a.Key.PrivateKey.String(), "0x")
+	if a.Key.Env != "" {
+		key = a.Key.Env // if we used env vars then use it when saving
+	}
+
 	return account{
 		Simple: simpleAccount{
 			Address: a.Address.String(),
-			Key:     strings.TrimPrefix(a.Key.PrivateKey.String(), "0x"),
+			Key:     key,
 		},
 	}
 }
@@ -239,6 +303,9 @@ func transformAdvancedKeyToJSON(key config.AccountKey) advanceKey {
 	switch key.Type {
 	case config.KeyTypeHex:
 		advancedKey.PrivateKey = strings.TrimPrefix(key.PrivateKey.String(), "0x")
+		if key.Env != "" {
+			advancedKey.PrivateKey = key.Env // if we used env vars then use it when saving
+		}
 	case config.KeyTypeBip44:
 		advancedKey.Mnemonic = key.Mnemonic
 		advancedKey.DerivationPath = key.DerivationPath

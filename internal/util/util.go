@@ -93,3 +93,8 @@ func RemoveFromStringArray(s []string, el string) []string {
 
 	return s
 }
+
+type ScriptQuery struct {
+	ID     flow.Identifier
+	Height uint64
+}

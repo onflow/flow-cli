@@ -110,6 +110,7 @@ func init() {
 	Cmd.Use = "emulator"
 	Cmd.Short = "Run Flow network for development"
 	Cmd.GroupID = "tools"
+	SnapshotCmd.AddToParent(Cmd)
 }
 
 func Exitf(code int, msg string, args ...interface{}) {

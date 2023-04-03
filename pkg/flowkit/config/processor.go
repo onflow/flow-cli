@@ -20,23 +20,13 @@ package config
 
 import (
 	"encoding/json"
-	"github.com/a8m/envsubst"
-	"github.com/joho/godotenv"
+	"fmt"
 )
 
 // ProcessorRun all pre-processors.
-func ProcessorRun(raw []byte) []byte {
-	raw = processEnv(raw)
-	raw = processFromFile(raw)
+func ProcessorRun(raw []byte) ([]byte, map[string]string) {
+	raw, accountFromFiles := processFromFile(raw)
 
-	return raw
-}
-
-// processEnv finds env variables and insert env values.
-func processEnv(raw []byte) []byte {
-	_ = godotenv.Load() // try to load .env file
-
-	raw, _ = envsubst.Bytes(raw)
 	return raw
 }
 

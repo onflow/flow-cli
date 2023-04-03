@@ -158,7 +158,7 @@ func Test_Testnet_ProjectDeploy(t *testing.T) {
 		},
 	})
 
-	contracts, err := flow.DeployProject(context.Background(), true)
+	contracts, err := flow.DeployProject(context.Background(), services.UpdateExisting(true))
 	assert.NoError(t, err)
 	assert.Len(t, contracts, 3)
 	assert.Equal(t, ContractA.Name, contracts[0].Name)
@@ -169,7 +169,7 @@ func Test_Testnet_ProjectDeploy(t *testing.T) {
 	ContractA.Source = []byte(`pub contract ContractA { init() {} }`)
 	_ = afero.WriteFile(mockFs, ContractA.Filename, ContractA.Source, 0644)
 
-	contracts, err = flow.DeployProject(context.Background(), true)
+	contracts, err = flow.DeployProject(context.Background(), services.UpdateExisting(true))
 	assert.NoError(t, err)
 	assert.Len(t, contracts, 3)
 	assert.Equal(t, ContractA.Name, contracts[0].Name)

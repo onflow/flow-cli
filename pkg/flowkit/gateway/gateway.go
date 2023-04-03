@@ -33,7 +33,7 @@ type Gateway interface {
 	GetTransactionResultsByBlockID(blockID flow.Identifier) ([]*flow.TransactionResult, error)
 	GetTransactionResult(flow.Identifier, bool) (*flow.TransactionResult, error)
 	GetTransactionsByBlockID(blockID flow.Identifier) ([]*flow.Transaction, error)
-	ExecuteScript([]byte, []cadence.Value) (cadence.Value, error)
+	ExecuteScript([]byte, []cadence.Value, *util.ScriptQuery) (cadence.Value, error)
 	GetLatestBlock() (*flow.Block, error)
 	GetBlockByHeight(uint64) (*flow.Block, error)
 	GetBlockByID(flow.Identifier) (*flow.Block, error)

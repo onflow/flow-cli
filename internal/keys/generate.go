@@ -87,4 +87,5 @@ func generate(
 		derivationPath: generateFlags.DerivationPath,
 	}, nil
 
+	return &KeyResult{privateKey: privateKey, publicKey: pubKey, sigAlgo: sigAlgo, mnemonic: mnemonic, derivationPath: generateFlags.DerivationPath}, nil
 }

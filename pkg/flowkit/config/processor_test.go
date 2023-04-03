@@ -19,7 +19,6 @@
 package config
 
 import (
-	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -37,7 +36,7 @@ func Test_PrivateKeyEnv(t *testing.T) {
 		}
 	}`)
 
-	result := ProcessorRun(test)
+	result, _ := ProcessorRun(test)
 
 	assert.JSONEq(t, `{
 			"accounts": {
@@ -62,7 +61,7 @@ func Test_PrivateKeyEnvMultipleAccounts(t *testing.T) {
 		}
 	}`)
 
-	result := ProcessorRun(test)
+	result, _ := ProcessorRun(test)
 
 	assert.JSONEq(t, `{
 		"accounts": {
@@ -72,4 +71,51 @@ func Test_PrivateKeyEnvMultipleAccounts(t *testing.T) {
 			}
 		}
 	}`, string(result))
+}
+
+func Test_PrivateConfigFileAccounts(t *testing.T) {
+	b := []byte(`{
+		"emulators": {
+			"default": {
+				"port": 3569,
+				"serviceAccount": "emulator-account"
+			}
+		},
+		"contracts": {},
+		"networks": {
+			"emulator": "127.0.0.1:3569"
+		},
+		"deployments": {},
+		"accounts": {
+			"emulator-account": {
+				"address": "f8d6e0586b0a20c7",
+				"key": "11c5dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7"
+			},
+			"admin-account": { "fromFile": "test.json" }
+		}
+	}`)
+
+	preprocessor, accFromFile := ProcessorRun(b)
+
+	assert.Len(t, accFromFile, 1)
+
+	assert.JSONEq(t, `{
+		"emulators": {
+			"default": {
+				"port": 3569,
+				"serviceAccount": "emulator-account"
+			}
+		},
+		"contracts": {},
+		"networks": {
+			"emulator": "127.0.0.1:3569"
+		},
+		"deployments": {},
+			"accounts": {
+				"emulator-account": {
+					"address": "f8d6e0586b0a20c7",
+					"key": "11c5dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7"
+				}
+			}
+		}`, string(preprocessor))
 }

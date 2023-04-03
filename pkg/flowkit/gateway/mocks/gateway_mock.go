@@ -90,8 +90,9 @@ func DefaultMockGateway() *TestGateway {
 		),
 		ExecuteScript: m.On(
 			ExecuteScriptFunc,
-			mock.Anything,
-			mock.Anything,
+			mock.AnythingOfType("[]uint8"),
+			mock.AnythingOfType("[]cadence.Value"),
+			mock.AnythingOfType("*util.ScriptQuery"),
 		),
 		GetBlockByHeight: m.On(GetBlockByHeightFunc, mock.Anything),
 		GetBlockByID:     m.On(GetBlockByIDFunc, mock.Anything),

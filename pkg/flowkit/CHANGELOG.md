@@ -171,3 +171,9 @@ Aliases contain new functions to get the aliases by network and add new aliases.
 - Package: `config`
 - Type: `Contracts`
 
+
+---
+
+`WithLogger` now takes zerolog instead of Logrus since that is what flow-emulator has changed to.
+- Package: `gateway`
+- Type: `EmulatorGateway`

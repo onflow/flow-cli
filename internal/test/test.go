@@ -20,12 +20,16 @@ package test
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"github.com/onflow/cadence/runtime/common"
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
 	"path"
+	"os"
+	"strings"
 
 	cdcTests "github.com/onflow/cadence-tools/test"
+	"github.com/onflow/cadence/runtime"
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
@@ -34,7 +38,10 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
 )
 
-type flagsTests struct{}
+type flagsTests struct {
+	Cover        bool   `default:"false" flag:"cover" info:"Use the cover flag to calculate coverage report"`
+	CoverProfile string `default:"coverage.json" flag:"coverprofile" info:"Filename to write the calculated coverage report"`
+}
 
 var testFlags = flagsTests{}
 
@@ -57,11 +64,15 @@ func run(
 	_ flowkit.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
-	filename := args[0]
+	testFiles := make(map[string][]byte, 0)
+	for _, filename := range args {
+		code, err := state.ReadFile(filename)
 
-	code, err := state.ReadFile(filename)
-	if err != nil {
-		return nil, fmt.Errorf("error loading script file: %w", err)
+		if err != nil {
+			return nil, fmt.Errorf("error loading script file: %w", err)
+		}
+
+		testFiles[filename] = code
 	}
 
 	logger.StartProgress("Running tests...")
@@ -72,8 +83,23 @@ func run(
 		return nil, err
 	}
 
+	if coverageReport != nil {
+		file, err := json.MarshalIndent(coverageReport, "", "  ")
+		if err != nil {
+			return nil, fmt.Errorf("error serializing coverage report: %w", err)
+		}
+
+		err = os.WriteFile(testFlags.CoverProfile, file, 0644)
+		if err != nil {
+			return nil, fmt.Errorf("error writing coverage report file: %w", err)
+		}
+	} else if Cmd.Flags().Changed("coverprofile") {
+		return nil, fmt.Errorf("the '--coverprofile' flag requires the '--cover' flag")
+	}
+
 	return &Result{
-		Results: result,
+		Results:        result,
+		CoverageReport: coverageReport,
 	}, nil
 }
 
@@ -141,19 +167,33 @@ func absolutePath(basePath, filePath string) string {
 }
 
 type Result struct {
-	cdcTests.Results
+	Results        map[string]cdcTests.Results
+	CoverageReport *runtime.CoverageReport
 }
 
 var _ command.Result = &Result{}
 
 func (r *Result) JSON() any {
-	results := make([]map[string]string, 0, len(r.Results))
+	results := make(map[string]map[string]string, len(r.Results))
 
-	for _, result := range r.Results {
-		results = append(results, map[string]string{
-			"testName": result.TestName,
-			"error":    result.Error.Error(),
-		})
+	for testFile, testResult := range r.Results {
+		testFileResults := make(map[string]string, len(testResult))
+		for _, result := range testResult {
+			var status string
+			if result.Error == nil {
+				status = "PASS"
+			} else {
+				status = fmt.Sprintf("FAIL: %s", result.Error.Error())
+			}
+			testFileResults[result.TestName] = status
+		}
+		results[testFile] = testFileResults
+	}
+
+	if r.CoverageReport != nil {
+		results["meta"] = map[string]string{
+			"info": r.CoverageReport.CoveredStatementsPercentage(),
+		}
 	}
 
 	return results
@@ -163,7 +203,12 @@ func (r *Result) String() string {
 	var b bytes.Buffer
 	writer := util.CreateTabWriter(&b)
 
-	_, _ = fmt.Fprintf(writer, cdcTests.PrettyPrintResults(r.Results))
+	for scriptPath, testResult := range r.Results {
+		_, _ = fmt.Fprint(writer, cdcTests.PrettyPrintResults(testResult, scriptPath))
+	}
+	if r.CoverageReport != nil {
+		_, _ = fmt.Fprint(writer, r.CoverageReport.CoveredStatementsPercentage())
+	}
 
 	_ = writer.Flush()
 
@@ -171,5 +216,15 @@ func (r *Result) String() string {
 }
 
 func (r *Result) Oneliner() string {
-	return cdcTests.PrettyPrintResults(r.Results)
+	var builder strings.Builder
+
+	for scriptPath, testResult := range r.Results {
+		builder.WriteString(cdcTests.PrettyPrintResults(testResult, scriptPath))
+	}
+	if r.CoverageReport != nil {
+		builder.WriteString(r.CoverageReport.CoveredStatementsPercentage())
+		builder.WriteString("\n")
+	}
+
+	return builder.String()
 }
