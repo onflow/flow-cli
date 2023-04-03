@@ -33,7 +33,8 @@ type Services interface {
 	// AddContract to the Flow account provided and return the transaction ID.
 	//
 	// If the contract already exists on the account the operation will fail and error will be returned.
-	// Use UpdateContract method for such usage.
+	// Use UpdateExistingContract(bool) to define whether a contract should be updated or not, or you can also
+	// define a custom UpdateContract function which returns bool indicating whether a contract should be updated or not.
 	AddContract(context.Context, *Account, *Script, UpdateContract) (flow.Identifier, bool, error)
 
 	// RemoveContract from the provided account by its name.
@@ -65,14 +66,16 @@ type Services interface {
 
 	DerivePrivateKeyFromMnemonic(context.Context, string, crypto.SignatureAlgorithm, string) (crypto.PrivateKey, error)
 
-	// DeployProject contracts to the Flow network or update if already exists and update is set to true.
+	// DeployProject contracts to the Flow network or update if already exists and UpdateContracts returns true.
 	//
 	// Retrieve all the contracts for specified network, sort them for deployment deploy one by one and replace
 	// the imports in the contract source, so it corresponds to the account name the contract was deployed to.
-	DeployProject(context.Context, bool) ([]*project.Contract, error)
+	// If contracts already exist use UpdateExistingContract(bool) to define whether a contract should be updated or not.
+	DeployProject(context.Context, UpdateContract) ([]*project.Contract, error)
 
-	// ExecuteScript on the Flow network and return the Cadence value as a result.
-	ExecuteScript(context.Context, *Script) (cadence.Value, error)
+	// ExecuteScript on the Flow network and return the Cadence value as a result. The script is executed at the
+	// block provided as part of the ScriptQuery value.
+	ExecuteScript(context.Context, *Script, ScriptQuery) (cadence.Value, error)
 
 	// GetTransactionByID from the Flow network including the transaction result. Using the waitSeal we can wait for the transaction to be sealed.
 	GetTransactionByID(context.Context, flow.Identifier, bool) (*flow.Transaction, *flow.TransactionResult, error)
