@@ -20,7 +20,6 @@ package gateway
 
 import (
 	"github.com/onflow/cadence"
-	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-go-sdk"
 )
 
@@ -34,7 +33,9 @@ type Gateway interface {
 	GetTransactionResultsByBlockID(blockID flow.Identifier) ([]*flow.TransactionResult, error)
 	GetTransactionResult(flow.Identifier, bool) (*flow.TransactionResult, error)
 	GetTransactionsByBlockID(blockID flow.Identifier) ([]*flow.Transaction, error)
-	ExecuteScript([]byte, []cadence.Value, flowkit.ScriptQuery) (cadence.Value, error)
+	ExecuteScript([]byte, []cadence.Value) (cadence.Value, error)
+	ExecuteScriptAtHeight([]byte, []cadence.Value, uint64) (cadence.Value, error)
+	ExecuteScriptAtID([]byte, []cadence.Value, flow.Identifier) (cadence.Value, error)
 	GetLatestBlock() (*flow.Block, error)
 	GetBlockByHeight(uint64) (*flow.Block, error)
 	GetBlockByID(flow.Identifier) (*flow.Block, error)

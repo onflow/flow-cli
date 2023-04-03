@@ -20,6 +20,7 @@ package project
 
 import (
 	"fmt"
+	"github.com/onflow/flow-cli/pkg/flowkit"
 	"regexp"
 
 	"github.com/onflow/cadence/runtime/ast"
@@ -28,18 +29,12 @@ import (
 )
 
 type Program struct {
-	script     Scripter
+	script     *flowkit.Script
 	astProgram *ast.Program
 }
 
-type Scripter interface {
-	Code() []byte
-	SetCode([]byte)
-	Location() string
-}
-
-func NewProgram(script Scripter) (*Program, error) {
-	astProgram, err := parser.ParseProgram(nil, script.Code(), parser.Config{})
+func NewProgram(script *flowkit.Script) (*Program, error) {
+	astProgram, err := parser.ParseProgram(nil, script.Code, parser.Config{})
 	if err != nil {
 		return nil, err
 	}
@@ -82,17 +77,17 @@ func (p *Program) replaceImport(from string, to string) *Program {
 	code = pathRegex.ReplaceAllString(code, replacement)
 	code = identifierRegex.ReplaceAllString(code, replacement)
 
-	p.script.SetCode([]byte(code))
+	p.script.Code = []byte(code)
 	p.reload()
 	return p
 }
 
 func (p *Program) Location() string {
-	return p.script.Location()
+	return p.script.Location
 }
 
 func (p *Program) Code() []byte {
-	return p.script.Code()
+	return p.script.Code
 }
 
 func (p *Program) Name() (string, error) {
@@ -117,7 +112,7 @@ func (p *Program) Name() (string, error) {
 }
 
 func (p *Program) reload() {
-	astProgram, err := parser.ParseProgram(nil, p.script.Code(), parser.Config{})
+	astProgram, err := parser.ParseProgram(nil, p.script.Code, parser.Config{})
 	if err != nil {
 		return
 	}

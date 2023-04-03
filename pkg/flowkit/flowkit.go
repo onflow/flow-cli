@@ -239,7 +239,7 @@ func UpdateExistingContract(updateExisting bool) UpdateContract {
 func (f *Flowkit) AddContract(
 	ctx context.Context,
 	account *Account,
-	contract *Script,
+	contract Script,
 	update UpdateContract,
 ) (flow.Identifier, bool, error) {
 	state, err := f.State()
@@ -247,7 +247,7 @@ func (f *Flowkit) AddContract(
 		return flow.EmptyID, false, err
 	}
 
-	program, err := project.NewProgram(contract)
+	program, err := project.NewProgram(&contract)
 	if err != nil {
 		return flow.EmptyID, false, err
 	}
@@ -327,11 +327,7 @@ func (f *Flowkit) AddContract(
 	if exists && updateExisting && f.network != config.EmulatorNetwork {
 		f.logger.Info(fmt.Sprintf("Contract '%s' updating on the account '%s'.", name, account.Address))
 
-		tx, err = NewUpdateAccountContractTransaction(
-			account,
-			name,
-			contract.Code(),
-		)
+		tx, err = NewUpdateAccountContractTransaction(account, name, contract.Code)
 		if err != nil {
 			return flow.EmptyID, false, err
 		}
@@ -433,12 +429,10 @@ func (f *Flowkit) GetBlock(_ context.Context, query BlockQuery) (*flow.Block, er
 	var block *flow.Block
 	if query.Latest {
 		block, err = f.gateway.GetLatestBlock()
-	} else if query.Height > 0 {
-		block, err = f.gateway.GetBlockByHeight(query.Height)
 	} else if query.ID != nil {
 		block, err = f.gateway.GetBlockByID(*query.ID)
 	} else {
-		return nil, fmt.Errorf("invalid query, valid are: \"latest\", block height or block ID")
+		block, err = f.gateway.GetBlockByHeight(query.Height)
 	}
 
 	if err != nil {
@@ -707,7 +701,7 @@ func (f *Flowkit) DeployProject(ctx context.Context, update UpdateContract) ([]*
 		txID, updated, err := f.AddContract(
 			ctx,
 			targetAccount,
-			NewScript(contract.Code(), contract.Args, contract.Location()),
+			Script{Code: contract.Code(), Args: contract.Args, Location: contract.Location()},
 			update,
 		)
 		if err != nil && errors.Is(err, errUpdateNoDiff) {
@@ -762,13 +756,22 @@ func (d *ProjectDeploymentError) Error() string {
 	return err
 }
 
-func (f *Flowkit) ExecuteScript(_ context.Context, script *Script, query ScriptQuery) (cadence.Value, error) {
+// Script includes Cadence code and optional arguments and filename.
+//
+// Filename is only required to be passed if you want to resolve imports.
+type Script struct {
+	Code     []byte
+	Args     []cadence.Value
+	Location string
+}
+
+func (f *Flowkit) ExecuteScript(_ context.Context, script Script, query ScriptQuery) (cadence.Value, error) {
 	state, err := f.State()
 	if err != nil {
 		return nil, err
 	}
 
-	program, err := project.NewProgram(script)
+	program, err := project.NewProgram(&script)
 	if err != nil {
 		return nil, err
 	}
@@ -790,7 +793,7 @@ func (f *Flowkit) ExecuteScript(_ context.Context, script *Script, query ScriptQ
 		if f.network == config.EmptyNetwork {
 			return nil, fmt.Errorf("missing network, specify which network to use to resolve imports in script code")
 		}
-		if script.Location() == "" {
+		if script.Location == "" {
 			return nil, fmt.Errorf("resolving imports in scripts not supported")
 		}
 
@@ -800,7 +803,13 @@ func (f *Flowkit) ExecuteScript(_ context.Context, script *Script, query ScriptQ
 		}
 	}
 
-	return f.gateway.ExecuteScript(program.Code(), script.Args, query)
+	if query.Latest {
+		return f.gateway.ExecuteScript(program.Code(), script.Args)
+	} else if query.ID != flow.EmptyID {
+		return f.gateway.ExecuteScriptAtID(program.Code(), script.Args, query.ID)
+	} else {
+		return f.gateway.ExecuteScriptAtHeight(program.Code(), script.Args, query.Height)
+	}
 }
 
 func (f *Flowkit) GetTransactionByID(
@@ -876,7 +885,7 @@ func (f *Flowkit) BuildTransaction(
 		if f.network == config.EmptyNetwork {
 			return nil, fmt.Errorf("missing network, specify which network to use to resolve imports in transaction code")
 		}
-		if script.Location() == "" { // when used as lib with code we don't support imports
+		if script.Location == "" { // when used as lib with code we don't support imports
 			return nil, fmt.Errorf("resolving imports in transactions not supported")
 		}
 
