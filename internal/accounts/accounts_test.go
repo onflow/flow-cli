@@ -20,17 +20,19 @@ package accounts
 
 import (
 	"fmt"
-	"github.com/onflow/flow-cli/internal/command"
-	"github.com/onflow/flow-cli/internal/util"
-	"github.com/onflow/flow-cli/pkg/flowkit"
-	"github.com/onflow/flow-cli/pkg/flowkit/tests"
+	"strings"
+	"testing"
+
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
-	"strings"
-	"testing"
+
+	"github.com/onflow/flow-cli/internal/command"
+	"github.com/onflow/flow-cli/internal/util"
+	"github.com/onflow/flow-cli/pkg/flowkit"
+	"github.com/onflow/flow-cli/pkg/flowkit/tests"
 )
 
 func Test_AddContract(t *testing.T) {
@@ -289,31 +291,35 @@ func Test_Get(t *testing.T) {
 }
 
 func Test_Result(t *testing.T) {
-	result := AccountResult{
-		Account: tests.NewAccountWithAddress("0x01"),
+	pkey, _ := crypto.DecodePublicKeyHex(crypto.ECDSA_P256, "a60b9c10a39070806d37d8f0e6be081e7af2d18cd92ee1bd850d10c994d61d538d2693eebe8faa94fea59ee579ea65a70ed897b05126e508e74f55b8669eec6b")
+	account := &flow.Account{
+		Address: flow.HexToAddress("0x01"),
+		Balance: uint64(1),
+		Keys: []*flow.AccountKey{{
+			Index:          0,
+			PublicKey:      pkey,
+			SigAlgo:        crypto.ECDSA_P256,
+			HashAlgo:       crypto.SHA3_256,
+			Weight:         1000,
+			SequenceNumber: 0,
+			Revoked:        false,
+		}},
+		Contracts: nil,
 	}
+	result := AccountResult{Account: account}
 
 	assert.Equal(t, strings.TrimPrefix(`
 Address	 0x0000000000000001
-Balance	 0.00000010
-Keys	 2
+Balance	 0.00000001
+Keys	 1
 
-Key 0	Public Key		 8da60bd98a827c87e21622c5070ae3ee440abf0927d5db33f9652cb1303eb8a04dfe41dea2c9ea64ee83ee8d7c8d068db8386c7bab98694af956e0fdae37184e
+Key 0	Public Key		 a60b9c10a39070806d37d8f0e6be081e7af2d18cd92ee1bd850d10c994d61d538d2693eebe8faa94fea59ee579ea65a70ed897b05126e508e74f55b8669eec6b
 	Weight			 1000
 	Signature Algorithm	 ECDSA_P256
 	Hash Algorithm		 SHA3_256
 	Revoked 		 false
-	Sequence Number 	 42
-	Index 			 1
-
-
-Key 1	Public Key		 c8a2a318b9099cc6c872a0ec3dcd9f59d17837e4ffd6cd8a1f913ddfa769559605e1ad6ad603ebb511f5a6c8125f863abc2e9c600216edaa07104a0fe320dba7
-	Weight			 1000
-	Signature Algorithm	 ECDSA_P256
-	Hash Algorithm		 SHA3_256
-	Revoked 		 false
-	Sequence Number 	 42
-	Index 			 2
+	Sequence Number 	 0
+	Index 			 0
 
 Contracts Deployed: 0
 
@@ -322,11 +328,10 @@ Contracts (hidden, use --include contracts)`, "\n"), result.String())
 
 	assert.Equal(t, map[string]interface{}{
 		"address":   flow.Address{0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x1},
-		"balance":   "0.00000010",
+		"balance":   "0.00000001",
 		"contracts": []string{},
 		"keys": []string{
-			"8da60bd98a827c87e21622c5070ae3ee440abf0927d5db33f9652cb1303eb8a04dfe41dea2c9ea64ee83ee8d7c8d068db8386c7bab98694af956e0fdae37184e",
-			"c8a2a318b9099cc6c872a0ec3dcd9f59d17837e4ffd6cd8a1f913ddfa769559605e1ad6ad603ebb511f5a6c8125f863abc2e9c600216edaa07104a0fe320dba7",
+			"a60b9c10a39070806d37d8f0e6be081e7af2d18cd92ee1bd850d10c994d61d538d2693eebe8faa94fea59ee579ea65a70ed897b05126e508e74f55b8669eec6b",
 		},
 	}, result.JSON())
 
