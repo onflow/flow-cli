@@ -853,7 +853,7 @@ func (f *Flowkit) BuildTransaction(
 	_ context.Context,
 	addresses *TransactionAddressesRoles,
 	proposerKeyIndex int,
-	script *Script,
+	script Script,
 	gasLimit uint64,
 ) (*Transaction, error) {
 	state, err := f.State()
@@ -959,7 +959,7 @@ func (f *Flowkit) SendSignedTransaction(
 func (f *Flowkit) SendTransaction(
 	ctx context.Context,
 	accounts *TransactionAccountRoles,
-	script *Script,
+	script Script,
 	gasLimit uint64,
 ) (*flow.Transaction, *flow.TransactionResult, error) {
 	tx, err := f.BuildTransaction(
