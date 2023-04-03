@@ -23,6 +23,7 @@ import (
 	"fmt"
 
 	"github.com/onflow/cadence"
+	flowsdk "github.com/onflow/flow-go-sdk"
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
@@ -74,13 +75,23 @@ func execute(
 		return nil, fmt.Errorf("error parsing script arguments: %w", err)
 	}
 
+	query := flowkit.ScriptQuery{}
+	if scriptFlags.BlockHeight != 0 {
+		query.Height = scriptFlags.BlockHeight
+	} else if scriptFlags.BlockID != "" {
+		query.ID = flowsdk.HexToID(scriptFlags.BlockID)
+	} else {
+		query.Latest = true
+	}
+
 	value, err := flow.ExecuteScript(
 		context.Background(),
-		flowkit.NewScript(code, scriptArgs, filename),
-		&util.ScriptQuery{
-			ID:     flow.HexToID(scriptFlags.BlockID),
-			Height: scriptFlags.BlockHeight,
+		flowkit.Script{
+			Code:     code,
+			Args:     scriptArgs,
+			Location: filename,
 		},
+		query,
 	)
 	if err != nil {
 		return nil, err
