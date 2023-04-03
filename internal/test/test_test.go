@@ -23,13 +23,13 @@ import (
 	"os"
 	"testing"
 
-	"github.com/onflow/flow-cli/internal/util"
-	"github.com/onflow/flow-cli/pkg/flowkit/config"
-	"github.com/onflow/flow-cli/pkg/flowkit/tests"
-
 	"github.com/onflow/cadence/runtime/stdlib"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/onflow/flow-cli/internal/util"
+	"github.com/onflow/flow-cli/pkg/flowkit/config"
+	"github.com/onflow/flow-cli/pkg/flowkit/tests"
 )
 
 func TestExecutingTests(t *testing.T) {
@@ -40,7 +40,7 @@ func TestExecutingTests(t *testing.T) {
 		script := tests.TestScriptSimple
 		testFiles := make(map[string][]byte, 0)
 		testFiles[script.Filename] = script.Source
-		results, err := testCode(script.Source, script.Filename, state)
+		results, _, err := testCode(testFiles, state, false)
 
 		require.NoError(t, err)
 		require.Len(t, results, 1)
@@ -54,7 +54,7 @@ func TestExecutingTests(t *testing.T) {
 		script := tests.TestScriptSimpleFailing
 		testFiles := make(map[string][]byte, 0)
 		testFiles[script.Filename] = script.Source
-		results, err := testCode(script.Source, script.Filename, state)
+		results, _, err := testCode(testFiles, state, false)
 
 		require.NoError(t, err)
 		require.Len(t, results, 1)
@@ -78,7 +78,7 @@ func TestExecutingTests(t *testing.T) {
 		script := tests.TestScriptWithImport
 		testFiles := make(map[string][]byte, 0)
 		testFiles[script.Filename] = script.Source
-		results, err := testCode(script.Source, script.Filename, state)
+		results, _, err := testCode(testFiles, state, false)
 
 		require.NoError(t, err)
 		require.Len(t, results, 1)
@@ -99,7 +99,7 @@ func TestExecutingTests(t *testing.T) {
 		script := tests.TestScriptWithFileRead
 		testFiles := make(map[string][]byte, 0)
 		testFiles[script.Filename] = script.Source
-		results, err := testCode(script.Source, script.Filename, state)
+		results, _, err := testCode(testFiles, state, false)
 
 		require.NoError(t, err)
 		require.Len(t, results, 1)
@@ -110,19 +110,18 @@ func TestExecutingTests(t *testing.T) {
 		t.Parallel()
 
 		// Setup
-		st, s, _ := setup()
+		_, state, _ := util.TestMocks(t)
 
-		c := config.Contract{
+		state.Contracts().AddOrUpdate(config.Contract{
 			Name:     tests.ContractFooCoverage.Name,
 			Location: tests.ContractFooCoverage.Filename,
-		}
-		st.Contracts().AddOrUpdate(c)
+		})
 
 		// Execute script
 		script := tests.TestScriptWithCoverage
 		testFiles := make(map[string][]byte, 0)
 		testFiles[script.Filename] = script.Source
-		results, coverageReport, err := s.Tests.Execute(testFiles, st.ReaderWriter(), true)
+		results, coverageReport, err := testCode(testFiles, state, true)
 
 		require.NoError(t, err)
 		require.Len(t, results, 1)

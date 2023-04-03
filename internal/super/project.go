@@ -20,11 +20,12 @@ package super
 
 import (
 	"context"
-	"github.com/onflow/flow-cli/internal/util"
+
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/pkg/errors"
 
+	"github.com/onflow/flow-cli/internal/util"
 	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
 	flowkitProject "github.com/onflow/flow-cli/pkg/flowkit/project"
@@ -105,7 +106,7 @@ func (p *project) startup() error {
 
 // deploys all the contracts found in the state configuration.
 func (p *project) deploy() {
-	deployed, err := p.flow.DeployProject(context.Background(), services.UpdateExisting(true))
+	deployed, err := p.flow.DeployProject(context.Background(), flowkit.UpdateExistingContract(true))
 	printDeployment(deployed, err, p.pathNameLookup)
 }
 
@@ -239,7 +240,7 @@ func (p *project) contractName(path string) (string, error) {
 		return "", errors.Wrap(err, "could not load contract to get the name")
 	}
 
-	program, err := flowkitProject.NewProgram(flowkit.NewScript(content, nil, path))
+	program, err := flowkitProject.NewProgram(content, nil, path)
 	if err != nil {
 		return "", err
 	}

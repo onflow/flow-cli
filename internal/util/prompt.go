@@ -20,7 +20,6 @@ package util
 
 import (
 	"fmt"
-	"github.com/sergi/go-diff/diffmatchpatch"
 	"os"
 	"path"
 	"strconv"
@@ -30,13 +29,12 @@ import (
 	"github.com/manifoldco/promptui"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
+	"github.com/sergi/go-diff/diffmatchpatch"
 	"golang.org/x/exp/maps"
 	"golang.org/x/exp/slices"
-	"os"
-	"path"
-	"strconv"
 
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
+	"github.com/onflow/flow-cli/pkg/flowkit/output"
 )
 
 func ApproveTransactionForSigningPrompt(transaction *flow.Transaction) bool {
@@ -678,7 +676,7 @@ func InstallPathPrompt(defaultPath string) string {
 	return path.Clean(install)
 }
 
-func ScaffoldPrompt(logger Logger, availableScaffolds map[string][]string) int {
+func ScaffoldPrompt(logger output.Logger, availableScaffolds map[string][]string) int {
 	const (
 		general = ""
 		mobile  = "mobile"
@@ -694,7 +692,7 @@ func ScaffoldPrompt(logger Logger, availableScaffolds map[string][]string) int {
 
 	index := 0
 	outputCategory := func(category string, items []string) {
-		logger.Info(Bold(Magenta(category)))
+		logger.Info(output.Bold(output.Magenta(category)))
 		for _, item := range items {
 			logger.Info(fmt.Sprintf("   [%d] %s", index+1, item))
 			index++

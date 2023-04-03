@@ -22,19 +22,19 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/onflow/cadence/runtime/common"
-	"github.com/onflow/flow-cli/pkg/flowkit/config"
-	"path"
 	"os"
+	"path"
 	"strings"
 
 	cdcTests "github.com/onflow/cadence-tools/test"
 	"github.com/onflow/cadence/runtime"
+	"github.com/onflow/cadence/runtime/common"
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/internal/util"
 	"github.com/onflow/flow-cli/pkg/flowkit"
+	"github.com/onflow/flow-cli/pkg/flowkit/config"
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
 )
 
@@ -64,6 +64,10 @@ func run(
 	_ flowkit.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
+	if !testFlags.Cover && Command.Cmd.Flags().Changed("coverprofile") {
+		return nil, fmt.Errorf("the '--coverprofile' flag requires the '--cover' flag")
+	}
+
 	testFiles := make(map[string][]byte, 0)
 	for _, filename := range args {
 		code, err := state.ReadFile(filename)
@@ -78,7 +82,7 @@ func run(
 	logger.StartProgress("Running tests...")
 	defer logger.StopProgress()
 
-	result, err := testCode(code, filename, state)
+	result, coverageReport, err := testCode(testFiles, state, testFlags.Cover)
 	if err != nil {
 		return nil, err
 	}
@@ -93,8 +97,6 @@ func run(
 		if err != nil {
 			return nil, fmt.Errorf("error writing coverage report file: %w", err)
 		}
-	} else if Cmd.Flags().Changed("coverprofile") {
-		return nil, fmt.Errorf("the '--coverprofile' flag requires the '--cover' flag")
 	}
 
 	return &Result{
@@ -103,12 +105,30 @@ func run(
 	}, nil
 }
 
-func testCode(code []byte, scriptPath string, state *flowkit.State) (cdcTests.Results, error) {
-	runner := cdcTests.NewTestRunner().
-		WithImportResolver(importResolver(scriptPath, state)).
-		WithFileResolver(fileResolver(scriptPath, state))
+func testCode(
+	testFiles map[string][]byte,
+	state *flowkit.State,
+	coverageEnabled bool,
+) (map[string]cdcTests.Results, *runtime.CoverageReport, error) {
+	var coverageReport *runtime.CoverageReport
+	runner := cdcTests.NewTestRunner()
+	if coverageEnabled {
+		coverageReport = runtime.NewCoverageReport()
+		runner = runner.WithCoverageReport(coverageReport)
+	}
 
-	return runner.RunTests(string(code))
+	testResults := make(map[string]cdcTests.Results, 0)
+	for scriptPath, code := range testFiles {
+		runner := runner.
+			WithImportResolver(importResolver(scriptPath, state)).
+			WithFileResolver(fileResolver(scriptPath, state))
+		results, err := runner.RunTests(string(code))
+		if err != nil {
+			return nil, nil, err
+		}
+		testResults[scriptPath] = results
+	}
+	return testResults, coverageReport, nil
 }
 
 func importResolver(scriptPath string, state *flowkit.State) cdcTests.ImportResolver {
