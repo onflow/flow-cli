@@ -353,8 +353,8 @@ func (t *Transaction) shouldSignEnvelope() bool {
 
 // NewTransactionSingleAccountRole creates transaction accounts from a single provided
 // account fulfilling all the roles (proposer, payer, authorizer).
-func NewTransactionSingleAccountRole(account Account) *TransactionAccountRoles {
-	return &TransactionAccountRoles{
+func NewTransactionSingleAccountRole(account Account) TransactionAccountRoles {
+	return TransactionAccountRoles{
 		Proposer:    account,
 		Authorizers: []Account{account},
 		Payer:       account,
@@ -370,13 +370,13 @@ type TransactionAccountRoles struct {
 	Payer       Account
 }
 
-func (t *TransactionAccountRoles) toAddresses() *TransactionAddressesRoles {
+func (t *TransactionAccountRoles) toAddresses() TransactionAddressesRoles {
 	auths := make([]flow.Address, len(t.Authorizers))
 	for i, a := range t.Authorizers {
 		auths[i] = a.Address
 	}
 
-	return &TransactionAddressesRoles{
+	return TransactionAddressesRoles{
 		Proposer:    t.Proposer.Address,
 		Authorizers: auths,
 		Payer:       t.Payer.Address,

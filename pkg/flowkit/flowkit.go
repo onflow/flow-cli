@@ -851,7 +851,7 @@ func (f *Flowkit) GetTransactionsByBlockID(
 
 func (f *Flowkit) BuildTransaction(
 	_ context.Context,
-	addresses *TransactionAddressesRoles,
+	addresses TransactionAddressesRoles,
 	proposerKeyIndex int,
 	script Script,
 	gasLimit uint64,
@@ -958,7 +958,7 @@ func (f *Flowkit) SendSignedTransaction(
 
 func (f *Flowkit) SendTransaction(
 	ctx context.Context,
-	accounts *TransactionAccountRoles,
+	accounts TransactionAccountRoles,
 	script Script,
 	gasLimit uint64,
 ) (*flow.Transaction, *flow.TransactionResult, error) {
