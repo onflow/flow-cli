@@ -45,7 +45,7 @@ type flagsTests struct {
 
 var testFlags = flagsTests{}
 
-var Command = &command.Command{
+var TestCommand = &command.Command{
 	Cmd: &cobra.Command{
 		Use:     "test <filename>",
 		Short:   "Run Cadence tests",
@@ -64,7 +64,7 @@ func run(
 	_ flowkit.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
-	if !testFlags.Cover && Command.Cmd.Flags().Changed("coverprofile") {
+	if !testFlags.Cover && testFlags.CoverProfile != "coverage.json" {
 		return nil, fmt.Errorf("the '--coverprofile' flag requires the '--cover' flag")
 	}
 

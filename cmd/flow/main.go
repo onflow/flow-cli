@@ -61,7 +61,7 @@ func main() {
 	status.Command.AddToParent(cmd)
 	tools.DevWallet.AddToParent(cmd)
 	tools.Flowser.AddToParent(cmd)
-	test.Command.AddToParent(cmd)
+	test.TestCommand.AddToParent(cmd)
 
 	// super commands
 	super.SetupCommand.AddToParent(cmd)
