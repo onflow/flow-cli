@@ -21,13 +21,13 @@ package transactions
 import (
 	"context"
 	"fmt"
-	"github.com/onflow/flow-cli/pkg/flowkit/output"
 
 	"github.com/onflow/cadence"
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/pkg/flowkit"
+	"github.com/onflow/flow-cli/pkg/flowkit/output"
 )
 
 type flagsSend struct {
@@ -126,12 +126,12 @@ func send(
 
 	tx, txResult, err := flow.SendTransaction(
 		context.Background(),
-		&flowkit.TransactionAccountRoles{
+		flowkit.TransactionAccountRoles{
 			Proposer:    *proposer,
 			Authorizers: authorizers,
 			Payer:       *payer,
 		},
-		flowkit.NewScript(code, transactionArgs, codeFilename),
+		flowkit.Script{Code: code, Args: transactionArgs, Location: codeFilename},
 		sendFlags.GasLimit,
 	)
 

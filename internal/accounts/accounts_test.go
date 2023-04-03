@@ -43,7 +43,7 @@ func Test_AddContract(t *testing.T) {
 
 		srv.AddContract.Run(func(args mock.Arguments) {
 			script := args.Get(2).(*flowkit.Script)
-			assert.Equal(t, tests.ContractSimpleWithArgs.Filename, script.Location())
+			assert.Equal(t, tests.ContractSimpleWithArgs.Filename, script.Location)
 			assert.Len(t, script.Args, 1)
 			assert.Equal(t, inArgs[1], script.Args[0].String())
 		})
@@ -57,7 +57,7 @@ func Test_AddContract(t *testing.T) {
 	t.Run("Success JSON arg", func(t *testing.T) {
 		srv.AddContract.Run(func(args mock.Arguments) {
 			script := args.Get(2).(*flowkit.Script)
-			assert.Equal(t, tests.ContractSimpleWithArgs.Filename, script.Location())
+			assert.Equal(t, tests.ContractSimpleWithArgs.Filename, script.Location)
 			assert.Len(t, script.Args, 1)
 			assert.Equal(t, "1", script.Args[0].String())
 		})
@@ -132,7 +132,7 @@ func Test_UpdateContract(t *testing.T) {
 
 		srv.AddContract.Run(func(args mock.Arguments) {
 			script := args.Get(2).(*flowkit.Script)
-			assert.Equal(t, tests.ContractSimpleWithArgs.Filename, script.Location())
+			assert.Equal(t, tests.ContractSimpleWithArgs.Filename, script.Location)
 			assert.Len(t, script.Args, 1)
 			assert.Equal(t, inArgs[1], script.Args[0].String())
 		})
@@ -149,7 +149,7 @@ func Test_UpdateContract(t *testing.T) {
 
 		srv.AddContract.Run(func(args mock.Arguments) {
 			script := args.Get(2).(*flowkit.Script)
-			assert.Equal(t, tests.ContractSimpleWithArgs.Filename, script.Location())
+			assert.Equal(t, tests.ContractSimpleWithArgs.Filename, script.Location)
 			assert.Len(t, script.Args, 1)
 			assert.Equal(t, "1", script.Args[0].String())
 		})

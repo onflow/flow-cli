@@ -88,7 +88,7 @@ func TestProgram(t *testing.T) {
 		}}
 
 		for i, test := range tests {
-			program, err := NewProgram(&testScript{code: test.code})
+			program, err := NewProgram(test.code, nil, "")
 			require.NoError(t, err, fmt.Sprintf("import test %d failed", i))
 			assert.Equal(t, len(test.imports) > 0, program.HasImports(), fmt.Sprintf("import test %d failed", i))
 			assert.Equal(t, test.imports, program.imports(), fmt.Sprintf("import test %d failed", i))
@@ -111,7 +111,7 @@ func TestProgram(t *testing.T) {
 		}}
 
 		for i, test := range tests {
-			program, err := NewProgram(&testScript{code: test.code})
+			program, err := NewProgram(test.code, nil, "")
 			require.NoError(t, err, fmt.Sprintf("import test %d failed", i))
 			name, err := program.Name()
 			require.NoError(t, err)
@@ -134,14 +134,14 @@ func TestProgram(t *testing.T) {
 		}
 
 		for _, code := range failed {
-			program, err := NewProgram(&testScript{code: code})
+			program, err := NewProgram(code, nil, "")
 			require.NoError(t, err)
 
 			_, err = program.Name()
 			assert.EqualError(t, err, "the code must declare exactly one contract or contract interface")
 		}
 
-		program, err := NewProgram(&testScript{code: []byte(`pub fun main() {}`)})
+		program, err := NewProgram([]byte(`pub fun main() {}`), nil, "")
 		require.NoError(t, err)
 		_, err = program.Name()
 		assert.EqualError(t, err, "unable to determine contract name")
@@ -166,7 +166,7 @@ func TestProgram(t *testing.T) {
 			pub contract Foo {}
 		`)
 
-		program, err := NewProgram(&testScript{code: code})
+		program, err := NewProgram(code, nil, "")
 		require.NoError(t, err)
 
 		program.

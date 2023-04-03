@@ -39,7 +39,7 @@ func Test_Execute(t *testing.T) {
 		srv.ExecuteScript.Run(func(args mock.Arguments) {
 			script := args.Get(1).(*flowkit.Script)
 			assert.Equal(t, fmt.Sprintf("\"%s\"", inArgs[1]), script.Args[0].String())
-			assert.Equal(t, tests.ScriptArgString.Filename, script.Location())
+			assert.Equal(t, tests.ScriptArgString.Filename, script.Location)
 		}).Return(cadence.NewInt(1), nil)
 
 		result, err := execute(inArgs, command.GlobalFlags{}, util.NoLogger, rw, srv.Mock)

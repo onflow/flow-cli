@@ -82,8 +82,8 @@ func updateContract(
 	_, _, err = flow.AddContract(
 		context.Background(),
 		to,
-		flowkit.NewScript(code, contractArgs, filename),
-		true,
+		flowkit.Script{Code: code, Args: contractArgs, Location: filename},
+		flowkit.UpdateExistingContract(true),
 	)
 	if err != nil {
 		return nil, err

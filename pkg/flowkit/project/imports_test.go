@@ -108,10 +108,7 @@ func TestResolver(t *testing.T) {
 
 		replacer := NewImportReplacer(contracts, aliases)
 		for i, script := range scripts {
-			program, err := NewProgram(&testScript{
-				code:     script,
-				location: paths[i],
-			})
+			program, err := NewProgram(script, nil, paths[i])
 			require.NoError(t, err)
 
 			program, err = replacer.Replace(program)
@@ -135,7 +132,7 @@ func TestResolver(t *testing.T) {
 			
 			pub contract Zoo {}
 		`)
-		program, err := NewProgram(&testScript{code: code, location: "./Zoo.cdc"})
+		program, err := NewProgram(code, nil, "./Zoo.cdc")
 		require.NoError(t, err)
 
 		replaced, err := replacer.Replace(program)

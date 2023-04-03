@@ -22,13 +22,14 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+
 	"github.com/onflow/cadence"
-	"github.com/onflow/flow-cli/internal/util"
 	tmpl "github.com/onflow/flow-core-contracts/lib/go/templates"
 	flowsdk "github.com/onflow/flow-go-sdk"
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
+	"github.com/onflow/flow-cli/internal/util"
 	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
 )
@@ -78,7 +79,8 @@ func stakingInfo(
 
 	stakingValue, err := flow.ExecuteScript(
 		context.Background(),
-		flowkit.NewScript(stakingInfoScript, cadenceAddress, ""),
+		flowkit.Script{Code: stakingInfoScript, Args: cadenceAddress},
+		flowkit.LatestScriptQuery,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("error getting staking info: %s", err.Error())
@@ -86,7 +88,8 @@ func stakingInfo(
 
 	delegationValue, err := flow.ExecuteScript(
 		context.Background(),
-		flowkit.NewScript(delegationInfoScript, cadenceAddress, ""),
+		flowkit.Script{Code: delegationInfoScript, Args: cadenceAddress},
+		flowkit.LatestScriptQuery,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("error getting delegation info: %s", err.Error())
@@ -116,7 +119,11 @@ func stakingInfo(
 	for nodeID := range nodeStakes {
 		stake, err := flow.ExecuteScript(
 			context.Background(),
-			flowkit.NewScript(totalCommitmentScript, []cadence.Value{cadence.String(nodeID)}, ""),
+			flowkit.Script{
+				Code: totalCommitmentScript,
+				Args: []cadence.Value{cadence.String(nodeID)},
+			},
+			flowkit.LatestScriptQuery,
 		)
 		if err != nil {
 			return nil, fmt.Errorf("error getting total stake for node: %s", err.Error())

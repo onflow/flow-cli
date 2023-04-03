@@ -19,16 +19,18 @@
 package transactions
 
 import (
+	"strings"
+	"testing"
+
+	"github.com/onflow/flow-go-sdk"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
+
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/internal/util"
 	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
 	"github.com/onflow/flow-cli/pkg/flowkit/tests"
-	"github.com/onflow/flow-go-sdk"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
-	"strings"
-	"testing"
 )
 
 func Test_Build(t *testing.T) {
@@ -45,7 +47,7 @@ func Test_Build(t *testing.T) {
 			assert.Equal(t, serviceAccountAddress, roles.Authorizers[0].String())
 			assert.Equal(t, 0, args.Get(2).(int))
 			script := args.Get(3).(*flowkit.Script)
-			assert.Equal(t, tests.TransactionSimple.Filename, script.Location())
+			assert.Equal(t, tests.TransactionSimple.Filename, script.Location)
 		}).Return(flowkit.NewTransaction(), nil)
 
 		result, err := build(inArgs, command.GlobalFlags{Yes: true}, util.NoLogger, srv.Mock, state)
@@ -144,7 +146,7 @@ func Test_Send(t *testing.T) {
 			assert.Equal(t, acc, roles.Proposer.Name)
 			assert.Equal(t, acc, roles.Authorizers[0].Name)
 			script := args.Get(2).(*flowkit.Script)
-			assert.Equal(t, tests.TransactionArgString.Filename, script.Location())
+			assert.Equal(t, tests.TransactionArgString.Filename, script.Location)
 			assert.Equal(t, args.Get(3).(uint64), gas)
 		}).Return(nil, nil, nil)
 
