@@ -6,11 +6,6 @@ require (
 	github.com/ethereum/go-ethereum v1.10.22
 	github.com/gosuri/uilive v0.0.4
 	github.com/lmars/go-slip10 v0.0.0-20190606092855-400ba44fee12
-	github.com/onflow/cadence v0.31.3
-	github.com/onflow/cadence-tools/test v0.3.0
-	github.com/onflow/flow-emulator v0.44.2
-	github.com/onflow/flow-go v0.29.11
-	github.com/onflow/flow-go-sdk v0.31.3
 	github.com/onflow/flow-go/crypto v0.24.4
 	github.com/manifoldco/promptui v0.9.0
 	github.com/onflow/cadence v0.37.0

@@ -21,6 +21,7 @@ package gateway
 import (
 	"context"
 	"fmt"
+	"github.com/onflow/flow-cli/pkg/flowkit"
 	"strings"
 	"time"
 
@@ -32,7 +33,6 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
-	"github.com/onflow/flow-cli/pkg/flowkit/util"
 )
 
 // maxGRPCMessageSize 20mb, matching the value set in onflow/flow-go
@@ -141,7 +141,7 @@ func (g *GrpcGateway) GetTransactionResult(ID flow.Identifier, waitSeal bool) (*
 }
 
 // ExecuteScript executes a script on Flow through the Access API.
-func (g *GrpcGateway) ExecuteScript(script []byte, arguments []cadence.Value, query *util.ScriptQuery) (cadence.Value, error) {
+func (g *GrpcGateway) ExecuteScript(script []byte, arguments []cadence.Value, query *flowkit.ScriptQuery) (cadence.Value, error) {
 	var value cadence.Value
 	var err error
 

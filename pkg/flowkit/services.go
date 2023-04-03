@@ -34,7 +34,7 @@ type Services interface {
 	//
 	// If the contract already exists on the account the operation will fail and error will be returned.
 	// Use UpdateContract method for such usage.
-	AddContract(context.Context, *Account, *Script, bool) (flow.Identifier, bool, error)
+	AddContract(context.Context, *Account, *Script, UpdateContract) (flow.Identifier, bool, error)
 
 	// RemoveContract from the provided account by its name.
 	//

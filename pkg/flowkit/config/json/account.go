@@ -34,6 +34,11 @@ import (
 
 type jsonAccounts map[string]account
 
+const (
+	defaultHashAlgo = crypto.SHA3_256
+	defaultSigAlgo  = crypto.ECDSA_P256
+)
+
 // transformAddress returns address based on address and chain id.
 func transformAddress(address string) (flow.Address, error) {
 	// only allow service for emulator

@@ -22,21 +22,19 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/onflow/flow-cli/internal/util"
+	"github.com/onflow/flow-cli/pkg/flowkit/output"
 	"io"
 	"net/http"
 	"strings"
 
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/pkg/flowkit"
-	"github.com/onflow/flow-cli/pkg/flowkit/services"
-	"github.com/onflow/flow-cli/pkg/flowkit/util"
-
 	"github.com/spf13/cobra"
 	"golang.org/x/exp/slices"
 )
 
-type SnapshotFlag struct {
-}
+type SnapshotFlag struct{}
 
 var snapshotFlag = SnapshotFlag{}
 
@@ -186,9 +184,10 @@ const (
 
 func snapshot(
 	args []string,
-	_ flowkit.ReaderWriter,
 	_ command.GlobalFlags,
-	_ *services.Services,
+	_ output.Logger,
+	_ flowkit.ReaderWriter,
+	_ flowkit.Services,
 ) (command.Result, error) {
 
 	subCommand := args[0]

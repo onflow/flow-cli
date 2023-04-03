@@ -64,6 +64,13 @@ func NewBlockQuery(query string) (BlockQuery, error) {
 	return BlockQuery{}, fmt.Errorf("invalid query: %s, valid are: \"latest\", block height or block ID", query)
 }
 
+// ScriptQuery defines block ID or height at which we should execute the script.
+type ScriptQuery struct {
+	Latest bool
+	ID     flow.Identifier
+	Height uint64
+}
+
 // EventWorker defines how many workers do we want to start, each in its own subroutine, and how many blocks
 // each worker fetches from the network. This is used to process the event requests concurrently.
 type EventWorker struct {
@@ -218,11 +225,19 @@ func (f *Flowkit) prepareTransaction(
 
 var errUpdateNoDiff = errors.New("contract already exists and is the same as the contract provided for update")
 
+type UpdateContract func(existing []byte, new []byte) bool
+
+func UpdateExistingContract(updateExisting bool) UpdateContract {
+	return func(existing []byte, new []byte) bool {
+		return updateExisting
+	}
+}
+
 func (f *Flowkit) AddContract(
-	_ context.Context,
+	ctx context.Context,
 	account *Account,
 	contract *Script,
-	updateExisting bool,
+	update UpdateContract,
 ) (flow.Identifier, bool, error) {
 	state, err := f.State()
 	if err != nil {
@@ -266,14 +281,7 @@ func (f *Flowkit) AddContract(
 		return flow.EmptyID, false, err
 	}
 
-	f.logger.StartProgress(
-		fmt.Sprintf(
-			"%s contract '%s' on account '%s'...",
-			map[bool]string{true: "Updating", false: "Creating"}[updateExisting],
-			name,
-			account.Address,
-		),
-	)
+	f.logger.StartProgress(fmt.Sprintf("Checking contract '%s' on account '%s'...", name, account.Address))
 	defer f.logger.StopProgress()
 
 	// check if contract exists on account
@@ -283,17 +291,39 @@ func (f *Flowkit) AddContract(
 	}
 	existingContract, exists := flowAccount.Contracts[name]
 	noDiffInContract := bytes.Equal(program.Code(), existingContract)
+
 	if exists && noDiffInContract {
 		return flow.EmptyID, false, errUpdateNoDiff
 	}
+
+	updateExisting := update(existingContract, program.Code())
 	if exists && !updateExisting {
 		return flow.EmptyID, false, fmt.Errorf(
 			fmt.Sprintf("contract %s exists in account %s", name, account.Name),
 		)
 	}
 
-	// if we are updating contract
-	if exists && updateExisting {
+	// special case for emulator updates, where we remove and add a contract because it allows us to have more freedom in changes.
+	// Updating contracts is limited as described in https://developers.flow.com/cadence/language/contract-updatability
+	if exists && updateExisting && f.network == config.EmulatorNetwork {
+		_, _ = f.RemoveContract(ctx, account, name) // ignore failure as it's meant to be best-effort
+
+		f.logger.Info(fmt.Sprintf("Contract '%s' updating on the account '%s'.", name, account.Address))
+
+		tx, err = NewAddAccountContractTransaction(
+			account,
+			name,
+			program.Code(),
+			contract.Args,
+		)
+		if err != nil {
+			return flow.EmptyID, false, err
+		}
+	}
+
+	if exists && updateExisting && f.network != config.EmulatorNetwork {
+		f.logger.Info(fmt.Sprintf("Contract '%s' updating on the account '%s'.", name, account.Address))
+
 		tx, err = NewUpdateAccountContractTransaction(
 			account,
 			name,
@@ -303,7 +333,6 @@ func (f *Flowkit) AddContract(
 			return flow.EmptyID, false, err
 		}
 	}
-
 	tx, err = f.prepareTransaction(tx, account)
 	if err != nil {
 		return flow.EmptyID, false, err
