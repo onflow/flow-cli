@@ -158,18 +158,27 @@ func (g *EmulatorGateway) Ping() error {
 	return nil
 }
 
-func (g *EmulatorGateway) ExecuteScript(script []byte, arguments []cadence.Value, query *util.ScriptQuery) (cadence.Value, error) {
+type scriptQuery struct {
+	id     flow.Identifier
+	height uint64
+	latest bool
+}
 
+func (g *EmulatorGateway) executeScriptQuery(
+	script []byte,
+	arguments []cadence.Value,
+	query scriptQuery,
+) (cadence.Value, error) {
 	args, err := cadenceValuesToMessages(arguments)
 	if err != nil {
 		return nil, UnwrapStatusError(err)
 	}
 
 	var result []byte
-	if query.ID != flow.EmptyID {
-		result, err = g.backend.ExecuteScriptAtBlockID(g.ctx, query.ID, script, args)
-	} else if query.Height > 0 {
-		result, err = g.backend.ExecuteScriptAtBlockHeight(g.ctx, query.Height, script, args)
+	if query.id != flow.EmptyID {
+		result, err = g.backend.ExecuteScriptAtBlockID(g.ctx, query.id, script, args)
+	} else if query.height > 0 {
+		result, err = g.backend.ExecuteScriptAtBlockHeight(g.ctx, query.height, script, args)
 	} else {
 		result, err = g.backend.ExecuteScriptAtLatestBlock(g.ctx, script, args)
 	}
@@ -184,6 +193,29 @@ func (g *EmulatorGateway) ExecuteScript(script []byte, arguments []cadence.Value
 	}
 
 	return value, nil
+}
+
+func (g *EmulatorGateway) ExecuteScript(
+	script []byte,
+	arguments []cadence.Value,
+) (cadence.Value, error) {
+	return g.executeScriptQuery(script, arguments, scriptQuery{latest: true})
+}
+
+func (g *EmulatorGateway) ExecuteScriptAtHeight(
+	script []byte,
+	arguments []cadence.Value,
+	height uint64,
+) (cadence.Value, error) {
+	return g.executeScriptQuery(script, arguments, scriptQuery{height: height})
+}
+
+func (g *EmulatorGateway) ExecuteScriptAtID(
+	script []byte,
+	arguments []cadence.Value,
+	id flow.Identifier,
+) (cadence.Value, error) {
+	return g.executeScriptQuery(script, arguments, scriptQuery{id: id})
 }
 
 func (g *EmulatorGateway) GetLatestBlock() (*flow.Block, error) {

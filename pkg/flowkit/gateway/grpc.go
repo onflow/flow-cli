@@ -21,7 +21,6 @@ package gateway
 import (
 	"context"
 	"fmt"
-	"github.com/onflow/flow-cli/pkg/flowkit"
 	"strings"
 	"time"
 
@@ -141,23 +140,18 @@ func (g *GrpcGateway) GetTransactionResult(ID flow.Identifier, waitSeal bool) (*
 }
 
 // ExecuteScript executes a script on Flow through the Access API.
-func (g *GrpcGateway) ExecuteScript(script []byte, arguments []cadence.Value, query *flowkit.ScriptQuery) (cadence.Value, error) {
-	var value cadence.Value
-	var err error
+func (g *GrpcGateway) ExecuteScript(script []byte, arguments []cadence.Value) (cadence.Value, error) {
+	return g.client.ExecuteScriptAtLatestBlock(g.ctx, script, arguments)
+}
 
-	if query.ID != flow.EmptyID {
-		value, err = g.client.ExecuteScriptAtBlockID(g.ctx, query.ID, script, arguments)
-	} else if query.Height > 0 {
-		value, err = g.client.ExecuteScriptAtBlockHeight(g.ctx, query.Height, script, arguments)
-	} else {
-		value, err = g.client.ExecuteScriptAtLatestBlock(g.ctx, script, arguments)
-	}
+// ExecuteScriptAtHeight executes a script at block height.
+func (g *GrpcGateway) ExecuteScriptAtHeight(script []byte, arguments []cadence.Value, height uint64) (cadence.Value, error) {
+	return g.client.ExecuteScriptAtBlockHeight(g.ctx, height, script, arguments)
+}
 
-	if err != nil {
-		return nil, fmt.Errorf("failed to submit executable script: %w", err)
-	}
-
-	return value, nil
+// ExecuteScriptAtID executes a script at block ID.
+func (g *GrpcGateway) ExecuteScriptAtID(script []byte, arguments []cadence.Value, ID flow.Identifier) (cadence.Value, error) {
+	return g.client.ExecuteScriptAtBlockID(g.ctx, ID, script, arguments)
 }
 
 // GetLatestBlock gets the latest block on Flow through the Access API.
