@@ -20,14 +20,11 @@ package config
 
 import (
 	"encoding/json"
-	"fmt"
 )
 
 // ProcessorRun all pre-processors.
-func ProcessorRun(raw []byte) ([]byte, map[string]string) {
-	raw, accountFromFiles := processFromFile(raw)
-
-	return raw
+func ProcessorRun(raw []byte) []byte {
+	return processFromFile(raw)
 }
 
 // processFromFile finds file variables and insert content.

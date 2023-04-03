@@ -119,7 +119,10 @@ func initTestnet(t *testing.T) (gateway.Gateway, *flowkit.State, flowkit.Service
 	_, _, err = flow.SendTransaction(
 		context.Background(),
 		flowkit.NewTransactionSingleAccountRole(*funder),
-		flowkit.NewScript(transferTx, []cadence.Value{amount, cadence.NewAddress(testAccount.Address)}, ""),
+		&flowkit.Script{
+			Code: transferTx,
+			Args: []cadence.Value{amount, cadence.NewAddress(testAccount.Address)},
+		},
 		flowsdk.DefaultTransactionGasLimit,
 	)
 	require.NoError(t, err)
@@ -158,7 +161,7 @@ func Test_Testnet_ProjectDeploy(t *testing.T) {
 		},
 	})
 
-	contracts, err := flow.DeployProject(context.Background(), services.UpdateExisting(true))
+	contracts, err := flow.DeployProject(context.Background(), flowkit.UpdateExistingContract(true))
 	assert.NoError(t, err)
 	assert.Len(t, contracts, 3)
 	assert.Equal(t, ContractA.Name, contracts[0].Name)
@@ -169,7 +172,7 @@ func Test_Testnet_ProjectDeploy(t *testing.T) {
 	ContractA.Source = []byte(`pub contract ContractA { init() {} }`)
 	_ = afero.WriteFile(mockFs, ContractA.Filename, ContractA.Source, 0644)
 
-	contracts, err = flow.DeployProject(context.Background(), services.UpdateExisting(true))
+	contracts, err = flow.DeployProject(context.Background(), flowkit.UpdateExistingContract(true))
 	assert.NoError(t, err)
 	assert.Len(t, contracts, 3)
 	assert.Equal(t, ContractA.Name, contracts[0].Name)

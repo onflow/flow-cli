@@ -758,7 +758,7 @@ func (d *ProjectDeploymentError) Error() string {
 
 // Script includes Cadence code and optional arguments and filename.
 //
-// Filename is only required to be passed if you want to resolve imports.
+// Filename is only required to be passed if the code has imports  you want to resolve.
 type Script struct {
 	Code     []byte
 	Args     []cadence.Value

@@ -23,7 +23,6 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"github.com/onflow/flow-cli/pkg/flowkit/gateway/mocks"
 	"strings"
 	"testing"
 
@@ -39,6 +38,7 @@ import (
 
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
 	"github.com/onflow/flow-cli/pkg/flowkit/gateway"
+	"github.com/onflow/flow-cli/pkg/flowkit/gateway/mocks"
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
 	"github.com/onflow/flow-cli/pkg/flowkit/project"
 	"github.com/onflow/flow-cli/pkg/flowkit/tests"
@@ -88,8 +88,11 @@ func setup() (*State, Flowkit, *mocks.TestGateway) {
 	return state, flowkit, gw
 }
 
-func resourceToContract(res tests.Resource) *Script {
-	return NewScript(res.Source, nil, res.Filename)
+func resourceToContract(res tests.Resource) Script {
+	return Script{
+		Code:     res.Source,
+		Location: res.Filename,
+	}
 }
 
 var ctx = context.Background()
@@ -171,7 +174,7 @@ func TestAccounts(t *testing.T) {
 			ctx,
 			serviceAcc,
 			resourceToContract(tests.ContractHelloString),
-			false,
+			UpdateExistingContract(false),
 		)
 
 		gw.Mock.AssertCalled(t, mocks.GetAccountFunc, serviceAddress)
@@ -436,7 +439,7 @@ func TestAccountsAddContract_Integration(t *testing.T) {
 			ctx,
 			srvAcc,
 			resourceToContract(tests.ContractSimple),
-			false,
+			UpdateExistingContract(false),
 		)
 		require.NoError(t, err)
 		require.NotNil(t, ID)
@@ -450,7 +453,7 @@ func TestAccountsAddContract_Integration(t *testing.T) {
 			ctx,
 			srvAcc,
 			resourceToContract(tests.ContractSimpleUpdated),
-			true,
+			UpdateExistingContract(true),
 		)
 		require.NoError(t, err)
 
@@ -470,7 +473,7 @@ func TestAccountsAddContract_Integration(t *testing.T) {
 			ctx,
 			srvAcc,
 			resourceToContract(tests.ContractSimple),
-			false,
+			UpdateExistingContract(false),
 		)
 		assert.NoError(t, err)
 
@@ -478,7 +481,7 @@ func TestAccountsAddContract_Integration(t *testing.T) {
 			ctx,
 			srvAcc,
 			resourceToContract(tests.ContractSimple),
-			false,
+			UpdateExistingContract(false),
 		)
 
 		require.Error(t, err)
@@ -496,7 +499,7 @@ func TestAccountsAddContract_Integration(t *testing.T) {
 			ctx,
 			srvAcc,
 			resourceToContract(tests.ContractSimple),
-			false,
+			UpdateExistingContract(false),
 		)
 		assert.NoError(t, err)
 
@@ -506,7 +509,7 @@ func TestAccountsAddContract_Integration(t *testing.T) {
 			ctx,
 			srvAcc,
 			resourceToContract(updated),
-			false,
+			UpdateExistingContract(false),
 		)
 
 		require.Error(t, err)
@@ -523,7 +526,7 @@ func TestAccountsAddContractWithArgs(t *testing.T) {
 		ctx,
 		srvAcc,
 		resourceToContract(tests.ContractSimpleWithArgs),
-		false,
+		UpdateExistingContract(false),
 	)
 	assert.Error(t, err)
 	assert.True(t, strings.Contains(err.Error(), "invalid argument count, too few arguments: expected 1, got 0"))
@@ -531,7 +534,7 @@ func TestAccountsAddContractWithArgs(t *testing.T) {
 	c := resourceToContract(tests.ContractSimpleWithArgs)
 	c.Args = []cadence.Value{cadence.UInt64(4)}
 
-	_, _, err = flowkit.AddContract(ctx, srvAcc, c, false)
+	_, _, err = flowkit.AddContract(ctx, srvAcc, c, UpdateExistingContract(false))
 	assert.NoError(t, err)
 
 	acc, err := flowkit.GetAccount(ctx, srvAcc.Address)
@@ -549,8 +552,11 @@ func TestAccountsRemoveContract_Integration(t *testing.T) {
 	_, _, err := flowkit.AddContract(
 		ctx,
 		srvAcc,
-		NewScript(c.Source, nil, c.Filename),
-		false,
+		Script{
+			Code:     c.Source,
+			Location: c.Filename,
+		},
+		UpdateExistingContract(false),
 	)
 	assert.NoError(t, err)
 
@@ -731,7 +737,7 @@ func TestEvents_Integration(t *testing.T) {
 			ctx,
 			srvAcc,
 			resourceToContract(tests.ContractEvents),
-			false,
+			UpdateExistingContract(false),
 		)
 		assert.NoError(t, err)
 		assert.NoError(t, err)
@@ -756,7 +762,7 @@ func TestEvents_Integration(t *testing.T) {
 			ctx,
 			srvAcc,
 			resourceToContract(tests.ContractEvents),
-			false,
+			UpdateExistingContract(false),
 		)
 		assert.NoError(t, err)
 
@@ -936,7 +942,7 @@ func TestProject(t *testing.T) {
 			gw.SendSignedTransaction.Return(tests.NewTransaction(), nil)
 		})
 
-		contracts, err := flowkit.DeployProject(ctx, false)
+		contracts, err := flowkit.DeployProject(ctx, UpdateExistingContract(false))
 
 		assert.NoError(t, err)
 		assert.Equal(t, len(contracts), 1)
@@ -1011,7 +1017,7 @@ func TestProject(t *testing.T) {
 			gw.SendSignedTransaction.Return(tests.NewTransaction(), nil)
 		})
 
-		contracts, err := flowkit.DeployProject(ctx, false)
+		contracts, err := flowkit.DeployProject(ctx, UpdateExistingContract(false))
 
 		assert.NoError(t, err)
 		assert.Equal(t, len(contracts), 2)
@@ -1088,7 +1094,7 @@ func TestProject(t *testing.T) {
 			gw.SendSignedTransaction.Return(tests.NewTransaction(), nil)
 		})
 
-		contracts, err := flowkit.DeployProject(ctx, false)
+		contracts, err := flowkit.DeployProject(ctx, UpdateExistingContract(false))
 
 		assert.NoError(t, err)
 		assert.Equal(t, len(contracts), 2)
@@ -1133,7 +1139,7 @@ func TestProject(t *testing.T) {
 			gw.SendSignedTransaction.Return(tests.NewTransaction(), nil)
 		})
 
-		contracts, err := flowkit.DeployProject(ctx, false)
+		contracts, err := flowkit.DeployProject(ctx, UpdateExistingContract(false))
 
 		assert.NoError(t, err)
 		assert.Equal(t, len(contracts), 1)
@@ -1163,7 +1169,7 @@ func simpleDeploy(state *State, flowkit Flowkit, update bool) ([]*project.Contra
 	}
 	state.Deployments().AddOrUpdate(d)
 
-	return flowkit.DeployProject(ctx, update)
+	return flowkit.DeployProject(ctx, UpdateExistingContract(update))
 }
 
 func TestProject_Integration(t *testing.T) {
@@ -1226,8 +1232,11 @@ func TestProject_Integration(t *testing.T) {
 		_, _, err := flowkit.AddContract(
 			ctx,
 			srvAcc,
-			NewScript(tests.ContractA.Source, nil, tests.ContractA.Filename),
-			false,
+			Script{
+				Code:     tests.ContractA.Source,
+				Location: tests.ContractA.Filename,
+			},
+			UpdateExistingContract(false),
 		)
 		require.NoError(t, err)
 
@@ -1239,7 +1248,7 @@ func TestProject_Integration(t *testing.T) {
 			replacedContracts[i] = strings.ReplaceAll(replacedContracts[i], `"./contractB.cdc"`, addr)
 		}
 
-		contracts, err := flowkit.DeployProject(ctx, false)
+		contracts, err := flowkit.DeployProject(ctx, UpdateExistingContract(false))
 		assert.NoError(t, err)
 		assert.Len(t, contracts, 2)
 
@@ -1279,7 +1288,11 @@ func TestScripts(t *testing.T) {
 		args := []cadence.Value{cadence.String("Foo")}
 		_, err := flowkit.ExecuteScript(
 			ctx,
-			NewScript(tests.ScriptArgString.Source, args, ""),
+			Script{
+				Code: tests.ScriptArgString.Source,
+				Args: args,
+			},
+			LatestScriptQuery,
 		)
 
 		assert.NoError(t, err)
@@ -1295,7 +1308,11 @@ func TestScripts_Integration(t *testing.T) {
 		args := []cadence.Value{cadence.String("Foo")}
 		res, err := flowkit.ExecuteScript(
 			ctx,
-			NewScript(tests.ScriptArgString.Source, args, ""),
+			Script{
+				Code: tests.ScriptArgString.Source,
+				Args: args,
+			},
+			LatestScriptQuery,
 		)
 
 		assert.NoError(t, err)
@@ -1308,7 +1325,11 @@ func TestScripts_Integration(t *testing.T) {
 		args := []cadence.Value{cadence.String("Foo")}
 		res, err := flowkit.ExecuteScript(
 			ctx,
-			NewScript(tests.ScriptWithError.Source, args, ""),
+			Script{
+				Code: tests.ScriptWithError.Source,
+				Args: args,
+			},
+			LatestScriptQuery,
 		)
 
 		assert.Error(t, err)
@@ -1343,12 +1364,16 @@ func TestScripts_Integration(t *testing.T) {
 			ctx,
 			srvAcc,
 			resourceToContract(tests.ContractHelloString),
-			false,
+			UpdateExistingContract(false),
 		)
 
 		res, err := flowkit.ExecuteScript(
 			ctx,
-			NewScript(tests.ScriptImport.Source, nil, tests.ScriptImport.Filename),
+			Script{
+				Code:     tests.ScriptImport.Source,
+				Location: tests.ScriptImport.Filename,
+			},
+			LatestScriptQuery,
 		)
 		assert.NoError(t, err)
 		assert.Equal(t, res.String(), "\"Hello Hello, World!\"")
@@ -1367,7 +1392,11 @@ func TestScripts_Integration(t *testing.T) {
 		for x, i := range in {
 			_, err := flowkit.ExecuteScript(
 				ctx,
-				NewScript(tests.ScriptImport.Source, nil, i),
+				Script{
+					Code:     tests.ScriptImport.Source,
+					Location: i,
+				},
+				LatestScriptQuery,
 			)
 			assert.NotNil(t, err)
 			assert.Equal(t, err.Error(), out[x])
@@ -1421,11 +1450,10 @@ func TestTransactions(t *testing.T) {
 		_, _, err := flowkit.SendTransaction(
 			ctx,
 			NewTransactionSingleAccountRole(*serviceAcc),
-			NewScript(
-				tests.TransactionArgString.Source,
-				[]cadence.Value{cadence.String("Bar")},
-				"",
-			),
+			Script{
+				Code: tests.TransactionArgString.Source,
+				Args: []cadence.Value{cadence.String("Bar")},
+			},
 			gasLimit,
 		)
 
@@ -1619,7 +1647,7 @@ func TestTransactions_Integration(t *testing.T) {
 					Payer:       txIn.payer,
 				},
 				txIn.index,
-				NewScript(txIn.code, txIn.args, txIn.file),
+				Script{txIn.code, txIn.args, txIn.file},
 				txIn.gas,
 			)
 
@@ -1663,7 +1691,7 @@ func TestTransactions_Integration(t *testing.T) {
 			ctx,
 			srvAcc,
 			resourceToContract(tests.ContractHelloString),
-			false,
+			UpdateExistingContract(false),
 		)
 
 		tx, err := flowkit.BuildTransaction(
@@ -1674,7 +1702,10 @@ func TestTransactions_Integration(t *testing.T) {
 				signer,
 			},
 			srvAcc.Key.Index(),
-			NewScript(tests.TransactionImports.Source, nil, tests.TransactionImports.Filename),
+			Script{
+				Code:     tests.TransactionImports.Source,
+				Location: tests.TransactionImports.Filename,
+			},
 			flow.DefaultTransactionGasLimit,
 		)
 
@@ -1705,7 +1736,10 @@ func TestTransactions_Integration(t *testing.T) {
 				a.Address,
 			},
 			0,
-			NewScript(tests.TransactionSimple.Source, nil, tests.TransactionSimple.Filename),
+			Script{
+				Code:     tests.TransactionSimple.Source,
+				Location: tests.TransactionSimple.Filename,
+			},
 			flow.DefaultTransactionGasLimit,
 		)
 
@@ -1741,7 +1775,10 @@ func TestTransactions_Integration(t *testing.T) {
 				a.Address,
 			},
 			0,
-			NewScript(tests.TransactionSingleAuth.Source, nil, tests.TransactionSingleAuth.Filename),
+			Script{
+				Code:     tests.TransactionSingleAuth.Source,
+				Location: tests.TransactionSingleAuth.Filename,
+			},
 			flow.DefaultTransactionGasLimit,
 		)
 
@@ -1778,7 +1815,10 @@ func TestTransactions_Integration(t *testing.T) {
 				a.Address,
 			},
 			0,
-			NewScript(tests.TransactionSingleAuth.Source, nil, tests.TransactionSingleAuth.Filename),
+			Script{
+				Code:     tests.TransactionSingleAuth.Source,
+				Location: tests.TransactionSingleAuth.Filename,
+			},
 			flow.DefaultTransactionGasLimit,
 		)
 
@@ -1812,7 +1852,7 @@ func TestTransactions_Integration(t *testing.T) {
 				Payer:       a.Address,
 			},
 			0,
-			NewScript(tests.TransactionTwoAuth.Source, nil, tests.TransactionTwoAuth.Filename),
+			Script{Code: tests.TransactionTwoAuth.Source, Location: tests.TransactionTwoAuth.Filename},
 			flow.DefaultTransactionGasLimit,
 		)
 
@@ -1835,7 +1875,10 @@ func TestTransactions_Integration(t *testing.T) {
 				Proposer: *a,
 				Payer:    *a,
 			},
-			NewScript(tests.TransactionSimple.Source, nil, tests.TransactionSimple.Filename),
+			Script{
+				Code:     tests.TransactionSimple.Source,
+				Location: tests.TransactionSimple.Filename,
+			},
 			flow.DefaultTransactionGasLimit,
 		)
 		assert.NoError(t, err)
@@ -1855,7 +1898,10 @@ func TestTransactions_Integration(t *testing.T) {
 		tx, txr, err := flowkit.SendTransaction(
 			ctx,
 			NewTransactionSingleAccountRole(*a),
-			NewScript(tests.TransactionSingleAuth.Source, nil, tests.TransactionSingleAuth.Filename),
+			Script{
+				Code:     tests.TransactionSingleAuth.Source,
+				Location: tests.TransactionSingleAuth.Filename,
+			},
 			flow.DefaultTransactionGasLimit,
 		)
 		assert.NoError(t, err)
@@ -1881,7 +1927,10 @@ func TestTransactions_Integration(t *testing.T) {
 				Authorizers: []Account{*c},
 				Payer:       *b,
 			},
-			NewScript(tests.TransactionSingleAuth.Source, nil, tests.TransactionSingleAuth.Filename),
+			Script{
+				Code:     tests.TransactionSingleAuth.Source,
+				Location: tests.TransactionSingleAuth.Filename,
+			},
 			flow.DefaultTransactionGasLimit,
 		)
 		assert.NoError(t, err)
@@ -1907,7 +1956,10 @@ func TestTransactions_Integration(t *testing.T) {
 				Authorizers: []Account{*a},
 				Payer:       *b,
 			},
-			NewScript(tests.TransactionSingleAuth.Source, nil, tests.TransactionSingleAuth.Filename),
+			Script{
+				Code:     tests.TransactionSingleAuth.Source,
+				Location: tests.TransactionSingleAuth.Filename,
+			},
 			flow.DefaultTransactionGasLimit,
 		)
 		assert.NoError(t, err)
@@ -1928,13 +1980,13 @@ func TestTransactions_Integration(t *testing.T) {
 		tx, txr, err := flowkit.SendTransaction(
 			ctx,
 			NewTransactionSingleAccountRole(*a),
-			NewScript(
-				tests.TransactionArgString.Source,
-				[]cadence.Value{
+			Script{
+				Code: tests.TransactionArgString.Source,
+				Args: []cadence.Value{
 					cadence.String("Bar"),
 				},
-				tests.TransactionArgString.Filename,
-			),
+				Location: tests.TransactionArgString.Filename,
+			},
 			flow.DefaultTransactionGasLimit,
 		)
 		assert.NoError(t, err)
@@ -1955,11 +2007,10 @@ func TestTransactions_Integration(t *testing.T) {
 		tx, txr, err := flowkit.SendTransaction(
 			ctx,
 			NewTransactionSingleAccountRole(*a),
-			NewScript(
-				tests.TransactionMultipleDeclarations.Source,
-				nil,
-				tests.TransactionMultipleDeclarations.Filename,
-			),
+			Script{
+				Code:     tests.TransactionMultipleDeclarations.Source,
+				Location: tests.TransactionMultipleDeclarations.Filename,
+			},
 			flow.DefaultTransactionGasLimit,
 		)
 		assert.NoError(t, err)

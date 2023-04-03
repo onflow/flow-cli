@@ -19,6 +19,7 @@
 package config
 
 import (
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -36,8 +37,6 @@ func Test_PrivateKeyEnv(t *testing.T) {
 		}
 	}`)
 
-	result, _ := ProcessorRun(test)
-
 	assert.JSONEq(t, `{
 			"accounts": {
 				"emulator-account": {
@@ -45,7 +44,7 @@ func Test_PrivateKeyEnv(t *testing.T) {
 					"key": "123"
 				}
 			}
-		}`, string(result))
+		}`, string(ProcessorRun(test)))
 }
 
 func Test_PrivateKeyEnvMultipleAccounts(t *testing.T) {
@@ -61,8 +60,6 @@ func Test_PrivateKeyEnvMultipleAccounts(t *testing.T) {
 		}
 	}`)
 
-	result, _ := ProcessorRun(test)
-
 	assert.JSONEq(t, `{
 		"accounts": {
 			"emulator-account": {
@@ -70,7 +67,7 @@ func Test_PrivateKeyEnvMultipleAccounts(t *testing.T) {
 				"key": "123"
 			}
 		}
-	}`, string(result))
+	}`, string(ProcessorRun(test)))
 }
 
 func Test_PrivateConfigFileAccounts(t *testing.T) {
@@ -95,10 +92,6 @@ func Test_PrivateConfigFileAccounts(t *testing.T) {
 		}
 	}`)
 
-	preprocessor, accFromFile := ProcessorRun(b)
-
-	assert.Len(t, accFromFile, 1)
-
 	assert.JSONEq(t, `{
 		"emulators": {
 			"default": {
@@ -117,5 +110,5 @@ func Test_PrivateConfigFileAccounts(t *testing.T) {
 					"key": "11c5dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7"
 				}
 			}
-		}`, string(preprocessor))
+		}`, string(ProcessorRun(b)))
 }

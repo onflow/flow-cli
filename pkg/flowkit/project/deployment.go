@@ -73,7 +73,7 @@ func NewDeployment(contracts []*Contract, aliases LocationAliases) (*Deployment,
 }
 
 func (d *Deployment) add(contract *Contract) error {
-	program, err := NewProgram(contract)
+	program, err := NewProgram(contract.code, contract.Args, contract.location)
 	if err != nil {
 		return err
 	}
