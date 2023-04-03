@@ -247,7 +247,7 @@ func (f *Flowkit) AddContract(
 		return flow.EmptyID, false, err
 	}
 
-	program, err := project.NewProgram(&contract)
+	program, err := project.NewProgram(contract.Code, contract.Args, contract.Location)
 	if err != nil {
 		return flow.EmptyID, false, err
 	}
@@ -771,7 +771,7 @@ func (f *Flowkit) ExecuteScript(_ context.Context, script Script, query ScriptQu
 		return nil, err
 	}
 
-	program, err := project.NewProgram(&script)
+	program, err := project.NewProgram(script.Code, script.Args, script.Location)
 	if err != nil {
 		return nil, err
 	}
@@ -876,7 +876,7 @@ func (f *Flowkit) BuildTransaction(
 		SetGasLimit(gasLimit).
 		SetBlockReference(latestBlock)
 
-	program, err := project.NewProgram(script)
+	program, err := project.NewProgram(script.Code, script.Args, script.Location)
 	if err != nil {
 		return nil, err
 	}
