@@ -370,7 +370,7 @@ type TransactionAccountRoles struct {
 	Payer       Account
 }
 
-func (t *TransactionAccountRoles) toAddresses() TransactionAddressesRoles {
+func (t TransactionAccountRoles) toAddresses() TransactionAddressesRoles {
 	auths := make([]flow.Address, len(t.Authorizers))
 	for i, a := range t.Authorizers {
 		auths[i] = a.Address
@@ -384,7 +384,7 @@ func (t *TransactionAccountRoles) toAddresses() TransactionAddressesRoles {
 }
 
 // getSigners for signing the transaction, detect if all accounts are same so only return the one account.
-func (t *TransactionAccountRoles) getSigners() []*Account {
+func (t TransactionAccountRoles) getSigners() []*Account {
 	// build only unique accounts to sign, it's important payer account is last
 	sigs := make([]*Account, 0)
 	addLastIfUnique := func(signer Account) {
