@@ -22,13 +22,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/onflow/flow-cli/internal/util"
-	"golang.org/x/exp/slices"
 
 	flowsdk "github.com/onflow/flow-go-sdk"
 	"github.com/spf13/cobra"
+	"golang.org/x/exp/slices"
 
 	"github.com/onflow/flow-cli/internal/command"
+	"github.com/onflow/flow-cli/internal/util"
 	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
@@ -67,9 +67,9 @@ func deploy(
 		}
 	}
 
-	deployFunc := services.UpdateExisting(deployFlags.Update)
+	deployFunc := flowkit.UpdateExistingContract(deployFlags.Update)
 	if deployFlags.ShowDiff {
-		deployFunc = output.ShowContractDiffPrompt
+		deployFunc = util.ShowContractDiffPrompt
 	}
 
 	c, err := flow.DeployProject(context.Background(), deployFunc)
