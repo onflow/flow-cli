@@ -41,12 +41,12 @@ func Test_Build(t *testing.T) {
 		inArgs := []string{tests.TransactionSimple.Filename}
 
 		srv.BuildTransaction.Run(func(args mock.Arguments) {
-			roles := args.Get(1).(*flowkit.TransactionAddressesRoles)
+			roles := args.Get(1).(flowkit.TransactionAddressesRoles)
 			assert.Equal(t, serviceAccountAddress, roles.Payer.String())
 			assert.Equal(t, serviceAccountAddress, roles.Proposer.String())
 			assert.Equal(t, serviceAccountAddress, roles.Authorizers[0].String())
 			assert.Equal(t, 0, args.Get(2).(int))
-			script := args.Get(3).(*flowkit.Script)
+			script := args.Get(3).(flowkit.Script)
 			assert.Equal(t, tests.TransactionSimple.Filename, script.Location)
 		}).Return(flowkit.NewTransaction(), nil)
 
@@ -140,12 +140,12 @@ func Test_Send(t *testing.T) {
 		inArgs := []string{tests.TransactionArgString.Filename, "foo"}
 
 		srv.SendTransaction.Run(func(args mock.Arguments) {
-			roles := args.Get(1).(*flowkit.TransactionAccountRoles)
+			roles := args.Get(1).(flowkit.TransactionAccountRoles)
 			acc := config.DefaultEmulator.ServiceAccount
 			assert.Equal(t, acc, roles.Payer.Name)
 			assert.Equal(t, acc, roles.Proposer.Name)
 			assert.Equal(t, acc, roles.Authorizers[0].Name)
-			script := args.Get(2).(*flowkit.Script)
+			script := args.Get(2).(flowkit.Script)
 			assert.Equal(t, tests.TransactionArgString.Filename, script.Location)
 			assert.Equal(t, args.Get(3).(uint64), gas)
 		}).Return(nil, nil, nil)

@@ -101,9 +101,9 @@ func DefaultMockServices() *MockServices {
 		BuildTransaction: m.On(
 			BuildTransactionFunc,
 			mock.Anything,
-			mock.AnythingOfType("*flowkit.TransactionAddressesRoles"),
+			mock.AnythingOfType("flowkit.TransactionAddressesRoles"),
 			mock.AnythingOfType("int"),
-			mock.AnythingOfType("*flowkit.Script"),
+			mock.AnythingOfType("flowkit.Script"),
 			mock.AnythingOfType("uint64"),
 		),
 		CreateAccount: m.On(
@@ -162,8 +162,8 @@ func DefaultMockServices() *MockServices {
 		SendTransaction: m.On(
 			SendTransactionFunc,
 			mock.Anything,
-			mock.AnythingOfType("*flowkit.TransactionAccountRoles"),
-			mock.AnythingOfType("*flowkit.Script"),
+			mock.AnythingOfType("flowkit.TransactionAccountRoles"),
+			mock.AnythingOfType("flowkit.Script"),
 			mock.AnythingOfType("uint64"),
 		),
 		SignTransactionPayload: m.On(

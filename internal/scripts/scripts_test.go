@@ -20,14 +20,16 @@ package scripts
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/onflow/cadence"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
+
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/internal/util"
 	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/tests"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
-	"testing"
 )
 
 func Test_Execute(t *testing.T) {
@@ -37,7 +39,7 @@ func Test_Execute(t *testing.T) {
 		inArgs := []string{tests.ScriptArgString.Filename, "foo"}
 
 		srv.ExecuteScript.Run(func(args mock.Arguments) {
-			script := args.Get(1).(*flowkit.Script)
+			script := args.Get(1).(flowkit.Script)
 			assert.Equal(t, fmt.Sprintf("\"%s\"", inArgs[1]), script.Args[0].String())
 			assert.Equal(t, tests.ScriptArgString.Filename, script.Location)
 		}).Return(cadence.NewInt(1), nil)
