@@ -41,8 +41,7 @@ func Test_PrivateConfigFileAccounts(t *testing.T) {
 			"emulator-account": {
 				"address": "f8d6e0586b0a20c7",
 				"key": "11c5dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7"
-			},
-			"admin-account": { "fromFile": "test.json" }
+			}	
 		}
 	}`)
 

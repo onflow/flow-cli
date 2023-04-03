@@ -20,9 +20,10 @@ package mocks
 
 import (
 	"github.com/onflow/cadence"
-	"github.com/onflow/flow-cli/pkg/flowkit/tests"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/stretchr/testify/mock"
+
+	"github.com/onflow/flow-cli/pkg/flowkit/tests"
 )
 
 const (
@@ -92,7 +93,6 @@ func DefaultMockGateway() *TestGateway {
 			ExecuteScriptFunc,
 			mock.AnythingOfType("[]uint8"),
 			mock.AnythingOfType("[]cadence.Value"),
-			mock.AnythingOfType("*util.ScriptQuery"),
 		),
 		GetBlockByHeight: m.On(GetBlockByHeightFunc, mock.Anything),
 		GetBlockByID:     m.On(GetBlockByIDFunc, mock.Anything),

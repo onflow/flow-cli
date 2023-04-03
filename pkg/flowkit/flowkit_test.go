@@ -800,7 +800,7 @@ func TestKeys(t *testing.T) {
 		key, err := flowkit.GenerateKey(ctx, crypto.ECDSA_P256, "aaaaaaaaaaaaaaaaaaaaaaannndddddd_its_gone")
 
 		assert.NoError(t, err)
-		assert.Equal(t, key.String(), "0x134f702d0872dba9c7aea15498aab9b2ffedd5aeebfd8ac3cf47c591f0d7ce52")
+		assert.Equal(t, "0x28350fff13e68ed3887ddc564df737db0a590c02cf4d3928eb30eb79f51672c2", key.String())
 	})
 
 	t.Run("Test Vector SLIP-0010", func(t *testing.T) {
@@ -894,7 +894,7 @@ func TestKeys(t *testing.T) {
 
 		errs := []string{
 			"failed to generate private key: crypto: insufficient seed length 8, must be at least 32 bytes for ECDSA_P256",
-			"failed to generate private key: crypto: Go SDK does not support key generation for UNKNOWN algorithm",
+			"failed to generate private key: key generation failed: the signature scheme UNKNOWN is not supported",
 		}
 
 		for x, in := range inputs {
