@@ -7,7 +7,7 @@ require (
 	github.com/getsentry/sentry-go v0.19.0
 	github.com/go-git/go-git/v5 v5.6.1
 	github.com/onflow/cadence v0.37.0
-	github.com/onflow/cadence-tools/languageserver v0.8.1-0.20230327102606-6be626d07eb8
+	github.com/onflow/cadence-tools/languageserver v0.9.0
 	github.com/onflow/cadence-tools/test v0.6.0
 	github.com/onflow/fcl-dev-wallet v0.6.0
 	github.com/onflow/flow-cli/pkg/flowkit v0.0.0-20230327102447-8c34a92f8cbb
@@ -132,7 +132,7 @@ require (
 	github.com/multiformats/go-multistream v0.3.3 // indirect
 	github.com/multiformats/go-varint v0.0.7 // indirect
 	github.com/onflow/atree v0.5.0 // indirect
-	github.com/onflow/cadence-tools/lint v0.5.0 // indirect
+	github.com/onflow/cadence-tools/lint v0.6.0 // indirect
 	github.com/onflow/flow-core-contracts/lib/go/contracts v0.12.1 // indirect
 	github.com/onflow/flow-core-contracts/lib/go/templates v0.12.1 // indirect
 	github.com/onflow/flow-ft/lib/go/contracts v0.5.0 // indirect
