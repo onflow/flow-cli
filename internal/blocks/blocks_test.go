@@ -19,15 +19,17 @@
 package blocks
 
 import (
+	"strings"
+	"testing"
+
+	"github.com/onflow/flow-go-sdk"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
+
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/internal/util"
 	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/tests"
-	"github.com/onflow/flow-go-sdk"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
-	"strings"
-	"testing"
 )
 
 func Test_GetBlock(t *testing.T) {
@@ -46,9 +48,12 @@ func Test_GetBlock(t *testing.T) {
 
 		srv.GetCollection.Return(nil, nil)
 
+		returnBlock := tests.NewBlock()
+		returnBlock.Height = uint64(100)
+
 		srv.GetBlock.Run(func(args mock.Arguments) {
 			assert.Equal(t, uint64(100), args.Get(1).(flowkit.BlockQuery).Height)
-		}).Return(tests.NewBlock(), nil)
+		}).Return(returnBlock, nil)
 
 		result, err := get(inArgs, command.GlobalFlags{}, util.NoLogger, rw, srv.Mock)
 		assert.NotNil(t, result)
