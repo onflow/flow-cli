@@ -114,6 +114,23 @@ SendTransaction(context.Context, *TransactionAccountRoles, *Script, uint64) (*fl
 
 Passing network parameter is no longer required as the network is initialized using the `NewFlowkit` initializer.
 
+---
+
+The `ScriptQuery` was moved to `flowkit` package and addded `Latest` field. It is also now passed by value instead of 
+by pointer. You can use `LatestScriptQuery` convenience variable to pass usage of latest block for script execution.
+
+----
+
+The `TransactionAccountRoles` and `TransactionAddressesRoles` are no longer passed to transaction functions as 
+pointer but as value since they are always required.
+
+---
+
+The `flowkit.NewScript` method was removed and you should use `flowkit.Script{}` struct directly for initialization. 
+Also getter and setters were removed to favour direct property access.
+
+
+
 ### Added
 
 ----
@@ -134,7 +151,6 @@ The `GetBlock` API doesn't return the `[]flow.BlockEvents, []*flow.Collection` a
 ---
 
 The `GetLatestBlockHeight` method was removed, you should instead use `GetBlock(LatestBlockQuery)`.
-
 
 
 ## v0.46.2
