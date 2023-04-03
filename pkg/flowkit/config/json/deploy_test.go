@@ -61,9 +61,9 @@ func Test_ConfigDeploymentsSimple(t *testing.T) {
 	account2Deployment := deployments.ByAccountAndNetwork(account2Name, "emulator")
 	account3Deployment := deployments.ByAccountAndNetwork(account3Name, "emulator")
 
-	require.Len(t, account1Deployment, 1)
-	require.Len(t, account2Deployment, 1)
-	require.Len(t, account3Deployment, 1)
+	require.NotNil(t, account1Deployment)
+	require.NotNil(t, account2Deployment)
+	require.NotNil(t, account3Deployment)
 
 	assert.Equal(t, account1Name, account1Deployment.Account)
 	assert.Equal(t, account2Name, account2Deployment.Account)
@@ -140,7 +140,7 @@ func Test_DeploymentAdvanced(t *testing.T) {
 	assert.NoError(t, err)
 
 	alice := deployments.ByAccountAndNetwork("alice", "emulator")
-	assert.Len(t, alice, 1)
+	assert.NotNil(t, alice)
 	assert.Len(t, alice.Contracts, 2)
 	assert.Equal(t, "Kibble", alice.Contracts[0].Name)
 	assert.Len(t, alice.Contracts[0].Args, 3)
