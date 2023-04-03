@@ -65,9 +65,9 @@ func (c *Parsers) FindForFormat(extension string) Parser {
 
 // Loader contains actions for composing and modifying configuration.
 type Loader struct {
-	readerWriter  ReaderWriter
-	configParsers Parsers
-	LoadedLocations  []string
+	readerWriter    ReaderWriter
+	configParsers   Parsers
+	LoadedLocations []string
 }
 
 // NewLoader returns a new loader.
@@ -171,7 +171,7 @@ func (l *Loader) Load(paths []string) (*Config, error) {
 
 // preprocess does all manipulations to the raw configuration format happens here.
 func (l *Loader) preprocess(raw []byte) []byte {
-	return ProcessorRun(raw)
+	return processorRun(raw)
 }
 
 // postprocess does all stateful changes to configuration structures here after it is parsed.

@@ -22,13 +22,8 @@ import (
 	"encoding/json"
 )
 
-// ProcessorRun all pre-processors.
-func ProcessorRun(raw []byte) []byte {
-	return processFromFile(raw)
-}
-
-// processFromFile finds file variables and insert content.
-func processFromFile(raw []byte) []byte {
+// processorRun all pre-processors.
+func processorRun(raw []byte) []byte {
 	type config struct {
 		Accounts    map[string]map[string]any `json:"accounts,omitempty"`
 		Contracts   any                       `json:"contracts,omitempty"`

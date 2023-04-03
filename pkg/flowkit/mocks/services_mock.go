@@ -2,11 +2,12 @@ package mocks
 
 import (
 	"github.com/onflow/cadence"
+	"github.com/onflow/flow-go-sdk"
+	"github.com/stretchr/testify/mock"
+
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
 	"github.com/onflow/flow-cli/pkg/flowkit/gateway/mocks"
 	"github.com/onflow/flow-cli/pkg/flowkit/tests"
-	"github.com/onflow/flow-go-sdk"
-	"github.com/stretchr/testify/mock"
 )
 
 const (
@@ -69,7 +70,8 @@ func DefaultMockServices() *MockServices {
 		ExecuteScript: m.On(
 			mocks.ExecuteScriptFunc,
 			mock.Anything,
-			mock.AnythingOfType("*flowkit.Script"),
+			mock.AnythingOfType("flowkit.Script"),
+			mock.AnythingOfType("flowkit.ScriptQuery"),
 		),
 		SendSignedTransaction: m.On(
 			mocks.SendSignedTransactionFunc,
@@ -80,8 +82,8 @@ func DefaultMockServices() *MockServices {
 			AddContractFunc,
 			mock.Anything,
 			mock.AnythingOfType("*flowkit.Account"),
-			mock.AnythingOfType("*flowkit.Script"),
-			mock.AnythingOfType("bool"),
+			mock.AnythingOfType("flowkit.Script"),
+			mock.AnythingOfType("flowkit.UpdateContract"),
 		),
 		GetCollection: m.On(
 			mocks.GetCollectionFunc,
@@ -113,7 +115,7 @@ func DefaultMockServices() *MockServices {
 		DeployProject: m.On(
 			DeployProjectFunc,
 			mock.Anything,
-			mock.AnythingOfType("bool"),
+			mock.AnythingOfType("flowkit.UpdateContract"),
 		),
 		DerivePrivateKeyFromMnemonic: m.On(
 			DerivePrivateKeyFromMnemonicFunc,
