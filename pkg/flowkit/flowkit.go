@@ -71,6 +71,9 @@ type ScriptQuery struct {
 	Height uint64
 }
 
+// LatestScriptQuery specifies the latest block at which query is executed.
+var LatestScriptQuery = ScriptQuery{Latest: true}
+
 // EventWorker defines how many workers do we want to start, each in its own subroutine, and how many blocks
 // each worker fetches from the network. This is used to process the event requests concurrently.
 type EventWorker struct {
@@ -666,7 +669,7 @@ func (f *Flowkit) derivePrivateKeyFromSeed(
 	return privateKey, nil
 }
 
-func (f *Flowkit) DeployProject(ctx context.Context, update bool) ([]*project.Contract, error) {
+func (f *Flowkit) DeployProject(ctx context.Context, update UpdateContract) ([]*project.Contract, error) {
 	state, err := f.State()
 	if err != nil {
 		return nil, err
@@ -699,12 +702,6 @@ func (f *Flowkit) DeployProject(ctx context.Context, update bool) ([]*project.Co
 		targetAccount, err := state.Accounts().ByName(contract.AccountName)
 		if err != nil {
 			return nil, fmt.Errorf("target account for deploying contract not found in configuration")
-		}
-
-		// special case for emulator updates, where we remove and add a contract because it allows us to have more freedom in changes.
-		// Updating contracts is limited as described in https://developers.flow.com/cadence/language/contract-updatability
-		if update && f.network == config.EmulatorNetwork {
-			_, _ = f.RemoveContract(ctx, targetAccount, contract.Name) // ignore failure as it's meant to be best-effort
 		}
 
 		txID, updated, err := f.AddContract(
@@ -765,7 +762,7 @@ func (d *ProjectDeploymentError) Error() string {
 	return err
 }
 
-func (f *Flowkit) ExecuteScript(_ context.Context, script *Script) (cadence.Value, error) {
+func (f *Flowkit) ExecuteScript(_ context.Context, script *Script, query ScriptQuery) (cadence.Value, error) {
 	state, err := f.State()
 	if err != nil {
 		return nil, err
@@ -803,7 +800,7 @@ func (f *Flowkit) ExecuteScript(_ context.Context, script *Script) (cadence.Valu
 		}
 	}
 
-	return f.gateway.ExecuteScript(program.Code(), script.Args)
+	return f.gateway.ExecuteScript(program.Code(), script.Args, query)
 }
 
 func (f *Flowkit) GetTransactionByID(
