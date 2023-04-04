@@ -109,3 +109,8 @@ check-headers:
 check-tidy:
 	go mod tidy
 	cd pkg/flowkit; go mod tidy
+
+.PHONY: generate
+generate:
+	go generate ./...
+	cd pkg/flowkit; go generate ./...

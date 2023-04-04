@@ -12,28 +12,29 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
-      with:
-        fetch-depth: 0
-    - uses: actions/setup-go@v1
-      with:
-        go-version: '1.19'
-    - uses: actions/cache@v1
-      with:
-        path: ~/go/pkg/mod
-        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-        restore-keys: |
-          ${{ runner.os }}-go-
-    - name: Run tests
-      run: |
-        make ci
-        make check-tidy
-        make check-headers
-    - name: Upload coverage report
-      uses: codecov/codecov-action@v1
-      with:
-        file: ./coverage.txt
-        flags: unittests
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-go@v1
+        with:
+          go-version: '1.19'
+      - uses: actions/cache@v1
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+      - name: Run tests
+        run: |
+          make generate
+          make ci
+          make check-tidy
+          make check-headers
+      - name: Upload coverage report
+        uses: codecov/codecov-action@v1
+        with:
+          file: ./coverage.txt
+          flags: unittests
 
   lint:
     runs-on: ubuntu-latest
@@ -44,5 +45,5 @@ jobs:
           go-version: '1.19'
       - uses: golangci/golangci-lint-action@v3.2.0
         with:
-          version: v1.47.2
+          version: v1.52.2
           args: --timeout=3m
