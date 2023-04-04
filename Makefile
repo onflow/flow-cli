@@ -9,14 +9,13 @@ COVER_PROFILE := coverage.txt
 # Disable go sum database lookup for private repos
 GOPRIVATE := github.com/dapperlabs/*
 # Ensure go bin path is in path (Especially for CI)
+GOPATH ?= $(HOME)/go
 PATH := $(PATH):$(GOPATH)/bin
 # OS
 UNAME := $(shell uname)
 
 MIXPANEL_PROJECT_TOKEN := 3fae49de272be1ceb8cf34119f747073
 ACCOUNT_TOKEN := lilico:sF60s3wughJBmNh2
-
-GOPATH ?= $(HOME)/go
 
 BINARY ?= ./cmd/flow/flow
 
@@ -113,6 +112,5 @@ check-tidy:
 
 .PHONY: generate
 generate: install-tools
-	go generate ./...; \
 	cd pkg/flowkit; \
  	go generate ./...
