@@ -22,8 +22,6 @@ package main
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/onflow/flow-cli/internal/util"
-
 	"github.com/onflow/flow-cli/internal/accounts"
 	"github.com/onflow/flow-cli/internal/blocks"
 	"github.com/onflow/flow-cli/internal/cadence"
@@ -44,6 +42,7 @@ import (
 	"github.com/onflow/flow-cli/internal/test"
 	"github.com/onflow/flow-cli/internal/tools"
 	"github.com/onflow/flow-cli/internal/transactions"
+	"github.com/onflow/flow-cli/internal/util"
 	"github.com/onflow/flow-cli/internal/version"
 )
 

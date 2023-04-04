@@ -20,9 +20,11 @@ package flowkit
 
 import (
 	"context"
-	"github.com/onflow/flow-cli/pkg/flowkit/config"
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+
+	"github.com/onflow/flow-cli/pkg/flowkit/config"
 )
 
 func Test_KMS_Keys(t *testing.T) {

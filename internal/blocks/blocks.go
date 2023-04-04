@@ -22,13 +22,12 @@ import (
 	"bytes"
 	"fmt"
 
-	"github.com/onflow/flow-cli/internal/util"
-
 	"github.com/onflow/flow-go-sdk"
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/internal/events"
+	"github.com/onflow/flow-cli/internal/util"
 )
 
 var Cmd = &cobra.Command{

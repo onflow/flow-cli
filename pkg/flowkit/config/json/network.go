@@ -22,8 +22,9 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"github.com/onflow/flow-go-sdk/crypto"
 	"strings"
+
+	"github.com/onflow/flow-go-sdk/crypto"
 
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
 )

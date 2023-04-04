@@ -29,10 +29,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/onflow/flow-cli/pkg/flowkit"
-
 	"golang.org/x/exp/maps"
 
+	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
 	flowkitProject "github.com/onflow/flow-cli/pkg/flowkit/project"
 )

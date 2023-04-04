@@ -20,6 +20,7 @@ package config
 
 import (
 	"fmt"
+
 	"github.com/onflow/cadence"
 	"golang.org/x/exp/slices"
 )

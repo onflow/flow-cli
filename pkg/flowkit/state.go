@@ -20,13 +20,13 @@ package flowkit
 
 import (
 	"fmt"
-	"golang.org/x/exp/slices"
 	"os"
 	"path"
 	"path/filepath"
 
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/pkg/errors"
+	"golang.org/x/exp/slices"
 
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
 	"github.com/onflow/flow-cli/pkg/flowkit/config/json"

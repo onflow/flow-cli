@@ -1,9 +1,10 @@
 package flowkit
 
 import (
+	"testing"
+
 	"github.com/onflow/flow-go-sdk"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func Test_Accounts(t *testing.T) {
