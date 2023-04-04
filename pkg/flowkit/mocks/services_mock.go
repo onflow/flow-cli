@@ -1,3 +1,21 @@
+/*
+ * Flow CLI
+ *
+ * Copyright 2019 Dapper Labs, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package mocks
 
 import (
@@ -11,24 +29,24 @@ import (
 )
 
 const (
-	AddContractFunc                  = "AddContract"
-	BuildTransactionFunc             = "BuildTransaction"
-	CreateAccountFunc                = "CreateAccount"
-	DeployProjectFunc                = "DeployProject"
-	DerivePrivateKeyFromMnemonicFunc = "DerivePrivateKeyFromMnemonic"
-	GatewayFunc                      = "Gateway"
-	GenerateKeyFunc                  = "GenerateKey"
-	GenerateMnemonicKeyFunc          = "GenerateMnemonicKey"
-	GetBlockFunc                     = "GetBlock"
-	GetTransactionByIDFunc           = "GetTransactionByID"
-	GetTransactionsByBlockIDFunc     = "GetTransactionsByBlockID"
-	NetworkFunc                      = "Network"
-	PingFunc                         = "Ping"
-	RemoveContractFunc               = "RemoveContract"
-	SendTransactionFunc              = "SendTransaction"
-	SetLoggerFunc                    = "SetLogger"
-	SignTransactionPayloadFunc       = "SignTransactionPayload"
-	TestFunc                         = "Test"
+	addContractFunc                  = "AddContract"
+	buildTransactionFunc             = "BuildTransaction"
+	createAccountFunc                = "CreateAccount"
+	deployProjectFunc                = "DeployProject"
+	derivePrivateKeyFromMnemonicFunc = "DerivePrivateKeyFromMnemonic"
+	gatewayFunc                      = "Gateway"
+	generateKeyFunc                  = "GenerateKey"
+	generateMnemonicKeyFunc          = "GenerateMnemonicKey"
+	getBlockFunc                     = "GetBlock"
+	getTransactionByIDFunc           = "GetTransactionByID"
+	getTransactionsByBlockIDFunc     = "GetTransactionsByBlockID"
+	networkFunc                      = "Network"
+	pingFunc                         = "Ping"
+	removeContractFunc               = "RemoveContract"
+	sendTransactionFunc              = "SendTransaction"
+	setLoggerFunc                    = "SetLogger"
+	signTransactionPayloadFunc       = "SignTransactionPayload"
+	testFunc                         = "Test"
 )
 
 type MockServices struct {
@@ -79,7 +97,7 @@ func DefaultMockServices() *MockServices {
 			mock.AnythingOfType("*flowkit.Transaction"),
 		),
 		AddContract: m.On(
-			AddContractFunc,
+			addContractFunc,
 			mock.Anything,
 			mock.AnythingOfType("*flowkit.Account"),
 			mock.AnythingOfType("flowkit.Script"),
@@ -99,7 +117,7 @@ func DefaultMockServices() *MockServices {
 			mock.AnythingOfType("*flowkit.EventWorker"),
 		),
 		BuildTransaction: m.On(
-			BuildTransactionFunc,
+			buildTransactionFunc,
 			mock.Anything,
 			mock.AnythingOfType("flowkit.TransactionAddressesRoles"),
 			mock.AnythingOfType("int"),
@@ -107,80 +125,80 @@ func DefaultMockServices() *MockServices {
 			mock.AnythingOfType("uint64"),
 		),
 		CreateAccount: m.On(
-			CreateAccountFunc,
+			createAccountFunc,
 			mock.Anything,
 			mock.AnythingOfType("*flowkit.Account"),
 			mock.AnythingOfType("[]flowkit.AccountPublicKey"),
 		),
 		DeployProject: m.On(
-			DeployProjectFunc,
+			deployProjectFunc,
 			mock.Anything,
 			mock.AnythingOfType("flowkit.UpdateContract"),
 		),
 		DerivePrivateKeyFromMnemonic: m.On(
-			DerivePrivateKeyFromMnemonicFunc,
+			derivePrivateKeyFromMnemonicFunc,
 			mock.Anything,
 			mock.AnythingOfType("string"),
 			mock.AnythingOfType("crypto.SignatureAlgorithm"),
 			mock.AnythingOfType("string"),
 		),
-		Gateway: m.On(GatewayFunc),
+		Gateway: m.On(gatewayFunc),
 		GenerateKey: m.On(
-			GenerateKeyFunc,
+			generateKeyFunc,
 			mock.Anything,
 			mock.AnythingOfType("crypto.SignatureAlgorithm"),
 			mock.AnythingOfType("string"),
 		),
 		GenerateMnemonicKey: m.On(
-			GenerateMnemonicKeyFunc,
+			generateMnemonicKeyFunc,
 			mock.Anything,
 			mock.AnythingOfType("crypto.SignatureAlgorithm"),
 			mock.AnythingOfType("string"),
 		),
 		GetBlock: m.On(
-			GetBlockFunc,
+			getBlockFunc,
 			mock.Anything,
 			mock.AnythingOfType("flowkit.BlockQuery"),
 		),
 		GetTransactionByID: m.On(
-			GetTransactionByIDFunc,
+			getTransactionByIDFunc,
 			mock.Anything,
 			mock.AnythingOfType("flow.Identifier"),
 			mock.AnythingOfType("bool"),
 		),
 		GetTransactionsByBlockID: m.On(
-			GetTransactionsByBlockIDFunc,
+			getTransactionsByBlockIDFunc,
 			mock.Anything,
 			mock.AnythingOfType("flow.Identifier"),
 		),
 		RemoveContract: m.On(
-			RemoveContractFunc,
+			removeContractFunc,
 			mock.Anything,
 			mock.AnythingOfType("*flowkit.Account"),
 			mock.AnythingOfType("string"),
 		),
 		SendTransaction: m.On(
-			SendTransactionFunc,
+			sendTransactionFunc,
 			mock.Anything,
 			mock.AnythingOfType("flowkit.TransactionAccountRoles"),
 			mock.AnythingOfType("flowkit.Script"),
 			mock.AnythingOfType("uint64"),
 		),
 		SignTransactionPayload: m.On(
-			SignTransactionPayloadFunc,
+			signTransactionPayloadFunc,
 			mock.Anything,
 			mock.AnythingOfType("*flowkit.Account"),
 			mock.AnythingOfType("[]uint8"),
 		),
 		Test: m.On(
-			TestFunc,
+			testFunc,
 			mock.Anything,
 			mock.AnythingOfType("[]byte"),
 			mock.AnythingOfType("string"),
 		),
-		Network:   m.On(NetworkFunc),
-		Ping:      m.On(PingFunc),
-		SetLogger: m.On(SetLoggerFunc, mock.AnythingOfType("output.Logger")),
+		Network:   m.On(networkFunc),
+		Ping:      m.On(pingFunc),
+		SetLogger: m.On(setLoggerFunc, mock.AnythingOfType("output.Logger")),
 	}
 
 	t.GetAccount.Run(func(args mock.Arguments) {
