@@ -1860,7 +1860,7 @@ func TestTransactions_Integration(t *testing.T) {
 		assert.Nil(t, tx)
 	})
 
-	// todo(sideninja) we should convert different variations of sending transaction to table tests
+	// TODO(sideninja) we should convert different variations of sending transaction to table tests
 
 	t.Run("Send Transaction No Auths", func(t *testing.T) {
 		t.Parallel()

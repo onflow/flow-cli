@@ -32,19 +32,6 @@ func cleanCode(code []byte) string {
 	return space.ReplaceAllString(string(code), " ")
 }
 
-type testAccount struct {
-	address flow.Address
-	name    string
-}
-
-func (t *testAccount) Name() string {
-	return t.name
-}
-
-func (t *testAccount) Address() flow.Address {
-	return t.address
-}
-
 func TestResolver(t *testing.T) {
 
 	t.Run("Resolve imports", func(t *testing.T) {

@@ -159,7 +159,7 @@ func newTransactionFromTemplate(templateTx *flow.Transaction, signer *Account) (
 		return nil, err
 	}
 	tx.SetPayer(signer.Address)
-	tx.SetGasLimit(maxGasLimit) // todo change this to calculated limit
+	tx.SetGasLimit(maxGasLimit) // TODO(sideninja) change this to calculated limit
 
 	return tx, nil
 }

@@ -19,7 +19,6 @@
 package project
 
 import (
-	"fmt"
 	"strings"
 	"testing"
 
@@ -108,35 +107,6 @@ var testContractH = testContract{
         pub contract ContractH {}
     `),
 	accountAddress: addresses.New(),
-}
-
-type testLoader struct{}
-
-func (t testLoader) Load(source string) ([]byte, error) {
-	switch source {
-	case testContractA.location:
-		return testContractA.code, nil
-	case testContractB.location:
-		return testContractB.code, nil
-	case testContractC.location:
-		return testContractC.code, nil
-	case testContractD.location:
-		return testContractD.code, nil
-	case testContractE.location:
-		return testContractE.code, nil
-	case testContractF.location:
-		return testContractF.code, nil
-	case testContractG.location:
-		return testContractG.code, nil
-	case testContractH.location:
-		return testContractH.code, nil
-	}
-
-	return nil, fmt.Errorf("failed to load %s", source)
-}
-
-func (t testLoader) Normalize(base, relative string) string {
-	return relative
 }
 
 type contractTestCase struct {

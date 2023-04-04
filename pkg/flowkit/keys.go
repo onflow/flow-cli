@@ -315,7 +315,7 @@ func (f *FileAccountKey) Signer(ctx context.Context) (crypto.Signer, error) {
 
 func (f *FileAccountKey) PrivateKey() (*crypto.PrivateKey, error) {
 	if f.privateKey == nil { // lazy load the key
-		key, err := os.ReadFile(f.location) // todo change to use state reader writer instance
+		key, err := os.ReadFile(f.location) // TODO(sideninja) change to use the state ReaderWriter
 		if err != nil {
 			return nil, fmt.Errorf("could not load the key for the account from provided location %s: %w", f.location, err)
 		}

@@ -173,7 +173,8 @@ func (p *project) watch() error {
 			case renamed:
 				p.renameContract(contract.oldPath, contract.path)
 			case removed:
-				err = p.removeContract(contract.path, contract.account) // todo what if contract got broken and then we want to delete it
+				// TODO(sideninja) what if contract contains invalid code and then we want to remove it
+				err = p.removeContract(contract.path, contract.account)
 				if err != nil {
 					return err
 				}
@@ -234,7 +235,7 @@ func (p *project) contractName(path string) (string, error) {
 		return name, nil
 	}
 
-	// todo add warning if name of the file is not matching the name of the contract
+	// TODO(sideninja) add a warning if the name of the file is not matching the name of the contract
 	content, err := p.state.ReadFile(path)
 	if err != nil {
 		return "", errors.Wrap(err, "could not load contract to get the name")

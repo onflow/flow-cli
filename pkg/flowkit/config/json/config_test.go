@@ -181,7 +181,7 @@ func Test_SerializeConfigToJsonEmulatorDefault(t *testing.T) {
 			"emulator": "127.0.0.1.3569"
 		}
 	}`)
-	config := config.Config{
+	cfg := config.Config{
 		Emulators: config.Emulators{{
 			Name:           "default",
 			Port:           3569,
@@ -206,7 +206,7 @@ func Test_SerializeConfigToJsonEmulatorDefault(t *testing.T) {
 		}},
 	}
 	parser := NewParser()
-	conf, _ := parser.Serialize(&config)
+	conf, _ := parser.Serialize(&cfg)
 	assert.JSONEq(t, string(configJson), string(conf))
 }
 

@@ -26,24 +26,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// limited test scripter implementation for running tests
-type testScript struct {
-	code     []byte
-	location string
-}
-
-func (t *testScript) Code() []byte {
-	return t.code
-}
-
-func (t *testScript) SetCode(code []byte) {
-	t.code = code
-}
-
-func (t *testScript) Location() string {
-	return t.location
-}
-
 func TestProgram(t *testing.T) {
 
 	t.Run("Imports", func(t *testing.T) {

@@ -82,7 +82,7 @@ func initTestnet(t *testing.T) (gateway.Gateway, *flowkit.State, flowkit.Service
 	state.Accounts().AddOrUpdate(testAccount)
 
 	// fund the account
-	// todo refactor core contracts lib to offer the template
+	// TODO(sideninja) refactor core contracts lib to offer the template
 	transferTx := []byte(`
 	import FungibleToken from 0x9a0766d93b6608b7
 	import FlowToken from 0x7e60df042a9c0868

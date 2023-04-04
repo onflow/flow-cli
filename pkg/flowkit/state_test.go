@@ -53,7 +53,7 @@ func keys() []crypto.PrivateKey {
 }
 
 func generateComplexProject() State {
-	config := config.Config{
+	cfg := config.Config{
 		Emulators: config.Emulators{{
 			Name:           "default",
 			Port:           9000,
@@ -153,7 +153,7 @@ func generateComplexProject() State {
 		}},
 	}
 
-	p, err := newProject(&config, composer, af)
+	p, err := newProject(&cfg, composer, af)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -162,7 +162,7 @@ func generateComplexProject() State {
 }
 
 func generateSimpleProject() State {
-	config := config.Config{
+	cfg := config.Config{
 		Emulators: config.Emulators{{
 			Name:           "default",
 			Port:           9000,
@@ -197,7 +197,7 @@ func generateSimpleProject() State {
 	}
 
 	composer.AddConfigParser(json.NewParser())
-	p, err := newProject(&config, composer, af)
+	p, err := newProject(&cfg, composer, af)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -206,7 +206,7 @@ func generateSimpleProject() State {
 }
 
 func generateAliasesProject() State {
-	config := config.Config{
+	cfg := config.Config{
 		Emulators: config.Emulators{{
 			Name:           "default",
 			Port:           9000,
@@ -247,7 +247,7 @@ func generateAliasesProject() State {
 		}},
 	}
 
-	p, err := newProject(&config, composer, af)
+	p, err := newProject(&cfg, composer, af)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -256,7 +256,7 @@ func generateAliasesProject() State {
 }
 
 func generateAliasesComplexProject() State {
-	config := config.Config{
+	cfg := config.Config{
 		Emulators: config.Emulators{{
 			Name:           "default",
 			Port:           9000,
@@ -331,7 +331,7 @@ func generateAliasesComplexProject() State {
 		}},
 	}
 
-	p, err := newProject(&config, composer, af)
+	p, err := newProject(&cfg, composer, af)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -687,7 +687,7 @@ func Test_DefaultEmulatorNotPresentInConfig(t *testing.T) {
 		"deployments": {
 		}
 	}`)
-	config := config.Config{
+	cfg := config.Config{
 		Emulators: config.Emulators{{
 			Name:           "default",
 			Port:           3569,
@@ -716,7 +716,7 @@ func Test_DefaultEmulatorNotPresentInConfig(t *testing.T) {
 	assert.NoError(t, err)
 	paths := []string{"flow.json"}
 	state, err := Load(paths, af)
-	assert.Equal(t, state.conf, &config)
+	assert.Equal(t, state.conf, &cfg)
 	assert.NoError(t, err)
 }
 
@@ -795,7 +795,7 @@ func Test_DefaultEmulatorPresentInConfig(t *testing.T) {
 		"deployments": {
 		}
 	}`)
-	config := config.Config{
+	cfg := config.Config{
 		Emulators: config.Emulators{{
 			Name:           "default",
 			Port:           3569,
@@ -825,7 +825,7 @@ func Test_DefaultEmulatorPresentInConfig(t *testing.T) {
 	paths := []string{"flow.json"}
 	state, err := Load(paths, af)
 	assert.Equal(t, 1, len(state.conf.Emulators))
-	assert.Equal(t, state.conf, &config)
+	assert.Equal(t, state.conf, &cfg)
 	assert.NoError(t, err)
 }
 
@@ -851,7 +851,7 @@ func Test_CustomEmulatorValuesInConfig(t *testing.T) {
 		"deployments": {
 		}
 	}`)
-	config := config.Config{
+	cfg := config.Config{
 		Emulators: config.Emulators{{
 			Name:           "custom-emulator",
 			Port:           2000,
@@ -882,6 +882,6 @@ func Test_CustomEmulatorValuesInConfig(t *testing.T) {
 	state, err := Load(paths, af)
 	assert.Equal(t, "custom-emulator", state.conf.Emulators[0].Name)
 	assert.Equal(t, 1, len(state.conf.Emulators))
-	assert.Equal(t, state.conf, &config)
+	assert.Equal(t, state.conf, &cfg)
 	assert.NoError(t, err)
 }

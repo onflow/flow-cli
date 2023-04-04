@@ -154,7 +154,7 @@ func (f *projectFiles) watch() (<-chan accountChange, <-chan contractChange, err
 
 				name, containsAccount := accountFromPath(rel)
 				if event.IsDir() && containsAccount {
-					// todo handle rename and move
+					// TODO(sideninja) handle moving of files
 					accounts <- accountChange{
 						status: status[event.Op],
 						name:   name,
