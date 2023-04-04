@@ -30,13 +30,13 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
 )
 
-type flagsAddContract struct {
+type deployContractFlags struct {
 	ArgsJSON string   `default:"" flag:"args-json" info:"arguments in JSON-Cadence format"`
 	Signer   string   `default:"emulator-account" flag:"signer" info:"Account name from configuration used to sign the transaction"`
 	Include  []string `default:"" flag:"include" info:"Fields to include in the output. Valid values: contracts."`
 }
 
-var addContractFlags = flagsAddContract{}
+var addContractFlags = deployContractFlags{}
 
 var AddContractCommand = &command.Command{
 	Cmd: &cobra.Command{
@@ -46,60 +46,62 @@ var AddContractCommand = &command.Command{
 		Args:    cobra.MinimumNArgs(1),
 	},
 	Flags: &addContractFlags,
-	RunS:  addContract,
+	RunS:  deployContract(false, &addContractFlags),
 }
 
-func addContract(
-	args []string,
-	_ command.GlobalFlags,
-	_ output.Logger,
-	flow flowkit.Services,
-	state *flowkit.State,
-) (command.Result, error) {
-	filename := args[0]
+func deployContract(update bool, flags *deployContractFlags) command.RunWithState {
+	return func(
+		args []string,
+		globalFlags command.GlobalFlags,
+		logger output.Logger,
+		flow flowkit.Services,
+		state *flowkit.State,
+	) (command.Result, error) {
+		filename := args[0]
 
-	code, err := state.ReadFile(filename)
-	if err != nil {
-		return nil, fmt.Errorf("error loading contract file: %w", err)
+		code, err := state.ReadFile(filename)
+		if err != nil {
+			return nil, fmt.Errorf("error loading contract file: %w", err)
+		}
+
+		to, err := state.Accounts().ByName(flags.Signer)
+		if err != nil {
+			return nil, err
+		}
+
+		var contractArgs []cadence.Value
+		if flags.ArgsJSON != "" {
+			contractArgs, err = flowkit.ParseArgumentsJSON(flags.ArgsJSON)
+		} else if len(args) > 1 {
+			contractArgs, err = flowkit.ParseArgumentsWithoutType(filename, code, args[1:])
+		}
+
+		if err != nil {
+			return nil, fmt.Errorf("error parsing transaction arguments: %w", err)
+		}
+
+		_, _, err = flow.AddContract(
+			context.Background(),
+			to,
+			flowkit.Script{
+				Code:     code,
+				Args:     contractArgs,
+				Location: filename,
+			},
+			flowkit.UpdateExistingContract(update),
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		account, err := flow.GetAccount(context.Background(), to.Address)
+		if err != nil {
+			return nil, err
+		}
+
+		return &AccountResult{
+			Account: account,
+			include: flags.Include,
+		}, nil
 	}
-
-	to, err := state.Accounts().ByName(addContractFlags.Signer)
-	if err != nil {
-		return nil, err
-	}
-
-	var contractArgs []cadence.Value
-	if addContractFlags.ArgsJSON != "" {
-		contractArgs, err = flowkit.ParseArgumentsJSON(addContractFlags.ArgsJSON)
-	} else if len(args) > 1 {
-		contractArgs, err = flowkit.ParseArgumentsWithoutType(filename, code, args[1:])
-	}
-
-	if err != nil {
-		return nil, fmt.Errorf("error parsing transaction arguments: %w", err)
-	}
-
-	_, _, err = flow.AddContract(
-		context.Background(),
-		to,
-		flowkit.Script{
-			Code:     code,
-			Args:     contractArgs,
-			Location: filename,
-		},
-		flowkit.UpdateExistingContract(false),
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	account, err := flow.GetAccount(context.Background(), to.Address)
-	if err != nil {
-		return nil, err
-	}
-
-	return &AccountResult{
-		Account: account,
-		include: addContractFlags.Include,
-	}, nil
 }

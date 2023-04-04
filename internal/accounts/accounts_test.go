@@ -35,7 +35,7 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowkit/tests"
 )
 
-func Test_AddContract(t *testing.T) {
+func Test_DeployContract(t *testing.T) {
 	srv, state, _ := util.TestMocks(t)
 
 	t.Run("Success", func(t *testing.T) {
@@ -48,7 +48,13 @@ func Test_AddContract(t *testing.T) {
 			assert.Equal(t, inArgs[1], script.Args[0].String())
 		})
 
-		result, err := addContract(inArgs, command.GlobalFlags{}, util.NoLogger, srv.Mock, state)
+		result, err := deployContract(false, nil)(
+			inArgs,
+			command.GlobalFlags{},
+			util.NoLogger,
+			srv.Mock,
+			state,
+		)
 
 		require.NoError(t, err)
 		assert.NotNil(t, result)
@@ -64,7 +70,13 @@ func Test_AddContract(t *testing.T) {
 
 		addContractFlags.ArgsJSON = `[{"type": "UInt64", "value": "1"}]`
 		args := []string{tests.ContractSimpleWithArgs.Filename}
-		result, err := addContract(args, command.GlobalFlags{}, util.NoLogger, srv.Mock, state)
+		result, err := deployContract(false, &addContractFlags)(
+			args,
+			command.GlobalFlags{},
+			util.NoLogger,
+			srv.Mock,
+			state,
+		)
 
 		require.NoError(t, err)
 		assert.NotNil(t, result)
@@ -72,7 +84,13 @@ func Test_AddContract(t *testing.T) {
 
 	t.Run("Fail non-existing file", func(t *testing.T) {
 		args := []string{"non-existing"}
-		result, err := addContract(args, command.GlobalFlags{}, util.NoLogger, srv.Mock, state)
+		result, err := deployContract(false, nil)(
+			args,
+			command.GlobalFlags{},
+			util.NoLogger,
+			srv.Mock,
+			state,
+		)
 
 		assert.Nil(t, result)
 		assert.EqualError(t, err, "error loading contract file: open non-existing: file does not exist")
@@ -81,7 +99,13 @@ func Test_AddContract(t *testing.T) {
 	t.Run("Fail invalid-json", func(t *testing.T) {
 		args := []string{tests.ContractA.Filename}
 		addContractFlags.ArgsJSON = "invalid"
-		result, err := addContract(args, command.GlobalFlags{}, util.NoLogger, srv.Mock, state)
+		result, err := deployContract(false, &addContractFlags)(
+			args,
+			command.GlobalFlags{},
+			util.NoLogger,
+			srv.Mock,
+			state,
+		)
 
 		assert.Nil(t, result)
 		assert.EqualError(t, err, "error parsing transaction arguments: invalid character 'i' looking for beginning of value")
@@ -90,7 +114,13 @@ func Test_AddContract(t *testing.T) {
 	t.Run("Fail invalid signer", func(t *testing.T) {
 		args := []string{tests.ContractA.Filename}
 		addContractFlags.Signer = "invalid"
-		result, err := addContract(args, command.GlobalFlags{}, util.NoLogger, srv.Mock, state)
+		result, err := deployContract(false, &addContractFlags)(
+			args,
+			command.GlobalFlags{},
+			util.NoLogger,
+			srv.Mock,
+			state,
+		)
 
 		assert.Nil(t, result)
 		assert.EqualError(t, err, "could not find account with name invalid in the configuration")
@@ -121,62 +151,6 @@ func Test_RemoveContract(t *testing.T) {
 
 		_, err := removeContract(inArgs, command.GlobalFlags{}, util.NoLogger, srv.Mock, state)
 		assert.EqualError(t, err, "could not find account with name invalid in the configuration")
-	})
-}
-
-func Test_UpdateContract(t *testing.T) {
-	srv, state, _ := util.TestMocks(t)
-
-	t.Run("Success", func(t *testing.T) {
-		inArgs := []string{tests.ContractSimpleWithArgs.Filename, "1"}
-
-		srv.AddContract.Run(func(args mock.Arguments) {
-			script := args.Get(2).(flowkit.Script)
-			assert.Equal(t, tests.ContractSimpleWithArgs.Filename, script.Location)
-			assert.Len(t, script.Args, 1)
-			assert.Equal(t, inArgs[1], script.Args[0].String())
-		})
-
-		result, err := updateContract(inArgs, command.GlobalFlags{}, util.NoLogger, srv.Mock, state)
-
-		require.NoError(t, err)
-		assert.NotNil(t, result)
-	})
-
-	t.Run("Success JSON arg", func(t *testing.T) {
-		updateContractFlags.ArgsJSON = `[{"type": "UInt64", "value": "1"}]`
-		inArgs := []string{tests.ContractSimpleWithArgs.Filename}
-
-		srv.AddContract.Run(func(args mock.Arguments) {
-			script := args.Get(2).(flowkit.Script)
-			assert.Equal(t, tests.ContractSimpleWithArgs.Filename, script.Location)
-			assert.Len(t, script.Args, 1)
-			assert.Equal(t, "1", script.Args[0].String())
-		})
-
-		result, err := updateContract(inArgs, command.GlobalFlags{}, util.NoLogger, srv.Mock, state)
-
-		require.NoError(t, err)
-		assert.NotNil(t, result)
-		updateContractFlags.ArgsJSON = "" // reset
-	})
-
-	t.Run("Fail invalid-json", func(t *testing.T) {
-		args := []string{tests.ContractA.Filename}
-		updateContractFlags.ArgsJSON = "invalid"
-		result, err := updateContract(args, command.GlobalFlags{}, util.NoLogger, srv.Mock, state)
-
-		assert.Nil(t, result)
-		assert.EqualError(t, err, "error parsing transaction arguments: invalid character 'i' looking for beginning of value")
-		updateContractFlags.ArgsJSON = "" // reset
-	})
-
-	t.Run("Fail non-existing file", func(t *testing.T) {
-		args := []string{"non-existing"}
-		result, err := updateContract(args, command.GlobalFlags{}, util.NoLogger, srv.Mock, state)
-
-		assert.Nil(t, result)
-		assert.EqualError(t, err, "error loading contract file: open non-existing: file does not exist")
 	})
 }
 
