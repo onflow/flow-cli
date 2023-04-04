@@ -19,14 +19,16 @@
 package project
 
 import (
+	"testing"
+
+	"github.com/onflow/flow-go-sdk"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/internal/util"
 	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
-	"github.com/onflow/flow-go-sdk"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func Test_ProjectDeploy(t *testing.T) {

@@ -22,13 +22,14 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"github.com/onflow/flow-cli/pkg/flowkit"
 	"math/rand"
 	"os"
 	sysExec "os/exec"
 	"regexp"
 	"strings"
 	"time"
+
+	"github.com/onflow/flow-cli/pkg/flowkit"
 
 	"golang.org/x/exp/maps"
 

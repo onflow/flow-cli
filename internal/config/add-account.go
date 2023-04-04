@@ -20,10 +20,12 @@ package config
 
 import (
 	"fmt"
-	"github.com/onflow/flow-cli/internal/util"
+	"strconv"
+
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
-	"strconv"
+
+	"github.com/onflow/flow-cli/internal/util"
 
 	"github.com/spf13/cobra"
 

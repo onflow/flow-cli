@@ -19,14 +19,16 @@
 package collections
 
 import (
-	"github.com/onflow/flow-cli/internal/util"
 	"testing"
 
-	"github.com/onflow/flow-cli/internal/command"
+	"github.com/onflow/flow-cli/internal/util"
+
 	"github.com/onflow/flow-go-sdk"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+
+	"github.com/onflow/flow-cli/internal/command"
 )
 
 func Test_Get(t *testing.T) {

@@ -21,6 +21,7 @@ package config
 import (
 	"bytes"
 	"fmt"
+
 	"github.com/onflow/flow-cli/internal/util"
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
 

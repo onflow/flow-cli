@@ -79,13 +79,11 @@ func generate(
 		return nil, err
 	}
 
-	pubKey := privateKey.PublicKey()
 	return &KeyResult{
 		privateKey:     privateKey,
-		publicKey:      pubKey,
+		publicKey:      privateKey.PublicKey(),
+		sigAlgo:        sigAlgo,
 		mnemonic:       mnemonic,
 		derivationPath: generateFlags.DerivationPath,
 	}, nil
-
-	return &KeyResult{privateKey: privateKey, publicKey: pubKey, sigAlgo: sigAlgo, mnemonic: mnemonic, derivationPath: generateFlags.DerivationPath}, nil
 }

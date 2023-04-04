@@ -9,9 +9,10 @@ import (
 	"strings"
 	"text/tabwriter"
 
-	"github.com/onflow/flow-cli/pkg/flowkit"
 	flowsdk "github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
+
+	"github.com/onflow/flow-cli/pkg/flowkit"
 )
 
 const EnvPrefix = "FLOW"

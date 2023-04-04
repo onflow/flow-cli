@@ -21,9 +21,10 @@ package emulator
 import (
 	"errors"
 	"fmt"
-	"github.com/onflow/flow-cli/internal/util"
 	"os"
 	"sync"
+
+	"github.com/onflow/flow-cli/internal/util"
 
 	emulator "github.com/onflow/flow-emulator"
 	"github.com/onflow/flow-emulator/cmd/emulator/start"

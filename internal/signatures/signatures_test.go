@@ -19,10 +19,12 @@
 package signatures
 
 import (
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/internal/util"
-	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func Test_Verify(t *testing.T) {

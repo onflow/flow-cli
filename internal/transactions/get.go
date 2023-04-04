@@ -20,9 +20,11 @@ package transactions
 
 import (
 	"context"
-	"github.com/onflow/flow-cli/pkg/flowkit/output"
-	flowsdk "github.com/onflow/flow-go-sdk"
 	"strings"
+
+	flowsdk "github.com/onflow/flow-go-sdk"
+
+	"github.com/onflow/flow-cli/pkg/flowkit/output"
 
 	"github.com/spf13/cobra"
 

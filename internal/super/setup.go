@@ -22,13 +22,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/onflow/flow-cli/internal/util"
 	"io"
 	"net/http"
 	"os"
 	"path"
 	"path/filepath"
 	"time"
+
+	"github.com/onflow/flow-cli/internal/util"
 
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"

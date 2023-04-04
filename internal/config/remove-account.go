@@ -19,8 +19,9 @@
 package config
 
 import (
-	"github.com/onflow/flow-cli/internal/util"
 	"github.com/spf13/cobra"
+
+	"github.com/onflow/flow-cli/internal/util"
 
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/pkg/flowkit"

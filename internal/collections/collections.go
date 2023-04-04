@@ -21,8 +21,9 @@ package collections
 import (
 	"bytes"
 	"fmt"
-	"github.com/onflow/flow-cli/internal/util"
 	"strings"
+
+	"github.com/onflow/flow-cli/internal/util"
 
 	"github.com/onflow/flow-go-sdk"
 	"github.com/spf13/cobra"

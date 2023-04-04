@@ -24,12 +24,13 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
-	"github.com/onflow/flow-cli/internal/util"
 	"io"
 	"net/http"
 	"os"
 	"strings"
 	"time"
+
+	"github.com/onflow/flow-cli/internal/util"
 
 	flowsdk "github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"

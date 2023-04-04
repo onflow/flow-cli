@@ -20,8 +20,9 @@
 package main
 
 import (
-	"github.com/onflow/flow-cli/internal/util"
 	"github.com/spf13/cobra"
+
+	"github.com/onflow/flow-cli/internal/util"
 
 	"github.com/onflow/flow-cli/internal/accounts"
 	"github.com/onflow/flow-cli/internal/blocks"

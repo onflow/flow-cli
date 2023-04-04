@@ -21,9 +21,10 @@ package tools
 import (
 	"errors"
 	"fmt"
-	"github.com/onflow/flow-cli/internal/util"
 	"os"
 	"runtime"
+
+	"github.com/onflow/flow-cli/internal/util"
 
 	"github.com/onflowser/flowser/v2/pkg/flowser"
 	"github.com/spf13/cobra"
