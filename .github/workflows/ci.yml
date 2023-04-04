@@ -26,7 +26,6 @@ jobs:
             ${{ runner.os }}-go-
       - name: Run tests
         run: |
-          make generate
           make ci
           make check-tidy
           make check-headers

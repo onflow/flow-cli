@@ -53,7 +53,7 @@ ifeq ($(COVER), true)
 endif
 
 .PHONY: ci
-ci: install-tools test coverage
+ci: install-tools generate test coverage
 
 .PHONY: install
 install:
