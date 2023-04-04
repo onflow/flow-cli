@@ -34,5 +34,5 @@ var UpdateCommand = &command.Command{
 		Args:    cobra.MinimumNArgs(1),
 	},
 	Flags: &updateContractFlags,
-	RunS:  deployContract(false, &updateContractFlags),
+	RunS:  deployContract(true, &updateContractFlags),
 }
