@@ -48,7 +48,7 @@ func Test_DeployContract(t *testing.T) {
 			assert.Equal(t, inArgs[1], script.Args[0].String())
 		})
 
-		result, err := deployContract(false, nil)(
+		result, err := deployContract(false, &addContractFlags)(
 			inArgs,
 			command.GlobalFlags{},
 			util.NoLogger,
@@ -84,7 +84,7 @@ func Test_DeployContract(t *testing.T) {
 
 	t.Run("Fail non-existing file", func(t *testing.T) {
 		args := []string{"non-existing"}
-		result, err := deployContract(false, nil)(
+		result, err := deployContract(false, &addContractFlags)(
 			args,
 			command.GlobalFlags{},
 			util.NoLogger,
