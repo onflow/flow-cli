@@ -30,7 +30,7 @@ install-tools:
 	GO111MODULE=on go install github.com/axw/gocov/gocov@latest; \
 	GO111MODULE=on go install github.com/matm/gocov-html@latest; \
 	GO111MODULE=on go install github.com/sanderhahn/gozip/cmd/gozip@latest; \
-	GO111MODULE=on go install github.com/vektra/mockery/v3@latest;
+	GO111MODULE=on go install github.com/vektra/mockery/v2@latest;
 
 .PHONY: test
 test:
@@ -95,7 +95,7 @@ install-linter:
 	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b ${GOPATH}/bin v1.47.2
 
 .PHONY: lint
-lint:
+lint: generate
 	golangci-lint run -v ./...
 
 .PHONY: fix-lint
@@ -112,6 +112,7 @@ check-tidy:
 	cd pkg/flowkit; go mod tidy
 
 .PHONY: generate
-generate:
-	go generate ./...
-	cd pkg/flowkit; go generate ./...
+generate: install-tools
+	go generate ./...; \
+	cd pkg/flowkit; \
+ 	go generate ./...
