@@ -9,10 +9,10 @@ require (
 	github.com/gosuri/uilive v0.0.4
 	github.com/manifoldco/promptui v0.9.0
 	github.com/onflow/cadence v0.37.0
-	github.com/onflow/cadence-tools/languageserver v0.8.1-0.20230327102606-6be626d07eb8
+	github.com/onflow/cadence-tools/languageserver v0.9.1-0.20230404112041-50a6e7e8fb92
 	github.com/onflow/cadence-tools/test v0.6.0
 	github.com/onflow/fcl-dev-wallet v0.6.0
-	github.com/onflow/flow-cli/pkg/flowkit v0.0.0-20230327102447-8c34a92f8cbb
+	github.com/onflow/flow-cli/pkg/flowkit v0.0.0-20230404110506-8464bcb4f9ec
 	github.com/onflow/flow-core-contracts/lib/go/templates v0.12.1
 	github.com/onflow/flow-emulator v0.45.0
 	github.com/onflow/flow-go-sdk v0.38.0
@@ -218,7 +218,3 @@ require (
 )
 
 replace github.com/onflow/flow-cli/pkg/flowkit => ./pkg/flowkit
-
-replace github.com/onflow/cadence-tools/languageserver => ../cadence-tools/languageserver
-
-replace github.com/onflow/cadence-tools/lint => ../cadence-tools/lint
