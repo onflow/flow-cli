@@ -303,7 +303,6 @@ func (f *Flowkit) AddContract(
 	}
 
 	f.logger.StartProgress(fmt.Sprintf("Checking contract '%s' on account '%s'...", name, account.Address))
-	defer f.logger.StopProgress()
 
 	// check if contract exists on account
 	flowAccount, err := f.gateway.GetAccount(account.Address)
@@ -319,17 +318,13 @@ func (f *Flowkit) AddContract(
 
 	updateExisting := update(existingContract, program.Code())
 	if exists && !updateExisting {
-		return flow.EmptyID, false, fmt.Errorf(
-			fmt.Sprintf("contract %s exists in account %s", name, account.Name),
-		)
+		return flow.EmptyID, false, fmt.Errorf(fmt.Sprintf("contract %s exists in account %s", name, account.Name))
 	}
 
 	// special case for emulator updates, where we remove and add a contract because it allows us to have more freedom in changes.
 	// Updating contracts is limited as described in https://developers.flow.com/cadence/language/contract-updatability
 	if exists && updateExisting && f.network == config.EmulatorNetwork {
 		_, _ = f.RemoveContract(ctx, account, name) // ignore failure as it's meant to be best-effort
-
-		f.logger.Info(fmt.Sprintf("Contract '%s' updating on the account '%s'.", name, account.Address))
 
 		tx, err = NewAddAccountContractTransaction(
 			account,
@@ -343,13 +338,12 @@ func (f *Flowkit) AddContract(
 	}
 
 	if exists && updateExisting && f.network != config.EmulatorNetwork {
-		f.logger.Info(fmt.Sprintf("Contract '%s' updating on the account '%s'.", name, account.Address))
-
 		tx, err = NewUpdateAccountContractTransaction(account, name, contract.Code)
 		if err != nil {
 			return flow.EmptyID, false, err
 		}
 	}
+
 	tx, err = f.prepareTransaction(tx, account)
 	if err != nil {
 		return flow.EmptyID, false, err
@@ -363,6 +357,12 @@ func (f *Flowkit) AddContract(
 		return flow.EmptyID, false, fmt.Errorf("failed to send transaction to deploy a contract: %w", err)
 	}
 
+	if exists && updateExisting {
+		f.logger.StartProgress(fmt.Sprintf("Contract '%s' updating on the account '%s'.", name, account.Address))
+	} else {
+		f.logger.StartProgress(fmt.Sprintf("Contract '%s' deploying on the account '%s'.", name, account.Address))
+	}
+
 	// we wait for transaction to be sealed
 	trx, err := f.gateway.GetTransactionResult(sentTx.ID(), true)
 	if err != nil {
@@ -372,7 +372,6 @@ func (f *Flowkit) AddContract(
 		return flow.EmptyID, false, trx.Error
 	}
 
-	f.logger.StopProgress()
 	f.logger.Info(fmt.Sprintf(
 		"Contract '%s' %s on the account '%s'.",
 		name,

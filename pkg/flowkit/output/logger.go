@@ -61,6 +61,7 @@ func (s *StdoutLogger) log(msg string, level int) {
 }
 
 func (s *StdoutLogger) Info(msg string) {
+	s.StopProgress()
 	s.log(msg, InfoLog)
 }
 
