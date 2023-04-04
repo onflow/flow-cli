@@ -87,7 +87,7 @@ func transformSimpleToConfig(accountName string, a simpleAccount) (*config.Accou
 	return &config.Account{
 		Name:    accountName,
 		Address: address,
-		Key:     config.NewDefaultAccountKey(pkey),
+		Key:     key,
 	}, nil
 }
 
