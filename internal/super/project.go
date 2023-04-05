@@ -215,7 +215,7 @@ func (p *project) addAccount(name string) error {
 	// create the account on the network and set the address
 	flowAcc, err := p.services.Accounts.Create(
 		p.service,
-		[]crypto.PublicKey{pubKey}, // need to get public key from private key
+		[]crypto.PublicKey{pubKey},
 		[]int{flow.AccountKeyWeightThreshold},
 		[]crypto.SignatureAlgorithm{crypto.ECDSA_P256},
 		[]crypto.HashAlgorithm{crypto.SHA3_256},
