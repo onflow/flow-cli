@@ -193,12 +193,7 @@ func (p *project) watch() error {
 
 // addAccount to the state and create it on the network.
 func (p *project) addAccount(name string) error {
-	serviceAccount, err := p.state.EmulatorServiceAccount()
-	if err != nil {
-		return err
-	}
-
-	privateKey, err := serviceAccount.Key().PrivateKey()
+	privateKey, err := p.service.Key().PrivateKey()
 	if err != nil {
 		return err
 	}
