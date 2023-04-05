@@ -193,15 +193,29 @@ func (p *project) watch() error {
 
 // addAccount to the state and create it on the network.
 func (p *project) addAccount(name string) error {
-	pkey, err := p.services.Keys.Generate("", crypto.ECDSA_P256)
+	serviceAccount, err := p.state.EmulatorServiceAccount()
 	if err != nil {
 		return err
 	}
 
+	privateKey, err := serviceAccount.Key().PrivateKey()
+	if err != nil {
+		return err
+	}
+
+	newAccountKey := flowkit.NewHexAccountKeyFromPrivateKey(0, crypto.SHA3_256, *privateKey)
+
+	newDecodedKey, err := crypto.DecodePrivateKeyHex(newAccountKey.SigAlgo(), newAccountKey.PrivateKeyHex())
+	if err != nil {
+		return err
+	}
+
+	pubKey := newDecodedKey.PublicKey()
+
 	// create the account on the network and set the address
 	flowAcc, err := p.services.Accounts.Create(
 		p.service,
-		[]crypto.PublicKey{pkey.PublicKey()},
+		[]crypto.PublicKey{pubKey}, // need to get public key from private key
 		[]int{flow.AccountKeyWeightThreshold},
 		[]crypto.SignatureAlgorithm{crypto.ECDSA_P256},
 		[]crypto.HashAlgorithm{crypto.SHA3_256},
@@ -213,7 +227,7 @@ func (p *project) addAccount(name string) error {
 
 	account := flowkit.NewAccount(name)
 	account.SetAddress(flowAcc.Address)
-	account.SetKey(flowkit.NewHexAccountKeyFromPrivateKey(0, crypto.SHA3_256, pkey))
+	account.SetKey(newAccountKey)
 
 	p.state.Accounts().AddOrUpdate(account)
 	p.state.Deployments().AddOrUpdate(config.Deployment{ // init empty deployment
