@@ -203,14 +203,7 @@ func (p *project) addAccount(name string) error {
 		return err
 	}
 
-	newAccountKey := flowkit.NewHexAccountKeyFromPrivateKey(0, crypto.SHA3_256, *privateKey)
-
-	newDecodedKey, err := crypto.DecodePrivateKeyHex(newAccountKey.SigAlgo(), newAccountKey.PrivateKeyHex())
-	if err != nil {
-		return err
-	}
-
-	pubKey := newDecodedKey.PublicKey()
+	pubKey := (*privateKey).PublicKey()
 
 	// create the account on the network and set the address
 	flowAcc, err := p.services.Accounts.Create(
@@ -225,9 +218,9 @@ func (p *project) addAccount(name string) error {
 		return err
 	}
 
-	account := flowkit.NewAccount(name)
-	account.SetAddress(flowAcc.Address)
-	account.SetKey(newAccountKey)
+	account := flowkit.NewAccount(name).
+		SetAddress(flowAcc.Address).
+		SetKey(flowkit.NewHexAccountKeyFromPrivateKey(0, crypto.SHA3_256, *privateKey))
 
 	p.state.Accounts().AddOrUpdate(account)
 	p.state.Deployments().AddOrUpdate(config.Deployment{ // init empty deployment
