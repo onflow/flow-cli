@@ -58,12 +58,13 @@ func newProject(
 }
 
 type project struct {
-	service        *flowkit.Account
-	services       *services.Services
-	state          *flowkit.State
-	readerWriter   flowkit.ReaderWriter
-	projectFiles   *projectFiles
-	pathNameLookup map[string]string
+	service                *flowkit.Account
+	services               *services.Services
+	state                  *flowkit.State
+	readerWriter           flowkit.ReaderWriter
+	projectFiles           *projectFiles
+	pathNameLookup         map[string]string
+	superGeneratedAccounts []string // accounts created by "flow dev" super commands and not developer
 }
 
 // startup cleans the state and then rebuilds it from the current folder state.
@@ -112,6 +113,15 @@ func (p *project) deploy() {
 	printDeployment(deployed, err, p.pathNameLookup)
 }
 
+func (p *project) isSuperGeneratedAccount(name string) bool {
+	for _, a := range p.superGeneratedAccounts {
+		if a == name {
+			return true
+		}
+	}
+	return false
+}
+
 // cleanState of existing contracts, deployments and non-service accounts as we will build it again.
 func (p *project) cleanState() {
 	contracts := make(config.Contracts, len(*p.state.Contracts()))
@@ -137,6 +147,10 @@ func (p *project) cleanState() {
 		}
 
 		if a.Name() == config.DefaultEmulatorServiceAccountName {
+			continue
+		}
+
+		if !p.isSuperGeneratedAccount(a.Name()) {
 			continue
 		}
 		_ = p.state.Accounts().Remove(a.Name())
@@ -216,6 +230,8 @@ func (p *project) addAccount(name string) error {
 	account := flowkit.NewAccount(name).
 		SetAddress(flowAcc.Address).
 		SetKey(flowkit.NewHexAccountKeyFromPrivateKey(0, crypto.SHA3_256, *privateKey))
+
+	p.superGeneratedAccounts = append(p.superGeneratedAccounts, account.Name())
 
 	p.state.Accounts().AddOrUpdate(account)
 	p.state.Deployments().AddOrUpdate(config.Deployment{ // init empty deployment
