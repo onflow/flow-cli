@@ -113,6 +113,10 @@ func (p *project) deploy() {
 	printDeployment(deployed, err, p.pathNameLookup)
 }
 
+func (p *project) AddSuperGeneratedAccount(name string) {
+	p.superGeneratedAccounts = append(p.superGeneratedAccounts, name)
+}
+
 func (p *project) isSuperGeneratedAccount(name string) bool {
 	for _, a := range p.superGeneratedAccounts {
 		if a == name {
@@ -231,7 +235,7 @@ func (p *project) addAccount(name string) error {
 		SetAddress(flowAcc.Address).
 		SetKey(flowkit.NewHexAccountKeyFromPrivateKey(0, crypto.SHA3_256, *privateKey))
 
-	p.superGeneratedAccounts = append(p.superGeneratedAccounts, account.Name())
+	p.AddSuperGeneratedAccount(account.Name())
 
 	p.state.Accounts().AddOrUpdate(account)
 	p.state.Deployments().AddOrUpdate(config.Deployment{ // init empty deployment
