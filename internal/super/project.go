@@ -193,15 +193,17 @@ func (p *project) watch() error {
 
 // addAccount to the state and create it on the network.
 func (p *project) addAccount(name string) error {
-	pkey, err := p.services.Keys.Generate("", crypto.ECDSA_P256)
+	privateKey, err := p.service.Key().PrivateKey()
 	if err != nil {
 		return err
 	}
 
+	pubKey := (*privateKey).PublicKey()
+
 	// create the account on the network and set the address
 	flowAcc, err := p.services.Accounts.Create(
 		p.service,
-		[]crypto.PublicKey{pkey.PublicKey()},
+		[]crypto.PublicKey{pubKey},
 		[]int{flow.AccountKeyWeightThreshold},
 		[]crypto.SignatureAlgorithm{crypto.ECDSA_P256},
 		[]crypto.HashAlgorithm{crypto.SHA3_256},
@@ -211,9 +213,9 @@ func (p *project) addAccount(name string) error {
 		return err
 	}
 
-	account := flowkit.NewAccount(name)
-	account.SetAddress(flowAcc.Address)
-	account.SetKey(flowkit.NewHexAccountKeyFromPrivateKey(0, crypto.SHA3_256, pkey))
+	account := flowkit.NewAccount(name).
+		SetAddress(flowAcc.Address).
+		SetKey(flowkit.NewHexAccountKeyFromPrivateKey(0, crypto.SHA3_256, *privateKey))
 
 	p.state.Accounts().AddOrUpdate(account)
 	p.state.Deployments().AddOrUpdate(config.Deployment{ // init empty deployment
