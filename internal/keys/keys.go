@@ -54,7 +54,7 @@ type KeyResult struct {
 }
 
 func (k *KeyResult) JSON() interface{} {
-	result := make(map[string]string)
+	result := make(map[string]any)
 	result["public"] = hex.EncodeToString(k.privateKey.PublicKey().Encode())
 
 	if k.privateKey != nil {
