@@ -357,7 +357,7 @@ func (f *Flowkit) AddContract(
 		return flow.EmptyID, false, fmt.Errorf("failed to send transaction to deploy a contract: %w", err)
 	}
 
-	if exists && updateExisting {
+	if exists {
 		f.logger.StartProgress(fmt.Sprintf("Contract '%s' updating on the account '%s'.", name, account.Address))
 	} else {
 		f.logger.StartProgress(fmt.Sprintf("Contract '%s' deploying on the account '%s'.", name, account.Address))
@@ -371,13 +371,6 @@ func (f *Flowkit) AddContract(
 	if trx.Error != nil {
 		return flow.EmptyID, false, trx.Error
 	}
-
-	f.logger.Info(fmt.Sprintf(
-		"Contract '%s' %s on the account '%s'.",
-		name,
-		map[bool]string{true: "updated", false: "created"}[updateExisting],
-		account.Address,
-	))
 
 	return sentTx.ID(), updateExisting, err
 }

@@ -94,6 +94,12 @@ func deployContract(update bool, flags *deployContractFlags) command.RunWithStat
 			return nil, err
 		}
 
+		logger.Info(fmt.Sprintf(
+			"Contract %s on the account '%s'.",
+			map[bool]string{true: "updated", false: "created"}[update],
+			to.Address,
+		))
+
 		account, err := flow.GetAccount(context.Background(), to.Address)
 		if err != nil {
 			return nil, err
