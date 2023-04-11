@@ -82,7 +82,7 @@ func run(
 	logger.StartProgress("Running tests...")
 	defer logger.StopProgress()
 
-	result, coverageReport, err := testCode(testFiles, state, testFlags.Cover)
+	res, coverageReport, err := testCode(testFiles, state, testFlags.Cover)
 	if err != nil {
 		return nil, err
 	}
@@ -100,7 +100,7 @@ func run(
 	}
 
 	return &result{
-		Results:        result,
+		Results:        res,
 		CoverageReport: coverageReport,
 	}, nil
 }
