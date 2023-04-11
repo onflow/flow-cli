@@ -29,20 +29,20 @@ var Cmd = &cobra.Command{
 }
 
 func init() {
-	InitCommand.AddToParent(Cmd)
-	Cmd.AddCommand(AddCmd)
-	Cmd.AddCommand(RemoveCmd)
+	initCommand.AddToParent(Cmd)
+	Cmd.AddCommand(addCmd)
+	Cmd.AddCommand(removeCmd)
 }
 
-type Result struct {
+type result struct {
 	result string
 }
 
-func (r *Result) JSON() any {
+func (r *result) JSON() any {
 	return nil
 }
 
-func (r *Result) String() string {
+func (r *result) String() string {
 	if r.result != "" {
 		return r.result
 	}
@@ -50,6 +50,6 @@ func (r *Result) String() string {
 	return ""
 }
 
-func (r *Result) Oneliner() string {
+func (r *result) Oneliner() string {
 	return ""
 }

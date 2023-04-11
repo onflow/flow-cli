@@ -38,7 +38,7 @@ type flagsGenerate struct {
 
 var generateFlags = flagsGenerate{}
 
-var GenerateCommand = &command.Command{
+var generateCommand = &command.Command{
 	Cmd: &cobra.Command{
 		Use:     "generate",
 		Short:   "Generate a new key-pair",
@@ -79,7 +79,7 @@ func generate(
 		return nil, err
 	}
 
-	return &KeyResult{
+	return &keyResult{
 		privateKey:     privateKey,
 		publicKey:      privateKey.PublicKey(),
 		sigAlgo:        sigAlgo,

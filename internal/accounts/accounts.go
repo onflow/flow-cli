@@ -38,21 +38,21 @@ var Cmd = &cobra.Command{
 }
 
 func init() {
-	AddContractCommand.AddToParent(Cmd)
-	RemoveCommand.AddToParent(Cmd)
-	UpdateCommand.AddToParent(Cmd)
-	CreateCommand.AddToParent(Cmd)
-	StakingCommand.AddToParent(Cmd)
-	GetCommand.AddToParent(Cmd)
+	addContractCommand.AddToParent(Cmd)
+	removeCommand.AddToParent(Cmd)
+	updateCommand.AddToParent(Cmd)
+	createCommand.AddToParent(Cmd)
+	stakingCommand.AddToParent(Cmd)
+	getCommand.AddToParent(Cmd)
 }
 
-// AccountResult represent result from all account commands.
-type AccountResult struct {
+// accountResult represent result from all account commands.
+type accountResult struct {
 	*flow.Account
 	include []string
 }
 
-func (r *AccountResult) JSON() any {
+func (r *accountResult) JSON() any {
 	result := make(map[string]any)
 	result["address"] = r.Address
 	result["balance"] = cadence.UFix64(r.Balance).String()
@@ -82,7 +82,7 @@ func (r *AccountResult) JSON() any {
 	return result
 }
 
-func (r *AccountResult) String() string {
+func (r *accountResult) String() string {
 	var b bytes.Buffer
 	writer := util.CreateTabWriter(&b)
 
@@ -127,7 +127,7 @@ func (r *AccountResult) String() string {
 	return b.String()
 }
 
-func (r *AccountResult) Oneliner() string {
+func (r *accountResult) Oneliner() string {
 	keys := make([]string, 0, len(r.Keys))
 	for _, key := range r.Keys {
 		keys = append(keys, key.PublicKey.String())

@@ -30,10 +30,10 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
 )
 
-type FlagsStatus struct {
+type flagsStatus struct {
 }
 
-var statusFlags = FlagsStatus{}
+var statusFlags = flagsStatus{}
 
 var Command = &command.Command{
 	Cmd: &cobra.Command{
@@ -53,21 +53,21 @@ func status(
 ) (command.Result, error) {
 	err := flow.Ping()
 
-	return &Result{
+	return &result{
 		network:    flow.Network().Name,
 		accessNode: flow.Network().Host,
 		err:        err,
 	}, nil
 }
 
-type Result struct {
+type result struct {
 	network    string
 	accessNode string
 	err        error
 }
 
 // getStatus returns string representation for Flow network status.
-func (r *Result) getStatus() string {
+func (r *result) getStatus() string {
 	if r.err == nil {
 		return "ONLINE"
 	}
@@ -76,7 +76,7 @@ func (r *Result) getStatus() string {
 }
 
 // getColoredStatus returns colored string representation for Flow network status.
-func (r *Result) getColoredStatus() string {
+func (r *result) getColoredStatus() string {
 	if r.err == nil {
 		return output.Green(r.getStatus())
 	}
@@ -85,7 +85,7 @@ func (r *Result) getColoredStatus() string {
 }
 
 // getIcon returns emoji icon representing Flow network status.
-func (r *Result) getIcon() string {
+func (r *result) getIcon() string {
 	if r.err == nil {
 		return output.GoEmoji()
 	}
@@ -94,7 +94,7 @@ func (r *Result) getIcon() string {
 }
 
 // String converts result to a string.
-func (r *Result) String() string {
+func (r *result) String() string {
 	var b bytes.Buffer
 	writer := util.CreateTabWriter(&b)
 
@@ -107,7 +107,7 @@ func (r *Result) String() string {
 }
 
 // JSON converts result to a JSON.
-func (r *Result) JSON() any {
+func (r *result) JSON() any {
 	result := make(map[string]string)
 
 	result["network"] = r.network
@@ -118,6 +118,6 @@ func (r *Result) JSON() any {
 }
 
 // Oneliner returns result as one liner grep friendly.
-func (r *Result) Oneliner() string {
+func (r *result) Oneliner() string {
 	return r.getStatus()
 }

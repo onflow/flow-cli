@@ -38,7 +38,7 @@ type flagsAddDeployment struct {
 
 var addDeploymentFlags = flagsAddDeployment{}
 
-var AddDeploymentCommand = &command.Command{
+var addDeploymentCommand = &command.Command{
 	Cmd: &cobra.Command{
 		Use:     "deployment",
 		Short:   "Add deployment to configuration",
@@ -81,7 +81,7 @@ func addDeployment(
 		return nil, err
 	}
 
-	return &Result{
+	return &result{
 		result: "Deployment added to the configuration.\nYou can deploy using 'flow project deploy' command",
 	}, nil
 }

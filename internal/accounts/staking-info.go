@@ -38,7 +38,7 @@ type flagsStakingInfo struct{}
 
 var stakingFlags = flagsStakingInfo{}
 
-var StakingCommand = &command.Command{
+var stakingCommand = &command.Command{
 	Cmd: &cobra.Command{
 		Use:     "staking-info <address>",
 		Short:   "Get account staking info",
@@ -142,7 +142,7 @@ func stakingInfo(
 
 	logger.StopProgress()
 
-	return &StakingResult{staking, delegation}, nil
+	return &stakingResult{staking, delegation}, nil
 }
 
 func envFromNetwork(network flowsdk.ChainID) tmpl.Environment {
@@ -204,12 +204,12 @@ func newStakingInfoFromValue(value cadence.Value) ([]map[string]any, error) {
 	return stakingInfo, nil
 }
 
-type StakingResult struct {
+type stakingResult struct {
 	staking    []map[string]any // stake as FlowIDTableStaking.NodeInfo
 	delegation []map[string]any // delegation as FlowIDTableStaking.DelegatorInfo
 }
 
-func (r *StakingResult) JSON() any {
+func (r *stakingResult) JSON() any {
 	result := make(map[string]any)
 	result["staking"] = r.staking
 	result["delegation"] = r.delegation
@@ -217,7 +217,7 @@ func (r *StakingResult) JSON() any {
 	return result
 }
 
-func (r *StakingResult) String() string {
+func (r *stakingResult) String() string {
 	var b bytes.Buffer
 	writer := util.CreateTabWriter(&b)
 
@@ -266,6 +266,6 @@ func (r *StakingResult) String() string {
 	return b.String()
 }
 
-func (r *StakingResult) Oneliner() string {
+func (r *stakingResult) Oneliner() string {
 	return ""
 }

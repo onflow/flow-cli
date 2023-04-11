@@ -38,7 +38,7 @@ type deployContractFlags struct {
 
 var addContractFlags = deployContractFlags{}
 
-var AddContractCommand = &command.Command{
+var addContractCommand = &command.Command{
 	Cmd: &cobra.Command{
 		Use:     "add-contract <filename> <args>",
 		Short:   "Deploy a new contract to an account",
@@ -99,7 +99,7 @@ func deployContract(update bool, flags *deployContractFlags) command.RunWithStat
 			return nil, err
 		}
 
-		return &AccountResult{
+		return &accountResult{
 			Account: account,
 			include: flags.Include,
 		}, nil

@@ -99,7 +99,7 @@ func run(
 		}
 	}
 
-	return &Result{
+	return &result{
 		Results:        result,
 		CoverageReport: coverageReport,
 	}, nil
@@ -186,14 +186,14 @@ func absolutePath(basePath, filePath string) string {
 	return path.Join(path.Dir(basePath), filePath)
 }
 
-type Result struct {
+type result struct {
 	Results        map[string]cdcTests.Results
 	CoverageReport *runtime.CoverageReport
 }
 
-var _ command.Result = &Result{}
+var _ command.Result = &result{}
 
-func (r *Result) JSON() any {
+func (r *result) JSON() any {
 	results := make(map[string]map[string]string, len(r.Results))
 
 	for testFile, testResult := range r.Results {
@@ -219,7 +219,7 @@ func (r *Result) JSON() any {
 	return results
 }
 
-func (r *Result) String() string {
+func (r *result) String() string {
 	var b bytes.Buffer
 	writer := util.CreateTabWriter(&b)
 
@@ -235,7 +235,7 @@ func (r *Result) String() string {
 	return b.String()
 }
 
-func (r *Result) Oneliner() string {
+func (r *result) Oneliner() string {
 	var builder strings.Builder
 
 	for scriptPath, testResult := range r.Results {

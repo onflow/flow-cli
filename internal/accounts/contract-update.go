@@ -26,7 +26,7 @@ import (
 
 var updateContractFlags = deployContractFlags{}
 
-var UpdateCommand = &command.Command{
+var updateCommand = &command.Command{
 	Cmd: &cobra.Command{
 		Use:     "update-contract <filename> <args>",
 		Short:   "Update a contract deployed to an account",

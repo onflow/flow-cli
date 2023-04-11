@@ -34,7 +34,7 @@ type flagsDecode struct {
 
 var decodeFlags = flagsDecode{}
 
-var DecodeCommand = &command.Command{
+var decodeCommand = &command.Command{
 	Cmd: &cobra.Command{
 		Use:     "decode <transaction filename>",
 		Short:   "Decode a transaction",
@@ -63,7 +63,7 @@ func decode(
 		return nil, err
 	}
 
-	return &TransactionResult{
+	return &transactionResult{
 		tx:      tx.FlowTransaction(),
 		include: decodeFlags.Include,
 	}, nil

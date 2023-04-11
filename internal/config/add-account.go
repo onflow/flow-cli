@@ -44,7 +44,7 @@ type flagsAddAccount struct {
 
 var addAccountFlags = flagsAddAccount{}
 
-var AddAccountCommand = &command.Command{
+var addAccountCommand = &command.Command{
 	Cmd: &cobra.Command{
 		Use:     "account",
 		Short:   "Add account to configuration",
@@ -107,7 +107,7 @@ func addAccount(
 		return nil, err
 	}
 
-	return &Result{
+	return &result{
 		result: fmt.Sprintf("Account %s added to the configuration", raw.Name),
 	}, nil
 

@@ -280,7 +280,7 @@ func Test_Result(t *testing.T) {
 		}},
 		Contracts: nil,
 	}
-	result := AccountResult{Account: account}
+	result := accountResult{Account: account}
 
 	assert.Equal(t, strings.TrimPrefix(`
 Address	 0x0000000000000001

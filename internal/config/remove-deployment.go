@@ -31,7 +31,7 @@ type flagsRemoveDeployment struct{}
 
 var removeDeploymentFlags = flagsRemoveDeployment{}
 
-var RemoveDeploymentCommand = &command.Command{
+var removeDeploymentCommand = &command.Command{
 	Cmd: &cobra.Command{
 		Use:     "deployment <account> <network>",
 		Short:   "Remove deployment from configuration",
@@ -68,7 +68,7 @@ func removeDeployment(
 		return nil, err
 	}
 
-	return &Result{
+	return &result{
 		result: "deployment removed",
 	}, nil
 }

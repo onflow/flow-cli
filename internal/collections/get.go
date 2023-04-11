@@ -34,7 +34,7 @@ type flagsCollections struct{}
 
 var collectionFlags = flagsCollections{}
 
-var GetCommand = &command.Command{
+var getCommand = &command.Command{
 	Cmd: &cobra.Command{
 		Use:     "get <collection_id>",
 		Short:   "Get collection info",
@@ -62,5 +62,5 @@ func get(
 		return nil, err
 	}
 
-	return &CollectionResult{collection}, nil
+	return &collectionResult{collection}, nil
 }

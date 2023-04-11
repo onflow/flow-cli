@@ -40,7 +40,7 @@ var Cmd = &cobra.Command{
 }
 
 func init() {
-	GetCommand.AddToParent(Cmd)
+	getCommand.AddToParent(Cmd)
 }
 
 type EventResult struct {

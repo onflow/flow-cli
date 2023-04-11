@@ -43,7 +43,7 @@ type flagsSend struct {
 
 var sendFlags = flagsSend{}
 
-var SendCommand = &command.Command{
+var sendCommand = &command.Command{
 	Cmd: &cobra.Command{
 		Use:     "send <code filename> [<argument> <argument> ...]",
 		Short:   "Send a transaction",
@@ -139,7 +139,7 @@ func send(
 		return nil, err
 	}
 
-	return &TransactionResult{
+	return &transactionResult{
 		result:  txResult,
 		tx:      tx,
 		include: sendFlags.Include,

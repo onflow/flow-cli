@@ -39,7 +39,7 @@ type flagsScripts struct {
 
 var scriptFlags = flagsScripts{}
 
-var ExecuteCommand = &command.Command{
+var executeCommand = &command.Command{
 	Cmd: &cobra.Command{
 		Use:     "execute <filename> [<argument> <argument> ...]",
 		Short:   "Execute a script",
@@ -97,5 +97,5 @@ func execute(
 		return nil, err
 	}
 
-	return &ScriptResult{value}, nil
+	return &scriptResult{value}, nil
 }

@@ -31,7 +31,7 @@ type flagsRemoveAccount struct{}
 
 var removeAccountFlags = flagsRemoveAccount{}
 
-var RemoveAccountCommand = &command.Command{
+var removeAccountCommand = &command.Command{
 	Cmd: &cobra.Command{
 		Use:     "account <name>",
 		Short:   "Remove account from configuration",
@@ -66,7 +66,7 @@ func removeAccount(
 		return nil, err
 	}
 
-	return &Result{
+	return &result{
 		result: "account removed",
 	}, nil
 }

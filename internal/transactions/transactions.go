@@ -40,22 +40,22 @@ var Cmd = &cobra.Command{
 }
 
 func init() {
-	GetCommand.AddToParent(Cmd)
-	SendCommand.AddToParent(Cmd)
-	SignCommand.AddToParent(Cmd)
-	BuildCommand.AddToParent(Cmd)
-	SendSignedCommand.AddToParent(Cmd)
-	DecodeCommand.AddToParent(Cmd)
+	getCommand.AddToParent(Cmd)
+	sendCommand.AddToParent(Cmd)
+	signCommand.AddToParent(Cmd)
+	buildCommand.AddToParent(Cmd)
+	sendSignedCommand.AddToParent(Cmd)
+	decodeCommand.AddToParent(Cmd)
 }
 
-type TransactionResult struct {
+type transactionResult struct {
 	result  *flow.TransactionResult
 	tx      *flow.Transaction
 	include []string
 	exclude []string
 }
 
-func (r *TransactionResult) JSON() any {
+func (r *transactionResult) JSON() any {
 	result := make(map[string]any)
 	result["id"] = r.tx.ID().String()
 	result["payload"] = fmt.Sprintf("%x", r.tx.Encode())
@@ -85,7 +85,7 @@ func (r *TransactionResult) JSON() any {
 	return result
 }
 
-func (r *TransactionResult) String() string {
+func (r *transactionResult) String() string {
 	var b bytes.Buffer
 	writer := util.CreateTabWriter(&b)
 
@@ -184,7 +184,7 @@ func (r *TransactionResult) String() string {
 	return b.String()
 }
 
-func (r *TransactionResult) Oneliner() string {
+func (r *transactionResult) Oneliner() string {
 	result := fmt.Sprintf(
 		"ID: %s, Payer: %s, Authorizer: %s",
 		r.tx.ID(), r.tx.Payer, r.tx.Authorizers)

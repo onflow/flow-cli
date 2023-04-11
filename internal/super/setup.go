@@ -39,11 +39,11 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
 )
 
-type FlagsSetup struct {
+type flagsSetup struct {
 	Scaffold bool `default:"" flag:"scaffold" info:"Use provided scaffolds for project creation"`
 }
 
-var setupFlags = FlagsSetup{}
+var setupFlags = flagsSetup{}
 
 var SetupCommand = &command.Command{
 	Cmd: &cobra.Command{

@@ -31,7 +31,7 @@ type flagsRemoveNetwork struct{}
 
 var removeNetworkFlags = flagsRemoveNetwork{}
 
-var RemoveNetworkCommand = &command.Command{
+var removeNetworkCommand = &command.Command{
 	Cmd: &cobra.Command{
 		Use:     "network <name>",
 		Short:   "Remove network from configuration",
@@ -66,7 +66,7 @@ func removeNetwork(
 		return nil, err
 	}
 
-	return &Result{
+	return &result{
 		result: "network removed",
 	}, nil
 }

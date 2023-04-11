@@ -41,7 +41,7 @@ type flagsAddContract struct {
 
 var addContractFlags = flagsAddContract{}
 
-var AddContractCommand = &command.Command{
+var addContractCommand = &command.Command{
 	Cmd: &cobra.Command{
 		Use:     "contract",
 		Short:   "Add contract to configuration",
@@ -101,7 +101,7 @@ func addContract(
 		return nil, err
 	}
 
-	return &Result{
+	return &result{
 		result: fmt.Sprintf("Contract %s added to the configuration", raw.Name),
 	}, nil
 }

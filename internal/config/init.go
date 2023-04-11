@@ -32,7 +32,7 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
 )
 
-type FlagsInit struct {
+type flagsInit struct {
 	ServicePrivateKey  string `flag:"service-private-key" info:"Service account private key"`
 	ServiceKeySigAlgo  string `default:"ECDSA_P256" flag:"service-sig-algo" info:"Service account key signature algorithm"`
 	ServiceKeyHashAlgo string `default:"SHA3_256" flag:"service-hash-algo" info:"Service account key hash algorithm"`
@@ -40,9 +40,9 @@ type FlagsInit struct {
 	Global             bool   `default:"false" flag:"global" info:"Initialize global user configuration"`
 }
 
-var InitFlag = FlagsInit{}
+var InitFlag = flagsInit{}
 
-var InitCommand = &command.Command{
+var initCommand = &command.Command{
 	Cmd: &cobra.Command{
 		Use:   "init",
 		Short: "Initialize a new configuration",
@@ -101,18 +101,18 @@ func Initialise(
 		return nil, err
 	}
 
-	return &InitResult{State: state}, nil
+	return &initResult{State: state}, nil
 }
 
-type InitResult struct {
+type initResult struct {
 	*flowkit.State
 }
 
-func (r *InitResult) JSON() any {
+func (r *initResult) JSON() any {
 	return r
 }
 
-func (r *InitResult) String() string {
+func (r *initResult) String() string {
 	var b bytes.Buffer
 	writer := util.CreateTabWriter(&b)
 	account, _ := r.State.EmulatorServiceAccount()
@@ -129,6 +129,6 @@ func (r *InitResult) String() string {
 	return b.String()
 }
 
-func (r *InitResult) Oneliner() string {
+func (r *initResult) Oneliner() string {
 	return ""
 }

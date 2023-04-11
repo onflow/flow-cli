@@ -37,14 +37,14 @@ var Cmd = &cobra.Command{
 }
 
 func init() {
-	GetCommand.AddToParent(Cmd)
+	getCommand.AddToParent(Cmd)
 }
 
-type CollectionResult struct {
+type collectionResult struct {
 	*flow.Collection
 }
 
-func (c *CollectionResult) JSON() any {
+func (c *collectionResult) JSON() any {
 	txIDs := make([]string, 0)
 
 	for _, tx := range c.Collection.TransactionIDs {
@@ -54,7 +54,7 @@ func (c *CollectionResult) JSON() any {
 	return txIDs
 }
 
-func (c *CollectionResult) String() string {
+func (c *collectionResult) String() string {
 	var b bytes.Buffer
 	writer := util.CreateTabWriter(&b)
 
@@ -69,6 +69,6 @@ func (c *CollectionResult) String() string {
 	return b.String()
 }
 
-func (c *CollectionResult) Oneliner() string {
+func (c *collectionResult) Oneliner() string {
 	return strings.Join(c.JSON().([]string), ",")
 }

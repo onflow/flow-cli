@@ -47,8 +47,8 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
 )
 
-// Run the command with arguments.
-type Run func(
+// run the command with arguments.
+type run func(
 	args []string,
 	globalFlags GlobalFlags,
 	logger output.Logger,
@@ -68,7 +68,7 @@ type RunWithState func(
 type Command struct {
 	Cmd   *cobra.Command
 	Flags any
-	Run   Run
+	Run   run
 	RunS  RunWithState
 }
 

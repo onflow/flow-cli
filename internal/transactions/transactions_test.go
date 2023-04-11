@@ -291,7 +291,7 @@ func Test_Result(t *testing.T) {
 			Signature:   []byte("6cde7f812897d22ee7633b82b059070be24faccdc47997bc0f765420e6e28bb6"),
 		}},
 	}
-	result := TransactionResult{tx: tx}
+	result := transactionResult{tx: tx}
 
 	assert.Equal(t, strings.TrimPrefix(`
 ID		e913d1f3e431c7df49c99845bea9ebff9db11bbf25d507b9ad0fad45652d515f

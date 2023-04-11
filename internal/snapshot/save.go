@@ -29,7 +29,7 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
 )
 
-var SaveCommand = &command.Command{
+var saveCommand = &command.Command{
 	Cmd: &cobra.Command{
 		Use:     "save",
 		Short:   "Get the latest finalized protocol snapshot",
@@ -71,5 +71,5 @@ func save(
 		return nil, fmt.Errorf("failed to write protocol snapshot file to %s: %w", outputPath, err)
 	}
 
-	return &SaveResult{OutputPath: outputPath}, nil
+	return &saveResult{OutputPath: outputPath}, nil
 }

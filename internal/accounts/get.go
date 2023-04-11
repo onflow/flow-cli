@@ -36,7 +36,7 @@ type flagsGet struct {
 
 var getFlags = flagsGet{}
 
-var GetCommand = &command.Command{
+var getCommand = &command.Command{
 	Cmd: &cobra.Command{
 		Use:     "get <address>",
 		Short:   "Gets an account by address",
@@ -64,7 +64,7 @@ func get(
 		return nil, err
 	}
 
-	return &AccountResult{
+	return &accountResult{
 		Account: account,
 		include: getFlags.Include,
 	}, nil

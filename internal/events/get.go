@@ -39,7 +39,7 @@ type flagsEvents struct {
 
 var eventsFlags = flagsEvents{}
 
-var GetCommand = &command.Command{
+var getCommand = &command.Command{
 	Cmd: &cobra.Command{
 		Use:   "get <event_name>",
 		Short: "Get events in a block range",

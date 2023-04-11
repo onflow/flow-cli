@@ -35,7 +35,7 @@ type flagsDerive struct {
 
 var deriveFlags = flagsDerive{}
 
-var DeriveCommand = &command.Command{
+var deriveCommand = &command.Command{
 	Cmd: &cobra.Command{
 		Use:     "derive <encoded private key>",
 		Short:   "Derive public key from a private key",
@@ -64,5 +64,5 @@ func derive(
 		return nil, fmt.Errorf("failed to decode private key: %w", err)
 	}
 
-	return &KeyResult{privateKey: parsedPrivateKey, publicKey: parsedPrivateKey.PublicKey()}, nil
+	return &keyResult{privateKey: parsedPrivateKey, publicKey: parsedPrivateKey.PublicKey()}, nil
 }

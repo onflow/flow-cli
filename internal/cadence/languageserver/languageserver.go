@@ -28,11 +28,11 @@ import (
 	"github.com/onflow/flow-cli/internal/util"
 )
 
-type Config struct {
+type config struct {
 	EnableFlowClient bool `default:"true" flag:"enable-flow-client" info:"Enable Flow client functionality"`
 }
 
-var conf Config
+var conf config
 
 var Cmd = &cobra.Command{
 	Use:   "language-server",

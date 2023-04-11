@@ -43,7 +43,7 @@ type flagsBuild struct {
 
 var buildFlags = flagsBuild{}
 
-var BuildCommand = &command.Command{
+var buildCommand = &command.Command{
 	Cmd: &cobra.Command{
 		Use:     "build <code filename>  [<argument> <argument> ...]",
 		Short:   "Build an unsigned transaction",
@@ -120,7 +120,7 @@ func build(
 		return nil, fmt.Errorf("transaction was not approved")
 	}
 
-	return &TransactionResult{
+	return &transactionResult{
 		tx:      tx.FlowTransaction(),
 		include: []string{"code", "payload", "signatures"},
 	}, nil

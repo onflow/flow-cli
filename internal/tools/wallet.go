@@ -30,12 +30,12 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
 )
 
-type FlagsWallet struct {
+type flagsWallet struct {
 	Port uint   `default:"8701" flag:"port" info:"Dev wallet port to listen on"`
 	Host string `default:"http://localhost:8888" flag:"emulator-host" info:"Host for access node connection"`
 }
 
-var walletFlags = FlagsWallet{}
+var walletFlags = flagsWallet{}
 
 var DevWallet = &command.Command{
 	Cmd: &cobra.Command{

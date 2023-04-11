@@ -39,7 +39,7 @@ type flagsAddNetwork struct {
 
 var addNetworkFlags = flagsAddNetwork{}
 
-var AddNetworkCommand = &command.Command{
+var addNetworkCommand = &command.Command{
 	Cmd: &cobra.Command{
 		Use:     "network",
 		Short:   "Add network to configuration",
@@ -77,7 +77,7 @@ func addNetwork(
 		return nil, err
 	}
 
-	return &Result{
+	return &result{
 		result: fmt.Sprintf("Network %s added to the configuration", raw["name"]),
 	}, nil
 }

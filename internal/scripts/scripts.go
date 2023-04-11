@@ -38,20 +38,20 @@ var Cmd = &cobra.Command{
 }
 
 func init() {
-	ExecuteCommand.AddToParent(Cmd)
+	executeCommand.AddToParent(Cmd)
 }
 
-type ScriptResult struct {
+type scriptResult struct {
 	cadence.Value
 }
 
-func (r *ScriptResult) JSON() any {
+func (r *scriptResult) JSON() any {
 	return json.RawMessage(
 		jsoncdc.MustEncode(r.Value),
 	)
 }
 
-func (r *ScriptResult) String() string {
+func (r *scriptResult) String() string {
 	var b bytes.Buffer
 	writer := util.CreateTabWriter(&b)
 
@@ -62,6 +62,6 @@ func (r *ScriptResult) String() string {
 	return b.String()
 }
 
-func (r *ScriptResult) Oneliner() string {
+func (r *scriptResult) Oneliner() string {
 	return r.Value.String()
 }

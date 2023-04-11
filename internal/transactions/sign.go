@@ -44,7 +44,7 @@ type flagsSign struct {
 
 var signFlags = flagsSign{}
 
-var SignCommand = &command.Command{
+var signCommand = &command.Command{
 	Cmd: &cobra.Command{
 		Use:     "sign [<built transaction filename> | --from-remote-url <url>]",
 		Short:   "Sign built transaction",
@@ -132,7 +132,7 @@ func sign(
 		fmt.Printf("%s Signed RLP Posted successfully\n", output.SuccessEmoji())
 	}
 
-	return &TransactionResult{
+	return &transactionResult{
 		tx:      signed.FlowTransaction(),
 		include: signFlags.Include,
 	}, nil

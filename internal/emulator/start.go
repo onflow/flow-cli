@@ -38,7 +38,7 @@ import (
 
 var Cmd *cobra.Command
 
-func ConfiguredServiceKey(
+func configuredServiceKey(
 	init bool,
 	sigAlgo crypto.SignatureAlgorithm,
 	hashAlgo crypto.HashAlgorithm,
@@ -63,20 +63,20 @@ func ConfiguredServiceKey(
 
 		state, err = flowkit.Init(loader, sigAlgo, hashAlgo)
 		if err != nil {
-			Exitf(1, err.Error())
+			exitf(1, err.Error())
 		} else {
 			err = state.SaveDefault()
 			if err != nil {
-				Exitf(1, err.Error())
+				exitf(1, err.Error())
 			}
 		}
 	} else {
 		state, err = flowkit.Load(command.Flags.ConfigPaths, loader)
 		if err != nil {
 			if errors.Is(err, config.ErrDoesNotExist) {
-				Exitf(1, "🙏 Configuration is missing, initialize it with: 'flow init' and then rerun this command.")
+				exitf(1, "🙏 Configuration is missing, initialize it with: 'flow init' and then rerun this command.")
 			} else {
-				Exitf(1, err.Error())
+				exitf(1, err.Error())
 			}
 		}
 	}
@@ -106,14 +106,14 @@ func ConfiguredServiceKey(
 }
 
 func init() {
-	Cmd = start.Cmd(ConfiguredServiceKey)
+	Cmd = start.Cmd(configuredServiceKey)
 	Cmd.Use = "emulator"
 	Cmd.Short = "Run Flow network for development"
 	Cmd.GroupID = "tools"
 	SnapshotCmd.AddToParent(Cmd)
 }
 
-func Exitf(code int, msg string, args ...any) {
+func exitf(code int, msg string, args ...any) {
 	fmt.Printf(msg+"\n", args...)
 	os.Exit(code)
 }

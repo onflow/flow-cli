@@ -22,7 +22,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var RemoveCmd = &cobra.Command{
+var removeCmd = &cobra.Command{
 	Use:              "remove <account|contract|deployment|network>",
 	Short:            "Remove resource from configuration",
 	Example:          "flow config remove account",
@@ -31,8 +31,8 @@ var RemoveCmd = &cobra.Command{
 }
 
 func init() {
-	RemoveAccountCommand.AddToParent(RemoveCmd)
-	RemoveContractCommand.AddToParent(RemoveCmd)
-	RemoveDeploymentCommand.AddToParent(RemoveCmd)
-	RemoveNetworkCommand.AddToParent(RemoveCmd)
+	removeAccountCommand.AddToParent(removeCmd)
+	removeContractCommand.AddToParent(removeCmd)
+	removeDeploymentCommand.AddToParent(removeCmd)
+	removeNetworkCommand.AddToParent(removeCmd)
 }

@@ -35,9 +35,9 @@ import (
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
 )
 
-type FlagsFlowser struct{}
+type flagsFlowser struct{}
 
-var flowserFlags = FlagsWallet{}
+var flowserFlags = flagsWallet{}
 
 var Flowser = &command.Command{
 	Cmd: &cobra.Command{

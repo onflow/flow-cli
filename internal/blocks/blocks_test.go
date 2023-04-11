@@ -62,7 +62,7 @@ func Test_GetBlock(t *testing.T) {
 }
 
 func Test_Result(t *testing.T) {
-	result := BlockResult{
+	result := blockResult{
 		block:       tests.NewBlock(),
 		collections: []*flow.Collection{tests.NewCollection()},
 	}

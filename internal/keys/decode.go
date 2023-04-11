@@ -39,7 +39,7 @@ type flagsDecode struct {
 
 var decodeFlags = flagsDecode{}
 
-var DecodeCommand = &command.Command{
+var decodeCommand = &command.Command{
 	Cmd: &cobra.Command{
 		Use:       "decode <rlp|pem> <encoded public key>",
 		Short:     "Decode an encoded public key",
@@ -103,7 +103,7 @@ func decode(
 		return nil, err
 	}
 
-	return &KeyResult{
+	return &keyResult{
 		publicKey: accountKey.PublicKey,
 		sigAlgo:   accountKey.SigAlgo,
 		hashAlgo:  accountKey.HashAlgo,

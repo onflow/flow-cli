@@ -479,12 +479,12 @@ func NewDeploymentPrompt(
 
 	contractName := contractPrompt(contractNames)
 	deploymentData.Contracts = append(deploymentData.Contracts, contractName)
-	contractNames = RemoveFromStringArray(contractNames, contractName)
+	contractNames = removeFromStringArray(contractNames, contractName)
 
 	for addAnotherContractToDeploymentPrompt() {
 		contractName := contractPrompt(contractNames)
 		deploymentData.Contracts = append(deploymentData.Contracts, contractName)
-		contractNames = RemoveFromStringArray(contractNames, contractName)
+		contractNames = removeFromStringArray(contractNames, contractName)
 
 		if len(contractNames) == 0 {
 			break

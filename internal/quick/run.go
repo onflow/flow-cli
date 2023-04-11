@@ -50,20 +50,20 @@ var RunCommand = &command.Command{
 		_ flowkit.Services,
 	) (command.Result, error) {
 		fmt.Println("⚠️Deprecation notice: Use 'flow dev' command.")
-		return &RunResult{}, nil
+		return &runResult{}, nil
 	},
 }
 
-type RunResult struct{}
+type runResult struct{}
 
-func (r *RunResult) JSON() any {
+func (r *runResult) JSON() any {
 	return nil
 }
 
-func (r *RunResult) String() string {
+func (r *runResult) String() string {
 	return ""
 }
 
-func (r *RunResult) Oneliner() string {
+func (r *runResult) Oneliner() string {
 	return ""
 }

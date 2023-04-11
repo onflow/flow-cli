@@ -35,7 +35,7 @@ type flagsRemoveContract struct {
 
 var flagsRemove = flagsRemoveContract{}
 
-var RemoveCommand = &command.Command{
+var removeCommand = &command.Command{
 	Cmd: &cobra.Command{
 		Use:     "remove-contract <name>",
 		Short:   "Remove a contract deployed to an account",
@@ -69,7 +69,7 @@ func removeContract(
 	if err != nil {
 		return nil, err
 	}
-	return &AccountResult{
+	return &accountResult{
 		Account: account,
 		include: flagsRemove.Include,
 	}, nil

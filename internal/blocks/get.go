@@ -36,7 +36,7 @@ type flagsBlocks struct {
 
 var blockFlags = flagsBlocks{}
 
-var GetCommand = &command.Command{
+var getCommand = &command.Command{
 	Cmd: &cobra.Command{
 		Use:     "get <block_id|latest|block_height>",
 		Short:   "Get block info",
@@ -92,7 +92,7 @@ func get(
 		}
 	}
 
-	return &BlockResult{
+	return &blockResult{
 		block:       block,
 		events:      events,
 		collections: collections,

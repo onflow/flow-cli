@@ -38,17 +38,17 @@ var Cmd = &cobra.Command{
 }
 
 func init() {
-	GetCommand.AddToParent(Cmd)
+	getCommand.AddToParent(Cmd)
 }
 
-type BlockResult struct {
+type blockResult struct {
 	block       *flow.Block
 	events      []flow.BlockEvents
 	collections []*flow.Collection
 	included    []string
 }
 
-func (r *BlockResult) JSON() any {
+func (r *blockResult) JSON() any {
 	result := make(map[string]any)
 	result["blockId"] = r.block.ID.String()
 	result["parentId"] = r.block.ParentID.String()
@@ -87,7 +87,7 @@ func blockStatusToString(code flow.BlockStatus) string {
 	}
 }
 
-func (r *BlockResult) String() string {
+func (r *blockResult) String() string {
 	var b bytes.Buffer
 	writer := util.CreateTabWriter(&b)
 
@@ -123,6 +123,6 @@ func (r *BlockResult) String() string {
 	return b.String()
 }
 
-func (r *BlockResult) Oneliner() string {
+func (r *blockResult) Oneliner() string {
 	return r.block.ID.String()
 }

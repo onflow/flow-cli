@@ -40,7 +40,7 @@ type flagsVerify struct {
 
 var verifyFlags = flagsVerify{}
 
-var VerifyCommand = &command.Command{
+var verifyCommand = &command.Command{
 	Cmd: &cobra.Command{
 		Use:     "verify <message> <signature> <public key>",
 		Short:   "Verify the signature",
@@ -88,7 +88,7 @@ func verify(
 		return nil, err
 	}
 
-	return &VerificationResult{
+	return &verificationResult{
 		valid:     valid,
 		message:   message,
 		signature: sig,
@@ -98,7 +98,7 @@ func verify(
 	}, nil
 }
 
-type VerificationResult struct {
+type verificationResult struct {
 	valid     bool
 	message   []byte
 	signature []byte
@@ -107,7 +107,7 @@ type VerificationResult struct {
 	hashAlgo  crypto.HashAlgorithm
 }
 
-func (s *VerificationResult) JSON() any {
+func (s *verificationResult) JSON() any {
 	return map[string]any{
 		"valid":     fmt.Sprintf("%v", s.valid),
 		"message":   string(s.message),
@@ -118,7 +118,7 @@ func (s *VerificationResult) JSON() any {
 	}
 }
 
-func (s *VerificationResult) String() string {
+func (s *verificationResult) String() string {
 	var b bytes.Buffer
 	writer := util.CreateTabWriter(&b)
 
@@ -133,7 +133,7 @@ func (s *VerificationResult) String() string {
 	return b.String()
 }
 
-func (s *VerificationResult) Oneliner() string {
+func (s *verificationResult) Oneliner() string {
 	return fmt.Sprintf(
 		"valid: %v, message: %s, signature: %x, sigAlgo: %s, hashAlgo: %s, pubKey: %x",
 		s.valid, s.message, s.signature, s.sigAlgo, s.hashAlgo, s.pubKey,

@@ -38,7 +38,7 @@ type flagsGet struct {
 
 var getFlags = flagsGet{}
 
-var GetCommand = &command.Command{
+var getCommand = &command.Command{
 	Cmd: &cobra.Command{
 		Use:     "get <tx_id>",
 		Aliases: []string{"status"},
@@ -64,7 +64,7 @@ func get(
 		return nil, err
 	}
 
-	return &TransactionResult{
+	return &transactionResult{
 		result:  result,
 		tx:      tx,
 		include: getFlags.Include,

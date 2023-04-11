@@ -89,14 +89,14 @@ func deploy(
 		return nil, err
 	}
 
-	return &DeployResult{c}, nil
+	return &deployResult{c}, nil
 }
 
-type DeployResult struct {
+type deployResult struct {
 	contracts []*project.Contract
 }
 
-func (r *DeployResult) JSON() any {
+func (r *deployResult) JSON() any {
 	result := make(map[string]any)
 
 	for _, contract := range r.contracts {
@@ -106,11 +106,11 @@ func (r *DeployResult) JSON() any {
 	return result
 }
 
-func (r *DeployResult) String() string {
+func (r *deployResult) String() string {
 	return ""
 }
 
-func (r *DeployResult) Oneliner() string {
+func (r *deployResult) Oneliner() string {
 	return ""
 }
 

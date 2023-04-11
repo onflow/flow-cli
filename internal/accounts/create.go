@@ -42,7 +42,7 @@ type flagsCreate struct {
 
 var createFlags = flagsCreate{}
 
-var CreateCommand = &command.Command{
+var createCommand = &command.Command{
 	Cmd: &cobra.Command{
 		Use:     "create",
 		Short:   "Create a new account on network",
@@ -120,7 +120,7 @@ func create(
 		return nil, err
 	}
 
-	return &AccountResult{
+	return &accountResult{
 		Account: account,
 		include: createFlags.Include,
 	}, nil

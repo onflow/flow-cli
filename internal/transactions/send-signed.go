@@ -37,7 +37,7 @@ type flagsSendSigned struct {
 
 var sendSignedFlags = flagsSendSigned{}
 
-var SendSignedCommand = &command.Command{
+var sendSignedCommand = &command.Command{
 	Cmd: &cobra.Command{
 		Use:     "send-signed <signed transaction filename>",
 		Short:   "Send signed transaction",
@@ -79,7 +79,7 @@ func sendSigned(
 		return nil, err
 	}
 
-	return &TransactionResult{
+	return &transactionResult{
 		result:  result,
 		tx:      sentTx,
 		include: sendSignedFlags.Include,
