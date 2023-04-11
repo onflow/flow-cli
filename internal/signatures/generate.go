@@ -94,7 +94,7 @@ func (s *SignatureResult) pubKey() string {
 	return "ERR"
 }
 
-func (s *SignatureResult) JSON() interface{} {
+func (s *SignatureResult) JSON() any {
 	return map[string]string{
 		"signature": fmt.Sprintf("%x", s.result),
 		"message":   s.message,

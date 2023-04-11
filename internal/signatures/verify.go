@@ -107,7 +107,7 @@ type VerificationResult struct {
 	hashAlgo  crypto.HashAlgorithm
 }
 
-func (s *VerificationResult) JSON() interface{} {
+func (s *VerificationResult) JSON() any {
 	return map[string]string{
 		"valid":     fmt.Sprintf("%v", s.valid),
 		"message":   string(s.message),

@@ -48,13 +48,13 @@ type EventResult struct {
 	Events      []flow.Event
 }
 
-func (e *EventResult) JSON() interface{} {
-	result := make([]interface{}, 0)
+func (e *EventResult) JSON() any {
+	result := make([]any, 0)
 
 	for _, blockEvent := range e.BlockEvents {
 		if len(blockEvent.Events) > 0 {
 			for _, event := range blockEvent.Events {
-				result = append(result, map[string]interface{}{
+				result = append(result, map[string]any{
 					"blockID":       blockEvent.Height,
 					"index":         event.EventIndex,
 					"type":          event.Type,

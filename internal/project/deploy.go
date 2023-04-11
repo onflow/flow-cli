@@ -96,7 +96,7 @@ type DeployResult struct {
 	contracts []*project.Contract
 }
 
-func (r *DeployResult) JSON() interface{} {
+func (r *DeployResult) JSON() any {
 	result := make(map[string]string)
 
 	for _, contract := range r.contracts {

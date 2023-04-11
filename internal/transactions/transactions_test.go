@@ -311,7 +311,7 @@ Code (hidden, use --include code)
 
 Payload (hidden, use --include payload)`, "\n"), result.String())
 
-	assert.Equal(t, map[string]interface{}{
+	assert.Equal(t, map[string]any{
 		"authorizers": "[]",
 		"id":          "e913d1f3e431c7df49c99845bea9ebff9db11bbf25d507b9ad0fad45652d515f",
 		"payer":       "0000000000000002",

@@ -300,7 +300,7 @@ Contracts Deployed: 0
 
 Contracts (hidden, use --include contracts)`, "\n"), result.String())
 
-	assert.Equal(t, map[string]interface{}{
+	assert.Equal(t, map[string]any{
 		"address":   flow.Address{0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x1},
 		"balance":   "0.00000001",
 		"contracts": []string{},

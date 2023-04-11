@@ -82,8 +82,8 @@ func transformConfigToJSON(config *config.Config) jsonConfig {
 }
 
 type oldFormat struct {
-	Host     interface{} `json:"host"`
-	Accounts interface{} `json:"accounts"`
+	Host     any `json:"host"`
+	Accounts any `json:"accounts"`
 }
 
 func oldConfigFormat(raw []byte) bool {

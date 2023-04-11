@@ -44,7 +44,7 @@ type CollectionResult struct {
 	*flow.Collection
 }
 
-func (c *CollectionResult) JSON() interface{} {
+func (c *CollectionResult) JSON() any {
 	txIDs := make([]string, 0)
 
 	for _, tx := range c.Collection.TransactionIDs {

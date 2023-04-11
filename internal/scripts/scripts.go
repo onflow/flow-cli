@@ -45,7 +45,7 @@ type ScriptResult struct {
 	cadence.Value
 }
 
-func (r *ScriptResult) JSON() interface{} {
+func (r *ScriptResult) JSON() any {
 	return json.RawMessage(
 		jsoncdc.MustEncode(r.Value),
 	)

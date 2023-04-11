@@ -39,7 +39,7 @@ type SaveResult struct {
 	OutputPath string
 }
 
-func (r *SaveResult) JSON() interface{} {
+func (r *SaveResult) JSON() any {
 	return map[string]string{"path": r.OutputPath}
 }
 

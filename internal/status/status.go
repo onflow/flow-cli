@@ -107,7 +107,7 @@ func (r *Result) String() string {
 }
 
 // JSON converts result to a JSON.
-func (r *Result) JSON() interface{} {
+func (r *Result) JSON() any {
 	result := make(map[string]string)
 
 	result["network"] = r.network

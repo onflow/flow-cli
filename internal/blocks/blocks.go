@@ -48,17 +48,17 @@ type BlockResult struct {
 	included    []string
 }
 
-func (r *BlockResult) JSON() interface{} {
-	result := make(map[string]interface{})
+func (r *BlockResult) JSON() any {
+	result := make(map[string]any)
 	result["blockId"] = r.block.ID.String()
 	result["parentId"] = r.block.ParentID.String()
 	result["height"] = r.block.Height
 	result["totalSeals"] = len(r.block.Seals)
 	result["totalCollections"] = len(r.block.CollectionGuarantees)
 
-	collections := make([]interface{}, 0, len(r.block.CollectionGuarantees))
+	collections := make([]any, 0, len(r.block.CollectionGuarantees))
 	for i, guarantee := range r.block.CollectionGuarantees {
-		collection := make(map[string]interface{})
+		collection := make(map[string]any)
 		collection["id"] = guarantee.CollectionID.String()
 
 		if command.ContainsFlag(r.included, "transactions") {

@@ -56,7 +56,7 @@ var RunCommand = &command.Command{
 
 type RunResult struct{}
 
-func (r *RunResult) JSON() interface{} {
+func (r *RunResult) JSON() any {
 	result := make(map[string]string)
 	return result
 }

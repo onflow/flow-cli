@@ -30,7 +30,7 @@ const (
 )
 
 // defaults holds the default values for global settings
-var defaults = map[string]interface{}{
+var defaults = map[string]any{
 	metricsEnabled: true,
 	flowserPath:    getDefaultInstallDir(),
 }

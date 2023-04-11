@@ -38,7 +38,7 @@ type Result struct {
 	result string
 }
 
-func (r *Result) JSON() interface{} {
+func (r *Result) JSON() any {
 	return nil
 }
 

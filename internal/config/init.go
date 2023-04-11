@@ -108,7 +108,7 @@ type InitResult struct {
 	*flowkit.State
 }
 
-func (r *InitResult) JSON() interface{} {
+func (r *InitResult) JSON() any {
 	return r
 }
 

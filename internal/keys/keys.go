@@ -53,7 +53,7 @@ type KeyResult struct {
 	derivationPath string
 }
 
-func (k *KeyResult) JSON() interface{} {
+func (k *KeyResult) JSON() any {
 	result := make(map[string]any)
 	result["public"] = hex.EncodeToString(k.privateKey.PublicKey().Encode())
 

@@ -55,8 +55,8 @@ type TransactionResult struct {
 	exclude []string
 }
 
-func (r *TransactionResult) JSON() interface{} {
-	result := make(map[string]interface{})
+func (r *TransactionResult) JSON() any {
+	result := make(map[string]any)
 	result["id"] = r.tx.ID().String()
 	result["payload"] = fmt.Sprintf("%x", r.tx.Encode())
 	result["authorizers"] = fmt.Sprintf("%s", r.tx.Authorizers)
@@ -65,9 +65,9 @@ func (r *TransactionResult) JSON() interface{} {
 	if r.result != nil {
 		result["status"] = r.result.Status.String()
 
-		txEvents := make([]interface{}, 0, len(r.result.Events))
+		txEvents := make([]any, 0, len(r.result.Events))
 		for _, event := range r.result.Events {
-			txEvents = append(txEvents, map[string]interface{}{
+			txEvents = append(txEvents, map[string]any{
 				"index": event.EventIndex,
 				"type":  event.Type,
 				"values": json.RawMessage(

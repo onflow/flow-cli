@@ -113,7 +113,7 @@ func init() {
 	SnapshotCmd.AddToParent(Cmd)
 }
 
-func Exitf(code int, msg string, args ...interface{}) {
+func Exitf(code int, msg string, args ...any) {
 	fmt.Printf(msg+"\n", args...)
 	os.Exit(code)
 }

@@ -102,7 +102,7 @@ Events Block #1:
 
 `, "\n"), event.String())
 
-	assert.Equal(t, []interface{}{map[string]interface{}{
+	assert.Equal(t, []any{map[string]any{
 		"blockID":       uint64(1),
 		"index":         0,
 		"transactionId": "0000000000000000000000000000000000000000000000000000000000000000",

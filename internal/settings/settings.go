@@ -55,7 +55,7 @@ func FileDir() string {
 }
 
 // Set updates settings file with new value for provided key
-func Set(key string, val interface{}) error {
+func Set(key string, val any) error {
 	if err := loadViper(); err != nil {
 		return err
 	}

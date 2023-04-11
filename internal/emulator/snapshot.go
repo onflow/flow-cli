@@ -54,7 +54,7 @@ type SnapshotList struct {
 	Snapshots []string
 }
 
-func (s *SnapshotList) JSON() interface{} {
+func (s *SnapshotList) JSON() any {
 	return s.Snapshots
 }
 
@@ -80,8 +80,8 @@ type SnapShotResult struct {
 	Result  string `json:"result,omitempty"`
 }
 
-func (r *SnapShotResult) JSON() interface{} {
-	result := make(map[string]interface{})
+func (r *SnapShotResult) JSON() any {
+	result := make(map[string]any)
 	result["name"] = r.Name
 	result["blockID"] = r.BlockID
 	result["height"] = r.Height

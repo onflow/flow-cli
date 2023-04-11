@@ -241,6 +241,6 @@ func (s *setupResult) Oneliner() string {
 	return fmt.Sprintf("Project created inside %s", s.targetDir)
 }
 
-func (s *setupResult) JSON() interface{} {
+func (s *setupResult) JSON() any {
 	return nil
 }

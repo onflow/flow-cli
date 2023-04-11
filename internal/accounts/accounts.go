@@ -52,8 +52,8 @@ type AccountResult struct {
 	include []string
 }
 
-func (r *AccountResult) JSON() interface{} {
-	result := make(map[string]interface{})
+func (r *AccountResult) JSON() any {
+	result := make(map[string]any)
 	result["address"] = r.Address
 	result["balance"] = cadence.UFix64(r.Balance).String()
 

@@ -67,7 +67,7 @@ type RunWithState func(
 
 type Command struct {
 	Cmd   *cobra.Command
-	Flags interface{}
+	Flags any
 	Run   Run
 	RunS  RunWithState
 }

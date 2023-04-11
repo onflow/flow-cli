@@ -378,7 +378,7 @@ const (
 )
 
 func decideFormat(b []byte) (FormatType, error) {
-	var raw map[string]interface{}
+	var raw map[string]any
 	err := json.Unmarshal(b, &raw)
 	if err != nil {
 		return 0, err
