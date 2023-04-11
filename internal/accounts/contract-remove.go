@@ -20,6 +20,7 @@ package accounts
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/spf13/cobra"
 
@@ -49,7 +50,7 @@ var removeCommand = &command.Command{
 func removeContract(
 	args []string,
 	_ command.GlobalFlags,
-	_ output.Logger,
+	logger output.Logger,
 	flow flowkit.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
@@ -64,6 +65,12 @@ func removeContract(
 	if err != nil {
 		return nil, err
 	}
+
+	logger.Info(fmt.Sprintf(
+		"Contract %s removed from account %s.",
+		contractName,
+		from.Address,
+	))
 
 	account, err := flow.GetAccount(context.Background(), from.Address)
 	if err != nil {

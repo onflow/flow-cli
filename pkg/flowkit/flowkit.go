@@ -425,11 +425,6 @@ func (f *Flowkit) RemoveContract(
 	}
 
 	f.logger.StopProgress()
-	f.logger.Info(fmt.Sprintf(
-		"Contract %s removed from account %s.",
-		contractName,
-		account.Address,
-	))
 
 	return sentTx.ID(), nil
 }
