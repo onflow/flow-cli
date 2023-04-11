@@ -97,7 +97,7 @@ type DeployResult struct {
 }
 
 func (r *DeployResult) JSON() any {
-	result := make(map[string]string)
+	result := make(map[string]any)
 
 	for _, contract := range r.contracts {
 		result[contract.Name] = contract.AccountAddress.String()

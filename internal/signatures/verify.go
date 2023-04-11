@@ -108,7 +108,7 @@ type VerificationResult struct {
 }
 
 func (s *VerificationResult) JSON() any {
-	return map[string]string{
+	return map[string]any{
 		"valid":     fmt.Sprintf("%v", s.valid),
 		"message":   string(s.message),
 		"signature": string(s.signature),

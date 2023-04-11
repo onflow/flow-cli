@@ -57,8 +57,7 @@ var RunCommand = &command.Command{
 type RunResult struct{}
 
 func (r *RunResult) JSON() any {
-	result := make(map[string]string)
-	return result
+	return nil
 }
 
 func (r *RunResult) String() string {
