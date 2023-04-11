@@ -85,7 +85,7 @@ func get(
 		end = latest.Height
 
 		start = end - last
-		if start < 0 {
+		if end < last {
 			start = 0
 		}
 	} else if start == 0 || end == 0 {
