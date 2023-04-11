@@ -129,7 +129,7 @@ func (r *TestResult) JSON() any {
 
 	if r.CoverageReport != nil {
 		results["meta"] = map[string]string{
-			"info": r.CoverageReport.CoveredStatementsPercentage(),
+			"info": r.CoverageReport.Percentage(),
 		}
 	}
 
@@ -144,7 +144,7 @@ func (r *TestResult) String() string {
 		_, _ = fmt.Fprint(writer, cdcTests.PrettyPrintResults(testResult, scriptPath))
 	}
 	if r.CoverageReport != nil {
-		_, _ = fmt.Fprint(writer, r.CoverageReport.CoveredStatementsPercentage())
+		_, _ = fmt.Fprint(writer, r.CoverageReport.String())
 	}
 
 	_ = writer.Flush()
@@ -159,7 +159,7 @@ func (r *TestResult) Oneliner() string {
 		builder.WriteString(cdcTests.PrettyPrintResults(testResult, scriptPath))
 	}
 	if r.CoverageReport != nil {
-		builder.WriteString(r.CoverageReport.CoveredStatementsPercentage())
+		builder.WriteString(r.CoverageReport.String())
 		builder.WriteString("\n")
 	}
 
