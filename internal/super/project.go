@@ -22,13 +22,11 @@ import (
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/pkg/errors"
-	"golang.org/x/exp/slices"
 
 	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/config"
 	flowkitProject "github.com/onflow/flow-cli/pkg/flowkit/project"
 	"github.com/onflow/flow-cli/pkg/flowkit/services"
-	"github.com/onflow/flow-cli/pkg/flowkit/util"
 )
 
 var emulator = config.DefaultEmulatorNetwork().Name
@@ -59,13 +57,12 @@ func newProject(
 }
 
 type project struct {
-	service         *flowkit.Account
-	services        *services.Services
-	state           *flowkit.State
-	readerWriter    flowkit.ReaderWriter
-	projectFiles    *projectFiles
-	pathNameLookup  map[string]string
-	createdAccounts []string // accounts created by "flow dev" super commands and not developer
+	service        *flowkit.Account
+	services       *services.Services
+	state          *flowkit.State
+	readerWriter   flowkit.ReaderWriter
+	projectFiles   *projectFiles
+	pathNameLookup map[string]string
 }
 
 // startup cleans the state and then rebuilds it from the current folder state.
@@ -76,6 +73,7 @@ func (p *project) startup() error {
 	}
 
 	p.cleanState()
+
 	err = p.addAccount(defaultAccount)
 	if err != nil {
 		return err
@@ -128,24 +126,6 @@ func (p *project) cleanState() {
 
 	for _, d := range p.state.Deployments().ByNetwork(emulator) {
 		_ = p.state.Deployments().Remove(d.Account, emulator)
-	}
-
-	accs := make([]flowkit.Account, len(*p.state.Accounts()))
-	copy(accs, *p.state.Accounts()) // we need to make a copy otherwise when we remove order shifts
-	for _, a := range accs {
-		chain, err := util.GetAddressNetwork(a.Address())
-		if err != nil || chain != flow.Emulator {
-			continue // don't remove non-emulator accounts
-		}
-
-		if a.Name() == config.DefaultEmulatorServiceAccountName {
-			continue
-		}
-
-		if !slices.Contains(p.createdAccounts, a.Name()) {
-			continue
-		}
-		_ = p.state.Accounts().Remove(a.Name())
 	}
 }
 
@@ -222,8 +202,6 @@ func (p *project) addAccount(name string) error {
 	account := flowkit.NewAccount(name).
 		SetAddress(flowAcc.Address).
 		SetKey(flowkit.NewHexAccountKeyFromPrivateKey(0, crypto.SHA3_256, *privateKey))
-
-	p.createdAccounts = append(p.createdAccounts, account.Name())
 
 	p.state.Accounts().AddOrUpdate(account)
 	p.state.Deployments().AddOrUpdate(config.Deployment{ // init empty deployment

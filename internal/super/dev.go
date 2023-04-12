@@ -102,10 +102,10 @@ func dev(
 		}
 	}
 
-	err = project.startup()
-	if err != nil {
-		return nil, err
-	}
+	//err = project.startup()
+	//if err != nil {
+	//	return nil, err
+	//}
 
 	err = project.watch()
 	if err != nil {
