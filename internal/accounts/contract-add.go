@@ -23,6 +23,7 @@ import (
 	"fmt"
 
 	"github.com/onflow/cadence"
+	flowsdk "github.com/onflow/flow-go-sdk"
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
@@ -80,7 +81,7 @@ func deployContract(update bool, flags *deployContractFlags) command.RunWithStat
 			return nil, fmt.Errorf("error parsing transaction arguments: %w", err)
 		}
 
-		_, _, err = flow.AddContract(
+		txID, _, err := flow.AddContract(
 			context.Background(),
 			to,
 			flowkit.Script{
@@ -91,13 +92,23 @@ func deployContract(update bool, flags *deployContractFlags) command.RunWithStat
 			flowkit.UpdateExistingContract(update),
 		)
 		if err != nil {
+			if txID != flowsdk.EmptyID {
+				logger.Info(fmt.Sprintf(
+					"Failed to %s contract on the account '%s' with transaction ID: %s",
+					map[bool]string{true: "updated", false: "created"}[update],
+					to.Address,
+					txID.String(),
+				))
+			}
+
 			return nil, err
 		}
 
 		logger.Info(fmt.Sprintf(
-			"Contract %s on the account '%s'.",
+			"Contract %s on the account '%s' with transaction ID %s.",
 			map[bool]string{true: "updated", false: "created"}[update],
 			to.Address,
+			txID.String(),
 		))
 
 		account, err := flow.GetAccount(context.Background(), to.Address)

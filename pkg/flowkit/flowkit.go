@@ -349,12 +349,10 @@ func (f *Flowkit) AddContract(
 		return flow.EmptyID, false, err
 	}
 
-	f.logger.Info(fmt.Sprintf("Transaction ID: %s", tx.FlowTransaction().ID()))
-
 	// send transaction with contract
 	sentTx, err := f.gateway.SendSignedTransaction(tx.FlowTransaction())
 	if err != nil {
-		return flow.EmptyID, false, fmt.Errorf("failed to send transaction to deploy a contract: %w", err)
+		return tx.FlowTransaction().ID(), false, fmt.Errorf("failed to send transaction to deploy a contract: %w", err)
 	}
 
 	if exists {
@@ -366,10 +364,10 @@ func (f *Flowkit) AddContract(
 	// we wait for transaction to be sealed
 	trx, err := f.gateway.GetTransactionResult(sentTx.ID(), true)
 	if err != nil {
-		return flow.EmptyID, false, err
+		return tx.FlowTransaction().ID(), false, err
 	}
 	if trx.Error != nil {
-		return flow.EmptyID, false, trx.Error
+		return tx.FlowTransaction().ID(), false, trx.Error
 	}
 
 	return sentTx.ID(), updateExisting, err
@@ -405,7 +403,6 @@ func (f *Flowkit) RemoveContract(
 		return flow.EmptyID, err
 	}
 
-	f.logger.Info(fmt.Sprintf("Transaction ID: %s", tx.FlowTransaction().ID().String()))
 	f.logger.StartProgress(
 		fmt.Sprintf("Removing Contract %s from %s...", contractName, account.Address),
 	)

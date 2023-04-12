@@ -61,15 +61,16 @@ func removeContract(
 		return nil, err
 	}
 
-	_, err = flow.RemoveContract(context.Background(), from, contractName)
+	id, err := flow.RemoveContract(context.Background(), from, contractName)
 	if err != nil {
 		return nil, err
 	}
 
 	logger.Info(fmt.Sprintf(
-		"Contract %s removed from account %s.",
+		"Contract %s removed from account %s with transaction ID: %s.",
 		contractName,
 		from.Address,
+		id.String(),
 	))
 
 	account, err := flow.GetAccount(context.Background(), from.Address)
