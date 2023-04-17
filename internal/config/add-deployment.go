@@ -65,16 +65,14 @@ func addDeployment(
 		raw = util.NewDeploymentPrompt(*state.Networks(), state.Config().Accounts, *state.Contracts())
 	}
 
-	contracts := make([]config.ContractDeployment, len(raw.Contracts))
-	for i, c := range raw.Contracts {
-		contracts[i] = config.ContractDeployment{Name: c}
+	deployment := state.Deployments().ByAccountAndNetwork(raw.Account, raw.Network)
+	if deployment == nil {
+		return nil, fmt.Errorf("deployment for account and network doesn't exist") // shouldn't happen
 	}
 
-	state.Deployments().AddOrUpdate(config.Deployment{
-		Network:   raw.Network,
-		Account:   raw.Account,
-		Contracts: contracts,
-	})
+	for _, c := range raw.Contracts {
+		deployment.AddContract(config.ContractDeployment{Name: c})
+	}
 
 	err = state.SaveEdited(globalFlags.ConfigPaths)
 	if err != nil {
