@@ -93,11 +93,15 @@ func NewRemoveAccountContractTransaction(signer *Account, name string) (*Transac
 	)
 }
 
+// addAccountContractWithArgs contains logic to build a transaction and include the contract code
+// as well as possible init arguments.
 func addAccountContractWithArgs(
 	signer *Account,
 	contract templates.Contract,
 	args []cadence.Value,
 ) (*Transaction, error) {
+	// define the add contract transaction template, note that the transaction has possibility
+	// of multiple arguments with the last %s which is extended in the next step
 	const addAccountContractTemplate = `
 	transaction(name: String, code: String %s) {
 		prepare(signer: AuthAccount) {
@@ -118,6 +122,8 @@ func addAccountContractWithArgs(
 		tx.AddRawArgument(jsoncdc.MustEncode(arg))
 	}
 
+	// here we itterate over all arguments and possibly extend the transaction input argument
+	// in the above template to include them
 	txArgs, addArgs := "", ""
 	for i, arg := range args {
 		txArgs += fmt.Sprintf(",arg%d:%s", i, arg.Type().ID())
