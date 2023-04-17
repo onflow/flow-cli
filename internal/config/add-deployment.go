@@ -67,7 +67,12 @@ func addDeployment(
 
 	deployment := state.Deployments().ByAccountAndNetwork(raw.Account, raw.Network)
 	if deployment == nil {
-		return nil, fmt.Errorf("deployment for account and network doesn't exist") // shouldn't happen
+		// add deployment if non-existing
+		state.Deployments().AddOrUpdate(config.Deployment{
+			Network: raw.Network,
+			Account: raw.Account,
+		})
+		deployment = state.Deployments().ByAccountAndNetwork(raw.Account, raw.Network)
 	}
 
 	for _, c := range raw.Contracts {
