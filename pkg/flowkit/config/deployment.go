@@ -40,6 +40,12 @@ type Deployment struct {
 
 // AddContract to deployment list on the account name and network name.
 func (d *Deployment) AddContract(contract ContractDeployment) {
+	for _, c := range d.Contracts {
+		if contract.Name == c.Name {
+			return // don't allow adding duplicates
+		}
+	}
+
 	d.Contracts = append(d.Contracts, contract)
 }
 
