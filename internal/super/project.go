@@ -192,7 +192,7 @@ func (p *project) watch() error {
 
 // addAccount to the state and create it on the network.
 func (p *project) addAccount(name string) error {
-	privateKey, err := p.service.Key().PrivateKey()
+	privateKey, err := p.service.Key.PrivateKey()
 	if err != nil {
 		return err
 	}
