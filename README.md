@@ -43,6 +43,7 @@ Available Commands:
   collections  Utilities to read collections
   config       Utilities to manage configuration
   emulator     Starts the Flow emulator server
+  test         Run Cadence tests
   events       Utilities to read events
   help         Help about any command
   init         Initialize a new configuration

@@ -12,8 +12,8 @@ flow test /path/to/test_script.cdc
 
 ⚠️ The `test` command expects configuration to be initialized. See [flow init](initialize-configuration.md) command.
 
-
 ## Example Usage
+
 A simple Cadence script `test_script.cdc`, which has a test case for running a cadence script on-chain:
 ```cadence
 import Test
@@ -35,9 +35,37 @@ Above test-script can be run with the CLI as follows, and the test results will 
 
 Running tests...
 
-Test results:
+Test results: "test_script.cdc"
 - PASS: testSimpleScript
+
 ```
 
 To learn more about writing tests in Cadence, have a look at the [Cadence testing framework](https://developers.flow.com/cadence/testing-framework).
+
+## Flags
+
+### Coverage
+
+- Flag: `--cover`
+- Default: `false`
+
+Use the `cover` flag to calculate coverage report for the code being tested.
+```shell
+> flow test --cover test_script.cdc
+
+Running tests...
+
+Test results: "test_script.cdc"
+- PASS: testSimpleScript
+Coverage: 100.0% of statements
+
+```
+
+### Coverage Report File
+
+- Flag: `--coverprofile`
+- Valid inputs: valid filename
+- Default: `coverage.json`
+
+Use the `coverprofile` to specify the filename where the calculated coverage report is to be written.
 
