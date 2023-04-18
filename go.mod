@@ -12,7 +12,7 @@ require (
 	github.com/onflow/cadence-tools/languageserver v0.9.1-0.20230404112041-50a6e7e8fb92
 	github.com/onflow/cadence-tools/test v0.6.0
 	github.com/onflow/fcl-dev-wallet v0.6.0
-	github.com/onflow/flow-cli/pkg/flowkit v0.0.0-20230404110506-8464bcb4f9ec
+	github.com/onflow/flow-cli/flowkit v0.0.0-00010101000000-000000000000
 	github.com/onflow/flow-core-contracts/lib/go/templates v0.12.1
 	github.com/onflow/flow-emulator v0.45.0
 	github.com/onflow/flow-go-sdk v0.38.0
@@ -135,6 +135,7 @@ require (
 	github.com/multiformats/go-varint v0.0.7 // indirect
 	github.com/onflow/atree v0.5.0 // indirect
 	github.com/onflow/cadence-tools/lint v0.6.0 // indirect
+	github.com/onflow/flow-cli/pkg/flowkit v0.0.0-20230404110506-8464bcb4f9ec // indirect
 	github.com/onflow/flow-core-contracts/lib/go/contracts v0.12.1 // indirect
 	github.com/onflow/flow-ft/lib/go/contracts v0.5.0 // indirect
 	github.com/onflow/flow-go v0.29.6-with-pr-3835.0.20230324174649-2f1a1d0f6fc4 // indirect
