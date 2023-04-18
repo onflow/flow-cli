@@ -31,9 +31,9 @@ import (
 
 	"golang.org/x/exp/maps"
 
-	"github.com/onflow/flow-cli/pkg/flowkit"
-	"github.com/onflow/flow-cli/pkg/flowkit/output"
-	flowkitProject "github.com/onflow/flow-cli/pkg/flowkit/project"
+	"github.com/onflow/flow-cli/flowkit"
+	"github.com/onflow/flow-cli/flowkit/output"
+	flowkitProject "github.com/onflow/flow-cli/flowkit/project"
 )
 
 func printDeployment(deployed []*flowkitProject.Contract, err error, contractPathNames map[string]string) {

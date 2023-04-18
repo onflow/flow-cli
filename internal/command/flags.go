@@ -25,8 +25,8 @@ import (
 	"github.com/psiemens/sconfig"
 	"github.com/spf13/cobra"
 
+	"github.com/onflow/flow-cli/flowkit/config"
 	"github.com/onflow/flow-cli/internal/util"
-	"github.com/onflow/flow-cli/pkg/flowkit/config"
 )
 
 // Flags initialized to default values.

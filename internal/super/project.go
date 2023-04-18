@@ -25,10 +25,10 @@ import (
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/pkg/errors"
 
+	"github.com/onflow/flow-cli/flowkit"
+	"github.com/onflow/flow-cli/flowkit/config"
+	flowkitProject "github.com/onflow/flow-cli/flowkit/project"
 	"github.com/onflow/flow-cli/internal/util"
-	"github.com/onflow/flow-cli/pkg/flowkit"
-	"github.com/onflow/flow-cli/pkg/flowkit/config"
-	flowkitProject "github.com/onflow/flow-cli/pkg/flowkit/project"
 )
 
 var emulator = config.EmulatorNetwork.Name

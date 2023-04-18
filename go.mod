@@ -218,4 +218,4 @@ require (
 	nhooyr.io/websocket v1.8.6 // indirect
 )
 
-replace github.com/onflow/flow-cli/pkg/flowkit => ./pkg/flowkit
+replace github.com/onflow/flow-cli/flowkit => ./flowkit
