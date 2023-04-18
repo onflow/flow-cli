@@ -34,7 +34,7 @@ install-tools:
 .PHONY: test
 test:
 	GO111MODULE=on go test -coverprofile=$(COVER_PROFILE) $(if $(JSON_OUTPUT),-json,) ./...
-	cd pkg/flowkit; GO111MODULE=on go test -coverprofile=$(COVER_PROFILE) $(if $(JSON_OUTPUT),-json,) ./...
+	cd flowkit; GO111MODULE=on go test -coverprofile=$(COVER_PROFILE) $(if $(JSON_OUTPUT),-json,) ./...
 
 .PHONY: test-e2e-emulator
 test-e2e-emulator:
@@ -59,14 +59,14 @@ install:
 	GO111MODULE=on go install \
 		-trimpath \
 		-ldflags \
-		"-X github.com/onflow/flow-cli/build.commit=$(COMMIT) -X github.com/onflow/flow-cli/build.semver=$(VERSION) -X github.com/onflow/flow-cli/pkg/flowkit/util.MIXPANEL_PROJECT_TOKEN=${MIXPANEL_PROJECT_TOKEN} -X github.com/onflow/flow-cli/internal/accounts.accountToken=${ACCOUNT_TOKEN}" \
+		"-X github.com/onflow/flow-cli/build.commit=$(COMMIT) -X github.com/onflow/flow-cli/build.semver=$(VERSION) -X github.com/onflow/flow-cli/flowkit/util.MIXPANEL_PROJECT_TOKEN=${MIXPANEL_PROJECT_TOKEN} -X github.com/onflow/flow-cli/internal/accounts.accountToken=${ACCOUNT_TOKEN}" \
 		./cmd/flow
 
 $(BINARY):
 	GO111MODULE=on go build \
 		-trimpath \
 		-ldflags \
-		"-X github.com/onflow/flow-cli/build.commit=$(COMMIT) -X github.com/onflow/flow-cli/build.semver=$(VERSION) -X github.com/onflow/flow-cli/pkg/flowkit/util.MIXPANEL_PROJECT_TOKEN=${MIXPANEL_PROJECT_TOKEN} -X github.com/onflow/flow-cli/internal/accounts.accountToken=${ACCOUNT_TOKEN}"\
+		"-X github.com/onflow/flow-cli/build.commit=$(COMMIT) -X github.com/onflow/flow-cli/build.semver=$(VERSION) -X github.com/onflow/flow-cli/flowkit/util.MIXPANEL_PROJECT_TOKEN=${MIXPANEL_PROJECT_TOKEN} -X github.com/onflow/flow-cli/internal/accounts.accountToken=${ACCOUNT_TOKEN}"\
 		-o $(BINARY) ./cmd/flow
 
 .PHONY: versioned-binaries
@@ -108,9 +108,9 @@ check-headers:
 .PHONY: check-tidy
 check-tidy:
 	go mod tidy
-	cd pkg/flowkit; go mod tidy
+	cd flowkit; go mod tidy
 
 .PHONY: generate
 generate: install-tools
-	cd pkg/flowkit; \
+	cd flowkit; \
  	go generate ./...
