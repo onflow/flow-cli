@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+Flowkit package was tagged as v1.0.0 and is now considered stable. 
+It was also moved and renamed from `github.com/onflow/pkg/flowkit` to `github.com/onflow/pkg/flowkit`.
+Please note that when you update to this version you will need to update your imports and 
+use the command: `go get github.com/onflow/flowkit@latest`.
+
+
 --- 
 
 Flowkit package APIs  completely undergo major changes. APIs that were previously accessed via services were moved
