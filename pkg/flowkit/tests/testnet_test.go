@@ -37,7 +37,7 @@ import (
 
 const testAccountName = "test-account"
 
-func initTestnet(t *testing.T) (gateway.Gateway, *flowkit.State, flowkit.Services, afero.Fs) {
+func initTestnet(t *testing.T) (gateway.Gateway, *flowkit.State, flowkit.Services, flowkit.ReaderWriter, afero.Fs) {
 	readerWriter, mockFs := ReaderWriter()
 
 	state, err := flowkit.Init(readerWriter, crypto.ECDSA_P256, crypto.SHA3_256)
@@ -127,13 +127,26 @@ func initTestnet(t *testing.T) (gateway.Gateway, *flowkit.State, flowkit.Service
 	)
 	require.NoError(t, err)
 
-	return gw, state, flow, mockFs
+	return gw, state, flow, readerWriter, mockFs
 }
 
 var testnet = config.TestnetNetwork.Name
 
+func Test_Foo(t *testing.T) {
+	_, st, _, rw, _ := initTestnet(t)
+
+	rw.WriteFile("test", []byte("foo"), 0644)
+
+	out, _ := rw.ReadFile("test")
+	assert.Equal(t, out, []byte("foo"))
+
+	rw.WriteFile("test", []byte("bar"), 0644)
+	out, _ = st.ReadFile("test")
+	assert.Equal(t, out, []byte("bar"))
+}
+
 func Test_Testnet_ProjectDeploy(t *testing.T) {
-	_, state, flow, mockFs := initTestnet(t)
+	_, state, flow, rw, _ := initTestnet(t)
 
 	state.Contracts().AddOrUpdate(config.Contract{
 		Name:     ContractA.Name,
@@ -161,7 +174,7 @@ func Test_Testnet_ProjectDeploy(t *testing.T) {
 		},
 	})
 
-	contracts, err := flow.DeployProject(context.Background(), flowkit.UpdateExistingContract(true))
+	contracts, err := flow.DeployProject(context.Background(), flowkit.UpdateExistingContract(false))
 	assert.NoError(t, err)
 	assert.Len(t, contracts, 3)
 	assert.Equal(t, ContractA.Name, contracts[0].Name)
@@ -169,13 +182,21 @@ func Test_Testnet_ProjectDeploy(t *testing.T) {
 	assert.Equal(t, ContractC.Name, contracts[2].Name)
 
 	// make a change
-	ContractA.Source = []byte(`pub contract ContractA { init() {} }`)
-	_ = afero.WriteFile(mockFs, ContractA.Filename, ContractA.Source, 0644)
+	updated := []byte(`
+		import "ContractA"
+		pub contract ContractB {
+			pub init() {}
+		}
+	`)
+	ContractB.Source = updated
+	err = rw.WriteFile(ContractB.Filename, ContractB.Source, 0644)
+	require.NoError(t, err)
 
 	contracts, err = flow.DeployProject(context.Background(), flowkit.UpdateExistingContract(true))
 	assert.NoError(t, err)
 	assert.Len(t, contracts, 3)
 	assert.Equal(t, ContractA.Name, contracts[0].Name)
 	assert.Equal(t, ContractB.Name, contracts[1].Name)
+	assert.Equal(t, ContractB.Source, updated)
 	assert.Equal(t, ContractC.Name, contracts[2].Name)
 }
