@@ -46,11 +46,7 @@ func Test_WithoutType(t *testing.T) {
 
 		sampleType := sample.Type().ID()
 
-		args, err := ParseArgumentsWithoutType(
-			"",
-			[]byte(fmt.Sprintf(`pub fun main(test: %s): Void {}`, sampleType)),
-			[]string{sample.String()},
-		)
+		args, err := ParseArgumentsWithoutType([]string{sample.String()}, []byte(fmt.Sprintf(`pub fun main(test: %s): Void {}`, sampleType)), "")
 		assert.NoError(t, err)
 		assert.Len(t, args, 1)
 		assert.Equal(t, []cadence.Value{sample}, args)
@@ -65,7 +61,7 @@ func Test_WithoutTypeContracts(t *testing.T) {
 	}
 
 	for _, tmp := range template {
-		args, err := ParseArgumentsWithoutType("", []byte(tmp), []string{"hello"})
+		args, err := ParseArgumentsWithoutType([]string{"hello"}, []byte(tmp), "")
 		assert.NoError(t, err)
 		assert.Len(t, args, 1)
 		v, _ := cadence.NewString("hello")

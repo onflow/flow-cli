@@ -91,7 +91,7 @@ func build(
 	if buildFlags.ArgsJSON != "" {
 		transactionArgs, err = flowkit.ParseArgumentsJSON(buildFlags.ArgsJSON)
 	} else {
-		transactionArgs, err = flowkit.ParseArgumentsWithoutType(filename, code, args[1:])
+		transactionArgs, err = flowkit.ParseArgumentsWithoutType(args[1:], code, filename)
 	}
 	if err != nil {
 		return nil, fmt.Errorf("error parsing transaction arguments: %w", err)

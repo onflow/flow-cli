@@ -74,7 +74,7 @@ func deployContract(update bool, flags *deployContractFlags) command.RunWithStat
 		if flags.ArgsJSON != "" {
 			contractArgs, err = flowkit.ParseArgumentsJSON(flags.ArgsJSON)
 		} else if len(args) > 1 {
-			contractArgs, err = flowkit.ParseArgumentsWithoutType(filename, code, args[1:])
+			contractArgs, err = flowkit.ParseArgumentsWithoutType(args[1:], code, filename)
 		}
 
 		if err != nil {
