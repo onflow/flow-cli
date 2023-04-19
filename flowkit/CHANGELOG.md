@@ -150,6 +150,16 @@ were moved to `accounts` package.
 The `AccountKey`, `HexAccountKey`, `KmsAccountKey`, `Bip44AccountKey` were renamed to `Key`, `HexKey`, `KMSKey`, `BIP44Key` to avoid stutter in the naming,
 as well as all the factory methods were renamed to remove the `account` word.
 
+--- 
+
+The `Transaction` was moved to `transactions` package as well as all the factory methods.
+All the factory methods were renamed to drop the `transaction` word.
+
+---
+
+The `TransactionAddressesRoles` was moved to `transactions` package and renamed to drop the 
+`transaction` word to `AddressRoles` the same holds true for `TransactionAccountRoles`.
+
 
 ### Added
 
