@@ -19,9 +19,10 @@
 package transactions
 
 import (
-	"github.com/onflow/flow-cli/flowkit/accounts"
 	"strings"
 	"testing"
+
+	"github.com/onflow/flow-cli/flowkit/accounts"
 
 	"github.com/onflow/flow-go-sdk"
 	"github.com/stretchr/testify/assert"
