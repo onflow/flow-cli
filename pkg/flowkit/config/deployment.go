@@ -52,17 +52,6 @@ func (d *Deployments) ByNetwork(network string) Deployments {
 	return deployments
 }
 
-// HasAccount check if deployments network has account
-func (d *Deployments) HasAccount(network string, account string) bool {
-	for _, deploy := range *d {
-		if deploy.Network == network && deploy.Account == account {
-			return true
-		}
-	}
-
-	return false
-}
-
 // ByAccountAndNetwork get deploy by account and network.
 func (d *Deployments) ByAccountAndNetwork(account string, network string) Deployments {
 	var deployments Deployments
