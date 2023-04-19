@@ -244,11 +244,6 @@ func Load(configFilePaths []string, readerWriter ReaderWriter) (*State, error) {
 	return proj, nil
 }
 
-// Exists checks if a project configuration exists.
-func Exists(path string) bool {
-	return config.Exists(path)
-}
-
 // Init initializes a new Flow project.
 func Init(
 	readerWriter ReaderWriter,

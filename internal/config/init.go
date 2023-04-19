@@ -89,7 +89,7 @@ func Initialise(
 		path = config.GlobalPath()
 	}
 
-	if flowkit.Exists(path) && !InitFlag.Reset {
+	if config.Exists(path) && !InitFlag.Reset {
 		return nil, fmt.Errorf(
 			"configuration already exists at: %s, if you want to reset configuration use the reset flag",
 			path,
