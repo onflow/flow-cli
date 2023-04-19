@@ -957,7 +957,7 @@ func (f *Flowkit) SendTransaction(
 ) (*flow.Transaction, *flow.TransactionResult, error) {
 	tx, err := f.BuildTransaction(
 		ctx,
-		accounts.ToAddresses(),
+		accounts.AddressRoles(),
 		accounts.Proposer.Key.Index(),
 		script,
 		gasLimit,

@@ -1562,7 +1562,7 @@ func Test_TransactionRoles(t *testing.T) {
 		}}
 
 		for i, test := range testVector {
-			signerAccs := test.getSigners()
+			signerAccs := test.Signers()
 			signerAddrs := make([]flow.Address, len(signerAccs))
 			for i, sig := range signerAccs {
 				signerAddrs[i] = sig.Address
@@ -1585,7 +1585,7 @@ func Test_TransactionRoles(t *testing.T) {
 			Payer:       *c,
 		}
 
-		addresses := roles.toAddresses()
+		addresses := roles.AddressRoles()
 
 		assert.Equal(t, a.Address, addresses.Proposer)
 		assert.Equal(t, c.Address, addresses.Payer)

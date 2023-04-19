@@ -376,7 +376,8 @@ type AccountRoles struct {
 	Payer       accounts.Account
 }
 
-func (t AccountRoles) ToAddresses() AddressesRoles {
+// AddressRoles returns address roles using the provided accounts.
+func (t AccountRoles) AddressRoles() AddressesRoles {
 	auths := make([]flow.Address, len(t.Authorizers))
 	for i, a := range t.Authorizers {
 		auths[i] = a.Address
