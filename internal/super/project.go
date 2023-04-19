@@ -304,6 +304,7 @@ func (p *project) removeContract(
 
 	if len(p.state.Deployments().ByAccountAndNetwork(accountName, emulator)) > 0 {
 		p.state.Deployments().RemoveContract(accountName, emulator, name) // we might delete account first
+		_ = p.state.Contracts().Remove(name)
 	}
 
 	return nil

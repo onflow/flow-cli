@@ -93,7 +93,7 @@ func (c *Contracts) AddOrUpdate(contract Contract) {
 
 // Remove contract by its name.
 func (c *Contracts) Remove(name string) error {
-	if c.ByName(name) != nil {
+	if c.ByName(name) == nil {
 		return fmt.Errorf("contract by name %s doesn't exist", name)
 	}
 
