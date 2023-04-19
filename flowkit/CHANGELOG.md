@@ -10,9 +10,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 Flowkit package was tagged as v1.0.0 and is now considered stable. 
-It was also moved and renamed from `github.com/onflow/pkg/flowkit` to `github.com/onflow/pkg/flowkit`.
+It was also moved and renamed from `github.com/onflow/pkg/flowkit` to `github.com/onflow/flowkit` (dropped `pkg`).
 Please note that when you update to this version you will need to update your imports and 
-use the command: `go get github.com/onflow/flowkit@latest`.
+use the command: `go get github.com/onflow/flowkit@latest` and you will have to manually change all 
+imports from `github.com/onflow/pkg/flowkit` to `github.com/onflow/flowkit` (a simple find and replace might do).
 
 
 --- 
@@ -28,8 +29,8 @@ account, err := services.Accounts.Get(address)
 ```
 changed to:
 ```go
-flowkit := flowkit.NewFlowkit(state, *network, clientGateway, logger)
-account, err := flowkit.GetAccount(context.Background(), address)
+services := flowkit.NewFlowkit(state, *network, clientGateway, logger)
+account, err := services.GetAccount(context.Background(), address)
 ```
 
 Each of the APIs now require context as the first argument.
