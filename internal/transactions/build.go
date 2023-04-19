@@ -21,14 +21,15 @@ package transactions
 import (
 	"context"
 	"fmt"
-	"github.com/onflow/flow-cli/flowkit/transactions"
 
 	"github.com/onflow/cadence"
 	flowsdk "github.com/onflow/flow-go-sdk"
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/flowkit"
+	"github.com/onflow/flow-cli/flowkit/arguments"
 	"github.com/onflow/flow-cli/flowkit/output"
+	"github.com/onflow/flow-cli/flowkit/transactions"
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/internal/util"
 )
@@ -90,9 +91,9 @@ func build(
 
 	var transactionArgs []cadence.Value
 	if buildFlags.ArgsJSON != "" {
-		transactionArgs, err = args.ParseArgumentsJSON(buildFlags.ArgsJSON)
+		transactionArgs, err = arguments.ParseJSON(buildFlags.ArgsJSON)
 	} else {
-		transactionArgs, err = args.ParseArgumentsWithoutType(args[1:], code, filename)
+		transactionArgs, err = arguments.ParseWithoutType(args[1:], code, filename)
 	}
 	if err != nil {
 		return nil, fmt.Errorf("error parsing transaction arguments: %w", err)

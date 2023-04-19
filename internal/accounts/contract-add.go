@@ -21,11 +21,13 @@ package accounts
 import (
 	"context"
 	"fmt"
+
 	"github.com/onflow/cadence"
 	flowsdk "github.com/onflow/flow-go-sdk"
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/flowkit"
+	"github.com/onflow/flow-cli/flowkit/arguments"
 	"github.com/onflow/flow-cli/flowkit/output"
 	"github.com/onflow/flow-cli/internal/command"
 )
@@ -71,9 +73,9 @@ func deployContract(update bool, flags *deployContractFlags) command.RunWithStat
 
 		var contractArgs []cadence.Value
 		if flags.ArgsJSON != "" {
-			contractArgs, err = args.ParseJSON(flags.ArgsJSON)
+			contractArgs, err = arguments.ParseJSON(flags.ArgsJSON)
 		} else if len(args) > 1 {
-			contractArgs, err = args.ParseWithoutType(args[1:], code, filename)
+			contractArgs, err = arguments.ParseWithoutType(args[1:], code, filename)
 		}
 
 		if err != nil {

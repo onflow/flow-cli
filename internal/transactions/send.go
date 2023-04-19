@@ -21,15 +21,15 @@ package transactions
 import (
 	"context"
 	"fmt"
-	"github.com/onflow/flow-cli/flowkit/transactions"
-
-	"github.com/onflow/flow-cli/flowkit/accounts"
 
 	"github.com/onflow/cadence"
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/flowkit"
+	"github.com/onflow/flow-cli/flowkit/accounts"
+	"github.com/onflow/flow-cli/flowkit/arguments"
 	"github.com/onflow/flow-cli/flowkit/output"
+	"github.com/onflow/flow-cli/flowkit/transactions"
 	"github.com/onflow/flow-cli/internal/command"
 )
 
@@ -119,9 +119,9 @@ func send(
 
 	var transactionArgs []cadence.Value
 	if sendFlags.ArgsJSON != "" {
-		transactionArgs, err = args.ParseArgumentsJSON(sendFlags.ArgsJSON)
+		transactionArgs, err = arguments.ParseJSON(sendFlags.ArgsJSON)
 	} else {
-		transactionArgs, err = args.ParseArgumentsWithoutType(args[1:], code, codeFilename)
+		transactionArgs, err = arguments.ParseWithoutType(args[1:], code, codeFilename)
 	}
 	if err != nil {
 		return nil, fmt.Errorf("error parsing transaction arguments: %w", err)
