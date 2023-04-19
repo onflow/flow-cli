@@ -135,6 +135,11 @@ pointer but as value since they are always required.
 The `flowkit.NewScript` method was removed and you should use `flowkit.Script{}` struct directly for initialization. 
 Also getter and setters were removed to favour direct property access.
 
+---
+
+The `config.Contracts.ByName(name string) *Contract` changed to return an error if contract 
+was not found whereas before it returned a nil value.
+
 
 
 ### Added
