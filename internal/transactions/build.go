@@ -90,9 +90,9 @@ func build(
 
 	var transactionArgs []cadence.Value
 	if buildFlags.ArgsJSON != "" {
-		transactionArgs, err = flowkit.ParseArgumentsJSON(buildFlags.ArgsJSON)
+		transactionArgs, err = args.ParseArgumentsJSON(buildFlags.ArgsJSON)
 	} else {
-		transactionArgs, err = flowkit.ParseArgumentsWithoutType(args[1:], code, filename)
+		transactionArgs, err = args.ParseArgumentsWithoutType(args[1:], code, filename)
 	}
 	if err != nil {
 		return nil, fmt.Errorf("error parsing transaction arguments: %w", err)

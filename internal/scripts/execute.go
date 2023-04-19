@@ -21,7 +21,6 @@ package scripts
 import (
 	"context"
 	"fmt"
-
 	"github.com/onflow/cadence"
 	flowsdk "github.com/onflow/flow-go-sdk"
 	"github.com/spf13/cobra"
@@ -66,9 +65,9 @@ func execute(
 
 	var scriptArgs []cadence.Value
 	if scriptFlags.ArgsJSON != "" {
-		scriptArgs, err = flowkit.ParseArgumentsJSON(scriptFlags.ArgsJSON)
+		scriptArgs, err = args.ParseArgumentsJSON(scriptFlags.ArgsJSON)
 	} else {
-		scriptArgs, err = flowkit.ParseArgumentsWithoutType(args[1:], code, filename)
+		scriptArgs, err = args.ParseArgumentsWithoutType(args[1:], code, filename)
 	}
 
 	if err != nil {

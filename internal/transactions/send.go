@@ -119,9 +119,9 @@ func send(
 
 	var transactionArgs []cadence.Value
 	if sendFlags.ArgsJSON != "" {
-		transactionArgs, err = flowkit.ParseArgumentsJSON(sendFlags.ArgsJSON)
+		transactionArgs, err = args.ParseArgumentsJSON(sendFlags.ArgsJSON)
 	} else {
-		transactionArgs, err = flowkit.ParseArgumentsWithoutType(args[1:], code, codeFilename)
+		transactionArgs, err = args.ParseArgumentsWithoutType(args[1:], code, codeFilename)
 	}
 	if err != nil {
 		return nil, fmt.Errorf("error parsing transaction arguments: %w", err)
