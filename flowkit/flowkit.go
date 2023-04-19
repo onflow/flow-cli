@@ -46,14 +46,6 @@ import (
 	"github.com/onflow/flow-cli/flowkit/transactions"
 )
 
-// AccountPublicKey contains public account key information.
-type AccountPublicKey struct {
-	Public   crypto.PublicKey
-	Weight   int
-	SigAlgo  crypto.SignatureAlgorithm
-	HashAlgo crypto.HashAlgorithm
-}
-
 // BlockQuery defines possible queries for block.
 type BlockQuery struct {
 	ID     *flow.Identifier
@@ -150,7 +142,7 @@ func (f *Flowkit) GetAccount(_ context.Context, address flow.Address) (*flow.Acc
 func (f *Flowkit) CreateAccount(
 	_ context.Context,
 	signer *accounts.Account,
-	keys []AccountPublicKey,
+	keys []accounts.AccountPublicKey,
 ) (*flow.Account, flow.Identifier, error) {
 	var accKeys []*flow.AccountKey
 	for _, k := range keys {

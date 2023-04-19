@@ -143,7 +143,7 @@ func TestAccounts(t *testing.T) {
 		account, ID, err := flowkit.CreateAccount(
 			ctx,
 			serviceAcc,
-			[]AccountPublicKey{{
+			[]accounts.AccountPublicKey{{
 				pubKey,
 				flow.AccountKeyWeightThreshold,
 				crypto.ECDSA_P256,
@@ -339,9 +339,9 @@ func TestAccountsCreate_Integration(t *testing.T) {
 		}}
 
 		for i, a := range accIn {
-			keys := make([]AccountPublicKey, 0)
+			keys := make([]accounts.AccountPublicKey, 0)
 			for j := range a.pubKeys {
-				keys = append(keys, AccountPublicKey{
+				keys = append(keys, accounts.AccountPublicKey{
 					Public:   a.pubKeys[j],
 					Weight:   a.weights[j],
 					SigAlgo:  a.sigAlgo[j],
@@ -409,9 +409,9 @@ func TestAccountsCreate_Integration(t *testing.T) {
 		}
 
 		for i, a := range accIn {
-			keys := make([]AccountPublicKey, 0)
+			keys := make([]accounts.AccountPublicKey, 0)
 			for i := range a.pubKeys {
-				keys = append(keys, AccountPublicKey{
+				keys = append(keys, accounts.AccountPublicKey{
 					Public:   a.pubKeys[i],
 					Weight:   a.weights[i],
 					SigAlgo:  a.sigAlgo[i],
@@ -1480,7 +1480,7 @@ func setupAccount(state *State, flowkit Flowkit, account *accounts.Account) {
 	acc, _, _ := flowkit.CreateAccount(
 		ctx,
 		srv,
-		[]AccountPublicKey{{
+		[]accounts.AccountPublicKey{{
 			(*pk).PublicKey(),
 			flow.AccountKeyWeightThreshold,
 			key.SigAlgo(),

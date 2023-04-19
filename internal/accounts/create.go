@@ -21,6 +21,7 @@ package accounts
 import (
 	"context"
 	"fmt"
+	"github.com/onflow/flow-cli/flowkit/accounts"
 	"strings"
 
 	"github.com/onflow/flow-go-sdk/crypto"
@@ -104,9 +105,9 @@ func create(
 		return nil, err
 	}
 
-	keys := make([]flowkit.AccountPublicKey, len(pubKeys))
+	keys := make([]accounts.AccountPublicKey, len(pubKeys))
 	for i, key := range pubKeys {
-		keys[i] = flowkit.AccountPublicKey{
+		keys[i] = accounts.AccountPublicKey{
 			Public: key, Weight: weightFlag[i], SigAlgo: sigAlgos[i], HashAlgo: hashAlgos[i],
 		}
 	}

@@ -36,6 +36,14 @@ import (
 	"github.com/onflow/flow-cli/flowkit/config"
 )
 
+// AccountPublicKey contains public account key information.
+type AccountPublicKey struct {
+	Public   crypto.PublicKey
+	Weight   int
+	SigAlgo  crypto.SignatureAlgorithm
+	HashAlgo crypto.HashAlgorithm
+}
+
 // Key defines functions any key representation must implement.
 type Key interface {
 	// Type returns the key type (hex, kms, file...)
