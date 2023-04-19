@@ -46,7 +46,7 @@ func Test_WithoutType(t *testing.T) {
 
 		sampleType := sample.Type().ID()
 
-		args, err := ParseArgumentsWithoutType([]string{sample.String()}, []byte(fmt.Sprintf(`pub fun main(test: %s): Void {}`, sampleType)), "")
+		args, err := ParseWithoutType([]string{sample.String()}, []byte(fmt.Sprintf(`pub fun main(test: %s): Void {}`, sampleType)), "")
 		assert.NoError(t, err)
 		assert.Len(t, args, 1)
 		assert.Equal(t, []cadence.Value{sample}, args)
@@ -61,7 +61,7 @@ func Test_WithoutTypeContracts(t *testing.T) {
 	}
 
 	for _, tmp := range template {
-		args, err := ParseArgumentsWithoutType([]string{"hello"}, []byte(tmp), "")
+		args, err := ParseWithoutType([]string{"hello"}, []byte(tmp), "")
 		assert.NoError(t, err)
 		assert.Len(t, args, 1)
 		v, _ := cadence.NewString("hello")
@@ -73,7 +73,7 @@ func Test_WithoutTypeContracts(t *testing.T) {
 func Test_ParseJSON(t *testing.T) {
 	jsonInput := `[{"type": "String", "value": "Hello World"}]`
 
-	values, err := ParseArgumentsJSON(jsonInput)
+	values, err := ParseJSON(jsonInput)
 	assert.NoError(t, err)
 	assert.Len(t, values, 1)
 	assert.Equal(t, `"Hello World"`, values[0].String())

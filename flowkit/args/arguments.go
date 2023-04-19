@@ -49,10 +49,10 @@ func (v *cadenceArgument) UnmarshalJSON(b []byte) (err error) {
 	return nil
 }
 
-// ParseArgumentsJSON parses string representing JSON array with Cadence arguments.
+// ParseJSON parses string representing JSON array with Cadence arguments.
 //
 // Cadence arguments must be defined in the JSON-Cadence format https://developers.flow.com/cadence/json-cadence-spec
-func ParseArgumentsJSON(args string) ([]cadence.Value, error) {
+func ParseJSON(args string) ([]cadence.Value, error) {
 	var arg []cadenceArgument
 	b := []byte(args)
 	err := json.Unmarshal(b, &arg)
@@ -72,7 +72,7 @@ func ParseArgumentsJSON(args string) ([]cadence.Value, error) {
 //
 // Using the Cadence code required arguments are computed and then extracted from passed slice of arguments.
 // The fileName argument is optional and can be empty if not present.
-func ParseArgumentsWithoutType(args []string, code []byte, fileName string) (scriptArgs []cadence.Value, err error) {
+func ParseWithoutType(args []string, code []byte, fileName string) (scriptArgs []cadence.Value, err error) {
 
 	resultArgs := make([]cadence.Value, 0, len(args))
 

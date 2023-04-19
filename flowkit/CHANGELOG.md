@@ -160,6 +160,11 @@ All the factory methods were renamed to drop the `transaction` word.
 The `TransactionAddressesRoles` was moved to `transactions` package and renamed to drop the 
 `transaction` word to `AddressRoles` the same holds true for `TransactionAccountRoles`.
 
+---
+
+The `ParseArgumentsJSON` and `ParseArgumentsWithoutType` were moved to a `args` package and renamed 
+to `ParseJSON` and `ParseWithoutType` correspondingly.
+
 
 ### Added
 
