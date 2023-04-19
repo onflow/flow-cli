@@ -165,6 +165,10 @@ The `TransactionAddressesRoles` was moved to `transactions` package and renamed 
 The `ParseArgumentsJSON` and `ParseArgumentsWithoutType` were moved to a `arguments` package and renamed 
 to `ParseJSON` and `ParseWithoutType` correspondingly.
 
+--- 
+
+Renamed transaction function from `transaction.SetGasLimit` to `transaction.SetComputeLimit`. 
+
 
 ### Added
 
