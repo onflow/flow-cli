@@ -21,6 +21,7 @@ package transactions
 import (
 	"context"
 	"fmt"
+	"github.com/onflow/flow-cli/flowkit/transactions"
 
 	"github.com/onflow/flow-cli/flowkit/accounts"
 
@@ -128,7 +129,7 @@ func send(
 
 	tx, txResult, err := flow.SendTransaction(
 		context.Background(),
-		flowkit.TransactionAccountRoles{
+		transactions.TransactionAccountRoles{
 			Proposer:    *proposer,
 			Authorizers: authorizers,
 			Payer:       *payer,

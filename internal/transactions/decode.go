@@ -20,6 +20,7 @@ package transactions
 
 import (
 	"fmt"
+	"github.com/onflow/flow-cli/flowkit/transactions"
 
 	"github.com/spf13/cobra"
 
@@ -58,7 +59,7 @@ func decode(
 		return nil, fmt.Errorf("failed to read transaction from %s: %v", filename, err)
 	}
 
-	tx, err := flowkit.NewTransactionFromPayload(payload)
+	tx, err := transactions.NewTransactionFromPayload(payload)
 	if err != nil {
 		return nil, err
 	}

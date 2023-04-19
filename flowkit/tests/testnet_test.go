@@ -21,6 +21,7 @@ package tests
 import (
 	"context"
 	accounts2 "github.com/onflow/flow-cli/flowkit/accounts"
+	transactions2 "github.com/onflow/flow-cli/flowkit/transactions"
 	"testing"
 
 	"github.com/onflow/cadence"
@@ -119,7 +120,7 @@ func initTestnet(t *testing.T) (gateway.Gateway, *flowkit.State, flowkit.Service
 	amount, _ := cadence.NewUFix64("0.01")
 	_, _, err = flow.SendTransaction(
 		context.Background(),
-		flowkit.NewTransactionSingleAccountRole(*funder),
+		transactions2.NewTransactionSingleAccountRole(*funder),
 		flowkit.Script{
 			Code: transferTx,
 			Args: []cadence.Value{amount, cadence.NewAddress(testAccount.Address)},

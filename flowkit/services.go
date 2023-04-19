@@ -21,6 +21,7 @@ package flowkit
 import (
 	"context"
 	"github.com/onflow/flow-cli/flowkit/accounts"
+	"github.com/onflow/flow-cli/flowkit/transactions"
 
 	"github.com/onflow/cadence"
 	"github.com/onflow/flow-go-sdk"
@@ -104,19 +105,19 @@ type Services interface {
 	// BuildTransaction builds a new transaction type for later signing and submitting to the network.
 	//
 	// TransactionAddressesRoles type defines the address for each role (payer, proposer, authorizers) and the script defines the transaction content.
-	BuildTransaction(context.Context, TransactionAddressesRoles, int, Script, uint64) (*Transaction, error)
+	BuildTransaction(context.Context, transactions.TransactionAddressesRoles, int, Script, uint64) (*transactions.Transaction, error)
 
 	// SignTransactionPayload will use the signer account provided and the payload raw byte content to sign it.
 	//
 	// The payload should be RLP encoded transaction payload and is suggested to be used in pair with BuildTransaction function.
-	SignTransactionPayload(context.Context, *accounts.Account, []byte) (*Transaction, error)
+	SignTransactionPayload(context.Context, *accounts.Account, []byte) (*transactions.Transaction, error)
 
 	// SendSignedTransaction will send a prebuilt and signed transaction to the Flow network.
 	//
 	// You can build the transaction using the BuildTransaction method and then sign it using the SignTranscation method.
-	SendSignedTransaction(context.Context, *Transaction) (*flow.Transaction, *flow.TransactionResult, error)
+	SendSignedTransaction(context.Context, *transactions.Transaction) (*flow.Transaction, *flow.TransactionResult, error)
 
 	// SendTransaction will build and send a transaction to the Flow network, using the accounts provided for each role and
 	// contain the script. Transaction as well as transaction result will be returned in case the transaction is successfully submitted.
-	SendTransaction(context.Context, TransactionAccountRoles, Script, uint64) (*flow.Transaction, *flow.TransactionResult, error)
+	SendTransaction(context.Context, transactions.TransactionAccountRoles, Script, uint64) (*flow.Transaction, *flow.TransactionResult, error)
 }

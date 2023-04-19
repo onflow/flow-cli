@@ -23,6 +23,7 @@ import (
 	"context"
 	"crypto/rand"
 	"fmt"
+	"github.com/onflow/flow-cli/flowkit/transactions"
 	"strconv"
 	"strings"
 	"sync"
@@ -172,7 +173,7 @@ func (f *Flowkit) CreateAccount(
 		accKeys = append(accKeys, accKey)
 	}
 
-	tx, err := NewCreateAccountTransaction(signer, accKeys, nil)
+	tx, err := transactions.NewCreateAccountTransaction(signer, accKeys, nil)
 	if err != nil {
 		return nil, flow.EmptyID, err
 	}
@@ -219,9 +220,9 @@ func (f *Flowkit) CreateAccount(
 
 // prepareTransaction prepares transaction for sending with data from network
 func (f *Flowkit) prepareTransaction(
-	tx *Transaction,
+	tx *transactions.Transaction,
 	account *accounts.Account,
-) (*Transaction, error) {
+) (*transactions.Transaction, error) {
 
 	block, err := f.gateway.GetLatestBlock()
 	if err != nil {
@@ -294,7 +295,7 @@ func (f *Flowkit) AddContract(
 		return flow.EmptyID, false, err
 	}
 
-	tx, err := NewAddAccountContractTransaction(
+	tx, err := transactions.NewAddAccountContractTransaction(
 		account,
 		name,
 		program.Code(),
@@ -329,7 +330,7 @@ func (f *Flowkit) AddContract(
 		if f.network == config.EmulatorNetwork {
 			_, _ = f.RemoveContract(ctx, account, name) // ignore failure as it's meant to be best-effort
 		} else {
-			tx, err = NewUpdateAccountContractTransaction(account, name, program.Code())
+			tx, err = transactions.NewUpdateAccountContractTransaction(account, name, program.Code())
 			if err != nil {
 				return flow.EmptyID, false, err
 			}
@@ -385,7 +386,7 @@ func (f *Flowkit) RemoveContract(
 		)
 	}
 
-	tx, err := NewRemoveAccountContractTransaction(account, contractName)
+	tx, err := transactions.NewRemoveAccountContractTransaction(account, contractName)
 	if err != nil {
 		return flow.EmptyID, err
 	}
@@ -843,11 +844,11 @@ func (f *Flowkit) GetTransactionsByBlockID(
 
 func (f *Flowkit) BuildTransaction(
 	_ context.Context,
-	addresses TransactionAddressesRoles,
+	addresses transactions.TransactionAddressesRoles,
 	proposerKeyIndex int,
 	script Script,
 	gasLimit uint64,
-) (*Transaction, error) {
+) (*transactions.Transaction, error) {
 	state, err := f.State()
 	if err != nil {
 		return nil, err
@@ -863,7 +864,7 @@ func (f *Flowkit) BuildTransaction(
 		return nil, err
 	}
 
-	tx := NewTransaction().
+	tx := transactions.NewTransaction().
 		SetPayer(addresses.Payer).
 		SetGasLimit(gasLimit).
 		SetBlockReference(latestBlock)
@@ -917,8 +918,8 @@ func (f *Flowkit) SignTransactionPayload(
 	_ context.Context,
 	signer *accounts.Account,
 	payload []byte,
-) (*Transaction, error) {
-	tx, err := NewTransactionFromPayload(payload)
+) (*transactions.Transaction, error) {
+	tx, err := transactions.NewTransactionFromPayload(payload)
 	if err != nil {
 		return nil, err
 	}
@@ -933,7 +934,7 @@ func (f *Flowkit) SignTransactionPayload(
 
 func (f *Flowkit) SendSignedTransaction(
 	_ context.Context,
-	tx *Transaction,
+	tx *transactions.Transaction,
 ) (*flow.Transaction, *flow.TransactionResult, error) {
 	sentTx, err := f.gateway.SendSignedTransaction(tx.FlowTransaction())
 	if err != nil {
@@ -950,7 +951,7 @@ func (f *Flowkit) SendSignedTransaction(
 
 func (f *Flowkit) SendTransaction(
 	ctx context.Context,
-	accounts TransactionAccountRoles,
+	accounts transactions.TransactionAccountRoles,
 	script Script,
 	gasLimit uint64,
 ) (*flow.Transaction, *flow.TransactionResult, error) {

@@ -23,6 +23,7 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
+	"github.com/onflow/flow-cli/flowkit/transactions"
 	"io"
 	"net/http"
 	"sort"
@@ -90,9 +91,9 @@ func sign(
 		return nil, fmt.Errorf("failed to read partial transaction from %s: %v", filenameOrUrl, err)
 	}
 
-	var signed *flowkit.Transaction
+	var signed *transactions.Transaction
 	var signers []*accounts.Account
-	tx, err := flowkit.NewTransactionFromPayload(payload)
+	tx, err := transactions.NewTransactionFromPayload(payload)
 	if err != nil {
 		return nil, err
 	}

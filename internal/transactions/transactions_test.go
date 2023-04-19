@@ -19,6 +19,7 @@
 package transactions
 
 import (
+	"github.com/onflow/flow-cli/flowkit/transactions"
 	"strings"
 	"testing"
 
@@ -43,14 +44,14 @@ func Test_Build(t *testing.T) {
 		inArgs := []string{tests.TransactionSimple.Filename}
 
 		srv.BuildTransaction.Run(func(args mock.Arguments) {
-			roles := args.Get(1).(flowkit.TransactionAddressesRoles)
+			roles := args.Get(1).(transactions.TransactionAddressesRoles)
 			assert.Equal(t, serviceAccountAddress, roles.Payer.String())
 			assert.Equal(t, serviceAccountAddress, roles.Proposer.String())
 			assert.Equal(t, serviceAccountAddress, roles.Authorizers[0].String())
 			assert.Equal(t, 0, args.Get(2).(int))
 			script := args.Get(3).(flowkit.Script)
 			assert.Equal(t, tests.TransactionSimple.Filename, script.Location)
-		}).Return(flowkit.NewTransaction(), nil)
+		}).Return(transactions.NewTransaction(), nil)
 
 		result, err := build(inArgs, command.GlobalFlags{Yes: true}, util.NoLogger, srv.Mock, state)
 		assert.NoError(t, err)
@@ -59,7 +60,7 @@ func Test_Build(t *testing.T) {
 
 	t.Run("Fail not approved", func(t *testing.T) {
 		inArgs := []string{tests.TransactionSimple.Filename}
-		srv.BuildTransaction.Return(flowkit.NewTransaction(), nil)
+		srv.BuildTransaction.Return(transactions.NewTransaction(), nil)
 
 		result, err := build(inArgs, command.GlobalFlags{}, util.NoLogger, srv.Mock, state)
 		assert.EqualError(t, err, "transaction was not approved")
@@ -68,7 +69,7 @@ func Test_Build(t *testing.T) {
 
 	t.Run("Fail parsing JSON", func(t *testing.T) {
 		inArgs := []string{tests.TransactionArgString.Filename}
-		srv.BuildTransaction.Return(flowkit.NewTransaction(), nil)
+		srv.BuildTransaction.Return(transactions.NewTransaction(), nil)
 		buildFlags.ArgsJSON = `invalid`
 
 		result, err := build(inArgs, command.GlobalFlags{}, util.NoLogger, srv.Mock, state)
@@ -79,7 +80,7 @@ func Test_Build(t *testing.T) {
 
 	t.Run("Fail invalid file", func(t *testing.T) {
 		inArgs := []string{"invalid"}
-		srv.BuildTransaction.Return(flowkit.NewTransaction(), nil)
+		srv.BuildTransaction.Return(transactions.NewTransaction(), nil)
 		result, err := build(inArgs, command.GlobalFlags{}, util.NoLogger, srv.Mock, state)
 		assert.EqualError(t, err, "error loading transaction file: open invalid: file does not exist")
 		assert.Nil(t, result)
@@ -142,7 +143,7 @@ func Test_Send(t *testing.T) {
 		inArgs := []string{tests.TransactionArgString.Filename, "foo"}
 
 		srv.SendTransaction.Run(func(args mock.Arguments) {
-			roles := args.Get(1).(flowkit.TransactionAccountRoles)
+			roles := args.Get(1).(transactions.TransactionAccountRoles)
 			acc := config.DefaultEmulator.ServiceAccount
 			assert.Equal(t, acc, roles.Payer.Name)
 			assert.Equal(t, acc, roles.Proposer.Name)
@@ -202,7 +203,7 @@ func Test_SendSigned(t *testing.T) {
 		_ = rw.WriteFile(inArgs[0], payload, 0677)
 
 		srv.SendSignedTransaction.Run(func(args mock.Arguments) {
-			tx := args.Get(1).(*flowkit.Transaction)
+			tx := args.Get(1).(*transactions.Transaction)
 			assert.Equal(t, "f8d6e0586b0a20c7", tx.FlowTransaction().Payer.String())
 			assert.Equal(t, "f8d6e0586b0a20c7", tx.FlowTransaction().Authorizers[0].String())
 			assert.Equal(t, "f8d6e0586b0a20c7", tx.FlowTransaction().ProposalKey.Address.String())
@@ -239,7 +240,7 @@ func Test_Sign(t *testing.T) {
 		srv.SignTransactionPayload.Run(func(args mock.Arguments) {
 			assert.Equal(t, "emulator-account", args.Get(1).(*accounts.Account).Name)
 			assert.Equal(t, built, args.Get(2).([]byte))
-		}).Return(flowkit.NewTransaction(), nil)
+		}).Return(transactions.NewTransaction(), nil)
 
 		result, err := sign(inArgs, command.GlobalFlags{Yes: true}, util.NoLogger, srv.Mock, state)
 		assert.NoError(t, err)

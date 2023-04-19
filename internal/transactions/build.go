@@ -21,6 +21,7 @@ package transactions
 import (
 	"context"
 	"fmt"
+	"github.com/onflow/flow-cli/flowkit/transactions"
 
 	"github.com/onflow/cadence"
 	flowsdk "github.com/onflow/flow-go-sdk"
@@ -99,7 +100,7 @@ func build(
 
 	tx, err := flow.BuildTransaction(
 		context.Background(),
-		flowkit.TransactionAddressesRoles{
+		transactions.TransactionAddressesRoles{
 			Proposer:    proposer,
 			Authorizers: authorizers,
 			Payer:       payer,
