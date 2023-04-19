@@ -368,16 +368,16 @@ type advanceAccountPre022 struct {
 	Keys    []advanceKey `json:"keys"`
 }
 
-type FormatType int
+type formatType int
 
 const (
-	simpleFormat         FormatType = 0
-	advancedFormat       FormatType = 1
-	simpleFormatPre022   FormatType = 2 // pre v.022 format
-	advancedFormatPre022 FormatType = 3 // pre v.022 format
+	simpleFormat         formatType = 0
+	advancedFormat       formatType = 1
+	simpleFormatPre022   formatType = 2 // pre v.022 format
+	advancedFormatPre022 formatType = 3 // pre v.022 format
 )
 
-func decideFormat(b []byte) (FormatType, error) {
+func decideFormat(b []byte) (formatType, error) {
 	var raw map[string]any
 	err := json.Unmarshal(b, &raw)
 	if err != nil {
