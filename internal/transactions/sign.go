@@ -23,10 +23,11 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
-	"github.com/onflow/flow-cli/flowkit/transactions"
 	"io"
 	"net/http"
 	"sort"
+
+	"github.com/onflow/flow-cli/flowkit/transactions"
 
 	"github.com/onflow/flow-cli/flowkit/accounts"
 

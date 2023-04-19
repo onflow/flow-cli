@@ -19,9 +19,10 @@
 package transactions
 
 import (
-	"github.com/onflow/flow-cli/flowkit/transactions"
 	"strings"
 	"testing"
+
+	"github.com/onflow/flow-cli/flowkit/transactions"
 
 	"github.com/onflow/flow-cli/flowkit/accounts"
 
