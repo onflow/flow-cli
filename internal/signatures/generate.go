@@ -83,7 +83,7 @@ func sign(
 type signatureResult struct {
 	result  string
 	message string
-	key     accounts.AccountKey
+	key     accounts.Key
 }
 
 func (s *signatureResult) pubKey() string {

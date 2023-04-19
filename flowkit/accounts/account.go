@@ -28,11 +28,11 @@ import (
 	"github.com/onflow/flow-cli/flowkit/config"
 )
 
-// Account is defined by an address and name and contains an AccountKey which can be used for signing.
+// Account is defined by an address and name and contains an Key which can be used for signing.
 type Account struct {
 	Name    string
 	Address flow.Address
-	Key     AccountKey
+	Key     Key
 }
 
 func FromConfig(conf *config.Config) (Accounts, error) {

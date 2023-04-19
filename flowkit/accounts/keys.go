@@ -37,29 +37,34 @@ import (
 	"github.com/onflow/flow-cli/flowkit/config"
 )
 
-// AccountKey is a flowkit specific account key implementation
-// allowing us to sign the transactions using different implemented methods.
-type AccountKey interface {
+// Key defines functions any key representation must implement.
+type Key interface {
 	// Type returns the key type (hex, kms, file...)
 	Type() config.KeyType
 	// Index returns the key index on the account
 	Index() int
-	//
+	// SigAlgo returns signature algorithm used for signing
 	SigAlgo() crypto.SignatureAlgorithm
+	// HashAlgo returns hash algorithm used for signing
 	HashAlgo() crypto.HashAlgorithm
+	// Signer is used when we want to sign a transaction, using the Sign() function
 	Signer(ctx context.Context) (crypto.Signer, error)
+	// ToConfig converts the key to the storable key format
 	ToConfig() config.AccountKey
+	// Validate key
 	Validate() error
+	// PrivateKey returns the private key if possible,
+	// depends on the key type
 	PrivateKey() (*crypto.PrivateKey, error)
 }
 
-var _ AccountKey = &HexAccountKey{}
+var _ Key = &HexAccountKey{}
 
-var _ AccountKey = &KmsAccountKey{}
+var _ Key = &KmsAccountKey{}
 
-var _ AccountKey = &Bip44AccountKey{}
+var _ Key = &Bip44AccountKey{}
 
-func keyFromConfig(accountKeyConf config.AccountKey) (AccountKey, error) {
+func keyFromConfig(accountKeyConf config.AccountKey) (Key, error) {
 	switch accountKeyConf.Type {
 	case config.KeyTypeHex:
 		return hexKeyFromConfig(accountKeyConf)
@@ -196,7 +201,7 @@ func gcloudApplicationSignin(resourceID string) error {
 	return nil
 }
 
-func kmsKeyFromConfig(key config.AccountKey) (AccountKey, error) {
+func kmsKeyFromConfig(key config.AccountKey) (Key, error) {
 	accountKMSKey, err := cloudkms.KeyFromResourceID(key.ResourceID)
 	if err != nil {
 		return nil, err
@@ -351,7 +356,7 @@ type Bip44AccountKey struct {
 	derivationPath string
 }
 
-func bip44KeyFromConfig(key config.AccountKey) (AccountKey, error) {
+func bip44KeyFromConfig(key config.AccountKey) (Key, error) {
 	return &Bip44AccountKey{
 		baseAccountKey: &baseAccountKey{
 			keyType:  config.KeyTypeBip44,
