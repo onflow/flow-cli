@@ -21,8 +21,9 @@ package accounts
 import (
 	"context"
 	"fmt"
-	"github.com/onflow/flow-cli/flowkit/accounts"
 	"strings"
+
+	"github.com/onflow/flow-cli/flowkit/accounts"
 
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/spf13/cobra"

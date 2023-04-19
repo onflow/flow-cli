@@ -165,7 +165,7 @@ func newFromTemplate(templateTx *flow.Transaction, signer *accounts.Account) (*T
 		return nil, err
 	}
 	tx.SetPayer(signer.Address)
-	tx.SetGasLimit(flow.DefaultTransactionGasLimit) // TODO(sideninja) change this to calculated limit
+	tx.SetComputeLimit(flow.DefaultTransactionGasLimit) // TODO(sideninja) change this to calculated limit
 
 	return tx, nil
 }
@@ -270,9 +270,9 @@ func (t *Transaction) SetBlockReference(block *flow.Block) *Transaction {
 	return t
 }
 
-// SetGasLimit sets the gas limit for transaction.
-func (t *Transaction) SetGasLimit(gasLimit uint64) *Transaction {
-	t.tx.SetGasLimit(gasLimit)
+// SetComputeLimit sets the gas limit for transaction.
+func (t *Transaction) SetComputeLimit(limit uint64) *Transaction {
+	t.tx.SetGasLimit(limit)
 	return t
 }
 

@@ -894,7 +894,7 @@ func (f *Flowkit) BuildTransaction(
 
 	tx := transactions.New().
 		SetPayer(addresses.Payer).
-		SetGasLimit(gasLimit).
+		SetComputeLimit(gasLimit).
 		SetBlockReference(latestBlock)
 
 	program, err := project.NewProgram(script.Code, script.Args, script.Location)
