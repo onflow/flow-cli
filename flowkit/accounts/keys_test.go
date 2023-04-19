@@ -59,7 +59,7 @@ func Test_File_key(t *testing.T) {
 	cKey := fileKey.ToConfig()
 	assert.Equal(t, cKey, confKey)
 
-	key := NewFileAccountKey(confKey.Location, confKey.Index, confKey.SigAlgo, confKey.HashAlgo)
+	key := NewFileKey(confKey.Location, confKey.Index, confKey.SigAlgo, confKey.HashAlgo)
 	assert.Equal(t, confKey, key.ToConfig())
 }
 

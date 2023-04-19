@@ -279,23 +279,23 @@ func (a *HexKey) privateKeyHex() string {
 }
 
 // fileKeyFromConfig creates a hex account key from a file location
-func fileKeyFromConfig(accountKey config.AccountKey) (*FileAccountKey, error) {
-	return &FileAccountKey{
+func fileKeyFromConfig(accountKey config.AccountKey) (*FileKey, error) {
+	return &FileKey{
 		baseAccountKey: baseKeyFromConfig(accountKey),
 		location:       accountKey.Location,
 	}, nil
 }
 
-// NewFileAccountKey creates a new account key that is stored to a separate file in the provided location.
+// NewFileKey creates a new account key that is stored to a separate file in the provided location.
 //
 // This type of the key is a more secure way of storing accounts. The config only includes the location and not the key.
-func NewFileAccountKey(
+func NewFileKey(
 	location string,
 	index int,
 	sigAlgo crypto.SignatureAlgorithm,
 	hashAlgo crypto.HashAlgorithm,
-) *FileAccountKey {
-	return &FileAccountKey{
+) *FileKey {
+	return &FileKey{
 		baseAccountKey: &baseAccountKey{
 			keyType:  config.KeyTypeFile,
 			index:    index,
@@ -306,16 +306,16 @@ func NewFileAccountKey(
 	}
 }
 
-// FileAccountKey represents a key that is saved in a seperate file and will be lazy-loaded.
+// FileKey represents a key that is saved in a seperate file and will be lazy-loaded.
 //
-// The FileAccountKey stores location of the file where private key is stored in hex-encoded format.
-type FileAccountKey struct {
+// The FileKey stores location of the file where private key is stored in hex-encoded format.
+type FileKey struct {
 	*baseAccountKey
 	privateKey crypto.PrivateKey
 	location   string
 }
 
-func (f *FileAccountKey) Signer(ctx context.Context) (crypto.Signer, error) {
+func (f *FileKey) Signer(ctx context.Context) (crypto.Signer, error) {
 	key, err := f.PrivateKey()
 	if err != nil {
 		return nil, err
@@ -324,7 +324,7 @@ func (f *FileAccountKey) Signer(ctx context.Context) (crypto.Signer, error) {
 	return crypto.NewInMemorySigner(*key, f.HashAlgo())
 }
 
-func (f *FileAccountKey) PrivateKey() (*crypto.PrivateKey, error) {
+func (f *FileKey) PrivateKey() (*crypto.PrivateKey, error) {
 	if f.privateKey == nil { // lazy load the key
 		key, err := os.ReadFile(f.location) // TODO(sideninja) change to use the state ReaderWriter
 		if err != nil {
@@ -339,7 +339,7 @@ func (f *FileAccountKey) PrivateKey() (*crypto.PrivateKey, error) {
 	return &f.privateKey, nil
 }
 
-func (f *FileAccountKey) ToConfig() config.AccountKey {
+func (f *FileKey) ToConfig() config.AccountKey {
 	return config.AccountKey{
 		Type:     config.KeyTypeFile,
 		SigAlgo:  f.sigAlgo,

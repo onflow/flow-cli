@@ -151,7 +151,7 @@ func createNetworkAccount(
 	return &accounts.Account{
 		Name:    name,
 		Address: *address[0],
-		Key:     accounts.NewFileAccountKey(privateFile, 0, defaultSignAlgo, defaultHashAlgo),
+		Key:     accounts.NewFileKey(privateFile, 0, defaultSignAlgo, defaultHashAlgo),
 	}, nil
 }
 
