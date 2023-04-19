@@ -94,12 +94,12 @@ func DefaultMockServices() *MockServices {
 		SendSignedTransaction: m.On(
 			mocks.SendSignedTransactionFunc,
 			mock.Anything,
-			mock.AnythingOfType("*flowkit.Transaction"),
+			mock.AnythingOfType("*transactions.Transaction"),
 		),
 		AddContract: m.On(
 			addContractFunc,
 			mock.Anything,
-			mock.AnythingOfType("*flowkit.Account"),
+			mock.AnythingOfType("*accounts.Account"),
 			mock.AnythingOfType("flowkit.Script"),
 			mock.AnythingOfType("flowkit.UpdateContract"),
 		),
@@ -119,7 +119,7 @@ func DefaultMockServices() *MockServices {
 		BuildTransaction: m.On(
 			buildTransactionFunc,
 			mock.Anything,
-			mock.AnythingOfType("flowkit.TransactionAddressesRoles"),
+			mock.AnythingOfType("transactions.AddressesRoles"),
 			mock.AnythingOfType("int"),
 			mock.AnythingOfType("flowkit.Script"),
 			mock.AnythingOfType("uint64"),
@@ -127,8 +127,8 @@ func DefaultMockServices() *MockServices {
 		CreateAccount: m.On(
 			createAccountFunc,
 			mock.Anything,
-			mock.AnythingOfType("*flowkit.Account"),
-			mock.AnythingOfType("[]flowkit.AccountPublicKey"),
+			mock.AnythingOfType("*accounts.Account"),
+			mock.AnythingOfType("[]accounts.PublicKey"),
 		),
 		DeployProject: m.On(
 			deployProjectFunc,
@@ -174,20 +174,20 @@ func DefaultMockServices() *MockServices {
 		RemoveContract: m.On(
 			removeContractFunc,
 			mock.Anything,
-			mock.AnythingOfType("*flowkit.Account"),
+			mock.AnythingOfType("*accounts.Account"),
 			mock.AnythingOfType("string"),
 		),
 		SendTransaction: m.On(
 			sendTransactionFunc,
 			mock.Anything,
-			mock.AnythingOfType("flowkit.TransactionAccountRoles"),
+			mock.AnythingOfType("transactions.AccountRoles"),
 			mock.AnythingOfType("flowkit.Script"),
 			mock.AnythingOfType("uint64"),
 		),
 		SignTransactionPayload: m.On(
 			signTransactionPayloadFunc,
 			mock.Anything,
-			mock.AnythingOfType("*flowkit.Account"),
+			mock.AnythingOfType("*accounts.Account"),
 			mock.AnythingOfType("[]uint8"),
 		),
 		Test: m.On(
