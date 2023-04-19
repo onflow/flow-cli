@@ -33,8 +33,6 @@ import (
 	"github.com/onflow/flow-cli/flowkit/accounts"
 )
 
-const maxGasLimit uint64 = 9999
-
 // New create new instance of transaction.
 func New() *Transaction {
 	return &Transaction{
@@ -134,7 +132,7 @@ func addAccountContractWithArgs(
 
 	script := fmt.Sprintf(addAccountContractTemplate, txArgs, addArgs)
 	tx.SetScript([]byte(script))
-	tx.SetGasLimit(maxGasLimit)
+	tx.SetGasLimit(flow.DefaultTransactionGasLimit)
 
 	t := &Transaction{tx: tx}
 	err := t.SetSigner(signer)
@@ -167,7 +165,7 @@ func newFromTemplate(templateTx *flow.Transaction, signer *accounts.Account) (*T
 		return nil, err
 	}
 	tx.SetPayer(signer.Address)
-	tx.SetGasLimit(maxGasLimit) // TODO(sideninja) change this to calculated limit
+	tx.SetGasLimit(flow.DefaultTransactionGasLimit) // TODO(sideninja) change this to calculated limit
 
 	return tx, nil
 }
@@ -378,7 +376,7 @@ type AccountRoles struct {
 	Payer       accounts.Account
 }
 
-func (t AccountRoles) toAddresses() AddressesRoles {
+func (t AccountRoles) ToAddresses() AddressesRoles {
 	auths := make([]flow.Address, len(t.Authorizers))
 	for i, a := range t.Authorizers {
 		auths[i] = a.Address
@@ -391,8 +389,8 @@ func (t AccountRoles) toAddresses() AddressesRoles {
 	}
 }
 
-// getSigners for signing the transaction, detect if all accounts are same so only return the one account.
-func (t AccountRoles) getSigners() []*accounts.Account {
+// Signers for signing the transaction, detect if all accounts are same so only return the one account.
+func (t AccountRoles) Signers() []*accounts.Account {
 	// build only unique accounts to sign, it's important payer account is last
 	sigs := make([]*accounts.Account, 0)
 	addLastIfUnique := func(signer accounts.Account) {
