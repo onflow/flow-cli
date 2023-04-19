@@ -23,7 +23,6 @@ import (
 	"context"
 	"crypto/rand"
 	"fmt"
-	"github.com/onflow/flow-cli/flowkit/transactions"
 	"strconv"
 	"strings"
 	"sync"
@@ -44,6 +43,7 @@ import (
 	"github.com/onflow/flow-cli/flowkit/gateway"
 	"github.com/onflow/flow-cli/flowkit/output"
 	"github.com/onflow/flow-cli/flowkit/project"
+	"github.com/onflow/flow-cli/flowkit/transactions"
 )
 
 // AccountPublicKey contains public account key information.
@@ -957,7 +957,7 @@ func (f *Flowkit) SendTransaction(
 ) (*flow.Transaction, *flow.TransactionResult, error) {
 	tx, err := f.BuildTransaction(
 		ctx,
-		accounts.toAddresses(),
+		accounts.ToAddresses(),
 		accounts.Proposer.Key.Index(),
 		script,
 		gasLimit,
@@ -966,7 +966,7 @@ func (f *Flowkit) SendTransaction(
 		return nil, nil, err
 	}
 
-	for _, signer := range accounts.getSigners() {
+	for _, signer := range accounts.Signers() {
 		err = tx.SetSigner(signer)
 		if err != nil {
 			return nil, nil, err
