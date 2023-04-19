@@ -33,15 +33,15 @@ import (
 	"github.com/onflow/cadence/runtime/sema"
 )
 
-type CadenceArgument struct {
+type cadenceArgument struct {
 	Value cadence.Value
 }
 
-func (v *CadenceArgument) MarshalJSON() ([]byte, error) {
+func (v *cadenceArgument) MarshalJSON() ([]byte, error) {
 	return jsoncdc.Encode(v.Value)
 }
 
-func (v *CadenceArgument) UnmarshalJSON(b []byte) (err error) {
+func (v *cadenceArgument) UnmarshalJSON(b []byte) (err error) {
 	v.Value, err = jsoncdc.Decode(nil, b)
 	if err != nil {
 		return err
@@ -50,7 +50,7 @@ func (v *CadenceArgument) UnmarshalJSON(b []byte) (err error) {
 }
 
 func ParseArgumentsJSON(input string) ([]cadence.Value, error) {
-	var args []CadenceArgument
+	var args []cadenceArgument
 	b := []byte(input)
 	err := json.Unmarshal(b, &args)
 
