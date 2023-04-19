@@ -170,6 +170,17 @@ to `ParseJSON` and `ParseWithoutType` correspondingly.
 
 Renamed transaction function from `transaction.SetGasLimit` to `transaction.SetComputeLimit`. 
 
+---
+
+The function `state.DeploymentContractsByNetwork(network string)` changed to accept network type like so:
+`state.DeploymentContractsByNetwork(network config.Network)`, there are also predefined network types in config 
+you can access using `config.EmulatorNetwork`, `config.TestnetNetwork`, `config.MainnetNetwork`.
+
+---
+
+The config functions for getting default networks was removed and replaced with variables.
+For example the method `config.DefaultMainnetNetwork()` was replaced with `config.MainnetNetwork` variable.
+
 
 ### Added
 
@@ -180,6 +191,35 @@ An `AccountPublicKey` type was added used in flowkit `CreateAccount` API, you ca
 
 A `BlockQuery` was added for querying blocks using the flowkit `GetBlock` API. You can find the definition in [flowkit.go](flowkit.go).
 You can use `NewBlockQuery` factory method to pass in raw string, which should be either equal to `"latest"`, height or block ID.
+
+---
+
+Added predefined common networks in config: 
+```go
+	EmptyNetwork    = Network{}
+	EmulatorNetwork = Network{
+		Name: "emulator",
+		Host: "127.0.0.1:3569",
+	}
+	TestnetNetwork = Network{
+		Name: "testnet",
+		Host: "access.devnet.nodes.onflow.org:9000",
+	}
+	SandboxNetwork = Network{
+		Name: "sandboxnet",
+		Host: "access.sandboxnet.nodes.onflow.org:9000",
+	}
+	MainnetNetwork = Network{
+		Name: "mainnet",
+		Host: "access.mainnet.nodes.onflow.org:9000",
+	}
+	DefaultNetworks = Networks{
+		EmulatorNetwork,
+		TestnetNetwork,
+		SandboxNetwork,
+		MainnetNetwork,
+	}
+```
 
 ### Removed
 
