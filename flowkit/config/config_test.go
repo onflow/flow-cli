@@ -136,10 +136,10 @@ func generateComplexConfig() config.Config {
 
 func Test_GetContractsForNetworkComplex(t *testing.T) {
 	conf := generateComplexConfig()
-	kitty := conf.Contracts.ByName("KittyItems")
+	kitty, _ := conf.Contracts.ByName("KittyItems")
 	assert.NotNil(t, kitty)
 
-	market := conf.Contracts.ByName("KittyItemsMarket")
+	market, _ := conf.Contracts.ByName("KittyItemsMarket")
 	assert.NotNil(t, market)
 
 	assert.Equal(t, "KittyItems", kitty.Name)
@@ -148,7 +148,7 @@ func Test_GetContractsForNetworkComplex(t *testing.T) {
 
 func Test_GetContractsByNameAndNetworkComplex(t *testing.T) {
 	conf := generateComplexConfig()
-	market := conf.Contracts.ByName("KittyItemsMarket")
+	market, _ := conf.Contracts.ByName("KittyItemsMarket")
 	assert.NotNil(t, market)
 
 	assert.Equal(t, "0000000123123123", market.Aliases.ByNetwork("testnet").Address.String())

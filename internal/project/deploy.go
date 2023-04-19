@@ -208,9 +208,9 @@ type standardContract struct {
 }
 
 func replaceContractWithAlias(state *flowkit.State, standardContract standardContract) error {
-	contract := state.Config().Contracts.ByName(standardContract.name)
-	if contract == nil {
-		return fmt.Errorf("contract not found") // shouldn't occur
+	contract, err := state.Config().Contracts.ByName(standardContract.name)
+	if err != nil {
+		return err
 	}
 	contract.Aliases.Add(config.MainnetNetwork.Name, standardContract.address) // replace contract with an alias
 

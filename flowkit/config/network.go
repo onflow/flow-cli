@@ -57,7 +57,7 @@ type Network struct {
 	Key  string
 }
 
-// ByName get network by name.
+// ByName get network by name or return an error if not found.
 func (n *Networks) ByName(name string) (*Network, error) {
 	for _, network := range *n {
 		if network.Name == name {

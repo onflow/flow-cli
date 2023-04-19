@@ -68,15 +68,15 @@ func (c *Contract) IsAliased() bool {
 	return len(c.Aliases) > 0
 }
 
-// ByName get contract by name.
-func (c *Contracts) ByName(name string) *Contract {
+// ByName get contract by name or return an error if it doesn't exist.
+func (c *Contracts) ByName(name string) (*Contract, error) {
 	for i, contract := range *c {
 		if contract.Name == name {
-			return &(*c)[i]
+			return &(*c)[i], nil
 		}
 	}
 
-	return nil
+	return nil, fmt.Errorf("contract %s does not exist", name)
 }
 
 // AddOrUpdate add new or update if already present.
@@ -93,8 +93,8 @@ func (c *Contracts) AddOrUpdate(contract Contract) {
 
 // Remove contract by its name.
 func (c *Contracts) Remove(name string) error {
-	if c.ByName(name) != nil {
-		return fmt.Errorf("contract by name %s doesn't exist", name)
+	if _, err := c.ByName(name); err != nil {
+		return err
 	}
 
 	for i, contract := range *c {

@@ -69,7 +69,7 @@ func (a *AccountKey) IsDefault() bool {
 		a.HashAlgo == DefaultHashAlgo
 }
 
-// ByName get account by name.
+// ByName get account by name or error if not found.
 func (a *Accounts) ByName(name string) (*Account, error) {
 	for _, account := range *a {
 		if account.Name == name {

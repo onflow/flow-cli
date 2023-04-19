@@ -150,9 +150,9 @@ func (p *State) DeploymentContractsByNetwork(network config.Network) ([]*project
 
 		// go through each contract in this deployment
 		for _, deploymentContract := range deploy.Contracts {
-			c := p.conf.Contracts.ByName(deploymentContract.Name)
-			if c == nil {
-				return nil, fmt.Errorf("contract with name %s not found", deploymentContract.Name)
+			c, err := p.conf.Contracts.ByName(deploymentContract.Name)
+			if err != nil {
+				return nil, err
 			}
 
 			location := c.Location

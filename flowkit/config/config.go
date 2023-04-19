@@ -61,26 +61,23 @@ func (c *Config) Validate() error {
 	}
 
 	for _, em := range c.Emulators {
-		_, err := c.Accounts.ByName(em.ServiceAccount)
-		if err != nil {
+		if _, err := c.Accounts.ByName(em.ServiceAccount); err != nil {
 			return fmt.Errorf("emulator %s contains nonexisting service account %s", em.Name, em.ServiceAccount)
 		}
 	}
 
 	for _, d := range c.Deployments {
-		_, err := c.Networks.ByName(d.Network)
-		if err != nil {
+		if _, err := c.Networks.ByName(d.Network); err != nil {
 			return fmt.Errorf("deployment contains nonexisting network %s", d.Network)
 		}
 
 		for _, con := range d.Contracts {
-			if c.Contracts.ByName(con.Name) == nil {
+			if _, err := c.Contracts.ByName(con.Name); err != nil {
 				return fmt.Errorf("deployment contains nonexisting contract %s", con.Name)
 			}
 		}
 
-		_, err = c.Accounts.ByName(d.Account)
-		if err != nil {
+		if _, err := c.Accounts.ByName(d.Account); err != nil {
 			return fmt.Errorf("deployment contains nonexisting account %s", d.Account)
 		}
 	}

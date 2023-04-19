@@ -273,7 +273,7 @@ func (p *project) addContract(
 		Location: path,
 	}
 
-	existing := p.state.Contracts().ByName(name)
+	existing, _ := p.state.Contracts().ByName(name)
 	if existing != nil { // make sure alises are persisted even if location changes
 		contract.Aliases = existing.Aliases
 	}
