@@ -71,9 +71,9 @@ func deployContract(update bool, flags *deployContractFlags) command.RunWithStat
 
 		var contractArgs []cadence.Value
 		if flags.ArgsJSON != "" {
-			contractArgs, err = args.ParseArgumentsJSON(flags.ArgsJSON)
+			contractArgs, err = args.ParseJSON(flags.ArgsJSON)
 		} else if len(args) > 1 {
-			contractArgs, err = args.ParseArgumentsWithoutType(args[1:], code, filename)
+			contractArgs, err = args.ParseWithoutType(args[1:], code, filename)
 		}
 
 		if err != nil {

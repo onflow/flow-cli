@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package args
+package arguments
 
 import (
 	"encoding/json"
