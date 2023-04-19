@@ -52,17 +52,17 @@ func (v *cadenceArgument) UnmarshalJSON(b []byte) (err error) {
 // ParseArgumentsJSON parses string representing JSON array with Cadence arguments.
 //
 // Cadence arguments must be defined in the JSON-Cadence format https://developers.flow.com/cadence/json-cadence-spec
-func ParseArgumentsJSON(input string) ([]cadence.Value, error) {
-	var args []cadenceArgument
-	b := []byte(input)
-	err := json.Unmarshal(b, &args)
+func ParseArgumentsJSON(args string) ([]cadence.Value, error) {
+	var arg []cadenceArgument
+	b := []byte(args)
+	err := json.Unmarshal(b, &arg)
 
 	if err != nil {
 		return nil, err
 	}
 
-	cadenceArgs := make([]cadence.Value, len(args))
-	for i, arg := range args {
+	cadenceArgs := make([]cadence.Value, len(arg))
+	for i, arg := range arg {
 		cadenceArgs[i] = arg.Value
 	}
 	return cadenceArgs, nil
