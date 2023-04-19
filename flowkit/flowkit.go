@@ -43,7 +43,7 @@ import (
 	"github.com/onflow/flow-cli/flowkit/project"
 )
 
-// AccountPublicKey holds information about the account key.
+// AccountPublicKey contains public account key information.
 type AccountPublicKey struct {
 	Public   crypto.PublicKey
 	Weight   int
