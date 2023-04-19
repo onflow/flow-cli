@@ -62,7 +62,7 @@ var _ Key = &HexKey{}
 
 var _ Key = &KmsAccountKey{}
 
-var _ Key = &Bip44AccountKey{}
+var _ Key = &Bip44Key{}
 
 func keyFromConfig(accountKeyConf config.AccountKey) (Key, error) {
 	switch accountKeyConf.Type {
@@ -348,8 +348,8 @@ func (f *FileKey) ToConfig() config.AccountKey {
 	}
 }
 
-// Bip44AccountKey implements https://github.com/onflow/flow/blob/master/flips/20201125-bip-44-multi-account.md
-type Bip44AccountKey struct {
+// Bip44Key implements https://github.com/onflow/flow/blob/master/flips/20201125-bip-44-multi-account.md
+type Bip44Key struct {
 	*baseAccountKey
 	privateKey     crypto.PrivateKey
 	mnemonic       string
@@ -357,7 +357,7 @@ type Bip44AccountKey struct {
 }
 
 func bip44KeyFromConfig(key config.AccountKey) (Key, error) {
-	return &Bip44AccountKey{
+	return &Bip44Key{
 		baseAccountKey: &baseAccountKey{
 			keyType:  config.KeyTypeBip44,
 			index:    key.Index,
@@ -369,7 +369,7 @@ func bip44KeyFromConfig(key config.AccountKey) (Key, error) {
 	}, nil
 }
 
-func (a *Bip44AccountKey) Signer(ctx context.Context) (crypto.Signer, error) {
+func (a *Bip44Key) Signer(ctx context.Context) (crypto.Signer, error) {
 	pkey, err := a.PrivateKey()
 	if err != nil {
 		return nil, err
@@ -378,7 +378,7 @@ func (a *Bip44AccountKey) Signer(ctx context.Context) (crypto.Signer, error) {
 	return crypto.NewInMemorySigner(*pkey, a.HashAlgo())
 }
 
-func (a *Bip44AccountKey) PrivateKey() (*crypto.PrivateKey, error) {
+func (a *Bip44Key) PrivateKey() (*crypto.PrivateKey, error) {
 	if a.privateKey == nil { // lazy load
 		err := a.Validate()
 		if err != nil {
@@ -388,7 +388,7 @@ func (a *Bip44AccountKey) PrivateKey() (*crypto.PrivateKey, error) {
 	return &a.privateKey, nil
 }
 
-func (a *Bip44AccountKey) ToConfig() config.AccountKey {
+func (a *Bip44Key) ToConfig() config.AccountKey {
 	return config.AccountKey{
 		Type:           a.keyType,
 		Index:          a.index,
@@ -400,7 +400,7 @@ func (a *Bip44AccountKey) ToConfig() config.AccountKey {
 	}
 }
 
-func (a *Bip44AccountKey) Validate() error {
+func (a *Bip44Key) Validate() error {
 
 	if !bip39.IsMnemonicValid(a.mnemonic) {
 		return fmt.Errorf("invalid mnemonic defined for account in flow.json")
@@ -435,7 +435,7 @@ func (a *Bip44AccountKey) Validate() error {
 	return nil
 }
 
-func (a *Bip44AccountKey) PrivateKeyHex() string {
+func (a *Bip44Key) PrivateKeyHex() string {
 	return hex.EncodeToString(a.privateKey.Encode())
 }
 
