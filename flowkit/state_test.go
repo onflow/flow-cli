@@ -20,6 +20,7 @@ package flowkit
 
 import (
 	"fmt"
+	"github.com/onflow/flow-cli/flowkit/accounts"
 	"os"
 	"sort"
 	"testing"
@@ -525,7 +526,7 @@ func Test_ChangingState(t *testing.T) {
 		crypto.ECDSA_P256,
 		[]byte("seedseedseedseedseedseedseedseedseedseedseedseed"),
 	)
-	key := NewHexAccountKeyFromPrivateKey(em.Key.Index(), em.Key.HashAlgo(), pk)
+	key := accounts.NewHexAccountKeyFromPrivateKey(em.Key.Index(), em.Key.HashAlgo(), pk)
 	em.Key = key
 
 	foo, err := p.Accounts().ByName("foo")
@@ -545,7 +546,7 @@ func Test_ChangingState(t *testing.T) {
 	assert.NotNil(t, zoo)
 	assert.NoError(t, err)
 
-	a := Account{}
+	a := accounts.Account{}
 	a.Name = "bobo"
 	p.Accounts().AddOrUpdate(&a)
 	bobo, err := p.Accounts().ByName("bobo")

@@ -28,6 +28,7 @@ import (
 	"github.com/pkg/errors"
 	"golang.org/x/exp/slices"
 
+	"github.com/onflow/flow-cli/flowkit/accounts"
 	"github.com/onflow/flow-cli/flowkit/config"
 	"github.com/onflow/flow-cli/flowkit/config/json"
 	"github.com/onflow/flow-cli/flowkit/project"
@@ -44,7 +45,7 @@ type State struct {
 	conf         *config.Config
 	confLoader   *config.Loader
 	readerWriter ReaderWriter
-	accounts     *Accounts
+	accounts     *accounts.Accounts
 }
 
 // ReaderWriter retrieve current file reader writer.
@@ -83,7 +84,7 @@ func (p *State) SaveEdited(paths []string) error {
 
 // Save saves the project configuration to the given path.
 func (p *State) Save(path string) error {
-	p.conf.Accounts = accountsToConfig(*p.accounts)
+	p.conf.Accounts = accounts.ToConfig(*p.accounts)
 	err := p.confLoader.Save(p.conf, path)
 
 	if err != nil {
@@ -109,7 +110,7 @@ func (p *State) Contracts() *config.Contracts {
 }
 
 // Accounts get accounts.
-func (p *State) Accounts() *Accounts {
+func (p *State) Accounts() *accounts.Accounts {
 	return p.accounts
 }
 
@@ -119,7 +120,7 @@ func (p *State) Config() *config.Config {
 }
 
 // EmulatorServiceAccount returns the service account for the default emulator profile.
-func (p *State) EmulatorServiceAccount() (*Account, error) {
+func (p *State) EmulatorServiceAccount() (*accounts.Account, error) {
 	emulator := p.conf.Emulators.Default()
 	if emulator == nil {
 		return nil, fmt.Errorf("no default emulator account")
@@ -131,7 +132,7 @@ func (p *State) EmulatorServiceAccount() (*Account, error) {
 // SetEmulatorKey sets the default emulator service account private key.
 func (p *State) SetEmulatorKey(privateKey crypto.PrivateKey) {
 	acc, _ := p.EmulatorServiceAccount()
-	acc.Key = NewHexAccountKeyFromPrivateKey(acc.Key.Index(), acc.Key.HashAlgo(), privateKey)
+	acc.Key = accounts.NewHexAccountKeyFromPrivateKey(acc.Key.Index(), acc.Key.HashAlgo(), privateKey)
 }
 
 // DeploymentContractsByNetwork returns all contracts for a network.
@@ -187,21 +188,21 @@ func (p *State) DeploymentContractsByNetwork(network config.Network) ([]*project
 }
 
 // AccountsForNetwork returns all accounts used on a network defined by deployments.
-func (p *State) AccountsForNetwork(network config.Network) *Accounts {
+func (p *State) AccountsForNetwork(network config.Network) *accounts.Accounts {
 	exists := make(map[string]bool, 0)
-	accounts := make(Accounts, 0)
+	accs := make(accounts.Accounts, 0)
 
 	for _, account := range *p.accounts {
 		if p.conf.Deployments.ByAccountAndNetwork(account.Name, network.Name) != nil {
-			slices.ContainsFunc(accounts, func(a Account) bool {
+			slices.ContainsFunc(accs, func(a accounts.Account) bool {
 				return a.Name == account.Name
 			})
 			if !exists[account.Name] {
-				accounts = append(accounts, account)
+				accs = append(accs, account)
 			}
 		}
 	}
-	return &accounts
+	return &accs
 }
 
 // AliasesForNetwork returns all deployment aliases for a network.
@@ -254,7 +255,7 @@ func Init(
 	sigAlgo crypto.SignatureAlgorithm,
 	hashAlgo crypto.HashAlgorithm,
 ) (*State, error) {
-	emulatorServiceAccount, err := generateEmulatorServiceAccount(sigAlgo, hashAlgo)
+	emulatorServiceAccount, err := accounts.NewEmulatorAccount(sigAlgo, hashAlgo)
 	if err != nil {
 		return nil, err
 	}
@@ -266,7 +267,7 @@ func Init(
 		confLoader:   loader,
 		readerWriter: readerWriter,
 		conf:         config.Default(),
-		accounts:     &Accounts{*emulatorServiceAccount},
+		accounts:     &accounts.Accounts{*emulatorServiceAccount},
 	}, nil
 }
 
@@ -276,7 +277,7 @@ func newProject(
 	loader *config.Loader,
 	readerWriter ReaderWriter,
 ) (*State, error) {
-	accounts, err := accountsFromConfig(conf)
+	accs, err := accounts.FromConfig(conf)
 	if err != nil {
 		return nil, err
 	}
@@ -285,6 +286,6 @@ func newProject(
 		conf:         conf,
 		readerWriter: readerWriter,
 		confLoader:   loader,
-		accounts:     &accounts,
+		accounts:     &accs,
 	}, nil
 }

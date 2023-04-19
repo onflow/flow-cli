@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package flowkit
+package accounts
 
 import (
 	"testing"

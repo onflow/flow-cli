@@ -23,6 +23,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"github.com/onflow/flow-cli/flowkit/accounts"
 	"strings"
 	"testing"
 
@@ -44,29 +45,29 @@ import (
 	"github.com/onflow/flow-cli/flowkit/tests"
 )
 
-func Alice() *Account {
+func Alice() *accounts.Account {
 	return newAccount("Alice", "0x1", "seedseedseedseedseedseedseedseedseedseedseedseedAlice")
 }
 
-func Bob() *Account {
+func Bob() *accounts.Account {
 	return newAccount("Bob", "0x2", "seedseedseedseedseedseedseedseedseedseedseedseedBob")
 }
 
-func Charlie() *Account {
+func Charlie() *accounts.Account {
 	return newAccount("Charlie", "0x3", "seedseedseedseedseedseedseedseedseedseedseedseedCharlie")
 }
 
-func Donald() *Account {
+func Donald() *accounts.Account {
 	return newAccount("Donald", "0x3", "seedseedseedseedseedseedseedseedseedseedseedseedDonald")
 }
 
-func newAccount(name string, address string, seed string) *Account {
+func newAccount(name string, address string, seed string) *accounts.Account {
 	privateKey, _ := crypto.GeneratePrivateKey(crypto.ECDSA_P256, []byte(seed))
 
-	return &Account{
+	return &accounts.Account{
 		Name:    name,
 		Address: flow.HexToAddress(address),
-		Key:     NewHexAccountKeyFromPrivateKey(0, crypto.SHA3_256, privateKey),
+		Key:     accounts.NewHexAccountKeyFromPrivateKey(0, crypto.SHA3_256, privateKey),
 	}
 }
 
@@ -250,7 +251,7 @@ func setupIntegration() (*State, Flowkit) {
 
 func TestAccountsCreate_Integration(t *testing.T) {
 	type accountsIn struct {
-		account  *Account
+		account  *accounts.Account
 		pubKeys  []crypto.PublicKey
 		weights  []int
 		sigAlgo  []crypto.SignatureAlgorithm
@@ -1470,7 +1471,7 @@ func setupAccounts(state *State, flowkit Flowkit) {
 	setupAccount(state, flowkit, Charlie())
 }
 
-func setupAccount(state *State, flowkit Flowkit, account *Account) {
+func setupAccount(state *State, flowkit Flowkit, account *accounts.Account) {
 	srv, _ := state.EmulatorServiceAccount()
 
 	key := account.Key
@@ -1486,7 +1487,7 @@ func setupAccount(state *State, flowkit Flowkit, account *Account) {
 		}},
 	)
 
-	state.Accounts().AddOrUpdate(&Account{
+	state.Accounts().AddOrUpdate(&accounts.Account{
 		Name:    account.Name,
 		Address: acc.Address,
 		Key:     key,
@@ -1514,7 +1515,7 @@ func Test_TransactionRoles(t *testing.T) {
 		}{{
 			TransactionAccountRoles: &TransactionAccountRoles{
 				Proposer:    *a,
-				Authorizers: []Account{*b},
+				Authorizers: []accounts.Account{*b},
 				Payer:       *c,
 			},
 			signerAddresses: []flow.Address{
@@ -1525,7 +1526,7 @@ func Test_TransactionRoles(t *testing.T) {
 		}, {
 			TransactionAccountRoles: &TransactionAccountRoles{
 				Proposer:    *a,
-				Authorizers: []Account{*a},
+				Authorizers: []accounts.Account{*a},
 				Payer:       *a,
 			},
 			signerAddresses: []flow.Address{
@@ -1535,7 +1536,7 @@ func Test_TransactionRoles(t *testing.T) {
 			TransactionAccountRoles: &TransactionAccountRoles{
 				Proposer:    *a,
 				Payer:       *b,
-				Authorizers: []Account{*a},
+				Authorizers: []accounts.Account{*a},
 			},
 			signerAddresses: []flow.Address{
 				a.Address, b.Address,
@@ -1552,7 +1553,7 @@ func Test_TransactionRoles(t *testing.T) {
 			TransactionAccountRoles: &TransactionAccountRoles{
 				Proposer:    aCopy1,
 				Payer:       aCopy2,
-				Authorizers: []Account{*a},
+				Authorizers: []accounts.Account{*a},
 			},
 			signerAddresses: []flow.Address{
 				a.Address,
@@ -1579,7 +1580,7 @@ func Test_TransactionRoles(t *testing.T) {
 
 		roles := &TransactionAccountRoles{
 			Proposer:    *a,
-			Authorizers: []Account{*b, *c},
+			Authorizers: []accounts.Account{*b, *c},
 			Payer:       *c,
 		}
 
@@ -1924,7 +1925,7 @@ func TestTransactions_Integration(t *testing.T) {
 			ctx,
 			TransactionAccountRoles{
 				Proposer:    *a,
-				Authorizers: []Account{*c},
+				Authorizers: []accounts.Account{*c},
 				Payer:       *b,
 			},
 			Script{
@@ -1953,7 +1954,7 @@ func TestTransactions_Integration(t *testing.T) {
 			ctx,
 			TransactionAccountRoles{
 				Proposer:    *a,
-				Authorizers: []Account{*a},
+				Authorizers: []accounts.Account{*a},
 				Payer:       *b,
 			},
 			Script{

@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package flowkit
+package accounts
 
 import (
 	"context"
@@ -40,8 +40,11 @@ import (
 // AccountKey is a flowkit specific account key implementation
 // allowing us to sign the transactions using different implemented methods.
 type AccountKey interface {
+	// Type returns the key type (hex, kms, file...)
 	Type() config.KeyType
+	// Index returns the key index on the account
 	Index() int
+	//
 	SigAlgo() crypto.SignatureAlgorithm
 	HashAlgo() crypto.HashAlgorithm
 	Signer(ctx context.Context) (crypto.Signer, error)
@@ -56,7 +59,7 @@ var _ AccountKey = &KmsAccountKey{}
 
 var _ AccountKey = &Bip44AccountKey{}
 
-func accountKeyFromConfig(accountKeyConf config.AccountKey) (AccountKey, error) {
+func keyFromConfig(accountKeyConf config.AccountKey) (AccountKey, error) {
 	switch accountKeyConf.Type {
 	case config.KeyTypeHex:
 		return hexKeyFromConfig(accountKeyConf)
@@ -298,6 +301,9 @@ func NewFileAccountKey(
 	}
 }
 
+// FileAccountKey represents a key that is saved in a seperate file and will be lazy-loaded.
+//
+// The FileAccountKey stores location of the file where private key is stored in hex-encoded format.
 type FileAccountKey struct {
 	*baseAccountKey
 	privateKey crypto.PrivateKey

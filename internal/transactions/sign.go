@@ -23,6 +23,7 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
+	"github.com/onflow/flow-cli/flowkit/accounts"
 	"io"
 	"net/http"
 	"sort"
@@ -89,7 +90,7 @@ func sign(
 	}
 
 	var signed *flowkit.Transaction
-	var signers []*flowkit.Account
+	var signers []*accounts.Account
 	tx, err := flowkit.NewTransactionFromPayload(payload)
 	if err != nil {
 		return nil, err

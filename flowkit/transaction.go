@@ -22,6 +22,7 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
+	"github.com/onflow/flow-cli/flowkit/accounts"
 
 	"github.com/onflow/cadence"
 	jsoncdc "github.com/onflow/cadence/encoding/json"
@@ -60,7 +61,7 @@ func NewTransactionFromPayload(payload []byte) (*Transaction, error) {
 }
 
 // NewUpdateAccountContractTransaction update account contract.
-func NewUpdateAccountContractTransaction(signer *Account, name string, source []byte) (*Transaction, error) {
+func NewUpdateAccountContractTransaction(signer *accounts.Account, name string, source []byte) (*Transaction, error) {
 	contract := templates.Contract{
 		Name:   name,
 		Source: string(source),
@@ -74,7 +75,7 @@ func NewUpdateAccountContractTransaction(signer *Account, name string, source []
 
 // NewAddAccountContractTransaction add new contract to the account.
 func NewAddAccountContractTransaction(
-	signer *Account,
+	signer *accounts.Account,
 	name string,
 	source []byte,
 	args []cadence.Value,
@@ -86,7 +87,7 @@ func NewAddAccountContractTransaction(
 }
 
 // NewRemoveAccountContractTransaction creates new transaction to remove contract.
-func NewRemoveAccountContractTransaction(signer *Account, name string) (*Transaction, error) {
+func NewRemoveAccountContractTransaction(signer *accounts.Account, name string) (*Transaction, error) {
 	return newTransactionFromTemplate(
 		templates.RemoveAccountContract(signer.Address, name),
 		signer,
@@ -96,7 +97,7 @@ func NewRemoveAccountContractTransaction(signer *Account, name string) (*Transac
 // addAccountContractWithArgs contains logic to build a transaction and include the contract code
 // as well as possible init arguments.
 func addAccountContractWithArgs(
-	signer *Account,
+	signer *accounts.Account,
 	contract templates.Contract,
 	args []cadence.Value,
 ) (*Transaction, error) {
@@ -146,7 +147,7 @@ func addAccountContractWithArgs(
 
 // NewCreateAccountTransaction creates new transaction for account.
 func NewCreateAccountTransaction(
-	signer *Account,
+	signer *accounts.Account,
 	keys []*flow.AccountKey,
 	contracts []templates.Contract,
 ) (*Transaction, error) {
@@ -157,7 +158,7 @@ func NewCreateAccountTransaction(
 	return newTransactionFromTemplate(template, signer)
 }
 
-func newTransactionFromTemplate(templateTx *flow.Transaction, signer *Account) (*Transaction, error) {
+func newTransactionFromTemplate(templateTx *flow.Transaction, signer *accounts.Account) (*Transaction, error) {
 	tx := &Transaction{tx: templateTx}
 
 	err := tx.SetSigner(signer)
@@ -172,13 +173,13 @@ func newTransactionFromTemplate(templateTx *flow.Transaction, signer *Account) (
 
 // Transaction builder of flow transactions.
 type Transaction struct {
-	signer   *Account
+	signer   *accounts.Account
 	proposer *flow.Account
 	tx       *flow.Transaction
 }
 
 // Signer get signer.
-func (t *Transaction) Signer() *Account {
+func (t *Transaction) Signer() *accounts.Account {
 	return t.signer
 }
 
@@ -198,7 +199,7 @@ func (t *Transaction) SetScriptWithArgs(script []byte, args []cadence.Value) err
 }
 
 // SetSigner sets the signer for transaction.
-func (t *Transaction) SetSigner(account *Account) error {
+func (t *Transaction) SetSigner(account *accounts.Account) error {
 	err := account.Key.Validate()
 	if err != nil {
 		return err
@@ -359,10 +360,10 @@ func (t *Transaction) shouldSignEnvelope() bool {
 
 // NewTransactionSingleAccountRole creates transaction accounts from a single provided
 // account fulfilling all the roles (proposer, payer, authorizer).
-func NewTransactionSingleAccountRole(account Account) TransactionAccountRoles {
+func NewTransactionSingleAccountRole(account accounts.Account) TransactionAccountRoles {
 	return TransactionAccountRoles{
 		Proposer:    account,
-		Authorizers: []Account{account},
+		Authorizers: []accounts.Account{account},
 		Payer:       account,
 	}
 }
@@ -371,9 +372,9 @@ func NewTransactionSingleAccountRole(account Account) TransactionAccountRoles {
 //
 // You can read more about roles here: https://developers.flow.com/learn/concepts/accounts-and-keys
 type TransactionAccountRoles struct {
-	Proposer    Account
-	Authorizers []Account
-	Payer       Account
+	Proposer    accounts.Account
+	Authorizers []accounts.Account
+	Payer       accounts.Account
 }
 
 func (t TransactionAccountRoles) toAddresses() TransactionAddressesRoles {
@@ -390,10 +391,10 @@ func (t TransactionAccountRoles) toAddresses() TransactionAddressesRoles {
 }
 
 // getSigners for signing the transaction, detect if all accounts are same so only return the one account.
-func (t TransactionAccountRoles) getSigners() []*Account {
+func (t TransactionAccountRoles) getSigners() []*accounts.Account {
 	// build only unique accounts to sign, it's important payer account is last
-	sigs := make([]*Account, 0)
-	addLastIfUnique := func(signer Account) {
+	sigs := make([]*accounts.Account, 0)
+	addLastIfUnique := func(signer accounts.Account) {
 		for _, sig := range sigs {
 			if sig.Address == signer.Address {
 				return

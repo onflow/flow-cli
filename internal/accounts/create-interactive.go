@@ -24,6 +24,7 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
+	"github.com/onflow/flow-cli/flowkit/accounts"
 	"io"
 	"net/http"
 	"os"
@@ -66,7 +67,7 @@ func createInteractive(state *flowkit.State) error {
 
 	log.StartProgress(fmt.Sprintf("Creating account %s on %s...", name, networkName))
 
-	var account *flowkit.Account
+	var account *accounts.Account
 	if selectedNetwork == config.EmulatorNetwork {
 		account, err = createEmulatorAccount(state, flow, name, key)
 		log.StopProgress()
@@ -116,7 +117,7 @@ func createNetworkAccount(
 	key crypto.PrivateKey,
 	privateFile string,
 	network config.Network,
-) (*flowkit.Account, error) {
+) (*accounts.Account, error) {
 	networkAccount := &lilicoAccount{
 		PublicKey: strings.TrimPrefix(key.PublicKey().String(), "0x"),
 	}
@@ -147,10 +148,10 @@ func createNetworkAccount(
 		return nil, fmt.Errorf("failed saving private key: %w", err)
 	}
 
-	return &flowkit.Account{
+	return &accounts.Account{
 		Name:    name,
 		Address: *address[0],
-		Key:     flowkit.NewFileAccountKey(privateFile, 0, defaultSignAlgo, defaultHashAlgo),
+		Key:     accounts.NewFileAccountKey(privateFile, 0, defaultSignAlgo, defaultHashAlgo),
 	}, nil
 }
 
@@ -159,7 +160,7 @@ func createEmulatorAccount(
 	flow flowkit.Services,
 	name string,
 	key crypto.PrivateKey,
-) (*flowkit.Account, error) {
+) (*accounts.Account, error) {
 	signer, err := state.EmulatorServiceAccount()
 	if err != nil {
 		return nil, err
@@ -179,10 +180,10 @@ func createEmulatorAccount(
 		return nil, err
 	}
 
-	return &flowkit.Account{
+	return &accounts.Account{
 		Name:    name,
 		Address: networkAccount.Address,
-		Key:     flowkit.NewHexAccountKeyFromPrivateKey(0, defaultHashAlgo, key),
+		Key:     accounts.NewHexAccountKeyFromPrivateKey(0, defaultHashAlgo, key),
 	}, nil
 }
 

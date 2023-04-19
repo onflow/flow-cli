@@ -20,6 +20,7 @@ package tests
 
 import (
 	"context"
+	accounts2 "github.com/onflow/flow-cli/flowkit/accounts"
 	"testing"
 
 	"github.com/onflow/cadence"
@@ -52,8 +53,8 @@ func initTestnet(t *testing.T) (gateway.Gateway, *flowkit.State, flowkit.Service
 	key, err := crypto.DecodePrivateKeyHex(crypto.ECDSA_P256, "4b2b6442fcbef2209bc1182af15d203a6195346cc8d95ebb433d3df1acb3910c")
 	require.NoError(t, err)
 
-	funderKey := flowkit.NewHexAccountKeyFromPrivateKey(0, crypto.SHA3_256, key)
-	funder := &flowkit.Account{
+	funderKey := accounts2.NewHexAccountKeyFromPrivateKey(0, crypto.SHA3_256, key)
+	funder := &accounts2.Account{
 		Name:    "funder",
 		Address: flowsdk.HexToAddress("0x72ddb3d2cec14114"),
 		Key:     funderKey,
@@ -74,10 +75,10 @@ func initTestnet(t *testing.T) (gateway.Gateway, *flowkit.State, flowkit.Service
 	)
 	require.NoError(t, err)
 
-	testAccount := &flowkit.Account{
+	testAccount := &accounts2.Account{
 		Name:    testAccountName,
 		Address: flowAccount.Address,
-		Key:     flowkit.NewHexAccountKeyFromPrivateKey(0, crypto.SHA3_256, testKey),
+		Key:     accounts2.NewHexAccountKeyFromPrivateKey(0, crypto.SHA3_256, testKey),
 	}
 	state.Accounts().AddOrUpdate(testAccount)
 

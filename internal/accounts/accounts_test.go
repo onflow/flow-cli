@@ -20,6 +20,7 @@ package accounts
 
 import (
 	"fmt"
+	"github.com/onflow/flow-cli/flowkit/accounts"
 	"strings"
 	"testing"
 
@@ -135,7 +136,7 @@ func Test_RemoveContract(t *testing.T) {
 		inArgs := []string{"test"}
 
 		srv.RemoveContract.Run(func(args mock.Arguments) {
-			acc := args.Get(1).(*flowkit.Account)
+			acc := args.Get(1).(*accounts.Account)
 			assert.Equal(t, "emulator-account", acc.Name)
 			assert.Equal(t, inArgs[0], args.Get(2).(string))
 		})
@@ -162,7 +163,7 @@ func Test_Create(t *testing.T) {
 		createFlags.Keys = []string{pkey}
 
 		srv.CreateAccount.Run(func(args mock.Arguments) {
-			acc := args.Get(1).(*flowkit.Account)
+			acc := args.Get(1).(*accounts.Account)
 			keys := args.Get(2).([]flowkit.AccountPublicKey)
 			assert.Equal(t, "emulator-account", acc.Name)
 			assert.Len(t, keys, 1)
@@ -185,7 +186,7 @@ func Test_Create(t *testing.T) {
 		createFlags.Weights = []int{500, 500}
 
 		srv.CreateAccount.Run(func(args mock.Arguments) {
-			acc := args.Get(1).(*flowkit.Account)
+			acc := args.Get(1).(*accounts.Account)
 			keys := args.Get(2).([]flowkit.AccountPublicKey)
 			assert.Equal(t, "emulator-account", acc.Name)
 			assert.Len(t, keys, 2)

@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package flowkit
+package accounts
 
 import (
 	"fmt"
@@ -35,7 +35,7 @@ type Account struct {
 	Key     AccountKey
 }
 
-func accountsFromConfig(conf *config.Config) (Accounts, error) {
+func FromConfig(conf *config.Config) (Accounts, error) {
 	var accounts Accounts
 	for _, accountConf := range conf.Accounts {
 		acc, err := fromConfig(accountConf)
@@ -48,7 +48,7 @@ func accountsFromConfig(conf *config.Config) (Accounts, error) {
 	return accounts, nil
 }
 
-func accountsToConfig(accounts Accounts) config.Accounts {
+func ToConfig(accounts Accounts) config.Accounts {
 	accountConfs := make([]config.Account, 0)
 
 	for _, account := range accounts {
@@ -59,7 +59,7 @@ func accountsToConfig(accounts Accounts) config.Accounts {
 }
 
 func fromConfig(account config.Account) (*Account, error) {
-	key, err := accountKeyFromConfig(account.Key)
+	key, err := keyFromConfig(account.Key)
 	if err != nil {
 		return nil, err
 	}
@@ -84,7 +84,7 @@ func toConfig(account Account) config.Account {
 	}
 }
 
-func generateEmulatorServiceAccount(sigAlgo crypto.SignatureAlgorithm, hashAlgo crypto.HashAlgorithm) (*Account, error) {
+func NewEmulatorAccount(sigAlgo crypto.SignatureAlgorithm, hashAlgo crypto.HashAlgorithm) (*Account, error) {
 	seed, err := randomSeed(crypto.MinSeedLength)
 	if err != nil {
 		return nil, err

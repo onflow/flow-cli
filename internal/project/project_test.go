@@ -19,6 +19,7 @@
 package project
 
 import (
+	"github.com/onflow/flow-cli/flowkit/accounts"
 	"testing"
 
 	"github.com/onflow/flow-go-sdk"
@@ -48,7 +49,7 @@ func Test_ProjectDeploy(t *testing.T) {
 			Location: "./ft.cdc",
 		})
 		_ = rw.WriteFile("./ft.cdc", []byte("test"), 0677) // mock the file
-		state.Accounts().AddOrUpdate(&flowkit.Account{Name: acc, Address: flow.HexToAddress("0x01")})
+		state.Accounts().AddOrUpdate(&accounts.Account{Name: acc, Address: flow.HexToAddress("0x01")})
 
 		state.Deployments().AddOrUpdate(config.Deployment{
 			Network:   config.MainnetNetwork.Name,

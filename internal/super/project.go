@@ -20,6 +20,7 @@ package super
 
 import (
 	"context"
+	"github.com/onflow/flow-cli/flowkit/accounts"
 
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
@@ -36,7 +37,7 @@ var emulator = config.EmulatorNetwork.Name
 const defaultAccount = "default"
 
 func newProject(
-	serviceAccount flowkit.Account,
+	serviceAccount accounts.Account,
 	flow flowkit.Services,
 	state *flowkit.State,
 	files *projectFiles,
@@ -57,7 +58,7 @@ func newProject(
 }
 
 type project struct {
-	service        *flowkit.Account
+	service        *accounts.Account
 	flow           flowkit.Services
 	state          *flowkit.State
 	projectFiles   *projectFiles
@@ -126,7 +127,7 @@ func (p *project) cleanState() {
 		_ = p.state.Deployments().Remove(d.Account, emulator)
 	}
 
-	accs := make([]flowkit.Account, len(*p.state.Accounts()))
+	accs := make([]accounts.Account, len(*p.state.Accounts()))
 	copy(accs, *p.state.Accounts()) // we need to make a copy otherwise when we remove order shifts
 	for _, a := range accs {
 		chain, err := util.GetAddressNetwork(a.Address)
@@ -214,10 +215,10 @@ func (p *project) addAccount(name string) error {
 		return err
 	}
 
-	p.state.Accounts().AddOrUpdate(&flowkit.Account{
+	p.state.Accounts().AddOrUpdate(&accounts.Account{
 		Name:    name,
 		Address: flowAcc.Address,
-		Key:     flowkit.NewHexAccountKeyFromPrivateKey(0, crypto.SHA3_256, *privateKey),
+		Key:     accounts.NewHexAccountKeyFromPrivateKey(0, crypto.SHA3_256, *privateKey),
 	})
 	p.state.Deployments().AddOrUpdate(config.Deployment{ // init empty deployment
 		Network: emulator,

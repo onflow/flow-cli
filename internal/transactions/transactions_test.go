@@ -19,6 +19,7 @@
 package transactions
 
 import (
+	"github.com/onflow/flow-cli/flowkit/accounts"
 	"strings"
 	"testing"
 
@@ -235,7 +236,7 @@ func Test_Sign(t *testing.T) {
 		_ = rw.WriteFile(inArgs[0], built, 0677)
 
 		srv.SignTransactionPayload.Run(func(args mock.Arguments) {
-			assert.Equal(t, "emulator-account", args.Get(1).(*flowkit.Account).Name)
+			assert.Equal(t, "emulator-account", args.Get(1).(*accounts.Account).Name)
 			assert.Equal(t, built, args.Get(2).([]byte))
 		}).Return(flowkit.NewTransaction(), nil)
 

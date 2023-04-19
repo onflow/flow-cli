@@ -22,6 +22,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"github.com/onflow/flow-cli/flowkit/accounts"
 	"strconv"
 	"strings"
 	"sync"
@@ -146,7 +147,7 @@ func (f *Flowkit) GetAccount(_ context.Context, address flow.Address) (*flow.Acc
 
 func (f *Flowkit) CreateAccount(
 	_ context.Context,
-	signer *Account,
+	signer *accounts.Account,
 	keys []AccountPublicKey,
 ) (*flow.Account, flow.Identifier, error) {
 	var accKeys []*flow.AccountKey
@@ -218,7 +219,7 @@ func (f *Flowkit) CreateAccount(
 // prepareTransaction prepares transaction for sending with data from network
 func (f *Flowkit) prepareTransaction(
 	tx *Transaction,
-	account *Account,
+	account *accounts.Account,
 ) (*Transaction, error) {
 
 	block, err := f.gateway.GetLatestBlock()
@@ -256,7 +257,7 @@ func UpdateExistingContract(updateExisting bool) UpdateContract {
 
 func (f *Flowkit) AddContract(
 	ctx context.Context,
-	account *Account,
+	account *accounts.Account,
 	contract Script,
 	update UpdateContract,
 ) (flow.Identifier, bool, error) {
@@ -365,7 +366,7 @@ func (f *Flowkit) AddContract(
 
 func (f *Flowkit) RemoveContract(
 	_ context.Context,
-	account *Account,
+	account *accounts.Account,
 	contractName string,
 ) (flow.Identifier, error) {
 	// check if contracts exists on the account
@@ -551,7 +552,7 @@ func (f *Flowkit) GenerateKey(
 	var err error
 
 	if inputSeed == "" {
-		seed, err = randomSeed(crypto.MinSeedLength)
+		seed, err = accounts.randomSeed(crypto.MinSeedLength)
 		if err != nil {
 			return nil, err
 		}
@@ -915,7 +916,7 @@ func (f *Flowkit) BuildTransaction(
 
 func (f *Flowkit) SignTransactionPayload(
 	_ context.Context,
-	signer *Account,
+	signer *accounts.Account,
 	payload []byte,
 ) (*Transaction, error) {
 	tx, err := NewTransactionFromPayload(payload)

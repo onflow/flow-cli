@@ -20,6 +20,7 @@ package flowkit
 
 import (
 	"context"
+	"github.com/onflow/flow-cli/flowkit/accounts"
 
 	"github.com/onflow/cadence"
 	"github.com/onflow/flow-go-sdk"
@@ -46,19 +47,19 @@ type Services interface {
 	// Returns the newly created account as well as the ID of the transaction that created the account.
 	//
 	// Keys is a slice but only one can be passed as well. If the transaction fails or there are other issues an error is returned.
-	CreateAccount(context.Context, *Account, []AccountPublicKey) (*flow.Account, flow.Identifier, error)
+	CreateAccount(context.Context, *accounts.Account, []AccountPublicKey) (*flow.Account, flow.Identifier, error)
 
 	// AddContract to the Flow account provided and return the transaction ID.
 	//
 	// If the contract already exists on the account the operation will fail and error will be returned.
 	// Use UpdateExistingContract(bool) to define whether a contract should be updated or not, or you can also
 	// define a custom UpdateContract function which returns bool indicating whether a contract should be updated or not.
-	AddContract(context.Context, *Account, Script, UpdateContract) (flow.Identifier, bool, error)
+	AddContract(context.Context, *accounts.Account, Script, UpdateContract) (flow.Identifier, bool, error)
 
 	// RemoveContract from the provided account by its name.
 	//
 	// If removal is successful transaction ID is returned.
-	RemoveContract(context.Context, *Account, string) (flow.Identifier, error)
+	RemoveContract(context.Context, *accounts.Account, string) (flow.Identifier, error)
 
 	// GetBlock by the query from Flow blockchain. Query can define a block by ID, block by height or require the latest block.
 	GetBlock(context.Context, BlockQuery) (*flow.Block, error)
@@ -108,7 +109,7 @@ type Services interface {
 	// SignTransactionPayload will use the signer account provided and the payload raw byte content to sign it.
 	//
 	// The payload should be RLP encoded transaction payload and is suggested to be used in pair with BuildTransaction function.
-	SignTransactionPayload(context.Context, *Account, []byte) (*Transaction, error)
+	SignTransactionPayload(context.Context, *accounts.Account, []byte) (*Transaction, error)
 
 	// SendSignedTransaction will send a prebuilt and signed transaction to the Flow network.
 	//

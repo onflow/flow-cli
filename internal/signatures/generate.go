@@ -22,6 +22,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"github.com/onflow/flow-cli/flowkit/accounts"
 
 	"github.com/spf13/cobra"
 
@@ -82,7 +83,7 @@ func sign(
 type signatureResult struct {
 	result  string
 	message string
-	key     flowkit.AccountKey
+	key     accounts.AccountKey
 }
 
 func (s *signatureResult) pubKey() string {

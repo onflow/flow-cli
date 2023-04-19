@@ -20,6 +20,7 @@ package config
 
 import (
 	"fmt"
+	"github.com/onflow/flow-cli/flowkit/accounts"
 	"strconv"
 
 	"github.com/onflow/flow-go-sdk"
@@ -95,8 +96,8 @@ func addAccount(
 		Key:     accountKey,
 	}
 
-	hexKey := flowkit.NewHexAccountKeyFromPrivateKey(account.Key.Index, account.Key.HashAlgo, account.Key.PrivateKey)
-	state.Accounts().AddOrUpdate(&flowkit.Account{
+	hexKey := accounts.NewHexAccountKeyFromPrivateKey(account.Key.Index, account.Key.HashAlgo, account.Key.PrivateKey)
+	state.Accounts().AddOrUpdate(&accounts.Account{
 		Name:    account.Name,
 		Address: account.Address,
 		Key:     hexKey,

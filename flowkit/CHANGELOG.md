@@ -163,6 +163,11 @@ The `GetBlock` API doesn't return the `[]flow.BlockEvents, []*flow.Collection` a
 
 The `GetLatestBlockHeight` method was removed, you should instead use `GetBlock(LatestBlockQuery)`.
 
+---
+
+The `Account` type and helper methods as well as `AccountKey` interface and all the implementations 
+were moved to `accounts` package. 
+
 
 ## v0.46.2
 

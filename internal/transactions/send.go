@@ -21,6 +21,7 @@ package transactions
 import (
 	"context"
 	"fmt"
+	"github.com/onflow/flow-cli/flowkit/accounts"
 
 	"github.com/onflow/cadence"
 	"github.com/spf13/cobra"
@@ -64,7 +65,7 @@ func send(
 	codeFilename := args[0]
 
 	proposerName := sendFlags.Proposer
-	var proposer *flowkit.Account
+	var proposer *accounts.Account
 	if proposerName != "" {
 		proposer, err = state.Accounts().ByName(proposerName)
 		if err != nil {
@@ -73,7 +74,7 @@ func send(
 	}
 
 	payerName := sendFlags.Payer
-	var payer *flowkit.Account
+	var payer *accounts.Account
 	if payerName != "" {
 		payer, err = state.Accounts().ByName(payerName)
 		if err != nil {
@@ -81,7 +82,7 @@ func send(
 		}
 	}
 
-	var authorizers []flowkit.Account
+	var authorizers []accounts.Account
 	for _, authorizerName := range sendFlags.Authorizers {
 		authorizer, err := state.Accounts().ByName(authorizerName)
 		if err != nil {
