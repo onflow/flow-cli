@@ -168,6 +168,10 @@ The `GetLatestBlockHeight` method was removed, you should instead use `GetBlock(
 The `Account` type and helper methods as well as `AccountKey` interface and all the implementations 
 were moved to `accounts` package. 
 
+---
+
+The `AccountKey`, `HexAccountKey`, `KmsAccountKey`, `Bip44AccountKey` were renamed to `Key`, `HexKey`, `KMSKey`, `BIP44Key` to avoid stutter in the naming,
+as well as all the factory methods were renamed to remove the `account` word.
 
 ## v0.46.2
 
