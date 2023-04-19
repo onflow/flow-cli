@@ -172,6 +172,11 @@ Renamed transaction function from `transaction.SetGasLimit` to `transaction.SetC
 
 ---
 
+The `flowkit.Account` getter methods for `account.Address()`, `account.Name()` was removed and the variable 
+was exported so you can use `account.Address`, `account.Name` directly.
+
+--- 
+
 The function `state.DeploymentContractsByNetwork(network string)` changed to accept network type like so:
 `state.DeploymentContractsByNetwork(network config.Network)`, there are also predefined network types in config 
 you can access using `config.EmulatorNetwork`, `config.TestnetNetwork`, `config.MainnetNetwork`.
