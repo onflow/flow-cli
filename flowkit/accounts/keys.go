@@ -60,7 +60,7 @@ type Key interface {
 
 var _ Key = &HexKey{}
 
-var _ Key = &KmsAccountKey{}
+var _ Key = &KMSKey{}
 
 var _ Key = &Bip44Key{}
 
@@ -121,14 +121,14 @@ func (a *baseAccountKey) Validate() error {
 	return nil
 }
 
-// KmsAccountKey implements Gcloud KMS system for signing.
-type KmsAccountKey struct {
+// KMSKey implements Gcloud KMS system for signing.
+type KMSKey struct {
 	*baseAccountKey
 	kmsKey cloudkms.Key
 }
 
 // ToConfig convert account key to configuration.
-func (a *KmsAccountKey) ToConfig() config.AccountKey {
+func (a *KMSKey) ToConfig() config.AccountKey {
 	return config.AccountKey{
 		Type:       a.keyType,
 		Index:      a.index,
@@ -138,7 +138,7 @@ func (a *KmsAccountKey) ToConfig() config.AccountKey {
 	}
 }
 
-func (a *KmsAccountKey) Signer(ctx context.Context) (crypto.Signer, error) {
+func (a *KMSKey) Signer(ctx context.Context) (crypto.Signer, error) {
 	kmsClient, err := cloudkms.NewClient(ctx)
 	if err != nil {
 		return nil, err
@@ -155,11 +155,11 @@ func (a *KmsAccountKey) Signer(ctx context.Context) (crypto.Signer, error) {
 	return accountKMSSigner, nil
 }
 
-func (a *KmsAccountKey) Validate() error {
+func (a *KMSKey) Validate() error {
 	return gcloudApplicationSignin(a.kmsKey.ResourceID())
 }
 
-func (a *KmsAccountKey) PrivateKey() (*crypto.PrivateKey, error) {
+func (a *KMSKey) PrivateKey() (*crypto.PrivateKey, error) {
 	return nil, fmt.Errorf("private key not accessible")
 }
 
@@ -207,7 +207,7 @@ func kmsKeyFromConfig(key config.AccountKey) (Key, error) {
 		return nil, err
 	}
 
-	return &KmsAccountKey{
+	return &KMSKey{
 		baseAccountKey: &baseAccountKey{
 			keyType:  config.KeyTypeGoogleKMS,
 			index:    key.Index,
