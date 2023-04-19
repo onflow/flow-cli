@@ -19,7 +19,6 @@
 package project
 
 import (
-	"github.com/onflow/flow-cli/flowkit/accounts"
 	"testing"
 
 	"github.com/onflow/flow-go-sdk"
@@ -27,6 +26,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/onflow/flow-cli/flowkit"
+	"github.com/onflow/flow-cli/flowkit/accounts"
 	"github.com/onflow/flow-cli/flowkit/config"
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/internal/util"
@@ -68,8 +68,11 @@ func Test_ProjectDeploy(t *testing.T) {
 
 		assert.Len(t, state.Deployments().ByNetwork(config.MainnetNetwork.Name), 0)  // should remove it
 		assert.Len(t, state.Deployments().ByNetwork(config.EmulatorNetwork.Name), 1) // should not remove it
-		assert.NotNil(t, state.Contracts().ByName(ft).Aliases)
-		assert.Equal(t, "f233dcee88fe0abe", state.Contracts().ByName(ft).Aliases.ByNetwork(config.MainnetNetwork.Name).Address.String())
+		c, err := state.Contracts().ByName(ft)
+		assert.NoError(t, err)
+		assert.NotNil(t, c.Aliases)
+
+		assert.Equal(t, "f233dcee88fe0abe", c.Aliases.ByNetwork(config.MainnetNetwork.Name).Address.String())
 	})
 
 }
