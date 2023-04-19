@@ -19,6 +19,7 @@
 package accounts
 
 import (
+	"crypto/rand"
 	"fmt"
 	"strings"
 
@@ -85,9 +86,10 @@ func toConfig(account Account) config.Account {
 }
 
 func NewEmulatorAccount(sigAlgo crypto.SignatureAlgorithm, hashAlgo crypto.HashAlgorithm) (*Account, error) {
-	seed, err := randomSeed(crypto.MinSeedLength)
+	seed := make([]byte, crypto.MinSeedLength)
+	_, err := rand.Read(seed)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to generate random seed: %v", err)
 	}
 
 	privateKey, err := crypto.GeneratePrivateKey(sigAlgo, seed)

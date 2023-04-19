@@ -21,8 +21,8 @@ package flowkit
 import (
 	"bytes"
 	"context"
+	"crypto/rand"
 	"fmt"
-	"github.com/onflow/flow-cli/flowkit/accounts"
 	"strconv"
 	"strings"
 	"sync"
@@ -38,6 +38,7 @@ import (
 	"golang.org/x/exp/maps"
 	"golang.org/x/exp/slices"
 
+	"github.com/onflow/flow-cli/flowkit/accounts"
 	"github.com/onflow/flow-cli/flowkit/config"
 	"github.com/onflow/flow-cli/flowkit/gateway"
 	"github.com/onflow/flow-cli/flowkit/output"
@@ -548,16 +549,14 @@ func (f *Flowkit) GenerateKey(
 	sigAlgo crypto.SignatureAlgorithm,
 	inputSeed string,
 ) (crypto.PrivateKey, error) {
-	var seed []byte
-	var err error
+	seed := []byte(inputSeed)
 
 	if inputSeed == "" {
-		seed, err = accounts.randomSeed(crypto.MinSeedLength)
+		seed = make([]byte, crypto.MinSeedLength)
+		_, err := rand.Read(seed)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to generate random seed: %v", err)
 		}
-	} else {
-		seed = []byte(inputSeed)
 	}
 
 	privateKey, err := crypto.GeneratePrivateKey(sigAlgo, seed)
