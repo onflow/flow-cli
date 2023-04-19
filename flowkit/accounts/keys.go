@@ -36,8 +36,8 @@ import (
 	"github.com/onflow/flow-cli/flowkit/config"
 )
 
-// AccountPublicKey contains public account key information.
-type AccountPublicKey struct {
+// PublicKey contains public account key information.
+type PublicKey struct {
 	Public   crypto.PublicKey
 	Weight   int
 	SigAlgo  crypto.SignatureAlgorithm

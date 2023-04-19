@@ -105,9 +105,9 @@ func create(
 		return nil, err
 	}
 
-	keys := make([]accounts.AccountPublicKey, len(pubKeys))
+	keys := make([]accounts.PublicKey, len(pubKeys))
 	for i, key := range pubKeys {
-		keys[i] = accounts.AccountPublicKey{
+		keys[i] = accounts.PublicKey{
 			Public: key, Weight: weightFlag[i], SigAlgo: sigAlgos[i], HashAlgo: hashAlgos[i],
 		}
 	}

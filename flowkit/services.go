@@ -48,7 +48,7 @@ type Services interface {
 	// Returns the newly created account as well as the ID of the transaction that created the account.
 	//
 	// Keys is a slice but only one can be passed as well. If the transaction fails or there are other issues an error is returned.
-	CreateAccount(context.Context, *accounts.Account, []accounts.AccountPublicKey) (*flow.Account, flow.Identifier, error)
+	CreateAccount(context.Context, *accounts.Account, []accounts.PublicKey) (*flow.Account, flow.Identifier, error)
 
 	// AddContract to the Flow account provided and return the transaction ID.
 	//

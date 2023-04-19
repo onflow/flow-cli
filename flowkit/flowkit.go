@@ -142,7 +142,7 @@ func (f *Flowkit) GetAccount(_ context.Context, address flow.Address) (*flow.Acc
 func (f *Flowkit) CreateAccount(
 	_ context.Context,
 	signer *accounts.Account,
-	keys []accounts.AccountPublicKey,
+	keys []accounts.PublicKey,
 ) (*flow.Account, flow.Identifier, error) {
 	var accKeys []*flow.AccountKey
 	for _, k := range keys {
