@@ -218,7 +218,7 @@ func (p *project) addAccount(name string) error {
 	p.state.Accounts().AddOrUpdate(&accounts.Account{
 		Name:    name,
 		Address: flowAcc.Address,
-		Key:     accounts.NewHexAccountKeyFromPrivateKey(0, crypto.SHA3_256, *privateKey),
+		Key:     accounts.NewHexKeyFromPrivateKey(0, crypto.SHA3_256, *privateKey),
 	})
 	p.state.Deployments().AddOrUpdate(config.Deployment{ // init empty deployment
 		Network: emulator,

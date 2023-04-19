@@ -98,7 +98,7 @@ func NewEmulatorAccount(sigAlgo crypto.SignatureAlgorithm, hashAlgo crypto.HashA
 	return &Account{
 		Name:    config.DefaultEmulator.ServiceAccount,
 		Address: flow.ServiceAddress(flow.Emulator),
-		Key:     NewHexAccountKeyFromPrivateKey(0, hashAlgo, privateKey),
+		Key:     NewHexKeyFromPrivateKey(0, hashAlgo, privateKey),
 	}, nil
 }
 

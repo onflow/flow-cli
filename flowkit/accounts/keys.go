@@ -79,15 +79,15 @@ func keyFromConfig(accountKeyConf config.AccountKey) (Key, error) {
 	return nil, fmt.Errorf(`invalid key type: "%s"`, accountKeyConf.Type)
 }
 
-type baseAccountKey struct {
+type baseKey struct {
 	keyType  config.KeyType
 	index    int
 	sigAlgo  crypto.SignatureAlgorithm
 	hashAlgo crypto.HashAlgorithm
 }
 
-func baseKeyFromConfig(accountKeyConf config.AccountKey) *baseAccountKey {
-	return &baseAccountKey{
+func baseKeyFromConfig(accountKeyConf config.AccountKey) *baseKey {
+	return &baseKey{
 		keyType:  accountKeyConf.Type,
 		index:    accountKeyConf.Index,
 		sigAlgo:  accountKeyConf.SigAlgo,
@@ -95,35 +95,35 @@ func baseKeyFromConfig(accountKeyConf config.AccountKey) *baseAccountKey {
 	}
 }
 
-func (a *baseAccountKey) Type() config.KeyType {
+func (a *baseKey) Type() config.KeyType {
 	return a.keyType
 }
 
-func (a *baseAccountKey) SigAlgo() crypto.SignatureAlgorithm {
+func (a *baseKey) SigAlgo() crypto.SignatureAlgorithm {
 	if a.sigAlgo == crypto.UnknownSignatureAlgorithm {
 		return crypto.ECDSA_P256 // default value
 	}
 	return a.sigAlgo
 }
 
-func (a *baseAccountKey) HashAlgo() crypto.HashAlgorithm {
+func (a *baseKey) HashAlgo() crypto.HashAlgorithm {
 	if a.hashAlgo == crypto.UnknownHashAlgorithm {
 		return crypto.SHA3_256 // default value
 	}
 	return a.hashAlgo
 }
 
-func (a *baseAccountKey) Index() int {
+func (a *baseKey) Index() int {
 	return a.index // default to 0
 }
 
-func (a *baseAccountKey) Validate() error {
+func (a *baseKey) Validate() error {
 	return nil
 }
 
 // KMSKey implements Gcloud KMS system for signing.
 type KMSKey struct {
-	*baseAccountKey
+	*baseKey
 	kmsKey cloudkms.Key
 }
 
@@ -208,7 +208,7 @@ func kmsKeyFromConfig(key config.AccountKey) (Key, error) {
 	}
 
 	return &KMSKey{
-		baseAccountKey: &baseAccountKey{
+		baseKey: &baseKey{
 			keyType:  config.KeyTypeGoogleKMS,
 			index:    key.Index,
 			sigAlgo:  key.SigAlgo,
@@ -220,17 +220,17 @@ func kmsKeyFromConfig(key config.AccountKey) (Key, error) {
 
 // HexKey implements account key in hex representation.
 type HexKey struct {
-	*baseAccountKey
+	*baseKey
 	privateKey crypto.PrivateKey
 }
 
-func NewHexAccountKeyFromPrivateKey(
+func NewHexKeyFromPrivateKey(
 	index int,
 	hashAlgo crypto.HashAlgorithm,
 	privateKey crypto.PrivateKey,
 ) *HexKey {
 	return &HexKey{
-		baseAccountKey: &baseAccountKey{
+		baseKey: &baseKey{
 			keyType:  config.KeyTypeHex,
 			index:    index,
 			sigAlgo:  privateKey.Algorithm(),
@@ -242,8 +242,8 @@ func NewHexAccountKeyFromPrivateKey(
 
 func hexKeyFromConfig(accountKey config.AccountKey) (*HexKey, error) {
 	return &HexKey{
-		baseAccountKey: baseKeyFromConfig(accountKey),
-		privateKey:     accountKey.PrivateKey,
+		baseKey:    baseKeyFromConfig(accountKey),
+		privateKey: accountKey.PrivateKey,
 	}, nil
 }
 
@@ -281,8 +281,8 @@ func (a *HexKey) privateKeyHex() string {
 // fileKeyFromConfig creates a hex account key from a file location
 func fileKeyFromConfig(accountKey config.AccountKey) (*FileKey, error) {
 	return &FileKey{
-		baseAccountKey: baseKeyFromConfig(accountKey),
-		location:       accountKey.Location,
+		baseKey:  baseKeyFromConfig(accountKey),
+		location: accountKey.Location,
 	}, nil
 }
 
@@ -296,7 +296,7 @@ func NewFileKey(
 	hashAlgo crypto.HashAlgorithm,
 ) *FileKey {
 	return &FileKey{
-		baseAccountKey: &baseAccountKey{
+		baseKey: &baseKey{
 			keyType:  config.KeyTypeFile,
 			index:    index,
 			sigAlgo:  sigAlgo,
@@ -310,7 +310,7 @@ func NewFileKey(
 //
 // The FileKey stores location of the file where private key is stored in hex-encoded format.
 type FileKey struct {
-	*baseAccountKey
+	*baseKey
 	privateKey crypto.PrivateKey
 	location   string
 }
@@ -350,7 +350,7 @@ func (f *FileKey) ToConfig() config.AccountKey {
 
 // BIP44Key implements https://github.com/onflow/flow/blob/master/flips/20201125-bip-44-multi-account.md
 type BIP44Key struct {
-	*baseAccountKey
+	*baseKey
 	privateKey     crypto.PrivateKey
 	mnemonic       string
 	derivationPath string
@@ -358,7 +358,7 @@ type BIP44Key struct {
 
 func bip44KeyFromConfig(key config.AccountKey) (Key, error) {
 	return &BIP44Key{
-		baseAccountKey: &baseAccountKey{
+		baseKey: &baseKey{
 			keyType:  config.KeyTypeBip44,
 			index:    key.Index,
 			sigAlgo:  key.SigAlgo,
@@ -433,10 +433,6 @@ func (a *BIP44Key) Validate() error {
 		return err
 	}
 	return nil
-}
-
-func (a *BIP44Key) PrivateKeyHex() string {
-	return hex.EncodeToString(a.privateKey.Encode())
 }
 
 func randomSeed(n int) ([]byte, error) {

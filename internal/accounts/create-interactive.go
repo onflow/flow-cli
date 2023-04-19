@@ -183,7 +183,7 @@ func createEmulatorAccount(
 	return &accounts.Account{
 		Name:    name,
 		Address: networkAccount.Address,
-		Key:     accounts.NewHexAccountKeyFromPrivateKey(0, defaultHashAlgo, key),
+		Key:     accounts.NewHexKeyFromPrivateKey(0, defaultHashAlgo, key),
 	}, nil
 }
 

@@ -526,7 +526,7 @@ func Test_ChangingState(t *testing.T) {
 		crypto.ECDSA_P256,
 		[]byte("seedseedseedseedseedseedseedseedseedseedseedseed"),
 	)
-	key := accounts.NewHexAccountKeyFromPrivateKey(em.Key.Index(), em.Key.HashAlgo(), pk)
+	key := accounts.NewHexKeyFromPrivateKey(em.Key.Index(), em.Key.HashAlgo(), pk)
 	em.Key = key
 
 	foo, err := p.Accounts().ByName("foo")

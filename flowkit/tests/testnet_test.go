@@ -53,7 +53,7 @@ func initTestnet(t *testing.T) (gateway.Gateway, *flowkit.State, flowkit.Service
 	key, err := crypto.DecodePrivateKeyHex(crypto.ECDSA_P256, "4b2b6442fcbef2209bc1182af15d203a6195346cc8d95ebb433d3df1acb3910c")
 	require.NoError(t, err)
 
-	funderKey := accounts2.NewHexAccountKeyFromPrivateKey(0, crypto.SHA3_256, key)
+	funderKey := accounts2.NewHexKeyFromPrivateKey(0, crypto.SHA3_256, key)
 	funder := &accounts2.Account{
 		Name:    "funder",
 		Address: flowsdk.HexToAddress("0x72ddb3d2cec14114"),
@@ -78,7 +78,7 @@ func initTestnet(t *testing.T) (gateway.Gateway, *flowkit.State, flowkit.Service
 	testAccount := &accounts2.Account{
 		Name:    testAccountName,
 		Address: flowAccount.Address,
-		Key:     accounts2.NewHexAccountKeyFromPrivateKey(0, crypto.SHA3_256, testKey),
+		Key:     accounts2.NewHexKeyFromPrivateKey(0, crypto.SHA3_256, testKey),
 	}
 	state.Accounts().AddOrUpdate(testAccount)
 

@@ -96,7 +96,7 @@ func addAccount(
 		Key:     accountKey,
 	}
 
-	hexKey := accounts.NewHexAccountKeyFromPrivateKey(account.Key.Index, account.Key.HashAlgo, account.Key.PrivateKey)
+	hexKey := accounts.NewHexKeyFromPrivateKey(account.Key.Index, account.Key.HashAlgo, account.Key.PrivateKey)
 	state.Accounts().AddOrUpdate(&accounts.Account{
 		Name:    account.Name,
 		Address: account.Address,
