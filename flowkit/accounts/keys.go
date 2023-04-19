@@ -58,7 +58,7 @@ type Key interface {
 	PrivateKey() (*crypto.PrivateKey, error)
 }
 
-var _ Key = &HexAccountKey{}
+var _ Key = &HexKey{}
 
 var _ Key = &KmsAccountKey{}
 
@@ -218,8 +218,8 @@ func kmsKeyFromConfig(key config.AccountKey) (Key, error) {
 	}, nil
 }
 
-// HexAccountKey implements account key in hex representation.
-type HexAccountKey struct {
+// HexKey implements account key in hex representation.
+type HexKey struct {
 	*baseAccountKey
 	privateKey crypto.PrivateKey
 }
@@ -228,8 +228,8 @@ func NewHexAccountKeyFromPrivateKey(
 	index int,
 	hashAlgo crypto.HashAlgorithm,
 	privateKey crypto.PrivateKey,
-) *HexAccountKey {
-	return &HexAccountKey{
+) *HexKey {
+	return &HexKey{
 		baseAccountKey: &baseAccountKey{
 			keyType:  config.KeyTypeHex,
 			index:    index,
@@ -240,22 +240,22 @@ func NewHexAccountKeyFromPrivateKey(
 	}
 }
 
-func hexKeyFromConfig(accountKey config.AccountKey) (*HexAccountKey, error) {
-	return &HexAccountKey{
+func hexKeyFromConfig(accountKey config.AccountKey) (*HexKey, error) {
+	return &HexKey{
 		baseAccountKey: baseKeyFromConfig(accountKey),
 		privateKey:     accountKey.PrivateKey,
 	}, nil
 }
 
-func (a *HexAccountKey) Signer(ctx context.Context) (crypto.Signer, error) {
+func (a *HexKey) Signer(ctx context.Context) (crypto.Signer, error) {
 	return crypto.NewInMemorySigner(a.privateKey, a.HashAlgo())
 }
 
-func (a *HexAccountKey) PrivateKey() (*crypto.PrivateKey, error) {
+func (a *HexKey) PrivateKey() (*crypto.PrivateKey, error) {
 	return &a.privateKey, nil
 }
 
-func (a *HexAccountKey) ToConfig() config.AccountKey {
+func (a *HexKey) ToConfig() config.AccountKey {
 	return config.AccountKey{
 		Type:       a.keyType,
 		Index:      a.index,
@@ -265,7 +265,7 @@ func (a *HexAccountKey) ToConfig() config.AccountKey {
 	}
 }
 
-func (a *HexAccountKey) Validate() error {
+func (a *HexKey) Validate() error {
 	_, err := crypto.DecodePrivateKeyHex(a.sigAlgo, a.PrivateKeyHex())
 	if err != nil {
 		return fmt.Errorf("invalid private key: %w", err)
@@ -274,7 +274,7 @@ func (a *HexAccountKey) Validate() error {
 	return nil
 }
 
-func (a *HexAccountKey) PrivateKeyHex() string {
+func (a *HexKey) PrivateKeyHex() string {
 	return hex.EncodeToString(a.privateKey.Encode())
 }
 
