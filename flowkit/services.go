@@ -104,8 +104,8 @@ type Services interface {
 
 	// BuildTransaction builds a new transaction type for later signing and submitting to the network.
 	//
-	// TransactionAddressesRoles type defines the address for each role (payer, proposer, authorizers) and the script defines the transaction content.
-	BuildTransaction(context.Context, transactions.TransactionAddressesRoles, int, Script, uint64) (*transactions.Transaction, error)
+	// AddressesRoles type defines the address for each role (payer, proposer, authorizers) and the script defines the transaction content.
+	BuildTransaction(context.Context, transactions.AddressesRoles, int, Script, uint64) (*transactions.Transaction, error)
 
 	// SignTransactionPayload will use the signer account provided and the payload raw byte content to sign it.
 	//
@@ -119,5 +119,5 @@ type Services interface {
 
 	// SendTransaction will build and send a transaction to the Flow network, using the accounts provided for each role and
 	// contain the script. Transaction as well as transaction result will be returned in case the transaction is successfully submitted.
-	SendTransaction(context.Context, transactions.TransactionAccountRoles, Script, uint64) (*flow.Transaction, *flow.TransactionResult, error)
+	SendTransaction(context.Context, transactions.AccountRoles, Script, uint64) (*flow.Transaction, *flow.TransactionResult, error)
 }

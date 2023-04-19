@@ -93,7 +93,7 @@ func sign(
 
 	var signed *transactions.Transaction
 	var signers []*accounts.Account
-	tx, err := transactions.NewTransactionFromPayload(payload)
+	tx, err := transactions.NewFromPayload(payload)
 	if err != nil {
 		return nil, err
 	}

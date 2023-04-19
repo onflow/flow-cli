@@ -59,7 +59,7 @@ func decode(
 		return nil, fmt.Errorf("failed to read transaction from %s: %v", filename, err)
 	}
 
-	tx, err := transactions.NewTransactionFromPayload(payload)
+	tx, err := transactions.NewFromPayload(payload)
 	if err != nil {
 		return nil, err
 	}

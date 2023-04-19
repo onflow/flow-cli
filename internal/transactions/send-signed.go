@@ -63,7 +63,7 @@ func sendSigned(
 		return nil, fmt.Errorf("error loading transaction payload: %w", err)
 	}
 
-	tx, err := transactions.NewTransactionFromPayload(code)
+	tx, err := transactions.NewFromPayload(code)
 	if err != nil {
 		return nil, err
 	}

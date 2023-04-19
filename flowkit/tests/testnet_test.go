@@ -120,7 +120,7 @@ func initTestnet(t *testing.T) (gateway.Gateway, *flowkit.State, flowkit.Service
 	amount, _ := cadence.NewUFix64("0.01")
 	_, _, err = flow.SendTransaction(
 		context.Background(),
-		transactions2.NewTransactionSingleAccountRole(*funder),
+		transactions2.SingleAccountRole(*funder),
 		flowkit.Script{
 			Code: transferTx,
 			Args: []cadence.Value{amount, cadence.NewAddress(testAccount.Address)},

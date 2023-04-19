@@ -100,7 +100,7 @@ func build(
 
 	tx, err := flow.BuildTransaction(
 		context.Background(),
-		transactions.TransactionAddressesRoles{
+		transactions.AddressesRoles{
 			Proposer:    proposer,
 			Authorizers: authorizers,
 			Payer:       payer,

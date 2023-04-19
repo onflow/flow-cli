@@ -129,7 +129,7 @@ func send(
 
 	tx, txResult, err := flow.SendTransaction(
 		context.Background(),
-		transactions.TransactionAccountRoles{
+		transactions.AccountRoles{
 			Proposer:    *proposer,
 			Authorizers: authorizers,
 			Payer:       *payer,

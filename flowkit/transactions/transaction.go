@@ -35,15 +35,15 @@ import (
 
 const maxGasLimit uint64 = 9999
 
-// NewTransaction create new instance of transaction.
-func NewTransaction() *Transaction {
+// New create new instance of transaction.
+func New() *Transaction {
 	return &Transaction{
 		tx: flow.NewTransaction(),
 	}
 }
 
-// NewTransactionFromPayload build transaction from payload.
-func NewTransactionFromPayload(payload []byte) (*Transaction, error) {
+// NewFromPayload build transaction from payload.
+func NewFromPayload(payload []byte) (*Transaction, error) {
 	partialTxBytes, err := hex.DecodeString(string(payload))
 	if err != nil {
 		return nil, fmt.Errorf("failed to decode partial transaction from %s: %v", payload, err)
@@ -61,21 +61,21 @@ func NewTransactionFromPayload(payload []byte) (*Transaction, error) {
 	return tx, nil
 }
 
-// NewUpdateAccountContractTransaction update account contract.
-func NewUpdateAccountContractTransaction(signer *accounts.Account, name string, source []byte) (*Transaction, error) {
+// NewUpdateAccountContract update account contract.
+func NewUpdateAccountContract(signer *accounts.Account, name string, source []byte) (*Transaction, error) {
 	contract := templates.Contract{
 		Name:   name,
 		Source: string(source),
 	}
 
-	return newTransactionFromTemplate(
+	return newFromTemplate(
 		templates.UpdateAccountContract(signer.Address, contract),
 		signer,
 	)
 }
 
-// NewAddAccountContractTransaction add new contract to the account.
-func NewAddAccountContractTransaction(
+// NewAddAccountContract add new contract to the account.
+func NewAddAccountContract(
 	signer *accounts.Account,
 	name string,
 	source []byte,
@@ -87,9 +87,9 @@ func NewAddAccountContractTransaction(
 	}, args)
 }
 
-// NewRemoveAccountContractTransaction creates new transaction to remove contract.
-func NewRemoveAccountContractTransaction(signer *accounts.Account, name string) (*Transaction, error) {
-	return newTransactionFromTemplate(
+// NewRemoveAccountContract creates new transaction to remove contract.
+func NewRemoveAccountContract(signer *accounts.Account, name string) (*Transaction, error) {
+	return newFromTemplate(
 		templates.RemoveAccountContract(signer.Address, name),
 		signer,
 	)
@@ -146,8 +146,8 @@ func addAccountContractWithArgs(
 	return t, nil
 }
 
-// NewCreateAccountTransaction creates new transaction for account.
-func NewCreateAccountTransaction(
+// NewCreateAccount creates new transaction for account.
+func NewCreateAccount(
 	signer *accounts.Account,
 	keys []*flow.AccountKey,
 	contracts []templates.Contract,
@@ -156,10 +156,10 @@ func NewCreateAccountTransaction(
 	if err != nil {
 		return nil, err
 	}
-	return newTransactionFromTemplate(template, signer)
+	return newFromTemplate(template, signer)
 }
 
-func newTransactionFromTemplate(templateTx *flow.Transaction, signer *accounts.Account) (*Transaction, error) {
+func newFromTemplate(templateTx *flow.Transaction, signer *accounts.Account) (*Transaction, error) {
 	tx := &Transaction{tx: templateTx}
 
 	err := tx.SetSigner(signer)
@@ -359,32 +359,32 @@ func (t *Transaction) shouldSignEnvelope() bool {
 	return t.signer.Address == t.tx.Payer
 }
 
-// NewTransactionSingleAccountRole creates transaction accounts from a single provided
+// SingleAccountRole creates transaction accounts from a single provided
 // account fulfilling all the roles (proposer, payer, authorizer).
-func NewTransactionSingleAccountRole(account accounts.Account) TransactionAccountRoles {
-	return TransactionAccountRoles{
+func SingleAccountRole(account accounts.Account) AccountRoles {
+	return AccountRoles{
 		Proposer:    account,
 		Authorizers: []accounts.Account{account},
 		Payer:       account,
 	}
 }
 
-// TransactionAccountRoles define all the accounts for different transaction roles.
+// AccountRoles define all the accounts for different transaction roles.
 //
 // You can read more about roles here: https://developers.flow.com/learn/concepts/accounts-and-keys
-type TransactionAccountRoles struct {
+type AccountRoles struct {
 	Proposer    accounts.Account
 	Authorizers []accounts.Account
 	Payer       accounts.Account
 }
 
-func (t TransactionAccountRoles) toAddresses() TransactionAddressesRoles {
+func (t AccountRoles) toAddresses() AddressesRoles {
 	auths := make([]flow.Address, len(t.Authorizers))
 	for i, a := range t.Authorizers {
 		auths[i] = a.Address
 	}
 
-	return TransactionAddressesRoles{
+	return AddressesRoles{
 		Proposer:    t.Proposer.Address,
 		Authorizers: auths,
 		Payer:       t.Payer.Address,
@@ -392,7 +392,7 @@ func (t TransactionAccountRoles) toAddresses() TransactionAddressesRoles {
 }
 
 // getSigners for signing the transaction, detect if all accounts are same so only return the one account.
-func (t TransactionAccountRoles) getSigners() []*accounts.Account {
+func (t AccountRoles) getSigners() []*accounts.Account {
 	// build only unique accounts to sign, it's important payer account is last
 	sigs := make([]*accounts.Account, 0)
 	addLastIfUnique := func(signer accounts.Account) {
@@ -413,10 +413,10 @@ func (t TransactionAccountRoles) getSigners() []*accounts.Account {
 	return sigs
 }
 
-// TransactionAddressesRoles defines transaction roles by account addresses.
+// AddressesRoles defines transaction roles by account addresses.
 //
 // You can read more about roles here: https://developers.flow.com/learn/concepts/accounts-and-keys
-type TransactionAddressesRoles struct {
+type AddressesRoles struct {
 	Proposer    flow.Address
 	Authorizers []flow.Address
 	Payer       flow.Address

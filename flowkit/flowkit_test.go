@@ -1451,7 +1451,7 @@ func TestTransactions(t *testing.T) {
 
 		_, _, err := flowkit.SendTransaction(
 			ctx,
-			transactions.NewTransactionSingleAccountRole(*serviceAcc),
+			transactions.SingleAccountRole(*serviceAcc),
 			Script{
 				Code: tests.TransactionArgString.Source,
 				Args: []cadence.Value{cadence.String("Bar")},
@@ -1511,10 +1511,10 @@ func Test_TransactionRoles(t *testing.T) {
 		aCopy2.Name = "Zoo"
 
 		testVector := []struct {
-			*transactions.TransactionAccountRoles
+			*transactions.AccountRoles
 			signerAddresses []flow.Address
 		}{{
-			TransactionAccountRoles: &transactions.TransactionAccountRoles{
+			AccountRoles: &transactions.AccountRoles{
 				Proposer:    *a,
 				Authorizers: []accounts.Account{*b},
 				Payer:       *c,
@@ -1525,7 +1525,7 @@ func Test_TransactionRoles(t *testing.T) {
 				c.Address,
 			},
 		}, {
-			TransactionAccountRoles: &transactions.TransactionAccountRoles{
+			AccountRoles: &transactions.AccountRoles{
 				Proposer:    *a,
 				Authorizers: []accounts.Account{*a},
 				Payer:       *a,
@@ -1534,7 +1534,7 @@ func Test_TransactionRoles(t *testing.T) {
 				a.Address,
 			},
 		}, {
-			TransactionAccountRoles: &transactions.TransactionAccountRoles{
+			AccountRoles: &transactions.AccountRoles{
 				Proposer:    *a,
 				Payer:       *b,
 				Authorizers: []accounts.Account{*a},
@@ -1543,7 +1543,7 @@ func Test_TransactionRoles(t *testing.T) {
 				a.Address, b.Address,
 			},
 		}, {
-			TransactionAccountRoles: &transactions.TransactionAccountRoles{
+			AccountRoles: &transactions.AccountRoles{
 				Proposer: *a,
 				Payer:    *a,
 			},
@@ -1551,7 +1551,7 @@ func Test_TransactionRoles(t *testing.T) {
 				a.Address,
 			},
 		}, {
-			TransactionAccountRoles: &transactions.TransactionAccountRoles{
+			AccountRoles: &transactions.AccountRoles{
 				Proposer:    aCopy1,
 				Payer:       aCopy2,
 				Authorizers: []accounts.Account{*a},
@@ -1579,7 +1579,7 @@ func Test_TransactionRoles(t *testing.T) {
 		b, _ := state.Accounts().ByName("Bob")
 		c, _ := state.Accounts().ByName("Charlie")
 
-		roles := &transactions.TransactionAccountRoles{
+		roles := &transactions.AccountRoles{
 			Proposer:    *a,
 			Authorizers: []accounts.Account{*b, *c},
 			Payer:       *c,
@@ -1643,7 +1643,7 @@ func TestTransactions_Integration(t *testing.T) {
 		for i, txIn := range txIns {
 			tx, err := f.BuildTransaction(
 				ctx,
-				transactions.TransactionAddressesRoles{
+				transactions.AddressesRoles{
 					Proposer:    txIn.prop,
 					Authorizers: txIn.auth,
 					Payer:       txIn.payer,
@@ -1698,7 +1698,7 @@ func TestTransactions_Integration(t *testing.T) {
 
 		tx, err := flowkit.BuildTransaction(
 			ctx,
-			transactions.TransactionAddressesRoles{
+			transactions.AddressesRoles{
 				signer,
 				[]flow.Address{signer},
 				signer,
@@ -1732,7 +1732,7 @@ func TestTransactions_Integration(t *testing.T) {
 
 		tx, err := flowkit.BuildTransaction(
 			ctx,
-			transactions.TransactionAddressesRoles{
+			transactions.AddressesRoles{
 				a.Address,
 				nil,
 				a.Address,
@@ -1771,7 +1771,7 @@ func TestTransactions_Integration(t *testing.T) {
 
 		tx, err := flowkit.BuildTransaction(
 			ctx,
-			transactions.TransactionAddressesRoles{
+			transactions.AddressesRoles{
 				a.Address,
 				[]flow.Address{a.Address},
 				a.Address,
@@ -1811,7 +1811,7 @@ func TestTransactions_Integration(t *testing.T) {
 
 		tx, err := flowkit.BuildTransaction(
 			ctx,
-			transactions.TransactionAddressesRoles{
+			transactions.AddressesRoles{
 				a.Address,
 				[]flow.Address{a.Address},
 				a.Address,
@@ -1848,7 +1848,7 @@ func TestTransactions_Integration(t *testing.T) {
 
 		tx, err := flowkit.BuildTransaction(
 			ctx,
-			transactions.TransactionAddressesRoles{
+			transactions.AddressesRoles{
 				Proposer:    a.Address,
 				Authorizers: []flow.Address{a.Address},
 				Payer:       a.Address,
@@ -1873,7 +1873,7 @@ func TestTransactions_Integration(t *testing.T) {
 
 		tx, txr, err := flowkit.SendTransaction(
 			ctx,
-			transactions.TransactionAccountRoles{
+			transactions.AccountRoles{
 				Proposer: *a,
 				Payer:    *a,
 			},
@@ -1899,7 +1899,7 @@ func TestTransactions_Integration(t *testing.T) {
 
 		tx, txr, err := flowkit.SendTransaction(
 			ctx,
-			transactions.NewTransactionSingleAccountRole(*a),
+			transactions.SingleAccountRole(*a),
 			Script{
 				Code:     tests.TransactionSingleAuth.Source,
 				Location: tests.TransactionSingleAuth.Filename,
@@ -1924,7 +1924,7 @@ func TestTransactions_Integration(t *testing.T) {
 
 		tx, txr, err := flowkit.SendTransaction(
 			ctx,
-			transactions.TransactionAccountRoles{
+			transactions.AccountRoles{
 				Proposer:    *a,
 				Authorizers: []accounts.Account{*c},
 				Payer:       *b,
@@ -1953,7 +1953,7 @@ func TestTransactions_Integration(t *testing.T) {
 
 		tx, txr, err := flowkit.SendTransaction(
 			ctx,
-			transactions.TransactionAccountRoles{
+			transactions.AccountRoles{
 				Proposer:    *a,
 				Authorizers: []accounts.Account{*a},
 				Payer:       *b,
@@ -1981,7 +1981,7 @@ func TestTransactions_Integration(t *testing.T) {
 
 		tx, txr, err := flowkit.SendTransaction(
 			ctx,
-			transactions.NewTransactionSingleAccountRole(*a),
+			transactions.SingleAccountRole(*a),
 			Script{
 				Code: tests.TransactionArgString.Source,
 				Args: []cadence.Value{
@@ -2008,7 +2008,7 @@ func TestTransactions_Integration(t *testing.T) {
 
 		tx, txr, err := flowkit.SendTransaction(
 			ctx,
-			transactions.NewTransactionSingleAccountRole(*a),
+			transactions.SingleAccountRole(*a),
 			Script{
 				Code:     tests.TransactionMultipleDeclarations.Source,
 				Location: tests.TransactionMultipleDeclarations.Filename,
