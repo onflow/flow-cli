@@ -102,6 +102,40 @@ func Test_Deployment(t *testing.T) {
 		assert.Equal(t, (*deployments)[0].Contracts[0], contracts[1])
 	})
 
+	t.Run("Deployment by network", func(t *testing.T) {
+		deployments := &Deployments{
+			Deployment{
+				Network: "net",
+				Account: "acc",
+			},
+			Deployment{
+				Network: "net",
+				Account: "acc2",
+			},
+			Deployment{
+				Network: "net2",
+				Account: "acc2",
+			},
+		}
+
+		network := deployments.ByNetwork("net")
+		assert.Len(t, network, 2)
+		assert.Equal(t, network[0].Account, "acc")
+		assert.Equal(t, network[1].Account, "acc2")
+	})
+
+	t.Run("Remove non-existing deployment", func(t *testing.T) {
+		deployments := &Deployments{
+			Deployment{
+				Network: "test",
+				Account: "acc",
+			},
+		}
+
+		err := deployments.Remove("acc", "no")
+		assert.EqualError(t, err, "deployment for account acc on network no does not exist in configuration")
+	})
+
 	t.Run("Add deployment contract", func(t *testing.T) {
 		const acc = "test"
 		const net = "testnet"

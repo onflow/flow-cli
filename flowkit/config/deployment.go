@@ -110,7 +110,7 @@ func (d *Deployments) Remove(account string, network string) error {
 
 	for i, deployment := range *d {
 		if deployment.Network == network && deployment.Account == account {
-			*d = append((*d)[0:i], (*d)[i+1:]...) // remove item
+			*d = slices.Delete(*d, i, i+1)
 		}
 	}
 
