@@ -22,6 +22,7 @@ import (
 	"fmt"
 
 	"github.com/onflow/flow-go-sdk"
+	"golang.org/x/exp/slices"
 )
 
 // Contract defines the configuration for a Cadence contract.
@@ -99,7 +100,7 @@ func (c *Contracts) Remove(name string) error {
 
 	for i, contract := range *c {
 		if contract.Name == name {
-			*c = append((*c)[0:i], (*c)[i+1:]...) // remove item
+			*c = slices.Delete(*c, i, i+1)
 		}
 	}
 
