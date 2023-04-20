@@ -353,6 +353,18 @@ var TestScriptWithImport = Resource{
     `),
 }
 
+var TestScriptWithRelativeImport = Resource{
+	Filename: "testScriptWithRelativeImport.cdc",
+	Source: []byte(`
+        import Hello from "../contracts/contractHello.cdc"
+
+        pub fun testSimple() {
+            let hello = Hello()
+            assert(hello.greeting == "Hello, World!")
+        }
+    `),
+}
+
 var TestScriptWithFileRead = Resource{
 	Filename: "testScriptWithFileRead.cdc",
 	Source: []byte(`
