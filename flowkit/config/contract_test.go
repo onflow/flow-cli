@@ -58,9 +58,17 @@ func TestContracts_Remove(t *testing.T) {
 
 func TestContracts_Remove_NotFound(t *testing.T) {
 	contracts := Contracts{
-		Contract{Name: "mycontract", Location: "path/to/contract.cdc"},
+		Contract{Name: "mycontract1", Location: "path/to/contract.cdc"},
+		Contract{Name: "mycontract2", Location: "path/to/contract.cdc"},
+		Contract{Name: "mycontract3", Location: "path/to/contract.cdc"},
 	}
-	err := contracts.Remove("nonexistent")
-	assert.Error(t, err)
-	assert.Len(t, contracts, 1)
+	err := contracts.Remove("mycontract2")
+	assert.NoError(t, err)
+	assert.Len(t, contracts, 2)
+	_, err = contracts.ByName("mycontract1")
+	assert.NoError(t, err)
+	_, err = contracts.ByName("mycontract3")
+	assert.NoError(t, err)
+	_, err = contracts.ByName("mycontract2")
+	assert.EqualError(t, err, "contract mycontract2 does not exist")
 }
