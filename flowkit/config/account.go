@@ -23,6 +23,7 @@ import (
 
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
+	"golang.org/x/exp/slices"
 )
 
 const (
@@ -96,7 +97,7 @@ func (a *Accounts) AddOrUpdate(name string, account Account) {
 func (a *Accounts) Remove(name string) {
 	for i, account := range *a {
 		if account.Name == name {
-			*a = append((*a)[0:i], (*a)[i+1:]...) // remove item
+			*a = slices.Delete(*a, i, i+1)
 		}
 	}
 }
