@@ -85,13 +85,18 @@ func (t *Tests) importResolver(scriptPath string, readerWriter flowkit.ReaderWri
 		}
 
 		relativePath := stringLocation.String()
+		contractFound := false
 		for _, contract := range *t.state.Contracts() {
-			if !strings.Contains(relativePath, contract.Location) {
-				return "", fmt.Errorf(
-					"cannot find contract with location '%s' in configuration",
-					relativePath,
-				)
+			if strings.Contains(relativePath, contract.Location) {
+				contractFound = true
+				break
 			}
+		}
+		if !contractFound {
+			return "", fmt.Errorf(
+				"cannot find contract with location '%s' in configuration",
+				relativePath,
+			)
 		}
 
 		importedContractFilePath := util.AbsolutePath(scriptPath, relativePath)

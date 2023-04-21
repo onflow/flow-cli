@@ -90,7 +90,7 @@ func TestExecutingTests(t *testing.T) {
 		assert.NoError(t, results[script.Filename][0].Error)
 	})
 
-	t.Run("with relative import", func(t *testing.T) {
+	t.Run("with relative imports", func(t *testing.T) {
 		t.Parallel()
 
 		// Setup
@@ -101,15 +101,25 @@ func TestExecutingTests(t *testing.T) {
 			tests.ContractHelloString.Source,
 			os.ModeTemporary,
 		)
+		readerWriter.WriteFile(
+			"../contracts/FooContract.cdc",
+			tests.ContractFooCoverage.Source,
+			os.ModeTemporary,
+		)
 
-		c := config.Contract{
+		contractHello := config.Contract{
 			Name:     tests.ContractHelloString.Name,
 			Location: tests.ContractHelloString.Filename,
 		}
-		st.Contracts().AddOrUpdate(c)
+		st.Contracts().AddOrUpdate(contractHello)
+		contractFoo := config.Contract{
+			Name:     tests.ContractFooCoverage.Name,
+			Location: tests.ContractFooCoverage.Filename,
+		}
+		st.Contracts().AddOrUpdate(contractFoo)
 
 		// Execute script
-		script := tests.TestScriptWithRelativeImport
+		script := tests.TestScriptWithRelativeImports
 		testFiles := make(map[string][]byte, 0)
 		testFiles[script.Filename] = script.Source
 		results, _, err := s.Tests.Execute(testFiles, readerWriter, false)
