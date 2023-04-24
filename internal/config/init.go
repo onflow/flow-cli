@@ -25,14 +25,14 @@ import (
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/spf13/cobra"
 
+	"github.com/onflow/flow-cli/flowkit"
+	"github.com/onflow/flow-cli/flowkit/config"
+	"github.com/onflow/flow-cli/flowkit/output"
 	"github.com/onflow/flow-cli/internal/command"
-	"github.com/onflow/flow-cli/pkg/flowkit"
-	"github.com/onflow/flow-cli/pkg/flowkit/output"
-	"github.com/onflow/flow-cli/pkg/flowkit/services"
-	"github.com/onflow/flow-cli/pkg/flowkit/util"
+	"github.com/onflow/flow-cli/internal/util"
 )
 
-type FlagsInit struct {
+type flagsInit struct {
 	ServicePrivateKey  string `flag:"service-private-key" info:"Service account private key"`
 	ServiceKeySigAlgo  string `default:"ECDSA_P256" flag:"service-sig-algo" info:"Service account key signature algorithm"`
 	ServiceKeyHashAlgo string `default:"SHA3_256" flag:"service-hash-algo" info:"Service account key hash algorithm"`
@@ -40,9 +40,9 @@ type FlagsInit struct {
 	Global             bool   `default:"false" flag:"global" info:"Initialize global user configuration"`
 }
 
-var InitFlag = FlagsInit{}
+var InitFlag = flagsInit{}
 
-var InitCommand = &command.Command{
+var initCommand = &command.Command{
 	Cmd: &cobra.Command{
 		Use:   "init",
 		Short: "Initialize a new configuration",
@@ -53,11 +53,12 @@ var InitCommand = &command.Command{
 
 func Initialise(
 	_ []string,
-	readerWriter flowkit.ReaderWriter,
 	_ command.GlobalFlags,
-	services *services.Services,
+	logger output.Logger,
+	readerWriter flowkit.ReaderWriter,
+	_ flowkit.Services,
 ) (command.Result, error) {
-	fmt.Println("⚠️Notice: for starting a new project prefer using 'flow setup'.")
+	logger.Info("⚠️Notice: for starting a new project prefer using 'flow setup'.")
 
 	sigAlgo := crypto.StringToSignatureAlgorithm(InitFlag.ServiceKeySigAlgo)
 	if sigAlgo == crypto.UnknownSignatureAlgorithm {
@@ -69,45 +70,55 @@ func Initialise(
 		return nil, fmt.Errorf("invalid hash algorithm: %s", InitFlag.ServiceKeyHashAlgo)
 	}
 
-	var privateKey crypto.PrivateKey
-	if InitFlag.ServicePrivateKey != "" {
-		var err error
-		privateKey, err = crypto.DecodePrivateKeyHex(sigAlgo, InitFlag.ServicePrivateKey)
-		if err != nil {
-			return nil, fmt.Errorf("invalid private key: %w", err)
-		}
-	}
-
-	s, err := services.Project.Init(
-		readerWriter,
-		InitFlag.Reset,
-		InitFlag.Global,
-		sigAlgo,
-		hashAlgo,
-		privateKey,
-	)
+	state, err := flowkit.Init(readerWriter, sigAlgo, hashAlgo)
 	if err != nil {
 		return nil, err
 	}
 
-	return &InitResult{State: s}, nil
+	if InitFlag.ServicePrivateKey != "" {
+		privateKey, err := crypto.DecodePrivateKeyHex(sigAlgo, InitFlag.ServicePrivateKey)
+		if err != nil {
+			return nil, fmt.Errorf("invalid private key: %w", err)
+		}
+
+		state.SetEmulatorKey(privateKey)
+	}
+
+	path := config.DefaultPath
+	if InitFlag.Global {
+		path = config.GlobalPath()
+	}
+
+	if config.Exists(path) && !InitFlag.Reset {
+		return nil, fmt.Errorf(
+			"configuration already exists at: %s, if you want to reset configuration use the reset flag",
+			path,
+		)
+	}
+
+	err = state.Save(path)
+	if err != nil {
+		return nil, err
+	}
+
+	return &initResult{State: state}, nil
 }
 
-type InitResult struct {
+type initResult struct {
 	*flowkit.State
 }
 
-func (r *InitResult) JSON() interface{} {
+func (r *initResult) JSON() any {
 	return r
 }
 
-func (r *InitResult) String() string {
+func (r *initResult) String() string {
 	var b bytes.Buffer
 	writer := util.CreateTabWriter(&b)
 	account, _ := r.State.EmulatorServiceAccount()
 
 	_, _ = fmt.Fprintf(writer, "Configuration initialized\n")
-	_, _ = fmt.Fprintf(writer, "Service account: %s\n\n", output.Bold("0x"+account.Address().String()))
+	_, _ = fmt.Fprintf(writer, "Service account: %s\n\n", output.Bold("0x"+account.Address.String()))
 	_, _ = fmt.Fprintf(writer,
 		"Start emulator by running: %s \nReset configuration using: %s\n",
 		output.Bold("'flow emulator'"),
@@ -118,6 +129,6 @@ func (r *InitResult) String() string {
 	return b.String()
 }
 
-func (r *InitResult) Oneliner() string {
+func (r *initResult) Oneliner() string {
 	return ""
 }

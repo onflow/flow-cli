@@ -19,12 +19,15 @@
 package accounts
 
 import (
-	"github.com/onflow/flow-go-sdk"
+	"context"
+	"fmt"
+
+	flowsdk "github.com/onflow/flow-go-sdk"
 	"github.com/spf13/cobra"
 
+	"github.com/onflow/flow-cli/flowkit"
+	"github.com/onflow/flow-cli/flowkit/output"
 	"github.com/onflow/flow-cli/internal/command"
-	"github.com/onflow/flow-cli/pkg/flowkit"
-	"github.com/onflow/flow-cli/pkg/flowkit/services"
 )
 
 type flagsGet struct {
@@ -33,7 +36,7 @@ type flagsGet struct {
 
 var getFlags = flagsGet{}
 
-var GetCommand = &command.Command{
+var getCommand = &command.Command{
 	Cmd: &cobra.Command{
 		Use:     "get <address>",
 		Short:   "Gets an account by address",
@@ -46,18 +49,22 @@ var GetCommand = &command.Command{
 
 func get(
 	args []string,
-	_ flowkit.ReaderWriter,
 	_ command.GlobalFlags,
-	services *services.Services,
+	logger output.Logger,
+	_ flowkit.ReaderWriter,
+	flow flowkit.Services,
 ) (command.Result, error) {
-	address := flow.HexToAddress(args[0])
+	address := flowsdk.HexToAddress(args[0])
 
-	account, err := services.Accounts.Get(address)
+	logger.StartProgress(fmt.Sprintf("Loading account %s...", address))
+	defer logger.StopProgress()
+
+	account, err := flow.GetAccount(context.Background(), address)
 	if err != nil {
 		return nil, err
 	}
 
-	return &AccountResult{
+	return &accountResult{
 		Account: account,
 		include: getFlags.Include,
 	}, nil

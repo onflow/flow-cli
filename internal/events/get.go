@@ -19,13 +19,14 @@
 package events
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/spf13/cobra"
 
+	"github.com/onflow/flow-cli/flowkit"
+	"github.com/onflow/flow-cli/flowkit/output"
 	"github.com/onflow/flow-cli/internal/command"
-	"github.com/onflow/flow-cli/pkg/flowkit"
-	"github.com/onflow/flow-cli/pkg/flowkit/services"
 )
 
 type flagsEvents struct {
@@ -38,7 +39,7 @@ type flagsEvents struct {
 
 var eventsFlags = flagsEvents{}
 
-var GetCommand = &command.Command{
+var getCommand = &command.Command{
 	Cmd: &cobra.Command{
 		Use:   "get <event_name>",
 		Short: "Get events in a block range",
@@ -62,9 +63,10 @@ flow events get A.1654653399040a61.FlowToken.TokensDeposited A.1654653399040a61.
 
 func get(
 	args []string,
-	_ flowkit.ReaderWriter,
 	_ command.GlobalFlags,
-	services *services.Services,
+	logger output.Logger,
+	_ flowkit.ReaderWriter,
+	flow flowkit.Services,
 ) (command.Result, error) {
 	var err error
 	start := eventsFlags.Start
@@ -73,20 +75,36 @@ func get(
 
 	// handle if not passing start and end
 	if start == 0 && end == 0 {
-		end, err = services.Blocks.GetLatestBlockHeight()
+		latest, err := flow.GetBlock(
+			context.Background(),
+			flowkit.BlockQuery{Latest: true},
+		)
 		if err != nil {
 			return nil, err
 		}
+		end = latest.Height
 
 		start = end - last
-		if start < 0 {
-			return nil, fmt.Errorf("value for 'last' is bigger than the latest height")
+		if end < last {
+			start = 0
 		}
 	} else if start == 0 || end == 0 {
 		return nil, fmt.Errorf("please provide either both start and end for range or only last flag")
 	}
 
-	events, err := services.Events.Get(args, start, end, eventsFlags.Batch, eventsFlags.Workers)
+	logger.StartProgress("Fetching events...")
+	defer logger.StopProgress()
+
+	events, err := flow.GetEvents(
+		context.Background(),
+		args,
+		start,
+		end,
+		&flowkit.EventWorker{
+			Count:           eventsFlags.Workers,
+			BlocksPerWorker: eventsFlags.Batch,
+		},
+	)
 	if err != nil {
 		return nil, err
 	}

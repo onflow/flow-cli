@@ -29,7 +29,7 @@ import (
 	"github.com/onflow/flow-go-sdk"
 	"github.com/spf13/cobra"
 
-	"github.com/onflow/flow-cli/pkg/flowkit/util"
+	"github.com/onflow/flow-cli/internal/util"
 )
 
 var Cmd = &cobra.Command{
@@ -40,7 +40,7 @@ var Cmd = &cobra.Command{
 }
 
 func init() {
-	GetCommand.AddToParent(Cmd)
+	getCommand.AddToParent(Cmd)
 }
 
 type EventResult struct {
@@ -48,13 +48,13 @@ type EventResult struct {
 	Events      []flow.Event
 }
 
-func (e *EventResult) JSON() interface{} {
-	result := make([]interface{}, 0)
+func (e *EventResult) JSON() any {
+	result := make([]any, 0)
 
 	for _, blockEvent := range e.BlockEvents {
 		if len(blockEvent.Events) > 0 {
 			for _, event := range blockEvent.Events {
-				result = append(result, map[string]interface{}{
+				result = append(result, map[string]any{
 					"blockID":       blockEvent.Height,
 					"index":         event.EventIndex,
 					"type":          event.Type,

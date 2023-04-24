@@ -26,10 +26,10 @@ import (
 	"github.com/onflow/flow-go-sdk"
 	"github.com/spf13/cobra"
 
+	"github.com/onflow/flow-cli/flowkit/output"
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/internal/events"
-	"github.com/onflow/flow-cli/pkg/flowkit/output"
-	"github.com/onflow/flow-cli/pkg/flowkit/util"
+	"github.com/onflow/flow-cli/internal/util"
 )
 
 var Cmd = &cobra.Command{
@@ -40,23 +40,23 @@ var Cmd = &cobra.Command{
 }
 
 func init() {
-	GetCommand.AddToParent(Cmd)
-	SendCommand.AddToParent(Cmd)
-	SignCommand.AddToParent(Cmd)
-	BuildCommand.AddToParent(Cmd)
-	SendSignedCommand.AddToParent(Cmd)
-	DecodeCommand.AddToParent(Cmd)
+	getCommand.AddToParent(Cmd)
+	sendCommand.AddToParent(Cmd)
+	signCommand.AddToParent(Cmd)
+	buildCommand.AddToParent(Cmd)
+	sendSignedCommand.AddToParent(Cmd)
+	decodeCommand.AddToParent(Cmd)
 }
 
-type TransactionResult struct {
+type transactionResult struct {
 	result  *flow.TransactionResult
 	tx      *flow.Transaction
 	include []string
 	exclude []string
 }
 
-func (r *TransactionResult) JSON() interface{} {
-	result := make(map[string]interface{})
+func (r *transactionResult) JSON() any {
+	result := make(map[string]any)
 	result["id"] = r.tx.ID().String()
 	result["payload"] = fmt.Sprintf("%x", r.tx.Encode())
 	result["authorizers"] = fmt.Sprintf("%s", r.tx.Authorizers)
@@ -65,9 +65,9 @@ func (r *TransactionResult) JSON() interface{} {
 	if r.result != nil {
 		result["status"] = r.result.Status.String()
 
-		txEvents := make([]interface{}, 0, len(r.result.Events))
+		txEvents := make([]any, 0, len(r.result.Events))
 		for _, event := range r.result.Events {
-			txEvents = append(txEvents, map[string]interface{}{
+			txEvents = append(txEvents, map[string]any{
 				"index": event.EventIndex,
 				"type":  event.Type,
 				"values": json.RawMessage(
@@ -85,7 +85,7 @@ func (r *TransactionResult) JSON() interface{} {
 	return result
 }
 
-func (r *TransactionResult) String() string {
+func (r *transactionResult) String() string {
 	var b bytes.Buffer
 	writer := util.CreateTabWriter(&b)
 
@@ -184,7 +184,7 @@ func (r *TransactionResult) String() string {
 	return b.String()
 }
 
-func (r *TransactionResult) Oneliner() string {
+func (r *transactionResult) Oneliner() string {
 	result := fmt.Sprintf(
 		"ID: %s, Payer: %s, Authorizer: %s",
 		r.tx.ID(), r.tx.Payer, r.tx.Authorizers)

@@ -19,19 +19,22 @@
 package collections
 
 import (
-	"github.com/onflow/flow-go-sdk"
+	"context"
+	"fmt"
+
+	flowsdk "github.com/onflow/flow-go-sdk"
 	"github.com/spf13/cobra"
 
+	"github.com/onflow/flow-cli/flowkit"
+	"github.com/onflow/flow-cli/flowkit/output"
 	"github.com/onflow/flow-cli/internal/command"
-	"github.com/onflow/flow-cli/pkg/flowkit"
-	"github.com/onflow/flow-cli/pkg/flowkit/services"
 )
 
 type flagsCollections struct{}
 
 var collectionFlags = flagsCollections{}
 
-var GetCommand = &command.Command{
+var getCommand = &command.Command{
 	Cmd: &cobra.Command{
 		Use:     "get <collection_id>",
 		Short:   "Get collection info",
@@ -44,16 +47,20 @@ var GetCommand = &command.Command{
 
 func get(
 	args []string,
-	_ flowkit.ReaderWriter,
 	_ command.GlobalFlags,
-	services *services.Services,
+	logger output.Logger,
+	_ flowkit.ReaderWriter,
+	flow flowkit.Services,
 ) (command.Result, error) {
-	id := flow.HexToID(args[0])
+	id := flowsdk.HexToID(args[0])
 
-	collection, err := services.Collections.Get(id)
+	logger.StartProgress(fmt.Sprintf("Loading collection %s", id))
+	defer logger.StopProgress()
+
+	collection, err := flow.GetCollection(context.Background(), id)
 	if err != nil {
 		return nil, err
 	}
 
-	return &CollectionResult{collection}, nil
+	return &collectionResult{collection}, nil
 }

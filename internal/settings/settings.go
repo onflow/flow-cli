@@ -55,7 +55,7 @@ func FileDir() string {
 }
 
 // Set updates settings file with new value for provided key
-func Set(key string, val interface{}) error {
+func Set(key string, val any) error {
 	if err := loadViper(); err != nil {
 		return err
 	}
@@ -66,34 +66,6 @@ func Set(key string, val interface{}) error {
 	}
 
 	return nil
-}
-
-func Get(key string) (interface{}, error) {
-	if err := loadViper(); err != nil {
-		return nil, err
-	}
-	return viper.Get(key), nil
-}
-
-func GetBool(key string) (bool, error) {
-	if err := loadViper(); err != nil {
-		return false, err
-	}
-	return viper.GetBool(key), nil
-}
-
-func GetString(key string) (string, error) {
-	if err := loadViper(); err != nil {
-		return "", err
-	}
-	return viper.GetString(key), nil
-}
-
-func GetInt(key string) (int, error) {
-	if err := loadViper(); err != nil {
-		return 0, err
-	}
-	return viper.GetInt(key), nil
 }
 
 // loadViper loads the global settings file

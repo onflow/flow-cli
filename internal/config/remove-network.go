@@ -21,17 +21,17 @@ package config
 import (
 	"github.com/spf13/cobra"
 
+	"github.com/onflow/flow-cli/flowkit"
+	"github.com/onflow/flow-cli/flowkit/output"
 	"github.com/onflow/flow-cli/internal/command"
-	"github.com/onflow/flow-cli/pkg/flowkit"
-	"github.com/onflow/flow-cli/pkg/flowkit/output"
-	"github.com/onflow/flow-cli/pkg/flowkit/services"
+	"github.com/onflow/flow-cli/internal/util"
 )
 
 type flagsRemoveNetwork struct{}
 
 var removeNetworkFlags = flagsRemoveNetwork{}
 
-var RemoveNetworkCommand = &command.Command{
+var removeNetworkCommand = &command.Command{
 	Cmd: &cobra.Command{
 		Use:     "network <name>",
 		Short:   "Remove network from configuration",
@@ -44,16 +44,16 @@ var RemoveNetworkCommand = &command.Command{
 
 func removeNetwork(
 	args []string,
-	_ flowkit.ReaderWriter,
 	globalFlags command.GlobalFlags,
-	_ *services.Services,
+	_ output.Logger,
+	_ flowkit.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
 	name := ""
 	if len(args) == 1 {
 		name = args[0]
 	} else {
-		name = output.RemoveNetworkPrompt(*state.Networks())
+		name = util.RemoveNetworkPrompt(*state.Networks())
 	}
 
 	err := state.Networks().Remove(name)
@@ -66,7 +66,7 @@ func removeNetwork(
 		return nil, err
 	}
 
-	return &Result{
+	return &result{
 		result: "network removed",
 	}, nil
 }

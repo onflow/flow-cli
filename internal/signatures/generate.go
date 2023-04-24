@@ -23,12 +23,14 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/onflow/flow-cli/flowkit/accounts"
+
 	"github.com/spf13/cobra"
 
+	"github.com/onflow/flow-cli/flowkit"
+	"github.com/onflow/flow-cli/flowkit/output"
 	"github.com/onflow/flow-cli/internal/command"
-	"github.com/onflow/flow-cli/pkg/flowkit"
-	"github.com/onflow/flow-cli/pkg/flowkit/services"
-	"github.com/onflow/flow-cli/pkg/flowkit/util"
+	"github.com/onflow/flow-cli/internal/util"
 )
 
 type flagsGenerate struct {
@@ -37,7 +39,7 @@ type flagsGenerate struct {
 
 var generateFlags = flagsGenerate{}
 
-var GenerateCommand = &command.Command{
+var generateCommand = &command.Command{
 	Cmd: &cobra.Command{
 		Use:     "generate <message>",
 		Short:   "Generate the message signature",
@@ -50,9 +52,9 @@ var GenerateCommand = &command.Command{
 
 func sign(
 	args []string,
-	_ flowkit.ReaderWriter,
 	_ command.GlobalFlags,
-	_ *services.Services,
+	_ output.Logger,
+	_ flowkit.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
 	message := []byte(args[0])
@@ -62,7 +64,7 @@ func sign(
 		return nil, err
 	}
 
-	s, err := acc.Key().Signer(context.Background())
+	s, err := acc.Key.Signer(context.Background())
 	if err != nil {
 		return nil, err
 	}
@@ -72,20 +74,20 @@ func sign(
 		return nil, err
 	}
 
-	return &SignatureResult{
+	return &signatureResult{
 		result:  string(signed),
 		message: string(message),
-		key:     acc.Key(),
+		key:     acc.Key,
 	}, nil
 }
 
-type SignatureResult struct {
+type signatureResult struct {
 	result  string
 	message string
-	key     flowkit.AccountKey
+	key     accounts.Key
 }
 
-func (s *SignatureResult) pubKey() string {
+func (s *signatureResult) pubKey() string {
 	pkey, err := s.key.PrivateKey()
 	if err == nil {
 		return (*pkey).PublicKey().String()
@@ -94,7 +96,7 @@ func (s *SignatureResult) pubKey() string {
 	return "ERR"
 }
 
-func (s *SignatureResult) JSON() interface{} {
+func (s *signatureResult) JSON() any {
 	return map[string]string{
 		"signature": fmt.Sprintf("%x", s.result),
 		"message":   s.message,
@@ -104,7 +106,7 @@ func (s *SignatureResult) JSON() interface{} {
 	}
 }
 
-func (s *SignatureResult) String() string {
+func (s *signatureResult) String() string {
 	var b bytes.Buffer
 	writer := util.CreateTabWriter(&b)
 
@@ -118,7 +120,7 @@ func (s *SignatureResult) String() string {
 	return b.String()
 }
 
-func (s *SignatureResult) Oneliner() string {
+func (s *signatureResult) Oneliner() string {
 
 	return fmt.Sprintf(
 		"signature: %x, message: %s, hashAlgo: %s, sigAlgo: %s, pubKey: %s",

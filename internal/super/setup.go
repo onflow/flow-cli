@@ -33,17 +33,17 @@ import (
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/spf13/cobra"
 
+	"github.com/onflow/flow-cli/flowkit"
+	"github.com/onflow/flow-cli/flowkit/output"
 	"github.com/onflow/flow-cli/internal/command"
-	"github.com/onflow/flow-cli/pkg/flowkit"
-	"github.com/onflow/flow-cli/pkg/flowkit/output"
-	"github.com/onflow/flow-cli/pkg/flowkit/services"
+	"github.com/onflow/flow-cli/internal/util"
 )
 
-type FlagsSetup struct {
+type flagsSetup struct {
 	Scaffold bool `default:"" flag:"scaffold" info:"Use provided scaffolds for project creation"`
 }
 
-var setupFlags = FlagsSetup{}
+var setupFlags = flagsSetup{}
 
 var SetupCommand = &command.Command{
 	Cmd: &cobra.Command{
@@ -71,12 +71,11 @@ type scaffold struct {
 
 func create(
 	args []string,
-	_ flowkit.ReaderWriter,
 	_ command.GlobalFlags,
-	_ *services.Services,
+	logger output.Logger,
+	_ flowkit.ReaderWriter,
+	_ flowkit.Services,
 ) (command.Result, error) {
-	logger := output.NewStdoutLogger(output.InfoLog)
-
 	targetDir, err := getTargetDirectory(args[0])
 	if err != nil {
 		return nil, err
@@ -100,7 +99,7 @@ func create(
 			)
 		}
 
-		selected := output.ScaffoldPrompt(logger, scaffoldList)
+		selected := util.ScaffoldPrompt(logger, scaffoldList)
 		pickedScaffold = scaffolds[selected]
 	}
 
@@ -242,6 +241,6 @@ func (s *setupResult) Oneliner() string {
 	return fmt.Sprintf("Project created inside %s", s.targetDir)
 }
 
-func (s *setupResult) JSON() interface{} {
+func (s *setupResult) JSON() any {
 	return nil
 }

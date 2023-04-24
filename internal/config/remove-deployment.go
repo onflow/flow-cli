@@ -21,17 +21,17 @@ package config
 import (
 	"github.com/spf13/cobra"
 
+	"github.com/onflow/flow-cli/flowkit"
+	"github.com/onflow/flow-cli/flowkit/output"
 	"github.com/onflow/flow-cli/internal/command"
-	"github.com/onflow/flow-cli/pkg/flowkit"
-	"github.com/onflow/flow-cli/pkg/flowkit/output"
-	"github.com/onflow/flow-cli/pkg/flowkit/services"
+	"github.com/onflow/flow-cli/internal/util"
 )
 
 type flagsRemoveDeployment struct{}
 
 var removeDeploymentFlags = flagsRemoveDeployment{}
 
-var RemoveDeploymentCommand = &command.Command{
+var removeDeploymentCommand = &command.Command{
 	Cmd: &cobra.Command{
 		Use:     "deployment <account> <network>",
 		Short:   "Remove deployment from configuration",
@@ -44,9 +44,9 @@ var RemoveDeploymentCommand = &command.Command{
 
 func removeDeployment(
 	args []string,
-	_ flowkit.ReaderWriter,
 	globalFlags command.GlobalFlags,
-	_ *services.Services,
+	_ output.Logger,
+	_ flowkit.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
 	account := ""
@@ -55,7 +55,7 @@ func removeDeployment(
 		account = args[0]
 		network = args[1]
 	} else {
-		account, network = output.RemoveDeploymentPrompt(*state.Deployments())
+		account, network = util.RemoveDeploymentPrompt(*state.Deployments())
 	}
 
 	err := state.Deployments().Remove(account, network)
@@ -68,7 +68,7 @@ func removeDeployment(
 		return nil, err
 	}
 
-	return &Result{
+	return &result{
 		result: "deployment removed",
 	}, nil
 }

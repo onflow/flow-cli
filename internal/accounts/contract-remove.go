@@ -19,11 +19,14 @@
 package accounts
 
 import (
+	"context"
+	"fmt"
+
 	"github.com/spf13/cobra"
 
+	"github.com/onflow/flow-cli/flowkit"
+	"github.com/onflow/flow-cli/flowkit/output"
 	"github.com/onflow/flow-cli/internal/command"
-	"github.com/onflow/flow-cli/pkg/flowkit"
-	"github.com/onflow/flow-cli/pkg/flowkit/services"
 )
 
 type flagsRemoveContract struct {
@@ -33,7 +36,7 @@ type flagsRemoveContract struct {
 
 var flagsRemove = flagsRemoveContract{}
 
-var RemoveCommand = &command.Command{
+var removeCommand = &command.Command{
 	Cmd: &cobra.Command{
 		Use:     "remove-contract <name>",
 		Short:   "Remove a contract deployed to an account",
@@ -46,9 +49,9 @@ var RemoveCommand = &command.Command{
 
 func removeContract(
 	args []string,
-	_ flowkit.ReaderWriter,
 	_ command.GlobalFlags,
-	services *services.Services,
+	logger output.Logger,
+	flow flowkit.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
 	contractName := args[0]
@@ -58,16 +61,23 @@ func removeContract(
 		return nil, err
 	}
 
-	_, err = services.Accounts.RemoveContract(from, contractName)
+	id, err := flow.RemoveContract(context.Background(), from, contractName)
 	if err != nil {
 		return nil, err
 	}
 
-	account, err := services.Accounts.Get(from.Address())
+	logger.Info(fmt.Sprintf(
+		"Contract %s removed from account %s with transaction ID: %s.",
+		contractName,
+		from.Address,
+		id.String(),
+	))
+
+	account, err := flow.GetAccount(context.Background(), from.Address)
 	if err != nil {
 		return nil, err
 	}
-	return &AccountResult{
+	return &accountResult{
 		Account: account,
 		include: flagsRemove.Include,
 	}, nil

@@ -23,16 +23,18 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"path"
 	"strings"
 
 	cdcTests "github.com/onflow/cadence-tools/test"
 	"github.com/onflow/cadence/runtime"
+	"github.com/onflow/cadence/runtime/common"
 	"github.com/spf13/cobra"
 
+	"github.com/onflow/flow-cli/flowkit"
+	"github.com/onflow/flow-cli/flowkit/output"
 	"github.com/onflow/flow-cli/internal/command"
-	"github.com/onflow/flow-cli/pkg/flowkit"
-	"github.com/onflow/flow-cli/pkg/flowkit/services"
-	"github.com/onflow/flow-cli/pkg/flowkit/util"
+	"github.com/onflow/flow-cli/internal/util"
 )
 
 type flagsTests struct {
@@ -42,29 +44,32 @@ type flagsTests struct {
 
 var testFlags = flagsTests{}
 
-var Cmd = &cobra.Command{
-	Use:     "test <filename>",
-	Short:   "Run Cadence tests",
-	Example: `flow test script.cdc`,
-	Args:    cobra.MinimumNArgs(1),
-	GroupID: "tools",
-}
-
 var TestCommand = &command.Command{
-	Cmd:   Cmd,
+	Cmd: &cobra.Command{
+		Use:     "test <filename>",
+		Short:   "Run Cadence tests",
+		Example: `flow test script.cdc`,
+		Args:    cobra.MinimumNArgs(1),
+		GroupID: "tools",
+	},
 	Flags: &testFlags,
-	Run:   run,
+	RunS:  run,
 }
 
 func run(
 	args []string,
-	readerWriter flowkit.ReaderWriter,
 	_ command.GlobalFlags,
-	services *services.Services,
+	logger output.Logger,
+	_ flowkit.Services,
+	state *flowkit.State,
 ) (command.Result, error) {
+	if !testFlags.Cover && testFlags.CoverProfile != "coverage.json" {
+		return nil, fmt.Errorf("the '--coverprofile' flag requires the '--cover' flag")
+	}
+
 	testFiles := make(map[string][]byte, 0)
 	for _, filename := range args {
-		code, err := readerWriter.ReadFile(filename)
+		code, err := state.ReadFile(filename)
 
 		if err != nil {
 			return nil, fmt.Errorf("error loading script file: %w", err)
@@ -73,12 +78,10 @@ func run(
 		testFiles[filename] = code
 	}
 
-	result, coverageReport, err := services.Tests.Execute(
-		testFiles,
-		readerWriter,
-		testFlags.Cover,
-	)
+	logger.StartProgress("Running tests...")
+	defer logger.StopProgress()
 
+	res, coverageReport, err := testCode(testFiles, state, testFlags.Cover)
 	if err != nil {
 		return nil, err
 	}
@@ -93,24 +96,101 @@ func run(
 		if err != nil {
 			return nil, fmt.Errorf("error writing coverage report file: %w", err)
 		}
-	} else if Cmd.Flags().Changed("coverprofile") {
-		return nil, fmt.Errorf("the '--coverprofile' flag requires the '--cover' flag")
 	}
 
-	return &TestResult{
-		Results:        result,
+	return &result{
+		Results:        res,
 		CoverageReport: coverageReport,
 	}, nil
 }
 
-type TestResult struct {
+func testCode(
+	testFiles map[string][]byte,
+	state *flowkit.State,
+	coverageEnabled bool,
+) (map[string]cdcTests.Results, *runtime.CoverageReport, error) {
+	var coverageReport *runtime.CoverageReport
+	runner := cdcTests.NewTestRunner()
+	if coverageEnabled {
+		coverageReport = runtime.NewCoverageReport()
+		runner = runner.WithCoverageReport(coverageReport)
+	}
+
+	testResults := make(map[string]cdcTests.Results, 0)
+	for scriptPath, code := range testFiles {
+		runner := runner.
+			WithImportResolver(importResolver(scriptPath, state)).
+			WithFileResolver(fileResolver(scriptPath, state))
+		results, err := runner.RunTests(string(code))
+		if err != nil {
+			return nil, nil, err
+		}
+		testResults[scriptPath] = results
+	}
+	return testResults, coverageReport, nil
+}
+
+func importResolver(scriptPath string, state *flowkit.State) cdcTests.ImportResolver {
+	return func(location common.Location) (string, error) {
+		stringLocation, isFileImport := location.(common.StringLocation)
+		if !isFileImport {
+			return "", fmt.Errorf("cannot import from %s", location)
+		}
+
+		relativePath := stringLocation.String()
+		contractFound := false
+		for _, contract := range *state.Contracts() {
+			if strings.Contains(relativePath, contract.Location) {
+				contractFound = true
+				break
+			}
+		}
+		if !contractFound {
+			return "", fmt.Errorf(
+				"cannot find contract with location '%s' in configuration",
+				relativePath,
+			)
+		}
+
+		importedContractFilePath := absolutePath(scriptPath, relativePath)
+		contractCode, err := state.ReadFile(importedContractFilePath)
+		if err != nil {
+			return "", err
+		}
+
+		return string(contractCode), nil
+	}
+}
+
+func fileResolver(scriptPath string, state *flowkit.State) cdcTests.FileResolver {
+	return func(path string) (string, error) {
+		importFilePath := absolutePath(scriptPath, path)
+
+		content, err := state.ReadFile(importFilePath)
+		if err != nil {
+			return "", err
+		}
+
+		return string(content), nil
+	}
+}
+
+func absolutePath(basePath, filePath string) string {
+	if path.IsAbs(filePath) {
+		return filePath
+	}
+
+	return path.Join(path.Dir(basePath), filePath)
+}
+
+type result struct {
 	Results        map[string]cdcTests.Results
 	CoverageReport *runtime.CoverageReport
 }
 
-var _ command.Result = &TestResult{}
+var _ command.Result = &result{}
 
-func (r *TestResult) JSON() any {
+func (r *result) JSON() any {
 	results := make(map[string]map[string]string, len(r.Results))
 
 	for testFile, testResult := range r.Results {
@@ -136,7 +216,7 @@ func (r *TestResult) JSON() any {
 	return results
 }
 
-func (r *TestResult) String() string {
+func (r *result) String() string {
 	var b bytes.Buffer
 	writer := util.CreateTabWriter(&b)
 
@@ -152,7 +232,7 @@ func (r *TestResult) String() string {
 	return b.String()
 }
 
-func (r *TestResult) Oneliner() string {
+func (r *result) Oneliner() string {
 	var builder strings.Builder
 
 	for scriptPath, testResult := range r.Results {

@@ -27,17 +27,17 @@ import (
 	"github.com/onflowser/flowser/v2/pkg/flowser"
 	"github.com/spf13/cobra"
 
+	"github.com/onflow/flow-cli/flowkit"
+	"github.com/onflow/flow-cli/flowkit/config"
+	"github.com/onflow/flow-cli/flowkit/output"
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/internal/settings"
-	"github.com/onflow/flow-cli/pkg/flowkit"
-	"github.com/onflow/flow-cli/pkg/flowkit/config"
-	"github.com/onflow/flow-cli/pkg/flowkit/output"
-	"github.com/onflow/flow-cli/pkg/flowkit/services"
+	"github.com/onflow/flow-cli/internal/util"
 )
 
-type FlagsFlowser struct{}
+type flagsFlowser struct{}
 
-var flowserFlags = FlagsWallet{}
+var flowserFlags = flagsWallet{}
 
 var Flowser = &command.Command{
 	Cmd: &cobra.Command{
@@ -53,9 +53,10 @@ var Flowser = &command.Command{
 
 func runFlowser(
 	_ []string,
-	reader flowkit.ReaderWriter,
 	_ command.GlobalFlags,
-	_ *services.Services,
+	_ output.Logger,
+	reader flowkit.ReaderWriter,
+	_ flowkit.Services,
 ) (command.Result, error) {
 	if runtime.GOOS != settings.Windows && runtime.GOOS != settings.Darwin {
 		fmt.Println("If you want Flowser to be supported on Linux please vote here: https://github.com/onflowser/flowser/discussions/142")
@@ -98,21 +99,21 @@ func runFlowser(
 
 func installFlowser(flowser *flowser.App, installPath string) (string, error) {
 	fmt.Println("It looks like Flowser is not yet installed on your system.")
-	installChoice := output.InstallPrompt()
-	if installChoice == output.CancelInstall {
+	installChoice := util.InstallPrompt()
+	if installChoice == util.CancelInstall {
 		return "", fmt.Errorf("user denied install")
 	}
 
 	// if user says it already installed it we only ask for path and return it
-	if installChoice == output.AlreadyInstalled {
-		installPath = output.InstallPathPrompt(installPath)
+	if installChoice == util.AlreadyInstalled {
+		installPath = util.InstallPathPrompt(installPath)
 		_ = settings.SetFlowserPath(installPath)
 		return installPath, nil
 	}
 
 	// we only allow custom paths on Windows since on MacOS apps needs to be installed inside Application folder
 	if runtime.GOOS == settings.Windows {
-		installPath = output.InstallPathPrompt(installPath)
+		installPath = util.InstallPathPrompt(installPath)
 		_ = settings.SetFlowserPath(installPath)
 	}
 

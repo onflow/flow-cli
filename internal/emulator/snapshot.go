@@ -26,17 +26,16 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/onflow/flow-cli/internal/command"
-	"github.com/onflow/flow-cli/pkg/flowkit"
-	"github.com/onflow/flow-cli/pkg/flowkit/services"
-	"github.com/onflow/flow-cli/pkg/flowkit/util"
-
 	"github.com/spf13/cobra"
 	"golang.org/x/exp/slices"
+
+	"github.com/onflow/flow-cli/flowkit"
+	"github.com/onflow/flow-cli/flowkit/output"
+	"github.com/onflow/flow-cli/internal/command"
+	"github.com/onflow/flow-cli/internal/util"
 )
 
-type SnapshotFlag struct {
-}
+type SnapshotFlag struct{}
 
 var snapshotFlag = SnapshotFlag{}
 
@@ -51,15 +50,15 @@ var SnapshotCmd = &command.Command{
 	Run:   snapshot,
 }
 
-type SnapshotList struct {
+type snapshotList struct {
 	Snapshots []string
 }
 
-func (s *SnapshotList) JSON() interface{} {
+func (s *snapshotList) JSON() any {
 	return s.Snapshots
 }
 
-func (s *SnapshotList) String() string {
+func (s *snapshotList) String() string {
 	var b bytes.Buffer
 	writer := util.CreateTabWriter(&b)
 	_, _ = fmt.Fprintf(writer, "Snapshots:\n")
@@ -70,19 +69,19 @@ func (s *SnapshotList) String() string {
 	return b.String()
 }
 
-func (s *SnapshotList) Oneliner() string {
+func (s *snapshotList) Oneliner() string {
 	return strings.Join(s.Snapshots, ",")
 }
 
-type SnapShotResult struct {
+type snapShotResult struct {
 	Name    string `json:"context"`
 	BlockID string `json:"blockId"`
 	Height  uint64 `json:"height"`
 	Result  string `json:"result,omitempty"`
 }
 
-func (r *SnapShotResult) JSON() interface{} {
-	result := make(map[string]interface{})
+func (r *snapShotResult) JSON() any {
+	result := make(map[string]any)
 	result["name"] = r.Name
 	result["blockID"] = r.BlockID
 	result["height"] = r.Height
@@ -93,7 +92,7 @@ func (r *SnapShotResult) JSON() interface{} {
 	return result
 }
 
-func (r *SnapShotResult) String() string {
+func (r *snapShotResult) String() string {
 	var b bytes.Buffer
 	writer := util.CreateTabWriter(&b)
 	if r.Result != "" {
@@ -107,11 +106,11 @@ func (r *SnapShotResult) String() string {
 	return b.String()
 }
 
-func (r *SnapShotResult) Oneliner() string {
+func (r *snapShotResult) Oneliner() string {
 	return fmt.Sprintf("%s : %s (%d) %s", r.Name, r.BlockID, r.Height, r.Result)
 }
 
-const SnapshotEndpoint = "http://localhost:8080/emulator/snapshots"
+const snapshotEndpoint = "http://localhost:8080/emulator/snapshots"
 
 func makeRequest(r *http.Request, v any) error {
 	resp, err := http.DefaultClient.Do(r)
@@ -137,7 +136,7 @@ func makeRequest(r *http.Request, v any) error {
 }
 
 func requestListSnapshots() (*http.Request, error) {
-	request, err := http.NewRequest("GET", SnapshotEndpoint, nil)
+	request, err := http.NewRequest("GET", snapshotEndpoint, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -146,7 +145,7 @@ func requestListSnapshots() (*http.Request, error) {
 
 func requestCreateSnapshot(name string) (*http.Request, error) {
 	requestBody := bytes.NewBufferString(fmt.Sprintf("name=%s", name))
-	request, err := http.NewRequest("POST", SnapshotEndpoint, requestBody)
+	request, err := http.NewRequest("POST", snapshotEndpoint, requestBody)
 	request.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 	if err != nil {
 		return nil, err
@@ -155,7 +154,7 @@ func requestCreateSnapshot(name string) (*http.Request, error) {
 }
 
 func requestLoadSnapshot(name string) (*http.Request, error) {
-	request, err := http.NewRequest("PUT", fmt.Sprintf("%s/%s", SnapshotEndpoint, name), nil)
+	request, err := http.NewRequest("PUT", fmt.Sprintf("%s/%s", snapshotEndpoint, name), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -176,19 +175,20 @@ func listSnapshot() (result []string, err error) {
 	return result, nil
 }
 
-type SnapshotCommand string
+type snapshotCommand string
 
 const (
-	SnapshotCommandList   SnapshotCommand = "list"
-	SnapshotCommandCreate SnapshotCommand = "create"
-	SnapshotCommandLoad   SnapshotCommand = "load"
+	snapshotCommandList   snapshotCommand = "list"
+	snapshotCommandCreate snapshotCommand = "create"
+	snapshotCommandLoad   snapshotCommand = "load"
 )
 
 func snapshot(
 	args []string,
-	_ flowkit.ReaderWriter,
 	_ command.GlobalFlags,
-	_ *services.Services,
+	_ output.Logger,
+	_ flowkit.ReaderWriter,
+	_ flowkit.Services,
 ) (command.Result, error) {
 
 	subCommand := args[0]
@@ -198,11 +198,11 @@ func snapshot(
 		return nil, err
 	}
 
-	switch SnapshotCommand(subCommand) {
-	case SnapshotCommandList:
-		return &SnapshotList{Snapshots: snapshots}, nil
+	switch snapshotCommand(subCommand) {
+	case snapshotCommandList:
+		return &snapshotList{Snapshots: snapshots}, nil
 
-	case SnapshotCommandCreate:
+	case snapshotCommandCreate:
 		if len(args) < 2 {
 			return nil, fmt.Errorf("snapshot create command requires name argument")
 		}
@@ -212,7 +212,7 @@ func snapshot(
 			return nil, fmt.Errorf("snapshot '%s' already exists", name)
 		}
 
-		var result SnapShotResult
+		var result snapShotResult
 		req, err := requestCreateSnapshot(name)
 		if err != nil {
 			return nil, err
@@ -224,7 +224,7 @@ func snapshot(
 		result.Result = "Snapshot created"
 		return &result, nil
 
-	case SnapshotCommandLoad:
+	case snapshotCommandLoad:
 		if len(args) < 2 {
 			return nil, fmt.Errorf("snapshot load command requires name argument")
 		}
@@ -234,7 +234,7 @@ func snapshot(
 			return nil, fmt.Errorf("snapshot '%s' does not exist", name)
 		}
 
-		var result SnapShotResult
+		var result snapShotResult
 		req, err := requestLoadSnapshot(name)
 		if err != nil {
 			return nil, err

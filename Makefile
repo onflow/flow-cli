@@ -9,14 +9,13 @@ COVER_PROFILE := coverage.txt
 # Disable go sum database lookup for private repos
 GOPRIVATE := github.com/dapperlabs/*
 # Ensure go bin path is in path (Especially for CI)
+GOPATH ?= $(HOME)/go
 PATH := $(PATH):$(GOPATH)/bin
 # OS
 UNAME := $(shell uname)
 
 MIXPANEL_PROJECT_TOKEN := 3fae49de272be1ceb8cf34119f747073
 ACCOUNT_TOKEN := lilico:sF60s3wughJBmNh2
-
-GOPATH ?= $(HOME)/go
 
 BINARY ?= ./cmd/flow/flow
 
@@ -29,12 +28,13 @@ install-tools:
 	mkdir -p ${GOPATH}; \
 	GO111MODULE=on go install github.com/axw/gocov/gocov@latest; \
 	GO111MODULE=on go install github.com/matm/gocov-html@latest; \
-	GO111MODULE=on go install github.com/sanderhahn/gozip/cmd/gozip@latest;
+	GO111MODULE=on go install github.com/sanderhahn/gozip/cmd/gozip@latest; \
+	GO111MODULE=on go install github.com/vektra/mockery/v2@latest;
 
 .PHONY: test
 test:
 	GO111MODULE=on go test -coverprofile=$(COVER_PROFILE) $(if $(JSON_OUTPUT),-json,) ./...
-	cd pkg/flowkit; GO111MODULE=on go test -coverprofile=$(COVER_PROFILE) $(if $(JSON_OUTPUT),-json,) ./...
+	cd flowkit; GO111MODULE=on go test -coverprofile=$(COVER_PROFILE) $(if $(JSON_OUTPUT),-json,) ./...
 
 .PHONY: test-e2e-emulator
 test-e2e-emulator:
@@ -52,21 +52,21 @@ ifeq ($(COVER), true)
 endif
 
 .PHONY: ci
-ci: install-tools test coverage
+ci: install-tools generate test coverage
 
 .PHONY: install
 install:
 	GO111MODULE=on go install \
 		-trimpath \
 		-ldflags \
-		"-X github.com/onflow/flow-cli/build.commit=$(COMMIT) -X github.com/onflow/flow-cli/build.semver=$(VERSION) -X github.com/onflow/flow-cli/pkg/flowkit/util.MIXPANEL_PROJECT_TOKEN=${MIXPANEL_PROJECT_TOKEN} -X github.com/onflow/flow-cli/internal/accounts.accountToken=${ACCOUNT_TOKEN}" \
+		"-X github.com/onflow/flow-cli/build.commit=$(COMMIT) -X github.com/onflow/flow-cli/build.semver=$(VERSION) -X github.com/onflow/flow-cli/flowkit/util.MIXPANEL_PROJECT_TOKEN=${MIXPANEL_PROJECT_TOKEN} -X github.com/onflow/flow-cli/internal/accounts.accountToken=${ACCOUNT_TOKEN}" \
 		./cmd/flow
 
 $(BINARY):
 	GO111MODULE=on go build \
 		-trimpath \
 		-ldflags \
-		"-X github.com/onflow/flow-cli/build.commit=$(COMMIT) -X github.com/onflow/flow-cli/build.semver=$(VERSION) -X github.com/onflow/flow-cli/pkg/flowkit/util.MIXPANEL_PROJECT_TOKEN=${MIXPANEL_PROJECT_TOKEN} -X github.com/onflow/flow-cli/internal/accounts.accountToken=${ACCOUNT_TOKEN}"\
+		"-X github.com/onflow/flow-cli/build.commit=$(COMMIT) -X github.com/onflow/flow-cli/build.semver=$(VERSION) -X github.com/onflow/flow-cli/flowkit/util.MIXPANEL_PROJECT_TOKEN=${MIXPANEL_PROJECT_TOKEN} -X github.com/onflow/flow-cli/internal/accounts.accountToken=${ACCOUNT_TOKEN}"\
 		-o $(BINARY) ./cmd/flow
 
 .PHONY: versioned-binaries
@@ -94,7 +94,7 @@ install-linter:
 	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b ${GOPATH}/bin v1.47.2
 
 .PHONY: lint
-lint:
+lint: generate
 	golangci-lint run -v ./...
 
 .PHONY: fix-lint
@@ -108,4 +108,9 @@ check-headers:
 .PHONY: check-tidy
 check-tidy:
 	go mod tidy
-	cd pkg/flowkit; go mod tidy
+	cd flowkit; go mod tidy
+
+.PHONY: generate
+generate: install-tools
+	cd flowkit; \
+ 	go generate ./...

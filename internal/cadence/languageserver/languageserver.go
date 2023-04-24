@@ -25,14 +25,14 @@ import (
 	"github.com/psiemens/sconfig"
 	"github.com/spf13/cobra"
 
-	"github.com/onflow/flow-cli/pkg/flowkit/util"
+	"github.com/onflow/flow-cli/internal/util"
 )
 
-type Config struct {
+type config struct {
 	EnableFlowClient bool `default:"true" flag:"enable-flow-client" info:"Enable Flow client functionality"`
 }
 
-var conf Config
+var conf config
 
 var Cmd = &cobra.Command{
 	Use:   "language-server",

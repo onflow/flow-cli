@@ -27,7 +27,7 @@ import (
 
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/internal/events"
-	"github.com/onflow/flow-cli/pkg/flowkit/util"
+	"github.com/onflow/flow-cli/internal/util"
 )
 
 var Cmd = &cobra.Command{
@@ -38,27 +38,27 @@ var Cmd = &cobra.Command{
 }
 
 func init() {
-	GetCommand.AddToParent(Cmd)
+	getCommand.AddToParent(Cmd)
 }
 
-type BlockResult struct {
+type blockResult struct {
 	block       *flow.Block
 	events      []flow.BlockEvents
 	collections []*flow.Collection
 	included    []string
 }
 
-func (r *BlockResult) JSON() interface{} {
-	result := make(map[string]interface{})
+func (r *blockResult) JSON() any {
+	result := make(map[string]any)
 	result["blockId"] = r.block.ID.String()
 	result["parentId"] = r.block.ParentID.String()
 	result["height"] = r.block.Height
 	result["totalSeals"] = len(r.block.Seals)
 	result["totalCollections"] = len(r.block.CollectionGuarantees)
 
-	collections := make([]interface{}, 0, len(r.block.CollectionGuarantees))
+	collections := make([]any, 0, len(r.block.CollectionGuarantees))
 	for i, guarantee := range r.block.CollectionGuarantees {
-		collection := make(map[string]interface{})
+		collection := make(map[string]any)
 		collection["id"] = guarantee.CollectionID.String()
 
 		if command.ContainsFlag(r.included, "transactions") {
@@ -87,7 +87,7 @@ func blockStatusToString(code flow.BlockStatus) string {
 	}
 }
 
-func (r *BlockResult) String() string {
+func (r *blockResult) String() string {
 	var b bytes.Buffer
 	writer := util.CreateTabWriter(&b)
 
@@ -123,6 +123,6 @@ func (r *BlockResult) String() string {
 	return b.String()
 }
 
-func (r *BlockResult) Oneliner() string {
+func (r *blockResult) Oneliner() string {
 	return r.block.ID.String()
 }

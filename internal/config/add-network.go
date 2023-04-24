@@ -24,12 +24,11 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/onflow/flow-cli/flowkit"
+	"github.com/onflow/flow-cli/flowkit/config"
+	"github.com/onflow/flow-cli/flowkit/output"
 	"github.com/onflow/flow-cli/internal/command"
-	"github.com/onflow/flow-cli/pkg/flowkit"
-	"github.com/onflow/flow-cli/pkg/flowkit/config"
-	"github.com/onflow/flow-cli/pkg/flowkit/output"
-	"github.com/onflow/flow-cli/pkg/flowkit/services"
-	"github.com/onflow/flow-cli/pkg/flowkit/util"
+	"github.com/onflow/flow-cli/internal/util"
 )
 
 type flagsAddNetwork struct {
@@ -40,7 +39,7 @@ type flagsAddNetwork struct {
 
 var addNetworkFlags = flagsAddNetwork{}
 
-var AddNetworkCommand = &command.Command{
+var addNetworkCommand = &command.Command{
 	Cmd: &cobra.Command{
 		Use:     "network",
 		Short:   "Add network to configuration",
@@ -53,30 +52,33 @@ var AddNetworkCommand = &command.Command{
 
 func addNetwork(
 	_ []string,
-	_ flowkit.ReaderWriter,
 	globalFlags command.GlobalFlags,
-	_ *services.Services,
+	_ output.Logger,
+	_ flowkit.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
-	networkData, flagsProvided, err := flagsToNetworkData(addNetworkFlags)
+	raw, flagsProvided, err := flagsToNetworkData(addNetworkFlags)
 	if err != nil {
 		return nil, err
 	}
 
 	if !flagsProvided {
-		networkData = output.NewNetworkPrompt()
+		raw = util.NewNetworkPrompt()
 	}
 
-	network := config.StringToNetwork(networkData["name"], networkData["host"], networkData["key"])
-	state.Networks().AddOrUpdate(network.Name, network)
+	state.Networks().AddOrUpdate(config.Network{
+		Name: raw["name"],
+		Host: raw["host"],
+		Key:  raw["key"],
+	})
 
 	err = state.SaveEdited(globalFlags.ConfigPaths)
 	if err != nil {
 		return nil, err
 	}
 
-	return &Result{
-		result: fmt.Sprintf("Network %s added to the configuration", networkData["name"]),
+	return &result{
+		result: fmt.Sprintf("Network %s added to the configuration", raw["name"]),
 	}, nil
 }
 

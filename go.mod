@@ -6,17 +6,21 @@ require (
 	github.com/dukex/mixpanel v1.0.1
 	github.com/getsentry/sentry-go v0.20.0
 	github.com/go-git/go-git/v5 v5.6.1
+	github.com/gosuri/uilive v0.0.4
+	github.com/manifoldco/promptui v0.9.0
 	github.com/onflow/cadence v0.38.1
-	github.com/onflow/cadence-tools/languageserver v0.8.1-0.20230327102606-6be626d07eb8
+	github.com/onflow/cadence-tools/languageserver v0.11.0-beta-02
 	github.com/onflow/cadence-tools/test v0.7.0
 	github.com/onflow/fcl-dev-wallet v0.6.0
-	github.com/onflow/flow-cli/pkg/flowkit v0.0.0-20230327102447-8c34a92f8cbb
+	github.com/onflow/flow-cli/flowkit v1.0.0-beta05
+	github.com/onflow/flow-core-contracts/lib/go/templates v1.2.3
 	github.com/onflow/flow-emulator v0.47.0
 	github.com/onflow/flow-go-sdk v0.40.0
 	github.com/onflowser/flowser/v2 v2.0.14-beta
 	github.com/pkg/errors v0.9.1
 	github.com/psiemens/sconfig v0.1.0
 	github.com/radovskyb/watcher v1.0.7
+	github.com/sergi/go-diff v1.1.0
 	github.com/spf13/afero v1.9.5
 	github.com/spf13/cobra v1.7.0
 	github.com/spf13/viper v1.14.0
@@ -82,7 +86,6 @@ require (
 	github.com/googleapis/enterprise-certificate-proxy v0.2.3 // indirect
 	github.com/googleapis/gax-go/v2 v2.7.1 // indirect
 	github.com/gorilla/mux v1.8.0 // indirect
-	github.com/gosuri/uilive v0.0.4 // indirect
 	github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.7.0 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
@@ -118,7 +121,6 @@ require (
 	github.com/logrusorgru/aurora v2.0.3+incompatible // indirect
 	github.com/m4ksio/wal v1.0.1-0.20221209164835-154a17396e4c // indirect
 	github.com/magiconair/properties v1.8.6 // indirect
-	github.com/manifoldco/promptui v0.9.0 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.17 // indirect
 	github.com/mattn/go-pointer v0.0.1 // indirect
@@ -138,9 +140,8 @@ require (
 	github.com/multiformats/go-multistream v0.3.3 // indirect
 	github.com/multiformats/go-varint v0.0.7 // indirect
 	github.com/onflow/atree v0.5.0 // indirect
-	github.com/onflow/cadence-tools/lint v0.5.0 // indirect
+	github.com/onflow/cadence-tools/lint v0.6.0 // indirect
 	github.com/onflow/flow-core-contracts/lib/go/contracts v1.2.3 // indirect
-	github.com/onflow/flow-core-contracts/lib/go/templates v1.2.3 // indirect
 	github.com/onflow/flow-ft/lib/go/contracts v0.7.0 // indirect
 	github.com/onflow/flow-go v0.30.1-0.20230419183628-e1fa8dba5ec5 // indirect
 	github.com/onflow/flow-go/crypto v0.24.7 // indirect
@@ -167,7 +168,6 @@ require (
 	github.com/rs/cors v1.8.0 // indirect
 	github.com/rs/zerolog v1.29.0 // indirect
 	github.com/schollz/progressbar/v3 v3.8.3 // indirect
-	github.com/sergi/go-diff v1.3.1 // indirect
 	github.com/sethvargo/go-retry v0.2.3 // indirect
 	github.com/skeema/knownhosts v1.1.0 // indirect
 	github.com/slok/go-http-metrics v0.10.0 // indirect
@@ -202,12 +202,12 @@ require (
 	go.uber.org/zap v1.24.0 // indirect
 	golang.org/x/crypto v0.7.0 // indirect
 	golang.org/x/mod v0.8.0 // indirect
-	golang.org/x/net v0.8.0 // indirect
+	golang.org/x/net v0.9.0 // indirect
 	golang.org/x/oauth2 v0.6.0 // indirect
 	golang.org/x/sync v0.1.0 // indirect
-	golang.org/x/sys v0.6.0 // indirect
-	golang.org/x/term v0.6.0 // indirect
-	golang.org/x/text v0.8.0 // indirect
+	golang.org/x/sys v0.7.0 // indirect
+	golang.org/x/term v0.7.0 // indirect
+	golang.org/x/text v0.9.0 // indirect
 	golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2 // indirect
 	gonum.org/v1/gonum v0.11.0 // indirect
 	google.golang.org/api v0.114.0 // indirect
@@ -226,4 +226,4 @@ require (
 	nhooyr.io/websocket v1.8.6 // indirect
 )
 
-replace github.com/onflow/flow-cli/pkg/flowkit => ./pkg/flowkit
+replace github.com/onflow/flow-cli/flowkit => ./flowkit

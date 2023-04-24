@@ -23,9 +23,9 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/onflow/flow-cli/flowkit"
+	"github.com/onflow/flow-cli/flowkit/output"
 	"github.com/onflow/flow-cli/internal/command"
-	"github.com/onflow/flow-cli/pkg/flowkit"
-	"github.com/onflow/flow-cli/pkg/flowkit/services"
 )
 
 type flagsRun struct {
@@ -43,27 +43,27 @@ var RunCommand = &command.Command{
 	},
 	Flags: &runFlags,
 	Run: func(
-		args []string,
+		_ []string,
+		_ command.GlobalFlags,
+		_ output.Logger,
 		_ flowkit.ReaderWriter,
-		globalFlags command.GlobalFlags,
-		services *services.Services,
+		_ flowkit.Services,
 	) (command.Result, error) {
 		fmt.Println("⚠️Deprecation notice: Use 'flow dev' command.")
-		return &RunResult{}, nil
+		return &runResult{}, nil
 	},
 }
 
-type RunResult struct{}
+type runResult struct{}
 
-func (r *RunResult) JSON() interface{} {
-	result := make(map[string]string)
-	return result
+func (r *runResult) JSON() any {
+	return nil
 }
 
-func (r *RunResult) String() string {
+func (r *runResult) String() string {
 	return ""
 }
 
-func (r *RunResult) Oneliner() string {
+func (r *runResult) Oneliner() string {
 	return ""
 }

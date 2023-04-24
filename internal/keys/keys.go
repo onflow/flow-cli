@@ -26,8 +26,8 @@ import (
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/spf13/cobra"
 
-	"github.com/onflow/flow-cli/pkg/flowkit/output"
-	"github.com/onflow/flow-cli/pkg/flowkit/util"
+	"github.com/onflow/flow-cli/flowkit/output"
+	"github.com/onflow/flow-cli/internal/util"
 )
 
 var Cmd = &cobra.Command{
@@ -38,12 +38,12 @@ var Cmd = &cobra.Command{
 }
 
 func init() {
-	GenerateCommand.AddToParent(Cmd)
-	DecodeCommand.AddToParent(Cmd)
-	DeriveCommand.AddToParent(Cmd)
+	generateCommand.AddToParent(Cmd)
+	decodeCommand.AddToParent(Cmd)
+	deriveCommand.AddToParent(Cmd)
 }
 
-type KeyResult struct {
+type keyResult struct {
 	privateKey     crypto.PrivateKey
 	publicKey      crypto.PublicKey
 	sigAlgo        crypto.SignatureAlgorithm
@@ -53,8 +53,8 @@ type KeyResult struct {
 	derivationPath string
 }
 
-func (k *KeyResult) JSON() interface{} {
-	result := make(map[string]string)
+func (k *keyResult) JSON() any {
+	result := make(map[string]any)
 	result["public"] = hex.EncodeToString(k.privateKey.PublicKey().Encode())
 
 	if k.privateKey != nil {
@@ -72,7 +72,7 @@ func (k *KeyResult) JSON() interface{} {
 	return result
 }
 
-func (k *KeyResult) String() string {
+func (k *keyResult) String() string {
 	var b bytes.Buffer
 	writer := util.CreateTabWriter(&b)
 
@@ -108,7 +108,7 @@ func (k *KeyResult) String() string {
 	return b.String()
 }
 
-func (k *KeyResult) Oneliner() string {
+func (k *keyResult) Oneliner() string {
 	result := fmt.Sprintf("Public Key: %x, ", k.publicKey.Encode())
 
 	if k.privateKey != nil {

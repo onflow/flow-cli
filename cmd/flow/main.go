@@ -42,8 +42,8 @@ import (
 	"github.com/onflow/flow-cli/internal/test"
 	"github.com/onflow/flow-cli/internal/tools"
 	"github.com/onflow/flow-cli/internal/transactions"
+	"github.com/onflow/flow-cli/internal/util"
 	"github.com/onflow/flow-cli/internal/version"
-	"github.com/onflow/flow-cli/pkg/flowkit/util"
 )
 
 func main() {

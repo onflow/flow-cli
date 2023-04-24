@@ -29,7 +29,7 @@ const enable = "enable"
 
 const disable = "disable"
 
-var MetricsSettings = &cobra.Command{
+var metricsSettings = &cobra.Command{
 	Use:       "metrics",
 	Short:     "Configure command usage metrics settings",
 	Example:   "flow settings metrics disable \nflow settings metrics enable",

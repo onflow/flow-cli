@@ -20,22 +20,25 @@ package accounts
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 
-	"github.com/onflow/flow-go-sdk"
+	"github.com/onflow/cadence"
+	tmpl "github.com/onflow/flow-core-contracts/lib/go/templates"
+	flowsdk "github.com/onflow/flow-go-sdk"
 	"github.com/spf13/cobra"
 
+	"github.com/onflow/flow-cli/flowkit"
+	"github.com/onflow/flow-cli/flowkit/output"
 	"github.com/onflow/flow-cli/internal/command"
-	"github.com/onflow/flow-cli/pkg/flowkit"
-	"github.com/onflow/flow-cli/pkg/flowkit/services"
-	"github.com/onflow/flow-cli/pkg/flowkit/util"
+	"github.com/onflow/flow-cli/internal/util"
 )
 
 type flagsStakingInfo struct{}
 
 var stakingFlags = flagsStakingInfo{}
 
-var StakingCommand = &command.Command{
+var stakingCommand = &command.Command{
 	Cmd: &cobra.Command{
 		Use:     "staking-info <address>",
 		Short:   "Get account staking info",
@@ -48,34 +51,173 @@ var StakingCommand = &command.Command{
 
 func stakingInfo(
 	args []string,
-	_ flowkit.ReaderWriter,
 	_ command.GlobalFlags,
-	services *services.Services,
+	logger output.Logger,
+	_ flowkit.ReaderWriter,
+	flow flowkit.Services,
 ) (command.Result, error) {
-	address := flow.HexToAddress(args[0])
+	address := flowsdk.HexToAddress(args[0])
 
-	staking, delegation, err := services.Accounts.StakingInfo(address)
+	logger.StartProgress(fmt.Sprintf("Fetching info for %s...", address.String()))
+	defer logger.StopProgress()
+
+	cadenceAddress := []cadence.Value{cadence.NewAddress(address)}
+
+	chain, err := util.GetAddressNetwork(address)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to determine network from address, check the address and network")
 	}
 
-	return &StakingResult{staking, delegation}, nil
+	if chain == flowsdk.Emulator {
+		return nil, fmt.Errorf("emulator chain not supported")
+	}
+
+	env := envFromNetwork(chain)
+
+	stakingInfoScript := tmpl.GenerateCollectionGetAllNodeInfoScript(env)
+	delegationInfoScript := tmpl.GenerateCollectionGetAllDelegatorInfoScript(env)
+
+	stakingValue, err := flow.ExecuteScript(
+		context.Background(),
+		flowkit.Script{Code: stakingInfoScript, Args: cadenceAddress},
+		flowkit.LatestScriptQuery,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("error getting staking info: %s", err.Error())
+	}
+
+	delegationValue, err := flow.ExecuteScript(
+		context.Background(),
+		flowkit.Script{Code: delegationInfoScript, Args: cadenceAddress},
+		flowkit.LatestScriptQuery,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("error getting delegation info: %s", err.Error())
+	}
+
+	// get staking infos and delegation infos
+	staking, err := newStakingInfoFromValue(stakingValue)
+	if err != nil {
+		return nil, fmt.Errorf("error parsing staking info: %s", err.Error())
+	}
+	delegation, err := newStakingInfoFromValue(delegationValue)
+	if err != nil {
+		return nil, fmt.Errorf("error parsing delegation info: %s", err.Error())
+	}
+
+	// get a set of node ids from all staking infos
+	nodeStakes := make(map[string]cadence.Value)
+	for _, stakingInfo := range staking {
+		nodeID, ok := stakingInfo["id"]
+		if ok {
+			nodeStakes[nodeIDToString(nodeID)] = nil
+		}
+	}
+	totalCommitmentScript := tmpl.GenerateGetTotalCommitmentBalanceScript(env)
+
+	// foreach node id, get the node total stake
+	for nodeID := range nodeStakes {
+		stake, err := flow.ExecuteScript(
+			context.Background(),
+			flowkit.Script{
+				Code: totalCommitmentScript,
+				Args: []cadence.Value{cadence.String(nodeID)},
+			},
+			flowkit.LatestScriptQuery,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("error getting total stake for node: %s", err.Error())
+		}
+
+		nodeStakes[nodeID] = stake
+	}
+
+	// foreach staking info, add the node total stake
+	for _, stakingInfo := range staking {
+		nodeID, ok := stakingInfo["id"]
+		if ok {
+			stakingInfo["nodeTotalStake"] = nodeStakes[nodeIDToString(nodeID)].(cadence.UFix64)
+		}
+	}
+
+	logger.StopProgress()
+
+	return &stakingResult{staking, delegation}, nil
 }
 
-type StakingResult struct {
-	staking    []map[string]interface{} // stake as FlowIDTableStaking.NodeInfo
-	delegation []map[string]interface{} // delegation as FlowIDTableStaking.DelegatorInfo
+func envFromNetwork(network flowsdk.ChainID) tmpl.Environment {
+	if network == flowsdk.Mainnet {
+		return tmpl.Environment{
+			IDTableAddress:       "8624b52f9ddcd04a",
+			FungibleTokenAddress: "f233dcee88fe0abe",
+			FlowTokenAddress:     "1654653399040a61",
+			LockedTokensAddress:  "8d0e87b65159ae63",
+			StakingProxyAddress:  "62430cf28c26d095",
+		}
+	}
+
+	if network == flowsdk.Testnet {
+		return tmpl.Environment{
+			IDTableAddress:       "9eca2b38b18b5dfe",
+			FungibleTokenAddress: "9a0766d93b6608b7",
+			FlowTokenAddress:     "7e60df042a9c0868",
+			LockedTokensAddress:  "95e019a17d0e23d7",
+			StakingProxyAddress:  "7aad92e5a0715d21",
+		}
+	}
+
+	return tmpl.Environment{}
 }
 
-func (r *StakingResult) JSON() interface{} {
-	result := make(map[string]interface{})
+func nodeIDToString(value any) string {
+	return value.(cadence.String).ToGoValue().(string)
+}
+
+func newStakingInfoFromValue(value cadence.Value) ([]map[string]any, error) {
+	stakingInfo := make([]map[string]any, 0)
+	arrayValue, ok := value.(cadence.Array)
+	if !ok {
+		return stakingInfo, fmt.Errorf("staking info must be a cadence array")
+	}
+
+	if len(arrayValue.Values) == 0 {
+		return stakingInfo, nil
+	}
+
+	for _, v := range arrayValue.Values {
+		vs, ok := v.(cadence.Struct)
+		if !ok {
+			return stakingInfo, fmt.Errorf("staking info must be a cadence array of structs")
+		}
+
+		keys := make([]string, 0)
+		values := make(map[string]any)
+		for _, field := range vs.StructType.Fields {
+			keys = append(keys, field.Identifier)
+		}
+		for j, value := range vs.Fields {
+			values[keys[j]] = value
+		}
+		stakingInfo = append(stakingInfo, values)
+	}
+
+	return stakingInfo, nil
+}
+
+type stakingResult struct {
+	staking    []map[string]any // stake as FlowIDTableStaking.NodeInfo
+	delegation []map[string]any // delegation as FlowIDTableStaking.DelegatorInfo
+}
+
+func (r *stakingResult) JSON() any {
+	result := make(map[string]any)
 	result["staking"] = r.staking
 	result["delegation"] = r.delegation
 
 	return result
 }
 
-func (r *StakingResult) String() string {
+func (r *stakingResult) String() string {
 	var b bytes.Buffer
 	writer := util.CreateTabWriter(&b)
 
@@ -124,6 +266,6 @@ func (r *StakingResult) String() string {
 	return b.String()
 }
 
-func (r *StakingResult) Oneliner() string {
+func (r *stakingResult) Oneliner() string {
 	return ""
 }

@@ -21,17 +21,17 @@ package config
 import (
 	"github.com/spf13/cobra"
 
+	"github.com/onflow/flow-cli/flowkit"
+	"github.com/onflow/flow-cli/flowkit/output"
 	"github.com/onflow/flow-cli/internal/command"
-	"github.com/onflow/flow-cli/pkg/flowkit"
-	"github.com/onflow/flow-cli/pkg/flowkit/output"
-	"github.com/onflow/flow-cli/pkg/flowkit/services"
+	"github.com/onflow/flow-cli/internal/util"
 )
 
 type flagsRemoveAccount struct{}
 
 var removeAccountFlags = flagsRemoveAccount{}
 
-var RemoveAccountCommand = &command.Command{
+var removeAccountCommand = &command.Command{
 	Cmd: &cobra.Command{
 		Use:     "account <name>",
 		Short:   "Remove account from configuration",
@@ -44,16 +44,16 @@ var RemoveAccountCommand = &command.Command{
 
 func removeAccount(
 	args []string,
-	_ flowkit.ReaderWriter,
 	globalFlags command.GlobalFlags,
-	_ *services.Services,
+	_ output.Logger,
+	_ flowkit.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
 	name := ""
 	if len(args) == 1 {
 		name = args[0]
 	} else {
-		name = output.RemoveAccountPrompt(state.Config().Accounts)
+		name = util.RemoveAccountPrompt(state.Config().Accounts)
 	}
 
 	err := state.Accounts().Remove(name)
@@ -66,7 +66,7 @@ func removeAccount(
 		return nil, err
 	}
 
-	return &Result{
+	return &result{
 		result: "account removed",
 	}, nil
 }

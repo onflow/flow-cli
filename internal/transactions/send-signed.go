@@ -19,14 +19,17 @@
 package transactions
 
 import (
+	"context"
 	"fmt"
+
+	"github.com/onflow/flow-cli/flowkit/transactions"
 
 	"github.com/spf13/cobra"
 
+	"github.com/onflow/flow-cli/flowkit"
+	"github.com/onflow/flow-cli/flowkit/output"
 	"github.com/onflow/flow-cli/internal/command"
-	"github.com/onflow/flow-cli/pkg/flowkit"
-	"github.com/onflow/flow-cli/pkg/flowkit/output"
-	"github.com/onflow/flow-cli/pkg/flowkit/services"
+	"github.com/onflow/flow-cli/internal/util"
 )
 
 type flagsSendSigned struct {
@@ -36,7 +39,7 @@ type flagsSendSigned struct {
 
 var sendSignedFlags = flagsSendSigned{}
 
-var SendSignedCommand = &command.Command{
+var sendSignedCommand = &command.Command{
 	Cmd: &cobra.Command{
 		Use:     "send-signed <signed transaction filename>",
 		Short:   "Send signed transaction",
@@ -44,38 +47,41 @@ var SendSignedCommand = &command.Command{
 		Example: `flow transactions send-signed signed.rlp`,
 	},
 	Flags: &sendSignedFlags,
-	RunS:  sendSigned,
+	Run:   sendSigned,
 }
 
 func sendSigned(
 	args []string,
-	readerWriter flowkit.ReaderWriter,
 	globalFlags command.GlobalFlags,
-	services *services.Services,
-	_ *flowkit.State,
+	logger output.Logger,
+	reader flowkit.ReaderWriter,
+	flow flowkit.Services,
 ) (command.Result, error) {
 	filename := args[0]
 
-	code, err := readerWriter.ReadFile(filename)
+	code, err := reader.ReadFile(filename)
 	if err != nil {
 		return nil, fmt.Errorf("error loading transaction payload: %w", err)
 	}
 
-	tx, err := flowkit.NewTransactionFromPayload(code)
+	tx, err := transactions.NewFromPayload(code)
 	if err != nil {
 		return nil, err
 	}
 
-	if !globalFlags.Yes && !output.ApproveTransactionForSendingPrompt(tx) {
+	if !globalFlags.Yes && !util.ApproveTransactionForSendingPrompt(tx.FlowTransaction()) {
 		return nil, fmt.Errorf("transaction was not approved for sending")
 	}
 
-	sentTx, result, err := services.Transactions.SendSigned(tx)
+	logger.StartProgress(fmt.Sprintf("Sending transaction with ID: %s", tx.FlowTransaction().ID()))
+	defer logger.StopProgress()
+
+	sentTx, result, err := flow.SendSignedTransaction(context.Background(), tx)
 	if err != nil {
 		return nil, err
 	}
 
-	return &TransactionResult{
+	return &transactionResult{
 		result:  result,
 		tx:      sentTx,
 		include: sendSignedFlags.Include,

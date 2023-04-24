@@ -21,17 +21,17 @@ package config
 import (
 	"github.com/spf13/cobra"
 
+	"github.com/onflow/flow-cli/flowkit"
+	"github.com/onflow/flow-cli/flowkit/output"
 	"github.com/onflow/flow-cli/internal/command"
-	"github.com/onflow/flow-cli/pkg/flowkit"
-	"github.com/onflow/flow-cli/pkg/flowkit/output"
-	"github.com/onflow/flow-cli/pkg/flowkit/services"
+	"github.com/onflow/flow-cli/internal/util"
 )
 
 type flagsRemoveContract struct{}
 
 var removeContractFlags = flagsRemoveContract{}
 
-var RemoveContractCommand = &command.Command{
+var removeContractCommand = &command.Command{
 	Cmd: &cobra.Command{
 		Use:     "contract <name>",
 		Short:   "Remove contract from configuration",
@@ -44,16 +44,16 @@ var RemoveContractCommand = &command.Command{
 
 func removeContract(
 	args []string,
-	_ flowkit.ReaderWriter,
 	globalFlags command.GlobalFlags,
-	_ *services.Services,
+	_ output.Logger,
+	_ flowkit.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
 	name := ""
 	if len(args) == 1 {
 		name = args[0]
 	} else {
-		name = output.RemoveContractPrompt(*state.Contracts())
+		name = util.RemoveContractPrompt(*state.Contracts())
 	}
 
 	err := state.Contracts().Remove(name)
@@ -66,7 +66,7 @@ func removeContract(
 		return nil, err
 	}
 
-	return &Result{
+	return &result{
 		result: "contract removed",
 	}, nil
 }

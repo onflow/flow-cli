@@ -20,14 +20,19 @@ package config
 
 import (
 	"fmt"
+	"strconv"
 
+	"github.com/onflow/flow-cli/flowkit/accounts"
+
+	"github.com/onflow/flow-go-sdk"
+	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/spf13/cobra"
 
+	"github.com/onflow/flow-cli/flowkit"
+	"github.com/onflow/flow-cli/flowkit/config"
+	"github.com/onflow/flow-cli/flowkit/output"
 	"github.com/onflow/flow-cli/internal/command"
-	"github.com/onflow/flow-cli/pkg/flowkit"
-	"github.com/onflow/flow-cli/pkg/flowkit/config"
-	"github.com/onflow/flow-cli/pkg/flowkit/output"
-	"github.com/onflow/flow-cli/pkg/flowkit/services"
+	"github.com/onflow/flow-cli/internal/util"
 )
 
 type flagsAddAccount struct {
@@ -41,7 +46,7 @@ type flagsAddAccount struct {
 
 var addAccountFlags = flagsAddAccount{}
 
-var AddAccountCommand = &command.Command{
+var addAccountCommand = &command.Command{
 	Cmd: &cobra.Command{
 		Use:     "account",
 		Short:   "Add account to configuration",
@@ -54,51 +59,87 @@ var AddAccountCommand = &command.Command{
 
 func addAccount(
 	_ []string,
-	_ flowkit.ReaderWriter,
 	globalFlags command.GlobalFlags,
-	_ *services.Services,
+	_ output.Logger,
+	_ flowkit.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
-	accountData, flagsProvided, err := flagsToAccountData(addAccountFlags)
+	raw, flagsProvided, err := flagsToAccountData(addAccountFlags)
 	if err != nil {
 		return nil, err
 	}
 
 	if !flagsProvided {
-		accountData = output.NewAccountPrompt()
+		raw = util.NewAccountPrompt()
 	}
 
-	account, err := config.StringToAccount(
-		accountData["name"],
-		accountData["address"],
-		accountData["keyIndex"],
-		accountData["sigAlgo"],
-		accountData["hashAlgo"],
-		accountData["key"],
-	)
+	key, err := parseKey(raw.Key, raw.SigAlgo)
 	if err != nil {
 		return nil, err
 	}
 
-	acc := flowkit.Account{}
-	acc.SetName(account.Name)
-	acc.SetAddress(account.Address)
-	acc.SetKey(flowkit.NewHexAccountKeyFromPrivateKey(account.Key.Index, account.Key.HashAlgo, account.Key.PrivateKey))
+	index, err := parseKeyIndex(raw.KeyIndex)
+	if err != nil {
+		return nil, err
+	}
 
-	state.Accounts().AddOrUpdate(&acc)
+	accountKey := config.AccountKey{
+		Type:       config.KeyTypeHex,
+		Index:      index,
+		SigAlgo:    crypto.StringToSignatureAlgorithm(raw.SigAlgo),
+		HashAlgo:   crypto.StringToHashAlgorithm(raw.HashAlgo),
+		PrivateKey: key,
+	}
+
+	account := &config.Account{
+		Name:    raw.Name,
+		Address: flow.HexToAddress(raw.Address),
+		Key:     accountKey,
+	}
+
+	hexKey := accounts.NewHexKeyFromPrivateKey(account.Key.Index, account.Key.HashAlgo, account.Key.PrivateKey)
+	state.Accounts().AddOrUpdate(&accounts.Account{
+		Name:    account.Name,
+		Address: account.Address,
+		Key:     hexKey,
+	})
 
 	err = state.SaveEdited(globalFlags.ConfigPaths)
 	if err != nil {
 		return nil, err
 	}
 
-	return &Result{
-		result: fmt.Sprintf("Account %s added to the configuration", accountData["name"]),
+	return &result{
+		result: fmt.Sprintf("Account %s added to the configuration", raw.Name),
 	}, nil
 
 }
 
-func flagsToAccountData(flags flagsAddAccount) (map[string]string, bool, error) {
+func parseKey(key string, sigAlgo string) (crypto.PrivateKey, error) {
+	privateKey, err := crypto.DecodePrivateKeyHex(
+		crypto.StringToSignatureAlgorithm(sigAlgo),
+		key,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return privateKey, nil
+}
+
+func parseKeyIndex(value string) (int, error) {
+	v, err := strconv.Atoi(value)
+	if err != nil {
+		return 0, fmt.Errorf("invalid index, must be a number")
+	}
+	if v < 0 {
+		return 0, fmt.Errorf("invalid index, must be positive")
+	}
+
+	return v, nil
+}
+
+func flagsToAccountData(flags flagsAddAccount) (*util.AccountData, bool, error) {
 	if flags.Name == "" && flags.Address == "" && flags.Key == "" {
 		return nil, false, nil
 	}
@@ -111,17 +152,16 @@ func flagsToAccountData(flags flagsAddAccount) (map[string]string, bool, error) 
 		return nil, true, fmt.Errorf("key must be provided")
 	}
 
-	_, err := config.StringToAddress(flags.Address)
-	if err != nil {
-		return nil, true, err
+	if flow.HexToAddress(flags.Address) == flow.EmptyAddress {
+		return nil, true, fmt.Errorf("invalid address")
 	}
 
-	return map[string]string{
-		"name":     flags.Name,
-		"address":  flags.Address,
-		"keyIndex": flags.KeyIndex,
-		"sigAlgo":  flags.SigAlgo,
-		"hashAlgo": flags.HashAlgo,
-		"key":      flags.Key,
+	return &util.AccountData{
+		Name:     flags.Name,
+		Address:  flags.Address,
+		SigAlgo:  flags.SigAlgo,
+		HashAlgo: flags.HashAlgo,
+		Key:      flags.Key,
+		KeyIndex: flags.KeyIndex,
 	}, true, nil
 }

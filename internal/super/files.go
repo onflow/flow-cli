@@ -29,7 +29,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/radovskyb/watcher"
 
-	"github.com/onflow/flow-cli/pkg/flowkit/config"
+	"github.com/onflow/flow-cli/flowkit/config"
 )
 
 const (
@@ -154,7 +154,7 @@ func (f *projectFiles) watch() (<-chan accountChange, <-chan contractChange, err
 
 				name, containsAccount := accountFromPath(rel)
 				if event.IsDir() && containsAccount {
-					// todo handle rename and move
+					// TODO(sideninja) handle moving of files
 					accounts <- accountChange{
 						status: status[event.Op],
 						name:   name,

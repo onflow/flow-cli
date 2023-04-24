@@ -25,23 +25,9 @@ import (
 	"github.com/psiemens/sconfig"
 	"github.com/spf13/cobra"
 
-	"github.com/onflow/flow-cli/pkg/flowkit/config"
-	"github.com/onflow/flow-cli/pkg/flowkit/util"
+	"github.com/onflow/flow-cli/flowkit/config"
+	"github.com/onflow/flow-cli/internal/util"
 )
-
-// GlobalFlags contains all global flags definitions.
-type GlobalFlags struct {
-	Filter           string
-	Format           string
-	Save             string
-	Host             string
-	HostNetworkKey   string
-	Log              string
-	Network          string
-	Yes              bool
-	ConfigPaths      []string
-	SkipVersionCheck bool
-}
 
 // Flags initialized to default values.
 var Flags = GlobalFlags{
@@ -50,7 +36,7 @@ var Flags = GlobalFlags{
 	Save:             "",
 	Host:             "",
 	HostNetworkKey:   "",
-	Network:          config.DefaultEmulatorNetwork().Name,
+	Network:          config.EmulatorNetwork.Name,
 	Log:              logLevelInfo,
 	Yes:              false,
 	ConfigPaths:      config.DefaultPaths(),

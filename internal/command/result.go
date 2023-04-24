@@ -29,8 +29,8 @@ import (
 	"github.com/spf13/afero"
 	"golang.org/x/exp/maps"
 
-	"github.com/onflow/flow-cli/pkg/flowkit/config"
-	"github.com/onflow/flow-cli/pkg/flowkit/output"
+	"github.com/onflow/flow-cli/flowkit/config"
+	"github.com/onflow/flow-cli/flowkit/output"
 )
 
 // Result interface describes all the formats for the result output.
@@ -40,7 +40,7 @@ type Result interface {
 	// Oneliner will output the result in "grep-able" format.
 	Oneliner() string
 	// JSON will output the result in JSON format
-	JSON() interface{}
+	JSON() any
 }
 
 // ContainsFlag checks if output flag is present for the provided field.
@@ -100,7 +100,7 @@ func outputResult(result string, saveFlag string, formatFlag string, filterFlag 
 }
 
 // filterResultValue returns a value by its name filtered from other result values.
-func filterResultValue(result Result, filter string) (interface{}, error) {
+func filterResultValue(result Result, filter string) (any, error) {
 	res, ok := result.JSON().(map[string]any)
 	if !ok {
 		return "", fmt.Errorf("not possible to filter by the value")

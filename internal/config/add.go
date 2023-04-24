@@ -22,7 +22,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var AddCmd = &cobra.Command{
+var addCmd = &cobra.Command{
 	Use:              "add <account|contract|deployment|network>",
 	Short:            "Add resource to configuration",
 	Example:          "flow config add account",
@@ -31,8 +31,8 @@ var AddCmd = &cobra.Command{
 }
 
 func init() {
-	AddAccountCommand.AddToParent(AddCmd)
-	AddContractCommand.AddToParent(AddCmd)
-	AddDeploymentCommand.AddToParent(AddCmd)
-	AddNetworkCommand.AddToParent(AddCmd)
+	addAccountCommand.AddToParent(addCmd)
+	addContractCommand.AddToParent(addCmd)
+	addDeploymentCommand.AddToParent(addCmd)
+	addNetworkCommand.AddToParent(addCmd)
 }

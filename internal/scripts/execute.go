@@ -19,16 +19,17 @@
 package scripts
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/onflow/cadence"
-	"github.com/onflow/flow-go-sdk"
+	flowsdk "github.com/onflow/flow-go-sdk"
 	"github.com/spf13/cobra"
 
+	"github.com/onflow/flow-cli/flowkit"
+	"github.com/onflow/flow-cli/flowkit/arguments"
+	"github.com/onflow/flow-cli/flowkit/output"
 	"github.com/onflow/flow-cli/internal/command"
-	"github.com/onflow/flow-cli/pkg/flowkit"
-	"github.com/onflow/flow-cli/pkg/flowkit/services"
-	"github.com/onflow/flow-cli/pkg/flowkit/util"
 )
 
 type flagsScripts struct {
@@ -39,7 +40,7 @@ type flagsScripts struct {
 
 var scriptFlags = flagsScripts{}
 
-var ExecuteCommand = &command.Command{
+var executeCommand = &command.Command{
 	Cmd: &cobra.Command{
 		Use:     "execute <filename> [<argument> <argument> ...]",
 		Short:   "Execute a script",
@@ -52,9 +53,10 @@ var ExecuteCommand = &command.Command{
 
 func execute(
 	args []string,
+	_ command.GlobalFlags,
+	_ output.Logger,
 	readerWriter flowkit.ReaderWriter,
-	globalFlags command.GlobalFlags,
-	srv *services.Services,
+	flow flowkit.Services,
 ) (command.Result, error) {
 	filename := args[0]
 
@@ -65,26 +67,36 @@ func execute(
 
 	var scriptArgs []cadence.Value
 	if scriptFlags.ArgsJSON != "" {
-		scriptArgs, err = flowkit.ParseArgumentsJSON(scriptFlags.ArgsJSON)
+		scriptArgs, err = arguments.ParseJSON(scriptFlags.ArgsJSON)
 	} else {
-		scriptArgs, err = flowkit.ParseArgumentsWithoutType(filename, code, args[1:])
+		scriptArgs, err = arguments.ParseWithoutType(args[1:], code, filename)
 	}
 
 	if err != nil {
 		return nil, fmt.Errorf("error parsing script arguments: %w", err)
 	}
 
-	value, err := srv.Scripts.Execute(
-		flowkit.NewScript(code, scriptArgs, filename),
-		globalFlags.Network,
-		&util.ScriptQuery{
-			ID:     flow.HexToID(scriptFlags.BlockID),
-			Height: scriptFlags.BlockHeight,
+	query := flowkit.ScriptQuery{}
+	if scriptFlags.BlockHeight != 0 {
+		query.Height = scriptFlags.BlockHeight
+	} else if scriptFlags.BlockID != "" {
+		query.ID = flowsdk.HexToID(scriptFlags.BlockID)
+	} else {
+		query.Latest = true
+	}
+
+	value, err := flow.ExecuteScript(
+		context.Background(),
+		flowkit.Script{
+			Code:     code,
+			Args:     scriptArgs,
+			Location: filename,
 		},
+		query,
 	)
 	if err != nil {
 		return nil, err
 	}
 
-	return &ScriptResult{value}, nil
+	return &scriptResult{value}, nil
 }

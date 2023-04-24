@@ -19,6 +19,7 @@
 package keys
 
 import (
+	"encoding/hex"
 	"fmt"
 	"strings"
 
@@ -26,9 +27,9 @@ import (
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/spf13/cobra"
 
+	"github.com/onflow/flow-cli/flowkit"
+	"github.com/onflow/flow-cli/flowkit/output"
 	"github.com/onflow/flow-cli/internal/command"
-	"github.com/onflow/flow-cli/pkg/flowkit"
-	"github.com/onflow/flow-cli/pkg/flowkit/services"
 )
 
 type flagsDecode struct {
@@ -38,7 +39,7 @@ type flagsDecode struct {
 
 var decodeFlags = flagsDecode{}
 
-var DecodeCommand = &command.Command{
+var decodeCommand = &command.Command{
 	Cmd: &cobra.Command{
 		Use:       "decode <rlp|pem> <encoded public key>",
 		Short:     "Decode an encoded public key",
@@ -52,9 +53,10 @@ var DecodeCommand = &command.Command{
 
 func decode(
 	args []string,
-	readerWriter flowkit.ReaderWriter,
 	_ command.GlobalFlags,
-	services *services.Services,
+	_ output.Logger,
+	reader flowkit.ReaderWriter,
+	_ flowkit.Services,
 ) (command.Result, error) {
 	encoding := args[0]
 	fromFile := decodeFlags.FromFile
@@ -74,7 +76,7 @@ func decode(
 	}
 
 	if fromFile != "" {
-		e, err := readerWriter.ReadFile(fromFile)
+		e, err := reader.ReadFile(fromFile)
 		if err != nil {
 			return nil, err
 		}
@@ -90,9 +92,9 @@ func decode(
 			return nil, fmt.Errorf("invalid signature algorithm: %s", decodeFlags.SigAlgo)
 		}
 
-		accountKey, err = services.Keys.DecodePEM(encoded, sigAlgo)
+		accountKey, err = decodePEM(encoded, sigAlgo)
 	case "rlp":
-		accountKey, err = services.Keys.DecodeRLP(encoded)
+		accountKey, err = decodeRLP(encoded)
 	default:
 		return nil, fmt.Errorf("encoding type not supported. Valid encoding: RLP and PEM")
 	}
@@ -101,10 +103,37 @@ func decode(
 		return nil, err
 	}
 
-	return &KeyResult{
+	return &keyResult{
 		publicKey: accountKey.PublicKey,
 		sigAlgo:   accountKey.SigAlgo,
 		hashAlgo:  accountKey.HashAlgo,
 		weight:    accountKey.Weight,
 	}, err
+}
+
+func decodePEM(pubKey string, sigAlgo crypto.SignatureAlgorithm) (*flow.AccountKey, error) {
+	pk, err := crypto.DecodePublicKeyPEM(sigAlgo, pubKey)
+	if err != nil {
+		return nil, err
+	}
+
+	return &flow.AccountKey{
+		PublicKey: pk,
+		SigAlgo:   sigAlgo,
+		Weight:    -1,
+	}, nil
+}
+
+func decodeRLP(pubKey string) (*flow.AccountKey, error) {
+	publicKeyBytes, err := hex.DecodeString(pubKey)
+	if err != nil {
+		return nil, fmt.Errorf("failed to decode public key: %w", err)
+	}
+
+	accountKey, err := flow.DecodeAccountKey(publicKeyBytes)
+	if err != nil {
+		return nil, fmt.Errorf("failed to decode: %w", err)
+	}
+
+	return accountKey, nil
 }

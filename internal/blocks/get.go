@@ -19,11 +19,14 @@
 package blocks
 
 import (
+	"context"
+
+	flowsdk "github.com/onflow/flow-go-sdk"
 	"github.com/spf13/cobra"
 
+	"github.com/onflow/flow-cli/flowkit"
+	"github.com/onflow/flow-cli/flowkit/output"
 	"github.com/onflow/flow-cli/internal/command"
-	"github.com/onflow/flow-cli/pkg/flowkit"
-	"github.com/onflow/flow-cli/pkg/flowkit/services"
 )
 
 type flagsBlocks struct {
@@ -33,7 +36,7 @@ type flagsBlocks struct {
 
 var blockFlags = flagsBlocks{}
 
-var GetCommand = &command.Command{
+var getCommand = &command.Command{
 	Cmd: &cobra.Command{
 		Use:     "get <block_id|latest|block_height>",
 		Short:   "Get block info",
@@ -46,20 +49,50 @@ var GetCommand = &command.Command{
 
 func get(
 	args []string,
-	_ flowkit.ReaderWriter,
 	_ command.GlobalFlags,
-	services *services.Services,
+	logger output.Logger,
+	_ flowkit.ReaderWriter,
+	flow flowkit.Services,
 ) (command.Result, error) {
-	block, events, collections, err := services.Blocks.GetBlock(
-		args[0], // block id
-		blockFlags.Events,
-		command.ContainsFlag(blockFlags.Include, "transactions"),
-	)
+
+	query, err := flowkit.NewBlockQuery(args[0])
 	if err != nil {
 		return nil, err
 	}
 
-	return &BlockResult{
+	logger.StartProgress("Fetching Block...")
+	defer logger.StopProgress()
+	block, err := flow.GetBlock(context.Background(), query)
+	if err != nil {
+		return nil, err
+	}
+
+	var events []flowsdk.BlockEvents
+	if blockFlags.Events != "" {
+		events, err = flow.GetEvents(
+			context.Background(),
+			[]string{blockFlags.Events},
+			block.Height,
+			block.Height,
+			nil,
+		)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	collections := make([]*flowsdk.Collection, 0)
+	if command.ContainsFlag(blockFlags.Include, "transactions") {
+		for _, guarantee := range block.CollectionGuarantees {
+			collection, err := flow.GetCollection(context.Background(), guarantee.CollectionID)
+			if err != nil {
+				return nil, err
+			}
+			collections = append(collections, collection)
+		}
+	}
+
+	return &blockResult{
 		block:       block,
 		events:      events,
 		collections: collections,

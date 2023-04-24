@@ -30,7 +30,7 @@ const (
 )
 
 // defaults holds the default values for global settings
-var defaults = map[string]interface{}{
+var defaults = map[string]any{
 	metricsEnabled: true,
 	flowserPath:    getDefaultInstallDir(),
 }
@@ -47,8 +47,8 @@ func getDefaultInstallDir() string {
 		return "/Applications"
 	case Windows:
 		// https://superuser.com/questions/1327037/what-choices-do-i-have-about-where-to-install-software-on-windows-10
-		user, _ := user.Current() // safe to ignore cache errors
-		return fmt.Sprintf(`%s\AppData\Local\Programs`, user.HomeDir)
+		usr, _ := user.Current() // safe to ignore cache errors
+		return fmt.Sprintf(`%s\AppData\Local\Programs`, usr.HomeDir)
 	default:
 		return ""
 	}

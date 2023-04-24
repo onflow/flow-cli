@@ -25,18 +25,17 @@ import (
 	devWallet "github.com/onflow/fcl-dev-wallet/go/wallet"
 	"github.com/spf13/cobra"
 
+	"github.com/onflow/flow-cli/flowkit"
+	"github.com/onflow/flow-cli/flowkit/output"
 	"github.com/onflow/flow-cli/internal/command"
-	"github.com/onflow/flow-cli/pkg/flowkit"
-	"github.com/onflow/flow-cli/pkg/flowkit/output"
-	"github.com/onflow/flow-cli/pkg/flowkit/services"
 )
 
-type FlagsWallet struct {
+type flagsWallet struct {
 	Port uint   `default:"8701" flag:"port" info:"Dev wallet port to listen on"`
 	Host string `default:"http://localhost:8888" flag:"emulator-host" info:"Host for access node connection"`
 }
 
-var walletFlags = FlagsWallet{}
+var walletFlags = flagsWallet{}
 
 var DevWallet = &command.Command{
 	Cmd: &cobra.Command{
@@ -52,9 +51,9 @@ var DevWallet = &command.Command{
 
 func wallet(
 	_ []string,
-	_ flowkit.ReaderWriter,
 	_ command.GlobalFlags,
-	_ *services.Services,
+	_ output.Logger,
+	_ flowkit.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
 	service, err := state.EmulatorServiceAccount()
@@ -62,13 +61,13 @@ func wallet(
 		return nil, err
 	}
 
-	privateKey, err := service.Key().PrivateKey()
+	privateKey, err := service.Key.PrivateKey()
 	if err != nil {
 		return nil, err
 	}
 
 	conf := devWallet.FlowConfig{
-		Address:    fmt.Sprintf("0x%s", service.Address().String()),
+		Address:    fmt.Sprintf("0x%s", service.Address.String()),
 		PrivateKey: strings.TrimPrefix((*privateKey).String(), "0x"),
 		PublicKey:  strings.TrimPrefix((*privateKey).PublicKey().String(), "0x"),
 		AccessNode: walletFlags.Host,

@@ -30,15 +30,15 @@ import (
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
 
+	"github.com/onflow/flow-cli/flowkit"
+	"github.com/onflow/flow-cli/flowkit/config"
 	"github.com/onflow/flow-cli/internal/command"
-	"github.com/onflow/flow-cli/pkg/flowkit"
-	"github.com/onflow/flow-cli/pkg/flowkit/config"
-	"github.com/onflow/flow-cli/pkg/flowkit/util"
+	"github.com/onflow/flow-cli/internal/util"
 )
 
 var Cmd *cobra.Command
 
-func ConfiguredServiceKey(
+func configuredServiceKey(
 	init bool,
 	sigAlgo crypto.SignatureAlgorithm,
 	hashAlgo crypto.HashAlgorithm,
@@ -63,20 +63,20 @@ func ConfiguredServiceKey(
 
 		state, err = flowkit.Init(loader, sigAlgo, hashAlgo)
 		if err != nil {
-			Exitf(1, err.Error())
+			exitf(1, err.Error())
 		} else {
 			err = state.SaveDefault()
 			if err != nil {
-				Exitf(1, err.Error())
+				exitf(1, err.Error())
 			}
 		}
 	} else {
 		state, err = flowkit.Load(command.Flags.ConfigPaths, loader)
 		if err != nil {
 			if errors.Is(err, config.ErrDoesNotExist) {
-				Exitf(1, "🙏 Configuration is missing, initialize it with: 'flow init' and then rerun this command.")
+				exitf(1, "🙏 Configuration is missing, initialize it with: 'flow init' and then rerun this command.")
 			} else {
-				Exitf(1, err.Error())
+				exitf(1, err.Error())
 			}
 		}
 	}
@@ -86,34 +86,34 @@ func ConfiguredServiceKey(
 		util.Exit(1, err.Error())
 	}
 
-	privateKey, err := serviceAccount.Key().PrivateKey()
+	privateKey, err := serviceAccount.Key.PrivateKey()
 	if err != nil {
 		util.Exit(1, "Only hexadecimal keys can be used as the emulator service account key.")
 	}
 
-	err = serviceAccount.Key().Validate()
+	err = serviceAccount.Key.Validate()
 	if err != nil {
 		util.Exit(
 			1,
 			fmt.Sprintf("invalid private key in %s emulator configuration, %s",
-				serviceAccount.Name(),
+				serviceAccount.Name,
 				err.Error(),
 			),
 		)
 	}
 
-	return *privateKey, serviceAccount.Key().SigAlgo(), serviceAccount.Key().HashAlgo()
+	return *privateKey, serviceAccount.Key.SigAlgo(), serviceAccount.Key.HashAlgo()
 }
 
 func init() {
-	Cmd = start.Cmd(ConfiguredServiceKey)
+	Cmd = start.Cmd(configuredServiceKey)
 	Cmd.Use = "emulator"
 	Cmd.Short = "Run Flow network for development"
 	Cmd.GroupID = "tools"
 	SnapshotCmd.AddToParent(Cmd)
 }
 
-func Exitf(code int, msg string, args ...interface{}) {
+func exitf(code int, msg string, args ...any) {
 	fmt.Printf(msg+"\n", args...)
 	os.Exit(code)
 }
