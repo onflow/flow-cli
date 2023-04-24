@@ -354,6 +354,22 @@ var TestScriptWithImport = Resource{
     `),
 }
 
+var TestScriptWithRelativeImports = Resource{
+	Filename: "testScriptWithRelativeImport.cdc",
+	Source: []byte(`
+        import FooContract from "../contracts/FooContract.cdc"
+        import Hello from "../contracts/contractHello.cdc"
+
+        pub fun testSimple() {
+            let hello = Hello()
+            assert(hello.greeting == "Hello, World!")
+
+            let fooContract = FooContract()
+            assert("Carmichael" == fooContract.getIntegerTrait(41041))
+        }
+    `),
+}
+
 var TestScriptWithFileRead = Resource{
 	Filename: "testScriptWithFileRead.cdc",
 	Source: []byte(`
