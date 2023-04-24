@@ -50,7 +50,7 @@ const (
 )
 
 type MockServices struct {
-	Mock                         *Services
+	Mock                         *mock.Mock
 	AddContract                  *mock.Call
 	BuildTransaction             *mock.Call
 	CreateAccount                *mock.Call
@@ -77,7 +77,7 @@ type MockServices struct {
 }
 
 func DefaultMockServices() *MockServices {
-	m := &Services{}
+	m := &mock.Mock{}
 	t := &MockServices{
 		Mock: m,
 		GetAccount: m.On(

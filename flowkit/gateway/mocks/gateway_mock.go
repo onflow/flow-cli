@@ -40,7 +40,7 @@ const (
 )
 
 type TestGateway struct {
-	Mock                           *Gateway
+	Mock                           *mock.Mock
 	SendSignedTransaction          *mock.Call
 	GetAccount                     *mock.Call
 	GetCollection                  *mock.Call
@@ -59,7 +59,7 @@ type TestGateway struct {
 }
 
 func DefaultMockGateway() *TestGateway {
-	m := &Gateway{}
+	m := &mock.Mock{}
 	t := &TestGateway{
 		Mock: m,
 		SendSignedTransaction: m.On(
