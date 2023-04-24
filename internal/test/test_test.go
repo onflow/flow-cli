@@ -91,12 +91,12 @@ func TestExecutingTests(t *testing.T) {
 		// Setup
 		_, state, _ := util.TestMocks(t)
 		readerWriter := state.ReaderWriter()
-		readerWriter.WriteFile(
+		_ = readerWriter.WriteFile(
 			"../contracts/contractHello.cdc",
 			tests.ContractHelloString.Source,
 			os.ModeTemporary,
 		)
-		readerWriter.WriteFile(
+		_ = readerWriter.WriteFile(
 			"../contracts/FooContract.cdc",
 			tests.ContractFooCoverage.Source,
 			os.ModeTemporary,
