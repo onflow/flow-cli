@@ -89,8 +89,8 @@ func TestExecutingTests(t *testing.T) {
 		t.Parallel()
 
 		// Setup
-		st, s, _ := setup()
-		readerWriter := st.ReaderWriter()
+		_, state, _ := util.TestMocks(t)
+		readerWriter := state.ReaderWriter()
 		readerWriter.WriteFile(
 			"../contracts/contractHello.cdc",
 			tests.ContractHelloString.Source,
@@ -106,18 +106,18 @@ func TestExecutingTests(t *testing.T) {
 			Name:     tests.ContractHelloString.Name,
 			Location: tests.ContractHelloString.Filename,
 		}
-		st.Contracts().AddOrUpdate(contractHello)
+		state.Contracts().AddOrUpdate(contractHello)
 		contractFoo := config.Contract{
 			Name:     tests.ContractFooCoverage.Name,
 			Location: tests.ContractFooCoverage.Filename,
 		}
-		st.Contracts().AddOrUpdate(contractFoo)
+		state.Contracts().AddOrUpdate(contractFoo)
 
 		// Execute script
 		script := tests.TestScriptWithRelativeImports
 		testFiles := make(map[string][]byte, 0)
 		testFiles[script.Filename] = script.Source
-		results, _, err := s.Tests.Execute(testFiles, readerWriter, false)
+		results, _, err := testCode(testFiles, state, false)
 
 		require.NoError(t, err)
 		require.Len(t, results, 1)
@@ -128,19 +128,19 @@ func TestExecutingTests(t *testing.T) {
 		t.Parallel()
 
 		// Setup
-		st, s, _ := setup()
+		_, state, _ := util.TestMocks(t)
 
 		c := config.Contract{
 			Name:     tests.ContractHelloString.Name,
 			Location: "SomeHelloContract.cdc",
 		}
-		st.Contracts().AddOrUpdate(c)
+		state.Contracts().AddOrUpdate(c)
 
 		// Execute script
 		script := tests.TestScriptWithImport
 		testFiles := make(map[string][]byte, 0)
 		testFiles[script.Filename] = script.Source
-		_, _, err := s.Tests.Execute(testFiles, st.ReaderWriter(), false)
+		_, _, err := testCode(testFiles, state, false)
 
 		require.Error(t, err)
 		assert.Error(
