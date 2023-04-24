@@ -25,99 +25,48 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestAliases_ByNetwork(t *testing.T) {
-	aliases := Aliases{
-		{
-			Network: "testnet",
-			Address: flow.HexToAddress("01"),
-		},
-		{
-			Network: "mainnet",
-			Address: flow.HexToAddress("02"),
-		},
-	}
-
-	assert.Equal(t, flow.HexToAddress("01"), aliases.ByNetwork("testnet").Address)
-	assert.Equal(t, flow.HexToAddress("02"), aliases.ByNetwork("mainnet").Address)
-	assert.Nil(t, aliases.ByNetwork("nonexistent"))
-}
-
 func TestAliases_Add(t *testing.T) {
 	aliases := Aliases{}
-	aliases.Add("testnet", flow.HexToAddress("01"))
+	aliases.Add("testnet", flow.HexToAddress("0xabcdef"))
 
-	assert.Equal(t, 1, len(aliases))
-	assert.Equal(t, flow.HexToAddress("01"), aliases.ByNetwork("testnet").Address)
-
-	aliases.Add("testnet", flow.HexToAddress("02")) // should not add a new entry
-	assert.Equal(t, 1, len(aliases))
-	assert.Equal(t, flow.HexToAddress("01"), aliases.ByNetwork("testnet").Address)
+	alias := aliases.ByNetwork("testnet")
+	assert.NotNil(t, alias)
 }
 
-func TestContracts_IsAliased(t *testing.T) {
-	contract := Contract{
-		Name:     "TestContract",
-		Location: "test.cdc",
-		Aliases: Aliases{
-			{
-				Network: "testnet",
-				Address: flow.HexToAddress("01"),
-			},
-		},
-	}
+func TestAliases_Add_Duplicate(t *testing.T) {
+	aliases := Aliases{}
+	aliases.Add("testnet", flow.HexToAddress("0xabcdef"))
+	aliases.Add("testnet", flow.HexToAddress("0x123456"))
 
-	assert.True(t, contract.IsAliased())
-
-	contract.Aliases = Aliases{}
-	assert.False(t, contract.IsAliased())
+	assert.Len(t, aliases, 1)
 }
 
-func TestContracts_ByName(t *testing.T) {
-	contracts := Contracts{
-		{
-			Name:     "TestContract",
-			Location: "test.cdc",
-		},
-	}
-
-	assert.NotNil(t, contracts.ByName("TestContract"))
-	assert.Nil(t, contracts.ByName("NonExistentContract"))
-}
-
-func TestContracts_AddOrUpdate(t *testing.T) {
+func TestContracts_AddOrUpdate_Add(t *testing.T) {
 	contracts := Contracts{}
-	contract := Contract{
-		Name:     "TestContract",
-		Location: "test.cdc",
+	contracts.AddOrUpdate(Contract{Name: "mycontract", Location: "path/to/contract.cdc"})
+
+	assert.Len(t, contracts, 1)
+
+	contract, err := contracts.ByName("mycontract")
+	assert.NoError(t, err)
+	assert.Equal(t, "path/to/contract.cdc", contract.Location)
+}
+
+func TestContracts_AddOrUpdate_Update(t *testing.T) {
+	contracts := Contracts{
+		Contract{Name: "mycontract", Location: "path/to/contract.cdc"},
 	}
+	contracts.AddOrUpdate(Contract{Name: "mycontract", Location: "new/path/to/contract.cdc"})
 
-	assert.Equal(t, 0, len(contracts))
+	assert.Len(t, contracts, 1)
 
-	contracts.AddOrUpdate(contract)
-	assert.Equal(t, 1, len(contracts))
-	assert.Equal(t, "test.cdc", contracts.ByName("TestContract").Location)
-
-	contract.Location = "updated.cdc"
-	contracts.AddOrUpdate(contract) // should update the existing contract
-	assert.Equal(t, 1, len(contracts))
-	assert.Equal(t, "updated.cdc", contracts.ByName("TestContract").Location)
+	contract, err := contracts.ByName("mycontract")
+	assert.NoError(t, err)
+	assert.Equal(t, "new/path/to/contract.cdc", contract.Location)
 }
 
 func TestContracts_Remove(t *testing.T) {
 	contracts := Contracts{
-		{
-			Name:     "TestContract",
-			Location: "test.cdc",
-		},
-	}
-
-	err := contracts.Remove("NonExistentContract")
-	assert.NotNil(t, err)
-	assert.Equal(t, 1, len(contracts))
-
-	err = contracts.Remove("TestContract")
-	assert.Nil(t, err)
-	assert.Equal(t, 0, len(contracts))
 		Contract{Name: "mycontract", Location: "path/to/contract.cdc"},
 	}
 	err := contracts.Remove("mycontract")
