@@ -90,6 +90,71 @@ func TestExecutingTests(t *testing.T) {
 		assert.NoError(t, results[script.Filename][0].Error)
 	})
 
+	t.Run("with relative imports", func(t *testing.T) {
+		t.Parallel()
+
+		// Setup
+		st, s, _ := setup()
+		readerWriter := st.ReaderWriter()
+		readerWriter.WriteFile(
+			"../contracts/contractHello.cdc",
+			tests.ContractHelloString.Source,
+			os.ModeTemporary,
+		)
+		readerWriter.WriteFile(
+			"../contracts/FooContract.cdc",
+			tests.ContractFooCoverage.Source,
+			os.ModeTemporary,
+		)
+
+		contractHello := config.Contract{
+			Name:     tests.ContractHelloString.Name,
+			Location: tests.ContractHelloString.Filename,
+		}
+		st.Contracts().AddOrUpdate(contractHello)
+		contractFoo := config.Contract{
+			Name:     tests.ContractFooCoverage.Name,
+			Location: tests.ContractFooCoverage.Filename,
+		}
+		st.Contracts().AddOrUpdate(contractFoo)
+
+		// Execute script
+		script := tests.TestScriptWithRelativeImports
+		testFiles := make(map[string][]byte, 0)
+		testFiles[script.Filename] = script.Source
+		results, _, err := s.Tests.Execute(testFiles, readerWriter, false)
+
+		require.NoError(t, err)
+		require.Len(t, results, 1)
+		assert.NoError(t, results[script.Filename][0].Error)
+	})
+
+	t.Run("with missing contract location from config", func(t *testing.T) {
+		t.Parallel()
+
+		// Setup
+		st, s, _ := setup()
+
+		c := config.Contract{
+			Name:     tests.ContractHelloString.Name,
+			Location: "SomeHelloContract.cdc",
+		}
+		st.Contracts().AddOrUpdate(c)
+
+		// Execute script
+		script := tests.TestScriptWithImport
+		testFiles := make(map[string][]byte, 0)
+		testFiles[script.Filename] = script.Source
+		_, _, err := s.Tests.Execute(testFiles, st.ReaderWriter(), false)
+
+		require.Error(t, err)
+		assert.Error(
+			t,
+			err,
+			"cannot find contract with location 'contractHello.cdc' in configuration",
+		)
+	})
+
 	t.Run("with file read", func(t *testing.T) {
 		t.Parallel()
 

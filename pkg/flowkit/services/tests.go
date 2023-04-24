@@ -20,13 +20,13 @@ package services
 
 import (
 	"fmt"
+	"strings"
 
 	cdcTests "github.com/onflow/cadence-tools/test"
 	"github.com/onflow/cadence/runtime"
 	"github.com/onflow/cadence/runtime/common"
 
 	"github.com/onflow/flow-cli/pkg/flowkit"
-	"github.com/onflow/flow-cli/pkg/flowkit/config"
 	"github.com/onflow/flow-cli/pkg/flowkit/output"
 	"github.com/onflow/flow-cli/pkg/flowkit/util"
 )
@@ -84,13 +84,22 @@ func (t *Tests) importResolver(scriptPath string, readerWriter flowkit.ReaderWri
 			return "", fmt.Errorf("cannot import from %s", location)
 		}
 
-		importedContract, err := t.resolveContract(stringLocation)
-		if err != nil {
-			return "", err
+		relativePath := stringLocation.String()
+		contractFound := false
+		for _, contract := range *t.state.Contracts() {
+			if strings.Contains(relativePath, contract.Location) {
+				contractFound = true
+				break
+			}
+		}
+		if !contractFound {
+			return "", fmt.Errorf(
+				"cannot find contract with location '%s' in configuration",
+				relativePath,
+			)
 		}
 
-		importedContractFilePath := util.AbsolutePath(scriptPath, importedContract.Location)
-
+		importedContractFilePath := util.AbsolutePath(scriptPath, relativePath)
 		contractCode, err := readerWriter.ReadFile(importedContractFilePath)
 		if err != nil {
 			return "", err
@@ -98,18 +107,6 @@ func (t *Tests) importResolver(scriptPath string, readerWriter flowkit.ReaderWri
 
 		return string(contractCode), nil
 	}
-}
-
-func (t *Tests) resolveContract(stringLocation common.StringLocation) (config.Contract, error) {
-	relativePath := stringLocation.String()
-	for _, contract := range *t.state.Contracts() {
-		if contract.Location == relativePath {
-			return contract, nil
-		}
-	}
-
-	return config.Contract{},
-		fmt.Errorf("cannot find contract with location '%s' in configuration", relativePath)
 }
 
 func (t *Tests) fileResolver(scriptPath string, readerWriter flowkit.ReaderWriter) cdcTests.FileResolver {
