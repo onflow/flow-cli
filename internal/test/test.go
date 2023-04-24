@@ -32,7 +32,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/flowkit"
-	"github.com/onflow/flow-cli/flowkit/config"
 	"github.com/onflow/flow-cli/flowkit/output"
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/internal/util"
@@ -138,13 +137,22 @@ func importResolver(scriptPath string, state *flowkit.State) cdcTests.ImportReso
 			return "", fmt.Errorf("cannot import from %s", location)
 		}
 
-		importedContract, err := resolveContract(stringLocation, state)
-		if err != nil {
-			return "", err
+		relativePath := stringLocation.String()
+		contractFound := false
+		for _, contract := range *state.Contracts() {
+			if strings.Contains(relativePath, contract.Location) {
+				contractFound = true
+				break
+			}
+		}
+		if !contractFound {
+			return "", fmt.Errorf(
+				"cannot find contract with location '%s' in configuration",
+				relativePath,
+			)
 		}
 
-		importedContractFilePath := absolutePath(scriptPath, importedContract.Location)
-
+		importedContractFilePath := absolutePath(scriptPath, relativePath)
 		contractCode, err := state.ReadFile(importedContractFilePath)
 		if err != nil {
 			return "", err
@@ -152,17 +160,6 @@ func importResolver(scriptPath string, state *flowkit.State) cdcTests.ImportReso
 
 		return string(contractCode), nil
 	}
-}
-
-func resolveContract(stringLocation common.StringLocation, state *flowkit.State) (config.Contract, error) {
-	relativePath := stringLocation.String()
-	for _, contract := range *state.Contracts() {
-		if contract.Location == relativePath {
-			return contract, nil
-		}
-	}
-
-	return config.Contract{}, fmt.Errorf("cannot find contract with location '%s' in configuration", relativePath)
 }
 
 func fileResolver(scriptPath string, state *flowkit.State) cdcTests.FileResolver {

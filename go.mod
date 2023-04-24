@@ -13,7 +13,7 @@ require (
 	github.com/onflow/cadence-tools/test v0.7.0
 	github.com/onflow/fcl-dev-wallet v0.6.0
 	github.com/onflow/flow-cli/flowkit v1.0.0-beta05
-	github.com/onflow/flow-core-contracts/lib/go/templates v0.12.1
+	github.com/onflow/flow-core-contracts/lib/go/templates v1.2.3
 	github.com/onflow/flow-emulator v0.47.0
 	github.com/onflow/flow-go-sdk v0.40.0
 	github.com/onflowser/flowser/v2 v2.0.14-beta
@@ -141,9 +141,9 @@ require (
 	github.com/multiformats/go-varint v0.0.7 // indirect
 	github.com/onflow/atree v0.5.0 // indirect
 	github.com/onflow/cadence-tools/lint v0.6.0 // indirect
-	github.com/onflow/flow-core-contracts/lib/go/contracts v0.12.1 // indirect
-	github.com/onflow/flow-ft/lib/go/contracts v0.5.0 // indirect
-	github.com/onflow/flow-go v0.30.1-0.20230405170219-7aae6a2af471 // indirect
+	github.com/onflow/flow-core-contracts/lib/go/contracts v1.2.3 // indirect
+	github.com/onflow/flow-ft/lib/go/contracts v0.7.0 // indirect
+	github.com/onflow/flow-go v0.30.1-0.20230419183628-e1fa8dba5ec5 // indirect
 	github.com/onflow/flow-go/crypto v0.24.7 // indirect
 	github.com/onflow/flow-nft/lib/go/contracts v0.0.0-20220727161549-d59b1e547ac4 // indirect
 	github.com/onflow/flow/protobuf/go/flow v0.3.2-0.20230330183547-d0dd18f6f20d // indirect
@@ -167,6 +167,7 @@ require (
 	github.com/rivo/uniseg v0.2.1-0.20211004051800-57c86be7915a // indirect
 	github.com/rs/cors v1.8.0 // indirect
 	github.com/rs/zerolog v1.29.0 // indirect
+	github.com/schollz/progressbar/v3 v3.8.3 // indirect
 	github.com/sethvargo/go-retry v0.2.3 // indirect
 	github.com/skeema/knownhosts v1.1.0 // indirect
 	github.com/slok/go-http-metrics v0.10.0 // indirect
@@ -200,12 +201,12 @@ require (
 	go.uber.org/multierr v1.9.0 // indirect
 	go.uber.org/zap v1.24.0 // indirect
 	golang.org/x/crypto v0.7.0 // indirect
-	golang.org/x/mod v0.9.0 // indirect
+	golang.org/x/mod v0.8.0 // indirect
 	golang.org/x/net v0.9.0 // indirect
 	golang.org/x/oauth2 v0.6.0 // indirect
 	golang.org/x/sync v0.1.0 // indirect
 	golang.org/x/sys v0.7.0 // indirect
-	golang.org/x/term v0.6.0 // indirect
+	golang.org/x/term v0.7.0 // indirect
 	golang.org/x/text v0.9.0 // indirect
 	golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2 // indirect
 	gonum.org/v1/gonum v0.11.0 // indirect
