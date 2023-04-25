@@ -10,6 +10,7 @@ require (
 	github.com/onflow/flow-emulator v0.47.0
 	github.com/onflow/flow-go v0.30.1-0.20230419183628-e1fa8dba5ec5
 	github.com/onflow/flow-go-sdk v0.40.0
+	github.com/onflow/flow-go/crypto v0.24.7
 	github.com/pkg/errors v0.9.1
 	github.com/rs/zerolog v1.29.0
 	github.com/spf13/afero v1.9.4
@@ -105,7 +106,6 @@ require (
 	github.com/onflow/flow-core-contracts/lib/go/contracts v1.2.3 // indirect
 	github.com/onflow/flow-core-contracts/lib/go/templates v1.2.3 // indirect
 	github.com/onflow/flow-ft/lib/go/contracts v0.7.0 // indirect
-	github.com/onflow/flow-go/crypto v0.24.7 // indirect
 	github.com/onflow/flow/protobuf/go/flow v0.3.2-0.20230330183547-d0dd18f6f20d // indirect
 	github.com/onflow/sdks v0.5.0 // indirect
 	github.com/opentracing/opentracing-go v1.2.0 // indirect
