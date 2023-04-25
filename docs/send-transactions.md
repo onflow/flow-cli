@@ -83,6 +83,7 @@ transaction to be executed.
   matching argument type in transaction code.
 
 Input arguments values matching corresponding types in the source code and passed in the same order.
+You can pass a `nil` value to optional arguments by sending the transaction like this: `flow transactions send tx.cdc nil`.
 
 ## Flags
 

@@ -43,6 +43,8 @@ script to be executed.
   matching argument type in script code.
 
 Input arguments values matching corresponding types in the source code and passed in the same order.
+You can pass a `nil` value to optional arguments by executing the flow script like this: `flow scripts execute script.cdc nil`.
+
 
 ## Flags
 
