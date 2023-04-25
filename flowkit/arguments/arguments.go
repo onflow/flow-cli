@@ -124,8 +124,14 @@ func ParseWithoutType(args []string, code []byte, fileName string) (scriptArgs [
 		astType := parameterList[index].TypeAnnotation.Type
 		semaType := checker.ConvertType(astType)
 
+		innerType := semaType
+
 		for {
-			switch v := semaType.(type) {
+			switch v := innerType.(type) {
+
+			case *sema.OptionalType:
+				innerType = v.Type
+				continue
 
 			case *sema.SimpleType:
 				if v == sema.StringType {
