@@ -123,14 +123,9 @@ func ParseWithoutType(args []string, code []byte, fileName string) (scriptArgs [
 	for index, argumentString := range args {
 		astType := parameterList[index].TypeAnnotation.Type
 		semaType := checker.ConvertType(astType)
-		isOptional := false
 
 		for {
 			switch v := semaType.(type) {
-			case *sema.OptionalType:
-				semaType = v.Type
-				isOptional = true
-				continue
 
 			case *sema.SimpleType:
 				if v == sema.StringType {
@@ -147,19 +142,13 @@ func ParseWithoutType(args []string, code []byte, fileName string) (scriptArgs [
 			break
 		}
 
-		var value cadence.Value
-
-		if isOptional && argumentString == "nil" {
-			value = cadence.NewOptional(nil)
-		} else {
-			value, err = runtime.ParseLiteral(argumentString, semaType, inter)
-			if err != nil {
-				return nil, fmt.Errorf(
-					"argument `%s` is not expected type `%s`",
-					parameterList[index].Identifier,
-					semaType.QualifiedString(),
-				)
-			}
+		value, err := runtime.ParseLiteral(argumentString, semaType, inter)
+		if err != nil {
+			return nil, fmt.Errorf(
+				"argument `%s` is not expected type `%s`",
+				parameterList[index].Identifier,
+				semaType.QualifiedString(),
+			)
 		}
 
 		resultArgs = append(resultArgs, value)
