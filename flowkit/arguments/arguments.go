@@ -68,7 +68,7 @@ func ParseJSON(args string) ([]cadence.Value, error) {
 	return cadenceArgs, nil
 }
 
-// ParseArguemtnsWithoutType parses arguments passed as string slice based on the Cadence code.
+// ParseWithoutType parses arguments passed as string slice based on the Cadence code.
 //
 // Using the Cadence code required arguments are computed and then extracted from passed slice of arguments.
 // The fileName argument is optional and can be empty if not present.
@@ -124,28 +124,17 @@ func ParseWithoutType(args []string, code []byte, fileName string) (scriptArgs [
 		astType := parameterList[index].TypeAnnotation.Type
 		semaType := checker.ConvertType(astType)
 
-		for {
-			switch v := semaType.(type) {
-			case *sema.OptionalType:
-				semaType = v.Type
-				continue
-
-			case *sema.SimpleType:
-				if v == sema.StringType {
-					if len(argumentString) > 0 && !strings.HasPrefix(argumentString, "\"") {
-						argumentString = "\"" + argumentString + "\""
-					}
-				}
-
-			case *sema.AddressType:
-				if !strings.Contains(argumentString, "0x") {
-					argumentString = fmt.Sprintf("0x%s", argumentString)
-				}
+		if semaType == sema.StringType {
+			if !strings.HasPrefix(argumentString, "\"") {
+				argumentString = ast.QuoteString(argumentString)
 			}
-			break
+		} else if _, ok := semaType.(*sema.AddressType); ok {
+			if !strings.HasPrefix(argumentString, "0x") {
+				argumentString = fmt.Sprintf("0x%s", argumentString)
+			}
 		}
 
-		var value, err = runtime.ParseLiteral(argumentString, semaType, inter)
+		value, err := runtime.ParseLiteral(argumentString, semaType, inter)
 		if err != nil {
 			return nil, fmt.Errorf(
 				"argument `%s` is not expected type `%s`",
@@ -153,6 +142,7 @@ func ParseWithoutType(args []string, code []byte, fileName string) (scriptArgs [
 				semaType.QualifiedString(),
 			)
 		}
+
 		resultArgs = append(resultArgs, value)
 	}
 	return resultArgs, nil
