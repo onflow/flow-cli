@@ -307,8 +307,6 @@ func (f *Flowkit) AddContract(
 		return flow.EmptyID, false, err
 	}
 
-	f.logger.StartProgress(fmt.Sprintf("Checking contract '%s' on account '%s'...", name, account.Address))
-
 	// check if contract exists on account
 	flowAccount, err := f.gateway.GetAccount(account.Address)
 	if err != nil {

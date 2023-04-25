@@ -22,6 +22,8 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/onflow/flow-cli/internal/util"
+
 	"github.com/onflow/cadence"
 	flowsdk "github.com/onflow/flow-go-sdk"
 	"github.com/spf13/cobra"
@@ -36,6 +38,7 @@ type deployContractFlags struct {
 	ArgsJSON string   `default:"" flag:"args-json" info:"arguments in JSON-Cadence format"`
 	Signer   string   `default:"emulator-account" flag:"signer" info:"Account name from configuration used to sign the transaction"`
 	Include  []string `default:"" flag:"include" info:"Fields to include in the output. Valid values: contracts."`
+	ShowDiff bool     `default:"false" flag:"show-diff" info:"Shows diff between existing and new contracts on update"`
 }
 
 var addContractFlags = deployContractFlags{}
@@ -82,6 +85,11 @@ func deployContract(update bool, flags *deployContractFlags) command.RunWithStat
 			return nil, fmt.Errorf("error parsing transaction arguments: %w", err)
 		}
 
+		deployFunc := flowkit.UpdateExistingContract(update)
+		if updateContractFlags.ShowDiff {
+			deployFunc = util.ShowContractDiffPrompt
+		}
+
 		txID, _, err := flow.AddContract(
 			context.Background(),
 			to,
@@ -90,8 +98,9 @@ func deployContract(update bool, flags *deployContractFlags) command.RunWithStat
 				Args:     contractArgs,
 				Location: filename,
 			},
-			flowkit.UpdateExistingContract(update),
+			deployFunc,
 		)
+
 		if err != nil {
 			if txID != flowsdk.EmptyID {
 				logger.Info(fmt.Sprintf(
