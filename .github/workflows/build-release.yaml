@@ -25,11 +25,6 @@ jobs:
           go-version: '1.19'
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-      - uses: actions/setup-go@v1
-        with:
-          go-version: '1.19'
-      - name: Generate mocks
-        run: make generate
       - uses: wangyoucao577/go-release-action@v1.37
         env:
           MIXPANEL_PROJECT_TOKEN: ${{ secrets.MIXPANEL_PROJECT_TOKEN }}
@@ -39,6 +34,7 @@ jobs:
           VERSION: ${{github.ref_name}}
           COMMIT: ${{ github.sha }}
         with:
+          pre_command: make generate
           github_token: ${{ secrets.GITHUB_TOKEN }}
           goos: ${{ matrix.goos }}
           goarch: ${{ matrix.goarch }}
