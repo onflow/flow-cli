@@ -54,14 +54,6 @@ endif
 .PHONY: ci
 ci: install-tools generate test coverage
 
-.PHONY: install
-install:
-	GO111MODULE=on go install \
-		-trimpath \
-		-ldflags \
-		"-X github.com/onflow/flow-cli/build.commit=$(COMMIT) -X github.com/onflow/flow-cli/build.semver=$(VERSION) -X github.com/onflow/flow-cli/flowkit/util.MIXPANEL_PROJECT_TOKEN=${MIXPANEL_PROJECT_TOKEN} -X github.com/onflow/flow-cli/internal/accounts.accountToken=${ACCOUNT_TOKEN}" \
-		./cmd/flow
-
 $(BINARY):
 	GO111MODULE=on go build \
 		-trimpath \
@@ -70,7 +62,7 @@ $(BINARY):
 		-o $(BINARY) ./cmd/flow
 
 .PHONY: versioned-binaries
-versioned-binaries:
+versioned-binaries: generate
 	$(MAKE) OS=linux ARCH=amd64 ARCHNAME=x86_64 versioned-binary
 	$(MAKE) OS=linux ARCH=arm64 versioned-binary
 	$(MAKE) OS=darwin ARCH=amd64 ARCHNAME=x86_64 versioned-binary
