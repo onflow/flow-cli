@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## 1.0.0
+
 ### Changed
 
 Flowkit package was tagged as v1.0.0 and is now considered stable. 
