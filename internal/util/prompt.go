@@ -255,7 +255,6 @@ func ShowContractDiffPrompt(logger *output.Logger) func([]byte, []byte) bool {
 		dmp := diffmatchpatch.New()
 		diffs := dmp.DiffMain(string(newContract), string(existingContract), false)
 		diffString := dmp.DiffPrettyText(diffs)
-		// fmt.Println(diffString)
 		(*logger).Info(diffString)
 
 		deployPrompt := promptui.Prompt{
