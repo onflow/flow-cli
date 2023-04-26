@@ -29,5 +29,3 @@ git
 # Ignore built CLI
 main
 *.pkey
-/flowkit/mocks/Services.go
-/flowkit/gateway/mocks/Gateway.go
