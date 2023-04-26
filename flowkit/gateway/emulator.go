@@ -343,3 +343,7 @@ func (g *EmulatorGateway) CoverageReport() *runtime.CoverageReport {
 func (g *EmulatorGateway) SetCoverageReport(coverageReport *runtime.CoverageReport) {
 	g.emulator.SetCoverageReport(coverageReport)
 }
+
+func (g *EmulatorGateway) RollbackToBlockHeight(height uint64) error {
+	return g.emulator.RollbackToBlockHeight(height)
+}
