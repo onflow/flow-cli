@@ -69,7 +69,7 @@ func deploy(
 
 	deployFunc := flowkit.UpdateExistingContract(deployFlags.Update)
 	if deployFlags.ShowDiff {
-		deployFunc = util.ShowContractDiffPrompt
+		deployFunc = util.ShowContractDiffPrompt(logger)
 	}
 
 	c, err := flow.DeployProject(context.Background(), deployFunc)

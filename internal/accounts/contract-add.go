@@ -87,7 +87,7 @@ func deployContract(update bool, flags *deployContractFlags) command.RunWithStat
 
 		deployFunc := flowkit.UpdateExistingContract(update)
 		if updateContractFlags.ShowDiff {
-			deployFunc = util.ShowContractDiffPrompt
+			deployFunc = util.ShowContractDiffPrompt(logger)
 		}
 
 		txID, _, err := flow.AddContract(
