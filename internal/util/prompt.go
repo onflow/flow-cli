@@ -250,23 +250,25 @@ func addAnotherContractToDeploymentPrompt() bool {
 // ShowContractDiffPrompt shows a diff between the new contract and the existing contract
 // and asks the user if they wish to continue with the deployment
 // returns true if the user wishes to continue with the deployment and false otherwise
-func ShowContractDiffPrompt(newContract []byte, existingContract []byte) bool {
-	dmp := diffmatchpatch.New()
-	diffs := dmp.DiffMain(string(newContract), string(existingContract), false)
-	diffString := dmp.DiffPrettyText(diffs)
-	fmt.Println(diffString)
+func ShowContractDiffPrompt(logger output.Logger) func([]byte, []byte) bool {
+	return func(newContract []byte, existingContract []byte) bool {
+		dmp := diffmatchpatch.New()
+		diffs := dmp.DiffMain(string(newContract), string(existingContract), false)
+		diffString := dmp.DiffPrettyText(diffs)
+		logger.Info(diffString)
 
-	deployPrompt := promptui.Prompt{
-		Label:     "Do you wish to deploy this contract?",
-		IsConfirm: true,
+		deployPrompt := promptui.Prompt{
+			Label:     "Do you wish to deploy this contract?",
+			IsConfirm: true,
+		}
+
+		deploy, err := deployPrompt.Run()
+		if err == promptui.ErrInterrupt {
+			os.Exit(-1)
+		}
+
+		return strings.ToLower(deploy) == "y"
 	}
-
-	deploy, err := deployPrompt.Run()
-	if err == promptui.ErrInterrupt {
-		os.Exit(-1)
-	}
-
-	return strings.ToLower(deploy) == "y"
 }
 
 type AccountData struct {
