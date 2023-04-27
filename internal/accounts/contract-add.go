@@ -48,7 +48,7 @@ var addContractFlags = deployContractFlags{}
 
 var addContractCommand = &command.Command{
 	Cmd: &cobra.Command{
-		Use:     "add-contract <filepath> <args>",
+		Use:     "add-contract <filename> <args>",
 		Short:   "Deploy a new contract to an account",
 		Example: `flow accounts add-contract ./FungibleToken.cdc helloArg`,
 		Args:    cobra.MinimumNArgs(1),
@@ -123,13 +123,17 @@ func deployContract(update bool, flags *deployContractFlags) command.RunWithStat
 			return nil, err
 		}
 
+		d := state.Deployments().ByAccountAndNetwork(to.Name, globalFlags.Network)
+		if d != nil {
+			d.AddContract(config.ContractDeployment{
+				Name: getFilenameWithoutExtension(path),
+			})
+		}
+
 		state.Contracts().AddOrUpdate(config.Contract{
 			Name:     getFilenameWithoutExtension(path),
 			Location: path,
 		})
-
-		d := state.Deployments().ByAccountAndNetwork(to.Name, globalFlags.Network)
-		d.AddContract(config.ContractDeployment{ Name: getFilenameWithoutExtension(path) })
 
 		err = state.SaveDefault()
 		if err != nil {
@@ -154,4 +158,3 @@ func deployContract(update bool, flags *deployContractFlags) command.RunWithStat
 		}, nil
 	}
 }
- 
