@@ -21,6 +21,9 @@ package accounts
 import (
 	"context"
 	"fmt"
+	"path/filepath"
+
+	"github.com/onflow/flow-cli/flowkit/config"
 
 	"github.com/onflow/flow-cli/internal/util"
 
@@ -52,6 +55,12 @@ var addContractCommand = &command.Command{
 	},
 	Flags: &addContractFlags,
 	RunS:  deployContract(false, &addContractFlags),
+}
+
+func getFilename(path string) string {
+	filename := filepath.Base(path)
+	extension := filepath.Ext(filename)
+	return filename[0 : len(filename)-len(extension)]
 }
 
 func deployContract(update bool, flags *deployContractFlags) command.RunWithState {
@@ -114,6 +123,19 @@ func deployContract(update bool, flags *deployContractFlags) command.RunWithStat
 			return nil, err
 		}
 
+		state.Contracts().AddOrUpdate(config.Contract{
+			Name:     getFilename(filename),
+			Location: filename,
+		})
+
+		d := state.Deployments().ByAccountAndNetwork(to.Name, globalFlags.Network)
+		d.AddContract(config.ContractDeployment{ Name: getFilename(filename) })
+
+		err = state.SaveDefault()
+		if err != nil {
+			return nil, err
+		}
+
 		logger.Info(fmt.Sprintf(
 			"Contract %s on the account '%s' with transaction ID %s.",
 			map[bool]string{true: "updated", false: "created"}[update],
@@ -132,3 +154,4 @@ func deployContract(update bool, flags *deployContractFlags) command.RunWithStat
 		}, nil
 	}
 }
+ 
