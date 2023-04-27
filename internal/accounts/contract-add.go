@@ -48,7 +48,7 @@ var addContractFlags = deployContractFlags{}
 
 var addContractCommand = &command.Command{
 	Cmd: &cobra.Command{
-		Use:     "add-contract <filename> <args>",
+		Use:     "add-contract <filepath> <args>",
 		Short:   "Deploy a new contract to an account",
 		Example: `flow accounts add-contract ./FungibleToken.cdc helloArg`,
 		Args:    cobra.MinimumNArgs(1),
@@ -57,7 +57,7 @@ var addContractCommand = &command.Command{
 	RunS:  deployContract(false, &addContractFlags),
 }
 
-func getFilename(path string) string {
+func getFilenameWithoutExtension(path string) string {
 	filename := filepath.Base(path)
 	extension := filepath.Ext(filename)
 	return filename[0 : len(filename)-len(extension)]
@@ -71,9 +71,9 @@ func deployContract(update bool, flags *deployContractFlags) command.RunWithStat
 		flow flowkit.Services,
 		state *flowkit.State,
 	) (command.Result, error) {
-		filename := args[0]
+		path := args[0]
 
-		code, err := state.ReadFile(filename)
+		code, err := state.ReadFile(path)
 		if err != nil {
 			return nil, fmt.Errorf("error loading contract file: %w", err)
 		}
@@ -87,7 +87,7 @@ func deployContract(update bool, flags *deployContractFlags) command.RunWithStat
 		if flags.ArgsJSON != "" {
 			contractArgs, err = arguments.ParseJSON(flags.ArgsJSON)
 		} else if len(args) > 1 {
-			contractArgs, err = arguments.ParseWithoutType(args[1:], code, filename)
+			contractArgs, err = arguments.ParseWithoutType(args[1:], code, path)
 		}
 
 		if err != nil {
@@ -105,7 +105,7 @@ func deployContract(update bool, flags *deployContractFlags) command.RunWithStat
 			flowkit.Script{
 				Code:     code,
 				Args:     contractArgs,
-				Location: filename,
+				Location: path,
 			},
 			deployFunc,
 		)
@@ -124,12 +124,12 @@ func deployContract(update bool, flags *deployContractFlags) command.RunWithStat
 		}
 
 		state.Contracts().AddOrUpdate(config.Contract{
-			Name:     getFilename(filename),
-			Location: filename,
+			Name:     getFilenameWithoutExtension(path),
+			Location: path,
 		})
 
 		d := state.Deployments().ByAccountAndNetwork(to.Name, globalFlags.Network)
-		d.AddContract(config.ContractDeployment{ Name: getFilename(filename) })
+		d.AddContract(config.ContractDeployment{ Name: getFilenameWithoutExtension(path) })
 
 		err = state.SaveDefault()
 		if err != nil {
