@@ -57,7 +57,7 @@ var addContractCommand = &command.Command{
 	RunS:  deployContract(false, &addContractFlags),
 }
 
-func getFilenameWithoutExtension(path string) string {
+func getFilenameFromPath(path string) string {
 	filename := filepath.Base(path)
 	extension := filepath.Ext(filename)
 	return filename[0 : len(filename)-len(extension)]
@@ -126,12 +126,12 @@ func deployContract(update bool, flags *deployContractFlags) command.RunWithStat
 		d := state.Deployments().ByAccountAndNetwork(to.Name, globalFlags.Network)
 		if d != nil {
 			d.AddContract(config.ContractDeployment{
-				Name: getFilenameWithoutExtension(path),
+				Name: getFilenameFromPath(path),
 			})
 		}
 
 		state.Contracts().AddOrUpdate(config.Contract{
-			Name:     getFilenameWithoutExtension(path),
+			Name:     getFilenameFromPath(path),
 			Location: path,
 		})
 
