@@ -72,6 +72,7 @@ func deployContract(update bool, flags *deployContractFlags) command.RunWithStat
 		state *flowkit.State,
 	) (command.Result, error) {
 		path := args[0]
+		filename := getFilenameFromPath(path)
 
 		code, err := state.ReadFile(path)
 		if err != nil {
@@ -126,12 +127,12 @@ func deployContract(update bool, flags *deployContractFlags) command.RunWithStat
 		d := state.Deployments().ByAccountAndNetwork(to.Name, globalFlags.Network)
 		if d != nil {
 			d.AddContract(config.ContractDeployment{
-				Name: getFilenameFromPath(path),
+				Name: filename,
 			})
 		}
 
 		state.Contracts().AddOrUpdate(config.Contract{
-			Name:     getFilenameFromPath(path),
+			Name:     filename,
 			Location: path,
 		})
 
@@ -158,3 +159,4 @@ func deployContract(update bool, flags *deployContractFlags) command.RunWithStat
 		}, nil
 	}
 }
+ 
