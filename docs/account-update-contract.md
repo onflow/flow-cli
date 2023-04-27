@@ -103,6 +103,13 @@ pub contract HelloWorld {
 
 Specify the name of the account that will be used to sign the transaction.
 
+### Show Diff
+
+- Flag: `--show-diff`
+- Valid inputs: `true`, `false`
+
+Shows a diff to approve before updating between deployed contract and new contract updates.
+
 ### Arguments JSON
 
 - Flag: `--args-json`
