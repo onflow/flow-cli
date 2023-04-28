@@ -19,9 +19,11 @@
 package transactions
 
 import (
+	"encoding/json"
 	"strings"
 	"testing"
 
+	"github.com/onflow/cadence"
 	"github.com/onflow/flow-cli/flowkit/transactions"
 
 	"github.com/onflow/flow-cli/flowkit/accounts"
@@ -295,9 +297,27 @@ func Test_Result(t *testing.T) {
 			Signature:   []byte("6cde7f812897d22ee7633b82b059070be24faccdc47997bc0f765420e6e28bb6"),
 		}},
 	}
-	result := transactionResult{tx: tx}
 
-	assert.Equal(t, strings.TrimPrefix(`
+	event := tests.NewEvent(
+		0,
+		"A.foo",
+		[]cadence.Field{{Type: cadence.StringType{}, Identifier: "bar"}},
+		[]cadence.Value{cadence.NewInt(1)},
+	)
+	event.Payload = []byte("mock_payload")
+
+	txResult := &flow.TransactionResult{
+		Status:      flow.TransactionStatusSealed,
+		Error:       nil,
+		Events:      []flow.Event{*event},
+		BlockID:     flow.HexToID("7aa74143741c1c3b837d389fcffa7a5e251b67b4ffef6d6887b40cd9c803f537"),
+		BlockHeight: 1,
+	}
+
+	t.Run("Success with no result", func(t *testing.T) {
+		result := transactionResult{tx: tx}
+
+		assert.Equal(t, strings.TrimPrefix(`
 ID		e913d1f3e431c7df49c99845bea9ebff9db11bbf25d507b9ad0fad45652d515f
 Payer		0000000000000002
 Authorizers	[]
@@ -315,10 +335,62 @@ Code (hidden, use --include code)
 
 Payload (hidden, use --include payload)`, "\n"), result.String())
 
-	assert.Equal(t, map[string]any{
-		"authorizers": "[]",
-		"id":          "e913d1f3e431c7df49c99845bea9ebff9db11bbf25d507b9ad0fad45652d515f",
-		"payer":       "0000000000000002",
-		"payload":     "f8dbf8498e7472616e73616374696f6e207b7dc0a06cde7f812897d22ee7633b82b059070be24faccdc47997bc0f765420e6e28bb682270f8800000000000000018001880000000000000002c0f846f8448080b84036636465376638313238393764323265653736333362383262303539303730626532346661636364633437393937626330663736353432306536653238626236f846f8448080b84036636465376638313238393764323265653736333362383262303539303730626532346661636364633437393937626330663736353432306536653238626236",
-	}, result.JSON())
+		assert.Equal(t, map[string]any{
+			"authorizers": "[]",
+			"id":          "e913d1f3e431c7df49c99845bea9ebff9db11bbf25d507b9ad0fad45652d515f",
+			"payer":       "0000000000000002",
+			"payload":     "f8dbf8498e7472616e73616374696f6e207b7dc0a06cde7f812897d22ee7633b82b059070be24faccdc47997bc0f765420e6e28bb682270f8800000000000000018001880000000000000002c0f846f8448080b84036636465376638313238393764323265653736333362383262303539303730626532346661636364633437393937626330663736353432306536653238626236f846f8448080b84036636465376638313238393764323265653736333362383262303539303730626532346661636364633437393937626330663736353432306536653238626236",
+		}, result.JSON())
+	})
+
+	t.Run("Success with result", func(t *testing.T) {
+		result := transactionResult{tx: tx, result: txResult}
+
+		assert.Equal(t, strings.TrimPrefix(`
+Block ID	7aa74143741c1c3b837d389fcffa7a5e251b67b4ffef6d6887b40cd9c803f537
+Block Height	1
+Status		✅ SEALED
+ID		e913d1f3e431c7df49c99845bea9ebff9db11bbf25d507b9ad0fad45652d515f
+Payer		0000000000000002
+Authorizers	[]
+
+Proposal Key:	
+    Address	0000000000000001
+    Index	0
+    Sequence	1
+
+Payload Signature 0: 0000000000000001
+Envelope Signature 0: 0000000000000001
+Signatures (minimized, use --include signatures)
+
+Events:		 
+    Index	0
+    Type	A.foo
+    Tx ID	0000000000000000000000000000000000000000000000000000000000000000
+    Values
+		- bar (String): 1 
+
+
+
+Code (hidden, use --include code)
+
+Payload (hidden, use --include payload)`, "\n"), result.String())
+
+		assert.Equal(t, map[string]any{
+			"authorizers":  "[]",
+			"block_height": uint64(1),
+			"block_id":     "7aa74143741c1c3b837d389fcffa7a5e251b67b4ffef6d6887b40cd9c803f537",
+			"events": []any{
+				map[string]any{
+					"index":  0,
+					"type":   "A.foo",
+					"values": json.RawMessage{0x6d, 0x6f, 0x63, 0x6b, 0x5f, 0x70, 0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64},
+				},
+			},
+			"id":      "e913d1f3e431c7df49c99845bea9ebff9db11bbf25d507b9ad0fad45652d515f",
+			"payer":   "0000000000000002",
+			"payload": "f8dbf8498e7472616e73616374696f6e207b7dc0a06cde7f812897d22ee7633b82b059070be24faccdc47997bc0f765420e6e28bb682270f8800000000000000018001880000000000000002c0f846f8448080b84036636465376638313238393764323265653736333362383262303539303730626532346661636364633437393937626330663736353432306536653238626236f846f8448080b84036636465376638313238393764323265653736333362383262303539303730626532346661636364633437393937626330663736353432306536653238626236",
+			"status":  "SEALED",
+		}, result.JSON())
+	})
 }
