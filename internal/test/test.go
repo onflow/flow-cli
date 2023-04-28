@@ -113,6 +113,38 @@ func testCode(
 	runner := cdcTests.NewTestRunner()
 	if coverageEnabled {
 		coverageReport = runtime.NewCoverageReport()
+		contracts := map[string]string{
+			"FlowToken":             "0x0ae53cb6e3f42a79",
+			"FlowFees":              "0xe5a8b7f23e8b548f",
+			"FungibleToken":         "0xee82856bf20e2aa6",
+			"FlowClusterQC":         "0xf8d6e0586b0a20c7",
+			"FlowDKG":               "0xf8d6e0586b0a20c7",
+			"FlowEpoch":             "0xf8d6e0586b0a20c7",
+			"FlowIDTableStaking":    "0xf8d6e0586b0a20c7",
+			"FlowServiceAccount":    "0xf8d6e0586b0a20c7",
+			"FlowStakingCollection": "0xf8d6e0586b0a20c7",
+			"FlowStorageFees":       "0xf8d6e0586b0a20c7",
+			"LockedTokens":          "0xf8d6e0586b0a20c7",
+			"NodeVersionBeacon":     "0xf8d6e0586b0a20c7",
+			"StakingProxy":          "0xf8d6e0586b0a20c7",
+			"ExampleNFT":            "0xf8d6e0586b0a20c7",
+			"FUSD":                  "0xf8d6e0586b0a20c7",
+			"NFTStorefront":         "0xf8d6e0586b0a20c7",
+			"NFTStorefrontV2":       "0xf8d6e0586b0a20c7",
+		}
+		for name, address := range contracts {
+			addr, _ := common.HexToAddress(address)
+			location := common.AddressLocation{
+				Address: addr,
+				Name:    name,
+			}
+			coverageReport.ExcludeLocation(location)
+		}
+		coverageReport.WithLocationInspectionHandler(func(location common.Location) bool {
+			_, addressLoc := location.(common.AddressLocation)
+			_, stringLoc := location.(common.StringLocation)
+			return addressLoc || stringLoc
+		})
 		runner = runner.WithCoverageReport(coverageReport)
 	}
 
