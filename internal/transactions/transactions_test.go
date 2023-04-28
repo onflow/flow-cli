@@ -24,17 +24,15 @@ import (
 	"testing"
 
 	"github.com/onflow/cadence"
-	"github.com/onflow/flow-cli/flowkit/transactions"
-
-	"github.com/onflow/flow-cli/flowkit/accounts"
-
 	"github.com/onflow/flow-go-sdk"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 
 	"github.com/onflow/flow-cli/flowkit"
+	"github.com/onflow/flow-cli/flowkit/accounts"
 	"github.com/onflow/flow-cli/flowkit/config"
 	"github.com/onflow/flow-cli/flowkit/tests"
+	"github.com/onflow/flow-cli/flowkit/transactions"
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/internal/util"
 )
