@@ -19,9 +19,9 @@
   },
   {
     "name": "Web Dapp using FCL",
-    "repo": "https://github.com/onflow/scaffold-flow.git",
+    "repo": "https://github.com/chasefleming/fcl-next-scaffold.git",
     "description": "Simple demo application using next.js and FCL with provided Cadence contracts.",
-    "commit": "4158c5e11b6d2c9e1cbc99af597e3b42b2e6c193",
+    "commit": "b45798b6c1143f2ef823685ddf877e6dc9da2fb3",
     "type": "web"
   },
   {
