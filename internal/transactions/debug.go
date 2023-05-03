@@ -28,15 +28,34 @@ import (
 	flowsdk "github.com/onflow/flow-go-sdk"
 	flowGo "github.com/onflow/flow-go/model/flow"
 	"github.com/rs/zerolog"
+	"github.com/spf13/cobra"
 	"os"
 )
+
+type flagsDebug struct {
+	Include []string `default:"" flag:"include" info:"Fields to include in the output. Valid values: signatures, code, payload."`
+	Exclude []string `default:"" flag:"exclude" info:"Fields to exclude from the output. Valid values: events."`
+}
+
+var debugFlags = flagsDebug{}
+
+var debugCommand = &command.Command{
+	Cmd: &cobra.Command{
+		Use:     "debug <transaction id | transaction filename>",
+		Short:   "Debug an existing on-chain transaction by ID or a non-existing RLP encoded transaction from a file",
+		Example: "flow transactions debug ./test.rlp",
+		Args:    cobra.ExactArgs(1),
+	},
+	Flags: &debugFlags,
+	Run:   debug,
+}
 
 func debug(
 	args []string,
 	_ command.GlobalFlags,
 	_ output.Logger,
-	flow flowkit.Services,
-	state *flowkit.State,
+	_ flowkit.ReaderWriter,
+	_ flowkit.Services,
 ) (command.Result, error) {
 	idArg := args[0]
 

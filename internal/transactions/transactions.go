@@ -46,6 +46,7 @@ func init() {
 	buildCommand.AddToParent(Cmd)
 	sendSignedCommand.AddToParent(Cmd)
 	decodeCommand.AddToParent(Cmd)
+	debugCommand.AddToParent(Cmd)
 }
 
 type transactionResult struct {
