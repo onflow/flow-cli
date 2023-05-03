@@ -63,6 +63,8 @@ func (r *transactionResult) JSON() any {
 	result["payer"] = r.tx.Payer.String()
 
 	if r.result != nil {
+		result["block_id"] = r.result.BlockID.String()
+		result["block_height"] = r.result.BlockHeight
 		result["status"] = r.result.Status.String()
 
 		txEvents := make([]any, 0, len(r.result.Events))
@@ -90,6 +92,8 @@ func (r *transactionResult) String() string {
 	writer := util.CreateTabWriter(&b)
 
 	if r.result != nil {
+		_, _ = fmt.Fprintf(writer, "Block ID\t%s\n", r.result.BlockID)
+		_, _ = fmt.Fprintf(writer, "Block Height\t%d\n", r.result.BlockHeight)
 		if r.result.Error != nil {
 			_, _ = fmt.Fprintf(writer, "%s Transaction Error \n%s\n\n\n", output.ErrorEmoji(), r.result.Error.Error())
 		}
