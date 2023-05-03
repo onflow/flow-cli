@@ -21,9 +21,6 @@ package accounts
 import (
 	"context"
 	"fmt"
-	"path/filepath"
-
-	"github.com/onflow/flow-cli/flowkit/config"
 
 	"github.com/onflow/flow-cli/internal/util"
 
@@ -57,12 +54,6 @@ var addContractCommand = &command.Command{
 	RunS:  deployContract(false, &addContractFlags),
 }
 
-func getFilenameFromPath(path string) string {
-	filename := filepath.Base(path)
-	extension := filepath.Ext(filename)
-	return filename[0 : len(filename)-len(extension)]
-}
-
 func deployContract(update bool, flags *deployContractFlags) command.RunWithState {
 	return func(
 		args []string,
@@ -71,10 +62,9 @@ func deployContract(update bool, flags *deployContractFlags) command.RunWithStat
 		flow flowkit.Services,
 		state *flowkit.State,
 	) (command.Result, error) {
-		path := args[0]
-		filename := getFilenameFromPath(path)
+		filename := args[0]
 
-		code, err := state.ReadFile(path)
+		code, err := state.ReadFile(filename)
 		if err != nil {
 			return nil, fmt.Errorf("error loading contract file: %w", err)
 		}
@@ -88,7 +78,7 @@ func deployContract(update bool, flags *deployContractFlags) command.RunWithStat
 		if flags.ArgsJSON != "" {
 			contractArgs, err = arguments.ParseJSON(flags.ArgsJSON)
 		} else if len(args) > 1 {
-			contractArgs, err = arguments.ParseWithoutType(args[1:], code, path)
+			contractArgs, err = arguments.ParseWithoutType(args[1:], code, filename)
 		}
 
 		if err != nil {
@@ -106,7 +96,7 @@ func deployContract(update bool, flags *deployContractFlags) command.RunWithStat
 			flowkit.Script{
 				Code:     code,
 				Args:     contractArgs,
-				Location: path,
+				Location: filename,
 			},
 			deployFunc,
 		)
@@ -121,23 +111,6 @@ func deployContract(update bool, flags *deployContractFlags) command.RunWithStat
 				))
 			}
 
-			return nil, err
-		}
-
-		d := state.Deployments().ByAccountAndNetwork(to.Name, globalFlags.Network)
-		if d != nil {
-			d.AddContract(config.ContractDeployment{
-				Name: filename,
-			})
-		}
-
-		state.Contracts().AddOrUpdate(config.Contract{
-			Name:     filename,
-			Location: path,
-		})
-
-		err = state.SaveDefault()
-		if err != nil {
 			return nil, err
 		}
 
