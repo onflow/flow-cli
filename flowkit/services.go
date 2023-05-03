@@ -55,7 +55,7 @@ type Services interface {
 	// If the contract already exists on the account the operation will fail and error will be returned.
 	// Use UpdateExistingContract(bool) to define whether a contract should be updated or not, or you can also
 	// define a custom UpdateContract function which returns bool indicating whether a contract should be updated or not.
-	AddContract(context.Context, *accounts.Account, Script, UpdateContract) (flow.Identifier, bool, error)
+	AddContract(context.Context, *accounts.Account, Script, UpdateContract, bool) (flow.Identifier, bool, error)
 
 	// RemoveContract from the provided account by its name.
 	//

@@ -4,7 +4,6 @@ package mocks
 
 import (
 	cadence "github.com/onflow/cadence"
-
 	accounts "github.com/onflow/flow-cli/flowkit/accounts"
 
 	config "github.com/onflow/flow-cli/flowkit/config"
@@ -33,32 +32,32 @@ type Services struct {
 	mock.Mock
 }
 
-// AddContract provides a mock function with given fields: _a0, _a1, _a2, _a3
-func (_m *Services) AddContract(_a0 context.Context, _a1 *accounts.Account, _a2 flowkit.Script, _a3 flowkit.UpdateContract) (flow.Identifier, bool, error) {
-	ret := _m.Called(_a0, _a1, _a2, _a3)
+// AddContract provides a mock function with given fields: _a0, _a1, _a2, _a3, _a4
+func (_m *Services) AddContract(_a0 context.Context, _a1 *accounts.Account, _a2 flowkit.Script, _a3 flowkit.UpdateContract, _a4 bool) (flow.Identifier, bool, error) {
+	ret := _m.Called(_a0, _a1, _a2, _a3, _a4)
 
 	var r0 flow.Identifier
 	var r1 bool
 	var r2 error
-	if rf, ok := ret.Get(0).(func(context.Context, *accounts.Account, flowkit.Script, flowkit.UpdateContract) (flow.Identifier, bool, error)); ok {
-		return rf(_a0, _a1, _a2, _a3)
+	if rf, ok := ret.Get(0).(func(context.Context, *accounts.Account, flowkit.Script, flowkit.UpdateContract, bool) (flow.Identifier, bool, error)); ok {
+		return rf(_a0, _a1, _a2, _a3, _a4)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, *accounts.Account, flowkit.Script, flowkit.UpdateContract) flow.Identifier); ok {
-		r0 = rf(_a0, _a1, _a2, _a3)
+	if rf, ok := ret.Get(0).(func(context.Context, *accounts.Account, flowkit.Script, flowkit.UpdateContract, bool) flow.Identifier); ok {
+		r0 = rf(_a0, _a1, _a2, _a3, _a4)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(flow.Identifier)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, *accounts.Account, flowkit.Script, flowkit.UpdateContract) bool); ok {
-		r1 = rf(_a0, _a1, _a2, _a3)
+	if rf, ok := ret.Get(1).(func(context.Context, *accounts.Account, flowkit.Script, flowkit.UpdateContract, bool) bool); ok {
+		r1 = rf(_a0, _a1, _a2, _a3, _a4)
 	} else {
 		r1 = ret.Get(1).(bool)
 	}
 
-	if rf, ok := ret.Get(2).(func(context.Context, *accounts.Account, flowkit.Script, flowkit.UpdateContract) error); ok {
-		r2 = rf(_a0, _a1, _a2, _a3)
+	if rf, ok := ret.Get(2).(func(context.Context, *accounts.Account, flowkit.Script, flowkit.UpdateContract, bool) error); ok {
+		r2 = rf(_a0, _a1, _a2, _a3, _a4)
 	} else {
 		r2 = ret.Error(2)
 	}

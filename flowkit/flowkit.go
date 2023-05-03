@@ -271,6 +271,7 @@ func (f *Flowkit) AddContract(
 	account *accounts.Account,
 	contract Script,
 	update UpdateContract,
+	save bool,
 ) (flow.Identifier, bool, error) {
 	state, err := f.State()
 	if err != nil {
@@ -373,17 +374,19 @@ func (f *Flowkit) AddContract(
 	}
 
 	// If success, add the new account to the state
-	filename := getFilenameFromPath(contract.Location)
-	d := state.Deployments().ByAccountAndNetwork(account.Name, f.network.Name)
-	if d != nil {
-		d.AddContract(config.ContractDeployment{
-			Name: getFilenameFromPath(filename),
+	if save {
+		filename := getFilenameFromPath(contract.Location)
+		d := state.Deployments().ByAccountAndNetwork(account.Name, f.network.Name)
+		if d != nil {
+			d.AddContract(config.ContractDeployment{
+				Name: getFilenameFromPath(filename),
+			})
+		}
+		state.Contracts().AddOrUpdate(config.Contract{
+			Name:     filename,
+			Location: contract.Location,
 		})
 	}
-	state.Contracts().AddOrUpdate(config.Contract{
-		Name:     filename,
-		Location: contract.Location,
-	})
 
 	err = state.SaveDefault()
 	if err != nil {
@@ -743,6 +746,7 @@ func (f *Flowkit) DeployProject(ctx context.Context, update UpdateContract) ([]*
 			targetAccount,
 			Script{Code: contract.Code(), Args: contract.Args, Location: contract.Location()},
 			update,
+			false,
 		)
 		if err != nil && errors.Is(err, errUpdateNoDiff) {
 			f.logger.Info(fmt.Sprintf(
