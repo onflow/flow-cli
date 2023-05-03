@@ -23,10 +23,11 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"github.com/onflow/flow-cli/flowkit/accounts"
-	"github.com/onflow/flow-cli/flowkit/transactions"
 	"strings"
 	"testing"
+
+	"github.com/onflow/flow-cli/flowkit/accounts"
+	"github.com/onflow/flow-cli/flowkit/transactions"
 
 	"github.com/onflow/cadence"
 	jsoncdc "github.com/onflow/cadence/encoding/json"

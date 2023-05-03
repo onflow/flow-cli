@@ -159,4 +159,3 @@ func deployContract(update bool, flags *deployContractFlags) command.RunWithStat
 		}, nil
 	}
 }
- 
