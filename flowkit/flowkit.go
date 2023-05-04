@@ -23,7 +23,6 @@ import (
 	"context"
 	"crypto/rand"
 	"fmt"
-	"path/filepath"
 	"strconv"
 	"strings"
 	"sync"
@@ -255,12 +254,6 @@ func UpdateExistingContract(updateExisting bool) UpdateContract {
 	}
 }
 
-func getFilenameFromPath(path string) string {
-	filename := filepath.Base(path)
-	extension := filepath.Ext(filename)
-	return filename[0 : len(filename)-len(extension)]
-}
-
 // AddContract to the Flow account provided and return the transaction ID.
 //
 // If the contract already exists on the account the operation will fail and error will be returned.
@@ -372,15 +365,14 @@ func (f *Flowkit) AddContract(
 		return tx.FlowTransaction().ID(), false, trx.Error
 	}
 
-	filename := getFilenameFromPath(contract.Location)
 	d := state.Deployments().ByAccountAndNetwork(account.Name, f.network.Name)
 	if d != nil {
 		d.AddContract(config.ContractDeployment{
-			Name: getFilenameFromPath(filename),
+			Name: name,
 		})
 	}
 	state.Contracts().AddOrUpdate(config.Contract{
-		Name:     filename,
+		Name:     name,
 		Location: contract.Location,
 	})
 
