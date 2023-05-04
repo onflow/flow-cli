@@ -99,7 +99,6 @@ func deployContract(update bool, flags *deployContractFlags) command.RunWithStat
 				Location: filename,
 			},
 			deployFunc,
-			true,
 		)
 
 		if err != nil {

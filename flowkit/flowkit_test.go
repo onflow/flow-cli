@@ -178,7 +178,6 @@ func TestAccounts(t *testing.T) {
 			serviceAcc,
 			resourceToContract(tests.ContractHelloString),
 			UpdateExistingContract(false),
-			false,
 		)
 
 		gw.Mock.AssertCalled(t, mocks.GetAccountFunc, serviceAddress)
@@ -444,7 +443,6 @@ func TestAccountsAddContract_Integration(t *testing.T) {
 			srvAcc,
 			resourceToContract(tests.ContractSimple),
 			UpdateExistingContract(false),
-			false,
 		)
 		require.NoError(t, err)
 		require.NotNil(t, ID)
@@ -459,7 +457,6 @@ func TestAccountsAddContract_Integration(t *testing.T) {
 			srvAcc,
 			resourceToContract(tests.ContractSimpleUpdated),
 			UpdateExistingContract(true),
-			false,
 		)
 		require.NoError(t, err)
 
@@ -480,7 +477,6 @@ func TestAccountsAddContract_Integration(t *testing.T) {
 			srvAcc,
 			resourceToContract(tests.ContractSimple),
 			UpdateExistingContract(false),
-			false,
 		)
 		assert.NoError(t, err)
 
@@ -489,7 +485,6 @@ func TestAccountsAddContract_Integration(t *testing.T) {
 			srvAcc,
 			resourceToContract(tests.ContractSimple),
 			UpdateExistingContract(false),
-			false,
 		)
 
 		require.Error(t, err)
@@ -508,7 +503,6 @@ func TestAccountsAddContract_Integration(t *testing.T) {
 			srvAcc,
 			resourceToContract(tests.ContractSimple),
 			UpdateExistingContract(false),
-			false,
 		)
 		assert.NoError(t, err)
 
@@ -519,7 +513,6 @@ func TestAccountsAddContract_Integration(t *testing.T) {
 			srvAcc,
 			resourceToContract(updated),
 			UpdateExistingContract(false),
-			false,
 		)
 
 		require.Error(t, err)
@@ -537,7 +530,6 @@ func TestAccountsAddContractWithArgs(t *testing.T) {
 		srvAcc,
 		resourceToContract(tests.ContractSimpleWithArgs),
 		UpdateExistingContract(false),
-		false,
 	)
 	assert.Error(t, err)
 	assert.True(t, strings.Contains(err.Error(), "invalid argument count, too few arguments: expected 1, got 0"))
@@ -545,7 +537,7 @@ func TestAccountsAddContractWithArgs(t *testing.T) {
 	c := resourceToContract(tests.ContractSimpleWithArgs)
 	c.Args = []cadence.Value{cadence.UInt64(4)}
 
-	_, _, err = flowkit.AddContract(ctx, srvAcc, c, UpdateExistingContract(false), false)
+	_, _, err = flowkit.AddContract(ctx, srvAcc, c, UpdateExistingContract(false))
 	assert.NoError(t, err)
 
 	acc, err := flowkit.GetAccount(ctx, srvAcc.Address)
@@ -568,7 +560,6 @@ func TestAccountsRemoveContract_Integration(t *testing.T) {
 			Location: c.Filename,
 		},
 		UpdateExistingContract(false),
-		false,
 	)
 	assert.NoError(t, err)
 
@@ -750,7 +741,6 @@ func TestEvents_Integration(t *testing.T) {
 			srvAcc,
 			resourceToContract(tests.ContractEvents),
 			UpdateExistingContract(false),
-			false,
 		)
 		assert.NoError(t, err)
 		assert.NoError(t, err)
@@ -776,7 +766,6 @@ func TestEvents_Integration(t *testing.T) {
 			srvAcc,
 			resourceToContract(tests.ContractEvents),
 			UpdateExistingContract(false),
-			false,
 		)
 		assert.NoError(t, err)
 
@@ -1251,7 +1240,6 @@ func TestProject_Integration(t *testing.T) {
 				Location: tests.ContractA.Filename,
 			},
 			UpdateExistingContract(false),
-			false,
 		)
 		require.NoError(t, err)
 
@@ -1380,7 +1368,6 @@ func TestScripts_Integration(t *testing.T) {
 			srvAcc,
 			resourceToContract(tests.ContractHelloString),
 			UpdateExistingContract(false),
-			false,
 		)
 
 		res, err := flowkit.ExecuteScript(
@@ -1708,7 +1695,6 @@ func TestTransactions_Integration(t *testing.T) {
 			srvAcc,
 			resourceToContract(tests.ContractHelloString),
 			UpdateExistingContract(false),
-			false,
 		)
 
 		tx, err := flowkit.BuildTransaction(
