@@ -372,7 +372,6 @@ func (f *Flowkit) AddContract(
 		return tx.FlowTransaction().ID(), false, trx.Error
 	}
 
-	// If success, add the new account to the state
 	filename := getFilenameFromPath(contract.Location)
 	d := state.Deployments().ByAccountAndNetwork(account.Name, f.network.Name)
 	if d != nil {

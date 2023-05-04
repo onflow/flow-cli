@@ -1253,7 +1253,7 @@ func TestProject_Integration(t *testing.T) {
 
 		contracts, err := flowkit.DeployProject(ctx, UpdateExistingContract(false))
 		assert.NoError(t, err)
-		assert.Len(t, contracts, 2)
+		assert.Len(t, contracts, 3)
 
 		account, err := flowkit.GetAccount(ctx, srvAcc.Address)
 
