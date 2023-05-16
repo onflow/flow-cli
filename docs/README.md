@@ -1,4 +1,3 @@
-# Flow CLI Documentation
+# This document has been moved to a new location:
 
-This directory contains the source files for the Flow CLI documentation.
-Read the full version on the [Flow documentation website](https://docs.onflow.org/flow-cli).
+https://github.com/onflow/docs/tree/main/docs/tooling/flow-cli/README.md
