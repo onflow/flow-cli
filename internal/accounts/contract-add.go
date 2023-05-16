@@ -101,12 +101,6 @@ func deployContract(update bool, flags *deployContractFlags) command.RunWithStat
 			deployFunc,
 		)
 
-		err = state.SaveDefault()
-
-		if err != nil {
-			return nil, err
-		}
-
 		if err != nil {
 			if txID != flowsdk.EmptyID {
 				logger.Info(fmt.Sprintf(
@@ -117,6 +111,12 @@ func deployContract(update bool, flags *deployContractFlags) command.RunWithStat
 				))
 			}
 
+			return nil, err
+		}
+
+		err = state.SaveDefault()
+
+		if err != nil {
 			return nil, err
 		}
 
