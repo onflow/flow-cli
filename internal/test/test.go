@@ -78,9 +78,6 @@ func run(
 		testFiles[filename] = code
 	}
 
-	logger.StartProgress("Running tests...")
-	defer logger.StopProgress()
-
 	res, coverageReport, err := testCode(testFiles, state, testFlags.Cover)
 	if err != nil {
 		return nil, err
