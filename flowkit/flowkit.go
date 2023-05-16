@@ -376,11 +376,6 @@ func (f *Flowkit) AddContract(
 		Location: contract.Location,
 	})
 
-	err = state.SaveDefault()
-	if err != nil {
-		return tx.FlowTransaction().ID(), false, err
-	}
-
 	return sentTx.ID(), updateExisting, err
 }
 
