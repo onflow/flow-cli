@@ -37,6 +37,10 @@ import (
 	"github.com/onflow/flow-cli/internal/util"
 )
 
+// Import statements with a path that contain this substring,
+// are considered to be helper/utility scripts for test files.
+const helperScriptSubstr = "_helper"
+
 type flagsTests struct {
 	Cover        bool   `default:"false" flag:"cover" info:"Use the cover flag to calculate coverage report"`
 	CoverProfile string `default:"coverage.json" flag:"coverprofile" info:"Filename to write the calculated coverage report"`
@@ -135,7 +139,7 @@ func importResolver(scriptPath string, state *flowkit.State) cdcTests.ImportReso
 		}
 		relativePath := stringLocation.String()
 
-		if strings.Contains(relativePath, "_helper") {
+		if strings.Contains(relativePath, helperScriptSubstr) {
 			importedScriptFilePath := absolutePath(scriptPath, relativePath)
 			scriptCode, err := state.ReadFile(importedScriptFilePath)
 			if err != nil {
