@@ -133,8 +133,17 @@ func importResolver(scriptPath string, state *flowkit.State) cdcTests.ImportReso
 		if !isFileImport {
 			return "", fmt.Errorf("cannot import from %s", location)
 		}
-
 		relativePath := stringLocation.String()
+
+		if strings.Contains(relativePath, "_helper") {
+			importedScriptFilePath := absolutePath(scriptPath, relativePath)
+			scriptCode, err := state.ReadFile(importedScriptFilePath)
+			if err != nil {
+				return "", nil
+			}
+			return string(scriptCode), nil
+		}
+
 		contractFound := false
 		for _, contract := range *state.Contracts() {
 			if strings.Contains(relativePath, contract.Location) {

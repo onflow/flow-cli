@@ -124,6 +124,21 @@ func TestExecutingTests(t *testing.T) {
 		assert.NoError(t, results[script.Filename][0].Error)
 	})
 
+	t.Run("with helper script import", func(t *testing.T) {
+		t.Parallel()
+		_, state, _ := util.TestMocks(t)
+
+		// Execute script
+		script := tests.TestScriptWithHelperImport
+		testFiles := make(map[string][]byte, 0)
+		testFiles[script.Filename] = script.Source
+		results, _, err := testCode(testFiles, state, false)
+
+		require.NoError(t, err)
+		require.Len(t, results, 1)
+		assert.NoError(t, results[script.Filename][0].Error)
+	})
+
 	t.Run("with missing contract location from config", func(t *testing.T) {
 		t.Parallel()
 
