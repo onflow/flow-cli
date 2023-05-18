@@ -10,6 +10,13 @@ VERSION="$1"
 # The architecture string, set by get_architecture
 ARCH=""
 
+# Optional environment variable for Github API token
+# If GITHUB_TOKEN is set, use it in the curl requests to avoid rate limiting
+curl_auth_options=()
+if [ -n "$GITHUB_TOKEN" ]; then
+    curl_auth_options+=(-H "Authorization: Bearer $GITHUB_TOKEN")
+fi
+
 # Get the architecture (CPU, OS) of the current system as a string.
 # Only MacOS/x86_64/ARM64 and Linux/x86_64/ARM64 architectures are supported.
 get_architecture() {
@@ -56,7 +63,13 @@ get_architecture() {
 get_version() {
   if [ -z "$VERSION" ]
   then
-    VERSION=$(curl -s "https://api.github.com/repos/$REPO/releases/latest" | grep -E 'tag_name' | cut -d '"' -f 4)
+    VERSION=$(curl "${curl_auth_options[@]}" -s "https://api.github.com/repos/$REPO/releases/latest" | grep -E 'tag_name' | cut -d '"' -f 4)
+    if [ -z "$VERSION" ] && [ ${#curl_auth_options[@]} -gt 0 ]
+    then
+      echo "Failed to get latest version from Github API, is your GITHUB_TOKEN valid?  Trying without authentication..."
+      curl_auth_options=()
+      get_version
+    fi
   fi
 }
 
@@ -72,7 +85,7 @@ main() {
 
   tmpfile=$(mktemp 2>/dev/null || mktemp -t flow)
   url="$ASSETS_URL$VERSION/flow-cli-$VERSION-$ARCH.tar.gz"
-  curl -L --progress-bar "$url" -o $tmpfile
+  curl "${curl_auth_options[@]}" -L --progress-bar "$url" -o $tmpfile
 
   # Ensure we don't receive a not found error as response.
   if grep -q "Not Found" $tmpfile
