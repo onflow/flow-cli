@@ -20,9 +20,10 @@ package tests
 
 import (
 	"context"
+	"testing"
+
 	accounts2 "github.com/onflow/flow-cli/flowkit/accounts"
 	transactions2 "github.com/onflow/flow-cli/flowkit/transactions"
-	"testing"
 
 	"github.com/onflow/cadence"
 	flowsdk "github.com/onflow/flow-go-sdk"

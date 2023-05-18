@@ -114,6 +114,12 @@ func deployContract(update bool, flags *deployContractFlags) command.RunWithStat
 			return nil, err
 		}
 
+		err = state.SaveDefault()
+
+		if err != nil {
+			return nil, err
+		}
+
 		logger.Info(fmt.Sprintf(
 			"Contract %s on the account '%s' with transaction ID %s.",
 			map[bool]string{true: "updated", false: "created"}[update],

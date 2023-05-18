@@ -19,9 +19,10 @@ package config_test
 
 import (
 	"fmt"
-	"github.com/onflow/flow-cli/flowkit/config"
 	"os"
 	"testing"
+
+	"github.com/onflow/flow-cli/flowkit/config"
 
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"

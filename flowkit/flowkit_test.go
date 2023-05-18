@@ -23,10 +23,11 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"github.com/onflow/flow-cli/flowkit/accounts"
-	"github.com/onflow/flow-cli/flowkit/transactions"
 	"strings"
 	"testing"
+
+	"github.com/onflow/flow-cli/flowkit/accounts"
+	"github.com/onflow/flow-cli/flowkit/transactions"
 
 	"github.com/onflow/cadence"
 	jsoncdc "github.com/onflow/cadence/encoding/json"
@@ -1252,7 +1253,7 @@ func TestProject_Integration(t *testing.T) {
 
 		contracts, err := flowkit.DeployProject(ctx, UpdateExistingContract(false))
 		assert.NoError(t, err)
-		assert.Len(t, contracts, 2)
+		assert.Len(t, contracts, 3)
 
 		account, err := flowkit.GetAccount(ctx, srvAcc.Address)
 

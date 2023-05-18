@@ -365,6 +365,17 @@ func (f *Flowkit) AddContract(
 		return tx.FlowTransaction().ID(), false, trx.Error
 	}
 
+	d := state.Deployments().ByAccountAndNetwork(account.Name, f.network.Name)
+	if d != nil {
+		d.AddContract(config.ContractDeployment{
+			Name: name,
+		})
+	}
+	state.Contracts().AddOrUpdate(config.Contract{
+		Name:     name,
+		Location: contract.Location,
+	})
+
 	return sentTx.ID(), updateExisting, err
 }
 

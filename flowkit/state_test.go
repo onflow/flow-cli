@@ -20,10 +20,11 @@ package flowkit
 
 import (
 	"fmt"
-	"github.com/onflow/flow-cli/flowkit/accounts"
 	"os"
 	"sort"
 	"testing"
+
+	"github.com/onflow/flow-cli/flowkit/accounts"
 
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
