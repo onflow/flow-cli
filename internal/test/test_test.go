@@ -38,8 +38,9 @@ func TestExecutingTests(t *testing.T) {
 		_, state, _ := util.TestMocks(t)
 
 		script := tests.TestScriptSimple
-		testFiles := make(map[string][]byte, 0)
-		testFiles[script.Filename] = script.Source
+		testFiles := map[string][]byte{
+			script.Filename: script.Source,
+		}
 		results, _, err := testCode(testFiles, state, false)
 
 		require.NoError(t, err)
@@ -52,8 +53,9 @@ func TestExecutingTests(t *testing.T) {
 		_, state, _ := util.TestMocks(t)
 
 		script := tests.TestScriptSimpleFailing
-		testFiles := make(map[string][]byte, 0)
-		testFiles[script.Filename] = script.Source
+		testFiles := map[string][]byte{
+			script.Filename: script.Source,
+		}
 		results, _, err := testCode(testFiles, state, false)
 
 		require.NoError(t, err)
@@ -76,8 +78,9 @@ func TestExecutingTests(t *testing.T) {
 
 		// Execute script
 		script := tests.TestScriptWithImport
-		testFiles := make(map[string][]byte, 0)
-		testFiles[script.Filename] = script.Source
+		testFiles := map[string][]byte{
+			script.Filename: script.Source,
+		}
 		results, _, err := testCode(testFiles, state, false)
 
 		require.NoError(t, err)
@@ -115,8 +118,9 @@ func TestExecutingTests(t *testing.T) {
 
 		// Execute script
 		script := tests.TestScriptWithRelativeImports
-		testFiles := make(map[string][]byte, 0)
-		testFiles[script.Filename] = script.Source
+		testFiles := map[string][]byte{
+			script.Filename: script.Source,
+		}
 		results, _, err := testCode(testFiles, state, false)
 
 		require.NoError(t, err)
@@ -130,8 +134,9 @@ func TestExecutingTests(t *testing.T) {
 
 		// Execute script
 		script := tests.TestScriptWithHelperImport
-		testFiles := make(map[string][]byte, 0)
-		testFiles[script.Filename] = script.Source
+		testFiles := map[string][]byte{
+			script.Filename: script.Source,
+		}
 		results, _, err := testCode(testFiles, state, false)
 
 		require.NoError(t, err)
@@ -153,8 +158,9 @@ func TestExecutingTests(t *testing.T) {
 
 		// Execute script
 		script := tests.TestScriptWithImport
-		testFiles := make(map[string][]byte, 0)
-		testFiles[script.Filename] = script.Source
+		testFiles := map[string][]byte{
+			script.Filename: script.Source,
+		}
 		_, _, err := testCode(testFiles, state, false)
 
 		require.Error(t, err)
@@ -177,8 +183,9 @@ func TestExecutingTests(t *testing.T) {
 
 		// Execute script
 		script := tests.TestScriptWithFileRead
-		testFiles := make(map[string][]byte, 0)
-		testFiles[script.Filename] = script.Source
+		testFiles := map[string][]byte{
+			script.Filename: script.Source,
+		}
 		results, _, err := testCode(testFiles, state, false)
 
 		require.NoError(t, err)
@@ -199,8 +206,9 @@ func TestExecutingTests(t *testing.T) {
 
 		// Execute script
 		script := tests.TestScriptWithCoverage
-		testFiles := make(map[string][]byte, 0)
-		testFiles[script.Filename] = script.Source
+		testFiles := map[string][]byte{
+			script.Filename: script.Source,
+		}
 		results, coverageReport, err := testCode(testFiles, state, true)
 
 		require.NoError(t, err)
