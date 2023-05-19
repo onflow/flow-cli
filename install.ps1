@@ -10,6 +10,8 @@
     The version to install.
 .Parameter AddToPath
     Add the absolute destination path to the 'User' scope environment variable 'Path'.
+.Parameter GitHubToken
+    Optional GitHub token to use to prevent rate limiting.
 .EXAMPLE
     Install the current version
     .\install.ps1
@@ -22,7 +24,8 @@
 param (
     [string] $version="",
     [string] $directory = "$env:APPDATA\Flow",
-    [bool] $addToPath = $true
+    [bool] $addToPath = $true,
+    [string] $githubToken = ""
 )
 
 Set-StrictMode -Version 3.0
@@ -36,8 +39,15 @@ $repo = "onflow/flow-cli"
 $versionURL = "https://api.github.com/repos/$repo/releases/latest"
 $assetsURL = "https://github.com/$repo/releases/download"
 
+# Add the GitHub token to the web request headers if it was provided
+$webRequestOptions = if ($githubToken) {
+	@{ 'Headers' = @{ 'Authorization' = "Bearer $githubToken" } }
+} else {
+    @{}
+}
+
 if (!$version) {
-    $q = (Invoke-WebRequest -Uri "$versionURL" -UseBasicParsing) | ConvertFrom-Json
+    $q = (Invoke-WebRequest -Uri "$versionURL" -UseBasicParsing @webRequestOptions) | ConvertFrom-Json
     $version = $q.tag_name
 }
 
@@ -47,7 +57,7 @@ New-Item -ItemType Directory -Force -Path $directory | Out-Null
 
 $progressPreference = 'silentlyContinue'
 
-Invoke-WebRequest -Uri "$assetsURL/$version/flow-cli-$version-windows-amd64.zip" -UseBasicParsing -OutFile "$directory\flow.zip"
+Invoke-WebRequest -Uri "$assetsURL/$version/flow-cli-$version-windows-amd64.zip" -UseBasicParsing -OutFile "$directory\flow.zip" @webRequestOptions
 
 Expand-Archive -Path "$directory\flow.zip" -DestinationPath "$directory" -Force
 
