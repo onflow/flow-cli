@@ -12,9 +12,9 @@ ARCH=""
 
 # Optional environment variable for Github API token
 # If GITHUB_TOKEN is set, use it in the curl requests to avoid rate limiting
-curl_auth_options=()
+github_token_header=""
 if [ -n "$GITHUB_TOKEN" ]; then
-    curl_auth_options+=(-H "Authorization: Bearer $GITHUB_TOKEN")
+  github_token_header="Authorization: Bearer $GITHUB_TOKEN"
 fi
 
 # Get the architecture (CPU, OS) of the current system as a string.
@@ -63,11 +63,18 @@ get_architecture() {
 get_version() {
   if [ -z "$VERSION" ]
   then
-    VERSION=$(curl "${curl_auth_options[@]}" -s "https://api.github.com/repos/$REPO/releases/latest" | grep -E 'tag_name' | cut -d '"' -f 4)
-    if [ -z "$VERSION" ] && [ ${#curl_auth_options[@]} -gt 0 ]
+    VERSION=""
+    if [ -n "$github_token_header" ]
+    then
+      VERSION=$(curl -H "$github_token_header" -s "https://api.github.com/repos/$REPO/releases/latest" | grep -E 'tag_name' | cut -d '"' -f 4)
+    else
+      VERSION=$(curl -s "https://api.github.com/repos/$REPO/releases/latest" | grep -E 'tag_name' | cut -d '"' -f 4)
+    fi
+
+    if [ -z "$VERSION" ] && [ -n "$github_token_header" ]
     then
       echo "Failed to get latest version from Github API, is your GITHUB_TOKEN valid?  Trying without authentication..."
-      curl_auth_options=()
+      github_token_header=""
       get_version
     fi
   fi
@@ -85,7 +92,12 @@ main() {
 
   tmpfile=$(mktemp 2>/dev/null || mktemp -t flow)
   url="$ASSETS_URL$VERSION/flow-cli-$VERSION-$ARCH.tar.gz"
-  curl "${curl_auth_options[@]}" -L --progress-bar "$url" -o $tmpfile
+  if [ -n "$github_token_header" ]
+  then
+    curl -H "$github_token_header" -L --progress-bar "$url" -o $tmpfile
+  else
+    curl -L --progress-bar "$url" -o $tmpfile
+  fi
 
   # Ensure we don't receive a not found error as response.
   if grep -q "Not Found" $tmpfile
