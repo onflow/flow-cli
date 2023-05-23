@@ -324,6 +324,15 @@ var ScriptImport = Resource{
 	`),
 }
 
+var HelperImport = Resource{
+	Filename: "test_helpers.cdc",
+	Source: []byte(`
+		pub fun double(_ x: Int): Int {
+			return x * 2
+		}
+	`),
+}
+
 var TestScriptSimple = Resource{
 	Filename: "./testScriptSimple.cdc",
 	Source: []byte(`
@@ -352,6 +361,18 @@ var TestScriptWithImport = Resource{
             assert(hello.greeting == "Hello, World!")
         }
     `),
+}
+
+var TestScriptWithHelperImport = Resource{
+	Filename: "testScriptWithHelperImport.cdc",
+	Source: []byte(`
+		import Test
+		import "test_helpers.cdc"
+
+		pub fun testDouble() {
+			Test.expect(double(2), Test.equal(4))
+		}
+	`),
 }
 
 var TestScriptWithRelativeImports = Resource{
@@ -437,6 +458,7 @@ var resources = []Resource{
 	ContractSimpleUpdated,
 	TransactionSimple,
 	ScriptImport,
+	HelperImport,
 	ContractA,
 	ContractB,
 	ContractC,
