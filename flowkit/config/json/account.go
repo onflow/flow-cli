@@ -94,7 +94,7 @@ func transformSimpleToConfig(accountName string, a simpleAccount) (*config.Accou
 // tryReplaceEnv checks if value matches env regex, if it does it check whether the value was set in env,
 // if not set then it errors, otherwise it replaces the value with set env variable, and also returns the original key.
 func tryReplaceEnv(value string) (replaced string, original string, err error) {
-	envRegex, err := regexp.Compile(`^\$(\w+)$|\{(\w+)\}$`)
+	envRegex, err := regexp.Compile(`^\$\{(\w+)\}|\$(\w+)$`)
 	if err != nil {
 		return "", "", err
 	}
