@@ -7,7 +7,7 @@
   <p align="center">
     <i>Flow CLI brings Flow to your terminal. Easily interact with the network and build your dapps.</i>
     <br />
-    <a href="https://docs.onflow.org/flow-cli/install/"><strong>Read the docs»</strong></a>
+    <a href="https://developers.flow.com/tooling/flow-cli/install"><strong>Read the docs»</strong></a>
     <br />
     <br />
     <a href="https://github.com/onflow/flow-cli/issues">Report Bug</a>
