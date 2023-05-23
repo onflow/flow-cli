@@ -25,22 +25,6 @@
     "type": "web"
   },
   {
-    "name": "Simple Unity",
-    "repo": "https://github.com/onflow/UnityFlowSDK.git",
-    "description": "Simple example demonstrating how to interact with the Flow network using Unity SDK.",
-    "commit": "d01a4b14a98383c18b4d57e87624cb8dba6d0946",
-    "folder": "Samples~/FlowControlQuickstartCodeSample",
-    "type": "unity"
-  },
-  {
-    "name": "Mobile Unity Game",
-    "repo": "https://github.com/onflow/UnityFlowSDK.git",
-    "description": "Example words game built on Flow using the Unity SDK.",
-    "commit": "d01a4b14a98383c18b4d57e87624cb8dba6d0946",
-    "folder": "Samples~/FlowWords",
-    "type": "unity"
-  },
-  {
     "name": "Swift iOS simple example",
     "repo": "https://github.com/Outblock/fcl-swift",
     "description": "iOS example demonstrating usage of FCL and Flow interactions.",
@@ -55,5 +39,21 @@
     "commit": "5c68d818e9bccf22409feb9759021e090c055e48",
     "folder": "example",
     "type": "mobile"
+  },
+  {
+    "name": "Simple Unity",
+    "repo": "https://github.com/onflow/UnityFlowSDK.git",
+    "description": "Simple example demonstrating how to interact with the Flow network using Unity SDK.",
+    "commit": "d01a4b14a98383c18b4d57e87624cb8dba6d0946",
+    "folder": "Samples~/FlowControlQuickstartCodeSample",
+    "type": "unity"
+  },
+  {
+    "name": "Mobile Unity Game",
+    "repo": "https://github.com/onflow/UnityFlowSDK.git",
+    "description": "Example words game built on Flow using the Unity SDK.",
+    "commit": "d01a4b14a98383c18b4d57e87624cb8dba6d0946",
+    "folder": "Samples~/FlowWords",
+    "type": "unity"
   }
 ]
