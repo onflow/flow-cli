@@ -3,12 +3,21 @@ updates:
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
-      interval: "weekly"
+      interval: "custom"
+      interval-count: 14
+      time: "12:00" # Adjust the time to your preferred schedule
 
   - package-ecosystem: "gomod"
+    allow:
+    - dependency-type: "direct"
+      update-type: "semver-minor"
+    - dependency-type: "direct"
+      update-type: "semver-major"
     directory: "/"
     schedule:
-      interval: "weekly"
+      interval: "custom"
+      interval-count: 14
+      time: "12:00" # Adjust the time to your preferred schedule
     ignore:
       - dependency-name: "github.com/onflow/flow-go"
       - dependency-name: "github.com/onflow/cadence"
