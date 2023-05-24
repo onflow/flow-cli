@@ -685,7 +685,7 @@ type ScaffoldItem struct {
 	assignedIndex int
 }
 
-func ScaffoldPrompt(logger output.Logger, items []ScaffoldItem) int {
+func ScaffoldPrompt(logger output.Logger, scaffoldItems []ScaffoldItem) int {
 	const (
 		general = ""
 		mobile  = "mobile"
@@ -712,10 +712,10 @@ func ScaffoldPrompt(logger output.Logger, items []ScaffoldItem) int {
 		logger.Info("")
 	}
 
-	outputCategory(general, items)
-	outputCategory(web, items)
-	outputCategory(mobile, items)
-	outputCategory(unity, items)
+	outputCategory(general, scaffoldItems)
+	outputCategory(web, scaffoldItems)
+	outputCategory(mobile, scaffoldItems)
+	outputCategory(unity, scaffoldItems)
 
 	prompt := promptui.Prompt{
 		Label: "Enter the scaffold number",
@@ -725,7 +725,7 @@ func ScaffoldPrompt(logger output.Logger, items []ScaffoldItem) int {
 				return fmt.Errorf("input must be a number")
 			}
 
-			if n < 0 && n > len(items) {
+			if n < 0 && n > len(scaffoldItems) {
 				return fmt.Errorf("not a valid number")
 			}
 			return nil
@@ -738,7 +738,7 @@ func ScaffoldPrompt(logger output.Logger, items []ScaffoldItem) int {
 	}
 	num, _ := strconv.Atoi(input)
 
-	for _, item := range items {
+	for _, item := range scaffoldItems {
 		if item.assignedIndex == num {
 			return item.Index
 		}

@@ -91,10 +91,10 @@ func create(
 	pickedScaffold := scaffolds[0]
 
 	if setupFlags.Scaffold {
-		items := make([]util.ScaffoldItem, 0)
+		scaffoldItems := make([]util.ScaffoldItem, 0)
 		for i, s := range scaffolds {
-			items = append(
-				items,
+			scaffoldItems = append(
+				scaffoldItems,
 				util.ScaffoldItem{
 					Index:    i,
 					Title:    fmt.Sprintf("%s - %s", output.Bold(s.Name), s.Description),
@@ -103,7 +103,7 @@ func create(
 			)
 		}
 
-		selected := util.ScaffoldPrompt(logger, items)
+		selected := util.ScaffoldPrompt(logger, scaffoldItems)
 		pickedScaffold = scaffolds[selected]
 	}
 
