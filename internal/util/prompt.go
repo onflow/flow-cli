@@ -678,7 +678,14 @@ func InstallPathPrompt(defaultPath string) string {
 	return path.Clean(install)
 }
 
-func ScaffoldPrompt(logger output.Logger, availableScaffolds map[string][]string) int {
+type ScaffoldItem struct {
+	Index         int
+	Title         string
+	Category      string
+	assignedIndex int
+}
+
+func ScaffoldPrompt(logger output.Logger, scaffoldItems []ScaffoldItem) int {
 	const (
 		general = ""
 		mobile  = "mobile"
@@ -693,19 +700,22 @@ func ScaffoldPrompt(logger output.Logger, availableScaffolds map[string][]string
 	}
 
 	index := 0
-	outputCategory := func(category string, items []string) {
-		logger.Info(output.Bold(output.Magenta(category)))
-		for _, item := range items {
-			logger.Info(fmt.Sprintf("   [%d] %s", index+1, item))
-			index++
+	outputCategory := func(category string, items []ScaffoldItem) {
+		logger.Info(output.Bold(output.Magenta(outputType[category])))
+		for i := range items {
+			if items[i].Category == category {
+				index++
+				logger.Info(fmt.Sprintf("   [%d] %s", index, items[i].Title))
+				items[i].assignedIndex = index
+			}
 		}
 		logger.Info("")
 	}
 
-	outputCategory(outputType[general], availableScaffolds[general])
-	outputCategory(outputType[web], availableScaffolds[web])
-	outputCategory(outputType[mobile], availableScaffolds[mobile])
-	outputCategory(outputType[unity], availableScaffolds[unity])
+	outputCategory(general, scaffoldItems)
+	outputCategory(web, scaffoldItems)
+	outputCategory(mobile, scaffoldItems)
+	outputCategory(unity, scaffoldItems)
 
 	prompt := promptui.Prompt{
 		Label: "Enter the scaffold number",
@@ -715,7 +725,7 @@ func ScaffoldPrompt(logger output.Logger, availableScaffolds map[string][]string
 				return fmt.Errorf("input must be a number")
 			}
 
-			if n < 0 && n > index {
+			if n < 0 && n > len(scaffoldItems) {
 				return fmt.Errorf("not a valid number")
 			}
 			return nil
@@ -726,7 +736,13 @@ func ScaffoldPrompt(logger output.Logger, availableScaffolds map[string][]string
 	if err == promptui.ErrInterrupt {
 		os.Exit(-1)
 	}
-
 	num, _ := strconv.Atoi(input)
-	return num - 1
+
+	for _, item := range scaffoldItems {
+		if item.assignedIndex == num {
+			return item.Index
+		}
+	}
+
+	return 0
 }
