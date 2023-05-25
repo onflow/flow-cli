@@ -518,38 +518,68 @@ func TestAccountsAddContract_Integration(t *testing.T) {
 		require.Error(t, err)
 		assert.EqualError(t, err, "contract Simple exists in account emulator-account")
 	})
-}
 
-// make sure contracts are not overwritten if they already exist
-func TestAddContract_NoOverwrite(t *testing.T) {
-	state, flowkit := setupIntegration()
-	srvAcc, _ := state.EmulatorServiceAccount()
+	t.Run("Add Contract No Overwrite", func(t *testing.T) {
+		state, flowkit := setupIntegration()
+		srvAcc, _ := state.EmulatorServiceAccount()
 
-	// Add a contract to state with an alias
-	contractAliased := config.Contract{
-		Name: tests.ContractSimple.Name,
-		Aliases: []config.Alias{{
-			Network: config.EmulatorNetwork.Name,
-			Address: Donald().Address,
-		}},
-	}
+		// Add a contract to state with an alias
+		contractAliased := config.Contract{
+			Name: tests.ContractSimple.Name,
+			Aliases: []config.Alias{{
+				Network: config.EmulatorNetwork.Name,
+				Address: Donald().Address,
+			}},
+		}
 
-	state.Contracts().AddOrUpdate(contractAliased)
-	c, _ := state.Contracts().ByName(tests.ContractSimple.Name)
-	assert.Equal(t, Donald().Address, c.Aliases[0].Address)
+		state.Contracts().AddOrUpdate(contractAliased)
+		c, _ := state.Contracts().ByName(tests.ContractSimple.Name)
+		assert.Equal(t, Donald().Address, c.Aliases[0].Address)
 
-	// Deploy contract to emulator account insted of Donald alias
-	_, _, err := flowkit.AddContract(
-		ctx,
-		srvAcc,
-		resourceToContract(tests.ContractSimple),
-		UpdateExistingContract(false),
-	)
-	assert.NoError(t, err)
+		// Deploy contract to emulator account insted of Donald alias
+		_, _, err := flowkit.AddContract(
+			ctx,
+			srvAcc,
+			resourceToContract(tests.ContractSimple),
+			UpdateExistingContract(false),
+		)
+		assert.NoError(t, err)
 
-	// Check contracts state still has Donald alias
-	c, _ = state.Contracts().ByName(tests.ContractSimple.Name)
-	assert.Equal(t, Donald().Address, c.Aliases[0].Address)
+		// Check contracts state still has Donald alias
+		c, _ = state.Contracts().ByName(tests.ContractSimple.Name)
+		assert.Equal(t, Donald().Address, c.Aliases[0].Address)
+	})
+
+	t.Run("Add Contract No Overwrite", func(t *testing.T) {
+		state, flowkit := setupIntegration()
+		srvAcc, _ := state.EmulatorServiceAccount()
+
+		// Add a contract to state with an alias
+		contractAliased := config.Contract{
+			Name: tests.ContractSimple.Name,
+			Aliases: []config.Alias{{
+				Network: config.EmulatorNetwork.Name,
+				Address: Donald().Address,
+			}},
+		}
+
+		state.Contracts().AddOrUpdate(contractAliased)
+		c, _ := state.Contracts().ByName(tests.ContractSimple.Name)
+		assert.Equal(t, Donald().Address, c.Aliases[0].Address)
+
+		// Deploy contract to emulator account insted of Donald alias
+		_, _, err := flowkit.AddContract(
+			ctx,
+			srvAcc,
+			resourceToContract(tests.ContractSimple),
+			UpdateExistingContract(false),
+		)
+		assert.NoError(t, err)
+
+		// Check contracts state still has Donald alias
+		c, _ = state.Contracts().ByName(tests.ContractSimple.Name)
+		assert.Equal(t, Donald().Address, c.Aliases[0].Address)
+	})
 }
 
 func TestAccountsAddContractWithArgs(t *testing.T) {
