@@ -26,12 +26,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/onflow/flow-cli/flowkit/accounts"
-	"github.com/onflow/flow-cli/flowkit/transactions"
-
 	"github.com/onflow/cadence"
 	jsoncdc "github.com/onflow/cadence/encoding/json"
-	emulator "github.com/onflow/flow-emulator"
+	"github.com/onflow/flow-emulator/emulator"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/access/grpc"
 	"github.com/onflow/flow-go-sdk/crypto"
@@ -39,12 +36,14 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
+	"github.com/onflow/flow-cli/flowkit/accounts"
 	"github.com/onflow/flow-cli/flowkit/config"
 	"github.com/onflow/flow-cli/flowkit/gateway"
 	"github.com/onflow/flow-cli/flowkit/gateway/mocks"
 	"github.com/onflow/flow-cli/flowkit/output"
 	"github.com/onflow/flow-cli/flowkit/project"
 	"github.com/onflow/flow-cli/flowkit/tests"
+	"github.com/onflow/flow-cli/flowkit/transactions"
 )
 
 func Alice() *accounts.Account {
