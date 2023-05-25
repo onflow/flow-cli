@@ -371,10 +371,14 @@ func (f *Flowkit) AddContract(
 			Name: name,
 		})
 	}
-	state.Contracts().AddOrUpdate(config.Contract{
-		Name:     name,
-		Location: contract.Location,
-	})
+
+	// don't add contract if it already exists because it might overwrite existing data
+	if c, _ := state.Contracts().ByName(name); c == nil {
+		state.Contracts().AddOrUpdate(config.Contract{
+			Name:     name,
+			Location: contract.Location,
+		})
+	}
 
 	return sentTx.ID(), updateExisting, err
 }
