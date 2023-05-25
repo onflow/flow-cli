@@ -550,6 +550,25 @@ func TestAccountsAddContract_Integration(t *testing.T) {
 		assert.Equal(t, Donald().Address, c.Aliases[0].Address)
 	})
 
+	t.Run("Contract is Added to State", func(t *testing.T) {
+		state, flowkit := setupIntegration()
+		srvAcc, _ := state.EmulatorServiceAccount()
+
+		c, _ := state.Contracts().ByName(tests.ContractSimple.Name)
+		assert.Nil(t, c)
+
+		_, _, err := flowkit.AddContract(
+			ctx,
+			srvAcc,
+			resourceToContract(tests.ContractSimple),
+			UpdateExistingContract(false),
+		)
+		assert.NoError(t, err)
+
+		c, _ = state.Contracts().ByName(tests.ContractSimple.Name)
+		assert.NotNil(t, c)
+	})
+
 	t.Run("Add Contract No Overwrite", func(t *testing.T) {
 		state, flowkit := setupIntegration()
 		srvAcc, _ := state.EmulatorServiceAccount()
