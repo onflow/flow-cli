@@ -18,6 +18,12 @@
     "commit": "624ffd71bd2f86faf954d251f69d346ddff1446a"
   },
   {
+    "name": "Hybrid Custody Project",
+    "repo": "https://github.com/onflow/hybrid-custody-scaffold",
+    "description": "Starter for exploring & implementing Hybrid Custody.",
+    "commit": "53a34f6aa81897b6f27a0e5470e30c949cad2ac8"
+  },
+  {
     "name": "Web Dapp using FCL",
     "repo": "https://github.com/chasefleming/fcl-next-scaffold.git",
     "description": "Simple demo application using next.js and FCL with provided Cadence contracts.",
