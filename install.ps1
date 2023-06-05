@@ -69,11 +69,15 @@ catch {}
 
 Move-Item -Path "$directory\flow-cli.exe" -Destination "$directory\flow.exe" -Force
 
-if ($addToPath) {
+# Check if the directory is already in the PATH
+$existingPaths = [Environment]::GetEnvironmentVariable("PATH", [System.EnvironmentVariableTarget]::User).Split(';')
+
+if ($addToPath -and $existingPaths -notcontains $directory) {
     Write-Output "Adding to PATH ..."
-    $newPath = $Env:Path + ";$directory"
-    [System.Environment]::SetEnvironmentVariable("PATH", $newPath)
-    [System.Environment]::SetEnvironmentVariable("PATH", $newPath, [System.EnvironmentVariableTarget]::User)
+    $processPath = [System.Environment]::GetEnvironmentVariable('PATH', [System.EnvironmentVariableTarget]::Process) + ";$directory"
+    $userPath = [System.Environment]::GetEnvironmentVariable('PATH', [System.EnvironmentVariableTarget]::User) + ";$directory"
+    [System.Environment]::SetEnvironmentVariable("PATH", $processPath, [System.EnvironmentVariableTarget]::Process)
+    [System.Environment]::SetEnvironmentVariable("PATH", $userPath, [System.EnvironmentVariableTarget]::User)
 }
 
 Write-Output "Done."
