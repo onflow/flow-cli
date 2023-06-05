@@ -211,7 +211,7 @@ func Test_ConfigMultipleAccountsSimple(t *testing.T) {
 		},
 		"testnet-account": {
 			"address": "0x2c1162386b0a245f",
-			"key": "b8f4a1d5e3c02d6789b4f5d6a7c8e9fb0a1b2c3d4e5f60718293a4b5c6d7e8f9"
+			"key": "1234567890123456789012345678901234567890123456789012345678901234"
 		}
 	}`)
 
@@ -242,7 +242,7 @@ func Test_ConfigMultipleAccountsSimple(t *testing.T) {
 	assert.Equal(t, key.HashAlgo.String(), "SHA3_256")
 	assert.Equal(t, key.Index, 0)
 	assert.Equal(t, key.SigAlgo.String(), "ECDSA_P256")
-	assert.Equal(t, key.PrivateKey.String(), "0xb8f4a1d5e3c02d6789b4f5d6a7c8e9fb0a1b2c3d4e5f60718293a4b5c6d7e8f9")
+	assert.Equal(t, key.PrivateKey.String(), "0x1234567890123456789012345678901234567890123456789012345678901234")
 }
 
 func Test_ConfigMultipleAccountsAdvanced(t *testing.T) {
@@ -353,7 +353,7 @@ func Test_ConfigAccountsMap(t *testing.T) {
 		},
 		"testnet-account": {
 			"address": "3c1162386b0a245f",
-			"key": "b8f4a1d5e3c02d6789b4f5d6a7c8e9fb0a1b2c3d4e5f60718293a4b5c6d7e8f9"
+			"key": "1234567890123456789012345678901234567890123456789012345678901234"
 		}
 	}`)
 
@@ -381,7 +381,7 @@ func Test_ConfigAccountsMapWithEnvVars(t *testing.T) {
 		},
 		"testnet-account": {
 			"address": "3c1162386b0a245f",
-			"key": "b8f4a1d5e3c02d6789b4f5d6a7c8e9fb0a1b2c3d4e5f60718293a4b5c6d7e8f9"
+			"key": "1234567890123456789012345678901234567890123456789012345678901234"
 		}
 	}`)
 
