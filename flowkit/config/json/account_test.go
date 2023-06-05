@@ -369,6 +369,35 @@ func Test_ConfigAccountsMap(t *testing.T) {
 	assert.Equal(t, emulatorAccount.Name, "emulator-account")
 }
 
+func Test_ConfigAccountsMapWithEnvVars(t *testing.T) {
+
+	os.Setenv("FLOW_EMULATOR_ADDRESS", "f8d6e0586b0a20c7")
+	os.Setenv("FLOW_EMULATOR_KEY", "dd72967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47")
+
+	b := []byte(`{
+		"emulator-account": {
+			"address": "$FLOW_EMULATOR_ADDRESS",
+			"key": "$FLOW_EMULATOR_KEY"
+		},
+		"testnet-account": {
+			"address": "3c1162386b0a245f",
+			"key": "1232967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47"
+		}
+	}`)
+
+	var jsonAccounts jsonAccounts
+	err := json.Unmarshal(b, &jsonAccounts)
+	assert.NoError(t, err)
+
+	accounts, err := jsonAccounts.transformToConfig()
+	assert.NoError(t, err)
+	emulatorAccount, err := accounts.ByName("emulator-account")
+	assert.NoError(t, err)
+	assert.Equal(t, emulatorAccount.Address.String(), "f8d6e0586b0a20c7")
+	assert.Equal(t, emulatorAccount.Key.PrivateKey.String(), "0xdd72967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47")
+	assert.Equal(t, emulatorAccount.Name, "emulator-account")
+}
+
 func Test_TransformDefaultAccountToJSON(t *testing.T) {
 	privateKey, err := crypto.DecodePrivateKeyHex(crypto.ECDSA_P256, "1272967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47")
 	assert.NoError(t, err)

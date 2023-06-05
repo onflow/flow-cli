@@ -79,6 +79,14 @@ func transformSimpleToConfig(accountName string, a simpleAccount) (*config.Accou
 	}
 	key.PrivateKey = pkey
 
+	replacedAddress, _, err := tryReplaceEnv(a.Address)
+	if err != nil {
+		return nil, err
+	}
+	if replacedAddress != "" {
+		a.Address = replacedAddress
+	}
+
 	address, err := transformAddress(a.Address)
 	if err != nil {
 		return nil, err
