@@ -25,9 +25,9 @@ import (
 	"github.com/onflow/cadence"
 	jsoncdc "github.com/onflow/cadence/encoding/json"
 	"github.com/onflow/cadence/runtime"
-	emulator "github.com/onflow/flow-emulator"
-	"github.com/onflow/flow-emulator/convert/sdk"
-	"github.com/onflow/flow-emulator/server/backend"
+	"github.com/onflow/flow-emulator/adapters"
+	"github.com/onflow/flow-emulator/emulator"
+
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
 	flowGo "github.com/onflow/flow-go/model/flow"
@@ -43,7 +43,8 @@ type EmulatorKey struct {
 
 type EmulatorGateway struct {
 	emulator        *emulator.Blockchain
-	backend         *backend.Backend
+	adapter         *adapters.SDKAdapter
+	accessAdapter   *adapters.AccessAdapter
 	ctx             context.Context
 	logger          *zerolog.Logger
 	emulatorOptions []emulator.Option
@@ -70,9 +71,10 @@ func NewEmulatorGatewayWithOpts(key *EmulatorKey, opts ...func(*EmulatorGateway)
 	}
 
 	gateway.emulator = newEmulator(key, gateway.emulatorOptions...)
-	gateway.backend = backend.New(gateway.logger, gateway.emulator)
-	gateway.backend.EnableAutoMine()
-
+	logger := zerolog.Nop()
+	gateway.adapter = adapters.NewSDKAdapter(&logger, gateway.emulator)
+	gateway.accessAdapter = adapters.NewAccessAdapter(&logger, gateway.emulator)
+	gateway.emulator.EnableAutoMine()
 	return gateway
 }
 
@@ -101,7 +103,7 @@ func newEmulator(key *EmulatorKey, emulatorOptions ...emulator.Option) *emulator
 
 	opts = append(opts, emulatorOptions...)
 
-	b, err := emulator.NewBlockchain(opts...)
+	b, err := emulator.New(opts...)
 	if err != nil {
 		panic(err)
 	}
@@ -110,7 +112,7 @@ func newEmulator(key *EmulatorKey, emulatorOptions ...emulator.Option) *emulator
 }
 
 func (g *EmulatorGateway) GetAccount(address flow.Address) (*flow.Account, error) {
-	account, err := g.backend.GetAccount(g.ctx, address)
+	account, err := g.adapter.GetAccount(g.ctx, address)
 	if err != nil {
 		return nil, UnwrapStatusError(err)
 	}
@@ -118,7 +120,7 @@ func (g *EmulatorGateway) GetAccount(address flow.Address) (*flow.Account, error
 }
 
 func (g *EmulatorGateway) SendSignedTransaction(tx *flow.Transaction) (*flow.Transaction, error) {
-	err := g.backend.SendTransaction(context.Background(), *tx)
+	err := g.adapter.SendTransaction(context.Background(), *tx)
 	if err != nil {
 		return nil, UnwrapStatusError(err)
 	}
@@ -126,7 +128,7 @@ func (g *EmulatorGateway) SendSignedTransaction(tx *flow.Transaction) (*flow.Tra
 }
 
 func (g *EmulatorGateway) GetTransactionResult(ID flow.Identifier, _ bool) (*flow.TransactionResult, error) {
-	result, err := g.backend.GetTransactionResult(g.ctx, ID)
+	result, err := g.adapter.GetTransactionResult(g.ctx, ID)
 	if err != nil {
 		return nil, UnwrapStatusError(err)
 	}
@@ -134,7 +136,7 @@ func (g *EmulatorGateway) GetTransactionResult(ID flow.Identifier, _ bool) (*flo
 }
 
 func (g *EmulatorGateway) GetTransaction(id flow.Identifier) (*flow.Transaction, error) {
-	transaction, err := g.backend.GetTransaction(g.ctx, id)
+	transaction, err := g.adapter.GetTransaction(g.ctx, id)
 	if err != nil {
 		return nil, UnwrapStatusError(err)
 	}
@@ -152,7 +154,7 @@ func (g *EmulatorGateway) GetTransactionsByBlockID(_ flow.Identifier) ([]*flow.T
 }
 
 func (g *EmulatorGateway) Ping() error {
-	err := g.backend.Ping(g.ctx)
+	err := g.adapter.Ping(g.ctx)
 	if err != nil {
 		return UnwrapStatusError(err)
 	}
@@ -177,11 +179,11 @@ func (g *EmulatorGateway) executeScriptQuery(
 
 	var result []byte
 	if query.id != flow.EmptyID {
-		result, err = g.backend.ExecuteScriptAtBlockID(g.ctx, query.id, script, args)
+		result, err = g.adapter.ExecuteScriptAtBlockID(g.ctx, query.id, script, args)
 	} else if query.height > 0 {
-		result, err = g.backend.ExecuteScriptAtBlockHeight(g.ctx, query.height, script, args)
+		result, err = g.adapter.ExecuteScriptAtBlockHeight(g.ctx, query.height, script, args)
 	} else {
-		result, err = g.backend.ExecuteScriptAtLatestBlock(g.ctx, script, args)
+		result, err = g.adapter.ExecuteScriptAtLatestBlock(g.ctx, script, args)
 	}
 
 	if err != nil {
@@ -220,12 +222,12 @@ func (g *EmulatorGateway) ExecuteScriptAtID(
 }
 
 func (g *EmulatorGateway) GetLatestBlock() (*flow.Block, error) {
-	block, _, err := g.backend.GetLatestBlock(g.ctx, true)
+	block, _, err := g.adapter.GetLatestBlock(g.ctx, true)
 	if err != nil {
 		return nil, UnwrapStatusError(err)
 	}
 
-	return convertBlock(block), nil
+	return block, nil
 }
 
 func cadenceValuesToMessages(values []cadence.Value) ([][]byte, error) {
@@ -279,28 +281,12 @@ func (g *EmulatorGateway) GetEvents(
 }
 
 func (g *EmulatorGateway) getBlockEvent(height uint64, eventType string) flow.BlockEvents {
-	block, _, _ := g.backend.GetBlockByHeight(g.ctx, height)
-	events, _ := g.backend.GetEventsForBlockIDs(g.ctx, eventType, []flow.Identifier{flow.Identifier(block.ID())})
-
-	result := flow.BlockEvents{
-		BlockID:        flow.Identifier(block.ID()),
-		Height:         block.Header.Height,
-		BlockTimestamp: block.Header.Timestamp,
-		Events:         []flow.Event{},
-	}
-
-	for _, e := range events {
-		if e.BlockID == block.ID() {
-			result.Events, _ = sdk.FlowEventsToSDK(e.Events)
-			return result
-		}
-	}
-
-	return result
+	events, _ := g.adapter.GetEventsForHeightRange(g.ctx, eventType, height, height)
+	return *events[0]
 }
 
 func (g *EmulatorGateway) GetCollection(id flow.Identifier) (*flow.Collection, error) {
-	collection, err := g.backend.GetCollectionByID(g.ctx, id)
+	collection, err := g.adapter.GetCollectionByID(g.ctx, id)
 	if err != nil {
 		return nil, UnwrapStatusError(err)
 	}
@@ -308,23 +294,23 @@ func (g *EmulatorGateway) GetCollection(id flow.Identifier) (*flow.Collection, e
 }
 
 func (g *EmulatorGateway) GetBlockByID(id flow.Identifier) (*flow.Block, error) {
-	block, _, err := g.backend.GetBlockByID(g.ctx, id)
+	block, _, err := g.adapter.GetBlockByID(g.ctx, id)
 	if err != nil {
 		return nil, UnwrapStatusError(err)
 	}
-	return convertBlock(block), nil
+	return block, nil
 }
 
 func (g *EmulatorGateway) GetBlockByHeight(height uint64) (*flow.Block, error) {
-	block, _, err := g.backend.GetBlockByHeight(g.ctx, height)
+	block, _, err := g.adapter.GetBlockByHeight(g.ctx, height)
 	if err != nil {
 		return nil, UnwrapStatusError(err)
 	}
-	return convertBlock(block), nil
+	return block, nil
 }
 
 func (g *EmulatorGateway) GetLatestProtocolStateSnapshot() ([]byte, error) {
-	snapshot, err := g.backend.GetLatestProtocolStateSnapshot(g.ctx)
+	snapshot, err := g.adapter.GetLatestProtocolStateSnapshot(g.ctx)
 	if err != nil {
 		return nil, UnwrapStatusError(err)
 	}
@@ -338,10 +324,6 @@ func (g *EmulatorGateway) SecureConnection() bool {
 
 func (g *EmulatorGateway) CoverageReport() *runtime.CoverageReport {
 	return g.emulator.CoverageReport()
-}
-
-func (g *EmulatorGateway) SetCoverageReport(coverageReport *runtime.CoverageReport) {
-	g.emulator.SetCoverageReport(coverageReport)
 }
 
 func (g *EmulatorGateway) RollbackToBlockHeight(height uint64) error {
