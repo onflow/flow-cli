@@ -6,10 +6,10 @@ require (
 	github.com/ethereum/go-ethereum v1.10.22
 	github.com/gosuri/uilive v0.0.4
 	github.com/lmars/go-slip10 v0.0.0-20190606092855-400ba44fee12
-	github.com/onflow/cadence v0.39.1
-	github.com/onflow/flow-emulator v0.50.1
-	github.com/onflow/flow-go v0.30.1-0.20230602200347-2a0e824db380
-	github.com/onflow/flow-go-sdk v0.41.0
+	github.com/onflow/cadence v0.39.2
+	github.com/onflow/flow-emulator v0.50.3
+	github.com/onflow/flow-go v0.31.1-0.20230606232908-66e59a929e3d
+	github.com/onflow/flow-go-sdk v0.41.1
 	github.com/onflow/flow-go/crypto v0.24.7
 	github.com/pkg/errors v0.9.1
 	github.com/rs/zerolog v1.29.0
@@ -62,7 +62,7 @@ require (
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.2.3 // indirect
 	github.com/googleapis/gax-go/v2 v2.7.1 // indirect
-	github.com/grpc-ecosystem/grpc-gateway/v2 v2.7.0 // indirect
+	github.com/grpc-ecosystem/grpc-gateway/v2 v2.11.3 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/hashicorp/golang-lru v0.5.5-0.20210104140557-80c98217689d // indirect
@@ -109,7 +109,7 @@ require (
 	github.com/onflow/flow-core-contracts/lib/go/templates v1.2.3 // indirect
 	github.com/onflow/flow-ft/lib/go/contracts v0.7.0 // indirect
 	github.com/onflow/flow-nft/lib/go/contracts v0.0.0-20220727161549-d59b1e547ac4 // indirect
-	github.com/onflow/flow/protobuf/go/flow v0.3.2-0.20230428213521-89bcc9e8517e // indirect
+	github.com/onflow/flow/protobuf/go/flow v0.3.2-0.20230602212908-08fc6536d391 // indirect
 	github.com/onflow/fusd/lib/go/contracts v0.0.0-20211021081023-ae9de8fb2c7e // indirect
 	github.com/onflow/nft-storefront/lib/go/contracts v0.0.0-20221222181731-14b90207cead // indirect
 	github.com/onflow/sdks v0.5.0 // indirect
