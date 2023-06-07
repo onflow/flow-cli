@@ -211,7 +211,7 @@ func Test_ConfigMultipleAccountsSimple(t *testing.T) {
 		},
 		"testnet-account": {
 			"address": "0x2c1162386b0a245f",
-			"key": "1232967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47"
+			"key": "1234567890123456789012345678901234567890123456789012345678901234"
 		}
 	}`)
 
@@ -242,7 +242,7 @@ func Test_ConfigMultipleAccountsSimple(t *testing.T) {
 	assert.Equal(t, key.HashAlgo.String(), "SHA3_256")
 	assert.Equal(t, key.Index, 0)
 	assert.Equal(t, key.SigAlgo.String(), "ECDSA_P256")
-	assert.Equal(t, key.PrivateKey.String(), "0x1232967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47")
+	assert.Equal(t, key.PrivateKey.String(), "0x1234567890123456789012345678901234567890123456789012345678901234")
 }
 
 func Test_ConfigMultipleAccountsAdvanced(t *testing.T) {
@@ -353,7 +353,7 @@ func Test_ConfigAccountsMap(t *testing.T) {
 		},
 		"testnet-account": {
 			"address": "3c1162386b0a245f",
-			"key": "1232967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47"
+			"key": "1234567890123456789012345678901234567890123456789012345678901234"
 		}
 	}`)
 
@@ -366,6 +366,35 @@ func Test_ConfigAccountsMap(t *testing.T) {
 	emulatorAccount, err := accounts.ByName("emulator-account")
 	assert.NoError(t, err)
 	assert.Equal(t, emulatorAccount.Address.String(), "f8d6e0586b0a20c7")
+	assert.Equal(t, emulatorAccount.Name, "emulator-account")
+}
+
+func Test_ConfigAccountsMapWithEnvVars(t *testing.T) {
+
+	os.Setenv("FLOW_EMULATOR_ADDRESS", "f8d6e0586b0a20c7")
+	os.Setenv("FLOW_EMULATOR_KEY", "dd72967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47")
+
+	b := []byte(`{
+		"emulator-account": {
+			"address": "$FLOW_EMULATOR_ADDRESS",
+			"key": "$FLOW_EMULATOR_KEY"
+		},
+		"testnet-account": {
+			"address": "3c1162386b0a245f",
+			"key": "1234567890123456789012345678901234567890123456789012345678901234"
+		}
+	}`)
+
+	var jsonAccounts jsonAccounts
+	err := json.Unmarshal(b, &jsonAccounts)
+	assert.NoError(t, err)
+
+	accounts, err := jsonAccounts.transformToConfig()
+	assert.NoError(t, err)
+	emulatorAccount, err := accounts.ByName("emulator-account")
+	assert.NoError(t, err)
+	assert.Equal(t, emulatorAccount.Address.String(), "f8d6e0586b0a20c7")
+	assert.Equal(t, emulatorAccount.Key.PrivateKey.String(), "0xdd72967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47")
 	assert.Equal(t, emulatorAccount.Name, "emulator-account")
 }
 
