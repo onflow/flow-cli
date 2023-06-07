@@ -24,8 +24,8 @@ import (
 	"os"
 	"sync"
 
-	emulator "github.com/onflow/flow-emulator"
 	"github.com/onflow/flow-emulator/cmd/emulator/start"
+	"github.com/onflow/flow-emulator/emulator"
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
