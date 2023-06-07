@@ -27,7 +27,7 @@
     "name": "Web Dapp using FCL",
     "repo": "https://github.com/chasefleming/fcl-next-scaffold.git",
     "description": "Simple demo application using next.js and FCL with provided Cadence contracts.",
-    "commit": "b45798b6c1143f2ef823685ddf877e6dc9da2fb3",
+    "commit": "ce9d91169772d5054475977b7b8c5a255d09f98d",
     "type": "web"
   },
   {
