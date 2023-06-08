@@ -33,7 +33,11 @@ var Cmd = &cobra.Command{
 		if len(args) > 0 {
 			execute.Execute(args, nil)
 		} else {
-			execute.RunREPL()
+			repl, err := execute.NewConsoleREPL()
+			if err != nil {
+				panic(err)
+			}
+			repl.Run()
 		}
 	},
 }
