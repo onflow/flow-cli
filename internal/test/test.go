@@ -129,6 +129,14 @@ func testCode(
 	runner := cdcTests.NewTestRunner()
 	if coverageEnabled {
 		coverageReport = runtime.NewCoverageReport()
+		coverageReport.WithLocationFilter(func(location common.Location) bool {
+			_, addressLoc := location.(common.AddressLocation)
+			_, stringLoc := location.(common.StringLocation)
+			// We only allow inspection of AddressLocation or StringLocation,
+			// since scripts and transactions cannot be attributed to their
+			// source files anyway.
+			return addressLoc || stringLoc
+		})
 		runner = runner.WithCoverageReport(coverageReport)
 	}
 

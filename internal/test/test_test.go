@@ -212,8 +212,10 @@ func TestExecutingTests(t *testing.T) {
 		results, coverageReport, err := testCode(testFiles, state, true)
 
 		require.NoError(t, err)
-		require.Len(t, results, 1)
-		assert.NoError(t, results[script.Filename][0].Error)
+		require.Len(t, results[script.Filename], 3)
+		for _, result := range results[script.Filename] {
+			assert.NoError(t, result.Error)
+		}
 
 		location := common.StringLocation("FooContract")
 		coverage := coverageReport.Coverage[location]
@@ -230,12 +232,32 @@ func TestExecutingTests(t *testing.T) {
 			coverage.LineHits,
 		)
 
+		assert.Equal(t, 1, coverageReport.TotalLocations())
 		assert.ElementsMatch(
 			t,
 			[]string{
 				"s.7465737400000000000000000000000000000000000000000000000000000000",
 				"I.Crypto",
 				"I.Test",
+				"A.0ae53cb6e3f42a79.FlowToken",
+				"A.f8d6e0586b0a20c7.FlowStorageFees",
+				"A.f8d6e0586b0a20c7.FlowDKG",
+				"A.f8d6e0586b0a20c7.ExampleNFT",
+				"A.f8d6e0586b0a20c7.NonFungibleToken",
+				"A.f8d6e0586b0a20c7.FlowIDTableStaking",
+				"A.f8d6e0586b0a20c7.FlowClusterQC",
+				"A.f8d6e0586b0a20c7.NodeVersionBeacon",
+				"A.f8d6e0586b0a20c7.StakingProxy",
+				"A.f8d6e0586b0a20c7.FUSD",
+				"A.e5a8b7f23e8b548f.FlowFees",
+				"A.ee82856bf20e2aa6.FungibleToken",
+				"A.f8d6e0586b0a20c7.FlowStakingCollection",
+				"A.f8d6e0586b0a20c7.MetadataViews",
+				"A.f8d6e0586b0a20c7.NFTStorefrontV2",
+				"A.f8d6e0586b0a20c7.NFTStorefront",
+				"A.f8d6e0586b0a20c7.LockedTokens",
+				"A.f8d6e0586b0a20c7.FlowServiceAccount",
+				"A.f8d6e0586b0a20c7.FlowEpoch",
 			},
 			coverageReport.ExcludedLocationIDs(),
 		)
