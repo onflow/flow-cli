@@ -48,6 +48,8 @@ type flagsTests struct {
 
 var testFlags = flagsTests{}
 
+var status = 0
+
 var TestCommand = &command.Command{
 	Cmd: &cobra.Command{
 		Use:     "test <filename>",
@@ -56,8 +58,9 @@ var TestCommand = &command.Command{
 		Args:    cobra.MinimumNArgs(1),
 		GroupID: "tools",
 	},
-	Flags: &testFlags,
-	RunS:  run,
+	Flags:  &testFlags,
+	RunS:   run,
+	Status: &status,
 }
 
 func run(
@@ -127,6 +130,12 @@ func testCode(
 			return nil, nil, err
 		}
 		testResults[scriptPath] = results
+		for _, result := range results {
+			if result.Error != nil {
+				status = 1
+				break
+			}
+		}
 	}
 	return testResults, coverageReport, nil
 }
