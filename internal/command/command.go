@@ -66,10 +66,11 @@ type RunWithState func(
 ) (Result, error)
 
 type Command struct {
-	Cmd   *cobra.Command
-	Flags any
-	Run   run
-	RunS  RunWithState
+	Cmd    *cobra.Command
+	Flags  any
+	Run    run
+	RunS   RunWithState
+	Status *int
 }
 
 const (
