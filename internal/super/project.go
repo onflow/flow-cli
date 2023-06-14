@@ -174,6 +174,13 @@ func (p *project) watch() error {
 			case created:
 				_ = p.addContract(contract.path, contract.account)
 			case changed:
+				// Remove contract before updating
+				// This is so one can develop without having to restart the emulator when hitting contract upgrade issues
+				// See: https://developers.flow.com/cadence/language/contract-updatability
+				err = p.removeContract(contract.path, contract.account)
+				if err != nil {
+					return err
+				}
 				_ = p.addContract(contract.path, contract.account)
 			case renamed:
 				p.renameContract(contract.oldPath, contract.path)

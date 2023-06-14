@@ -327,15 +327,9 @@ func (f *Flowkit) AddContract(
 	}
 
 	if exists && updateExisting {
-		// special case for emulator updates, where we remove and add a contract because it allows us to have more freedom in changes.
-		// Updating contracts is limited as described in https://developers.flow.com/cadence/language/contract-updatability
-		if f.network == config.EmulatorNetwork {
-			_, _ = f.RemoveContract(ctx, account, name) // ignore failure as it's meant to be best-effort
-		} else {
-			tx, err = transactions.NewUpdateAccountContract(account, name, program.Code())
-			if err != nil {
-				return flow.EmptyID, false, err
-			}
+		tx, err = transactions.NewUpdateAccountContract(account, name, program.Code())
+		if err != nil {
+			return flow.EmptyID, false, err
 		}
 	}
 
