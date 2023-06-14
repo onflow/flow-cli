@@ -22,16 +22,13 @@ import (
 	"context"
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/onflow/cadence"
-	"github.com/onflow/flow-go-sdk"
-	grpcAccess "github.com/onflow/flow-go-sdk/access/grpc"
 	"github.com/onflow/flow-go/utils/grpcutils"
+	"github.com/onflow/flow/protobuf/go/flow/execution"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
-	"github.com/onflow/flow-cli/pkg/flowkit"
 	"github.com/onflow/flow-cli/pkg/flowkit/util"
 )
 
@@ -41,24 +38,28 @@ const maxGRPCMessageSize = 1024 * 1024 * 20
 
 // GrpcGateway is a gateway implementation that uses the Flow Access gRPC API.
 type GrpcGateway struct {
-	client       *grpcAccess.Client
+	client       execution.ExecutionAPIClient
 	ctx          context.Context
 	secureClient bool
 }
 
 // NewGrpcGateway returns a new gRPC gateway.
 func NewGrpcGateway(host string) (*GrpcGateway, error) {
-
-	gClient, err := grpcAccess.NewClient(
+	conn, err := grpc.Dial(
 		host,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(maxGRPCMessageSize)),
 	)
-	ctx := context.Background()
-
-	if err != nil || gClient == nil {
+	if err != nil {
 		return nil, fmt.Errorf("failed to connect to host %s", host)
 	}
+
+	return newGrpcGatewayWithConn(conn)
+}
+
+func newGrpcGatewayWithConn(conn *grpc.ClientConn) (*GrpcGateway, error) {
+	gClient := execution.NewExecutionAPIClient(conn)
+	ctx := context.Background()
 
 	return &GrpcGateway{
 		client:       gClient,
@@ -74,140 +75,144 @@ func NewSecureGrpcGateway(host, hostNetworkKey string) (*GrpcGateway, error) {
 		return nil, fmt.Errorf("failed to create secure GRPC dial options with network key \"%s\": %w", hostNetworkKey, err)
 	}
 
-	gClient, err := grpcAccess.NewClient(
+	conn, err := grpc.Dial(
 		host,
 		secureDialOpts,
 		grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(maxGRPCMessageSize)),
 	)
-	ctx := context.Background()
 
-	if err != nil || gClient == nil {
+	if err != nil {
 		return nil, fmt.Errorf("failed to connect to host %s", host)
 	}
 
-	return &GrpcGateway{
-		client:       gClient,
-		ctx:          ctx,
-		secureClient: true,
-	}, nil
+	return newGrpcGatewayWithConn(conn)
 }
 
-// GetAccount gets an account by address from the Flow Access API.
-func (g *GrpcGateway) GetAccount(address flow.Address) (*flow.Account, error) {
-	account, err := g.client.GetAccountAtLatestBlock(g.ctx, address)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get account with address %s: %w", address, err)
-	}
-
-	return account, nil
-}
-
-// SendSignedTransaction sends a transaction to flow that is already prepared and signed.
-func (g *GrpcGateway) SendSignedTransaction(transaction *flowkit.Transaction) (*flow.Transaction, error) {
-	tx := transaction.FlowTransaction()
-
-	err := g.client.SendTransaction(g.ctx, *tx)
-	if err != nil {
-		return nil, fmt.Errorf("failed to submit transaction: %w", err)
-	}
-
-	return tx, nil
-}
-
-// GetTransaction gets a transaction by ID from the Flow Access API.
-func (g *GrpcGateway) GetTransaction(ID flow.Identifier) (*flow.Transaction, error) {
-	return g.client.GetTransaction(g.ctx, ID)
-}
-
-func (g *GrpcGateway) GetTransactionResultsByBlockID(blockID flow.Identifier) ([]*flow.TransactionResult, error) {
-	return g.client.GetTransactionResultsByBlockID(g.ctx, blockID)
-}
-
-func (g *GrpcGateway) GetTransactionsByBlockID(blockID flow.Identifier) ([]*flow.Transaction, error) {
-	return g.client.GetTransactionsByBlockID(g.ctx, blockID)
-}
-
-// GetTransactionResult gets a transaction result by ID from the Flow Access API.
-func (g *GrpcGateway) GetTransactionResult(ID flow.Identifier, waitSeal bool) (*flow.TransactionResult, error) {
-	result, err := g.client.GetTransactionResult(g.ctx, ID)
+// // GetAccount gets an account by address from the Flow Access API.
+//
+//	func (g *GrpcGateway) GetAccount(address flow.Address) (*flow.Account, error) {
+//		account, err := g.client.GetAccountAtLatestBlock(g.ctx, address)
+//		if err != nil {
+//			return nil, fmt.Errorf("failed to get account with address %s: %w", address, err)
+//		}
+//
+//		return account, nil
+//	}
+//
+// // SendSignedTransaction sends a transaction to flow that is already prepared and signed.
+//
+//	func (g *GrpcGateway) SendSignedTransaction(transaction *flowkit.Transaction) (*flow.Transaction, error) {
+//		tx := transaction.FlowTransaction()
+//
+//		err := g.client.SendTransaction(g.ctx, *tx)
+//		if err != nil {
+//			return nil, fmt.Errorf("failed to submit transaction: %w", err)
+//		}
+//
+//		return tx, nil
+//	}
+//
+// // GetTransaction gets a transaction by ID from the Flow Access API.
+//
+//	func (g *GrpcGateway) GetTransaction(ID flow.Identifier) (*flow.Transaction, error) {
+//		return g.client.GetTransaction(g.ctx, ID)
+//	}
+//
+//	func (g *GrpcGateway) GetTransactionResultsByBlockID(blockID flow.Identifier) ([]*flow.TransactionResult, error) {
+//		return g.client.GetTransactionResultsByBlockID(g.ctx, blockID)
+//	}
+//
+//	func (g *GrpcGateway) GetTransactionsByBlockID(blockID flow.Identifier) ([]*flow.Transaction, error) {
+//		return g.client.GetTransactionsByBlockID(g.ctx, blockID)
+//	}
+//
+// // GetTransactionResult gets a transaction result by ID from the Flow Access API.
+//
+//	func (g *GrpcGateway) GetTransactionResult(ID flow.Identifier, waitSeal bool) (*flow.TransactionResult, error) {
+//		result, err := g.client.GetTransactionResult(g.ctx, ID)
+//		if err != nil {
+//			return nil, err
+//		}
+//
+//		if result.Status != flow.TransactionStatusSealed && waitSeal {
+//			time.Sleep(time.Second)
+//			return g.GetTransactionResult(ID, waitSeal)
+//		}
+//
+//		return result, nil
+//	}
+//
+// ExecuteScript executes a script on Flow through the Access API.
+func (g *GrpcGateway) ExecuteScript(script []byte, arguments []cadence.Value, query *util.ScriptQuery) (cadence.Value, error) {
+	args, err := cadenceValuesToMessages(arguments)
 	if err != nil {
 		return nil, err
 	}
 
-	if result.Status != flow.TransactionStatusSealed && waitSeal {
-		time.Sleep(time.Second)
-		return g.GetTransactionResult(ID, waitSeal)
+	opts := &execution.ExecuteScriptAtBlockIDRequest{
+		BlockId:   query.ID.Bytes(),
+		Script:    script,
+		Arguments: args,
 	}
-
-	return result, nil
-}
-
-// ExecuteScript executes a script on Flow through the Access API.
-func (g *GrpcGateway) ExecuteScript(script []byte, arguments []cadence.Value, query *util.ScriptQuery) (cadence.Value, error) {
-	var value cadence.Value
-	var err error
-
-	if query.ID != flow.EmptyID {
-		value, err = g.client.ExecuteScriptAtBlockID(g.ctx, query.ID, script, arguments)
-	} else if query.Height > 0 {
-		value, err = g.client.ExecuteScriptAtBlockHeight(g.ctx, query.Height, script, arguments)
-	} else {
-		value, err = g.client.ExecuteScriptAtLatestBlock(g.ctx, script, arguments)
-	}
-
+	res, err := g.client.ExecuteScriptAtBlockID(g.ctx, opts)
 	if err != nil {
 		return nil, fmt.Errorf("failed to submit executable script: %w", err)
 	}
 
-	return value, nil
+	cdcValue, err := messageToCadenceValue(res.GetValue())
+	if err != nil {
+		return nil, err
+	}
+
+	return cdcValue, nil
 }
 
-// GetLatestBlock gets the latest block on Flow through the Access API.
-func (g *GrpcGateway) GetLatestBlock() (*flow.Block, error) {
-	return g.client.GetLatestBlock(g.ctx, true)
-}
-
-// GetBlockByID get block by ID from the Flow Access API.
-func (g *GrpcGateway) GetBlockByID(id flow.Identifier) (*flow.Block, error) {
-	return g.client.GetBlockByID(g.ctx, id)
-}
-
-// GetBlockByHeight get block by height from the Flow Access API.
-func (g *GrpcGateway) GetBlockByHeight(height uint64) (*flow.Block, error) {
-	return g.client.GetBlockByHeight(g.ctx, height)
-}
-
-// GetEvents gets events by name and block range from the Flow Access API.
-func (g *GrpcGateway) GetEvents(
-	eventType string,
-	startHeight uint64,
-	endHeight uint64,
-) ([]flow.BlockEvents, error) {
-
-	events, err := g.client.GetEventsForHeightRange(
-		g.ctx,
-		eventType,
-		startHeight,
-		endHeight,
-	)
-
-	return events, err
-}
-
-// GetCollection gets a collection by ID from the Flow Access API.
-func (g *GrpcGateway) GetCollection(id flow.Identifier) (*flow.Collection, error) {
-	return g.client.GetCollection(g.ctx, id)
-}
-
-// GetLatestProtocolStateSnapshot gets the latest finalized protocol state snapshot
-func (g *GrpcGateway) GetLatestProtocolStateSnapshot() ([]byte, error) {
-	return g.client.GetLatestProtocolStateSnapshot(g.ctx)
-}
-
-// Ping is used to check if the access node is alive and healthy.
-func (g *GrpcGateway) Ping() error {
-	return g.client.Ping(g.ctx)
-}
+// // GetLatestBlock gets the latest block on Flow through the Access API.
+// func (g *GrpcGateway) GetLatestBlock() (*flow.Block, error) {
+// 	return g.client.GetLatestBlock(g.ctx, true)
+// }
+//
+// // GetBlockByID get block by ID from the Flow Access API.
+// func (g *GrpcGateway) GetBlockByID(id flow.Identifier) (*flow.Block, error) {
+// 	return g.client.GetBlockByID(g.ctx, id)
+// }
+//
+// // GetBlockByHeight get block by height from the Flow Access API.
+// func (g *GrpcGateway) GetBlockByHeight(height uint64) (*flow.Block, error) {
+// 	return g.client.GetBlockByHeight(g.ctx, height)
+// }
+//
+// // GetEvents gets events by name and block range from the Flow Access API.
+// func (g *GrpcGateway) GetEvents(
+// 	eventType string,
+// 	startHeight uint64,
+// 	endHeight uint64,
+// ) ([]flow.BlockEvents, error) {
+//
+// 	events, err := g.client.GetEventsForHeightRange(
+// 		g.ctx,
+// 		eventType,
+// 		startHeight,
+// 		endHeight,
+// 	)
+//
+// 	return events, err
+// }
+//
+// // GetCollection gets a collection by ID from the Flow Access API.
+// func (g *GrpcGateway) GetCollection(id flow.Identifier) (*flow.Collection, error) {
+// 	return g.client.GetCollection(g.ctx, id)
+// }
+//
+// // GetLatestProtocolStateSnapshot gets the latest finalized protocol state snapshot
+// func (g *GrpcGateway) GetLatestProtocolStateSnapshot() ([]byte, error) {
+// 	return g.client.GetLatestProtocolStateSnapshot(g.ctx)
+// }
+//
+// // Ping is used to check if the access node is alive and healthy.
+// func (g *GrpcGateway) Ping() error {
+// 	return g.client.Ping(g.ctx)
+// }
 
 // SecureConnection is used to log warning if a service should be using a secure client but is not
 func (g *GrpcGateway) SecureConnection() bool {
