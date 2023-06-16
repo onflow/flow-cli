@@ -61,5 +61,12 @@
     "commit": "5c68d818e9bccf22409feb9759021e090c055e48",
     "folder": "example",
     "type": "mobile"
+  },
+  {
+    "name": "Reat Native simple example",
+    "repo": "https://github.com/jribbink/fcl-react-native-scaffold",
+    "description": "React Native (Expo) example demonstrating FCL and Flow interactions.",
+    "commit": "51c22c360db48e4eb44c960d79dab0b7e693d8b4",
+    "type": "mobile"
   }
 ]
