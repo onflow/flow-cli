@@ -215,7 +215,7 @@ func TestExecutingTests(t *testing.T) {
 		require.Len(t, results, 1)
 		assert.NoError(t, results[script.Filename][0].Error)
 
-		location := common.StringLocation("FooContract.cdc")
+		location := common.StringLocation("FooContract")
 		coverage := coverageReport.Coverage[location]
 
 		assert.Equal(t, []int{}, coverage.MissedLines())

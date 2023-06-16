@@ -354,7 +354,7 @@ var TestScriptSimpleFailing = Resource{
 var TestScriptWithImport = Resource{
 	Filename: "testScriptWithImport.cdc",
 	Source: []byte(`
-        import Hello from "contractHello.cdc"
+        import "Hello"
 
         pub fun testSimple() {
             let hello = Hello()
@@ -378,8 +378,8 @@ var TestScriptWithHelperImport = Resource{
 var TestScriptWithRelativeImports = Resource{
 	Filename: "testScriptWithRelativeImport.cdc",
 	Source: []byte(`
-        import FooContract from "../contracts/FooContract.cdc"
-        import Hello from "../contracts/contractHello.cdc"
+        import "FooContract"
+        import "Hello"
 
         pub fun testSimple() {
             let hello = Hello()
@@ -406,7 +406,7 @@ var TestScriptWithFileRead = Resource{
 var TestScriptWithCoverage = Resource{
 	Filename: "testScriptWithCoverage.cdc",
 	Source: []byte(`
-		import FooContract from "FooContract.cdc"
+		import "FooContract"
 
 		pub let foo = FooContract()
 
