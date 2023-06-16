@@ -42,9 +42,14 @@ import (
 // are considered to be helper/utility scripts for test files.
 const helperScriptSubstr = "_helper"
 
+// When the value of flagsTests.CoverCode equals "contracts",
+// scripts and transactions are excluded from coverage report.
+const contractsCoverCode = "contracts"
+
 type flagsTests struct {
 	Cover        bool   `default:"false" flag:"cover" info:"Use the cover flag to calculate coverage report"`
 	CoverProfile string `default:"coverage.json" flag:"coverprofile" info:"Filename to write the calculated coverage report"`
+	CoverCode    string `default:"all" flag:"covercode" info:"Use the covercode flag to calculate coverage report only for certain types of code. Available values are \"all\" & \"contracts\""`
 }
 
 var testFlags = flagsTests{}
@@ -86,7 +91,7 @@ func run(
 		testFiles[filename] = code
 	}
 
-	res, coverageReport, err := testCode(testFiles, state, testFlags.Cover)
+	res, coverageReport, err := testCode(testFiles, state, testFlags)
 	if err != nil {
 		return nil, err
 	}
@@ -123,20 +128,24 @@ func run(
 func testCode(
 	testFiles map[string][]byte,
 	state *flowkit.State,
-	coverageEnabled bool,
+	flags flagsTests,
 ) (map[string]cdcTests.Results, *runtime.CoverageReport, error) {
 	var coverageReport *runtime.CoverageReport
 	runner := cdcTests.NewTestRunner()
-	if coverageEnabled {
+	if flags.Cover {
 		coverageReport = runtime.NewCoverageReport()
-		coverageReport.WithLocationFilter(func(location common.Location) bool {
-			_, addressLoc := location.(common.AddressLocation)
-			_, stringLoc := location.(common.StringLocation)
-			// We only allow inspection of AddressLocation or StringLocation,
-			// since scripts and transactions cannot be attributed to their
-			// source files anyway.
-			return addressLoc || stringLoc
-		})
+		if flags.CoverCode == contractsCoverCode {
+			coverageReport.WithLocationFilter(
+				func(location common.Location) bool {
+					_, addressLoc := location.(common.AddressLocation)
+					_, stringLoc := location.(common.StringLocation)
+					// We only allow inspection of AddressLocation or StringLocation,
+					// since scripts and transactions cannot be attributed to their
+					// source files anyway.
+					return addressLoc || stringLoc
+				},
+			)
+		}
 		runner = runner.WithCoverageReport(coverageReport)
 	}
 

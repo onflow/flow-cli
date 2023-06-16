@@ -41,7 +41,7 @@ func TestExecutingTests(t *testing.T) {
 		testFiles := map[string][]byte{
 			script.Filename: script.Source,
 		}
-		results, _, err := testCode(testFiles, state, false)
+		results, _, err := testCode(testFiles, state, flagsTests{})
 
 		require.NoError(t, err)
 		require.Len(t, results, 1)
@@ -56,7 +56,7 @@ func TestExecutingTests(t *testing.T) {
 		testFiles := map[string][]byte{
 			script.Filename: script.Source,
 		}
-		results, _, err := testCode(testFiles, state, false)
+		results, _, err := testCode(testFiles, state, flagsTests{})
 
 		require.NoError(t, err)
 		require.Len(t, results, 1)
@@ -81,7 +81,7 @@ func TestExecutingTests(t *testing.T) {
 		testFiles := map[string][]byte{
 			script.Filename: script.Source,
 		}
-		results, _, err := testCode(testFiles, state, false)
+		results, _, err := testCode(testFiles, state, flagsTests{})
 
 		require.NoError(t, err)
 		require.Len(t, results, 1)
@@ -121,7 +121,7 @@ func TestExecutingTests(t *testing.T) {
 		testFiles := map[string][]byte{
 			script.Filename: script.Source,
 		}
-		results, _, err := testCode(testFiles, state, false)
+		results, _, err := testCode(testFiles, state, flagsTests{})
 
 		require.NoError(t, err)
 		require.Len(t, results, 1)
@@ -137,7 +137,7 @@ func TestExecutingTests(t *testing.T) {
 		testFiles := map[string][]byte{
 			script.Filename: script.Source,
 		}
-		results, _, err := testCode(testFiles, state, false)
+		results, _, err := testCode(testFiles, state, flagsTests{})
 
 		require.NoError(t, err)
 		require.Len(t, results, 1)
@@ -161,7 +161,7 @@ func TestExecutingTests(t *testing.T) {
 		testFiles := map[string][]byte{
 			script.Filename: script.Source,
 		}
-		_, _, err := testCode(testFiles, state, false)
+		_, _, err := testCode(testFiles, state, flagsTests{})
 
 		require.Error(t, err)
 		assert.Error(
@@ -186,7 +186,7 @@ func TestExecutingTests(t *testing.T) {
 		testFiles := map[string][]byte{
 			script.Filename: script.Source,
 		}
-		results, _, err := testCode(testFiles, state, false)
+		results, _, err := testCode(testFiles, state, flagsTests{})
 
 		require.NoError(t, err)
 		require.Len(t, results, 1)
@@ -209,7 +209,89 @@ func TestExecutingTests(t *testing.T) {
 		testFiles := map[string][]byte{
 			script.Filename: script.Source,
 		}
-		results, coverageReport, err := testCode(testFiles, state, true)
+		flags := flagsTests{
+			Cover: true,
+		}
+		results, coverageReport, err := testCode(testFiles, state, flags)
+
+		require.NoError(t, err)
+		require.Len(t, results[script.Filename], 3)
+		for _, result := range results[script.Filename] {
+			assert.NoError(t, result.Error)
+		}
+
+		location := common.StringLocation("FooContract")
+		coverage := coverageReport.Coverage[location]
+
+		assert.Equal(t, []int{}, coverage.MissedLines())
+		assert.Equal(t, 15, coverage.Statements)
+		assert.Equal(t, "100.0%", coverage.Percentage())
+		assert.EqualValues(
+			t,
+			map[int]int{
+				6: 1, 14: 1, 18: 10, 19: 1, 20: 9, 21: 1, 22: 8, 23: 1,
+				24: 7, 25: 1, 26: 6, 27: 1, 30: 5, 31: 4, 34: 1,
+			},
+			coverage.LineHits,
+		)
+
+		assert.True(t, coverageReport.TotalLocations() > 1)
+		assert.ElementsMatch(
+			t,
+			[]string{
+				"s.7465737400000000000000000000000000000000000000000000000000000000",
+				"I.Crypto",
+				"I.Test",
+				"A.0ae53cb6e3f42a79.FlowToken",
+				"A.f8d6e0586b0a20c7.FlowStorageFees",
+				"A.f8d6e0586b0a20c7.FlowDKG",
+				"A.f8d6e0586b0a20c7.ExampleNFT",
+				"A.f8d6e0586b0a20c7.NonFungibleToken",
+				"A.f8d6e0586b0a20c7.FlowIDTableStaking",
+				"A.f8d6e0586b0a20c7.FlowClusterQC",
+				"A.f8d6e0586b0a20c7.NodeVersionBeacon",
+				"A.f8d6e0586b0a20c7.StakingProxy",
+				"A.f8d6e0586b0a20c7.FUSD",
+				"A.e5a8b7f23e8b548f.FlowFees",
+				"A.ee82856bf20e2aa6.FungibleToken",
+				"A.f8d6e0586b0a20c7.FlowStakingCollection",
+				"A.f8d6e0586b0a20c7.MetadataViews",
+				"A.f8d6e0586b0a20c7.NFTStorefrontV2",
+				"A.f8d6e0586b0a20c7.NFTStorefront",
+				"A.f8d6e0586b0a20c7.LockedTokens",
+				"A.f8d6e0586b0a20c7.FlowServiceAccount",
+				"A.f8d6e0586b0a20c7.FlowEpoch",
+			},
+			coverageReport.ExcludedLocationIDs(),
+		)
+		assert.Equal(
+			t,
+			"Coverage: 97.2% of statements",
+			coverageReport.String(),
+		)
+	})
+
+	t.Run("with code coverage for contracts only", func(t *testing.T) {
+		t.Parallel()
+
+		// Setup
+		_, state, _ := util.TestMocks(t)
+
+		state.Contracts().AddOrUpdate(config.Contract{
+			Name:     tests.ContractFooCoverage.Name,
+			Location: tests.ContractFooCoverage.Filename,
+		})
+
+		// Execute script
+		script := tests.TestScriptWithCoverage
+		testFiles := map[string][]byte{
+			script.Filename: script.Source,
+		}
+		flags := flagsTests{
+			Cover:     true,
+			CoverCode: contractsCoverCode,
+		}
+		results, coverageReport, err := testCode(testFiles, state, flags)
 
 		require.NoError(t, err)
 		require.Len(t, results[script.Filename], 3)
