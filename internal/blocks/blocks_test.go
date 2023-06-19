@@ -46,14 +46,30 @@ func Test_GetBlock(t *testing.T) {
 			assert.Equal(t, uint64(100), args.Get(3).(uint64))
 		}).Return(nil, nil)
 
-		srv.GetCollection.Return(nil, nil)
-
 		returnBlock := tests.NewBlock()
 		returnBlock.Height = uint64(100)
 
 		srv.GetBlock.Run(func(args mock.Arguments) {
 			assert.Equal(t, uint64(100), args.Get(1).(flowkit.BlockQuery).Height)
 		}).Return(returnBlock, nil)
+
+		returnCollection := tests.NewCollection()
+		transaction1 := tests.NewTransaction()
+		transaction2 := tests.NewTransaction()
+		returnCollection.TransactionIDs = []flow.Identifier{
+			transaction1.ID(),
+			transaction2.ID(),
+		}
+		transactions := []*flow.Transaction{
+			transaction1,
+			transaction2,
+		}
+
+		srv.GetTransactionsByBlockID.Run(func(args mock.Arguments) {
+			assert.Equal(t, returnBlock.ID, args.Get(1).(flow.Identifier))
+		}).Return(transactions, nil, nil)
+
+		srv.GetCollection.Return(returnCollection, nil)
 
 		result, err := get(inArgs, command.GlobalFlags{}, util.NoLogger, rw, srv.Mock)
 		assert.NotNil(t, result)
