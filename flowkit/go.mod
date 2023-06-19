@@ -6,7 +6,7 @@ require (
 	github.com/ethereum/go-ethereum v1.10.22
 	github.com/gosuri/uilive v0.0.4
 	github.com/lmars/go-slip10 v0.0.0-20190606092855-400ba44fee12
-	github.com/onflow/cadence v0.39.4
+	github.com/onflow/cadence v0.39.10
 	github.com/onflow/flow-emulator v0.50.4
 	github.com/onflow/flow-go v0.31.1-0.20230607185125-e75265a6c631
 	github.com/onflow/flow-go-sdk v0.41.2
