@@ -82,13 +82,31 @@ func get(
 	}
 
 	collections := make([]*flowsdk.Collection, 0)
+	collectionTxs := 0
 	if command.ContainsFlag(blockFlags.Include, "transactions") {
+		var lastCollection *flowsdk.Collection
 		for _, guarantee := range block.CollectionGuarantees {
 			collection, err := flow.GetCollection(context.Background(), guarantee.CollectionID)
 			if err != nil {
 				return nil, err
 			}
 			collections = append(collections, collection)
+			collectionTxs += len(collection.TransactionIDs)
+			lastCollection = collection
+		}
+
+		transactions, _, err := flow.GetTransactionsByBlockID(context.Background(), block.ID)
+		if err != nil {
+			return nil, err
+		}
+		// The last transaction returned from `flow.GetTransactionsByBlockID`,
+		// is the system chunk transaction. We add it as the last transaction
+		// in the last collection.
+		if lastCollection != nil && len(transactions) == (collectionTxs+1) {
+			lastCollection.TransactionIDs = append(
+				lastCollection.TransactionIDs,
+				transactions[collectionTxs].ID(),
+			)
 		}
 	}
 
