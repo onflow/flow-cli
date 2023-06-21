@@ -8,7 +8,7 @@ require (
 	github.com/go-git/go-git/v5 v5.6.1
 	github.com/gosuri/uilive v0.0.4
 	github.com/manifoldco/promptui v0.9.0
-	github.com/onflow/cadence v0.39.4
+	github.com/onflow/cadence v0.39.10
 	github.com/onflow/cadence-tools/languageserver v0.29.1
 	github.com/onflow/cadence-tools/test v0.9.0
 	github.com/onflow/fcl-dev-wallet v0.7.1

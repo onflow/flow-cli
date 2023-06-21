@@ -92,7 +92,18 @@ func run(
 	}
 
 	if coverageReport != nil {
-		file, err := json.MarshalIndent(coverageReport, "", "  ")
+		var file []byte
+		var err error
+
+		ext := path.Ext(testFlags.CoverProfile)
+		if ext == ".json" {
+			file, err = json.MarshalIndent(coverageReport, "", "  ")
+		} else if ext == ".lcov" {
+			file, err = coverageReport.MarshalLCOV()
+		} else {
+			return nil, fmt.Errorf("given format: %v, only .json and .lcov are supported", ext)
+		}
+
 		if err != nil {
 			return nil, fmt.Errorf("error serializing coverage report: %w", err)
 		}
