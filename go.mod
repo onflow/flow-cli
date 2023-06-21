@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	github.com/dukex/mixpanel v1.0.1
-	github.com/getsentry/sentry-go v0.21.0
+	github.com/getsentry/sentry-go v0.22.0
 	github.com/go-git/go-git/v5 v5.6.1
 	github.com/gosuri/uilive v0.0.4
 	github.com/manifoldco/promptui v0.9.0
