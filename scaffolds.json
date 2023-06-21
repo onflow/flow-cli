@@ -66,7 +66,7 @@
     "name": "FCL React Native Mobile Dapp",
     "repo": "https://github.com/jribbink/fcl-react-native-scaffold",
     "description": "React Native (Expo) mobile dapp example demonstrating FCL and Flow interactions.",
-    "commit": "445130fff2f5bc268d89bacc01d3b2ed6db8e60d",
+    "commit": "b5c4b3c98d5733a23c0e93b269bb3383a1af2639",
     "type": "mobile"
   }
 ]
