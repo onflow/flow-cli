@@ -14,7 +14,7 @@ require (
 	github.com/onflow/fcl-dev-wallet v0.7.1
 	github.com/onflow/flow-cli/flowkit v1.1.2-0.20230607004725-067568f50e28
 	github.com/onflow/flow-core-contracts/lib/go/templates v1.2.3
-	github.com/onflow/flow-emulator v0.50.4
+	github.com/onflow/flow-emulator v0.50.7
 	github.com/onflow/flow-go-sdk v0.41.5
 	github.com/onflowser/flowser/v2 v2.0.14-beta
 	github.com/pkg/errors v0.9.1
