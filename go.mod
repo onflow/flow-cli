@@ -11,7 +11,7 @@ require (
 	github.com/onflow/cadence v0.39.12
 	github.com/onflow/cadence-tools/languageserver v0.30.0
 	github.com/onflow/cadence-tools/test v0.9.2
-	github.com/onflow/fcl-dev-wallet v0.7.1
+	github.com/onflow/fcl-dev-wallet v0.7.2
 	github.com/onflow/flow-cli/flowkit v1.3.1
 	github.com/onflow/flow-core-contracts/lib/go/templates v1.2.3
 	github.com/onflow/flow-emulator v0.51.1
