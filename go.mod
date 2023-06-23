@@ -8,14 +8,14 @@ require (
 	github.com/go-git/go-git/v5 v5.6.1
 	github.com/gosuri/uilive v0.0.4
 	github.com/manifoldco/promptui v0.9.0
-	github.com/onflow/cadence v0.39.10
+	github.com/onflow/cadence v0.39.12
 	github.com/onflow/cadence-tools/languageserver v0.29.1
-	github.com/onflow/cadence-tools/test v0.9.1
+	github.com/onflow/cadence-tools/test v0.9.2
 	github.com/onflow/fcl-dev-wallet v0.7.1
 	github.com/onflow/flow-cli/flowkit v1.1.2-0.20230607004725-067568f50e28
 	github.com/onflow/flow-core-contracts/lib/go/templates v1.2.3
-	github.com/onflow/flow-emulator v0.50.4
-	github.com/onflow/flow-go-sdk v0.41.5
+	github.com/onflow/flow-emulator v0.51.1
+	github.com/onflow/flow-go-sdk v0.41.6
 	github.com/onflowser/flowser/v2 v2.0.14-beta
 	github.com/pkg/errors v0.9.1
 	github.com/psiemens/sconfig v0.1.0
@@ -148,9 +148,9 @@ require (
 	github.com/onflow/flow-archive v1.3.4-0.20230503192214-9e81e82d4dcc // indirect
 	github.com/onflow/flow-core-contracts/lib/go/contracts v1.2.3 // indirect
 	github.com/onflow/flow-ft/lib/go/contracts v0.7.0 // indirect
-	github.com/onflow/flow-go v0.31.1-0.20230607185125-e75265a6c631 // indirect
+	github.com/onflow/flow-go v0.31.1-0.20230622201809-5001508cc224 // indirect
 	github.com/onflow/flow-go/crypto v0.24.7 // indirect
-	github.com/onflow/flow-nft/lib/go/contracts v0.0.0-20220727161549-d59b1e547ac4 // indirect
+	github.com/onflow/flow-nft/lib/go/contracts v1.1.0 // indirect
 	github.com/onflow/flow/protobuf/go/flow v0.3.2-0.20230602212908-08fc6536d391 // indirect
 	github.com/onflow/fusd/lib/go/contracts v0.0.0-20211021081023-ae9de8fb2c7e // indirect
 	github.com/onflow/nft-storefront/lib/go/contracts v0.0.0-20221222181731-14b90207cead // indirect
