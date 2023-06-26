@@ -22,6 +22,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/onflow/flow-cli/internal/util"
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/flowkit"
@@ -32,6 +33,7 @@ import (
 type flagsRemoveContract struct {
 	Signer  string   `default:"emulator-account" flag:"signer" info:"Account name from configuration used to sign the transaction"`
 	Include []string `default:"" flag:"include" info:"Fields to include in the output. Valid values: contracts."`
+	Network string   `default:"" flag:"network" info:"Network name from configuration to use"`
 }
 
 var flagsRemove = flagsRemoveContract{}
@@ -64,6 +66,27 @@ func removeContract(
 	id, err := flow.RemoveContract(context.Background(), from, contractName)
 	if err != nil {
 		return nil, err
+	}
+
+	removeFromState := util.RemoveContractFromFlowJSONPrompt(contractName)
+
+	if removeFromState {
+		// If a network flag is provided, remove from that networks deployments
+		// Otherwise, remove from all deployments
+		if flagsRemove.Network != "" {
+			state.Deployments().ByAccountAndNetwork(from.Name, flagsRemove.Network).RemoveContract(contractName)
+		} else {
+			for i := range state.Deployments().All() {
+				if state.Deployments().All()[i].Account == from.Name {
+					state.Deployments().All()[i].RemoveContract(contractName)
+				}
+			}
+		}
+
+		err = state.SaveDefault()
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	logger.Info(fmt.Sprintf(
