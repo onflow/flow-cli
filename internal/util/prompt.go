@@ -569,6 +569,16 @@ func RemoveContractPrompt(contracts config.Contracts) string {
 	return name
 }
 
+func RemoveContractFromFlowJSONPrompt(contractName string) bool {
+	prompt := promptui.Select{
+		Label: fmt.Sprintf("Do you want to remove %s from your flow.json deployments?", contractName),
+		Items: []string{"Yes", "No"},
+	}
+	chosen, _, _ := prompt.Run()
+
+	return chosen == 0
+}
+
 func RemoveNetworkPrompt(networks config.Networks) string {
 	networkNames := make([]string, 0)
 

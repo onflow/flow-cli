@@ -60,6 +60,11 @@ func (d *Deployment) RemoveContract(contractName string) {
 
 type Deployments []Deployment
 
+// All returns a list of all deployments
+func (d *Deployments) All() Deployments {
+	return *d
+}
+
 // ByNetwork get all deployments by network.
 func (d *Deployments) ByNetwork(network string) Deployments {
 	var deployments Deployments
