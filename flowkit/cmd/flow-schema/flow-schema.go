@@ -37,7 +37,7 @@ func main() {
 		}
 
 		if string(fileContents) != string(json) {
-			fmt.Println("Schema is out of date")
+			fmt.Println("Schema is out of date - have you run `make generate-schema`?")
 			os.Exit(1)
 		}
 	} else {
