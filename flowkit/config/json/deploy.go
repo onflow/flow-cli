@@ -22,6 +22,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/invopop/jsonschema"
 	"github.com/onflow/cadence"
 	jsoncdc "github.com/onflow/cadence/encoding/json"
 
@@ -177,5 +178,21 @@ func (d deployment) MarshalJSON() ([]byte, error) {
 		return json.Marshal(d.simple)
 	} else {
 		return json.Marshal(d.advanced)
+	}
+}
+
+func (j jsonDeployment) JSONSchema() *jsonschema.Schema {
+	return &jsonschema.Schema{
+		OneOf: []*jsonschema.Schema{
+			{
+				Type: "string",
+			},
+			{
+				Ref: "#/$defs/contractDeployment",
+			},
+		},
+		Definitions: map[string]*jsonschema.Schema{
+			"contractDeployment": jsonschema.Reflect(contractDeployment{}),
+		},
 	}
 }
