@@ -133,6 +133,16 @@
         "args"
       ]
     },
+    "deployment": {
+      "oneOf": [
+        {
+          "type": "string"
+        },
+        {
+          "$ref": "#/$defs/contractDeployment"
+        }
+      ]
+    },
     "jsonAccounts": {
       "patternProperties": {
         ".*": {
@@ -202,14 +212,15 @@
       "type": "object"
     },
     "jsonDeployment": {
-      "oneOf": [
-        {
-          "type": "string"
-        },
-        {
-          "$ref": "#/$defs/contractDeployment"
+      "patternProperties": {
+        ".*": {
+          "items": {
+            "$ref": "#/$defs/deployment"
+          },
+          "type": "array"
         }
-      ]
+      },
+      "type": "object"
     },
     "jsonDeployments": {
       "patternProperties": {

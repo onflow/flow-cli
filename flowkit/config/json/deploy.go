@@ -181,7 +181,7 @@ func (d deployment) MarshalJSON() ([]byte, error) {
 	}
 }
 
-func (j jsonDeployment) JSONSchema() *jsonschema.Schema {
+func (j deployment) JSONSchema() *jsonschema.Schema {
 	return &jsonschema.Schema{
 		OneOf: []*jsonschema.Schema{
 			{
