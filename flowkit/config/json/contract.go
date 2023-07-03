@@ -22,6 +22,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/invopop/jsonschema"
 	"github.com/onflow/flow-go-sdk"
 
 	"github.com/onflow/flow-cli/flowkit/config"
@@ -129,5 +130,21 @@ func (j jsonContract) MarshalJSON() ([]byte, error) {
 		return json.Marshal(j.Simple)
 	} else {
 		return json.Marshal(j.Advanced)
+	}
+}
+
+func (j jsonContract) JSONSchema() *jsonschema.Schema {
+	return &jsonschema.Schema{
+		OneOf: []*jsonschema.Schema{
+			{
+				Type: "string",
+			},
+			{
+				Ref: "#/$defs/jsonContractAdvanced",
+			},
+		},
+		Definitions: map[string]*jsonschema.Schema{
+			"jsonContractAdvanced": jsonschema.Reflect(jsonContractAdvanced{}),
+		},
 	}
 }

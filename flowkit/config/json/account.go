@@ -25,6 +25,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/invopop/jsonschema"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
 	"golang.org/x/exp/slices"
@@ -455,4 +456,29 @@ func (j account) MarshalJSON() ([]byte, error) {
 	}
 
 	return json.Marshal(j.Advanced)
+}
+
+func (a account) JSONSchema() *jsonschema.Schema {
+	return &jsonschema.Schema{
+		OneOf: []*jsonschema.Schema{
+			{
+				Ref: "#/$defs/simpleAccount",
+			},
+			{
+				Ref: "#/$defs/advancedAccount",
+			},
+			{
+				Ref: "#/$defs/simpleAccountPre022",
+			},
+			{
+				Ref: "#/$defs/advanceAccountPre022",
+			},
+		},
+		Definitions: map[string]*jsonschema.Schema{
+			"simpleAccount": jsonschema.Reflect(simpleAccount{}),
+			"advancedAccount": jsonschema.Reflect(advancedAccount{}),
+			"simpleAccountPre022": jsonschema.Reflect(simpleAccountPre022{}),
+			"advanceAccountPre022": jsonschema.Reflect(advanceAccountPre022{}),
+		},
+	}
 }

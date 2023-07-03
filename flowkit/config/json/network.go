@@ -24,6 +24,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/invopop/jsonschema"
 	"github.com/onflow/flow-go-sdk/crypto"
 
 	"github.com/onflow/flow-cli/flowkit/config"
@@ -146,4 +147,23 @@ func validateECDSAP256Pub(key string) error {
 	}
 
 	return nil
+}
+
+func (j jsonNetwork) JSONSchema() *jsonschema.Schema {
+	return &jsonschema.Schema{
+		OneOf: []*jsonschema.Schema{
+			{
+				Ref: "#/$defs/simpleNetwork",
+			},
+			{
+				Ref: "#/$defs/advancedNetwork",
+			},
+		},
+		Definitions: map[string]*jsonschema.Schema{
+			"simpleNetwork": {
+				Type: "string",
+			},
+			"advancedNetwork": jsonschema.Reflect(advancedNetwork{}),
+		},
+	}
 }

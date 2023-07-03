@@ -1,0 +1,311 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/onflow/flow-cli/flowkit/config/json/json-config",
+  "$ref": "#/$defs/jsonConfig",
+  "$defs": {
+    "account": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/simpleAccount"
+        },
+        {
+          "$ref": "#/$defs/advancedAccount"
+        },
+        {
+          "$ref": "#/$defs/simpleAccountPre022"
+        },
+        {
+          "$ref": "#/$defs/advanceAccountPre022"
+        }
+      ]
+    },
+    "advanceAccountPre022": {
+      "properties": {
+        "address": {
+          "type": "string"
+        },
+        "keys": {
+          "items": {
+            "$ref": "#/$defs/advanceKey"
+          },
+          "type": "array"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "address",
+        "keys"
+      ]
+    },
+    "advanceKey": {
+      "properties": {
+        "type": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer"
+        },
+        "signatureAlgorithm": {
+          "type": "string"
+        },
+        "hashAlgorithm": {
+          "type": "string"
+        },
+        "privateKey": {
+          "type": "string"
+        },
+        "mnemonic": {
+          "type": "string"
+        },
+        "derivationPath": {
+          "type": "string"
+        },
+        "resourceID": {
+          "type": "string"
+        },
+        "location": {
+          "type": "string"
+        },
+        "context": {
+          "patternProperties": {
+            ".*": {
+              "type": "string"
+            }
+          },
+          "type": "object"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "type"
+      ]
+    },
+    "advancedAccount": {
+      "properties": {
+        "address": {
+          "type": "string"
+        },
+        "key": {
+          "$ref": "#/$defs/advanceKey"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "address",
+        "key"
+      ]
+    },
+    "advancedNetwork": {
+      "properties": {
+        "host": {
+          "type": "string"
+        },
+        "key": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "host",
+        "key"
+      ]
+    },
+    "contractDeployment": {
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "args": {
+          "items": {
+            "type": "object"
+          },
+          "type": "array"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "name",
+        "args"
+      ]
+    },
+    "deployment": {
+      "oneOf": [
+        {
+          "type": "string"
+        },
+        {
+          "$ref": "#/$defs/contractDeployment"
+        }
+      ]
+    },
+    "jsonAccounts": {
+      "patternProperties": {
+        ".*": {
+          "$ref": "#/$defs/account"
+        }
+      },
+      "type": "object"
+    },
+    "jsonConfig": {
+      "properties": {
+        "emulators": {
+          "$ref": "#/$defs/jsonEmulators"
+        },
+        "contracts": {
+          "$ref": "#/$defs/jsonContracts"
+        },
+        "networks": {
+          "$ref": "#/$defs/jsonNetworks"
+        },
+        "accounts": {
+          "$ref": "#/$defs/jsonAccounts"
+        },
+        "deployments": {
+          "$ref": "#/$defs/jsonDeployments"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
+    "jsonContract": {
+      "oneOf": [
+        {
+          "type": "string"
+        },
+        {
+          "$ref": "#/$defs/jsonContractAdvanced"
+        }
+      ]
+    },
+    "jsonContractAdvanced": {
+      "properties": {
+        "source": {
+          "type": "string"
+        },
+        "aliases": {
+          "patternProperties": {
+            ".*": {
+              "type": "string"
+            }
+          },
+          "type": "object"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "source",
+        "aliases"
+      ]
+    },
+    "jsonContracts": {
+      "patternProperties": {
+        ".*": {
+          "$ref": "#/$defs/jsonContract"
+        }
+      },
+      "type": "object"
+    },
+    "jsonDeployment": {
+      "patternProperties": {
+        ".*": {
+          "items": {
+            "$ref": "#/$defs/deployment"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
+    "jsonDeployments": {
+      "patternProperties": {
+        ".*": {
+          "$ref": "#/$defs/jsonDeployment"
+        }
+      },
+      "type": "object"
+    },
+    "jsonEmulator": {
+      "properties": {
+        "port": {
+          "type": "integer"
+        },
+        "serviceAccount": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "port",
+        "serviceAccount"
+      ]
+    },
+    "jsonEmulators": {
+      "patternProperties": {
+        ".*": {
+          "$ref": "#/$defs/jsonEmulator"
+        }
+      },
+      "type": "object"
+    },
+    "jsonNetwork": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/simpleNetwork"
+        },
+        {
+          "$ref": "#/$defs/advancedNetwork"
+        }
+      ]
+    },
+    "jsonNetworks": {
+      "patternProperties": {
+        ".*": {
+          "$ref": "#/$defs/jsonNetwork"
+        }
+      },
+      "type": "object"
+    },
+    "simpleAccount": {
+      "properties": {
+        "address": {
+          "type": "string"
+        },
+        "key": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "address",
+        "key"
+      ]
+    },
+    "simpleAccountPre022": {
+      "properties": {
+        "address": {
+          "type": "string"
+        },
+        "keys": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "address",
+        "keys"
+      ]
+    },
+    "simpleNetwork": {
+      "type": "string"
+    }
+  }
+}
