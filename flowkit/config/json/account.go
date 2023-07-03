@@ -333,8 +333,8 @@ func transformAdvancedKeyToJSON(key config.AccountKey) advanceKey {
 }
 
 type account struct {
-	Simple   simpleAccount 		`jsonschema:"oneof_required"`
-	Advanced advancedAccount 	`jsonschema:"oneof_required"`
+	Simple   simpleAccount
+	Advanced advancedAccount
 }
 
 type simpleAccount struct {
