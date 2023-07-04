@@ -17,6 +17,11 @@ if [ -n "$GITHUB_TOKEN" ]; then
   github_token_header="Authorization: Bearer $GITHUB_TOKEN"
 fi
 
+modify_profile = true
+if [ -n "$NO_MODIFY_PROFILE" ]; then
+  modify_profile = false
+fi
+
 # Get the architecture (CPU, OS) of the current system as a string.
 # Only MacOS/x86_64/ARM64 and Linux/x86_64/ARM64 architectures are supported.
 get_architecture() {
@@ -36,6 +41,7 @@ get_architecture() {
         Darwin)
             _ostype=darwin
             _targetpath=/usr/local/bin
+            modify_profile = false
             ;;
         *)
             echo "unrecognized OS type: $_ostype"
@@ -80,6 +86,32 @@ get_version() {
   fi
 }
 
+
+# Function to detect and append directory to the PATH variable
+append_path_to_profile() {
+    # Do not modify the profile if the user has set the NO_MODIFY_PROFILE environment variable
+    # or if profile modification was otherwise disabled by the script
+    if [ "$modify_profile" = false ]; then
+        return
+    fi
+
+    # List of common profile files
+    local profile_files=("$HOME/.bashrc" "$HOME/.bash_profile" "$HOME/.bash_login" "$HOME/.profile" "$HOME/.zshrc" "$HOME/.zprofile" "$HOME/.zlogin")
+
+    for profile_file in "${profile_files[@]}"; do
+        if [[ -f "$profile_file" ]]; then
+            # Check if the directory is already in the PATH
+            if grep -q -x "export PATH=\$PATH:$1" "$profile_file"; then
+                echo "Directory already in PATH in $profile_file."
+            else
+                # Append the directory to the PATH variable in the profile file
+                echo "export PATH=\$PATH:$1" >> "$profile_file"
+                echo "Directory appended to PATH in $profile_file."
+            fi
+        fi
+    done
+}
+
 # Determine the system architecure, download the appropriate binary, and
 # install it in `/usr/local/bin` on macOS and `~/.local/bin` on Linux
 # with executable permission.
@@ -111,6 +143,11 @@ main() {
   tar -xf $tmpfile -C $TARGET_PATH
   mv $TARGET_PATH/flow-cli $TARGET_PATH/flow
   chmod +x $TARGET_PATH/flow
+
+  rm $tmpfile
+
+  # Add the directory to the PATH variable
+  append_path_to_profile $TARGET_PATH
 
   echo "Successfully installed the Flow CLI to $TARGET_PATH."
   echo "Make sure $TARGET_PATH is in your \$PATH environment variable."
