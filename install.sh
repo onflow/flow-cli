@@ -17,9 +17,9 @@ if [ -n "$GITHUB_TOKEN" ]; then
   github_token_header="Authorization: Bearer $GITHUB_TOKEN"
 fi
 
-modify_profile = true
-if [ -n "$NO_MODIFY_PROFILE" ]; then
-  modify_profile = false
+modify_dotfiles = true
+if [ -n "$NO_MODIFY_DOTFILES" ]; then
+  modify_dotfiles = false
 fi
 
 # Get the architecture (CPU, OS) of the current system as a string.
@@ -41,7 +41,7 @@ get_architecture() {
         Darwin)
             _ostype=darwin
             _targetpath=/usr/local/bin
-            modify_profile = false
+            modify_dotfiles = false
             ;;
         *)
             echo "unrecognized OS type: $_ostype"
@@ -88,18 +88,19 @@ get_version() {
 
 
 # Function to detect and append directory to the PATH variable
-append_path_to_profile() {
-    # Do not modify the profile if the user has set the NO_MODIFY_PROFILE environment variable
-    # or if profile modification was otherwise disabled by the script
-    if [ "$modify_profile" = false ]; then
+append_path_to_dotfiles() {
+    # Do not modify the dotfiles if the user has set the NO_MODIFY_DOTFILES environment variable
+    # or if dotfile modification was otherwise disabled by the script (i.e. on macOS)
+    if [ "$modify_dotfiles" = false ]; then
         return
     fi
 
     # List of common profile files
-    local profile_files=("$HOME/.bashrc" "$HOME/.bash_profile" "$HOME/.bash_login" "$HOME/.profile" "$HOME/.zshrc" "$HOME/.zprofile" "$HOME/.zlogin")
+    # Should support all POSIX compliant shells and Zsh
+    local supported_dotfiles=("$HOME/.bashrc" "$HOME/.bash_profile" "$HOME/.bash_login" "$HOME/.profile" "$HOME/.zshrc" "$HOME/.zprofile" "$HOME/.zlogin")
 
-    for profile_file in "${profile_files[@]}"; do
-        if [[ -f "$profile_file" ]]; then
+    for dotfile in "${profile_files[@]}"; do
+        if [[ -f "$dotfile" ]]; then
             # Check if the directory is already in the PATH
             if grep -q -x "export PATH=\$PATH:$1" "$profile_file"; then
                 echo "Directory already in PATH in $profile_file."
@@ -144,10 +145,11 @@ main() {
   mv $TARGET_PATH/flow-cli $TARGET_PATH/flow
   chmod +x $TARGET_PATH/flow
 
+  # Remove the temporary file
   rm $tmpfile
 
   # Add the directory to the PATH variable
-  append_path_to_profile $TARGET_PATH
+  append_path_to_dotfiles "$TARGET_PATH"
 
   echo "Successfully installed the Flow CLI to $TARGET_PATH."
   echo "Make sure $TARGET_PATH is in your \$PATH environment variable."
