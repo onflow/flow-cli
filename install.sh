@@ -105,8 +105,17 @@ append_path_to_dotfiles() {
             if grep -q -x "export PATH=\$PATH:$1" "$profile_file"; then
                 echo "Directory already in PATH in $profile_file."
             else
-                # Append the directory to the PATH variable in the profile file
-                echo "export PATH=\$PATH:$1" >> "$profile_file"
+                # Append the directory to the PATH variable in the dotfile
+                # It will only be appended if the directory is not already in the PATH
+                echo ""                                         >> "$profile_file"
+                echo "### FLOW CLI"                             >> "$profile_file"
+                echo "case \":\$PATH:\" in"                     >> "$profile_file"
+                echo " *\":$TARGET_PATH:\"*);;"                 >> "$profile_file"
+                echo "  *)"                                     >> "$profile_file"
+                echo "    export PATH=\"\$PATH:$TARGET_PATH\""  >> "$profile_file"
+                echo "esac"                                     >> "$profile_file"
+                echo "### END"                                  >> "$profile_file"
+                ### END
                 echo "Directory appended to PATH in $profile_file."
             fi
         fi
