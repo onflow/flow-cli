@@ -17,9 +17,9 @@ if [ -n "$GITHUB_TOKEN" ]; then
   github_token_header="Authorization: Bearer $GITHUB_TOKEN"
 fi
 
-modify_dotfiles = true
+modify_dotfiles=true
 if [ -n "$NO_MODIFY_DOTFILES" ]; then
-  modify_dotfiles = false
+  modify_dotfiles=false
 fi
 
 # Get the architecture (CPU, OS) of the current system as a string.
@@ -41,7 +41,7 @@ get_architecture() {
         Darwin)
             _ostype=darwin
             _targetpath=/usr/local/bin
-            modify_dotfiles = false
+            modify_dotfiles=false
             ;;
         *)
             echo "unrecognized OS type: $_ostype"
