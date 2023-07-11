@@ -870,21 +870,22 @@ func (f *Flowkit) GetTransactionsByBlockID(
 	}
 
 	txRes, err := f.gateway.GetTransactionResultsByBlockID(blockID)
-	if err != nil {
-		if strings.Contains(err.Error(), "received message larger than max") {
-			txRes := []*flow.TransactionResult{}
-			for _, transaction := range tx {
-				txr, err := f.gateway.GetTransactionResult(transaction.ID(), true)
-				if err != nil {
-					return nil, nil, err
-				}
-				txRes = append(txRes, txr)
-			}
-			return tx, txRes, nil
-		}
-		return nil, nil, err
+	if err == nil {
+		return tx, txRes, nil
 	}
-	return tx, txRes, nil
+
+	if strings.Contains(err.Error(), "received message larger than max") {
+		txRes := []*flow.TransactionResult{}
+		for _, transaction := range tx {
+			txr, err := f.gateway.GetTransactionResult(transaction.ID(), true)
+			if err != nil {
+				return nil, nil, err
+			}
+			txRes = append(txRes, txr)
+		}
+		return tx, txRes, nil
+	}
+	return nil, nil, err
 }
 
 // BuildTransaction builds a new transaction type for later signing and submitting to the network.
