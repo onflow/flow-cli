@@ -874,7 +874,8 @@ func (f *Flowkit) GetTransactionsByBlockID(
 		return tx, txRes, nil
 	}
 
-	if strings.Contains(err.Error(), "received message larger than max") {
+	errorMessage := err.Error()
+	if strings.Contains(errorMessage, "received message larger than max") || strings.Contains(errorMessage, "trying to send message larger than max") {
 		txRes := []*flow.TransactionResult{}
 		for _, transaction := range tx {
 			txr, err := f.gateway.GetTransactionResult(transaction.ID(), true)
