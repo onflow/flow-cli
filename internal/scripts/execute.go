@@ -21,6 +21,9 @@ package scripts
 import (
 	"context"
 	"fmt"
+	"strings"
+
+	"github.com/onflow/flixkit-go"
 
 	"github.com/onflow/cadence"
 	flowsdk "github.com/onflow/flow-go-sdk"
@@ -58,18 +61,24 @@ func execute(
 	readerWriter flowkit.ReaderWriter,
 	flow flowkit.Services,
 ) (command.Result, error) {
-	filename := args[0]
+	filenameOrAction := args[0]
 
-	code, err := readerWriter.ReadFile(filename)
-	if err != nil {
-		return nil, fmt.Errorf("error loading script file: %w", err)
+	fmt.Println("filename: ", filenameOrAction)
+
+	if strings.HasPrefix(filenameOrAction, "flix") {
+		return executeFlixScript(args, filenameOrAction, readerWriter, flow)
 	}
 
-	var scriptArgs []cadence.Value
+	return executeLocalScript(args, filenameOrAction, readerWriter, flow)
+}
+
+func sendScript(code []byte, argsArr []string, location string, flow flowkit.Services) (command.Result, error) {
+	var cadenceArgs []cadence.Value
+	var err error
 	if scriptFlags.ArgsJSON != "" {
-		scriptArgs, err = arguments.ParseJSON(scriptFlags.ArgsJSON)
+		cadenceArgs, err = arguments.ParseJSON(scriptFlags.ArgsJSON)
 	} else {
-		scriptArgs, err = arguments.ParseWithoutType(args[1:], code, filename)
+		cadenceArgs, err = arguments.ParseWithoutType(argsArr, code, location)
 	}
 
 	if err != nil {
@@ -89,8 +98,8 @@ func execute(
 		context.Background(),
 		flowkit.Script{
 			Code:     code,
-			Args:     scriptArgs,
-			Location: filename,
+			Args:     cadenceArgs,
+			Location: location,
 		},
 		query,
 	)
@@ -99,4 +108,79 @@ func execute(
 	}
 
 	return &scriptResult{value}, nil
+}
+
+func executeLocalScript(args []string, filename string, readerWriter flowkit.ReaderWriter, flow flowkit.Services) (command.Result, error) {
+	code, err := readerWriter.ReadFile(filename)
+	if err != nil {
+		return nil, fmt.Errorf("error loading script file: %w", err)
+	}
+
+	return sendScript(code, args[1:], filename, flow)
+}
+
+func executeFlixScript(args []string, action string, readerWriter flowkit.ReaderWriter, flow flowkit.Services) (command.Result, error) {
+	commandParts := strings.Split(action, ":")
+
+	if len(commandParts) != 3 {
+		return nil, fmt.Errorf("invalid flix command")
+	}
+
+	flixFindMethod := commandParts[1]
+	flixIdentifier := commandParts[2]
+
+	var parsedFlixTemplate *flixkit.FlowInteractionTemplate
+	var argsArr []string
+
+	switch flixFindMethod {
+	case "name":
+		argsArr = args[1:]
+		flixTemplate, err := flixkit.GetFlix("https://flix.flow.com/v1/templates", flixIdentifier)
+		if err != nil {
+			return nil, fmt.Errorf("could not find flix template")
+		}
+		parsedFlixTemplate = flixTemplate
+
+	case "id":
+		argsArr = args[1:]
+		flixTemplate, err := flixkit.GetFlixByID("https://flix.flow.com/v1/templates", flixIdentifier)
+		if err != nil {
+			return nil, fmt.Errorf("could not find flix template")
+		}
+		parsedFlixTemplate = flixTemplate
+
+	case "local":
+		if flixIdentifier == "path" {
+			filePath := args[1]
+			argsArr = args[2:]
+
+			flixTemplate, err := readerWriter.ReadFile(filePath)
+			if err != nil {
+				return nil, fmt.Errorf("error loading script file: %w", err)
+			}
+
+			parsedTemplate, err := flixkit.ParseFlix(string(flixTemplate))
+			if err != nil {
+				return nil, fmt.Errorf("error parsing script file: %w", err)
+			}
+
+			parsedFlixTemplate = parsedTemplate
+		} else {
+			return nil, fmt.Errorf("invalid flix command")
+		}
+
+	default:
+		return nil, fmt.Errorf("invalid flix command")
+	}
+
+	if parsedFlixTemplate.IsTransaction() {
+		return nil, fmt.Errorf("invalid command for a transaction")
+	}
+
+	cadenceWithImportsReplaced, err := parsedFlixTemplate.GetAndReplaceCadenceImports("testnet")
+	if err != nil {
+		return nil, fmt.Errorf("could not replace imports")
+	}
+
+	return sendScript([]byte(cadenceWithImportsReplaced), argsArr, "", flow)
 }
