@@ -63,8 +63,6 @@ func execute(
 ) (command.Result, error) {
 	filenameOrAction := args[0]
 
-	fmt.Println("filename: ", filenameOrAction)
-
 	if strings.HasPrefix(filenameOrAction, "flix") {
 		return executeFlixScript(args, filenameOrAction, readerWriter, flow)
 	}
