@@ -406,6 +406,7 @@ var TestScriptWithFileRead = Resource{
 var TestScriptWithCoverage = Resource{
 	Filename: "testScriptWithCoverage.cdc",
 	Source: []byte(`
+		import Test
 		import "FooContract"
 
 		pub let foo = FooContract()
@@ -429,7 +430,7 @@ var TestScriptWithCoverage = Resource{
 				let result = foo.getIntegerTrait(input)
 
 				// Assert
-				assert(result == testInputs[input])
+				Test.assert(result == testInputs[input])
 			}
 		}
 
@@ -438,7 +439,20 @@ var TestScriptWithCoverage = Resource{
 			foo.addSpecialNumber(78557, "Sierpinski")
 
 			// Assert
-			assert("Sierpinski" == foo.getIntegerTrait(78557))
+			Test.assert("Sierpinski" == foo.getIntegerTrait(78557))
+		}
+
+		pub fun testExecuteScript() {
+			// Arrange
+			let blockchain = Test.newEmulatorBlockchain()
+
+			// Act
+			let code = "pub fun main(): Int { return 42 }"
+			let result = blockchain.executeScript(code, [])
+			let answer = (result.returnValue as! Int?)!
+
+			// Assert
+			Test.assert(answer == 42)
 		}
     `),
 }
