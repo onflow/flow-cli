@@ -127,13 +127,14 @@ func executeFlixScript(args []string, action string, readerWriter flowkit.Reader
 	flixFindMethod := commandParts[1]
 	flixIdentifier := commandParts[2]
 
+	var flixService = flixkit.NewFlixService(&flixkit.Config{})
 	var parsedFlixTemplate *flixkit.FlowInteractionTemplate
 	var argsArr []string
 
 	switch flixFindMethod {
 	case "name":
 		argsArr = args[1:]
-		flixTemplate, err := flixkit.GetFlix("https://flix.flow.com/v1/templates", flixIdentifier)
+		flixTemplate, err := flixService.GetFlix(flixIdentifier)
 		if err != nil {
 			return nil, fmt.Errorf("could not find flix template")
 		}
@@ -141,7 +142,7 @@ func executeFlixScript(args []string, action string, readerWriter flowkit.Reader
 
 	case "id":
 		argsArr = args[1:]
-		flixTemplate, err := flixkit.GetFlixByID("https://flix.flow.com/v1/templates", flixIdentifier)
+		flixTemplate, err := flixService.GetFlixByID(flixIdentifier)
 		if err != nil {
 			return nil, fmt.Errorf("could not find flix template")
 		}
