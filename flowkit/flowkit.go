@@ -869,7 +869,6 @@ func (f *Flowkit) GetTransactionsByBlockID(
 	if err != nil {
 		return nil, nil, err
 	}
-	fmt.Println(len(tx))
 	txRes, err := f.gateway.GetTransactionResultsByBlockID(blockID)
 	if err == nil {
 		return tx, txRes, nil
