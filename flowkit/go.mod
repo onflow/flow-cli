@@ -180,3 +180,5 @@ require (
 	modernc.org/memory v1.5.0 // indirect
 	modernc.org/sqlite v1.21.1 // indirect
 )
+
+replace github.com/onflow/flow-go-sdk => github.com/findonflow/flow-go-sdk v0.40.1-0.20230717122814-47abbbe6e6b0

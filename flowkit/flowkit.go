@@ -864,37 +864,26 @@ func (f *Flowkit) GetTransactionsByBlockID(
 	_ context.Context,
 	blockID flow.Identifier,
 ) ([]*flow.Transaction, []*flow.TransactionResult, error) {
+
 	tx, err := f.gateway.GetTransactionsByBlockID(blockID)
 	if err != nil {
 		return nil, nil, err
 	}
+	fmt.Println(len(tx))
 	txRes, err := f.gateway.GetTransactionResultsByBlockID(blockID)
 	if err == nil {
 		return tx, txRes, nil
 	}
-
 	errorMessage := err.Error()
 
 	if strings.Contains(errorMessage, "received message larger than max") || strings.Contains(errorMessage, "trying to send message larger than max") {
-
-		block, err := f.gateway.GetBlockByID(blockID)
-		if err != nil {
-			return nil, nil, err
-		}
-
 		txRes := []*flow.TransactionResult{}
-		for _, c := range block.CollectionGuarantees {
-			ct, err := f.gateway.GetCollection(c.CollectionID)
+		for index := range tx {
+			txr, err := f.gateway.GetTransactionResultByIndex(blockID, uint32(index))
 			if err != nil {
-				return nil, nil, err
+				return nil, nil, errors.Wrapf(err, "failed getting result for index %d", index)
 			}
-			for _, transaction := range ct.TransactionIDs {
-				txr, err := f.gateway.GetTransactionResult(transaction, true)
-				if err != nil {
-					return nil, nil, err
-				}
-				txRes = append(txRes, txr)
-			}
+			txRes = append(txRes, txr)
 		}
 		return tx, txRes, nil
 	}

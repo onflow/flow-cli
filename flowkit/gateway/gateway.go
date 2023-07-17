@@ -31,6 +31,7 @@ type Gateway interface {
 	SendSignedTransaction(*flow.Transaction) (*flow.Transaction, error)
 	GetTransaction(flow.Identifier) (*flow.Transaction, error)
 	GetTransactionResultsByBlockID(blockID flow.Identifier) ([]*flow.TransactionResult, error)
+	GetTransactionResultByIndex(blockID flow.Identifier, index uint32) (*flow.TransactionResult, error)
 	GetTransactionResult(flow.Identifier, bool) (*flow.TransactionResult, error)
 	GetTransactionsByBlockID(blockID flow.Identifier) ([]*flow.Transaction, error)
 	ExecuteScript([]byte, []cadence.Value) (cadence.Value, error)

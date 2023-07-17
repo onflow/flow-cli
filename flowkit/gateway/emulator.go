@@ -148,6 +148,11 @@ func (g *EmulatorGateway) GetTransactionResultsByBlockID(_ flow.Identifier) ([]*
 	panic("GetTransactionResultsByBlockID not implemented")
 }
 
+func (g *EmulatorGateway) GetTransactionResultByIndex(_ flow.Identifier, _ uint32) (*flow.TransactionResult, error) {
+	// TODO: implement
+	panic("GetTransactionResultsByIndex not implemented")
+}
+
 func (g *EmulatorGateway) GetTransactionsByBlockID(_ flow.Identifier) ([]*flow.Transaction, error) {
 	// TODO: implement
 	panic("GetTransactionResultsByBlockID not implemented")

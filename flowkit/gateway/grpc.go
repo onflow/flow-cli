@@ -116,6 +116,10 @@ func (g *GrpcGateway) GetTransaction(ID flow.Identifier) (*flow.Transaction, err
 	return g.client.GetTransaction(g.ctx, ID)
 }
 
+func (g *GrpcGateway) GetTransactionResultByIndex(blockID flow.Identifier, index uint32) (*flow.TransactionResult, error) {
+	return g.client.GetTransactionResultByIndex(g.ctx, blockID, index)
+}
+
 func (g *GrpcGateway) GetTransactionResultsByBlockID(blockID flow.Identifier) ([]*flow.TransactionResult, error) {
 	return g.client.GetTransactionResultsByBlockID(g.ctx, blockID)
 }
