@@ -868,21 +868,33 @@ func (f *Flowkit) GetTransactionsByBlockID(
 	if err != nil {
 		return nil, nil, err
 	}
-
 	txRes, err := f.gateway.GetTransactionResultsByBlockID(blockID)
 	if err == nil {
 		return tx, txRes, nil
 	}
 
 	errorMessage := err.Error()
+
 	if strings.Contains(errorMessage, "received message larger than max") || strings.Contains(errorMessage, "trying to send message larger than max") {
+
+		block, err := f.gateway.GetBlockByID(blockID)
+		if err != nil {
+			return nil, nil, err
+		}
+
 		txRes := []*flow.TransactionResult{}
-		for _, transaction := range tx {
-			txr, err := f.gateway.GetTransactionResult(transaction.ID(), true)
+		for _, c := range block.CollectionGuarantees {
+			ct, err := f.gateway.GetCollection(c.CollectionID)
 			if err != nil {
 				return nil, nil, err
 			}
-			txRes = append(txRes, txr)
+			for _, transaction := range ct.TransactionIDs {
+				txr, err := f.gateway.GetTransactionResult(transaction, true)
+				if err != nil {
+					return nil, nil, err
+				}
+				txRes = append(txRes, txr)
+			}
 		}
 		return tx, txRes, nil
 	}
