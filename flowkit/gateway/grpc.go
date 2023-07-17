@@ -36,7 +36,7 @@ import (
 
 // maxGRPCMessageSize 20mb, matching the value set in onflow/flow-go
 // https://github.com/onflow/flow-go/blob/master/utils/grpc/grpc.go#L5
-const maxGRPCMessageSize = 1024 * 1024 * 20
+const maxGRPCMessageSize = 1024 * 1024 * 60
 
 // GrpcGateway is a gateway implementation that uses the Flow Access gRPC API.
 type GrpcGateway struct {
