@@ -117,11 +117,11 @@ func executeLocalScript(args []string, filename string, readerWriter flowkit.Rea
 	return sendScript(code, args[1:], filename, flow)
 }
 
-func executeFlixScript(args []string, action string, readerWriter flowkit.ReaderWriter, flow flowkit.Services) (command.Result, error) {
+func getFlixCadence(args []string, action string, readerWriter flowkit.ReaderWriter) (*flixkit.FlowInteractionTemplate, []string, error) {
 	commandParts := strings.Split(action, ":")
 
 	if len(commandParts) != 3 {
-		return nil, fmt.Errorf("invalid flix command")
+		return nil, nil, fmt.Errorf("invalid flix command")
 	}
 
 	flixFindMethod := commandParts[1]
@@ -136,7 +136,7 @@ func executeFlixScript(args []string, action string, readerWriter flowkit.Reader
 		argsArr = args[1:]
 		flixTemplate, err := flixService.GetFlix(flixIdentifier)
 		if err != nil {
-			return nil, fmt.Errorf("could not find flix template")
+			return nil, nil, fmt.Errorf("could not find flix template")
 		}
 		parsedFlixTemplate = flixTemplate
 
@@ -144,7 +144,7 @@ func executeFlixScript(args []string, action string, readerWriter flowkit.Reader
 		argsArr = args[1:]
 		flixTemplate, err := flixService.GetFlixByID(flixIdentifier)
 		if err != nil {
-			return nil, fmt.Errorf("could not find flix template")
+			return nil, nil, fmt.Errorf("could not find flix template")
 		}
 		parsedFlixTemplate = flixTemplate
 
@@ -155,31 +155,37 @@ func executeFlixScript(args []string, action string, readerWriter flowkit.Reader
 
 			flixTemplate, err := readerWriter.ReadFile(filePath)
 			if err != nil {
-				return nil, fmt.Errorf("error loading script file: %w", err)
+				return nil, nil, fmt.Errorf("error loading script file: %w", err)
 			}
 
 			parsedTemplate, err := flixkit.ParseFlix(string(flixTemplate))
 			if err != nil {
-				return nil, fmt.Errorf("error parsing script file: %w", err)
+				return nil, nil, fmt.Errorf("error parsing script file: %w", err)
 			}
 
 			parsedFlixTemplate = parsedTemplate
 		} else {
-			return nil, fmt.Errorf("invalid flix command")
+			return nil, nil, fmt.Errorf("invalid flix command")
 		}
 
 	default:
-		return nil, fmt.Errorf("invalid flix command")
+		return nil, nil, fmt.Errorf("invalid flix command")
 	}
 
-	if parsedFlixTemplate.IsTransaction() {
+	return parsedFlixTemplate, argsArr, nil
+}
+
+func executeFlixScript(args []string, action string, readerWriter flowkit.ReaderWriter, flow flowkit.Services) (command.Result, error) {
+	flix, updatedArgs, err := getFlixCadence(args, action, readerWriter)
+
+	if flix.IsTransaction() {
 		return nil, fmt.Errorf("invalid command for a transaction")
 	}
 
-	cadenceWithImportsReplaced, err := parsedFlixTemplate.GetAndReplaceCadenceImports("testnet")
+	cadenceWithImportsReplaced, err := flix.GetAndReplaceCadenceImports("testnet")
 	if err != nil {
 		return nil, fmt.Errorf("could not replace imports")
 	}
 
-	return sendScript([]byte(cadenceWithImportsReplaced), argsArr, "", flow)
+	return sendScript([]byte(cadenceWithImportsReplaced), updatedArgs, "", flow)
 }
