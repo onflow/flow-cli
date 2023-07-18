@@ -154,7 +154,6 @@ func sendTransaction(code []byte, args []string, location string, flow flowkit.S
 	if sendFlags.ArgsJSON != "" {
 		transactionArgs, err = arguments.ParseJSON(sendFlags.ArgsJSON)
 	} else {
-		fmt.Println("args: ", args)
 		transactionArgs, err = arguments.ParseWithoutType(args, code, location)
 	}
 	if err != nil {
