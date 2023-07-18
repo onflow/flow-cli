@@ -134,7 +134,8 @@ func getFlixCadence(args []string, action string, readerWriter flowkit.ReaderWri
 	switch flixFindMethod {
 	case "name":
 		argsArr = args[1:]
-		flixTemplate, err := flixService.GetFlix(flixIdentifier)
+		ctx := context.Background()
+		flixTemplate, err := flixService.GetFlix(ctx, flixIdentifier)
 		if err != nil {
 			return nil, nil, fmt.Errorf("could not find flix template")
 		}
@@ -142,7 +143,8 @@ func getFlixCadence(args []string, action string, readerWriter flowkit.ReaderWri
 
 	case "id":
 		argsArr = args[1:]
-		flixTemplate, err := flixService.GetFlixByID(flixIdentifier)
+		ctx := context.Background()
+		flixTemplate, err := flixService.GetFlixByID(ctx, flixIdentifier)
 		if err != nil {
 			return nil, nil, fmt.Errorf("could not find flix template")
 		}
