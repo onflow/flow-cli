@@ -21,6 +21,9 @@ package transactions
 import (
 	"context"
 	"fmt"
+	"strings"
+
+	"github.com/onflow/flow-cli/internal/flix"
 
 	"github.com/onflow/cadence"
 	"github.com/spf13/cobra"
@@ -64,8 +67,43 @@ func send(
 	flow flowkit.Services,
 	state *flowkit.State,
 ) (result command.Result, err error) {
-	codeFilename := args[0]
+	filenameOrAction := args[0]
 
+	if strings.HasPrefix(filenameOrAction, "flix") {
+		return executeFlixTransaction(args, filenameOrAction, flow, state)
+	}
+
+	return executeLocalTransaction(args, filenameOrAction, flow, state)
+}
+
+func executeLocalTransaction(args []string, filename string, flow flowkit.Services, state *flowkit.State) (result command.Result, err error) {
+	code, err := state.ReadFile(filename)
+	if err != nil {
+		return nil, fmt.Errorf("error loading transaction file: %w", err)
+	}
+
+	return sendTransaction(code, args, filename, flow, state)
+}
+
+func executeFlixTransaction(args []string, action string, flow flowkit.Services, state *flowkit.State) (result command.Result, err error) {
+	template, flixArgs, err := flix.GetFlix(args, action, state.ReaderWriter())
+	if err != nil {
+		return nil, err
+	}
+
+	if template.IsScript() {
+		return nil, fmt.Errorf("invalid template for command")
+	}
+
+	cadenceWithImportsReplaced, err := template.GetAndReplaceCadenceImports("testnet")
+	if err != nil {
+		return nil, fmt.Errorf("could not replace imports")
+	}
+
+	return sendTransaction([]byte(cadenceWithImportsReplaced), flixArgs, "", flow, state)
+}
+
+func sendTransaction(code []byte, args []string, location string, flow flowkit.Services, state *flowkit.State) (result command.Result, err error) {
 	proposerName := sendFlags.Proposer
 	var proposer *accounts.Account
 	if proposerName != "" {
@@ -112,16 +150,12 @@ func send(
 		authorizers = append(authorizers, *signer)
 	}
 
-	code, err := state.ReadFile(codeFilename)
-	if err != nil {
-		return nil, fmt.Errorf("error loading transaction file: %w", err)
-	}
-
 	var transactionArgs []cadence.Value
 	if sendFlags.ArgsJSON != "" {
 		transactionArgs, err = arguments.ParseJSON(sendFlags.ArgsJSON)
 	} else {
-		transactionArgs, err = arguments.ParseWithoutType(args[1:], code, codeFilename)
+		fmt.Println("args: ", args)
+		transactionArgs, err = arguments.ParseWithoutType(args, code, location)
 	}
 	if err != nil {
 		return nil, fmt.Errorf("error parsing transaction arguments: %w", err)
@@ -134,7 +168,7 @@ func send(
 			Authorizers: authorizers,
 			Payer:       *payer,
 		},
-		flowkit.Script{Code: code, Args: transactionArgs, Location: codeFilename},
+		flowkit.Script{Code: code, Args: transactionArgs, Location: location},
 		sendFlags.GasLimit,
 	)
 

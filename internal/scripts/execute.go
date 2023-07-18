@@ -23,8 +23,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/onflow/flixkit-go"
-
 	"github.com/onflow/cadence"
 	flowsdk "github.com/onflow/flow-go-sdk"
 	"github.com/spf13/cobra"
@@ -33,6 +31,7 @@ import (
 	"github.com/onflow/flow-cli/flowkit/arguments"
 	"github.com/onflow/flow-cli/flowkit/output"
 	"github.com/onflow/flow-cli/internal/command"
+	"github.com/onflow/flow-cli/internal/flix"
 )
 
 type flagsScripts struct {
@@ -117,77 +116,17 @@ func executeLocalScript(args []string, filename string, readerWriter flowkit.Rea
 	return sendScript(code, args[1:], filename, flow)
 }
 
-func getFlix(args []string, action string, readerWriter flowkit.ReaderWriter) (*flixkit.FlowInteractionTemplate, []string, error) {
-	commandParts := strings.Split(action, ":")
-
-	if len(commandParts) != 3 {
-		return nil, nil, fmt.Errorf("invalid flix command")
-	}
-
-	flixFindMethod := commandParts[1]
-	flixIdentifier := commandParts[2]
-
-	var flixService = flixkit.NewFlixService(&flixkit.Config{})
-	var template *flixkit.FlowInteractionTemplate
-	var flixArgs []string
-
-	switch flixFindMethod {
-	case "name":
-		flixArgs = args[1:]
-		ctx := context.Background()
-		flixRes, err := flixService.GetFlix(ctx, flixIdentifier)
-		if err != nil {
-			return nil, nil, fmt.Errorf("could not find flix template")
-		}
-		template = flixRes
-
-	case "id":
-		flixArgs = args[1:]
-		ctx := context.Background()
-		flixRes, err := flixService.GetFlixByID(ctx, flixIdentifier)
-		if err != nil {
-			return nil, nil, fmt.Errorf("could not find flix template")
-		}
-		template = flixRes
-
-	case "local":
-		if flixIdentifier == "path" {
-			filePath := args[1]
-			flixArgs = args[2:]
-
-			flixFile, err := readerWriter.ReadFile(filePath)
-			if err != nil {
-				return nil, nil, fmt.Errorf("error loading script file: %w", err)
-			}
-
-			flixRes, err := flixkit.ParseFlix(string(flixFile))
-			if err != nil {
-				return nil, nil, fmt.Errorf("error parsing script file: %w", err)
-			}
-
-			template = flixRes
-		} else {
-			return nil, nil, fmt.Errorf("invalid flix command")
-		}
-
-	default:
-		return nil, nil, fmt.Errorf("invalid flix command")
-	}
-
-	return template, flixArgs, nil
-}
-
 func executeFlixScript(args []string, action string, readerWriter flowkit.ReaderWriter, flow flowkit.Services) (command.Result, error) {
-	flix, updatedArgs, err := getFlix(args, action, readerWriter)
+	template, flixArgs, err := flix.GetFlix(args, action, readerWriter)
 
-	if flix.IsTransaction() {
-		return nil, fmt.Errorf("invalid command for a transaction")
+	if template.IsTransaction() {
+		return nil, fmt.Errorf("invalid template for command")
 	}
 
-	cadenceWithImportsReplaced, err := flix.GetAndReplaceCadenceImports("testnet")
+	cadenceWithImportsReplaced, err := template.GetAndReplaceCadenceImports("testnet")
 	if err != nil {
 		return nil, fmt.Errorf("could not replace imports")
 	}
 
-	return sendScript([]byte(cadenceWithImportsReplaced), updatedArgs, "", flow)
+	return sendScript([]byte(cadenceWithImportsReplaced), flixArgs, "", flow)
 }
