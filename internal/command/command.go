@@ -200,8 +200,12 @@ func resolveHost(state *flowkit.State, hostFlag, networkKeyFlag, networkFlag str
 				return nil, fmt.Errorf("invalid network key %s: %w", networkKeyFlag, err)
 			}
 		}
+		_, err := state.Networks().ByName(networkFlag)
+		if err != nil {
+			return nil, fmt.Errorf("network with name %s does not exist in configuration", networkFlag)
+		}
 
-		return &config.Network{Name: "custom", Host: hostFlag, Key: networkKeyFlag}, nil
+		return &config.Network{Name: networkFlag, Host: hostFlag, Key: networkKeyFlag}, nil
 	}
 
 	// network flag with project initialized is next
