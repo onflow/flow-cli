@@ -14,7 +14,7 @@ require (
 	github.com/onflow/fcl-dev-wallet v0.7.2
 	github.com/onflow/flow-cli/flowkit v1.3.2-0.20230714155736-8c42ef6a9f45
 	github.com/onflow/flow-core-contracts/lib/go/templates v1.2.3
-	github.com/onflow/flow-emulator v0.52.0
+	github.com/onflow/flow-emulator v0.53.0
 	github.com/onflow/flow-go-sdk v0.41.9
 	github.com/onflowser/flowser/v2 v2.0.14-beta
 	github.com/pkg/errors v0.9.1
@@ -146,13 +146,12 @@ require (
 	github.com/onflow/atree v0.6.0 // indirect
 	github.com/onflow/cadence-tools/lint v0.10.1 // indirect
 	github.com/onflow/flow-archive v1.3.4-0.20230503192214-9e81e82d4dcc // indirect
-	github.com/onflow/flow-core-contracts/lib/go/contracts v1.2.3 // indirect
+	github.com/onflow/flow-core-contracts/lib/go/contracts v1.2.4-0.20230703193002-53362441b57d // indirect
 	github.com/onflow/flow-ft/lib/go/contracts v0.7.0 // indirect
-	github.com/onflow/flow-go v0.31.1-0.20230712191318-82d6e5f45ca1 // indirect
+	github.com/onflow/flow-go v0.31.1-0.20230718164039-e3411eff1e9d // indirect
 	github.com/onflow/flow-go/crypto v0.24.7 // indirect
 	github.com/onflow/flow-nft/lib/go/contracts v1.1.0 // indirect
 	github.com/onflow/flow/protobuf/go/flow v0.3.2-0.20230602212908-08fc6536d391 // indirect
-	github.com/onflow/fusd/lib/go/contracts v0.0.0-20211021081023-ae9de8fb2c7e // indirect
 	github.com/onflow/nft-storefront/lib/go/contracts v0.0.0-20221222181731-14b90207cead // indirect
 	github.com/onflow/sdks v0.5.0 // indirect
 	github.com/onflow/wal v0.0.0-20230529184820-bc9f8244608d // indirect
