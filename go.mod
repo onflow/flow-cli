@@ -148,8 +148,8 @@ require (
 	github.com/onflow/flow-archive v1.3.4-0.20230503192214-9e81e82d4dcc // indirect
 	github.com/onflow/flow-core-contracts/lib/go/contracts v1.2.4-0.20230703193002-53362441b57d // indirect
 	github.com/onflow/flow-ft/lib/go/contracts v0.7.0 // indirect
-	github.com/onflow/flow-go v0.31.1-0.20230718164039-e3411eff1e9d // indirect
-	github.com/onflow/flow-go/crypto v0.24.7 // indirect
+	github.com/onflow/flow-go v0.31.1-0.20230720190804-2782d45706ac // indirect
+	github.com/onflow/flow-go/crypto v0.24.9 // indirect
 	github.com/onflow/flow-nft/lib/go/contracts v1.1.0 // indirect
 	github.com/onflow/flow/protobuf/go/flow v0.3.2-0.20230602212908-08fc6536d391 // indirect
 	github.com/onflow/nft-storefront/lib/go/contracts v0.0.0-20221222181731-14b90207cead // indirect
