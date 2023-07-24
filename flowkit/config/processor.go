@@ -20,10 +20,11 @@ package config
 
 import (
 	"encoding/json"
+	"fmt"
 )
 
 // processorRun all pre-processors.
-func processorRun(raw []byte) []byte {
+func processorRun(raw []byte) ([]byte, error) {
 	type config struct {
 		Accounts    map[string]map[string]any `json:"accounts,omitempty"`
 		Contracts   any                       `json:"contracts,omitempty"`
@@ -33,8 +34,15 @@ func processorRun(raw []byte) []byte {
 	}
 
 	var conf config
-	_ = json.Unmarshal(raw, &conf)
+	err := json.Unmarshal(raw, &conf)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse config JSON: %w", err)
+	}
 
-	raw, _ = json.Marshal(conf)
-	return raw
+	raw, err = json.Marshal(conf)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal config: %w", err)
+	}
+
+	return raw, nil
 }

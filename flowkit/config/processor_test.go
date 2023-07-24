@@ -22,6 +22,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func Test_PrivateConfigFileAccounts(t *testing.T) {
@@ -45,6 +46,9 @@ func Test_PrivateConfigFileAccounts(t *testing.T) {
 		}
 	}`)
 
+	processorRunRes, err := processorRun(b)
+	require.NoError(t, err)
+
 	assert.JSONEq(t, `{
 		"emulators": {
 			"default": {
@@ -63,5 +67,5 @@ func Test_PrivateConfigFileAccounts(t *testing.T) {
 					"key": "11c5dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7"
 				}
 			}
-		}`, string(processorRun(b)))
+		}`, string(processorRunRes))
 }
