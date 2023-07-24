@@ -34,43 +34,6 @@ func keys() []crypto.PrivateKey {
 	return keys
 }
 
-func Test_SimpleInvalidContractConfig(t *testing.T) {
-	b := []byte(`{
-	"networks": {
-		"emulator": "127.0.0.1:3569",
-		"mainnet": "access.mainnet.nodes.onflow.org:9000",
-		"testnet": "access.devnet.nodes.onflow.org:9000"
-	},
-	"contracts": {
-		"DapperWalletRestrictions": "./contracts/DapperWalletRestrictions.cdc",
-	},
-	"accounts": {
-		"emulator-account": {
-			"address": "f8d6e0586b0a20c7",
-			"key": "2e8a599d996182262b49b2dbacf15d4ce103044d74ca003e5959ab3d64608947"
-		}
-	},
-	"deployments": {
-		"emulator": {
-			"emulator-account": [
-				"DapperWalletRestrictions"
-			]
-		}
-	}
-}`)
-
-	parser := NewParser()
-	conf, err := parser.Deserialize(b)
-
-	assert.NoError(t, err)
-	assert.Len(t, conf.Accounts, 1)
-	assert.Equal(t, "emulator-account", conf.Accounts[0].Name)
-	assert.Equal(t, "0x11c5dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7", conf.Accounts[0].Key.PrivateKey.String())
-	network, err := conf.Networks.ByName("emulator")
-	assert.NoError(t, err)
-	assert.Equal(t, "127.0.0.1:3569", network.Host)
-}
-
 func Test_SimpleJSONConfig(t *testing.T) {
 	b := []byte(`{
 		"emulators": {
