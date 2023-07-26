@@ -1,0 +1,61 @@
+{
+  "coverage": {
+    "A.01cf0e2f2f715450.ApprovalVoting": {
+      "line_hits": {
+        "100": 1,
+        "101": 2,
+        "103": 1,
+        "104": 1,
+        "106": 2,
+        "110": 1,
+        "112": 1,
+        "118": 1,
+        "119": 1,
+        "121": 1,
+        "45": 1,
+        "46": 1,
+        "49": 1,
+        "50": 1,
+        "51": 2,
+        "52": 2,
+        "59": 2,
+        "61": 1,
+        "72": 3,
+        "73": 2,
+        "75": 1,
+        "78": 1,
+        "79": 1,
+        "80": 2,
+        "81": 2,
+        "84": 1,
+        "90": 1,
+        "97": 1,
+        "98": 1
+      },
+      "missed_lines": [],
+      "statements": 29,
+      "percentage": "100.0%"
+    }
+  },
+  "excluded_locations": [
+    "A.f8d6e0586b0a20c7.NodeVersionBeacon",
+    "A.f8d6e0586b0a20c7.NFTStorefrontV2",
+    "A.f8d6e0586b0a20c7.NFTStorefront",
+    "A.f8d6e0586b0a20c7.FlowClusterQC",
+    "A.f8d6e0586b0a20c7.FlowDKG",
+    "A.f8d6e0586b0a20c7.LockedTokens",
+    "A.f8d6e0586b0a20c7.StakingProxy",
+    "A.0ae53cb6e3f42a79.FlowToken",
+    "A.f8d6e0586b0a20c7.ExampleNFT",
+    "A.f8d6e0586b0a20c7.FlowStorageFees",
+    "A.f8d6e0586b0a20c7.FlowEpoch",
+    "I.Test",
+    "A.f8d6e0586b0a20c7.FlowIDTableStaking",
+    "A.ee82856bf20e2aa6.FungibleToken",
+    "A.e5a8b7f23e8b548f.FlowFees",
+    "A.f8d6e0586b0a20c7.FlowStakingCollection",
+    "A.f8d6e0586b0a20c7.FlowServiceAccount",
+    "I.Crypto",
+    "s.7465737400000000000000000000000000000000000000000000000000000000"
+  ]
+}
