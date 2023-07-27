@@ -10,7 +10,7 @@ require (
 	github.com/manifoldco/promptui v0.9.0
 	github.com/onflow/cadence v0.39.14
 	github.com/onflow/cadence-tools/languageserver v0.30.1
-	github.com/onflow/cadence-tools/test v0.9.3
+	github.com/onflow/cadence-tools/test v0.10.0
 	github.com/onflow/fcl-dev-wallet v0.7.2
 	github.com/onflow/flow-cli/flowkit v1.3.2-0.20230714155736-8c42ef6a9f45
 	github.com/onflow/flow-core-contracts/lib/go/templates v1.2.3
