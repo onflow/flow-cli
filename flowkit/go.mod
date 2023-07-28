@@ -10,7 +10,7 @@ require (
 	github.com/onflow/cadence v0.39.14
 	github.com/onflow/flow-emulator v0.53.0
 	github.com/onflow/flow-go v0.31.1-0.20230720190804-2782d45706ac
-	github.com/onflow/flow-go-sdk v0.41.9
+	github.com/onflow/flow-go-sdk v0.42.0
 	github.com/onflow/flow-go/crypto v0.24.9
 	github.com/pkg/errors v0.9.1
 	github.com/rs/zerolog v1.29.0
@@ -107,6 +107,7 @@ require (
 	github.com/multiformats/go-multistream v0.4.1 // indirect
 	github.com/multiformats/go-varint v0.0.7 // indirect
 	github.com/onflow/atree v0.6.0 // indirect
+	github.com/onflow/crypto v0.24.9 // indirect
 	github.com/onflow/flow-core-contracts/lib/go/contracts v1.2.4-0.20230703193002-53362441b57d // indirect
 	github.com/onflow/flow-core-contracts/lib/go/templates v1.2.3 // indirect
 	github.com/onflow/flow-ft/lib/go/contracts v0.7.0 // indirect
@@ -176,5 +177,3 @@ require (
 	modernc.org/memory v1.5.0 // indirect
 	modernc.org/sqlite v1.21.1 // indirect
 )
-
-replace github.com/onflow/flow-go-sdk => github.com/findonflow/flow-go-sdk v0.40.1-0.20230717122814-47abbbe6e6b0
