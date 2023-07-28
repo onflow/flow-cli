@@ -227,3 +227,5 @@ require (
 	modernc.org/sqlite v1.21.1 // indirect
 	nhooyr.io/websocket v1.8.7 // indirect
 )
+
+replace github.com/onflow/flow-cli/flowkit => ./flowkit
