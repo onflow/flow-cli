@@ -166,6 +166,40 @@ func Test_MissingConfiguration(t *testing.T) {
 	assert.EqualError(t, err, "missing configuration")
 }
 
+func Test_ConfigurationMalformedJSON(t *testing.T) {
+	b := []byte(`{
+		"emulators": {
+			"default": {
+				"port": 3569,
+				"serviceAccount": "emulator-account",
+			}
+		},
+		"contracts": {},
+		"networks": {
+			"emulator": "127.0.0.1:3569"
+		},
+		"accounts": {
+			"emulator-account": {
+				"address": "f8d6e0586b0a20c7",
+				"key": "21c5dfdeb0ff03a7a73ef39788563b62c89adea67bbb21ab95e5f710bd1d40b7"
+			}
+		},
+		"deployments": {}
+	}`)
+
+	mockFS := afero.NewMemMapFs()
+	err := afero.WriteFile(mockFS, "flow.json", b, 0644)
+
+	assert.NoError(t, err)
+
+	composer := config.NewLoader(afero.Afero{Fs: mockFS})
+	composer.AddConfigParser(json.NewParser())
+
+	conf, err := composer.Load(config.DefaultPaths())
+	assert.EqualError(t, err, "failed to preprocess config: failed to parse config JSON: invalid character '}' looking for beginning of object key string")
+	assert.Nil(t, conf)
+}
+
 func Test_ConfigurationWrongFormat(t *testing.T) {
 	b := []byte(`{
 		"deployments": {

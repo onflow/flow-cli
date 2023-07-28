@@ -113,7 +113,11 @@ func (l *Loader) loadConfig(confPath string) (*Config, error) {
 		return nil, err
 	}
 
-	preProcessed := l.preprocess(raw)
+	preProcessed, err := l.preprocess(raw)
+	if err != nil {
+		return nil, fmt.Errorf("failed to preprocess config: %w", err)
+	}
+
 	configParser := l.configParsers.FindForFormat(filepath.Ext(confPath))
 	if configParser == nil {
 		return nil, fmt.Errorf("parser not found for config: %s", confPath)
@@ -170,7 +174,7 @@ func (l *Loader) Load(paths []string) (*Config, error) {
 }
 
 // preprocess does all manipulations to the raw configuration format happens here.
-func (l *Loader) preprocess(raw []byte) []byte {
+func (l *Loader) preprocess(raw []byte) ([]byte, error) {
 	return processorRun(raw)
 }
 
