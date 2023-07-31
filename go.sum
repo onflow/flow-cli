@@ -778,6 +778,8 @@ github.com/onflow/cadence-tools/lint v0.10.1 h1:EAtLDiwtA7gnZ1grwmQkiCu487dTpH1H
 github.com/onflow/cadence-tools/lint v0.10.1/go.mod h1:Rz3QhLseu6SnvZgBvyeJ0qzzz38Wxlev1lFwLiZtoPQ=
 github.com/onflow/cadence-tools/test v0.10.0 h1:tcNjOFXl7ZuuvgQ3uS36ENd8l3RkSBv4toC/J302rhY=
 github.com/onflow/cadence-tools/test v0.10.0/go.mod h1:eIvZOzFdi4JR2x6ekQfN8veQy04ZlZYbeeiQF/oZ0zM=
+github.com/onflow/crypto v0.24.9 h1:jYP1qdwid0qCineFzBFlxBchg710A7RuSWpTqxaOdog=
+github.com/onflow/crypto v0.24.9/go.mod h1:J/V7IEVaqjDajvF8K0B/SJPJDgAOP2G+LVLeb0hgmbg=
 github.com/onflow/fcl-dev-wallet v0.7.2 h1:ZwhpzDakcZn9rHiIr52LwkdPh1MpUPbxA/PwCVaZ2SA=
 github.com/onflow/fcl-dev-wallet v0.7.2/go.mod h1:kc42jkiuoPJmxMRFjfbRO9XvnR/3XLheaOerxVMDTiw=
 github.com/onflow/flow-archive v1.3.4-0.20230503192214-9e81e82d4dcc h1:C4ZniFeOv+pHlDLJdGc/4e3NklSjVuvaXKN47980gnY=
@@ -793,8 +795,8 @@ github.com/onflow/flow-ft/lib/go/contracts v0.7.0/go.mod h1:kTMFIySzEJJeupk+7EmX
 github.com/onflow/flow-go v0.31.1-0.20230720190804-2782d45706ac h1:9HCLt6xQXXGYokhu7FUO89fCNYTduRn+XAmeh+7e9Lg=
 github.com/onflow/flow-go v0.31.1-0.20230720190804-2782d45706ac/go.mod h1:x+d1ufrH+bqOeL4++5b6fkXlQgjMUtuk0EEomVdxdtY=
 github.com/onflow/flow-go-sdk v0.24.0/go.mod h1:IoptMLPyFXWvyd9yYA6/4EmSeeozl6nJoIv4FaEMg74=
-github.com/onflow/flow-go-sdk v0.41.9 h1:cyplhhhc0RnfOAan2t7I/7C9g1hVGDDLUhWj6ZHAkk4=
-github.com/onflow/flow-go-sdk v0.41.9/go.mod h1:e9Q5TITCy7g08lkdQJxP8fAKBnBoC5FjALvUKr36j4I=
+github.com/onflow/flow-go-sdk v0.42.0 h1:n5EQMYChVsRMzEDDckBZTy5wQKejeXsvatVbNC11fAU=
+github.com/onflow/flow-go-sdk v0.42.0/go.mod h1:QNEJ8amKeIZZWAvo7I2Mn/o0sPQ21H1iEdox0t94anY=
 github.com/onflow/flow-go/crypto v0.21.3/go.mod h1:vI6V4CY3R6c4JKBxdcRiR/AnjBfL8OSD97bJc60cLuQ=
 github.com/onflow/flow-go/crypto v0.24.9 h1:0EQp+kSZYJepMIiSypfJVe7tzsPcb6UXOdOtsTCDhBs=
 github.com/onflow/flow-go/crypto v0.24.9/go.mod h1:fqCzkIBBMRRkciVrvW21rECKq1oD7Q6u+bCI78lfNX0=
