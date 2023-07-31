@@ -21,7 +21,6 @@ package scripts
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"github.com/onflow/cadence"
 	flowsdk "github.com/onflow/flow-go-sdk"
@@ -31,7 +30,6 @@ import (
 	"github.com/onflow/flow-cli/flowkit/arguments"
 	"github.com/onflow/flow-cli/flowkit/output"
 	"github.com/onflow/flow-cli/internal/command"
-	"github.com/onflow/flow-cli/internal/flix"
 )
 
 type flagsScripts struct {
@@ -60,16 +58,10 @@ func execute(
 	readerWriter flowkit.ReaderWriter,
 	flow flowkit.Services,
 ) (command.Result, error) {
-	filenameOrAction := args[0]
-
-	if strings.HasPrefix(filenameOrAction, "flix") {
-		return executeFlixScript(args, filenameOrAction, readerWriter, flow)
-	}
-
-	return executeLocalScript(args, filenameOrAction, readerWriter, flow)
+	return executeLocalScript(args, args[0], readerWriter, flow)
 }
 
-func sendScript(code []byte, argsArr []string, location string, flow flowkit.Services) (command.Result, error) {
+func SendScript(code []byte, argsArr []string, location string, flow flowkit.Services) (command.Result, error) {
 	var cadenceArgs []cadence.Value
 	var err error
 	if scriptFlags.ArgsJSON != "" {
@@ -113,20 +105,5 @@ func executeLocalScript(args []string, filename string, readerWriter flowkit.Rea
 		return nil, fmt.Errorf("error loading script file: %w", err)
 	}
 
-	return sendScript(code, args[1:], filename, flow)
-}
-
-func executeFlixScript(args []string, action string, readerWriter flowkit.ReaderWriter, flow flowkit.Services) (command.Result, error) {
-	template, flixArgs, err := flix.GetFlix(args, action, readerWriter)
-
-	if template.IsTransaction() {
-		return nil, fmt.Errorf("invalid template for command")
-	}
-
-	cadenceWithImportsReplaced, err := template.GetAndReplaceCadenceImports("testnet")
-	if err != nil {
-		return nil, fmt.Errorf("could not replace imports")
-	}
-
-	return sendScript([]byte(cadenceWithImportsReplaced), flixArgs, "", flow)
+	return SendScript(code, args[1:], filename, flow)
 }

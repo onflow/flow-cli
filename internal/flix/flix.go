@@ -3,68 +3,134 @@ package flix
 import (
 	"context"
 	"fmt"
-	"strings"
+	"os"
+
+	"github.com/onflow/flow-cli/internal/scripts"
+
+	"github.com/onflow/flow-cli/internal/transactions"
 
 	"github.com/onflow/flixkit-go"
 	"github.com/onflow/flow-cli/flowkit"
+	"github.com/onflow/flow-cli/flowkit/output"
+	"github.com/onflow/flow-cli/internal/command"
+	"github.com/spf13/cobra"
 )
 
-func GetFlix(args []string, action string, readerWriter flowkit.ReaderWriter) (*flixkit.FlowInteractionTemplate, []string, error) {
-	commandParts := strings.Split(action, ":")
+type flagsOpts struct {
+	ArgsJSON    string   `default:"" flag:"args-json" info:"arguments in JSON-Cadence format"`
+	BlockID     string   `default:"" flag:"block-id" info:"block ID to execute the script at"`
+	BlockHeight uint64   `default:"" flag:"block-height" info:"block height to execute the script at"`
+	Signer      string   `default:"" flag:"signer" info:"Account name from configuration used to sign the transaction as proposer, payer and suthorizer"`
+	Proposer    string   `default:"" flag:"proposer" info:"Account name from configuration used as proposer"`
+	Payer       string   `default:"" flag:"payer" info:"Account name from configuration used as payer"`
+	Authorizers []string `default:"" flag:"authorizer" info:"Name of a single or multiple comma-separated accounts used as authorizers from configuration"`
+	Include     []string `default:"" flag:"include" info:"Fields to include in the output"`
+	Exclude     []string `default:"" flag:"exclude" info:"Fields to exclude from the output (events)"`
+	GasLimit    uint64   `default:"1000" flag:"gas-limit" info:"transaction gas limit"`
+}
 
-	if len(commandParts) != 3 {
-		return nil, nil, fmt.Errorf("invalid flix command")
-	}
+var flags = flagsOpts{}
 
-	flixFindMethod := commandParts[1]
-	flixIdentifier := commandParts[2]
+var Cmd = &cobra.Command{
+	Use:   "flix",
+	Short: "Commands for the Flix functionality",
+}
 
-	var flixService = flixkit.NewFlixService(&flixkit.Config{})
-	var template *flixkit.FlowInteractionTemplate
-	var argsArr []string
-
-	switch flixFindMethod {
-	case "name":
-		argsArr = args[1:]
+var idCommand = &command.Command{
+	Cmd: &cobra.Command{
+		Use:     "id <id>",
+		Short:   "Execute flix operation with given id",
+		Args:    cobra.MinimumNArgs(1),
+		Example: `flow flix id 123`,
+	},
+	Flags: &flags,
+	RunS: func(args []string, _ command.GlobalFlags, _ output.Logger, flow flowkit.Services, state *flowkit.State) (result command.Result, err error) {
+		flixService := flixkit.NewFlixService(&flixkit.Config{})
+		flixID := args[0]
 		ctx := context.Background()
-		flixRes, err := flixService.GetFlix(ctx, flixIdentifier)
+		template, err := flixService.GetFlixByID(ctx, flixID)
 		if err != nil {
-			return nil, nil, fmt.Errorf("could not find flix template")
+			return nil, fmt.Errorf("could not find flix template")
 		}
-		template = flixRes
 
-	case "id":
-		argsArr = args[1:]
-		ctx := context.Background()
-		flixRes, err := flixService.GetFlixByID(ctx, flixIdentifier)
+		cadenceWithImportsReplaced, err := template.GetAndReplaceCadenceImports(flow.Network().Name)
 		if err != nil {
-			return nil, nil, fmt.Errorf("could not find flix template")
+			return nil, fmt.Errorf("could not replace imports")
 		}
-		template = flixRes
 
-	case "local":
-		if flixIdentifier == "path" {
-			filePath := args[1]
-			argsArr = args[2:]
-
-			flixFile, err := readerWriter.ReadFile(filePath)
-			if err != nil {
-				return nil, nil, fmt.Errorf("error loading script file: %w", err)
-			}
-
-			flixRes, err := flixkit.ParseFlix(string(flixFile))
-			if err != nil {
-				return nil, nil, fmt.Errorf("error parsing script file: %w", err)
-			}
-
-			template = flixRes
+		if template.IsScript() {
+			return scripts.SendScript([]byte(cadenceWithImportsReplaced), args[1:], "", flow)
 		} else {
-			return nil, nil, fmt.Errorf("invalid flix command")
+			return transactions.SendTransaction([]byte(cadenceWithImportsReplaced), args[1:], "", flow, state)
+		}
+	},
+}
+
+var nameCommand = &command.Command{
+	Cmd: &cobra.Command{
+		Use:     "name <name>",
+		Short:   "Execute flix operation with given name",
+		Args:    cobra.MinimumNArgs(1),
+		Example: `flow flix name transfer-flow`,
+	},
+	Flags: &flags,
+	RunS: func(args []string, _ command.GlobalFlags, _ output.Logger, flow flowkit.Services, state *flowkit.State) (result command.Result, err error) {
+		flixService := flixkit.NewFlixService(&flixkit.Config{})
+		flixName := args[0]
+		ctx := context.Background()
+		template, err := flixService.GetFlix(ctx, flixName)
+		if err != nil {
+			return nil, fmt.Errorf("could not find flix template")
 		}
 
-	default:
-		return nil, nil, fmt.Errorf("invalid flix command")
-	}
+		cadenceWithImportsReplaced, err := template.GetAndReplaceCadenceImports(flow.Network().Name)
+		if err != nil {
+			return nil, fmt.Errorf("could not replace imports")
+		}
 
-	return template, argsArr, nil
+		if template.IsScript() {
+			return scripts.SendScript([]byte(cadenceWithImportsReplaced), args[1:], "", flow)
+		} else {
+			return transactions.SendTransaction([]byte(cadenceWithImportsReplaced), args[1:], "", flow, state)
+		}
+	},
+}
+
+var pathCommand = &command.Command{
+	Cmd: &cobra.Command{
+		Use:     "path <path>",
+		Short:   "Execute flix operation with given name",
+		Args:    cobra.MinimumNArgs(1),
+		Example: `flow flix path transfer-flow`,
+	},
+	Flags: &flags,
+	RunS: func(args []string, _ command.GlobalFlags, _ output.Logger, flow flowkit.Services, state *flowkit.State) (result command.Result, err error) {
+		filePath := args[0]
+		file, err := os.ReadFile(filePath)
+		if err != nil {
+			return nil, fmt.Errorf("could not read file")
+		}
+
+		template, err := flixkit.ParseFlix(string(file))
+		if err != nil {
+			return nil, fmt.Errorf("could not parse flix")
+		}
+
+		cadenceWithImportsReplaced, err := template.GetAndReplaceCadenceImports(flow.Network().Name)
+		if err != nil {
+			return nil, fmt.Errorf("could not replace imports")
+		}
+
+		if template.IsScript() {
+			return scripts.SendScript([]byte(cadenceWithImportsReplaced), args[1:], "", flow)
+		} else {
+			return transactions.SendTransaction([]byte(cadenceWithImportsReplaced), args[1:], "", flow, state)
+		}
+	},
+}
+
+func init() {
+	idCommand.AddToParent(Cmd)
+	nameCommand.AddToParent(Cmd)
+	pathCommand.AddToParent(Cmd)
 }

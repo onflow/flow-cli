@@ -21,9 +21,6 @@ package transactions
 import (
 	"context"
 	"fmt"
-	"strings"
-
-	"github.com/onflow/flow-cli/internal/flix"
 
 	"github.com/onflow/cadence"
 	"github.com/spf13/cobra"
@@ -67,13 +64,7 @@ func send(
 	flow flowkit.Services,
 	state *flowkit.State,
 ) (result command.Result, err error) {
-	filenameOrAction := args[0]
-
-	if strings.HasPrefix(filenameOrAction, "flix") {
-		return executeFlixTransaction(args, filenameOrAction, flow, state)
-	}
-
-	return executeLocalTransaction(args, filenameOrAction, flow, state)
+	return executeLocalTransaction(args, args[0], flow, state)
 }
 
 func executeLocalTransaction(args []string, filename string, flow flowkit.Services, state *flowkit.State) (result command.Result, err error) {
@@ -82,28 +73,10 @@ func executeLocalTransaction(args []string, filename string, flow flowkit.Servic
 		return nil, fmt.Errorf("error loading transaction file: %w", err)
 	}
 
-	return sendTransaction(code, args, filename, flow, state)
+	return SendTransaction(code, args, filename, flow, state)
 }
 
-func executeFlixTransaction(args []string, action string, flow flowkit.Services, state *flowkit.State) (result command.Result, err error) {
-	template, flixArgs, err := flix.GetFlix(args, action, state.ReaderWriter())
-	if err != nil {
-		return nil, err
-	}
-
-	if template.IsScript() {
-		return nil, fmt.Errorf("invalid template for command")
-	}
-
-	cadenceWithImportsReplaced, err := template.GetAndReplaceCadenceImports("testnet")
-	if err != nil {
-		return nil, fmt.Errorf("could not replace imports")
-	}
-
-	return sendTransaction([]byte(cadenceWithImportsReplaced), flixArgs, "", flow, state)
-}
-
-func sendTransaction(code []byte, args []string, location string, flow flowkit.Services, state *flowkit.State) (result command.Result, err error) {
+func SendTransaction(code []byte, args []string, location string, flow flowkit.Services, state *flowkit.State) (result command.Result, err error) {
 	proposerName := sendFlags.Proposer
 	var proposer *accounts.Account
 	if proposerName != "" {
