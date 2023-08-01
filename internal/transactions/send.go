@@ -33,7 +33,7 @@ import (
 	"github.com/onflow/flow-cli/internal/command"
 )
 
-type flagsSend struct {
+type Flags struct {
 	ArgsJSON    string   `default:"" flag:"args-json" info:"arguments in JSON-Cadence format"`
 	Signer      string   `default:"" flag:"signer" info:"Account name from configuration used to sign the transaction as proposer, payer and suthorizer"`
 	Proposer    string   `default:"" flag:"proposer" info:"Account name from configuration used as proposer"`
@@ -44,7 +44,7 @@ type flagsSend struct {
 	GasLimit    uint64   `default:"1000" flag:"gas-limit" info:"transaction gas limit"`
 }
 
-var sendFlags = flagsSend{}
+var flags = Flags{}
 
 var sendCommand = &command.Command{
 	Cmd: &cobra.Command{
@@ -53,7 +53,7 @@ var sendCommand = &command.Command{
 		Args:    cobra.MinimumNArgs(1),
 		Example: `flow transactions send tx.cdc "Hello world"`,
 	},
-	Flags: &sendFlags,
+	Flags: &flags,
 	RunS:  send,
 }
 
@@ -73,10 +73,10 @@ func executeLocalTransaction(args []string, filename string, flow flowkit.Servic
 		return nil, fmt.Errorf("error loading transaction file: %w", err)
 	}
 
-	return SendTransaction(code, args, filename, flow, state)
+	return SendTransaction(code, args, filename, flow, state, flags)
 }
 
-func SendTransaction(code []byte, args []string, location string, flow flowkit.Services, state *flowkit.State) (result command.Result, err error) {
+func SendTransaction(code []byte, args []string, location string, flow flowkit.Services, state *flowkit.State, sendFlags Flags) (result command.Result, err error) {
 	proposerName := sendFlags.Proposer
 	var proposer *accounts.Account
 	if proposerName != "" {

@@ -32,13 +32,13 @@ import (
 	"github.com/onflow/flow-cli/internal/command"
 )
 
-type flagsScripts struct {
+type Flags struct {
 	ArgsJSON    string `default:"" flag:"args-json" info:"arguments in JSON-Cadence format"`
 	BlockID     string `default:"" flag:"block-id" info:"block ID to execute the script at"`
 	BlockHeight uint64 `default:"" flag:"block-height" info:"block height to execute the script at"`
 }
 
-var scriptFlags = flagsScripts{}
+var flags = Flags{}
 
 var executeCommand = &command.Command{
 	Cmd: &cobra.Command{
@@ -47,7 +47,7 @@ var executeCommand = &command.Command{
 		Example: `flow scripts execute script.cdc "Meow" "Woof"`,
 		Args:    cobra.MinimumNArgs(1),
 	},
-	Flags: &scriptFlags,
+	Flags: &flags,
 	Run:   execute,
 }
 
@@ -61,7 +61,7 @@ func execute(
 	return executeLocalScript(args, args[0], readerWriter, flow)
 }
 
-func SendScript(code []byte, argsArr []string, location string, flow flowkit.Services) (command.Result, error) {
+func SendScript(code []byte, argsArr []string, location string, flow flowkit.Services, scriptFlags Flags) (command.Result, error) {
 	var cadenceArgs []cadence.Value
 	var err error
 	if scriptFlags.ArgsJSON != "" {
@@ -105,5 +105,5 @@ func executeLocalScript(args []string, filename string, readerWriter flowkit.Rea
 		return nil, fmt.Errorf("error loading script file: %w", err)
 	}
 
-	return SendScript(code, args[1:], filename, flow)
+	return SendScript(code, args[1:], filename, flow, flags)
 }

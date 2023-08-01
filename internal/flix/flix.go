@@ -16,7 +16,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type flagsOpts struct {
+type Flags struct {
 	ArgsJSON    string   `default:"" flag:"args-json" info:"arguments in JSON-Cadence format"`
 	BlockID     string   `default:"" flag:"block-id" info:"block ID to execute the script at"`
 	BlockHeight uint64   `default:"" flag:"block-height" info:"block height to execute the script at"`
@@ -29,7 +29,7 @@ type flagsOpts struct {
 	GasLimit    uint64   `default:"1000" flag:"gas-limit" info:"transaction gas limit"`
 }
 
-var flags = flagsOpts{}
+var flags = Flags{}
 
 var Cmd = &cobra.Command{
 	Use:   "flix",
@@ -59,9 +59,24 @@ var idCommand = &command.Command{
 		}
 
 		if template.IsScript() {
-			return scripts.SendScript([]byte(cadenceWithImportsReplaced), args[1:], "", flow)
+			scriptsFlags := scripts.Flags{
+				ArgsJSON:    flags.ArgsJSON,
+				BlockID:     flags.BlockID,
+				BlockHeight: flags.BlockHeight,
+			}
+			return scripts.SendScript([]byte(cadenceWithImportsReplaced), args[1:], "", flow, scriptsFlags)
 		} else {
-			return transactions.SendTransaction([]byte(cadenceWithImportsReplaced), args[1:], "", flow, state)
+			transactionFlags := transactions.Flags{
+				ArgsJSON:    flags.ArgsJSON,
+				Signer:      flags.Signer,
+				Proposer:    flags.Proposer,
+				Payer:       flags.Payer,
+				Authorizers: flags.Authorizers,
+				Include:     flags.Include,
+				Exclude:     flags.Exclude,
+				GasLimit:    flags.GasLimit,
+			}
+			return transactions.SendTransaction([]byte(cadenceWithImportsReplaced), args[1:], "", flow, state, transactionFlags)
 		}
 	},
 }
@@ -89,9 +104,24 @@ var nameCommand = &command.Command{
 		}
 
 		if template.IsScript() {
-			return scripts.SendScript([]byte(cadenceWithImportsReplaced), args[1:], "", flow)
+			scriptsFlags := scripts.Flags{
+				ArgsJSON:    flags.ArgsJSON,
+				BlockID:     flags.BlockID,
+				BlockHeight: flags.BlockHeight,
+			}
+			return scripts.SendScript([]byte(cadenceWithImportsReplaced), args[1:], "", flow, scriptsFlags)
 		} else {
-			return transactions.SendTransaction([]byte(cadenceWithImportsReplaced), args[1:], "", flow, state)
+			transactionFlags := transactions.Flags{
+				ArgsJSON:    flags.ArgsJSON,
+				Signer:      flags.Signer,
+				Proposer:    flags.Proposer,
+				Payer:       flags.Payer,
+				Authorizers: flags.Authorizers,
+				Include:     flags.Include,
+				Exclude:     flags.Exclude,
+				GasLimit:    flags.GasLimit,
+			}
+			return transactions.SendTransaction([]byte(cadenceWithImportsReplaced), args[1:], "", flow, state, transactionFlags)
 		}
 	},
 }
@@ -122,9 +152,24 @@ var pathCommand = &command.Command{
 		}
 
 		if template.IsScript() {
-			return scripts.SendScript([]byte(cadenceWithImportsReplaced), args[1:], "", flow)
+			scriptsFlags := scripts.Flags{
+				ArgsJSON:    flags.ArgsJSON,
+				BlockID:     flags.BlockID,
+				BlockHeight: flags.BlockHeight,
+			}
+			return scripts.SendScript([]byte(cadenceWithImportsReplaced), args[1:], "", flow, scriptsFlags)
 		} else {
-			return transactions.SendTransaction([]byte(cadenceWithImportsReplaced), args[1:], "", flow, state)
+			transactionFlags := transactions.Flags{
+				ArgsJSON:    flags.ArgsJSON,
+				Signer:      flags.Signer,
+				Proposer:    flags.Proposer,
+				Payer:       flags.Payer,
+				Authorizers: flags.Authorizers,
+				Include:     flags.Include,
+				Exclude:     flags.Exclude,
+				GasLimit:    flags.GasLimit,
+			}
+			return transactions.SendTransaction([]byte(cadenceWithImportsReplaced), args[1:], "", flow, state, transactionFlags)
 		}
 	},
 }
