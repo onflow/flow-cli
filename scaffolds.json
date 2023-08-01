@@ -31,6 +31,13 @@
     "type": "web"
   },
   {
+    "name": "Magic Link Hybrid Custody Dapp",
+    "repo": "https://github.com/jribbink/magic-link-hc-sample/",
+    "description": "Simple web app demonstrating Magic Link as a custodial solution for Hybrid Custody.",
+    "commit": "643619cb6b5759c51a82b43efe761211398e87e6",
+    "type": "web"
+  },
+  {
     "name": "Simple Unity",
     "repo": "https://github.com/onflow/UnityFlowSDK.git",
     "description": "Simple example demonstrating how to interact with the Flow network using Unity SDK.",
