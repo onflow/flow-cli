@@ -140,8 +140,8 @@ func Test_Send(t *testing.T) {
 
 	t.Run("Success", func(t *testing.T) {
 		const gas = uint64(1000)
-		sendFlags.GasLimit = gas
-		inArgs := []string{tests.TransactionArgString.Filename, "foo"}
+		flags.GasLimit = gas
+		inArgs := []string{tests.TransactionArgString.Filename}
 
 		srv.SendTransaction.Run(func(args mock.Arguments) {
 			roles := args.Get(1).(transactions.AccountRoles)
@@ -160,33 +160,33 @@ func Test_Send(t *testing.T) {
 	})
 
 	t.Run("Fail non-existing account", func(t *testing.T) {
-		sendFlags.Proposer = "invalid"
+		flags.Proposer = "invalid"
 		_, err := send([]string{""}, command.GlobalFlags{}, util.NoLogger, srv.Mock, state)
 		assert.EqualError(t, err, "proposer account: [invalid] doesn't exists in configuration")
-		sendFlags.Proposer = "" // reset
+		flags.Proposer = "" // reset
 
-		sendFlags.Payer = "invalid"
+		flags.Payer = "invalid"
 		_, err = send([]string{""}, command.GlobalFlags{}, util.NoLogger, srv.Mock, state)
 		assert.EqualError(t, err, "payer account: [invalid] doesn't exists in configuration")
-		sendFlags.Payer = "" // reset
+		flags.Payer = "" // reset
 
-		sendFlags.Authorizers = []string{"invalid"}
+		flags.Authorizers = []string{"invalid"}
 		_, err = send([]string{""}, command.GlobalFlags{}, util.NoLogger, srv.Mock, state)
 		assert.EqualError(t, err, "authorizer account: [invalid] doesn't exists in configuration")
-		sendFlags.Authorizers = nil // reset
+		flags.Authorizers = nil // reset
 
-		sendFlags.Signer = "invalid"
+		flags.Signer = "invalid"
 		_, err = send([]string{""}, command.GlobalFlags{}, util.NoLogger, srv.Mock, state)
 		assert.EqualError(t, err, "signer account: [invalid] doesn't exists in configuration")
-		sendFlags.Signer = "" // reset
+		flags.Signer = "" // reset
 	})
 
 	t.Run("Fail signer and payer flag", func(t *testing.T) {
-		sendFlags.Proposer = config.DefaultEmulator.ServiceAccount
-		sendFlags.Signer = config.DefaultEmulator.ServiceAccount
+		flags.Proposer = config.DefaultEmulator.ServiceAccount
+		flags.Signer = config.DefaultEmulator.ServiceAccount
 		_, err := send([]string{""}, command.GlobalFlags{}, util.NoLogger, srv.Mock, state)
 		assert.EqualError(t, err, "signer flag cannot be combined with payer/proposer/authorizer flags")
-		sendFlags.Signer = "" // reset
+		flags.Signer = "" // reset
 	})
 
 	t.Run("Fail loading transaction file", func(t *testing.T) {
