@@ -77,7 +77,7 @@ func getType(s string) flixTypes {
 func execute(
 	args []string,
 	_ command.GlobalFlags,
-	_ output.Logger,
+	logger output.Logger,
 	flow flowkit.Services,
 	state *flowkit.State,
 ) (result command.Result, err error) {
@@ -90,28 +90,33 @@ func execute(
 	if flixQueryType == id {
 		template, err = flixService.GetFlixByID(ctx, flixQuery)
 		if err != nil {
-			return nil, fmt.Errorf("could not find flix with id %s", flixQuery)
+			logger.Error(fmt.Sprintf("could not find flix with id %s", flixQuery))
+			return nil, err
 		}
 	} else if flixQueryType == name {
 		template, err = flixService.GetFlix(ctx, flixQuery)
 		if err != nil {
-			return nil, fmt.Errorf("could not find flix with name %s", flixQuery)
+			logger.Error(fmt.Sprintf("could not find flix with name %s", flixQuery))
+			return nil, err
 		}
 	} else if flixQueryType == path {
 		file, err := os.ReadFile(flixQuery)
 		if err != nil {
-			return nil, fmt.Errorf("could not read file")
+			logger.Error(fmt.Sprintf("could not read flix file %s", flixQuery))
+			return nil, err
 		}
 		template, err = flixkit.ParseFlix(string(file))
 	}
 
 	if err != nil {
-		return nil, fmt.Errorf("could not find or parse flix template")
+		logger.Error("could not find or parse flix template")
+		return nil, err
 	}
 
 	cadenceWithImportsReplaced, err := template.GetAndReplaceCadenceImports(flow.Network().Name)
 	if err != nil {
-		return nil, fmt.Errorf("could not replace imports")
+		logger.Error("could not replace imports")
+		return nil, err
 	}
 
 	if template.IsScript() {
