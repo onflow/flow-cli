@@ -22,6 +22,8 @@ package main
 import (
 	"os"
 
+	"github.com/onflow/flow-cli/internal/flix"
+
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/accounts"
@@ -32,7 +34,6 @@ import (
 	"github.com/onflow/flow-cli/internal/config"
 	"github.com/onflow/flow-cli/internal/emulator"
 	"github.com/onflow/flow-cli/internal/events"
-	"github.com/onflow/flow-cli/internal/flix"
 	"github.com/onflow/flow-cli/internal/keys"
 	"github.com/onflow/flow-cli/internal/project"
 	"github.com/onflow/flow-cli/internal/quick"
@@ -86,7 +87,7 @@ func main() {
 	cmd.AddCommand(config.Cmd)
 	cmd.AddCommand(signatures.Cmd)
 	cmd.AddCommand(snapshot.Cmd)
-	cmd.AddCommand(flix.Cmd)
+	cmd.AddCommand(flix.FlixCommand.Cmd)
 
 	command.InitFlags(cmd)
 	cmd.AddGroup(&cobra.Group{
