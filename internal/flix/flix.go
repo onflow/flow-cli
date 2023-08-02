@@ -46,12 +46,12 @@ var FlixCommand = &command.Command{
 	RunS:  execute,
 }
 
-type flixTypes string
+type flixQueryTypes string
 
 const (
-	name flixTypes = "name"
-	path flixTypes = "path"
-	id   flixTypes = "id"
+	name flixQueryTypes = "name"
+	path flixQueryTypes = "path"
+	id   flixQueryTypes = "id"
 )
 
 func isHex(s string) bool {
@@ -63,7 +63,7 @@ func isPath(path string) bool {
 	return strings.HasPrefix(path, "./")
 }
 
-func getType(s string) flixTypes {
+func getType(s string) flixQueryTypes {
 	switch {
 	case isPath(s):
 		return path
