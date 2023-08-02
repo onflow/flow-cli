@@ -4,16 +4,18 @@ import (
 	"context"
 	"fmt"
 	"os"
-
-	"github.com/onflow/flow-cli/flowkit/output"
-	"github.com/onflow/flow-cli/internal/command"
-
-	"github.com/onflow/flow-cli/flowkit"
+	"regexp"
+	"strings"
 
 	"github.com/onflow/flixkit-go"
 
+	"github.com/onflow/flow-cli/flowkit/output"
+	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/internal/scripts"
 	"github.com/onflow/flow-cli/internal/transactions"
+
+	"github.com/onflow/flow-cli/flowkit"
+
 	"github.com/spf13/cobra"
 )
 
@@ -28,72 +30,108 @@ type flixFlags struct {
 	Include     []string `default:"" flag:"include" info:"Fields to include in the output"`
 	Exclude     []string `default:"" flag:"exclude" info:"Fields to exclude from the output (events)"`
 	GasLimit    uint64   `default:"1000" flag:"gas-limit" info:"transaction gas limit"`
-	ID          string   `default:"" flag:"id" info:"id of the flix"`
-	Name        string   `default:"" flag:"name" info:"name of the flix"`
-	Path        string   `default:"" flag:"path" info:"path to the flix file"`
 }
 
 var flags = flixFlags{}
 
 var FlixCommand = &command.Command{
 	Cmd: &cobra.Command{
-		Use:     "flix [<argument> <argument> ...]",
-		Short:   "Execute flix operation with given id, name or path",
-		Args:    cobra.MinimumNArgs(1),
-		Example: `flow flix --id 123`,
+		Use:     "flix <id | name | path>",
+		Short:   "Execute flix with given id, name or path",
+		Example: "flow flix multiply 2 3 --network testnet",
+		Args:    cobra.ArbitraryArgs,
+		GroupID: "flix",
 	},
 	Flags: &flags,
-	RunS: func(args []string, _ command.GlobalFlags, _ output.Logger, flow flowkit.Services, state *flowkit.State) (result command.Result, err error) {
-		flixService := flixkit.NewFlixService(&flixkit.Config{})
-		ctx := context.Background()
-		var template *flixkit.FlowInteractionTemplate
+	RunS:  execute,
+}
 
-		if flags.ID != "" {
-			template, err = flixService.GetFlixByID(ctx, flags.ID)
-			if err != nil {
-				return nil, fmt.Errorf("could not find flix with id %s", flags.ID)
-			}
-		} else if flags.Name != "" {
-			template, err = flixService.GetFlix(ctx, flags.Name)
-			if err != nil {
-				return nil, fmt.Errorf("could not find flix with name %s", flags.Name)
-			}
-		} else if flags.Path != "" {
-			file, err := os.ReadFile(flags.Path)
-			if err != nil {
-				return nil, fmt.Errorf("could not read file")
-			}
-			template, err = flixkit.ParseFlix(string(file))
-		}
+type flixTypes string
 
+const (
+	name flixTypes = "name"
+	path flixTypes = "path"
+	id   flixTypes = "id"
+)
+
+func isHex(s string) bool {
+	match, _ := regexp.MatchString("^[a-fA-F0-9]+$", s)
+	return match
+}
+
+func isPath(path string) bool {
+	return strings.HasPrefix(path, "./")
+}
+
+func getType(s string) flixTypes {
+	switch {
+	case isPath(s):
+		return path
+	case isHex(s):
+		return id
+	default:
+		return name
+	}
+}
+
+func execute(
+	args []string,
+	_ command.GlobalFlags,
+	_ output.Logger,
+	flow flowkit.Services,
+	state *flowkit.State,
+) (result command.Result, err error) {
+	flixService := flixkit.NewFlixService(&flixkit.Config{})
+	ctx := context.Background()
+	var template *flixkit.FlowInteractionTemplate
+	flixQuery := args[0]
+	flixQueryType := getType(flixQuery)
+
+	if flixQueryType == id {
+		template, err = flixService.GetFlixByID(ctx, flixQuery)
 		if err != nil {
-			return nil, fmt.Errorf("could not find or parse flix template")
+			return nil, fmt.Errorf("could not find flix with id %s", flixQuery)
 		}
-
-		cadenceWithImportsReplaced, err := template.GetAndReplaceCadenceImports(flow.Network().Name)
+	} else if flixQueryType == name {
+		template, err = flixService.GetFlix(ctx, flixQuery)
 		if err != nil {
-			return nil, fmt.Errorf("could not replace imports")
+			return nil, fmt.Errorf("could not find flix with name %s", flixQuery)
 		}
+	} else if flixQueryType == path {
+		file, err := os.ReadFile(flixQuery)
+		if err != nil {
+			return nil, fmt.Errorf("could not read file")
+		}
+		template, err = flixkit.ParseFlix(string(file))
+	}
 
-		if template.IsScript() {
-			scriptsFlags := scripts.Flags{
-				ArgsJSON:    flags.ArgsJSON,
-				BlockID:     flags.BlockID,
-				BlockHeight: flags.BlockHeight,
-			}
-			return scripts.SendScript([]byte(cadenceWithImportsReplaced), args, "", flow, scriptsFlags)
-		} else {
-			transactionFlags := transactions.Flags{
-				ArgsJSON:    flags.ArgsJSON,
-				Signer:      flags.Signer,
-				Proposer:    flags.Proposer,
-				Payer:       flags.Payer,
-				Authorizers: flags.Authorizers,
-				Include:     flags.Include,
-				Exclude:     flags.Exclude,
-				GasLimit:    flags.GasLimit,
-			}
-			return transactions.SendTransaction([]byte(cadenceWithImportsReplaced), args, "", flow, state, transactionFlags)
+	if err != nil {
+		return nil, fmt.Errorf("could not find or parse flix template")
+	}
+
+	cadenceWithImportsReplaced, err := template.GetAndReplaceCadenceImports(flow.Network().Name)
+	if err != nil {
+		return nil, fmt.Errorf("could not replace imports")
+	}
+
+	if template.IsScript() {
+		scriptsFlags := scripts.Flags{
+			ArgsJSON:    flags.ArgsJSON,
+			BlockID:     flags.BlockID,
+			BlockHeight: flags.BlockHeight,
 		}
-	},
+		return scripts.SendScript([]byte(cadenceWithImportsReplaced), args[1:], "", flow, scriptsFlags)
+	} else {
+		transactionFlags := transactions.Flags{
+			ArgsJSON:    flags.ArgsJSON,
+			Signer:      flags.Signer,
+			Proposer:    flags.Proposer,
+			Payer:       flags.Payer,
+			Authorizers: flags.Authorizers,
+			Include:     flags.Include,
+			Exclude:     flags.Exclude,
+			GasLimit:    flags.GasLimit,
+		}
+		return transactions.SendTransaction([]byte(cadenceWithImportsReplaced), args[1:], "", flow, state, transactionFlags)
+	}
 }

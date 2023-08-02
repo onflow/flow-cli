@@ -71,6 +71,9 @@ func main() {
 	super.SetupCommand.AddToParent(cmd)
 	super.DevCommand.AddToParent(cmd)
 
+	// flix commands
+	flix.FlixCommand.AddToParent(cmd)
+
 	// structured commands
 	cmd.AddCommand(settings.Cmd)
 	cmd.AddCommand(cadence.Cmd)
@@ -87,7 +90,6 @@ func main() {
 	cmd.AddCommand(config.Cmd)
 	cmd.AddCommand(signatures.Cmd)
 	cmd.AddCommand(snapshot.Cmd)
-	cmd.AddCommand(flix.FlixCommand.Cmd)
 
 	command.InitFlags(cmd)
 	cmd.AddGroup(&cobra.Group{
@@ -113,6 +115,10 @@ func main() {
 	cmd.AddGroup(&cobra.Group{
 		ID:    "security",
 		Title: "🔒 Flow Security",
+	})
+	cmd.AddGroup(&cobra.Group{
+		ID:    "flix",
+		Title: "Flow Interaction Templates (FLIX)",
 	})
 
 	cmd.SetUsageTemplate(command.UsageTemplate)
