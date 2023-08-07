@@ -2,10 +2,9 @@ package super
 
 import (
 	"context"
+	"encoding/hex"
 	"fmt"
 	"os"
-	"regexp"
-	"strings"
 
 	"github.com/onflow/flixkit-go"
 
@@ -54,13 +53,17 @@ const (
 	flixId   flixQueryTypes = "id"
 )
 
-func isHex(s string) bool {
-	match, _ := regexp.MatchString("^[a-fA-F0-9]+$", s)
-	return match
+func isHex(str string) bool {
+	if len(str) != 64 {
+		return false
+	}
+	_, err := hex.DecodeString(str)
+	return err == nil
 }
 
 func isPath(path string) bool {
-	return strings.HasPrefix(path, "./")
+	_, err := os.Stat(path)
+	return err == nil
 }
 
 func getType(s string) flixQueryTypes {
