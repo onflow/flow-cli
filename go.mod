@@ -147,7 +147,7 @@ require (
 	github.com/multiformats/go-varint v0.0.7 // indirect
 	github.com/onflow/atree v0.6.0 // indirect
 	github.com/onflow/cadence-tools/lint v0.9.0 // indirect
-	github.com/onflow/flixkit-go v0.0.0
+	github.com/onflow/flixkit-go v0.1.0 // indirect
 	github.com/onflow/flow-archive v1.3.4-0.20230503192214-9e81e82d4dcc // indirect
 	github.com/onflow/flow-core-contracts/lib/go/contracts v1.2.3 // indirect
 	github.com/onflow/flow-ft/lib/go/contracts v0.7.0 // indirect
@@ -233,4 +233,3 @@ require (
 )
 
 replace github.com/onflow/flow-cli/flowkit => ./flowkit
-replace github.com/onflow/flixkit-go => ../flixkit-go
