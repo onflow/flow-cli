@@ -21,7 +21,7 @@
     "name": "Hybrid Custody Project",
     "repo": "https://github.com/onflow/hybrid-custody-scaffold",
     "description": "Starter for exploring & implementing Hybrid Custody.",
-    "commit": "1179e362d3d7e8d153b09f7603f5dfd9a7700d87"
+    "commit": "29851ce513535d14a6a1a67903f30218c8e47e91"
   },
   {
     "name": "FCL Web Dapp",
