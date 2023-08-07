@@ -1,4 +1,4 @@
-package flix
+package super
 
 import (
 	"context"
@@ -40,7 +40,7 @@ var FlixCommand = &command.Command{
 		Short:   "Execute FLIX template with a given id, name, or local filename",
 		Example: "flow flix multiply 2 3",
 		Args:    cobra.ArbitraryArgs,
-		GroupID: "flix",
+		GroupID: "super",
 	},
 	Flags: &flags,
 	RunS:  execute,
@@ -49,9 +49,9 @@ var FlixCommand = &command.Command{
 type flixQueryTypes string
 
 const (
-	name flixQueryTypes = "name"
-	path flixQueryTypes = "path"
-	id   flixQueryTypes = "id"
+	flixName flixQueryTypes = "name"
+	flixPath flixQueryTypes = "path"
+	flixId   flixQueryTypes = "id"
 )
 
 func isHex(s string) bool {
@@ -66,11 +66,11 @@ func isPath(path string) bool {
 func getType(s string) flixQueryTypes {
 	switch {
 	case isPath(s):
-		return path
+		return flixPath
 	case isHex(s):
-		return id
+		return flixId
 	default:
-		return name
+		return flixName
 	}
 }
 
@@ -87,19 +87,19 @@ func execute(
 	flixQuery := args[0]
 	flixQueryType := getType(flixQuery)
 
-	if flixQueryType == id {
+	if flixQueryType == flixId {
 		template, err = flixService.GetFlixByID(ctx, flixQuery)
 		if err != nil {
 			logger.Error(fmt.Sprintf("could not find flix with id %s", flixQuery))
 			return nil, err
 		}
-	} else if flixQueryType == name {
+	} else if flixQueryType == flixName {
 		template, err = flixService.GetFlix(ctx, flixQuery)
 		if err != nil {
 			logger.Error(fmt.Sprintf("could not find flix with name %s", flixQuery))
 			return nil, err
 		}
-	} else if flixQueryType == path {
+	} else if flixQueryType == flixPath {
 		file, err := os.ReadFile(flixQuery)
 		if err != nil {
 			logger.Error(fmt.Sprintf("could not read flix file %s", flixQuery))

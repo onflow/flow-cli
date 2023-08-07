@@ -22,8 +22,6 @@ package main
 import (
 	"os"
 
-	"github.com/onflow/flow-cli/internal/flix"
-
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/accounts"
@@ -70,9 +68,7 @@ func main() {
 	// super commands
 	super.SetupCommand.AddToParent(cmd)
 	super.DevCommand.AddToParent(cmd)
-
-	// flix commands
-	flix.FlixCommand.AddToParent(cmd)
+	super.FlixCommand.AddToParent(cmd)
 
 	// structured commands
 	cmd.AddCommand(settings.Cmd)
