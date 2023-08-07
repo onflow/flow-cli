@@ -37,7 +37,7 @@ var flags = flixFlags{}
 var FlixCommand = &command.Command{
 	Cmd: &cobra.Command{
 		Use:     "flix <id | name | path>",
-		Short:   "Execute flix with given id, name or path",
+		Short:   "Execute FLIX template with a given id, name, or local filename",
 		Example: "flow flix multiply 2 3 --network testnet",
 		Args:    cobra.ArbitraryArgs,
 		GroupID: "flix",
