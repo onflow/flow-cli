@@ -132,11 +132,6 @@ func execute(
 		return nil, err
 	}
 
-	if err != nil {
-		logger.Error("could not find or parse flix template")
-		return nil, err
-	}
-
 	cadenceWithImportsReplaced, err := template.GetAndReplaceCadenceImports(flow.Network().Name)
 	if err != nil {
 		logger.Error("could not replace imports")
