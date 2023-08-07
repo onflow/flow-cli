@@ -85,27 +85,30 @@ func execute(
 	ctx := context.Background()
 	var template *flixkit.FlowInteractionTemplate
 	flixQuery := args[0]
-	flixQueryType := getType(flixQuery)
 
-	if flixQueryType == flixId {
+	switch getType(flixQuery) {
+	case flixId:
 		template, err = flixService.GetFlixByID(ctx, flixQuery)
 		if err != nil {
 			logger.Error(fmt.Sprintf("could not find flix with id %s", flixQuery))
 			return nil, err
 		}
-	} else if flixQueryType == flixName {
+	case flixName:
 		template, err = flixService.GetFlix(ctx, flixQuery)
 		if err != nil {
 			logger.Error(fmt.Sprintf("could not find flix with name %s", flixQuery))
 			return nil, err
 		}
-	} else if flixQueryType == flixPath {
+	case flixPath:
 		file, err := os.ReadFile(flixQuery)
 		if err != nil {
 			logger.Error(fmt.Sprintf("could not read flix file %s", flixQuery))
 			return nil, err
 		}
 		template, err = flixkit.ParseFlix(string(file))
+	default:
+		logger.Error("invalid flix query type")
+		return nil, err
 	}
 
 	if err != nil {
