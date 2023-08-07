@@ -64,10 +64,8 @@ func send(
 	flow flowkit.Services,
 	state *flowkit.State,
 ) (result command.Result, err error) {
-	return executeLocalTransaction(args, args[0], flow, state)
-}
+	filename := args[0]
 
-func executeLocalTransaction(args []string, filename string, flow flowkit.Services, state *flowkit.State) (result command.Result, err error) {
 	code, err := state.ReadFile(filename)
 	if err != nil {
 		return nil, fmt.Errorf("error loading transaction file: %w", err)

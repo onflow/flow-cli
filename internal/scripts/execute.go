@@ -58,7 +58,14 @@ func execute(
 	readerWriter flowkit.ReaderWriter,
 	flow flowkit.Services,
 ) (command.Result, error) {
-	return executeLocalScript(args, args[0], readerWriter, flow)
+	filename := args[0]
+
+	code, err := readerWriter.ReadFile(filename)
+	if err != nil {
+		return nil, fmt.Errorf("error loading script file: %w", err)
+	}
+
+	return SendScript(code, args[1:], filename, flow, flags)
 }
 
 func SendScript(code []byte, argsArr []string, location string, flow flowkit.Services, scriptFlags Flags) (command.Result, error) {
@@ -97,13 +104,4 @@ func SendScript(code []byte, argsArr []string, location string, flow flowkit.Ser
 	}
 
 	return &scriptResult{value}, nil
-}
-
-func executeLocalScript(args []string, filename string, readerWriter flowkit.ReaderWriter, flow flowkit.Services) (command.Result, error) {
-	code, err := readerWriter.ReadFile(filename)
-	if err != nil {
-		return nil, fmt.Errorf("error loading script file: %w", err)
-	}
-
-	return SendScript(code, args[1:], filename, flow, flags)
 }
