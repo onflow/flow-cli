@@ -117,24 +117,26 @@ func execute(
 	case flixId:
 		template, err = flixService.GetFlixByID(ctx, flixQuery)
 		if err != nil {
-			logger.Error(fmt.Sprintf("could not find flix with id %s", flixQuery))
-			return nil, err
+			return nil, fmt.Errorf("could not find flix with id %s: %w", flixQuery, err)
 		}
+
 	case flixName:
 		template, err = flixService.GetFlix(ctx, flixQuery)
 		if err != nil {
-			logger.Error(fmt.Sprintf("could not find flix with name %s", flixQuery))
-			return nil, err
+			return nil, fmt.Errorf("could not find flix with name %s: %w", flixQuery, err)
 		}
+
 	case flixPath:
 		file, err := os.ReadFile(flixQuery)
 		if err != nil {
-			logger.Error(fmt.Sprintf("could not read flix file %s", flixQuery))
-			return nil, err
+			return nil, fmt.Errorf("could not read flix file %s: %w", flixQuery, err)
 		}
 		template, err = flixkit.ParseFlix(string(file))
+		if err != nil {
+			return nil, fmt.Errorf("could not parse flix from file %s: %w", flixQuery, err)
+		}
+
 	default:
-		logger.Error("invalid flix query type")
 		return nil, fmt.Errorf("invalid flix query type: %s", flixQuery)
 	}
 
