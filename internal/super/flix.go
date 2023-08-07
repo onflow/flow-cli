@@ -135,7 +135,7 @@ func execute(
 		template, err = flixkit.ParseFlix(string(file))
 	default:
 		logger.Error("invalid flix query type")
-		return nil, err
+		return nil, fmt.Errorf("invalid flix query type: %s", flixQuery)
 	}
 
 	cadenceWithImportsReplaced, err := template.GetAndReplaceCadenceImports(flow.Network().Name)
