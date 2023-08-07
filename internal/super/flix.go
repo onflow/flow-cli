@@ -129,17 +129,17 @@ func execute(
 			BlockHeight: flags.BlockHeight,
 		}
 		return scripts.SendScript([]byte(cadenceWithImportsReplaced), args[1:], "", flow, scriptsFlags)
-	} else {
-		transactionFlags := transactions.Flags{
-			ArgsJSON:    flags.ArgsJSON,
-			Signer:      flags.Signer,
-			Proposer:    flags.Proposer,
-			Payer:       flags.Payer,
-			Authorizers: flags.Authorizers,
-			Include:     flags.Include,
-			Exclude:     flags.Exclude,
-			GasLimit:    flags.GasLimit,
-		}
-		return transactions.SendTransaction([]byte(cadenceWithImportsReplaced), args[1:], "", flow, state, transactionFlags)
 	}
+
+	transactionFlags := transactions.Flags{
+		ArgsJSON:    flags.ArgsJSON,
+		Signer:      flags.Signer,
+		Proposer:    flags.Proposer,
+		Payer:       flags.Payer,
+		Authorizers: flags.Authorizers,
+		Include:     flags.Include,
+		Exclude:     flags.Exclude,
+		GasLimit:    flags.GasLimit,
+	}
+	return transactions.SendTransaction([]byte(cadenceWithImportsReplaced), args[1:], "", flow, state, transactionFlags)
 }
