@@ -76,12 +76,18 @@ func isHex(str string) bool {
 		return false
 	}
 	_, err := hex.DecodeString(str)
-	return err == nil
+	if err != nil {
+		return false
+	}
+	return true
 }
 
 func isPath(path string) bool {
 	_, err := os.Stat(path)
-	return err == nil
+	if err != nil {
+		return false
+	}
+	return true
 }
 
 func getType(s string) flixQueryTypes {
