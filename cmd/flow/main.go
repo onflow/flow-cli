@@ -112,10 +112,6 @@ func main() {
 		ID:    "security",
 		Title: "🔒 Flow Security",
 	})
-	cmd.AddGroup(&cobra.Group{
-		ID:    "flix",
-		Title: "Flow Interaction Templates (FLIX)",
-	})
 
 	cmd.SetUsageTemplate(command.UsageTemplate)
 
