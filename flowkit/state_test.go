@@ -344,7 +344,7 @@ func generateAliasesComplexProject() State {
 func Test_GetContractsByNameSimple(t *testing.T) {
 	p := generateSimpleProject()
 	path := "../hungry-kitties/cadence/contracts/NonFungibleToken.cdc"
-	af.WriteFile(path, []byte("pub contract{}"), os.ModePerm)
+	af.WriteFile(path, []byte("access(all) contract{}"), os.ModePerm)
 
 	contracts, err := p.DeploymentContractsByNetwork(config.EmulatorNetwork)
 	require.NoError(t, err)
@@ -392,7 +392,7 @@ func Test_GetContractsByNameComplex(t *testing.T) {
 	p := generateComplexProject()
 
 	for _, c := range p.conf.Contracts {
-		_ = af.WriteFile(c.Location, []byte("pub contract{}"), os.ModePerm)
+		_ = af.WriteFile(c.Location, []byte("access(all) contract{}"), os.ModePerm)
 	}
 
 	contracts, err := p.DeploymentContractsByNetwork(config.EmulatorNetwork)

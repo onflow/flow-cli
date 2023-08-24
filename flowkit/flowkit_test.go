@@ -507,7 +507,7 @@ func TestAccountsAddContract_Integration(t *testing.T) {
 		assert.NoError(t, err)
 
 		updated := tests.ContractSimple
-		updated.Source = []byte(`pub contract Simple { init() {} }`)
+		updated.Source = []byte(`access(all) contract Simple { init() {} }`)
 		_, _, err = flowkit.AddContract(
 			ctx,
 			srvAcc,
