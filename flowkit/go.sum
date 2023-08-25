@@ -1107,12 +1107,12 @@ github.com/onflow/flow-core-contracts/lib/go/contracts v1.2.4-0.20230822191436-8
 github.com/onflow/flow-core-contracts/lib/go/contracts v1.2.4-0.20230822191436-8a95802475f4/go.mod h1:IRraF/nm1xiefjSIkQ6w6ZNzZbUGfB14bzMUNXjrMmo=
 github.com/onflow/flow-core-contracts/lib/go/templates v1.2.4-0.20230808220007-f00e74ca675b h1:f+5TwXPwlvtaDwn0ZlMIxibuPwbvmtlnSkeZgAm38Yw=
 github.com/onflow/flow-core-contracts/lib/go/templates v1.2.4-0.20230808220007-f00e74ca675b/go.mod h1:a9vPOJl7SwR0L6MMzPGEshp5HEsPQfay/pze+jrNlrw=
-github.com/onflow/flow-emulator v0.54.1-0.20230823195422-f93d2baa2e50 h1:wuItnV4zMbVd14QoIY0Y/aBIuv8R1HMKjmduAnZ001U=
-github.com/onflow/flow-emulator v0.54.1-0.20230823195422-f93d2baa2e50/go.mod h1:lUNk9x74fvooGPEkzqWG6sIQEbQSbm5nn6fjlZ+T3ZM=
+github.com/onflow/flow-emulator v0.54.1-0.20230824191334-33ca4ff2621a h1:hhhFOz2YO2p/6whANnv7SSnYn4vlXS1bClfD/OG55p0=
+github.com/onflow/flow-emulator v0.54.1-0.20230824191334-33ca4ff2621a/go.mod h1:aiHlhz2EZVjDUWjFVV8aTSA5u53T380Tr60kazfgrR8=
 github.com/onflow/flow-ft/lib/go/contracts v0.7.1-0.20230818200853-ab1b03e98a95 h1:mtQIjtnUQ2axR74YRMSG4rYo5PzWIbToGCdbu0oZjGs=
 github.com/onflow/flow-ft/lib/go/contracts v0.7.1-0.20230818200853-ab1b03e98a95/go.mod h1:kTMFIySzEJJeupk+7EmXs0EJ6CBWY/MV9fv9iYQk+RU=
-github.com/onflow/flow-go v0.31.1-0.20230823193859-43245c9c2602 h1:7ewOtP3ynBlWW2cvomRD4Ierkb9Qk3awkmdnnAAYtM0=
-github.com/onflow/flow-go v0.31.1-0.20230823193859-43245c9c2602/go.mod h1:BC9pUgGOoprxzKmhZ7Bn7eXANb4X4BEY7eFhdYqvzLo=
+github.com/onflow/flow-go v0.31.1-0.20230825164918-09c1887078ac h1:WLd0/rl5w4toaBnpzvrugUONeuEY7Qnzvp+hrgm5IJg=
+github.com/onflow/flow-go v0.31.1-0.20230825164918-09c1887078ac/go.mod h1:ipprHiXpX2s9eTCgHS3hqmqxaIqz1wKGbJ3aOgmVkAQ=
 github.com/onflow/flow-go-sdk v0.41.7-stable-cadence/go.mod h1:ejVN+bqcsTHVvRpDDJDoBNdmcxUfFMW4IvdTbMeQ/hQ=
 github.com/onflow/flow-go-sdk v0.41.10-0.20230815215544-c3e9ce914aee h1:zU78xj/94YNYtf4CLGWogCTPyrR+1h3QTalsU/ZEKDg=
 github.com/onflow/flow-go-sdk v0.41.10-0.20230815215544-c3e9ce914aee/go.mod h1:JdN8uOpLMFaMTCFSoeck78fYPupTsV7ccvyrDM88nQU=
