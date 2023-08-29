@@ -187,8 +187,8 @@ func Test_Testnet_ProjectDeploy(t *testing.T) {
 	// make a change
 	updated := []byte(`
 		import "ContractA"
-		pub contract ContractB {
-			pub init() {}
+		access(all) contract ContractB {
+			access(all) init() {}
 		}
 	`)
 	ContractB.Source = updated

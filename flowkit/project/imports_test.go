@@ -55,20 +55,20 @@ func TestResolver(t *testing.T) {
 			[]byte(`
 			import Kibble from "./Kibble.cdc"
 			import FT from "./FT.cdc"
-			pub fun main() {}
+			access(all) fun main() {}
     `), []byte(`
 			import Kibble from "../../tests/Kibble.cdc"
 			import FT from "../../tests/FT.cdc"
-			pub fun main() {}
+			access(all) fun main() {}
     `), []byte(`
 			import Kibble from "../../tests/Kibble.cdc"
 			import NFT from "../../tests/NFT.cdc"
-			pub fun main() {}
+			access(all) fun main() {}
     `), []byte(`
 			import Kibble from "./Kibble.cdc"
 			import Crypto
 			import Foo from 0x0000000000000001
-			pub fun main() {}
+			access(all) fun main() {}
 	`),
 		}
 
@@ -76,20 +76,20 @@ func TestResolver(t *testing.T) {
 			[]byte(`
 			import Kibble from 0x0000000000000001 
 			import FT from 0x0000000000000002 
-			pub fun main() {}
+			access(all) fun main() {}
     `), []byte(`
 			import Kibble from 0x0000000000000001 
 			import FT from 0x0000000000000002 
-			pub fun main() {}
+			access(all) fun main() {}
     `), []byte(`
 			import Kibble from 0x0000000000000001 
 			import NFT from 0x0000000000000004 
-			pub fun main() {}
+			access(all) fun main() {}
     `), []byte(`
 			import Kibble from 0x0000000000000001
 			import Crypto
 			import Foo from 0x0000000000000001
-			pub fun main() {}
+			access(all) fun main() {}
 	`),
 		}
 
@@ -117,7 +117,7 @@ func TestResolver(t *testing.T) {
 			import Foo from "./Foo.cdc"
 			import "Bar"
 			
-			pub contract Zoo {}
+			access(all) contract Zoo {}
 		`)
 		program, err := NewProgram(code, nil, "./Zoo.cdc")
 		require.NoError(t, err)
@@ -129,7 +129,7 @@ func TestResolver(t *testing.T) {
 			import Foo from 0x0000000000000001
 			import Bar from 0x0000000000000002
 			
-			pub contract Zoo {}
+			access(all) contract Zoo {}
 		`)
 
 		assert.Equal(t, cleanCode(expected), cleanCode(replaced.Code()))

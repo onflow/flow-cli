@@ -507,7 +507,7 @@ func TestAccountsAddContract_Integration(t *testing.T) {
 		assert.NoError(t, err)
 
 		updated := tests.ContractSimple
-		updated.Source = []byte(`pub contract Simple { init() {} }`)
+		updated.Source = []byte(`access(all) contract Simple { init() {} }`)
 		_, _, err = flowkit.AddContract(
 			ctx,
 			srvAcc,
@@ -1333,7 +1333,7 @@ func TestScripts(t *testing.T) {
 		_, flowkit, gw := setup()
 
 		gw.ExecuteScript.Run(func(args mock.Arguments) {
-			assert.Len(t, string(args.Get(0).([]byte)), 78)
+			assert.Len(t, string(args.Get(0).([]byte)), 86)
 			assert.Equal(t, "\"Foo\"", args.Get(1).([]cadence.Value)[0].String())
 			gw.ExecuteScript.Return(cadence.MustConvertValue(""), nil)
 		})

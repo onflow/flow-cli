@@ -39,13 +39,13 @@ var addresses = test.AddressGenerator()
 
 var testContractA = testContract{
 	location:       "ContractA.cdc",
-	code:           []byte(`pub contract ContractA {}`),
+	code:           []byte(`access(all) contract ContractA {}`),
 	accountAddress: addresses.New(),
 }
 
 var testContractB = testContract{
 	location:       "ContractB.cdc",
-	code:           []byte(`pub contract ContractB {}`),
+	code:           []byte(`access(all) contract ContractB {}`),
 	accountAddress: addresses.New(),
 }
 
@@ -54,7 +54,7 @@ var testContractC = testContract{
 	code: []byte(`
         import ContractA from "ContractA.cdc"
     
-        pub contract ContractC {}
+        access(all) contract ContractC {}
     `),
 	accountAddress: addresses.New(),
 }
@@ -64,7 +64,7 @@ var testContractD = testContract{
 	code: []byte(`
         import ContractC from "ContractC.cdc"
 
-        pub contract ContractD {}
+        access(all) contract ContractD {}
     `),
 	accountAddress: addresses.New(),
 }
@@ -74,7 +74,7 @@ var testContractE = testContract{
 	code: []byte(`
         import ContractF from "ContractF.cdc"
 
-        pub contract ContractE {}
+        access(all) contract ContractE {}
     `),
 }
 
@@ -83,7 +83,7 @@ var testContractF = testContract{
 	code: []byte(`
         import ContractE from "ContractE.cdc"
 
-        pub contract ContractF {}
+        access(all) contract ContractF {}
     `),
 	accountAddress: addresses.New(),
 }
@@ -94,7 +94,7 @@ var testContractG = testContract{
         import ContractA from "ContractA.cdc"
         import ContractB from "ContractB.cdc"
 
-        pub contract ContractG {}
+        access(all) contract ContractG {}
     `),
 	accountAddress: addresses.New(),
 }
@@ -104,7 +104,7 @@ var testContractH = testContract{
 	code: []byte(`
         import ContractFoo from "Foo.cdc"
 
-        pub contract ContractH {}
+        access(all) contract ContractH {}
     `),
 	accountAddress: addresses.New(),
 }

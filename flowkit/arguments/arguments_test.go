@@ -191,7 +191,7 @@ func Test_ParseWithoutType(t *testing.T) {
 				args, err := ParseWithoutType(
 					[]string{literal},
 					[]byte(fmt.Sprintf(
-						`pub fun main(test: %s) {}`,
+						`access(all) fun main(test: %s) {}`,
 						testCase.Type.ID(),
 					)),
 					"",
@@ -217,8 +217,8 @@ func Test_ParseWithoutType(t *testing.T) {
 		t.Parallel()
 
 		template := map[string]string{
-			"script":      `pub fun main(foo: String): Void {}`,
-			"contract":    `pub contract Foo { init(foo: String) {} }`,
+			"script":      `access(all) fun main(foo: String): Void {}`,
+			"contract":    `access(all) contract Foo { init(foo: String) {} }`,
 			"transaction": `transaction(foo: String) {}`,
 		}
 
