@@ -9,11 +9,11 @@ require (
 	github.com/gosuri/uilive v0.0.4
 	github.com/manifoldco/promptui v0.9.0
 	github.com/onflow/cadence v0.41.0-stable-cadence.1
-	github.com/onflow/cadence-tools/languageserver v0.31.1-0.20230825223712-689b434cfbcc
-	github.com/onflow/cadence-tools/test v0.11.1-0.20230825223712-689b434cfbcc
+	github.com/onflow/cadence-tools/languageserver v0.33.0-stable-cadence.1
+	github.com/onflow/cadence-tools/test v0.12.0-stable-cadence.1
 	github.com/onflow/fcl-dev-wallet v0.7.2
 	github.com/onflow/flixkit-go v0.1.0
-	github.com/onflow/flow-cli/flowkit v1.3.5-0.20230825221814-b6e47e54a129
+	github.com/onflow/flow-cli/flowkit v1.5.0-stable-cadence.1
 	github.com/onflow/flow-core-contracts/lib/go/templates v1.2.4-0.20230808220007-f00e74ca675b
 	github.com/onflow/flow-emulator v0.55.0-stable-cadence.1
 	github.com/onflow/flow-go-sdk v0.44.0-stable-cadence.1
@@ -149,7 +149,7 @@ require (
 	github.com/multiformats/go-multistream v0.4.1 // indirect
 	github.com/multiformats/go-varint v0.0.7 // indirect
 	github.com/onflow/atree v0.6.0 // indirect
-	github.com/onflow/cadence-tools/lint v0.11.1-0.20230825223712-689b434cfbcc // indirect
+	github.com/onflow/cadence-tools/lint v0.12.0-stable-cadence.1 // indirect
 	github.com/onflow/flow-archive v1.3.4-0.20230503192214-9e81e82d4dcc // indirect
 	github.com/onflow/flow-core-contracts/lib/go/contracts v1.2.4-0.20230822191436-8a95802475f4 // indirect
 	github.com/onflow/flow-ft/lib/go/contracts v0.7.1-0.20230818200853-ab1b03e98a95 // indirect
