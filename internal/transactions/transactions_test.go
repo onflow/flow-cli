@@ -141,7 +141,7 @@ func Test_Send(t *testing.T) {
 	t.Run("Success", func(t *testing.T) {
 		const gas = uint64(1000)
 		flags.GasLimit = gas
-		inArgs := []string{tests.TransactionArgString.Filename}
+		inArgs := []string{tests.TransactionArgString.Filename, "test"}
 
 		srv.SendTransaction.Run(func(args mock.Arguments) {
 			roles := args.Get(1).(transactions.AccountRoles)
