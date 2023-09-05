@@ -146,7 +146,7 @@ func execute(
 			BlockID:     flags.BlockID,
 			BlockHeight: flags.BlockHeight,
 		}
-		return scripts.SendScript([]byte(cadenceWithImportsReplaced), args, "", flow, scriptsFlags)
+		return scripts.SendScript([]byte(cadenceWithImportsReplaced), args[1:], "", flow, scriptsFlags)
 	}
 
 	transactionFlags := transactions.Flags{
@@ -159,5 +159,5 @@ func execute(
 		Exclude:     flags.Exclude,
 		GasLimit:    flags.GasLimit,
 	}
-	return transactions.SendTransaction([]byte(cadenceWithImportsReplaced), args, "", flow, state, transactionFlags)
+	return transactions.SendTransaction([]byte(cadenceWithImportsReplaced), args[1:], "", flow, state, transactionFlags)
 }

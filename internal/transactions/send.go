@@ -71,7 +71,7 @@ func send(
 		return nil, fmt.Errorf("error loading transaction file: %w", err)
 	}
 
-	return SendTransaction(code, args, filename, flow, state, flags)
+	return SendTransaction(code, args[1:], filename, flow, state, flags)
 }
 
 func SendTransaction(code []byte, args []string, location string, flow flowkit.Services, state *flowkit.State, sendFlags Flags) (result command.Result, err error) {
@@ -125,7 +125,7 @@ func SendTransaction(code []byte, args []string, location string, flow flowkit.S
 	if sendFlags.ArgsJSON != "" {
 		transactionArgs, err = arguments.ParseJSON(sendFlags.ArgsJSON)
 	} else {
-		transactionArgs, err = arguments.ParseWithoutType(args[1:], code, location)
+		transactionArgs, err = arguments.ParseWithoutType(args, code, location)
 	}
 	if err != nil {
 		return nil, fmt.Errorf("error parsing transaction arguments: %w", err)

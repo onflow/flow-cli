@@ -68,13 +68,13 @@ func execute(
 	return SendScript(code, args[1:], filename, flow, flags)
 }
 
-func SendScript(code []byte, args []string, location string, flow flowkit.Services, scriptFlags Flags) (command.Result, error) {
+func SendScript(code []byte, argsArr []string, location string, flow flowkit.Services, scriptFlags Flags) (command.Result, error) {
 	var cadenceArgs []cadence.Value
 	var err error
 	if scriptFlags.ArgsJSON != "" {
 		cadenceArgs, err = arguments.ParseJSON(scriptFlags.ArgsJSON)
 	} else {
-		cadenceArgs, err = arguments.ParseWithoutType(args[1:], code, location)
+		cadenceArgs, err = arguments.ParseWithoutType(argsArr, code, location)
 	}
 
 	if err != nil {
