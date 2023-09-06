@@ -22,6 +22,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/onflow/flow-go-sdk"
 	"github.com/spf13/cobra"
@@ -153,11 +154,28 @@ func (r *transactionResult) String() string {
 			Events: r.result.Events,
 		}
 
+		if r.result != nil && !command.ContainsFlag(r.include, "fee-events") {
+			feeEvents := []string{"FlowFees", "FlowToken"}
+			var filteredEvents []flow.Event
+
+			EventLoop:
+			for _, event := range e.Events {
+					for _, feeEvent := range feeEvents {
+					if strings.Contains(event.Type, feeEvent) {
+						continue EventLoop
+					}	
+				}
+				filteredEvents = append(filteredEvents, event)				
+			}
+			e.Events = filteredEvents
+		}
+
 		eventsOutput := e.String()
 		if eventsOutput == "" {
 			eventsOutput = "None"
 		}
 
+		
 		_, _ = fmt.Fprintf(writer, "\n\nEvents:\t %s\n", eventsOutput)
 	}
 
@@ -182,6 +200,10 @@ func (r *transactionResult) String() string {
 		_, _ = fmt.Fprintf(writer, "\n\nPayload:\n%x", r.tx.Encode())
 	} else {
 		_, _ = fmt.Fprint(writer, "\n\nPayload (hidden, use --include payload)")
+	}
+
+	if !command.ContainsFlag(r.include, "fee-events") && !command.ContainsFlag(r.exclude, "events") {
+		_, _ = fmt.Fprint(writer, "\n\nFee Events (hidden, use --include fee-events)")
 	}
 
 	_ = writer.Flush()

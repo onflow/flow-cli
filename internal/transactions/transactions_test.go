@@ -331,7 +331,9 @@ Signatures (minimized, use --include signatures)
 
 Code (hidden, use --include code)
 
-Payload (hidden, use --include payload)`, "\n"), result.String())
+Payload (hidden, use --include payload)
+
+Fee Events (hidden, use --include fee-events)`, "\n"), result.String())
 
 		assert.Equal(t, map[string]any{
 			"authorizers": "[]",
@@ -372,7 +374,9 @@ Events:
 
 Code (hidden, use --include code)
 
-Payload (hidden, use --include payload)`, "\n"), result.String())
+Payload (hidden, use --include payload)
+
+Fee Events (hidden, use --include fee-events)`, "\n"), result.String())
 
 		assert.Equal(t, map[string]any{
 			"authorizers":  "[]",
