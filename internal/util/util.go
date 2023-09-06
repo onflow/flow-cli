@@ -72,7 +72,6 @@ func GetAddressNetwork(address flowsdk.Address) (flowsdk.ChainID, error) {
 		flowsdk.Mainnet,
 		flowsdk.Testnet,
 		flowsdk.Emulator,
-		flowsdk.Sandboxnet,
 	}
 	for _, net := range networks {
 		if address.IsValid(net) {
