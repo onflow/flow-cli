@@ -156,7 +156,7 @@ func (r *transactionResult) String() string {
 		if r.result != nil && !command.ContainsFlag(r.include, "fee-events") {
 			// last 3 events are fee events
 			if e.Events != nil && len(e.Events) >= 3 {
-				e.Events  = e.Events[:len(e.Events)-3]
+				e.Events = e.Events[:len(e.Events)-3]
 			}
 		}
 
