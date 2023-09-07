@@ -22,7 +22,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"strings"
 
 	"github.com/onflow/flow-go-sdk"
 	"github.com/spf13/cobra"
@@ -155,19 +154,10 @@ func (r *transactionResult) String() string {
 		}
 
 		if r.result != nil && !command.ContainsFlag(r.include, "fee-events") {
-			feeEvents := []string{"FlowFees", "FlowToken"}
-			var filteredEvents []flow.Event
-
-		EventLoop:
-			for _, event := range e.Events {
-				for _, feeEvent := range feeEvents {
-					if strings.Contains(event.Type, feeEvent) {
-						continue EventLoop
-					}
-				}
-				filteredEvents = append(filteredEvents, event)
+			// last 3 events are fee events
+			if e.Events != nil && len(e.Events) >= 3 {
+				e.Events  = e.Events[:len(e.Events)-3]
 			}
-			e.Events = filteredEvents
 		}
 
 		eventsOutput := e.String()
