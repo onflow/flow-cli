@@ -29,12 +29,12 @@ func GenerateSchema() *jsonschema.Schema {
 	// This is necessary because the jsonschema library does not support
 	// definitions in nested schemas and is a workaround
 	var moveDefinitions func(*jsonschema.Schema)
-	moveDefinitions = func (s *jsonschema.Schema) {
+	moveDefinitions = func(s *jsonschema.Schema) {
 		for k, v := range s.Definitions {
 			schema.Definitions[k] = v
 			moveDefinitions(v)
 		}
-		if (s != schema) {
+		if s != schema {
 			s.Definitions = nil
 		}
 	}

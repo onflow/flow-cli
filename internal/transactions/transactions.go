@@ -158,14 +158,14 @@ func (r *transactionResult) String() string {
 			feeEvents := []string{"FlowFees", "FlowToken"}
 			var filteredEvents []flow.Event
 
-			EventLoop:
+		EventLoop:
 			for _, event := range e.Events {
-					for _, feeEvent := range feeEvents {
+				for _, feeEvent := range feeEvents {
 					if strings.Contains(event.Type, feeEvent) {
 						continue EventLoop
-					}	
+					}
 				}
-				filteredEvents = append(filteredEvents, event)				
+				filteredEvents = append(filteredEvents, event)
 			}
 			e.Events = filteredEvents
 		}
@@ -175,7 +175,6 @@ func (r *transactionResult) String() string {
 			eventsOutput = "None"
 		}
 
-		
 		_, _ = fmt.Fprintf(writer, "\n\nEvents:\t %s\n", eventsOutput)
 	}
 
