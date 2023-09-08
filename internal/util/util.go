@@ -23,7 +23,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"os"
-	"path"
+	"path/filepath"
 	"strings"
 	"text/tabwriter"
 
@@ -46,7 +46,7 @@ func AddToGitIgnore(filename string, loader flowkit.ReaderWriter) error {
 	if err != nil {
 		return err
 	}
-	gitIgnorePath := path.Join(currentWd, ".gitignore")
+	gitIgnorePath := filepath.Join(currentWd, ".gitignore")
 	gitIgnoreFiles := ""
 	filePermissions := os.FileMode(0644)
 

@@ -23,7 +23,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"path"
+	"path/filepath"
 	"strings"
 
 	cdcTests "github.com/onflow/cadence-tools/test"
@@ -100,7 +100,7 @@ func run(
 		var file []byte
 		var err error
 
-		ext := path.Ext(testFlags.CoverProfile)
+		ext := filepath.Ext(testFlags.CoverProfile)
 		if ext == ".json" {
 			file, err = json.MarshalIndent(coverageReport, "", "  ")
 		} else if ext == ".lcov" {
@@ -223,11 +223,11 @@ func fileResolver(scriptPath string, state *flowkit.State) cdcTests.FileResolver
 }
 
 func absolutePath(basePath, filePath string) string {
-	if path.IsAbs(filePath) {
+	if filepath.IsAbs(filePath) {
 		return filePath
 	}
 
-	return path.Join(path.Dir(basePath), filePath)
+	return filepath.Join(filepath.Dir(basePath), filePath)
 }
 
 type result struct {

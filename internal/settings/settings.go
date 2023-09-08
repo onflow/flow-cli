@@ -22,7 +22,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"path"
+	"path/filepath"
 
 	"github.com/spf13/viper"
 )
@@ -51,7 +51,7 @@ func FileDir() string {
 	if err != nil {
 		dir = "."
 	}
-	return path.Join(dir, settingsDir)
+	return filepath.Join(dir, settingsDir)
 }
 
 // Set updates settings file with new value for provided key

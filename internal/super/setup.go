@@ -25,7 +25,6 @@ import (
 	"io"
 	"net/http"
 	"os"
-	"path"
 	"path/filepath"
 	"time"
 
@@ -123,7 +122,7 @@ func getTargetDirectory(directory string) (string, error) {
 		return "", err
 	}
 
-	target := path.Join(pwd, directory)
+	target := filepath.Join(pwd, directory)
 	info, err := os.Stat(target)
 	if !os.IsNotExist(err) {
 		if !info.IsDir() {

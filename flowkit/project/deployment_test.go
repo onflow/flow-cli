@@ -38,7 +38,7 @@ type testContract struct {
 var addresses = test.AddressGenerator()
 
 var testContractA = testContract{
-	location:       "ContractA.cdc",
+	location:       "foobar/ContractA.cdc",
 	code:           []byte(`pub contract ContractA {}`),
 	accountAddress: addresses.New(),
 }
@@ -50,7 +50,7 @@ var testContractB = testContract{
 }
 
 var testContractC = testContract{
-	location: "ContractC.cdc",
+	location: "foobar/ContractC.cdc",
 	code: []byte(`
         import ContractA from "ContractA.cdc"
     
@@ -62,7 +62,7 @@ var testContractC = testContract{
 var testContractD = testContract{
 	location: "ContractD.cdc",
 	code: []byte(`
-        import ContractC from "ContractC.cdc"
+        import ContractC from "foobar/ContractC.cdc"
 
         pub contract ContractD {}
     `),
@@ -91,7 +91,7 @@ var testContractF = testContract{
 var testContractG = testContract{
 	location: "ContractG.cdc",
 	code: []byte(`
-        import ContractA from "ContractA.cdc"
+        import ContractA from "foobar/ContractA.cdc"
         import ContractB from "ContractB.cdc"
 
         pub contract ContractG {}
