@@ -20,6 +20,7 @@ package project
 
 import (
 	"fmt"
+	"path/filepath"
 
 	"gonum.org/v1/gonum/graph"
 	"gonum.org/v1/gonum/graph/simple"
@@ -86,7 +87,7 @@ func (d *Deployment) add(contract *Contract) error {
 	}
 
 	d.contracts = append(d.contracts, c)
-	d.contractsByLocation[c.Location()] = c
+	d.contractsByLocation[filepath.Clean(c.Location())] = c
 	d.contractsByName[c.Name] = c
 
 	return nil
