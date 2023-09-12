@@ -8,11 +8,22 @@ VERSION := $(shell git describe --tags --abbrev=0 --exact-match 2>/dev/null)
 COVER_PROFILE := coverage.txt
 # Disable go sum database lookup for private repos
 GOPRIVATE := github.com/dapperlabs/*
+
 # Ensure go bin path is in path (Especially for CI)
-GOPATH ?= $(HOME)/go
-PATH := $(PATH):$(GOPATH)/bin
-# OS
-UNAME := $(shell uname)
+ifeq ($(OS),Windows_NT)
+	GOPATH ?= $(USERPROFILE)\go
+	PATH := $(PATH);$(GOPATH)\bin
+else
+	GOPATH ?= $(HOME)/go
+	PATH := $(PATH):$(GOPATH)/bin
+endif
+
+# Set MKDIR variable based on OS
+ifeq ($(OS),Windows_NT)
+	MKDIR := mkdir
+else
+	MKDIR := mkdir -p
+endif
 
 MIXPANEL_PROJECT_TOKEN := 3fae49de272be1ceb8cf34119f747073
 ACCOUNT_TOKEN := lilico:sF60s3wughJBmNh2
@@ -24,17 +35,20 @@ binary: $(BINARY)
 
 .PHONY: install-tools
 install-tools:
-	cd ${GOPATH}; \
-	mkdir -p ${GOPATH}; \
-	GO111MODULE=on go install github.com/axw/gocov/gocov@latest; \
-	GO111MODULE=on go install github.com/matm/gocov-html@latest; \
-	GO111MODULE=on go install github.com/sanderhahn/gozip/cmd/gozip@latest; \
-	GO111MODULE=on go install github.com/vektra/mockery/v2@latest;
+	$(MKDIR) ${GOPATH} && \
+	go env -w GO111MODULE=on && \
+	go install github.com/axw/gocov/gocov@latest && \
+	go install github.com/matm/gocov-html@latest && \
+	go install github.com/sanderhahn/gozip/cmd/gozip@latest && \
+	go install github.com/vektra/mockery/v2@latest
 
 .PHONY: test
 test:
-	GO111MODULE=on go test -coverprofile=$(COVER_PROFILE) $(if $(JSON_OUTPUT),-json,) ./...
-	cd flowkit; GO111MODULE=on go test -coverprofile=$(COVER_PROFILE) $(if $(JSON_OUTPUT),-json,) ./...
+	go env -w GO111MODULE=on && \
+	go env -w CGO_ENABLED=0 && \
+	go test -coverprofile=$(COVER_PROFILE) $(if $(JSON_OUTPUT),-json,) ./... && \
+	cd flowkit && \
+	go test -coverprofile=$(COVER_PROFILE) $(if $(JSON_OUTPUT),-json,) ./...
 
 .PHONY: test-e2e-emulator
 test-e2e-emulator:
@@ -82,7 +96,6 @@ clean:
 	rm ./cmd/flow/flow*
 
 .PHONY: install-linter
-install-linter:
 	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b ${GOPATH}/bin v1.47.2
 
 .PHONY: lint
@@ -104,7 +117,7 @@ check-schema:
 .PHONY: check-tidy
 check-tidy:
 	go mod tidy
-	cd flowkit; go mod tidy
+	cd flowkit && go mod tidy
 
 .PHONY: generate-schema
 generate-schema:
@@ -112,5 +125,5 @@ generate-schema:
 
 .PHONY: generate
 generate: install-tools
-	cd flowkit; \
+	cd flowkit && \
  	go generate ./...

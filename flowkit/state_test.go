@@ -21,6 +21,7 @@ package flowkit
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"sort"
 	"testing"
 
@@ -343,7 +344,7 @@ func generateAliasesComplexProject() State {
 
 func Test_GetContractsByNameSimple(t *testing.T) {
 	p := generateSimpleProject()
-	path := "../hungry-kitties/cadence/contracts/NonFungibleToken.cdc"
+	path := filepath.FromSlash("../hungry-kitties/cadence/contracts/NonFungibleToken.cdc")
 	af.WriteFile(path, []byte("pub contract{}"), os.ModePerm)
 
 	contracts, err := p.DeploymentContractsByNetwork(config.EmulatorNetwork)
@@ -423,13 +424,13 @@ func Test_GetContractsByNameComplex(t *testing.T) {
 	assert.Equal(t, contractNames[5], "KittyItemsMarket")
 	assert.Equal(t, contractNames[6], "NonFungibleToken")
 
-	assert.Equal(t, sources[0], "../hungry-kitties/cadence/contracts/FungibleToken.cdc")
-	assert.Equal(t, sources[1], "../hungry-kitties/cadence/contracts/NonFungibleToken.cdc")
-	assert.Equal(t, sources[2], "cadence/kibble/contracts/Kibble.cdc")
-	assert.Equal(t, sources[3], "cadence/kittyItems/contracts/KittyItems.cdc")
-	assert.Equal(t, sources[4], "cadence/kittyItems/contracts/KittyItems.cdc")
-	assert.Equal(t, sources[5], "cadence/kittyItemsMarket/contracts/KittyItemsMarket.cdc")
-	assert.Equal(t, sources[6], "cadence/kittyItemsMarket/contracts/KittyItemsMarket.cdc")
+	assert.Equal(t, sources[0], filepath.FromSlash("../hungry-kitties/cadence/contracts/FungibleToken.cdc"))
+	assert.Equal(t, sources[1], filepath.FromSlash("../hungry-kitties/cadence/contracts/NonFungibleToken.cdc"))
+	assert.Equal(t, sources[2], filepath.FromSlash("cadence/kibble/contracts/Kibble.cdc"))
+	assert.Equal(t, sources[3], filepath.FromSlash("cadence/kittyItems/contracts/KittyItems.cdc"))
+	assert.Equal(t, sources[4], filepath.FromSlash("cadence/kittyItems/contracts/KittyItems.cdc"))
+	assert.Equal(t, sources[5], filepath.FromSlash("cadence/kittyItemsMarket/contracts/KittyItemsMarket.cdc"))
+	assert.Equal(t, sources[6], filepath.FromSlash("cadence/kittyItemsMarket/contracts/KittyItemsMarket.cdc"))
 
 	assert.Equal(t, targets[0], "f8d6e0586b0a20c1")
 	assert.Equal(t, targets[1], "f8d6e0586b0a20c1")

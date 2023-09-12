@@ -28,11 +28,11 @@ import (
 
 func Test_AccountFromPath(t *testing.T) {
 	paths := [][]string{ // first is path, second is account name
-		{"cadence/contracts/alice/foo.cdc", "alice"},
-		{"cadence/contracts/alice", "alice"},
-		{"cadence/contracts/alice/boo/foo.cdc", ""},
-		{"cadence/contracts/foo.cdc", ""},
-		{"cadence/contracts/foo/bar/goo/foo", ""},
+		{filepath.FromSlash("cadence/contracts/alice/foo.cdc"), "alice"},
+		{filepath.FromSlash("cadence/contracts/alice"), "alice"},
+		{filepath.FromSlash("cadence/contracts/alice/boo/foo.cdc"), ""},
+		{filepath.FromSlash("cadence/contracts/foo.cdc"), ""},
+		{filepath.FromSlash("cadence/contracts/foo/bar/goo/foo"), ""},
 	}
 
 	for i, test := range paths {
@@ -45,10 +45,10 @@ func Test_AccountFromPath(t *testing.T) {
 func Test_RelativeProjectPath(t *testing.T) {
 	cdcDir := "/Users/Mike/Dev/my-project/cadence"
 	paths := [][]string{
-		{filepath.Join(cdcDir, "/contracts/foo.cdc"), "cadence/contracts/foo.cdc"},
-		{filepath.Join(cdcDir, "/contracts/alice/foo.cdc"), "cadence/contracts/alice/foo.cdc"},
-		{filepath.Join(cdcDir, "/scripts/bar.cdc"), "cadence/scripts/bar.cdc"},
-		{filepath.Join(cdcDir, "/bar.cdc"), "cadence/bar.cdc"},
+		{filepath.Join(cdcDir, "/contracts/foo.cdc"), filepath.FromSlash("cadence/contracts/foo.cdc")},
+		{filepath.Join(cdcDir, "/contracts/alice/foo.cdc"), filepath.FromSlash("cadence/contracts/alice/foo.cdc")},
+		{filepath.Join(cdcDir, "/scripts/bar.cdc"), filepath.FromSlash("cadence/scripts/bar.cdc")},
+		{filepath.Join(cdcDir, "/bar.cdc"), filepath.FromSlash("cadence/bar.cdc")},
 	}
 
 	f := &projectFiles{
