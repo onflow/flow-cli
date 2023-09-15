@@ -1,22 +1,3 @@
-# Set OS-related environment variables
-ifeq ($(OS),Windows_NT)
-	SHELL := cmd.exe
-	GOPATH ?= $(USERPROFILE)\go
-	PATH := $(PATH);$(GOPATH)\bin
-	MKDIR_GOPATH := if not exist "$(GOPATH)" md "$(GOPATH)"
-	SET_GOPATH := go env -w GOPATH="$(GOPATH)"
-	SET_GO111MODULE := go env -w GO111MODULE=on
-	SET_CGO_DISABLED := go env -w CGO_ENABLED=0
-else
-	SHELL := /bin/bash
-	GOPATH ?= $(HOME)/go
-	PATH := $(PATH):$(GOPATH)/bin
-	MKDIR_GOPATH := mkdir -p "$(GOPATH)"
-	SET_GOPATH := export GOPATH="$(GOPATH)"
-	SET_GO111MODULE := export GO111MODULE=on
-	SET_CGO_DISABLED := export CGO_ENABLED=0
-endif
-
 # The short Git commit hash
 SHORT_COMMIT := $(shell git rev-parse --short HEAD)
 # The Git commit hash
@@ -27,6 +8,11 @@ VERSION := $(shell git describe --tags --abbrev=0 --exact-match 2>/dev/null)
 COVER_PROFILE := coverage.txt
 # Disable go sum database lookup for private repos
 GOPRIVATE := github.com/dapperlabs/*
+# Ensure go bin path is in path (Especially for CI)
+GOPATH ?= $(HOME)/go
+PATH := $(PATH):$(GOPATH)/bin
+# OS
+UNAME := $(shell uname)
 
 MIXPANEL_PROJECT_TOKEN := 3fae49de272be1ceb8cf34119f747073
 ACCOUNT_TOKEN := lilico:sF60s3wughJBmNh2
@@ -38,21 +24,17 @@ binary: $(BINARY)
 
 .PHONY: install-tools
 install-tools:
-	$(MKDIR_GOPATH) && \
-	$(SET_GOPATH) && \
-	$(SET_GO111MODULE) && \
-	go install github.com/axw/gocov/gocov@latest && \
-	go install github.com/matm/gocov-html/cmd/gocov-html@latest && \
-	go install github.com/sanderhahn/gozip/cmd/gozip@latest && \
-	go install github.com/vektra/mockery/v2@latest
+	cd ${GOPATH}; \
+	mkdir -p ${GOPATH}; \
+	GO111MODULE=on go install github.com/axw/gocov/gocov@latest; \
+	GO111MODULE=on go install github.com/matm/gocov-html@latest; \
+	GO111MODULE=on go install github.com/sanderhahn/gozip/cmd/gozip@latest; \
+	GO111MODULE=on go install github.com/vektra/mockery/v2@latest;
 
 .PHONY: test
 test:
-	$(SET_GO111MODULE) && \
-	$(SET_CGO_DISABLED) && \
-	go test -coverprofile=$(COVER_PROFILE) $(if $(JSON_OUTPUT),-json,) ./... && \
-	cd flowkit && \
-	go test -coverprofile=$(COVER_PROFILE) $(if $(JSON_OUTPUT),-json,) ./...
+	GO111MODULE=on go test -coverprofile=$(COVER_PROFILE) $(if $(JSON_OUTPUT),-json,) ./...
+	cd flowkit; GO111MODULE=on go test -coverprofile=$(COVER_PROFILE) $(if $(JSON_OUTPUT),-json,) ./...
 
 .PHONY: test-e2e-emulator
 test-e2e-emulator:
@@ -66,7 +48,7 @@ ifeq ($(COVER), true)
 	./cover-summary.sh
 	gocov-html cover.json > index.html
 	# coverage.zip will automatically be picked up by teamcity
-	gozip -c coverage.zip index.html 
+	gozip -c coverage.zip index.html
 endif
 
 .PHONY: ci
@@ -100,6 +82,7 @@ clean:
 	rm ./cmd/flow/flow*
 
 .PHONY: install-linter
+install-linter:
 	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b ${GOPATH}/bin v1.47.2
 
 .PHONY: lint
@@ -121,14 +104,13 @@ check-schema:
 .PHONY: check-tidy
 check-tidy:
 	go mod tidy
-	cd flowkit && go mod tidy
+	cd flowkit; go mod tidy
 
 .PHONY: generate-schema
 generate-schema:
-	echo %PATH% && dir $(GOPATH) && cd flowkit && go run ./cmd/flow-schema/flow-schema.go ./schema.json
+	cd flowkit && go run ./cmd/flow-schema/flow-schema.go ./schema.json
 
 .PHONY: generate
 generate: install-tools
-	echo %PATH% && dir $(GOPATH) && \
-	cd flowkit && \
+	cd flowkit; \
  	go generate ./...
