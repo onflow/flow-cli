@@ -66,7 +66,7 @@ ifeq ($(COVER), true)
 	./cover-summary.sh
 	gocov-html cover.json > index.html
 	# coverage.zip will automatically be picked up by teamcity
-	gozip -c coverage.zip index.html
+	gozip -c coverage.zip index.html 
 endif
 
 .PHONY: ci
@@ -125,10 +125,9 @@ check-tidy:
 
 .PHONY: generate-schema
 generate-schema:
-	echo %PATH% && dir $(GOPATH) && cd flowkit && go run ./cmd/flow-schema/flow-schema.go ./schema.json
+	cd flowkit && go run ./cmd/flow-schema/flow-schema.go ./schema.json
 
 .PHONY: generate
 generate: install-tools
-	echo %PATH% && dir $(GOPATH) && \
 	cd flowkit && \
  	go generate ./...
