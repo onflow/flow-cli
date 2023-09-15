@@ -22,6 +22,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/onflow/flow-go-sdk"
 	"github.com/spf13/cobra"
@@ -91,6 +92,7 @@ func (r *transactionResult) String() string {
 	var b bytes.Buffer
 	writer := util.CreateTabWriter(&b)
 	const feeEventsCountAppended = 3
+	const feeDeductedEvent = "FeesDeducted"
 
 	if r.result != nil {
 		_, _ = fmt.Fprintf(writer, "Block ID\t%s\n", r.result.BlockID)
@@ -155,9 +157,18 @@ func (r *transactionResult) String() string {
 		}
 
 		if r.result != nil && !command.ContainsFlag(r.include, "fee-events") {
-			// last 3 events are fee events
-			if e.Events != nil && len(e.Events) >= feeEventsCountAppended {
-				e.Events = e.Events[:len(e.Events)-feeEventsCountAppended]
+			if e.Events != nil {
+				found := false
+				for _, event := range e.Events {
+					// test if fee events are present
+					if strings.Contains(event.Type, feeDeductedEvent) {
+						found = true
+						break
+					}
+				}
+				if found {
+					e.Events = e.Events[:len(e.Events)-feeEventsCountAppended]
+				}
 			}
 		}
 
