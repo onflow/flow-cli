@@ -90,6 +90,7 @@ func (r *transactionResult) JSON() any {
 func (r *transactionResult) String() string {
 	var b bytes.Buffer
 	writer := util.CreateTabWriter(&b)
+	const feeEventsCountAppended = 3
 
 	if r.result != nil {
 		_, _ = fmt.Fprintf(writer, "Block ID\t%s\n", r.result.BlockID)
@@ -155,8 +156,8 @@ func (r *transactionResult) String() string {
 
 		if r.result != nil && !command.ContainsFlag(r.include, "fee-events") {
 			// last 3 events are fee events
-			if e.Events != nil && len(e.Events) >= 3 {
-				e.Events = e.Events[:len(e.Events)-3]
+			if e.Events != nil && len(e.Events) >= feeEventsCountAppended {
+				e.Events = e.Events[:len(e.Events)-feeEventsCountAppended]
 			}
 		}
 
