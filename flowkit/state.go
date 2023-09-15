@@ -21,7 +21,6 @@ package flowkit
 import (
 	"fmt"
 	"os"
-	"path"
 	"path/filepath"
 
 	"github.com/onflow/flow-go-sdk/crypto"
@@ -173,7 +172,7 @@ func (p *State) DeploymentContractsByNetwork(network config.Network) ([]*project
 
 			contract := project.NewContract(
 				c.Name,
-				path.Clean(location),
+				filepath.Clean(location),
 				code,
 				account.Address,
 				account.Name,
@@ -213,7 +212,7 @@ func (p *State) AliasesForNetwork(network config.Network) project.LocationAliase
 	for _, contract := range p.conf.Contracts {
 		if contract.IsAliased() && contract.Aliases.ByNetwork(network.Name) != nil {
 			alias := contract.Aliases.ByNetwork(network.Name).Address.String()
-			aliases[path.Clean(contract.Location)] = alias // alias for import by file location
+			aliases[filepath.Clean(contract.Location)] = alias // alias for import by file location
 			aliases[contract.Name] = alias                 // alias for import by name
 		}
 	}

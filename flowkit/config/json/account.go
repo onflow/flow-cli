@@ -22,6 +22,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 
@@ -224,7 +225,7 @@ func transformAdvancedToConfig(accountName string, a advancedAccount) (*config.A
 		if a.Key.Location == "" {
 			return nil, fmt.Errorf("missing location to a file containing the private key value for the account %s", accountName)
 		}
-		key.Location = a.Key.Location
+		key.Location = filepath.FromSlash(a.Key.Location)
 	}
 
 	return &config.Account{
@@ -326,7 +327,7 @@ func transformAdvancedKeyToJSON(key config.AccountKey) advanceKey {
 	case config.KeyTypeGoogleKMS:
 		advancedKey.ResourceID = key.ResourceID
 	case config.KeyTypeFile:
-		advancedKey.Location = key.Location
+		advancedKey.Location = filepath.ToSlash(key.Location)
 	}
 
 	return advancedKey
