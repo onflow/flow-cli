@@ -20,6 +20,7 @@ package config_test
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/onflow/flow-cli/flowkit/config"
@@ -459,5 +460,5 @@ func Test_LoadAccountFileType(t *testing.T) {
 	assert.NoError(t, err)
 
 	assert.Len(t, conf.Accounts, 1)
-	assert.Equal(t, "./test.pkey", acc.Key.Location)
+	assert.Equal(t, filepath.FromSlash("./test.pkey"), acc.Key.Location)
 }

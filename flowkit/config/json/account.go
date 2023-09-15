@@ -225,7 +225,7 @@ func transformAdvancedToConfig(accountName string, a advancedAccount) (*config.A
 		if a.Key.Location == "" {
 			return nil, fmt.Errorf("missing location to a file containing the private key value for the account %s", accountName)
 		}
-		key.Location = filepath.ToSlash(a.Key.Location)
+		key.Location = filepath.FromSlash(a.Key.Location)
 	}
 
 	return &config.Account{
@@ -446,10 +446,6 @@ func (j *account) UnmarshalJSON(b []byte) error {
 		var advanced advancedAccount
 		err = json.Unmarshal(b, &advanced)
 		j.Advanced = advanced
-	}
-	
-	if j.Advanced.Key.Type == config.KeyTypeFile {
-		j.Advanced.Key.Location = filepath.FromSlash(j.Advanced.Key.Location)
 	}
 
 	return err

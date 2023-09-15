@@ -1,3 +1,22 @@
+# Set OS-related environment variables
+ifeq ($(OS),Windows_NT)
+	SHELL := cmd.exe
+	GOPATH ?= $(USERPROFILE)\go
+	PATH := $(PATH);$(GOPATH)\bin
+	MKDIR_GOPATH := if not exist "$(GOPATH)" md "$(GOPATH)"
+	SET_GOPATH := go env -w GOPATH="$(GOPATH)"
+	SET_GO111MODULE := go env -w GO111MODULE=on
+	SET_CGO_DISABLED := go env -w CGO_ENABLED=0
+else
+	SHELL := /bin/bash
+	GOPATH ?= $(HOME)/go
+	PATH := $(PATH):$(GOPATH)/bin
+	MKDIR_GOPATH := mkdir -p "$(GOPATH)"
+	SET_GOPATH := export GOPATH="$(GOPATH)"
+	SET_GO111MODULE := export GO111MODULE=on
+	SET_CGO_DISABLED := export CGO_ENABLED=0
+endif
+
 # The short Git commit hash
 SHORT_COMMIT := $(shell git rev-parse --short HEAD)
 # The Git commit hash
@@ -9,22 +28,6 @@ COVER_PROFILE := coverage.txt
 # Disable go sum database lookup for private repos
 GOPRIVATE := github.com/dapperlabs/*
 
-# Ensure go bin path is in path (Especially for CI)
-ifeq ($(OS),Windows_NT)
-	GOPATH ?= $(USERPROFILE)\go
-	PATH := $(PATH);$(GOPATH)\bin
-else
-	GOPATH ?= $(HOME)/go
-	PATH := $(PATH):$(GOPATH)/bin
-endif
-
-# Set MKDIR variable based on OS
-ifeq ($(OS),Windows_NT)
-	MKDIR := mkdir
-else
-	MKDIR := mkdir -p
-endif
-
 MIXPANEL_PROJECT_TOKEN := 3fae49de272be1ceb8cf34119f747073
 ACCOUNT_TOKEN := lilico:sF60s3wughJBmNh2
 
@@ -35,17 +38,18 @@ binary: $(BINARY)
 
 .PHONY: install-tools
 install-tools:
-	$(MKDIR) ${GOPATH} && \
-	go env -w GO111MODULE=on && \
+	$(MKDIR_GOPATH) && \
+	$(SET_GOPATH) && \
+	$(SET_GO111MODULE) && \
 	go install github.com/axw/gocov/gocov@latest && \
-	go install github.com/matm/gocov-html@latest && \
+	go install github.com/matm/gocov-html/cmd/gocov-html@latest && \
 	go install github.com/sanderhahn/gozip/cmd/gozip@latest && \
 	go install github.com/vektra/mockery/v2@latest
 
 .PHONY: test
 test:
-	go env -w GO111MODULE=on && \
-	go env -w CGO_ENABLED=0 && \
+	$(SET_GO111MODULE) && \
+	$(SET_CGO_DISABLED) && \
 	go test -coverprofile=$(COVER_PROFILE) $(if $(JSON_OUTPUT),-json,) ./... && \
 	cd flowkit && \
 	go test -coverprofile=$(COVER_PROFILE) $(if $(JSON_OUTPUT),-json,) ./...
@@ -62,7 +66,7 @@ ifeq ($(COVER), true)
 	./cover-summary.sh
 	gocov-html cover.json > index.html
 	# coverage.zip will automatically be picked up by teamcity
-	gozip -c coverage.zip index.html
+	gozip -c coverage.zip index.html 
 endif
 
 .PHONY: ci
@@ -121,9 +125,10 @@ check-tidy:
 
 .PHONY: generate-schema
 generate-schema:
-	cd flowkit && go run ./cmd/flow-schema/flow-schema.go ./schema.json
+	echo %PATH% && dir $(GOPATH) && cd flowkit && go run ./cmd/flow-schema/flow-schema.go ./schema.json
 
 .PHONY: generate
 generate: install-tools
+	echo %PATH% && dir $(GOPATH) && \
 	cd flowkit && \
  	go generate ./...
