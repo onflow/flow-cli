@@ -20,6 +20,7 @@ package transactions
 
 import (
 	"encoding/json"
+	"fmt"
 	"strings"
 	"testing"
 
@@ -31,6 +32,7 @@ import (
 	"github.com/onflow/flow-cli/flowkit"
 	"github.com/onflow/flow-cli/flowkit/accounts"
 	"github.com/onflow/flow-cli/flowkit/config"
+	"github.com/onflow/flow-cli/flowkit/output"
 	"github.com/onflow/flow-cli/flowkit/tests"
 	"github.com/onflow/flow-cli/flowkit/transactions"
 	"github.com/onflow/flow-cli/internal/command"
@@ -371,10 +373,10 @@ Fee Events (hidden, use --include fee-events)`, "\n"), result.String())
 	t.Run("Success with result", func(t *testing.T) {
 		result := transactionResult{tx: tx, result: txResult}
 
-		assert.Equal(t, strings.TrimPrefix(`
+		expectedString := strings.TrimPrefix(fmt.Sprintf(`
 Block ID	7aa74143741c1c3b837d389fcffa7a5e251b67b4ffef6d6887b40cd9c803f537
 Block Height	1
-Status		✅ SEALED
+Status		%s SEALED
 ID		e913d1f3e431c7df49c99845bea9ebff9db11bbf25d507b9ad0fad45652d515f
 Payer		0000000000000002
 Authorizers	[]
@@ -399,9 +401,12 @@ Events:
 
 Code (hidden, use --include code)
 
+
 Payload (hidden, use --include payload)
 
-Fee Events (hidden, use --include fee-events)`, "\n"), result.String())
+Fee Events (hidden, use --include fee-events)`, output.OkEmoji()), "\n")
+
+		assert.Equal(t, expectedString, result.String())
 
 		assert.Equal(t, map[string]any{
 			"authorizers":  "[]",

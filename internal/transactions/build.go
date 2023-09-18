@@ -148,6 +148,5 @@ func parseAddress(value string) (flowsdk.Address, bool) {
 	// valid on any chain
 	return address, address.IsValid(flowsdk.Mainnet) ||
 		address.IsValid(flowsdk.Testnet) ||
-		address.IsValid(flowsdk.Emulator) ||
-		address.IsValid(flowsdk.Sandboxnet)
+		address.IsValid(flowsdk.Emulator)
 }

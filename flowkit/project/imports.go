@@ -20,7 +20,7 @@ package project
 
 import (
 	"fmt"
-	"path"
+	"path/filepath"
 
 	"github.com/onflow/flow-go-sdk"
 )
@@ -49,7 +49,7 @@ func (i *ImportReplacer) Replace(program *Program) (*Program, error) {
 
 	for _, imp := range imports {
 		// check if import by path exists (e.g. import X from ["./X.cdc"])
-		importLocation := path.Clean(absolutePath(program.Location(), imp))
+		importLocation := filepath.Clean(absolutePath(program.Location(), imp))
 		address, isPath := contractsLocations[importLocation]
 		if isPath {
 			program.replaceImport(imp, address)
@@ -72,18 +72,18 @@ func (i *ImportReplacer) Replace(program *Program) (*Program, error) {
 func (i *ImportReplacer) getContractsLocations() map[string]string {
 	locationAddress := make(map[string]string)
 	for _, contract := range i.contracts {
-		locationAddress[path.Clean(contract.Location())] = contract.AccountAddress.String()
+		locationAddress[filepath.Clean(contract.Location())] = contract.AccountAddress.String()
 		// add also by name since we might use the new import schema
 		locationAddress[contract.Name] = contract.AccountAddress.String()
 	}
 
 	for source, target := range i.aliases {
-		locationAddress[path.Clean(source)] = flow.HexToAddress(target).String()
+		locationAddress[filepath.Clean(source)] = flow.HexToAddress(target).String()
 	}
 
 	return locationAddress
 }
 
 func absolutePath(basePath, relativePath string) string {
-	return path.Join(path.Dir(basePath), relativePath)
+	return filepath.Join(filepath.Dir(basePath), relativePath)
 }

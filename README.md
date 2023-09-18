@@ -22,15 +22,15 @@
 
 ## Installation
 
-To install the Flow CLI, follow the [installation instructions](https://docs.onflow.org/flow-cli/install) on the Flow documentation website.
+To install the Flow CLI, follow the [installation instructions](https://developers.flow.com/tools/toolchains/flow-cli/install) on the Flow documentation website.
 
 ## Documentation
 
-You can find the CLI documentation on the [CLI documentation website](https://docs.onflow.org/flow-cli).
+You can find the CLI documentation on the [CLI documentation website](https://developers.flow.com/tools/toolchains/flow-cli).
 
 ## Features
 The Flow CLI is a command line tool that allows you to interact with the Flow blockchain. 
-Read about supported commands in the [CLI documentation website](https://docs.onflow.org/flow-cli).
+Read about supported commands in the [CLI documentation website](https://developers.flow.com/tools/toolchains/flow-cli).
 
 ```
 Usage:
@@ -55,7 +55,7 @@ Available Commands:
   version      View version and commit information
 ```
 
-The Flow CLI includes several commands to interact with Flow networks, such as querying account information, or sending transactions. It also includes the [Flow Emulator](https://docs.onflow.org/emulator/).
+The Flow CLI includes several commands to interact with Flow networks, such as querying account information, or sending transactions. It also includes the [Flow Emulator](https://developers.flow.com/tools/toolchains/emulator).
 
 
 ![Alt Text](./cli.gif)

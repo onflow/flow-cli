@@ -21,6 +21,7 @@ package json
 import (
 	"encoding/json"
 	"fmt"
+	"path/filepath"
 
 	"github.com/invopop/jsonschema"
 	"github.com/onflow/flow-go-sdk"
@@ -70,7 +71,7 @@ func transformContractsToJSON(contracts config.Contracts) jsonContracts {
 		// if simple case
 		if !c.IsAliased() {
 			jsonContracts[c.Name] = jsonContract{
-				Simple: c.Location,
+				Simple: filepath.ToSlash(c.Location),
 			}
 		} else { // if advanced config
 			// check if we already created for this name then add or create
@@ -81,7 +82,7 @@ func transformContractsToJSON(contracts config.Contracts) jsonContracts {
 
 			jsonContracts[c.Name] = jsonContract{
 				Advanced: jsonContractAdvanced{
-					Source:  c.Location,
+					Source:  filepath.ToSlash(c.Location),
 					Aliases: aliases,
 				},
 			}
@@ -110,7 +111,7 @@ func (j *jsonContract) UnmarshalJSON(b []byte) error {
 	// simple
 	err := json.Unmarshal(b, &source)
 	if err == nil {
-		j.Simple = source
+		j.Simple = filepath.FromSlash(source)
 		return nil
 	}
 
@@ -118,6 +119,7 @@ func (j *jsonContract) UnmarshalJSON(b []byte) error {
 	err = json.Unmarshal(b, &advancedFormat)
 	if err == nil {
 		j.Advanced = advancedFormat
+		j.Advanced.Source = filepath.FromSlash(j.Advanced.Source)
 	} else {
 		return err
 	}
