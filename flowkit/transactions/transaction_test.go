@@ -53,7 +53,7 @@ func TestNew(t *testing.T) {
 
 	script := []byte(`
 		transaction (arg: Int) {
-			prepare(signer: AuthAccount) {}
+			prepare(signer: &Account) {}
 			execute {}
 		}
 	`)
