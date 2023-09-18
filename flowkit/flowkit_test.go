@@ -1488,7 +1488,7 @@ func TestTransactions(t *testing.T) {
 			assert.NoError(t, err)
 			assert.Equal(t, "\"Bar\"", arg.String())
 			assert.Equal(t, serviceAddress, tx.Payer)
-			assert.Len(t, string(tx.Script), 227)
+			assert.Len(t, string(tx.Script), 224)
 
 			t := tests.NewTransaction()
 			txID = t.ID()

@@ -234,7 +234,7 @@ var TransactionArgString = Resource{
 		transaction(greeting: String) {
 			let guest: Address
 			
-			prepare(authorizer: AuthAccount) {
+			prepare(authorizer: &Account) {
 				self.guest = authorizer.address
 			}
 			
@@ -251,7 +251,7 @@ var TransactionImports = Resource{
 		import Hello from "./contractHello.cdc"
 		
 		transaction() {
-			prepare(authorizer: AuthAccount) {}
+			prepare(authorizer: &Account) {}
 			execute {
 				Hello.hello()
 			}
@@ -270,7 +270,7 @@ var TransactionSingleAuth = Resource{
 	Filename: "transactionAuth1.cdc",
 	Source: []byte(`
 		transaction() {
-			prepare(authorizer: AuthAccount) {}
+			prepare(authorizer: &Account) {}
 		}
 	`),
 }
@@ -279,7 +279,7 @@ var TransactionTwoAuth = Resource{
 	Filename: "transactionAuth2.cdc",
 	Source: []byte(`
 		transaction() {
-			prepare(auth1: AuthAccount, auth2: AuthAccount) {}
+			prepare(auth1: &Account, auth2: &Account) {}
 		}
 	`),
 }
@@ -290,7 +290,7 @@ var TransactionMultipleDeclarations = Resource{
 		access(all) fun dummy(_ address: Address): Void {}
 
 		transaction() {
-			prepare(authorizer: AuthAccount) {}
+			prepare(authorizer: &Account) {}
 		}
 	`),
 }
@@ -593,7 +593,7 @@ func NewAccountCreateResult(address flow.Address) *flow.TransactionResult {
 		Value: cadence.Event{
 			EventType: cadence.NewEventType(common.NewStringLocation(nil, flow.EventAccountCreated), "", []cadence.Field{{
 				Identifier: "address",
-				Type:       cadence.AddressType{},
+				Type:       cadence.AddressType,
 			}}, nil),
 			Fields: []cadence.Value{
 				cadence.NewAddress(address),
