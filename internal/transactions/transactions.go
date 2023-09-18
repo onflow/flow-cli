@@ -156,18 +156,12 @@ func (r *transactionResult) String() string {
 			Events: r.result.Events,
 		}
 
-		if r.result != nil && !command.ContainsFlag(r.include, "fee-events") {
-			if e.Events != nil {
-				found := false
-				for _, event := range e.Events {
-					// test if fee events are present
-					if strings.Contains(event.Type, feeDeductedEvent) {
-						found = true
-						break
-					}
-				}
-				if found {
+		if r.result != nil && e.Events != nil  && !command.ContainsFlag(r.include, "fee-events") {
+			for _, event := range e.Events {
+				if strings.Contains(event.Type, feeDeductedEvent) {
+					// if fee event are present remove them
 					e.Events = e.Events[:len(e.Events)-feeEventsCountAppended]
+					break
 				}
 			}
 		}
