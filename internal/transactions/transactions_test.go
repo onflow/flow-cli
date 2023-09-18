@@ -401,7 +401,6 @@ Events:
 
 Code (hidden, use --include code)
 
-
 Payload (hidden, use --include payload)
 
 Fee Events (hidden, use --include fee-events)`, output.OkEmoji()), "\n")
