@@ -156,7 +156,7 @@ func (r *transactionResult) String() string {
 			Events: r.result.Events,
 		}
 
-		if r.result != nil && e.Events != nil  && !command.ContainsFlag(r.include, "fee-events") {
+		if r.result != nil && e.Events != nil && !command.ContainsFlag(r.include, "fee-events") {
 			for _, event := range e.Events {
 				if strings.Contains(event.Type, feeDeductedEvent) {
 					// if fee event are present remove them
