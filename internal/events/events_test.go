@@ -85,7 +85,7 @@ func Test_Result(t *testing.T) {
 				*tests.NewEvent(
 					0,
 					"A.foo",
-					[]cadence.Field{{Type: cadence.StringType{}, Identifier: "bar"}},
+					[]cadence.Field{{Type: cadence.StringType, Identifier: "bar"}},
 					[]cadence.Value{cadence.NewInt(1)},
 				),
 			},
