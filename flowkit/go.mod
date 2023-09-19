@@ -8,7 +8,7 @@ require (
 	github.com/invopop/jsonschema v0.7.0
 	github.com/lmars/go-slip10 v0.0.0-20190606092855-400ba44fee12
 	github.com/onflow/cadence v0.41.0-stable-cadence.1.0.20230918153730-ec4d615b89d8
-	github.com/onflow/flow-emulator v0.54.1-0.20230915232846-43e906821db9
+	github.com/onflow/flow-emulator v0.54.1-0.20230919150501-db4da71c768b
 	github.com/onflow/flow-go v0.31.1-0.20230918230928-ba70724dc568
 	github.com/onflow/flow-go-sdk v0.44.0-stable-cadence.1.0.20230915213126-68e7ffb5595f
 	github.com/onflow/flow-go/crypto v0.24.9

@@ -299,7 +299,7 @@ func Test_Result(t *testing.T) {
 	event := tests.NewEvent(
 		0,
 		"A.foo",
-		[]cadence.Field{{Type: cadence.StringType{}, Identifier: "bar"}},
+		[]cadence.Field{{Type: cadence.StringType, Identifier: "bar"}},
 		[]cadence.Value{cadence.NewInt(1)},
 	)
 	event.Payload = []byte("mock_payload")
