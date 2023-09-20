@@ -476,9 +476,9 @@ func (a account) JSONSchema() *jsonschema.Schema {
 			},
 		},
 		Definitions: map[string]*jsonschema.Schema{
-			"simpleAccount": jsonschema.Reflect(simpleAccount{}),
-			"advancedAccount": jsonschema.Reflect(advancedAccount{}),
-			"simpleAccountPre022": jsonschema.Reflect(simpleAccountPre022{}),
+			"simpleAccount":        jsonschema.Reflect(simpleAccount{}),
+			"advancedAccount":      jsonschema.Reflect(advancedAccount{}),
+			"simpleAccountPre022":  jsonschema.Reflect(simpleAccountPre022{}),
 			"advanceAccountPre022": jsonschema.Reflect(advanceAccountPre022{}),
 		},
 	}

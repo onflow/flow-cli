@@ -213,7 +213,7 @@ func (p *State) AliasesForNetwork(network config.Network) project.LocationAliase
 		if contract.IsAliased() && contract.Aliases.ByNetwork(network.Name) != nil {
 			alias := contract.Aliases.ByNetwork(network.Name).Address.String()
 			aliases[filepath.Clean(contract.Location)] = alias // alias for import by file location
-			aliases[contract.Name] = alias                 // alias for import by name
+			aliases[contract.Name] = alias                     // alias for import by name
 		}
 	}
 
