@@ -8,15 +8,15 @@ require (
 	github.com/go-git/go-git/v5 v5.6.1
 	github.com/gosuri/uilive v0.0.4
 	github.com/manifoldco/promptui v0.9.0
-	github.com/onflow/cadence v0.41.0-stable-cadence.1.0.20230918153730-ec4d615b89d8
+	github.com/onflow/cadence v1.0.0-preview.1
 	github.com/onflow/cadence-tools/languageserver v0.33.0-stable-cadence.1.0.20230919211119-0f47bd4a9c62
 	github.com/onflow/cadence-tools/test v0.12.0-stable-cadence.1.0.20230918225240-b1fc85f88c80
 	github.com/onflow/fcl-dev-wallet v0.7.2
 	github.com/onflow/flixkit-go v0.1.0
 	github.com/onflow/flow-cli/flowkit v1.5.0-stable-cadence.1.0.20230919210856-b34bc43b5bc4
 	github.com/onflow/flow-core-contracts/lib/go/templates v1.2.4-0.20230918230627-2daea3d4f44b
-	github.com/onflow/flow-emulator v0.54.1-0.20230919150501-db4da71c768b
-	github.com/onflow/flow-go-sdk v0.44.0-stable-cadence.1.0.20230915213126-68e7ffb5595f
+	github.com/onflow/flow-emulator v0.55.0-stable-cadence.2
+	github.com/onflow/flow-go-sdk v0.44.0-stable-cadence.2
 	github.com/onflowser/flowser/v2 v2.0.14-beta
 	github.com/pkg/errors v0.9.1
 	github.com/psiemens/sconfig v0.1.0
@@ -153,11 +153,11 @@ require (
 	github.com/onflow/atree v0.6.1-0.20230711151834-86040b30171f // indirect
 	github.com/onflow/cadence-tools/lint v0.12.0-stable-cadence.1.0.20230918225240-b1fc85f88c80 // indirect
 	github.com/onflow/flow-archive v1.3.4-0.20230503192214-9e81e82d4dcc // indirect
-	github.com/onflow/flow-core-contracts/lib/go/contracts v1.2.4-0.20230918230627-2daea3d4f44b // indirect
-	github.com/onflow/flow-ft/lib/go/contracts v0.7.1-0.20230913160646-09adc7d3b513 // indirect
-	github.com/onflow/flow-go v0.31.1-0.20230918230928-ba70724dc568 // indirect
+	github.com/onflow/flow-core-contracts/lib/go/contracts v1.2.4-0.20230921055800-5ed9c184d103 // indirect
+	github.com/onflow/flow-ft/lib/go/contracts v0.7.1-0.20230921055403-cf7a05c90c20 // indirect
+	github.com/onflow/flow-go v0.31.1-0.20230921060220-83b00fb98777 // indirect
 	github.com/onflow/flow-go/crypto v0.24.9 // indirect
-	github.com/onflow/flow-nft/lib/go/contracts v1.1.1-0.20230915224343-ca2663ed82cf // indirect
+	github.com/onflow/flow-nft/lib/go/contracts v1.1.1-0.20230921055127-6493dc1ba948 // indirect
 	github.com/onflow/flow/protobuf/go/flow v0.3.2-0.20230628215638-83439d22e0ce // indirect
 	github.com/onflow/sdks v0.5.1-0.20230912225508-b35402f12bba // indirect
 	github.com/onflow/wal v0.0.0-20230529184820-bc9f8244608d // indirect
