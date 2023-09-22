@@ -38,6 +38,12 @@ func (j jsonDeployments) transformToConfig() (config.Deployments, error) {
 	for networkName, deploys := range j {
 
 		var deploy config.Deployment
+		if networkName != "" && len(deploys) == 0 {
+			deploy = config.Deployment{
+				Network: networkName,
+			}
+			deployments = append(deployments, deploy)
+		}
 		for accountName, contracts := range deploys {
 			deploy = config.Deployment{
 				Network: networkName,

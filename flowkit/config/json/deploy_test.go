@@ -138,16 +138,39 @@ func Test_DeploymentAdvanced(t *testing.T) {
 
 	deployments, err := jsonDeployments.transformToConfig()
 	assert.NoError(t, err)
+	j := transformDeploymentsToJSON(deployments)
+	x, _ := json.Marshal(j)
 
-	alice := deployments.ByAccountAndNetwork("alice", "emulator")
-	assert.NotNil(t, alice)
-	assert.Len(t, alice.Contracts, 2)
-	assert.Equal(t, "Kibble", alice.Contracts[0].Name)
-	assert.Len(t, alice.Contracts[0].Args, 3)
-	assert.Equal(t, `"Hello World"`, alice.Contracts[0].Args[0].String())
-	assert.Equal(t, "10", alice.Contracts[0].Args[1].String())
-	assert.Equal(t, "Bool", alice.Contracts[0].Args[2].Type().ID())
-	assert.False(t, alice.Contracts[0].Args[2].ToGoValue().(bool))
-	assert.Equal(t, "KittyItemsMarket", alice.Contracts[1].Name)
-	assert.Len(t, alice.Contracts[1].Args, 0)
+	assert.Equal(t, cleanSpecialChars(b), cleanSpecialChars(x))
+}
+
+
+func Test_EmptyEmulatorDeployment(t *testing.T) {
+	b := []byte(`{
+		"emulator": {}
+	}`)
+
+	result := []byte(`{
+		"emulator": {"":[]}
+	}`)
+
+	var jd jsonDeployments
+	err := json.Unmarshal(b, &jd)
+	assert.NoError(t, err)
+	deployments, _ := jd.transformToConfig()
+	j := transformDeploymentsToJSON(deployments)
+	x, _ := json.Marshal(j)
+
+	assert.Equal(t, cleanSpecialChars(result), cleanSpecialChars(x))
+
+	var jd2 jsonDeployments
+	// use the result from above to test the reverse transformation
+	// to verify that processing is idempotent
+	err = json.Unmarshal(x, &jd2)
+	assert.NoError(t, err)
+	deployments2, _ := jd2.transformToConfig()
+	j2 := transformDeploymentsToJSON(deployments2)
+	x2, _ := json.Marshal(j2)
+
+	assert.Equal(t, cleanSpecialChars(result), cleanSpecialChars(x2))
 }
