@@ -157,10 +157,6 @@ func Test_EmptyEmulatorDeployment(t *testing.T) {
 		"emulator": {}
 	}`)
 
-	result := []byte(`{
-		"emulator": {"":[]}
-	}`)
-
 	var jd jsonDeployments
 	err := json.Unmarshal(b, &jd)
 	assert.NoError(t, err)
@@ -168,7 +164,7 @@ func Test_EmptyEmulatorDeployment(t *testing.T) {
 	j := transformDeploymentsToJSON(deployments)
 	x, _ := json.Marshal(j)
 
-	assert.Equal(t, cleanSpecialChars(result), cleanSpecialChars(x))
+	assert.Equal(t, cleanSpecialChars(b), cleanSpecialChars(x))
 
 	var jd2 jsonDeployments
 	// use the result from above to test the reverse transformation
@@ -179,5 +175,5 @@ func Test_EmptyEmulatorDeployment(t *testing.T) {
 	j2 := transformDeploymentsToJSON(deployments2)
 	x2, _ := json.Marshal(j2)
 
-	assert.Equal(t, cleanSpecialChars(result), cleanSpecialChars(x2))
+	assert.Equal(t, cleanSpecialChars(b), cleanSpecialChars(x2))
 }

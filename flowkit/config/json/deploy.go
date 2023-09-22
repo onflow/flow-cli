@@ -134,6 +134,8 @@ func transformDeploymentsToJSON(configDeployments config.Deployments) jsonDeploy
 
 		if _, ok := jsonDeploys[d.Network]; ok {
 			jsonDeploys[d.Network][d.Account] = deployments
+		} else if d.Network != "" && d.Account == "" {
+			jsonDeploys[d.Network] = jsonDeployment{ }			
 		} else {
 			jsonDeploys[d.Network] = jsonDeployment{
 				d.Account: deployments,
