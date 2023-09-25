@@ -77,8 +77,10 @@ func (c *Config) Validate() error {
 			}
 		}
 
-		if _, err := c.Accounts.ByName(d.Account); err != nil {
-			return fmt.Errorf("deployment contains nonexisting account %s", d.Account)
+		if d.Account != "" {
+			if _, err := c.Accounts.ByName(d.Account); err != nil {
+				return fmt.Errorf("deployment contains nonexisting account %s", d.Account)
+			}
 		}
 	}
 
