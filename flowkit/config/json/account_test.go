@@ -21,6 +21,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/onflow/flow-go-sdk"
@@ -114,7 +115,7 @@ func Test_ConfigAccountKeysAdvancedFile(t *testing.T) {
 	assert.Equal(t, "f8d6e0586b0a20c7", account.Address.String())
 	assert.Equal(t, "SHA3_256", key.HashAlgo.String())
 	assert.Equal(t, "ECDSA_P256", key.SigAlgo.String())
-	assert.Equal(t, "./test.pkey", key.Location)
+	assert.Equal(t, filepath.FromSlash("./test.pkey"), key.Location)
 	assert.Equal(t, "", key.ResourceID)
 
 	jsonAccs := transformAccountsToJSON(accounts)

@@ -20,6 +20,7 @@ package transactions
 
 import (
 	"encoding/json"
+	"fmt"
 	"strings"
 	"testing"
 
@@ -31,6 +32,7 @@ import (
 	"github.com/onflow/flow-cli/flowkit"
 	"github.com/onflow/flow-cli/flowkit/accounts"
 	"github.com/onflow/flow-cli/flowkit/config"
+	"github.com/onflow/flow-cli/flowkit/output"
 	"github.com/onflow/flow-cli/flowkit/tests"
 	"github.com/onflow/flow-cli/flowkit/transactions"
 	"github.com/onflow/flow-cli/internal/command"
@@ -141,7 +143,7 @@ func Test_Send(t *testing.T) {
 	t.Run("Success", func(t *testing.T) {
 		const gas = uint64(1000)
 		flags.GasLimit = gas
-		inArgs := []string{tests.TransactionArgString.Filename}
+		inArgs := []string{tests.TransactionArgString.Filename, "test"}
 
 		srv.SendTransaction.Run(func(args mock.Arguments) {
 			roles := args.Get(1).(transactions.AccountRoles)
@@ -304,6 +306,24 @@ func Test_Result(t *testing.T) {
 	)
 	event.Payload = []byte("mock_payload")
 
+	withdrawEvent := tests.NewEvent(
+		1,
+		"A.1654653399040a61.FlowToken.TokensWithdrawn",
+		[]cadence.Field{{Type: cadence.StringType, Identifier: "bar"}},
+		[]cadence.Value{cadence.NewInt(1)},
+	)
+	depositEvent := tests.NewEvent(
+		2,
+		"A.1654653399040a61.FlowToken.TokensDeposited",
+		[]cadence.Field{{Type: cadence.StringType, Identifier: "bar"}},
+		[]cadence.Value{cadence.NewInt(1)},
+	)
+	feeEvent := tests.NewEvent(
+		3,
+		"A.f919ee77447b7497.FlowFees.FeesDeducted",
+		[]cadence.Field{{Type: cadence.StringType, Identifier: "bar"}},
+		[]cadence.Value{cadence.NewInt(1)},
+	)
 	txResult := &flow.TransactionResult{
 		Status:      flow.TransactionStatusSealed,
 		Error:       nil,
@@ -312,6 +332,13 @@ func Test_Result(t *testing.T) {
 		BlockHeight: 1,
 	}
 
+	txResultFeeEvents := &flow.TransactionResult{
+		Status:      flow.TransactionStatusSealed,
+		Error:       nil,
+		Events:      []flow.Event{*event, *withdrawEvent, *depositEvent, *feeEvent},
+		BlockID:     flow.HexToID("7aa74143741c1c3b837d389fcffa7a5e251b67b4ffef6d6887b40cd9c803f537"),
+		BlockHeight: 1,
+	}
 	t.Run("Success with no result", func(t *testing.T) {
 		result := transactionResult{tx: tx}
 
@@ -331,7 +358,9 @@ Signatures (minimized, use --include signatures)
 
 Code (hidden, use --include code)
 
-Payload (hidden, use --include payload)`, "\n"), result.String())
+Payload (hidden, use --include payload)
+
+Fee Events (hidden, use --include fee-events)`, "\n"), result.String())
 
 		assert.Equal(t, map[string]any{
 			"authorizers": "[]",
@@ -343,6 +372,61 @@ Payload (hidden, use --include payload)`, "\n"), result.String())
 
 	t.Run("Success with result", func(t *testing.T) {
 		result := transactionResult{tx: tx, result: txResult}
+
+		expectedString := strings.TrimPrefix(fmt.Sprintf(`
+Block ID	7aa74143741c1c3b837d389fcffa7a5e251b67b4ffef6d6887b40cd9c803f537
+Block Height	1
+Status		%s SEALED
+ID		e913d1f3e431c7df49c99845bea9ebff9db11bbf25d507b9ad0fad45652d515f
+Payer		0000000000000002
+Authorizers	[]
+
+Proposal Key:	
+    Address	0000000000000001
+    Index	0
+    Sequence	1
+
+Payload Signature 0: 0000000000000001
+Envelope Signature 0: 0000000000000001
+Signatures (minimized, use --include signatures)
+
+Events:		 
+    Index	0
+    Type	A.foo
+    Tx ID	0000000000000000000000000000000000000000000000000000000000000000
+    Values
+		- bar (String): 1 
+
+
+
+Code (hidden, use --include code)
+
+Payload (hidden, use --include payload)
+
+Fee Events (hidden, use --include fee-events)`, output.OkEmoji()), "\n")
+
+		assert.Equal(t, expectedString, result.String())
+
+		assert.Equal(t, map[string]any{
+			"authorizers":  "[]",
+			"block_height": uint64(1),
+			"block_id":     "7aa74143741c1c3b837d389fcffa7a5e251b67b4ffef6d6887b40cd9c803f537",
+			"events": []any{
+				map[string]any{
+					"index":  0,
+					"type":   "A.foo",
+					"values": json.RawMessage{0x6d, 0x6f, 0x63, 0x6b, 0x5f, 0x70, 0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64},
+				},
+			},
+			"id":      "e913d1f3e431c7df49c99845bea9ebff9db11bbf25d507b9ad0fad45652d515f",
+			"payer":   "0000000000000002",
+			"payload": "f8dbf8498e7472616e73616374696f6e207b7dc0a06cde7f812897d22ee7633b82b059070be24faccdc47997bc0f765420e6e28bb682270f8800000000000000018001880000000000000002c0f846f8448080b84036636465376638313238393764323265653736333362383262303539303730626532346661636364633437393937626330663736353432306536653238626236f846f8448080b84036636465376638313238393764323265653736333362383262303539303730626532346661636364633437393937626330663736353432306536653238626236",
+			"status":  "SEALED",
+		}, result.JSON())
+	})
+
+	t.Run("Result without fee events", func(t *testing.T) {
+		result := transactionResult{tx: tx, result: txResultFeeEvents}
 
 		assert.Equal(t, strings.TrimPrefix(`
 Block ID	7aa74143741c1c3b837d389fcffa7a5e251b67b4ffef6d6887b40cd9c803f537
@@ -372,23 +456,59 @@ Events:
 
 Code (hidden, use --include code)
 
-Payload (hidden, use --include payload)`, "\n"), result.String())
+Payload (hidden, use --include payload)
 
-		assert.Equal(t, map[string]any{
-			"authorizers":  "[]",
-			"block_height": uint64(1),
-			"block_id":     "7aa74143741c1c3b837d389fcffa7a5e251b67b4ffef6d6887b40cd9c803f537",
-			"events": []any{
-				map[string]any{
-					"index":  0,
-					"type":   "A.foo",
-					"values": json.RawMessage{0x6d, 0x6f, 0x63, 0x6b, 0x5f, 0x70, 0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64},
-				},
-			},
-			"id":      "e913d1f3e431c7df49c99845bea9ebff9db11bbf25d507b9ad0fad45652d515f",
-			"payer":   "0000000000000002",
-			"payload": "f8dbf8498e7472616e73616374696f6e207b7dc0a06cde7f812897d22ee7633b82b059070be24faccdc47997bc0f765420e6e28bb682270f8800000000000000018001880000000000000002c0f846f8448080b84036636465376638313238393764323265653736333362383262303539303730626532346661636364633437393937626330663736353432306536653238626236f846f8448080b84036636465376638313238393764323265653736333362383262303539303730626532346661636364633437393937626330663736353432306536653238626236",
-			"status":  "SEALED",
-		}, result.JSON())
+Fee Events (hidden, use --include fee-events)`, "\n"), result.String())
+	})
+	t.Run("Result with fee events", func(t *testing.T) {
+		result := transactionResult{tx: tx, result: txResultFeeEvents, include: []string{"fee-events"}}
+
+		assert.Equal(t, strings.TrimPrefix(`
+Block ID	7aa74143741c1c3b837d389fcffa7a5e251b67b4ffef6d6887b40cd9c803f537
+Block Height	1
+Status		✅ SEALED
+ID		e913d1f3e431c7df49c99845bea9ebff9db11bbf25d507b9ad0fad45652d515f
+Payer		0000000000000002
+Authorizers	[]
+
+Proposal Key:	
+    Address	0000000000000001
+    Index	0
+    Sequence	1
+
+Payload Signature 0: 0000000000000001
+Envelope Signature 0: 0000000000000001
+Signatures (minimized, use --include signatures)
+
+Events:		 
+    Index	0
+    Type	A.foo
+    Tx ID	0000000000000000000000000000000000000000000000000000000000000000
+    Values
+		- bar (String): 1 
+
+    Index	1
+    Type	A.1654653399040a61.FlowToken.TokensWithdrawn
+    Tx ID	0000000000000000000000000000000000000000000000000000000000000000
+    Values
+		- bar (String): 1 
+
+    Index	2
+    Type	A.1654653399040a61.FlowToken.TokensDeposited
+    Tx ID	0000000000000000000000000000000000000000000000000000000000000000
+    Values
+		- bar (String): 1 
+
+    Index	3
+    Type	A.f919ee77447b7497.FlowFees.FeesDeducted
+    Tx ID	0000000000000000000000000000000000000000000000000000000000000000
+    Values
+		- bar (String): 1 
+
+
+
+Code (hidden, use --include code)
+
+Payload (hidden, use --include payload)`, "\n"), result.String())
 	})
 }

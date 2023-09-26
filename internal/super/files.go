@@ -22,7 +22,6 @@ import (
 	"fmt"
 	"io/fs"
 	"os"
-	"path"
 	"path/filepath"
 	"time"
 
@@ -58,7 +57,7 @@ type contractChange struct {
 
 func newProjectFiles(projectPath string) *projectFiles {
 	return &projectFiles{
-		cadencePath: path.Join(projectPath, cadenceDir),
+		cadencePath: filepath.Join(projectPath, cadenceDir),
 		watcher:     watcher.New(),
 	}
 }
@@ -121,7 +120,7 @@ func (f *projectFiles) transactions() ([]string, error) {
 // This function returns two channels, accountChange which reports any changes on the accounts folders and
 // contractChange which reports any changes to the contract files.
 func (f *projectFiles) watch() (<-chan accountChange, <-chan contractChange, error) {
-	err := f.watcher.AddRecursive(path.Join(f.cadencePath, contractDir))
+	err := f.watcher.AddRecursive(filepath.Join(f.cadencePath, contractDir))
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "add recursive files failed")
 	}
@@ -193,7 +192,7 @@ func (f *projectFiles) watch() (<-chan accountChange, <-chan contractChange, err
 
 // getFilePaths returns a list of only Cadence files that are inside the provided directory.
 func (f *projectFiles) getCadenceFilepaths(dir string) ([]string, error) {
-	dir = path.Join(f.cadencePath, dir)
+	dir = filepath.Join(f.cadencePath, dir)
 	paths := make([]string, 0)
 	err := filepath.WalkDir(dir, func(path string, d fs.DirEntry, err error) error {
 		if path == dir || d.IsDir() || filepath.Ext(path) != cadenceExt { // we only want to get .cdc files in the dir
@@ -218,7 +217,7 @@ func (f *projectFiles) getCadenceFilepaths(dir string) ([]string, error) {
 // relProjectPath gets a filepath relative to the project directory including the base cadence directory.
 // eg. a path /Users/Mike/Dev/project/cadence/contracts/foo.cdc will become cadence/contracts/foo.cdc
 func (f *projectFiles) relProjectPath(file string) (string, error) {
-	rel, err := filepath.Rel(path.Dir(f.cadencePath), file)
+	rel, err := filepath.Rel(filepath.Dir(f.cadencePath), file)
 	if err != nil {
 		return "", errors.Wrap(err, "failed getting project relative path")
 	}

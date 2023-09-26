@@ -125,7 +125,7 @@ func SendTransaction(code []byte, args []string, location string, flow flowkit.S
 	if sendFlags.ArgsJSON != "" {
 		transactionArgs, err = arguments.ParseJSON(sendFlags.ArgsJSON)
 	} else {
-		transactionArgs, err = arguments.ParseWithoutType(args, code, location)
+		transactionArgs, err = arguments.ParseWithoutType(args[1:], code, location)
 	}
 	if err != nil {
 		return nil, fmt.Errorf("error parsing transaction arguments: %w", err)
@@ -141,7 +141,6 @@ func SendTransaction(code []byte, args []string, location string, flow flowkit.S
 		flowkit.Script{Code: code, Args: transactionArgs, Location: location},
 		sendFlags.GasLimit,
 	)
-
 	if err != nil {
 		return nil, err
 	}

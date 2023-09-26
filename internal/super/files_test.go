@@ -20,7 +20,7 @@ package super
 
 import (
 	"fmt"
-	"path"
+	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -36,7 +36,7 @@ func Test_AccountFromPath(t *testing.T) {
 	}
 
 	for i, test := range paths {
-		name, ok := accountFromPath(test[0])
+		name, ok := accountFromPath(filepath.FromSlash(test[0]))
 		assert.Equal(t, test[1] != "", ok) // if we don't provide a name we mean it shouldn't be returned
 		assert.Equal(t, test[1], name, fmt.Sprintf("failed test %d", i))
 	}
@@ -45,10 +45,10 @@ func Test_AccountFromPath(t *testing.T) {
 func Test_RelativeProjectPath(t *testing.T) {
 	cdcDir := "/Users/Mike/Dev/my-project/cadence"
 	paths := [][]string{
-		{path.Join(cdcDir, "/contracts/foo.cdc"), "cadence/contracts/foo.cdc"},
-		{path.Join(cdcDir, "/contracts/alice/foo.cdc"), "cadence/contracts/alice/foo.cdc"},
-		{path.Join(cdcDir, "/scripts/bar.cdc"), "cadence/scripts/bar.cdc"},
-		{path.Join(cdcDir, "/bar.cdc"), "cadence/bar.cdc"},
+		{filepath.Join(cdcDir, "/contracts/foo.cdc"), "cadence/contracts/foo.cdc"},
+		{filepath.Join(cdcDir, "/contracts/alice/foo.cdc"), "cadence/contracts/alice/foo.cdc"},
+		{filepath.Join(cdcDir, "/scripts/bar.cdc"), "cadence/scripts/bar.cdc"},
+		{filepath.Join(cdcDir, "/bar.cdc"), "cadence/bar.cdc"},
 	}
 
 	f := &projectFiles{
@@ -56,8 +56,8 @@ func Test_RelativeProjectPath(t *testing.T) {
 	}
 
 	for i, test := range paths {
-		rel, err := f.relProjectPath(test[0])
+		rel, err := f.relProjectPath(filepath.FromSlash(test[0]))
 		assert.NoError(t, err)
-		assert.Equal(t, test[1], rel, fmt.Sprintf("test %d failed", i))
+		assert.Equal(t, filepath.FromSlash(test[1]), rel, fmt.Sprintf("test %d failed", i))
 	}
 }
