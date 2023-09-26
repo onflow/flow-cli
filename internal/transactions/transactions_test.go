@@ -309,19 +309,19 @@ func Test_Result(t *testing.T) {
 	withdrawEvent := tests.NewEvent(
 		1,
 		"A.1654653399040a61.FlowToken.TokensWithdrawn",
-		[]cadence.Field{{Type: cadence.StringType{}, Identifier: "bar"}},
+		[]cadence.Field{{Type: cadence.StringType, Identifier: "bar"}},
 		[]cadence.Value{cadence.NewInt(1)},
 	)
 	depositEvent := tests.NewEvent(
 		2,
 		"A.1654653399040a61.FlowToken.TokensDeposited",
-		[]cadence.Field{{Type: cadence.StringType{}, Identifier: "bar"}},
+		[]cadence.Field{{Type: cadence.StringType, Identifier: "bar"}},
 		[]cadence.Value{cadence.NewInt(1)},
 	)
 	feeEvent := tests.NewEvent(
 		3,
 		"A.f919ee77447b7497.FlowFees.FeesDeducted",
-		[]cadence.Field{{Type: cadence.StringType{}, Identifier: "bar"}},
+		[]cadence.Field{{Type: cadence.StringType, Identifier: "bar"}},
 		[]cadence.Value{cadence.NewInt(1)},
 	)
 	txResult := &flow.TransactionResult{
