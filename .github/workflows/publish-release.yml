@@ -12,7 +12,5 @@ jobs:
       - uses: mislav/bump-homebrew-formula-action@v3
         with:
           formula-name: flow-cli
-          # https://github.com/mislav/bump-homebrew-formula-action/issues/58
-          formula-path: Formula/f/flow-cli.rb
         env:
           COMMITTER_TOKEN: ${{ secrets.COMMITTER_TOKEN }}
