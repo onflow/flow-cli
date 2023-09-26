@@ -50,7 +50,7 @@ var testContractB = testContract{
 }
 
 var testContractC = testContract{
-	location: "ContractC.cdc",
+	location: "foobar/ContractC.cdc",
 	code: []byte(`
         import ContractA from "ContractA.cdc"
     
@@ -62,7 +62,7 @@ var testContractC = testContract{
 var testContractD = testContract{
 	location: "ContractD.cdc",
 	code: []byte(`
-        import ContractC from "ContractC.cdc"
+        import ContractC from "foobar/ContractC.cdc"
 
         access(all) contract ContractD {}
     `),
@@ -91,7 +91,7 @@ var testContractF = testContract{
 var testContractG = testContract{
 	location: "ContractG.cdc",
 	code: []byte(`
-        import ContractA from "ContractA.cdc"
+        import ContractA from "foobar/ContractA.cdc"
         import ContractB from "ContractB.cdc"
 
         access(all) contract ContractG {}
@@ -166,7 +166,6 @@ func TestContractDeploymentOrder(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
-
 			contracts := make([]*Contract, len(testCase.contracts))
 			for i, contract := range testCase.contracts {
 				contracts[i] = NewContract(

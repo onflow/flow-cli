@@ -22,6 +22,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/onflow/flow-go-sdk"
 	"github.com/spf13/cobra"
@@ -90,6 +91,8 @@ func (r *transactionResult) JSON() any {
 func (r *transactionResult) String() string {
 	var b bytes.Buffer
 	writer := util.CreateTabWriter(&b)
+	const feeEventsCountAppended = 3
+	const feeDeductedEvent = "FeesDeducted"
 
 	if r.result != nil {
 		_, _ = fmt.Fprintf(writer, "Block ID\t%s\n", r.result.BlockID)
@@ -153,6 +156,16 @@ func (r *transactionResult) String() string {
 			Events: r.result.Events,
 		}
 
+		if r.result != nil && e.Events != nil && !command.ContainsFlag(r.include, "fee-events") {
+			for _, event := range e.Events {
+				if strings.Contains(event.Type, feeDeductedEvent) {
+					// if fee event are present remove them
+					e.Events = e.Events[:len(e.Events)-feeEventsCountAppended]
+					break
+				}
+			}
+		}
+
 		eventsOutput := e.String()
 		if eventsOutput == "" {
 			eventsOutput = "None"
@@ -182,6 +195,10 @@ func (r *transactionResult) String() string {
 		_, _ = fmt.Fprintf(writer, "\n\nPayload:\n%x", r.tx.Encode())
 	} else {
 		_, _ = fmt.Fprint(writer, "\n\nPayload (hidden, use --include payload)")
+	}
+
+	if !command.ContainsFlag(r.include, "fee-events") && !command.ContainsFlag(r.exclude, "events") {
+		_, _ = fmt.Fprint(writer, "\n\nFee Events (hidden, use --include fee-events)")
 	}
 
 	_ = writer.Flush()
