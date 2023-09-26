@@ -71,7 +71,7 @@ func send(
 		return nil, fmt.Errorf("error loading transaction file: %w", err)
 	}
 
-	return SendTransaction(code, args[1:], filename, flow, state, flags)
+	return SendTransaction(code, args, filename, flow, state, flags)
 }
 
 func SendTransaction(code []byte, args []string, location string, flow flowkit.Services, state *flowkit.State, sendFlags Flags) (result command.Result, err error) {
@@ -141,7 +141,6 @@ func SendTransaction(code []byte, args []string, location string, flow flowkit.S
 		flowkit.Script{Code: code, Args: transactionArgs, Location: location},
 		sendFlags.GasLimit,
 	)
-
 	if err != nil {
 		return nil, err
 	}

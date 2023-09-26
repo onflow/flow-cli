@@ -38,7 +38,7 @@ type testContract struct {
 var addresses = test.AddressGenerator()
 
 var testContractA = testContract{
-	location:       "ContractA.cdc",
+	location:       "foobar/ContractA.cdc",
 	code:           []byte(`access(all) contract ContractA {}`),
 	accountAddress: addresses.New(),
 }
@@ -179,6 +179,7 @@ func TestContractDeploymentOrder(t *testing.T) {
 			}
 
 			deployment, err := NewDeployment(contracts, nil)
+			assert.NoError(t, err)
 
 			contracts, err = deployment.Sort()
 			if !strings.Contains(testCase.name, "unresolved") && !strings.Contains(testCase.name, "cycle") {
