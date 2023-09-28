@@ -105,12 +105,12 @@ func addAccountContractWithArgs(
 	const addAccountContractTemplate = `
 	transaction(name: String, code: String %s) {
 		prepare(signer: AuthAccount) {
-			signer.contracts.add(name: name, code: code.decodeHex() %s)
+			signer.contracts.add(name: name, code: code.utf8 %s)
 		}
 	}`
 
 	cadenceName := cadence.String(contract.Name)
-	cadenceCode := cadence.String(contract.SourceHex())
+	cadenceCode := cadence.String(contract.Source)
 
 	tx := flow.NewTransaction().
 		AddRawArgument(jsoncdc.MustEncode(cadenceName)).
