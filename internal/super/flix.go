@@ -26,12 +26,11 @@ import (
 
 	"github.com/onflow/flixkit-go"
 
+	"github.com/onflow/flow-cli/flowkit"
 	"github.com/onflow/flow-cli/flowkit/output"
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/internal/scripts"
 	"github.com/onflow/flow-cli/internal/transactions"
-
-	"github.com/onflow/flow-cli/flowkit"
 
 	"github.com/spf13/cobra"
 )
@@ -47,7 +46,14 @@ type flixFlags struct {
 	Include     []string `default:"" flag:"include" info:"Fields to include in the output"`
 	Exclude     []string `default:"" flag:"exclude" info:"Fields to exclude from the output (events)"`
 	GasLimit    uint64   `default:"1000" flag:"gas-limit" info:"transaction gas limit"`
+	Generate 	string	 `default:"" flag:"generate" info:"generate code for the given language"`
+	Save 		string	 `default:"" flag:"output" info:"output file for generated code"`
 }
+
+type flixResult struct {
+	output string
+	save string
+} 
 
 var flags = flixFlags{}
 
@@ -106,6 +112,7 @@ func execute(
 	ctx := context.Background()
 	var template *flixkit.FlowInteractionTemplate
 	flixQuery := args[0]
+	isLocal := false
 
 	switch getType(flixQuery) {
 	case flixId:
@@ -121,6 +128,7 @@ func execute(
 		}
 
 	case flixPath:
+		isLocal = true
 		file, err := os.ReadFile(flixQuery)
 		if err != nil {
 			return nil, fmt.Errorf("could not read flix file %s: %w", flixQuery, err)
@@ -133,6 +141,22 @@ func execute(
 	default:
 		return nil, fmt.Errorf("invalid flix query type: %s", flixQuery)
 	}
+
+	if flags.Generate != "" {
+		jsGen := flixkit.JavascriptGenerator{}
+		out, err := jsGen.Generate(template, flixQuery, isLocal)
+
+		if flags.Save != "" {
+			err = os.WriteFile(flags.Save, []byte(out), 0644)
+			if err != nil {
+				return nil, fmt.Errorf("could not write to file %s: %w", flags.Save, err)
+			}
+		}
+		return &flixResult{
+			save: flags.Save,
+			output: out,
+		}, err
+	} 
 
 	cadenceWithImportsReplaced, err := template.GetAndReplaceCadenceImports(flow.Network().Name)
 	if err != nil {
@@ -160,4 +184,26 @@ func execute(
 		GasLimit:    flags.GasLimit,
 	}
 	return transactions.SendTransaction([]byte(cadenceWithImportsReplaced), args[1:], "", flow, state, transactionFlags)
+}
+
+func (fr *flixResult) JSON() any {
+	result := make(map[string]any)
+	result["output"] = fr.output
+	result["save"] = fr.save
+	return result
+}
+
+func (fr *flixResult) String() string {
+	return isSaved(fr)
+}
+
+func (fr *flixResult) Oneliner() string {
+	return isSaved(fr)
+}
+
+func isSaved(fr *flixResult) string {
+	if fr.save != "" {
+		return fmt.Sprintf("Generated code saved to %s", fr.save)
+	}
+	return fr.output
 }
