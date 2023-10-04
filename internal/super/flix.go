@@ -25,6 +25,7 @@ import (
 	"os"
 
 	"github.com/onflow/flixkit-go"
+	"github.com/onflow/flixkit-go/bindings"
 
 	"github.com/onflow/flow-cli/flowkit"
 	"github.com/onflow/flow-cli/flowkit/output"
@@ -46,14 +47,14 @@ type flixFlags struct {
 	Include     []string `default:"" flag:"include" info:"Fields to include in the output"`
 	Exclude     []string `default:"" flag:"exclude" info:"Fields to exclude from the output (events)"`
 	GasLimit    uint64   `default:"1000" flag:"gas-limit" info:"transaction gas limit"`
-	Generate 	string	 `default:"" flag:"generate" info:"generate code for the given language"`
-	Save 		string	 `default:"" flag:"output" info:"output file for generated code"`
+	Bindings    string   `default:"" flag:"bindings" info:"generate binding code for the given language, fcl-js' is supported language"`
+	Save        string   `default:"" flag:"output" info:"output file for generated binding code"`
 }
 
 type flixResult struct {
 	output string
-	save string
-} 
+	save   string
+}
 
 var flags = flixFlags{}
 
@@ -62,7 +63,7 @@ var FlixCommand = &command.Command{
 		Use:     "flix <id | name | path>",
 		Short:   "Execute FLIX template with a given id, name, or local filename",
 		Example: "flow flix multiply 2 3",
-		Args:    cobra.ArbitraryArgs,
+		Args:    cobra.MinimumNArgs(1),
 		GroupID: "super",
 	},
 	Flags: &flags,
@@ -142,9 +143,13 @@ func execute(
 		return nil, fmt.Errorf("invalid flix query type: %s", flixQuery)
 	}
 
-	if flags.Generate != "" {
-		jsGen := flixkit.JavascriptGenerator{}
-		out, err := jsGen.Generate(template, flixQuery, isLocal)
+	if flags.Bindings != "" {
+		if flags.Bindings != "fcl-js" {
+			return nil, fmt.Errorf("binding not supported %s", flags.Bindings)
+		}
+
+		fclJsGen := bindings.FclJSGenerator{}
+		out, err := fclJsGen.Generate(template, flixQuery, isLocal)
 
 		if flags.Save != "" {
 			err = os.WriteFile(flags.Save, []byte(out), 0644)
@@ -153,10 +158,10 @@ func execute(
 			}
 		}
 		return &flixResult{
-			save: flags.Save,
+			save:   flags.Save,
 			output: out,
 		}, err
-	} 
+	}
 
 	cadenceWithImportsReplaced, err := template.GetAndReplaceCadenceImports(flow.Network().Name)
 	if err != nil {
