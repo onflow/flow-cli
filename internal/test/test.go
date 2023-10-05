@@ -22,6 +22,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"math/rand"
 	"os"
 	"path/filepath"
 	"strings"
@@ -50,6 +51,8 @@ type flagsTests struct {
 	Cover        bool   `default:"false" flag:"cover" info:"Use the cover flag to calculate coverage report"`
 	CoverProfile string `default:"coverage.json" flag:"coverprofile" info:"Filename to write the calculated coverage report. Supported extensions are .json and .lcov"`
 	CoverCode    string `default:"all" flag:"covercode" info:"Use the covercode flag to calculate coverage report only for certain types of code. Available values are \"all\" & \"contracts\""`
+	Random       bool   `default:"false" flag:"random" info:"Use the random flag to execute test cases randomly"`
+	Seed         int64  `default:"0" flag:"seed" info:"Use the seed flag to manipulate random execution of test cases"`
 }
 
 var testFlags = flagsTests{}
@@ -91,20 +94,20 @@ func run(
 		testFiles[filename] = code
 	}
 
-	res, coverageReport, err := testCode(testFiles, state, testFlags)
+	result, err := testCode(testFiles, state, testFlags)
 	if err != nil {
 		return nil, err
 	}
 
-	if coverageReport != nil {
+	if result.CoverageReport != nil {
 		var file []byte
 		var err error
 
 		ext := filepath.Ext(testFlags.CoverProfile)
 		if ext == ".json" {
-			file, err = json.MarshalIndent(coverageReport, "", "  ")
+			file, err = json.MarshalIndent(result.CoverageReport, "", "  ")
 		} else if ext == ".lcov" {
-			file, err = coverageReport.MarshalLCOV()
+			file, err = result.CoverageReport.MarshalLCOV()
 		} else {
 			return nil, fmt.Errorf("given format: %v, only .json and .lcov are supported", ext)
 		}
@@ -119,46 +122,61 @@ func run(
 		}
 	}
 
-	return &result{
-		Results:        res,
-		CoverageReport: coverageReport,
-	}, nil
+	return result, nil
 }
 
 func testCode(
 	testFiles map[string][]byte,
 	state *flowkit.State,
 	flags flagsTests,
-) (map[string]cdcTests.Results, *runtime.CoverageReport, error) {
-	var coverageReport *runtime.CoverageReport
+) (*result, error) {
 	runner := cdcTests.NewTestRunner()
+
+	var coverageReport *runtime.CoverageReport
 	if flags.Cover {
 		coverageReport = runtime.NewCoverageReport()
 		if flags.CoverCode == contractsCoverCode {
 			coverageReport.WithLocationFilter(
 				func(location common.Location) bool {
 					_, addressLoc := location.(common.AddressLocation)
-					_, stringLoc := location.(common.StringLocation)
-					// We only allow inspection of AddressLocation or StringLocation,
-					// since scripts and transactions cannot be attributed to their
-					// source files anyway.
-					return addressLoc || stringLoc
+					// We only allow inspection of AddressLocation,
+					// since scripts and transactions cannot be
+					// attributed to their source files anyway.
+					return addressLoc
 				},
 			)
 		}
 		runner = runner.WithCoverageReport(coverageReport)
 	}
 
+	var seed int64
+	if flags.Random {
+		seed = int64(rand.Intn(150000))
+		runner = runner.WithRandomSeed(seed)
+	} else if flags.Seed > 0 {
+		seed = flags.Seed
+		runner = runner.WithRandomSeed(seed)
+	}
+
+	contracts := make(map[string]common.Address, 0)
+	for _, contract := range *state.Contracts() {
+		alias := contract.Aliases.ByNetwork("testing")
+		contracts[contract.Name] = common.Address(alias.Address)
+	}
+
 	testResults := make(map[string]cdcTests.Results, 0)
 	for scriptPath, code := range testFiles {
 		runner := runner.
 			WithImportResolver(importResolver(scriptPath, state)).
-			WithFileResolver(fileResolver(scriptPath, state))
+			WithFileResolver(fileResolver(scriptPath, state)).
+			WithContracts(contracts)
+
 		results, err := runner.RunTests(string(code))
 		if err != nil {
-			return nil, nil, err
+			return nil, err
 		}
 		testResults[scriptPath] = results
+
 		for _, result := range results {
 			if result.Error != nil {
 				status = 1
@@ -166,37 +184,50 @@ func testCode(
 			}
 		}
 	}
-	return testResults, coverageReport, nil
+
+	return &result{
+		Results:        testResults,
+		CoverageReport: coverageReport,
+		RandomSeed:     seed,
+	}, nil
 }
 
 func importResolver(scriptPath string, state *flowkit.State) cdcTests.ImportResolver {
 	return func(location common.Location) (string, error) {
-		stringLocation, isFileImport := location.(common.StringLocation)
-		if !isFileImport {
-			return "", fmt.Errorf("cannot import from %s", location)
-		}
-		relativePath := stringLocation.String()
-
-		if strings.Contains(relativePath, helperScriptSubstr) {
-			importedScriptFilePath := absolutePath(scriptPath, relativePath)
-			scriptCode, err := state.ReadFile(importedScriptFilePath)
-			if err != nil {
-				return "", nil
-			}
-			return string(scriptCode), nil
-		}
-
 		var contract *config.Contract
-		for _, c := range *state.Contracts() {
-			if c.Name == relativePath {
-				contract = &c
-				break
+
+		switch location := location.(type) {
+		case common.AddressLocation:
+			for _, c := range *state.Contracts() {
+				if c.Name == location.Name {
+					contract = &c
+					break
+				}
 			}
-		}
-		if contract == nil {
+
+		case common.StringLocation:
+			relativePath := location.String()
+
+			if strings.Contains(relativePath, helperScriptSubstr) {
+				importedScriptFilePath := absolutePath(scriptPath, relativePath)
+				scriptCode, err := state.ReadFile(importedScriptFilePath)
+				if err != nil {
+					return "", nil
+				}
+				return string(scriptCode), nil
+			}
+
+			for _, c := range *state.Contracts() {
+				if c.Name == relativePath || strings.Contains(relativePath, c.Location) {
+					contract = &c
+					break
+				}
+			}
+
+		default:
 			return "", fmt.Errorf(
 				"cannot find contract with location '%s' in configuration",
-				relativePath,
+				scriptPath,
 			)
 		}
 
@@ -233,6 +264,7 @@ func absolutePath(basePath, filePath string) string {
 type result struct {
 	Results        map[string]cdcTests.Results
 	CoverageReport *runtime.CoverageReport
+	RandomSeed     int64
 }
 
 var _ command.Result = &result{}
@@ -254,10 +286,12 @@ func (r *result) JSON() any {
 		results[testFile] = testFileResults
 	}
 
+	results["meta"] = map[string]string{}
 	if r.CoverageReport != nil {
-		results["meta"] = map[string]string{
-			"info": r.CoverageReport.Percentage(),
-		}
+		results["meta"]["coverage"] = r.CoverageReport.Percentage()
+	}
+	if r.RandomSeed > 0 {
+		results["meta"]["seed"] = fmt.Sprint(r.RandomSeed)
 	}
 
 	return results
@@ -273,6 +307,9 @@ func (r *result) String() string {
 	if r.CoverageReport != nil {
 		_, _ = fmt.Fprint(writer, r.CoverageReport.String())
 	}
+	if r.RandomSeed > 0 {
+		_, _ = fmt.Fprintf(writer, "\nSeed: %d", r.RandomSeed)
+	}
 
 	_ = writer.Flush()
 
@@ -287,6 +324,10 @@ func (r *result) Oneliner() string {
 	}
 	if r.CoverageReport != nil {
 		builder.WriteString(r.CoverageReport.String())
+		builder.WriteString("\n")
+	}
+	if r.RandomSeed > 0 {
+		builder.WriteString(fmt.Sprintf("Seed: %d", r.RandomSeed))
 		builder.WriteString("\n")
 	}
 
