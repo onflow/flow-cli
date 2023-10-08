@@ -160,7 +160,28 @@ func TestExecutingTests(t *testing.T) {
 		assert.NoError(t, result.Results[script.Filename][0].Error)
 	})
 
-	t.Run("with missing contract location from config", func(t *testing.T) {
+	t.Run("with missing contract in config", func(t *testing.T) {
+		t.Parallel()
+
+		// Setup
+		_, state, _ := util.TestMocks(t)
+
+		// Execute script
+		script := tests.TestScriptWithMissingContract
+		testFiles := map[string][]byte{
+			script.Filename: script.Source,
+		}
+		_, err := testCode(testFiles, state, flagsTests{})
+
+		require.Error(t, err)
+		assert.ErrorContains(
+			t,
+			err,
+			"cannot find contract with location 'ApprovalVoting' in configuration",
+		)
+	})
+
+	t.Run("with missing testing alias in config", func(t *testing.T) {
 		t.Parallel()
 
 		// Setup
@@ -168,8 +189,11 @@ func TestExecutingTests(t *testing.T) {
 
 		c := config.Contract{
 			Name:     tests.ContractHelloString.Name,
-			Location: "SomeHelloContract.cdc",
-			Aliases:  aliases,
+			Location: tests.ContractHelloString.Filename,
+			Aliases: config.Aliases{{
+				Network: "emulator",
+				Address: flow.HexToAddress("0x0000000000000007"),
+			}},
 		}
 		state.Contracts().AddOrUpdate(c)
 
@@ -181,10 +205,10 @@ func TestExecutingTests(t *testing.T) {
 		_, err := testCode(testFiles, state, flagsTests{})
 
 		require.Error(t, err)
-		assert.Error(
+		assert.ErrorContains(
 			t,
 			err,
-			"cannot find contract with location 'contractHello.cdc' in configuration",
+			"unable to find 'testing' alias for contract: Hello",
 		)
 	})
 

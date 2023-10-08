@@ -229,10 +229,12 @@ func importResolver(scriptPath string, state *flowkit.State) cdcTests.ImportReso
 				}
 			}
 
-		default:
+		}
+
+		if contract == nil {
 			return "", fmt.Errorf(
 				"cannot find contract with location '%s' in configuration",
-				scriptPath,
+				location,
 			)
 		}
 

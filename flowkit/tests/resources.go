@@ -376,6 +376,23 @@ var TestScriptWithImport = Resource{
 	`),
 }
 
+var TestScriptWithMissingContract = Resource{
+	Filename: "testScriptWithImport.cdc",
+	Source: []byte(`
+        import Test
+        import "ApprovalVoting"
+
+        pub fun setup() {
+            let err = Test.deployContract(
+                name: "ApprovalVoting",
+                path: "ApprovalVoting.cdc",
+                arguments: []
+            )
+            Test.expect(err, Test.beNil())
+        }
+	`),
+}
+
 var TestScriptWithHelperImport = Resource{
 	Filename: "testScriptWithHelperImport.cdc",
 	Source: []byte(`
