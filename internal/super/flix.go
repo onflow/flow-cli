@@ -148,7 +148,8 @@ func execute(
 			return nil, fmt.Errorf("binding not supported %s", flags.Bindings)
 		}
 
-		fclJsGen := bindings.FclJSGenerator{}
+		fclJsGen := bindings.NewFclJSGenerator()
+
 		out, err := fclJsGen.Generate(template, flixQuery, isLocal)
 
 		if flags.Save != "" {
