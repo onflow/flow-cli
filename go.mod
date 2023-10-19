@@ -15,7 +15,7 @@ require (
 	github.com/onflow/flixkit-go v0.1.0
 	github.com/onflow/flow-cli/flowkit v1.3.5-0.20230808220356-6a2bfeb10552
 	github.com/onflow/flow-core-contracts/lib/go/templates v1.2.3
-	github.com/onflow/flow-emulator v0.54.2-0.20230928194031-75caeb6a3378
+	github.com/onflow/flow-emulator v0.54.2-0.20231018165559-cb57f007d44c
 	github.com/onflow/flow-go-sdk v0.41.11
 	github.com/onflowser/flowser/v2 v2.0.14-beta
 	github.com/pkg/errors v0.9.1
@@ -249,7 +249,5 @@ require (
 )
 
 replace github.com/onflow/flow-cli/flowkit => ./flowkit
-
-replace github.com/onflow/cadence-tools/test => ../cadence-tools/test
 
 replace github.com/onflow/cadence-tools/languageserver => ../cadence-tools/languageserver
