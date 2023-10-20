@@ -881,10 +881,12 @@ github.com/onflow/atree v0.6.0/go.mod h1:gBHU0M05qCbv9NN0kijLWMgC47gHVNBIp4KmsVF
 github.com/onflow/cadence v0.20.1/go.mod h1:7mzUvPZUIJztIbr9eTvs+fQjWWHTF8veC+yk4ihcNIA=
 github.com/onflow/cadence v0.42.0 h1:XatyCy1pZu10x+JouRU6cZ9A50dF3uM+ubqYUER1/Vk=
 github.com/onflow/cadence v0.42.0/go.mod h1:raU8va8QRyTa/eUbhej4mbyW2ETePfSaywoo36MddgE=
+github.com/onflow/cadence-tools/languageserver v0.32.1-0.20231019231050-6b3b4c3d7391 h1:oa7EaEYdOYz2TlOEtYUCE9My9qcKJl5Ls77Sn0EnEsY=
+github.com/onflow/cadence-tools/languageserver v0.32.1-0.20231019231050-6b3b4c3d7391/go.mod h1:fhZRm+U/ooK0sZKCqvfGIImdtm28GPXGBPBIhLt02gw=
 github.com/onflow/cadence-tools/lint v0.13.0 h1:9KEhxLWYOia1+PgoUbW3f565gQDToZ/Jjz3soWOHjiY=
 github.com/onflow/cadence-tools/lint v0.13.0/go.mod h1:CHG36RWxqm2ptL3aYzbTGkf38VtMJCjgaipIEGEZ1Ys=
-github.com/onflow/cadence-tools/test v0.11.1-0.20231013154910-de381d86eb19 h1:EfBqdqQIZkkzSxgrHZy6rGtQzwgDbEeRkoDtwagRI+k=
-github.com/onflow/cadence-tools/test v0.11.1-0.20231013154910-de381d86eb19/go.mod h1:PNbz+xsaz3fvcL0VaDJFWCJ9EASoGe4BOln3Au5PMhQ=
+github.com/onflow/cadence-tools/test v0.11.1-0.20231019151236-180d41abbfdc h1:5TCE3D/Zg/IynUFvz6m4+bsRIU7c3olIrQJK6FCEZgA=
+github.com/onflow/cadence-tools/test v0.11.1-0.20231019151236-180d41abbfdc/go.mod h1:0dvbnujGgPp48Jy8mLwLQioC+0IDtn9PJd4uh9Nq+0E=
 github.com/onflow/fcl-dev-wallet v0.7.4 h1:vI6t3U0AO88R/Iitn5KsnniSpbN9Lqsqwvi9EJT4C0k=
 github.com/onflow/fcl-dev-wallet v0.7.4/go.mod h1:kc42jkiuoPJmxMRFjfbRO9XvnR/3XLheaOerxVMDTiw=
 github.com/onflow/flixkit-go v0.1.0 h1:3nH+1z+D+0YlmEJk9zYtvD8p4eUl2wJtiV6ZCgM7vYE=
