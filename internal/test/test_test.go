@@ -306,6 +306,9 @@ func TestExecutingTests(t *testing.T) {
 				"A.0000000000000001.FlowEpoch",
 				"A.0000000000000001.FlowStorageFees",
 				"A.0000000000000004.FlowFees",
+				"A.0000000000000001.MetadataViews",
+				"A.0000000000000001.NonFungibleToken",
+				"A.0000000000000001.ViewResolver",
 			},
 			coverageReport.ExcludedLocationIDs(),
 		)
@@ -393,6 +396,9 @@ func TestExecutingTests(t *testing.T) {
 				"A.0000000000000001.FlowEpoch",
 				"A.0000000000000001.FlowStorageFees",
 				"A.0000000000000004.FlowFees",
+				"A.0000000000000001.MetadataViews",
+				"A.0000000000000001.NonFungibleToken",
+				"A.0000000000000001.ViewResolver",
 			},
 			coverageReport.ExcludedLocationIDs(),
 		)
