@@ -10,12 +10,12 @@ require (
 	github.com/manifoldco/promptui v0.9.0
 	github.com/onflow/cadence v0.42.0
 	github.com/onflow/cadence-tools/languageserver v0.32.1-0.20231019231050-6b3b4c3d7391
-	github.com/onflow/cadence-tools/test v0.11.1-0.20231019151236-180d41abbfdc
+	github.com/onflow/cadence-tools/test v0.13.0
 	github.com/onflow/fcl-dev-wallet v0.7.4
 	github.com/onflow/flixkit-go v0.1.0
 	github.com/onflow/flow-cli/flowkit v1.3.5-0.20230808220356-6a2bfeb10552
 	github.com/onflow/flow-core-contracts/lib/go/templates v1.2.3
-	github.com/onflow/flow-emulator v0.54.2-0.20231018165559-cb57f007d44c
+	github.com/onflow/flow-emulator v0.56.0
 	github.com/onflow/flow-go-sdk v0.41.11
 	github.com/onflowser/flowser/v2 v2.0.14-beta
 	github.com/pkg/errors v0.9.1
