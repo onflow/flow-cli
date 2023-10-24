@@ -96,7 +96,7 @@ func run(
 	}
 	if testFlags.Random && testFlags.Seed > 0 {
 		fmt.Printf(
-			"%s The '--seed' flag has higher priority over '--random'. Do not combine them.\n",
+			"%s Both '--seed' and '--random' flags are used. Hence, the '--random' flag will be ignored.\n",
 			output.WarningEmoji(),
 		)
 	}
