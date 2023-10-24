@@ -241,7 +241,7 @@ func importResolver(scriptPath string, state *flowkit.State) cdcTests.ImportReso
 			}
 
 			for _, c := range *state.Contracts() {
-				if c.Name == relativePath || strings.Contains(relativePath, c.Location) {
+				if c.Name == relativePath {
 					contract = &c
 					break
 				}
