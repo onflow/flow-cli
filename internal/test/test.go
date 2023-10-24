@@ -213,11 +213,12 @@ func testCode(
 }
 
 func importResolver(scriptPath string, state *flowkit.State) cdcTests.ImportResolver {
+	contracts := make(map[string]config.Contract, 0)
+	for _, contract := range *state.Contracts() {
+		contracts[contract.Name] = contract
+	}
+
 	return func(location common.Location) (string, error) {
-		contracts := make(map[string]config.Contract, 0)
-		for _, contract := range *state.Contracts() {
-			contracts[contract.Name] = contract
-		}
 
 		contract := config.Contract{}
 
