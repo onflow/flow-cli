@@ -189,7 +189,24 @@ func Test_Send(t *testing.T) {
 		sendFlags.Signer = "" // reset
 	})
 
+	t.Run("Fail signer not used and payer and proposer flags not set", func(t *testing.T) {
+		sendFlags.Payer = ""
+		sendFlags.Proposer = config.DefaultEmulator.ServiceAccount
+		_, err := send([]string{""}, command.GlobalFlags{}, util.NoLogger, srv.Mock, state)
+		assert.EqualError(t, err, "proposer/payer flags are required when signer flag is not used")
+		sendFlags.Signer = "" // reset
+
+		sendFlags.Proposer = ""
+		sendFlags.Payer = config.DefaultEmulator.ServiceAccount
+		_, err = send([]string{""}, command.GlobalFlags{}, util.NoLogger, srv.Mock, state)
+		assert.EqualError(t, err, "proposer/payer flags are required when signer flag is not used")
+		sendFlags.Signer = "" // reset
+
+	})
+
 	t.Run("Fail loading transaction file", func(t *testing.T) {
+		sendFlags.Proposer = config.DefaultEmulator.ServiceAccount
+		sendFlags.Payer = config.DefaultEmulator.ServiceAccount
 		_, err := send([]string{"invalid"}, command.GlobalFlags{}, util.NoLogger, srv.Mock, state)
 		assert.EqualError(t, err, "error loading transaction file: open invalid: file does not exist")
 	})
