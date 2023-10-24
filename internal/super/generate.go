@@ -21,6 +21,7 @@ package super
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/onflow/flow-cli/flowkit"
 
@@ -59,45 +60,58 @@ func generateNew(
 
 	templateType := args[0]
 	name := args[1]
-	filename := fmt.Sprintf("%s.cdc", name)
-	var fileToWrite string
+	var filename string
 
-	if _, err := os.Stat(filename); err == nil {
-		return nil, fmt.Errorf("file already exists: %s", filename)
+	// Don't add .cdc extension if it's already there
+	if strings.HasSuffix(name, ".cdc") {
+		filename = name
+	} else {
+		filename = fmt.Sprintf("%s.cdc", name)
 	}
 
-	contractTemplate := fmt.Sprintf(`
+	var fileToWrite string
+	var basePath string
+
+	switch templateType {
+	case "contract":
+		basePath = "cadence/contracts"
+		fileToWrite = fmt.Sprintf(`
 pub contract %s {
     // Contract details here
 }`, name)
-
-	scriptTemplate := `pub fun main() {
-	// Script details here
+	case "script":
+		basePath = "cadence/scripts"
+		fileToWrite = `pub fun main() {
+    // Script details here
 }`
-
-	transactionTemplate := `transaction() {
+	case "transaction":
+		basePath = "cadence/transactions"
+		fileToWrite = `transaction() {
     prepare() {}
 
     execute {}
 }`
-
-	switch templateType {
-	case "contract":
-		fileToWrite = contractTemplate
-	case "script":
-		fileToWrite = scriptTemplate
-	case "transaction":
-		fileToWrite = transactionTemplate
 	default:
 		return nil, fmt.Errorf("invalid template type: %s", templateType)
 	}
 
-	err = os.WriteFile(filename, []byte(fileToWrite), 0644)
+	filenameWithBasePath := fmt.Sprintf("%s/%s", basePath, filename)
+
+	if _, err := os.Stat(filenameWithBasePath); err == nil {
+		return nil, fmt.Errorf("file already exists: %s", filenameWithBasePath)
+	}
+
+	// Ensure the directory exists
+	if err := os.MkdirAll(basePath, 0755); err != nil {
+		return nil, fmt.Errorf("error creating directories: %w", err)
+	}
+
+	err = os.WriteFile(filenameWithBasePath, []byte(fileToWrite), 0644)
 	if err != nil {
 		return nil, fmt.Errorf("error writing file: %w", err)
 	}
 
-	logger.Info(fmt.Sprintf("Generated new contract: %s at %s", name, filename))
+	logger.Info(fmt.Sprintf("Generated new contract: %s at %s", name, filenameWithBasePath))
 
 	return nil, err
 }
