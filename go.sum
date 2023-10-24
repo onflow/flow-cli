@@ -281,8 +281,8 @@ github.com/gammazero/deque v0.1.0 h1:f9LnNmq66VDeuAlSAapemq/U7hJ2jpIWa4c09q8Dlik
 github.com/gammazero/deque v0.1.0/go.mod h1:KQw7vFau1hHuM8xmI9RbgKFbAsQFWmBpqQ2KenFLk6M=
 github.com/gammazero/workerpool v1.1.2 h1:vuioDQbgrz4HoaCi2q1HLlOXdpbap5AET7xu5/qj87g=
 github.com/gballet/go-libpcsclite v0.0.0-20190607065134-2772fd86a8ff/go.mod h1:x7DCsMOv1taUwEWCzT4cmDeAkigA5/QCwUodaVOe8Ww=
-github.com/getsentry/sentry-go v0.24.1 h1:W6/0GyTy8J6ge6lVCc94WB6Gx2ZuLrgopnn9w8Hiwuk=
-github.com/getsentry/sentry-go v0.24.1/go.mod h1:lc76E2QywIyW8WuBnwl8Lc4bkmQH4+w1gwTf25trprY=
+github.com/getsentry/sentry-go v0.25.0 h1:q6Eo+hS+yoJlTO3uu/azhQadsD8V+jQn2D8VvX1eOyI=
+github.com/getsentry/sentry-go v0.25.0/go.mod h1:lc76E2QywIyW8WuBnwl8Lc4bkmQH4+w1gwTf25trprY=
 github.com/ghodss/yaml v1.0.0/go.mod h1:4dBDuWmgqj2HViK6kFavaiC9ZROes6MMH2rRYeMEF04=
 github.com/gin-contrib/sse v0.1.0 h1:Y/yl/+YNO8GZSjAhjMsSuLt29uWRFHdHYUb5lYOV9qE=
 github.com/gin-contrib/sse v0.1.0/go.mod h1:RHrZQHXnP2xjPF+u1gW/2HnVO7nvIa9PG3Gm+fLHvGI=
@@ -783,8 +783,8 @@ github.com/onflow/cadence-tools/lint v0.11.1 h1:3LuXC9yY5127qBpK0LI1ZSNveEPuJ/Jf
 github.com/onflow/cadence-tools/lint v0.11.1/go.mod h1:cPTvbS0Z3hQbwXyWR0gTYiWkIRQb762WAaeOuP6rqrU=
 github.com/onflow/cadence-tools/test v0.10.0 h1:tcNjOFXl7ZuuvgQ3uS36ENd8l3RkSBv4toC/J302rhY=
 github.com/onflow/cadence-tools/test v0.10.0/go.mod h1:eIvZOzFdi4JR2x6ekQfN8veQy04ZlZYbeeiQF/oZ0zM=
-github.com/onflow/fcl-dev-wallet v0.7.2 h1:ZwhpzDakcZn9rHiIr52LwkdPh1MpUPbxA/PwCVaZ2SA=
-github.com/onflow/fcl-dev-wallet v0.7.2/go.mod h1:kc42jkiuoPJmxMRFjfbRO9XvnR/3XLheaOerxVMDTiw=
+github.com/onflow/fcl-dev-wallet v0.7.4 h1:vI6t3U0AO88R/Iitn5KsnniSpbN9Lqsqwvi9EJT4C0k=
+github.com/onflow/fcl-dev-wallet v0.7.4/go.mod h1:kc42jkiuoPJmxMRFjfbRO9XvnR/3XLheaOerxVMDTiw=
 github.com/onflow/flixkit-go v0.2.0 h1:yI7jksFPkLoQkFZ31oYrq3xPaZBn+qqLslpLM7TttSo=
 github.com/onflow/flixkit-go v0.2.0/go.mod h1:i3EYZbxDP+k0n4nt1fzlwBFMENdNA82w+ZlQ9knfunQ=
 github.com/onflow/flow-archive v1.3.4-0.20230503192214-9e81e82d4dcc h1:C4ZniFeOv+pHlDLJdGc/4e3NklSjVuvaXKN47980gnY=
@@ -1625,8 +1625,8 @@ google.golang.org/grpc v1.39.1/go.mod h1:PImNr+rS9TWYb2O4/emRugxiyHZ5JyHW5F+RPnD
 google.golang.org/grpc v1.40.0/go.mod h1:ogyxbiOoUXAkP+4+xa6PZSE9DZgIHtSpzjDTB9KAK34=
 google.golang.org/grpc v1.42.0/go.mod h1:k+4IHHFw41K8+bbowsex27ge2rCb65oeWqe4jJ590SU=
 google.golang.org/grpc v1.45.0/go.mod h1:lN7owxKUQEqMfSyQikvvk5tf/6zMPsrK+ONuO11+0rQ=
-google.golang.org/grpc v1.58.2 h1:SXUpjxeVF3FKrTYQI4f4KvbGD5u2xccdYdurwowix5I=
-google.golang.org/grpc v1.58.2/go.mod h1:tgX3ZQDlNJGU96V6yHh1T/JeoBQ2TXdr43YbYSsCJk0=
+google.golang.org/grpc v1.58.3 h1:BjnpXut1btbtgN/6sp+brB2Kbm2LjNXnidYujAVbSoQ=
+google.golang.org/grpc v1.58.3/go.mod h1:tgX3ZQDlNJGU96V6yHh1T/JeoBQ2TXdr43YbYSsCJk0=
 google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.1.0/go.mod h1:6Kw0yEErY5E/yWrBtf03jp27GLLJujG4z/JK95pnjjw=
 google.golang.org/protobuf v0.0.0-20200109180630-ec00e32a8dfd/go.mod h1:DFci5gLYBciE7Vtevhsrf46CRTquxDuWsQurQQe4oz8=
 google.golang.org/protobuf v0.0.0-20200221191635-4d8936d0db64/go.mod h1:kwYJMbMJ01Woi6D6+Kah6886xMZcty6N08ah7+eCXa0=

@@ -4,14 +4,14 @@ go 1.18
 
 require (
 	github.com/dukex/mixpanel v1.0.1
-	github.com/getsentry/sentry-go v0.24.1
+	github.com/getsentry/sentry-go v0.25.0
 	github.com/go-git/go-git/v5 v5.6.1
 	github.com/gosuri/uilive v0.0.4
 	github.com/manifoldco/promptui v0.9.0
 	github.com/onflow/cadence v0.40.0
 	github.com/onflow/cadence-tools/languageserver v0.32.0
 	github.com/onflow/cadence-tools/test v0.10.0
-	github.com/onflow/fcl-dev-wallet v0.7.2
+	github.com/onflow/fcl-dev-wallet v0.7.4
 	github.com/onflow/flixkit-go v0.2.0
 	github.com/onflow/flow-cli/flowkit v1.3.5-0.20230808220356-6a2bfeb10552
 	github.com/onflow/flow-core-contracts/lib/go/templates v1.2.3
@@ -27,7 +27,7 @@ require (
 	github.com/spf13/viper v1.16.0
 	github.com/stretchr/testify v1.8.4
 	golang.org/x/exp v0.0.0-20230321023759-10a507213a29
-	google.golang.org/grpc v1.58.2
+	google.golang.org/grpc v1.58.3
 )
 
 require (
