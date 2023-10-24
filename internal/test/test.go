@@ -217,16 +217,16 @@ func testCode(
 
 func importResolver(scriptPath string, state *flowkit.State) cdcTests.ImportResolver {
 	return func(location common.Location) (string, error) {
-		var contract *config.Contract
+		contracts := make(map[string]config.Contract, 0)
+		for _, contract := range *state.Contracts() {
+			contracts[contract.Name] = contract
+		}
+
+		contract := config.Contract{}
 
 		switch location := location.(type) {
 		case common.AddressLocation:
-			for _, c := range *state.Contracts() {
-				if c.Name == location.Name {
-					contract = &c
-					break
-				}
-			}
+			contract = contracts[location.Name]
 
 		case common.StringLocation:
 			relativePath := location.String()
@@ -240,16 +240,10 @@ func importResolver(scriptPath string, state *flowkit.State) cdcTests.ImportReso
 				return string(scriptCode), nil
 			}
 
-			for _, c := range *state.Contracts() {
-				if c.Name == relativePath {
-					contract = &c
-					break
-				}
-			}
-
+			contract = contracts[relativePath]
 		}
 
-		if contract == nil {
+		if contract.Location == "" {
 			return "", fmt.Errorf(
 				"cannot find contract with location '%s' in configuration",
 				location,
