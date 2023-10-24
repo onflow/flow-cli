@@ -39,6 +39,18 @@ import (
 	"github.com/onflow/flow-cli/internal/util"
 )
 
+// The key where meta information for a test report in JSON
+// format can be found.
+const TestReportMetaKey = "meta"
+
+// The key where coverage meta information for a test report
+// in JSON format can be found.
+const TestReportCoverageKey = "coverage"
+
+// The key where seed meta information for a test report
+// in JSON format can be found.
+const TestReportSeedKey = "seed"
+
 // Import statements with a path that contain this substring,
 // are considered to be helper/utility scripts for test files.
 const helperScriptSubstr = "_helper"
@@ -299,13 +311,14 @@ func (r *result) JSON() any {
 		results[testFile] = testFileResults
 	}
 
-	results["meta"] = map[string]string{}
+	meta := map[string]string{}
 	if r.CoverageReport != nil {
-		results["meta"]["coverage"] = r.CoverageReport.Percentage()
+		meta[TestReportCoverageKey] = r.CoverageReport.Percentage()
 	}
 	if r.RandomSeed > 0 {
-		results["meta"]["seed"] = fmt.Sprint(r.RandomSeed)
+		meta[TestReportSeedKey] = fmt.Sprint(r.RandomSeed)
 	}
+	results[TestReportMetaKey] = meta
 
 	return results
 }

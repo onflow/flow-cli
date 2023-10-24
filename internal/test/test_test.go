@@ -19,6 +19,7 @@
 package test
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"testing"
@@ -495,6 +496,59 @@ Seed: 1521
 			t,
 			expected,
 			result.Oneliner(),
+		)
+	})
+
+	t.Run("with JSON output", func(t *testing.T) {
+		t.Parallel()
+
+		// Setup
+		_, state, _ := util.TestMocks(t)
+
+		state.Contracts().AddOrUpdate(config.Contract{
+			Name:     tests.ContractFooCoverage.Name,
+			Location: tests.ContractFooCoverage.Filename,
+			Aliases:  aliases,
+		})
+
+		// Execute script
+		script := tests.TestScriptWithCoverage
+		testFiles := map[string][]byte{
+			script.Filename: script.Source,
+		}
+		flags := flagsTests{
+			Seed:      1521,
+			Cover:     true,
+			CoverCode: contractsCoverCode,
+		}
+		result, err := testCode(testFiles, state, flags)
+
+		require.NoError(t, err)
+		require.Len(t, result.Results[script.Filename], 2)
+		for _, result := range result.Results[script.Filename] {
+			assert.NoError(t, result.Error)
+		}
+
+		output, err := json.Marshal(result.JSON())
+		require.NoError(t, err)
+
+		expected := `
+        {
+            "meta": {
+                "coverage": "100.0%",
+                "seed": "1521"
+            },
+            "testScriptWithCoverage.cdc": {
+                "testGetIntegerTrait": "PASS",
+                "testAddSpecialNumber": "PASS"
+            }
+        }
+		`
+
+		assert.JSONEq(
+			t,
+			expected,
+			string(output),
 		)
 	})
 }
