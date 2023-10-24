@@ -82,6 +82,12 @@ func run(
 	if !testFlags.Cover && testFlags.CoverProfile != "coverage.json" {
 		return nil, fmt.Errorf("the '--coverprofile' flag requires the '--cover' flag")
 	}
+	if testFlags.Random && testFlags.Seed > 0 {
+		fmt.Printf(
+			"%s The '--seed' flag has higher priority over '--random'. Do not combine them.\n",
+			output.WarningEmoji(),
+		)
+	}
 
 	testFiles := make(map[string][]byte, 0)
 	for _, filename := range args {
@@ -150,11 +156,11 @@ func testCode(
 	}
 
 	var seed int64
-	if flags.Random {
-		seed = int64(rand.Intn(150000))
-		runner = runner.WithRandomSeed(seed)
-	} else if flags.Seed > 0 {
+	if flags.Seed > 0 {
 		seed = flags.Seed
+		runner = runner.WithRandomSeed(seed)
+	} else if flags.Random {
+		seed = int64(rand.Intn(150000))
 		runner = runner.WithRandomSeed(seed)
 	}
 
