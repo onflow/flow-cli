@@ -189,19 +189,20 @@ func Test_Send(t *testing.T) {
 		sendFlags.Signer = "" // reset
 	})
 
-	t.Run("Fail signer not used and payer and proposer flags not set", func(t *testing.T) {
+	t.Run("Fail signer not used and payer flag not set", func(t *testing.T) {
 		sendFlags.Payer = ""
 		sendFlags.Proposer = config.DefaultEmulator.ServiceAccount
 		_, err := send([]string{""}, command.GlobalFlags{}, util.NoLogger, srv.Mock, state)
 		assert.EqualError(t, err, "proposer/payer flags are required when signer flag is not used")
 		sendFlags.Signer = "" // reset
+	})
 
+	t.Run("Fail signer not used and proposer flag not set", func(t *testing.T) {
 		sendFlags.Proposer = ""
 		sendFlags.Payer = config.DefaultEmulator.ServiceAccount
-		_, err = send([]string{""}, command.GlobalFlags{}, util.NoLogger, srv.Mock, state)
+		_, err := send([]string{""}, command.GlobalFlags{}, util.NoLogger, srv.Mock, state)
 		assert.EqualError(t, err, "proposer/payer flags are required when signer flag is not used")
 		sendFlags.Signer = "" // reset
-
 	})
 
 	t.Run("Fail loading transaction file", func(t *testing.T) {
