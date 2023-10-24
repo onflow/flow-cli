@@ -209,8 +209,38 @@ func TestExecutingTests(t *testing.T) {
 		assert.ErrorContains(
 			t,
 			err,
-			"unable to find 'testing' alias for contract: Hello",
+			"could not find the address of contract: Hello",
 		)
+	})
+
+	t.Run("without testing alias for common contracts", func(t *testing.T) {
+		t.Parallel()
+
+		// Setup
+		_, state, _ := util.TestMocks(t)
+
+		c := config.Contract{
+			Name:     tests.ContractHelloString.Name,
+			Location: tests.ContractHelloString.Filename,
+			Aliases:  aliases,
+		}
+		state.Contracts().AddOrUpdate(c)
+		// fungibleToken has no `testing` alias, but it is not
+		// actually deployed/used, so there is no errror.
+		fungibleToken := config.Contract{
+			Name:     "FungibleToken",
+			Location: "cadence/contracts/FungibleToken.cdc",
+		}
+		state.Contracts().AddOrUpdate(fungibleToken)
+
+		// Execute script
+		script := tests.TestScriptWithImport
+		testFiles := map[string][]byte{
+			script.Filename: script.Source,
+		}
+		_, err := testCode(testFiles, state, flagsTests{})
+
+		assert.NoError(t, err)
 	})
 
 	t.Run("with file read", func(t *testing.T) {

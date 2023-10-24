@@ -179,12 +179,9 @@ func testCode(
 	contracts := make(map[string]common.Address, 0)
 	for _, contract := range *state.Contracts() {
 		alias := contract.Aliases.ByNetwork("testing")
-		if alias == nil {
-			return nil, fmt.Errorf(
-				"unable to find 'testing' alias for contract: %s", contract.Name,
-			)
+		if alias != nil {
+			contracts[contract.Name] = common.Address(alias.Address)
 		}
-		contracts[contract.Name] = common.Address(alias.Address)
 	}
 
 	testResults := make(map[string]cdcTests.Results, 0)
