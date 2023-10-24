@@ -53,8 +53,14 @@ func generateNew(
 	flow flowkit.Services,
 	state *flowkit.State,
 ) (result command.Result, err error) {
-	name := args[0]
+	if len(args) < 2 {
+		return nil, fmt.Errorf("invalid number of arguments")
+	}
+
+	templateType := args[0]
+	name := args[1]
 	filename := fmt.Sprintf("%s.cdc", name)
+	var fileToWrite string
 
 	if _, err := os.Stat(filename); err == nil {
 		return nil, fmt.Errorf("file already exists: %s", filename)
@@ -65,7 +71,28 @@ pub contract %s {
     // Contract details here
 }`, name)
 
-	err = os.WriteFile(filename, []byte(contractTemplate), 0644)
+	scriptTemplate := `pub fun main() {
+	// Script details here
+}`
+
+	transactionTemplate := `transaction() {
+    prepare() {}
+
+    execute {}
+}`
+
+	switch templateType {
+	case "contract":
+		fileToWrite = contractTemplate
+	case "script":
+		fileToWrite = scriptTemplate
+	case "transaction":
+		fileToWrite = transactionTemplate
+	default:
+		return nil, fmt.Errorf("invalid template type: %s", templateType)
+	}
+
+	err = os.WriteFile(filename, []byte(fileToWrite), 0644)
 	if err != nil {
 		return nil, fmt.Errorf("error writing file: %w", err)
 	}
