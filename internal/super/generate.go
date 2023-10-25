@@ -95,7 +95,7 @@ pub contract %s {
 		return nil, fmt.Errorf("invalid template type: %s", templateType)
 	}
 
-	filenameWithBasePath := fmt.Sprintf("%s/%s", basePath, filename)
+	filenameWithBasePath := filepath.Join(basePath, filename)
 
 	if _, err := os.Stat(filenameWithBasePath); err == nil {
 		return nil, fmt.Errorf("file already exists: %s", filenameWithBasePath)
