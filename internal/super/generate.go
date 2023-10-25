@@ -87,7 +87,9 @@ pub contract %s {
 	case "transaction":
 		basePath = "cadence/transactions"
 		fileToWrite = `transaction() {
-    prepare() {}
+    prepare(account:AuthAccount) {
+    
+    }
 
     execute {}
 }`
