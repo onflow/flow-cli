@@ -38,31 +38,91 @@ type generateFlagsDef struct {
 
 var generateFlags = generateFlagsDef{}
 
-var GenerateCommand = &command.Command{
-	Cmd: &cobra.Command{
-		Use:     "generate <contract | transaction | script> <name>",
-		Short:   "Generate new boilerplate files",
-		Example: "flow generate contract HelloWorld",
-		Args:    cobra.ArbitraryArgs,
-		GroupID: "super",
-	},
-	Flags: &generateFlags,
-	RunS:  generateNew,
+var GenerateCommand = &cobra.Command{
+	Use:     "generate",
+	Short:   "Generate new boilerplate files",
+	GroupID: "super",
 }
 
-func generateNew(
+var GenerateContractCommand = &command.Command{
+	Cmd: &cobra.Command{
+		Use:     "contract <name>",
+		Short:   "Generate a new contract",
+		Example: "flow generate contract HelloWorld",
+		Args:    cobra.ExactArgs(1),
+	},
+	Flags: &generateFlags,
+	RunS:  generateContract,
+}
+
+var GenerateTransactionCommand = &command.Command{
+	Cmd: &cobra.Command{
+		Use:     "transaction <name>",
+		Short:   "Generate a new transaction",
+		Example: "flow generate transaction SomeTransaction",
+		Args:    cobra.ExactArgs(1),
+	},
+	Flags: &generateFlags,
+	RunS:  generateTransaction,
+}
+
+var GenerateScriptCommand = &command.Command{
+	Cmd: &cobra.Command{
+		Use:     "script <name>",
+		Short:   "Generate a new script",
+		Example: "flow generate script SomeScript",
+		Args:    cobra.ExactArgs(1),
+	},
+	Flags: &generateFlags,
+	RunS:  generateScript,
+}
+
+func init() {
+	GenerateContractCommand.AddToParent(GenerateCommand)
+	GenerateTransactionCommand.AddToParent(GenerateCommand)
+	GenerateScriptCommand.AddToParent(GenerateCommand)
+}
+
+func generateContract(
 	args []string,
 	_ command.GlobalFlags,
 	logger output.Logger,
 	flow flowkit.Services,
 	state *flowkit.State,
 ) (result command.Result, err error) {
-	if len(args) < 2 {
+	return generateNew(args, "contract", logger)
+}
+
+func generateTransaction(
+	args []string,
+	_ command.GlobalFlags,
+	logger output.Logger,
+	flow flowkit.Services,
+	state *flowkit.State,
+) (result command.Result, err error) {
+	return generateNew(args, "transaction", logger)
+}
+
+func generateScript(
+	args []string,
+	_ command.GlobalFlags,
+	logger output.Logger,
+	flow flowkit.Services,
+	state *flowkit.State,
+) (result command.Result, err error) {
+	return generateNew(args, "script", logger)
+}
+
+func generateNew(
+	args []string,
+	templateType string,
+	logger output.Logger,
+) (result command.Result, err error) {
+	if len(args) < 1 {
 		return nil, fmt.Errorf("invalid number of arguments")
 	}
 
-	templateType := args[0]
-	name := args[1]
+	name := args[0]
 	var filename string
 
 	// Don't add .cdc extension if it's already there
