@@ -47,12 +47,11 @@ type flixFlags struct {
 	Include     []string `default:"" flag:"include" info:"Fields to include in the output"`
 	Exclude     []string `default:"" flag:"exclude" info:"Fields to exclude from the output (events)"`
 	GasLimit    uint64   `default:"1000" flag:"gas-limit" info:"transaction gas limit"`
-	Save        string   `default:"" flag:"save" info:"save generated code to file"`
 }
 
 type flixResult struct {
-	result string
-	save   string
+	flixQuery string
+	result    string
 }
 
 var flags = flixFlags{}
@@ -188,37 +187,24 @@ func bindingsCmd(
 
 	out, err := fclJsGen.Generate(template, flixQuery, isLocal)
 
-	if flags.Save != "" {
-		err = state.ReaderWriter().WriteFile(flags.Save, []byte(out), 0644)
-		if err != nil {
-			return nil, fmt.Errorf("could not write to file %s: %w", flags.Save, err)
-		}
-	}
 	return &flixResult{
-		save:   flags.Save,
-		result: out,
+		flixQuery: flixQuery,
+		result:    out,
 	}, err
 }
 
 func (fr *flixResult) JSON() any {
 	result := make(map[string]any)
+	result["flixQuery"] = fr.flixQuery
 	result["result"] = fr.result
-	result["save"] = fr.save
 	return result
 }
 
 func (fr *flixResult) String() string {
-	return isSaved(fr)
+	return fr.result
 }
 
 func (fr *flixResult) Oneliner() string {
-	return isSaved(fr)
-}
-
-func isSaved(fr *flixResult) string {
-	if fr.save != "" {
-		return fmt.Sprintf("Generated code saved to %s", fr.save)
-	}
 	return fr.result
 }
 
