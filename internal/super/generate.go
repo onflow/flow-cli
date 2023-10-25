@@ -153,7 +153,7 @@ func generateNew(
 	switch templateType {
 	case "contract":
 		fileToWrite = fmt.Sprintf(`
-pub contract %s {
+access(all) contract %s {
     init() {}
 }`, name)
 	case "script":
