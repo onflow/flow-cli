@@ -130,35 +130,10 @@ func executeCmd(
 	state *flowkit.State,
 ) (result command.Result, err error) {
 	flixService := flixkit.NewFlixService(&flixkit.Config{})
-	ctx := context.Background()
-	var template *flixkit.FlowInteractionTemplate
 	flixQuery := args[0]
-
-	switch getType(flixQuery) {
-	case flixId:
-		template, err = flixService.GetFlixByID(ctx, flixQuery)
-		if err != nil {
-			return nil, fmt.Errorf("could not find flix with id %s: %w", flixQuery, err)
-		}
-
-	case flixName:
-		template, err = flixService.GetFlix(ctx, flixQuery)
-		if err != nil {
-			return nil, fmt.Errorf("could not find flix with name %s: %w", flixQuery, err)
-		}
-
-	case flixPath:
-		file, err := os.ReadFile(flixQuery)
-		if err != nil {
-			return nil, fmt.Errorf("could not read flix file %s: %w", flixQuery, err)
-		}
-		template, err = flixkit.ParseFlix(string(file))
-		if err != nil {
-			return nil, fmt.Errorf("could not parse flix from file %s: %w", flixQuery, err)
-		}
-
-	default:
-		return nil, fmt.Errorf("invalid flix query type: %s", flixQuery)
+	template, err := getTemplate(state, flixService, flixQuery)
+	if err != nil {
+		return nil, err
 	}
 
 	cadenceWithImportsReplaced, err := template.GetAndReplaceCadenceImports(flow.Network().Name)
@@ -197,37 +172,16 @@ func bindingsCmd(
 	state *flowkit.State,
 ) (result command.Result, err error) {
 	flixService := flixkit.NewFlixService(&flixkit.Config{})
-	ctx := context.Background()
-	var template *flixkit.FlowInteractionTemplate
 	flixQuery := args[0]
+
+	template, err := getTemplate(state, flixService, flixQuery)
+	if err != nil {
+		return nil, err
+	}
+
 	isLocal := false
-
-	switch getType(flixQuery) {
-	case flixId:
-		template, err = flixService.GetFlixByID(ctx, flixQuery)
-		if err != nil {
-			return nil, fmt.Errorf("could not find flix with id %s: %w", flixQuery, err)
-		}
-
-	case flixName:
-		template, err = flixService.GetFlix(ctx, flixQuery)
-		if err != nil {
-			return nil, fmt.Errorf("could not find flix with name %s: %w", flixQuery, err)
-		}
-
-	case flixPath:
+	if getType(flixQuery) == flixPath {
 		isLocal = true
-		file, err := os.ReadFile(flixQuery)
-		if err != nil {
-			return nil, fmt.Errorf("could not read flix file %s: %w", flixQuery, err)
-		}
-		template, err = flixkit.ParseFlix(string(file))
-		if err != nil {
-			return nil, fmt.Errorf("could not parse flix from file %s: %w", flixQuery, err)
-		}
-
-	default:
-		return nil, fmt.Errorf("invalid flix query type: %s", flixQuery)
 	}
 
 	fclJsGen := bindings.NewFclJSGenerator()
@@ -235,7 +189,7 @@ func bindingsCmd(
 	out, err := fclJsGen.Generate(template, flixQuery, isLocal)
 
 	if flags.Save != "" {
-		err = os.WriteFile(flags.Save, []byte(out), 0644)
+		err = state.ReaderWriter().WriteFile(flags.Save, []byte(out), 0644)
 		if err != nil {
 			return nil, fmt.Errorf("could not write to file %s: %w", flags.Save, err)
 		}
@@ -266,4 +220,37 @@ func isSaved(fr *flixResult) string {
 		return fmt.Sprintf("Generated code saved to %s", fr.save)
 	}
 	return fr.result
+}
+
+func getTemplate(state *flowkit.State, flixService flixkit.FlixService, flixQuery string) (*flixkit.FlowInteractionTemplate, error) {
+	var template *flixkit.FlowInteractionTemplate
+	var err error
+	ctx := context.Background()
+	switch getType(flixQuery) {
+	case flixId:
+		template, err = flixService.GetFlixByID(ctx, flixQuery)
+		if err != nil {
+			return nil, fmt.Errorf("could not find flix with id %s: %w", flixQuery, err)
+		}
+
+	case flixName:
+		template, err = flixService.GetFlix(ctx, flixQuery)
+		if err != nil {
+			return nil, fmt.Errorf("could not find flix with name %s: %w", flixQuery, err)
+		}
+
+	case flixPath:
+		file, err := state.ReadFile(flixQuery)
+		if err != nil {
+			return nil, fmt.Errorf("could not read flix file %s: %w", flixQuery, err)
+		}
+		template, err = flixkit.ParseFlix(string(file))
+		if err != nil {
+			return nil, fmt.Errorf("could not parse flix from file %s: %w", flixQuery, err)
+		}
+
+	default:
+		return nil, fmt.Errorf("invalid flix query type: %s", flixQuery)
+	}
+	return template, nil
 }
