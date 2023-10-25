@@ -37,7 +37,7 @@ Usage:
   flow [command]
 
 👋 Welcome Flow developer!
-   If you are starting a new flow project use our super commands, start by running 'flow setup'. 
+   If you are starting a new flow project try running 'flow setup <project_name>'. 
 
 🔥 Super Commands
   dev          Build your Flow project
