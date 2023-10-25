@@ -78,7 +78,7 @@ func generateNew(
 		basePath = "cadence/contracts"
 		fileToWrite = fmt.Sprintf(`
 pub contract %s {
-    // Contract details here
+    init() {}
 }`, name)
 	case "script":
 		basePath = "cadence/scripts"

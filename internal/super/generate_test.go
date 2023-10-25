@@ -64,7 +64,7 @@ func TestGenerateNewContract(t *testing.T) {
 	// Check content is correct
 	expectedContent := `
 pub contract TestContract {
-    // Contract details here
+    init() {}
 }`
 	assert.Equal(t, expectedContent, string(content))
 
