@@ -31,7 +31,10 @@ func TestGenerateNewContract(t *testing.T) {
 	dir, err := os.MkdirTemp("", "test")
 	assert.NoError(t, err, "Failed to create temp dir")
 	defer os.RemoveAll(dir)
-	os.Chdir(dir)
+
+	if err := os.Chdir(dir); err != nil {
+		t.Fatalf("Failed to change directory: %v", err)
+	}
 
 	logger := output.NewStdoutLogger(output.NoneLog)
 
@@ -62,7 +65,10 @@ func TestGenerateNewContractFileAlreadyExists(t *testing.T) {
 	dir, err := os.MkdirTemp("", "test")
 	assert.NoError(t, err, "Failed to create temp dir")
 	defer os.RemoveAll(dir)
-	os.Chdir(dir)
+
+	if err := os.Chdir(dir); err != nil {
+		t.Fatalf("Failed to change directory: %v", err)
+	}
 
 	logger := output.NewStdoutLogger(output.NoneLog)
 
@@ -83,7 +89,10 @@ func TestGenerateNewContractWithFileExtension(t *testing.T) {
 	dir, err := os.MkdirTemp("", "test")
 	assert.NoError(t, err, "Failed to create temp dir")
 	defer os.RemoveAll(dir)
-	os.Chdir(dir)
+
+	if err := os.Chdir(dir); err != nil {
+		t.Fatalf("Failed to change directory: %v", err)
+	}
 
 	logger := output.NewStdoutLogger(output.NoneLog)
 
@@ -97,7 +106,10 @@ func TestGenerateNewScript(t *testing.T) {
 	dir, err := os.MkdirTemp("", "test")
 	assert.NoError(t, err, "Failed to create temp dir")
 	defer os.RemoveAll(dir)
-	os.Chdir(dir)
+
+	if err := os.Chdir(dir); err != nil {
+		t.Fatalf("Failed to change directory: %v", err)
+	}
 
 	logger := output.NewStdoutLogger(output.NoneLog)
 
@@ -119,7 +131,10 @@ func TestGenerateNewTransaction(t *testing.T) {
 	dir, err := os.MkdirTemp("", "test")
 	assert.NoError(t, err, "Failed to create temp dir")
 	defer os.RemoveAll(dir)
-	os.Chdir(dir)
+
+	if err := os.Chdir(dir); err != nil {
+		t.Fatalf("Failed to change directory: %v", err)
+	}
 
 	logger := output.NewStdoutLogger(output.NoneLog)
 
@@ -143,15 +158,16 @@ func TestGenerateNewWithDirFlag(t *testing.T) {
 	dir, err := os.MkdirTemp("", "test")
 	assert.NoError(t, err, "Failed to create temp dir")
 	defer os.RemoveAll(dir)
-	os.Chdir(dir)
 
-	// Mock logger
+	if err := os.Chdir(dir); err != nil {
+		t.Fatalf("Failed to change directory: %v", err)
+	}
+
 	logger := output.NewStdoutLogger(output.NoneLog)
 
-	// Setting the flag values manually for this test
+	// Set a custom directory
 	generateFlags.Directory = "customDir"
 
-	// Test contract generation
 	_, err = generateNew([]string{"TestContract"}, "contract", logger)
 	assert.NoError(t, err, "Failed to generate contract")
 
@@ -161,7 +177,6 @@ func TestGenerateNewWithDirFlag(t *testing.T) {
 	content, err := os.ReadFile("customDir/TestContract.cdc")
 	assert.NoError(t, err, "Failed to read generated file")
 
-	// Check content is correct
 	expectedContent := `
 access(all) contract TestContract {
     init() {}
