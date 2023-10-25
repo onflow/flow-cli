@@ -47,11 +47,11 @@ type flixFlags struct {
 	Include     []string `default:"" flag:"include" info:"Fields to include in the output"`
 	Exclude     []string `default:"" flag:"exclude" info:"Fields to exclude from the output (events)"`
 	GasLimit    uint64   `default:"1000" flag:"gas-limit" info:"transaction gas limit"`
-	Save        string   `default:"" flag:"output" info:"output file for generated binding code"`
+	Save        string   `default:"" flag:"save" info:"save generated code to file"`
 }
 
 type flixResult struct {
-	output string
+	result string
 	save   string
 }
 
@@ -67,7 +67,7 @@ var executeCommand = &command.Command{
 	Cmd: &cobra.Command{
 		Use:     "execute <id | name | path>",
 		Short:   "execute FLIX template with a given id, name, or local filename",
-		Example: "flow flix execute multiply 2 3",
+		Example: "flow flix execute transfer-flow 1 0x123456789",
 		Args:    cobra.MinimumNArgs(1),
 	},
 	Flags: &flags,
@@ -242,13 +242,13 @@ func bindingsCmd(
 	}
 	return &flixResult{
 		save:   flags.Save,
-		output: out,
+		result: out,
 	}, err
 }
 
 func (fr *flixResult) JSON() any {
 	result := make(map[string]any)
-	result["output"] = fr.output
+	result["result"] = fr.result
 	result["save"] = fr.save
 	return result
 }
@@ -265,5 +265,5 @@ func isSaved(fr *flixResult) string {
 	if fr.save != "" {
 		return fmt.Sprintf("Generated code saved to %s", fr.save)
 	}
-	return fr.output
+	return fr.result
 }
