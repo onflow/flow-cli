@@ -157,7 +157,7 @@ access(all) contract %s {
     init() {}
 }`, name)
 	case "script":
-		fileToWrite = `pub fun main() {
+		fileToWrite = `access(all) fun main() {
     // Script details here
 }`
 	case "transaction":
