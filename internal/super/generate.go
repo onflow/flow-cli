@@ -111,7 +111,7 @@ pub contract %s {
 		return nil, fmt.Errorf("error writing file: %w", err)
 	}
 
-	logger.Info(fmt.Sprintf("Generated new contract: %s at %s", name, filenameWithBasePath))
+	logger.Info(fmt.Sprintf("Generated new %s: %s at %s", templateType, name, filenameWithBasePath))
 
 	return nil, err
 }
