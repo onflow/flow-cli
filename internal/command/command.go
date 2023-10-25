@@ -186,11 +186,6 @@ func createGateway(network config.Network) (gateway.Gateway, error) {
 // 3. if conf is not initialized and network flag is provided resolve to coded value for that network
 // 4. default to emulator network
 func resolveHost(state *flowkit.State, hostFlag, networkKeyFlag, networkFlag string) (*config.Network, error) {
-	// don't allow both network and host flag as the host might be different
-	if networkFlag != config.EmulatorNetwork.Name && hostFlag != "" {
-		return nil, fmt.Errorf("shouldn't use both host and network flags, better to use network flag")
-	}
-
 	// host flag has the highest priority
 	if hostFlag != "" {
 		// if network-key was provided validate it
@@ -201,7 +196,16 @@ func resolveHost(state *flowkit.State, hostFlag, networkKeyFlag, networkFlag str
 			}
 		}
 
-		return &config.Network{Name: "custom", Host: hostFlag, Key: networkKeyFlag}, nil
+		if state != nil {
+			_, err := state.Networks().ByName(networkFlag)
+			if err != nil {
+				return nil, fmt.Errorf("network with name %s does not exist in configuration", networkFlag)
+			}
+		} else {
+			networkFlag = "custom"
+		}
+
+		return &config.Network{Name: networkFlag, Host: hostFlag, Key: networkKeyFlag}, nil
 	}
 
 	// network flag with project initialized is next

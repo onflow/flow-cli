@@ -21,6 +21,7 @@ package flowkit
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"sort"
 	"testing"
 
@@ -343,7 +344,7 @@ func generateAliasesComplexProject() State {
 
 func Test_GetContractsByNameSimple(t *testing.T) {
 	p := generateSimpleProject()
-	path := "../hungry-kitties/cadence/contracts/NonFungibleToken.cdc"
+	path := filepath.FromSlash("../hungry-kitties/cadence/contracts/NonFungibleToken.cdc")
 	af.WriteFile(path, []byte("pub contract{}"), os.ModePerm)
 
 	contracts, err := p.DeploymentContractsByNetwork(config.EmulatorNetwork)
@@ -399,21 +400,22 @@ func Test_GetContractsByNameComplex(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, 7, len(contracts))
 
-	//sort names so tests are deterministic
+	//sort contracts by name so tests are deterministic
+	sort.Slice(contracts, func(i, j int) bool {
+		return contracts[i].Name < contracts[j].Name
+	})
+
 	contractNames := funk.Map(contracts, func(c *project.Contract) string {
 		return c.Name
 	}).([]string)
-	sort.Strings(contractNames)
 
 	sources := funk.Map(contracts, func(c *project.Contract) string {
 		return c.Location()
 	}).([]string)
-	sort.Strings(sources)
 
 	targets := funk.Map(contracts, func(c *project.Contract) string {
 		return c.AccountAddress.String()
 	}).([]string)
-	sort.Strings(targets)
 
 	assert.Equal(t, contractNames[0], "FungibleToken")
 	assert.Equal(t, contractNames[1], "Kibble")
@@ -423,21 +425,21 @@ func Test_GetContractsByNameComplex(t *testing.T) {
 	assert.Equal(t, contractNames[5], "KittyItemsMarket")
 	assert.Equal(t, contractNames[6], "NonFungibleToken")
 
-	assert.Equal(t, sources[0], "../hungry-kitties/cadence/contracts/FungibleToken.cdc")
-	assert.Equal(t, sources[1], "../hungry-kitties/cadence/contracts/NonFungibleToken.cdc")
-	assert.Equal(t, sources[2], "cadence/kibble/contracts/Kibble.cdc")
-	assert.Equal(t, sources[3], "cadence/kittyItems/contracts/KittyItems.cdc")
-	assert.Equal(t, sources[4], "cadence/kittyItems/contracts/KittyItems.cdc")
-	assert.Equal(t, sources[5], "cadence/kittyItemsMarket/contracts/KittyItemsMarket.cdc")
-	assert.Equal(t, sources[6], "cadence/kittyItemsMarket/contracts/KittyItemsMarket.cdc")
+	assert.Equal(t, sources[0], filepath.FromSlash("../hungry-kitties/cadence/contracts/FungibleToken.cdc"))
+	assert.Equal(t, sources[1], filepath.FromSlash("cadence/kibble/contracts/Kibble.cdc"))
+	assert.Equal(t, sources[2], filepath.FromSlash("cadence/kittyItems/contracts/KittyItems.cdc"))
+	assert.Equal(t, sources[3], filepath.FromSlash("cadence/kittyItems/contracts/KittyItems.cdc"))
+	assert.Equal(t, sources[4], filepath.FromSlash("cadence/kittyItemsMarket/contracts/KittyItemsMarket.cdc"))
+	assert.Equal(t, sources[5], filepath.FromSlash("cadence/kittyItemsMarket/contracts/KittyItemsMarket.cdc"))
+	assert.Equal(t, sources[6], filepath.FromSlash("../hungry-kitties/cadence/contracts/NonFungibleToken.cdc"))
 
 	assert.Equal(t, targets[0], "f8d6e0586b0a20c1")
 	assert.Equal(t, targets[1], "f8d6e0586b0a20c1")
-	assert.Equal(t, targets[2], "f8d6e0586b0a20c1")
+	assert.Equal(t, targets[2], "f8d6e0586b0a20c7")
 	assert.Equal(t, targets[3], "f8d6e0586b0a20c1")
-	assert.Equal(t, targets[4], "f8d6e0586b0a20c1")
-	assert.Equal(t, targets[5], "f8d6e0586b0a20c7")
-	assert.Equal(t, targets[6], "f8d6e0586b0a20c7")
+	assert.Equal(t, targets[4], "f8d6e0586b0a20c7")
+	assert.Equal(t, targets[5], "f8d6e0586b0a20c1")
+	assert.Equal(t, targets[6], "f8d6e0586b0a20c1")
 }
 
 func Test_EmulatorConfigComplex(t *testing.T) {
@@ -485,7 +487,7 @@ func Test_GetAliases(t *testing.T) {
 	contracts, _ := p.DeploymentContractsByNetwork(config.EmulatorNetwork)
 
 	assert.Len(t, aliases, 2)
-	assert.Equal(t, aliases["../hungry-kitties/cadence/contracts/FungibleToken.cdc"], "ee82856bf20e2aa6")
+	assert.Equal(t, aliases[filepath.FromSlash("../hungry-kitties/cadence/contracts/FungibleToken.cdc")], "ee82856bf20e2aa6")
 	assert.Len(t, contracts, 1)
 	assert.Equal(t, contracts[0].Name, "NonFungibleToken")
 }
@@ -503,11 +505,11 @@ func Test_GetAliasesComplex(t *testing.T) {
 	assert.Equal(t, cEmulator[0].Name, "NonFungibleToken")
 
 	assert.Len(t, aEmulator, 4)
-	assert.Equal(t, aEmulator["../hungry-kitties/cadence/contracts/FungibleToken.cdc"], "ee82856bf20e2aa6")
-	assert.Equal(t, aEmulator["../hungry-kitties/cadence/contracts/Kibble.cdc"], "ee82856bf20e2aa6")
+	assert.Equal(t, aEmulator[filepath.FromSlash("../hungry-kitties/cadence/contracts/FungibleToken.cdc")], "ee82856bf20e2aa6")
+	assert.Equal(t, aEmulator[filepath.FromSlash("../hungry-kitties/cadence/contracts/Kibble.cdc")], "ee82856bf20e2aa6")
 
 	assert.Len(t, aTestnet, 2)
-	assert.Equal(t, aTestnet["../hungry-kitties/cadence/contracts/Kibble.cdc"], "ee82856bf20e2aa6")
+	assert.Equal(t, aTestnet[filepath.FromSlash("../hungry-kitties/cadence/contracts/Kibble.cdc")], "ee82856bf20e2aa6")
 
 	assert.Len(t, cTestnet, 2)
 	assert.Equal(t, cTestnet[0].Name, "NonFungibleToken")

@@ -23,7 +23,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"path"
+	"path/filepath"
 	"strings"
 
 	cdcTests "github.com/onflow/cadence-tools/test"
@@ -42,9 +42,14 @@ import (
 // are considered to be helper/utility scripts for test files.
 const helperScriptSubstr = "_helper"
 
+// When the value of flagsTests.CoverCode equals "contracts",
+// scripts and transactions are excluded from coverage report.
+const contractsCoverCode = "contracts"
+
 type flagsTests struct {
 	Cover        bool   `default:"false" flag:"cover" info:"Use the cover flag to calculate coverage report"`
-	CoverProfile string `default:"coverage.json" flag:"coverprofile" info:"Filename to write the calculated coverage report"`
+	CoverProfile string `default:"coverage.json" flag:"coverprofile" info:"Filename to write the calculated coverage report. Supported extensions are .json and .lcov"`
+	CoverCode    string `default:"all" flag:"covercode" info:"Use the covercode flag to calculate coverage report only for certain types of code. Available values are \"all\" & \"contracts\""`
 }
 
 var testFlags = flagsTests{}
@@ -86,7 +91,7 @@ func run(
 		testFiles[filename] = code
 	}
 
-	res, coverageReport, err := testCode(testFiles, state, testFlags.Cover)
+	res, coverageReport, err := testCode(testFiles, state, testFlags)
 	if err != nil {
 		return nil, err
 	}
@@ -95,7 +100,7 @@ func run(
 		var file []byte
 		var err error
 
-		ext := path.Ext(testFlags.CoverProfile)
+		ext := filepath.Ext(testFlags.CoverProfile)
 		if ext == ".json" {
 			file, err = json.MarshalIndent(coverageReport, "", "  ")
 		} else if ext == ".lcov" {
@@ -123,12 +128,24 @@ func run(
 func testCode(
 	testFiles map[string][]byte,
 	state *flowkit.State,
-	coverageEnabled bool,
+	flags flagsTests,
 ) (map[string]cdcTests.Results, *runtime.CoverageReport, error) {
 	var coverageReport *runtime.CoverageReport
 	runner := cdcTests.NewTestRunner()
-	if coverageEnabled {
+	if flags.Cover {
 		coverageReport = runtime.NewCoverageReport()
+		if flags.CoverCode == contractsCoverCode {
+			coverageReport.WithLocationFilter(
+				func(location common.Location) bool {
+					_, addressLoc := location.(common.AddressLocation)
+					_, stringLoc := location.(common.StringLocation)
+					// We only allow inspection of AddressLocation or StringLocation,
+					// since scripts and transactions cannot be attributed to their
+					// source files anyway.
+					return addressLoc || stringLoc
+				},
+			)
+		}
 		runner = runner.WithCoverageReport(coverageReport)
 	}
 
@@ -206,11 +223,11 @@ func fileResolver(scriptPath string, state *flowkit.State) cdcTests.FileResolver
 }
 
 func absolutePath(basePath, filePath string) string {
-	if path.IsAbs(filePath) {
+	if filepath.IsAbs(filePath) {
 		return filePath
 	}
 
-	return path.Join(path.Dir(basePath), filePath)
+	return filepath.Join(filepath.Dir(basePath), filePath)
 }
 
 type result struct {

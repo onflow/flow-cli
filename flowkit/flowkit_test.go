@@ -1058,7 +1058,7 @@ func TestProject(t *testing.T) {
 
 			argCode := tx.Arguments[1]
 			decodeCode, _ := jsoncdc.Decode(nil, argCode)
-			code, _ := hex.DecodeString(decodeCode.ToGoValue().(string))
+			code := decodeCode.ToGoValue().(string)
 
 			argName := tx.Arguments[0]
 			decodeName, _ := jsoncdc.Decode(nil, argName)
@@ -1135,7 +1135,7 @@ func TestProject(t *testing.T) {
 
 			argCode := tx.Arguments[1]
 			decodeCode, _ := jsoncdc.Decode(nil, argCode)
-			code, _ := hex.DecodeString(decodeCode.ToGoValue().(string))
+			code, _ := decodeCode.ToGoValue().(string)
 
 			argName := tx.Arguments[0]
 			decodeName, _ := jsoncdc.Decode(nil, argName)

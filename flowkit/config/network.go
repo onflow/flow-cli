@@ -32,10 +32,6 @@ var (
 		Name: "testnet",
 		Host: "access.devnet.nodes.onflow.org:9000",
 	}
-	SandboxNetwork = Network{
-		Name: "sandboxnet",
-		Host: "access.sandboxnet.nodes.onflow.org:9000",
-	}
 	MainnetNetwork = Network{
 		Name: "mainnet",
 		Host: "access.mainnet.nodes.onflow.org:9000",
@@ -43,7 +39,6 @@ var (
 	DefaultNetworks = Networks{
 		EmulatorNetwork,
 		TestnetNetwork,
-		SandboxNetwork,
 		MainnetNetwork,
 	}
 )

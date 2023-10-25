@@ -23,6 +23,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"strings"
 
 	configJson "github.com/onflow/flow-cli/flowkit/config/json"
 )
@@ -54,11 +55,15 @@ func main() {
 			os.Exit(1)
 		}
 
-		if string(fileContents) != string(json) {
+		if normalizeNewlines(string(fileContents)) != normalizeNewlines(string(json)) {
 			fmt.Println("Schema is out of date - have you run `make generate-schema`?")
 			os.Exit(1)
 		}
 	} else {
 		os.WriteFile(path, json, 0644)
 	}
+}
+
+func normalizeNewlines(s string) string {
+	return strings.ReplaceAll(s, "\r\n", "\n")
 }

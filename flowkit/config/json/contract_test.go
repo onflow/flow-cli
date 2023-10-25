@@ -19,6 +19,7 @@ package json
 
 import (
 	"encoding/json"
+	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -43,8 +44,8 @@ func Test_ConfigContractsSimple(t *testing.T) {
 	marketContract, _ := contracts.ByName("KittyItemsMarket")
 	assert.NotNil(t, marketContract)
 
-	assert.Equal(t, "./cadence/kittyItems/contracts/KittyItems.cdc", contract.Location)
-	assert.Equal(t, "./cadence/kittyItems/contracts/KittyItemsMarket.cdc", marketContract.Location)
+	assert.Equal(t, filepath.FromSlash("./cadence/kittyItems/contracts/KittyItems.cdc"), contract.Location)
+	assert.Equal(t, filepath.FromSlash("./cadence/kittyItems/contracts/KittyItemsMarket.cdc"), marketContract.Location)
 }
 
 func Test_ConfigContractsComplex(t *testing.T) {
@@ -73,8 +74,8 @@ func Test_ConfigContractsComplex(t *testing.T) {
 	kittyItemsMarket, _ := contracts.ByName("KittyItemsMarket")
 	assert.NotNil(t, kittyItemsMarket)
 
-	assert.Equal(t, "./cadence/kittyItems/contracts/KittyItems.cdc", kittyItems.Location)
-	assert.Equal(t, "./cadence/kittyItemsMarket/contracts/KittyItemsMarket.cdc", kittyItemsMarket.Location)
+	assert.Equal(t, filepath.FromSlash("./cadence/kittyItems/contracts/KittyItems.cdc"), kittyItems.Location)
+	assert.Equal(t, filepath.FromSlash("./cadence/kittyItemsMarket/contracts/KittyItemsMarket.cdc"), kittyItemsMarket.Location)
 
 	assert.True(t, kittyItemsMarket.Aliases.ByNetwork("emulator") == nil)
 
@@ -115,19 +116,19 @@ func Test_ConfigContractsAliases(t *testing.T) {
 	assert.NotNil(t, fungibleToken)
 	assert.True(t, fungibleToken.IsAliased())
 	assert.Equal(t, "e5a8b7f23e8b548f", fungibleToken.Aliases.ByNetwork("emulator").Address.String())
-	assert.Equal(t, "../hungry-kitties/cadence/contracts/FungibleToken.cdc", fungibleToken.Location)
+	assert.Equal(t, filepath.FromSlash("../hungry-kitties/cadence/contracts/FungibleToken.cdc"), fungibleToken.Location)
 
 	kibble, _ := contracts.ByName("Kibble")
 	assert.NotNil(t, kibble)
 	assert.True(t, kibble.IsAliased())
-	assert.Equal(t, "../hungry-kitties/cadence/contracts/Kibble.cdc", kibble.Location)
+	assert.Equal(t, filepath.FromSlash("../hungry-kitties/cadence/contracts/Kibble.cdc"), kibble.Location)
 	assert.Equal(t, "ead892083b3e2c6c", kibble.Aliases.ByNetwork("testnet").Address.String())
 	assert.Equal(t, "f8d6e0586b0a20c7", kibble.Aliases.ByNetwork("emulator").Address.String())
 
 	nft, _ := contracts.ByName("NonFungibleToken")
 	assert.NotNil(t, nft)
 	assert.False(t, nft.IsAliased())
-	assert.Equal(t, nft.Location, "../hungry-kitties/cadence/contracts/NonFungibleToken.cdc")
+	assert.Equal(t, nft.Location, filepath.FromSlash("../hungry-kitties/cadence/contracts/NonFungibleToken.cdc"))
 }
 
 func Test_TransformContractToJSON(t *testing.T) {

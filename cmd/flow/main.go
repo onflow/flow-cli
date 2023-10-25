@@ -68,6 +68,7 @@ func main() {
 	// super commands
 	super.SetupCommand.AddToParent(cmd)
 	super.DevCommand.AddToParent(cmd)
+	super.FlixCommand.AddToParent(cmd)
 
 	// structured commands
 	cmd.AddCommand(settings.Cmd)

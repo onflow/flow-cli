@@ -58,7 +58,7 @@ func Test_Execute(t *testing.T) {
 
 	t.Run("Fail parsing invalid JSON args", func(t *testing.T) {
 		inArgs := []string{tests.TestScriptSimple.Filename}
-		scriptFlags.ArgsJSON = "invalid"
+		flags.ArgsJSON = "invalid"
 
 		result, err := execute(inArgs, command.GlobalFlags{}, util.NoLogger, rw, srv.Mock)
 		assert.Nil(t, result)

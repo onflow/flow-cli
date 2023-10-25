@@ -21,7 +21,7 @@ package util
 import (
 	"fmt"
 	"os"
-	"path"
+	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -685,7 +685,7 @@ func InstallPathPrompt(defaultPath string) string {
 		os.Exit(-1)
 	}
 
-	return path.Clean(install)
+	return filepath.Clean(install)
 }
 
 type ScaffoldItem struct {

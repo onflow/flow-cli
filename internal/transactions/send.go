@@ -33,7 +33,7 @@ import (
 	"github.com/onflow/flow-cli/internal/command"
 )
 
-type flagsSend struct {
+type Flags struct {
 	ArgsJSON    string   `default:"" flag:"args-json" info:"arguments in JSON-Cadence format"`
 	Signer      string   `default:"" flag:"signer" info:"Account name from configuration used to sign the transaction as proposer, payer and suthorizer"`
 	Proposer    string   `default:"" flag:"proposer" info:"Account name from configuration used as proposer"`
@@ -44,7 +44,7 @@ type flagsSend struct {
 	GasLimit    uint64   `default:"1000" flag:"gas-limit" info:"transaction gas limit"`
 }
 
-var sendFlags = flagsSend{}
+var flags = Flags{}
 
 var sendCommand = &command.Command{
 	Cmd: &cobra.Command{
@@ -53,7 +53,7 @@ var sendCommand = &command.Command{
 		Args:    cobra.MinimumNArgs(1),
 		Example: `flow transactions send tx.cdc "Hello world"`,
 	},
-	Flags: &sendFlags,
+	Flags: &flags,
 	RunS:  send,
 }
 
@@ -64,8 +64,17 @@ func send(
 	flow flowkit.Services,
 	state *flowkit.State,
 ) (result command.Result, err error) {
-	codeFilename := args[0]
+	filename := args[0]
 
+	code, err := state.ReadFile(filename)
+	if err != nil {
+		return nil, fmt.Errorf("error loading transaction file: %w", err)
+	}
+
+	return SendTransaction(code, args[1:], filename, flow, state, flags)
+}
+
+func SendTransaction(code []byte, args []string, location string, flow flowkit.Services, state *flowkit.State, sendFlags Flags) (result command.Result, err error) {
 	proposerName := sendFlags.Proposer
 	var proposer *accounts.Account
 	if proposerName != "" {
@@ -118,16 +127,11 @@ func send(
 		authorizers = append(authorizers, *signer)
 	}
 
-	code, err := state.ReadFile(codeFilename)
-	if err != nil {
-		return nil, fmt.Errorf("error loading transaction file: %w", err)
-	}
-
 	var transactionArgs []cadence.Value
 	if sendFlags.ArgsJSON != "" {
 		transactionArgs, err = arguments.ParseJSON(sendFlags.ArgsJSON)
 	} else {
-		transactionArgs, err = arguments.ParseWithoutType(args[1:], code, codeFilename)
+		transactionArgs, err = arguments.ParseWithoutType(args, code, location)
 	}
 	if err != nil {
 		return nil, fmt.Errorf("error parsing transaction arguments: %w", err)
@@ -140,7 +144,7 @@ func send(
 			Authorizers: authorizers,
 			Payer:       *payer,
 		},
-		flowkit.Script{Code: code, Args: transactionArgs, Location: codeFilename},
+		flowkit.Script{Code: code, Args: transactionArgs, Location: location},
 		sendFlags.GasLimit,
 	)
 
