@@ -21,6 +21,7 @@ package super
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/onflow/flow-cli/flowkit"
