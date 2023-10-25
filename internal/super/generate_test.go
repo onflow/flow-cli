@@ -108,7 +108,7 @@ func TestGenerateNewScript(t *testing.T) {
 	content, err := os.ReadFile("cadence/scripts/TestScript.cdc")
 	assert.NoError(t, err, "Failed to read generated file")
 
-	expectedContent := `pub fun main() {
+	expectedContent := `access(all) fun main() {
     // Script details here
 }`
 	assert.Equal(t, expectedContent, string(content))
