@@ -47,7 +47,6 @@ type flixFlags struct {
 	Include     []string `default:"" flag:"include" info:"Fields to include in the output"`
 	Exclude     []string `default:"" flag:"exclude" info:"Fields to exclude from the output (events)"`
 	GasLimit    uint64   `default:"1000" flag:"gas-limit" info:"transaction gas limit"`
-	Bindings    string   `default:"" flag:"bindings" info:"generate binding code for the given language, fcl-js' is supported language"`
 	Save        string   `default:"" flag:"output" info:"output file for generated binding code"`
 }
 
@@ -57,17 +56,38 @@ type flixResult struct {
 }
 
 var flags = flixFlags{}
+var FlixCmd = &cobra.Command{
+	Use:              "flix",
+	Short:            "execute  <id | name | path>, bindings <flix>, generate <cadence code>",
+	TraverseChildren: true,
+	GroupID:          "tools",
+}
 
-var FlixCommand = &command.Command{
+var executeCommand = &command.Command{
 	Cmd: &cobra.Command{
-		Use:     "flix <id | name | path>",
-		Short:   "Execute FLIX template with a given id, name, or local filename",
-		Example: "flow flix multiply 2 3",
+		Use:     "execute <id | name | path>",
+		Short:   "execute FLIX template with a given id, name, or local filename",
+		Example: "flow flix execute multiply 2 3",
 		Args:    cobra.MinimumNArgs(1),
-		GroupID: "super",
 	},
 	Flags: &flags,
-	RunS:  execute,
+	RunS:  executeCmd,
+}
+
+var bindingCommand = &command.Command{
+	Cmd: &cobra.Command{
+		Use:     "bindings <id | name | path>",
+		Short:   "generate binding file for FLIX template fcl-js is default",
+		Example: "flow flix bindings multiply.template.json",
+		Args:    cobra.MinimumNArgs(1),
+	},
+	Flags: &flags,
+	RunS:  bindingsCmd,
+}
+
+func init() {
+	executeCommand.AddToParent(FlixCmd)
+	bindingCommand.AddToParent(FlixCmd)
 }
 
 type flixQueryTypes string
@@ -102,7 +122,74 @@ func getType(s string) flixQueryTypes {
 	}
 }
 
-func execute(
+func executeCmd(
+	args []string,
+	_ command.GlobalFlags,
+	logger output.Logger,
+	flow flowkit.Services,
+	state *flowkit.State,
+) (result command.Result, err error) {
+	flixService := flixkit.NewFlixService(&flixkit.Config{})
+	ctx := context.Background()
+	var template *flixkit.FlowInteractionTemplate
+	flixQuery := args[0]
+
+	switch getType(flixQuery) {
+	case flixId:
+		template, err = flixService.GetFlixByID(ctx, flixQuery)
+		if err != nil {
+			return nil, fmt.Errorf("could not find flix with id %s: %w", flixQuery, err)
+		}
+
+	case flixName:
+		template, err = flixService.GetFlix(ctx, flixQuery)
+		if err != nil {
+			return nil, fmt.Errorf("could not find flix with name %s: %w", flixQuery, err)
+		}
+
+	case flixPath:
+		file, err := os.ReadFile(flixQuery)
+		if err != nil {
+			return nil, fmt.Errorf("could not read flix file %s: %w", flixQuery, err)
+		}
+		template, err = flixkit.ParseFlix(string(file))
+		if err != nil {
+			return nil, fmt.Errorf("could not parse flix from file %s: %w", flixQuery, err)
+		}
+
+	default:
+		return nil, fmt.Errorf("invalid flix query type: %s", flixQuery)
+	}
+
+	cadenceWithImportsReplaced, err := template.GetAndReplaceCadenceImports(flow.Network().Name)
+	if err != nil {
+		logger.Error("could not replace imports")
+		return nil, err
+	}
+
+	if template.IsScript() {
+		scriptsFlags := scripts.Flags{
+			ArgsJSON:    flags.ArgsJSON,
+			BlockID:     flags.BlockID,
+			BlockHeight: flags.BlockHeight,
+		}
+		return scripts.SendScript([]byte(cadenceWithImportsReplaced), args[1:], "", flow, scriptsFlags)
+	}
+
+	transactionFlags := transactions.Flags{
+		ArgsJSON:    flags.ArgsJSON,
+		Signer:      flags.Signer,
+		Proposer:    flags.Proposer,
+		Payer:       flags.Payer,
+		Authorizers: flags.Authorizers,
+		Include:     flags.Include,
+		Exclude:     flags.Exclude,
+		GasLimit:    flags.GasLimit,
+	}
+	return transactions.SendTransaction([]byte(cadenceWithImportsReplaced), args[1:], "", flow, state, transactionFlags)
+}
+
+func bindingsCmd(
 	args []string,
 	_ command.GlobalFlags,
 	logger output.Logger,
@@ -143,53 +230,20 @@ func execute(
 		return nil, fmt.Errorf("invalid flix query type: %s", flixQuery)
 	}
 
-	if flags.Bindings != "" {
-		if flags.Bindings != "fcl-js" {
-			return nil, fmt.Errorf("binding not supported %s", flags.Bindings)
+	fclJsGen := bindings.NewFclJSGenerator()
+
+	out, err := fclJsGen.Generate(template, flixQuery, isLocal)
+
+	if flags.Save != "" {
+		err = os.WriteFile(flags.Save, []byte(out), 0644)
+		if err != nil {
+			return nil, fmt.Errorf("could not write to file %s: %w", flags.Save, err)
 		}
-
-		fclJsGen := bindings.NewFclJSGenerator()
-
-		out, err := fclJsGen.Generate(template, flixQuery, isLocal)
-
-		if flags.Save != "" {
-			err = os.WriteFile(flags.Save, []byte(out), 0644)
-			if err != nil {
-				return nil, fmt.Errorf("could not write to file %s: %w", flags.Save, err)
-			}
-		}
-		return &flixResult{
-			save:   flags.Save,
-			output: out,
-		}, err
 	}
-
-	cadenceWithImportsReplaced, err := template.GetAndReplaceCadenceImports(flow.Network().Name)
-	if err != nil {
-		logger.Error("could not replace imports")
-		return nil, err
-	}
-
-	if template.IsScript() {
-		scriptsFlags := scripts.Flags{
-			ArgsJSON:    flags.ArgsJSON,
-			BlockID:     flags.BlockID,
-			BlockHeight: flags.BlockHeight,
-		}
-		return scripts.SendScript([]byte(cadenceWithImportsReplaced), args[1:], "", flow, scriptsFlags)
-	}
-
-	transactionFlags := transactions.Flags{
-		ArgsJSON:    flags.ArgsJSON,
-		Signer:      flags.Signer,
-		Proposer:    flags.Proposer,
-		Payer:       flags.Payer,
-		Authorizers: flags.Authorizers,
-		Include:     flags.Include,
-		Exclude:     flags.Exclude,
-		GasLimit:    flags.GasLimit,
-	}
-	return transactions.SendTransaction([]byte(cadenceWithImportsReplaced), args[1:], "", flow, state, transactionFlags)
+	return &flixResult{
+		save:   flags.Save,
+		output: out,
+	}, err
 }
 
 func (fr *flixResult) JSON() any {
