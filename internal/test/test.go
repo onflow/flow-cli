@@ -22,6 +22,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"math/rand"
 	"os"
 	"path/filepath"
 	"strings"
@@ -38,6 +39,18 @@ import (
 	"github.com/onflow/flow-cli/internal/util"
 )
 
+// The key where meta information for a test report in JSON
+// format can be found.
+const TestReportMetaKey = "meta"
+
+// The key where coverage meta information for a test report
+// in JSON format can be found.
+const TestReportCoverageKey = "coverage"
+
+// The key where seed meta information for a test report
+// in JSON format can be found.
+const TestReportSeedKey = "seed"
+
 // Import statements with a path that contain this substring,
 // are considered to be helper/utility scripts for test files.
 const helperScriptSubstr = "_helper"
@@ -50,6 +63,8 @@ type flagsTests struct {
 	Cover        bool   `default:"false" flag:"cover" info:"Use the cover flag to calculate coverage report"`
 	CoverProfile string `default:"coverage.json" flag:"coverprofile" info:"Filename to write the calculated coverage report. Supported extensions are .json and .lcov"`
 	CoverCode    string `default:"all" flag:"covercode" info:"Use the covercode flag to calculate coverage report only for certain types of code. Available values are \"all\" & \"contracts\""`
+	Random       bool   `default:"false" flag:"random" info:"Use the random flag to execute test cases randomly"`
+	Seed         int64  `default:"0" flag:"seed" info:"Use the seed flag to manipulate random execution of test cases"`
 }
 
 var testFlags = flagsTests{}
@@ -79,6 +94,12 @@ func run(
 	if !testFlags.Cover && testFlags.CoverProfile != "coverage.json" {
 		return nil, fmt.Errorf("the '--coverprofile' flag requires the '--cover' flag")
 	}
+	if testFlags.Random && testFlags.Seed > 0 {
+		fmt.Printf(
+			"%s Both '--seed' and '--random' flags are used. Hence, the '--random' flag will be ignored.\n",
+			output.WarningEmoji(),
+		)
+	}
 
 	testFiles := make(map[string][]byte, 0)
 	for _, filename := range args {
@@ -91,20 +112,20 @@ func run(
 		testFiles[filename] = code
 	}
 
-	res, coverageReport, err := testCode(testFiles, state, testFlags)
+	result, err := testCode(testFiles, state, testFlags)
 	if err != nil {
 		return nil, err
 	}
 
-	if coverageReport != nil {
+	if result.CoverageReport != nil {
 		var file []byte
 		var err error
 
 		ext := filepath.Ext(testFlags.CoverProfile)
 		if ext == ".json" {
-			file, err = json.MarshalIndent(coverageReport, "", "  ")
+			file, err = json.MarshalIndent(result.CoverageReport, "", "  ")
 		} else if ext == ".lcov" {
-			file, err = coverageReport.MarshalLCOV()
+			file, err = result.CoverageReport.MarshalLCOV()
 		} else {
 			return nil, fmt.Errorf("given format: %v, only .json and .lcov are supported", ext)
 		}
@@ -119,46 +140,63 @@ func run(
 		}
 	}
 
-	return &result{
-		Results:        res,
-		CoverageReport: coverageReport,
-	}, nil
+	return result, nil
 }
 
 func testCode(
 	testFiles map[string][]byte,
 	state *flowkit.State,
 	flags flagsTests,
-) (map[string]cdcTests.Results, *runtime.CoverageReport, error) {
-	var coverageReport *runtime.CoverageReport
+) (*result, error) {
 	runner := cdcTests.NewTestRunner()
+
+	var coverageReport *runtime.CoverageReport
 	if flags.Cover {
 		coverageReport = runtime.NewCoverageReport()
 		if flags.CoverCode == contractsCoverCode {
 			coverageReport.WithLocationFilter(
 				func(location common.Location) bool {
 					_, addressLoc := location.(common.AddressLocation)
-					_, stringLoc := location.(common.StringLocation)
-					// We only allow inspection of AddressLocation or StringLocation,
-					// since scripts and transactions cannot be attributed to their
-					// source files anyway.
-					return addressLoc || stringLoc
+					// We only allow inspection of AddressLocation,
+					// since scripts and transactions cannot be
+					// attributed to their source files anyway.
+					return addressLoc
 				},
 			)
 		}
 		runner = runner.WithCoverageReport(coverageReport)
 	}
 
+	var seed int64
+	if flags.Seed > 0 {
+		seed = flags.Seed
+		runner = runner.WithRandomSeed(seed)
+	} else if flags.Random {
+		seed = int64(rand.Intn(150000))
+		runner = runner.WithRandomSeed(seed)
+	}
+
+	contracts := make(map[string]common.Address, 0)
+	for _, contract := range *state.Contracts() {
+		alias := contract.Aliases.ByNetwork("testing")
+		if alias != nil {
+			contracts[contract.Name] = common.Address(alias.Address)
+		}
+	}
+
 	testResults := make(map[string]cdcTests.Results, 0)
 	for scriptPath, code := range testFiles {
 		runner := runner.
 			WithImportResolver(importResolver(scriptPath, state)).
-			WithFileResolver(fileResolver(scriptPath, state))
+			WithFileResolver(fileResolver(scriptPath, state)).
+			WithContracts(contracts)
+
 		results, err := runner.RunTests(string(code))
 		if err != nil {
-			return nil, nil, err
+			return nil, err
 		}
 		testResults[scriptPath] = results
+
 		for _, result := range results {
 			if result.Error != nil {
 				status = 1
@@ -166,37 +204,47 @@ func testCode(
 			}
 		}
 	}
-	return testResults, coverageReport, nil
+
+	return &result{
+		Results:        testResults,
+		CoverageReport: coverageReport,
+		RandomSeed:     seed,
+	}, nil
 }
 
 func importResolver(scriptPath string, state *flowkit.State) cdcTests.ImportResolver {
+	contracts := make(map[string]config.Contract, 0)
+	for _, contract := range *state.Contracts() {
+		contracts[contract.Name] = contract
+	}
+
 	return func(location common.Location) (string, error) {
-		stringLocation, isFileImport := location.(common.StringLocation)
-		if !isFileImport {
-			return "", fmt.Errorf("cannot import from %s", location)
-		}
-		relativePath := stringLocation.String()
 
-		if strings.Contains(relativePath, helperScriptSubstr) {
-			importedScriptFilePath := absolutePath(scriptPath, relativePath)
-			scriptCode, err := state.ReadFile(importedScriptFilePath)
-			if err != nil {
-				return "", nil
+		contract := config.Contract{}
+
+		switch location := location.(type) {
+		case common.AddressLocation:
+			contract = contracts[location.Name]
+
+		case common.StringLocation:
+			relativePath := location.String()
+
+			if strings.Contains(relativePath, helperScriptSubstr) {
+				importedScriptFilePath := absolutePath(scriptPath, relativePath)
+				scriptCode, err := state.ReadFile(importedScriptFilePath)
+				if err != nil {
+					return "", nil
+				}
+				return string(scriptCode), nil
 			}
-			return string(scriptCode), nil
+
+			contract = contracts[relativePath]
 		}
 
-		var contract *config.Contract
-		for _, c := range *state.Contracts() {
-			if c.Name == relativePath {
-				contract = &c
-				break
-			}
-		}
-		if contract == nil {
+		if contract.Location == "" {
 			return "", fmt.Errorf(
 				"cannot find contract with location '%s' in configuration",
-				relativePath,
+				location,
 			)
 		}
 
@@ -233,6 +281,7 @@ func absolutePath(basePath, filePath string) string {
 type result struct {
 	Results        map[string]cdcTests.Results
 	CoverageReport *runtime.CoverageReport
+	RandomSeed     int64
 }
 
 var _ command.Result = &result{}
@@ -254,11 +303,14 @@ func (r *result) JSON() any {
 		results[testFile] = testFileResults
 	}
 
+	meta := map[string]string{}
 	if r.CoverageReport != nil {
-		results["meta"] = map[string]string{
-			"info": r.CoverageReport.Percentage(),
-		}
+		meta[TestReportCoverageKey] = r.CoverageReport.Percentage()
 	}
+	if r.RandomSeed > 0 {
+		meta[TestReportSeedKey] = fmt.Sprint(r.RandomSeed)
+	}
+	results[TestReportMetaKey] = meta
 
 	return results
 }
@@ -272,6 +324,9 @@ func (r *result) String() string {
 	}
 	if r.CoverageReport != nil {
 		_, _ = fmt.Fprint(writer, r.CoverageReport.String())
+	}
+	if r.RandomSeed > 0 {
+		_, _ = fmt.Fprintf(writer, "\nSeed: %d", r.RandomSeed)
 	}
 
 	_ = writer.Flush()
@@ -287,6 +342,10 @@ func (r *result) Oneliner() string {
 	}
 	if r.CoverageReport != nil {
 		builder.WriteString(r.CoverageReport.String())
+		builder.WriteString("\n")
+	}
+	if r.RandomSeed > 0 {
+		builder.WriteString(fmt.Sprintf("Seed: %d", r.RandomSeed))
 		builder.WriteString("\n")
 	}
 

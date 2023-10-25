@@ -19,11 +19,14 @@
 package test
 
 import (
+	"encoding/json"
+	"fmt"
 	"os"
 	"testing"
 
 	"github.com/onflow/cadence/runtime/common"
 	"github.com/onflow/cadence/runtime/stdlib"
+	"github.com/onflow/flow-go-sdk"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -33,46 +36,57 @@ import (
 )
 
 func TestExecutingTests(t *testing.T) {
+	t.Parallel()
+
+	aliases := config.Aliases{{
+		Network: "testing",
+		Address: flow.HexToAddress("0x0000000000000007"),
+	}}
+
 	t.Run("simple", func(t *testing.T) {
 		t.Parallel()
+
 		_, state, _ := util.TestMocks(t)
 
 		script := tests.TestScriptSimple
 		testFiles := map[string][]byte{
 			script.Filename: script.Source,
 		}
-		results, _, err := testCode(testFiles, state, flagsTests{})
+		result, err := testCode(testFiles, state, flagsTests{})
 
 		require.NoError(t, err)
-		require.Len(t, results, 1)
-		assert.NoError(t, results[script.Filename][0].Error)
+		require.Len(t, result.Results, 1)
+		assert.NoError(t, result.Results[script.Filename][0].Error)
 	})
 
 	t.Run("simple failing", func(t *testing.T) {
 		t.Parallel()
+
 		_, state, _ := util.TestMocks(t)
 
 		script := tests.TestScriptSimpleFailing
 		testFiles := map[string][]byte{
 			script.Filename: script.Source,
 		}
-		results, _, err := testCode(testFiles, state, flagsTests{})
+		result, err := testCode(testFiles, state, flagsTests{})
 
 		require.NoError(t, err)
-		require.Len(t, results, 1)
+		require.Len(t, result.Results, 1)
 
-		err = results[script.Filename][0].Error
+		err = result.Results[script.Filename][0].Error
 		require.Error(t, err)
 		assert.ErrorAs(t, err, &stdlib.AssertionError{})
 	})
 
 	t.Run("with import", func(t *testing.T) {
 		t.Parallel()
+
 		_, state, _ := util.TestMocks(t)
 
 		c := config.Contract{
 			Name:     tests.ContractHelloString.Name,
 			Location: tests.ContractHelloString.Filename,
+			Aliases:  aliases,
 		}
 		state.Contracts().AddOrUpdate(c)
 
@@ -81,11 +95,11 @@ func TestExecutingTests(t *testing.T) {
 		testFiles := map[string][]byte{
 			script.Filename: script.Source,
 		}
-		results, _, err := testCode(testFiles, state, flagsTests{})
+		result, err := testCode(testFiles, state, flagsTests{})
 
 		require.NoError(t, err)
-		require.Len(t, results, 1)
-		assert.NoError(t, results[script.Filename][0].Error)
+		require.Len(t, result.Results, 1)
+		assert.NoError(t, result.Results[script.Filename][0].Error)
 	})
 
 	t.Run("with relative imports", func(t *testing.T) {
@@ -108,11 +122,13 @@ func TestExecutingTests(t *testing.T) {
 		contractHello := config.Contract{
 			Name:     tests.ContractHelloString.Name,
 			Location: tests.ContractHelloString.Filename,
+			Aliases:  aliases,
 		}
 		state.Contracts().AddOrUpdate(contractHello)
 		contractFoo := config.Contract{
 			Name:     tests.ContractFooCoverage.Name,
 			Location: tests.ContractFooCoverage.Filename,
+			Aliases:  aliases,
 		}
 		state.Contracts().AddOrUpdate(contractFoo)
 
@@ -121,15 +137,16 @@ func TestExecutingTests(t *testing.T) {
 		testFiles := map[string][]byte{
 			script.Filename: script.Source,
 		}
-		results, _, err := testCode(testFiles, state, flagsTests{})
+		result, err := testCode(testFiles, state, flagsTests{})
 
 		require.NoError(t, err)
-		require.Len(t, results, 1)
-		assert.NoError(t, results[script.Filename][0].Error)
+		require.Len(t, result.Results, 1)
+		assert.NoError(t, result.Results[script.Filename][0].Error)
 	})
 
 	t.Run("with helper script import", func(t *testing.T) {
 		t.Parallel()
+
 		_, state, _ := util.TestMocks(t)
 
 		// Execute script
@@ -137,14 +154,35 @@ func TestExecutingTests(t *testing.T) {
 		testFiles := map[string][]byte{
 			script.Filename: script.Source,
 		}
-		results, _, err := testCode(testFiles, state, flagsTests{})
+		result, err := testCode(testFiles, state, flagsTests{})
 
 		require.NoError(t, err)
-		require.Len(t, results, 1)
-		assert.NoError(t, results[script.Filename][0].Error)
+		require.Len(t, result.Results, 1)
+		assert.NoError(t, result.Results[script.Filename][0].Error)
 	})
 
-	t.Run("with missing contract location from config", func(t *testing.T) {
+	t.Run("with missing contract in config", func(t *testing.T) {
+		t.Parallel()
+
+		// Setup
+		_, state, _ := util.TestMocks(t)
+
+		// Execute script
+		script := tests.TestScriptWithMissingContract
+		testFiles := map[string][]byte{
+			script.Filename: script.Source,
+		}
+		_, err := testCode(testFiles, state, flagsTests{})
+
+		require.Error(t, err)
+		assert.ErrorContains(
+			t,
+			err,
+			"cannot find contract with location 'ApprovalVoting' in configuration",
+		)
+	})
+
+	t.Run("with missing testing alias in config", func(t *testing.T) {
 		t.Parallel()
 
 		// Setup
@@ -152,7 +190,11 @@ func TestExecutingTests(t *testing.T) {
 
 		c := config.Contract{
 			Name:     tests.ContractHelloString.Name,
-			Location: "SomeHelloContract.cdc",
+			Location: tests.ContractHelloString.Filename,
+			Aliases: config.Aliases{{
+				Network: "emulator",
+				Address: flow.HexToAddress("0x0000000000000007"),
+			}},
 		}
 		state.Contracts().AddOrUpdate(c)
 
@@ -161,18 +203,49 @@ func TestExecutingTests(t *testing.T) {
 		testFiles := map[string][]byte{
 			script.Filename: script.Source,
 		}
-		_, _, err := testCode(testFiles, state, flagsTests{})
+		_, err := testCode(testFiles, state, flagsTests{})
 
 		require.Error(t, err)
-		assert.Error(
+		assert.ErrorContains(
 			t,
 			err,
-			"cannot find contract with location 'contractHello.cdc' in configuration",
+			"could not find the address of contract: Hello",
 		)
+	})
+
+	t.Run("without testing alias for common contracts", func(t *testing.T) {
+		t.Parallel()
+
+		// Setup
+		_, state, _ := util.TestMocks(t)
+
+		c := config.Contract{
+			Name:     tests.ContractHelloString.Name,
+			Location: tests.ContractHelloString.Filename,
+			Aliases:  aliases,
+		}
+		state.Contracts().AddOrUpdate(c)
+		// fungibleToken has no `testing` alias, but it is not
+		// actually deployed/used, so there is no errror.
+		fungibleToken := config.Contract{
+			Name:     "FungibleToken",
+			Location: "cadence/contracts/FungibleToken.cdc",
+		}
+		state.Contracts().AddOrUpdate(fungibleToken)
+
+		// Execute script
+		script := tests.TestScriptWithImport
+		testFiles := map[string][]byte{
+			script.Filename: script.Source,
+		}
+		_, err := testCode(testFiles, state, flagsTests{})
+
+		assert.NoError(t, err)
 	})
 
 	t.Run("with file read", func(t *testing.T) {
 		t.Parallel()
+
 		_, state, rw := util.TestMocks(t)
 
 		_ = rw.WriteFile(
@@ -186,11 +259,11 @@ func TestExecutingTests(t *testing.T) {
 		testFiles := map[string][]byte{
 			script.Filename: script.Source,
 		}
-		results, _, err := testCode(testFiles, state, flagsTests{})
+		result, err := testCode(testFiles, state, flagsTests{})
 
 		require.NoError(t, err)
-		require.Len(t, results, 1)
-		assert.NoError(t, results[script.Filename][0].Error)
+		require.Len(t, result.Results, 1)
+		assert.NoError(t, result.Results[script.Filename][0].Error)
 	})
 
 	t.Run("with code coverage", func(t *testing.T) {
@@ -202,6 +275,7 @@ func TestExecutingTests(t *testing.T) {
 		state.Contracts().AddOrUpdate(config.Contract{
 			Name:     tests.ContractFooCoverage.Name,
 			Location: tests.ContractFooCoverage.Filename,
+			Aliases:  aliases,
 		})
 
 		// Execute script
@@ -212,15 +286,19 @@ func TestExecutingTests(t *testing.T) {
 		flags := flagsTests{
 			Cover: true,
 		}
-		results, coverageReport, err := testCode(testFiles, state, flags)
+		result, err := testCode(testFiles, state, flags)
 
 		require.NoError(t, err)
-		require.Len(t, results[script.Filename], 3)
-		for _, result := range results[script.Filename] {
+		require.Len(t, result.Results[script.Filename], 2)
+		for _, result := range result.Results[script.Filename] {
 			assert.NoError(t, result.Error)
 		}
 
-		location := common.StringLocation("FooContract")
+		coverageReport := result.CoverageReport
+		location := common.AddressLocation{
+			Name:    "FooContract",
+			Address: common.Address{0, 0, 0, 0, 0, 0, 0, 7},
+		}
 		coverage := coverageReport.Coverage[location]
 
 		assert.Equal(t, []int{}, coverage.MissedLines())
@@ -242,29 +320,38 @@ func TestExecutingTests(t *testing.T) {
 				"s.7465737400000000000000000000000000000000000000000000000000000000",
 				"I.Crypto",
 				"I.Test",
-				"A.0ae53cb6e3f42a79.FlowToken",
-				"A.f8d6e0586b0a20c7.FlowStorageFees",
-				"A.f8d6e0586b0a20c7.FlowDKG",
-				"A.f8d6e0586b0a20c7.ExampleNFT",
-				"A.f8d6e0586b0a20c7.FlowIDTableStaking",
-				"A.f8d6e0586b0a20c7.FlowClusterQC",
-				"A.f8d6e0586b0a20c7.NodeVersionBeacon",
-				"A.f8d6e0586b0a20c7.StakingProxy",
-				"A.e5a8b7f23e8b548f.FlowFees",
-				"A.ee82856bf20e2aa6.FungibleToken",
-				"A.f8d6e0586b0a20c7.FlowStakingCollection",
-				"A.f8d6e0586b0a20c7.NFTStorefrontV2",
-				"A.f8d6e0586b0a20c7.NFTStorefront",
-				"A.f8d6e0586b0a20c7.LockedTokens",
-				"A.f8d6e0586b0a20c7.FlowServiceAccount",
-				"A.f8d6e0586b0a20c7.FlowEpoch",
+				"A.0000000000000001.NodeVersionBeacon",
+				"A.0000000000000001.FlowServiceAccount",
+				"A.0000000000000002.FungibleToken",
+				"A.0000000000000001.FlowClusterQC",
+				"A.0000000000000001.FlowDKG",
+				"A.0000000000000002.FungibleTokenMetadataViews",
+				"A.0000000000000001.NFTStorefrontV2",
+				"A.0000000000000001.FlowIDTableStaking",
+				"A.0000000000000001.LockedTokens",
+				"A.0000000000000001.ExampleNFT",
+				"A.0000000000000001.NFTStorefront",
+				"A.0000000000000001.FlowStakingCollection",
+				"A.0000000000000001.StakingProxy",
+				"A.0000000000000003.FlowToken",
+				"A.0000000000000001.FlowEpoch",
+				"A.0000000000000001.FlowStorageFees",
+				"A.0000000000000004.FlowFees",
+				"A.0000000000000001.MetadataViews",
+				"A.0000000000000001.NonFungibleToken",
+				"A.0000000000000001.ViewResolver",
 			},
 			coverageReport.ExcludedLocationIDs(),
 		)
 		assert.Equal(
 			t,
-			"Coverage: 97.4% of statements",
+			"Coverage: 90.6% of statements",
 			coverageReport.String(),
+		)
+		assert.Contains(
+			t,
+			result.String(),
+			"Coverage: 90.6% of statements",
 		)
 	})
 
@@ -277,6 +364,7 @@ func TestExecutingTests(t *testing.T) {
 		state.Contracts().AddOrUpdate(config.Contract{
 			Name:     tests.ContractFooCoverage.Name,
 			Location: tests.ContractFooCoverage.Filename,
+			Aliases:  aliases,
 		})
 
 		// Execute script
@@ -288,15 +376,19 @@ func TestExecutingTests(t *testing.T) {
 			Cover:     true,
 			CoverCode: contractsCoverCode,
 		}
-		results, coverageReport, err := testCode(testFiles, state, flags)
+		result, err := testCode(testFiles, state, flags)
 
 		require.NoError(t, err)
-		require.Len(t, results[script.Filename], 3)
-		for _, result := range results[script.Filename] {
+		require.Len(t, result.Results[script.Filename], 2)
+		for _, result := range result.Results[script.Filename] {
 			assert.NoError(t, result.Error)
 		}
 
-		location := common.StringLocation("FooContract")
+		coverageReport := result.CoverageReport
+		location := common.AddressLocation{
+			Name:    "FooContract",
+			Address: common.Address{0, 0, 0, 0, 0, 0, 0, 7},
+		}
 		coverage := coverageReport.Coverage[location]
 
 		assert.Equal(t, []int{}, coverage.MissedLines())
@@ -318,22 +410,26 @@ func TestExecutingTests(t *testing.T) {
 				"s.7465737400000000000000000000000000000000000000000000000000000000",
 				"I.Crypto",
 				"I.Test",
-				"A.0ae53cb6e3f42a79.FlowToken",
-				"A.f8d6e0586b0a20c7.FlowStorageFees",
-				"A.f8d6e0586b0a20c7.FlowDKG",
-				"A.f8d6e0586b0a20c7.ExampleNFT",
-				"A.f8d6e0586b0a20c7.FlowIDTableStaking",
-				"A.f8d6e0586b0a20c7.FlowClusterQC",
-				"A.f8d6e0586b0a20c7.NodeVersionBeacon",
-				"A.f8d6e0586b0a20c7.StakingProxy",
-				"A.e5a8b7f23e8b548f.FlowFees",
-				"A.ee82856bf20e2aa6.FungibleToken",
-				"A.f8d6e0586b0a20c7.FlowStakingCollection",
-				"A.f8d6e0586b0a20c7.NFTStorefrontV2",
-				"A.f8d6e0586b0a20c7.NFTStorefront",
-				"A.f8d6e0586b0a20c7.LockedTokens",
-				"A.f8d6e0586b0a20c7.FlowServiceAccount",
-				"A.f8d6e0586b0a20c7.FlowEpoch",
+				"A.0000000000000001.NodeVersionBeacon",
+				"A.0000000000000001.FlowServiceAccount",
+				"A.0000000000000002.FungibleToken",
+				"A.0000000000000001.FlowClusterQC",
+				"A.0000000000000001.FlowDKG",
+				"A.0000000000000002.FungibleTokenMetadataViews",
+				"A.0000000000000001.NFTStorefrontV2",
+				"A.0000000000000001.FlowIDTableStaking",
+				"A.0000000000000001.LockedTokens",
+				"A.0000000000000001.ExampleNFT",
+				"A.0000000000000001.NFTStorefront",
+				"A.0000000000000001.FlowStakingCollection",
+				"A.0000000000000001.StakingProxy",
+				"A.0000000000000003.FlowToken",
+				"A.0000000000000001.FlowEpoch",
+				"A.0000000000000001.FlowStorageFees",
+				"A.0000000000000004.FlowFees",
+				"A.0000000000000001.MetadataViews",
+				"A.0000000000000001.NonFungibleToken",
+				"A.0000000000000001.ViewResolver",
 			},
 			coverageReport.ExcludedLocationIDs(),
 		)
@@ -341,6 +437,148 @@ func TestExecutingTests(t *testing.T) {
 			t,
 			"Coverage: 100.0% of statements",
 			coverageReport.String(),
+		)
+		assert.Contains(
+			t,
+			result.String(),
+			"Coverage: 100.0% of statements",
+		)
+	})
+
+	t.Run("with random test case execution", func(t *testing.T) {
+		t.Parallel()
+
+		// Setup
+		_, state, _ := util.TestMocks(t)
+
+		state.Contracts().AddOrUpdate(config.Contract{
+			Name:     tests.ContractFooCoverage.Name,
+			Location: tests.ContractFooCoverage.Filename,
+			Aliases:  aliases,
+		})
+
+		// Execute script
+		script := tests.TestScriptWithCoverage
+		testFiles := map[string][]byte{
+			script.Filename: script.Source,
+		}
+		flags := flagsTests{
+			Random: true,
+		}
+		result, err := testCode(testFiles, state, flags)
+
+		require.NoError(t, err)
+		require.Len(t, result.Results[script.Filename], 2)
+		for _, result := range result.Results[script.Filename] {
+			assert.NoError(t, result.Error)
+		}
+
+		assert.Contains(
+			t,
+			result.String(),
+			fmt.Sprintf("Seed: %d", result.RandomSeed),
+		)
+	})
+
+	t.Run("with input seed for test case execution", func(t *testing.T) {
+		t.Parallel()
+
+		// Setup
+		_, state, _ := util.TestMocks(t)
+
+		state.Contracts().AddOrUpdate(config.Contract{
+			Name:     tests.ContractFooCoverage.Name,
+			Location: tests.ContractFooCoverage.Filename,
+			Aliases:  aliases,
+		})
+
+		// Execute script
+		script := tests.TestScriptWithCoverage
+		testFiles := map[string][]byte{
+			script.Filename: script.Source,
+		}
+		flags := flagsTests{
+			Seed: 1521,
+		}
+		result, err := testCode(testFiles, state, flags)
+
+		require.NoError(t, err)
+		require.Len(t, result.Results[script.Filename], 2)
+		for _, result := range result.Results[script.Filename] {
+			assert.NoError(t, result.Error)
+		}
+
+		assert.Contains(
+			t,
+			result.String(),
+			fmt.Sprintf("Seed: %d", flags.Seed),
+		)
+
+		// Note that `testGetIntegerTrait` is the first test case,
+		// but it gets executed after `testAddSpecialNumber`, due
+		// to random test execution.
+		expected := `Test results: "testScriptWithCoverage.cdc"
+- PASS: testAddSpecialNumber
+- PASS: testGetIntegerTrait
+Seed: 1521
+`
+		assert.Equal(
+			t,
+			expected,
+			result.Oneliner(),
+		)
+	})
+
+	t.Run("with JSON output", func(t *testing.T) {
+		t.Parallel()
+
+		// Setup
+		_, state, _ := util.TestMocks(t)
+
+		state.Contracts().AddOrUpdate(config.Contract{
+			Name:     tests.ContractFooCoverage.Name,
+			Location: tests.ContractFooCoverage.Filename,
+			Aliases:  aliases,
+		})
+
+		// Execute script
+		script := tests.TestScriptWithCoverage
+		testFiles := map[string][]byte{
+			script.Filename: script.Source,
+		}
+		flags := flagsTests{
+			Seed:      1521,
+			Cover:     true,
+			CoverCode: contractsCoverCode,
+		}
+		result, err := testCode(testFiles, state, flags)
+
+		require.NoError(t, err)
+		require.Len(t, result.Results[script.Filename], 2)
+		for _, result := range result.Results[script.Filename] {
+			assert.NoError(t, result.Error)
+		}
+
+		output, err := json.Marshal(result.JSON())
+		require.NoError(t, err)
+
+		expected := `
+        {
+            "meta": {
+                "coverage": "100.0%",
+                "seed": "1521"
+            },
+            "testScriptWithCoverage.cdc": {
+                "testGetIntegerTrait": "PASS",
+                "testAddSpecialNumber": "PASS"
+            }
+        }
+		`
+
+		assert.JSONEq(
+			t,
+			expected,
+			string(output),
 		)
 	})
 }
