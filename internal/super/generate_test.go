@@ -154,3 +154,33 @@ func TestGenerateNewTransaction(t *testing.T) {
 }`
 	assert.Equal(t, expectedContent, string(content))
 }
+
+func TestGenerateNewWithDirFlag(t *testing.T) {
+	dir, err := os.MkdirTemp("", "test")
+	assert.NoError(t, err, "Failed to create temp dir")
+	defer os.RemoveAll(dir)
+	os.Chdir(dir)
+
+	// Mock logger
+	logger := output.NewStdoutLogger(output.NoneLog)
+
+	// Setting the flag values manually for this test
+	generateFlags.Directory = "customDir"
+
+	// Test contract generation
+	_, err = generateNew([]string{"contract", "TestContract"}, command.GlobalFlags{}, logger, nil, nil)
+	assert.NoError(t, err, "Failed to generate contract")
+
+	// Check if the file exists in the correct directory
+	assert.FileExists(t, "customDir/TestContract.cdc")
+
+	content, err := os.ReadFile("customDir/TestContract.cdc")
+	assert.NoError(t, err, "Failed to read generated file")
+
+	// Check content is correct
+	expectedContent := `
+pub contract TestContract {
+    init() {}
+}`
+	assert.Equal(t, expectedContent, string(content))
+}

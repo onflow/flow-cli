@@ -32,7 +32,9 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type generateFlagsDef struct{}
+type generateFlagsDef struct {
+	Directory string `default:"" flag:"dir" info:"Directory to generate files in"`
+}
 
 var generateFlags = generateFlagsDef{}
 
@@ -73,20 +75,32 @@ func generateNew(
 	var fileToWrite string
 	var basePath string
 
+	if generateFlags.Directory != "" {
+		basePath = generateFlags.Directory
+	} else {
+		switch templateType {
+		case "contract":
+			basePath = "cadence/contracts"
+		case "script":
+			basePath = "cadence/scripts"
+		case "transaction":
+			basePath = "cadence/transactions"
+		default:
+			return nil, fmt.Errorf("invalid template type: %s", templateType)
+		}
+	}
+
 	switch templateType {
 	case "contract":
-		basePath = "cadence/contracts"
 		fileToWrite = fmt.Sprintf(`
 pub contract %s {
     init() {}
 }`, name)
 	case "script":
-		basePath = "cadence/scripts"
 		fileToWrite = `pub fun main() {
     // Script details here
 }`
 	case "transaction":
-		basePath = "cadence/transactions"
 		fileToWrite = `transaction() {
     prepare(account:AuthAccount) {}
 
