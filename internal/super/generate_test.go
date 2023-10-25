@@ -148,7 +148,7 @@ func TestGenerateNewTransaction(t *testing.T) {
 	assert.NoError(t, err, "Failed to read generated file")
 
 	expectedContent := `transaction() {
-    prepare() {}
+    prepare(account:AuthAccount) {}
 
     execute {}
 }`
