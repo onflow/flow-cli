@@ -162,7 +162,7 @@ func TestGenerateNewWithDirFlag(t *testing.T) {
 
 	// Check content is correct
 	expectedContent := `
-pub contract TestContract {
+access(all) contract TestContract {
     init() {}
 }`
 	assert.Equal(t, expectedContent, string(content))
