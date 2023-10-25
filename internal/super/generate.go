@@ -39,7 +39,7 @@ var GenerateCommand = &command.Command{
 	Cmd: &cobra.Command{
 		Use:     "generate <contract | transaction | script>",
 		Short:   "Generate new boilerplate files",
-		Example: "flow generate HelloWorld",
+		Example: "flow generate contract HelloWorld",
 		Args:    cobra.ArbitraryArgs,
 		GroupID: "super",
 	},
