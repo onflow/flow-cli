@@ -37,7 +37,7 @@ var generateFlags = generateFlagsDef{}
 
 var GenerateCommand = &command.Command{
 	Cmd: &cobra.Command{
-		Use:     "generate <contract | transaction | script>",
+		Use:     "generate <contract | transaction | script> <name>",
 		Short:   "Generate new boilerplate files",
 		Example: "flow generate contract HelloWorld",
 		Args:    cobra.ArbitraryArgs,
