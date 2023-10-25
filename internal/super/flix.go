@@ -84,9 +84,21 @@ var bindingCommand = &command.Command{
 	RunS:  bindingsCmd,
 }
 
+var generateCommand = &command.Command{
+	Cmd: &cobra.Command{
+		Use:     "generate cadence.cdc",
+		Short:   "generate FLIX json template given local filename",
+		Example: "flow flix generate multiply.cdc",
+		Args:    cobra.MinimumNArgs(1),
+	},
+	Flags: &flags,
+	RunS:  generateCmd,
+}
+
 func init() {
 	executeCommand.AddToParent(FlixCmd)
 	bindingCommand.AddToParent(FlixCmd)
+	generateCommand.AddToParent(FlixCmd)
 }
 
 type flixQueryTypes string
@@ -190,6 +202,36 @@ func bindingsCmd(
 	return &flixResult{
 		flixQuery: flixQuery,
 		result:    out,
+	}, err
+}
+
+func generateCmd(
+	args []string,
+	_ command.GlobalFlags,
+	logger output.Logger,
+	flow flowkit.Services,
+	state *flowkit.State,
+) (result command.Result, err error) {
+	cadenceFile := args[0]
+
+	if cadenceFile == "" {
+		return nil, fmt.Errorf("no cadence code found")
+	}
+
+	code, err := state.ReadFile(cadenceFile)
+	if err != nil {
+		return nil, fmt.Errorf("could not read cadence file %s: %w", cadenceFile, err)
+	}
+
+	flixGen := generator.Generator1_0_0()
+	flix, err := flixGen.Generate(code)
+	if err != nil {
+		return nil, fmt.Errorf("could not generate flix %w", err)
+	}
+
+	return &flixResult{
+		flixQuery: cadenceFile,
+		result:    flix,
 	}, err
 }
 
