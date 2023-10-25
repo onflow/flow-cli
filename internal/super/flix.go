@@ -58,7 +58,7 @@ type flixResult struct {
 var flags = flixFlags{}
 var FlixCmd = &cobra.Command{
 	Use:              "flix",
-	Short:            "execute  <id | name | path>, bindings <flix>",
+	Short:            "execute, bindings",
 	TraverseChildren: true,
 	GroupID:          "tools",
 }
