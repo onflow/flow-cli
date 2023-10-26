@@ -358,15 +358,21 @@ func (f *Flowkit) AddContract(
 		return tx.FlowTransaction().ID(), false, trx.Error
 	}
 
-	deployment := config.Deployment{
-		Network: f.network.Name,
-		Account: account.Name,
-		Contracts: []config.ContractDeployment{{
-			Name: name,
-			Args: contract.Args,
-		}},
+	d := state.Deployments().ByAccountAndNetwork(account.Name, f.network.Name)
+	cd := config.ContractDeployment{
+		Name: name,
+		Args: contract.Args,
 	}
-	state.Deployments().AddOrUpdate(deployment)
+	if d != nil {
+		d.AddContract(cd)
+	} else {
+		deployment := config.Deployment{
+			Network:   f.network.Name,
+			Account:   account.Name,
+			Contracts: []config.ContractDeployment{cd},
+		}
+		state.Deployments().AddOrUpdate(deployment)
+	}
 
 	// don't add contract if it already exists because it might overwrite existing data
 	if c, _ := state.Contracts().ByName(name); c == nil {
