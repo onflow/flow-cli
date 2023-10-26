@@ -21,11 +21,13 @@ package super
 import (
 	"context"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"os"
 
 	"github.com/onflow/flixkit-go"
 	"github.com/onflow/flixkit-go/bindings"
+	"github.com/onflow/flixkit-go/generator"
 
 	"github.com/onflow/flow-cli/flowkit"
 	"github.com/onflow/flow-cli/flowkit/output"
@@ -223,15 +225,17 @@ func generateCmd(
 		return nil, fmt.Errorf("could not read cadence file %s: %w", cadenceFile, err)
 	}
 
-	flixGen := generator.Generator1_0_0()
-	flix, err := flixGen.Generate(code)
+	flix, err := generator.NewGenerator().Generate(string(code))
 	if err != nil {
 		return nil, fmt.Errorf("could not generate flix %w", err)
 	}
-
+	prettyJSON, err := json.MarshalIndent(flix, "", "    ")
+	if err != nil {
+		return nil, fmt.Errorf("could not marshal flix %w", err)
+	}
 	return &flixResult{
 		flixQuery: cadenceFile,
-		result:    flix,
+		result:    string(prettyJSON),
 	}, err
 }
 
