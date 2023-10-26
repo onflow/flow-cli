@@ -81,7 +81,6 @@ func create(
 	}
 
 	scaffolds, err := getScaffolds()
-
 	if err != nil {
 		return nil, err
 	}
@@ -107,11 +106,11 @@ func create(
 	}
 
 	logger.StartProgress(fmt.Sprintf("Creating your project %s", targetDir))
+	defer logger.StopProgress()
 	err = cloneScaffold(targetDir, pickedScaffold)
 	if err != nil {
 		return nil, fmt.Errorf("failed creating scaffold %w", err)
 	}
-	logger.StopProgress()
 
 	return &setupResult{targetDir: targetDir}, nil
 }
