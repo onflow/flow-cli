@@ -21,13 +21,11 @@ package super
 import (
 	"context"
 	"encoding/hex"
-	"encoding/json"
 	"fmt"
 	"os"
 
 	"github.com/onflow/flixkit-go"
 	"github.com/onflow/flixkit-go/bindings"
-	"github.com/onflow/flixkit-go/generator"
 
 	"github.com/onflow/flow-cli/flowkit"
 	"github.com/onflow/flow-cli/flowkit/output"
@@ -214,29 +212,32 @@ func generateCmd(
 	flow flowkit.Services,
 	state *flowkit.State,
 ) (result command.Result, err error) {
-	cadenceFile := args[0]
+	/*
+		cadenceFile := args[0]
 
-	if cadenceFile == "" {
-		return nil, fmt.Errorf("no cadence code found")
-	}
+		if cadenceFile == "" {
+			return nil, fmt.Errorf("no cadence code found")
+		}
 
-	code, err := state.ReadFile(cadenceFile)
-	if err != nil {
-		return nil, fmt.Errorf("could not read cadence file %s: %w", cadenceFile, err)
-	}
+		code, err := state.ReadFile(cadenceFile)
+		if err != nil {
+			return nil, fmt.Errorf("could not read cadence file %s: %w", cadenceFile, err)
+		}
 
-	flix, err := generator.NewGenerator().Generate(string(code))
-	if err != nil {
-		return nil, fmt.Errorf("could not generate flix %w", err)
-	}
-	prettyJSON, err := json.MarshalIndent(flix, "", "    ")
-	if err != nil {
-		return nil, fmt.Errorf("could not marshal flix %w", err)
-	}
-	return &flixResult{
-		flixQuery: cadenceFile,
-		result:    string(prettyJSON),
-	}, err
+		flix, err := generator.NewGenerator().Generate(string(code))
+		if err != nil {
+			return nil, fmt.Errorf("could not generate flix %w", err)
+		}
+		prettyJSON, err := json.MarshalIndent(flix, "", "    ")
+		if err != nil {
+			return nil, fmt.Errorf("could not marshal flix %w", err)
+		}
+		return &flixResult{
+			flixQuery: cadenceFile,
+			result:    string(prettyJSON),
+		}, err
+	*/
+	return nil, nil
 }
 
 func (fr *flixResult) JSON() any {
