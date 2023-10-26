@@ -220,7 +220,6 @@ func (f *Flowkit) prepareTransaction(
 	tx *transactions.Transaction,
 	account *accounts.Account,
 ) (*transactions.Transaction, error) {
-
 	block, err := f.gateway.GetLatestBlock()
 	if err != nil {
 		return nil, err
@@ -360,10 +359,19 @@ func (f *Flowkit) AddContract(
 	}
 
 	d := state.Deployments().ByAccountAndNetwork(account.Name, f.network.Name)
+	cd := config.ContractDeployment{
+		Name: name,
+		Args: contract.Args,
+	}
 	if d != nil {
-		d.AddContract(config.ContractDeployment{
-			Name: name,
-		})
+		d.AddContract(cd)
+	} else {
+		deployment := config.Deployment{
+			Network:   f.network.Name,
+			Account:   account.Name,
+			Contracts: []config.ContractDeployment{cd},
+		}
+		state.Deployments().AddOrUpdate(deployment)
 	}
 
 	// don't add contract if it already exists because it might overwrite existing data
@@ -549,7 +557,7 @@ func makeEventQueries(
 ) []grpc.EventRangeQuery {
 	var queries []grpc.EventRangeQuery
 	for startHeight <= endHeight {
-		suggestedEndHeight := startHeight + blockCount - 1 //since we are inclusive
+		suggestedEndHeight := startHeight + blockCount - 1 // since we are inclusive
 		end := endHeight
 		if suggestedEndHeight < endHeight {
 			end = suggestedEndHeight
@@ -564,7 +572,6 @@ func makeEventQueries(
 		startHeight = suggestedEndHeight + 1
 	}
 	return queries
-
 }
 
 // GenerateKey using the signature algorithm and optional seed. If seed is not provided a random safe seed will be generated.
