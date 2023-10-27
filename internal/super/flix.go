@@ -57,7 +57,7 @@ type flixResult struct {
 var flags = flixFlags{}
 var FlixCmd = &cobra.Command{
 	Use:              "flix",
-	Short:            "execute, bindings",
+	Short:            "execute, package",
 	TraverseChildren: true,
 	GroupID:          "tools",
 }
@@ -73,20 +73,20 @@ var executeCommand = &command.Command{
 	RunS:  executeCmd,
 }
 
-var bindingCommand = &command.Command{
+var packageCommand = &command.Command{
 	Cmd: &cobra.Command{
-		Use:     "bindings <id | name | path>",
-		Short:   "generate binding file for FLIX template fcl-js is default",
-		Example: "flow flix bindings multiply.template.json",
+		Use:     "package <id | name | path>",
+		Short:   "package file for FLIX template fcl-js is default",
+		Example: "flow flix package multiply.template.json",
 		Args:    cobra.MinimumNArgs(1),
 	},
 	Flags: &flags,
-	RunS:  bindingsCmd,
+	RunS:  packageCmd,
 }
 
 func init() {
 	executeCommand.AddToParent(FlixCmd)
-	bindingCommand.AddToParent(FlixCmd)
+	packageCommand.AddToParent(FlixCmd)
 }
 
 type flixQueryTypes string
@@ -163,7 +163,7 @@ func executeCmd(
 	return transactions.SendTransaction([]byte(cadenceWithImportsReplaced), args[1:], "", flow, state, transactionFlags)
 }
 
-func bindingsCmd(
+func packageCmd(
 	args []string,
 	_ command.GlobalFlags,
 	logger output.Logger,
