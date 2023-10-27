@@ -42,6 +42,7 @@ var GenerateCommand = &cobra.Command{
 	Use:     "generate",
 	Short:   "Generate new boilerplate files",
 	GroupID: "super",
+	Aliases: []string{"g"},
 }
 
 var GenerateContractCommand = &command.Command{
