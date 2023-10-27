@@ -24,6 +24,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/onflow/flow-cli/flowkit/config"
+
 	"github.com/onflow/flow-cli/flowkit"
 
 	"github.com/onflow/flow-cli/flowkit/output"
@@ -91,7 +93,7 @@ func generateContract(
 	flow flowkit.Services,
 	state *flowkit.State,
 ) (result command.Result, err error) {
-	return generateNew(args, "contract", logger)
+	return generateNew(args, "contract", logger, state)
 }
 
 func generateTransaction(
@@ -101,7 +103,7 @@ func generateTransaction(
 	flow flowkit.Services,
 	state *flowkit.State,
 ) (result command.Result, err error) {
-	return generateNew(args, "transaction", logger)
+	return generateNew(args, "transaction", logger, state)
 }
 
 func generateScript(
@@ -111,13 +113,14 @@ func generateScript(
 	flow flowkit.Services,
 	state *flowkit.State,
 ) (result command.Result, err error) {
-	return generateNew(args, "script", logger)
+	return generateNew(args, "script", logger, state)
 }
 
 func generateNew(
 	args []string,
 	templateType string,
 	logger output.Logger,
+	state *flowkit.State,
 ) (result command.Result, err error) {
 	if len(args) < 1 {
 		return nil, fmt.Errorf("invalid number of arguments")
@@ -188,6 +191,14 @@ access(all) contract %s {
 	}
 
 	logger.Info(fmt.Sprintf("Generated new %s: %s at %s", templateType, name, filenameWithBasePath))
+
+	if templateType == "contract" {
+		state.Contracts().AddOrUpdate(config.Contract{Name: name, Location: filenameWithBasePath})
+		err = state.SaveDefault()
+		if err != nil {
+			return nil, fmt.Errorf("error saving to flow.json: %w", err)
+		}
+	}
 
 	return nil, err
 }
