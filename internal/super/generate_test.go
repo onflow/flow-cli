@@ -22,6 +22,8 @@ import (
 	"os"
 	"testing"
 
+	"github.com/onflow/flow-cli/internal/util"
+
 	"github.com/stretchr/testify/assert"
 
 	"github.com/onflow/flow-cli/flowkit/output"
@@ -37,9 +39,10 @@ func TestGenerateNewContract(t *testing.T) {
 	}
 
 	logger := output.NewStdoutLogger(output.NoneLog)
+	_, state, _ := util.TestMocks(t)
 
 	// Test contract generation
-	_, err = generateNew([]string{"TestContract"}, "contract", logger)
+	_, err = generateNew([]string{"TestContract"}, "contract", logger, state)
 	assert.NoError(t, err, "Failed to generate contract")
 
 	// Check if the file exists in the correct directory
@@ -56,7 +59,7 @@ access(all) contract TestContract {
 	assert.Equal(t, expectedContent, string(content))
 
 	// Test file already exists scenario
-	_, err = generateNew([]string{"TestContract"}, "contract", logger)
+	_, err = generateNew([]string{"TestContract"}, "contract", logger, state)
 	assert.Error(t, err)
 	assert.Equal(t, "file already exists: cadence/contracts/TestContract.cdc", err.Error())
 }
@@ -71,16 +74,17 @@ func TestGenerateNewContractFileAlreadyExists(t *testing.T) {
 	}
 
 	logger := output.NewStdoutLogger(output.NoneLog)
+	_, state, _ := util.TestMocks(t)
 
 	// Test contract generation
-	_, err = generateNew([]string{"TestContract"}, "contract", logger)
+	_, err = generateNew([]string{"TestContract"}, "contract", logger, state)
 	assert.NoError(t, err, "Failed to generate contract")
 
 	// Check if the file exists in the correct directory
 	assert.FileExists(t, "cadence/contracts/TestContract.cdc")
 
 	// Test file already exists scenario
-	_, err = generateNew([]string{"TestContract"}, "contract", logger)
+	_, err = generateNew([]string{"TestContract"}, "contract", logger, state)
 	assert.Error(t, err)
 	assert.Equal(t, "file already exists: cadence/contracts/TestContract.cdc", err.Error())
 }
@@ -95,8 +99,9 @@ func TestGenerateNewContractWithFileExtension(t *testing.T) {
 	}
 
 	logger := output.NewStdoutLogger(output.NoneLog)
+	_, state, _ := util.TestMocks(t)
 
-	_, err = generateNew([]string{"TestContract.cdc"}, "contract", logger)
+	_, err = generateNew([]string{"TestContract.cdc"}, "contract", logger, state)
 	assert.NoError(t, err, "Failed to generate contract")
 
 	assert.FileExists(t, "cadence/contracts/TestContract.cdc")
@@ -112,8 +117,9 @@ func TestGenerateNewScript(t *testing.T) {
 	}
 
 	logger := output.NewStdoutLogger(output.NoneLog)
+	_, state, _ := util.TestMocks(t)
 
-	_, err = generateNew([]string{"TestScript"}, "script", logger)
+	_, err = generateNew([]string{"TestScript"}, "script", logger, state)
 	assert.NoError(t, err, "Failed to generate contract")
 
 	assert.FileExists(t, "cadence/scripts/TestScript.cdc")
@@ -137,8 +143,9 @@ func TestGenerateNewTransaction(t *testing.T) {
 	}
 
 	logger := output.NewStdoutLogger(output.NoneLog)
+	_, state, _ := util.TestMocks(t)
 
-	_, err = generateNew([]string{"TestTransaction"}, "transaction", logger)
+	_, err = generateNew([]string{"TestTransaction"}, "transaction", logger, state)
 	assert.NoError(t, err, "Failed to generate contract")
 
 	assert.FileExists(t, "cadence/transactions/TestTransaction.cdc")
@@ -164,11 +171,12 @@ func TestGenerateNewWithDirFlag(t *testing.T) {
 	}
 
 	logger := output.NewStdoutLogger(output.NoneLog)
+	_, state, _ := util.TestMocks(t)
 
 	// Set a custom directory
 	generateFlags.Directory = "customDir"
 
-	_, err = generateNew([]string{"TestContract"}, "contract", logger)
+	_, err = generateNew([]string{"TestContract"}, "contract", logger, state)
 	assert.NoError(t, err, "Failed to generate contract")
 
 	// Check if the file exists in the correct directory
