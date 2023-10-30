@@ -25,13 +25,13 @@ import (
 	"os"
 
 	"github.com/onflow/flixkit-go"
+	"github.com/onflow/flixkit-go/bindings"
 
+	"github.com/onflow/flow-cli/flowkit"
 	"github.com/onflow/flow-cli/flowkit/output"
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/internal/scripts"
 	"github.com/onflow/flow-cli/internal/transactions"
-
-	"github.com/onflow/flow-cli/flowkit"
 
 	"github.com/spf13/cobra"
 )
@@ -49,18 +49,44 @@ type flixFlags struct {
 	GasLimit    uint64   `default:"1000" flag:"gas-limit" info:"transaction gas limit"`
 }
 
-var flags = flixFlags{}
+type flixResult struct {
+	flixQuery string
+	result    string
+}
 
-var FlixCommand = &command.Command{
+var flags = flixFlags{}
+var FlixCmd = &cobra.Command{
+	Use:              "flix",
+	Short:            "execute, package",
+	TraverseChildren: true,
+	GroupID:          "tools",
+}
+
+var executeCommand = &command.Command{
 	Cmd: &cobra.Command{
-		Use:     "flix <id | name | path>",
-		Short:   "Execute FLIX template with a given id, name, or local filename",
-		Example: "flow flix multiply 2 3",
-		Args:    cobra.ArbitraryArgs,
-		GroupID: "super",
+		Use:     "execute <id | name | path>",
+		Short:   "execute FLIX template with a given id, name, or local filename",
+		Example: "flow flix execute transfer-flow 1 0x123456789",
+		Args:    cobra.MinimumNArgs(1),
 	},
 	Flags: &flags,
-	RunS:  execute,
+	RunS:  executeCmd,
+}
+
+var packageCommand = &command.Command{
+	Cmd: &cobra.Command{
+		Use:     "package <id | name | path>",
+		Short:   "package file for FLIX template fcl-js is default",
+		Example: "flow flix package multiply.template.json",
+		Args:    cobra.MinimumNArgs(1),
+	},
+	Flags: &flags,
+	RunS:  packageCmd,
+}
+
+func init() {
+	executeCommand.AddToParent(FlixCmd)
+	packageCommand.AddToParent(FlixCmd)
 }
 
 type flixQueryTypes string
@@ -95,7 +121,7 @@ func getType(s string) flixQueryTypes {
 	}
 }
 
-func execute(
+func executeCmd(
 	args []string,
 	_ command.GlobalFlags,
 	logger output.Logger,
@@ -103,35 +129,10 @@ func execute(
 	state *flowkit.State,
 ) (result command.Result, err error) {
 	flixService := flixkit.NewFlixService(&flixkit.Config{})
-	ctx := context.Background()
-	var template *flixkit.FlowInteractionTemplate
 	flixQuery := args[0]
-
-	switch getType(flixQuery) {
-	case flixId:
-		template, err = flixService.GetFlixByID(ctx, flixQuery)
-		if err != nil {
-			return nil, fmt.Errorf("could not find flix with id %s: %w", flixQuery, err)
-		}
-
-	case flixName:
-		template, err = flixService.GetFlix(ctx, flixQuery)
-		if err != nil {
-			return nil, fmt.Errorf("could not find flix with name %s: %w", flixQuery, err)
-		}
-
-	case flixPath:
-		file, err := os.ReadFile(flixQuery)
-		if err != nil {
-			return nil, fmt.Errorf("could not read flix file %s: %w", flixQuery, err)
-		}
-		template, err = flixkit.ParseFlix(string(file))
-		if err != nil {
-			return nil, fmt.Errorf("could not parse flix from file %s: %w", flixQuery, err)
-		}
-
-	default:
-		return nil, fmt.Errorf("invalid flix query type: %s", flixQuery)
+	template, err := getTemplate(state, flixService, flixQuery)
+	if err != nil {
+		return nil, err
 	}
 
 	cadenceWithImportsReplaced, err := template.GetAndReplaceCadenceImports(flow.Network().Name)
@@ -160,4 +161,82 @@ func execute(
 		GasLimit:    flags.GasLimit,
 	}
 	return transactions.SendTransaction([]byte(cadenceWithImportsReplaced), args[1:], "", flow, state, transactionFlags)
+}
+
+func packageCmd(
+	args []string,
+	_ command.GlobalFlags,
+	logger output.Logger,
+	flow flowkit.Services,
+	state *flowkit.State,
+) (result command.Result, err error) {
+	flixService := flixkit.NewFlixService(&flixkit.Config{})
+	flixQuery := args[0]
+
+	template, err := getTemplate(state, flixService, flixQuery)
+	if err != nil {
+		return nil, err
+	}
+
+	isLocal := false
+	if getType(flixQuery) == flixPath {
+		isLocal = true
+	}
+
+	fclJsGen := bindings.NewFclJSGenerator()
+
+	out, err := fclJsGen.Generate(template, flixQuery, isLocal)
+
+	return &flixResult{
+		flixQuery: flixQuery,
+		result:    out,
+	}, err
+}
+
+func (fr *flixResult) JSON() any {
+	result := make(map[string]any)
+	result["flixQuery"] = fr.flixQuery
+	result["result"] = fr.result
+	return result
+}
+
+func (fr *flixResult) String() string {
+	return fr.result
+}
+
+func (fr *flixResult) Oneliner() string {
+	return fr.result
+}
+
+func getTemplate(state *flowkit.State, flixService flixkit.FlixService, flixQuery string) (*flixkit.FlowInteractionTemplate, error) {
+	var template *flixkit.FlowInteractionTemplate
+	var err error
+	ctx := context.Background()
+	switch getType(flixQuery) {
+	case flixId:
+		template, err = flixService.GetFlixByID(ctx, flixQuery)
+		if err != nil {
+			return nil, fmt.Errorf("could not find flix with id %s: %w", flixQuery, err)
+		}
+
+	case flixName:
+		template, err = flixService.GetFlix(ctx, flixQuery)
+		if err != nil {
+			return nil, fmt.Errorf("could not find flix with name %s: %w", flixQuery, err)
+		}
+
+	case flixPath:
+		file, err := state.ReadFile(flixQuery)
+		if err != nil {
+			return nil, fmt.Errorf("could not read flix file %s: %w", flixQuery, err)
+		}
+		template, err = flixkit.ParseFlix(string(file))
+		if err != nil {
+			return nil, fmt.Errorf("could not parse flix from file %s: %w", flixQuery, err)
+		}
+
+	default:
+		return nil, fmt.Errorf("invalid flix query type: %s", flixQuery)
+	}
+	return template, nil
 }
