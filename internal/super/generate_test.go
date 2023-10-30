@@ -45,18 +45,16 @@ func TestGenerateNewContract(t *testing.T) {
 	_, err = generateNew([]string{"TestContract"}, "contract", logger, state)
 	assert.NoError(t, err, "Failed to generate contract")
 
-	// Check if the file exists in the correct directory
-	assert.FileExists(t, "cadence/contracts/TestContract.cdc")
-
-	content, err := os.ReadFile("cadence/contracts/TestContract.cdc")
+	fileContent, err := state.ReaderWriter().ReadFile("cadence/contracts/TestContract.cdc")
 	assert.NoError(t, err, "Failed to read generated file")
+	assert.NotNil(t, fileContent)
 
 	// Check content is correct
 	expectedContent := `
 access(all) contract TestContract {
     init() {}
 }`
-	assert.Equal(t, expectedContent, string(content))
+	assert.Equal(t, expectedContent, string(fileContent))
 
 	// Test file already exists scenario
 	_, err = generateNew([]string{"TestContract"}, "contract", logger, state)
@@ -80,8 +78,10 @@ func TestGenerateNewContractFileAlreadyExists(t *testing.T) {
 	_, err = generateNew([]string{"TestContract"}, "contract", logger, state)
 	assert.NoError(t, err, "Failed to generate contract")
 
-	// Check if the file exists in the correct directory
-	assert.FileExists(t, "cadence/contracts/TestContract.cdc")
+	//// Check if the file exists in the correct directory
+	content, err := state.ReaderWriter().ReadFile("cadence/contracts/TestContract.cdc")
+	assert.NoError(t, err, "Failed to read generated file")
+	assert.NotNil(t, content)
 
 	// Test file already exists scenario
 	_, err = generateNew([]string{"TestContract"}, "contract", logger, state)
@@ -104,7 +104,10 @@ func TestGenerateNewContractWithFileExtension(t *testing.T) {
 	_, err = generateNew([]string{"TestContract.cdc"}, "contract", logger, state)
 	assert.NoError(t, err, "Failed to generate contract")
 
-	assert.FileExists(t, "cadence/contracts/TestContract.cdc")
+	// Check file exists
+	content, err := state.ReaderWriter().ReadFile("cadence/contracts/TestContract.cdc")
+	assert.NoError(t, err, "Failed to read generated file")
+	assert.NotNil(t, content)
 }
 
 func TestGenerateNewScript(t *testing.T) {
@@ -122,10 +125,9 @@ func TestGenerateNewScript(t *testing.T) {
 	_, err = generateNew([]string{"TestScript"}, "script", logger, state)
 	assert.NoError(t, err, "Failed to generate contract")
 
-	assert.FileExists(t, "cadence/scripts/TestScript.cdc")
-
-	content, err := os.ReadFile("cadence/scripts/TestScript.cdc")
+	content, err := state.ReaderWriter().ReadFile("cadence/scripts/TestScript.cdc")
 	assert.NoError(t, err, "Failed to read generated file")
+	assert.NotNil(t, content)
 
 	expectedContent := `access(all) fun main() {
     // Script details here
@@ -148,10 +150,9 @@ func TestGenerateNewTransaction(t *testing.T) {
 	_, err = generateNew([]string{"TestTransaction"}, "transaction", logger, state)
 	assert.NoError(t, err, "Failed to generate contract")
 
-	assert.FileExists(t, "cadence/transactions/TestTransaction.cdc")
-
-	content, err := os.ReadFile("cadence/transactions/TestTransaction.cdc")
+	content, err := state.ReaderWriter().ReadFile("cadence/transactions/TestTransaction.cdc")
 	assert.NoError(t, err, "Failed to read generated file")
+	assert.NotNil(t, content)
 
 	expectedContent := `transaction() {
     prepare(account:AuthAccount) {}
@@ -179,11 +180,9 @@ func TestGenerateNewWithDirFlag(t *testing.T) {
 	_, err = generateNew([]string{"TestContract"}, "contract", logger, state)
 	assert.NoError(t, err, "Failed to generate contract")
 
-	// Check if the file exists in the correct directory
-	assert.FileExists(t, "customDir/TestContract.cdc")
-
-	content, err := os.ReadFile("customDir/TestContract.cdc")
+	content, err := state.ReaderWriter().ReadFile("customDir/TestContract.cdc")
 	assert.NoError(t, err, "Failed to read generated file")
+	assert.NotNil(t, content)
 
 	expectedContent := `
 access(all) contract TestContract {

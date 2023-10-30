@@ -176,7 +176,8 @@ access(all) contract %s {
 
 	filenameWithBasePath := filepath.Join(basePath, filename)
 
-	if _, err := os.Stat(filenameWithBasePath); err == nil {
+	// Check file existence
+	if _, err := state.ReaderWriter().ReadFile(filenameWithBasePath); err == nil {
 		return nil, fmt.Errorf("file already exists: %s", filenameWithBasePath)
 	}
 
@@ -185,7 +186,7 @@ access(all) contract %s {
 		return nil, fmt.Errorf("error creating directories: %w", err)
 	}
 
-	err = os.WriteFile(filenameWithBasePath, []byte(fileToWrite), 0644)
+	err = state.ReaderWriter().WriteFile(filenameWithBasePath, []byte(fileToWrite), 0644)
 	if err != nil {
 		return nil, fmt.Errorf("error writing file: %w", err)
 	}
