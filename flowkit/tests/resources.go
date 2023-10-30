@@ -327,68 +327,112 @@ var ScriptImport = Resource{
 var HelperImport = Resource{
 	Filename: "test_helpers.cdc",
 	Source: []byte(`
-		pub fun double(_ x: Int): Int {
-			return x * 2
-		}
+        pub fun double(_ x: Int): Int {
+            return x * 2
+        }
 	`),
 }
 
 var TestScriptSimple = Resource{
 	Filename: "./testScriptSimple.cdc",
 	Source: []byte(`
+        import Test
+
         pub fun testSimple() {
-            assert(true)
+            Test.assert(true)
         }
-    `),
+	`),
 }
 
 var TestScriptSimpleFailing = Resource{
 	Filename: "./testScriptSimpleFailing.cdc",
 	Source: []byte(`
+        import Test
+
         pub fun testSimple() {
-            assert(false)
+            Test.assert(false)
         }
-    `),
+	`),
 }
 
 var TestScriptWithImport = Resource{
 	Filename: "testScriptWithImport.cdc",
 	Source: []byte(`
+        import Test
         import "Hello"
 
-        pub fun testSimple() {
-            let hello = Hello()
-            assert(hello.greeting == "Hello, World!")
+        pub fun setup() {
+            let err = Test.deployContract(
+                name: "Hello",
+                path: "contractHello.cdc",
+                arguments: []
+            )
+            Test.expect(err, Test.beNil())
         }
-    `),
+
+        pub fun testSimple() {
+            Test.assertEqual("Hello, World!", Hello.greeting)
+        }
+	`),
+}
+
+var TestScriptWithMissingContract = Resource{
+	Filename: "testScriptWithImport.cdc",
+	Source: []byte(`
+        import Test
+        import "ApprovalVoting"
+
+        pub fun setup() {
+            let err = Test.deployContract(
+                name: "ApprovalVoting",
+                path: "ApprovalVoting.cdc",
+                arguments: []
+            )
+            Test.expect(err, Test.beNil())
+        }
+	`),
 }
 
 var TestScriptWithHelperImport = Resource{
 	Filename: "testScriptWithHelperImport.cdc",
 	Source: []byte(`
-		import Test
-		import "test_helpers.cdc"
+        import Test
+        import "test_helpers.cdc"
 
-		pub fun testDouble() {
-			Test.expect(double(2), Test.equal(4))
-		}
+        pub fun testDouble() {
+            Test.expect(double(2), Test.equal(4))
+        }
 	`),
 }
 
 var TestScriptWithRelativeImports = Resource{
 	Filename: "testScriptWithRelativeImport.cdc",
 	Source: []byte(`
-        import "FooContract"
-        import "Hello"
+        import Test
+        import FooContract from "../contracts/FooContract.cdc"
+        import Hello from "../contracts/contractHello.cdc"
+
+        pub fun setup() {
+            var err = Test.deployContract(
+                name: "FooContract",
+                path: "../contracts/FooContract.cdc",
+                arguments: []
+            )
+            Test.expect(err, Test.beNil())
+
+            err = Test.deployContract(
+                name: "Hello",
+                path: "../contracts/contractHello.cdc",
+                arguments: []
+            )
+            Test.expect(err, Test.beNil())
+        }
 
         pub fun testSimple() {
-            let hello = Hello()
-            assert(hello.greeting == "Hello, World!")
-
-            let fooContract = FooContract()
-            assert("Carmichael" == fooContract.getIntegerTrait(41041))
+            Test.assertEqual("Enormous", FooContract.getIntegerTrait(100001))
+            Test.assertEqual("Hello, World!", Hello.greeting)
         }
-    `),
+	`),
 }
 
 var TestScriptWithFileRead = Resource{
@@ -398,63 +442,58 @@ var TestScriptWithFileRead = Resource{
 
         pub fun testSimple() {
             let content = Test.readFile("./someFile.cdc")
-            assert(content == "This was read from a file!")
+            Test.assertEqual("This was read from a file!", content)
         }
-    `),
+	`),
 }
 
 var TestScriptWithCoverage = Resource{
 	Filename: "testScriptWithCoverage.cdc",
 	Source: []byte(`
-		import Test
-		import "FooContract"
+        import Test
+        import "FooContract"
 
-		pub let foo = FooContract()
+        pub fun setup() {
+            let err = Test.deployContract(
+                name: "FooContract",
+                path: "FooContract.cdc",
+                arguments: []
+            )
 
-		pub fun testGetIntegerTrait() {
-			// Arrange
-			let testInputs: {Int: String} = {
-				-1: "Negative",
-				0: "Zero",
-				9: "Small",
-				99: "Big",
-				999: "Huge",
-				1001: "Enormous",
-				1729: "Harshad",
-				8128: "Harmonic",
-				41041: "Carmichael"
-			}
+            Test.expect(err, Test.beNil())
+        }
 
-			for input in testInputs.keys {
-				// Act
-				let result = foo.getIntegerTrait(input)
+        pub fun testGetIntegerTrait() {
+            // Arrange
+            let testInputs: {Int: String} = {
+                -1: "Negative",
+                0: "Zero",
+                9: "Small",
+                99: "Big",
+                999: "Huge",
+                1001: "Enormous",
+                1729: "Harshad",
+                8128: "Harmonic",
+                41041: "Carmichael"
+            }
 
-				// Assert
-				Test.assert(result == testInputs[input])
-			}
-		}
+            for input in testInputs.keys {
+                // Act
+                let result = FooContract.getIntegerTrait(input)
 
-		pub fun testAddSpecialNumber() {
-			// Act
-			foo.addSpecialNumber(78557, "Sierpinski")
+                // Assert
+                Test.assertEqual(testInputs[input]!, result)
+            }
+        }
 
-			// Assert
-			Test.assert("Sierpinski" == foo.getIntegerTrait(78557))
-		}
+        pub fun testAddSpecialNumber() {
+            // Act
+            FooContract.addSpecialNumber(78557, "Sierpinski")
 
-		pub fun testExecuteScript() {
-			// Arrange
-			let blockchain = Test.newEmulatorBlockchain()
-
-			// Act
-			let code = "pub fun main(): Int { return 42 }"
-			let result = blockchain.executeScript(code, [])
-			let answer = (result.returnValue as! Int?)!
-
-			// Assert
-			Test.assert(answer == 42)
-		}
-    `),
+            // Assert
+            Test.assertEqual(FooContract.getIntegerTrait(78557), "Sierpinski")
+        }
+	`),
 }
 
 var SomeFile = Resource{

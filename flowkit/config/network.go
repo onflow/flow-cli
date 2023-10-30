@@ -28,6 +28,10 @@ var (
 		Name: "emulator",
 		Host: "127.0.0.1:3569",
 	}
+	TestingNetwork = Network{
+		Name: "testing",
+		Host: "127.0.0.1:3569",
+	}
 	TestnetNetwork = Network{
 		Name: "testnet",
 		Host: "access.devnet.nodes.onflow.org:9000",
@@ -38,6 +42,7 @@ var (
 	}
 	DefaultNetworks = Networks{
 		EmulatorNetwork,
+		TestingNetwork,
 		TestnetNetwork,
 		MainnetNetwork,
 	}
