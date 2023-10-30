@@ -37,6 +37,7 @@ import (
 type ReaderWriter interface {
 	ReadFile(source string) ([]byte, error)
 	WriteFile(filename string, data []byte, perm os.FileMode) error
+	MkdirAll(path string, perm os.FileMode) error
 }
 
 // State manages the state for a Flow project.
