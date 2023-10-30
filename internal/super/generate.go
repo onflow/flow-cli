@@ -20,7 +20,6 @@ package super
 
 import (
 	"fmt"
-	"os"
 	"path/filepath"
 	"strings"
 
@@ -182,7 +181,7 @@ access(all) contract %s {
 	}
 
 	// Ensure the directory exists
-	if err := os.MkdirAll(basePath, 0755); err != nil {
+	if err := state.ReaderWriter().MkdirAll(basePath, 0755); err != nil {
 		return nil, fmt.Errorf("error creating directories: %w", err)
 	}
 
