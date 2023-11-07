@@ -23,6 +23,9 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 
@@ -68,8 +71,8 @@ var FlixCmd = &cobra.Command{
 
 var executeCommand = &command.Command{
 	Cmd: &cobra.Command{
-		Use:     "execute <id | name | path>",
-		Short:   "execute FLIX template with a given id, name, or local filename",
+		Use:     "execute <id | name | path | url>",
+		Short:   "execute FLIX template with a given id, name, local filename, or url",
 		Example: "flow flix execute transfer-flow 1 0x123456789",
 		Args:    cobra.MinimumNArgs(1),
 	},
@@ -79,7 +82,7 @@ var executeCommand = &command.Command{
 
 var bindingCommand = &command.Command{
 	Cmd: &cobra.Command{
-		Use:     "package <id | name | path>",
+		Use:     "package <id | name | path | url>",
 		Short:   "package file for FLIX template fcl-js is default",
 		Example: "flow flix package multiply.template.json",
 		Args:    cobra.MinimumNArgs(1),
@@ -111,6 +114,7 @@ const (
 	flixName flixQueryTypes = "name"
 	flixPath flixQueryTypes = "path"
 	flixId   flixQueryTypes = "id"
+	flixUrl  flixQueryTypes = "url"
 )
 
 func isHex(str string) bool {
@@ -126,12 +130,19 @@ func isPath(path string) bool {
 	return err == nil
 }
 
+func isUrl(str string) bool {
+	u, err := url.Parse(str)
+	return err == nil && u.Scheme != "" && u.Host != ""
+}
+
 func getType(s string) flixQueryTypes {
 	switch {
 	case isPath(s):
 		return flixPath
 	case isHex(s):
 		return flixId
+	case isUrl(s):
+		return flixUrl
 	default:
 		return flixName
 	}
@@ -296,6 +307,26 @@ func getTemplate(state *flowkit.State, flixService flixkit.FlixService, flixQuer
 		template, err = flixkit.ParseFlix(string(file))
 		if err != nil {
 			return nil, fmt.Errorf("could not parse flix from file %s: %w", flixQuery, err)
+		}
+	case flixUrl:
+		resp, err := http.Get(flixQuery)
+		if err != nil {
+			return nil, fmt.Errorf("could not parse flix from url %s: %w", flixQuery, err)
+		}
+		defer resp.Body.Close()
+
+		if resp.StatusCode != http.StatusOK {
+			return nil, fmt.Errorf("server returned non-200 status code %w", resp.StatusCode)
+		}
+
+		body, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return nil, err
+		}
+
+		template, err = flixkit.ParseFlix(string(body))
+		if err != nil {
+			return nil, fmt.Errorf("could not parse flix from url %s: %w", flixQuery, err)
 		}
 
 	default:
