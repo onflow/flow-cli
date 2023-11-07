@@ -189,7 +189,6 @@ func packageCmd(
 	flixService := flixkit.NewFlixService(&flixkit.Config{})
 	flixQuery := args[0]
 
-	fmt.Println("flixQuery", flixQuery)
 	template, err := getTemplate(state, flixService, flixQuery)
 	if err != nil {
 		return nil, err
@@ -222,7 +221,6 @@ func generateCmd(
 	flow flowkit.Services,
 	state *flowkit.State,
 ) (result command.Result, err error) {
-
 	cadenceFile := args[0]
 
 	if cadenceFile == "" {
@@ -234,28 +232,14 @@ func generateCmd(
 		return nil, fmt.Errorf("could not read cadence file %s: %w", cadenceFile, err)
 	}
 
-	depContracts := make([]flixkit.Contracts, 0)
-	for _, deployment := range *state.Deployments() {
-		contracts, err := state.DeploymentContractsByNetwork(config.Network{Name: deployment.Network})
-		if err != nil {
-			continue
-		}
-		for _, contract := range contracts {
-			contract := flixkit.Contracts{
-				contract.Name: flixkit.Networks{
-					deployment.Network: flixkit.Network{
-						Address:   "0x" + contract.AccountAddress.String(),
-						FqAddress: "A." + contract.AccountAddress.String() + "." + contract.Name,
-						Contract:  contract.Name,
-					},
-				},
-			}
-			depContracts = append(depContracts, contract)
-		}
+	depContracts := GetDeployedContracts(state)
+	gen_1_0_0, err := generator.NewGenerator(depContracts, nil, logger)
+	if err != nil {
+		return nil, fmt.Errorf("could not create flix generator %w", err)
 	}
 
-	gen_1_0_0 := generator.NewGenerator(depContracts)
-	flix, err := gen_1_0_0.Generate(string(code))
+	ctx := context.Background()
+	flix, err := gen_1_0_0.Generate(ctx, string(code))
 	if err != nil {
 		return nil, fmt.Errorf("could not generate flix %w", err)
 	}
@@ -333,4 +317,27 @@ func GetRelativePath(source, target string) (string, error) {
 	}
 
 	return relPath, nil
+}
+
+func GetDeployedContracts(state *flowkit.State) []flixkit.Contracts {
+	depContracts := make([]flixkit.Contracts, 0)
+	for _, deployment := range *state.Deployments() {
+		contracts, err := state.DeploymentContractsByNetwork(config.Network{Name: deployment.Network})
+		if err != nil {
+			continue
+		}
+		for _, contract := range contracts {
+			contract := flixkit.Contracts{
+				contract.Name: flixkit.Networks{
+					deployment.Network: flixkit.Network{
+						Address:   "0x" + contract.AccountAddress.String(),
+						FqAddress: "A." + contract.AccountAddress.String() + "." + contract.Name,
+						Contract:  contract.Name,
+					},
+				},
+			}
+			depContracts = append(depContracts, contract)
+		}
+	}
+	return depContracts
 }
