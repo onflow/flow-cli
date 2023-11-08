@@ -9,7 +9,7 @@ require (
 	github.com/gosuri/uilive v0.0.4
 	github.com/manifoldco/promptui v0.9.0
 	github.com/onflow/cadence v0.42.0
-	github.com/onflow/cadence-tools/languageserver v0.32.1-0.20231019231050-6b3b4c3d7391
+	github.com/onflow/cadence-tools/languageserver v0.33.0
 	github.com/onflow/cadence-tools/test v0.13.0
 	github.com/onflow/fcl-dev-wallet v0.7.4
 	github.com/onflow/flixkit-go v0.2.0
