@@ -31,7 +31,7 @@ import (
 
 	"github.com/onflow/flixkit-go"
 	"github.com/onflow/flixkit-go/bindings"
-	"github.com/onflow/flixkit-go/generator"
+	"github.com/onflow/flixkit-go/generator/v1_0_0"
 
 	"github.com/onflow/flow-cli/flowkit"
 	"github.com/onflow/flow-cli/flowkit/config"
@@ -54,6 +54,7 @@ type flixFlags struct {
 	Include     []string `default:"" flag:"include" info:"Fields to include in the output"`
 	Exclude     []string `default:"" flag:"exclude" info:"Fields to exclude from the output (events)"`
 	GasLimit    uint64   `default:"1000" flag:"gas-limit" info:"transaction gas limit"`
+	PreFill     string   `default:"" flag:"pre-fill" info:"template path to pre fill the FLIX"`
 }
 
 type flixResult struct {
@@ -94,7 +95,7 @@ var bindingCommand = &command.Command{
 var generateCommand = &command.Command{
 	Cmd: &cobra.Command{
 		Use:     "generate cadence.cdc",
-		Short:   "generate FLIX json template given local filename",
+		Short:   "generate FLIX json template given local Cadence filename",
 		Example: "flow flix generate multiply.cdc",
 		Args:    cobra.MinimumNArgs(1),
 	},
@@ -244,13 +245,21 @@ func generateCmd(
 	}
 
 	depContracts := GetDeployedContracts(state)
-	gen_1_0_0, err := generator.NewGenerator(depContracts, nil, logger)
+	gen_1_0_0, err := v1_0_0.NewGenerator(depContracts, nil, logger)
 	if err != nil {
 		return nil, fmt.Errorf("could not create flix generator %w", err)
 	}
 
+	var template *flixkit.FlowInteractionTemplate
+	if flags.PreFill != "" {
+		flixService := flixkit.NewFlixService(&flixkit.Config{})
+		template, err = getTemplate(state, flixService, flags.PreFill)
+		if err != nil {
+			return nil, fmt.Errorf("could not parse template from pre fill %w", err)
+		}
+	}
 	ctx := context.Background()
-	flix, err := gen_1_0_0.Generate(ctx, string(code))
+	flix, err := gen_1_0_0.Generate(ctx, string(code), template)
 	if err != nil {
 		return nil, fmt.Errorf("could not generate flix %w", err)
 	}
