@@ -205,8 +205,9 @@ func packageCmd(
 	if err != nil {
 		return nil, err
 	}
-
+	isLocal := false
 	if getType(flixQuery) == flixPath {
+		isLocal = true
 		if flags.Save != "" {
 			// resolve template file location to relative path to be used by binding file
 			flixQuery, err = GetRelativePath(flixQuery, flags.Save)
@@ -218,7 +219,7 @@ func packageCmd(
 	}
 
 	fclJsGen := bindings.NewFclJSGenerator()
-	out, err := fclJsGen.Generate(template, flixQuery, isPath(flixQuery))
+	out, err := fclJsGen.Generate(template, flixQuery, isLocal)
 
 	return &flixResult{
 		flixQuery: flixQuery,
