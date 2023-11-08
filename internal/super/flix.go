@@ -245,7 +245,7 @@ func generateCmd(
 	}
 
 	depContracts := GetDeployedContracts(state)
-	gen_1_0_0, err := v1_0_0.NewGenerator(depContracts, nil, logger)
+	generator, err := v1_0_0.NewGenerator(depContracts, nil, logger)
 	if err != nil {
 		return nil, fmt.Errorf("could not create flix generator %w", err)
 	}
@@ -259,7 +259,7 @@ func generateCmd(
 		}
 	}
 	ctx := context.Background()
-	flix, err := gen_1_0_0.Generate(ctx, string(code), template)
+	flix, err := generator.Generate(ctx, string(code), template)
 	if err != nil {
 		return nil, fmt.Errorf("could not generate flix %w", err)
 	}
