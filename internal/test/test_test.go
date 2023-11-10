@@ -320,6 +320,7 @@ func TestExecutingTests(t *testing.T) {
 				"s.7465737400000000000000000000000000000000000000000000000000000000",
 				"I.Crypto",
 				"I.Test",
+				"I.BlockchainHelpers",
 				"A.0000000000000001.NodeVersionBeacon",
 				"A.0000000000000001.FlowServiceAccount",
 				"A.0000000000000002.FungibleToken",
@@ -340,18 +341,19 @@ func TestExecutingTests(t *testing.T) {
 				"A.0000000000000001.MetadataViews",
 				"A.0000000000000001.NonFungibleToken",
 				"A.0000000000000001.ViewResolver",
+				"A.0000000000000001.RandomBeaconHistory",
 			},
 			coverageReport.ExcludedLocationIDs(),
 		)
 		assert.Equal(
 			t,
-			"Coverage: 90.6% of statements",
+			"Coverage: 87.7% of statements",
 			coverageReport.String(),
 		)
 		assert.Contains(
 			t,
 			result.String(),
-			"Coverage: 90.6% of statements",
+			"Coverage: 87.7% of statements",
 		)
 	})
 
@@ -410,6 +412,8 @@ func TestExecutingTests(t *testing.T) {
 				"s.7465737400000000000000000000000000000000000000000000000000000000",
 				"I.Crypto",
 				"I.Test",
+				"I.BlockchainHelpers",
+				"A.0000000000000001.RandomBeaconHistory",
 				"A.0000000000000001.NodeVersionBeacon",
 				"A.0000000000000001.FlowServiceAccount",
 				"A.0000000000000002.FungibleToken",
