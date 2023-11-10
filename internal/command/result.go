@@ -87,6 +87,11 @@ func outputResult(result string, saveFlag string, formatFlag string, filterFlag 
 			Fs: afero.NewOsFs(),
 		}
 
+		err := af.MkdirAll(saveFlag, 0644)
+		if err != nil {
+			return err
+		}
+
 		fmt.Printf("%s result saved to: %s \n", output.SaveEmoji(), saveFlag)
 		return af.WriteFile(saveFlag, []byte(result), 0644)
 	}
