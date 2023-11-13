@@ -340,18 +340,20 @@ func TestExecutingTests(t *testing.T) {
 				"A.0000000000000001.MetadataViews",
 				"A.0000000000000001.NonFungibleToken",
 				"A.0000000000000001.ViewResolver",
+				"A.0000000000000001.RandomBeaconHistory",
+				"I.BlockchainHelpers",
 			},
 			coverageReport.ExcludedLocationIDs(),
 		)
 		assert.Equal(
 			t,
-			"Coverage: 90.6% of statements",
+			"Coverage: 87.7% of statements",
 			coverageReport.String(),
 		)
 		assert.Contains(
 			t,
 			result.String(),
-			"Coverage: 90.6% of statements",
+			"Coverage: 87.7% of statements",
 		)
 	})
 
@@ -430,6 +432,8 @@ func TestExecutingTests(t *testing.T) {
 				"A.0000000000000001.MetadataViews",
 				"A.0000000000000001.NonFungibleToken",
 				"A.0000000000000001.ViewResolver",
+				"A.0000000000000001.RandomBeaconHistory",
+				"I.BlockchainHelpers",
 			},
 			coverageReport.ExcludedLocationIDs(),
 		)
