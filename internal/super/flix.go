@@ -31,7 +31,7 @@ import (
 
 	"github.com/onflow/flixkit-go"
 	"github.com/onflow/flixkit-go/bindings"
-	"github.com/onflow/flixkit-go/generator/v1_0_0"
+	"github.com/onflow/flixkit-go/generator/flixkitv1_0_0"
 
 	"github.com/onflow/flow-cli/flowkit"
 	"github.com/onflow/flow-cli/flowkit/config"
@@ -246,7 +246,7 @@ func generateCmd(
 	}
 
 	depContracts := GetDeployedContracts(state)
-	generator, err := v1_0_0.NewGenerator(depContracts, nil, logger)
+	generator, err := flixkitv1_0_0.NewGenerator(depContracts, nil, logger)
 	if err != nil {
 		return nil, fmt.Errorf("could not create flix generator %w", err)
 	}
