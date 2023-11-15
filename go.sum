@@ -929,6 +929,8 @@ github.com/onflow/wal v0.0.0-20230529184820-bc9f8244608d h1:gAEqYPn3DS83rHIKEpsa
 github.com/onflow/wal v0.0.0-20230529184820-bc9f8244608d/go.mod h1:iMC8gkLqu4nkbkAla5HkSBb+FGyQOZiWz3DYm2wSXCk=
 github.com/onflowser/flowser/v2 v2.0.14-beta h1:yvmXyGUkR7e0+Z1t7Gyn+p2Q+CpUmgsqF01M7EtNr3k=
 github.com/onflowser/flowser/v2 v2.0.14-beta/go.mod h1:g/nfelBOx0A4j60Twsr7GsmKapr2oxtRZQS0lwPHgZY=
+github.com/onflowser/flowser/v3 v3.1.2 h1:ctMBVES3o2wG5b/tuYTYtYoxzeH4M6nsmbPoHkUOOEI=
+github.com/onflowser/flowser/v3 v3.1.2/go.mod h1:3UZqdIyKVh+wXOhz9p2YrVl+ZvxohxhAmdM68dDKYPE=
 github.com/onsi/ginkgo v1.6.0/go.mod h1:lLunBs/Ym6LB5Z9jYTR76FiuTmxDTDusOGeTQH+WWjE=
 github.com/onsi/ginkgo v1.7.0/go.mod h1:lLunBs/Ym6LB5Z9jYTR76FiuTmxDTDusOGeTQH+WWjE=
 github.com/onsi/ginkgo v1.10.3/go.mod h1:lLunBs/Ym6LB5Z9jYTR76FiuTmxDTDusOGeTQH+WWjE=

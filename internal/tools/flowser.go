@@ -24,7 +24,7 @@ import (
 	"os"
 	"runtime"
 
-	"github.com/onflowser/flowser/v2/pkg/flowser"
+	"github.com/onflowser/flowser/v3/pkg/flowser"
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/flowkit"
