@@ -51,8 +51,10 @@ func getDefaultInstallDir() string {
 		usr, _ := user.Current() // safe to ignore cache errors
 		return fmt.Sprintf(`%s\AppData\Local\Programs`, usr.HomeDir)
 	case Linux:
+		// https://unix.stackexchange.com/questions/127076/into-which-directory-should-i-install-programs-in-linux
+		usr, _ := user.Current() // safe to ignore cache errors
 		// Use path in users home folder to not require sudo permissions for installation
-		return "~/.local/bin"
+		return fmt.Sprintf(`%s/.local/bin`, usr.HomeDir)
 	default:
 		return ""
 	}
