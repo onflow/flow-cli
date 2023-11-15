@@ -19,7 +19,6 @@
 package tools
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"runtime"
@@ -58,11 +57,6 @@ func runFlowser(
 	reader flowkit.ReaderWriter,
 	_ flowkit.Services,
 ) (command.Result, error) {
-	if runtime.GOOS != settings.Windows && runtime.GOOS != settings.Darwin {
-		fmt.Println("If you want Flowser to be supported on Linux please vote here: https://github.com/onflowser/flowser/discussions/142")
-		return nil, errors.New("OS not supported, only supporting Windows and Mac OS")
-	}
-
 	flowser := flowser.New()
 
 	installPath, err := settings.GetFlowserPath()
