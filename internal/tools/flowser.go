@@ -105,8 +105,8 @@ func installFlowser(flowser *flowser.App, installPath string) (string, error) {
 		return installPath, nil
 	}
 
-	// we only allow custom paths on Windows since on MacOS apps needs to be installed inside Application folder
-	if runtime.GOOS == settings.Windows {
+	// MacOS apps must always be installed inside Application folder
+	if runtime.GOOS != settings.Darwin {
 		installPath = util.InstallPathPrompt(installPath)
 		_ = settings.SetFlowserPath(installPath)
 	}
