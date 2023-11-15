@@ -51,7 +51,8 @@ func getDefaultInstallDir() string {
 		usr, _ := user.Current() // safe to ignore cache errors
 		return fmt.Sprintf(`%s\AppData\Local\Programs`, usr.HomeDir)
 	case Linux:
-		return "/usr/bin"
+		// Use path in users home folder to not require sudo permissions for installation
+		return "~/.local/bin"
 	default:
 		return ""
 	}
