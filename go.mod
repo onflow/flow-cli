@@ -17,7 +17,7 @@ require (
 	github.com/onflow/flow-core-contracts/lib/go/templates v1.2.4-0.20231016154253-a00dbf7c061f
 	github.com/onflow/flow-emulator v0.57.3
 	github.com/onflow/flow-go-sdk v0.41.16
-	github.com/onflowser/flowser/v3 v3.1.2
+	github.com/onflowser/flowser/v3 v3.1.3
 	github.com/pkg/errors v0.9.1
 	github.com/psiemens/sconfig v0.1.0
 	github.com/radovskyb/watcher v1.0.7
