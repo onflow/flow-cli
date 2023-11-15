@@ -38,6 +38,7 @@ var defaults = map[string]any{
 const (
 	Darwin  = "darwin"
 	Windows = "windows"
+	Linux   = "linux"
 )
 
 // getDefaultInstallDir returns default installation directory based on the OS.
@@ -49,6 +50,8 @@ func getDefaultInstallDir() string {
 		// https://superuser.com/questions/1327037/what-choices-do-i-have-about-where-to-install-software-on-windows-10
 		usr, _ := user.Current() // safe to ignore cache errors
 		return fmt.Sprintf(`%s\AppData\Local\Programs`, usr.HomeDir)
+	case Linux:
+		return "/usr/bin"
 	default:
 		return ""
 	}
