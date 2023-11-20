@@ -86,6 +86,7 @@ func main() {
 	cmd.AddCommand(signatures.Cmd)
 	cmd.AddCommand(snapshot.Cmd)
 	cmd.AddCommand(super.FlixCmd)
+	cmd.AddCommand(super.GenerateCommand)
 
 	command.InitFlags(cmd)
 	cmd.AddGroup(&cobra.Group{

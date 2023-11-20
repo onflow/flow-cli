@@ -66,7 +66,7 @@ var flags = flixFlags{}
 var FlixCmd = &cobra.Command{
 	Use:              "flix",
 	Short:            "execute, generate, package",
-	TraverseChildren: true,
+]	TraverseChildren: true,
 	GroupID:          "tools",
 }
 
@@ -81,7 +81,7 @@ var executeCommand = &command.Command{
 	RunS:  executeCmd,
 }
 
-var bindingCommand = &command.Command{
+var packageCommand = &command.Command{
 	Cmd: &cobra.Command{
 		Use:     "package <id | name | path | url>",
 		Short:   "package file for FLIX template fcl-js is default",

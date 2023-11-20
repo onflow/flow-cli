@@ -368,7 +368,6 @@ func TestAccountsCreate_Integration(t *testing.T) {
 			}
 
 		}
-
 	})
 
 	t.Run("Create Invalid", func(t *testing.T) {
@@ -428,7 +427,6 @@ func TestAccountsCreate_Integration(t *testing.T) {
 			assert.Equal(t, errMsg, err.Error())
 		}
 	})
-
 }
 
 func TestAccountsAddContract_Integration(t *testing.T) {
@@ -463,6 +461,13 @@ func TestAccountsAddContract_Integration(t *testing.T) {
 		acc, err = flowkit.GetAccount(ctx, srvAcc.Address)
 		require.NoError(t, err)
 		assert.Equal(t, acc.Contracts["Simple"], tests.ContractSimpleUpdated.Source)
+
+		contract, err := state.Contracts().ByName(tests.ContractSimpleUpdated.Name)
+		require.NoError(t, err)
+		require.NotNil(t, contract)
+
+		deployments := state.Deployments().ByAccountAndNetwork(srvAcc.Name, "emulator")
+		require.NotNil(t, deployments)
 	})
 
 	t.Run("Add Contract Invalid Same Content", func(t *testing.T) {
@@ -574,7 +579,7 @@ func TestAccountsAddContractWithArgs(t *testing.T) {
 	state, flowkit := setupIntegration()
 	srvAcc, _ := state.EmulatorServiceAccount()
 
-	//adding contract without argument should return an error
+	// adding contract without argument should return an error
 	_, _, err := flowkit.AddContract(
 		ctx,
 		srvAcc,
@@ -693,7 +698,6 @@ func TestBlocks(t *testing.T) {
 		gw.Mock.AssertNotCalled(t, mocks.GetBlockByHeightFunc)
 		gw.Mock.AssertNotCalled(t, mocks.GetLatestBlockFunc)
 	})
-
 }
 
 func TestBlocksGet_Integration(t *testing.T) {
@@ -741,7 +745,6 @@ func TestEvents(t *testing.T) {
 	})
 
 	t.Run("Test create queries", func(t *testing.T) {
-
 		names := []string{"first", "second"}
 		queries := makeEventQueries(names, 0, 400, 250)
 		expected := []grpc.EventRangeQuery{
@@ -764,7 +767,6 @@ func TestEvents(t *testing.T) {
 
 		assert.EqualError(t, err, "failed getting event")
 	})
-
 }
 
 func TestEvents_Integration(t *testing.T) {
@@ -913,12 +915,12 @@ func TestKeys(t *testing.T) {
 		assert.Equal(t, key.String(), "0x638dc9ad0eee91d09249f0fd7c5323a11600e20d5b9105b66b782a96236e74cf")
 	})
 
-	//https://github.com/onflow/ledger-app-flow/blob/dc61213a9c3d73152b78b7391d04165d07f1ad89/tests_speculos/test-basic-show-address-expert.js#L28
+	// https://github.com/onflow/ledger-app-flow/blob/dc61213a9c3d73152b78b7391d04165d07f1ad89/tests_speculos/test-basic-show-address-expert.js#L28
 	t.Run("Generate Keys with mnemonic (custom path - Ledger)", func(t *testing.T) {
 		t.Parallel()
 
 		_, flowkit, _ := setup()
-		//ledger test mnemonic: https://github.com/onflow/ledger-app-flow#using-a-real-device-for-integration-tests-nano-s-and-nano-s-plus
+		// ledger test mnemonic: https://github.com/onflow/ledger-app-flow#using-a-real-device-for-integration-tests-nano-s-and-nano-s-plus
 		key, err := flowkit.DerivePrivateKeyFromMnemonic(ctx, "equip will roof matter pink blind book anxiety banner elbow sun young", crypto.ECDSA_secp256k1, "m/44'/539'/513'/0/0")
 
 		assert.NoError(t, err)
@@ -957,7 +959,6 @@ func TestKeys(t *testing.T) {
 				x++
 			}
 		}
-
 	})
 }
 
@@ -1198,7 +1199,6 @@ func TestProject(t *testing.T) {
 		assert.Equal(t, len(contracts), 1)
 		assert.Equal(t, contracts[0].AccountAddress, acct2.Address)
 	})
-
 }
 
 // used for integration tests
@@ -1325,7 +1325,6 @@ func TestProject_Integration(t *testing.T) {
 		_, err = simpleDeploy(state, flowkit, true)
 		assert.NoError(t, err)
 	})
-
 }
 
 func TestScripts(t *testing.T) {
@@ -1350,7 +1349,6 @@ func TestScripts(t *testing.T) {
 
 		assert.NoError(t, err)
 	})
-
 }
 
 func TestScripts_Integration(t *testing.T) {
@@ -1388,7 +1386,6 @@ func TestScripts_Integration(t *testing.T) {
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "cannot find type in this scope")
 		assert.Nil(t, res)
-
 	})
 
 	t.Run("Execute With Imports", func(t *testing.T) {
@@ -1454,7 +1451,6 @@ func TestScripts_Integration(t *testing.T) {
 			assert.NotNil(t, err)
 			assert.Equal(t, err.Error(), out[x])
 		}
-
 	})
 }
 
@@ -1514,7 +1510,6 @@ func TestTransactions(t *testing.T) {
 		gw.Mock.AssertNumberOfCalls(t, mocks.SendSignedTransactionFunc, 1)
 		gw.Mock.AssertNumberOfCalls(t, mocks.GetTransactionResultFunc, 1)
 	})
-
 }
 
 func setupAccounts(state *State, flowkit Flowkit) {
@@ -1712,7 +1707,6 @@ func TestTransactions_Integration(t *testing.T) {
 			assert.Equal(t, ftx.ProposalKey.Address, txIn.prop)
 			assert.Equal(t, ftx.ProposalKey.KeyIndex, txIn.index)
 		}
-
 	})
 
 	t.Run("Build Transaction with Imports", func(t *testing.T) {
@@ -1850,7 +1844,6 @@ func TestTransactions_Integration(t *testing.T) {
 		assert.Nil(t, err)
 		assert.Equal(t, txResult.Status, flow.TransactionStatusSealed)
 		assert.NotNil(t, txSent.ID())
-
 	})
 
 	t.Run("Fails signing transaction, wrong account", func(t *testing.T) {
@@ -2090,5 +2083,4 @@ func Test_BlockQuery(t *testing.T) {
 
 	_, err = NewBlockQuery("invalid")
 	assert.EqualError(t, err, "invalid query: invalid, valid are: \"latest\", block height or block ID")
-
 }
