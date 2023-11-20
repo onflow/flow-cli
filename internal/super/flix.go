@@ -66,7 +66,7 @@ var flags = flixFlags{}
 var FlixCmd = &cobra.Command{
 	Use:              "flix",
 	Short:            "execute, generate, package",
-]	TraverseChildren: true,
+	TraverseChildren: true,
 	GroupID:          "tools",
 }
 
@@ -105,7 +105,7 @@ var generateCommand = &command.Command{
 
 func init() {
 	executeCommand.AddToParent(FlixCmd)
-	bindingCommand.AddToParent(FlixCmd)
+	packageCommand.AddToParent(FlixCmd)
 	generateCommand.AddToParent(FlixCmd)
 }
 
