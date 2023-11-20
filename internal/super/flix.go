@@ -23,8 +23,6 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"io"
-	"net/http"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -319,22 +317,11 @@ func getTemplate(state *flowkit.State, flixService flixkit.FlixService, flixQuer
 			return nil, fmt.Errorf("could not parse flix from file %s: %w", flixQuery, err)
 		}
 	case flixUrl:
-		resp, err := http.Get(flixQuery)
+		flixString, err := flixkit.FetchFlixWithContext(ctx, flixQuery)
 		if err != nil {
 			return nil, fmt.Errorf("could not parse flix from url %s: %w", flixQuery, err)
 		}
-		defer resp.Body.Close()
-
-		if resp.StatusCode != http.StatusOK {
-			return nil, fmt.Errorf("server returned non-200 status code %w", resp.StatusCode)
-		}
-
-		body, err := io.ReadAll(resp.Body)
-		if err != nil {
-			return nil, err
-		}
-
-		template, err = flixkit.ParseFlix(string(body))
+		template, err = flixkit.ParseFlix(flixString)
 		if err != nil {
 			return nil, fmt.Errorf("could not parse flix from url %s: %w", flixQuery, err)
 		}
