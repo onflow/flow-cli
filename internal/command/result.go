@@ -23,6 +23,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/onflow/flow-go-sdk/access/grpc"
@@ -87,7 +88,9 @@ func outputResult(result string, saveFlag string, formatFlag string, filterFlag 
 			Fs: afero.NewOsFs(),
 		}
 
-		err := af.MkdirAll(saveFlag, 0644)
+		// create directory if doesn't exist
+		dir := filepath.Dir(saveFlag)
+		err := af.MkdirAll(dir, 0644)
 		if err != nil {
 			return err
 		}

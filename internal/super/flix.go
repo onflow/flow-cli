@@ -355,18 +355,53 @@ func GetDeployedContracts(state *flowkit.State) []flixkit.Contracts {
 		if err != nil {
 			continue
 		}
-		for _, contract := range contracts {
+		for _, c := range contracts {
 			contract := flixkit.Contracts{
-				contract.Name: flixkit.Networks{
-					deployment.Network: flixkit.Network{
-						Address:   "0x" + contract.AccountAddress.String(),
-						FqAddress: "A." + contract.AccountAddress.String() + "." + contract.Name,
-						Contract:  contract.Name,
-					},
+				c.Name: flixkit.Networks{
+					deployment.Network: createFlixNetworkContract(
+						networkContract{
+							contractName:   c.Name,
+							networkAddress: c.AccountAddress.String(),
+						}),
 				},
 			}
 			depContracts = append(depContracts, contract)
 		}
 	}
+	// Networks of interest
+	networks := []config.Network{
+		config.MainnetNetwork,
+		config.TestnetNetwork,
+	}
+
+	for _, net := range networks {
+		locAliases := state.AliasesForNetwork(net)
+		for name, addr := range locAliases {
+			contract := flixkit.Contracts{
+				name: flixkit.Networks{
+					net.Name: createFlixNetworkContract(
+						networkContract{
+							contractName:   name,
+							networkAddress: addr,
+						}),
+				},
+			}
+			depContracts = append(depContracts, contract)
+		}
+	}
+
 	return depContracts
+}
+
+type networkContract struct {
+	contractName   string
+	networkAddress string
+}
+
+func createFlixNetworkContract(contract networkContract) flixkit.Network {
+	return flixkit.Network{
+		Address:   "0x" + contract.networkAddress,
+		FqAddress: "A." + contract.networkAddress + "." + contract.contractName,
+		Contract:  contract.contractName,
+	}
 }
