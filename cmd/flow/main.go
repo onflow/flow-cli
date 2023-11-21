@@ -22,6 +22,8 @@ package main
 import (
 	"os"
 
+	"github.com/onflow/flow-cli/internal/contracts"
+
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/accounts"
@@ -87,8 +89,13 @@ func main() {
 	cmd.AddCommand(snapshot.Cmd)
 	cmd.AddCommand(super.FlixCmd)
 	cmd.AddCommand(super.GenerateCommand)
+	cmd.AddCommand(contracts.Cmd)
 
 	command.InitFlags(cmd)
+	cmd.AddGroup(&cobra.Group{
+		ID:    "manager",
+		Title: "🔗 Contract Manager",
+	})
 	cmd.AddGroup(&cobra.Group{
 		ID:    "super",
 		Title: "🔥 Super Commands",
