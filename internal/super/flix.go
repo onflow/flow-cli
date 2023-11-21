@@ -332,9 +332,10 @@ func getTemplate(state *flowkit.State, flixService flixkit.FlixService, flixQuer
 	return template, nil
 }
 
-// GetRelativePath computes the relative path from target to source.
-func GetRelativePath(source, target string) (string, error) {
-	relPath, err := filepath.Rel(filepath.Dir(target), source)
+// GetRelativePath computes the relative path from generated file to flix json file.
+// This path is used in the binding file to reference the flix json file.
+func GetRelativePath(configFile, bindingFile string) (string, error) {
+	relPath, err := filepath.Rel(filepath.Dir(bindingFile), configFile)
 	if err != nil {
 		return "", err
 	}
