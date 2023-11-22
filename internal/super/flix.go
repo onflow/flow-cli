@@ -92,7 +92,7 @@ var packageCommand = &command.Command{
 
 var generateCommand = &command.Command{
 	Cmd: &cobra.Command{
-		Use:     "generate cadence.cdc",
+		Use:     "generate <cadence.cdc>",
 		Short:   "generate FLIX json template given local Cadence filename",
 		Example: "flow flix generate multiply.cdc",
 		Args:    cobra.MinimumNArgs(1),
