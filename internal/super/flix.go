@@ -345,7 +345,8 @@ func GetRelativePath(configFile, bindingFile string) (string, error) {
 		relPath = "./" + relPath
 	}
 
-	return relPath, nil
+	// Currently binding files are js, we need to convert the path to unix style
+	return filepath.ToSlash(relPath), nil
 }
 
 func GetDeployedContracts(state *flowkit.State) []flixkit.Contracts {
