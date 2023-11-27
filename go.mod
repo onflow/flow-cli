@@ -15,7 +15,7 @@ require (
 	github.com/onflow/flixkit-go v0.3.1
 	github.com/onflow/flow-cli/flowkit v1.6.1-0.20231110211255-b41f57a8b8c7
 	github.com/onflow/flow-core-contracts/lib/go/templates v1.2.4-0.20231016154253-a00dbf7c061f
-	github.com/onflow/flow-emulator v0.57.3
+	github.com/onflow/flow-emulator v0.58.0
 	github.com/onflow/flow-go-sdk v0.41.16
 	github.com/onflowser/flowser/v3 v3.1.3
 	github.com/pkg/errors v0.9.1
@@ -172,7 +172,7 @@ require (
 	github.com/onflow/flow-archive v1.3.4-0.20230503192214-9e81e82d4dcc // indirect
 	github.com/onflow/flow-core-contracts/lib/go/contracts v1.2.4-0.20231016154253-a00dbf7c061f // indirect
 	github.com/onflow/flow-ft/lib/go/contracts v0.7.1-0.20230711213910-baad011d2b13 // indirect
-	github.com/onflow/flow-go v0.32.4-0.20231111003039-3b479f6b0995 // indirect
+	github.com/onflow/flow-go v0.32.4-0.20231115172515-c1ec969fd6f2 // indirect
 	github.com/onflow/flow-go/crypto v0.24.10 // indirect
 	github.com/onflow/flow-nft/lib/go/contracts v1.1.0 // indirect
 	github.com/onflow/flow/protobuf/go/flow v0.3.2-0.20231018182244-e72527c55c63 // indirect
