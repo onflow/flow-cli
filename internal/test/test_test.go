@@ -347,13 +347,13 @@ func TestExecutingTests(t *testing.T) {
 		)
 		assert.Equal(
 			t,
-			"Coverage: 87.7% of statements",
+			"Coverage: 91.8% of statements",
 			coverageReport.String(),
 		)
 		assert.Contains(
 			t,
 			result.String(),
-			"Coverage: 87.7% of statements",
+			"Coverage: 91.8% of statements",
 		)
 	})
 
