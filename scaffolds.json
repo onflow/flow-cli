@@ -68,5 +68,12 @@
     "description": "React Native (Expo) mobile dapp example demonstrating FCL and Flow interactions.",
     "commit": "b5c4b3c98d5733a23c0e93b269bb3383a1af2639",
     "type": "mobile"
+  },
+  {
+    "name": "FCL PWA",
+    "repo": "https://github.com/bshahid331/flow-pwa-scaffold",
+    "description": "Walletless Mobile PWA App demonstrating FCL and Flow interactions.",
+    "commit": "6796427a02b67340447a9c83dc8bdc2b3b06a8c8",
+    "type": "web"
   }
 ]
