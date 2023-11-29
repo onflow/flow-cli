@@ -41,7 +41,7 @@ var generateFlags = generateFlagsDef{}
 
 var GenerateCommand = &cobra.Command{
 	Use:     "generate",
-	Short:   "Generate new boilerplate files",
+	Short:   "Generate template files for common Cadence code",
 	GroupID: "super",
 	Aliases: []string{"g"},
 }
@@ -49,7 +49,7 @@ var GenerateCommand = &cobra.Command{
 var GenerateContractCommand = &command.Command{
 	Cmd: &cobra.Command{
 		Use:     "contract <name>",
-		Short:   "Generate a new contract",
+		Short:   "Generate Cadence smart contract template",
 		Example: "flow generate contract HelloWorld",
 		Args:    cobra.ExactArgs(1),
 	},
@@ -60,7 +60,7 @@ var GenerateContractCommand = &command.Command{
 var GenerateTransactionCommand = &command.Command{
 	Cmd: &cobra.Command{
 		Use:     "transaction <name>",
-		Short:   "Generate a new transaction",
+		Short:   "Generate a Cadence transaction template",
 		Example: "flow generate transaction SomeTransaction",
 		Args:    cobra.ExactArgs(1),
 	},
@@ -71,7 +71,7 @@ var GenerateTransactionCommand = &command.Command{
 var GenerateScriptCommand = &command.Command{
 	Cmd: &cobra.Command{
 		Use:     "script <name>",
-		Short:   "Generate a new script",
+		Short:   "Generate a Cadence script template",
 		Example: "flow generate script SomeScript",
 		Args:    cobra.ExactArgs(1),
 	},
