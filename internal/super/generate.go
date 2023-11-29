@@ -41,7 +41,7 @@ var generateFlags = generateFlagsDef{}
 
 var GenerateCommand = &cobra.Command{
 	Use:     "generate",
-	Short:   "Generate templates for common project elements to speed up development",
+	Short:   "Generate template files for common Cadence code",
 	GroupID: "super",
 	Aliases: []string{"g"},
 }
