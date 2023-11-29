@@ -585,4 +585,62 @@ Seed: 1521
 			string(output),
 		)
 	})
+
+	t.Run("run specific test case by name", func(t *testing.T) {
+		t.Parallel()
+
+		// Setup
+		_, state, _ := util.TestMocks(t)
+
+		// Execute script
+		script := tests.TestScriptSimple
+		testFiles := map[string][]byte{
+			script.Filename: script.Source,
+		}
+		flags := flagsTests{
+			Name: "testSimple",
+		}
+
+		result, err := testCode(testFiles, state, flags)
+
+		assert.NoError(t, err)
+		assert.Len(t, result.Results, 1)
+		assert.NoError(t, result.Results[script.Filename][0].Error)
+
+		expected := "Test results: \"./testScriptSimple.cdc\"\n- PASS: testSimple\n"
+		assert.Equal(
+			t,
+			expected,
+			result.Oneliner(),
+		)
+	})
+
+	t.Run("run specific test case by name will fail if not found", func(t *testing.T) {
+		t.Parallel()
+
+		// Setup
+		_, state, _ := util.TestMocks(t)
+
+		// Execute script
+		script := tests.TestScriptSimple
+		testFiles := map[string][]byte{
+			script.Filename: script.Source,
+		}
+		flags := flagsTests{
+			Name: "doesNotExist",
+		}
+
+		result, err := testCode(testFiles, state, flags)
+
+		assert.NoError(t, err)
+		assert.Len(t, result.Results, 1)
+		assert.Error(t, result.Results[script.Filename][0].Error, "cannot find function in this scope: `doesNotExist`")
+
+		expected := "Test results: \"./testScriptSimple.cdc\"\n- FAIL: doesNotExist\n\t\tcannot find function in this scope: `doesNotExist`\n"
+		assert.Equal(
+			t,
+			expected,
+			result.Oneliner(),
+		)
+	})
 }
