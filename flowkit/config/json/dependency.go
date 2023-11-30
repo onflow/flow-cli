@@ -49,7 +49,7 @@ func (j jsonDependencies) transformToConfig() (config.Dependencies, error) {
 	return deps, nil
 }
 
-func (j jsonDependencies) transformDependenciesToJSON(configDependencies config.Dependencies) jsonDependencies {
+func transformDependenciesToJSON(configDependencies config.Dependencies) jsonDependencies {
 	jsonDeps := jsonDependencies{}
 
 	for _, dep := range configDependencies {

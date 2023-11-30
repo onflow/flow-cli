@@ -51,7 +51,7 @@ func Test_TransformDependenciesToJSON(t *testing.T) {
 	dependencies, err := jsonDependencies.transformToConfig()
 	assert.NoError(t, err)
 
-	j := jsonDependencies.transformDependenciesToJSON(dependencies)
+	j := transformDependenciesToJSON(dependencies)
 	x, _ := json.Marshal(j)
 
 	assert.Equal(t, cleanSpecialChars(b), cleanSpecialChars(x))
