@@ -25,3 +25,14 @@ func (d *Dependencies) ByName(name string) *Dependency {
 
 	return nil
 }
+
+func (d *Dependencies) AddOrUpdate(dep Dependency) {
+	for i, dependency := range *d {
+		if dependency.Name == dep.Name {
+			(*d)[i] = dep
+			return
+		}
+	}
+
+	*d = append(*d, dep)
+}

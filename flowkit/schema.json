@@ -159,6 +159,9 @@
         "contracts": {
           "$ref": "#/$defs/jsonContracts"
         },
+        "dependencies": {
+          "$ref": "#/$defs/jsonDependencies"
+        },
         "networks": {
           "$ref": "#/$defs/jsonNetworks"
         },
@@ -207,6 +210,14 @@
       "patternProperties": {
         ".*": {
           "$ref": "#/$defs/jsonContract"
+        }
+      },
+      "type": "object"
+    },
+    "jsonDependencies": {
+      "patternProperties": {
+        ".*": {
+          "$ref": "#/$defs/jsonDependencies"
         }
       },
       "type": "object"

@@ -27,11 +27,12 @@ import (
 
 // jsonConfig implements JSON format for persisting and parsing configuration.
 type jsonConfig struct {
-	Emulators   jsonEmulators   `json:"emulators,omitempty"`
-	Contracts   jsonContracts   `json:"contracts,omitempty"`
-	Networks    jsonNetworks    `json:"networks,omitempty"`
-	Accounts    jsonAccounts    `json:"accounts,omitempty"`
-	Deployments jsonDeployments `json:"deployments,omitempty"`
+	Emulators    jsonEmulators    `json:"emulators,omitempty"`
+	Contracts    jsonContracts    `json:"contracts,omitempty"`
+	Dependencies jsonDependencies `json:"dependencies,omitempty"`
+	Networks     jsonNetworks     `json:"networks,omitempty"`
+	Accounts     jsonAccounts     `json:"accounts,omitempty"`
+	Deployments  jsonDeployments  `json:"deployments,omitempty"`
 }
 
 func (j *jsonConfig) transformToConfig() (*config.Config, error) {
@@ -41,6 +42,11 @@ func (j *jsonConfig) transformToConfig() (*config.Config, error) {
 	}
 
 	contracts, err := j.Contracts.transformToConfig()
+	if err != nil {
+		return nil, err
+	}
+
+	dependencies, err := j.Dependencies.transformToConfig()
 	if err != nil {
 		return nil, err
 	}
@@ -61,11 +67,12 @@ func (j *jsonConfig) transformToConfig() (*config.Config, error) {
 	}
 
 	conf := &config.Config{
-		Emulators:   emulators,
-		Contracts:   contracts,
-		Networks:    networks,
-		Accounts:    accounts,
-		Deployments: deployments,
+		Emulators:    emulators,
+		Contracts:    contracts,
+		Dependencies: dependencies,
+		Networks:     networks,
+		Accounts:     accounts,
+		Deployments:  deployments,
 	}
 
 	return conf, nil
@@ -73,11 +80,12 @@ func (j *jsonConfig) transformToConfig() (*config.Config, error) {
 
 func transformConfigToJSON(config *config.Config) jsonConfig {
 	return jsonConfig{
-		Emulators:   transformEmulatorsToJSON(config.Emulators),
-		Contracts:   transformContractsToJSON(config.Contracts),
-		Networks:    transformNetworksToJSON(config.Networks),
-		Accounts:    transformAccountsToJSON(config.Accounts),
-		Deployments: transformDeploymentsToJSON(config.Deployments),
+		Emulators:    transformEmulatorsToJSON(config.Emulators),
+		Contracts:    transformContractsToJSON(config.Contracts),
+		Dependencies: transformDependenciesToJSON(config.Dependencies),
+		Networks:     transformNetworksToJSON(config.Networks),
+		Accounts:     transformAccountsToJSON(config.Accounts),
+		Deployments:  transformDeploymentsToJSON(config.Deployments),
 	}
 }
 
