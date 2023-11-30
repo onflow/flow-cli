@@ -3,7 +3,9 @@ package evm
 import (
 	_ "embed"
 	"fmt"
+	"strings"
 
+	"github.com/onflow/flow-go/fvm/evm/types"
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/flowkit"
@@ -57,13 +59,66 @@ func deploy(
 			Signer: deployFlags.Signer,
 		},
 	)
+	if err != nil {
+		return nil, err
+	}
+
+	printResult(result)
+	return nil, nil
+}
+
+func getDeployedAddress(event flowkit.Event) string {
+	addr, ok := event.Values["deployedContractAddress"]
+	if !ok || addr.String() == "\"0000000000000000000000000000000000000000\"" {
+		return ""
+	}
+
+	return strings.ReplaceAll(addr.String(), "\"", "")
+}
+
+func getGasConsumd(event flowkit.Event) uint64 {
+	gas, ok := event.Values["gasConsumed"]
+	if !ok {
+		return 0
+	}
+	return gas.ToGoValue().(uint64)
+}
+
+func getLatestHeight(event flowkit.Event) uint64 {
+	h, ok := event.Values["height"]
+	if !ok {
+		return 0
+	}
+	return h.ToGoValue().(uint64)
+}
+
+func printResult(result command.Result) {
+	fmt.Printf("\n🔥🔥🔥🔥🔥🔥🔥 EVM Contract Deployment Summary 🔥🔥🔥🔥🔥🔥🔥")
+	fmt.Printf("\n-------------------------------------------------------------\n\n")
 
 	txResult := result.(*transactions.TransactionResult)
+	events := flowkit.EventsFromTransaction(txResult.Result)
+	var (
+		gasConsumed     uint64
+		deployedAddress string
+		latestHeight    uint64
+	)
 
-	fmt.Println("========== EVM ===========")
+	for _, e := range events {
+		if e.Type == fmt.Sprintf("flow.%s", types.EventTypeTransactionExecuted) {
+			if address := getDeployedAddress(e); address != "" {
+				deployedAddress = address
+			}
+		}
+		gasConsumed += getGasConsumd(e)
+		latestHeight = getLatestHeight(e)
+	}
 
-	fmt.Println("==========================")
+	fmt.Println("Contract Address:      ", deployedAddress)
+	fmt.Println("Gas Consumed:          ", gasConsumed)
+	fmt.Println("Gas Price:              TBD")
+	fmt.Println("Latest Block Height:   ", latestHeight)
+
+	fmt.Printf("\n\n\nFlow Transaction Details\n\n")
 	fmt.Println(result)
-
-	return nil, nil
 }
