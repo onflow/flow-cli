@@ -10,7 +10,7 @@ import (
 func Test_ConfigDependencies(t *testing.T) {
 	b := []byte(`{
 	"HelloWorld": {
-		"remoteSource": "testnet/0x877931736ee77cff.HelloWorld",
+		"remoteSource": "testnet/877931736ee77cff.HelloWorld",
 		"aliases": {
 				"testnet": "877931736ee77cff",
 				"mainnet": "0b2a3299cc857e29"
@@ -36,7 +36,7 @@ func Test_ConfigDependencies(t *testing.T) {
 func Test_TransformDependenciesToJSON(t *testing.T) {
 	b := []byte(`{
 		"HelloWorld": {
-			"remoteSource": "testnet/0x877931736ee77cff.HelloWorld",
+			"remoteSource": "testnet/877931736ee77cff.HelloWorld",
 			"aliases": {
  				"mainnet": "0b2a3299cc857e29",
 				"testnet": "877931736ee77cff"

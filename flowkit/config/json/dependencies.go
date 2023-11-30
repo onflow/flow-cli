@@ -37,7 +37,7 @@ func (j jsonDependencies) transformToConfig() (config.Dependencies, error) {
 			Name: dependencyName,
 			RemoteSource: config.RemoteSource{
 				NetworkName:  depNetwork,
-				Address:      depAddress,
+				Address:      flow.HexToAddress(depAddress),
 				ContractName: depContractName,
 			},
 			Aliases: aliases,
@@ -92,7 +92,7 @@ func buildRemoteSourceString(remoteSource config.RemoteSource) string {
 
 	builder.WriteString(remoteSource.NetworkName)
 	builder.WriteString("/")
-	builder.WriteString(remoteSource.Address)
+	builder.WriteString(remoteSource.Address.String())
 	builder.WriteString(".")
 	builder.WriteString(remoteSource.ContractName)
 

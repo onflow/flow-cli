@@ -1,8 +1,10 @@
 package config
 
+import "github.com/onflow/flow-go-sdk"
+
 type RemoteSource struct {
 	NetworkName  string
-	Address      string
+	Address      flow.Address
 	ContractName string
 }
 
