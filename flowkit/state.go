@@ -109,6 +109,10 @@ func (p *State) Contracts() *config.Contracts {
 	return &p.conf.Contracts
 }
 
+func (p *State) Dependencies() *config.Dependencies {
+	return &p.conf.Dependencies
+}
+
 // Accounts get accounts.
 func (p *State) Accounts() *accounts.Accounts {
 	return p.accounts
