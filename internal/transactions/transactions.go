@@ -50,7 +50,7 @@ func init() {
 }
 
 type TransactionResult struct {
-	result  *flow.TransactionResult
+	Result  *flow.TransactionResult
 	tx      *flow.Transaction
 	include []string
 	exclude []string
@@ -63,13 +63,13 @@ func (r *TransactionResult) JSON() any {
 	result["authorizers"] = fmt.Sprintf("%s", r.tx.Authorizers)
 	result["payer"] = r.tx.Payer.String()
 
-	if r.result != nil {
-		result["block_id"] = r.result.BlockID.String()
-		result["block_height"] = r.result.BlockHeight
-		result["status"] = r.result.Status.String()
+	if r.Result != nil {
+		result["block_id"] = r.Result.BlockID.String()
+		result["block_height"] = r.Result.BlockHeight
+		result["status"] = r.Result.Status.String()
 
-		txEvents := make([]any, 0, len(r.result.Events))
-		for _, event := range r.result.Events {
+		txEvents := make([]any, 0, len(r.Result.Events))
+		for _, event := range r.Result.Events {
 			txEvents = append(txEvents, map[string]any{
 				"index": event.EventIndex,
 				"type":  event.Type,
@@ -80,8 +80,8 @@ func (r *TransactionResult) JSON() any {
 		}
 		result["events"] = txEvents
 
-		if r.result.Error != nil {
-			result["error"] = r.result.Error.Error()
+		if r.Result.Error != nil {
+			result["error"] = r.Result.Error.Error()
 		}
 	}
 
@@ -94,18 +94,18 @@ func (r *TransactionResult) String() string {
 	const feeEventsCountAppended = 3
 	const feeDeductedEvent = "FeesDeducted"
 
-	if r.result != nil {
-		_, _ = fmt.Fprintf(writer, "Block ID\t%s\n", r.result.BlockID)
-		_, _ = fmt.Fprintf(writer, "Block Height\t%d\n", r.result.BlockHeight)
-		if r.result.Error != nil {
-			_, _ = fmt.Fprintf(writer, "%s Transaction Error \n%s\n\n\n", output.ErrorEmoji(), r.result.Error.Error())
+	if r.Result != nil {
+		_, _ = fmt.Fprintf(writer, "Block ID\t%s\n", r.Result.BlockID)
+		_, _ = fmt.Fprintf(writer, "Block Height\t%d\n", r.Result.BlockHeight)
+		if r.Result.Error != nil {
+			_, _ = fmt.Fprintf(writer, "%s Transaction Error \n%s\n\n\n", output.ErrorEmoji(), r.Result.Error.Error())
 		}
 
 		statusBadge := ""
-		if r.result.Status == flow.TransactionStatusSealed {
+		if r.Result.Status == flow.TransactionStatusSealed {
 			statusBadge = output.OkEmoji()
 		}
-		_, _ = fmt.Fprintf(writer, "Status\t%s %s\n", statusBadge, r.result.Status)
+		_, _ = fmt.Fprintf(writer, "Status\t%s %s\n", statusBadge, r.Result.Status)
 	}
 
 	_, _ = fmt.Fprintf(writer, "ID\t%s\n", r.tx.ID())
@@ -151,12 +151,12 @@ func (r *TransactionResult) String() string {
 		_, _ = fmt.Fprintf(writer, "\nSignatures (minimized, use --include signatures)")
 	}
 
-	if r.result != nil && !command.ContainsFlag(r.exclude, "events") {
+	if r.Result != nil && !command.ContainsFlag(r.exclude, "events") {
 		e := events.EventResult{
-			Events: r.result.Events,
+			Events: r.Result.Events,
 		}
 
-		if r.result != nil && e.Events != nil && !command.ContainsFlag(r.include, "fee-events") {
+		if r.Result != nil && e.Events != nil && !command.ContainsFlag(r.include, "fee-events") {
 			for _, event := range e.Events {
 				if strings.Contains(event.Type, feeDeductedEvent) {
 					// if fee event are present remove them
@@ -210,8 +210,8 @@ func (r *TransactionResult) Oneliner() string {
 		"ID: %s, Payer: %s, Authorizer: %s",
 		r.tx.ID(), r.tx.Payer, r.tx.Authorizers)
 
-	if r.result != nil {
-		result += fmt.Sprintf(", Status: %s, Events: %s", r.result.Status, r.result.Events)
+	if r.Result != nil {
+		result += fmt.Sprintf(", Status: %s, Events: %s", r.Result.Status, r.Result.Events)
 	}
 
 	return result

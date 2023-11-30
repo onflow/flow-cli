@@ -82,7 +82,7 @@ func sendSigned(
 	}
 
 	return &TransactionResult{
-		result:  result,
+		Result:  result,
 		tx:      sentTx,
 		include: sendSignedFlags.Include,
 		exclude: sendSignedFlags.Exclude,

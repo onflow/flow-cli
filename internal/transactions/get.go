@@ -31,7 +31,7 @@ import (
 )
 
 type flagsGet struct {
-	Sealed  bool     `default:"true" flag:"sealed" info:"Wait for a sealed result"`
+	Sealed  bool     `default:"true" flag:"sealed" info:"Wait for a sealed Result"`
 	Include []string `default:"" flag:"include" info:"Fields to include in the output. Valid values: signatures, code, payload, fee-events."`
 	Exclude []string `default:"" flag:"exclude" info:"Fields to exclude from the output. Valid values: events."`
 }
@@ -65,7 +65,7 @@ func get(
 	}
 
 	return &TransactionResult{
-		result:  result,
+		Result:  result,
 		tx:      tx,
 		include: getFlags.Include,
 		exclude: getFlags.Exclude,

@@ -357,7 +357,7 @@ func Test_Result(t *testing.T) {
 		BlockID:     flow.HexToID("7aa74143741c1c3b837d389fcffa7a5e251b67b4ffef6d6887b40cd9c803f537"),
 		BlockHeight: 1,
 	}
-	t.Run("Success with no result", func(t *testing.T) {
+	t.Run("Success with no Result", func(t *testing.T) {
 		result := TransactionResult{tx: tx}
 
 		assert.Equal(t, strings.TrimPrefix(`
@@ -388,8 +388,8 @@ Fee Events (hidden, use --include fee-events)`, "\n"), result.String())
 		}, result.JSON())
 	})
 
-	t.Run("Success with result", func(t *testing.T) {
-		result := TransactionResult{tx: tx, result: txResult}
+	t.Run("Success with Result", func(t *testing.T) {
+		result := TransactionResult{tx: tx, Result: txResult}
 
 		expectedString := strings.TrimPrefix(fmt.Sprintf(`
 Block ID	7aa74143741c1c3b837d389fcffa7a5e251b67b4ffef6d6887b40cd9c803f537
@@ -444,7 +444,7 @@ Fee Events (hidden, use --include fee-events)`, output.OkEmoji()), "\n")
 	})
 
 	t.Run("Result without fee events", func(t *testing.T) {
-		result := TransactionResult{tx: tx, result: txResultFeeEvents}
+		result := TransactionResult{tx: tx, Result: txResultFeeEvents}
 
 		assert.Equal(t, strings.TrimPrefix(`
 Block ID	7aa74143741c1c3b837d389fcffa7a5e251b67b4ffef6d6887b40cd9c803f537
@@ -479,7 +479,7 @@ Payload (hidden, use --include payload)
 Fee Events (hidden, use --include fee-events)`, "\n"), result.String())
 	})
 	t.Run("Result with fee events", func(t *testing.T) {
-		result := TransactionResult{tx: tx, result: txResultFeeEvents, include: []string{"fee-events"}}
+		result := TransactionResult{tx: tx, Result: txResultFeeEvents, include: []string{"fee-events"}}
 
 		assert.Equal(t, strings.TrimPrefix(`
 Block ID	7aa74143741c1c3b837d389fcffa7a5e251b67b4ffef6d6887b40cd9c803f537

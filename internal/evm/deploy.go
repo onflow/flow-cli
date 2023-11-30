@@ -58,6 +58,8 @@ func deploy(
 		},
 	)
 
+	txResult := result.(*transactions.TransactionResult)
+
 	fmt.Println("========== EVM ===========")
 
 	fmt.Println("==========================")
