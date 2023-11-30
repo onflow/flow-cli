@@ -32,6 +32,7 @@ import (
 	"github.com/onflow/flow-cli/internal/config"
 	"github.com/onflow/flow-cli/internal/emulator"
 	"github.com/onflow/flow-cli/internal/events"
+	"github.com/onflow/flow-cli/internal/evm"
 	"github.com/onflow/flow-cli/internal/keys"
 	"github.com/onflow/flow-cli/internal/project"
 	"github.com/onflow/flow-cli/internal/quick"
@@ -87,6 +88,9 @@ func main() {
 	cmd.AddCommand(snapshot.Cmd)
 	cmd.AddCommand(super.FlixCmd)
 	cmd.AddCommand(super.GenerateCommand)
+
+	// todo beta release
+	cmd.AddCommand(evm.Cmd)
 
 	command.InitFlags(cmd)
 	cmd.AddGroup(&cobra.Group{

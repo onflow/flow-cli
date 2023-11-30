@@ -49,14 +49,14 @@ func init() {
 	decodeCommand.AddToParent(Cmd)
 }
 
-type transactionResult struct {
+type TransactionResult struct {
 	result  *flow.TransactionResult
 	tx      *flow.Transaction
 	include []string
 	exclude []string
 }
 
-func (r *transactionResult) JSON() any {
+func (r *TransactionResult) JSON() any {
 	result := make(map[string]any)
 	result["id"] = r.tx.ID().String()
 	result["payload"] = fmt.Sprintf("%x", r.tx.Encode())
@@ -88,7 +88,7 @@ func (r *transactionResult) JSON() any {
 	return result
 }
 
-func (r *transactionResult) String() string {
+func (r *TransactionResult) String() string {
 	var b bytes.Buffer
 	writer := util.CreateTabWriter(&b)
 	const feeEventsCountAppended = 3
@@ -205,7 +205,7 @@ func (r *transactionResult) String() string {
 	return b.String()
 }
 
-func (r *transactionResult) Oneliner() string {
+func (r *TransactionResult) Oneliner() string {
 	result := fmt.Sprintf(
 		"ID: %s, Payer: %s, Authorizer: %s",
 		r.tx.ID(), r.tx.Payer, r.tx.Authorizers)

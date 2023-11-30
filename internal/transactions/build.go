@@ -122,7 +122,7 @@ func build(
 		return nil, fmt.Errorf("transaction was not approved")
 	}
 
-	return &transactionResult{
+	return &TransactionResult{
 		tx:      tx.FlowTransaction(),
 		include: []string{"code", "payload", "signatures"},
 	}, nil

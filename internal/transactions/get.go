@@ -64,7 +64,7 @@ func get(
 		return nil, err
 	}
 
-	return &transactionResult{
+	return &TransactionResult{
 		result:  result,
 		tx:      tx,
 		include: getFlags.Include,

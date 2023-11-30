@@ -152,7 +152,7 @@ func SendTransaction(code []byte, args []string, location string, flow flowkit.S
 		return nil, err
 	}
 
-	return &transactionResult{
+	return &TransactionResult{
 		result:  txResult,
 		tx:      tx,
 		include: sendFlags.Include,

@@ -81,7 +81,7 @@ func sendSigned(
 		return nil, err
 	}
 
-	return &transactionResult{
+	return &TransactionResult{
 		result:  result,
 		tx:      sentTx,
 		include: sendSignedFlags.Include,

@@ -136,7 +136,7 @@ func sign(
 		fmt.Printf("%s Signed RLP Posted successfully\n", output.SuccessEmoji())
 	}
 
-	return &transactionResult{
+	return &TransactionResult{
 		tx:      signed.FlowTransaction(),
 		include: signFlags.Include,
 	}, nil

@@ -358,7 +358,7 @@ func Test_Result(t *testing.T) {
 		BlockHeight: 1,
 	}
 	t.Run("Success with no result", func(t *testing.T) {
-		result := transactionResult{tx: tx}
+		result := TransactionResult{tx: tx}
 
 		assert.Equal(t, strings.TrimPrefix(`
 ID		e913d1f3e431c7df49c99845bea9ebff9db11bbf25d507b9ad0fad45652d515f
@@ -389,7 +389,7 @@ Fee Events (hidden, use --include fee-events)`, "\n"), result.String())
 	})
 
 	t.Run("Success with result", func(t *testing.T) {
-		result := transactionResult{tx: tx, result: txResult}
+		result := TransactionResult{tx: tx, result: txResult}
 
 		expectedString := strings.TrimPrefix(fmt.Sprintf(`
 Block ID	7aa74143741c1c3b837d389fcffa7a5e251b67b4ffef6d6887b40cd9c803f537
@@ -444,7 +444,7 @@ Fee Events (hidden, use --include fee-events)`, output.OkEmoji()), "\n")
 	})
 
 	t.Run("Result without fee events", func(t *testing.T) {
-		result := transactionResult{tx: tx, result: txResultFeeEvents}
+		result := TransactionResult{tx: tx, result: txResultFeeEvents}
 
 		assert.Equal(t, strings.TrimPrefix(`
 Block ID	7aa74143741c1c3b837d389fcffa7a5e251b67b4ffef6d6887b40cd9c803f537
@@ -479,7 +479,7 @@ Payload (hidden, use --include payload)
 Fee Events (hidden, use --include fee-events)`, "\n"), result.String())
 	})
 	t.Run("Result with fee events", func(t *testing.T) {
-		result := transactionResult{tx: tx, result: txResultFeeEvents, include: []string{"fee-events"}}
+		result := TransactionResult{tx: tx, result: txResultFeeEvents, include: []string{"fee-events"}}
 
 		assert.Equal(t, strings.TrimPrefix(`
 Block ID	7aa74143741c1c3b837d389fcffa7a5e251b67b4ffef6d6887b40cd9c803f537
