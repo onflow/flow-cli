@@ -20,11 +20,8 @@ package super
 
 import (
 	"context"
-	"encoding/hex"
-	"encoding/json"
 	"fmt"
 	"net/url"
-	"os"
 	"path/filepath"
 
 	"github.com/onflow/flixkit-go"
@@ -107,46 +104,6 @@ func init() {
 	generateCommand.AddToParent(FlixCmd)
 }
 
-type flixQueryTypes string
-
-const (
-	flixName flixQueryTypes = "name"
-	flixPath flixQueryTypes = "path"
-	flixId   flixQueryTypes = "id"
-	flixUrl  flixQueryTypes = "url"
-)
-
-func isHex(str string) bool {
-	if len(str) != 64 {
-		return false
-	}
-	_, err := hex.DecodeString(str)
-	return err == nil
-}
-
-func isPath(path string) bool {
-	_, err := os.Stat(path)
-	return err == nil
-}
-
-func isUrl(str string) bool {
-	u, err := url.Parse(str)
-	return err == nil && u.Scheme != "" && u.Host != ""
-}
-
-func getType(s string) flixQueryTypes {
-	switch {
-	case isPath(s):
-		return flixPath
-	case isHex(s):
-		return flixId
-	case isUrl(s):
-		return flixUrl
-	default:
-		return flixName
-	}
-}
-
 func executeCmd(
 	args []string,
 	_ command.GlobalFlags,
@@ -154,26 +111,26 @@ func executeCmd(
 	flow flowkit.Services,
 	state *flowkit.State,
 ) (result command.Result, err error) {
-	flixService := flixkit.NewFlixService(&flixkit.Config{})
+	flixService := flixkit.NewFlixService(&flixkit.Config{
+		FileReader: state,
+	})
 	flixQuery := args[0]
-	template, err := getTemplate(state, flixService, flixQuery)
-	if err != nil {
-		return nil, err
-	}
 
-	cadenceWithImportsReplaced, err := template.GetAndReplaceCadenceImports(flow.Network().Name)
+	ctx := context.Background()
+	cadenceWithImportsReplaced, err := flixService.GetAndReplaceCadenceImports(ctx, flixQuery, flow.Network().Name)
+
 	if err != nil {
 		logger.Error("could not replace imports")
 		return nil, err
 	}
 
-	if template.IsScript() {
+	if cadenceWithImportsReplaced.IsScript {
 		scriptsFlags := scripts.Flags{
 			ArgsJSON:    flags.ArgsJSON,
 			BlockID:     flags.BlockID,
 			BlockHeight: flags.BlockHeight,
 		}
-		return scripts.SendScript([]byte(cadenceWithImportsReplaced), args[1:], "", flow, scriptsFlags)
+		return scripts.SendScript([]byte(cadenceWithImportsReplaced.Cadence), args[1:], "", flow, scriptsFlags)
 	}
 
 	transactionFlags := transactions.Flags{
@@ -186,7 +143,7 @@ func executeCmd(
 		Exclude:     flags.Exclude,
 		GasLimit:    flags.GasLimit,
 	}
-	return transactions.SendTransaction([]byte(cadenceWithImportsReplaced), args[1:], "", flow, state, transactionFlags)
+	return transactions.SendTransaction([]byte(cadenceWithImportsReplaced.Cadence), args[1:], "", flow, state, transactionFlags)
 }
 
 func packageCmd(
@@ -196,16 +153,16 @@ func packageCmd(
 	flow flowkit.Services,
 	state *flowkit.State,
 ) (result command.Result, err error) {
-	flixService := flixkit.NewFlixService(&flixkit.Config{})
+	flixService := flixkit.NewFlixService(&flixkit.Config{
+		FileReader: state,
+	})
 	flixQuery := args[0]
-
-	template, err := getTemplate(state, flixService, flixQuery)
+	ctx := context.Background()
+	template, err := flixService.GetTemplate(ctx, flixQuery)
 	if err != nil {
 		return nil, err
 	}
-	isLocal := false
-	if getType(flixQuery) == flixPath {
-		isLocal = true
+	if !isUrl(flixQuery) {
 		if flags.Save != "" {
 			// resolve template file location to relative path to be used by binding file
 			flixQuery, err = GetRelativePath(flixQuery, flags.Save)
@@ -217,7 +174,7 @@ func packageCmd(
 	}
 
 	fclJsGen := bindings.NewFclJSGenerator()
-	out, err := fclJsGen.Generate(template, flixQuery, isLocal)
+	out, err := fclJsGen.Generate(template, flixQuery)
 
 	return &flixResult{
 		flixQuery: flixQuery,
@@ -249,28 +206,26 @@ func generateCmd(
 		return nil, fmt.Errorf("could not create flix generator %w", err)
 	}
 
-	var template *flixkit.FlowInteractionTemplate
+	ctx := context.Background()
+	var template string
 	if flags.PreFill != "" {
-		flixService := flixkit.NewFlixService(&flixkit.Config{})
-		template, err = getTemplate(state, flixService, flags.PreFill)
+		flixService := flixkit.NewFlixService(&flixkit.Config{
+			FileReader: state,
+		})
+		template, err = flixService.GetTemplate(ctx, flags.PreFill)
 		if err != nil {
 			return nil, fmt.Errorf("could not parse template from pre fill %w", err)
 		}
 	}
-	ctx := context.Background()
-	flix, err := generator.Generate(ctx, string(code), template)
+
+	prettyJSON, err := generator.Generate(ctx, string(code), template)
 	if err != nil {
 		return nil, fmt.Errorf("could not generate flix %w", err)
 	}
 
-	prettyJSON, err := json.MarshalIndent(flix, "", "    ")
-	if err != nil {
-		return nil, fmt.Errorf("could not marshal flix %w", err)
-	}
-
 	return &flixResult{
 		flixQuery: cadenceFile,
-		result:    string(prettyJSON),
+		result:    prettyJSON,
 	}, err
 
 }
@@ -288,48 +243,6 @@ func (fr *flixResult) String() string {
 
 func (fr *flixResult) Oneliner() string {
 	return fr.result
-}
-
-func getTemplate(state *flowkit.State, flixService flixkit.FlixService, flixQuery string) (*flixkit.FlowInteractionTemplate, error) {
-	var template *flixkit.FlowInteractionTemplate
-	var err error
-	ctx := context.Background()
-	switch getType(flixQuery) {
-	case flixId:
-		template, err = flixService.GetFlixByID(ctx, flixQuery)
-		if err != nil {
-			return nil, fmt.Errorf("could not find flix with id %s: %w", flixQuery, err)
-		}
-
-	case flixName:
-		template, err = flixService.GetFlix(ctx, flixQuery)
-		if err != nil {
-			return nil, fmt.Errorf("could not find flix with name %s: %w", flixQuery, err)
-		}
-
-	case flixPath:
-		file, err := state.ReadFile(flixQuery)
-		if err != nil {
-			return nil, fmt.Errorf("could not read flix file %s: %w", flixQuery, err)
-		}
-		template, err = flixkit.ParseFlix(string(file))
-		if err != nil {
-			return nil, fmt.Errorf("could not parse flix from file %s: %w", flixQuery, err)
-		}
-	case flixUrl:
-		flixString, err := flixkit.FetchFlixWithContext(ctx, flixQuery)
-		if err != nil {
-			return nil, fmt.Errorf("could not parse flix from url %s: %w", flixQuery, err)
-		}
-		template, err = flixkit.ParseFlix(flixString)
-		if err != nil {
-			return nil, fmt.Errorf("could not parse flix from url %s: %w", flixQuery, err)
-		}
-
-	default:
-		return nil, fmt.Errorf("invalid flix query type: %s", flixQuery)
-	}
-	return template, nil
 }
 
 // GetRelativePath computes the relative path from generated file to flix json file.
@@ -405,4 +318,9 @@ func createFlixNetworkContract(contract networkContract) flixkit.Network {
 		FqAddress: "A." + contract.networkAddress + "." + contract.contractName,
 		Contract:  contract.contractName,
 	}
+}
+
+func isUrl(str string) bool {
+	u, err := url.Parse(str)
+	return err == nil && u.Scheme != "" && u.Host != ""
 }
