@@ -15,7 +15,7 @@ import (
 )
 
 //go:embed deploy.cdc
-var deployCode string
+var deployCode []byte
 
 type flagsDeploy struct {
 	Signer string `default:"" flag:"signer" info:"Account name from configuration used to sign the transaction as proposer, payer and suthorizer"`
@@ -50,7 +50,7 @@ func deploy(
 	}
 
 	result, err := transactions.SendTransaction(
-		[]byte(deployCode),
+		deployCode,
 		[]string{string(evmCode)},
 		filename,
 		flow,
@@ -63,7 +63,7 @@ func deploy(
 		return nil, err
 	}
 
-	printResult(result)
+	printDeployResult(result)
 	return nil, nil
 }
 
@@ -92,7 +92,7 @@ func getLatestHeight(event flowkit.Event) uint64 {
 	return h.ToGoValue().(uint64)
 }
 
-func printResult(result command.Result) {
+func printDeployResult(result command.Result) {
 	fmt.Printf("\n🔥🔥🔥🔥🔥🔥🔥 EVM Contract Deployment Summary 🔥🔥🔥🔥🔥🔥🔥")
 	fmt.Printf("\n-------------------------------------------------------------\n\n")
 
