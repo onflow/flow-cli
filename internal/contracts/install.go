@@ -1,7 +1,10 @@
 package contracts
 
 import (
+	"context"
 	"fmt"
+
+	flowsdk "github.com/onflow/flow-go-sdk"
 
 	"github.com/onflow/flow-cli/flowkit"
 	"github.com/onflow/flow-cli/flowkit/output"
@@ -29,17 +32,22 @@ func install(
 	flow flowkit.Services,
 	state *flowkit.State,
 ) (result command.Result, err error) {
-	//address := flowsdk.HexToAddress(args[0])
-	//logger.Info(fmt.Sprintf("Fetching contract and dependencies for %s", address))
-	//account, err := flow.GetAccount(context.Background(), address)
-	//if err != nil {
-	//	return nil, err
-	//}
-	//
-	//fmt.Println("account: ", len(account.Contracts))
 
 	for _, dependency := range *state.Dependencies() {
 		fmt.Println("dependency: ", dependency.Name)
+		fmt.Println("dependency remote source address: ", dependency.RemoteSource.Address.String())
+		fmt.Println("dependency remote source contract name: ", dependency.RemoteSource.ContractName)
+
+		depAddress := flowsdk.HexToAddress(dependency.RemoteSource.Address.String())
+		logger.Info(fmt.Sprintf("Fetching contract and dependencies for %s", depAddress))
+		account, err := flow.GetAccount(context.Background(), depAddress)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, contract := range account.Contracts {
+			fmt.Println("contract: ", string(contract))
+		}
 	}
 
 	return nil, err
