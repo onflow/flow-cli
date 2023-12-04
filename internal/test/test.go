@@ -193,11 +193,25 @@ func testCode(
 			WithContracts(contracts)
 
 		if flags.Name != "" {
-			result, err := runner.RunTest(string(code), flags.Name)
+			testFunctions, err := runner.GetTests(string(code))
 			if err != nil {
 				return nil, err
 			}
-			testResults[scriptPath] = []cdcTests.Result{*result}
+			includesTest := false
+			for _, testFunction := range testFunctions {
+				if testFunction == flags.Name {
+					includesTest = true
+					break
+				}
+			}
+
+			if includesTest {
+				result, err := runner.RunTest(string(code), flags.Name)
+				if err != nil {
+					return nil, err
+				}
+				testResults[scriptPath] = []cdcTests.Result{*result}
+			}
 		} else {
 			results, err := runner.RunTests(string(code))
 			if err != nil {
@@ -205,7 +219,6 @@ func testCode(
 			}
 			testResults[scriptPath] = results
 		}
-
 
 		for _, result := range testResults[scriptPath] {
 			if result.Error != nil {
