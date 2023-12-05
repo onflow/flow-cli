@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/onflow/cadence/runtime/parser"
+
 	flowsdk "github.com/onflow/flow-go-sdk"
 
 	"github.com/onflow/flow-cli/flowkit"
@@ -46,7 +48,13 @@ func install(
 		}
 
 		for _, contract := range account.Contracts {
-			fmt.Println("contract: ", string(contract))
+			parsedProgram, err := parser.ParseProgram(nil, contract, parser.Config{})
+			if err != nil {
+				return nil, err
+			}
+
+			fmt.Println("Contract Name: ", parsedProgram.SoleContractDeclaration().Identifier)
+			fmt.Println("Imports: ", parsedProgram.ImportDeclarations())
 		}
 	}
 
