@@ -197,15 +197,12 @@ func testCode(
 			if err != nil {
 				return nil, err
 			}
-			includesTest := false
-			for _, testFunction := range testFunctions {
-				if testFunction == flags.Name {
-					includesTest = true
-					break
-				}
-			}
 
-			if includesTest {
+			for _, testFunction := range testFunctions {
+				if testFunction != flags.Name {
+					continue
+				}
+
 				result, err := runner.RunTest(string(code), flags.Name)
 				if err != nil {
 					return nil, err
