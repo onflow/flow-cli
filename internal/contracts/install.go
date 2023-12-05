@@ -55,6 +55,12 @@ func install(
 
 			fmt.Println("Contract Name: ", parsedProgram.SoleContractDeclaration().Identifier)
 			fmt.Println("Imports: ", parsedProgram.ImportDeclarations())
+
+			for _, importDeclaration := range parsedProgram.ImportDeclarations() {
+				fmt.Println("Import String: ", importDeclaration.String())
+				fmt.Println("Import Identifiers: ", importDeclaration.Identifiers)
+				fmt.Println("Import Location: ", importDeclaration.Location)
+			}
 		}
 	}
 
