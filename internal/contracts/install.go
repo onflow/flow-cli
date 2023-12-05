@@ -3,6 +3,8 @@ package contracts
 import (
 	"context"
 	"fmt"
+	"os"
+	"path/filepath"
 
 	"github.com/onflow/cadence/runtime/parser"
 
@@ -27,6 +29,23 @@ var installCommand = &command.Command{
 	RunS:  install,
 }
 
+func ContractExists(address, contractName string) bool {
+	path := filepath.Join("imports", address, contractName)
+	_, err := os.Stat(path)
+	return !os.IsNotExist(err)
+}
+
+func CreateContractFile(address, contractName, data string) error {
+	path := filepath.Join("imports", address, contractName)
+
+	dir := filepath.Dir(path)
+	if err := os.MkdirAll(dir, os.ModePerm); err != nil {
+		return err
+	}
+
+	return os.WriteFile(path, []byte(data), 0644)
+}
+
 func FetchDependencies(flow flowkit.Services, address flowsdk.Address) error {
 	account, err := flow.GetAccount(context.Background(), address)
 	if err != nil {
@@ -41,6 +60,19 @@ func FetchDependencies(flow flowkit.Services, address flowsdk.Address) error {
 
 		fmt.Println("Contract Name: ", parsedProgram.SoleContractDeclaration().Identifier)
 		fmt.Println("Imports: ", parsedProgram.ImportDeclarations())
+
+		contractName := parsedProgram.SoleContractDeclaration().Identifier
+
+		fileExists := ContractExists(address.String(), contractName.String())
+		if !fileExists {
+			fmt.Println("Create file!")
+			err := CreateContractFile(address.String(), contractName.String(), string(contract))
+			if err == nil {
+				fmt.Println("File created!")
+			}
+		} else {
+			fmt.Println("File already exists!")
+		}
 
 		for _, importDeclaration := range parsedProgram.ImportDeclarations() {
 			fmt.Println("Import String: ", importDeclaration.String())
