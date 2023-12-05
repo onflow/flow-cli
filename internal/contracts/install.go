@@ -27,6 +27,31 @@ var installCommand = &command.Command{
 	RunS:  install,
 }
 
+func FetchDependencies(flow flowkit.Services, address flowsdk.Address) error {
+	account, err := flow.GetAccount(context.Background(), address)
+	if err != nil {
+		return err
+	}
+
+	for _, contract := range account.Contracts {
+		parsedProgram, err := parser.ParseProgram(nil, contract, parser.Config{})
+		if err != nil {
+			return err
+		}
+
+		fmt.Println("Contract Name: ", parsedProgram.SoleContractDeclaration().Identifier)
+		fmt.Println("Imports: ", parsedProgram.ImportDeclarations())
+
+		for _, importDeclaration := range parsedProgram.ImportDeclarations() {
+			fmt.Println("Import String: ", importDeclaration.String())
+			fmt.Println("Import Identifiers: ", importDeclaration.Identifiers)
+			fmt.Println("Import Location: ", importDeclaration.Location)
+		}
+	}
+
+	return nil
+}
+
 func install(
 	_ []string,
 	_ command.GlobalFlags,
@@ -42,25 +67,10 @@ func install(
 
 		depAddress := flowsdk.HexToAddress(dependency.RemoteSource.Address.String())
 		logger.Info(fmt.Sprintf("Fetching contract and dependencies for %s", depAddress))
-		account, err := flow.GetAccount(context.Background(), depAddress)
+
+		err := FetchDependencies(flow, depAddress)
 		if err != nil {
-			return nil, err
-		}
-
-		for _, contract := range account.Contracts {
-			parsedProgram, err := parser.ParseProgram(nil, contract, parser.Config{})
-			if err != nil {
-				return nil, err
-			}
-
-			fmt.Println("Contract Name: ", parsedProgram.SoleContractDeclaration().Identifier)
-			fmt.Println("Imports: ", parsedProgram.ImportDeclarations())
-
-			for _, importDeclaration := range parsedProgram.ImportDeclarations() {
-				fmt.Println("Import String: ", importDeclaration.String())
-				fmt.Println("Import Identifiers: ", importDeclaration.Identifiers)
-				fmt.Println("Import Location: ", importDeclaration.Location)
-			}
+			fmt.Println("Error:", err)
 		}
 	}
 
