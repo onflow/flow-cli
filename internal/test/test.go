@@ -357,6 +357,11 @@ func (r *result) String() string {
 func (r *result) Oneliner() string {
 	var builder strings.Builder
 
+	if len(r.Results) == 0 {
+		builder.WriteString("No tests found")
+		return builder.String()
+	}
+
 	for scriptPath, testResult := range r.Results {
 		builder.WriteString(cdcTests.PrettyPrintResults(testResult, scriptPath))
 	}

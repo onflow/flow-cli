@@ -666,5 +666,10 @@ Seed: 1521
 
 		assert.NoError(t, err)
 		assert.Len(t, result.Results, 0)
+		assert.Equal(
+			t,
+			"No tests found",
+			result.Oneliner(),
+		)
 	})
 }
