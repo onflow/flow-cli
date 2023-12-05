@@ -640,6 +640,11 @@ Seed: 1521
 		assert.NoError(t, result.Results[scriptPassing.Filename][0].Error)
 		assert.Error(t, result.Results[scriptFailing.Filename][0].Error)
 		assert.ErrorAs(t, result.Results[scriptFailing.Filename][0].Error, &stdlib.AssertionError{})
+		assert.Equal(
+			t,
+			"Test results: \"./testScriptSimple.cdc\"\n- PASS: testSimple\nTest results: \"./testScriptSimpleFailing.cdc\"\n- FAIL: testSimple\n\t\tExecution failed:\n\t\t\terror: assertion failed\n\t\t\t --> 7465737400000000000000000000000000000000000000000000000000000000:5:12\n\t\t\t\n",
+			result.Oneliner(),
+		)
 	})
 
 	t.Run("run specific test case by name will do nothing if not found", func(t *testing.T) {
