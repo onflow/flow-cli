@@ -46,12 +46,13 @@ func CreateContractFile(address, contractName, data string) error {
 	return os.WriteFile(path, []byte(data), 0644)
 }
 
-func FetchDependencies(flow flowkit.Services, address flowsdk.Address) error {
+func FetchDependencies(flow flowkit.Services, address flowsdk.Address, contractName string) error {
 	account, err := flow.GetAccount(context.Background(), address)
 	if err != nil {
 		return err
 	}
 
+	// TODO: Should only get the contract you need
 	for _, contract := range account.Contracts {
 		parsedProgram, err := parser.ParseProgram(nil, contract, parser.Config{})
 		if err != nil {
@@ -61,23 +62,25 @@ func FetchDependencies(flow flowkit.Services, address flowsdk.Address) error {
 		fmt.Println("Contract Name: ", parsedProgram.SoleContractDeclaration().Identifier)
 		fmt.Println("Imports: ", parsedProgram.ImportDeclarations())
 
-		contractName := parsedProgram.SoleContractDeclaration().Identifier
+		parsedContractName := parsedProgram.SoleContractDeclaration().Identifier
 
-		fileExists := ContractExists(address.String(), contractName.String())
-		if !fileExists {
-			fmt.Println("Create file!")
-			err := CreateContractFile(address.String(), contractName.String(), string(contract))
-			if err == nil {
-				fmt.Println("File created!")
+		if parsedContractName.String() == contractName {
+			fileExists := ContractExists(address.String(), parsedContractName.String())
+			if !fileExists {
+				fmt.Println("Create file!")
+				err := CreateContractFile(address.String(), parsedContractName.String(), string(contract))
+				if err == nil {
+					fmt.Println("File created!")
+				}
+			} else {
+				fmt.Println("File already exists!")
 			}
-		} else {
-			fmt.Println("File already exists!")
-		}
 
-		for _, importDeclaration := range parsedProgram.ImportDeclarations() {
-			fmt.Println("Import String: ", importDeclaration.String())
-			fmt.Println("Import Identifiers: ", importDeclaration.Identifiers)
-			fmt.Println("Import Location: ", importDeclaration.Location)
+			for _, importDeclaration := range parsedProgram.ImportDeclarations() {
+				fmt.Println("Import String: ", importDeclaration.String())
+				fmt.Println("Import Identifiers: ", importDeclaration.Identifiers)
+				fmt.Println("Import Location: ", importDeclaration.Location)
+			}
 		}
 	}
 
@@ -100,7 +103,7 @@ func install(
 		depAddress := flowsdk.HexToAddress(dependency.RemoteSource.Address.String())
 		logger.Info(fmt.Sprintf("Fetching contract and dependencies for %s", depAddress))
 
-		err := FetchDependencies(flow, depAddress)
+		err := FetchDependencies(flow, depAddress, dependency.RemoteSource.ContractName)
 		if err != nil {
 			fmt.Println("Error:", err)
 		}
