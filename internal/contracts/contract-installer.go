@@ -103,5 +103,29 @@ func (ci *ContractInstaller) handleFoundContract(contractAddr, contractName, con
 		}
 	}
 
+	err := ci.updateState(contractAddr, contractName)
+	if err != nil {
+		ci.Logger.Error(fmt.Sprintf("Error updating state: %v", err))
+		return err
+	}
+
+	return nil
+}
+
+func (ci *ContractInstaller) updateState(contractAddress, contractName string) error {
+	dep := config.Dependency{
+		Name: contractName,
+		RemoteSource: config.RemoteSource{
+			NetworkName:  ci.FlowService.Network().Name,
+			Address:      flowsdk.HexToAddress(contractAddress),
+			ContractName: contractName,
+		},
+	}
+	ci.State.Dependencies().AddOrUpdate(dep)
+	err := ci.State.SaveDefault()
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
