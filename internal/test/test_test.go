@@ -642,7 +642,7 @@ Seed: 1521
 		assert.ErrorAs(t, result.Results[scriptFailing.Filename][0].Error, &stdlib.AssertionError{})
 		assert.Equal(
 			t,
-			"Test results: \"./testScriptSimpleFailing.cdc\"\n- FAIL: testSimple\n\t\tExecution failed:\n\t\t\terror: assertion failed\n\t\t\t --> 7465737400000000000000000000000000000000000000000000000000000000:5:12\n\t\t\t\nTest results: \"./testScriptSimple.cdc\"\n- PASS: testSimple\n",
+			"Test results: \"./testScriptSimple.cdc\"\n- PASS: testSimple\nTest results: \"./testScriptSimpleFailing.cdc\"\n- FAIL: testSimple\n\t\tExecution failed:\n\t\t\terror: assertion failed\n\t\t\t --> 7465737400000000000000000000000000000000000000000000000000000000:5:12\n\t\t\t\n",
 			result.Oneliner(),
 		)
 	})
