@@ -29,3 +29,6 @@ git
 # Ignore built CLI
 main
 *.pkey
+
+# Local developement file generation
+imports
