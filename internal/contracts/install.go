@@ -3,8 +3,8 @@ package contracts
 import (
 	"context"
 	"fmt"
-	"os"
-	"path/filepath"
+
+	"github.com/onflow/flow-cli/flowkit/config"
 
 	"github.com/onflow/cadence/runtime/parser"
 
@@ -29,36 +29,39 @@ var installCommand = &command.Command{
 	RunS:  install,
 }
 
-func contractFileExists(address, contractName string) bool {
-	path := filepath.Join("imports", address, contractName)
-	_, err := os.Stat(path)
-	return !os.IsNotExist(err)
+func install(
+	_ []string,
+	_ command.GlobalFlags,
+	logger output.Logger,
+	flow flowkit.Services,
+	state *flowkit.State,
+) (result command.Result, err error) {
+	for _, dependency := range *state.Dependencies() {
+		if err := processDependency(flow, logger, dependency); err != nil {
+			fmt.Println("Error:", err)
+			return nil, err
+		}
+	}
+	return nil, nil
 }
 
-func createContractFile(address, contractName, data string) error {
-	path := filepath.Join("imports", address, contractName)
-
-	dir := filepath.Dir(path)
-	if err := os.MkdirAll(dir, os.ModePerm); err != nil {
-		return err
-	}
-
-	return os.WriteFile(path, []byte(data), 0644)
+func processDependency(flow flowkit.Services, logger output.Logger, dependency config.Dependency) error {
+	depAddress := flowsdk.HexToAddress(dependency.RemoteSource.Address.String())
+	return fetchDependencies(flow, logger, depAddress, dependency.RemoteSource.ContractName)
 }
 
 func handleFoundContract(contractAddr, contractName, contractData string) error {
 	if !contractFileExists(contractAddr, contractName) {
-		fmt.Println("Create file!")
 		if err := createContractFile(contractAddr, contractName, contractData); err != nil {
 			return fmt.Errorf("failed to create contract file: %v", err)
 		}
-		fmt.Println("File created!")
 	}
 
 	return nil
 }
 
-func fetchDependencies(flow flowkit.Services, address flowsdk.Address, contractName string) error {
+func fetchDependencies(flow flowkit.Services, logger output.Logger, address flowsdk.Address, contractName string) error {
+	logger.Info(fmt.Sprintf("Fetching dependencies for %s at %s", contractName, address))
 	account, err := flow.GetAccount(context.Background(), address)
 	if err != nil {
 		return fmt.Errorf("failed to get account: %v", err)
@@ -91,10 +94,7 @@ func fetchDependencies(flow flowkit.Services, address flowsdk.Address, contractN
 			continue
 		}
 
-		fmt.Println("Parsed Contract Name: ", parsedContractName)
-
 		if parsedContractName == contractName {
-			fmt.Println("Contract found!")
 			if err := handleFoundContract(address.String(), parsedContractName, string(contract)); err != nil {
 				return fmt.Errorf("failed to handle found contract: %v", err)
 			}
@@ -103,7 +103,7 @@ func fetchDependencies(flow flowkit.Services, address flowsdk.Address, contractN
 				importName := importDeclaration.Identifiers[0].String()
 				importAddress := flowsdk.HexToAddress(importDeclaration.Location.String())
 
-				err := fetchDependencies(flow, importAddress, importName)
+				err := fetchDependencies(flow, logger, importAddress, importName)
 				if err != nil {
 					return err
 				}
@@ -112,30 +112,4 @@ func fetchDependencies(flow flowkit.Services, address flowsdk.Address, contractN
 	}
 
 	return nil
-}
-
-func install(
-	_ []string,
-	_ command.GlobalFlags,
-	logger output.Logger,
-	flow flowkit.Services,
-	state *flowkit.State,
-) (result command.Result, err error) {
-
-	for _, dependency := range *state.Dependencies() {
-		fmt.Println("dependency: ", dependency.Name)
-		fmt.Println("dependency remote source address: ", dependency.RemoteSource.Address.String())
-		fmt.Println("dependency remote source contract name: ", dependency.RemoteSource.ContractName)
-
-		depAddress := flowsdk.HexToAddress(dependency.RemoteSource.Address.String())
-		logger.Info(fmt.Sprintf("Fetching contract and dependencies for %s", depAddress))
-
-		err := fetchDependencies(flow, depAddress, dependency.RemoteSource.ContractName)
-		if err != nil {
-			fmt.Println("Error:", err)
-			return nil, err
-		}
-	}
-
-	return nil, err
 }
