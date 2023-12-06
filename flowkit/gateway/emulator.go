@@ -59,7 +59,6 @@ func NewEmulatorGateway(key *EmulatorKey) *EmulatorGateway {
 }
 
 func NewEmulatorGatewayWithOpts(key *EmulatorKey, opts ...func(*EmulatorGateway)) *EmulatorGateway {
-
 	noopLogger := zerolog.Nop()
 	gateway := &EmulatorGateway{
 		ctx:             context.Background(),
@@ -71,9 +70,8 @@ func NewEmulatorGatewayWithOpts(key *EmulatorKey, opts ...func(*EmulatorGateway)
 	}
 
 	gateway.emulator = newEmulator(key, gateway.emulatorOptions...)
-	logger := zerolog.Nop()
-	gateway.adapter = adapters.NewSDKAdapter(&logger, gateway.emulator)
-	gateway.accessAdapter = adapters.NewAccessAdapter(&logger, gateway.emulator)
+	gateway.adapter = adapters.NewSDKAdapter(gateway.logger, gateway.emulator)
+	gateway.accessAdapter = adapters.NewAccessAdapter(gateway.logger, gateway.emulator)
 	gateway.emulator.EnableAutoMine()
 	return gateway
 }
