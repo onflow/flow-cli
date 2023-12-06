@@ -52,7 +52,6 @@ func FetchDependencies(flow flowkit.Services, address flowsdk.Address, contractN
 		return err
 	}
 
-	// TODO: Should only get the contract you need
 	for _, contract := range account.Contracts {
 		parsedProgram, err := parser.ParseProgram(nil, contract, parser.Config{})
 		if err != nil {
