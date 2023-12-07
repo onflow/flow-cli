@@ -44,7 +44,7 @@ func NewImportReplacer(contracts []*Contract, aliases LocationAliases) *ImportRe
 }
 
 func (i *ImportReplacer) Replace(program *Program) (*Program, error) {
-	imports := program.imports()
+	imports := program.Imports()
 	contractsLocations := i.getContractsLocations()
 
 	for _, imp := range imports {

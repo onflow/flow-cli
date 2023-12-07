@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/onflow/cadence/runtime/parser"
+	"github.com/onflow/flow-cli/flowkit/project"
 
 	"github.com/onflow/flow-cli/flowkit/config"
 	flowsdk "github.com/onflow/flow-go-sdk"
@@ -57,37 +57,32 @@ func (ci *ContractInstaller) fetchDependencies(address flowsdk.Address, contract
 	}
 
 	for _, contract := range account.Contracts {
-		parsedProgram, err := parser.ParseProgram(nil, contract, parser.Config{})
+
+		program, err := project.NewProgram(contract, nil, "")
 		if err != nil {
 			return fmt.Errorf("failed to parse program: %v", err)
 		}
 
-		if parsedProgram == nil {
-			return fmt.Errorf("parsed program is nil")
-		}
-
-		var parsedContractName string
-
-		if contractDeclaration := parsedProgram.SoleContractDeclaration(); contractDeclaration != nil {
-			parsedContractName = contractDeclaration.Identifier.String()
-		} else if contractInterfaceDeclaration := parsedProgram.SoleContractInterfaceDeclaration(); contractInterfaceDeclaration != nil {
-			parsedContractName = contractInterfaceDeclaration.Identifier.String()
-		} else {
-			continue
+		parsedContractName, err := program.Name()
+		if err != nil {
+			return fmt.Errorf("failed to parse contract name: %v", err)
 		}
 
 		if parsedContractName == contractName {
-			if err := ci.handleFoundContract(address.String(), parsedContractName, string(contract)); err != nil {
+			program.ConvertImports()
+
+			if err := ci.handleFoundContract(address.String(), parsedContractName, string(program.DevelopmentCode())); err != nil {
 				return fmt.Errorf("failed to handle found contract: %v", err)
 			}
 
-			for _, importDeclaration := range parsedProgram.ImportDeclarations() {
-				importName := importDeclaration.Identifiers[0].String()
-				importAddress := flowsdk.HexToAddress(importDeclaration.Location.String())
-
-				err := ci.fetchDependencies(importAddress, importName)
-				if err != nil {
-					return err
+			if program.HasImports() {
+				imports := program.Imports()
+				for _, imp := range imports {
+					importAddress := flowsdk.HexToAddress(imp)
+					err := ci.fetchDependencies(importAddress, imp)
+					if err != nil {
+						return err
+					}
 				}
 			}
 		}

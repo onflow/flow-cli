@@ -73,7 +73,7 @@ func TestProgram(t *testing.T) {
 			program, err := NewProgram(test.code, nil, "")
 			require.NoError(t, err, fmt.Sprintf("import test %d failed", i))
 			assert.Equal(t, len(test.imports) > 0, program.HasImports(), fmt.Sprintf("import test %d failed", i))
-			assert.Equal(t, test.imports, program.imports(), fmt.Sprintf("import test %d failed", i))
+			assert.Equal(t, test.imports, program.Imports(), fmt.Sprintf("import test %d failed", i))
 		}
 	})
 
