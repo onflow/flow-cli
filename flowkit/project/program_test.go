@@ -160,4 +160,31 @@ func TestProgram(t *testing.T) {
 		assert.Equal(t, string(replaced), string(program.Code()))
 	})
 
+	t.Run("Convert to Import Syntax", func(t *testing.T) {
+		code := []byte(`
+		import Foo from 0x123
+		import "Bar"
+		import FooSpace from 0x124
+		import "BarSpace"
+
+		pub contract Foo {}
+	`)
+
+		expected := []byte(`
+		import "Foo"
+		import "Bar"
+		import "FooSpace"
+		import "BarSpace"
+
+		pub contract Foo {}
+	`)
+
+		program, err := NewProgram(code, nil, "")
+		require.NoError(t, err)
+
+		program.ConvertImports()
+
+		assert.Equal(t, string(expected), string(program.DevelopmentCode()))
+	})
+
 }
