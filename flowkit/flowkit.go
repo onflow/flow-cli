@@ -275,7 +275,7 @@ func (f *Flowkit) AddContract(
 		return flow.EmptyID, false, err
 	}
 
-	if program.HasImports() {
+	if program.HasPathImports() {
 		contracts, err := state.DeploymentContractsByNetwork(f.network)
 		if err != nil {
 			return flow.EmptyID, false, err
@@ -811,7 +811,7 @@ func (f *Flowkit) ExecuteScript(_ context.Context, script Script, query ScriptQu
 		return nil, err
 	}
 
-	if program.HasImports() {
+	if program.HasPathImports() {
 		contracts, err := state.DeploymentContractsByNetwork(f.network)
 		if err != nil {
 			return nil, err
@@ -921,7 +921,7 @@ func (f *Flowkit) BuildTransaction(
 		return nil, err
 	}
 
-	if program.HasImports() {
+	if program.HasPathImports() {
 		if f.network == config.EmptyNetwork {
 			return nil, fmt.Errorf("missing network, specify which network to use to resolve imports in transaction code")
 		}
@@ -1050,7 +1050,6 @@ func (f *Flowkit) SendTransaction(
 
 	return sentTx, res, err
 }
-
 
 // this is added to resolve the issue with chainhash ambiguous import,
 // the code is not used, but it's needed to force go.mod specify and retain chainhash version

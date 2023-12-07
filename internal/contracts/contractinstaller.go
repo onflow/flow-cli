@@ -75,11 +75,11 @@ func (ci *ContractInstaller) fetchDependencies(address flowsdk.Address, contract
 				return fmt.Errorf("failed to handle found contract: %v", err)
 			}
 
-			if program.HasImports() {
-				imports := program.Imports()
+			if program.HasAddressImports() {
+				imports := program.AddressImportDeclarations()
 				for _, imp := range imports {
-					importAddress := flowsdk.HexToAddress(imp)
-					err := ci.fetchDependencies(importAddress, imp)
+					importAddress := flowsdk.HexToAddress(imp.Location.String())
+					err := ci.fetchDependencies(importAddress, imp.Identifiers[0].String())
 					if err != nil {
 						return err
 					}

@@ -28,6 +28,32 @@ import (
 
 func TestProgram(t *testing.T) {
 
+	t.Run("AddressImports", func(t *testing.T) {
+		tests := []struct {
+			code          []byte
+			expectedCount int
+		}{
+			{
+				code: []byte(`
+                import Foo from 0x123
+                import "Bar"
+                import FooSpace from 0x124
+                import "BarSpace"
+
+                pub contract Foo {}
+            `),
+				expectedCount: 2,
+			},
+		}
+
+		for i, test := range tests {
+			program, err := NewProgram(test.code, nil, "")
+			require.NoError(t, err, fmt.Sprintf("AddressImports test %d failed", i))
+			addressImports := program.AddressImportDeclarations()
+			assert.Len(t, addressImports, test.expectedCount, fmt.Sprintf("AddressImports test %d failed", i))
+		}
+	})
+
 	t.Run("Imports", func(t *testing.T) {
 		tests := []struct {
 			code    []byte
@@ -72,8 +98,8 @@ func TestProgram(t *testing.T) {
 		for i, test := range tests {
 			program, err := NewProgram(test.code, nil, "")
 			require.NoError(t, err, fmt.Sprintf("import test %d failed", i))
-			assert.Equal(t, len(test.imports) > 0, program.HasImports(), fmt.Sprintf("import test %d failed", i))
-			assert.Equal(t, test.imports, program.Imports(), fmt.Sprintf("import test %d failed", i))
+			assert.Equal(t, len(test.imports) > 0, program.HasPathImports(), fmt.Sprintf("import test %d failed", i))
+			assert.Equal(t, test.imports, program.pathImports(), fmt.Sprintf("import test %d failed", i))
 		}
 	})
 

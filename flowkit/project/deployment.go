@@ -137,7 +137,7 @@ func (d *Deployment) conflictExists() bool {
 // buildDependencies iterates over all contracts and checks the imports which are added as its dependencies.
 func (d *Deployment) buildDependencies() error {
 	for _, contract := range d.contracts {
-		for _, location := range contract.program.Imports() {
+		for _, location := range contract.program.pathImports() {
 			// find contract by the path import
 			importPath := absolutePath(contract.location, location)
 			importContract, isPath := d.contractsByLocation[importPath]

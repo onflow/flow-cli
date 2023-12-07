@@ -51,10 +51,26 @@ func NewProgram(code []byte, args []cadence.Value, location string) (*Program, e
 	}, nil
 }
 
+func (p *Program) AddressImportDeclarations() []*ast.ImportDeclaration {
+	addressImports := make([]*ast.ImportDeclaration, 0)
+
+	for _, importDeclaration := range p.astProgram.ImportDeclarations() {
+		if len(importDeclaration.Identifiers) > 0 && len(importDeclaration.Location.String()) > 0 {
+			addressImports = append(addressImports, importDeclaration)
+		}
+	}
+
+	return addressImports
+}
+
+func (p *Program) HasAddressImports() bool {
+	return len(p.AddressImportDeclarations()) > 0
+}
+
 // Imports builds an array of all the import locations
 // It currently supports getting import locations as identifiers or as strings. Strings locations
 // can represent a file or an account name, whereas identifiers represent contract names.
-func (p *Program) Imports() []string {
+func (p *Program) pathImports() []string {
 	imports := make([]string, 0)
 
 	for _, importDeclaration := range p.astProgram.ImportDeclarations() {
@@ -68,8 +84,8 @@ func (p *Program) Imports() []string {
 	return imports
 }
 
-func (p *Program) HasImports() bool {
-	return len(p.Imports()) > 0
+func (p *Program) HasPathImports() bool {
+	return len(p.pathImports()) > 0
 }
 
 func (p *Program) replaceImport(from string, to string) *Program {
