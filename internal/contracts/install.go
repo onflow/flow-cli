@@ -29,7 +29,7 @@ func install(
 	flow flowkit.Services,
 	state *flowkit.State,
 ) (result command.Result, err error) {
-	installer := NewContractInstaller(flow, logger, state)
+	installer := NewContractInstaller(logger, state)
 	if err := installer.install(); err != nil {
 		logger.Error(fmt.Sprintf("Error: %v", err))
 		return nil, err
