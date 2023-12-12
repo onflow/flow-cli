@@ -19,6 +19,10 @@ ACCOUNT_TOKEN := lilico:sF60s3wughJBmNh2
 
 BINARY ?= ./cmd/flow/flow
 
+include crypto_adx_flag.mk
+
+CGO_FLAG := CGO_CFLAGS=$(CRYPTO_FLAG)
+
 .PHONY: binary
 binary: $(BINARY)
 
@@ -55,7 +59,7 @@ endif
 ci: install-tools generate test coverage
 
 $(BINARY):
-	GO111MODULE=on go build \
+	$(CGO_FLAG) GO111MODULE=on go build \
 		-trimpath \
 		-ldflags \
 		"-X github.com/onflow/flow-cli/build.commit=$(COMMIT) -X github.com/onflow/flow-cli/build.semver=$(VERSION) -X github.com/onflow/flow-cli/flowkit/util.MIXPANEL_PROJECT_TOKEN=${MIXPANEL_PROJECT_TOKEN} -X github.com/onflow/flow-cli/internal/accounts.accountToken=${ACCOUNT_TOKEN}"\
