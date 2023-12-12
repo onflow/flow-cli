@@ -68,6 +68,7 @@ func (ci *ContractInstaller) add(depRemoteSource, customName string) error {
 	var name string
 
 	if customName != "" {
+		fmt.Printf("Using custom name: %s\n", customName)
 		name = customName
 	} else {
 		name = depContractName
@@ -91,10 +92,10 @@ func (ci *ContractInstaller) add(depRemoteSource, customName string) error {
 
 func (ci *ContractInstaller) processDependency(dependency config.Dependency) error {
 	depAddress := flowsdk.HexToAddress(dependency.RemoteSource.Address.String())
-	return ci.fetchDependencies(dependency.RemoteSource.NetworkName, depAddress, dependency.RemoteSource.ContractName)
+	return ci.fetchDependencies(dependency.RemoteSource.NetworkName, depAddress, dependency.Name, dependency.RemoteSource.ContractName)
 }
 
-func (ci *ContractInstaller) fetchDependencies(networkName string, address flowsdk.Address, contractName string) error {
+func (ci *ContractInstaller) fetchDependencies(networkName string, address flowsdk.Address, assignedName, contractName string) error {
 	ci.Logger.Info(fmt.Sprintf("Fetching dependencies for %s at %s", contractName, address))
 	account, err := ci.Gateways[networkName].GetAccount(address)
 	if err != nil {
@@ -123,7 +124,7 @@ func (ci *ContractInstaller) fetchDependencies(networkName string, address flows
 		if parsedContractName == contractName {
 			program.ConvertImports()
 
-			if err := ci.handleFoundContract(networkName, address.String(), parsedContractName, string(program.DevelopmentCode())); err != nil {
+			if err := ci.handleFoundContract(networkName, address.String(), assignedName, parsedContractName, string(program.DevelopmentCode())); err != nil {
 				return fmt.Errorf("failed to handle found contract: %v", err)
 			}
 
@@ -131,7 +132,8 @@ func (ci *ContractInstaller) fetchDependencies(networkName string, address flows
 				imports := program.AddressImportDeclarations()
 				for _, imp := range imports {
 					importAddress := flowsdk.HexToAddress(imp.Location.String())
-					err := ci.fetchDependencies("testnet", importAddress, imp.Identifiers[0].String())
+					contractName := imp.Identifiers[0].String()
+					err := ci.fetchDependencies("testnet", importAddress, contractName, contractName)
 					if err != nil {
 						return err
 					}
@@ -143,14 +145,14 @@ func (ci *ContractInstaller) fetchDependencies(networkName string, address flows
 	return nil
 }
 
-func (ci *ContractInstaller) handleFoundContract(networkName, contractAddr, contractName, contractData string) error {
+func (ci *ContractInstaller) handleFoundContract(networkName, contractAddr, assignedName, contractName, contractData string) error {
 	if !contractFileExists(contractAddr, contractName) {
 		if err := createContractFile(contractAddr, contractName, contractData); err != nil {
 			return fmt.Errorf("failed to create contract file: %v", err)
 		}
 	}
 
-	err := ci.updateState(networkName, contractAddr, contractName)
+	err := ci.updateState(networkName, contractAddr, assignedName, contractName)
 	if err != nil {
 		ci.Logger.Error(fmt.Sprintf("Error updating state: %v", err))
 		return err
@@ -159,9 +161,9 @@ func (ci *ContractInstaller) handleFoundContract(networkName, contractAddr, cont
 	return nil
 }
 
-func (ci *ContractInstaller) updateState(networkName, contractAddress, contractName string) error {
+func (ci *ContractInstaller) updateState(networkName, contractAddress, assignedName, contractName string) error {
 	dep := config.Dependency{
-		Name: contractName,
+		Name: assignedName,
 		RemoteSource: config.RemoteSource{
 			NetworkName:  networkName,
 			Address:      flowsdk.HexToAddress(contractAddress),
