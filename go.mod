@@ -16,7 +16,7 @@ require (
 	github.com/onflow/flixkit-go v0.3.1
 	github.com/onflow/flow-cli/flowkit v1.6.1-0.20231110211255-b41f57a8b8c7
 	github.com/onflow/flow-core-contracts/lib/go/templates v1.2.4-0.20231016154253-a00dbf7c061f
-	github.com/onflow/flow-emulator v0.59.1-0.20231212135229-f6a1475e6308
+	github.com/onflow/flow-emulator v0.59.0
 	github.com/onflow/flow-go v0.32.4-0.20231211231711-1aba0828ca33
 	github.com/onflow/flow-go-sdk v0.41.17
 	github.com/onflowser/flowser/v3 v3.1.3
@@ -43,7 +43,7 @@ require (
 	github.com/FactomProject/btcutilecc v0.0.0-20130527213604-d3a63a5752ec // indirect
 	github.com/Microsoft/go-winio v0.6.1 // indirect
 	github.com/OneOfOne/xxhash v1.2.8 // indirect
-	github.com/ProtonMail/go-crypto v0.0.0-20230828082145-3c4c8a2d2371 // indirect
+	github.com/ProtonMail/go-crypto v0.0.0-20230923063757-afb1ddc0824c // indirect
 	github.com/StackExchange/wmi v1.2.1 // indirect
 	github.com/VictoriaMetrics/fastcache v1.12.1 // indirect
 	github.com/acomagu/bufpipe v1.0.4 // indirect

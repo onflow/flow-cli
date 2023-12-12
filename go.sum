@@ -92,8 +92,8 @@ github.com/OneOfOne/xxhash v1.2.2/go.mod h1:HSdplMjZKSmBqAxg5vPj2TmRDmfkzw+cTzAE
 github.com/OneOfOne/xxhash v1.2.5/go.mod h1:eZbhyaAYD41SGSSsnmcpxVoRiQ/MPUTjUdIIOT9Um7Q=
 github.com/OneOfOne/xxhash v1.2.8 h1:31czK/TI9sNkxIKfaUfGlU47BAxQ0ztGgd9vPyqimf8=
 github.com/OneOfOne/xxhash v1.2.8/go.mod h1:eZbhyaAYD41SGSSsnmcpxVoRiQ/MPUTjUdIIOT9Um7Q=
-github.com/ProtonMail/go-crypto v0.0.0-20230828082145-3c4c8a2d2371 h1:kkhsdkhsCvIsutKu5zLMgWtgh9YxGCNAw8Ad8hjwfYg=
-github.com/ProtonMail/go-crypto v0.0.0-20230828082145-3c4c8a2d2371/go.mod h1:EjAoLdwvbIOoOQr3ihjnSoLZRtE8azugULFRteWMNc0=
+github.com/ProtonMail/go-crypto v0.0.0-20230923063757-afb1ddc0824c h1:kMFnB0vCcX7IL/m9Y5LO+KQYv+t1CQOiFe6+SV2J7bE=
+github.com/ProtonMail/go-crypto v0.0.0-20230923063757-afb1ddc0824c/go.mod h1:EjAoLdwvbIOoOQr3ihjnSoLZRtE8azugULFRteWMNc0=
 github.com/Shopify/goreferrer v0.0.0-20181106222321-ec9c9a553398/go.mod h1:a1uqRtAwp2Xwc6WNPJEufxJ7fx3npB4UV/JOLmbu5I0=
 github.com/Shopify/sarama v1.19.0/go.mod h1:FVkBWblsNy7DGZRfXLU0O9RCGt5g3g3yEuWXgklEdEo=
 github.com/Shopify/toxiproxy v2.1.4+incompatible/go.mod h1:OXgGpZ6Cli1/URJOF1DMxUHB2q5Ap20/P/eIdh4G0pI=
@@ -884,8 +884,6 @@ github.com/onflow/cadence-tools/languageserver v0.33.3 h1:o6f2kPxsgSruH+HT8CakcZ
 github.com/onflow/cadence-tools/languageserver v0.33.3/go.mod h1:rUy3zxWWZl+KYAyzhAcnrYNI8ZDKI242RFK8Q9w+90M=
 github.com/onflow/cadence-tools/lint v0.14.1 h1:Qkw8+q+ALfB62W7KWHMFh+90gTfJ+NoFulYETMCTkcI=
 github.com/onflow/cadence-tools/lint v0.14.1/go.mod h1:w1xfiiPpZ35v/F+2+MF/Rily7LcIgE0dm/FMW1vQkpc=
-github.com/onflow/cadence-tools/test v0.14.4 h1:m4SwQFbzHasCDiLdI0zNIZVRMLYQUfiiL6BDZSp06Jo=
-github.com/onflow/cadence-tools/test v0.14.4/go.mod h1:1FaKl2BPM05BWWwo5ctwE7dA/CE5KA/kxUrtcCkvCEc=
 github.com/onflow/cadence-tools/test v0.14.5-0.20231212143648-fb25e9aca2d4 h1:bCrLCTZSXbSEn94Zl+AnnVVacKF03OelT2w29ETZfoI=
 github.com/onflow/cadence-tools/test v0.14.5-0.20231212143648-fb25e9aca2d4/go.mod h1:ix09Bb3GQ/fZMNpSR8E+vSFItGF54fzP9gFxU7AsOIw=
 github.com/onflow/fcl-dev-wallet v0.7.4 h1:vI6t3U0AO88R/Iitn5KsnniSpbN9Lqsqwvi9EJT4C0k=
@@ -896,8 +894,8 @@ github.com/onflow/flow-core-contracts/lib/go/contracts v1.2.4-0.20231016154253-a
 github.com/onflow/flow-core-contracts/lib/go/contracts v1.2.4-0.20231016154253-a00dbf7c061f/go.mod h1:jM6GMAL+m0hjusUgiYDNrixPQ6b9s8xjoJQoEu5bHQI=
 github.com/onflow/flow-core-contracts/lib/go/templates v1.2.4-0.20231016154253-a00dbf7c061f h1:Ep+Mpo2miWMe4pjPGIaEvEzshRep30dvNgxqk+//FrQ=
 github.com/onflow/flow-core-contracts/lib/go/templates v1.2.4-0.20231016154253-a00dbf7c061f/go.mod h1:ZeLxwaBkzuSInESGjL8/IPZWezF+YOYsYbMrZlhN+q4=
-github.com/onflow/flow-emulator v0.59.1-0.20231212135229-f6a1475e6308 h1:M0UA5+0YYPnz3MaM0RQ7dQijmGaI/ZRjtiLe84gRVKE=
-github.com/onflow/flow-emulator v0.59.1-0.20231212135229-f6a1475e6308/go.mod h1:e9Zi+TqefQXxjgDygu16DeTgmjMCYITWv0PM7Ar2hXI=
+github.com/onflow/flow-emulator v0.59.0 h1:KIfm9/+x62KqcZDjqE35fkuvVuY506OZ917xNtb3U6E=
+github.com/onflow/flow-emulator v0.59.0/go.mod h1:Js1KKaXrui2yKKkXAlKTqmByRySis6/FH+vkGA6Kqu0=
 github.com/onflow/flow-ft/lib/go/contracts v0.7.1-0.20230711213910-baad011d2b13 h1:B4ll7e3j+MqTJv2122Enq3RtDNzmIGRu9xjV7fo7un0=
 github.com/onflow/flow-ft/lib/go/contracts v0.7.1-0.20230711213910-baad011d2b13/go.mod h1:kTMFIySzEJJeupk+7EmXs0EJ6CBWY/MV9fv9iYQk+RU=
 github.com/onflow/flow-go v0.32.4-0.20231211231711-1aba0828ca33 h1:QCUFvIlE4Y7OMp3ZqXMCOw7emLV0jBMcC5BSoNX375Q=

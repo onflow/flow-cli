@@ -117,7 +117,7 @@ func run(
 	funcABI := ABI.Methods[funcName]
 	unpackedValues, err := funcABI.Outputs.Unpack(byteArray)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unpack failed: %w", err)
 	}
 
 	fmt.Println("Result: ", unpackedValues)
