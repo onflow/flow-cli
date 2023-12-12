@@ -33,7 +33,7 @@ jobs:
           BUILD_TIME: $(date --iso-8601=seconds)
           VERSION: ${{github.ref_name}}
           COMMIT: ${{ github.sha }}
-          CGO_CFLAGS: "-O -D__BLST_PORTABLE__" // temporary workaround for crypto being built on older machines
+          CGO_CFLAGS: "-O -D__BLST_PORTABLE__" # temporary workaround for crypto being built on older machines
         with:
           pre_command: make generate
           github_token: ${{ secrets.GITHUB_TOKEN }}
