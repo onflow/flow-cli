@@ -25,6 +25,8 @@ jobs:
           go-version: '1.20'
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+      - name: build binaries
+        run: make versioned-binaries
       - uses: wangyoucao577/go-release-action@v1.41
         env:
           MIXPANEL_PROJECT_TOKEN: ${{ secrets.MIXPANEL_PROJECT_TOKEN }}
@@ -35,7 +37,7 @@ jobs:
           COMMIT: ${{ github.sha }}
           CGO_CFLAGS: "-O -D__BLST_PORTABLE__" # temporary workaround for crypto being built on older machines
         with:
-          pre_command: make versioned-binaries
+          pre_command: make generate
           github_token: ${{ secrets.GITHUB_TOKEN }}
           goos: ${{ matrix.goos }}
           goarch: ${{ matrix.goarch }}
