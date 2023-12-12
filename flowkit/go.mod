@@ -11,7 +11,7 @@ require (
 	github.com/onflow/cadence v0.42.6
 	github.com/onflow/flow-emulator v0.58.0
 	github.com/onflow/flow-go v0.32.4-0.20231115172515-c1ec969fd6f2
-	github.com/onflow/flow-go-sdk v0.41.16
+	github.com/onflow/flow-go-sdk v0.41.17
 	github.com/onflow/flow-go/crypto v0.24.10
 	github.com/pkg/errors v0.9.1
 	github.com/rs/zerolog v1.29.0
