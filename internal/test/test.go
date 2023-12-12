@@ -65,6 +65,7 @@ type flagsTests struct {
 	CoverCode    string `default:"all" flag:"covercode" info:"Use the covercode flag to calculate coverage report only for certain types of code. Available values are \"all\" & \"contracts\""`
 	Random       bool   `default:"false" flag:"random" info:"Use the random flag to execute test cases randomly"`
 	Seed         int64  `default:"0" flag:"seed" info:"Use the seed flag to manipulate random execution of test cases"`
+	Name         string `default:"" flag:"name" info:"Use the name flag to run only tests that match the given name"`
 }
 
 var testFlags = flagsTests{}
@@ -191,13 +192,32 @@ func testCode(
 			WithFileResolver(fileResolver(scriptPath, state)).
 			WithContracts(contracts)
 
-		results, err := runner.RunTests(string(code))
-		if err != nil {
-			return nil, err
-		}
-		testResults[scriptPath] = results
+		if flags.Name != "" {
+			testFunctions, err := runner.GetTests(string(code))
+			if err != nil {
+				return nil, err
+			}
 
-		for _, result := range results {
+			for _, testFunction := range testFunctions {
+				if testFunction != flags.Name {
+					continue
+				}
+
+				result, err := runner.RunTest(string(code), flags.Name)
+				if err != nil {
+					return nil, err
+				}
+				testResults[scriptPath] = []cdcTests.Result{*result}
+			}
+		} else {
+			results, err := runner.RunTests(string(code))
+			if err != nil {
+				return nil, err
+			}
+			testResults[scriptPath] = results
+		}
+
+		for _, result := range testResults[scriptPath] {
 			if result.Error != nil {
 				status = 1
 				break
@@ -336,6 +356,11 @@ func (r *result) String() string {
 
 func (r *result) Oneliner() string {
 	var builder strings.Builder
+
+	if len(r.Results) == 0 {
+		builder.WriteString("No tests found")
+		return builder.String()
+	}
 
 	for scriptPath, testResult := range r.Results {
 		builder.WriteString(cdcTests.PrettyPrintResults(testResult, scriptPath))
