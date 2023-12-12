@@ -40,7 +40,7 @@ import (
 
 type flagsSetup struct {
 	Scaffold   bool `default:"" flag:"scaffold" info:"Use provided scaffolds for project creation"`
-	ScaffoldID int  `default:"" flag:"scaffold-id" info:"Use provided scaffold ID for project creation"`
+	ScaffoldID int  `default:"" flag:"id" info:"Use provided scaffold ID for project creation"`
 }
 
 var setupFlags = flagsSetup{}
@@ -89,28 +89,28 @@ func create(
 	// default to first scaffold - basic scaffold
 	pickedScaffold := scaffolds[0]
 
-	if setupFlags.ScaffoldID != 0 {
-		if setupFlags.ScaffoldID > len(scaffolds) {
-			return nil, fmt.Errorf("scaffold with id %d does not exist", setupFlags.ScaffoldID)
-		}
-		pickedScaffold = scaffolds[setupFlags.ScaffoldID-1]
-	}
-
 	if setupFlags.Scaffold {
-		scaffoldItems := make([]util.ScaffoldItem, 0)
-		for i, s := range scaffolds {
-			scaffoldItems = append(
-				scaffoldItems,
-				util.ScaffoldItem{
-					Index:    i,
-					Title:    fmt.Sprintf("%s - %s", output.Bold(s.Name), s.Description),
-					Category: s.Type,
-				},
-			)
-		}
+		if setupFlags.ScaffoldID != 0 {
+			if setupFlags.ScaffoldID > len(scaffolds) {
+				return nil, fmt.Errorf("scaffold with id %d does not exist", setupFlags.ScaffoldID)
+			}
+			pickedScaffold = scaffolds[setupFlags.ScaffoldID-1]
+		} else {
+			scaffoldItems := make([]util.ScaffoldItem, 0)
+			for i, s := range scaffolds {
+				scaffoldItems = append(
+					scaffoldItems,
+					util.ScaffoldItem{
+						Index:    i,
+						Title:    fmt.Sprintf("%s - %s", output.Bold(s.Name), s.Description),
+						Category: s.Type,
+					},
+				)
+			}
 
-		selected := util.ScaffoldPrompt(logger, scaffoldItems)
-		pickedScaffold = scaffolds[selected]
+			selected := util.ScaffoldPrompt(logger, scaffoldItems)
+			pickedScaffold = scaffolds[selected]
+		}
 	}
 
 	logger.StartProgress(fmt.Sprintf("Creating your project %s", targetDir))
