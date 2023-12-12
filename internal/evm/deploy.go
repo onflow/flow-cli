@@ -34,6 +34,8 @@ var deployCommand = &command.Command{
 	RunS:  deploy,
 }
 
+// todo only for demo, super hacky now
+
 func deploy(
 	args []string,
 	_ command.GlobalFlags,

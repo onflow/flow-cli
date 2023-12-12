@@ -4,6 +4,7 @@ import (
 	_ "embed"
 	"fmt"
 
+	"github.com/onflow/cadence"
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/flowkit"
@@ -32,9 +33,11 @@ var createCommand = &command.Command{
 	RunS:  create,
 }
 
+// todo only for demo, super hacky now
+
 func create(
 	args []string,
-	_ command.GlobalFlags,
+	g command.GlobalFlags,
 	_ output.Logger,
 	flow flowkit.Services,
 	state *flowkit.State,
@@ -54,13 +57,16 @@ func create(
 		return nil, err
 	}
 
-	printCreateResult(result)
+	val, _ := GetEVMAccount("f8d6e0586b0a20c7", flow)
+	printCreateResult(val, result)
 
 	return nil, nil
 }
 
-func printCreateResult(result command.Result) {
-	fmt.Printf("\n🔥🔥🔥🔥🔥🔥🔥 EVM Account Creation Summary 🔥🔥🔥🔥🔥🔥🔥")
+func printCreateResult(balance cadence.Value, result command.Result) {
+	fmt.Printf("\n🔥🔥🔥🔥🔥🔥🔥 EVM Account Creation Summary 🔥🔥🔥🔥🔥🔥🔥\n")
+	fmt.Println("Address:  ", "0000000000000000000000000000000000000001")
+	fmt.Println("Balance:  ", balance.String())
 	fmt.Printf("\n-------------------------------------------------------------\n\n")
 
 	fmt.Println(result)

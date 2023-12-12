@@ -5,6 +5,7 @@ import (
 	_ "embed"
 	"fmt"
 
+	"github.com/onflow/cadence"
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/flowkit"
@@ -31,6 +32,8 @@ var getCommand = &command.Command{
 	RunS:  get,
 }
 
+// todo only for demo, super hacky now
+
 func get(
 	args []string,
 	_ command.GlobalFlags,
@@ -38,13 +41,26 @@ func get(
 	flow flowkit.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
+	val, _ := GetEVMAccount(args[0], flow)
 
-	scriptArgs, err := arguments.ParseWithoutType([]string{args[0]}, getCode, "")
+	fmt.Printf("\n🔥🔥🔥🔥🔥🔥🔥 EVM Account Creation Summary 🔥🔥🔥🔥🔥🔥🔥\n")
+	fmt.Println("Address:  ", "0000000000000000000000000000000000000001")
+	fmt.Println("Balance:  ", val)
+	fmt.Printf("\n-------------------------------------------------------------\n\n")
+	return nil, nil
+}
+
+func GetEVMAccount(
+	address string,
+	flow flowkit.Services,
+) (cadence.Value, error) {
+
+	scriptArgs, err := arguments.ParseWithoutType([]string{address}, getCode, "")
 	if err != nil {
 		return nil, err
 	}
 
-	value, err := flow.ExecuteScript(
+	return flow.ExecuteScript(
 		context.Background(),
 		flowkit.Script{
 			Code: getCode,
@@ -52,11 +68,4 @@ func get(
 		},
 		flowkit.ScriptQuery{Latest: true},
 	)
-	if err != nil {
-		return nil, err
-	}
-
-	fmt.Println(value)
-
-	return nil, nil
 }
