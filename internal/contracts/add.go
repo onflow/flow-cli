@@ -9,7 +9,9 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type addFlagsCollection struct{}
+type addFlagsCollection struct {
+	name string `default:"" flag:"name" info:"Name of the dependency"`
+}
 
 var addFlags = addFlagsCollection{}
 
@@ -33,7 +35,7 @@ func add(
 	dep := args[0]
 
 	installer := NewContractInstaller(logger, state)
-	if err := installer.add(dep); err != nil {
+	if err := installer.add(dep, addFlags.name); err != nil {
 		logger.Error(fmt.Sprintf("Error: %v", err))
 		return nil, err
 	}

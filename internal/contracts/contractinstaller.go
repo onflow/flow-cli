@@ -59,14 +59,22 @@ func (ci *ContractInstaller) install() error {
 	return nil
 }
 
-func (ci *ContractInstaller) add(depRemoteSource string) error {
+func (ci *ContractInstaller) add(depRemoteSource, customName string) error {
 	depNetwork, depAddress, depContractName, err := config.ParseRemoteSourceString(depRemoteSource)
 	if err != nil {
 		return fmt.Errorf("error parsing remote source: %w", err)
 	}
 
+	var name string
+
+	if customName != "" {
+		name = customName
+	} else {
+		name = depContractName
+	}
+
 	dep := config.Dependency{
-		Name: depContractName,
+		Name: name,
 		RemoteSource: config.RemoteSource{
 			NetworkName:  depNetwork,
 			Address:      flowsdk.HexToAddress(depAddress),
