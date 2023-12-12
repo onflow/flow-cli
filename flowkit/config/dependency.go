@@ -1,6 +1,30 @@
 package config
 
-import "github.com/onflow/flow-go-sdk"
+import (
+	"fmt"
+	"strings"
+
+	"github.com/onflow/flow-go-sdk"
+)
+
+func ParseRemoteSourceString(s string) (network, address, contractName string, err error) {
+	fmt.Printf("Parsing: %s\n", s)
+
+	parts := strings.Split(s, "/")
+	if len(parts) != 2 {
+		return "", "", "", fmt.Errorf("invalid format")
+	}
+	network = parts[0]
+
+	subParts := strings.Split(parts[1], ".")
+	if len(subParts) != 2 {
+		return "", "", "", fmt.Errorf("invalid format")
+	}
+	address = subParts[0]
+	contractName = subParts[1]
+
+	return network, address, contractName, nil
+}
 
 type RemoteSource struct {
 	NetworkName  string

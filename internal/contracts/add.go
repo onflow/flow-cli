@@ -9,28 +9,31 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type installFlagsCollection struct{}
+type addFlagsCollection struct{}
 
-var installFlags = installFlagsCollection{}
+var addFlags = addFlagsCollection{}
 
-var installCommand = &command.Command{
+var addCommand = &command.Command{
 	Cmd: &cobra.Command{
-		Use:   "install",
-		Short: "Install contract and dependencies.",
+		Use:   "add",
+		Short: "Add a single contract and its dependencies.",
+		Args:  cobra.ExactArgs(1),
 	},
-	Flags: &installFlags,
-	RunS:  install,
+	Flags: &addFlags,
+	RunS:  add,
 }
 
-func install(
-	_ []string,
+func add(
+	args []string,
 	_ command.GlobalFlags,
 	logger output.Logger,
 	flow flowkit.Services,
 	state *flowkit.State,
 ) (result command.Result, err error) {
+	dep := args[0]
+
 	installer := NewContractInstaller(logger, state)
-	if err := installer.install(); err != nil {
+	if err := installer.add(dep); err != nil {
 		logger.Error(fmt.Sprintf("Error: %v", err))
 		return nil, err
 	}

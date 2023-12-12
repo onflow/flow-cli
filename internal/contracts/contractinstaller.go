@@ -59,6 +59,28 @@ func (ci *ContractInstaller) install() error {
 	return nil
 }
 
+func (ci *ContractInstaller) add(depRemoteSource string) error {
+	depNetwork, depAddress, depContractName, err := config.ParseRemoteSourceString(depRemoteSource)
+	if err != nil {
+		return fmt.Errorf("error parsing remote source: %w", err)
+	}
+
+	dep := config.Dependency{
+		Name: depContractName,
+		RemoteSource: config.RemoteSource{
+			NetworkName:  depNetwork,
+			Address:      flowsdk.HexToAddress(depAddress),
+			ContractName: depContractName,
+		},
+	}
+
+	if err := ci.processDependency(dep); err != nil {
+		return fmt.Errorf("error processing dependency: %w", err)
+	}
+
+	return nil
+}
+
 func (ci *ContractInstaller) processDependency(dependency config.Dependency) error {
 	depAddress := flowsdk.HexToAddress(dependency.RemoteSource.Address.String())
 	return ci.fetchDependencies(dependency.RemoteSource.NetworkName, depAddress, dependency.RemoteSource.ContractName)
