@@ -39,7 +39,7 @@ import (
 )
 
 type flagsSetup struct {
-	Scaffold   bool `default:"" flag:"scaffold" info:"Use provided scaffolds for project creation interactively"`
+	Scaffold   bool `default:"" flag:"scaffold" info:"Interactively select a provided scaffold for project creation"`
 	ScaffoldID int  `default:"" flag:"scaffold-id" info:"Use provided scaffold ID for project creation"`
 }
 
