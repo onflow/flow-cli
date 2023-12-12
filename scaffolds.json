@@ -1,34 +1,29 @@
 [
   {
-    "id": 1,
     "name": "Empty Cadence Project",
     "repo": "https://github.com/sideninja/flow-empty-scaffold",
     "description": "Empty project containing only basic folder structure and flow.json configuration.",
     "commit": "598612f4cdc7ee4487752ef203061082527216b4"
   },
   {
-    "id": 2,
     "name": "Simple Cadence Project",
     "repo": "https://github.com/sideninja/flow-basic-scaffold.git",
     "description": "Scaffold contains required folder structure as well as some example Cadence code.",
     "commit": "f14d43b951400b95e850c07023735538ff836ac6"
   },
   {
-    "id": 3,
     "name": "Cadence NFT Project",
     "repo": "https://github.com/nvdtf/flow-nft-scaffold.git",
     "description": "Scaffold contains the ExampleNFT sample NFT contract.",
     "commit": "624ffd71bd2f86faf954d251f69d346ddff1446a"
   },
   {
-    "id": 4,
     "name": "Hybrid Custody Project",
     "repo": "https://github.com/onflow/hybrid-custody-scaffold",
     "description": "Starter for exploring & implementing Hybrid Custody.",
     "commit": "1e76638c7b1e37124b8222ccad3cc9dbe84731d5"
   },
   {
-    "id": 5,
     "name": "FCL Web Dapp",
     "repo": "https://github.com/chasefleming/fcl-next-scaffold.git",
     "description": "Simple TypeScript web application using next.js, FCL, and Cadence.",
@@ -36,7 +31,6 @@
     "type": "web"
   },
   {
-    "id": 6,
     "name": "Simple Unity",
     "repo": "https://github.com/onflow/UnityFlowSDK.git",
     "description": "Simple example demonstrating how to interact with the Flow network using Unity SDK.",
@@ -45,7 +39,6 @@
     "type": "unity"
   },
   {
-    "id": 7,
     "name": "Mobile Unity Game",
     "repo": "https://github.com/onflow/UnityFlowSDK.git",
     "description": "Example words game built on Flow using the Unity SDK.",
@@ -54,7 +47,6 @@
     "type": "unity"
   },
   {
-    "id": 8,
     "name": "Swift iOS simple example",
     "repo": "https://github.com/Outblock/fcl-swift",
     "description": "iOS example demonstrating usage of FCL and Flow interactions.",
@@ -63,7 +55,6 @@
     "type": "mobile"
   },
   {
-    "id": 9,
     "name": "Android simple example",
     "repo": "https://github.com/Outblock/fcl-android",
     "description": "Android example demonstrating usage of FCL and Flow interactions.",
@@ -72,7 +63,6 @@
     "type": "mobile"
   },
   {
-    "id": 10,
     "name": "FCL React Native Mobile Dapp",
     "repo": "https://github.com/jribbink/fcl-react-native-scaffold",
     "description": "React Native (Expo) mobile dapp example demonstrating FCL and Flow interactions.",
@@ -80,7 +70,6 @@
     "type": "mobile"
   },
   {
-    "id": 11,
     "name": "FCL PWA",
     "repo": "https://github.com/bshahid331/flow-pwa-scaffold",
     "description": "Walletless Mobile PWA App demonstrating FCL and Flow interactions.",
