@@ -22,10 +22,10 @@ jobs:
         continue-on-error: true
         uses: snyk/actions/golang@master
         with:
-          go-version: '1.19'
+          go-version: '1.20'
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-      - uses: wangyoucao577/go-release-action@v1.40
+      - uses: wangyoucao577/go-release-action@v1.41
         env:
           MIXPANEL_PROJECT_TOKEN: ${{ secrets.MIXPANEL_PROJECT_TOKEN }}
           LILICO_TOKEN: ${{ secrets.LILICO_TOKEN }}
@@ -38,6 +38,6 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           goos: ${{ matrix.goos }}
           goarch: ${{ matrix.goarch }}
-          goversion: "1.19"
+          goversion: "1.20"
           project_path: "./cmd/flow"
           ldflags: -X "github.com/onflow/flow-cli/build.commit=${{ env.COMMIT }}" -X "github.com/onflow/flow-cli/build.semver=${{ env.VERSION }}" -X "github.com/onflow/flow-cli/internal/command.mixpanelToken=${{ env.MIXPANEL_PROJECT_TOKEN }}" -X "github.com/onflow/flow-cli/internal/accounts.accountToken=${{ env.LILICO_TOKEN }}"
