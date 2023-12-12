@@ -39,7 +39,8 @@ import (
 )
 
 type flagsSetup struct {
-	Scaffold bool `default:"" flag:"scaffold" info:"Use provided scaffolds for project creation"`
+	Scaffold   bool `default:"" flag:"scaffold" info:"Use provided scaffolds for project creation"`
+	ScaffoldID int  `default:"" flag:"scaffold-id" info:"Use provided scaffold ID for project creation"`
 }
 
 var setupFlags = flagsSetup{}
@@ -87,6 +88,13 @@ func create(
 
 	// default to first scaffold - basic scaffold
 	pickedScaffold := scaffolds[0]
+
+	if setupFlags.ScaffoldID != 0 {
+		if setupFlags.ScaffoldID > len(scaffolds) {
+			return nil, fmt.Errorf("scaffold with id %d does not exist", setupFlags.ScaffoldID)
+		}
+		pickedScaffold = scaffolds[setupFlags.ScaffoldID-1]
+	}
 
 	if setupFlags.Scaffold {
 		scaffoldItems := make([]util.ScaffoldItem, 0)
