@@ -168,7 +168,6 @@ with the bellow content.
 
 ```json
 {
-  "id": "unique id of the scaffold",
   "name": "name of the scaffold",
   "repo": "HTTP URL to the repository containing the scaffold",
   "commit": "Hash of the (latest) commit in your scaffold repository",
