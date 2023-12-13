@@ -148,8 +148,8 @@ github.com/btcsuite/btcd v0.0.0-20171128150713-2e60448ffcc6/go.mod h1:Dmm/EzmjnC
 github.com/btcsuite/btcd v0.20.1-beta/go.mod h1:wVuoA8VJLEcwgqHBwHmzLRazpKxTv13Px/pDuV7OomQ=
 github.com/btcsuite/btcd/btcec/v2 v2.2.1 h1:xP60mv8fvp+0khmrN0zTdPC3cNm24rfeE6lh2R/Yv3E=
 github.com/btcsuite/btcd/btcec/v2 v2.2.1/go.mod h1:9/CSmJxmuvqzX9Wh2fXMWToLOHhPd11lSPuIupwTkI8=
-github.com/btcsuite/btcd/chaincfg/chainhash v1.0.2 h1:KdUfX2zKommPRa+PD0sWZUyXe9w277ABlgELO7H04IM=
-github.com/btcsuite/btcd/chaincfg/chainhash v1.0.2/go.mod h1:7SFka0XMvUgj3hfZtydOrQY2mwhPclbT2snogU7SQQc=
+github.com/btcsuite/btcd/chaincfg/chainhash v1.0.3 h1:SDlJ7bAm4ewvrmZtR0DaiYbQGdKPeaaIm7bM+qRhFeU=
+github.com/btcsuite/btcd/chaincfg/chainhash v1.0.3/go.mod h1:7SFka0XMvUgj3hfZtydOrQY2mwhPclbT2snogU7SQQc=
 github.com/btcsuite/btclog v0.0.0-20170628155309-84c8d2346e9f/go.mod h1:TdznJufoqS23FtqVCzL0ZqgP5MqXbb4fg/WgDys70nA=
 github.com/btcsuite/btcutil v0.0.0-20190425235716-9e5f4b9a998d/go.mod h1:+5NJ2+qvTyV9exUAL/rxXi3DcLg2Ts+ymUAY5y4NvMg=
 github.com/btcsuite/go-socks v0.0.0-20170105172521-4720035b7bfd/go.mod h1:HHNXQzUsZCxOoE+CPiyCTO6x34Zs86zZUiwtpXoGdtg=
@@ -884,8 +884,6 @@ github.com/onflow/cadence-tools/test v0.14.4 h1:m4SwQFbzHasCDiLdI0zNIZVRMLYQUfii
 github.com/onflow/cadence-tools/test v0.14.4/go.mod h1:1FaKl2BPM05BWWwo5ctwE7dA/CE5KA/kxUrtcCkvCEc=
 github.com/onflow/fcl-dev-wallet v0.7.4 h1:vI6t3U0AO88R/Iitn5KsnniSpbN9Lqsqwvi9EJT4C0k=
 github.com/onflow/fcl-dev-wallet v0.7.4/go.mod h1:kc42jkiuoPJmxMRFjfbRO9XvnR/3XLheaOerxVMDTiw=
-github.com/onflow/flixkit-go v0.3.1 h1:5izElx+3H7vCqlzK0pzEZ+lW3xjfLoB4w5cD2/3qe2M=
-github.com/onflow/flixkit-go v0.3.1/go.mod h1:H+x/JnydsqM1jmn927RTsyjSZtFFPloJUfY3zE8kMik=
 github.com/onflow/flow-archive v1.3.4-0.20230503192214-9e81e82d4dcc h1:C4ZniFeOv+pHlDLJdGc/4e3NklSjVuvaXKN47980gnY=
 github.com/onflow/flow-archive v1.3.4-0.20230503192214-9e81e82d4dcc/go.mod h1:UPsvKk/37Atosif4wlBl3gsLbGJyGpdXYpXDsWtMVBE=
 github.com/onflow/flow-core-contracts/lib/go/contracts v1.2.4-0.20231016154253-a00dbf7c061f h1:S8yIZw9LFXfYD1V5H9BiixihHw3GrXVPrmfplSzYaww=
