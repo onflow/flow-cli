@@ -171,6 +171,7 @@ func (ci *ContractInstaller) updateState(networkName, contractAddress, assignedN
 		},
 	}
 	ci.State.Dependencies().AddOrUpdate(dep)
+	ci.State.Contracts().AddDependencyAsContract(dep)
 	err := ci.State.SaveDefault()
 	if err != nil {
 		return err

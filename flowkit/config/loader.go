@@ -202,7 +202,6 @@ func (l *Loader) composeConfig(baseConf *Config, conf *Config) {
 		baseConf.Contracts.AddOrUpdate(contract)
 	}
 	for _, dependency := range conf.Dependencies {
-		fmt.Println("dependency in LOADER: ", dependency.Name)
 		baseConf.Dependencies.AddOrUpdate(dependency)
 	}
 	for _, deployment := range conf.Deployments {

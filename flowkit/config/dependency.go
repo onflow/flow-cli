@@ -35,7 +35,6 @@ type RemoteSource struct {
 type Dependency struct {
 	Name         string
 	RemoteSource RemoteSource
-	Aliases      Aliases
 }
 
 type Dependencies []Dependency

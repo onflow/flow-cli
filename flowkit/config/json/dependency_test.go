@@ -9,14 +9,8 @@ import (
 
 func Test_ConfigDependencies(t *testing.T) {
 	b := []byte(`{
-	"HelloWorld": {
-		"remoteSource": "testnet/877931736ee77cff.HelloWorld",
-		"aliases": {
-				"testnet": "877931736ee77cff",
-				"mainnet": "0b2a3299cc857e29"
-			}
-		}
-	}`)
+		"HelloWorld": "testnet/877931736ee77cff.HelloWorld"
+		}`)
 
 	var jsonDependencies jsonDependencies
 	err := json.Unmarshal(b, &jsonDependencies)
@@ -30,18 +24,11 @@ func Test_ConfigDependencies(t *testing.T) {
 	dependencyOne := dependencies.ByName("HelloWorld")
 
 	assert.NotNil(t, dependencyOne)
-	assert.Len(t, dependencyOne.Aliases, 2)
 }
 
 func Test_TransformDependenciesToJSON(t *testing.T) {
 	b := []byte(`{
-		"HelloWorld": {
-			"remoteSource": "testnet/877931736ee77cff.HelloWorld",
-			"aliases": {
- 				"mainnet": "0b2a3299cc857e29",
-				"testnet": "877931736ee77cff"
-			}
-		}
+		"HelloWorld": "testnet/877931736ee77cff.HelloWorld"
 	}`)
 
 	var jsonDependencies jsonDependencies

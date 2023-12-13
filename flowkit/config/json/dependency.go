@@ -9,28 +9,20 @@ import (
 	"github.com/onflow/flow-cli/flowkit/config"
 )
 
-type dependency struct {
-	RemoteSource string            `json:"remoteSource"`
-	Aliases      map[string]string `json:"aliases"`
-}
-
-type jsonDependencies map[string]dependency
+//	type dependency struct {
+//		RemoteSource string `json:"remoteSource"`
+//	}
+//
+// type jsonDependencies map[string]dependency
+type jsonDependencies map[string]string
 
 func (j jsonDependencies) transformToConfig() (config.Dependencies, error) {
 	deps := make(config.Dependencies, 0)
 
-	for dependencyName, dependencies := range j {
-		depNetwork, depAddress, depContractName, err := config.ParseRemoteSourceString(dependencies.RemoteSource)
+	for dependencyName, dependencySource := range j {
+		depNetwork, depAddress, depContractName, err := config.ParseRemoteSourceString(dependencySource)
 		if err != nil {
 			return nil, fmt.Errorf("error parsing remote source for dependency %s: %w", dependencyName, err)
-		}
-
-		aliases := make(config.Aliases, 0)
-		for network, address := range dependencies.Aliases {
-			aliases = append(aliases, config.Alias{
-				Network: network,
-				Address: flow.HexToAddress(address),
-			})
 		}
 
 		dep := config.Dependency{
@@ -40,7 +32,6 @@ func (j jsonDependencies) transformToConfig() (config.Dependencies, error) {
 				Address:      flow.HexToAddress(depAddress),
 				ContractName: depContractName,
 			},
-			Aliases: aliases,
 		}
 
 		deps = append(deps, dep)
@@ -53,16 +44,7 @@ func transformDependenciesToJSON(configDependencies config.Dependencies) jsonDep
 	jsonDeps := jsonDependencies{}
 
 	for _, dep := range configDependencies {
-
-		aliases := make(map[string]string)
-		for _, alias := range dep.Aliases {
-			aliases[alias.Network] = alias.Address.String()
-		}
-
-		jsonDeps[dep.Name] = dependency{
-			RemoteSource: buildRemoteSourceString(dep.RemoteSource),
-			Aliases:      aliases,
-		}
+		jsonDeps[dep.Name] = buildRemoteSourceString(dep.RemoteSource)
 	}
 
 	return jsonDeps
