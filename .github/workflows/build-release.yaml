@@ -25,8 +25,6 @@ jobs:
           go-version: '1.20'
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-      - name: build binaries
-        run: make versioned-binaries
       - uses: wangyoucao577/go-release-action@v1.41
         env:
           MIXPANEL_PROJECT_TOKEN: ${{ secrets.MIXPANEL_PROJECT_TOKEN }}
@@ -43,5 +41,4 @@ jobs:
           goarch: ${{ matrix.goarch }}
           goversion: "1.20"
           project_path: "./cmd/flow"
-          build_command: CGO_CFLAGS="-O -D__BLST_PORTABLE__" CGO_ENABLED=1 go build
           ldflags: -X "github.com/onflow/flow-cli/build.commit=${{ env.COMMIT }}" -X "github.com/onflow/flow-cli/build.semver=${{ env.VERSION }}" -X "github.com/onflow/flow-cli/internal/command.mixpanelToken=${{ env.MIXPANEL_PROJECT_TOKEN }}" -X "github.com/onflow/flow-cli/internal/accounts.accountToken=${{ env.LILICO_TOKEN }}"
