@@ -59,7 +59,7 @@ endif
 ci: install-tools generate test coverage
 
 $(BINARY):
-	$(CGO_FLAG) GO111MODULE=on go build \
+	$(CGO_FLAG) CGO_ENABLED=1 GO111MODULE=on go build \
 		-trimpath \
 		-ldflags \
 		"-X github.com/onflow/flow-cli/build.commit=$(COMMIT) -X github.com/onflow/flow-cli/build.semver=$(VERSION) -X github.com/onflow/flow-cli/flowkit/util.MIXPANEL_PROJECT_TOKEN=${MIXPANEL_PROJECT_TOKEN} -X github.com/onflow/flow-cli/internal/accounts.accountToken=${ACCOUNT_TOKEN}"\
