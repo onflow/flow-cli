@@ -259,3 +259,5 @@ require (
 )
 
 replace github.com/onflow/flow-cli/flowkit => ./flowkit
+
+replace github.com/onflow/flow-go/crypto => github.com/onflow/flow-go/crypto v0.24.9
