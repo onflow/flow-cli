@@ -94,6 +94,25 @@ func run(
 		return nil, fmt.Errorf("can't prepare arguments: %w", err)
 	}
 
+	resultValue, err := executeCall(flow, contractAddress, callerAddress, data)
+	if err != nil {
+		return nil, err
+	}
+
+	funcABI := ABI.Methods[funcName]
+	resultUnpacked, err := funcABI.Outputs.Unpack(resultValue)
+	if err != nil {
+		return nil, fmt.Errorf("unpack failed: %w", err)
+	}
+
+	fmt.Println("Result: ", resultUnpacked)
+
+	return nil, nil
+}
+
+func executeCall(flow flowkit.Services, contractAddress string, callerAddress string, data []byte) ([]byte, error) {
+	fmt.Println("execute call: ", contractAddress, callerAddress, data)
+
 	decodedAddress, err := hex.DecodeString(contractAddress)
 	if err != nil {
 		return nil, err
@@ -127,20 +146,12 @@ func run(
 		return nil, fmt.Errorf("script doesn't return byte array as it should")
 	}
 
-	byteArray := make([]byte, len(cadenceArray.Values))
+	resultValue := make([]byte, len(cadenceArray.Values))
 	for i, x := range cadenceArray.Values {
-		byteArray[i] = x.ToGoValue().(byte)
+		resultValue[i] = x.ToGoValue().(byte)
 	}
 
-	funcABI := ABI.Methods[funcName]
-	unpackedValues, err := funcABI.Outputs.Unpack(byteArray)
-	if err != nil {
-		return nil, fmt.Errorf("unpack failed: %w", err)
-	}
-
-	fmt.Println("Result: ", unpackedValues)
-
-	return nil, nil
+	return resultValue, nil
 }
 
 func cadenceByteArrayString(data []byte) string {
