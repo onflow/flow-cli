@@ -164,10 +164,16 @@ func (ci *ContractInstaller) handleFoundContract(networkName, contractAddr, assi
 	return nil
 }
 
+const (
+	NetworkEmulator = "emulator"
+	NetworkTestnet  = "testnet"
+	NetworkMainnet  = "mainnet"
+)
+
 var networkToChainID = map[string]flow.ChainID{
-	"emulator": flow.Emulator,
-	"testnet":  flow.Testnet,
-	"mainnet":  flow.Mainnet,
+	NetworkEmulator: flow.Emulator,
+	NetworkTestnet:  flow.Testnet,
+	NetworkMainnet:  flow.Mainnet,
 }
 
 func isCoreContract(networkName, contractName, contractAddress string) bool {
@@ -185,11 +191,10 @@ func isCoreContract(networkName, contractName, contractAddress string) bool {
 
 func getCoreContractByName(networkName, contractName string) *systemcontracts.SystemContract {
 	sc := systemcontracts.SystemContractsForChain(networkToChainID[networkName])
-	coreContracts := sc.All()
 
-	for _, coreContract := range coreContracts {
+	for i, coreContract := range sc.All() {
 		if coreContract.Name == contractName {
-			return &coreContract
+			return &sc.All()[i]
 		}
 	}
 
@@ -210,33 +215,15 @@ func (ci *ContractInstaller) updateState(networkName, contractAddress, assignedN
 
 	// If core contract found by name and address matches, then use all core contract aliases across networks
 	if isCoreContract(networkName, contractName, contractAddress) {
-		emulatorCoreContract := getCoreContractByName("emulator", contractName)
-
-		if emulatorCoreContract != nil {
-			aliases = append(aliases, config.Alias{
-				Network: "emulator",
-				Address: flowsdk.HexToAddress(emulatorCoreContract.Address.String()),
-			})
+		for _, networkStr := range []string{NetworkEmulator, NetworkTestnet, NetworkMainnet} {
+			coreContract := getCoreContractByName(networkStr, contractName)
+			if coreContract != nil {
+				aliases = append(aliases, config.Alias{
+					Network: networkStr,
+					Address: flowsdk.HexToAddress(coreContract.Address.String()),
+				})
+			}
 		}
-
-		testnetCoreContract := getCoreContractByName("testnet", contractName)
-
-		if testnetCoreContract != nil {
-			aliases = append(aliases, config.Alias{
-				Network: "testnet",
-				Address: flowsdk.HexToAddress(testnetCoreContract.Address.String()),
-			})
-		}
-
-		mainnetCoreContract := getCoreContractByName("mainnet", contractName)
-
-		if mainnetCoreContract != nil {
-			aliases = append(aliases, config.Alias{
-				Network: "mainnet",
-				Address: flowsdk.HexToAddress(mainnetCoreContract.Address.String()),
-			})
-		}
-
 	}
 
 	// If no core contract match, then use the address in remoteSource as alias
