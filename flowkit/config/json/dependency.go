@@ -54,7 +54,7 @@ func buildRemoteSourceString(remoteSource config.RemoteSource) string {
 	var builder strings.Builder
 
 	builder.WriteString(remoteSource.NetworkName)
-	builder.WriteString("/")
+	builder.WriteString("://")
 	builder.WriteString(remoteSource.Address.String())
 	builder.WriteString(".")
 	builder.WriteString(remoteSource.ContractName)

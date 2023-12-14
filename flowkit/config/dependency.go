@@ -8,15 +8,15 @@ import (
 )
 
 func ParseRemoteSourceString(s string) (network, address, contractName string, err error) {
-	parts := strings.Split(s, "/")
+	parts := strings.Split(s, "://")
 	if len(parts) != 2 {
-		return "", "", "", fmt.Errorf("invalid format")
+		return "", "", "", fmt.Errorf("invalid dependency source format")
 	}
 	network = parts[0]
 
 	subParts := strings.Split(parts[1], ".")
 	if len(subParts) != 2 {
-		return "", "", "", fmt.Errorf("invalid format")
+		return "", "", "", fmt.Errorf("invalid dependency source format")
 	}
 	address = subParts[0]
 	contractName = subParts[1]

@@ -9,7 +9,7 @@ import (
 
 func Test_ConfigDependencies(t *testing.T) {
 	b := []byte(`{
-		"HelloWorld": "testnet/877931736ee77cff.HelloWorld"
+		"HelloWorld": "testnet://877931736ee77cff.HelloWorld"
 		}`)
 
 	var jsonDependencies jsonDependencies
@@ -28,7 +28,7 @@ func Test_ConfigDependencies(t *testing.T) {
 
 func Test_TransformDependenciesToJSON(t *testing.T) {
 	b := []byte(`{
-		"HelloWorld": "testnet/877931736ee77cff.HelloWorld"
+		"HelloWorld": "testnet://877931736ee77cff.HelloWorld"
 	}`)
 
 	var jsonDependencies jsonDependencies
