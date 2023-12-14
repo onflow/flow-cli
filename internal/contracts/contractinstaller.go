@@ -71,7 +71,6 @@ func (ci *ContractInstaller) add(depRemoteSource, customName string) error {
 	var name string
 
 	if customName != "" {
-		fmt.Printf("Using custom name: %s\n", customName)
 		name = customName
 	} else {
 		name = depContractName
