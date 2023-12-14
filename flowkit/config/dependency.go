@@ -8,8 +8,6 @@ import (
 )
 
 func ParseRemoteSourceString(s string) (network, address, contractName string, err error) {
-	fmt.Printf("Parsing: %s\n", s)
-
 	parts := strings.Split(s, "/")
 	if len(parts) != 2 {
 		return "", "", "", fmt.Errorf("invalid format")
