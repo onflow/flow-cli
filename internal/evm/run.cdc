@@ -12,6 +12,7 @@ pub fun main(caller: Address, contractAddress: [UInt8; 20], data: [UInt8]): [UIn
         value: EVM.Balance(flow: 0.0)
     )
 
+    log(evmResult)
     destroy bridgedAccount
     return evmResult
 }
