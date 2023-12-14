@@ -33,6 +33,7 @@ func init() {
 	createCommand.AddToParent(Cmd)
 	getCommand.AddToParent(Cmd)
 	runCommand.AddToParent(Cmd)
+	rpcCommand.AddToParent(Cmd)
 }
 
 type evmResult struct {
