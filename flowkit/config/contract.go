@@ -108,17 +108,12 @@ func (c *Contracts) Remove(name string) error {
 }
 
 // AddDependencyAsContract adds a dependency as a contract if it doesn't already exist.
-func (c *Contracts) AddDependencyAsContract(dependency Dependency) {
+func (c *Contracts) AddDependencyAsContract(dependency Dependency, aliases []Alias) {
 	fmt.Printf("Adding dependency as contract: %s\n", dependency.Name)
 	contract := Contract{
 		Name:     dependency.Name,
 		Location: fmt.Sprintf("imports/%s/%s", dependency.RemoteSource.Address, dependency.RemoteSource.ContractName),
-		Aliases: Aliases{
-			Alias{
-				Network: dependency.RemoteSource.NetworkName,
-				Address: dependency.RemoteSource.Address,
-			},
-		},
+		Aliases:  aliases,
 	}
 
 	if _, err := c.ByName(contract.Name); err != nil {

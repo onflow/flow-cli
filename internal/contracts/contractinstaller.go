@@ -3,6 +3,9 @@ package contracts
 import (
 	"fmt"
 
+	"github.com/onflow/flow-go/fvm/systemcontracts"
+	"github.com/onflow/flow-go/model/flow"
+
 	"github.com/onflow/flow-cli/flowkit/gateway"
 
 	"github.com/onflow/flow-cli/flowkit/project"
@@ -161,6 +164,12 @@ func (ci *ContractInstaller) handleFoundContract(networkName, contractAddr, assi
 	return nil
 }
 
+var networkToChainID = map[string]flow.ChainID{
+	"emulator": flow.Emulator,
+	"testnet":  flow.Testnet,
+	"mainnet":  flow.Mainnet,
+}
+
 func (ci *ContractInstaller) updateState(networkName, contractAddress, assignedName, contractName string) error {
 	dep := config.Dependency{
 		Name: assignedName,
@@ -170,8 +179,31 @@ func (ci *ContractInstaller) updateState(networkName, contractAddress, assignedN
 			ContractName: contractName,
 		},
 	}
+
+	sc := systemcontracts.SystemContractsForChain(networkToChainID[networkName])
+	coreContracts := sc.All()
+
+	var aliases []config.Alias
+
+	for _, coreContract := range coreContracts {
+		if coreContract.Name == contractName && coreContract.Address.String() == contractAddress {
+			aliases = append(aliases, config.Alias{
+				Network: networkName,
+				Address: flowsdk.HexToAddress(contractAddress),
+			})
+		}
+	}
+
+	// If no core contract match, then use the address in remoteSource as alias
+	if len(aliases) == 0 {
+		aliases = append(aliases, config.Alias{
+			Network: dep.RemoteSource.NetworkName,
+			Address: dep.RemoteSource.Address,
+		})
+	}
+
 	ci.State.Dependencies().AddOrUpdate(dep)
-	ci.State.Contracts().AddDependencyAsContract(dep)
+	ci.State.Contracts().AddDependencyAsContract(dep, aliases)
 	err := ci.State.SaveDefault()
 	if err != nil {
 		return err
