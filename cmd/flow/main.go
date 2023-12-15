@@ -22,7 +22,7 @@ package main
 import (
 	"os"
 
-	"github.com/onflow/flow-cli/internal/contracts"
+	"github.com/onflow/flow-cli/internal/dependencymanager"
 
 	"github.com/spf13/cobra"
 
@@ -89,7 +89,7 @@ func main() {
 	cmd.AddCommand(snapshot.Cmd)
 	cmd.AddCommand(super.FlixCmd)
 	cmd.AddCommand(super.GenerateCommand)
-	cmd.AddCommand(contracts.Cmd)
+	cmd.AddCommand(dependencymanager.Cmd)
 
 	command.InitFlags(cmd)
 	cmd.AddGroup(&cobra.Group{

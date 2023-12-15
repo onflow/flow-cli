@@ -87,9 +87,9 @@ GenerateMnemonicKey(context.Context, crypto.SignatureAlgorithm, string) (crypto.
 
 DerivePrivateKeyFromMnemonic(context.Context, string, crypto.SignatureAlgorithm, string) (crypto.PrivateKey, error)
 
-// DeployProject contracts to the Flow network or update if already exists and update is set to true.
+// DeployProject dependencymanager to the Flow network or update if already exists and update is set to true.
 //
-// Retrieve all the contracts for specified network, sort them for deployment deploy one by one and replace
+// Retrieve all the dependencymanager for specified network, sort them for deployment deploy one by one and replace
 // the imports in the contract source, so it corresponds to the account name the contract was deployed to.
 DeployProject(context.Context, bool) ([]*project.Contract, error)
 

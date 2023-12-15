@@ -1,4 +1,4 @@
-package contracts
+package dependencymanager
 
 import (
 	"github.com/spf13/cobra"
