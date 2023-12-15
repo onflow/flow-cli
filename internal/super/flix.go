@@ -25,11 +25,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/onflow/flixkit-go"
-	"github.com/onflow/flixkit-go/bindings"
-	v1_1 "github.com/onflow/flixkit-go/flixkitv1_1"
-	flixkitv1_1 "github.com/onflow/flixkit-go/flixkitv1_1/generator"
-
+	"github.com/onflow/flixkit-go/flixkit"
+	v1_1 "github.com/onflow/flixkit-go/flixkit/v1_1"
 	"github.com/onflow/flow-cli/flowkit"
 	"github.com/onflow/flow-cli/flowkit/config"
 	"github.com/onflow/flow-cli/flowkit/output"
@@ -175,12 +172,12 @@ func packageCmd(
 	}
 
 	var out string
-	var gen bindings.FclGenerator
+	var gen flixkit.FclGenerator
 	switch flags.Lang {
 	case "js":
-		gen = *bindings.NewFclJSGenerator()
+		gen = *flixkit.NewFclJSGenerator()
 	case "ts":
-		gen = *bindings.NewFclTSGenerator()
+		gen = *flixkit.NewFclTSGenerator()
 	default:
 		return nil, fmt.Errorf("language %s not supported", flags.Lang)
 	}
@@ -214,7 +211,7 @@ func generateCmd(
 	}
 
 	depContracts := GetDeployedContracts(state)
-	generator, err := flixkitv1_1.NewGenerator(depContracts, logger)
+	generator, err := flixkit.NewGenerator(depContracts, logger)
 	if err != nil {
 		return nil, fmt.Errorf("could not create flix generator %w", err)
 	}
