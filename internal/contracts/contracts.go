@@ -5,10 +5,11 @@ import (
 )
 
 var Cmd = &cobra.Command{
-	Use:              "contracts",
+	Use:              "dependencies",
 	Short:            "Manage contracts and dependencies",
 	TraverseChildren: true,
 	GroupID:          "manager",
+	Aliases:          []string{"deps"},
 }
 
 func init() {
