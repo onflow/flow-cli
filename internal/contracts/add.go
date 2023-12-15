@@ -32,6 +32,9 @@ func add(
 	flow flowkit.Services,
 	state *flowkit.State,
 ) (result command.Result, err error) {
+	logger.StartProgress(fmt.Sprintf("Installing dependencies for %s...", args[0]))
+	defer logger.StopProgress()
+
 	dep := args[0]
 
 	installer := NewContractInstaller(logger, state)
@@ -39,5 +42,8 @@ func add(
 		logger.Error(fmt.Sprintf("Error: %v", err))
 		return nil, err
 	}
+
+	logger.Info("✅  Dependencies installed. Check your flow.json")
+
 	return nil, nil
 }
