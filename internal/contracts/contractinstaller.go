@@ -2,6 +2,7 @@ package contracts
 
 import (
 	"fmt"
+	"sync"
 
 	"github.com/onflow/flow-go/fvm/systemcontracts"
 	"github.com/onflow/flow-go/model/flow"
@@ -21,6 +22,7 @@ type ContractInstaller struct {
 	Gateways map[string]gateway.Gateway
 	Logger   output.Logger
 	State    *flowkit.State
+	Mutex    sync.Mutex
 }
 
 func NewContractInstaller(logger output.Logger, state *flowkit.State) *ContractInstaller {
@@ -98,7 +100,6 @@ func (ci *ContractInstaller) processDependency(dependency config.Dependency) err
 }
 
 func (ci *ContractInstaller) fetchDependencies(networkName string, address flowsdk.Address, assignedName, contractName string) error {
-	ci.Logger.Info(fmt.Sprintf("Fetching dependencies for %s at %s", contractName, address))
 	account, err := ci.Gateways[networkName].GetAccount(address)
 	if err != nil {
 		return fmt.Errorf("failed to get account: %v", err)
@@ -110,6 +111,9 @@ func (ci *ContractInstaller) fetchDependencies(networkName string, address flows
 	if account.Contracts == nil {
 		return fmt.Errorf("contracts are nil for account: %s", address)
 	}
+
+	var wg sync.WaitGroup
+	errCh := make(chan error, len(account.Contracts))
 
 	for _, contract := range account.Contracts {
 
@@ -133,14 +137,25 @@ func (ci *ContractInstaller) fetchDependencies(networkName string, address flows
 			if program.HasAddressImports() {
 				imports := program.AddressImportDeclarations()
 				for _, imp := range imports {
-					importAddress := flowsdk.HexToAddress(imp.Location.String())
-					contractName := imp.Identifiers[0].String()
-					err := ci.fetchDependencies("testnet", importAddress, contractName, contractName)
-					if err != nil {
-						return err
-					}
+					wg.Add(1)
+					go func(importAddress flowsdk.Address, contractName string) {
+						defer wg.Done()
+						err := ci.fetchDependencies("testnet", importAddress, contractName, contractName)
+						if err != nil {
+							errCh <- err
+						}
+					}(flowsdk.HexToAddress(imp.Location.String()), imp.Identifiers[0].String())
 				}
 			}
+		}
+	}
+
+	wg.Wait()
+	close(errCh)
+
+	for err := range errCh {
+		if err != nil {
+			return err
 		}
 	}
 
@@ -148,6 +163,9 @@ func (ci *ContractInstaller) fetchDependencies(networkName string, address flows
 }
 
 func (ci *ContractInstaller) handleFoundContract(networkName, contractAddr, assignedName, contractName, contractData string) error {
+	ci.Mutex.Lock()
+	defer ci.Mutex.Unlock()
+
 	if !contractFileExists(contractAddr, contractName) {
 		if err := createContractFile(contractAddr, contractName, contractData); err != nil {
 			return fmt.Errorf("failed to create contract file: %v", err)
