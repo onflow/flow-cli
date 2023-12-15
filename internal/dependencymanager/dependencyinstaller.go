@@ -18,14 +18,14 @@ import (
 	"github.com/onflow/flow-cli/flowkit/output"
 )
 
-type ContractInstaller struct {
+type DependencyInstaller struct {
 	Gateways map[string]gateway.Gateway
 	Logger   output.Logger
 	State    *flowkit.State
 	Mutex    sync.Mutex
 }
 
-func NewContractInstaller(logger output.Logger, state *flowkit.State) *ContractInstaller {
+func NewDepdencyInstaller(logger output.Logger, state *flowkit.State) *DependencyInstaller {
 	emulatorGateway, err := gateway.NewGrpcGateway(config.EmulatorNetwork)
 	if err != nil {
 		logger.Error(fmt.Sprintf("Error creating emulator gateway: %v", err))
@@ -47,14 +47,14 @@ func NewContractInstaller(logger output.Logger, state *flowkit.State) *ContractI
 		config.MainnetNetwork.Name:  mainnetGateway,
 	}
 
-	return &ContractInstaller{
+	return &DependencyInstaller{
 		Gateways: gateways,
 		Logger:   logger,
 		State:    state,
 	}
 }
 
-func (ci *ContractInstaller) install() error {
+func (ci *DependencyInstaller) install() error {
 	for _, dependency := range *ci.State.Dependencies() {
 		if err := ci.processDependency(dependency); err != nil {
 			ci.Logger.Error(fmt.Sprintf("Error processing dependency: %v", err))
@@ -64,7 +64,7 @@ func (ci *ContractInstaller) install() error {
 	return nil
 }
 
-func (ci *ContractInstaller) add(depRemoteSource, customName string) error {
+func (ci *DependencyInstaller) add(depRemoteSource, customName string) error {
 	depNetwork, depAddress, depContractName, err := config.ParseRemoteSourceString(depRemoteSource)
 	if err != nil {
 		return fmt.Errorf("error parsing remote source: %w", err)
@@ -94,12 +94,12 @@ func (ci *ContractInstaller) add(depRemoteSource, customName string) error {
 	return nil
 }
 
-func (ci *ContractInstaller) processDependency(dependency config.Dependency) error {
+func (ci *DependencyInstaller) processDependency(dependency config.Dependency) error {
 	depAddress := flowsdk.HexToAddress(dependency.RemoteSource.Address.String())
 	return ci.fetchDependencies(dependency.RemoteSource.NetworkName, depAddress, dependency.Name, dependency.RemoteSource.ContractName)
 }
 
-func (ci *ContractInstaller) fetchDependencies(networkName string, address flowsdk.Address, assignedName, contractName string) error {
+func (ci *DependencyInstaller) fetchDependencies(networkName string, address flowsdk.Address, assignedName, contractName string) error {
 	account, err := ci.Gateways[networkName].GetAccount(address)
 	if err != nil {
 		return fmt.Errorf("failed to get account: %v", err)
@@ -162,7 +162,7 @@ func (ci *ContractInstaller) fetchDependencies(networkName string, address flows
 	return nil
 }
 
-func (ci *ContractInstaller) handleFoundContract(networkName, contractAddr, assignedName, contractName, contractData string) error {
+func (ci *DependencyInstaller) handleFoundContract(networkName, contractAddr, assignedName, contractName, contractData string) error {
 	ci.Mutex.Lock()
 	defer ci.Mutex.Unlock()
 
@@ -218,7 +218,7 @@ func getCoreContractByName(networkName, contractName string) *systemcontracts.Sy
 	return nil
 }
 
-func (ci *ContractInstaller) updateState(networkName, contractAddress, assignedName, contractName string) error {
+func (ci *DependencyInstaller) updateState(networkName, contractAddress, assignedName, contractName string) error {
 	dep := config.Dependency{
 		Name: assignedName,
 		RemoteSource: config.RemoteSource{

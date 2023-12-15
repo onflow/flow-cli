@@ -32,7 +32,7 @@ func install(
 	logger.StartProgress("Installing dependencies from flow.json...")
 	defer logger.StopProgress()
 
-	installer := NewContractInstaller(logger, state)
+	installer := NewDepdencyInstaller(logger, state)
 	if err := installer.install(); err != nil {
 		logger.Error(fmt.Sprintf("Error: %v", err))
 		return nil, err

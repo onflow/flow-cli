@@ -37,7 +37,7 @@ func add(
 
 	dep := args[0]
 
-	installer := NewContractInstaller(logger, state)
+	installer := NewDepdencyInstaller(logger, state)
 	if err := installer.add(dep, addFlags.name); err != nil {
 		logger.Error(fmt.Sprintf("Error: %v", err))
 		return nil, err
