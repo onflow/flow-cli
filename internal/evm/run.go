@@ -111,8 +111,6 @@ func run(
 }
 
 func executeCall(flow flowkit.Services, contractAddress string, callerAddress string, data []byte) ([]byte, error) {
-	fmt.Println("execute call: ", contractAddress, callerAddress, data)
-
 	decodedAddress, err := hex.DecodeString(contractAddress)
 	if err != nil {
 		return nil, err

@@ -74,7 +74,14 @@ func send(
 	return SendTransaction(code, args[1:], filename, flow, state, flags)
 }
 
-func SendTransaction(code []byte, args []string, location string, flow flowkit.Services, state *flowkit.State, sendFlags Flags) (result command.Result, err error) {
+func SendTransaction(
+	code []byte,
+	args []string,
+	location string,
+	flow flowkit.Services,
+	state *flowkit.State,
+	sendFlags Flags,
+) (result command.Result, err error) {
 	proposerName := sendFlags.Proposer
 	var proposer *accounts.Account
 	if proposerName != "" {
