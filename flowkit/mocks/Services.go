@@ -4,6 +4,7 @@ package mocks
 
 import (
 	cadence "github.com/onflow/cadence"
+
 	accounts "github.com/onflow/flow-cli/flowkit/accounts"
 
 	config "github.com/onflow/flow-cli/flowkit/config"
