@@ -56,7 +56,7 @@ func rpcRun(
 ) (command.Result, error) {
 
 	logger := zerolog.New(os.Stdout).With().Str("module", "grpc").Logger()
-	api := &ethAPI{flow: flow, log: logger, state: state, nonces: make(map[common.Address]uint)}
+	api := &ethAPI{flow: flow, log: logger, state: state, nonces: make(map[common.Address]uint64)}
 
 	server := rpc.NewServer()
 	err := server.RegisterName("eth", api)
@@ -91,11 +91,32 @@ func requestLogger(logger zerolog.Logger, next http.Handler) http.Handler {
 	})
 }
 
+func callServiceMethod(flow flowkit.Services, method string) ([]byte, error) {
+	const serviceContract = "e536720791a7dadbebdbcd8c8546fb0791a11901"
+
+	ABI, err := abi.JSON(bytes.NewReader(serviceABI))
+	if err != nil {
+		return nil, fmt.Errorf("can't deserialize ABI file: %w", err)
+	}
+
+	data, err := ABI.Pack(method)
+	if err != nil {
+		return nil, fmt.Errorf("can't prepare arguments: %w", err)
+	}
+
+	val, err := executeCall(flow, serviceContract, "f8d6e0586b0a20c7", data)
+	if err != nil {
+		return nil, err
+	}
+
+	return val, err
+}
+
 type ethAPI struct {
 	flow   flowkit.Services
 	state  *flowkit.State
 	log    zerolog.Logger
-	nonces map[common.Address]uint
+	nonces map[common.Address]uint64
 }
 
 func (e *ethAPI) Call(
@@ -156,32 +177,30 @@ func (e *ethAPI) GetTransactionCount(
 	blockNumberOrHash rpc.BlockNumberOrHash,
 ) (*hexutil.Uint64, error) {
 	// todo maybe add internal counter
-	nonce := uint64(0)
-	e.log.Info().Uint64("nonce", nonce).Msg("get transaction count")
-	return (*hexutil.Uint64)(&nonce), nil
+	var nonce hexutil.Uint64
+	stored := e.nonces[address]
+	nonce = (hexutil.Uint64)(stored)
+
+	e.log.Info().Uint64("nonce", stored).Msg("get transaction count")
+	return &nonce, nil
 }
 
 func (e *ethAPI) BlockNumber() hexutil.Uint64 {
 	e.log.Info().Msg("get latest block number")
 
-	const serviceContract = "e536720791a7dadbebdbcd8c8546fb0791a11901"
-
-	ABI, err := abi.JSON(bytes.NewReader(serviceABI))
-	if err != nil {
-		panic(fmt.Errorf("can't deserialize ABI file: %w", err))
-	}
-
-	data, err := ABI.Pack("getBlock")
-	if err != nil {
-		panic(fmt.Errorf("can't prepare arguments: %w", err))
-	}
-
-	val, err := executeCall(e.flow, serviceContract, "f8d6e0586b0a20c7", data)
+	val, err := callServiceMethod(e.flow, "getBlock")
 	if err != nil {
 		panic(err)
 	}
 
 	return hexutil.Uint64(binary.BigEndian.Uint64(val[len(val)-8:]))
+}
+
+func (e *ethAPI) GetTransactionReceipt(
+	ctx context.Context,
+	hash common.Hash,
+) (map[string]interface{}, error) {
+	return map[string]interface{}{}, nil
 }
 
 func (e *ethAPI) ChainId() *hexutil.Big {
@@ -196,6 +215,15 @@ func (e *ethAPI) GetBlockByNumber(
 ) (map[string]interface{}, error) {
 	e.log.Info().Msg("get block by number")
 	return map[string]interface{}{}, nil
+}
+
+func (e *ethAPI) GetBalance(
+	ctx context.Context,
+	address common.Address,
+	blockNumberOrHash *rpc.BlockNumberOrHash,
+) (*hexutil.Big, error) {
+
+	return (*hexutil.Big)(big.NewInt(101)), nil
 }
 
 func (e *ethAPI) GasPrice(ctx context.Context) (*hexutil.Big, error) {
