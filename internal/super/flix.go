@@ -26,7 +26,6 @@ import (
 	"path/filepath"
 
 	"github.com/onflow/flixkit-go/flixkit"
-	v1_1 "github.com/onflow/flixkit-go/flixkit/v1_1"
 	"github.com/onflow/flow-cli/flowkit"
 	"github.com/onflow/flow-cli/flowkit/config"
 	"github.com/onflow/flow-cli/flowkit/output"
@@ -272,9 +271,8 @@ func GetRelativePath(configFile, bindingFile string) (string, error) {
 	return filepath.ToSlash(relPath), nil
 }
 
-func GetDeployedContracts(state *flowkit.State) []v1_1.Contract {
-	allContracts := map[string]v1_1.Contract{}
-	depContracts := make([]v1_1.Contract, 0)
+func GetDeployedContracts(state *flowkit.State) flixkit.ContractInfos {
+	allContracts := make(flixkit.ContractInfos)
 	depNetworks := make([]string, 0)
 	// get all configured networks in flow.json
 	for _, n := range *state.Networks() {
@@ -289,18 +287,9 @@ func GetDeployedContracts(state *flowkit.State) []v1_1.Contract {
 		}
 		for _, c := range contracts {
 			if _, ok := allContracts[c.Name]; !ok {
-				allContracts[c.Name] = v1_1.Contract{
-					Contract: c.Name,
-					Networks: make([]v1_1.Network, 0),
-				}
+				allContracts[c.Name] = make(flixkit.NetworkAddressMap)
 			}
-			e := allContracts[c.Name]
-			n := v1_1.Network{
-				Network: network,
-				Address: "0x" + c.AccountAddress.String(),
-			}
-			e.Networks = append(e.Networks, n)
-			allContracts[c.Name] = e
+			allContracts[c.Name][network] = c.AccountAddress.String()
 		}
 		locAliases := state.AliasesForNetwork(config.Network{Name: network})
 		for name, addr := range locAliases {
@@ -308,23 +297,12 @@ func GetDeployedContracts(state *flowkit.State) []v1_1.Contract {
 				continue
 			}
 			if _, ok := allContracts[name]; !ok {
-				allContracts[name] = v1_1.Contract{
-					Contract: name,
-					Networks: make([]v1_1.Network, 0),
-				}
+				allContracts[name] = make(flixkit.NetworkAddressMap)
 			}
-			e := allContracts[name]
-			e.Networks = append(e.Networks, v1_1.Network{
-				Network: network,
-				Address: "0x" + addr,
-			})
-			allContracts[name] = e
+			allContracts[name][network] = addr
 		}
 	}
-	for _, c := range allContracts {
-		depContracts = append(depContracts, c)
-	}
-	return depContracts
+	return allContracts
 }
 
 func isUrl(str string) bool {
