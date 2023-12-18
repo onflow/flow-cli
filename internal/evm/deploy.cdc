@@ -21,7 +21,7 @@ transaction(bytecode: String) {
         let address = bridgedAccount.deploy(
            code: decodedCode,
            gasLimit: 300000,
-           value: EVM.Balance(flow: 0.5)
+           value: EVM.Balance(flow: 0.0)
         )
 
         destroy bridgedAccount
