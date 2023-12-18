@@ -1,0 +1,14 @@
+// SPDX-License-Identifier: GPL-3.0
+
+pragma solidity >=0.8.2 <0.9.0;
+
+contract Storage {
+
+    function getBalance(address _owner) external view returns (uint) {
+        return address(_owner).balance;
+    }
+
+    function getBlock() external view returns (uint) {
+        return block.number;
+    }
+}

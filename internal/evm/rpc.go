@@ -91,7 +91,7 @@ func requestLogger(logger zerolog.Logger, next http.Handler) http.Handler {
 	})
 }
 
-func callServiceMethod(flow flowkit.Services, method string) ([]byte, error) {
+func callServiceMethod(flow flowkit.Services, method string, args ...interface{}) ([]byte, error) {
 	const serviceContract = "e536720791a7dadbebdbcd8c8546fb0791a11901"
 
 	ABI, err := abi.JSON(bytes.NewReader(serviceABI))
@@ -99,7 +99,7 @@ func callServiceMethod(flow flowkit.Services, method string) ([]byte, error) {
 		return nil, fmt.Errorf("can't deserialize ABI file: %w", err)
 	}
 
-	data, err := ABI.Pack(method)
+	data, err := ABI.Pack(method, args...)
 	if err != nil {
 		return nil, fmt.Errorf("can't prepare arguments: %w", err)
 	}
@@ -148,17 +148,20 @@ func (e *ethAPI) SendRawTransaction(
 	txStream := rlp.NewStream(bytes.NewReader(input), uint64(len(input)))
 	err := tx.DecodeRLP(txStream)
 	if err != nil {
+		e.log.Error().Err(err).Msg("")
 		return common.Hash{}, err
 	}
 
 	sender, err := types.Sender(emulator.GetDefaultSigner(), &tx)
 	if err != nil {
+		e.log.Error().Err(err).Msg("")
 		return common.Hash{}, err
 	}
 
 	// todo probably decode rlp the tx and then check the account and increase nonce counter if successful
 	err = sendSignedTx(e.flow, e.state, input)
 	if err != nil {
+		e.log.Error().Err(err).Msg("")
 		return common.Hash{}, err
 	}
 
@@ -190,6 +193,7 @@ func (e *ethAPI) BlockNumber() hexutil.Uint64 {
 
 	val, err := callServiceMethod(e.flow, "getBlock")
 	if err != nil {
+		e.log.Error().Err(err).Msg("")
 		panic(err)
 	}
 
@@ -220,10 +224,19 @@ func (e *ethAPI) GetBlockByNumber(
 func (e *ethAPI) GetBalance(
 	ctx context.Context,
 	address common.Address,
-	blockNumberOrHash *rpc.BlockNumberOrHash,
+	blockNrOrHash rpc.BlockNumberOrHash,
 ) (*hexutil.Big, error) {
+	e.log.Info().Str("address", address.String()).Msg("get balance")
 
-	return (*hexutil.Big)(big.NewInt(101)), nil
+	val, err := callServiceMethod(e.flow, "getBalance", address)
+	if err != nil {
+		e.log.Error().Err(err).Msg("")
+		return nil, err
+	}
+
+	balance := binary.BigEndian.Uint64(val[len(val)-8:])
+
+	return (*hexutil.Big)(big.NewInt(int64(balance))), nil
 }
 
 func (e *ethAPI) GasPrice(ctx context.Context) (*hexutil.Big, error) {
