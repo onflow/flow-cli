@@ -3,13 +3,13 @@
     "name": "Empty Cadence Project",
     "repo": "https://github.com/sideninja/flow-empty-scaffold",
     "description": "Empty project containing only basic folder structure and flow.json configuration.",
-    "commit": "598612f4cdc7ee4487752ef203061082527216b4"
+    "commit": "2ba41348c54c60ccc4e7c3a2d46deead17aab2e6"
   },
   {
     "name": "Simple Cadence Project",
     "repo": "https://github.com/sideninja/flow-basic-scaffold.git",
     "description": "Scaffold contains required folder structure as well as some example Cadence code.",
-    "commit": "f14d43b951400b95e850c07023735538ff836ac6"
+    "commit": "5ea01c5f49a855bd0e91333bcae561d52a0de5ec"
   },
   {
     "name": "Cadence NFT Project",
