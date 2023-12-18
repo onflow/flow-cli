@@ -34,6 +34,7 @@ func init() {
 	getCommand.AddToParent(Cmd)
 	runCommand.AddToParent(Cmd)
 	rpcCommand.AddToParent(Cmd)
+	fundCommand.AddToParent(Cmd)
 }
 
 type evmResult struct {
