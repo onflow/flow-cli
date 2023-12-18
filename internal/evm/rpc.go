@@ -1,17 +1,25 @@
 package evm
 
 import (
+	"bytes"
 	"context"
 	_ "embed"
+	"encoding/binary"
 	"fmt"
+	"io"
 	"math/big"
 	"net/http"
+	"os"
 	"strings"
 
+	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/ethereum/go-ethereum/rpc"
+	"github.com/onflow/flow-go/fvm/evm/emulator"
+	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/flowkit"
@@ -19,8 +27,8 @@ import (
 	"github.com/onflow/flow-cli/internal/command"
 )
 
-//go:embed run.cdc
-var callCode []byte
+//go:embed service.abi
+var serviceABI []byte
 
 type flagsRPC struct{}
 
@@ -47,14 +55,22 @@ func rpcRun(
 	state *flowkit.State,
 ) (command.Result, error) {
 
+	logger := zerolog.New(os.Stdout).With().Str("module", "grpc").Logger()
+	api := &ethAPI{flow: flow, log: logger, state: state, nonces: make(map[common.Address]uint)}
+
 	server := rpc.NewServer()
-	err := server.RegisterName("eth", &ethAPI{flow})
+	err := server.RegisterName("eth", api)
+	if err != nil {
+		return nil, err
+	}
+	err = server.RegisterName("net", &NetAPI{})
 	if err != nil {
 		return nil, err
 	}
 
-	http.Handle("/", server)
-	err = http.ListenAndServe(":9000", nil)
+	mux := http.NewServeMux()
+	mux.Handle("/", requestLogger(logger, server))
+	err = http.ListenAndServe(":9000", mux)
 	if err != nil {
 		return nil, err
 	}
@@ -63,8 +79,23 @@ func rpcRun(
 	return nil, nil
 }
 
+func requestLogger(logger zerolog.Logger, next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var body []byte
+		if r.Body != nil {
+			body, _ = io.ReadAll(r.Body)
+			r.Body = io.NopCloser(bytes.NewBuffer(body)) // recreate the body for next handler
+		}
+		logger.Info().Str("method", r.Method).Str("body", string(body)).Msg("request")
+		next.ServeHTTP(w, r)
+	})
+}
+
 type ethAPI struct {
-	flow flowkit.Services
+	flow   flowkit.Services
+	state  *flowkit.State
+	log    zerolog.Logger
+	nonces map[common.Address]uint
 }
 
 func (e *ethAPI) Call(
@@ -74,34 +105,101 @@ func (e *ethAPI) Call(
 	overrides *StateOverride,
 	blockOverrides *BlockOverrides,
 ) (hexutil.Bytes, error) {
+	e.log.Info().Str("to", args.To.String()).Str("data", args.Data.String()).Msg("call")
+
 	val, err := executeCall(
 		e.flow,
 		strings.ReplaceAll(args.To.String(), "0x", ""),
-		"f8d6e0586b0a20c7",
+		"f8d6e0586b0a20c7", // todo set from args
 		*args.Data,
 	)
 
-	fmt.Println("result", val, err)
 	return val, err
+}
+
+func (e *ethAPI) SendRawTransaction(
+	ctx context.Context,
+	input hexutil.Bytes,
+) (common.Hash, error) {
+	e.log.Info().Str("data", input.String()).Msg("send raw transaction")
+
+	tx := types.Transaction{}
+	txStream := rlp.NewStream(bytes.NewReader(input), uint64(len(input)))
+	err := tx.DecodeRLP(txStream)
+	if err != nil {
+		return common.Hash{}, err
+	}
+
+	sender, err := types.Sender(emulator.GetDefaultSigner(), &tx)
+	if err != nil {
+		return common.Hash{}, err
+	}
+
+	// todo probably decode rlp the tx and then check the account and increase nonce counter if successful
+	err = sendSignedTx(e.flow, e.state, input)
+	if err != nil {
+		return common.Hash{}, err
+	}
+
+	e.nonces[sender]++
+
+	return tx.Hash(), nil
 }
 
 func (e *ethAPI) Ping() (int, error) {
 	return 1, nil
 }
 
-func (e *ethAPI) BlockNumber() hexutil.Uint64 {
-	return hexutil.Uint64(65848272)
+func (e *ethAPI) GetTransactionCount(
+	ctx context.Context,
+	address common.Address,
+	blockNumberOrHash rpc.BlockNumberOrHash,
+) (*hexutil.Uint64, error) {
+	// todo maybe add internal counter
+	nonce := uint64(0)
+	e.log.Info().Uint64("nonce", nonce).Msg("get transaction count")
+	return (*hexutil.Uint64)(&nonce), nil
 }
 
-func (s *ethAPI) GetBlockByNumber(
+func (e *ethAPI) BlockNumber() hexutil.Uint64 {
+	e.log.Info().Msg("get latest block number")
+
+	const serviceContract = "e536720791a7dadbebdbcd8c8546fb0791a11901"
+
+	ABI, err := abi.JSON(bytes.NewReader(serviceABI))
+	if err != nil {
+		panic(fmt.Errorf("can't deserialize ABI file: %w", err))
+	}
+
+	data, err := ABI.Pack("getBlock")
+	if err != nil {
+		panic(fmt.Errorf("can't prepare arguments: %w", err))
+	}
+
+	val, err := executeCall(e.flow, serviceContract, "f8d6e0586b0a20c7", data)
+	if err != nil {
+		panic(err)
+	}
+
+	return hexutil.Uint64(binary.BigEndian.Uint64(val[len(val)-8:]))
+}
+
+func (e *ethAPI) ChainId() *hexutil.Big {
+	e.log.Info().Msg("get chain id")
+	return (*hexutil.Big)(big.NewInt(666)) // hardcode testnet
+}
+
+func (e *ethAPI) GetBlockByNumber(
 	ctx context.Context,
 	blockNumber rpc.BlockNumber,
 	fullTx bool,
 ) (map[string]interface{}, error) {
+	e.log.Info().Msg("get block by number")
 	return map[string]interface{}{}, nil
 }
 
-func (s *ethAPI) GasPrice(ctx context.Context) (*hexutil.Big, error) {
+func (e *ethAPI) GasPrice(ctx context.Context) (*hexutil.Big, error) {
+	e.log.Info().Msg("gas price")
 	return (*hexutil.Big)(big.NewInt(1)), nil
 }
 
@@ -124,6 +222,26 @@ type TransactionArgs struct {
 	// Introduced by AccessListTxType transaction.
 	AccessList *types.AccessList `json:"accessList,omitempty"`
 	ChainID    *hexutil.Big      `json:"chainId,omitempty"`
+}
+
+// NetAPI offers network related RPC methods
+type NetAPI struct {
+	networkVersion uint64
+}
+
+// Listening returns an indication if the node is listening for network connections.
+func (s *NetAPI) Listening() bool {
+	return true // always listening
+}
+
+// PeerCount returns the number of connected peers
+func (s *NetAPI) PeerCount() hexutil.Uint {
+	return 1
+}
+
+// Version returns the current ethereum protocol version.
+func (s *NetAPI) Version() string {
+	return fmt.Sprintf("%d", 666)
 }
 
 type StateOverride map[common.Address]OverrideAccount
