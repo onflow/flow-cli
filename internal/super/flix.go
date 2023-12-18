@@ -26,6 +26,7 @@ import (
 	"path/filepath"
 
 	"github.com/onflow/flixkit-go/flixkit"
+
 	"github.com/onflow/flow-cli/flowkit"
 	"github.com/onflow/flow-cli/flowkit/config"
 	"github.com/onflow/flow-cli/flowkit/output"
