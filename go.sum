@@ -882,10 +882,8 @@ github.com/onflow/cadence-tools/test v0.14.5 h1:u1kYkotKdwKEf9c3h65mI3VMevBkHY+7
 github.com/onflow/cadence-tools/test v0.14.5/go.mod h1:ix09Bb3GQ/fZMNpSR8E+vSFItGF54fzP9gFxU7AsOIw=
 github.com/onflow/fcl-dev-wallet v0.7.4 h1:vI6t3U0AO88R/Iitn5KsnniSpbN9Lqsqwvi9EJT4C0k=
 github.com/onflow/fcl-dev-wallet v0.7.4/go.mod h1:kc42jkiuoPJmxMRFjfbRO9XvnR/3XLheaOerxVMDTiw=
-github.com/onflow/flow-archive v1.3.4-0.20230503192214-9e81e82d4dcc h1:C4ZniFeOv+pHlDLJdGc/4e3NklSjVuvaXKN47980gnY=
-github.com/onflow/flow-archive v1.3.4-0.20230503192214-9e81e82d4dcc/go.mod h1:UPsvKk/37Atosif4wlBl3gsLbGJyGpdXYpXDsWtMVBE=
-github.com/onflow/flixkit-go v0.3.1 h1:5izElx+3H7vCqlzK0pzEZ+lW3xjfLoB4w5cD2/3qe2M=
-github.com/onflow/flixkit-go v0.3.1/go.mod h1:H+x/JnydsqM1jmn927RTsyjSZtFFPloJUfY3zE8kMik=
+github.com/onflow/flixkit-go v1.0.0 h1:SY2H4iB3kW8CEOxnofJZYm3sEZXnz3x0qiWkIe4l1LI=
+github.com/onflow/flixkit-go v1.0.0/go.mod h1:KGL7oMu4uzt7s0qsNkaqGBYIt+Z38Qbf0JG56qK/Sg0=
 github.com/onflow/flow-core-contracts/lib/go/contracts v1.2.4-0.20231016154253-a00dbf7c061f h1:S8yIZw9LFXfYD1V5H9BiixihHw3GrXVPrmfplSzYaww=
 github.com/onflow/flow-core-contracts/lib/go/contracts v1.2.4-0.20231016154253-a00dbf7c061f/go.mod h1:jM6GMAL+m0hjusUgiYDNrixPQ6b9s8xjoJQoEu5bHQI=
 github.com/onflow/flow-core-contracts/lib/go/templates v1.2.4-0.20231016154253-a00dbf7c061f h1:Ep+Mpo2miWMe4pjPGIaEvEzshRep30dvNgxqk+//FrQ=
