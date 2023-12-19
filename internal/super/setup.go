@@ -39,7 +39,8 @@ import (
 )
 
 type flagsSetup struct {
-	Scaffold bool `default:"" flag:"scaffold" info:"Use provided scaffolds for project creation"`
+	Scaffold   bool `default:"" flag:"scaffold" info:"Interactively select a provided scaffold for project creation"`
+	ScaffoldID int  `default:"" flag:"scaffold-id" info:"Use provided scaffold ID for project creation"`
 }
 
 var setupFlags = flagsSetup{}
@@ -81,13 +82,19 @@ func create(
 	}
 
 	scaffolds, err := getScaffolds()
-
 	if err != nil {
 		return nil, err
 	}
 
 	// default to first scaffold - basic scaffold
 	pickedScaffold := scaffolds[0]
+
+	if setupFlags.ScaffoldID != 0 {
+		if setupFlags.ScaffoldID > len(scaffolds) {
+			return nil, fmt.Errorf("scaffold with id %d does not exist", setupFlags.ScaffoldID)
+		}
+		pickedScaffold = scaffolds[setupFlags.ScaffoldID-1]
+	}
 
 	if setupFlags.Scaffold {
 		scaffoldItems := make([]util.ScaffoldItem, 0)
@@ -107,11 +114,11 @@ func create(
 	}
 
 	logger.StartProgress(fmt.Sprintf("Creating your project %s", targetDir))
+	defer logger.StopProgress()
 	err = cloneScaffold(targetDir, pickedScaffold)
 	if err != nil {
 		return nil, fmt.Errorf("failed creating scaffold %w", err)
 	}
-	logger.StopProgress()
 
 	return &setupResult{targetDir: targetDir}, nil
 }

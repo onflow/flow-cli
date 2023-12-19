@@ -67,6 +67,7 @@ func createInteractive(state *flowkit.State) error {
 	}
 
 	log.StartProgress(fmt.Sprintf("Creating account %s on %s...", name, networkName))
+	defer log.StopProgress()
 
 	var account *accounts.Account
 	if selectedNetwork == config.EmulatorNetwork {

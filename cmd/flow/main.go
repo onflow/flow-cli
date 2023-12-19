@@ -68,7 +68,6 @@ func main() {
 	// super commands
 	super.SetupCommand.AddToParent(cmd)
 	super.DevCommand.AddToParent(cmd)
-	super.FlixCommand.AddToParent(cmd)
 
 	// structured commands
 	cmd.AddCommand(settings.Cmd)
@@ -86,6 +85,8 @@ func main() {
 	cmd.AddCommand(config.Cmd)
 	cmd.AddCommand(signatures.Cmd)
 	cmd.AddCommand(snapshot.Cmd)
+	cmd.AddCommand(super.FlixCmd)
+	cmd.AddCommand(super.GenerateCommand)
 
 	command.InitFlags(cmd)
 	cmd.AddGroup(&cobra.Group{
