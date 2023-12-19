@@ -8,29 +8,17 @@ require (
 	github.com/go-git/go-git/v5 v5.11.0
 	github.com/gosuri/uilive v0.0.4
 	github.com/manifoldco/promptui v0.9.0
-<<<<<<< HEAD
-	github.com/onflow/cadence v1.0.0-preview.1
+	github.com/onflow/cadence v1.0.0-preview.1.0.20231213191345-0ff20e15e7e1
 	github.com/onflow/cadence-tools/languageserver v0.33.0-stable-cadence.3
 	github.com/onflow/cadence-tools/test v0.12.0-stable-cadence.2
-	github.com/onflow/fcl-dev-wallet v0.7.2
-	github.com/onflow/flixkit-go v0.1.0
-	github.com/onflow/flow-cli/flowkit v1.5.0-stable-cadence.3
-	github.com/onflow/flow-core-contracts/lib/go/templates v1.2.4-0.20230918230627-2daea3d4f44b
-	github.com/onflow/flow-emulator v0.55.0-stable-cadence.2
-	github.com/onflow/flow-go-sdk v0.44.0-stable-cadence.2
-	github.com/onflowser/flowser/v2 v2.0.14-beta
-=======
-	github.com/onflow/cadence v0.42.6
-	github.com/onflow/cadence-tools/languageserver v0.33.3
-	github.com/onflow/cadence-tools/test v0.14.5
 	github.com/onflow/fcl-dev-wallet v0.7.4
 	github.com/onflow/flixkit-go v0.3.1
-	github.com/onflow/flow-cli/flowkit v1.6.1-0.20231110211255-b41f57a8b8c7
-	github.com/onflow/flow-core-contracts/lib/go/templates v1.2.4-0.20231016154253-a00dbf7c061f
-	github.com/onflow/flow-emulator v0.59.0
-	github.com/onflow/flow-go-sdk v0.41.17
+	github.com/onflow/flow-cli/flowkit v1.5.0
+	github.com/onflow/flow-core-contracts/lib/go/templates v1.2.4-0.20230918230627-2daea3d4f44b
+	github.com/onflow/flow-emulator v0.59.1-0.20231218185945-9116c416533f
+	github.com/onflow/flow-go v0.32.4-0.20231214190912-4c4527a42fb0
+	github.com/onflow/flow-go-sdk v0.44.0-stable-cadence.2
 	github.com/onflowser/flowser/v3 v3.1.3
->>>>>>> master
 	github.com/pkg/errors v0.9.1
 	github.com/psiemens/sconfig v0.1.0
 	github.com/radovskyb/watcher v1.0.7
@@ -39,13 +27,8 @@ require (
 	github.com/spf13/cobra v1.8.0
 	github.com/spf13/viper v1.16.0
 	github.com/stretchr/testify v1.8.4
-<<<<<<< HEAD
 	golang.org/x/exp v0.0.0-20230626212559-97b1e661b5df
-	google.golang.org/grpc v1.58.1
-=======
-	golang.org/x/exp v0.0.0-20230321023759-10a507213a29
 	google.golang.org/grpc v1.59.0
->>>>>>> master
 )
 
 require (
@@ -57,18 +40,11 @@ require (
 	github.com/DataDog/zstd v1.5.2 // indirect
 	github.com/FactomProject/basen v0.0.0-20150613233007-fe3947df716e // indirect
 	github.com/FactomProject/btcutilecc v0.0.0-20130527213604-d3a63a5752ec // indirect
-<<<<<<< HEAD
-	github.com/Microsoft/go-winio v0.5.2 // indirect
-	github.com/ProtonMail/go-crypto v0.0.0-20230217124315-7d5c6f04bbb8 // indirect
-	github.com/SaveTheRbtz/mph v0.1.2 // indirect
-	github.com/acomagu/bufpipe v1.0.4 // indirect
-=======
 	github.com/Microsoft/go-winio v0.6.1 // indirect
-	github.com/OneOfOne/xxhash v1.2.8 // indirect
 	github.com/ProtonMail/go-crypto v0.0.0-20230828082145-3c4c8a2d2371 // indirect
-	github.com/StackExchange/wmi v0.0.0-20180116203802-5d049714c4a6 // indirect
-	github.com/VictoriaMetrics/fastcache v1.6.0 // indirect
->>>>>>> master
+	github.com/SaveTheRbtz/mph v0.1.2 // indirect
+	github.com/StackExchange/wmi v1.2.1 // indirect
+	github.com/VictoriaMetrics/fastcache v1.12.1 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bits-and-blooms/bitset v1.10.0 // indirect
 	github.com/btcsuite/btcd/btcec/v2 v2.2.1 // indirect
@@ -137,7 +113,7 @@ require (
 	github.com/hashicorp/golang-lru/v2 v2.0.2 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/holiman/bloomfilter/v2 v2.0.3 // indirect
-	github.com/holiman/uint256 v1.2.2-0.20230321075855-87b91420868c // indirect
+	github.com/holiman/uint256 v1.2.3 // indirect
 	github.com/iancoleman/orderedmap v0.0.0-20190318233801-ac98e3ecb4b0 // indirect
 	github.com/improbable-eng/grpc-web v0.15.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
@@ -157,13 +133,8 @@ require (
 	github.com/jbenet/go-temp-err-catcher v0.1.0 // indirect
 	github.com/jbenet/goprocess v0.1.4 // indirect
 	github.com/joho/godotenv v1.4.0 // indirect
-<<<<<<< HEAD
 	github.com/k0kubun/pp v3.0.1+incompatible // indirect
 	github.com/kevinburke/go-bindata v3.24.0+incompatible // indirect
-=======
-	github.com/k0kubun/pp/v3 v3.2.0 // indirect
-	github.com/kevinburke/go-bindata v3.23.0+incompatible // indirect
->>>>>>> master
 	github.com/kevinburke/ssh_config v1.2.0 // indirect
 	github.com/klauspost/compress v1.16.5 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.5 // indirect
@@ -183,6 +154,7 @@ require (
 	github.com/mattn/go-tty v0.0.4 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.4 // indirect
 	github.com/minio/sha256-simd v1.0.1 // indirect
+	github.com/mitchellh/colorstring v0.0.0-20190213212951-d06e56a500db // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/mr-tron/base58 v1.2.0 // indirect
 	github.com/multiformats/go-base32 v0.1.0 // indirect
@@ -193,30 +165,15 @@ require (
 	github.com/multiformats/go-multihash v0.2.3 // indirect
 	github.com/multiformats/go-multistream v0.4.1 // indirect
 	github.com/multiformats/go-varint v0.0.7 // indirect
-<<<<<<< HEAD
+	github.com/olekukonko/tablewriter v0.0.5 // indirect
 	github.com/onflow/atree v0.6.1-0.20230711151834-86040b30171f // indirect
 	github.com/onflow/cadence-tools/lint v0.12.0-stable-cadence.2 // indirect
-	github.com/onflow/flow-archive v1.3.4-0.20230503192214-9e81e82d4dcc // indirect
 	github.com/onflow/flow-core-contracts/lib/go/contracts v1.2.4-0.20230921055800-5ed9c184d103 // indirect
-	github.com/onflow/flow-ft/lib/go/contracts v0.7.1-0.20230921055403-cf7a05c90c20 // indirect
-	github.com/onflow/flow-go v0.31.1-0.20230921060220-83b00fb98777 // indirect
-	github.com/onflow/flow-go/crypto v0.24.9 // indirect
-	github.com/onflow/flow-nft/lib/go/contracts v1.1.1-0.20230921055127-6493dc1ba948 // indirect
-	github.com/onflow/flow/protobuf/go/flow v0.3.2-0.20230628215638-83439d22e0ce // indirect
-	github.com/onflow/sdks v0.5.1-0.20230912225508-b35402f12bba // indirect
-=======
-	github.com/olekukonko/tablewriter v0.0.5 // indirect
-	github.com/onflow/atree v0.6.0 // indirect
-	github.com/onflow/cadence-tools/lint v0.14.1 // indirect
-	github.com/onflow/flow-core-contracts/lib/go/contracts v1.2.4-0.20231016154253-a00dbf7c061f // indirect
-	github.com/onflow/flow-ft/lib/go/contracts v0.7.1-0.20230711213910-baad011d2b13 // indirect
-	github.com/onflow/flow-go v0.32.4-0.20231211231711-1aba0828ca33 // indirect
+	github.com/onflow/flow-ft/lib/go/contracts v0.7.1-0.20231212194336-a2802ba36596 // indirect
 	github.com/onflow/flow-go/crypto v0.25.0 // indirect
-	github.com/onflow/flow-nft/lib/go/contracts v1.1.0 // indirect
+	github.com/onflow/flow-nft/lib/go/contracts v1.1.1-0.20231213195450-0b951b342b14 // indirect
 	github.com/onflow/flow/protobuf/go/flow v0.3.2-0.20231124194313-106cc495def6 // indirect
-	github.com/onflow/nft-storefront/lib/go/contracts v0.0.0-20221222181731-14b90207cead // indirect
-	github.com/onflow/sdks v0.5.0 // indirect
->>>>>>> master
+	github.com/onflow/sdks v0.5.1-0.20230912225508-b35402f12bba // indirect
 	github.com/onflow/wal v0.0.0-20230529184820-bc9f8244608d // indirect
 	github.com/opentracing/opentracing-go v1.2.0 // indirect
 	github.com/pbnjay/memory v0.0.0-20210728143218-7b4eea64cf58 // indirect
@@ -235,6 +192,7 @@ require (
 	github.com/rogpeppe/go-internal v1.11.0 // indirect
 	github.com/rs/cors v1.8.0 // indirect
 	github.com/rs/zerolog v1.29.0 // indirect
+	github.com/schollz/progressbar/v3 v3.13.1 // indirect
 	github.com/sethvargo/go-retry v0.2.3 // indirect
 	github.com/shirou/gopsutil v3.21.4-0.20210419000835-c7a38de76ee5+incompatible // indirect
 	github.com/skeema/knownhosts v1.2.1 // indirect
@@ -250,8 +208,8 @@ require (
 	github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7 // indirect
 	github.com/texttheater/golang-levenshtein/levenshtein v0.0.0-20200805054039-cae8b0eaed6c // indirect
 	github.com/tidwall/pretty v1.2.1 // indirect
-	github.com/tklauser/go-sysconf v0.3.9 // indirect
-	github.com/tklauser/numcpus v0.3.0 // indirect
+	github.com/tklauser/go-sysconf v0.3.12 // indirect
+	github.com/tklauser/numcpus v0.6.1 // indirect
 	github.com/turbolent/prettier v0.0.0-20220320183459-661cc755135d // indirect
 	github.com/tyler-smith/go-bip39 v1.1.0 // indirect
 	github.com/vmihailenco/msgpack v4.0.4+incompatible // indirect
@@ -273,27 +231,17 @@ require (
 	go.uber.org/atomic v1.11.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.24.0 // indirect
-<<<<<<< HEAD
-	golang.org/x/crypto v0.11.0 // indirect
-	golang.org/x/net v0.12.0 // indirect
-	golang.org/x/oauth2 v0.10.0 // indirect
-	golang.org/x/sync v0.3.0 // indirect
-	golang.org/x/sys v0.11.0 // indirect
-	golang.org/x/term v0.10.0 // indirect
-	golang.org/x/text v0.11.0 // indirect
-	golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2 // indirect
-=======
 	golang.org/x/crypto v0.16.0 // indirect
-	golang.org/x/mod v0.13.0 // indirect
+	golang.org/x/mod v0.14.0 // indirect
 	golang.org/x/net v0.19.0 // indirect
 	golang.org/x/oauth2 v0.11.0 // indirect
-	golang.org/x/sync v0.4.0 // indirect
+	golang.org/x/sync v0.5.0 // indirect
 	golang.org/x/sys v0.15.0 // indirect
+	golang.org/x/term v0.15.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	golang.org/x/time v0.3.0 // indirect
-	golang.org/x/tools v0.14.0 // indirect
+	golang.org/x/tools v0.16.0 // indirect
 	golang.org/x/xerrors v0.0.0-20231012003039-104605ab7028 // indirect
->>>>>>> master
 	gonum.org/v1/gonum v0.13.0 // indirect
 	google.golang.org/api v0.126.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect

@@ -26,7 +26,7 @@ import (
 
 	"github.com/onflow/cadence/runtime/common"
 	"github.com/onflow/cadence/runtime/stdlib"
-	"github.com/onflow/flow-go-sdk"
+	"github.com/onflow/flow-go/model/flow"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -320,27 +320,6 @@ func TestExecutingTests(t *testing.T) {
 				"s.7465737400000000000000000000000000000000000000000000000000000000",
 				"I.Crypto",
 				"I.Test",
-<<<<<<< HEAD
-				"A.0000000000000003.FlowToken",
-				"A.0000000000000001.FlowStorageFees",
-				"A.0000000000000001.FlowDKG",
-				"A.0000000000000001.ExampleNFT",
-				"A.0000000000000001.FlowIDTableStaking",
-				"A.0000000000000001.FlowClusterQC",
-				"A.0000000000000001.NodeVersionBeacon",
-				"A.0000000000000001.StakingProxy",
-				"A.0000000000000004.FlowFees",
-				"A.0000000000000002.FungibleToken",
-				"A.0000000000000001.FlowStakingCollection",
-
-				// TODO: enable
-				//"A.0000000000000001.NFTStorefrontV2",
-				//"A.0000000000000001.NFTStorefront",
-
-				"A.0000000000000001.LockedTokens",
-				"A.0000000000000001.FlowServiceAccount",
-				"A.0000000000000001.FlowEpoch",
-=======
 				"A.0000000000000001.NodeVersionBeacon",
 				"A.0000000000000001.FlowServiceAccount",
 				"A.0000000000000002.FungibleToken",
@@ -351,7 +330,6 @@ func TestExecutingTests(t *testing.T) {
 				"A.0000000000000001.FlowIDTableStaking",
 				"A.0000000000000001.LockedTokens",
 				"A.0000000000000001.ExampleNFT",
-				"A.0000000000000001.NFTStorefront",
 				"A.0000000000000001.FlowStakingCollection",
 				"A.0000000000000001.StakingProxy",
 				"A.0000000000000003.FlowToken",
@@ -363,17 +341,12 @@ func TestExecutingTests(t *testing.T) {
 				"A.0000000000000001.ViewResolver",
 				"A.0000000000000001.RandomBeaconHistory",
 				"I.BlockchainHelpers",
->>>>>>> master
 			},
 			coverageReport.ExcludedLocationIDs(),
 		)
 		assert.Equal(
 			t,
-<<<<<<< HEAD
-			"Coverage: 42.7% of statements",
-=======
 			"Coverage: 91.8% of statements",
->>>>>>> master
 			coverageReport.String(),
 		)
 		assert.Contains(
@@ -438,27 +411,6 @@ func TestExecutingTests(t *testing.T) {
 				"s.7465737400000000000000000000000000000000000000000000000000000000",
 				"I.Crypto",
 				"I.Test",
-<<<<<<< HEAD
-				"A.0000000000000003.FlowToken",
-				"A.0000000000000001.FlowStorageFees",
-				"A.0000000000000001.FlowDKG",
-				"A.0000000000000001.ExampleNFT",
-				"A.0000000000000001.FlowIDTableStaking",
-				"A.0000000000000001.FlowClusterQC",
-				"A.0000000000000001.NodeVersionBeacon",
-				"A.0000000000000001.StakingProxy",
-				"A.0000000000000004.FlowFees",
-				"A.0000000000000002.FungibleToken",
-				"A.0000000000000001.FlowStakingCollection",
-
-				// TODO: enable
-				//"A.0000000000000001.NFTStorefrontV2",
-				//"A.0000000000000001.NFTStorefront",
-
-				"A.0000000000000001.LockedTokens",
-				"A.0000000000000001.FlowServiceAccount",
-				"A.0000000000000001.FlowEpoch",
-=======
 				"A.0000000000000001.NodeVersionBeacon",
 				"A.0000000000000001.FlowServiceAccount",
 				"A.0000000000000002.FungibleToken",
@@ -469,7 +421,6 @@ func TestExecutingTests(t *testing.T) {
 				"A.0000000000000001.FlowIDTableStaking",
 				"A.0000000000000001.LockedTokens",
 				"A.0000000000000001.ExampleNFT",
-				"A.0000000000000001.NFTStorefront",
 				"A.0000000000000001.FlowStakingCollection",
 				"A.0000000000000001.StakingProxy",
 				"A.0000000000000003.FlowToken",
@@ -481,7 +432,6 @@ func TestExecutingTests(t *testing.T) {
 				"A.0000000000000001.ViewResolver",
 				"A.0000000000000001.RandomBeaconHistory",
 				"I.BlockchainHelpers",
->>>>>>> master
 			},
 			coverageReport.ExcludedLocationIDs(),
 		)
