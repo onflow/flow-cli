@@ -27,10 +27,6 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/onflow/flixkit-go"
-	"github.com/onflow/flixkit-go/bindings"
-	"github.com/onflow/flixkit-go/generator/flixkitv1_0_0"
-
 	"github.com/onflow/flow-cli/flowkit"
 	"github.com/onflow/flow-cli/flowkit/config"
 	"github.com/onflow/flow-cli/flowkit/output"
