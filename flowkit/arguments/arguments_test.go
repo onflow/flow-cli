@@ -149,6 +149,8 @@ func Test_ParseWithoutType(t *testing.T) {
 				Name: "variable-sized array",
 				Value: cadence.NewArray([]cadence.Value{
 					cadence.String("42"),
+				}).WithType(&cadence.VariableSizedArrayType{
+					ElementType: cadence.StringType,
 				}),
 				Type: &cadence.VariableSizedArrayType{
 					ElementType: cadence.StringType,
@@ -158,6 +160,9 @@ func Test_ParseWithoutType(t *testing.T) {
 				Name: "constant-sized array",
 				Value: cadence.NewArray([]cadence.Value{
 					cadence.String("42"),
+				}).WithType(&cadence.ConstantSizedArrayType{
+					ElementType: cadence.StringType,
+					Size:        1,
 				}),
 				Type: &cadence.ConstantSizedArrayType{
 					ElementType: cadence.StringType,
