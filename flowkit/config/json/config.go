@@ -75,6 +75,11 @@ func (j *jsonConfig) transformToConfig() (*config.Config, error) {
 		Deployments:  deployments,
 	}
 
+	// Add dependencies as contracts so they can be used in the project just like any other contract.
+	for _, dep := range dependencies {
+		conf.Contracts.AddDependencyAsContract(dep, dep.RemoteSource.NetworkName)
+	}
+
 	return conf, nil
 }
 

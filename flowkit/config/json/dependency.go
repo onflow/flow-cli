@@ -9,11 +9,6 @@ import (
 	"github.com/onflow/flow-cli/flowkit/config"
 )
 
-//	type dependency struct {
-//		RemoteSource string `json:"remoteSource"`
-//	}
-//
-// type jsonDependencies map[string]dependency
 type jsonDependencies map[string]string
 
 func (j jsonDependencies) transformToConfig() (config.Dependencies, error) {

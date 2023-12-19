@@ -100,12 +100,7 @@ func TestContracts_AddDependencyAsContract(t *testing.T) {
 			Address:      flow.HexToAddress("0x0000000000abcdef"),
 			ContractName: "TestContract",
 		},
-	}, []Alias{
-		Alias{
-			Network: "testnet",
-			Address: flow.HexToAddress("0x0000000000abcdef"),
-		},
-	})
+	}, "testnet")
 
 	assert.Len(t, contracts, 1)
 

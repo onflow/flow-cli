@@ -4,9 +4,6 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/onflow/flow-go/fvm/systemcontracts"
-	"github.com/onflow/flow-go/model/flow"
-
 	"github.com/onflow/flow-cli/flowkit/gateway"
 
 	"github.com/onflow/flow-cli/flowkit/project"
@@ -181,43 +178,6 @@ func (ci *DependencyInstaller) handleFoundContract(networkName, contractAddr, as
 	return nil
 }
 
-const (
-	NetworkEmulator = "emulator"
-	NetworkTestnet  = "testnet"
-	NetworkMainnet  = "mainnet"
-)
-
-var networkToChainID = map[string]flow.ChainID{
-	NetworkEmulator: flow.Emulator,
-	NetworkTestnet:  flow.Testnet,
-	NetworkMainnet:  flow.Mainnet,
-}
-
-func isCoreContract(networkName, contractName, contractAddress string) bool {
-	sc := systemcontracts.SystemContractsForChain(networkToChainID[networkName])
-	coreContracts := sc.All()
-
-	for _, coreContract := range coreContracts {
-		if coreContract.Name == contractName && coreContract.Address.String() == contractAddress {
-			return true
-		}
-	}
-
-	return false
-}
-
-func getCoreContractByName(networkName, contractName string) *systemcontracts.SystemContract {
-	sc := systemcontracts.SystemContractsForChain(networkToChainID[networkName])
-
-	for i, coreContract := range sc.All() {
-		if coreContract.Name == contractName {
-			return &sc.All()[i]
-		}
-	}
-
-	return nil
-}
-
 func (ci *DependencyInstaller) updateState(networkName, contractAddress, assignedName, contractName string) error {
 	dep := config.Dependency{
 		Name: assignedName,
@@ -228,31 +188,8 @@ func (ci *DependencyInstaller) updateState(networkName, contractAddress, assigne
 		},
 	}
 
-	var aliases []config.Alias
-
-	// If core contract found by name and address matches, then use all core contract aliases across networks
-	if isCoreContract(networkName, contractName, contractAddress) {
-		for _, networkStr := range []string{NetworkEmulator, NetworkTestnet, NetworkMainnet} {
-			coreContract := getCoreContractByName(networkStr, contractName)
-			if coreContract != nil {
-				aliases = append(aliases, config.Alias{
-					Network: networkStr,
-					Address: flowsdk.HexToAddress(coreContract.Address.String()),
-				})
-			}
-		}
-	}
-
-	// If no core contract match, then use the address in remoteSource as alias
-	if len(aliases) == 0 {
-		aliases = append(aliases, config.Alias{
-			Network: dep.RemoteSource.NetworkName,
-			Address: dep.RemoteSource.Address,
-		})
-	}
-
 	ci.State.Dependencies().AddOrUpdate(dep)
-	ci.State.Contracts().AddDependencyAsContract(dep, aliases)
+	ci.State.Contracts().AddDependencyAsContract(dep, networkName)
 	err := ci.State.SaveDefault()
 	if err != nil {
 		return err

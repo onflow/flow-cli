@@ -22,6 +22,7 @@ func Test_ConfigDependencies(t *testing.T) {
 	assert.Len(t, dependencies, 1)
 
 	dependencyOne := dependencies.ByName("HelloWorld")
+	assert.NotNil(t, dependencyOne)
 
 	assert.NotNil(t, dependencyOne)
 }
