@@ -1051,7 +1051,6 @@ func (f *Flowkit) SendTransaction(
 	return sentTx, res, err
 }
 
-
 // this is added to resolve the issue with chainhash ambiguous import,
 // the code is not used, but it's needed to force go.mod specify and retain chainhash version
 // workaround for issue: https://github.com/golang/go/issues/27899
