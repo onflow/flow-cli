@@ -26,7 +26,7 @@ import (
 
 	"github.com/onflow/cadence/runtime/common"
 	"github.com/onflow/cadence/runtime/stdlib"
-	"github.com/onflow/flow-go/model/flow"
+	flowsdk "github.com/onflow/flow-go-sdk"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -40,7 +40,7 @@ func TestExecutingTests(t *testing.T) {
 
 	aliases := config.Aliases{{
 		Network: "testing",
-		Address: flow.HexToAddress("0x0000000000000007"),
+		Address: flowsdk.HexToAddress("0x0000000000000007"),
 	}}
 
 	t.Run("simple", func(t *testing.T) {
@@ -193,7 +193,7 @@ func TestExecutingTests(t *testing.T) {
 			Location: tests.ContractHelloString.Filename,
 			Aliases: config.Aliases{{
 				Network: "emulator",
-				Address: flow.HexToAddress("0x0000000000000007"),
+				Address: flowsdk.HexToAddress("0x0000000000000007"),
 			}},
 		}
 		state.Contracts().AddOrUpdate(c)
@@ -326,7 +326,6 @@ func TestExecutingTests(t *testing.T) {
 				"A.0000000000000001.FlowClusterQC",
 				"A.0000000000000001.FlowDKG",
 				"A.0000000000000002.FungibleTokenMetadataViews",
-				"A.0000000000000001.NFTStorefrontV2",
 				"A.0000000000000001.FlowIDTableStaking",
 				"A.0000000000000001.LockedTokens",
 				"A.0000000000000001.ExampleNFT",
@@ -346,13 +345,13 @@ func TestExecutingTests(t *testing.T) {
 		)
 		assert.Equal(
 			t,
-			"Coverage: 91.8% of statements",
+			"Coverage: 91.6% of statements",
 			coverageReport.String(),
 		)
 		assert.Contains(
 			t,
 			result.String(),
-			"Coverage: 91.8% of statements",
+			"Coverage: 91.6% of statements",
 		)
 	})
 
@@ -404,7 +403,7 @@ func TestExecutingTests(t *testing.T) {
 			coverage.LineHits,
 		)
 
-		assert.Equal(t, 3, coverageReport.TotalLocations())
+		assert.Equal(t, 1, coverageReport.TotalLocations())
 		assert.ElementsMatch(
 			t,
 			[]string{
@@ -417,7 +416,6 @@ func TestExecutingTests(t *testing.T) {
 				"A.0000000000000001.FlowClusterQC",
 				"A.0000000000000001.FlowDKG",
 				"A.0000000000000002.FungibleTokenMetadataViews",
-				"A.0000000000000001.NFTStorefrontV2",
 				"A.0000000000000001.FlowIDTableStaking",
 				"A.0000000000000001.LockedTokens",
 				"A.0000000000000001.ExampleNFT",
@@ -437,7 +435,7 @@ func TestExecutingTests(t *testing.T) {
 		)
 		assert.Equal(
 			t,
-			"Coverage: 22.9% of statements",
+			"Coverage: 100.0% of statements",
 			coverageReport.String(),
 		)
 		assert.Contains(
