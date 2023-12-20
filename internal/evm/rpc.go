@@ -5,22 +5,25 @@ import (
 	"context"
 	_ "embed"
 	"encoding/binary"
+	"encoding/hex"
 	"fmt"
 	"io"
 	"math/big"
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/eth/filters"
 	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/ethereum/go-ethereum/rpc"
 	"github.com/onflow/cadence"
-	"github.com/onflow/cadence/encoding/ccf"
+	jsoncdc "github.com/onflow/cadence/encoding/json"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go/fvm/evm/emulator"
 	evmTypes "github.com/onflow/flow-go/fvm/evm/types"
@@ -38,6 +41,8 @@ var serviceABI []byte
 type flagsRPC struct{}
 
 var rpcFlags = flagsRPC{}
+
+const serviceAccountPrivateKey = "0xf6d5333177711e562cabf1f311916196ee6ffc2a07966d9d4628094073bd5442"
 
 var rpcCommand = &command.Command{
 	Cmd: &cobra.Command{
@@ -60,7 +65,15 @@ func rpcRun(
 	state *flowkit.State,
 ) (command.Result, error) {
 	logger := zerolog.New(os.Stdout).With().Str("module", "grpc").Logger()
-	api := &ethAPI{flow: flow, log: logger, state: state, nonces: make(map[common.Address]uint64)}
+
+	api := &ethAPI{
+		flow:     flow,
+		log:      logger,
+		state:    state,
+		nonces:   make(map[common.Address]uint64),
+		receipts: make(map[common.Hash]*types.ReceiptForStorage),
+		txs:      make(map[common.Hash]*types.Transaction),
+	}
 
 	server := rpc.NewServer()
 	err := server.RegisterName("eth", api)
@@ -121,10 +134,12 @@ func callServiceMethod(flow flowkit.Services, method string, args ...interface{}
 }
 
 type ethAPI struct {
-	flow   flowkit.Services
-	state  *flowkit.State
-	log    zerolog.Logger
-	nonces map[common.Address]uint64
+	flow     flowkit.Services
+	state    *flowkit.State
+	log      zerolog.Logger
+	nonces   map[common.Address]uint64
+	receipts map[common.Hash]*types.ReceiptForStorage
+	txs      map[common.Hash]*types.Transaction
 }
 
 func (e *ethAPI) Call(
@@ -142,6 +157,11 @@ func (e *ethAPI) Call(
 		"f8d6e0586b0a20c7", // todo set from args
 		*args.Data,
 	)
+
+	if err != nil {
+		e.log.Error().Err(err).Msg("failed to execute a call")
+		return nil, err
+	}
 
 	return val, err
 }
@@ -173,39 +193,173 @@ func (e *ethAPI) SendRawTransaction(
 		return common.Hash{}, err
 	}
 
-	e.parseEvents(txRes)
+	receipt, err := e.parseReceipt(txRes)
+	if err != nil {
+		e.log.Error().Err(err).Str("hash", tx.Hash().Hex()).Msg("could not parse receipt from transaction")
+	} else {
+		e.log.Info().Str("tx hash", tx.Hash().Hex()).Msg("parsed receipt")
+		e.receipts[tx.Hash()] = receipt
+	}
+
+	e.txs[tx.Hash()] = &tx
 	e.nonces[sender]++
 	e.log.Info().Str("account", sender.String()).Uint64("nonce", e.nonces[sender]).Msg("updating nonce")
 
 	return tx.Hash(), nil
 }
 
-func (e *ethAPI) parseEvents(res *flow.TransactionResult) error {
+func (e *ethAPI) SendTransaction(ctx context.Context, args TransactionArgs) (common.Hash, error) {
+	e.log.Info().Str("to", args.To.String()).Msg("send transaction")
+
+	tx := types.NewTransaction(
+		uint64(*args.Nonce),
+		*args.To,
+		args.Value.ToInt(),
+		uint64(*args.Gas),
+		args.GasPrice.ToInt(),
+		*args.Data,
+	)
+
+	privateKey, err := crypto.HexToECDSA(serviceAccountPrivateKey)
+	if err != nil {
+		e.log.Error().Err(err).Msg("failed to decode private key")
+	}
+	signed, err := types.SignTx(tx, emulator.GetDefaultSigner(), privateKey)
+	if err != nil {
+		e.log.Error().Err(err).Msg("failed to sign tx")
+		return common.Hash{}, err
+	}
+
+	var encoded bytes.Buffer
+	err = signed.EncodeRLP(&encoded)
+	if err != nil {
+		e.log.Error().Err(err).Msg("failed to encode tx")
+		return common.Hash{}, err
+	}
+
+	return e.SendRawTransaction(ctx, encoded.Bytes())
+}
+
+func (e *ethAPI) parseReceipt(res *flow.TransactionResult) (*types.ReceiptForStorage, error) {
 	for _, ev := range res.Events {
-		if ev.Type != string(evmTypes.EventTypeTransactionExecuted) {
+		if ev.Type != fmt.Sprintf("flow.%s", evmTypes.EventTypeTransactionExecuted) {
 			continue
 		}
 
-		val, err := ccf.Decode(nil, ev.Payload)
+		val, err := jsoncdc.Decode(nil, ev.Payload)
 		if err != nil {
-			return err
+			return nil, err
 		}
 
 		event, ok := val.(cadence.Event)
 		if !ok {
-			return fmt.Errorf("event of wrong type")
+			return nil, fmt.Errorf("event of wrong type")
 		}
 
-		fmt.Println(event)
-		/*for i, f := range event.GetFields() {
-			if f.Identifier == "" {
-				val := event.GetFieldValues()[i]
+		var result evmTypes.Result
 
+		for i, f := range event.GetFields() {
+			val := event.GetFieldValues()[i]
+
+			switch f.Identifier {
+			case "failed":
+				result.Failed = val.ToGoValue().(bool)
+			case "transactionType":
+				result.TxType = val.ToGoValue().(uint8)
+			case "deployedContractAddress":
+				addr := evmTypes.NewAddressFromString(val.ToGoValue().(string))
+				result.DeployedContractAddress = addr
+			case "stateRootHash":
+				hashStr := strings.ReplaceAll(val.ToGoValue().(string), "0x", "")
+				hash, err := hex.DecodeString(hashStr)
+				if err != nil {
+					return nil, fmt.Errorf("failed to hex decode hash: %w", err)
+				}
+
+				result.StateRootHash = common.BytesToHash(hash)
+			case "gasConsumed":
+				result.GasConsumed = val.ToGoValue().(uint64)
+			case "logs":
+				logByes, err := hex.DecodeString(val.ToGoValue().(string))
+				if err != nil {
+					return nil, fmt.Errorf("failed to hex decode logs: %w", err)
+				}
+				var logs []*types.Log
+				err = rlp.DecodeBytes(logByes, &logs)
+				if err != nil {
+					return nil, fmt.Errorf("failed to rlp decode logs: %w", err)
+				}
+
+				result.Logs = logs
+			case "returnedValue":
+				res, err := hex.DecodeString(val.ToGoValue().(string))
+				if err != nil {
+					return nil, fmt.Errorf("failed to hex decode value: %w", err)
+				}
+
+				result.ReturnedValue = res
+			default:
+				continue
 			}
-		}*/
+		}
+
+		return result.Receipt(), nil
 	}
 
-	return nil
+	return nil, fmt.Errorf("event not found")
+}
+
+func (e *ethAPI) GetTransactionReceipt(
+	ctx context.Context,
+	hash common.Hash,
+) (map[string]interface{}, error) {
+	// artificial delay to wait for tx result, ofc this is hacky but ok for now
+	time.Sleep(300 * time.Millisecond)
+
+	tx, ok := e.txs[hash]
+	if !ok {
+		return nil, fmt.Errorf("transaction not found")
+	}
+
+	receipt, ok := e.receipts[hash]
+	if !ok {
+		return nil, fmt.Errorf("receipt for transaction not found")
+	}
+
+	from, err := types.Sender(emulator.GetDefaultSigner(), tx)
+	if err != nil {
+		e.log.Error().Err(err).Msg("couldn't get the sender from the tx")
+	}
+
+	fields := map[string]interface{}{
+		"blockHash":         receipt.BlockHash,
+		"blockNumber":       receipt.BlockNumber,
+		"transactionHash":   tx.Hash(),
+		"transactionIndex":  receipt.TransactionIndex,
+		"from":              from,
+		"to":                tx.To(),
+		"gasUsed":           receipt.GasUsed,
+		"cumulativeGasUsed": receipt.CumulativeGasUsed,
+		"contractAddress":   nil,
+		"logs":              receipt.Logs,
+		"logsBloom":         receipt.Bloom,
+		"type":              hexutil.Uint(receipt.Type),
+		"effectiveGasPrice": (*hexutil.Big)(receipt.EffectiveGasPrice),
+	}
+
+	// Assign receipt status or post state.
+	if len(receipt.PostState) > 0 {
+		fields["root"] = hexutil.Bytes(receipt.PostState)
+	} else {
+		fields["status"] = hexutil.Uint(receipt.Status)
+	}
+
+	// If the ContractAddress is 20 0x0 bytes, assume it is not a contract creation
+	if receipt.ContractAddress != (common.Address{}) {
+		fields["contractAddress"] = receipt.ContractAddress
+	}
+
+	return fields, nil
 }
 
 func (e *ethAPI) Ping() (int, error) {
@@ -291,13 +445,6 @@ func (e *ethAPI) GetFilterLogs(
 // (pending)Log filters return []Log.
 func (e *ethAPI) GetFilterChanges(id rpc.ID) (interface{}, error) {
 	return []interface{}{}, nil
-}
-
-func (e *ethAPI) GetTransactionReceipt(
-	ctx context.Context,
-	hash common.Hash,
-) (map[string]interface{}, error) {
-	return map[string]interface{}{}, nil
 }
 
 func (e *ethAPI) ChainId() *hexutil.Big {
