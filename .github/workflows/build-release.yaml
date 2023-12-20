@@ -38,6 +38,6 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           goos: ${{ matrix.goos }}
           goarch: ${{ matrix.goarch }}
-          goversion: "1.19"
+          goversion: "1.20"
           project_path: "./cmd/flow"
           ldflags: -X "github.com/onflow/flow-cli/build.commit=${{ env.COMMIT }}" -X "github.com/onflow/flow-cli/build.semver=${{ env.VERSION }}" -X "github.com/onflow/flow-cli/internal/command.mixpanelToken=${{ env.MIXPANEL_PROJECT_TOKEN }}" -X "github.com/onflow/flow-cli/internal/accounts.accountToken=${{ env.LILICO_TOKEN }}"
