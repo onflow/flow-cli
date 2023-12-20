@@ -87,7 +87,7 @@ func transformConfigToJSON(config *config.Config) jsonConfig {
 	return jsonConfig{
 		Emulators:    transformEmulatorsToJSON(config.Emulators),
 		Contracts:    transformContractsToJSON(config.Contracts),
-		Dependencies: transformDependenciesToJSON(config.Dependencies),
+		Dependencies: transformDependenciesToJSON(config.Dependencies, config.Contracts),
 		Networks:     transformNetworksToJSON(config.Networks),
 		Accounts:     transformAccountsToJSON(config.Accounts),
 		Deployments:  transformDeploymentsToJSON(config.Deployments),

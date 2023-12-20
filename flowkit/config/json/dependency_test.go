@@ -32,15 +32,27 @@ func Test_TransformDependenciesToJSON(t *testing.T) {
 		"HelloWorld": "testnet://877931736ee77cff.HelloWorld"
 	}`)
 
+	bOut := []byte(`{
+		"HelloWorld": {
+			"remoteSource": "testnet://877931736ee77cff.HelloWorld",
+			"aliases": {}
+		}
+	}`)
+
+	var jsonContracts jsonContracts
+	errContracts := json.Unmarshal(b, &jsonContracts)
+	assert.NoError(t, errContracts)
+
 	var jsonDependencies jsonDependencies
 	err := json.Unmarshal(b, &jsonDependencies)
 	assert.NoError(t, err)
 
+	contracts, err := jsonContracts.transformToConfig()
 	dependencies, err := jsonDependencies.transformToConfig()
 	assert.NoError(t, err)
 
-	j := transformDependenciesToJSON(dependencies)
+	j := transformDependenciesToJSON(dependencies, contracts)
 	x, _ := json.Marshal(j)
 
-	assert.Equal(t, cleanSpecialChars(b), cleanSpecialChars(x))
+	assert.Equal(t, cleanSpecialChars(bOut), cleanSpecialChars(x))
 }

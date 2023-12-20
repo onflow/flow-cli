@@ -163,6 +163,8 @@ func (c *Contracts) AddDependencyAsContract(dependency Dependency, networkName s
 				})
 			}
 		}
+	} else {
+		aliases = append(aliases, dependency.Aliases...)
 	}
 
 	// If no core contract match, then use the address in remoteSource as alias
@@ -183,4 +185,14 @@ func (c *Contracts) AddDependencyAsContract(dependency Dependency, networkName s
 	if _, err := c.ByName(contract.Name); err != nil {
 		c.AddOrUpdate(contract)
 	}
+}
+
+func (c *Contracts) DependencyContractByName(name string) *Contract {
+	for i, contract := range *c {
+		if contract.Name == name && contract.IsDependency {
+			return &(*c)[i]
+		}
+	}
+
+	return nil
 }
