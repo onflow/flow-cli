@@ -16,9 +16,14 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/eth/filters"
 	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/ethereum/go-ethereum/rpc"
+	"github.com/onflow/cadence"
+	"github.com/onflow/cadence/encoding/ccf"
+	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go/fvm/evm/emulator"
+	evmTypes "github.com/onflow/flow-go/fvm/evm/types"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 
@@ -54,7 +59,6 @@ func rpcRun(
 	flow flowkit.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
-
 	logger := zerolog.New(os.Stdout).With().Str("module", "grpc").Logger()
 	api := &ethAPI{flow: flow, log: logger, state: state, nonces: make(map[common.Address]uint64)}
 
@@ -67,6 +71,10 @@ func rpcRun(
 	if err != nil {
 		return nil, err
 	}
+
+	handler := server.WebsocketHandler([]string{"*"})
+	//handler := node.NewWSHandlerStack(server, nil)
+	go http.ListenAndServe(":8001", handler)
 
 	mux := http.NewServeMux()
 	mux.Handle("/", requestLogger(logger, server))
@@ -159,15 +167,45 @@ func (e *ethAPI) SendRawTransaction(
 	}
 
 	// todo probably decode rlp the tx and then check the account and increase nonce counter if successful
-	err = sendSignedTx(e.flow, e.state, input)
+	txRes, err := sendSignedTx(e.flow, e.state, input)
 	if err != nil {
 		e.log.Error().Err(err).Msg("")
 		return common.Hash{}, err
 	}
 
+	e.parseEvents(txRes)
 	e.nonces[sender]++
+	e.log.Info().Str("account", sender.String()).Uint64("nonce", e.nonces[sender]).Msg("updating nonce")
 
 	return tx.Hash(), nil
+}
+
+func (e *ethAPI) parseEvents(res *flow.TransactionResult) error {
+	for _, ev := range res.Events {
+		if ev.Type != string(evmTypes.EventTypeTransactionExecuted) {
+			continue
+		}
+
+		val, err := ccf.Decode(nil, ev.Payload)
+		if err != nil {
+			return err
+		}
+
+		event, ok := val.(cadence.Event)
+		if !ok {
+			return fmt.Errorf("event of wrong type")
+		}
+
+		fmt.Println(event)
+		/*for i, f := range event.GetFields() {
+			if f.Identifier == "" {
+				val := event.GetFieldValues()[i]
+
+			}
+		}*/
+	}
+
+	return nil
 }
 
 func (e *ethAPI) Ping() (int, error) {
@@ -189,7 +227,6 @@ func (e *ethAPI) GetTransactionCount(
 }
 
 func (e *ethAPI) BlockNumber() hexutil.Uint64 {
-	e.log.Info().Msg("get latest block number")
 
 	val, err := callServiceMethod(e.flow, "getBlock")
 	if err != nil {
@@ -197,7 +234,63 @@ func (e *ethAPI) BlockNumber() hexutil.Uint64 {
 		panic(err)
 	}
 
-	return hexutil.Uint64(binary.BigEndian.Uint64(val[len(val)-8:]))
+	block := hexutil.Uint64(binary.BigEndian.Uint64(val[len(val)-8:]))
+
+	e.log.Info().Str("number", block.String()).Msg("get latest block number")
+	return block
+}
+
+// eth_getLogs
+// GetLogs returns logs matching the given argument that are stored within the state.
+func (e *ethAPI) GetLogs(
+	ctx context.Context,
+	criteria filters.FilterCriteria,
+) ([]*types.Log, error) {
+	return []*types.Log{}, nil
+}
+
+// eth_newFilter
+// NewFilter creates a new filter and returns the filter id. It can be
+// used to retrieve logs when the state changes. This method cannot be
+// used to fetch logs that are already stored in the state.
+//
+// Default criteria for the from and to block are "latest".
+// Using "latest" as block number will return logs for mined blocks.
+// Using "pending" as block number returns logs for not yet mined (pending) blocks.
+// In case logs are removed (chain reorg) previously returned logs are returned
+// again but with the removed property set to true.
+//
+// In case "fromBlock" > "toBlock" an error is returned.
+func (e *ethAPI) NewFilter(
+	criteria filters.FilterCriteria,
+) (rpc.ID, error) {
+	return "", nil
+}
+
+// eth_uninstallFilter
+// UninstallFilter removes the filter with the given filter id.
+func (e *ethAPI) UninstallFilter(id rpc.ID) bool {
+	return false
+}
+
+// eth_getFilterLogs
+// GetFilterLogs returns the logs for the filter with the given id.
+// If the filter could not be found an empty array of logs is returned.
+func (e *ethAPI) GetFilterLogs(
+	ctx context.Context,
+	id rpc.ID,
+) ([]*types.Log, error) {
+	return []*types.Log{}, nil
+}
+
+// eth_getFilterChanges
+// GetFilterChanges returns the logs for the filter with the given id since
+// last time it was called. This can be used for polling.
+//
+// For pending transaction and block filters the result is []common.Hash.
+// (pending)Log filters return []Log.
+func (e *ethAPI) GetFilterChanges(id rpc.ID) (interface{}, error) {
+	return []interface{}{}, nil
 }
 
 func (e *ethAPI) GetTransactionReceipt(
@@ -239,9 +332,18 @@ func (e *ethAPI) GetBalance(
 	return (*hexutil.Big)(big.NewInt(int64(balance))), nil
 }
 
+func (e *ethAPI) EstimateGas(
+	ctx context.Context,
+	args TransactionArgs,
+	blockNumberOrHash *rpc.BlockNumberOrHash,
+	overrides *StateOverride,
+) (hexutil.Uint64, error) {
+	return hexutil.Uint64(21000 * 10), nil
+}
+
 func (e *ethAPI) GasPrice(ctx context.Context) (*hexutil.Big, error) {
 	e.log.Info().Msg("gas price")
-	return (*hexutil.Big)(big.NewInt(1)), nil
+	return (*hexutil.Big)(big.NewInt(100)), nil
 }
 
 type TransactionArgs struct {
