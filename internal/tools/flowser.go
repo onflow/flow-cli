@@ -19,12 +19,11 @@
 package tools
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"runtime"
 
-	"github.com/onflowser/flowser/v2/pkg/flowser"
+	"github.com/onflowser/flowser/v3/pkg/flowser"
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/flowkit"
@@ -58,11 +57,6 @@ func runFlowser(
 	reader flowkit.ReaderWriter,
 	_ flowkit.Services,
 ) (command.Result, error) {
-	if runtime.GOOS != settings.Windows && runtime.GOOS != settings.Darwin {
-		fmt.Println("If you want Flowser to be supported on Linux please vote here: https://github.com/onflowser/flowser/discussions/142")
-		return nil, errors.New("OS not supported, only supporting Windows and Mac OS")
-	}
-
 	flowser := flowser.New()
 
 	installPath, err := settings.GetFlowserPath()
@@ -111,8 +105,8 @@ func installFlowser(flowser *flowser.App, installPath string) (string, error) {
 		return installPath, nil
 	}
 
-	// we only allow custom paths on Windows since on MacOS apps needs to be installed inside Application folder
-	if runtime.GOOS == settings.Windows {
+	// MacOS apps must always be installed inside Application folder
+	if runtime.GOOS != settings.Darwin {
 		installPath = util.InstallPathPrompt(installPath)
 		_ = settings.SetFlowserPath(installPath)
 	}

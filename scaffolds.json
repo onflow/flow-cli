@@ -3,13 +3,13 @@
     "name": "Empty Cadence Project",
     "repo": "https://github.com/sideninja/flow-empty-scaffold",
     "description": "Empty project containing only basic folder structure and flow.json configuration.",
-    "commit": "bbda71db8852e08c97b555a794e9d6e47e8740a9"
+    "commit": "2ba41348c54c60ccc4e7c3a2d46deead17aab2e6"
   },
   {
     "name": "Simple Cadence Project",
     "repo": "https://github.com/sideninja/flow-basic-scaffold.git",
     "description": "Scaffold contains required folder structure as well as some example Cadence code.",
-    "commit": "f14d43b951400b95e850c07023735538ff836ac6"
+    "commit": "5ea01c5f49a855bd0e91333bcae561d52a0de5ec"
   },
   {
     "name": "Cadence NFT Project",
@@ -21,7 +21,7 @@
     "name": "Hybrid Custody Project",
     "repo": "https://github.com/onflow/hybrid-custody-scaffold",
     "description": "Starter for exploring & implementing Hybrid Custody.",
-    "commit": "29851ce513535d14a6a1a67903f30218c8e47e91"
+    "commit": "1e76638c7b1e37124b8222ccad3cc9dbe84731d5"
   },
   {
     "name": "FCL Web Dapp",
@@ -68,5 +68,12 @@
     "description": "React Native (Expo) mobile dapp example demonstrating FCL and Flow interactions.",
     "commit": "b5c4b3c98d5733a23c0e93b269bb3383a1af2639",
     "type": "mobile"
+  },
+  {
+    "name": "FCL PWA",
+    "repo": "https://github.com/bshahid331/flow-pwa-scaffold",
+    "description": "Walletless Mobile PWA App demonstrating FCL and Flow interactions.",
+    "commit": "6796427a02b67340447a9c83dc8bdc2b3b06a8c8",
+    "type": "web"
   }
 ]

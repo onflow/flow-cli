@@ -36,23 +36,42 @@ Read about supported commands in the [CLI documentation website](https://develop
 Usage:
   flow [command]
 
-Available Commands:
-  accounts     Utilities to manage accounts
-  blocks       Utilities to read blocks
+👋 Welcome Flow developer!
+   If you are starting a new flow project try running 'flow setup <project_name>'. 
+
+🔥 Super Commands
+  dev          Build your Flow project
+  flix         Execute FLIX template with a given id, name, or local filename
+  generate     Generate new boilerplate files
+  setup        Start a new Flow project
+
+📦 Flow Entities
+  accounts     Create and retrieve accounts and deploy contracts
+  blocks       Retrieve blocks
+  collections  Retrieve collections
+  events       Retrieve events
+
+💬 Flow Interactions
+  scripts      Execute Cadence scripts
+  transactions Build, sign, send and retrieve transactions
+
+🔨 Flow Tools
   cadence      Execute Cadence code
-  collections  Utilities to read collections
-  config       Utilities to manage configuration
-  emulator     Starts the Flow emulator server
+  dev-wallet   Run a development wallet
+  emulator     Run Flow network for development
+  flowser      Run Flowser project explorer
   test         Run Cadence tests
-  events       Utilities to read events
-  help         Help about any command
+
+🏄 Flow Project
+  deploy       Deploy all project contracts
   init         Initialize a new configuration
-  keys         Utilities to manage keys
   project      Manage your Cadence project
-  scripts      Utilities to execute scripts
-  status       Display the status of the Flow network
-  transactions Utilities to send transactions
-  version      View version and commit information
+  run          Start emulator and deploy all project contracts
+
+🔒 Flow Security
+  keys         Generate and decode Flow keys
+  signatures   Signature verification and creation
+
 ```
 
 The Flow CLI includes several commands to interact with Flow networks, such as querying account information, or sending transactions. It also includes the [Flow Emulator](https://developers.flow.com/tools/emulator).

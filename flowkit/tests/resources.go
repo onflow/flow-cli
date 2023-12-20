@@ -327,68 +327,112 @@ var ScriptImport = Resource{
 var HelperImport = Resource{
 	Filename: "test_helpers.cdc",
 	Source: []byte(`
-		access(all) fun double(_ x: Int): Int {
-			return x * 2
-		}
+        access(all) fun double(_ x: Int): Int {
+            return x * 2
+        }
 	`),
 }
 
 var TestScriptSimple = Resource{
 	Filename: "./testScriptSimple.cdc",
 	Source: []byte(`
+        import Test
+
         access(all) fun testSimple() {
-            assert(true)
+            Test.assert(true)
         }
-    `),
+	`),
 }
 
 var TestScriptSimpleFailing = Resource{
 	Filename: "./testScriptSimpleFailing.cdc",
 	Source: []byte(`
+        import Test
+
         access(all) fun testSimple() {
-            assert(false)
+            Test.assert(false)
         }
-    `),
+	`),
 }
 
 var TestScriptWithImport = Resource{
 	Filename: "testScriptWithImport.cdc",
 	Source: []byte(`
+        import Test
         import "Hello"
 
-        access(all) fun testSimple() {
-            let hello = Hello()
-            assert(hello.greeting == "Hello, World!")
+        access(all) fun setup() {
+            let err = Test.deployContract(
+                name: "Hello",
+                path: "contractHello.cdc",
+                arguments: []
+            )
+            Test.expect(err, Test.beNil())
         }
-    `),
+
+        access(all) fun testSimple() {
+            Test.assertEqual("Hello, World!", Hello.greeting)
+        }
+	`),
+}
+
+var TestScriptWithMissingContract = Resource{
+	Filename: "testScriptWithImport.cdc",
+	Source: []byte(`
+        import Test
+        import "ApprovalVoting"
+
+        access(all) fun setup() {
+            let err = Test.deployContract(
+                name: "ApprovalVoting",
+                path: "ApprovalVoting.cdc",
+                arguments: []
+            )
+            Test.expect(err, Test.beNil())
+        }
+	`),
 }
 
 var TestScriptWithHelperImport = Resource{
 	Filename: "testScriptWithHelperImport.cdc",
 	Source: []byte(`
-		import Test
-		import "test_helpers.cdc"
+        import Test
+        import "test_helpers.cdc"
 
-		access(all) fun testDouble() {
-			Test.expect(double(2), Test.equal(4))
-		}
+        access(all) fun testDouble() {
+            Test.expect(double(2), Test.equal(4))
+        }
 	`),
 }
 
 var TestScriptWithRelativeImports = Resource{
 	Filename: "testScriptWithRelativeImport.cdc",
 	Source: []byte(`
-        import "FooContract"
-        import "Hello"
+        import Test
+        import FooContract from "../contracts/FooContract.cdc"
+        import Hello from "../contracts/contractHello.cdc"
+
+        access(all) fun setup() {
+            var err = Test.deployContract(
+                name: "FooContract",
+                path: "../contracts/FooContract.cdc",
+                arguments: []
+            )
+            Test.expect(err, Test.beNil())
+
+            err = Test.deployContract(
+                name: "Hello",
+                path: "../contracts/contractHello.cdc",
+                arguments: []
+            )
+            Test.expect(err, Test.beNil())
+        }
 
         access(all) fun testSimple() {
-            let hello = Hello()
-            assert(hello.greeting == "Hello, World!")
-
-            let fooContract = FooContract()
-            assert("Carmichael" == fooContract.getIntegerTrait(41041))
+            Test.assertEqual("Enormous", FooContract.getIntegerTrait(100001))
+            Test.assertEqual("Hello, World!", Hello.greeting)
         }
-    `),
+	`),
 }
 
 var TestScriptWithFileRead = Resource{
@@ -398,63 +442,59 @@ var TestScriptWithFileRead = Resource{
 
         access(all) fun testSimple() {
             let content = Test.readFile("./someFile.cdc")
-            assert(content == "This was read from a file!")
+            Test.assertEqual("This was read from a file!", content)
         }
-    `),
+	`),
 }
 
 var TestScriptWithCoverage = Resource{
 	Filename: "testScriptWithCoverage.cdc",
 	Source: []byte(`
-		import Test
-		import "FooContract"
+        import Test
+        import "FooContract"
 
-		access(all) let foo = FooContract()
 
-		access(all) fun testGetIntegerTrait() {
-			// Arrange
-			let testInputs: {Int: String} = {
-				-1: "Negative",
-				0: "Zero",
-				9: "Small",
-				99: "Big",
-				999: "Huge",
-				1001: "Enormous",
-				1729: "Harshad",
-				8128: "Harmonic",
-				41041: "Carmichael"
-			}
+        access(all) fun setup() {
+            let err = Test.deployContract(
+                name: "FooContract",
+                path: "FooContract.cdc",
+                arguments: []
+            )
 
-			for input in testInputs.keys {
-				// Act
-				let result = foo.getIntegerTrait(input)
+            Test.expect(err, Test.beNil())
+        }
 
-				// Assert
-				Test.assert(result == testInputs[input])
-			}
-		}
+        access(all) fun testGetIntegerTrait() {
+            // Arrange
+            let testInputs: {Int: String} = {
+                -1: "Negative",
+                0: "Zero",
+                9: "Small",
+                99: "Big",
+                999: "Huge",
+                1001: "Enormous",
+                1729: "Harshad",
+                8128: "Harmonic",
+                41041: "Carmichael"
+            }
 
-		access(all) fun testAddSpecialNumber() {
-			// Act
-			foo.addSpecialNumber(78557, "Sierpinski")
+            for input in testInputs.keys {
+                // Act
+                let result = FooContract.getIntegerTrait(input)
 
-			// Assert
-			Test.assert("Sierpinski" == foo.getIntegerTrait(78557))
-		}
+                // Assert
+                Test.assertEqual(testInputs[input]!, result)
+            }
+        }
 
-		access(all) fun testExecuteScript() {
-			// Arrange
-			let blockchain = Test.newEmulatorBlockchain()
+        access(all) fun testAddSpecialNumber() {
+            // Act
+            FooContract.addSpecialNumber(78557, "Sierpinski")
 
-			// Act
-			let code = "access(all) fun main(): Int { return 42 }"
-			let result = blockchain.executeScript(code, [])
-			let answer = (result.returnValue as! Int?)!
-
-			// Assert
-			Test.assert(answer == 42)
-		}
-    `),
+            // Assert
+            Test.assertEqual(FooContract.getIntegerTrait(78557), "Sierpinski")
+        }
+	`),
 }
 
 var SomeFile = Resource{

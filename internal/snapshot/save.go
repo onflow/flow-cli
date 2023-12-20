@@ -50,6 +50,7 @@ func save(
 	fileName := args[0]
 
 	logger.StartProgress("Downloading protocol snapshot...")
+	defer logger.StopProgress()
 	if !flow.Gateway().SecureConnection() {
 		logger.Info(fmt.Sprintf("%s warning: using insecure client connection to download snapshot, you should use a secure network configuration...", output.WarningEmoji()))
 	}

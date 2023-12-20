@@ -104,8 +104,14 @@ func SendTransaction(code []byte, args []string, location string, flow flowkit.S
 
 	signerName := sendFlags.Signer
 
-	if signerName == "" && proposer == nil && payer == nil && len(authorizers) == 0 {
-		signerName = state.Config().Emulators.Default().ServiceAccount
+	if signerName == "" {
+		if proposer == nil && payer == nil && len(authorizers) == 0 {
+			signerName = state.Config().Emulators.Default().ServiceAccount
+		} else {
+			if proposer == nil || payer == nil {
+				return nil, fmt.Errorf("proposer/payer flags are required when signer flag is not used")
+			}
+		}
 	}
 
 	if signerName != "" {
