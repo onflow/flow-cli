@@ -18,11 +18,9 @@ jobs:
           - goarch: arm64
             goos: windows
     steps:
-      - uses: wangyoucao577/go-release-action@v1.40
+      - name: Set up Go 1.20
+        uses: actions/setup-go@v2
         with:
-          pre_command: make generate
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          goos: ${{ matrix.goos }}
-          goarch: ${{ matrix.goarch }}
-          goversion: "1.20"
-          project_path: "./cmd/flow"
+          go-version: 1.20
+      - name: Run make generate
+        run: make generate
