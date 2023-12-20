@@ -205,3 +205,5 @@ require (
 	modernc.org/memory v1.5.0 // indirect
 	modernc.org/sqlite v1.21.1 // indirect
 )
+
+replace github.com/onflow/flow-go/crypto => github.com/onflow/crypto v0.25.0
