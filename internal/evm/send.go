@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/onflow/flow-go-sdk"
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/flowkit"
@@ -48,14 +49,12 @@ func send(
 		return nil, fmt.Errorf("can't open tx file: %w", err)
 	}
 
-	err = sendSignedTx(flow, state, signedTx)
+	_, err = sendSignedTx(flow, state, signedTx)
 
-	fmt.Println("transaction sent", err)
-
-	return nil, nil
+	return nil, err
 }
 
-func sendSignedTx(flow flowkit.Services, state *flowkit.State, rawTx []byte) error {
+func sendSignedTx(flow flowkit.Services, state *flowkit.State, rawTx []byte) (*flow.TransactionResult, error) {
 	encodedTx := cadenceByteArrayString(rawTx)
 
 	result, err := transactions.SendTransaction(
@@ -69,12 +68,13 @@ func sendSignedTx(flow flowkit.Services, state *flowkit.State, rawTx []byte) err
 		},
 	)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	txResult := result.(*transactions.TransactionResult)
+	if txResult.Result.Error != nil {
+		return nil, txResult.Result.Error
+	}
 
-	fmt.Println(txResult.Result)
-
-	return nil
+	return txResult.Result, nil
 }
