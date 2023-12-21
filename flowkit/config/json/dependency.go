@@ -11,8 +11,6 @@ import (
 	"github.com/onflow/flow-cli/flowkit/config"
 )
 
-//type jsonDependencies map[string]string
-
 type jsonDependencies map[string]jsonDependency
 
 func (j jsonDependencies) transformToConfig() (config.Dependencies, error) {
@@ -121,7 +119,7 @@ func (j *jsonDependency) UnmarshalJSON(b []byte) error {
 	// simple
 	err := json.Unmarshal(b, &remoteSource)
 	if err == nil {
-		j.Simple = remoteSource //filepath.FromSlash(remoteSource)
+		j.Simple = remoteSource
 		return nil
 	}
 
