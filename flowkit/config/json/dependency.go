@@ -70,42 +70,6 @@ func transformDependenciesToJSON(configDependencies config.Dependencies, configC
 	jsonDeps := jsonDependencies{}
 
 	for _, dep := range configDependencies {
-		//jsonDeps[dep.Name] = buildRemoteSourceString(dep.RemoteSource)
-		//if dep.RemoteSource.Address != flow.EmptyAddress {
-		//	jsonDeps[dep.Name] = jsonDependency{
-		//		Simple: buildRemoteSourceString(dep.RemoteSource),
-		//	}
-		//} else {
-		//	// TODO
-		//	// check if we already created for this name then add or create
-		//	aliases := make(map[string]string)
-		//	for _, alias := range dep.Aliases {
-		//		aliases[alias.Network] = alias.Address.String()
-		//	}
-		//
-		//	jsonDeps[dep.Name] = jsonDependency{
-		//		Extended: jsonDependencyExtended{
-		//			RemoteSource: fmt.Sprintf("%s://%s.%s", dep.RemoteSource.NetworkName, dep.RemoteSource.Address.String(), dep.RemoteSource.ContractName),
-		//			Aliases:      dep.Aliases,
-		//		},
-		//	}
-		//}
-
-		//aliases := make(map[string]string)
-		//for _, alias := range dep.Aliases {
-		//	aliases[alias.Network] = alias.Address.String()
-		//}
-		//
-		//jsonDeps[dep.Name] = jsonDependency{
-		//	Extended: jsonDependencyExtended{
-		//		RemoteSource: fmt.Sprintf("%s://%s.%s", dep.RemoteSource.NetworkName, dep.RemoteSource.Address.String(), dep.RemoteSource.ContractName),
-		//		Aliases:      dep.Aliases,
-		//	},
-		//}
-
-		// just always output extended?
-		// do you look for contract name add address to match
-
 		aliases := make(map[string]string)
 
 		depContract := configContracts.DependencyContractByName(dep.Name)
@@ -165,7 +129,6 @@ func (j *jsonDependency) UnmarshalJSON(b []byte) error {
 	err = json.Unmarshal(b, &extendedFormat)
 	if err == nil {
 		j.Extended = extendedFormat
-		//j.Extended.RemoteSource = filepath.FromSlash(j.Extended.RemoteSource)
 	} else {
 		return err
 	}
