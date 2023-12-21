@@ -263,4 +263,10 @@ require (
 
 replace github.com/onflow/flow-cli/flowkit => ./flowkit
 
-replace github.com/onflow/flow-go/crypto => github.com/onflow/flow-go/crypto v0.24.9
+replace (
+	github.com/onflow/flow-core-contracts/lib/go/contracts => github.com/onflow/flow-core-contracts/lib/go/contracts v0.15.0
+	github.com/onflow/flow-core-contracts/lib/go/templates => github.com/onflow/flow-core-contracts/lib/go/templates v0.15.0
+	github.com/onflow/flow-ft/lib/go/contracts => github.com/onflow/flow-ft/lib/go/contracts v0.7.0
+	github.com/onflow/flow-go/crypto => github.com/onflow/flow-go/crypto v0.24.9
+	github.com/onflow/flow-nft/lib/go/contracts => github.com/onflow/flow-nft/lib/go/contracts v1.1.0
+)
