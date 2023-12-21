@@ -33,7 +33,7 @@ install-tools:
 	GO111MODULE=on go install github.com/axw/gocov/gocov@latest; \
 	GO111MODULE=on go install github.com/matm/gocov-html@latest; \
 	GO111MODULE=on go install github.com/sanderhahn/gozip/cmd/gozip@latest; \
-	GO111MODULE=on go install github.com/vektra/mockery/v2@latest;
+	GO111MODULE=on go install github.com/vektra/mockery/v2@v2.38.0;
 
 .PHONY: test
 test:
