@@ -30,8 +30,6 @@ binary: $(BINARY)
 install-tools:
 	cd ${GOPATH}; \
 	mkdir -p ${GOPATH}; \
-	GO111MODULE=on go install github.com/axw/gocov/gocov@latest; \
-	GO111MODULE=on go install github.com/matm/gocov-html@latest; \
 	GO111MODULE=on go install github.com/sanderhahn/gozip/cmd/gozip@latest; \
 	GO111MODULE=on go install github.com/vektra/mockery/v2@v2.38.0;
 
@@ -47,12 +45,6 @@ test-e2e-emulator:
 .PHONY: coverage
 coverage:
 ifeq ($(COVER), true)
-	# file has to be called index.html
-	gocov convert $(COVER_PROFILE) > cover.json
-	./cover-summary.sh
-	gocov-html cover.json > index.html
-	# coverage.zip will automatically be picked up by teamcity
-	gozip -c coverage.zip index.html
 endif
 
 .PHONY: ci
