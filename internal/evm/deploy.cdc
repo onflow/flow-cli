@@ -9,7 +9,7 @@ transaction(bytecode: String) {
         let vaultRef = signer.borrow<&FlowToken.Vault>(from: /storage/flowTokenVault)
             ?? panic("Could not borrow reference to the owner's Vault!")
 
-        self.sentVault <- vaultRef.withdraw(amount: 1.0) as! @FlowToken.Vault
+        self.sentVault <- vaultRef.withdraw(amount: 10.0) as! @FlowToken.Vault
     }
 
     execute {
@@ -20,7 +20,7 @@ transaction(bytecode: String) {
 
         let address = bridgedAccount.deploy(
            code: decodedCode,
-           gasLimit: 300000,
+           gasLimit: 1200000,
            value: EVM.Balance(flow: 0.0)
         )
 
