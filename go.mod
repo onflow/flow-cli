@@ -1,36 +1,33 @@
 module github.com/onflow/flow-cli
 
-go 1.18
+go 1.20
 
 require (
 	github.com/dukex/mixpanel v1.0.1
-	github.com/ethereum/go-ethereum v1.12.0
 	github.com/getsentry/sentry-go v0.25.0
 	github.com/go-git/go-git/v5 v5.11.0
 	github.com/gosuri/uilive v0.0.4
 	github.com/manifoldco/promptui v0.9.0
-	github.com/onflow/cadence v0.42.6
-	github.com/onflow/cadence-tools/languageserver v0.33.3
-	github.com/onflow/cadence-tools/test v0.14.5-0.20231212143648-fb25e9aca2d4
+	github.com/onflow/cadence v1.0.0-preview.1.0.20231213191345-0ff20e15e7e1
+	github.com/onflow/cadence-tools/languageserver v0.33.4-0.20231219175757-0bc75e6b5d35
+	github.com/onflow/cadence-tools/test v0.14.6-0.20231218234314-e73ac82193b0
 	github.com/onflow/fcl-dev-wallet v0.7.4
-	github.com/onflow/flixkit-go v0.3.1
-	github.com/onflow/flow-cli/flowkit v1.8.0
+	github.com/onflow/flixkit-go v1.0.1-0.20231219224839-06f824c2a16e
+	github.com/onflow/flow-cli/flowkit v1.8.1-0.20231219002530-719e6b55f35a
 	github.com/onflow/flow-core-contracts/lib/go/templates v1.2.4-0.20231016154253-a00dbf7c061f
-	github.com/onflow/flow-emulator v0.59.1-0.20231221115108-31f6c41dfc4e
-	github.com/onflow/flow-go v0.32.4-0.20231219234712-3d8d907db2f0
-	github.com/onflow/flow-go-sdk v0.44.0-stable-cadence.1
+	github.com/onflow/flow-emulator v0.59.1-0.20231221115955-65530e5da999
+	github.com/onflow/flow-go-sdk v0.44.0-stable-cadence.2
 	github.com/onflowser/flowser/v3 v3.1.3
 	github.com/pkg/errors v0.9.1
 	github.com/psiemens/sconfig v0.1.0
 	github.com/radovskyb/watcher v1.0.7
-	github.com/rs/zerolog v1.29.0
 	github.com/sergi/go-diff v1.3.1
 	github.com/spf13/afero v1.10.0
 	github.com/spf13/cobra v1.8.0
 	github.com/spf13/viper v1.16.0
 	github.com/stretchr/testify v1.8.4
 	golang.org/x/exp v0.0.0-20230626212559-97b1e661b5df
-	google.golang.org/grpc v1.59.0
+	google.golang.org/grpc v1.60.0
 )
 
 require (
@@ -49,7 +46,7 @@ require (
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bits-and-blooms/bitset v1.10.0 // indirect
 	github.com/btcsuite/btcd/btcec/v2 v2.2.1 // indirect
-	github.com/btcsuite/btcd/chaincfg/chainhash v1.0.2 // indirect
+	github.com/btcsuite/btcd/chaincfg/chainhash v1.0.3 // indirect
 	github.com/c-bata/go-prompt v0.2.6 // indirect
 	github.com/cenkalti/backoff/v4 v4.2.1 // indirect
 	github.com/cespare/xxhash v1.1.0 // indirect
@@ -169,7 +166,7 @@ require (
 	github.com/multiformats/go-varint v0.0.7 // indirect
 	github.com/olekukonko/tablewriter v0.0.5 // indirect
 	github.com/onflow/atree v0.6.1-0.20230711151834-86040b30171f // indirect
-	github.com/onflow/cadence-tools/lint v0.14.1 // indirect
+	github.com/onflow/cadence-tools/lint v0.14.2-0.20231218234314-e73ac82193b0 // indirect
 	github.com/onflow/flow-core-contracts/lib/go/contracts v1.2.4-0.20231016154253-a00dbf7c061f // indirect
 	github.com/onflow/flow-ft/lib/go/contracts v0.7.1-0.20231212194336-a2802ba36596 // indirect
 	github.com/onflow/flow-go/crypto v0.25.0 // indirect
@@ -244,7 +241,7 @@ require (
 	golang.org/x/xerrors v0.0.0-20231012003039-104605ab7028 // indirect
 	gonum.org/v1/gonum v0.13.0 // indirect
 	google.golang.org/api v0.151.0 // indirect
-	google.golang.org/appengine v1.6.7 // indirect
+	google.golang.org/appengine v1.6.8 // indirect
 	google.golang.org/genproto v0.0.0-20231016165738-49dd2c1f3d0b // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20231016165738-49dd2c1f3d0b // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20231030173426-d783a09b4405 // indirect
@@ -263,10 +260,4 @@ require (
 
 replace github.com/onflow/flow-cli/flowkit => ./flowkit
 
-replace (
-	github.com/onflow/flow-core-contracts/lib/go/contracts => github.com/onflow/flow-core-contracts/lib/go/contracts v0.15.0
-	github.com/onflow/flow-core-contracts/lib/go/templates => github.com/onflow/flow-core-contracts/lib/go/templates v0.15.0
-	github.com/onflow/flow-ft/lib/go/contracts => github.com/onflow/flow-ft/lib/go/contracts v0.7.0
-	github.com/onflow/flow-go/crypto => github.com/onflow/flow-go/crypto v0.24.9
-	github.com/onflow/flow-nft/lib/go/contracts => github.com/onflow/flow-nft/lib/go/contracts v1.1.0
-)
+replace github.com/onflow/flow-go/crypto => github.com/onflow/flow-go/crypto v0.24.9
