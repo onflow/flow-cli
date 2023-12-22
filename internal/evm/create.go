@@ -20,9 +20,7 @@ package evm
 
 import (
 	_ "embed"
-	"fmt"
 
-	"github.com/onflow/cadence"
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/flowkit"
@@ -61,7 +59,8 @@ func create(
 	state *flowkit.State,
 ) (command.Result, error) {
 	amount := args[0]
-	result, err := transactions.SendTransaction(
+
+	return transactions.SendTransaction(
 		createCode,
 		[]string{"", amount},
 		"",
@@ -71,24 +70,4 @@ func create(
 			Signer: deployFlags.Signer,
 		},
 	)
-	if err != nil {
-		return nil, err
-	}
-
-	val, _ := GetEVMAccount("f8d6e0586b0a20c7", flow)
-	printCreateResult(val, result)
-
-	return nil, nil
-}
-
-func printCreateResult(balance cadence.Value, result command.Result) {
-	fmt.Printf("\n🔥🔥🔥🔥🔥🔥🔥 EVM Account Creation Summary 🔥🔥🔥🔥🔥🔥🔥\n")
-	fmt.Println("Address:  ", "0000000000000000000000000000000000000001")
-	fmt.Println("Balance:  ", balance.String())
-	fmt.Printf("\n-------------------------------------------------------------\n\n")
-
-	fmt.Println(result)
-	//txResult := result.(*transactions.TransactionResult)
-	//events := flowkit.EventsFromTransaction(txResult.Result)
-
 }
