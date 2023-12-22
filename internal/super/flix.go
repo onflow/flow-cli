@@ -20,16 +20,12 @@ package super
 
 import (
 	"context"
-	"encoding/hex"
-	"encoding/json"
 	"fmt"
 	"net/url"
 	"os"
 	"path/filepath"
 
-	"github.com/onflow/flixkit-go"
-	"github.com/onflow/flixkit-go/bindings"
-	"github.com/onflow/flixkit-go/generator/flixkitv1_0_0"
+	"github.com/onflow/flixkit-go/flixkit"
 
 	"github.com/onflow/flow-cli/flowkit"
 	"github.com/onflow/flow-cli/flowkit/config"
@@ -53,6 +49,7 @@ type flixFlags struct {
 	Exclude     []string `default:"" flag:"exclude" info:"Fields to exclude from the output (events)"`
 	GasLimit    uint64   `default:"1000" flag:"gas-limit" info:"transaction gas limit"`
 	PreFill     string   `default:"" flag:"pre-fill" info:"template path to pre fill the FLIX"`
+	Lang        string   `default:"js" flag:"lang" info:"language to generate the template for"`
 }
 
 type flixResult struct {
@@ -81,9 +78,9 @@ var executeCommand = &command.Command{
 
 var packageCommand = &command.Command{
 	Cmd: &cobra.Command{
-		Use:     "package <id | name | path | url>",
+		Use:     "package <id | name | path | url> --lang <lang>",
 		Short:   "package file for FLIX template fcl-js is default",
-		Example: "flow flix package multiply.template.json",
+		Example: "flow flix package multiply.template.json --lang js",
 		Args:    cobra.MinimumNArgs(1),
 	},
 	Flags: &flags,
@@ -107,46 +104,6 @@ func init() {
 	generateCommand.AddToParent(FlixCmd)
 }
 
-type flixQueryTypes string
-
-const (
-	flixName flixQueryTypes = "name"
-	flixPath flixQueryTypes = "path"
-	flixId   flixQueryTypes = "id"
-	flixUrl  flixQueryTypes = "url"
-)
-
-func isHex(str string) bool {
-	if len(str) != 64 {
-		return false
-	}
-	_, err := hex.DecodeString(str)
-	return err == nil
-}
-
-func isPath(path string) bool {
-	_, err := os.Stat(path)
-	return err == nil
-}
-
-func isUrl(str string) bool {
-	u, err := url.Parse(str)
-	return err == nil && u.Scheme != "" && u.Host != ""
-}
-
-func getType(s string) flixQueryTypes {
-	switch {
-	case isPath(s):
-		return flixPath
-	case isHex(s):
-		return flixId
-	case isUrl(s):
-		return flixUrl
-	default:
-		return flixName
-	}
-}
-
 func executeCmd(
 	args []string,
 	_ command.GlobalFlags,
@@ -154,26 +111,24 @@ func executeCmd(
 	flow flowkit.Services,
 	state *flowkit.State,
 ) (result command.Result, err error) {
-	flixService := flixkit.NewFlixService(&flixkit.Config{})
+	flixService := flixkit.NewFlixService(&flixkit.Config{
+		FileReader: state,
+	})
 	flixQuery := args[0]
-	template, err := getTemplate(state, flixService, flixQuery)
-	if err != nil {
-		return nil, err
-	}
-
-	cadenceWithImportsReplaced, err := template.GetAndReplaceCadenceImports(flow.Network().Name)
+	ctx := context.Background()
+	cadenceWithImportsReplaced, err := flixService.GetAndReplaceCadenceImports(ctx, flixQuery, flow.Network().Name)
 	if err != nil {
 		logger.Error("could not replace imports")
 		return nil, err
 	}
 
-	if template.IsScript() {
+	if cadenceWithImportsReplaced.IsScript {
 		scriptsFlags := scripts.Flags{
 			ArgsJSON:    flags.ArgsJSON,
 			BlockID:     flags.BlockID,
 			BlockHeight: flags.BlockHeight,
 		}
-		return scripts.SendScript([]byte(cadenceWithImportsReplaced), args[1:], "", flow, scriptsFlags)
+		return scripts.SendScript([]byte(cadenceWithImportsReplaced.Cadence), args[1:], "", flow, scriptsFlags)
 	}
 
 	transactionFlags := transactions.Flags{
@@ -186,29 +141,29 @@ func executeCmd(
 		Exclude:     flags.Exclude,
 		GasLimit:    flags.GasLimit,
 	}
-	return transactions.SendTransaction([]byte(cadenceWithImportsReplaced), args[1:], "", flow, state, transactionFlags)
+	return transactions.SendTransaction([]byte(cadenceWithImportsReplaced.Cadence), args[1:], "", flow, state, transactionFlags)
 }
 
 func packageCmd(
 	args []string,
-	flags command.GlobalFlags,
+	gFlags command.GlobalFlags,
 	logger output.Logger,
 	flow flowkit.Services,
 	state *flowkit.State,
 ) (result command.Result, err error) {
-	flixService := flixkit.NewFlixService(&flixkit.Config{})
+	flixService := flixkit.NewFlixService(&flixkit.Config{
+		FileReader: state,
+	})
 	flixQuery := args[0]
-
-	template, err := getTemplate(state, flixService, flixQuery)
+	ctx := context.Background()
+	template, err := flixService.GetTemplate(ctx, flixQuery)
 	if err != nil {
 		return nil, err
 	}
-	isLocal := false
-	if getType(flixQuery) == flixPath {
-		isLocal = true
-		if flags.Save != "" {
+	if !isUrl(flixQuery) {
+		if gFlags.Save != "" {
 			// resolve template file location to relative path to be used by binding file
-			flixQuery, err = GetRelativePath(flixQuery, flags.Save)
+			flixQuery, err = GetRelativePath(flixQuery, gFlags.Save)
 			if err != nil {
 				logger.Error("could not resolve relative path to template")
 				return nil, err
@@ -216,8 +171,20 @@ func packageCmd(
 		}
 	}
 
-	fclJsGen := bindings.NewFclJSGenerator()
-	out, err := fclJsGen.Generate(template, flixQuery, isLocal)
+	var out string
+	var gen flixkit.FclGenerator
+	switch flags.Lang {
+	case "js":
+		gen = *flixkit.NewFclJSGenerator()
+	case "ts":
+		gen = *flixkit.NewFclTSGenerator()
+	default:
+		return nil, fmt.Errorf("language %s not supported", flags.Lang)
+	}
+	out, err = gen.Generate(template, flixQuery)
+	if err != nil {
+		return nil, err
+	}
 
 	return &flixResult{
 		flixQuery: flixQuery,
@@ -244,33 +211,31 @@ func generateCmd(
 	}
 
 	depContracts := GetDeployedContracts(state)
-	generator, err := flixkitv1_0_0.NewGenerator(depContracts, nil, logger)
+	generator, err := flixkit.NewGenerator(depContracts, logger)
 	if err != nil {
 		return nil, fmt.Errorf("could not create flix generator %w", err)
 	}
 
-	var template *flixkit.FlowInteractionTemplate
+	ctx := context.Background()
+	var template string
 	if flags.PreFill != "" {
-		flixService := flixkit.NewFlixService(&flixkit.Config{})
-		template, err = getTemplate(state, flixService, flags.PreFill)
+		flixService := flixkit.NewFlixService(&flixkit.Config{
+			FileReader: state,
+		})
+		template, err = flixService.GetTemplate(ctx, flags.PreFill)
 		if err != nil {
 			return nil, fmt.Errorf("could not parse template from pre fill %w", err)
 		}
 	}
-	ctx := context.Background()
-	flix, err := generator.Generate(ctx, string(code), template)
+
+	prettyJSON, err := generator.Generate(ctx, string(code), template)
 	if err != nil {
 		return nil, fmt.Errorf("could not generate flix %w", err)
 	}
 
-	prettyJSON, err := json.MarshalIndent(flix, "", "    ")
-	if err != nil {
-		return nil, fmt.Errorf("could not marshal flix %w", err)
-	}
-
 	return &flixResult{
 		flixQuery: cadenceFile,
-		result:    string(prettyJSON),
+		result:    prettyJSON,
 	}, err
 
 }
@@ -290,48 +255,6 @@ func (fr *flixResult) Oneliner() string {
 	return fr.result
 }
 
-func getTemplate(state *flowkit.State, flixService flixkit.FlixService, flixQuery string) (*flixkit.FlowInteractionTemplate, error) {
-	var template *flixkit.FlowInteractionTemplate
-	var err error
-	ctx := context.Background()
-	switch getType(flixQuery) {
-	case flixId:
-		template, err = flixService.GetFlixByID(ctx, flixQuery)
-		if err != nil {
-			return nil, fmt.Errorf("could not find flix with id %s: %w", flixQuery, err)
-		}
-
-	case flixName:
-		template, err = flixService.GetFlix(ctx, flixQuery)
-		if err != nil {
-			return nil, fmt.Errorf("could not find flix with name %s: %w", flixQuery, err)
-		}
-
-	case flixPath:
-		file, err := state.ReadFile(flixQuery)
-		if err != nil {
-			return nil, fmt.Errorf("could not read flix file %s: %w", flixQuery, err)
-		}
-		template, err = flixkit.ParseFlix(string(file))
-		if err != nil {
-			return nil, fmt.Errorf("could not parse flix from file %s: %w", flixQuery, err)
-		}
-	case flixUrl:
-		flixString, err := flixkit.FetchFlixWithContext(ctx, flixQuery)
-		if err != nil {
-			return nil, fmt.Errorf("could not parse flix from url %s: %w", flixQuery, err)
-		}
-		template, err = flixkit.ParseFlix(flixString)
-		if err != nil {
-			return nil, fmt.Errorf("could not parse flix from url %s: %w", flixQuery, err)
-		}
-
-	default:
-		return nil, fmt.Errorf("invalid flix query type: %s", flixQuery)
-	}
-	return template, nil
-}
-
 // GetRelativePath computes the relative path from generated file to flix json file.
 // This path is used in the binding file to reference the flix json file.
 func GetRelativePath(configFile, bindingFile string) (string, error) {
@@ -349,60 +272,46 @@ func GetRelativePath(configFile, bindingFile string) (string, error) {
 	return filepath.ToSlash(relPath), nil
 }
 
-func GetDeployedContracts(state *flowkit.State) []flixkit.Contracts {
-	depContracts := make([]flixkit.Contracts, 0)
-	for _, deployment := range *state.Deployments() {
-		contracts, err := state.DeploymentContractsByNetwork(config.Network{Name: deployment.Network})
+func GetDeployedContracts(state *flowkit.State) flixkit.ContractInfos {
+	allContracts := make(flixkit.ContractInfos)
+	depNetworks := make([]string, 0)
+	// get all configured networks in flow.json
+	for _, n := range *state.Networks() {
+		depNetworks = append(depNetworks, n.Name)
+	}
+
+	// get all deployed and alias contracts for configured networks
+	for _, network := range depNetworks {
+		contracts, err := state.DeploymentContractsByNetwork(config.Network{Name: network})
 		if err != nil {
 			continue
 		}
 		for _, c := range contracts {
-			contract := flixkit.Contracts{
-				c.Name: flixkit.Networks{
-					deployment.Network: createFlixNetworkContract(
-						networkContract{
-							contractName:   c.Name,
-							networkAddress: c.AccountAddress.String(),
-						}),
-				},
+			if _, ok := allContracts[c.Name]; !ok {
+				allContracts[c.Name] = make(flixkit.NetworkAddressMap)
 			}
-			depContracts = append(depContracts, contract)
+			allContracts[c.Name][network] = c.AccountAddress.String()
 		}
-	}
-	// Networks of interest
-	networks := []config.Network{
-		config.MainnetNetwork,
-		config.TestnetNetwork,
-	}
-
-	for _, net := range networks {
-		locAliases := state.AliasesForNetwork(net)
+		locAliases := state.AliasesForNetwork(config.Network{Name: network})
 		for name, addr := range locAliases {
-			contract := flixkit.Contracts{
-				name: flixkit.Networks{
-					net.Name: createFlixNetworkContract(
-						networkContract{
-							contractName:   name,
-							networkAddress: addr,
-						}),
-				},
+			if isPath(name) {
+				continue
 			}
-			depContracts = append(depContracts, contract)
+			if _, ok := allContracts[name]; !ok {
+				allContracts[name] = make(flixkit.NetworkAddressMap)
+			}
+			allContracts[name][network] = addr
 		}
 	}
-
-	return depContracts
+	return allContracts
 }
 
-type networkContract struct {
-	contractName   string
-	networkAddress string
+func isUrl(str string) bool {
+	u, err := url.Parse(str)
+	return err == nil && u.Scheme != "" && u.Host != ""
 }
 
-func createFlixNetworkContract(contract networkContract) flixkit.Network {
-	return flixkit.Network{
-		Address:   "0x" + contract.networkAddress,
-		FqAddress: "A." + contract.networkAddress + "." + contract.contractName,
-		Contract:  contract.contractName,
-	}
+func isPath(path string) bool {
+	_, err := os.Stat(path)
+	return err == nil
 }

@@ -39,12 +39,12 @@ var ContractHelloString = Resource{
 	Name:     "Hello",
 	Filename: "contractHello.cdc",
 	Source: []byte(`
-		pub contract Hello {
-			pub let greeting: String
+		access(all) contract Hello {
+			access(all) let greeting: String
 			init() {
 				self.greeting = "Hello, World!"
 			}
-			pub fun hello(): String {
+			access(all) fun hello(): String {
 				return self.greeting
 			}
 		}
@@ -55,7 +55,7 @@ var ContractSimple = Resource{
 	Name:     "Simple",
 	Filename: "contractSimple.cdc",
 	Source: []byte(`
-		pub contract Simple {}
+		access(all) contract Simple {}
 	`),
 }
 
@@ -63,8 +63,8 @@ var ContractSimpleUpdated = Resource{
 	Name:     "Simple",
 	Filename: "contractSimpleUpdated.cdc",
 	Source: []byte(`
-		pub contract Simple {
-			pub fun newFunc() {}
+		access(all) contract Simple {
+			access(all) fun newFunc() {}
 		}
 	`),
 }
@@ -73,8 +73,8 @@ var ContractSimpleWithArgs = Resource{
 	Name:     "Simple",
 	Filename: "contractArgs.cdc",
 	Source: []byte(`
-		pub contract Simple {
-			pub let id: UInt64
+		access(all) contract Simple {
+			access(all) let id: UInt64
 			init(initId: UInt64) {
 				self.id = initId
 			}
@@ -86,10 +86,10 @@ var ContractEvents = Resource{
 	Name:     "ContractEvents",
 	Filename: "contractEvents.cdc",
 	Source: []byte(`
-		pub contract ContractEvents {
-			pub struct S {
-				pub var x: Int
-				pub var y: String
+		access(all) contract ContractEvents {
+			access(all) struct S {
+				access(all) var x: Int
+				access(all) var y: String
 				
 				init(x: Int, y: String) {
 					self.x = x
@@ -97,16 +97,16 @@ var ContractEvents = Resource{
 				}
 			}
 
-			pub event EventA(x: Int)
-			pub event EventB(x: Int, y: Int)
-			pub event EventC(x: UInt8)
-			pub event EventD(x: String)
-			pub event EventE(x: UFix64) 
-			pub event EventF(x: Address)
-			pub event EventG(x: [UInt8])
-			pub event EventH(x: [[UInt8]])
-			pub event EventI(x: {String: Int})
-			pub event EventJ(x: S)
+			access(all) event EventA(x: Int)
+			access(all) event EventB(x: Int, y: Int)
+			access(all) event EventC(x: UInt8)
+			access(all) event EventD(x: String)
+			access(all) event EventE(x: UFix64) 
+			access(all) event EventF(x: Address)
+			access(all) event EventG(x: [UInt8])
+			access(all) event EventH(x: [[UInt8]])
+			access(all) event EventI(x: {String: Int})
+			access(all) event EventJ(x: S)
 			
 			init() {
 				emit EventA(x: 1)				
@@ -127,7 +127,7 @@ var ContractEvents = Resource{
 var ContractA = Resource{
 	Name:     "ContractA",
 	Filename: "contractA.cdc",
-	Source:   []byte(`pub contract ContractA {}`),
+	Source:   []byte(`access(all) contract ContractA {}`),
 }
 
 var ContractB = Resource{
@@ -135,7 +135,7 @@ var ContractB = Resource{
 	Filename: "contractB.cdc",
 	Source: []byte(`
 		import ContractA from "./contractA.cdc"
-		pub contract ContractB {}
+		access(all) contract ContractB {}
 	`),
 }
 
@@ -146,8 +146,8 @@ var ContractC = Resource{
 		import ContractB from "./contractB.cdc"
 		import ContractA from "./contractA.cdc"
 
-		pub contract ContractC {
-			pub let x: String
+		access(all) contract ContractC {
+			access(all) let x: String
 			init(x: String) {
 				self.x = x
 			}
@@ -159,8 +159,8 @@ var ContractFooCoverage = Resource{
 	Name:     "FooContract",
 	Filename: "FooContract.cdc",
 	Source: []byte(`
-		pub contract FooContract {
-			pub let specialNumbers: {Int: String}
+		access(all) contract FooContract {
+			access(all) let specialNumbers: {Int: String}
 
 			init() {
 				self.specialNumbers = {
@@ -170,11 +170,11 @@ var ContractFooCoverage = Resource{
 				}
 			}
 
-			pub fun addSpecialNumber(_ n: Int, _ trait: String) {
+			access(all) fun addSpecialNumber(_ n: Int, _ trait: String) {
 				self.specialNumbers[n] = trait
 			}
 
-			pub fun getIntegerTrait(_ n: Int): String {
+			access(all) fun getIntegerTrait(_ n: Int): String {
 				if n < 0 {
 					return "Negative"
 				} else if n == 0 {
@@ -200,7 +200,7 @@ var ContractFooCoverage = Resource{
 var ContractAA = Resource{
 	Name:     "ContractAA",
 	Filename: "contractAA.cdc",
-	Source:   []byte(`pub contract ContractAA {}`),
+	Source:   []byte(`access(all) contract ContractAA {}`),
 }
 
 var ContractBB = Resource{
@@ -208,7 +208,7 @@ var ContractBB = Resource{
 	Filename: "contractBB.cdc",
 	Source: []byte(`
 		import "ContractAA"
-		pub contract ContractB {}
+		access(all) contract ContractB {}
 	`),
 }
 
@@ -219,8 +219,8 @@ var ContractCC = Resource{
 		import "ContractBB"
 		import "ContractAA"
 
-		pub contract ContractC {
-			pub let x: String
+		access(all) contract ContractC {
+			access(all) let x: String
 			init(x: String) {
 				self.x = x
 			}
@@ -234,7 +234,7 @@ var TransactionArgString = Resource{
 		transaction(greeting: String) {
 			let guest: Address
 			
-			prepare(authorizer: AuthAccount) {
+			prepare(authorizer: &Account) {
 				self.guest = authorizer.address
 			}
 			
@@ -251,7 +251,7 @@ var TransactionImports = Resource{
 		import Hello from "./contractHello.cdc"
 		
 		transaction() {
-			prepare(authorizer: AuthAccount) {}
+			prepare(authorizer: &Account) {}
 			execute {
 				Hello.hello()
 			}
@@ -270,7 +270,7 @@ var TransactionSingleAuth = Resource{
 	Filename: "transactionAuth1.cdc",
 	Source: []byte(`
 		transaction() {
-			prepare(authorizer: AuthAccount) {}
+			prepare(authorizer: &Account) {}
 		}
 	`),
 }
@@ -279,7 +279,7 @@ var TransactionTwoAuth = Resource{
 	Filename: "transactionAuth2.cdc",
 	Source: []byte(`
 		transaction() {
-			prepare(auth1: AuthAccount, auth2: AuthAccount) {}
+			prepare(auth1: &Account, auth2: &Account) {}
 		}
 	`),
 }
@@ -287,10 +287,10 @@ var TransactionTwoAuth = Resource{
 var TransactionMultipleDeclarations = Resource{
 	Filename: "transactionMultipleDec.cdc",
 	Source: []byte(`
-		pub fun dummy(_ address: Address): Void {}
+		access(all) fun dummy(_ address: Address): Void {}
 
 		transaction() {
-			prepare(authorizer: AuthAccount) {}
+			prepare(authorizer: &Account) {}
 		}
 	`),
 }
@@ -298,7 +298,7 @@ var TransactionMultipleDeclarations = Resource{
 var ScriptWithError = Resource{
 	Filename: "scriptError.cdc",
 	Source: []byte(`
-	    	pub fun main(name: String): Strin {
+	    	access(all) fun main(name: String): Strin {
 		  return "Hello ".concat(name)
 		}
 	`),
@@ -307,7 +307,7 @@ var ScriptWithError = Resource{
 var ScriptArgString = Resource{
 	Filename: "scriptArg.cdc",
 	Source: []byte(`
-		pub fun main(name: String): String {
+		access(all) fun main(name: String): String {
 		  return "Hello ".concat(name)
 		}
 	`),
@@ -318,7 +318,7 @@ var ScriptImport = Resource{
 	Source: []byte(`
 		import Hello from "./contractHello.cdc"
 
-		pub fun main(): String {
+		access(all) fun main(): String {
 		  return "Hello ".concat(Hello.greeting)
 		}
 	`),
@@ -327,7 +327,7 @@ var ScriptImport = Resource{
 var HelperImport = Resource{
 	Filename: "test_helpers.cdc",
 	Source: []byte(`
-        pub fun double(_ x: Int): Int {
+        access(all) fun double(_ x: Int): Int {
             return x * 2
         }
 	`),
@@ -338,7 +338,7 @@ var TestScriptSimple = Resource{
 	Source: []byte(`
         import Test
 
-        pub fun testSimple() {
+        access(all) fun testSimple() {
             Test.assert(true)
         }
 	`),
@@ -349,7 +349,7 @@ var TestScriptSimpleFailing = Resource{
 	Source: []byte(`
         import Test
 
-        pub fun testSimple() {
+        access(all) fun testSimple() {
             Test.assert(false)
         }
 	`),
@@ -361,7 +361,7 @@ var TestScriptWithImport = Resource{
         import Test
         import "Hello"
 
-        pub fun setup() {
+        access(all) fun setup() {
             let err = Test.deployContract(
                 name: "Hello",
                 path: "contractHello.cdc",
@@ -370,7 +370,7 @@ var TestScriptWithImport = Resource{
             Test.expect(err, Test.beNil())
         }
 
-        pub fun testSimple() {
+        access(all) fun testSimple() {
             Test.assertEqual("Hello, World!", Hello.greeting)
         }
 	`),
@@ -382,7 +382,7 @@ var TestScriptWithMissingContract = Resource{
         import Test
         import "ApprovalVoting"
 
-        pub fun setup() {
+        access(all) fun setup() {
             let err = Test.deployContract(
                 name: "ApprovalVoting",
                 path: "ApprovalVoting.cdc",
@@ -399,7 +399,7 @@ var TestScriptWithHelperImport = Resource{
         import Test
         import "test_helpers.cdc"
 
-        pub fun testDouble() {
+        access(all) fun testDouble() {
             Test.expect(double(2), Test.equal(4))
         }
 	`),
@@ -412,7 +412,7 @@ var TestScriptWithRelativeImports = Resource{
         import FooContract from "../contracts/FooContract.cdc"
         import Hello from "../contracts/contractHello.cdc"
 
-        pub fun setup() {
+        access(all) fun setup() {
             var err = Test.deployContract(
                 name: "FooContract",
                 path: "../contracts/FooContract.cdc",
@@ -428,7 +428,7 @@ var TestScriptWithRelativeImports = Resource{
             Test.expect(err, Test.beNil())
         }
 
-        pub fun testSimple() {
+        access(all) fun testSimple() {
             Test.assertEqual("Enormous", FooContract.getIntegerTrait(100001))
             Test.assertEqual("Hello, World!", Hello.greeting)
         }
@@ -440,7 +440,7 @@ var TestScriptWithFileRead = Resource{
 	Source: []byte(`
         import Test
 
-        pub fun testSimple() {
+        access(all) fun testSimple() {
             let content = Test.readFile("./someFile.cdc")
             Test.assertEqual("This was read from a file!", content)
         }
@@ -453,7 +453,8 @@ var TestScriptWithCoverage = Resource{
         import Test
         import "FooContract"
 
-        pub fun setup() {
+
+        access(all) fun setup() {
             let err = Test.deployContract(
                 name: "FooContract",
                 path: "FooContract.cdc",
@@ -463,7 +464,7 @@ var TestScriptWithCoverage = Resource{
             Test.expect(err, Test.beNil())
         }
 
-        pub fun testGetIntegerTrait() {
+        access(all) fun testGetIntegerTrait() {
             // Arrange
             let testInputs: {Int: String} = {
                 -1: "Negative",
@@ -486,7 +487,7 @@ var TestScriptWithCoverage = Resource{
             }
         }
 
-        pub fun testAddSpecialNumber() {
+        access(all) fun testAddSpecialNumber() {
             // Act
             FooContract.addSpecialNumber(78557, "Sierpinski")
 
@@ -632,7 +633,7 @@ func NewAccountCreateResult(address flow.Address) *flow.TransactionResult {
 		Value: cadence.Event{
 			EventType: cadence.NewEventType(common.NewStringLocation(nil, flow.EventAccountCreated), "", []cadence.Field{{
 				Identifier: "address",
-				Type:       cadence.AddressType{},
+				Type:       cadence.AddressType,
 			}}, nil),
 			Fields: []cadence.Value{
 				cadence.NewAddress(address),

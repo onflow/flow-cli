@@ -45,84 +45,84 @@ func Test_ParseWithoutType(t *testing.T) {
 			{
 				Name:  "Address",
 				Value: cadence.NewAddress([8]byte{0, 0, 0, 0, 0, 0, 0, 1}),
-				Type:  cadence.AddressType{},
+				Type:  cadence.AddressType,
 			},
 			{
 				Name:  "Bool",
 				Value: cadence.NewBool(true),
-				Type:  cadence.BoolType{},
+				Type:  cadence.BoolType,
 			},
 			{
 				Name:  "Int",
 				Value: cadence.NewInt(-42),
-				Type:  cadence.IntType{},
+				Type:  cadence.IntType,
 			},
 			{
 				Name:  "Int8",
 				Value: cadence.NewInt8(-42),
-				Type:  cadence.Int8Type{},
+				Type:  cadence.Int8Type,
 			},
 			{
 				Name:  "Int16",
 				Value: cadence.NewInt16(-42),
-				Type:  cadence.Int16Type{},
+				Type:  cadence.Int16Type,
 			},
 			{
 				Name:  "Int32",
 				Value: cadence.NewInt32(-42),
-				Type:  cadence.Int32Type{},
+				Type:  cadence.Int32Type,
 			},
 			{
 				Name:  "Int64",
 				Value: cadence.NewInt64(-42),
-				Type:  cadence.Int64Type{},
+				Type:  cadence.Int64Type,
 			},
 			{
 				Name:  "Int128",
 				Value: cadence.NewInt128(-42),
-				Type:  cadence.Int128Type{},
+				Type:  cadence.Int128Type,
 			},
 			{
 				Name:  "UInt8",
 				Value: cadence.NewUInt8(42),
-				Type:  cadence.UInt8Type{},
+				Type:  cadence.UInt8Type,
 			},
 			{
 				Name:  "UInt16",
 				Value: cadence.NewUInt16(42),
-				Type:  cadence.UInt16Type{},
+				Type:  cadence.UInt16Type,
 			},
 			{
 				Name:  "UInt32",
 				Value: cadence.NewUInt32(42),
-				Type:  cadence.UInt32Type{},
+				Type:  cadence.UInt32Type,
 			},
 			{
 				Name:  "UInt64",
 				Value: cadence.NewUInt64(42),
-				Type:  cadence.UInt64Type{},
+				Type:  cadence.UInt64Type,
 			},
 			{
 				Name:  "UInt128",
 				Value: cadence.NewUInt128(42),
-				Type:  cadence.UInt128Type{},
+				Type:  cadence.UInt128Type,
 			},
 			{
 				Name:  "String",
 				Value: cadence.String("42"),
-				Type:  cadence.StringType{},
+				Type:  cadence.StringType,
 			},
 			{
 				Name:    "String, no quoting",
 				Literal: `foo`,
 				Value:   cadence.String("foo"),
-				Type:    cadence.StringType{},
+				Type:    cadence.StringType,
 			},
 			{
 				Name:  "optional String, nil",
 				Value: cadence.NewOptional(nil),
 				Type: &cadence.OptionalType{
-					Type: cadence.StringType{},
+					Type: cadence.StringType,
 				},
 			},
 			{
@@ -131,49 +131,53 @@ func Test_ParseWithoutType(t *testing.T) {
 					cadence.String("test"),
 				),
 				Type: &cadence.OptionalType{
-					Type: cadence.StringType{},
+					Type: cadence.StringType,
 				},
 			},
-			// TODO: depends on https://github.com/onflow/cadence/pull/2469
-			//{
-			//	Name: "doubly optional String, nil",
-			//	Value: cadence.NewOptional(
-			//		cadence.NewOptional(nil),
-			//	),
-			//	Type: &cadence.OptionalType{
-			//		Type: &cadence.OptionalType{
-			//			Type: cadence.StringType{},
-			//		},
-			//	},
-			//},
+			{
+				Name: "doubly optional String, nil",
+				Value: cadence.NewOptional(
+					cadence.NewOptional(nil),
+				),
+				Type: &cadence.OptionalType{
+					Type: &cadence.OptionalType{
+						Type: cadence.StringType,
+					},
+				},
+			},
 			{
 				Name: "variable-sized array",
 				Value: cadence.NewArray([]cadence.Value{
 					cadence.String("42"),
+				}).WithType(&cadence.VariableSizedArrayType{
+					ElementType: cadence.StringType,
 				}),
 				Type: &cadence.VariableSizedArrayType{
-					ElementType: cadence.StringType{},
+					ElementType: cadence.StringType,
 				},
 			},
 			{
 				Name: "constant-sized array",
 				Value: cadence.NewArray([]cadence.Value{
 					cadence.String("42"),
+				}).WithType(&cadence.ConstantSizedArrayType{
+					ElementType: cadence.StringType,
+					Size:        1,
 				}),
 				Type: &cadence.ConstantSizedArrayType{
-					ElementType: cadence.StringType{},
+					ElementType: cadence.StringType,
 					Size:        1,
 				},
 			},
 			{
 				Name:           "identifier (invalid)",
 				InvalidLiteral: "foo",
-				Type:           cadence.IntType{},
+				Type:           cadence.IntType,
 			},
 			{
 				Name:           "expression (invalid)",
 				InvalidLiteral: "1 + 1",
-				Type:           cadence.IntType{},
+				Type:           cadence.IntType,
 			},
 		}
 
@@ -191,7 +195,7 @@ func Test_ParseWithoutType(t *testing.T) {
 				args, err := ParseWithoutType(
 					[]string{literal},
 					[]byte(fmt.Sprintf(
-						`pub fun main(test: %s) {}`,
+						`access(all) fun main(test: %s) {}`,
 						testCase.Type.ID(),
 					)),
 					"",
@@ -217,8 +221,8 @@ func Test_ParseWithoutType(t *testing.T) {
 		t.Parallel()
 
 		template := map[string]string{
-			"script":      `pub fun main(foo: String): Void {}`,
-			"contract":    `pub contract Foo { init(foo: String) {} }`,
+			"script":      `access(all) fun main(foo: String): Void {}`,
+			"contract":    `access(all) contract Foo { init(foo: String) {} }`,
 			"transaction": `transaction(foo: String) {}`,
 		}
 

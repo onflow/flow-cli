@@ -35,7 +35,7 @@ func Test_AccountCreatedEvent(t *testing.T) {
 		flow.EventAccountCreated,
 		[]cadence.Field{{
 			Identifier: "address",
-			Type:       cadence.AddressType{},
+			Type:       cadence.AddressType,
 		}},
 		[]cadence.Value{cadence.NewAddress(address)},
 	)
