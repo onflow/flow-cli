@@ -15,7 +15,7 @@ require (
 	github.com/onflow/flixkit-go v1.0.1-0.20231219224839-06f824c2a16e
 	github.com/onflow/flow-cli/flowkit v1.8.1-0.20231219002530-719e6b55f35a
 	github.com/onflow/flow-core-contracts/lib/go/templates v0.15.1-0.20231212203043-37cbe453d425
-	github.com/onflow/flow-emulator v0.59.1-0.20231218185945-9116c416533f
+	github.com/onflow/flow-emulator v0.59.1-0.20231221115955-65530e5da999
 	github.com/onflow/flow-go-sdk v0.44.0-stable-cadence.2
 	github.com/onflowser/flowser/v3 v3.1.3
 	github.com/pkg/errors v0.9.1
@@ -168,10 +168,10 @@ require (
 	github.com/onflow/cadence-tools/lint v0.14.2-0.20231218234314-e73ac82193b0 // indirect
 	github.com/onflow/flow-core-contracts/lib/go/contracts v0.15.1-0.20231212203043-37cbe453d425 // indirect
 	github.com/onflow/flow-ft/lib/go/contracts v0.7.1-0.20231212194336-a2802ba36596 // indirect
-	github.com/onflow/flow-go v0.32.4-0.20231214190912-4c4527a42fb0 // indirect
+	github.com/onflow/flow-go v0.32.4-0.20231220215809-5d681fdf0c1f // indirect
 	github.com/onflow/flow-go/crypto v0.25.0 // indirect
 	github.com/onflow/flow-nft/lib/go/contracts v1.1.1-0.20231213195450-0b951b342b14 // indirect
-	github.com/onflow/flow/protobuf/go/flow v0.3.2-0.20231124194313-106cc495def6 // indirect
+	github.com/onflow/flow/protobuf/go/flow v0.3.2-0.20231213135419-ae911cc351a2 // indirect
 	github.com/onflow/sdks v0.5.1-0.20230912225508-b35402f12bba // indirect
 	github.com/onflow/wal v0.0.0-20230529184820-bc9f8244608d // indirect
 	github.com/opentracing/opentracing-go v1.2.0 // indirect
