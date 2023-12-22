@@ -489,15 +489,14 @@ func (e *ethAPI) GetBalance(
 ) (*hexutil.Big, error) {
 	e.log.Info().Str("address", address.String()).Msg("get balance")
 
-	val, err := callServiceMethod(e.flow, "getBalance", address)
+	addr := strings.ReplaceAll(address.String(), "0x", "")
+	val, err := GetEVMAccountBalance(addr, e.flow)
 	if err != nil {
-		e.log.Error().Err(err).Msg("")
 		return nil, err
 	}
 
-	balance := binary.BigEndian.Uint64(val[len(val)-8:])
-
-	return (*hexutil.Big)(big.NewInt(int64(balance))), nil
+	bal := val.ToGoValue().(uint64)
+	return (*hexutil.Big)(big.NewInt(int64(bal))), nil
 }
 
 func (e *ethAPI) EstimateGas(

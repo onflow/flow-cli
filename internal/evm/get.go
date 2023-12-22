@@ -21,6 +21,7 @@ package evm
 import (
 	"context"
 	_ "embed"
+	"encoding/hex"
 	"fmt"
 
 	"github.com/onflow/cadence"
@@ -41,10 +42,10 @@ var getFlags = flagsGet{}
 
 var getCommand = &command.Command{
 	Cmd: &cobra.Command{
-		Use:     "get-account <evm address>",
-		Short:   "Get account by the EVM address",
+		Use:     "get-balance <evm address>",
+		Short:   "Get account balance by the EVM address",
 		Args:    cobra.ExactArgs(1),
-		Example: "flow evm get-account 522b3294e6d06aa25ad0f1b8891242e335d3b459",
+		Example: "flow evm get-balance 522b3294e6d06aa25ad0f1b8891242e335d3b459",
 	},
 	Flags: &getFlags,
 	RunS:  get,
@@ -59,16 +60,22 @@ func get(
 	flow flowkit.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
-	val, _ := GetEVMAccount(args[0], flow)
+	a, err := hex.DecodeString(args[0])
+	if err != nil {
+		return nil, err
+	}
 
-	fmt.Printf("\n🔥🔥🔥🔥🔥🔥🔥 EVM Account Creation Summary 🔥🔥🔥🔥🔥🔥🔥\n")
-	fmt.Println("Address:  ", "0000000000000000000000000000000000000001")
+	addressBytes := cadenceByteArrayString(a)
+
+	val, _ := GetEVMAccountBalance(addressBytes, flow)
+
+	fmt.Printf("\n🔥🔥🔥🔥🔥🔥🔥 EVM Get Balance 🔥🔥🔥🔥🔥🔥🔥\n")
 	fmt.Println("Balance:  ", val)
 	fmt.Printf("\n-------------------------------------------------------------\n\n")
 	return nil, nil
 }
 
-func GetEVMAccount(
+func GetEVMAccountBalance(
 	address string,
 	flow flowkit.Services,
 ) (cadence.Value, error) {

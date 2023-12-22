@@ -7,7 +7,7 @@ transaction(amount: UFix64) {
     let auth: AuthAccount
 
     prepare(signer: auth(Storage) &Account) {
-        let vaultRef = signer.borrow<&FlowToken.Vault>(from: /storage/flowTokenVault)
+        let vaultRef = signer.storage.borrow<&FlowToken.Vault>(from: /storage/flowTokenVault)
             ?? panic("Could not borrow reference to the owner's Vault!")
 
         self.sentVault <- vaultRef.withdraw(amount: amount) as! @FlowToken.Vault
@@ -19,6 +19,6 @@ transaction(amount: UFix64) {
         account.address().deposit(from: <-self.sentVault)
 
         log(account.balance())
-        self.auth.save<@EVM.BridgedAccount>(<-account, to: StoragePath(identifier: "evm")!)
+        self.auth.storage.save<@EVM.BridgedAccount>(<-account, to: StoragePath(identifier: "evm")!)
     }
 }

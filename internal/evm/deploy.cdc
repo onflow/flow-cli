@@ -6,7 +6,7 @@ transaction(bytecode: String) {
     let sentVault: @FlowToken.Vault
 
     prepare(signer: auth(Storage) &Account) {
-        let vaultRef = signer.borrow<&FlowToken.Vault>(from: /storage/flowTokenVault)
+        let vaultRef = signer.storage.borrow<auth(FungibleToken.Withdrawable) &FlowToken.Vault>(from: /storage/flowTokenVault)
             ?? panic("Could not borrow reference to the owner's Vault!")
 
         self.sentVault <- vaultRef.withdraw(amount: 10.0) as! @FlowToken.Vault
