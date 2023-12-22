@@ -33,10 +33,14 @@ import (
 	"github.com/onflow/flow-cli/flowkit"
 	"github.com/onflow/flow-cli/flowkit/output"
 	"github.com/onflow/flow-cli/internal/command"
+	"github.com/onflow/flow-cli/internal/transactions"
 )
 
 //go:embed service.abi
 var serviceABI []byte
+
+//go:embed service.sol
+var serviceCode []byte
 
 type flagsRPC struct{}
 
@@ -66,6 +70,11 @@ func rpcRun(
 ) (command.Result, error) {
 	logger := zerolog.New(os.Stdout).With().Str("module", "grpc").Logger()
 
+	err := deployServiceContract(flow, state)
+	if err != nil {
+		return nil, fmt.Errorf("failed to deploy EVM service contract: %w", err)
+	}
+
 	api := &ethAPI{
 		flow:     flow,
 		log:      logger,
@@ -76,7 +85,7 @@ func rpcRun(
 	}
 
 	server := rpc.NewServer()
-	err := server.RegisterName("eth", api)
+	err = server.RegisterName("eth", api)
 	if err != nil {
 		return nil, err
 	}
@@ -98,6 +107,18 @@ func rpcRun(
 
 	server.Stop()
 	return nil, nil
+}
+
+func deployServiceContract(flow flowkit.Services, state *flowkit.State) error {
+	_, err := transactions.SendTransaction(
+		deployCode,
+		[]string{string(serviceCode)},
+		"",
+		flow,
+		state,
+		transactions.Flags{},
+	)
+	return err
 }
 
 func requestLogger(logger zerolog.Logger, next http.Handler) http.Handler {
