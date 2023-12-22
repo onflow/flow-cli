@@ -86,7 +86,6 @@ func main() {
 	cmd.AddCommand(config.Cmd)
 	cmd.AddCommand(signatures.Cmd)
 	cmd.AddCommand(snapshot.Cmd)
-	cmd.AddCommand(super.FlixCmd)
 	cmd.AddCommand(super.GenerateCommand)
 
 	// todo beta release

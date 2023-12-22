@@ -9,8 +9,8 @@ require (
 	github.com/invopop/jsonschema v0.7.0
 	github.com/lmars/go-slip10 v0.0.0-20190606092855-400ba44fee12
 	github.com/onflow/cadence v1.0.0-preview.1.0.20231213191345-0ff20e15e7e1
-	github.com/onflow/flow-emulator v0.59.1-0.20231218185945-9116c416533f
-	github.com/onflow/flow-go v0.32.4-0.20231214190912-4c4527a42fb0
+	github.com/onflow/flow-emulator v0.59.1-0.20231221115955-65530e5da999
+	github.com/onflow/flow-go v0.32.4-0.20231220215809-5d681fdf0c1f
 	github.com/onflow/flow-go-sdk v0.44.0-stable-cadence.2
 	github.com/onflow/flow-go/crypto v0.25.0
 	github.com/pkg/errors v0.9.1
@@ -81,7 +81,7 @@ require (
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.11.3 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
-	github.com/hashicorp/golang-lru v0.5.5-0.20210104140557-80c98217689d // indirect
+	github.com/hashicorp/golang-lru v0.5.4 // indirect
 	github.com/hashicorp/golang-lru/v2 v2.0.2 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/holiman/bloomfilter/v2 v2.0.3 // indirect
@@ -130,10 +130,10 @@ require (
 	github.com/olekukonko/tablewriter v0.0.5 // indirect
 	github.com/onflow/atree v0.6.1-0.20230711151834-86040b30171f // indirect
 	github.com/onflow/flow-core-contracts/lib/go/contracts v0.15.1-0.20231212203043-37cbe453d425 // indirect
-	github.com/onflow/flow-core-contracts/lib/go/templates v0.15.1-0.20231212203043-37cbe453d425 // indirect
+	github.com/onflow/flow-core-contracts/lib/go/templates v0.15.1-0.20231204202154-f8dfacb39d86 // indirect
 	github.com/onflow/flow-ft/lib/go/contracts v0.7.1-0.20231212194336-a2802ba36596 // indirect
 	github.com/onflow/flow-nft/lib/go/contracts v1.1.1-0.20231213195450-0b951b342b14 // indirect
-	github.com/onflow/flow/protobuf/go/flow v0.3.2-0.20231124194313-106cc495def6 // indirect
+	github.com/onflow/flow/protobuf/go/flow v0.3.2-0.20231213135419-ae911cc351a2 // indirect
 	github.com/onflow/sdks v0.5.1-0.20230912225508-b35402f12bba // indirect
 	github.com/opentracing/opentracing-go v1.2.0 // indirect
 	github.com/pbnjay/memory v0.0.0-20210728143218-7b4eea64cf58 // indirect
