@@ -54,7 +54,7 @@ func fund(
 
 	res, err := transactions.SendTransaction(
 		fundCode,
-		[]string{addressBytes, amount},
+		[]string{"", addressBytes, amount},
 		"",
 		flow,
 		state,

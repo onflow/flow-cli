@@ -59,7 +59,7 @@ func sendSignedTx(flow flowkit.Services, state *flowkit.State, rawTx []byte) (*f
 
 	result, err := transactions.SendTransaction(
 		sendCode,
-		[]string{encodedTx},
+		[]string{"", encodedTx},
 		"",
 		flow,
 		state,

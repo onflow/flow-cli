@@ -63,7 +63,7 @@ func create(
 	amount := args[0]
 	result, err := transactions.SendTransaction(
 		createCode,
-		[]string{amount},
+		[]string{"", amount},
 		"",
 		flow,
 		state,

@@ -6,7 +6,7 @@ transaction(amount: UFix64) {
     let sentVault: @FlowToken.Vault
     let auth: AuthAccount
 
-    prepare(signer: AuthAccount) {
+    prepare(signer: auth(Storage) &Account) {
         let vaultRef = signer.borrow<&FlowToken.Vault>(from: /storage/flowTokenVault)
             ?? panic("Could not borrow reference to the owner's Vault!")
 

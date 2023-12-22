@@ -71,7 +71,7 @@ func deploy(
 
 	result, err := transactions.SendTransaction(
 		deployCode,
-		[]string{string(evmCode)},
+		[]string{"", string(evmCode)},
 		filename,
 		flow,
 		state,

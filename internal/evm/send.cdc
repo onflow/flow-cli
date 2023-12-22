@@ -4,7 +4,7 @@ transaction(encodedTx: [UInt8]) {
     let bridgedAccount: @EVM.BridgedAccount
     let auth: AuthAccount
 
-    prepare(signer: AuthAccount) {
+    prepare(signer: auth(Storage) &Account) {
         self.auth = signer
         self.bridgedAccount <- signer.load<@EVM.BridgedAccount>(from: StoragePath(identifier: "evm")!)!
     }

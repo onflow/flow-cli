@@ -112,7 +112,7 @@ func rpcRun(
 func deployServiceContract(flow flowkit.Services, state *flowkit.State) error {
 	_, err := transactions.SendTransaction(
 		deployCode,
-		[]string{string(serviceCode)},
+		[]string{"", string(serviceCode)},
 		"",
 		flow,
 		state,

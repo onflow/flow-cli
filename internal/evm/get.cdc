@@ -1,6 +1,6 @@
 import EVM from 0xf8d6e0586b0a20c7 // todo dynamically set
 
-pub fun main(address: Address): UFix64 {
+access(all) fun main(address: Address): UFix64 {
     let acc = getAuthAccount(address)
 
     let evmAcc <- acc.load<@EVM.BridgedAccount>(from: StoragePath(identifier: "evm")!)!

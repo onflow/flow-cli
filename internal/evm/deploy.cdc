@@ -5,7 +5,7 @@ import FlowToken from 0x0ae53cb6e3f42a79
 transaction(bytecode: String) {
     let sentVault: @FlowToken.Vault
 
-    prepare(signer: AuthAccount) {
+    prepare(signer: auth(Storage) &Account) {
         let vaultRef = signer.borrow<&FlowToken.Vault>(from: /storage/flowTokenVault)
             ?? panic("Could not borrow reference to the owner's Vault!")
 
