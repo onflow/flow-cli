@@ -21,10 +21,11 @@ package dependencymanager
 import (
 	"fmt"
 
+	"github.com/spf13/cobra"
+
 	"github.com/onflow/flow-cli/flowkit"
 	"github.com/onflow/flow-cli/flowkit/output"
 	"github.com/onflow/flow-cli/internal/command"
-	"github.com/spf13/cobra"
 )
 
 type addFlagsCollection struct {

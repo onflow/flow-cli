@@ -21,8 +21,9 @@ package json
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/invopop/jsonschema"
 	"strings"
+
+	"github.com/invopop/jsonschema"
 
 	"github.com/onflow/flow-go-sdk"
 

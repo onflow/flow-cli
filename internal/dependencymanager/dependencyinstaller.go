@@ -26,8 +26,9 @@ import (
 
 	"github.com/onflow/flow-cli/flowkit/project"
 
-	"github.com/onflow/flow-cli/flowkit/config"
 	flowsdk "github.com/onflow/flow-go-sdk"
+
+	"github.com/onflow/flow-cli/flowkit/config"
 
 	"github.com/onflow/flow-cli/flowkit"
 	"github.com/onflow/flow-cli/flowkit/output"

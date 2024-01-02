@@ -20,9 +20,10 @@ package config
 
 import (
 	"fmt"
+	"path/filepath"
+
 	"github.com/onflow/flow-go/fvm/systemcontracts"
 	flowGo "github.com/onflow/flow-go/model/flow"
-	"path/filepath"
 
 	"github.com/onflow/flow-go-sdk"
 	"golang.org/x/exp/slices"
