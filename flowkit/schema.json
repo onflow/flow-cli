@@ -217,10 +217,41 @@
     "jsonDependencies": {
       "patternProperties": {
         ".*": {
-          "$ref": "#/$defs/jsonDependencies"
+          "$ref": "#/$defs/jsonDependency"
         }
       },
       "type": "object"
+    },
+    "jsonDependency": {
+      "oneOf": [
+        {
+          "type": "string"
+        },
+        {
+          "$ref": "#/$defs/jsonDependencyExtended"
+        }
+      ]
+    },
+    "jsonDependencyExtended": {
+      "properties": {
+        "remoteSource": {
+          "type": "string"
+        },
+        "aliases": {
+          "patternProperties": {
+            ".*": {
+              "type": "string"
+            }
+          },
+          "type": "object"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "remoteSource",
+        "aliases"
+      ]
     },
     "jsonDeployment": {
       "patternProperties": {
