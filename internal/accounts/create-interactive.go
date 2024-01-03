@@ -119,12 +119,12 @@ func createInteractive(state *flowkit.State) (*accountResult, error) {
 
 // createNetworkAccount using the account creation API and return the newly created account address.
 func createNetworkAccount(
-		state *flowkit.State,
-		flow flowkit.Services,
-		name string,
-		key crypto.PrivateKey,
-		privateFile string,
-		network config.Network,
+	state *flowkit.State,
+	flow flowkit.Services,
+	name string,
+	key crypto.PrivateKey,
+	privateFile string,
+	network config.Network,
 ) (*accounts.Account, error) {
 	networkAccount := &lilicoAccount{
 		PublicKey: strings.TrimPrefix(key.PublicKey().String(), "0x"),
@@ -164,10 +164,10 @@ func createNetworkAccount(
 }
 
 func createEmulatorAccount(
-		state *flowkit.State,
-		flow flowkit.Services,
-		name string,
-		key crypto.PrivateKey,
+	state *flowkit.State,
+	flow flowkit.Services,
+	name string,
+	key crypto.PrivateKey,
 ) (*accounts.Account, error) {
 	signer, err := state.EmulatorServiceAccount()
 	if err != nil {

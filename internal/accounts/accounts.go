@@ -86,6 +86,13 @@ func (r *accountResult) String() string {
 	var b bytes.Buffer
 	writer := util.CreateTabWriter(&b)
 
+	if r.Address.IsValid(flow.Testnet) {
+		_, _ = fmt.Fprintf(writer, fmt.Sprintf(
+			"If you would like to fund the account with 1000 FLOW tokens for testing,"+
+				" visit %s \n\n",
+			fmt.Sprintf("https://testnet-faucet.onflow.org/fund-account?address=%s", r.Address.String())))
+	}
+
 	_, _ = fmt.Fprintf(writer, "Address\t 0x%s\n", r.Address)
 	_, _ = fmt.Fprintf(writer, "Balance\t %s\n", cadence.UFix64(r.Balance))
 
@@ -106,13 +113,6 @@ func (r *accountResult) String() string {
 			_, _ = fmt.Fprint(writer, "...keys minimized, use --include keys flag if you want to view all\n\n")
 			break
 		}
-	}
-
-	if r.Address.IsValid(flow.Testnet) {
-		_, _ = fmt.Fprintf(writer, fmt.Sprintf(
-			"If you would like to fund the account with 1000 FLOW tokens for testing,"+
-				" visit %s \n",
-			fmt.Sprintf("https://testnet-faucet.onflow.org/fund-account?address=%s", r.Address.String())))
 	}
 
 	_, _ = fmt.Fprintf(writer, "Contracts Deployed: %d\n", len(r.Contracts))
