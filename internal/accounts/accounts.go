@@ -108,6 +108,13 @@ func (r *accountResult) String() string {
 		}
 	}
 
+	if r.Address.IsValid(flow.Testnet) {
+		_, _ = fmt.Fprintf(writer, fmt.Sprintf(
+			"If you would like to fund the account with 1000 FLOW tokens for testing,"+
+				" visit %s \n",
+			fmt.Sprintf("https://testnet-faucet.onflow.org/fund-account?address=%s", r.Address.String())))
+	}
+
 	_, _ = fmt.Fprintf(writer, "Contracts Deployed: %d\n", len(r.Contracts))
 	for name := range r.Contracts {
 		_, _ = fmt.Fprintf(writer, "Contract: '%s'\n", name)

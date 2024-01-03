@@ -61,14 +61,21 @@ func create(
 	flow flowkit.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
+	if len(createFlags.Keys) == 0 { // if user doesn't provide any flags go into interactive mode
+		return createInteractive(state)
+	} else {
+		return createManual(state, flow)
+	}
+}
+
+func createManual(
+	state *flowkit.State,
+	flow flowkit.Services,
+) (*accountResult, error) {
 	sigsFlag := createFlags.SigAlgo
 	hashFlag := createFlags.HashAlgo
 	keysFlag := createFlags.Keys
 	weightFlag := createFlags.Weights
-
-	if len(keysFlag) == 0 { // if user doesn't provide any flags go into interactive mode
-		return nil, createInteractive(state)
-	}
 
 	signer, err := state.Accounts().ByName(createFlags.Signer)
 	if err != nil {
