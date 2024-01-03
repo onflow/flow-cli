@@ -103,7 +103,7 @@ func main() {
 	})
 	cmd.AddGroup(&cobra.Group{
 		ID:    "tools",
-		Title: "🔨 Flow Tools",
+		Title: "🔨 Flow ToolS",
 	})
 	cmd.AddGroup(&cobra.Group{
 		ID:    "project",
