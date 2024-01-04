@@ -31,30 +31,28 @@ var fundCommand = &command.Command{
 }
 
 func fund(
-		args []string,
-		_ command.GlobalFlags,
-		logger output.Logger,
-		_ flowkit.ReaderWriter,
-		flow flowkit.Services,
+	args []string,
+	_ command.GlobalFlags,
+	logger output.Logger,
+	_ flowkit.ReaderWriter,
+	flow flowkit.Services,
 ) (command.Result, error) {
 	address := flowsdk.HexToAddress(args[0])
 	if !address.IsValid(flowsdk.Testnet) {
 		return nil, fmt.Errorf("unsupported address %s, faucet can only work for valid Testnet addresses", address.String())
 	}
 
-	link := fmt.Sprintf("https://testnet-faucet.onflow.org/fund-account?address=%s", address.String())
-
 	logger.Info(
 		fmt.Sprintf(
 			"Opening the Testnet faucet to fund 0x%s on your native browser."+
-					"\n\nIf there is an issue, please use this link instead: %s",
+				"\n\nIf there is an issue, please use this link instead: %s",
 			address.String(),
-			link,
+			testnetFaucetURL(address),
 		))
 	// wait for the user to read the message
 	time.Sleep(5 * time.Second)
 
-	if err := browser.OpenURL(link); err != nil {
+	if err := browser.OpenURL(testnetFaucetURL(address)); err != nil {
 		return nil, err
 	}
 
