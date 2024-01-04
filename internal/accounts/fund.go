@@ -23,6 +23,7 @@ import (
 	"time"
 
 	flowsdk "github.com/onflow/flow-go-sdk"
+
 	"github.com/pkg/browser"
 	"github.com/spf13/cobra"
 
@@ -49,11 +50,11 @@ var fundCommand = &command.Command{
 }
 
 func fund(
-		args []string,
-		_ command.GlobalFlags,
-		logger output.Logger,
-		_ flowkit.ReaderWriter,
-		flow flowkit.Services,
+	args []string,
+	_ command.GlobalFlags,
+	logger output.Logger,
+	_ flowkit.ReaderWriter,
+	flow flowkit.Services,
 ) (command.Result, error) {
 	address := flowsdk.HexToAddress(args[0])
 	if !address.IsValid(flowsdk.Testnet) {
@@ -63,7 +64,7 @@ func fund(
 	logger.Info(
 		fmt.Sprintf(
 			"Opening the Testnet faucet to fund 0x%s on your native browser."+
-					"\n\nIf there is an issue, please use this link instead: %s",
+				"\n\nIf there is an issue, please use this link instead: %s",
 			address.String(),
 			testnetFaucetURL(address),
 		))
