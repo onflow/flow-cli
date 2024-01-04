@@ -88,10 +88,12 @@ func (r *accountResult) String() string {
 	writer := util.CreateTabWriter(&b)
 
 	if r.Address.IsValid(flow.Testnet) {
-		_, _ = fmt.Fprintf(writer, fmt.Sprintf(
+		_, _ = fmt.Fprintf(
+			writer,
 			"If you would like to fund the account with 1000 FLOW tokens for testing,"+
-				" visit %s \n\n",
-			fmt.Sprintf("https://testnet-faucet.onflow.org/fund-account?address=%s", r.Address.String())))
+				" visit https://testnet-faucet.onflow.org/fund-account?address=%s\n\n",
+		 	r.Address.String(),
+		)
 	}
 
 	_, _ = fmt.Fprintf(writer, "Address\t 0x%s\n", r.Address)
