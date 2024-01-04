@@ -1,3 +1,21 @@
+/*
+ * Flow CLI
+ *
+ * Copyright 2019 Dapper Labs, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package accounts
 
 import (
@@ -31,11 +49,11 @@ var fundCommand = &command.Command{
 }
 
 func fund(
-	args []string,
-	_ command.GlobalFlags,
-	logger output.Logger,
-	_ flowkit.ReaderWriter,
-	flow flowkit.Services,
+		args []string,
+		_ command.GlobalFlags,
+		logger output.Logger,
+		_ flowkit.ReaderWriter,
+		flow flowkit.Services,
 ) (command.Result, error) {
 	address := flowsdk.HexToAddress(args[0])
 	if !address.IsValid(flowsdk.Testnet) {
@@ -45,7 +63,7 @@ func fund(
 	logger.Info(
 		fmt.Sprintf(
 			"Opening the Testnet faucet to fund 0x%s on your native browser."+
-				"\n\nIf there is an issue, please use this link instead: %s",
+					"\n\nIf there is an issue, please use this link instead: %s",
 			address.String(),
 			testnetFaucetURL(address),
 		))
