@@ -490,8 +490,10 @@ func (e *ethAPI) GetBalance(
 	e.log.Info().Str("address", address.String()).Msg("get balance")
 
 	addr := strings.ReplaceAll(address.String(), "0x", "")
+
 	val, err := GetEVMAccountBalance(addr, e.flow)
 	if err != nil {
+		e.log.Info().Err(err).Str("address", address.String()).Msg("get account balance error")
 		return nil, err
 	}
 

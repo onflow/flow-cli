@@ -60,14 +60,8 @@ func get(
 	flow flowkit.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
-	a, err := hex.DecodeString(args[0])
-	if err != nil {
-		return nil, err
-	}
 
-	addressBytes := cadenceByteArrayString(a)
-
-	val, _ := GetEVMAccountBalance(addressBytes, flow)
+	val, _ := GetEVMAccountBalance(args[0], flow)
 
 	fmt.Printf("\n🔥🔥🔥🔥🔥🔥🔥 EVM Get Balance 🔥🔥🔥🔥🔥🔥🔥\n")
 	fmt.Println("Balance:  ", val)
@@ -79,8 +73,14 @@ func GetEVMAccountBalance(
 	address string,
 	flow flowkit.Services,
 ) (cadence.Value, error) {
+	a, err := hex.DecodeString(address)
+	if err != nil {
+		return nil, err
+	}
 
-	scriptArgs, err := arguments.ParseWithoutType([]string{address}, getCode, "")
+	addressBytes := cadenceByteArrayString(a)
+
+	scriptArgs, err := arguments.ParseWithoutType([]string{addressBytes}, getCode, "")
 	if err != nil {
 		return nil, err
 	}

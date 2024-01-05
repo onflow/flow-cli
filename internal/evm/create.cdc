@@ -4,10 +4,10 @@ import FlowToken from 0x0ae53cb6e3f42a79
 
 transaction(amount: UFix64) {
     let sentVault: @FlowToken.Vault
-    let auth: AuthAccount
+    let auth: auth(Storage) &Account
 
     prepare(signer: auth(Storage) &Account) {
-        let vaultRef = signer.storage.borrow<&FlowToken.Vault>(from: /storage/flowTokenVault)
+        let vaultRef = signer.storage.borrow<auth(FungibleToken.Withdrawable) &FlowToken.Vault>(from: /storage/flowTokenVault)
             ?? panic("Could not borrow reference to the owner's Vault!")
 
         self.sentVault <- vaultRef.withdraw(amount: amount) as! @FlowToken.Vault
