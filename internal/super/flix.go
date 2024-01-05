@@ -24,6 +24,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/onflow/flixkit-go/flixkit"
 
@@ -290,7 +291,7 @@ func GetDeployedContracts(state *flowkit.State) flixkit.ContractInfos {
 			if _, ok := allContracts[c.Name]; !ok {
 				allContracts[c.Name] = make(flixkit.NetworkAddressMap)
 			}
-			allContracts[c.Name][network] = c.AccountAddress.String()
+			allContracts[c.Name][network] = add0xPrefix(c.AccountAddress.String())
 		}
 		locAliases := state.AliasesForNetwork(config.Network{Name: network})
 		for name, addr := range locAliases {
@@ -300,12 +301,19 @@ func GetDeployedContracts(state *flowkit.State) flixkit.ContractInfos {
 			if _, ok := allContracts[name]; !ok {
 				allContracts[name] = make(flixkit.NetworkAddressMap)
 			}
-			allContracts[name][network] = addr
+			allContracts[name][network] = add0xPrefix(addr)
 		}
 	}
 	return allContracts
 }
 
+func add0xPrefix(s string) string {
+	prefix := "0x"
+	if !strings.HasPrefix(s, prefix) {
+		return prefix + s
+	}
+	return s
+}
 func isUrl(str string) bool {
 	u, err := url.Parse(str)
 	return err == nil && u.Scheme != "" && u.Host != ""
