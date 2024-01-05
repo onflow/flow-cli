@@ -355,6 +355,12 @@ func TestExecutingTests(t *testing.T) {
 			result.String(),
 			"Coverage: 91.8% of statements",
 		)
+
+		lcovReport, _ := coverageReport.MarshalLCOV()
+		assert.Contains(t, string(lcovReport), "TN:\nSF:FooContract.cdc\n")
+
+		jsonReport, _ := coverageReport.MarshalJSON()
+		assert.Contains(t, string(jsonReport), `{"coverage":{"FooContract.cdc":{`)
 	})
 
 	t.Run("with code coverage for contracts only", func(t *testing.T) {
@@ -447,6 +453,12 @@ func TestExecutingTests(t *testing.T) {
 			result.String(),
 			"Coverage: 100.0% of statements",
 		)
+
+		lcovReport, _ := coverageReport.MarshalLCOV()
+		assert.Contains(t, string(lcovReport), "TN:\nSF:FooContract.cdc\n")
+
+		jsonReport, _ := coverageReport.MarshalJSON()
+		assert.Contains(t, string(jsonReport), `{"coverage":{"FooContract.cdc":{`)
 	})
 
 	t.Run("with random test case execution", func(t *testing.T) {

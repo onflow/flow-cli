@@ -177,12 +177,19 @@ func testCode(
 		runner = runner.WithRandomSeed(seed)
 	}
 
-	contracts := make(map[string]common.Address, 0)
-	for _, contract := range *state.Contracts() {
+	contractsConfig := *state.Contracts()
+	contracts := make(map[string]common.Address, len(contractsConfig))
+	locationMappings := make(map[string]string, len(contractsConfig))
+	for _, contract := range contractsConfig {
 		alias := contract.Aliases.ByNetwork("testing")
 		if alias != nil {
 			contracts[contract.Name] = common.Address(alias.Address)
+			locationMappings[contract.Name] = contract.Location
 		}
+	}
+
+	if coverageReport != nil {
+		coverageReport.WithLocationMappings(locationMappings)
 	}
 
 	testResults := make(map[string]cdcTests.Results, 0)
