@@ -20,7 +20,9 @@
 package main
 
 import (
+	"fmt"
 	"os"
+	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -52,6 +54,36 @@ func main() {
 	var cmd = &cobra.Command{
 		Use:              "flow",
 		TraverseChildren: true,
+		// Messaging for Cadence 1.0 upgrade
+		PersistentPostRun: func(cmd *cobra.Command, args []string) {
+			outputFlag, _ := cmd.Flags().GetString("output")
+			// If output is set to json, do not append any message
+			if outputFlag != "json" {
+
+				width := 80
+				url := "https://developers.flow.com/build/cadence-migration-guide"
+
+				// Function to center text within a given width
+				centerText := func(text string, width int) string {
+					space := (width - len(text)) / 2
+					if space < 0 {
+						space = 0
+					}
+					return fmt.Sprintf("%s%s%s", strings.Repeat(" ", space), text, strings.Repeat(" ", space))
+				}
+
+				fmt.Println(strings.Repeat("+", width))
+				fmt.Println(centerText("⚠ Upgrade to Cadence 1.0", width))
+				fmt.Println(centerText("You are currently using a version of this tool that", width))
+				fmt.Println(centerText("precedes a network upgrade, which will require support", width))
+				fmt.Println(centerText("for version 1.0 of the Cadence smart contract", width))
+				fmt.Println(centerText("programming language. To learn how to upgrade,", width))
+				fmt.Println(centerText("please visit our migration guide here:", width))
+				fmt.Println(centerText(url, width))
+				fmt.Println(strings.Repeat("+", width))
+
+			}
+		},
 	}
 
 	// quick commands
