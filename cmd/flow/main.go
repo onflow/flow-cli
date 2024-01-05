@@ -55,7 +55,7 @@ func main() {
 		Use:              "flow",
 		TraverseChildren: true,
 		// Messaging for Cadence 1.0 upgrade
-		PersistentPostRun: func(cmd *cobra.Command, args []string) {
+		PersistentPreRun: func(cmd *cobra.Command, args []string) {
 			outputFlag, _ := cmd.Flags().GetString("output")
 			// If output is set to json, do not append any message
 			if outputFlag != "json" {
