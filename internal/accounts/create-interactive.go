@@ -203,7 +203,7 @@ func createEmulatorAccount(
 		Name:    name,
 		Address: networkAccount.Address,
 		Key:     accounts.NewHexKeyFromPrivateKey(0, defaultHashAlgo, key),
-		//Key:     accounts.NewFileKey(privateFile, 0, defaultSignAlgo, defaultHashAlgo),
+		//Key: accounts.NewFileKey(privateFile, 0, defaultSignAlgo, defaultHashAlgo),
 	}, nil
 }
 
