@@ -70,7 +70,7 @@ func createInteractive(state *flowkit.State) (*accountResult, error) {
 
 	var account *accounts.Account
 	if selectedNetwork == config.EmulatorNetwork {
-		account, err = createEmulatorAccount(state, flow, name, key)
+		account, err = createEmulatorAccount(state, flow, name, key, privateFile)
 		log.StopProgress()
 		log.Info(output.Italic("\nPlease note that the newly-created account will only be available while you keep the emulator service running. If you restart the emulator service, all accounts will be reset. If you want to persist accounts between restarts, please use the '--persist' flag when starting the flow emulator.\n"))
 	} else {
@@ -168,6 +168,7 @@ func createEmulatorAccount(
 	flow flowkit.Services,
 	name string,
 	key crypto.PrivateKey,
+	privateFile string,
 ) (*accounts.Account, error) {
 	signer, err := state.EmulatorServiceAccount()
 	if err != nil {
@@ -188,10 +189,21 @@ func createEmulatorAccount(
 		return nil, err
 	}
 
+	err = util.AddToGitIgnore(privateFile, state.ReaderWriter())
+	if err != nil {
+		return nil, err
+	}
+
+	err = state.ReaderWriter().WriteFile(privateFile, []byte(key.String()), os.FileMode(0644))
+	if err != nil {
+		return nil, fmt.Errorf("failed saving private key: %w", err)
+	}
+
 	return &accounts.Account{
 		Name:    name,
 		Address: networkAccount.Address,
 		Key:     accounts.NewHexKeyFromPrivateKey(0, defaultHashAlgo, key),
+		//Key:     accounts.NewFileKey(privateFile, 0, defaultSignAlgo, defaultHashAlgo),
 	}, nil
 }
 
