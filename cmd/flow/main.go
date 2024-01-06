@@ -74,10 +74,9 @@ func main() {
 
 				fmt.Println(strings.Repeat("+", width))
 				fmt.Println(centerText("⚠ Upgrade to Cadence 1.0", width))
-				fmt.Println(centerText("You are currently using a version of this tool that", width))
-				fmt.Println(centerText("precedes a network upgrade, which will require support", width))
-				fmt.Println(centerText("for version 1.0 of Cadence. To learn how to upgrade,", width))
-				fmt.Println(centerText("please visit our migration guide here:", width))
+				fmt.Println(centerText("The Crescendo network upgrade, including Cadence 1.0, is coming soon.", width))
+				fmt.Println(centerText("You may need to update your existing contracts to support this change.", width))
+				fmt.Println(centerText("Please visit our migration guide here:", width))
 				fmt.Println(centerText(url, width))
 				fmt.Println(strings.Repeat("+", width))
 
