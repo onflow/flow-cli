@@ -251,9 +251,9 @@ func Load(configFilePaths []string, readerWriter ReaderWriter) (*State, error) {
 
 // Init initializes a new Flow project.
 func Init(
-		readerWriter ReaderWriter,
-		sigAlgo crypto.SignatureAlgorithm,
-		hashAlgo crypto.HashAlgorithm,
+	readerWriter ReaderWriter,
+	sigAlgo crypto.SignatureAlgorithm,
+	hashAlgo crypto.HashAlgorithm,
 ) (*State, error) {
 	emulatorServiceAccount, err := accounts.NewEmulatorAccount(sigAlgo, hashAlgo)
 	if err != nil {
@@ -277,21 +277,19 @@ func Init(
 	loader := config.NewLoader(readerWriter)
 	loader.AddConfigParser(json.NewParser())
 
-	state := State{
+	return &State{
 		confLoader:   loader,
 		readerWriter: readerWriter,
 		conf:         config.Default(),
 		accounts:     &accounts.Accounts{*emulatorServiceAccount},
-	}
-
-	return &state, nil
+	}, nil
 }
 
 // newProject creates a new project from a configuration object.
 func newProject(
-		conf *config.Config,
-		loader *config.Loader,
-		readerWriter ReaderWriter,
+	conf *config.Config,
+	loader *config.Loader,
+	readerWriter ReaderWriter,
 ) (*State, error) {
 	accs, err := accounts.FromConfig(conf)
 	if err != nil {
@@ -303,4 +301,5 @@ func newProject(
 		readerWriter: readerWriter,
 		confLoader:   loader,
 		accounts:     &accs,
-	}, 
+	}, nil
+}
