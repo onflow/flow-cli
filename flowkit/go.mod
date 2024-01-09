@@ -12,7 +12,7 @@ require (
 	github.com/onflow/flow-emulator v0.59.0
 	github.com/onflow/flow-go v0.32.4-0.20231130134727-3c01c7f8966c
 	github.com/onflow/flow-go-sdk v0.41.17
-	github.com/onflow/flow-go/crypto v0.24.10
+	github.com/onflow/flow-go/crypto v0.24.9
 	github.com/pkg/errors v0.9.1
 	github.com/rs/zerolog v1.29.0
 	github.com/spf13/afero v1.9.4

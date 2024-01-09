@@ -30,14 +30,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/onflow/flow-cli/flowkit/accounts"
-
 	flowsdk "github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
 	"github.com/onflow/flow-cli/flowkit"
+	"github.com/onflow/flow-cli/flowkit/accounts"
 	"github.com/onflow/flow-cli/flowkit/config"
 	"github.com/onflow/flow-cli/flowkit/gateway"
 	"github.com/onflow/flow-cli/flowkit/output"
@@ -48,7 +47,7 @@ import (
 //
 // This process takes the user through couple of steps with prompts asking for them to provide name and network,
 // and it then uses account creation APIs to automatically create the account on the network as well as save it.
-func createInteractive(state *flowkit.State) error {
+func createInteractive(state *flowkit.State) (*accountResult, error) {
 	log := output.NewStdoutLogger(output.InfoLog)
 	name := util.AccountNamePrompt(state.Accounts().Names())
 	networkName, selectedNetwork := util.CreateAccountNetworkPrompt()
@@ -57,13 +56,13 @@ func createInteractive(state *flowkit.State) error {
 	// create new gateway based on chosen network
 	gw, err := gateway.NewGrpcGateway(selectedNetwork)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	flow := flowkit.NewFlowkit(state, selectedNetwork, gw, output.NewStdoutLogger(output.NoneLog))
 
 	key, err := flow.GenerateKey(context.Background(), defaultSignAlgo, "")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	log.StartProgress(fmt.Sprintf("Creating account %s on %s...", name, networkName))
@@ -79,7 +78,7 @@ func createInteractive(state *flowkit.State) error {
 		log.StopProgress()
 	}
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	log.Info(fmt.Sprintf(
@@ -93,7 +92,7 @@ func createInteractive(state *flowkit.State) error {
 	state.Accounts().AddOrUpdate(account)
 	err = state.SaveDefault()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	items := []string{
@@ -108,7 +107,14 @@ func createInteractive(state *flowkit.State) error {
 	}
 	outputList(log, items, false)
 
-	return nil
+	return &accountResult{
+		Account: &flowsdk.Account{
+			Address: account.Address,
+			Balance: 0,
+			Keys:    []*flowsdk.AccountKey{flowsdk.NewAccountKey().FromPrivateKey(key)},
+		},
+		include: nil,
+	}, nil
 }
 
 // createNetworkAccount using the account creation API and return the newly created account address.

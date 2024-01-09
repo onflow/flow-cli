@@ -37,6 +37,10 @@ var Cmd = &cobra.Command{
 	GroupID:          "resources",
 }
 
+func testnetFaucetURL(address flow.Address) string {
+	return fmt.Sprintf("https://testnet-faucet.onflow.org/fund-account?address=%s", address)
+}
+
 func init() {
 	addContractCommand.AddToParent(Cmd)
 	removeCommand.AddToParent(Cmd)
@@ -44,6 +48,7 @@ func init() {
 	createCommand.AddToParent(Cmd)
 	stakingCommand.AddToParent(Cmd)
 	getCommand.AddToParent(Cmd)
+	fundCommand.AddToParent(Cmd)
 }
 
 // accountResult represent result from all account commands.
@@ -85,6 +90,15 @@ func (r *accountResult) JSON() any {
 func (r *accountResult) String() string {
 	var b bytes.Buffer
 	writer := util.CreateTabWriter(&b)
+
+	if r.Address.IsValid(flow.Testnet) {
+		_, _ = fmt.Fprintf(
+			writer,
+			"If you would like to fund the account with 1000 FLOW tokens for testing,"+
+				" visit %s\n\n",
+			testnetFaucetURL(r.Address),
+		)
+	}
 
 	_, _ = fmt.Fprintf(writer, "Address\t 0x%s\n", r.Address)
 	_, _ = fmt.Fprintf(writer, "Balance\t %s\n", cadence.UFix64(r.Balance))

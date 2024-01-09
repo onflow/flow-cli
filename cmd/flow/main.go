@@ -20,7 +20,9 @@
 package main
 
 import (
+	"fmt"
 	"os"
+	"strings"
 
 	"github.com/onflow/flow-cli/internal/dependencymanager"
 
@@ -54,6 +56,34 @@ func main() {
 	var cmd = &cobra.Command{
 		Use:              "flow",
 		TraverseChildren: true,
+		// Messaging for Cadence 1.0 upgrade
+		PersistentPreRun: func(cmd *cobra.Command, args []string) {
+			outputFlag, _ := cmd.Flags().GetString("output")
+			// If output is set to json, do not append any message
+			if outputFlag != "json" {
+
+				width := 80
+				url := "https://developers.flow.com/build/cadence-migration-guide"
+
+				// Function to center text within a given width
+				centerText := func(text string, width int) string {
+					space := (width - len(text)) / 2
+					if space < 0 {
+						space = 0
+					}
+					return fmt.Sprintf("%s%s%s", strings.Repeat(" ", space), text, strings.Repeat(" ", space))
+				}
+
+				fmt.Println(strings.Repeat("+", width))
+				fmt.Println(centerText("⚠ Upgrade to Cadence 1.0", width))
+				fmt.Println(centerText("The Crescendo network upgrade, including Cadence 1.0, is coming soon.", width))
+				fmt.Println(centerText("You may need to update your existing contracts to support this change.", width))
+				fmt.Println(centerText("Please visit our migration guide here:", width))
+				fmt.Println(centerText(url, width))
+				fmt.Println(strings.Repeat("+", width))
+
+			}
+		},
 	}
 
 	// quick commands
