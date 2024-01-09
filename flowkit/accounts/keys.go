@@ -310,8 +310,8 @@ func NewFileKey(
 			sigAlgo:  sigAlgo,
 			hashAlgo: hashAlgo,
 		},
-		location: location,
 		rw:       rw,
+		location: location,
 	}
 }
 
@@ -321,8 +321,8 @@ func NewFileKey(
 type FileKey struct {
 	*baseKey
 	privateKey crypto.PrivateKey
-	location   string
 	rw         config.ReaderWriter
+	location   string
 }
 
 func (f *FileKey) Signer(ctx context.Context) (crypto.Signer, error) {
