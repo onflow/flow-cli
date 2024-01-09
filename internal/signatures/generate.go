@@ -66,12 +66,12 @@ func sign(
 
 	s, err := acc.Key.Signer(context.Background())
 	if err != nil {
-		return nil, fmt.Errorf("signer error: %w", err)
+		return nil, err
 	}
 
 	signed, err := s.Sign(message)
 	if err != nil {
-		return nil, fmt.Errorf("sign failed: %w", err)
+		return nil, err
 	}
 
 	return &signatureResult{
