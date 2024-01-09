@@ -251,31 +251,47 @@ func Load(configFilePaths []string, readerWriter ReaderWriter) (*State, error) {
 
 // Init initializes a new Flow project.
 func Init(
-	readerWriter ReaderWriter,
-	sigAlgo crypto.SignatureAlgorithm,
-	hashAlgo crypto.HashAlgorithm,
+		readerWriter ReaderWriter,
+		sigAlgo crypto.SignatureAlgorithm,
+		hashAlgo crypto.HashAlgorithm,
 ) (*State, error) {
 	emulatorServiceAccount, err := accounts.NewEmulatorAccount(sigAlgo, hashAlgo)
 	if err != nil {
 		return nil, err
 	}
 
+	// save private key for emulator
+	pkey, err := emulatorServiceAccount.Key.PrivateKey()
+	if err != nil {
+		return nil, err
+	}
+
+	if err := readerWriter.WriteFile(
+		accounts.DefaultEmulatorPrivateKeyFile(),
+		[]byte((*pkey).String()),
+		os.FileMode(0644),
+	); err != nil {
+		return nil, err
+	}
+
 	loader := config.NewLoader(readerWriter)
 	loader.AddConfigParser(json.NewParser())
 
-	return &State{
+	state := State{
 		confLoader:   loader,
 		readerWriter: readerWriter,
 		conf:         config.Default(),
 		accounts:     &accounts.Accounts{*emulatorServiceAccount},
-	}, nil
+	}
+
+	return &state, nil
 }
 
 // newProject creates a new project from a configuration object.
 func newProject(
-	conf *config.Config,
-	loader *config.Loader,
-	readerWriter ReaderWriter,
+		conf *config.Config,
+		loader *config.Loader,
+		readerWriter ReaderWriter,
 ) (*State, error) {
 	accs, err := accounts.FromConfig(conf)
 	if err != nil {
@@ -287,5 +303,4 @@ func newProject(
 		readerWriter: readerWriter,
 		confLoader:   loader,
 		accounts:     &accs,
-	}, nil
-}
+	}, 

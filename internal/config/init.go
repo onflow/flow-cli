@@ -21,12 +21,9 @@ package config
 import (
 	"bytes"
 	"fmt"
-	"os"
 
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/spf13/cobra"
-
-	"github.com/onflow/flow-cli/flowkit/accounts"
 
 	"github.com/onflow/flow-cli/flowkit"
 	"github.com/onflow/flow-cli/flowkit/config"
@@ -76,21 +73,6 @@ func Initialise(
 	state, err := flowkit.Init(readerWriter, sigAlgo, hashAlgo)
 	if err != nil {
 		return nil, err
-	}
-
-	emAcc, err := state.EmulatorServiceAccount()
-	if err != nil {
-		return nil, err
-	}
-
-	pkey, err := emAcc.Key.PrivateKey()
-	if err != nil {
-		return nil, err
-	}
-
-	err = state.ReaderWriter().WriteFile(accounts.DefaultEmulatorPrivateKeyFile(), []byte((*pkey).String()), os.FileMode(0644))
-	if err != nil {
-		return nil, fmt.Errorf("failed saving private key: %w", err)
 	}
 
 	if InitFlag.ServicePrivateKey != "" {
