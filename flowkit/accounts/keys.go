@@ -336,18 +336,18 @@ func (f *FileKey) Signer(ctx context.Context) (crypto.Signer, error) {
 
 func (f *FileKey) PrivateKey() (*crypto.PrivateKey, error) {
 	if f.privateKey == nil { // lazy load the key
-		var key []byte
-		var err error
+		// if reader writer is provided, use it to read the file
+		var (
+			key []byte
+			err error
+		)
 		if f.rw != nil {
 			key, err = f.rw.ReadFile(f.location)
-			if err != nil {
-				return nil, fmt.Errorf("could not load the key for the account from provided location %s: %w", f.location, err)
-			}
 		} else {
 			key, err = os.ReadFile(f.location)
-			if err != nil {
-				return nil, fmt.Errorf("could not load the key for the account from provided location %s: %w", f.location, err)
-			}
+		}
+		if err != nil {
+			return nil, fmt.Errorf("could not load the key for the account from provided location %s: %w", f.location, err)
 		}
 
 		pkey, err := crypto.DecodePrivateKeyHex(f.sigAlgo, strings.TrimPrefix(string(key), "0x"))

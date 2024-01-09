@@ -111,7 +111,6 @@ func NewEmulatorAccount(
 		return nil, fmt.Errorf("failed to generate emulator service key: %w", err)
 	}
 
-	fmt.Printf("writing file to %s with key %s ", DefaultEmulatorPrivateKeyFile(), privateKey.String())
 	if err := rw.WriteFile(DefaultEmulatorPrivateKeyFile(), []byte(privateKey.String()), 0644); err != nil {
 		return nil, fmt.Errorf("failed to write private key file: %w", err)
 	}
