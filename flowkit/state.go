@@ -31,7 +31,6 @@ import (
 	"github.com/onflow/flow-cli/flowkit/config"
 	"github.com/onflow/flow-cli/flowkit/config/json"
 	"github.com/onflow/flow-cli/flowkit/project"
-	"github.com/onflow/flow-cli/internal/util"
 )
 
 // ReaderWriter defines read file and write file methods.
@@ -259,29 +258,12 @@ func Init(
 	loader := config.NewLoader(readerWriter)
 	loader.AddConfigParser(json.NewParser())
 
-	state := State{
+	return &State{
 		confLoader:   loader,
 		readerWriter: readerWriter,
 		conf:         config.Default(),
 		accounts:     &accounts.Accounts{*emulatorServiceAccount},
-	}
-
-	err = util.AddToGitIgnore("emulator_account.pkey", state.ReaderWriter())
-	if err != nil {
-		return nil, err
-	}
-
-	pkey, err := emulatorServiceAccount.Key.PrivateKey()
-	if err != nil {
-		return nil, err
-	}
-
-	err = state.ReaderWriter().WriteFile("emulator_account.pkey", []byte((*pkey).String()), os.FileMode(0644))
-	if err != nil {
-		return nil, fmt.Errorf("failed saving private key: %w", err)
-	}
-
-	return &state, nil
+	}, nil
 }
 
 // newProject creates a new project from a configuration object.
