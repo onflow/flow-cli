@@ -41,11 +41,6 @@ func PrivateKeyFile(name string) string {
 	return fmt.Sprintf("%s.pkey", name)
 }
 
-// DefaultEmulatorPrivateKeyFile returns the default emulator private key file name.
-func DefaultEmulatorPrivateKeyFile() string {
-	return PrivateKeyFile("emulator-account")
-}
-
 func FromConfig(conf *config.Config) (Accounts, error) {
 	var accounts Accounts
 	for _, accountConf := range conf.Accounts {
@@ -95,6 +90,11 @@ func toConfig(account Account) config.Account {
 	}
 }
 
+// defaultEmulatorPrivateKeyFile returns the default emulator private key file name.
+func defaultEmulatorPrivateKeyFile() string {
+	return PrivateKeyFile("emulator-account")
+}
+
 func NewEmulatorAccount(
 	rw config.ReaderWriter,
 	sigAlgo crypto.SignatureAlgorithm,
@@ -111,14 +111,14 @@ func NewEmulatorAccount(
 		return nil, fmt.Errorf("failed to generate emulator service key: %w", err)
 	}
 
-	if err := rw.WriteFile(DefaultEmulatorPrivateKeyFile(), []byte(privateKey.String()), 0644); err != nil {
+	if err := rw.WriteFile(defaultEmulatorPrivateKeyFile(), []byte(privateKey.String()), 0644); err != nil {
 		return nil, fmt.Errorf("failed to write private key file: %w", err)
 	}
 
 	return &Account{
 		Name:    config.DefaultEmulator.ServiceAccount,
 		Address: flow.ServiceAddress(flow.Emulator),
-		Key:     NewFileKey(DefaultEmulatorPrivateKeyFile(), 0, sigAlgo, hashAlgo, rw),
+		Key:     NewFileKey(defaultEmulatorPrivateKeyFile(), 0, sigAlgo, hashAlgo, rw),
 	}, nil
 }
 
