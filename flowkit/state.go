@@ -40,6 +40,11 @@ type ReaderWriter interface {
 	MkdirAll(path string, perm os.FileMode) error
 }
 
+const (
+	// DefaultEmulatorServiceAccountName is the default emulator service account name.
+	DefaultEmulatorServiceAccountName = "emulator-account"
+)
+
 // State manages the state for a Flow project.
 type State struct {
 	conf         *config.Config

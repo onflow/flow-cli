@@ -35,6 +35,16 @@ type Account struct {
 	Key     Key
 }
 
+// PrivateKeyFile returns the private key file name for an account.
+func PrivateKeyFile(name string) string {
+	return fmt.Sprintf("%s.pkey", name)
+}
+
+// DefaultEmulatorPrivateKeyFile returns the default emulator private key file name.
+func DefaultEmulatorPrivateKeyFile() string {
+	return PrivateKeyFile("emulator-account")
+}
+
 func FromConfig(conf *config.Config) (Accounts, error) {
 	var accounts Accounts
 	for _, accountConf := range conf.Accounts {
@@ -88,7 +98,7 @@ func NewEmulatorAccount(sigAlgo crypto.SignatureAlgorithm, hashAlgo crypto.HashA
 	return &Account{
 		Name:    config.DefaultEmulator.ServiceAccount,
 		Address: flow.ServiceAddress(flow.Emulator),
-		Key:     NewFileKey("emulator_account.pkey", 0, sigAlgo, hashAlgo),
+		Key:     NewFileKey(DefaultEmulatorPrivateKeyFile(), 0, sigAlgo, hashAlgo),
 	}, nil
 }
 
