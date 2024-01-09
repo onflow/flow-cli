@@ -19,6 +19,7 @@
 package accounts
 
 import (
+	"crypto/rand"
 	"fmt"
 	"strings"
 
@@ -94,11 +95,31 @@ func toConfig(account Account) config.Account {
 	}
 }
 
-func NewEmulatorAccount(sigAlgo crypto.SignatureAlgorithm, hashAlgo crypto.HashAlgorithm) (*Account, error) {
+func NewEmulatorAccount(
+	rw config.ReaderWriter,
+	sigAlgo crypto.SignatureAlgorithm,
+	hashAlgo crypto.HashAlgorithm,
+) (*Account, error) {
+	seed := make([]byte, crypto.MinSeedLength)
+	_, err := rand.Read(seed)
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate random seed: %w", err)
+	}
+
+	privateKey, err := crypto.GeneratePrivateKey(sigAlgo, seed)
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate emulator service key: %w", err)
+	}
+
+	fmt.Printf("writing file to %s with key %s ", DefaultEmulatorPrivateKeyFile(), privateKey.String())
+	if err := rw.WriteFile(DefaultEmulatorPrivateKeyFile(), []byte(privateKey.String()), 0644); err != nil {
+		return nil, fmt.Errorf("failed to write private key file: %w", err)
+	}
+
 	return &Account{
 		Name:    config.DefaultEmulator.ServiceAccount,
 		Address: flow.ServiceAddress(flow.Emulator),
-		Key:     NewFileKey(DefaultEmulatorPrivateKeyFile(), 0, sigAlgo, hashAlgo),
+		Key:     NewFileKey(DefaultEmulatorPrivateKeyFile(), 0, sigAlgo, hashAlgo, rw),
 	}, nil
 }
 

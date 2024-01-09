@@ -246,35 +246,21 @@ func Load(configFilePaths []string, readerWriter ReaderWriter) (*State, error) {
 
 // Init initializes a new Flow project.
 func Init(
-	readerWriter ReaderWriter,
+	rw ReaderWriter,
 	sigAlgo crypto.SignatureAlgorithm,
 	hashAlgo crypto.HashAlgorithm,
 ) (*State, error) {
-	emulatorServiceAccount, err := accounts.NewEmulatorAccount(sigAlgo, hashAlgo)
+	emulatorServiceAccount, err := accounts.NewEmulatorAccount(rw, sigAlgo, hashAlgo)
 	if err != nil {
 		return nil, err
 	}
 
-	// save private key for emulator
-	pkey, err := emulatorServiceAccount.Key.PrivateKey()
-	if err != nil {
-		return nil, err
-	}
-
-	if err := readerWriter.WriteFile(
-		accounts.DefaultEmulatorPrivateKeyFile(),
-		[]byte((*pkey).String()),
-		os.FileMode(0644),
-	); err != nil {
-		return nil, err
-	}
-
-	loader := config.NewLoader(readerWriter)
+	loader := config.NewLoader(rw)
 	loader.AddConfigParser(json.NewParser())
 
 	return &State{
 		confLoader:   loader,
-		readerWriter: readerWriter,
+		readerWriter: rw,
 		conf:         config.Default(),
 		accounts:     &accounts.Accounts{*emulatorServiceAccount},
 	}, nil

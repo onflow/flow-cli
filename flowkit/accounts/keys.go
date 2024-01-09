@@ -301,6 +301,7 @@ func NewFileKey(
 	index int,
 	sigAlgo crypto.SignatureAlgorithm,
 	hashAlgo crypto.HashAlgorithm,
+	rw config.ReaderWriter,
 ) *FileKey {
 	return &FileKey{
 		baseKey: &baseKey{
@@ -310,6 +311,7 @@ func NewFileKey(
 			hashAlgo: hashAlgo,
 		},
 		location: location,
+		rw:       rw,
 	}
 }
 
@@ -320,6 +322,7 @@ type FileKey struct {
 	*baseKey
 	privateKey crypto.PrivateKey
 	location   string
+	rw         config.ReaderWriter
 }
 
 func (f *FileKey) Signer(ctx context.Context) (crypto.Signer, error) {
@@ -333,10 +336,20 @@ func (f *FileKey) Signer(ctx context.Context) (crypto.Signer, error) {
 
 func (f *FileKey) PrivateKey() (*crypto.PrivateKey, error) {
 	if f.privateKey == nil { // lazy load the key
-		key, err := os.ReadFile(f.location) // TODO(sideninja) change to use the state ReaderWriter
-		if err != nil {
-			return nil, fmt.Errorf("could not load the key for the account from provided location %s: %w", f.location, err)
+		var key []byte
+		var err error
+		if f.rw != nil {
+			key, err = f.rw.ReadFile(f.location)
+			if err != nil {
+				return nil, fmt.Errorf("could not load the key for the account from provided location %s: %w", f.location, err)
+			}
+		} else {
+			key, err = os.ReadFile(f.location)
+			if err != nil {
+				return nil, fmt.Errorf("could not load the key for the account from provided location %s: %w", f.location, err)
+			}
 		}
+
 		pkey, err := crypto.DecodePrivateKeyHex(f.sigAlgo, strings.TrimPrefix(string(key), "0x"))
 		if err != nil {
 			return nil, fmt.Errorf("could not decode the key from provided location %s: %w", f.location, err)
