@@ -27,14 +27,15 @@ import (
 
 	"github.com/onflow/flixkit-go/flixkit"
 
+	"github.com/onflow/flow-go-sdk"
+	"github.com/spf13/cobra"
+
 	"github.com/onflow/flow-cli/flowkit"
 	"github.com/onflow/flow-cli/flowkit/config"
 	"github.com/onflow/flow-cli/flowkit/output"
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/internal/scripts"
 	"github.com/onflow/flow-cli/internal/transactions"
-
-	"github.com/spf13/cobra"
 )
 
 type flixFlags struct {
@@ -283,6 +284,7 @@ func GetDeployedContracts(state *flowkit.State) flixkit.ContractInfos {
 	// get all deployed and alias contracts for configured networks
 	for _, network := range depNetworks {
 		contracts, err := state.DeploymentContractsByNetwork(config.Network{Name: network})
+		fmt.Println("contracts len", network, len(contracts))
 		if err != nil {
 			continue
 		}
@@ -290,17 +292,18 @@ func GetDeployedContracts(state *flowkit.State) flixkit.ContractInfos {
 			if _, ok := allContracts[c.Name]; !ok {
 				allContracts[c.Name] = make(flixkit.NetworkAddressMap)
 			}
-			allContracts[c.Name][network] = c.AccountAddress.String()
+			allContracts[c.Name][network] = c.AccountAddress.Hex()
 		}
 		locAliases := state.AliasesForNetwork(config.Network{Name: network})
 		for name, addr := range locAliases {
+			address := flow.BytesToAddress([]byte(addr))
 			if isPath(name) {
 				continue
 			}
 			if _, ok := allContracts[name]; !ok {
 				allContracts[name] = make(flixkit.NetworkAddressMap)
 			}
-			allContracts[name][network] = addr
+			allContracts[name][network] = address.Hex()
 		}
 	}
 	return allContracts
