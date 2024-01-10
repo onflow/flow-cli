@@ -144,9 +144,8 @@ func (ci *DependencyInstaller) fetchDependencies(networkName string, address flo
 		}
 
 		if parsedContractName == contractName {
-			program.ConvertImports()
 
-			if err := ci.handleFoundContract(networkName, address.String(), assignedName, parsedContractName, string(program.DevelopmentCode())); err != nil {
+			if err := ci.handleFoundContract(networkName, address.String(), assignedName, parsedContractName, program); err != nil {
 				return fmt.Errorf("failed to handle found contract: %v", err)
 			}
 
@@ -178,9 +177,12 @@ func (ci *DependencyInstaller) fetchDependencies(networkName string, address flo
 	return nil
 }
 
-func (ci *DependencyInstaller) handleFoundContract(networkName, contractAddr, assignedName, contractName, contractData string) error {
+func (ci *DependencyInstaller) handleFoundContract(networkName, contractAddr, assignedName, contractName string, program *project.Program) error {
 	ci.Mutex.Lock()
 	defer ci.Mutex.Unlock()
+
+	program.ConvertImports()
+	contractData := string(program.DevelopmentCode())
 
 	if !contractFileExists(contractAddr, contractName) {
 		if err := createContractFile(contractAddr, contractName, contractData); err != nil {
