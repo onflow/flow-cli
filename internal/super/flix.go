@@ -283,6 +283,7 @@ func GetDeployedContracts(state *flowkit.State) flixkit.ContractInfos {
 	// get all deployed and alias contracts for configured networks
 	for _, network := range depNetworks {
 		contracts, err := state.DeploymentContractsByNetwork(config.Network{Name: network})
+		fmt.Println("contracts len", network, len(contracts))
 		if err != nil {
 			continue
 		}
