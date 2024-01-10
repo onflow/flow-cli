@@ -107,7 +107,7 @@ func init() {
 
 func executeCmd(
 	args []string,
-	_ command.GlobalFlags,
+	flags command.GlobalFlags,
 	logger output.Logger,
 	flow flowkit.Services,
 	state *flowkit.State,
@@ -115,6 +115,17 @@ func executeCmd(
 	flixService := flixkit.NewFlixService(&flixkit.Config{
 		FileReader: state,
 	})
+	return executeFlixCmd(args, flags, logger, flow, state, flixService)
+}
+
+func executeFlixCmd(
+	args []string,
+	_ command.GlobalFlags,
+	logger output.Logger,
+	flow flowkit.Services,
+	state *flowkit.State,
+	flixService flixkit.FlixService,
+) (result command.Result, err error) {
 	flixQuery := args[0]
 	ctx := context.Background()
 	cadenceWithImportsReplaced, err := flixService.GetAndReplaceCadenceImports(ctx, flixQuery, flow.Network().Name)
@@ -155,6 +166,27 @@ func packageCmd(
 	flixService := flixkit.NewFlixService(&flixkit.Config{
 		FileReader: state,
 	})
+	var gen flixkit.GenerateBinding
+	switch flags.Lang {
+	case "js", "javascript":
+		gen = flixkit.NewFclJSGenerator()
+	case "ts", "typescript":
+		gen = flixkit.NewFclTSGenerator()
+	default:
+		return nil, fmt.Errorf("language %s not supported", flags.Lang)
+	}
+	return packageFlixCmd(args, gFlags, logger, flow, state, flixService, gen)
+}
+
+func packageFlixCmd(
+	args []string,
+	gFlags command.GlobalFlags,
+	logger output.Logger,
+	flow flowkit.Services,
+	state *flowkit.State,
+	flixService flixkit.FlixService,
+	generator flixkit.GenerateBinding,
+) (result command.Result, err error) {
 	flixQuery := args[0]
 	ctx := context.Background()
 	template, err := flixService.GetTemplate(ctx, flixQuery)
@@ -172,17 +204,7 @@ func packageCmd(
 		}
 	}
 
-	var out string
-	var gen flixkit.FclGenerator
-	switch flags.Lang {
-	case "js":
-		gen = *flixkit.NewFclJSGenerator()
-	case "ts":
-		gen = *flixkit.NewFclTSGenerator()
-	default:
-		return nil, fmt.Errorf("language %s not supported", flags.Lang)
-	}
-	out, err = gen.Generate(template, flixQuery)
+	out, err := generator.Generate(template, flixQuery)
 	if err != nil {
 		return nil, err
 	}
@@ -195,10 +217,32 @@ func packageCmd(
 
 func generateCmd(
 	args []string,
+	gFlags command.GlobalFlags,
+	logger output.Logger,
+	flow flowkit.Services,
+	state *flowkit.State,
+) (result command.Result, err error) {
+	flixService := flixkit.NewFlixService(&flixkit.Config{
+		FileReader: state,
+	})
+	depContracts := getDeployedContracts(state)
+	generator, err := flixkit.NewGenerator(depContracts, logger)
+	if err != nil {
+		return nil, fmt.Errorf("could not create flix generator %w", err)
+	}
+
+	return generateFlixCmd(args, gFlags, logger, flow, state, flixService, generator, flags)
+}
+
+func generateFlixCmd(
+	args []string,
 	_ command.GlobalFlags,
 	logger output.Logger,
 	flow flowkit.Services,
 	state *flowkit.State,
+	flixService flixkit.FlixService,
+	generator flixkit.GenerateTemplate,
+	flags flixFlags,
 ) (result command.Result, err error) {
 	cadenceFile := args[0]
 
@@ -211,8 +255,6 @@ func generateCmd(
 		return nil, fmt.Errorf("could not read cadence file %s: %w", cadenceFile, err)
 	}
 
-	depContracts := GetDeployedContracts(state)
-	generator, err := flixkit.NewGenerator(depContracts, logger)
 	if err != nil {
 		return nil, fmt.Errorf("could not create flix generator %w", err)
 	}
@@ -220,9 +262,6 @@ func generateCmd(
 	ctx := context.Background()
 	var template string
 	if flags.PreFill != "" {
-		flixService := flixkit.NewFlixService(&flixkit.Config{
-			FileReader: state,
-		})
 		template, err = flixService.GetTemplate(ctx, flags.PreFill)
 		if err != nil {
 			return nil, fmt.Errorf("could not parse template from pre fill %w", err)
@@ -273,7 +312,7 @@ func GetRelativePath(configFile, bindingFile string) (string, error) {
 	return filepath.ToSlash(relPath), nil
 }
 
-func GetDeployedContracts(state *flowkit.State) flixkit.ContractInfos {
+func getDeployedContracts(state *flowkit.State) flixkit.ContractInfos {
 	allContracts := make(flixkit.ContractInfos)
 	depNetworks := make([]string, 0)
 	// get all configured networks in flow.json
