@@ -19,6 +19,8 @@
 package dependencymanager
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 	"sync"
 
@@ -181,6 +183,10 @@ func (ci *DependencyInstaller) handleFoundContract(networkName, contractAddr, as
 	ci.Mutex.Lock()
 	defer ci.Mutex.Unlock()
 
+	hash := sha256.New()
+	hash.Write(program.DevelopmentCode())
+	originalContractDataHash := hex.EncodeToString(hash.Sum(nil))
+
 	program.ConvertImports()
 	contractData := string(program.DevelopmentCode())
 
@@ -190,7 +196,7 @@ func (ci *DependencyInstaller) handleFoundContract(networkName, contractAddr, as
 		}
 	}
 
-	err := ci.updateState(networkName, contractAddr, assignedName, contractName)
+	err := ci.updateState(networkName, contractAddr, assignedName, contractName, originalContractDataHash)
 	if err != nil {
 		ci.Logger.Error(fmt.Sprintf("Error updating state: %v", err))
 		return err
@@ -199,7 +205,7 @@ func (ci *DependencyInstaller) handleFoundContract(networkName, contractAddr, as
 	return nil
 }
 
-func (ci *DependencyInstaller) updateState(networkName, contractAddress, assignedName, contractName string) error {
+func (ci *DependencyInstaller) updateState(networkName, contractAddress, assignedName, contractName, contractHash string) error {
 	dep := config.Dependency{
 		Name: assignedName,
 		RemoteSource: config.RemoteSource{
@@ -207,6 +213,7 @@ func (ci *DependencyInstaller) updateState(networkName, contractAddress, assigne
 			Address:      flowsdk.HexToAddress(contractAddress),
 			ContractName: contractName,
 		},
+		Version: contractHash,
 	}
 
 	ci.State.Dependencies().AddOrUpdate(dep)

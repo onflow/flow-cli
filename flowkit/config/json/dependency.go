@@ -59,7 +59,8 @@ func (j jsonDependencies) transformToConfig() (config.Dependencies, error) {
 			}
 
 			dep = config.Dependency{
-				Name: dependencyName,
+				Name:    dependencyName,
+				Version: dependency.Extended.Version,
 				RemoteSource: config.RemoteSource{
 					NetworkName:  depNetwork,
 					Address:      flow.HexToAddress(depAddress),
@@ -99,6 +100,7 @@ func transformDependenciesToJSON(configDependencies config.Dependencies, configC
 		jsonDeps[dep.Name] = jsonDependency{
 			Extended: jsonDependencyExtended{
 				RemoteSource: buildRemoteSourceString(dep.RemoteSource),
+				Version:      dep.Version,
 				Aliases:      aliases,
 			},
 		}
@@ -122,6 +124,7 @@ func buildRemoteSourceString(remoteSource config.RemoteSource) string {
 // jsonDependencyExtended for json parsing advanced config.
 type jsonDependencyExtended struct {
 	RemoteSource string            `json:"remoteSource"`
+	Version      string            `json:"version"`
 	Aliases      map[string]string `json:"aliases"`
 }
 

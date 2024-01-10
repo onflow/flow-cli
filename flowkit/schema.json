@@ -237,6 +237,9 @@
         "remoteSource": {
           "type": "string"
         },
+        "version": {
+          "type": "string"
+        },
         "aliases": {
           "patternProperties": {
             ".*": {
@@ -250,6 +253,7 @@
       "type": "object",
       "required": [
         "remoteSource",
+        "version",
         "aliases"
       ]
     },
