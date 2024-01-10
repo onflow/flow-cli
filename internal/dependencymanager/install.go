@@ -48,8 +48,7 @@ func install(
 	flow flowkit.Services,
 	state *flowkit.State,
 ) (result command.Result, err error) {
-	logger.StartProgress("Installing dependencies from flow.json...")
-	defer logger.StopProgress()
+	logger.Info("🔄 Installing dependencies from flow.json...")
 
 	installer := NewDepdencyInstaller(logger, state)
 	if err := installer.install(); err != nil {

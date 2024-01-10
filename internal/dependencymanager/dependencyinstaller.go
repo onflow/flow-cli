@@ -22,6 +22,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+	"github.com/onflow/flow-cli/internal/util"
 	"sync"
 
 	"github.com/onflow/flow-cli/flowkit/gateway"
@@ -189,6 +190,16 @@ func (ci *DependencyInstaller) handleFoundContract(networkName, contractAddr, as
 
 	program.ConvertImports()
 	contractData := string(program.DevelopmentCode())
+
+	// Check version hash and prompt if different
+	// Ignore if no hash
+	dependency := ci.State.Dependencies().ByName(assignedName)
+	if dependency != nil && dependency.Version != "" && dependency.Version != originalContractDataHash {
+		msg := fmt.Sprintf("The latest version of %s is different from the one you have locally. Do you want to update it?", contractName)
+		if !util.GenericBoolPrompt(msg) {
+			return nil
+		}
+	}
 
 	if !contractFileExists(contractAddr, contractName) {
 		if err := createContractFile(contractAddr, contractName, contractData); err != nil {

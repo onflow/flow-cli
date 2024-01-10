@@ -51,8 +51,7 @@ func add(
 	flow flowkit.Services,
 	state *flowkit.State,
 ) (result command.Result, err error) {
-	logger.StartProgress(fmt.Sprintf("Installing dependencies for %s...", args[0]))
-	defer logger.StopProgress()
+	logger.Info(fmt.Sprintf("🔄 Installing dependencies for %s...", args[0]))
 
 	dep := args[0]
 
