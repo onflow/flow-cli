@@ -22,8 +22,9 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
-	"github.com/onflow/flow-cli/internal/util"
 	"sync"
+
+	"github.com/onflow/flow-cli/internal/util"
 
 	"github.com/onflow/flow-cli/flowkit/gateway"
 
