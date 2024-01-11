@@ -169,9 +169,9 @@ func packageCmd(
 	var gen flixkit.GenerateBinding
 	switch flags.Lang {
 	case "js", "javascript":
-		gen = flixkit.NewFclJSGenerator()
+		gen = flixkit.NewFclGeneratorJS()
 	case "ts", "typescript":
-		gen = flixkit.NewFclTSGenerator()
+		gen = flixkit.NewFclGeneratorTS()
 	default:
 		return nil, fmt.Errorf("language %s not supported", flags.Lang)
 	}
