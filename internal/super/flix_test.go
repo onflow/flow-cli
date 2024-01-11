@@ -112,7 +112,6 @@ func Test_ExecuteFlixTransaction(t *testing.T) {
 	result, err := executeFlixCmd([]string{"transfer-token"}, command.GlobalFlags{}, logger, srv.Mock, state, mockFlixService)
 	assert.NoError(t, err)
 	assert.NotNil(t, result)
-
 }
 
 type MockFclGenerator struct {
@@ -162,7 +161,7 @@ func Test_GenerateFlix(t *testing.T) {
 	mockFlixService.On("GetTemplate", ctx, templateName).Return(template, nil)
 
 	mockGenerateTemplate := new(MockGenerateTemplate)
-	mockGenerateTemplate.On("Generate", cadenceCode, template).Return(template, nil)
+	mockGenerateTemplate.On("Generate", ctx, cadenceCode, "").Return(template, nil)
 
 	configJson := []byte(`{
 		"contracts": {},
@@ -241,5 +240,4 @@ func Test_GenerateFlixPrefill(t *testing.T) {
 	result, err := generateFlixCmd([]string{cadenceFile}, command.GlobalFlags{}, logger, srv.Mock, state, mockFlixService, mockGenerateTemplate, flixFlags{PreFill: templateName})
 	assert.NoError(t, err)
 	assert.NotNil(t, result)
-
 }
