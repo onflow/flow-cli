@@ -22,9 +22,9 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
-	"sync"
-
 	"github.com/onflow/flow-cli/internal/util"
+	"os"
+	"sync"
 
 	"github.com/onflow/flow-cli/flowkit/gateway"
 
@@ -192,9 +192,18 @@ func (ci *DependencyInstaller) handleFoundContract(networkName, contractAddr, as
 	program.ConvertImports()
 	contractData := string(program.DevelopmentCode())
 
-	// Check version hash and prompt if different
-	// Ignore if no hash
 	dependency := ci.State.Dependencies().ByName(assignedName)
+
+	// If a dependency by this name already exists and its remote source network or address does not match, then give option to stop or continue
+	if dependency != nil && (dependency.RemoteSource.NetworkName != networkName || dependency.RemoteSource.Address.String() != contractAddr) {
+		ci.Logger.Info(fmt.Sprintf("🚫 A dependency named %s already exists with a different remote source. Please fix the conflict and retry.", assignedName))
+		os.Exit(0)
+		return nil
+	}
+
+	// Check if remote source version is different from local version
+	// If it is, ask if they want to update
+	// If no hash, ignore
 	if dependency != nil && dependency.Version != "" && dependency.Version != originalContractDataHash {
 		msg := fmt.Sprintf("The latest version of %s is different from the one you have locally. Do you want to update it?", contractName)
 		if !util.GenericBoolPrompt(msg) {
