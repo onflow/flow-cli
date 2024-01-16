@@ -74,13 +74,13 @@ func main() {
 					return fmt.Sprintf("%s%s%s", strings.Repeat(" ", space), text, strings.Repeat(" ", space))
 				}
 
-				fmt.Println(strings.Repeat("+", width))
-				fmt.Println(centerText("⚠ Upgrade to Cadence 1.0", width))
-				fmt.Println(centerText("The Crescendo network upgrade, including Cadence 1.0, is coming soon.", width))
-				fmt.Println(centerText("You may need to update your existing contracts to support this change.", width))
-				fmt.Println(centerText("Please visit our migration guide here:", width))
-				fmt.Println(centerText(url, width))
-				fmt.Println(strings.Repeat("+", width))
+				fmt.Fprintln(os.Stderr, strings.Repeat("+", width))
+				fmt.Fprintln(os.Stderr, centerText("⚠ Upgrade to Cadence 1.0", width))
+				fmt.Fprintln(os.Stderr, centerText("The Crescendo network upgrade, including Cadence 1.0, is coming soon.", width))
+				fmt.Fprintln(os.Stderr, centerText("You may need to update your existing contracts to support this change.", width))
+				fmt.Fprintln(os.Stderr, centerText("Please visit our migration guide here:", width))
+				fmt.Fprintln(os.Stderr, centerText(url, width))
+				fmt.Fprintln(os.Stderr, strings.Repeat("+", width))
 
 			}
 		},
