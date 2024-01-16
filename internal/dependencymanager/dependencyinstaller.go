@@ -46,7 +46,7 @@ type DependencyInstaller struct {
 	Mutex    sync.Mutex
 }
 
-func NewDepdencyInstaller(logger output.Logger, state *flowkit.State) *DependencyInstaller {
+func NewDependencyInstaller(logger output.Logger, state *flowkit.State) *DependencyInstaller {
 	emulatorGateway, err := gateway.NewGrpcGateway(config.EmulatorNetwork)
 	if err != nil {
 		logger.Error(fmt.Sprintf("Error creating emulator gateway: %v", err))
