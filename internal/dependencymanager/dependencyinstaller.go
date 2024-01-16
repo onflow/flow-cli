@@ -123,7 +123,7 @@ func (ci *DependencyInstaller) processDependency(dependency config.Dependency) e
 func (ci *DependencyInstaller) fetchDependencies(networkName string, address flowsdk.Address, assignedName, contractName string) error {
 	account, err := ci.Gateways[networkName].GetAccount(address)
 	if err != nil {
-		return fmt.Errorf("failed to get account: %v", err)
+		return fmt.Errorf("failed to get account: %w", err)
 	}
 	if account == nil {
 		return fmt.Errorf("account is nil for address: %s", address)
@@ -140,18 +140,18 @@ func (ci *DependencyInstaller) fetchDependencies(networkName string, address flo
 
 		program, err := project.NewProgram(contract, nil, "")
 		if err != nil {
-			return fmt.Errorf("failed to parse program: %v", err)
+			return fmt.Errorf("failed to parse program: %w", err)
 		}
 
 		parsedContractName, err := program.Name()
 		if err != nil {
-			return fmt.Errorf("failed to parse contract name: %v", err)
+			return fmt.Errorf("failed to parse contract name: %w", err)
 		}
 
 		if parsedContractName == contractName {
 
 			if err := ci.handleFoundContract(networkName, address.String(), assignedName, parsedContractName, program); err != nil {
-				return fmt.Errorf("failed to handle found contract: %v", err)
+				return fmt.Errorf("failed to handle found contract: %w", err)
 			}
 
 			if program.HasAddressImports() {
@@ -214,7 +214,7 @@ func (ci *DependencyInstaller) handleFoundContract(networkName, contractAddr, as
 
 	if !contractFileExists(contractAddr, contractName) {
 		if err := createContractFile(contractAddr, contractName, contractData); err != nil {
-			return fmt.Errorf("failed to create contract file: %v", err)
+			return fmt.Errorf("failed to create contract file: %w", err)
 		}
 	}
 
