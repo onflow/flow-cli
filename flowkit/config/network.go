@@ -42,7 +42,7 @@ var (
 	}
 	CrescendoNetwork = Network{
 		Name: "crescendo",
-		Host: "access.devnet.nodes.onflow.org:9000",
+		Host: "access.crescendo.nodes.onflow.org:9000",
 	}
 	DefaultNetworks = Networks{
 		EmulatorNetwork,
