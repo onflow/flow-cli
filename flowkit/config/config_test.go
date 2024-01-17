@@ -325,7 +325,7 @@ func Test_DefaultConfig(t *testing.T) {
 	assert.Len(t, cfg.Emulators, 1)
 	assert.Equal(t, cfg.Emulators[0].Name, "default")
 	assert.Equal(t, cfg.Emulators[0].ServiceAccount, "emulator-account")
-	assert.Len(t, cfg.Networks, 4)
+	assert.Len(t, cfg.Networks, 5)
 	assert.Equal(t, "emulator", cfg.Networks[0].Name)
 	assert.Equal(t, "testing", cfg.Networks[1].Name)
 	assert.Equal(t, "testnet", cfg.Networks[2].Name)
