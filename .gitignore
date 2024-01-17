@@ -30,5 +30,5 @@ git
 main
 *.pkey
 
-# Local developement file generation
+# Local development file generation folder
 imports
