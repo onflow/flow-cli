@@ -346,6 +346,7 @@ type ContractData struct {
 	Emulator string
 	Testnet  string
 	Mainnet  string
+	Crescendo string
 }
 
 func NewContractPrompt() *ContractData {
@@ -392,6 +393,18 @@ func NewContractPrompt() *ContractData {
 		},
 	}
 	contract.Testnet, _ = testnetAliasPrompt.Run()
+
+	crescendoAliasPrompt := promptui.Prompt{
+		Label: "Enter crescendo alias, if exists",
+		Validate: func(s string) error {
+			if s != "" && flow.HexToAddress(s) == flow.EmptyAddress {
+				return fmt.Errorf("invalid crescendo address")
+			}
+
+			return nil
+		},
+	}
+	contract.Crescendo, _ = crescendoAliasPrompt.Run()
 
 	mainnetAliasPrompt := promptui.Prompt{
 		Label: "Enter mainnet alias, if exists",
@@ -614,6 +627,7 @@ func CreateAccountNetworkPrompt() (string, config.Network) {
 		"Emulator": config.EmulatorNetwork,
 		"Testnet":  config.TestnetNetwork,
 		"Mainnet":  config.MainnetNetwork,
+		"Crescendo": config.CrescendoNetwork,
 	}
 
 	networkPrompt := promptui.Select{

@@ -149,4 +149,5 @@ func parseAddress(value string) (flowsdk.Address, bool) {
 	return address, address.IsValid(flowsdk.Mainnet) ||
 		address.IsValid(flowsdk.Testnet) ||
 		address.IsValid(flowsdk.Emulator)
+		//|| address.IsValid(flowsdk.Crescendo) //TODO: add crescendo, it is missing in flowsdk
 }

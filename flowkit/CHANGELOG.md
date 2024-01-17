@@ -11,25 +11,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-Flowkit package was tagged as v1.0.0 and is now considered stable. 
+Flowkit package was tagged as v1.0.0 and is now considered stable.
 It was also moved and renamed from `github.com/onflow/pkg/flowkit` to `github.com/onflow/flowkit` (dropped `pkg`).
-Please note that when you update to this version you will need to update your imports and 
-use the command: `go get github.com/onflow/flowkit@latest` and you will have to manually change all 
+Please note that when you update to this version you will need to update your imports and
+use the command: `go get github.com/onflow/flowkit@latest` and you will have to manually change all
 imports from `github.com/onflow/pkg/flowkit` to `github.com/onflow/flowkit` (a simple find and replace might do).
 
+---
 
---- 
-
-Flowkit package APIs  completely undergo major changes. APIs that were previously accessed via services were moved
+Flowkit package APIs completely undergo major changes. APIs that were previously accessed via services were moved
 under a single interface defined in [services.go](services.go). Accessing those methods must be done on a
 flowkit instance.
 
 Example previously:
+
 ```go
 services := services.NewServices(gateway, state, logger)
 account, err := services.Accounts.Get(address)
 ```
+
 changed to:
+
 ```go
 services := flowkit.NewFlowkit(state, *network, clientGateway, logger)
 account, err := services.GetAccount(context.Background(), address)
@@ -37,6 +39,7 @@ account, err := services.GetAccount(context.Background(), address)
 
 Each of the APIs now require context as the first argument.
 We can find a definition of the flowkit interface here:
+
 ```go
 Network() config.Network
 Ping() error
@@ -125,22 +128,22 @@ Passing network parameter is no longer required as the network is initialized us
 
 ---
 
-The `ScriptQuery` was moved to `flowkit` package and addded `Latest` field. It is also now passed by value instead of 
+The `ScriptQuery` was moved to `flowkit` package and addded `Latest` field. It is also now passed by value instead of
 by pointer. You can use `LatestScriptQuery` convenience variable to pass usage of latest block for script execution.
 
-----
+---
 
-The `TransactionAccountRoles` and `TransactionAddressesRoles` are no longer passed to transaction functions as 
+The `TransactionAccountRoles` and `TransactionAddressesRoles` are no longer passed to transaction functions as
 pointer but as value since they are always required.
 
 ---
 
-The `flowkit.NewScript` method was removed and you should use `flowkit.Script{}` struct directly for initialization. 
+The `flowkit.NewScript` method was removed and you should use `flowkit.Script{}` struct directly for initialization.
 Also getter and setters were removed to favour direct property access.
 
 ---
 
-The `config.Contracts.ByName(name string) *Contract` changed to return an error if contract 
+The `config.Contracts.ByName(name string) *Contract` changed to return an error if contract
 was not found whereas before it returned a nil value.
 
 ---
@@ -153,45 +156,45 @@ were moved to `accounts` package.
 The `AccountKey`, `HexAccountKey`, `KmsAccountKey`, `Bip44AccountKey` were renamed to `Key`, `HexKey`, `KMSKey`, `BIP44Key` to avoid stutter in the naming,
 as well as all the factory methods were renamed to remove the `account` word.
 
---- 
+---
 
 The `Transaction` was moved to `transactions` package as well as all the factory methods.
 All the factory methods were renamed to drop the `transaction` word.
 
 ---
 
-The `TransactionAddressesRoles` was moved to `transactions` package and renamed to drop the 
+The `TransactionAddressesRoles` was moved to `transactions` package and renamed to drop the
 `transaction` word to `AddressRoles` the same holds true for `TransactionAccountRoles`.
 
 ---
 
-The `ParseArgumentsJSON` and `ParseArgumentsWithoutType` were moved to a `arguments` package and renamed 
+The `ParseArgumentsJSON` and `ParseArgumentsWithoutType` were moved to a `arguments` package and renamed
 to `ParseJSON` and `ParseWithoutType` correspondingly.
-
---- 
-
-Renamed transaction function from `transaction.SetGasLimit` to `transaction.SetComputeLimit`. 
 
 ---
 
-The `flowkit.Account` getter methods for `account.Address()`, `account.Name()` was removed and the variable 
+Renamed transaction function from `transaction.SetGasLimit` to `transaction.SetComputeLimit`.
+
+---
+
+The `flowkit.Account` getter methods for `account.Address()`, `account.Name()` was removed and the variable
 was exported so you can use `account.Address`, `account.Name` directly.
 
---- 
+---
 
 The function `state.DeploymentContractsByNetwork(network string)` changed to accept network type like so:
-`state.DeploymentContractsByNetwork(network config.Network)`, there are also predefined network types in config 
-you can access using `config.EmulatorNetwork`, `config.TestnetNetwork`, `config.MainnetNetwork`.
+`state.DeploymentContractsByNetwork(network config.Network)`, there are also predefined network types in config
+you can access using `config.EmulatorNetwork`, `config.TestnetNetwork`, `config.MainnetNetwork`, `config.CrescendoNetwork`.
 
 ---
 
 The config functions for getting default networks was removed and replaced with variables.
 For example the method `config.DefaultMainnetNetwork()` was replaced with `config.MainnetNetwork` variable.
 
-
 ### Added
 
-----
+---
+
 An `AccountPublicKey` type was added used in flowkit `CreateAccount` API, you can find the definition in [flowkit.go](flowkit.go).
 
 ---
@@ -201,7 +204,8 @@ You can use `NewBlockQuery` factory method to pass in raw string, which should b
 
 ---
 
-Added predefined common networks in config: 
+Added predefined common networks in config:
+
 ```go
 	EmptyNetwork    = Network{}
 	EmulatorNetwork = Network{
@@ -220,11 +224,16 @@ Added predefined common networks in config:
 		Name: "mainnet",
 		Host: "access.mainnet.nodes.onflow.org:9000",
 	}
+	CrescendoNetwork = Network{
+		Name: "crescendo",
+		Host: "access.devnet.nodes.onflow.org:9000",
+	}
 	DefaultNetworks = Networks{
 		EmulatorNetwork,
 		TestnetNetwork,
 		SandboxNetwork,
 		MainnetNetwork,
+		CrescendoNetwork,
 	}
 ```
 
@@ -248,22 +257,28 @@ The `flowkit.Exist(path string)` was removed, the `config.Exist(path string)` sh
 ### Changed
 
 ---
+
 The `Network` property was removed from `Contract` type. The network is now included in
 the `Aliases` on the contract. We also removed having multiple contracts by same name just to
 accommodate multiple aliases. Now there's only one contract identified by name,
 and if there are multiple network aliases they are contained in the `Aliases` list.
+
 - Package: `config`
 - Type: `Contracts`
 
 ---
+
 A method `Contracts.AddOrUpdate(name, contract)` was changed to not include the name, as it's
 already part of the contract you are adding.
+
 - Method: `AddOrUpdate`
 - Package: `config`
 - Type: `Contracts`
 
 ---
+
 Don't return error if contract by name not found but rather just a `nil`.
+
 - Method: `ByName`
 - Package: `config`
 - Type: `Contracts`
@@ -274,12 +289,13 @@ Don't return error if contract by name not found but rather just a `nil`.
 
 New type `Aliases` was added to `Contracts`.
 Aliases contain new functions to get the aliases by network and add new aliases.
+
 - Package: `config`
 - Type: `Contracts`
-
 
 ---
 
 `WithLogger` now takes zerolog instead of Logrus since that is what flow-emulator has changed to.
+
 - Package: `gateway`
 - Type: `EmulatorGateway`

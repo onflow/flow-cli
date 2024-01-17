@@ -37,6 +37,7 @@ type flagsAddContract struct {
 	EmulatorAlias string `flag:"emulator-alias" info:"Address for the emulator alias"`
 	TestnetAlias  string `flag:"testnet-alias" info:"Address for the testnet alias"`
 	MainnetAlias  string `flag:"mainnet-alias" info:"Address for the mainnet alias"`
+	CrescendoAlias string `flag:"crescendo-alias" info:"Address for the crescendo alias"`
 }
 
 var addContractFlags = flagsAddContract{}
@@ -94,6 +95,13 @@ func addContract(
 		)
 	}
 
+	if raw.Crescendo != "" {
+		contract.Aliases.Add(
+			config.CrescendoNetwork.Name,
+			flow.HexToAddress(raw.Crescendo),
+		)
+	}
+
 	state.Contracts().AddOrUpdate(contract)
 
 	err = state.SaveEdited(globalFlags.ConfigPaths)
@@ -135,11 +143,16 @@ func flagsToContractData(flags flagsAddContract) (*util.ContractData, bool, erro
 		return nil, true, fmt.Errorf("invalid mainnnet alias address")
 	}
 
+	if flags.CrescendoAlias != "" && flow.HexToAddress(flags.CrescendoAlias) == flow.EmptyAddress {
+		return nil, true, fmt.Errorf("invalid crescendo alias address")
+	}
+
 	return &util.ContractData{
 		Name:     flags.Name,
 		Source:   flags.Filename,
 		Emulator: flags.EmulatorAlias,
 		Testnet:  flags.TestnetAlias,
 		Mainnet:  flags.MainnetAlias,
+		Crescendo: flags.CrescendoAlias,
 	}, true, nil
 }

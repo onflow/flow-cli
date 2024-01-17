@@ -40,11 +40,16 @@ var (
 		Name: "mainnet",
 		Host: "access.mainnet.nodes.onflow.org:9000",
 	}
+	CrescendoNetwork = Network{
+		Name: "crescendo",
+		Host: "access.devnet.nodes.onflow.org:9000",
+	}
 	DefaultNetworks = Networks{
 		EmulatorNetwork,
 		TestingNetwork,
 		TestnetNetwork,
 		MainnetNetwork,
+		CrescendoNetwork,
 	}
 )
 

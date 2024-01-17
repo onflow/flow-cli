@@ -156,6 +156,7 @@ func envFromNetwork(network flowsdk.ChainID) tmpl.Environment {
 		}
 	}
 
+	// TODO: maybe add cresecendo here?
 	if network == flowsdk.Testnet {
 		return tmpl.Environment{
 			IDTableAddress:       "9eca2b38b18b5dfe",
