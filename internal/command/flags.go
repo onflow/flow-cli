@@ -125,7 +125,6 @@ func InitFlags(cmd *cobra.Command) {
 		"Approve any prompts",
 	)
 
-
 	cmd.PersistentFlags().BoolVarP(
 		&Flags.SkipVersionCheck,
 		"skip-version-check",
