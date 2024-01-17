@@ -216,6 +216,8 @@ func (ci *DependencyInstaller) handleFoundContract(networkName, contractAddr, as
 		if err := createContractFile(contractAddr, contractName, contractData); err != nil {
 			return fmt.Errorf("failed to create contract file: %w", err)
 		}
+
+		ci.Logger.Info(fmt.Sprintf("Dependency Manager: %s from %s on %s installed", contractName, contractAddr, networkName))
 	}
 
 	err := ci.updateState(networkName, contractAddr, assignedName, contractName, originalContractDataHash)
