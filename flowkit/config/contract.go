@@ -126,9 +126,8 @@ var networkToChainID = map[string]flowGo.ChainID{
 
 func isCoreContract(networkName, contractName, contractAddress string) bool {
 	sc := systemcontracts.SystemContractsForChain(networkToChainID[networkName])
-	coreContracts := sc.All()
 
-	for _, coreContract := range coreContracts {
+	for _, coreContract := range sc.All() {
 		if coreContract.Name == contractName && coreContract.Address.String() == contractAddress {
 			return true
 		}
