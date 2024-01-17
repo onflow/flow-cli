@@ -32,11 +32,11 @@ import (
 )
 
 type flagsAddContract struct {
-	Name          string `flag:"name" info:"Name of the contract"`
-	Filename      string `flag:"filename" info:"Filename of the contract source"`
-	EmulatorAlias string `flag:"emulator-alias" info:"Address for the emulator alias"`
-	TestnetAlias  string `flag:"testnet-alias" info:"Address for the testnet alias"`
-	MainnetAlias  string `flag:"mainnet-alias" info:"Address for the mainnet alias"`
+	Name           string `flag:"name" info:"Name of the contract"`
+	Filename       string `flag:"filename" info:"Filename of the contract source"`
+	EmulatorAlias  string `flag:"emulator-alias" info:"Address for the emulator alias"`
+	TestnetAlias   string `flag:"testnet-alias" info:"Address for the testnet alias"`
+	MainnetAlias   string `flag:"mainnet-alias" info:"Address for the mainnet alias"`
 	CrescendoAlias string `flag:"crescendo-alias" info:"Address for the crescendo alias"`
 }
 
@@ -148,11 +148,11 @@ func flagsToContractData(flags flagsAddContract) (*util.ContractData, bool, erro
 	}
 
 	return &util.ContractData{
-		Name:     flags.Name,
-		Source:   flags.Filename,
-		Emulator: flags.EmulatorAlias,
-		Testnet:  flags.TestnetAlias,
-		Mainnet:  flags.MainnetAlias,
+		Name:      flags.Name,
+		Source:    flags.Filename,
+		Emulator:  flags.EmulatorAlias,
+		Testnet:   flags.TestnetAlias,
+		Mainnet:   flags.MainnetAlias,
 		Crescendo: flags.CrescendoAlias,
 	}, true, nil
 }
