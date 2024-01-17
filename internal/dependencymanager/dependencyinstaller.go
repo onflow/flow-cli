@@ -240,11 +240,17 @@ func (ci *DependencyInstaller) updateState(networkName, contractAddress, assigne
 		Version: contractHash,
 	}
 
+	isNewDep := ci.State.Dependencies().ByName(dep.Name) == nil
+
 	ci.State.Dependencies().AddOrUpdate(dep)
 	ci.State.Contracts().AddDependencyAsContract(dep, networkName)
 	err := ci.State.SaveDefault()
 	if err != nil {
 		return err
+	}
+
+	if isNewDep {
+		ci.Logger.Info(fmt.Sprintf("Dependency Manager: %s added to flow.json", dep.Name))
 	}
 
 	return nil
