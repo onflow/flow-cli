@@ -91,12 +91,10 @@ func (ci *DependencyInstaller) add(depRemoteSource, customName string) error {
 		return fmt.Errorf("error parsing remote source: %w", err)
 	}
 
-	var name string
+	name := depContractName
 
 	if customName != "" {
 		name = customName
-	} else {
-		name = depContractName
 	}
 
 	dep := config.Dependency{
