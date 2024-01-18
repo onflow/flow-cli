@@ -10,7 +10,7 @@ import (
 
 	context "context"
 
-	crypto "github.com/onflow/flow-go/crypto"
+	crypto "github.com/onflow/crypto"
 
 	flow "github.com/onflow/flow-go-sdk"
 
