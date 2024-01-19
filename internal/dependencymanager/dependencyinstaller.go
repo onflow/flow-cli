@@ -76,17 +76,17 @@ func NewDependencyInstaller(logger output.Logger, state *flowkit.State) *Depende
 	}
 }
 
-func (ci *DependencyInstaller) install() error {
-	for _, dependency := range *ci.State.Dependencies() {
-		if err := ci.processDependency(dependency); err != nil {
-			ci.Logger.Error(fmt.Sprintf("Error processing dependency: %v", err))
+func (di *DependencyInstaller) install() error {
+	for _, dependency := range *di.State.Dependencies() {
+		if err := di.processDependency(dependency); err != nil {
+			di.Logger.Error(fmt.Sprintf("Error processing dependency: %v", err))
 			return err
 		}
 	}
 	return nil
 }
 
-func (ci *DependencyInstaller) add(depRemoteSource, customName string) error {
+func (di *DependencyInstaller) add(depRemoteSource, customName string) error {
 	depNetwork, depAddress, depContractName, err := config.ParseRemoteSourceString(depRemoteSource)
 	if err != nil {
 		return fmt.Errorf("error parsing remote source: %w", err)
@@ -107,20 +107,20 @@ func (ci *DependencyInstaller) add(depRemoteSource, customName string) error {
 		},
 	}
 
-	if err := ci.processDependency(dep); err != nil {
+	if err := di.processDependency(dep); err != nil {
 		return fmt.Errorf("error processing dependency: %w", err)
 	}
 
 	return nil
 }
 
-func (ci *DependencyInstaller) processDependency(dependency config.Dependency) error {
+func (di *DependencyInstaller) processDependency(dependency config.Dependency) error {
 	depAddress := flowsdk.HexToAddress(dependency.RemoteSource.Address.String())
-	return ci.fetchDependencies(dependency.RemoteSource.NetworkName, depAddress, dependency.Name, dependency.RemoteSource.ContractName)
+	return di.fetchDependencies(dependency.RemoteSource.NetworkName, depAddress, dependency.Name, dependency.RemoteSource.ContractName)
 }
 
-func (ci *DependencyInstaller) fetchDependencies(networkName string, address flowsdk.Address, assignedName, contractName string) error {
-	account, err := ci.Gateways[networkName].GetAccount(address)
+func (di *DependencyInstaller) fetchDependencies(networkName string, address flowsdk.Address, assignedName, contractName string) error {
+	account, err := di.Gateways[networkName].GetAccount(address)
 	if err != nil {
 		return fmt.Errorf("failed to get account: %w", err)
 	}
@@ -149,7 +149,7 @@ func (ci *DependencyInstaller) fetchDependencies(networkName string, address flo
 
 		if parsedContractName == contractName {
 
-			if err := ci.handleFoundContract(networkName, address.String(), assignedName, parsedContractName, program); err != nil {
+			if err := di.handleFoundContract(networkName, address.String(), assignedName, parsedContractName, program); err != nil {
 				return fmt.Errorf("failed to handle found contract: %w", err)
 			}
 
@@ -159,7 +159,7 @@ func (ci *DependencyInstaller) fetchDependencies(networkName string, address flo
 					wg.Add(1)
 					go func(importAddress flowsdk.Address, contractName string) {
 						defer wg.Done()
-						err := ci.fetchDependencies(networkName, importAddress, contractName, contractName)
+						err := di.fetchDependencies(networkName, importAddress, contractName, contractName)
 						if err != nil {
 							errCh <- err
 						}
@@ -181,32 +181,32 @@ func (ci *DependencyInstaller) fetchDependencies(networkName string, address flo
 	return nil
 }
 
-func (ci *DependencyInstaller) contractFileExists(address, contractName string) bool {
+func (di *DependencyInstaller) contractFileExists(address, contractName string) bool {
 	path := filepath.Join("imports", address, contractName)
 
-	_, err := ci.State.ReaderWriter().Stat(path)
+	_, err := di.State.ReaderWriter().Stat(path)
 
 	return err == nil
 }
 
-func (ci *DependencyInstaller) createContractFile(address, contractName, data string) error {
+func (di *DependencyInstaller) createContractFile(address, contractName, data string) error {
 	path := filepath.Join("imports", address, contractName)
 	dir := filepath.Dir(path)
 
-	if err := ci.State.ReaderWriter().MkdirAll(dir, 0755); err != nil {
+	if err := di.State.ReaderWriter().MkdirAll(dir, 0755); err != nil {
 		return fmt.Errorf("error creating directories: %w", err)
 	}
 
-	if err := ci.State.ReaderWriter().WriteFile(path, []byte(data), 0644); err != nil {
+	if err := di.State.ReaderWriter().WriteFile(path, []byte(data), 0644); err != nil {
 		return fmt.Errorf("error writing file: %w", err)
 	}
 
 	return nil
 }
 
-func (ci *DependencyInstaller) handleFoundContract(networkName, contractAddr, assignedName, contractName string, program *project.Program) error {
-	ci.Mutex.Lock()
-	defer ci.Mutex.Unlock()
+func (di *DependencyInstaller) handleFoundContract(networkName, contractAddr, assignedName, contractName string, program *project.Program) error {
+	di.Mutex.Lock()
+	defer di.Mutex.Unlock()
 
 	hash := sha256.New()
 	hash.Write(program.DevelopmentCode())
@@ -215,11 +215,11 @@ func (ci *DependencyInstaller) handleFoundContract(networkName, contractAddr, as
 	program.ConvertImports()
 	contractData := string(program.DevelopmentCode())
 
-	dependency := ci.State.Dependencies().ByName(assignedName)
+	dependency := di.State.Dependencies().ByName(assignedName)
 
 	// If a dependency by this name already exists and its remote source network or address does not match, then give option to stop or continue
 	if dependency != nil && (dependency.RemoteSource.NetworkName != networkName || dependency.RemoteSource.Address.String() != contractAddr) {
-		ci.Logger.Info(fmt.Sprintf("🚫 A dependency named %s already exists with a different remote source. Please fix the conflict and retry.", assignedName))
+		di.Logger.Info(fmt.Sprintf("🚫 A dependency named %s already exists with a different remote source. Please fix the conflict and retry.", assignedName))
 		os.Exit(0)
 		return nil
 	}
@@ -234,24 +234,24 @@ func (ci *DependencyInstaller) handleFoundContract(networkName, contractAddr, as
 		}
 	}
 
-	if !ci.contractFileExists(contractAddr, contractName) {
-		if err := ci.createContractFile(contractAddr, contractName, contractData); err != nil {
+	if !di.contractFileExists(contractAddr, contractName) {
+		if err := di.createContractFile(contractAddr, contractName, contractData); err != nil {
 			return fmt.Errorf("failed to create contract file: %w", err)
 		}
 
-		ci.Logger.Info(fmt.Sprintf("Dependency Manager: %s from %s on %s installed", contractName, contractAddr, networkName))
+		di.Logger.Info(fmt.Sprintf("Dependency Manager: %s from %s on %s installed", contractName, contractAddr, networkName))
 	}
 
-	err := ci.updateState(networkName, contractAddr, assignedName, contractName, originalContractDataHash)
+	err := di.updateState(networkName, contractAddr, assignedName, contractName, originalContractDataHash)
 	if err != nil {
-		ci.Logger.Error(fmt.Sprintf("Error updating state: %v", err))
+		di.Logger.Error(fmt.Sprintf("Error updating state: %v", err))
 		return err
 	}
 
 	return nil
 }
 
-func (ci *DependencyInstaller) updateState(networkName, contractAddress, assignedName, contractName, contractHash string) error {
+func (di *DependencyInstaller) updateState(networkName, contractAddress, assignedName, contractName, contractHash string) error {
 	dep := config.Dependency{
 		Name: assignedName,
 		RemoteSource: config.RemoteSource{
@@ -262,17 +262,17 @@ func (ci *DependencyInstaller) updateState(networkName, contractAddress, assigne
 		Version: contractHash,
 	}
 
-	isNewDep := ci.State.Dependencies().ByName(dep.Name) == nil
+	isNewDep := di.State.Dependencies().ByName(dep.Name) == nil
 
-	ci.State.Dependencies().AddOrUpdate(dep)
-	ci.State.Contracts().AddDependencyAsContract(dep, networkName)
-	err := ci.State.SaveDefault()
+	di.State.Dependencies().AddOrUpdate(dep)
+	di.State.Contracts().AddDependencyAsContract(dep, networkName)
+	err := di.State.SaveDefault()
 	if err != nil {
 		return err
 	}
 
 	if isNewDep {
-		ci.Logger.Info(fmt.Sprintf("Dependency Manager: %s added to flow.json", dep.Name))
+		di.Logger.Info(fmt.Sprintf("Dependency Manager: %s added to flow.json", dep.Name))
 	}
 
 	return nil
