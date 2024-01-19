@@ -110,7 +110,7 @@ func executeCmd(
 	flow flowkit.Services,
 	state *flowkit.State,
 ) (result command.Result, err error) {
-	flixService := flixkit.NewFlixService(&flixkit.Config{
+	flixService := flixkit.NewFlixService(&flixkit.FlixServiceConfig{
 		FileReader: state,
 	})
 	return executeFlixCmd(args, flags, logger, flow, state, flixService)
@@ -126,7 +126,7 @@ func executeFlixCmd(
 ) (result command.Result, err error) {
 	flixQuery := args[0]
 	ctx := context.Background()
-	cadenceWithImportsReplaced, err := flixService.GetAndReplaceCadenceImports(ctx, flixQuery, flow.Network().Name)
+	cadenceWithImportsReplaced, err := flixService.GetTemplateAndReplaceImports(ctx, flixQuery, flow.Network().Name)
 	if err != nil {
 		logger.Error("could not replace imports")
 		return nil, err
@@ -161,7 +161,7 @@ func packageCmd(
 	flow flowkit.Services,
 	state *flowkit.State,
 ) (result command.Result, err error) {
-	flixService := flixkit.NewFlixService(&flixkit.Config{
+	flixService := flixkit.NewFlixService(&flixkit.FlixServiceConfig{
 		FileReader: state,
 	})
 
@@ -197,8 +197,9 @@ func generateCmd(
 	flow flowkit.Services,
 	state *flowkit.State,
 ) (result command.Result, err error) {
-	flixService := flixkit.NewFlixService(&flixkit.Config{
+	flixService := flixkit.NewFlixService(&flixkit.FlixServiceConfig{
 		FileReader: state,
+		Logger:     logger,
 	})
 
 	return generateFlixCmd(args, gFlags, logger, flow, state, flixService, flags)

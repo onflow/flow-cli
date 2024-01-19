@@ -12,7 +12,7 @@ require (
 	github.com/onflow/cadence-tools/languageserver v0.33.3
 	github.com/onflow/cadence-tools/test v0.14.5
 	github.com/onflow/fcl-dev-wallet v0.7.4
-	github.com/onflow/flixkit-go v1.0.2
+	github.com/onflow/flixkit-go v1.1.0
 	github.com/onflow/flow-cli/flowkit v1.8.0
 	github.com/onflow/flow-core-contracts/lib/go/templates v1.2.4-0.20231016154253-a00dbf7c061f
 	github.com/onflow/flow-emulator v0.59.0
@@ -272,3 +272,6 @@ replace github.com/onflow/flow-cli/flowkit => ./flowkit
 
 // this is a woraround for the flow-go/crypto cross compliation issue
 replace github.com/onflow/flow-go/crypto => github.com/onflow/flow-go/crypto v0.24.9
+
+// this is a woraround for the flow-go/crypto cross compliation issue
+replace github.com/onflow/rcrypto => github.com/onflow/flow-go/crypto v0.24.9
