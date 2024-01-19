@@ -20,7 +20,6 @@ package tests
 
 import (
 	"fmt"
-
 	"github.com/onflow/cadence"
 	"github.com/onflow/cadence/runtime/common"
 	"github.com/onflow/flow-go-sdk"
@@ -578,6 +577,20 @@ var transactionResults = test.TransactionResultGenerator()
 func NewAccountWithAddress(address string) *flow.Account {
 	account := accounts.New()
 	account.Address = flow.HexToAddress(address)
+	return account
+}
+
+func NewAccountWithContracts(address string, contracts ...Resource) *flow.Account {
+	account := accounts.New()
+
+	if account.Contracts == nil {
+		account.Contracts = make(map[string][]byte)
+	}
+
+	for _, contract := range contracts {
+		account.Contracts[contract.Name] = contract.Source
+	}
+
 	return account
 }
 
