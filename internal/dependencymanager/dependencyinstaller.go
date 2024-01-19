@@ -158,7 +158,7 @@ func (ci *DependencyInstaller) fetchDependencies(networkName string, address flo
 					wg.Add(1)
 					go func(importAddress flowsdk.Address, contractName string) {
 						defer wg.Done()
-						err := ci.fetchDependencies("testnet", importAddress, contractName, contractName)
+						err := ci.fetchDependencies(networkName, importAddress, contractName, contractName)
 						if err != nil {
 							errCh <- err
 						}
