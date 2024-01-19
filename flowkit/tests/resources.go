@@ -582,6 +582,7 @@ func NewAccountWithAddress(address string) *flow.Account {
 
 func NewAccountWithContracts(address string, contracts ...Resource) *flow.Account {
 	account := accounts.New()
+	account.Address = flow.HexToAddress(address)
 
 	if account.Contracts == nil {
 		account.Contracts = make(map[string][]byte)
