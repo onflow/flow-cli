@@ -23,6 +23,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"os"
+	"path/filepath"
 	"sync"
 
 	"github.com/onflow/flow-cli/internal/util"
@@ -180,6 +181,29 @@ func (ci *DependencyInstaller) fetchDependencies(networkName string, address flo
 	return nil
 }
 
+func (ci *DependencyInstaller) contractFileExists(address, contractName string) bool {
+	path := filepath.Join("imports", address, contractName)
+
+	_, err := ci.State.ReaderWriter().Stat(path)
+
+	return err == nil
+}
+
+func (ci *DependencyInstaller) createContractFile(address, contractName, data string) error {
+	path := filepath.Join("imports", address, contractName)
+	dir := filepath.Dir(path)
+
+	if err := ci.State.ReaderWriter().MkdirAll(dir, 0755); err != nil {
+		return fmt.Errorf("error creating directories: %w", err)
+	}
+
+	if err := ci.State.ReaderWriter().WriteFile(path, []byte(data), 0644); err != nil {
+		return fmt.Errorf("error writing file: %w", err)
+	}
+
+	return nil
+}
+
 func (ci *DependencyInstaller) handleFoundContract(networkName, contractAddr, assignedName, contractName string, program *project.Program) error {
 	ci.Mutex.Lock()
 	defer ci.Mutex.Unlock()
@@ -210,8 +234,8 @@ func (ci *DependencyInstaller) handleFoundContract(networkName, contractAddr, as
 		}
 	}
 
-	if !contractFileExists(contractAddr, contractName) {
-		if err := createContractFile(contractAddr, contractName, contractData); err != nil {
+	if !ci.contractFileExists(contractAddr, contractName) {
+		if err := ci.createContractFile(contractAddr, contractName, contractData); err != nil {
 			return fmt.Errorf("failed to create contract file: %w", err)
 		}
 
