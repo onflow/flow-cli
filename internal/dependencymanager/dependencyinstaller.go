@@ -211,10 +211,22 @@ func (di *DependencyInstaller) createContractFile(address, contractName, data st
 	return nil
 }
 
-func (di *DependencyInstaller) handleFoundContract(networkName, contractAddr, assignedName, contractName string, program *project.Program) error {
+func (di *DependencyInstaller) handleFileSystem(contractAddr, contractName, contractData, networkName string) error {
 	di.Mutex.Lock()
 	defer di.Mutex.Unlock()
 
+	if !di.contractFileExists(contractAddr, contractName) {
+		if err := di.createContractFile(contractAddr, contractName, contractData); err != nil {
+			return fmt.Errorf("failed to create contract file: %w", err)
+		}
+
+		di.Logger.Info(fmt.Sprintf("Dependency Manager: %s from %s on %s installed", contractName, contractAddr, networkName))
+	}
+
+	return nil
+}
+
+func (di *DependencyInstaller) handleFoundContract(networkName, contractAddr, assignedName, contractName string, program *project.Program) error {
 	hash := sha256.New()
 	hash.Write(program.DevelopmentCode())
 	originalContractDataHash := hex.EncodeToString(hash.Sum(nil))
@@ -241,15 +253,12 @@ func (di *DependencyInstaller) handleFoundContract(networkName, contractAddr, as
 		}
 	}
 
-	if !di.contractFileExists(contractAddr, contractName) {
-		if err := di.createContractFile(contractAddr, contractName, contractData); err != nil {
-			return fmt.Errorf("failed to create contract file: %w", err)
-		}
-
-		di.Logger.Info(fmt.Sprintf("Dependency Manager: %s from %s on %s installed", contractName, contractAddr, networkName))
+	err := di.handleFileSystem(contractAddr, contractName, contractData, networkName)
+	if err != nil {
+		return fmt.Errorf("error handling file system: %w", err)
 	}
 
-	err := di.updateState(networkName, contractAddr, assignedName, contractName, originalContractDataHash)
+	err = di.updateState(networkName, contractAddr, assignedName, contractName, originalContractDataHash)
 	if err != nil {
 		di.Logger.Error(fmt.Sprintf("Error updating state: %v", err))
 		return err
