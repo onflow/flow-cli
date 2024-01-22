@@ -135,8 +135,11 @@ func (di *DependencyInstaller) fetchDependencies(networkName string, address flo
 	var wg sync.WaitGroup
 	errCh := make(chan error, len(account.Contracts))
 
-	for _, contract := range account.Contracts {
+	// Create a max number of goroutines so that we don't rate limit the access node
+	maxGoroutines := 5
+	semaphore := make(chan struct{}, maxGoroutines)
 
+	for _, contract := range account.Contracts {
 		program, err := project.NewProgram(contract, nil, "")
 		if err != nil {
 			return fmt.Errorf("failed to parse program: %w", err)
@@ -148,7 +151,6 @@ func (di *DependencyInstaller) fetchDependencies(networkName string, address flo
 		}
 
 		if parsedContractName == contractName {
-
 			if err := di.handleFoundContract(networkName, address.String(), assignedName, parsedContractName, program); err != nil {
 				return fmt.Errorf("failed to handle found contract: %w", err)
 			}
@@ -158,7 +160,11 @@ func (di *DependencyInstaller) fetchDependencies(networkName string, address flo
 				for _, imp := range imports {
 					wg.Add(1)
 					go func(importAddress flowsdk.Address, contractName string) {
-						defer wg.Done()
+						semaphore <- struct{}{}
+						defer func() {
+							<-semaphore
+							wg.Done()
+						}()
 						err := di.fetchDependencies(networkName, importAddress, contractName, contractName)
 						if err != nil {
 							errCh <- err
@@ -171,6 +177,7 @@ func (di *DependencyInstaller) fetchDependencies(networkName string, address flo
 
 	wg.Wait()
 	close(errCh)
+	close(semaphore)
 
 	for err := range errCh {
 		if err != nil {
