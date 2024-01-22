@@ -80,7 +80,50 @@ func TestDependencyInstallerInstall(t *testing.T) {
 		err := di.Install()
 		assert.NoError(t, err, "Failed to install dependencies")
 
-		filePath := fmt.Sprintf("imports/%s/Hello", serviceAddress.String())
+		filePath := fmt.Sprintf("imports/%s/%s", serviceAddress.String(), tests.ContractHelloString.Name)
+		fileContent, err := state.ReaderWriter().ReadFile(filePath)
+		assert.NoError(t, err, "Failed to read generated file")
+		assert.NotNil(t, fileContent)
+	})
+}
+
+func TestDependencyInstallerAdd(t *testing.T) {
+
+	logger := output.NewStdoutLogger(output.NoneLog)
+	_, state, _ := util.TestMocks(t)
+
+	serviceAcc, _ := state.EmulatorServiceAccount()
+	serviceAddress := serviceAcc.Address
+
+	t.Run("Success", func(t *testing.T) {
+		gw := mocks.DefaultMockGateway()
+
+		gw.GetAccount.Run(func(args mock.Arguments) {
+			addr := args.Get(0).(flow.Address)
+			assert.Equal(t, addr.String(), serviceAcc.Address.String())
+			acc := tests.NewAccountWithAddress(addr.String())
+			acc.Contracts = map[string][]byte{
+				tests.ContractHelloString.Name: tests.ContractHelloString.Source,
+			}
+
+			gw.GetAccount.Return(acc, nil)
+		})
+
+		di := &DependencyInstaller{
+			Gateways: map[string]gateway.Gateway{
+				config.EmulatorNetwork.Name: gw.Mock,
+				config.TestnetNetwork.Name:  gw.Mock,
+				config.MainnetNetwork.Name:  gw.Mock,
+			},
+			Logger: logger,
+			State:  state,
+		}
+
+		remoteSourceStr := fmt.Sprintf("emulator://%s.%s", serviceAddress.String(), tests.ContractHelloString.Name)
+		err := di.Add(remoteSourceStr, "")
+		assert.NoError(t, err, "Failed to install dependencies")
+
+		filePath := fmt.Sprintf("imports/%s/%s", serviceAddress.String(), tests.ContractHelloString.Name)
 		fileContent, err := state.ReaderWriter().ReadFile(filePath)
 		assert.NoError(t, err, "Failed to read generated file")
 		assert.NotNil(t, fileContent)
