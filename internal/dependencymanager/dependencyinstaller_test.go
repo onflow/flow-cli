@@ -59,12 +59,12 @@ func TestDependencyInstallerInstall(t *testing.T) {
 		gw.GetAccount.Run(func(args mock.Arguments) {
 			addr := args.Get(0).(flow.Address)
 			assert.Equal(t, addr.String(), serviceAcc.Address.String())
-			racc := tests.NewAccountWithAddress(addr.String())
-			racc.Contracts = map[string][]byte{
+			acc := tests.NewAccountWithAddress(addr.String())
+			acc.Contracts = map[string][]byte{
 				tests.ContractHelloString.Name: tests.ContractHelloString.Source,
 			}
 
-			gw.GetAccount.Return(racc, nil)
+			gw.GetAccount.Return(acc, nil)
 		})
 
 		di := &DependencyInstaller{
