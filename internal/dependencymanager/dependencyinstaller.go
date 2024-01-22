@@ -76,7 +76,7 @@ func NewDependencyInstaller(logger output.Logger, state *flowkit.State) *Depende
 	}
 }
 
-func (di *DependencyInstaller) install() error {
+func (di *DependencyInstaller) Install() error {
 	for _, dependency := range *di.State.Dependencies() {
 		if err := di.processDependency(dependency); err != nil {
 			di.Logger.Error(fmt.Sprintf("Error processing dependency: %v", err))
@@ -86,7 +86,7 @@ func (di *DependencyInstaller) install() error {
 	return nil
 }
 
-func (di *DependencyInstaller) add(depRemoteSource, customName string) error {
+func (di *DependencyInstaller) Add(depRemoteSource, customName string) error {
 	depNetwork, depAddress, depContractName, err := config.ParseRemoteSourceString(depRemoteSource)
 	if err != nil {
 		return fmt.Errorf("error parsing remote source: %w", err)

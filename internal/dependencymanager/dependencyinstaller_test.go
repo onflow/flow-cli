@@ -77,7 +77,7 @@ func TestDependencyInstallerInstall(t *testing.T) {
 			State:  state,
 		}
 
-		err := di.install()
+		err := di.Install()
 		assert.NoError(t, err, "Failed to install dependencies")
 
 		filePath := fmt.Sprintf("imports/%s/Hello", serviceAddress.String())

@@ -51,7 +51,7 @@ func install(
 	logger.Info("🔄 Installing dependencies from flow.json...")
 
 	installer := NewDependencyInstaller(logger, state)
-	if err := installer.install(); err != nil {
+	if err := installer.Install(); err != nil {
 		logger.Error(fmt.Sprintf("Error: %v", err))
 		return nil, err
 	}
