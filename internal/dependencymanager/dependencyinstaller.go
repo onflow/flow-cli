@@ -47,6 +47,7 @@ type DependencyInstaller struct {
 	Mutex    sync.Mutex
 }
 
+// NewDependencyInstaller creates a new instance of DependencyInstaller
 func NewDependencyInstaller(logger output.Logger, state *flowkit.State) *DependencyInstaller {
 	emulatorGateway, err := gateway.NewGrpcGateway(config.EmulatorNetwork)
 	if err != nil {
@@ -76,6 +77,7 @@ func NewDependencyInstaller(logger output.Logger, state *flowkit.State) *Depende
 	}
 }
 
+// Install processes all the dependencies in the state and installs them and any dependencies they have
 func (di *DependencyInstaller) Install() error {
 	for _, dependency := range *di.State.Dependencies() {
 		if err := di.processDependency(dependency); err != nil {
@@ -86,6 +88,7 @@ func (di *DependencyInstaller) Install() error {
 	return nil
 }
 
+// Add processes a single dependency and installs it and any dependencies it has, as well as adding it to the state
 func (di *DependencyInstaller) Add(depRemoteSource, customName string) error {
 	depNetwork, depAddress, depContractName, err := config.ParseRemoteSourceString(depRemoteSource)
 	if err != nil {
