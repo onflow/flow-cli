@@ -105,7 +105,6 @@ func run(
 	testFiles := make(map[string][]byte, 0)
 	for _, filename := range args {
 		code, err := state.ReadFile(filename)
-
 		if err != nil {
 			return nil, fmt.Errorf("error loading script file: %w", err)
 		}
@@ -153,7 +152,7 @@ func testCode(
 
 	var coverageReport *runtime.CoverageReport
 	if flags.Cover {
-		coverageReport = runtime.NewCoverageReport()
+		coverageReport = state.CreateCoverageReport("testing")
 		if flags.CoverCode == contractsCoverCode {
 			coverageReport.WithLocationFilter(
 				func(location common.Location) bool {
@@ -179,17 +178,11 @@ func testCode(
 
 	contractsConfig := *state.Contracts()
 	contracts := make(map[string]common.Address, len(contractsConfig))
-	locationMappings := make(map[string]string, len(contractsConfig))
 	for _, contract := range contractsConfig {
 		alias := contract.Aliases.ByNetwork("testing")
 		if alias != nil {
 			contracts[contract.Name] = common.Address(alias.Address)
-			locationMappings[contract.Name] = contract.Location
 		}
-	}
-
-	if coverageReport != nil {
-		coverageReport.WithLocationMappings(locationMappings)
 	}
 
 	testResults := make(map[string]cdcTests.Results, 0)
@@ -246,7 +239,6 @@ func importResolver(scriptPath string, state *flowkit.State) cdcTests.ImportReso
 	}
 
 	return func(location common.Location) (string, error) {
-
 		contract := config.Contract{}
 
 		switch location := location.(type) {
