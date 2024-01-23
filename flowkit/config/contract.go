@@ -113,15 +113,23 @@ func (c *Contracts) Remove(name string) error {
 }
 
 const (
-	NetworkEmulator = "emulator"
-	NetworkTestnet  = "testnet"
-	NetworkMainnet  = "mainnet"
+	networkEmulator = "emulator"
+	networkTestnet  = "testnet"
+	networkMainnet  = "mainnet"
 )
 
+func supportedNetworks() []string {
+	return []string{
+		networkEmulator,
+		networkTestnet,
+		networkMainnet,
+	}
+}
+
 var networkToChainID = map[string]flowGo.ChainID{
-	NetworkEmulator: flowGo.Emulator,
-	NetworkTestnet:  flowGo.Testnet,
-	NetworkMainnet:  flowGo.Mainnet,
+	networkEmulator: flowGo.Emulator,
+	networkTestnet:  flowGo.Testnet,
+	networkMainnet:  flowGo.Mainnet,
 }
 
 func isCoreContract(networkName, contractName, contractAddress string) bool {
@@ -154,7 +162,7 @@ func (c *Contracts) AddDependencyAsContract(dependency Dependency, networkName s
 
 	// If core contract found by name and address matches, then use all core contract aliases across networks
 	if isCoreContract(networkName, dependency.RemoteSource.ContractName, dependency.RemoteSource.Address.String()) {
-		for _, networkStr := range []string{NetworkEmulator, NetworkTestnet, NetworkMainnet} {
+		for _, networkStr := range supportedNetworks() {
 			coreContract := getCoreContractByName(networkStr, dependency.RemoteSource.ContractName)
 			if coreContract != nil {
 				aliases = append(aliases, Alias{
