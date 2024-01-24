@@ -233,11 +233,11 @@ func (di *DependencyInstaller) handleFileSystem(contractAddr, contractName, cont
 
 func (di *DependencyInstaller) handleFoundContract(networkName, contractAddr, assignedName, contractName string, program *project.Program) error {
 	hash := sha256.New()
-	hash.Write(program.DevelopmentCode())
+	hash.Write(program.CodeWithUnprocessedImports())
 	originalContractDataHash := hex.EncodeToString(hash.Sum(nil))
 
 	program.ConvertImports()
-	contractData := string(program.DevelopmentCode())
+	contractData := string(program.CodeWithUnprocessedImports())
 
 	dependency := di.State.Dependencies().ByName(assignedName)
 

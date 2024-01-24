@@ -29,11 +29,11 @@ import (
 )
 
 type Program struct {
-	code            []byte
-	args            []cadence.Value
-	location        string
-	astProgram      *ast.Program
-	developmentCode []byte
+	code                       []byte
+	args                       []cadence.Value
+	location                   string
+	astProgram                 *ast.Program
+	codeWithUnprocessedImports []byte
 }
 
 func NewProgram(code []byte, args []cadence.Value, location string) (*Program, error) {
@@ -43,11 +43,11 @@ func NewProgram(code []byte, args []cadence.Value, location string) (*Program, e
 	}
 
 	return &Program{
-		code:            code,
-		args:            args,
-		location:        location,
-		astProgram:      astProgram,
-		developmentCode: code, // has converted import syntax e.g. 'import "Foo"'
+		code:                       code,
+		args:                       args,
+		location:                   location,
+		astProgram:                 astProgram,
+		codeWithUnprocessedImports: code, // has converted import syntax e.g. 'import "Foo"'
 	}, nil
 }
 
@@ -111,8 +111,8 @@ func (p *Program) Code() []byte {
 	return p.code
 }
 
-func (p *Program) DevelopmentCode() []byte {
-	return p.developmentCode
+func (p *Program) CodeWithUnprocessedImports() []byte {
+	return p.codeWithUnprocessedImports
 }
 
 func (p *Program) Name() (string, error) {
@@ -141,7 +141,7 @@ func (p *Program) ConvertImports() {
 	addressImportRegex := regexp.MustCompile(`import\s+(\w+)\s+from\s+0x[0-9a-fA-F]+`)
 	modifiedCode := addressImportRegex.ReplaceAllString(code, `import "$1"`)
 
-	p.developmentCode = []byte(modifiedCode)
+	p.codeWithUnprocessedImports = []byte(modifiedCode)
 }
 
 func (p *Program) reload() {

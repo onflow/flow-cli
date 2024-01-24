@@ -210,7 +210,7 @@ func TestProgram(t *testing.T) {
 
 		program.ConvertImports()
 
-		assert.Equal(t, string(expected), string(program.DevelopmentCode()))
+		assert.Equal(t, string(expected), string(program.CodeWithUnprocessedImports()))
 	})
 
 }
