@@ -1450,8 +1450,6 @@ github.com/onflow/cadence-tools/lint v0.14.2-0.20231218234314-e73ac82193b0 h1:5U
 github.com/onflow/cadence-tools/lint v0.14.2-0.20231218234314-e73ac82193b0/go.mod h1:uCqzKihZstub2FcI4z+pZluNoiJF43lorA34TbIpWNc=
 github.com/onflow/cadence-tools/test v0.14.6-0.20231218234314-e73ac82193b0 h1:zOCm0mON4Emih2nsOkmIPqFn9pEAjkWOhxv2eQfqS4Q=
 github.com/onflow/cadence-tools/test v0.14.6-0.20231218234314-e73ac82193b0/go.mod h1:7YEToMoGKi0Dj+vSZKPaVn80HwJZYrrzwzCwgw9Pirw=
-github.com/onflow/fcl-dev-wallet v0.7.4 h1:vI6t3U0AO88R/Iitn5KsnniSpbN9Lqsqwvi9EJT4C0k=
-github.com/onflow/fcl-dev-wallet v0.7.4/go.mod h1:kc42jkiuoPJmxMRFjfbRO9XvnR/3XLheaOerxVMDTiw=
 github.com/onflow/fcl-dev-wallet v0.8.0-stable-cadence.1 h1:IqdUzdqFCSW0klWmA3J9c17ZyQTab9SWcWSLouX6o0Q=
 github.com/onflow/fcl-dev-wallet v0.8.0-stable-cadence.1/go.mod h1:kc42jkiuoPJmxMRFjfbRO9XvnR/3XLheaOerxVMDTiw=
 github.com/onflow/flixkit-go v1.1.0 h1:yju2lotk2LQBXUwb0rZeOtVbHW2KVSzzRRu/3rPtzok=
