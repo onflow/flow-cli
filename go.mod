@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	github.com/dukex/mixpanel v1.0.1
-	github.com/getsentry/sentry-go v0.25.0
+	github.com/getsentry/sentry-go v0.26.0
 	github.com/go-git/go-git/v5 v5.11.0
 	github.com/gosuri/uilive v0.0.4
 	github.com/manifoldco/promptui v0.9.0
@@ -12,12 +12,13 @@ require (
 	github.com/onflow/cadence-tools/languageserver v0.33.4-0.20231219175757-0bc75e6b5d35
 	github.com/onflow/cadence-tools/test v0.14.6-0.20231218234314-e73ac82193b0
 	github.com/onflow/fcl-dev-wallet v0.7.4
-	github.com/onflow/flixkit-go v1.0.1-0.20231219224839-06f824c2a16e
+	github.com/onflow/flixkit-go v1.1.0
 	github.com/onflow/flow-cli/flowkit v1.8.1-0.20231219002530-719e6b55f35a
-	github.com/onflow/flow-core-contracts/lib/go/templates v0.15.1-0.20231212203043-37cbe453d425
+	github.com/onflow/flow-core-contracts/lib/go/templates v1.2.4-0.20231016154253-a00dbf7c061f
 	github.com/onflow/flow-emulator v0.59.1-0.20231218185945-9116c416533f
 	github.com/onflow/flow-go-sdk v0.44.0-stable-cadence.2
 	github.com/onflowser/flowser/v3 v3.1.3
+	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
 	github.com/pkg/errors v0.9.1
 	github.com/psiemens/sconfig v0.1.0
 	github.com/radovskyb/watcher v1.0.7
@@ -27,7 +28,7 @@ require (
 	github.com/spf13/viper v1.16.0
 	github.com/stretchr/testify v1.8.4
 	golang.org/x/exp v0.0.0-20230626212559-97b1e661b5df
-	google.golang.org/grpc v1.60.0
+	google.golang.org/grpc v1.60.1
 )
 
 require (
@@ -87,6 +88,7 @@ require (
 	github.com/go-ole/go-ole v1.2.6 // indirect
 	github.com/go-redis/redis/v8 v8.11.5 // indirect
 	github.com/go-stack/stack v1.8.1 // indirect
+	github.com/gobwas/ws v1.3.0 // indirect
 	github.com/gofrs/flock v0.8.1 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/glog v1.1.2 // indirect
@@ -166,7 +168,7 @@ require (
 	github.com/olekukonko/tablewriter v0.0.5 // indirect
 	github.com/onflow/atree v0.6.1-0.20230711151834-86040b30171f // indirect
 	github.com/onflow/cadence-tools/lint v0.14.2-0.20231218234314-e73ac82193b0 // indirect
-	github.com/onflow/flow-core-contracts/lib/go/contracts v0.15.1-0.20231212203043-37cbe453d425 // indirect
+	github.com/onflow/flow-core-contracts/lib/go/contracts v1.2.4-0.20231016154253-a00dbf7c061f // indirect
 	github.com/onflow/flow-ft/lib/go/contracts v0.7.1-0.20231212194336-a2802ba36596 // indirect
 	github.com/onflow/flow-go v0.32.4-0.20231214190912-4c4527a42fb0 // indirect
 	github.com/onflow/flow-go/crypto v0.25.0 // indirect

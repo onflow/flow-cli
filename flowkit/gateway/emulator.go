@@ -141,14 +141,20 @@ func (g *EmulatorGateway) GetTransaction(id flow.Identifier) (*flow.Transaction,
 	return transaction, nil
 }
 
-func (g *EmulatorGateway) GetTransactionResultsByBlockID(_ flow.Identifier) ([]*flow.TransactionResult, error) {
-	// TODO: implement
-	panic("GetTransactionResultsByBlockID not implemented")
+func (g *EmulatorGateway) GetTransactionResultsByBlockID(id flow.Identifier) ([]*flow.TransactionResult, error) {
+	txr, err := g.adapter.GetTransactionResultsByBlockID(g.ctx, id)
+	if err != nil {
+		return nil, UnwrapStatusError(err)
+	}
+	return txr, nil
 }
 
-func (g *EmulatorGateway) GetTransactionsByBlockID(_ flow.Identifier) ([]*flow.Transaction, error) {
-	// TODO: implement
-	panic("GetTransactionResultsByBlockID not implemented")
+func (g *EmulatorGateway) GetTransactionsByBlockID(id flow.Identifier) ([]*flow.Transaction, error) {
+	txr, err := g.adapter.GetTransactionsByBlockID(g.ctx, id)
+	if err != nil {
+		return nil, UnwrapStatusError(err)
+	}
+	return txr, nil
 }
 
 func (g *EmulatorGateway) Ping() error {

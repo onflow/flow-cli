@@ -54,6 +54,14 @@ func InitFlags(cmd *cobra.Command) {
 	)
 
 	cmd.PersistentFlags().StringVarP(
+		&Flags.Format,
+		"format",
+		"",
+		Flags.Format,
+		"Format result values",
+	)
+
+	cmd.PersistentFlags().StringVarP(
 		&Flags.Host,
 		"host",
 		"",
