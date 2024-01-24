@@ -34,8 +34,9 @@ var installFlags = installFlagsCollection{}
 
 var installCommand = &command.Command{
 	Cmd: &cobra.Command{
-		Use:   "install",
-		Short: "Install contract and dependencies.",
+		Use:     "install",
+		Short:   "Install contract and dependencies.",
+		Example: "flow dependencies install",
 	},
 	Flags: &installFlags,
 	RunS:  install,

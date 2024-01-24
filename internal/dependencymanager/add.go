@@ -36,9 +36,10 @@ var addFlags = addFlagsCollection{}
 
 var addCommand = &command.Command{
 	Cmd: &cobra.Command{
-		Use:   "add",
-		Short: "Add a single contract and its dependencies.",
-		Args:  cobra.ExactArgs(1),
+		Use:     "add <remote source string>",
+		Short:   "Add a single contract and its dependencies.",
+		Example: "flow dependencies add testnet://0afe396ebc8eee65.FlowToken",
+		Args:    cobra.ExactArgs(1),
 	},
 	Flags: &addFlags,
 	RunS:  add,
