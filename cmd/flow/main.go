@@ -123,10 +123,6 @@ func main() {
 
 	command.InitFlags(cmd)
 	cmd.AddGroup(&cobra.Group{
-		ID:    "manager",
-		Title: "🔗 Contract Manager",
-	})
-	cmd.AddGroup(&cobra.Group{
 		ID:    "super",
 		Title: "🔥 Super Commands",
 	})
@@ -149,6 +145,10 @@ func main() {
 	cmd.AddGroup(&cobra.Group{
 		ID:    "security",
 		Title: "🔒 Flow Security",
+	})
+	cmd.AddGroup(&cobra.Group{
+		ID:    "manager",
+		Title: "🔗 Contract Manager",
 	})
 
 	cmd.SetUsageTemplate(command.UsageTemplate)
