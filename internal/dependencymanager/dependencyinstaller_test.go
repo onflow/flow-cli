@@ -80,7 +80,7 @@ func TestDependencyInstallerInstall(t *testing.T) {
 		err := di.Install()
 		assert.NoError(t, err, "Failed to install dependencies")
 
-		filePath := fmt.Sprintf("imports/%s/%s", serviceAddress.String(), tests.ContractHelloString.Name)
+		filePath := fmt.Sprintf("imports/%s/%s.cdc", serviceAddress.String(), tests.ContractHelloString.Name)
 		fileContent, err := state.ReaderWriter().ReadFile(filePath)
 		assert.NoError(t, err, "Failed to read generated file")
 		assert.NotNil(t, fileContent)
@@ -123,7 +123,7 @@ func TestDependencyInstallerAdd(t *testing.T) {
 		err := di.Add(remoteSourceStr, "")
 		assert.NoError(t, err, "Failed to install dependencies")
 
-		filePath := fmt.Sprintf("imports/%s/%s", serviceAddress.String(), tests.ContractHelloString.Name)
+		filePath := fmt.Sprintf("imports/%s/%s.cdc", serviceAddress.String(), tests.ContractHelloString.Name)
 		fileContent, err := state.ReaderWriter().ReadFile(filePath)
 		assert.NoError(t, err, "Failed to read generated file")
 		assert.NotNil(t, fileContent)

@@ -192,7 +192,8 @@ func (di *DependencyInstaller) fetchDependencies(networkName string, address flo
 }
 
 func (di *DependencyInstaller) contractFileExists(address, contractName string) bool {
-	path := filepath.Join("imports", address, contractName)
+	fileName := fmt.Sprintf("%s.cdc", contractName)
+	path := filepath.Join("imports", address, fileName)
 
 	_, err := di.State.ReaderWriter().Stat(path)
 
@@ -200,7 +201,8 @@ func (di *DependencyInstaller) contractFileExists(address, contractName string) 
 }
 
 func (di *DependencyInstaller) createContractFile(address, contractName, data string) error {
-	path := filepath.Join("imports", address, contractName)
+	fileName := fmt.Sprintf("%s.cdc", contractName)
+	path := filepath.Join("imports", address, fileName)
 	dir := filepath.Dir(path)
 
 	if err := di.State.ReaderWriter().MkdirAll(dir, 0755); err != nil {
