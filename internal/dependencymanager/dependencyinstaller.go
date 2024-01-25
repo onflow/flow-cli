@@ -180,11 +180,11 @@ func (di *DependencyInstaller) fetchDependencies(networkName string, address flo
 				}
 			}
 		}
+	}
 
-		if !found {
-			errMsg := fmt.Sprintf("contract %s not found for account %s on network %s", contractName, address, networkName)
-			di.Logger.Error(errMsg)
-		}
+	if !found {
+		errMsg := fmt.Sprintf("contract %s not found for account %s on network %s", contractName, address, networkName)
+		di.Logger.Error(errMsg)
 	}
 
 	wg.Wait()
