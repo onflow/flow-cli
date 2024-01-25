@@ -187,7 +187,7 @@ func (c *Contracts) AddDependencyAsContract(dependency Dependency, networkName s
 
 	contract := Contract{
 		Name:         dependency.Name,
-		Location:     filepath.ToSlash(fmt.Sprintf("%s/%s/%s", dependencyManagerDirectory, dependency.RemoteSource.Address, dependency.RemoteSource.ContractName)),
+		Location:     filepath.ToSlash(fmt.Sprintf("%s/%s/%s.cdc", dependencyManagerDirectory, dependency.RemoteSource.Address, dependency.RemoteSource.ContractName)),
 		Aliases:      aliases,
 		IsDependency: true,
 	}
