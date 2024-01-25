@@ -234,7 +234,7 @@
     },
     "jsonDependencyExtended": {
       "properties": {
-        "remoteSource": {
+        "source": {
           "type": "string"
         },
         "version": {
@@ -252,7 +252,7 @@
       "additionalProperties": false,
       "type": "object",
       "required": [
-        "remoteSource",
+        "source",
         "version",
         "aliases"
       ]

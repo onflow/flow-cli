@@ -39,29 +39,29 @@ func (j jsonDependencies) transformToConfig() (config.Dependencies, error) {
 		var dep config.Dependency
 
 		if dependency.Simple != "" {
-			depNetwork, depAddress, depContractName, err := config.ParseRemoteSourceString(dependency.Simple)
+			depNetwork, depAddress, depContractName, err := config.ParseSourceString(dependency.Simple)
 			if err != nil {
-				return nil, fmt.Errorf("error parsing remote source for dependency %s: %w", dependencyName, err)
+				return nil, fmt.Errorf("error parsing source for dependency %s: %w", dependencyName, err)
 			}
 
 			dep = config.Dependency{
 				Name: dependencyName,
-				RemoteSource: config.RemoteSource{
+				Source: config.Source{
 					NetworkName:  depNetwork,
 					Address:      flow.HexToAddress(depAddress),
 					ContractName: depContractName,
 				},
 			}
 		} else {
-			depNetwork, depAddress, depContractName, err := config.ParseRemoteSourceString(dependency.Extended.RemoteSource)
+			depNetwork, depAddress, depContractName, err := config.ParseSourceString(dependency.Extended.Source)
 			if err != nil {
-				return nil, fmt.Errorf("error parsing remote source for dependency %s: %w", dependencyName, err)
+				return nil, fmt.Errorf("error parsing source for dependency %s: %w", dependencyName, err)
 			}
 
 			dep = config.Dependency{
 				Name:    dependencyName,
 				Version: dependency.Extended.Version,
-				RemoteSource: config.RemoteSource{
+				Source: config.Source{
 					NetworkName:  depNetwork,
 					Address:      flow.HexToAddress(depAddress),
 					ContractName: depContractName,
@@ -99,9 +99,9 @@ func transformDependenciesToJSON(configDependencies config.Dependencies, configC
 
 		jsonDeps[dep.Name] = jsonDependency{
 			Extended: jsonDependencyExtended{
-				RemoteSource: buildRemoteSourceString(dep.RemoteSource),
-				Version:      dep.Version,
-				Aliases:      aliases,
+				Source:  buildSourceString(dep.Source),
+				Version: dep.Version,
+				Aliases: aliases,
 			},
 		}
 	}
@@ -109,23 +109,23 @@ func transformDependenciesToJSON(configDependencies config.Dependencies, configC
 	return jsonDeps
 }
 
-func buildRemoteSourceString(remoteSource config.RemoteSource) string {
+func buildSourceString(source config.Source) string {
 	var builder strings.Builder
 
-	builder.WriteString(remoteSource.NetworkName)
+	builder.WriteString(source.NetworkName)
 	builder.WriteString("://")
-	builder.WriteString(remoteSource.Address.String())
+	builder.WriteString(source.Address.String())
 	builder.WriteString(".")
-	builder.WriteString(remoteSource.ContractName)
+	builder.WriteString(source.ContractName)
 
 	return builder.String()
 }
 
 // jsonDependencyExtended for json parsing advanced config.
 type jsonDependencyExtended struct {
-	RemoteSource string            `json:"remoteSource"`
-	Version      string            `json:"version"`
-	Aliases      map[string]string `json:"aliases"`
+	Source  string            `json:"source"`
+	Version string            `json:"version"`
+	Aliases map[string]string `json:"aliases"`
 }
 
 // jsonDependency structure for json parsing.
@@ -135,13 +135,13 @@ type jsonDependency struct {
 }
 
 func (j *jsonDependency) UnmarshalJSON(b []byte) error {
-	var remoteSource string
+	var source string
 	var extendedFormat jsonDependencyExtended
 
 	// simple
-	err := json.Unmarshal(b, &remoteSource)
+	err := json.Unmarshal(b, &source)
 	if err == nil {
-		j.Simple = remoteSource
+		j.Simple = source
 		return nil
 	}
 

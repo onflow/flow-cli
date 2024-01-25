@@ -163,9 +163,9 @@ func (c *Contracts) AddDependencyAsContract(dependency Dependency, networkName s
 	var aliases []Alias
 
 	// If core contract found by name and address matches, then use all core contract aliases across networks
-	if isCoreContract(networkName, dependency.RemoteSource.ContractName, dependency.RemoteSource.Address.String()) {
+	if isCoreContract(networkName, dependency.Source.ContractName, dependency.Source.Address.String()) {
 		for _, networkStr := range supportedNetworks() {
-			coreContract := getCoreContractByName(networkStr, dependency.RemoteSource.ContractName)
+			coreContract := getCoreContractByName(networkStr, dependency.Source.ContractName)
 			if coreContract != nil {
 				aliases = append(aliases, Alias{
 					Network: networkStr,
@@ -177,17 +177,17 @@ func (c *Contracts) AddDependencyAsContract(dependency Dependency, networkName s
 		aliases = append(aliases, dependency.Aliases...)
 	}
 
-	// If no core contract match, then use the address in remoteSource as alias
+	// If no core contract match, then use the address in source as alias
 	if len(aliases) == 0 {
 		aliases = append(aliases, Alias{
-			Network: dependency.RemoteSource.NetworkName,
-			Address: dependency.RemoteSource.Address,
+			Network: dependency.Source.NetworkName,
+			Address: dependency.Source.Address,
 		})
 	}
 
 	contract := Contract{
 		Name:         dependency.Name,
-		Location:     filepath.ToSlash(fmt.Sprintf("%s/%s/%s.cdc", dependencyManagerDirectory, dependency.RemoteSource.Address, dependency.RemoteSource.ContractName)),
+		Location:     filepath.ToSlash(fmt.Sprintf("%s/%s/%s.cdc", dependencyManagerDirectory, dependency.Source.Address, dependency.Source.ContractName)),
 		Aliases:      aliases,
 		IsDependency: true,
 	}

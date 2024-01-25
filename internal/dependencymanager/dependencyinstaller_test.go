@@ -44,7 +44,7 @@ func TestDependencyInstallerInstall(t *testing.T) {
 
 	dep := config.Dependency{
 		Name: "Hello",
-		RemoteSource: config.RemoteSource{
+		Source: config.Source{
 			NetworkName:  "emulator",
 			Address:      serviceAddress,
 			ContractName: "Hello",
@@ -119,8 +119,8 @@ func TestDependencyInstallerAdd(t *testing.T) {
 			State:  state,
 		}
 
-		remoteSourceStr := fmt.Sprintf("emulator://%s.%s", serviceAddress.String(), tests.ContractHelloString.Name)
-		err := di.Add(remoteSourceStr, "")
+		sourceStr := fmt.Sprintf("emulator://%s.%s", serviceAddress.String(), tests.ContractHelloString.Name)
+		err := di.Add(sourceStr, "")
 		assert.NoError(t, err, "Failed to install dependencies")
 
 		filePath := fmt.Sprintf("imports/%s/%s.cdc", serviceAddress.String(), tests.ContractHelloString.Name)

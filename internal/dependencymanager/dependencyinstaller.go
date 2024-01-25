@@ -89,10 +89,10 @@ func (di *DependencyInstaller) Install() error {
 }
 
 // Add processes a single dependency and installs it and any dependencies it has, as well as adding it to the state
-func (di *DependencyInstaller) Add(depRemoteSource, customName string) error {
-	depNetwork, depAddress, depContractName, err := config.ParseRemoteSourceString(depRemoteSource)
+func (di *DependencyInstaller) Add(depSource, customName string) error {
+	depNetwork, depAddress, depContractName, err := config.ParseSourceString(depSource)
 	if err != nil {
-		return fmt.Errorf("error parsing remote source: %w", err)
+		return fmt.Errorf("error parsing source: %w", err)
 	}
 
 	name := depContractName
@@ -103,7 +103,7 @@ func (di *DependencyInstaller) Add(depRemoteSource, customName string) error {
 
 	dep := config.Dependency{
 		Name: name,
-		RemoteSource: config.RemoteSource{
+		Source: config.Source{
 			NetworkName:  depNetwork,
 			Address:      flowsdk.HexToAddress(depAddress),
 			ContractName: depContractName,
@@ -118,8 +118,8 @@ func (di *DependencyInstaller) Add(depRemoteSource, customName string) error {
 }
 
 func (di *DependencyInstaller) processDependency(dependency config.Dependency) error {
-	depAddress := flowsdk.HexToAddress(dependency.RemoteSource.Address.String())
-	return di.fetchDependencies(dependency.RemoteSource.NetworkName, depAddress, dependency.Name, dependency.RemoteSource.ContractName)
+	depAddress := flowsdk.HexToAddress(dependency.Source.Address.String())
+	return di.fetchDependencies(dependency.Source.NetworkName, depAddress, dependency.Name, dependency.Source.ContractName)
 }
 
 func (di *DependencyInstaller) fetchDependencies(networkName string, address flowsdk.Address, assignedName, contractName string) error {
@@ -251,7 +251,7 @@ func (di *DependencyInstaller) handleFoundContract(networkName, contractAddr, as
 	dependency := di.State.Dependencies().ByName(assignedName)
 
 	// If a dependency by this name already exists and its remote source network or address does not match, then give option to stop or continue
-	if dependency != nil && (dependency.RemoteSource.NetworkName != networkName || dependency.RemoteSource.Address.String() != contractAddr) {
+	if dependency != nil && (dependency.Source.NetworkName != networkName || dependency.Source.Address.String() != contractAddr) {
 		di.Logger.Info(fmt.Sprintf("🚫 A dependency named %s already exists with a different remote source. Please fix the conflict and retry.", assignedName))
 		os.Exit(0)
 		return nil
@@ -284,7 +284,7 @@ func (di *DependencyInstaller) handleFoundContract(networkName, contractAddr, as
 func (di *DependencyInstaller) updateState(networkName, contractAddress, assignedName, contractName, contractHash string) error {
 	dep := config.Dependency{
 		Name: assignedName,
-		RemoteSource: config.RemoteSource{
+		Source: config.Source{
 			NetworkName:  networkName,
 			Address:      flowsdk.HexToAddress(contractAddress),
 			ContractName: contractName,

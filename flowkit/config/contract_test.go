@@ -95,7 +95,7 @@ func TestContracts_AddDependencyAsContract(t *testing.T) {
 	contracts := Contracts{}
 	contracts.AddDependencyAsContract(Dependency{
 		Name: "testcontract",
-		RemoteSource: RemoteSource{
+		Source: Source{
 			NetworkName:  "testnet",
 			Address:      flow.HexToAddress("0x0000000000abcdef"),
 			ContractName: "TestContract",

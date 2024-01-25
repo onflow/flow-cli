@@ -25,7 +25,7 @@ import (
 	"github.com/onflow/flow-go-sdk"
 )
 
-func ParseRemoteSourceString(s string) (network, address, contractName string, err error) {
+func ParseSourceString(s string) (network, address, contractName string, err error) {
 	parts := strings.Split(s, "://")
 	if len(parts) != 2 {
 		return "", "", "", fmt.Errorf("invalid dependency source format: %s", s)
@@ -42,17 +42,17 @@ func ParseRemoteSourceString(s string) (network, address, contractName string, e
 	return network, address, contractName, nil
 }
 
-type RemoteSource struct {
+type Source struct {
 	NetworkName  string
 	Address      flow.Address
 	ContractName string
 }
 
 type Dependency struct {
-	Name         string
-	RemoteSource RemoteSource
-	Version      string
-	Aliases      Aliases
+	Name    string
+	Source  Source
+	Version string
+	Aliases Aliases
 }
 
 type Dependencies []Dependency
