@@ -260,7 +260,7 @@ func (di *DependencyInstaller) handleFoundContract(networkName, contractAddr, as
 	// Check if remote source version is different from local version
 	// If it is, ask if they want to update
 	// If no hash, ignore
-	if dependency != nil && dependency.Version != "" && dependency.Version != originalContractDataHash {
+	if dependency != nil && dependency.Hash != "" && dependency.Hash != originalContractDataHash {
 		msg := fmt.Sprintf("The latest version of %s is different from the one you have locally. Do you want to update it?", contractName)
 		if !util.GenericBoolPrompt(msg) {
 			return nil
@@ -289,7 +289,7 @@ func (di *DependencyInstaller) updateState(networkName, contractAddress, assigne
 			Address:      flowsdk.HexToAddress(contractAddress),
 			ContractName: contractName,
 		},
-		Version: contractHash,
+		Hash: contractHash,
 	}
 
 	isNewDep := di.State.Dependencies().ByName(dep.Name) == nil

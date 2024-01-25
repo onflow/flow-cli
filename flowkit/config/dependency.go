@@ -51,7 +51,7 @@ type Source struct {
 type Dependency struct {
 	Name    string
 	Source  Source
-	Version string
+	Hash    string
 	Aliases Aliases
 }
 

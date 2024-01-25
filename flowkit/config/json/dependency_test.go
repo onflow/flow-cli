@@ -53,7 +53,7 @@ func Test_TransformDependenciesToJSON(t *testing.T) {
 	bOut := []byte(`{
 		"HelloWorld": {
 			"source": "testnet://877931736ee77cff.HelloWorld",
-			"version": "",
+			"hash": "",
 			"aliases": {}
 		}
 	}`)
