@@ -148,7 +148,7 @@ func main() {
 	})
 	cmd.AddGroup(&cobra.Group{
 		ID:    "manager",
-		Title: "🔗 Contract Manager",
+		Title: "🔗 Dependency Manager",
 	})
 
 	cmd.SetUsageTemplate(command.UsageTemplate)
