@@ -48,20 +48,20 @@ type DependencyInstaller struct {
 }
 
 // NewDependencyInstaller creates a new instance of DependencyInstaller
-func NewDependencyInstaller(logger output.Logger, state *flowkit.State) *DependencyInstaller {
+func NewDependencyInstaller(logger output.Logger, state *flowkit.State) (*DependencyInstaller, error) {
 	emulatorGateway, err := gateway.NewGrpcGateway(config.EmulatorNetwork)
 	if err != nil {
-		logger.Error(fmt.Sprintf("Error creating emulator gateway: %v", err))
+		return nil, fmt.Errorf("error creating emulator gateway: %v", err)
 	}
 
 	testnetGateway, err := gateway.NewGrpcGateway(config.TestnetNetwork)
 	if err != nil {
-		logger.Error(fmt.Sprintf("Error creating testnet gateway: %v", err))
+		return nil, fmt.Errorf("error creating testnet gateway: %v", err)
 	}
 
 	mainnetGateway, err := gateway.NewGrpcGateway(config.MainnetNetwork)
 	if err != nil {
-		logger.Error(fmt.Sprintf("Error creating mainnet gateway: %v", err))
+		return nil, fmt.Errorf("error creating mainnet gateway: %v", err)
 	}
 
 	gateways := map[string]gateway.Gateway{
@@ -74,7 +74,7 @@ func NewDependencyInstaller(logger output.Logger, state *flowkit.State) *Depende
 		Gateways: gateways,
 		Logger:   logger,
 		State:    state,
-	}
+	}, nil
 }
 
 // Install processes all the dependencies in the state and installs them and any dependencies they have
