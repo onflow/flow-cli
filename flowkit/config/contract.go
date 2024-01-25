@@ -112,6 +112,8 @@ func (c *Contracts) Remove(name string) error {
 	return nil
 }
 
+const dependencyManagerDirectory = "imports"
+
 const (
 	networkEmulator = "emulator"
 	networkTestnet  = "testnet"
@@ -185,7 +187,7 @@ func (c *Contracts) AddDependencyAsContract(dependency Dependency, networkName s
 
 	contract := Contract{
 		Name:         dependency.Name,
-		Location:     filepath.ToSlash(fmt.Sprintf("imports/%s/%s", dependency.RemoteSource.Address, dependency.RemoteSource.ContractName)),
+		Location:     filepath.ToSlash(fmt.Sprintf("%s/%s/%s", dependencyManagerDirectory, dependency.RemoteSource.Address, dependency.RemoteSource.ContractName)),
 		Aliases:      aliases,
 		IsDependency: true,
 	}
