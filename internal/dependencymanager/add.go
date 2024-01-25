@@ -67,7 +67,7 @@ func add(
 		return nil, err
 	}
 
-	logger.Info("✅  Dependencies installed. Check your flow.json")
+	logger.Info("✅  Dependencies installation complete. Check your flow.json")
 
 	return nil, nil
 }

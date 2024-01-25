@@ -142,6 +142,8 @@ func (di *DependencyInstaller) fetchDependencies(networkName string, address flo
 	maxGoroutines := 5
 	semaphore := make(chan struct{}, maxGoroutines)
 
+	found := false
+
 	for _, contract := range account.Contracts {
 		program, err := project.NewProgram(contract, nil, "")
 		if err != nil {
@@ -154,6 +156,8 @@ func (di *DependencyInstaller) fetchDependencies(networkName string, address flo
 		}
 
 		if parsedContractName == contractName {
+			found = true
+
 			if err := di.handleFoundContract(networkName, address.String(), assignedName, parsedContractName, program); err != nil {
 				return fmt.Errorf("failed to handle found contract: %w", err)
 			}
@@ -175,6 +179,11 @@ func (di *DependencyInstaller) fetchDependencies(networkName string, address flo
 					}(flowsdk.HexToAddress(imp.Location.String()), imp.Identifiers[0].String())
 				}
 			}
+		}
+
+		if !found {
+			errMsg := fmt.Sprintf("contract %s not found for account %s on network %s", contractName, address, networkName)
+			di.Logger.Error(errMsg)
 		}
 	}
 
