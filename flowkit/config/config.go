@@ -33,11 +33,12 @@ import (
 // Accounts defines Flow accounts and their addresses, private key and more properties
 // Deployments describes which contracts should be deployed to which accounts
 type Config struct {
-	Emulators   Emulators
-	Contracts   Contracts
-	Networks    Networks
-	Accounts    Accounts
-	Deployments Deployments
+	Emulators    Emulators
+	Contracts    Contracts
+	Dependencies Dependencies
+	Networks     Networks
+	Accounts     Accounts
+	Deployments  Deployments
 }
 
 type KeyType string

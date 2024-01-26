@@ -29,10 +29,11 @@ import (
 )
 
 type Program struct {
-	code       []byte
-	args       []cadence.Value
-	location   string
-	astProgram *ast.Program
+	code                       []byte
+	args                       []cadence.Value
+	location                   string
+	astProgram                 *ast.Program
+	codeWithUnprocessedImports []byte
 }
 
 func NewProgram(code []byte, args []cadence.Value, location string) (*Program, error) {
@@ -42,15 +43,31 @@ func NewProgram(code []byte, args []cadence.Value, location string) (*Program, e
 	}
 
 	return &Program{
-		code:       code,
-		args:       args,
-		location:   location,
-		astProgram: astProgram,
+		code:                       code,
+		args:                       args,
+		location:                   location,
+		astProgram:                 astProgram,
+		codeWithUnprocessedImports: code, // has converted import syntax e.g. 'import "Foo"'
 	}, nil
 }
 
-// imports builds an array of all the import locations
-//
+func (p *Program) AddressImportDeclarations() []*ast.ImportDeclaration {
+	addressImports := make([]*ast.ImportDeclaration, 0)
+
+	for _, importDeclaration := range p.astProgram.ImportDeclarations() {
+		if len(importDeclaration.Identifiers) > 0 && len(importDeclaration.Location.String()) > 0 {
+			addressImports = append(addressImports, importDeclaration)
+		}
+	}
+
+	return addressImports
+}
+
+func (p *Program) HasAddressImports() bool {
+	return len(p.AddressImportDeclarations()) > 0
+}
+
+// Imports builds an array of all the import locations
 // It currently supports getting import locations as identifiers or as strings. Strings locations
 // can represent a file or an account name, whereas identifiers represent contract names.
 func (p *Program) imports() []string {
@@ -94,6 +111,10 @@ func (p *Program) Code() []byte {
 	return p.code
 }
 
+func (p *Program) CodeWithUnprocessedImports() []byte {
+	return p.codeWithUnprocessedImports
+}
+
 func (p *Program) Name() (string, error) {
 	if len(p.astProgram.CompositeDeclarations()) > 1 || len(p.astProgram.InterfaceDeclarations()) > 1 ||
 		len(p.astProgram.CompositeDeclarations())+len(p.astProgram.InterfaceDeclarations()) > 1 {
@@ -115,6 +136,14 @@ func (p *Program) Name() (string, error) {
 	return "", fmt.Errorf("unable to determine contract name")
 }
 
+func (p *Program) ConvertAddressImports() {
+	code := string(p.code)
+	addressImportRegex := regexp.MustCompile(`import\s+(\w+)\s+from\s+0x[0-9a-fA-F]+`)
+	modifiedCode := addressImportRegex.ReplaceAllString(code, `import "$1"`)
+
+	p.codeWithUnprocessedImports = []byte(modifiedCode)
+}
+
 func (p *Program) reload() {
 	astProgram, err := parser.ParseProgram(nil, p.code, parser.Config{})
 	if err != nil {
@@ -122,4 +151,5 @@ func (p *Program) reload() {
 	}
 
 	p.astProgram = astProgram
+	p.ConvertAddressImports()
 }

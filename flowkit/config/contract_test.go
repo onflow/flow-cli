@@ -90,3 +90,22 @@ func TestContracts_Remove_NotFound(t *testing.T) {
 	_, err = contracts.ByName("mycontract2")
 	assert.EqualError(t, err, "contract mycontract2 does not exist")
 }
+
+func TestContracts_AddDependencyAsContract(t *testing.T) {
+	contracts := Contracts{}
+	contracts.AddDependencyAsContract(Dependency{
+		Name: "testcontract",
+		Source: Source{
+			NetworkName:  "testnet",
+			Address:      flow.HexToAddress("0x0000000000abcdef"),
+			ContractName: "TestContract",
+		},
+	}, "testnet")
+
+	assert.Len(t, contracts, 1)
+
+	contract, err := contracts.ByName("testcontract")
+	assert.NoError(t, err)
+	assert.Equal(t, "imports/0000000000abcdef/TestContract.cdc", contract.Location)
+	assert.Len(t, contract.Aliases, 1)
+}
