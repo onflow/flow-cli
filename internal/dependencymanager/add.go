@@ -67,9 +67,9 @@ func add(
 		return nil, err
 	}
 
-	logger.Info("✅  Dependencies installation complete. Check your flow.json")
-	logger.Info("Make sure you add any dependencies you need to your 'deployments' section. You can do this with 'flow add config deployment'")
-	logger.Info("Note: core contracts do not need to be added to deployments. See this url for reference: https://github.com/onflow/flow-core-contracts")
+	logger.Info("✅  Dependency installation complete. Check your flow.json")
+	logger.Info("Ensure you add any required dependencies to your 'deployments' section. This can be done using the 'flow add config deployment' command.")
+	logger.Info("Note: Core contracts do not need to be added to deployments. For reference, see this URL: https://github.com/onflow/flow-core-contracts")
 
 	return nil, nil
 }
