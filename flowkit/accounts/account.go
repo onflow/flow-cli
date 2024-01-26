@@ -36,6 +36,11 @@ type Account struct {
 	Key     Key
 }
 
+// PrivateKeyFile returns the private key file name for an account.
+func PrivateKeyFile(name string) string {
+	return fmt.Sprintf("%s.pkey", name)
+}
+
 func FromConfig(conf *config.Config) (Accounts, error) {
 	var accounts Accounts
 	for _, accountConf := range conf.Accounts {
@@ -85,22 +90,35 @@ func toConfig(account Account) config.Account {
 	}
 }
 
-func NewEmulatorAccount(sigAlgo crypto.SignatureAlgorithm, hashAlgo crypto.HashAlgorithm) (*Account, error) {
+// defaultEmulatorPrivateKeyFile returns the default emulator private key file name.
+func defaultEmulatorPrivateKeyFile() string {
+	return PrivateKeyFile("emulator-account")
+}
+
+func NewEmulatorAccount(
+	rw config.ReaderWriter,
+	sigAlgo crypto.SignatureAlgorithm,
+	hashAlgo crypto.HashAlgorithm,
+) (*Account, error) {
 	seed := make([]byte, crypto.MinSeedLength)
 	_, err := rand.Read(seed)
 	if err != nil {
-		return nil, fmt.Errorf("failed to generate random seed: %v", err)
+		return nil, fmt.Errorf("failed to generate random seed: %w", err)
 	}
 
 	privateKey, err := crypto.GeneratePrivateKey(sigAlgo, seed)
 	if err != nil {
-		return nil, fmt.Errorf("failed to generate emulator service key: %v", err)
+		return nil, fmt.Errorf("failed to generate emulator service key: %w", err)
+	}
+
+	if err := rw.WriteFile(defaultEmulatorPrivateKeyFile(), []byte(privateKey.String()), 0644); err != nil {
+		return nil, fmt.Errorf("failed to write private key file: %w", err)
 	}
 
 	return &Account{
 		Name:    config.DefaultEmulator.ServiceAccount,
 		Address: flow.ServiceAddress(flow.Emulator),
-		Key:     NewHexKeyFromPrivateKey(0, hashAlgo, privateKey),
+		Key:     NewFileKey(defaultEmulatorPrivateKeyFile(), 0, sigAlgo, hashAlgo, rw),
 	}, nil
 }
 

@@ -51,7 +51,7 @@ func createInteractive(state *flowkit.State) (*accountResult, error) {
 	log := output.NewStdoutLogger(output.InfoLog)
 	name := util.AccountNamePrompt(state.Accounts().Names())
 	networkName, selectedNetwork := util.CreateAccountNetworkPrompt()
-	privateFile := fmt.Sprintf("%s.pkey", name)
+	privateFile := accounts.PrivateKeyFile(name)
 
 	// create new gateway based on chosen network
 	gw, err := gateway.NewGrpcGateway(selectedNetwork)
@@ -159,7 +159,7 @@ func createNetworkAccount(
 	return &accounts.Account{
 		Name:    name,
 		Address: *address[0],
-		Key:     accounts.NewFileKey(privateFile, 0, defaultSignAlgo, defaultHashAlgo),
+		Key:     accounts.NewFileKey(privateFile, 0, defaultSignAlgo, defaultHashAlgo, state.ReaderWriter()),
 	}, nil
 }
 
