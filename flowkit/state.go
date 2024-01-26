@@ -23,6 +23,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/onflow/cadence/runtime"
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/pkg/errors"
 	"golang.org/x/exp/slices"
@@ -47,6 +48,22 @@ type State struct {
 	confLoader   *config.Loader
 	readerWriter ReaderWriter
 	accounts     *accounts.Accounts
+}
+
+func (p *State) CreateCoverageReport(network string) *runtime.CoverageReport {
+	coverageReport := runtime.NewCoverageReport()
+	contractsConfig := *p.Contracts()
+	locationMappings := make(map[string]string, len(contractsConfig))
+	for _, contract := range contractsConfig {
+		alias := contract.Aliases.ByNetwork(network)
+		if alias != nil {
+			locationMappings[contract.Name] = contract.Location
+		}
+	}
+
+	coverageReport.WithLocationMappings(locationMappings)
+
+	return coverageReport
 }
 
 // ReaderWriter retrieve current file reader writer.
@@ -87,7 +104,6 @@ func (p *State) SaveEdited(paths []string) error {
 func (p *State) Save(path string) error {
 	p.conf.Accounts = accounts.ToConfig(*p.accounts)
 	err := p.confLoader.Save(p.conf, path)
-
 	if err != nil {
 		return fmt.Errorf("failed to save project configuration to: %s", path)
 	}
