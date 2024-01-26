@@ -237,7 +237,7 @@
         "source": {
           "type": "string"
         },
-        "version": {
+        "hash": {
           "type": "string"
         },
         "aliases": {
@@ -253,7 +253,7 @@
       "type": "object",
       "required": [
         "source",
-        "version",
+        "hash",
         "aliases"
       ]
     },
