@@ -26,11 +26,12 @@ import (
 // processorRun all pre-processors.
 func processorRun(raw []byte) ([]byte, error) {
 	type config struct {
-		Accounts    map[string]map[string]any `json:"accounts,omitempty"`
-		Contracts   any                       `json:"contracts,omitempty"`
-		Networks    any                       `json:"networks,omitempty"`
-		Deployments any                       `json:"deployments,omitempty"`
-		Emulators   any                       `json:"emulators,omitempty"`
+		Accounts     map[string]map[string]any `json:"accounts,omitempty"`
+		Contracts    any                       `json:"contracts,omitempty"`
+		Dependencies any                       `json:"dependencies,omitempty"`
+		Networks     any                       `json:"networks,omitempty"`
+		Deployments  any                       `json:"deployments,omitempty"`
+		Emulators    any                       `json:"emulators,omitempty"`
 	}
 
 	var conf config

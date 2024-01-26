@@ -38,6 +38,7 @@ type ReaderWriter interface {
 	ReadFile(source string) ([]byte, error)
 	WriteFile(filename string, data []byte, perm os.FileMode) error
 	MkdirAll(path string, perm os.FileMode) error
+	Stat(path string) (os.FileInfo, error)
 }
 
 // State manages the state for a Flow project.
@@ -107,6 +108,10 @@ func (p *State) Deployments() *config.Deployments {
 // Contracts get contracts configuration.
 func (p *State) Contracts() *config.Contracts {
 	return &p.conf.Contracts
+}
+
+func (p *State) Dependencies() *config.Dependencies {
+	return &p.conf.Dependencies
 }
 
 // Accounts get accounts.
