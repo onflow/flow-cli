@@ -36,7 +36,7 @@ var addFlags = addFlagsCollection{}
 
 var addCommand = &command.Command{
 	Cmd: &cobra.Command{
-		Use:     "add <remote source string>",
+		Use:     "add <source string>",
 		Short:   "Add a single contract and its dependencies.",
 		Example: "flow dependencies add testnet://0afe396ebc8eee65.FlowToken",
 		Args:    cobra.ExactArgs(1),
