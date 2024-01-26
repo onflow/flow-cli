@@ -245,7 +245,7 @@ func (di *DependencyInstaller) handleFoundContract(networkName, contractAddr, as
 	hash.Write(program.CodeWithUnprocessedImports())
 	originalContractDataHash := hex.EncodeToString(hash.Sum(nil))
 
-	program.ConvertImports()
+	program.ConvertAddressImports()
 	contractData := string(program.CodeWithUnprocessedImports())
 
 	dependency := di.State.Dependencies().ByName(assignedName)

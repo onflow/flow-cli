@@ -275,7 +275,7 @@ func (f *Flowkit) AddContract(
 		return flow.EmptyID, false, err
 	}
 
-	if program.HasPathImports() {
+	if program.HasImports() {
 		contracts, err := state.DeploymentContractsByNetwork(f.network)
 		if err != nil {
 			return flow.EmptyID, false, err
@@ -811,7 +811,7 @@ func (f *Flowkit) ExecuteScript(_ context.Context, script Script, query ScriptQu
 		return nil, err
 	}
 
-	if program.HasPathImports() {
+	if program.HasImports() {
 		contracts, err := state.DeploymentContractsByNetwork(f.network)
 		if err != nil {
 			return nil, err
@@ -921,7 +921,7 @@ func (f *Flowkit) BuildTransaction(
 		return nil, err
 	}
 
-	if program.HasPathImports() {
+	if program.HasImports() {
 		if f.network == config.EmptyNetwork {
 			return nil, fmt.Errorf("missing network, specify which network to use to resolve imports in transaction code")
 		}

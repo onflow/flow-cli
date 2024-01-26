@@ -70,7 +70,7 @@ func (p *Program) HasAddressImports() bool {
 // Imports builds an array of all the import locations
 // It currently supports getting import locations as identifiers or as strings. Strings locations
 // can represent a file or an account name, whereas identifiers represent contract names.
-func (p *Program) pathImports() []string {
+func (p *Program) imports() []string {
 	imports := make([]string, 0)
 
 	for _, importDeclaration := range p.astProgram.ImportDeclarations() {
@@ -84,8 +84,8 @@ func (p *Program) pathImports() []string {
 	return imports
 }
 
-func (p *Program) HasPathImports() bool {
-	return len(p.pathImports()) > 0
+func (p *Program) HasImports() bool {
+	return len(p.imports()) > 0
 }
 
 func (p *Program) replaceImport(from string, to string) *Program {
@@ -136,7 +136,7 @@ func (p *Program) Name() (string, error) {
 	return "", fmt.Errorf("unable to determine contract name")
 }
 
-func (p *Program) ConvertImports() {
+func (p *Program) ConvertAddressImports() {
 	code := string(p.code)
 	addressImportRegex := regexp.MustCompile(`import\s+(\w+)\s+from\s+0x[0-9a-fA-F]+`)
 	modifiedCode := addressImportRegex.ReplaceAllString(code, `import "$1"`)
@@ -151,5 +151,5 @@ func (p *Program) reload() {
 	}
 
 	p.astProgram = astProgram
-	p.ConvertImports()
+	p.ConvertAddressImports()
 }
