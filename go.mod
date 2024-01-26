@@ -177,7 +177,7 @@ require (
 	github.com/onflow/crypto v0.25.0 // indirect
 	github.com/onflow/flow-core-contracts/lib/go/contracts v1.2.4-0.20231016154253-a00dbf7c061f // indirect
 	github.com/onflow/flow-ft/lib/go/contracts v0.7.1-0.20230711213910-baad011d2b13 // indirect
-	github.com/onflow/flow-go v0.33.2-0.20240124150131-cf75dacdb2ad // indirect
+	github.com/onflow/flow-go v0.33.2-0.20240124160231-5ea899926d22 // indirect
 	github.com/onflow/flow-go/crypto v0.25.0 // indirect
 	github.com/onflow/flow-nft/lib/go/contracts v1.1.0 // indirect
 	github.com/onflow/flow/protobuf/go/flow v0.3.2-0.20231213135419-ae911cc351a2 // indirect
@@ -270,5 +270,5 @@ require (
 
 replace github.com/onflow/flow-cli/flowkit => ./flowkit
 
-// this is a woraround for the flow-go/crypto cross compliation issue
+// this is a woraround for the flow-go/crypto cross compilation issue
 replace github.com/onflow/crypto => github.com/onflow/crypto v0.24.9
