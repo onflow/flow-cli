@@ -30,7 +30,7 @@ import (
 	flowsdk "github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
 
-	"github.com/onflow/flow-cli/flowkit"
+	"github.com/onflow/flow-cli/flowkit/v2"
 )
 
 const EnvPrefix = "FLOW"

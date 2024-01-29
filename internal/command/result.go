@@ -30,8 +30,8 @@ import (
 	"github.com/spf13/afero"
 	"golang.org/x/exp/maps"
 
-	"github.com/onflow/flow-cli/flowkit/config"
-	"github.com/onflow/flow-cli/flowkit/output"
+	"github.com/onflow/flow-cli/flowkit/v2/config"
+	"github.com/onflow/flow-cli/flowkit/v2/output"
 )
 
 // Result interface describes all the formats for the result output.

@@ -1454,6 +1454,8 @@ github.com/onflow/fcl-dev-wallet v0.7.4 h1:vI6t3U0AO88R/Iitn5KsnniSpbN9Lqsqwvi9E
 github.com/onflow/fcl-dev-wallet v0.7.4/go.mod h1:kc42jkiuoPJmxMRFjfbRO9XvnR/3XLheaOerxVMDTiw=
 github.com/onflow/flixkit-go v1.1.0 h1:yju2lotk2LQBXUwb0rZeOtVbHW2KVSzzRRu/3rPtzok=
 github.com/onflow/flixkit-go v1.1.0/go.mod h1:KGL7oMu4uzt7s0qsNkaqGBYIt+Z38Qbf0JG56qK/Sg0=
+github.com/onflow/flow-cli/flowkit v1.8.1-0.20231219002530-719e6b55f35a h1:t1ZXP66YB/cQ3vylV2ia9v8ge29f6jMi/C8V0Zs/mLY=
+github.com/onflow/flow-cli/flowkit v1.8.1-0.20231219002530-719e6b55f35a/go.mod h1:1phGv+akrmM6fxTvXmqlLwY2YNy6+6dWnYGr+pcXZeo=
 github.com/onflow/flow-core-contracts/lib/go/contracts v1.2.4-0.20231016154253-a00dbf7c061f h1:S8yIZw9LFXfYD1V5H9BiixihHw3GrXVPrmfplSzYaww=
 github.com/onflow/flow-core-contracts/lib/go/contracts v1.2.4-0.20231016154253-a00dbf7c061f/go.mod h1:jM6GMAL+m0hjusUgiYDNrixPQ6b9s8xjoJQoEu5bHQI=
 github.com/onflow/flow-core-contracts/lib/go/templates v1.2.4-0.20231016154253-a00dbf7c061f h1:Ep+Mpo2miWMe4pjPGIaEvEzshRep30dvNgxqk+//FrQ=

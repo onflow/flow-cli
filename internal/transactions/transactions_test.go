@@ -29,12 +29,12 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 
-	"github.com/onflow/flow-cli/flowkit"
-	"github.com/onflow/flow-cli/flowkit/accounts"
-	"github.com/onflow/flow-cli/flowkit/config"
-	"github.com/onflow/flow-cli/flowkit/output"
-	"github.com/onflow/flow-cli/flowkit/tests"
-	"github.com/onflow/flow-cli/flowkit/transactions"
+	"github.com/onflow/flow-cli/flowkit/v2"
+	"github.com/onflow/flow-cli/flowkit/v2/accounts"
+	"github.com/onflow/flow-cli/flowkit/v2/config"
+	"github.com/onflow/flow-cli/flowkit/v2/output"
+	"github.com/onflow/flow-cli/flowkit/v2/tests"
+	"github.com/onflow/flow-cli/flowkit/v2/transactions"
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/internal/util"
 )
