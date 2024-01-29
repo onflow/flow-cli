@@ -30,7 +30,7 @@ import (
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/templates"
 
-	"github.com/onflow/flow-cli/flowkit/accounts"
+	"github.com/onflow/flow-cli/flowkit/v2/accounts"
 )
 
 // New create new instance of transaction.

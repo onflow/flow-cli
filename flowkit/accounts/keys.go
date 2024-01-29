@@ -33,7 +33,7 @@ import (
 	"github.com/onflow/flow-go-sdk/crypto/cloudkms"
 	"github.com/tyler-smith/go-bip39"
 
-	"github.com/onflow/flow-cli/flowkit/config"
+	"github.com/onflow/flow-cli/flowkit/v2/config"
 )
 
 // PublicKey contains public account key information.

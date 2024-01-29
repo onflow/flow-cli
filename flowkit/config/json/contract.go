@@ -26,7 +26,7 @@ import (
 	"github.com/invopop/jsonschema"
 	"github.com/onflow/flow-go-sdk"
 
-	"github.com/onflow/flow-cli/flowkit/config"
+	"github.com/onflow/flow-cli/flowkit/v2/config"
 )
 
 type jsonContracts map[string]jsonContract

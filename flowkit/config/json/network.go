@@ -27,7 +27,7 @@ import (
 	"github.com/invopop/jsonschema"
 	"github.com/onflow/flow-go-sdk/crypto"
 
-	"github.com/onflow/flow-cli/flowkit/config"
+	"github.com/onflow/flow-cli/flowkit/v2/config"
 )
 
 type jsonNetworks map[string]jsonNetwork

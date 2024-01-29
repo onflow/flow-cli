@@ -23,9 +23,9 @@ import (
 	"github.com/onflow/flow-go-sdk"
 	"github.com/stretchr/testify/mock"
 
-	"github.com/onflow/flow-cli/flowkit/config"
-	"github.com/onflow/flow-cli/flowkit/gateway/mocks"
-	"github.com/onflow/flow-cli/flowkit/tests"
+	"github.com/onflow/flow-cli/flowkit/v2/config"
+	"github.com/onflow/flow-cli/flowkit/v2/gateway/mocks"
+	"github.com/onflow/flow-cli/flowkit/v2/tests"
 )
 
 const (

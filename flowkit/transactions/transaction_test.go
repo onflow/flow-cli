@@ -27,9 +27,9 @@ import (
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/onflow/flow-cli/flowkit/accounts"
-	"github.com/onflow/flow-cli/flowkit/tests"
-	"github.com/onflow/flow-cli/flowkit/transactions"
+	"github.com/onflow/flow-cli/flowkit/v2/accounts"
+	"github.com/onflow/flow-cli/flowkit/v2/tests"
+	"github.com/onflow/flow-cli/flowkit/v2/transactions"
 )
 
 func TestNew(t *testing.T) {

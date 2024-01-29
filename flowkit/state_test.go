@@ -32,10 +32,10 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/thoas/go-funk"
 
-	"github.com/onflow/flow-cli/flowkit/accounts"
-	"github.com/onflow/flow-cli/flowkit/config"
-	"github.com/onflow/flow-cli/flowkit/config/json"
-	"github.com/onflow/flow-cli/flowkit/project"
+	"github.com/onflow/flow-cli/flowkit/v2/accounts"
+	"github.com/onflow/flow-cli/flowkit/v2/config"
+	"github.com/onflow/flow-cli/flowkit/v2/config/json"
+	"github.com/onflow/flow-cli/flowkit/v2/project"
 )
 
 var af = afero.Afero{Fs: afero.NewMemMapFs()}

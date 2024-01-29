@@ -31,7 +31,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
-	"github.com/onflow/flow-cli/flowkit/config"
+	"github.com/onflow/flow-cli/flowkit/v2/config"
 )
 
 // maxGRPCMessageSize 60mb

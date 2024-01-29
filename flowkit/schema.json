@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/onflow/flow-cli/flowkit/config/json/json-config",
+  "$id": "https://github.com/onflow/flow-cli/flowkit/v2/config/json/json-config",
   "$ref": "#/$defs/jsonConfig",
   "$defs": {
     "account": {
@@ -33,10 +33,7 @@
       },
       "additionalProperties": false,
       "type": "object",
-      "required": [
-        "address",
-        "keys"
-      ]
+      "required": ["address", "keys"]
     },
     "advanceKey": {
       "properties": {
@@ -78,9 +75,7 @@
       },
       "additionalProperties": false,
       "type": "object",
-      "required": [
-        "type"
-      ]
+      "required": ["type"]
     },
     "advancedAccount": {
       "properties": {
@@ -93,10 +88,7 @@
       },
       "additionalProperties": false,
       "type": "object",
-      "required": [
-        "address",
-        "key"
-      ]
+      "required": ["address", "key"]
     },
     "advancedNetwork": {
       "properties": {
@@ -109,10 +101,7 @@
       },
       "additionalProperties": false,
       "type": "object",
-      "required": [
-        "host",
-        "key"
-      ]
+      "required": ["host", "key"]
     },
     "contractDeployment": {
       "properties": {
@@ -128,10 +117,7 @@
       },
       "additionalProperties": false,
       "type": "object",
-      "required": [
-        "name",
-        "args"
-      ]
+      "required": ["name", "args"]
     },
     "deployment": {
       "oneOf": [
@@ -198,10 +184,7 @@
       },
       "additionalProperties": false,
       "type": "object",
-      "required": [
-        "source",
-        "aliases"
-      ]
+      "required": ["source", "aliases"]
     },
     "jsonContracts": {
       "patternProperties": {
@@ -241,10 +224,7 @@
       },
       "additionalProperties": false,
       "type": "object",
-      "required": [
-        "port",
-        "serviceAccount"
-      ]
+      "required": ["port", "serviceAccount"]
     },
     "jsonEmulators": {
       "patternProperties": {
@@ -283,10 +263,7 @@
       },
       "additionalProperties": false,
       "type": "object",
-      "required": [
-        "address",
-        "key"
-      ]
+      "required": ["address", "key"]
     },
     "simpleAccountPre022": {
       "properties": {
@@ -299,10 +276,7 @@
       },
       "additionalProperties": false,
       "type": "object",
-      "required": [
-        "address",
-        "keys"
-      ]
+      "required": ["address", "keys"]
     },
     "simpleNetwork": {
       "type": "string"

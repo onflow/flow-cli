@@ -1,4 +1,4 @@
-module github.com/onflow/flow-cli/flowkit
+module github.com/onflow/flow-cli/flowkit/v2
 
 go 1.20
 

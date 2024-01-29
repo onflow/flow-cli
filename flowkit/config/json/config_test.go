@@ -24,7 +24,7 @@ import (
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/onflow/flow-cli/flowkit/config"
+	"github.com/onflow/flow-cli/flowkit/v2/config"
 )
 
 func keys() []crypto.PrivateKey {

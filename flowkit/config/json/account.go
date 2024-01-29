@@ -31,7 +31,7 @@ import (
 	"github.com/onflow/flow-go-sdk/crypto"
 	"golang.org/x/exp/slices"
 
-	"github.com/onflow/flow-cli/flowkit/config"
+	"github.com/onflow/flow-cli/flowkit/v2/config"
 )
 
 type jsonAccounts map[string]account

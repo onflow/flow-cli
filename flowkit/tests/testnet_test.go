@@ -22,8 +22,8 @@ import (
 	"context"
 	"testing"
 
-	accounts2 "github.com/onflow/flow-cli/flowkit/accounts"
-	transactions2 "github.com/onflow/flow-cli/flowkit/transactions"
+	accounts2 "github.com/onflow/flow-cli/flowkit/v2/accounts"
+	transactions2 "github.com/onflow/flow-cli/flowkit/v2/transactions"
 
 	"github.com/onflow/cadence"
 	flowsdk "github.com/onflow/flow-go-sdk"
@@ -32,10 +32,10 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/onflow/flow-cli/flowkit"
-	"github.com/onflow/flow-cli/flowkit/config"
-	"github.com/onflow/flow-cli/flowkit/gateway"
-	"github.com/onflow/flow-cli/flowkit/output"
+	"github.com/onflow/flow-cli/flowkit/v2"
+	"github.com/onflow/flow-cli/flowkit/v2/config"
+	"github.com/onflow/flow-cli/flowkit/v2/gateway"
+	"github.com/onflow/flow-cli/flowkit/v2/output"
 )
 
 const testAccountName = "test-account"
