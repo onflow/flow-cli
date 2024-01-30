@@ -24,6 +24,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/onflow/flow-cli/flowkit/tests"
+
 	"github.com/onflow/flow-cli/flowkit/config"
 )
 
@@ -59,7 +61,8 @@ func Test_File_key(t *testing.T) {
 	cKey := fileKey.ToConfig()
 	assert.Equal(t, cKey, confKey)
 
-	key := NewFileKey(confKey.Location, confKey.Index, confKey.SigAlgo, confKey.HashAlgo)
+	rw, _ := tests.ReaderWriter()
+	key := NewFileKey(confKey.Location, confKey.Index, confKey.SigAlgo, confKey.HashAlgo, rw)
 	assert.Equal(t, confKey, key.ToConfig())
 }
 

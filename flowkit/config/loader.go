@@ -201,6 +201,9 @@ func (l *Loader) composeConfig(baseConf *Config, conf *Config) {
 	for _, contract := range conf.Contracts {
 		baseConf.Contracts.AddOrUpdate(contract)
 	}
+	for _, dependency := range conf.Dependencies {
+		baseConf.Dependencies.AddOrUpdate(dependency)
+	}
 	for _, deployment := range conf.Deployments {
 		baseConf.Deployments.AddOrUpdate(deployment)
 	}

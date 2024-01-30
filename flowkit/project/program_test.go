@@ -28,6 +28,32 @@ import (
 
 func TestProgram(t *testing.T) {
 
+	t.Run("AddressImports", func(t *testing.T) {
+		tests := []struct {
+			code          []byte
+			expectedCount int
+		}{
+			{
+				code: []byte(`
+                import Foo from 0x123
+                import "Bar"
+                import FooSpace from 0x124
+                import "BarSpace"
+
+                pub contract Foo {}
+            `),
+				expectedCount: 2,
+			},
+		}
+
+		for i, test := range tests {
+			program, err := NewProgram(test.code, nil, "")
+			require.NoError(t, err, fmt.Sprintf("AddressImports test %d failed", i))
+			addressImports := program.AddressImportDeclarations()
+			assert.Len(t, addressImports, test.expectedCount, fmt.Sprintf("AddressImports test %d failed", i))
+		}
+	})
+
 	t.Run("Imports", func(t *testing.T) {
 		tests := []struct {
 			code    []byte
@@ -158,6 +184,33 @@ func TestProgram(t *testing.T) {
 			replaceImport("BarSpace", "4")
 
 		assert.Equal(t, string(replaced), string(program.Code()))
+	})
+
+	t.Run("Convert to Import Syntax", func(t *testing.T) {
+		code := []byte(`
+		import Foo from 0x123
+		import "Bar"
+		import FooSpace from 0x124
+		import "BarSpace"
+
+		pub contract Foo {}
+	`)
+
+		expected := []byte(`
+		import "Foo"
+		import "Bar"
+		import "FooSpace"
+		import "BarSpace"
+
+		pub contract Foo {}
+	`)
+
+		program, err := NewProgram(code, nil, "")
+		require.NoError(t, err)
+
+		program.ConvertAddressImports()
+
+		assert.Equal(t, string(expected), string(program.CodeWithUnprocessedImports()))
 	})
 
 }
