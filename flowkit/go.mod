@@ -9,10 +9,10 @@ require (
 	github.com/invopop/jsonschema v0.7.0
 	github.com/lmars/go-slip10 v0.0.0-20190606092855-400ba44fee12
 	github.com/onflow/cadence v1.0.0-M4
+	github.com/onflow/crypto v0.25.0
 	github.com/onflow/flow-emulator v1.0.0-M1
 	github.com/onflow/flow-go v0.33.2-0.20240126211806-97279f96695f
 	github.com/onflow/flow-go-sdk v1.0.0-M1
-	github.com/onflow/flow-go/crypto v0.25.0
 	github.com/pkg/errors v0.9.1
 	github.com/rs/zerolog v1.29.0
 	github.com/spf13/afero v1.10.0
@@ -136,7 +136,6 @@ require (
 	github.com/multiformats/go-varint v0.0.7 // indirect
 	github.com/olekukonko/tablewriter v0.0.5 // indirect
 	github.com/onflow/atree v0.6.1-0.20230711151834-86040b30171f // indirect
-	github.com/onflow/crypto v0.25.0 // indirect
 	github.com/onflow/flow-core-contracts/lib/go/contracts v0.15.1-0.20240125214229-b7a95136dd0d // indirect
 	github.com/onflow/flow-core-contracts/lib/go/templates v0.15.1-0.20240125214229-b7a95136dd0d // indirect
 	github.com/onflow/flow-ft/lib/go/contracts v0.7.1-0.20240125205519-2e80d9b4bd01 // indirect
