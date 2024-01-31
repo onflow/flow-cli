@@ -40,7 +40,7 @@ func TestProgram(t *testing.T) {
                 import FooSpace from 0x124
                 import "BarSpace"
 
-                pub contract Foo {}
+                access(all) contract Foo {}
             `),
 				expectedCount: 2,
 			},
@@ -193,7 +193,7 @@ func TestProgram(t *testing.T) {
 		import FooSpace from 0x124
 		import "BarSpace"
 
-		pub contract Foo {}
+		access(all) contract Foo {}
 	`)
 
 		expected := []byte(`
@@ -202,7 +202,7 @@ func TestProgram(t *testing.T) {
 		import "FooSpace"
 		import "BarSpace"
 
-		pub contract Foo {}
+		access(all) contract Foo {}
 	`)
 
 		program, err := NewProgram(code, nil, "")
