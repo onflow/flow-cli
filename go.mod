@@ -12,12 +12,12 @@ require (
 	github.com/onflow/cadence-tools/languageserver v1.0.0-M1
 	github.com/onflow/cadence-tools/test v1.0.0-M1
 	github.com/onflow/fcl-dev-wallet v0.7.4
-	github.com/onflow/flixkit-go v1.1.0
+	github.com/onflow/flixkit-go v1.1.1-0.20240131170156-cd4c454e4b0d
 	github.com/onflow/flow-cli/flowkit v1.11.1-0.20240130210637-a22f7c578d37
 	github.com/onflow/flow-core-contracts/lib/go/templates v1.2.4-0.20231016154253-a00dbf7c061f
 	github.com/onflow/flow-emulator v1.0.0-M1
 	github.com/onflow/flow-go-sdk v1.0.0-M1
-	github.com/onflowser/flowser/v3 v3.2.0
+	github.com/onflowser/flowser/v3 v3.2.1-0.20240131200229-7d4d22715f48
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
 	github.com/pkg/errors v0.9.1
 	github.com/psiemens/sconfig v0.1.0
@@ -175,10 +175,9 @@ require (
 	github.com/onflow/atree v0.6.1-0.20230711151834-86040b30171f // indirect
 	github.com/onflow/cadence-tools/lint v1.0.0-M1 // indirect
 	github.com/onflow/crypto v0.25.0 // indirect
-	github.com/onflow/flow-core-contracts/lib/go/contracts v1.2.4-0.20231016154253-a00dbf7c061f // indirect
+	github.com/onflow/flow-core-contracts/lib/go/contracts v0.15.1-0.20240125214229-b7a95136dd0d // indirect
 	github.com/onflow/flow-ft/lib/go/contracts v0.7.1-0.20240125205519-2e80d9b4bd01 // indirect
 	github.com/onflow/flow-go v0.33.2-0.20240126211806-97279f96695f // indirect
-	github.com/onflow/flow-go/crypto v0.25.0 // indirect
 	github.com/onflow/flow-nft/lib/go/contracts v1.1.1-0.20240125205553-d2b571fb3fad // indirect
 	github.com/onflow/flow/protobuf/go/flow v0.3.2-0.20231213135419-ae911cc351a2 // indirect
 	github.com/onflow/sdks v0.5.1-0.20230912225508-b35402f12bba // indirect
@@ -268,6 +267,3 @@ require (
 )
 
 replace github.com/onflow/flow-cli/flowkit => ./flowkit
-
-// this is a woraround for the flow-go/crypto cross compliation issue
-replace github.com/onflow/flow-go/crypto => github.com/onflow/flow-go/crypto v0.24.9
