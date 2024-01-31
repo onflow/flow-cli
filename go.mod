@@ -267,3 +267,6 @@ require (
 )
 
 replace github.com/onflow/flow-cli/flowkit => ./flowkit
+
+// this is a woraround for the flow-go/crypto cross compliation issue
+replace github.com/onflow/crypto => github.com/onflow/crypto v0.24.9
