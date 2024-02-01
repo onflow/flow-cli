@@ -27,7 +27,7 @@ import (
 
 	"github.com/onflow/flow-go-sdk"
 
-	"github.com/onflow/flow-cli/flowkit/config"
+	"github.com/onflow/flow-cli/flowkit/v2/config"
 )
 
 type jsonDependencies map[string]jsonDependency
@@ -50,7 +50,7 @@ func (j jsonDependencies) transformToConfig() (config.Dependencies, error) {
 					NetworkName:  depNetwork,
 					Address:      flow.HexToAddress(depAddress),
 					ContractName: depContractName,
-				},
+			},
 			}
 		} else {
 			depNetwork, depAddress, depContractName, err := config.ParseSourceString(dependency.Extended.Source)
