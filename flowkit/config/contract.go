@@ -20,6 +20,10 @@ package config
 
 import (
 	"fmt"
+	"path/filepath"
+
+	"github.com/onflow/flow-go/fvm/systemcontracts"
+	flowGo "github.com/onflow/flow-go/model/flow"
 
 	"github.com/onflow/flow-go-sdk"
 	"golang.org/x/exp/slices"
@@ -27,9 +31,10 @@ import (
 
 // Contract defines the configuration for a Cadence contract.
 type Contract struct {
-	Name     string
-	Location string
-	Aliases  Aliases
+	Name         string
+	Location     string
+	Aliases      Aliases
+	IsDependency bool
 }
 
 // Alias defines an existing pre-deployed contract address for specific network.
@@ -101,6 +106,101 @@ func (c *Contracts) Remove(name string) error {
 	for i, contract := range *c {
 		if contract.Name == name {
 			*c = slices.Delete(*c, i, i+1)
+		}
+	}
+
+	return nil
+}
+
+const dependencyManagerDirectory = "imports"
+
+const (
+	networkEmulator = "emulator"
+	networkTestnet  = "testnet"
+	networkMainnet  = "mainnet"
+)
+
+func supportedNetworks() []string {
+	return []string{
+		networkEmulator,
+		networkTestnet,
+		networkMainnet,
+	}
+}
+
+var networkToChainID = map[string]flowGo.ChainID{
+	networkEmulator: flowGo.Emulator,
+	networkTestnet:  flowGo.Testnet,
+	networkMainnet:  flowGo.Mainnet,
+}
+
+func isCoreContract(networkName, contractName, contractAddress string) bool {
+	sc := systemcontracts.SystemContractsForChain(networkToChainID[networkName])
+
+	for _, coreContract := range sc.All() {
+		if coreContract.Name == contractName && coreContract.Address.String() == contractAddress {
+			return true
+		}
+	}
+
+	return false
+}
+
+func getCoreContractByName(networkName, contractName string) *systemcontracts.SystemContract {
+	sc := systemcontracts.SystemContractsForChain(networkToChainID[networkName])
+
+	for i, coreContract := range sc.All() {
+		if coreContract.Name == contractName {
+			return &sc.All()[i]
+		}
+	}
+
+	return nil
+}
+
+// AddDependencyAsContract adds a dependency as a contract if it doesn't already exist.
+func (c *Contracts) AddDependencyAsContract(dependency Dependency, networkName string) {
+	var aliases []Alias
+
+	// If core contract found by name and address matches, then use all core contract aliases across networks
+	if isCoreContract(networkName, dependency.Source.ContractName, dependency.Source.Address.String()) {
+		for _, networkStr := range supportedNetworks() {
+			coreContract := getCoreContractByName(networkStr, dependency.Source.ContractName)
+			if coreContract != nil {
+				aliases = append(aliases, Alias{
+					Network: networkStr,
+					Address: flow.HexToAddress(coreContract.Address.String()),
+				})
+			}
+		}
+	} else {
+		aliases = append(aliases, dependency.Aliases...)
+	}
+
+	// If no core contract match, then use the address in source as alias
+	if len(aliases) == 0 {
+		aliases = append(aliases, Alias{
+			Network: dependency.Source.NetworkName,
+			Address: dependency.Source.Address,
+		})
+	}
+
+	contract := Contract{
+		Name:         dependency.Name,
+		Location:     filepath.ToSlash(fmt.Sprintf("%s/%s/%s.cdc", dependencyManagerDirectory, dependency.Source.Address, dependency.Source.ContractName)),
+		Aliases:      aliases,
+		IsDependency: true,
+	}
+
+	if _, err := c.ByName(contract.Name); err != nil {
+		c.AddOrUpdate(contract)
+	}
+}
+
+func (c *Contracts) DependencyContractByName(name string) *Contract {
+	for i, contract := range *c {
+		if contract.Name == name && contract.IsDependency {
+			return &(*c)[i]
 		}
 	}
 
