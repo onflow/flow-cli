@@ -27,17 +27,17 @@ import (
 	"net/http"
 	"sort"
 
-	"github.com/onflow/flow-cli/flowkit/transactions"
+	"github.com/onflow/flowkit/transactions"
 
-	"github.com/onflow/flow-cli/flowkit/accounts"
+	"github.com/onflow/flowkit/accounts"
 
 	flowsdk "github.com/onflow/flow-go-sdk"
 	"github.com/spf13/cobra"
 
-	"github.com/onflow/flow-cli/flowkit"
-	"github.com/onflow/flow-cli/flowkit/output"
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/internal/util"
+	"github.com/onflow/flowkit"
+	"github.com/onflow/flowkit/output"
 )
 
 type flagsSign struct {

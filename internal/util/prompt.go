@@ -33,8 +33,8 @@ import (
 	"golang.org/x/exp/maps"
 	"golang.org/x/exp/slices"
 
-	"github.com/onflow/flow-cli/flowkit/config"
-	"github.com/onflow/flow-cli/flowkit/output"
+	"github.com/onflow/flowkit/config"
+	"github.com/onflow/flowkit/output"
 )
 
 func ApproveTransactionForSigningPrompt(transaction *flow.Transaction) bool {
