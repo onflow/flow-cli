@@ -38,9 +38,6 @@ import (
 func TestExecutingTests(t *testing.T) {
 	t.Parallel()
 
-	// TODO:
-	t.Skip("TODO")
-
 	aliases := config.Aliases{{
 		Network: "testing",
 		Address: flowsdk.HexToAddress("0x0000000000000007"),
@@ -662,7 +659,7 @@ Seed: 1521
 			result.Oneliner(),
 			"Test results: \"./testScriptSimpleFailing.cdc\"\n- FAIL: "+
 				"testSimple\n\t\tExecution failed:\n\t\t\terror: assertion failed\n"+
-				"\t\t\t --> 7465737400000000000000000000000000000000000000000000000000000000:5:12",
+				"\t\t\t --> ./testScriptSimpleFailing.cdc:5:12",
 		)
 	})
 
