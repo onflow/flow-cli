@@ -26,11 +26,11 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 
-	"github.com/onflow/flow-cli/flowkit/config"
-	"github.com/onflow/flow-cli/flowkit/gateway"
-	"github.com/onflow/flow-cli/flowkit/gateway/mocks"
-	"github.com/onflow/flow-cli/flowkit/output"
-	"github.com/onflow/flow-cli/flowkit/tests"
+	"github.com/onflow/flow-cli/flowkit/v2/config"
+	"github.com/onflow/flow-cli/flowkit/v2/gateway"
+	"github.com/onflow/flow-cli/flowkit/v2/gateway/mocks"
+	"github.com/onflow/flow-cli/flowkit/v2/output"
+	"github.com/onflow/flow-cli/flowkit/v2/tests"
 	"github.com/onflow/flow-cli/internal/util"
 )
 
