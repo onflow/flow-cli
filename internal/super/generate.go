@@ -165,7 +165,7 @@ access(all) contract %s {
 }`
 	case "transaction":
 		fileToWrite = `transaction() {
-    prepare(account:AuthAccount) {}
+    prepare(account: &Account) {}
 
     execute {}
 }`

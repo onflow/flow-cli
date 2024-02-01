@@ -155,7 +155,7 @@ func TestGenerateNewTransaction(t *testing.T) {
 	assert.NotNil(t, content)
 
 	expectedContent := `transaction() {
-    prepare(account:AuthAccount) {}
+    prepare(account: &Account) {}
 
     execute {}
 }`

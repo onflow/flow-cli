@@ -68,6 +68,11 @@ func transformContractsToJSON(contracts config.Contracts) jsonContracts {
 	jsonContracts := jsonContracts{}
 
 	for _, c := range contracts {
+		// If it's a dependency, skip. These are used under the hood and should not be saved.
+		if c.IsDependency {
+			continue
+		}
+
 		// if simple case
 		if !c.IsAliased() {
 			jsonContracts[c.Name] = jsonContract{

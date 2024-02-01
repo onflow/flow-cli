@@ -353,6 +353,12 @@ func TestExecutingTests(t *testing.T) {
 			result.String(),
 			"Coverage: 91.6% of statements",
 		)
+
+		lcovReport, _ := coverageReport.MarshalLCOV()
+		assert.Contains(t, string(lcovReport), "TN:\nSF:FooContract.cdc\n")
+
+		jsonReport, _ := coverageReport.MarshalJSON()
+		assert.Contains(t, string(jsonReport), `{"coverage":{"FooContract.cdc":{`)
 	})
 
 	t.Run("with code coverage for contracts only", func(t *testing.T) {
@@ -443,6 +449,12 @@ func TestExecutingTests(t *testing.T) {
 			result.String(),
 			"Coverage: 100.0% of statements",
 		)
+
+		lcovReport, _ := coverageReport.MarshalLCOV()
+		assert.Contains(t, string(lcovReport), "TN:\nSF:FooContract.cdc\n")
+
+		jsonReport, _ := coverageReport.MarshalJSON()
+		assert.Contains(t, string(jsonReport), `{"coverage":{"FooContract.cdc":{`)
 	})
 
 	t.Run("with random test case execution", func(t *testing.T) {
@@ -647,7 +659,7 @@ Seed: 1521
 			result.Oneliner(),
 			"Test results: \"./testScriptSimpleFailing.cdc\"\n- FAIL: "+
 				"testSimple\n\t\tExecution failed:\n\t\t\terror: assertion failed\n"+
-				"\t\t\t --> 7465737400000000000000000000000000000000000000000000000000000000:5:12",
+				"\t\t\t --> ./testScriptSimpleFailing.cdc:5:12",
 		)
 	})
 

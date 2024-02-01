@@ -756,3 +756,13 @@ func ScaffoldPrompt(logger output.Logger, scaffoldItems []ScaffoldItem) int {
 
 	return 0
 }
+
+func GenericBoolPrompt(msg string) bool {
+	prompt := promptui.Select{
+		Label: msg,
+		Items: []string{"Yes", "No"},
+	}
+	_, result, _ := prompt.Run()
+
+	return result == "Yes"
+}

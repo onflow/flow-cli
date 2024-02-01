@@ -145,6 +145,9 @@
         "contracts": {
           "$ref": "#/$defs/jsonContracts"
         },
+        "dependencies": {
+          "$ref": "#/$defs/jsonDependencies"
+        },
         "networks": {
           "$ref": "#/$defs/jsonNetworks"
         },
@@ -193,6 +196,49 @@
         }
       },
       "type": "object"
+    },
+    "jsonDependencies": {
+      "patternProperties": {
+        ".*": {
+          "$ref": "#/$defs/jsonDependency"
+        }
+      },
+      "type": "object"
+    },
+    "jsonDependency": {
+      "oneOf": [
+        {
+          "type": "string"
+        },
+        {
+          "$ref": "#/$defs/jsonDependencyExtended"
+        }
+      ]
+    },
+    "jsonDependencyExtended": {
+      "properties": {
+        "source": {
+          "type": "string"
+        },
+        "hash": {
+          "type": "string"
+        },
+        "aliases": {
+          "patternProperties": {
+            ".*": {
+              "type": "string"
+            }
+          },
+          "type": "object"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "source",
+        "hash",
+        "aliases"
+      ]
     },
     "jsonDeployment": {
       "patternProperties": {

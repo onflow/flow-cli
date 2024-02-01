@@ -24,6 +24,8 @@ import (
 	"os"
 	"strings"
 
+	"github.com/onflow/flow-cli/internal/dependencymanager"
+
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/accounts"
@@ -117,6 +119,7 @@ func main() {
 	cmd.AddCommand(snapshot.Cmd)
 	cmd.AddCommand(super.FlixCmd)
 	cmd.AddCommand(super.GenerateCommand)
+	cmd.AddCommand(dependencymanager.Cmd)
 
 	command.InitFlags(cmd)
 	cmd.AddGroup(&cobra.Group{
@@ -142,6 +145,10 @@ func main() {
 	cmd.AddGroup(&cobra.Group{
 		ID:    "security",
 		Title: "🔒 Flow Security",
+	})
+	cmd.AddGroup(&cobra.Group{
+		ID:    "manager",
+		Title: "🔗 Dependency Manager",
 	})
 
 	cmd.SetUsageTemplate(command.UsageTemplate)
