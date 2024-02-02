@@ -34,7 +34,6 @@ install-tools:
 .PHONY: test
 test:
 	GO111MODULE=on go test -coverprofile=$(COVER_PROFILE) $(if $(JSON_OUTPUT),-json,) ./...
-	cd flowkit; GO111MODULE=on go test -coverprofile=$(COVER_PROFILE) $(if $(JSON_OUTPUT),-json,) ./...
 
 .PHONY: test-e2e-emulator
 test-e2e-emulator:
@@ -97,20 +96,10 @@ fix-lint:
 check-headers:
 	@./check-headers.sh
 
-.PHONY: check-schema
-check-schema:
-	cd flowkit && go run ./cmd/flow-schema/flow-schema.go --verify=true ./schema.json 
-
 .PHONY: check-tidy
 check-tidy:
 	go mod tidy
-	cd flowkit; go mod tidy
-
-.PHONY: generate-schema
-generate-schema:
-	cd flowkit && go run ./cmd/flow-schema/flow-schema.go ./schema.json
 
 .PHONY: generate
 generate: install-tools
-	cd flowkit; \
- 	go generate ./...
+	go generate ./...
