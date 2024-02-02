@@ -27,8 +27,9 @@ import (
 
 	"github.com/onflow/flowkit"
 
-	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flowkit/output"
+
+	"github.com/onflow/flow-cli/internal/command"
 
 	"github.com/spf13/cobra"
 )

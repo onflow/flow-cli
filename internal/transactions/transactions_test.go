@@ -29,14 +29,15 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 
-	"github.com/onflow/flow-cli/internal/command"
-	"github.com/onflow/flow-cli/internal/util"
 	"github.com/onflow/flowkit"
 	"github.com/onflow/flowkit/accounts"
 	"github.com/onflow/flowkit/config"
 	"github.com/onflow/flowkit/output"
 	"github.com/onflow/flowkit/tests"
 	"github.com/onflow/flowkit/transactions"
+
+	"github.com/onflow/flow-cli/internal/command"
+	"github.com/onflow/flow-cli/internal/util"
 )
 
 func Test_Build(t *testing.T) {

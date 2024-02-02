@@ -23,9 +23,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flowkit"
 	"github.com/onflow/flowkit/output"
+
+	"github.com/onflow/flow-cli/internal/command"
 )
 
 type installFlagsCollection struct{}

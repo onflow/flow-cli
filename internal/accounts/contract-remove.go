@@ -26,9 +26,10 @@ import (
 
 	"github.com/onflow/flow-cli/internal/util"
 
-	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flowkit"
 	"github.com/onflow/flowkit/output"
+
+	"github.com/onflow/flow-cli/internal/command"
 )
 
 type flagsRemoveContract struct {

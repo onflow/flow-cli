@@ -30,9 +30,10 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/onflow/flow-cli/internal/util"
 	"github.com/onflow/flowkit/config"
 	"github.com/onflow/flowkit/tests"
+
+	"github.com/onflow/flow-cli/internal/util"
 )
 
 func TestExecutingTests(t *testing.T) {

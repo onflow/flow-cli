@@ -29,13 +29,14 @@ import (
 	"github.com/onflow/flixkit-go/flixkit"
 	"github.com/onflow/flow-go-sdk/crypto"
 
-	"github.com/onflow/flow-cli/internal/command"
-	"github.com/onflow/flow-cli/internal/util"
 	"github.com/onflow/flowkit"
 	"github.com/onflow/flowkit/config"
 	"github.com/onflow/flowkit/mocks"
 	"github.com/onflow/flowkit/output"
 	"github.com/onflow/flowkit/tests"
+
+	"github.com/onflow/flow-cli/internal/command"
+	"github.com/onflow/flow-cli/internal/util"
 )
 
 type MockFlixService struct {

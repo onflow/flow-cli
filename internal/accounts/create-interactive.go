@@ -35,12 +35,13 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/onflow/flow-cli/internal/util"
 	"github.com/onflow/flowkit"
 	"github.com/onflow/flowkit/accounts"
 	"github.com/onflow/flowkit/config"
 	"github.com/onflow/flowkit/gateway"
 	"github.com/onflow/flowkit/output"
+
+	"github.com/onflow/flow-cli/internal/util"
 )
 
 // createInteractive is used when user calls a default account create command without any provided values.

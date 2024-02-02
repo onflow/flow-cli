@@ -28,12 +28,13 @@ import (
 	"github.com/onflow/flow-go-sdk"
 	"github.com/spf13/cobra"
 
-	"github.com/onflow/flow-cli/internal/command"
-	"github.com/onflow/flow-cli/internal/scripts"
-	"github.com/onflow/flow-cli/internal/transactions"
 	"github.com/onflow/flowkit"
 	"github.com/onflow/flowkit/config"
 	"github.com/onflow/flowkit/output"
+
+	"github.com/onflow/flow-cli/internal/command"
+	"github.com/onflow/flow-cli/internal/scripts"
+	"github.com/onflow/flow-cli/internal/transactions"
 )
 
 type flixFlags struct {
