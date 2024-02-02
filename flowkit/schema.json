@@ -33,7 +33,10 @@
       },
       "additionalProperties": false,
       "type": "object",
-      "required": ["address", "keys"]
+      "required": [
+        "address",
+        "keys"
+      ]
     },
     "advanceKey": {
       "properties": {
@@ -75,7 +78,9 @@
       },
       "additionalProperties": false,
       "type": "object",
-      "required": ["type"]
+      "required": [
+        "type"
+      ]
     },
     "advancedAccount": {
       "properties": {
@@ -88,7 +93,10 @@
       },
       "additionalProperties": false,
       "type": "object",
-      "required": ["address", "key"]
+      "required": [
+        "address",
+        "key"
+      ]
     },
     "advancedNetwork": {
       "properties": {
@@ -101,7 +109,10 @@
       },
       "additionalProperties": false,
       "type": "object",
-      "required": ["host", "key"]
+      "required": [
+        "host",
+        "key"
+      ]
     },
     "contractDeployment": {
       "properties": {
@@ -117,7 +128,10 @@
       },
       "additionalProperties": false,
       "type": "object",
-      "required": ["name", "args"]
+      "required": [
+        "name",
+        "args"
+      ]
     },
     "deployment": {
       "oneOf": [
@@ -187,7 +201,10 @@
       },
       "additionalProperties": false,
       "type": "object",
-      "required": ["source", "aliases"]
+      "required": [
+        "source",
+        "aliases"
+      ]
     },
     "jsonContracts": {
       "patternProperties": {
@@ -234,7 +251,11 @@
       },
       "additionalProperties": false,
       "type": "object",
-      "required": ["source", "hash", "aliases"]
+      "required": [
+        "source",
+        "hash",
+        "aliases"
+      ]
     },
     "jsonDeployment": {
       "patternProperties": {
@@ -266,7 +287,10 @@
       },
       "additionalProperties": false,
       "type": "object",
-      "required": ["port", "serviceAccount"]
+      "required": [
+        "port",
+        "serviceAccount"
+      ]
     },
     "jsonEmulators": {
       "patternProperties": {
@@ -305,7 +329,10 @@
       },
       "additionalProperties": false,
       "type": "object",
-      "required": ["address", "key"]
+      "required": [
+        "address",
+        "key"
+      ]
     },
     "simpleAccountPre022": {
       "properties": {
@@ -318,7 +345,10 @@
       },
       "additionalProperties": false,
       "type": "object",
-      "required": ["address", "keys"]
+      "required": [
+        "address",
+        "keys"
+      ]
     },
     "simpleNetwork": {
       "type": "string"
