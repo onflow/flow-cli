@@ -23,7 +23,7 @@ BINARY ?= ./cmd/flow/flow
 binary: $(BINARY)
 
 .PHONY: install-tools
-install-tools: install-cross-build-tools
+install-tools:
 	cd ${GOPATH}; \
 	mkdir -p ${GOPATH}; \
 	GO111MODULE=on go install github.com/axw/gocov/gocov@latest; \
@@ -107,15 +107,15 @@ generate: install-tools
 .PHONY: install-cross-build-tools
 install-cross-build-tools:
 	if [ "$(UNAME)" = "Debian" ] ; then \
-		sudo apt-get update && sudo apt-get -y install apt-utils gcc-aarch64-linux-gnu ; \
+		apt-get update && apt-get -y install apt-utils gcc-aarch64-linux-gnu ; \
 	elif [ "$(UNAME)" = "Linux" ] ; then \
-		sudo apt-get update && sudo apt-get -y install apt-utils gcc-aarch64-linux-gnu ; \
+		apt-get update && apt-get -y install apt-utils gcc-aarch64-linux-gnu ; \
 	else \
 		echo "this target only works on Debian or Linux, host runs on" $(UNAME) ; \
 	fi
 
 .PHONY: pre-build
-pre-build: generate
+pre-build: generate install-cross-build-tools
 	export CGO_FLAGS="-O2 -D__BLST_PORTABLE__"
 	export GOARCH=$(INPUT_GOARCH)
 	if [ "$(GOARCH)" = "arm64" ] ; then \
