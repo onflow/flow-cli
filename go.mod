@@ -13,10 +13,10 @@ require (
 	github.com/onflow/cadence-tools/test v0.14.5
 	github.com/onflow/fcl-dev-wallet v0.7.4
 	github.com/onflow/flixkit-go v1.1.1
-	github.com/onflow/flow-cli/flowkit v1.11.0
 	github.com/onflow/flow-core-contracts/lib/go/templates v1.2.4-0.20231016154253-a00dbf7c061f
 	github.com/onflow/flow-emulator v0.59.0
 	github.com/onflow/flow-go-sdk v0.41.17
+	github.com/onflow/flowkit v1.13.0
 	github.com/onflowser/flowser/v3 v3.1.3
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
 	github.com/pkg/errors v0.9.1
@@ -168,6 +168,7 @@ require (
 	github.com/olekukonko/tablewriter v0.0.5 // indirect
 	github.com/onflow/atree v0.6.0 // indirect
 	github.com/onflow/cadence-tools/lint v0.14.1 // indirect
+	github.com/onflow/flow-cli/flowkit v1.11.0 // indirect
 	github.com/onflow/flow-core-contracts/lib/go/contracts v1.2.4-0.20231016154253-a00dbf7c061f // indirect
 	github.com/onflow/flow-ft/lib/go/contracts v0.7.1-0.20230711213910-baad011d2b13 // indirect
 	github.com/onflow/flow-go v0.32.4-0.20231211231711-1aba0828ca33 // indirect
@@ -259,8 +260,6 @@ require (
 	modernc.org/sqlite v1.21.1 // indirect
 	nhooyr.io/websocket v1.8.7 // indirect
 )
-
-replace github.com/onflow/flow-cli/flowkit => ./flowkit
 
 // this is a woraround for the flow-go/crypto cross compliation issue
 replace github.com/onflow/flow-go/crypto => github.com/onflow/flow-go/crypto v0.24.9

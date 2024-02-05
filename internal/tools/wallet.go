@@ -25,8 +25,9 @@ import (
 	devWallet "github.com/onflow/fcl-dev-wallet/go/wallet"
 	"github.com/spf13/cobra"
 
-	"github.com/onflow/flow-cli/flowkit"
-	"github.com/onflow/flow-cli/flowkit/output"
+	"github.com/onflow/flowkit"
+	"github.com/onflow/flowkit/output"
+
 	"github.com/onflow/flow-cli/internal/command"
 )
 
