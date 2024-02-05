@@ -114,10 +114,15 @@ install-cross-build-tools:
 		echo "this target only works on Debian or Linux, host runs on" $(UNAME) ; \
 	fi
 
+# INPUT_GOARCH is a variable set by the wangyoucao577 action
+# https://github.com/wangyoucao577/go-release-action/blob/v1.40/action.yml#L109
+GOARCH := $(INPUT_GOARCH)
+
 .PHONY: pre-build
 pre-build: generate install-cross-build-tools
+	export CGO_ENABLED=1
 	export CGO_FLAGS="-O2 -D__BLST_PORTABLE__"
-	export GOARCH=$(INPUT_GOARCH)
+	export GOARCH=$(GOARCH)
 	if [ "$(GOARCH)" = "arm64" ] ; then \
 		export CC=aarch64-linux-gnu-gcc ; \
 	elif [ "$(GOARCH)" = "amd64" ] ; then \
