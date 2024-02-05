@@ -102,7 +102,7 @@ check-tidy:
 
 .PHONY: generate
 generate: install-tools
- 	go generate ./...
+	go generate ./...
 
 .PHONY: install-cross-build-tools
 install-cross-build-tools:
