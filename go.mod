@@ -16,7 +16,7 @@ require (
 	github.com/onflow/flow-core-contracts/lib/go/templates v0.15.1-0.20240125214229-b7a95136dd0d
 	github.com/onflow/flow-emulator v1.0.0-M1
 	github.com/onflow/flow-go-sdk v1.0.0-M1
-	github.com/onflow/flowkit/v2 v2.0.0-stable-cadence-alpha.2
+	github.com/onflow/flowkit/v2 v2.0.0-stable-cadence.2
 	github.com/onflowser/flowser/v3 v3.2.1-0.20240131200229-7d4d22715f48
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
 	github.com/pkg/errors v0.9.1
