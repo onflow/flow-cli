@@ -125,3 +125,13 @@ install-cross-build-tools:
 		echo "this target only works on Debian or Linux, host runs on" $(UNAME) ; \
 	fi
 
+.PHONY: pre-build
+pre-build: 
+	export CGO_FLAGS="-O2 -D__BLST_PORTABLE__"
+	if [ "$(GOARCH)" = "arm64" ] ; then \
+		export CC=aarch64-linux-gnu-gcc ; \
+	elif [ "$(GOARCH)" = "amd64" ] ; then \
+		export CC=x86_64-linux-gnu-gcc ; \
+	else \
+		echo "arch target" $(GOARCH) "is not supported" ; \
+	fi 
