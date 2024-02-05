@@ -23,7 +23,7 @@ BINARY ?= ./cmd/flow/flow
 binary: $(BINARY)
 
 .PHONY: install-tools
-install-tools:
+install-tools: install-cross-build-tools
 	cd ${GOPATH}; \
 	mkdir -p ${GOPATH}; \
 	GO111MODULE=on go install github.com/axw/gocov/gocov@latest; \
@@ -62,7 +62,7 @@ $(BINARY):
 		-o $(BINARY) ./cmd/flow
 
 .PHONY: versioned-binaries
-versioned-binaries: generate
+versioned-binaries: generate 
 	$(MAKE) OS=linux ARCH=amd64 ARCHNAME=x86_64 versioned-binary
 	$(MAKE) OS=linux ARCH=arm64 versioned-binary
 	$(MAKE) OS=darwin ARCH=amd64 ARCHNAME=x86_64 versioned-binary
@@ -114,3 +114,14 @@ generate-schema:
 generate: install-tools
 	cd flowkit; \
  	go generate ./...
+
+.PHONY: install-cross-build-tools
+install-cross-build-tools:
+	if [ "$(UNAME)" = "Debian" ] ; then \
+		apt-get update && apt-get -y install apt-utils gcc-aarch64-linux-gnu ; \
+	elif [ "$(UNAME)" = "Linux" ] ; then \
+		apt-get update && apt-get -y install apt-utils gcc-aarch64-linux-gnu ; \
+	else \
+		echo "this target only works on Debian or Linux, host runs on" $(UNAME) ; \
+	fi
+
