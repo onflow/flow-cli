@@ -27,8 +27,9 @@ import (
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/spf13/cobra"
 
-	"github.com/onflow/flow-cli/flowkit"
-	"github.com/onflow/flow-cli/flowkit/output"
+	"github.com/onflow/flowkit"
+	"github.com/onflow/flowkit/output"
+
 	"github.com/onflow/flow-cli/internal/command"
 )
 

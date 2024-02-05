@@ -35,11 +35,12 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/onflow/flow-cli/flowkit"
-	"github.com/onflow/flow-cli/flowkit/accounts"
-	"github.com/onflow/flow-cli/flowkit/config"
-	"github.com/onflow/flow-cli/flowkit/gateway"
-	"github.com/onflow/flow-cli/flowkit/output"
+	"github.com/onflow/flowkit"
+	"github.com/onflow/flowkit/accounts"
+	"github.com/onflow/flowkit/config"
+	"github.com/onflow/flowkit/gateway"
+	"github.com/onflow/flowkit/output"
+
 	"github.com/onflow/flow-cli/internal/util"
 )
 
@@ -51,7 +52,7 @@ func createInteractive(state *flowkit.State) (*accountResult, error) {
 	log := output.NewStdoutLogger(output.InfoLog)
 	name := util.AccountNamePrompt(state.Accounts().Names())
 	networkName, selectedNetwork := util.CreateAccountNetworkPrompt()
-	privateFile := fmt.Sprintf("%s.pkey", name)
+	privateFile := accounts.PrivateKeyFile(name)
 
 	// create new gateway based on chosen network
 	gw, err := gateway.NewGrpcGateway(selectedNetwork)
@@ -159,7 +160,7 @@ func createNetworkAccount(
 	return &accounts.Account{
 		Name:    name,
 		Address: *address[0],
-		Key:     accounts.NewFileKey(privateFile, 0, defaultSignAlgo, defaultHashAlgo),
+		Key:     accounts.NewFileKey(privateFile, 0, defaultSignAlgo, defaultHashAlgo, state.ReaderWriter()),
 	}, nil
 }
 

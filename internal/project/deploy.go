@@ -27,10 +27,11 @@ import (
 	"github.com/spf13/cobra"
 	"golang.org/x/exp/slices"
 
-	"github.com/onflow/flow-cli/flowkit"
-	"github.com/onflow/flow-cli/flowkit/config"
-	"github.com/onflow/flow-cli/flowkit/output"
-	"github.com/onflow/flow-cli/flowkit/project"
+	"github.com/onflow/flowkit"
+	"github.com/onflow/flowkit/config"
+	"github.com/onflow/flowkit/output"
+	"github.com/onflow/flowkit/project"
+
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/internal/util"
 )

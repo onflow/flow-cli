@@ -26,7 +26,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/onflow/flow-cli/flowkit/output"
+	"github.com/onflow/flowkit/output"
 )
 
 func TestGenerateNewContract(t *testing.T) {

@@ -23,8 +23,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/onflow/flow-cli/flowkit"
-	"github.com/onflow/flow-cli/flowkit/output"
+	"github.com/onflow/flowkit"
+	"github.com/onflow/flowkit/output"
+
 	"github.com/onflow/flow-cli/internal/command"
 )
 
@@ -68,7 +69,7 @@ func add(
 	}
 
 	logger.Info("✅  Dependency installation complete. Check your flow.json")
-	logger.Info("Ensure you add any required dependencies to your 'deployments' section. This can be done using the 'flow add config deployment' command.")
+	logger.Info("Ensure you add any required dependencies to your 'deployments' section. This can be done using the 'flow config add deployment' command.")
 	logger.Info("Note: Core contracts do not need to be added to deployments. For reference, see this URL: https://github.com/onflow/flow-core-contracts")
 
 	return nil, nil
