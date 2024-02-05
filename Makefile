@@ -115,8 +115,9 @@ install-cross-build-tools:
 	fi
 
 .PHONY: pre-build
-pre-build: 
+pre-build: generate
 	export CGO_FLAGS="-O2 -D__BLST_PORTABLE__"
+	export GOARCH=$(INPUT_GOARCH)
 	if [ "$(GOARCH)" = "arm64" ] ; then \
 		export CC=aarch64-linux-gnu-gcc ; \
 	elif [ "$(GOARCH)" = "amd64" ] ; then \
