@@ -38,13 +38,14 @@ import (
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
 
-	"github.com/onflow/flow-cli/build"
-	"github.com/onflow/flow-cli/internal/settings"
-	"github.com/onflow/flow-cli/internal/util"
 	"github.com/onflow/flowkit/v2"
 	"github.com/onflow/flowkit/v2/config"
 	"github.com/onflow/flowkit/v2/gateway"
 	"github.com/onflow/flowkit/v2/output"
+
+	"github.com/onflow/flow-cli/build"
+	"github.com/onflow/flow-cli/internal/settings"
+	"github.com/onflow/flow-cli/internal/util"
 )
 
 // run the command with arguments.

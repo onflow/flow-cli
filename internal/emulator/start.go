@@ -30,10 +30,11 @@ import (
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
 
-	"github.com/onflow/flow-cli/internal/command"
-	"github.com/onflow/flow-cli/internal/util"
 	"github.com/onflow/flowkit/v2"
 	"github.com/onflow/flowkit/v2/config"
+
+	"github.com/onflow/flow-cli/internal/command"
+	"github.com/onflow/flow-cli/internal/util"
 )
 
 var Cmd *cobra.Command

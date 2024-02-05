@@ -26,12 +26,13 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 
-	"github.com/onflow/flow-cli/internal/util"
 	"github.com/onflow/flowkit/v2/config"
 	"github.com/onflow/flowkit/v2/gateway"
 	"github.com/onflow/flowkit/v2/gateway/mocks"
 	"github.com/onflow/flowkit/v2/output"
 	"github.com/onflow/flowkit/v2/tests"
+
+	"github.com/onflow/flow-cli/internal/util"
 )
 
 func TestDependencyInstallerInstall(t *testing.T) {
