@@ -39,12 +39,12 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/build"
-	"github.com/onflow/flow-cli/flowkit"
-	"github.com/onflow/flow-cli/flowkit/config"
-	"github.com/onflow/flow-cli/flowkit/gateway"
-	"github.com/onflow/flow-cli/flowkit/output"
 	"github.com/onflow/flow-cli/internal/settings"
 	"github.com/onflow/flow-cli/internal/util"
+	"github.com/onflow/flowkit/v2"
+	"github.com/onflow/flowkit/v2/config"
+	"github.com/onflow/flowkit/v2/gateway"
+	"github.com/onflow/flowkit/v2/output"
 )
 
 // run the command with arguments.
