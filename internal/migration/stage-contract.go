@@ -26,7 +26,7 @@ var stageContractCommand = &command.Command{
 		Use:     "flow stage-contract <NAME> <CONTRACT_PATH> --network <NETWORK> --signer <HOST_ACCOUNT>",
 		Short:   "stage a contract for migration",
 		Example: `flow stage-contract HelloWorld hello_world.cdc --network testnet --signer emulator-account`,
-		Args:    cobra.MinimumNArgs(1),
+		Args:    cobra.MinimumNArgs(2),
 	},
 	Flags: &flags,
 	Run:   stageContract,
