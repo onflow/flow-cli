@@ -34,14 +34,14 @@ var MigrationContractStagingAddress = map[string]string{
 
 func stageContract(
 	args []string,
-	_ command.GlobalFlags,
+	globalFlags command.GlobalFlags,
 	_ output.Logger,
 	flow flowkit.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
 	scTempl, err := template.ParseFiles("./transactions/stage-contract.cdc")
 	if err != nil {
-		return nil, fmt.Errorf("error loading stag contract file: %w", err)
+		return nil, fmt.Errorf("error loading staging contract file: %w", err)
 	}
 
 	// render transaction template with network
@@ -49,7 +49,7 @@ func stageContract(
 	if err := scTempl.Execute(
 		&txScriptBuf, 
 		map[string]string{
-		"MigrationContractStaging": MigrationContractStagingAddress["testnet"],
+		"MigrationContractStaging": MigrationContractStagingAddress[globalFlags.Network],
 		}); err != nil {
 		return nil, err
 	}
@@ -62,7 +62,7 @@ func stageContract(
 		return nil, fmt.Errorf("error loading contract file: %w", err)
 	}
 
-	res, err := transactions.SendTransaction(
+	return transactions.SendTransaction(
 		txScriptBuf.Bytes(), 
 		[]string{
 			contractName,
@@ -73,9 +73,4 @@ func stageContract(
 		state, 
 		stageContractflags,
 	)
-	if err != nil {
-		return nil, err
-	}
-
-	return res, nil
 }
