@@ -54,8 +54,10 @@ func stageContract(
 		return nil, err
 	}
 
+	contractName, contractPath := args[0], args[1]
+
 	// get the contract code from argument
-	contractCode, err := state.ReadFile(args[1])
+	contractCode, err := state.ReadFile(contractPath)
 	if err != nil {
 		return nil, fmt.Errorf("error loading contract file: %w", err)
 	}
@@ -63,7 +65,7 @@ func stageContract(
 	res, err := transactions.SendTransaction(
 		txScriptBuf.Bytes(), 
 		[]string{
-			args[0],
+			contractName,
 			string(contractCode),
 		}, 
 		"", 
