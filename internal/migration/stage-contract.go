@@ -23,7 +23,7 @@ var stageContractCommand = &command.Command{
 		Args:    cobra.MinimumNArgs(2),
 	},
 	Flags: &stageContractflags,
-	// Run:   stageContract,
+	RunS:   stageContract,
 }
 
 var MigrationContractStagingAddress = map[string]string{
@@ -38,7 +38,7 @@ func stageContract(
 	_ output.Logger,
 	flow flowkit.Services,
 	state *flowkit.State,
-) (interface{}, error) {
+) (command.Result, error) {
 	scTempl, err := template.ParseFiles("./transactions/stage-contract.cdc")
 	if err != nil {
 		return nil, fmt.Errorf("error loading stag contract file: %w", err)
