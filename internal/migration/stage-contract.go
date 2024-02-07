@@ -1,25 +1,19 @@
 package migration
 
 import (
-	"context"
+	"bytes"
 	"fmt"
+	"text/template"
 
-	"github.com/onflow/cadence"
 	"github.com/onflow/flow-cli/internal/command"
+	"github.com/onflow/flow-cli/internal/transactions"
 	"github.com/onflow/flowkit"
-	"github.com/onflow/flowkit/arguments"
 	"github.com/onflow/flowkit/output"
 	"github.com/spf13/cobra"
-
-	flowsdk "github.com/onflow/flow-go-sdk"
 )
 
-type StageContractFlags struct {
-	Network string `default:"" flag:"network" info:"network to stage the contract on"`
-	Signer string `default:"" flag:"signer" info:"signer account to stage the contract with"`
-}
 
-var flags = StageContractFlags{}
+var stageContractflags = transactions.Flags{}
 
 var stageContractCommand = &command.Command{
 	Cmd: &cobra.Command{
@@ -28,60 +22,58 @@ var stageContractCommand = &command.Command{
 		Example: `flow stage-contract HelloWorld hello_world.cdc --network testnet --signer emulator-account`,
 		Args:    cobra.MinimumNArgs(2),
 	},
-	Flags: &flags,
-	Run:   stageContract,
+	Flags: &stageContractflags,
+	// Run:   stageContract,
 }
+
+var MigrationContractStagingAddress = map[string]string{
+	"testnet":  "0xSomeAddress",
+	"mainnet":  "0xSomeOtherAddress",
+}
+
 
 func stageContract(
 	args []string,
 	_ command.GlobalFlags,
 	_ output.Logger,
-	readerWriter flowkit.ReaderWriter,
 	flow flowkit.Services,
-) (command.Result, error) {
-	stageContractCode, err := readerWriter.ReadFile("./transactions/stage-contract.cdc")
+	state *flowkit.State,
+) (interface{}, error) {
+	scTempl, err := template.ParseFiles("./transactions/stage-contract.cdc")
 	if err != nil {
 		return nil, fmt.Errorf("error loading stag contract file: %w", err)
 	}
 
-	// TODO: do something about sending transactions instead
-	return SendScript(stageContractCode, args[1:], "", flow, flags)
-}
-
-func SendScript(code []byte, argsArr []string, location string, flow flowkit.Services, scriptFlags Flags) (command.Result, error) {
-	var cadenceArgs []cadence.Value
-	var err error
-	if scriptFlags.ArgsJSON != "" {
-		cadenceArgs, err = arguments.ParseJSON(scriptFlags.ArgsJSON)
-	} else {
-		cadenceArgs, err = arguments.ParseWithoutType(argsArr, code, location)
+	// render transaction template with network
+	var txScriptBuf bytes.Buffer
+	if err := scTempl.Execute(
+		&txScriptBuf, 
+		map[string]string{
+		"MigrationContractStaging": MigrationContractStagingAddress["testnet"],
+		}); err != nil {
+		return nil, err
 	}
 
+	// get the contract code from argument
+	contractCode, err := state.ReadFile(args[1])
 	if err != nil {
-		return nil, fmt.Errorf("error parsing script arguments: %w", err)
+		return nil, fmt.Errorf("error loading contract file: %w", err)
 	}
 
-	query := flowkit.ScriptQuery{}
-	if scriptFlags.BlockHeight != 0 {
-		query.Height = scriptFlags.BlockHeight
-	} else if scriptFlags.BlockID != "" {
-		query.ID = flowsdk.HexToID(scriptFlags.BlockID)
-	} else {
-		query.Latest = true
-	}
-
-	value, err := flow.ExecuteScript(
-		context.Background(),
-		flowkit.Script{
-			Code:     code,
-			Args:     cadenceArgs,
-			Location: location,
-		},
-		query,
+	res, err := transactions.SendTransaction(
+		txScriptBuf.Bytes(), 
+		[]string{
+			args[0],
+			string(contractCode),
+		}, 
+		"", 
+		flow, 
+		state, 
+		stageContractflags,
 	)
 	if err != nil {
 		return nil, err
 	}
 
-	return &scriptResult{value}, nil
+	return res, nil
 }
