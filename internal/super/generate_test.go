@@ -51,7 +51,8 @@ func TestGenerateNewContract(t *testing.T) {
 
 	// Check content is correct
 	expectedContent := `
-access(all) contract TestContract {
+access(all)
+contract TestContract {
     init() {}
 }`
 	assert.Equal(t, expectedContent, string(fileContent))
@@ -129,7 +130,8 @@ func TestGenerateNewScript(t *testing.T) {
 	assert.NoError(t, err, "Failed to read generated file")
 	assert.NotNil(t, content)
 
-	expectedContent := `access(all) fun main() {
+	expectedContent := `access(all)
+fun main() {
     // Script details here
 }`
 	assert.Equal(t, expectedContent, string(content))
@@ -185,7 +187,8 @@ func TestGenerateNewWithDirFlag(t *testing.T) {
 	assert.NotNil(t, content)
 
 	expectedContent := `
-access(all) contract TestContract {
+access(all)
+contract TestContract {
     init() {}
 }`
 	assert.Equal(t, expectedContent, string(content))
