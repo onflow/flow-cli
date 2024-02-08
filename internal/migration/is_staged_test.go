@@ -30,7 +30,7 @@ func Test_IsStaged(t *testing.T) {
 			contractAddr := cadence.NewAddress(flowsdk.HexToAddress("0xSomeAddress"))
 			assert.Equal(t, contractName, actualContractNameArg)
 			assert.Equal(t, contractAddr, actualContractAddressArg)
-		}).Return(cadence.NewMeteredOptional(nil, nil), nil)
+		}).Return(cadence.NewMeteredBool(nil, true), nil)
 
 		result, err := isStaged(
 			[]string{testContract.Name, "0xSomeAddress"},
@@ -42,7 +42,6 @@ func Test_IsStaged(t *testing.T) {
 			state,
 		)
 		assert.NoError(t, err)
-		// TODO: fix this
-		assert.Nil(t, result)
+		assert.NotNil(t, result)
 	})
 }

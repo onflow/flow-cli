@@ -36,7 +36,7 @@ func isStaged(
 	flow flowkit.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
-	scTempl, err := template.ParseFiles("./cadence/cripts/get_staged_contract_code.cdc")
+	scTempl, err := template.ParseFiles("./cadence/scripts/is_staged.cdc")
 	if err != nil {
 		return nil, fmt.Errorf("error loading staging contract file: %w", err)
 	}
@@ -81,10 +81,5 @@ func isStaged(
 		return nil, err
 	}
 
-	// check if valid is returned. If no value is returned, return false
-	if value.String() == "" {
-		return nil, nil
-	}
-
-	return nil, nil
+	return scripts.NewScriptResult(value), nil
 }
