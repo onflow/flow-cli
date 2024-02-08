@@ -26,13 +26,6 @@ var stageContractCommand = &command.Command{
 	RunS:   stageContract,
 }
 
-// TODO: update these  once deployed
-var MigrationContractStagingAddress = map[string]string{
-	"testnet":  "0xa983fecbed621163",
-	"mainnet":  "0xa983fecbed621163",
-}
-
-
 func stageContract(
 	args []string,
 	globalFlags command.GlobalFlags,
