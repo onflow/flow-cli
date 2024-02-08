@@ -16,8 +16,9 @@ import (
 func Test_StageContract(t *testing.T) {
 	srv, state, _ := util.TestMocks(t)
 
+	testContract := tests.ContractSimple
+
 	t.Run("Success", func(t *testing.T) {
-	 	testContract := tests.ContractSimple
 
 		srv.SendTransaction.Run(func(args mock.Arguments) {
 		script := args.Get(2).(flowkit.Script)
