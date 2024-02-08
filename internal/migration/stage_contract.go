@@ -40,7 +40,7 @@ func stageContract(
 	flow flowkit.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
-	scTempl, err := template.ParseFiles("./transactions/stage_contract.cdc")
+	scTempl, err := template.ParseFiles("./cadence/transactions/stage_contract.cdc")
 	if err != nil {
 		return nil, fmt.Errorf("error loading staging contract file: %w", err)
 	}
