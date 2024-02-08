@@ -1,9 +1,7 @@
 package migration
 
 import (
-	"bytes"
 	"fmt"
-	"text/template"
 
 	"github.com/onflow/flowkit"
 	"github.com/onflow/flowkit/output"
@@ -33,25 +31,15 @@ func unstageContract(
 	flow flowkit.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
-	scTempl, err := template.ParseFiles("./cadence/transactions/unstage_contract.cdc")
+	code, err := RenderContractTemplate(UnstageContractTransactionFilepath, globalFlags.Network)
 	if err != nil {
 		return nil, fmt.Errorf("error loading staging contract file: %w", err)
-	}
-
-	// render transaction template with network
-	var txScriptBuf bytes.Buffer
-	if err := scTempl.Execute(
-		&txScriptBuf,
-		map[string]string{
-			"MigrationContractStaging": MigrationContractStagingAddress[globalFlags.Network],
-		}); err != nil {
-		return nil, fmt.Errorf("error rendering staging contract template: %w", err)
 	}
 
 	contractName := args[0]
 
 	res, err := transactions.SendTransaction(
-		txScriptBuf.Bytes(),
+		code,
 		[]string{
 			contractName,
 		},

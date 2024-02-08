@@ -1,10 +1,8 @@
 package migration
 
 import (
-	"bytes"
 	"context"
 	"fmt"
-	"text/template"
 
 	"github.com/onflow/cadence"
 	flowsdk "github.com/onflow/flow-go-sdk"
@@ -36,19 +34,9 @@ func isStaged(
 	flow flowkit.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
-	scTempl, err := template.ParseFiles("./cadence/scripts/is_staged.cdc")
+	code, err := RenderContractTemplate(IsStagedFileScriptpath, globalFlags.Network)
 	if err != nil {
 		return nil, fmt.Errorf("error loading staging contract file: %w", err)
-	}
-
-	// render transaction template with network
-	var txScriptBuf bytes.Buffer
-	if err := scTempl.Execute(
-		&txScriptBuf,
-		map[string]string{
-			"MigrationContractStaging": MigrationContractStagingAddress[globalFlags.Network],
-		}); err != nil {
-		return nil, fmt.Errorf("error rendering staging contract template: %w", err)
 	}
 
 	contractName, contractAddress := args[0], args[1]
@@ -72,7 +60,7 @@ func isStaged(
 	value, err := flow.ExecuteScript(
 		context.Background(),
 		flowkit.Script{
-			Code: txScriptBuf.Bytes(),
+			Code: code,
 			Args: []cadence.Value{caddr, cname},
 		},
 		query,

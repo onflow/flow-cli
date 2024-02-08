@@ -1,9 +1,7 @@
 package migration
 
 import (
-	"bytes"
 	"fmt"
-	"text/template"
 
 	"github.com/onflow/flowkit"
 	"github.com/onflow/flowkit/output"
@@ -33,19 +31,9 @@ func stageContract(
 	flow flowkit.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
-	scTempl, err := template.ParseFiles("./cadence/transactions/stage_contract.cdc")
+	code, err := RenderContractTemplate(StageContractTransactionFilepath, globalFlags.Network)
 	if err != nil {
 		return nil, fmt.Errorf("error loading staging contract file: %w", err)
-	}
-
-	// render transaction template with network
-	var txScriptBuf bytes.Buffer
-	if err := scTempl.Execute(
-		&txScriptBuf,
-		map[string]string{
-			"MigrationContractStaging": MigrationContractStagingAddress[globalFlags.Network],
-		}); err != nil {
-		return nil, fmt.Errorf("error rendering staging contract template: %w", err)
 	}
 
 	contractName, contractPath := args[0], args[1]
@@ -57,7 +45,7 @@ func stageContract(
 	}
 
 	res, err := transactions.SendTransaction(
-		txScriptBuf.Bytes(),
+		code,
 		[]string{
 			contractName,
 			string(contractCode),
