@@ -71,7 +71,7 @@ func isStaged(
 		query.Latest = true
 	}
 
-	_, err = flow.ExecuteScript(
+	value, err := flow.ExecuteScript(
 		context.Background(),
 		flowkit.Script{
 			Code:     txScriptBuf.Bytes(),
@@ -81,6 +81,11 @@ func isStaged(
 	)
 	if err != nil {
 		return nil, err
+	}
+
+	// check if valid is returned. If no value is returned, return false 
+	if value.String() == "" {
+		return nil, nil
 	}
 
 	return nil, nil
