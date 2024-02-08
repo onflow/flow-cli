@@ -2,11 +2,14 @@ package migration
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"text/template"
 
+	"github.com/onflow/cadence"
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/internal/scripts"
+	flowsdk "github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flowkit"
 	"github.com/onflow/flowkit/output"
 	"github.com/spf13/cobra"
@@ -33,7 +36,7 @@ func isStaged(
 	flow flowkit.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
-	scTempl, err := template.ParseFiles("./transactions/get_staged_contract_code.cdc")
+	scTempl, err := template.ParseFiles("./scripts/get_staged_contract_code.cdc")
 	if err != nil {
 		return nil, fmt.Errorf("error loading staging contract file: %w", err)
 	}
@@ -51,19 +54,34 @@ func isStaged(
 
 	contractName, contractAddress := args[0], args[1]
 
-	res, err := scripts.SendScript(
-		txScriptBuf.Bytes(),
-		[]string{
-			contractName,
-			contractAddress,
-		},
-		"",
-		flow,
-		isStagedflags,
-	)
+	caddr := cadence.NewAddress(flowsdk.HexToAddress(contractAddress))
+
+	cname, err := cadence.NewString(contractName)
 	if err != nil {
-		return nil, fmt.Errorf("error sending script: %w", err)
+		return nil, fmt.Errorf("failed to get cadence string from contract name: %w", err)
 	}
 
-	return res, nil
+
+	query := flowkit.ScriptQuery{}
+	if isStagedflags.BlockHeight != 0 {
+		query.Height = isStagedflags.BlockHeight
+	} else if isStagedflags.BlockID != "" {
+		query.ID = flowsdk.HexToID(isStagedflags.BlockID)
+	} else {
+		query.Latest = true
+	}
+
+	_, err = flow.ExecuteScript(
+		context.Background(),
+		flowkit.Script{
+			Code:     txScriptBuf.Bytes(),
+			Args:     []cadence.Value{caddr, cname},
+		},
+		query,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return nil, nil
 }
