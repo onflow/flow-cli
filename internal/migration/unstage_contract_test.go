@@ -14,7 +14,7 @@ import (
 	"github.com/onflow/flow-cli/internal/util"
 )
 
-func Test_StageContract(t *testing.T) {
+func Test_UnstageContract(t *testing.T) {
 	srv, state, _ := util.TestMocks(t)
 
 	testContract := tests.ContractSimple
@@ -24,20 +24,18 @@ func Test_StageContract(t *testing.T) {
 		srv.SendTransaction.Run(func(args mock.Arguments) {
 			script := args.Get(2).(flowkit.Script)
 
-			actualContractNameArg, actualContractCodeArg := script.Args[0], script.Args[1]
+			actualContractNameArg := script.Args[0]
 
 			contractName, _ := cadence.NewString(testContract.Name)
-			contractBody, _ := cadence.NewString(string(testContract.Source))
 			assert.Equal(t, contractName, actualContractNameArg)
-			assert.Equal(t, contractBody, actualContractCodeArg)
 		}).Return(flow.NewTransaction(), &flow.TransactionResult{
 			Status:      flow.TransactionStatusSealed,
 			Error:       nil,
 			BlockHeight: 1,
 		}, nil)
 
-		result, err := stageContract(
-			[]string{testContract.Name, testContract.Filename},
+		result, err := unstageContract(
+			[]string{testContract.Name},
 			command.GlobalFlags{
 				Network: "testnet",
 			},

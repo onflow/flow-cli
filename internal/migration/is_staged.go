@@ -7,12 +7,13 @@ import (
 	"text/template"
 
 	"github.com/onflow/cadence"
-	"github.com/onflow/flow-cli/internal/command"
-	"github.com/onflow/flow-cli/internal/scripts"
 	flowsdk "github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flowkit"
 	"github.com/onflow/flowkit/output"
 	"github.com/spf13/cobra"
+
+	"github.com/onflow/flow-cli/internal/command"
+	"github.com/onflow/flow-cli/internal/scripts"
 )
 
 var isStagedflags = scripts.Flags{}
@@ -25,9 +26,8 @@ var IsStagedCommand = &command.Command{
 		Args:    cobra.MinimumNArgs(2),
 	},
 	Flags: &isStagedflags,
-	RunS:   isStaged,
+	RunS:  isStaged,
 }
-
 
 func isStaged(
 	args []string,
@@ -44,13 +44,12 @@ func isStaged(
 	// render transaction template with network
 	var txScriptBuf bytes.Buffer
 	if err := scTempl.Execute(
-		&txScriptBuf, 
+		&txScriptBuf,
 		map[string]string{
-		"MigrationContractStaging": MigrationContractStagingAddress[globalFlags.Network],
+			"MigrationContractStaging": MigrationContractStagingAddress[globalFlags.Network],
 		}); err != nil {
 		return nil, fmt.Errorf("error rendering staging contract template: %w", err)
 	}
-
 
 	contractName, contractAddress := args[0], args[1]
 
@@ -60,7 +59,6 @@ func isStaged(
 	if err != nil {
 		return nil, fmt.Errorf("failed to get cadence string from contract name: %w", err)
 	}
-
 
 	query := flowkit.ScriptQuery{}
 	if isStagedflags.BlockHeight != 0 {
@@ -74,8 +72,8 @@ func isStaged(
 	value, err := flow.ExecuteScript(
 		context.Background(),
 		flowkit.Script{
-			Code:     txScriptBuf.Bytes(),
-			Args:     []cadence.Value{caddr, cname},
+			Code: txScriptBuf.Bytes(),
+			Args: []cadence.Value{caddr, cname},
 		},
 		query,
 	)
@@ -83,7 +81,7 @@ func isStaged(
 		return nil, err
 	}
 
-	// check if valid is returned. If no value is returned, return false 
+	// check if valid is returned. If no value is returned, return false
 	if value.String() == "" {
 		return nil, nil
 	}
