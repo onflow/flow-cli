@@ -27,7 +27,7 @@ var migrationContractStagingAddress = map[string]string{
 }
 
 // RenderContractTemplate renders the contract template
-func RenderContractTemplate(network string, filepath string) ([]byte, error) {
+func RenderContractTemplate(filepath string, network string) ([]byte, error) {
 	scTempl, err := template.ParseFiles(filepath)
 	if err != nil {
 		return nil, fmt.Errorf("error loading staging contract file: %w", err)
