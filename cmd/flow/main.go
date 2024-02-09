@@ -63,7 +63,7 @@ func main() {
 			if outputFlag != "json" {
 
 				width := 80
-				url := "https://developers.flow.com/build/cadence-migration-guide"
+				url := "https://cadence-lang.org/docs/cadence_migration_guide"
 
 				// Function to center text within a given width
 				centerText := func(text string, width int) string {
