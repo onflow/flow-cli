@@ -53,38 +53,16 @@ func unstageContract(
 	flow flowkit.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
+	contractName := args[0]
+
 	code, err := RenderContractTemplate(UnstageContractTransactionFilepath, globalFlags.Network)
 	if err != nil {
 		return nil, fmt.Errorf("error loading staging contract file: %w", err)
 	}
 
-	contractName := args[0]
-
-	deployments := state.Deployments().ByNetwork(globalFlags.Network)
-	var accountName string
-	for _, d := range deployments {
-		for _, c := range d.Contracts {
-			if c.Name == contractName {
-				accountName = d.Account
-				break
-			}
-		}
-	}
-
-	accs := state.Accounts()
-	if accs == nil {
-		return nil, fmt.Errorf("no accounts found in state")
-	}
-
-	var accountToDeploy *accounts.Account
-	for _, a := range *accs {
-		if accountName == a.Name {
-			accountToDeploy = &a
-			break
-		}
-	}
-	if accountToDeploy == nil {
-		return nil, fmt.Errorf("account %s not found in state", accountName)
+	account, err := getAccountByContractName(state, contractName, globalFlags.Network)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get account by contract name: %w", err)
 	}
 
 	cName, err := cadence.NewString(contractName)
@@ -95,9 +73,9 @@ func unstageContract(
 	_, _, err = flow.SendTransaction(
 		context.Background(),
 		transactions.AccountRoles{
-			Proposer:    *accountToDeploy,
-			Authorizers: []accounts.Account{*accountToDeploy},
-			Payer:       *accountToDeploy,
+			Proposer:    *account,
+			Authorizers: []accounts.Account{*account},
+			Payer:       *account,
 		},
 		flowkit.Script{
 			Code: code,

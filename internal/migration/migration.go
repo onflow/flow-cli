@@ -22,6 +22,8 @@ import (
 	"bytes"
 	"fmt"
 	"text/template"
+
+	"github.com/onflow/flowkit/accounts"
 )
 
 const (
@@ -65,4 +67,38 @@ func RenderContractTemplate(filepath string, network string) ([]byte, error) {
 	}
 
 	return txScriptBuf.Bytes(), nil
+}
+
+func getAccountByContractName(state *State, contractName string, network string) (*accounts.Account, error) {
+	deployments := state.Deployments().ByNetwork(network)
+	var accountName string
+	for _, d := range deployments {
+		for _, c := range d.Contracts {
+			if c.Name == contractName {
+				accountName = d.Account
+				break
+			}
+		}
+	}
+	if accountName == "" {
+		return nil, fmt.Errorf("contract not found in state")
+	}
+
+	accs := state.Accounts()
+	if accs == nil {
+		return nil, fmt.Errorf("no accounts found in state")
+	}
+
+	var account *accounts.Account
+	for _, a := range *accs {
+		if accountName == a.Name {
+			account = &a
+			break
+		}
+	}
+	if account == nil {
+		return nil, fmt.Errorf("account %s not found in state", accountName)
+	}
+
+	return account, nil
 }

@@ -53,56 +53,26 @@ func stageContract(
 	flow flowkit.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
-	code, err := RenderContractTemplate(UnstageContractTransactionFilepath, globalFlags.Network)
+	contractName := args[0]
+
+	code, err := RenderContractTemplate(StageContractTransactionFilepath, globalFlags.Network)
 	if err != nil {
 		return nil, fmt.Errorf("error loading staging contract file: %w", err)
 	}
-	
-	contractName := args[0]
 
-	contracts := state.Contracts()
-	if contracts == nil {
+	contract, err := state.Contracts().ByName(contractName)
+	if err != nil {
 		return nil, fmt.Errorf("no contracts found in state")
 	}
 
-	var contractPath string
-	for _, c := range *contracts {
-		if contractName == c.Name {
-			contractPath = c.Location
-			break
-		}
-	}
-
-	contractCode, err := state.ReadFile(contractPath)
+	contractCode, err := state.ReadFile(contract.Location)
 	if err != nil {
 		return nil, fmt.Errorf("error loading contract file: %w", err)
 	}
 
-	deployments := state.Deployments().ByNetwork(globalFlags.Network)
-	var accountName string
-	for _, d := range deployments {
-		for _, c := range d.Contracts {
-			if c.Name == contractName {
-				accountName = d.Account
-				break
-			}
-		}
-	}
-
-	accs := state.Accounts()
-	if accs == nil {
-		return nil, fmt.Errorf("no accounts found in state")
-	}
-
-	var accountToDeploy *accounts.Account
-	for _, a := range *accs {
-		if accountName == a.Name {
-			accountToDeploy = &a
-			break
-		}
-	}
-	if accountToDeploy == nil {
-		return nil, fmt.Errorf("account %s not found in state", accountName)
+	account, err := getAccountByContractName(state, globalFlags.Network, contractName)
+	if err != nil {
+		return nil, fmt.Errorf("error getting account by contract name: %w", err)
 	}
 
 	cName, err := cadence.NewString(contractName)
@@ -118,9 +88,9 @@ func stageContract(
 	_, _, err = flow.SendTransaction(
 		context.Background(),
 		transactions.AccountRoles{
-			Proposer:    *accountToDeploy,
-			Authorizers: []accounts.Account{*accountToDeploy},
-			Payer:       *accountToDeploy,
+			Proposer:    *account,
+			Authorizers: []accounts.Account{*account},
+			Payer:       *account,
 		},
 		flowkit.Script{
 			Code: code,
