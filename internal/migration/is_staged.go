@@ -66,22 +66,13 @@ func isStaged(
 		return nil, fmt.Errorf("failed to get cadence string from contract name: %w", err)
 	}
 
-	query := flowkit.ScriptQuery{}
-	if isStagedflags.BlockHeight != 0 {
-		query.Height = isStagedflags.BlockHeight
-	} else if isStagedflags.BlockID != "" {
-		query.ID = flowsdk.HexToID(isStagedflags.BlockID)
-	} else {
-		query.Latest = true
-	}
-
 	value, err := flow.ExecuteScript(
 		context.Background(),
 		flowkit.Script{
 			Code: code,
 			Args: []cadence.Value{caddr, cname},
 		},
-		query,
+		flowkit.LatestScriptQuery,
 	)
 	if err != nil {
 		return nil, err

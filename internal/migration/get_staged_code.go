@@ -60,23 +60,14 @@ func getStagedCode(
 	contractAddress := args[0]
 
 	caddr := cadence.NewAddress(flowsdk.HexToAddress(contractAddress))
-
-	query := flowkit.ScriptQuery{}
-	if getStagedCodeflags.BlockHeight != 0 {
-		query.Height = getStagedCodeflags.BlockHeight
-	} else if getStagedCodeflags.BlockID != "" {
-		query.ID = flowsdk.HexToID(getStagedCodeflags.BlockID)
-	} else {
-		query.Latest = true
-	}
-
+	
 	value, err := flow.ExecuteScript(
 		context.Background(),
 		flowkit.Script{
 			Code: code,
 			Args: []cadence.Value{caddr},
 		},
-		query,
+		flowkit.LatestScriptQuery,
 	)
 	if err != nil {
 		return nil, err

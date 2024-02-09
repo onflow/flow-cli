@@ -61,22 +61,13 @@ func listStagedContracts(
 
 	caddr := cadence.NewAddress(flowsdk.HexToAddress(contractAddress))
 
-	query := flowkit.ScriptQuery{}
-	if listStagedContractsflags.BlockHeight != 0 {
-		query.Height = listStagedContractsflags.BlockHeight
-	} else if listStagedContractsflags.BlockID != "" {
-		query.ID = flowsdk.HexToID(listStagedContractsflags.BlockID)
-	} else {
-		query.Latest = true
-	}
-
 	value, err := flow.ExecuteScript(
 		context.Background(),
 		flowkit.Script{
 			Code: code,
 			Args: []cadence.Value{caddr},
 		},
-		query,
+		flowkit.LatestScriptQuery,
 	)
 	if err != nil {
 		return nil, err
