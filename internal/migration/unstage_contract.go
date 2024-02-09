@@ -19,9 +19,13 @@
 package migration
 
 import (
+	"context"
 	"fmt"
 
+	"github.com/onflow/cadence"
+	flowsdk "github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flowkit"
+	"github.com/onflow/flowkit/accounts"
 	"github.com/onflow/flowkit/output"
 	"github.com/spf13/cobra"
 
@@ -56,19 +60,55 @@ func unstageContract(
 
 	contractName := args[0]
 
-	res, err := transactions.SendTransaction(
-		code,
-		[]string{
-			contractName,
-		},
-		"",
-		flow,
-		state,
-		stageContractflags,
-	)
-	if err != nil {
-		return nil, fmt.Errorf("error sending transaction: %w", err)
+	deployments := state.Deployments().ByNetwork(globalFlags.Network)
+	var accountName string
+	for _, d := range deployments {
+		for _, c := range d.Contracts {
+			if c.Name == contractName {
+				accountName = d.Account
+				break
+			}
+		}
 	}
 
-	return res, nil
+	accs := state.Accounts()
+	if accs == nil {
+		return nil, fmt.Errorf("no accounts found in state")
+	}
+
+	var accountToDeploy *accounts.Account
+	for _, a := range *accs {
+		if accountName == a.Name {
+			accountToDeploy = &a
+			break
+		}
+	}
+	if accountToDeploy == nil {
+		return nil, fmt.Errorf("account %s not found in state", accountName)
+	}
+
+	cName, err := cadence.NewString(contractName)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get cadence string from contract name: %w", err)
+	}
+
+	_, _, err = flow.SendTransaction(
+		context.Background(),
+		transactions.AccountRoles{
+			Proposer:    *accountToDeploy,
+			Authorizers: []accounts.Account{*accountToDeploy},
+			Payer:       *accountToDeploy,
+		},
+		flowkit.Script{
+			Code: code,
+			Args: []cadence.Value{cName},
+		},
+		flowsdk.DefaultTransactionGasLimit,
+	)
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to send transaction: %w", err)
+	}
+
+	return nil, nil
 }
