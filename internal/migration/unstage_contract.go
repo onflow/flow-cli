@@ -27,13 +27,13 @@ import (
 	"github.com/onflow/flowkit"
 	"github.com/onflow/flowkit/accounts"
 	"github.com/onflow/flowkit/output"
+	"github.com/onflow/flowkit/transactions"
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
-	"github.com/onflow/flow-cli/internal/transactions"
 )
 
-var unstageContractflags = transactions.Flags{}
+var unstageContractflags interface{}
 
 var unstageContractCommand = &command.Command{
 	Cmd: &cobra.Command{
