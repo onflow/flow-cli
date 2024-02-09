@@ -24,7 +24,6 @@ import (
 	"text/template"
 )
 
-
 const (
 	// GetStagedContractCodeFilepath is the file path for the get staged code transaction
 	GetStagedContractCodeScriptFilepath = "./cadence/scripts/get_staged_contract_code.cdc"
@@ -53,7 +52,7 @@ func RenderContractTemplate(filepath string, network string) ([]byte, error) {
 
 	if migrationContractStagingAddress[network] == "" {
 		return nil, fmt.Errorf("staging contract address not found for network: %s", network)
-	}	
+	}
 
 	// render transaction template with network
 	var txScriptBuf bytes.Buffer
@@ -65,5 +64,5 @@ func RenderContractTemplate(filepath string, network string) ([]byte, error) {
 		return nil, fmt.Errorf("error rendering staging contract template: %w", err)
 	}
 
-	return txScriptBuf.Bytes(), nil 
+	return txScriptBuf.Bytes(), nil
 }
