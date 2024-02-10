@@ -23,6 +23,7 @@ import (
 	"fmt"
 	"text/template"
 
+	"github.com/onflow/flowkit"
 	"github.com/onflow/flowkit/accounts"
 )
 
@@ -69,7 +70,7 @@ func RenderContractTemplate(filepath string, network string) ([]byte, error) {
 	return txScriptBuf.Bytes(), nil
 }
 
-func getAccountByContractName(state *State, contractName string, network string) (*accounts.Account, error) {
+func getAccountByContractName(state *flowkit.State, contractName string, network string) (*accounts.Account, error) {
 	deployments := state.Deployments().ByNetwork(network)
 	var accountName string
 	for _, d := range deployments {
