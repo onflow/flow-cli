@@ -30,7 +30,9 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 	"os"
+	"os/signal"
 	"strings"
+	"syscall"
 )
 
 type flagsDev struct{}
@@ -71,7 +73,9 @@ func dev(
 		util.Exit(1, "Only hexadecimal keys can be used as the emulator service account key.")
 	}
 
-	log := zerolog.New(os.Stdout)
+	consoleWriter := zerolog.ConsoleWriter{Out: os.Stdout}
+	log := zerolog.New(consoleWriter).With().Timestamp().Logger()
+
 	emulatorServer := server.NewEmulatorServer(&log, &server.Config{
 		ServicePublicKey:   (*privateKey).PublicKey(),
 		ServicePrivateKey:  *privateKey,
@@ -84,14 +88,15 @@ func dev(
 		panic(fmt.Sprintf("Failed to prepare the emulator for connections: %s", emuErr))
 	}
 
+	c := make(chan os.Signal)
+	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 	go func() {
 		emulatorServer.Start()
+		<-c
+		os.Exit(1)
 	}()
-	fmt.Println("Emulator server is ready")
 
-	//time.Sleep(3 * time.Second)
-
-	err = flow.Ping()
+	err = flow.Wait()
 	if err != nil {
 		logger.Error("Error connecting to emulator. Make sure you started an emulator using 'flow emulator' command.")
 		logger.Info(fmt.Sprintf("%s This tool requires emulator to function. Emulator needs to be run inside the project root folder where the configuration file ('flow.json') exists.\n\n", output.TryEmoji()))

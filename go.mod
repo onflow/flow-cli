@@ -8,7 +8,7 @@ require (
 	github.com/go-git/go-git/v5 v5.11.0
 	github.com/gosuri/uilive v0.0.4
 	github.com/manifoldco/promptui v0.9.0
-	github.com/onflow/cadence v0.42.6
+	github.com/onflow/cadence v0.42.7
 	github.com/onflow/cadence-tools/languageserver v0.33.3
 	github.com/onflow/cadence-tools/test v0.14.5
 	github.com/onflow/fcl-dev-wallet v0.7.4
@@ -265,5 +265,7 @@ require (
 //replace github.com/onflow/flow-go/crypto => github.com/onflow/flow-go/crypto v0.24.9
 replace (
 	github.com/onflow/flow-emulator v0.59.0 => ../flow-emulator
+	github.com/onflow/flow-go-sdk v0.41.17 => ../flow-go-sdk
+	github.com/onflow/flowkit v1.13.0 => ../flowkit
 	github.com/onflow/flow-go/crypto => github.com/onflow/flow-go/crypto v0.24.9
 )
