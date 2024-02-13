@@ -1,4 +1,4 @@
-import MigrationContractStaging from {{.MigrationContractStaging}}
+import "MigrationContractStaging"
 
 
 /// Unstages the given contract from the staging contract. Only the contract host can perform this action.

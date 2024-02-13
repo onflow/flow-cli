@@ -52,9 +52,9 @@ func isStaged(
 	flow flowkit.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
-	code, err := RenderContractTemplate(IsStagedFileScriptpath, globalFlags.Network)
+	code, err := state.ReaderWriter().ReadFile(GetStagedContractCodeScriptFilepath)
 	if err != nil {
-		return nil, fmt.Errorf("error loading staging contract file: %w", err)
+		return nil, fmt.Errorf("failed to read staged contract code script: %w", err)
 	}
 
 	contractName, contractAddress := args[0], args[1]

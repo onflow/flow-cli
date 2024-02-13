@@ -1,4 +1,4 @@
-import MigrationContractStaging from {{.MigrationContractStaging}}
+import "MigrationContractStaging"
 
 /// Returns whether the given contract is staged or not
 ///

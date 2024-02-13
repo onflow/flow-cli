@@ -23,8 +23,11 @@ import (
 	"fmt"
 	"text/template"
 
+	"github.com/onflow/cadence"
+	flowsdk "github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flowkit"
 	"github.com/onflow/flowkit/accounts"
+	"github.com/onflow/flowkit/project"
 )
 
 const (
@@ -40,11 +43,6 @@ const (
 	UnstageContractTransactionFilepath = "./cadence/transactions/unstage_contract.cdc"
 )
 
-// TODO: update these  once deployed
-var migrationContractStagingAddress = map[string]string{
-	"testnet": "0xa983fecbed621163",
-	"mainnet": "0xa983fecbed621163",
-}
 
 // RenderContractTemplate renders the contract template
 func RenderContractTemplate(filepath string, network string) ([]byte, error) {
@@ -68,6 +66,44 @@ func RenderContractTemplate(filepath string, network string) ([]byte, error) {
 	}
 
 	return txScriptBuf.Bytes(), nil
+}
+
+// TODO: update these  once deployed
+var migrationContractStagingAddress = map[string]string{
+	"testnet": "0xa983fecbed621163",
+	"mainnet": "0xa983fecbed621163",
+}
+
+func ReplaceImports(state flowkit.State, filepath string, network string, vals []cadence.Value) ([]byte, error) {
+	code, err := state.ReaderWriter().ReadFile(filepath)
+	if err != nil {
+		return nil, fmt.Errorf("error loading file: %w", err)
+	}
+
+	importReplacer := project.NewImportReplacer(
+		[]*project.Contract{
+			{
+			Name: "MigrationContractStaging",
+			AccountAddress: flowsdk.HexToAddress(migrationContractStagingAddress[network]),
+			},
+		},
+		nil,
+	)
+	program, err := project.NewProgram(
+		code,
+		vals,
+		"",
+	) 
+	if err != nil {
+		return nil, fmt.Errorf("error creating program: %w", err) 
+	}
+
+	program, err = importReplacer.Replace(program)
+	if err != nil {
+		return nil, fmt.Errorf("error replacing imports: %w", err) 
+	}
+
+	return program.Code(), nil
 }
 
 func getAccountByContractName(state *flowkit.State, contractName string, network string) (*accounts.Account, error) {

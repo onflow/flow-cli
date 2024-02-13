@@ -1,4 +1,4 @@
-import MigrationContractStaging from {{.MigrationContractStaging}}
+import "MigrationContractStaging"
 
 /// This transaction is used to stage a contract update for Cadence 1.0 contract migrations.
 ///
