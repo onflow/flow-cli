@@ -22,6 +22,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/psiemens/sconfig v0.1.0
 	github.com/radovskyb/watcher v1.0.7
+	github.com/rs/zerolog v1.29.0
 	github.com/sergi/go-diff v1.3.1
 	github.com/spf13/afero v1.10.0
 	github.com/spf13/cobra v1.8.0
@@ -194,7 +195,6 @@ require (
 	github.com/rivo/uniseg v0.4.4 // indirect
 	github.com/rogpeppe/go-internal v1.11.0 // indirect
 	github.com/rs/cors v1.8.0 // indirect
-	github.com/rs/zerolog v1.29.0 // indirect
 	github.com/sethvargo/go-retry v0.2.3 // indirect
 	github.com/shirou/gopsutil v3.21.4-0.20210419000835-c7a38de76ee5+incompatible // indirect
 	github.com/skeema/knownhosts v1.2.1 // indirect
@@ -262,4 +262,8 @@ require (
 )
 
 // this is a woraround for the flow-go/crypto cross compliation issue
-replace github.com/onflow/flow-go/crypto => github.com/onflow/flow-go/crypto v0.24.9
+//replace github.com/onflow/flow-go/crypto => github.com/onflow/flow-go/crypto v0.24.9
+replace (
+	github.com/onflow/flow-emulator v0.59.0 => ../flow-emulator
+	github.com/onflow/flow-go/crypto => github.com/onflow/flow-go/crypto v0.24.9
+)

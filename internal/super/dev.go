@@ -21,16 +21,16 @@ package super
 import (
 	"errors"
 	"fmt"
-	"os"
-	"strings"
-
 	"github.com/onflow/cadence/runtime/parser"
-	"github.com/spf13/cobra"
-
+	"github.com/onflow/flow-cli/internal/command"
+	"github.com/onflow/flow-cli/internal/util"
+	"github.com/onflow/flow-emulator/server"
 	"github.com/onflow/flowkit"
 	"github.com/onflow/flowkit/output"
-
-	"github.com/onflow/flow-cli/internal/command"
+	"github.com/rs/zerolog"
+	"github.com/spf13/cobra"
+	"os"
+	"strings"
 )
 
 type flagsDev struct{}
@@ -60,6 +60,36 @@ func dev(
 	if err != nil {
 		return nil, err
 	}
+
+	serviceAccount, err := state.EmulatorServiceAccount()
+	if err != nil {
+		util.Exit(1, err.Error())
+	}
+
+	privateKey, err := serviceAccount.Key.PrivateKey()
+	if err != nil {
+		util.Exit(1, "Only hexadecimal keys can be used as the emulator service account key.")
+	}
+
+	log := zerolog.New(os.Stdout)
+	emulatorServer := server.NewEmulatorServer(&log, &server.Config{
+		ServicePublicKey:   (*privateKey).PublicKey(),
+		ServicePrivateKey:  *privateKey,
+		ServiceKeySigAlgo:  serviceAccount.Key.SigAlgo(),
+		ServiceKeyHashAlgo: serviceAccount.Key.HashAlgo(),
+	})
+
+	emuErr := emulatorServer.Listen()
+	if emuErr != nil {
+		panic(fmt.Sprintf("Failed to prepare the emulator for connections: %s", emuErr))
+	}
+
+	go func() {
+		emulatorServer.Start()
+	}()
+	fmt.Println("Emulator server is ready")
+
+	//time.Sleep(3 * time.Second)
 
 	err = flow.Ping()
 	if err != nil {
