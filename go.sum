@@ -94,8 +94,6 @@ github.com/OneOfOne/xxhash v1.2.8 h1:31czK/TI9sNkxIKfaUfGlU47BAxQ0ztGgd9vPyqimf8
 github.com/OneOfOne/xxhash v1.2.8/go.mod h1:eZbhyaAYD41SGSSsnmcpxVoRiQ/MPUTjUdIIOT9Um7Q=
 github.com/ProtonMail/go-crypto v0.0.0-20230828082145-3c4c8a2d2371 h1:kkhsdkhsCvIsutKu5zLMgWtgh9YxGCNAw8Ad8hjwfYg=
 github.com/ProtonMail/go-crypto v0.0.0-20230828082145-3c4c8a2d2371/go.mod h1:EjAoLdwvbIOoOQr3ihjnSoLZRtE8azugULFRteWMNc0=
-github.com/SaveTheRbtz/mph v0.1.1-0.20240117162131-4166ec7869bc h1:DCHzPQOcU/7gwDTWbFQZc5qHMPS1g0xTO56k8NXsv9M=
-github.com/SaveTheRbtz/mph v0.1.1-0.20240117162131-4166ec7869bc/go.mod h1:LJM5a3zcIJ/8TmZwlUczvROEJT8ntOdhdG9jjcR1B0I=
 github.com/Shopify/goreferrer v0.0.0-20181106222321-ec9c9a553398/go.mod h1:a1uqRtAwp2Xwc6WNPJEufxJ7fx3npB4UV/JOLmbu5I0=
 github.com/Shopify/sarama v1.19.0/go.mod h1:FVkBWblsNy7DGZRfXLU0O9RCGt5g3g3yEuWXgklEdEo=
 github.com/Shopify/toxiproxy v2.1.4+incompatible/go.mod h1:OXgGpZ6Cli1/URJOF1DMxUHB2q5Ap20/P/eIdh4G0pI=
@@ -675,11 +673,10 @@ github.com/julienschmidt/httprouter v1.1.1-0.20170430222011-975b5c4c7c21/go.mod 
 github.com/julienschmidt/httprouter v1.2.0/go.mod h1:SYymIcj16QtmaHHD7aYtjjsJG7VTCxuUUipMqKk8s4w=
 github.com/julienschmidt/httprouter v1.3.0/go.mod h1:JR6WtHb+2LUe8TCKY3cZOxFyyO8IZAc4RVcycCCAKdM=
 github.com/jung-kurt/gofpdf v1.0.3-0.20190309125859-24315acbbda5/go.mod h1:7Id9E/uU8ce6rXgefFLlgrJj/GYY22cpxn+r32jIOes=
-github.com/k0kubun/colorstring v0.0.0-20150214042306-9440f1994b88 h1:uC1QfSlInpQF+M0ao65imhwqKnz3Q2z/d8PWZRMQvDM=
 github.com/k0kubun/colorstring v0.0.0-20150214042306-9440f1994b88/go.mod h1:3w7q1U84EfirKl04SVQ/s7nPm1ZPhiXd34z40TNz36k=
 github.com/k0kubun/go-ansi v0.0.0-20180517002512-3bf9e2903213/go.mod h1:vNUNkEQ1e29fT/6vq2aBdFsgNPmy8qMdSay1npru+Sw=
-github.com/k0kubun/pp v3.0.1+incompatible h1:3tqvf7QgUnZ5tXO6pNAZlrvHgl6DvifjDrd9g2S9Z40=
-github.com/k0kubun/pp v3.0.1+incompatible/go.mod h1:GWse8YhT0p8pT4ir3ZgBbfZild3tgzSScAn6HmfYukg=
+github.com/k0kubun/pp/v3 v3.2.0 h1:h33hNTZ9nVFNP3u2Fsgz8JXiF5JINoZfFq4SvKJwNcs=
+github.com/k0kubun/pp/v3 v3.2.0/go.mod h1:ODtJQbQcIRfAD3N+theGCV1m/CBxweERz2dapdz1EwA=
 github.com/karalabe/usb v0.0.0-20190919080040-51dc0efba356/go.mod h1:Od972xHfMJowv7NGVDiWVxk2zxnWgjLlJzE+F4F7AGU=
 github.com/kataras/golog v0.0.10/go.mod h1:yJ8YKCmyL+nWjERB90Qwn+bdyBZsaQwU3bTVFgkFIp8=
 github.com/kataras/iris/v12 v12.1.8/go.mod h1:LMYy4VlP67TQ3Zgriz8RE2h2kMZV2SgMYbq3UhfoFmE=
@@ -789,8 +786,8 @@ github.com/mattn/go-runewidth v0.0.6/go.mod h1:H031xJmbD/WCDINGzjvQ9THkh0rPKHF+m
 github.com/mattn/go-runewidth v0.0.7/go.mod h1:H031xJmbD/WCDINGzjvQ9THkh0rPKHF+m2gUSrubnMI=
 github.com/mattn/go-runewidth v0.0.9/go.mod h1:H031xJmbD/WCDINGzjvQ9THkh0rPKHF+m2gUSrubnMI=
 github.com/mattn/go-runewidth v0.0.13/go.mod h1:Jdepj2loyihRzMpdS35Xk/zdY8IAYHsh153qUoGf23w=
-github.com/mattn/go-runewidth v0.0.14 h1:+xnbZSEeDbOIg5/mE6JF0w6n9duR1l3/WmbinWVwUuU=
-github.com/mattn/go-runewidth v0.0.14/go.mod h1:Jdepj2loyihRzMpdS35Xk/zdY8IAYHsh153qUoGf23w=
+github.com/mattn/go-runewidth v0.0.15 h1:UNAjwbU9l54TA3KzvqLGxwWjHmMgBUVhBiTjelZgg3U=
+github.com/mattn/go-runewidth v0.0.15/go.mod h1:Jdepj2loyihRzMpdS35Xk/zdY8IAYHsh153qUoGf23w=
 github.com/mattn/go-tty v0.0.3/go.mod h1:ihxohKRERHTVzN+aSVRwACLCeqIoZAWpoICkkvrWyR0=
 github.com/mattn/go-tty v0.0.4 h1:NVikla9X8MN0SQAqCYzpGyXv0jY7MNl3HOWD2dkle7E=
 github.com/mattn/go-tty v0.0.4/go.mod h1:u5GGXBtZU6RQoKV8gY5W6UhMudbR5vXnUe7j3pxse28=
@@ -884,8 +881,8 @@ github.com/onflow/atree v0.1.0-beta1.0.20211027184039-559ee654ece9/go.mod h1:+6x
 github.com/onflow/atree v0.6.1-0.20230711151834-86040b30171f h1:Z8/PgTqOgOg02MTRpTBYO2k16FE6z4wEOtaC2WBR9Xo=
 github.com/onflow/atree v0.6.1-0.20230711151834-86040b30171f/go.mod h1:xvP61FoOs95K7IYdIYRnNcYQGf4nbF/uuJ0tHf4DRuM=
 github.com/onflow/cadence v0.20.1/go.mod h1:7mzUvPZUIJztIbr9eTvs+fQjWWHTF8veC+yk4ihcNIA=
-github.com/onflow/cadence v1.0.0-M3 h1:bSydJise9pU4aALloUKv/EWmDLITRlbBpuG8OPBydZM=
-github.com/onflow/cadence v1.0.0-M3/go.mod h1:odXGZZ/wGNA5mwT8bC9v8u8EXACHllB2ABSZK65TGL8=
+github.com/onflow/cadence v0.42.9 h1:EX+eak/Jjy9PyKcAEmOViGOHMyP/nCOwJO+deodZlJE=
+github.com/onflow/cadence v0.42.9/go.mod h1:1wFd+LiNiN6qoZXof3MBdpM6d8BsxbVIxOA77LbIYmE=
 github.com/onflow/cadence-tools/languageserver v0.33.3 h1:o6f2kPxsgSruH+HT8CakcZlm43QX5WtIuW6XVh/R5DM=
 github.com/onflow/cadence-tools/languageserver v0.33.3/go.mod h1:rUy3zxWWZl+KYAyzhAcnrYNI8ZDKI242RFK8Q9w+90M=
 github.com/onflow/cadence-tools/lint v0.14.1 h1:Qkw8+q+ALfB62W7KWHMFh+90gTfJ+NoFulYETMCTkcI=
@@ -894,7 +891,6 @@ github.com/onflow/cadence-tools/test v0.14.5 h1:u1kYkotKdwKEf9c3h65mI3VMevBkHY+7
 github.com/onflow/cadence-tools/test v0.14.5/go.mod h1:ix09Bb3GQ/fZMNpSR8E+vSFItGF54fzP9gFxU7AsOIw=
 github.com/onflow/contract-updater/lib/go/templates v1.0.1-beta.1 h1:LbrgHZwScCNefS/vqKnrcp2kPu69J8oHhlBvdj6FZPE=
 github.com/onflow/contract-updater/lib/go/templates v1.0.1-beta.1/go.mod h1:zRHJ3z7aJBCnA0Tv6ZoXpUiBMnVNZbWyXz1kdzdQDB4=
-github.com/onflow/crypto v0.25.0 h1:BeWbLsh3ZD13Ej+Uky6kg1PL1ZIVBDVX+2MVBNwqddg=
 github.com/onflow/fcl-dev-wallet v0.7.4 h1:vI6t3U0AO88R/Iitn5KsnniSpbN9Lqsqwvi9EJT4C0k=
 github.com/onflow/fcl-dev-wallet v0.7.4/go.mod h1:kc42jkiuoPJmxMRFjfbRO9XvnR/3XLheaOerxVMDTiw=
 github.com/onflow/flixkit-go v1.1.1 h1:ARgLsfWxc3LjgUHUAELildY5lxJ6kA4gVfAS2+ZRaCE=
