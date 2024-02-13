@@ -11,12 +11,12 @@ require (
 	github.com/onflow/cadence v1.0.0-M3
 	github.com/onflow/cadence-tools/languageserver v0.33.3
 	github.com/onflow/cadence-tools/test v0.14.5
-	github.com/onflow/contract-updater/lib/go/templates v0.0.0-20240213162302-f4cd4ad7e6c1
+	github.com/onflow/contract-updater/lib/go/templates v1.0.1-beta.1
 	github.com/onflow/fcl-dev-wallet v0.7.4
 	github.com/onflow/flixkit-go v1.1.1
 	github.com/onflow/flow-core-contracts/lib/go/templates v1.2.4-0.20231016154253-a00dbf7c061f
 	github.com/onflow/flow-emulator v0.59.0
-	github.com/onflow/flow-go-sdk v1.0.0-M1
+	github.com/onflow/flow-go-sdk v0.41.17
 	github.com/onflow/flowkit v1.13.0
 	github.com/onflowser/flowser/v3 v3.1.3
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
@@ -176,7 +176,6 @@ require (
 	github.com/olekukonko/tablewriter v0.0.5 // indirect
 	github.com/onflow/atree v0.6.1-0.20230711151834-86040b30171f // indirect
 	github.com/onflow/cadence-tools/lint v0.14.1 // indirect
-	github.com/onflow/crypto v0.25.0 // indirect
 	github.com/onflow/flow-cli/flowkit v1.11.0 // indirect
 	github.com/onflow/flow-core-contracts/lib/go/contracts v1.2.4-0.20231016154253-a00dbf7c061f // indirect
 	github.com/onflow/flow-ft/lib/go/contracts v0.7.1-0.20230711213910-baad011d2b13 // indirect
