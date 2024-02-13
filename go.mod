@@ -32,8 +32,6 @@ require (
 	google.golang.org/grpc v1.61.0
 )
 
-replace github.com/onflow/cadence => github.com/onflow/cadence v0.42.6
-
 require (
 	cloud.google.com/go/compute v1.23.3 // indirect
 	cloud.google.com/go/compute/metadata v0.2.3 // indirect
