@@ -261,14 +261,31 @@ func (fr *flixResult) Oneliner() string {
 func getDeployedContracts(state *flowkit.State) flixkit.ContractInfos {
 	allContracts := make(flixkit.ContractInfos)
 	depNetworks := make([]string, 0)
+	accountAddresses := make(map[string]string)
 	// get all configured networks in flow.json
 	for _, n := range *state.Networks() {
 		depNetworks = append(depNetworks, n.Name)
 	}
 
+	// get account addresses
+	for _, a := range *state.Accounts() {
+		accountAddresses[a.Name] = a.Address.Hex()
+	}
+
+	for _, d := range *state.Deployments() {
+		addr := accountAddresses[d.Account]
+		for _, c := range d.Contracts {
+			if _, ok := allContracts[c.Name]; !ok {
+				allContracts[c.Name] = make(flixkit.NetworkAddressMap)
+			}
+			allContracts[c.Name][d.Network] = addr
+		}
+	}
+
 	// get all deployed and alias contracts for configured networks
 	for _, network := range depNetworks {
-		contracts, err := state.DeploymentContractsByNetwork(config.Network{Name: network})
+		cfg := config.Network{Name: network}
+		contracts, err := state.DeploymentContractsByNetwork(cfg)
 		if err != nil {
 			continue
 		}
@@ -278,7 +295,7 @@ func getDeployedContracts(state *flowkit.State) flixkit.ContractInfos {
 			}
 			allContracts[c.Name][network] = c.AccountAddress.Hex()
 		}
-		locAliases := state.AliasesForNetwork(config.Network{Name: network})
+		locAliases := state.AliasesForNetwork(cfg)
 		for name, addr := range locAliases {
 			address := flow.BytesToAddress([]byte(addr))
 			if isPath(name) {
@@ -290,6 +307,7 @@ func getDeployedContracts(state *flowkit.State) flixkit.ContractInfos {
 			allContracts[name][network] = address.Hex()
 		}
 	}
+
 	return allContracts
 }
 
