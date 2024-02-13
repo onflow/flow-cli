@@ -23,6 +23,7 @@ import (
 	"fmt"
 
 	"github.com/onflow/cadence"
+	"github.com/onflow/contract-updater/lib/go/templates"
 	flowsdk "github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flowkit"
 	"github.com/onflow/flowkit/accounts"
@@ -53,6 +54,7 @@ func unstageContract(
 	flow flowkit.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
+    code := templates.GenerateUnstageContractScript(flowsdk.HexToAddress(migrationContractStagingAddress[globalFlags.Network]))
 	contractName := args[0]
 
 	code, err := RenderContractTemplate(UnstageContractTransactionFilepath, globalFlags.Network)

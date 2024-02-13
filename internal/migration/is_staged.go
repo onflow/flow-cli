@@ -23,6 +23,7 @@ import (
 	"fmt"
 
 	"github.com/onflow/cadence"
+	"github.com/onflow/contract-updater/lib/go/templates"
 	flowsdk "github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flowkit"
 	"github.com/onflow/flowkit/output"
@@ -52,10 +53,7 @@ func isStaged(
 	flow flowkit.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
-	code, err := state.ReaderWriter().ReadFile(GetStagedContractCodeScriptFilepath)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read staged contract code script: %w", err)
-	}
+    code := templates.GenerateIsStagedScript(flowsdk.HexToAddress(migrationContractStagingAddress[globalFlags.Network]))
 
 	contractName, contractAddress := args[0], args[1]
 

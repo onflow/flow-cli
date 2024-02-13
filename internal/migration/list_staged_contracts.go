@@ -20,9 +20,9 @@ package migration
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/onflow/cadence"
+	"github.com/onflow/contract-updater/lib/go/templates"
 	flowsdk "github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flowkit"
 	"github.com/onflow/flowkit/output"
@@ -52,10 +52,7 @@ func listStagedContracts(
 	flow flowkit.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
-	code, err := RenderContractTemplate(GetStagedCodeForAddressScriptFilepath, globalFlags.Network)
-	if err != nil {
-		return nil, fmt.Errorf("error loading staging contract file: %w", err)
-	}
+    code := templates.GenerateGetAllStagedContractCodeForAddressScript(flowsdk.HexToAddress(migrationContractStagingAddress[globalFlags.Network]))
 
 	contractAddress := args[0]
 
