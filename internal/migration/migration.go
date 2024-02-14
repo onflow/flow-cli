@@ -21,90 +21,16 @@ package migration
 import (
 	"bytes"
 	"fmt"
-	"text/template"
 
-	"github.com/onflow/cadence"
 	"github.com/onflow/flow-cli/internal/util"
-	flowsdk "github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flowkit"
 	"github.com/onflow/flowkit/accounts"
-	"github.com/onflow/flowkit/project"
 )
-
-const (
-	// GetStagedContractCodeFilepath is the file path for the get staged code transaction
-	GetStagedContractCodeScriptFilepath = "./cadence/scripts/get_staged_contract_code.cdc"
-	// GetStagedCodeForAddressFilepath is the file path for the get all staged contract code for address transaction
-	GetStagedCodeForAddressScriptFilepath = "./cadence/scripts/get_all_staged_contract_code_for_address.cdc"
-	// IsStagedFilepath is the file path for the is staged transaction
-	IsStagedFileScriptpath = "./cadence/scripts/is_staged.cdc"
-	// StageContractFilepath is the file path for the stage contract transaction
-	StageContractTransactionFilepath = "./cadence/transactions/stage_contract.cdc"
-	// UnstageContractFilepath is the file path for the unstage contract transaction
-	UnstageContractTransactionFilepath = "./cadence/transactions/unstage_contract.cdc"
-)
-
-
-// RenderContractTemplate renders the contract template
-func RenderContractTemplate(filepath string, network string) ([]byte, error) {
-	scTempl, err := template.ParseFiles(filepath)
-	if err != nil {
-		return nil, fmt.Errorf("error loading staging contract file: %w", err)
-	}
-
-	if migrationContractStagingAddress[network] == "" {
-		return nil, fmt.Errorf("staging contract address not found for network: %s", network)
-	}
-
-	// render transaction template with network
-	var txScriptBuf bytes.Buffer
-	if err := scTempl.Execute(
-		&txScriptBuf,
-		map[string]string{
-			"MigrationContractStaging": migrationContractStagingAddress[network],
-		}); err != nil {
-		return nil, fmt.Errorf("error rendering staging contract template: %w", err)
-	}
-
-	return txScriptBuf.Bytes(), nil
-}
 
 // TODO: update these  once deployed
 var migrationContractStagingAddress = map[string]string{
 	"testnet": "0xa983fecbed621163",
 	"mainnet": "0xa983fecbed621163",
-}
-
-func ReplaceImports(state flowkit.State, filepath string, network string, vals []cadence.Value) ([]byte, error) {
-	code, err := state.ReaderWriter().ReadFile(filepath)
-	if err != nil {
-		return nil, fmt.Errorf("error loading file: %w", err)
-	}
-
-	importReplacer := project.NewImportReplacer(
-		[]*project.Contract{
-			{
-			Name: "MigrationContractStaging",
-			AccountAddress: flowsdk.HexToAddress(migrationContractStagingAddress[network]),
-			},
-		},
-		nil,
-	)
-	program, err := project.NewProgram(
-		code,
-		vals,
-		"",
-	) 
-	if err != nil {
-		return nil, fmt.Errorf("error creating program: %w", err) 
-	}
-
-	program, err = importReplacer.Replace(program)
-	if err != nil {
-		return nil, fmt.Errorf("error replacing imports: %w", err) 
-	}
-
-	return program.Code(), nil
 }
 
 func getAccountByContractName(state *flowkit.State, contractName string, network string) (*accounts.Account, error) {
