@@ -25,10 +25,11 @@ import (
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/pkg/errors"
 
-	"github.com/onflow/flow-cli/flowkit"
-	"github.com/onflow/flow-cli/flowkit/accounts"
-	"github.com/onflow/flow-cli/flowkit/config"
-	flowkitProject "github.com/onflow/flow-cli/flowkit/project"
+	"github.com/onflow/flowkit/v2"
+	"github.com/onflow/flowkit/v2/accounts"
+	"github.com/onflow/flowkit/v2/config"
+	flowkitProject "github.com/onflow/flowkit/v2/project"
+
 	"github.com/onflow/flow-cli/internal/util"
 )
 
