@@ -57,6 +57,13 @@ type transactionResult struct {
 	exclude []string
 }
 
+func NewTransactionResult(tx *flow.Transaction, result *flow.TransactionResult) *transactionResult {
+	return &transactionResult{
+		result: result,
+		tx:     tx,
+	}
+}
+
 func (r *transactionResult) JSON() any {
 	result := make(map[string]any)
 	result["id"] = r.tx.ID().String()

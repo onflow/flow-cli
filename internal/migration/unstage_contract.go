@@ -26,12 +26,12 @@ import (
 	"github.com/onflow/contract-updater/lib/go/templates"
 	flowsdk "github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flowkit"
-	"github.com/onflow/flowkit/accounts"
 	"github.com/onflow/flowkit/output"
 	"github.com/onflow/flowkit/transactions"
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
+	internaltx "github.com/onflow/flow-cli/internal/transactions"
 )
 
 var unstageContractflags interface{}
@@ -67,13 +67,9 @@ func unstageContract(
 		return nil, fmt.Errorf("failed to get cadence string from contract name: %w", err)
 	}
 
-	_, _, err = flow.SendTransaction(
+	tx, res, err := flow.SendTransaction(
 		context.Background(),
-		transactions.AccountRoles{
-			Proposer:    *account,
-			Authorizers: []accounts.Account{*account},
-			Payer:       *account,
-		},
+		transactions.SingleAccountRole(*account),
 		flowkit.Script{
 			Code: code,
 			Args: []cadence.Value{cName},
@@ -85,5 +81,5 @@ func unstageContract(
 		return nil, fmt.Errorf("failed to send transaction: %w", err)
 	}
 
-	return &migrationResult{}, nil
+	return internaltx.NewTransactionResult(tx, res), nil
 }

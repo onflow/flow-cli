@@ -53,8 +53,6 @@ func isStaged(
 	flow flowkit.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
-	code := templates.GenerateIsStagedScript(MigrationContractStagingAddress(globalFlags.Network))
-
 	contractName, contractAddress := args[0], args[1]
 
 	caddr := cadence.NewAddress(flowsdk.HexToAddress(contractAddress))
@@ -67,7 +65,7 @@ func isStaged(
 	value, err := flow.ExecuteScript(
 		context.Background(),
 		flowkit.Script{
-			Code: code,
+			Code: templates.GenerateIsStagedScript(MigrationContractStagingAddress(globalFlags.Network)),
 			Args: []cadence.Value{caddr, cname},
 		},
 		flowkit.LatestScriptQuery,

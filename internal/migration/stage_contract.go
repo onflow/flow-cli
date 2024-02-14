@@ -26,10 +26,11 @@ import (
 	"github.com/onflow/contract-updater/lib/go/templates"
 	flowsdk "github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flowkit"
-	"github.com/onflow/flowkit/accounts"
 	"github.com/onflow/flowkit/output"
 	"github.com/onflow/flowkit/transactions"
 	"github.com/spf13/cobra"
+
+	internaltx "github.com/onflow/flow-cli/internal/transactions"
 
 	"github.com/onflow/flow-cli/internal/command"
 )
@@ -54,7 +55,6 @@ func stageContract(
 	flow flowkit.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
-	code := templates.GenerateStageContractScript(MigrationContractStagingAddress(globalFlags.Network))
 	contractName := args[0]
 
 	contract, err := state.Contracts().ByName(contractName)
@@ -82,15 +82,11 @@ func stageContract(
 		return nil, fmt.Errorf("failed to get cadence string from contract code: %w", err)
 	}
 
-	_, _, err = flow.SendTransaction(
+	tx, res, err := flow.SendTransaction(
 		context.Background(),
-		transactions.AccountRoles{
-			Proposer:    *account,
-			Authorizers: []accounts.Account{*account},
-			Payer:       *account,
-		},
+		transactions.SingleAccountRole(*account),
 		flowkit.Script{
-			Code: code,
+			Code: templates.GenerateStageContractScript(MigrationContractStagingAddress(globalFlags.Network)),
 			Args: []cadence.Value{cName, cCode},
 		},
 		flowsdk.DefaultTransactionGasLimit,
@@ -100,5 +96,5 @@ func stageContract(
 		return nil, fmt.Errorf("failed to send transaction: %w", err)
 	}
 
-	return &migrationResult{}, nil
+	return internaltx.NewTransactionResult(tx, res), nil
 }
