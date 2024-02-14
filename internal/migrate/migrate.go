@@ -86,3 +86,12 @@ func getAccountByContractName(state *flowkit.State, contractName string, network
 
 	return account, nil
 }
+
+func getAddressByContractName(state *flowkit.State, contractName string, network string) (flow.Address, error) {
+	account, err := getAccountByContractName(state, contractName, network)
+	if err != nil {
+		return flow.Address{}, err
+	}
+
+	return flow.HexToAddress(account.Address.Hex()), nil
+}

@@ -24,7 +24,6 @@ import (
 
 	"github.com/onflow/cadence"
 	"github.com/onflow/contract-updater/lib/go/templates"
-	flowsdk "github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flowkit"
 	"github.com/onflow/flowkit/output"
 	"github.com/spf13/cobra"
@@ -37,9 +36,9 @@ var isStagedflags struct{}
 
 var IsStagedCommand = &command.Command{
 	Cmd: &cobra.Command{
-		Use:     "is-staged <CONTRACT_NAME> <CONTRACT_ADDRESS>",
+		Use:     "is-staged <CONTRACT_NAME>",
 		Short:   "checks to see if the contract is staged for migration",
-		Example: `flow migrate is-staged HelloWorld 0xhello`,
+		Example: `flow migrate is-staged HelloWorld`,
 		Args:    cobra.MinimumNArgs(2),
 	},
 	Flags: &isStagedflags,
@@ -53,9 +52,14 @@ func isStaged(
 	flow flowkit.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
-	contractName, contractAddress := args[0], args[1]
+	contractName := args[0]
 
-	caddr := cadence.NewAddress(flowsdk.HexToAddress(contractAddress))
+	addr, err := getAddressByContractName(state, contractName, globalFlags.Network)
+	if err != nil {
+		return nil, fmt.Errorf("error getting account by contract name: %w", err)
+	}
+
+	caddr := cadence.NewAddress(addr)
 
 	cname, err := cadence.NewString(contractName)
 	if err != nil {
@@ -71,7 +75,7 @@ func isStaged(
 		flowkit.LatestScriptQuery,
 	)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error executing script: %w", err)
 	}
 
 	return scripts.NewScriptResult(value), nil

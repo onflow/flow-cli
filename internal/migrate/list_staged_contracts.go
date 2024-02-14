@@ -20,10 +20,10 @@ package migrate
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/onflow/cadence"
 	"github.com/onflow/contract-updater/lib/go/templates"
-	flowsdk "github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flowkit"
 	"github.com/onflow/flowkit/output"
 	"github.com/spf13/cobra"
@@ -36,9 +36,9 @@ var listStagedContractsflags struct{}
 
 var listStagedContractsCommand = &command.Command{
 	Cmd: &cobra.Command{
-		Use:     "list-staged <CONTRACT_ADDRESS>",
-		Short:   "returns back the a list of staged contracts given a contract address",
-		Example: `flow migrate list-staged 0xhello`,
+		Use:     "list-staged <ACCOUNT_NAME>",
+		Short:   "returns back the a list of staged contracts given an account name",
+		Example: `flow migrate list-staged test-account`,
 		Args:    cobra.MinimumNArgs(1),
 	},
 	Flags: &listStagedContractsflags,
@@ -52,9 +52,14 @@ func listStagedContracts(
 	flow flowkit.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
-	contractAddress := args[0]
+	accountName := args[0]
 
-	caddr := cadence.NewAddress(flowsdk.HexToAddress(contractAddress))
+	account, err := state.Accounts().ByName(accountName)
+	if err != nil {
+		return nil, fmt.Errorf("error getting account by name: %w", err)
+	}
+
+	caddr := cadence.NewAddress(account.Address)
 
 	value, err := flow.ExecuteScript(
 		context.Background(),
@@ -65,7 +70,7 @@ func listStagedContracts(
 		flowkit.LatestScriptQuery,
 	)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error executing script: %w", err)
 	}
 
 	return scripts.NewScriptResult(value), nil

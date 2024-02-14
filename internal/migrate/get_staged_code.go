@@ -20,9 +20,9 @@ package migrate
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/onflow/cadence"
-	flowsdk "github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flowkit"
 	"github.com/onflow/flowkit/output"
 	"github.com/spf13/cobra"
@@ -37,9 +37,9 @@ var getStagedCodeflags struct{}
 
 var getStagedCodeCommand = &command.Command{
 	Cmd: &cobra.Command{
-		Use:     "staged-code <CONTRACT_ADDRESS>",
+		Use:     "staged-code <CONTRACT_NAME>",
 		Short:   "returns back the staged code for a contract",
-		Example: `flow migrate staged-code 0xhello`,
+		Example: `flow migrate staged-code HelloWorld`,
 		Args:    cobra.MinimumNArgs(1),
 	},
 	Flags: &getStagedCodeflags,
@@ -53,9 +53,15 @@ func getStagedCode(
 	flow flowkit.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
-	contractAddress := args[0]
+	contractName := args[0]
 
-	caddr := cadence.NewAddress(flowsdk.HexToAddress(contractAddress))
+	addr, err := getAddressByContractName(state, contractName, globalFlags.Network)
+	if err != nil {
+		return nil, fmt.Errorf("error getting account by contract name: %w", err)
+	}
+
+
+	caddr := cadence.NewAddress(addr)
 
 	value, err := flow.ExecuteScript(
 		context.Background(),
@@ -66,7 +72,7 @@ func getStagedCode(
 		flowkit.LatestScriptQuery,
 	)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error executing script: %w", err)
 	}
 
 	return scripts.NewScriptResult(value), nil
