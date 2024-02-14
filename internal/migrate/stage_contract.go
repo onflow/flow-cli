@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package migration
+package migrate
 
 import (
 	"context"
@@ -30,24 +30,25 @@ import (
 	"github.com/onflow/flowkit/transactions"
 	"github.com/spf13/cobra"
 
-	"github.com/onflow/flow-cli/internal/command"
 	internaltx "github.com/onflow/flow-cli/internal/transactions"
+
+	"github.com/onflow/flow-cli/internal/command"
 )
 
-var unstageContractflags interface{}
+var stageContractflags interface{}
 
-var unstageContractCommand = &command.Command{
+var stageContractCommand = &command.Command{
 	Cmd: &cobra.Command{
-		Use:     "flow unstage-contract <NAME> --network <NETWORK> --signer <HOST_ACCOUNT>",
-		Short:   "unstage a contract for migration",
-		Example: `flow unstage-contract HelloWorld`,
+		Use:     "flow migrate stage-contract <NAME> --network <NETWORK> --signer <HOST_ACCOUNT>",
+		Short:   "stage a contract for migration",
+		Example: `flow migrate stage-contract HelloWorld --network testnet --signer emulator-account`,
 		Args:    cobra.MinimumNArgs(1),
 	},
-	Flags: &unstageContractflags,
-	RunS:  unstageContract,
+	Flags: &stageContractflags,
+	RunS:  stageContract,
 }
 
-func unstageContract(
+func stageContract(
 	args []string,
 	globalFlags command.GlobalFlags,
 	_ output.Logger,
@@ -56,9 +57,19 @@ func unstageContract(
 ) (command.Result, error) {
 	contractName := args[0]
 
+	contract, err := state.Contracts().ByName(contractName)
+	if err != nil {
+		return nil, fmt.Errorf("no contracts found in state")
+	}
+
+	contractCode, err := state.ReadFile(contract.Location)
+	if err != nil {
+		return nil, fmt.Errorf("error loading contract file: %w", err)
+	}
+
 	account, err := getAccountByContractName(state, contractName, globalFlags.Network)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get account by contract name: %w", err)
+		return nil, fmt.Errorf("error getting account by contract name: %w", err)
 	}
 
 	cName, err := cadence.NewString(contractName)
@@ -66,12 +77,17 @@ func unstageContract(
 		return nil, fmt.Errorf("failed to get cadence string from contract name: %w", err)
 	}
 
+	cCode, err := cadence.NewString(string(contractCode))
+	if err != nil {
+		return nil, fmt.Errorf("failed to get cadence string from contract code: %w", err)
+	}
+
 	tx, res, err := flow.SendTransaction(
 		context.Background(),
 		transactions.SingleAccountRole(*account),
 		flowkit.Script{
-			Code: templates.GenerateUnstageContractScript(MigrationContractStagingAddress(globalFlags.Network)),
-			Args: []cadence.Value{cName},
+			Code: templates.GenerateStageContractScript(MigrationContractStagingAddress(globalFlags.Network)),
+			Args: []cadence.Value{cName, cCode},
 		},
 		flowsdk.DefaultTransactionGasLimit,
 	)

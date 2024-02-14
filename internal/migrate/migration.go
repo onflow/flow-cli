@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package migration
+package migrate
 
 import (
 	"fmt"
@@ -24,7 +24,24 @@ import (
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flowkit"
 	"github.com/onflow/flowkit/accounts"
+	"github.com/spf13/cobra"
 )
+
+
+func init() {
+	getStagedCodeCommand.AddToParent(Cmd)
+	IsStagedCommand.AddToParent(Cmd)
+	listStagedContractsCommand.AddToParent(Cmd)
+	stageContractCommand.AddToParent(Cmd)
+	unstageContractCommand.AddToParent(Cmd)
+}
+
+var Cmd = &cobra.Command{
+	Use:              "migrate",
+	Short:            "Migrate your Cadence project to 1.0",
+	TraverseChildren: true,
+	GroupID:          "migrate",
+}
 
 // address of the migration contract on each network
 var migrationContractStagingAddress = map[string]string{

@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package migration
+package migrate
 
 import (
 	"context"
@@ -37,9 +37,9 @@ var getStagedCodeflags = scripts.Flags{}
 
 var getStagedCodeCommand = &command.Command{
 	Cmd: &cobra.Command{
-		Use:     "flow staged-code <CONTRACT_ADDRESS>",
+		Use:     "flow migrate staged-code <CONTRACT_ADDRESS>",
 		Short:   "returns back the staged code for a contract",
-		Example: `flow staged-code 0xhello`,
+		Example: `flow migrate staged-code 0xhello`,
 		Args:    cobra.MinimumNArgs(1),
 	},
 	Flags: &getStagedCodeflags,

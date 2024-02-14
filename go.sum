@@ -875,8 +875,6 @@ github.com/onflow/cadence-tools/lint v0.14.1 h1:Qkw8+q+ALfB62W7KWHMFh+90gTfJ+NoF
 github.com/onflow/cadence-tools/lint v0.14.1/go.mod h1:w1xfiiPpZ35v/F+2+MF/Rily7LcIgE0dm/FMW1vQkpc=
 github.com/onflow/cadence-tools/test v0.14.5 h1:u1kYkotKdwKEf9c3h65mI3VMevBkHY+7WsOiOLamjzU=
 github.com/onflow/cadence-tools/test v0.14.5/go.mod h1:ix09Bb3GQ/fZMNpSR8E+vSFItGF54fzP9gFxU7AsOIw=
-github.com/onflow/contract-updater/lib/go/templates v1.0.1-beta.1.0.20240213230719-fd698fe2aeb6 h1:fq+i9ToGk0JuyUJS1rekXZInjimocXlzhCrXyR9aDUQ=
-github.com/onflow/contract-updater/lib/go/templates v1.0.1-beta.1.0.20240213230719-fd698fe2aeb6/go.mod h1:OXO6s0X7OW4Q6QTfAfnjoOmibEPgs0psOfMi+tPyzQE=
 github.com/onflow/contract-updater/lib/go/templates v1.0.1 h1:xPj898Y8OgLLbXH8+JeKVBV6J+nqPZjiLgGM3Abucto=
 github.com/onflow/contract-updater/lib/go/templates v1.0.1/go.mod h1:OXO6s0X7OW4Q6QTfAfnjoOmibEPgs0psOfMi+tPyzQE=
 github.com/onflow/fcl-dev-wallet v0.7.4 h1:vI6t3U0AO88R/Iitn5KsnniSpbN9Lqsqwvi9EJT4C0k=

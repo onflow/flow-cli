@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package migration
+package migrate
 
 import (
 	"context"
@@ -37,9 +37,9 @@ var isStagedflags = scripts.Flags{}
 
 var IsStagedCommand = &command.Command{
 	Cmd: &cobra.Command{
-		Use:     "flow is-staged <CONTRACT_NAME> <CONTRACT_ADDRESS>",
+		Use:     "flow migrate is-staged <CONTRACT_NAME> <CONTRACT_ADDRESS>",
 		Short:   "checks to see if the contract is staged for migration",
-		Example: `flow is-staged HelloWorld 0xhello`,
+		Example: `flow migrate is-staged HelloWorld 0xhello`,
 		Args:    cobra.MinimumNArgs(2),
 	},
 	Flags: &isStagedflags,

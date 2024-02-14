@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package migration
+package migrate
 
 import (
 	"testing"
@@ -31,7 +31,7 @@ import (
 	"github.com/onflow/flow-cli/internal/util"
 )
 
-func Test_ListStagedContracts(t *testing.T) {
+func Test_GetStagedCode(t *testing.T) {
 	srv, state, _ := util.TestMocks(t)
 
 	t.Run("Success", func(t *testing.T) {
@@ -45,7 +45,7 @@ func Test_ListStagedContracts(t *testing.T) {
 			assert.Equal(t, contractAddr, actualContractAddressArg)
 		}).Return(cadence.NewMeteredBool(nil, true), nil)
 
-		result, err := listStagedContracts(
+		result, err := getStagedCode(
 			[]string{"0xSomeAddress"},
 			command.GlobalFlags{
 				Network: "testnet",

@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package migration
+package migrate
 
 import (
 	"testing"
@@ -24,7 +24,6 @@ import (
 	"github.com/onflow/cadence"
 	flowsdk "github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flowkit"
-	"github.com/onflow/flowkit/tests"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 
@@ -32,26 +31,22 @@ import (
 	"github.com/onflow/flow-cli/internal/util"
 )
 
-func Test_IsStaged(t *testing.T) {
+func Test_ListStagedContracts(t *testing.T) {
 	srv, state, _ := util.TestMocks(t)
-
-	testContract := tests.ContractSimple
 
 	t.Run("Success", func(t *testing.T) {
 
 		srv.ExecuteScript.Run(func(args mock.Arguments) {
 			script := args.Get(1).(flowkit.Script)
 
-			actualContractAddressArg, actualContractNameArg := script.Args[0], script.Args[1]
+			actualContractAddressArg := script.Args[0]
 
-			contractName, _ := cadence.NewString(testContract.Name)
 			contractAddr := cadence.NewAddress(flowsdk.HexToAddress("0xSomeAddress"))
-			assert.Equal(t, contractName, actualContractNameArg)
 			assert.Equal(t, contractAddr, actualContractAddressArg)
 		}).Return(cadence.NewMeteredBool(nil, true), nil)
 
-		result, err := isStaged(
-			[]string{testContract.Name, "0xSomeAddress"},
+		result, err := listStagedContracts(
+			[]string{"0xSomeAddress"},
 			command.GlobalFlags{
 				Network: "testnet",
 			},
@@ -60,7 +55,6 @@ func Test_IsStaged(t *testing.T) {
 			state,
 		)
 		assert.NoError(t, err)
-		// TODO: fix this
 		assert.NotNil(t, result)
 	})
 }

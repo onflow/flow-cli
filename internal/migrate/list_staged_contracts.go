@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package migration
+package migrate
 
 import (
 	"context"
@@ -36,9 +36,9 @@ var listStagedContractsflags = scripts.Flags{}
 
 var listStagedContractsCommand = &command.Command{
 	Cmd: &cobra.Command{
-		Use:     "flow list-staged <CONTRACT_ADDRESS>",
+		Use:     "flow migrate list-staged <CONTRACT_ADDRESS>",
 		Short:   "returns back the a list of staged contracts given a contract address",
-		Example: `flow list-staged 0xhello`,
+		Example: `flow migrate list-staged 0xhello`,
 		Args:    cobra.MinimumNArgs(1),
 	},
 	Flags: &listStagedContractsflags,
