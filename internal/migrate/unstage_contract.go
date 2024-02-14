@@ -34,7 +34,7 @@ import (
 	internaltx "github.com/onflow/flow-cli/internal/transactions"
 )
 
-var unstageContractflags interface{}
+var unstageContractflags struct{}
 
 var unstageContractCommand = &command.Command{
 	Cmd: &cobra.Command{

@@ -32,7 +32,7 @@ import (
 	"github.com/onflow/flow-cli/internal/scripts"
 )
 
-var listStagedContractsflags = scripts.Flags{}
+var listStagedContractsflags struct{}
 
 var listStagedContractsCommand = &command.Command{
 	Cmd: &cobra.Command{

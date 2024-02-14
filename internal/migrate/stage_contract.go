@@ -35,7 +35,7 @@ import (
 	"github.com/onflow/flow-cli/internal/command"
 )
 
-var stageContractflags interface{}
+var stageContractflags struct{}
 
 var stageContractCommand = &command.Command{
 	Cmd: &cobra.Command{

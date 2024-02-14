@@ -33,7 +33,7 @@ import (
 	"github.com/onflow/flow-cli/internal/scripts"
 )
 
-var isStagedflags = scripts.Flags{}
+var isStagedflags struct{}
 
 var IsStagedCommand = &command.Command{
 	Cmd: &cobra.Command{
