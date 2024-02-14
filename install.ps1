@@ -39,16 +39,54 @@ $repo = "onflow/flow-cli"
 $versionURL = "https://api.github.com/repos/$repo/releases/latest"
 $assetsURL = "https://github.com/$repo/releases/download"
 
-# Add the GitHub token to the web request headers if it was provided
-$webRequestOptions = if ($githubToken) {
-	@{ 'Headers' = @{ 'Authorization' = "Bearer $githubToken" } }
-} else {
-    @{}
+# Function to get the latest version
+function Get-Version {
+    param (
+        [string]$repo,
+        [string]$searchTerm,
+        [string]$githubTokenHeader
+    )
+
+    $page = 1
+    $version = null
+
+    while (-not $version) {
+        if ($githubTokenHeader) {
+            $response = Invoke-WebRequest -Uri "https://api.github.com/repos/$repo/releases?per_page=100&page=$page" -Headers @{ 'Authorization' = $githubTokenHeader } -UseBasicParsing -ErrorAction SilentlyContinue
+        } else {
+            $response = Invoke-WebRequest -Uri "https://api.github.com/repos/$repo/releases?per_page=100&page=$page" -UseBasicParsing -ErrorAction SilentlyContinue
+        }
+
+        $status = $response.StatusCode
+
+        if ($status -eq 403 -and $githubTokenHeader) {
+            Write-Output "Failed to get latest version from Github API, is your GITHUB_TOKEN valid? Trying without authentication..."
+            $githubTokenHeader = ""
+            continue
+        }
+
+        if ($status -ne 200) {
+            Write-Output "Failed to get latest version from Github API, please manually specify a version to install as an argument to this script."
+            return $null
+        }
+
+        $jsonResponse = $response.Content | ConvertFrom-Json
+
+        foreach ($release in $jsonResponse) {
+            if ($release.tag_name -like "*$searchTerm*") {
+                $version = $release.tag_name
+                break
+            }
+        }
+
+        $page++
+    }
+
+    return $version
 }
 
-if (!$version) {
-    $q = (Invoke-WebRequest -Uri "$versionURL" -UseBasicParsing @webRequestOptions) | ConvertFrom-Json
-    $version = $q.tag_name
+if (-not $version) {
+    $version = Get-Version -repo $repo -searchTerm "cadence-v1.0.0" -githubTokenHeader $githubToken
 }
 
 Write-Output("Installing version {0} ..." -f $version)
@@ -67,7 +105,7 @@ try {
 }
 catch {}
 
-Move-Item -Path "$directory\flow-cli.exe" -Destination "$directory\flow.exe" -Force
+Move-Item -Path "$directory\flow-cli.exe" -Destination "$directory\flow-c1.exe" -Force
 
 # Check if the directory is already in the PATH
 $existingPaths = [Environment]::GetEnvironmentVariable("PATH", [System.EnvironmentVariableTarget]::User).Split(';')
@@ -80,6 +118,7 @@ if ($addToPath -and $existingPaths -notcontains $directory) {
     [System.Environment]::SetEnvironmentVariable("PATH", $userPath, [System.EnvironmentVariableTarget]::User)
 }
 
-Write-Output "Done."
+Write-Output "\nSuccessfully installed Flow CLI $version"
+Write-Output "PRE-RELEASE: Use the 'flow-c1' command to interact with this Cadence 1.0 CLI pre-release."
 
 Start-Sleep -Seconds 1
