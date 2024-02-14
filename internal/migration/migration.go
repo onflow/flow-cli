@@ -19,20 +19,17 @@
 package migration
 
 import (
-	"bytes"
 	"fmt"
 
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flowkit"
 	"github.com/onflow/flowkit/accounts"
-
-	"github.com/onflow/flow-cli/internal/util"
 )
 
-// TODO: update these  once deployed
+// address of the migration contract on each network
 var migrationContractStagingAddress = map[string]string{
-	"testnet": "0xa983fecbed621163",
-	"mainnet": "0xa983fecbed621163",
+	"testnet":   "0x2ceae959ed1a7e7a",
+	"crescendo": "0x27b2302520211b67",
 }
 
 // MigrationContractStagingAddress returns the address of the migration contract on the given network
@@ -72,40 +69,4 @@ func getAccountByContractName(state *flowkit.State, contractName string, network
 	}
 
 	return account, nil
-}
-
-type migrationResult struct {
-	result  string
-	message string
-	key     accounts.Key
-}
-
-func (s *migrationResult) JSON() any {
-	return map[string]string{
-		"signature": fmt.Sprintf("%x", s.result),
-		"message":   s.message,
-		"hashAlgo":  s.key.HashAlgo().String(),
-		"sigAlgo":   s.key.SigAlgo().String(),
-	}
-}
-
-func (s *migrationResult) String() string {
-	var b bytes.Buffer
-	writer := util.CreateTabWriter(&b)
-
-	_, _ = fmt.Fprintf(writer, "Signature \t %x\n", s.result)
-	_, _ = fmt.Fprintf(writer, "Message \t %s\n", s.message)
-	_, _ = fmt.Fprintf(writer, "Hash Algorithm \t %s\n", s.key.HashAlgo())
-	_, _ = fmt.Fprintf(writer, "Signature Algorithm \t %s\n", s.key.SigAlgo())
-
-	_ = writer.Flush()
-	return b.String()
-}
-
-func (s *migrationResult) Oneliner() string {
-
-	return fmt.Sprintf(
-		"signature: %x, message: %s, hashAlgo: %s, sigAlgo: %s",
-		s.result, s.message, s.key.HashAlgo(), s.key.SigAlgo(),
-	)
 }

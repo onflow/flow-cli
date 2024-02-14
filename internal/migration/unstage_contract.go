@@ -54,7 +54,6 @@ func unstageContract(
 	flow flowkit.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
-	code := templates.GenerateUnstageContractScript(MigrationContractStagingAddress(globalFlags.Network))
 	contractName := args[0]
 
 	account, err := getAccountByContractName(state, contractName, globalFlags.Network)
@@ -71,7 +70,7 @@ func unstageContract(
 		context.Background(),
 		transactions.SingleAccountRole(*account),
 		flowkit.Script{
-			Code: code,
+			Code: templates.GenerateUnstageContractScript(MigrationContractStagingAddress(globalFlags.Network)),
 			Args: []cadence.Value{cName},
 		},
 		flowsdk.DefaultTransactionGasLimit,
