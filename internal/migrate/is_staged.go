@@ -37,7 +37,7 @@ var isStagedflags struct{}
 
 var IsStagedCommand = &command.Command{
 	Cmd: &cobra.Command{
-		Use:     "flow migrate is-staged <CONTRACT_NAME> <CONTRACT_ADDRESS>",
+		Use:     "is-staged <CONTRACT_NAME> <CONTRACT_ADDRESS>",
 		Short:   "checks to see if the contract is staged for migration",
 		Example: `flow migrate is-staged HelloWorld 0xhello`,
 		Args:    cobra.MinimumNArgs(2),

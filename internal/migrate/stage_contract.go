@@ -39,7 +39,7 @@ var stageContractflags struct{}
 
 var stageContractCommand = &command.Command{
 	Cmd: &cobra.Command{
-		Use:     "flow migrate stage-contract <NAME> --network <NETWORK> --signer <HOST_ACCOUNT>",
+		Use:     "stage-contract <NAME> --network <NETWORK> --signer <HOST_ACCOUNT>",
 		Short:   "stage a contract for migration",
 		Example: `flow migrate stage-contract HelloWorld --network testnet --signer emulator-account`,
 		Args:    cobra.MinimumNArgs(1),

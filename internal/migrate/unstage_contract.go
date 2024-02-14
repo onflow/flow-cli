@@ -38,7 +38,7 @@ var unstageContractflags struct{}
 
 var unstageContractCommand = &command.Command{
 	Cmd: &cobra.Command{
-		Use:     "flow migrate unstage-contract <NAME> --network <NETWORK> --signer <HOST_ACCOUNT>",
+		Use:     "unstage-contract <NAME> --network <NETWORK> --signer <HOST_ACCOUNT>",
 		Short:   "unstage a contract for migration",
 		Example: `flow migrate unstage-contract HelloWorld`,
 		Args:    cobra.MinimumNArgs(1),

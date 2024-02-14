@@ -37,7 +37,7 @@ var getStagedCodeflags struct{}
 
 var getStagedCodeCommand = &command.Command{
 	Cmd: &cobra.Command{
-		Use:     "flow migrate staged-code <CONTRACT_ADDRESS>",
+		Use:     "staged-code <CONTRACT_ADDRESS>",
 		Short:   "returns back the staged code for a contract",
 		Example: `flow migrate staged-code 0xhello`,
 		Args:    cobra.MinimumNArgs(1),

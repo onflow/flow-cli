@@ -36,7 +36,7 @@ var listStagedContractsflags struct{}
 
 var listStagedContractsCommand = &command.Command{
 	Cmd: &cobra.Command{
-		Use:     "flow migrate list-staged <CONTRACT_ADDRESS>",
+		Use:     "list-staged <CONTRACT_ADDRESS>",
 		Short:   "returns back the a list of staged contracts given a contract address",
 		Example: `flow migrate list-staged 0xhello`,
 		Args:    cobra.MinimumNArgs(1),

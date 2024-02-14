@@ -152,6 +152,10 @@ func main() {
 		ID:    "manager",
 		Title: "🔗 Dependency Manager",
 	})
+	cmd.AddGroup(&cobra.Group{
+		ID:    "migrate",
+		Title: "📦 Migration to 1.0",
+	})
 
 	cmd.SetUsageTemplate(command.UsageTemplate)
 
