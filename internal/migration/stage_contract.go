@@ -67,7 +67,7 @@ func stageContract(
 		return nil, fmt.Errorf("error loading contract file: %w", err)
 	}
 
-	account, err := getAccountByContractName(state, globalFlags.Network, contractName)
+	account, err := getAccountByContractName(state, contractName, globalFlags.Network)
 	if err != nil {
 		return nil, fmt.Errorf("error getting account by contract name: %w", err)
 	}
@@ -100,5 +100,5 @@ func stageContract(
 		return nil, fmt.Errorf("failed to send transaction: %w", err)
 	}
 
-	return nil, nil
+	return &migrationResult{}, nil
 }

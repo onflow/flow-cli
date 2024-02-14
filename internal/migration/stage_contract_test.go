@@ -24,6 +24,7 @@ import (
 	"github.com/onflow/cadence"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flowkit"
+	"github.com/onflow/flowkit/config"
 	"github.com/onflow/flowkit/tests"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -33,11 +34,31 @@ import (
 )
 
 func Test_StageContract(t *testing.T) {
-	srv, state, _ := util.TestMocks(t)
-
 	testContract := tests.ContractSimple
 
 	t.Run("Success", func(t *testing.T) {
+	    srv, state, _ := util.TestMocks(t)
+
+		// Add contract to state
+		state.Contracts().AddOrUpdate(
+			config.Contract{
+				Name:   testContract.Name,
+				Location: testContract.Filename,
+			},
+		)
+
+		// Add deployment to state
+		state.Deployments().AddOrUpdate(
+			config.Deployment{
+				Network: "testnet",
+				Account: "emulator-account",
+				Contracts: []config.ContractDeployment{
+					{
+						Name: testContract.Name,
+					},
+			},
+		},
+		)
 
 		srv.SendTransaction.Run(func(args mock.Arguments) {
 			script := args.Get(2).(flowkit.Script)
@@ -67,9 +88,10 @@ func Test_StageContract(t *testing.T) {
 		assert.NotNil(t, result)
 	})
 
-	t.Run("missing contract file", func(t *testing.T) {
+	t.Run("missing contract", func(t *testing.T) {
+	    srv, state, _ := util.TestMocks(t)
 		result, err := stageContract(
-			[]string{testContract.Name, "bad file path"},
+			[]string{testContract.Name},
 			command.GlobalFlags{
 				Network: "testnet",
 			},

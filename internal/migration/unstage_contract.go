@@ -57,11 +57,6 @@ func unstageContract(
     code := templates.GenerateUnstageContractScript(flowsdk.HexToAddress(migrationContractStagingAddress[globalFlags.Network]))
 	contractName := args[0]
 
-	code, err := RenderContractTemplate(UnstageContractTransactionFilepath, globalFlags.Network)
-	if err != nil {
-		return nil, fmt.Errorf("error loading staging contract file: %w", err)
-	}
-
 	account, err := getAccountByContractName(state, contractName, globalFlags.Network)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get account by contract name: %w", err)
@@ -90,5 +85,5 @@ func unstageContract(
 		return nil, fmt.Errorf("failed to send transaction: %w", err)
 	}
 
-	return nil, nil
+	return &migrationResult{}, nil
 }
