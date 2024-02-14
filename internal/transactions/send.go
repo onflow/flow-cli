@@ -150,7 +150,7 @@ func SendTransaction(code []byte, args []string, location string, flow flowkit.S
 	)
 
 	if err != nil {
-		return nil, fmt.Errorf("failed to send transaction: %w", err)
+		return nil, err
 	}
 
 	return &transactionResult{
