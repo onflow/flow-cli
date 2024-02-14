@@ -30,8 +30,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/onflow/flow-cli/flowkit/config"
-	"github.com/onflow/flow-cli/flowkit/tests"
+	"github.com/onflow/flowkit/v2/config"
+	"github.com/onflow/flowkit/v2/tests"
+
 	"github.com/onflow/flow-cli/internal/util"
 )
 
@@ -339,19 +340,24 @@ func TestExecutingTests(t *testing.T) {
 				"A.0000000000000001.NonFungibleToken",
 				"A.0000000000000001.ViewResolver",
 				"A.0000000000000001.RandomBeaconHistory",
+				"A.0000000000000001.EVM",
+				"A.0000000000000002.FungibleTokenSwitchboard",
 				"I.BlockchainHelpers",
 			},
 			coverageReport.ExcludedLocationIDs(),
 		)
+
+		expected := "Coverage: 91.9% of statements"
+
 		assert.Equal(
 			t,
-			"Coverage: 91.6% of statements",
+			expected,
 			coverageReport.String(),
 		)
 		assert.Contains(
 			t,
 			result.String(),
-			"Coverage: 91.6% of statements",
+			expected,
 		)
 
 		lcovReport, _ := coverageReport.MarshalLCOV()
@@ -435,6 +441,8 @@ func TestExecutingTests(t *testing.T) {
 				"A.0000000000000001.NonFungibleToken",
 				"A.0000000000000001.ViewResolver",
 				"A.0000000000000001.RandomBeaconHistory",
+				"A.0000000000000001.EVM",
+				"A.0000000000000002.FungibleTokenSwitchboard",
 				"I.BlockchainHelpers",
 			},
 			coverageReport.ExcludedLocationIDs(),
