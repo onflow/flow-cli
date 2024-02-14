@@ -11,7 +11,7 @@ require (
 	github.com/onflow/cadence v0.42.6
 	github.com/onflow/cadence-tools/languageserver v0.33.3
 	github.com/onflow/cadence-tools/test v0.14.5
-	github.com/onflow/contract-updater/lib/go/templates v1.0.1-beta.1
+	github.com/onflow/contract-updater/lib/go/templates v1.0.1-beta.1.0.20240213230719-fd698fe2aeb6
 	github.com/onflow/fcl-dev-wallet v0.7.4
 	github.com/onflow/flixkit-go v1.1.2
 	github.com/onflow/flow-core-contracts/lib/go/templates v1.2.4-0.20231016154253-a00dbf7c061f
@@ -31,8 +31,6 @@ require (
 	golang.org/x/exp v0.0.0-20230321023759-10a507213a29
 	google.golang.org/grpc v1.61.0
 )
-
-replace github.com/onflow/contract-updater/lib/go/templates v1.0.1-beta.1 => ../contract-updater/lib/go/templates
 
 require (
 	cloud.google.com/go/compute v1.23.3 // indirect
