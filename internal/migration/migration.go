@@ -22,15 +22,22 @@ import (
 	"bytes"
 	"fmt"
 
-	"github.com/onflow/flow-cli/internal/util"
+	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flowkit"
 	"github.com/onflow/flowkit/accounts"
+
+	"github.com/onflow/flow-cli/internal/util"
 )
 
 // TODO: update these  once deployed
 var migrationContractStagingAddress = map[string]string{
 	"testnet": "0xa983fecbed621163",
 	"mainnet": "0xa983fecbed621163",
+}
+
+// MigrationContractStagingAddress returns the address of the migration contract on the given network
+func MigrationContractStagingAddress(network string) flow.Address {
+	return flow.HexToAddress(migrationContractStagingAddress[network])
 }
 
 func getAccountByContractName(state *flowkit.State, contractName string, network string) (*accounts.Account, error) {
@@ -67,7 +74,6 @@ func getAccountByContractName(state *flowkit.State, contractName string, network
 	return account, nil
 }
 
-
 type migrationResult struct {
 	result  string
 	message string
@@ -103,4 +109,3 @@ func (s *migrationResult) Oneliner() string {
 		s.result, s.message, s.key.HashAlgo(), s.key.SigAlgo(),
 	)
 }
-

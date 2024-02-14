@@ -53,7 +53,7 @@ func isStaged(
 	flow flowkit.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
-    code := templates.GenerateIsStagedScript(flowsdk.HexToAddress(migrationContractStagingAddress[globalFlags.Network]))
+	code := templates.GenerateIsStagedScript(MigrationContractStagingAddress(globalFlags.Network))
 
 	contractName, contractAddress := args[0], args[1]
 

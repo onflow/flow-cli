@@ -54,7 +54,7 @@ func stageContract(
 	flow flowkit.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
-    code := templates.GenerateStageContractScript(flowsdk.HexToAddress(migrationContractStagingAddress[globalFlags.Network]))
+	code := templates.GenerateStageContractScript(MigrationContractStagingAddress(globalFlags.Network))
 	contractName := args[0]
 
 	contract, err := state.Contracts().ByName(contractName)

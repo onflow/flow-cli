@@ -54,7 +54,7 @@ func unstageContract(
 	flow flowkit.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
-    code := templates.GenerateUnstageContractScript(flowsdk.HexToAddress(migrationContractStagingAddress[globalFlags.Network]))
+	code := templates.GenerateUnstageContractScript(MigrationContractStagingAddress(globalFlags.Network))
 	contractName := args[0]
 
 	account, err := getAccountByContractName(state, contractName, globalFlags.Network)

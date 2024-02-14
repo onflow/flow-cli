@@ -28,6 +28,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/contract-updater/lib/go/templates"
+
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/internal/scripts"
 )
@@ -52,12 +53,12 @@ func getStagedCode(
 	flow flowkit.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
-    code := templates.GenerateGetStagedContractCodeScript(flowsdk.HexToAddress(migrationContractStagingAddress[globalFlags.Network]))
+	code := templates.GenerateGetStagedContractCodeScript(MigrationContractStagingAddress(globalFlags.Network))
 
 	contractAddress := args[0]
 
 	caddr := cadence.NewAddress(flowsdk.HexToAddress(contractAddress))
-	
+
 	value, err := flow.ExecuteScript(
 		context.Background(),
 		flowkit.Script{

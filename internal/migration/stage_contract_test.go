@@ -37,12 +37,12 @@ func Test_StageContract(t *testing.T) {
 	testContract := tests.ContractSimple
 
 	t.Run("Success", func(t *testing.T) {
-	    srv, state, _ := util.TestMocks(t)
+		srv, state, _ := util.TestMocks(t)
 
 		// Add contract to state
 		state.Contracts().AddOrUpdate(
 			config.Contract{
-				Name:   testContract.Name,
+				Name:     testContract.Name,
 				Location: testContract.Filename,
 			},
 		)
@@ -56,8 +56,8 @@ func Test_StageContract(t *testing.T) {
 					{
 						Name: testContract.Name,
 					},
+				},
 			},
-		},
 		)
 
 		srv.SendTransaction.Run(func(args mock.Arguments) {
@@ -89,7 +89,7 @@ func Test_StageContract(t *testing.T) {
 	})
 
 	t.Run("missing contract", func(t *testing.T) {
-	    srv, state, _ := util.TestMocks(t)
+		srv, state, _ := util.TestMocks(t)
 		result, err := stageContract(
 			[]string{testContract.Name},
 			command.GlobalFlags{

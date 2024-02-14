@@ -52,7 +52,7 @@ func listStagedContracts(
 	flow flowkit.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
-    code := templates.GenerateGetAllStagedContractCodeForAddressScript(flowsdk.HexToAddress(migrationContractStagingAddress[globalFlags.Network]))
+	code := templates.GenerateGetAllStagedContractCodeForAddressScript(MigrationContractStagingAddress(globalFlags.Network))
 
 	contractAddress := args[0]
 
