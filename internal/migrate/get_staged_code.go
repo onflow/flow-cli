@@ -60,7 +60,6 @@ func getStagedCode(
 		return nil, fmt.Errorf("error getting account by contract name: %w", err)
 	}
 
-
 	caddr := cadence.NewAddress(addr)
 
 	value, err := flow.ExecuteScript(
