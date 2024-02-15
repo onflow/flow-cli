@@ -60,13 +60,18 @@ func getStagedCode(
 		return nil, fmt.Errorf("error getting account by contract name: %w", err)
 	}
 
+	cName, err := cadence.NewString(contractName)
+	if err != nil {
+		return nil, fmt.Errorf("error creating cadence string: %w", err)
+	}
+
 	caddr := cadence.NewAddress(addr)
 
 	value, err := flow.ExecuteScript(
 		context.Background(),
 		flowkit.Script{
 			Code: templates.GenerateGetStagedContractCodeScript(MigrationContractStagingAddress(globalFlags.Network)),
-			Args: []cadence.Value{caddr},
+			Args: []cadence.Value{caddr, cName},
 		},
 		flowkit.LatestScriptQuery,
 	)
