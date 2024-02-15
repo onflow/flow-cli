@@ -22,7 +22,6 @@ import (
 	"testing"
 
 	"github.com/onflow/cadence"
-	flowsdk "github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flowkit"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -41,12 +40,12 @@ func Test_ListStagedContracts(t *testing.T) {
 
 			actualContractAddressArg := script.Args[0]
 
-			contractAddr := cadence.NewAddress(flowsdk.HexToAddress("0xSomeAddress"))
+			contractAddr := cadence.NewAddress(util.EmulatorAccountAddress)
 			assert.Equal(t, contractAddr, actualContractAddressArg)
 		}).Return(cadence.NewMeteredBool(nil, true), nil)
 
 		result, err := listStagedContracts(
-			[]string{"0xSomeAddress"},
+			[]string{"emulator-account"},
 			command.GlobalFlags{
 				Network: "testnet",
 			},

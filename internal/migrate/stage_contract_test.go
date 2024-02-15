@@ -76,7 +76,7 @@ func Test_StageContract(t *testing.T) {
 		}, nil)
 
 		result, err := stageContract(
-			[]string{testContract.Name, testContract.Filename},
+			[]string{testContract.Name},
 			command.GlobalFlags{
 				Network: "testnet",
 			},

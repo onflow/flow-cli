@@ -22,8 +22,9 @@ import (
 	"testing"
 
 	"github.com/onflow/cadence"
-	flowsdk "github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flowkit"
+	"github.com/onflow/flowkit/config"
+	"github.com/onflow/flowkit/tests"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 
@@ -35,18 +36,40 @@ func Test_GetStagedCode(t *testing.T) {
 	srv, state, _ := util.TestMocks(t)
 
 	t.Run("Success", func(t *testing.T) {
+		testContract := tests.ContractSimple
+
+		// Add contract to state
+		state.Contracts().AddOrUpdate(
+			config.Contract{
+				Name:     testContract.Name,
+				Location: testContract.Filename,
+			},
+		)
+
+		// Add deployment to state
+		state.Deployments().AddOrUpdate(
+			config.Deployment{
+				Network: "testnet",
+				Account: "emulator-account",
+				Contracts: []config.ContractDeployment{
+					{
+						Name: testContract.Name,
+					},
+				},
+			},
+		)
 
 		srv.ExecuteScript.Run(func(args mock.Arguments) {
 			script := args.Get(1).(flowkit.Script)
 
 			actualContractAddressArg := script.Args[0]
 
-			contractAddr := cadence.NewAddress(flowsdk.HexToAddress("0xSomeAddress"))
-			assert.Equal(t, contractAddr, actualContractAddressArg)
+			contractAddr := cadence.NewAddress(util.EmulatorAccountAddress)
+			assert.Equal(t, contractAddr.String(), actualContractAddressArg.String())
 		}).Return(cadence.NewMeteredBool(nil, true), nil)
 
 		result, err := getStagedCode(
-			[]string{"0xSomeAddress"},
+			[]string{testContract.Name},
 			command.GlobalFlags{
 				Network: "testnet",
 			},
