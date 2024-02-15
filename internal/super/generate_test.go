@@ -19,7 +19,6 @@
 package super
 
 import (
-	"os"
 	"testing"
 
 	"github.com/onflow/flow-cli/internal/util"
@@ -30,19 +29,11 @@ import (
 )
 
 func TestGenerateNewContract(t *testing.T) {
-	dir, err := os.MkdirTemp("", "test")
-	assert.NoError(t, err, "Failed to create temp dir")
-	defer os.RemoveAll(dir)
-
-	if err := os.Chdir(dir); err != nil {
-		t.Fatalf("Failed to change directory: %v", err)
-	}
-
 	logger := output.NewStdoutLogger(output.NoneLog)
 	_, state, _ := util.TestMocks(t)
 
 	// Test contract generation
-	_, err = generateNew([]string{"TestContract"}, "contract", logger, state)
+	_, err := generateNew([]string{"TestContract"}, "contract", logger, state)
 	assert.NoError(t, err, "Failed to generate contract")
 
 	fileContent, err := state.ReaderWriter().ReadFile("cadence/contracts/TestContract.cdc")
@@ -51,7 +42,8 @@ func TestGenerateNewContract(t *testing.T) {
 
 	// Check content is correct
 	expectedContent := `
-access(all) contract TestContract {
+access(all)
+contract TestContract {
     init() {}
 }`
 	assert.Equal(t, expectedContent, string(fileContent))
@@ -63,19 +55,11 @@ access(all) contract TestContract {
 }
 
 func TestGenerateNewContractFileAlreadyExists(t *testing.T) {
-	dir, err := os.MkdirTemp("", "test")
-	assert.NoError(t, err, "Failed to create temp dir")
-	defer os.RemoveAll(dir)
-
-	if err := os.Chdir(dir); err != nil {
-		t.Fatalf("Failed to change directory: %v", err)
-	}
-
 	logger := output.NewStdoutLogger(output.NoneLog)
 	_, state, _ := util.TestMocks(t)
 
 	// Test contract generation
-	_, err = generateNew([]string{"TestContract"}, "contract", logger, state)
+	_, err := generateNew([]string{"TestContract"}, "contract", logger, state)
 	assert.NoError(t, err, "Failed to generate contract")
 
 	//// Check if the file exists in the correct directory
@@ -90,18 +74,10 @@ func TestGenerateNewContractFileAlreadyExists(t *testing.T) {
 }
 
 func TestGenerateNewContractWithFileExtension(t *testing.T) {
-	dir, err := os.MkdirTemp("", "test")
-	assert.NoError(t, err, "Failed to create temp dir")
-	defer os.RemoveAll(dir)
-
-	if err := os.Chdir(dir); err != nil {
-		t.Fatalf("Failed to change directory: %v", err)
-	}
-
 	logger := output.NewStdoutLogger(output.NoneLog)
 	_, state, _ := util.TestMocks(t)
 
-	_, err = generateNew([]string{"TestContract.cdc"}, "contract", logger, state)
+	_, err := generateNew([]string{"TestContract.cdc"}, "contract", logger, state)
 	assert.NoError(t, err, "Failed to generate contract")
 
 	// Check file exists
@@ -111,43 +87,28 @@ func TestGenerateNewContractWithFileExtension(t *testing.T) {
 }
 
 func TestGenerateNewScript(t *testing.T) {
-	dir, err := os.MkdirTemp("", "test")
-	assert.NoError(t, err, "Failed to create temp dir")
-	defer os.RemoveAll(dir)
-
-	if err := os.Chdir(dir); err != nil {
-		t.Fatalf("Failed to change directory: %v", err)
-	}
-
 	logger := output.NewStdoutLogger(output.NoneLog)
 	_, state, _ := util.TestMocks(t)
 
-	_, err = generateNew([]string{"TestScript"}, "script", logger, state)
+	_, err := generateNew([]string{"TestScript"}, "script", logger, state)
 	assert.NoError(t, err, "Failed to generate contract")
 
 	content, err := state.ReaderWriter().ReadFile("cadence/scripts/TestScript.cdc")
 	assert.NoError(t, err, "Failed to read generated file")
 	assert.NotNil(t, content)
 
-	expectedContent := `access(all) fun main() {
+	expectedContent := `access(all)
+fun main() {
     // Script details here
 }`
 	assert.Equal(t, expectedContent, string(content))
 }
 
 func TestGenerateNewTransaction(t *testing.T) {
-	dir, err := os.MkdirTemp("", "test")
-	assert.NoError(t, err, "Failed to create temp dir")
-	defer os.RemoveAll(dir)
-
-	if err := os.Chdir(dir); err != nil {
-		t.Fatalf("Failed to change directory: %v", err)
-	}
-
 	logger := output.NewStdoutLogger(output.NoneLog)
 	_, state, _ := util.TestMocks(t)
 
-	_, err = generateNew([]string{"TestTransaction"}, "transaction", logger, state)
+	_, err := generateNew([]string{"TestTransaction"}, "transaction", logger, state)
 	assert.NoError(t, err, "Failed to generate contract")
 
 	content, err := state.ReaderWriter().ReadFile("cadence/transactions/TestTransaction.cdc")
@@ -163,21 +124,13 @@ func TestGenerateNewTransaction(t *testing.T) {
 }
 
 func TestGenerateNewWithDirFlag(t *testing.T) {
-	dir, err := os.MkdirTemp("", "test")
-	assert.NoError(t, err, "Failed to create temp dir")
-	defer os.RemoveAll(dir)
-
-	if err := os.Chdir(dir); err != nil {
-		t.Fatalf("Failed to change directory: %v", err)
-	}
-
 	logger := output.NewStdoutLogger(output.NoneLog)
 	_, state, _ := util.TestMocks(t)
 
 	// Set a custom directory
 	generateFlags.Directory = "customDir"
 
-	_, err = generateNew([]string{"TestContract"}, "contract", logger, state)
+	_, err := generateNew([]string{"TestContract"}, "contract", logger, state)
 	assert.NoError(t, err, "Failed to generate contract")
 
 	content, err := state.ReaderWriter().ReadFile("customDir/TestContract.cdc")
@@ -185,7 +138,8 @@ func TestGenerateNewWithDirFlag(t *testing.T) {
 	assert.NotNil(t, content)
 
 	expectedContent := `
-access(all) contract TestContract {
+access(all)
+contract TestContract {
     init() {}
 }`
 	assert.Equal(t, expectedContent, string(content))
