@@ -39,7 +39,7 @@ var IsStagedCommand = &command.Command{
 		Use:     "is-staged <CONTRACT_NAME>",
 		Short:   "checks to see if the contract is staged for migration",
 		Example: `flow migrate is-staged HelloWorld`,
-		Args:    cobra.MinimumNArgs(2),
+		Args:    cobra.MinimumNArgs(1),
 	},
 	Flags: &isStagedflags,
 	RunS:  isStaged,
