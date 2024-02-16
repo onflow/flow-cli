@@ -23,7 +23,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/onflow/flowkit/accounts"
+	"github.com/onflow/flowkit/v2/accounts"
 
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
@@ -31,8 +31,8 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
-	"github.com/onflow/flowkit"
-	"github.com/onflow/flowkit/tests"
+	"github.com/onflow/flowkit/v2"
+	"github.com/onflow/flowkit/v2/tests"
 
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/internal/util"

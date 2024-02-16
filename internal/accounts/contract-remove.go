@@ -26,8 +26,8 @@ import (
 
 	"github.com/onflow/flow-cli/internal/util"
 
-	"github.com/onflow/flowkit"
-	"github.com/onflow/flowkit/output"
+	"github.com/onflow/flowkit/v2"
+	"github.com/onflow/flowkit/v2/output"
 
 	"github.com/onflow/flow-cli/internal/command"
 )
