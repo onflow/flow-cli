@@ -64,6 +64,11 @@ func Test_StageContract(t *testing.T) {
 			Name: "testnet",
 		}, nil)
 
+		srv.Mock.On("ReplaceImportsInScript", mock.Anything, mock.Anything).Return(
+			flowkit.Script{
+				Code: testContract.Source,
+			}, nil)
+
 		srv.SendTransaction.Run(func(args mock.Arguments) {
 			script := args.Get(2).(flowkit.Script)
 

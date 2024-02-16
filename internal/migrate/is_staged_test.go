@@ -59,6 +59,10 @@ func Test_IsStaged(t *testing.T) {
 			},
 		)
 
+		srv.Network.Return(config.Network{
+			Name: "testnet",
+		}, nil)
+
 		srv.ExecuteScript.Run(func(args mock.Arguments) {
 			script := args.Get(1).(flowkit.Script)
 
