@@ -62,14 +62,9 @@ func stageContract(
 		return nil, fmt.Errorf("no contracts found in state")
 	}
 
-	contractCode, err := state.ReadFile(contract.Location)
+	replacedCode, err := replaceImportsIfExists(state, flow, contract.Location)
 	if err != nil {
-		return nil, fmt.Errorf("error loading contract file: %w", err)
-	}
-
-	account, err := getAccountByContractName(state, contractName, flow.Network().Name)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get account by contract name: %w", err)
+		return nil, fmt.Errorf("failed to replace imports: %w", err)
 	}
 
 	cName, err := cadence.NewString(contractName)
@@ -77,9 +72,14 @@ func stageContract(
 		return nil, fmt.Errorf("failed to get cadence string from contract name: %w", err)
 	}
 
-	cCode, err := cadence.NewString(string(contractCode))
+	cCode, err := cadence.NewString(string(replacedCode))
 	if err != nil {
 		return nil, fmt.Errorf("failed to get cadence string from contract code: %w", err)
+	}
+
+	account, err := getAccountByContractName(state, contractName, flow.Network().Name)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get account by contract name: %w", err)
 	}
 
 	tx, res, err := flow.SendTransaction(

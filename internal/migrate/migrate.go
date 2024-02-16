@@ -21,9 +21,11 @@ package migrate
 import (
 	"fmt"
 
+	"github.com/onflow/cadence"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flowkit/v2"
 	"github.com/onflow/flowkit/v2/accounts"
+	"github.com/onflow/flowkit/v2/project"
 	"github.com/spf13/cobra"
 )
 
@@ -51,6 +53,38 @@ var migrationContractStagingAddress = map[string]string{
 // MigrationContractStagingAddress returns the address of the migration contract on the given network
 func MigrationContractStagingAddress(network string) flow.Address {
 	return flow.HexToAddress(migrationContractStagingAddress[network])
+}
+
+// replaceImportsIfExists replaces imports in the given contract file with the actual contract code
+func replaceImportsIfExists(state *flowkit.State, flow flowkit.Services, location string) ([]byte, error) {
+	code, err := state.ReadFile(location)
+	if err != nil {
+		return nil, fmt.Errorf("error loading contract file: %w", err)
+	}
+
+	contracts, err := state.DeploymentContractsByNetwork(flow.Network())
+	if err != nil {
+		return nil, err
+	}
+
+	importReplacer := project.NewImportReplacer(
+		contracts,
+		state.AliasesForNetwork(flow.Network()),
+	)
+
+	program, err := project.NewProgram(code, []cadence.Value{}, location)
+	if err != nil {
+		return nil, err
+	}
+
+	if program.HasImports() {
+		program, err = importReplacer.Replace(program)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return program.Code(), nil
 }
 
 func getAccountByContractName(state *flowkit.State, contractName string, network string) (*accounts.Account, error) {
