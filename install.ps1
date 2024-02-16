@@ -48,7 +48,7 @@ function Get-Version {
     )
 
     $page = 1
-    $version = null
+    $version = $null
 
     while (-not $version) {
         if ($githubTokenHeader) {
