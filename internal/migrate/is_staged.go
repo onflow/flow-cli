@@ -55,6 +55,9 @@ func isStaged(
 	contractName := args[0]
 
 	addr, err := getAddressByContractName(state, contractName, globalFlags.Network)
+	if err != nil {
+		return nil, fmt.Errorf("error getting address by contract name: %w", err)
+	}
 
 	caddr := cadence.NewAddress(addr)
 
