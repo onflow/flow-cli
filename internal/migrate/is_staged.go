@@ -54,12 +54,17 @@ func isStaged(
 ) (command.Result, error) {
 	contractName := args[0]
 
-	addr, err := getAddressByContractName(state, contractName, globalFlags.Network)
+	c, err := state.Contracts().ByName(contractName)
+	if err != nil {
+		return nil, fmt.Errorf("error getting contract by name: %w", err)
+	}
+
+	addr, err := state.ContractAddress(c, flow.Network())
 	if err != nil {
 		return nil, fmt.Errorf("error getting account by contract name: %w", err)
 	}
 
-	caddr := cadence.NewAddress(addr)
+	caddr := cadence.BytesToAddress(addr.Bytes())
 
 	cname, err := cadence.NewString(contractName)
 	if err != nil {
