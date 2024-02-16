@@ -77,7 +77,7 @@ func stageContract(
 		return nil, fmt.Errorf("failed to get cadence string from contract code: %w", err)
 	}
 
-	account, err := getAccountByContractName(state, contractName, flow.Network().Name)
+	account, err := getAccountByContractName(state, contractName, flow.Network())
 	if err != nil {
 		return nil, fmt.Errorf("failed to get account by contract name: %w", err)
 	}

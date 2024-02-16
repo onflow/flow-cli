@@ -55,7 +55,7 @@ func getStagedCode(
 ) (command.Result, error) {
 	contractName := args[0]
 
-	addr, err := getAddressByContractName(state, contractName, globalFlags.Network)
+	addr, err := getAddressByContractName(state, contractName, flow.Network())
 	if err != nil {
 		return nil, fmt.Errorf("error getting address by contract name: %w", err)
 	}
@@ -70,7 +70,7 @@ func getStagedCode(
 	value, err := flow.ExecuteScript(
 		context.Background(),
 		flowkit.Script{
-			Code: templates.GenerateGetStagedContractCodeScript(MigrationContractStagingAddress(globalFlags.Network)),
+			Code: templates.GenerateGetStagedContractCodeScript(MigrationContractStagingAddress(flow.Network().Name)),
 			Args: []cadence.Value{caddr, cName},
 		},
 		flowkit.LatestScriptQuery,

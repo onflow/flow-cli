@@ -25,6 +25,7 @@ import (
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flowkit/v2"
 	"github.com/onflow/flowkit/v2/accounts"
+	"github.com/onflow/flowkit/v2/config"
 	"github.com/onflow/flowkit/v2/project"
 	"github.com/spf13/cobra"
 )
@@ -87,8 +88,8 @@ func replaceImportsIfExists(state *flowkit.State, flow flowkit.Services, locatio
 	return program.Code(), nil
 }
 
-func getAccountByContractName(state *flowkit.State, contractName string, network string) (*accounts.Account, error) {
-	deployments := state.Deployments().ByNetwork(network)
+func getAccountByContractName(state *flowkit.State, contractName string, network config.Network) (*accounts.Account, error) {
+	deployments := state.Deployments().ByNetwork(network.Name)
 	var accountName string
 	for _, d := range deployments {
 		for _, c := range d.Contracts {
@@ -121,7 +122,7 @@ func getAccountByContractName(state *flowkit.State, contractName string, network
 	return account, nil
 }
 
-func getAddressByContractName(state *flowkit.State, contractName string, network string) (flow.Address, error) {
+func getAddressByContractName(state *flowkit.State, contractName string, network config.Network) (flow.Address, error) {
 	account, err := getAccountByContractName(state, contractName, network)
 	if err != nil {
 		return flow.Address{}, err
