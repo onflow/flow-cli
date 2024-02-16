@@ -67,26 +67,14 @@ func stageContract(
 		return nil, fmt.Errorf("error loading contract file: %w", err)
 	}
 
-	script, err := flow.ReplaceImportsInScript(context.Background(), flowkit.Script{
-		Code:     contractCode,
-		Args:     []cadence.Value{}, // no need for arguments
-		Location: contract.Location,
-	})
-	if err != nil {
-		return nil, fmt.Errorf("failed to replace imports in script: %w", err)
-	}
-
-	account, err := state.AccountByContractName(contractName, flow.Network())
-	if err != nil {
-		return nil, fmt.Errorf("error getting account by contract name: %w", err)
-	}
+	account, err := getAccountByContractName(state, contractName, globalFlags.Network)
 
 	cName, err := cadence.NewString(contractName)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get cadence string from contract name: %w", err)
 	}
 
-	cCode, err := cadence.NewString(string(script.Code))
+	cCode, err := cadence.NewString(string(contractCode))
 	if err != nil {
 		return nil, fmt.Errorf("failed to get cadence string from contract code: %w", err)
 	}

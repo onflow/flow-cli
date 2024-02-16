@@ -905,12 +905,6 @@ github.com/onflow/flow/protobuf/go/flow v0.3.2-0.20231124194313-106cc495def6 h1:
 github.com/onflow/flow/protobuf/go/flow v0.3.2-0.20231124194313-106cc495def6/go.mod h1:NA2pX2nw8zuaxfKphhKsk00kWLwfd+tv8mS23YXO4Sk=
 github.com/onflow/flowkit v1.13.0 h1:a8XIDxz/k54nw2UAN3BxVeXnflwUzZaxocSxhA5IFiw=
 github.com/onflow/flowkit v1.13.0/go.mod h1:V1vMr/51HpLT8oWw/zoFsLs33ibG8FNeoNbA5SGTHf8=
-github.com/onflow/flowkit v1.14.0 h1:c78cZ96cGfl3IjmASlGwIJMqfL8X5d276HWGZt0+OM8=
-github.com/onflow/flowkit v1.14.0/go.mod h1:V1vMr/51HpLT8oWw/zoFsLs33ibG8FNeoNbA5SGTHf8=
-github.com/onflow/flowkit v1.14.1-0.20240216172541-07e0146c2968 h1:egXrh4NleSgU9VkCpLVm/vHUl7WeB6DXdtg2iBvwy/0=
-github.com/onflow/flowkit v1.14.1-0.20240216172541-07e0146c2968/go.mod h1:V1vMr/51HpLT8oWw/zoFsLs33ibG8FNeoNbA5SGTHf8=
-github.com/onflow/flowkit v1.14.1-0.20240216181534-cbeace82404d h1:wx/aLx6xKm84mBKXcKqwWi2MprgSHWhAG4U1epX+2G8=
-github.com/onflow/flowkit v1.14.1-0.20240216181534-cbeace82404d/go.mod h1:V1vMr/51HpLT8oWw/zoFsLs33ibG8FNeoNbA5SGTHf8=
 github.com/onflow/nft-storefront/lib/go/contracts v0.0.0-20221222181731-14b90207cead h1:2j1Unqs76Z1b95Gu4C3Y28hzNUHBix7wL490e61SMSw=
 github.com/onflow/nft-storefront/lib/go/contracts v0.0.0-20221222181731-14b90207cead/go.mod h1:E3ScfQb5XcWJCIAdtIeEnr5i5l2y60GT0BTXeIHseWg=
 github.com/onflow/sdks v0.5.0 h1:2HCRibwqDaQ1c9oUApnkZtEAhWiNY2GTpRD5+ftdkN8=

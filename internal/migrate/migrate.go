@@ -19,7 +19,11 @@
 package migrate
 
 import (
+	"fmt"
+
 	"github.com/onflow/flow-go-sdk"
+	"github.com/onflow/flowkit"
+	"github.com/onflow/flowkit/accounts"
 	"github.com/spf13/cobra"
 )
 
@@ -47,4 +51,47 @@ var migrationContractStagingAddress = map[string]string{
 // MigrationContractStagingAddress returns the address of the migration contract on the given network
 func MigrationContractStagingAddress(network string) flow.Address {
 	return flow.HexToAddress(migrationContractStagingAddress[network])
+}
+
+func getAccountByContractName(state *flowkit.State, contractName string, network string) (*accounts.Account, error) {
+	deployments := state.Deployments().ByNetwork(network)
+	var accountName string
+	for _, d := range deployments {
+		for _, c := range d.Contracts {
+			if c.Name == contractName {
+				accountName = d.Account
+				break
+			}
+		}
+	}
+	if accountName == "" {
+		return nil, fmt.Errorf("contract not found in state")
+	}
+
+	accs := state.Accounts()
+	if accs == nil {
+		return nil, fmt.Errorf("no accounts found in state")
+	}
+
+	var account *accounts.Account
+	for _, a := range *accs {
+		if accountName == a.Name {
+			account = &a
+			break
+		}
+	}
+	if account == nil {
+		return nil, fmt.Errorf("account %s not found in state", accountName)
+	}
+
+	return account, nil
+}
+
+func getAddressByContractName(state *flowkit.State, contractName string, network string) (flow.Address, error) {
+	account, err := getAccountByContractName(state, contractName, network)
+	if err != nil {
+		return flow.Address{}, err
+	}
+
+	return flow.HexToAddress(account.Address.Hex()), nil
 }
