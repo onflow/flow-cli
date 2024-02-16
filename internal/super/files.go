@@ -28,7 +28,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/radovskyb/watcher"
 
-	"github.com/onflow/flowkit/config"
+	"github.com/onflow/flowkit/v2/config"
 )
 
 const (

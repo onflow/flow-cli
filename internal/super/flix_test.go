@@ -29,11 +29,11 @@ import (
 	"github.com/onflow/flixkit-go/flixkit"
 	"github.com/onflow/flow-go-sdk/crypto"
 
-	"github.com/onflow/flowkit"
-	"github.com/onflow/flowkit/config"
-	"github.com/onflow/flowkit/mocks"
-	"github.com/onflow/flowkit/output"
-	"github.com/onflow/flowkit/tests"
+	"github.com/onflow/flowkit/v2"
+	"github.com/onflow/flowkit/v2/config"
+	"github.com/onflow/flowkit/v2/mocks"
+	"github.com/onflow/flowkit/v2/output"
+	"github.com/onflow/flowkit/v2/tests"
 
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/internal/util"
@@ -43,14 +43,14 @@ type MockFlixService struct {
 	mock.Mock
 }
 
-var TEMPLATE_STR = "{ \"f_type\": \"IniteractionTemplate\", \"f_version\": \"1.1.0\", \"id\": \"0ea\",}"
+var TEMPLATE_STR = "{ \"f_type\": \"InteractionTemplate\", \"f_version\": \"1.1.0\", \"id\": \"0ea\",}"
 
 func (m *MockFlixService) GetTemplate(ctx context.Context, templateName string) (string, string, error) {
 	args := m.Called(ctx, templateName)
 	return TEMPLATE_STR, args.String(0), args.Error(1)
 }
 
-var CADENCE_SCRIPT = "pub fun main() {\n    log(\"Hello, World!\")\n}"
+var CADENCE_SCRIPT = "access(all) fun main() {\n    log(\"Hello, World!\")\n}"
 
 func (m *MockFlixService) GetTemplateAndReplaceImports(ctx context.Context, templateName string, network string) (*flixkit.FlowInteractionTemplateExecution, error) {
 	result := &flixkit.FlowInteractionTemplateExecution{
@@ -79,7 +79,7 @@ func Test_ExecuteFlixScript(t *testing.T) {
 	logger := output.NewStdoutLogger(output.NoneLog)
 	srv, state, _ := util.TestMocks(t)
 	mockFlixService := new(MockFlixService)
-	testCadenceScript := "pub fun main() {\n    log(\"Hello, World!\")\n}"
+	testCadenceScript := "access(all) fun main() {\n    log(\"Hello, World!\")\n}"
 	mockFlixService.On("GetTemplateAndReplaceImports", ctx, "templateName", "emulator").Return(&flixkit.FlowInteractionTemplateExecution{
 		Network:       "emulator",
 		IsTransaciton: false,
@@ -108,7 +108,7 @@ func Test_ExecuteFlixTransaction(t *testing.T) {
 	logger := output.NewStdoutLogger(output.NoneLog)
 	srv, state, _ := util.TestMocks(t)
 	mockFlixService := new(MockFlixService)
-	testCadenceTx := "transaction { prepare(signer: AuthAccount) { /* prepare logic */ } execute { log(\"Hello, Cadence!\") } }"
+	testCadenceTx := "transaction { prepare(signer: &Account) { /* prepare logic */ } execute { log(\"Hello, Cadence!\") } }"
 	mockFlixService.On("GetTemplateAndReplaceImports", ctx, "templateName", "emulator").Return(&flixkit.FlowInteractionTemplateExecution{
 		Network:       "emulator",
 		IsTransaciton: false,
@@ -148,7 +148,7 @@ func Test_PackageFlix(t *testing.T) {
 func Test_GenerateFlix(t *testing.T) {
 	srv := mocks.DefaultMockServices()
 	cadenceFile := "cadence.cdc"
-	cadenceCode := "pub fun main() {\n    log(\"Hello, World!\")\n}"
+	cadenceCode := "access(all) fun main() {\n    log(\"Hello, World!\")\n}"
 
 	mockFlixService := new(MockFlixService)
 

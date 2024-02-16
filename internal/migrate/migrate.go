@@ -22,8 +22,8 @@ import (
 	"fmt"
 
 	"github.com/onflow/flow-go-sdk"
-	"github.com/onflow/flowkit"
-	"github.com/onflow/flowkit/accounts"
+	"github.com/onflow/flowkit/v2"
+	"github.com/onflow/flowkit/v2/accounts"
 	"github.com/spf13/cobra"
 )
 

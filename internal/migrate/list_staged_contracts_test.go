@@ -22,7 +22,7 @@ import (
 	"testing"
 
 	"github.com/onflow/cadence"
-	"github.com/onflow/flowkit"
+	"github.com/onflow/flowkit/v2"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 
