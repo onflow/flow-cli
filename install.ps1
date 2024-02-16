@@ -39,24 +39,26 @@ $repo = "onflow/flow-cli"
 $versionURL = "https://api.github.com/repos/$repo/releases/latest"
 $assetsURL = "https://github.com/$repo/releases/download"
 
+# Add the GitHub token to the web request headers if it was provided
+$webRequestOptions = if ($githubToken) {
+	@{ 'Headers' = @{ 'Authorization' = "Bearer $githubToken" } }
+} else {
+    @{}
+}
+
 # Function to get the latest version
 function Get-Version {
     param (
         [string]$repo,
         [string]$searchTerm,
-        [string]$githubTokenHeader
+        [hashtable]$webRequestOptions
     )
 
     $page = 1
     $version = $null
 
     while (-not $version) {
-        if ($githubTokenHeader) {
-            $response = Invoke-WebRequest -Uri "https://api.github.com/repos/$repo/releases?per_page=100&page=$page" -Headers @{ 'Authorization' = $githubTokenHeader } -UseBasicParsing -ErrorAction SilentlyContinue
-        } else {
-            $response = Invoke-WebRequest -Uri "https://api.github.com/repos/$repo/releases?per_page=100&page=$page" -UseBasicParsing -ErrorAction SilentlyContinue
-        }
-
+        $response = Invoke-WebRequest -Uri "https://api.github.com/repos/$repo/releases?per_page=100&page=$page" -UseBasicParsing @webRequestOptions -ErrorAction SilentlyContinue
         $status = $response.StatusCode
 
         if ($status -eq 403 -and $githubTokenHeader) {
@@ -86,7 +88,7 @@ function Get-Version {
 }
 
 if (-not $version) {
-    $version = Get-Version -repo $repo -searchTerm "cadence-v1.0.0" -githubTokenHeader $githubToken
+    $version = Get-Version -repo $repo -searchTerm "cadence-v1.0.0" -webRequestOptions $webRequestOptions
 }
 
 Write-Output("Installing version {0} ..." -f $version)
@@ -118,7 +120,8 @@ if ($addToPath -and $existingPaths -notcontains $directory) {
     [System.Environment]::SetEnvironmentVariable("PATH", $userPath, [System.EnvironmentVariableTarget]::User)
 }
 
-Write-Output "\nSuccessfully installed Flow CLI $version"
+Write-Output ""
+Write-Output "Successfully installed Flow CLI $version"
 Write-Output "PRE-RELEASE: Use the 'flow-c1' command to interact with this Cadence 1.0 CLI pre-release."
 
 Start-Sleep -Seconds 1
