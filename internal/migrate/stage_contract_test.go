@@ -60,6 +60,10 @@ func Test_StageContract(t *testing.T) {
 			},
 		)
 
+		srv.Network.Return(config.Network{
+			Name: "testnet",
+		}, nil)
+
 		srv.SendTransaction.Run(func(args mock.Arguments) {
 			script := args.Get(2).(flowkit.Script)
 
