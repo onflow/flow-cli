@@ -35,14 +35,18 @@ func Test_ListStagedContracts(t *testing.T) {
 
 	t.Run("Success", func(t *testing.T) {
 
+		account, err := state.EmulatorServiceAccount()
+		assert.NoError(t, err)
+
 		srv.ExecuteScript.Run(func(args mock.Arguments) {
 			script := args.Get(1).(flowkit.Script)
+			assert.Equal(t, 1, len(script.Args))
 
 			actualContractAddressArg := script.Args[0]
 
-			contractAddr := cadence.NewAddress(util.EmulatorAccountAddress)
+			contractAddr := cadence.NewAddress(account.Address)
 			assert.Equal(t, contractAddr, actualContractAddressArg)
-		}).Return(cadence.NewBool(true), nil)
+		}).Return(cadence.NewArray([]cadence.Value{}), nil)
 
 		result, err := listStagedContracts(
 			[]string{"emulator-account"},

@@ -26,6 +26,7 @@ import (
 	"github.com/onflow/flowkit/v2"
 	"github.com/onflow/flowkit/v2/config"
 	"github.com/onflow/flowkit/v2/tests"
+	"github.com/onflow/flowkit/v2/transactions"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 
@@ -65,7 +66,12 @@ func Test_UnstageContract(t *testing.T) {
 		}, nil)
 
 		srv.SendTransaction.Run(func(args mock.Arguments) {
+			accountRoles := args.Get(1).(transactions.AccountRoles)
 			script := args.Get(2).(flowkit.Script)
+
+			assert.Equal(t, 1, len(accountRoles.Signers()))
+			assert.Equal(t, "emulator-account", accountRoles.Signers()[0].Name)
+			assert.Equal(t, 1, len(script.Args))
 
 			actualContractNameArg := script.Args[0]
 
