@@ -9,6 +9,8 @@ ASSETS_URL="https://github.com/$REPO/releases/download/"
 VERSION="$1"
 # The architecture string, set by get_architecture
 ARCH=""
+# The tag search term to use if no version is specified (first match is used)
+SEARCH_TERM="cadence-v1.0.0"
 
 # Optional environment variable for Github API token
 # If GITHUB_TOKEN is set, use it in the curl requests to avoid rate limiting
@@ -60,21 +62,37 @@ get_architecture() {
 }
 
 # Get the latest version from remote if none specified in args.
+page=1
 get_version() {
   if [ -z "$VERSION" ]
   then
     VERSION=""
     if [ -n "$github_token_header" ]
     then
-      VERSION=$(curl -H "$github_token_header" -s "https://api.github.com/repos/$REPO/releases/latest" | grep -E 'tag_name' | cut -d '"' -f 4)
+      response=$(curl -H "$github_token_header" -s "https://api.github.com/repos/$REPO/releases?per_page=100&page=$page" -w "%{http_code}")
     else
-      VERSION=$(curl -s "https://api.github.com/repos/$REPO/releases/latest" | grep -E 'tag_name' | cut -d '"' -f 4)
+      response=$(curl -s "https://api.github.com/repos/$REPO/releases?per_page=100&page=$page" -w "%{http_code}")
     fi
 
-    if [ -z "$VERSION" ] && [ -n "$github_token_header" ]
+    status=$(echo "$response" | tail -n 1)
+    if [ "$status" -eq "403" ] && [ -n "$github_token_header" ]
     then
       echo "Failed to get latest version from Github API, is your GITHUB_TOKEN valid?  Trying without authentication..."
       github_token_header=""
+      get_version
+    fi
+
+    if [ "$status" -ne "200" ]
+    then
+      echo "Failed to get latest version from Github API, please manually specify a version to install as an argument to this script."
+      return 1
+    fi
+
+    VERSION=$(echo "$response" | grep -E 'tag_name' | grep -E "$SEARCH_TERM" | head -n 1 | cut -d '"' -f 4)
+
+    if [ -z "$VERSION" ]
+    then
+      page=$((page+1))
       get_version
     fi
   fi
@@ -109,11 +127,15 @@ main() {
   [ -d $TARGET_PATH ] || mkdir -p $TARGET_PATH
 
   tar -xf $tmpfile -C $TARGET_PATH
-  mv $TARGET_PATH/flow-cli $TARGET_PATH/flow
-  chmod +x $TARGET_PATH/flow
+  mv $TARGET_PATH/flow-cli $TARGET_PATH/flow-c1
+  chmod +x $TARGET_PATH/flow-c1
 
-  echo "Successfully installed the Flow CLI to $TARGET_PATH."
+  echo ""
+  echo "Successfully installed Flow CLI $VERSION to $TARGET_PATH."
   echo "Make sure $TARGET_PATH is in your \$PATH environment variable."
+  echo ""
+  echo "PRE-RELEASE: Use the 'flow-c1' command to interact with this Cadence 1.0 CLI pre-release."
+  echo ""
 }
 
 main

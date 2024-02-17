@@ -64,7 +64,7 @@ func listStagedContracts(
 	value, err := flow.ExecuteScript(
 		context.Background(),
 		flowkit.Script{
-			Code: templates.GenerateGetStagedContractNamesForAddressScript(MigrationContractStagingAddress(globalFlags.Network)),
+			Code: templates.GenerateGetStagedContractNamesForAddressScript(MigrationContractStagingAddress(flow.Network().Name)),
 			Args: []cadence.Value{caddr},
 		},
 		flowkit.LatestScriptQuery,

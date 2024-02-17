@@ -35,8 +35,6 @@ var NoLogger = output.NewStdoutLogger(output.NoneLog)
 
 var TestID = flow.HexToID("24993fc99f81641c45c0afa307e683b4f08d407d90041aa9439f487acb33d633")
 
-var EmulatorAccountAddress = flow.HexToAddress("0xf8d6e0586b0a20c7")
-
 // TestMocks creates mock flowkit services, an empty state and a mock reader writer
 func TestMocks(t *testing.T) (*mocks.MockServices, *flowkit.State, flowkit.ReaderWriter) {
 	services := mocks.DefaultMockServices()

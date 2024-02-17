@@ -22,6 +22,7 @@ import (
 	"testing"
 
 	"github.com/onflow/cadence"
+	"github.com/onflow/contract-updater/lib/go/templates"
 	"github.com/onflow/flowkit/v2"
 	"github.com/onflow/flowkit/v2/config"
 	"github.com/onflow/flowkit/v2/tests"
@@ -58,6 +59,12 @@ func Test_GetStagedCode(t *testing.T) {
 				},
 			},
 		)
+		account, err := state.EmulatorServiceAccount()
+		assert.NoError(t, err)
+
+		srv.Network.Return(config.Network{
+			Name: "testnet",
+		}, nil)
 
 		srv.Network.Return(config.Network{
 			Name: "testnet",
@@ -66,11 +73,17 @@ func Test_GetStagedCode(t *testing.T) {
 		srv.ExecuteScript.Run(func(args mock.Arguments) {
 			script := args.Get(1).(flowkit.Script)
 
-			actualContractAddressArg := script.Args[0]
+			actualContractAddressArg, actualContractNameArg := script.Args[0], script.Args[1]
 
-			contractAddr := cadence.NewAddress(util.EmulatorAccountAddress)
+			assert.Equal(t, templates.GenerateGetStagedContractCodeScript(MigrationContractStagingAddress("testnet")), script.Code)
+
+			assert.Equal(t, 2, len(script.Args))
+
+			assert.EqualValues(t, testContract.Name, actualContractNameArg)
+
+			contractAddr := cadence.NewAddress(account.Address)
 			assert.Equal(t, contractAddr.String(), actualContractAddressArg.String())
-		}).Return(cadence.NewMeteredBool(nil, true), nil)
+		}).Return(cadence.NewString(string(testContract.Source)))
 
 		result, err := getStagedCode(
 			[]string{testContract.Name},

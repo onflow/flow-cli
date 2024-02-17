@@ -74,7 +74,7 @@ func isStaged(
 	value, err := flow.ExecuteScript(
 		context.Background(),
 		flowkit.Script{
-			Code: templates.GenerateIsStagedScript(MigrationContractStagingAddress(globalFlags.Network)),
+			Code: templates.GenerateIsStagedScript(MigrationContractStagingAddress(flow.Network().Name)),
 			Args: []cadence.Value{caddr, cname},
 		},
 		flowkit.LatestScriptQuery,
