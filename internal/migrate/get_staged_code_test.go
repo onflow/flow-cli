@@ -70,7 +70,7 @@ func Test_GetStagedCode(t *testing.T) {
 
 			contractAddr := cadence.NewAddress(util.EmulatorAccountAddress)
 			assert.Equal(t, contractAddr.String(), actualContractAddressArg.String())
-		}).Return(cadence.NewMeteredBool(nil, true), nil)
+		}).Return(cadence.NewBool(true), nil)
 
 		result, err := getStagedCode(
 			[]string{testContract.Name},

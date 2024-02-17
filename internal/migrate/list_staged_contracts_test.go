@@ -42,7 +42,7 @@ func Test_ListStagedContracts(t *testing.T) {
 
 			contractAddr := cadence.NewAddress(util.EmulatorAccountAddress)
 			assert.Equal(t, contractAddr, actualContractAddressArg)
-		}).Return(cadence.NewMeteredBool(nil, true), nil)
+		}).Return(cadence.NewBool(true), nil)
 
 		result, err := listStagedContracts(
 			[]string{"emulator-account"},

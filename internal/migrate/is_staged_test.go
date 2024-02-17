@@ -72,7 +72,7 @@ func Test_IsStaged(t *testing.T) {
 			contractAddr := cadence.NewAddress(util.EmulatorAccountAddress)
 			assert.Equal(t, contractName, actualContractNameArg)
 			assert.Equal(t, contractAddr, actualContractAddressArg)
-		}).Return(cadence.NewMeteredBool(nil, true), nil)
+		}).Return(cadence.NewBool(true), nil)
 
 		result, err := isStaged(
 			[]string{testContract.Name},
