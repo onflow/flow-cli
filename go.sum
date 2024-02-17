@@ -2055,6 +2055,8 @@ github.com/onflow/cadence-tools/lint v1.0.0-M4 h1:XeBX+/2TKbe04nyMjUbSD9aHcF5+H6
 github.com/onflow/cadence-tools/lint v1.0.0-M4/go.mod h1:vgKOF14/NwWktjsRKHlWEz8z/3uQu5nuqDzQOm+u2qY=
 github.com/onflow/cadence-tools/test v1.0.0-M3 h1:ZbKoMhXsvafJIOO/MVE7lV5INXfq2IL0Z+W2MsJnKwY=
 github.com/onflow/cadence-tools/test v1.0.0-M3/go.mod h1:Yk6OyiRMNseM6C13FpNUxTJ7GekYZMzdX5D2B10y4N8=
+github.com/onflow/contract-updater/lib/go/templates v1.0.1 h1:xPj898Y8OgLLbXH8+JeKVBV6J+nqPZjiLgGM3Abucto=
+github.com/onflow/contract-updater/lib/go/templates v1.0.1/go.mod h1:OXO6s0X7OW4Q6QTfAfnjoOmibEPgs0psOfMi+tPyzQE=
 github.com/onflow/crypto v0.24.9 h1:jYP1qdwid0qCineFzBFlxBchg710A7RuSWpTqxaOdog=
 github.com/onflow/crypto v0.24.9/go.mod h1:J/V7IEVaqjDajvF8K0B/SJPJDgAOP2G+LVLeb0hgmbg=
 github.com/onflow/fcl-dev-wallet v0.8.0-stable-cadence.1 h1:IqdUzdqFCSW0klWmA3J9c17ZyQTab9SWcWSLouX6o0Q=
