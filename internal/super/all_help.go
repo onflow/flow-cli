@@ -3,6 +3,7 @@ package super
 import (
 	"bytes"
 	"fmt"
+	"regexp"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -71,7 +72,7 @@ func getCommandHelpText(cmd *cobra.Command, removeGlobalFlags bool) string {
 		helpText = removeGlobalFlagsSection(helpText)
 	}
 
-	return helpText
+	return removeANSICodes(helpText)
 }
 
 func removeGlobalFlagsSection(helpText string) string {
@@ -91,4 +92,9 @@ func removeGlobalFlagsSection(helpText string) string {
 		}
 	}
 	return helpText
+}
+
+func removeANSICodes(input string) string {
+	re := regexp.MustCompile(`\x1B\[[0-9;]*[a-zA-Z]`)
+	return re.ReplaceAllString(input, "")
 }
