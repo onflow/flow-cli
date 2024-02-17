@@ -62,9 +62,17 @@ func stageContract(
 		return nil, fmt.Errorf("no contracts found in state")
 	}
 
-	replacedCode, err := replaceImportsIfExists(state, flow, contract.Location)
+	code, err := state.ReadFile(contract.Location)
 	if err != nil {
-		return nil, fmt.Errorf("failed to replace imports: %w", err)
+		return nil, fmt.Errorf("failed to read contract code: %w", err)
+	}
+
+	script, err := flow.ReplaceImportsInScript(context.Background(), flowkit.Script{
+		Code:     code,
+		Location: contract.Location,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to replace imports in script: %w", err)
 	}
 
 	cName, err := cadence.NewString(contractName)
@@ -72,7 +80,7 @@ func stageContract(
 		return nil, fmt.Errorf("failed to get cadence string from contract name: %w", err)
 	}
 
-	cCode, err := cadence.NewString(string(replacedCode))
+	cCode, err := cadence.NewString(string(script.Code))
 	if err != nil {
 		return nil, fmt.Errorf("failed to get cadence string from contract code: %w", err)
 	}
