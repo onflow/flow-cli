@@ -64,7 +64,9 @@ func getCommandHelpText(cmd *cobra.Command, removeGlobalFlags bool) string {
 	// Create a new bytes buffer to capture the output
 	buf := new(bytes.Buffer)
 	cmd.SetOut(buf)
-	cmd.Help()
+	if err := cmd.Help(); err != nil {
+		fmt.Printf("Error generating help for %s", cmd.Name())
+	}
 	cmd.SetOut(nil)
 	helpText := buf.String()
 
