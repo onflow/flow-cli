@@ -22,6 +22,7 @@ import (
 	"testing"
 
 	"github.com/onflow/cadence"
+	"github.com/onflow/contract-updater/lib/go/templates"
 	"github.com/onflow/flowkit/v2"
 	"github.com/onflow/flowkit/v2/config"
 	"github.com/onflow/flowkit/v2/tests"
@@ -69,6 +70,8 @@ func Test_GetStagedCode(t *testing.T) {
 			script := args.Get(1).(flowkit.Script)
 
 			actualContractAddressArg, actualContractNameArg := script.Args[0], script.Args[1]
+
+			assert.Equal(t, templates.GenerateGetStagedContractCodeScript(MigrationContractStagingAddress("testnet")), script.Code)
 
 			assert.Equal(t, 2, len(script.Args))
 

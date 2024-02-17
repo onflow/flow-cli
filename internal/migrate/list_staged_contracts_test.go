@@ -22,7 +22,9 @@ import (
 	"testing"
 
 	"github.com/onflow/cadence"
+	"github.com/onflow/contract-updater/lib/go/templates"
 	"github.com/onflow/flowkit/v2"
+	"github.com/onflow/flowkit/v2/config"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 
@@ -38,8 +40,14 @@ func Test_ListStagedContracts(t *testing.T) {
 		account, err := state.EmulatorServiceAccount()
 		assert.NoError(t, err)
 
+		srv.Network.Return(config.Network{
+			Name: "testnet",
+		}, nil)
+
 		srv.ExecuteScript.Run(func(args mock.Arguments) {
 			script := args.Get(1).(flowkit.Script)
+
+			assert.Equal(t, templates.GenerateGetStagedContractNamesForAddressScript(MigrationContractStagingAddress("testnet")), script.Code)
 			assert.Equal(t, 1, len(script.Args))
 
 			actualContractAddressArg := script.Args[0]

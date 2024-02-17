@@ -22,6 +22,7 @@ import (
 	"testing"
 
 	"github.com/onflow/cadence"
+	"github.com/onflow/contract-updater/lib/go/templates"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flowkit/v2"
 	"github.com/onflow/flowkit/v2/config"
@@ -68,6 +69,8 @@ func Test_UnstageContract(t *testing.T) {
 		srv.SendTransaction.Run(func(args mock.Arguments) {
 			accountRoles := args.Get(1).(transactions.AccountRoles)
 			script := args.Get(2).(flowkit.Script)
+
+			assert.Equal(t, templates.GenerateUnstageContractScript(MigrationContractStagingAddress("testnet")), script.Code)
 
 			assert.Equal(t, 1, len(accountRoles.Signers()))
 			assert.Equal(t, "emulator-account", accountRoles.Signers()[0].Name)

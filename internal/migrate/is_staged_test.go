@@ -22,6 +22,7 @@ import (
 	"testing"
 
 	"github.com/onflow/cadence"
+	"github.com/onflow/contract-updater/lib/go/templates"
 	"github.com/onflow/flowkit/v2"
 	"github.com/onflow/flowkit/v2/config"
 	"github.com/onflow/flowkit/v2/tests"
@@ -68,6 +69,8 @@ func Test_IsStaged(t *testing.T) {
 
 		srv.ExecuteScript.Run(func(args mock.Arguments) {
 			script := args.Get(1).(flowkit.Script)
+
+			assert.Equal(t, templates.GenerateIsStagedScript(MigrationContractStagingAddress("testnet")), script.Code)
 
 			assert.Equal(t, 2, len(script.Args))
 			actualContractAddressArg, actualContractNameArg := script.Args[0], script.Args[1]
