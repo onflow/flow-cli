@@ -21,6 +21,7 @@ package main
 
 import (
 	"fmt"
+	evm_gateway "github.com/onflow/flow-cli/internal/evm-gateway"
 	"os"
 	"strings"
 
@@ -122,6 +123,7 @@ func main() {
 	cmd.AddCommand(super.GenerateCommand)
 	cmd.AddCommand(dependencymanager.Cmd)
 	cmd.AddCommand(migrate.Cmd)
+	cmd.AddCommand(evm_gateway.GatewayCmd.Cmd)
 
 	command.InitFlags(cmd)
 	cmd.AddGroup(&cobra.Group{
