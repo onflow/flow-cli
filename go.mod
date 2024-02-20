@@ -16,6 +16,7 @@ require (
 	github.com/onflow/flixkit-go v1.1.1-0.20240214222351-03b90f7d32ef
 	github.com/onflow/flow-core-contracts/lib/go/templates v0.15.2-0.20240206003101-928bf99024d7
 	github.com/onflow/flow-emulator v1.0.0-M5
+	github.com/onflow/flow-evm-gateway v0.0.0-20240220202014-12947709fffd
 	github.com/onflow/flow-go-sdk v1.0.0-M4
 	github.com/onflow/flowkit/v2 v2.0.0-stable-cadence-alpha.2.0.20240214213743-ee40994a815f
 	github.com/onflowser/flowser/v3 v3.2.1-0.20240131200229-7d4d22715f48
@@ -199,7 +200,7 @@ require (
 	github.com/rivo/uniseg v0.4.4 // indirect
 	github.com/rogpeppe/go-internal v1.11.0 // indirect
 	github.com/rs/cors v1.8.0 // indirect
-	github.com/rs/zerolog v1.29.0 // indirect
+	github.com/rs/zerolog v1.31.0 // indirect
 	github.com/sethvargo/go-retry v0.2.3 // indirect
 	github.com/shirou/gopsutil v3.21.4-0.20210419000835-c7a38de76ee5+incompatible // indirect
 	github.com/skeema/knownhosts v1.2.1 // indirect
