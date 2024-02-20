@@ -19,13 +19,14 @@
 package super
 
 import (
-	"bytes"
 	"fmt"
 	"regexp"
 	"strings"
 
 	"github.com/spf13/cobra"
 )
+
+var ansiRegex = regexp.MustCompile(`\x1B\[[0-9;]*[a-zA-Z]`)
 
 var AllHelp = &cobra.Command{
 	Use:     "allHelp",
@@ -54,7 +55,7 @@ func generateCS(c *cobra.Command) (string, error) {
 	generateCommandHelpTexts(cmd, &helpTexts)
 	helpTexts = append(helpTexts, "```")
 
-	commands := strings.Join(helpTexts, "\n\n------------\n\n")
+	commands := strings.Join(helpTexts, "\n\n---------------\n\n")
 
 	return commands, nil
 
@@ -79,20 +80,21 @@ func generateCommandHelpTexts(cmd *cobra.Command, result *[]string) {
 // Helper function to execute the help command for a given cobra.Command
 // and return the output as a string.
 func getCommandHelpText(cmd *cobra.Command, removeGlobalFlags bool) string {
-	// Create a new bytes buffer to capture the output
-	buf := new(bytes.Buffer)
-	cmd.SetOut(buf)
+	var sb strings.Builder
+	cmd.SetOut(&sb)
+
 	if err := cmd.Help(); err != nil {
 		fmt.Printf("Error generating help for %s", cmd.Name())
 	}
+
 	cmd.SetOut(nil)
-	helpText := buf.String()
+	helpText := sb.String()
 
 	if removeGlobalFlags {
 		helpText = removeGlobalFlagsSection(helpText)
 	}
 
-	return removeANSICodes(helpText)
+	return ansiRegex.ReplaceAllString(helpText, "")
 }
 
 func removeGlobalFlagsSection(helpText string) string {
@@ -112,9 +114,4 @@ func removeGlobalFlagsSection(helpText string) string {
 		}
 	}
 	return helpText
-}
-
-func removeANSICodes(input string) string {
-	re := regexp.MustCompile(`\x1B\[[0-9;]*[a-zA-Z]`)
-	return re.ReplaceAllString(input, "")
 }
