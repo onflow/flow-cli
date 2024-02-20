@@ -36,6 +36,7 @@ func init() {
 	listStagedContractsCommand.AddToParent(Cmd)
 	stageContractCommand.AddToParent(Cmd)
 	unstageContractCommand.AddToParent(Cmd)
+	stateCommand.AddToParent(Cmd)
 }
 
 var Cmd = &cobra.Command{
