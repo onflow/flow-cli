@@ -21,11 +21,8 @@ package main
 
 import (
 	"fmt"
-	evm_gateway "github.com/onflow/flow-cli/internal/evm-gateway"
 	"os"
 	"strings"
-
-	"github.com/onflow/flow-cli/internal/dependencymanager"
 
 	"github.com/spf13/cobra"
 
@@ -35,8 +32,10 @@ import (
 	"github.com/onflow/flow-cli/internal/collections"
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/internal/config"
+	"github.com/onflow/flow-cli/internal/dependencymanager"
 	"github.com/onflow/flow-cli/internal/emulator"
 	"github.com/onflow/flow-cli/internal/events"
+	evm "github.com/onflow/flow-cli/internal/evm"
 	"github.com/onflow/flow-cli/internal/keys"
 	"github.com/onflow/flow-cli/internal/migrate"
 	"github.com/onflow/flow-cli/internal/project"
@@ -123,7 +122,7 @@ func main() {
 	cmd.AddCommand(super.GenerateCommand)
 	cmd.AddCommand(dependencymanager.Cmd)
 	cmd.AddCommand(migrate.Cmd)
-	cmd.AddCommand(evm_gateway.GatewayCmd.Cmd)
+	cmd.AddCommand(evm.Cmd)
 
 	command.InitFlags(cmd)
 	cmd.AddGroup(&cobra.Group{
