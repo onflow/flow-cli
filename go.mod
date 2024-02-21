@@ -15,7 +15,7 @@ require (
 	github.com/onflow/fcl-dev-wallet v0.8.0-stable-cadence.1
 	github.com/onflow/flixkit-go v1.1.1-0.20240214222351-03b90f7d32ef
 	github.com/onflow/flow-core-contracts/lib/go/templates v0.15.2-0.20240206003101-928bf99024d7
-	github.com/onflow/flow-emulator v1.0.0-M5
+	github.com/onflow/flow-emulator v1.0.0-M6
 	github.com/onflow/flow-go-sdk v1.0.0-M4
 	github.com/onflow/flowkit/v2 v2.0.0-stable-cadence-alpha.2.0.20240214213743-ee40994a815f
 	github.com/onflowser/flowser/v3 v3.2.1-0.20240131200229-7d4d22715f48
@@ -178,11 +178,11 @@ require (
 	github.com/onflow/crypto v0.25.0 // indirect
 	github.com/onflow/flow-core-contracts/lib/go/contracts v0.15.2-0.20240206003101-928bf99024d7 // indirect
 	github.com/onflow/flow-ft/lib/go/contracts v0.7.1-0.20240205224107-320aa3cf09e0 // indirect
-	github.com/onflow/flow-go v0.33.2-0.20240214203221-b11eeaa896bd // indirect
+	github.com/onflow/flow-go v0.34.0-crescendo-preview.1 // indirect
 	github.com/onflow/flow-nft/lib/go/contracts v1.1.1-0.20240205233530-86ee8c352fa6 // indirect
 	github.com/onflow/flow/protobuf/go/flow v0.3.7 // indirect
 	github.com/onflow/sdks v0.5.1-0.20230912225508-b35402f12bba // indirect
-	github.com/onflow/wal v0.0.0-20230529184820-bc9f8244608d // indirect
+	github.com/onflow/wal v0.0.0-20240208022732-d756cd497d3b // indirect
 	github.com/opentracing/opentracing-go v1.2.0 // indirect
 	github.com/pbnjay/memory v0.0.0-20210728143218-7b4eea64cf58 // indirect
 	github.com/pelletier/go-toml/v2 v2.0.8 // indirect
@@ -270,3 +270,5 @@ require (
 
 // this is a woraround for the flow-go/crypto cross compliation issue
 replace github.com/onflow/crypto => github.com/onflow/crypto v0.24.9
+
+replace github.com/onflow/flixkit-go => /Users/tomhaile/gitrepos/flixkit-go
