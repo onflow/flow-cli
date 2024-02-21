@@ -62,7 +62,7 @@ func (m *MockFlixService) GetTemplateAndReplaceImports(ctx context.Context, temp
 	return result, nil
 }
 
-func (m *MockFlixService) CreateTemplate(ctx context.Context, contractInfos flixkit.ContractInfos, code string, preFill string) (string, error) {
+func (m *MockFlixService) CreateTemplate(ctx context.Context, contractInfos flixkit.ContractInfos, code string, preFill string, networks []config.Network) (string, error) {
 	args := m.Called(ctx, contractInfos, code, preFill)
 	return TEMPLATE_STR, args.Error(1)
 }

@@ -25,7 +25,6 @@ import (
 
 	"github.com/onflow/flixkit-go/flixkit"
 
-	"github.com/onflow/flow-go-sdk"
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flowkit/v2"
@@ -152,7 +151,8 @@ func executeFlixCmd(
 		Exclude:     flags.Exclude,
 		GasLimit:    flags.GasLimit,
 	}
-	return transactions.SendTransaction([]byte(cadenceWithImportsReplaced.Cadence), args[1:], "", flow, state, transactionFlags)
+	// some reason sendTransaction clips the first argument
+	return transactions.SendTransaction([]byte(cadenceWithImportsReplaced.Cadence), args, "", flow, state, transactionFlags)
 }
 
 func packageCmd(
@@ -217,6 +217,7 @@ func generateFlixCmd(
 ) (result command.Result, err error) {
 	cadenceFile := args[0]
 	depContracts := getDeployedContracts(state)
+
 	if cadenceFile == "" {
 		return nil, fmt.Errorf("no cadence code found")
 	}
@@ -230,8 +231,11 @@ func generateFlixCmd(
 		return nil, fmt.Errorf("could not create flix generator %w", err)
 	}
 
+	// get user's configured networks
+	depNetworks := getNetworks(state)
 	ctx := context.Background()
-	prettyJSON, err := flixService.CreateTemplate(ctx, depContracts, string(code), flags.PreFill)
+
+	prettyJSON, err := flixService.CreateTemplate(ctx, depContracts, string(code), flags.PreFill, depNetworks)
 	if err != nil {
 		return nil, fmt.Errorf("could not generate flix %w", err)
 	}
@@ -269,7 +273,7 @@ func getDeployedContracts(state *flowkit.State) flixkit.ContractInfos {
 
 	// get account addresses
 	for _, a := range *state.Accounts() {
-		accountAddresses[a.Name] = a.Address.Hex()
+		accountAddresses[a.Name] = a.Address.HexWithPrefix()
 	}
 
 	for _, d := range *state.Deployments() {
@@ -293,22 +297,29 @@ func getDeployedContracts(state *flowkit.State) flixkit.ContractInfos {
 			if _, ok := allContracts[c.Name]; !ok {
 				allContracts[c.Name] = make(flixkit.NetworkAddressMap)
 			}
-			allContracts[c.Name][network] = c.AccountAddress.Hex()
+			allContracts[c.Name][network] = c.AccountAddress.HexWithPrefix()
 		}
 		locAliases := state.AliasesForNetwork(cfg)
 		for name, addr := range locAliases {
-			address := flow.BytesToAddress([]byte(addr))
 			if isPath(name) {
 				continue
 			}
 			if _, ok := allContracts[name]; !ok {
 				allContracts[name] = make(flixkit.NetworkAddressMap)
 			}
-			allContracts[name][network] = address.Hex()
+			allContracts[name][network] = addr
 		}
 	}
 
 	return allContracts
+}
+
+func getNetworks(state *flowkit.State) []config.Network {
+	networks := make([]config.Network, 0)
+	for _, n := range *state.Networks() {
+		networks = append(networks, n)
+	}
+	return networks
 }
 
 func isPath(path string) bool {
