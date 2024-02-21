@@ -32,3 +32,6 @@ main
 
 # Local development file generation folder
 imports
+
+# Goreleaser .env
+.release-env
