@@ -1,3 +1,6 @@
+PACKAGE_NAME := github.com/onflow/flow-cli
+GOLANG_CROSS_VERSION ?= v1.20.0
+
 # The short Git commit hash
 SHORT_COMMIT := $(shell git rev-parse --short HEAD)
 # The Git commit hash
@@ -54,7 +57,15 @@ endif
 ci: install-tools generate test coverage
 
 $(BINARY):
-	GO111MODULE=on go build \
+	if [ "$(GOARCH)" = "arm64" ]; then \
+		export CC=aarch64-linux-gnu-gcc; \
+	elif [ "$(GOARCH)" = "amd64" ]; then \
+		export CC=x86_64-linux-gnu-gcc; \
+	fi; \
+	GO111MODULE=on \
+    CGO_ENABLED=1 \
+    CGO_FLAGS="-O2 -D__BLST_PORTABLE__" \
+	go build \
 		-trimpath \
 		-ldflags \
 		"-X github.com/onflow/flow-cli/build.commit=$(COMMIT) -X github.com/onflow/flow-cli/build.semver=$(VERSION) -X github.com/onflow/flow-cli/internal/accounts.accountToken=${ACCOUNT_TOKEN}"\
@@ -103,3 +114,28 @@ check-tidy:
 .PHONY: generate
 generate: install-tools
 	go generate ./...
+
+.PHONY: release-dry-run
+release-dry-run:
+	@docker run \
+		--rm \
+		-e CGO_ENABLED=1 \
+		-v /var/run/docker.sock:/var/run/docker.sock \
+		-v `pwd`:/go/src/$(PACKAGE_NAME) \
+		-v `pwd`/sysroot:/sysroot \
+		-w /go/src/$(PACKAGE_NAME) \
+		ghcr.io/goreleaser/goreleaser-cross:${GOLANG_CROSS_VERSION} \
+		--clean --skip=validate --skip=publish
+
+.PHONY: release
+release:
+	docker run \
+		--rm \
+		-e CGO_ENABLED=1 \
+		--env-file .release-env \
+		-v /var/run/docker.sock:/var/run/docker.sock \
+		-v `pwd`:/go/src/$(PACKAGE_NAME) \
+		-v `pwd`/sysroot:/sysroot \
+		-w /go/src/$(PACKAGE_NAME) \
+		ghcr.io/goreleaser/goreleaser-cross:${GOLANG_CROSS_VERSION} \
+		release --clean
