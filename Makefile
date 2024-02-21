@@ -1,3 +1,4 @@
+# Configuration for goreleaser
 PACKAGE_NAME := github.com/onflow/flow-cli
 GOLANG_CROSS_VERSION ?= v1.20.0
 
