@@ -17,9 +17,10 @@ jobs:
           go-version: '1.20'
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-      - name: setup dependencies
-        uses: actions/setup-go@v2
-      - name: setup release environment
+      - uses: actions/setup-go@v4
+        with:
+          go-version: "1.20"
+      - name: Setup Release Environment
         run: |-
           echo 'MIXPANEL_PROJECT_TOKEN=${{ secrets.MIXPANEL_PROJECT_TOKEN }}' > .release-env
           echo 'LILICO_TOKEN=${{ secrets.LILICO_TOKEN }}' >> .release-env
@@ -29,5 +30,5 @@ jobs:
           echo 'COMMIT=${{ github.sha }}' >> .release-env 
           echo 'CGO_FLAGS="-O2 -D__BLST_PORTABLE__"' >> .release-env
           echo 'GITHUB_TOKEN=${{ secrets.FLOW_CLI_RELEASE }}' >> .release-env
-      - name: release publish
+      - name: Build and Release
         run: make release
