@@ -19,6 +19,7 @@
 package dependencymanager
 
 import (
+	"context"
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
@@ -123,7 +124,8 @@ func (di *DependencyInstaller) processDependency(dependency config.Dependency) e
 }
 
 func (di *DependencyInstaller) fetchDependencies(networkName string, address flowsdk.Address, assignedName, contractName string) error {
-	account, err := di.Gateways[networkName].GetAccount(address)
+	ctx := context.Background()
+	account, err := di.Gateways[networkName].GetAccount(ctx, address)
 	if err != nil {
 		return fmt.Errorf("failed to get account: %w", err)
 	}
