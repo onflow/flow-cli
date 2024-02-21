@@ -1,3 +1,7 @@
+before:
+  hooks:
+    - make generate
+
 builds:
   - id: darwin-amd64
     main: ./cmd/flow
@@ -69,9 +73,7 @@ checksum:
 snapshot:
   name_template: "{{ .Tag }}"
 changelog:
-  disable: true
-readme:
-  disable: true
+  skip: true
 release:
   github:
     owner: onflow
