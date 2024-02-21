@@ -62,7 +62,7 @@ func (m *MockFlixService) GetTemplateAndReplaceImports(ctx context.Context, temp
 	return result, nil
 }
 
-func (m *MockFlixService) CreateTemplate(ctx context.Context, contractInfos flixkit.ContractInfos, code string, preFill string) (string, error) {
+func (m *MockFlixService) CreateTemplate(ctx context.Context, contractInfos flixkit.ContractInfos, code string, preFill string, networks []config.Network) (string, error) {
 	args := m.Called(ctx, contractInfos, code, preFill)
 	return TEMPLATE_STR, args.Error(1)
 }
@@ -156,7 +156,7 @@ func Test_GenerateFlix(t *testing.T) {
 		"contracts": {},
 		"accounts": {
 			"emulator-account": {
-				"address": "f8d6e0586b0a20c7",
+				"address": "0xf8d6e0586b0a20c7",
 				"key": "dd72967fd2bd75234ae9037dd4694c1f00baad63a10c35172bf65fbb8ad74b47"
 			}
 		},
@@ -200,7 +200,7 @@ func Test_GenerateFlix(t *testing.T) {
 	logger := output.NewStdoutLogger(output.NoneLog)
 	contractInfos := make(flixkit.ContractInfos)
 	contractInfos[tests.ContractHelloString.Name] = make(flixkit.NetworkAddressMap)
-	contractInfos[tests.ContractHelloString.Name]["emulator"] = "f8d6e0586b0a20c7"
+	contractInfos[tests.ContractHelloString.Name]["emulator"] = "0xf8d6e0586b0a20c7"
 
 	ctx := context.Background()
 	mockFlixService.On("CreateTemplate", ctx, contractInfos, cadenceCode, "").Return(TEMPLATE_STR, nil)
