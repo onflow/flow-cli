@@ -57,15 +57,7 @@ endif
 ci: install-tools generate test coverage
 
 $(BINARY):
-	if [ "$(GOARCH)" = "arm64" ]; then \
-		export CC=aarch64-linux-gnu-gcc; \
-	elif [ "$(GOARCH)" = "amd64" ]; then \
-		export CC=x86_64-linux-gnu-gcc; \
-	fi; \
-	GO111MODULE=on \
-    CGO_ENABLED=1 \
-    CGO_FLAGS="-O2 -D__BLST_PORTABLE__" \
-	go build \
+	GO111MODULE=on go build \
 		-trimpath \
 		-ldflags \
 		"-X github.com/onflow/flow-cli/build.commit=$(COMMIT) -X github.com/onflow/flow-cli/build.semver=$(VERSION) -X github.com/onflow/flow-cli/internal/accounts.accountToken=${ACCOUNT_TOKEN}"\
