@@ -13,7 +13,7 @@ require (
 	github.com/onflow/cadence-tools/test v1.0.0-M3
 	github.com/onflow/contract-updater/lib/go/templates v1.0.1
 	github.com/onflow/fcl-dev-wallet v0.8.0-stable-cadence.1
-	github.com/onflow/flixkit-go v1.1.1-0.20240214222351-03b90f7d32ef
+	github.com/onflow/flixkit-go v1.2.1-cadence-v1-M1
 	github.com/onflow/flow-core-contracts/lib/go/templates v0.15.2-0.20240206003101-928bf99024d7
 	github.com/onflow/flow-emulator v1.0.0-M6
 	github.com/onflow/flow-go-sdk v1.0.0-M4
@@ -270,5 +270,3 @@ require (
 
 // this is a woraround for the flow-go/crypto cross compliation issue
 replace github.com/onflow/crypto => github.com/onflow/crypto v0.24.9
-
-replace github.com/onflow/flixkit-go => /Users/tomhaile/gitrepos/flixkit-go
