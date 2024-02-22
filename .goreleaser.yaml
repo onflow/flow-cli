@@ -69,9 +69,6 @@ archives:
     name_template: "{{ .ProjectName }}-{{ .Version }}-{{ .Os }}-{{ .Arch }}"
     format: tar.gz
     wrap_in_directory: false
-checksum:
-  name_template: "{{ .ProjectName }}-{{ .Version }}-{{ .Os }}-{{ .Arch }}.md5"
-  algorithm: md5
 snapshot:
   name_template: "{{ .Tag }}"
 changelog:
