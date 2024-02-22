@@ -43,6 +43,8 @@ snapshot:
   name_template: "{{ .Tag }}"
 changelog:
   skip: true
+checksum:
+  name_template: "checksums.txt"
 release:
   github:
     owner: onflow
