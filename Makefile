@@ -112,7 +112,6 @@ generate: install-tools
 release:
 	docker run \
 		--rm \
-		-e CGO_ENABLED=1 \
 		--env-file .release-env \
 		-v /var/run/docker.sock:/var/run/docker.sock \
 		-v `pwd`:/go/src/$(PACKAGE_NAME) \
