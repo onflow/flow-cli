@@ -273,5 +273,3 @@ require (
 
 // this is a woraround for the flow-go/crypto cross compliation issue
 replace github.com/onflow/crypto => github.com/onflow/crypto v0.24.9
-
-replace github.com/onflow/flow-emulator => ../flow-emulator
