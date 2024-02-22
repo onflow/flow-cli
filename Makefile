@@ -1,6 +1,6 @@
 # Configuration for goreleaser
 PACKAGE_NAME := github.com/onflow/flow-cli
-GOLANG_CROSS_VERSION ?= v1.22.0
+GOLANG_CROSS_VERSION ?= v1.20.0
 
 # The short Git commit hash
 SHORT_COMMIT := $(shell git rev-parse --short HEAD)

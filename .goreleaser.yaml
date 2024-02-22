@@ -16,16 +16,16 @@ builds:
       - CXX=o64-clang++
       - >-
         {{- if eq .Os "darwin" }}
-          {{- if eq .Arch "amd64"}}CC=o64-clang{{- end }}
-          {{- if eq .Arch "arm64"}}CC=oa64-clang{{- end }}
+          {{- if eq .Arch "amd64"}}CC=o64-clang CXX=o64-clang++{{- end }}
+          {{- if eq .Arch "arm64"}}CC=oa64-clang CXX=oa64-clang++{{- end }}
         {{- end }}
         {{ if eq .Os "linux" }}
-          {{- if eq .Arch "amd64" }}CC=x86_64-linux-gnu-gcc{{- end }}
-          {{- if eq .Arch "arm64" }}CC=aarch64-linux-gnu-gcc{{- end }}
+          {{- if eq .Arch "amd64" }}CC=x86_64-linux-gnu-gcc CXX=x86_64-linux-gnu-g++{{- end }}
+          {{- if eq .Arch "arm64" }}CC=aarch64-linux-gnu-gcc CXX=aarch64-linux-gnu-g++{{- end }}
         {{- end }}
         {{- if eq .Os "windows" }}
-          {{- if eq .Arch "amd64" }}CC=x86_64-w64-mingw32-gcc{{- end }}
-          {{- if eq .Arch "arm64" }}CC=aarch64-w64-mingw32-gcc{{- end }}
+          {{- if eq .Arch "amd64" }}CC=x86_64-w64-mingw32-gcc CXX=x86_64-w64-mingw32-g++{{- end }}
+          {{- if eq .Arch "arm64" }}CC=aarch64-w64-mingw32-gcc CXX=aarch64-w64-mingw32-g++{{- end }}
         {{- end }}
     flags:
       - -mod=readonly
