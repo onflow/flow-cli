@@ -12,19 +12,22 @@ builds:
       - amd64
       - arm64
     env:
-      - >-
-        {{- if eq .Os "darwin" }}
-          {{- if eq .Arch "amd64"}}CC=o64-clang CXX=o64-clang++{{- end }}
-          {{- if eq .Arch "arm64"}}CC=oa64-clang CXX=oa64-clang++{{- end }}
-        {{- end }}
-        {{ if eq .Os "linux" }}
-          {{- if eq .Arch "amd64" }}CC=x86_64-linux-gnu-gcc CXX=x86_64-linux-gnu-g++{{- end }}
-          {{- if eq .Arch "arm64" }}CC=aarch64-linux-gnu-gcc CXX=aarch64-linux-gnu-g++{{- end }}
-        {{- end }}
-        {{- if eq .Os "windows" }}
-          {{- if eq .Arch "amd64" }}CC=x86_64-w64-mingw32-gcc CXX=x86_64-w64-mingw32-g++{{- end }}
-          {{- if eq .Arch "arm64" }}CC=aarch64-w64-mingw32-gcc CXX=aarch64-w64-mingw32-g++{{- end }}
-        {{- end }}
+      - CGO_FLAGS="-O2 -D__BLST_PORTABLE__"
+      - CGO_ENABLED=1
+      - CC_darwin_amd64=o64-clang
+      - CXX_darwin_amd64=o64-clang+
+      - CC_darwin_arm64=oa64-clang
+      - CXX_darwin_arm64=oa64-clang++
+      - CC_linux_amd64=x86_64-linux-gnu-gcc
+      - CXX_linux_amd64=x86_64-linux-gnu-g++
+      - CC_linux_arm64=aarch64-linux-gnu-gcc
+      - CXX_linux_arm64=aarch64-linux-gnu-g++
+      - CC_windows_amd64=x86_64-w64-mingw32-gcc
+      - CXX_windows_amd64=x86_64-w64-mingw32-g++
+      - CC_windows_arm64=aarch64-w64-mingw32-gcc
+      - CXX_windows_arm64=aarch64-w64-mingw32-g++
+      - 'CC={{ index .Env (print "CC_" .Os "_" .Arch) }}'
+      - 'CXX={{ index .Env (print "CXX_" .Os "_" .Arch) }}'
     flags:
       - -mod=readonly
     ldflags:
