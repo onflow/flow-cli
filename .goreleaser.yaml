@@ -12,8 +12,6 @@ builds:
       - amd64
       - arm64
     env:
-      - CC=o64-clang
-      - CXX=o64-clang++
       - >-
         {{- if eq .Os "darwin" }}
           {{- if eq .Arch "amd64"}}CC=o64-clang CXX=o64-clang++{{- end }}
