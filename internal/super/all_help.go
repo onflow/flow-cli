@@ -99,7 +99,7 @@ func getCommandHelpText(cmd *cobra.Command, removeGlobalFlags bool) string {
 
 func removeGlobalFlagsSection(helpText string) string {
 	// Define the start of the Global Flags section
-	startMarker := "Global Flags:\n"
+	const startMarker = "Global Flags:\n"
 	start := strings.Index(helpText, startMarker)
 	if start != -1 {
 		// Attempt to find the end of the Global Flags section by looking for the next section or end of text
