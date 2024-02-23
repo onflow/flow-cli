@@ -4,6 +4,7 @@ go 1.20
 
 require (
 	github.com/dukex/mixpanel v1.0.1
+	github.com/ethereum/go-ethereum v1.13.5
 	github.com/getsentry/sentry-go v0.27.0
 	github.com/go-git/go-git/v5 v5.11.0
 	github.com/gosuri/uilive v0.0.4
@@ -17,6 +18,7 @@ require (
 	github.com/onflow/flow-core-contracts/lib/go/templates v0.15.2-0.20240206003101-928bf99024d7
 	github.com/onflow/flow-emulator v1.0.0-M5
 	github.com/onflow/flow-evm-gateway v0.0.0-20240220202014-12947709fffd
+	github.com/onflow/flow-go v0.33.2-0.20240220142056-d1573c75f26c
 	github.com/onflow/flow-go-sdk v1.0.0-M4
 	github.com/onflow/flowkit/v2 v2.0.0-stable-cadence-alpha.2.0.20240214213743-ee40994a815f
 	github.com/onflowser/flowser/v3 v3.2.1-0.20240131200229-7d4d22715f48
@@ -29,7 +31,7 @@ require (
 	github.com/spf13/cobra v1.8.0
 	github.com/spf13/viper v1.16.0
 	github.com/stretchr/testify v1.8.4
-	golang.org/x/exp v0.0.0-20240103183307-be819d1f06fc
+	golang.org/x/exp v0.0.0-20240222234643-814bf88cf225
 	google.golang.org/grpc v1.61.0
 )
 
@@ -80,7 +82,6 @@ require (
 	github.com/ef-ds/deque v1.0.4 // indirect
 	github.com/emirpasic/gods v1.18.1 // indirect
 	github.com/ethereum/c-kzg-4844 v0.4.0 // indirect
-	github.com/ethereum/go-ethereum v1.13.5 // indirect
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
 	github.com/fxamacker/cbor/v2 v2.4.1-0.20230228173756-c0c9f774e40c // indirect
 	github.com/fxamacker/circlehash v0.3.0 // indirect
@@ -182,7 +183,6 @@ require (
 	github.com/onflow/crypto v0.25.0 // indirect
 	github.com/onflow/flow-core-contracts/lib/go/contracts v0.15.2-0.20240206003101-928bf99024d7 // indirect
 	github.com/onflow/flow-ft/lib/go/contracts v0.7.1-0.20240205224107-320aa3cf09e0 // indirect
-	github.com/onflow/flow-go v0.33.2-0.20240220142056-d1573c75f26c // indirect
 	github.com/onflow/flow-nft/lib/go/contracts v1.1.1-0.20240205233530-86ee8c352fa6 // indirect
 	github.com/onflow/flow/protobuf/go/flow v0.3.7 // indirect
 	github.com/onflow/sdks v0.5.1-0.20230912225508-b35402f12bba // indirect
@@ -244,15 +244,15 @@ require (
 	go.uber.org/atomic v1.11.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.24.0 // indirect
-	golang.org/x/crypto v0.17.0 // indirect
-	golang.org/x/mod v0.14.0 // indirect
-	golang.org/x/net v0.19.0 // indirect
+	golang.org/x/crypto v0.19.0 // indirect
+	golang.org/x/mod v0.15.0 // indirect
+	golang.org/x/net v0.21.0 // indirect
 	golang.org/x/oauth2 v0.14.0 // indirect
-	golang.org/x/sync v0.5.0 // indirect
-	golang.org/x/sys v0.15.0 // indirect
+	golang.org/x/sync v0.6.0 // indirect
+	golang.org/x/sys v0.17.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	golang.org/x/time v0.3.0 // indirect
-	golang.org/x/tools v0.16.1 // indirect
+	golang.org/x/tools v0.18.0 // indirect
 	golang.org/x/xerrors v0.0.0-20231012003039-104605ab7028 // indirect
 	gonum.org/v1/gonum v0.13.0 // indirect
 	google.golang.org/api v0.151.0 // indirect
