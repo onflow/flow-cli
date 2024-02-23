@@ -48,27 +48,28 @@ var AllHelp = &cobra.Command{
 func generateCS(c *cobra.Command) (string, error) {
 	cmd := c.Root()
 	var helpTexts strings.Builder
-	helpTexts.Write("```")
+	helpTexts.WriteString("```")
 
 	// Generate the help texts
 	generateCommandHelpTexts(cmd, &helpTexts)
-	helpTexts = append(helpTexts, "```")
+	helpTexts.WriteString("```")
 
-	commands := strings.Join(helpTexts, "\n\n---------------\n\n")
+	helpTexts.WriteString("\n\n---------------\n\n")
 
-	return commands, nil
+	return helpTexts.String(), nil
 
 }
 
 // Recursive function to traverse all commands and subcommands,
 // capturing the help text for each.
-func generateCommandHelpTexts(cmd *cobra.Command, result *[]string) {
+func generateCommandHelpTexts(cmd *cobra.Command, result *strings.Builder) {
 	removeGlobalFlags := true
 	// version is last command show global flags
 	if cmd.Name() == "version" {
 		removeGlobalFlags = false
 	}
-	*result = append(*result, getCommandHelpText(cmd, removeGlobalFlags))
+
+	result.WriteString(getCommandHelpText(cmd, removeGlobalFlags))
 
 	// Recursively process each subcommand
 	for _, subCmd := range cmd.Commands() {
