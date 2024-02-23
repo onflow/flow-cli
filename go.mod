@@ -272,6 +272,3 @@ require (
 	nhooyr.io/websocket v1.8.7 // indirect
 	rsc.io/tmplfunc v0.0.3 // indirect
 )
-
-// this is a woraround for the flow-go/crypto cross compliation issue
-replace github.com/onflow/crypto => github.com/onflow/crypto v0.24.9
