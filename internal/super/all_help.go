@@ -50,7 +50,6 @@ func generateCS(c *cobra.Command) (string, error) {
 	var helpTexts strings.Builder
 
 	helpTexts.WriteString("```")
-	helpTexts.WriteString("\n\n---------------\n\n")
 	// Generate the help texts
 	generateCommandHelpTexts(cmd, &helpTexts)
 	helpTexts.WriteString("```")
