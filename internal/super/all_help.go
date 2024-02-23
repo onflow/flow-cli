@@ -29,7 +29,7 @@ import (
 var ansiRegex = regexp.MustCompile(`\x1B\[[0-9;]*[a-zA-Z]`)
 
 var AllHelp = &cobra.Command{
-	Use:     "allHelp",
+	Use:     "all-help",
 	Short:   "Outputs help for all the CLI commands",
 	Example: "flow cheat sheet",
 	Run: func(
