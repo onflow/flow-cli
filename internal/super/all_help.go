@@ -47,9 +47,8 @@ var AllHelp = &cobra.Command{
 
 func generateCS(c *cobra.Command) (string, error) {
 	cmd := c.Root()
-	// Slice to hold the help texts of all commands
-	var helpTexts []string
-	helpTexts = append(helpTexts, "```")
+	var helpTexts strings.Builder
+	helpTexts.Write("```")
 
 	// Generate the help texts
 	generateCommandHelpTexts(cmd, &helpTexts)
