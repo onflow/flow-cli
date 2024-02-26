@@ -9,6 +9,7 @@ jobs:
     name: Release Go Binary
     runs-on: ubuntu-latest
     steps:
+      # See https://github.com/onflow/flow-cli/pull/1431 for more information
       - name: Delete unnecessary cache
         run: rm -rf /opt/hostedtoolcache
       - uses: actions/checkout@v3
