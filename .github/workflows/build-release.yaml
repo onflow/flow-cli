@@ -11,7 +11,7 @@ jobs:
     steps:
       # See https://github.com/onflow/flow-cli/pull/1431 for more information
       - name: Delete unnecessary cache
-        run: rm -rf /opt/hostedtoolcache
+        run: rm -rf ${RUNNER_TOOL_CACHE}
       - uses: actions/checkout@v3
       - name: Codebase security check
         continue-on-error: true
