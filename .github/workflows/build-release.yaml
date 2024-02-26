@@ -10,7 +10,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Delete unnecessary cache
-        run: rm -rf /opt/hostedtoolcache
+        run: |-
+          du -sh file_path
+          rm -rf /opt/hostedtoolcache
       - uses: actions/checkout@v3
       - name: Codebase security check
         continue-on-error: true
