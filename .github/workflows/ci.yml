@@ -19,6 +19,7 @@ jobs:
         os: [ubuntu-latest, windows-latest]
     runs-on: ${{ matrix.os }}
     steps:
+      - run: du -sh /opt/hostedtoolcache
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
