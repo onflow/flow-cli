@@ -341,11 +341,12 @@ func NewAccountPrompt() *AccountData {
 }
 
 type ContractData struct {
-	Name     string
-	Source   string
-	Emulator string
-	Testnet  string
-	Mainnet  string
+	Name       string
+	Source     string
+	Emulator   string
+	Testnet    string
+	Mainnet    string
+	Previewnet string
 }
 
 func NewContractPrompt() *ContractData {
@@ -404,6 +405,18 @@ func NewContractPrompt() *ContractData {
 		},
 	}
 	contract.Mainnet, _ = mainnetAliasPrompt.Run()
+
+	previewnetAliasPrompt := promptui.Prompt{
+		Label: "Enter previewnet alias, if exists",
+		Validate: func(s string) error {
+			if s != "" && flow.HexToAddress(s) == flow.EmptyAddress {
+				return fmt.Errorf("invalid testnet address")
+			}
+
+			return nil
+		},
+	}
+	contract.Previewnet, _ = previewnetAliasPrompt.Run()
 
 	return contract
 }
@@ -611,9 +624,10 @@ func ReportCrash() bool {
 
 func CreateAccountNetworkPrompt() (string, config.Network) {
 	networkMap := map[string]config.Network{
-		"Emulator": config.EmulatorNetwork,
-		"Testnet":  config.TestnetNetwork,
-		"Mainnet":  config.MainnetNetwork,
+		"Emulator":   config.EmulatorNetwork,
+		"Testnet":    config.TestnetNetwork,
+		"Mainnet":    config.MainnetNetwork,
+		"Previewnet": config.PreviewnetNetwork,
 	}
 
 	networkPrompt := promptui.Select{
