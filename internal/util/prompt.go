@@ -406,18 +406,6 @@ func NewContractPrompt() *ContractData {
 	}
 	contract.Mainnet, _ = mainnetAliasPrompt.Run()
 
-	previewnetAliasPrompt := promptui.Prompt{
-		Label: "Enter previewnet alias, if exists",
-		Validate: func(s string) error {
-			if s != "" && flow.HexToAddress(s) == flow.EmptyAddress {
-				return fmt.Errorf("invalid testnet address")
-			}
-
-			return nil
-		},
-	}
-	contract.Previewnet, _ = previewnetAliasPrompt.Run()
-
 	return contract
 }
 
