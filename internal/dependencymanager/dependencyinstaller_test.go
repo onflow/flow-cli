@@ -58,7 +58,7 @@ func TestDependencyInstallerInstall(t *testing.T) {
 		gw := mocks.DefaultMockGateway()
 
 		gw.GetAccount.Run(func(args mock.Arguments) {
-			addr := args.Get(0).(flow.Address)
+			addr := args.Get(1).(flow.Address)
 			assert.Equal(t, addr.String(), serviceAcc.Address.String())
 			acc := tests.NewAccountWithAddress(addr.String())
 			acc.Contracts = map[string][]byte{
@@ -100,7 +100,7 @@ func TestDependencyInstallerAdd(t *testing.T) {
 		gw := mocks.DefaultMockGateway()
 
 		gw.GetAccount.Run(func(args mock.Arguments) {
-			addr := args.Get(0).(flow.Address)
+			addr := args.Get(1).(flow.Address)
 			assert.Equal(t, addr.String(), serviceAcc.Address.String())
 			acc := tests.NewAccountWithAddress(addr.String())
 			acc.Contracts = map[string][]byte{
