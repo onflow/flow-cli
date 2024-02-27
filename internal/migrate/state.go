@@ -60,7 +60,7 @@ func migrateState(
 	flow flowkit.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
-	if globalFlags.Network != "emulator" {
+	if globalFlags.Network != config.EmulatorNetwork.Name {
 		return nil, fmt.Errorf("state migration is only supported for the emulator network")
 	}
 
@@ -95,8 +95,9 @@ func resolveStagedContracts(state *flowkit.State, contractNames []string) ([]mig
 		}
 
 		var address flow.Address
-		if contract.Aliases.ByNetwork(config.EmulatorNetwork.Name) != nil {
-			address = contract.Aliases.ByNetwork(config.EmulatorNetwork.Name).Address
+		alias := contract.Aliases.ByNetwork(config.EmulatorNetwork.Name)
+		if alias != nil {
+			address = alias.Address
 		}
 
 		code, err := state.ReadFile(contract.Location)
