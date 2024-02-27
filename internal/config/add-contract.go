@@ -97,7 +97,7 @@ func addContract(
 
 	if raw.Previewnet != "" {
 		contract.Aliases.Add(
-			config.Previewnet.Name,
+			config.PreviewnetNetwork.Name,
 			flow.HexToAddress(raw.Mainnet),
 		)
 	}
