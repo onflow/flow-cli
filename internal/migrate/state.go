@@ -28,6 +28,7 @@ import (
 	"github.com/onflow/flow-emulator/storage/sqlite"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go/cmd/util/ledger/migrations"
+	"github.com/onflow/flow-go/cmd/util/ledger/reporters"
 	"github.com/onflow/flowkit/v2"
 	"github.com/onflow/flowkit/v2/config"
 	"github.com/onflow/flowkit/v2/output"
@@ -38,8 +39,9 @@ import (
 )
 
 var stateFlags struct {
-	Contracts []string `default:"" flag:"contracts" info:"contract names to migrate"`
-	DBPath    string   `default:"./flowdb" flag:"db-path" info:"path to the sqlite database file"`
+	Contracts  []string `default:"" flag:"contracts" info:"contract names to migrate"`
+	SaveReport string   `default:"" flag:"save-report" info:"save migration report to a given directory if provided"`
+	DBPath     string   `default:"./flowdb" flag:"db-path" info:"path to the sqlite database file"`
 }
 
 var stateCommand = &command.Command{
@@ -74,8 +76,16 @@ func migrateState(
 		return nil, fmt.Errorf("failed to open database: %w", err)
 	}
 
-	rwf := &migration.NOOPReportWriterFactory{}
 	logger := zerolog.New(zerolog.ConsoleWriter{Out: os.Stderr}).With().Timestamp().Logger()
+
+	// Create a report writer factory if a report path is provided
+	var rwf reporters.ReportWriterFactory
+	if stateFlags.SaveReport != "" {
+		rwf = reporters.NewReportFileWriterFactory(stateFlags.SaveReport, logger)
+	} else {
+		rwf = &migration.NOOPReportWriterFactory{}
+	}
+
 	err = emulatorMigrate.MigrateCadence1(store, contracts, rwf, logger)
 	if err != nil {
 		return nil, fmt.Errorf("failed to migrate database: %w", err)
