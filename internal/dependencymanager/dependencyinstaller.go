@@ -19,6 +19,7 @@
 package dependencymanager
 
 import (
+	"context"
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
@@ -64,10 +65,16 @@ func NewDependencyInstaller(logger output.Logger, state *flowkit.State) (*Depend
 		return nil, fmt.Errorf("error creating mainnet gateway: %v", err)
 	}
 
+	previewnetGateway, err := gateway.NewGrpcGateway(config.PreviewnetNetwork)
+	if err != nil {
+		return nil, fmt.Errorf("error creating previewnet gateway: %v", err)
+	}
+
 	gateways := map[string]gateway.Gateway{
-		config.EmulatorNetwork.Name: emulatorGateway,
-		config.TestnetNetwork.Name:  testnetGateway,
-		config.MainnetNetwork.Name:  mainnetGateway,
+		config.EmulatorNetwork.Name:   emulatorGateway,
+		config.TestnetNetwork.Name:    testnetGateway,
+		config.MainnetNetwork.Name:    mainnetGateway,
+		config.PreviewnetNetwork.Name: previewnetGateway,
 	}
 
 	return &DependencyInstaller{
@@ -123,7 +130,8 @@ func (di *DependencyInstaller) processDependency(dependency config.Dependency) e
 }
 
 func (di *DependencyInstaller) fetchDependencies(networkName string, address flowsdk.Address, assignedName, contractName string) error {
-	account, err := di.Gateways[networkName].GetAccount(address)
+	ctx := context.Background()
+	account, err := di.Gateways[networkName].GetAccount(ctx, address)
 	if err != nil {
 		return fmt.Errorf("failed to get account: %w", err)
 	}
