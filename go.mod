@@ -17,7 +17,7 @@ require (
 	github.com/onflow/flixkit-go v1.2.1-cadence-v1-M3
 	github.com/onflow/flow-core-contracts/lib/go/templates v0.15.2-0.20240206003101-928bf99024d7
 	github.com/onflow/flow-emulator v1.0.0-M7
-	github.com/onflow/flow-evm-gateway v0.0.0-20240220202014-12947709fffd
+	github.com/onflow/flow-evm-gateway v0.1.0
 	github.com/onflow/flow-go v0.34.0-crescendo-preview.4
 	github.com/onflow/flow-go-sdk v1.0.0-M7
 	github.com/onflow/flowkit/v2 v2.0.0-stable-cadence-alpha.5.0.20240226193947-433a6c5a487d
@@ -99,6 +99,7 @@ require (
 	github.com/go-redis/redis/v8 v8.11.5 // indirect
 	github.com/go-stack/stack v1.8.1 // indirect
 	github.com/gobwas/ws v1.3.0 // indirect
+	github.com/goccy/go-json v0.10.2 // indirect
 	github.com/gofrs/flock v0.8.1 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/glog v1.1.2 // indirect
