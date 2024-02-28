@@ -1,8 +1,12 @@
 package evm
 
 import (
+	"context"
 	"fmt"
 	"math/big"
+	"os"
+	"os/signal"
+	"syscall"
 
 	gethCommon "github.com/ethereum/go-ethereum/common"
 	"github.com/onflow/flow-evm-gateway/bootstrap"
@@ -32,8 +36,9 @@ type gatewayFlag struct {
 	RPCHost            string `flag:"rpc-host" default:"localhost" info:"host for the RPC API server"`
 	RPCPort            int    `flag:"rpc-port" default:"3000" info:"port for the RPC API server"`
 	AccessNodeGRPCHost string `flag:"access-node-grpc-host" default:"localhost:3569" info:"host to the flow access node gRPC API"`
-	InitHeight         uint64 `flag:"init-height" default:"EmptyHeight" info:"init cadence block height from where the event ingestion will start. WARNING: you should only provide this if there are no existing values in the database, otherwise an error will be thrown"`
-	NetworkID          string `flag:"network-id" default:"testnet" info:"EVM network ID (testnet, mainnet)"`
+	InitCadenceHeight  uint64 `flag:"init-cadence-height" default:"0" info:"init cadence block height from where the event ingestion will start. WARNING: you should only provide this if there are no existing values in the database, otherwise an error will be thrown"`
+	EVMNetworkID       string `flag:"evm-network-id" default:"testnet" info:"EVM network ID (testnet, mainnet)"`
+	FlowNetworkID      string `flag:"flow-network-id" default:"emulator" info:"EVM network ID (emulator, previewnet)"`
 	Coinbase           string `flag:"coinbase" default:"" info:"coinbase address to use for fee collection"`
 	GasPrice           string `flag:"gas-price" default:"1" info:"static gas price used for EVM transactions"`
 	COAAddress         string `flag:"coa-address" default:"" info:"Flow address that holds COA account used for submitting transactions"`
@@ -62,7 +67,7 @@ var gatewayCommand = &command.Command{
 			AccessNodeGRPCHost: flagGateway.AccessNodeGRPCHost,
 			RPCPort:            flagGateway.RPCPort,
 			RPCHost:            flagGateway.RPCHost,
-			InitHeight:         flagGateway.InitHeight,
+			InitCadenceHeight:  flagGateway.InitCadenceHeight,
 			CreateCOAResource:  flagGateway.CreateCOAResource,
 		}
 
@@ -85,15 +90,35 @@ var gatewayCommand = &command.Command{
 		}
 		cfg.COAKey = pkey
 
-		switch flagGateway.NetworkID {
+		cfg.FlowNetworkID = flagGateway.FlowNetworkID
+
+		switch flagGateway.EVMNetworkID {
 		case "testnet":
-			cfg.ChainID = emulator.FlowEVMTestnetChainID
+			cfg.EVMNetworkID = emulator.FlowEVMTestnetChainID
 		case "mainnet":
-			cfg.ChainID = emulator.FlowEVMMainnetChainID
+			cfg.EVMNetworkID = emulator.FlowEVMMainnetChainID
 		default:
-			return nil, fmt.Errorf("network ID not supported")
+			return nil, fmt.Errorf("EVM network ID not supported")
 		}
 
-		return nil, bootstrap.Start(cfg)
+		if cfg.FlowNetworkID != "previewnet" && cfg.FlowNetworkID != "emulator" {
+			return nil, fmt.Errorf("flow network ID is invalid, only allowed to set 'emulator' and 'previewnet'")
+		}
+
+		ctx, cancel := context.WithCancel(context.Background())
+
+		err = bootstrap.Start(ctx, cfg)
+		if err != nil {
+			panic(err)
+		}
+
+		osSig := make(chan os.Signal, 1)
+		signal.Notify(osSig, syscall.SIGINT, syscall.SIGTERM)
+
+		<-osSig
+		fmt.Println("OS Signal to shutdown received, shutting down")
+		cancel()
+
+		return nil, nil
 	},
 }
