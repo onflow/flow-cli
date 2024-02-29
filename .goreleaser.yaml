@@ -41,6 +41,7 @@ archives:
     name_template: "{{ .ProjectName }}-v{{ .Version }}-{{ .Os }}-{{ .Arch }}"
     format: tar.gz
     wrap_in_directory: false
+    files:
 snapshot:
   name_template: "{{ .Tag }}"
 changelog:
