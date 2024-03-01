@@ -38,7 +38,7 @@ archives:
   - id: golang-cross
     builds:
       - flow-cli
-    name_template: "{{ .ProjectName }}-{{ .Version }}-{{ .Os }}-{{ .Arch }}"
+    name_template: "{{ .ProjectName }}-v{{ .Version }}-{{ .Os }}-{{ .Arch }}"
     format: tar.gz
     wrap_in_directory: false
 snapshot:
