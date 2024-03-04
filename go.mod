@@ -9,7 +9,7 @@ require (
 	github.com/gosuri/uilive v0.0.4
 	github.com/manifoldco/promptui v0.9.0
 	github.com/onflow/cadence v0.42.6
-	github.com/onflow/cadence-tools/languageserver v0.33.3
+	github.com/onflow/cadence-tools/languageserver v0.33.4
 	github.com/onflow/cadence-tools/test v0.14.5
 	github.com/onflow/fcl-dev-wallet v0.7.4
 	github.com/onflow/flixkit-go v1.1.2
@@ -168,7 +168,7 @@ require (
 	github.com/olekukonko/tablewriter v0.0.5 // indirect
 	github.com/onflow/atree v0.6.0 // indirect
 	github.com/onflow/cadence-tools/lint v0.14.1 // indirect
-	github.com/onflow/flow-cli/flowkit v1.11.0 // indirect
+	github.com/onflow/flow-cli/flowkit v1.11.1-0.20240126012608-4c90a9ea28d9 // indirect
 	github.com/onflow/flow-core-contracts/lib/go/contracts v1.2.4-0.20231016154253-a00dbf7c061f // indirect
 	github.com/onflow/flow-ft/lib/go/contracts v0.7.1-0.20230711213910-baad011d2b13 // indirect
 	github.com/onflow/flow-go v0.32.4-0.20231211231711-1aba0828ca33 // indirect
