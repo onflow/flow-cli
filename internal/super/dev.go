@@ -96,7 +96,7 @@ func dev(
 		os.Exit(1)
 	}()
 
-	err = flow.Wait()
+	err = flow.WaitServer()
 	if err != nil {
 		logger.Error("Error connecting to emulator. Make sure you started an emulator using 'flow emulator' command.")
 		logger.Info(fmt.Sprintf("%s This tool requires emulator to function. Emulator needs to be run inside the project root folder where the configuration file ('flow.json') exists.\n\n", output.TryEmoji()))
