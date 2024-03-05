@@ -262,10 +262,4 @@ require (
 )
 
 // this is a woraround for the flow-go/crypto cross compliation issue
-//replace github.com/onflow/flow-go/crypto => github.com/onflow/flow-go/crypto v0.24.9
-replace (
-	github.com/onflow/flow-emulator v0.59.0 => ../flow-emulator
-	github.com/onflow/flow-go-sdk v0.41.17 => ../flow-go-sdk
-	github.com/onflow/flowkit v1.13.0 => ../flowkit
-	github.com/onflow/flow-go/crypto => github.com/onflow/flow-go/crypto v0.24.9
-)
+replace github.com/onflow/flow-go/crypto => github.com/onflow/flow-go/crypto v0.24.9
