@@ -1,0 +1,55 @@
+before:
+  hooks:
+    - make generate
+
+builds:
+  - id: flow-cli
+    main: ./cmd/flow
+    goos:
+      - darwin
+      - linux
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    env:
+      - CGO_FLAGS="-O2 -D__BLST_PORTABLE__"
+      - CGO_ENABLED=1
+      - CC_darwin_amd64=o64-clang
+      - CXX_darwin_amd64=o64-clang+
+      - CC_darwin_arm64=oa64-clang
+      - CXX_darwin_arm64=oa64-clang++
+      - CC_linux_amd64=x86_64-linux-gnu-gcc
+      - CXX_linux_amd64=x86_64-linux-gnu-g++
+      - CC_linux_arm64=aarch64-linux-gnu-gcc
+      - CXX_linux_arm64=aarch64-linux-gnu-g++
+      - CC_windows_amd64=x86_64-w64-mingw32-gcc
+      - CXX_windows_amd64=x86_64-w64-mingw32-g++
+      - CC_windows_arm64=/llvm-mingw/bin/aarch64-w64-mingw32-gcc
+      - CXX_windows_arm64=/llvm-mingw/bin/aarch64-w64-mingw32-g++
+      - 'CC={{ index .Env (print "CC_" .Os "_" .Arch) }}'
+      - 'CXX={{ index .Env (print "CXX_" .Os "_" .Arch) }}'
+    flags:
+      - -mod=readonly
+    ldflags:
+      - -X github.com/onflow/flow-cli/build.commit={{ .Env.COMMIT }} -X github.com/onflow/flow-cli/build.semver={{ .Env.VERSION }} -X github.com/onflow/flow-cli/internal/command.mixpanelToken={{ .Env.MIXPANEL_PROJECT_TOKEN }} -X github.com/onflow/flow-cli/internal/accounts.accountToken={{ .Env.LILICO_TOKEN }}
+
+archives:
+  - id: golang-cross
+    builds:
+      - flow-cli
+    name_template: "{{ .ProjectName }}-v{{ .Version }}-{{ .Os }}-{{ .Arch }}"
+    format: tar.gz
+    wrap_in_directory: false
+snapshot:
+  name_template: "{{ .Tag }}"
+changelog:
+  skip: true
+checksum:
+  name_template: "checksums.txt"
+release:
+  github:
+    owner: onflow
+    name: flow-cli
+  prerelease: auto
+  draft: false

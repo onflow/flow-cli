@@ -260,6 +260,3 @@ require (
 	modernc.org/sqlite v1.21.1 // indirect
 	nhooyr.io/websocket v1.8.7 // indirect
 )
-
-// this is a woraround for the flow-go/crypto cross compliation issue
-replace github.com/onflow/flow-go/crypto => github.com/onflow/flow-go/crypto v0.24.9
