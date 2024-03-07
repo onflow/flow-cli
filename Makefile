@@ -58,6 +58,8 @@ endif
 ci: install-tools generate test coverage
 
 $(BINARY):
+	CGO_ENABLED=1 \
+	CGO_FLAGS="-O2 -D__BLST_PORTABLE__" \
 	GO111MODULE=on go build \
 		-trimpath \
 		-ldflags \
