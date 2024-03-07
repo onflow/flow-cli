@@ -29,5 +29,6 @@ jobs:
           echo 'VERSION=${{ github.ref_name }}' >> .release-env
           echo 'COMMIT=${{ github.sha }}' >> .release-env 
           echo 'GITHUB_TOKEN=${{ secrets.FLOW_CLI_RELEASE }}' >> .release-env
+          echo 'CGO_CFLAGS="-O2 -D__BLST_PORTABLE__"' >> .release-env
       - name: Build and Release
         run: make release
