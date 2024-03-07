@@ -907,10 +907,14 @@ github.com/onflow/flow-core-contracts/lib/go/templates v1.2.4-0.20231016154253-a
 github.com/onflow/flow-core-contracts/lib/go/templates v1.2.4-0.20231016154253-a00dbf7c061f/go.mod h1:ZeLxwaBkzuSInESGjL8/IPZWezF+YOYsYbMrZlhN+q4=
 github.com/onflow/flow-emulator v0.61.0 h1:nrgY5YQ+BcKIyZ7o7keQzKZdtpLnB//DIpnI+txvYcw=
 github.com/onflow/flow-emulator v0.61.0/go.mod h1:WjJrpG6K5tRIaI79E7uaX5a/EEBpciOq4L3iOnjZZaE=
+github.com/onflow/flow-emulator v0.61.1 h1:7uCzphiAMjZbehsCSTQ8mQWUpMeKqjxCd45yYRvMEQk=
+github.com/onflow/flow-emulator v0.61.1/go.mod h1:YLR3/wi4Z9j7s9tJyIvTmxH3wAsO7zkFHSRrW0axyuE=
 github.com/onflow/flow-ft/lib/go/contracts v0.7.1-0.20230711213910-baad011d2b13 h1:B4ll7e3j+MqTJv2122Enq3RtDNzmIGRu9xjV7fo7un0=
 github.com/onflow/flow-ft/lib/go/contracts v0.7.1-0.20230711213910-baad011d2b13/go.mod h1:kTMFIySzEJJeupk+7EmXs0EJ6CBWY/MV9fv9iYQk+RU=
 github.com/onflow/flow-go v0.33.2-0.20240306170028-bd1722d73820 h1:xDa3pMxz4t15sLLhCgURZSGmS4lixGtaVSdwcKwsdaM=
 github.com/onflow/flow-go v0.33.2-0.20240306170028-bd1722d73820/go.mod h1:I5sWWA5pHsJDlZV61iqqQ3k++IhB/k1qE/80s2sjP5s=
+github.com/onflow/flow-go v0.33.2-0.20240306234901-64ab8d27ea30 h1:1JkIA71XEspysh2EsAGeOi1gNc2/TgZJ9kGyyPWJWDU=
+github.com/onflow/flow-go v0.33.2-0.20240306234901-64ab8d27ea30/go.mod h1:I5sWWA5pHsJDlZV61iqqQ3k++IhB/k1qE/80s2sjP5s=
 github.com/onflow/flow-go-sdk v0.24.0/go.mod h1:IoptMLPyFXWvyd9yYA6/4EmSeeozl6nJoIv4FaEMg74=
 github.com/onflow/flow-go-sdk v0.46.0 h1:mrIQziCDe6Oi5HH/aPFvYluh1XUwO6lYpoXLWrBZc2s=
 github.com/onflow/flow-go-sdk v0.46.0/go.mod h1:azVWF0yHI8wT1erF0vuYGqQZybl6Frbc+0Zu3rIPeHc=
