@@ -30,7 +30,6 @@ binary: $(BINARY)
 install-tools:
 	cd ${GOPATH}; \
 	mkdir -p ${GOPATH}; \
-	echo "${CGO_CFLAGS}"; \
 	GO111MODULE=on go install github.com/axw/gocov/gocov@latest; \
 	GO111MODULE=on go install github.com/matm/gocov-html/cmd/gocov-html@latest; \
 	GO111MODULE=on go install github.com/sanderhahn/gozip/cmd/gozip@latest; \
