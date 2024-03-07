@@ -13,7 +13,7 @@ builds:
       - amd64
       - arm64
     env:
-      - CGO_FLAGS="-O2 -D__BLST_PORTABLE__"
+      - CGO_CFLAGS=-O2 -D__BLST_PORTABLE__
       - CGO_ENABLED=1
       - CC_darwin_amd64=o64-clang
       - CXX_darwin_amd64=o64-clang+
