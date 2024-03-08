@@ -91,7 +91,7 @@ func dev(
 
 		emuErr := emulatorServer.Listen()
 		if emuErr != nil {
-			panic(fmt.Sprintf("Failed to prepare the emulator for connections: %s", emuErr))
+			return nil, fmt.Errorf("failed to prepare the emulator for connections: %s", emuErr)
 		}
 
 		c := make(chan os.Signal)
