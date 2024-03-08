@@ -35,7 +35,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
-	"github.com/onflow/flow-cli/internal/util"
 )
 
 type flagsDev struct {
@@ -76,7 +75,7 @@ func dev(
 	if devFlags.StartEmulator {
 		privateKey, err := serviceAccount.Key.PrivateKey()
 		if err != nil {
-			util.Exit(1, "Only hexadecimal keys can be used as the emulator service account key.")
+			return nil, fmt.Errorf("failed to get private key: %s", err)
 		}
 
 		consoleWriter := zerolog.ConsoleWriter{Out: os.Stdout}
