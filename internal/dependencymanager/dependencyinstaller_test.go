@@ -26,11 +26,12 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 
-	"github.com/onflow/flow-cli/flowkit/config"
-	"github.com/onflow/flow-cli/flowkit/gateway"
-	"github.com/onflow/flow-cli/flowkit/gateway/mocks"
-	"github.com/onflow/flow-cli/flowkit/output"
-	"github.com/onflow/flow-cli/flowkit/tests"
+	"github.com/onflow/flowkit/v2/config"
+	"github.com/onflow/flowkit/v2/gateway"
+	"github.com/onflow/flowkit/v2/gateway/mocks"
+	"github.com/onflow/flowkit/v2/output"
+	"github.com/onflow/flowkit/v2/tests"
+
 	"github.com/onflow/flow-cli/internal/util"
 )
 
@@ -57,7 +58,7 @@ func TestDependencyInstallerInstall(t *testing.T) {
 		gw := mocks.DefaultMockGateway()
 
 		gw.GetAccount.Run(func(args mock.Arguments) {
-			addr := args.Get(0).(flow.Address)
+			addr := args.Get(1).(flow.Address)
 			assert.Equal(t, addr.String(), serviceAcc.Address.String())
 			acc := tests.NewAccountWithAddress(addr.String())
 			acc.Contracts = map[string][]byte{
@@ -69,9 +70,10 @@ func TestDependencyInstallerInstall(t *testing.T) {
 
 		di := &DependencyInstaller{
 			Gateways: map[string]gateway.Gateway{
-				config.EmulatorNetwork.Name: gw.Mock,
-				config.TestnetNetwork.Name:  gw.Mock,
-				config.MainnetNetwork.Name:  gw.Mock,
+				config.EmulatorNetwork.Name:   gw.Mock,
+				config.TestnetNetwork.Name:    gw.Mock,
+				config.MainnetNetwork.Name:    gw.Mock,
+				config.PreviewnetNetwork.Name: gw.Mock,
 			},
 			Logger: logger,
 			State:  state,
@@ -99,7 +101,7 @@ func TestDependencyInstallerAdd(t *testing.T) {
 		gw := mocks.DefaultMockGateway()
 
 		gw.GetAccount.Run(func(args mock.Arguments) {
-			addr := args.Get(0).(flow.Address)
+			addr := args.Get(1).(flow.Address)
 			assert.Equal(t, addr.String(), serviceAcc.Address.String())
 			acc := tests.NewAccountWithAddress(addr.String())
 			acc.Contracts = map[string][]byte{
@@ -111,9 +113,10 @@ func TestDependencyInstallerAdd(t *testing.T) {
 
 		di := &DependencyInstaller{
 			Gateways: map[string]gateway.Gateway{
-				config.EmulatorNetwork.Name: gw.Mock,
-				config.TestnetNetwork.Name:  gw.Mock,
-				config.MainnetNetwork.Name:  gw.Mock,
+				config.EmulatorNetwork.Name:   gw.Mock,
+				config.TestnetNetwork.Name:    gw.Mock,
+				config.MainnetNetwork.Name:    gw.Mock,
+				config.PreviewnetNetwork.Name: gw.Mock,
 			},
 			Logger: logger,
 			State:  state,

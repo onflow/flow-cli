@@ -21,12 +21,13 @@ package transactions
 import (
 	"fmt"
 
-	"github.com/onflow/flow-cli/flowkit/transactions"
+	"github.com/onflow/flowkit/v2/transactions"
 
 	"github.com/spf13/cobra"
 
-	"github.com/onflow/flow-cli/flowkit"
-	"github.com/onflow/flow-cli/flowkit/output"
+	"github.com/onflow/flowkit/v2"
+	"github.com/onflow/flowkit/v2/output"
+
 	"github.com/onflow/flow-cli/internal/command"
 )
 

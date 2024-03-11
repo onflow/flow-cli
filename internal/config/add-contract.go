@@ -24,9 +24,10 @@ import (
 	"github.com/onflow/flow-go-sdk"
 	"github.com/spf13/cobra"
 
-	"github.com/onflow/flow-cli/flowkit"
-	"github.com/onflow/flow-cli/flowkit/config"
-	"github.com/onflow/flow-cli/flowkit/output"
+	"github.com/onflow/flowkit/v2"
+	"github.com/onflow/flowkit/v2/config"
+	"github.com/onflow/flowkit/v2/output"
+
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/internal/util"
 )
@@ -91,6 +92,13 @@ func addContract(
 		contract.Aliases.Add(
 			config.TestnetNetwork.Name,
 			flow.HexToAddress(raw.Testnet),
+		)
+	}
+
+	if raw.Previewnet != "" {
+		contract.Aliases.Add(
+			config.PreviewnetNetwork.Name,
+			flow.HexToAddress(raw.Mainnet),
 		)
 	}
 

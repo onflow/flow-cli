@@ -30,7 +30,7 @@ import (
 	flowsdk "github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
 
-	"github.com/onflow/flow-cli/flowkit"
+	"github.com/onflow/flowkit/v2"
 )
 
 const EnvPrefix = "FLOW"
@@ -72,6 +72,7 @@ func GetAddressNetwork(address flowsdk.Address) (flowsdk.ChainID, error) {
 		flowsdk.Mainnet,
 		flowsdk.Testnet,
 		flowsdk.Emulator,
+		flowsdk.Previewnet,
 	}
 	for _, net := range networks {
 		if address.IsValid(net) {

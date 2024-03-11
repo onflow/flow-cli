@@ -19,6 +19,7 @@
 package dependencymanager
 
 import (
+	"context"
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
@@ -28,16 +29,16 @@ import (
 
 	"github.com/onflow/flow-cli/internal/util"
 
-	"github.com/onflow/flow-cli/flowkit/gateway"
+	"github.com/onflow/flowkit/v2/gateway"
 
-	"github.com/onflow/flow-cli/flowkit/project"
+	"github.com/onflow/flowkit/v2/project"
 
 	flowsdk "github.com/onflow/flow-go-sdk"
 
-	"github.com/onflow/flow-cli/flowkit/config"
+	"github.com/onflow/flowkit/v2/config"
 
-	"github.com/onflow/flow-cli/flowkit"
-	"github.com/onflow/flow-cli/flowkit/output"
+	"github.com/onflow/flowkit/v2"
+	"github.com/onflow/flowkit/v2/output"
 )
 
 type DependencyInstaller struct {
@@ -64,10 +65,16 @@ func NewDependencyInstaller(logger output.Logger, state *flowkit.State) (*Depend
 		return nil, fmt.Errorf("error creating mainnet gateway: %v", err)
 	}
 
+	previewnetGateway, err := gateway.NewGrpcGateway(config.PreviewnetNetwork)
+	if err != nil {
+		return nil, fmt.Errorf("error creating previewnet gateway: %v", err)
+	}
+
 	gateways := map[string]gateway.Gateway{
-		config.EmulatorNetwork.Name: emulatorGateway,
-		config.TestnetNetwork.Name:  testnetGateway,
-		config.MainnetNetwork.Name:  mainnetGateway,
+		config.EmulatorNetwork.Name:   emulatorGateway,
+		config.TestnetNetwork.Name:    testnetGateway,
+		config.MainnetNetwork.Name:    mainnetGateway,
+		config.PreviewnetNetwork.Name: previewnetGateway,
 	}
 
 	return &DependencyInstaller{
@@ -123,7 +130,8 @@ func (di *DependencyInstaller) processDependency(dependency config.Dependency) e
 }
 
 func (di *DependencyInstaller) fetchDependencies(networkName string, address flowsdk.Address, assignedName, contractName string) error {
-	account, err := di.Gateways[networkName].GetAccount(address)
+	ctx := context.Background()
+	account, err := di.Gateways[networkName].GetAccount(ctx, address)
 	if err != nil {
 		return fmt.Errorf("failed to get account: %w", err)
 	}

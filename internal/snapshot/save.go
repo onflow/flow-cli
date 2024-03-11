@@ -19,13 +19,15 @@
 package snapshot
 
 import (
+	"context"
 	"fmt"
 	"path/filepath"
 
 	"github.com/spf13/cobra"
 
-	"github.com/onflow/flow-cli/flowkit"
-	"github.com/onflow/flow-cli/flowkit/output"
+	"github.com/onflow/flowkit/v2"
+	"github.com/onflow/flowkit/v2/output"
+
 	"github.com/onflow/flow-cli/internal/command"
 )
 
@@ -54,8 +56,8 @@ func save(
 	if !flow.Gateway().SecureConnection() {
 		logger.Info(fmt.Sprintf("%s warning: using insecure client connection to download snapshot, you should use a secure network configuration...", output.WarningEmoji()))
 	}
-
-	snapshotBytes, err := flow.Gateway().GetLatestProtocolStateSnapshot()
+	ctx := context.Background()
+	snapshotBytes, err := flow.Gateway().GetLatestProtocolStateSnapshot(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get latest finalized protocol snapshot from gateway: %w", err)
 	}
