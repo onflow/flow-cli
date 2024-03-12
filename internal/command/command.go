@@ -19,6 +19,7 @@
 package command
 
 import (
+	"context"
 	"crypto/sha256"
 	"encoding/base64"
 	"errors"
@@ -167,7 +168,9 @@ func (c Command) AddToParent(parent *cobra.Command) {
 		wg.Wait()
 
 		if c.Status != nil {
-			os.Exit(*c.Status)
+			parentCtx := cmd.Parent().Context()
+			parentCtx = context.WithValue(parentCtx, ExitCodeKey{}, *c.Status)
+			cmd.Parent().SetContext(parentCtx)
 		}
 	}
 
