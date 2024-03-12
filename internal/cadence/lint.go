@@ -72,6 +72,19 @@ var lintCommand = &command.Command{
 	Status: &status,
 }
 
+const (
+	SemanticErrorCategory = "semantic-error"
+	SyntaxErrorCategory   = "syntax-error"
+	ErrorCategory         = "error"
+)
+
+const (
+	ErrorSeverity   Severity = "error"
+	WarningSeverity Severity = "warning"
+)
+
+type Severity string
+
 func lint(
 	args []string,
 	globalFlags command.GlobalFlags,
@@ -100,16 +113,17 @@ func lintFiles(
 	*lintResults,
 	error,
 ) {
-	diagnostics := make(map[common.Location][]analysis.Diagnostic)
+	linterDiagnostics := make(map[common.Location][]analysis.Diagnostic)
+	errorDiagnostics := make(map[common.Location][]analysis.Diagnostic)
 
 	processParserCheckerError := func(err error, location common.Location) error {
 		unwrapped := err
-		errorDiagnostics, err := maybeProcessConvertableError(unwrapped, location)
+		diagnostics, err := maybeProcessConvertableError(unwrapped, location)
 		if err != nil {
 			return err
 		}
 
-		diagnostics[location] = append(diagnostics[location], errorDiagnostics...)
+		errorDiagnostics[location] = append(errorDiagnostics[location], diagnostics...)
 		return nil
 	}
 
@@ -161,19 +175,29 @@ func lintFiles(
 		analyzers := maps.Values(cdcLint.Analyzers)
 		program.Run(analyzers, func(d analysis.Diagnostic) {
 			location := program.Location
-			diagnostics[location] = append(diagnostics[location], d)
+			linterDiagnostics[location] = append(linterDiagnostics[location], d)
 		})
 	}
 
 	results := make([]lintResult, 0)
 	for _, location := range locations {
-		fileDiagnostics := diagnostics[location]
+		// Remove any diagnostics that are expected from the Cadence V1 Analyzer
+		// And combine the linter diagnostics with the error diagnostics
+		diagnostics := removeExpectedCadenceV1Errors(linterDiagnostics[location], errorDiagnostics[location])
+		diagnostics = append(diagnostics, linterDiagnostics[location]...)
+
 		results = append(results, lintResult{
 			FilePath:    location.String(),
-			Diagnostics: fileDiagnostics,
+			Diagnostics: diagnostics,
 		})
-		if len(fileDiagnostics) > 0 {
-			status = 1
+
+		// Set the status to 1 if any of the diagnostics are errors
+		for _, diagnostic := range diagnostics {
+			severity := getDiagnosticSeverity(diagnostic)
+			if severity == ErrorSeverity {
+				status = 1
+				break
+			}
 		}
 	}
 
@@ -218,6 +242,64 @@ func getDiagnosticsForParentError(err errors.ParentError, location common.Locati
 	}
 
 	return diagnostics, nil
+}
+
+// This function is used to remove expected errors from the diagnostics
+// It will remove all diagnostics that overlap wholly with those provided
+// by the Cadence V1 Analyzer
+//
+// It's imperfect, but it reduces redundancy/confusion.  The implementation
+// is somewhat inefficient and using an interval tree would be better.
+func removeExpectedCadenceV1Errors(
+	linterDiagnostics []analysis.Diagnostic,
+	errorDiagnostics []analysis.Diagnostic,
+) []analysis.Diagnostic {
+	cadenceV1Ranges := make([]ast.Range, 0)
+	for _, diagnostic := range linterDiagnostics {
+		if diagnostic.Category == cdcLint.CadenceV1Category {
+			cadenceV1Ranges = append(cadenceV1Ranges, diagnostic.Range)
+		}
+	}
+
+	// remove any diagnostics that overlap with the Cadence V1 ranges
+	filteredDiagnostics := make([]analysis.Diagnostic, 0)
+	for _, diagnostic := range errorDiagnostics {
+		if diagnostic.Category == cdcLint.CadenceV1Category {
+			filteredDiagnostics = append(filteredDiagnostics, diagnostic)
+			continue
+		}
+
+		overlap := false
+		for _, cadenceV1Range := range cadenceV1Ranges {
+			if ast.RangeContains(nil, cadenceV1Range, diagnostic.Range) {
+				overlap = true
+				break
+			}
+		}
+
+		if !overlap {
+			filteredDiagnostics = append(filteredDiagnostics, diagnostic)
+		}
+	}
+
+	return filteredDiagnostics
+}
+
+func getDiagnosticSeverity(
+	diagnostic analysis.Diagnostic,
+) Severity {
+	switch diagnostic.Category {
+	case SemanticErrorCategory:
+		return ErrorSeverity
+	case SyntaxErrorCategory:
+		return ErrorSeverity
+	case ErrorCategory:
+		return ErrorSeverity
+	case cdcLint.CadenceV1Category:
+		return ErrorSeverity
+	default:
+		return WarningSeverity
+	}
 }
 
 func convertError(
@@ -276,9 +358,14 @@ func (r *lintResults) String() string {
 		}
 
 		for _, diagnostic := range result.Diagnostics {
+			color := lipgloss.Color("#FF3E3E")
+			if getDiagnosticSeverity(diagnostic) == WarningSeverity {
+				color = lipgloss.Color("#FFA500")
+			}
+
 			startPos := diagnostic.Range.StartPos
 			sb.WriteString(fmt.Sprintf("%s:%d:%d: ", relPath, startPos.Line, startPos.Column))
-			sb.WriteString(lipgloss.NewStyle().Foreground(lipgloss.Color("#FF3E3E")).Render(fmt.Sprintf("%s: %s", diagnostic.Category, diagnostic.Message)))
+			sb.WriteString(lipgloss.NewStyle().Foreground(color).Render(fmt.Sprintf("%s: %s", diagnostic.Category, diagnostic.Message)))
 			sb.WriteString("\n\n")
 		}
 	}
