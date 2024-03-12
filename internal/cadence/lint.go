@@ -155,7 +155,9 @@ func lintFiles(
 		return nil, err
 	}
 
-	for _, program := range programs {
+	// Only run linter on explicitly provided files
+	for _, location := range locations {
+		program := programs[location]
 		analyzers := maps.Values(cdcLint.Analyzers)
 		program.Run(analyzers, func(d analysis.Diagnostic) {
 			location := program.Location
@@ -164,12 +166,13 @@ func lintFiles(
 	}
 
 	results := make([]lintResult, 0)
-	for location, diagnosticList := range diagnostics {
+	for _, location := range locations {
+		fileDiagnostics := diagnostics[location]
 		results = append(results, lintResult{
 			FilePath:    location.String(),
-			Diagnostics: diagnosticList,
+			Diagnostics: fileDiagnostics,
 		})
-		if len(diagnosticList) > 0 {
+		if len(fileDiagnostics) > 0 {
 			status = 1
 		}
 	}
