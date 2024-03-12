@@ -319,11 +319,11 @@ func convertError(
 
 	suggestedFixes := make([]analysis.SuggestedFix, 0)
 
-	category := "error"
+	category := ErrorCategory
 	if _, ok := err.(sema.SemanticError); ok {
-		category = "semantic-error"
+		category = SemanticErrorCategory
 	} else if _, ok := err.(*parser.SyntaxError); ok {
-		category = "syntax-error"
+		category = SyntaxErrorCategory
 	}
 
 	diagnostic := analysis.Diagnostic{
