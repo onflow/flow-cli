@@ -168,9 +168,9 @@ func (c Command) AddToParent(parent *cobra.Command) {
 		wg.Wait()
 
 		if c.Status != nil {
-			parentCtx := cmd.Parent().Context()
-			parentCtx = context.WithValue(parentCtx, ExitCodeKey{}, *c.Status)
-			cmd.Parent().SetContext(parentCtx)
+			rootCtx := cmd.Root().Context()
+			rootCtx = context.WithValue(rootCtx, ExitCodeKey{}, *c.Status)
+			cmd.Root().SetContext(rootCtx)
 		}
 	}
 

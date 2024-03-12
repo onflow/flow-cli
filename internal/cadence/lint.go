@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"path/filepath"
 	"strings"
+	"sync"
 
 	"github.com/spf13/cobra"
 	"golang.org/x/exp/maps"
@@ -113,6 +114,7 @@ func lintFiles(
 	*lintResults,
 	error,
 ) {
+	mutex := &sync.Mutex{}
 	linterDiagnostics := make(map[common.Location][]analysis.Diagnostic)
 	errorDiagnostics := make(map[common.Location][]analysis.Diagnostic)
 
@@ -123,7 +125,9 @@ func lintFiles(
 			return err
 		}
 
+		mutex.Lock()
 		errorDiagnostics[location] = append(errorDiagnostics[location], diagnostics...)
+		mutex.Unlock()
 		return nil
 	}
 
@@ -170,14 +174,23 @@ func lintFiles(
 	}
 
 	// Only run linter on explicitly provided files
+	wg := &sync.WaitGroup{}
+	analyzers := maps.Values(cdcLint.Analyzers)
 	for _, location := range locations {
 		program := programs[location]
-		analyzers := maps.Values(cdcLint.Analyzers)
-		program.Run(analyzers, func(d analysis.Diagnostic) {
-			location := program.Location
-			linterDiagnostics[location] = append(linterDiagnostics[location], d)
-		})
+
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			program.Run(analyzers, func(d analysis.Diagnostic) {
+				location := program.Location
+				mutex.Lock()
+				linterDiagnostics[location] = append(linterDiagnostics[location], d)
+				mutex.Unlock()
+			})
+		}()
 	}
+	wg.Wait()
 
 	results := make([]lintResult, 0)
 	for _, location := range locations {
@@ -324,6 +337,8 @@ func convertError(
 		category = SemanticErrorCategory
 	} else if _, ok := err.(*parser.SyntaxError); ok {
 		category = SyntaxErrorCategory
+	} else if _, ok := err.(*parser.SyntaxErrorWithSuggestedReplacement); ok {
+		category = SyntaxErrorCategory
 	}
 
 	diagnostic := analysis.Diagnostic{
@@ -365,7 +380,8 @@ func (r *lintResults) String() string {
 
 			startPos := diagnostic.Range.StartPos
 			sb.WriteString(fmt.Sprintf("%s:%d:%d: ", relPath, startPos.Line, startPos.Column))
-			sb.WriteString(lipgloss.NewStyle().Foreground(color).Render(fmt.Sprintf("%s: %s", diagnostic.Category, diagnostic.Message)))
+			sb.WriteString(lipgloss.NewStyle().Foreground(color).Render(fmt.Sprintf("%s:", diagnostic.Category)))
+			sb.WriteString(fmt.Sprintf(" %s", diagnostic.Message))
 			sb.WriteString("\n\n")
 		}
 	}
