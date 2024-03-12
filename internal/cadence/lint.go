@@ -27,12 +27,12 @@ import (
 	"golang.org/x/exp/maps"
 
 	"github.com/charmbracelet/lipgloss"
-	"github.com/charmbracelet/lipgloss/table"
 
 	cdcLint "github.com/onflow/cadence-tools/lint"
 	"github.com/onflow/cadence/runtime/ast"
 	"github.com/onflow/cadence/runtime/common"
 	"github.com/onflow/cadence/runtime/errors"
+	"github.com/onflow/cadence/runtime/parser"
 	"github.com/onflow/cadence/runtime/sema"
 	"github.com/onflow/cadence/tools/analysis"
 	"github.com/onflow/flow-cli/internal/command"
@@ -231,9 +231,16 @@ func convertError(
 
 	suggestedFixes := make([]analysis.SuggestedFix, 0)
 
+	category := "error"
+	if _, ok := err.(sema.SemanticError); ok {
+		category = "semantic-error"
+	} else if _, ok := err.(*parser.SyntaxError); ok {
+		category = "syntax-error"
+	}
+
 	diagnostic := analysis.Diagnostic{
 		Location:         location,
-		Category:         "error",
+		Category:         category,
 		Message:          message,
 		SecondaryMessage: secondaryMessage,
 		SuggestedFixes:   suggestedFixes,
@@ -257,47 +264,17 @@ func (r *lintResults) String() string {
 
 		numProblems += len(result.Diagnostics)
 
-		filenameStyle := lipgloss.NewStyle().
-			Underline(true)
-
-		absPath, err := filepath.Abs(result.FilePath)
+		relPath, err := filepath.Rel(".", result.FilePath)
 		if err != nil {
-			absPath = result.FilePath
+			relPath = result.FilePath
 		}
 
-		sb.WriteString(filenameStyle.Render(absPath))
-		sb.WriteString("\n")
-
-		rows := make([][]string, 0)
-		for i, diagnostic := range result.Diagnostics {
-			columns := make([]string, 0)
-			positionString := fmt.Sprintf("%d:%d", diagnostic.Range.StartPos.Line, diagnostic.Range.StartPos.Column)
-
-			paddingTop := 1
-			if i == 0 {
-				paddingTop = 0
-			}
-
-			// If the diagnostic has a code, use that, otherwise use the category
-			codeOrCategory := diagnostic.Category
-			if diagnostic.Code != "" {
-				codeOrCategory = diagnostic.Code
-			}
-
-			columns = append(columns, lipgloss.NewStyle().Width(7).Align(lipgloss.Center).PaddingTop(paddingTop).Render(positionString))
-			columns = append(columns, lipgloss.NewStyle().Width(56).Align(lipgloss.Left).PaddingTop(paddingTop).PaddingLeft(1).Render(diagnostic.Message))
-			columns = append(columns, lipgloss.NewStyle().Width(13).Align(lipgloss.Center).PaddingTop(paddingTop).Render(codeOrCategory))
-
-			rows = append(rows, columns)
+		for _, diagnostic := range result.Diagnostics {
+			startPos := diagnostic.Range.StartPos
+			sb.WriteString(fmt.Sprintf("%s:%d:%d: ", relPath, startPos.Line, startPos.Column))
+			sb.WriteString(lipgloss.NewStyle().Foreground(lipgloss.Color("#FF3E3E")).Render(fmt.Sprintf("%s: %s", diagnostic.Category, diagnostic.Message)))
+			sb.WriteString("\n\n")
 		}
-
-		t := table.New().
-			Border(lipgloss.NormalBorder()).
-			BorderStyle(lipgloss.NewStyle().Foreground(lipgloss.Color("#1FEE8A"))).
-			Rows(rows...)
-
-		sb.WriteString(t.Render())
-		sb.WriteString("\n\n")
 	}
 
 	if numProblems == 0 {
