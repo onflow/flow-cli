@@ -37,6 +37,7 @@ import (
 
 type generateFlagsDef struct {
 	Directory string `default:"" flag:"dir" info:"Directory to generate files in"`
+	SkipTests bool   `default:"false" flag:"skip-tests" info:"Skip generating test files"`
 }
 
 var generateFlags = generateFlagsDef{}
@@ -200,17 +201,9 @@ fun main() {
 		return nil, fmt.Errorf("file already exists: %s", filenameWithBasePath)
 	}
 
-	if _, err := state.ReaderWriter().ReadFile(testFilenameWithBasePath); err == nil {
-		return nil, fmt.Errorf("file already exists: %s", testFilenameWithBasePath)
-	}
-
 	// Ensure the directory exists
 	if err := state.ReaderWriter().MkdirAll(basePath, 0755); err != nil {
 		return nil, fmt.Errorf("error creating directories: %w", err)
-	}
-
-	if err := state.ReaderWriter().MkdirAll(testsBasePath, 0755); err != nil {
-		return nil, fmt.Errorf("error creating test directory: %w", err)
 	}
 
 	// Write files
@@ -219,19 +212,34 @@ fun main() {
 		return nil, fmt.Errorf("error writing file: %w", err)
 	}
 
-	err = state.ReaderWriter().WriteFile(testFilenameWithBasePath, []byte(testFileToWrite), 0644)
-	if err != nil {
-		return nil, fmt.Errorf("error writing test file: %w", err)
+	logger.Info(fmt.Sprintf("Generated new %s: %s at %s", templateType, name, filenameWithBasePath))
+
+	if generateFlags.SkipTests != true {
+		if _, err := state.ReaderWriter().ReadFile(testFilenameWithBasePath); err == nil {
+			return nil, fmt.Errorf("file already exists: %s", testFilenameWithBasePath)
+		}
+
+		if err := state.ReaderWriter().MkdirAll(testsBasePath, 0755); err != nil {
+			return nil, fmt.Errorf("error creating test directory: %w", err)
+		}
+
+		err = state.ReaderWriter().WriteFile(testFilenameWithBasePath, []byte(testFileToWrite), 0644)
+		if err != nil {
+			return nil, fmt.Errorf("error writing test file: %w", err)
+		}
+
+		logger.Info(fmt.Sprintf("Generated new test file: %s at %s", name, testFilenameWithBasePath))
 	}
 
-	logger.Info(fmt.Sprintf("Generated new %s: %s at %s", templateType, name, filenameWithBasePath))
-	logger.Info(fmt.Sprintf("Generated new test file: %s at %s", name, testFilenameWithBasePath))
-
 	if templateType == "contract" {
-		aliases := config.Aliases{{
-			Network: "testing",
-			Address: flow.HexToAddress("0x0000000000000007"),
-		}}
+		var aliases config.Aliases
+
+		if generateFlags.SkipTests != true {
+			aliases = config.Aliases{{
+				Network: "testing",
+				Address: flow.HexToAddress("0x0000000000000007"),
+			}}
+		}
 
 		contract := config.Contract{
 			Name:     name,
