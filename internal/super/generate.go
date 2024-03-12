@@ -20,7 +20,7 @@ package super
 
 import (
 	"fmt"
-	"github.com/onflow/flow-go-sdk"
+	flowsdk "github.com/onflow/flow-go-sdk"
 	"path/filepath"
 	"strings"
 
@@ -237,7 +237,7 @@ fun main() {
 		if generateFlags.SkipTests != true {
 			aliases = config.Aliases{{
 				Network: "testing",
-				Address: flow.HexToAddress("0x0000000000000007"),
+				Address: flowsdk.HexToAddress("0x0000000000000007"),
 			}}
 		}
 
