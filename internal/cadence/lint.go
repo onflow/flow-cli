@@ -20,7 +20,7 @@ package cadence
 
 import (
 	"fmt"
-	"path/filepath"
+	"slices"
 	"strings"
 	"sync"
 
@@ -41,9 +41,7 @@ import (
 	"github.com/onflow/flowkit/v2/output"
 )
 
-type lintFlagsCollection struct {
-	Fix bool `default:"false" flag:"fix" info:"Fix linting errors"`
-}
+type lintFlagsCollection struct{}
 type lintResult struct {
 	FilePath    string
 	Diagnostics []analysis.Diagnostic
@@ -198,13 +196,14 @@ func lintFiles(
 		// And combine the linter diagnostics with the error diagnostics
 		diagnostics := removeExpectedCadenceV1Errors(linterDiagnostics[location], errorDiagnostics[location])
 		diagnostics = append(diagnostics, linterDiagnostics[location]...)
+		sortDiagnostics(diagnostics)
 
 		results = append(results, lintResult{
 			FilePath:    location.String(),
 			Diagnostics: diagnostics,
 		})
 
-		// Set the status to 1 if any of the diagnostics are errors
+		// Set the status to 1 if any of the diagnostics are error-level
 		for _, diagnostic := range diagnostics {
 			severity := getDiagnosticSeverity(diagnostic)
 			if severity == ErrorSeverity {
@@ -356,6 +355,42 @@ func convertError(
 	return &diagnostic
 }
 
+// Sort diagnostics in order of precedence: start pos -> category -> message
+// Ensures that diagnostics are always in a consistent order
+func sortDiagnostics(
+	diagnostics []analysis.Diagnostic,
+) {
+	slices.SortFunc(diagnostics, func(a analysis.Diagnostic, b analysis.Diagnostic) int {
+		if r := a.Range.StartPos.Offset - b.Range.StartPos.Offset; r != 0 {
+			return r
+		}
+
+		if r := strings.Compare(a.Category, b.Category); r != 0 {
+			return r
+		}
+
+		return strings.Compare(a.Message, b.Message)
+	})
+}
+
+func renderDiagnostic(diagnostic analysis.Diagnostic) string {
+	locationColor := lipgloss.Color("#A9B7C6")
+	categoryColor := lipgloss.Color("#FF3E3E")
+	if getDiagnosticSeverity(diagnostic) == WarningSeverity {
+		categoryColor = lipgloss.Color("#FFA500")
+	}
+
+	startPos := diagnostic.Range.StartPos
+	locationText := fmt.Sprintf("%s:%d:%d:", diagnostic.Location.String(), startPos.Line, startPos.Column)
+	categoryText := fmt.Sprintf("%s:", diagnostic.Category)
+
+	return fmt.Sprintf("%s %s %s",
+		lipgloss.NewStyle().Foreground(locationColor).Render(locationText),
+		lipgloss.NewStyle().Foreground(categoryColor).Render(categoryText),
+		diagnostic.Message,
+	)
+}
+
 func (r *lintResults) String() string {
 	var sb strings.Builder
 	var numProblems int
@@ -367,22 +402,8 @@ func (r *lintResults) String() string {
 
 		numProblems += len(result.Diagnostics)
 
-		relPath, err := filepath.Rel(".", result.FilePath)
-		if err != nil {
-			relPath = result.FilePath
-		}
-
 		for _, diagnostic := range result.Diagnostics {
-			color := lipgloss.Color("#FF3E3E")
-			if getDiagnosticSeverity(diagnostic) == WarningSeverity {
-				color = lipgloss.Color("#FFA500")
-			}
-
-			startPos := diagnostic.Range.StartPos
-			sb.WriteString(fmt.Sprintf("%s:%d:%d: ", relPath, startPos.Line, startPos.Column))
-			sb.WriteString(lipgloss.NewStyle().Foreground(color).Render(fmt.Sprintf("%s:", diagnostic.Category)))
-			sb.WriteString(fmt.Sprintf(" %s", diagnostic.Message))
-			sb.WriteString("\n\n")
+			sb.WriteString(fmt.Sprintf("%s\n\n", renderDiagnostic(diagnostic)))
 		}
 	}
 
