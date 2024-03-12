@@ -341,11 +341,12 @@ func NewAccountPrompt() *AccountData {
 }
 
 type ContractData struct {
-	Name     string
-	Source   string
-	Emulator string
-	Testnet  string
-	Mainnet  string
+	Name       string
+	Source     string
+	Emulator   string
+	Testnet    string
+	Mainnet    string
+	Previewnet string
 }
 
 func NewContractPrompt() *ContractData {
@@ -611,9 +612,10 @@ func ReportCrash() bool {
 
 func CreateAccountNetworkPrompt() (string, config.Network) {
 	networkMap := map[string]config.Network{
-		"Emulator": config.EmulatorNetwork,
-		"Testnet":  config.TestnetNetwork,
-		"Mainnet":  config.MainnetNetwork,
+		"Emulator":   config.EmulatorNetwork,
+		"Testnet":    config.TestnetNetwork,
+		"Mainnet":    config.MainnetNetwork,
+		"Previewnet": config.PreviewnetNetwork,
 	}
 
 	networkPrompt := promptui.Select{

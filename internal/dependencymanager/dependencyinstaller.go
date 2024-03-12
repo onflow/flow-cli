@@ -65,10 +65,16 @@ func NewDependencyInstaller(logger output.Logger, state *flowkit.State) (*Depend
 		return nil, fmt.Errorf("error creating mainnet gateway: %v", err)
 	}
 
+	previewnetGateway, err := gateway.NewGrpcGateway(config.PreviewnetNetwork)
+	if err != nil {
+		return nil, fmt.Errorf("error creating previewnet gateway: %v", err)
+	}
+
 	gateways := map[string]gateway.Gateway{
-		config.EmulatorNetwork.Name: emulatorGateway,
-		config.TestnetNetwork.Name:  testnetGateway,
-		config.MainnetNetwork.Name:  mainnetGateway,
+		config.EmulatorNetwork.Name:   emulatorGateway,
+		config.TestnetNetwork.Name:    testnetGateway,
+		config.MainnetNetwork.Name:    mainnetGateway,
+		config.PreviewnetNetwork.Name: previewnetGateway,
 	}
 
 	return &DependencyInstaller{

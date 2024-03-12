@@ -70,9 +70,10 @@ func TestDependencyInstallerInstall(t *testing.T) {
 
 		di := &DependencyInstaller{
 			Gateways: map[string]gateway.Gateway{
-				config.EmulatorNetwork.Name: gw.Mock,
-				config.TestnetNetwork.Name:  gw.Mock,
-				config.MainnetNetwork.Name:  gw.Mock,
+				config.EmulatorNetwork.Name:   gw.Mock,
+				config.TestnetNetwork.Name:    gw.Mock,
+				config.MainnetNetwork.Name:    gw.Mock,
+				config.PreviewnetNetwork.Name: gw.Mock,
 			},
 			Logger: logger,
 			State:  state,
@@ -112,9 +113,10 @@ func TestDependencyInstallerAdd(t *testing.T) {
 
 		di := &DependencyInstaller{
 			Gateways: map[string]gateway.Gateway{
-				config.EmulatorNetwork.Name: gw.Mock,
-				config.TestnetNetwork.Name:  gw.Mock,
-				config.MainnetNetwork.Name:  gw.Mock,
+				config.EmulatorNetwork.Name:   gw.Mock,
+				config.TestnetNetwork.Name:    gw.Mock,
+				config.MainnetNetwork.Name:    gw.Mock,
+				config.PreviewnetNetwork.Name: gw.Mock,
 			},
 			Logger: logger,
 			State:  state,
