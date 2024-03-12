@@ -20,6 +20,7 @@ package super
 
 import (
 	"fmt"
+	"github.com/onflow/flow-go-sdk"
 	"path/filepath"
 	"strings"
 
@@ -116,6 +117,13 @@ func generateScript(
 	return generateNew(args, "script", logger, state)
 }
 
+func addCDCExtension(name string) string {
+	if strings.HasSuffix(name, ".cdc") {
+		return name
+	}
+	return fmt.Sprintf("%s.cdc", name)
+}
+
 func generateNew(
 	args []string,
 	templateType string,
@@ -127,17 +135,12 @@ func generateNew(
 	}
 
 	name := args[0]
-	var filename string
-
-	// Don't add .cdc extension if it's already there
-	if strings.HasSuffix(name, ".cdc") {
-		filename = name
-	} else {
-		filename = fmt.Sprintf("%s.cdc", name)
-	}
+	var filename = addCDCExtension(name)
 
 	var fileToWrite string
+	var testFileToWrite string
 	var basePath string
+	var testsBasePath = "cadence/tests"
 
 	if generateFlags.Directory != "" {
 		basePath = generateFlags.Directory
@@ -161,6 +164,19 @@ access(all)
 contract %s {
     init() {}
 }`, name)
+		testFileToWrite = fmt.Sprintf(`import Test
+
+access(all) let account = Test.createAccount()
+
+access(all) fun testContract() {
+    let err = Test.deployContract(
+        name: "%s",
+        path: "../contracts/%s.cdc",
+        arguments: [],
+    )
+
+    Test.expect(err, Test.beNil())
+}`, name, name)
 	case "script":
 		fileToWrite = `access(all)
 fun main() {
@@ -177,10 +193,15 @@ fun main() {
 	}
 
 	filenameWithBasePath := filepath.Join(basePath, filename)
+	testFilenameWithBasePath := filepath.Join(testsBasePath, addCDCExtension(fmt.Sprintf("%s_test", name)))
 
 	// Check file existence
 	if _, err := state.ReaderWriter().ReadFile(filenameWithBasePath); err == nil {
 		return nil, fmt.Errorf("file already exists: %s", filenameWithBasePath)
+	}
+
+	if _, err := state.ReaderWriter().ReadFile(testFilenameWithBasePath); err == nil {
+		return nil, fmt.Errorf("file already exists: %s", testFilenameWithBasePath)
 	}
 
 	// Ensure the directory exists
@@ -188,15 +209,36 @@ fun main() {
 		return nil, fmt.Errorf("error creating directories: %w", err)
 	}
 
+	if err := state.ReaderWriter().MkdirAll(testsBasePath, 0755); err != nil {
+		return nil, fmt.Errorf("error creating test directory: %w", err)
+	}
+
+	// Write files
 	err = state.ReaderWriter().WriteFile(filenameWithBasePath, []byte(fileToWrite), 0644)
 	if err != nil {
 		return nil, fmt.Errorf("error writing file: %w", err)
 	}
 
+	err = state.ReaderWriter().WriteFile(testFilenameWithBasePath, []byte(testFileToWrite), 0644)
+	if err != nil {
+		return nil, fmt.Errorf("error writing test file: %w", err)
+	}
+
 	logger.Info(fmt.Sprintf("Generated new %s: %s at %s", templateType, name, filenameWithBasePath))
+	logger.Info(fmt.Sprintf("Generated new test file: %s at %s", name, testFilenameWithBasePath))
 
 	if templateType == "contract" {
-		state.Contracts().AddOrUpdate(config.Contract{Name: name, Location: filenameWithBasePath})
+		aliases := config.Aliases{{
+			Network: "testing",
+			Address: flow.HexToAddress("0x0000000000000007"),
+		}}
+
+		contract := config.Contract{
+			Name:     name,
+			Location: filenameWithBasePath,
+			Aliases:  aliases,
+		}
+		state.Contracts().AddOrUpdate(contract)
 		err = state.SaveDefault()
 		if err != nil {
 			return nil, fmt.Errorf("error saving to flow.json: %w", err)

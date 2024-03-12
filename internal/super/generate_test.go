@@ -40,13 +40,33 @@ func TestGenerateNewContract(t *testing.T) {
 	assert.NoError(t, err, "Failed to read generated file")
 	assert.NotNil(t, fileContent)
 
+	testContent, err := state.ReaderWriter().ReadFile("cadence/tests/TestContract_test.cdc")
+	assert.NoError(t, err, "Failed to read generated file")
+	assert.NotNil(t, testContent)
+
 	// Check content is correct
 	expectedContent := `
 access(all)
 contract TestContract {
     init() {}
 }`
+
+	expectedTestContent := `import Test
+
+access(all) let account = Test.createAccount()
+
+access(all) fun testContract() {
+    let err = Test.deployContract(
+        name: "TestContract",
+        path: "../contracts/TestContract.cdc",
+        arguments: [],
+    )
+
+    Test.expect(err, Test.beNil())
+}`
+
 	assert.Equal(t, expectedContent, string(fileContent))
+	assert.Equal(t, expectedTestContent, string(testContent))
 
 	// Test file already exists scenario
 	_, err = generateNew([]string{"TestContract"}, "contract", logger, state)
