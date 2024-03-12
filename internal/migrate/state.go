@@ -86,7 +86,14 @@ func migrateState(
 		rwf = &migration.NOOPReportWriterFactory{}
 	}
 
-	err = emulatorMigrate.MigrateCadence1(store, contracts, rwf, logger)
+	err = emulatorMigrate.MigrateCadence1(
+		store,
+		migrations.EVMContractChangeNone,
+		migrations.BurnerContractChangeDeploy,
+		contracts,
+		rwf,
+		logger,
+	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to migrate database: %w", err)
 	}
