@@ -169,6 +169,9 @@ func lintFiles(
 			FilePath:    location.String(),
 			Diagnostics: diagnosticList,
 		})
+		if len(diagnosticList) > 0 {
+			status = 1
+		}
 	}
 
 	return &lintResults{
@@ -300,6 +303,5 @@ func (r *lintResults) Oneliner() string {
 		return "No problems found"
 	}
 
-	status = 1
 	return fmt.Sprintf("Found %d problem(s)", problems)
 }

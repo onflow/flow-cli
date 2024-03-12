@@ -74,6 +74,8 @@ type Command struct {
 	Status *int
 }
 
+type ExitCodeKey struct{}
+
 const (
 	formatText   = "text"
 	formatInline = "inline"
@@ -163,6 +165,10 @@ func (c Command) AddToParent(parent *cobra.Command) {
 		handleError("Output Error", err)
 
 		wg.Wait()
+
+		if c.Status != nil {
+			os.Exit(*c.Status)
+		}
 	}
 
 	bindFlags(c)

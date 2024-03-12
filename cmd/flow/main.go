@@ -164,7 +164,8 @@ func main() {
 		util.Exit(1, err.Error())
 	}
 
-	if status := *test.TestCommand.Status; status > 0 {
-		os.Exit(int(status))
+	// Exit with the code added to the command context if it exists
+	if exitCode, ok := cmd.Context().Value(command.ExitCodeKey{}).(int); ok {
+		os.Exit(exitCode)
 	}
 }
