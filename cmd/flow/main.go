@@ -163,9 +163,4 @@ func main() {
 	if err := cmd.Execute(); err != nil {
 		util.Exit(1, err.Error())
 	}
-
-	// Exit with the code added to the command context if it exists
-	if exitCode, ok := cmd.Context().Value(command.ExitCodeKey{}).(int); ok {
-		os.Exit(exitCode)
-	}
 }

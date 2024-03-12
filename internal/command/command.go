@@ -19,7 +19,6 @@
 package command
 
 import (
-	"context"
 	"crypto/sha256"
 	"encoding/base64"
 	"errors"
@@ -68,14 +67,11 @@ type RunWithState func(
 ) (Result, error)
 
 type Command struct {
-	Cmd    *cobra.Command
-	Flags  any
-	Run    run
-	RunS   RunWithState
-	Status *int
+	Cmd   *cobra.Command
+	Flags any
+	Run   run
+	RunS  RunWithState
 }
-
-type ExitCodeKey struct{}
 
 const (
 	formatText   = "text"
@@ -167,11 +163,12 @@ func (c Command) AddToParent(parent *cobra.Command) {
 
 		wg.Wait()
 
-		if c.Status != nil {
-			rootCtx := cmd.Root().Context()
-			rootCtx = context.WithValue(rootCtx, ExitCodeKey{}, *c.Status)
-			cmd.Root().SetContext(rootCtx)
+		// exit with code if result has it
+		exitCode := 0
+		if res, ok := result.(ResultWithExitCode); ok {
+			exitCode = res.ExitCode()
 		}
+		os.Exit(exitCode)
 	}
 
 	bindFlags(c)

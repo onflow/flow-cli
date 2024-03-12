@@ -48,11 +48,13 @@ type lintResult struct {
 }
 
 type lintResults struct {
-	Results []lintResult
+	Results  []lintResult
+	exitCode int
 }
 
+var _ command.ResultWithExitCode = &lintResults{}
+
 var lintFlags = lintFlagsCollection{}
-var status = 0
 
 type convertibleError interface {
 	error
@@ -66,9 +68,8 @@ var lintCommand = &command.Command{
 		Example: "flow cadence lint **/*.cdc",
 		Args:    cobra.MinimumNArgs(1),
 	},
-	Flags:  &lintFlags,
-	RunS:   lint,
-	Status: &status,
+	Flags: &lintFlags,
+	RunS:  lint,
 }
 
 const (
@@ -92,7 +93,6 @@ func lint(
 	state *flowkit.State,
 ) (command.Result, error) {
 	locations := make([]common.Location, 0)
-
 	for _, filePath := range args {
 		locations = append(locations, common.StringLocation(filePath))
 	}
@@ -191,6 +191,7 @@ func lintFiles(
 	wg.Wait()
 
 	results := make([]lintResult, 0)
+	exitCode := 0
 	for _, location := range locations {
 		// Remove any diagnostics that are expected from the Cadence V1 Analyzer
 		// And combine the linter diagnostics with the error diagnostics
@@ -203,18 +204,19 @@ func lintFiles(
 			Diagnostics: diagnostics,
 		})
 
-		// Set the status to 1 if any of the diagnostics are error-level
+		// Set the exitCode to 1 if any of the diagnostics are error-level
 		for _, diagnostic := range diagnostics {
 			severity := getDiagnosticSeverity(diagnostic)
 			if severity == ErrorSeverity {
-				status = 1
+				exitCode = 1
 				break
 			}
 		}
 	}
 
 	return &lintResults{
-		Results: results,
+		Results:  results,
+		exitCode: exitCode,
 	}, nil
 }
 
@@ -431,4 +433,8 @@ func (r *lintResults) Oneliner() string {
 	}
 
 	return fmt.Sprintf("Found %d problem(s)", problems)
+}
+
+func (r *lintResults) ExitCode() int {
+	return r.exitCode
 }
