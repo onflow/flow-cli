@@ -95,7 +95,7 @@ func lintFiles(
 
 	// Only run linter on explicitly provided files
 	for _, location := range filePaths {
-		diagnostics, err := l.LintFile(location)
+		diagnostics, err := l.lintFile(location)
 		if err != nil {
 			return nil, err
 		}

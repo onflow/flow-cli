@@ -34,7 +34,8 @@ import (
 func Test_Lint(t *testing.T) {
 	state := setupMockState(t)
 
-	t.Run("results.exitCode matches result.ExitCode()", func(t *testing.T) {
+	// Test this to make sure that lintResult exit codes are actually propogated to CLI result
+	t.Run("results.exitCode exported via result.ExitCode()", func(t *testing.T) {
 		results := lintResults{
 			exitCode: 999,
 		}
@@ -165,6 +166,75 @@ func Test_Lint(t *testing.T) {
 			exitCode: 0,
 		})
 	})
+
+	t.Run("resolves stdlib imports contracts", func(t *testing.T) {
+		results, error := lintFiles(state, "StdlibImportsContract.cdc")
+		require.NoError(t, error)
+
+		// Expects an error because getAuthAccount is only available in scripts
+		require.Equal(t, results, &lintResults{
+			Results: []lintResult{
+				{
+					FilePath: "StdlibImportsContract.cdc",
+					Diagnostics: []analysis.Diagnostic{
+						{
+							Category:         "semantic-error",
+							Message:          "cannot find variable in this scope: `getAuthAccount`",
+							SecondaryMessage: "not found in this scope",
+							Location:         common.StringLocation("StdlibImportsContract.cdc"),
+							Range: ast.Range{
+								StartPos: ast.Position{Line: 7, Column: 13, Offset: 114},
+								EndPos:   ast.Position{Line: 7, Column: 26, Offset: 127},
+							},
+						},
+					},
+				},
+			},
+			exitCode: 1,
+		})
+	})
+
+	t.Run("resolves stdlib imports transactions", func(t *testing.T) {
+		results, error := lintFiles(state, "StdlibImportsTransaction.cdc")
+		require.NoError(t, error)
+
+		// Expects an error because getAuthAccount is only available in scripts
+		require.Equal(t, results, &lintResults{
+			Results: []lintResult{
+				{
+					FilePath: "StdlibImportsTransaction.cdc",
+					Diagnostics: []analysis.Diagnostic{
+						{
+							Category:         "semantic-error",
+							Message:          "cannot find variable in this scope: `getAuthAccount`",
+							SecondaryMessage: "not found in this scope",
+							Location:         common.StringLocation("StdlibImportsTransaction.cdc"),
+							Range: ast.Range{
+								StartPos: ast.Position{Line: 7, Column: 13, Offset: 113},
+								EndPos:   ast.Position{Line: 7, Column: 26, Offset: 126},
+							},
+						},
+					},
+				},
+			},
+			exitCode: 1,
+		})
+	})
+
+	t.Run("resolves stdlib imports scripts", func(t *testing.T) {
+		results, error := lintFiles(state, "StdlibImportsScript.cdc")
+		require.NoError(t, error)
+
+		require.Equal(t, results, &lintResults{
+			Results: []lintResult{
+				{
+					FilePath:    "StdlibImportsScript.cdc",
+					Diagnostics: []analysis.Diagnostic{},
+				},
+			},
+			exitCode: 0,
+		})
+	})
 }
 
 func setupMockState(t *testing.T) *flowkit.State {
@@ -186,7 +256,7 @@ func setupMockState(t *testing.T) *flowkit.State {
 	import "NoError"
 	access(all) contract WithFlowkitImport {
 		init() {
-			log(NoError.getType())
+			let foo = NoError.getType()
 		}
 	}
 	`), 0644)
@@ -208,6 +278,36 @@ func setupMockState(t *testing.T) *flowkit.State {
 		init() {
 			let test: PublicAccount = self.account
 		}
+	}`), 0644)
+	_ = afero.WriteFile(mockFs, "StdlibImportsContract.cdc", []byte(`
+	import Crypto
+	import Test
+	import BlockchainHelpers
+	access(all) contract WithImports{
+		init() {
+			let foo = getAuthAccount<&Account>(0x01)
+			log(RLP.getType())
+		}
+	}
+	`), 0644)
+	_ = afero.WriteFile(mockFs, "StdlibImportsTransaction.cdc", []byte(`
+	import Crypto
+	import Test
+	import BlockchainHelpers
+	transaction {
+		prepare(signer: &Account) {
+			let foo = getAuthAccount<&Account>(0x01)
+			log(RLP.getType())
+		}
+	}
+	`), 0644)
+	_ = afero.WriteFile(mockFs, "StdlibImportsScript.cdc", []byte(`
+	import Crypto
+	import Test
+	import BlockchainHelpers
+	access(all) fun main(): Void {
+		let foo = getAuthAccount<&Account>(0x01)
+		log(RLP.getType())
 	}`), 0644)
 
 	rw := afero.Afero{Fs: mockFs}

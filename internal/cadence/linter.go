@@ -50,7 +50,7 @@ func newLinter(state *flowkit.State) *linter {
 	return l
 }
 
-func (l *linter) LintFile(
+func (l *linter) lintFile(
 	filePath string,
 ) (
 	[]analysis.Diagnostic,
@@ -113,10 +113,6 @@ func (l *linter) LintFile(
 	analysisProgram.Run(analyzers, report)
 
 	return diagnostics, nil
-}
-
-func isErrorDiagnostic(diagnostic analysis.Diagnostic) bool {
-	return diagnostic.Category == ErrorCategory || diagnostic.Category == SemanticErrorCategory || diagnostic.Category == SyntaxErrorCategory
 }
 
 func (l *linter) newCheckerConfig(lib standardLibrary) *sema.Config {
@@ -332,4 +328,8 @@ func convertError(
 	}
 
 	return &diagnostic
+}
+
+func isErrorDiagnostic(diagnostic analysis.Diagnostic) bool {
+	return diagnostic.Category == ErrorCategory || diagnostic.Category == SemanticErrorCategory || diagnostic.Category == SyntaxErrorCategory
 }
