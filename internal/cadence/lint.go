@@ -58,12 +58,12 @@ var lintCommand = &command.Command{
 	RunS:  lint,
 }
 
+type severity string
+
 const (
 	errorSeverity   severity = "error"
 	warningSeverity severity = "warning"
 )
-
-type severity string
 
 func lint(
 	args []string,

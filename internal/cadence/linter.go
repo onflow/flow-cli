@@ -38,6 +38,8 @@ const (
 	ErrorCategory         = "error"
 )
 
+var analyzers = maps.Values(cadenceLint.Analyzers)
+
 func newLinter(state *flowkit.State) *linter {
 	l := &linter{
 		checkers: make(map[common.Location]*sema.Checker),
@@ -108,8 +110,6 @@ func (l *linter) lintFile(
 	report := func(diagnostic analysis.Diagnostic) {
 		diagnostics = append(diagnostics, diagnostic)
 	}
-
-	analyzers := maps.Values(cadenceLint.Analyzers)
 	analysisProgram.Run(analyzers, report)
 
 	return diagnostics, nil
