@@ -106,6 +106,7 @@ func lintFiles(
 		})
 
 		// Set the exitCode to 1 if any of the diagnostics are error-level
+		// In the future, this may be configurable
 		for _, diagnostic := range diagnostics {
 			severity := getDiagnosticSeverity(diagnostic)
 			if severity == errorSeverity {
