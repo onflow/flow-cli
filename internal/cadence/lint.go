@@ -22,19 +22,11 @@ import (
 	"fmt"
 	"slices"
 	"strings"
-	"sync"
 
 	"github.com/spf13/cobra"
-	"golang.org/x/exp/maps"
 
 	"github.com/charmbracelet/lipgloss"
 
-	cdcLint "github.com/onflow/cadence-tools/lint"
-	"github.com/onflow/cadence/runtime/ast"
-	"github.com/onflow/cadence/runtime/common"
-	"github.com/onflow/cadence/runtime/errors"
-	"github.com/onflow/cadence/runtime/parser"
-	"github.com/onflow/cadence/runtime/sema"
 	"github.com/onflow/cadence/tools/analysis"
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flowkit/v2"
@@ -56,11 +48,6 @@ var _ command.ResultWithExitCode = &lintResults{}
 
 var lintFlags = lintFlagsCollection{}
 
-type convertibleError interface {
-	error
-	ast.HasPosition
-}
-
 var lintCommand = &command.Command{
 	Cmd: &cobra.Command{
 		Use:     "lint [files]",
@@ -73,17 +60,11 @@ var lintCommand = &command.Command{
 }
 
 const (
-	SemanticErrorCategory = "semantic-error"
-	SyntaxErrorCategory   = "syntax-error"
-	ErrorCategory         = "error"
+	errorSeverity   severity = "error"
+	warningSeverity severity = "warning"
 )
 
-const (
-	ErrorSeverity   Severity = "error"
-	WarningSeverity Severity = "warning"
-)
-
-type Severity string
+type severity string
 
 func lint(
 	args []string,
@@ -92,12 +73,8 @@ func lint(
 	flow flowkit.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
-	locations := make([]common.Location, 0)
-	for _, filePath := range args {
-		locations = append(locations, common.StringLocation(filePath))
-	}
-
-	results, err := lintFiles(locations, state)
+	filePaths := args
+	results, err := lintFiles(state, filePaths...)
 	if err != nil {
 		return nil, err
 	}
@@ -106,108 +83,33 @@ func lint(
 }
 
 func lintFiles(
-	locations []common.Location,
 	state *flowkit.State,
+	filePaths ...string,
 ) (
 	*lintResults,
 	error,
 ) {
-	mutex := &sync.Mutex{}
-	linterDiagnostics := make(map[common.Location][]analysis.Diagnostic)
-	errorDiagnostics := make(map[common.Location][]analysis.Diagnostic)
-
-	processParserCheckerError := func(err error, location common.Location) error {
-		unwrapped := err
-		diagnostics, err := maybeProcessConvertableError(unwrapped, location)
-		if err != nil {
-			return err
-		}
-
-		mutex.Lock()
-		errorDiagnostics[location] = append(errorDiagnostics[location], diagnostics...)
-		mutex.Unlock()
-		return nil
-	}
-
-	config := &analysis.Config{
-		Mode: analysis.NeedTypes | analysis.NeedExtendedElaboration | analysis.NeedPositionInfo | analysis.NeedSyntax,
-		HandleParserError: func(err analysis.ParsingCheckingError, program *ast.Program) error {
-			if program == nil {
-				return err
-			}
-			return processParserCheckerError(err.Unwrap(), err.ImportLocation())
-		},
-		HandleCheckerError: func(err analysis.ParsingCheckingError, checker *sema.Checker) error {
-			if checker == nil {
-				return err
-			}
-			return processParserCheckerError(err.Unwrap(), err.ImportLocation())
-		},
-		ResolveCode: func(location common.Location, importingLocation common.Location, importRange ast.Range) ([]byte, error) {
-			if _, ok := location.(common.StringLocation); !ok {
-				return nil, fmt.Errorf("unsupported location type: %T", location)
-			}
-
-			originalLocation := location.String()
-			resolvedLocation := location
-
-			// If the location is not a .cdc file, it's a contract name
-			// Must resolve the contract name to a file location
-			if !strings.HasSuffix(originalLocation, ".cdc") {
-				contract, err := state.Contracts().ByName(originalLocation)
-				if err != nil {
-					return nil, fmt.Errorf("unable to resolve contract code: %w", err)
-				}
-
-				resolvedLocation = common.StringLocation(contract.Location)
-			}
-
-			return state.ReadFile(resolvedLocation.String())
-		},
-	}
-
-	programs, err := analysis.Load(config, locations...)
-	if err != nil {
-		return nil, err
-	}
-
-	// Only run linter on explicitly provided files
-	wg := &sync.WaitGroup{}
-	analyzers := maps.Values(cdcLint.Analyzers)
-	for _, location := range locations {
-		program := programs[location]
-
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			program.Run(analyzers, func(d analysis.Diagnostic) {
-				location := program.Location
-				mutex.Lock()
-				linterDiagnostics[location] = append(linterDiagnostics[location], d)
-				mutex.Unlock()
-			})
-		}()
-	}
-	wg.Wait()
-
+	l := newLinter(state)
 	results := make([]lintResult, 0)
 	exitCode := 0
-	for _, location := range locations {
-		// Remove any diagnostics that are expected from the Cadence V1 Analyzer
-		// And combine the linter diagnostics with the error diagnostics
-		diagnostics := removeExpectedCadenceV1Errors(linterDiagnostics[location], errorDiagnostics[location])
-		diagnostics = append(diagnostics, linterDiagnostics[location]...)
-		sortDiagnostics(diagnostics)
 
+	// Only run linter on explicitly provided files
+	for _, location := range filePaths {
+		diagnostics, err := l.LintFile(location)
+		if err != nil {
+			return nil, err
+		}
+
+		sortDiagnostics(diagnostics)
 		results = append(results, lintResult{
-			FilePath:    location.String(),
+			FilePath:    location,
 			Diagnostics: diagnostics,
 		})
 
 		// Set the exitCode to 1 if any of the diagnostics are error-level
 		for _, diagnostic := range diagnostics {
 			severity := getDiagnosticSeverity(diagnostic)
-			if severity == ErrorSeverity {
+			if severity == errorSeverity {
 				exitCode = 1
 				break
 			}
@@ -220,141 +122,13 @@ func lintFiles(
 	}, nil
 }
 
-func maybeProcessConvertableError(
-	err error,
-	location common.Location,
-) (
-	[]analysis.Diagnostic,
-	error,
-) {
-	diagnostics := make([]analysis.Diagnostic, 0)
-	if parentErr, ok := err.(errors.ParentError); ok {
-		checkerDiagnostics, err := getDiagnosticsForParentError(parentErr, location)
-		if err != nil {
-			return nil, err
-		}
-
-		diagnostics = append(diagnostics, checkerDiagnostics...)
-	}
-	return diagnostics, nil
-}
-
-func getDiagnosticsForParentError(err errors.ParentError, location common.Location) ([]analysis.Diagnostic, error) {
-	diagnostics := make([]analysis.Diagnostic, 0)
-
-	for _, childErr := range err.ChildErrors() {
-		convertibleErr, ok := childErr.(convertibleError)
-		if !ok {
-			return nil, fmt.Errorf("unable to convert non-convertable error to diagnostic: %T", childErr)
-		}
-		diagnostic := convertError(convertibleErr, location)
-		if diagnostic == nil {
-			continue
-		}
-
-		diagnostics = append(diagnostics, *diagnostic)
-	}
-
-	return diagnostics, nil
-}
-
-// This function is used to remove expected errors from the diagnostics
-// It will remove all diagnostics that overlap wholly with those provided
-// by the Cadence V1 Analyzer
-//
-// It's imperfect, but it reduces redundancy/confusion.  The implementation
-// is somewhat inefficient and using an interval tree would be better.
-func removeExpectedCadenceV1Errors(
-	linterDiagnostics []analysis.Diagnostic,
-	errorDiagnostics []analysis.Diagnostic,
-) []analysis.Diagnostic {
-	cadenceV1Ranges := make([]ast.Range, 0)
-	for _, diagnostic := range linterDiagnostics {
-		if diagnostic.Category == cdcLint.CadenceV1Category {
-			cadenceV1Ranges = append(cadenceV1Ranges, diagnostic.Range)
-		}
-	}
-
-	// remove any diagnostics that overlap with the Cadence V1 ranges
-	filteredDiagnostics := make([]analysis.Diagnostic, 0)
-	for _, diagnostic := range errorDiagnostics {
-		if diagnostic.Category == cdcLint.CadenceV1Category {
-			filteredDiagnostics = append(filteredDiagnostics, diagnostic)
-			continue
-		}
-
-		overlap := false
-		for _, cadenceV1Range := range cadenceV1Ranges {
-			if ast.RangeContains(nil, cadenceV1Range, diagnostic.Range) {
-				overlap = true
-				break
-			}
-		}
-
-		if !overlap {
-			filteredDiagnostics = append(filteredDiagnostics, diagnostic)
-		}
-	}
-
-	return filteredDiagnostics
-}
-
 func getDiagnosticSeverity(
 	diagnostic analysis.Diagnostic,
-) Severity {
-	switch diagnostic.Category {
-	case SemanticErrorCategory:
-		return ErrorSeverity
-	case SyntaxErrorCategory:
-		return ErrorSeverity
-	case ErrorCategory:
-		return ErrorSeverity
-	case cdcLint.CadenceV1Category:
-		return ErrorSeverity
-	default:
-		return WarningSeverity
+) severity {
+	if isErrorDiagnostic(diagnostic) {
+		return errorSeverity
 	}
-}
-
-func convertError(
-	err convertibleError,
-	location common.Location,
-) *analysis.Diagnostic {
-	startPosition := err.StartPosition()
-	endPosition := err.EndPosition(nil)
-
-	var message string
-	var secondaryMessage string
-
-	message = err.Error()
-	if secondaryError, ok := err.(errors.SecondaryError); ok {
-		secondaryMessage = secondaryError.SecondaryError()
-	}
-
-	suggestedFixes := make([]analysis.SuggestedFix, 0)
-
-	category := ErrorCategory
-	if _, ok := err.(sema.SemanticError); ok {
-		category = SemanticErrorCategory
-	} else if _, ok := err.(*parser.SyntaxError); ok {
-		category = SyntaxErrorCategory
-	} else if _, ok := err.(*parser.SyntaxErrorWithSuggestedReplacement); ok {
-		category = SyntaxErrorCategory
-	}
-
-	diagnostic := analysis.Diagnostic{
-		Location:         location,
-		Category:         category,
-		Message:          message,
-		SecondaryMessage: secondaryMessage,
-		SuggestedFixes:   suggestedFixes,
-		Range: ast.Range{
-			StartPos: startPosition,
-			EndPos:   endPosition,
-		},
-	}
-
-	return &diagnostic
+	return warningSeverity
 }
 
 // Sort diagnostics in order of precedence: start pos -> category -> message
@@ -378,7 +152,7 @@ func sortDiagnostics(
 func renderDiagnostic(diagnostic analysis.Diagnostic) string {
 	locationColor := lipgloss.Color("#A9B7C6")
 	categoryColor := lipgloss.Color("#FF3E3E")
-	if getDiagnosticSeverity(diagnostic) == WarningSeverity {
+	if getDiagnosticSeverity(diagnostic) == warningSeverity {
 		categoryColor = lipgloss.Color("#FFA500")
 	}
 
