@@ -23,9 +23,8 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/logrusorgru/aurora/v4"
 	"github.com/spf13/cobra"
-
-	"github.com/charmbracelet/lipgloss"
 
 	"github.com/onflow/cadence/tools/analysis"
 	"github.com/onflow/flow-cli/internal/command"
@@ -150,10 +149,9 @@ func sortDiagnostics(
 }
 
 func renderDiagnostic(diagnostic analysis.Diagnostic) string {
-	locationColor := lipgloss.Color("#A9B7C6")
-	categoryColor := lipgloss.Color("#FF3E3E")
+	categoryColor := aurora.RedFg
 	if getDiagnosticSeverity(diagnostic) == warningSeverity {
-		categoryColor = lipgloss.Color("#FFA500")
+		categoryColor = aurora.YellowFg
 	}
 
 	startPos := diagnostic.Range.StartPos
@@ -161,8 +159,8 @@ func renderDiagnostic(diagnostic analysis.Diagnostic) string {
 	categoryText := fmt.Sprintf("%s:", diagnostic.Category)
 
 	return fmt.Sprintf("%s %s %s",
-		lipgloss.NewStyle().Foreground(locationColor).Render(locationText),
-		lipgloss.NewStyle().Foreground(categoryColor).Render(categoryText),
+		aurora.Gray(12, locationText).String(),
+		aurora.Colorize(categoryText, categoryColor).String(),
 		diagnostic.Message,
 	)
 }
@@ -184,9 +182,9 @@ func (r *lintResults) String() string {
 	}
 
 	if numProblems == 0 {
-		sb.WriteString(lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#1FEE8A")).Render("✅ No problems found"))
+		sb.WriteString("No problems found")
 	} else {
-		sb.WriteString(lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#FF3E3E")).Render(fmt.Sprintf("❌ Found %d problem(s)", numProblems)))
+		sb.WriteString(aurora.Red(fmt.Sprintf("Found %d problem(s)", numProblems)).String())
 	}
 
 	return sb.String()
