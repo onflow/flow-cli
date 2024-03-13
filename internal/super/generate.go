@@ -20,9 +20,10 @@ package super
 
 import (
 	"fmt"
-	flowsdk "github.com/onflow/flow-go-sdk"
 	"path/filepath"
 	"strings"
+
+	flowsdk "github.com/onflow/flow-go-sdk"
 
 	"github.com/onflow/flowkit/config"
 
