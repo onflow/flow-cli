@@ -215,7 +215,7 @@ fun main() {
 
 	logger.Info(fmt.Sprintf("Generated new %s: %s at %s", templateType, name, filenameWithBasePath))
 
-	if generateFlags.SkipTests != true {
+	if generateFlags.SkipTests != true && templateType == "contract" {
 		if _, err := state.ReaderWriter().ReadFile(testFilenameWithBasePath); err == nil {
 			return nil, fmt.Errorf("file already exists: %s", testFilenameWithBasePath)
 		}
