@@ -66,9 +66,9 @@ func (l *linter) lintFile(
 		return nil, err
 	}
 
-	program, err := parser.ParseProgram(nil, code, parser.Config{})
-	if err != nil {
-		errorDiagnostics, err := maybeProcessConvertableError(err, location)
+	program, parseErr := parser.ParseProgram(nil, code, parser.Config{})
+	if parseErr != nil {
+		errorDiagnostics, err := maybeProcessConvertableError(parseErr, location)
 		if err != nil {
 			return nil, err
 		}
@@ -76,6 +76,7 @@ func (l *linter) lintFile(
 		diagnostics = append(diagnostics, errorDiagnostics...)
 	}
 
+	// If the program is nil, nothing can be checked & analyzed so return early
 	if program == nil {
 		return diagnostics, nil
 	}
@@ -209,8 +210,8 @@ func (l *linter) handleLocation(
 	[]sema.ResolvedLocation,
 	error,
 ) {
-	if _, isAddress := location.(common.AddressLocation); isAddress {
-		return nil, fmt.Errorf("address locations are not supported")
+	if _, ok := location.(common.StringLocation); !ok {
+		return nil, fmt.Errorf("unsupported location: %T", location)
 	}
 
 	return []runtime.ResolvedLocation{
@@ -230,7 +231,7 @@ func (l *linter) resolveImportFilepath(
 ) {
 	switch location := location.(type) {
 	case common.StringLocation:
-		// if the location is not a cadence file try getting the code by identifier
+		// If the location is not a cadence file try getting the code by identifier
 		if !strings.Contains(location.String(), ".cdc") {
 			contract, err := l.state.Contracts().ByName(location.String())
 			if err != nil {
@@ -240,6 +241,7 @@ func (l *linter) resolveImportFilepath(
 			return contract.Location, nil
 		}
 
+		// If the location is a cadence file, resolve relative to the parent location
 		parentPath := ""
 		if parentLocation != nil {
 			parentPath = parentLocation.String()

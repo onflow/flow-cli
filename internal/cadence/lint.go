@@ -93,13 +93,13 @@ func lintFiles(
 	results := make([]lintResult, 0)
 	exitCode := 0
 
-	// Only run linter on explicitly provided files
 	for _, location := range filePaths {
 		diagnostics, err := l.lintFile(location)
 		if err != nil {
 			return nil, err
 		}
 
+		// Sort for consistent output
 		sortDiagnostics(diagnostics)
 		results = append(results, lintResult{
 			FilePath:    location,
@@ -133,7 +133,6 @@ func getDiagnosticSeverity(
 }
 
 // Sort diagnostics in order of precedence: start pos -> category -> message
-// Ensures that diagnostics are always in a consistent order
 func sortDiagnostics(
 	diagnostics []analysis.Diagnostic,
 ) {
