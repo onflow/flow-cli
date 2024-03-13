@@ -45,8 +45,7 @@ func TestGenerateNewContract(t *testing.T) {
 	assert.NotNil(t, testContent)
 
 	// Check content is correct
-	expectedContent := `
-access(all)
+	expectedContent := `access(all)
 contract TestContract {
     init() {}
 }`
@@ -176,8 +175,7 @@ func TestGenerateNewWithDirFlag(t *testing.T) {
 	assert.NoError(t, err, "Failed to read generated file")
 	assert.NotNil(t, content)
 
-	expectedContent := `
-access(all)
+	expectedContent := `access(all)
 contract TestContract {
     init() {}
 }`
