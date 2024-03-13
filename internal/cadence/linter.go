@@ -7,7 +7,6 @@ import (
 
 	cadenceLint "github.com/onflow/cadence-tools/lint"
 	cdcTests "github.com/onflow/cadence-tools/test/helpers"
-	"github.com/onflow/cadence/runtime"
 	"github.com/onflow/cadence/runtime/ast"
 	"github.com/onflow/cadence/runtime/common"
 	"github.com/onflow/cadence/runtime/errors"
@@ -124,7 +123,6 @@ func (l *linter) newCheckerConfig(lib standardLibrary) *sema.Config {
 		AccessCheckMode:            sema.AccessCheckModeStrict,
 		PositionInfoEnabled:        true,
 		ExtendedElaborationEnabled: true,
-		LocationHandler:            l.handleLocation,
 		ImportHandler:              l.handleImport,
 		AttachmentsEnabled:         true,
 	}
@@ -201,25 +199,6 @@ func (l *linter) handleImport(
 			Elaboration: importedChecker.Elaboration,
 		}, nil
 	}
-}
-
-func (l *linter) handleLocation(
-	identifiers []ast.Identifier,
-	location common.Location,
-) (
-	[]sema.ResolvedLocation,
-	error,
-) {
-	if _, ok := location.(common.StringLocation); !ok {
-		return nil, fmt.Errorf("unsupported location: %T", location)
-	}
-
-	return []runtime.ResolvedLocation{
-		{
-			Location:    location,
-			Identifiers: identifiers,
-		},
-	}, nil
 }
 
 func (l *linter) resolveImportFilepath(
