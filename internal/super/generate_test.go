@@ -92,6 +92,23 @@ func TestGenerateNewContractSkipTests(t *testing.T) {
 	assert.Nil(t, testContent)
 }
 
+func TestGenerateNewContractWithCDCExtension(t *testing.T) {
+	logger := output.NewStdoutLogger(output.NoneLog)
+	_, state, _ := util.TestMocks(t)
+
+	// Test contract generation
+	_, err := generateNew([]string{"Tester.cdc"}, "contract", logger, state)
+	assert.NoError(t, err, "Failed to generate contract")
+
+	fileContent, err := state.ReaderWriter().ReadFile("cadence/contracts/Tester.cdc")
+	assert.NoError(t, err, "Failed to read generated file")
+	assert.NotNil(t, fileContent)
+
+	testContent, err := state.ReaderWriter().ReadFile("cadence/tests/Tester_test.cdc")
+	assert.NoError(t, err, "Failed to read generated file")
+	assert.NotNil(t, testContent)
+}
+
 func TestGenerateNewContractFileAlreadyExists(t *testing.T) {
 	logger := output.NewStdoutLogger(output.NoneLog)
 	_, state, _ := util.TestMocks(t)

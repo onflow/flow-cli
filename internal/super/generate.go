@@ -126,6 +126,10 @@ func addCDCExtension(name string) string {
 	return fmt.Sprintf("%s.cdc", name)
 }
 
+func stripCDCExtension(name string) string {
+	return strings.TrimSuffix(name, filepath.Ext(name))
+}
+
 func generateNew(
 	args []string,
 	templateType string,
@@ -136,8 +140,8 @@ func generateNew(
 		return nil, fmt.Errorf("invalid number of arguments")
 	}
 
-	name := args[0]
-	var filename = addCDCExtension(name)
+	name := stripCDCExtension(args[0])
+	filename := addCDCExtension(name)
 
 	var fileToWrite string
 	var testFileToWrite string
