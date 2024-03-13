@@ -237,7 +237,7 @@ fun main() {
 
 		if generateFlags.SkipTests != true {
 			aliases = config.Aliases{{
-				Network: "testing",
+				Network: config.TestingNetwork.Name,
 				Address: flowsdk.HexToAddress("0x0000000000000007"),
 			}}
 		}
