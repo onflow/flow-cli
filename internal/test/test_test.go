@@ -343,6 +343,7 @@ func TestExecutingTests(t *testing.T) {
 				"A.0000000000000001.EVM",
 				"A.0000000000000002.FungibleTokenSwitchboard",
 				"I.BlockchainHelpers",
+				"A.0000000000000001.Burner",
 			},
 			coverageReport.ExcludedLocationIDs(),
 		)
@@ -444,6 +445,7 @@ func TestExecutingTests(t *testing.T) {
 				"A.0000000000000001.EVM",
 				"A.0000000000000002.FungibleTokenSwitchboard",
 				"I.BlockchainHelpers",
+				"A.0000000000000001.Burner",
 			},
 			coverageReport.ExcludedLocationIDs(),
 		)
