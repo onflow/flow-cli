@@ -79,6 +79,10 @@ func TestGenerateNewContractSkipTests(t *testing.T) {
 
 	generateFlags.SkipTests = true
 
+	t.Cleanup(func() {
+		generateFlags.SkipTests = false
+	})
+
 	// Test contract generation
 	_, err := generateNew([]string{"TestContract"}, "contract", logger, state)
 	assert.NoError(t, err, "Failed to generate contract")
