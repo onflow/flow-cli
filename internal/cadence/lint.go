@@ -33,6 +33,7 @@ import (
 )
 
 type lintFlagsCollection struct{}
+
 type lintResult struct {
 	FilePath    string
 	Diagnostics []analysis.Diagnostic
