@@ -31,7 +31,8 @@ import (
 	"github.com/onflow/flow-evm-gateway/config"
 	flowsdk "github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
-	"github.com/onflow/flow-go/fvm/evm/emulator"
+	"github.com/onflow/flow-go/fvm/evm/types"
+	flowGo "github.com/onflow/flow-go/model/flow"
 	"github.com/onflow/flowkit/v2"
 	"github.com/onflow/flowkit/v2/output"
 	"github.com/spf13/cobra"
@@ -108,13 +109,20 @@ var gatewayCommand = &command.Command{
 		}
 		cfg.COAKey = pkey
 
-		cfg.FlowNetworkID = flagGateway.FlowNetworkID
+		switch flagGateway.FlowNetworkID {
+		case "previewnet":
+			cfg.FlowNetworkID = flowGo.Previewnet
+		case "emulator":
+			cfg.FlowNetworkID = flowGo.Emulator
+		default:
+			return nil, fmt.Errorf("flow network ID not supported, only possible to specify 'previewnet' or 'emulator'")
+		}
 
 		switch flagGateway.EVMNetworkID {
 		case "testnet":
-			cfg.EVMNetworkID = emulator.FlowEVMTestnetChainID
+			cfg.EVMNetworkID = types.FlowEVMTestnetChainID
 		case "mainnet":
-			cfg.EVMNetworkID = emulator.FlowEVMMainnetChainID
+			cfg.EVMNetworkID = types.FlowEVMMainnetChainID
 		default:
 			return nil, fmt.Errorf("EVM network ID not supported")
 		}
