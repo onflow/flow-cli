@@ -20,8 +20,9 @@ package cadence
 
 import (
 	"fmt"
-	"slices"
 	"strings"
+
+	"golang.org/x/exp/slices"
 
 	"github.com/logrusorgru/aurora/v4"
 	"github.com/spf13/cobra"
