@@ -146,7 +146,6 @@ func generateNew(
 	var fileToWrite string
 	var testFileToWrite string
 	var basePath string
-	var testsBasePath = "cadence/tests"
 
 	if generateFlags.Directory != "" {
 		basePath = generateFlags.Directory
@@ -198,7 +197,6 @@ fun main() {
 	}
 
 	filenameWithBasePath := filepath.Join(basePath, filename)
-	testFilenameWithBasePath := filepath.Join(testsBasePath, addCDCExtension(fmt.Sprintf("%s_test", name)))
 
 	// Check file existence
 	if _, err := state.ReaderWriter().ReadFile(filenameWithBasePath); err == nil {
@@ -219,6 +217,9 @@ fun main() {
 	logger.Info(fmt.Sprintf("Generated new %s: %s at %s", templateType, name, filenameWithBasePath))
 
 	if generateFlags.SkipTests != true && templateType == "contract" {
+		testsBasePath := "cadence/tests"
+		testFilenameWithBasePath := filepath.Join(testsBasePath, addCDCExtension(fmt.Sprintf("%s_test", name)))
+
 		if _, err := state.ReaderWriter().ReadFile(testFilenameWithBasePath); err == nil {
 			return nil, fmt.Errorf("file already exists: %s", testFilenameWithBasePath)
 		}
