@@ -19,9 +19,12 @@
 package super
 
 import (
+	"bytes"
+	"embed"
 	"fmt"
 	"path/filepath"
 	"strings"
+	"text/template"
 
 	flowsdk "github.com/onflow/flow-go-sdk"
 
@@ -35,6 +38,9 @@ import (
 
 	"github.com/spf13/cobra"
 )
+
+//go:embed templates/*.tmpl
+var templatesFS embed.FS
 
 type generateFlagsDef struct {
 	Directory string `default:"" flag:"dir" info:"Directory to generate files in"`
@@ -130,6 +136,28 @@ func stripCDCExtension(name string) string {
 	return strings.TrimSuffix(name, filepath.Ext(name))
 }
 
+// processTemplate reads a template file from the embedded filesystem and processes it with the provided data
+// If you don't need to provide data, pass nil
+func processTemplate(templatePath string, data map[string]interface{}) (string, error) {
+	templateData, err := templatesFS.ReadFile(templatePath)
+	if err != nil {
+		return "", fmt.Errorf("failed to read template file: %w", err)
+	}
+
+	tmpl, err := template.New("template").Parse(string(templateData))
+	if err != nil {
+		return "", fmt.Errorf("failed to parse template: %w", err)
+	}
+
+	var executedTemplate bytes.Buffer
+	// Execute the template with the provided data or nil if no data is needed
+	if err = tmpl.Execute(&executedTemplate, data); err != nil {
+		return "", fmt.Errorf("failed to execute template: %w", err)
+	}
+
+	return executedTemplate.String(), nil
+}
+
 func generateNew(
 	args []string,
 	templateType string,
@@ -164,34 +192,26 @@ func generateNew(
 
 	switch templateType {
 	case "contract":
-		fileToWrite = fmt.Sprintf(`access(all)
-contract %s {
-    init() {}
-}`, name)
-		testFileToWrite = fmt.Sprintf(`import Test
+		nameData := map[string]interface{}{"Name": name}
+		fileToWrite, err = processTemplate("templates/contract_init.cdc.tmpl", nameData)
+		if err != nil {
+			return nil, fmt.Errorf("error generating contract template: %w", err)
+		}
 
-access(all) let account = Test.createAccount()
-
-access(all) fun testContract() {
-    let err = Test.deployContract(
-        name: "%s",
-        path: "../contracts/%s.cdc",
-        arguments: [],
-    )
-
-    Test.expect(err, Test.beNil())
-}`, name, name)
+		testFileToWrite, err = processTemplate("templates/contract_init_test.cdc.tmpl", nameData)
+		if err != nil {
+			return nil, fmt.Errorf("error generating contract test template: %w", err)
+		}
 	case "script":
-		fileToWrite = `access(all)
-fun main() {
-    // Script details here
-}`
+		fileToWrite, err = processTemplate("templates/script_init.cdc.tmpl", nil)
+		if err != nil {
+			return nil, fmt.Errorf("error generating script template: %w", err)
+		}
 	case "transaction":
-		fileToWrite = `transaction() {
-    prepare(account:AuthAccount) {}
-
-    execute {}
-}`
+		fileToWrite, err = processTemplate("templates/transaction_init.cdc.tmpl", nil)
+		if err != nil {
+			return nil, fmt.Errorf("error generating transaction template: %w", err)
+		}
 	default:
 		return nil, fmt.Errorf("invalid template type: %s", templateType)
 	}
