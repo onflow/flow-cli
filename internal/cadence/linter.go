@@ -23,11 +23,13 @@ import (
 	"path/filepath"
 	"strings"
 
+	"errors"
+
 	cadenceLint "github.com/onflow/cadence-tools/lint"
 	cdcTests "github.com/onflow/cadence-tools/test/helpers"
 	"github.com/onflow/cadence/runtime/ast"
 	"github.com/onflow/cadence/runtime/common"
-	"github.com/onflow/cadence/runtime/errors"
+	cdcErrors "github.com/onflow/cadence/runtime/errors"
 	"github.com/onflow/cadence/runtime/parser"
 	"github.com/onflow/cadence/runtime/sema"
 	"github.com/onflow/cadence/runtime/stdlib"
@@ -86,14 +88,20 @@ func (l *linter) lintFile(
 	}
 	codeStr := string(code)
 
-	program, parseErr := parser.ParseProgram(nil, code, parser.Config{})
-	if parseErr != nil {
-		errorDiagnostics, err := getDiagnosticsForParsingCheckingError(parseErr, location, codeStr)
+	// Parse program & convert any parsing errors to diagnostics
+	program, parseProgramErr := parser.ParseProgram(nil, code, parser.Config{})
+	if parseProgramErr != nil {
+		var parserErr parser.Error
+		if !errors.As(parseProgramErr, &parserErr) {
+			return nil, fmt.Errorf("could not process parsing error: %s", parseProgramErr)
+		}
+
+		checkerDiagnostics, err := getDiagnosticsFromParentError(parserErr, location, codeStr)
 		if err != nil {
 			return nil, err
 		}
 
-		diagnostics = append(diagnostics, errorDiagnostics...)
+		diagnostics = append(diagnostics, checkerDiagnostics...)
 	}
 
 	// If the program is nil, nothing can be checked & analyzed so return early
@@ -101,6 +109,7 @@ func (l *linter) lintFile(
 		return diagnostics, nil
 	}
 
+	// Create checker based on program type
 	checker, err := sema.NewChecker(
 		program,
 		location,
@@ -111,23 +120,29 @@ func (l *linter) lintFile(
 		return nil, err
 	}
 
-	checkError := checker.Check()
-	if checkError != nil {
-		errorDiagnostics, err := getDiagnosticsForParsingCheckingError(checkError, location, codeStr)
+	// Check the program & convert any checking errors to diagnostics
+	checkProgramErr := checker.Check()
+	if checkProgramErr != nil {
+		var checkerErr sema.CheckerError
+		if !errors.As(checkProgramErr, &checkerErr) {
+			return nil, fmt.Errorf("could not process checking error: %s", checkProgramErr)
+		}
+
+		checkerDiagnostics, err := getDiagnosticsFromParentError(checkerErr, location, codeStr)
 		if err != nil {
 			return nil, err
 		}
 
-		diagnostics = append(diagnostics, errorDiagnostics...)
+		diagnostics = append(diagnostics, checkerDiagnostics...)
 	}
 
+	// Run analysis on the program
 	analysisProgram := analysis.Program{
 		Program:  program,
 		Checker:  checker,
 		Location: checker.Location,
 		Code:     []byte(code),
 	}
-
 	report := func(diagnostic analysis.Diagnostic) {
 		diagnostics = append(diagnostics, diagnostic)
 	}
@@ -160,6 +175,7 @@ func (l *linter) decideCheckerConfig(program *ast.Program) *sema.Config {
 	return l.checkerScriptConfig
 }
 
+// Resolve any imports found in the program while checking
 func (l *linter) handleImport(
 	checker *sema.Checker,
 	importedLocation common.Location,
@@ -260,37 +276,16 @@ func (l *linter) resolveImportFilepath(
 
 // helpers
 
-func getDiagnosticsForParsingCheckingError(
-	err error,
-	location common.Location,
-	code string,
-) (
-	[]analysis.Diagnostic,
-	error,
-) {
-	parentErr, ok := err.(errors.ParentError)
-
-	if !ok {
-		return nil, fmt.Errorf("could not process parsing/checking error: %s", err)
-	}
-
-	checkerDiagnostics, err := getDiagnosticsForParentError(parentErr, location, code)
-	if err != nil {
-		return nil, err
-	}
-
-	return checkerDiagnostics, nil
-}
-
-func getDiagnosticsForParentError(err errors.ParentError, location common.Location, code string) ([]analysis.Diagnostic, error) {
+func getDiagnosticsFromParentError(err cdcErrors.ParentError, location common.Location, code string) ([]analysis.Diagnostic, error) {
 	diagnostics := make([]analysis.Diagnostic, 0)
 
 	for _, childErr := range err.ChildErrors() {
-		convertibleErr, ok := childErr.(positionedError)
-		if !ok {
-			return nil, fmt.Errorf("could not process parsing/checking error: %s", childErr)
+		var positionedErr positionedError
+		if !errors.As(childErr, &positionedErr) {
+			return nil, fmt.Errorf("could not process error: %s", childErr)
 		}
-		diagnostic := convertPositionedErrorToDiagnostic(convertibleErr, location, code)
+
+		diagnostic := convertPositionedErrorToDiagnostic(positionedErr, location, code)
 		if diagnostic == nil {
 			continue
 		}
@@ -306,28 +301,34 @@ func convertPositionedErrorToDiagnostic(
 	location common.Location,
 	code string,
 ) *analysis.Diagnostic {
+	message := err.Error()
 	startPosition := err.StartPosition()
 	endPosition := err.EndPosition(nil)
 
-	var message string
 	var secondaryMessage string
-
-	message = err.Error()
-	if secondaryError, ok := err.(errors.SecondaryError); ok {
-		secondaryMessage = secondaryError.SecondaryError()
+	var secondaryErr cdcErrors.SecondaryError
+	if errors.As(err, &secondaryErr) {
+		secondaryMessage = secondaryErr.SecondaryError()
 	}
 
-	category := ErrorCategory
-	if _, ok := err.(sema.SemanticError); ok {
+	var category string
+	var semanticErr sema.SemanticError
+	var syntaxErr *parser.SyntaxError
+	var syntaxErrWithSuggestedReplacement *parser.SyntaxErrorWithSuggestedReplacement
+	switch {
+	case errors.As(err, &semanticErr):
 		category = SemanticErrorCategory
-	} else if _, ok := err.(*parser.SyntaxError); ok {
+	case errors.As(err, &syntaxErr):
 		category = SyntaxErrorCategory
-	} else if _, ok := err.(*parser.SyntaxErrorWithSuggestedReplacement); ok {
+	case errors.As(err, &syntaxErrWithSuggestedReplacement):
 		category = SyntaxErrorCategory
+	default:
+		category = ErrorCategory
 	}
 
-	var suggestedFixes []errors.SuggestedFix[ast.TextEdit]
-	if errWithFixes, ok := err.(errors.HasSuggestedFixes[ast.TextEdit]); ok {
+	var suggestedFixes []cdcErrors.SuggestedFix[ast.TextEdit]
+	var errWithFixes cdcErrors.HasSuggestedFixes[ast.TextEdit]
+	if errors.As(err, &errWithFixes) {
 		suggestedFixes = errWithFixes.SuggestFixes(code)
 	}
 
