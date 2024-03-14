@@ -31,7 +31,7 @@ var ansiRegex = regexp.MustCompile(`\x1B\[[0-9;]*[a-zA-Z]`)
 var AllHelp = &cobra.Command{
 	Use:     "all-help",
 	Short:   "Outputs help for all the CLI commands",
-	Example: "flow cheat sheet",
+	Example: "flow cheatsheet",
 	Run: func(
 		c *cobra.Command,
 		args []string,
@@ -39,7 +39,7 @@ var AllHelp = &cobra.Command{
 		root := c.Root()
 		r, err := generateCS(root)
 		if err != nil {
-			fmt.Printf("Error generating cheat sheet: %s", root.Name())
+			fmt.Printf("Error generating cheatsheet: %s", root.Name())
 		}
 		fmt.Println(r)
 	},
