@@ -37,13 +37,13 @@ import (
 )
 
 type linter struct {
-	checkers              map[common.Location]*sema.Checker
+	checkers              map[string]*sema.Checker
 	state                 *flowkit.State
 	checkerStandardConfig *sema.Config
 	checkerScriptConfig   *sema.Config
 }
 
-type convertibleError interface {
+type positionedError interface {
 	error
 	ast.HasPosition
 }
@@ -59,10 +59,12 @@ var analyzers = maps.Values(cadenceLint.Analyzers)
 
 func newLinter(state *flowkit.State) *linter {
 	l := &linter{
-		checkers: make(map[common.Location]*sema.Checker),
+		checkers: make(map[string]*sema.Checker),
 		state:    state,
 	}
 
+	// Create checker configs for both standard and script
+	// Scripts have a different stdlib than contracts and transactions
 	l.checkerStandardConfig = l.newCheckerConfig(newStandardLibrary())
 	l.checkerScriptConfig = l.newCheckerConfig(newScriptStandardLibrary())
 
@@ -82,10 +84,11 @@ func (l *linter) lintFile(
 	if err != nil {
 		return nil, err
 	}
+	codeStr := string(code)
 
 	program, parseErr := parser.ParseProgram(nil, code, parser.Config{})
 	if parseErr != nil {
-		errorDiagnostics, err := maybeProcessConvertableError(parseErr, location)
+		errorDiagnostics, err := getDiagnosticsForParsingCheckingError(parseErr, location, codeStr)
 		if err != nil {
 			return nil, err
 		}
@@ -110,7 +113,7 @@ func (l *linter) lintFile(
 
 	checkError := checker.Check()
 	if checkError != nil {
-		errorDiagnostics, err := maybeProcessConvertableError(checkError, location)
+		errorDiagnostics, err := getDiagnosticsForParsingCheckingError(checkError, location, codeStr)
 		if err != nil {
 			return nil, err
 		}
@@ -133,19 +136,22 @@ func (l *linter) lintFile(
 	return diagnostics, nil
 }
 
+// Create a new checker config with the given standard library
 func (l *linter) newCheckerConfig(lib standardLibrary) *sema.Config {
 	return &sema.Config{
 		BaseValueActivationHandler: func(_ common.Location) *sema.VariableActivation {
 			return lib.baseValueActivation
 		},
 		AccessCheckMode:            sema.AccessCheckModeStrict,
-		PositionInfoEnabled:        true,
-		ExtendedElaborationEnabled: true,
+		PositionInfoEnabled:        true, // Must be enabled for linters
+		ExtendedElaborationEnabled: true, // Must be enabled for linters
 		ImportHandler:              l.handleImport,
+		SuggestionsEnabled:         true, // Must be enabled to offer semantic suggestions
 		AttachmentsEnabled:         true,
 	}
 }
 
+// Choose the checker config based on the assumed type of the program
 func (l *linter) decideCheckerConfig(program *ast.Program) *sema.Config {
 	if program.SoleTransactionDeclaration() != nil || program.SoleContractDeclaration() != nil {
 		return l.checkerStandardConfig
@@ -179,13 +185,13 @@ func (l *linter) handleImport(
 			Elaboration: helpersChecker.Elaboration,
 		}, nil
 	default:
-		importedChecker, ok := l.checkers[importedLocation]
-		if !ok {
-			filepath, err := l.resolveImportFilepath(importedLocation, checker.Location)
-			if err != nil {
-				return nil, err
-			}
+		filepath, err := l.resolveImportFilepath(importedLocation, checker.Location)
+		if err != nil {
+			return nil, err
+		}
 
+		importedChecker, ok := l.checkers[filepath]
+		if !ok {
 			code, err := l.state.ReadFile(filepath)
 			if err != nil {
 				return nil, err
@@ -206,7 +212,8 @@ func (l *linter) handleImport(
 			if err != nil {
 				return nil, err
 			}
-			l.checkers[importedLocation] = importedChecker
+
+			l.checkers[filepath] = importedChecker
 			err = importedChecker.Check()
 			if err != nil {
 				return nil, err
@@ -253,34 +260,37 @@ func (l *linter) resolveImportFilepath(
 
 // helpers
 
-func maybeProcessConvertableError(
+func getDiagnosticsForParsingCheckingError(
 	err error,
 	location common.Location,
+	code string,
 ) (
 	[]analysis.Diagnostic,
 	error,
 ) {
-	diagnostics := make([]analysis.Diagnostic, 0)
-	if parentErr, ok := err.(errors.ParentError); ok {
-		checkerDiagnostics, err := getDiagnosticsForParentError(parentErr, location)
-		if err != nil {
-			return nil, err
-		}
+	parentErr, ok := err.(errors.ParentError)
 
-		diagnostics = append(diagnostics, checkerDiagnostics...)
+	if !ok {
+		return nil, fmt.Errorf("could not process parsing/checking error: %s", err)
 	}
-	return diagnostics, nil
+
+	checkerDiagnostics, err := getDiagnosticsForParentError(parentErr, location, code)
+	if err != nil {
+		return nil, err
+	}
+
+	return checkerDiagnostics, nil
 }
 
-func getDiagnosticsForParentError(err errors.ParentError, location common.Location) ([]analysis.Diagnostic, error) {
+func getDiagnosticsForParentError(err errors.ParentError, location common.Location, code string) ([]analysis.Diagnostic, error) {
 	diagnostics := make([]analysis.Diagnostic, 0)
 
 	for _, childErr := range err.ChildErrors() {
-		convertibleErr, ok := childErr.(convertibleError)
+		convertibleErr, ok := childErr.(positionedError)
 		if !ok {
-			return nil, fmt.Errorf("unable to convert non-convertable error to diagnostic: %T", childErr)
+			return nil, fmt.Errorf("could not process parsing/checking error: %s", childErr)
 		}
-		diagnostic := convertError(convertibleErr, location)
+		diagnostic := convertPositionedErrorToDiagnostic(convertibleErr, location, code)
 		if diagnostic == nil {
 			continue
 		}
@@ -291,9 +301,10 @@ func getDiagnosticsForParentError(err errors.ParentError, location common.Locati
 	return diagnostics, nil
 }
 
-func convertError(
-	err convertibleError,
+func convertPositionedErrorToDiagnostic(
+	err positionedError,
 	location common.Location,
+	code string,
 ) *analysis.Diagnostic {
 	startPosition := err.StartPosition()
 	endPosition := err.EndPosition(nil)
@@ -315,6 +326,11 @@ func convertError(
 		category = SyntaxErrorCategory
 	}
 
+	var suggestedFixes []errors.SuggestedFix[ast.TextEdit]
+	if errWithFixes, ok := err.(errors.HasSuggestedFixes[ast.TextEdit]); ok {
+		suggestedFixes = errWithFixes.SuggestFixes(code)
+	}
+
 	diagnostic := analysis.Diagnostic{
 		Location:         location,
 		Category:         category,
@@ -324,6 +340,7 @@ func convertError(
 			StartPos: startPosition,
 			EndPos:   endPosition,
 		},
+		SuggestedFixes: suggestedFixes,
 	}
 
 	return &diagnostic

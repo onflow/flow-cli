@@ -16,6 +16,8 @@
  * limitations under the License.
  */
 
+// NOTE: This file is a copy of the file https://github.com/onflow/cadence-tools/blob/master/languageserver/server/stdlib.go
+
 package cadence
 
 import (
