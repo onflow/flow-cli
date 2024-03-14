@@ -49,13 +49,11 @@ func generateCS(c *cobra.Command) (string, error) {
 	cmd := c.Root()
 	var helpTexts strings.Builder
 
-	helpTexts.WriteString("```")
 	// Generate the help texts
 	generateCommandHelpTexts(cmd, &helpTexts)
 	globalFlags := getGlobalFlagsHelp(cmd)
 	helpTexts.WriteString("\n\n---------------\n\n")
 	helpTexts.WriteString(globalFlags)
-	helpTexts.WriteString("```")
 
 	return helpTexts.String(), nil
 
