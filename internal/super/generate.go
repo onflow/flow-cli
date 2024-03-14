@@ -19,9 +19,12 @@
 package super
 
 import (
+	"bytes"
+	"embed"
 	"fmt"
 	"path/filepath"
 	"strings"
+	"text/template"
 
 	flowsdk "github.com/onflow/flow-go-sdk"
 
@@ -35,6 +38,9 @@ import (
 
 	"github.com/spf13/cobra"
 )
+
+//go:embed templates/*.tmpl
+var templatesFS embed.FS
 
 type generateFlagsDef struct {
 	Directory string `default:"" flag:"dir" info:"Directory to generate files in"`
@@ -130,6 +136,61 @@ func stripCDCExtension(name string) string {
 	return strings.TrimSuffix(name, filepath.Ext(name))
 }
 
+func generateContractTemplate(name string) (string, error) {
+	data, err := templatesFS.ReadFile("templates/contract_init.cdc.tmpl")
+	if err != nil {
+		return "", err
+	}
+
+	tmpl, err := template.New("contract").Parse(string(data))
+	if err != nil {
+		return "", err
+	}
+
+	var executedTemplate bytes.Buffer
+
+	err = tmpl.Execute(&executedTemplate, struct {
+		Name string
+	}{Name: name})
+	if err != nil {
+		return "", err
+	}
+
+	return executedTemplate.String(), nil
+}
+
+func getContractTestTemplate(name string) (string, error) {
+	data, err := templatesFS.ReadFile("templates/contract_init_test.cdc.tmpl")
+	if err != nil {
+		return "", err
+	}
+
+	tmpl, err := template.New("contract_test").Parse(string(data))
+	if err != nil {
+		return "", err
+	}
+
+	var executedTemplate bytes.Buffer
+
+	err = tmpl.Execute(&executedTemplate, struct {
+		Name string
+	}{Name: name})
+	if err != nil {
+		return "", err
+	}
+
+	return executedTemplate.String(), nil
+}
+
+func getTemplateWithNoArgs(templateName string) (string, error) {
+	data, err := templatesFS.ReadFile(fmt.Sprintf("templates/%s.cdc.tmpl", templateName))
+	if err != nil {
+		return "", err
+	}
+
+	return string(data), nil
+}
+
 func generateNew(
 	args []string,
 	templateType string,
@@ -164,34 +225,25 @@ func generateNew(
 
 	switch templateType {
 	case "contract":
-		fileToWrite = fmt.Sprintf(`access(all)
-contract %s {
-    init() {}
-}`, name)
-		testFileToWrite = fmt.Sprintf(`import Test
+		fileToWrite, err = generateContractTemplate(name)
+		if err != nil {
+			return nil, fmt.Errorf("error generating contract template: %w", err)
+		}
 
-access(all) let account = Test.createAccount()
-
-access(all) fun testContract() {
-    let err = Test.deployContract(
-        name: "%s",
-        path: "../contracts/%s.cdc",
-        arguments: [],
-    )
-
-    Test.expect(err, Test.beNil())
-}`, name, name)
+		testFileToWrite, err = getContractTestTemplate(name)
+		if err != nil {
+			return nil, fmt.Errorf("error generating contract test template: %w", err)
+		}
 	case "script":
-		fileToWrite = `access(all)
-fun main() {
-    // Script details here
-}`
+		fileToWrite, err = getTemplateWithNoArgs("script_init")
+		if err != nil {
+			return nil, fmt.Errorf("error generating script template: %w", err)
+		}
 	case "transaction":
-		fileToWrite = `transaction() {
-    prepare(account:AuthAccount) {}
-
-    execute {}
-}`
+		fileToWrite, err = getTemplateWithNoArgs("transaction_init")
+		if err != nil {
+			return nil, fmt.Errorf("error generating transaction template: %w", err)
+		}
 	default:
 		return nil, fmt.Errorf("invalid template type: %s", templateType)
 	}
