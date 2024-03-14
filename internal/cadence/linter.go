@@ -91,7 +91,7 @@ func (l *linter) lintFile(
 	// Parse program & convert any parsing errors to diagnostics
 	program, parseProgramErr := parser.ParseProgram(nil, code, parser.Config{})
 	if parseProgramErr != nil {
-		var parserErr parser.Error
+		var parserErr *parser.Error
 		if !errors.As(parseProgramErr, &parserErr) {
 			return nil, fmt.Errorf("could not process parsing error: %s", parseProgramErr)
 		}
@@ -123,7 +123,7 @@ func (l *linter) lintFile(
 	// Check the program & convert any checking errors to diagnostics
 	checkProgramErr := checker.Check()
 	if checkProgramErr != nil {
-		var checkerErr sema.CheckerError
+		var checkerErr *sema.CheckerError
 		if !errors.As(checkProgramErr, &checkerErr) {
 			return nil, fmt.Errorf("could not process checking error: %s", checkProgramErr)
 		}
