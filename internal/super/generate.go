@@ -23,6 +23,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	flowsdk "github.com/onflow/flow-go-sdk"
+
 	"github.com/onflow/flowkit/config"
 
 	"github.com/onflow/flowkit"
@@ -36,6 +38,7 @@ import (
 
 type generateFlagsDef struct {
 	Directory string `default:"" flag:"dir" info:"Directory to generate files in"`
+	SkipTests bool   `default:"false" flag:"skip-tests" info:"Skip generating test files"`
 }
 
 var generateFlags = generateFlagsDef{}
@@ -116,6 +119,17 @@ func generateScript(
 	return generateNew(args, "script", logger, state)
 }
 
+func addCDCExtension(name string) string {
+	if strings.HasSuffix(name, ".cdc") {
+		return name
+	}
+	return fmt.Sprintf("%s.cdc", name)
+}
+
+func stripCDCExtension(name string) string {
+	return strings.TrimSuffix(name, filepath.Ext(name))
+}
+
 func generateNew(
 	args []string,
 	templateType string,
@@ -126,17 +140,11 @@ func generateNew(
 		return nil, fmt.Errorf("invalid number of arguments")
 	}
 
-	name := args[0]
-	var filename string
-
-	// Don't add .cdc extension if it's already there
-	if strings.HasSuffix(name, ".cdc") {
-		filename = name
-	} else {
-		filename = fmt.Sprintf("%s.cdc", name)
-	}
+	name := stripCDCExtension(args[0])
+	filename := addCDCExtension(name)
 
 	var fileToWrite string
+	var testFileToWrite string
 	var basePath string
 
 	if generateFlags.Directory != "" {
@@ -156,11 +164,23 @@ func generateNew(
 
 	switch templateType {
 	case "contract":
-		fileToWrite = fmt.Sprintf(`
-access(all)
+		fileToWrite = fmt.Sprintf(`access(all)
 contract %s {
     init() {}
 }`, name)
+		testFileToWrite = fmt.Sprintf(`import Test
+
+access(all) let account = Test.createAccount()
+
+access(all) fun testContract() {
+    let err = Test.deployContract(
+        name: "%s",
+        path: "../contracts/%s.cdc",
+        arguments: [],
+    )
+
+    Test.expect(err, Test.beNil())
+}`, name, name)
 	case "script":
 		fileToWrite = `access(all)
 fun main() {
@@ -188,6 +208,7 @@ fun main() {
 		return nil, fmt.Errorf("error creating directories: %w", err)
 	}
 
+	// Write files
 	err = state.ReaderWriter().WriteFile(filenameWithBasePath, []byte(fileToWrite), 0644)
 	if err != nil {
 		return nil, fmt.Errorf("error writing file: %w", err)
@@ -195,8 +216,42 @@ fun main() {
 
 	logger.Info(fmt.Sprintf("Generated new %s: %s at %s", templateType, name, filenameWithBasePath))
 
+	if generateFlags.SkipTests != true && templateType == "contract" {
+		testsBasePath := "cadence/tests"
+		testFilenameWithBasePath := filepath.Join(testsBasePath, addCDCExtension(fmt.Sprintf("%s_test", name)))
+
+		if _, err := state.ReaderWriter().ReadFile(testFilenameWithBasePath); err == nil {
+			return nil, fmt.Errorf("file already exists: %s", testFilenameWithBasePath)
+		}
+
+		if err := state.ReaderWriter().MkdirAll(testsBasePath, 0755); err != nil {
+			return nil, fmt.Errorf("error creating test directory: %w", err)
+		}
+
+		err = state.ReaderWriter().WriteFile(testFilenameWithBasePath, []byte(testFileToWrite), 0644)
+		if err != nil {
+			return nil, fmt.Errorf("error writing test file: %w", err)
+		}
+
+		logger.Info(fmt.Sprintf("Generated new test file: %s at %s", name, testFilenameWithBasePath))
+	}
+
 	if templateType == "contract" {
-		state.Contracts().AddOrUpdate(config.Contract{Name: name, Location: filenameWithBasePath})
+		var aliases config.Aliases
+
+		if generateFlags.SkipTests != true {
+			aliases = config.Aliases{{
+				Network: config.TestingNetwork.Name,
+				Address: flowsdk.HexToAddress("0x0000000000000007"),
+			}}
+		}
+
+		contract := config.Contract{
+			Name:     name,
+			Location: filenameWithBasePath,
+			Aliases:  aliases,
+		}
+		state.Contracts().AddOrUpdate(contract)
 		err = state.SaveDefault()
 		if err != nil {
 			return nil, fmt.Errorf("error saving to flow.json: %w", err)
