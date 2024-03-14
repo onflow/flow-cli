@@ -52,6 +52,9 @@ func generateCS(c *cobra.Command) (string, error) {
 	helpTexts.WriteString("```")
 	// Generate the help texts
 	generateCommandHelpTexts(cmd, &helpTexts)
+	globalFlags := getGlobalFlagsHelp(cmd)
+	helpTexts.WriteString("\n\n---------------\n\n")
+	helpTexts.WriteString(globalFlags)
 	helpTexts.WriteString("```")
 
 	return helpTexts.String(), nil
@@ -61,13 +64,9 @@ func generateCS(c *cobra.Command) (string, error) {
 // Recursive function to traverse all commands and subcommands,
 // capturing the help text for each.
 func generateCommandHelpTexts(cmd *cobra.Command, result *strings.Builder) {
-	removeGlobalFlags := true
-	// version is last command show global flags
-	if cmd.Name() == "version" {
-		removeGlobalFlags = false
-	}
+
 	result.WriteString("\n\n---------------\n\n")
-	result.WriteString(getCommandHelpText(cmd, removeGlobalFlags))
+	result.WriteString(getCommandHelpText(cmd))
 
 	// Recursively process each subcommand
 	for _, subCmd := range cmd.Commands() {
@@ -77,7 +76,7 @@ func generateCommandHelpTexts(cmd *cobra.Command, result *strings.Builder) {
 
 // Helper function to execute the help command for a given cobra.Command
 // and return the output as a string.
-func getCommandHelpText(cmd *cobra.Command, removeGlobalFlags bool) string {
+func getCommandHelpText(cmd *cobra.Command) string {
 	var sb strings.Builder
 	cmd.SetOut(&sb)
 
@@ -87,11 +86,7 @@ func getCommandHelpText(cmd *cobra.Command, removeGlobalFlags bool) string {
 
 	cmd.SetOut(nil)
 	helpText := sb.String()
-
-	if removeGlobalFlags {
-		helpText = removeGlobalFlagsSection(helpText)
-	}
-
+	helpText = removeGlobalFlagsSection(helpText)
 	return ansiRegex.ReplaceAllString(helpText, "")
 }
 
@@ -111,5 +106,24 @@ func removeGlobalFlagsSection(helpText string) string {
 			helpText = helpText[:start]
 		}
 	}
+	return helpText
+}
+
+func getGlobalFlagsHelp(rootCmd *cobra.Command) string {
+	// Initialize a strings.Builder to capture the output
+	var globalFlagsHelp strings.Builder
+
+	// Create a dummy command to capture global flags
+	var dummyCmd cobra.Command
+	// Assign the persistent flags of the rootCmd to the dummy command
+	dummyCmd.PersistentFlags().AddFlagSet(rootCmd.PersistentFlags())
+
+	// Set the output of the dummy command's flag set to the strings.Builder
+	dummyCmd.SetOut(&globalFlagsHelp)
+	_ = dummyCmd.Usage()
+	helpText := globalFlagsHelp.String()
+	helpText = strings.Replace(helpText, "Usage:\n", "", 1)
+	helpText = strings.Replace(helpText, "Flags:", "Global Flags:", 1)
+
 	return helpText
 }
