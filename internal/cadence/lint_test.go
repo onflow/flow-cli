@@ -36,7 +36,7 @@ func Test_Lint(t *testing.T) {
 
 	// Test this to make sure that lintResult exit codes are actually propogated to CLI result
 	t.Run("results.exitCode exported via result.ExitCode()", func(t *testing.T) {
-		results := lintResults{
+		results := lintResult{
 			exitCode: 999,
 		}
 		require.Equal(t, 999, results.ExitCode())
@@ -46,8 +46,8 @@ func Test_Lint(t *testing.T) {
 		results, error := lintFiles(state, "NoError.cdc")
 		require.NoError(t, error)
 
-		require.Equal(t, &lintResults{
-			Results: []lintResult{
+		require.Equal(t, &lintResult{
+			Results: []fileResult{
 				{
 					FilePath:    "NoError.cdc",
 					Diagnostics: []analysis.Diagnostic{},
@@ -62,8 +62,8 @@ func Test_Lint(t *testing.T) {
 		require.NoError(t, error)
 
 		// Should not have results for imported file, only for the file being linted
-		require.Equal(t, &lintResults{
-			Results: []lintResult{
+		require.Equal(t, &lintResult{
+			Results: []fileResult{
 				{
 					FilePath:    "foo/WithImports.cdc",
 					Diagnostics: []analysis.Diagnostic{},
@@ -77,8 +77,8 @@ func Test_Lint(t *testing.T) {
 		results, error := lintFiles(state, "NoError.cdc", "foo/WithImports.cdc")
 		require.NoError(t, error)
 
-		require.Equal(t, &lintResults{
-			Results: []lintResult{
+		require.Equal(t, &lintResult{
+			Results: []fileResult{
 				{
 					FilePath:    "NoError.cdc",
 					Diagnostics: []analysis.Diagnostic{},
@@ -96,8 +96,8 @@ func Test_Lint(t *testing.T) {
 		results, error := lintFiles(state, "LintWarning.cdc")
 		require.NoError(t, error)
 
-		require.Equal(t, &lintResults{
-			Results: []lintResult{
+		require.Equal(t, &lintResult{
+			Results: []fileResult{
 				{
 					FilePath: "LintWarning.cdc",
 					Diagnostics: []analysis.Diagnostic{
@@ -121,8 +121,8 @@ func Test_Lint(t *testing.T) {
 		results, error := lintFiles(state, "LintError.cdc")
 		require.NoError(t, error)
 
-		require.Equal(t, &lintResults{
-			Results: []lintResult{
+		require.Equal(t, &lintResult{
+			Results: []fileResult{
 				{
 					FilePath: "LintError.cdc",
 					Diagnostics: []analysis.Diagnostic{
@@ -156,8 +156,8 @@ func Test_Lint(t *testing.T) {
 		results, error := lintFiles(state, "WithFlowkitImport.cdc")
 		require.NoError(t, error)
 
-		require.Equal(t, results, &lintResults{
-			Results: []lintResult{
+		require.Equal(t, results, &lintResult{
+			Results: []fileResult{
 				{
 					FilePath:    "WithFlowkitImport.cdc",
 					Diagnostics: []analysis.Diagnostic{},
@@ -172,8 +172,8 @@ func Test_Lint(t *testing.T) {
 		require.NoError(t, error)
 
 		// Expects an error because getAuthAccount is only available in scripts
-		require.Equal(t, results, &lintResults{
-			Results: []lintResult{
+		require.Equal(t, results, &lintResult{
+			Results: []fileResult{
 				{
 					FilePath: "StdlibImportsContract.cdc",
 					Diagnostics: []analysis.Diagnostic{
@@ -199,8 +199,8 @@ func Test_Lint(t *testing.T) {
 		require.NoError(t, error)
 
 		// Expects an error because getAuthAccount is only available in scripts
-		require.Equal(t, results, &lintResults{
-			Results: []lintResult{
+		require.Equal(t, results, &lintResult{
+			Results: []fileResult{
 				{
 					FilePath: "StdlibImportsTransaction.cdc",
 					Diagnostics: []analysis.Diagnostic{
@@ -225,8 +225,8 @@ func Test_Lint(t *testing.T) {
 		results, error := lintFiles(state, "StdlibImportsScript.cdc")
 		require.NoError(t, error)
 
-		require.Equal(t, results, &lintResults{
-			Results: []lintResult{
+		require.Equal(t, results, &lintResult{
+			Results: []fileResult{
 				{
 					FilePath:    "StdlibImportsScript.cdc",
 					Diagnostics: []analysis.Diagnostic{},

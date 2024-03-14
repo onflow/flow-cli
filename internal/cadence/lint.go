@@ -36,17 +36,17 @@ import (
 
 type lintFlagsCollection struct{}
 
-type lintResult struct {
+type fileResult struct {
 	FilePath    string
 	Diagnostics []analysis.Diagnostic
 }
 
-type lintResults struct {
-	Results  []lintResult
+type lintResult struct {
+	Results  []fileResult
 	exitCode int
 }
 
-var _ command.ResultWithExitCode = &lintResults{}
+var _ command.ResultWithExitCode = &lintResult{}
 
 var lintFlags = lintFlagsCollection{}
 
@@ -81,18 +81,18 @@ func lint(
 		return nil, err
 	}
 
-	return results, nil
+	return &results, nil
 }
 
 func lintFiles(
 	state *flowkit.State,
 	filePaths ...string,
 ) (
-	*lintResults,
+	lintResult,
 	error,
 ) {
 	l := newLinter(state)
-	results := make([]lintResult, 0)
+	results := make([]fileResult, 0)
 	exitCode := 0
 
 	for _, location := range filePaths {
@@ -103,7 +103,7 @@ func lintFiles(
 
 		// Sort for consistent output
 		sortDiagnostics(diagnostics)
-		results = append(results, lintResult{
+		results = append(results, fileResult{
 			FilePath:    location,
 			Diagnostics: diagnostics,
 		})
@@ -119,7 +119,7 @@ func lintFiles(
 		}
 	}
 
-	return &lintResults{
+	return lintResult{
 		Results:  results,
 		exitCode: exitCode,
 	}, nil
@@ -168,7 +168,7 @@ func renderDiagnostic(diagnostic analysis.Diagnostic) string {
 	)
 }
 
-func (r *lintResults) String() string {
+func (r *lintResult) String() string {
 	var sb strings.Builder
 	var numProblems int
 
@@ -193,11 +193,11 @@ func (r *lintResults) String() string {
 	return sb.String()
 }
 
-func (r *lintResults) JSON() interface{} {
+func (r *lintResult) JSON() interface{} {
 	return r
 }
 
-func (r *lintResults) Oneliner() string {
+func (r *lintResult) Oneliner() string {
 	problems := 0
 	for _, result := range r.Results {
 		problems += len(result.Diagnostics)
@@ -210,6 +210,6 @@ func (r *lintResults) Oneliner() string {
 	return fmt.Sprintf("Found %d problem(s)", problems)
 }
 
-func (r *lintResults) ExitCode() int {
+func (r *lintResult) ExitCode() int {
 	return r.exitCode
 }
