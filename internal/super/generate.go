@@ -136,59 +136,26 @@ func stripCDCExtension(name string) string {
 	return strings.TrimSuffix(name, filepath.Ext(name))
 }
 
-func generateContractTemplate(name string) (string, error) {
-	data, err := templatesFS.ReadFile("templates/contract_init.cdc.tmpl")
+// processTemplate reads a template file from the embedded filesystem and processes it with the provided data
+// If you don't need to provide data, pass nil
+func processTemplate(templatePath string, data map[string]interface{}) (string, error) {
+	templateData, err := templatesFS.ReadFile(templatePath)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("failed to read template file: %w", err)
 	}
 
-	tmpl, err := template.New("contract").Parse(string(data))
+	tmpl, err := template.New("template").Parse(string(templateData))
 	if err != nil {
-		return "", err
-	}
-
-	var executedTemplate bytes.Buffer
-
-	err = tmpl.Execute(&executedTemplate, struct {
-		Name string
-	}{Name: name})
-	if err != nil {
-		return "", err
-	}
-
-	return executedTemplate.String(), nil
-}
-
-func getContractTestTemplate(name string) (string, error) {
-	data, err := templatesFS.ReadFile("templates/contract_init_test.cdc.tmpl")
-	if err != nil {
-		return "", err
-	}
-
-	tmpl, err := template.New("contract_test").Parse(string(data))
-	if err != nil {
-		return "", err
+		return "", fmt.Errorf("failed to parse template: %w", err)
 	}
 
 	var executedTemplate bytes.Buffer
-
-	err = tmpl.Execute(&executedTemplate, struct {
-		Name string
-	}{Name: name})
-	if err != nil {
-		return "", err
+	// Execute the template with the provided data or nil if no data is needed
+	if err = tmpl.Execute(&executedTemplate, data); err != nil {
+		return "", fmt.Errorf("failed to execute template: %w", err)
 	}
 
 	return executedTemplate.String(), nil
-}
-
-func getTemplateWithNoArgs(templateName string) (string, error) {
-	data, err := templatesFS.ReadFile(fmt.Sprintf("templates/%s.cdc.tmpl", templateName))
-	if err != nil {
-		return "", err
-	}
-
-	return string(data), nil
 }
 
 func generateNew(
@@ -225,22 +192,23 @@ func generateNew(
 
 	switch templateType {
 	case "contract":
-		fileToWrite, err = generateContractTemplate(name)
+		nameData := map[string]interface{}{"Name": name}
+		fileToWrite, err = processTemplate("templates/contract_init.cdc.tmpl", nameData)
 		if err != nil {
 			return nil, fmt.Errorf("error generating contract template: %w", err)
 		}
 
-		testFileToWrite, err = getContractTestTemplate(name)
+		testFileToWrite, err = processTemplate("templates/contract_init_test.cdc.tmpl", nameData)
 		if err != nil {
 			return nil, fmt.Errorf("error generating contract test template: %w", err)
 		}
 	case "script":
-		fileToWrite, err = getTemplateWithNoArgs("script_init")
+		fileToWrite, err = processTemplate("templates/script_init.cdc.tmpl", nil)
 		if err != nil {
 			return nil, fmt.Errorf("error generating script template: %w", err)
 		}
 	case "transaction":
-		fileToWrite, err = getTemplateWithNoArgs("transaction_init")
+		fileToWrite, err = processTemplate("templates/transaction_init.cdc.tmpl", nil)
 		if err != nil {
 			return nil, fmt.Errorf("error generating transaction template: %w", err)
 		}
