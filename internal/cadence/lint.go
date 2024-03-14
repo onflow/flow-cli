@@ -76,19 +76,19 @@ func lint(
 	state *flowkit.State,
 ) (command.Result, error) {
 	filePaths := args
-	results, err := lintFiles(state, filePaths...)
+	result, err := lintFiles(state, filePaths...)
 	if err != nil {
 		return nil, err
 	}
 
-	return &results, nil
+	return result, nil
 }
 
 func lintFiles(
 	state *flowkit.State,
 	filePaths ...string,
 ) (
-	lintResult,
+	*lintResult,
 	error,
 ) {
 	l := newLinter(state)
@@ -119,7 +119,7 @@ func lintFiles(
 		}
 	}
 
-	return lintResult{
+	return &lintResult{
 		Results:  results,
 		exitCode: exitCode,
 	}, nil
