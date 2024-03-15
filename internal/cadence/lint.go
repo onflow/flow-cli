@@ -53,7 +53,7 @@ var lintFlags = lintFlagsCollection{}
 var lintCommand = &command.Command{
 	Cmd: &cobra.Command{
 		Use:     "lint [files]",
-		Short:   "Lint Cadence code",
+		Short:   "Lint Cadence code to identify potential issues or errors",
 		Example: "flow cadence lint **/*.cdc",
 		Args:    cobra.MinimumNArgs(1),
 	},
@@ -170,24 +170,35 @@ func renderDiagnostic(diagnostic analysis.Diagnostic) string {
 
 func (r *lintResult) String() string {
 	var sb strings.Builder
-	var numProblems int
+	numErrors := 0
+	numWarnings := 0
 
 	for _, result := range r.Results {
 		if len(result.Diagnostics) == 0 {
 			continue
 		}
 
-		numProblems += len(result.Diagnostics)
-
 		for _, diagnostic := range result.Diagnostics {
 			sb.WriteString(fmt.Sprintf("%s\n\n", renderDiagnostic(diagnostic)))
+
+			if isErrorDiagnostic(diagnostic) {
+				numErrors++
+			} else {
+				numWarnings++
+			}
 		}
 	}
 
-	if numProblems == 0 {
-		sb.WriteString("No problems found")
-	} else {
-		sb.WriteString(aurora.Red(fmt.Sprintf("Found %d problem(s)", numProblems)).String())
+	var color aurora.Color
+	if numErrors > 0 {
+		color = aurora.RedFg
+	} else if numWarnings > 0 {
+		color = aurora.YellowFg
+	}
+
+	total := numErrors + numWarnings
+	if total > 0 {
+		sb.WriteString(aurora.Colorize(fmt.Sprintf("%d problem(s) (%d errors, %d warnings)\n", total, numErrors, numWarnings), color).String())
 	}
 
 	return sb.String()
@@ -201,10 +212,6 @@ func (r *lintResult) Oneliner() string {
 	problems := 0
 	for _, result := range r.Results {
 		problems += len(result.Diagnostics)
-	}
-
-	if problems == 0 {
-		return "No problems found"
 	}
 
 	return fmt.Sprintf("Found %d problem(s)", problems)

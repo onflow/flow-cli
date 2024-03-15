@@ -25,7 +25,7 @@ import (
 
 	"errors"
 
-	cadenceLint "github.com/onflow/cadence-tools/lint"
+	cdcLint "github.com/onflow/cadence-tools/lint"
 	cdcTests "github.com/onflow/cadence-tools/test/helpers"
 	"github.com/onflow/cadence/runtime/ast"
 	"github.com/onflow/cadence/runtime/common"
@@ -57,7 +57,7 @@ const (
 	ErrorCategory         = "error"
 )
 
-var analyzers = maps.Values(cadenceLint.Analyzers)
+var analyzers = maps.Values(cdcLint.Analyzers)
 
 func newLinter(state *flowkit.State) *linter {
 	l := &linter{
