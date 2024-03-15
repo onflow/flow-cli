@@ -44,4 +44,5 @@ var Cmd = &cobra.Command{
 
 func init() {
 	Cmd.AddCommand(languageserver.Cmd)
+	lintCommand.AddToParent(Cmd)
 }

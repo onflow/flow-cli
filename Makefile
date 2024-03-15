@@ -1,3 +1,7 @@
+# Configuration for goreleaser
+PACKAGE_NAME := github.com/onflow/flow-cli
+GOLANG_CROSS_VERSION ?= v1.20.0
+
 # The short Git commit hash
 SHORT_COMMIT := $(shell git rev-parse --short HEAD)
 # The Git commit hash
@@ -54,6 +58,8 @@ endif
 ci: install-tools generate test coverage
 
 $(BINARY):
+	CGO_ENABLED=1 \
+	CGO_CFLAGS="-O2 -D__BLST_PORTABLE__" \
 	GO111MODULE=on go build \
 		-trimpath \
 		-ldflags \
@@ -103,3 +109,15 @@ check-tidy:
 .PHONY: generate
 generate: install-tools
 	go generate ./...
+
+.PHONY: release
+release:
+	docker run \
+		--rm \
+		--env-file .release-env \
+		-v /var/run/docker.sock:/var/run/docker.sock \
+		-v `pwd`:/go/src/$(PACKAGE_NAME) \
+		-v `pwd`/sysroot:/sysroot \
+		-w /go/src/$(PACKAGE_NAME) \
+		ghcr.io/goreleaser/goreleaser-cross:${GOLANG_CROSS_VERSION} \
+		release --clean
