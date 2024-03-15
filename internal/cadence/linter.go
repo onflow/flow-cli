@@ -25,11 +25,11 @@ import (
 
 	"errors"
 
-	cdcLint "github.com/onflow/cadence-tools/lint"
-	cdcTests "github.com/onflow/cadence-tools/test/helpers"
+	cdclint "github.com/onflow/cadence-tools/lint"
+	cdctests "github.com/onflow/cadence-tools/test/helpers"
 	"github.com/onflow/cadence/runtime/ast"
 	"github.com/onflow/cadence/runtime/common"
-	cdcErrors "github.com/onflow/cadence/runtime/errors"
+	cdcerrors "github.com/onflow/cadence/runtime/errors"
 	"github.com/onflow/cadence/runtime/parser"
 	"github.com/onflow/cadence/runtime/sema"
 	"github.com/onflow/cadence/runtime/stdlib"
@@ -57,7 +57,7 @@ const (
 	ErrorCategory         = "error"
 )
 
-var analyzers = maps.Values(cdcLint.Analyzers)
+var analyzers = maps.Values(cdclint.Analyzers)
 
 func newLinter(state *flowkit.State) *linter {
 	l := &linter{
@@ -195,8 +195,8 @@ func (l *linter) handleImport(
 		return sema.ElaborationImport{
 			Elaboration: testChecker.Elaboration,
 		}, nil
-	case cdcTests.BlockchainHelpersLocation:
-		helpersChecker := cdcTests.BlockchainHelpersChecker()
+	case cdctests.BlockchainHelpersLocation:
+		helpersChecker := cdctests.BlockchainHelpersChecker()
 		return sema.ElaborationImport{
 			Elaboration: helpersChecker.Elaboration,
 		}, nil
@@ -276,7 +276,7 @@ func (l *linter) resolveImportFilepath(
 
 // helpers
 
-func getDiagnosticsFromParentError(err cdcErrors.ParentError, location common.Location, code string) ([]analysis.Diagnostic, error) {
+func getDiagnosticsFromParentError(err cdcerrors.ParentError, location common.Location, code string) ([]analysis.Diagnostic, error) {
 	diagnostics := make([]analysis.Diagnostic, 0)
 
 	for _, childErr := range err.ChildErrors() {
@@ -306,7 +306,7 @@ func convertPositionedErrorToDiagnostic(
 	endPosition := err.EndPosition(nil)
 
 	var secondaryMessage string
-	var secondaryErr cdcErrors.SecondaryError
+	var secondaryErr cdcerrors.SecondaryError
 	if errors.As(err, &secondaryErr) {
 		secondaryMessage = secondaryErr.SecondaryError()
 	}
@@ -326,8 +326,8 @@ func convertPositionedErrorToDiagnostic(
 		category = ErrorCategory
 	}
 
-	var suggestedFixes []cdcErrors.SuggestedFix[ast.TextEdit]
-	var errWithFixes cdcErrors.HasSuggestedFixes[ast.TextEdit]
+	var suggestedFixes []cdcerrors.SuggestedFix[ast.TextEdit]
+	var errWithFixes cdcerrors.HasSuggestedFixes[ast.TextEdit]
 	if errors.As(err, &errWithFixes) {
 		suggestedFixes = errWithFixes.SuggestFixes(code)
 	}
