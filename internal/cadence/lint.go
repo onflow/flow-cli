@@ -52,7 +52,7 @@ var lintFlags = lintFlagsCollection{}
 
 var lintCommand = &command.Command{
 	Cmd: &cobra.Command{
-		Use:     "lint [files]",
+		Use:     "lint file1.cdc [file2.cdc ...]",
 		Short:   "Lint Cadence code to identify potential issues or errors",
 		Example: "flow cadence lint **/*.cdc",
 		Args:    cobra.MinimumNArgs(1),
