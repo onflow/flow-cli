@@ -44,6 +44,11 @@ type Result interface {
 	JSON() any
 }
 
+type ResultWithExitCode interface {
+	Result
+	ExitCode() int
+}
+
 // ContainsFlag checks if output flag is present for the provided field.
 func ContainsFlag(flags []string, field string) bool {
 	for _, n := range flags {

@@ -8,9 +8,11 @@ require (
 	github.com/getsentry/sentry-go v0.27.0
 	github.com/go-git/go-git/v5 v5.11.0
 	github.com/gosuri/uilive v0.0.4
+	github.com/logrusorgru/aurora/v4 v4.0.0
 	github.com/manifoldco/promptui v0.9.0
 	github.com/onflow/cadence v1.0.0-preview.13
 	github.com/onflow/cadence-tools/languageserver v1.0.0-preview.6
+	github.com/onflow/cadence-tools/lint v1.0.0-preview.9
 	github.com/onflow/cadence-tools/test v1.0.0-preview.8
 	github.com/onflow/contract-updater/lib/go/templates v1.0.1
 	github.com/onflow/fcl-dev-wallet v0.8.0-stable-cadence.1
@@ -161,7 +163,6 @@ require (
 	github.com/libp2p/go-msgio v0.3.0 // indirect
 	github.com/lmars/go-slip10 v0.0.0-20190606092855-400ba44fee12 // indirect
 	github.com/logrusorgru/aurora v2.0.3+incompatible // indirect
-	github.com/logrusorgru/aurora/v4 v4.0.0 // indirect
 	github.com/magiconair/properties v1.8.7 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
@@ -183,7 +184,6 @@ require (
 	github.com/multiformats/go-varint v0.0.7 // indirect
 	github.com/olekukonko/tablewriter v0.0.5 // indirect
 	github.com/onflow/atree v0.6.1-0.20240308163425-dc825c20b1a2 // indirect
-	github.com/onflow/cadence-tools/lint v1.0.0-preview.9 // indirect
 	github.com/onflow/crypto v0.25.0 // indirect
 	github.com/onflow/flow-core-contracts/lib/go/contracts v0.15.2-0.20240305214031-d81e0c3b42f3 // indirect
 	github.com/onflow/flow-ft/lib/go/contracts v0.7.1-0.20240305212555-29d91e18f0c1 // indirect
@@ -206,7 +206,7 @@ require (
 	github.com/prometheus/procfs v0.12.0 // indirect
 	github.com/psiemens/graceland v1.0.0 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
-	github.com/rivo/uniseg v0.4.4 // indirect
+	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/rogpeppe/go-internal v1.11.0 // indirect
 	github.com/rs/cors v1.8.0 // indirect
 	github.com/schollz/progressbar/v3 v3.13.1 // indirect
