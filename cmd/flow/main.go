@@ -121,7 +121,6 @@ func main() {
 	cmd.AddCommand(super.GenerateCommand)
 	cmd.AddCommand(dependencymanager.Cmd)
 	cmd.AddCommand(super.AllHelp)
-	cmd.SetHelpCommand(super.CustomHelp)
 
 	command.InitFlags(cmd)
 	cmd.AddGroup(&cobra.Group{
