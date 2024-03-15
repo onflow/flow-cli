@@ -19,9 +19,14 @@
 package super
 
 import (
+	"bytes"
+	"embed"
 	"fmt"
 	"path/filepath"
 	"strings"
+	"text/template"
+
+	flowsdk "github.com/onflow/flow-go-sdk"
 
 	"github.com/onflow/flowkit/v2/config"
 
@@ -34,8 +39,12 @@ import (
 	"github.com/spf13/cobra"
 )
 
+//go:embed templates/*.tmpl
+var templatesFS embed.FS
+
 type generateFlagsDef struct {
 	Directory string `default:"" flag:"dir" info:"Directory to generate files in"`
+	SkipTests bool   `default:"false" flag:"skip-tests" info:"Skip generating test files"`
 }
 
 var generateFlags = generateFlagsDef{}
@@ -116,6 +125,39 @@ func generateScript(
 	return generateNew(args, "script", logger, state)
 }
 
+func addCDCExtension(name string) string {
+	if strings.HasSuffix(name, ".cdc") {
+		return name
+	}
+	return fmt.Sprintf("%s.cdc", name)
+}
+
+func stripCDCExtension(name string) string {
+	return strings.TrimSuffix(name, filepath.Ext(name))
+}
+
+// processTemplate reads a template file from the embedded filesystem and processes it with the provided data
+// If you don't need to provide data, pass nil
+func processTemplate(templatePath string, data map[string]interface{}) (string, error) {
+	templateData, err := templatesFS.ReadFile(templatePath)
+	if err != nil {
+		return "", fmt.Errorf("failed to read template file: %w", err)
+	}
+
+	tmpl, err := template.New("template").Parse(string(templateData))
+	if err != nil {
+		return "", fmt.Errorf("failed to parse template: %w", err)
+	}
+
+	var executedTemplate bytes.Buffer
+	// Execute the template with the provided data or nil if no data is needed
+	if err = tmpl.Execute(&executedTemplate, data); err != nil {
+		return "", fmt.Errorf("failed to execute template: %w", err)
+	}
+
+	return executedTemplate.String(), nil
+}
+
 func generateNew(
 	args []string,
 	templateType string,
@@ -126,17 +168,11 @@ func generateNew(
 		return nil, fmt.Errorf("invalid number of arguments")
 	}
 
-	name := args[0]
-	var filename string
-
-	// Don't add .cdc extension if it's already there
-	if strings.HasSuffix(name, ".cdc") {
-		filename = name
-	} else {
-		filename = fmt.Sprintf("%s.cdc", name)
-	}
+	name := stripCDCExtension(args[0])
+	filename := addCDCExtension(name)
 
 	var fileToWrite string
+	var testFileToWrite string
 	var basePath string
 
 	if generateFlags.Directory != "" {
@@ -156,22 +192,26 @@ func generateNew(
 
 	switch templateType {
 	case "contract":
-		fileToWrite = fmt.Sprintf(`
-access(all)
-contract %s {
-    init() {}
-}`, name)
-	case "script":
-		fileToWrite = `access(all)
-fun main() {
-    // Script details here
-}`
-	case "transaction":
-		fileToWrite = `transaction() {
-    prepare(account: &Account) {}
+		nameData := map[string]interface{}{"Name": name}
+		fileToWrite, err = processTemplate("templates/contract_init.cdc.tmpl", nameData)
+		if err != nil {
+			return nil, fmt.Errorf("error generating contract template: %w", err)
+		}
 
-    execute {}
-}`
+		testFileToWrite, err = processTemplate("templates/contract_init_test.cdc.tmpl", nameData)
+		if err != nil {
+			return nil, fmt.Errorf("error generating contract test template: %w", err)
+		}
+	case "script":
+		fileToWrite, err = processTemplate("templates/script_init.cdc.tmpl", nil)
+		if err != nil {
+			return nil, fmt.Errorf("error generating script template: %w", err)
+		}
+	case "transaction":
+		fileToWrite, err = processTemplate("templates/transaction_init.cdc.tmpl", nil)
+		if err != nil {
+			return nil, fmt.Errorf("error generating transaction template: %w", err)
+		}
 	default:
 		return nil, fmt.Errorf("invalid template type: %s", templateType)
 	}
@@ -188,6 +228,7 @@ fun main() {
 		return nil, fmt.Errorf("error creating directories: %w", err)
 	}
 
+	// Write files
 	err = state.ReaderWriter().WriteFile(filenameWithBasePath, []byte(fileToWrite), 0644)
 	if err != nil {
 		return nil, fmt.Errorf("error writing file: %w", err)
@@ -195,8 +236,42 @@ fun main() {
 
 	logger.Info(fmt.Sprintf("Generated new %s: %s at %s", templateType, name, filenameWithBasePath))
 
+	if generateFlags.SkipTests != true && templateType == "contract" {
+		testsBasePath := "cadence/tests"
+		testFilenameWithBasePath := filepath.Join(testsBasePath, addCDCExtension(fmt.Sprintf("%s_test", name)))
+
+		if _, err := state.ReaderWriter().ReadFile(testFilenameWithBasePath); err == nil {
+			return nil, fmt.Errorf("file already exists: %s", testFilenameWithBasePath)
+		}
+
+		if err := state.ReaderWriter().MkdirAll(testsBasePath, 0755); err != nil {
+			return nil, fmt.Errorf("error creating test directory: %w", err)
+		}
+
+		err = state.ReaderWriter().WriteFile(testFilenameWithBasePath, []byte(testFileToWrite), 0644)
+		if err != nil {
+			return nil, fmt.Errorf("error writing test file: %w", err)
+		}
+
+		logger.Info(fmt.Sprintf("Generated new test file: %s at %s", name, testFilenameWithBasePath))
+	}
+
 	if templateType == "contract" {
-		state.Contracts().AddOrUpdate(config.Contract{Name: name, Location: filenameWithBasePath})
+		var aliases config.Aliases
+
+		if generateFlags.SkipTests != true {
+			aliases = config.Aliases{{
+				Network: config.TestingNetwork.Name,
+				Address: flowsdk.HexToAddress("0x0000000000000007"),
+			}}
+		}
+
+		contract := config.Contract{
+			Name:     name,
+			Location: filenameWithBasePath,
+			Aliases:  aliases,
+		}
+		state.Contracts().AddOrUpdate(contract)
 		err = state.SaveDefault()
 		if err != nil {
 			return nil, fmt.Errorf("error saving to flow.json: %w", err)

@@ -40,18 +40,77 @@ func TestGenerateNewContract(t *testing.T) {
 	assert.NoError(t, err, "Failed to read generated file")
 	assert.NotNil(t, fileContent)
 
+	testContent, err := state.ReaderWriter().ReadFile("cadence/tests/TestContract_test.cdc")
+	assert.NoError(t, err, "Failed to read generated file")
+	assert.NotNil(t, testContent)
+
 	// Check content is correct
-	expectedContent := `
-access(all)
+	expectedContent := `access(all)
 contract TestContract {
     init() {}
 }`
+
+	expectedTestContent := `import Test
+
+access(all) let account = Test.createAccount()
+
+access(all) fun testContract() {
+    let err = Test.deployContract(
+        name: "TestContract",
+        path: "../contracts/TestContract.cdc",
+        arguments: [],
+    )
+
+    Test.expect(err, Test.beNil())
+}`
+
 	assert.Equal(t, expectedContent, string(fileContent))
+	assert.Equal(t, expectedTestContent, string(testContent))
 
 	// Test file already exists scenario
 	_, err = generateNew([]string{"TestContract"}, "contract", logger, state)
 	assert.Error(t, err)
 	assert.Equal(t, "file already exists: cadence/contracts/TestContract.cdc", err.Error())
+}
+
+func TestGenerateNewContractSkipTests(t *testing.T) {
+	logger := output.NewStdoutLogger(output.NoneLog)
+	_, state, _ := util.TestMocks(t)
+
+	generateFlags.SkipTests = true
+
+	t.Cleanup(func() {
+		generateFlags.SkipTests = false
+	})
+
+	// Test contract generation
+	_, err := generateNew([]string{"TestContract"}, "contract", logger, state)
+	assert.NoError(t, err, "Failed to generate contract")
+
+	fileContent, err := state.ReaderWriter().ReadFile("cadence/contracts/TestContract.cdc")
+	assert.NoError(t, err, "Failed to read generated file")
+	assert.NotNil(t, fileContent)
+
+	testContent, err := state.ReaderWriter().ReadFile("cadence/tests/TestContract_test.cdc")
+	assert.Error(t, err, "Failed to read generated file")
+	assert.Nil(t, testContent)
+}
+
+func TestGenerateNewContractWithCDCExtension(t *testing.T) {
+	logger := output.NewStdoutLogger(output.NoneLog)
+	_, state, _ := util.TestMocks(t)
+
+	// Test contract generation
+	_, err := generateNew([]string{"Tester.cdc"}, "contract", logger, state)
+	assert.NoError(t, err, "Failed to generate contract")
+
+	fileContent, err := state.ReaderWriter().ReadFile("cadence/contracts/Tester.cdc")
+	assert.NoError(t, err, "Failed to read generated file")
+	assert.NotNil(t, fileContent)
+
+	testContent, err := state.ReaderWriter().ReadFile("cadence/tests/Tester_test.cdc")
+	assert.NoError(t, err, "Failed to read generated file")
+	assert.NotNil(t, testContent)
 }
 
 func TestGenerateNewContractFileAlreadyExists(t *testing.T) {
@@ -137,8 +196,7 @@ func TestGenerateNewWithDirFlag(t *testing.T) {
 	assert.NoError(t, err, "Failed to read generated file")
 	assert.NotNil(t, content)
 
-	expectedContent := `
-access(all)
+	expectedContent := `access(all)
 contract TestContract {
     init() {}
 }`
