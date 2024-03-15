@@ -22,18 +22,25 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/rs/zerolog"
+	"github.com/spf13/cobra"
+
+	"github.com/onflow/cadence"
 	"github.com/onflow/cadence/runtime/common"
+
 	"github.com/onflow/flow-emulator/storage/migration"
 	emulatorMigrate "github.com/onflow/flow-emulator/storage/migration"
 	"github.com/onflow/flow-emulator/storage/sqlite"
-	"github.com/onflow/flow-go-sdk"
+
 	"github.com/onflow/flow-go/cmd/util/ledger/migrations"
 	"github.com/onflow/flow-go/cmd/util/ledger/reporters"
+
 	"github.com/onflow/flowkit/v2"
 	"github.com/onflow/flowkit/v2/config"
 	"github.com/onflow/flowkit/v2/output"
-	"github.com/rs/zerolog"
-	"github.com/spf13/cobra"
+	"github.com/onflow/flowkit/v2/project"
+
+	"github.com/onflow/flow-go-sdk"
 
 	"github.com/onflow/flow-cli/internal/command"
 )
@@ -102,7 +109,19 @@ func migrateState(
 }
 
 func resolveStagedContracts(state *flowkit.State, contractNames []string) ([]migrations.StagedContract, error) {
-	contracts := make([]migrations.StagedContract, len(contractNames))
+	stagedContracts := make([]migrations.StagedContract, len(contractNames))
+
+	network := config.EmulatorNetwork
+
+	contracts, err := state.DeploymentContractsByNetwork(network)
+	if err != nil {
+		return nil, err
+	}
+
+	importReplacer := project.NewImportReplacer(
+		contracts,
+		state.AliasesForNetwork(network),
+	)
 
 	for i, contractName := range contractNames {
 		// First try to get contract address from aliases
@@ -112,7 +131,7 @@ func resolveStagedContracts(state *flowkit.State, contractNames []string) ([]mig
 		}
 
 		var address flow.Address
-		alias := contract.Aliases.ByNetwork(config.EmulatorNetwork.Name)
+		alias := contract.Aliases.ByNetwork(network.Name)
 		if alias != nil {
 			address = alias.Address
 		}
@@ -124,20 +143,34 @@ func resolveStagedContracts(state *flowkit.State, contractNames []string) ([]mig
 
 		// If contract is not aliased, try to get address by deployment account
 		if address == flow.EmptyAddress {
-			address, err = getAddressByContractName(state, contractName, config.EmulatorNetwork)
+			address, err = getAddressByContractName(state, contractName, network)
 			if err != nil {
 				return nil, fmt.Errorf("failed to get address by contract name: %w", err)
 			}
 		}
 
-		contracts[i] = migrations.StagedContract{
+		program, err := project.NewProgram(code, []cadence.Value{}, contract.Location)
+		if err != nil {
+			return nil, err
+		}
+
+		if program.HasImports() {
+			program, err = importReplacer.Replace(program)
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		updatedCode := program.Code()
+
+		stagedContracts[i] = migrations.StagedContract{
 			Contract: migrations.Contract{
 				Name: contractName,
-				Code: code,
+				Code: updatedCode,
 			},
 			Address: common.Address(address),
 		}
 	}
 
-	return contracts, nil
+	return stagedContracts, nil
 }
