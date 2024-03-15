@@ -168,19 +168,11 @@ func renderDiagnostic(diagnostic analysis.Diagnostic) string {
 	)
 }
 
-func (r *lintResult) String() string {
-	var sb strings.Builder
+func (r *lintResult) countProblems() (int, int) {
 	numErrors := 0
 	numWarnings := 0
-
 	for _, result := range r.Results {
-		if len(result.Diagnostics) == 0 {
-			continue
-		}
-
 		for _, diagnostic := range result.Diagnostics {
-			sb.WriteString(fmt.Sprintf("%s\n\n", renderDiagnostic(diagnostic)))
-
 			if isErrorDiagnostic(diagnostic) {
 				numErrors++
 			} else {
@@ -188,8 +180,20 @@ func (r *lintResult) String() string {
 			}
 		}
 	}
+	return numErrors, numWarnings
+}
+
+func (r *lintResult) String() string {
+	var sb strings.Builder
+
+	for _, result := range r.Results {
+		for _, diagnostic := range result.Diagnostics {
+			sb.WriteString(fmt.Sprintf("%s\n\n", renderDiagnostic(diagnostic)))
+		}
+	}
 
 	var color aurora.Color
+	numErrors, numWarnings := r.countProblems()
 	if numErrors > 0 {
 		color = aurora.RedFg
 	} else if numWarnings > 0 {
@@ -198,7 +202,9 @@ func (r *lintResult) String() string {
 
 	total := numErrors + numWarnings
 	if total > 0 {
-		sb.WriteString(aurora.Colorize(fmt.Sprintf("%d problem(s) (%d errors, %d warnings)\n", total, numErrors, numWarnings), color).String())
+		sb.WriteString(aurora.Colorize(fmt.Sprintf("%d %s (%d %s, %d %s)", total, pluralize("problem", total), numErrors, pluralize("error", numErrors), numWarnings, pluralize("warning", numWarnings)), color).String())
+	} else {
+		sb.WriteString(aurora.Green("Lint passed").String())
 	}
 
 	return sb.String()
@@ -209,14 +215,22 @@ func (r *lintResult) JSON() interface{} {
 }
 
 func (r *lintResult) Oneliner() string {
-	problems := 0
-	for _, result := range r.Results {
-		problems += len(result.Diagnostics)
-	}
+	numErrors, numWarnings := r.countProblems()
+	total := numErrors + numWarnings
 
-	return fmt.Sprintf("Found %d problem(s)", problems)
+	if total > 0 {
+		return fmt.Sprintf("%d %s (%d %s, %d %s)", total, pluralize("problem", total), numErrors, pluralize("error", numErrors), numWarnings, pluralize("warning", numWarnings))
+	}
+	return "Lint passed"
 }
 
 func (r *lintResult) ExitCode() int {
 	return r.exitCode
+}
+
+func pluralize(word string, count int) string {
+	if count == 1 {
+		return word
+	}
+	return word + "s"
 }
