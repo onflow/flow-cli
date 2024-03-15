@@ -67,11 +67,10 @@ type RunWithState func(
 ) (Result, error)
 
 type Command struct {
-	Cmd    *cobra.Command
-	Flags  any
-	Run    run
-	RunS   RunWithState
-	Status *int
+	Cmd   *cobra.Command
+	Flags any
+	Run   run
+	RunS  RunWithState
 }
 
 const (
@@ -163,6 +162,13 @@ func (c Command) AddToParent(parent *cobra.Command) {
 		handleError("Output Error", err)
 
 		wg.Wait()
+
+		// exit with code if result has it
+		exitCode := 0
+		if res, ok := result.(ResultWithExitCode); ok {
+			exitCode = res.ExitCode()
+		}
+		os.Exit(exitCode)
 	}
 
 	bindFlags(c)
