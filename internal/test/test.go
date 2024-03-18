@@ -30,6 +30,7 @@ import (
 	cdcTests "github.com/onflow/cadence-tools/test"
 	"github.com/onflow/cadence/runtime"
 	"github.com/onflow/cadence/runtime/common"
+	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flowkit"
@@ -147,6 +148,9 @@ func testCode(
 	flags flagsTests,
 ) (*result, error) {
 	runner := cdcTests.NewTestRunner()
+
+	logger := zerolog.New(zerolog.ConsoleWriter{Out: os.Stderr}).With().Timestamp().Logger()
+	runner = runner.WithLogger(logger)
 
 	var coverageReport *runtime.CoverageReport
 	if flags.Cover {
