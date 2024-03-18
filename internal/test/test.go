@@ -147,10 +147,8 @@ func testCode(
 	state *flowkit.State,
 	flags flagsTests,
 ) (*result, error) {
-	runner := cdcTests.NewTestRunner()
-
 	logger := zerolog.New(zerolog.ConsoleWriter{Out: os.Stderr}).With().Timestamp().Logger()
-	runner = runner.WithLogger(logger)
+	runner := cdcTests.NewTestRunner().WithLogger(logger)
 
 	var coverageReport *runtime.CoverageReport
 	if flags.Cover {
