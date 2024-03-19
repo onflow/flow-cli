@@ -123,7 +123,7 @@ func (r *deployResult) Oneliner() string {
 func checkForStandardContractUsageOnMainnet(state *flowkit.State, logger output.Logger, replace bool) error {
 
 	mainnetContracts := make(map[string]standardContract)
-	sc := systemcontracts.SystemContractsForChain(flowGo.Emulator)
+	sc := systemcontracts.SystemContractsForChain(flowGo.Mainnet)
 
 	for _, coreContract := range sc.All() {
 		mainnetContracts[coreContract.Name] = standardContract{
