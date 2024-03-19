@@ -20,6 +20,9 @@ package version
 
 import (
 	"fmt"
+	"log"
+	"runtime/debug"
+	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -35,7 +38,7 @@ var Cmd = &cobra.Command{
 
 		// Print version/commit strings if they are known
 		if build.IsDefined(semver) {
-			fmt.Printf("Version: %s\n", semver)
+			fmt.Printf("Flow CLI Version: %s\n", semver)
 		}
 		if build.IsDefined(commit) {
 			fmt.Printf("Commit: %s\n", commit)
@@ -43,6 +46,20 @@ var Cmd = &cobra.Command{
 		// If no version info is known print a message to indicate this.
 		if !build.IsDefined(semver) && !build.IsDefined(commit) {
 			fmt.Printf("Version information unknown!\n")
+		}
+
+		// Print the Flow package dependencies from github.com/onflow
+		bi, ok := debug.ReadBuildInfo()
+		if !ok {
+			log.Printf("Failed to read build info")
+			return
+		}
+
+		fmt.Printf("\nFlow Package Dependencies: \n")
+		for _, dep := range bi.Deps {
+			if strings.Contains(dep.Path, "github.com/onflow/") {
+				fmt.Printf("%s: %s\n", dep.Path, dep.Version)
+			}
 		}
 	},
 }
