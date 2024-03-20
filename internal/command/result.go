@@ -76,10 +76,10 @@ func formatResult(result Result, filterFlag string, formatFlag string) (string, 
 	}
 
 	switch strings.ToLower(formatFlag) {
-	case formatJSON:
+	case FormatJSON:
 		jsonRes, _ := json.Marshal(result.JSON())
 		return string(jsonRes), nil
-	case formatInline:
+	case FormatInline:
 		return result.Oneliner(), nil
 	default:
 		return result.String(), nil
@@ -104,7 +104,7 @@ func outputResult(result string, saveFlag string, formatFlag string, filterFlag 
 		return af.WriteFile(saveFlag, []byte(result), 0644)
 	}
 
-	if formatFlag == formatInline || filterFlag != "" {
+	if formatFlag == FormatInline || filterFlag != "" {
 		_, _ = fmt.Fprintf(os.Stdout, "%s", result)
 	} else { // default normal output
 		_, _ = fmt.Fprintf(os.Stdout, "\n%s\n\n", result)

@@ -39,10 +39,12 @@ type versionCmd struct {
 
 // Print prints the version information in the given format.
 func (c versionCmd) Print(format string) error {
-	if format == "text" {
+	switch format {
+	case command.FormatInline, command.FormatText:
 		var txtBuilder strings.Builder
 		txtBuilder.WriteString(fmt.Sprintf("Flow CLI Version: %s %s\n", c.Version, c.Commit))
 		txtBuilder.WriteString(fmt.Sprintf("\nFlow Package Dependencies \n"))
+
 		for _, dep := range c.Dependencies {
 			txtBuilder.WriteString(fmt.Sprintf("%s %s\n", dep.Path, dep.Version))
 		}
@@ -50,9 +52,8 @@ func (c versionCmd) Print(format string) error {
 		log.Println(txtBuilder.String())
 
 		return nil
-	}
 
-	if format == "json" {
+	case command.FormatJSON:
 		jsonRes, err := c.MarshalJSON()
 		if err != nil {
 			return err
@@ -61,9 +62,10 @@ func (c versionCmd) Print(format string) error {
 		log.Println(string(jsonRes))
 
 		return nil
-	}
 
-	return fmt.Errorf("unsupported format: %s", format)
+	default:
+		return fmt.Errorf("unsupported format: %s", format)
+	}
 }
 
 // MarshalJSON returns the JSON encoding of the cmdPrint.
@@ -100,7 +102,7 @@ var Cmd = &cobra.Command{
 		semver := build.Semver()
 		commit := build.Commit()
 
-		ver := &versionCmd{
+		v := &versionCmd{
 			Version: semver,
 			Commit:  commit,
 		}
@@ -114,11 +116,11 @@ var Cmd = &cobra.Command{
 		// only add dependencies from github.com/onflow
 		for _, dep := range bi.Deps {
 			if strings.Contains(dep.Path, "github.com/onflow/") {
-				ver.Dependencies = append(ver.Dependencies, *dep)
+				v.Dependencies = append(v.Dependencies, *dep)
 			}
 		}
 
-		if err := ver.Print(command.Flags.Format); err != nil {
+		if err := v.Print(command.Flags.Format); err != nil {
 			log.Printf("Failed to print version information: %s", err)
 			return
 		}
