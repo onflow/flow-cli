@@ -44,7 +44,7 @@ func (c versionCmd) Print(format string) error {
 		txtBuilder.WriteString(fmt.Sprintf("Flow CLI Version: %s %s\n", c.Version, c.Commit))
 		txtBuilder.WriteString(fmt.Sprintf("\nFlow Package Dependencies \n"))
 		for _, dep := range c.Dependencies {
-			txtBuilder.WriteString(fmt.Sprintf("%s %s %s\n", dep.Path, dep.Version, dep.Sum))
+			txtBuilder.WriteString(fmt.Sprintf("%s %s\n", dep.Path, dep.Version))
 		}
 
 		log.Println(txtBuilder.String())
