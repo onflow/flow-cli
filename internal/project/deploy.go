@@ -22,6 +22,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/onflow/flow-go/fvm/systemcontracts"
+	flowGo "github.com/onflow/flow-go/model/flow"
 
 	flowsdk "github.com/onflow/flow-go-sdk"
 	"github.com/spf13/cobra"
@@ -119,62 +121,16 @@ func (r *deployResult) Oneliner() string {
 // are referencing standard contract and if so warn the use that they should use the already
 // deployed contracts as an alias on mainnet instead of deploying their own copy.
 func checkForStandardContractUsageOnMainnet(state *flowkit.State, logger output.Logger, replace bool) error {
-	mainnetContracts := map[string]standardContract{
-		"FungibleToken": {
-			name:     "FungibleToken",
-			address:  flowsdk.HexToAddress("0xf233dcee88fe0abe"),
-			infoLink: "https://developers.flow.com/flow/core-contracts/fungible-token",
-		},
-		"FlowToken": {
-			name:     "FlowToken",
-			address:  flowsdk.HexToAddress("0x1654653399040a61"),
-			infoLink: "https://developers.flow.com/flow/core-contracts/flow-token",
-		},
-		"FlowFees": {
-			name:     "FlowFees",
-			address:  flowsdk.HexToAddress("0xf919ee77447b7497"),
-			infoLink: "https://developers.flow.com/flow/core-contracts/flow-fees",
-		},
-		"FlowServiceAccount": {
-			name:     "FlowServiceAccount",
-			address:  flowsdk.HexToAddress("0xe467b9dd11fa00df"),
-			infoLink: "https://developers.flow.com/flow/core-contracts/service-account",
-		},
-		"FlowStorageFees": {
-			name:     "FlowStorageFees",
-			address:  flowsdk.HexToAddress("0xe467b9dd11fa00df"),
-			infoLink: "https://developers.flow.com/flow/core-contracts/service-account",
-		},
-		"FlowIDTableStaking": {
-			name:     "FlowIDTableStaking",
-			address:  flowsdk.HexToAddress("0x8624b52f9ddcd04a"),
-			infoLink: "https://developers.flow.com/flow/core-contracts/staking-contract-reference",
-		},
-		"FlowEpoch": {
-			name:     "FlowEpoch",
-			address:  flowsdk.HexToAddress("0x8624b52f9ddcd04a"),
-			infoLink: "https://developers.flow.com/flow/core-contracts/epoch-contract-reference",
-		},
-		"FlowClusterQC": {
-			name:     "FlowClusterQC",
-			address:  flowsdk.HexToAddress("0x8624b52f9ddcd04a"),
-			infoLink: "https://developers.flow.com/flow/core-contracts/epoch-contract-reference",
-		},
-		"FlowDKG": {
-			name:     "FlowDKG",
-			address:  flowsdk.HexToAddress("0x8624b52f9ddcd04a"),
-			infoLink: "https://developers.flow.com/flow/core-contracts/epoch-contract-reference",
-		},
-		"NonFungibleToken": {
-			name:     "NonFungibleToken",
-			address:  flowsdk.HexToAddress("0x1d7e57aa55817448"),
-			infoLink: "https://developers.flow.com/flow/core-contracts/non-fungible-token",
-		},
-		"MetadataViews": {
-			name:     "MetadataViews",
-			address:  flowsdk.HexToAddress("0x1d7e57aa55817448"),
-			infoLink: "https://developers.flow.com/flow/core-contracts/nft-metadata",
-		},
+
+	mainnetContracts := make(map[string]standardContract)
+	sc := systemcontracts.SystemContractsForChain(flowGo.Mainnet)
+
+	for _, coreContract := range sc.All() {
+		mainnetContracts[coreContract.Name] = standardContract{
+			name:     coreContract.Name,
+			address:  flowsdk.HexToAddress(coreContract.Address.String()),
+			infoLink: "https://developers.flow.com/flow/core-contracts/",
+		}
 	}
 
 	contracts, err := state.DeploymentContractsByNetwork(config.MainnetNetwork)
