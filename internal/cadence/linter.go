@@ -67,8 +67,8 @@ func newLinter(state *flowkit.State) *linter {
 
 	// Create checker configs for both standard and script
 	// Scripts have a different stdlib than contracts and transactions
-	l.checkerStandardConfig = l.newCheckerConfig(newStandardLibrary())
-	l.checkerScriptConfig = l.newCheckerConfig(newScriptStandardLibrary())
+	l.checkerStandardConfig = l.newCheckerConfig(NewStandardLibrary())
+	l.checkerScriptConfig = l.newCheckerConfig(NewScriptStandardLibrary())
 
 	return l
 }
@@ -155,7 +155,7 @@ func (l *linter) lintFile(
 func (l *linter) newCheckerConfig(lib standardLibrary) *sema.Config {
 	return &sema.Config{
 		BaseValueActivationHandler: func(_ common.Location) *sema.VariableActivation {
-			return lib.baseValueActivation
+			return lib.BaseValueActivation
 		},
 		AccessCheckMode:            sema.AccessCheckModeStrict,
 		PositionInfoEnabled:        true, // Must be enabled for linters

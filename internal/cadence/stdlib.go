@@ -29,7 +29,7 @@ import (
 )
 
 type standardLibrary struct {
-	baseValueActivation *sema.VariableActivation
+	BaseValueActivation *sema.VariableActivation
 }
 
 var _ stdlib.StandardLibraryHandler = standardLibrary{}
@@ -287,18 +287,18 @@ func (standardLibrary) IsContractBeingAdded(_ common.AddressLocation) bool {
 	panic(errors.NewUnreachableError())
 }
 
-func newStandardLibrary() (result standardLibrary) {
-	result.baseValueActivation = sema.NewVariableActivation(sema.BaseValueActivation)
+func NewStandardLibrary() (result standardLibrary) {
+	result.BaseValueActivation = sema.NewVariableActivation(sema.BaseValueActivation)
 	for _, valueDeclaration := range stdlib.DefaultStandardLibraryValues(result) {
-		result.baseValueActivation.DeclareValue(valueDeclaration)
+		result.BaseValueActivation.DeclareValue(valueDeclaration)
 	}
 	return
 }
 
-func newScriptStandardLibrary() (result standardLibrary) {
-	result.baseValueActivation = sema.NewVariableActivation(sema.BaseValueActivation)
+func NewScriptStandardLibrary() (result standardLibrary) {
+	result.BaseValueActivation = sema.NewVariableActivation(sema.BaseValueActivation)
 	for _, declaration := range stdlib.DefaultScriptStandardLibraryValues(result) {
-		result.baseValueActivation.DeclareValue(declaration)
+		result.BaseValueActivation.DeclareValue(declaration)
 	}
 	return
 }
