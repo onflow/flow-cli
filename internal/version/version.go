@@ -42,9 +42,10 @@ func (c versionCmd) Print(format string) error {
 	switch format {
 	case command.FormatInline, command.FormatText:
 		var txtBuilder strings.Builder
-		txtBuilder.WriteString(fmt.Sprintf("Flow CLI Version: %s %s\n", c.Version, c.Commit))
-		txtBuilder.WriteString(fmt.Sprintf("\nFlow Package Dependencies \n"))
+		txtBuilder.WriteString(fmt.Sprintf("Version: %s\n", c.Version))
+		txtBuilder.WriteString(fmt.Sprintf("Commit: %s\n", c.Commit))
 
+		txtBuilder.WriteString(fmt.Sprintf("\nFlow Package Dependencies \n"))
 		for _, dep := range c.Dependencies {
 			txtBuilder.WriteString(fmt.Sprintf("%s %s\n", dep.Path, dep.Version))
 		}
