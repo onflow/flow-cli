@@ -31,7 +31,7 @@ type stagingValidator struct {
 	// All code for system contracts since they are not staged on the network
 	systemContracts map[common.Location][]byte
 	// Record errors related to missing staged dependencies, as these are reported separately
-	missingContracts map[common.Location]error
+	missingContractErrors map[common.Location]error
 	// Cache for contract elaborations which are reused during program checking & used for the update checker
 	elaborations map[common.Location]*sema.Elaboration
 }
@@ -110,15 +110,17 @@ func (v *stagingValidator) ValidateContractUpdate(
 	}
 
 	// Reset the missing contracts map
-	v.missingContracts = make(map[common.Location]error)
+	v.missingContractErrors = make(map[common.Location]error)
 
 	// Parse and check the contract code
 	_, _, err = v.parseAndCheckContract(ctx, updatedCode, location)
 
 	// Errors related to missing dependencies are separate from other errors
 	// These errors are non-fatal and are only used to inform the user
-	if len(v.missingContracts) > 0 {
-		return &contractsNotStagedError{contracts: v.missingContracts}
+	// We do not care about checking/parsing errors here, since these are ultimately
+	// expected/don't mean anything since the import resolutions are not complete
+	if len(v.missingContractErrors) > 0 {
+		return &contractsNotStagedError{contracts: v.missingContractErrors}
 	}
 
 	if err != nil {
@@ -240,6 +242,7 @@ func (v *stagingValidator) resolveImport(checker *sema.Checker, importedLocation
 	if !ok {
 		importedCode, err := v.getStagedContractCode(context.Background(), addrLocation)
 		if err != nil {
+			v.missingContractErrors[importedLocation] = err
 			return nil, fmt.Errorf("failed to get staged contract code: %w", err)
 		}
 
