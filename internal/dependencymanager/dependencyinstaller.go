@@ -325,7 +325,7 @@ func (di *DependencyInstaller) updateDependencyDeployment(contractName string) e
 			deployment.AddContract(config.ContractDeployment{Name: c})
 		}
 
-		err := di.State.SaveDefault()
+		err := di.SaveState()
 		if err != nil {
 			return err
 		}
@@ -351,7 +351,7 @@ func (di *DependencyInstaller) updateDependencyState(networkName, contractAddres
 
 	di.State.Dependencies().AddOrUpdate(dep)
 	di.State.Contracts().AddDependencyAsContract(dep, networkName)
-	err := di.State.SaveDefault()
+	err := di.SaveState()
 	if err != nil {
 		return err
 	}
@@ -361,4 +361,11 @@ func (di *DependencyInstaller) updateDependencyState(networkName, contractAddres
 	}
 
 	return nil
+}
+
+func (di *DependencyInstaller) SaveState() error {
+	di.Mutex.Lock()
+	defer di.Mutex.Unlock()
+
+	return di.State.SaveDefault()
 }
