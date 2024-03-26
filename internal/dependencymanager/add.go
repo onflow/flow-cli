@@ -58,13 +58,13 @@ func add(
 
 	dep := args[0]
 
-	installer, err := NewDependencyInstaller(logger, state)
+	installer, err := NewDependencyInstaller(logger, state, addFlags.skipDeployments)
 	if err != nil {
 		logger.Error(fmt.Sprintf("Error: %v", err))
 		return nil, err
 	}
 
-	if err := installer.Add(dep, addFlags.name, addFlags.skipDeployments); err != nil {
+	if err := installer.Add(dep, addFlags.name); err != nil {
 		logger.Error(fmt.Sprintf("Error: %v", err))
 		return nil, err
 	}

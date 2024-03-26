@@ -42,14 +42,15 @@ import (
 )
 
 type DependencyInstaller struct {
-	Gateways map[string]gateway.Gateway
-	Logger   output.Logger
-	State    *flowkit.State
-	Mutex    sync.Mutex
+	Gateways        map[string]gateway.Gateway
+	Logger          output.Logger
+	State           *flowkit.State
+	Mutex           sync.Mutex
+	SkipDeployments bool
 }
 
 // NewDependencyInstaller creates a new instance of DependencyInstaller
-func NewDependencyInstaller(logger output.Logger, state *flowkit.State) (*DependencyInstaller, error) {
+func NewDependencyInstaller(logger output.Logger, state *flowkit.State, skipDeployments bool) (*DependencyInstaller, error) {
 	emulatorGateway, err := gateway.NewGrpcGateway(config.EmulatorNetwork)
 	if err != nil {
 		return nil, fmt.Errorf("error creating emulator gateway: %v", err)
@@ -72,14 +73,15 @@ func NewDependencyInstaller(logger output.Logger, state *flowkit.State) (*Depend
 	}
 
 	return &DependencyInstaller{
-		Gateways: gateways,
-		Logger:   logger,
-		State:    state,
+		Gateways:        gateways,
+		Logger:          logger,
+		State:           state,
+		SkipDeployments: skipDeployments,
 	}, nil
 }
 
 // Install processes all the dependencies in the state and installs them and any dependencies they have
-func (di *DependencyInstaller) Install(skipDeployments bool) error {
+func (di *DependencyInstaller) Install() error {
 	for _, dependency := range *di.State.Dependencies() {
 		if err := di.processDependency(dependency); err != nil {
 			di.Logger.Error(fmt.Sprintf("Error processing dependency: %v", err))
@@ -90,7 +92,7 @@ func (di *DependencyInstaller) Install(skipDeployments bool) error {
 }
 
 // Add processes a single dependency and installs it and any dependencies it has, as well as adding it to the state
-func (di *DependencyInstaller) Add(depSource, customName string, skipDeployments bool) error {
+func (di *DependencyInstaller) Add(depSource, customName string) error {
 	depNetwork, depAddress, depContractName, err := config.ParseSourceString(depSource)
 	if err != nil {
 		return fmt.Errorf("error parsing source: %w", err)
@@ -281,6 +283,9 @@ func (di *DependencyInstaller) handleFoundContract(networkName, contractAddr, as
 	}
 
 	// TODO: Handle adding to dependencies
+	if !di.SkipDeployments {
+		// Add to deployments
+	}
 
 	return nil
 }
