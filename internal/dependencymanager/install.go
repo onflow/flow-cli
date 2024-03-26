@@ -29,7 +29,9 @@ import (
 	"github.com/onflow/flow-cli/internal/command"
 )
 
-type installFlagsCollection struct{}
+type installFlagsCollection struct {
+	skipDeployments bool `default:"false" flag:"skip-deployments" info:"Skip adding the dependency to deployments"`
+}
 
 var installFlags = installFlagsCollection{}
 
@@ -58,7 +60,7 @@ func install(
 		return nil, err
 	}
 
-	if err := installer.Install(); err != nil {
+	if err := installer.Install(installFlags.skipDeployments); err != nil {
 		logger.Error(fmt.Sprintf("Error: %v", err))
 		return nil, err
 	}

@@ -79,7 +79,7 @@ func NewDependencyInstaller(logger output.Logger, state *flowkit.State) (*Depend
 }
 
 // Install processes all the dependencies in the state and installs them and any dependencies they have
-func (di *DependencyInstaller) Install() error {
+func (di *DependencyInstaller) Install(skipDeployments bool) error {
 	for _, dependency := range *di.State.Dependencies() {
 		if err := di.processDependency(dependency); err != nil {
 			di.Logger.Error(fmt.Sprintf("Error processing dependency: %v", err))
@@ -90,7 +90,7 @@ func (di *DependencyInstaller) Install() error {
 }
 
 // Add processes a single dependency and installs it and any dependencies it has, as well as adding it to the state
-func (di *DependencyInstaller) Add(depSource, customName string) error {
+func (di *DependencyInstaller) Add(depSource, customName string, skipDeployments bool) error {
 	depNetwork, depAddress, depContractName, err := config.ParseSourceString(depSource)
 	if err != nil {
 		return fmt.Errorf("error parsing source: %w", err)
@@ -274,16 +274,18 @@ func (di *DependencyInstaller) handleFoundContract(networkName, contractAddr, as
 		return fmt.Errorf("error handling file system: %w", err)
 	}
 
-	err = di.updateState(networkName, contractAddr, assignedName, contractName, originalContractDataHash)
+	err = di.updateDependencyState(networkName, contractAddr, assignedName, contractName, originalContractDataHash)
 	if err != nil {
 		di.Logger.Error(fmt.Sprintf("Error updating state: %v", err))
 		return err
 	}
 
+	// TODO: Handle adding to dependencies
+
 	return nil
 }
 
-func (di *DependencyInstaller) updateState(networkName, contractAddress, assignedName, contractName, contractHash string) error {
+func (di *DependencyInstaller) updateDependencyState(networkName, contractAddress, assignedName, contractName, contractHash string) error {
 	dep := config.Dependency{
 		Name: assignedName,
 		Source: config.Source{
