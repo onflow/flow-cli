@@ -20,6 +20,7 @@ package util
 
 import (
 	"fmt"
+	"github.com/onflow/flowkit/accounts"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -492,6 +493,42 @@ func NewDeploymentPrompt(
 			break
 		}
 	}
+
+	return deploymentData
+}
+
+// AddContractToDeploymentPrompt prompts a user to select an account to deploy a given contract on a given network
+// TODO: Add none as an option
+func AddContractToDeploymentPrompt(networkName string, accounts accounts.Accounts, contractName string) *DeploymentData {
+	deploymentData := &DeploymentData{
+		Network:   networkName,
+		Contracts: []string{contractName},
+	}
+	var err error
+
+	accountNames := make([]string, 0)
+	for _, account := range accounts {
+		accountNames = append(accountNames, account.Name)
+	}
+
+	// Add a "none" option to the list of accounts
+	accountNames = append(accountNames, "none")
+
+	accountPrompt := promptui.Select{
+		Label: fmt.Sprintf("Choose an account to deploy %s to on %s (or 'none' to skip)", contractName, networkName),
+		Items: accountNames,
+	}
+	selectedIndex, _, err := accountPrompt.Run()
+	if err == promptui.ErrInterrupt {
+		os.Exit(-1)
+	}
+
+	// Handle the "none" selection based on its last position
+	if selectedIndex == len(accountNames)-1 {
+		return nil
+	}
+
+	deploymentData.Account = accounts[selectedIndex].Name
 
 	return deploymentData
 }
