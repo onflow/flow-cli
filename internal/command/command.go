@@ -74,9 +74,9 @@ type Command struct {
 }
 
 const (
-	formatText   = "text"
-	formatInline = "inline"
-	formatJSON   = "json"
+	FormatText   = "text"
+	FormatInline = "inline"
+	FormatJSON   = "json"
 )
 
 const (
@@ -238,7 +238,7 @@ func resolveHost(state *flowkit.State, hostFlag, networkKeyFlag, networkFlag str
 func createLogger(logFlag string, formatFlag string) output.Logger {
 	// disable logging if we user want a specific format like JSON
 	// (more common they will not want also to have logs)
-	if formatFlag != formatText {
+	if formatFlag != FormatText {
 		logFlag = logLevelNone
 	}
 

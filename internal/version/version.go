@@ -19,12 +19,82 @@
 package version
 
 import (
+	"encoding/json"
 	"fmt"
+	"log"
+	"runtime/debug"
+	"strings"
 
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/build"
+	"github.com/onflow/flow-cli/internal/command"
 )
+
+type versionCmd struct {
+	Version      string
+	Commit       string
+	Dependencies []debug.Module
+}
+
+// Print prints the version information in the given format.
+func (c versionCmd) Print(format string) error {
+	switch format {
+	case command.FormatInline, command.FormatText:
+		var txtBuilder strings.Builder
+		txtBuilder.WriteString(fmt.Sprintf("Version: %s\n", c.Version))
+		txtBuilder.WriteString(fmt.Sprintf("Commit: %s\n", c.Commit))
+
+		txtBuilder.WriteString(fmt.Sprintf("\nFlow Package Dependencies \n"))
+		for _, dep := range c.Dependencies {
+			txtBuilder.WriteString(fmt.Sprintf("%s %s\n", dep.Path, dep.Version))
+		}
+
+		log.Println(txtBuilder.String())
+
+		return nil
+
+	case command.FormatJSON:
+		jsonRes, err := c.MarshalJSON()
+		if err != nil {
+			return err
+		}
+
+		log.Println(string(jsonRes))
+
+		return nil
+
+	default:
+		return fmt.Errorf("unsupported format: %s", format)
+	}
+}
+
+// MarshalJSON returns the JSON encoding of the cmdPrint.
+func (c *versionCmd) MarshalJSON() ([]byte, error) {
+	js := struct {
+		Version      string `json:"version"`
+		Commit       string `json:"commit"`
+		Dependencies []struct {
+			Package string `json:"package"`
+			Version string `json:"version"`
+		} `json:"dependencies"`
+	}{
+		Version: c.Version,
+		Commit:  c.Commit,
+	}
+
+	for _, dep := range c.Dependencies {
+		js.Dependencies = append(js.Dependencies, struct {
+			Package string `json:"package"`
+			Version string `json:"version"`
+		}{
+			Package: dep.Path,
+			Version: dep.Version,
+		})
+	}
+
+	return json.Marshal(js)
+}
 
 var Cmd = &cobra.Command{
 	Use:   "version",
@@ -33,16 +103,27 @@ var Cmd = &cobra.Command{
 		semver := build.Semver()
 		commit := build.Commit()
 
-		// Print version/commit strings if they are known
-		if build.IsDefined(semver) {
-			fmt.Printf("Version: %s\n", semver)
+		v := &versionCmd{
+			Version: semver,
+			Commit:  commit,
 		}
-		if build.IsDefined(commit) {
-			fmt.Printf("Commit: %s\n", commit)
+
+		bi, ok := debug.ReadBuildInfo()
+		if !ok {
+			log.Printf("Failed to read build info")
+			return
 		}
-		// If no version info is known print a message to indicate this.
-		if !build.IsDefined(semver) && !build.IsDefined(commit) {
-			fmt.Printf("Version information unknown!\n")
+
+		// only add dependencies from github.com/onflow
+		for _, dep := range bi.Deps {
+			if strings.Contains(dep.Path, "github.com/onflow/") {
+				v.Dependencies = append(v.Dependencies, *dep)
+			}
+		}
+
+		if err := v.Print(command.Flags.Format); err != nil {
+			log.Printf("Failed to print version information: %s", err)
+			return
 		}
 	},
 }
