@@ -23,6 +23,8 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+	"github.com/onflow/flow-go/fvm/systemcontracts"
+	flowGo "github.com/onflow/flow-go/model/flow"
 	"os"
 	"path/filepath"
 	"sync"
@@ -244,6 +246,17 @@ func (di *DependencyInstaller) handleFileSystem(contractAddr, contractName, cont
 	return nil
 }
 
+func isCoreContract(contractName string) bool {
+	sc := systemcontracts.SystemContractsForChain(flowGo.Emulator)
+
+	for _, coreContract := range sc.All() {
+		if coreContract.Name == contractName {
+			return true
+		}
+	}
+	return false
+}
+
 func (di *DependencyInstaller) handleFoundContract(networkName, contractAddr, assignedName, contractName string, program *project.Program) error {
 	hash := sha256.New()
 	hash.Write(program.CodeWithUnprocessedImports())
@@ -282,7 +295,7 @@ func (di *DependencyInstaller) handleFoundContract(networkName, contractAddr, as
 		return err
 	}
 
-	if !di.SkipDeployments {
+	if !di.SkipDeployments && !isCoreContract(contractName) {
 		err = di.updateDependencyDeployment(contractName)
 		if err != nil {
 			di.Logger.Error(fmt.Sprintf("Error updating deployment: %v", err))
