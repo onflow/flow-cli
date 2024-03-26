@@ -282,9 +282,42 @@ func (di *DependencyInstaller) handleFoundContract(networkName, contractAddr, as
 		return err
 	}
 
-	// TODO: Handle adding to dependencies
 	if !di.SkipDeployments {
-		// Add to deployments
+		err = di.updateDependencyDeployment(contractName)
+		if err != nil {
+			di.Logger.Error(fmt.Sprintf("Error updating deployment: %v", err))
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (di *DependencyInstaller) updateDependencyDeployment(contractName string) error {
+	// Add to deployments
+	// If a deployment already exists for that account, contract, and network, then ignore
+	raw := util.AddContractToDeploymentPrompt("emulator", *di.State.Accounts(), contractName)
+
+	if raw != nil {
+		deployment := di.State.Deployments().ByAccountAndNetwork(raw.Account, raw.Network)
+		if deployment == nil {
+			di.State.Deployments().AddOrUpdate(config.Deployment{
+				Network: raw.Network,
+				Account: raw.Account,
+			})
+			deployment = di.State.Deployments().ByAccountAndNetwork(raw.Account, raw.Network)
+		}
+
+		for _, c := range raw.Contracts {
+			deployment.AddContract(config.ContractDeployment{Name: c})
+		}
+
+		err := di.State.SaveDefault()
+		if err != nil {
+			return err
+		}
+
+		di.Logger.Info(fmt.Sprintf("Dependency Manager: %s added to emulator deployments in flow.json", contractName))
 	}
 
 	return nil
