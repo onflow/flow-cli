@@ -263,6 +263,7 @@ func (l *lilicoAccount) create(network string) (flowsdk.Identifier, error) {
 	request.Header.Add("Authorization", accountToken)
 
 	client := &http.Client{
+		Timeout: time.Second * 20,
 		Transport: &http.Transport{
 			TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, // lilico api doesn't yet have a valid cert, todo reevaluate
 		},
@@ -272,6 +273,11 @@ func (l *lilicoAccount) create(network string) (flowsdk.Identifier, error) {
 		return flowsdk.EmptyID, fmt.Errorf("could not create an account: %w", err)
 	}
 	defer res.Body.Close()
+
+	if res.StatusCode != http.StatusOK {
+		bodyBytes, _ := io.ReadAll(res.Body)
+		return flowsdk.EmptyID, fmt.Errorf("account creation failed with status %d: %s", res.StatusCode, string(bodyBytes))
+	}
 
 	body, _ := io.ReadAll(res.Body)
 	var lilicoRes lilicoResponse
