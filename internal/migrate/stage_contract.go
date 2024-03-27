@@ -22,7 +22,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 
+	"github.com/manifoldco/promptui"
 	"github.com/onflow/cadence"
 	"github.com/onflow/cadence/runtime/common"
 	"github.com/onflow/contract-updater/lib/go/templates"
@@ -38,7 +40,7 @@ import (
 )
 
 var stageContractflags struct {
-	Force bool `default:"false" flag:"force" info:"Force staging the contract without validation"`
+	SkipValidation bool `default:"false" flag:"skip-validation" info:"Do not validate the contract code against staged dependencies"`
 }
 
 var stageContractCommand = &command.Command{
@@ -87,23 +89,51 @@ func stageContract(
 	}
 
 	// Validate the contract code by default
-	if !stageContractflags.Force {
+	if !stageContractflags.SkipValidation {
+		logger.StartProgress("Validating contract code against any staged dependencies")
 		validator := newStagingValidator(flow, state)
 
-		var missingDependenciesErr *contractsNotStagedError
+		var missingDependenciesErr *missingDependenciesError
 		contractLocation := common.NewAddressLocation(nil, common.Address(account.Address), contractName)
-		err = validator.ValidateContractUpdate(context.Background(), contractLocation, replacedCode)
+		err = validator.ValidateContractUpdate(context.Background(), contractLocation, common.StringLocation(contract.Location), replacedCode)
+
+		logger.StopProgress()
 
 		// Errors when the contract's dependencies have not been staged yet are non-fatal
 		// This is because the contract may be dependent on contracts that are not yet staged
 		// and we do not want to require in-order staging of contracts
 		// Any other errors are fatal, however, can be bypassed with the --force flag
 		if errors.As(err, &missingDependenciesErr) {
-			logger.Info(fmt.Sprintf("The staged contract cannot be validated: %s", err))
-			logger.Info("Staging will continue without validation, please monitor the status of the contract to ensure it is staged correctly")
+			infoMessage := strings.Builder{}
+			infoMessage.WriteString("Validation cannot be performed as some of your contract's dependencies could not be found (have they been staged yet?)\n")
+			for _, contract := range missingDependenciesErr.contracts {
+				infoMessage.WriteString(fmt.Sprintf("  - %s\n", contract))
+			}
+			infoMessage.WriteString("\nYou may still stage your contract, however it will be unable to be migrated until the missing contracts are staged by their respective owners.  It is important to monitor the status of your contract using the `flow migrate is-validated` command\n")
+			logger.Error(infoMessage.String())
+
+			continuePrompt := promptui.Select{
+				Label: "Do you wish to continue staging your contract?",
+				Items: []string{"Yes", "No"},
+			}
+
+			_, result, err := continuePrompt.Run()
+			if err != nil {
+				return nil, err
+			}
+
+			if result == "No" {
+				return nil, fmt.Errorf("staging cancelled")
+			}
 		} else if err != nil {
-			return nil, fmt.Errorf("the contract code does not appear to be valid, you can use the --force flag to bypass this check: %w", err)
+			logger.Error(validator.prettyPrintError(err, common.StringLocation(contract.Location)))
+			return nil, fmt.Errorf("errors were found while validating the contract code, and your contract HAS NOT been staged, you can use the --skip-validation flag to bypass this check")
+		} else {
+			logger.Info("No issues found while validating contract code\n")
+			logger.Info("DISCLAIMER: Pre-staging validation is not exhaustive and does not guarantee the contract will work as expected, please monitor the status of your contract using the `flow migrate is-validated` command\n")
 		}
+	} else {
+		logger.Info("Skipping contract code validation, you may monitor the status of your contract using the `flow migrate is-validated` command\n")
 	}
 
 	tx, res, err := flow.SendTransaction(
