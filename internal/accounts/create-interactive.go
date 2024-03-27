@@ -223,7 +223,7 @@ type lilicoResponse struct {
 	} `json:"data"`
 }
 
-var accountToken = ""
+var accountToken = "lilico:sF60s3wughJBmNh2"
 
 const defaultHashAlgo = crypto.SHA3_256
 
