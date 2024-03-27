@@ -37,7 +37,7 @@ var isValidatedflags struct{}
 var IsValidatedCommand = &command.Command{
 	Cmd: &cobra.Command{
 		Use:     "is-validated <CONTRACT_NAME>",
-		Short:   "checks to see if the contract is validated for migration",
+		Short:   "checks to see if the contract has passed the last emulated migration",
 		Example: `flow migrate is-validated HelloWorld`,
 		Args:    cobra.MinimumNArgs(1),
 	},
