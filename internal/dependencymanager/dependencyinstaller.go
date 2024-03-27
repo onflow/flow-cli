@@ -23,13 +23,11 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+	"github.com/onflow/flow-cli/internal/util"
 	"github.com/onflow/flow-go/fvm/systemcontracts"
 	flowGo "github.com/onflow/flow-go/model/flow"
 	"os"
 	"path/filepath"
-	"sync"
-
-	"github.com/onflow/flow-cli/internal/util"
 
 	"github.com/onflow/flowkit/gateway"
 
@@ -47,7 +45,6 @@ type DependencyInstaller struct {
 	Gateways        map[string]gateway.Gateway
 	Logger          output.Logger
 	State           *flowkit.State
-	Mutex           sync.Mutex
 	SkipDeployments bool
 }
 
@@ -141,13 +138,6 @@ func (di *DependencyInstaller) fetchDependencies(networkName string, address flo
 		return fmt.Errorf("contracts are nil for account: %s", address)
 	}
 
-	var wg sync.WaitGroup
-	errCh := make(chan error, len(account.Contracts))
-
-	// Create a max number of goroutines so that we don't rate limit the access node
-	maxGoroutines := 5
-	semaphore := make(chan struct{}, maxGoroutines)
-
 	found := false
 
 	for _, contract := range account.Contracts {
@@ -171,18 +161,11 @@ func (di *DependencyInstaller) fetchDependencies(networkName string, address flo
 			if program.HasAddressImports() {
 				imports := program.AddressImportDeclarations()
 				for _, imp := range imports {
-					wg.Add(1)
-					go func(importAddress flowsdk.Address, contractName string) {
-						semaphore <- struct{}{}
-						defer func() {
-							<-semaphore
-							wg.Done()
-						}()
-						err := di.fetchDependencies(networkName, importAddress, contractName, contractName)
-						if err != nil {
-							errCh <- err
-						}
-					}(flowsdk.HexToAddress(imp.Location.String()), imp.Identifiers[0].String())
+					contractName := imp.Identifiers[0].String()
+					err := di.fetchDependencies(networkName, flowsdk.HexToAddress(imp.Location.String()), contractName, contractName)
+					if err != nil {
+						return err
+					}
 				}
 			}
 		}
@@ -191,16 +174,6 @@ func (di *DependencyInstaller) fetchDependencies(networkName string, address flo
 	if !found {
 		errMsg := fmt.Sprintf("contract %s not found for account %s on network %s", contractName, address, networkName)
 		di.Logger.Error(errMsg)
-	}
-
-	wg.Wait()
-	close(errCh)
-	close(semaphore)
-
-	for err := range errCh {
-		if err != nil {
-			return err
-		}
 	}
 
 	return nil
@@ -232,9 +205,6 @@ func (di *DependencyInstaller) createContractFile(address, contractName, data st
 }
 
 func (di *DependencyInstaller) handleFileSystem(contractAddr, contractName, contractData, networkName string) error {
-	di.Mutex.Lock()
-	defer di.Mutex.Unlock()
-
 	if !di.contractFileExists(contractAddr, contractName) {
 		if err := di.createContractFile(contractAddr, contractName, contractData); err != nil {
 			return fmt.Errorf("failed to create contract file: %w", err)
@@ -325,7 +295,7 @@ func (di *DependencyInstaller) updateDependencyDeployment(contractName string) e
 			deployment.AddContract(config.ContractDeployment{Name: c})
 		}
 
-		err := di.SaveState()
+		err := di.State.SaveDefault()
 		if err != nil {
 			return err
 		}
@@ -351,7 +321,7 @@ func (di *DependencyInstaller) updateDependencyState(networkName, contractAddres
 
 	di.State.Dependencies().AddOrUpdate(dep)
 	di.State.Contracts().AddDependencyAsContract(dep, networkName)
-	err := di.SaveState()
+	err := di.State.SaveDefault()
 	if err != nil {
 		return err
 	}
@@ -361,11 +331,4 @@ func (di *DependencyInstaller) updateDependencyState(networkName, contractAddres
 	}
 
 	return nil
-}
-
-func (di *DependencyInstaller) SaveState() error {
-	di.Mutex.Lock()
-	defer di.Mutex.Unlock()
-
-	return di.State.SaveDefault()
 }

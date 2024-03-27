@@ -498,7 +498,6 @@ func NewDeploymentPrompt(
 }
 
 // AddContractToDeploymentPrompt prompts a user to select an account to deploy a given contract on a given network
-// TODO: Add none as an option
 func AddContractToDeploymentPrompt(networkName string, accounts accounts.Accounts, contractName string) *DeploymentData {
 	deploymentData := &DeploymentData{
 		Network:   networkName,
