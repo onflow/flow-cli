@@ -41,8 +41,8 @@ var IsValidatedCommand = &command.Command{
 		Example: `flow migrate is-validated HelloWorld`,
 		Args:    cobra.MinimumNArgs(1),
 	},
-	Flags: &isStagedflags,
-	RunS:  isStaged,
+	Flags: &isValidatedflags,
+	RunS:  isValidated,
 }
 
 func isValidated(
