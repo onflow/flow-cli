@@ -20,11 +20,12 @@ package util
 
 import (
 	"fmt"
-	"github.com/onflow/flowkit/accounts"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
+
+	"github.com/onflow/flowkit/accounts"
 
 	"github.com/gosuri/uilive"
 	"github.com/manifoldco/promptui"
