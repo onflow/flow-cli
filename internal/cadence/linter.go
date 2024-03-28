@@ -25,6 +25,8 @@ import (
 
 	"errors"
 
+	"github.com/onflow/flow-cli/internal/util"
+
 	cdclint "github.com/onflow/cadence-tools/lint"
 	cdctests "github.com/onflow/cadence-tools/test/helpers"
 	"github.com/onflow/cadence/runtime/ast"
@@ -34,7 +36,6 @@ import (
 	"github.com/onflow/cadence/runtime/sema"
 	"github.com/onflow/cadence/runtime/stdlib"
 	"github.com/onflow/cadence/tools/analysis"
-	"github.com/onflow/flow-cli/internal/util"
 	"github.com/onflow/flowkit/v2"
 	"golang.org/x/exp/maps"
 )
