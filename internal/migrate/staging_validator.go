@@ -109,12 +109,6 @@ func (v *stagingValidator) ValidateContractUpdate(
 		return fmt.Errorf("failed to parse old contract code: %w", err)
 	}
 
-	// Parse the new contract code
-	newProgram, err := parser.ParseProgram(nil, updatedCode, parser.Config{})
-	if err != nil {
-		return fmt.Errorf("failed to parse new contract code: %w", err)
-	}
-
 	// Reset the missing contract dependencies
 	v.missingDependencies = nil
 
@@ -136,6 +130,7 @@ func (v *stagingValidator) ValidateContractUpdate(
 		return err
 	}
 
+	// Convert the new program checker to an interpreter program
 	interpreterProgram := interpreter.ProgramFromChecker(newProgramChecker)
 
 	// Check if contract code is valid according to Cadence V1 Update Checker
