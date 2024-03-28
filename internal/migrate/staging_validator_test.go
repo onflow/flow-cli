@@ -21,12 +21,13 @@ package migrate
 import (
 	"testing"
 
+	"github.com/onflow/flow-cli/internal/util"
+
 	"github.com/onflow/cadence"
 	"github.com/onflow/cadence/runtime/common"
 	"github.com/onflow/cadence/runtime/sema"
 	"github.com/onflow/cadence/runtime/stdlib"
 	"github.com/onflow/contract-updater/lib/go/templates"
-	"github.com/onflow/flow-cli/internal/util"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flowkit/v2"
 	"github.com/onflow/flowkit/v2/config"
