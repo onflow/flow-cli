@@ -67,17 +67,16 @@ type RunWithState func(
 ) (Result, error)
 
 type Command struct {
-	Cmd    *cobra.Command
-	Flags  any
-	Run    run
-	RunS   RunWithState
-	Status *int
+	Cmd   *cobra.Command
+	Flags any
+	Run   run
+	RunS  RunWithState
 }
 
 const (
-	formatText   = "text"
-	formatInline = "inline"
-	formatJSON   = "json"
+	FormatText   = "text"
+	FormatInline = "inline"
+	FormatJSON   = "json"
 )
 
 const (
@@ -163,6 +162,13 @@ func (c Command) AddToParent(parent *cobra.Command) {
 		handleError("Output Error", err)
 
 		wg.Wait()
+
+		// exit with code if result has it
+		exitCode := 0
+		if res, ok := result.(ResultWithExitCode); ok {
+			exitCode = res.ExitCode()
+		}
+		os.Exit(exitCode)
 	}
 
 	bindFlags(c)
@@ -232,7 +238,7 @@ func resolveHost(state *flowkit.State, hostFlag, networkKeyFlag, networkFlag str
 func createLogger(logFlag string, formatFlag string) output.Logger {
 	// disable logging if we user want a specific format like JSON
 	// (more common they will not want also to have logs)
-	if formatFlag != formatText {
+	if formatFlag != FormatText {
 		logFlag = logLevelNone
 	}
 

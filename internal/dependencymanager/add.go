@@ -30,7 +30,8 @@ import (
 )
 
 type addFlagsCollection struct {
-	name string `default:"" flag:"name" info:"Name of the dependency"`
+	name            string `default:"" flag:"name" info:"Name of the dependency"`
+	skipDeployments bool   `default:"false" flag:"skip-deployments" info:"Skip adding the dependency to deployments"`
 }
 
 var addFlags = addFlagsCollection{}
@@ -57,7 +58,7 @@ func add(
 
 	dep := args[0]
 
-	installer, err := NewDependencyInstaller(logger, state)
+	installer, err := NewDependencyInstaller(logger, state, addFlags.skipDeployments)
 	if err != nil {
 		logger.Error(fmt.Sprintf("Error: %v", err))
 		return nil, err

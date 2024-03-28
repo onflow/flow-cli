@@ -30,6 +30,7 @@ import (
 	cdcTests "github.com/onflow/cadence-tools/test"
 	"github.com/onflow/cadence/runtime"
 	"github.com/onflow/cadence/runtime/common"
+	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flowkit"
@@ -71,8 +72,6 @@ type flagsTests struct {
 
 var testFlags = flagsTests{}
 
-var status = 0
-
 var TestCommand = &command.Command{
 	Cmd: &cobra.Command{
 		Use:     "test <filename>",
@@ -81,9 +80,8 @@ var TestCommand = &command.Command{
 		Args:    cobra.MinimumNArgs(1),
 		GroupID: "tools",
 	},
-	Flags:  &testFlags,
-	RunS:   run,
-	Status: &status,
+	Flags: &testFlags,
+	RunS:  run,
 }
 
 func run(
@@ -149,7 +147,8 @@ func testCode(
 	state *flowkit.State,
 	flags flagsTests,
 ) (*result, error) {
-	runner := cdcTests.NewTestRunner()
+	logger := zerolog.New(zerolog.ConsoleWriter{Out: os.Stderr}).With().Timestamp().Logger()
+	runner := cdcTests.NewTestRunner().WithLogger(logger)
 
 	var coverageReport *runtime.CoverageReport
 	if flags.Cover {
@@ -187,6 +186,7 @@ func testCode(
 	}
 
 	testResults := make(map[string]cdcTests.Results, 0)
+	exitCode := 0
 	for scriptPath, code := range testFiles {
 		runner := runner.
 			WithImportResolver(importResolver(scriptPath, state)).
@@ -220,7 +220,7 @@ func testCode(
 
 		for _, result := range testResults[scriptPath] {
 			if result.Error != nil {
-				status = 1
+				exitCode = 1
 				break
 			}
 		}
@@ -230,6 +230,7 @@ func testCode(
 		Results:        testResults,
 		CoverageReport: coverageReport,
 		RandomSeed:     seed,
+		exitCode:       exitCode,
 	}, nil
 }
 
@@ -302,9 +303,10 @@ type result struct {
 	Results        map[string]cdcTests.Results
 	CoverageReport *runtime.CoverageReport
 	RandomSeed     int64
+	exitCode       int
 }
 
-var _ command.Result = &result{}
+var _ command.ResultWithExitCode = &result{}
 
 func (r *result) JSON() any {
 	results := make(map[string]map[string]string, len(r.Results))
@@ -375,4 +377,8 @@ func (r *result) Oneliner() string {
 	}
 
 	return builder.String()
+}
+
+func (r *result) ExitCode() int {
+	return r.exitCode
 }
