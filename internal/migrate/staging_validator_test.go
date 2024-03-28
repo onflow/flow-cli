@@ -249,4 +249,41 @@ func Test_StagingValidator(t *testing.T) {
 		require.Equal(t, 1, len(missingDepsErr.MissingContracts))
 		require.Equal(t, impLocation, missingDepsErr.MissingContracts[0])
 	})
+
+	t.Run("valid contract update with system contract imports", func(t *testing.T) {
+		location := common.NewAddressLocation(nil, common.Address{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01}, "Test")
+		sourceCodeLocation := common.StringLocation("./Test.cdc")
+		oldContract := `
+		import FlowToken from 0x7e60df042a9c0868
+		pub contract Test {
+			pub fun test() {}
+		}`
+		newContract := `
+		import FlowToken from 0x7e60df042a9c0868
+		import Burner from 0x9a0766d93b6608b7
+		access(all) contract Test {
+			access(all) fun test() {}
+		}`
+		mockAccount := &flow.Account{
+			Address: flow.HexToAddress("01"),
+			Balance: 1000,
+			Keys:    nil,
+			Contracts: map[string][]byte{
+				"Test": []byte(oldContract),
+			},
+		}
+
+		// setup mocks
+		require.NoError(t, rw.WriteFile(sourceCodeLocation.String(), []byte(newContract), 0o644))
+		srv.GetAccount.Run(func(args mock.Arguments) {
+			require.Equal(t, flow.HexToAddress("01"), args.Get(1).(flow.Address))
+		}).Return(mockAccount, nil)
+		srv.Network.Return(config.Network{
+			Name: "testnet",
+		}, nil)
+
+		validator := newStagingValidator(srv.Mock, state)
+		err := validator.ValidateContractUpdate(location, sourceCodeLocation, []byte(newContract))
+		require.NoError(t, err)
+	})
 }

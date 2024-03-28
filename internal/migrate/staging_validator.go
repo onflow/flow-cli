@@ -40,7 +40,6 @@ import (
 	"github.com/onflow/flow-go/cmd/util/ledger/migrations"
 	"github.com/onflow/flow-go/model/flow"
 	"github.com/onflow/flowkit/v2"
-	"github.com/onflow/flowkit/v2/config"
 )
 
 type stagingValidator struct {
@@ -78,9 +77,9 @@ func (e *missingDependenciesError) Error() string {
 
 var _ error = &missingDependenciesError{}
 
-var chainIdMap = map[config.Network]flow.ChainID{
-	config.MainnetNetwork: flow.Mainnet,
-	config.TestnetNetwork: flow.Testnet,
+var chainIdMap = map[string]flow.ChainID{
+	"mainnet": flow.Mainnet,
+	"testnet": flow.Testnet,
 }
 
 func newStagingValidator(flow flowkit.Services, state *flowkit.State) *stagingValidator {
@@ -296,7 +295,7 @@ func (v *stagingValidator) resolveImport(checker *sema.Checker, importedLocation
 }
 
 func (v *stagingValidator) resolveSystemContracts() {
-	chainId, ok := chainIdMap[v.flow.Network()]
+	chainId, ok := chainIdMap[v.flow.Network().Name]
 	if !ok {
 		return
 	}
