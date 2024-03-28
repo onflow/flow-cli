@@ -98,7 +98,7 @@ func (l *linter) lintFile(
 			return nil, fmt.Errorf("could not process parsing error: %s", parseProgramErr)
 		}
 
-		checkerDiagnostics, err := GetDiagnosticsFromParentError(parserErr, location, codeStr)
+		checkerDiagnostics, err := getDiagnosticsFromParentError(parserErr, location, codeStr)
 		if err != nil {
 			return nil, err
 		}
@@ -130,7 +130,7 @@ func (l *linter) lintFile(
 			return nil, fmt.Errorf("could not process checking error: %s", checkProgramErr)
 		}
 
-		checkerDiagnostics, err := GetDiagnosticsFromParentError(checkerErr, location, codeStr)
+		checkerDiagnostics, err := getDiagnosticsFromParentError(checkerErr, location, codeStr)
 		if err != nil {
 			return nil, err
 		}
@@ -278,7 +278,7 @@ func (l *linter) resolveImportFilepath(
 
 // helpers
 
-func GetDiagnosticsFromParentError(err cdcerrors.ParentError, location common.Location, code string) ([]analysis.Diagnostic, error) {
+func getDiagnosticsFromParentError(err cdcerrors.ParentError, location common.Location, code string) ([]analysis.Diagnostic, error) {
 	diagnostics := make([]analysis.Diagnostic, 0)
 
 	for _, childErr := range err.ChildErrors() {
