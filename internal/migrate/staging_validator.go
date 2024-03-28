@@ -204,7 +204,6 @@ func (v *stagingValidator) parseAndCheckContract(
 }
 
 func (v *stagingValidator) getStagedContractCode(
-	ctx context.Context,
 	location common.AddressLocation,
 ) ([]byte, error) {
 	// First check if the code is already known
@@ -256,6 +255,7 @@ func (v *stagingValidator) resolveImport(checker *sema.Checker, importedLocation
 	}
 
 	// Check if the imported location is an address location
+	// No other location types are supported (as is the case with code on-chain)
 	addrLocation, ok := importedLocation.(common.AddressLocation)
 	if !ok {
 		return nil, fmt.Errorf("expected address location")
@@ -266,7 +266,7 @@ func (v *stagingValidator) resolveImport(checker *sema.Checker, importedLocation
 
 	// If not resolved, parse and check the contract code
 	if !ok {
-		importedCode, err := v.getStagedContractCode(context.Background(), addrLocation)
+		importedCode, err := v.getStagedContractCode(addrLocation)
 		if err != nil {
 			v.missingDependencies = append(v.missingDependencies, addrLocation)
 			return nil, fmt.Errorf("failed to get staged contract code: %w", err)
@@ -403,6 +403,10 @@ func (v *stagingValidator) resolveAddressContractNames(address common.Address) (
 	return contractNames, nil
 }
 
+// Helper for pretty printing errors
+// While it is done by default in checker/parser errors, this has two purposes:
+// 1. Add color to the error message
+// 2. Use pretty printing on contract update errors which do not do this by default
 func (v *stagingValidator) prettyPrintError(err error, location common.Location) string {
 	var sb strings.Builder
 	printErr := pretty.NewErrorPrettyPrinter(&sb, true).
@@ -414,6 +418,8 @@ func (v *stagingValidator) prettyPrintError(err error, location common.Location)
 	}
 }
 
+// Stdlib handler used by the Cadence V1 Update Checker to resolve contract names
+// When an address import with no identifiers is used, the contract names are resolved
 func (a *accountContractNamesProviderImpl) GetAccountContractNames(
 	address common.Address,
 ) ([]string, error) {
