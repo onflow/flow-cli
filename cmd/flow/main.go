@@ -120,6 +120,7 @@ func main() {
 	cmd.AddCommand(super.FlixCmd)
 	cmd.AddCommand(super.GenerateCommand)
 	cmd.AddCommand(dependencymanager.Cmd)
+	cmd.AddCommand(super.AllHelp)
 
 	command.InitFlags(cmd)
 	cmd.AddGroup(&cobra.Group{
