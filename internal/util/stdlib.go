@@ -289,7 +289,7 @@ func (StandardLibrary) IsContractBeingAdded(_ common.AddressLocation) bool {
 
 func NewStandardLibrary() (result StandardLibrary) {
 	result.BaseValueActivation = sema.NewVariableActivation(sema.BaseValueActivation)
-	for _, valueDeclaration := range stdlib.DefaultStandardLibraryValues(nil) {
+	for _, valueDeclaration := range stdlib.DefaultStandardLibraryValues(result) {
 		result.BaseValueActivation.DeclareValue(valueDeclaration)
 	}
 	return
@@ -297,7 +297,7 @@ func NewStandardLibrary() (result StandardLibrary) {
 
 func NewScriptStandardLibrary() (result StandardLibrary) {
 	result.BaseValueActivation = sema.NewVariableActivation(sema.BaseValueActivation)
-	for _, declaration := range stdlib.DefaultScriptStandardLibraryValues(nil) {
+	for _, declaration := range stdlib.DefaultScriptStandardLibraryValues(result) {
 		result.BaseValueActivation.DeclareValue(declaration)
 	}
 	return

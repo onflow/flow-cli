@@ -184,7 +184,6 @@ func (v *stagingValidator) parseAndCheckContract(
 	}
 
 	// Check the contract code
-	// TODO: Do we need location handler? Error Message?
 	checker, err := sema.NewChecker(
 		program,
 		location,
@@ -302,8 +301,10 @@ func (v *stagingValidator) resolveSystemContracts() {
 		return
 	}
 
-	// TODO: do we need burner/EVM config?
-	stagedSystemContracts := migrations.SystemContractChanges(chainId, migrations.SystemContractChangesOptions{})
+	stagedSystemContracts := migrations.SystemContractChanges(chainId, migrations.SystemContractChangesOptions{
+		Burner: migrations.BurnerContractChangeUpdate,
+		EVM:    migrations.EVMContractChangeFull,
+	})
 	for _, stagedSystemContract := range stagedSystemContracts {
 		location := common.AddressLocation{
 			Address: stagedSystemContract.Address,
