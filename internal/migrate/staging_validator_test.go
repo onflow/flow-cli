@@ -23,6 +23,7 @@ import (
 
 	"github.com/onflow/cadence"
 	"github.com/onflow/cadence/runtime/common"
+	"github.com/onflow/cadence/runtime/stdlib"
 	"github.com/onflow/contract-updater/lib/go/templates"
 	"github.com/onflow/flow-cli/internal/util"
 	"github.com/onflow/flow-go-sdk"
@@ -39,15 +40,13 @@ func Test_StagingValidator(t *testing.T) {
 		location := common.NewAddressLocation(nil, common.Address{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01}, "Test")
 		sourceCodeLocation := common.StringLocation("./Test.cdc")
 		oldContract := `
-			pub contract Test {
-				pub fun test() {}
-			}
-		`
+		pub contract Test {
+			pub fun test() {}
+		}`
 		newContract := `
-			access(all) contract Test {
-				access(all) fun test() {}
-			}
-		`
+		access(all) contract Test {
+			access(all) fun test() {}
+		}`
 		mockAccount := &flow.Account{
 			Address: flow.HexToAddress("01"),
 			Balance: 1000,
@@ -65,6 +64,90 @@ func Test_StagingValidator(t *testing.T) {
 		srv.Network.Return(config.Network{
 			Name: "testnet",
 		}, nil)
+
+		validator := newStagingValidator(srv.Mock, state)
+		err := validator.ValidateContractUpdate(location, sourceCodeLocation, []byte(newContract))
+		require.NoError(t, err)
+	})
+
+	t.Run("contract update with update error", func(t *testing.T) {
+		location := common.NewAddressLocation(nil, common.Address{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01}, "Test")
+		sourceCodeLocation := common.StringLocation("./Test.cdc")
+		oldContract := `
+		pub contract Test {
+			pub fun test() {}
+		}`
+		newContract := `
+		access(all) contract Test {
+			access(all) let x: Int
+			access(all) fun test() {}
+
+			init() {
+				self.x = 1
+			}
+		}`
+		mockAccount := &flow.Account{
+			Address: flow.HexToAddress("01"),
+			Balance: 1000,
+			Keys:    nil,
+			Contracts: map[string][]byte{
+				"Test": []byte(oldContract),
+			},
+		}
+
+		// setup mocks
+		require.NoError(t, rw.WriteFile(sourceCodeLocation.String(), []byte(newContract), 0o644))
+		srv.GetAccount.Run(func(args mock.Arguments) {
+			require.Equal(t, flow.HexToAddress("01"), args.Get(1).(flow.Address))
+		}).Return(mockAccount, nil)
+		srv.Network.Return(config.Network{
+			Name: "testnet",
+		}, nil)
+
+		validator := newStagingValidator(srv.Mock, state)
+		err := validator.ValidateContractUpdate(location, sourceCodeLocation, []byte(newContract))
+		var updateErr *stdlib.ContractUpdateError
+		require.ErrorAs(t, err, &updateErr)
+	})
+
+	t.Run("valid contract update with dependencies", func(t *testing.T) {
+		location := common.NewAddressLocation(nil, common.Address{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01}, "Test")
+		sourceCodeLocation := common.StringLocation("./Test.cdc")
+		oldContract := `
+		pub contract Test {
+			pub fun test() {}
+		}`
+		newContract := `
+		import ImpContract from 0x02
+		access(all) contract Test {
+			access(all) fun test() {}
+		}`
+		impContract := `
+		access(all) contract ImpContract {
+			access(all) let x: Int
+			init() {
+				self.x = 1
+			}
+		}`
+		mockAccount := &flow.Account{
+			Address: flow.HexToAddress("01"),
+			Balance: 1000,
+			Keys:    nil,
+			Contracts: map[string][]byte{
+				"Test": []byte(oldContract),
+			},
+		}
+
+		// setup mocks
+		require.NoError(t, rw.WriteFile(sourceCodeLocation.String(), []byte(newContract), 0o644))
+		srv.GetAccount.Run(func(args mock.Arguments) {
+			require.Equal(t, flow.HexToAddress("01"), args.Get(1).(flow.Address))
+		}).Return(mockAccount, nil)
+		srv.Network.Return(config.Network{
+			Name: "testnet",
+		}, nil)
+		mockResString, err := cadence.NewString(impContract)
+		require.NoError(t, err)
 		srv.ExecuteScript.Run(func(args mock.Arguments) {
 			script := args.Get(1).(flowkit.Script)
 
@@ -73,14 +156,75 @@ func Test_StagingValidator(t *testing.T) {
 			assert.Equal(t, 2, len(script.Args))
 			actualContractAddressArg, actualContractNameArg := script.Args[0], script.Args[1]
 
-			contractName, _ := cadence.NewString("Test")
-			contractAddr := cadence.NewAddress(flow.HexToAddress("01"))
+			contractName, _ := cadence.NewString("ImpContract")
+			contractAddr := cadence.NewAddress(flow.HexToAddress("02"))
 			assert.Equal(t, contractName, actualContractNameArg)
 			assert.Equal(t, contractAddr, actualContractAddressArg)
-		}).Return(cadence.NewBool(true), nil)
+		}).Return(cadence.NewOptional(mockResString), nil)
+
+		validator := newStagingValidator(srv.Mock, state)
+		err = validator.ValidateContractUpdate(location, sourceCodeLocation, []byte(newContract))
+		require.NoError(t, err)
+	})
+
+	t.Run("contract update missing dependency", func(t *testing.T) {
+		location := common.NewAddressLocation(nil, common.Address{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01}, "Test")
+		impLocation := common.NewAddressLocation(nil, common.Address{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02}, "ImpContract")
+		sourceCodeLocation := common.StringLocation("./Test.cdc")
+		oldContract := `
+		pub contract Test {
+			pub fun test() {}
+		}`
+		newContract := `
+		import ImpContract from 0x02
+		access(all) contract Test {
+			access(all) fun test() {}
+		}`
+		mockAccount := &flow.Account{
+			Address: flow.HexToAddress("01"),
+			Balance: 1000,
+			Keys:    nil,
+			Contracts: map[string][]byte{
+				"Test": []byte(oldContract),
+			},
+		}
+
+		// setup mocks
+		require.NoError(t, rw.WriteFile(sourceCodeLocation.String(), []byte(newContract), 0o644))
+		srv.GetAccount.Run(func(args mock.Arguments) {
+			require.Equal(t, flow.HexToAddress("01"), args.Get(1).(flow.Address))
+		}).Return(mockAccount, nil)
+		srv.Network.Return(config.Network{
+			Name: "testnet",
+		}, nil)
+		srv.ExecuteScript.Return(cadence.NewOptional(nil), nil)
 
 		validator := newStagingValidator(srv.Mock, state)
 		err := validator.ValidateContractUpdate(location, sourceCodeLocation, []byte(newContract))
-		require.NoError(t, err)
+		var missingDepsErr *missingDependenciesError
+		require.ErrorAs(t, err, &missingDepsErr)
+		require.Equal(t, 1, len(missingDepsErr.MissingContracts))
+		require.Equal(t, impLocation, missingDepsErr.MissingContracts[0])
 	})
 }
+
+/*
+
+	srv.ExecuteScript.Run(func(args mock.Arguments) {
+		script := args.Get(1).(flowkit.Script)
+
+		assert.Equal(t, templates.GenerateGetStagedContractCodeScript(MigrationContractStagingAddress("testnet")), script.Code)
+		assert.Equal(t, 2, len(script.Args))
+	}).Return(func(args mock.Arguments) cadence.Value {
+		script := args.Get(1).(flowkit.Script)
+		address, contractName := script.Args[0].(cadence.Address), script.Args[1].(cadence.String)
+
+		if address.String() == "02" && contractName.String() == "Test" {
+			strRes, err := cadence.NewString(impContract)
+			require.NoError(t, err)
+			return cadence.NewOptional(strRes)
+		}
+
+		return cadence.NewOptional(nil)
+	})
+*/

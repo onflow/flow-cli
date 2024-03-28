@@ -45,12 +45,12 @@ var _ stdlib.AccountContractNamesProvider = &accountContractNamesProviderImpl{}
 
 // Error when not all staged dependencies are found
 type missingDependenciesError struct {
-	contracts []common.AddressLocation
+	MissingContracts []common.AddressLocation
 }
 
 func (e *missingDependenciesError) Error() string {
-	contractNames := make([]string, len(e.contracts))
-	for i, location := range e.contracts {
+	contractNames := make([]string, len(e.MissingContracts))
+	for i, location := range e.MissingContracts {
 		contractNames[i] = location.Name
 	}
 	return fmt.Sprintf("the following staged contract dependencies could not be found (have they been staged yet?): %v", contractNames)
@@ -128,7 +128,7 @@ func (v *stagingValidator) ValidateContractUpdate(
 	// We do not care about checking/parsing errors here, since these are ultimately
 	// expected/don't mean anything since the import resolutions are not complete
 	if len(v.missingDependencies) > 0 {
-		return &missingDependenciesError{contracts: v.missingDependencies}
+		return &missingDependenciesError{MissingContracts: v.missingDependencies}
 	}
 
 	if err != nil {

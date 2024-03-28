@@ -106,7 +106,7 @@ func stageContract(
 		if errors.As(err, &missingDependenciesErr) {
 			infoMessage := strings.Builder{}
 			infoMessage.WriteString("Validation cannot be performed as some of your contract's dependencies could not be found (have they been staged yet?)\n")
-			for _, contract := range missingDependenciesErr.contracts {
+			for _, contract := range missingDependenciesErr.MissingContracts {
 				infoMessage.WriteString(fmt.Sprintf("  - %s\n", contract))
 			}
 			infoMessage.WriteString("\nYou may still stage your contract, however it will be unable to be migrated until the missing contracts are staged by their respective owners.  It is important to monitor the status of your contract using the `flow migrate is-validated` command\n")
