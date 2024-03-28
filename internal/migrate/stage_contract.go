@@ -130,7 +130,7 @@ func stageContract(
 			return nil, fmt.Errorf("errors were found while validating the contract code, and your contract HAS NOT been staged, you can use the --skip-validation flag to bypass this check")
 		} else {
 			logger.Info("No issues found while validating contract code\n")
-			logger.Info("DISCLAIMER: Pre-staging validation is not exhaustive and does not guarantee the contract will work as expected, please monitor the status of your contract using the `flow migrate is-validated` command\n")
+			logger.Info("DISCLAIMER: Pre-staging validation checks are not exhaustive and do not guarantee the contract will work as expected, please monitor the status of your contract using the `flow migrate is-validated` command\n")
 		}
 	} else {
 		logger.Info("Skipping contract code validation, you may monitor the status of your contract using the `flow migrate is-validated` command\n")

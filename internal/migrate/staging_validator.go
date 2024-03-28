@@ -202,15 +202,12 @@ func (v *stagingValidator) getStagedContractCode(
 ) ([]byte, error) {
 	// First check if the code is already known
 	// This may be true for system contracts since they are not staged
+	// Or any other staged contracts that have been resolved
 	if code, ok := v.contracts[location]; ok {
 		return code, nil
 	}
 
-	cAddr, err := cadence.NewString(location.Address.String())
-	if err != nil {
-		return nil, fmt.Errorf("failed to get cadence string from contract address: %w", err)
-	}
-
+	cAddr := cadence.BytesToAddress(location.Address.Bytes())
 	cName, err := cadence.NewString(location.Name)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get cadence string from contract name: %w", err)
@@ -225,10 +222,20 @@ func (v *stagingValidator) getStagedContractCode(
 		flowkit.LatestScriptQuery,
 	)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get staged contract code: %w", err)
+		return nil, err
 	}
 
-	v.contracts[location] = []byte(value.String())
+	optValue, ok := value.(cadence.Optional)
+	if !ok {
+		return nil, fmt.Errorf("invalid script return value type: %T", value)
+	}
+
+	strValue, ok := optValue.Value.(cadence.String)
+	if !ok {
+		return nil, fmt.Errorf("invalid script return value type: %T", value)
+	}
+
+	v.contracts[location] = []byte(strValue)
 	return v.contracts[location], nil
 }
 
