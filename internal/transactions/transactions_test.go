@@ -29,12 +29,12 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 
-	"github.com/onflow/flowkit"
-	"github.com/onflow/flowkit/accounts"
-	"github.com/onflow/flowkit/config"
-	"github.com/onflow/flowkit/output"
-	"github.com/onflow/flowkit/tests"
-	"github.com/onflow/flowkit/transactions"
+	"github.com/onflow/flowkit/v2"
+	"github.com/onflow/flowkit/v2/accounts"
+	"github.com/onflow/flowkit/v2/config"
+	"github.com/onflow/flowkit/v2/output"
+	"github.com/onflow/flowkit/v2/tests"
+	"github.com/onflow/flowkit/v2/transactions"
 
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/internal/util"
@@ -320,7 +320,7 @@ func Test_Result(t *testing.T) {
 	event := tests.NewEvent(
 		0,
 		"A.foo",
-		[]cadence.Field{{Type: cadence.StringType{}, Identifier: "bar"}},
+		[]cadence.Field{{Type: cadence.StringType, Identifier: "bar"}},
 		[]cadence.Value{cadence.NewInt(1)},
 	)
 	event.Payload = []byte("mock_payload")
@@ -328,19 +328,19 @@ func Test_Result(t *testing.T) {
 	withdrawEvent := tests.NewEvent(
 		1,
 		"A.1654653399040a61.FlowToken.TokensWithdrawn",
-		[]cadence.Field{{Type: cadence.StringType{}, Identifier: "bar"}},
+		[]cadence.Field{{Type: cadence.StringType, Identifier: "bar"}},
 		[]cadence.Value{cadence.NewInt(1)},
 	)
 	depositEvent := tests.NewEvent(
 		2,
 		"A.1654653399040a61.FlowToken.TokensDeposited",
-		[]cadence.Field{{Type: cadence.StringType{}, Identifier: "bar"}},
+		[]cadence.Field{{Type: cadence.StringType, Identifier: "bar"}},
 		[]cadence.Value{cadence.NewInt(1)},
 	)
 	feeEvent := tests.NewEvent(
 		3,
 		"A.f919ee77447b7497.FlowFees.FeesDeducted",
-		[]cadence.Field{{Type: cadence.StringType{}, Identifier: "bar"}},
+		[]cadence.Field{{Type: cadence.StringType, Identifier: "bar"}},
 		[]cadence.Value{cadence.NewInt(1)},
 	)
 	txResult := &flow.TransactionResult{

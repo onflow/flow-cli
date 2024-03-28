@@ -45,6 +45,10 @@ type scriptResult struct {
 	cadence.Value
 }
 
+func NewScriptResult(value cadence.Value) *scriptResult {
+	return &scriptResult{Value: value}
+}
+
 func (r *scriptResult) JSON() any {
 	return json.RawMessage(
 		jsoncdc.MustEncode(r.Value),

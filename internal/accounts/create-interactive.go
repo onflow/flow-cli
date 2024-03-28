@@ -35,11 +35,11 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/onflow/flowkit"
-	"github.com/onflow/flowkit/accounts"
-	"github.com/onflow/flowkit/config"
-	"github.com/onflow/flowkit/gateway"
-	"github.com/onflow/flowkit/output"
+	"github.com/onflow/flowkit/v2"
+	"github.com/onflow/flowkit/v2/accounts"
+	"github.com/onflow/flowkit/v2/config"
+	"github.com/onflow/flowkit/v2/gateway"
+	"github.com/onflow/flowkit/v2/output"
 
 	"github.com/onflow/flow-cli/internal/util"
 )

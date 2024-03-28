@@ -25,11 +25,11 @@ import (
 	"github.com/onflow/cadence"
 	"github.com/spf13/cobra"
 
-	"github.com/onflow/flowkit"
-	"github.com/onflow/flowkit/accounts"
-	"github.com/onflow/flowkit/arguments"
-	"github.com/onflow/flowkit/output"
-	"github.com/onflow/flowkit/transactions"
+	"github.com/onflow/flowkit/v2"
+	"github.com/onflow/flowkit/v2/accounts"
+	"github.com/onflow/flowkit/v2/arguments"
+	"github.com/onflow/flowkit/v2/output"
+	"github.com/onflow/flowkit/v2/transactions"
 
 	"github.com/onflow/flow-cli/internal/command"
 )
@@ -72,7 +72,7 @@ func send(
 		return nil, fmt.Errorf("error loading transaction file: %w", err)
 	}
 
-	return SendTransaction(code, args[1:], filename, flow, state, flags)
+	return SendTransaction(code, args, filename, flow, state, flags)
 }
 
 func SendTransaction(code []byte, args []string, location string, flow flowkit.Services, state *flowkit.State, sendFlags Flags) (result command.Result, err error) {
@@ -132,7 +132,7 @@ func SendTransaction(code []byte, args []string, location string, flow flowkit.S
 	if sendFlags.ArgsJSON != "" {
 		transactionArgs, err = arguments.ParseJSON(sendFlags.ArgsJSON)
 	} else {
-		transactionArgs, err = arguments.ParseWithoutType(args, code, location)
+		transactionArgs, err = arguments.ParseWithoutType(args[1:], code, location)
 	}
 	if err != nil {
 		return nil, fmt.Errorf("error parsing transaction arguments: %w", err)
@@ -148,7 +148,6 @@ func SendTransaction(code []byte, args []string, location string, flow flowkit.S
 		flowkit.Script{Code: code, Args: transactionArgs, Location: location},
 		sendFlags.GasLimit,
 	)
-
 	if err != nil {
 		return nil, err
 	}

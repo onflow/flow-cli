@@ -34,7 +34,7 @@ import (
 	"github.com/onflow/cadence/runtime/sema"
 	"github.com/onflow/cadence/runtime/stdlib"
 	"github.com/onflow/cadence/tools/analysis"
-	"github.com/onflow/flowkit"
+	"github.com/onflow/flowkit/v2"
 	"golang.org/x/exp/maps"
 )
 
@@ -138,10 +138,10 @@ func (l *linter) lintFile(
 
 	// Run analysis on the program
 	analysisProgram := analysis.Program{
-		Program:     program,
-		Elaboration: checker.Elaboration,
-		Location:    checker.Location,
-		Code:        []byte(code),
+		Program:  program,
+		Checker:  checker,
+		Location: checker.Location,
+		Code:     []byte(code),
 	}
 	report := func(diagnostic analysis.Diagnostic) {
 		diagnostics = append(diagnostics, diagnostic)
@@ -314,13 +314,22 @@ func convertPositionedErrorToDiagnostic(
 	var category string
 	var semanticErr sema.SemanticError
 	var syntaxErr *parser.SyntaxError
+	var syntaxErrWithSuggestedReplacement *parser.SyntaxErrorWithSuggestedReplacement
 	switch {
 	case errors.As(err, &semanticErr):
 		category = SemanticErrorCategory
 	case errors.As(err, &syntaxErr):
 		category = SyntaxErrorCategory
+	case errors.As(err, &syntaxErrWithSuggestedReplacement):
+		category = SyntaxErrorCategory
 	default:
 		category = ErrorCategory
+	}
+
+	var suggestedFixes []cdcerrors.SuggestedFix[ast.TextEdit]
+	var errWithFixes cdcerrors.HasSuggestedFixes[ast.TextEdit]
+	if errors.As(err, &errWithFixes) {
+		suggestedFixes = errWithFixes.SuggestFixes(code)
 	}
 
 	diagnostic := analysis.Diagnostic{
@@ -332,6 +341,7 @@ func convertPositionedErrorToDiagnostic(
 			StartPos: startPosition,
 			EndPos:   endPosition,
 		},
+		SuggestedFixes: suggestedFixes,
 	}
 
 	return &diagnostic

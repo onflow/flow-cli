@@ -25,8 +25,8 @@ import (
 	"github.com/onflow/cadence/runtime/common"
 	"github.com/onflow/cadence/tools/analysis"
 	"github.com/onflow/flow-go-sdk/crypto"
-	"github.com/onflow/flowkit"
-	"github.com/onflow/flowkit/config"
+	"github.com/onflow/flowkit/v2"
+	"github.com/onflow/flowkit/v2/config"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/require"
 )
@@ -210,8 +210,8 @@ func Test_Lint(t *testing.T) {
 							SecondaryMessage: "not found in this scope",
 							Location:         common.StringLocation("StdlibImportsTransaction.cdc"),
 							Range: ast.Range{
-								StartPos: ast.Position{Line: 7, Column: 13, Offset: 116},
-								EndPos:   ast.Position{Line: 7, Column: 26, Offset: 129},
+								StartPos: ast.Position{Line: 7, Column: 13, Offset: 113},
+								EndPos:   ast.Position{Line: 7, Column: 26, Offset: 126},
 							},
 						},
 					},
@@ -285,7 +285,7 @@ func setupMockState(t *testing.T) *flowkit.State {
 	import BlockchainHelpers
 	access(all) contract WithImports{
 		init() {
-			let foo = getAuthAccount(0x01)
+			let foo = getAuthAccount<&Account>(0x01)
 			log(RLP.getType())
 		}
 	}
@@ -295,8 +295,8 @@ func setupMockState(t *testing.T) *flowkit.State {
 	import Test
 	import BlockchainHelpers
 	transaction {
-		prepare(signer: AuthAccount) {
-			let foo = getAuthAccount(0x01)
+		prepare(signer: &Account) {
+			let foo = getAuthAccount<&Account>(0x01)
 			log(RLP.getType())
 		}
 	}
@@ -306,7 +306,7 @@ func setupMockState(t *testing.T) *flowkit.State {
 	import Test
 	import BlockchainHelpers
 	access(all) fun main(): Void {
-		let foo = getAuthAccount(0x01)
+		let foo = getAuthAccount<&Account>(0x01)
 		log(RLP.getType())
 	}`), 0644)
 

@@ -26,11 +26,11 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 
-	"github.com/onflow/flowkit/config"
-	"github.com/onflow/flowkit/gateway"
-	"github.com/onflow/flowkit/gateway/mocks"
-	"github.com/onflow/flowkit/output"
-	"github.com/onflow/flowkit/tests"
+	"github.com/onflow/flowkit/v2/config"
+	"github.com/onflow/flowkit/v2/gateway"
+	"github.com/onflow/flowkit/v2/gateway/mocks"
+	"github.com/onflow/flowkit/v2/output"
+	"github.com/onflow/flowkit/v2/tests"
 
 	"github.com/onflow/flow-cli/internal/util"
 )
@@ -70,9 +70,10 @@ func TestDependencyInstallerInstall(t *testing.T) {
 
 		di := &DependencyInstaller{
 			Gateways: map[string]gateway.Gateway{
-				config.EmulatorNetwork.Name: gw.Mock,
-				config.TestnetNetwork.Name:  gw.Mock,
-				config.MainnetNetwork.Name:  gw.Mock,
+				config.EmulatorNetwork.Name:   gw.Mock,
+				config.TestnetNetwork.Name:    gw.Mock,
+				config.MainnetNetwork.Name:    gw.Mock,
+				config.PreviewnetNetwork.Name: gw.Mock,
 			},
 			Logger: logger,
 			State:  state,
@@ -112,9 +113,10 @@ func TestDependencyInstallerAdd(t *testing.T) {
 
 		di := &DependencyInstaller{
 			Gateways: map[string]gateway.Gateway{
-				config.EmulatorNetwork.Name: gw.Mock,
-				config.TestnetNetwork.Name:  gw.Mock,
-				config.MainnetNetwork.Name:  gw.Mock,
+				config.EmulatorNetwork.Name:   gw.Mock,
+				config.TestnetNetwork.Name:    gw.Mock,
+				config.MainnetNetwork.Name:    gw.Mock,
+				config.PreviewnetNetwork.Name: gw.Mock,
 			},
 			Logger: logger,
 			State:  state,

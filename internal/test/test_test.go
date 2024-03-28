@@ -26,12 +26,12 @@ import (
 
 	"github.com/onflow/cadence/runtime/common"
 	"github.com/onflow/cadence/runtime/stdlib"
-	"github.com/onflow/flow-go-sdk"
+	flowsdk "github.com/onflow/flow-go-sdk"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/onflow/flowkit/config"
-	"github.com/onflow/flowkit/tests"
+	"github.com/onflow/flowkit/v2/config"
+	"github.com/onflow/flowkit/v2/tests"
 
 	"github.com/onflow/flow-cli/internal/util"
 )
@@ -41,7 +41,7 @@ func TestExecutingTests(t *testing.T) {
 
 	aliases := config.Aliases{{
 		Network: "testing",
-		Address: flow.HexToAddress("0x0000000000000007"),
+		Address: flowsdk.HexToAddress("0x0000000000000007"),
 	}}
 
 	t.Run("simple", func(t *testing.T) {
@@ -194,7 +194,7 @@ func TestExecutingTests(t *testing.T) {
 			Location: tests.ContractHelloString.Filename,
 			Aliases: config.Aliases{{
 				Network: "emulator",
-				Address: flow.HexToAddress("0x0000000000000007"),
+				Address: flowsdk.HexToAddress("0x0000000000000007"),
 			}},
 		}
 		state.Contracts().AddOrUpdate(c)
@@ -327,11 +327,9 @@ func TestExecutingTests(t *testing.T) {
 				"A.0000000000000001.FlowClusterQC",
 				"A.0000000000000001.FlowDKG",
 				"A.0000000000000002.FungibleTokenMetadataViews",
-				"A.0000000000000001.NFTStorefrontV2",
 				"A.0000000000000001.FlowIDTableStaking",
 				"A.0000000000000001.LockedTokens",
 				"A.0000000000000001.ExampleNFT",
-				"A.0000000000000001.NFTStorefront",
 				"A.0000000000000001.FlowStakingCollection",
 				"A.0000000000000001.StakingProxy",
 				"A.0000000000000003.FlowToken",
@@ -342,19 +340,25 @@ func TestExecutingTests(t *testing.T) {
 				"A.0000000000000001.NonFungibleToken",
 				"A.0000000000000001.ViewResolver",
 				"A.0000000000000001.RandomBeaconHistory",
+				"A.0000000000000001.EVM",
+				"A.0000000000000002.FungibleTokenSwitchboard",
 				"I.BlockchainHelpers",
+				"A.0000000000000001.Burner",
 			},
 			coverageReport.ExcludedLocationIDs(),
 		)
+
+		expected := "Coverage: 91.9% of statements"
+
 		assert.Equal(
 			t,
-			"Coverage: 91.8% of statements",
+			expected,
 			coverageReport.String(),
 		)
 		assert.Contains(
 			t,
 			result.String(),
-			"Coverage: 91.8% of statements",
+			expected,
 		)
 
 		lcovReport, _ := coverageReport.MarshalLCOV()
@@ -425,11 +429,9 @@ func TestExecutingTests(t *testing.T) {
 				"A.0000000000000001.FlowClusterQC",
 				"A.0000000000000001.FlowDKG",
 				"A.0000000000000002.FungibleTokenMetadataViews",
-				"A.0000000000000001.NFTStorefrontV2",
 				"A.0000000000000001.FlowIDTableStaking",
 				"A.0000000000000001.LockedTokens",
 				"A.0000000000000001.ExampleNFT",
-				"A.0000000000000001.NFTStorefront",
 				"A.0000000000000001.FlowStakingCollection",
 				"A.0000000000000001.StakingProxy",
 				"A.0000000000000003.FlowToken",
@@ -440,7 +442,10 @@ func TestExecutingTests(t *testing.T) {
 				"A.0000000000000001.NonFungibleToken",
 				"A.0000000000000001.ViewResolver",
 				"A.0000000000000001.RandomBeaconHistory",
+				"A.0000000000000001.EVM",
+				"A.0000000000000002.FungibleTokenSwitchboard",
 				"I.BlockchainHelpers",
+				"A.0000000000000001.Burner",
 			},
 			coverageReport.ExcludedLocationIDs(),
 		)
@@ -664,7 +669,7 @@ Seed: 1521
 			result.Oneliner(),
 			"Test results: \"./testScriptSimpleFailing.cdc\"\n- FAIL: "+
 				"testSimple\n\t\tExecution failed:\n\t\t\terror: assertion failed\n"+
-				"\t\t\t --> 7465737400000000000000000000000000000000000000000000000000000000:5:12",
+				"\t\t\t --> ./testScriptSimpleFailing.cdc:5:12",
 		)
 	})
 

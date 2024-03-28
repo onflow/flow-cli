@@ -29,16 +29,16 @@ import (
 
 	"github.com/onflow/flow-cli/internal/util"
 
-	"github.com/onflow/flowkit/gateway"
+	"github.com/onflow/flowkit/v2/gateway"
 
-	"github.com/onflow/flowkit/project"
+	"github.com/onflow/flowkit/v2/project"
 
 	flowsdk "github.com/onflow/flow-go-sdk"
 
-	"github.com/onflow/flowkit/config"
+	"github.com/onflow/flowkit/v2/config"
 
-	"github.com/onflow/flowkit"
-	"github.com/onflow/flowkit/output"
+	"github.com/onflow/flowkit/v2"
+	"github.com/onflow/flowkit/v2/output"
 )
 
 type DependencyInstaller struct {
@@ -65,10 +65,16 @@ func NewDependencyInstaller(logger output.Logger, state *flowkit.State) (*Depend
 		return nil, fmt.Errorf("error creating mainnet gateway: %v", err)
 	}
 
+	previewnetGateway, err := gateway.NewGrpcGateway(config.PreviewnetNetwork)
+	if err != nil {
+		return nil, fmt.Errorf("error creating previewnet gateway: %v", err)
+	}
+
 	gateways := map[string]gateway.Gateway{
-		config.EmulatorNetwork.Name: emulatorGateway,
-		config.TestnetNetwork.Name:  testnetGateway,
-		config.MainnetNetwork.Name:  mainnetGateway,
+		config.EmulatorNetwork.Name:   emulatorGateway,
+		config.TestnetNetwork.Name:    testnetGateway,
+		config.MainnetNetwork.Name:    mainnetGateway,
+		config.PreviewnetNetwork.Name: previewnetGateway,
 	}
 
 	return &DependencyInstaller{

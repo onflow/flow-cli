@@ -27,7 +27,7 @@ import (
 	"github.com/onflow/flow-go-sdk"
 	"github.com/spf13/cobra"
 
-	"github.com/onflow/flowkit/output"
+	"github.com/onflow/flowkit/v2/output"
 
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/internal/events"
@@ -55,6 +55,13 @@ type transactionResult struct {
 	tx      *flow.Transaction
 	include []string
 	exclude []string
+}
+
+func NewTransactionResult(tx *flow.Transaction, result *flow.TransactionResult) *transactionResult {
+	return &transactionResult{
+		result: result,
+		tx:     tx,
+	}
 }
 
 func (r *transactionResult) JSON() any {

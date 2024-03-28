@@ -29,8 +29,8 @@ import (
 
 	"github.com/onflow/cadence/runtime/parser"
 	"github.com/onflow/flow-emulator/server"
-	"github.com/onflow/flowkit"
-	"github.com/onflow/flowkit/output"
+	"github.com/onflow/flowkit/v2"
+	"github.com/onflow/flowkit/v2/output"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 

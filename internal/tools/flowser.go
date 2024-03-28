@@ -26,9 +26,9 @@ import (
 	"github.com/onflowser/flowser/v3/pkg/flowser"
 	"github.com/spf13/cobra"
 
-	"github.com/onflow/flowkit"
-	"github.com/onflow/flowkit/config"
-	"github.com/onflow/flowkit/output"
+	"github.com/onflow/flowkit/v2"
+	"github.com/onflow/flowkit/v2/config"
+	"github.com/onflow/flowkit/v2/output"
 
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/internal/settings"
