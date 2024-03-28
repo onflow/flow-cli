@@ -9,6 +9,7 @@ import (
 	"github.com/onflow/cadence/runtime"
 	"github.com/onflow/cadence/runtime/ast"
 	"github.com/onflow/cadence/runtime/common"
+	"github.com/onflow/cadence/runtime/interpreter"
 	"github.com/onflow/cadence/runtime/old_parser"
 	"github.com/onflow/cadence/runtime/parser"
 	"github.com/onflow/cadence/runtime/pretty"
@@ -121,7 +122,7 @@ func (v *stagingValidator) ValidateContractUpdate(
 	v.contracts[sourceCodeLocation] = updatedCode
 
 	// Parse and check the contract code
-	_, _, err = v.parseAndCheckContract(sourceCodeLocation)
+	_, newProgramChecker, err := v.parseAndCheckContract(sourceCodeLocation)
 
 	// Errors related to missing dependencies are separate from other errors
 	// These errors are non-fatal and are only used to inform the user
@@ -135,6 +136,8 @@ func (v *stagingValidator) ValidateContractUpdate(
 		return err
 	}
 
+	interpreterProgram := interpreter.ProgramFromChecker(newProgramChecker)
+
 	// Check if contract code is valid according to Cadence V1 Update Checker
 	validator := stdlib.NewCadenceV042ToV1ContractUpdateValidator(
 		sourceCodeLocation,
@@ -143,7 +146,7 @@ func (v *stagingValidator) ValidateContractUpdate(
 			resolverFunc: v.resolveAddressContractNames,
 		},
 		oldProgram,
-		newProgram,
+		interpreterProgram,
 		v.elaborations,
 	)
 
