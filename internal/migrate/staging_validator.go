@@ -301,7 +301,7 @@ func (v *stagingValidator) resolveSystemContracts() {
 	}
 
 	stagedSystemContracts := migrations.SystemContractChanges(chainId, migrations.SystemContractChangesOptions{
-		Burner: migrations.BurnerContractChangeUpdate,
+		Burner: migrations.BurnerContractChangeUpdate, // needs to be update for now since BurnerChangeDeploy is a no-op in flow-go
 		EVM:    migrations.EVMContractChangeFull,
 	})
 	for _, stagedSystemContract := range stagedSystemContracts {
