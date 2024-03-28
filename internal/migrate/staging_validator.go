@@ -62,7 +62,6 @@ type accountContractNamesProviderImpl struct {
 
 var _ stdlib.AccountContractNamesProvider = &accountContractNamesProviderImpl{}
 
-// Error when not all staged dependencies are found
 type missingDependenciesError struct {
 	MissingContracts []common.AddressLocation
 }
@@ -99,13 +98,8 @@ func (v *stagingValidator) ValidateContractUpdate(
 	// Code of the updated contract
 	updatedCode []byte,
 ) error {
-	// All dependent code will be resolved first
-	// This helps isolate errors related to these missing dependencies
-	// Instead of performing this resolution as a part of the checker
-	// which would obfuscate the actual error
-
-	// Resolve all system contract code
-	v.resolveSystemContracts()
+	// Resolve all system contract code & add to cache
+	v.loadSystemContracts()
 
 	// Get the account for the contract
 	address := flowsdk.Address(location.Address)
@@ -137,9 +131,8 @@ func (v *stagingValidator) ValidateContractUpdate(
 	_, newProgramChecker, err := v.parseAndCheckContract(sourceCodeLocation)
 
 	// Errors related to missing dependencies are separate from other errors
-	// These errors are non-fatal and are only used to inform the user
-	// We do not care about checking/parsing errors here, since these are ultimately
-	// expected/don't mean anything since the import resolutions are not complete
+	// They may be handled differently by the caller, and it's parsing/checking
+	// errors are not relevant/informative if these are present (they are expected)
 	if len(v.missingDependencies) > 0 {
 		return &missingDependenciesError{MissingContracts: v.missingDependencies}
 	}
@@ -294,7 +287,7 @@ func (v *stagingValidator) resolveImport(checker *sema.Checker, importedLocation
 	}, nil
 }
 
-func (v *stagingValidator) resolveSystemContracts() {
+func (v *stagingValidator) loadSystemContracts() {
 	chainId, ok := chainIdMap[v.flow.Network().Name]
 	if !ok {
 		return
@@ -314,7 +307,7 @@ func (v *stagingValidator) resolveSystemContracts() {
 	}
 }
 
-// This is a copy of the resolveLocation function from the linter
+// This is a copy of the resolveLocation function from the linter/language server
 func (v *stagingValidator) resolveLocation(
 	identifiers []ast.Identifier,
 	location common.Location,

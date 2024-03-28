@@ -102,7 +102,8 @@ func stageContract(
 		// Errors when the contract's dependencies have not been staged yet are non-fatal
 		// This is because the contract may be dependent on contracts that are not yet staged
 		// and we do not want to require in-order staging of contracts
-		// Any other errors are fatal, however, can be bypassed with the --force flag
+		// Instead, we will prompt the user to continue staging the contract.  Other errors
+		// will be fatal and require manual intervention using the --skip-validation flag if desired
 		if errors.As(err, &missingDependenciesErr) {
 			infoMessage := strings.Builder{}
 			infoMessage.WriteString("Validation cannot be performed as some of your contract's dependencies could not be found (have they been staged yet?)\n")

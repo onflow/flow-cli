@@ -172,6 +172,9 @@ func Test_StagingValidator(t *testing.T) {
 				self.x = 1
 			}
 		}`
+		mockScriptResultString, err := cadence.NewString(impContract)
+		require.NoError(t, err)
+
 		mockAccount := &flow.Account{
 			Address: flow.HexToAddress("01"),
 			Balance: 1000,
@@ -189,8 +192,6 @@ func Test_StagingValidator(t *testing.T) {
 		srv.Network.Return(config.Network{
 			Name: "testnet",
 		}, nil)
-		mockResString, err := cadence.NewString(impContract)
-		require.NoError(t, err)
 		srv.ExecuteScript.Run(func(args mock.Arguments) {
 			script := args.Get(1).(flowkit.Script)
 
@@ -203,8 +204,9 @@ func Test_StagingValidator(t *testing.T) {
 			contractAddr := cadence.NewAddress(flow.HexToAddress("02"))
 			assert.Equal(t, contractName, actualContractNameArg)
 			assert.Equal(t, contractAddr, actualContractAddressArg)
-		}).Return(cadence.NewOptional(mockResString), nil)
+		}).Return(cadence.NewOptional(mockScriptResultString), nil)
 
+		// validate
 		validator := newStagingValidator(srv.Mock, state)
 		err = validator.ValidateContractUpdate(location, sourceCodeLocation, []byte(newContract))
 		require.NoError(t, err)
