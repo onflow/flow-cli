@@ -73,7 +73,6 @@ func newStagingValidator(flow flowkit.Services, state *flowkit.State) *stagingVa
 }
 
 func (v *stagingValidator) ValidateContractUpdate(
-	ctx context.Context,
 	// Network location of the contract to be updated
 	location common.AddressLocation,
 	// Location of the source code, ensures that the error messages reference this instead of a network location
@@ -91,7 +90,7 @@ func (v *stagingValidator) ValidateContractUpdate(
 
 	// Get the account for the contract
 	address := flowsdk.Address(location.Address)
-	account, err := v.flow.GetAccount(ctx, address)
+	account, err := v.flow.GetAccount(context.Background(), address)
 	if err != nil {
 		return fmt.Errorf("failed to get account: %w", err)
 	}
@@ -122,7 +121,7 @@ func (v *stagingValidator) ValidateContractUpdate(
 	v.contracts[sourceCodeLocation] = updatedCode
 
 	// Parse and check the contract code
-	_, _, err = v.parseAndCheckContract(ctx, sourceCodeLocation)
+	_, _, err = v.parseAndCheckContract(sourceCodeLocation)
 
 	// Errors related to missing dependencies are separate from other errors
 	// These errors are non-fatal and are only used to inform the user
@@ -157,7 +156,6 @@ func (v *stagingValidator) ValidateContractUpdate(
 }
 
 func (v *stagingValidator) parseAndCheckContract(
-	ctx context.Context,
 	location common.Location,
 ) (*ast.Program, *sema.Checker, error) {
 	code := v.contracts[location]
@@ -266,7 +264,7 @@ func (v *stagingValidator) resolveImport(checker *sema.Checker, importedLocation
 		}
 		v.contracts[addrLocation] = importedCode
 
-		_, checker, err = v.parseAndCheckContract(context.Background(), addrLocation)
+		_, checker, err = v.parseAndCheckContract(addrLocation)
 		if err != nil {
 			return nil, fmt.Errorf("failed to parse and check contract code: %w", err)
 		}

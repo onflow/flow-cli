@@ -95,7 +95,7 @@ func stageContract(
 
 		var missingDependenciesErr *missingDependenciesError
 		contractLocation := common.NewAddressLocation(nil, common.Address(account.Address), contractName)
-		err = validator.ValidateContractUpdate(context.Background(), contractLocation, common.StringLocation(contract.Location), replacedCode)
+		err = validator.ValidateContractUpdate(contractLocation, common.StringLocation(contract.Location), replacedCode)
 
 		logger.StopProgress()
 
