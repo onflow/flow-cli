@@ -25,6 +25,8 @@ import (
 
 	"errors"
 
+	"github.com/onflow/flow-cli/internal/util"
+
 	cdclint "github.com/onflow/cadence-tools/lint"
 	cdctests "github.com/onflow/cadence-tools/test/helpers"
 	"github.com/onflow/cadence/runtime/ast"
@@ -67,8 +69,8 @@ func newLinter(state *flowkit.State) *linter {
 
 	// Create checker configs for both standard and script
 	// Scripts have a different stdlib than contracts and transactions
-	l.checkerStandardConfig = l.newCheckerConfig(newStandardLibrary())
-	l.checkerScriptConfig = l.newCheckerConfig(newScriptStandardLibrary())
+	l.checkerStandardConfig = l.newCheckerConfig(util.NewStandardLibrary())
+	l.checkerScriptConfig = l.newCheckerConfig(util.NewScriptStandardLibrary())
 
 	return l
 }
@@ -96,7 +98,7 @@ func (l *linter) lintFile(
 			return nil, fmt.Errorf("could not process parsing error: %s", parseProgramErr)
 		}
 
-		checkerDiagnostics, err := getDiagnosticsFromParentError(parserErr, location, codeStr)
+		checkerDiagnostics, err := GetDiagnosticsFromParentError(parserErr, location, codeStr)
 		if err != nil {
 			return nil, err
 		}
@@ -128,7 +130,7 @@ func (l *linter) lintFile(
 			return nil, fmt.Errorf("could not process checking error: %s", checkProgramErr)
 		}
 
-		checkerDiagnostics, err := getDiagnosticsFromParentError(checkerErr, location, codeStr)
+		checkerDiagnostics, err := GetDiagnosticsFromParentError(checkerErr, location, codeStr)
 		if err != nil {
 			return nil, err
 		}
@@ -152,10 +154,10 @@ func (l *linter) lintFile(
 }
 
 // Create a new checker config with the given standard library
-func (l *linter) newCheckerConfig(lib standardLibrary) *sema.Config {
+func (l *linter) newCheckerConfig(lib util.StandardLibrary) *sema.Config {
 	return &sema.Config{
 		BaseValueActivationHandler: func(_ common.Location) *sema.VariableActivation {
-			return lib.baseValueActivation
+			return lib.BaseValueActivation
 		},
 		AccessCheckMode:            sema.AccessCheckModeStrict,
 		PositionInfoEnabled:        true, // Must be enabled for linters
@@ -276,7 +278,7 @@ func (l *linter) resolveImportFilepath(
 
 // helpers
 
-func getDiagnosticsFromParentError(err cdcerrors.ParentError, location common.Location, code string) ([]analysis.Diagnostic, error) {
+func GetDiagnosticsFromParentError(err cdcerrors.ParentError, location common.Location, code string) ([]analysis.Diagnostic, error) {
 	diagnostics := make([]analysis.Diagnostic, 0)
 
 	for _, childErr := range err.ChildErrors() {

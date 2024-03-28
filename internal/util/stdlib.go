@@ -18,7 +18,7 @@
 
 // NOTE: This file is a copy of the file https://github.com/onflow/cadence-tools/blob/master/languageserver/server/stdlib.go
 
-package cadence
+package util
 
 import (
 	"github.com/onflow/cadence/runtime/common"
@@ -28,85 +28,85 @@ import (
 	"github.com/onflow/cadence/runtime/stdlib"
 )
 
-type standardLibrary struct {
-	baseValueActivation *sema.VariableActivation
+type StandardLibrary struct {
+	BaseValueActivation *sema.VariableActivation
 }
 
-var _ stdlib.StandardLibraryHandler = standardLibrary{}
+var _ stdlib.StandardLibraryHandler = StandardLibrary{}
 
-func (standardLibrary) ProgramLog(_ string, _ interpreter.LocationRange) error {
+func (StandardLibrary) ProgramLog(_ string, _ interpreter.LocationRange) error {
 	// Implementation should never be called,
 	// only its definition is used for type-checking
 	panic(errors.NewUnreachableError())
 }
 
-func (standardLibrary) UnsafeRandom() (uint64, error) {
+func (StandardLibrary) UnsafeRandom() (uint64, error) {
 	// Implementation should never be called,
 	// only its definition is used for type-checking
 	panic(errors.NewUnreachableError())
 }
 
-func (standardLibrary) GetBlockAtHeight(_ uint64) (stdlib.Block, bool, error) {
+func (StandardLibrary) GetBlockAtHeight(_ uint64) (stdlib.Block, bool, error) {
 	// Implementation should never be called,
 	// only its definition is used for type-checking
 	panic(errors.NewUnreachableError())
 }
 
-func (standardLibrary) GetCurrentBlockHeight() (uint64, error) {
+func (StandardLibrary) GetCurrentBlockHeight() (uint64, error) {
 	// Implementation should never be called,
 	// only its definition is used for type-checking
 	panic(errors.NewUnreachableError())
 }
 
-func (standardLibrary) GetAccountBalance(_ common.Address) (uint64, error) {
+func (StandardLibrary) GetAccountBalance(_ common.Address) (uint64, error) {
 	// Implementation should never be called,
 	// only its definition is used for type-checking
 	panic(errors.NewUnreachableError())
 }
 
-func (standardLibrary) GetAccountAvailableBalance(_ common.Address) (uint64, error) {
+func (StandardLibrary) GetAccountAvailableBalance(_ common.Address) (uint64, error) {
 	// Implementation should never be called,
 	// only its definition is used for type-checking
 	panic(errors.NewUnreachableError())
 }
 
-func (standardLibrary) CommitStorageTemporarily(_ *interpreter.Interpreter) error {
+func (StandardLibrary) CommitStorageTemporarily(_ *interpreter.Interpreter) error {
 	// Implementation should never be called,
 	// only its definition is used for type-checking
 	panic(errors.NewUnreachableError())
 }
 
-func (standardLibrary) GetStorageUsed(_ common.Address) (uint64, error) {
+func (StandardLibrary) GetStorageUsed(_ common.Address) (uint64, error) {
 	// Implementation should never be called,
 	// only its definition is used for type-checking
 	panic(errors.NewUnreachableError())
 }
 
-func (standardLibrary) GetStorageCapacity(_ common.Address) (uint64, error) {
+func (StandardLibrary) GetStorageCapacity(_ common.Address) (uint64, error) {
 	// Implementation should never be called,
 	// only its definition is used for type-checking
 	panic(errors.NewUnreachableError())
 }
 
-func (standardLibrary) GetAccountKey(_ common.Address, _ int) (*stdlib.AccountKey, error) {
+func (StandardLibrary) GetAccountKey(_ common.Address, _ int) (*stdlib.AccountKey, error) {
 	// Implementation should never be called,
 	// only its definition is used for type-checking
 	panic(errors.NewUnreachableError())
 }
 
-func (standardLibrary) GetAccountContractNames(_ common.Address) ([]string, error) {
+func (StandardLibrary) GetAccountContractNames(_ common.Address) ([]string, error) {
 	// Implementation should never be called,
 	// only its definition is used for type-checking
 	panic(errors.NewUnreachableError())
 }
 
-func (standardLibrary) GetAccountContractCode(_ common.AddressLocation) ([]byte, error) {
+func (StandardLibrary) GetAccountContractCode(_ common.AddressLocation) ([]byte, error) {
 	// Implementation should never be called,
 	// only its definition is used for type-checking
 	panic(errors.NewUnreachableError())
 }
 
-func (standardLibrary) EmitEvent(
+func (StandardLibrary) EmitEvent(
 	_ *interpreter.Interpreter,
 	_ *sema.CompositeType,
 	_ []interpreter.Value,
@@ -117,19 +117,19 @@ func (standardLibrary) EmitEvent(
 	panic(errors.NewUnreachableError())
 }
 
-func (standardLibrary) AddEncodedAccountKey(_ common.Address, _ []byte) error {
+func (StandardLibrary) AddEncodedAccountKey(_ common.Address, _ []byte) error {
 	// Implementation should never be called,
 	// only its definition is used for type-checking
 	panic(errors.NewUnreachableError())
 }
 
-func (standardLibrary) RevokeEncodedAccountKey(_ common.Address, _ int) ([]byte, error) {
+func (StandardLibrary) RevokeEncodedAccountKey(_ common.Address, _ int) ([]byte, error) {
 	// Implementation should never be called,
 	// only its definition is used for type-checking
 	panic(errors.NewUnreachableError())
 }
 
-func (standardLibrary) AddAccountKey(
+func (StandardLibrary) AddAccountKey(
 	_ common.Address,
 	_ *stdlib.PublicKey,
 	_ sema.HashAlgorithm,
@@ -143,37 +143,37 @@ func (standardLibrary) AddAccountKey(
 	panic(errors.NewUnreachableError())
 }
 
-func (standardLibrary) RevokeAccountKey(_ common.Address, _ int) (*stdlib.AccountKey, error) {
+func (StandardLibrary) RevokeAccountKey(_ common.Address, _ int) (*stdlib.AccountKey, error) {
 	// Implementation should never be called,
 	// only its definition is used for type-checking
 	panic(errors.NewUnreachableError())
 }
 
-func (standardLibrary) ParseAndCheckProgram(_ []byte, _ common.Location, _ bool) (*interpreter.Program, error) {
+func (StandardLibrary) ParseAndCheckProgram(_ []byte, _ common.Location, _ bool) (*interpreter.Program, error) {
 	// Implementation should never be called,
 	// only its definition is used for type-checking
 	panic(errors.NewUnreachableError())
 }
 
-func (standardLibrary) UpdateAccountContractCode(_ common.AddressLocation, _ []byte) error {
+func (StandardLibrary) UpdateAccountContractCode(_ common.AddressLocation, _ []byte) error {
 	// Implementation should never be called,
 	// only its definition is used for type-checking
 	panic(errors.NewUnreachableError())
 }
 
-func (standardLibrary) RecordContractUpdate(_ common.AddressLocation, _ *interpreter.CompositeValue) {
+func (StandardLibrary) RecordContractUpdate(_ common.AddressLocation, _ *interpreter.CompositeValue) {
 	// Implementation should never be called,
 	// only its definition is used for type-checking
 	panic(errors.NewUnreachableError())
 }
 
-func (standardLibrary) ContractUpdateRecorded(_ common.AddressLocation) bool {
+func (StandardLibrary) ContractUpdateRecorded(_ common.AddressLocation) bool {
 	// Implementation should never be called,
 	// only its definition is used for type-checking
 	panic(errors.NewUnreachableError())
 }
 
-func (standardLibrary) InterpretContract(
+func (StandardLibrary) InterpretContract(
 	_ common.AddressLocation,
 	_ *interpreter.Program,
 	_ string,
@@ -184,37 +184,37 @@ func (standardLibrary) InterpretContract(
 	panic(errors.NewUnreachableError())
 }
 
-func (standardLibrary) TemporarilyRecordCode(_ common.AddressLocation, _ []byte) {
+func (StandardLibrary) TemporarilyRecordCode(_ common.AddressLocation, _ []byte) {
 	// Implementation should never be called,
 	// only its definition is used for type-checking
 	panic(errors.NewUnreachableError())
 }
 
-func (standardLibrary) RemoveAccountContractCode(_ common.AddressLocation) error {
+func (StandardLibrary) RemoveAccountContractCode(_ common.AddressLocation) error {
 	// Implementation should never be called,
 	// only its definition is used for type-checking
 	panic(errors.NewUnreachableError())
 }
 
-func (standardLibrary) RecordContractRemoval(_ common.AddressLocation) {
+func (StandardLibrary) RecordContractRemoval(_ common.AddressLocation) {
 	// Implementation should never be called,
 	// only its definition is used for type-checking
 	panic(errors.NewUnreachableError())
 }
 
-func (standardLibrary) CreateAccount(_ common.Address) (address common.Address, err error) {
+func (StandardLibrary) CreateAccount(_ common.Address) (address common.Address, err error) {
 	// Implementation should never be called,
 	// only its definition is used for type-checking
 	panic(errors.NewUnreachableError())
 }
 
-func (standardLibrary) ValidatePublicKey(_ *stdlib.PublicKey) error {
+func (StandardLibrary) ValidatePublicKey(_ *stdlib.PublicKey) error {
 	// Implementation should never be called,
 	// only its definition is used for type-checking
 	panic(errors.NewUnreachableError())
 }
 
-func (standardLibrary) VerifySignature(
+func (StandardLibrary) VerifySignature(
 	_ []byte,
 	_ string,
 	_ []byte,
@@ -227,78 +227,78 @@ func (standardLibrary) VerifySignature(
 	panic(errors.NewUnreachableError())
 }
 
-func (standardLibrary) BLSVerifyPOP(_ *stdlib.PublicKey, _ []byte) (bool, error) {
+func (StandardLibrary) BLSVerifyPOP(_ *stdlib.PublicKey, _ []byte) (bool, error) {
 	// Implementation should never be called,
 	// only its definition is used for type-checking
 	panic(errors.NewUnreachableError())
 }
 
-func (standardLibrary) Hash(_ []byte, _ string, _ sema.HashAlgorithm) ([]byte, error) {
+func (StandardLibrary) Hash(_ []byte, _ string, _ sema.HashAlgorithm) ([]byte, error) {
 	// Implementation should never be called,
 	// only its definition is used for type-checking
 	panic(errors.NewUnreachableError())
 }
 
-func (standardLibrary) AccountKeysCount(_ common.Address) (uint64, error) {
+func (StandardLibrary) AccountKeysCount(_ common.Address) (uint64, error) {
 	// Implementation should never be called,
 	// only its definition is used for type-checking
 	panic(errors.NewUnreachableError())
 }
 
-func (standardLibrary) BLSAggregatePublicKeys(_ []*stdlib.PublicKey) (*stdlib.PublicKey, error) {
+func (StandardLibrary) BLSAggregatePublicKeys(_ []*stdlib.PublicKey) (*stdlib.PublicKey, error) {
 	// Implementation should never be called,
 	// only its definition is used for type-checking
 	panic(errors.NewUnreachableError())
 }
 
-func (standardLibrary) BLSAggregateSignatures(_ [][]byte) ([]byte, error) {
+func (StandardLibrary) BLSAggregateSignatures(_ [][]byte) ([]byte, error) {
 	// Implementation should never be called,
 	// only its definition is used for type-checking
 	panic(errors.NewUnreachableError())
 }
 
-func (l standardLibrary) GenerateAccountID(_ common.Address) (uint64, error) {
+func (l StandardLibrary) GenerateAccountID(_ common.Address) (uint64, error) {
 	// Implementation should never be called,
 	// only its definition is used for type-checking
 	panic(errors.NewUnreachableError())
 }
 
-func (l standardLibrary) ReadRandom(_ []byte) error {
+func (l StandardLibrary) ReadRandom(_ []byte) error {
 	// Implementation should never be called,
 	// only its definition is used for type-checking
 	panic(errors.NewUnreachableError())
 }
 
-func (standardLibrary) StartContractAddition(_ common.AddressLocation) {
+func (StandardLibrary) StartContractAddition(_ common.AddressLocation) {
 	// Implementation should never be called,
 	// only its definition is used for type-checking
 	panic(errors.NewUnreachableError())
 }
 
-func (standardLibrary) EndContractAddition(_ common.AddressLocation) {
+func (StandardLibrary) EndContractAddition(_ common.AddressLocation) {
 	// Implementation should never be called,
 	// only its definition is used for type-checking
 	panic(errors.NewUnreachableError())
 }
 
-func (standardLibrary) IsContractBeingAdded(_ common.AddressLocation) bool {
+func (StandardLibrary) IsContractBeingAdded(_ common.AddressLocation) bool {
 	// Implementation should never be called,
 	// only its definition is used for type-checking
 	panic(errors.NewUnreachableError())
 }
 
-func newStandardLibrary() (result standardLibrary) {
-	result.baseValueActivation = sema.NewVariableActivation(sema.BaseValueActivation)
+func NewStandardLibrary() (result StandardLibrary) {
+	result.BaseValueActivation = sema.NewVariableActivation(sema.BaseValueActivation)
 	for _, valueDeclaration := range stdlib.DefaultStandardLibraryValues(result) {
-		result.baseValueActivation.DeclareValue(valueDeclaration)
+		result.BaseValueActivation.DeclareValue(valueDeclaration)
 	}
 	return
 }
 
-func newScriptStandardLibrary() (result standardLibrary) {
-	result.baseValueActivation = sema.NewVariableActivation(sema.BaseValueActivation)
+func NewScriptStandardLibrary() (result StandardLibrary) {
+	result.BaseValueActivation = sema.NewVariableActivation(sema.BaseValueActivation)
 	for _, declaration := range stdlib.DefaultScriptStandardLibraryValues(result) {
-		result.baseValueActivation.DeclareValue(declaration)
+		result.BaseValueActivation.DeclareValue(declaration)
 	}
 	return
 }
