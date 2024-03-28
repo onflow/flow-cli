@@ -15,7 +15,7 @@ import (
 	"github.com/onflow/cadence/runtime/sema"
 	"github.com/onflow/cadence/runtime/stdlib"
 	"github.com/onflow/contract-updater/lib/go/templates"
-	internalCadence "github.com/onflow/flow-cli/internal/cadence"
+	"github.com/onflow/flow-cli/internal/util"
 	flowsdk "github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go/cmd/util/ledger/migrations"
 	"github.com/onflow/flow-go/model/flow"
@@ -176,7 +176,8 @@ func (v *stagingValidator) parseAndCheckContract(
 			AccessCheckMode:    sema.AccessCheckModeStrict,
 			AttachmentsEnabled: true,
 			BaseValueActivationHandler: func(_ common.Location) *sema.VariableActivation {
-				return internalCadence.NewStandardLibrary().BaseValueActivation
+				// Only checking contracts, so no need to consider script standard library
+				return util.NewStandardLibrary().BaseValueActivation
 			},
 			LocationHandler: v.resolveLocation,
 			ImportHandler:   v.resolveImport,
