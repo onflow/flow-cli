@@ -75,8 +75,9 @@ func TestDependencyInstallerInstall(t *testing.T) {
 				config.MainnetNetwork.Name:    gw.Mock,
 				config.PreviewnetNetwork.Name: gw.Mock,
 			},
-			Logger: logger,
-			State:  state,
+			Logger:          logger,
+			State:           state,
+			SkipDeployments: true,
 		}
 
 		err := di.Install()
@@ -118,8 +119,9 @@ func TestDependencyInstallerAdd(t *testing.T) {
 				config.MainnetNetwork.Name:    gw.Mock,
 				config.PreviewnetNetwork.Name: gw.Mock,
 			},
-			Logger: logger,
-			State:  state,
+			Logger:          logger,
+			State:           state,
+			SkipDeployments: true,
 		}
 
 		sourceStr := fmt.Sprintf("emulator://%s.%s", serviceAddress.String(), tests.ContractHelloString.Name)
