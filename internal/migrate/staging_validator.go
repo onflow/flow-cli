@@ -304,6 +304,7 @@ func (v *stagingValidator) loadSystemContracts() {
 		}
 
 		v.contracts[location] = stagedSystemContract.Code
+		v.accountContractNames[stagedSystemContract.Address] = append(v.accountContractNames[stagedSystemContract.Address], stagedSystemContract.Name)
 	}
 }
 
@@ -385,22 +386,40 @@ func (v *stagingValidator) resolveAddressContractNames(address common.Address) (
 		return names, nil
 	}
 
-	// Get the account for the contract
-	account, err := v.flow.GetAccount(context.Background(), flowsdk.Address(address))
+	cAddr := cadence.BytesToAddress(address.Bytes())
+	value, err := v.flow.ExecuteScript(
+		context.Background(),
+		flowkit.Script{
+			Code: templates.GenerateGetStagedContractNamesForAddressScript(MigrationContractStagingAddress(v.flow.Network().Name)),
+			Args: []cadence.Value{cAddr},
+		},
+		flowkit.LatestScriptQuery,
+	)
+
 	if err != nil {
-		return nil, fmt.Errorf("failed to get account: %w", err)
+		return nil, err
 	}
 
-	// Get the contract names
-	contractNames := make([]string, 0, len(account.Contracts))
-	for name := range account.Contracts {
-		contractNames = append(contractNames, name)
+	optValue, ok := value.(cadence.Optional)
+	if !ok {
+		return nil, fmt.Errorf("invalid script return value type: %T", value)
+	}
+
+	arrValue, ok := optValue.Value.(cadence.Array)
+	if !ok {
+		return nil, fmt.Errorf("invalid script return value type: %T", value)
 	}
 
 	// Cache the contract names
-	v.accountContractNames[address] = contractNames
+	for _, name := range arrValue.Values {
+		strName, ok := name.(cadence.String)
+		if !ok {
+			return nil, fmt.Errorf("invalid array value type: %T", name)
+		}
+		v.accountContractNames[address] = append(v.accountContractNames[address], string(strName))
+	}
 
-	return contractNames, nil
+	return v.accountContractNames[address], nil
 }
 
 // Helper for pretty printing errors
