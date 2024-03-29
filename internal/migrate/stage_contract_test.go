@@ -88,6 +88,9 @@ func Test_StageContract(t *testing.T) {
 			BlockHeight: 1,
 		}, nil)
 
+		// disable validation
+		stageContractflags.SkipValidation = true
+
 		result, err := stageContract(
 			[]string{testContract.Name},
 			command.GlobalFlags{
@@ -97,6 +100,9 @@ func Test_StageContract(t *testing.T) {
 			srv.Mock,
 			state,
 		)
+		// reset flags
+		stageContractflags.SkipValidation = false
+
 		assert.NoError(t, err)
 		assert.NotNil(t, result)
 	})
