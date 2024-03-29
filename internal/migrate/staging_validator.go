@@ -83,10 +83,11 @@ var chainIdMap = map[string]flow.ChainID{
 
 func newStagingValidator(flow flowkit.Services, state *flowkit.State) *stagingValidator {
 	return &stagingValidator{
-		flow:         flow,
-		state:        state,
-		contracts:    make(map[common.Location][]byte),
-		elaborations: make(map[common.Location]*sema.Elaboration),
+		flow:                 flow,
+		state:                state,
+		contracts:            make(map[common.Location][]byte),
+		elaborations:         make(map[common.Location]*sema.Elaboration),
+		accountContractNames: make(map[common.Address][]string),
 	}
 }
 
@@ -112,7 +113,7 @@ func (v *stagingValidator) ValidateContractUpdate(
 	contractName := location.Name
 	contractCode, ok := account.Contracts[contractName]
 	if !ok {
-		return fmt.Errorf("old contract code not found")
+		return fmt.Errorf("old contract code not found for contract: %s", contractName)
 	}
 
 	// Parse the old contract code
@@ -120,9 +121,6 @@ func (v *stagingValidator) ValidateContractUpdate(
 	if err != nil {
 		return fmt.Errorf("failed to parse old contract code: %w", err)
 	}
-
-	// Reset the missing contract dependencies
-	v.missingDependencies = nil
 
 	// Store contract code for error pretty printing
 	v.contracts[sourceCodeLocation] = updatedCode
@@ -377,10 +375,6 @@ func (v *stagingValidator) resolveLocation(
 }
 
 func (v *stagingValidator) resolveAddressContractNames(address common.Address) ([]string, error) {
-	if v.accountContractNames == nil {
-		v.accountContractNames = make(map[common.Address][]string)
-	}
-
 	// Check if the contract names are already cached
 	if names, ok := v.accountContractNames[address]; ok {
 		return names, nil
