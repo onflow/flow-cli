@@ -25,7 +25,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/onflow/flowkit/accounts"
+	"github.com/onflow/flowkit/v2/accounts"
 
 	"github.com/gosuri/uilive"
 	"github.com/manifoldco/promptui"
