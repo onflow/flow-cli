@@ -31,6 +31,7 @@ import (
 
 type installFlagsCollection struct {
 	skipDeployments bool `default:"false" flag:"skip-deployments" info:"Skip adding the dependency to deployments"`
+	skipAlias       bool `default:"false" flag:"skip-alias" info:"Skip prompting for an alias"`
 }
 
 var installFlags = installFlagsCollection{}
@@ -54,7 +55,7 @@ func install(
 ) (result command.Result, err error) {
 	logger.Info("🔄 Installing dependencies from flow.json...")
 
-	installer, err := NewDependencyInstaller(logger, state, installFlags.skipDeployments)
+	installer, err := NewDependencyInstaller(logger, state, installFlags.skipDeployments, addFlags.skipAlias)
 	if err != nil {
 		logger.Error(fmt.Sprintf("Error: %v", err))
 		return nil, err

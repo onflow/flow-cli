@@ -48,10 +48,11 @@ type DependencyInstaller struct {
 	Logger          output.Logger
 	State           *flowkit.State
 	SkipDeployments bool
+	SkipAlias       bool
 }
 
 // NewDependencyInstaller creates a new instance of DependencyInstaller
-func NewDependencyInstaller(logger output.Logger, state *flowkit.State, skipDeployments bool) (*DependencyInstaller, error) {
+func NewDependencyInstaller(logger output.Logger, state *flowkit.State, skipDeployments, skipAlias bool) (*DependencyInstaller, error) {
 	emulatorGateway, err := gateway.NewGrpcGateway(config.EmulatorNetwork)
 	if err != nil {
 		return nil, fmt.Errorf("error creating emulator gateway: %v", err)
@@ -78,6 +79,7 @@ func NewDependencyInstaller(logger output.Logger, state *flowkit.State, skipDepl
 		Logger:          logger,
 		State:           state,
 		SkipDeployments: skipDeployments,
+		SkipAlias:       skipAlias,
 	}, nil
 }
 
@@ -275,6 +277,14 @@ func (di *DependencyInstaller) handleFoundContract(networkName, contractAddr, as
 		}
 	}
 
+	if !di.SkipAlias && !isCoreContract(contractName) {
+		err = di.updateDependencyAlias(contractName, networkName)
+		if err != nil {
+			di.Logger.Error(fmt.Sprintf("Error updating alias: %v", err))
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -303,6 +313,30 @@ func (di *DependencyInstaller) updateDependencyDeployment(contractName string) e
 		}
 
 		di.Logger.Info(fmt.Sprintf("Dependency Manager: %s added to emulator deployments in flow.json", contractName))
+	}
+
+	return nil
+}
+
+func (di *DependencyInstaller) updateDependencyAlias(contractName, aliasNetwork string) error {
+	var missingNetwork string
+
+	if aliasNetwork == "testnet" {
+		missingNetwork = "mainnet"
+	} else {
+		missingNetwork = "testnet"
+	}
+
+	label := fmt.Sprintf("Enter an alias address for %s on %s if you have one, otherwise leave blank", contractName, missingNetwork)
+	raw := util.AddressPromptOrEmpty(label, "Invalid alias address")
+
+	if raw != "" {
+		contract, err := di.State.Contracts().ByName(contractName)
+		if err != nil {
+			return err
+		}
+
+		contract.Aliases.Add(missingNetwork, flowsdk.HexToAddress(raw))
 	}
 
 	return nil
