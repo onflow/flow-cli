@@ -204,12 +204,12 @@ func secureNetworkKeyPrompt() string {
 	return networkKey
 }
 
-func addressPrompt(label string) string {
+func addressPrompt(label, errorMessage string) string {
 	addressPrompt := promptui.Prompt{
 		Label: label,
 		Validate: func(s string) error {
 			if flow.HexToAddress(s) == flow.EmptyAddress {
-				return fmt.Errorf("invalid address")
+				return fmt.Errorf(errorMessage)
 			}
 			return nil
 		},
@@ -286,7 +286,7 @@ func NewAccountPrompt() *AccountData {
 	var err error
 	account := &AccountData{
 		Name:    NamePrompt(),
-		Address: addressPrompt("Enter address"),
+		Address: addressPrompt("Enter address", "invalid address"),
 	}
 
 	sigAlgoPrompt := promptui.Select{
