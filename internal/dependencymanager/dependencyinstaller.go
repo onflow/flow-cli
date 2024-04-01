@@ -269,6 +269,7 @@ func (di *DependencyInstaller) handleFoundContract(networkName, contractAddr, as
 		return err
 	}
 
+	// If the contract is not a core contract and the user does not want to skip deployments, then prompt for a deployment
 	if !di.SkipDeployments && !isCoreContract(contractName) {
 		err = di.updateDependencyDeployment(contractName)
 		if err != nil {
@@ -277,6 +278,7 @@ func (di *DependencyInstaller) handleFoundContract(networkName, contractAddr, as
 		}
 	}
 
+	// If the contract is not a core contract and the user does not want to skip aliasing, then prompt for an alias
 	if !di.SkipAlias && !isCoreContract(contractName) {
 		err = di.updateDependencyAlias(contractName, networkName)
 		if err != nil {
