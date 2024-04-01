@@ -29,11 +29,6 @@ import (
 	"github.com/onflow/flow-cli/internal/command"
 )
 
-type dependencyManagerFlagsCollection struct {
-	skipDeployments bool `default:"false" flag:"skip-deployments" info:"Skip adding the dependency to deployments"`
-	skipAlias       bool `default:"false" flag:"skip-alias" info:"Skip prompting for an alias"`
-}
-
 var installFlags = dependencyManagerFlagsCollection{}
 
 var installCommand = &command.Command{
@@ -55,7 +50,7 @@ func install(
 ) (result command.Result, err error) {
 	logger.Info("🔄 Installing dependencies from flow.json...")
 
-	installer, err := NewDependencyInstaller(logger, state, installFlags.skipDeployments, installFlags.skipAlias)
+	installer, err := NewDependencyInstaller(logger, state, installFlags)
 	if err != nil {
 		logger.Error(fmt.Sprintf("Error: %v", err))
 		return nil, err

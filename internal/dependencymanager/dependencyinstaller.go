@@ -43,6 +43,11 @@ import (
 	"github.com/onflow/flowkit/output"
 )
 
+type dependencyManagerFlagsCollection struct {
+	skipDeployments bool `default:"false" flag:"skip-deployments" info:"Skip adding the dependency to deployments"`
+	skipAlias       bool `default:"false" flag:"skip-alias" info:"Skip prompting for an alias"`
+}
+
 type DependencyInstaller struct {
 	Gateways        map[string]gateway.Gateway
 	Logger          output.Logger
@@ -52,7 +57,7 @@ type DependencyInstaller struct {
 }
 
 // NewDependencyInstaller creates a new instance of DependencyInstaller
-func NewDependencyInstaller(logger output.Logger, state *flowkit.State, skipDeployments, skipAlias bool) (*DependencyInstaller, error) {
+func NewDependencyInstaller(logger output.Logger, state *flowkit.State, flags dependencyManagerFlagsCollection) (*DependencyInstaller, error) {
 	emulatorGateway, err := gateway.NewGrpcGateway(config.EmulatorNetwork)
 	if err != nil {
 		return nil, fmt.Errorf("error creating emulator gateway: %v", err)
@@ -78,8 +83,8 @@ func NewDependencyInstaller(logger output.Logger, state *flowkit.State, skipDepl
 		Gateways:        gateways,
 		Logger:          logger,
 		State:           state,
-		SkipDeployments: skipDeployments,
-		SkipAlias:       skipAlias,
+		SkipDeployments: flags.skipDeployments,
+		SkipAlias:       flags.skipAlias,
 	}, nil
 }
 
