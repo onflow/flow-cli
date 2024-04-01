@@ -204,7 +204,7 @@ func secureNetworkKeyPrompt() string {
 	return networkKey
 }
 
-func addressPrompt(label, errorMessage string) string {
+func AddressPrompt(label, errorMessage string) string {
 	addressPrompt := promptui.Prompt{
 		Label: label,
 		Validate: func(s string) error {
@@ -286,7 +286,7 @@ func NewAccountPrompt() *AccountData {
 	var err error
 	account := &AccountData{
 		Name:    NamePrompt(),
-		Address: addressPrompt("Enter address", "invalid address"),
+		Address: AddressPrompt("Enter address", "invalid address"),
 	}
 
 	sigAlgoPrompt := promptui.Select{
@@ -371,9 +371,9 @@ func NewContractPrompt() *ContractData {
 		os.Exit(-1)
 	}
 
-	contract.Emulator = addressPrompt("Enter emulator alias, if exists", "invalid alias address")
-	contract.Testnet = addressPrompt("Enter testnet alias, if exists", "invalid testnet address")
-	contract.Mainnet = addressPrompt("Enter mainnet alias, if exists", "invalid mainnet address")
+	contract.Emulator = AddressPrompt("Enter emulator alias, if exists", "invalid alias address")
+	contract.Testnet = AddressPrompt("Enter testnet alias, if exists", "invalid testnet address")
+	contract.Mainnet = AddressPrompt("Enter mainnet alias, if exists", "invalid mainnet address")
 
 	return contract
 }
