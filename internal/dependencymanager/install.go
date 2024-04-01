@@ -29,12 +29,12 @@ import (
 	"github.com/onflow/flow-cli/internal/command"
 )
 
-type installFlagsCollection struct {
+type dependencyManagerFlagsCollection struct {
 	skipDeployments bool `default:"false" flag:"skip-deployments" info:"Skip adding the dependency to deployments"`
 	skipAlias       bool `default:"false" flag:"skip-alias" info:"Skip prompting for an alias"`
 }
 
-var installFlags = installFlagsCollection{}
+var installFlags = dependencyManagerFlagsCollection{}
 
 var installCommand = &command.Command{
 	Cmd: &cobra.Command{

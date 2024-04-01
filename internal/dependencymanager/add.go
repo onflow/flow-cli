@@ -30,9 +30,8 @@ import (
 )
 
 type addFlagsCollection struct {
-	name            string `default:"" flag:"name" info:"Name of the dependency"`
-	skipDeployments bool   `default:"false" flag:"skip-deployments" info:"Skip adding the dependency to deployments"`
-	skipAlias       bool   `default:"false" flag:"skip-alias" info:"Skip prompting for an alias"`
+	dependencyManagerFlagsCollection
+	name string `default:"" flag:"name" info:"Name of the dependency"`
 }
 
 var addFlags = addFlagsCollection{}
