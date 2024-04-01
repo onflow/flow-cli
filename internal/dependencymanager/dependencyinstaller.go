@@ -323,10 +323,10 @@ func (di *DependencyInstaller) updateDependencyDeployment(contractName string) e
 func (di *DependencyInstaller) updateDependencyAlias(contractName, aliasNetwork string) error {
 	var missingNetwork string
 
-	if aliasNetwork == "testnet" {
-		missingNetwork = "mainnet"
+	if aliasNetwork == config.TestnetNetwork.Name {
+		missingNetwork = config.MainnetNetwork.Name
 	} else {
-		missingNetwork = "testnet"
+		missingNetwork = config.TestnetNetwork.Name
 	}
 
 	label := fmt.Sprintf("Enter an alias address for %s on %s if you have one, otherwise leave blank", contractName, missingNetwork)
