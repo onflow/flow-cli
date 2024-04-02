@@ -96,6 +96,12 @@ func (di *DependencyInstaller) Install() error {
 			return err
 		}
 	}
+
+	err := di.State.SaveDefault()
+	if err != nil {
+		return fmt.Errorf("error saving state: %w", err)
+	}
+
 	return nil
 }
 
@@ -123,6 +129,11 @@ func (di *DependencyInstaller) Add(depSource, customName string) error {
 
 	if err := di.processDependency(dep); err != nil {
 		return fmt.Errorf("error processing dependency: %w", err)
+	}
+
+	err = di.State.SaveDefault()
+	if err != nil {
+		return fmt.Errorf("error saving state: %w", err)
 	}
 
 	return nil
@@ -314,11 +325,6 @@ func (di *DependencyInstaller) updateDependencyDeployment(contractName string) e
 			deployment.AddContract(config.ContractDeployment{Name: c})
 		}
 
-		err := di.State.SaveDefault()
-		if err != nil {
-			return err
-		}
-
 		di.Logger.Info(fmt.Sprintf("Dependency Manager: %s added to emulator deployments in flow.json", contractName))
 	}
 
@@ -364,10 +370,6 @@ func (di *DependencyInstaller) updateDependencyState(networkName, contractAddres
 
 	di.State.Dependencies().AddOrUpdate(dep)
 	di.State.Contracts().AddDependencyAsContract(dep, networkName)
-	err := di.State.SaveDefault()
-	if err != nil {
-		return err
-	}
 
 	if isNewDep {
 		di.Logger.Info(fmt.Sprintf("Dependency Manager: %s added to flow.json", dep.Name))
