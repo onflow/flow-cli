@@ -204,12 +204,34 @@ func secureNetworkKeyPrompt() string {
 	return networkKey
 }
 
-func addressPrompt() string {
+func addressPrompt(label, errorMessage string) string {
 	addressPrompt := promptui.Prompt{
-		Label: "Enter address",
+		Label: label,
 		Validate: func(s string) error {
 			if flow.HexToAddress(s) == flow.EmptyAddress {
-				return fmt.Errorf("invalid address")
+				return fmt.Errorf(errorMessage)
+			}
+			return nil
+		},
+	}
+
+	address, err := addressPrompt.Run()
+	if err == promptui.ErrInterrupt {
+		os.Exit(-1)
+	}
+
+	return address
+}
+
+func AddressPromptOrEmpty(label, errorMessage string) string {
+	addressPrompt := promptui.Prompt{
+		Label: label,
+		Validate: func(s string) error {
+			if s == "" {
+				return nil
+			}
+			if flow.HexToAddress(s) == flow.EmptyAddress {
+				return fmt.Errorf(errorMessage)
 			}
 			return nil
 		},
@@ -286,7 +308,7 @@ func NewAccountPrompt() *AccountData {
 	var err error
 	account := &AccountData{
 		Name:    NamePrompt(),
-		Address: addressPrompt(),
+		Address: addressPrompt("Enter address", "invalid address"),
 	}
 
 	sigAlgoPrompt := promptui.Select{
@@ -372,41 +394,9 @@ func NewContractPrompt() *ContractData {
 		os.Exit(-1)
 	}
 
-	emulatorAliasPrompt := promptui.Prompt{
-		Label: "Enter emulator alias, if exists",
-		Validate: func(s string) error {
-			if s != "" && flow.HexToAddress(s) == flow.EmptyAddress {
-				return fmt.Errorf("invalid alias address")
-			}
-
-			return nil
-		},
-	}
-	contract.Emulator, _ = emulatorAliasPrompt.Run()
-
-	testnetAliasPrompt := promptui.Prompt{
-		Label: "Enter testnet alias, if exists",
-		Validate: func(s string) error {
-			if s != "" && flow.HexToAddress(s) == flow.EmptyAddress {
-				return fmt.Errorf("invalid testnet address")
-			}
-
-			return nil
-		},
-	}
-	contract.Testnet, _ = testnetAliasPrompt.Run()
-
-	mainnetAliasPrompt := promptui.Prompt{
-		Label: "Enter mainnet alias, if exists",
-		Validate: func(s string) error {
-			if s != "" && flow.HexToAddress(s) == flow.EmptyAddress {
-				return fmt.Errorf("invalid mainnet address")
-			}
-
-			return nil
-		},
-	}
-	contract.Mainnet, _ = mainnetAliasPrompt.Run()
+	contract.Emulator = addressPrompt("Enter emulator alias, if exists", "invalid alias address")
+	contract.Testnet = addressPrompt("Enter testnet alias, if exists", "invalid testnet address")
+	contract.Mainnet = addressPrompt("Enter mainnet alias, if exists", "invalid mainnet address")
 
 	return contract
 }

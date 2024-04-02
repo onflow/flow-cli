@@ -29,11 +29,7 @@ import (
 	"github.com/onflow/flow-cli/internal/command"
 )
 
-type installFlagsCollection struct {
-	skipDeployments bool `default:"false" flag:"skip-deployments" info:"Skip adding the dependency to deployments"`
-}
-
-var installFlags = installFlagsCollection{}
+var installFlags = dependencyManagerFlagsCollection{}
 
 var installCommand = &command.Command{
 	Cmd: &cobra.Command{
@@ -54,7 +50,7 @@ func install(
 ) (result command.Result, err error) {
 	logger.Info("🔄 Installing dependencies from flow.json...")
 
-	installer, err := NewDependencyInstaller(logger, state, installFlags.skipDeployments)
+	installer, err := NewDependencyInstaller(logger, state, installFlags)
 	if err != nil {
 		logger.Error(fmt.Sprintf("Error: %v", err))
 		return nil, err
@@ -64,8 +60,6 @@ func install(
 		logger.Error(fmt.Sprintf("Error: %v", err))
 		return nil, err
 	}
-
-	logger.Info("✅  Dependency installation complete. Check your flow.json")
 
 	return nil, nil
 }

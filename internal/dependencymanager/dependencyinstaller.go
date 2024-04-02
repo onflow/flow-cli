@@ -43,15 +43,48 @@ import (
 	"github.com/onflow/flowkit/v2/output"
 )
 
+type categorizedLogs struct {
+	fileSystemActions []string
+	stateUpdates      []string
+}
+
+func (cl *categorizedLogs) LogAll(logger output.Logger) {
+	logger.Info("📝 Dependency Manager Actions Summary")
+	logger.Info("") // Add a line break after the section
+
+	if len(cl.fileSystemActions) > 0 {
+		logger.Info("🗃️  File System Actions:")
+		for _, msg := range cl.fileSystemActions {
+			logger.Info(fmt.Sprintf("✅ %s", msg))
+		}
+		logger.Info("") // Add a line break after the section
+	}
+
+	if len(cl.stateUpdates) > 0 {
+		logger.Info("💾 State Updates:")
+		for _, msg := range cl.stateUpdates {
+			logger.Info(fmt.Sprintf("✅ %s", msg))
+		}
+		logger.Info("") // Add a line break after the section
+	}
+}
+
+type dependencyManagerFlagsCollection struct {
+	skipDeployments bool `default:"false" flag:"skip-deployments" info:"Skip adding the dependency to deployments"`
+	skipAlias       bool `default:"false" flag:"skip-alias" info:"Skip prompting for an alias"`
+}
+
 type DependencyInstaller struct {
 	Gateways        map[string]gateway.Gateway
 	Logger          output.Logger
 	State           *flowkit.State
 	SkipDeployments bool
+	SkipAlias       bool
+	logs            categorizedLogs
 }
 
 // NewDependencyInstaller creates a new instance of DependencyInstaller
-func NewDependencyInstaller(logger output.Logger, state *flowkit.State, skipDeployments bool) (*DependencyInstaller, error) {
+func NewDependencyInstaller(logger output.Logger, state *flowkit.State, flags dependencyManagerFlagsCollection) (*DependencyInstaller, error) {
 	emulatorGateway, err := gateway.NewGrpcGateway(config.EmulatorNetwork)
 	if err != nil {
 		return nil, fmt.Errorf("error creating emulator gateway: %v", err)
@@ -83,7 +116,8 @@ func NewDependencyInstaller(logger output.Logger, state *flowkit.State, skipDepl
 		Gateways:        gateways,
 		Logger:          logger,
 		State:           state,
-		SkipDeployments: skipDeployments,
+		SkipDeployments: flags.skipDeployments,
+		SkipAlias:       flags.skipAlias,
 	}, nil
 }
 
@@ -95,6 +129,14 @@ func (di *DependencyInstaller) Install() error {
 			return err
 		}
 	}
+
+	err := di.State.SaveDefault()
+	if err != nil {
+		return fmt.Errorf("error saving state: %w", err)
+	}
+
+	di.logs.LogAll(di.Logger)
+
 	return nil
 }
 
@@ -123,6 +165,13 @@ func (di *DependencyInstaller) Add(depSource, customName string) error {
 	if err := di.processDependency(dep); err != nil {
 		return fmt.Errorf("error processing dependency: %w", err)
 	}
+
+	err = di.State.SaveDefault()
+	if err != nil {
+		return fmt.Errorf("error saving state: %w", err)
+	}
+
+	di.logs.LogAll(di.Logger)
 
 	return nil
 }
@@ -218,7 +267,7 @@ func (di *DependencyInstaller) handleFileSystem(contractAddr, contractName, cont
 			return fmt.Errorf("failed to create contract file: %w", err)
 		}
 
-		di.Logger.Info(fmt.Sprintf("Dependency Manager: %s from %s on %s installed", contractName, contractAddr, networkName))
+		di.logs.fileSystemActions = append(di.logs.fileSystemActions, fmt.Sprintf("%s from %s on %s installed", contractName, contractAddr, networkName))
 	}
 
 	return nil
@@ -273,12 +322,26 @@ func (di *DependencyInstaller) handleFoundContract(networkName, contractAddr, as
 		return err
 	}
 
+	// If the contract is not a core contract and the user does not want to skip deployments, then prompt for a deployment
 	if !di.SkipDeployments && !isCoreContract(contractName) {
 		err = di.updateDependencyDeployment(contractName)
 		if err != nil {
 			di.Logger.Error(fmt.Sprintf("Error updating deployment: %v", err))
 			return err
 		}
+
+		di.logs.stateUpdates = append(di.logs.stateUpdates, fmt.Sprintf("%s added to emulator deployments", contractName))
+	}
+
+	// If the contract is not a core contract and the user does not want to skip aliasing, then prompt for an alias
+	if !di.SkipAlias && !isCoreContract(contractName) {
+		err = di.updateDependencyAlias(contractName, networkName)
+		if err != nil {
+			di.Logger.Error(fmt.Sprintf("Error updating alias: %v", err))
+			return err
+		}
+
+		di.logs.stateUpdates = append(di.logs.stateUpdates, fmt.Sprintf("Alias added for %s on %s", contractName, networkName))
 	}
 
 	return nil
@@ -302,13 +365,30 @@ func (di *DependencyInstaller) updateDependencyDeployment(contractName string) e
 		for _, c := range raw.Contracts {
 			deployment.AddContract(config.ContractDeployment{Name: c})
 		}
+	}
 
-		err := di.State.SaveDefault()
+	return nil
+}
+
+func (di *DependencyInstaller) updateDependencyAlias(contractName, aliasNetwork string) error {
+	var missingNetwork string
+
+	if aliasNetwork == config.TestnetNetwork.Name {
+		missingNetwork = config.MainnetNetwork.Name
+	} else {
+		missingNetwork = config.TestnetNetwork.Name
+	}
+
+	label := fmt.Sprintf("Enter an alias address for %s on %s if you have one, otherwise leave blank", contractName, missingNetwork)
+	raw := util.AddressPromptOrEmpty(label, "Invalid alias address")
+
+	if raw != "" {
+		contract, err := di.State.Contracts().ByName(contractName)
 		if err != nil {
 			return err
 		}
 
-		di.Logger.Info(fmt.Sprintf("Dependency Manager: %s added to emulator deployments in flow.json", contractName))
+		contract.Aliases.Add(missingNetwork, flowsdk.HexToAddress(raw))
 	}
 
 	return nil
@@ -329,13 +409,9 @@ func (di *DependencyInstaller) updateDependencyState(networkName, contractAddres
 
 	di.State.Dependencies().AddOrUpdate(dep)
 	di.State.Contracts().AddDependencyAsContract(dep, networkName)
-	err := di.State.SaveDefault()
-	if err != nil {
-		return err
-	}
 
 	if isNewDep {
-		di.Logger.Info(fmt.Sprintf("Dependency Manager: %s added to flow.json", dep.Name))
+		di.logs.stateUpdates = append(di.logs.stateUpdates, fmt.Sprintf("%s added to flow.json", dep.Name))
 	}
 
 	return nil

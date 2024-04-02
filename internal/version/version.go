@@ -21,7 +21,6 @@ package version
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"runtime/debug"
 	"strings"
 
@@ -45,12 +44,12 @@ func (c versionCmd) Print(format string) error {
 		txtBuilder.WriteString(fmt.Sprintf("Version: %s\n", c.Version))
 		txtBuilder.WriteString(fmt.Sprintf("Commit: %s\n", c.Commit))
 
-		txtBuilder.WriteString(fmt.Sprintf("\nFlow Package Dependencies \n"))
+		txtBuilder.WriteString("\nFlow Package Dependencies \n")
 		for _, dep := range c.Dependencies {
 			txtBuilder.WriteString(fmt.Sprintf("%s %s\n", dep.Path, dep.Version))
 		}
 
-		log.Println(txtBuilder.String())
+		fmt.Println(txtBuilder.String())
 
 		return nil
 
@@ -60,7 +59,7 @@ func (c versionCmd) Print(format string) error {
 			return err
 		}
 
-		log.Println(string(jsonRes))
+		fmt.Println(string(jsonRes))
 
 		return nil
 
@@ -99,7 +98,7 @@ func (c *versionCmd) MarshalJSON() ([]byte, error) {
 var Cmd = &cobra.Command{
 	Use:   "version",
 	Short: "View version and commit information",
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 		semver := build.Semver()
 		commit := build.Commit()
 
@@ -110,8 +109,7 @@ var Cmd = &cobra.Command{
 
 		bi, ok := debug.ReadBuildInfo()
 		if !ok {
-			log.Printf("Failed to read build info")
-			return
+			return fmt.Errorf("failed to read build info")
 		}
 
 		// only add dependencies from github.com/onflow
@@ -122,8 +120,9 @@ var Cmd = &cobra.Command{
 		}
 
 		if err := v.Print(command.Flags.Format); err != nil {
-			log.Printf("Failed to print version information: %s", err)
-			return
+			return err
 		}
+
+		return nil
 	},
 }

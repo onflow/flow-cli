@@ -160,6 +160,11 @@ func main() {
 
 	cmd.SetUsageTemplate(command.UsageTemplate)
 
+	// Don't print usage on error
+	cmd.SilenceUsage = true
+	// Don't print errors on error (we handle them)
+	cmd.SilenceErrors = true
+
 	if err := cmd.Execute(); err != nil {
 		util.Exit(1, err.Error())
 	}
