@@ -44,7 +44,6 @@ import (
 )
 
 type categorizedLogs struct {
-	dependencyActions []string
 	fileSystemActions []string
 	stateUpdates      []string
 }
@@ -52,14 +51,6 @@ type categorizedLogs struct {
 func (cl *categorizedLogs) LogAll(logger output.Logger) {
 	logger.Info("📝 Dependency Manager Actions Summary")
 	logger.Info("") // Add a line break after the section
-
-	if len(cl.dependencyActions) > 0 {
-		logger.Info("🔨 Dependency Actions:")
-		for _, msg := range cl.dependencyActions {
-			logger.Info(fmt.Sprintf("✅ %s", msg))
-		}
-		logger.Info("") // Add a line break after the section
-	}
 
 	if len(cl.fileSystemActions) > 0 {
 		logger.Info("🗃️  File System Actions:")
@@ -333,7 +324,7 @@ func (di *DependencyInstaller) handleFoundContract(networkName, contractAddr, as
 			return err
 		}
 
-		di.logs.dependencyActions = append(di.logs.dependencyActions, fmt.Sprintf("%s added to emulator deployments", contractName))
+		di.logs.stateUpdates = append(di.logs.stateUpdates, fmt.Sprintf("%s added to emulator deployments", contractName))
 	}
 
 	// If the contract is not a core contract and the user does not want to skip aliasing, then prompt for an alias
@@ -344,7 +335,7 @@ func (di *DependencyInstaller) handleFoundContract(networkName, contractAddr, as
 			return err
 		}
 
-		di.logs.dependencyActions = append(di.logs.dependencyActions, fmt.Sprintf("Alias added for %s on %s", contractName, networkName))
+		di.logs.stateUpdates = append(di.logs.stateUpdates, fmt.Sprintf("Alias added for %s on %s", contractName, networkName))
 	}
 
 	return nil
