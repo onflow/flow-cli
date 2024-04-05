@@ -52,23 +52,27 @@ var initCommand = &command.Command{
 	Run:   Initialise,
 }
 
-func Initialise(
-	_ []string,
-	_ command.GlobalFlags,
-	logger output.Logger,
-	readerWriter flowkit.ReaderWriter,
-	_ flowkit.Services,
-) (command.Result, error) {
+// InitConfigParameters holds all necessary parameters for initializing the configuration.
+type InitConfigParameters struct {
+	ServicePrivateKey  string
+	ServiceKeySigAlgo  string
+	ServiceKeyHashAlgo string
+	Reset              bool
+	Global             bool
+}
+
+// InitializeConfiguration creates the Flow configuration json file based on the provided parameters.
+func InitializeConfiguration(params InitConfigParameters, logger output.Logger, readerWriter flowkit.ReaderWriter) (*flowkit.State, error) {
 	logger.Info("⚠️Notice: for starting a new project prefer using 'flow setup'.")
 
-	sigAlgo := crypto.StringToSignatureAlgorithm(InitFlag.ServiceKeySigAlgo)
+	sigAlgo := crypto.StringToSignatureAlgorithm(params.ServiceKeySigAlgo)
 	if sigAlgo == crypto.UnknownSignatureAlgorithm {
-		return nil, fmt.Errorf("invalid signature algorithm: %s", InitFlag.ServiceKeySigAlgo)
+		return nil, fmt.Errorf("invalid signature algorithm: %s", params.ServiceKeySigAlgo)
 	}
 
-	hashAlgo := crypto.StringToHashAlgorithm(InitFlag.ServiceKeyHashAlgo)
+	hashAlgo := crypto.StringToHashAlgorithm(params.ServiceKeyHashAlgo)
 	if hashAlgo == crypto.UnknownHashAlgorithm {
-		return nil, fmt.Errorf("invalid hash algorithm: %s", InitFlag.ServiceKeyHashAlgo)
+		return nil, fmt.Errorf("invalid hash algorithm: %s", params.ServiceKeyHashAlgo)
 	}
 
 	state, err := flowkit.Init(readerWriter, sigAlgo, hashAlgo)
@@ -76,8 +80,8 @@ func Initialise(
 		return nil, err
 	}
 
-	if InitFlag.ServicePrivateKey != "" {
-		privateKey, err := crypto.DecodePrivateKeyHex(sigAlgo, InitFlag.ServicePrivateKey)
+	if params.ServicePrivateKey != "" {
+		privateKey, err := crypto.DecodePrivateKeyHex(sigAlgo, params.ServicePrivateKey)
 		if err != nil {
 			return nil, fmt.Errorf("invalid private key: %w", err)
 		}
@@ -86,11 +90,11 @@ func Initialise(
 	}
 
 	path := config.DefaultPath
-	if InitFlag.Global {
+	if params.Global {
 		path = config.GlobalPath()
 	}
 
-	if config.Exists(path) && !InitFlag.Reset {
+	if config.Exists(path) && !params.Reset {
 		return nil, fmt.Errorf(
 			"configuration already exists at: %s, if you want to reset configuration use the reset flag",
 			path,
@@ -102,18 +106,40 @@ func Initialise(
 		return nil, err
 	}
 
-	return &initResult{State: state}, nil
+	return state, nil
 }
 
-type initResult struct {
+func Initialise(
+	_ []string,
+	_ command.GlobalFlags,
+	logger output.Logger,
+	readerWriter flowkit.ReaderWriter,
+	_ flowkit.Services,
+) (command.Result, error) {
+	params := InitConfigParameters{
+		ServicePrivateKey:  InitFlag.ServicePrivateKey,
+		ServiceKeySigAlgo:  InitFlag.ServiceKeySigAlgo,
+		ServiceKeyHashAlgo: InitFlag.ServiceKeyHashAlgo,
+		Reset:              InitFlag.Reset,
+		Global:             InitFlag.Global,
+	}
+	state, err := InitializeConfiguration(params, logger, readerWriter)
+	if err != nil {
+		return nil, err
+	}
+
+	return &InitResult{State: state}, nil
+}
+
+type InitResult struct {
 	*flowkit.State
 }
 
-func (r *initResult) JSON() any {
+func (r *InitResult) JSON() any {
 	return r
 }
 
-func (r *initResult) String() string {
+func (r *InitResult) String() string {
 	var b bytes.Buffer
 	writer := util.CreateTabWriter(&b)
 	account, _ := r.State.EmulatorServiceAccount()
@@ -130,6 +156,6 @@ func (r *initResult) String() string {
 	return b.String()
 }
 
-func (r *initResult) Oneliner() string {
+func (r *InitResult) Oneliner() string {
 	return ""
 }
