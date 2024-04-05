@@ -262,12 +262,9 @@ func createLogger(logFlag string, formatFlag string) output.Logger {
 // checkVersion fetches latest version and compares it to local.
 func checkVersion(logger output.Logger) {
 	currentVersion := build.Semver()
-	if isDevelopment() {
-		return // avoid warning in local development
-	}
 
 	// If using cadence-v1.0.0 pre-release, check for cadence-v1.0.0 releases instead
-	if strings.Contains(currentVersion, "cadence-v1.0.0") {
+	if strings.Contains(currentVersion, "cadence-v1.0.0") || true {
 		checkVersionCadence1(logger)
 		return
 	}
@@ -300,7 +297,7 @@ func checkVersion(logger output.Logger) {
 // checkVersionCadence1 fetches latest version of cadence-v1.0.0 and compares it to local.
 // This is a special case for cadence-v1.0.0 pre-release & should be removed when cadence-v1.0.0 branch is merged.
 func checkVersionCadence1(logger output.Logger) {
-	resp, err := http.Get("https://api.github.com/repos/onflow/flow-cli/releases?per_page=100")
+	resp, err := http.Get("https://api.github.com/repos/onflow/flow-cli/tags?per_page=100")
 	if err != nil || resp.StatusCode >= 400 {
 		return
 	}
@@ -313,20 +310,19 @@ func checkVersionCadence1(logger output.Logger) {
 	}(resp.Body)
 
 	body, _ := io.ReadAll(resp.Body)
-	//parse json
-	var releases []map[string]interface{}
-	err = json.Unmarshal(body, &releases)
+	var tags []map[string]interface{}
+	err = json.Unmarshal(body, &tags)
 	if err != nil {
 		return
 	}
 
 	var latestVersion string
-	for _, release := range releases {
-		if release["tag_name"] == nil {
+	for _, tag := range tags {
+		if tag["name"] == nil {
 			continue
 		}
 
-		tagName := release["tag_name"].(string)
+		tagName := tag["name"].(string)
 		if strings.Contains(tagName, "cadence-v1.0.0") {
 			latestVersion = tagName
 			break
