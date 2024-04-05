@@ -262,9 +262,12 @@ func createLogger(logFlag string, formatFlag string) output.Logger {
 // checkVersion fetches latest version and compares it to local.
 func checkVersion(logger output.Logger) {
 	currentVersion := build.Semver()
+	if isDevelopment() {
+		return // avoid warning in local development
+	}
 
 	// If using cadence-v1.0.0 pre-release, check for cadence-v1.0.0 releases instead
-	if strings.Contains(currentVersion, "cadence-v1.0.0") || true {
+	if strings.Contains(currentVersion, "cadence-v1.0.0") {
 		checkVersionCadence1(logger)
 		return
 	}
