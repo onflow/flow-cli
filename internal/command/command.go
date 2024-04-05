@@ -297,7 +297,8 @@ func checkVersion(logger output.Logger) {
 	}
 }
 
-// checkVersion fetches latest version and compares it to local.
+// checkVersionCadence1 fetches latest version of cadence-v1.0.0 and compares it to local.
+// This is a special case for cadence-v1.0.0 pre-release & should be removed when cadence-v1.0.0 branch is merged.
 func checkVersionCadence1(logger output.Logger) {
 	resp, err := http.Get("https://api.github.com/repos/onflow/flow-cli/releases?per_page=100")
 	if err != nil || resp.StatusCode >= 400 {
