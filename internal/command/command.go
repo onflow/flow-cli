@@ -21,6 +21,7 @@ package command
 import (
 	"crypto/sha256"
 	"encoding/base64"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -260,6 +261,17 @@ func createLogger(logFlag string, formatFlag string) output.Logger {
 
 // checkVersion fetches latest version and compares it to local.
 func checkVersion(logger output.Logger) {
+	currentVersion := build.Semver()
+	if isDevelopment() {
+		return // avoid warning in local development
+	}
+
+	// If using cadence-v1.0.0 pre-release, check for cadence-v1.0.0 releases instead
+	if strings.Contains(currentVersion, "cadence-v1.0.0") {
+		checkVersionCadence1(logger)
+		return
+	}
+
 	resp, err := http.Get("https://raw.githubusercontent.com/onflow/flow-cli/master/version.txt")
 	if err != nil || resp.StatusCode >= 400 {
 		return
@@ -275,12 +287,53 @@ func checkVersion(logger output.Logger) {
 	body, _ := io.ReadAll(resp.Body)
 	latestVersion := strings.TrimSpace(string(body))
 
-	currentVersion := build.Semver()
-	if isDevelopment() {
-		return // avoid warning in local development
+	if currentVersion != latestVersion {
+		logger.Info(fmt.Sprintf(
+			"\n%s  Version warning: a new version of Flow CLI is available (%s).\n"+
+				"   Read the installation guide for upgrade instructions: https://docs.onflow.org/flow-cli/install\n",
+			output.WarningEmoji(),
+			strings.ReplaceAll(latestVersion, "\n", ""),
+		))
+	}
+}
+
+// checkVersion fetches latest version and compares it to local.
+func checkVersionCadence1(logger output.Logger) {
+	resp, err := http.Get("https://api.github.com/repos/onflow/flow-cli/releases?per_page=100")
+	if err != nil || resp.StatusCode >= 400 {
+		return
 	}
 
-	if currentVersion != latestVersion {
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+			logger.Error("error closing request")
+		}
+	}(resp.Body)
+
+	body, _ := io.ReadAll(resp.Body)
+	//parse json
+	var releases []map[string]interface{}
+	err = json.Unmarshal(body, &releases)
+	if err != nil {
+		return
+	}
+
+	var latestVersion string
+	for _, release := range releases {
+		if release["tag_name"] == nil {
+			continue
+		}
+
+		tagName := release["tag_name"].(string)
+		if strings.Contains(tagName, "cadence-v1.0.0") {
+			latestVersion = tagName
+			break
+		}
+	}
+
+	currentVersion := build.Semver()
+	if currentVersion != latestVersion && latestVersion != "" {
 		logger.Info(fmt.Sprintf(
 			"\n%s  Version warning: a new version of Flow CLI is available (%s).\n"+
 				"   Read the installation guide for upgrade instructions: https://docs.onflow.org/flow-cli/install\n",
