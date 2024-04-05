@@ -318,11 +318,11 @@ func checkVersionCadence1(logger output.Logger) {
 
 	var latestVersion string
 	for _, tag := range tags {
-		if tag["name"] == nil {
+		tagName, ok := tag["name"].(string)
+		if !ok {
 			continue
 		}
 
-		tagName := tag["name"].(string)
 		if strings.Contains(tagName, "cadence-v1.0.0") {
 			latestVersion = tagName
 			break
