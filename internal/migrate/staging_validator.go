@@ -153,6 +153,11 @@ func (v *stagingValidator) ValidateContractUpdate(
 		interpreterProgram,
 		v.elaborations,
 	)
+	chainId, ok := chainIdMap[v.flow.Network().Name]
+	if !ok {
+		return fmt.Errorf("unsupported network: %s", v.flow.Network().Name)
+	}
+	validator.WithUserDefinedTypeChangeChecker(newUserDefinedTypeChangeCheckerFunc(chainId))
 
 	err = validator.Validate()
 	if err != nil {
@@ -437,4 +442,31 @@ func (a *accountContractNamesProviderImpl) GetAccountContractNames(
 	address common.Address,
 ) ([]string, error) {
 	return a.resolverFunc(address)
+}
+
+// TEMPORARY: this is not exported by flow-go and should be removed once it is
+// This is for a quick fix to get the validator working
+func newUserDefinedTypeChangeCheckerFunc(
+	chainID flow.ChainID,
+) func(oldTypeID common.TypeID, newTypeID common.TypeID) (checked, valid bool) {
+
+	typeChangeRules := map[common.TypeID]common.TypeID{}
+
+	compositeTypeRules := migrations.NewCompositeTypeConversionRules(chainID)
+	for typeID, newStaticType := range compositeTypeRules {
+		typeChangeRules[typeID] = newStaticType.ID()
+	}
+
+	interfaceTypeRules := migrations.NewInterfaceTypeConversionRules(chainID)
+	for typeID, newStaticType := range interfaceTypeRules {
+		typeChangeRules[typeID] = newStaticType.ID()
+	}
+
+	return func(oldTypeID common.TypeID, newTypeID common.TypeID) (checked, valid bool) {
+		expectedNewTypeID, found := typeChangeRules[oldTypeID]
+		if found {
+			return true, expectedNewTypeID == newTypeID
+		}
+		return false, false
+	}
 }

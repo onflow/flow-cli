@@ -128,7 +128,7 @@ func stageContract(
 			}
 		} else if err != nil {
 			logger.Error(validator.prettyPrintError(err, common.StringLocation(contract.Location)))
-			return nil, fmt.Errorf("errors were found while validating the contract code, and your contract HAS NOT been staged, you can use the --skip-validation flag to bypass this check")
+			return nil, fmt.Errorf("errors were found while attempting to perform preliminary validation of the contract code, and your contract HAS NOT been staged, however you can use the --skip-validation flag to bypass this check & stage the contract anyway")
 		} else {
 			logger.Info("No issues found while validating contract code\n")
 			logger.Info("DISCLAIMER: Pre-staging validation checks are not exhaustive and do not guarantee the contract will work as expected, please monitor the status of your contract using the `flow migrate is-validated` command\n")
