@@ -337,7 +337,7 @@ func checkVersionCadence1(logger output.Logger) {
 	if currentVersion != latestVersion && latestVersion != "" {
 		logger.Info(fmt.Sprintf(
 			"\n%s  Version warning: a new version of Flow CLI is available (%s).\n"+
-				"   Read the installation guide for upgrade instructions: https://docs.onflow.org/flow-cli/install\n",
+				"   Read the installation guide for upgrade instructions: https://cadence-lang.org/docs/cadence-migration-guide#install-cadence-10-cli\n",
 			output.WarningEmoji(),
 			strings.ReplaceAll(latestVersion, "\n", ""),
 		))
