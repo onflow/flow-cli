@@ -20,7 +20,6 @@ require (
 	github.com/onflow/flow-core-contracts/lib/go/templates v0.15.2-0.20240402184019-90048578066e
 	github.com/onflow/flow-emulator v1.0.0-preview.16
 	github.com/onflow/flow-evm-gateway v0.4.0
-	github.com/onflow/flow-go v0.34.0-crescendo-preview.9.0.20240403221216-33c1de004dc1
 	github.com/onflow/flow-go-sdk v1.0.0-preview.17
 	github.com/onflow/flowkit/v2 v2.0.0-stable-cadence-alpha.13
 	github.com/onflowser/flowser/v3 v3.2.1-0.20240131200229-7d4d22715f48
@@ -188,6 +187,7 @@ require (
 	github.com/onflow/flow-core-contracts/lib/go/contracts v0.15.2-0.20240402184019-90048578066e // indirect
 	github.com/onflow/flow-ft/lib/go/contracts v0.7.1-0.20240402160548-a9c331660956 // indirect
 	github.com/onflow/flow-ft/lib/go/templates v0.7.1-0.20240402160548-a9c331660956 // indirect
+	github.com/onflow/flow-go v0.34.0-crescendo-preview.9.0.20240405163546-39f59b1a3be6 // indirect
 	github.com/onflow/flow-nft/lib/go/contracts v1.1.1-0.20240402163945-74687e7a5b9d // indirect
 	github.com/onflow/flow-nft/lib/go/templates v0.0.0-20240402163945-74687e7a5b9d // indirect
 	github.com/onflow/flow/protobuf/go/flow v0.3.7 // indirect

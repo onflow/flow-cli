@@ -2104,6 +2104,8 @@ github.com/onflow/flow-ft/lib/go/templates v0.7.1-0.20240402160548-a9c331660956 
 github.com/onflow/flow-ft/lib/go/templates v0.7.1-0.20240402160548-a9c331660956/go.mod h1:uQ8XFqmMK2jxyBSVrmyuwdWjTEb+6zGjRYotfDJ5pAE=
 github.com/onflow/flow-go v0.34.0-crescendo-preview.9.0.20240403221216-33c1de004dc1 h1:HqAjOF/BndZMTMHF96a90i97UwjyvgZQDupM2WGJFFM=
 github.com/onflow/flow-go v0.34.0-crescendo-preview.9.0.20240403221216-33c1de004dc1/go.mod h1:IB2SxxipIJKEex9fD35R+a7FsR86vAefOCHp21ky3fU=
+github.com/onflow/flow-go v0.34.0-crescendo-preview.9.0.20240405163546-39f59b1a3be6 h1:FuGWa/2ukr6v70L62ncDFDPfUVLOymMiR8W2JSazL84=
+github.com/onflow/flow-go v0.34.0-crescendo-preview.9.0.20240405163546-39f59b1a3be6/go.mod h1:IB2SxxipIJKEex9fD35R+a7FsR86vAefOCHp21ky3fU=
 github.com/onflow/flow-go-sdk v1.0.0-M1/go.mod h1:TDW0MNuCs4SvqYRUzkbRnRmHQL1h4X8wURsCw9P9beo=
 github.com/onflow/flow-go-sdk v1.0.0-preview.17 h1:RDW+FCKWJBCX7U6bK7ZEBVqBrhdNS9CIAV+xvVeLLYY=
 github.com/onflow/flow-go-sdk v1.0.0-preview.17/go.mod h1:2XygOoc/RN2c28o3vebEc3TLhzfAviOEwpn2yQJHojQ=
