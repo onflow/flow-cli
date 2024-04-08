@@ -21,6 +21,7 @@ package super
 import (
 	"bytes"
 	"fmt"
+	"github.com/onflow/flow-cli/internal/config"
 	"github.com/spf13/cobra"
 	"io"
 	"os"
@@ -33,6 +34,7 @@ import (
 )
 
 type flagsSetup struct {
+	ConfigOnly bool `default:"false" flag:"config-only" info:"Only create a flow.json default config"`
 	Scaffold   bool `default:"" flag:"scaffold" info:"Interactively select a provided scaffold for project creation"`
 	ScaffoldID int  `default:"" flag:"scaffold-id" info:"Use provided scaffold ID for project creation"`
 }
@@ -55,7 +57,7 @@ func create(
 	args []string,
 	_ command.GlobalFlags,
 	logger output.Logger,
-	_ flowkit.ReaderWriter,
+	readerWriter flowkit.ReaderWriter,
 	_ flowkit.Services,
 ) (command.Result, error) {
 	targetDir, err := getTargetDirectory(args[0])
@@ -63,18 +65,35 @@ func create(
 		return nil, err
 	}
 
-	selectedScaffold, err := selectScaffold(logger)
-	if err != nil {
-		return nil, fmt.Errorf("error selecting scaffold %w", err)
-	}
-
-	logger.StartProgress(fmt.Sprintf("Creating your project %s", targetDir))
-	defer logger.StopProgress()
-
-	if selectedScaffold != nil {
-		err = cloneScaffold(targetDir, *selectedScaffold)
+	if setupFlags.Scaffold || setupFlags.ScaffoldID != 0 {
+		selectedScaffold, err := selectScaffold(logger)
 		if err != nil {
-			return nil, fmt.Errorf("failed creating scaffold %w", err)
+			return nil, fmt.Errorf("error selecting scaffold %w", err)
+		}
+
+		logger.StartProgress(fmt.Sprintf("Creating your project %s", targetDir))
+		defer logger.StopProgress()
+
+		if selectedScaffold != nil {
+			err = cloneScaffold(targetDir, *selectedScaffold)
+			if err != nil {
+				return nil, fmt.Errorf("failed creating scaffold %w", err)
+			}
+		}
+	} else {
+
+		// TODO: Ask for project name if not given
+
+		params := config.InitConfigParameters{
+			ServiceKeySigAlgo:  "ECDSA_P256",
+			ServiceKeyHashAlgo: "SHA3_256",
+			Reset:              false,
+			Global:             false,
+			TargetDirectory:    targetDir,
+		}
+		_, err := config.InitializeConfiguration(params, logger, readerWriter)
+		if err != nil {
+			return nil, fmt.Errorf("failed to initialize configuration: %w", err)
 		}
 	}
 

@@ -21,9 +21,9 @@ package config
 import (
 	"bytes"
 	"fmt"
-
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/spf13/cobra"
+	"os"
 
 	"github.com/onflow/flowkit"
 	"github.com/onflow/flowkit/config"
@@ -59,6 +59,7 @@ type InitConfigParameters struct {
 	ServiceKeyHashAlgo string
 	Reset              bool
 	Global             bool
+	TargetDirectory    string
 }
 
 // InitializeConfiguration creates the Flow configuration json file based on the provided parameters.
@@ -89,9 +90,22 @@ func InitializeConfiguration(params InitConfigParameters, logger output.Logger, 
 		state.SetEmulatorKey(privateKey)
 	}
 
-	path := config.DefaultPath
-	if params.Global {
-		path = config.GlobalPath()
+	var path string
+	if params.TargetDirectory != "" {
+		path = fmt.Sprintf("%s/flow.json", params.TargetDirectory)
+
+		// Create the directory if it doesn't exist
+		err := state.ReaderWriter().MkdirAll(params.TargetDirectory, os.ModePerm)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create target directory: %w", err)
+		}
+	} else {
+		// Otherwise, choose between the default and global paths
+		if params.Global {
+			path = config.GlobalPath()
+		} else {
+			path = config.DefaultPath
+		}
 	}
 
 	if config.Exists(path) && !params.Reset {
