@@ -30,6 +30,7 @@ import (
 )
 
 type addFlagsCollection struct {
+	dependencyManagerFlagsCollection
 	name string `default:"" flag:"name" info:"Name of the dependency"`
 }
 
@@ -57,7 +58,7 @@ func add(
 
 	dep := args[0]
 
-	installer, err := NewDependencyInstaller(logger, state)
+	installer, err := NewDependencyInstaller(logger, state, addFlags.dependencyManagerFlagsCollection)
 	if err != nil {
 		logger.Error(fmt.Sprintf("Error: %v", err))
 		return nil, err
@@ -67,10 +68,6 @@ func add(
 		logger.Error(fmt.Sprintf("Error: %v", err))
 		return nil, err
 	}
-
-	logger.Info("✅  Dependency installation complete. Check your flow.json")
-	logger.Info("Ensure you add any required dependencies to your 'deployments' section. This can be done using the 'flow config add deployment' command.")
-	logger.Info("Note: Core contracts do not need to be added to deployments. For reference, see this URL: https://github.com/onflow/flow-core-contracts")
 
 	return nil, nil
 }
