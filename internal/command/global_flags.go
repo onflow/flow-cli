@@ -33,7 +33,7 @@ import (
 // Flags initialized to default values.
 var Flags = GlobalFlags{
 	Filter:           "",
-	Format:           formatText,
+	Format:           FormatText,
 	Save:             "",
 	Host:             "",
 	HostNetworkKey:   "",

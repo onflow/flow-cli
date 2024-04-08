@@ -25,7 +25,9 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"sync"
+
+	"github.com/onflow/flow-go/fvm/systemcontracts"
+	flowGo "github.com/onflow/flow-go/model/flow"
 
 	"github.com/onflow/flow-cli/internal/util"
 
@@ -41,15 +43,48 @@ import (
 	"github.com/onflow/flowkit/output"
 )
 
+type categorizedLogs struct {
+	fileSystemActions []string
+	stateUpdates      []string
+}
+
+func (cl *categorizedLogs) LogAll(logger output.Logger) {
+	logger.Info("📝 Dependency Manager Actions Summary")
+	logger.Info("") // Add a line break after the section
+
+	if len(cl.fileSystemActions) > 0 {
+		logger.Info("🗃️  File System Actions:")
+		for _, msg := range cl.fileSystemActions {
+			logger.Info(fmt.Sprintf("✅ %s", msg))
+		}
+		logger.Info("") // Add a line break after the section
+	}
+
+	if len(cl.stateUpdates) > 0 {
+		logger.Info("💾 State Updates:")
+		for _, msg := range cl.stateUpdates {
+			logger.Info(fmt.Sprintf("✅ %s", msg))
+		}
+		logger.Info("") // Add a line break after the section
+	}
+}
+
+type dependencyManagerFlagsCollection struct {
+	skipDeployments bool `default:"false" flag:"skip-deployments" info:"Skip adding the dependency to deployments"`
+	skipAlias       bool `default:"false" flag:"skip-alias" info:"Skip prompting for an alias"`
+}
+
 type DependencyInstaller struct {
-	Gateways map[string]gateway.Gateway
-	Logger   output.Logger
-	State    *flowkit.State
-	Mutex    sync.Mutex
+	Gateways        map[string]gateway.Gateway
+	Logger          output.Logger
+	State           *flowkit.State
+	SkipDeployments bool
+	SkipAlias       bool
+	logs            categorizedLogs
 }
 
 // NewDependencyInstaller creates a new instance of DependencyInstaller
-func NewDependencyInstaller(logger output.Logger, state *flowkit.State) (*DependencyInstaller, error) {
+func NewDependencyInstaller(logger output.Logger, state *flowkit.State, flags dependencyManagerFlagsCollection) (*DependencyInstaller, error) {
 	emulatorGateway, err := gateway.NewGrpcGateway(config.EmulatorNetwork)
 	if err != nil {
 		return nil, fmt.Errorf("error creating emulator gateway: %v", err)
@@ -72,9 +107,11 @@ func NewDependencyInstaller(logger output.Logger, state *flowkit.State) (*Depend
 	}
 
 	return &DependencyInstaller{
-		Gateways: gateways,
-		Logger:   logger,
-		State:    state,
+		Gateways:        gateways,
+		Logger:          logger,
+		State:           state,
+		SkipDeployments: flags.skipDeployments,
+		SkipAlias:       flags.skipAlias,
 	}, nil
 }
 
@@ -86,6 +123,14 @@ func (di *DependencyInstaller) Install() error {
 			return err
 		}
 	}
+
+	err := di.State.SaveDefault()
+	if err != nil {
+		return fmt.Errorf("error saving state: %w", err)
+	}
+
+	di.logs.LogAll(di.Logger)
+
 	return nil
 }
 
@@ -115,6 +160,13 @@ func (di *DependencyInstaller) Add(depSource, customName string) error {
 		return fmt.Errorf("error processing dependency: %w", err)
 	}
 
+	err = di.State.SaveDefault()
+	if err != nil {
+		return fmt.Errorf("error saving state: %w", err)
+	}
+
+	di.logs.LogAll(di.Logger)
+
 	return nil
 }
 
@@ -136,13 +188,6 @@ func (di *DependencyInstaller) fetchDependencies(networkName string, address flo
 	if account.Contracts == nil {
 		return fmt.Errorf("contracts are nil for account: %s", address)
 	}
-
-	var wg sync.WaitGroup
-	errCh := make(chan error, len(account.Contracts))
-
-	// Create a max number of goroutines so that we don't rate limit the access node
-	maxGoroutines := 5
-	semaphore := make(chan struct{}, maxGoroutines)
 
 	found := false
 
@@ -167,18 +212,11 @@ func (di *DependencyInstaller) fetchDependencies(networkName string, address flo
 			if program.HasAddressImports() {
 				imports := program.AddressImportDeclarations()
 				for _, imp := range imports {
-					wg.Add(1)
-					go func(importAddress flowsdk.Address, contractName string) {
-						semaphore <- struct{}{}
-						defer func() {
-							<-semaphore
-							wg.Done()
-						}()
-						err := di.fetchDependencies(networkName, importAddress, contractName, contractName)
-						if err != nil {
-							errCh <- err
-						}
-					}(flowsdk.HexToAddress(imp.Location.String()), imp.Identifiers[0].String())
+					contractName := imp.Identifiers[0].String()
+					err := di.fetchDependencies(networkName, flowsdk.HexToAddress(imp.Location.String()), contractName, contractName)
+					if err != nil {
+						return err
+					}
 				}
 			}
 		}
@@ -187,16 +225,6 @@ func (di *DependencyInstaller) fetchDependencies(networkName string, address flo
 	if !found {
 		errMsg := fmt.Sprintf("contract %s not found for account %s on network %s", contractName, address, networkName)
 		di.Logger.Error(errMsg)
-	}
-
-	wg.Wait()
-	close(errCh)
-	close(semaphore)
-
-	for err := range errCh {
-		if err != nil {
-			return err
-		}
 	}
 
 	return nil
@@ -228,18 +256,26 @@ func (di *DependencyInstaller) createContractFile(address, contractName, data st
 }
 
 func (di *DependencyInstaller) handleFileSystem(contractAddr, contractName, contractData, networkName string) error {
-	di.Mutex.Lock()
-	defer di.Mutex.Unlock()
-
 	if !di.contractFileExists(contractAddr, contractName) {
 		if err := di.createContractFile(contractAddr, contractName, contractData); err != nil {
 			return fmt.Errorf("failed to create contract file: %w", err)
 		}
 
-		di.Logger.Info(fmt.Sprintf("Dependency Manager: %s from %s on %s installed", contractName, contractAddr, networkName))
+		di.logs.fileSystemActions = append(di.logs.fileSystemActions, fmt.Sprintf("%s from %s on %s installed", contractName, contractAddr, networkName))
 	}
 
 	return nil
+}
+
+func isCoreContract(contractName string) bool {
+	sc := systemcontracts.SystemContractsForChain(flowGo.Emulator)
+
+	for _, coreContract := range sc.All() {
+		if coreContract.Name == contractName {
+			return true
+		}
+	}
+	return false
 }
 
 func (di *DependencyInstaller) handleFoundContract(networkName, contractAddr, assignedName, contractName string, program *project.Program) error {
@@ -274,16 +310,85 @@ func (di *DependencyInstaller) handleFoundContract(networkName, contractAddr, as
 		return fmt.Errorf("error handling file system: %w", err)
 	}
 
-	err = di.updateState(networkName, contractAddr, assignedName, contractName, originalContractDataHash)
+	err = di.updateDependencyState(networkName, contractAddr, assignedName, contractName, originalContractDataHash)
 	if err != nil {
 		di.Logger.Error(fmt.Sprintf("Error updating state: %v", err))
 		return err
 	}
 
+	// If the contract is not a core contract and the user does not want to skip deployments, then prompt for a deployment
+	if !di.SkipDeployments && !isCoreContract(contractName) {
+		err = di.updateDependencyDeployment(contractName)
+		if err != nil {
+			di.Logger.Error(fmt.Sprintf("Error updating deployment: %v", err))
+			return err
+		}
+
+		di.logs.stateUpdates = append(di.logs.stateUpdates, fmt.Sprintf("%s added to emulator deployments", contractName))
+	}
+
+	// If the contract is not a core contract and the user does not want to skip aliasing, then prompt for an alias
+	if !di.SkipAlias && !isCoreContract(contractName) {
+		err = di.updateDependencyAlias(contractName, networkName)
+		if err != nil {
+			di.Logger.Error(fmt.Sprintf("Error updating alias: %v", err))
+			return err
+		}
+
+		di.logs.stateUpdates = append(di.logs.stateUpdates, fmt.Sprintf("Alias added for %s on %s", contractName, networkName))
+	}
+
 	return nil
 }
 
-func (di *DependencyInstaller) updateState(networkName, contractAddress, assignedName, contractName, contractHash string) error {
+func (di *DependencyInstaller) updateDependencyDeployment(contractName string) error {
+	// Add to deployments
+	// If a deployment already exists for that account, contract, and network, then ignore
+	raw := util.AddContractToDeploymentPrompt("emulator", *di.State.Accounts(), contractName)
+
+	if raw != nil {
+		deployment := di.State.Deployments().ByAccountAndNetwork(raw.Account, raw.Network)
+		if deployment == nil {
+			di.State.Deployments().AddOrUpdate(config.Deployment{
+				Network: raw.Network,
+				Account: raw.Account,
+			})
+			deployment = di.State.Deployments().ByAccountAndNetwork(raw.Account, raw.Network)
+		}
+
+		for _, c := range raw.Contracts {
+			deployment.AddContract(config.ContractDeployment{Name: c})
+		}
+	}
+
+	return nil
+}
+
+func (di *DependencyInstaller) updateDependencyAlias(contractName, aliasNetwork string) error {
+	var missingNetwork string
+
+	if aliasNetwork == config.TestnetNetwork.Name {
+		missingNetwork = config.MainnetNetwork.Name
+	} else {
+		missingNetwork = config.TestnetNetwork.Name
+	}
+
+	label := fmt.Sprintf("Enter an alias address for %s on %s if you have one, otherwise leave blank", contractName, missingNetwork)
+	raw := util.AddressPromptOrEmpty(label, "Invalid alias address")
+
+	if raw != "" {
+		contract, err := di.State.Contracts().ByName(contractName)
+		if err != nil {
+			return err
+		}
+
+		contract.Aliases.Add(missingNetwork, flowsdk.HexToAddress(raw))
+	}
+
+	return nil
+}
+
+func (di *DependencyInstaller) updateDependencyState(networkName, contractAddress, assignedName, contractName, contractHash string) error {
 	dep := config.Dependency{
 		Name: assignedName,
 		Source: config.Source{
@@ -298,13 +403,9 @@ func (di *DependencyInstaller) updateState(networkName, contractAddress, assigne
 
 	di.State.Dependencies().AddOrUpdate(dep)
 	di.State.Contracts().AddDependencyAsContract(dep, networkName)
-	err := di.State.SaveDefault()
-	if err != nil {
-		return err
-	}
 
 	if isNewDep {
-		di.Logger.Info(fmt.Sprintf("Dependency Manager: %s added to flow.json", dep.Name))
+		di.logs.stateUpdates = append(di.logs.stateUpdates, fmt.Sprintf("%s added to flow.json", dep.Name))
 	}
 
 	return nil
