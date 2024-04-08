@@ -102,7 +102,7 @@ func generateContract(
 	flow flowkit.Services,
 	state *flowkit.State,
 ) (result command.Result, err error) {
-	return generateNew(args, "contract", logger, state)
+	return generateNew(args, "contract", generateFlags.Directory, logger, state)
 }
 
 func generateTransaction(
@@ -112,7 +112,7 @@ func generateTransaction(
 	flow flowkit.Services,
 	state *flowkit.State,
 ) (result command.Result, err error) {
-	return generateNew(args, "transaction", logger, state)
+	return generateNew(args, "transaction", generateFlags.Directory, logger, state)
 }
 
 func generateScript(
@@ -122,7 +122,7 @@ func generateScript(
 	flow flowkit.Services,
 	state *flowkit.State,
 ) (result command.Result, err error) {
-	return generateNew(args, "script", logger, state)
+	return generateNew(args, "script", generateFlags.Directory, logger, state)
 }
 
 func addCDCExtension(name string) string {
@@ -161,6 +161,7 @@ func processTemplate(templatePath string, data map[string]interface{}) (string, 
 func generateNew(
 	args []string,
 	templateType string,
+	directory string,
 	logger output.Logger,
 	state *flowkit.State,
 ) (result command.Result, err error) {
@@ -175,8 +176,9 @@ func generateNew(
 	var testFileToWrite string
 	var basePath string
 
-	if generateFlags.Directory != "" {
-		basePath = generateFlags.Directory
+	if directory != "" {
+		basePath = directory
+		fmt.Println("Directory: ", directory)
 	} else {
 		switch templateType {
 		case "contract":
