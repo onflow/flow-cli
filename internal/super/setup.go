@@ -22,6 +22,7 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/onflow/flow-cli/internal/config"
+	"github.com/onflow/flow-cli/internal/util"
 	"github.com/spf13/cobra"
 	"io"
 	"os"
@@ -46,7 +47,7 @@ var SetupCommand = &command.Command{
 		Use:     "setup <project name>",
 		Short:   "Start a new Flow project",
 		Example: "flow setup my-project",
-		Args:    cobra.ExactArgs(1),
+		Args:    cobra.MaximumNArgs(1),
 		GroupID: "super",
 	},
 	Flags: &setupFlags,
@@ -60,12 +61,15 @@ func create(
 	readerWriter flowkit.ReaderWriter,
 	_ flowkit.Services,
 ) (command.Result, error) {
-	targetDir, err := getTargetDirectory(args[0])
-	if err != nil {
-		return nil, err
-	}
+	var targetDir string
+	var err error
 
 	if setupFlags.Scaffold || setupFlags.ScaffoldID != 0 {
+		targetDir, err = getTargetDirectory(args[0])
+		if err != nil {
+			return nil, err
+		}
+
 		selectedScaffold, err := selectScaffold(logger)
 		if err != nil {
 			return nil, fmt.Errorf("error selecting scaffold %w", err)
@@ -81,8 +85,19 @@ func create(
 			}
 		}
 	} else {
-
-		// TODO: Ask for project name if not given
+		// Ask for project name if not given
+		if len(args) < 1 {
+			name := util.NamePrompt()
+			targetDir, err = getTargetDirectory(name)
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			targetDir, err = getTargetDirectory(args[0])
+			if err != nil {
+				return nil, err
+			}
+		}
 
 		params := config.InitConfigParameters{
 			ServiceKeySigAlgo:  "ECDSA_P256",
