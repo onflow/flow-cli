@@ -99,7 +99,7 @@ func generateContract(
 	args []string,
 	_ command.GlobalFlags,
 	logger output.Logger,
-	flow flowkit.Services,
+	_ flowkit.Services,
 	state *flowkit.State,
 ) (result command.Result, err error) {
 	return generateNew(args, "contract", generateFlags.Directory, logger, state)
@@ -109,7 +109,7 @@ func generateTransaction(
 	args []string,
 	_ command.GlobalFlags,
 	logger output.Logger,
-	flow flowkit.Services,
+	_ flowkit.Services,
 	state *flowkit.State,
 ) (result command.Result, err error) {
 	return generateNew(args, "transaction", generateFlags.Directory, logger, state)
@@ -119,7 +119,7 @@ func generateScript(
 	args []string,
 	_ command.GlobalFlags,
 	logger output.Logger,
-	flow flowkit.Services,
+	_ flowkit.Services,
 	state *flowkit.State,
 ) (result command.Result, err error) {
 	return generateNew(args, "script", generateFlags.Directory, logger, state)
