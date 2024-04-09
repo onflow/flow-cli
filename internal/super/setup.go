@@ -51,15 +51,15 @@ var SetupCommand = &command.Command{
 		GroupID: "super",
 	},
 	Flags: &setupFlags,
-	Run:   create,
+	RunS:  create,
 }
 
 func create(
 	args []string,
 	_ command.GlobalFlags,
 	logger output.Logger,
-	readerWriter flowkit.ReaderWriter,
 	_ flowkit.Services,
+	state *flowkit.State,
 ) (command.Result, error) {
 	var targetDir string
 	var err error
@@ -106,7 +106,7 @@ func create(
 			Global:             false,
 			TargetDirectory:    targetDir,
 		}
-		_, err := config.InitializeConfiguration(params, logger, readerWriter)
+		_, err := config.InitializeConfiguration(params, logger, state.ReaderWriter())
 		if err != nil {
 			return nil, fmt.Errorf("failed to initialize configuration: %w", err)
 		}
