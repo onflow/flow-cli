@@ -110,6 +110,30 @@ func create(
 		if err != nil {
 			return nil, fmt.Errorf("failed to initialize configuration: %w", err)
 		}
+
+		// Generate standard cadence files
+		// cadence/contracts/DefaultContract.cdc
+		// cadence/scripts/DefaultScript.cdc
+		// cadence/transactions/DefaultTransaction.cdc
+		// cadence/tests/DefaultContract_test.cdc
+
+		directoryPath := filepath.Join(targetDir, "cadence")
+
+		_, err = generateNew([]string{"DefaultContract"}, "contract", directoryPath, logger, state)
+		if err != nil {
+			return nil, err
+		}
+
+		_, err = generateNew([]string{"DefaultScript"}, "script", directoryPath, logger, state)
+		if err != nil {
+			return nil, err
+		}
+
+		_, err = generateNew([]string{"DefaultTransaction"}, "transaction", directoryPath, logger, state)
+		if err != nil {
+			return nil, err
+		}
+
 	}
 
 	return &setupResult{targetDir: targetDir}, nil
