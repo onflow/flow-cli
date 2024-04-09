@@ -189,7 +189,7 @@ func TestGenerateNewWithDirFlag(t *testing.T) {
 	_, err := generateNew([]string{"TestContract"}, "contract", "customDir", logger, state)
 	assert.NoError(t, err, "Failed to generate contract")
 
-	content, err := state.ReaderWriter().ReadFile("customDir/TestContract.cdc")
+	content, err := state.ReaderWriter().ReadFile("customDir/contracts/TestContract.cdc")
 	assert.NoError(t, err, "Failed to read generated file")
 	assert.NotNil(t, content)
 
