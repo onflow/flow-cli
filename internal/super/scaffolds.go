@@ -21,15 +21,17 @@ package super
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/go-git/go-git/v5"
-	"github.com/go-git/go-git/v5/plumbing"
-	"github.com/onflow/flow-cli/internal/util"
-	"github.com/onflow/flowkit/output"
 	"io"
 	"net/http"
 	"os"
 	"path/filepath"
 	"time"
+
+	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/plumbing"
+	"github.com/onflow/flowkit/output"
+
+	"github.com/onflow/flow-cli/internal/util"
 )
 
 const scaffoldListURL = "https://raw.githubusercontent.com/onflow/flow-cli/master/scaffolds.json"

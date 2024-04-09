@@ -21,9 +21,10 @@ package config
 import (
 	"bytes"
 	"fmt"
+	"os"
+
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/spf13/cobra"
-	"os"
 
 	"github.com/onflow/flowkit"
 	"github.com/onflow/flowkit/config"

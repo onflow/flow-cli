@@ -20,13 +20,15 @@ package super
 
 import (
 	"fmt"
-	"github.com/onflow/flow-cli/internal/command"
-	"github.com/onflow/flow-cli/internal/util"
-	"github.com/onflow/flowkit/output"
-	"github.com/stretchr/testify/assert"
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/onflow/flowkit/output"
+	"github.com/stretchr/testify/assert"
+
+	"github.com/onflow/flow-cli/internal/command"
+	"github.com/onflow/flow-cli/internal/util"
 )
 
 func TestCreate(t *testing.T) {

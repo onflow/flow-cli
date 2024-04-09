@@ -21,12 +21,14 @@ package super
 import (
 	"bytes"
 	"fmt"
-	"github.com/onflow/flow-cli/internal/config"
-	"github.com/onflow/flow-cli/internal/util"
-	"github.com/spf13/cobra"
 	"io"
 	"os"
 	"path/filepath"
+
+	"github.com/spf13/cobra"
+
+	"github.com/onflow/flow-cli/internal/config"
+	"github.com/onflow/flow-cli/internal/util"
 
 	"github.com/onflow/flowkit"
 	"github.com/onflow/flowkit/output"
