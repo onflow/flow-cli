@@ -179,12 +179,8 @@ func generateNew(
 	var testsBasePath = "tests"
 
 	if directory != "" {
-		fmt.Println("directory: ", directory)
 		rootDir = directory
-		fmt.Println("rootDir in scope: ", rootDir)
 	}
-
-	fmt.Println("rootDir: ", rootDir)
 
 	switch templateType {
 	case "contract":
