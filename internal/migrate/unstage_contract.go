@@ -26,6 +26,7 @@ import (
 	"github.com/onflow/contract-updater/lib/go/templates"
 	flowsdk "github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flowkit/v2"
+	"github.com/onflow/flowkit/v2/config"
 	"github.com/onflow/flowkit/v2/output"
 	"github.com/onflow/flowkit/v2/transactions"
 	"github.com/spf13/cobra"
@@ -54,8 +55,11 @@ func unstageContract(
 	flow flowkit.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
-	contractName := args[0]
+	if flow.Network().Name != config.TestnetNetwork.Name && flow.Network().Name != config.MainnetNetwork.Name {
+		return nil, fmt.Errorf("staging contracts is only supported on testnet & mainnet networks, see https://cadence-lang.org/docs/cadence-migration-guide for more information")
+	}
 
+	contractName := args[0]
 	account, err := getAccountByContractName(state, contractName, flow.Network())
 	if err != nil {
 		return nil, fmt.Errorf("failed to get account by contract name: %w", err)

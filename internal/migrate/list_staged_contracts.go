@@ -25,6 +25,7 @@ import (
 	"github.com/onflow/cadence"
 	"github.com/onflow/contract-updater/lib/go/templates"
 	"github.com/onflow/flowkit/v2"
+	"github.com/onflow/flowkit/v2/config"
 	"github.com/onflow/flowkit/v2/output"
 	"github.com/spf13/cobra"
 
@@ -52,8 +53,11 @@ func listStagedContracts(
 	flow flowkit.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
-	accountName := args[0]
+	if flow.Network().Name != config.TestnetNetwork.Name && flow.Network().Name != config.MainnetNetwork.Name {
+		return nil, fmt.Errorf("staging contracts is only supported on testnet & mainnet networks, see https://cadence-lang.org/docs/cadence-migration-guide for more information")
+	}
 
+	accountName := args[0]
 	account, err := state.Accounts().ByName(accountName)
 	if err != nil {
 		return nil, fmt.Errorf("error getting account by name: %w", err)
