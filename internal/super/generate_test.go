@@ -193,6 +193,10 @@ func TestGenerateNewWithDirFlag(t *testing.T) {
 	assert.NoError(t, err, "Failed to read generated file")
 	assert.NotNil(t, content)
 
+	testContent, err := state.ReaderWriter().ReadFile("customDir/tests/TestContract_test.cdc")
+	assert.NoError(t, err, "Failed to read generated file")
+	assert.NotNil(t, testContent)
+
 	expectedContent := `access(all)
 contract TestContract {
     init() {}

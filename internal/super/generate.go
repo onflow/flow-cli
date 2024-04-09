@@ -175,9 +175,11 @@ func generateNew(
 	var fileToWrite string
 	var testFileToWrite string
 	var basePath string
+	var testsBasePath = "cadence/tests"
 
 	if directory != "" {
 		basePath = directory
+		testsBasePath = filepath.Join(directory, "tests")
 		fmt.Println("Directory: ", directory)
 	} else {
 		switch templateType {
@@ -239,7 +241,6 @@ func generateNew(
 	logger.Info(fmt.Sprintf("Generated new %s: %s at %s", templateType, name, filenameWithBasePath))
 
 	if generateFlags.SkipTests != true && templateType == "contract" {
-		testsBasePath := "cadence/tests"
 		testFilenameWithBasePath := filepath.Join(testsBasePath, addCDCExtension(fmt.Sprintf("%s_test", name)))
 
 		if _, err := state.ReaderWriter().ReadFile(testFilenameWithBasePath); err == nil {
