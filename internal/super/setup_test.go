@@ -36,7 +36,7 @@ func TestCreate(t *testing.T) {
 	projectName := "foobar"
 
 	// Test project creation
-	_, err := create([]string{projectName}, command.GlobalFlags{}, logger, state.ReaderWriter(), nil)
+	_, err := create([]string{projectName}, command.GlobalFlags{}, logger, nil, state)
 	assert.NoError(t, err, "Failed to create project")
 
 	// Check project was created in target directory which is in pwd
