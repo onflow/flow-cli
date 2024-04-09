@@ -131,3 +131,10 @@ func getAddressByContractName(state *flowkit.State, contractName string, network
 
 	return flow.HexToAddress(account.Address.Hex()), nil
 }
+
+func checkNetwork(network config.Network) error {
+	if network.Name != config.TestnetNetwork.Name && network.Name != config.MainnetNetwork.Name {
+		return fmt.Errorf("staging contracts is only supported on testnet & mainnet networks, see https://cadence-lang.org/docs/cadence-migration-guide for more information")
+	}
+	return nil
+}

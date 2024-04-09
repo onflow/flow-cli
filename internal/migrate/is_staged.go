@@ -52,8 +52,12 @@ func isStaged(
 	flow flowkit.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
-	contractName := args[0]
+	err := checkNetwork(flow.Network())
+	if err != nil {
+		return nil, err
+	}
 
+	contractName := args[0]
 	addr, err := getAddressByContractName(state, contractName, flow.Network())
 	if err != nil {
 		return nil, fmt.Errorf("error getting address by contract name: %w", err)

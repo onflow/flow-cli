@@ -52,8 +52,12 @@ func listStagedContracts(
 	flow flowkit.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
-	accountName := args[0]
+	err := checkNetwork(flow.Network())
+	if err != nil {
+		return nil, err
+	}
 
+	accountName := args[0]
 	account, err := state.Accounts().ByName(accountName)
 	if err != nil {
 		return nil, fmt.Errorf("error getting account by name: %w", err)

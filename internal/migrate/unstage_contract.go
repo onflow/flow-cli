@@ -54,8 +54,12 @@ func unstageContract(
 	flow flowkit.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
-	contractName := args[0]
+	err := checkNetwork(flow.Network())
+	if err != nil {
+		return nil, err
+	}
 
+	contractName := args[0]
 	account, err := getAccountByContractName(state, contractName, flow.Network())
 	if err != nil {
 		return nil, fmt.Errorf("failed to get account by contract name: %w", err)
