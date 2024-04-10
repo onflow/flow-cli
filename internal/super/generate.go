@@ -99,30 +99,30 @@ func generateContract(
 	args []string,
 	_ command.GlobalFlags,
 	logger output.Logger,
-	flow flowkit.Services,
+	_ flowkit.Services,
 	state *flowkit.State,
 ) (result command.Result, err error) {
-	return generateNew(args, "contract", logger, state)
+	return generateNew(args, "contract", generateFlags.Directory, logger, state)
 }
 
 func generateTransaction(
 	args []string,
 	_ command.GlobalFlags,
 	logger output.Logger,
-	flow flowkit.Services,
+	_ flowkit.Services,
 	state *flowkit.State,
 ) (result command.Result, err error) {
-	return generateNew(args, "transaction", logger, state)
+	return generateNew(args, "transaction", generateFlags.Directory, logger, state)
 }
 
 func generateScript(
 	args []string,
 	_ command.GlobalFlags,
 	logger output.Logger,
-	flow flowkit.Services,
+	_ flowkit.Services,
 	state *flowkit.State,
 ) (result command.Result, err error) {
-	return generateNew(args, "script", logger, state)
+	return generateNew(args, "script", generateFlags.Directory, logger, state)
 }
 
 func addCDCExtension(name string) string {
@@ -161,6 +161,7 @@ func processTemplate(templatePath string, data map[string]interface{}) (string, 
 func generateNew(
 	args []string,
 	templateType string,
+	directory string,
 	logger output.Logger,
 	state *flowkit.State,
 ) (result command.Result, err error) {
@@ -173,25 +174,17 @@ func generateNew(
 
 	var fileToWrite string
 	var testFileToWrite string
+	var rootDir = "cadence"
 	var basePath string
+	var testsBasePath = "tests"
 
-	if generateFlags.Directory != "" {
-		basePath = generateFlags.Directory
-	} else {
-		switch templateType {
-		case "contract":
-			basePath = "cadence/contracts"
-		case "script":
-			basePath = "cadence/scripts"
-		case "transaction":
-			basePath = "cadence/transactions"
-		default:
-			return nil, fmt.Errorf("invalid template type: %s", templateType)
-		}
+	if directory != "" {
+		rootDir = directory
 	}
 
 	switch templateType {
 	case "contract":
+		basePath = "contracts"
 		nameData := map[string]interface{}{"Name": name}
 		fileToWrite, err = processTemplate("templates/contract_init.cdc.tmpl", nameData)
 		if err != nil {
@@ -203,11 +196,13 @@ func generateNew(
 			return nil, fmt.Errorf("error generating contract test template: %w", err)
 		}
 	case "script":
+		basePath = "scripts"
 		fileToWrite, err = processTemplate("templates/script_init.cdc.tmpl", nil)
 		if err != nil {
 			return nil, fmt.Errorf("error generating script template: %w", err)
 		}
 	case "transaction":
+		basePath = "transactions"
 		fileToWrite, err = processTemplate("templates/transaction_init.cdc.tmpl", nil)
 		if err != nil {
 			return nil, fmt.Errorf("error generating transaction template: %w", err)
@@ -216,7 +211,8 @@ func generateNew(
 		return nil, fmt.Errorf("invalid template type: %s", templateType)
 	}
 
-	filenameWithBasePath := filepath.Join(basePath, filename)
+	directoryWithBasePath := filepath.Join(rootDir, basePath)
+	filenameWithBasePath := filepath.Join(rootDir, basePath, filename)
 
 	// Check file existence
 	if _, err := state.ReaderWriter().ReadFile(filenameWithBasePath); err == nil {
@@ -224,7 +220,7 @@ func generateNew(
 	}
 
 	// Ensure the directory exists
-	if err := state.ReaderWriter().MkdirAll(basePath, 0755); err != nil {
+	if err := state.ReaderWriter().MkdirAll(directoryWithBasePath, 0755); err != nil {
 		return nil, fmt.Errorf("error creating directories: %w", err)
 	}
 
@@ -237,14 +233,14 @@ func generateNew(
 	logger.Info(fmt.Sprintf("Generated new %s: %s at %s", templateType, name, filenameWithBasePath))
 
 	if generateFlags.SkipTests != true && templateType == "contract" {
-		testsBasePath := "cadence/tests"
-		testFilenameWithBasePath := filepath.Join(testsBasePath, addCDCExtension(fmt.Sprintf("%s_test", name)))
+		testDirectoryWithBasePath := filepath.Join(rootDir, testsBasePath)
+		testFilenameWithBasePath := filepath.Join(rootDir, testsBasePath, addCDCExtension(fmt.Sprintf("%s_test", name)))
 
 		if _, err := state.ReaderWriter().ReadFile(testFilenameWithBasePath); err == nil {
 			return nil, fmt.Errorf("file already exists: %s", testFilenameWithBasePath)
 		}
 
-		if err := state.ReaderWriter().MkdirAll(testsBasePath, 0755); err != nil {
+		if err := state.ReaderWriter().MkdirAll(testDirectoryWithBasePath, 0755); err != nil {
 			return nil, fmt.Errorf("error creating test directory: %w", err)
 		}
 
