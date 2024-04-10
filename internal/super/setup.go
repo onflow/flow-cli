@@ -21,6 +21,10 @@ package super
 import (
 	"bytes"
 	"fmt"
+	tea "github.com/charmbracelet/bubbletea"
+	"github.com/onflow/flow-cli/internal/util"
+	"github.com/onflow/flow-go/fvm/systemcontracts"
+	flowGo "github.com/onflow/flow-go/model/flow"
 	"io"
 	"os"
 	"path/filepath"
@@ -28,8 +32,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/config"
-	"github.com/onflow/flow-cli/internal/util"
-
 	"github.com/onflow/flowkit"
 	"github.com/onflow/flowkit/output"
 
@@ -134,6 +136,31 @@ func create(
 		_, err = generateNew([]string{"DefaultTransaction"}, "transaction", directoryPath, logger, state)
 		if err != nil {
 			return nil, err
+		}
+
+		// Prompt to ask which core contracts should be installed
+		sc := systemcontracts.SystemContractsForChain(flowGo.Emulator)
+		promptMessage := "Select the core contracts you'd like to install"
+
+		contractNames := make([]string, 0)
+
+		for _, contract := range sc.All() {
+			contractNames = append(contractNames, contract.Name)
+		}
+
+		m := util.GenericOptionSelect(contractNames, promptMessage)
+		finalModel, err := tea.NewProgram(m).Run()
+
+		if err != nil {
+			fmt.Printf("Error running program: %v\n", err)
+			os.Exit(1)
+		}
+
+		final := finalModel.(util.OptionSelectModel)
+
+		fmt.Println("Selected items:")
+		for i := range final.Selected {
+			fmt.Printf("- %s\n", final.Choices[i])
 		}
 
 	}
