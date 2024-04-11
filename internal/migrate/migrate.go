@@ -51,6 +51,7 @@ var Cmd = &cobra.Command{
 var migrationContractStagingAddress = map[string]string{
 	"testnet":   "0x2ceae959ed1a7e7a",
 	"crescendo": "0x27b2302520211b67",
+	"mainnet":   "0x56100d46aa9b0212",
 }
 
 // MigrationContractStagingAddress returns the address of the migration contract on the given network
