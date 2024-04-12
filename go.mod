@@ -10,9 +10,9 @@ require (
 	github.com/logrusorgru/aurora/v4 v4.0.0
 	github.com/manifoldco/promptui v0.9.0
 	github.com/onflow/cadence v0.42.10
-	github.com/onflow/cadence-tools/languageserver v0.33.5-0.20240412192021-94f7def8000f
-	github.com/onflow/cadence-tools/lint v0.14.2-0.20240412191500-4001820751bd
-	github.com/onflow/cadence-tools/test v0.14.7-0.20240412191133-4d5808f59bda
+	github.com/onflow/cadence-tools/languageserver v0.33.5-0.20240412233530-f5cf3a868fc6
+	github.com/onflow/cadence-tools/lint v0.14.2
+	github.com/onflow/cadence-tools/test v0.14.7
 	github.com/onflow/fcl-dev-wallet v0.7.4
 	github.com/onflow/flixkit-go v1.1.3-0.20240412194317-98d9e765f5ab
 	github.com/onflow/flow-core-contracts/lib/go/templates v1.2.4-0.20231016154253-a00dbf7c061f
