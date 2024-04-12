@@ -69,7 +69,7 @@ func (cl *categorizedLogs) LogAll(logger output.Logger) {
 	}
 }
 
-type dependencyManagerFlagsCollection struct {
+type DependencyManagerFlagsCollection struct {
 	skipDeployments bool `default:"false" flag:"skip-deployments" info:"Skip adding the dependency to deployments"`
 	skipAlias       bool `default:"false" flag:"skip-alias" info:"Skip prompting for an alias"`
 }
@@ -84,7 +84,7 @@ type DependencyInstaller struct {
 }
 
 // NewDependencyInstaller creates a new instance of DependencyInstaller
-func NewDependencyInstaller(logger output.Logger, state *flowkit.State, flags dependencyManagerFlagsCollection) (*DependencyInstaller, error) {
+func NewDependencyInstaller(logger output.Logger, state *flowkit.State, flags DependencyManagerFlagsCollection) (*DependencyInstaller, error) {
 	emulatorGateway, err := gateway.NewGrpcGateway(config.EmulatorNetwork)
 	if err != nil {
 		return nil, fmt.Errorf("error creating emulator gateway: %v", err)
@@ -161,6 +161,24 @@ func (di *DependencyInstaller) Add(depSource, customName string) error {
 	}
 
 	err = di.State.SaveDefault()
+	if err != nil {
+		return fmt.Errorf("error saving state: %w", err)
+	}
+
+	di.logs.LogAll(di.Logger)
+
+	return nil
+}
+
+// AddMany processes multiple dependencies and installs them as well as adding them to the state
+func (di *DependencyInstaller) AddMany(dependencies []config.Dependency) error {
+	for _, dep := range dependencies {
+		if err := di.processDependency(dep); err != nil {
+			return fmt.Errorf("error processing dependency: %w", err)
+		}
+	}
+
+	err := di.State.SaveDefault()
 	if err != nil {
 		return fmt.Errorf("error saving state: %w", err)
 	}

@@ -134,3 +134,65 @@ func TestDependencyInstallerAdd(t *testing.T) {
 		assert.NotNil(t, fileContent)
 	})
 }
+
+func TestDependencyInstallerAddMany(t *testing.T) {
+	logger := output.NewStdoutLogger(output.NoneLog)
+	_, state, _ := util.TestMocks(t)
+
+	serviceAcc, _ := state.EmulatorServiceAccount()
+	serviceAddress := serviceAcc.Address.String()
+
+	dependencies := []config.Dependency{
+		{
+			Name: "ContractOne",
+			Source: config.Source{
+				NetworkName:  "emulator",
+				Address:      flow.HexToAddress(serviceAddress),
+				ContractName: "ContractOne",
+			},
+		},
+		{
+			Name: "ContractTwo",
+			Source: config.Source{
+				NetworkName:  "emulator",
+				Address:      flow.HexToAddress(serviceAddress),
+				ContractName: "ContractTwo",
+			},
+		},
+	}
+
+	t.Run("AddMultipleDependencies", func(t *testing.T) {
+		gw := mocks.DefaultMockGateway()
+		gw.GetAccount.Run(func(args mock.Arguments) {
+			addr := args.Get(1).(flow.Address)
+			assert.Equal(t, addr.String(), serviceAddress)
+			acc := tests.NewAccountWithAddress(addr.String())
+			acc.Contracts = map[string][]byte{
+				"ContractOne": []byte("pub contract ContractOne {}"),
+				"ContractTwo": []byte("pub contract ContractTwo {}"),
+			}
+			gw.GetAccount.Return(acc, nil)
+		})
+
+		di := &DependencyInstaller{
+			Gateways: map[string]gateway.Gateway{
+				config.EmulatorNetwork.Name: gw.Mock,
+				config.TestnetNetwork.Name:  gw.Mock,
+				config.MainnetNetwork.Name:  gw.Mock,
+			},
+			Logger:          logger,
+			State:           state,
+			SkipDeployments: true,
+			SkipAlias:       true,
+		}
+
+		err := di.AddMany(dependencies)
+		assert.NoError(t, err, "Failed to add multiple dependencies")
+
+		for _, dep := range dependencies {
+			filePath := fmt.Sprintf("imports/%s/%s.cdc", dep.Source.Address.String(), dep.Name)
+			_, err := state.ReaderWriter().ReadFile(filePath)
+			assert.NoError(t, err, fmt.Sprintf("Failed to read generated file for %s", dep.Name))
+		}
+	})
+}
