@@ -79,13 +79,14 @@ type DependencyInstaller struct {
 	Logger          output.Logger
 	State           *flowkit.State
 	SaveState       bool
+	TargetDir       string
 	SkipDeployments bool
 	SkipAlias       bool
 	logs            categorizedLogs
 }
 
 // NewDependencyInstaller creates a new instance of DependencyInstaller
-func NewDependencyInstaller(logger output.Logger, state *flowkit.State, saveState bool, flags DependencyManagerFlagsCollection) (*DependencyInstaller, error) {
+func NewDependencyInstaller(logger output.Logger, state *flowkit.State, saveState bool, targetDir string, flags DependencyManagerFlagsCollection) (*DependencyInstaller, error) {
 	emulatorGateway, err := gateway.NewGrpcGateway(config.EmulatorNetwork)
 	if err != nil {
 		return nil, fmt.Errorf("error creating emulator gateway: %v", err)
@@ -112,6 +113,7 @@ func NewDependencyInstaller(logger output.Logger, state *flowkit.State, saveStat
 		Logger:          logger,
 		State:           state,
 		SaveState:       saveState,
+		TargetDir:       targetDir,
 		SkipDeployments: flags.skipDeployments,
 		SkipAlias:       flags.skipAlias,
 	}, nil
@@ -268,7 +270,7 @@ func (di *DependencyInstaller) contractFileExists(address, contractName string) 
 
 func (di *DependencyInstaller) createContractFile(address, contractName, data string) error {
 	fileName := fmt.Sprintf("%s.cdc", contractName)
-	path := filepath.Join("imports", address, fileName)
+	path := filepath.Join(di.TargetDir, "imports", address, fileName)
 	dir := filepath.Dir(path)
 
 	if err := di.State.ReaderWriter().MkdirAll(dir, 0755); err != nil {
