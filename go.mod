@@ -14,7 +14,7 @@ require (
 	github.com/onflow/cadence-tools/lint v0.14.2
 	github.com/onflow/cadence-tools/test v0.14.7
 	github.com/onflow/fcl-dev-wallet v0.7.4
-	github.com/onflow/flixkit-go v1.1.3-0.20240412194317-98d9e765f5ab
+	github.com/onflow/flixkit-go v1.1.3
 	github.com/onflow/flow-core-contracts/lib/go/templates v1.2.4-0.20231016154253-a00dbf7c061f
 	github.com/onflow/flow-emulator v0.62.1
 	github.com/onflow/flow-go v0.33.2-0.20240412174857-015156b297b5
