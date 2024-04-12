@@ -76,6 +76,7 @@ func TestDependencyInstallerInstall(t *testing.T) {
 			},
 			Logger:          logger,
 			State:           state,
+			SaveState:       true,
 			SkipDeployments: true,
 			SkipAlias:       true,
 		}
@@ -120,6 +121,7 @@ func TestDependencyInstallerAdd(t *testing.T) {
 			},
 			Logger:          logger,
 			State:           state,
+			SaveState:       true,
 			SkipDeployments: true,
 			SkipAlias:       true,
 		}
@@ -182,6 +184,7 @@ func TestDependencyInstallerAddMany(t *testing.T) {
 			},
 			Logger:          logger,
 			State:           state,
+			SaveState:       true,
 			SkipDeployments: true,
 			SkipAlias:       true,
 		}

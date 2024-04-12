@@ -78,13 +78,14 @@ type DependencyInstaller struct {
 	Gateways        map[string]gateway.Gateway
 	Logger          output.Logger
 	State           *flowkit.State
+	SaveState       bool
 	SkipDeployments bool
 	SkipAlias       bool
 	logs            categorizedLogs
 }
 
 // NewDependencyInstaller creates a new instance of DependencyInstaller
-func NewDependencyInstaller(logger output.Logger, state *flowkit.State, flags DependencyManagerFlagsCollection) (*DependencyInstaller, error) {
+func NewDependencyInstaller(logger output.Logger, state *flowkit.State, saveState bool, flags DependencyManagerFlagsCollection) (*DependencyInstaller, error) {
 	emulatorGateway, err := gateway.NewGrpcGateway(config.EmulatorNetwork)
 	if err != nil {
 		return nil, fmt.Errorf("error creating emulator gateway: %v", err)
@@ -110,9 +111,20 @@ func NewDependencyInstaller(logger output.Logger, state *flowkit.State, flags De
 		Gateways:        gateways,
 		Logger:          logger,
 		State:           state,
+		SaveState:       saveState,
 		SkipDeployments: flags.skipDeployments,
 		SkipAlias:       flags.skipAlias,
 	}, nil
+}
+
+// saveState checks the SaveState flag and saves the state if set to true.
+func (di *DependencyInstaller) saveState() error {
+	if di.SaveState {
+		if err := di.State.SaveDefault(); err != nil {
+			return fmt.Errorf("error saving state: %w", err)
+		}
+	}
+	return nil
 }
 
 // Install processes all the dependencies in the state and installs them and any dependencies they have
@@ -124,9 +136,8 @@ func (di *DependencyInstaller) Install() error {
 		}
 	}
 
-	err := di.State.SaveDefault()
-	if err != nil {
-		return fmt.Errorf("error saving state: %w", err)
+	if err := di.saveState(); err != nil {
+		return err
 	}
 
 	di.logs.LogAll(di.Logger)
@@ -160,9 +171,8 @@ func (di *DependencyInstaller) Add(depSource, customName string) error {
 		return fmt.Errorf("error processing dependency: %w", err)
 	}
 
-	err = di.State.SaveDefault()
-	if err != nil {
-		return fmt.Errorf("error saving state: %w", err)
+	if err := di.saveState(); err != nil {
+		return err
 	}
 
 	di.logs.LogAll(di.Logger)
@@ -178,9 +188,8 @@ func (di *DependencyInstaller) AddMany(dependencies []config.Dependency) error {
 		}
 	}
 
-	err := di.State.SaveDefault()
-	if err != nil {
-		return fmt.Errorf("error saving state: %w", err)
+	if err := di.saveState(); err != nil {
+		return err
 	}
 
 	di.logs.LogAll(di.Logger)
