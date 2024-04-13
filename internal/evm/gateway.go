@@ -26,7 +26,6 @@ import (
 	"os/signal"
 	"syscall"
 
-	gethCommon "github.com/ethereum/go-ethereum/common"
 	"github.com/onflow/flow-evm-gateway/bootstrap"
 	"github.com/onflow/flow-evm-gateway/config"
 	flowsdk "github.com/onflow/flow-go-sdk"
@@ -35,6 +34,7 @@ import (
 	flowGo "github.com/onflow/flow-go/model/flow"
 	"github.com/onflow/flowkit/v2"
 	"github.com/onflow/flowkit/v2/output"
+	gethCommon "github.com/onflow/go-ethereum/common"
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
@@ -120,9 +120,9 @@ var gatewayCommand = &command.Command{
 
 		switch flagGateway.EVMNetworkID {
 		case "testnet":
-			cfg.EVMNetworkID = types.FlowEVMTestnetChainID
+			cfg.EVMNetworkID = types.FlowEVMTestNetChainID
 		case "mainnet":
-			cfg.EVMNetworkID = types.FlowEVMMainnetChainID
+			cfg.EVMNetworkID = types.FlowEVMMainNetChainID
 		default:
 			return nil, fmt.Errorf("EVM network ID not supported")
 		}
