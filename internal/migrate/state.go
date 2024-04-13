@@ -88,6 +88,10 @@ func migrateState(
 	// Create a report writer factory if a report path is provided
 	var rwf reporters.ReportWriterFactory
 	if stateFlags.SaveReport != "" {
+		err := state.ReaderWriter().MkdirAll(stateFlags.SaveReport, os.ModePerm)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create report directory: %w", err)
+		}
 		rwf = reporters.NewReportFileWriterFactory(stateFlags.SaveReport, logger)
 	} else {
 		rwf = &migration.NOOPReportWriterFactory{}

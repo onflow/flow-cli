@@ -61,8 +61,12 @@ func stageContract(
 	flow flowkit.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
-	contractName := args[0]
+	err := checkNetwork(flow.Network())
+	if err != nil {
+		return nil, err
+	}
 
+	contractName := args[0]
 	contract, err := state.Contracts().ByName(contractName)
 	if err != nil {
 		return nil, fmt.Errorf("no contracts found in state")
