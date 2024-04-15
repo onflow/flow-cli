@@ -122,7 +122,8 @@ func NewDependencyInstaller(logger output.Logger, state *flowkit.State, saveStat
 // saveState checks the SaveState flag and saves the state if set to true.
 func (di *DependencyInstaller) saveState() error {
 	if di.SaveState {
-		if err := di.State.Save(di.TargetDir); err != nil {
+		statePath := filepath.Join(di.TargetDir, "flow.json")
+		if err := di.State.Save(statePath); err != nil {
 			return fmt.Errorf("error saving state: %w", err)
 		}
 	}
