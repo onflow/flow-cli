@@ -172,7 +172,7 @@ func create(
 				dependencies = append(dependencies, flowkitConfig.Dependency{
 					Name: contract.Name,
 					Source: flowkitConfig.Source{
-						NetworkName:  "mainnet",
+						NetworkName:  flowkitConfig.MainnetNetwork.Name,
 						Address:      flowsdk.HexToAddress(contract.Address.String()),
 						ContractName: contract.Name,
 					},
