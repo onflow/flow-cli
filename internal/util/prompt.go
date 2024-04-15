@@ -20,11 +20,12 @@ package util
 
 import (
 	"fmt"
-	tea "github.com/charmbracelet/bubbletea"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
+
+	tea "github.com/charmbracelet/bubbletea"
 
 	"github.com/onflow/flowkit/accounts"
 
