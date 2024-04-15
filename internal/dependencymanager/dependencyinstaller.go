@@ -148,8 +148,8 @@ func (di *DependencyInstaller) Install() error {
 	return nil
 }
 
-// Add processes a single dependency and installs it and any dependencies it has, as well as adding it to the state
-func (di *DependencyInstaller) Add(depSource, customName string) error {
+// AddBySourceString processes a single dependency and installs it and any dependencies it has, as well as adding it to the state
+func (di *DependencyInstaller) AddBySourceString(depSource, customName string) error {
 	depNetwork, depAddress, depContractName, err := config.ParseSourceString(depSource)
 	if err != nil {
 		return fmt.Errorf("error parsing source: %w", err)
@@ -170,6 +170,21 @@ func (di *DependencyInstaller) Add(depSource, customName string) error {
 		},
 	}
 
+	if err := di.processDependency(dep); err != nil {
+		return fmt.Errorf("error processing dependency: %w", err)
+	}
+
+	if err := di.saveState(); err != nil {
+		return err
+	}
+
+	di.logs.LogAll(di.Logger)
+
+	return nil
+}
+
+// Add processes a single dependency and installs it and any dependencies it has, as well as adding it to the state
+func (di *DependencyInstaller) Add(dep config.Dependency) error {
 	if err := di.processDependency(dep); err != nil {
 		return fmt.Errorf("error processing dependency: %w", err)
 	}

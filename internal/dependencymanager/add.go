@@ -64,7 +64,7 @@ func add(
 		return nil, err
 	}
 
-	if err := installer.Add(dep, addFlags.name); err != nil {
+	if err := installer.AddBySourceString(dep, addFlags.name); err != nil {
 		logger.Error(fmt.Sprintf("Error: %v", err))
 		return nil, err
 	}
