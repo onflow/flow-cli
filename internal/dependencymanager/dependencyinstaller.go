@@ -122,7 +122,7 @@ func NewDependencyInstaller(logger output.Logger, state *flowkit.State, saveStat
 // saveState checks the SaveState flag and saves the state if set to true.
 func (di *DependencyInstaller) saveState() error {
 	if di.SaveState {
-		if err := di.State.SaveDefault(); err != nil {
+		if err := di.State.Save(di.TargetDir); err != nil {
 			return fmt.Errorf("error saving state: %w", err)
 		}
 	}
