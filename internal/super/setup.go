@@ -22,9 +22,12 @@ import (
 	"bytes"
 	"fmt"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/onflow/flow-cli/internal/dependencymanager"
 	"github.com/onflow/flow-cli/internal/util"
+	flowsdk "github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go/fvm/systemcontracts"
 	flowGo "github.com/onflow/flow-go/model/flow"
+	flowkitConfig "github.com/onflow/flowkit/config"
 	"io"
 	"os"
 	"path/filepath"
@@ -110,7 +113,7 @@ func create(
 			Global:             false,
 			TargetDirectory:    targetDir,
 		}
-		_, err := config.InitializeConfiguration(params, logger, state.ReaderWriter())
+		state, err := config.InitializeConfiguration(params, logger, state.ReaderWriter())
 		if err != nil {
 			return nil, fmt.Errorf("failed to initialize configuration: %w", err)
 		}
@@ -139,7 +142,7 @@ func create(
 		}
 
 		// Prompt to ask which core contracts should be installed
-		sc := systemcontracts.SystemContractsForChain(flowGo.Emulator)
+		sc := systemcontracts.SystemContractsForChain(flowGo.Mainnet)
 		promptMessage := "Select the core contracts you'd like to install"
 
 		contractNames := make([]string, 0)
@@ -158,9 +161,37 @@ func create(
 
 		final := finalModel.(util.OptionSelectModel)
 
-		fmt.Println("Selected items:")
-		for i := range final.Selected {
-			fmt.Printf("- %s\n", final.Choices[i])
+		var dependencies []flowkitConfig.Dependency
+
+		// Loop standard contracts and add them to the dependencies if selected
+		for i, contract := range sc.All() {
+			if _, ok := final.Selected[i]; ok {
+				dependencies = append(dependencies, flowkitConfig.Dependency{
+					Name: contract.Name,
+					Source: flowkitConfig.Source{
+						NetworkName:  "mainnet",
+						Address:      flowsdk.HexToAddress(contract.Address.String()),
+						ContractName: contract.Name,
+					},
+				})
+			}
+		}
+
+		// Add the selected core contracts as dependencies
+		installer, err := dependencymanager.NewDependencyInstaller(logger, state, false, targetDir, dependencymanager.DependencyManagerFlagsCollection{})
+		if err != nil {
+			logger.Error(fmt.Sprintf("Error: %v", err))
+			return nil, err
+		}
+
+		if err := installer.AddMany(dependencies); err != nil {
+			logger.Error(fmt.Sprintf("Error: %v", err))
+			return nil, err
+		}
+
+		err = state.Save(filepath.Join(targetDir, "flow.json"))
+		if err != nil {
+			return nil, err
 		}
 
 	}
