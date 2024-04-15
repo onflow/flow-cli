@@ -29,7 +29,7 @@ import (
 	"github.com/onflow/flow-cli/internal/command"
 )
 
-var installFlags = dependencyManagerFlagsCollection{}
+var installFlags = DependencyManagerFlagsCollection{}
 
 var installCommand = &command.Command{
 	Cmd: &cobra.Command{
@@ -50,7 +50,7 @@ func install(
 ) (result command.Result, err error) {
 	logger.Info("🔄 Installing dependencies from flow.json...")
 
-	installer, err := NewDependencyInstaller(logger, state, installFlags)
+	installer, err := NewDependencyInstaller(logger, state, true, "", installFlags)
 	if err != nil {
 		logger.Error(fmt.Sprintf("Error: %v", err))
 		return nil, err

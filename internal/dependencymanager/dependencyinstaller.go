@@ -69,7 +69,7 @@ func (cl *categorizedLogs) LogAll(logger output.Logger) {
 	}
 }
 
-type dependencyManagerFlagsCollection struct {
+type DependencyManagerFlagsCollection struct {
 	skipDeployments bool `default:"false" flag:"skip-deployments" info:"Skip adding the dependency to deployments"`
 	skipAlias       bool `default:"false" flag:"skip-alias" info:"Skip prompting for an alias"`
 }
@@ -78,13 +78,15 @@ type DependencyInstaller struct {
 	Gateways        map[string]gateway.Gateway
 	Logger          output.Logger
 	State           *flowkit.State
+	SaveState       bool
+	TargetDir       string
 	SkipDeployments bool
 	SkipAlias       bool
 	logs            categorizedLogs
 }
 
 // NewDependencyInstaller creates a new instance of DependencyInstaller
-func NewDependencyInstaller(logger output.Logger, state *flowkit.State, flags dependencyManagerFlagsCollection) (*DependencyInstaller, error) {
+func NewDependencyInstaller(logger output.Logger, state *flowkit.State, saveState bool, targetDir string, flags DependencyManagerFlagsCollection) (*DependencyInstaller, error) {
 	emulatorGateway, err := gateway.NewGrpcGateway(config.EmulatorNetwork)
 	if err != nil {
 		return nil, fmt.Errorf("error creating emulator gateway: %v", err)
@@ -110,9 +112,22 @@ func NewDependencyInstaller(logger output.Logger, state *flowkit.State, flags de
 		Gateways:        gateways,
 		Logger:          logger,
 		State:           state,
+		SaveState:       saveState,
+		TargetDir:       targetDir,
 		SkipDeployments: flags.skipDeployments,
 		SkipAlias:       flags.skipAlias,
 	}, nil
+}
+
+// saveState checks the SaveState flag and saves the state if set to true.
+func (di *DependencyInstaller) saveState() error {
+	if di.SaveState {
+		statePath := filepath.Join(di.TargetDir, "flow.json")
+		if err := di.State.Save(statePath); err != nil {
+			return fmt.Errorf("error saving state: %w", err)
+		}
+	}
+	return nil
 }
 
 // Install processes all the dependencies in the state and installs them and any dependencies they have
@@ -124,9 +139,8 @@ func (di *DependencyInstaller) Install() error {
 		}
 	}
 
-	err := di.State.SaveDefault()
-	if err != nil {
-		return fmt.Errorf("error saving state: %w", err)
+	if err := di.saveState(); err != nil {
+		return err
 	}
 
 	di.logs.LogAll(di.Logger)
@@ -134,8 +148,8 @@ func (di *DependencyInstaller) Install() error {
 	return nil
 }
 
-// Add processes a single dependency and installs it and any dependencies it has, as well as adding it to the state
-func (di *DependencyInstaller) Add(depSource, customName string) error {
+// AddBySourceString processes a single dependency and installs it and any dependencies it has, as well as adding it to the state
+func (di *DependencyInstaller) AddBySourceString(depSource, customName string) error {
 	depNetwork, depAddress, depContractName, err := config.ParseSourceString(depSource)
 	if err != nil {
 		return fmt.Errorf("error parsing source: %w", err)
@@ -160,9 +174,40 @@ func (di *DependencyInstaller) Add(depSource, customName string) error {
 		return fmt.Errorf("error processing dependency: %w", err)
 	}
 
-	err = di.State.SaveDefault()
-	if err != nil {
-		return fmt.Errorf("error saving state: %w", err)
+	if err := di.saveState(); err != nil {
+		return err
+	}
+
+	di.logs.LogAll(di.Logger)
+
+	return nil
+}
+
+// Add processes a single dependency and installs it and any dependencies it has, as well as adding it to the state
+func (di *DependencyInstaller) Add(dep config.Dependency) error {
+	if err := di.processDependency(dep); err != nil {
+		return fmt.Errorf("error processing dependency: %w", err)
+	}
+
+	if err := di.saveState(); err != nil {
+		return err
+	}
+
+	di.logs.LogAll(di.Logger)
+
+	return nil
+}
+
+// AddMany processes multiple dependencies and installs them as well as adding them to the state
+func (di *DependencyInstaller) AddMany(dependencies []config.Dependency) error {
+	for _, dep := range dependencies {
+		if err := di.processDependency(dep); err != nil {
+			return fmt.Errorf("error processing dependency: %w", err)
+		}
+	}
+
+	if err := di.saveState(); err != nil {
+		return err
 	}
 
 	di.logs.LogAll(di.Logger)
@@ -241,7 +286,7 @@ func (di *DependencyInstaller) contractFileExists(address, contractName string) 
 
 func (di *DependencyInstaller) createContractFile(address, contractName, data string) error {
 	fileName := fmt.Sprintf("%s.cdc", contractName)
-	path := filepath.Join("imports", address, fileName)
+	path := filepath.Join(di.TargetDir, "imports", address, fileName)
 	dir := filepath.Dir(path)
 
 	if err := di.State.ReaderWriter().MkdirAll(dir, 0755); err != nil {

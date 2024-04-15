@@ -25,13 +25,21 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/spf13/cobra"
+	tea "github.com/charmbracelet/bubbletea"
+	flowsdk "github.com/onflow/flow-go-sdk"
+	"github.com/onflow/flow-go/fvm/systemcontracts"
+	flowGo "github.com/onflow/flow-go/model/flow"
+	flowkitConfig "github.com/onflow/flowkit/config"
 
-	"github.com/onflow/flow-cli/internal/config"
+	"github.com/onflow/flow-cli/internal/dependencymanager"
 	"github.com/onflow/flow-cli/internal/util"
+
+	"github.com/spf13/cobra"
 
 	"github.com/onflow/flowkit"
 	"github.com/onflow/flowkit/output"
+
+	"github.com/onflow/flow-cli/internal/config"
 
 	"github.com/onflow/flow-cli/internal/command"
 )
@@ -108,7 +116,7 @@ func create(
 			Global:             false,
 			TargetDirectory:    targetDir,
 		}
-		_, err := config.InitializeConfiguration(params, logger, state.ReaderWriter())
+		state, err := config.InitializeConfiguration(params, logger, state.ReaderWriter())
 		if err != nil {
 			return nil, fmt.Errorf("failed to initialize configuration: %w", err)
 		}
@@ -132,6 +140,59 @@ func create(
 		}
 
 		_, err = generateNew([]string{"DefaultTransaction"}, "transaction", directoryPath, logger, state)
+		if err != nil {
+			return nil, err
+		}
+
+		// Prompt to ask which core contracts should be installed
+		sc := systemcontracts.SystemContractsForChain(flowGo.Mainnet)
+		promptMessage := "Select the core contracts you'd like to install"
+
+		contractNames := make([]string, 0)
+
+		for _, contract := range sc.All() {
+			contractNames = append(contractNames, contract.Name)
+		}
+
+		m := util.GenericOptionSelect(contractNames, promptMessage)
+		finalModel, err := tea.NewProgram(m).Run()
+
+		if err != nil {
+			fmt.Printf("Error running program: %v\n", err)
+			os.Exit(1)
+		}
+
+		final := finalModel.(util.OptionSelectModel)
+
+		var dependencies []flowkitConfig.Dependency
+
+		// Loop standard contracts and add them to the dependencies if selected
+		for i, contract := range sc.All() {
+			if _, ok := final.Selected[i]; ok {
+				dependencies = append(dependencies, flowkitConfig.Dependency{
+					Name: contract.Name,
+					Source: flowkitConfig.Source{
+						NetworkName:  flowkitConfig.MainnetNetwork.Name,
+						Address:      flowsdk.HexToAddress(contract.Address.String()),
+						ContractName: contract.Name,
+					},
+				})
+			}
+		}
+
+		// Add the selected core contracts as dependencies
+		installer, err := dependencymanager.NewDependencyInstaller(logger, state, false, targetDir, dependencymanager.DependencyManagerFlagsCollection{})
+		if err != nil {
+			logger.Error(fmt.Sprintf("Error: %v", err))
+			return nil, err
+		}
+
+		if err := installer.AddMany(dependencies); err != nil {
+			logger.Error(fmt.Sprintf("Error: %v", err))
+			return nil, err
+		}
+
+		err = state.Save(filepath.Join(targetDir, "flow.json"))
 		if err != nil {
 			return nil, err
 		}

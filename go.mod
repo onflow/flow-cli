@@ -3,23 +3,24 @@ module github.com/onflow/flow-cli
 go 1.20
 
 require (
+	github.com/charmbracelet/bubbletea v0.25.0
 	github.com/dukex/mixpanel v1.0.1
 	github.com/getsentry/sentry-go v0.27.0
 	github.com/go-git/go-git/v5 v5.11.0
 	github.com/gosuri/uilive v0.0.4
 	github.com/logrusorgru/aurora/v4 v4.0.0
 	github.com/manifoldco/promptui v0.9.0
-	github.com/onflow/cadence v0.42.9
-	github.com/onflow/cadence-tools/languageserver v0.33.3
-	github.com/onflow/cadence-tools/lint v0.14.1
-	github.com/onflow/cadence-tools/test v0.14.6
+	github.com/onflow/cadence v0.42.10
+	github.com/onflow/cadence-tools/languageserver v0.33.5
+	github.com/onflow/cadence-tools/lint v0.14.2
+	github.com/onflow/cadence-tools/test v0.14.7
 	github.com/onflow/fcl-dev-wallet v0.7.4
-	github.com/onflow/flixkit-go v1.1.2
+	github.com/onflow/flixkit-go v1.1.3
 	github.com/onflow/flow-core-contracts/lib/go/templates v1.2.4-0.20231016154253-a00dbf7c061f
-	github.com/onflow/flow-emulator v0.61.1
-	github.com/onflow/flow-go v0.33.2-0.20240306234901-64ab8d27ea30
-	github.com/onflow/flow-go-sdk v0.46.0
-	github.com/onflow/flowkit v1.17.1
+	github.com/onflow/flow-emulator v0.62.1
+	github.com/onflow/flow-go v0.33.2-0.20240412174857-015156b297b5
+	github.com/onflow/flow-go-sdk v0.46.2
+	github.com/onflow/flowkit v1.17.3
 	github.com/onflowser/flowser/v3 v3.1.3
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
 	github.com/pkg/errors v0.9.1
@@ -49,6 +50,7 @@ require (
 	github.com/ProtonMail/go-crypto v0.0.0-20230828082145-3c4c8a2d2371 // indirect
 	github.com/StackExchange/wmi v1.2.1 // indirect
 	github.com/VictoriaMetrics/fastcache v1.12.1 // indirect
+	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bits-and-blooms/bitset v1.10.0 // indirect
 	github.com/btcsuite/btcd/btcec/v2 v2.2.1 // indirect
@@ -66,6 +68,7 @@ require (
 	github.com/cockroachdb/tokenbucket v0.0.0-20230807174530-cc333fc44b06 // indirect
 	github.com/consensys/bavard v0.1.13 // indirect
 	github.com/consensys/gnark-crypto v0.12.1 // indirect
+	github.com/containerd/console v1.0.4-0.20230313162750-1ae8d489ac81 // indirect
 	github.com/coreos/go-semver v0.3.0 // indirect
 	github.com/crate-crypto/go-kzg-4844 v0.7.0 // indirect
 	github.com/cyphar/filepath-securejoin v0.2.4 // indirect
@@ -83,7 +86,7 @@ require (
 	github.com/ef-ds/deque v1.0.4 // indirect
 	github.com/emirpasic/gods v1.18.1 // indirect
 	github.com/ethereum/c-kzg-4844 v0.4.0 // indirect
-	github.com/ethereum/go-ethereum v1.13.5 // indirect
+	github.com/ethereum/go-ethereum v1.13.10 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
 	github.com/fxamacker/cbor/v2 v2.4.1-0.20230228173756-c0c9f774e40c // indirect
@@ -125,7 +128,7 @@ require (
 	github.com/hashicorp/golang-lru/v2 v2.0.7 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/holiman/bloomfilter/v2 v2.0.3 // indirect
-	github.com/holiman/uint256 v1.2.3 // indirect
+	github.com/holiman/uint256 v1.2.4 // indirect
 	github.com/iancoleman/orderedmap v0.0.0-20190318233801-ac98e3ecb4b0 // indirect
 	github.com/improbable-eng/grpc-web v0.15.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
@@ -158,9 +161,11 @@ require (
 	github.com/libp2p/go-msgio v0.3.0 // indirect
 	github.com/lmars/go-slip10 v0.0.0-20190606092855-400ba44fee12 // indirect
 	github.com/logrusorgru/aurora v2.0.3+incompatible // indirect
+	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
 	github.com/magiconair/properties v1.8.7 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
+	github.com/mattn/go-localereader v0.0.1 // indirect
 	github.com/mattn/go-runewidth v0.0.15 // indirect
 	github.com/mattn/go-tty v0.0.4 // indirect
 	github.com/matttproud/golang_protobuf_extensions/v2 v2.0.0 // indirect
@@ -168,6 +173,10 @@ require (
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/mmcloughlin/addchain v0.4.0 // indirect
 	github.com/mr-tron/base58 v1.2.0 // indirect
+	github.com/muesli/ansi v0.0.0-20211018074035-2e021307bc4b // indirect
+	github.com/muesli/cancelreader v0.2.2 // indirect
+	github.com/muesli/reflow v0.3.0 // indirect
+	github.com/muesli/termenv v0.15.2 // indirect
 	github.com/multiformats/go-base32 v0.1.0 // indirect
 	github.com/multiformats/go-base36 v0.2.0 // indirect
 	github.com/multiformats/go-multiaddr v0.12.2 // indirect
@@ -178,12 +187,12 @@ require (
 	github.com/multiformats/go-varint v0.0.7 // indirect
 	github.com/olekukonko/tablewriter v0.0.5 // indirect
 	github.com/onflow/atree v0.6.0 // indirect
-	github.com/onflow/crypto v0.25.0 // indirect
-	github.com/onflow/flow-cli/flowkit v1.11.0 // indirect
+	github.com/onflow/crypto v0.25.1 // indirect
 	github.com/onflow/flow-core-contracts/lib/go/contracts v1.2.4-0.20231016154253-a00dbf7c061f // indirect
 	github.com/onflow/flow-ft/lib/go/contracts v0.7.1-0.20230711213910-baad011d2b13 // indirect
 	github.com/onflow/flow-nft/lib/go/contracts v1.1.0 // indirect
-	github.com/onflow/flow/protobuf/go/flow v0.3.7 // indirect
+	github.com/onflow/flow/protobuf/go/flow v0.4.0 // indirect
+	github.com/onflow/go-ethereum v1.13.4 // indirect
 	github.com/onflow/nft-storefront/lib/go/contracts v0.0.0-20221222181731-14b90207cead // indirect
 	github.com/onflow/sdks v0.5.0 // indirect
 	github.com/onflow/wal v0.0.0-20240208022732-d756cd497d3b // indirect
@@ -207,7 +216,6 @@ require (
 	github.com/shirou/gopsutil v3.21.4-0.20210419000835-c7a38de76ee5+incompatible // indirect
 	github.com/skeema/knownhosts v1.2.1 // indirect
 	github.com/slok/go-http-metrics v0.10.0 // indirect
-	github.com/sony/gobreaker v0.5.0 // indirect
 	github.com/sourcegraph/jsonrpc2 v0.1.0 // indirect
 	github.com/spaolacci/murmur3 v1.1.0 // indirect
 	github.com/spf13/cast v1.5.1 // indirect
@@ -249,6 +257,7 @@ require (
 	golang.org/x/oauth2 v0.17.0 // indirect
 	golang.org/x/sync v0.6.0 // indirect
 	golang.org/x/sys v0.17.0 // indirect
+	golang.org/x/term v0.17.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	golang.org/x/time v0.5.0 // indirect
 	golang.org/x/tools v0.17.0 // indirect

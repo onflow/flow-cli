@@ -30,7 +30,7 @@ import (
 )
 
 type addFlagsCollection struct {
-	dependencyManagerFlagsCollection
+	DependencyManagerFlagsCollection
 	name string `default:"" flag:"name" info:"Name of the dependency"`
 }
 
@@ -58,13 +58,13 @@ func add(
 
 	dep := args[0]
 
-	installer, err := NewDependencyInstaller(logger, state, addFlags.dependencyManagerFlagsCollection)
+	installer, err := NewDependencyInstaller(logger, state, true, "", addFlags.DependencyManagerFlagsCollection)
 	if err != nil {
 		logger.Error(fmt.Sprintf("Error: %v", err))
 		return nil, err
 	}
 
-	if err := installer.Add(dep, addFlags.name); err != nil {
+	if err := installer.AddBySourceString(dep, addFlags.name); err != nil {
 		logger.Error(fmt.Sprintf("Error: %v", err))
 		return nil, err
 	}
