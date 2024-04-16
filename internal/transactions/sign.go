@@ -23,6 +23,7 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
+	"github.com/onflow/flow-cli/internal/prompt"
 	"io"
 	"net/http"
 	"sort"
@@ -38,7 +39,6 @@ import (
 	"github.com/onflow/flowkit/output"
 
 	"github.com/onflow/flow-cli/internal/command"
-	"github.com/onflow/flow-cli/internal/util"
 )
 
 type flagsSign struct {
@@ -115,7 +115,7 @@ func sign(
 	})
 
 	for _, signer := range signers {
-		if !globalFlags.Yes && !util.ApproveTransactionForSigningPrompt(tx.FlowTransaction()) {
+		if !globalFlags.Yes && !prompt.ApproveTransactionForSigningPrompt(tx.FlowTransaction()) {
 			return nil, fmt.Errorf("transaction was not approved for signing")
 		}
 

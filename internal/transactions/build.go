@@ -21,6 +21,7 @@ package transactions
 import (
 	"context"
 	"fmt"
+	"github.com/onflow/flow-cli/internal/prompt"
 
 	"github.com/onflow/cadence"
 	flowsdk "github.com/onflow/flow-go-sdk"
@@ -32,7 +33,6 @@ import (
 	"github.com/onflow/flowkit/transactions"
 
 	"github.com/onflow/flow-cli/internal/command"
-	"github.com/onflow/flow-cli/internal/util"
 )
 
 type flagsBuild struct {
@@ -119,7 +119,7 @@ func build(
 		return nil, err
 	}
 
-	if !globalFlags.Yes && !util.ApproveTransactionForBuildingPrompt(tx.FlowTransaction()) {
+	if !globalFlags.Yes && !prompt.ApproveTransactionForBuildingPrompt(tx.FlowTransaction()) {
 		return nil, fmt.Errorf("transaction was not approved")
 	}
 

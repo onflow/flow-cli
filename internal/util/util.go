@@ -100,14 +100,3 @@ func ValidateECDSAP256Pub(key string) error {
 
 	return nil
 }
-
-func removeFromStringArray(s []string, el string) []string {
-	for i, v := range s {
-		if v == el {
-			s = append(s[:i], s[i+1:]...)
-			break
-		}
-	}
-
-	return s
-}

@@ -16,10 +16,11 @@
  * limitations under the License.
  */
 
-package util
+package prompt
 
 import (
 	"fmt"
+	"github.com/onflow/flow-cli/internal/util"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -195,7 +196,7 @@ func secureNetworkKeyPrompt() string {
 				return nil
 			}
 
-			return ValidateECDSAP256Pub(s)
+			return util.ValidateECDSAP256Pub(s)
 		},
 	}
 	networkKey, err := networkKeyPrompt.Run()
@@ -488,6 +489,17 @@ func NewDeploymentPrompt(
 	}
 
 	return deploymentData
+}
+
+func removeFromStringArray(s []string, el string) []string {
+	for i, v := range s {
+		if v == el {
+			s = append(s[:i], s[i+1:]...)
+			break
+		}
+	}
+
+	return s
 }
 
 // AddContractToDeploymentPrompt prompts a user to select an account to deploy a given contract on a given network

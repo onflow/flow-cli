@@ -23,13 +23,12 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+	"github.com/onflow/flow-cli/internal/prompt"
 	"os"
 	"path/filepath"
 
 	"github.com/onflow/flow-go/fvm/systemcontracts"
 	flowGo "github.com/onflow/flow-go/model/flow"
-
-	"github.com/onflow/flow-cli/internal/util"
 
 	"github.com/onflow/flowkit/gateway"
 
@@ -345,7 +344,7 @@ func (di *DependencyInstaller) handleFoundContract(networkName, contractAddr, as
 	// If no hash, ignore
 	if dependency != nil && dependency.Hash != "" && dependency.Hash != originalContractDataHash {
 		msg := fmt.Sprintf("The latest version of %s is different from the one you have locally. Do you want to update it?", contractName)
-		if !util.GenericBoolPrompt(msg) {
+		if !prompt.GenericBoolPrompt(msg) {
 			return nil
 		}
 	}
@@ -389,7 +388,7 @@ func (di *DependencyInstaller) handleFoundContract(networkName, contractAddr, as
 func (di *DependencyInstaller) updateDependencyDeployment(contractName string) error {
 	// Add to deployments
 	// If a deployment already exists for that account, contract, and network, then ignore
-	raw := util.AddContractToDeploymentPrompt("emulator", *di.State.Accounts(), contractName)
+	raw := prompt.AddContractToDeploymentPrompt("emulator", *di.State.Accounts(), contractName)
 
 	if raw != nil {
 		deployment := di.State.Deployments().ByAccountAndNetwork(raw.Account, raw.Network)
@@ -419,7 +418,7 @@ func (di *DependencyInstaller) updateDependencyAlias(contractName, aliasNetwork 
 	}
 
 	label := fmt.Sprintf("Enter an alias address for %s on %s if you have one, otherwise leave blank", contractName, missingNetwork)
-	raw := util.AddressPromptOrEmpty(label, "Invalid alias address")
+	raw := prompt.AddressPromptOrEmpty(label, "Invalid alias address")
 
 	if raw != "" {
 		contract, err := di.State.Contracts().ByName(contractName)

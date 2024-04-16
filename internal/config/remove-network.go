@@ -19,13 +19,13 @@
 package config
 
 import (
+	"github.com/onflow/flow-cli/internal/prompt"
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flowkit"
 	"github.com/onflow/flowkit/output"
 
 	"github.com/onflow/flow-cli/internal/command"
-	"github.com/onflow/flow-cli/internal/util"
 )
 
 type flagsRemoveNetwork struct{}
@@ -54,7 +54,7 @@ func removeNetwork(
 	if len(args) == 1 {
 		name = args[0]
 	} else {
-		name = util.RemoveNetworkPrompt(*state.Networks())
+		name = prompt.RemoveNetworkPrompt(*state.Networks())
 	}
 
 	err := state.Networks().Remove(name)

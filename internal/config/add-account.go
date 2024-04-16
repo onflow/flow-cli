@@ -20,6 +20,7 @@ package config
 
 import (
 	"fmt"
+	"github.com/onflow/flow-cli/internal/prompt"
 	"strconv"
 
 	"github.com/onflow/flowkit/accounts"
@@ -33,7 +34,6 @@ import (
 	"github.com/onflow/flowkit/output"
 
 	"github.com/onflow/flow-cli/internal/command"
-	"github.com/onflow/flow-cli/internal/util"
 )
 
 type flagsAddAccount struct {
@@ -71,7 +71,7 @@ func addAccount(
 	}
 
 	if !flagsProvided {
-		raw = util.NewAccountPrompt()
+		raw = prompt.NewAccountPrompt()
 	}
 
 	key, err := parseKey(raw.Key, raw.SigAlgo)
@@ -140,7 +140,7 @@ func parseKeyIndex(value string) (int, error) {
 	return v, nil
 }
 
-func flagsToAccountData(flags flagsAddAccount) (*util.AccountData, bool, error) {
+func flagsToAccountData(flags flagsAddAccount) (*prompt.AccountData, bool, error) {
 	if flags.Name == "" && flags.Address == "" && flags.Key == "" {
 		return nil, false, nil
 	}
@@ -157,7 +157,7 @@ func flagsToAccountData(flags flagsAddAccount) (*util.AccountData, bool, error) 
 		return nil, true, fmt.Errorf("invalid address")
 	}
 
-	return &util.AccountData{
+	return &prompt.AccountData{
 		Name:     flags.Name,
 		Address:  flags.Address,
 		SigAlgo:  flags.SigAlgo,

@@ -19,13 +19,13 @@
 package config
 
 import (
+	"github.com/onflow/flow-cli/internal/prompt"
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flowkit"
 	"github.com/onflow/flowkit/output"
 
 	"github.com/onflow/flow-cli/internal/command"
-	"github.com/onflow/flow-cli/internal/util"
 )
 
 type flagsRemoveAccount struct{}
@@ -54,7 +54,7 @@ func removeAccount(
 	if len(args) == 1 {
 		name = args[0]
 	} else {
-		name = util.RemoveAccountPrompt(state.Config().Accounts)
+		name = prompt.RemoveAccountPrompt(state.Config().Accounts)
 	}
 
 	err := state.Accounts().Remove(name)

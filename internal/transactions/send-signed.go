@@ -21,6 +21,7 @@ package transactions
 import (
 	"context"
 	"fmt"
+	"github.com/onflow/flow-cli/internal/prompt"
 
 	"github.com/onflow/flowkit/transactions"
 
@@ -30,7 +31,6 @@ import (
 	"github.com/onflow/flowkit/output"
 
 	"github.com/onflow/flow-cli/internal/command"
-	"github.com/onflow/flow-cli/internal/util"
 )
 
 type flagsSendSigned struct {
@@ -70,7 +70,7 @@ func sendSigned(
 		return nil, err
 	}
 
-	if !globalFlags.Yes && !util.ApproveTransactionForSendingPrompt(tx.FlowTransaction()) {
+	if !globalFlags.Yes && !prompt.ApproveTransactionForSendingPrompt(tx.FlowTransaction()) {
 		return nil, fmt.Errorf("transaction was not approved for sending")
 	}
 

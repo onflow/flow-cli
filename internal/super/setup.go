@@ -21,6 +21,7 @@ package super
 import (
 	"bytes"
 	"fmt"
+	"github.com/onflow/flow-cli/internal/prompt"
 	"io"
 	"os"
 	"path/filepath"
@@ -32,8 +33,6 @@ import (
 	flowkitConfig "github.com/onflow/flowkit/config"
 
 	"github.com/onflow/flow-cli/internal/dependencymanager"
-	"github.com/onflow/flow-cli/internal/util"
-
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flowkit"
@@ -97,7 +96,7 @@ func create(
 	} else {
 		// Ask for project name if not given
 		if len(args) < 1 {
-			name := util.NamePrompt()
+			name := prompt.NamePrompt()
 			targetDir, err = getTargetDirectory(name)
 			if err != nil {
 				return nil, err
@@ -154,7 +153,7 @@ func create(
 			contractNames = append(contractNames, contract.Name)
 		}
 
-		m := util.GenericOptionSelect(contractNames, promptMessage)
+		m := prompt.GenericOptionSelect(contractNames, promptMessage)
 		finalModel, err := tea.NewProgram(m).Run()
 
 		if err != nil {
@@ -162,7 +161,7 @@ func create(
 			os.Exit(1)
 		}
 
-		final := finalModel.(util.OptionSelectModel)
+		final := finalModel.(prompt.OptionSelectModel)
 
 		var dependencies []flowkitConfig.Dependency
 

@@ -21,10 +21,9 @@ package accounts
 import (
 	"context"
 	"fmt"
+	"github.com/onflow/flow-cli/internal/prompt"
 
 	"github.com/spf13/cobra"
-
-	"github.com/onflow/flow-cli/internal/util"
 
 	"github.com/onflow/flowkit"
 	"github.com/onflow/flowkit/output"
@@ -70,7 +69,7 @@ func removeContract(
 		return nil, err
 	}
 
-	removeFromState := util.RemoveContractFromFlowJSONPrompt(contractName)
+	removeFromState := prompt.RemoveContractFromFlowJSONPrompt(contractName)
 
 	if removeFromState {
 		// If a network flag is provided, remove from that networks deployments

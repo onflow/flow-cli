@@ -20,6 +20,7 @@ package config
 
 import (
 	"fmt"
+	"github.com/onflow/flow-cli/internal/prompt"
 	"net/url"
 
 	"github.com/spf13/cobra"
@@ -64,7 +65,7 @@ func addNetwork(
 	}
 
 	if !flagsProvided {
-		raw = util.NewNetworkPrompt()
+		raw = prompt.NewNetworkPrompt()
 	}
 
 	state.Networks().AddOrUpdate(config.Network{

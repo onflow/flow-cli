@@ -20,6 +20,7 @@ package config
 
 import (
 	"fmt"
+	"github.com/onflow/flow-cli/internal/prompt"
 
 	"github.com/spf13/cobra"
 
@@ -28,7 +29,6 @@ import (
 	"github.com/onflow/flowkit/output"
 
 	"github.com/onflow/flow-cli/internal/command"
-	"github.com/onflow/flow-cli/internal/util"
 )
 
 type flagsAddDeployment struct {
@@ -63,7 +63,7 @@ func addDeployment(
 	}
 
 	if !flagsProvided {
-		raw = util.NewDeploymentPrompt(*state.Networks(), state.Config().Accounts, *state.Contracts())
+		raw = prompt.NewDeploymentPrompt(*state.Networks(), state.Config().Accounts, *state.Contracts())
 	}
 
 	deployment := state.Deployments().ByAccountAndNetwork(raw.Account, raw.Network)
@@ -90,7 +90,7 @@ func addDeployment(
 	}, nil
 }
 
-func flagsToDeploymentData(flags flagsAddDeployment) (*util.DeploymentData, bool, error) {
+func flagsToDeploymentData(flags flagsAddDeployment) (*prompt.DeploymentData, bool, error) {
 	if flags.Network == "" && flags.Account == "" && len(flags.Contracts) == 0 {
 		return nil, false, nil
 	}
@@ -103,7 +103,7 @@ func flagsToDeploymentData(flags flagsAddDeployment) (*util.DeploymentData, bool
 		return nil, true, fmt.Errorf("at least one contract name must be provided")
 	}
 
-	return &util.DeploymentData{
+	return &prompt.DeploymentData{
 		Network:   flags.Network,
 		Account:   flags.Account,
 		Contracts: flags.Contracts,

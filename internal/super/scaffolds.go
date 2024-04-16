@@ -21,6 +21,7 @@ package super
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/onflow/flow-cli/internal/prompt"
 	"io"
 	"net/http"
 	"os"
@@ -30,8 +31,6 @@ import (
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/onflow/flowkit/output"
-
-	"github.com/onflow/flow-cli/internal/util"
 )
 
 const scaffoldListURL = "https://raw.githubusercontent.com/onflow/flow-cli/master/scaffolds.json"
@@ -63,11 +62,11 @@ func selectScaffold(logger output.Logger) (*scaffold, error) {
 	}
 
 	if setupFlags.Scaffold {
-		scaffoldItems := make([]util.ScaffoldItem, 0)
+		scaffoldItems := make([]prompt.ScaffoldItem, 0)
 		for i, s := range scaffolds {
 			scaffoldItems = append(
 				scaffoldItems,
-				util.ScaffoldItem{
+				prompt.ScaffoldItem{
 					Index:    i,
 					Title:    fmt.Sprintf("%s - %s", output.Bold(s.Name), s.Description),
 					Category: s.Type,
@@ -75,7 +74,7 @@ func selectScaffold(logger output.Logger) (*scaffold, error) {
 			)
 		}
 
-		selected := util.ScaffoldPrompt(logger, scaffoldItems)
+		selected := prompt.ScaffoldPrompt(logger, scaffoldItems)
 		pickedScaffold = scaffolds[selected]
 	}
 
