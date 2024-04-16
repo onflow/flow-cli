@@ -153,7 +153,7 @@ func create(
 			contractNames = append(contractNames, contract.Name)
 		}
 
-		m := prompt.GenericOptionSelect(contractNames, promptMessage)
+		m := prompt.SelectOptions(contractNames, promptMessage)
 		finalModel, err := tea.NewProgram(m).Run()
 
 		if err != nil {

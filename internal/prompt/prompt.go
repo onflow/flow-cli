@@ -826,8 +826,8 @@ type OptionSelectModel struct {
 	Selected map[int]struct{} // which items are selected
 }
 
-// GenericOptionSelect creates a prompt for selecting multiple options
-func GenericOptionSelect(options []string, message string) OptionSelectModel {
+// SelectOptions creates a prompt for selecting multiple options
+func SelectOptions(options []string, message string) OptionSelectModel {
 	return OptionSelectModel{
 		message:  message,
 		Choices:  options,
