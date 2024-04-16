@@ -20,8 +20,9 @@ package config
 
 import (
 	"fmt"
-	"github.com/onflow/flow-cli/internal/prompt"
 	"net/url"
+
+	"github.com/onflow/flow-cli/internal/prompt"
 
 	"github.com/spf13/cobra"
 

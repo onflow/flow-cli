@@ -23,7 +23,6 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
-	"github.com/onflow/flow-cli/internal/prompt"
 	"io"
 	"net/http"
 	"os"
@@ -33,6 +32,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/onflow/flow-cli/internal/prompt"
 
 	"github.com/dukex/mixpanel"
 	"github.com/getsentry/sentry-go"

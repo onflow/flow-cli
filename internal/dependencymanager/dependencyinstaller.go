@@ -23,9 +23,10 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
-	"github.com/onflow/flow-cli/internal/prompt"
 	"os"
 	"path/filepath"
+
+	"github.com/onflow/flow-cli/internal/prompt"
 
 	"github.com/onflow/flow-go/fvm/systemcontracts"
 	flowGo "github.com/onflow/flow-go/model/flow"

@@ -21,12 +21,13 @@ package super
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/onflow/flow-cli/internal/prompt"
 	"io"
 	"net/http"
 	"os"
 	"path/filepath"
 	"time"
+
+	"github.com/onflow/flow-cli/internal/prompt"
 
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"

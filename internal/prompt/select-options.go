@@ -20,8 +20,9 @@ package prompt
 
 import (
 	"fmt"
-	tea "github.com/charmbracelet/bubbletea"
 	"strings"
+
+	tea "github.com/charmbracelet/bubbletea"
 )
 
 // OptionSelectModel represents the prompt state

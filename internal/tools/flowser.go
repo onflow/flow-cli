@@ -20,9 +20,10 @@ package tools
 
 import (
 	"fmt"
-	"github.com/onflow/flow-cli/internal/prompt"
 	"os"
 	"runtime"
+
+	"github.com/onflow/flow-cli/internal/prompt"
 
 	"github.com/onflowser/flowser/v3/pkg/flowser"
 	"github.com/spf13/cobra"

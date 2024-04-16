@@ -21,10 +21,11 @@ package super
 import (
 	"bytes"
 	"fmt"
-	"github.com/onflow/flow-cli/internal/prompt"
 	"io"
 	"os"
 	"path/filepath"
+
+	"github.com/onflow/flow-cli/internal/prompt"
 
 	tea "github.com/charmbracelet/bubbletea"
 	flowsdk "github.com/onflow/flow-go-sdk"
@@ -32,8 +33,9 @@ import (
 	flowGo "github.com/onflow/flow-go/model/flow"
 	flowkitConfig "github.com/onflow/flowkit/config"
 
-	"github.com/onflow/flow-cli/internal/dependencymanager"
 	"github.com/spf13/cobra"
+
+	"github.com/onflow/flow-cli/internal/dependencymanager"
 
 	"github.com/onflow/flowkit"
 	"github.com/onflow/flowkit/output"

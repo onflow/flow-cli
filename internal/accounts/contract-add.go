@@ -21,6 +21,7 @@ package accounts
 import (
 	"context"
 	"fmt"
+
 	"github.com/onflow/flow-cli/internal/prompt"
 
 	"github.com/onflow/cadence"

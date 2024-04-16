@@ -20,11 +20,12 @@ package prompt
 
 import (
 	"fmt"
-	"github.com/onflow/flow-cli/internal/util"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
+
+	"github.com/onflow/flow-cli/internal/util"
 
 	"github.com/onflow/flowkit/accounts"
 
