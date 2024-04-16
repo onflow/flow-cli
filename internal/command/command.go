@@ -33,6 +33,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/onflow/flow-cli/internal/prompt"
+
 	"github.com/dukex/mixpanel"
 	"github.com/getsentry/sentry-go"
 	"github.com/spf13/afero"
@@ -311,7 +313,7 @@ func initCrashReporting() {
 			// ask for crash report permission
 			fmt.Printf("\n%s Crash detected! %s\n\n", output.ErrorEmoji(), event.Message)
 
-			if util.ReportCrash() {
+			if prompt.ReportCrash() {
 				return event
 			} else {
 				fmt.Printf("\nPlease help us improve the Flow CLI by opening an issue on https://github.com/onflow/flow-cli/issues, \nand pasting the output as well as a description of the actions you took that resulted in this crash.\n\n")

@@ -25,16 +25,17 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/onflow/flow-cli/internal/prompt"
+
 	tea "github.com/charmbracelet/bubbletea"
 	flowsdk "github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go/fvm/systemcontracts"
 	flowGo "github.com/onflow/flow-go/model/flow"
 	flowkitConfig "github.com/onflow/flowkit/config"
 
-	"github.com/onflow/flow-cli/internal/dependencymanager"
-	"github.com/onflow/flow-cli/internal/util"
-
 	"github.com/spf13/cobra"
+
+	"github.com/onflow/flow-cli/internal/dependencymanager"
 
 	"github.com/onflow/flowkit"
 	"github.com/onflow/flowkit/output"
@@ -97,7 +98,7 @@ func create(
 	} else {
 		// Ask for project name if not given
 		if len(args) < 1 {
-			name := util.NamePrompt()
+			name := prompt.NamePrompt()
 			targetDir, err = getTargetDirectory(name)
 			if err != nil {
 				return nil, err
@@ -154,7 +155,7 @@ func create(
 			contractNames = append(contractNames, contract.Name)
 		}
 
-		m := util.GenericOptionSelect(contractNames, promptMessage)
+		m := prompt.SelectOptions(contractNames, promptMessage)
 		finalModel, err := tea.NewProgram(m).Run()
 
 		if err != nil {
@@ -162,7 +163,7 @@ func create(
 			os.Exit(1)
 		}
 
-		final := finalModel.(util.OptionSelectModel)
+		final := finalModel.(prompt.OptionSelectModel)
 
 		var dependencies []flowkitConfig.Dependency
 

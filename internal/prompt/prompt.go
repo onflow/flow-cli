@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package util
+package prompt
 
 import (
 	"fmt"
@@ -25,7 +25,7 @@ import (
 	"strconv"
 	"strings"
 
-	tea "github.com/charmbracelet/bubbletea"
+	"github.com/onflow/flow-cli/internal/util"
 
 	"github.com/onflow/flowkit/accounts"
 
@@ -195,7 +195,7 @@ func secureNetworkKeyPrompt() string {
 				return nil
 			}
 
-			return ValidateECDSAP256Pub(s)
+			return util.ValidateECDSAP256Pub(s)
 		},
 	}
 	networkKey, err := networkKeyPrompt.Run()
@@ -488,6 +488,17 @@ func NewDeploymentPrompt(
 	}
 
 	return deploymentData
+}
+
+func removeFromStringArray(s []string, el string) []string {
+	for i, v := range s {
+		if v == el {
+			s = append(s[:i], s[i+1:]...)
+			break
+		}
+	}
+
+	return s
 }
 
 // AddContractToDeploymentPrompt prompts a user to select an account to deploy a given contract on a given network
@@ -804,79 +815,4 @@ func GenericSelect(items []string, message string) string {
 	_, result, _ := prompt.Run()
 
 	return result
-}
-
-// OptionSelectModel represents the prompt state
-type OptionSelectModel struct {
-	message  string           // message to display
-	cursor   int              // position of the cursor
-	Choices  []string         // items on the list
-	Selected map[int]struct{} // which items are selected
-}
-
-// GenericOptionSelect creates a prompt for selecting multiple options
-func GenericOptionSelect(options []string, message string) OptionSelectModel {
-	return OptionSelectModel{
-		message:  message,
-		Choices:  options,
-		Selected: make(map[int]struct{}),
-	}
-}
-
-func (m OptionSelectModel) Init() tea.Cmd {
-	return nil // No initial command
-}
-
-func (m OptionSelectModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	switch msg := msg.(type) {
-	case tea.KeyMsg:
-		switch msg.Type {
-		case tea.KeyCtrlC, tea.KeyEsc: // Quit the program
-			return m, tea.Quit
-
-		case tea.KeyUp: // Navigate up
-			if m.cursor > 0 {
-				m.cursor--
-			}
-
-		case tea.KeyDown: // Navigate down
-			if m.cursor < len(m.Choices)-1 {
-				m.cursor++
-			}
-
-		case tea.KeySpace: // Select an item
-			// Toggle selection
-			if _, ok := m.Selected[m.cursor]; ok {
-				delete(m.Selected, m.cursor) // Deselect
-			} else {
-				m.Selected[m.cursor] = struct{}{} // Select
-			}
-
-		case tea.KeyEnter: // Confirm selection
-			return m, tea.Quit // Quit and process selections in main
-		}
-	}
-
-	return m, nil
-}
-
-func (m OptionSelectModel) View() string {
-	var b strings.Builder
-	b.WriteString(fmt.Sprintf("%s.\n", m.message))
-	b.WriteString("Use arrow keys to navigate, space to select, enter to confirm, q to quit:\n\n")
-	for i, choice := range m.Choices {
-		if m.cursor == i {
-			b.WriteString("> ")
-		} else {
-			b.WriteString("  ")
-		}
-		// Mark selected items
-		if _, ok := m.Selected[i]; ok {
-			b.WriteString("[x] ")
-		} else {
-			b.WriteString("[ ] ")
-		}
-		b.WriteString(choice + "\n")
-	}
-	return b.String()
 }

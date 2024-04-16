@@ -30,6 +30,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/onflow/flow-cli/internal/prompt"
+
 	flowsdk "github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
 	"google.golang.org/grpc/codes"
@@ -50,8 +52,8 @@ import (
 // and it then uses account creation APIs to automatically create the account on the network as well as save it.
 func createInteractive(state *flowkit.State) (*accountResult, error) {
 	log := output.NewStdoutLogger(output.InfoLog)
-	name := util.AccountNamePrompt(state.Accounts().Names())
-	networkName, selectedNetwork := util.CreateAccountNetworkPrompt()
+	name := prompt.AccountNamePrompt(state.Accounts().Names())
+	networkName, selectedNetwork := prompt.CreateAccountNetworkPrompt()
 	privateFile := accounts.PrivateKeyFile(name)
 
 	// create new gateway based on chosen network
