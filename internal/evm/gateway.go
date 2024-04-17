@@ -56,7 +56,7 @@ type gatewayFlag struct {
 	RPCPort            int    `flag:"rpc-port" default:"3000" info:"port for the RPC API server"`
 	AccessNodeGRPCHost string `flag:"access-node-grpc-host" default:"localhost:3569" info:"host to the flow access node gRPC API"`
 	InitCadenceHeight  uint64 `flag:"init-cadence-height" default:"0" info:"init cadence block height from where the event ingestion will start. WARNING: you should only provide this if there are no existing values in the database, otherwise an error will be thrown"`
-	EVMNetworkID       string `flag:"evm-network-id" default:"testnet" info:"EVM network ID (testnet, mainnet, previewnet)"`
+	EVMNetworkID       string `flag:"evm-network-id" default:"previewnet" info:"EVM network ID (testnet, mainnet, previewnet)"`
 	FlowNetworkID      string `flag:"flow-network-id" default:"emulator" info:"EVM network ID (emulator, previewnet)"`
 	Coinbase           string `flag:"coinbase" default:"" info:"coinbase address to use for fee collection"`
 	GasPrice           string `flag:"gas-price" default:"1" info:"static gas price used for EVM transactions"`
