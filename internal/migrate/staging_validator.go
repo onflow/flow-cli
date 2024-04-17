@@ -401,6 +401,8 @@ func (v *stagingValidator) resolveAccountAccess(checker *sema.Checker, memberLoc
 		return false
 	}
 
+	// If the source code of the update is being checked, we should check account access based on the
+	// targetted network location of the contract & not the source code location
 	if checkerLocation == v.sourceCodeLocation && memberAddressLocation.Address == v.targetLocation.Address {
 		return true
 	}
