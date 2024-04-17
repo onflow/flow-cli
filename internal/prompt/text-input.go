@@ -49,6 +49,15 @@ func (m TextInputModel) View() string {
 	return fmt.Sprintf("%s\n\n%s\n\n%s", m.customMsg, m.textInput.View(), "(Enter to submit, Esc to quit)")
 }
 
-func (m TextInputModel) GetValue() string {
-	return m.textInput.Value()
+// RunTextInput handles running the text input and retrieving the result
+func RunTextInput(customMsg, placeholder string) (string, error) {
+	model := NewTextInput(customMsg, placeholder)
+	p := tea.NewProgram(model)
+
+	if finalModel, err := p.Run(); err != nil {
+		return "", err // return the error to handle it outside if necessary
+	} else {
+		final := finalModel.(TextInputModel)
+		return final.textInput.Value(), nil // directly return the input value
+	}
 }

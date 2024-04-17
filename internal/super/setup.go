@@ -21,14 +21,14 @@ package super
 import (
 	"bytes"
 	"fmt"
+	flowsdk "github.com/onflow/flow-go-sdk"
+	"golang.org/x/exp/slices"
 	"io"
 	"os"
 	"path/filepath"
 
 	"github.com/onflow/flow-cli/internal/prompt"
 
-	tea "github.com/charmbracelet/bubbletea"
-	flowsdk "github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go/fvm/systemcontracts"
 	flowGo "github.com/onflow/flow-go/model/flow"
 	flowkitConfig "github.com/onflow/flowkit/config"
@@ -98,17 +98,13 @@ func create(
 	} else {
 		// Ask for project name if not given
 		if len(args) < 1 {
-			m := prompt.NewTextInput("Enter the name of your project", "Hello World")
-			finalModel, err := tea.NewProgram(m).Run()
-
+			userInput, err := prompt.RunTextInput("Enter the name of your project", "Type your project name here...")
 			if err != nil {
-				fmt.Printf("Error running program: %v\n", err)
+				fmt.Printf("Error running project name: %v\n", err)
 				os.Exit(1)
 			}
 
-			name := finalModel.(prompt.TextInputModel).GetValue()
-
-			targetDir, err = getTargetDirectory(name)
+			targetDir, err = getTargetDirectory(userInput)
 			if err != nil {
 				return nil, err
 			}
@@ -156,7 +152,7 @@ func create(
 
 		// Prompt to ask which core contracts should be installed
 		sc := systemcontracts.SystemContractsForChain(flowGo.Mainnet)
-		promptMessage := "Select the core contracts you'd like to install"
+		promptMessage := "Select the core contracts you'd like to install:"
 
 		contractNames := make([]string, 0)
 
@@ -164,21 +160,17 @@ func create(
 			contractNames = append(contractNames, contract.Name)
 		}
 
-		m := prompt.SelectOptions(contractNames, promptMessage)
-		finalModel, err := tea.NewProgram(m).Run()
-
+		selectedContractNames, err := prompt.RunSelectOptions(contractNames, promptMessage)
 		if err != nil {
-			fmt.Printf("Error running program: %v\n", err)
+			fmt.Printf("Error running dependency selection: %v\n", err)
 			os.Exit(1)
 		}
-
-		final := finalModel.(prompt.OptionSelectModel)
 
 		var dependencies []flowkitConfig.Dependency
 
 		// Loop standard contracts and add them to the dependencies if selected
-		for i, contract := range sc.All() {
-			if _, ok := final.Selected[i]; ok {
+		for _, contract := range sc.All() {
+			if slices.Contains(selectedContractNames, contract.Name) {
 				dependencies = append(dependencies, flowkitConfig.Dependency{
 					Name: contract.Name,
 					Source: flowkitConfig.Source{

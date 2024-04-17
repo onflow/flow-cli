@@ -99,3 +99,20 @@ func (m OptionSelectModel) View() string {
 	}
 	return b.String()
 }
+
+// RunSelectOptions handles creating, running the select options prompt, and returning selected choices
+func RunSelectOptions(options []string, message string) ([]string, error) {
+	model := SelectOptions(options, message)
+	p := tea.NewProgram(model)
+	finalModel, err := p.Run()
+	if err != nil {
+		return nil, err
+	}
+
+	final := finalModel.(OptionSelectModel)
+	selectedChoices := make([]string, 0)
+	for i := range final.Selected {
+		selectedChoices = append(selectedChoices, final.Choices[i])
+	}
+	return selectedChoices, nil
+}
