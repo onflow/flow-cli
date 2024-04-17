@@ -98,7 +98,16 @@ func create(
 	} else {
 		// Ask for project name if not given
 		if len(args) < 1 {
-			name := prompt.NamePrompt()
+			m := prompt.NewTextInput("Enter the name of your project", "Hello World")
+			finalModel, err := tea.NewProgram(m).Run()
+
+			if err != nil {
+				fmt.Printf("Error running program: %v\n", err)
+				os.Exit(1)
+			}
+
+			name := finalModel.(prompt.TextInputModel).GetValue()
+
 			targetDir, err = getTargetDirectory(name)
 			if err != nil {
 				return nil, err
