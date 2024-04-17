@@ -6,31 +6,32 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
-type TextInputModel struct {
+// textInputModel is now private, only accessible within the 'prompt' package.
+type textInputModel struct {
 	textInput textinput.Model
 	err       error
 	customMsg string
 }
 
-// NewTextInput initializes a new text input model with a custom message
-func NewTextInput(customMsg, placeholder string) TextInputModel {
+// newTextInput is a private function that initializes a new text input model.
+func newTextInput(customMsg, placeholder string) textInputModel {
 	ti := textinput.New()
 	ti.Placeholder = placeholder
 	ti.Focus()
 	ti.CharLimit = 256
 	ti.Width = 30
 
-	return TextInputModel{
+	return textInputModel{
 		textInput: ti,
 		customMsg: customMsg,
 	}
 }
 
-func (m TextInputModel) Init() tea.Cmd {
+func (m textInputModel) Init() tea.Cmd {
 	return textinput.Blink
 }
 
-func (m TextInputModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m textInputModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.Type {
@@ -45,19 +46,19 @@ func (m TextInputModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
-func (m TextInputModel) View() string {
+func (m textInputModel) View() string {
 	return fmt.Sprintf("%s\n\n%s\n\n%s", m.customMsg, m.textInput.View(), "(Enter to submit, Esc to quit)")
 }
 
-// RunTextInput handles running the text input and retrieving the result
+// RunTextInput remains public. It's the entry point for external usage.
 func RunTextInput(customMsg, placeholder string) (string, error) {
-	model := NewTextInput(customMsg, placeholder)
+	model := newTextInput(customMsg, placeholder)
 	p := tea.NewProgram(model)
 
 	if finalModel, err := p.Run(); err != nil {
-		return "", err // return the error to handle it outside if necessary
+		return "", err
 	} else {
-		final := finalModel.(TextInputModel)
-		return final.textInput.Value(), nil // directly return the input value
+		final := finalModel.(textInputModel)
+		return final.textInput.Value(), nil
 	}
 }
