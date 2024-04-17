@@ -104,6 +104,9 @@ func (v *stagingValidator) ValidateContractUpdate(
 	// Code of the updated contract
 	updatedCode []byte,
 ) error {
+	v.sourceCodeLocation = sourceCodeLocation
+	v.targetLocation = location
+
 	// Resolve all system contract code & add to cache
 	v.loadSystemContracts()
 
