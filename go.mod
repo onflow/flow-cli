@@ -10,7 +10,7 @@ require (
 	github.com/logrusorgru/aurora/v4 v4.0.0
 	github.com/manifoldco/promptui v0.9.0
 	github.com/onflow/cadence v0.42.10
-	github.com/onflow/cadence-tools/languageserver v0.33.5-0.20240412233530-f5cf3a868fc6
+	github.com/onflow/cadence-tools/languageserver v0.33.5
 	github.com/onflow/cadence-tools/lint v0.14.2
 	github.com/onflow/cadence-tools/test v0.14.7
 	github.com/onflow/fcl-dev-wallet v0.7.4
@@ -32,7 +32,7 @@ require (
 	github.com/spf13/viper v1.16.0
 	github.com/stretchr/testify v1.8.4
 	golang.org/x/exp v0.0.0-20240119083558-1b970713d09a
-	google.golang.org/grpc v1.63.0
+	google.golang.org/grpc v1.63.2
 )
 
 require (

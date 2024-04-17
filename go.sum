@@ -901,8 +901,8 @@ github.com/onflow/atree v0.6.0/go.mod h1:gBHU0M05qCbv9NN0kijLWMgC47gHVNBIp4KmsVF
 github.com/onflow/cadence v0.20.1/go.mod h1:7mzUvPZUIJztIbr9eTvs+fQjWWHTF8veC+yk4ihcNIA=
 github.com/onflow/cadence v0.42.10 h1:3oC5ceeXhdCrhHcf9H0yYXQKW3Tw/vkSXLe+PUZa4i0=
 github.com/onflow/cadence v0.42.10/go.mod h1:1wFd+LiNiN6qoZXof3MBdpM6d8BsxbVIxOA77LbIYmE=
-github.com/onflow/cadence-tools/languageserver v0.33.5-0.20240412233530-f5cf3a868fc6 h1:6XjFYV1qa3FJgZSkBEvS7T9IHRz/PZoc2SpCNZTFfrQ=
-github.com/onflow/cadence-tools/languageserver v0.33.5-0.20240412233530-f5cf3a868fc6/go.mod h1:euGucPAVixPrlTyYGnsZTHg65u7C6zdmfRJlVwRgMaI=
+github.com/onflow/cadence-tools/languageserver v0.33.5 h1:Tg2YniU+ZJPI9RlTOuguqkLriUaFXue6FNXM+Ewijgo=
+github.com/onflow/cadence-tools/languageserver v0.33.5/go.mod h1:euGucPAVixPrlTyYGnsZTHg65u7C6zdmfRJlVwRgMaI=
 github.com/onflow/cadence-tools/lint v0.14.2 h1:WGh6ARN9MRVeYID3OnlalPtDTeYkliteHHR+ITCh/J4=
 github.com/onflow/cadence-tools/lint v0.14.2/go.mod h1:PlYwSF4wwpCtQJKs1cQAb80AG90a4rhADTitCogQ4UE=
 github.com/onflow/cadence-tools/test v0.14.7 h1:o4tHQLvxLGlG6mFyDl2vFYFtoTLCFJVxuJQ16ab+3u4=
@@ -1819,8 +1819,8 @@ google.golang.org/grpc v1.38.0/go.mod h1:NREThFqKR1f3iQ6oBuvc5LadQuXVGo9rkm5ZGrQ
 google.golang.org/grpc v1.39.0/go.mod h1:PImNr+rS9TWYb2O4/emRugxiyHZ5JyHW5F+RPnDzfrE=
 google.golang.org/grpc v1.39.1/go.mod h1:PImNr+rS9TWYb2O4/emRugxiyHZ5JyHW5F+RPnDzfrE=
 google.golang.org/grpc v1.40.0/go.mod h1:ogyxbiOoUXAkP+4+xa6PZSE9DZgIHtSpzjDTB9KAK34=
-google.golang.org/grpc v1.63.0 h1:WjKe+dnvABXyPJMD7KDNLxtoGk5tgk+YFWN6cBWjZE8=
-google.golang.org/grpc v1.63.0/go.mod h1:WAX/8DgncnokcFUldAxq7GeB5DXHDbMF+lLvDomNkRA=
+google.golang.org/grpc v1.63.2 h1:MUeiw1B2maTVZthpU5xvASfTh3LDbxHd6IJ6QQVU+xM=
+google.golang.org/grpc v1.63.2/go.mod h1:WAX/8DgncnokcFUldAxq7GeB5DXHDbMF+lLvDomNkRA=
 google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.1.0/go.mod h1:6Kw0yEErY5E/yWrBtf03jp27GLLJujG4z/JK95pnjjw=
 google.golang.org/protobuf v0.0.0-20200109180630-ec00e32a8dfd/go.mod h1:DFci5gLYBciE7Vtevhsrf46CRTquxDuWsQurQQe4oz8=
 google.golang.org/protobuf v0.0.0-20200221191635-4d8936d0db64/go.mod h1:kwYJMbMJ01Woi6D6+Kah6886xMZcty6N08ah7+eCXa0=
