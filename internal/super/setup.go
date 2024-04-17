@@ -21,11 +21,12 @@ package super
 import (
 	"bytes"
 	"fmt"
-	flowsdk "github.com/onflow/flow-go-sdk"
-	"golang.org/x/exp/slices"
 	"io"
 	"os"
 	"path/filepath"
+
+	flowsdk "github.com/onflow/flow-go-sdk"
+	"golang.org/x/exp/slices"
 
 	"github.com/onflow/flow-cli/internal/prompt"
 
