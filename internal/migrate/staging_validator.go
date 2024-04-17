@@ -46,6 +46,11 @@ type stagingValidator struct {
 	flow  flowkit.Services
 	state *flowkit.State
 
+	// Location of the source code that is used for the update
+	sourceCodeLocation common.Location
+	// Location of the target contract that is being updated
+	targetLocation common.AddressLocation
+
 	// Cache for account contract names so we don't have to fetch them multiple times
 	accountContractNames map[common.Address][]string
 	// All resolved contract code
@@ -192,8 +197,9 @@ func (v *stagingValidator) parseAndCheckContract(
 				// Only checking contracts, so no need to consider script standard library
 				return util.NewStandardLibrary().BaseValueActivation
 			},
-			LocationHandler: v.resolveLocation,
-			ImportHandler:   v.resolveImport,
+			LocationHandler:            v.resolveLocation,
+			ImportHandler:              v.resolveImport,
+			MemberAccountAccessHandler: v.resolveAccountAccess,
 		},
 	)
 	if err != nil {
@@ -379,6 +385,24 @@ func (v *stagingValidator) resolveLocation(
 	}
 
 	return resolvedLocations, nil
+}
+
+func (v *stagingValidator) resolveAccountAccess(checker *sema.Checker, memberLocation common.Location) bool {
+	checkerLocation, ok := checker.Location.(common.StringLocation)
+	if !ok {
+		return false
+	}
+
+	memberAddressLocation, ok := memberLocation.(common.AddressLocation)
+	if !ok {
+		return false
+	}
+
+	if checkerLocation == v.sourceCodeLocation && memberAddressLocation.Address == v.targetLocation.Address {
+		return true
+	}
+
+	return false
 }
 
 func (v *stagingValidator) resolveAddressContractNames(address common.Address) ([]string, error) {
