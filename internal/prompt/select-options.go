@@ -25,28 +25,28 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
-// OptionSelectModel represents the prompt state
-type OptionSelectModel struct {
+// optionSelectModel represents the prompt state but is now private
+type optionSelectModel struct {
 	message  string           // message to display
 	cursor   int              // position of the cursor
-	Choices  []string         // items on the list
-	Selected map[int]struct{} // which items are selected
+	choices  []string         // items on the list
+	selected map[int]struct{} // which items are selected
 }
 
-// SelectOptions creates a prompt for selecting multiple options
-func SelectOptions(options []string, message string) OptionSelectModel {
-	return OptionSelectModel{
+// selectOptions creates a prompt for selecting multiple options but is now private
+func selectOptions(options []string, message string) optionSelectModel {
+	return optionSelectModel{
 		message:  message,
-		Choices:  options,
-		Selected: make(map[int]struct{}),
+		choices:  options,
+		selected: make(map[int]struct{}),
 	}
 }
 
-func (m OptionSelectModel) Init() tea.Cmd {
+func (m optionSelectModel) Init() tea.Cmd {
 	return nil // No initial command
 }
 
-func (m OptionSelectModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m optionSelectModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.Type {
@@ -59,16 +59,16 @@ func (m OptionSelectModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 
 		case tea.KeyDown: // Navigate down
-			if m.cursor < len(m.Choices)-1 {
+			if m.cursor < len(m.choices)-1 {
 				m.cursor++
 			}
 
 		case tea.KeySpace: // Select an item
 			// Toggle selection
-			if _, ok := m.Selected[m.cursor]; ok {
-				delete(m.Selected, m.cursor) // Deselect
+			if _, ok := m.selected[m.cursor]; ok {
+				delete(m.selected, m.cursor) // Deselect
 			} else {
-				m.Selected[m.cursor] = struct{}{} // Select
+				m.selected[m.cursor] = struct{}{} // Select
 			}
 
 		case tea.KeyEnter: // Confirm selection
@@ -79,18 +79,18 @@ func (m OptionSelectModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
-func (m OptionSelectModel) View() string {
+func (m optionSelectModel) View() string {
 	var b strings.Builder
 	b.WriteString(fmt.Sprintf("%s.\n", m.message))
 	b.WriteString("Use arrow keys to navigate, space to select, enter to confirm, q to quit:\n\n")
-	for i, choice := range m.Choices {
+	for i, choice := range m.choices {
 		if m.cursor == i {
 			b.WriteString("> ")
 		} else {
 			b.WriteString("  ")
 		}
 		// Mark selected items
-		if _, ok := m.Selected[i]; ok {
+		if _, ok := m.selected[i]; ok {
 			b.WriteString("[x] ")
 		} else {
 			b.WriteString("[ ] ")
@@ -98,4 +98,21 @@ func (m OptionSelectModel) View() string {
 		b.WriteString(choice + "\n")
 	}
 	return b.String()
+}
+
+// RunSelectOptions remains public and is the interface for external usage.
+func RunSelectOptions(options []string, message string) ([]string, error) {
+	model := selectOptions(options, message)
+	p := tea.NewProgram(model)
+	finalModel, err := p.Run()
+	if err != nil {
+		return nil, err
+	}
+
+	final := finalModel.(optionSelectModel)
+	selectedChoices := make([]string, 0)
+	for i := range final.selected {
+		selectedChoices = append(selectedChoices, final.choices[i])
+	}
+	return selectedChoices, nil
 }
