@@ -391,6 +391,10 @@ func (v *stagingValidator) resolveLocation(
 }
 
 func (v *stagingValidator) resolveAccountAccess(checker *sema.Checker, memberLocation common.Location) bool {
+	if checker == nil {
+		return false
+	}
+
 	checkerLocation, ok := checker.Location.(common.StringLocation)
 	if !ok {
 		return false
@@ -403,11 +407,7 @@ func (v *stagingValidator) resolveAccountAccess(checker *sema.Checker, memberLoc
 
 	// If the source code of the update is being checked, we should check account access based on the
 	// targeted network location of the contract & not the source code location
-	if checkerLocation == v.sourceCodeLocation && memberAddressLocation.Address == v.targetLocation.Address {
-		return true
-	}
-
-	return false
+	return checkerLocation == v.sourceCodeLocation && memberAddressLocation.Address == v.targetLocation.Address
 }
 
 func (v *stagingValidator) resolveAddressContractNames(address common.Address) ([]string, error) {

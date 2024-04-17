@@ -288,4 +288,65 @@ func Test_StagingValidator(t *testing.T) {
 		err := validator.ValidateContractUpdate(location, sourceCodeLocation, []byte(newContract))
 		require.NoError(t, err)
 	})
+
+	t.Run("resolves account access correctly", func(t *testing.T) {
+		location := common.NewAddressLocation(nil, common.Address{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01}, "Test")
+		sourceCodeLocation := common.StringLocation("./Test.cdc")
+		oldContract := `
+		import ImpContract from 0x01
+		pub contract Test {
+			pub fun test() {}
+		}`
+		newContract := `
+		import ImpContract from 0x01
+		access(all) contract Test {
+			access(all) fun test() {}
+			init() {
+				ImpContract.test()
+			}
+		}`
+		impContract := `
+		access(all) contract ImpContract {
+			access(account) fun test() {}
+			init() {}
+		}`
+		mockScriptResultString, err := cadence.NewString(impContract)
+		require.NoError(t, err)
+
+		mockAccount := &flow.Account{
+			Address: flow.HexToAddress("01"),
+			Balance: 1000,
+			Keys:    nil,
+			Contracts: map[string][]byte{
+				"Test": []byte(oldContract),
+			},
+		}
+
+		// setup mocks
+		require.NoError(t, rw.WriteFile(sourceCodeLocation.String(), []byte(newContract), 0o644))
+		srv.GetAccount.Run(func(args mock.Arguments) {
+			require.Equal(t, flow.HexToAddress("01"), args.Get(1).(flow.Address))
+		}).Return(mockAccount, nil)
+		srv.Network.Return(config.Network{
+			Name: "testnet",
+		}, nil)
+		srv.ExecuteScript.Run(func(args mock.Arguments) {
+			script := args.Get(1).(flowkit.Script)
+
+			assert.Equal(t, templates.GenerateGetStagedContractCodeScript(MigrationContractStagingAddress("testnet")), script.Code)
+
+			assert.Equal(t, 2, len(script.Args))
+			actualContractAddressArg, actualContractNameArg := script.Args[0], script.Args[1]
+
+			contractName, _ := cadence.NewString("ImpContract")
+			contractAddr := cadence.NewAddress(flow.HexToAddress("01"))
+			assert.Equal(t, contractName, actualContractNameArg)
+			assert.Equal(t, contractAddr, actualContractAddressArg)
+		}).Return(cadence.NewOptional(mockScriptResultString), nil)
+
+		// validate
+		validator := newStagingValidator(srv.Mock, state)
+		err = validator.ValidateContractUpdate(location, sourceCodeLocation, []byte(newContract))
+		require.NoError(t, err)
+	})
 }
