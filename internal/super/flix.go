@@ -238,8 +238,10 @@ func generateFlixCmd(
 	if len(flags.Networks) > 0 {
 		nets := make([]config.Network, 0)
 		for _, n := range depNetworks {
-			if n.Name == flags.Networks[0] {
-				nets = append(nets, n)
+			for _, net := range flags.Networks {
+				if n.Name == net {
+					nets = append(nets, n)
+				}
 			}
 		}
 		depNetworks = nets
