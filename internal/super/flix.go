@@ -49,6 +49,7 @@ type flixFlags struct {
 	GasLimit    uint64   `default:"1000" flag:"gas-limit" info:"transaction gas limit"`
 	PreFill     string   `default:"" flag:"pre-fill" info:"template path to pre fill the FLIX"`
 	Lang        string   `default:"js" flag:"lang" info:"language to generate the template for"`
+	Networks    []string `default:"" flag:"networks" info:"networks to generate the template for"`
 }
 
 type flixResult struct {
@@ -233,6 +234,20 @@ func generateFlixCmd(
 
 	// get user's configured networks
 	depNetworks := getNetworks(state)
+
+	if len(flags.Networks) > 0 {
+		nets := make([]config.Network, 0)
+		for _, n := range depNetworks {
+			if n.Name == flags.Networks[0] {
+				nets = append(nets, n)
+			}
+		}
+		depNetworks = nets
+		if len(depNetworks) != len(flags.Networks) {
+			return nil, fmt.Errorf("networks not found in state Network configuration")
+		}
+	}
+
 	ctx := context.Background()
 
 	prettyJSON, err := flixService.CreateTemplate(ctx, depContracts, string(code), flags.PreFill, depNetworks)
