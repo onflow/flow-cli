@@ -10,9 +10,9 @@ COMMIT := $(shell git rev-parse HEAD)
 VERSION := $(shell git describe --tags --abbrev=0 --exact-match 2>/dev/null)
 # Name of the cover profile
 COVER_PROFILE := coverage.txt
-# Disable go1.20.14 sum database lookup for private repos
+# Disable go sum database lookup for private repos
 GOPRIVATE := github.com/dapperlabs/*
-# Ensure go1.20.14 bin path is in path (Especially for CI)
+# Ensure go bin path is in path (Especially for CI)
 GOPATH ?= $(HOME)/go
 PATH := $(PATH):$(GOPATH)/bin
 # OS
@@ -30,14 +30,14 @@ binary: $(BINARY)
 install-tools:
 	cd ${GOPATH}; \
 	mkdir -p ${GOPATH}; \
-	GO111MODULE=on go1.20.14 install github.com/axw/gocov/gocov@latest; \
-	GO111MODULE=on go1.20.14 install github.com/matm/gocov-html/cmd/gocov-html@latest; \
-	GO111MODULE=on go1.20.14 install github.com/sanderhahn/gozip/cmd/gozip@latest; \
-	GO111MODULE=on go1.20.14 install github.com/vektra/mockery/v2@v2.38.0;
+	GO111MODULE=on go install github.com/axw/gocov/gocov@latest; \
+	GO111MODULE=on go install github.com/matm/gocov-html/cmd/gocov-html@latest; \
+	GO111MODULE=on go install github.com/sanderhahn/gozip/cmd/gozip@latest; \
+	GO111MODULE=on go install github.com/vektra/mockery/v2@v2.38.0;
 
 .PHONY: test
 test:
-	GO111MODULE=on go1.20.14 test -coverprofile=$(COVER_PROFILE) $(if $(JSON_OUTPUT),-json,) ./...
+	GO111MODULE=on go test -coverprofile=$(COVER_PROFILE) $(if $(JSON_OUTPUT),-json,) ./...
 
 .PHONY: test-e2e-emulator
 test-e2e-emulator:
@@ -60,7 +60,7 @@ ci: install-tools generate test coverage
 $(BINARY):
 	CGO_ENABLED=1 \
 	CGO_CFLAGS="-O2 -D__BLST_PORTABLE__" \
-	GO111MODULE=on go1.20.14 build \
+	GO111MODULE=on go build \
 		-trimpath \
 		-ldflags \
 		"-X github.com/onflow/flow-cli/build.commit=$(COMMIT) -X github.com/onflow/flow-cli/build.semver=$(VERSION) -X github.com/onflow/flow-cli/internal/accounts.accountToken=${ACCOUNT_TOKEN}"\
@@ -104,11 +104,11 @@ check-headers:
 
 .PHONY: check-tidy
 check-tidy:
-	go1.20.14 mod tidy
+	go mod tidy
 
 .PHONY: generate
 generate: install-tools
-	go1.20.14 generate ./...
+	go generate ./...
 
 .PHONY: release
 release:
