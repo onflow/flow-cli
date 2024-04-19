@@ -31,6 +31,7 @@ import (
 	"github.com/google/go-github/github"
 	"github.com/logrusorgru/aurora/v4"
 	"github.com/onflow/flowkit/v2"
+	"github.com/onflow/flowkit/v2/config"
 	"github.com/onflow/flowkit/v2/output"
 	"github.com/spf13/cobra"
 
@@ -88,6 +89,11 @@ func isValidated(repoService GitHubRepositoriesService) func(
 		flow flowkit.Services,
 		state *flowkit.State,
 	) (command.Result, error) {
+		err := checkNetwork(flow.Network())
+		if err != nil {
+			return nil, err
+		}
+
 		if repoService == nil {
 			repoService = github.NewClient(nil).Repositories
 		}
@@ -101,7 +107,14 @@ func isValidated(repoService GitHubRepositoriesService) func(
 			return nil, err
 		}
 
-		status, timestamp, err := getContractValidationStatus(addr.HexWithPrefix(), contractName, state, repoService, logger)
+		status, timestamp, err := getContractValidationStatus(
+			flow.Network(),
+			addr.HexWithPrefix(),
+			contractName,
+			state,
+			repoService,
+			logger,
+		)
 		if err != nil {
 			return nil, err
 		}
@@ -113,9 +126,9 @@ func isValidated(repoService GitHubRepositoriesService) func(
 	}
 }
 
-func getContractValidationStatus(address string, contractName string, state *flowkit.State, repoService GitHubRepositoriesService, logger output.Logger) (*contractUpdateStatus, *time.Time, error) {
+func getContractValidationStatus(network config.Network, address string, contractName string, state *flowkit.State, repoService GitHubRepositoriesService, logger output.Logger) (*contractUpdateStatus, *time.Time, error) {
 	// Get last migration report
-	report, timestamp, err := getLatestMigrationReport(repoService, logger)
+	report, timestamp, err := getLatestMigrationReport(network, repoService, logger)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -143,7 +156,7 @@ func getContractValidationStatus(address string, contractName string, state *flo
 	return status, timestamp, nil
 }
 
-func getLatestMigrationReport(repoService GitHubRepositoriesService, logger output.Logger) (*github.RepositoryContent, *time.Time, error) {
+func getLatestMigrationReport(network config.Network, repoService GitHubRepositoriesService, logger output.Logger) (*github.RepositoryContent, *time.Time, error) {
 	// Get the content of the migration reports folder
 	_, folderContent, _, err := repoService.GetContents(
 		context.Background(),
@@ -169,9 +182,13 @@ func getLatestMigrationReport(repoService GitHubRepositoriesService, logger outp
 			}
 
 			// Extract the time from the filename
-			t, err := extractTimeFromFilename(contentPath)
+			networkStr, t, err := extractInfoFromFilename(contentPath)
 			if err != nil {
-				logger.Error(fmt.Sprintf("Failed to extract report timestamp from filename, file appears to be in an unexpected format: %s", contentPath))
+				logger.Error(fmt.Sprintf("Failed to extract report information from filename, file appears to be in an unexpected format: %s", contentPath))
+				continue
+			}
+
+			if networkStr != strings.ToLower(network.Name) {
 				continue
 			}
 
@@ -222,20 +239,24 @@ func fetchAndParseReport(repoService GitHubRepositoriesService, reportPath strin
 	return statuses, nil
 }
 
-func extractTimeFromFilename(filename string) (*time.Time, error) {
-	// Extracts the timestamp from the filename in the format: migrations_data/raw/XXXXXX-<unix-timestamp>.json
+func extractInfoFromFilename(filename string) (string, *time.Time, error) {
+	// Extracts the timestamp from the filename in the format: migrations_data/raw/XXXXXX-<network>-<unix-timestamp>.json
 	fileName := path.Base(filename)
 	fileNameWithoutExt := strings.TrimSuffix(fileName, path.Ext(fileName))
 	splitFileName := strings.Split(fileNameWithoutExt, "-")
+	if len(splitFileName) < 2 {
+		return "", nil, fmt.Errorf("filename is not in the expected format")
+	}
 
 	timestampStr := splitFileName[len(splitFileName)-1]
+	network := strings.ToLower(splitFileName[len(splitFileName)-2])
 	unixTimestamp, err := strconv.ParseInt(timestampStr, 10, 64)
 	if err != nil {
-		return nil, err
+		return "", nil, err
 	}
 
 	t := time.Unix(unixTimestamp, 0)
-	return &t, nil
+	return network, &t, nil
 }
 
 func (v validationResult) String() string {

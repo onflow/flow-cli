@@ -54,17 +54,22 @@ func Test_IsValidated(t *testing.T) {
 
 		// mock github file download
 		data, _ := json.Marshal(statuses)
-		mockClient.On("DownloadContents", mock.Anything, "onflow", "cadence", "migrations_data/raw/123-abc-2.json", mock.MatchedBy(func(opts *github.RepositoryContentGetOptions) bool {
+		mockClient.On("DownloadContents", mock.Anything, "onflow", "cadence", "migrations_data/raw/123-abc-testnet-2.json", mock.MatchedBy(func(opts *github.RepositoryContentGetOptions) bool {
 			return opts.Ref == "master"
 		})).Return(io.NopCloser(bytes.NewReader(data)), nil).Once()
 
 		// mock github folder response
 		fileType := "file"
-		olderPath := "migrations_data/raw/123-abc-1.json"
-		latestPath := "migrations_data/raw/123-abc-2.json"
+		olderPath := "migrations_data/raw/123-abc-testnet-1.json"
+		wrongNetworkPath := "migrations_data/raw/123-abc-mainnet-2.json"
+		latestPath := "migrations_data/raw/123-abc-testnet-2.json"
 		mockFolderContent := []*github.RepositoryContent{
 			{
 				Path: &olderPath,
+				Type: &fileType,
+			},
+			{
+				Path: &wrongNetworkPath,
 				Type: &fileType,
 			},
 			{
