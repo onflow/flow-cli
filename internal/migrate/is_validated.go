@@ -264,6 +264,9 @@ func (v validationResult) String() string {
 		builder.WriteString(aurora.Red("Please review the error and re-stage the contract to resolve these issues if necessary\n").String())
 	}
 
+	builder.WriteString("\n")
+	builder.WriteString("For more information, please visit the migration report on GitHub: https://github.com/onflow/cadence/tree/master/migrations_data\n")
+
 	return builder.String()
 }
 
