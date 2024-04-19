@@ -134,7 +134,7 @@ func getContractValidationStatus(address string, contractName string, state *flo
 
 	// Throw error if contract was not part of the last migration
 	if status == nil {
-		return nil, nil, fmt.Errorf("the contract %s has not been part of any emulated migrations yet, please ensure it is staged & wait for the next emulated migration (last migration: %s)", contractName, timestamp.Format(time.RFC3339))
+		return nil, nil, fmt.Errorf("the contract %s has not been part of any emulated migrations yet, please ensure it is staged & wait for the next emulated migration (last migration report at: %s)", contractName, timestamp.Format(time.RFC3339))
 	}
 
 	return status, timestamp, nil
@@ -237,7 +237,7 @@ func (v validationResult) String() string {
 	status := v.Status
 
 	builder := strings.Builder{}
-	builder.WriteString("Last emulated migration occurred at: ")
+	builder.WriteString("Last emulated migration report was at: ")
 	builder.WriteString(v.Timestamp.Format(time.RFC3339))
 	builder.WriteString("\n\n")
 
@@ -257,6 +257,7 @@ func (v validationResult) String() string {
 		builder.WriteString("Error: ")
 		builder.WriteString(status.Error)
 	}
+
 	return builder.String()
 }
 
