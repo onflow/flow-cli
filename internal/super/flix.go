@@ -236,22 +236,19 @@ func generateFlixCmd(
 	depNetworks := getNetworks(state)
 
 	if len(flags.ExcludeNetworks) > 0 {
-		nets := make([]config.Network, 0)
+		excludeMap := make(map[string]bool)
+		for _, net := range flags.ExcludeNetworks {
+			excludeMap[net] = true
+		}
 
-		for _, n := range depNetworks {
-			excluded := false
-			for _, net := range flags.ExcludeNetworks {
-				if n.Name == net {
-					excluded = true
-					break
-				}
-			}
-			if !excluded {
-				nets = append(nets, n)
+		var filteredNetworks []config.Network
+		for _, network := range depNetworks {
+			if !excludeMap[network.Name] {
+				filteredNetworks = append(filteredNetworks, network)
 			}
 		}
 
-		depNetworks = nets
+		depNetworks = filteredNetworks
 		if len(depNetworks) == 0 {
 			return nil, fmt.Errorf("all networks have been excluded")
 		}
