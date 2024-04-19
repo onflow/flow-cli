@@ -20,17 +20,34 @@ package migrate
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"path"
+	"strconv"
+	"strings"
+	"time"
 
-	"github.com/onflow/cadence"
-	"github.com/onflow/contract-updater/lib/go/templates"
+	"github.com/google/go-github/github"
 	"github.com/onflow/flowkit/v2"
 	"github.com/onflow/flowkit/v2/output"
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
-	"github.com/onflow/flow-cli/internal/scripts"
 )
+
+type contractUpdateStatus struct {
+	AccountAddress string `json:"account_address"`
+	ContractName   string `json:"contract_name"`
+	Error          string `json:"error"`
+}
+
+type validationResult struct {
+	AccountAddress string
+	ContractName   string
+	WasChecked     bool
+	Error          string
+	Timestamp      time.Time
+}
 
 var isValidatedflags struct{}
 
@@ -45,42 +62,188 @@ var IsValidatedCommand = &command.Command{
 	RunS:  isValidated,
 }
 
+const (
+	repoOwner = "onflow"
+	repoName  = "cadence"
+	repoPath  = "migrations_data"
+	repoRef   = "master"
+)
+
 func isValidated(
 	args []string,
 	globalFlags command.GlobalFlags,
-	_ output.Logger,
+	logger output.Logger,
 	flow flowkit.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
-	err := checkNetwork(flow.Network())
+	contractName := args[0]
+
+	addr, err := getAddressByContractName(state, contractName, flow.Network())
+	if err != nil {
+		return nil, err
+	}
+	addressHex := addr.HexWithPrefix()
+
+	logger.StartProgress("Checking if contract has been validated")
+	defer logger.StopProgress()
+
+	statuses, timestamp, err := getLatestMigrationReport()
 	if err != nil {
 		return nil, err
 	}
 
-	contractName := args[0]
-	addr, err := getAddressByContractName(state, contractName, flow.Network())
-	if err != nil {
-		return nil, fmt.Errorf("error getting address by contract name: %w", err)
+	// get the validation result
+	var status *contractUpdateStatus
+	for _, s := range statuses {
+		if s.ContractName == contractName && s.AccountAddress == addressHex {
+			status = &s
+			break
+		}
 	}
 
-	caddr := cadence.NewAddress(addr)
+	logger.StopProgress()
 
-	cname, err := cadence.NewString(contractName)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get cadence string from contract name: %w", err)
+	errorMessage := ""
+	if status != nil {
+		errorMessage = status.Error
 	}
 
-	value, err := flow.ExecuteScript(
+	return validationResult{
+		AccountAddress: status.AccountAddress,
+		ContractName:   status.ContractName,
+		Timestamp:      *timestamp,
+		Error:          errorMessage,
+		WasChecked:     status != nil,
+	}, nil
+}
+
+func getLatestMigrationReport() ([]contractUpdateStatus, *time.Time, error) {
+	gitClient := github.NewClient(nil)
+
+	// get tree folder containing the reports
+	_, folderContent, _, err := gitClient.Repositories.GetContents(
 		context.Background(),
-		flowkit.Script{
-			Code: templates.GenerateIsValidatedScript(MigrationContractStagingAddress(flow.Network().Name)),
-			Args: []cadence.Value{caddr, cname},
+		repoOwner,
+		repoName,
+		repoPath,
+		&github.RepositoryContentGetOptions{
+			Ref: repoRef,
 		},
-		flowkit.LatestScriptQuery,
 	)
 	if err != nil {
-		return nil, fmt.Errorf("error executing script: %w", err)
+		return nil, nil, err
 	}
 
-	return scripts.NewScriptResult(value), nil
+	// Find the latest report file
+	var latestReport *github.RepositoryContent
+	var latestReportTime *time.Time
+	for _, content := range folderContent {
+		if content.Type != nil && *content.Type == "file" {
+			contentPath := content.GetPath()
+			if path.Ext(contentPath) != ".json" {
+				continue
+			}
+
+			// extract the time from the filename
+			t, err := extractTimeFromFilename(contentPath)
+			if err != nil {
+				return nil, nil, err
+			}
+
+			// check if this is the latest report
+			if t.After(*latestReportTime) {
+				latestReport = content
+				latestReportTime = t
+			}
+		}
+	}
+
+	if latestReport == nil {
+		return nil, nil, fmt.Errorf("no reports found")
+	}
+
+	// Get the content of the latest report
+	reportContent, _, _, err := gitClient.Repositories.GetContents(
+		context.Background(),
+		repoOwner,
+		repoName,
+		latestReport.GetPath(),
+		&github.RepositoryContentGetOptions{
+			Ref: repoRef,
+		},
+	)
+
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// Parse the report
+	var statuses []contractUpdateStatus
+	reportStr, err := reportContent.GetContent()
+	if err != nil {
+		return nil, nil, err
+	}
+	err = json.Unmarshal([]byte(reportStr), &statuses)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return statuses, latestReportTime, nil
+}
+
+func extractTimeFromFilename(filename string) (*time.Time, error) {
+	var splitFileName []string
+	fileName := path.Base(filename)
+	fileNameWithoutExt := strings.TrimSuffix(fileName, path.Ext(fileName))
+	splitFileName = strings.Split(fileNameWithoutExt, "-")
+	timestampStr := splitFileName[len(splitFileName)-1]
+	unixTimestamp, err := strconv.ParseInt(timestampStr, 10, 64)
+	if err != nil {
+		return nil, err
+	}
+
+	t := time.Unix(unixTimestamp, 0)
+	return &t, nil
+}
+
+func (v validationResult) String() string {
+	builder := strings.Builder{}
+	builder.WriteString("Last emulated migration occured at: ")
+	builder.WriteString(v.Timestamp.Format(time.RFC3339))
+	builder.WriteString("\n\n")
+
+	builder.WriteString("The contract, ")
+	builder.WriteString(v.ContractName)
+	builder.WriteString(", has ")
+	if v.WasChecked {
+		if v.Error == "" {
+			builder.WriteString("PASSED the last emulated migration")
+		} else {
+			builder.WriteString("FAILED the last emulated migration")
+		}
+	} else {
+		builder.WriteString("not been part of any emulated migrations")
+	}
+	builder.WriteString("\n\n")
+
+	if v.Error != "" {
+		builder.WriteString("Error: ")
+		builder.WriteString(v.Error)
+	}
+	return builder.String()
+}
+
+func (v validationResult) JSON() interface{} {
+	return v
+}
+
+func (v validationResult) Oneliner() string {
+	if v.WasChecked {
+		if v.Error == "" {
+			return "PASSED"
+		}
+		return "FAILED"
+	} else {
+		return "NOT CHECKED"
+	}
 }
