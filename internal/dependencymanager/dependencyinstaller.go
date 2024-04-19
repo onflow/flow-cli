@@ -23,6 +23,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+	"github.com/spf13/cobra"
 	"os"
 	"path/filepath"
 
@@ -72,6 +73,11 @@ func (cl *categorizedLogs) LogAll(logger output.Logger) {
 type dependencyManagerFlagsCollection struct {
 	skipDeployments bool `default:"false" flag:"skip-deployments" info:"Skip adding the dependency to deployments"`
 	skipAlias       bool `default:"false" flag:"skip-alias" info:"Skip prompting for an alias"`
+}
+
+func (f *dependencyManagerFlagsCollection) AddToCommand(cmd *cobra.Command) {
+	cmd.Flags().BoolVar(&f.skipDeployments, "skip-deployments", false, "Skip adding the dependency to deployments")
+	cmd.Flags().BoolVar(&f.skipAlias, "skip-alias", false, "Skip prompting for an alias")
 }
 
 type DependencyInstaller struct {
