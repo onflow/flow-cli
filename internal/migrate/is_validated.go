@@ -254,7 +254,6 @@ func (v validationResult) String() string {
 	builder.WriteString("\n\n")
 
 	if status.Error != "" {
-		builder.WriteString("Error: ")
 		builder.WriteString(status.Error)
 	}
 
