@@ -22,12 +22,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"path"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/google/go-github/github"
+	"github.com/logrusorgru/aurora/v4"
 	"github.com/onflow/flowkit/v2"
 	"github.com/onflow/flowkit/v2/output"
 	"github.com/spf13/cobra"
@@ -38,11 +40,12 @@ import (
 //go:generate mockery --name GitHubRepositoriesService --output ./mocks --case underscore
 type GitHubRepositoriesService interface {
 	GetContents(ctx context.Context, owner string, repo string, path string, opt *github.RepositoryContentGetOptions) (fileContent *github.RepositoryContent, directoryContent []*github.RepositoryContent, resp *github.Response, err error)
+	DownloadContents(ctx context.Context, owner string, repo string, filepath string, opt *github.RepositoryContentGetOptions) (io.ReadCloser, error)
 }
 
 type contractUpdateStatus struct {
 	AccountAddress string `json:"account_address"`
-	ContractName   string `json:"contract_name"`
+	ContractName   string `json:"account_name"`
 	Error          string `json:"error"`
 }
 
@@ -134,7 +137,7 @@ func getContractValidationStatus(address string, contractName string, state *flo
 
 	// Throw error if contract was not part of the last migration
 	if status == nil {
-		return nil, nil, fmt.Errorf("the contract %s has not been part of any emulated migrations yet, please ensure it is staged & wait for the next emulated migration (last migration report at: %s)", contractName, timestamp.Format(time.RFC3339))
+		return nil, nil, fmt.Errorf("the contract %s has not been part of any emulated migrations yet, please ensure it is staged & wait for the next emulated migration (last migration report was at %s)", contractName, timestamp.Format(time.RFC3339))
 	}
 
 	return status, timestamp, nil
@@ -189,7 +192,7 @@ func getLatestMigrationReport(repoService GitHubRepositoriesService, logger outp
 
 func fetchAndParseReport(repoService GitHubRepositoriesService, reportPath string) ([]contractUpdateStatus, error) {
 	// Get the content of the latest report
-	reportContent, _, _, err := repoService.GetContents(
+	rc, err := repoService.DownloadContents(
 		context.Background(),
 		repoOwner,
 		repoName,
@@ -201,15 +204,17 @@ func fetchAndParseReport(repoService GitHubRepositoriesService, reportPath strin
 	if err != nil {
 		return nil, err
 	}
+	defer rc.Close()
 
-	// Parse the report
-	var statuses []contractUpdateStatus
-	reportStr, err := reportContent.GetContent()
+	// Read the report content
+	reportContent, err := io.ReadAll(rc)
 	if err != nil {
 		return nil, err
 	}
 
-	err = json.Unmarshal([]byte(reportStr), &statuses)
+	// Parse the report
+	var statuses []contractUpdateStatus
+	err = json.Unmarshal(reportContent, &statuses)
 	if err != nil {
 		return nil, err
 	}
@@ -237,7 +242,7 @@ func (v validationResult) String() string {
 	status := v.Status
 
 	builder := strings.Builder{}
-	builder.WriteString("Last emulated migration report was at: ")
+	builder.WriteString("Last emulated migration report was created at ")
 	builder.WriteString(v.Timestamp.Format(time.RFC3339))
 	builder.WriteString("\n\n")
 
@@ -255,6 +260,8 @@ func (v validationResult) String() string {
 
 	if status.Error != "" {
 		builder.WriteString(status.Error)
+		builder.WriteString("\n")
+		builder.WriteString(aurora.Red("Please review the error and re-stage the contract to resolve these issues if necessary\n").String())
 	}
 
 	return builder.String()

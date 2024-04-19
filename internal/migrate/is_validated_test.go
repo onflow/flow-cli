@@ -19,7 +19,9 @@
 package migrate
 
 import (
+	"bytes"
 	"encoding/json"
+	"io"
 	"testing"
 	"time"
 
@@ -50,13 +52,11 @@ func Test_IsValidated(t *testing.T) {
 		// mock network
 		srv.Network.Return(config.TestnetNetwork)
 
-		// mock github file response
+		// mock github file download
 		data, _ := json.Marshal(statuses)
-		content := string(data)
-		mockFileContent := &github.RepositoryContent{
-			Content: &content,
-		}
-		mockClient.On("GetContents", mock.Anything, "onflow", "cadence", "migrations_data/raw/123-abc-2.json", mock.Anything).Return(mockFileContent, nil, nil, nil).Once()
+		mockClient.On("DownloadContents", mock.Anything, "onflow", "cadence", "migrations_data/raw/123-abc-2.json", mock.MatchedBy(func(opts *github.RepositoryContentGetOptions) bool {
+			return opts.Ref == "master"
+		})).Return(io.NopCloser(bytes.NewReader(data)), nil).Once()
 
 		// mock github folder response
 		fileType := "file"
@@ -72,7 +72,9 @@ func Test_IsValidated(t *testing.T) {
 				Type: &fileType,
 			},
 		}
-		mockClient.On("GetContents", mock.Anything, "onflow", "cadence", "migrations_data/raw", mock.Anything).Return(nil, mockFolderContent, nil, nil).Once()
+		mockClient.On("GetContents", mock.Anything, "onflow", "cadence", "migrations_data/raw", mock.MatchedBy(func(opts *github.RepositoryContentGetOptions) bool {
+			return opts.Ref == "master"
+		})).Return(nil, mockFolderContent, nil, nil).Once()
 
 		// mock flowkit contract
 		state.Contracts().AddOrUpdate(
