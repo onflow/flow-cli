@@ -19,27 +19,61 @@
 package migrate
 
 import (
+	"encoding/json"
 	"testing"
+	"time"
 
-	"github.com/onflow/cadence"
-	"github.com/onflow/contract-updater/lib/go/templates"
-	"github.com/onflow/flowkit/v2"
+	"github.com/google/go-github/github"
+	"github.com/onflow/flow-cli/internal/command"
+	"github.com/onflow/flow-cli/internal/migrate/mocks"
+	"github.com/onflow/flow-cli/internal/util"
 	"github.com/onflow/flowkit/v2/config"
 	"github.com/onflow/flowkit/v2/tests"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-
-	"github.com/onflow/flow-cli/internal/command"
-	"github.com/onflow/flow-cli/internal/util"
+	"github.com/stretchr/testify/require"
 )
 
 func Test_IsValidated(t *testing.T) {
 	srv, state, _ := util.TestMocks(t)
-
 	testContract := tests.ContractSimple
 
-	t.Run("Success", func(t *testing.T) {
+	// use emulator-account because it already exists in mock, so we don't need to create it
+	emuAccount, err := state.EmulatorServiceAccount()
+	require.NoError(t, err)
 
+	// Helper function to test the isValidated function
+	// with all of the necessary mocks
+	testIsValidatedWithStatuses := func(statuses []contractUpdateStatus) (command.Result, error) {
+		mockClient := mocks.NewGitHubRepositoriesService(t)
+
+		// mock network
+		srv.Network.Return(config.TestnetNetwork)
+
+		// mock github file response
+		data, _ := json.Marshal(statuses)
+		content := string(data)
+		mockFileContent := &github.RepositoryContent{
+			Content: &content,
+		}
+		mockClient.On("GetContents", mock.Anything, "onflow", "cadence", "migrations_data/2.json", mock.Anything).Return(mockFileContent, nil, nil, nil).Once()
+
+		// mock github folder response
+		fileType := "file"
+		olderPath := "migrations_data/1.json"
+		latestPath := "migrations_data/2.json"
+		mockFolderContent := []*github.RepositoryContent{
+			{
+				Path: &olderPath,
+				Type: &fileType,
+			},
+			{
+				Path: &latestPath,
+				Type: &fileType,
+			},
+		}
+		mockClient.On("GetContents", mock.Anything, "onflow", "cadence", "migrations_data", mock.Anything).Return(nil, mockFolderContent, nil, nil).Once()
+
+		// mock flowkit contract
 		state.Contracts().AddOrUpdate(
 			config.Contract{
 				Name:     testContract.Name,
@@ -51,7 +85,7 @@ func Test_IsValidated(t *testing.T) {
 		state.Deployments().AddOrUpdate(
 			config.Deployment{
 				Network: "testnet",
-				Account: "emulator-account",
+				Account: emuAccount.Name,
 				Contracts: []config.ContractDeployment{
 					{
 						Name: testContract.Name,
@@ -60,28 +94,8 @@ func Test_IsValidated(t *testing.T) {
 			},
 		)
 
-		srv.Network.Return(config.Network{
-			Name: "testnet",
-		}, nil)
-
-		account, err := state.EmulatorServiceAccount()
-		assert.NoError(t, err)
-
-		srv.ExecuteScript.Run(func(args mock.Arguments) {
-			script := args.Get(1).(flowkit.Script)
-
-			assert.Equal(t, templates.GenerateIsValidatedScript(MigrationContractStagingAddress("testnet")), script.Code)
-
-			assert.Equal(t, 2, len(script.Args))
-			actualContractAddressArg, actualContractNameArg := script.Args[0], script.Args[1]
-
-			contractName, _ := cadence.NewString(testContract.Name)
-			contractAddr := cadence.NewAddress(account.Address)
-			assert.Equal(t, contractName, actualContractNameArg)
-			assert.Equal(t, contractAddr, actualContractAddressArg)
-		}).Return(cadence.NewBool(true), nil)
-
-		result, err := isValidated(
+		// call the isValidated function
+		res, err := isValidated(mockClient)(
 			[]string{testContract.Name},
 			command.GlobalFlags{
 				Network: "testnet",
@@ -90,8 +104,49 @@ func Test_IsValidated(t *testing.T) {
 			srv.Mock,
 			state,
 		)
-		assert.NoError(t, err)
-		// TODO: fix this
-		assert.NotNil(t, result)
+
+		require.Equal(t, true, mockClient.AssertExpectations(t))
+		return res, err
+	}
+
+	t.Run("isValidated gets status from latest report on github", func(t *testing.T) {
+		res, err := testIsValidatedWithStatuses([]contractUpdateStatus{
+			{
+				AccountAddress: "0x01",
+				ContractName:   "some-other-contract",
+				Error:          "4567",
+			},
+			{
+				AccountAddress: emuAccount.Address.HexWithPrefix(),
+				ContractName:   testContract.Name,
+				Error:          "1234",
+			},
+		})
+		require.NoError(t, err)
+		require.NotNil(t, res)
+
+		expectedUnixTime := 2
+		expectedTime := time.Unix(int64(expectedUnixTime), 0)
+		require.Equal(t, res.JSON(), validationResult{
+			Timestamp: expectedTime,
+			Status: contractUpdateStatus{
+				AccountAddress: emuAccount.Address.HexWithPrefix(),
+				ContractName:   testContract.Name,
+				Error:          "1234",
+			},
+		})
+	})
+
+	t.Run("isValidated errors if contract was not in last migration", func(t *testing.T) {
+		res, err := testIsValidatedWithStatuses([]contractUpdateStatus{
+			{
+				AccountAddress: "0x01",
+				ContractName:   "some-other-contract",
+				Error:          "4567",
+			},
+		})
+
+		require.ErrorContains(t, err, "has not been part of any emulated migrations yet")
+		require.Nil(t, res)
 	})
 }

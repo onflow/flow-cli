@@ -29,11 +29,17 @@ import (
 
 	"github.com/google/go-github/github"
 	"github.com/onflow/flowkit/v2"
+	"github.com/onflow/flowkit/v2/config"
 	"github.com/onflow/flowkit/v2/output"
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
 )
+
+//go:generate mockery --name GitHubRepositoriesService --output ./mocks --case underscore
+type GitHubRepositoriesService interface {
+	GetContents(ctx context.Context, owner string, repo string, path string, opt *github.RepositoryContentGetOptions) (fileContent *github.RepositoryContent, directoryContent []*github.RepositoryContent, resp *github.Response, err error)
+}
 
 type contractUpdateStatus struct {
 	AccountAddress string `json:"account_address"`
@@ -42,11 +48,8 @@ type contractUpdateStatus struct {
 }
 
 type validationResult struct {
-	AccountAddress string
-	ContractName   string
-	WasChecked     bool
-	Error          string
-	Timestamp      time.Time
+	Timestamp time.Time
+	Status    contractUpdateStatus
 }
 
 var isValidatedflags struct{}
@@ -59,7 +62,7 @@ var IsValidatedCommand = &command.Command{
 		Args:    cobra.MinimumNArgs(1),
 	},
 	Flags: &isValidatedflags,
-	RunS:  isValidated,
+	RunS:  isValidated(nil),
 }
 
 const (
@@ -69,59 +72,76 @@ const (
 	repoRef   = "master"
 )
 
-func isValidated(
+func isValidated(repoService GitHubRepositoriesService) func(
 	args []string,
-	globalFlags command.GlobalFlags,
+	_ command.GlobalFlags,
 	logger output.Logger,
 	flow flowkit.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
-	contractName := args[0]
+	return func(
+		args []string,
+		globalFlags command.GlobalFlags,
+		logger output.Logger,
+		flow flowkit.Services,
+		state *flowkit.State,
+	) (command.Result, error) {
+		if repoService == nil {
+			repoService = github.NewClient(nil).Repositories
+		}
 
-	addr, err := getAddressByContractName(state, contractName, flow.Network())
-	if err != nil {
-		return nil, err
+		logger.StartProgress("Checking if contract has been validated")
+		defer logger.StopProgress()
+
+		contractName := args[0]
+		status, timestamp, err := getContractValidationStatus(contractName, flow.Network(), state, repoService)
+		if err != nil {
+			return nil, err
+		}
+
+		return validationResult{
+			Timestamp: *timestamp,
+			Status:    *status,
+		}, nil
 	}
-	addressHex := addr.HexWithPrefix()
+}
 
-	logger.StartProgress("Checking if contract has been validated")
-	defer logger.StopProgress()
-
-	statuses, timestamp, err := getLatestMigrationReport()
+func getContractValidationStatus(contractName string, network config.Network, state *flowkit.State, repoService GitHubRepositoriesService) (*contractUpdateStatus, *time.Time, error) {
+	addr, err := getAddressByContractName(state, contractName, network)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
+	}
+	addrHex := addr.HexWithPrefix()
+
+	report, timestamp, err := getLatestMigrationReport(repoService)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	statuses, err := fetchAndParseReport(repoService, report.GetPath())
+	if err != nil {
+		return nil, nil, err
 	}
 
 	// get the validation result
 	var status *contractUpdateStatus
 	for _, s := range statuses {
-		if s.ContractName == contractName && s.AccountAddress == addressHex {
+		if s.ContractName == contractName && s.AccountAddress == addrHex {
 			status = &s
 			break
 		}
 	}
 
-	logger.StopProgress()
-
-	errorMessage := ""
-	if status != nil {
-		errorMessage = status.Error
+	if status == nil {
+		return nil, nil, fmt.Errorf("the contract %s has not been part of any emulated migrations yet, please ensure it is staged & wait for the next emulated migration (last migration: %s)", contractName, timestamp.Format(time.RFC3339))
 	}
 
-	return validationResult{
-		AccountAddress: status.AccountAddress,
-		ContractName:   status.ContractName,
-		Timestamp:      *timestamp,
-		Error:          errorMessage,
-		WasChecked:     status != nil,
-	}, nil
+	return status, timestamp, nil
 }
 
-func getLatestMigrationReport() ([]contractUpdateStatus, *time.Time, error) {
-	gitClient := github.NewClient(nil)
-
+func getLatestMigrationReport(repoService GitHubRepositoriesService) (*github.RepositoryContent, *time.Time, error) {
 	// get tree folder containing the reports
-	_, folderContent, _, err := gitClient.Repositories.GetContents(
+	_, folderContent, _, err := repoService.GetContents(
 		context.Background(),
 		repoOwner,
 		repoName,
@@ -151,7 +171,7 @@ func getLatestMigrationReport() ([]contractUpdateStatus, *time.Time, error) {
 			}
 
 			// check if this is the latest report
-			if t.After(*latestReportTime) {
+			if latestReportTime == nil || t.After(*latestReportTime) {
 				latestReport = content
 				latestReportTime = t
 			}
@@ -162,33 +182,36 @@ func getLatestMigrationReport() ([]contractUpdateStatus, *time.Time, error) {
 		return nil, nil, fmt.Errorf("no reports found")
 	}
 
+	return latestReport, latestReportTime, nil
+}
+
+func fetchAndParseReport(repoService GitHubRepositoriesService, reportPath string) ([]contractUpdateStatus, error) {
 	// Get the content of the latest report
-	reportContent, _, _, err := gitClient.Repositories.GetContents(
+	reportContent, _, _, err := repoService.GetContents(
 		context.Background(),
 		repoOwner,
 		repoName,
-		latestReport.GetPath(),
+		reportPath,
 		&github.RepositoryContentGetOptions{
 			Ref: repoRef,
 		},
 	)
-
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	// Parse the report
 	var statuses []contractUpdateStatus
 	reportStr, err := reportContent.GetContent()
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 	err = json.Unmarshal([]byte(reportStr), &statuses)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
-	return statuses, latestReportTime, nil
+	return statuses, nil
 }
 
 func extractTimeFromFilename(filename string) (*time.Time, error) {
@@ -207,28 +230,28 @@ func extractTimeFromFilename(filename string) (*time.Time, error) {
 }
 
 func (v validationResult) String() string {
+	status := v.Status
+
 	builder := strings.Builder{}
 	builder.WriteString("Last emulated migration occured at: ")
 	builder.WriteString(v.Timestamp.Format(time.RFC3339))
 	builder.WriteString("\n\n")
 
 	builder.WriteString("The contract, ")
-	builder.WriteString(v.ContractName)
+	builder.WriteString(status.ContractName)
 	builder.WriteString(", has ")
-	if v.WasChecked {
-		if v.Error == "" {
-			builder.WriteString("PASSED the last emulated migration")
-		} else {
-			builder.WriteString("FAILED the last emulated migration")
-		}
+
+	if status.Error == "" {
+		builder.WriteString("PASSED the last emulated migration")
 	} else {
-		builder.WriteString("not been part of any emulated migrations")
+		builder.WriteString("FAILED the last emulated migration")
 	}
+
 	builder.WriteString("\n\n")
 
-	if v.Error != "" {
+	if status.Error != "" {
 		builder.WriteString("Error: ")
-		builder.WriteString(v.Error)
+		builder.WriteString(status.Error)
 	}
 	return builder.String()
 }
@@ -238,12 +261,8 @@ func (v validationResult) JSON() interface{} {
 }
 
 func (v validationResult) Oneliner() string {
-	if v.WasChecked {
-		if v.Error == "" {
-			return "PASSED"
-		}
-		return "FAILED"
-	} else {
-		return "NOT CHECKED"
+	if v.Status.Error == "" {
+		return "PASSED"
 	}
+	return "FAILED"
 }
