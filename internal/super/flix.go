@@ -49,7 +49,7 @@ type flixFlags struct {
 	GasLimit    uint64   `default:"1000" flag:"gas-limit" info:"transaction gas limit"`
 	PreFill     string   `default:"" flag:"pre-fill" info:"template path to pre fill the FLIX"`
 	Lang        string   `default:"js" flag:"lang" info:"language to generate the template for"`
-	Networks    []string `default:"" flag:"networks" info:"networks to generate the template for"`
+	Targets     []string `default:"" flag:"targets" info:"Specific targeted networks to generate the FLIX template"`
 }
 
 type flixResult struct {
@@ -173,9 +173,9 @@ func packageCmd(
 func packageFlixCmd(
 	args []string,
 	gFlags command.GlobalFlags,
-	logger output.Logger,
-	flow flowkit.Services,
-	state *flowkit.State,
+	_ output.Logger,
+	_ flowkit.Services,
+	_ *flowkit.State,
 	flixService flixkit.FlixService,
 	flags flixFlags,
 ) (result command.Result, err error) {
@@ -210,8 +210,8 @@ func generateCmd(
 func generateFlixCmd(
 	args []string,
 	_ command.GlobalFlags,
-	logger output.Logger,
-	flow flowkit.Services,
+	_ output.Logger,
+	_ flowkit.Services,
 	state *flowkit.State,
 	flixService flixkit.FlixService,
 	flags flixFlags,
@@ -235,18 +235,18 @@ func generateFlixCmd(
 	// get user's configured networks
 	depNetworks := getNetworks(state)
 
-	if len(flags.Networks) > 0 {
+	if len(flags.Targets) > 0 {
 		nets := make([]config.Network, 0)
 		for _, n := range depNetworks {
-			for _, net := range flags.Networks {
+			for _, net := range flags.Targets {
 				if n.Name == net {
 					nets = append(nets, n)
 				}
 			}
 		}
 		depNetworks = nets
-		if len(depNetworks) != len(flags.Networks) {
-			return nil, fmt.Errorf("networks not found in state Network configuration")
+		if len(depNetworks) != len(flags.Targets) {
+			return nil, fmt.Errorf("target networks not found in state Network configuration")
 		}
 	}
 
