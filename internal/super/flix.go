@@ -37,19 +37,19 @@ import (
 )
 
 type flixFlags struct {
-	ArgsJSON    string   `default:"" flag:"args-json" info:"arguments in JSON-Cadence format"`
-	BlockID     string   `default:"" flag:"block-id" info:"block ID to execute the script at"`
-	BlockHeight uint64   `default:"" flag:"block-height" info:"block height to execute the script at"`
-	Signer      string   `default:"" flag:"signer" info:"Account name from configuration used to sign the transaction as proposer, payer and suthorizer"`
-	Proposer    string   `default:"" flag:"proposer" info:"Account name from configuration used as proposer"`
-	Payer       string   `default:"" flag:"payer" info:"Account name from configuration used as payer"`
-	Authorizers []string `default:"" flag:"authorizer" info:"Name of a single or multiple comma-separated accounts used as authorizers from configuration"`
-	Include     []string `default:"" flag:"include" info:"Fields to include in the output"`
-	Exclude     []string `default:"" flag:"exclude" info:"Fields to exclude from the output (events)"`
-	GasLimit    uint64   `default:"1000" flag:"gas-limit" info:"transaction gas limit"`
-	PreFill     string   `default:"" flag:"pre-fill" info:"template path to pre fill the FLIX"`
-	Lang        string   `default:"js" flag:"lang" info:"language to generate the template for"`
-	Targets     []string `default:"" flag:"targets" info:"Specific targeted networks to generate the FLIX template"`
+	ArgsJSON        string   `default:"" flag:"args-json" info:"arguments in JSON-Cadence format"`
+	BlockID         string   `default:"" flag:"block-id" info:"block ID to execute the script at"`
+	BlockHeight     uint64   `default:"" flag:"block-height" info:"block height to execute the script at"`
+	Signer          string   `default:"" flag:"signer" info:"Account name from configuration used to sign the transaction as proposer, payer and suthorizer"`
+	Proposer        string   `default:"" flag:"proposer" info:"Account name from configuration used as proposer"`
+	Payer           string   `default:"" flag:"payer" info:"Account name from configuration used as payer"`
+	Authorizers     []string `default:"" flag:"authorizer" info:"Name of a single or multiple comma-separated accounts used as authorizers from configuration"`
+	Include         []string `default:"" flag:"include" info:"Fields to include in the output"`
+	Exclude         []string `default:"" flag:"exclude" info:"Fields to exclude from the output (events)"`
+	GasLimit        uint64   `default:"1000" flag:"gas-limit" info:"transaction gas limit"`
+	PreFill         string   `default:"" flag:"pre-fill" info:"template path to pre fill the FLIX"`
+	Lang            string   `default:"js" flag:"lang" info:"language to generate the template for"`
+	ExcludeNetworks []string `default:"" flag:"exclude-networks" info:"Specify which networks to exclude when generating a FLIX template"`
 }
 
 type flixResult struct {
@@ -235,18 +235,25 @@ func generateFlixCmd(
 	// get user's configured networks
 	depNetworks := getNetworks(state)
 
-	if len(flags.Targets) > 0 {
+	if len(flags.ExcludeNetworks) > 0 {
 		nets := make([]config.Network, 0)
+
 		for _, n := range depNetworks {
-			for _, net := range flags.Targets {
+			excluded := false
+			for _, net := range flags.ExcludeNetworks {
 				if n.Name == net {
-					nets = append(nets, n)
+					excluded = true
+					break
 				}
 			}
+			if !excluded {
+				nets = append(nets, n)
+			}
 		}
+
 		depNetworks = nets
-		if len(depNetworks) != len(flags.Targets) {
-			return nil, fmt.Errorf("target networks not found in state Network configuration")
+		if len(depNetworks) == 0 {
+			return nil, fmt.Errorf("all networks have been excluded")
 		}
 	}
 
