@@ -29,7 +29,6 @@ import (
 
 	"github.com/google/go-github/github"
 	"github.com/onflow/flowkit/v2"
-	"github.com/onflow/flowkit/v2/config"
 	"github.com/onflow/flowkit/v2/output"
 	"github.com/spf13/cobra"
 
@@ -68,7 +67,7 @@ var IsValidatedCommand = &command.Command{
 const (
 	repoOwner = "onflow"
 	repoName  = "cadence"
-	repoPath  = "migrations_data"
+	repoPath  = "migrations_data/raw"
 	repoRef   = "master"
 )
 
@@ -94,7 +93,12 @@ func isValidated(repoService GitHubRepositoriesService) func(
 		defer logger.StopProgress()
 
 		contractName := args[0]
-		status, timestamp, err := getContractValidationStatus(contractName, flow.Network(), state, repoService)
+		addr, err := getAddressByContractName(state, contractName, flow.Network())
+		if err != nil {
+			return nil, err
+		}
+
+		status, timestamp, err := getContractValidationStatus(addr.HexWithPrefix(), contractName, state, repoService, logger)
 		if err != nil {
 			return nil, err
 		}
@@ -106,32 +110,29 @@ func isValidated(repoService GitHubRepositoriesService) func(
 	}
 }
 
-func getContractValidationStatus(contractName string, network config.Network, state *flowkit.State, repoService GitHubRepositoriesService) (*contractUpdateStatus, *time.Time, error) {
-	addr, err := getAddressByContractName(state, contractName, network)
-	if err != nil {
-		return nil, nil, err
-	}
-	addrHex := addr.HexWithPrefix()
-
-	report, timestamp, err := getLatestMigrationReport(repoService)
+func getContractValidationStatus(address string, contractName string, state *flowkit.State, repoService GitHubRepositoriesService, logger output.Logger) (*contractUpdateStatus, *time.Time, error) {
+	// Get last migration report
+	report, timestamp, err := getLatestMigrationReport(repoService, logger)
 	if err != nil {
 		return nil, nil, err
 	}
 
+	// Get all the contract statuses from the report
 	statuses, err := fetchAndParseReport(repoService, report.GetPath())
 	if err != nil {
 		return nil, nil, err
 	}
 
-	// get the validation result
+	// Gett the validation result related to the contract
 	var status *contractUpdateStatus
 	for _, s := range statuses {
-		if s.ContractName == contractName && s.AccountAddress == addrHex {
+		if s.ContractName == contractName && s.AccountAddress == address {
 			status = &s
 			break
 		}
 	}
 
+	// Throw error if contract was not part of the last migration
 	if status == nil {
 		return nil, nil, fmt.Errorf("the contract %s has not been part of any emulated migrations yet, please ensure it is staged & wait for the next emulated migration (last migration: %s)", contractName, timestamp.Format(time.RFC3339))
 	}
@@ -139,8 +140,8 @@ func getContractValidationStatus(contractName string, network config.Network, st
 	return status, timestamp, nil
 }
 
-func getLatestMigrationReport(repoService GitHubRepositoriesService) (*github.RepositoryContent, *time.Time, error) {
-	// get tree folder containing the reports
+func getLatestMigrationReport(repoService GitHubRepositoriesService, logger output.Logger) (*github.RepositoryContent, *time.Time, error) {
+	// Get the content of the migration reports folder
 	_, folderContent, _, err := repoService.GetContents(
 		context.Background(),
 		repoOwner,
@@ -164,13 +165,14 @@ func getLatestMigrationReport(repoService GitHubRepositoriesService) (*github.Re
 				continue
 			}
 
-			// extract the time from the filename
+			// Extract the time from the filename
 			t, err := extractTimeFromFilename(contentPath)
 			if err != nil {
-				return nil, nil, err
+				logger.Error(fmt.Sprintf("Failed to extract report timestamp from filename, file appears to be in an unexpected format: %s", contentPath))
+				continue
 			}
 
-			// check if this is the latest report
+			// Check if this is the latest report
 			if latestReportTime == nil || t.After(*latestReportTime) {
 				latestReport = content
 				latestReportTime = t
@@ -179,7 +181,7 @@ func getLatestMigrationReport(repoService GitHubRepositoriesService) (*github.Re
 	}
 
 	if latestReport == nil {
-		return nil, nil, fmt.Errorf("no reports found")
+		return nil, nil, fmt.Errorf("no reports found on the repository, have any migrations been run yet?")
 	}
 
 	return latestReport, latestReportTime, nil
@@ -206,6 +208,7 @@ func fetchAndParseReport(repoService GitHubRepositoriesService, reportPath strin
 	if err != nil {
 		return nil, err
 	}
+
 	err = json.Unmarshal([]byte(reportStr), &statuses)
 	if err != nil {
 		return nil, err
@@ -215,10 +218,11 @@ func fetchAndParseReport(repoService GitHubRepositoriesService, reportPath strin
 }
 
 func extractTimeFromFilename(filename string) (*time.Time, error) {
-	var splitFileName []string
+	// Extracts the timestamp from the filename in the format: migrations_data/raw/XXXXXX-<unix-timestamp>.json
 	fileName := path.Base(filename)
 	fileNameWithoutExt := strings.TrimSuffix(fileName, path.Ext(fileName))
-	splitFileName = strings.Split(fileNameWithoutExt, "-")
+	splitFileName := strings.Split(fileNameWithoutExt, "-")
+
 	timestampStr := splitFileName[len(splitFileName)-1]
 	unixTimestamp, err := strconv.ParseInt(timestampStr, 10, 64)
 	if err != nil {
@@ -233,7 +237,7 @@ func (v validationResult) String() string {
 	status := v.Status
 
 	builder := strings.Builder{}
-	builder.WriteString("Last emulated migration occured at: ")
+	builder.WriteString("Last emulated migration occurred at: ")
 	builder.WriteString(v.Timestamp.Format(time.RFC3339))
 	builder.WriteString("\n\n")
 

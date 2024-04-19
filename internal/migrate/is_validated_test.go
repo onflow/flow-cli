@@ -24,13 +24,14 @@ import (
 	"time"
 
 	"github.com/google/go-github/github"
-	"github.com/onflow/flow-cli/internal/command"
-	"github.com/onflow/flow-cli/internal/migrate/mocks"
-	"github.com/onflow/flow-cli/internal/util"
 	"github.com/onflow/flowkit/v2/config"
 	"github.com/onflow/flowkit/v2/tests"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+
+	"github.com/onflow/flow-cli/internal/command"
+	"github.com/onflow/flow-cli/internal/migrate/mocks"
+	"github.com/onflow/flow-cli/internal/util"
 )
 
 func Test_IsValidated(t *testing.T) {
@@ -55,12 +56,12 @@ func Test_IsValidated(t *testing.T) {
 		mockFileContent := &github.RepositoryContent{
 			Content: &content,
 		}
-		mockClient.On("GetContents", mock.Anything, "onflow", "cadence", "migrations_data/2.json", mock.Anything).Return(mockFileContent, nil, nil, nil).Once()
+		mockClient.On("GetContents", mock.Anything, "onflow", "cadence", "migrations_data/raw/123-abc-2.json", mock.Anything).Return(mockFileContent, nil, nil, nil).Once()
 
 		// mock github folder response
 		fileType := "file"
-		olderPath := "migrations_data/1.json"
-		latestPath := "migrations_data/2.json"
+		olderPath := "migrations_data/raw/123-abc-1.json"
+		latestPath := "migrations_data/raw/123-abc-2.json"
 		mockFolderContent := []*github.RepositoryContent{
 			{
 				Path: &olderPath,
@@ -71,7 +72,7 @@ func Test_IsValidated(t *testing.T) {
 				Type: &fileType,
 			},
 		}
-		mockClient.On("GetContents", mock.Anything, "onflow", "cadence", "migrations_data", mock.Anything).Return(nil, mockFolderContent, nil, nil).Once()
+		mockClient.On("GetContents", mock.Anything, "onflow", "cadence", "migrations_data/raw", mock.Anything).Return(nil, mockFolderContent, nil, nil).Once()
 
 		// mock flowkit contract
 		state.Contracts().AddOrUpdate(
