@@ -26,6 +26,10 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/psiemens/sconfig"
+
+	"github.com/spf13/cobra"
+
 	"github.com/onflow/flow-go/fvm/systemcontracts"
 	flowGo "github.com/onflow/flow-go/model/flow"
 
@@ -72,6 +76,17 @@ func (cl *categorizedLogs) LogAll(logger output.Logger) {
 type dependencyManagerFlagsCollection struct {
 	skipDeployments bool `default:"false" flag:"skip-deployments" info:"Skip adding the dependency to deployments"`
 	skipAlias       bool `default:"false" flag:"skip-alias" info:"Skip prompting for an alias"`
+}
+
+func (f *dependencyManagerFlagsCollection) AddToCommand(cmd *cobra.Command) {
+	err := sconfig.New(f).
+		FromEnvironment(util.EnvPrefix).
+		BindFlags(cmd.Flags()).
+		Parse()
+
+	if err != nil {
+		panic(err)
+	}
 }
 
 type DependencyInstaller struct {
