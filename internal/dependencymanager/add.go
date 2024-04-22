@@ -30,11 +30,13 @@ import (
 )
 
 type addFlagsCollection struct {
-	DependencyManagerFlagsCollection
-	name string `default:"" flag:"name" info:"Name of the dependency"`
+	*Flags
+	name string
 }
 
-var addFlags = addFlagsCollection{}
+var addFlags = addFlagsCollection{
+	Flags: &Flags{},
+}
 
 var addCommand = &command.Command{
 	Cmd: &cobra.Command{
@@ -43,8 +45,14 @@ var addCommand = &command.Command{
 		Example: "flow dependencies add testnet://0afe396ebc8eee65.FlowToken",
 		Args:    cobra.ExactArgs(1),
 	},
-	Flags: &addFlags,
-	RunS:  add,
+	RunS: add,
+}
+
+func init() {
+	// Add common flags.
+	addFlags.Flags.AddToCommand(addCommand.Cmd)
+	// Add command-specific flags.
+	addCommand.Cmd.Flags().StringVar(&addFlags.name, "name", "", "Name of the dependency")
 }
 
 func add(
@@ -58,7 +66,7 @@ func add(
 
 	dep := args[0]
 
-	installer, err := NewDependencyInstaller(logger, state, true, "", addFlags.DependencyManagerFlagsCollection)
+	installer, err := NewDependencyInstaller(logger, state, true, "", *addFlags.Flags)
 	if err != nil {
 		logger.Error(fmt.Sprintf("Error: %v", err))
 		return nil, err
