@@ -23,9 +23,10 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
-	"github.com/psiemens/sconfig"
 	"os"
 	"path/filepath"
+
+	"github.com/psiemens/sconfig"
 
 	"github.com/spf13/cobra"
 
