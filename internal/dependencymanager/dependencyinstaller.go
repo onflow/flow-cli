@@ -23,6 +23,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+	"github.com/psiemens/sconfig"
 	"os"
 	"path/filepath"
 
@@ -77,8 +78,14 @@ type dependencyManagerFlagsCollection struct {
 }
 
 func (f *dependencyManagerFlagsCollection) AddToCommand(cmd *cobra.Command) {
-	cmd.Flags().BoolVar(&f.skipDeployments, "skip-deployments", false, "Skip adding the dependency to deployments")
-	cmd.Flags().BoolVar(&f.skipAlias, "skip-alias", false, "Skip prompting for an alias")
+	err := sconfig.New(f).
+		FromEnvironment(util.EnvPrefix).
+		BindFlags(cmd.Flags()).
+		Parse()
+
+	if err != nil {
+		panic(err)
+	}
 }
 
 type DependencyInstaller struct {
