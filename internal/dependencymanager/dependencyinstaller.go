@@ -74,6 +74,17 @@ type DependencyManagerFlagsCollection struct {
 	skipAlias       bool `default:"false" flag:"skip-alias" info:"Skip prompting for an alias"`
 }
 
+func (f *dependencyManagerFlagsCollection) AddToCommand(cmd *cobra.Command) {
+	err := sconfig.New(f).
+		FromEnvironment(util.EnvPrefix).
+		BindFlags(cmd.Flags()).
+		Parse()
+
+	if err != nil {
+		panic(err)
+	}
+}
+
 type DependencyInstaller struct {
 	Gateways        map[string]gateway.Gateway
 	Logger          output.Logger

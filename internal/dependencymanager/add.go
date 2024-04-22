@@ -34,7 +34,9 @@ type addFlagsCollection struct {
 	name string `default:"" flag:"name" info:"Name of the dependency"`
 }
 
-var addFlags = addFlagsCollection{}
+var addFlags = addFlagsCollection{
+	dependencyManagerFlagsCollection: &dependencyManagerFlagsCollection{},
+}
 
 var addCommand = &command.Command{
 	Cmd: &cobra.Command{
@@ -43,8 +45,14 @@ var addCommand = &command.Command{
 		Example: "flow dependencies add testnet://0afe396ebc8eee65.FlowToken",
 		Args:    cobra.ExactArgs(1),
 	},
-	Flags: &addFlags,
-	RunS:  add,
+	RunS: add,
+}
+
+func init() {
+	// Add common flags.
+	addFlags.dependencyManagerFlagsCollection.AddToCommand(addCommand.Cmd)
+	// Add command-specific flags.
+	addCommand.Cmd.Flags().StringVar(&addFlags.name, "name", "", "Name of the dependency")
 }
 
 func add(
