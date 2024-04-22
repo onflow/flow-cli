@@ -184,7 +184,7 @@ func create(
 		}
 
 		// Add the selected core contracts as dependencies
-		installer, err := dependencymanager.NewDependencyInstaller(logger, state, false, targetDir, dependencymanager.DependencyManagerFlagsCollection{})
+		installer, err := dependencymanager.NewDependencyInstaller(logger, state, false, targetDir, dependencymanager.Flags{})
 		if err != nil {
 			logger.Error(fmt.Sprintf("Error: %v", err))
 			return nil, err

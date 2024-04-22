@@ -26,7 +26,12 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/psiemens/sconfig"
+
 	"github.com/onflow/flow-cli/internal/prompt"
+	"github.com/onflow/flow-cli/internal/util"
+
+	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-go/fvm/systemcontracts"
 	flowGo "github.com/onflow/flow-go/model/flow"
@@ -69,9 +74,20 @@ func (cl *categorizedLogs) LogAll(logger output.Logger) {
 	}
 }
 
-type DependencyManagerFlagsCollection struct {
+type Flags struct {
 	skipDeployments bool `default:"false" flag:"skip-deployments" info:"Skip adding the dependency to deployments"`
 	skipAlias       bool `default:"false" flag:"skip-alias" info:"Skip prompting for an alias"`
+}
+
+func (f *Flags) AddToCommand(cmd *cobra.Command) {
+	err := sconfig.New(f).
+		FromEnvironment(util.EnvPrefix).
+		BindFlags(cmd.Flags()).
+		Parse()
+
+	if err != nil {
+		panic(err)
+	}
 }
 
 type DependencyInstaller struct {
@@ -86,7 +102,7 @@ type DependencyInstaller struct {
 }
 
 // NewDependencyInstaller creates a new instance of DependencyInstaller
-func NewDependencyInstaller(logger output.Logger, state *flowkit.State, saveState bool, targetDir string, flags DependencyManagerFlagsCollection) (*DependencyInstaller, error) {
+func NewDependencyInstaller(logger output.Logger, state *flowkit.State, saveState bool, targetDir string, flags Flags) (*DependencyInstaller, error) {
 	emulatorGateway, err := gateway.NewGrpcGateway(config.EmulatorNetwork)
 	if err != nil {
 		return nil, fmt.Errorf("error creating emulator gateway: %v", err)
