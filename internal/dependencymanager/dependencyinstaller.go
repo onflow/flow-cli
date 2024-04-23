@@ -71,6 +71,10 @@ func (cl *categorizedLogs) LogAll(logger output.Logger) {
 		}
 		logger.Info("") // Add a line break after the section
 	}
+
+	if len(cl.fileSystemActions) == 0 && len(cl.stateUpdates) == 0 {
+		logger.Info("👍 Zero changes were made. Everything looks good.")
+	}
 }
 
 type dependencyManagerFlagsCollection struct {
