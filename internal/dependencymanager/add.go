@@ -20,6 +20,7 @@ package dependencymanager
 
 import (
 	"fmt"
+	"github.com/onflow/flow-cli/internal/util"
 
 	"github.com/spf13/cobra"
 
@@ -62,7 +63,7 @@ func add(
 	flow flowkit.Services,
 	state *flowkit.State,
 ) (result command.Result, err error) {
-	logger.Info(fmt.Sprintf("🔄 Installing dependencies for %s...", args[0]))
+	logger.Info(fmt.Sprintf("%s Installing dependencies for %s...", util.PrintEmoji("🔄"), args[0]))
 
 	dep := args[0]
 
