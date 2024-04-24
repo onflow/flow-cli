@@ -137,36 +137,36 @@ func (v *validator) validate(contractName string) (validationResult, error) {
 
 	return validationResult{
 		Timestamp: *timestamp,
-		Status:    *status,
+		Status:    status,
 		Network:   v.network.Name,
 	}, nil
 }
 
-func (v *validator) getContractValidationStatus(network config.Network, address string, contractName string) (*contractUpdateStatus, *time.Time, error) {
+func (v *validator) getContractValidationStatus(network config.Network, address string, contractName string) (contractUpdateStatus, *time.Time, error) {
 	// Get last migration report
 	report, timestamp, err := v.getLatestMigrationReport(network)
 	if err != nil {
-		return nil, nil, err
+		return contractUpdateStatus{}, nil, err
 	}
 
 	// Get all the contract statuses from the report
 	statuses, err := v.fetchAndParseReport(report.GetPath())
 	if err != nil {
-		return nil, nil, err
+		return contractUpdateStatus{}, nil, err
 	}
 
 	// Get the validation result related to the contract
-	var status *contractUpdateStatus
+	var status contractUpdateStatus
 	for _, s := range statuses {
 		if s.ContractName == contractName && s.AccountAddress == address {
-			status = &s
+			status = s
 			break
 		}
 	}
 
 	// Throw error if contract was not part of the last migration
-	if status == nil {
-		return nil, nil, fmt.Errorf("the contract %s has not been part of any emulated migrations yet, please ensure it is staged & wait for the next emulated migration (last migration report was at %s)", contractName, timestamp.Format(time.RFC3339))
+	if status == (contractUpdateStatus{}) {
+		return contractUpdateStatus{}, nil, fmt.Errorf("the contract %s has not been part of any emulated migrations yet, please ensure it is staged & wait for the next emulated migration (last migration report was at %s)", contractName, timestamp.Format(time.RFC3339))
 	}
 
 	return status, timestamp, nil
