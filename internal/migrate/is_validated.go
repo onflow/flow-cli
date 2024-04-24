@@ -25,6 +25,7 @@ import (
 	"io"
 	"path"
 	"regexp"
+	"slices"
 	"strings"
 	"time"
 
@@ -156,20 +157,14 @@ func (v *validator) getContractValidationStatus(network config.Network, address 
 	}
 
 	// Get the validation result related to the contract
-	var status contractUpdateStatus
-	for _, s := range statuses {
-		if s.ContractName == contractName && s.AccountAddress == address {
-			status = s
-			break
-		}
-	}
-
-	// Throw error if contract was not part of the last migration
-	if status == (contractUpdateStatus{}) {
+	idx := slices.IndexFunc(statuses, func(s contractUpdateStatus) bool {
+		return s.ContractName == contractName && s.AccountAddress == address
+	})
+	if idx == -1 {
 		return contractUpdateStatus{}, nil, fmt.Errorf("the contract %s has not been part of any emulated migrations yet, please ensure it is staged & wait for the next emulated migration (last migration report was at %s)", contractName, timestamp.Format(time.RFC3339))
 	}
 
-	return status, timestamp, nil
+	return statuses[idx], timestamp, nil
 }
 
 func (v *validator) getLatestMigrationReport(network config.Network) (*github.RepositoryContent, *time.Time, error) {
