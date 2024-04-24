@@ -35,6 +35,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
+	"github.com/onflow/flow-cli/internal/util"
 )
 
 //go:generate mockery --name GitHubRepositoriesService --output ./mocks --case underscore
@@ -183,7 +184,7 @@ func getLatestMigrationReport(network config.Network, repoService GitHubReposito
 			// Extract the time from the filename
 			networkStr, t, err := extractInfoFromFilename(contentPath)
 			if err != nil {
-				logger.Error(fmt.Sprintf("Failed to extract report information from filename, file appears to be in an unexpected format: %s", contentPath))
+				// ignore files with incorrect naming
 				continue
 			}
 
@@ -244,7 +245,6 @@ func extractInfoFromFilename(filename string) (string, *time.Time, error) {
 	fileNameWithoutExt := strings.TrimSuffix(fileName, path.Ext(fileName))
 	splitFileName := strings.Split(fileNameWithoutExt, "-")
 
-	fmt.Println(splitFileName)
 	if len(splitFileName) < 4 {
 		return "", nil, fmt.Errorf("filename is not in the expected format")
 	}
@@ -278,7 +278,12 @@ func (v validationResult) String() string {
 	builder.WriteString(v.Timestamp.Format(time.RFC3339))
 	builder.WriteString("\n\n")
 
-	builder.WriteString("The contract, ")
+	emoji := "❌"
+	if status.Error == "" {
+		emoji = "✅"
+	}
+
+	builder.WriteString(util.MessageWithEmojiPrefix(emoji, "The contract, "))
 	builder.WriteString(status.ContractName)
 	builder.WriteString(", has ")
 
@@ -293,11 +298,10 @@ func (v validationResult) String() string {
 	if status.Error != "" {
 		builder.WriteString(status.Error)
 		builder.WriteString("\n")
-		builder.WriteString(aurora.Red("Please review the error and re-stage the contract to resolve these issues if necessary\n").String())
+		builder.WriteString(aurora.Red(">> Please review the error and re-stage the contract to resolve these issues if necessary\n").String())
 	}
 
-	builder.WriteString("\n")
-	builder.WriteString("For more information, please find the latest full migration report on GitHub: https://github.com/onflow/cadence/tree/master/migrations_data\n")
+	builder.WriteString("\nFor more information, please find the latest full migration report on GitHub: https://github.com/onflow/cadence/tree/master/migrations_data")
 
 	return builder.String()
 }
