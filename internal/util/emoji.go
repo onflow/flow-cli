@@ -14,5 +14,5 @@ func PrintEmoji(emoji string) string {
 }
 
 func MessageWithEmojiPrefix(emoji string, message string) string {
-	return fmt.Sprintf("%s %s", PrintEmoji(emoji), message)
+	return fmt.Sprintf("%s%s", PrintEmoji(strings.Join(emoji, " ")), message)
 }
