@@ -26,6 +26,10 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/psiemens/sconfig"
+
+	"github.com/spf13/cobra"
+
 	"github.com/onflow/flow-go/fvm/systemcontracts"
 	flowGo "github.com/onflow/flow-go/model/flow"
 
@@ -49,13 +53,13 @@ type categorizedLogs struct {
 }
 
 func (cl *categorizedLogs) LogAll(logger output.Logger) {
-	logger.Info("📝 Dependency Manager Actions Summary")
+	logger.Info(util.MessageWithEmojiPrefix("📝", "Dependency Manager Actions Summary"))
 	logger.Info("") // Add a line break after the section
 
 	if len(cl.fileSystemActions) > 0 {
 		logger.Info("🗃️  File System Actions:")
 		for _, msg := range cl.fileSystemActions {
-			logger.Info(fmt.Sprintf("✅ %s", msg))
+			logger.Info(util.MessageWithEmojiPrefix("✅", msg))
 		}
 		logger.Info("") // Add a line break after the section
 	}
@@ -63,15 +67,30 @@ func (cl *categorizedLogs) LogAll(logger output.Logger) {
 	if len(cl.stateUpdates) > 0 {
 		logger.Info("💾 State Updates:")
 		for _, msg := range cl.stateUpdates {
-			logger.Info(fmt.Sprintf("✅ %s", msg))
+			logger.Info(util.MessageWithEmojiPrefix("✅", msg))
 		}
 		logger.Info("") // Add a line break after the section
+	}
+
+	if len(cl.fileSystemActions) == 0 && len(cl.stateUpdates) == 0 {
+		logger.Info(util.MessageWithEmojiPrefix("👍", "Zero changes were made. Everything looks good."))
 	}
 }
 
 type dependencyManagerFlagsCollection struct {
 	skipDeployments bool `default:"false" flag:"skip-deployments" info:"Skip adding the dependency to deployments"`
 	skipAlias       bool `default:"false" flag:"skip-alias" info:"Skip prompting for an alias"`
+}
+
+func (f *dependencyManagerFlagsCollection) AddToCommand(cmd *cobra.Command) {
+	err := sconfig.New(f).
+		FromEnvironment(util.EnvPrefix).
+		BindFlags(cmd.Flags()).
+		Parse()
+
+	if err != nil {
+		panic(err)
+	}
 }
 
 type DependencyInstaller struct {
@@ -296,7 +315,7 @@ func (di *DependencyInstaller) handleFoundContract(networkName, contractAddr, as
 
 	// If a dependency by this name already exists and its remote source network or address does not match, then give option to stop or continue
 	if dependency != nil && (dependency.Source.NetworkName != networkName || dependency.Source.Address.String() != contractAddr) {
-		di.Logger.Info(fmt.Sprintf("🚫 A dependency named %s already exists with a different remote source. Please fix the conflict and retry.", assignedName))
+		di.Logger.Info(fmt.Sprintf("%s A dependency named %s already exists with a different remote source. Please fix the conflict and retry.", util.PrintEmoji("🚫"), assignedName))
 		os.Exit(0)
 		return nil
 	}
