@@ -53,6 +53,7 @@ type contractUpdateStatus struct {
 type validationResult struct {
 	Timestamp time.Time
 	Status    contractUpdateStatus
+	Network   string
 }
 
 var isValidatedflags struct{}
@@ -74,6 +75,8 @@ const (
 	repoPath  = "migrations_data"
 	repoRef   = "master"
 )
+
+const moreInformationMessage = "For more information, please find the latest full migration report on GitHub (https://github.com/onflow/cadence/tree/master/migrations_data).\n\nNew reports are generated after each weekly emulated migration and your contract's status may change, so please actively monitor this status and stay tuned for the latest announcements until the migration deadline."
 
 func isValidated(repoService GitHubRepositoriesService) func(
 	args []string,
@@ -116,12 +119,13 @@ func isValidated(repoService GitHubRepositoriesService) func(
 			logger,
 		)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("%w\n\n%s", err, moreInformationMessage)
 		}
 
 		return validationResult{
 			Timestamp: *timestamp,
 			Status:    *status,
+			Network:   flow.Network().Name,
 		}, nil
 	}
 }
@@ -278,22 +282,34 @@ func (v validationResult) String() string {
 	builder.WriteString(v.Timestamp.Format(time.RFC3339))
 	builder.WriteString("\n\n")
 
-	emoji := "❌"
+	statusBuilder := strings.Builder{}
+	emoji := "❌ "
+	statusColor := aurora.Red
 	if status.Error == "" {
-		emoji = "✅"
+		emoji = "✅ "
+		statusColor = aurora.Green
 	}
 
-	builder.WriteString(util.MessageWithEmojiPrefix(emoji, "The contract, "))
-	builder.WriteString(status.ContractName)
-	builder.WriteString(", has ")
+	statusBuilder.WriteString(util.PrintEmoji(emoji))
+	statusBuilder.WriteString("The contract has ")
 
 	if status.Error == "" {
-		builder.WriteString("PASSED the last emulated migration")
+		statusBuilder.WriteString("PASSED")
 	} else {
-		builder.WriteString("FAILED the last emulated migration")
+		statusBuilder.WriteString("FAILED")
 	}
+	statusBuilder.WriteString(" the last emulated migration")
 
-	builder.WriteString("\n\n")
+	statusBuilder.WriteString("\n\n - Account: ")
+	statusBuilder.WriteString(status.AccountAddress)
+	statusBuilder.WriteString("\n - Contract: ")
+	statusBuilder.WriteString(status.ContractName)
+	statusBuilder.WriteString("\n - Network: ")
+	statusBuilder.WriteString(v.Network)
+	statusBuilder.WriteString("\n\n")
+
+	// Write colored status
+	builder.WriteString(statusColor(statusBuilder.String()).String())
 
 	if status.Error != "" {
 		builder.WriteString(status.Error)
@@ -301,7 +317,8 @@ func (v validationResult) String() string {
 		builder.WriteString(aurora.Red(">> Please review the error and re-stage the contract to resolve these issues if necessary\n").String())
 	}
 
-	builder.WriteString("\nFor more information, please find the latest full migration report on GitHub: https://github.com/onflow/cadence/tree/master/migrations_data")
+	builder.WriteString("\n")
+	builder.WriteString(moreInformationMessage)
 
 	return builder.String()
 }
@@ -311,8 +328,13 @@ func (v validationResult) JSON() interface{} {
 }
 
 func (v validationResult) Oneliner() string {
+	emoji := "❌"
 	if v.Status.Error == "" {
-		return "PASSED"
+		emoji = "✅"
 	}
-	return "FAILED"
+
+	if v.Status.Error == "" {
+		return util.MessageWithEmojiPrefix(emoji, "PASSED")
+	}
+	return util.MessageWithEmojiPrefix(emoji, "FAILED")
 }
