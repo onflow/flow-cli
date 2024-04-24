@@ -24,6 +24,7 @@ import (
 	"fmt"
 	"io"
 	"path"
+	"regexp"
 	"strings"
 	"time"
 
@@ -42,6 +43,13 @@ import (
 type GitHubRepositoriesService interface {
 	GetContents(ctx context.Context, owner string, repo string, path string, opt *github.RepositoryContentGetOptions) (fileContent *github.RepositoryContent, directoryContent []*github.RepositoryContent, resp *github.Response, err error)
 	DownloadContents(ctx context.Context, owner string, repo string, filepath string, opt *github.RepositoryContentGetOptions) (io.ReadCloser, error)
+}
+
+type validator struct {
+	repoService GitHubRepositoriesService
+	state       *flowkit.State
+	logger      output.Logger
+	network     config.Network
 }
 
 type contractUpdateStatus struct {
@@ -66,7 +74,7 @@ var IsValidatedCommand = &command.Command{
 		Args:    cobra.MinimumNArgs(1),
 	},
 	Flags: &isValidatedflags,
-	RunS:  isValidated(nil),
+	RunS:  isValidated,
 }
 
 const (
@@ -78,72 +86,76 @@ const (
 
 const moreInformationMessage = "For more information, please find the latest full migration report on GitHub (https://github.com/onflow/cadence/tree/master/migrations_data).\n\nNew reports are generated after each weekly emulated migration and your contract's status may change, so please actively monitor this status and stay tuned for the latest announcements until the migration deadline."
 
-func isValidated(repoService GitHubRepositoriesService) func(
+func isValidated(
 	args []string,
 	_ command.GlobalFlags,
 	logger output.Logger,
 	flow flowkit.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
-	return func(
-		args []string,
-		globalFlags command.GlobalFlags,
-		logger output.Logger,
-		flow flowkit.Services,
-		state *flowkit.State,
-	) (command.Result, error) {
-		err := checkNetwork(flow.Network())
-		if err != nil {
-			return nil, err
-		}
+	repoService := github.NewClient(nil).Repositories
+	v := newValidator(repoService, flow.Network(), state, logger)
 
-		if repoService == nil {
-			repoService = github.NewClient(nil).Repositories
-		}
+	contractName := args[0]
+	return v.validate(contractName)
+}
 
-		logger.StartProgress("Checking if contract has been validated")
-		defer logger.StopProgress()
-
-		contractName := args[0]
-		addr, err := getAddressByContractName(state, contractName, flow.Network())
-		if err != nil {
-			return nil, err
-		}
-
-		status, timestamp, err := getContractValidationStatus(
-			flow.Network(),
-			addr.HexWithPrefix(),
-			contractName,
-			state,
-			repoService,
-			logger,
-		)
-		if err != nil {
-			return nil, fmt.Errorf("%w\n\n%s", err, moreInformationMessage)
-		}
-
-		return validationResult{
-			Timestamp: *timestamp,
-			Status:    *status,
-			Network:   flow.Network().Name,
-		}, nil
+func newValidator(repoService GitHubRepositoriesService, network config.Network, state *flowkit.State, logger output.Logger) *validator {
+	return &validator{
+		repoService: repoService,
+		state:       state,
+		logger:      logger,
+		network:     network,
 	}
 }
 
-func getContractValidationStatus(network config.Network, address string, contractName string, state *flowkit.State, repoService GitHubRepositoriesService, logger output.Logger) (*contractUpdateStatus, *time.Time, error) {
+func (v *validator) validate(contractName string) (validationResult, error) {
+	err := checkNetwork(v.network)
+	if err != nil {
+		return validationResult{}, err
+	}
+
+	v.logger.StartProgress("Checking if contract has been validated")
+	defer v.logger.StopProgress()
+
+	addr, err := getAddressByContractName(v.state, contractName, v.network)
+	if err != nil {
+		return validationResult{}, err
+	}
+
+	status, timestamp, err := v.getContractValidationStatus(
+		v.network,
+		addr.HexWithPrefix(),
+		contractName,
+	)
+	if err != nil {
+		// Append more information message to the error
+		// this way we can ensure that if, for whatever reason, we fail to fetch the report
+		// the user will still understand that they can find the report on GitHub
+		return validationResult{}, fmt.Errorf("%w\n\n%s", err, moreInformationMessage)
+	}
+
+	return validationResult{
+		Timestamp: *timestamp,
+		Status:    *status,
+		Network:   v.network.Name,
+	}, nil
+}
+
+func (v *validator) getContractValidationStatus(network config.Network, address string, contractName string) (*contractUpdateStatus, *time.Time, error) {
 	// Get last migration report
-	report, timestamp, err := getLatestMigrationReport(network, repoService, logger)
+	report, timestamp, err := v.getLatestMigrationReport(network)
 	if err != nil {
 		return nil, nil, err
 	}
 
 	// Get all the contract statuses from the report
-	statuses, err := fetchAndParseReport(repoService, report.GetPath())
+	statuses, err := v.fetchAndParseReport(report.GetPath())
 	if err != nil {
 		return nil, nil, err
 	}
 
-	// Gett the validation result related to the contract
+	// Get the validation result related to the contract
 	var status *contractUpdateStatus
 	for _, s := range statuses {
 		if s.ContractName == contractName && s.AccountAddress == address {
@@ -160,9 +172,9 @@ func getContractValidationStatus(network config.Network, address string, contrac
 	return status, timestamp, nil
 }
 
-func getLatestMigrationReport(network config.Network, repoService GitHubRepositoriesService, logger output.Logger) (*github.RepositoryContent, *time.Time, error) {
+func (v *validator) getLatestMigrationReport(network config.Network) (*github.RepositoryContent, *time.Time, error) {
 	// Get the content of the migration reports folder
-	_, folderContent, _, err := repoService.GetContents(
+	_, folderContent, _, err := v.repoService.GetContents(
 		context.Background(),
 		repoOwner,
 		repoName,
@@ -181,17 +193,16 @@ func getLatestMigrationReport(network config.Network, repoService GitHubReposito
 	for _, content := range folderContent {
 		if content.Type != nil && *content.Type == "file" {
 			contentPath := content.GetPath()
-			if path.Ext(contentPath) != ".json" {
-				continue
-			}
 
-			// Extract the time from the filename
+			// Try to extract the time from the filename
 			networkStr, t, err := extractInfoFromFilename(contentPath)
 			if err != nil {
-				// ignore files with incorrect naming
+				// Ignore files that don't match the expected format
+				// Or have any another error while parsing
 				continue
 			}
 
+			// Ignore reports from other networks
 			if networkStr != strings.ToLower(network.Name) {
 				continue
 			}
@@ -211,9 +222,9 @@ func getLatestMigrationReport(network config.Network, repoService GitHubReposito
 	return latestReport, latestReportTime, nil
 }
 
-func fetchAndParseReport(repoService GitHubRepositoriesService, reportPath string) ([]contractUpdateStatus, error) {
+func (v *validator) fetchAndParseReport(reportPath string) ([]contractUpdateStatus, error) {
 	// Get the content of the latest report
-	rc, err := repoService.DownloadContents(
+	rc, err := v.repoService.DownloadContents(
 		context.Background(),
 		repoOwner,
 		repoName,
@@ -246,30 +257,22 @@ func fetchAndParseReport(repoService GitHubRepositoriesService, reportPath strin
 func extractInfoFromFilename(filename string) (string, *time.Time, error) {
 	// Extracts the timestamp from the filename in the format: migrations_data/raw/XXXXXX-MM-DD-YYYY-<network>-XXXXXX.json
 	fileName := path.Base(filename)
-	fileNameWithoutExt := strings.TrimSuffix(fileName, path.Ext(fileName))
-	splitFileName := strings.Split(fileNameWithoutExt, "-")
 
-	if len(splitFileName) < 4 {
-		return "", nil, fmt.Errorf("filename is not in the expected format")
+	expr := regexp.MustCompile(`^staged-contracts-report.*(\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}Z)-([a-z]+).json$`)
+	regexpMatches := expr.FindStringSubmatch(fileName)
+	if regexpMatches == nil {
+		return "", nil, fmt.Errorf("filename does not match the expected format")
 	}
-
-	// Data type is the first elements
-	if splitFileName[0] != "staged" || splitFileName[1] != "contracts" || splitFileName[2] != "report" {
-		return "", nil, fmt.Errorf("filename is not in the expected format")
-	}
-
-	// Last elements excluding very last one are the timestamp
-	dateTimeSplit := splitFileName[len(splitFileName)-4 : len(splitFileName)-1]
 
 	// Extract the timestamp
-	timestampStr := strings.Join(dateTimeSplit, "-")
-	timestamp, err := time.Parse(time.RFC3339Nano, timestampStr)
+	timestampStr := regexpMatches[1]
+	timestamp, err := time.Parse("2006-01-02T15-04-05Z", timestampStr)
 	if err != nil {
 		return "", nil, fmt.Errorf("failed to parse timestamp from filename")
 	}
 
 	// Extract the network
-	network := strings.ToLower(splitFileName[len(splitFileName)-1])
+	network := regexpMatches[2]
 
 	return network, &timestamp, nil
 }

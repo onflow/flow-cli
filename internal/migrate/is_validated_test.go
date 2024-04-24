@@ -37,7 +37,7 @@ import (
 )
 
 func Test_IsValidated(t *testing.T) {
-	srv, state, _ := util.TestMocks(t)
+	_, state, _ := util.TestMocks(t)
 	testContract := tests.ContractSimple
 
 	// use emulator-account because it already exists in mock, so we don't need to create it
@@ -49,20 +49,17 @@ func Test_IsValidated(t *testing.T) {
 	testIsValidatedWithStatuses := func(statuses []contractUpdateStatus) (command.Result, error) {
 		mockClient := mocks.NewGitHubRepositoriesService(t)
 
-		// mock network
-		srv.Network.Return(config.TestnetNetwork)
-
 		// mock github file download
 		data, _ := json.Marshal(statuses)
-		mockClient.On("DownloadContents", mock.Anything, "onflow", "cadence", "migrations_data/staged-contracts-report-2024-04-17T20:05:50.000Z-testnet.json", mock.MatchedBy(func(opts *github.RepositoryContentGetOptions) bool {
+		mockClient.On("DownloadContents", mock.Anything, "onflow", "cadence", "migrations_data/staged-contracts-report-2024-04-17T20-05-50Z-testnet.json", mock.MatchedBy(func(opts *github.RepositoryContentGetOptions) bool {
 			return opts.Ref == "master"
 		})).Return(io.NopCloser(bytes.NewReader(data)), nil).Once()
 
 		// mock github folder response
 		fileType := "file"
-		olderPath := "migrations_data/staged-contracts-report-2019-04-17T20:05:50.000Z-testnet.json"
-		wrongNetworkPath := "migrations_data/staged-contracts-report-2025-04-17T20:05:50.000Z-mainnet.json"
-		latestPath := "migrations_data/staged-contracts-report-2024-04-17T20:05:50.000Z-testnet.json"
+		olderPath := "migrations_data/staged-contracts-report-2019-04-17T20-05-50Z-testnet.json"
+		wrongNetworkPath := "migrations_data/staged-contracts-report-2025-04-17T20-05-50Z-mainnet.json"
+		latestPath := "migrations_data/staged-contracts-report-2024-04-17T20-05-50Z-testnet.json"
 		mockFolderContent := []*github.RepositoryContent{
 			{
 				Path: &olderPath,
@@ -103,14 +100,10 @@ func Test_IsValidated(t *testing.T) {
 		)
 
 		// call the isValidated function
-		res, err := isValidated(mockClient)(
-			[]string{testContract.Name},
-			command.GlobalFlags{
-				Network: "testnet",
-			},
-			util.NoLogger,
-			srv.Mock,
-			state,
+		validator := newValidator(mockClient, config.TestnetNetwork, state, util.NoLogger)
+
+		res, err := validator.validate(
+			testContract.Name,
 		)
 
 		require.Equal(t, true, mockClient.AssertExpectations(t))
@@ -133,6 +126,7 @@ func Test_IsValidated(t *testing.T) {
 		require.NoError(t, err)
 		require.NotNil(t, res)
 
+		// use a different time format for expected time to better ensure parsing is correct
 		expectedTime, err := time.Parse(time.RFC3339, "2024-04-17T20:05:50Z")
 		require.NoError(t, err)
 		require.Equal(t, res.JSON(), validationResult{
@@ -142,11 +136,12 @@ func Test_IsValidated(t *testing.T) {
 				ContractName:   testContract.Name,
 				Error:          "1234",
 			},
+			Network: "testnet",
 		})
 	})
 
 	t.Run("isValidated errors if contract was not in last migration", func(t *testing.T) {
-		res, err := testIsValidatedWithStatuses([]contractUpdateStatus{
+		_, err := testIsValidatedWithStatuses([]contractUpdateStatus{
 			{
 				AccountAddress: "0x01",
 				ContractName:   "some-other-contract",
@@ -155,6 +150,5 @@ func Test_IsValidated(t *testing.T) {
 		})
 
 		require.ErrorContains(t, err, "has not been part of any emulated migrations yet")
-		require.Nil(t, res)
 	})
 }
