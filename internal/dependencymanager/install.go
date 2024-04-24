@@ -20,6 +20,7 @@ package dependencymanager
 
 import (
 	"fmt"
+	"github.com/onflow/flow-cli/internal/util"
 
 	"github.com/spf13/cobra"
 
@@ -48,7 +49,7 @@ func install(
 	flow flowkit.Services,
 	state *flowkit.State,
 ) (result command.Result, err error) {
-	logger.Info("🔄 Installing dependencies from flow.json...")
+	logger.Info(util.MessageWithEmojiPrefix("🔄", "Installing dependencies from flow.json..."))
 
 	installer, err := NewDependencyInstaller(logger, state, installFlags)
 	if err != nil {
