@@ -24,7 +24,6 @@ import (
 	"fmt"
 	"io"
 	"path"
-	"strconv"
 	"strings"
 	"time"
 
@@ -46,8 +45,8 @@ type GitHubRepositoriesService interface {
 
 type contractUpdateStatus struct {
 	AccountAddress string `json:"account_address"`
-	ContractName   string `json:"account_name"`
-	Error          string `json:"error"`
+	ContractName   string `json:"contract_name"`
+	Error          string `json:"error,omitempty"`
 }
 
 type validationResult struct {
@@ -71,7 +70,7 @@ var IsValidatedCommand = &command.Command{
 const (
 	repoOwner = "onflow"
 	repoName  = "cadence"
-	repoPath  = "migrations_data/raw"
+	repoPath  = "migrations_data"
 	repoRef   = "master"
 )
 
@@ -240,23 +239,35 @@ func fetchAndParseReport(repoService GitHubRepositoriesService, reportPath strin
 }
 
 func extractInfoFromFilename(filename string) (string, *time.Time, error) {
-	// Extracts the timestamp from the filename in the format: migrations_data/raw/XXXXXX-<network>-<unix-timestamp>.json
+	// Extracts the timestamp from the filename in the format: migrations_data/raw/XXXXXX-MM-DD-YYYY-<network>-XXXXXX.json
 	fileName := path.Base(filename)
 	fileNameWithoutExt := strings.TrimSuffix(fileName, path.Ext(fileName))
 	splitFileName := strings.Split(fileNameWithoutExt, "-")
-	if len(splitFileName) < 2 {
+
+	fmt.Println(splitFileName)
+	if len(splitFileName) < 4 {
 		return "", nil, fmt.Errorf("filename is not in the expected format")
 	}
 
-	timestampStr := splitFileName[len(splitFileName)-1]
-	network := strings.ToLower(splitFileName[len(splitFileName)-2])
-	unixTimestamp, err := strconv.ParseInt(timestampStr, 10, 64)
-	if err != nil {
-		return "", nil, err
+	// Data type is the first elements
+	if splitFileName[0] != "staged" || splitFileName[1] != "contracts" || splitFileName[2] != "report" {
+		return "", nil, fmt.Errorf("filename is not in the expected format")
 	}
 
-	t := time.Unix(unixTimestamp, 0)
-	return network, &t, nil
+	// Last elements excluding very last one are the timestamp
+	dateTimeSplit := splitFileName[len(splitFileName)-4 : len(splitFileName)-1]
+
+	// Extract the timestamp
+	timestampStr := strings.Join(dateTimeSplit, "-")
+	timestamp, err := time.Parse(time.RFC3339Nano, timestampStr)
+	if err != nil {
+		return "", nil, fmt.Errorf("failed to parse timestamp from filename")
+	}
+
+	// Extract the network
+	network := strings.ToLower(splitFileName[len(splitFileName)-1])
+
+	return network, &timestamp, nil
 }
 
 func (v validationResult) String() string {
@@ -286,7 +297,7 @@ func (v validationResult) String() string {
 	}
 
 	builder.WriteString("\n")
-	builder.WriteString("For more information, please visit the migration report on GitHub: https://github.com/onflow/cadence/tree/master/migrations_data\n")
+	builder.WriteString("For more information, please find the latest full migration report on GitHub: https://github.com/onflow/cadence/tree/master/migrations_data\n")
 
 	return builder.String()
 }
