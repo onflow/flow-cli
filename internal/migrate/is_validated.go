@@ -230,7 +230,7 @@ func (v *validator) getLatestMigrationReport(network config.Network) (*github.Re
 	}
 
 	if latestReport == nil {
-		return nil, nil, fmt.Errorf("no reports found on the repository, have any migrations been run yet?")
+		return nil, nil, fmt.Errorf("no emulated migration reports found for network `%s` within the remote repository - have any migrations been run yet for this network?", network.Name)
 	}
 
 	return latestReport, latestReportTime, nil
