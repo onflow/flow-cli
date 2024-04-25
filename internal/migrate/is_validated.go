@@ -53,6 +53,7 @@ type validator struct {
 }
 
 type contractUpdateStatus struct {
+	Kind           string `json:"kind,omitempty"`
 	AccountAddress string `json:"account_address"`
 	ContractName   string `json:"contract_name"`
 	Error          string `json:"error,omitempty"`
@@ -85,6 +86,7 @@ const (
 )
 
 const moreInformationMessage = "For more information, please find the latest full migration report on GitHub (https://github.com/onflow/cadence/tree/master/migrations_data).\n\nNew reports are generated after each weekly emulated migration and your contract's status may change, so please actively monitor this status and stay tuned for the latest announcements until the migration deadline."
+const contractUpdateFailureKind = "contract-update-failure"
 
 func isValidated(
 	args []string,
@@ -132,7 +134,7 @@ func (v *validator) validate(contractName string) (validationResult, error) {
 		// Append more information message to the error
 		// this way we can ensure that if, for whatever reason, we fail to fetch the report
 		// the user will still understand that they can find the report on GitHub
-		return validationResult{}, fmt.Errorf("%w\n\n%s", err, moreInformationMessage)
+		return validationResult{}, fmt.Errorf("%w\n\n%s%s", err, moreInformationMessage, "\n")
 	}
 
 	return validationResult{
@@ -166,7 +168,19 @@ func (v *validator) getContractValidationStatus(network config.Network, address 
 
 	// Throw error if contract was not part of the last migration
 	if status == nil {
-		return contractUpdateStatus{}, nil, fmt.Errorf("the contract %s has not been part of any emulated migrations yet, please ensure it is staged & wait for the next emulated migration (last migration report was at %s)", contractName, timestamp.Format(time.RFC3339))
+		builder := strings.Builder{}
+		builder.WriteString("the contract does not appear to have been a part of any emulated migrations yet, please ensure that it has been staged & wait for the next emulated migration (last migration report was at ")
+		builder.WriteString(timestamp.Format(time.RFC3339))
+		builder.WriteString(")\n\n")
+
+		builder.WriteString(" - Account: ")
+		builder.WriteString(address)
+		builder.WriteString("\n - Contract: ")
+		builder.WriteString(contractName)
+		builder.WriteString("\n - Network: ")
+		builder.WriteString(network.Name)
+
+		return contractUpdateStatus{}, nil, fmt.Errorf(builder.String())
 	}
 
 	return *status, timestamp, nil
@@ -277,6 +291,12 @@ func extractInfoFromFilename(filename string) (string, *time.Time, error) {
 	return network, &timestamp, nil
 }
 
+func (s contractUpdateStatus) IsFailure() bool {
+	// Just in case there are failures without an error message in the future
+	// we will also check the kind of the status
+	return s.Error != "" || s.Kind == contractUpdateFailureKind
+}
+
 func (v validationResult) String() string {
 	status := v.Status
 
@@ -286,20 +306,20 @@ func (v validationResult) String() string {
 	builder.WriteString("\n\n")
 
 	statusBuilder := strings.Builder{}
-	emoji := "❌ "
-	statusColor := aurora.Red
-	if status.Error == "" {
-		emoji = "✅ "
-		statusColor = aurora.Green
+	emoji := "✅ "
+	statusColor := aurora.Green
+	if status.IsFailure() {
+		emoji = "❌ "
+		statusColor = aurora.Red
 	}
 
 	statusBuilder.WriteString(util.PrintEmoji(emoji))
 	statusBuilder.WriteString("The contract has ")
 
-	if status.Error == "" {
-		statusBuilder.WriteString("PASSED")
-	} else {
+	if status.IsFailure() {
 		statusBuilder.WriteString("FAILED")
+	} else {
+		statusBuilder.WriteString("PASSED")
 	}
 	statusBuilder.WriteString(" the last emulated migration")
 
@@ -317,12 +337,14 @@ func (v validationResult) String() string {
 	if status.Error != "" {
 		builder.WriteString(status.Error)
 		builder.WriteString("\n")
-		builder.WriteString(aurora.Red(">> Please review the error and re-stage the contract to resolve these issues if necessary\n").String())
 	}
 
-	builder.WriteString("\n")
-	builder.WriteString(moreInformationMessage)
+	if status.IsFailure() {
+		builder.WriteString(aurora.Red(">> Please review the error and re-stage the contract to resolve these issues if necessary").String())
+		builder.WriteString("\n\n")
+	}
 
+	builder.WriteString(moreInformationMessage)
 	return builder.String()
 }
 
@@ -331,13 +353,8 @@ func (v validationResult) JSON() interface{} {
 }
 
 func (v validationResult) Oneliner() string {
-	emoji := "❌"
-	if v.Status.Error == "" {
-		emoji = "✅"
+	if v.Status.IsFailure() {
+		return util.MessageWithEmojiPrefix("❌", "FAILED")
 	}
-
-	if v.Status.Error == "" {
-		return util.MessageWithEmojiPrefix(emoji, "PASSED")
-	}
-	return util.MessageWithEmojiPrefix(emoji, "FAILED")
+	return util.MessageWithEmojiPrefix("✅", "FAIlED")
 }
