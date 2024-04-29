@@ -74,10 +74,10 @@ var testFlags = flagsTests{}
 
 var TestCommand = &command.Command{
 	Cmd: &cobra.Command{
-		Use:     "test <filename>",
+		Use:     "test [filenames]",
 		Short:   "Run Cadence tests",
-		Example: `flow test script.cdc`,
-		Args:    cobra.MinimumNArgs(1),
+		Example: `flow test`,
+		Args:    cobra.ArbitraryArgs,
 		GroupID: "tools",
 	},
 	Flags: &testFlags,
@@ -101,8 +101,22 @@ func run(
 		)
 	}
 
+	var filenames []string
+	if len(args) == 0 {
+		filenames, err := filepath.Glob("**/*_test.cdc")
+		if err != nil {
+			return nil, fmt.Errorf("error loading script files: %w", err)
+		}
+
+		if len(filenames) == 0 {
+			return nil, fmt.Errorf("no test files found matching the pattern *_test.cdc")
+		}
+	} else {
+		filenames = args
+	}
+
 	testFiles := make(map[string][]byte, 0)
-	for _, filename := range args {
+	for _, filename := range filenames {
 		code, err := state.ReadFile(filename)
 		if err != nil {
 			return nil, fmt.Errorf("error loading script file: %w", err)
