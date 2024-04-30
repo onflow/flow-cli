@@ -22,25 +22,20 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/rs/zerolog"
-	"github.com/spf13/cobra"
-
 	"github.com/onflow/cadence"
 	"github.com/onflow/cadence/runtime/common"
-
 	"github.com/onflow/flow-emulator/storage/migration"
 	emulatorMigrate "github.com/onflow/flow-emulator/storage/migration"
 	"github.com/onflow/flow-emulator/storage/sqlite"
-
+	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go/cmd/util/ledger/migrations"
 	"github.com/onflow/flow-go/cmd/util/ledger/reporters"
-
 	"github.com/onflow/flowkit/v2"
 	"github.com/onflow/flowkit/v2/config"
 	"github.com/onflow/flowkit/v2/output"
 	"github.com/onflow/flowkit/v2/project"
-
-	"github.com/onflow/flow-go-sdk"
+	"github.com/rs/zerolog"
+	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
 )
@@ -99,6 +94,7 @@ func migrateState(
 
 	err = emulatorMigrate.MigrateCadence1(
 		store,
+		stateFlags.SaveReport,
 		migrations.EVMContractChangeNone,
 		migrations.BurnerContractChangeDeploy,
 		contracts,
