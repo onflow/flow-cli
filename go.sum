@@ -2167,8 +2167,6 @@ github.com/onflow/flow-nft/lib/go/templates v0.0.0-20240429184308-40c3de711140/g
 github.com/onflow/flow/protobuf/go/flow v0.3.2-0.20231121210617-52ee94b830c2/go.mod h1:NA2pX2nw8zuaxfKphhKsk00kWLwfd+tv8mS23YXO4Sk=
 github.com/onflow/flow/protobuf/go/flow v0.4.1-0.20240412170550-911321113030 h1:I+aosSiJny88O4p3nPbCiUcp/UqN6AepvO6uj82bjH0=
 github.com/onflow/flow/protobuf/go/flow v0.4.1-0.20240412170550-911321113030/go.mod h1:NA2pX2nw8zuaxfKphhKsk00kWLwfd+tv8mS23YXO4Sk=
-github.com/onflow/flowkit/v2 v2.0.0-stable-cadence-alpha.14 h1:QdkfqwIev54NgxSOimkhEReao6f5iRXMWgzwXYWQHcE=
-github.com/onflow/flowkit/v2 v2.0.0-stable-cadence-alpha.14/go.mod h1:ddPf0Zjo4y7uFCFGJfFmosBBI6ssvz5xzZFiRPfkA8I=
 github.com/onflow/flowkit/v2 v2.0.0-stable-cadence-alpha.16 h1:9R14g2xBrSOp0CVv/lOqWbu2/yzjW+8kaxNrLlTXYwE=
 github.com/onflow/flowkit/v2 v2.0.0-stable-cadence-alpha.16/go.mod h1:imdFpb5iHenT2kHL4MNmiUzeYtECX6AGNteScqYtZpY=
 github.com/onflow/go-ethereum v1.13.4 h1:iNO86fm8RbBbhZ87ZulblInqCdHnAQVY8okBrNsTevc=
