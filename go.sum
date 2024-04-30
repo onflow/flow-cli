@@ -2169,6 +2169,8 @@ github.com/onflow/flow/protobuf/go/flow v0.4.1-0.20240412170550-911321113030 h1:
 github.com/onflow/flow/protobuf/go/flow v0.4.1-0.20240412170550-911321113030/go.mod h1:NA2pX2nw8zuaxfKphhKsk00kWLwfd+tv8mS23YXO4Sk=
 github.com/onflow/flowkit/v2 v2.0.0-stable-cadence-alpha.14 h1:QdkfqwIev54NgxSOimkhEReao6f5iRXMWgzwXYWQHcE=
 github.com/onflow/flowkit/v2 v2.0.0-stable-cadence-alpha.14/go.mod h1:ddPf0Zjo4y7uFCFGJfFmosBBI6ssvz5xzZFiRPfkA8I=
+github.com/onflow/flowkit/v2 v2.0.0-stable-cadence-alpha.16 h1:9R14g2xBrSOp0CVv/lOqWbu2/yzjW+8kaxNrLlTXYwE=
+github.com/onflow/flowkit/v2 v2.0.0-stable-cadence-alpha.16/go.mod h1:imdFpb5iHenT2kHL4MNmiUzeYtECX6AGNteScqYtZpY=
 github.com/onflow/go-ethereum v1.13.4 h1:iNO86fm8RbBbhZ87ZulblInqCdHnAQVY8okBrNsTevc=
 github.com/onflow/go-ethereum v1.13.4/go.mod h1:cE/gEUkAffhwbVmMJYz+t1dAfVNHNwZCgc3BWtZxBGY=
 github.com/onflow/sdks v0.5.1-0.20230912225508-b35402f12bba h1:rIehuhO6bj4FkwE4VzwEjX7MoAlOhUJENBJLqDqVxAo=
