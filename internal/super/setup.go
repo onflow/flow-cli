@@ -135,7 +135,7 @@ func startInteractiveSetup(
 		}
 	}()
 
-	fmt.Printf("Creating project in %s\n", tempDir)
+	fmt.Printf("Creating project in %s\n", targetDir)
 
 	params := config.InitConfigParameters{
 		ServiceKeySigAlgo:  "ECDSA_P256",
