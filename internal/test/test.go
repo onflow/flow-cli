@@ -110,13 +110,10 @@ func run(
 
 	var filenames []string
 	if len(args) == 0 {
-		filenames, err := filepath.Glob(defaultGlobPattern)
+		var err error
+		filenames, err = filepath.Glob(defaultGlobPattern)
 		if err != nil {
 			return nil, fmt.Errorf("error loading script files: %w", err)
-		}
-
-		if len(filenames) == 0 {
-			return nil, fmt.Errorf("no test files found matching the pattern *_test.cdc")
 		}
 	} else {
 		filenames = args
