@@ -77,24 +77,14 @@ func create(
 	var err error
 
 	if setupFlags.Scaffold || setupFlags.ScaffoldID != 0 {
-		targetDir, err = getTargetDirectory(args[0])
+		// Error if no project name is given
+		if len(args) < 1 || args[0] == "" {
+			return nil, fmt.Errorf("no project name provided")
+		}
+
+		targetDir, err = handleScaffold(args[0], logger)
 		if err != nil {
 			return nil, err
-		}
-
-		selectedScaffold, err := selectScaffold(logger)
-		if err != nil {
-			return nil, fmt.Errorf("error selecting scaffold %w", err)
-		}
-
-		logger.StartProgress(fmt.Sprintf("Creating your project %s", targetDir))
-		defer logger.StopProgress()
-
-		if selectedScaffold != nil {
-			err = cloneScaffold(targetDir, *selectedScaffold)
-			if err != nil {
-				return nil, fmt.Errorf("failed creating scaffold %w", err)
-			}
 		}
 	} else {
 		// Ask for project name if not given
