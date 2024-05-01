@@ -61,6 +61,9 @@ const helperScriptSubstr = "_helper"
 // scripts and transactions are excluded from coverage report.
 const contractsCoverCode = "contracts"
 
+// The default glob pattern to find test files.
+const defaultGlobPattern = "**/*_test.cdc"
+
 type flagsTests struct {
 	Cover        bool   `default:"false" flag:"cover" info:"Use the cover flag to calculate coverage report"`
 	CoverProfile string `default:"coverage.json" flag:"coverprofile" info:"Filename to write the calculated coverage report. Supported extensions are .json and .lcov"`
@@ -74,9 +77,13 @@ var testFlags = flagsTests{}
 
 var TestCommand = &command.Command{
 	Cmd: &cobra.Command{
-		Use:     "test [filenames]",
-		Short:   "Run Cadence tests",
-		Example: `flow test`,
+		Use:   "test [files...]",
+		Short: "Run Cadence tests",
+		Example: fmt.Sprintf(`# Run tests in files matching the default pattern %s
+flow test
+
+# Run tests in the specified files
+flow test test1.cdc test2.cdc`, defaultGlobPattern),
 		Args:    cobra.ArbitraryArgs,
 		GroupID: "tools",
 	},
@@ -103,7 +110,7 @@ func run(
 
 	var filenames []string
 	if len(args) == 0 {
-		filenames, err := filepath.Glob("**/*_test.cdc")
+		filenames, err := filepath.Glob(defaultGlobPattern)
 		if err != nil {
 			return nil, fmt.Errorf("error loading script files: %w", err)
 		}
