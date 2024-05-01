@@ -205,7 +205,6 @@ func startInteractiveSetup(
 	// Add the selected core contracts as dependencies
 	installer, err := dependencymanager.NewDependencyInstaller(logger, state, false, tempDir, dependencymanager.Flags{})
 	if err != nil {
-		logger.Error(fmt.Sprintf("Error: %v", err))
 		return "", err
 	}
 
