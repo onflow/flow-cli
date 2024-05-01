@@ -359,14 +359,18 @@ func (r *result) String() string {
 	var b bytes.Buffer
 	writer := util.CreateTabWriter(&b)
 
-	for scriptPath, testResult := range r.Results {
-		_, _ = fmt.Fprint(writer, cdcTests.PrettyPrintResults(testResult, scriptPath))
-	}
-	if r.CoverageReport != nil {
-		_, _ = fmt.Fprint(writer, r.CoverageReport.String())
-	}
-	if r.RandomSeed > 0 {
-		_, _ = fmt.Fprintf(writer, "\nSeed: %d", r.RandomSeed)
+	if len(r.Results) == 0 {
+		_, _ = fmt.Fprint(writer, "No tests found")
+	} else {
+		for scriptPath, testResult := range r.Results {
+			_, _ = fmt.Fprint(writer, cdcTests.PrettyPrintResults(testResult, scriptPath))
+		}
+		if r.CoverageReport != nil {
+			_, _ = fmt.Fprint(writer, r.CoverageReport.String())
+		}
+		if r.RandomSeed > 0 {
+			_, _ = fmt.Fprintf(writer, "\nSeed: %d", r.RandomSeed)
+		}
 	}
 
 	_ = writer.Flush()
