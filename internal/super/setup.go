@@ -108,7 +108,7 @@ func startInteractiveSetup(
 	if len(args) < 1 {
 		userInput, err := prompt.RunTextInput("Enter the name of your project", "Type your project name here...")
 		if err != nil {
-			return nil, fmt.Errorf("error running project name: %v", err)
+			return "", fmt.Errorf("error running project name: %v", err)
 		}
 
 		targetDir, err = getTargetDirectory(userInput)
