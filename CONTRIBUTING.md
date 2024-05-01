@@ -159,7 +159,7 @@ You can also release manually although this is not recommended:
 
 To make the new version the default version that is installed
 
-- Change `version.txt` and commit it
+- **DEPRECATED** Change `version.txt` and commit it.  (This file is no longer user for versions of the Flow CLI later than v1.18.0, although it should still be maintained to support older versions of the CLI for a while)
 
 ## Adding a scaffold
 You can add your own scaffold by creating a GitHub repository containing the scaffold content and then making a PR 
