@@ -20,6 +20,7 @@ package dependencymanager
 
 import (
 	"fmt"
+
 	"github.com/onflow/flow-cli/internal/util"
 
 	"github.com/spf13/cobra"
@@ -46,7 +47,8 @@ var addCommand = &command.Command{
 		Example: "flow dependencies add testnet://0afe396ebc8eee65.FlowToken",
 		Args:    cobra.ExactArgs(1),
 	},
-	RunS: add,
+	RunS:  add,
+	Flags: &struct{}{},
 }
 
 func init() {

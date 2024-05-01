@@ -21,6 +21,7 @@ package command
 import (
 	"crypto/sha256"
 	"encoding/base64"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -262,7 +263,7 @@ func createLogger(logFlag string, formatFlag string) output.Logger {
 
 // checkVersion fetches latest version and compares it to local.
 func checkVersion(logger output.Logger) {
-	resp, err := http.Get("https://raw.githubusercontent.com/onflow/flow-cli/master/version.txt")
+	resp, err := http.Get("https://formulae.brew.sh/api/formula/flow-cli.json")
 	if err != nil || resp.StatusCode >= 400 {
 		return
 	}
@@ -275,7 +276,21 @@ func checkVersion(logger output.Logger) {
 	}(resp.Body)
 
 	body, _ := io.ReadAll(resp.Body)
-	latestVersion := strings.TrimSpace(string(body))
+	var data map[string]interface{}
+	err = json.Unmarshal(body, &data)
+	if err != nil {
+		return
+	}
+
+	versions, ok := data["versions"].(map[string]interface{})
+	if !ok {
+		return
+	}
+
+	latestVersion, ok := versions["stable"].(string)
+	if !ok {
+		return
+	}
 
 	currentVersion := build.Semver()
 	if isDevelopment() {
@@ -284,7 +299,7 @@ func checkVersion(logger output.Logger) {
 
 	if currentVersion != latestVersion {
 		logger.Info(fmt.Sprintf(
-			"\n%s  Version warning: a new version of Flow CLI is available (%s).\n"+
+			"\n%s  Version warning: a new version of Flow CLI is available (v%s).\n"+
 				"   Read the installation guide for upgrade instructions: https://docs.onflow.org/flow-cli/install\n",
 			output.WarningEmoji(),
 			strings.ReplaceAll(latestVersion, "\n", ""),
