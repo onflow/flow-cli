@@ -46,6 +46,33 @@ type scaffold struct {
 	Type        string `json:"type"`
 }
 
+func handleScaffold(
+	projectName string,
+	logger output.Logger,
+) (string, error) {
+	targetDir, err := getTargetDirectory(projectName)
+	if err != nil {
+		return "", err
+	}
+
+	selectedScaffold, err := selectScaffold(logger)
+	if err != nil {
+		return "", fmt.Errorf("error selecting scaffold %w", err)
+	}
+
+	logger.StartProgress(fmt.Sprintf("Creating your project %s", targetDir))
+	defer logger.StopProgress()
+
+	if selectedScaffold != nil {
+		err = cloneScaffold(targetDir, *selectedScaffold)
+		if err != nil {
+			return "", fmt.Errorf("failed creating scaffold %w", err)
+		}
+	}
+
+	return targetDir, nil
+}
+
 func selectScaffold(logger output.Logger) (*scaffold, error) {
 	scaffolds, err := getScaffolds()
 	if err != nil {

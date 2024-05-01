@@ -77,134 +77,157 @@ func create(
 	var err error
 
 	if setupFlags.Scaffold || setupFlags.ScaffoldID != 0 {
-		targetDir, err = getTargetDirectory(args[0])
+		// Error if no project name is given
+		if len(args) < 1 || args[0] == "" {
+			return nil, fmt.Errorf("no project name provided")
+		}
+
+		targetDir, err = handleScaffold(args[0], logger)
 		if err != nil {
 			return nil, err
-		}
-
-		selectedScaffold, err := selectScaffold(logger)
-		if err != nil {
-			return nil, fmt.Errorf("error selecting scaffold %w", err)
-		}
-
-		logger.StartProgress(fmt.Sprintf("Creating your project %s", targetDir))
-		defer logger.StopProgress()
-
-		if selectedScaffold != nil {
-			err = cloneScaffold(targetDir, *selectedScaffold)
-			if err != nil {
-				return nil, fmt.Errorf("failed creating scaffold %w", err)
-			}
 		}
 	} else {
-		// Ask for project name if not given
-		if len(args) < 1 {
-			userInput, err := prompt.RunTextInput("Enter the name of your project", "Type your project name here...")
-			if err != nil {
-				fmt.Printf("Error running project name: %v\n", err)
-				os.Exit(1)
-			}
-
-			targetDir, err = getTargetDirectory(userInput)
-			if err != nil {
-				return nil, err
-			}
-		} else {
-			targetDir, err = getTargetDirectory(args[0])
-			if err != nil {
-				return nil, err
-			}
-		}
-
-		params := config.InitConfigParameters{
-			ServiceKeySigAlgo:  "ECDSA_P256",
-			ServiceKeyHashAlgo: "SHA3_256",
-			Reset:              false,
-			Global:             false,
-			TargetDirectory:    targetDir,
-		}
-		state, err := config.InitializeConfiguration(params, logger, state.ReaderWriter())
-		if err != nil {
-			return nil, fmt.Errorf("failed to initialize configuration: %w", err)
-		}
-
-		// Generate standard cadence files
-		// cadence/contracts/DefaultContract.cdc
-		// cadence/scripts/DefaultScript.cdc
-		// cadence/transactions/DefaultTransaction.cdc
-		// cadence/tests/DefaultContract_test.cdc
-
-		directoryPath := filepath.Join(targetDir, "cadence")
-
-		_, err = generateNew([]string{"DefaultContract"}, "contract", directoryPath, logger, state)
+		targetDir, err = startInteractiveSetup(args, logger, state)
 		if err != nil {
 			return nil, err
 		}
-
-		_, err = generateNew([]string{"DefaultScript"}, "script", directoryPath, logger, state)
-		if err != nil {
-			return nil, err
-		}
-
-		_, err = generateNew([]string{"DefaultTransaction"}, "transaction", directoryPath, logger, state)
-		if err != nil {
-			return nil, err
-		}
-
-		// Prompt to ask which core contracts should be installed
-		sc := systemcontracts.SystemContractsForChain(flowGo.Mainnet)
-		promptMessage := "Select the core contracts you'd like to install:"
-
-		contractNames := make([]string, 0)
-
-		for _, contract := range sc.All() {
-			contractNames = append(contractNames, contract.Name)
-		}
-
-		selectedContractNames, err := prompt.RunSelectOptions(contractNames, promptMessage)
-		if err != nil {
-			fmt.Printf("Error running dependency selection: %v\n", err)
-			os.Exit(1)
-		}
-
-		var dependencies []flowkitConfig.Dependency
-
-		// Loop standard contracts and add them to the dependencies if selected
-		for _, contract := range sc.All() {
-			if slices.Contains(selectedContractNames, contract.Name) {
-				dependencies = append(dependencies, flowkitConfig.Dependency{
-					Name: contract.Name,
-					Source: flowkitConfig.Source{
-						NetworkName:  flowkitConfig.MainnetNetwork.Name,
-						Address:      flowsdk.HexToAddress(contract.Address.String()),
-						ContractName: contract.Name,
-					},
-				})
-			}
-		}
-
-		// Add the selected core contracts as dependencies
-		installer, err := dependencymanager.NewDependencyInstaller(logger, state, false, targetDir, dependencymanager.Flags{})
-		if err != nil {
-			logger.Error(fmt.Sprintf("Error: %v", err))
-			return nil, err
-		}
-
-		if err := installer.AddMany(dependencies); err != nil {
-			logger.Error(fmt.Sprintf("Error: %v", err))
-			return nil, err
-		}
-
-		err = state.Save(filepath.Join(targetDir, "flow.json"))
-		if err != nil {
-			return nil, err
-		}
-
 	}
 
 	return &setupResult{targetDir: targetDir}, nil
 }
 
+func startInteractiveSetup(
+	args []string,
+	logger output.Logger,
+	state *flowkit.State,
+) (string, error) {
+	var targetDir string
+	var err error
+
+	// Ask for project name if not given
+	if len(args) < 1 {
+		userInput, err := prompt.RunTextInput("Enter the name of your project", "Type your project name here...")
+		if err != nil {
+			return "", fmt.Errorf("error running project name: %v", err)
+		}
+
+		targetDir, err = getTargetDirectory(userInput)
+		if err != nil {
+			return "", err
+		}
+	} else {
+		targetDir, err = getTargetDirectory(args[0])
+		if err != nil {
+			return "", err
+		}
+	}
+
+	// Create a temp directory which will later be moved to the target directory if successful
+	tempDir, err := os.MkdirTemp("", "flow-cli-*")
+	if err != nil {
+		return "", fmt.Errorf("failed to create temp directory: %w", err)
+	}
+
+	defer func() {
+		if err := os.RemoveAll(tempDir); err != nil {
+			logger.Error(fmt.Sprintf("Failed to remove %s: %v", tempDir, err))
+		}
+	}()
+
+	params := config.InitConfigParameters{
+		ServiceKeySigAlgo:  "ECDSA_P256",
+		ServiceKeyHashAlgo: "SHA3_256",
+		Reset:              false,
+		Global:             false,
+		TargetDirectory:    tempDir,
+	}
+	state, err = config.InitializeConfiguration(params, logger, state.ReaderWriter())
+	if err != nil {
+		return "", fmt.Errorf("failed to initialize configuration: %w", err)
+	}
+
+	// Generate standard cadence files
+	// cadence/contracts/DefaultContract.cdc
+	// cadence/scripts/DefaultScript.cdc
+	// cadence/transactions/DefaultTransaction.cdc
+	// cadence/tests/DefaultContract_test.cdc
+
+	directoryPath := filepath.Join(tempDir, "cadence")
+
+	_, err = generateNew([]string{"DefaultContract"}, "contract", directoryPath, logger, state)
+	if err != nil {
+		return "", err
+	}
+
+	_, err = generateNew([]string{"DefaultScript"}, "script", directoryPath, logger, state)
+	if err != nil {
+		return "", err
+	}
+
+	_, err = generateNew([]string{"DefaultTransaction"}, "transaction", directoryPath, logger, state)
+	if err != nil {
+		return "", err
+	}
+
+	// Prompt to ask which core contracts should be installed
+	sc := systemcontracts.SystemContractsForChain(flowGo.Mainnet)
+	promptMessage := "Select the core contracts you'd like to install:"
+
+	contractNames := make([]string, 0)
+
+	for _, contract := range sc.All() {
+		contractNames = append(contractNames, contract.Name)
+	}
+
+	selectedContractNames, err := prompt.RunSelectOptions(contractNames, promptMessage)
+	if err != nil {
+		return "", fmt.Errorf("error running dependency selection: %v\n", err)
+	}
+
+	var dependencies []flowkitConfig.Dependency
+
+	// Loop standard contracts and add them to the dependencies if selected
+	for _, contract := range sc.All() {
+		if slices.Contains(selectedContractNames, contract.Name) {
+			dependencies = append(dependencies, flowkitConfig.Dependency{
+				Name: contract.Name,
+				Source: flowkitConfig.Source{
+					NetworkName:  flowkitConfig.MainnetNetwork.Name,
+					Address:      flowsdk.HexToAddress(contract.Address.String()),
+					ContractName: contract.Name,
+				},
+			})
+		}
+	}
+
+	// Add the selected core contracts as dependencies
+	installer, err := dependencymanager.NewDependencyInstaller(logger, state, false, tempDir, dependencymanager.Flags{})
+	if err != nil {
+		return "", err
+	}
+
+	if err := installer.AddMany(dependencies); err != nil {
+		return "", err
+	}
+
+	err = state.Save(filepath.Join(tempDir, "flow.json"))
+	if err != nil {
+		return "", err
+	}
+
+	// Move the temp directory to the target directory
+	err = os.Rename(tempDir, targetDir)
+	if err != nil {
+		return "", fmt.Errorf("failed to move temp directory to target directory: %w", err)
+	}
+
+	return targetDir, nil
+}
+
+// getTargetDirectory checks if the specified directory path is suitable for use.
+// It verifies that the path points to an existing, empty directory.
+// If the directory does not exist, the function returns the path without error,
+// indicating that the path is available for use (assuming creation is handled elsewhere).
 func getTargetDirectory(directory string) (string, error) {
 	pwd, err := os.Getwd()
 	if err != nil {
