@@ -116,12 +116,26 @@ func create(
 			}
 		}
 
+		// Create a temp directory which will later be moved to the target directory if successful
+		tempDir, err := os.MkdirTemp("", "flow-cli-*")
+		if err != nil {
+			return nil, fmt.Errorf("failed to create temp directory: %w", err)
+		}
+
+		defer func() {
+			if err := os.RemoveAll(tempDir); err != nil {
+				logger.Error(fmt.Sprintf("Failed to remove %s: %v", tempDir, err))
+			}
+		}()
+
+		fmt.Printf("Creating project in %s\n", tempDir)
+
 		params := config.InitConfigParameters{
 			ServiceKeySigAlgo:  "ECDSA_P256",
 			ServiceKeyHashAlgo: "SHA3_256",
 			Reset:              false,
 			Global:             false,
-			TargetDirectory:    targetDir,
+			TargetDirectory:    tempDir,
 		}
 		state, err := config.InitializeConfiguration(params, logger, state.ReaderWriter())
 		if err != nil {
@@ -134,7 +148,7 @@ func create(
 		// cadence/transactions/DefaultTransaction.cdc
 		// cadence/tests/DefaultContract_test.cdc
 
-		directoryPath := filepath.Join(targetDir, "cadence")
+		directoryPath := filepath.Join(tempDir, "cadence")
 
 		_, err = generateNew([]string{"DefaultContract"}, "contract", directoryPath, logger, state)
 		if err != nil {
@@ -184,7 +198,7 @@ func create(
 		}
 
 		// Add the selected core contracts as dependencies
-		installer, err := dependencymanager.NewDependencyInstaller(logger, state, false, targetDir, dependencymanager.Flags{})
+		installer, err := dependencymanager.NewDependencyInstaller(logger, state, false, tempDir, dependencymanager.Flags{})
 		if err != nil {
 			logger.Error(fmt.Sprintf("Error: %v", err))
 			return nil, err
@@ -195,9 +209,15 @@ func create(
 			return nil, err
 		}
 
-		err = state.Save(filepath.Join(targetDir, "flow.json"))
+		err = state.Save(filepath.Join(tempDir, "flow.json"))
 		if err != nil {
 			return nil, err
+		}
+
+		// Move the temp directory to the target directory
+		err = os.Rename(tempDir, targetDir)
+		if err != nil {
+			return nil, fmt.Errorf("failed to move temp directory to target directory: %w", err)
 		}
 
 	}
@@ -205,6 +225,10 @@ func create(
 	return &setupResult{targetDir: targetDir}, nil
 }
 
+// getTargetDirectory checks if the specified directory path is suitable for use.
+// It verifies that the path points to an existing, empty directory.
+// If the directory does not exist, the function returns the path without error,
+// indicating that the path is available for use (assuming creation is handled elsewhere).
 func getTargetDirectory(directory string) (string, error) {
 	pwd, err := os.Getwd()
 	if err != nil {
