@@ -211,7 +211,6 @@ func startInteractiveSetup(
 	}
 
 	if err := installer.AddMany(dependencies); err != nil {
-		logger.Error(fmt.Sprintf("Error: %v", err))
 		return "", err
 	}
 
