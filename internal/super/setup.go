@@ -184,8 +184,7 @@ func startInteractiveSetup(
 
 	selectedContractNames, err := prompt.RunSelectOptions(contractNames, promptMessage)
 	if err != nil {
-		fmt.Printf("Error running dependency selection: %v\n", err)
-		os.Exit(1)
+		return "", fmt.Errorf("error running dependency selection: %v\n", err)
 	}
 
 	var dependencies []flowkitConfig.Dependency
