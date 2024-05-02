@@ -32,7 +32,6 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version: "1.20"
-          cache: ${{ runner.os != 'Windows' }}
       - name: Run tests
         run: |
           make ci
@@ -43,6 +42,7 @@ jobs:
         with:
           file: ./coverage.txt
           flags: unittests
+        if: matrix.os == 'ubuntu-latest'
 
   lint:
     runs-on: ubuntu-latest
