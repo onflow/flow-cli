@@ -50,6 +50,7 @@ import (
 type categorizedLogs struct {
 	fileSystemActions []string
 	stateUpdates      []string
+	issues            []string
 }
 
 func (cl *categorizedLogs) LogAll(logger output.Logger) {
@@ -57,19 +58,27 @@ func (cl *categorizedLogs) LogAll(logger output.Logger) {
 	logger.Info("") // Add a line break after the section
 
 	if len(cl.fileSystemActions) > 0 {
-		logger.Info("🗃️  File System Actions:")
+		logger.Info(util.MessageWithEmojiPrefix("🗃️", "File System Actions:"))
 		for _, msg := range cl.fileSystemActions {
-			logger.Info(util.MessageWithEmojiPrefix("✅", msg))
+			logger.Info(msg)
 		}
 		logger.Info("") // Add a line break after the section
 	}
 
 	if len(cl.stateUpdates) > 0 {
-		logger.Info("💾 State Updates:")
+		logger.Info(util.MessageWithEmojiPrefix("💾", "State Updates:"))
 		for _, msg := range cl.stateUpdates {
-			logger.Info(util.MessageWithEmojiPrefix("✅", msg))
+			logger.Info(msg)
 		}
 		logger.Info("") // Add a line break after the section
+	}
+
+	if len(cl.issues) > 0 {
+		logger.Info(util.MessageWithEmojiPrefix("⚠️", "Issues:"))
+		for _, msg := range cl.issues {
+			logger.Info(msg)
+		}
+		logger.Info("")
 	}
 
 	if len(cl.fileSystemActions) == 0 && len(cl.stateUpdates) == 0 {
@@ -286,7 +295,8 @@ func (di *DependencyInstaller) handleFileSystem(contractAddr, contractName, cont
 			return fmt.Errorf("failed to create contract file: %w", err)
 		}
 
-		di.logs.fileSystemActions = append(di.logs.fileSystemActions, fmt.Sprintf("%s from %s on %s installed", contractName, contractAddr, networkName))
+		msg := util.MessageWithEmojiPrefix("✅️", fmt.Sprintf("Contract %s from %s on %s installed", contractName, contractAddr, networkName))
+		di.logs.fileSystemActions = append(di.logs.fileSystemActions, msg)
 	}
 
 	return nil
@@ -301,6 +311,20 @@ func isCoreContract(contractName string) bool {
 		}
 	}
 	return false
+}
+
+// checkForContractConflicts checks if a contract with the same name already exists in the state and adds a warning
+func (di *DependencyInstaller) checkForContractConflicts(contractName string) error {
+	_, err := di.State.Contracts().ByName(contractName)
+	if err != nil {
+		return nil
+	} else {
+		if !isCoreContract(contractName) {
+			msg := util.MessageWithEmojiPrefix("❌", fmt.Sprintf("Contract named %s already exists in flow.json", contractName))
+			di.logs.issues = append(di.logs.issues, msg)
+		}
+		return nil
+	}
 }
 
 func (di *DependencyInstaller) handleFoundContract(networkName, contractAddr, assignedName, contractName string, program *project.Program) error {
@@ -330,7 +354,14 @@ func (di *DependencyInstaller) handleFoundContract(networkName, contractAddr, as
 		}
 	}
 
-	err := di.handleFileSystem(contractAddr, contractName, contractData, networkName)
+	//// This needs to happen before dependency state is updated
+	err := di.checkForContractConflicts(assignedName)
+	if err != nil {
+		di.Logger.Error(fmt.Sprintf("Error checking for contract conflicts: %v", err))
+		return err
+	}
+
+	err = di.handleFileSystem(contractAddr, contractName, contractData, networkName)
 	if err != nil {
 		return fmt.Errorf("error handling file system: %w", err)
 	}
@@ -349,7 +380,8 @@ func (di *DependencyInstaller) handleFoundContract(networkName, contractAddr, as
 			return err
 		}
 
-		di.logs.stateUpdates = append(di.logs.stateUpdates, fmt.Sprintf("%s added to emulator deployments", contractName))
+		msg := util.MessageWithEmojiPrefix("✅", fmt.Sprintf("%s added to emulator deployments", contractName))
+		di.logs.stateUpdates = append(di.logs.stateUpdates, msg)
 	}
 
 	// If the contract is not a core contract and the user does not want to skip aliasing, then prompt for an alias
@@ -360,7 +392,8 @@ func (di *DependencyInstaller) handleFoundContract(networkName, contractAddr, as
 			return err
 		}
 
-		di.logs.stateUpdates = append(di.logs.stateUpdates, fmt.Sprintf("Alias added for %s on %s", contractName, networkName))
+		msg := util.MessageWithEmojiPrefix("✅", fmt.Sprintf("Alias added for %s on %s", contractName, networkName))
+		di.logs.stateUpdates = append(di.logs.stateUpdates, msg)
 	}
 
 	return nil
@@ -430,7 +463,8 @@ func (di *DependencyInstaller) updateDependencyState(networkName, contractAddres
 	di.State.Contracts().AddDependencyAsContract(dep, networkName)
 
 	if isNewDep {
-		di.logs.stateUpdates = append(di.logs.stateUpdates, fmt.Sprintf("%s added to flow.json", dep.Name))
+		msg := util.MessageWithEmojiPrefix("✅", fmt.Sprintf("%s added to flow.json", dep.Name))
+		di.logs.stateUpdates = append(di.logs.stateUpdates, msg)
 	}
 
 	return nil
