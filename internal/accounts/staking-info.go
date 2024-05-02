@@ -171,11 +171,11 @@ func envFromNetwork(network flowsdk.ChainID) tmpl.Environment {
 }
 
 func nodeIDToString(value any) string {
-	return value.(cadence.String).ToGoValue().(string)
+	return string(value.(cadence.String))
 }
 
-func newStakingInfoFromValue(value cadence.Value) ([]map[string]any, error) {
-	stakingInfo := make([]map[string]any, 0)
+func newStakingInfoFromValue(value cadence.Value) ([]map[string]cadence.Value, error) {
+	stakingInfo := make([]map[string]cadence.Value, 0)
 	arrayValue, ok := value.(cadence.Array)
 	if !ok {
 		return stakingInfo, fmt.Errorf("staking info must be a cadence array")
@@ -191,14 +191,7 @@ func newStakingInfoFromValue(value cadence.Value) ([]map[string]any, error) {
 			return stakingInfo, fmt.Errorf("staking info must be a cadence array of structs")
 		}
 
-		keys := make([]string, 0)
-		values := make(map[string]any)
-		for _, field := range vs.StructType.Fields {
-			keys = append(keys, field.Identifier)
-		}
-		for j, value := range vs.Fields {
-			values[keys[j]] = value
-		}
+		values := cadence.FieldsMappedByName(vs)
 		stakingInfo = append(stakingInfo, values)
 	}
 
@@ -206,8 +199,8 @@ func newStakingInfoFromValue(value cadence.Value) ([]map[string]any, error) {
 }
 
 type stakingResult struct {
-	staking    []map[string]any // stake as FlowIDTableStaking.NodeInfo
-	delegation []map[string]any // delegation as FlowIDTableStaking.DelegatorInfo
+	staking    []map[string]cadence.Value // stake as FlowIDTableStaking.NodeInfo
+	delegation []map[string]cadence.Value // delegation as FlowIDTableStaking.DelegatorInfo
 }
 
 func (r *stakingResult) JSON() any {
