@@ -62,7 +62,7 @@ const helperScriptSubstr = "_helper"
 const contractsCoverCode = "contracts"
 
 // The default glob pattern to find test files.
-const defaultGlobPattern = "**/*_test.cdc"
+const defaultTestSuffix = "_test.cdc"
 
 type flagsTests struct {
 	Cover        bool   `default:"false" flag:"cover" info:"Use the cover flag to calculate coverage report"`
@@ -79,11 +79,11 @@ var TestCommand = &command.Command{
 	Cmd: &cobra.Command{
 		Use:   "test [files...]",
 		Short: "Run Cadence tests",
-		Example: fmt.Sprintf(`# Run tests in files matching the default pattern %s
+		Example: `# Run tests in files matching default pattern **/*_test.cdc
 flow test
 
 # Run tests in the specified files
-flow test test1.cdc test2.cdc`, defaultGlobPattern),
+flow test test1.cdc test2.cdc`,
 		Args:    cobra.ArbitraryArgs,
 		GroupID: "tools",
 	},
@@ -111,7 +111,7 @@ func run(
 	var filenames []string
 	if len(args) == 0 {
 		var err error
-		filenames, err = filepath.Glob(defaultGlobPattern)
+		filenames, err = findAllTestFiles(".")
 		if err != nil {
 			return nil, fmt.Errorf("error loading script files: %w", err)
 		}
@@ -403,4 +403,25 @@ func (r *result) Oneliner() string {
 
 func (r *result) ExitCode() int {
 	return r.exitCode
+}
+
+func findAllTestFiles(baseDir string) ([]string, error) {
+	var filenames []string
+	err := filepath.Walk(baseDir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		if !strings.HasSuffix(path, defaultTestSuffix) {
+			return nil
+		}
+
+		filenames = append(filenames, path)
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return filenames, nil
 }
