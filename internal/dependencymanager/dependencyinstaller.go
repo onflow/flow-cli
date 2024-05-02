@@ -57,7 +57,7 @@ func (cl *categorizedLogs) LogAll(logger output.Logger) {
 	logger.Info("") // Add a line break after the section
 
 	if len(cl.fileSystemActions) > 0 {
-		logger.Info("🗃️  File System Actions:")
+		logger.Info(util.MessageWithEmojiPrefix("🗃️", "File System Actions:"))
 		for _, msg := range cl.fileSystemActions {
 			logger.Info(util.MessageWithEmojiPrefix("✅", msg))
 		}
@@ -65,7 +65,7 @@ func (cl *categorizedLogs) LogAll(logger output.Logger) {
 	}
 
 	if len(cl.stateUpdates) > 0 {
-		logger.Info("💾 State Updates:")
+		logger.Info(util.MessageWithEmojiPrefix("💾", "State Updates:"))
 		for _, msg := range cl.stateUpdates {
 			logger.Info(util.MessageWithEmojiPrefix("✅", msg))
 		}

@@ -111,3 +111,7 @@ func removeFromStringArray(s []string, el string) []string {
 
 	return s
 }
+
+func NormalizeLineEndings(s string) string {
+	return strings.ReplaceAll(s, "\r\n", "\n")
+}
