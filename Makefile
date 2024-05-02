@@ -28,8 +28,8 @@ binary: $(BINARY)
 
 .PHONY: install-tools
 install-tools:
-	cd ${GOPATH}; \
-	mkdir -p ${GOPATH}; \
+	cd '${GOPATH}'; \
+	mkdir -p '${GOPATH}'; \
 	GO111MODULE=on go install github.com/axw/gocov/gocov@latest; \
 	GO111MODULE=on go install github.com/matm/gocov-html/cmd/gocov-html@latest; \
 	GO111MODULE=on go install github.com/sanderhahn/gozip/cmd/gozip@latest; \
@@ -85,10 +85,6 @@ publish:
 .PHONY: clean
 clean:
 	rm ./cmd/flow/flow*
-
-.PHONY: install-linter
-install-linter:
-	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b ${GOPATH}/bin v1.47.2
 
 .PHONY: lint
 lint: generate
