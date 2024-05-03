@@ -106,8 +106,8 @@ func generateContract(
 		return nil, fmt.Errorf("invalid number of arguments")
 	}
 
-	generator := NewGenerator(map[string]string{"contract": args[0]}, "cadence", state, logger)
-	err = generator.Create()
+	generator := NewGenerator("cadence", state, logger)
+	err = generator.Create(TemplateMap{"contract": args[0]})
 	return nil, err
 }
 
@@ -122,8 +122,8 @@ func generateTransaction(
 		return nil, fmt.Errorf("invalid number of arguments")
 	}
 
-	generator := NewGenerator(map[string]string{"transaction": args[0]}, "cadence", state, logger)
-	err = generator.Create()
+	generator := NewGenerator("cadence", state, logger)
+	err = generator.Create(TemplateMap{"transaction": args[0]})
 	return nil, err
 }
 
@@ -138,8 +138,8 @@ func generateScript(
 		return nil, fmt.Errorf("invalid number of arguments")
 	}
 
-	generator := NewGenerator(map[string]string{"script": args[0]}, "cadence", state, logger)
-	err = generator.Create()
+	generator := NewGenerator("cadence", state, logger)
+	err = generator.Create(TemplateMap{"script": args[0]})
 	return nil, err
 }
 
@@ -154,25 +154,26 @@ func stripCDCExtension(name string) string {
 	return strings.TrimSuffix(name, filepath.Ext(name))
 }
 
+// TemplateMap defines a map of template types to their specific names
+type TemplateMap map[string]string
+
 type Generator struct {
-	TypeNames   map[string]string // Map of template types to their specific names
 	Directory   string
 	State       *flowkit.State
 	Logger      output.Logger
 	DisableLogs bool
 }
 
-func NewGenerator(typeNames map[string]string, directory string, state *flowkit.State, logger output.Logger) *Generator {
+func NewGenerator(directory string, state *flowkit.State, logger output.Logger) *Generator {
 	return &Generator{
-		TypeNames: typeNames,
 		Directory: directory,
 		State:     state,
 		Logger:    logger,
 	}
 }
 
-func (g *Generator) Create() error {
-	for templateType, name := range g.TypeNames {
+func (g *Generator) Create(typeNames TemplateMap) error {
+	for templateType, name := range typeNames {
 		err := g.generate(templateType, name)
 		if err != nil {
 			return err
