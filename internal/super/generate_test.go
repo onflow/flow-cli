@@ -19,6 +19,8 @@
 package super
 
 import (
+	"fmt"
+	"path/filepath"
 	"testing"
 
 	"github.com/onflow/flow-cli/internal/util"
@@ -64,13 +66,14 @@ access(all) fun testContract() {
     Test.expect(err, Test.beNil())
 }`
 
-	assert.Equal(t, expectedContent, string(fileContent))
-	assert.Equal(t, expectedTestContent, string(testContent))
+	assert.Equal(t, expectedContent, util.NormalizeLineEndings(string(fileContent)))
+	assert.Equal(t, expectedTestContent, util.NormalizeLineEndings(string(testContent)))
 
 	// Test file already exists scenario
 	_, err = generateNew([]string{"TestContract"}, "contract", logger, state)
 	assert.Error(t, err)
-	assert.Equal(t, "file already exists: cadence/contracts/TestContract.cdc", err.Error())
+	expectedError := fmt.Sprintf("file already exists: %s", filepath.FromSlash("cadence/contracts/TestContract.cdc"))
+	assert.Equal(t, expectedError, err.Error())
 }
 
 func TestGenerateNewContractSkipTests(t *testing.T) {
@@ -129,7 +132,8 @@ func TestGenerateNewContractFileAlreadyExists(t *testing.T) {
 	// Test file already exists scenario
 	_, err = generateNew([]string{"TestContract"}, "contract", logger, state)
 	assert.Error(t, err)
-	assert.Equal(t, "file already exists: cadence/contracts/TestContract.cdc", err.Error())
+	expectedError := fmt.Sprintf("file already exists: %s", filepath.FromSlash("cadence/contracts/TestContract.cdc"))
+	assert.Equal(t, expectedError, err.Error())
 }
 
 func TestGenerateNewContractWithFileExtension(t *testing.T) {
@@ -160,7 +164,7 @@ func TestGenerateNewScript(t *testing.T) {
 fun main() {
     // Script details here
 }`
-	assert.Equal(t, expectedContent, string(content))
+	assert.Equal(t, expectedContent, util.NormalizeLineEndings(string(content)))
 }
 
 func TestGenerateNewTransaction(t *testing.T) {
@@ -179,7 +183,7 @@ func TestGenerateNewTransaction(t *testing.T) {
 
     execute {}
 }`
-	assert.Equal(t, expectedContent, string(content))
+	assert.Equal(t, expectedContent, util.NormalizeLineEndings(string(content)))
 }
 
 func TestGenerateNewWithDirFlag(t *testing.T) {
@@ -200,5 +204,5 @@ func TestGenerateNewWithDirFlag(t *testing.T) {
 contract TestContract {
     init() {}
 }`
-	assert.Equal(t, expectedContent, string(content))
+	assert.Equal(t, expectedContent, util.NormalizeLineEndings(string(content)))
 }
