@@ -216,6 +216,7 @@ func (g *Generator) generate(templateType, name string) error {
 
 	directoryWithBasePath := filepath.Join(rootDir, basePath)
 	filenameWithBasePath := filepath.Join(rootDir, basePath, filename)
+	relativeFilenameWithBasePath := filepath.Join(basePath, filename)
 
 	// Check file existence
 	if _, err := g.state.ReaderWriter().ReadFile(filenameWithBasePath); err == nil {
@@ -260,7 +261,7 @@ func (g *Generator) generate(templateType, name string) error {
 	}
 
 	if templateType == ContractType {
-		err := g.updateContractsState(name, filenameWithBasePath)
+		err := g.updateContractsState(name, relativeFilenameWithBasePath)
 		if err != nil {
 			return err
 		}
