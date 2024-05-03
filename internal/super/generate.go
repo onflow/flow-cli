@@ -96,6 +96,8 @@ func init() {
 	GenerateScriptCommand.AddToParent(GenerateCommand)
 }
 
+const DefaultCadenceDirectory = "cadence"
+
 func generateContract(
 	args []string,
 	_ command.GlobalFlags,
@@ -104,7 +106,7 @@ func generateContract(
 	state *flowkit.State,
 ) (result command.Result, err error) {
 	options := GeneratorOptions{
-		Directory: "cadence",
+		Directory: DefaultCadenceDirectory,
 		State:     state,
 		Logger:    logger,
 	}
@@ -121,7 +123,7 @@ func generateTransaction(
 	state *flowkit.State,
 ) (result command.Result, err error) {
 	options := GeneratorOptions{
-		Directory: "cadence",
+		Directory: DefaultCadenceDirectory,
 		State:     state,
 		Logger:    logger,
 	}
@@ -138,7 +140,7 @@ func generateScript(
 	state *flowkit.State,
 ) (result command.Result, err error) {
 	options := GeneratorOptions{
-		Directory: "cadence",
+		Directory: DefaultCadenceDirectory,
 		State:     state,
 		Logger:    logger,
 	}
@@ -184,7 +186,7 @@ func (g *Generator) generate(templateType, name string) error {
 
 	var fileToWrite string
 	var testFileToWrite string
-	var rootDir = "cadence"
+	var rootDir = DefaultCadenceDirectory
 	var basePath string
 	var testsBasePath = "tests"
 	var err error
