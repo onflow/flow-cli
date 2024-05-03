@@ -110,7 +110,7 @@ func generateContract(
 	state *flowkit.State,
 ) (result command.Result, err error) {
 	generator := NewGenerator(DefaultCadenceDirectory, state, logger, false)
-	err = generator.Create(TemplateMap{ContractType: args[0]})
+	err = generator.Create(TemplateMap{ContractType: []string{args[0]}})
 	return nil, err
 }
 
@@ -122,7 +122,7 @@ func generateTransaction(
 	state *flowkit.State,
 ) (result command.Result, err error) {
 	generator := NewGenerator(DefaultCadenceDirectory, state, logger, false)
-	err = generator.Create(TemplateMap{TransactionType: args[0]})
+	err = generator.Create(TemplateMap{TransactionType: []string{args[0]}})
 	return nil, err
 }
 
@@ -134,12 +134,12 @@ func generateScript(
 	state *flowkit.State,
 ) (result command.Result, err error) {
 	generator := NewGenerator(DefaultCadenceDirectory, state, logger, false)
-	err = generator.Create(TemplateMap{ScriptType: args[0]})
+	err = generator.Create(TemplateMap{ScriptType: []string{args[0]}})
 	return nil, err
 }
 
 // TemplateMap defines a map of template types to their specific names
-type TemplateMap map[string]string
+type TemplateMap map[string][]string
 
 type Generator struct {
 	Directory   string
@@ -158,10 +158,12 @@ func NewGenerator(directory string, state *flowkit.State, logger output.Logger, 
 }
 
 func (g *Generator) Create(typeNames TemplateMap) error {
-	for templateType, name := range typeNames {
-		err := g.generate(templateType, name)
-		if err != nil {
-			return err
+	for templateType, names := range typeNames {
+		for _, name := range names {
+			err := g.generate(templateType, name)
+			if err != nil {
+				return err
+			}
 		}
 	}
 	return nil
