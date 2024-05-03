@@ -34,7 +34,12 @@ func TestGenerateNewContract(t *testing.T) {
 	logger := output.NewStdoutLogger(output.NoneLog)
 	_, state, _ := util.TestMocks(t)
 
-	generator := NewGenerator("cadence", state, logger)
+	options := GeneratorOptions{
+		Directory: "cadence",
+		State:     state,
+		Logger:    logger,
+	}
+	generator := NewGenerator(options)
 
 	// Test contract generation
 	err := generator.Create(TemplateMap{"contract": "TestContract"})
@@ -72,8 +77,13 @@ access(all) fun testContract() {
 	assert.Equal(t, expectedTestContent, util.NormalizeLineEndings(string(testContent)))
 
 	// Test file already exists scenario
-	generator = NewGenerator("cadence", state, logger)
-	err = generator.Create(TemplateMap{"contract": "TestContract"})
+	optionsTwo := GeneratorOptions{
+		Directory: "cadence",
+		State:     state,
+		Logger:    logger,
+	}
+	generatorTwo := NewGenerator(optionsTwo)
+	err = generatorTwo.Create(TemplateMap{"contract": "TestContract"})
 	assert.Error(t, err)
 	expectedError := fmt.Sprintf("file already exists: %s", filepath.FromSlash("cadence/contracts/TestContract.cdc"))
 	assert.Equal(t, expectedError, err.Error())
@@ -85,7 +95,12 @@ func TestGenerateNewContractSkipTests(t *testing.T) {
 
 	generateFlags.SkipTests = true
 
-	generator := NewGenerator("cadence", state, logger)
+	options := GeneratorOptions{
+		Directory: "cadence",
+		State:     state,
+		Logger:    logger,
+	}
+	generator := NewGenerator(options)
 	t.Cleanup(func() {
 		generateFlags.SkipTests = false
 	})
@@ -108,7 +123,12 @@ func TestGenerateNewContractWithCDCExtension(t *testing.T) {
 	_, state, _ := util.TestMocks(t)
 
 	// Test contract generation
-	generator := NewGenerator("cadence", state, logger)
+	options := GeneratorOptions{
+		Directory: "cadence",
+		State:     state,
+		Logger:    logger,
+	}
+	generator := NewGenerator(options)
 	err := generator.Create(TemplateMap{"contract": "Tester.cdc"})
 	assert.NoError(t, err, "Failed to generate contract")
 
@@ -126,7 +146,12 @@ func TestGenerateNewContractFileAlreadyExists(t *testing.T) {
 	_, state, _ := util.TestMocks(t)
 
 	// Test contract generation
-	generator := NewGenerator("cadence", state, logger)
+	options := GeneratorOptions{
+		Directory: "cadence",
+		State:     state,
+		Logger:    logger,
+	}
+	generator := NewGenerator(options)
 	err := generator.Create(TemplateMap{"contract": "TestContract"})
 	assert.NoError(t, err, "Failed to generate contract")
 
@@ -136,8 +161,13 @@ func TestGenerateNewContractFileAlreadyExists(t *testing.T) {
 	assert.NotNil(t, content)
 
 	// Test file already exists scenario
-	generator = NewGenerator("cadence", state, logger)
-	err = generator.Create(TemplateMap{"contract": "TestContract"})
+	optionsTwo := GeneratorOptions{
+		Directory: "cadence",
+		State:     state,
+		Logger:    logger,
+	}
+	generatorTwo := NewGenerator(optionsTwo)
+	err = generatorTwo.Create(TemplateMap{"contract": "TestContract"})
 	assert.Error(t, err)
 	expectedError := fmt.Sprintf("file already exists: %s", filepath.FromSlash("cadence/contracts/TestContract.cdc"))
 	assert.Equal(t, expectedError, err.Error())
@@ -147,7 +177,12 @@ func TestGenerateNewContractWithFileExtension(t *testing.T) {
 	logger := output.NewStdoutLogger(output.NoneLog)
 	_, state, _ := util.TestMocks(t)
 
-	generator := NewGenerator("cadence", state, logger)
+	options := GeneratorOptions{
+		Directory: "cadence",
+		State:     state,
+		Logger:    logger,
+	}
+	generator := NewGenerator(options)
 	err := generator.Create(TemplateMap{"contract": "TestContract.cdc"})
 	assert.NoError(t, err, "Failed to generate contract")
 
@@ -161,7 +196,12 @@ func TestGenerateNewScript(t *testing.T) {
 	logger := output.NewStdoutLogger(output.NoneLog)
 	_, state, _ := util.TestMocks(t)
 
-	generator := NewGenerator("cadence", state, logger)
+	options := GeneratorOptions{
+		Directory: "cadence",
+		State:     state,
+		Logger:    logger,
+	}
+	generator := NewGenerator(options)
 	err := generator.Create(TemplateMap{"script": "TestScript"})
 	assert.NoError(t, err, "Failed to generate contract")
 
@@ -180,7 +220,12 @@ func TestGenerateNewTransaction(t *testing.T) {
 	logger := output.NewStdoutLogger(output.NoneLog)
 	_, state, _ := util.TestMocks(t)
 
-	generator := NewGenerator("cadence", state, logger)
+	options := GeneratorOptions{
+		Directory: "cadence",
+		State:     state,
+		Logger:    logger,
+	}
+	generator := NewGenerator(options)
 	err := generator.Create(TemplateMap{"transaction": "TestTransaction"})
 	assert.NoError(t, err, "Failed to generate contract")
 
@@ -200,7 +245,12 @@ func TestGenerateNewWithDirFlag(t *testing.T) {
 	logger := output.NewStdoutLogger(output.NoneLog)
 	_, state, _ := util.TestMocks(t)
 
-	generator := NewGenerator("customDir", state, logger)
+	options := GeneratorOptions{
+		Directory: "customDir",
+		State:     state,
+		Logger:    logger,
+	}
+	generator := NewGenerator(options)
 	err := generator.Create(TemplateMap{"contract": "TestContract"})
 	assert.NoError(t, err, "Failed to generate contract")
 
