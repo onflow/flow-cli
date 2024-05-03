@@ -154,17 +154,14 @@ func startInteractiveSetup(
 
 	directoryPath := filepath.Join(tempDir, "cadence")
 
-	_, err = generateNew([]string{"DefaultContract"}, "contract", directoryPath, logger, state)
-	if err != nil {
-		return "", err
+	templates := TemplateMap{
+		"contract":    []string{"DefaultContract"},
+		"script":      []string{"DefaultScripts"},
+		"transaction": []string{"DefaultTransaction"},
 	}
 
-	_, err = generateNew([]string{"DefaultScript"}, "script", directoryPath, logger, state)
-	if err != nil {
-		return "", err
-	}
-
-	_, err = generateNew([]string{"DefaultTransaction"}, "transaction", directoryPath, logger, state)
+	generator := NewGenerator(directoryPath, state, logger, true)
+	err = generator.Create(templates)
 	if err != nil {
 		return "", err
 	}
