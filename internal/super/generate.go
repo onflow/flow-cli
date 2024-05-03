@@ -22,10 +22,11 @@ import (
 	"bytes"
 	"embed"
 	"fmt"
-	flowsdk "github.com/onflow/flow-go-sdk"
-	"github.com/onflow/flowkit/config"
 	"path/filepath"
 	"text/template"
+
+	flowsdk "github.com/onflow/flow-go-sdk"
+	"github.com/onflow/flowkit/config"
 
 	"github.com/onflow/flow-cli/internal/util"
 
