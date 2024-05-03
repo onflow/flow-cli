@@ -102,10 +102,6 @@ func generateContract(
 	_ flowkit.Services,
 	state *flowkit.State,
 ) (result command.Result, err error) {
-	if len(args) < 1 {
-		return nil, fmt.Errorf("invalid number of arguments")
-	}
-
 	options := GeneratorOptions{
 		Directory: "cadence",
 		State:     state,
@@ -123,10 +119,6 @@ func generateTransaction(
 	_ flowkit.Services,
 	state *flowkit.State,
 ) (result command.Result, err error) {
-	if len(args) < 1 {
-		return nil, fmt.Errorf("invalid number of arguments")
-	}
-
 	options := GeneratorOptions{
 		Directory: "cadence",
 		State:     state,
@@ -144,10 +136,6 @@ func generateScript(
 	_ flowkit.Services,
 	state *flowkit.State,
 ) (result command.Result, err error) {
-	if len(args) < 1 {
-		return nil, fmt.Errorf("invalid number of arguments")
-	}
-
 	options := GeneratorOptions{
 		Directory: "cadence",
 		State:     state,
