@@ -96,7 +96,12 @@ func init() {
 	GenerateScriptCommand.AddToParent(GenerateCommand)
 }
 
-const DefaultCadenceDirectory = "cadence"
+const (
+	DefaultCadenceDirectory = "cadence"
+	ContractType            = "contract"
+	TransactionType         = "transaction"
+	ScriptType              = "script"
+)
 
 func generateContract(
 	args []string,
@@ -111,7 +116,7 @@ func generateContract(
 		Logger:    logger,
 	}
 	generator := NewGenerator(options)
-	err = generator.Create(TemplateMap{"contract": args[0]})
+	err = generator.Create(TemplateMap{ContractType: args[0]})
 	return nil, err
 }
 
@@ -128,7 +133,7 @@ func generateTransaction(
 		Logger:    logger,
 	}
 	generator := NewGenerator(options)
-	err = generator.Create(TemplateMap{"transaction": args[0]})
+	err = generator.Create(TemplateMap{TransactionType: args[0]})
 	return nil, err
 }
 
@@ -145,7 +150,7 @@ func generateScript(
 		Logger:    logger,
 	}
 	generator := NewGenerator(options)
-	err = generator.Create(TemplateMap{"script": args[0]})
+	err = generator.Create(TemplateMap{ScriptType: args[0]})
 	return nil, err
 }
 
@@ -196,7 +201,7 @@ func (g *Generator) generate(templateType, name string) error {
 	}
 
 	switch templateType {
-	case "contract":
+	case ContractType:
 		basePath = "contracts"
 		nameData := map[string]interface{}{"Name": name}
 		fileToWrite, err = processTemplate("templates/contract_init.cdc.tmpl", nameData)
@@ -208,13 +213,13 @@ func (g *Generator) generate(templateType, name string) error {
 		if err != nil {
 			return fmt.Errorf("error generating contract test template: %w", err)
 		}
-	case "script":
+	case ScriptType:
 		basePath = "scripts"
 		fileToWrite, err = processTemplate("templates/script_init.cdc.tmpl", nil)
 		if err != nil {
 			return fmt.Errorf("error generating script template: %w", err)
 		}
-	case "transaction":
+	case TransactionType:
 		basePath = "transactions"
 		fileToWrite, err = processTemplate("templates/transaction_init.cdc.tmpl", nil)
 		if err != nil {
@@ -247,7 +252,7 @@ func (g *Generator) generate(templateType, name string) error {
 		g.Options.Logger.Info(fmt.Sprintf("Generated new %s: %s at %s", templateType, name, filenameWithBasePath))
 	}
 
-	if generateFlags.SkipTests != true && templateType == "contract" {
+	if generateFlags.SkipTests != true && templateType == ContractType {
 		testDirectoryWithBasePath := filepath.Join(rootDir, testsBasePath)
 		testFilenameWithBasePath := filepath.Join(rootDir, testsBasePath, util.AddCDCExtension(fmt.Sprintf("%s_test", name)))
 
@@ -269,7 +274,7 @@ func (g *Generator) generate(templateType, name string) error {
 		}
 	}
 
-	if templateType == "contract" {
+	if templateType == ContractType {
 		var aliases config.Aliases
 
 		if generateFlags.SkipTests != true {
