@@ -160,13 +160,7 @@ func startInteractiveSetup(
 		"transaction": "DefaultTransaction",
 	}
 
-	options := GeneratorOptions{
-		Directory:   directoryPath,
-		State:       state,
-		Logger:      logger,
-		DisableLogs: true,
-	}
-	generator := NewGenerator(options)
+	generator := NewGenerator(directoryPath, state, logger, true)
 	err = generator.Create(templates)
 	if err != nil {
 		return "", err

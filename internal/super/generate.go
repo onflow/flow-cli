@@ -109,12 +109,7 @@ func generateContract(
 	_ flowkit.Services,
 	state *flowkit.State,
 ) (result command.Result, err error) {
-	options := GeneratorOptions{
-		Directory: DefaultCadenceDirectory,
-		State:     state,
-		Logger:    logger,
-	}
-	generator := NewGenerator(options)
+	generator := NewGenerator(DefaultCadenceDirectory, state, logger, false)
 	err = generator.Create(TemplateMap{ContractType: args[0]})
 	return nil, err
 }
@@ -126,12 +121,7 @@ func generateTransaction(
 	_ flowkit.Services,
 	state *flowkit.State,
 ) (result command.Result, err error) {
-	options := GeneratorOptions{
-		Directory: DefaultCadenceDirectory,
-		State:     state,
-		Logger:    logger,
-	}
-	generator := NewGenerator(options)
+	generator := NewGenerator(DefaultCadenceDirectory, state, logger, false)
 	err = generator.Create(TemplateMap{TransactionType: args[0]})
 	return nil, err
 }
@@ -143,12 +133,7 @@ func generateScript(
 	_ flowkit.Services,
 	state *flowkit.State,
 ) (result command.Result, err error) {
-	options := GeneratorOptions{
-		Directory: DefaultCadenceDirectory,
-		State:     state,
-		Logger:    logger,
-	}
-	generator := NewGenerator(options)
+	generator := NewGenerator(DefaultCadenceDirectory, state, logger, false)
 	err = generator.Create(TemplateMap{ScriptType: args[0]})
 	return nil, err
 }
@@ -156,20 +141,19 @@ func generateScript(
 // TemplateMap defines a map of template types to their specific names
 type TemplateMap map[string]string
 
-type GeneratorOptions struct {
+type Generator struct {
 	Directory   string
 	State       *flowkit.State
 	Logger      output.Logger
 	DisableLogs bool
 }
 
-type Generator struct {
-	Options GeneratorOptions
-}
-
-func NewGenerator(options GeneratorOptions) *Generator {
+func NewGenerator(directory string, state *flowkit.State, logger output.Logger, disableLogs bool) *Generator {
 	return &Generator{
-		Options: options,
+		Directory:   directory,
+		State:       state,
+		Logger:      logger,
+		DisableLogs: disableLogs,
 	}
 }
 
@@ -195,8 +179,8 @@ func (g *Generator) generate(templateType, name string) error {
 	var testsBasePath = "tests"
 	var err error
 
-	if g.Options.Directory != "" {
-		rootDir = g.Options.Directory
+	if g.Directory != "" {
+		rootDir = g.Directory
 	}
 
 	switch templateType {
@@ -232,44 +216,44 @@ func (g *Generator) generate(templateType, name string) error {
 	filenameWithBasePath := filepath.Join(rootDir, basePath, filename)
 
 	// Check file existence
-	if _, err := g.Options.State.ReaderWriter().ReadFile(filenameWithBasePath); err == nil {
+	if _, err := g.State.ReaderWriter().ReadFile(filenameWithBasePath); err == nil {
 		return fmt.Errorf("file already exists: %s", filenameWithBasePath)
 	}
 
 	// Ensure the directory exists
-	if err := g.Options.State.ReaderWriter().MkdirAll(directoryWithBasePath, 0755); err != nil {
+	if err := g.State.ReaderWriter().MkdirAll(directoryWithBasePath, 0755); err != nil {
 		return fmt.Errorf("error creating directories: %w", err)
 	}
 
 	// Write files
-	err = g.Options.State.ReaderWriter().WriteFile(filenameWithBasePath, []byte(fileToWrite), 0644)
+	err = g.State.ReaderWriter().WriteFile(filenameWithBasePath, []byte(fileToWrite), 0644)
 	if err != nil {
 		return fmt.Errorf("error writing file: %w", err)
 	}
 
-	if !g.Options.DisableLogs {
-		g.Options.Logger.Info(fmt.Sprintf("Generated new %s: %s at %s", templateType, name, filenameWithBasePath))
+	if !g.DisableLogs {
+		g.Logger.Info(fmt.Sprintf("Generated new %s: %s at %s", templateType, name, filenameWithBasePath))
 	}
 
 	if generateFlags.SkipTests != true && templateType == ContractType {
 		testDirectoryWithBasePath := filepath.Join(rootDir, testsBasePath)
 		testFilenameWithBasePath := filepath.Join(rootDir, testsBasePath, util.AddCDCExtension(fmt.Sprintf("%s_test", name)))
 
-		if _, err := g.Options.State.ReaderWriter().ReadFile(testFilenameWithBasePath); err == nil {
+		if _, err := g.State.ReaderWriter().ReadFile(testFilenameWithBasePath); err == nil {
 			return fmt.Errorf("file already exists: %s", testFilenameWithBasePath)
 		}
 
-		if err := g.Options.State.ReaderWriter().MkdirAll(testDirectoryWithBasePath, 0755); err != nil {
+		if err := g.State.ReaderWriter().MkdirAll(testDirectoryWithBasePath, 0755); err != nil {
 			return fmt.Errorf("error creating test directory: %w", err)
 		}
 
-		err := g.Options.State.ReaderWriter().WriteFile(testFilenameWithBasePath, []byte(testFileToWrite), 0644)
+		err := g.State.ReaderWriter().WriteFile(testFilenameWithBasePath, []byte(testFileToWrite), 0644)
 		if err != nil {
 			return fmt.Errorf("error writing test file: %w", err)
 		}
 
-		if !g.Options.DisableLogs {
-			g.Options.Logger.Info(fmt.Sprintf("Generated new test file: %s at %s", name, testFilenameWithBasePath))
+		if !g.DisableLogs {
+			g.Logger.Info(fmt.Sprintf("Generated new test file: %s at %s", name, testFilenameWithBasePath))
 		}
 	}
 
@@ -299,8 +283,8 @@ func (g *Generator) updateContractsState(name, location string) error {
 		Aliases:  aliases,
 	}
 
-	g.Options.State.Contracts().AddOrUpdate(contract)
-	err := g.Options.State.SaveDefault()
+	g.State.Contracts().AddOrUpdate(contract)
+	err := g.State.SaveDefault()
 	if err != nil {
 		return fmt.Errorf("error saving to flow.json: %w", err)
 	}
