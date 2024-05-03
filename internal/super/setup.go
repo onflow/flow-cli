@@ -161,9 +161,10 @@ func startInteractiveSetup(
 	}
 
 	options := GeneratorOptions{
-		Directory: directoryPath,
-		State:     state,
-		Logger:    logger,
+		Directory:   directoryPath,
+		State:       state,
+		Logger:      logger,
+		DisableLogs: true,
 	}
 	generator := NewGenerator(options)
 	err = generator.Create(templates)

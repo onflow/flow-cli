@@ -284,7 +284,9 @@ func (g *Generator) generate(templateType, name string) error {
 			return fmt.Errorf("error writing test file: %w", err)
 		}
 
-		g.Options.Logger.Info(fmt.Sprintf("Generated new test file: %s at %s", name, testFilenameWithBasePath))
+		if !g.Options.DisableLogs {
+			g.Options.Logger.Info(fmt.Sprintf("Generated new test file: %s at %s", name, testFilenameWithBasePath))
+		}
 	}
 
 	if templateType == "contract" {
