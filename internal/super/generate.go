@@ -22,8 +22,8 @@ import (
 	"bytes"
 	"embed"
 	"fmt"
+	"github.com/onflow/flow-cli/internal/util"
 	"path/filepath"
-	"strings"
 	"text/template"
 
 	flowsdk "github.com/onflow/flow-go-sdk"
@@ -158,17 +158,6 @@ func generateScript(
 	return nil, err
 }
 
-func addCDCExtension(name string) string {
-	if strings.HasSuffix(name, ".cdc") {
-		return name
-	}
-	return fmt.Sprintf("%s.cdc", name)
-}
-
-func stripCDCExtension(name string) string {
-	return strings.TrimSuffix(name, filepath.Ext(name))
-}
-
 // TemplateMap defines a map of template types to their specific names
 type TemplateMap map[string]string
 
@@ -201,8 +190,8 @@ func (g *Generator) Create(typeNames TemplateMap) error {
 
 func (g *Generator) generate(templateType, name string) error {
 
-	name = stripCDCExtension(name)
-	filename := addCDCExtension(name)
+	name = util.StripCDCExtension(name)
+	filename := util.AddCDCExtension(name)
 
 	var fileToWrite string
 	var testFileToWrite string
@@ -269,7 +258,7 @@ func (g *Generator) generate(templateType, name string) error {
 
 	if generateFlags.SkipTests != true && templateType == "contract" {
 		testDirectoryWithBasePath := filepath.Join(rootDir, testsBasePath)
-		testFilenameWithBasePath := filepath.Join(rootDir, testsBasePath, addCDCExtension(fmt.Sprintf("%s_test", name)))
+		testFilenameWithBasePath := filepath.Join(rootDir, testsBasePath, util.AddCDCExtension(fmt.Sprintf("%s_test", name)))
 
 		if _, err := g.Options.State.ReaderWriter().ReadFile(testFilenameWithBasePath); err == nil {
 			return fmt.Errorf("file already exists: %s", testFilenameWithBasePath)
