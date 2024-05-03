@@ -22,14 +22,12 @@ import (
 	"bytes"
 	"embed"
 	"fmt"
+	flowsdk "github.com/onflow/flow-go-sdk"
+	"github.com/onflow/flowkit/config"
 	"path/filepath"
 	"text/template"
 
 	"github.com/onflow/flow-cli/internal/util"
-
-	flowsdk "github.com/onflow/flow-go-sdk"
-
-	"github.com/onflow/flowkit/config"
 
 	"github.com/onflow/flowkit"
 
@@ -275,25 +273,35 @@ func (g *Generator) generate(templateType, name string) error {
 	}
 
 	if templateType == ContractType {
-		var aliases config.Aliases
-
-		if generateFlags.SkipTests != true {
-			aliases = config.Aliases{{
-				Network: config.TestingNetwork.Name,
-				Address: flowsdk.HexToAddress("0x0000000000000007"),
-			}}
-		}
-
-		contract := config.Contract{
-			Name:     name,
-			Location: filenameWithBasePath,
-			Aliases:  aliases,
-		}
-		g.Options.State.Contracts().AddOrUpdate(contract)
-		err := g.Options.State.SaveDefault()
+		err := g.updateContractsState(name, filenameWithBasePath)
 		if err != nil {
-			return fmt.Errorf("error saving to flow.json: %w", err)
+			return err
 		}
+	}
+
+	return nil
+}
+
+func (g *Generator) updateContractsState(name, location string) error {
+	var aliases config.Aliases
+
+	if generateFlags.SkipTests != true {
+		aliases = config.Aliases{{
+			Network: config.TestingNetwork.Name,
+			Address: flowsdk.HexToAddress("0x0000000000000007"),
+		}}
+	}
+
+	contract := config.Contract{
+		Name:     name,
+		Location: location,
+		Aliases:  aliases,
+	}
+
+	g.Options.State.Contracts().AddOrUpdate(contract)
+	err := g.Options.State.SaveDefault()
+	if err != nil {
+		return fmt.Errorf("error saving to flow.json: %w", err)
 	}
 
 	return nil
