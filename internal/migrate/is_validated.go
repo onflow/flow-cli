@@ -149,6 +149,7 @@ func (v *validator) getContractUpdateStatuses(contractNames ...string) ([]contra
 		}
 	}
 
+	// find missing accounts and contracts from tstatuses
 	missingAccountsAndContracts := make(map[string]string)
 
 	// Throw error if contract was not part of the last migration
