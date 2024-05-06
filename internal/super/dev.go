@@ -22,11 +22,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	flowGo "github.com/onflow/flow-go/model/flow"
 	"os"
 	"os/signal"
 	"strings"
 	"syscall"
+
+	flowGo "github.com/onflow/flow-go/model/flow"
 
 	"github.com/onflow/cadence/runtime/parser"
 	"github.com/onflow/flow-emulator/server"
