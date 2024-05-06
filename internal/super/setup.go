@@ -112,9 +112,7 @@ func startInteractiveSetup(
 		Fs: afero.NewOsFs(),
 	}
 	state, err := flowkit.Init(rw, crypto.ECDSA_P256, crypto.SHA3_256)
-	if err != nil {
-		os.Exit(1)
-	}
+	return err
 
 	// Ask for project name if not given
 	if len(args) < 1 {
