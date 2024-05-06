@@ -21,6 +21,7 @@ package super
 import (
 	"bytes"
 	"fmt"
+	"github.com/onflow/flow-cli/internal/util"
 	"io"
 	"os"
 	"path/filepath"
@@ -196,6 +197,8 @@ func startInteractiveSetup(
 			})
 		}
 	}
+
+	logger.Info(util.MessageWithEmojiPrefix("🔄", "Installing selected core contracts and dependencies..."))
 
 	// Add the selected core contracts as dependencies
 	installer, err := dependencymanager.NewDependencyInstaller(logger, state, false, tempDir, dependencymanager.Flags{})

@@ -81,7 +81,7 @@ func (m optionSelectModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m optionSelectModel) View() string {
 	var b strings.Builder
-	b.WriteString(fmt.Sprintf("%s.\n", m.message))
+	b.WriteString(fmt.Sprintf("%s\n", m.message))
 	b.WriteString("Use arrow keys to navigate, space to select, enter to confirm, q to quit:\n\n")
 	for i, choice := range m.choices {
 		if m.cursor == i {
