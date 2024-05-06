@@ -38,7 +38,7 @@ import (
 )
 
 type flagsDev struct {
-	StartEmulator bool `default:"false" flag:"start-emulator" info:"Start emulator if not already running"`
+	DisableEmulator bool `default:"false" flag:"disable-emulator" info:"Disable the emulator from running by default"`
 }
 
 var devFlags = flagsDev{}
@@ -72,7 +72,7 @@ func dev(
 		return nil, err
 	}
 
-	if devFlags.StartEmulator {
+	if !devFlags.DisableEmulator {
 		privateKey, err := serviceAccount.Key.PrivateKey()
 		if err != nil {
 			return nil, fmt.Errorf("failed to get private key: %s", err)
