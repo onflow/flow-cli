@@ -22,6 +22,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	flowGo "github.com/onflow/flow-go/model/flow"
 	"os"
 	"os/signal"
 	"strings"
@@ -82,6 +83,7 @@ func dev(
 		log := zerolog.New(consoleWriter).With().Timestamp().Logger()
 
 		emulatorServer := server.NewEmulatorServer(&log, &server.Config{
+			ChainID:                flowGo.Emulator,
 			ServicePublicKey:       (*privateKey).PublicKey(),
 			ServicePrivateKey:      *privateKey,
 			ServiceKeySigAlgo:      serviceAccount.Key.SigAlgo(),
