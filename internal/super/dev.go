@@ -90,7 +90,7 @@ func dev(
 			ServiceKeySigAlgo:      serviceAccount.Key.SigAlgo(),
 			ServiceKeyHashAlgo:     serviceAccount.Key.HashAlgo(),
 			ScriptGasLimit:         100000,
-			TransactionMaxGasLimit: 999999,
+			TransactionMaxGasLimit: 9999,
 		})
 
 		emuErr := emulatorServer.Listen()
