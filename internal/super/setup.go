@@ -25,6 +25,8 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/onflow/flow-cli/internal/util"
+
 	flowsdk "github.com/onflow/flow-go-sdk"
 	"golang.org/x/exp/slices"
 
@@ -196,6 +198,8 @@ func startInteractiveSetup(
 			})
 		}
 	}
+
+	logger.Info(util.MessageWithEmojiPrefix("🔄", "Installing selected core contracts and dependencies..."))
 
 	// Add the selected core contracts as dependencies
 	installer, err := dependencymanager.NewDependencyInstaller(logger, state, false, tempDir, dependencymanager.Flags{})

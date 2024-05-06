@@ -65,8 +65,6 @@ type InitConfigParameters struct {
 
 // InitializeConfiguration creates the Flow configuration json file based on the provided parameters.
 func InitializeConfiguration(params InitConfigParameters, logger output.Logger, readerWriter flowkit.ReaderWriter) (*flowkit.State, error) {
-	logger.Info("⚠️Notice: for starting a new project prefer using 'flow setup'.")
-
 	sigAlgo := crypto.StringToSignatureAlgorithm(params.ServiceKeySigAlgo)
 	if sigAlgo == crypto.UnknownSignatureAlgorithm {
 		return nil, fmt.Errorf("invalid signature algorithm: %s", params.ServiceKeySigAlgo)
