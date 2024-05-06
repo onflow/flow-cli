@@ -25,6 +25,7 @@ import (
 	"io"
 	"path"
 	"regexp"
+	"slices"
 	"strings"
 	"time"
 
@@ -143,32 +144,34 @@ func (v *validator) getContractUpdateStatuses(contractNames ...string) ([]contra
 	}
 
 	// Get the validation result related to the contract
+	var foundAddresses []string
 	for _, s := range statuses {
 		if addressToContractName[s.AccountAddress] == s.ContractName {
 			contractUpdateStatuses = append(contractUpdateStatuses, s)
+			foundAddresses = append(foundAddresses, s.AccountAddress)
 		}
 	}
 
-	// find missing accounts and contracts from tstatuses
-	missingAccountsAndContracts := make(map[string]string)
-
-	// Throw error if contract was not part of the last migration
-	if len(missingAccountsAndContracts) != 0 {
-		builder := strings.Builder{}
-		builder.WriteString("some contracts do not appear to have been a part of any emulated migrations yet, please ensure that it has been staged & wait for the next emulated migration (last migration report was at ")
-		builder.WriteString(ts.Format(time.RFC3339))
-		builder.WriteString(")\n\n")
-
-		for address, contractName := range missingAccountsAndContracts {
+	for addr, contractName := range addressToContractName {
+		var missingContractErr error
+		if !slices.Contains(foundAddresses, addr) {
+			builder := strings.Builder{}
+			builder.WriteString("some contracts do not appear to have been a part of any emulated migrations yet, please ensure that it has been staged & wait for the next emulated migration (last migration report was at ")
+			builder.WriteString(ts.Format(time.RFC3339))
+			builder.WriteString(")\n\n")
 			builder.WriteString(" - Account: ")
-			builder.WriteString(address)
+			builder.WriteString(addr)
 			builder.WriteString("\n - Contract: ")
 			builder.WriteString(contractName)
 			builder.WriteString("\n - Network: ")
 			builder.WriteString(v.network.Name)
+
+			missingContractErr = fmt.Errorf(builder.String())
 		}
 
-		return nil, ts, fmt.Errorf(builder.String())
+		if missingContractErr != nil {
+			return nil, nil, missingContractErr
+		}
 	}
 
 	return contractUpdateStatuses, ts, nil
@@ -220,48 +223,6 @@ func (v *validator) validate(contractName string) (validationResult, error) {
 		Network:   v.network.Name,
 	}, nil
 }
-
-// func (v *validator) getContractValidationStatus(network config.Network, address string, contractName string) (contractUpdateStatus, *time.Time, error) {
-// 	// Get last migration report
-// 	report, timestamp, err := v.getLatestMigrationReport(network)
-// 	if err != nil {
-// 		return contractUpdateStatus{}, nil, err
-// 	}
-
-// 	// Get all the contract statuses from the report
-// 	statuses, err := v.fetchAndParseReport(report.GetPath())
-// 	if err != nil {
-// 		return contractUpdateStatus{}, nil, err
-// 	}
-
-// 	// Get the validation result related to the contract
-// 	var status *contractUpdateStatus
-// 	for _, s := range statuses {
-// 		if s.ContractName == contractName && s.AccountAddress == address {
-// 			status = &s
-// 			break
-// 		}
-// 	}
-
-// 	// Throw error if contract was not part of the last migration
-// 	if status == nil {
-// 		builder := strings.Builder{}
-// 		builder.WriteString("the contract does not appear to have been a part of any emulated migrations yet, please ensure that it has been staged & wait for the next emulated migration (last migration report was at ")
-// 		builder.WriteString(timestamp.Format(time.RFC3339))
-// 		builder.WriteString(")\n\n")
-
-// 		builder.WriteString(" - Account: ")
-// 		builder.WriteString(address)
-// 		builder.WriteString("\n - Contract: ")
-// 		builder.WriteString(contractName)
-// 		builder.WriteString("\n - Network: ")
-// 		builder.WriteString(network.Name)
-
-// 		return contractUpdateStatus{}, nil, fmt.Errorf(builder.String())
-// 	}
-
-// 	return *status, timestamp, nil
-// }
 
 func (v *validator) getLatestMigrationReport(network config.Network) (*github.RepositoryContent, *time.Time, error) {
 	// Get the content of the migration reports folder
