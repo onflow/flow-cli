@@ -21,11 +21,12 @@ package super
 import (
 	"bytes"
 	"fmt"
-	"github.com/onflow/flow-go-sdk/crypto"
-	"github.com/spf13/afero"
 	"io"
 	"os"
 	"path/filepath"
+
+	"github.com/onflow/flow-go-sdk/crypto"
+	"github.com/spf13/afero"
 
 	"github.com/onflow/flow-cli/internal/util"
 
