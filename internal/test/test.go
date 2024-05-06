@@ -61,6 +61,9 @@ const helperScriptSubstr = "_helper"
 // scripts and transactions are excluded from coverage report.
 const contractsCoverCode = "contracts"
 
+// The default glob pattern to find test files.
+const defaultTestSuffix = "_test.cdc"
+
 type flagsTests struct {
 	Cover        bool   `default:"false" flag:"cover" info:"Use the cover flag to calculate coverage report"`
 	CoverProfile string `default:"coverage.json" flag:"coverprofile" info:"Filename to write the calculated coverage report. Supported extensions are .json and .lcov"`
@@ -74,10 +77,14 @@ var testFlags = flagsTests{}
 
 var TestCommand = &command.Command{
 	Cmd: &cobra.Command{
-		Use:     "test <filename>",
-		Short:   "Run Cadence tests",
-		Example: `flow test script.cdc`,
-		Args:    cobra.MinimumNArgs(1),
+		Use:   "test [files...]",
+		Short: "Run Cadence tests",
+		Example: `# Run tests in files matching default pattern **/*_test.cdc
+flow test
+
+# Run tests in the specified files
+flow test test1.cdc test2.cdc`,
+		Args:    cobra.ArbitraryArgs,
 		GroupID: "tools",
 	},
 	Flags: &testFlags,
@@ -101,8 +108,19 @@ func run(
 		)
 	}
 
+	var filenames []string
+	if len(args) == 0 {
+		var err error
+		filenames, err = findAllTestFiles(".")
+		if err != nil {
+			return nil, fmt.Errorf("error loading script files: %w", err)
+		}
+	} else {
+		filenames = args
+	}
+
 	testFiles := make(map[string][]byte, 0)
-	for _, filename := range args {
+	for _, filename := range filenames {
 		code, err := state.ReadFile(filename)
 		if err != nil {
 			return nil, fmt.Errorf("error loading script file: %w", err)
@@ -341,14 +359,18 @@ func (r *result) String() string {
 	var b bytes.Buffer
 	writer := util.CreateTabWriter(&b)
 
-	for scriptPath, testResult := range r.Results {
-		_, _ = fmt.Fprint(writer, cdcTests.PrettyPrintResults(testResult, scriptPath))
-	}
-	if r.CoverageReport != nil {
-		_, _ = fmt.Fprint(writer, r.CoverageReport.String())
-	}
-	if r.RandomSeed > 0 {
-		_, _ = fmt.Fprintf(writer, "\nSeed: %d", r.RandomSeed)
+	if len(r.Results) == 0 {
+		_, _ = fmt.Fprint(writer, "No tests found")
+	} else {
+		for scriptPath, testResult := range r.Results {
+			_, _ = fmt.Fprint(writer, cdcTests.PrettyPrintResults(testResult, scriptPath))
+		}
+		if r.CoverageReport != nil {
+			_, _ = fmt.Fprint(writer, r.CoverageReport.String())
+		}
+		if r.RandomSeed > 0 {
+			_, _ = fmt.Fprintf(writer, "\nSeed: %d", r.RandomSeed)
+		}
 	}
 
 	_ = writer.Flush()
@@ -381,4 +403,25 @@ func (r *result) Oneliner() string {
 
 func (r *result) ExitCode() int {
 	return r.exitCode
+}
+
+func findAllTestFiles(baseDir string) ([]string, error) {
+	var filenames []string
+	err := filepath.Walk(baseDir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		if !strings.HasSuffix(path, defaultTestSuffix) {
+			return nil
+		}
+
+		filenames = append(filenames, path)
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return filenames, nil
 }
