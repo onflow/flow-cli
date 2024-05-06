@@ -82,10 +82,11 @@ func dev(
 		log := zerolog.New(consoleWriter).With().Timestamp().Logger()
 
 		emulatorServer := server.NewEmulatorServer(&log, &server.Config{
-			ServicePublicKey:   (*privateKey).PublicKey(),
-			ServicePrivateKey:  *privateKey,
-			ServiceKeySigAlgo:  serviceAccount.Key.SigAlgo(),
-			ServiceKeyHashAlgo: serviceAccount.Key.HashAlgo(),
+			ServicePublicKey:       (*privateKey).PublicKey(),
+			ServicePrivateKey:      *privateKey,
+			ServiceKeySigAlgo:      serviceAccount.Key.SigAlgo(),
+			ServiceKeyHashAlgo:     serviceAccount.Key.HashAlgo(),
+			TransactionMaxGasLimit: 999999,
 		})
 
 		emuErr := emulatorServer.Listen()
