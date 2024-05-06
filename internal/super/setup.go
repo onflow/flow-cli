@@ -25,6 +25,9 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/onflow/flow-go-sdk/crypto"
+	"github.com/spf13/afero"
+
 	"github.com/onflow/flow-cli/internal/util"
 
 	flowsdk "github.com/onflow/flow-go-sdk"
@@ -65,15 +68,15 @@ var SetupCommand = &command.Command{
 		GroupID: "super",
 	},
 	Flags: &setupFlags,
-	RunS:  create,
+	Run:   create,
 }
 
 func create(
 	args []string,
 	_ command.GlobalFlags,
 	logger output.Logger,
+	_ flowkit.ReaderWriter,
 	_ flowkit.Services,
-	state *flowkit.State,
 ) (command.Result, error) {
 	var targetDir string
 	var err error
@@ -89,7 +92,7 @@ func create(
 			return nil, err
 		}
 	} else {
-		targetDir, err = startInteractiveSetup(args, logger, state)
+		targetDir, err = startInteractiveSetup(args, logger)
 		if err != nil {
 			return nil, err
 		}
@@ -101,10 +104,17 @@ func create(
 func startInteractiveSetup(
 	args []string,
 	logger output.Logger,
-	state *flowkit.State,
 ) (string, error) {
 	var targetDir string
 	var err error
+
+	rw := afero.Afero{
+		Fs: afero.NewOsFs(),
+	}
+	state, err := flowkit.Init(rw, crypto.ECDSA_P256, crypto.SHA3_256)
+	if err != nil {
+		return "", err
+	}
 
 	// Ask for project name if not given
 	if len(args) < 1 {
