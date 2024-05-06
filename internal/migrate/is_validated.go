@@ -111,6 +111,82 @@ func newValidator(repoService GitHubRepositoriesService, network config.Network,
 	}
 }
 
+func (v *validator) getContractUpdateStatuses(contractNames ...string) ([]contractUpdateStatus, error) {
+	var contractUpdateStatuses []contractUpdateStatus
+	err := checkNetwork(v.network)
+	if err != nil {
+		return nil, err
+	}
+
+	v.logger.StartProgress("Checking if contracts has been validated")
+	defer v.logger.StopProgress()
+
+	addressToContractName := make(map[string]string)
+	for _, contractName := range contractNames {
+		addr, err := getAddressByContractName(v.state, contractName, v.network)
+		if err != nil {
+			return nil, err
+		}
+		addressToContractName[addr.HexWithPrefix()] = contractName
+	}
+
+	// Get last migration report
+	report, ts, err := v.getLatestMigrationReport(v.network)
+	if err != nil {
+		return nil, err
+	}
+
+	// Get all the contract statuses from the report
+	statuses, err := v.fetchAndParseReport(report.GetPath())
+	if err != nil {
+		return nil, err
+	}
+
+	// Get the validation result related to the contract
+	for _, s := range statuses {
+		if addressToContractName[s.AccountAddress] == s.ContractName {
+			contractUpdateStatuses = append(contractUpdateStatuses, s)
+		}
+	}
+
+	missingAccountsAndContracts :=  make(map[string]string)
+
+	// Throw error if contract was not part of the last migration
+	if len(missingAccountsAndContracts) != 0 {
+		builder := strings.Builder{}
+		builder.WriteString("some contracts do not appear to have been a part of any emulated migrations yet, please ensure that it has been staged & wait for the next emulated migration (last migration report was at ")
+		builder.WriteString(ts.Format(time.RFC3339))
+		builder.WriteString(")\n\n")
+
+		for address, contractName := range missingAccountsAndContracts {
+			builder.WriteString(" - Account: ")
+			builder.WriteString(address)
+			builder.WriteString("\n - Contract: ")
+			builder.WriteString(contractName)
+			builder.WriteString("\n - Network: ")
+			builder.WriteString(v.network.Name)
+		}
+
+		return nil, fmt.Errorf(builder.String())
+	}
+
+	return contractUpdateStatuses, nil
+}
+
+func (v *validator) getContractValidationStatus(network config.Network, address string, contractName string) (contractUpdateStatus, *time.Time, error) {
+	status, err := v.getContractUpdateStatuses(contractName)
+	if err != nil {
+		return contractUpdateStatus{}, nil, err
+	}
+
+	if len(status) != 1 {
+		return contractUpdateStatus{}, nil, fmt.Errorf("failed to find contract in last migration report")
+	}
+
+	return status[0], timestamp, nil
+
+}
+
 func (v *validator) validate(contractName string) (validationResult, error) {
 	err := checkNetwork(v.network)
 	if err != nil {
