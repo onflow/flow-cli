@@ -38,7 +38,7 @@ import (
 )
 
 type flagsDev struct {
-	StartEmulator bool `default:"false" flag:"start-emulator" info:"Start emulator if not already running"`
+	StartEmulator bool `default:"true" flag:"start-emulator" info:"Start emulator if not already running"`
 }
 
 var devFlags = flagsDev{}
