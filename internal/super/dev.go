@@ -86,6 +86,7 @@ func dev(
 			ServicePrivateKey:      *privateKey,
 			ServiceKeySigAlgo:      serviceAccount.Key.SigAlgo(),
 			ServiceKeyHashAlgo:     serviceAccount.Key.HashAlgo(),
+			ScriptGasLimit:         100000,
 			TransactionMaxGasLimit: 999999,
 		})
 
