@@ -110,7 +110,8 @@ func generateContract(
 	state *flowkit.State,
 ) (result command.Result, err error) {
 	generator := NewGenerator(DefaultCadenceDirectory, state, logger, false)
-	err = generator.Create(TemplateMap{ContractType: []string{args[0]}})
+	contract := Contract{Name: args[0], Account: args[1]}
+	err = generator.Create(TemplateMap{ContractType: []TemplateItem{contract}})
 	return nil, err
 }
 
@@ -122,7 +123,8 @@ func generateTransaction(
 	state *flowkit.State,
 ) (result command.Result, err error) {
 	generator := NewGenerator(DefaultCadenceDirectory, state, logger, false)
-	err = generator.Create(TemplateMap{TransactionType: []string{args[0]}})
+	transaction := OtherTemplate{Name: args[0]}
+	err = generator.Create(TemplateMap{TransactionType: []TemplateItem{transaction}})
 	return nil, err
 }
 
@@ -134,12 +136,50 @@ func generateScript(
 	state *flowkit.State,
 ) (result command.Result, err error) {
 	generator := NewGenerator(DefaultCadenceDirectory, state, logger, false)
-	err = generator.Create(TemplateMap{ScriptType: []string{args[0]}})
+	script := OtherTemplate{Name: args[0]}
+	err = generator.Create(TemplateMap{ScriptType: []TemplateItem{script}})
 	return nil, err
 }
 
-// TemplateMap defines a map of template types to their specific names
-type TemplateMap map[string][]string
+// TemplateItem is an interface for different template types
+type TemplateItem interface {
+	GetName() string
+	GetAccount() string
+}
+
+// Contract contains properties for contracts
+type Contract struct {
+	Name    string
+	Account string
+}
+
+// GetName returns the name of the contract
+func (c Contract) GetName() string {
+	return c.Name
+}
+
+// GetAccount returns the account of the contract
+func (c Contract) GetAccount() string {
+	return c.Account
+}
+
+// OtherTemplate contains only a name property for scripts and transactions
+type OtherTemplate struct {
+	Name string
+}
+
+// GetName returns the name of the script or transaction
+func (o OtherTemplate) GetName() string {
+	return o.Name
+}
+
+// GetAccount returns an empty string for scripts and transactions
+func (o OtherTemplate) GetAccount() string {
+	return ""
+}
+
+// TemplateMap holds all templates with flexibility
+type TemplateMap map[string][]TemplateItem
 
 type Generator struct {
 	directory   string
@@ -158,9 +198,9 @@ func NewGenerator(directory string, state *flowkit.State, logger output.Logger, 
 }
 
 func (g *Generator) Create(typeNames TemplateMap) error {
-	for templateType, names := range typeNames {
-		for _, name := range names {
-			err := g.generate(templateType, name)
+	for templateType, items := range typeNames {
+		for _, item := range items {
+			err := g.generate(templateType, item.GetName(), item.GetAccount())
 			if err != nil {
 				return err
 			}
@@ -169,7 +209,7 @@ func (g *Generator) Create(typeNames TemplateMap) error {
 	return nil
 }
 
-func (g *Generator) generate(templateType, name string) error {
+func (g *Generator) generate(templateType, name, account string) error {
 
 	name = util.StripCDCExtension(name)
 	filename := util.AddCDCExtension(name)
@@ -214,9 +254,9 @@ func (g *Generator) generate(templateType, name string) error {
 		return fmt.Errorf("invalid template type: %s", templateType)
 	}
 
-	directoryWithBasePath := filepath.Join(rootDir, basePath)
-	filenameWithBasePath := filepath.Join(rootDir, basePath, filename)
-	relativeFilenameWithBasePath := filepath.Join(basePath, filename)
+	directoryWithBasePath := filepath.Join(rootDir, basePath, account)
+	filenameWithBasePath := filepath.Join(rootDir, basePath, account, filename)
+	relativeFilenameWithBasePath := filepath.Join(basePath, account, filename)
 
 	// Check file existence
 	if _, err := g.state.ReaderWriter().ReadFile(filenameWithBasePath); err == nil {
