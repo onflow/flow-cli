@@ -27,6 +27,8 @@ import (
 	"strings"
 	"syscall"
 
+	flowGo "github.com/onflow/flow-go/model/flow"
+
 	"github.com/onflow/cadence/runtime/parser"
 	"github.com/onflow/flow-emulator/server"
 	"github.com/onflow/flowkit"
@@ -82,10 +84,13 @@ func dev(
 		log := zerolog.New(consoleWriter).With().Timestamp().Logger()
 
 		emulatorServer := server.NewEmulatorServer(&log, &server.Config{
-			ServicePublicKey:   (*privateKey).PublicKey(),
-			ServicePrivateKey:  *privateKey,
-			ServiceKeySigAlgo:  serviceAccount.Key.SigAlgo(),
-			ServiceKeyHashAlgo: serviceAccount.Key.HashAlgo(),
+			ChainID:                flowGo.Emulator,
+			ServicePublicKey:       (*privateKey).PublicKey(),
+			ServicePrivateKey:      *privateKey,
+			ServiceKeySigAlgo:      serviceAccount.Key.SigAlgo(),
+			ServiceKeyHashAlgo:     serviceAccount.Key.HashAlgo(),
+			ScriptGasLimit:         100000,
+			TransactionMaxGasLimit: 9999,
 		})
 
 		emuErr := emulatorServer.Listen()
