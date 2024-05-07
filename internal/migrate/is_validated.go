@@ -147,7 +147,7 @@ func (v *validator) getContractUpdateStatuses(contractNames ...string) ([]contra
 		return nil, nil, err
 	}
 
-	v.logger.StartProgress("Checking if contracts has been validated")
+	v.logger.StartProgress("Checking if contracts has been validated...")
 	defer v.logger.StopProgress()
 
 	addressToContractName := make(map[string]string)

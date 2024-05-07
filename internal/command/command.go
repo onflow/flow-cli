@@ -126,7 +126,7 @@ func (c Command) AddToParent(parent *cobra.Command) {
 			checkVersion(logger)
 		}
 
-		// command to validate contracts are sstill valid for migration
+		// command to validate contracts are still valid for migration
 
 		// record command usage
 		wg := sync.WaitGroup{}
