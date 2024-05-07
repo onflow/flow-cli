@@ -168,7 +168,7 @@ func startInteractiveSetup(
 
 	templates := TemplateMap{
 		"contract": []TemplateItem{
-			Contract{Name: "DefaultContract", Account: "example-account"},
+			Contract{Name: "DefaultContract", Account: ""},
 		},
 		"script": []TemplateItem{
 			OtherTemplate{Name: "DefaultScripts"},

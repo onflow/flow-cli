@@ -20,10 +20,6 @@
 package main
 
 import (
-	"fmt"
-	"os"
-	"strings"
-
 	"github.com/onflow/flow-cli/internal/dependencymanager"
 
 	"github.com/spf13/cobra"
@@ -62,25 +58,25 @@ func main() {
 			// If output is set to json, do not append any message
 			if outputFlag != "json" {
 
-				width := 80
-				url := "https://cadence-lang.org/docs/cadence_migration_guide"
+				//width := 80
+				//url := "https://cadence-lang.org/docs/cadence_migration_guide"
+				//
+				//// Function to center text within a given width
+				//centerText := func(text string, width int) string {
+				//	space := (width - len(text)) / 2
+				//	if space < 0 {
+				//		space = 0
+				//	}
+				//	return fmt.Sprintf("%s%s%s", strings.Repeat(" ", space), text, strings.Repeat(" ", space))
+				//}
 
-				// Function to center text within a given width
-				centerText := func(text string, width int) string {
-					space := (width - len(text)) / 2
-					if space < 0 {
-						space = 0
-					}
-					return fmt.Sprintf("%s%s%s", strings.Repeat(" ", space), text, strings.Repeat(" ", space))
-				}
-
-				fmt.Fprintln(os.Stderr, strings.Repeat("+", width))
-				fmt.Fprintln(os.Stderr, centerText("⚠ Upgrade to Cadence 1.0", width))
-				fmt.Fprintln(os.Stderr, centerText("The Crescendo network upgrade, including Cadence 1.0, is coming soon.", width))
-				fmt.Fprintln(os.Stderr, centerText("You may need to update your existing contracts to support this change.", width))
-				fmt.Fprintln(os.Stderr, centerText("Please visit our migration guide here:", width))
-				fmt.Fprintln(os.Stderr, centerText(url, width))
-				fmt.Fprintln(os.Stderr, strings.Repeat("+", width))
+				//fmt.Fprintln(os.Stderr, strings.Repeat("+", width))
+				//fmt.Fprintln(os.Stderr, centerText("⚠ Upgrade to Cadence 1.0", width))
+				//fmt.Fprintln(os.Stderr, centerText("The Crescendo network upgrade, including Cadence 1.0, is coming soon.", width))
+				//fmt.Fprintln(os.Stderr, centerText("You may need to update your existing contracts to support this change.", width))
+				//fmt.Fprintln(os.Stderr, centerText("Please visit our migration guide here:", width))
+				//fmt.Fprintln(os.Stderr, centerText(url, width))
+				//fmt.Fprintln(os.Stderr, strings.Repeat("+", width))
 
 			}
 		},
