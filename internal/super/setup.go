@@ -58,9 +58,10 @@ type flagsSetup struct {
 
 var setupFlags = flagsSetup{}
 
+// TODO: Add --config-only flag
 var SetupCommand = &command.Command{
 	Cmd: &cobra.Command{
-		Use:     "setup <project name>",
+		Use:     "init <project name>",
 		Short:   "Start a new Flow project",
 		Example: "flow setup my-project",
 		Args:    cobra.MaximumNArgs(1),
