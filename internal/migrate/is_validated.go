@@ -40,6 +40,34 @@ import (
 	"github.com/onflow/flow-cli/internal/util"
 )
 
+type missingContractError struct {
+	MissingContracts []struct {
+		ContractName string
+		Address      string
+		Network      string
+	}
+	LastMigrationTime *time.Time
+}
+
+func (m missingContractError) Error() string {
+	builder := strings.Builder{}
+	builder.WriteString("some contracts do not appear to have been a part of any emulated migrations yet, please ensure that it has been staged & wait for the next emulated migration (last migration report was at ")
+	builder.WriteString(m.LastMigrationTime.Format(time.RFC3339))
+	builder.WriteString(")\n\n")
+
+	for _, contract := range m.MissingContracts {
+		builder.WriteString(" - Account: ")
+		builder.WriteString(contract.Address)
+		builder.WriteString("\n - Contract: ")
+		builder.WriteString(contract.ContractName)
+		builder.WriteString("\n - Network: ")
+		builder.WriteString(contract.Network)
+		builder.WriteString("\n\n")
+	}
+
+	return builder.String()
+}
+
 //go:generate mockery --name GitHubRepositoriesService --output ./mocks --case underscore
 type GitHubRepositoriesService interface {
 	GetContents(ctx context.Context, owner string, repo string, path string, opt *github.RepositoryContentGetOptions) (fileContent *github.RepositoryContent, directoryContent []*github.RepositoryContent, resp *github.Response, err error)
