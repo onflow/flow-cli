@@ -177,7 +177,7 @@ func startInteractiveSetup(
 		},
 	}
 
-	generator := NewGenerator(directoryPath, state, logger, true)
+	generator := NewGenerator(directoryPath, state, logger, true, false)
 	err = generator.Create(templates)
 	if err != nil {
 		return "", err

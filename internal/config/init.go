@@ -124,10 +124,10 @@ func InitializeConfiguration(params InitConfigParameters, readerWriter flowkit.R
 		)
 	}
 
-	err = state.Save(path)
-	if err != nil {
-		return nil, err
-	}
+	//err = state.Save(path)
+	//if err != nil {
+	//	return nil, err
+	//}
 
 	return state, nil
 }
