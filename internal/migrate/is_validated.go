@@ -204,7 +204,7 @@ func (v *validator) getContractUpdateStatuses(contractNames ...string) ([]contra
 }
 
 
-func (v *validator) getContractValidationStatus(network config.Network, address string, contractName string) (contractUpdateStatus, *time.Time, error) {
+func (v *validator) getContractValidationStatus(contractName string) (contractUpdateStatus, *time.Time, error) {
 	status, ts, err := v.getContractUpdateStatuses(contractName)
 	if err != nil {
 		return contractUpdateStatus{}, nil, err
@@ -227,14 +227,7 @@ func (v *validator) validate(contractName string) (validationResult, error) {
 	v.logger.StartProgress("Checking if contract has been validated")
 	defer v.logger.StopProgress()
 
-	addr, err := getAddressByContractName(v.state, contractName, v.network)
-	if err != nil {
-		return validationResult{}, err
-	}
-
 	status, timestamp, err := v.getContractValidationStatus(
-		v.network,
-		addr.HexWithPrefix(),
 		contractName,
 	)
 	if err != nil {
