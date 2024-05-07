@@ -41,10 +41,10 @@ import (
 )
 
 type missingContractError struct {
-	MissingContracts []struct{
+	MissingContracts []struct {
 		ContractName string
-		Address string
-		Network string
+		Address      string
+		Network      string
 	}
 	LastMigrationTime *time.Time
 }
@@ -195,14 +195,13 @@ func (v *validator) getContractUpdateStatuses(contractNames ...string) ([]contra
 			missingContractErr.LastMigrationTime = ts
 		}
 
-		if len(missingContractErr.MissingContracts) > 0  {
+		if len(missingContractErr.MissingContracts) > 0 {
 			return nil, nil, missingContractErr
 		}
 	}
 
 	return contractUpdateStatuses, ts, nil
 }
-
 
 func (v *validator) getContractValidationStatus(contractName string) (contractUpdateStatus, *time.Time, error) {
 	status, ts, err := v.getContractUpdateStatuses(contractName)
