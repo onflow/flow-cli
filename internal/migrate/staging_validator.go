@@ -43,6 +43,11 @@ import (
 	"github.com/onflow/flow-cli/internal/util"
 )
 
+/*
+
+TODO: test circular dependency case, probably works, but worried about cached checkers
+*/
+
 type stagingValidator struct {
 	flow  flowkit.Services
 	state *flowkit.State
@@ -54,7 +59,8 @@ type stagingValidator struct {
 	// All resolved contract code
 	contracts map[common.Location][]byte
 	// Record errors related to missing staged dependencies, as these are reported separately
-	missingDependencies []common.AddressLocation
+	// dependent -> missing dependencies
+	missingDependencies map[common.Location][]common.AddressLocation
 	// Cache for contract checkers which are reused during program checking & used for the update checker
 	checkers map[common.Location]*sema.Checker
 }
@@ -150,6 +156,7 @@ func (v *stagingValidator) Validate(stagedContracts []StagedContract) error {
 		v.stagedContracts[stagedContract.DeployLocation] = stagedContract
 	}
 
+	// Load system contracts
 	v.loadSystemContracts()
 
 	// Parse and check all staged contracts
@@ -245,6 +252,7 @@ func (v *stagingValidator) validateContractUpdate(location common.AddressLocatio
 
 func (v *stagingValidator) parseAndCheckContract(
 	importedLocation common.Location,
+	stack ...common.Location,
 ) (*ast.Program, *sema.Checker, error) {
 	// Resolve the contract code and location based on whether this is a staged update
 	// Or an existing contract
@@ -282,7 +290,7 @@ func (v *stagingValidator) parseAndCheckContract(
 				return util.NewStandardLibrary().BaseValueActivation
 			},
 			LocationHandler:            v.resolveLocation,
-			ImportHandler:              v.resolveImport,
+			ImportHandler:              v.resolveImport(append(stack, importedLocation)),
 			MemberAccountAccessHandler: v.resolveAccountAccess,
 		},
 	)
@@ -331,6 +339,13 @@ func (v *stagingValidator) getStagedContractCode(
 		return nil, fmt.Errorf("invalid script return value type: %T", value)
 	}
 
+	// If the contract code is nil, the contract has not been staged yet
+	// Return nil to indicate this
+	if optValue.Value == nil {
+		v.contracts[location] = nil
+		return nil, nil
+	}
+
 	strValue, ok := optValue.Value.(cadence.String)
 	if !ok {
 		return nil, fmt.Errorf("invalid script return value type: %T", value)
@@ -340,66 +355,65 @@ func (v *stagingValidator) getStagedContractCode(
 	return v.contracts[location], nil
 }
 
-func (v *stagingValidator) resolveImport(checker *sema.Checker, importedLocation common.Location, _ ast.Range) (sema.Import, error) {
-	// Check if the imported location is the crypto checker
-	if importedLocation == stdlib.CryptoCheckerLocation {
-		cryptoChecker := stdlib.CryptoChecker()
+func (v *stagingValidator) resolveImport(stack []common.Location) func(*sema.Checker, common.Location, ast.Range) (sema.Import, error) {
+	return func(_ *sema.Checker, importedLocation common.Location, _ ast.Range) (sema.Import, error) {
+		// Check if the imported location is the crypto checker
+		if importedLocation == stdlib.CryptoCheckerLocation {
+			cryptoChecker := stdlib.CryptoChecker()
+			return sema.ElaborationImport{
+				Elaboration: cryptoChecker.Elaboration,
+			}, nil
+		}
+
+		// Check if the imported location is an address location
+		// No other location types are supported (as is the case with code on-chain)
+		addrLocation, ok := importedLocation.(common.AddressLocation)
+		if !ok {
+			return nil, fmt.Errorf("expected address location")
+		}
+
+		// Check if this contract has already been resolved
+		subChecker, ok := v.checkers[importedLocation]
+
+		// If not resolved, parse and check the contract code
+		if !ok {
+			importedCode, err := v.getStagedContractCode(addrLocation)
+			if err != nil {
+				return nil, fmt.Errorf("failed to get staged contract code: %w", err)
+			}
+			v.contracts[addrLocation] = importedCode
+
+			// Handle the case where the contract has not been staged yet
+			// This missing dependency will be tracked for all dependents
+			if importedCode == nil {
+				for _, dependent := range stack {
+					v.missingDependencies[dependent] = append(v.missingDependencies[dependent], addrLocation)
+				}
+				return nil, fmt.Errorf("the following contract has not been staged: %s", addrLocation)
+			}
+
+			// We do not need to worry about circular dependencies
+			// They are caught internally by Cadence, as long as we are caching the checkers
+			// e.g. A -> B -> A will be known because A is imported while being checked
+			_, checker, err := v.parseAndCheckContract(addrLocation, stack...)
+			if err != nil {
+				return nil, err
+			}
+
+			v.checkers[importedLocation] = checker
+			subChecker = checker
+		} else {
+			// Inherit missing dependencies from the imported contract
+			// This is important because these missing upstream dependencies will not be encountered
+			// when checking this dependency tree, as this intermediate checker is cached
+			for _, dependent := range stack {
+				v.missingDependencies[dependent] = append(v.missingDependencies[dependent], v.missingDependencies[importedLocation]...)
+			}
+		}
+
 		return sema.ElaborationImport{
-			Elaboration: cryptoChecker.Elaboration,
+			Elaboration: subChecker.Elaboration,
 		}, nil
-	}
-
-	// Check if the imported location is an address location
-	// No other location types are supported (as is the case with code on-chain)
-	addrLocation, ok := importedLocation.(common.AddressLocation)
-	if !ok {
-		return nil, fmt.Errorf("expected address location")
-	}
-
-	// Check if this contract has already been resolved
-	subChecker, ok := v.checkers[importedLocation]
-
-	// If not resolved, parse and check the contract code
-	if !ok {
-		importedCode, err := v.getStagedContractCode(addrLocation)
-		if err != nil {
-			v.missingDependencies = append(v.missingDependencies, addrLocation)
-			return nil, fmt.Errorf("failed to get staged contract code: %w", err)
-		}
-		v.contracts[addrLocation] = importedCode
-
-		_, checker, err = v.parseAndCheckContract(addrLocation)
-		if err != nil {
-			return nil, fmt.Errorf("failed to parse and check contract code: %w", err)
-		}
-
-		v.checkers[importedLocation] = checker
-		subChecker = checker
-	}
-
-	return sema.ElaborationImport{
-		Elaboration: subChecker.Elaboration,
-	}, nil
-}
-
-func (v *stagingValidator) loadSystemContracts() {
-	chainId, ok := chainIdMap[v.flow.Network().Name]
-	if !ok {
-		return
-	}
-
-	stagedSystemContracts := migrations.SystemContractChanges(chainId, migrations.SystemContractsMigrationOptions{
-		Burner: migrations.BurnerContractChangeUpdate, // needs to be update for now since BurnerChangeDeploy is a no-op in flow-go
-		EVM:    migrations.EVMContractChangeFull,
-	})
-	for _, stagedSystemContract := range stagedSystemContracts {
-		location := common.AddressLocation{
-			Address: stagedSystemContract.Address,
-			Name:    stagedSystemContract.Name,
-		}
-
-		v.contracts[location] = stagedSystemContract.Code
-		v.accountContractNames[stagedSystemContract.Address] = append(v.accountContractNames[stagedSystemContract.Address], stagedSystemContract.Name)
 	}
 }
 
@@ -537,6 +551,27 @@ func (v *stagingValidator) resolveAddressContractNames(address common.Address) (
 	}
 
 	return v.accountContractNames[address], nil
+}
+
+func (v *stagingValidator) loadSystemContracts() {
+	chainId, ok := chainIdMap[v.flow.Network().Name]
+	if !ok {
+		return
+	}
+
+	stagedSystemContracts := migrations.SystemContractChanges(chainId, migrations.SystemContractsMigrationOptions{
+		Burner: migrations.BurnerContractChangeUpdate, // needs to be update for now since BurnerChangeDeploy is a no-op in flow-go
+		EVM:    migrations.EVMContractChangeFull,
+	})
+	for _, stagedSystemContract := range stagedSystemContracts {
+		location := common.AddressLocation{
+			Address: stagedSystemContract.Address,
+			Name:    stagedSystemContract.Name,
+		}
+
+		v.contracts[location] = stagedSystemContract.Code
+		v.accountContractNames[stagedSystemContract.Address] = append(v.accountContractNames[stagedSystemContract.Address], stagedSystemContract.Name)
+	}
 }
 
 func (v *stagingValidator) elaborations() map[common.Location]*sema.Elaboration {
