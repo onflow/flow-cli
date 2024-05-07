@@ -25,7 +25,6 @@ import (
 	"io"
 	"path"
 	"regexp"
-	"slices"
 	"strings"
 	"time"
 
@@ -35,6 +34,7 @@ import (
 	"github.com/onflow/flowkit/v2/config"
 	"github.com/onflow/flowkit/v2/output"
 	"github.com/spf13/cobra"
+	"golang.org/x/exp/slices"
 
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/internal/util"
