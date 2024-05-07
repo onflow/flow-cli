@@ -186,7 +186,7 @@ func startInteractiveSetup(
 
 	// Prompt to ask which core contracts should be installed
 	sc := systemcontracts.SystemContractsForChain(flowGo.Mainnet)
-	promptMessage := "Select the core contracts you'd like to install:"
+	promptMessage := "Select any core contracts you would like to install or skip to continue."
 
 	contractNames := make([]string, 0)
 
