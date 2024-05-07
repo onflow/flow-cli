@@ -8,7 +8,9 @@ import (
 
 	"github.com/logrusorgru/aurora/v4"
 	"github.com/manifoldco/promptui"
+	"github.com/onflow/cadence"
 	"github.com/onflow/cadence/runtime/common"
+	"github.com/onflow/contract-updater/lib/go/templates"
 	"github.com/onflow/flow-go-sdk"
 	flowsdk "github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flowkit/v2"
@@ -118,14 +120,16 @@ func (s *stagingService) validateAndStageContracts(ctx context.Context, contract
 	validator := newStagingValidator(s.flow, s.state)
 
 	// Collect all staged contracts
-	stagedContracts := make(map[common.AddressLocation]StagedContract)
+	stagedContracts := make([]StagedContract, len(contracts))
 	for _, contract := range contracts {
 		deployLocation := common.NewAddressLocation(nil, common.Address(contract.AccountAddress), contract.Name)
 		sourceLocation := common.StringLocation(contract.Location())
-		stagedContracts[deployLocation] = StagedContract{
+
+		stagedContracts = append(stagedContracts, StagedContract{
+			DeployLocation: deployLocation,
 			SourceLocation: sourceLocation,
 			Code:           contract.Code(),
-		}
+		})
 	}
 
 	// Validate all contracts
@@ -258,7 +262,8 @@ func (s *stagingService) stageContracts(ctx context.Context, contracts []*projec
 		txID, err := s.stageContract(
 			ctx,
 			targetAccount,
-			flowkit.Script{Code: contract.Code(), Args: contract.Args, Location: contract.Location()},
+			contract.Name,
+			contract.Code(),
 		)
 		if err != nil {
 			stagingErrors[contractDeploymentLocation(contract)] = err
@@ -275,11 +280,17 @@ func (s *stagingService) stageContracts(ctx context.Context, contracts []*projec
 	return stagingErrors
 }
 
-func (s *stagingService) stageContract(ctx context.Context, account *accounts.Account, script flowkit.Script) (flow.Identifier, error) {
+func (s *stagingService) stageContract(ctx context.Context, account *accounts.Account, contractName string, contractCode []byte) (flow.Identifier, error) {
+	cName := cadence.String(contractName)
+	cCode := cadence.String(contractCode)
+
 	tx, _, err := s.flow.SendTransaction(
-		ctx,
+		context.Background(),
 		transactions.SingleAccountRole(*account),
-		script,
+		flowkit.Script{
+			Code: templates.GenerateStageContractScript(MigrationContractStagingAddress(s.flow.Network().Name)),
+			Args: []cadence.Value{cName, cCode},
+		},
 		flowsdk.DefaultTransactionGasLimit,
 	)
 	if err != nil {
@@ -329,6 +340,7 @@ func (s *stagingService) prettyPrintValidationResults(contracts []*project.Contr
 	return sb.String(), nil
 }
 
+// helper function to create a common.AddressLocation for a deployment contract
 func contractDeploymentLocation(contract *project.Contract) common.AddressLocation {
 	return common.NewAddressLocation(nil, common.Address(contract.AccountAddress), contract.Name)
 }

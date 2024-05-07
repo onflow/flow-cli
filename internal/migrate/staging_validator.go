@@ -60,6 +60,7 @@ type stagingValidator struct {
 }
 
 type StagedContract struct {
+	DeployLocation common.AddressLocation
 	SourceLocation common.Location
 	Code           []byte
 }
@@ -116,7 +117,7 @@ func (e *stagingValidatorError) MissingDependencies() []common.AddressLocation {
 
 // ContractsMissingDependencies returns the contracts attempted to be validated that are missing dependencies
 func (e *stagingValidatorError) MissingDependencyErrors() map[common.AddressLocation]*missingDependenciesError {
-	missingDependencyErrors := make(map[common.Location]*missingDependenciesError)
+	missingDependencyErrors := make(map[common.AddressLocation]*missingDependenciesError)
 	for location := range e.errors {
 		var missingDependenciesErr *missingDependenciesError
 		if errors.As(e.errors[location], &missingDependenciesErr) {
@@ -143,29 +144,39 @@ func newStagingValidator(flow flowkit.Services, state *flowkit.State) *stagingVa
 	}
 }
 
-func (v *stagingValidator) Validate(stagedContracts map[common.AddressLocation]StagedContract) error {
-	v.stagedContracts = stagedContracts
+func (v *stagingValidator) Validate(stagedContracts []StagedContract) error {
+	v.stagedContracts = make(map[common.AddressLocation]StagedContract)
+	for _, stagedContract := range stagedContracts {
+		v.stagedContracts[stagedContract.DeployLocation] = stagedContract
+	}
+
 	v.loadSystemContracts()
 
 	// Parse and check all staged contracts
 	errors := v.parseAndCheckStaged()
 
-	for location := range v.contracts {
-		err := v.validateContractUpdate(location.(common.AddressLocation))
+	for location := range v.stagedContracts {
+		// Don't validate contracts with existing errors
+		if errors[location] != nil {
+			continue
+		}
+
+		// Validate the contract update
+		err := v.validateContractUpdate(location)
 		if err != nil {
 			errors[location] = err
 		}
 	}
 
+	// Return a validator error if there are any errors
 	if len(errors) > 0 {
 		return &stagingValidatorError{errors: errors}
 	}
-
 	return nil
 }
 
-func (v *stagingValidator) parseAndCheckStaged() map[common.Location]error {
-	errors := make(map[common.Location]error)
+func (v *stagingValidator) parseAndCheckStaged() map[common.AddressLocation]error {
+	errors := make(map[common.AddressLocation]error)
 	for location := range v.stagedContracts {
 		_, _, err := v.parseAndCheckContract(location)
 		if err != nil {

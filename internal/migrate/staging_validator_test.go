@@ -68,7 +68,7 @@ func Test_StagingValidator(t *testing.T) {
 		}, nil)
 
 		validator := newStagingValidator(srv.Mock, state)
-		err := validator.ValidateContractUpdate(location, sourceCodeLocation, []byte(newContract))
+		err := validator.Validate([]StagedContract{{location, sourceCodeLocation, []byte(newContract)}})
 		require.NoError(t, err)
 	})
 
@@ -107,7 +107,7 @@ func Test_StagingValidator(t *testing.T) {
 		}, nil)
 
 		validator := newStagingValidator(srv.Mock, state)
-		err := validator.ValidateContractUpdate(location, sourceCodeLocation, []byte(newContract))
+		err := validator.Validate([]StagedContract{{location, sourceCodeLocation, []byte(newContract)}})
 		var updateErr *stdlib.ContractUpdateError
 		require.ErrorAs(t, err, &updateErr)
 	})
@@ -148,7 +148,7 @@ func Test_StagingValidator(t *testing.T) {
 		}, nil)
 
 		validator := newStagingValidator(srv.Mock, state)
-		err := validator.ValidateContractUpdate(location, sourceCodeLocation, []byte(newContract))
+		err := validator.Validate([]StagedContract{{location, sourceCodeLocation, []byte(newContract)}})
 		var checkerErr *sema.CheckerError
 		require.ErrorAs(t, err, &checkerErr)
 	})
@@ -208,7 +208,7 @@ func Test_StagingValidator(t *testing.T) {
 
 		// validate
 		validator := newStagingValidator(srv.Mock, state)
-		err = validator.ValidateContractUpdate(location, sourceCodeLocation, []byte(newContract))
+		err = validator.Validate([]StagedContract{{location, sourceCodeLocation, []byte(newContract)}})
 		require.NoError(t, err)
 	})
 
@@ -245,7 +245,7 @@ func Test_StagingValidator(t *testing.T) {
 		srv.ExecuteScript.Return(cadence.NewOptional(nil), nil)
 
 		validator := newStagingValidator(srv.Mock, state)
-		err := validator.ValidateContractUpdate(location, sourceCodeLocation, []byte(newContract))
+		err := validator.Validate([]StagedContract{{location, sourceCodeLocation, []byte(newContract)}})
 		var missingDepsErr *missingDependenciesError
 		require.ErrorAs(t, err, &missingDepsErr)
 		require.Equal(t, 1, len(missingDepsErr.MissingContracts))
@@ -285,7 +285,7 @@ func Test_StagingValidator(t *testing.T) {
 		}, nil)
 
 		validator := newStagingValidator(srv.Mock, state)
-		err := validator.ValidateContractUpdate(location, sourceCodeLocation, []byte(newContract))
+		err := validator.Validate([]StagedContract{{location, sourceCodeLocation, []byte(newContract)}})
 		require.NoError(t, err)
 	})
 
@@ -346,7 +346,7 @@ func Test_StagingValidator(t *testing.T) {
 
 		// validate
 		validator := newStagingValidator(srv.Mock, state)
-		err = validator.ValidateContractUpdate(location, sourceCodeLocation, []byte(newContract))
+		err = validator.Validate([]StagedContract{{location, sourceCodeLocation, []byte(newContract)}})
 		require.NoError(t, err)
 	})
 }

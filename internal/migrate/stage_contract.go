@@ -27,22 +27,16 @@ package migrate
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"path/filepath"
+	"strings"
 
-	"github.com/onflow/cadence"
 	"github.com/onflow/cadence/runtime/common"
-	"github.com/onflow/contract-updater/lib/go/templates"
-	flowsdk "github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flowkit/v2"
 	"github.com/onflow/flowkit/v2/config"
 	"github.com/onflow/flowkit/v2/output"
 	"github.com/onflow/flowkit/v2/project"
-	"github.com/onflow/flowkit/v2/transactions"
 	"github.com/spf13/cobra"
-
-	internaltx "github.com/onflow/flow-cli/internal/transactions"
 
 	"github.com/onflow/flow-cli/internal/command"
 )
@@ -68,7 +62,7 @@ var stageContractCommand = &command.Command{
 		Args:    cobra.MinimumNArgs(1),
 	},
 	Flags: &stageContractflags,
-	RunS:  stageContracts,
+	RunS:  stageContract,
 }
 
 func buildContract(state *flowkit.State, flow flowkit.Services, contract *config.Contract) (*project.Contract, error) {
@@ -87,7 +81,7 @@ func buildContract(state *flowkit.State, flow flowkit.Services, contract *config
 	return project.NewContract(contractName, filepath.Clean(contract.Location), replacedCode, account.Address, account.Name, nil), nil
 }
 
-func stageContracts(
+func stageContract(
 	args []string,
 	globalFlags command.GlobalFlags,
 	logger output.Logger,
@@ -127,43 +121,6 @@ func stageContracts(
 	}, nil
 }
 
-func stageContract() {
-	// Validate the contract code by default
-	if !stageContractflags.SkipValidation {
-
-		// Errors when the contract's dependencies have not been staged yet are non-fatal
-		// This is because the contract may be dependent on contracts that are not yet staged
-		// and we do not want to require in-order staging of contracts
-		// Instead, we will prompt the user to continue staging the contract.  Other errors
-		// will be fatal and require manual intervention using the --skip-validation flag if desired
-		if errors.As(err, &missingDependenciesErr) {
-
-		} else if err != nil {
-			logger.Error(validator.prettyPrintError(err, common.StringLocation(contract.Location)))
-			return nil, fmt.Errorf("errors were found while attempting to perform preliminary validation of the contract code, and your contract HAS NOT been staged, however you can use the --skip-validation flag to bypass this check & stage the contract anyway")
-		} else {
-			logger.Info("No issues found while validating contract code\n")
-		}
-	} else {
-	}
-
-	tx, res, err := flow.SendTransaction(
-		context.Background(),
-		transactions.SingleAccountRole(*account),
-		flowkit.Script{
-			Code: templates.GenerateStageContractScript(MigrationContractStagingAddress(flow.Network().Name)),
-			Args: []cadence.Value{cName, cCode},
-		},
-		flowsdk.DefaultTransactionGasLimit,
-	)
-
-	if err != nil {
-		return nil, fmt.Errorf("failed to send transaction: %w", err)
-	}
-
-	return internaltx.NewTransactionResult(tx, res), nil
-}
-
 func (r *stagingResult) ExitCode() int {
 	for _, err := range r.Contracts {
 		if err != nil {
@@ -177,6 +134,26 @@ func (s *stagingResult) String() string {
 	if len(s.Contracts) == 0 {
 		return "no contracts staged"
 	}
+
+	sb := &strings.Builder{}
+
+	// First, print the failing contracts
+	for location, err := range s.Contracts {
+		if err != nil {
+			sb.WriteString(fmt.Sprintf("failed to stage contract %s: %s\n", location, err))
+		}
+	}
+
+	// Then, print the successfully staged contracts
+	for location, err := range s.Contracts {
+		if err == nil {
+			sb.WriteString(fmt.Sprintf("staged contract %s\n", location))
+		}
+	}
+
+	sb.WriteString(fmt.Sprintf("staged %d contracts", len(s.Contracts)))
+
+	return sb.String()
 }
 
 func (s *stagingResult) JSON() interface{} {
