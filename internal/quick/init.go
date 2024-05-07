@@ -18,22 +18,15 @@
 
 package quick
 
-import (
-	"github.com/spf13/cobra"
-
-	"github.com/onflow/flow-cli/internal/command"
-	"github.com/onflow/flow-cli/internal/config"
-)
-
 // TODO(sideninja) workaround - init needed to be copied in order to work else there is flag duplicate error
 
-var InitCommand = &command.Command{
-	Cmd: &cobra.Command{
-		Use:     "init",
-		Short:   "Initialize a new configuration",
-		Example: "flow project init",
-		GroupID: "project",
-	},
-	Flags: &config.InitFlag,
-	Run:   config.Initialise, // TODO(sideninja) workaround - init needed to be copied in order to work else there is flag duplicate error
-}
+//var InitCommand = &command.Command{
+//	Cmd: &cobra.Command{
+//		Use:     "init",
+//		Short:   "Initialize a new configuration",
+//		Example: "flow project init",
+//		GroupID: "project",
+//	},
+//	Flags: &config.InitFlag,
+//	Run:   config.Initialise, // TODO(sideninja) workaround - init needed to be copied in order to work else there is flag duplicate error
+//}

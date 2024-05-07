@@ -25,7 +25,6 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/spf13/afero"
 
 	"github.com/onflow/flow-cli/internal/util"
@@ -111,10 +110,10 @@ func startInteractiveSetup(
 	rw := afero.Afero{
 		Fs: afero.NewOsFs(),
 	}
-	state, err := flowkit.Init(rw, crypto.ECDSA_P256, crypto.SHA3_256)
-	if err != nil {
-		return "", err
-	}
+	//state, err := flowkit.Init(rw, crypto.ECDSA_P256, crypto.SHA3_256)
+	//if err != nil {
+	//	return "", err
+	//}
 
 	// Ask for project name if not given
 	if len(args) < 1 {
@@ -153,7 +152,7 @@ func startInteractiveSetup(
 		Global:             false,
 		TargetDirectory:    tempDir,
 	}
-	state, err = config.InitializeConfiguration(params, logger, state.ReaderWriter())
+	state, err := config.InitializeConfiguration(params, rw)
 	if err != nil {
 		return "", fmt.Errorf("failed to initialize configuration: %w", err)
 	}

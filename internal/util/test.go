@@ -39,7 +39,7 @@ var TestID = flow.HexToID("24993fc99f81641c45c0afa307e683b4f08d407d90041aa9439f4
 func TestMocks(t *testing.T) (*mocks.MockServices, *flowkit.State, flowkit.ReaderWriter) {
 	services := mocks.DefaultMockServices()
 	rw, _ := tests.ReaderWriter()
-	state, err := flowkit.Init(rw, crypto.ECDSA_P256, crypto.SHA3_256)
+	state, err := flowkit.Init(rw, crypto.ECDSA_P256, crypto.SHA3_256, "")
 	require.NoError(t, err)
 
 	return services, state, rw
