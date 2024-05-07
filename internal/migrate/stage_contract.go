@@ -16,21 +16,29 @@
  * limitations under the License.
  */
 
+/*
+TODO: handle the broken dependency graph case.
+
+e.g. Foo -> Bar -> Baz
+but only Foo & Baz are staged, so how to build the contract graph?
+*/
+
 package migrate
 
 import (
 	"context"
 	"errors"
 	"fmt"
-	"strings"
+	"path/filepath"
 
-	"github.com/manifoldco/promptui"
 	"github.com/onflow/cadence"
 	"github.com/onflow/cadence/runtime/common"
 	"github.com/onflow/contract-updater/lib/go/templates"
 	flowsdk "github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flowkit/v2"
+	"github.com/onflow/flowkit/v2/config"
 	"github.com/onflow/flowkit/v2/output"
+	"github.com/onflow/flowkit/v2/project"
 	"github.com/onflow/flowkit/v2/transactions"
 	"github.com/spf13/cobra"
 
@@ -39,8 +47,17 @@ import (
 	"github.com/onflow/flow-cli/internal/command"
 )
 
+type stagingResult struct {
+	// Error will be nil if the contract was successfully staged
+	Contracts map[common.AddressLocation]error
+}
+
+var _ command.ResultWithExitCode = &stagingResult{}
+
 var stageContractflags struct {
-	SkipValidation bool `default:"false" flag:"skip-validation" info:"Do not validate the contract code against staged dependencies"`
+	All            bool     `default:"false" flag:"all" info:"Stage all contracts"`
+	Accounts       []string `default:"" flag:"accounts" info:"Accounts to stage the contract under"`
+	SkipValidation bool     `default:"false" flag:"skip-validation" info:"Do not validate the contract code against staged dependencies"`
 }
 
 var stageContractCommand = &command.Command{
@@ -51,10 +68,26 @@ var stageContractCommand = &command.Command{
 		Args:    cobra.MinimumNArgs(1),
 	},
 	Flags: &stageContractflags,
-	RunS:  stageContract,
+	RunS:  stageContracts,
 }
 
-func stageContract(
+func buildContract(state *flowkit.State, flow flowkit.Services, contract *config.Contract) (*project.Contract, error) {
+	contractName := contract.Name
+
+	replacedCode, err := replaceImportsIfExists(state, flow, contract.Location)
+	if err != nil {
+		return nil, fmt.Errorf("failed to replace imports: %w", err)
+	}
+
+	account, err := getAccountByContractName(state, contractName, flow.Network())
+	if err != nil {
+		return nil, fmt.Errorf("failed to get account by contract name: %w", err)
+	}
+
+	return project.NewContract(contractName, filepath.Clean(contract.Location), replacedCode, account.Address, account.Name, nil), nil
+}
+
+func stageContracts(
 	args []string,
 	globalFlags command.GlobalFlags,
 	logger output.Logger,
@@ -66,42 +99,37 @@ func stageContract(
 		return nil, err
 	}
 
-	contractName := args[0]
-	contract, err := state.Contracts().ByName(contractName)
-	if err != nil {
-		return nil, fmt.Errorf("no contracts found in state")
+	s := newStagingService(flow, state, logger, !stageContractflags.SkipValidation)
+
+	// Stage contracts based on the provided flags
+	var results map[common.AddressLocation]error
+	if stageContractflags.All {
+		results, err = s.StageAllContracts(context.Background())
+		if err != nil {
+			return nil, err
+		}
+	} else if len(args) > 0 {
+		results, err = s.StageContractsByName(context.Background(), args)
+		if err != nil {
+			return nil, err
+		}
+	} else if len(stageContractflags.Accounts) > 0 {
+		results, err = s.StageContractsByAccounts(context.Background(), stageContractflags.Accounts)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		return nil, fmt.Errorf("no contracts specified, please provide contract names or use the --all or --accounts flags")
 	}
 
-	replacedCode, err := replaceImportsIfExists(state, flow, contract.Location)
-	if err != nil {
-		return nil, fmt.Errorf("failed to replace imports: %w", err)
-	}
+	return &stagingResult{
+		Contracts: results,
+	}, nil
+}
 
-	cName, err := cadence.NewString(contractName)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get cadence string from contract name: %w", err)
-	}
-
-	cCode, err := cadence.NewString(string(replacedCode))
-	if err != nil {
-		return nil, fmt.Errorf("failed to get cadence string from contract code: %w", err)
-	}
-
-	account, err := getAccountByContractName(state, contractName, flow.Network())
-	if err != nil {
-		return nil, fmt.Errorf("failed to get account by contract name: %w", err)
-	}
-
+func stageContract() {
 	// Validate the contract code by default
 	if !stageContractflags.SkipValidation {
-		logger.StartProgress("Validating contract code against any staged dependencies")
-		validator := newStagingValidator(flow, state)
-
-		var missingDependenciesErr *missingDependenciesError
-		contractLocation := common.NewAddressLocation(nil, common.Address(account.Address), contractName)
-		err = validator.ValidateContractUpdate(contractLocation, common.StringLocation(contract.Location), replacedCode)
-
-		logger.StopProgress()
 
 		// Errors when the contract's dependencies have not been staged yet are non-fatal
 		// This is because the contract may be dependent on contracts that are not yet staged
@@ -109,36 +137,14 @@ func stageContract(
 		// Instead, we will prompt the user to continue staging the contract.  Other errors
 		// will be fatal and require manual intervention using the --skip-validation flag if desired
 		if errors.As(err, &missingDependenciesErr) {
-			infoMessage := strings.Builder{}
-			infoMessage.WriteString("Validation cannot be performed as some of your contract's dependencies could not be found (have they been staged yet?)\n")
-			for _, contract := range missingDependenciesErr.MissingContracts {
-				infoMessage.WriteString(fmt.Sprintf("  - %s\n", contract))
-			}
-			infoMessage.WriteString("\nYou may still stage your contract, however it will be unable to be migrated until the missing contracts are staged by their respective owners.  It is important to monitor the status of your contract using the `flow migrate is-validated` command\n")
-			logger.Error(infoMessage.String())
 
-			continuePrompt := promptui.Select{
-				Label: "Do you wish to continue staging your contract?",
-				Items: []string{"Yes", "No"},
-			}
-
-			_, result, err := continuePrompt.Run()
-			if err != nil {
-				return nil, err
-			}
-
-			if result == "No" {
-				return nil, fmt.Errorf("staging cancelled")
-			}
 		} else if err != nil {
 			logger.Error(validator.prettyPrintError(err, common.StringLocation(contract.Location)))
 			return nil, fmt.Errorf("errors were found while attempting to perform preliminary validation of the contract code, and your contract HAS NOT been staged, however you can use the --skip-validation flag to bypass this check & stage the contract anyway")
 		} else {
 			logger.Info("No issues found while validating contract code\n")
-			logger.Info("DISCLAIMER: Pre-staging validation checks are not exhaustive and do not guarantee the contract will work as expected, please monitor the status of your contract using the `flow migrate is-validated` command\n")
 		}
 	} else {
-		logger.Info("Skipping contract code validation, you may monitor the status of your contract using the `flow migrate is-validated` command\n")
 	}
 
 	tx, res, err := flow.SendTransaction(
@@ -156,4 +162,30 @@ func stageContract(
 	}
 
 	return internaltx.NewTransactionResult(tx, res), nil
+}
+
+func (r *stagingResult) ExitCode() int {
+	for _, err := range r.Contracts {
+		if err != nil {
+			return 1
+		}
+	}
+	return 0
+}
+
+func (s *stagingResult) String() string {
+	if len(s.Contracts) == 0 {
+		return "no contracts staged"
+	}
+}
+
+func (s *stagingResult) JSON() interface{} {
+	return s
+}
+
+func (r *stagingResult) Oneliner() string {
+	if len(r.Contracts) == 0 {
+		return "no contracts staged"
+	}
+	return fmt.Sprintf("staged %d contracts", len(r.Contracts))
 }
