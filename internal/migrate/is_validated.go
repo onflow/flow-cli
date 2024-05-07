@@ -41,10 +41,10 @@ import (
 )
 
 type missingContractError struct {
-	MissingContracts []struct {
+	MissingContracts []struct{
 		ContractName string
-		Address      string
-		Network      string
+		Address string
+		Network string
 	}
 	LastMigrationTime *time.Time
 }
@@ -181,29 +181,28 @@ func (v *validator) getContractUpdateStatuses(contractNames ...string) ([]contra
 	}
 
 	for addr, contractName := range addressToContractName {
-		var missingContractErr error
+		var missingContractErr missingContractError
 		if !slices.Contains(foundAddresses, addr) {
-			builder := strings.Builder{}
-			builder.WriteString("some contracts do not appear to have been a part of any emulated migrations yet, please ensure that it has been staged & wait for the next emulated migration (last migration report was at ")
-			builder.WriteString(ts.Format(time.RFC3339))
-			builder.WriteString(")\n\n")
-			builder.WriteString(" - Account: ")
-			builder.WriteString(addr)
-			builder.WriteString("\n - Contract: ")
-			builder.WriteString(contractName)
-			builder.WriteString("\n - Network: ")
-			builder.WriteString(v.network.Name)
-
-			missingContractErr = fmt.Errorf(builder.String())
+			missingContractErr.MissingContracts = append(missingContractErr.MissingContracts, struct {
+				ContractName string
+				Address      string
+				Network      string
+			}{
+				ContractName: contractName,
+				Address:      addr,
+				Network:      v.network.Name,
+			})
+			missingContractErr.LastMigrationTime = ts
 		}
 
-		if missingContractErr != nil {
+		if len(missingContractErr.MissingContracts) > 0  {
 			return nil, nil, missingContractErr
 		}
 	}
 
 	return contractUpdateStatuses, ts, nil
 }
+
 
 func (v *validator) getContractValidationStatus(network config.Network, address string, contractName string) (contractUpdateStatus, *time.Time, error) {
 	status, ts, err := v.getContractUpdateStatuses(contractName)
