@@ -149,6 +149,6 @@ func Test_IsValidated(t *testing.T) {
 			},
 		})
 
-		require.ErrorContains(t, err, "does not appear to have been a part of any emulated migrations yet")
+		require.ErrorContains(t, err, "do not appear to have been a part of any emulated migrations yet")
 	})
 }
