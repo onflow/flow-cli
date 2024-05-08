@@ -45,7 +45,7 @@ import (
 
 /*
 
-TODO: test circular dependency case, probably works, but worried about cached checkers
+TODO: handle invalid dependencies
 */
 
 type stagingValidator struct {
