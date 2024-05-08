@@ -53,71 +53,21 @@ func newStagingService(flow flowkit.Services, state *flowkit.State, logger outpu
 	}
 }
 
-func (s *stagingService) StageAllContracts(ctx context.Context) (map[common.AddressLocation]error, error) {
-	contracts, err := s.getAllDeploymentContracts()
-	if err != nil {
-		return nil, err
-	}
-
-	return s.validateAndStageContracts(ctx, contracts)
-}
-
-func (s *stagingService) StageContractsByName(ctx context.Context, contractNames []string) (map[common.AddressLocation]error, error) {
-	contracts, err := s.getAllDeploymentContracts()
-	if err != nil {
-		return nil, err
-	}
-
-	// Filter contracts by name
-	filtered := make([]*project.Contract, 0, len(contractNames))
-	for _, contract := range contracts {
-		for _, name := range contractNames {
-			if contract.Name == name {
-				filtered = append(filtered, contract)
-			}
-		}
-	}
-
-	return s.validateAndStageContracts(ctx, filtered)
-}
-
-func (s *stagingService) StageContractsByAccounts(ctx context.Context, accountNames []string) (map[common.AddressLocation]error, error) {
-	contracts, err := s.getAllDeploymentContracts()
-	if err != nil {
-		return nil, err
-	}
-
-	// Filter contracts by account name
-	// TODO: FILTERING IS BAD, WE MIGHT THROW ERRORS FOR UNRELATED CONTRACTS
-	filtered := make([]*project.Contract, 0, len(contracts))
-	for _, contract := range contracts {
-		for _, name := range accountNames {
-			if contract.AccountName == name {
-				filtered = append(filtered, contract)
-			}
-		}
-	}
-
-	return s.validateAndStageContracts(ctx, filtered)
-}
-
-func (s *stagingService) getAllDeploymentContracts() ([]*project.Contract, error) {
+func (s *stagingService) StageContracts(ctx context.Context, filter func(*project.Contract) bool) (map[common.AddressLocation]error, error) {
 	contracts, err := s.state.DeploymentContractsByNetwork(s.flow.Network())
 	if err != nil {
 		return nil, err
 	}
 
-	deployment, err := project.NewDeployment(contracts, s.state.AliasesForNetwork(s.flow.Network()))
-	if err != nil {
-		return nil, err
+	// Filter contracts
+	filtered := make([]*project.Contract, 0, len(contracts))
+	for _, contract := range contracts {
+		if filter(contract) {
+			filtered = append(filtered, contract)
+		}
 	}
 
-	sorted, err := deployment.Sort()
-	if err != nil {
-		return nil, err
-	}
-
-	return sorted, nil
+	return s.validateAndStageContracts(ctx, filtered)
 }
 
 func (s *stagingService) validateAndStageContracts(ctx context.Context, contracts []*project.Contract) (map[common.AddressLocation]error, error) {
@@ -268,6 +218,8 @@ func (s *stagingService) promptStagingUnvalidatedContracts(validatorError *stagi
 	return true
 }
 
+// Stage contracts for network with an optional filter
+// Returns a map of staged/attempted contracts and errors occuring if any
 func (s *stagingService) stageContracts(ctx context.Context, contracts []*project.Contract) map[common.AddressLocation]error {
 	stagingErrors := make(map[common.AddressLocation]error)
 	for _, contract := range contracts {

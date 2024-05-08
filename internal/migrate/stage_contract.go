@@ -50,7 +50,7 @@ var _ command.ResultWithExitCode = &stagingResult{}
 
 var stageContractflags struct {
 	All            bool     `default:"false" flag:"all" info:"Stage all contracts"`
-	Accounts       []string `default:"" flag:"accounts" info:"Accounts to stage the contract under"`
+	Accounts       []string `default:"" flag:"account" info:"Accounts to stage the contract under"`
 	SkipValidation bool     `default:"false" flag:"skip-validation" info:"Do not validate the contract code against staged dependencies"`
 }
 
@@ -93,29 +93,51 @@ func stageContract(
 		return nil, err
 	}
 
+	var results map[common.AddressLocation]error
 	s := newStagingService(flow, state, logger, !stageContractflags.SkipValidation)
 
-	// Stage contracts based on the provided flags
-	var results map[common.AddressLocation]error
+	// Stage all contracts
 	if stageContractflags.All {
-		results, err = s.StageAllContracts(context.Background())
-		if err != nil {
-			return nil, err
+		if len(args) > 0 || len(stageContractflags.Accounts) > 0 {
+			return nil, fmt.Errorf("cannot use --all flag with contract names or --accounts flag")
 		}
-	} else if len(args) > 0 {
-		results, err = s.StageContractsByName(context.Background(), args)
-		if err != nil {
-			return nil, err
-		}
-	} else if len(stageContractflags.Accounts) > 0 {
-		results, err = s.StageContractsByAccounts(context.Background(), stageContractflags.Accounts)
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		return nil, fmt.Errorf("no contracts specified, please provide contract names or use the --all or --accounts flags")
+
+		results, err = s.StageContracts(context.Background(), nil)
 	}
 
+	// Filter by contract names
+	if len(args) > 0 {
+		if len(stageContractflags.Accounts) > 0 {
+			return nil, fmt.Errorf("cannot use --account flag with contract names")
+		}
+
+		results, err = s.StageContracts(context.Background(), func(c *project.Contract) bool {
+			for _, name := range args {
+				if c.Name == name {
+					return true
+				}
+			}
+			return false
+		})
+	}
+
+	// Filter by accounts
+	if len(stageContractflags.Accounts) > 0 {
+		results, err = s.StageContracts(context.Background(), func(c *project.Contract) bool {
+			for _, account := range stageContractflags.Accounts {
+				if c.AccountName == account {
+					return true
+				}
+			}
+			return false
+		})
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Print the results
 	return &stagingResult{
 		Contracts: results,
 	}, nil
