@@ -242,14 +242,19 @@ func Test_StagingValidator(t *testing.T) {
 		srv.Network.Return(config.Network{
 			Name: "testnet",
 		}, nil)
-		srv.ExecuteScript.Return(cadence.NewOptional(nil), nil)
+		srv.ExecuteScript.Run(func(args mock.Arguments) {}).Return(cadence.NewOptional(nil), nil)
 
 		validator := newStagingValidator(srv.Mock, state)
 		err := validator.Validate([]StagedContract{{location, sourceCodeLocation, []byte(newContract)}})
-		var missingDepsErr *missingDependenciesError
-		require.ErrorAs(t, err, &missingDepsErr)
-		require.Equal(t, 1, len(missingDepsErr.MissingContracts))
-		require.Equal(t, impLocation, missingDepsErr.MissingContracts[0])
+
+		var validatorErr *stagingValidatorError
+		require.ErrorAs(t, err, &validatorErr)
+		require.Equal(t, 1, len(validatorErr.Unwrap()))
+
+		var missingDependenciesErr *missingDependenciesError
+		require.ErrorAs(t, validatorErr.Unwrap()[0], &missingDependenciesErr)
+		require.Equal(t, 1, len(missingDependenciesErr.MissingContracts))
+		require.Equal(t, impLocation, missingDependenciesErr.MissingContracts[0])
 	})
 
 	t.Run("valid contract update with system contract imports", func(t *testing.T) {

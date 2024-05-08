@@ -145,6 +145,7 @@ func newStagingValidator(flow flowkit.Services, state *flowkit.State) *stagingVa
 		flow:                 flow,
 		state:                state,
 		contracts:            make(map[common.Location][]byte),
+		missingDependencies:  make(map[common.Location][]common.AddressLocation),
 		checkers:             make(map[common.Location]*sema.Checker),
 		accountContractNames: make(map[common.Address][]string),
 	}
