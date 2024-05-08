@@ -185,13 +185,14 @@ func (v *stagingValidator) Validate(stagedContracts []StagedContract) error {
 func (v *stagingValidator) parseAndCheckAllStaged() map[common.AddressLocation]error {
 	errors := make(map[common.AddressLocation]error)
 	for location := range v.stagedContracts {
-		_, _, err := v.parseAndCheckContract(location)
+		_, checker, err := v.parseAndCheckContract(location)
+		v.checkers[location] = checker
 
 		// First, check if the contract has missing dependencies
 		// This error case takes precedence over any other errors
 		// Since it is a prerequisite for the contract to be checked
 		// and any other errors are misleading
-		if v.missingDependencies[location] != nil {
+		if len(v.missingDependencies[location]) > 0 {
 			errors[location] = &missingDependenciesError{MissingContracts: v.missingDependencies[location]}
 			continue
 		}
@@ -199,6 +200,7 @@ func (v *stagingValidator) parseAndCheckAllStaged() map[common.AddressLocation]e
 		// Otherwise, record parsing/checking errors if they exist
 		if err != nil {
 			errors[location] = err
+			continue
 		}
 	}
 	return errors
