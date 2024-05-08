@@ -129,7 +129,9 @@ func (c Command) AddToParent(parent *cobra.Command) {
 		}
 
 		// command to validate contracts are still valid for migration
-		migrate.NewValidator(github.NewClient(nil).Repositories, flow.Network(), state, logger).ValidateContracts()
+		if err := migrate.NewValidator(github.NewClient(nil).Repositories, flow.Network(), state, logger).ValidateContracts(); err != nil {
+			handleError("Migration Validation Error", err)
+		}
 
 		// record command usage
 		wg := sync.WaitGroup{}

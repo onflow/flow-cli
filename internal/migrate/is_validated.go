@@ -140,12 +140,15 @@ func NewValidator(repoService GitHubRepositoriesService, network config.Network,
 	}
 }
 
-func (v *validator) ValidateContracts(contractNames ...string)  (error) {
-	for _, contractName := range contractNames {
-		_, err := v.validate(contractName)
-		if err != nil {
-			return  err
-		}
+func (v *validator) ValidateContracts() error {
+	var contractNames []string
+	for _, c := range *v.state.Contracts() {
+		contractNames = append(contractNames, c.Name)
+	}
+
+	_, _, err := v.getContractUpdateStatuses(contractNames...)
+	if err != nil {
+		return err
 	}
 
 	return nil
