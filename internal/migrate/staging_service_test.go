@@ -20,6 +20,7 @@ package migrate
 
 import (
 	"context"
+	"errors"
 	"reflect"
 	"testing"
 
@@ -181,62 +182,6 @@ func Test_StagingService(t *testing.T) {
 				deployments: []mockDeployment{
 					{
 						name: "Foo",
-						code: `FOOCODE`,
-					},
-				},
-			},
-		}
-		srv, state, _ := setupMocks(mockAccount)
-
-		v := newMockStagingValidator(t)
-		v.On("Validate", mock.MatchedBy(func(stagedContracts []StagedContract) bool {
-			return reflect.DeepEqual(stagedContracts, []StagedContract{
-				{
-					DeployLocation: simpleAddressLocation("0x01.Foo"),
-					SourceLocation: common.StringLocation("0x01/Foo.cdc"),
-					Code:           []byte("FooCode"),
-				},
-			})
-		})).Return(&stagingValidatorError{
-			errors: map[common.AddressLocation]error{
-				simpleAddressLocation("0x01.Foo"): &missingDependenciesError{
-					MissingContracts: []common.AddressLocation{
-						simpleAddressLocation("FooCode"),
-					},
-				},
-			},
-		}).Once()
-
-		s := newStagingService(
-			srv,
-			state,
-			util.NoLogger,
-			v,
-			func(sve *stagingValidatorError) bool {
-				return true
-			},
-		)
-
-		results, err := s.StageAllContracts(
-			context.Background(),
-		)
-
-		require.NoError(t, err)
-		require.NotNil(t, results)
-
-		require.Equal(t, 1, len(results))
-		require.Contains(t, results, simpleAddressLocation("0x01.Foo"))
-		require.Nil(t, results[simpleAddressLocation("0x01.Foo")])
-	})
-
-	t.Run("stages unvalidated contracts if chosen", func(t *testing.T) {
-		mockAccount := []mockAccount{
-			{
-				name:    "some-account",
-				address: "0x01",
-				deployments: []mockDeployment{
-					{
-						name: "Foo",
 						code: `FooCode`,
 					},
 				},
@@ -345,5 +290,68 @@ func Test_StagingService(t *testing.T) {
 		require.ErrorAs(t, results[simpleAddressLocation("0x01.Foo")], &mde)
 		require.NotNil(t, results[simpleAddressLocation("0x01.Foo")])
 		require.Equal(t, []common.AddressLocation{simpleAddressLocation("0x02.Bar")}, mde.MissingContracts)
+	})
+
+	t.Run("reports and does not stage invalid contracts", func(t *testing.T) {
+		mockAccount := []mockAccount{
+			{
+				name:    "some-account",
+				address: "0x01",
+				deployments: []mockDeployment{
+					{
+						name: "Foo",
+						code: `FooCode`,
+					},
+					{
+						name: "Bar",
+						code: `BarCode`,
+					},
+				},
+			},
+		}
+		srv, state, _ := setupMocks(mockAccount)
+
+		v := newMockStagingValidator(t)
+		v.On("Validate", mock.MatchedBy(func(stagedContracts []StagedContract) bool {
+			return reflect.DeepEqual(stagedContracts, []StagedContract{
+				{
+					DeployLocation: simpleAddressLocation("0x01.Foo"),
+					SourceLocation: common.StringLocation("0x01/Foo.cdc"),
+					Code:           []byte("FooCode"),
+				},
+				{
+					DeployLocation: simpleAddressLocation("0x01.Bar"),
+					SourceLocation: common.StringLocation("0x01/Bar.cdc"),
+					Code:           []byte("BarCode"),
+				},
+			})
+		})).Return(&stagingValidatorError{
+			errors: map[common.AddressLocation]error{
+				simpleAddressLocation("0x01.Foo"): errors.New("FooError"),
+			},
+		}).Once()
+
+		s := newStagingService(
+			srv,
+			state,
+			util.NoLogger,
+			v,
+			func(sve *stagingValidatorError) bool {
+				return false
+			},
+		)
+
+		results, err := s.StageAllContracts(
+			context.Background(),
+		)
+
+		require.NoError(t, err)
+		require.NotNil(t, results)
+
+		require.Equal(t, 2, len(results))
+		require.Contains(t, results, simpleAddressLocation("0x01.Foo"))
+		require.Contains(t, results, simpleAddressLocation("0x01.Bar"))
+		require.ErrorContains(t, results[simpleAddressLocation("0x01.Foo")], "FooError")
+		require.Nil(t, results[simpleAddressLocation("0x01.Bar")])
 	})
 }

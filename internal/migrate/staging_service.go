@@ -116,16 +116,16 @@ func (s *stagingServiceImpl) validateAndStageContracts(ctx context.Context, cont
 	results := make(map[common.AddressLocation]error)
 
 	// First, stage contracts that passed validation
-	newErrors := s.stageValidContracts(ctx, validatorError, contracts)
-	for location, err := range newErrors {
+	newResults := s.stageValidContracts(ctx, validatorError, contracts)
+	for location, err := range newResults {
 		results[location] = err
 	}
 
 	// Now, handle contracts that failed validation
 	// This will prompt the user to continue staging contracts that have missing dependencies
 	// Other validation errors will be fatal
-	newErrors = s.maybeStageInvalidContracts(ctx, validatorError, contracts)
-	for location, err := range newErrors {
+	newResults = s.maybeStageInvalidContracts(ctx, validatorError, contracts)
+	for location, err := range newResults {
 		results[location] = err
 	}
 
@@ -140,7 +140,7 @@ func (s *stagingServiceImpl) stageValidContracts(ctx context.Context, validatorE
 	} else {
 		for _, contract := range contracts {
 			contractLocation := common.NewAddressLocation(nil, common.Address(contract.AccountAddress), contract.Name)
-			if _, hasError := validatorError.errors[contractLocation]; hasError {
+			if _, hasError := validatorError.errors[contractLocation]; !hasError {
 				validContracts = append(validContracts, contract)
 			}
 		}
@@ -168,8 +168,7 @@ func (s *stagingServiceImpl) maybeStageInvalidContracts(ctx context.Context, val
 	}
 
 	missingDependencyErrors := validatorError.MissingDependencyErrors()
-	hasMissingDependencies := len(missingDependencyErrors) > 0
-	if !hasMissingDependencies {
+	if len(missingDependencyErrors) == 0 {
 		return results
 	}
 
