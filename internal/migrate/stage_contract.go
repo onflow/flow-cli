@@ -16,13 +16,6 @@
  * limitations under the License.
  */
 
-/*
-TODO: handle the broken dependency graph case.
-
-e.g. Foo -> Bar -> Baz
-but only Foo & Baz are staged, so how to build the contract graph?
-*/
-
 package migrate
 
 import (
@@ -93,12 +86,22 @@ func stageContract(
 		return nil, err
 	}
 
-	var results map[common.AddressLocation]error
 	s := newStagingService(flow, state, logger, !stageContractflags.SkipValidation)
+	return stageWithFilters(s, stageContractflags.All, args, stageContractflags.Accounts)
+}
+
+func stageWithFilters(
+	s stagingService,
+	allContracts bool,
+	contractNames []string,
+	accountNames []string,
+) (*stagingResult, error) {
+	var results map[common.AddressLocation]error
+	var err error
 
 	// Stage all contracts
-	if stageContractflags.All {
-		if len(args) > 0 || len(stageContractflags.Accounts) > 0 {
+	if allContracts {
+		if len(contractNames) > 0 || len(accountNames) > 0 {
 			return nil, fmt.Errorf("cannot use --all flag with contract names or --accounts flag")
 		}
 
@@ -106,13 +109,13 @@ func stageContract(
 	}
 
 	// Filter by contract names
-	if len(args) > 0 {
-		if len(stageContractflags.Accounts) > 0 {
+	if len(contractNames) > 0 {
+		if len(accountNames) > 0 {
 			return nil, fmt.Errorf("cannot use --account flag with contract names")
 		}
 
 		results, err = s.StageContracts(context.Background(), func(c *project.Contract) bool {
-			for _, name := range args {
+			for _, name := range contractNames {
 				if c.Name == name {
 					return true
 				}
@@ -122,9 +125,9 @@ func stageContract(
 	}
 
 	// Filter by accounts
-	if len(stageContractflags.Accounts) > 0 {
+	if len(accountNames) > 0 {
 		results, err = s.StageContracts(context.Background(), func(c *project.Contract) bool {
-			for _, account := range stageContractflags.Accounts {
+			for _, account := range accountNames {
 				if c.AccountName == account {
 					return true
 				}

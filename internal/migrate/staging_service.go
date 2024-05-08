@@ -37,15 +37,23 @@ import (
 	"github.com/onflow/flowkit/v2/transactions"
 )
 
-type stagingService struct {
+//go:generate mockery --name stagingService --output ./mocks --case underscore --exported
+type stagingService interface {
+	// StageContracts stages contracts for the network, based on an optional filter
+	StageContracts(ctx context.Context, filter func(*project.Contract) bool) (map[common.AddressLocation]error, error)
+}
+
+type stagingServiceImpl struct {
 	flow              flowkit.Services
 	state             *flowkit.State
 	logger            output.Logger
 	validationEnabled bool
 }
 
-func newStagingService(flow flowkit.Services, state *flowkit.State, logger output.Logger, validationEnabled bool) *stagingService {
-	return &stagingService{
+var _ stagingService = &stagingServiceImpl{}
+
+func newStagingService(flow flowkit.Services, state *flowkit.State, logger output.Logger, validationEnabled bool) *stagingServiceImpl {
+	return &stagingServiceImpl{
 		flow:              flow,
 		state:             state,
 		logger:            logger,
@@ -53,7 +61,7 @@ func newStagingService(flow flowkit.Services, state *flowkit.State, logger outpu
 	}
 }
 
-func (s *stagingService) StageContracts(ctx context.Context, filter func(*project.Contract) bool) (map[common.AddressLocation]error, error) {
+func (s *stagingServiceImpl) StageContracts(ctx context.Context, filter func(*project.Contract) bool) (map[common.AddressLocation]error, error) {
 	contracts, err := s.state.DeploymentContractsByNetwork(s.flow.Network())
 	if err != nil {
 		return nil, err
@@ -70,7 +78,7 @@ func (s *stagingService) StageContracts(ctx context.Context, filter func(*projec
 	return s.validateAndStageContracts(ctx, filtered)
 }
 
-func (s *stagingService) validateAndStageContracts(ctx context.Context, contracts []*project.Contract) (map[common.AddressLocation]error, error) {
+func (s *stagingServiceImpl) validateAndStageContracts(ctx context.Context, contracts []*project.Contract) (map[common.AddressLocation]error, error) {
 	// If validation is disabled, just stage the contracts
 	if !s.validationEnabled {
 		s.logger.Info("Skipping contract code validation, you may monitor the status of your contract using the `flow migrate is-validated` command\n")
@@ -84,7 +92,7 @@ func (s *stagingService) validateAndStageContracts(ctx context.Context, contract
 	defer s.logger.StopProgress()
 
 	// Create a new validator
-	validator := newStagingValidator(s.flow, s.state)
+	validator := newStagingValidator(s.flow)
 
 	// Collect all staged contracts
 	stagedContracts := make([]StagedContract, len(contracts))
@@ -128,7 +136,7 @@ func (s *stagingService) validateAndStageContracts(ctx context.Context, contract
 	return results, nil
 }
 
-func (s *stagingService) stageValidContracts(ctx context.Context, validatorError *stagingValidatorError, contracts []*project.Contract) map[common.AddressLocation]error {
+func (s *stagingServiceImpl) stageValidContracts(ctx context.Context, validatorError *stagingValidatorError, contracts []*project.Contract) map[common.AddressLocation]error {
 	stagingErrors := make(map[common.AddressLocation]error)
 	validContracts := make([]*project.Contract, 0, len(contracts))
 	for _, contract := range contracts {
@@ -146,7 +154,7 @@ func (s *stagingService) stageValidContracts(ctx context.Context, validatorError
 	return stagingErrors
 }
 
-func (s *stagingService) maybeStageInvalidContracts(ctx context.Context, validatorError *stagingValidatorError, contracts []*project.Contract) map[common.AddressLocation]error {
+func (s *stagingServiceImpl) maybeStageInvalidContracts(ctx context.Context, validatorError *stagingValidatorError, contracts []*project.Contract) map[common.AddressLocation]error {
 	// Fill results with all validation errors initially
 	// These will be overwritten if contracts are staged
 	results := make(map[common.AddressLocation]error)
@@ -188,7 +196,7 @@ func (s *stagingService) maybeStageInvalidContracts(ctx context.Context, validat
 	return results
 }
 
-func (s *stagingService) promptStagingUnvalidatedContracts(validatorError *stagingValidatorError) bool {
+func (s *stagingServiceImpl) promptStagingUnvalidatedContracts(validatorError *stagingValidatorError) bool {
 	infoMessage := strings.Builder{}
 
 	infoMessage.WriteString("Preliminary validation could not be performed on the following contracts:\n")
@@ -220,12 +228,14 @@ func (s *stagingService) promptStagingUnvalidatedContracts(validatorError *stagi
 
 // Stage contracts for network with an optional filter
 // Returns a map of staged/attempted contracts and errors occuring if any
-func (s *stagingService) stageContracts(ctx context.Context, contracts []*project.Contract) map[common.AddressLocation]error {
+func (s *stagingServiceImpl) stageContracts(ctx context.Context, contracts []*project.Contract) map[common.AddressLocation]error {
 	stagingErrors := make(map[common.AddressLocation]error)
 	for _, contract := range contracts {
 		targetAccount, err := s.state.Accounts().ByName(contract.AccountName)
+		deployLocation := contractDeploymentLocation(contract)
+
 		if err != nil {
-			stagingErrors[contractDeploymentLocation(contract)] = fmt.Errorf("failed to get account by contract name: %w", err)
+			stagingErrors[deployLocation] = fmt.Errorf("failed to get account by contract name: %w", err)
 			continue
 		}
 
@@ -236,7 +246,7 @@ func (s *stagingService) stageContracts(ctx context.Context, contracts []*projec
 			contract.Code(),
 		)
 		if err != nil {
-			stagingErrors[contractDeploymentLocation(contract)] = err
+			stagingErrors[deployLocation] = err
 			continue
 		}
 
@@ -250,7 +260,7 @@ func (s *stagingService) stageContracts(ctx context.Context, contracts []*projec
 	return stagingErrors
 }
 
-func (s *stagingService) stageContract(ctx context.Context, account *accounts.Account, contractName string, contractCode []byte) (flow.Identifier, error) {
+func (s *stagingServiceImpl) stageContract(ctx context.Context, account *accounts.Account, contractName string, contractCode []byte) (flow.Identifier, error) {
 	cName := cadence.String(contractName)
 	cCode := cadence.String(contractCode)
 
@@ -270,7 +280,7 @@ func (s *stagingService) stageContract(ctx context.Context, account *accounts.Ac
 	return tx.ID(), nil
 }
 
-func (s *stagingService) prettyPrintValidationResults(contracts []*project.Contract, validatorError *stagingValidatorError) (string, error) {
+func (s *stagingServiceImpl) prettyPrintValidationResults(contracts []*project.Contract, validatorError *stagingValidatorError) (string, error) {
 	var sb strings.Builder
 
 	sb.WriteString("Validation results:\n")

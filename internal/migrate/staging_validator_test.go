@@ -21,8 +21,6 @@ package migrate
 import (
 	"testing"
 
-	"github.com/onflow/flow-cli/internal/util"
-
 	"github.com/onflow/cadence"
 	"github.com/onflow/cadence/runtime/common"
 	"github.com/onflow/cadence/runtime/sema"
@@ -31,13 +29,12 @@ import (
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flowkit/v2"
 	"github.com/onflow/flowkit/v2/config"
-	"github.com/stretchr/testify/assert"
+	flowkitMocks "github.com/onflow/flowkit/v2/mocks"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
 func Test_StagingValidator(t *testing.T) {
-	srv, state, rw := util.TestMocks(t)
 	t.Run("valid contract update with no dependencies", func(t *testing.T) {
 		location := common.NewAddressLocation(nil, common.Address{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01}, "Test")
 		sourceCodeLocation := common.StringLocation("./Test.cdc")
@@ -49,25 +46,17 @@ func Test_StagingValidator(t *testing.T) {
 		access(all) contract Test {
 			access(all) fun test() {}
 		}`
-		mockAccount := &flow.Account{
-			Address: flow.HexToAddress("01"),
-			Balance: 1000,
-			Keys:    nil,
-			Contracts: map[string][]byte{
-				"Test": []byte(oldContract),
-			},
-		}
 
 		// setup mocks
-		require.NoError(t, rw.WriteFile(sourceCodeLocation.String(), []byte(newContract), 0o644))
-		srv.GetAccount.Run(func(args mock.Arguments) {
-			require.Equal(t, flow.HexToAddress("01"), args.Get(1).(flow.Address))
-		}).Return(mockAccount, nil)
-		srv.Network.Return(config.Network{
-			Name: "testnet",
-		}, nil)
+		srv := setupMocks(t, []mockAccount{
+			{
+				address:         flow.HexToAddress("01"),
+				contracts:       map[string][]byte{"Test": []byte(oldContract)},
+				stagedContracts: nil,
+			},
+		})
 
-		validator := newStagingValidator(srv.Mock, state)
+		validator := newStagingValidator(srv)
 		err := validator.Validate([]StagedContract{{location, sourceCodeLocation, []byte(newContract)}})
 		require.NoError(t, err)
 	})
@@ -88,25 +77,17 @@ func Test_StagingValidator(t *testing.T) {
 				self.x = 1
 			}
 		}`
-		mockAccount := &flow.Account{
-			Address: flow.HexToAddress("01"),
-			Balance: 1000,
-			Keys:    nil,
-			Contracts: map[string][]byte{
-				"Test": []byte(oldContract),
-			},
-		}
 
 		// setup mocks
-		require.NoError(t, rw.WriteFile(sourceCodeLocation.String(), []byte(newContract), 0o644))
-		srv.GetAccount.Run(func(args mock.Arguments) {
-			require.Equal(t, flow.HexToAddress("01"), args.Get(1).(flow.Address))
-		}).Return(mockAccount, nil)
-		srv.Network.Return(config.Network{
-			Name: "testnet",
-		}, nil)
+		srv := setupMocks(t, []mockAccount{
+			{
+				address:         flow.HexToAddress("01"),
+				contracts:       map[string][]byte{"Test": []byte(oldContract)},
+				stagedContracts: nil,
+			},
+		})
 
-		validator := newStagingValidator(srv.Mock, state)
+		validator := newStagingValidator(srv)
 		err := validator.Validate([]StagedContract{{location, sourceCodeLocation, []byte(newContract)}})
 		var updateErr *stdlib.ContractUpdateError
 		require.ErrorAs(t, err, &updateErr)
@@ -129,25 +110,17 @@ func Test_StagingValidator(t *testing.T) {
 				self.x = "bad type :("
 			}
 		}`
-		mockAccount := &flow.Account{
-			Address: flow.HexToAddress("01"),
-			Balance: 1000,
-			Keys:    nil,
-			Contracts: map[string][]byte{
-				"Test": []byte(oldContract),
-			},
-		}
 
 		// setup mocks
-		require.NoError(t, rw.WriteFile(sourceCodeLocation.String(), []byte(newContract), 0o644))
-		srv.GetAccount.Run(func(args mock.Arguments) {
-			require.Equal(t, flow.HexToAddress("01"), args.Get(1).(flow.Address))
-		}).Return(mockAccount, nil)
-		srv.Network.Return(config.Network{
-			Name: "testnet",
-		}, nil)
+		srv := setupMocks(t, []mockAccount{
+			{
+				address:         flow.HexToAddress("01"),
+				contracts:       map[string][]byte{"Test": []byte(oldContract)},
+				stagedContracts: nil,
+			},
+		})
 
-		validator := newStagingValidator(srv.Mock, state)
+		validator := newStagingValidator(srv)
 		err := validator.Validate([]StagedContract{{location, sourceCodeLocation, []byte(newContract)}})
 		var checkerErr *sema.CheckerError
 		require.ErrorAs(t, err, &checkerErr)
@@ -172,43 +145,24 @@ func Test_StagingValidator(t *testing.T) {
 				self.x = 1
 			}
 		}`
-		mockScriptResultString, err := cadence.NewString(impContract)
-		require.NoError(t, err)
-
-		mockAccount := &flow.Account{
-			Address: flow.HexToAddress("01"),
-			Balance: 1000,
-			Keys:    nil,
-			Contracts: map[string][]byte{
-				"Test": []byte(oldContract),
-			},
-		}
 
 		// setup mocks
-		require.NoError(t, rw.WriteFile(sourceCodeLocation.String(), []byte(newContract), 0o644))
-		srv.GetAccount.Run(func(args mock.Arguments) {
-			require.Equal(t, flow.HexToAddress("01"), args.Get(1).(flow.Address))
-		}).Return(mockAccount, nil)
-		srv.Network.Return(config.Network{
-			Name: "testnet",
-		}, nil)
-		srv.ExecuteScript.Run(func(args mock.Arguments) {
-			script := args.Get(1).(flowkit.Script)
-
-			assert.Equal(t, templates.GenerateGetStagedContractCodeScript(MigrationContractStagingAddress("testnet")), script.Code)
-
-			assert.Equal(t, 2, len(script.Args))
-			actualContractAddressArg, actualContractNameArg := script.Args[0], script.Args[1]
-
-			contractName, _ := cadence.NewString("ImpContract")
-			contractAddr := cadence.NewAddress(flow.HexToAddress("02"))
-			assert.Equal(t, contractName, actualContractNameArg)
-			assert.Equal(t, contractAddr, actualContractAddressArg)
-		}).Return(cadence.NewOptional(mockScriptResultString), nil)
+		srv := setupMocks(t, []mockAccount{
+			{
+				address:         flow.HexToAddress("01"),
+				contracts:       map[string][]byte{"Test": []byte(oldContract)},
+				stagedContracts: nil,
+			},
+			{
+				address:         flow.HexToAddress("02"),
+				contracts:       nil,
+				stagedContracts: map[string][]byte{"ImpContract": []byte(impContract)},
+			},
+		})
 
 		// validate
-		validator := newStagingValidator(srv.Mock, state)
-		err = validator.Validate([]StagedContract{{location, sourceCodeLocation, []byte(newContract)}})
+		validator := newStagingValidator(srv)
+		err := validator.Validate([]StagedContract{{location, sourceCodeLocation, []byte(newContract)}})
 		require.NoError(t, err)
 	})
 
@@ -225,26 +179,17 @@ func Test_StagingValidator(t *testing.T) {
 		access(all) contract Test {
 			access(all) fun test() {}
 		}`
-		mockAccount := &flow.Account{
-			Address: flow.HexToAddress("01"),
-			Balance: 1000,
-			Keys:    nil,
-			Contracts: map[string][]byte{
-				"Test": []byte(oldContract),
-			},
-		}
 
 		// setup mocks
-		require.NoError(t, rw.WriteFile(sourceCodeLocation.String(), []byte(newContract), 0o644))
-		srv.GetAccount.Run(func(args mock.Arguments) {
-			require.Equal(t, flow.HexToAddress("01"), args.Get(1).(flow.Address))
-		}).Return(mockAccount, nil)
-		srv.Network.Return(config.Network{
-			Name: "testnet",
-		}, nil)
-		srv.ExecuteScript.Run(func(args mock.Arguments) {}).Return(cadence.NewOptional(nil), nil)
+		srv := setupMocks(t, []mockAccount{
+			{
+				address:         flow.HexToAddress("01"),
+				contracts:       map[string][]byte{"Test": []byte(oldContract)},
+				stagedContracts: nil,
+			},
+		})
 
-		validator := newStagingValidator(srv.Mock, state)
+		validator := newStagingValidator(srv)
 		err := validator.Validate([]StagedContract{{location, sourceCodeLocation, []byte(newContract)}})
 
 		var validatorErr *stagingValidatorError
@@ -271,25 +216,17 @@ func Test_StagingValidator(t *testing.T) {
 		access(all) contract Test {
 			access(all) fun test() {}
 		}`
-		mockAccount := &flow.Account{
-			Address: flow.HexToAddress("01"),
-			Balance: 1000,
-			Keys:    nil,
-			Contracts: map[string][]byte{
-				"Test": []byte(oldContract),
-			},
-		}
 
 		// setup mocks
-		require.NoError(t, rw.WriteFile(sourceCodeLocation.String(), []byte(newContract), 0o644))
-		srv.GetAccount.Run(func(args mock.Arguments) {
-			require.Equal(t, flow.HexToAddress("01"), args.Get(1).(flow.Address))
-		}).Return(mockAccount, nil)
-		srv.Network.Return(config.Network{
-			Name: "testnet",
-		}, nil)
+		srv := setupMocks(t, []mockAccount{
+			{
+				address:         flow.HexToAddress("01"),
+				contracts:       map[string][]byte{"Test": []byte(oldContract)},
+				stagedContracts: nil,
+			},
+		})
 
-		validator := newStagingValidator(srv.Mock, state)
+		validator := newStagingValidator(srv)
 		err := validator.Validate([]StagedContract{{location, sourceCodeLocation, []byte(newContract)}})
 		require.NoError(t, err)
 	})
@@ -315,43 +252,138 @@ func Test_StagingValidator(t *testing.T) {
 			access(account) fun test() {}
 			init() {}
 		}`
-		mockScriptResultString, err := cadence.NewString(impContract)
-		require.NoError(t, err)
-
-		mockAccount := &flow.Account{
-			Address: flow.HexToAddress("01"),
-			Balance: 1000,
-			Keys:    nil,
-			Contracts: map[string][]byte{
-				"Test": []byte(oldContract),
-			},
-		}
 
 		// setup mocks
-		require.NoError(t, rw.WriteFile(sourceCodeLocation.String(), []byte(newContract), 0o644))
-		srv.GetAccount.Run(func(args mock.Arguments) {
-			require.Equal(t, flow.HexToAddress("01"), args.Get(1).(flow.Address))
-		}).Return(mockAccount, nil)
-		srv.Network.Return(config.Network{
-			Name: "testnet",
-		}, nil)
-		srv.ExecuteScript.Run(func(args mock.Arguments) {
-			script := args.Get(1).(flowkit.Script)
-
-			assert.Equal(t, templates.GenerateGetStagedContractCodeScript(MigrationContractStagingAddress("testnet")), script.Code)
-
-			assert.Equal(t, 2, len(script.Args))
-			actualContractAddressArg, actualContractNameArg := script.Args[0], script.Args[1]
-
-			contractName, _ := cadence.NewString("ImpContract")
-			contractAddr := cadence.NewAddress(flow.HexToAddress("01"))
-			assert.Equal(t, contractName, actualContractNameArg)
-			assert.Equal(t, contractAddr, actualContractAddressArg)
-		}).Return(cadence.NewOptional(mockScriptResultString), nil)
+		srv := setupMocks(t, []mockAccount{
+			{
+				address:         flow.HexToAddress("01"),
+				contracts:       map[string][]byte{"Test": []byte(oldContract)},
+				stagedContracts: map[string][]byte{"ImpContract": []byte(impContract)},
+			},
+		})
 
 		// validate
-		validator := newStagingValidator(srv.Mock, state)
-		err = validator.Validate([]StagedContract{{location, sourceCodeLocation, []byte(newContract)}})
+		validator := newStagingValidator(srv)
+		err := validator.Validate([]StagedContract{{location, sourceCodeLocation, []byte(newContract)}})
 		require.NoError(t, err)
 	})
+
+	t.Run("validates multiple contracts, no error", func(t *testing.T) {
+		location1 := common.NewAddressLocation(nil, common.Address{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01}, "Foo")
+		location2 := common.NewAddressLocation(nil, common.Address{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02}, "Bar")
+		sourceCodeLocation1 := common.StringLocation("./Foo.cdc")
+		sourceCodeLocation2 := common.StringLocation("./Bar.cdc")
+		oldContract1 := `
+		pub contract Foo {
+			pub fun test() {}
+		}`
+		oldContract2 := `
+		pub contract Bar {
+			pub fun test() {}
+			init() {
+				Foo.test()
+			}
+		}`
+		newContract1 := `
+		access(all) contract Foo {
+			access(all) fun test() {}
+		}`
+		newContract2 := `
+		import Foo from 0x01
+		access(all) contract Bar {
+			access(all) fun test() {}
+			init() {
+				Foo.test()
+			}
+		}`
+
+		// setup mocks
+		srv := setupMocks(t, []mockAccount{
+			{
+				address:         flow.HexToAddress("01"),
+				contracts:       map[string][]byte{"Foo": []byte(oldContract1)},
+				stagedContracts: nil,
+			},
+			{
+				address:         flow.HexToAddress("02"),
+				contracts:       map[string][]byte{"Bar": []byte(oldContract2)},
+				stagedContracts: nil,
+			},
+		})
+
+		validator := newStagingValidator(srv)
+		err := validator.Validate([]StagedContract{
+			{location1, sourceCodeLocation1, []byte(newContract1)},
+			{location2, sourceCodeLocation2, []byte(newContract2)},
+		})
+
+		require.NoError(t, err)
+	})
+}
+
+type mockAccount struct {
+	address         flow.Address
+	contracts       map[string][]byte
+	stagedContracts map[string][]byte
+}
+
+func setupMocks(
+	t *testing.T,
+	accounts []mockAccount,
+) *flowkitMocks.Services {
+	t.Helper()
+	srv := flowkitMocks.NewServices(t)
+
+	// Mock all accounts & staged contracts
+	for _, acc := range accounts {
+		mockAccount := &flow.Account{
+			Address:   acc.address,
+			Balance:   1000,
+			Keys:      nil,
+			Contracts: acc.contracts,
+		}
+
+		srv.On("GetAccount", mock.Anything, acc.address).Return(mockAccount, nil).Maybe()
+
+		for contractName, code := range acc.stagedContracts {
+			srv.On(
+				"ExecuteScript",
+				mock.Anything,
+				mock.MatchedBy(func(script flowkit.Script) bool {
+					if string(script.Code) != string(templates.GenerateGetStagedContractCodeScript(MigrationContractStagingAddress("testnet"))) {
+						return false
+					}
+
+					if len(script.Args) != 2 {
+						return false
+					}
+
+					callContractAddress, callContractName := script.Args[0], script.Args[1]
+					if callContractName != cadence.String(contractName) {
+						return false
+					}
+					if callContractAddress != cadence.Address(acc.address) {
+						return false
+					}
+
+					return true
+				}),
+				mock.Anything,
+			).Return(cadence.NewOptional(cadence.String(code)), nil).Maybe()
+		}
+	}
+
+	// Mock missing contract, fallback if not found
+	srv.On(
+		"ExecuteScript",
+		mock.Anything,
+		mock.Anything,
+		mock.Anything,
+	).Return(cadence.NewOptional(nil), nil).Maybe()
+
+	srv.On("Network", mock.Anything).Return(config.Network{
+		Name: "testnet",
+	}, nil).Maybe()
+
+	return srv
 }

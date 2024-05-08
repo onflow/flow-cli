@@ -49,8 +49,7 @@ TODO: test circular dependency case, probably works, but worried about cached ch
 */
 
 type stagingValidator struct {
-	flow  flowkit.Services
-	state *flowkit.State
+	flow flowkit.Services
 
 	stagedContracts map[common.AddressLocation]StagedContract
 
@@ -62,7 +61,12 @@ type stagingValidator struct {
 	// dependent -> missing dependencies
 	missingDependencies map[common.Location][]common.AddressLocation
 	// Cache for contract checkers which are reused during program checking & used for the update checker
-	checkers map[common.Location]*sema.Checker
+	checkingCache map[common.Location]*cachedCheckingResult
+}
+
+type cachedCheckingResult struct {
+	checker *sema.Checker
+	err     error
 }
 
 type StagedContract struct {
@@ -140,13 +144,12 @@ var chainIdMap = map[string]flow.ChainID{
 	"testnet": flow.Testnet,
 }
 
-func newStagingValidator(flow flowkit.Services, state *flowkit.State) *stagingValidator {
+func newStagingValidator(flow flowkit.Services) *stagingValidator {
 	return &stagingValidator{
 		flow:                 flow,
-		state:                state,
 		contracts:            make(map[common.Location][]byte),
 		missingDependencies:  make(map[common.Location][]common.AddressLocation),
-		checkers:             make(map[common.Location]*sema.Checker),
+		checkingCache:        make(map[common.Location]*cachedCheckingResult),
 		accountContractNames: make(map[common.Address][]string),
 	}
 }
@@ -186,8 +189,7 @@ func (v *stagingValidator) Validate(stagedContracts []StagedContract) error {
 func (v *stagingValidator) parseAndCheckAllStaged() map[common.AddressLocation]error {
 	errors := make(map[common.AddressLocation]error)
 	for location := range v.stagedContracts {
-		_, checker, err := v.parseAndCheckContract(location)
-		v.checkers[location] = checker
+		_, err := v.checkContract(location)
 
 		// First, check if the contract has missing dependencies
 		// This error case takes precedence over any other errors
@@ -198,7 +200,7 @@ func (v *stagingValidator) parseAndCheckAllStaged() map[common.AddressLocation]e
 			continue
 		}
 
-		// Otherwise, record parsing/checking errors if they exist
+		// Otherwise, check if there was an error checking the contract
 		if err != nil {
 			errors[location] = err
 			continue
@@ -235,7 +237,7 @@ func (v *stagingValidator) validateContractUpdate(location common.AddressLocatio
 	}
 
 	// Convert the new program checker to an interpreter program
-	interpreterProgram := interpreter.ProgramFromChecker(v.checkers[location])
+	interpreterProgram := interpreter.ProgramFromChecker(v.checkingCache[location].checker)
 
 	// Check if contract code is valid according to Cadence V1 Update Checker
 	validator := stdlib.NewCadenceV042ToV1ContractUpdateValidator(
@@ -264,35 +266,71 @@ func (v *stagingValidator) validateContractUpdate(location common.AddressLocatio
 	return nil
 }
 
-func (v *stagingValidator) parseAndCheckContract(
-	importedLocation common.Location,
+func (v *stagingValidator) checkContract(
+	importedLocation common.AddressLocation,
 	stack ...common.Location,
-) (*ast.Program, *sema.Checker, error) {
+) (checker *sema.Checker, err error) {
+	// Try to load cached checker
+	if cacheItem, ok := v.checkingCache[importedLocation]; ok {
+		// Inherit missing dependencies from the imported contract
+		// This is important because these missing upstream dependencies will not be encountered
+		// when checking this dependency tree, as this intermediate checker is cached
+		for _, dependent := range stack {
+			v.missingDependencies[dependent] = append(v.missingDependencies[dependent], v.missingDependencies[importedLocation]...)
+		}
+		return cacheItem.checker, cacheItem.err
+	}
+
+	// Cache the checker
+	defer func() {
+		v.checkingCache[importedLocation] = &cachedCheckingResult{
+			checker: checker,
+			err:     err,
+		}
+	}()
+
 	// Resolve the contract code and location based on whether this is a staged update
 	// Or an existing contract
 	var location common.Location
 	var code []byte
 
-	stagedContract, ok := v.stagedContracts[importedLocation.(common.AddressLocation)]
+	stagedContract, ok := v.stagedContracts[importedLocation]
 	if ok {
 		location = stagedContract.SourceLocation
 		code = stagedContract.Code
 	} else {
+		// TODO: Shouldn't be checking for cotnract again if already known missing
 		location = importedLocation
-		code, ok = v.contracts[importedLocation]
+		code, ok = v.contracts[location]
 		if !ok {
-			return nil, nil, fmt.Errorf("contract code not found for location: %s", importedLocation)
+			code, err = v.getStagedContractCode(importedLocation)
+			if err != nil {
+				err = fmt.Errorf("failed to get staged contract code: %w", err)
+				return
+			}
+			v.contracts[importedLocation] = code
+		}
+
+		// Handle the case where the contract has not been staged yet
+		// This missing dependency will be tracked for all dependents
+		if code == nil {
+			for _, dependent := range stack {
+				v.missingDependencies[dependent] = append(v.missingDependencies[dependent], importedLocation)
+			}
+			err = fmt.Errorf("the following contract has not been staged: %s", importedLocation)
+			return
 		}
 	}
 
 	// Parse the contract code
-	program, err := parser.ParseProgram(nil, code, parser.Config{})
+	var program *ast.Program
+	program, err = parser.ParseProgram(nil, code, parser.Config{})
 	if err != nil {
-		return nil, nil, err
+		return
 	}
 
 	// Check the contract code
-	checker, err := sema.NewChecker(
+	checker, err = sema.NewChecker(
 		program,
 		location,
 		nil,
@@ -309,15 +347,11 @@ func (v *stagingValidator) parseAndCheckContract(
 		},
 	)
 	if err != nil {
-		return nil, nil, err
+		return
 	}
 
 	err = checker.Check()
-	if err != nil {
-		return nil, nil, err
-	}
-
-	return program, checker, nil
+	return
 }
 
 func (v *stagingValidator) getStagedContractCode(
@@ -387,42 +421,9 @@ func (v *stagingValidator) resolveImport(stack []common.Location) func(*sema.Che
 		}
 
 		// Check if this contract has already been resolved
-		subChecker, ok := v.checkers[importedLocation]
-
-		// If not resolved, parse and check the contract code
-		if !ok {
-			importedCode, err := v.getStagedContractCode(addrLocation)
-			if err != nil {
-				return nil, fmt.Errorf("failed to get staged contract code: %w", err)
-			}
-			v.contracts[addrLocation] = importedCode
-
-			// Handle the case where the contract has not been staged yet
-			// This missing dependency will be tracked for all dependents
-			if importedCode == nil {
-				for _, dependent := range stack {
-					v.missingDependencies[dependent] = append(v.missingDependencies[dependent], addrLocation)
-				}
-				return nil, fmt.Errorf("the following contract has not been staged: %s", addrLocation)
-			}
-
-			// We do not need to worry about circular dependencies
-			// They are caught internally by Cadence, as long as we are caching the checkers
-			// e.g. A -> B -> A will be known because A is imported while being checked
-			_, checker, err := v.parseAndCheckContract(addrLocation, stack...)
-			if err != nil {
-				return nil, err
-			}
-
-			v.checkers[importedLocation] = checker
-			subChecker = checker
-		} else {
-			// Inherit missing dependencies from the imported contract
-			// This is important because these missing upstream dependencies will not be encountered
-			// when checking this dependency tree, as this intermediate checker is cached
-			for _, dependent := range stack {
-				v.missingDependencies[dependent] = append(v.missingDependencies[dependent], v.missingDependencies[importedLocation]...)
-			}
+		subChecker, err := v.checkContract(addrLocation, stack...)
+		if err != nil {
+			return nil, err
 		}
 
 		return sema.ElaborationImport{
@@ -590,8 +591,12 @@ func (v *stagingValidator) loadSystemContracts() {
 
 func (v *stagingValidator) elaborations() map[common.Location]*sema.Elaboration {
 	elaborations := make(map[common.Location]*sema.Elaboration)
-	for location := range v.checkers {
-		elaborations[location] = v.checkers[location].Elaboration
+	for location, cacheItem := range v.checkingCache {
+		checker := cacheItem.checker
+		if checker == nil {
+			continue
+		}
+		elaborations[location] = checker.Elaboration
 	}
 	return elaborations
 }

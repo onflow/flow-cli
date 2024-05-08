@@ -22,6 +22,7 @@ import (
 	"testing"
 
 	"github.com/onflow/cadence"
+	"github.com/onflow/cadence/runtime/common"
 	"github.com/onflow/contract-updater/lib/go/templates"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flowkit/v2"
@@ -32,11 +33,95 @@ import (
 	"github.com/stretchr/testify/mock"
 
 	"github.com/onflow/flow-cli/internal/command"
+	"github.com/onflow/flow-cli/internal/migrate/mocks"
 	"github.com/onflow/flow-cli/internal/util"
 )
 
 func Test_StageContract(t *testing.T) {
 	testContract := tests.ContractSimple
+
+	t.Run("all contracts filter", func(t *testing.T) {
+		stagingService := mocks.NewStagingService(t)
+
+		mockResult := make(map[common.AddressLocation]error)
+		mockResult[common.NewAddressLocation(nil, common.Address{0x01}, "Foo")] = nil
+		stagingService.On("StageContracts", mock.Anything, mock.Anything).Return(mockResult, nil)
+
+		result, err := stageWithFilters(
+			stagingService,
+			true,
+			nil,
+			nil,
+		)
+
+		assert.NoError(t, err)
+		assert.NotNil(t, result)
+		assert.Equal(t, mockResult, result.Contracts)
+	})
+
+	t.Run("contract name filter", func(t *testing.T) {
+		stagingService := mocks.NewStagingService(t)
+
+		mockResult := make(map[common.AddressLocation]error)
+		mockResult[common.NewAddressLocation(nil, common.Address{0x01}, "Foo")] = nil
+		stagingService.On("StageContracts", mock.Anything, mock.Anything).Return(mockResult, nil)
+
+		result, err := stageWithFilters(
+			stagingService,
+			false,
+			[]string{"Foo"},
+			nil,
+		)
+
+		assert.NoError(t, err)
+		assert.NotNil(t, result)
+		assert.Equal(t, mockResult, result.Contracts)
+	})
+
+	t.Run("fails all contracts filter with contract name filter", func(t *testing.T) {
+		stagingService := mocks.NewStagingService(t)
+		stagingService.On("StageContracts", mock.Anything, mock.Anything).Return(make(map[common.AddressLocation]error), nil)
+
+		result, err := stageWithFilters(
+			stagingService,
+			true,
+			[]string{"Foo"},
+			nil,
+		)
+
+		assert.Error(t, err)
+		assert.Nil(t, result)
+	})
+
+	t.Run("fails all contracts filter with account filter", func(t *testing.T) {
+		stagingService := mocks.NewStagingService(t)
+		stagingService.On("StageContracts", mock.Anything, mock.Anything).Return(make(map[common.AddressLocation]error), nil)
+
+		result, err := stageWithFilters(
+			stagingService,
+			true,
+			nil,
+			[]string{"emulator-account"},
+		)
+
+		assert.Error(t, err)
+		assert.Nil(t, result)
+	})
+
+	t.Run("fails account filter with contract name filter", func(t *testing.T) {
+		stagingService := mocks.NewStagingService(t)
+		stagingService.On("StageContracts", mock.Anything, mock.Anything).Return(make(map[common.AddressLocation]error), nil)
+
+		result, err := stageWithFilters(
+			stagingService,
+			false,
+			[]string{"Foo"},
+			[]string{"emulator-account"},
+		)
+
+		assert.Error(t, err)
+		assert.Nil(t, result)
+	})
 
 	t.Run("Success", func(t *testing.T) {
 		srv, state, _ := util.TestMocks(t)
