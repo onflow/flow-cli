@@ -41,7 +41,7 @@ type mockAccount struct {
 	stagedContracts map[string][]byte
 }
 
-func setupMocks(
+func setupValidatorMocks(
 	t *testing.T,
 	accounts []mockAccount,
 ) *flowkitMocks.Services {
@@ -123,7 +123,7 @@ func Test_StagingValidator(t *testing.T) {
 		}`
 
 		// setup mocks
-		srv := setupMocks(t, []mockAccount{
+		srv := setupValidatorMocks(t, []mockAccount{
 			{
 				address:         flow.HexToAddress("01"),
 				contracts:       map[string][]byte{"Test": []byte(oldContract)},
@@ -154,7 +154,7 @@ func Test_StagingValidator(t *testing.T) {
 		}`
 
 		// setup mocks
-		srv := setupMocks(t, []mockAccount{
+		srv := setupValidatorMocks(t, []mockAccount{
 			{
 				address:         flow.HexToAddress("01"),
 				contracts:       map[string][]byte{"Test": []byte(oldContract)},
@@ -187,7 +187,7 @@ func Test_StagingValidator(t *testing.T) {
 		}`
 
 		// setup mocks
-		srv := setupMocks(t, []mockAccount{
+		srv := setupValidatorMocks(t, []mockAccount{
 			{
 				address:         flow.HexToAddress("01"),
 				contracts:       map[string][]byte{"Test": []byte(oldContract)},
@@ -222,7 +222,7 @@ func Test_StagingValidator(t *testing.T) {
 		}`
 
 		// setup mocks
-		srv := setupMocks(t, []mockAccount{
+		srv := setupValidatorMocks(t, []mockAccount{
 			{
 				address:         flow.HexToAddress("01"),
 				contracts:       map[string][]byte{"Test": []byte(oldContract)},
@@ -256,7 +256,7 @@ func Test_StagingValidator(t *testing.T) {
 		}`
 
 		// setup mocks
-		srv := setupMocks(t, []mockAccount{
+		srv := setupValidatorMocks(t, []mockAccount{
 			{
 				address:         flow.HexToAddress("01"),
 				contracts:       map[string][]byte{"Test": []byte(oldContract)},
@@ -293,7 +293,7 @@ func Test_StagingValidator(t *testing.T) {
 		}`
 
 		// setup mocks
-		srv := setupMocks(t, []mockAccount{
+		srv := setupValidatorMocks(t, []mockAccount{
 			{
 				address:         flow.HexToAddress("01"),
 				contracts:       map[string][]byte{"Test": []byte(oldContract)},
@@ -329,7 +329,7 @@ func Test_StagingValidator(t *testing.T) {
 		}`
 
 		// setup mocks
-		srv := setupMocks(t, []mockAccount{
+		srv := setupValidatorMocks(t, []mockAccount{
 			{
 				address:         flow.HexToAddress("01"),
 				contracts:       map[string][]byte{"Test": []byte(oldContract)},
@@ -345,7 +345,7 @@ func Test_StagingValidator(t *testing.T) {
 
 	t.Run("validates multiple contracts, no error", func(t *testing.T) {
 		// setup mocks
-		srv := setupMocks(t, []mockAccount{
+		srv := setupValidatorMocks(t, []mockAccount{
 			{
 				address: flow.HexToAddress("01"),
 				contracts: map[string][]byte{"Foo": []byte(`
@@ -396,7 +396,7 @@ func Test_StagingValidator(t *testing.T) {
 
 	t.Run("validates multiple contracts with errors", func(t *testing.T) {
 		// setup mocks
-		srv := setupMocks(t, []mockAccount{
+		srv := setupValidatorMocks(t, []mockAccount{
 			{
 				address: flow.HexToAddress("01"),
 				contracts: map[string][]byte{"Foo": []byte(`
@@ -462,7 +462,7 @@ func Test_StagingValidator(t *testing.T) {
 		// setup mocks
 		// ordering is important here, e.g. even though Foo is checked
 		// first, Bar will still recognize the missing dependency
-		srv := setupMocks(t, []mockAccount{
+		srv := setupValidatorMocks(t, []mockAccount{
 			{
 				address: flow.HexToAddress("01"),
 				contracts: map[string][]byte{"Foo": []byte(`

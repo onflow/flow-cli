@@ -25,7 +25,6 @@ import (
 	"strings"
 
 	"github.com/logrusorgru/aurora/v4"
-	"github.com/manifoldco/promptui"
 	"github.com/onflow/cadence"
 	"github.com/onflow/cadence/runtime/common"
 	"github.com/onflow/contract-updater/lib/go/templates"
@@ -37,50 +36,46 @@ import (
 	"github.com/onflow/flowkit/v2/transactions"
 )
 
-//go:generate mockery --name stagingService --output ./mocks --case underscore --exported
+//go:generate mockery --name stagingService --inpackage --testonly --case underscore
 type stagingService interface {
-	// StageContracts stages contracts for the network, based on an optional filter
-	StageContracts(ctx context.Context, filter func(*project.Contract) bool) (map[common.AddressLocation]error, error)
+	// StageContracts stages contracts for the network
+	StageAllContracts(ctx context.Context) (map[common.AddressLocation]error, error)
 }
 
 type stagingServiceImpl struct {
-	flow              flowkit.Services
-	state             *flowkit.State
-	logger            output.Logger
-	validationEnabled bool
+	flow                        flowkit.Services
+	state                       *flowkit.State
+	logger                      output.Logger
+	validator                   stagingValidator
+	unvalidatedContractsHandler func(*stagingValidatorError) bool
 }
 
 var _ stagingService = &stagingServiceImpl{}
 
-func newStagingService(flow flowkit.Services, state *flowkit.State, logger output.Logger, validationEnabled bool) *stagingServiceImpl {
+func newStagingService(
+	flow flowkit.Services,
+	state *flowkit.State,
+	logger output.Logger,
+	validator stagingValidator,
+	unvalidatedContractsHandler func(*stagingValidatorError) bool,
+) *stagingServiceImpl {
 	return &stagingServiceImpl{
-		flow:              flow,
-		state:             state,
-		logger:            logger,
-		validationEnabled: validationEnabled,
+		flow:                        flow,
+		state:                       state,
+		logger:                      logger,
+		validator:                   validator,
+		unvalidatedContractsHandler: unvalidatedContractsHandler,
 	}
 }
 
-func (s *stagingServiceImpl) StageContracts(ctx context.Context, filter func(*project.Contract) bool) (map[common.AddressLocation]error, error) {
+func (s *stagingServiceImpl) StageAllContracts(ctx context.Context) (map[common.AddressLocation]error, error) {
 	contracts, err := s.state.DeploymentContractsByNetwork(s.flow.Network())
 	if err != nil {
 		return nil, err
 	}
 
-	// Filter contracts
-	filtered := make([]*project.Contract, 0, len(contracts))
-	for _, contract := range contracts {
-		if filter(contract) {
-			filtered = append(filtered, contract)
-		}
-	}
-
-	return s.validateAndStageContracts(ctx, filtered)
-}
-
-func (s *stagingServiceImpl) validateAndStageContracts(ctx context.Context, contracts []*project.Contract) (map[common.AddressLocation]error, error) {
 	// If validation is disabled, just stage the contracts
-	if !s.validationEnabled {
+	if s.validator == nil {
 		s.logger.Info("Skipping contract code validation, you may monitor the status of your contract using the `flow migrate is-validated` command\n")
 		s.logger.StartProgress(fmt.Sprintf("Staging %d contracts for accounts: %s", len(contracts), s.state.AccountsForNetwork(s.flow.Network()).String()))
 		defer s.logger.StopProgress()
@@ -88,14 +83,15 @@ func (s *stagingServiceImpl) validateAndStageContracts(ctx context.Context, cont
 		return s.stageContracts(ctx, contracts), nil
 	}
 
+	return s.validateAndStageContracts(ctx, contracts)
+}
+
+func (s *stagingServiceImpl) validateAndStageContracts(ctx context.Context, contracts []*project.Contract) (map[common.AddressLocation]error, error) {
 	s.logger.StartProgress(fmt.Sprintf("Validating and staging %d contracts for accounts: %s", len(contracts), s.state.AccountsForNetwork(s.flow.Network()).String()))
 	defer s.logger.StopProgress()
 
-	// Create a new validator
-	validator := newStagingValidator(s.flow)
-
 	// Collect all staged contracts
-	stagedContracts := make([]StagedContract, len(contracts))
+	stagedContracts := make([]StagedContract, 0)
 	for _, contract := range contracts {
 		deployLocation := common.NewAddressLocation(nil, common.Address(contract.AccountAddress), contract.Name)
 		sourceLocation := common.StringLocation(contract.Location())
@@ -109,7 +105,7 @@ func (s *stagingServiceImpl) validateAndStageContracts(ctx context.Context, cont
 
 	// Validate all contracts
 	var validatorError *stagingValidatorError
-	err := validator.Validate(stagedContracts)
+	err := s.validator.Validate(stagedContracts)
 
 	// We will handle validation errors separately per contract to allow for partial staging
 	if err != nil && !errors.As(err, &validatorError) {
@@ -137,27 +133,36 @@ func (s *stagingServiceImpl) validateAndStageContracts(ctx context.Context, cont
 }
 
 func (s *stagingServiceImpl) stageValidContracts(ctx context.Context, validatorError *stagingValidatorError, contracts []*project.Contract) map[common.AddressLocation]error {
-	stagingErrors := make(map[common.AddressLocation]error)
-	validContracts := make([]*project.Contract, 0, len(contracts))
-	for _, contract := range contracts {
-		contractLocation := common.NewAddressLocation(nil, common.Address(contract.AccountAddress), contract.Name)
-		if _, hasError := validatorError.errors[contractLocation]; !hasError {
-			validContracts = append(validContracts, contract)
-		}
-	}
-	for contractLocation, err := range s.stageContracts(ctx, validContracts) {
-		if err != nil {
-			stagingErrors[contractLocation] = err
+	validContracts := make([]*project.Contract, 0)
+
+	if validatorError == nil || validatorError.errors == nil {
+		validContracts = contracts
+	} else {
+		for _, contract := range contracts {
+			contractLocation := common.NewAddressLocation(nil, common.Address(contract.AccountAddress), contract.Name)
+			if _, hasError := validatorError.errors[contractLocation]; hasError {
+				validContracts = append(validContracts, contract)
+			}
 		}
 	}
 
-	return stagingErrors
+	// Stage contracts that passed validation
+	results := make(map[common.AddressLocation]error)
+	for contractLocation, err := range s.stageContracts(ctx, validContracts) {
+		results[contractLocation] = err
+	}
+
+	return results
 }
 
 func (s *stagingServiceImpl) maybeStageInvalidContracts(ctx context.Context, validatorError *stagingValidatorError, contracts []*project.Contract) map[common.AddressLocation]error {
 	// Fill results with all validation errors initially
 	// These will be overwritten if contracts are staged
 	results := make(map[common.AddressLocation]error)
+	if validatorError == nil || validatorError.errors == nil {
+		return results
+	}
+
 	for contractLocation, contractErr := range validatorError.errors {
 		results[contractLocation] = contractErr
 	}
@@ -169,7 +174,7 @@ func (s *stagingServiceImpl) maybeStageInvalidContracts(ctx context.Context, val
 	}
 
 	// Prompt user to continue staging contracts that have missing dependencies
-	willStage := s.promptStagingUnvalidatedContracts(validatorError)
+	willStage := s.unvalidatedContractsHandler(validatorError)
 
 	// If user does not want to stage these contracts, we can just return
 	// validation errors as-is
@@ -188,54 +193,23 @@ func (s *stagingServiceImpl) maybeStageInvalidContracts(ctx context.Context, val
 
 	// Stage contracts that have missing dependencies & add errors to results
 	for location, err := range s.stageContracts(ctx, unvalidatedContracts) {
-		if err != nil {
-			results[location] = err
-		}
+		// Overwrite errors with staging results
+		results[location] = err
 	}
 
 	return results
 }
 
-func (s *stagingServiceImpl) promptStagingUnvalidatedContracts(validatorError *stagingValidatorError) bool {
-	infoMessage := strings.Builder{}
-
-	infoMessage.WriteString("Preliminary validation could not be performed on the following contracts:\n")
-	missingDependencyErrors := validatorError.MissingDependencyErrors()
-	for deployLocation := range missingDependencyErrors {
-		infoMessage.WriteString(fmt.Sprintf("  - %s\n", deployLocation))
-	}
-
-	infoMessage.WriteString("\nThese contracts depend on the following contracts which have not been staged yet:\n")
-	missingDependencies := validatorError.MissingDependencies()
-	for _, depLocation := range missingDependencies {
-		infoMessage.WriteString(fmt.Sprintf("  - %s\n", depLocation))
-	}
-
-	infoMessage.WriteString("\nYou may still stage your contract, however it will be unable to be migrated until the missing contracts are staged by their respective owners.  It is important to monitor the status of your contract using the `flow migrate is-validated` command\n")
-	s.logger.Error(infoMessage.String())
-
-	continuePrompt := promptui.Select{
-		Label: "Do you wish to continue staging your contract?",
-		Items: []string{"Yes", "No"},
-	}
-
-	_, result, err := continuePrompt.Run()
-	if err != nil || result != "Yes" {
-		return false
-	}
-	return true
-}
-
 // Stage contracts for network with an optional filter
 // Returns a map of staged/attempted contracts and errors occuring if any
 func (s *stagingServiceImpl) stageContracts(ctx context.Context, contracts []*project.Contract) map[common.AddressLocation]error {
-	stagingErrors := make(map[common.AddressLocation]error)
+	results := make(map[common.AddressLocation]error)
 	for _, contract := range contracts {
 		targetAccount, err := s.state.Accounts().ByName(contract.AccountName)
 		deployLocation := contractDeploymentLocation(contract)
 
 		if err != nil {
-			stagingErrors[deployLocation] = fmt.Errorf("failed to get account by contract name: %w", err)
+			results[deployLocation] = fmt.Errorf("failed to get account by contract name: %w", err)
 			continue
 		}
 
@@ -245,10 +219,7 @@ func (s *stagingServiceImpl) stageContracts(ctx context.Context, contracts []*pr
 			contract.Name,
 			contract.Code(),
 		)
-		if err != nil {
-			stagingErrors[deployLocation] = err
-			continue
-		}
+		results[deployLocation] = err
 
 		s.logger.Info(fmt.Sprintf(
 			"%s -> 0x%s (%s)",
@@ -257,7 +228,7 @@ func (s *stagingServiceImpl) stageContracts(ctx context.Context, contracts []*pr
 			txID.String(),
 		))
 	}
-	return stagingErrors
+	return results
 }
 
 func (s *stagingServiceImpl) stageContract(ctx context.Context, account *accounts.Account, contractName string, contractCode []byte) (flow.Identifier, error) {

@@ -24,6 +24,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/manifoldco/promptui"
 	"github.com/onflow/cadence/runtime/common"
 	"github.com/onflow/flowkit/v2"
 	"github.com/onflow/flowkit/v2/config"
@@ -86,8 +87,45 @@ func stageContract(
 		return nil, err
 	}
 
-	s := newStagingService(flow, state, logger, !stageContractflags.SkipValidation)
+	var v stagingValidator
+	if !stageContractflags.SkipValidation {
+		v = newStagingValidator(flow)
+	}
+
+	s := newStagingService(flow, state, logger, v, promptStagingUnvalidatedContracts(logger))
 	return stageWithFilters(s, stageContractflags.All, args, stageContractflags.Accounts)
+}
+
+func promptStagingUnvalidatedContracts(logger output.Logger) func(validatorError *stagingValidatorError) bool {
+	return func(validatorError *stagingValidatorError) bool {
+		infoMessage := strings.Builder{}
+
+		infoMessage.WriteString("Preliminary validation could not be performed on the following contracts:\n")
+		missingDependencyErrors := validatorError.MissingDependencyErrors()
+		for deployLocation := range missingDependencyErrors {
+			infoMessage.WriteString(fmt.Sprintf("  - %s\n", deployLocation))
+		}
+
+		infoMessage.WriteString("\nThese contracts depend on the following contracts which have not been staged yet:\n")
+		missingDependencies := validatorError.MissingDependencies()
+		for _, depLocation := range missingDependencies {
+			infoMessage.WriteString(fmt.Sprintf("  - %s\n", depLocation))
+		}
+
+		infoMessage.WriteString("\nYou may still stage your contract, however it will be unable to be migrated until the missing contracts are staged by their respective owners.  It is important to monitor the status of your contract using the `flow migrate is-validated` command\n")
+		logger.Error(infoMessage.String())
+
+		continuePrompt := promptui.Select{
+			Label: "Do you wish to continue staging your contract?",
+			Items: []string{"Yes", "No"},
+		}
+
+		_, result, err := continuePrompt.Run()
+		if err != nil || result != "Yes" {
+			return false
+		}
+		return true
+	}
 }
 
 func stageWithFilters(
@@ -105,7 +143,7 @@ func stageWithFilters(
 			return nil, fmt.Errorf("cannot use --all flag with contract names or --accounts flag")
 		}
 
-		results, err = s.StageContracts(context.Background(), nil)
+		results, err = s.StageAllContracts(context.Background())
 	}
 
 	// Filter by contract names
@@ -114,26 +152,12 @@ func stageWithFilters(
 			return nil, fmt.Errorf("cannot use --account flag with contract names")
 		}
 
-		results, err = s.StageContracts(context.Background(), func(c *project.Contract) bool {
-			for _, name := range contractNames {
-				if c.Name == name {
-					return true
-				}
-			}
-			return false
-		})
+		results, err = s.StageAllContracts(context.Background())
 	}
 
 	// Filter by accounts
 	if len(accountNames) > 0 {
-		results, err = s.StageContracts(context.Background(), func(c *project.Contract) bool {
-			for _, account := range accountNames {
-				if c.AccountName == account {
-					return true
-				}
-			}
-			return false
-		})
+		results, err = s.StageAllContracts(context.Background())
 	}
 
 	if err != nil {

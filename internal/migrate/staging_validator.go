@@ -48,7 +48,12 @@ import (
 TODO: handle invalid dependencies
 */
 
-type stagingValidator struct {
+//go:generate mockery --name stagingValidator --inpackage --testonly --case underscore
+type stagingValidator interface {
+	Validate(stagedContracts []StagedContract) error
+}
+
+type stagingValidatorImpl struct {
 	flow flowkit.Services
 
 	stagedContracts map[common.AddressLocation]StagedContract
@@ -144,8 +149,8 @@ var chainIdMap = map[string]flow.ChainID{
 	"testnet": flow.Testnet,
 }
 
-func newStagingValidator(flow flowkit.Services) *stagingValidator {
-	return &stagingValidator{
+func newStagingValidator(flow flowkit.Services) *stagingValidatorImpl {
+	return &stagingValidatorImpl{
 		flow:                 flow,
 		contracts:            make(map[common.Location][]byte),
 		missingDependencies:  make(map[common.Location][]common.AddressLocation),
@@ -154,7 +159,7 @@ func newStagingValidator(flow flowkit.Services) *stagingValidator {
 	}
 }
 
-func (v *stagingValidator) Validate(stagedContracts []StagedContract) error {
+func (v *stagingValidatorImpl) Validate(stagedContracts []StagedContract) error {
 	v.stagedContracts = make(map[common.AddressLocation]StagedContract)
 	for _, stagedContract := range stagedContracts {
 		v.stagedContracts[stagedContract.DeployLocation] = stagedContract
@@ -186,7 +191,7 @@ func (v *stagingValidator) Validate(stagedContracts []StagedContract) error {
 	return nil
 }
 
-func (v *stagingValidator) parseAndCheckAllStaged() map[common.AddressLocation]error {
+func (v *stagingValidatorImpl) parseAndCheckAllStaged() map[common.AddressLocation]error {
 	errors := make(map[common.AddressLocation]error)
 	for location := range v.stagedContracts {
 		_, err := v.checkContract(location)
@@ -209,7 +214,7 @@ func (v *stagingValidator) parseAndCheckAllStaged() map[common.AddressLocation]e
 	return errors
 }
 
-func (v *stagingValidator) validateContractUpdate(location common.AddressLocation) error {
+func (v *stagingValidatorImpl) validateContractUpdate(location common.AddressLocation) error {
 	// Get the staged update
 	contract, ok := v.stagedContracts[location]
 	if !ok {
@@ -266,7 +271,7 @@ func (v *stagingValidator) validateContractUpdate(location common.AddressLocatio
 	return nil
 }
 
-func (v *stagingValidator) checkContract(
+func (v *stagingValidatorImpl) checkContract(
 	importedLocation common.AddressLocation,
 	stack ...common.Location,
 ) (checker *sema.Checker, err error) {
@@ -354,7 +359,7 @@ func (v *stagingValidator) checkContract(
 	return
 }
 
-func (v *stagingValidator) getStagedContractCode(
+func (v *stagingValidatorImpl) getStagedContractCode(
 	location common.AddressLocation,
 ) ([]byte, error) {
 	// First check if the code is already known
@@ -403,7 +408,7 @@ func (v *stagingValidator) getStagedContractCode(
 	return v.contracts[location], nil
 }
 
-func (v *stagingValidator) resolveImport(stack []common.Location) func(*sema.Checker, common.Location, ast.Range) (sema.Import, error) {
+func (v *stagingValidatorImpl) resolveImport(stack []common.Location) func(*sema.Checker, common.Location, ast.Range) (sema.Import, error) {
 	return func(_ *sema.Checker, importedLocation common.Location, _ ast.Range) (sema.Import, error) {
 		// Check if the imported location is the crypto checker
 		if importedLocation == stdlib.CryptoCheckerLocation {
@@ -433,7 +438,7 @@ func (v *stagingValidator) resolveImport(stack []common.Location) func(*sema.Che
 }
 
 // This is a copy of the resolveLocation function from the linter/language server
-func (v *stagingValidator) resolveLocation(
+func (v *stagingValidatorImpl) resolveLocation(
 	identifiers []ast.Identifier,
 	location common.Location,
 ) (
@@ -500,7 +505,7 @@ func (v *stagingValidator) resolveLocation(
 	return resolvedLocations, nil
 }
 
-func (v *stagingValidator) resolveAccountAccess(checker *sema.Checker, memberLocation common.Location) bool {
+func (v *stagingValidatorImpl) resolveAccountAccess(checker *sema.Checker, memberLocation common.Location) bool {
 	if checker == nil {
 		return false
 	}
@@ -526,7 +531,7 @@ func (v *stagingValidator) resolveAccountAccess(checker *sema.Checker, memberLoc
 	return false
 }
 
-func (v *stagingValidator) resolveAddressContractNames(address common.Address) ([]string, error) {
+func (v *stagingValidatorImpl) resolveAddressContractNames(address common.Address) ([]string, error) {
 	// Check if the contract names are already cached
 	if names, ok := v.accountContractNames[address]; ok {
 		return names, nil
@@ -568,7 +573,7 @@ func (v *stagingValidator) resolveAddressContractNames(address common.Address) (
 	return v.accountContractNames[address], nil
 }
 
-func (v *stagingValidator) loadSystemContracts() {
+func (v *stagingValidatorImpl) loadSystemContracts() {
 	chainId, ok := chainIdMap[v.flow.Network().Name]
 	if !ok {
 		return
@@ -589,7 +594,7 @@ func (v *stagingValidator) loadSystemContracts() {
 	}
 }
 
-func (v *stagingValidator) elaborations() map[common.Location]*sema.Elaboration {
+func (v *stagingValidatorImpl) elaborations() map[common.Location]*sema.Elaboration {
 	elaborations := make(map[common.Location]*sema.Elaboration)
 	for location, cacheItem := range v.checkingCache {
 		checker := cacheItem.checker
@@ -605,7 +610,7 @@ func (v *stagingValidator) elaborations() map[common.Location]*sema.Elaboration 
 // While it is done by default in checker/parser errors, this has two purposes:
 // 1. Add color to the error message
 // 2. Use pretty printing on contract update errors which do not do this by default
-func (v *stagingValidator) prettyPrintError(err error, location common.Location) string {
+func (v *stagingValidatorImpl) prettyPrintError(err error, location common.Location) string {
 	var sb strings.Builder
 	printErr := pretty.NewErrorPrettyPrinter(&sb, true).
 		PrettyPrintError(err, location, v.contracts)

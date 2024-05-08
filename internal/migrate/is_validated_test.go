@@ -32,7 +32,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/onflow/flow-cli/internal/command"
-	"github.com/onflow/flow-cli/internal/migrate/mocks"
 	"github.com/onflow/flow-cli/internal/util"
 )
 
@@ -47,7 +46,7 @@ func Test_IsValidated(t *testing.T) {
 	// Helper function to test the isValidated function
 	// with all of the necessary mocks
 	testIsValidatedWithStatuses := func(statuses []contractUpdateStatus) (command.Result, error) {
-		mockClient := mocks.NewGitHubRepositoriesService(t)
+		mockClient := newMockGitHubRepositoriesService(t)
 
 		// mock github file download
 		data, _ := json.Marshal(statuses)

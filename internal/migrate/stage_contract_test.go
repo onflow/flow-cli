@@ -33,7 +33,6 @@ import (
 	"github.com/stretchr/testify/mock"
 
 	"github.com/onflow/flow-cli/internal/command"
-	"github.com/onflow/flow-cli/internal/migrate/mocks"
 	"github.com/onflow/flow-cli/internal/util"
 )
 
@@ -41,7 +40,7 @@ func Test_StageContract(t *testing.T) {
 	testContract := tests.ContractSimple
 
 	t.Run("all contracts filter", func(t *testing.T) {
-		stagingService := mocks.NewStagingService(t)
+		stagingService := newMockStagingService(t)
 
 		mockResult := make(map[common.AddressLocation]error)
 		mockResult[common.NewAddressLocation(nil, common.Address{0x01}, "Foo")] = nil
@@ -60,7 +59,7 @@ func Test_StageContract(t *testing.T) {
 	})
 
 	t.Run("contract name filter", func(t *testing.T) {
-		stagingService := mocks.NewStagingService(t)
+		stagingService := newMockStagingService(t)
 
 		mockResult := make(map[common.AddressLocation]error)
 		mockResult[common.NewAddressLocation(nil, common.Address{0x01}, "Foo")] = nil
@@ -79,7 +78,7 @@ func Test_StageContract(t *testing.T) {
 	})
 
 	t.Run("fails all contracts filter with contract name filter", func(t *testing.T) {
-		stagingService := mocks.NewStagingService(t)
+		stagingService := newMockStagingService(t)
 		stagingService.On("StageContracts", mock.Anything, mock.Anything).Return(make(map[common.AddressLocation]error), nil)
 
 		result, err := stageWithFilters(
@@ -94,7 +93,7 @@ func Test_StageContract(t *testing.T) {
 	})
 
 	t.Run("fails all contracts filter with account filter", func(t *testing.T) {
-		stagingService := mocks.NewStagingService(t)
+		stagingService := newMockStagingService(t)
 		stagingService.On("StageContracts", mock.Anything, mock.Anything).Return(make(map[common.AddressLocation]error), nil)
 
 		result, err := stageWithFilters(
@@ -109,7 +108,7 @@ func Test_StageContract(t *testing.T) {
 	})
 
 	t.Run("fails account filter with contract name filter", func(t *testing.T) {
-		stagingService := mocks.NewStagingService(t)
+		stagingService := newMockStagingService(t)
 		stagingService.On("StageContracts", mock.Anything, mock.Anything).Return(make(map[common.AddressLocation]error), nil)
 
 		result, err := stageWithFilters(

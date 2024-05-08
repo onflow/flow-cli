@@ -19,339 +19,331 @@
 package migrate
 
 import (
+	"context"
+	"reflect"
 	"testing"
 
-	"github.com/onflow/flow-cli/internal/util"
-
-	"github.com/onflow/cadence"
 	"github.com/onflow/cadence/runtime/common"
-	"github.com/onflow/cadence/runtime/sema"
-	"github.com/onflow/cadence/runtime/stdlib"
-	"github.com/onflow/contract-updater/lib/go/templates"
+	"github.com/onflow/flow-cli/internal/util"
 	"github.com/onflow/flow-go-sdk"
+	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/onflow/flowkit/v2"
+	"github.com/onflow/flowkit/v2/accounts"
 	"github.com/onflow/flowkit/v2/config"
-	"github.com/stretchr/testify/assert"
+
+	flowkitMocks "github.com/onflow/flowkit/v2/mocks"
+
+	"github.com/onflow/flowkit/v2/tests"
+
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
 func Test_StagingService(t *testing.T) {
-	srv, _, rw := util.TestMocks(t)
-	t.Run("valid contract update with no dependencies", func(t *testing.T) {
-		location := common.NewAddressLocation(nil, common.Address{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01}, "Test")
-		sourceCodeLocation := common.StringLocation("./Test.cdc")
-		oldContract := `
-		 pub contract Test {
-			 pub fun test() {}
-		 }`
-		newContract := `
-		 access(all) contract Test {
-			 access(all) fun test() {}
-		 }`
-		mockAccount := &flow.Account{
-			Address: flow.HexToAddress("01"),
-			Balance: 1000,
-			Keys:    nil,
-			Contracts: map[string][]byte{
-				"Test": []byte(oldContract),
-			},
-		}
+	type mockDeployment struct {
+		name string
+		code string
+	}
 
-		// setup mocks
-		require.NoError(t, rw.WriteFile(sourceCodeLocation.String(), []byte(newContract), 0o644))
-		srv.GetAccount.Run(func(args mock.Arguments) {
-			require.Equal(t, flow.HexToAddress("01"), args.Get(1).(flow.Address))
-		}).Return(mockAccount, nil)
-		srv.Network.Return(config.Network{
-			Name: "testnet",
-		}, nil)
+	type mockAccount struct {
+		name        string
+		address     string
+		deployments []mockDeployment
+	}
 
-		validator := newStagingValidator(srv.Mock)
-		err := validator.Validate([]StagedContract{{location, sourceCodeLocation, []byte(newContract)}})
-		require.NoError(t, err)
-	})
-
-	t.Run("contract update with update error", func(t *testing.T) {
-		location := common.NewAddressLocation(nil, common.Address{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01}, "Test")
-		sourceCodeLocation := common.StringLocation("./Test.cdc")
-		oldContract := `
-		 pub contract Test {
-			 pub fun test() {}
-		 }`
-		newContract := `
-		 access(all) contract Test {
-			 access(all) let x: Int
-			 access(all) fun test() {}
- 
-			 init() {
-				 self.x = 1
-			 }
-		 }`
-		mockAccount := &flow.Account{
-			Address: flow.HexToAddress("01"),
-			Balance: 1000,
-			Keys:    nil,
-			Contracts: map[string][]byte{
-				"Test": []byte(oldContract),
-			},
-		}
-
-		// setup mocks
-		require.NoError(t, rw.WriteFile(sourceCodeLocation.String(), []byte(newContract), 0o644))
-		srv.GetAccount.Run(func(args mock.Arguments) {
-			require.Equal(t, flow.HexToAddress("01"), args.Get(1).(flow.Address))
-		}).Return(mockAccount, nil)
-		srv.Network.Return(config.Network{
-			Name: "testnet",
-		}, nil)
-
-		validator := newStagingValidator(srv.Mock)
-		err := validator.Validate([]StagedContract{{location, sourceCodeLocation, []byte(newContract)}})
-		var updateErr *stdlib.ContractUpdateError
-		require.ErrorAs(t, err, &updateErr)
-	})
-
-	t.Run("contract update with checker error", func(t *testing.T) {
-		location := common.NewAddressLocation(nil, common.Address{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01}, "Test")
-		sourceCodeLocation := common.StringLocation("./Test.cdc")
-		oldContract := `
-		 pub contract Test {
-			 let x: Int
-			 init() {
-				 self.x = 1
-			 }
-		 }`
-		newContract := `
-		 access(all) contract Test {
-			 access(all) let x: Int
-			 init() {
-				 self.x = "bad type :("
-			 }
-		 }`
-		mockAccount := &flow.Account{
-			Address: flow.HexToAddress("01"),
-			Balance: 1000,
-			Keys:    nil,
-			Contracts: map[string][]byte{
-				"Test": []byte(oldContract),
-			},
-		}
-
-		// setup mocks
-		require.NoError(t, rw.WriteFile(sourceCodeLocation.String(), []byte(newContract), 0o644))
-		srv.GetAccount.Run(func(args mock.Arguments) {
-			require.Equal(t, flow.HexToAddress("01"), args.Get(1).(flow.Address))
-		}).Return(mockAccount, nil)
-		srv.Network.Return(config.Network{
-			Name: "testnet",
-		}, nil)
-
-		validator := newStagingValidator(srv.Mock)
-		err := validator.Validate([]StagedContract{{location, sourceCodeLocation, []byte(newContract)}})
-		var checkerErr *sema.CheckerError
-		require.ErrorAs(t, err, &checkerErr)
-	})
-
-	t.Run("valid contract update with dependencies", func(t *testing.T) {
-		location := common.NewAddressLocation(nil, common.Address{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01}, "Test")
-		sourceCodeLocation := common.StringLocation("./Test.cdc")
-		oldContract := `
-		 pub contract Test {
-			 pub fun test() {}
-		 }`
-		newContract := `
-		 import ImpContract from 0x02
-		 access(all) contract Test {
-			 access(all) fun test() {}
-		 }`
-		impContract := `
-		 access(all) contract ImpContract {
-			 access(all) let x: Int
-			 init() {
-				 self.x = 1
-			 }
-		 }`
-		mockScriptResultString, err := cadence.NewString(impContract)
+	setupMocks := func(
+		accts []mockAccount,
+	) (flowkit.Services, *flowkit.State, flowkit.ReaderWriter) {
+		srv := flowkitMocks.NewServices(t)
+		rw, _ := tests.ReaderWriter()
+		state, err := flowkit.Init(rw, crypto.ECDSA_P256, crypto.SHA3_256)
 		require.NoError(t, err)
 
-		mockAccount := &flow.Account{
-			Address: flow.HexToAddress("01"),
-			Balance: 1000,
-			Keys:    nil,
-			Contracts: map[string][]byte{
-				"Test": []byte(oldContract),
-			},
+		for _, account := range accts {
+			key, err := crypto.GeneratePrivateKey(crypto.ECDSA_P256, make([]byte, 32))
+			require.NoError(t, err)
+
+			state.Accounts().AddOrUpdate(
+				&accounts.Account{
+					Name:    account.name,
+					Address: flow.HexToAddress(account.address),
+					Key: accounts.NewHexKeyFromPrivateKey(
+						0,
+						crypto.SHA3_256,
+						key,
+					),
+				},
+			)
+
+			contractDeployments := make([]config.ContractDeployment, 0)
+			for _, deployment := range account.deployments {
+				fname := account.address + "/" + deployment.name + ".cdc"
+				rw.WriteFile(fname, []byte(deployment.code), 0644)
+
+				state.Contracts().AddOrUpdate(
+					config.Contract{
+						Name:     deployment.name,
+						Location: fname,
+					},
+				)
+
+				contractDeployments = append(
+					contractDeployments,
+					config.ContractDeployment{
+						Name: deployment.name,
+					},
+				)
+			}
+
+			state.Deployments().AddOrUpdate(
+				config.Deployment{
+					Network:   "testnet",
+					Account:   account.name,
+					Contracts: contractDeployments,
+				},
+			)
 		}
 
-		// setup mocks
-		require.NoError(t, rw.WriteFile(sourceCodeLocation.String(), []byte(newContract), 0o644))
-		srv.GetAccount.Run(func(args mock.Arguments) {
-			require.Equal(t, flow.HexToAddress("01"), args.Get(1).(flow.Address))
-		}).Return(mockAccount, nil)
-		srv.Network.Return(config.Network{
+		srv.On("Network", mock.Anything).Return(config.Network{
 			Name: "testnet",
-		}, nil)
-		srv.ExecuteScript.Run(func(args mock.Arguments) {
-			script := args.Get(1).(flowkit.Script)
+		}, nil).Maybe()
 
-			assert.Equal(t, templates.GenerateGetStagedContractCodeScript(MigrationContractStagingAddress("testnet")), script.Code)
+		// TODO, should make sure that the script is correct
+		srv.On("SendTransaction", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(tests.NewTransaction(), nil, nil).Maybe()
 
-			assert.Equal(t, 2, len(script.Args))
-			actualContractAddressArg, actualContractNameArg := script.Args[0], script.Args[1]
+		return srv, state, rw
+	}
 
-			contractName, _ := cadence.NewString("ImpContract")
-			contractAddr := cadence.NewAddress(flow.HexToAddress("02"))
-			assert.Equal(t, contractName, actualContractNameArg)
-			assert.Equal(t, contractAddr, actualContractAddressArg)
-		}).Return(cadence.NewOptional(mockScriptResultString), nil)
+	t.Run("stages valid contracts", func(t *testing.T) {
+		mockAccount := []mockAccount{
+			{
+				name:    "some-account",
+				address: "0x01",
+				deployments: []mockDeployment{
+					{
+						name: "Foo",
+						code: `FooCode`,
+					},
+					{
+						name: "Bar",
+						code: `BarCode`,
+					},
+				},
+			},
+		}
+		srv, state, _ := setupMocks(mockAccount)
 
-		// validate
-		validator := newStagingValidator(srv.Mock)
-		err = validator.Validate([]StagedContract{{location, sourceCodeLocation, []byte(newContract)}})
+		v := newMockStagingValidator(t)
+		v.On("Validate", mock.MatchedBy(func(stagedContracts []StagedContract) bool {
+			return reflect.DeepEqual(stagedContracts, []StagedContract{
+				{
+					DeployLocation: simpleAddressLocation("0x01.Foo"),
+					SourceLocation: common.StringLocation("0x01/Foo.cdc"),
+					Code:           []byte("FooCode"),
+				},
+				{
+					DeployLocation: simpleAddressLocation("0x01.Bar"),
+					SourceLocation: common.StringLocation("0x01/Bar.cdc"),
+					Code:           []byte("BarCode"),
+				},
+			})
+		})).Return(nil).Once()
+
+		s := newStagingService(
+			srv,
+			state,
+			util.NoLogger,
+			v,
+			func(sve *stagingValidatorError) bool {
+				return false
+			},
+		)
+
+		results, err := s.StageAllContracts(
+			context.Background(),
+		)
+
 		require.NoError(t, err)
+		require.NotNil(t, results)
+
+		require.Equal(t, 2, len(results))
+		require.Contains(t, results, simpleAddressLocation("0x01.Foo"))
+		require.Contains(t, results, simpleAddressLocation("0x01.Bar"))
+		require.Nil(t, results[simpleAddressLocation("0x01.Foo")])
+		require.Nil(t, results[simpleAddressLocation("0x01.Bar")])
 	})
 
-	t.Run("contract update missing dependency", func(t *testing.T) {
-		location := common.NewAddressLocation(nil, common.Address{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01}, "Test")
-		impLocation := common.NewAddressLocation(nil, common.Address{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02}, "ImpContract")
-		sourceCodeLocation := common.StringLocation("./Test.cdc")
-		oldContract := `
-		 pub contract Test {
-			 pub fun test() {}
-		 }`
-		newContract := `
-		 import ImpContract from 0x02
-		 access(all) contract Test {
-			 access(all) fun test() {}
-		 }`
-		mockAccount := &flow.Account{
-			Address: flow.HexToAddress("01"),
-			Balance: 1000,
-			Keys:    nil,
-			Contracts: map[string][]byte{
-				"Test": []byte(oldContract),
+	t.Run("stages unvalidated contracts if chosen", func(t *testing.T) {
+		mockAccount := []mockAccount{
+			{
+				name:    "some-account",
+				address: "0x01",
+				deployments: []mockDeployment{
+					{
+						name: "Foo",
+						code: `FOOCODE`,
+					},
+				},
 			},
 		}
+		srv, state, _ := setupMocks(mockAccount)
 
-		// setup mocks
-		require.NoError(t, rw.WriteFile(sourceCodeLocation.String(), []byte(newContract), 0o644))
-		srv.GetAccount.Run(func(args mock.Arguments) {
-			require.Equal(t, flow.HexToAddress("01"), args.Get(1).(flow.Address))
-		}).Return(mockAccount, nil)
-		srv.Network.Return(config.Network{
-			Name: "testnet",
-		}, nil)
-		srv.ExecuteScript.Run(func(args mock.Arguments) {}).Return(cadence.NewOptional(nil), nil)
+		v := newMockStagingValidator(t)
+		v.On("Validate", mock.MatchedBy(func(stagedContracts []StagedContract) bool {
+			return reflect.DeepEqual(stagedContracts, []StagedContract{
+				{
+					DeployLocation: simpleAddressLocation("0x01.Foo"),
+					SourceLocation: common.StringLocation("0x01/Foo.cdc"),
+					Code:           []byte("FooCode"),
+				},
+			})
+		})).Return(&stagingValidatorError{
+			errors: map[common.AddressLocation]error{
+				simpleAddressLocation("0x01.Foo"): &missingDependenciesError{
+					MissingContracts: []common.AddressLocation{
+						simpleAddressLocation("FooCode"),
+					},
+				},
+			},
+		}).Once()
 
-		validator := newStagingValidator(srv.Mock)
-		err := validator.Validate([]StagedContract{{location, sourceCodeLocation, []byte(newContract)}})
+		s := newStagingService(
+			srv,
+			state,
+			util.NoLogger,
+			v,
+			func(sve *stagingValidatorError) bool {
+				return true
+			},
+		)
 
-		var validatorErr *stagingValidatorError
-		require.ErrorAs(t, err, &validatorErr)
-		require.Equal(t, 1, len(validatorErr.Unwrap()))
+		results, err := s.StageAllContracts(
+			context.Background(),
+		)
 
-		var missingDependenciesErr *missingDependenciesError
-		require.ErrorAs(t, validatorErr.Unwrap()[0], &missingDependenciesErr)
-		require.Equal(t, 1, len(missingDependenciesErr.MissingContracts))
-		require.Equal(t, impLocation, missingDependenciesErr.MissingContracts[0])
+		require.NoError(t, err)
+		require.NotNil(t, results)
+
+		require.Equal(t, 1, len(results))
+		require.Contains(t, results, simpleAddressLocation("0x01.Foo"))
+		require.Nil(t, results[simpleAddressLocation("0x01.Foo")])
 	})
 
-	t.Run("valid contract update with system contract imports", func(t *testing.T) {
-		location := common.NewAddressLocation(nil, common.Address{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01}, "Test")
-		sourceCodeLocation := common.StringLocation("./Test.cdc")
-		oldContract := `
-		 import FlowToken from 0x7e60df042a9c0868
-		 pub contract Test {
-			 pub fun test() {}
-		 }`
-		newContract := `
-		 import FlowToken from 0x7e60df042a9c0868
-		 import Burner from 0x9a0766d93b6608b7
-		 access(all) contract Test {
-			 access(all) fun test() {}
-		 }`
-		mockAccount := &flow.Account{
-			Address: flow.HexToAddress("01"),
-			Balance: 1000,
-			Keys:    nil,
-			Contracts: map[string][]byte{
-				"Test": []byte(oldContract),
+	t.Run("stages unvalidated contracts if chosen", func(t *testing.T) {
+		mockAccount := []mockAccount{
+			{
+				name:    "some-account",
+				address: "0x01",
+				deployments: []mockDeployment{
+					{
+						name: "Foo",
+						code: `FooCode`,
+					},
+				},
 			},
 		}
+		srv, state, _ := setupMocks(mockAccount)
 
-		// setup mocks
-		require.NoError(t, rw.WriteFile(sourceCodeLocation.String(), []byte(newContract), 0o644))
-		srv.GetAccount.Run(func(args mock.Arguments) {
-			require.Equal(t, flow.HexToAddress("01"), args.Get(1).(flow.Address))
-		}).Return(mockAccount, nil)
-		srv.Network.Return(config.Network{
-			Name: "testnet",
-		}, nil)
+		v := newMockStagingValidator(t)
+		v.On("Validate", mock.MatchedBy(func(stagedContracts []StagedContract) bool {
+			return reflect.DeepEqual(stagedContracts, []StagedContract{
+				{
+					DeployLocation: simpleAddressLocation("0x01.Foo"),
+					SourceLocation: common.StringLocation("0x01/Foo.cdc"),
+					Code:           []byte("FooCode"),
+				},
+			})
+		})).Return(&stagingValidatorError{
+			errors: map[common.AddressLocation]error{
+				simpleAddressLocation("0x01.Foo"): &missingDependenciesError{
+					MissingContracts: []common.AddressLocation{
+						simpleAddressLocation("0x02.Bar"),
+					},
+				},
+			},
+		}).Once()
 
-		validator := newStagingValidator(srv.Mock)
-		err := validator.Validate([]StagedContract{{location, sourceCodeLocation, []byte(newContract)}})
+		s := newStagingService(
+			srv,
+			state,
+			util.NoLogger,
+			v,
+			func(sve *stagingValidatorError) bool {
+				require.NotNil(t, sve)
+				return true
+			},
+		)
+
+		results, err := s.StageAllContracts(
+			context.Background(),
+		)
+
 		require.NoError(t, err)
+		require.NotNil(t, results)
+
+		require.Equal(t, 1, len(results))
+		require.Contains(t, results, simpleAddressLocation("0x01.Foo"))
+		require.Nil(t, results[simpleAddressLocation("0x01.Foo")])
 	})
 
-	t.Run("resolves account access correctly", func(t *testing.T) {
-		location := common.NewAddressLocation(nil, common.Address{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01}, "Test")
-		sourceCodeLocation := common.StringLocation("./Test.cdc")
-		oldContract := `
-		 import ImpContract from 0x01
-		 pub contract Test {
-			 pub fun test() {}
-		 }`
-		newContract := `
-		 import ImpContract from 0x01
-		 access(all) contract Test {
-			 access(all) fun test() {}
-			 init() {
-				 ImpContract.test()
-			 }
-		 }`
-		impContract := `
-		 access(all) contract ImpContract {
-			 access(account) fun test() {}
-			 init() {}
-		 }`
-		mockScriptResultString, err := cadence.NewString(impContract)
-		require.NoError(t, err)
-
-		mockAccount := &flow.Account{
-			Address: flow.HexToAddress("01"),
-			Balance: 1000,
-			Keys:    nil,
-			Contracts: map[string][]byte{
-				"Test": []byte(oldContract),
+	t.Run("returns missing dependency error if staging not chosen", func(t *testing.T) {
+		mockAccount := []mockAccount{
+			{
+				name:    "some-account",
+				address: "0x01",
+				deployments: []mockDeployment{
+					{
+						name: "Foo",
+						code: `FooCode`,
+					},
+				},
 			},
 		}
+		srv, state, _ := setupMocks(mockAccount)
 
-		// setup mocks
-		require.NoError(t, rw.WriteFile(sourceCodeLocation.String(), []byte(newContract), 0o644))
-		srv.GetAccount.Run(func(args mock.Arguments) {
-			require.Equal(t, flow.HexToAddress("01"), args.Get(1).(flow.Address))
-		}).Return(mockAccount, nil)
-		srv.Network.Return(config.Network{
-			Name: "testnet",
-		}, nil)
-		srv.ExecuteScript.Run(func(args mock.Arguments) {
-			script := args.Get(1).(flowkit.Script)
+		v := newMockStagingValidator(t)
+		v.On("Validate", mock.MatchedBy(func(stagedContracts []StagedContract) bool {
+			return reflect.DeepEqual(stagedContracts, []StagedContract{
+				{
+					DeployLocation: simpleAddressLocation("0x01.Foo"),
+					SourceLocation: common.StringLocation("0x01/Foo.cdc"),
+					Code:           []byte("FooCode"),
+				},
+			})
+		})).Return(&stagingValidatorError{
+			errors: map[common.AddressLocation]error{
+				simpleAddressLocation("0x01.Foo"): &missingDependenciesError{
+					MissingContracts: []common.AddressLocation{
+						simpleAddressLocation("0x02.Bar"),
+					},
+				},
+			},
+		}).Once()
 
-			assert.Equal(t, templates.GenerateGetStagedContractCodeScript(MigrationContractStagingAddress("testnet")), script.Code)
+		s := newStagingService(
+			srv,
+			state,
+			util.NoLogger,
+			v,
+			func(sve *stagingValidatorError) bool {
+				require.NotNil(t, sve)
+				return false
+			},
+		)
 
-			assert.Equal(t, 2, len(script.Args))
-			actualContractAddressArg, actualContractNameArg := script.Args[0], script.Args[1]
+		results, err := s.StageAllContracts(
+			context.Background(),
+		)
 
-			contractName, _ := cadence.NewString("ImpContract")
-			contractAddr := cadence.NewAddress(flow.HexToAddress("01"))
-			assert.Equal(t, contractName, actualContractNameArg)
-			assert.Equal(t, contractAddr, actualContractAddressArg)
-		}).Return(cadence.NewOptional(mockScriptResultString), nil)
-
-		// validate
-		validator := newStagingValidator(srv.Mock)
-		err = validator.Validate([]StagedContract{{location, sourceCodeLocation, []byte(newContract)}})
 		require.NoError(t, err)
+		require.NotNil(t, results)
+
+		require.Equal(t, 1, len(results))
+		require.Contains(t, results, simpleAddressLocation("0x01.Foo"))
+
+		var mde *missingDependenciesError
+		require.ErrorAs(t, results[simpleAddressLocation("0x01.Foo")], &mde)
+		require.NotNil(t, results[simpleAddressLocation("0x01.Foo")])
+		require.Equal(t, []common.AddressLocation{simpleAddressLocation("0x02.Bar")}, mde.MissingContracts)
 	})
 }

@@ -39,14 +39,14 @@ import (
 	"github.com/onflow/flow-cli/internal/util"
 )
 
-//go:generate mockery --name GitHubRepositoriesService --output ./mocks --case underscore
-type GitHubRepositoriesService interface {
+//go:generate mockery --name gitHubRepositoriesService --inpackage --testonly --case underscore
+type gitHubRepositoriesService interface {
 	GetContents(ctx context.Context, owner string, repo string, path string, opt *github.RepositoryContentGetOptions) (fileContent *github.RepositoryContent, directoryContent []*github.RepositoryContent, resp *github.Response, err error)
 	DownloadContents(ctx context.Context, owner string, repo string, filepath string, opt *github.RepositoryContentGetOptions) (io.ReadCloser, error)
 }
 
 type validator struct {
-	repoService GitHubRepositoriesService
+	repoService gitHubRepositoriesService
 	state       *flowkit.State
 	logger      output.Logger
 	network     config.Network
@@ -102,7 +102,7 @@ func isValidated(
 	return v.validate(contractName)
 }
 
-func newValidator(repoService GitHubRepositoriesService, network config.Network, state *flowkit.State, logger output.Logger) *validator {
+func newValidator(repoService gitHubRepositoriesService, network config.Network, state *flowkit.State, logger output.Logger) *validator {
 	return &validator{
 		repoService: repoService,
 		state:       state,
