@@ -36,6 +36,7 @@ import (
 
 	"github.com/dukex/mixpanel"
 	"github.com/getsentry/sentry-go"
+	"github.com/google/go-github/github"
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
 
@@ -45,6 +46,7 @@ import (
 	"github.com/onflow/flowkit/v2/output"
 
 	"github.com/onflow/flow-cli/build"
+	"github.com/onflow/flow-cli/internal/migrate"
 	"github.com/onflow/flow-cli/internal/settings"
 	"github.com/onflow/flow-cli/internal/util"
 )
@@ -127,6 +129,7 @@ func (c Command) AddToParent(parent *cobra.Command) {
 		}
 
 		// command to validate contracts are still valid for migration
+		migrate.NewValidator(github.NewClient(nil).Repositories, flow.Network(), state, logger).ValidateContracts()
 
 		// record command usage
 		wg := sync.WaitGroup{}

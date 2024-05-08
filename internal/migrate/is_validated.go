@@ -125,19 +125,32 @@ func isValidated(
 	state *flowkit.State,
 ) (command.Result, error) {
 	repoService := github.NewClient(nil).Repositories
-	v := newValidator(repoService, flow.Network(), state, logger)
+	v := NewValidator(repoService, flow.Network(), state, logger)
 
 	contractName := args[0]
 	return v.validate(contractName)
 }
 
-func newValidator(repoService GitHubRepositoriesService, network config.Network, state *flowkit.State, logger output.Logger) *validator {
+func NewValidator(repoService GitHubRepositoriesService, network config.Network, state *flowkit.State, logger output.Logger) *validator {
 	return &validator{
 		repoService: repoService,
 		state:       state,
 		logger:      logger,
 		network:     network,
 	}
+}
+
+func (v *validator) ValidateContracts(contractNames ...string) (interface{}, error) {
+	var results []validationResult
+	for _, contractName := range contractNames {
+		result, err := v.validate(contractName)
+		if err != nil {
+			return nil, err
+		}
+		results = append(results, result)
+	}
+
+	return results, nil
 }
 
 func (v *validator) getContractUpdateStatuses(contractNames ...string) ([]contractUpdateStatus, *time.Time, error) {
