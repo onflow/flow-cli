@@ -448,5 +448,5 @@ func checkContractMigrations(state *flowkit.State, logger output.Logger, flow fl
 	// 	return err
 	// }
 
-	return 
+	return
 }
