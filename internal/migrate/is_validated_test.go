@@ -47,7 +47,7 @@ func Test_IsValidated(t *testing.T) {
 
 	// Helper function to test the isValidated function
 	// with all of the necessary mocks
-	testIsValidatedWithStatuses := func(statuses []contractUpdateStatus) (command.Result, error) {
+	testIsValidatedWithStatuses := func(statuses []validator.ContractUpdateStatus) (command.Result, error) {
 		mockClient := mocks.NewGitHubRepositoriesService(t)
 
 		// mock github file download
@@ -142,7 +142,7 @@ func Test_IsValidated(t *testing.T) {
 	})
 
 	t.Run("isValidated errors if contract was not in last migration", func(t *testing.T) {
-		_, err := testIsValidatedWithStatuses([]contractUpdateStatus{
+		_, err := testIsValidatedWithStatuses([]validator.ContractUpdateStatus{
 			{
 				AccountAddress: "0x01",
 				ContractName:   "some-other-contract",
