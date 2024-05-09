@@ -7,9 +7,10 @@ import (
 	"io"
 	"path"
 	"regexp"
-	"slices"
 	"strings"
 	"time"
+
+	"golang.org/x/exp/slices"
 
 	"github.com/google/go-github/github"
 	"github.com/onflow/flow-cli/internal/util"
