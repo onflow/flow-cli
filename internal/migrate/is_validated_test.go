@@ -103,12 +103,17 @@ func Test_IsValidated(t *testing.T) {
 		// call the isValidated function
 		validator := validator.NewValidator(mockClient, config.TestnetNetwork, state, util.NoLogger)
 
-		res, err := validator.Validate(
+		res, ts, err := validator.Validate(
 			testContract.Name,
 		)
 
+		require.NoError(t, err)
+
 		require.Equal(t, true, mockClient.AssertExpectations(t))
-		return res, err
+		return validationResult{
+			Status:    res,
+			Timestamp: *ts,
+		}, nil
 	}
 
 	t.Run("isValidated gets status from latest report on github", func(t *testing.T) {

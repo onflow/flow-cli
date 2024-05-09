@@ -31,9 +31,6 @@ const (
 	repoRef   = "master"
 )
 
-const moreInformationMessage = "For more information, please find the latest full migration report on GitHub (https://github.com/onflow/cadence/tree/master/migrations_data).\n\nNew reports are generated after each weekly emulated migration and your contract's status may change, so please actively monitor this status and stay tuned for the latest announcements until the migration deadline."
-const contractUpdateFailureKind = "contract-update-failure"
-
 type missingContractError struct {
 	MissingContracts []struct {
 		ContractName string
@@ -74,6 +71,12 @@ type ContractUpdateStatus struct {
 	AccountAddress string `json:"account_address"`
 	ContractName   string `json:"contract_name"`
 	Error          string `json:"error,omitempty"`
+}
+
+func (s ContractUpdateStatus) IsFailure() bool {
+	// Just in case there are failures without an error message in the future
+	// we will also check the kind of the status
+	return s.Error != "" || s.Kind == contractUpdateFailureKind
 }
 
 func NewValidator(repoService GitHubRepositoriesService, network config.Network, state *flowkit.State, logger output.Logger) *validator {
