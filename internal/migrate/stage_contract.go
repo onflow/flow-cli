@@ -145,7 +145,7 @@ func stageAll(
 		return nil, err
 	}
 
-	return &stagingResults{Results: results}, nil
+	return &stagingResults{Results: results, prettyPrinter: s.PrettyPrintValidationError}, nil
 }
 
 func stageByContractNames(
@@ -178,7 +178,7 @@ func stageByContractNames(
 		return nil, err
 	}
 
-	return &stagingResults{Results: results}, nil
+	return &stagingResults{Results: results, prettyPrinter: s.PrettyPrintValidationError}, nil
 }
 
 func stageByAccountNames(
@@ -217,7 +217,7 @@ func stageByAccountNames(
 		return nil, err
 	}
 
-	return &stagingResults{Results: results}, nil
+	return &stagingResults{Results: results, prettyPrinter: s.PrettyPrintValidationError}, nil
 }
 
 func (r *stagingResults) ExitCode() int {
@@ -236,10 +236,9 @@ func (r *stagingResults) String() string {
 	for _, result := range r.Results {
 		if result.err != nil {
 			sb.WriteString(r.prettyPrinter(result.err, nil))
+			sb.WriteString("\n")
 		}
 	}
-
-	sb.WriteString("Staging Results:\n\n")
 
 	numStaged := 0
 	numUnvalidated := 0
@@ -257,7 +256,7 @@ func (r *stagingResults) String() string {
 				numUnvalidated++
 			}
 		} else {
-			sb.WriteString(aurora.Red(fmt.Sprintf("✘ %s", location.Name)).String())
+			sb.WriteString(aurora.Red(fmt.Sprintf("✘ %s ", location)).String())
 			sb.WriteString("(failed to stage)\n")
 			numFailed++
 		}
@@ -266,10 +265,10 @@ func (r *stagingResults) String() string {
 	sb.WriteString("\n")
 
 	if numStaged > 0 {
-		sb.WriteString(aurora.Green(fmt.Sprintf("%d %s staged, passing preliminary validation\n", numStaged, pluralize("contract", numStaged))).String())
+		sb.WriteString(aurora.Green(fmt.Sprintf("%d %s staged & passed local validation\n", numStaged, pluralize("contract", numStaged))).String())
 	}
 	if numUnvalidated > 0 {
-		sb.WriteString(aurora.Yellow(fmt.Sprintf("%d %s staged, but not validated\n", numUnvalidated, pluralize("contract", numStaged))).String())
+		sb.WriteString(aurora.Yellow(fmt.Sprintf("%d %s staged, but was not validated\n", numUnvalidated, pluralize("contract", numStaged))).String())
 	}
 	if numFailed > 0 {
 		sb.WriteString(aurora.Red(fmt.Sprintf("%d %s failed to stage\n", numFailed, pluralize("contract", numStaged))).String())
