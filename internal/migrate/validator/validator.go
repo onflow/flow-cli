@@ -69,7 +69,7 @@ type validator struct {
 	network     config.Network
 }
 
-type contractUpdateStatus struct {
+type ContractUpdateStatus struct {
 	Kind           string `json:"kind,omitempty"`
 	AccountAddress string `json:"account_address"`
 	ContractName   string `json:"contract_name"`
@@ -103,8 +103,8 @@ func (v *validator) ValidateContracts() error {
 	return nil
 }
 
-func (v *validator) getContractUpdateStatuses(contractNames ...string) ([]contractUpdateStatus, *time.Time, error) {
-	var contractUpdateStatuses []contractUpdateStatus
+func (v *validator) getContractUpdateStatuses(contractNames ...string) ([]ContractUpdateStatus, *time.Time, error) {
+	var contractUpdateStatuses []ContractUpdateStatus
 	err := util.CheckNetwork(v.network)
 	if err != nil {
 		return nil, nil, err
@@ -166,44 +166,32 @@ func (v *validator) getContractUpdateStatuses(contractNames ...string) ([]contra
 	return contractUpdateStatuses, ts, nil
 }
 
-func (v *validator) getContractValidationStatus(contractName string) (contractUpdateStatus, *time.Time, error) {
+func (v *validator) getContractValidationStatus(contractName string) (ContractUpdateStatus, *time.Time, error) {
 	status, ts, err := v.getContractUpdateStatuses(contractName)
 	if err != nil {
-		return contractUpdateStatus{}, nil, err
+		return ContractUpdateStatus{}, nil, err
 	}
 
 	if len(status) != 1 {
-		return contractUpdateStatus{}, nil, fmt.Errorf("failed to find contract in last migration report")
+		return ContractUpdateStatus{}, nil, fmt.Errorf("failed to find contract in last migration report")
 	}
 
 	return status[0], ts, nil
 
 }
 
-func (v *validator) validate(contractName string) (validationResult, error) {
+func (v *validator) Validate(contractName string) (ContractUpdateStatus, *time.Time, error) {
 	err := util.CheckNetwork(v.network)
 	if err != nil {
-		return validationResult{}, err
+		return ContractUpdateStatus{}, nil, err
 	}
 
 	v.logger.StartProgress("Checking if contract has been validated")
 	defer v.logger.StopProgress()
 
-	status, timestamp, err := v.getContractValidationStatus(
+	return v.getContractValidationStatus(
 		contractName,
 	)
-	if err != nil {
-		// Append more information message to the error
-		// this way we can ensure that if, for whatever reason, we fail to fetch the report
-		// the user will still understand that they can find the report on GitHub
-		return validationResult{}, fmt.Errorf("%w\n\n%s%s", err, moreInformationMessage, "\n")
-	}
-
-	return validationResult{
-		Timestamp: *timestamp,
-		Status:    status,
-		Network:   v.network.Name,
-	}, nil
 }
 
 func (v *validator) getLatestMigrationReport(network config.Network) (*github.RepositoryContent, *time.Time, error) {
@@ -256,7 +244,7 @@ func (v *validator) getLatestMigrationReport(network config.Network) (*github.Re
 	return latestReport, latestReportTime, nil
 }
 
-func (v *validator) fetchAndParseReport(reportPath string) ([]contractUpdateStatus, error) {
+func (v *validator) fetchAndParseReport(reportPath string) ([]ContractUpdateStatus, error) {
 	// Get the content of the latest report
 	rc, err := v.repoService.DownloadContents(
 		context.Background(),
@@ -279,7 +267,7 @@ func (v *validator) fetchAndParseReport(reportPath string) ([]contractUpdateStat
 	}
 
 	// Parse the report
-	var statuses []contractUpdateStatus
+	var statuses []ContractUpdateStatus
 	err = json.Unmarshal(reportContent, &statuses)
 	if err != nil {
 		return nil, err

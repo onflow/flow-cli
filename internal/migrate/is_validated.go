@@ -35,7 +35,7 @@ import (
 
 type validationResult struct {
 	Timestamp time.Time
-	Status    contractUpdateStatus
+	Status    validator.ContractUpdateStatus
 	Network   string
 }
 

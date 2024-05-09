@@ -33,6 +33,7 @@ import (
 
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/internal/migrate/mocks"
+	"github.com/onflow/flow-cli/internal/migrate/validator"
 	"github.com/onflow/flow-cli/internal/util"
 )
 
@@ -100,9 +101,9 @@ func Test_IsValidated(t *testing.T) {
 		)
 
 		// call the isValidated function
-		validator := newValidator(mockClient, config.TestnetNetwork, state, util.NoLogger)
+		validator := validator.NewValidator(mockClient, config.TestnetNetwork, state, util.NoLogger)
 
-		res, err := validator.validate(
+		res, err := validator.Validate(
 			testContract.Name,
 		)
 
@@ -131,7 +132,7 @@ func Test_IsValidated(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, res.JSON(), validationResult{
 			Timestamp: expectedTime,
-			Status: contractUpdateStatus{
+			Status: validator.ContractUpdateStatus{
 				AccountAddress: emuAccount.Address.HexWithPrefix(),
 				ContractName:   testContract.Name,
 				Error:          "1234",
