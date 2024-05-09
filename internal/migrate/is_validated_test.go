@@ -32,8 +32,8 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/onflow/flow-cli/internal/command"
-	"github.com/onflow/flow-cli/internal/migrate/mocks"
 	"github.com/onflow/flow-cli/internal/migrate/validator"
+	"github.com/onflow/flow-cli/internal/migrate/validator/mocks"
 	"github.com/onflow/flow-cli/internal/util"
 )
 
