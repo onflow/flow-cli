@@ -73,6 +73,23 @@ func newStagingService(
 }
 
 func (s *stagingServiceImpl) StageContracts(ctx context.Context, contracts []*project.Contract) (map[common.AddressLocation]stagingResult, error) {
+	// Replace imports in all contracts
+	replacedContracts := make([]*project.Contract, 0, len(contracts))
+	for _, contract := range contracts {
+		newScript, err := s.flow.ReplaceImportsInScript(context.Background(), flowkit.Script{
+			Code:     contract.Code(),
+			Location: contract.Location(),
+			Args:     nil,
+		})
+		if err != nil {
+			return nil, fmt.Errorf("failed to replace imports in contract %s: %w", contract.Name, err)
+		}
+
+		newContract := *contract
+		newContract.SetCode(newScript.Code)
+		replacedContracts = append(replacedContracts, &newContract)
+	}
+
 	// If validation is disabled, just stage the contracts
 	if s.validator == nil {
 		s.logger.Info("Skipping contract code validation, you may monitor the status of your contract using the `flow migrate is-validated` command\n")
@@ -80,7 +97,7 @@ func (s *stagingServiceImpl) StageContracts(ctx context.Context, contracts []*pr
 		defer s.logger.StopProgress()
 
 		results := make(map[common.AddressLocation]stagingResult)
-		errorMap := s.stageContracts(ctx, contracts)
+		errorMap := s.stageContracts(ctx, replacedContracts)
 		for location, err := range errorMap {
 			results[location] = stagingResult{
 				err:          err,
@@ -91,7 +108,7 @@ func (s *stagingServiceImpl) StageContracts(ctx context.Context, contracts []*pr
 		return results, nil
 	}
 
-	return s.validateAndStageContracts(ctx, contracts)
+	return s.validateAndStageContracts(ctx, replacedContracts)
 }
 
 func (s *stagingServiceImpl) validateAndStageContracts(ctx context.Context, contracts []*project.Contract) (map[common.AddressLocation]stagingResult, error) {
@@ -131,23 +148,21 @@ func (s *stagingServiceImpl) validateAndStageContracts(ctx context.Context, cont
 		}
 	}
 
-	// First, stage contracts that passed validation
-	newResults := s.stageValidContracts(ctx, contracts, validatorError)
-	for location, err := range newResults {
-		results[location] = stagingResult{
-			err:          err,
-			wasValidated: true,
-		}
-	}
-
 	// Now, handle contracts that failed validation
-	// This will prompt the user to continue staging contracts that have missing dependencies
-	// Other validation errors will be fatal
-	newResults = s.maybeStageInvalidContracts(ctx, contracts, validatorError)
+	newResults := s.maybeStageInvalidContracts(ctx, contracts, validatorError)
 	for location, err := range newResults {
 		results[location] = stagingResult{
 			err:          err,
 			wasValidated: false,
+		}
+	}
+
+	// Stage contracts that passed validation
+	newResults = s.stageValidContracts(ctx, contracts, validatorError)
+	for location, err := range newResults {
+		results[location] = stagingResult{
+			err:          err,
+			wasValidated: true,
 		}
 	}
 
@@ -192,6 +207,7 @@ func (s *stagingServiceImpl) maybeStageInvalidContracts(ctx context.Context, con
 	}
 
 	// Prompt user to continue staging contracts that have missing dependencies
+	s.logger.StopProgress()
 	willStage := s.unvalidatedContractsHandler(validatorErr)
 
 	// If user does not want to stage these contracts, we can just return

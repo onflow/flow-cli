@@ -49,10 +49,12 @@ var stageContractflags struct {
 
 var stageContractCommand = &command.Command{
 	Cmd: &cobra.Command{
-		Use:     "stage-contract <CONTRACT_NAME>",
-		Short:   "stage a contract for migration",
-		Example: `flow migrate stage-contract HelloWorld`,
-		Args:    cobra.MinimumNArgs(1),
+		Use:   "stage-contract [contract names...]",
+		Short: "Stage a contract, or many contracts, for migration",
+		Example: `flow migrate stage-contract Foo Bar --network testnet
+flow migrate stage-contract --account my-account --network testnet
+flow migrate stage-contract --all --network testnet`,
+		Args: cobra.ArbitraryArgs,
 	},
 	Flags: &stageContractflags,
 	RunS:  stageContract,
@@ -68,26 +70,6 @@ func stageContract(
 	err := checkNetwork(flow.Network())
 	if err != nil {
 		return nil, err
-	}
-
-	// Get all contracts
-	contracts, err := state.DeploymentContractsByNetwork(flow.Network())
-	if err != nil {
-		return nil, err
-	}
-
-	// Replace imports in all contracts
-	for _, contract := range contracts {
-		newScript, err := flow.ReplaceImportsInScript(context.Background(), flowkit.Script{
-			Code:     contract.Code(),
-			Location: contract.Location(),
-			Args:     nil,
-		})
-		if err != nil {
-			return nil, fmt.Errorf("failed to replace imports in contract %s: %w", contract.Name, err)
-		}
-
-		contract.SetCode(newScript.Code)
 	}
 
 	// Validate command arguments
@@ -250,6 +232,15 @@ func (r *stagingResults) ExitCode() int {
 func (r *stagingResults) String() string {
 	var sb strings.Builder
 
+	// First print out any errors that occurred during staging
+	for _, result := range r.Results {
+		if result.err != nil {
+			sb.WriteString(r.prettyPrinter(result.err, nil))
+		}
+	}
+
+	sb.WriteString("Staging Results:\n\n")
+
 	numStaged := 0
 	numUnvalidated := 0
 	numFailed := 0
@@ -257,38 +248,36 @@ func (r *stagingResults) String() string {
 	for location, result := range r.Results {
 		if result.err == nil {
 			if result.wasValidated {
-				sb.WriteString(aurora.Green(fmt.Sprintf("✔ %s\n", location.Name)).String())
+				sb.WriteString(aurora.Green(fmt.Sprintf("✔ %s ", location.String())).String())
+				sb.WriteString("(staged & validated)\n")
 				numStaged++
 			} else {
-				sb.WriteString(aurora.Yellow(fmt.Sprintf("⚠ %s (staged, but not validated)\n", location.Name)).String())
+				sb.WriteString(aurora.Yellow(fmt.Sprintf("⚠ %s ", location)).String())
+				sb.WriteString("(staged, but not validated)\n")
 				numUnvalidated++
 			}
 		} else {
-			sb.WriteString(aurora.Red(fmt.Sprintf("✘ %s\n", location.Name)).String())
-			// todo does nil work
-			sb.WriteString(r.prettyPrinter(result.err, nil))
+			sb.WriteString(aurora.Red(fmt.Sprintf("✘ %s", location.Name)).String())
+			sb.WriteString("(failed to stage)\n")
 			numFailed++
 		}
-
-		sb.WriteString("\n")
 	}
 
 	sb.WriteString("\n")
 
-	sb.WriteString("Summary:\n")
 	if numStaged > 0 {
-		sb.WriteString(fmt.Sprintf("  %d contracts staged and validated\n", numStaged))
+		sb.WriteString(aurora.Green(fmt.Sprintf("%d %s staged, passing preliminary validation\n", numStaged, pluralize("contract", numStaged))).String())
 	}
 	if numUnvalidated > 0 {
-		sb.WriteString(fmt.Sprintf("  %d contracts staged, but not validated\n", numUnvalidated))
+		sb.WriteString(aurora.Yellow(fmt.Sprintf("%d %s staged, but not validated\n", numUnvalidated, pluralize("contract", numStaged))).String())
 	}
 	if numFailed > 0 {
-		sb.WriteString(fmt.Sprintf("  %d contracts failed to stage\n", numFailed))
+		sb.WriteString(aurora.Red(fmt.Sprintf("%d %s failed to stage\n", numFailed, pluralize("contract", numStaged))).String())
 	}
 
 	sb.WriteString("\n")
-	sb.WriteString("DISCLAIMER: Pre-staging validation checks are not exhaustive and do not guarantee the contract will work as expected, please monitor the status of your contract using the `flow migrate is-validated` command\n")
-	sb.WriteString("You may use the --skip-validation flag to disable these checks and stage all contracts regardless\n")
+	sb.WriteString("DISCLAIMER: Pre-staging validation checks are not exhaustive and do not guarantee the contract will work as expected, please monitor the status of your contract using the `flow migrate is-validated` command\n\n")
+	sb.WriteString("You may use the --skip-validation flag to disable these checks and stage all contracts regardless")
 
 	return sb.String()
 }
@@ -313,4 +302,11 @@ func boolCount(flags ...bool) int {
 		}
 	}
 	return count
+}
+
+func pluralize(word string, count int) string {
+	if count == 1 {
+		return word
+	}
+	return word + "s"
 }
