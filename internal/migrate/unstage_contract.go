@@ -32,6 +32,7 @@ import (
 
 	"github.com/onflow/flow-cli/internal/command"
 	internaltx "github.com/onflow/flow-cli/internal/transactions"
+	"github.com/onflow/flow-cli/internal/util"
 )
 
 var unstageContractflags struct{}
@@ -54,13 +55,13 @@ func unstageContract(
 	flow flowkit.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
-	err := checkNetwork(flow.Network())
+	err := util.CheckNetwork(flow.Network())
 	if err != nil {
 		return nil, err
 	}
 
 	contractName := args[0]
-	account, err := getAccountByContractName(state, contractName, flow.Network())
+	account, err := util.GetAccountByContractName(state, contractName, flow.Network())
 	if err != nil {
 		return nil, fmt.Errorf("failed to get account by contract name: %w", err)
 	}

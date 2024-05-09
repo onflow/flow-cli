@@ -128,9 +128,9 @@ func (c Command) AddToParent(parent *cobra.Command) {
 			checkVersion(logger)
 		}
 
-		// command to validate contracts are still valid for migration
-		if err := migrate.NewValidator(github.NewClient(nil).Repositories, flow.Network(), state, logger).ValidateContracts(); err != nil {
-			handleError("Migration Validation Error", err)
+		// check contract migrations if flag is set
+		if Flags.ContractMigrationCheck {
+			checkContractMigrations(state, logger, flow)
 		}
 
 		// record command usage
@@ -417,14 +417,24 @@ func UsageMetrics(command *cobra.Command, wg *sync.WaitGroup) {
 
 // GlobalFlags contains all global flags definitions.
 type GlobalFlags struct {
-	Filter           string
-	Format           string
-	Save             string
-	Host             string
-	HostNetworkKey   string
-	Log              string
-	Network          string
-	Yes              bool
-	ConfigPaths      []string
-	SkipVersionCheck bool
+	Filter                 string
+	Format                 string
+	Save                   string
+	Host                   string
+	HostNetworkKey         string
+	Log                    string
+	Network                string
+	Yes                    bool
+	ConfigPaths            []string
+	SkipVersionCheck       bool
+	ContractMigrationCheck bool
+}
+
+func checkContractMigrations(state *flowkit.State, logger output.Logger, flow flowkit.Services) error {
+	// command to validate contracts are still valid for migration
+	if err := migrate.NewValidator(github.NewClient(nil).Repositories, flow.Network(), state, logger).ValidateContracts(); err != nil {
+		return err
+	}
+
+	return nil
 }

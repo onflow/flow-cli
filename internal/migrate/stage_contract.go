@@ -35,6 +35,7 @@ import (
 	"github.com/spf13/cobra"
 
 	internaltx "github.com/onflow/flow-cli/internal/transactions"
+	"github.com/onflow/flow-cli/internal/util"
 
 	"github.com/onflow/flow-cli/internal/command"
 )
@@ -61,7 +62,7 @@ func stageContract(
 	flow flowkit.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
-	err := checkNetwork(flow.Network())
+	err := util.CheckNetwork(flow.Network())
 	if err != nil {
 		return nil, err
 	}
@@ -87,7 +88,7 @@ func stageContract(
 		return nil, fmt.Errorf("failed to get cadence string from contract code: %w", err)
 	}
 
-	account, err := getAccountByContractName(state, contractName, flow.Network())
+	account, err := util.GetAccountByContractName(state, contractName, flow.Network())
 	if err != nil {
 		return nil, fmt.Errorf("failed to get account by contract name: %w", err)
 	}

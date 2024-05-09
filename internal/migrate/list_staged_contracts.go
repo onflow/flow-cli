@@ -30,6 +30,7 @@ import (
 
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/internal/scripts"
+	"github.com/onflow/flow-cli/internal/util"
 )
 
 var listStagedContractsflags struct{}
@@ -52,7 +53,7 @@ func listStagedContracts(
 	flow flowkit.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
-	err := checkNetwork(flow.Network())
+	err := util.CheckNetwork(flow.Network())
 	if err != nil {
 		return nil, err
 	}
