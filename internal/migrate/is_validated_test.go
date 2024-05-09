@@ -113,6 +113,7 @@ func Test_IsValidated(t *testing.T) {
 		return validationResult{
 			Status:    res,
 			Timestamp: *ts,
+			Network:   config.TestnetNetwork.Name,
 		}, nil
 	}
 
