@@ -23,6 +23,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/logrusorgru/aurora"
 	"github.com/manifoldco/promptui"
 	"github.com/onflow/cadence/runtime/common"
 	"github.com/onflow/flowkit/v2"
@@ -33,12 +34,12 @@ import (
 	"github.com/onflow/flow-cli/internal/command"
 )
 
-type stagingResult struct {
-	// Error will be nil if the contract was successfully staged
-	Contracts map[common.AddressLocation]error
+type stagingResults struct {
+	Results       map[common.AddressLocation]stagingResult
+	prettyPrinter func(err error, location common.Location) string
 }
 
-var _ command.ResultWithExitCode = &stagingResult{}
+var _ command.ResultWithExitCode = &stagingResults{}
 
 var stageContractflags struct {
 	All            bool     `default:"false" flag:"all" info:"Stage all contracts"`
@@ -151,7 +152,7 @@ func stageAll(
 	s stagingService,
 	state *flowkit.State,
 	flow flowkit.Services,
-) (*stagingResult, error) {
+) (*stagingResults, error) {
 	contracts, err := state.DeploymentContractsByNetwork(flow.Network())
 	if err != nil {
 		return nil, err
@@ -162,7 +163,7 @@ func stageAll(
 		return nil, err
 	}
 
-	return &stagingResult{Contracts: results}, nil
+	return &stagingResults{Results: results}, nil
 }
 
 func stageByContractNames(
@@ -170,7 +171,7 @@ func stageByContractNames(
 	state *flowkit.State,
 	flow flowkit.Services,
 	contractNames []string,
-) (*stagingResult, error) {
+) (*stagingResults, error) {
 	contracts, err := state.DeploymentContractsByNetwork(flow.Network())
 	if err != nil {
 		return nil, err
@@ -195,7 +196,7 @@ func stageByContractNames(
 		return nil, err
 	}
 
-	return &stagingResult{Contracts: results}, nil
+	return &stagingResults{Results: results}, nil
 }
 
 func stageByAccountNames(
@@ -203,7 +204,7 @@ func stageByAccountNames(
 	state *flowkit.State,
 	flow flowkit.Services,
 	accountNames []string,
-) (*stagingResult, error) {
+) (*stagingResults, error) {
 	contracts, err := state.DeploymentContractsByNetwork(flow.Network())
 	if err != nil {
 		return nil, err
@@ -234,53 +235,73 @@ func stageByAccountNames(
 		return nil, err
 	}
 
-	return &stagingResult{Contracts: results}, nil
+	return &stagingResults{Results: results}, nil
 }
 
-func (r *stagingResult) ExitCode() int {
-	for _, err := range r.Contracts {
-		if err != nil {
+func (r *stagingResults) ExitCode() int {
+	for _, r := range r.Results {
+		if r.err != nil {
 			return 1
 		}
 	}
 	return 0
 }
 
-func (s *stagingResult) String() string {
-	if len(s.Contracts) == 0 {
-		return "no contracts staged"
-	}
+func (r *stagingResults) String() string {
+	var sb strings.Builder
 
-	sb := &strings.Builder{}
+	numStaged := 0
+	numUnvalidated := 0
+	numFailed := 0
 
-	// First, print the failing contracts
-	for location, err := range s.Contracts {
-		if err != nil {
-			sb.WriteString(fmt.Sprintf("failed to stage contract %s: %s\n", location, err))
+	for location, result := range r.Results {
+		if result.err == nil {
+			if result.wasValidated {
+				sb.WriteString(aurora.Green(fmt.Sprintf("✔ %s\n", location.Name)).String())
+				numStaged++
+			} else {
+				sb.WriteString(aurora.Yellow(fmt.Sprintf("⚠ %s (staged, but not validated)\n", location.Name)).String())
+				numUnvalidated++
+			}
+		} else {
+			sb.WriteString(aurora.Red(fmt.Sprintf("✘ %s\n", location.Name)).String())
+			// todo does nil work
+			sb.WriteString(r.prettyPrinter(result.err, nil))
+			numFailed++
 		}
+
+		sb.WriteString("\n")
 	}
 
-	// Then, print the successfully staged contracts
-	for location, err := range s.Contracts {
-		if err == nil {
-			sb.WriteString(fmt.Sprintf("staged contract %s\n", location))
-		}
+	sb.WriteString("\n")
+
+	sb.WriteString("Summary:\n")
+	if numStaged > 0 {
+		sb.WriteString(fmt.Sprintf("  %d contracts staged and validated\n", numStaged))
+	}
+	if numUnvalidated > 0 {
+		sb.WriteString(fmt.Sprintf("  %d contracts staged, but not validated\n", numUnvalidated))
+	}
+	if numFailed > 0 {
+		sb.WriteString(fmt.Sprintf("  %d contracts failed to stage\n", numFailed))
 	}
 
-	sb.WriteString(fmt.Sprintf("staged %d contracts", len(s.Contracts)))
+	sb.WriteString("\n")
+	sb.WriteString("DISCLAIMER: Pre-staging validation checks are not exhaustive and do not guarantee the contract will work as expected, please monitor the status of your contract using the `flow migrate is-validated` command\n")
+	sb.WriteString("You may use the --skip-validation flag to disable these checks and stage all contracts regardless\n")
 
 	return sb.String()
 }
 
-func (s *stagingResult) JSON() interface{} {
+func (s *stagingResults) JSON() interface{} {
 	return s
 }
 
-func (r *stagingResult) Oneliner() string {
-	if len(r.Contracts) == 0 {
+func (r *stagingResults) Oneliner() string {
+	if len(r.Results) == 0 {
 		return "no contracts staged"
 	}
-	return fmt.Sprintf("staged %d contracts", len(r.Contracts))
+	return fmt.Sprintf("staged %d contracts", len(r.Results))
 }
 
 // helpers

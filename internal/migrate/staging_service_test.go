@@ -182,9 +182,12 @@ func Test_StagingService(t *testing.T) {
 
 		require.Equal(t, 2, len(results))
 		require.Contains(t, results, simpleAddressLocation("0x01.Foo"))
+		require.Nil(t, results[simpleAddressLocation("0x01.Foo")].err)
+		require.Equal(t, results[simpleAddressLocation("0x01.Foo")].wasValidated, true)
+
 		require.Contains(t, results, simpleAddressLocation("0x01.Bar"))
-		require.Nil(t, results[simpleAddressLocation("0x01.Foo")])
 		require.Nil(t, results[simpleAddressLocation("0x01.Bar")])
+		require.Equal(t, results[simpleAddressLocation("0x01.Bar")].wasValidated, true)
 	})
 
 	t.Run("stages unvalidated contracts if chosen", func(t *testing.T) {
@@ -243,6 +246,7 @@ func Test_StagingService(t *testing.T) {
 		require.Equal(t, 1, len(results))
 		require.Contains(t, results, simpleAddressLocation("0x01.Foo"))
 		require.Nil(t, results[simpleAddressLocation("0x01.Foo")])
+		require.Equal(t, results[simpleAddressLocation("0x01.Foo")].wasValidated, false)
 	})
 
 	t.Run("returns missing dependency error if staging not chosen", func(t *testing.T) {
@@ -302,9 +306,11 @@ func Test_StagingService(t *testing.T) {
 		require.Contains(t, results, simpleAddressLocation("0x01.Foo"))
 
 		var mde *missingDependenciesError
-		require.ErrorAs(t, results[simpleAddressLocation("0x01.Foo")], &mde)
-		require.NotNil(t, results[simpleAddressLocation("0x01.Foo")])
+		require.ErrorAs(t, results[simpleAddressLocation("0x01.Foo")].err, &mde)
+		require.NotNil(t, results[simpleAddressLocation("0x01.Foo")].err)
 		require.Equal(t, []common.AddressLocation{simpleAddressLocation("0x02.Bar")}, mde.MissingContracts)
+
+		require.Equal(t, results[simpleAddressLocation("0x01.Foo")].wasValidated, true)
 	})
 
 	t.Run("reports and does not stage invalid contracts", func(t *testing.T) {
@@ -366,8 +372,11 @@ func Test_StagingService(t *testing.T) {
 
 		require.Equal(t, 2, len(results))
 		require.Contains(t, results, simpleAddressLocation("0x01.Foo"))
+		require.ErrorContains(t, results[simpleAddressLocation("0x01.Foo")].err, "FooError")
+		require.Equal(t, results[simpleAddressLocation("0x01.Foo")].wasValidated, true)
+
 		require.Contains(t, results, simpleAddressLocation("0x01.Bar"))
-		require.ErrorContains(t, results[simpleAddressLocation("0x01.Foo")], "FooError")
-		require.Nil(t, results[simpleAddressLocation("0x01.Bar")])
+		require.Nil(t, results[simpleAddressLocation("0x01.Bar")].err)
+		require.Equal(t, results[simpleAddressLocation("0x01.Bar")].wasValidated, true)
 	})
 }

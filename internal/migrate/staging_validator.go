@@ -45,12 +45,13 @@ import (
 
 /*
 
-TODO: handle invalid dependencies
+TODO: handle invalid dependencies, e.g. stage and fails
 */
 
 //go:generate mockery --name stagingValidator --inpackage --testonly --case underscore
 type stagingValidator interface {
 	Validate(stagedContracts []StagedContract) error
+	PrettyPrintError(err error, location common.Location) string
 }
 
 type stagingValidatorImpl struct {
@@ -163,6 +164,9 @@ func (v *stagingValidatorImpl) Validate(stagedContracts []StagedContract) error 
 	v.stagedContracts = make(map[common.AddressLocation]StagedContract)
 	for _, stagedContract := range stagedContracts {
 		v.stagedContracts[stagedContract.DeployLocation] = stagedContract
+
+		// Add the contract code to the contracts map for pretty printing
+		v.contracts[stagedContract.SourceLocation] = stagedContract.Code
 	}
 
 	// Load system contracts
@@ -304,7 +308,7 @@ func (v *stagingValidatorImpl) checkContract(
 		location = stagedContract.SourceLocation
 		code = stagedContract.Code
 	} else {
-		// TODO: Shouldn't be checking for cotnract again if already known missing
+		// TODO: Shouldn't be checking for contract again if already known missing
 		location = importedLocation
 		code, ok = v.contracts[location]
 		if !ok {
@@ -610,7 +614,7 @@ func (v *stagingValidatorImpl) elaborations() map[common.Location]*sema.Elaborat
 // While it is done by default in checker/parser errors, this has two purposes:
 // 1. Add color to the error message
 // 2. Use pretty printing on contract update errors which do not do this by default
-func (v *stagingValidatorImpl) prettyPrintError(err error, location common.Location) string {
+func (v *stagingValidatorImpl) PrettyPrintError(err error, location common.Location) string {
 	var sb strings.Builder
 	printErr := pretty.NewErrorPrettyPrinter(&sb, true).
 		PrettyPrintError(err, location, v.contracts)

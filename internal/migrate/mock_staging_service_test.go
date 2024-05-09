@@ -17,24 +17,42 @@ type mockStagingService struct {
 	mock.Mock
 }
 
+// PrettyPrintValidationError provides a mock function with given fields: err, location
+func (_m *mockStagingService) PrettyPrintValidationError(err error, location common.Location) string {
+	ret := _m.Called(err, location)
+
+	if len(ret) == 0 {
+		panic("no return value specified for PrettyPrintValidationError")
+	}
+
+	var r0 string
+	if rf, ok := ret.Get(0).(func(error, common.Location) string); ok {
+		r0 = rf(err, location)
+	} else {
+		r0 = ret.Get(0).(string)
+	}
+
+	return r0
+}
+
 // StageContracts provides a mock function with given fields: ctx, contracts
-func (_m *mockStagingService) StageContracts(ctx context.Context, contracts []*project.Contract) (map[common.AddressLocation]error, error) {
+func (_m *mockStagingService) StageContracts(ctx context.Context, contracts []*project.Contract) (map[common.AddressLocation]stagingResult, error) {
 	ret := _m.Called(ctx, contracts)
 
 	if len(ret) == 0 {
 		panic("no return value specified for StageContracts")
 	}
 
-	var r0 map[common.AddressLocation]error
+	var r0 map[common.AddressLocation]stagingResult
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, []*project.Contract) (map[common.AddressLocation]error, error)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, []*project.Contract) (map[common.AddressLocation]stagingResult, error)); ok {
 		return rf(ctx, contracts)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, []*project.Contract) map[common.AddressLocation]error); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, []*project.Contract) map[common.AddressLocation]stagingResult); ok {
 		r0 = rf(ctx, contracts)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(map[common.AddressLocation]error)
+			r0 = ret.Get(0).(map[common.AddressLocation]stagingResult)
 		}
 	}
 

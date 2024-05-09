@@ -63,8 +63,10 @@ func Test_StageContract(t *testing.T) {
 			},
 		})
 
-		mockResult := make(map[common.AddressLocation]error)
-		mockResult[common.NewAddressLocation(nil, common.Address{0x01}, "Foo")] = nil
+		mockResult := make(map[common.AddressLocation]stagingResult)
+		mockResult[common.NewAddressLocation(nil, common.Address{0x01}, "Foo")] = stagingResult{
+			err: nil,
+		}
 
 		ss.On("StageContracts", mock.Anything, mock.Anything).Return(mockResult, nil)
 
@@ -76,7 +78,7 @@ func Test_StageContract(t *testing.T) {
 
 		assert.NoError(t, err)
 		assert.NotNil(t, result)
-		assert.Equal(t, mockResult, result.Contracts)
+		assert.Equal(t, mockResult, result.Results)
 	})
 
 	t.Run("contract name filter", func(t *testing.T) {
@@ -97,8 +99,10 @@ func Test_StageContract(t *testing.T) {
 			},
 		})
 
-		mockResult := make(map[common.AddressLocation]error)
-		mockResult[common.NewAddressLocation(nil, common.Address{0x01}, "Foo")] = nil
+		mockResult := make(map[common.AddressLocation]stagingResult)
+		mockResult[common.NewAddressLocation(nil, common.Address{0x01}, "Foo")] = stagingResult{
+			err: nil,
+		}
 
 		ss.On("StageContracts", mock.Anything, mock.Anything).Return(mockResult, nil).Once()
 
@@ -111,7 +115,7 @@ func Test_StageContract(t *testing.T) {
 
 		assert.NoError(t, err)
 		assert.NotNil(t, result)
-		assert.Equal(t, mockResult, result.Contracts)
+		assert.Equal(t, mockResult, result.Results)
 	})
 
 	t.Run("contract name filter", func(t *testing.T) {
@@ -138,8 +142,10 @@ func Test_StageContract(t *testing.T) {
 			},
 		})
 
-		mockResult := make(map[common.AddressLocation]error)
-		mockResult[common.NewAddressLocation(nil, common.Address{0x01}, "Foo")] = nil
+		mockResult := make(map[common.AddressLocation]stagingResult)
+		mockResult[common.NewAddressLocation(nil, common.Address{0x01}, "Foo")] = stagingResult{
+			err: nil,
+		}
 		ss.On("StageContracts", mock.Anything, mock.Anything).Return(mockResult, nil).Once()
 
 		result, err := stageByAccountNames(
@@ -151,7 +157,7 @@ func Test_StageContract(t *testing.T) {
 
 		assert.NoError(t, err)
 		assert.NotNil(t, result)
-		assert.Equal(t, mockResult, result.Contracts)
+		assert.Equal(t, mockResult, result.Results)
 	})
 
 	t.Run("contract name not found", func(t *testing.T) {
