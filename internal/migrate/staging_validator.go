@@ -43,11 +43,6 @@ import (
 	"github.com/onflow/flow-cli/internal/util"
 )
 
-/*
-
-TODO: handle invalid dependencies, e.g. stage and fails
-*/
-
 //go:generate mockery --name stagingValidator --inpackage --testonly --case underscore
 type stagingValidator interface {
 	Validate(stagedContracts []StagedContract) error
@@ -275,10 +270,11 @@ func (v *stagingValidatorImpl) validateContractUpdate(location common.AddressLoc
 	return nil
 }
 
+// Check a contract by location
 func (v *stagingValidatorImpl) checkContract(
 	importedLocation common.AddressLocation,
 	stack ...common.Location,
-) (checker *sema.Checker, err error) {
+) (*sema.Checker, error) {
 	// Try to load cached checker
 	if cacheItem, ok := v.checkingCache[importedLocation]; ok {
 		// Inherit missing dependencies from the imported contract
@@ -290,77 +286,78 @@ func (v *stagingValidatorImpl) checkContract(
 		return cacheItem.checker, cacheItem.err
 	}
 
-	// Cache the checker
-	defer func() {
-		v.checkingCache[importedLocation] = &cachedCheckingResult{
-			checker: checker,
-			err:     err,
-		}
-	}()
-
-	// Resolve the contract code and location based on whether this is a staged update
-	// Or an existing contract
-	var location common.Location
-	var code []byte
-
-	stagedContract, ok := v.stagedContracts[importedLocation]
-	if ok {
-		location = stagedContract.SourceLocation
-		code = stagedContract.Code
-	} else {
-		// TODO: Shouldn't be checking for contract again if already known missing
-		location = importedLocation
-		code, ok = v.contracts[location]
-		if !ok {
-			code, err = v.getStagedContractCode(importedLocation)
-			if err != nil {
-				err = fmt.Errorf("failed to get staged contract code: %w", err)
-				return
-			}
-			v.contracts[importedLocation] = code
-		}
-
-		// Handle the case where the contract has not been staged yet
-		// This missing dependency will be tracked for all dependents
-		if code == nil {
-			for _, dependent := range stack {
-				v.missingDependencies[dependent] = append(v.missingDependencies[dependent], importedLocation)
-			}
-			err = fmt.Errorf("the following contract has not been staged: %s", importedLocation)
-			return
-		}
-	}
-
-	// Parse the contract code
-	var program *ast.Program
-	program, err = parser.ParseProgram(nil, code, parser.Config{})
-	if err != nil {
-		return
-	}
-
 	// Check the contract code
-	checker, err = sema.NewChecker(
-		program,
-		location,
-		nil,
-		&sema.Config{
-			AccessCheckMode:    sema.AccessCheckModeStrict,
-			AttachmentsEnabled: true,
-			BaseValueActivationHandler: func(_ common.Location) *sema.VariableActivation {
-				// Only checking contracts, so no need to consider script standard library
-				return util.NewStandardLibrary().BaseValueActivation
-			},
-			LocationHandler:            v.resolveLocation,
-			ImportHandler:              v.resolveImport(append(stack, importedLocation)),
-			MemberAccountAccessHandler: v.resolveAccountAccess,
-		},
-	)
-	if err != nil {
-		return
-	}
+	checker, err := (func() (*sema.Checker, error) {
+		// Resolve the contract code and real location based on whether this is a staged update
+		var location common.Location
+		var code []byte
 
-	err = checker.Check()
-	return
+		stagedContract, ok := v.stagedContracts[importedLocation]
+		if ok {
+			location = stagedContract.SourceLocation
+			code = stagedContract.Code
+		} else {
+			location = importedLocation
+			code, ok = v.contracts[location]
+
+			// If the contract code is not known, try to get it
+			if !ok {
+				code, err := v.getStagedContractCode(importedLocation)
+				if err != nil {
+					return nil, fmt.Errorf("failed to get staged contract code: %w", err)
+				}
+				v.contracts[importedLocation] = code
+			}
+
+			// Handle the case where the contract has not been staged yet
+			// This missing dependency will be tracked for all dependents
+			if code == nil {
+				for _, dependent := range stack {
+					v.missingDependencies[dependent] = append(v.missingDependencies[dependent], importedLocation)
+				}
+				err := fmt.Errorf("the following contract has not been staged: %s", importedLocation)
+				return nil, err
+			}
+		}
+
+		// Parse the contract code
+		var program *ast.Program
+		program, err := parser.ParseProgram(nil, code, parser.Config{})
+		if err != nil {
+			return nil, err
+		}
+
+		// Check the contract code
+		checker, err := sema.NewChecker(
+			program,
+			location,
+			nil,
+			&sema.Config{
+				AccessCheckMode:    sema.AccessCheckModeStrict,
+				AttachmentsEnabled: true,
+				BaseValueActivationHandler: func(_ common.Location) *sema.VariableActivation {
+					// Only checking contracts, so no need to consider script standard library
+					return util.NewStandardLibrary().BaseValueActivation
+				},
+				LocationHandler:            v.resolveLocation,
+				ImportHandler:              v.resolveImport(append(stack, importedLocation)),
+				MemberAccountAccessHandler: v.resolveAccountAccess,
+			},
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		err = checker.Check()
+		return checker, err
+	})()
+
+	// Cache the checking result
+	v.checkingCache[importedLocation] = &cachedCheckingResult{
+		checker: checker,
+		err:     err,
+	}
+	return checker, err
 }
 
 func (v *stagingValidatorImpl) getStagedContractCode(
