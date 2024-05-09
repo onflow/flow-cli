@@ -21,13 +21,11 @@ package migrate
 import (
 	"context"
 	"fmt"
-	"path/filepath"
 	"strings"
 
 	"github.com/manifoldco/promptui"
 	"github.com/onflow/cadence/runtime/common"
 	"github.com/onflow/flowkit/v2"
-	"github.com/onflow/flowkit/v2/config"
 	"github.com/onflow/flowkit/v2/output"
 	"github.com/onflow/flowkit/v2/project"
 	"github.com/spf13/cobra"
@@ -59,22 +57,6 @@ var stageContractCommand = &command.Command{
 	RunS:  stageContract,
 }
 
-func buildContract(state *flowkit.State, flow flowkit.Services, contract *config.Contract) (*project.Contract, error) {
-	contractName := contract.Name
-
-	replacedCode, err := replaceImportsIfExists(state, flow, contract.Location)
-	if err != nil {
-		return nil, fmt.Errorf("failed to replace imports: %w", err)
-	}
-
-	account, err := getAccountByContractName(state, contractName, flow.Network())
-	if err != nil {
-		return nil, fmt.Errorf("failed to get account by contract name: %w", err)
-	}
-
-	return project.NewContract(contractName, filepath.Clean(contract.Location), replacedCode, account.Address, account.Name, nil), nil
-}
-
 func stageContract(
 	args []string,
 	globalFlags command.GlobalFlags,
@@ -87,13 +69,50 @@ func stageContract(
 		return nil, err
 	}
 
+	// Get all contracts
+	contracts, err := state.DeploymentContractsByNetwork(flow.Network())
+	if err != nil {
+		return nil, err
+	}
+
+	// Replace imports in all contracts
+	for _, contract := range contracts {
+		newScript, err := flow.ReplaceImportsInScript(context.Background(), flowkit.Script{
+			Code:     contract.Code(),
+			Location: contract.Location(),
+			Args:     nil,
+		})
+		if err != nil {
+			return nil, fmt.Errorf("failed to replace imports in contract %s: %w", contract.Name, err)
+		}
+
+		contract.SetCode(newScript.Code)
+	}
+
+	// Validate command arguments
+	optionCount := boolCount(stageContractflags.All, len(stageContractflags.Accounts) > 0, len(args) > 0)
+	if optionCount > 1 {
+		return nil, fmt.Errorf("only one of --all, --account, or contract names can be provided")
+	} else if optionCount == 0 {
+		return nil, fmt.Errorf("at least one of --all, --account, or contract names must be provided")
+	}
+
+	// Stage based on flags
 	var v stagingValidator
 	if !stageContractflags.SkipValidation {
 		v = newStagingValidator(flow)
 	}
-
 	s := newStagingService(flow, state, logger, v, promptStagingUnvalidatedContracts(logger))
-	return stageWithFilters(s, stageContractflags.All, args, stageContractflags.Accounts)
+
+	if stageContractflags.All {
+		return stageAll(s, state, flow)
+	}
+
+	if len(stageContractflags.Accounts) > 0 {
+		return stageByAccountNames(s, state, flow, stageContractflags.Accounts)
+	}
+
+	return stageByContractNames(s, state, flow, args)
 }
 
 func promptStagingUnvalidatedContracts(logger output.Logger) func(validatorError *stagingValidatorError) bool {
@@ -128,46 +147,94 @@ func promptStagingUnvalidatedContracts(logger output.Logger) func(validatorError
 	}
 }
 
-func stageWithFilters(
+func stageAll(
 	s stagingService,
-	allContracts bool,
-	contractNames []string,
-	accountNames []string,
+	state *flowkit.State,
+	flow flowkit.Services,
 ) (*stagingResult, error) {
-	var results map[common.AddressLocation]error
-	var err error
-
-	// Stage all contracts
-	if allContracts {
-		if len(contractNames) > 0 || len(accountNames) > 0 {
-			return nil, fmt.Errorf("cannot use --all flag with contract names or --accounts flag")
-		}
-
-		results, err = s.StageAllContracts(context.Background())
-	}
-
-	// Filter by contract names
-	if len(contractNames) > 0 {
-		if len(accountNames) > 0 {
-			return nil, fmt.Errorf("cannot use --account flag with contract names")
-		}
-
-		results, err = s.StageAllContracts(context.Background())
-	}
-
-	// Filter by accounts
-	if len(accountNames) > 0 {
-		results, err = s.StageAllContracts(context.Background())
-	}
-
+	contracts, err := state.DeploymentContractsByNetwork(flow.Network())
 	if err != nil {
 		return nil, err
 	}
 
-	// Print the results
-	return &stagingResult{
-		Contracts: results,
-	}, nil
+	results, err := s.StageContracts(context.Background(), contracts)
+	if err != nil {
+		return nil, err
+	}
+
+	return &stagingResult{Contracts: results}, nil
+}
+
+func stageByContractNames(
+	s stagingService,
+	state *flowkit.State,
+	flow flowkit.Services,
+	contractNames []string,
+) (*stagingResult, error) {
+	contracts, err := state.DeploymentContractsByNetwork(flow.Network())
+	if err != nil {
+		return nil, err
+	}
+
+	filteredContracts := make([]*project.Contract, 0)
+	for _, name := range contractNames {
+		found := false
+		for _, contract := range contracts {
+			if contract.Name == name {
+				filteredContracts = append(filteredContracts, contract)
+				found = true
+			}
+		}
+		if !found {
+			return nil, fmt.Errorf("deployment not found for contract %s on network %s", name, flow.Network().Name)
+		}
+	}
+
+	results, err := s.StageContracts(context.Background(), filteredContracts)
+	if err != nil {
+		return nil, err
+	}
+
+	return &stagingResult{Contracts: results}, nil
+}
+
+func stageByAccountNames(
+	s stagingService,
+	state *flowkit.State,
+	flow flowkit.Services,
+	accountNames []string,
+) (*stagingResult, error) {
+	contracts, err := state.DeploymentContractsByNetwork(flow.Network())
+	if err != nil {
+		return nil, err
+	}
+
+	filteredContracts := make([]*project.Contract, 0)
+	for _, accountName := range accountNames {
+		account, err := state.Accounts().ByName(accountName)
+		if err != nil {
+			return nil, err
+		}
+
+		found := false
+		for _, contract := range contracts {
+			if contract.AccountName == account.Name {
+				filteredContracts = append(filteredContracts, contract)
+				found = true
+			}
+		}
+
+		if !found {
+			return nil, fmt.Errorf("no deployments found for account %s on network %s", account.Name, flow.Network().Name)
+		}
+	}
+
+	results, err := s.StageContracts(context.Background(), filteredContracts)
+	if err != nil {
+		return nil, err
+	}
+
+	return &stagingResult{Contracts: results}, nil
 }
 
 func (r *stagingResult) ExitCode() int {
@@ -214,4 +281,15 @@ func (r *stagingResult) Oneliner() string {
 		return "no contracts staged"
 	}
 	return fmt.Sprintf("staged %d contracts", len(r.Contracts))
+}
+
+// helpers
+func boolCount(flags ...bool) int {
+	count := 0
+	for _, flag := range flags {
+		if flag {
+			count++
+		}
+	}
+	return count
 }

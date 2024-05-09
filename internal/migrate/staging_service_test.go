@@ -31,6 +31,7 @@ import (
 	"github.com/onflow/flowkit/v2"
 	"github.com/onflow/flowkit/v2/accounts"
 	"github.com/onflow/flowkit/v2/config"
+	"github.com/onflow/flowkit/v2/project"
 
 	flowkitMocks "github.com/onflow/flowkit/v2/mocks"
 
@@ -40,70 +41,78 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+type mockDeployment struct {
+	name string
+	code string
+}
+
+type mockAccount struct {
+	name        string
+	address     string
+	deployments []mockDeployment
+}
+
+func addAccountsToState(
+	t *testing.T,
+	state *flowkit.State,
+	accts []mockAccount,
+) {
+	for _, account := range accts {
+		key, err := crypto.GeneratePrivateKey(crypto.ECDSA_P256, make([]byte, 32))
+		require.NoError(t, err)
+
+		state.Accounts().AddOrUpdate(
+			&accounts.Account{
+				Name:    account.name,
+				Address: flow.HexToAddress(account.address),
+				Key: accounts.NewHexKeyFromPrivateKey(
+					0,
+					crypto.SHA3_256,
+					key,
+				),
+			},
+		)
+
+		contractDeployments := make([]config.ContractDeployment, 0)
+		for _, deployment := range account.deployments {
+			fname := account.address + "/" + deployment.name + ".cdc"
+			state.ReaderWriter().WriteFile(fname, []byte(deployment.code), 0644)
+
+			state.Contracts().AddOrUpdate(
+				config.Contract{
+					Name:     deployment.name,
+					Location: fname,
+				},
+			)
+
+			contractDeployments = append(
+				contractDeployments,
+				config.ContractDeployment{
+					Name: deployment.name,
+				},
+			)
+		}
+
+		state.Deployments().AddOrUpdate(
+			config.Deployment{
+				Network:   "testnet",
+				Account:   account.name,
+				Contracts: contractDeployments,
+			},
+		)
+	}
+}
+
 func Test_StagingService(t *testing.T) {
-	type mockDeployment struct {
-		name string
-		code string
-	}
-
-	type mockAccount struct {
-		name        string
-		address     string
-		deployments []mockDeployment
-	}
-
 	setupMocks := func(
 		accts []mockAccount,
-	) (flowkit.Services, *flowkit.State, flowkit.ReaderWriter) {
+	) (flowkit.Services, *flowkit.State, []*project.Contract) {
 		srv := flowkitMocks.NewServices(t)
 		rw, _ := tests.ReaderWriter()
 		state, err := flowkit.Init(rw, crypto.ECDSA_P256, crypto.SHA3_256)
 		require.NoError(t, err)
 
-		for _, account := range accts {
-			key, err := crypto.GeneratePrivateKey(crypto.ECDSA_P256, make([]byte, 32))
-			require.NoError(t, err)
-
-			state.Accounts().AddOrUpdate(
-				&accounts.Account{
-					Name:    account.name,
-					Address: flow.HexToAddress(account.address),
-					Key: accounts.NewHexKeyFromPrivateKey(
-						0,
-						crypto.SHA3_256,
-						key,
-					),
-				},
-			)
-
-			contractDeployments := make([]config.ContractDeployment, 0)
-			for _, deployment := range account.deployments {
-				fname := account.address + "/" + deployment.name + ".cdc"
-				rw.WriteFile(fname, []byte(deployment.code), 0644)
-
-				state.Contracts().AddOrUpdate(
-					config.Contract{
-						Name:     deployment.name,
-						Location: fname,
-					},
-				)
-
-				contractDeployments = append(
-					contractDeployments,
-					config.ContractDeployment{
-						Name: deployment.name,
-					},
-				)
-			}
-
-			state.Deployments().AddOrUpdate(
-				config.Deployment{
-					Network:   "testnet",
-					Account:   account.name,
-					Contracts: contractDeployments,
-				},
-			)
-		}
+		addAccountsToState(t, state, accts)
 
 		srv.On("Network", mock.Anything).Return(config.Network{
 			Name: "testnet",
@@ -112,7 +121,10 @@ func Test_StagingService(t *testing.T) {
 		// TODO, should make sure that the script is correct
 		srv.On("SendTransaction", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(tests.NewTransaction(), nil, nil).Maybe()
 
-		return srv, state, rw
+		deploymentContracts, err := state.DeploymentContractsByNetwork(config.TestnetNetwork)
+		require.NoError(t, err)
+
+		return srv, state, deploymentContracts
 	}
 
 	t.Run("stages valid contracts", func(t *testing.T) {
@@ -132,7 +144,7 @@ func Test_StagingService(t *testing.T) {
 				},
 			},
 		}
-		srv, state, _ := setupMocks(mockAccount)
+		srv, state, deploymentContracts := setupMocks(mockAccount)
 
 		v := newMockStagingValidator(t)
 		v.On("Validate", mock.MatchedBy(func(stagedContracts []StagedContract) bool {
@@ -160,8 +172,9 @@ func Test_StagingService(t *testing.T) {
 			},
 		)
 
-		results, err := s.StageAllContracts(
+		results, err := s.StageContracts(
 			context.Background(),
+			deploymentContracts,
 		)
 
 		require.NoError(t, err)
@@ -187,7 +200,7 @@ func Test_StagingService(t *testing.T) {
 				},
 			},
 		}
-		srv, state, _ := setupMocks(mockAccount)
+		srv, state, deploymentContracts := setupMocks(mockAccount)
 
 		v := newMockStagingValidator(t)
 		v.On("Validate", mock.MatchedBy(func(stagedContracts []StagedContract) bool {
@@ -219,8 +232,9 @@ func Test_StagingService(t *testing.T) {
 			},
 		)
 
-		results, err := s.StageAllContracts(
+		results, err := s.StageContracts(
 			context.Background(),
+			deploymentContracts,
 		)
 
 		require.NoError(t, err)
@@ -244,7 +258,7 @@ func Test_StagingService(t *testing.T) {
 				},
 			},
 		}
-		srv, state, _ := setupMocks(mockAccount)
+		srv, state, deploymentContracts := setupMocks(mockAccount)
 
 		v := newMockStagingValidator(t)
 		v.On("Validate", mock.MatchedBy(func(stagedContracts []StagedContract) bool {
@@ -276,8 +290,9 @@ func Test_StagingService(t *testing.T) {
 			},
 		)
 
-		results, err := s.StageAllContracts(
+		results, err := s.StageContracts(
 			context.Background(),
+			deploymentContracts,
 		)
 
 		require.NoError(t, err)
@@ -309,7 +324,7 @@ func Test_StagingService(t *testing.T) {
 				},
 			},
 		}
-		srv, state, _ := setupMocks(mockAccount)
+		srv, state, deploymentContracts := setupMocks(mockAccount)
 
 		v := newMockStagingValidator(t)
 		v.On("Validate", mock.MatchedBy(func(stagedContracts []StagedContract) bool {
@@ -341,8 +356,9 @@ func Test_StagingService(t *testing.T) {
 			},
 		)
 
-		results, err := s.StageAllContracts(
+		results, err := s.StageContracts(
 			context.Background(),
+			deploymentContracts,
 		)
 
 		require.NoError(t, err)

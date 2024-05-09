@@ -39,7 +39,7 @@ import (
 //go:generate mockery --name stagingService --inpackage --testonly --case underscore
 type stagingService interface {
 	// StageContracts stages contracts for the network
-	StageAllContracts(ctx context.Context) (map[common.AddressLocation]error, error)
+	StageContracts(ctx context.Context, contracts []*project.Contract) (map[common.AddressLocation]error, error)
 }
 
 type stagingServiceImpl struct {
@@ -68,12 +68,7 @@ func newStagingService(
 	}
 }
 
-func (s *stagingServiceImpl) StageAllContracts(ctx context.Context) (map[common.AddressLocation]error, error) {
-	contracts, err := s.state.DeploymentContractsByNetwork(s.flow.Network())
-	if err != nil {
-		return nil, err
-	}
-
+func (s *stagingServiceImpl) StageContracts(ctx context.Context, contracts []*project.Contract) (map[common.AddressLocation]error, error) {
 	// If validation is disabled, just stage the contracts
 	if s.validator == nil {
 		s.logger.Info("Skipping contract code validation, you may monitor the status of your contract using the `flow migrate is-validated` command\n")
@@ -87,7 +82,12 @@ func (s *stagingServiceImpl) StageAllContracts(ctx context.Context) (map[common.
 }
 
 func (s *stagingServiceImpl) validateAndStageContracts(ctx context.Context, contracts []*project.Contract) (map[common.AddressLocation]error, error) {
-	s.logger.StartProgress(fmt.Sprintf("Validating and staging %d contracts for accounts: %s", len(contracts), s.state.AccountsForNetwork(s.flow.Network()).String()))
+	accountNames := make([]string, 0)
+	for _, contract := range contracts {
+		accountNames = append(accountNames, contract.AccountName)
+	}
+	s.logger.StartProgress(fmt.Sprintf("Validating and staging %d contracts for accounts: %s", len(contracts), strings.Join(accountNames, ", ")))
+
 	defer s.logger.StopProgress()
 
 	// Collect all staged contracts
