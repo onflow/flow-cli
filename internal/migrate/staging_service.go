@@ -52,6 +52,7 @@ type stagingServiceImpl struct {
 type stagingResult struct {
 	err          error
 	wasValidated bool
+	txId         flow.Identifier
 }
 
 var _ stagingService = &stagingServiceImpl{}
@@ -96,18 +97,11 @@ func (s *stagingServiceImpl) StageContracts(ctx context.Context, contracts []*pr
 		s.logger.StartProgress(fmt.Sprintf("Staging %d contracts for accounts: %s", len(contracts), s.state.AccountsForNetwork(s.flow.Network()).String()))
 		defer s.logger.StopProgress()
 
-		results := make(map[common.AddressLocation]stagingResult)
-		errorMap := s.stageContracts(ctx, replacedContracts)
-		for location, err := range errorMap {
-			results[location] = stagingResult{
-				err:          err,
-				wasValidated: false,
-			}
-		}
-
+		results := s.stageContracts(ctx, replacedContracts)
 		return results, nil
 	}
 
+	// Otherwise, validate and stage the contracts
 	return s.validateAndStageContracts(ctx, replacedContracts)
 }
 
@@ -150,31 +144,24 @@ func (s *stagingServiceImpl) validateAndStageContracts(ctx context.Context, cont
 
 	// Now, handle contracts that failed validation
 	newResults := s.maybeStageInvalidContracts(ctx, contracts, validatorError)
-	for location, err := range newResults {
-		results[location] = stagingResult{
-			err:          err,
-			wasValidated: false,
-		}
+	for location, res := range newResults {
+		// We overwrite the original validation error result with the new staging result
+		results[location] = res
 	}
 
 	// Stage contracts that passed validation
 	newResults = s.stageValidContracts(ctx, contracts, validatorError)
-	for location, err := range newResults {
-		results[location] = stagingResult{
-			err:          err,
-			wasValidated: true,
-		}
+	for location, res := range newResults {
+		results[location] = res
 	}
 
 	return results, nil
 }
 
-func (s *stagingServiceImpl) stageValidContracts(ctx context.Context, contracts []*project.Contract, validatorError *stagingValidatorError) map[common.AddressLocation]error {
-	validContracts := make([]*project.Contract, 0)
-
-	if validatorError == nil || validatorError.errors == nil {
-		validContracts = contracts
-	} else {
+func (s *stagingServiceImpl) stageValidContracts(ctx context.Context, contracts []*project.Contract, validatorError *stagingValidatorError) map[common.AddressLocation]stagingResult {
+	// Filter out contracts that failed validation
+	validContracts := contracts
+	if validatorError != nil && validatorError.errors != nil {
 		for _, contract := range contracts {
 			contractLocation := contractDeploymentLocation(contract)
 			if _, hasError := validatorError.errors[contractLocation]; !hasError {
@@ -184,22 +171,21 @@ func (s *stagingServiceImpl) stageValidContracts(ctx context.Context, contracts 
 	}
 
 	// Stage contracts that passed validation
-	results := make(map[common.AddressLocation]error)
-	for contractLocation, err := range s.stageContracts(ctx, validContracts) {
-		results[contractLocation] = err
+	results := make(map[common.AddressLocation]stagingResult)
+	for contractLocation, res := range s.stageContracts(ctx, validContracts) {
+		res.wasValidated = true
+		results[contractLocation] = res
 	}
 
 	return results
 }
 
-func (s *stagingServiceImpl) maybeStageInvalidContracts(ctx context.Context, contracts []*project.Contract, validatorErr *stagingValidatorError) map[common.AddressLocation]error {
+func (s *stagingServiceImpl) maybeStageInvalidContracts(ctx context.Context, contracts []*project.Contract, validatorErr *stagingValidatorError) map[common.AddressLocation]stagingResult {
 	if validatorErr == nil || validatorErr.errors == nil {
 		return nil
 	}
 
-	// Fill results with all validation errors initially
-	// These will be overwritten if contracts are staged
-	results := make(map[common.AddressLocation]error)
+	results := make(map[common.AddressLocation]stagingResult)
 
 	missingDependencyErrors := validatorErr.MissingDependencyErrors()
 	if len(missingDependencyErrors) == 0 {
@@ -222,13 +208,13 @@ func (s *stagingServiceImpl) maybeStageInvalidContracts(ctx context.Context, con
 		contractLocation := contractDeploymentLocation(contract)
 		if _, hasError := missingDependencyErrors[contractLocation]; hasError {
 			unvalidatedContracts = append(unvalidatedContracts, contract)
-			results[contractLocation] = missingDependencyErrors[contractLocation]
 		}
 	}
 
-	// Stage contracts that have missing dependencies & add errors to results
-	for location, err := range s.stageContracts(ctx, unvalidatedContracts) {
-		results[location] = err
+	// Stage contracts that have missing dependencies & add to results
+	for location, res := range s.stageContracts(ctx, unvalidatedContracts) {
+		res.wasValidated = false
+		results[location] = res
 	}
 
 	return results
@@ -236,33 +222,42 @@ func (s *stagingServiceImpl) maybeStageInvalidContracts(ctx context.Context, con
 
 // Stage contracts for network with an optional filter
 // Returns a map of staged/attempted contracts and errors occuring if any
-func (s *stagingServiceImpl) stageContracts(ctx context.Context, contracts []*project.Contract) map[common.AddressLocation]error {
-	results := make(map[common.AddressLocation]error)
+func (s *stagingServiceImpl) stageContracts(ctx context.Context, contracts []*project.Contract) map[common.AddressLocation]stagingResult {
+	results := make(map[common.AddressLocation]stagingResult)
 	for _, contract := range contracts {
 		targetAccount, err := s.state.Accounts().ByName(contract.AccountName)
 		deployLocation := contractDeploymentLocation(contract)
 
 		if err != nil {
-			results[deployLocation] = fmt.Errorf("failed to get account by contract name: %w", err)
+			results[deployLocation] = stagingResult{
+				err: fmt.Errorf("failed to get account by contract name: %w", err),
+			}
 			continue
 		}
 
 		s.logger.StartProgress(fmt.Sprintf("Staging contract %s for account %s", contract.Name, targetAccount.Name))
 
-		_, err = s.stageContract(
+		txId, err := s.stageContract(
 			ctx,
 			targetAccount,
 			contract.Name,
 			contract.Code(),
 		)
 		if err != nil {
-			results[deployLocation] = fmt.Errorf("failed to stage contract: %w", err)
+			results[deployLocation] = stagingResult{
+				err:  fmt.Errorf("failed to stage contract: %w", err),
+				txId: txId,
+			}
 		} else {
-			results[deployLocation] = nil
+			results[deployLocation] = stagingResult{
+				err:  nil,
+				txId: txId,
+			}
 		}
 
 		s.logger.StopProgress()
 	}
+
 	return results
 }
 

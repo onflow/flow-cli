@@ -26,6 +26,7 @@ import (
 	"github.com/logrusorgru/aurora"
 	"github.com/manifoldco/promptui"
 	"github.com/onflow/cadence/runtime/common"
+	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flowkit/v2"
 	"github.com/onflow/flowkit/v2/output"
 	"github.com/onflow/flowkit/v2/project"
@@ -245,21 +246,30 @@ func (r *stagingResults) String() string {
 	numFailed := 0
 
 	for location, result := range r.Results {
+		var color aurora.Color
+		var prefix string
+
 		if result.err == nil {
 			if result.wasValidated {
-				sb.WriteString(aurora.Green(fmt.Sprintf("✔ %s ", location.String())).String())
-				sb.WriteString("(staged & validated)\n")
+				color = aurora.GreenFg
+				prefix = "✔"
 				numStaged++
 			} else {
-				sb.WriteString(aurora.Yellow(fmt.Sprintf("⚠ %s ", location)).String())
-				sb.WriteString("(staged, but not validated)\n")
+				color = aurora.YellowFg
+				prefix = "⚠"
 				numUnvalidated++
 			}
 		} else {
-			sb.WriteString(aurora.Red(fmt.Sprintf("✘ %s ", location)).String())
-			sb.WriteString("(failed to stage)\n")
+			color = aurora.RedFg
+			prefix = "✘"
 			numFailed++
 		}
+
+		sb.WriteString(aurora.Colorize(fmt.Sprintf("%s %s ", prefix, location.String()), color).String())
+		if result.txId != flow.EmptyID {
+			sb.WriteString(fmt.Sprintf(" (txId: %s)", result.txId))
+		}
+		sb.WriteString("\n")
 	}
 
 	sb.WriteString("\n")
