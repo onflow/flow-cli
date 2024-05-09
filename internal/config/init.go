@@ -99,24 +99,6 @@ func InitializeConfiguration(params InitConfigParameters, readerWriter flowkit.R
 		state.SetEmulatorKey(privateKey)
 	}
 
-	//var path string
-	//if params.TargetDirectory != "" {
-	//	path = fmt.Sprintf("%s/flow.json", params.TargetDirectory)
-	//
-	//	// Create the directory if it doesn't exist
-	//	err := state.ReaderWriter().MkdirAll(params.TargetDirectory, os.ModePerm)
-	//	if err != nil {
-	//		return nil, fmt.Errorf("failed to create target directory: %w", err)
-	//	}
-	//} else {
-	//	// Otherwise, choose between the default and global paths
-	//	if params.Global {
-	//		path = config.GlobalPath()
-	//	} else {
-	//		path = config.DefaultPath
-	//	}
-	//}
-
 	if config.Exists(path) && !params.Reset {
 		return nil, fmt.Errorf(
 			"configuration already exists at: %s, if you want to reset configuration use the reset flag",
@@ -124,62 +106,5 @@ func InitializeConfiguration(params InitConfigParameters, readerWriter flowkit.R
 		)
 	}
 
-	//err = state.Save(path)
-	//if err != nil {
-	//	return nil, err
-	//}
-
 	return state, nil
 }
-
-//
-//func Initialise(
-//	_ []string,
-//	_ command.GlobalFlags,
-//	logger output.Logger,
-//	readerWriter flowkit.ReaderWriter,
-//	_ flowkit.Services,
-//) (command.Result, error) {
-//	params := InitConfigParameters{
-//		ServicePrivateKey:  InitFlag.ServicePrivateKey,
-//		ServiceKeySigAlgo:  InitFlag.ServiceKeySigAlgo,
-//		ServiceKeyHashAlgo: InitFlag.ServiceKeyHashAlgo,
-//		Reset:              InitFlag.Reset,
-//		Global:             InitFlag.Global,
-//	}
-//	state, err := InitializeConfiguration(params, logger, readerWriter)
-//	if err != nil {
-//		return nil, err
-//	}
-//
-//	return &InitResult{State: state}, nil
-//}
-//
-//type InitResult struct {
-//	*flowkit.State
-//}
-//
-//func (r *InitResult) JSON() any {
-//	return r
-//}
-//
-//func (r *InitResult) String() string {
-//	var b bytes.Buffer
-//	writer := util.CreateTabWriter(&b)
-//	account, _ := r.State.EmulatorServiceAccount()
-//
-//	_, _ = fmt.Fprintf(writer, "Configuration initialized\n")
-//	_, _ = fmt.Fprintf(writer, "Service account: %s\n\n", output.Bold("0x"+account.Address.String()))
-//	_, _ = fmt.Fprintf(writer,
-//		"Start emulator by running: %s \nReset configuration using: %s\n",
-//		output.Bold("'flow emulator'"),
-//		output.Bold("'flow init --reset'"),
-//	)
-//
-//	_ = writer.Flush()
-//	return b.String()
-//}
-//
-//func (r *InitResult) Oneliner() string {
-//	return ""
-//}
