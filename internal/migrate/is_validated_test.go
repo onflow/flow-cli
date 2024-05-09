@@ -107,7 +107,9 @@ func Test_IsValidated(t *testing.T) {
 			testContract.Name,
 		)
 
-		require.NoError(t, err)
+		if err != nil {
+			return validationResult{}, err
+		}
 
 		require.Equal(t, true, mockClient.AssertExpectations(t))
 		return validationResult{
