@@ -12,8 +12,9 @@ import (
 
 	"golang.org/x/exp/slices"
 
-	"github.com/google/go-github/github"
 	"github.com/onflow/flow-cli/internal/util"
+
+	"github.com/google/go-github/github"
 	"github.com/onflow/flowkit/v2"
 	"github.com/onflow/flowkit/v2/config"
 	"github.com/onflow/flowkit/v2/output"
