@@ -23,8 +23,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/onflow/flow-cli/internal/util"
-
 	"github.com/onflow/cadence"
 	"github.com/onflow/cadence/runtime"
 	"github.com/onflow/cadence/runtime/ast"
@@ -40,6 +38,8 @@ import (
 	"github.com/onflow/flow-go/cmd/util/ledger/migrations"
 	"github.com/onflow/flow-go/model/flow"
 	"github.com/onflow/flowkit/v2"
+
+	"github.com/onflow/flow-cli/internal/util"
 )
 
 type stagingValidator struct {
@@ -307,7 +307,7 @@ func (v *stagingValidator) loadSystemContracts() {
 		return
 	}
 
-	stagedSystemContracts := migrations.SystemContractChanges(chainId, migrations.SystemContractChangesOptions{
+	stagedSystemContracts := migrations.SystemContractChanges(chainId, migrations.SystemContractsMigrationOptions{
 		Burner: migrations.BurnerContractChangeUpdate, // needs to be update for now since BurnerChangeDeploy is a no-op in flow-go
 		EVM:    migrations.EVMContractChangeFull,
 	})

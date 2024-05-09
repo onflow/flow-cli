@@ -165,3 +165,7 @@ func CheckNetwork(network config.Network) error {
 	}
 	return nil
 }
+
+func NormalizeLineEndings(s string) string {
+	return strings.ReplaceAll(s, "\r\n", "\n")
+}

@@ -12,6 +12,13 @@ on:
       - master
       - 'feature/**'
 
+# We need to set this explicitly to make sure the CI works on Windows
+# Default shell does not terminate on error in GitHub Actions
+# https://github.com/actions/runner-images/issues/6668
+defaults:
+  run:
+    shell: bash
+
 jobs:
   test:
     strategy:
@@ -22,7 +29,7 @@ jobs:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
-      - uses: actions/setup-go@v4
+      - uses: actions/setup-go@v5
         with:
           go-version: "1.20"
       - name: Run tests
@@ -35,17 +42,19 @@ jobs:
         with:
           file: ./coverage.txt
           flags: unittests
+          token: ${{ secrets.CODECOV_TOKEN }}
+        if: matrix.os == 'ubuntu-latest'
 
   lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-go@v4
+      - uses: actions/setup-go@v5
         with:
           go-version: "1.20"
       - name: generate
         run: make generate
-      - uses: golangci/golangci-lint-action@v3.7.0
+      - uses: golangci/golangci-lint-action@v5.1.0
         with:
           version: v1.52.2
           only-new-issues: true
