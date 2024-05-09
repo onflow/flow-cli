@@ -24,6 +24,8 @@ type GitHubRepositoriesService interface {
 	DownloadContents(ctx context.Context, owner string, repo string, filepath string, opt *github.RepositoryContentGetOptions) (io.ReadCloser, error)
 }
 
+const contractUpdateFailureKind = "contract-update-failure"
+
 const (
 	repoOwner = "onflow"
 	repoName  = "cadence"

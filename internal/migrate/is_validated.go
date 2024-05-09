@@ -34,7 +34,6 @@ import (
 )
 
 const moreInformationMessage = "For more information, please find the latest full migration report on GitHub (https://github.com/onflow/cadence/tree/master/migrations_data).\n\nNew reports are generated after each weekly emulated migration and your contract's status may change, so please actively monitor this status and stay tuned for the latest announcements until the migration deadline."
-const contractUpdateFailureKind = "contract-update-failure"
 
 type validationResult struct {
 	Timestamp time.Time

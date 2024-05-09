@@ -117,7 +117,7 @@ func Test_IsValidated(t *testing.T) {
 	}
 
 	t.Run("isValidated gets status from latest report on github", func(t *testing.T) {
-		res, err := testIsValidatedWithStatuses([]contractUpdateStatus{
+		res, err := testIsValidatedWithStatuses([]validator.ContractUpdateStatus{
 			{
 				AccountAddress: "0x01",
 				ContractName:   "some-other-contract",
