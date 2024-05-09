@@ -442,11 +442,11 @@ type GlobalFlags struct {
 	ContractMigrationCheck bool
 }
 
-func checkContractMigrations(state *flowkit.State, logger output.Logger, flow flowkit.Services) error {
+func checkContractMigrations(state *flowkit.State, logger output.Logger, flow flowkit.Services) {
 	// command to validate contracts are still valid for migration
 	// if err := migrate.NewValidator(github.NewClient(nil).Repositories, flow.Network(), state, logger).ValidateContracts(); err != nil {
 	// 	return err
 	// }
 
-	return nil
+	return 
 }
