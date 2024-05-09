@@ -63,7 +63,17 @@ func isValidated(
 	v := validator.NewValidator(repoService, flow.Network(), state, logger)
 
 	contractName := args[0]
-	return v.Validate(contractName)
+	s, ts, err := v.Validate(contractName)
+	if err != nil {
+		return nil, err
+	}
+
+	return validationResult{
+		Status:    s,
+		Timestamp: *ts,
+		Network:   flow.Network().Name,
+	}, nil
+
 }
 
 func (v validationResult) String() string {
