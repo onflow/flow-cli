@@ -20,10 +20,11 @@ package config
 
 import (
 	"fmt"
+	"os"
+
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/onflow/flowkit"
 	"github.com/onflow/flowkit/config"
-	"os"
 )
 
 //type flagsInit struct {

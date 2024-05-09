@@ -21,9 +21,10 @@ package main
 
 import (
 	"fmt"
-	"github.com/onflow/flow-cli/internal/dependencymanager"
 	"os"
 	"strings"
+
+	"github.com/onflow/flow-cli/internal/dependencymanager"
 
 	"github.com/spf13/cobra"
 
