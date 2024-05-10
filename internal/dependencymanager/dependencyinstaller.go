@@ -102,6 +102,26 @@ func (f *dependencyManagerFlagsCollection) AddToCommand(cmd *cobra.Command) {
 	}
 }
 
+type dependencyKey struct {
+	network      string
+	Address      string
+	contractName string
+}
+
+type DependencyStateMap map[dependencyKey]dependencyState
+
+type dependencyState struct {
+	hasAliasRequest      bool
+	hasDeploymentRequest bool
+}
+
+type requestType string
+
+const (
+	AliasRequest      requestType = "Alias"
+	DeploymentRequest requestType = "Deployment"
+)
+
 type DependencyInstaller struct {
 	Gateways        map[string]gateway.Gateway
 	Logger          output.Logger
@@ -109,6 +129,7 @@ type DependencyInstaller struct {
 	SkipDeployments bool
 	SkipAlias       bool
 	logs            categorizedLogs
+	stateMap        DependencyStateMap
 }
 
 // NewDependencyInstaller creates a new instance of DependencyInstaller
@@ -140,6 +161,7 @@ func NewDependencyInstaller(logger output.Logger, state *flowkit.State, flags de
 		State:           state,
 		SkipDeployments: flags.skipDeployments,
 		SkipAlias:       flags.skipAlias,
+		stateMap:        make(DependencyStateMap),
 	}, nil
 }
 
@@ -366,9 +388,16 @@ func (di *DependencyInstaller) handleFoundContract(networkName, contractAddr, as
 		return err
 	}
 
+	dependencyKey := dependencyKey{
+		network:      networkName,
+		Address:      contractAddr,
+		contractName: contractName,
+	}
+
 	// If the contract is not a core contract and the user does not want to skip deployments, then prompt for a deployment
-	if !di.SkipDeployments && !isCoreContract(contractName) {
-		err = di.updateDependencyDeployment(contractName)
+	// Also, don't ask for deployments on networks besides emulator
+	if !di.SkipDeployments && !isCoreContract(contractName) && !di.hasRequest(dependencyKey, DeploymentRequest) && networkName == config.EmulatorNetwork.Name {
+		err = di.updateDependencyDeployment(contractName, dependencyKey)
 		if err != nil {
 			di.Logger.Error(fmt.Sprintf("Error updating deployment: %v", err))
 			return err
@@ -379,8 +408,9 @@ func (di *DependencyInstaller) handleFoundContract(networkName, contractAddr, as
 	}
 
 	// If the contract is not a core contract and the user does not want to skip aliasing, then prompt for an alias
-	if !di.SkipAlias && !isCoreContract(contractName) {
-		err = di.updateDependencyAlias(contractName, networkName)
+	if !di.SkipAlias && !isCoreContract(contractName) && !di.hasRequest(dependencyKey, AliasRequest) {
+		err = di.updateDependencyAlias(contractName, networkName, dependencyKey)
+
 		if err != nil {
 			di.Logger.Error(fmt.Sprintf("Error updating alias: %v", err))
 			return err
@@ -393,30 +423,7 @@ func (di *DependencyInstaller) handleFoundContract(networkName, contractAddr, as
 	return nil
 }
 
-func (di *DependencyInstaller) updateDependencyDeployment(contractName string) error {
-	// Add to deployments
-	// If a deployment already exists for that account, contract, and network, then ignore
-	raw := util.AddContractToDeploymentPrompt("emulator", *di.State.Accounts(), contractName)
-
-	if raw != nil {
-		deployment := di.State.Deployments().ByAccountAndNetwork(raw.Account, raw.Network)
-		if deployment == nil {
-			di.State.Deployments().AddOrUpdate(config.Deployment{
-				Network: raw.Network,
-				Account: raw.Account,
-			})
-			deployment = di.State.Deployments().ByAccountAndNetwork(raw.Account, raw.Network)
-		}
-
-		for _, c := range raw.Contracts {
-			deployment.AddContract(config.ContractDeployment{Name: c})
-		}
-	}
-
-	return nil
-}
-
-func (di *DependencyInstaller) updateDependencyAlias(contractName, aliasNetwork string) error {
+func (di *DependencyInstaller) updateDependencyAlias(contractName, aliasNetwork string, key dependencyKey) error {
 	var missingNetwork string
 
 	if aliasNetwork == config.TestnetNetwork.Name {
@@ -437,7 +444,66 @@ func (di *DependencyInstaller) updateDependencyAlias(contractName, aliasNetwork 
 		contract.Aliases.Add(missingNetwork, flowsdk.HexToAddress(raw))
 	}
 
+	// Set it has already been checked
+	di.updateRequestMap(key, true, AliasRequest)
+
 	return nil
+}
+
+func (di *DependencyInstaller) updateDependencyDeployment(contractName string, key dependencyKey) error {
+	// Add to deployments
+	// If a deployment already exists for that account, contract, and network, then ignore
+	raw := util.AddContractToDeploymentPrompt("emulator", *di.State.Accounts(), contractName)
+
+	if raw != nil {
+		deployment := di.State.Deployments().ByAccountAndNetwork(raw.Account, raw.Network)
+		if deployment == nil {
+			di.State.Deployments().AddOrUpdate(config.Deployment{
+				Network: raw.Network,
+				Account: raw.Account,
+			})
+			deployment = di.State.Deployments().ByAccountAndNetwork(raw.Account, raw.Network)
+		}
+
+		for _, c := range raw.Contracts {
+			deployment.AddContract(config.ContractDeployment{Name: c})
+		}
+
+		// Set it has already been checked
+		di.updateRequestMap(key, true, DeploymentRequest)
+	}
+
+	return nil
+}
+
+func (di *DependencyInstaller) updateRequestMap(key dependencyKey, status bool, reqType requestType) {
+	state, exists := di.stateMap[key]
+	if !exists {
+		state = dependencyState{}
+	}
+
+	switch reqType {
+	case AliasRequest:
+		state.hasAliasRequest = status
+	case DeploymentRequest:
+		state.hasDeploymentRequest = status
+	}
+	di.stateMap[key] = state
+}
+
+func (di *DependencyInstaller) hasRequest(key dependencyKey, reqType requestType) bool {
+	state, exists := di.stateMap[key]
+	if !exists {
+		return false
+	}
+
+	switch reqType {
+	case AliasRequest:
+		return state.hasAliasRequest
+	case DeploymentRequest:
+		return state.hasDeploymentRequest
+	}
+	return false
 }
 
 func (di *DependencyInstaller) updateDependencyState(networkName, contractAddress, assignedName, contractName, contractHash string) error {
