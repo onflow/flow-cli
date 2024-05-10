@@ -468,11 +468,13 @@ func Test_StagingValidator(t *testing.T) {
 		require.Equal(t, 2, len(validatorErr.Unwrap()))
 
 		// check that error exists & ensure that the local contract names are used (not the deploy locations)
-		require.ErrorContains(t, validatorErr.Unwrap()[0], "mismatched types")
-		require.ErrorContains(t, validatorErr.Unwrap()[0], "Foo.cdc")
-		require.ErrorContains(t, validatorErr.Unwrap()[1], "mismatched types")
-		require.ErrorContains(t, validatorErr.Unwrap()[1], "Foo.cdc")
-		require.ErrorContains(t, validatorErr.Unwrap()[1], "Bar.cdc")
+		e0 := validatorErr.Unwrap()[0].Error()
+		e1 := validatorErr.Unwrap()[1].Error()
+		require.Contains(t, e0, "mismatched types")
+		require.Contains(t, e0, "Foo.cdc")
+		require.Contains(t, e1, "mismatched types")
+		require.Contains(t, e1, "Foo.cdc")
+		require.Contains(t, e1, "Bar.cdc")
 	})
 
 	t.Run("cached downstream missing dependency errors", func(t *testing.T) {
