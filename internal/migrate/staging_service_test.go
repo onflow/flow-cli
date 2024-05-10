@@ -76,7 +76,7 @@ func addAccountsToState(
 		contractDeployments := make([]config.ContractDeployment, 0)
 		for _, deployment := range account.deployments {
 			fname := account.address + "/" + deployment.name + ".cdc"
-			state.ReaderWriter().WriteFile(fname, []byte(deployment.code), 0644)
+			require.NoError(t, state.ReaderWriter().WriteFile(fname, []byte(deployment.code), 0644))
 
 			state.Contracts().AddOrUpdate(
 				config.Contract{
@@ -423,3 +423,5 @@ func Test_StagingService(t *testing.T) {
 		require.Equal(t, results[simpleAddressLocation("0x01.Bar")].wasValidated, true)
 	})
 }
+
+// TODO: Add test for when the contract name mismatches

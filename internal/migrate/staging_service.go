@@ -112,7 +112,13 @@ func (s *stagingServiceImpl) validateAndStageContracts(ctx context.Context, cont
 	// Collect all staged contracts
 	stagedContracts := make([]StagedContract, 0)
 	for _, contract := range contracts {
-		deployLocation := common.NewAddressLocation(nil, common.Address(contract.AccountAddress), contract.Name)
+		// We need the real name of the contract, not the name in flow.json
+		name, err := getCadenceContractName(contract)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get contract name: %w", err)
+		}
+
+		deployLocation := common.NewAddressLocation(nil, common.Address(contract.AccountAddress), name)
 		sourceLocation := common.StringLocation(contract.Location())
 
 		stagedContracts = append(stagedContracts, StagedContract{
@@ -222,11 +228,18 @@ func (s *stagingServiceImpl) maybeStageInvalidContracts(ctx context.Context, con
 	return results
 }
 
-// Stage contracts for network with an optional filter
-// Returns a map of staged/attempted contracts and errors occuring if any
 func (s *stagingServiceImpl) stageContracts(ctx context.Context, contracts []*project.Contract) map[common.AddressLocation]stagingResult {
 	results := make(map[common.AddressLocation]stagingResult)
 	for _, contract := range contracts {
+		// We need the real name of the contract, not the name in flow.json
+		name, err := getCadenceContractName(contract)
+		if err != nil {
+			results[contractDeploymentLocation(contract)] = stagingResult{
+				err: err,
+			}
+			continue
+		}
+
 		targetAccount, err := s.state.Accounts().ByName(contract.AccountName)
 		deployLocation := contractDeploymentLocation(contract)
 
@@ -237,12 +250,12 @@ func (s *stagingServiceImpl) stageContracts(ctx context.Context, contracts []*pr
 			continue
 		}
 
-		s.logger.StartProgress(fmt.Sprintf("Staging contract %s for account %s", contract.Name, targetAccount.Name))
+		s.logger.StartProgress(fmt.Sprintf("Staging contract %s for account %s", name, targetAccount.Name))
 
 		txId, err := s.stageContract(
 			ctx,
 			targetAccount,
-			contract.Name,
+			name,
 			contract.Code(),
 		)
 		if err != nil {
@@ -290,4 +303,23 @@ func (v *stagingServiceImpl) PrettyPrintValidationError(err error, location comm
 // helper function to create a common.AddressLocation for a deployment contract
 func contractDeploymentLocation(contract *project.Contract) common.AddressLocation {
 	return common.NewAddressLocation(nil, common.Address(contract.AccountAddress), contract.Name)
+}
+
+func getCadenceContractName(contract *project.Contract) (string, error) {
+	script := flowkit.Script{
+		Code:     contract.Code(),
+		Location: contract.Location(),
+		Args:     contract.Args,
+	}
+	program, err := project.NewProgram(script.Code, script.Args, script.Location)
+	if err != nil {
+		return "", fmt.Errorf("failed to parse contract %s: %w", contract.Name, err)
+	}
+
+	name, err := program.Name()
+	if err != nil {
+		return "", fmt.Errorf("failed to get contract name: %w", err)
+	}
+
+	return name, nil
 }
