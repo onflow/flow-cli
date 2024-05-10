@@ -404,7 +404,7 @@ func (di *DependencyInstaller) handleFoundContract(networkName, contractAddr, as
 
 	// If the contract is not a core contract and the user does not want to skip deployments, then prompt for a deployment
 	// Also, don't ask for deployments on networks besides emulator
-	if !di.SkipDeployments && !isCoreContract(contractName) && !di.hasRequest(depKey, DeploymentRequest) && networkName == config.EmulatorNetwork.Name {
+	if !di.SkipDeployments && !isCoreContract(contractName) && !di.hasRequest(depKey, DeploymentRequest) {
 		err = di.updateDependencyDeployment(contractName, depKey)
 		if err != nil {
 			di.Logger.Error(fmt.Sprintf("Error updating deployment: %v", err))
