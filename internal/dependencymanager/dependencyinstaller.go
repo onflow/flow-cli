@@ -405,7 +405,7 @@ func (di *DependencyInstaller) handleFoundContract(networkName, contractAddr, as
 	// If the contract is not a core contract and the user does not want to skip deployments, then prompt for a deployment
 	// Also, don't ask for deployments on networks besides emulator
 	if !di.SkipDeployments && !isCoreContract(contractName) && !di.hasRequest(depKey, DeploymentRequest) {
-		err = di.updateDependencyDeployment(contractName, depKey)
+		err = di.updateDependencyDeployment(depKey)
 		if err != nil {
 			di.Logger.Error(fmt.Sprintf("Error updating deployment: %v", err))
 			return err
@@ -417,7 +417,7 @@ func (di *DependencyInstaller) handleFoundContract(networkName, contractAddr, as
 
 	// If the contract is not a core contract and the user does not want to skip aliasing, then prompt for an alias
 	if !di.SkipAlias && !isCoreContract(contractName) && !di.hasRequest(depKey, AliasRequest) {
-		err = di.updateDependencyAlias(contractName, networkName, depKey)
+		err = di.updateDependencyAlias(networkName, depKey)
 
 		if err != nil {
 			di.Logger.Error(fmt.Sprintf("Error updating alias: %v", err))
@@ -431,7 +431,7 @@ func (di *DependencyInstaller) handleFoundContract(networkName, contractAddr, as
 	return nil
 }
 
-func (di *DependencyInstaller) updateDependencyAlias(contractName, aliasNetwork string, key dependencyKey) error {
+func (di *DependencyInstaller) updateDependencyAlias(aliasNetwork string, key dependencyKey) error {
 	var missingNetwork string
 
 	if aliasNetwork == config.TestnetNetwork.Name {
@@ -440,11 +440,11 @@ func (di *DependencyInstaller) updateDependencyAlias(contractName, aliasNetwork 
 		missingNetwork = config.TestnetNetwork.Name
 	}
 
-	label := fmt.Sprintf("Enter an alias address for %s on %s if you have one, otherwise leave blank", contractName, missingNetwork)
+	label := fmt.Sprintf("Enter an alias address for %s on %s if you have one, otherwise leave blank", key.contractName, missingNetwork)
 	raw := util.AddressPromptOrEmpty(label, "Invalid alias address")
 
 	if raw != "" {
-		contract, err := di.State.Contracts().ByName(contractName)
+		contract, err := di.State.Contracts().ByName(key.contractName)
 		if err != nil {
 			return err
 		}
@@ -458,10 +458,10 @@ func (di *DependencyInstaller) updateDependencyAlias(contractName, aliasNetwork 
 	return nil
 }
 
-func (di *DependencyInstaller) updateDependencyDeployment(contractName string, key dependencyKey) error {
+func (di *DependencyInstaller) updateDependencyDeployment(key dependencyKey) error {
 	// Add to deployments
 	// If a deployment already exists for that account, contract, and network, then ignore
-	raw := util.AddContractToDeploymentPrompt("emulator", *di.State.Accounts(), contractName)
+	raw := util.AddContractToDeploymentPrompt("emulator", *di.State.Accounts(), key.contractName)
 
 	if raw != nil {
 		deployment := di.State.Deployments().ByAccountAndNetwork(raw.Account, raw.Network)
