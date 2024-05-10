@@ -406,7 +406,7 @@ func Test_StagingService(t *testing.T) {
 				},
 				{
 					DeployLocation: simpleAddressLocation("0x01.Bar"),
-					SourceLocation: common.StringLocation("0x01/Bar.cdc"),
+					SourceLocation: common.StringLocation(filepath.FromSlash("0x01/Bar.cdc")),
 					Code:           []byte("access(all) contract Bar {}"),
 				},
 			})
