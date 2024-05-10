@@ -81,6 +81,37 @@ func (m missingContractError) Error() string {
 	return builder.String()
 }
 
+type brokenContractError struct {
+	BrokenContracts []struct {
+		ContractName string
+		Address      string
+		Network      string
+		Error        string
+	}
+	LastMigrationTime *time.Time
+}
+
+func (m brokenContractError) Error() string {
+	builder := strings.Builder{}
+	builder.WriteString("some  of thse contracts seem to have failed the last emulated migration (last migration report was at ")
+	builder.WriteString(m.LastMigrationTime.Format(time.RFC3339))
+	builder.WriteString(")\n\n")
+
+	for _, contract := range m.BrokenContracts {
+		builder.WriteString(" - Account: ")
+		builder.WriteString(contract.Address)
+		builder.WriteString("\n - Contract: ")
+		builder.WriteString(contract.ContractName)
+		builder.WriteString("\n - Network: ")
+		builder.WriteString(contract.Network)
+		builder.WriteString("\n - Error: ")
+		builder.WriteString(contract.Error)
+		builder.WriteString("\n\n")
+	}
+
+	return builder.String()
+}
+
 type validator struct {
 	repoService GitHubRepositoriesService
 	state       *flowkit.State
