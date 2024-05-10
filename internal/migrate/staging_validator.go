@@ -43,6 +43,8 @@ import (
 	"github.com/onflow/flow-cli/internal/util"
 )
 
+// TODO: test same contract -> multiple accounts
+
 //go:generate mockery --name stagingValidator --inpackage --testonly --case underscore
 type stagingValidator interface {
 	Validate(stagedContracts []stagedContractUpdate) error
@@ -58,12 +60,16 @@ type stagingValidatorImpl struct {
 	accountContractNames map[common.Address][]string
 	// All resolved contract code
 	contracts map[common.Location][]byte
-	// Record errors related to missing staged dependencies, as these are reported separately
-	// dependent -> missing dependencies
-	missingDependencies map[common.Location][]common.AddressLocation
+
+	// Dependency graph for staged contracts
+	// This root level map holds all nodes
+	graph map[common.Location]node
+
 	// Cache for contract checkers which are reused during program checking & used for the update checker
 	checkingCache map[common.Location]*cachedCheckingResult
 }
+
+type node map[common.Location]node
 
 type cachedCheckingResult struct {
 	checker *sema.Checker
@@ -72,7 +78,7 @@ type cachedCheckingResult struct {
 
 type stagedContractUpdate struct {
 	DeployLocation common.AddressLocation
-	SourceLocation common.Location
+	SourceLocation common.StringLocation
 	Code           []byte
 }
 
@@ -95,6 +101,16 @@ func (e *missingDependenciesError) Error() string {
 }
 
 var _ error = &missingDependenciesError{}
+
+type upstreamValidationError struct {
+	Location common.Location
+}
+
+func (e *upstreamValidationError) Error() string {
+	return fmt.Sprintf("upstream dependency %s failed validation", e.Location)
+}
+
+var _ error = &upstreamValidationError{}
 
 type stagingValidatorError struct {
 	errors map[common.AddressLocation]error
@@ -149,9 +165,9 @@ func newStagingValidator(flow flowkit.Services) *stagingValidatorImpl {
 	return &stagingValidatorImpl{
 		flow:                 flow,
 		contracts:            make(map[common.Location][]byte),
-		missingDependencies:  make(map[common.Location][]common.AddressLocation),
 		checkingCache:        make(map[common.Location]*cachedCheckingResult),
 		accountContractNames: make(map[common.Address][]string),
+		graph:                make(map[common.Location]node),
 	}
 }
 
@@ -168,67 +184,84 @@ func (v *stagingValidatorImpl) Validate(stagedContracts []stagedContractUpdate) 
 	v.loadSystemContracts()
 
 	// Parse and check all staged contracts
-	errors := v.parseAndCheckAllStaged()
+	errs := v.parseAndCheckAllStaged()
 
-	for location := range v.stagedContracts {
+	// Validate all contract updates
+	for _, contract := range v.stagedContracts {
 		// Don't validate contracts with existing errors
-		if errors[location] != nil {
+		if errs[contract.DeployLocation] != nil {
 			continue
 		}
 
 		// Validate the contract update
-		err := v.validateContractUpdate(location)
+		checker := v.checkingCache[contract.SourceLocation].checker
+		err := v.validateContractUpdate(contract, checker)
 		if err != nil {
-			errors[location] = err
+			errs[contract.DeployLocation] = err
 		}
+	}
+
+	// Check for any upstream contract update failures
+	for _, contract := range v.stagedContracts {
+		// We leave out contracts with missing dependencies
+		// errors becuase they are handled separately
+		var missingDependenciesErr *missingDependenciesError
+		err := errs[contract.DeployLocation]
+		if err == nil || errors.As(err, &missingDependenciesErr) {
+			continue
+		}
+
+		v.forEachDependency(contract, func(dependency common.Location) {
+			if errs[dependency] != nil {
+				errs[contract.DeployLocation] = &upstreamValidationError{Location: dependency}
+			}
+		})
 	}
 
 	// Return a validator error if there are any errors
 	if len(errors) > 0 {
-		return &stagingValidatorError{errors: errors}
+		return &stagingValidatorError{errors: errs}
 	}
 	return nil
 }
 
-func (v *stagingValidatorImpl) parseAndCheckAllStaged() map[common.AddressLocation]error {
-	errors := make(map[common.AddressLocation]error)
-	for location := range v.stagedContracts {
-		_, err := v.checkContract(location)
-
-		// First, check if the contract has missing dependencies
-		// This error case takes precedence over any other errors
-		// Since it is a prerequisite for the contract to be checked
-		// and any other errors are misleading
-		if len(v.missingDependencies[location]) > 0 {
-			errors[location] = &missingDependenciesError{MissingContracts: v.missingDependencies[location]}
-			continue
-		}
-
-		// Otherwise, check if there was an error checking the contract
+func (v *stagingValidatorImpl) parseAndCheckAllStaged() map[common.StringLocation]error {
+	errors := make(map[common.StringLocation]error)
+	for _, contract := range v.stagedContracts {
+		_, err := v.checkContract(contract.SourceLocation)
 		if err != nil {
-			errors[location] = err
-			continue
+			errors[contract.SourceLocation] = err
+		}
+	}
+
+	// Report any missing dependency errors separately
+	// These will override any other errors parsing/checking errors
+	// Note: nodes are not visited more than once so cyclic imports are not an issue
+	// They will be reported, however, by the checker, if they do exist
+	for _, contract := range v.stagedContracts {
+		// TODO: add test case for cyclic imports
+		// Create a set of all dependencies
+		missingDependencies := make([]common.AddressLocation, 0)
+
+		if len(missingDependencies) > 0 {
+			errors[contract.DeployLocation] = &missingDependenciesError{
+				MissingContracts: missingDependencies,
+			}
 		}
 	}
 	return errors
 }
 
-func (v *stagingValidatorImpl) validateContractUpdate(location common.AddressLocation) error {
-	// Get the staged update
-	contract, ok := v.stagedContracts[location]
-	if !ok {
-		return fmt.Errorf("staged contract not found for location: %s", location)
-	}
-
+func (v *stagingValidatorImpl) validateContractUpdate(contract stagedContractUpdate, checker *sema.Checker) error {
 	// Get the account for the contract
-	address := flowsdk.Address(location.Address)
+	address := flowsdk.Address(contract.DeployLocation.Address)
 	account, err := v.flow.GetAccount(context.Background(), address)
 	if err != nil {
 		return fmt.Errorf("failed to get account: %w", err)
 	}
 
 	// Get the target contract old code
-	contractName := location.Name
+	contractName := contract.DeployLocation.Name
 	contractCode, ok := account.Contracts[contractName]
 	if !ok {
 		return fmt.Errorf("old contract code not found for contract: %s", contractName)
@@ -241,7 +274,7 @@ func (v *stagingValidatorImpl) validateContractUpdate(location common.AddressLoc
 	}
 
 	// Convert the new program checker to an interpreter program
-	interpreterProgram := interpreter.ProgramFromChecker(v.checkingCache[location].checker)
+	interpreterProgram := interpreter.ProgramFromChecker(checker)
 
 	// Check if contract code is valid according to Cadence V1 Update Checker
 	validator := stdlib.NewCadenceV042ToV1ContractUpdateValidator(
@@ -272,53 +305,36 @@ func (v *stagingValidatorImpl) validateContractUpdate(location common.AddressLoc
 
 // Check a contract by location
 func (v *stagingValidatorImpl) checkContract(
-	importedLocation common.AddressLocation,
-	stack ...common.Location,
+	importedLocation common.Location,
 ) (*sema.Checker, error) {
 	// Try to load cached checker
 	if cacheItem, ok := v.checkingCache[importedLocation]; ok {
-		// Inherit missing dependencies from the imported contract
-		// This is important because these missing upstream dependencies will not be encountered
-		// when checking this dependency tree, as this intermediate checker is cached
-		for _, dependent := range stack {
-			v.missingDependencies[dependent] = append(v.missingDependencies[dependent], v.missingDependencies[importedLocation]...)
-		}
 		return cacheItem.checker, cacheItem.err
 	}
 
 	// Check the contract code
 	checker, err := (func() (*sema.Checker, error) {
 		// Resolve the contract code and real location based on whether this is a staged update
-		var location common.Location
 		var code []byte
+		var err error
 
-		stagedContract, ok := v.stagedContracts[importedLocation]
-		if ok {
-			location = stagedContract.SourceLocation
-			code = stagedContract.Code
-		} else {
-			var err error
-
-			location = importedLocation
-			code, err = v.getStagedContractCode(importedLocation)
+		// If it's an address location, get the staged contract code from the netwrok
+		if addressLocation, ok := importedLocation.(common.AddressLocation); ok {
+			code, err = v.getStagedContractCode(addressLocation)
 			if err != nil {
 				return nil, fmt.Errorf("failed to get staged contract code: %w", err)
 			}
-
-			// Handle the case where the contract has not been staged yet
-			// This missing dependency will be tracked for all dependents
+		} else {
+			// Otherwise, the code is already known
+			code = v.contracts[importedLocation]
 			if code == nil {
-				for _, dependent := range stack {
-					v.missingDependencies[dependent] = append(v.missingDependencies[dependent], importedLocation)
-				}
-				err := fmt.Errorf("the following contract has not been staged: %s", importedLocation)
-				return nil, err
+				return nil, fmt.Errorf("contract code not found for location: %s", importedLocation)
 			}
 		}
 
 		// Parse the contract code
 		var program *ast.Program
-		program, err := parser.ParseProgram(nil, code, parser.Config{})
+		program, err = parser.ParseProgram(nil, code, parser.Config{})
 		if err != nil {
 			return nil, err
 		}
@@ -326,7 +342,7 @@ func (v *stagingValidatorImpl) checkContract(
 		// Check the contract code
 		checker, err := sema.NewChecker(
 			program,
-			location,
+			importedLocation,
 			nil,
 			&sema.Config{
 				AccessCheckMode:    sema.AccessCheckModeStrict,
@@ -336,7 +352,7 @@ func (v *stagingValidatorImpl) checkContract(
 					return util.NewStandardLibrary().BaseValueActivation
 				},
 				LocationHandler:            v.resolveLocation,
-				ImportHandler:              v.resolveImport(append(stack, importedLocation)),
+				ImportHandler:              v.resolveImport,
 				MemberAccountAccessHandler: v.resolveAccountAccess,
 			},
 		)
@@ -392,8 +408,7 @@ func (v *stagingValidatorImpl) getStagedContractCode(
 	// If the contract code is nil, the contract has not been staged yet
 	// Return nil to indicate this
 	if optValue.Value == nil {
-		v.contracts[location] = nil
-		return nil, nil
+		return nil, fmt.Errorf("the following contract has not been staged: %s", location)
 	}
 
 	strValue, ok := optValue.Value.(cadence.String)
@@ -405,36 +420,32 @@ func (v *stagingValidatorImpl) getStagedContractCode(
 	return v.contracts[location], nil
 }
 
-func (v *stagingValidatorImpl) resolveImport(stack []common.Location) func(*sema.Checker, common.Location, ast.Range) (sema.Import, error) {
-	return func(_ *sema.Checker, importedLocation common.Location, _ ast.Range) (sema.Import, error) {
-		// Check if the imported location is the crypto checker
-		if importedLocation == stdlib.CryptoCheckerLocation {
-			cryptoChecker := stdlib.CryptoChecker()
-			return sema.ElaborationImport{
-				Elaboration: cryptoChecker.Elaboration,
-			}, nil
-		}
+func (v *stagingValidatorImpl) resolveImport(parentChecker *sema.Checker, importedLocation common.Location, _ ast.Range) (sema.Import, error) {
+	// Add this to the dependency graph
+	if parentChecker != nil {
+		v.addDependency(parentChecker.Location, importedLocation)
+	}
 
-		// Check if the imported location is an address location
-		// No other location types are supported (as is the case with code on-chain)
-		addrLocation, ok := importedLocation.(common.AddressLocation)
-		if !ok {
-			return nil, fmt.Errorf("expected address location")
-		}
-
-		// Check if this contract has already been resolved
-		subChecker, err := v.checkContract(addrLocation, stack...)
-		if err != nil {
-			return nil, err
-		}
-
+	// Check if the imported location is the crypto checker
+	if importedLocation == stdlib.CryptoCheckerLocation {
+		cryptoChecker := stdlib.CryptoChecker()
 		return sema.ElaborationImport{
-			Elaboration: subChecker.Elaboration,
+			Elaboration: cryptoChecker.Elaboration,
 		}, nil
 	}
+
+	// Check if this contract has already been resolved
+	subChecker, err := v.checkContract(importedLocation)
+	if err != nil {
+		return nil, err
+	}
+
+	return sema.ElaborationImport{
+		Elaboration: subChecker.Elaboration,
+	}, nil
 }
 
-// This is a copy of the resolveLocation function from the linter/language server
+// This mostly is a copy of the resolveLocation function from the linter/language server
 func (v *stagingValidatorImpl) resolveLocation(
 	identifiers []ast.Identifier,
 	location common.Location,
@@ -490,11 +501,22 @@ func (v *stagingValidatorImpl) resolveLocation(
 	resolvedLocations := make([]runtime.ResolvedLocation, len(identifiers))
 	for i := range resolvedLocations {
 		identifier := identifiers[i]
+
+		var resolvedLocation common.Location
+		resovledAddrLocation := common.AddressLocation{
+			Address: addressLocation.Address,
+			Name:    identifier.Identifier,
+		}
+
+		// If the contract one of our staged contract updates, use the source location
+		if stagedUpdate, ok := v.stagedContracts[resovledAddrLocation]; ok {
+			resolvedLocation = stagedUpdate.SourceLocation
+		} else {
+			resolvedLocation = resovledAddrLocation
+		}
+
 		resolvedLocations[i] = runtime.ResolvedLocation{
-			Location: common.AddressLocation{
-				Address: addressLocation.Address,
-				Name:    identifier.Identifier,
-			},
+			Location:    resolvedLocation,
 			Identifiers: []runtime.Identifier{identifier},
 		}
 	}
@@ -506,6 +528,7 @@ func (v *stagingValidatorImpl) resolveAccountAccess(checker *sema.Checker, membe
 	if checker == nil {
 		return false
 	}
+	// TODO: FIX ME
 
 	checkerLocation, ok := checker.Location.(common.StringLocation)
 	if !ok {
@@ -601,6 +624,40 @@ func (v *stagingValidatorImpl) elaborations() map[common.Location]*sema.Elaborat
 		elaborations[location] = checker.Elaboration
 	}
 	return elaborations
+}
+
+func (v *stagingValidatorImpl) addDependency(dependent common.Location, dependency common.Location) {
+	// Create the dependent node if it does not exist
+	if _, ok := v.graph[dependent]; !ok {
+		v.graph[dependent] = make(node)
+	}
+
+	// Create the dependency node if it does not exist
+	if _, ok := v.graph[dependency]; !ok {
+		v.graph[dependency] = make(node)
+	}
+
+	// Add the dependency
+	v.graph[dependent][dependency] = v.graph[dependency]
+}
+
+func (v *stagingValidatorImpl) forEachDependency(
+	contract stagedContractUpdate,
+	visitor func(dependency common.Location),
+) {
+	seen := make(map[common.Location]bool)
+	var traverse func(location common.Location)
+	traverse = func(location common.Location) {
+		seen[location] = true
+
+		for dep := range v.graph[location] {
+			if !seen[dep] {
+				visitor(dep)
+				traverse(dep)
+			}
+		}
+	}
+	traverse(contract.SourceLocation)
 }
 
 // Helper for pretty printing errors

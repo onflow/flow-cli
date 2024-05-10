@@ -377,6 +377,7 @@ func Test_StagingValidator(t *testing.T) {
 			{
 				address: flow.HexToAddress("02"),
 				contracts: map[string][]byte{"Bar": []byte(`
+				import Foo from 0x01
 				pub contract Bar {
 					pub fun test() {}
 					init() {
