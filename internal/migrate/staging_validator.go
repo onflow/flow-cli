@@ -125,14 +125,6 @@ func (e *stagingValidatorError) Error() string {
 	return sb.String()
 }
 
-func (e *stagingValidatorError) Unwrap() []error {
-	var errs []error
-	for _, err := range e.errors {
-		errs = append(errs, err)
-	}
-	return errs
-}
-
 // MissingDependencies returns the contracts dependended on by the staged contracts that are missing
 func (e *stagingValidatorError) MissingDependencies() []common.AddressLocation {
 	missingDependencies := make([]common.AddressLocation, 0)
@@ -347,7 +339,7 @@ func (v *stagingValidatorImpl) checkContract(
 		var code []byte
 		var err error
 
-		// If it's an address location, get the staged contract code from the netwrok
+		// If it's an address location, get the staged contract code from the network
 		if addressLocation, ok := importedLocation.(common.AddressLocation); ok {
 			code, err = v.getStagedContractCode(addressLocation)
 			if err != nil {

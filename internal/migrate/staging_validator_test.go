@@ -132,7 +132,7 @@ func simpleAddressLocation(location string) common.AddressLocation {
 
 func Test_StagingValidator(t *testing.T) {
 	t.Run("valid contract update with no dependencies", func(t *testing.T) {
-		location := common.NewAddressLocation(nil, common.Address{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01}, "Test")
+		location := simpleAddressLocation("0x01.Test")
 		sourceCodeLocation := common.StringLocation("./Test.cdc")
 		oldContract := `
 		pub contract Test {
@@ -158,7 +158,7 @@ func Test_StagingValidator(t *testing.T) {
 	})
 
 	t.Run("contract update with update error", func(t *testing.T) {
-		location := common.NewAddressLocation(nil, common.Address{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01}, "Test")
+		location := simpleAddressLocation("0x01.Test")
 		sourceCodeLocation := common.StringLocation("./Test.cdc")
 		oldContract := `
 		pub contract Test {
@@ -185,12 +185,16 @@ func Test_StagingValidator(t *testing.T) {
 
 		validator := newStagingValidator(srv)
 		err := validator.Validate([]stagedContractUpdate{{location, sourceCodeLocation, []byte(newContract)}})
+
+		var validatorErr *stagingValidatorError
+		require.ErrorAs(t, err, &validatorErr)
+
 		var updateErr *stdlib.ContractUpdateError
-		require.ErrorAs(t, err, &updateErr)
+		require.ErrorAs(t, validatorErr.errors[simpleAddressLocation("0x01.Test")], &updateErr)
 	})
 
 	t.Run("contract update with checker error", func(t *testing.T) {
-		location := common.NewAddressLocation(nil, common.Address{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01}, "Test")
+		location := simpleAddressLocation("0x01.Test")
 		sourceCodeLocation := common.StringLocation("./Test.cdc")
 		oldContract := `
 		pub contract Test {
@@ -218,12 +222,16 @@ func Test_StagingValidator(t *testing.T) {
 
 		validator := newStagingValidator(srv)
 		err := validator.Validate([]stagedContractUpdate{{location, sourceCodeLocation, []byte(newContract)}})
+
+		var validatorErr *stagingValidatorError
+		require.ErrorAs(t, err, &validatorErr)
+
 		var checkerErr *sema.CheckerError
-		require.ErrorAs(t, err, &checkerErr)
+		require.ErrorAs(t, validatorErr.errors[simpleAddressLocation("0x01.Test")], &checkerErr)
 	})
 
 	t.Run("valid contract update with dependencies", func(t *testing.T) {
-		location := common.NewAddressLocation(nil, common.Address{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01}, "Test")
+		location := simpleAddressLocation("0x01.Test")
 		sourceCodeLocation := common.StringLocation("./Test.cdc")
 		oldContract := `
 		pub contract Test {
@@ -261,8 +269,8 @@ func Test_StagingValidator(t *testing.T) {
 	})
 
 	t.Run("contract update missing dependency", func(t *testing.T) {
-		location := common.NewAddressLocation(nil, common.Address{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01}, "Test")
-		impLocation := common.NewAddressLocation(nil, common.Address{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02}, "ImpContract")
+		location := simpleAddressLocation("0x01.Test")
+		impLocation := simpleAddressLocation("0x02.ImpContract")
 		sourceCodeLocation := common.StringLocation("./Test.cdc")
 		oldContract := `
 		pub contract Test {
@@ -291,16 +299,16 @@ func Test_StagingValidator(t *testing.T) {
 
 		var validatorErr *stagingValidatorError
 		require.ErrorAs(t, err, &validatorErr)
-		require.Equal(t, 1, len(validatorErr.Unwrap()))
+		require.Equal(t, 1, len(validatorErr.errors))
 
 		var missingDependenciesErr *missingDependenciesError
-		require.ErrorAs(t, validatorErr.Unwrap()[0], &missingDependenciesErr)
+		require.ErrorAs(t, validatorErr.errors[simpleAddressLocation("0x01.Test")], &missingDependenciesErr)
 		require.Equal(t, 1, len(missingDependenciesErr.MissingContracts))
 		require.Equal(t, impLocation, missingDependenciesErr.MissingContracts[0])
 	})
 
 	t.Run("valid contract update with system contract imports", func(t *testing.T) {
-		location := common.NewAddressLocation(nil, common.Address{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01}, "Test")
+		location := simpleAddressLocation("0x01.Test")
 		sourceCodeLocation := common.StringLocation("./Test.cdc")
 		oldContract := `
 		import FlowToken from 0x7e60df042a9c0868
@@ -466,22 +474,26 @@ func Test_StagingValidator(t *testing.T) {
 
 		var validatorErr *stagingValidatorError
 		require.ErrorAs(t, err, &validatorErr)
-		require.Equal(t, 2, len(validatorErr.Unwrap()))
+
+		require.Equal(t, 2, len(validatorErr.errors))
 
 		// check that error exists & ensure that the local contract names are used (not the deploy locations)
-		require.Contains(t, validatorErr.Unwrap()[0].Error(), "mismatched types")
-		require.Contains(t, validatorErr.Unwrap()[0].Error(), "Foo.cdc")
+		fooErr := validatorErr.errors[simpleAddressLocation("0x01.Foo")]
+		require.ErrorContains(t, fooErr, "mismatched types")
+		require.ErrorContains(t, fooErr, "Foo.cdc")
 
+		// Bar should have an error related to
 		var upstreamErr *upstreamValidationError
-		require.ErrorAs(t, validatorErr.Unwrap()[1], &upstreamErr)
+		require.ErrorAs(t, validatorErr.errors[simpleAddressLocation("0x02.Bar")], &upstreamErr)
 	})
 
-	t.Run("cached downstream missing dependency errors", func(t *testing.T) {
+	t.Run("downstream missing dependency errors", func(t *testing.T) {
 		// setup mocks
 		srv := setupValidatorMocks(t, []mockNetworkAccount{
 			{
 				address: flow.HexToAddress("01"),
 				contracts: map[string][]byte{"Foo": []byte(`
+				import ImpContract from 0x03
 				pub contract Foo {
 					pub fun test() {}
 					init() {}
@@ -499,6 +511,15 @@ func Test_StagingValidator(t *testing.T) {
 			},
 			{
 				address: flow.HexToAddress("03"),
+				contracts: map[string][]byte{"ImpContract": []byte(`
+				pub contract ImpContract {}
+				`)},
+			},
+			{
+				address: flow.HexToAddress("04"),
+				contracts: map[string][]byte{"AnotherImp": []byte(`
+				pub contract AnotherImp {}
+				`)},
 			},
 		})
 
@@ -523,6 +544,7 @@ func Test_StagingValidator(t *testing.T) {
 				SourceLocation: common.StringLocation("./Bar.cdc"),
 				Code: []byte(`
 				import Foo from 0x01
+				import AnotherImp from 0x04
 				access(all) contract Bar {
 					access(all) fun test() {}
 					init() {
@@ -534,15 +556,18 @@ func Test_StagingValidator(t *testing.T) {
 
 		var validatorErr *stagingValidatorError
 		require.ErrorAs(t, err, &validatorErr)
-		require.Equal(t, 2, len(validatorErr.Unwrap()))
+		require.Equal(t, 2, len(validatorErr.errors))
 
 		var missingDependenciesErr *missingDependenciesError
-		require.ErrorAs(t, validatorErr.Unwrap()[0], &missingDependenciesErr)
+		require.ErrorAs(t, validatorErr.errors[simpleAddressLocation("0x01.Foo")], &missingDependenciesErr)
 		require.Equal(t, 1, len(missingDependenciesErr.MissingContracts))
 		require.Equal(t, simpleAddressLocation("0x03.ImpContract"), missingDependenciesErr.MissingContracts[0])
 
-		require.ErrorAs(t, validatorErr.Unwrap()[1], &missingDependenciesErr)
-		require.Equal(t, 1, len(missingDependenciesErr.MissingContracts))
-		require.Equal(t, simpleAddressLocation("0x03.ImpContract"), missingDependenciesErr.MissingContracts[0])
+		require.ErrorAs(t, validatorErr.errors[simpleAddressLocation("0x02.Bar")], &missingDependenciesErr)
+		require.Equal(t, 2, len(missingDependenciesErr.MissingContracts))
+		require.ElementsMatch(t, []common.AddressLocation{
+			simpleAddressLocation("0x03.ImpContract"),
+			simpleAddressLocation("0x04.AnotherImp"),
+		}, missingDependenciesErr.MissingContracts)
 	})
 }
