@@ -111,6 +111,7 @@ type dependencyKey struct {
 type DependencyStateMap map[dependencyKey]dependencyState
 
 type dependencyState struct {
+	hasContractsCheck    bool
 	hasAliasRequest      bool
 	hasDeploymentRequest bool
 }
@@ -119,6 +120,7 @@ type requestType string
 
 const (
 	AliasRequest      requestType = "Alias"
+	ContractCheck     requestType = "ContractCheck"
 	DeploymentRequest requestType = "Deployment"
 )
 
@@ -330,13 +332,17 @@ func isCoreContract(contractName string) bool {
 }
 
 // checkForContractConflicts checks if a contract with the same name already exists in the state and adds a warning
-func (di *DependencyInstaller) checkForContractConflicts(contractName string) error {
-	_, err := di.State.Contracts().ByName(contractName)
+func (di *DependencyInstaller) checkForContractConflicts(key dependencyKey) error {
+	_, err := di.State.Contracts().ByName(key.contractName)
+
+	// Set it has already been checked
+	di.updateRequestMap(key, true, ContractCheck)
+
 	if err != nil {
 		return nil
 	} else {
-		if !isCoreContract(contractName) {
-			msg := util.MessageWithEmojiPrefix("❌", fmt.Sprintf("Contract named %s already exists in flow.json", contractName))
+		if !isCoreContract(key.contractName) {
+			msg := util.MessageWithEmojiPrefix("❌", fmt.Sprintf("Contract named %s already exists in flow.json", key.contractName))
 			di.logs.issues = append(di.logs.issues, msg)
 		}
 		return nil
@@ -370,14 +376,22 @@ func (di *DependencyInstaller) handleFoundContract(networkName, contractAddr, as
 		}
 	}
 
-	//// This needs to happen before dependency state is updated
-	err := di.checkForContractConflicts(assignedName)
-	if err != nil {
-		di.Logger.Error(fmt.Sprintf("Error checking for contract conflicts: %v", err))
-		return err
+	depKey := dependencyKey{
+		network:      networkName,
+		Address:      contractAddr,
+		contractName: contractName,
 	}
 
-	err = di.handleFileSystem(contractAddr, contractName, contractData, networkName)
+	// This needs to happen before dependency state is updated
+	if !di.hasRequest(depKey, ContractCheck) {
+		err := di.checkForContractConflicts(depKey)
+		if err != nil {
+			di.Logger.Error(fmt.Sprintf("Error checking for contract conflicts: %v", err))
+			return err
+		}
+	}
+
+	err := di.handleFileSystem(contractAddr, contractName, contractData, networkName)
 	if err != nil {
 		return fmt.Errorf("error handling file system: %w", err)
 	}
@@ -388,16 +402,10 @@ func (di *DependencyInstaller) handleFoundContract(networkName, contractAddr, as
 		return err
 	}
 
-	dependencyKey := dependencyKey{
-		network:      networkName,
-		Address:      contractAddr,
-		contractName: contractName,
-	}
-
 	// If the contract is not a core contract and the user does not want to skip deployments, then prompt for a deployment
 	// Also, don't ask for deployments on networks besides emulator
-	if !di.SkipDeployments && !isCoreContract(contractName) && !di.hasRequest(dependencyKey, DeploymentRequest) && networkName == config.EmulatorNetwork.Name {
-		err = di.updateDependencyDeployment(contractName, dependencyKey)
+	if !di.SkipDeployments && !isCoreContract(contractName) && !di.hasRequest(depKey, DeploymentRequest) && networkName == config.EmulatorNetwork.Name {
+		err = di.updateDependencyDeployment(contractName, depKey)
 		if err != nil {
 			di.Logger.Error(fmt.Sprintf("Error updating deployment: %v", err))
 			return err
@@ -408,8 +416,8 @@ func (di *DependencyInstaller) handleFoundContract(networkName, contractAddr, as
 	}
 
 	// If the contract is not a core contract and the user does not want to skip aliasing, then prompt for an alias
-	if !di.SkipAlias && !isCoreContract(contractName) && !di.hasRequest(dependencyKey, AliasRequest) {
-		err = di.updateDependencyAlias(contractName, networkName, dependencyKey)
+	if !di.SkipAlias && !isCoreContract(contractName) && !di.hasRequest(depKey, AliasRequest) {
+		err = di.updateDependencyAlias(contractName, networkName, depKey)
 
 		if err != nil {
 			di.Logger.Error(fmt.Sprintf("Error updating alias: %v", err))
@@ -485,6 +493,8 @@ func (di *DependencyInstaller) updateRequestMap(key dependencyKey, status bool, 
 	switch reqType {
 	case AliasRequest:
 		state.hasAliasRequest = status
+	case ContractCheck:
+		state.hasContractsCheck = status
 	case DeploymentRequest:
 		state.hasDeploymentRequest = status
 	}
@@ -500,6 +510,8 @@ func (di *DependencyInstaller) hasRequest(key dependencyKey, reqType requestType
 	switch reqType {
 	case AliasRequest:
 		return state.hasAliasRequest
+	case ContractCheck:
+		return state.hasContractsCheck
 	case DeploymentRequest:
 		return state.hasDeploymentRequest
 	}
