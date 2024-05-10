@@ -25,20 +25,18 @@ import (
 	"testing"
 
 	"github.com/onflow/cadence/runtime/common"
-	"github.com/onflow/flow-cli/internal/util"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/onflow/flowkit/v2"
 	"github.com/onflow/flowkit/v2/accounts"
 	"github.com/onflow/flowkit/v2/config"
-	"github.com/onflow/flowkit/v2/project"
-
 	flowkitMocks "github.com/onflow/flowkit/v2/mocks"
-
+	"github.com/onflow/flowkit/v2/project"
 	"github.com/onflow/flowkit/v2/tests"
-
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+
+	"github.com/onflow/flow-cli/internal/util"
 )
 
 type mockDeployment struct {

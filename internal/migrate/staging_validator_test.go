@@ -87,11 +87,32 @@ func setupValidatorMocks(
 		}
 	}
 
-	// Mock missing contract, fallback if not found
+	// Mock trying to get staged contract code for a contract that doesn't exist
+	// This is the fallback mock for all other staged contract code requests
 	srv.On(
 		"ExecuteScript",
 		mock.Anything,
-		mock.Anything,
+		mock.MatchedBy(func(script flowkit.Script) bool {
+			if string(script.Code) != string(templates.GenerateGetStagedContractCodeScript(MigrationContractStagingAddress("testnet"))) {
+				return false
+			}
+
+			if len(script.Args) != 2 {
+				return false
+			}
+
+			callContractAddress, callContractName := script.Args[0], script.Args[1]
+
+			if callContractAddress.Type() != cadence.AddressType {
+				return false
+			}
+
+			if callContractName.Type() != cadence.StringType {
+				return false
+			}
+
+			return true
+		}),
 		mock.Anything,
 	).Return(cadence.NewOptional(nil), nil).Maybe()
 

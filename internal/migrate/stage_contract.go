@@ -23,8 +23,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/onflow/flow-cli/internal/command"
-
 	"github.com/logrusorgru/aurora"
 	"github.com/manifoldco/promptui"
 	"github.com/onflow/cadence/runtime/common"
@@ -33,6 +31,8 @@ import (
 	"github.com/onflow/flowkit/v2/output"
 	"github.com/onflow/flowkit/v2/project"
 	"github.com/spf13/cobra"
+
+	"github.com/onflow/flow-cli/internal/command"
 )
 
 type stagingResults struct {

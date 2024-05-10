@@ -24,8 +24,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/onflow/flow-cli/internal/util"
-
 	"github.com/onflow/cadence"
 	"github.com/onflow/cadence/runtime"
 	"github.com/onflow/cadence/runtime/ast"
@@ -41,6 +39,8 @@ import (
 	"github.com/onflow/flow-go/cmd/util/ledger/migrations"
 	"github.com/onflow/flow-go/model/flow"
 	"github.com/onflow/flowkit/v2"
+
+	"github.com/onflow/flow-cli/internal/util"
 )
 
 //go:generate mockery --name stagingValidator --inpackage --testonly --case underscore
