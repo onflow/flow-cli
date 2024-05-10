@@ -36,6 +36,7 @@ import (
 
 	"github.com/dukex/mixpanel"
 	"github.com/getsentry/sentry-go"
+	"github.com/google/go-github/github"
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
 
@@ -45,6 +46,7 @@ import (
 	"github.com/onflow/flowkit/v2/output"
 
 	"github.com/onflow/flow-cli/build"
+	"github.com/onflow/flow-cli/internal/migrate/validator"
 	"github.com/onflow/flow-cli/internal/settings"
 	"github.com/onflow/flow-cli/internal/util"
 )
@@ -443,10 +445,26 @@ type GlobalFlags struct {
 }
 
 func checkContractMigrations(state *flowkit.State, logger output.Logger, flow flowkit.Services) {
-	// command to validate contracts are still valid for migration
-	// if err := migrate.NewValidator(github.NewClient(nil).Repositories, flow.Network(), state, logger).ValidateContracts(); err != nil {
-	// 	return err
-	// }
+	contractStatuses, err := validator.NewValidator(github.NewClient(nil).Repositories, flow.Network(), state, logger).GetContractStatuses()
+	if err != nil {
+		logger.Error(fmt.Sprintf("failed to validate contracts: %s", err))
+		return
+	}
+
+	for _, contract := range contractStatuses {
+		if contract.IsFailure() {
+			logger.Error(fmt.Sprintf(
+				"Contract %s has failed the last emulated migration\n"+
+					" - Account: %s\n"+
+					" - Contract: %s\n"+
+					" - Error: %s\n",
+				contract.ContractName,
+				contract.AccountAddress,
+				contract.ContractName,
+				contract.Error,
+			))
+		}
+	}
 
 	return
 }
