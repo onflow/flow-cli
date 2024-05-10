@@ -297,16 +297,12 @@ func (v *stagingValidatorImpl) checkContract(
 			location = stagedContract.SourceLocation
 			code = stagedContract.Code
 		} else {
-			location = importedLocation
-			code, ok = v.contracts[location]
+			var err error
 
-			// If the contract code is not known, try to get it
-			if !ok {
-				code, err := v.getStagedContractCode(importedLocation)
-				if err != nil {
-					return nil, fmt.Errorf("failed to get staged contract code: %w", err)
-				}
-				v.contracts[importedLocation] = code
+			location = importedLocation
+			code, err = v.getStagedContractCode(importedLocation)
+			if err != nil {
+				return nil, fmt.Errorf("failed to get staged contract code: %w", err)
 			}
 
 			// Handle the case where the contract has not been staged yet

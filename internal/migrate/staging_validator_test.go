@@ -224,13 +224,11 @@ func Test_StagingValidator(t *testing.T) {
 		// setup mocks
 		srv := setupValidatorMocks(t, []mockNetworkAccount{
 			{
-				address:         flow.HexToAddress("01"),
-				contracts:       map[string][]byte{"Test": []byte(oldContract)},
-				stagedContracts: nil,
+				address:   flow.HexToAddress("01"),
+				contracts: map[string][]byte{"Test": []byte(oldContract)},
 			},
 			{
 				address:         flow.HexToAddress("02"),
-				contracts:       nil,
 				stagedContracts: map[string][]byte{"ImpContract": []byte(impContract)},
 			},
 		})
@@ -250,6 +248,7 @@ func Test_StagingValidator(t *testing.T) {
 			pub fun test() {}
 		}`
 		newContract := `
+		// staged contract does not exist
 		import ImpContract from 0x02
 		access(all) contract Test {
 			access(all) fun test() {}
@@ -258,9 +257,11 @@ func Test_StagingValidator(t *testing.T) {
 		// setup mocks
 		srv := setupValidatorMocks(t, []mockNetworkAccount{
 			{
-				address:         flow.HexToAddress("01"),
-				contracts:       map[string][]byte{"Test": []byte(oldContract)},
-				stagedContracts: nil,
+				address:   flow.HexToAddress("01"),
+				contracts: map[string][]byte{"Test": []byte(oldContract)},
+			},
+			{
+				address: flow.HexToAddress("02"),
 			},
 		})
 
@@ -295,9 +296,8 @@ func Test_StagingValidator(t *testing.T) {
 		// setup mocks
 		srv := setupValidatorMocks(t, []mockNetworkAccount{
 			{
-				address:         flow.HexToAddress("01"),
-				contracts:       map[string][]byte{"Test": []byte(oldContract)},
-				stagedContracts: nil,
+				address:   flow.HexToAddress("01"),
+				contracts: map[string][]byte{"Test": []byte(oldContract)},
 			},
 		})
 
@@ -352,7 +352,6 @@ func Test_StagingValidator(t *testing.T) {
 				pub contract Foo {
 					pub fun test() {}
 				}`)},
-				stagedContracts: nil,
 			},
 			{
 				address: flow.HexToAddress("02"),
@@ -363,7 +362,6 @@ func Test_StagingValidator(t *testing.T) {
 						Foo.test()
 					}
 				}`)},
-				stagedContracts: nil,
 			},
 		})
 
@@ -404,7 +402,6 @@ func Test_StagingValidator(t *testing.T) {
 					pub fun test() {}
 					init() {}
 				}`)},
-				stagedContracts: nil,
 			},
 			{
 				address: flow.HexToAddress("02"),
@@ -415,7 +412,6 @@ func Test_StagingValidator(t *testing.T) {
 						Foo.test()
 					}
 				}`)},
-				stagedContracts: nil,
 			},
 		})
 
@@ -460,8 +456,6 @@ func Test_StagingValidator(t *testing.T) {
 
 	t.Run("cached downstream missing dependency errors", func(t *testing.T) {
 		// setup mocks
-		// ordering is important here, e.g. even though Foo is checked
-		// first, Bar will still recognize the missing dependency
 		srv := setupValidatorMocks(t, []mockNetworkAccount{
 			{
 				address: flow.HexToAddress("01"),
@@ -470,7 +464,6 @@ func Test_StagingValidator(t *testing.T) {
 					pub fun test() {}
 					init() {}
 				}`)},
-				stagedContracts: nil,
 			},
 			{
 				address: flow.HexToAddress("02"),
@@ -481,16 +474,22 @@ func Test_StagingValidator(t *testing.T) {
 						Foo.test()
 					}
 				}`)},
-				stagedContracts: nil,
+			},
+			{
+				address: flow.HexToAddress("03"),
 			},
 		})
 
 		validator := newStagingValidator(srv)
+
+		// ordering is important here, e.g. even though Foo is checked
+		// first, Bar will still recognize the missing dependency
 		err := validator.Validate([]StagedContract{
 			{
 				DeployLocation: simpleAddressLocation("0x01.Foo"),
 				SourceLocation: common.StringLocation("./Foo.cdc"),
 				Code: []byte(`
+				// staged contract does not exist
 				import ImpContract from 0x03
 				access(all) contract Foo {
 					access(all) fun test() {}

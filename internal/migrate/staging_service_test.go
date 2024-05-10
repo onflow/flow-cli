@@ -120,6 +120,9 @@ func Test_StagingService(t *testing.T) {
 
 		// TODO, should make sure that the script is correct
 		srv.On("SendTransaction", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(tests.NewTransaction(), nil, nil).Maybe()
+		srv.On("ReplaceImportsInScript", mock.Anything, mock.Anything).Return(func(_ context.Context, script flowkit.Script) (flowkit.Script, error) {
+			return script, nil
+		}).Maybe()
 
 		deploymentContracts, err := state.DeploymentContractsByNetwork(config.TestnetNetwork)
 		require.NoError(t, err)
@@ -186,7 +189,7 @@ func Test_StagingService(t *testing.T) {
 		require.Equal(t, results[simpleAddressLocation("0x01.Foo")].wasValidated, true)
 
 		require.Contains(t, results, simpleAddressLocation("0x01.Bar"))
-		require.Nil(t, results[simpleAddressLocation("0x01.Bar")])
+		require.Nil(t, results[simpleAddressLocation("0x01.Bar")].err)
 		require.Equal(t, results[simpleAddressLocation("0x01.Bar")].wasValidated, true)
 	})
 
@@ -245,7 +248,47 @@ func Test_StagingService(t *testing.T) {
 
 		require.Equal(t, 1, len(results))
 		require.Contains(t, results, simpleAddressLocation("0x01.Foo"))
-		require.Nil(t, results[simpleAddressLocation("0x01.Foo")])
+		require.Nil(t, results[simpleAddressLocation("0x01.Foo")].err)
+		require.Equal(t, results[simpleAddressLocation("0x01.Foo")].wasValidated, false)
+	})
+
+	t.Run("skips validation if no validator", func(t *testing.T) {
+		mockAccount := []mockAccount{
+			{
+				name:    "some-account",
+				address: "0x01",
+				deployments: []mockDeployment{
+					{
+						name: "Foo",
+						code: `FooCode`,
+					},
+				},
+			},
+		}
+		srv, state, deploymentContracts := setupMocks(mockAccount)
+
+		s := newStagingService(
+			srv,
+			state,
+			util.NoLogger,
+			nil,
+			func(sve *stagingValidatorError) bool {
+				require.NotNil(t, sve)
+				return true
+			},
+		)
+
+		results, err := s.StageContracts(
+			context.Background(),
+			deploymentContracts,
+		)
+
+		require.NoError(t, err)
+		require.NotNil(t, results)
+
+		require.Equal(t, 1, len(results))
+		require.Contains(t, results, simpleAddressLocation("0x01.Foo"))
+		require.Nil(t, results[simpleAddressLocation("0x01.Foo")].err)
 		require.Equal(t, results[simpleAddressLocation("0x01.Foo")].wasValidated, false)
 	})
 

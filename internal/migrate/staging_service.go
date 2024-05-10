@@ -160,7 +160,7 @@ func (s *stagingServiceImpl) validateAndStageContracts(ctx context.Context, cont
 
 func (s *stagingServiceImpl) stageValidContracts(ctx context.Context, contracts []*project.Contract, validatorError *stagingValidatorError) map[common.AddressLocation]stagingResult {
 	// Filter out contracts that failed validation
-	validContracts := contracts
+	validContracts := make([]*project.Contract, 0, len(contracts))
 	if validatorError != nil && validatorError.errors != nil {
 		for _, contract := range contracts {
 			contractLocation := contractDeploymentLocation(contract)
@@ -168,6 +168,8 @@ func (s *stagingServiceImpl) stageValidContracts(ctx context.Context, contracts 
 				validContracts = append(validContracts, contract)
 			}
 		}
+	} else {
+		validContracts = contracts
 	}
 
 	// Stage contracts that passed validation
