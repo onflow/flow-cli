@@ -138,11 +138,11 @@ func Test_StagingService(t *testing.T) {
 				deployments: []mockDeployment{
 					{
 						name: "Foo",
-						code: `FooCode`,
+						code: "access(all) contract Foo {}",
 					},
 					{
 						name: "Bar",
-						code: `BarCode`,
+						code: "access(all) contract Bar {}",
 					},
 				},
 			},
@@ -150,17 +150,17 @@ func Test_StagingService(t *testing.T) {
 		srv, state, deploymentContracts := setupMocks(mockAccount)
 
 		v := newMockStagingValidator(t)
-		v.On("Validate", mock.MatchedBy(func(stagedContracts []StagedContract) bool {
-			return reflect.DeepEqual(stagedContracts, []StagedContract{
+		v.On("Validate", mock.MatchedBy(func(stagedContracts []stagedContractUpdate) bool {
+			return reflect.DeepEqual(stagedContracts, []stagedContractUpdate{
 				{
 					DeployLocation: simpleAddressLocation("0x01.Foo"),
 					SourceLocation: common.StringLocation("0x01/Foo.cdc"),
-					Code:           []byte("FooCode"),
+					Code:           []byte("access(all) contract Foo {}"),
 				},
 				{
 					DeployLocation: simpleAddressLocation("0x01.Bar"),
 					SourceLocation: common.StringLocation("0x01/Bar.cdc"),
-					Code:           []byte("BarCode"),
+					Code:           []byte("access(all) contract Bar {}"),
 				},
 			})
 		})).Return(nil).Once()
@@ -201,7 +201,7 @@ func Test_StagingService(t *testing.T) {
 				deployments: []mockDeployment{
 					{
 						name: "Foo",
-						code: `FooCode`,
+						code: "access(all) contract Foo {}",
 					},
 				},
 			},
@@ -209,12 +209,12 @@ func Test_StagingService(t *testing.T) {
 		srv, state, deploymentContracts := setupMocks(mockAccount)
 
 		v := newMockStagingValidator(t)
-		v.On("Validate", mock.MatchedBy(func(stagedContracts []StagedContract) bool {
-			return reflect.DeepEqual(stagedContracts, []StagedContract{
+		v.On("Validate", mock.MatchedBy(func(stagedContracts []stagedContractUpdate) bool {
+			return reflect.DeepEqual(stagedContracts, []stagedContractUpdate{
 				{
 					DeployLocation: simpleAddressLocation("0x01.Foo"),
 					SourceLocation: common.StringLocation("0x01/Foo.cdc"),
-					Code:           []byte("FooCode"),
+					Code:           []byte("access(all) contract Foo {}"),
 				},
 			})
 		})).Return(&stagingValidatorError{
@@ -260,7 +260,7 @@ func Test_StagingService(t *testing.T) {
 				deployments: []mockDeployment{
 					{
 						name: "Foo",
-						code: `FooCode`,
+						code: "access(all) contract Foo {}",
 					},
 				},
 			},
@@ -300,7 +300,7 @@ func Test_StagingService(t *testing.T) {
 				deployments: []mockDeployment{
 					{
 						name: "Foo",
-						code: `FooCode`,
+						code: "access(all) contract Foo {}",
 					},
 				},
 			},
@@ -308,12 +308,12 @@ func Test_StagingService(t *testing.T) {
 		srv, state, deploymentContracts := setupMocks(mockAccount)
 
 		v := newMockStagingValidator(t)
-		v.On("Validate", mock.MatchedBy(func(stagedContracts []StagedContract) bool {
-			return reflect.DeepEqual(stagedContracts, []StagedContract{
+		v.On("Validate", mock.MatchedBy(func(stagedContracts []stagedContractUpdate) bool {
+			return reflect.DeepEqual(stagedContracts, []stagedContractUpdate{
 				{
 					DeployLocation: simpleAddressLocation("0x01.Foo"),
 					SourceLocation: common.StringLocation("0x01/Foo.cdc"),
-					Code:           []byte("FooCode"),
+					Code:           []byte("access(all) contract Foo {}"),
 				},
 			})
 		})).Return(&stagingValidatorError{
@@ -364,11 +364,11 @@ func Test_StagingService(t *testing.T) {
 				deployments: []mockDeployment{
 					{
 						name: "Foo",
-						code: `FooCode`,
+						code: "access(all) contract Foo {}",
 					},
 					{
 						name: "Bar",
-						code: `BarCode`,
+						code: "access(all) contract Bar {}",
 					},
 				},
 			},
@@ -376,17 +376,17 @@ func Test_StagingService(t *testing.T) {
 		srv, state, deploymentContracts := setupMocks(mockAccount)
 
 		v := newMockStagingValidator(t)
-		v.On("Validate", mock.MatchedBy(func(stagedContracts []StagedContract) bool {
-			return reflect.DeepEqual(stagedContracts, []StagedContract{
+		v.On("Validate", mock.MatchedBy(func(stagedContracts []stagedContractUpdate) bool {
+			return reflect.DeepEqual(stagedContracts, []stagedContractUpdate{
 				{
 					DeployLocation: simpleAddressLocation("0x01.Foo"),
 					SourceLocation: common.StringLocation("0x01/Foo.cdc"),
-					Code:           []byte("FooCode"),
+					Code:           []byte("access(all) contract Foo {}"),
 				},
 				{
 					DeployLocation: simpleAddressLocation("0x01.Bar"),
 					SourceLocation: common.StringLocation("0x01/Bar.cdc"),
-					Code:           []byte("BarCode"),
+					Code:           []byte("access(all) contract Bar {}"),
 				},
 			})
 		})).Return(&stagingValidatorError{

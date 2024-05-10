@@ -28,7 +28,6 @@ import (
 	"github.com/onflow/contract-updater/lib/go/templates"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flowkit/v2"
-	"github.com/onflow/flowkit/v2/accounts"
 	"github.com/onflow/flowkit/v2/output"
 	"github.com/onflow/flowkit/v2/project"
 	"github.com/onflow/flowkit/v2/transactions"
@@ -36,7 +35,6 @@ import (
 
 //go:generate mockery --name stagingService --inpackage --testonly --case underscore
 type stagingService interface {
-	// StageContracts stages contracts for the network
 	StageContracts(ctx context.Context, contracts []*project.Contract) (map[common.AddressLocation]stagingResult, error)
 	PrettyPrintValidationError(err error, location common.Location) string
 }
@@ -74,21 +72,10 @@ func newStagingService(
 }
 
 func (s *stagingServiceImpl) StageContracts(ctx context.Context, contracts []*project.Contract) (map[common.AddressLocation]stagingResult, error) {
-	// Replace imports in all contracts
-	replacedContracts := make([]*project.Contract, 0, len(contracts))
-	for _, contract := range contracts {
-		newScript, err := s.flow.ReplaceImportsInScript(context.Background(), flowkit.Script{
-			Code:     contract.Code(),
-			Location: contract.Location(),
-			Args:     nil,
-		})
-		if err != nil {
-			return nil, fmt.Errorf("failed to replace imports in contract %s: %w", contract.Name, err)
-		}
-
-		newContract := *contract
-		newContract.SetCode(newScript.Code)
-		replacedContracts = append(replacedContracts, &newContract)
+	// Convert contracts to staged contracts
+	stagedContracts, err := s.convertToStagedContracts(contracts)
+	if err != nil {
+		return nil, err
 	}
 
 	// If validation is disabled, just stage the contracts
@@ -97,40 +84,21 @@ func (s *stagingServiceImpl) StageContracts(ctx context.Context, contracts []*pr
 		s.logger.StartProgress(fmt.Sprintf("Staging %d contracts for accounts: %s", len(contracts), s.state.AccountsForNetwork(s.flow.Network()).String()))
 		defer s.logger.StopProgress()
 
-		results := s.stageContracts(ctx, replacedContracts)
+		results := s.stageContracts(ctx, stagedContracts)
 		return results, nil
 	}
 
 	// Otherwise, validate and stage the contracts
-	return s.validateAndStageContracts(ctx, replacedContracts)
+	return s.validateAndStageContracts(ctx, stagedContracts)
 }
 
-func (s *stagingServiceImpl) validateAndStageContracts(ctx context.Context, contracts []*project.Contract) (map[common.AddressLocation]stagingResult, error) {
+func (s *stagingServiceImpl) validateAndStageContracts(ctx context.Context, contracts []stagedContractUpdate) (map[common.AddressLocation]stagingResult, error) {
 	s.logger.StartProgress(fmt.Sprintf("Validating and staging %d contracts", len(contracts)))
 	defer s.logger.StopProgress()
 
-	// Collect all staged contracts
-	stagedContracts := make([]StagedContract, 0)
-	for _, contract := range contracts {
-		// We need the real name of the contract, not the name in flow.json
-		name, err := getCadenceContractName(contract)
-		if err != nil {
-			return nil, fmt.Errorf("failed to get contract name: %w", err)
-		}
-
-		deployLocation := common.NewAddressLocation(nil, common.Address(contract.AccountAddress), name)
-		sourceLocation := common.StringLocation(contract.Location())
-
-		stagedContracts = append(stagedContracts, StagedContract{
-			DeployLocation: deployLocation,
-			SourceLocation: sourceLocation,
-			Code:           contract.Code(),
-		})
-	}
-
 	// Validate all contracts
 	var validatorError *stagingValidatorError
-	err := s.validator.Validate(stagedContracts)
+	err := s.validator.Validate(contracts)
 
 	// We will handle validation errors separately per contract to allow for partial staging
 	if err != nil && !errors.As(err, &validatorError) {
@@ -164,13 +132,12 @@ func (s *stagingServiceImpl) validateAndStageContracts(ctx context.Context, cont
 	return results, nil
 }
 
-func (s *stagingServiceImpl) stageValidContracts(ctx context.Context, contracts []*project.Contract, validatorError *stagingValidatorError) map[common.AddressLocation]stagingResult {
+func (s *stagingServiceImpl) stageValidContracts(ctx context.Context, contracts []stagedContractUpdate, validatorError *stagingValidatorError) map[common.AddressLocation]stagingResult {
 	// Filter out contracts that failed validation
-	validContracts := make([]*project.Contract, 0, len(contracts))
+	validContracts := make([]stagedContractUpdate, 0, len(contracts))
 	if validatorError != nil && validatorError.errors != nil {
 		for _, contract := range contracts {
-			contractLocation := contractDeploymentLocation(contract)
-			if _, hasError := validatorError.errors[contractLocation]; !hasError {
+			if _, hasError := validatorError.errors[contract.DeployLocation]; !hasError {
 				validContracts = append(validContracts, contract)
 			}
 		}
@@ -188,7 +155,7 @@ func (s *stagingServiceImpl) stageValidContracts(ctx context.Context, contracts 
 	return results
 }
 
-func (s *stagingServiceImpl) maybeStageInvalidContracts(ctx context.Context, contracts []*project.Contract, validatorErr *stagingValidatorError) map[common.AddressLocation]stagingResult {
+func (s *stagingServiceImpl) maybeStageInvalidContracts(ctx context.Context, contracts []stagedContractUpdate, validatorErr *stagingValidatorError) map[common.AddressLocation]stagingResult {
 	if validatorErr == nil || validatorErr.errors == nil {
 		return nil
 	}
@@ -211,10 +178,9 @@ func (s *stagingServiceImpl) maybeStageInvalidContracts(ctx context.Context, con
 	}
 
 	// Otherwise, we will stage the contracts that have missing dependencies
-	unvalidatedContracts := make([]*project.Contract, 0, len(missingDependencyErrors))
+	unvalidatedContracts := make([]stagedContractUpdate, 0, len(missingDependencyErrors))
 	for _, contract := range contracts {
-		contractLocation := contractDeploymentLocation(contract)
-		if _, hasError := missingDependencyErrors[contractLocation]; hasError {
+		if _, hasError := missingDependencyErrors[contract.DeployLocation]; hasError {
 			unvalidatedContracts = append(unvalidatedContracts, contract)
 		}
 	}
@@ -228,43 +194,22 @@ func (s *stagingServiceImpl) maybeStageInvalidContracts(ctx context.Context, con
 	return results
 }
 
-func (s *stagingServiceImpl) stageContracts(ctx context.Context, contracts []*project.Contract) map[common.AddressLocation]stagingResult {
+func (s *stagingServiceImpl) stageContracts(ctx context.Context, contracts []stagedContractUpdate) map[common.AddressLocation]stagingResult {
 	results := make(map[common.AddressLocation]stagingResult)
 	for _, contract := range contracts {
-		// We need the real name of the contract, not the name in flow.json
-		name, err := getCadenceContractName(contract)
-		if err != nil {
-			results[contractDeploymentLocation(contract)] = stagingResult{
-				err: err,
-			}
-			continue
-		}
-
-		targetAccount, err := s.state.Accounts().ByName(contract.AccountName)
-		deployLocation := contractDeploymentLocation(contract)
-
-		if err != nil {
-			results[deployLocation] = stagingResult{
-				err: fmt.Errorf("failed to get account by contract name: %w", err),
-			}
-			continue
-		}
-
-		s.logger.StartProgress(fmt.Sprintf("Staging contract %s for account %s", name, targetAccount.Name))
+		s.logger.StartProgress(fmt.Sprintf("Staging contract %s", contract.DeployLocation))
 
 		txId, err := s.stageContract(
 			ctx,
-			targetAccount,
-			name,
-			contract.Code(),
+			contract,
 		)
 		if err != nil {
-			results[deployLocation] = stagingResult{
+			results[contract.DeployLocation] = stagingResult{
 				err:  fmt.Errorf("failed to stage contract: %w", err),
 				txId: txId,
 			}
 		} else {
-			results[deployLocation] = stagingResult{
+			results[contract.DeployLocation] = stagingResult{
 				err:  nil,
 				txId: txId,
 			}
@@ -276,9 +221,15 @@ func (s *stagingServiceImpl) stageContracts(ctx context.Context, contracts []*pr
 	return results
 }
 
-func (s *stagingServiceImpl) stageContract(ctx context.Context, account *accounts.Account, contractName string, contractCode []byte) (flow.Identifier, error) {
-	cName := cadence.String(contractName)
-	cCode := cadence.String(contractCode)
+func (s *stagingServiceImpl) stageContract(ctx context.Context, contract stagedContractUpdate) (flow.Identifier, error) {
+	cName := cadence.String(contract.DeployLocation.Name)
+	cCode := cadence.String(contract.Code)
+
+	// Get the account for the contract
+	account, err := s.state.Accounts().ByAddress(flow.Address(contract.DeployLocation.Address))
+	if err != nil {
+		return flow.Identifier{}, fmt.Errorf("failed to get account for contract %s: %w", contract.DeployLocation.Name, err)
+	}
 
 	tx, _, err := s.flow.SendTransaction(
 		context.Background(),
@@ -300,26 +251,43 @@ func (v *stagingServiceImpl) PrettyPrintValidationError(err error, location comm
 	return v.validator.PrettyPrintError(err, location)
 }
 
-// helper function to create a common.AddressLocation for a deployment contract
-func contractDeploymentLocation(contract *project.Contract) common.AddressLocation {
-	return common.NewAddressLocation(nil, common.Address(contract.AccountAddress), contract.Name)
-}
+func (s *stagingServiceImpl) convertToStagedContracts(contracts []*project.Contract) ([]stagedContractUpdate, error) {
+	// Collect all staged contracts
+	stagedContracts := make([]stagedContractUpdate, 0)
+	for _, contract := range contracts {
+		rawScript := flowkit.Script{
+			Code:     contract.Code(),
+			Location: contract.Location(),
+			Args:     contract.Args,
+		}
 
-func getCadenceContractName(contract *project.Contract) (string, error) {
-	script := flowkit.Script{
-		Code:     contract.Code(),
-		Location: contract.Location(),
-		Args:     contract.Args,
-	}
-	program, err := project.NewProgram(script.Code, script.Args, script.Location)
-	if err != nil {
-		return "", fmt.Errorf("failed to parse contract %s: %w", contract.Name, err)
+		// Replace imports in the contract
+		script, err := s.flow.ReplaceImportsInScript(context.Background(), rawScript)
+		if err != nil {
+			return nil, fmt.Errorf("failed to replace imports in contract %s: %w", contract.Name, err)
+		}
+
+		// We need the real name of the contract, not the name in flow.json
+		program, err := project.NewProgram(script.Code, script.Args, script.Location)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse contract %s: %w", contract.Name, err)
+		}
+
+		name, err := program.Name()
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse contract name: %w", err)
+		}
+
+		// Convert relevant information to Cadence types
+		deployLocation := common.NewAddressLocation(nil, common.Address(contract.AccountAddress), name)
+		sourceLocation := common.StringLocation(contract.Location())
+
+		stagedContracts = append(stagedContracts, stagedContractUpdate{
+			DeployLocation: deployLocation,
+			SourceLocation: sourceLocation,
+			Code:           script.Code,
+		})
 	}
 
-	name, err := program.Name()
-	if err != nil {
-		return "", fmt.Errorf("failed to get contract name: %w", err)
-	}
-
-	return name, nil
+	return stagedContracts, nil
 }

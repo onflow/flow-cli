@@ -31,7 +31,7 @@ func (_m *mockStagingValidator) PrettyPrintError(err error, location common.Loca
 }
 
 // Validate provides a mock function with given fields: stagedContracts
-func (_m *mockStagingValidator) Validate(stagedContracts []StagedContract) error {
+func (_m *mockStagingValidator) Validate(stagedContracts []stagedContractUpdate) error {
 	ret := _m.Called(stagedContracts)
 
 	if len(ret) == 0 {
@@ -39,7 +39,7 @@ func (_m *mockStagingValidator) Validate(stagedContracts []StagedContract) error
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func([]StagedContract) error); ok {
+	if rf, ok := ret.Get(0).(func([]stagedContractUpdate) error); ok {
 		r0 = rf(stagedContracts)
 	} else {
 		r0 = ret.Error(0)

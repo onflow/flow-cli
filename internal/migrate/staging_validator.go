@@ -45,14 +45,14 @@ import (
 
 //go:generate mockery --name stagingValidator --inpackage --testonly --case underscore
 type stagingValidator interface {
-	Validate(stagedContracts []StagedContract) error
+	Validate(stagedContracts []stagedContractUpdate) error
 	PrettyPrintError(err error, location common.Location) string
 }
 
 type stagingValidatorImpl struct {
 	flow flowkit.Services
 
-	stagedContracts map[common.AddressLocation]StagedContract
+	stagedContracts map[common.AddressLocation]stagedContractUpdate
 
 	// Cache for account contract names so we don't have to fetch them multiple times
 	accountContractNames map[common.Address][]string
@@ -70,7 +70,7 @@ type cachedCheckingResult struct {
 	err     error
 }
 
-type StagedContract struct {
+type stagedContractUpdate struct {
 	DeployLocation common.AddressLocation
 	SourceLocation common.Location
 	Code           []byte
@@ -155,8 +155,8 @@ func newStagingValidator(flow flowkit.Services) *stagingValidatorImpl {
 	}
 }
 
-func (v *stagingValidatorImpl) Validate(stagedContracts []StagedContract) error {
-	v.stagedContracts = make(map[common.AddressLocation]StagedContract)
+func (v *stagingValidatorImpl) Validate(stagedContracts []stagedContractUpdate) error {
+	v.stagedContracts = make(map[common.AddressLocation]stagedContractUpdate)
 	for _, stagedContract := range stagedContracts {
 		v.stagedContracts[stagedContract.DeployLocation] = stagedContract
 

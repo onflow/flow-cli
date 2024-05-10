@@ -132,7 +132,7 @@ func Test_StagingValidator(t *testing.T) {
 		})
 
 		validator := newStagingValidator(srv)
-		err := validator.Validate([]StagedContract{{location, sourceCodeLocation, []byte(newContract)}})
+		err := validator.Validate([]stagedContractUpdate{{location, sourceCodeLocation, []byte(newContract)}})
 		require.NoError(t, err)
 	})
 
@@ -163,7 +163,7 @@ func Test_StagingValidator(t *testing.T) {
 		})
 
 		validator := newStagingValidator(srv)
-		err := validator.Validate([]StagedContract{{location, sourceCodeLocation, []byte(newContract)}})
+		err := validator.Validate([]stagedContractUpdate{{location, sourceCodeLocation, []byte(newContract)}})
 		var updateErr *stdlib.ContractUpdateError
 		require.ErrorAs(t, err, &updateErr)
 	})
@@ -196,7 +196,7 @@ func Test_StagingValidator(t *testing.T) {
 		})
 
 		validator := newStagingValidator(srv)
-		err := validator.Validate([]StagedContract{{location, sourceCodeLocation, []byte(newContract)}})
+		err := validator.Validate([]stagedContractUpdate{{location, sourceCodeLocation, []byte(newContract)}})
 		var checkerErr *sema.CheckerError
 		require.ErrorAs(t, err, &checkerErr)
 	})
@@ -235,7 +235,7 @@ func Test_StagingValidator(t *testing.T) {
 
 		// validate
 		validator := newStagingValidator(srv)
-		err := validator.Validate([]StagedContract{{location, sourceCodeLocation, []byte(newContract)}})
+		err := validator.Validate([]stagedContractUpdate{{location, sourceCodeLocation, []byte(newContract)}})
 		require.NoError(t, err)
 	})
 
@@ -266,7 +266,7 @@ func Test_StagingValidator(t *testing.T) {
 		})
 
 		validator := newStagingValidator(srv)
-		err := validator.Validate([]StagedContract{{location, sourceCodeLocation, []byte(newContract)}})
+		err := validator.Validate([]stagedContractUpdate{{location, sourceCodeLocation, []byte(newContract)}})
 
 		var validatorErr *stagingValidatorError
 		require.ErrorAs(t, err, &validatorErr)
@@ -302,7 +302,7 @@ func Test_StagingValidator(t *testing.T) {
 		})
 
 		validator := newStagingValidator(srv)
-		err := validator.Validate([]StagedContract{{location, sourceCodeLocation, []byte(newContract)}})
+		err := validator.Validate([]stagedContractUpdate{{location, sourceCodeLocation, []byte(newContract)}})
 		require.NoError(t, err)
 	})
 
@@ -339,7 +339,7 @@ func Test_StagingValidator(t *testing.T) {
 
 		// validate
 		validator := newStagingValidator(srv)
-		err := validator.Validate([]StagedContract{{location, sourceCodeLocation, []byte(newContract)}})
+		err := validator.Validate([]stagedContractUpdate{{location, sourceCodeLocation, []byte(newContract)}})
 		require.NoError(t, err)
 	})
 
@@ -366,7 +366,7 @@ func Test_StagingValidator(t *testing.T) {
 		})
 
 		validator := newStagingValidator(srv)
-		err := validator.Validate([]StagedContract{
+		err := validator.Validate([]stagedContractUpdate{
 			{
 				DeployLocation: simpleAddressLocation("0x01.Foo"),
 				SourceLocation: common.StringLocation("./Foo.cdc"),
@@ -416,7 +416,7 @@ func Test_StagingValidator(t *testing.T) {
 		})
 
 		validator := newStagingValidator(srv)
-		err := validator.Validate([]StagedContract{
+		err := validator.Validate([]stagedContractUpdate{
 			{
 				DeployLocation: simpleAddressLocation("0x01.Foo"),
 				SourceLocation: common.StringLocation("./Foo.cdc"),
@@ -484,7 +484,7 @@ func Test_StagingValidator(t *testing.T) {
 
 		// ordering is important here, e.g. even though Foo is checked
 		// first, Bar will still recognize the missing dependency
-		err := validator.Validate([]StagedContract{
+		err := validator.Validate([]stagedContractUpdate{
 			{
 				DeployLocation: simpleAddressLocation("0x01.Foo"),
 				SourceLocation: common.StringLocation("./Foo.cdc"),
