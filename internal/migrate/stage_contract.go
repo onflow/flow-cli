@@ -24,7 +24,6 @@ import (
 	"strings"
 
 	"github.com/logrusorgru/aurora"
-	"github.com/manifoldco/promptui"
 	"github.com/onflow/cadence/runtime/common"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flowkit/v2"
@@ -119,16 +118,7 @@ func promptStagingUnvalidatedContracts(logger output.Logger) func(validatorError
 		infoMessage.WriteString("\nYou may still stage your contract, however it will be unable to be migrated until the missing contracts are staged by their respective owners.  It is important to monitor the status of your contract using the `flow migrate is-validated` command\n")
 		logger.Error(infoMessage.String())
 
-		continuePrompt := promptui.Select{
-			Label: "Do you wish to continue staging your contract?",
-			Items: []string{"Yes", "No"},
-		}
-
-		_, result, err := continuePrompt.Run()
-		if err != nil || result != "Yes" {
-			return false
-		}
-		return true
+		return util.GenericBoolPrompt("Do you wish to continue staging your contract?")
 	}
 }
 
