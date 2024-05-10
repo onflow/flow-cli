@@ -103,11 +103,12 @@ func (e *missingDependenciesError) Error() string {
 var _ error = &missingDependenciesError{}
 
 type upstreamValidationError struct {
-	Location common.Location
+	Location        common.Location
+	BadDependencies []common.Location
 }
 
 func (e *upstreamValidationError) Error() string {
-	return fmt.Sprintf("upstream dependency %s failed validation", e.Location)
+	return fmt.Sprintf("contract %s has upstream validation errors, related to the following dependencies: %v", e.Location, e.BadDependencies)
 }
 
 var _ error = &upstreamValidationError{}
@@ -189,7 +190,7 @@ func (v *stagingValidatorImpl) Validate(stagedContracts []stagedContractUpdate) 
 	// Validate all contract updates
 	for _, contract := range v.stagedContracts {
 		// Don't validate contracts with existing errors
-		if errs[contract.DeployLocation] != nil {
+		if errs[contract.SourceLocation] != nil {
 			continue
 		}
 
@@ -197,30 +198,53 @@ func (v *stagingValidatorImpl) Validate(stagedContracts []stagedContractUpdate) 
 		checker := v.checkingCache[contract.SourceLocation].checker
 		err := v.validateContractUpdate(contract, checker)
 		if err != nil {
-			errs[contract.DeployLocation] = err
+			errs[contract.SourceLocation] = err
 		}
 	}
 
 	// Check for any upstream contract update failures
 	for _, contract := range v.stagedContracts {
-		// We leave out contracts with missing dependencies
-		// errors becuase they are handled separately
+		err := errs[contract.SourceLocation]
+
+		// We will override any errors other than those related
+		// to missing dependencies, since they are more specific
+		// forms of upstream validation errors
 		var missingDependenciesErr *missingDependenciesError
-		err := errs[contract.DeployLocation]
-		if err == nil || errors.As(err, &missingDependenciesErr) {
+		if errors.As(err, &missingDependenciesErr) {
 			continue
 		}
 
+		badDeps := make([]common.Location, 0)
 		v.forEachDependency(contract, func(dependency common.Location) {
-			if errs[dependency] != nil {
-				errs[contract.DeployLocation] = &upstreamValidationError{Location: dependency}
+			strLocation, ok := dependency.(common.StringLocation)
+			if !ok {
+				return
+			}
+
+			if errs[strLocation] != nil {
+				badDeps = append(badDeps, dependency)
 			}
 		})
+
+		if len(badDeps) > 0 {
+			errs[contract.SourceLocation] = &upstreamValidationError{
+				Location:        contract.SourceLocation,
+				BadDependencies: badDeps,
+			}
+		}
 	}
 
 	// Return a validator error if there are any errors
-	if len(errors) > 0 {
-		return &stagingValidatorError{errors: errs}
+	if len(errs) > 0 {
+		// Map errors to address locations
+		errsByAddress := make(map[common.AddressLocation]error)
+		for _, contract := range v.stagedContracts {
+			err := errs[contract.SourceLocation]
+			if err != nil {
+				errsByAddress[contract.DeployLocation] = err
+			}
+		}
+		return &stagingValidatorError{errors: errsByAddress}
 	}
 	return nil
 }
@@ -242,9 +266,14 @@ func (v *stagingValidatorImpl) parseAndCheckAllStaged() map[common.StringLocatio
 		// TODO: add test case for cyclic imports
 		// Create a set of all dependencies
 		missingDependencies := make([]common.AddressLocation, 0)
+		v.forEachDependency(contract, func(dependency common.Location) {
+			if _, ok := v.contracts[dependency]; !ok {
+				missingDependencies = append(missingDependencies, dependency.(common.AddressLocation))
+			}
+		})
 
 		if len(missingDependencies) > 0 {
-			errors[contract.DeployLocation] = &missingDependenciesError{
+			errors[contract.SourceLocation] = &missingDependenciesError{
 				MissingContracts: missingDependencies,
 			}
 		}
