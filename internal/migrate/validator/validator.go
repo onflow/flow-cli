@@ -141,9 +141,9 @@ func NewValidator(repoService GitHubRepositoriesService, network config.Network,
 	}
 }
 
-func (v *validator) ValidateContracts() error {
+func (v *validator) ValidateContracts() ([]ContractUpdateStatus, error) {
 	if v.state.Contracts() == nil {
-		return nil
+		return nil, nil
 	}
 
 	var contractNames []string
@@ -151,12 +151,12 @@ func (v *validator) ValidateContracts() error {
 		contractNames = append(contractNames, c.Name)
 	}
 
-	_, _, err := v.getContractUpdateStatuses(contractNames...)
+	statuses, _, err := v.getContractUpdateStatuses(contractNames...)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	return statuses, err
 }
 
 func (v *validator) getContractUpdateStatuses(contractNames ...string) ([]ContractUpdateStatus, *time.Time, error) {
