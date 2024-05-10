@@ -21,10 +21,13 @@ package migrate
 import (
 	"context"
 	"errors"
+	"path/filepath"
 	"reflect"
 	"testing"
 
+	"github.com/onflow/cadence"
 	"github.com/onflow/cadence/runtime/common"
+	"github.com/onflow/contract-updater/lib/go/templates"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/onflow/flowkit/v2"
@@ -116,14 +119,31 @@ func Test_StagingService(t *testing.T) {
 			Name: "testnet",
 		}, nil).Maybe()
 
-		// TODO, should make sure that the script is correct
-		srv.On("SendTransaction", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(tests.NewTransaction(), nil, nil).Maybe()
 		srv.On("ReplaceImportsInScript", mock.Anything, mock.Anything).Return(func(_ context.Context, script flowkit.Script) (flowkit.Script, error) {
 			return script, nil
 		}).Maybe()
 
 		deploymentContracts, err := state.DeploymentContractsByNetwork(config.TestnetNetwork)
 		require.NoError(t, err)
+
+		srv.On("SendTransaction", mock.Anything, mock.Anything, mock.MatchedBy(func(script flowkit.Script) bool {
+			expectedScript := templates.GenerateStageContractScript(MigrationContractStagingAddress("testnet"))
+			if string(script.Code) != string(expectedScript) {
+				return false
+			}
+
+			if len(script.Args) != 2 {
+				return false
+			}
+
+			_, ok := script.Args[0].(cadence.String)
+			if !ok {
+				return false
+			}
+
+			_, ok = script.Args[1].(cadence.String)
+			return ok
+		}), mock.Anything).Return(tests.NewTransaction(), nil, nil).Maybe()
 
 		return srv, state, deploymentContracts
 	}
@@ -152,12 +172,12 @@ func Test_StagingService(t *testing.T) {
 			return reflect.DeepEqual(stagedContracts, []stagedContractUpdate{
 				{
 					DeployLocation: simpleAddressLocation("0x01.Foo"),
-					SourceLocation: common.StringLocation("0x01/Foo.cdc"),
+					SourceLocation: common.StringLocation(filepath.FromSlash("0x01/Foo.cdc")),
 					Code:           []byte("access(all) contract Foo {}"),
 				},
 				{
 					DeployLocation: simpleAddressLocation("0x01.Bar"),
-					SourceLocation: common.StringLocation("0x01/Bar.cdc"),
+					SourceLocation: common.StringLocation(filepath.FromSlash("0x01/Bar.cdc")),
 					Code:           []byte("access(all) contract Bar {}"),
 				},
 			})
@@ -211,7 +231,7 @@ func Test_StagingService(t *testing.T) {
 			return reflect.DeepEqual(stagedContracts, []stagedContractUpdate{
 				{
 					DeployLocation: simpleAddressLocation("0x01.Foo"),
-					SourceLocation: common.StringLocation("0x01/Foo.cdc"),
+					SourceLocation: common.StringLocation(filepath.FromSlash("0x01/Foo.cdc")),
 					Code:           []byte("access(all) contract Foo {}"),
 				},
 			})
@@ -248,6 +268,7 @@ func Test_StagingService(t *testing.T) {
 		require.Contains(t, results, simpleAddressLocation("0x01.Foo"))
 		require.Nil(t, results[simpleAddressLocation("0x01.Foo")].err)
 		require.Equal(t, results[simpleAddressLocation("0x01.Foo")].wasValidated, false)
+		require.Equal(t, results[simpleAddressLocation("0x01.Foo")].txId, tests.NewTransaction().ID())
 	})
 
 	t.Run("skips validation if no validator", func(t *testing.T) {
@@ -288,6 +309,7 @@ func Test_StagingService(t *testing.T) {
 		require.Contains(t, results, simpleAddressLocation("0x01.Foo"))
 		require.Nil(t, results[simpleAddressLocation("0x01.Foo")].err)
 		require.Equal(t, results[simpleAddressLocation("0x01.Foo")].wasValidated, false)
+		require.Equal(t, results[simpleAddressLocation("0x01.Foo")].txId, tests.NewTransaction().ID())
 	})
 
 	t.Run("returns missing dependency error if staging not chosen", func(t *testing.T) {
@@ -310,7 +332,7 @@ func Test_StagingService(t *testing.T) {
 			return reflect.DeepEqual(stagedContracts, []stagedContractUpdate{
 				{
 					DeployLocation: simpleAddressLocation("0x01.Foo"),
-					SourceLocation: common.StringLocation("0x01/Foo.cdc"),
+					SourceLocation: common.StringLocation(filepath.FromSlash("0x01/Foo.cdc")),
 					Code:           []byte("access(all) contract Foo {}"),
 				},
 			})
@@ -378,7 +400,7 @@ func Test_StagingService(t *testing.T) {
 			return reflect.DeepEqual(stagedContracts, []stagedContractUpdate{
 				{
 					DeployLocation: simpleAddressLocation("0x01.Foo"),
-					SourceLocation: common.StringLocation("0x01/Foo.cdc"),
+					SourceLocation: common.StringLocation(filepath.FromSlash("0x01/Foo.cdc")),
 					Code:           []byte("access(all) contract Foo {}"),
 				},
 				{
@@ -419,7 +441,6 @@ func Test_StagingService(t *testing.T) {
 		require.Contains(t, results, simpleAddressLocation("0x01.Bar"))
 		require.Nil(t, results[simpleAddressLocation("0x01.Bar")].err)
 		require.Equal(t, results[simpleAddressLocation("0x01.Bar")].wasValidated, true)
+		require.Equal(t, results[simpleAddressLocation("0x01.Bar")].txId, tests.NewTransaction().ID())
 	})
 }
-
-// TODO: Add test for when the contract name mismatches
