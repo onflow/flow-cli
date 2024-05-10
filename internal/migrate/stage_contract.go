@@ -33,6 +33,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
+	"github.com/onflow/flow-cli/internal/util"
 )
 
 type stagingResults struct {
@@ -276,13 +277,13 @@ func (r *stagingResults) String() string {
 
 	reports := []string{}
 	if numStaged > 0 {
-		reports = append(reports, aurora.Green(fmt.Sprintf("%d %s staged & validated", numStaged, pluralize("contract", numStaged))).String())
+		reports = append(reports, aurora.Green(fmt.Sprintf("%d %s staged & validated", numStaged, util.Pluralize("contract", numStaged))).String())
 	}
 	if numUnvalidated > 0 {
-		reports = append(reports, aurora.Yellow(fmt.Sprintf("%d %s staged without validation", numUnvalidated, pluralize("contract", numStaged))).String())
+		reports = append(reports, aurora.Yellow(fmt.Sprintf("%d %s staged without validation", numUnvalidated, util.Pluralize("contract", numStaged))).String())
 	}
 	if numFailed > 0 {
-		reports = append(reports, aurora.Red(fmt.Sprintf("%d %s failed to stage", numFailed, pluralize("contract", numFailed))).String())
+		reports = append(reports, aurora.Red(fmt.Sprintf("%d %s failed to stage", numFailed, util.Pluralize("contract", numFailed))).String())
 	}
 
 	sb.WriteString(fmt.Sprintf("Staging results: %s\n\n", strings.Join(reports, ", ")))
@@ -313,11 +314,4 @@ func boolCount(flags ...bool) int {
 		}
 	}
 	return count
-}
-
-func pluralize(word string, count int) string {
-	if count == 1 {
-		return word
-	}
-	return word + "s"
 }
