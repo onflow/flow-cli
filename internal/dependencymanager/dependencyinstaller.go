@@ -108,7 +108,7 @@ type dependencyKey struct {
 	contractName string
 }
 
-type DependencyStateMap map[dependencyKey]dependencyState
+type dependencyStateMap map[dependencyKey]dependencyState
 
 type dependencyState struct {
 	hasContractsCheck    bool
@@ -131,7 +131,7 @@ type DependencyInstaller struct {
 	SkipDeployments bool
 	SkipAlias       bool
 	logs            categorizedLogs
-	stateMap        DependencyStateMap
+	stateMap        dependencyStateMap
 }
 
 // NewDependencyInstaller creates a new instance of DependencyInstaller
@@ -163,7 +163,7 @@ func NewDependencyInstaller(logger output.Logger, state *flowkit.State, flags de
 		State:           state,
 		SkipDeployments: flags.skipDeployments,
 		SkipAlias:       flags.skipAlias,
-		stateMap:        make(DependencyStateMap),
+		stateMap:        make(dependencyStateMap),
 	}, nil
 }
 
