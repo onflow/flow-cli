@@ -274,17 +274,19 @@ func (r *stagingResults) String() string {
 
 	sb.WriteString("\n")
 
+	reports := []string{}
 	if numStaged > 0 {
-		sb.WriteString(aurora.Green(fmt.Sprintf("%d %s staged & passed local validation\n", numStaged, pluralize("contract", numStaged))).String())
+		reports = append(reports, aurora.Green(fmt.Sprintf("%d %s staged & validated", numStaged, pluralize("contract", numStaged))).String())
 	}
 	if numUnvalidated > 0 {
-		sb.WriteString(aurora.Yellow(fmt.Sprintf("%d %s staged, but was not validated\n", numUnvalidated, pluralize("contract", numStaged))).String())
+		reports = append(reports, aurora.Yellow(fmt.Sprintf("%d %s staged without validation", numUnvalidated, pluralize("contract", numStaged))).String())
 	}
 	if numFailed > 0 {
-		sb.WriteString(aurora.Red(fmt.Sprintf("%d %s failed to stage\n", numFailed, pluralize("contract", numStaged))).String())
+		reports = append(reports, aurora.Red(fmt.Sprintf("%d %s failed to stage", numFailed, pluralize("contract", numFailed))).String())
 	}
 
-	sb.WriteString("\n")
+	sb.WriteString(fmt.Sprintf("Staging results: %s\n\n", strings.Join(reports, ", ")))
+
 	sb.WriteString("DISCLAIMER: Pre-staging validation checks are not exhaustive and do not guarantee the contract will work as expected, please monitor the status of your contract using the `flow migrate is-validated` command\n\n")
 	sb.WriteString("You may use the --skip-validation flag to disable these checks and stage all contracts regardless")
 
