@@ -206,6 +206,12 @@ func (v *stagingValidatorImpl) Validate(stagedContracts []stagedContractUpdate) 
 			continue
 		}
 
+		// Leave cyclic import errors to the checker
+		var cyclicImportErr *sema.CyclicImportsError
+		if errors.As(err, &cyclicImportErr) {
+			continue
+		}
+
 		badDeps := make([]common.Location, 0)
 		v.forEachDependency(contract, func(dependency common.Location) {
 			strLocation, ok := dependency.(common.StringLocation)
@@ -255,7 +261,6 @@ func (v *stagingValidatorImpl) parseAndCheckAllStaged() map[common.StringLocatio
 	// Note: nodes are not visited more than once so cyclic imports are not an issue
 	// They will be reported, however, by the checker, if they do exist
 	for _, contract := range v.stagedContracts {
-		// TODO: add test case for cyclic imports
 		// Create a set of all dependencies
 		missingDependencies := make([]common.AddressLocation, 0)
 		v.forEachDependency(contract, func(dependency common.Location) {
@@ -327,69 +332,76 @@ func (v *stagingValidatorImpl) validateContractUpdate(contract stagedContractUpd
 // Check a contract by location
 func (v *stagingValidatorImpl) checkContract(
 	importedLocation common.Location,
-) (*sema.Checker, error) {
+) (checker *sema.Checker, err error) {
 	// Try to load cached checker
 	if cacheItem, ok := v.checkingCache[importedLocation]; ok {
 		return cacheItem.checker, cacheItem.err
 	}
 
-	// Check the contract code
-	checker, err := (func() (*sema.Checker, error) {
-		// Resolve the contract code and real location based on whether this is a staged update
-		var code []byte
-		var err error
-
-		// If it's an address location, get the staged contract code from the network
-		if addressLocation, ok := importedLocation.(common.AddressLocation); ok {
-			code, err = v.getStagedContractCode(addressLocation)
-			if err != nil {
-				return nil, fmt.Errorf("failed to get staged contract code: %w", err)
-			}
-		} else {
-			// Otherwise, the code is already known
-			code = v.contracts[importedLocation]
-			if code == nil {
-				return nil, fmt.Errorf("contract code not found for location: %s", importedLocation)
-			}
-		}
-
-		// Parse the contract code
-		var program *ast.Program
-		program, err = parser.ParseProgram(nil, code, parser.Config{})
-		if err != nil {
-			return nil, err
-		}
-
-		// Check the contract code
-		checker, err := sema.NewChecker(
-			program,
-			importedLocation,
-			nil,
-			&sema.Config{
-				AccessCheckMode:    sema.AccessCheckModeStrict,
-				AttachmentsEnabled: true,
-				BaseValueActivationHandler: func(_ common.Location) *sema.VariableActivation {
-					// Only checking contracts, so no need to consider script standard library
-					return util.NewStandardLibrary().BaseValueActivation
-				},
-				LocationHandler:            v.resolveLocation,
-				ImportHandler:              v.resolveImport,
-				MemberAccountAccessHandler: v.resolveAccountAccess,
-			},
-		)
-		if err != nil {
-			return nil, err
-		}
-
-		err = checker.Check()
-		return checker, err
-	})()
-
 	// Cache the checking result
+	defer func() {
+		var cacheItem *cachedCheckingResult
+		if existingCacheItem, ok := v.checkingCache[importedLocation]; ok {
+			cacheItem = existingCacheItem
+		} else {
+			cacheItem = &cachedCheckingResult{}
+		}
+
+		cacheItem.checker = checker
+		cacheItem.err = err
+	}()
+
+	// Resolve the contract code and real location based on whether this is a staged update
+	var code []byte
+
+	// If it's an address location, get the staged contract code from the network
+	if addressLocation, ok := importedLocation.(common.AddressLocation); ok {
+		code, err = v.getStagedContractCode(addressLocation)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		// Otherwise, the code is already known
+		code = v.contracts[importedLocation]
+		if code == nil {
+			return nil, fmt.Errorf("contract code not found for location: %s", importedLocation)
+		}
+	}
+
+	// Parse the contract code
+	var program *ast.Program
+	program, err = parser.ParseProgram(nil, code, parser.Config{})
+	if err != nil {
+		return nil, err
+	}
+
+	// Check the contract code
+	checker, err = sema.NewChecker(
+		program,
+		importedLocation,
+		nil,
+		&sema.Config{
+			AccessCheckMode:    sema.AccessCheckModeStrict,
+			AttachmentsEnabled: true,
+			BaseValueActivationHandler: func(_ common.Location) *sema.VariableActivation {
+				// Only checking contracts, so no need to consider script standard library
+				return util.NewStandardLibrary().BaseValueActivation
+			},
+			LocationHandler:            v.resolveLocation,
+			ImportHandler:              v.resolveImport,
+			MemberAccountAccessHandler: v.resolveAccountAccess,
+		},
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	// We must add this checker to the cache before checking to prevent cyclic imports
 	v.checkingCache[importedLocation] = &cachedCheckingResult{
 		checker: checker,
-		err:     err,
 	}
+
+	err = checker.Check()
 	return checker, err
 }
 

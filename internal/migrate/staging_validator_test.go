@@ -487,6 +487,153 @@ func Test_StagingValidator(t *testing.T) {
 		require.ErrorAs(t, validatorErr.errors[simpleAddressLocation("0x02.Bar")], &upstreamErr)
 	})
 
+	t.Run("resolves account access correctly", func(t *testing.T) {
+		location := simpleAddressLocation("0x01.Test")
+		sourceCodeLocation := common.StringLocation("./Test.cdc")
+		oldContract := `
+		import ImpContract from 0x01
+		pub contract Test {
+			pub fun test() {}
+		}`
+		newContract := `
+		import ImpContract from 0x01
+		access(all) contract Test {
+			access(all) fun test() {}
+			init() {
+				ImpContract.test()
+			}
+		}`
+		impContract := `
+		access(all) contract ImpContract {
+			access(account) fun test() {}
+			init() {}
+		}`
+
+		// setup mocks
+		srv := setupValidatorMocks(t, []mockNetworkAccount{
+			{
+				address:         flow.HexToAddress("01"),
+				contracts:       map[string][]byte{"Test": []byte(oldContract)},
+				stagedContracts: map[string][]byte{"ImpContract": []byte(impContract)},
+			},
+		})
+
+		// validate
+		validator := newStagingValidator(srv)
+		err := validator.Validate([]stagedContractUpdate{{location, sourceCodeLocation, []byte(newContract)}})
+		require.NoError(t, err)
+	})
+
+	t.Run("validates multiple contracts, no error", func(t *testing.T) {
+		// setup mocks
+		srv := setupValidatorMocks(t, []mockNetworkAccount{
+			{
+				address: flow.HexToAddress("01"),
+				contracts: map[string][]byte{"Foo": []byte(`
+				pub contract Foo {
+					pub fun test() {}
+				}`)},
+			},
+			{
+				address: flow.HexToAddress("02"),
+				contracts: map[string][]byte{"Bar": []byte(`
+				import Foo from 0x01
+				pub contract Bar {
+					pub fun test() {}
+					init() {
+						Foo.test()
+					}
+				}`)},
+			},
+		})
+
+		validator := newStagingValidator(srv)
+		err := validator.Validate([]stagedContractUpdate{
+			{
+				DeployLocation: simpleAddressLocation("0x01.Foo"),
+				SourceLocation: common.StringLocation("./Foo.cdc"),
+				Code: []byte(`
+				access(all) contract Foo {
+					access(all) fun test() {}
+				}`),
+			},
+			{
+				DeployLocation: simpleAddressLocation("0x02.Bar"),
+				SourceLocation: common.StringLocation("./Bar.cdc"),
+				Code: []byte(`
+				import Foo from 0x01
+				access(all) contract Bar {
+					access(all) fun test() {}
+					init() {
+						Foo.test()
+					}
+				}`),
+			},
+		})
+
+		require.NoError(t, err)
+	})
+
+	t.Run("validates cyclic imports", func(t *testing.T) {
+		// setup mocks
+		srv := setupValidatorMocks(t, []mockNetworkAccount{
+			{
+				address: flow.HexToAddress("01"),
+				contracts: map[string][]byte{"Foo": []byte(`
+				pub contract Foo {
+					pub fun test() {}
+					init() {}
+				}`)},
+			},
+			{
+				address: flow.HexToAddress("02"),
+				contracts: map[string][]byte{"Bar": []byte(`
+				pub contract Bar {
+					pub fun test() {}
+					init() {
+						Foo.test()
+					}
+				}`)},
+			},
+		})
+
+		validator := newStagingValidator(srv)
+		err := validator.Validate([]stagedContractUpdate{
+			{
+				DeployLocation: simpleAddressLocation("0x01.Foo"),
+				SourceLocation: common.StringLocation("./Foo.cdc"),
+				Code: []byte(`
+				import Bar from 0x02
+				access(all) contract Foo {
+					access(all) fun test() {}
+					init() {}
+				}`),
+			},
+			{
+				DeployLocation: simpleAddressLocation("0x02.Bar"),
+				SourceLocation: common.StringLocation("./Bar.cdc"),
+				Code: []byte(`
+				import Foo from 0x01
+				access(all) contract Bar {
+					access(all) fun test() {}
+					init() {
+						Foo.test()
+					}
+				}`),
+			},
+		})
+
+		var validatorErr *stagingValidatorError
+		require.ErrorAs(t, err, &validatorErr)
+
+		require.Equal(t, 2, len(validatorErr.errors))
+
+		// check that error exists & ensure that the local contract names are used (not the deploy locations)
+		var cyclicImportError *sema.CyclicImportsError
+		require.ErrorAs(t, validatorErr.errors[simpleAddressLocation("0x01.Foo")], &cyclicImportError)
+		require.ErrorAs(t, validatorErr.errors[simpleAddressLocation("0x02.Bar")], &cyclicImportError)
+	})
+
 	t.Run("downstream missing dependency errors", func(t *testing.T) {
 		// setup mocks
 		srv := setupValidatorMocks(t, []mockNetworkAccount{
