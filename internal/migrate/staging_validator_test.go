@@ -336,39 +336,55 @@ func Test_StagingValidator(t *testing.T) {
 	})
 
 	t.Run("resolves account access correctly", func(t *testing.T) {
-		location := simpleAddressLocation("0x01.Test")
-		sourceCodeLocation := common.StringLocation("./Test.cdc")
-		oldContract := `
-		import ImpContract from 0x01
-		pub contract Test {
-			pub fun test() {}
-		}`
-		newContract := `
-		import ImpContract from 0x01
-		access(all) contract Test {
-			access(all) fun test() {}
-			init() {
-				ImpContract.test()
-			}
-		}`
-		impContract := `
-		access(all) contract ImpContract {
-			access(account) fun test() {}
-			init() {}
-		}`
-
 		// setup mocks
 		srv := setupValidatorMocks(t, []mockNetworkAccount{
 			{
-				address:         flow.HexToAddress("01"),
-				contracts:       map[string][]byte{"Test": []byte(oldContract)},
-				stagedContracts: map[string][]byte{"ImpContract": []byte(impContract)},
+				address: flow.HexToAddress("01"),
+				contracts: map[string][]byte{
+					"Test": []byte(`
+					import ImpContract from 0x01
+					pub contract Test {
+						pub fun test() {}
+					}`),
+					"Imp2": []byte(`
+					pub contract Imp2 {
+						access(account) fun test() {}
+					}`),
+				},
+				stagedContracts: map[string][]byte{"ImpContract": []byte(`
+				access(all) contract ImpContract {
+					access(account) fun test() {}
+					init() {}
+				}`)},
 			},
 		})
 
 		// validate
 		validator := newStagingValidator(srv)
-		err := validator.Validate([]stagedContractUpdate{{location, sourceCodeLocation, []byte(newContract)}})
+		err := validator.Validate([]stagedContractUpdate{
+			{
+				simpleAddressLocation("0x01.Test"),
+				common.StringLocation("./Test.cdc"),
+				[]byte(`
+			import ImpContract from 0x01
+			import Imp2 from 0x01
+			access(all) contract Test {
+				access(all) fun test() {}
+				init() {
+					ImpContract.test()
+					Imp2.test()
+				}
+			}`),
+			},
+			{
+				simpleAddressLocation("0x01.Imp2"),
+				common.StringLocation("./Imp2.cdc"),
+				[]byte(`
+			access(all) contract Imp2 {
+				access(account) fun test() {}
+			}`),
+			},
+		})
 		require.NoError(t, err)
 	})
 

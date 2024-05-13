@@ -43,8 +43,6 @@ import (
 	"github.com/onflow/flow-cli/internal/util"
 )
 
-// TODO: test same contract -> multiple accounts
-
 //go:generate mockery --name stagingValidator --inpackage --testonly --case underscore
 type stagingValidator interface {
 	Validate(stagedContracts []stagedContractUpdate) error
@@ -561,27 +559,42 @@ func (v *stagingValidatorImpl) resolveAccountAccess(checker *sema.Checker, membe
 	if checker == nil {
 		return false
 	}
-	// TODO: FIX ME
 
-	checkerLocation, ok := checker.Location.(common.StringLocation)
-	if !ok {
-		return false
-	}
-
-	memberAddressLocation, ok := memberLocation.(common.AddressLocation)
-	if !ok {
-		return false
-	}
-
-	// If the source code of the update is being checked, we should check account access based on the
-	// targeted network location of the contract & not the source code location
-	for deployLocation, stagedContract := range v.stagedContracts {
-		if stagedContract.SourceLocation == checkerLocation {
-			return memberAddressLocation.Address == deployLocation.Address
+	var memberAddress common.Address
+	if memberAddressLocation, ok := memberLocation.(common.AddressLocation); ok {
+		memberAddress = memberAddressLocation.Address
+	} else if memberStringLocation, ok := memberLocation.(common.StringLocation); ok {
+		found := false
+		for _, stagedContract := range v.stagedContracts {
+			if stagedContract.SourceLocation == memberStringLocation {
+				memberAddress = stagedContract.DeployLocation.Address
+				found = true
+				break
+			}
+		}
+		if !found {
+			return false
 		}
 	}
 
-	return false
+	var checkerAddress common.Address
+	if checkerAddressLocation, ok := checker.Location.(common.AddressLocation); ok {
+		checkerAddress = checkerAddressLocation.Address
+	} else if checkerStringLocation, ok := checker.Location.(common.StringLocation); ok {
+		found := false
+		for _, stagedContract := range v.stagedContracts {
+			if stagedContract.SourceLocation == checkerStringLocation {
+				checkerAddress = stagedContract.DeployLocation.Address
+				found = true
+				break
+			}
+		}
+		if !found {
+			return false
+		}
+	}
+
+	return memberAddress == checkerAddress
 }
 
 func (v *stagingValidatorImpl) resolveAddressContractNames(address common.Address) ([]string, error) {
