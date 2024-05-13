@@ -129,11 +129,9 @@ func (c Command) AddToParent(parent *cobra.Command) {
 		}
 
 		// check contract migrations if flag is set
-		t := time.Now()
-		if Flags.ContractMigrationCheck {
+		if !Flags.SkipContractMigrationCheck {
 			checkContractMigrations(state, logger, flow)
 		}
-		logger.Debug(fmt.Sprintf("Contract migration check took %s", time.Since(t)))
 
 		// record command usage
 		wg := sync.WaitGroup{}
@@ -443,7 +441,7 @@ type GlobalFlags struct {
 	Yes                    bool
 	ConfigPaths            []string
 	SkipVersionCheck       bool
-	ContractMigrationCheck bool
+	SkipContractMigrationCheck bool
 }
 
 func checkContractMigrations(state *flowkit.State, logger output.Logger, flow flowkit.Services) {
