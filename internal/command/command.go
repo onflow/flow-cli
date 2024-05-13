@@ -129,9 +129,11 @@ func (c Command) AddToParent(parent *cobra.Command) {
 		}
 
 		// check contract migrations if flag is set
+		t := time.Now()
 		if Flags.ContractMigrationCheck {
 			checkContractMigrations(state, logger, flow)
 		}
+		logger.Debug(fmt.Sprintf("Contract migration check took %s", time.Since(t)))
 
 		// record command usage
 		wg := sync.WaitGroup{}
