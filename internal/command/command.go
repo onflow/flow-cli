@@ -454,27 +454,24 @@ func checkContractMigrations(state *flowkit.State, logger output.Logger, flow fl
 		return
 	}
 
-	var hasFailed bool
+	var failedContracts []validator.ContractUpdateStatus
 
 	for _, contract := range contractStatuses {
 		if contract.IsFailure() {
-			hasFailed = true
-			_, _ = fmt.Fprintf(os.Stderr,
-				"Contract %s has failed the last emulated migration\n"+
-					" - Account: %s\n"+
-					" - Contract: %s\n",
-				contract.ContractName,
-				contract.AccountAddress,
-				contract.ContractName,
-			)
+			failedContracts = append(failedContracts, contract)
 		}
 	}
 
-	if hasFailed {
-		_, _ = fmt.Fprintf(
-			os.Stderr, 
-			"Please check the latest migration data at %s for more information about failures. \n",
-			migrationDataURL,
+	if len(failedContracts) > 0 {
+		fmt.Fprintf(
+			os.Stderr, "\n%s  Contract Migration Check: %d contract(s) failed to migrate\n", output.ErrorEmoji(), len(failedContracts),
+		)
+		for _, contract := range failedContracts {
+			fmt.Fprintf(os.Stderr, " - Account: %s\n - Contract: %s\n\n", contract.AccountAddress, contract.ContractName)
+		}
+
+		fmt.Fprintf(
+			os.Stderr, "\n Please visit %s for more information about the failure. \n", migrationDataURL,
 		)
 	}
 	return
