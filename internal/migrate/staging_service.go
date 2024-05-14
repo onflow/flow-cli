@@ -62,12 +62,19 @@ func newStagingService(
 	validator stagingValidator,
 	unvalidatedContractsHandler func(*stagingValidatorError) bool,
 ) *stagingServiceImpl {
+	handler := func(err *stagingValidatorError) bool {
+		return false
+	}
+	if unvalidatedContractsHandler != nil {
+		handler = unvalidatedContractsHandler
+	}
+
 	return &stagingServiceImpl{
 		flow:                        flow,
 		state:                       state,
 		logger:                      logger,
 		validator:                   validator,
-		unvalidatedContractsHandler: unvalidatedContractsHandler,
+		unvalidatedContractsHandler: handler,
 	}
 }
 
@@ -116,82 +123,41 @@ func (s *stagingServiceImpl) validateAndStageContracts(ctx context.Context, cont
 		}
 	}
 
-	// Now, handle contracts that failed validation
-	newResults := s.maybeStageInvalidContracts(ctx, contracts, validatorError)
-	for location, res := range newResults {
-		// We overwrite the original validation error result with the new staging result
-		results[location] = res
-	}
-
-	// Stage contracts that passed validation
-	newResults = s.stageValidContracts(ctx, contracts, validatorError)
-	for location, res := range newResults {
-		results[location] = res
-	}
-
-	return results, nil
-}
-
-func (s *stagingServiceImpl) stageValidContracts(ctx context.Context, contracts []stagedContractUpdate, validatorError *stagingValidatorError) map[common.AddressLocation]stagingResult {
-	// Filter out contracts that failed validation
-	validContracts := make([]stagedContractUpdate, 0, len(contracts))
-	if validatorError != nil && validatorError.errors != nil {
+	// Split contracts into valid, and contracts with missing dependencies
+	missingDepsContracts := make([]stagedContractUpdate, 0)
+	validContracts := make([]stagedContractUpdate, 0)
+	if validatorError == nil {
+		validContracts = contracts
+	} else {
 		for _, contract := range contracts {
-			if _, hasError := validatorError.errors[contract.DeployLocation]; !hasError {
+			contractErr := validatorError.errors[contract.DeployLocation]
+
+			var missingDepsError *missingDependenciesError
+			if errors.As(contractErr, &missingDepsError) {
+				missingDepsContracts = append(missingDepsContracts, contract)
+			} else if contractErr == nil {
 				validContracts = append(validContracts, contract)
 			}
 		}
-	} else {
-		validContracts = contracts
+	}
+
+	s.logger.StopProgress()
+
+	// Now, handle contracts that were not validated due to missing dependencies
+	if len(missingDepsContracts) > 0 && s.unvalidatedContractsHandler(validatorError) {
+		for location, res := range s.stageContracts(ctx, missingDepsContracts) {
+			res.WasValidated = false
+			results[location] = res
+		}
 	}
 
 	// Stage contracts that passed validation
-	results := make(map[common.AddressLocation]stagingResult)
 	for contractLocation, res := range s.stageContracts(ctx, validContracts) {
 		res.WasValidated = true
 		results[contractLocation] = res
 	}
 
-	return results
-}
-
-func (s *stagingServiceImpl) maybeStageInvalidContracts(ctx context.Context, contracts []stagedContractUpdate, validatorErr *stagingValidatorError) map[common.AddressLocation]stagingResult {
-	if validatorErr == nil || validatorErr.errors == nil {
-		return nil
-	}
-
-	results := make(map[common.AddressLocation]stagingResult)
-
-	missingDependencyErrors := validatorErr.MissingDependencyErrors()
-	if len(missingDependencyErrors) == 0 {
-		return results
-	}
-
-	// Prompt user to continue staging contracts that have missing dependencies
-	s.logger.StopProgress()
-	willStage := s.unvalidatedContractsHandler(validatorErr)
-
-	// If user does not want to stage these contracts, we can just return
-	// validation errors as-is
-	if !willStage {
-		return results
-	}
-
-	// Otherwise, we will stage the contracts that have missing dependencies
-	unvalidatedContracts := make([]stagedContractUpdate, 0, len(missingDependencyErrors))
-	for _, contract := range contracts {
-		if _, hasError := missingDependencyErrors[contract.DeployLocation]; hasError {
-			unvalidatedContracts = append(unvalidatedContracts, contract)
-		}
-	}
-
-	// Stage contracts that have missing dependencies & add to results
-	for location, res := range s.stageContracts(ctx, unvalidatedContracts) {
-		res.WasValidated = false
-		results[location] = res
-	}
-
-	return results
+	return results, nil
 }
 
 func (s *stagingServiceImpl) stageContracts(ctx context.Context, contracts []stagedContractUpdate) map[common.AddressLocation]stagingResult {

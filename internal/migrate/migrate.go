@@ -34,7 +34,7 @@ func init() {
 	getStagedCodeCommand.AddToParent(Cmd)
 	IsStagedCommand.AddToParent(Cmd)
 	listStagedContractsCommand.AddToParent(Cmd)
-	stageContractCommand.AddToParent(Cmd)
+	stageCommand.AddToParent(Cmd)
 	unstageContractCommand.AddToParent(Cmd)
 	stateCommand.AddToParent(Cmd)
 	IsValidatedCommand.AddToParent(Cmd)

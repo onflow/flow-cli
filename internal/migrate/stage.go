@@ -42,26 +42,31 @@ type stagingResults struct {
 
 var _ command.ResultWithExitCode = &stagingResults{}
 
-var stageContractflags struct {
-	All            bool     `default:"false" flag:"all" info:"Stage all contracts"`
+var stageProjectFlags struct {
 	Accounts       []string `default:"" flag:"account" info:"Accounts to stage the contract under"`
 	SkipValidation bool     `default:"false" flag:"skip-validation" info:"Do not validate the contract code against staged dependencies"`
 }
 
-var stageContractCommand = &command.Command{
+var stageCommand = &command.Command{
 	Cmd: &cobra.Command{
-		Use:   "stage-contract [contract names...]",
+		Use:   "stage [contract names...]",
 		Short: "Stage a contract, or many contracts, for migration",
-		Example: `flow migrate stage-contract Foo Bar --network testnet
-flow migrate stage-contract --account my-account --network testnet
-flow migrate stage-contract --all --network testnet`,
-		Args: cobra.ArbitraryArgs,
+		Example: `# Stage all contracts
+flow migrate stage --network testnet
+
+# Stage by contract name(s)
+flow migrate stage Foo Bar --network testnet
+
+# Stage by account name(s)
+flow migrate stage --account my-account --network testnet`,
+		Args:    cobra.ArbitraryArgs,
+		Aliases: []string{"stage"},
 	},
-	Flags: &stageContractflags,
-	RunS:  stageContract,
+	Flags: &stageProjectFlags,
+	RunS:  stageProject,
 }
 
-func stageContract(
+func stageProject(
 	args []string,
 	globalFlags command.GlobalFlags,
 	logger output.Logger,
@@ -74,26 +79,23 @@ func stageContract(
 	}
 
 	// Validate command arguments
-	optionCount := boolCount(stageContractflags.All, len(stageContractflags.Accounts) > 0, len(args) > 0)
-	if optionCount > 1 {
-		return nil, fmt.Errorf("only one of --all, --account, or contract names can be provided")
-	} else if optionCount == 0 {
-		return nil, fmt.Errorf("at least one of --all, --account, or contract names must be provided")
+	if len(stageProjectFlags.Accounts) > 0 && len(args) > 0 {
+		return nil, fmt.Errorf("only one of contract names or --account can be provided")
 	}
 
 	// Stage based on flags
 	var v stagingValidator
-	if !stageContractflags.SkipValidation {
+	if !stageProjectFlags.SkipValidation {
 		v = newStagingValidator(flow)
 	}
 	s := newStagingService(flow, state, logger, v, promptStagingUnvalidatedContracts(logger))
 
-	if stageContractflags.All {
+	if len(args) == 0 && len(stageProjectFlags.Accounts) == 0 {
 		return stageAll(s, state, flow)
 	}
 
-	if len(stageContractflags.Accounts) > 0 {
-		return stageByAccountNames(s, state, flow, stageContractflags.Accounts)
+	if len(stageProjectFlags.Accounts) > 0 {
+		return stageByAccountNames(s, state, flow, stageProjectFlags.Accounts)
 	}
 
 	return stageByContractNames(s, state, flow, args)
