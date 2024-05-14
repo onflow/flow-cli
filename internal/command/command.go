@@ -473,7 +473,7 @@ func checkContractMigrations(state *flowkit.State, logger output.Logger, flow fl
 	if hasFailed {
 		_, _ = fmt.Fprintf(
 			os.Stderr, 
-			"Some contracts have failed the last emulated migration, please check the latest migration data at %s for more information \n",
+			"Please check the latest migration data at %s for more information about failures. \n",
 			migrationDataURL,
 		)
 	}
