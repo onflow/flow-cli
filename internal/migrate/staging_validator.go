@@ -186,7 +186,7 @@ func (v *stagingValidatorImpl) Validate(stagedContracts []stagedContractUpdate) 
 	v.loadSystemContracts()
 
 	// Parse and check all staged contracts
-	errs := v.parseAndCheckAllStaged()
+	errs := v.checkAllStaged()
 
 	// Validate all contract updates
 	for _, contract := range v.stagedContracts {
@@ -256,7 +256,7 @@ func (v *stagingValidatorImpl) Validate(stagedContracts []stagedContractUpdate) 
 	return nil
 }
 
-func (v *stagingValidatorImpl) parseAndCheckAllStaged() map[common.StringLocation]error {
+func (v *stagingValidatorImpl) checkAllStaged() map[common.StringLocation]error {
 	errors := make(map[common.StringLocation]error)
 	for _, contract := range v.stagedContracts {
 		_, err := v.checkContract(contract.SourceLocation)
