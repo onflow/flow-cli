@@ -19,9 +19,11 @@
 package migrate
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/onflow/cadence"
@@ -125,11 +127,19 @@ func (e *stagingValidatorError) Error() string {
 
 // MissingDependencies returns the contracts dependended on by the staged contracts that are missing
 func (e *stagingValidatorError) MissingDependencies() []common.AddressLocation {
-	missingDependencies := make([]common.AddressLocation, 0)
+	missingDepsMap := make(map[common.AddressLocation]struct{})
 	for _, err := range e.MissingDependencyErrors() {
-		missingDependencies = append(missingDependencies, err.MissingContracts...)
+		for _, missingDep := range err.MissingContracts {
+			missingDepsMap[missingDep] = struct{}{}
+		}
 	}
 
+	missingDependencies := make([]common.AddressLocation, 0)
+	for missingDep := range missingDepsMap {
+		missingDependencies = append(missingDependencies, missingDep)
+	}
+
+	sortAddressLocations(missingDependencies)
 	return missingDependencies
 }
 
@@ -729,4 +739,15 @@ func (a *accountContractNamesProviderImpl) GetAccountContractNames(
 	address common.Address,
 ) ([]string, error) {
 	return a.resolverFunc(address)
+}
+
+// util to sort address locations
+func sortAddressLocations(locations []common.AddressLocation) {
+	slices.SortFunc(locations, func(a common.AddressLocation, b common.AddressLocation) int {
+		addrCmp := bytes.Compare(a.Address.Bytes(), b.Address.Bytes())
+		if addrCmp != 0 {
+			return addrCmp
+		}
+		return strings.Compare(a.Name, b.Name)
+	})
 }

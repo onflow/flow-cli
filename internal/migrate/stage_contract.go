@@ -102,14 +102,24 @@ func stageContract(
 func promptStagingUnvalidatedContracts(logger output.Logger) func(validatorError *stagingValidatorError) bool {
 	return func(validatorError *stagingValidatorError) bool {
 		infoMessage := strings.Builder{}
-
 		infoMessage.WriteString("Preliminary validation could not be performed on the following contracts:\n")
+
+		// Sort the locations for consistent output
 		missingDependencyErrors := validatorError.MissingDependencyErrors()
+		sortedLocations := make([]common.AddressLocation, 0, len(missingDependencyErrors))
 		for deployLocation := range missingDependencyErrors {
+			sortedLocations = append(sortedLocations, deployLocation)
+		}
+		sortAddressLocations(sortedLocations)
+
+		// Print the locations
+		for _, deployLocation := range sortedLocations {
 			infoMessage.WriteString(fmt.Sprintf("  - %s\n", deployLocation))
 		}
 
 		infoMessage.WriteString("\nThese contracts depend on the following contracts which have not been staged yet:\n")
+
+		// Print the missing dependencies
 		missingDependencies := validatorError.MissingDependencies()
 		for _, depLocation := range missingDependencies {
 			infoMessage.WriteString(fmt.Sprintf("  - %s\n", depLocation))
