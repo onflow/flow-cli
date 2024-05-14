@@ -311,7 +311,7 @@ func setupMockState(t *testing.T) *flowkit.State {
 	}`), 0644)
 
 	rw := afero.Afero{Fs: mockFs}
-	state, err := flowkit.Init(rw, crypto.ECDSA_P256, crypto.SHA3_256)
+	state, err := flowkit.Init(rw)
 	require.NoError(t, err)
 
 	// Mock flowkit contracts
