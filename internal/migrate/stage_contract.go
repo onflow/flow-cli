@@ -269,6 +269,8 @@ func (r *stagingResults) String() string {
 		sb.WriteString(aurora.Colorize(fmt.Sprintf("%s %s ", prefix, location.String()), color).String())
 		if result.TxId != flow.EmptyID {
 			sb.WriteString(fmt.Sprintf(" (txId: %s)", result.TxId))
+		} else if result.Err == nil {
+			sb.WriteString(" (already staged)")
 		}
 		sb.WriteString("\n")
 	}

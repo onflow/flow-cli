@@ -107,7 +107,8 @@ func addAccountsToState(
 func Test_StagingService(t *testing.T) {
 	setupMocks := func(
 		accts []mockAccount,
-	) (flowkit.Services, *flowkit.State, []*project.Contract) {
+		mocksStagedContracts map[common.AddressLocation][]byte,
+	) (*flowkitMocks.Services, *flowkit.State, []*project.Contract) {
 		srv := flowkitMocks.NewServices(t)
 		rw, _ := tests.ReaderWriter()
 		state, err := flowkit.Init(rw, crypto.ECDSA_P256, crypto.SHA3_256)
@@ -145,6 +146,52 @@ func Test_StagingService(t *testing.T) {
 			return ok
 		}), mock.Anything).Return(tests.NewTransaction(), nil, nil).Maybe()
 
+		// Mock staged contracts on network
+		for location, code := range mocksStagedContracts {
+			srv.On(
+				"ExecuteScript",
+				mock.Anything,
+				mock.MatchedBy(func(script flowkit.Script) bool {
+					if string(script.Code) != string(templates.GenerateGetStagedContractCodeScript(MigrationContractStagingAddress("testnet"))) {
+						return false
+					}
+
+					if len(script.Args) != 2 {
+						return false
+					}
+
+					callContractAddress, callContractName := script.Args[0], script.Args[1]
+					if callContractName != cadence.String(location.Name) {
+						return false
+					}
+					if callContractAddress != cadence.Address(location.Address) {
+						return false
+					}
+
+					return true
+				}),
+				mock.Anything,
+			).Return(cadence.NewOptional(cadence.String(code)), nil).Maybe()
+		}
+
+		// Default all staged contracts to nil
+		srv.On(
+			"ExecuteScript",
+			mock.Anything,
+			mock.MatchedBy(func(script flowkit.Script) bool {
+				if string(script.Code) != string(templates.GenerateGetStagedContractCodeScript(MigrationContractStagingAddress("testnet"))) {
+					return false
+				}
+
+				if len(script.Args) != 2 {
+					return false
+				}
+
+				return true
+			}),
+			mock.Anything,
+		).Return(cadence.NewOptional(nil), nil).Maybe()
+
 		return srv, state, deploymentContracts
 	}
 
@@ -165,7 +212,7 @@ func Test_StagingService(t *testing.T) {
 				},
 			},
 		}
-		srv, state, deploymentContracts := setupMocks(mockAccount)
+		srv, state, deploymentContracts := setupMocks(mockAccount, nil)
 
 		v := newMockStagingValidator(t)
 		v.On("Validate", mock.MatchedBy(func(stagedContracts []stagedContractUpdate) bool {
@@ -226,7 +273,7 @@ func Test_StagingService(t *testing.T) {
 				},
 			},
 		}
-		srv, state, deploymentContracts := setupMocks(mockAccount)
+		srv, state, deploymentContracts := setupMocks(mockAccount, nil)
 
 		v := newMockStagingValidator(t)
 		v.On("Validate", mock.MatchedBy(func(stagedContracts []stagedContractUpdate) bool {
@@ -286,7 +333,7 @@ func Test_StagingService(t *testing.T) {
 				},
 			},
 		}
-		srv, state, deploymentContracts := setupMocks(mockAccount)
+		srv, state, deploymentContracts := setupMocks(mockAccount, nil)
 
 		s := newStagingService(
 			srv,
@@ -327,7 +374,7 @@ func Test_StagingService(t *testing.T) {
 				},
 			},
 		}
-		srv, state, deploymentContracts := setupMocks(mockAccount)
+		srv, state, deploymentContracts := setupMocks(mockAccount, nil)
 
 		v := newMockStagingValidator(t)
 		v.On("Validate", mock.MatchedBy(func(stagedContracts []stagedContractUpdate) bool {
@@ -394,7 +441,7 @@ func Test_StagingService(t *testing.T) {
 				},
 			},
 		}
-		srv, state, deploymentContracts := setupMocks(mockAccount)
+		srv, state, deploymentContracts := setupMocks(mockAccount, nil)
 
 		v := newMockStagingValidator(t)
 		v.On("Validate", mock.MatchedBy(func(stagedContracts []stagedContractUpdate) bool {
@@ -443,5 +490,60 @@ func Test_StagingService(t *testing.T) {
 		require.Nil(t, results[simpleAddressLocation("0x01.Bar")].Err)
 		require.Equal(t, results[simpleAddressLocation("0x01.Bar")].WasValidated, true)
 		require.IsType(t, flow.Identifier{}, results[simpleAddressLocation("0x01.Bar")].TxId)
+	})
+
+	t.Run("skips staging contracts without changes", func(t *testing.T) {
+		mockAccount := []mockAccount{
+			{
+				name:    "some-account",
+				address: "0x01",
+				deployments: []mockDeployment{
+					{
+						name: "Foo",
+						code: "access(all) contract Foo {}",
+					},
+				},
+			},
+		}
+		srv, state, deploymentContracts := setupMocks(mockAccount, map[common.AddressLocation][]byte{
+			simpleAddressLocation("0x01.Foo"): []byte("access(all) contract Foo {}"),
+		})
+
+		v := newMockStagingValidator(t)
+		v.On("Validate", mock.MatchedBy(func(stagedContracts []stagedContractUpdate) bool {
+			return reflect.DeepEqual(stagedContracts, []stagedContractUpdate{
+				{
+					DeployLocation: simpleAddressLocation("0x01.Foo"),
+					SourceLocation: common.StringLocation(filepath.FromSlash("0x01/Foo.cdc")),
+					Code:           []byte("access(all) contract Foo {}"),
+				},
+			})
+		})).Return(nil).Once()
+
+		s := newStagingService(
+			srv,
+			state,
+			util.NoLogger,
+			v,
+			func(sve *stagingValidatorError) bool {
+				return false
+			},
+		)
+
+		results, err := s.StageContracts(
+			context.Background(),
+			deploymentContracts,
+		)
+
+		require.NoError(t, err)
+		require.NotNil(t, results)
+
+		require.Equal(t, 1, len(results))
+		require.Contains(t, results, simpleAddressLocation("0x01.Foo"))
+		require.Nil(t, results[simpleAddressLocation("0x01.Foo")].Err)
+		require.Equal(t, true, results[simpleAddressLocation("0x01.Foo")].WasValidated)
+		require.Equal(t, flow.Identifier{}, results[simpleAddressLocation("0x01.Foo")].TxId)
+
+		srv.AssertNotCalled(t, "SendTransaction", mock.Anything, mock.Anything, mock.Anything, mock.Anything)
 	})
 }

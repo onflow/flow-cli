@@ -272,7 +272,7 @@ func (v *stagingValidatorImpl) parseAndCheckAllStaged() map[common.StringLocatio
 		// Create a set of all dependencies
 		missingDependencies := make([]common.AddressLocation, 0)
 		v.forEachDependency(contract, func(dependency common.Location) {
-			if _, ok := v.contracts[dependency]; !ok {
+			if code := v.contracts[dependency]; code == nil {
 				if dependency, ok := dependency.(common.AddressLocation); ok {
 					missingDependencies = append(missingDependencies, dependency)
 				}
@@ -425,41 +425,12 @@ func (v *stagingValidatorImpl) getStagedContractCode(
 		return code, nil
 	}
 
-	cAddr := cadence.BytesToAddress(location.Address.Bytes())
-	cName, err := cadence.NewString(location.Name)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get cadence string from contract name: %w", err)
-	}
-
-	value, err := v.flow.ExecuteScript(
-		context.Background(),
-		flowkit.Script{
-			Code: templates.GenerateGetStagedContractCodeScript(MigrationContractStagingAddress(v.flow.Network().Name)),
-			Args: []cadence.Value{cAddr, cName},
-		},
-		flowkit.LatestScriptQuery,
-	)
+	code, err := getStagedContractCode(context.Background(), v.flow, location)
 	if err != nil {
 		return nil, err
 	}
 
-	optValue, ok := value.(cadence.Optional)
-	if !ok {
-		return nil, fmt.Errorf("invalid script return value type: %T", value)
-	}
-
-	// If the contract code is nil, the contract has not been staged yet
-	// Return nil to indicate this
-	if optValue.Value == nil {
-		return nil, fmt.Errorf("the following contract has not been staged: %s", location)
-	}
-
-	strValue, ok := optValue.Value.(cadence.String)
-	if !ok {
-		return nil, fmt.Errorf("invalid script return value type: %T", value)
-	}
-
-	v.contracts[location] = []byte(strValue)
+	v.contracts[location] = code
 	return v.contracts[location], nil
 }
 

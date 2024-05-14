@@ -197,8 +197,6 @@ func (s *stagingServiceImpl) maybeStageInvalidContracts(ctx context.Context, con
 func (s *stagingServiceImpl) stageContracts(ctx context.Context, contracts []stagedContractUpdate) map[common.AddressLocation]stagingResult {
 	results := make(map[common.AddressLocation]stagingResult)
 	for _, contract := range contracts {
-		s.logger.StartProgress(fmt.Sprintf("Staging contract %s", contract.DeployLocation))
-
 		txId, err := s.stageContract(
 			ctx,
 			contract,
@@ -214,14 +212,20 @@ func (s *stagingServiceImpl) stageContracts(ctx context.Context, contracts []sta
 				TxId: txId,
 			}
 		}
-
-		s.logger.StopProgress()
 	}
 
 	return results
 }
 
 func (s *stagingServiceImpl) stageContract(ctx context.Context, contract stagedContractUpdate) (flow.Identifier, error) {
+	s.logger.StartProgress(fmt.Sprintf("Staging contract %s", contract.DeployLocation))
+	defer s.logger.StopProgress()
+
+	// Check if the staged contract has changed
+	if !s.hasStagedContractChanged(contract) {
+		return flow.EmptyID, nil
+	}
+
 	cName := cadence.String(contract.DeployLocation.Name)
 	cCode := cadence.String(contract.Code)
 
@@ -247,8 +251,24 @@ func (s *stagingServiceImpl) stageContract(ctx context.Context, contract stagedC
 	return tx.ID(), nil
 }
 
-func (v *stagingServiceImpl) PrettyPrintValidationError(err error, location common.Location) string {
-	return v.validator.PrettyPrintError(err, location)
+func (s *stagingServiceImpl) hasStagedContractChanged(contract stagedContractUpdate) bool {
+	// Get the staged contract code
+	stagedCode, err := getStagedContractCode(context.Background(), s.flow, contract.DeployLocation)
+	if err != nil {
+		// swallow error, if we can't get the staged contract code, we should stage
+		return true
+	}
+
+	if stagedCode == nil {
+		return true
+	}
+
+	// If the staged contract code is different from the contract code, we need to stage it
+	if string(stagedCode) != string(contract.Code) {
+		return true
+	}
+
+	return false
 }
 
 func (s *stagingServiceImpl) convertToStagedContracts(contracts []*project.Contract) ([]stagedContractUpdate, error) {
@@ -290,4 +310,8 @@ func (s *stagingServiceImpl) convertToStagedContracts(contracts []*project.Contr
 	}
 
 	return stagedContracts, nil
+}
+
+func (v *stagingServiceImpl) PrettyPrintValidationError(err error, location common.Location) string {
+	return v.validator.PrettyPrintError(err, location)
 }
