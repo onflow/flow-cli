@@ -650,7 +650,7 @@ func Test_StagingValidator(t *testing.T) {
 		require.ErrorAs(t, validatorErr.errors[simpleAddressLocation("0x02.Bar")], &cyclicImportError)
 	})
 
-	t.Run("downstream missing dependency errors", func(t *testing.T) {
+	t.Run("upstream missing dependency errors", func(t *testing.T) {
 		// setup mocks
 		srv := setupValidatorMocks(t, []mockNetworkAccount{
 			{
@@ -732,5 +732,34 @@ func Test_StagingValidator(t *testing.T) {
 			simpleAddressLocation("0x03.ImpContract"),
 			simpleAddressLocation("0x04.AnotherImp"),
 		}, missingDependenciesErr.MissingContracts)
+	})
+
+	t.Run("import Crypto checker", func(t *testing.T) {
+		// setup mocks
+		srv := setupValidatorMocks(t, []mockNetworkAccount{
+			{
+				address: flow.HexToAddress("01"),
+				contracts: map[string][]byte{"Foo": []byte(`
+				import Crypto
+				pub contract Foo {
+					init() {}
+				}`)},
+			},
+		})
+
+		validator := newStagingValidator(srv)
+		err := validator.Validate([]stagedContractUpdate{
+			{
+				DeployLocation: simpleAddressLocation("0x01.Foo"),
+				SourceLocation: common.StringLocation("./Foo.cdc"),
+				Code: []byte(`
+				import Crypto
+				access(all) contract Foo {
+					init() {}
+				}`),
+			},
+		})
+
+		require.Nil(t, err)
 	})
 }

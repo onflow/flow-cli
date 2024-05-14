@@ -263,7 +263,9 @@ func (v *stagingValidatorImpl) parseAndCheckAllStaged() map[common.StringLocatio
 		missingDependencies := make([]common.AddressLocation, 0)
 		v.forEachDependency(contract, func(dependency common.Location) {
 			if _, ok := v.contracts[dependency]; !ok {
-				missingDependencies = append(missingDependencies, dependency.(common.AddressLocation))
+				if dependency, ok := dependency.(common.AddressLocation); ok {
+					missingDependencies = append(missingDependencies, dependency)
+				}
 			}
 		})
 
