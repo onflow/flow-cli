@@ -224,7 +224,7 @@ func stageByAccountNames(
 
 func (r *stagingResults) ExitCode() int {
 	for _, r := range r.Results {
-		if r.err != nil {
+		if r.Err != nil {
 			return 1
 		}
 	}
@@ -236,8 +236,8 @@ func (r *stagingResults) String() string {
 
 	// First print out any errors that occurred during staging
 	for _, result := range r.Results {
-		if result.err != nil {
-			sb.WriteString(r.prettyPrinter(result.err, nil))
+		if result.Err != nil {
+			sb.WriteString(r.prettyPrinter(result.Err, nil))
 			sb.WriteString("\n")
 		}
 	}
@@ -250,8 +250,8 @@ func (r *stagingResults) String() string {
 		var color aurora.Color
 		var prefix string
 
-		if result.err == nil {
-			if result.wasValidated {
+		if result.Err == nil {
+			if result.WasValidated {
 				color = aurora.GreenFg
 				prefix = "✔"
 				numStaged++
@@ -267,8 +267,8 @@ func (r *stagingResults) String() string {
 		}
 
 		sb.WriteString(aurora.Colorize(fmt.Sprintf("%s %s ", prefix, location.String()), color).String())
-		if result.txId != flow.EmptyID {
-			sb.WriteString(fmt.Sprintf(" (txId: %s)", result.txId))
+		if result.TxId != flow.EmptyID {
+			sb.WriteString(fmt.Sprintf(" (txId: %s)", result.TxId))
 		}
 		sb.WriteString("\n")
 	}

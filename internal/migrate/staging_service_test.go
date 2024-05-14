@@ -203,14 +203,14 @@ func Test_StagingService(t *testing.T) {
 
 		require.Equal(t, 2, len(results))
 		require.Contains(t, results, simpleAddressLocation("0x01.Foo"))
-		require.Nil(t, results[simpleAddressLocation("0x01.Foo")].err)
-		require.Equal(t, results[simpleAddressLocation("0x01.Foo")].wasValidated, true)
-		require.IsType(t, flow.Identifier{}, results[simpleAddressLocation("0x01.Foo")].txId)
+		require.Nil(t, results[simpleAddressLocation("0x01.Foo")].Err)
+		require.Equal(t, results[simpleAddressLocation("0x01.Foo")].WasValidated, true)
+		require.IsType(t, flow.Identifier{}, results[simpleAddressLocation("0x01.Foo")].TxId)
 
 		require.Contains(t, results, simpleAddressLocation("0x01.Bar"))
-		require.Nil(t, results[simpleAddressLocation("0x01.Bar")].err)
-		require.Equal(t, results[simpleAddressLocation("0x01.Bar")].wasValidated, true)
-		require.IsType(t, flow.Identifier{}, results[simpleAddressLocation("0x01.Bar")].txId)
+		require.Nil(t, results[simpleAddressLocation("0x01.Bar")].Err)
+		require.Equal(t, results[simpleAddressLocation("0x01.Bar")].WasValidated, true)
+		require.IsType(t, flow.Identifier{}, results[simpleAddressLocation("0x01.Bar")].TxId)
 	})
 
 	t.Run("stages unvalidated contracts if chosen", func(t *testing.T) {
@@ -268,9 +268,9 @@ func Test_StagingService(t *testing.T) {
 
 		require.Equal(t, 1, len(results))
 		require.Contains(t, results, simpleAddressLocation("0x01.Foo"))
-		require.Nil(t, results[simpleAddressLocation("0x01.Foo")].err)
-		require.Equal(t, results[simpleAddressLocation("0x01.Foo")].wasValidated, false)
-		require.IsType(t, flow.Identifier{}, results[simpleAddressLocation("0x01.Foo")].txId)
+		require.Nil(t, results[simpleAddressLocation("0x01.Foo")].Err)
+		require.Equal(t, results[simpleAddressLocation("0x01.Foo")].WasValidated, false)
+		require.IsType(t, flow.Identifier{}, results[simpleAddressLocation("0x01.Foo")].TxId)
 	})
 
 	t.Run("skips validation if no validator", func(t *testing.T) {
@@ -309,9 +309,9 @@ func Test_StagingService(t *testing.T) {
 
 		require.Equal(t, 1, len(results))
 		require.Contains(t, results, simpleAddressLocation("0x01.Foo"))
-		require.Nil(t, results[simpleAddressLocation("0x01.Foo")].err)
-		require.Equal(t, results[simpleAddressLocation("0x01.Foo")].wasValidated, false)
-		require.IsType(t, flow.Identifier{}, results[simpleAddressLocation("0x01.Foo")].txId)
+		require.Nil(t, results[simpleAddressLocation("0x01.Foo")].Err)
+		require.Equal(t, results[simpleAddressLocation("0x01.Foo")].WasValidated, false)
+		require.IsType(t, flow.Identifier{}, results[simpleAddressLocation("0x01.Foo")].TxId)
 	})
 
 	t.Run("returns missing dependency error if staging not chosen", func(t *testing.T) {
@@ -371,10 +371,10 @@ func Test_StagingService(t *testing.T) {
 		require.Contains(t, results, simpleAddressLocation("0x01.Foo"))
 
 		var mde *missingDependenciesError
-		require.ErrorAs(t, results[simpleAddressLocation("0x01.Foo")].err, &mde)
-		require.NotNil(t, results[simpleAddressLocation("0x01.Foo")].err)
+		require.ErrorAs(t, results[simpleAddressLocation("0x01.Foo")].Err, &mde)
+		require.NotNil(t, results[simpleAddressLocation("0x01.Foo")].Err)
 		require.Equal(t, []common.AddressLocation{simpleAddressLocation("0x02.Bar")}, mde.MissingContracts)
-		require.Equal(t, results[simpleAddressLocation("0x01.Foo")].wasValidated, true)
+		require.Equal(t, results[simpleAddressLocation("0x01.Foo")].WasValidated, true)
 	})
 
 	t.Run("reports and does not stage invalid contracts", func(t *testing.T) {
@@ -436,12 +436,12 @@ func Test_StagingService(t *testing.T) {
 
 		require.Equal(t, 2, len(results))
 		require.Contains(t, results, simpleAddressLocation("0x01.Foo"))
-		require.ErrorContains(t, results[simpleAddressLocation("0x01.Foo")].err, "FooError")
-		require.Equal(t, results[simpleAddressLocation("0x01.Foo")].wasValidated, true)
+		require.ErrorContains(t, results[simpleAddressLocation("0x01.Foo")].Err, "FooError")
+		require.Equal(t, results[simpleAddressLocation("0x01.Foo")].WasValidated, true)
 
 		require.Contains(t, results, simpleAddressLocation("0x01.Bar"))
-		require.Nil(t, results[simpleAddressLocation("0x01.Bar")].err)
-		require.Equal(t, results[simpleAddressLocation("0x01.Bar")].wasValidated, true)
-		require.IsType(t, flow.Identifier{}, results[simpleAddressLocation("0x01.Bar")].txId)
+		require.Nil(t, results[simpleAddressLocation("0x01.Bar")].Err)
+		require.Equal(t, results[simpleAddressLocation("0x01.Bar")].WasValidated, true)
+		require.IsType(t, flow.Identifier{}, results[simpleAddressLocation("0x01.Bar")].TxId)
 	})
 }

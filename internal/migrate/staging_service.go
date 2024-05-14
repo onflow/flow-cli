@@ -48,9 +48,9 @@ type stagingServiceImpl struct {
 }
 
 type stagingResult struct {
-	err          error
-	wasValidated bool
-	txId         flow.Identifier
+	Err          error
+	WasValidated bool
+	TxId         flow.Identifier
 }
 
 var _ stagingService = &stagingServiceImpl{}
@@ -110,8 +110,8 @@ func (s *stagingServiceImpl) validateAndStageContracts(ctx context.Context, cont
 	if validatorError != nil {
 		for location, err := range validatorError.errors {
 			results[location] = stagingResult{
-				err:          err,
-				wasValidated: true,
+				Err:          err,
+				WasValidated: true,
 			}
 		}
 	}
@@ -148,7 +148,7 @@ func (s *stagingServiceImpl) stageValidContracts(ctx context.Context, contracts 
 	// Stage contracts that passed validation
 	results := make(map[common.AddressLocation]stagingResult)
 	for contractLocation, res := range s.stageContracts(ctx, validContracts) {
-		res.wasValidated = true
+		res.WasValidated = true
 		results[contractLocation] = res
 	}
 
@@ -187,7 +187,7 @@ func (s *stagingServiceImpl) maybeStageInvalidContracts(ctx context.Context, con
 
 	// Stage contracts that have missing dependencies & add to results
 	for location, res := range s.stageContracts(ctx, unvalidatedContracts) {
-		res.wasValidated = false
+		res.WasValidated = false
 		results[location] = res
 	}
 
@@ -205,13 +205,13 @@ func (s *stagingServiceImpl) stageContracts(ctx context.Context, contracts []sta
 		)
 		if err != nil {
 			results[contract.DeployLocation] = stagingResult{
-				err:  fmt.Errorf("failed to stage contract: %w", err),
-				txId: txId,
+				Err:  fmt.Errorf("failed to stage contract: %w", err),
+				TxId: txId,
 			}
 		} else {
 			results[contract.DeployLocation] = stagingResult{
-				err:  nil,
-				txId: txId,
+				Err:  nil,
+				TxId: txId,
 			}
 		}
 

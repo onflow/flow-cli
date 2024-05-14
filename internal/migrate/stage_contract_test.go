@@ -65,7 +65,7 @@ func Test_StageContract(t *testing.T) {
 
 		mockResult := make(map[common.AddressLocation]stagingResult)
 		mockResult[common.NewAddressLocation(nil, common.Address{0x01}, "Foo")] = stagingResult{
-			err: nil,
+			Err: nil,
 		}
 
 		ss.On("StageContracts", mock.Anything, mock.Anything).Return(mockResult, nil)
@@ -101,7 +101,7 @@ func Test_StageContract(t *testing.T) {
 
 		mockResult := make(map[common.AddressLocation]stagingResult)
 		mockResult[common.NewAddressLocation(nil, common.Address{0x01}, "Foo")] = stagingResult{
-			err: nil,
+			Err: nil,
 		}
 
 		ss.On("StageContracts", mock.Anything, mock.Anything).Return(mockResult, nil).Once()
@@ -144,7 +144,7 @@ func Test_StageContract(t *testing.T) {
 
 		mockResult := make(map[common.AddressLocation]stagingResult)
 		mockResult[common.NewAddressLocation(nil, common.Address{0x01}, "Foo")] = stagingResult{
-			err: nil,
+			Err: nil,
 		}
 		ss.On("StageContracts", mock.Anything, mock.Anything).Return(mockResult, nil).Once()
 
