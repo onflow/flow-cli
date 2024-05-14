@@ -27,7 +27,6 @@ import (
 	"github.com/stretchr/testify/mock"
 
 	"github.com/onflow/flixkit-go/flixkit"
-	"github.com/onflow/flow-go-sdk/crypto"
 
 	"github.com/onflow/flowkit/v2"
 	"github.com/onflow/flowkit/v2/config"

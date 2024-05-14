@@ -22,7 +22,7 @@ import (
 	"testing"
 
 	"github.com/onflow/flow-go-sdk/crypto"
-	"github.com/onflow/flowkit/accounts"
+	"github.com/onflow/flowkit/v2/accounts"
 
 	"github.com/onflow/flow-go-sdk"
 	"github.com/stretchr/testify/require"
