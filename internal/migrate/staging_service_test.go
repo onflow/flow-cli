@@ -258,6 +258,8 @@ func Test_StagingService(t *testing.T) {
 		require.Nil(t, results[simpleAddressLocation("0x01.Bar")].Err)
 		require.Equal(t, results[simpleAddressLocation("0x01.Bar")].WasValidated, true)
 		require.IsType(t, flow.Identifier{}, results[simpleAddressLocation("0x01.Bar")].TxId)
+
+		srv.AssertNumberOfCalls(t, "SendTransaction", 2)
 	})
 
 	t.Run("stages unvalidated contracts if chosen", func(t *testing.T) {
@@ -318,6 +320,8 @@ func Test_StagingService(t *testing.T) {
 		require.Nil(t, results[simpleAddressLocation("0x01.Foo")].Err)
 		require.Equal(t, results[simpleAddressLocation("0x01.Foo")].WasValidated, false)
 		require.IsType(t, flow.Identifier{}, results[simpleAddressLocation("0x01.Foo")].TxId)
+
+		srv.AssertNumberOfCalls(t, "SendTransaction", 1)
 	})
 
 	t.Run("skips validation if no validator", func(t *testing.T) {
@@ -359,6 +363,8 @@ func Test_StagingService(t *testing.T) {
 		require.Nil(t, results[simpleAddressLocation("0x01.Foo")].Err)
 		require.Equal(t, results[simpleAddressLocation("0x01.Foo")].WasValidated, false)
 		require.IsType(t, flow.Identifier{}, results[simpleAddressLocation("0x01.Foo")].TxId)
+
+		srv.AssertNumberOfCalls(t, "SendTransaction", 1)
 	})
 
 	t.Run("returns missing dependency error if staging not chosen", func(t *testing.T) {
@@ -422,6 +428,8 @@ func Test_StagingService(t *testing.T) {
 		require.NotNil(t, results[simpleAddressLocation("0x01.Foo")].Err)
 		require.Equal(t, []common.AddressLocation{simpleAddressLocation("0x02.Bar")}, mde.MissingContracts)
 		require.Equal(t, results[simpleAddressLocation("0x01.Foo")].WasValidated, true)
+
+		srv.AssertNumberOfCalls(t, "SendTransaction", 0)
 	})
 
 	t.Run("reports and does not stage invalid contracts", func(t *testing.T) {
@@ -490,6 +498,8 @@ func Test_StagingService(t *testing.T) {
 		require.Nil(t, results[simpleAddressLocation("0x01.Bar")].Err)
 		require.Equal(t, results[simpleAddressLocation("0x01.Bar")].WasValidated, true)
 		require.IsType(t, flow.Identifier{}, results[simpleAddressLocation("0x01.Bar")].TxId)
+
+		srv.AssertNumberOfCalls(t, "SendTransaction", 1)
 	})
 
 	t.Run("skips staging contracts without changes", func(t *testing.T) {
@@ -544,6 +554,6 @@ func Test_StagingService(t *testing.T) {
 		require.Equal(t, true, results[simpleAddressLocation("0x01.Foo")].WasValidated)
 		require.Equal(t, flow.Identifier{}, results[simpleAddressLocation("0x01.Foo")].TxId)
 
-		srv.AssertNotCalled(t, "SendTransaction", mock.Anything, mock.Anything, mock.Anything, mock.Anything)
+		srv.AssertNumberOfCalls(t, "SendTransaction", 0)
 	})
 }
