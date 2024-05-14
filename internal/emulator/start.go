@@ -62,7 +62,7 @@ func configuredServiceKey(
 			hashAlgo = emulator.DefaultServiceKeyHashAlgo
 		}
 
-		state, err = flowkit.Init(loader, sigAlgo, hashAlgo)
+		state, err = flowkit.Init(loader)
 		if err != nil {
 			exitf(1, err.Error())
 		} else {

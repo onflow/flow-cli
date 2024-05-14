@@ -71,7 +71,7 @@ func Initialise(
 		return nil, fmt.Errorf("invalid hash algorithm: %s", InitFlag.ServiceKeyHashAlgo)
 	}
 
-	state, err := flowkit.Init(readerWriter, sigAlgo, hashAlgo)
+	state, err := flowkit.Init(readerWriter)
 	if err != nil {
 		return nil, err
 	}
