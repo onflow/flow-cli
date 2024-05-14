@@ -153,7 +153,6 @@ func (v *validator) getContractUpdateStatuses(contractNames ...string) ([]Contra
 		return nil, nil, err
 	}
 
-
 	// Get all the contract statuses from the report
 	statuses, err := v.fetchAndParseReport(report.GetPath())
 	if err != nil {
