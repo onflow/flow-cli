@@ -444,6 +444,9 @@ type GlobalFlags struct {
 	SkipContractMigrationCheck bool
 }
 
+
+const migrationDataURL = "https://github.com/onflow/cadence/tree/master/migrations_data"
+
 func checkContractMigrations(state *flowkit.State, logger output.Logger, flow flowkit.Services) {
 	contractStatuses, err := validator.NewValidator(github.NewClient(nil).Repositories, flow.Network(), state, logger).GetContractStatuses()
 	if err != nil {
@@ -451,20 +454,28 @@ func checkContractMigrations(state *flowkit.State, logger output.Logger, flow fl
 		return
 	}
 
+	var hasFailed bool
+
 	for _, contract := range contractStatuses {
 		if contract.IsFailure() {
-			logger.Error(fmt.Sprintf(
+			hasFailed = true
+			_, _ = fmt.Fprintf(os.Stderr,
 				"Contract %s has failed the last emulated migration\n"+
 					" - Account: %s\n"+
-					" - Contract: %s\n"+
-					" - Error: %s\n",
+					" - Contract: %s\n",
 				contract.ContractName,
 				contract.AccountAddress,
 				contract.ContractName,
-				contract.Error,
-			))
+			)
 		}
 	}
 
+	if hasFailed {
+		_, _ = fmt.Fprintf(
+			os.Stderr, 
+			"Some contracts have failed the last emulated migration, please check the latest migration data at %s for more information \n",
+			migrationDataURL,
+		)
+	}
 	return
 }
