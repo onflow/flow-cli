@@ -35,6 +35,8 @@ import (
 	"github.com/onflow/flow-cli/internal/util"
 )
 
+const stagingLimit = 200
+
 type stagingResults struct {
 	Results       map[common.AddressLocation]stagingResult
 	prettyPrinter func(err error, location common.Location) string
@@ -144,6 +146,10 @@ func stageAll(
 		return nil, err
 	}
 
+	if len(contracts) > stagingLimit {
+		return nil, fmt.Errorf("cannot stage more than %d contracts at once", stagingLimit)
+	}
+
 	results, err := s.StageContracts(context.Background(), contracts)
 	if err != nil {
 		return nil, err
@@ -175,6 +181,10 @@ func stageByContractNames(
 		if !found {
 			return nil, fmt.Errorf("deployment not found for contract %s on network %s", name, flow.Network().Name)
 		}
+	}
+
+	if len(contracts) > stagingLimit {
+		return nil, fmt.Errorf("cannot stage more than %d contracts at once", stagingLimit)
 	}
 
 	results, err := s.StageContracts(context.Background(), filteredContracts)
@@ -214,6 +224,10 @@ func stageByAccountNames(
 		if !found {
 			return nil, fmt.Errorf("no deployments found for account %s on network %s", account.Name, flow.Network().Name)
 		}
+	}
+
+	if len(contracts) > stagingLimit {
+		return nil, fmt.Errorf("cannot stage more than %d contracts at once", stagingLimit)
 	}
 
 	results, err := s.StageContracts(context.Background(), filteredContracts)
