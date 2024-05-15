@@ -29,25 +29,6 @@ import (
 	"github.com/onflow/flowkit/config"
 )
 
-//type flagsInit struct {
-//	ServicePrivateKey  string `flag:"service-private-key" info:"Service account private key"`
-//	ServiceKeySigAlgo  string `default:"ECDSA_P256" flag:"service-sig-algo" info:"Service account key signature algorithm"`
-//	ServiceKeyHashAlgo string `default:"SHA3_256" flag:"service-hash-algo" info:"Service account key hash algorithm"`
-//	Reset              bool   `default:"false" flag:"reset" info:"Reset configuration file"`
-//	Global             bool   `default:"false" flag:"global" info:"Initialize global user configuration"`
-//}
-//
-//var InitFlag = flagsInit{}
-
-//var initCommand = &command.Command{
-//	Cmd: &cobra.Command{
-//		Use:   "init",
-//		Short: "Initialize a new configuration",
-//	},
-//	Flags: &InitFlag,
-//	Run:   Initialise,
-//}
-
 // InitConfigParameters holds all necessary parameters for initializing the configuration.
 type InitConfigParameters struct {
 	ServicePrivateKey  string
