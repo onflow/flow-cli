@@ -22,10 +22,12 @@ import (
 	"bytes"
 	"fmt"
 
+	"github.com/onflow/flowkit"
+	"github.com/onflow/flowkit/accounts"
+
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/spf13/cobra"
 
-	"github.com/onflow/flowkit"
 	"github.com/onflow/flowkit/config"
 	"github.com/onflow/flowkit/output"
 
@@ -75,6 +77,13 @@ func Initialise(
 	if err != nil {
 		return nil, err
 	}
+
+	emulatorAccount, err := accounts.NewEmulatorAccount(readerWriter, crypto.ECDSA_P256, crypto.SHA3_256, "")
+	if err != nil {
+		return nil, err
+	}
+
+	state.Accounts().AddOrUpdate(emulatorAccount)
 
 	if InitFlag.ServicePrivateKey != "" {
 		privateKey, err := crypto.DecodePrivateKeyHex(sigAlgo, InitFlag.ServicePrivateKey)
