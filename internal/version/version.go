@@ -30,6 +30,12 @@ import (
 	"github.com/onflow/flow-cli/internal/command"
 )
 
+var verboseFlag bool
+
+func init() {
+	Cmd.Flags().BoolVarP(&verboseFlag, "verbose", "v", false, "Show detailed dependency information")
+}
+
 type versionCmd struct {
 	Version      string
 	Commit       string
@@ -44,9 +50,11 @@ func (c versionCmd) Print(format string) error {
 		txtBuilder.WriteString(fmt.Sprintf("Version: %s\n", c.Version))
 		txtBuilder.WriteString(fmt.Sprintf("Commit: %s\n", c.Commit))
 
-		txtBuilder.WriteString("\nFlow Package Dependencies \n")
-		for _, dep := range c.Dependencies {
-			txtBuilder.WriteString(fmt.Sprintf("%s %s\n", dep.Path, dep.Version))
+		if verboseFlag {
+			txtBuilder.WriteString("\nFlow Package Dependencies \n")
+			for _, dep := range c.Dependencies {
+				txtBuilder.WriteString(fmt.Sprintf("%s %s\n", dep.Path, dep.Version))
+			}
 		}
 
 		fmt.Println(txtBuilder.String())
