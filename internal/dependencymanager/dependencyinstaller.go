@@ -244,6 +244,9 @@ func (di *DependencyInstaller) fetchDependencies(networkName string, address flo
 		address: address,
 		name:    assignedName,
 	})
+	if err != nil {
+		return fmt.Errorf("error adding dependency: %w", err)
+	}
 
 	ctx := context.Background()
 	account, err := di.Gateways[networkName].GetAccount(ctx, address)
