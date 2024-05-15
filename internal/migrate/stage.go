@@ -286,7 +286,7 @@ func (r *stagingResults) String() string {
 		if result.TxId != flow.EmptyID {
 			sb.WriteString(fmt.Sprintf(" (txId: %s)", result.TxId))
 		} else if result.Err == nil {
-			sb.WriteString(" (already staged)")
+			sb.WriteString(" (no changes)")
 		}
 		sb.WriteString("\n")
 	}
