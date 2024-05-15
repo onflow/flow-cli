@@ -20,6 +20,7 @@ package config
 
 import (
 	"fmt"
+	"github.com/onflow/flowkit/accounts"
 	"os"
 
 	"github.com/onflow/flow-go-sdk/crypto"
@@ -86,10 +87,17 @@ func InitializeConfiguration(params InitConfigParameters, readerWriter flowkit.R
 		return nil, fmt.Errorf("invalid hash algorithm: %s", params.ServiceKeyHashAlgo)
 	}
 
-	state, err := flowkit.Init(readerWriter, sigAlgo, hashAlgo, params.TargetDirectory)
+	state, err := flowkit.Init(readerWriter)
 	if err != nil {
 		return nil, err
 	}
+
+	emulatorAccount, err := accounts.NewEmulatorAccount(readerWriter, sigAlgo, hashAlgo, params.TargetDirectory)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create emulator account: %w", err)
+	}
+
+	state.Accounts().AddOrUpdate(emulatorAccount)
 
 	if params.ServicePrivateKey != "" {
 		privateKey, err := crypto.DecodePrivateKeyHex(sigAlgo, params.ServicePrivateKey)
