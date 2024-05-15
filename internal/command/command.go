@@ -444,7 +444,6 @@ type GlobalFlags struct {
 	SkipContractMigrationCheck bool
 }
 
-
 const migrationDataURL = "https://github.com/onflow/cadence/tree/master/migrations_data"
 
 func checkContractMigrations(state *flowkit.State, logger output.Logger, flow flowkit.Services) {
