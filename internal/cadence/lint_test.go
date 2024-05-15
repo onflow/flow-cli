@@ -24,7 +24,6 @@ import (
 	"github.com/onflow/cadence/runtime/ast"
 	"github.com/onflow/cadence/runtime/common"
 	"github.com/onflow/cadence/tools/analysis"
-	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/onflow/flowkit"
 	"github.com/onflow/flowkit/config"
 	"github.com/spf13/afero"
@@ -311,7 +310,7 @@ func setupMockState(t *testing.T) *flowkit.State {
 	}`), 0644)
 
 	rw := afero.Afero{Fs: mockFs}
-	state, err := flowkit.Init(rw, crypto.ECDSA_P256, crypto.SHA3_256)
+	state, err := flowkit.Init(rw)
 	require.NoError(t, err)
 
 	// Mock flowkit contracts

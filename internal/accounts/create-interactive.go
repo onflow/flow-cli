@@ -52,7 +52,7 @@ func createInteractive(state *flowkit.State) (*accountResult, error) {
 	log := output.NewStdoutLogger(output.InfoLog)
 	name := util.AccountNamePrompt(state.Accounts().Names())
 	networkName, selectedNetwork := util.CreateAccountNetworkPrompt()
-	privateFile := accounts.PrivateKeyFile(name)
+	privateFile := accounts.PrivateKeyFile(name, "")
 
 	// create new gateway based on chosen network
 	gw, err := gateway.NewGrpcGateway(selectedNetwork)
