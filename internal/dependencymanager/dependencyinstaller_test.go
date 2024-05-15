@@ -80,6 +80,7 @@ func TestDependencyInstallerInstall(t *testing.T) {
 			TargetDir:       "",
 			SkipDeployments: true,
 			SkipAlias:       true,
+			dependencies:    make(map[string]config.Dependency),
 		}
 
 		err := di.Install()
@@ -126,6 +127,7 @@ func TestDependencyInstallerAdd(t *testing.T) {
 			TargetDir:       "",
 			SkipDeployments: true,
 			SkipAlias:       true,
+			dependencies:    make(map[string]config.Dependency),
 		}
 
 		sourceStr := fmt.Sprintf("emulator://%s.%s", serviceAddress.String(), tests.ContractHelloString.Name)

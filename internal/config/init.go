@@ -22,7 +22,12 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/onflow/flowkit"
+	"github.com/onflow/flowkit/accounts"
+
 	"github.com/onflow/flow-go-sdk/crypto"
+	"github.com/spf13/cobra"
+
 	"github.com/onflow/flowkit"
 	"github.com/onflow/flowkit/config"
 )
@@ -86,10 +91,17 @@ func InitializeConfiguration(params InitConfigParameters, readerWriter flowkit.R
 		return nil, fmt.Errorf("invalid hash algorithm: %s", params.ServiceKeyHashAlgo)
 	}
 
-	state, err := flowkit.Init(readerWriter, sigAlgo, hashAlgo, params.TargetDirectory)
+	state, err := flowkit.Init(readerWriter)
 	if err != nil {
 		return nil, err
 	}
+
+	emulatorAccount, err := accounts.NewEmulatorAccount(readerWriter, crypto.ECDSA_P256, crypto.SHA3_256, "")
+	if err != nil {
+		return nil, err
+	}
+
+	state.Accounts().AddOrUpdate(emulatorAccount)
 
 	if params.ServicePrivateKey != "" {
 		privateKey, err := crypto.DecodePrivateKeyHex(sigAlgo, params.ServicePrivateKey)
