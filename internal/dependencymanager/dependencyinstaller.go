@@ -207,25 +207,24 @@ func (di *DependencyInstaller) Add(depSource, customName string) error {
 }
 
 func (di *DependencyInstaller) addDependency(dep config.Dependency) error {
-	if _, exists := di.dependencies[dep.Source.Address.String()]; exists {
+	sourceString := fmt.Sprintf("%s://%s.%s", dep.Source.NetworkName, dep.Source.Address.String(), dep.Source.ContractName)
+
+	if _, exists := di.dependencies[sourceString]; exists {
 		return nil
 	}
 
-	di.dependencies[dep.Source.Address.String()] = dep
+	di.dependencies[sourceString] = dep
 
 	return nil
-
 }
 
 // checkForConflictingContracts checks if any of the dependencies conflict with contracts already in the state
 func (di *DependencyInstaller) checkForConflictingContracts() {
 	for _, dependency := range di.dependencies {
-		_, err := di.initialContractsState.ByName(dependency.Name)
-		if err != nil {
-			if !isCoreContract(dependency.Name) {
-				msg := util.MessageWithEmojiPrefix("❌", fmt.Sprintf("Contract named %s already exists in flow.json", dependency.Name))
-				di.logs.issues = append(di.logs.issues, msg)
-			}
+		foundContract, _ := di.initialContractsState.ByName(dependency.Name)
+		if foundContract != nil {
+			msg := util.MessageWithEmojiPrefix("❌", fmt.Sprintf("Contract named %s already exists in flow.json", dependency.Name))
+			di.logs.issues = append(di.logs.issues, msg)
 		}
 	}
 }
