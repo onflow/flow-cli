@@ -111,7 +111,7 @@ func NewValidator(repoService GitHubRepositoriesService, network config.Network,
 }
 
 func (v *validator) GetContractStatuses() ([]ContractUpdateStatus, error) {
-	if v.state.Contracts() == nil {
+	if v.state == nil || v.state.Contracts() == nil {
 		return nil, nil
 	}
 

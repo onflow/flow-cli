@@ -449,7 +449,7 @@ const migrationDataURL = "https://github.com/onflow/cadence/tree/master/migratio
 func checkContractMigrations(state *flowkit.State, logger output.Logger, flow flowkit.Services) {
 	contractStatuses, err := validator.NewValidator(github.NewClient(nil).Repositories, flow.Network(), state, logger).GetContractStatuses()
 	if err != nil {
-		logger.Error(fmt.Sprintf("failed to validate contracts: %s", err))
+		// if we can't get the contract statuses, we don't check them
 		return
 	}
 
