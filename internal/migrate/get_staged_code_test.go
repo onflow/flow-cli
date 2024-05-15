@@ -79,7 +79,7 @@ func Test_GetStagedCode(t *testing.T) {
 
 			contractAddr := cadence.NewAddress(account.Address)
 			assert.Equal(t, contractAddr.String(), actualContractAddressArg.String())
-		}).Return(cadence.NewString(string(testContract.Source)))
+		}).Return(cadence.NewOptional(cadence.String(testContract.Source)), nil)
 
 		result, err := getStagedCode(
 			[]string{testContract.Name},
