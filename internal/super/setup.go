@@ -285,7 +285,6 @@ func (s *setupResult) String() string {
 	out.WriteString(fmt.Sprintf("%s Congrats! your project was created.\n\n", output.SuccessEmoji()))
 	out.WriteString("Start development by following these steps:\n")
 	out.WriteString(fmt.Sprintf("1. '%s' to change to your new project,\n", output.Bold(fmt.Sprintf("cd %s", relDir))))
-	//out.WriteString(fmt.Sprintf("2. '%s' or run Flowser to start the emulator,\n", output.Bold("flow emulator")))
 	out.WriteString(fmt.Sprintf("2. '%s' to start developing.\n", output.Bold("flow dev")))
 	out.WriteString(fmt.Sprintf("3. '%s' to test your project.\n\n", output.Bold("flow test")))
 	out.WriteString(fmt.Sprintf("You should also read README.md to learn more about the development process!\n"))
