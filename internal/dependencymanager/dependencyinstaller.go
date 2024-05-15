@@ -102,11 +102,6 @@ func (f *dependencyManagerFlagsCollection) AddToCommand(cmd *cobra.Command) {
 	}
 }
 
-type dependency struct {
-	address flowsdk.Address
-	name    string
-}
-
 type DependencyInstaller struct {
 	Gateways              map[string]gateway.Gateway
 	Logger                output.Logger
@@ -115,7 +110,7 @@ type DependencyInstaller struct {
 	SkipAlias             bool
 	logs                  categorizedLogs
 	initialContractsState config.Contracts
-	dependencies          map[string]dependency
+	dependencies          map[string]config.Dependency
 }
 
 // NewDependencyInstaller creates a new instance of DependencyInstaller
@@ -148,7 +143,7 @@ func NewDependencyInstaller(logger output.Logger, state *flowkit.State, flags de
 		SkipDeployments:       flags.skipDeployments,
 		SkipAlias:             flags.skipAlias,
 		initialContractsState: *state.Contracts(), // Copy at this point in time
-		dependencies:          make(map[string]dependency),
+		dependencies:          make(map[string]config.Dependency),
 	}, nil
 }
 
@@ -211,12 +206,12 @@ func (di *DependencyInstaller) Add(depSource, customName string) error {
 	return nil
 }
 
-func (di *DependencyInstaller) addDependency(dep dependency) error {
-	if _, exists := di.dependencies[dep.address.String()]; exists {
+func (di *DependencyInstaller) addDependency(dep config.Dependency) error {
+	if _, exists := di.dependencies[dep.Source.Address.String()]; exists {
 		return nil
 	}
 
-	di.dependencies[dep.address.String()] = dep
+	di.dependencies[dep.Source.Address.String()] = dep
 
 	return nil
 
@@ -224,10 +219,10 @@ func (di *DependencyInstaller) addDependency(dep dependency) error {
 
 func (di *DependencyInstaller) handleClosingTasks() {
 	for _, dependency := range di.dependencies {
-		_, err := di.initialContractsState.ByName(dependency.name)
+		_, err := di.initialContractsState.ByName(dependency.Name)
 		if err != nil {
-			if !isCoreContract(dependency.name) {
-				msg := util.MessageWithEmojiPrefix("❌", fmt.Sprintf("Contract named %s already exists in flow.json", dependency.name))
+			if !isCoreContract(dependency.Name) {
+				msg := util.MessageWithEmojiPrefix("❌", fmt.Sprintf("Contract named %s already exists in flow.json", dependency.Name))
 				di.logs.issues = append(di.logs.issues, msg)
 			}
 		}
@@ -240,9 +235,13 @@ func (di *DependencyInstaller) processDependency(dependency config.Dependency) e
 }
 
 func (di *DependencyInstaller) fetchDependencies(networkName string, address flowsdk.Address, assignedName, contractName string) error {
-	err := di.addDependency(dependency{
-		address: address,
-		name:    assignedName,
+	err := di.addDependency(config.Dependency{
+		Name: assignedName,
+		Source: config.Source{
+			NetworkName:  networkName,
+			Address:      address,
+			ContractName: contractName,
+		},
 	})
 	if err != nil {
 		return fmt.Errorf("error adding dependency: %w", err)
