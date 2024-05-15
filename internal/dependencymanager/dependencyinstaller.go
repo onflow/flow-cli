@@ -156,7 +156,7 @@ func (di *DependencyInstaller) Install() error {
 		}
 	}
 
-	di.handleClosingTasks()
+	di.checkForConflictingContracts()
 
 	err := di.State.SaveDefault()
 	if err != nil {
@@ -194,7 +194,7 @@ func (di *DependencyInstaller) Add(depSource, customName string) error {
 		return fmt.Errorf("error processing dependency: %w", err)
 	}
 
-	di.handleClosingTasks()
+	di.checkForConflictingContracts()
 
 	err = di.State.SaveDefault()
 	if err != nil {
@@ -217,7 +217,7 @@ func (di *DependencyInstaller) addDependency(dep config.Dependency) error {
 
 }
 
-func (di *DependencyInstaller) handleClosingTasks() {
+func (di *DependencyInstaller) checkForConflictingContracts() {
 	for _, dependency := range di.dependencies {
 		_, err := di.initialContractsState.ByName(dependency.Name)
 		if err != nil {
