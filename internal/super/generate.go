@@ -109,7 +109,7 @@ func generateContract(
 	_ flowkit.Services,
 	state *flowkit.State,
 ) (result command.Result, err error) {
-	generator := NewGenerator(DefaultCadenceDirectory, state, logger, false)
+	generator := NewGenerator(DefaultCadenceDirectory, state, logger, false, true)
 	contract := Contract{Name: args[0], Account: args[1]}
 	err = generator.Create(TemplateMap{ContractType: []TemplateItem{contract}})
 	return nil, err
@@ -122,7 +122,7 @@ func generateTransaction(
 	_ flowkit.Services,
 	state *flowkit.State,
 ) (result command.Result, err error) {
-	generator := NewGenerator(DefaultCadenceDirectory, state, logger, false)
+	generator := NewGenerator(DefaultCadenceDirectory, state, logger, false, true)
 	transaction := OtherTemplate{Name: args[0]}
 	err = generator.Create(TemplateMap{TransactionType: []TemplateItem{transaction}})
 	return nil, err
@@ -135,7 +135,7 @@ func generateScript(
 	_ flowkit.Services,
 	state *flowkit.State,
 ) (result command.Result, err error) {
-	generator := NewGenerator(DefaultCadenceDirectory, state, logger, false)
+	generator := NewGenerator(DefaultCadenceDirectory, state, logger, false, true)
 	script := OtherTemplate{Name: args[0]}
 	err = generator.Create(TemplateMap{ScriptType: []TemplateItem{script}})
 	return nil, err
@@ -186,14 +186,16 @@ type Generator struct {
 	state       *flowkit.State
 	logger      output.Logger
 	disableLogs bool
+	saveState   bool
 }
 
-func NewGenerator(directory string, state *flowkit.State, logger output.Logger, disableLogs bool) *Generator {
+func NewGenerator(directory string, state *flowkit.State, logger output.Logger, disableLogs, saveState bool) *Generator {
 	return &Generator{
 		directory:   directory,
 		state:       state,
 		logger:      logger,
 		disableLogs: disableLogs,
+		saveState:   saveState,
 	}
 }
 
@@ -327,9 +329,12 @@ func (g *Generator) updateContractsState(name, location string) error {
 	}
 
 	g.state.Contracts().AddOrUpdate(contract)
-	err := g.state.SaveDefault()
-	if err != nil {
-		return fmt.Errorf("error saving to flow.json: %w", err)
+
+	if g.saveState {
+		err := g.state.SaveDefault() // TODO: Support adding a target project directory
+		if err != nil {
+			return fmt.Errorf("error saving to flow.json: %w", err)
+		}
 	}
 
 	return nil

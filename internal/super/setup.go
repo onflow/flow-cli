@@ -25,7 +25,6 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/spf13/afero"
 
 	"github.com/onflow/flow-cli/internal/util"
@@ -59,9 +58,10 @@ type flagsSetup struct {
 
 var setupFlags = flagsSetup{}
 
+// TODO: Add --config-only flag
 var SetupCommand = &command.Command{
 	Cmd: &cobra.Command{
-		Use:     "setup <project name>",
+		Use:     "init <project name>",
 		Short:   "Start a new Flow project",
 		Example: "flow setup my-project",
 		Args:    cobra.MaximumNArgs(1),
@@ -111,10 +111,10 @@ func startInteractiveSetup(
 	rw := afero.Afero{
 		Fs: afero.NewOsFs(),
 	}
-	state, err := flowkit.Init(rw, crypto.ECDSA_P256, crypto.SHA3_256)
-	if err != nil {
-		return "", err
-	}
+	//state, err := flowkit.Init(rw, crypto.ECDSA_P256, crypto.SHA3_256)
+	//if err != nil {
+	//	return "", err
+	//}
 
 	// Ask for project name if not given
 	if len(args) < 1 {
@@ -153,7 +153,7 @@ func startInteractiveSetup(
 		Global:             false,
 		TargetDirectory:    tempDir,
 	}
-	state, err = config.InitializeConfiguration(params, logger, state.ReaderWriter())
+	state, err := config.InitializeConfiguration(params, rw)
 	if err != nil {
 		return "", fmt.Errorf("failed to initialize configuration: %w", err)
 	}
@@ -168,7 +168,7 @@ func startInteractiveSetup(
 
 	templates := TemplateMap{
 		"contract": []TemplateItem{
-			Contract{Name: "DefaultContract", Account: "example-account"},
+			Contract{Name: "DefaultContract", Account: ""},
 		},
 		"script": []TemplateItem{
 			OtherTemplate{Name: "DefaultScripts"},
@@ -178,7 +178,7 @@ func startInteractiveSetup(
 		},
 	}
 
-	generator := NewGenerator(directoryPath, state, logger, true)
+	generator := NewGenerator(directoryPath, state, logger, true, false)
 	err = generator.Create(templates)
 	if err != nil {
 		return "", err
@@ -186,7 +186,7 @@ func startInteractiveSetup(
 
 	// Prompt to ask which core contracts should be installed
 	sc := systemcontracts.SystemContractsForChain(flowGo.Mainnet)
-	promptMessage := "Select the core contracts you'd like to install:"
+	promptMessage := "Select any core contracts you would like to install or skip to continue."
 
 	contractNames := make([]string, 0)
 
@@ -215,6 +215,7 @@ func startInteractiveSetup(
 		}
 	}
 
+	logger.Info("")
 	logger.Info(util.MessageWithEmojiPrefix("🔄", "Installing selected core contracts and dependencies..."))
 
 	// Add the selected core contracts as dependencies
@@ -284,8 +285,9 @@ func (s *setupResult) String() string {
 	out.WriteString(fmt.Sprintf("%s Congrats! your project was created.\n\n", output.SuccessEmoji()))
 	out.WriteString("Start development by following these steps:\n")
 	out.WriteString(fmt.Sprintf("1. '%s' to change to your new project,\n", output.Bold(fmt.Sprintf("cd %s", relDir))))
-	out.WriteString(fmt.Sprintf("2. '%s' or run Flowser to start the emulator,\n", output.Bold("flow emulator")))
-	out.WriteString(fmt.Sprintf("3. '%s' to start developing.\n\n", output.Bold("flow dev")))
+	//out.WriteString(fmt.Sprintf("2. '%s' or run Flowser to start the emulator,\n", output.Bold("flow emulator")))
+	out.WriteString(fmt.Sprintf("2. '%s' to start developing.\n", output.Bold("flow dev")))
+	out.WriteString(fmt.Sprintf("3. '%s' to test your project.\n\n", output.Bold("flow test")))
 	out.WriteString(fmt.Sprintf("You should also read README.md to learn more about the development process!\n"))
 
 	return out.String()
