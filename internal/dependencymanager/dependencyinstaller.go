@@ -217,6 +217,7 @@ func (di *DependencyInstaller) addDependency(dep config.Dependency) error {
 
 }
 
+// checkForConflictingContracts checks if any of the dependencies conflict with contracts already in the state
 func (di *DependencyInstaller) checkForConflictingContracts() {
 	for _, dependency := range di.dependencies {
 		_, err := di.initialContractsState.ByName(dependency.Name)
