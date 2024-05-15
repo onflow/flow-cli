@@ -12,16 +12,16 @@ require (
 	github.com/logrusorgru/aurora/v4 v4.0.0
 	github.com/manifoldco/promptui v0.9.0
 	github.com/onflow/cadence v0.42.10
-	github.com/onflow/cadence-tools/languageserver v0.33.5
+	github.com/onflow/cadence-tools/languageserver v0.33.6
 	github.com/onflow/cadence-tools/lint v0.14.2
 	github.com/onflow/cadence-tools/test v0.14.7
 	github.com/onflow/fcl-dev-wallet v0.7.4
-	github.com/onflow/flixkit-go v1.1.4-0.20240507174933-7a1de7bbf70f
+	github.com/onflow/flixkit-go v1.2.0
 	github.com/onflow/flow-core-contracts/lib/go/templates v1.2.4-0.20231016154253-a00dbf7c061f
 	github.com/onflow/flow-emulator v0.62.1
 	github.com/onflow/flow-go v0.33.2-0.20240412174857-015156b297b5
 	github.com/onflow/flow-go-sdk v0.46.3
-	github.com/onflow/flowkit v1.17.4-0.20240507180449-b565ca87f6b8
+	github.com/onflow/flowkit v1.18.0
 	github.com/onflowser/flowser/v3 v3.1.3
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
 	github.com/pkg/errors v0.9.1
