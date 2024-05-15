@@ -20,8 +20,9 @@ package config
 
 import (
 	"fmt"
-	"github.com/onflow/flowkit/accounts"
 	"os"
+
+	"github.com/onflow/flowkit/accounts"
 
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/onflow/flowkit"
