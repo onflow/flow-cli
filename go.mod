@@ -11,18 +11,18 @@ require (
 	github.com/logrusorgru/aurora/v4 v4.0.0
 	github.com/manifoldco/promptui v0.9.0
 	github.com/onflow/cadence v1.0.0-preview.25
-	github.com/onflow/cadence-tools/languageserver v1.0.0-preview.14
+	github.com/onflow/cadence-tools/languageserver v1.0.0-preview.15
 	github.com/onflow/cadence-tools/lint v1.0.0-preview.17
 	github.com/onflow/cadence-tools/test v1.0.0-preview.15
 	github.com/onflow/contract-updater/lib/go/templates v1.0.1
 	github.com/onflow/fcl-dev-wallet v0.8.0-stable-cadence.1
-	github.com/onflow/flixkit-go v1.2.1-cadence-v1-preview.13
+	github.com/onflow/flixkit-go v1.2.1-cadence-v1-preview.14
 	github.com/onflow/flow-core-contracts/lib/go/templates v0.15.2-0.20240429192223-e696a8e439b5
 	github.com/onflow/flow-emulator v1.0.0-preview.22
 	github.com/onflow/flow-evm-gateway v0.9.0
 	github.com/onflow/flow-go v0.34.0-crescendo-preview.18
 	github.com/onflow/flow-go-sdk v1.0.0-preview.25
-	github.com/onflow/flowkit/v2 v2.0.0-stable-cadence-alpha.18
+	github.com/onflow/flowkit/v2 v2.0.0-stable-cadence-alpha.19
 	github.com/onflow/go-ethereum v1.13.4
 	github.com/onflowser/flowser/v3 v3.2.1-0.20240131200229-7d4d22715f48
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c

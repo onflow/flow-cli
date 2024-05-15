@@ -21,8 +21,10 @@ package util
 import (
 	"testing"
 
-	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
+	"github.com/onflow/flowkit/v2/accounts"
+
+	"github.com/onflow/flow-go-sdk"
 	"github.com/stretchr/testify/require"
 
 	"github.com/onflow/flowkit/v2"
@@ -39,8 +41,11 @@ var TestID = flow.HexToID("24993fc99f81641c45c0afa307e683b4f08d407d90041aa9439f4
 func TestMocks(t *testing.T) (*mocks.MockServices, *flowkit.State, flowkit.ReaderWriter) {
 	services := mocks.DefaultMockServices()
 	rw, _ := tests.ReaderWriter()
-	state, err := flowkit.Init(rw, crypto.ECDSA_P256, crypto.SHA3_256)
+	state, err := flowkit.Init(rw)
 	require.NoError(t, err)
+
+	emulatorAccount, _ := accounts.NewEmulatorAccount(rw, crypto.ECDSA_P256, crypto.SHA3_256, "")
+	state.Accounts().AddOrUpdate(emulatorAccount)
 
 	return services, state, rw
 }
