@@ -111,7 +111,7 @@ func Test_StagingService(t *testing.T) {
 	) (*flowkitMocks.Services, *flowkit.State, []*project.Contract) {
 		srv := flowkitMocks.NewServices(t)
 		rw, _ := tests.ReaderWriter()
-		state, err := flowkit.Init(rw, crypto.ECDSA_P256, crypto.SHA3_256)
+		state, err := flowkit.Init(rw)
 		require.NoError(t, err)
 
 		addAccountsToState(t, state, accts)

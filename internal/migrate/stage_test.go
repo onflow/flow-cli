@@ -22,7 +22,6 @@ import (
 	"testing"
 
 	"github.com/onflow/cadence/runtime/common"
-	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/onflow/flowkit/v2"
 	"github.com/onflow/flowkit/v2/config"
 	flowkitMocks "github.com/onflow/flowkit/v2/mocks"
@@ -38,7 +37,7 @@ func Test_StageContract(t *testing.T) {
 		ss := newMockStagingService(t)
 		srv := flowkitMocks.NewServices(t)
 		rw, _ := tests.ReaderWriter()
-		state, _ := flowkit.Init(rw, crypto.ECDSA_P256, crypto.SHA3_256)
+		state, _ := flowkit.Init(rw)
 
 		addAccountsToState(t, state, accts)
 
