@@ -27,7 +27,6 @@ import (
 	"github.com/stretchr/testify/mock"
 
 	"github.com/onflow/flixkit-go/flixkit"
-	"github.com/onflow/flow-go-sdk/crypto"
 
 	"github.com/onflow/flowkit/v2"
 	"github.com/onflow/flowkit/v2/config"
@@ -221,7 +220,7 @@ func Test_GenerateFlixPrefill(t *testing.T) {
 	var rw = afero.Afero{Fs: mockFS}
 	err := rw.WriteFile(cadenceFile, []byte(CADENCE_SCRIPT), 0644)
 	assert.NoError(t, err)
-	state, _ := flowkit.Init(rw, crypto.ECDSA_P256, crypto.SHA3_256)
+	state, _ := flowkit.Init(rw)
 
 	mockFlixService := new(MockFlixService)
 	ctx := context.Background()

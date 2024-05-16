@@ -23,6 +23,7 @@ import (
 	"fmt"
 
 	"github.com/onflow/cadence"
+	"github.com/onflow/cadence/runtime/common"
 	"github.com/onflow/flowkit/v2"
 	"github.com/onflow/flowkit/v2/output"
 	"github.com/spf13/cobra"
@@ -65,24 +66,56 @@ func getStagedCode(
 		return nil, fmt.Errorf("error getting address by contract name: %w", err)
 	}
 
-	cName, err := cadence.NewString(contractName)
+	location := common.NewAddressLocation(nil, common.Address(addr), contractName)
+	code, err := getStagedContractCode(context.Background(), flow, location)
 	if err != nil {
-		return nil, fmt.Errorf("error creating cadence string: %w", err)
+		return nil, err
 	}
 
-	caddr := cadence.NewAddress(addr)
+	// If the contract is not staged, return nil
+	if code == nil {
+		return scripts.NewScriptResult(cadence.NewOptional(nil)), nil
+	}
+
+	return scripts.NewScriptResult(cadence.NewOptional(cadence.String(code))), nil
+}
+
+func getStagedContractCode(
+	ctx context.Context,
+	flow flowkit.Services,
+	location common.AddressLocation,
+) ([]byte, error) {
+	cAddr := cadence.BytesToAddress(location.Address.Bytes())
+	cName, err := cadence.NewString(location.Name)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get cadence string from contract name: %w", err)
+	}
 
 	value, err := flow.ExecuteScript(
 		context.Background(),
 		flowkit.Script{
 			Code: templates.GenerateGetStagedContractCodeScript(MigrationContractStagingAddress(flow.Network().Name)),
-			Args: []cadence.Value{caddr, cName},
+			Args: []cadence.Value{cAddr, cName},
 		},
 		flowkit.LatestScriptQuery,
 	)
 	if err != nil {
-		return nil, fmt.Errorf("error executing script: %w", err)
+		return nil, err
 	}
 
-	return scripts.NewScriptResult(value), nil
+	optValue, ok := value.(cadence.Optional)
+	if !ok {
+		return nil, fmt.Errorf("invalid script return value type: %T", value)
+	}
+
+	if optValue.Value == nil {
+		return nil, nil
+	}
+
+	strValue, ok := optValue.Value.(cadence.String)
+	if !ok {
+		return nil, fmt.Errorf("invalid script return value type: %T", value)
+	}
+
+	return []byte(strValue), nil
 }

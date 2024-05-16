@@ -19,9 +19,13 @@
 package migrate
 
 import (
+	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"strings"
+
+	"golang.org/x/exp/slices"
 
 	"github.com/onflow/cadence"
 	"github.com/onflow/cadence/runtime"
@@ -42,23 +46,41 @@ import (
 	"github.com/onflow/flow-cli/internal/util"
 )
 
-type stagingValidator struct {
-	flow  flowkit.Services
-	state *flowkit.State
+//go:generate mockery --name stagingValidator --inpackage --testonly --case underscore
+type stagingValidator interface {
+	Validate(stagedContracts []stagedContractUpdate) error
+	PrettyPrintError(err error, location common.Location) string
+}
 
-	// Location of the source code that is used for the update
-	sourceCodeLocation common.Location
-	// Location of the target contract that is being updated
-	targetLocation common.AddressLocation
+type stagingValidatorImpl struct {
+	flow flowkit.Services
+
+	stagedContracts map[common.AddressLocation]stagedContractUpdate
 
 	// Cache for account contract names so we don't have to fetch them multiple times
 	accountContractNames map[common.Address][]string
 	// All resolved contract code
 	contracts map[common.Location][]byte
-	// Record errors related to missing staged dependencies, as these are reported separately
-	missingDependencies []common.AddressLocation
-	// Cache for contract elaborations which are reused during program checking & used for the update checker
-	elaborations map[common.Location]*sema.Elaboration
+
+	// Dependency graph for staged contracts
+	// This root level map holds all nodes
+	graph map[common.Location]node
+
+	// Cache for contract checkers which are reused during program checking & used for the update checker
+	checkingCache map[common.Location]*cachedCheckingResult
+}
+
+type node map[common.Location]node
+
+type cachedCheckingResult struct {
+	checker *sema.Checker
+	err     error
+}
+
+type stagedContractUpdate struct {
+	DeployLocation common.AddressLocation
+	SourceLocation common.StringLocation
+	Code           []byte
 }
 
 type accountContractNamesProviderImpl struct {
@@ -81,44 +103,202 @@ func (e *missingDependenciesError) Error() string {
 
 var _ error = &missingDependenciesError{}
 
+type upstreamValidationError struct {
+	Location        common.Location
+	BadDependencies []common.Location
+}
+
+func (e *upstreamValidationError) Error() string {
+	return fmt.Sprintf("contract %s has upstream validation errors, related to the following dependencies: %v", e.Location, e.BadDependencies)
+}
+
+var _ error = &upstreamValidationError{}
+
+type stagingValidatorError struct {
+	errors map[common.AddressLocation]error
+}
+
+func (e *stagingValidatorError) Error() string {
+	var sb strings.Builder
+	for location, err := range e.errors {
+		sb.WriteString(fmt.Sprintf("error for contract %s: %s\n", location, err))
+	}
+	return sb.String()
+}
+
+// MissingDependencies returns the contracts dependended on by the staged contracts that are missing
+func (e *stagingValidatorError) MissingDependencies() []common.AddressLocation {
+	missingDepsMap := make(map[common.AddressLocation]struct{})
+	for _, err := range e.MissingDependencyErrors() {
+		for _, missingDep := range err.MissingContracts {
+			missingDepsMap[missingDep] = struct{}{}
+		}
+	}
+
+	missingDependencies := make([]common.AddressLocation, 0)
+	for missingDep := range missingDepsMap {
+		missingDependencies = append(missingDependencies, missingDep)
+	}
+
+	sortAddressLocations(missingDependencies)
+	return missingDependencies
+}
+
+// ContractsMissingDependencies returns the contracts attempted to be validated that are missing dependencies
+func (e *stagingValidatorError) MissingDependencyErrors() map[common.AddressLocation]*missingDependenciesError {
+	missingDependencyErrors := make(map[common.AddressLocation]*missingDependenciesError)
+	for location := range e.errors {
+		var missingDependenciesErr *missingDependenciesError
+		if errors.As(e.errors[location], &missingDependenciesErr) {
+			missingDependencyErrors[location] = missingDependenciesErr
+		}
+	}
+	return missingDependencyErrors
+}
+
+var _ error = &stagingValidatorError{}
+
 var chainIdMap = map[string]flow.ChainID{
 	"mainnet": flow.Mainnet,
 	"testnet": flow.Testnet,
 }
 
-func newStagingValidator(flow flowkit.Services, state *flowkit.State) *stagingValidator {
-	return &stagingValidator{
+func newStagingValidator(flow flowkit.Services) *stagingValidatorImpl {
+	return &stagingValidatorImpl{
 		flow:                 flow,
-		state:                state,
 		contracts:            make(map[common.Location][]byte),
-		elaborations:         make(map[common.Location]*sema.Elaboration),
+		checkingCache:        make(map[common.Location]*cachedCheckingResult),
 		accountContractNames: make(map[common.Address][]string),
+		graph:                make(map[common.Location]node),
 	}
 }
 
-func (v *stagingValidator) ValidateContractUpdate(
-	// Network location of the contract to be updated
-	location common.AddressLocation,
-	// Location of the source code, ensures that the error messages reference this instead of a network location
-	sourceCodeLocation common.Location,
-	// Code of the updated contract
-	updatedCode []byte,
-) error {
-	v.sourceCodeLocation = sourceCodeLocation
-	v.targetLocation = location
+func (v *stagingValidatorImpl) Validate(stagedContracts []stagedContractUpdate) error {
+	v.stagedContracts = make(map[common.AddressLocation]stagedContractUpdate)
+	for _, stagedContract := range stagedContracts {
+		v.stagedContracts[stagedContract.DeployLocation] = stagedContract
 
-	// Resolve all system contract code & add to cache
+		// Add the contract code to the contracts map for pretty printing
+		v.contracts[stagedContract.SourceLocation] = stagedContract.Code
+	}
+
+	// Load system contracts
 	v.loadSystemContracts()
 
+	// Parse and check all staged contracts
+	errs := v.checkAllStaged()
+
+	// Validate all contract updates
+	for _, contract := range v.stagedContracts {
+		// Don't validate contracts with existing errors
+		if errs[contract.SourceLocation] != nil {
+			continue
+		}
+
+		// Validate the contract update
+		checker := v.checkingCache[contract.SourceLocation].checker
+		err := v.validateContractUpdate(contract, checker)
+		if err != nil {
+			errs[contract.SourceLocation] = err
+		}
+	}
+
+	// Check for any upstream contract update failures
+	for _, contract := range v.stagedContracts {
+		err := errs[contract.SourceLocation]
+
+		// We will override any errors other than those related
+		// to missing dependencies, since they are more specific
+		// forms of upstream validation errors
+		var missingDependenciesErr *missingDependenciesError
+		if errors.As(err, &missingDependenciesErr) {
+			continue
+		}
+
+		// Leave cyclic import errors to the checker
+		var cyclicImportErr *sema.CyclicImportsError
+		if errors.As(err, &cyclicImportErr) {
+			continue
+		}
+
+		badDeps := make([]common.Location, 0)
+		v.forEachDependency(contract, func(dependency common.Location) {
+			strLocation, ok := dependency.(common.StringLocation)
+			if !ok {
+				return
+			}
+
+			if errs[strLocation] != nil {
+				badDeps = append(badDeps, dependency)
+			}
+		})
+
+		if len(badDeps) > 0 {
+			errs[contract.SourceLocation] = &upstreamValidationError{
+				Location:        contract.SourceLocation,
+				BadDependencies: badDeps,
+			}
+		}
+	}
+
+	// Return a validator error if there are any errors
+	if len(errs) > 0 {
+		// Map errors to address locations
+		errsByAddress := make(map[common.AddressLocation]error)
+		for _, contract := range v.stagedContracts {
+			err := errs[contract.SourceLocation]
+			if err != nil {
+				errsByAddress[contract.DeployLocation] = err
+			}
+		}
+		return &stagingValidatorError{errors: errsByAddress}
+	}
+	return nil
+}
+
+func (v *stagingValidatorImpl) checkAllStaged() map[common.StringLocation]error {
+	errors := make(map[common.StringLocation]error)
+	for _, contract := range v.stagedContracts {
+		_, err := v.checkContract(contract.SourceLocation)
+		if err != nil {
+			errors[contract.SourceLocation] = err
+		}
+	}
+
+	// Report any missing dependency errors separately
+	// These will override any other errors parsing/checking errors
+	// Note: nodes are not visited more than once so cyclic imports are not an issue
+	// They will be reported, however, by the checker, if they do exist
+	for _, contract := range v.stagedContracts {
+		// Create a set of all dependencies
+		missingDependencies := make([]common.AddressLocation, 0)
+		v.forEachDependency(contract, func(dependency common.Location) {
+			if code := v.contracts[dependency]; code == nil {
+				if dependency, ok := dependency.(common.AddressLocation); ok {
+					missingDependencies = append(missingDependencies, dependency)
+				}
+			}
+		})
+
+		if len(missingDependencies) > 0 {
+			errors[contract.SourceLocation] = &missingDependenciesError{
+				MissingContracts: missingDependencies,
+			}
+		}
+	}
+	return errors
+}
+
+func (v *stagingValidatorImpl) validateContractUpdate(contract stagedContractUpdate, checker *sema.Checker) error {
 	// Get the account for the contract
-	address := flowsdk.Address(location.Address)
+	address := flowsdk.Address(contract.DeployLocation.Address)
 	account, err := v.flow.GetAccount(context.Background(), address)
 	if err != nil {
 		return fmt.Errorf("failed to get account: %w", err)
 	}
 
 	// Get the target contract old code
-	contractName := location.Name
+	contractName := contract.DeployLocation.Name
 	contractCode, ok := account.Contracts[contractName]
 	if !ok {
 		return fmt.Errorf("old contract code not found for contract: %s", contractName)
@@ -130,36 +310,19 @@ func (v *stagingValidator) ValidateContractUpdate(
 		return fmt.Errorf("failed to parse old contract code: %w", err)
 	}
 
-	// Store contract code for error pretty printing
-	v.contracts[sourceCodeLocation] = updatedCode
-
-	// Parse and check the contract code
-	_, newProgramChecker, err := v.parseAndCheckContract(sourceCodeLocation)
-
-	// Errors related to missing dependencies are separate from other errors
-	// They may be handled differently by the caller, and it's parsing/checking
-	// errors are not relevant/informative if these are present (they are expected)
-	if len(v.missingDependencies) > 0 {
-		return &missingDependenciesError{MissingContracts: v.missingDependencies}
-	}
-
-	if err != nil {
-		return err
-	}
-
 	// Convert the new program checker to an interpreter program
-	interpreterProgram := interpreter.ProgramFromChecker(newProgramChecker)
+	interpreterProgram := interpreter.ProgramFromChecker(checker)
 
 	// Check if contract code is valid according to Cadence V1 Update Checker
 	validator := stdlib.NewCadenceV042ToV1ContractUpdateValidator(
-		sourceCodeLocation,
+		contract.SourceLocation,
 		contractName,
 		&accountContractNamesProviderImpl{
 			resolverFunc: v.resolveAddressContractNames,
 		},
 		oldProgram,
 		interpreterProgram,
-		v.elaborations,
+		v.elaborations(),
 	)
 
 	// Set the user defined type change checker
@@ -177,21 +340,56 @@ func (v *stagingValidator) ValidateContractUpdate(
 	return nil
 }
 
-func (v *stagingValidator) parseAndCheckContract(
-	location common.Location,
-) (*ast.Program, *sema.Checker, error) {
-	code := v.contracts[location]
+// Check a contract by location
+func (v *stagingValidatorImpl) checkContract(
+	importedLocation common.Location,
+) (checker *sema.Checker, err error) {
+	// Try to load cached checker
+	if cacheItem, ok := v.checkingCache[importedLocation]; ok {
+		return cacheItem.checker, cacheItem.err
+	}
+
+	// Cache the checking result
+	defer func() {
+		var cacheItem *cachedCheckingResult
+		if existingCacheItem, ok := v.checkingCache[importedLocation]; ok {
+			cacheItem = existingCacheItem
+		} else {
+			cacheItem = &cachedCheckingResult{}
+		}
+
+		cacheItem.checker = checker
+		cacheItem.err = err
+	}()
+
+	// Resolve the contract code and real location based on whether this is a staged update
+	var code []byte
+
+	// If it's an address location, get the staged contract code from the network
+	if addressLocation, ok := importedLocation.(common.AddressLocation); ok {
+		code, err = v.getStagedContractCode(addressLocation)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		// Otherwise, the code is already known
+		code = v.contracts[importedLocation]
+		if code == nil {
+			return nil, fmt.Errorf("contract code not found for location: %s", importedLocation)
+		}
+	}
 
 	// Parse the contract code
-	program, err := parser.ParseProgram(nil, code, parser.Config{})
+	var program *ast.Program
+	program, err = parser.ParseProgram(nil, code, parser.Config{})
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	// Check the contract code
-	checker, err := sema.NewChecker(
+	checker, err = sema.NewChecker(
 		program,
-		location,
+		importedLocation,
 		nil,
 		&sema.Config{
 			AccessCheckMode:    sema.AccessCheckModeStrict,
@@ -206,18 +404,19 @@ func (v *stagingValidator) parseAndCheckContract(
 		},
 	)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
+	}
+
+	// We must add this checker to the cache before checking to prevent cyclic imports
+	v.checkingCache[importedLocation] = &cachedCheckingResult{
+		checker: checker,
 	}
 
 	err = checker.Check()
-	if err != nil {
-		return nil, nil, err
-	}
-
-	return program, checker, nil
+	return checker, err
 }
 
-func (v *stagingValidator) getStagedContractCode(
+func (v *stagingValidatorImpl) getStagedContractCode(
 	location common.AddressLocation,
 ) ([]byte, error) {
 	// First check if the code is already known
@@ -227,39 +426,21 @@ func (v *stagingValidator) getStagedContractCode(
 		return code, nil
 	}
 
-	cAddr := cadence.BytesToAddress(location.Address.Bytes())
-	cName, err := cadence.NewString(location.Name)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get cadence string from contract name: %w", err)
-	}
-
-	value, err := v.flow.ExecuteScript(
-		context.Background(),
-		flowkit.Script{
-			Code: templates.GenerateGetStagedContractCodeScript(MigrationContractStagingAddress(v.flow.Network().Name)),
-			Args: []cadence.Value{cAddr, cName},
-		},
-		flowkit.LatestScriptQuery,
-	)
+	code, err := getStagedContractCode(context.Background(), v.flow, location)
 	if err != nil {
 		return nil, err
 	}
 
-	optValue, ok := value.(cadence.Optional)
-	if !ok {
-		return nil, fmt.Errorf("invalid script return value type: %T", value)
-	}
-
-	strValue, ok := optValue.Value.(cadence.String)
-	if !ok {
-		return nil, fmt.Errorf("invalid script return value type: %T", value)
-	}
-
-	v.contracts[location] = []byte(strValue)
+	v.contracts[location] = code
 	return v.contracts[location], nil
 }
 
-func (v *stagingValidator) resolveImport(checker *sema.Checker, importedLocation common.Location, _ ast.Range) (sema.Import, error) {
+func (v *stagingValidatorImpl) resolveImport(parentChecker *sema.Checker, importedLocation common.Location, _ ast.Range) (sema.Import, error) {
+	// Add this to the dependency graph
+	if parentChecker != nil {
+		v.addDependency(parentChecker.Location, importedLocation)
+	}
+
 	// Check if the imported location is the crypto checker
 	if importedLocation == stdlib.CryptoCheckerLocation {
 		cryptoChecker := stdlib.CryptoChecker()
@@ -268,62 +449,19 @@ func (v *stagingValidator) resolveImport(checker *sema.Checker, importedLocation
 		}, nil
 	}
 
-	// Check if the imported location is an address location
-	// No other location types are supported (as is the case with code on-chain)
-	addrLocation, ok := importedLocation.(common.AddressLocation)
-	if !ok {
-		return nil, fmt.Errorf("expected address location")
-	}
-
 	// Check if this contract has already been resolved
-	elaboration, ok := v.elaborations[importedLocation]
-
-	// If not resolved, parse and check the contract code
-	if !ok {
-		importedCode, err := v.getStagedContractCode(addrLocation)
-		if err != nil {
-			v.missingDependencies = append(v.missingDependencies, addrLocation)
-			return nil, fmt.Errorf("failed to get staged contract code: %w", err)
-		}
-		v.contracts[addrLocation] = importedCode
-
-		_, checker, err = v.parseAndCheckContract(addrLocation)
-		if err != nil {
-			return nil, fmt.Errorf("failed to parse and check contract code: %w", err)
-		}
-
-		v.elaborations[importedLocation] = checker.Elaboration
-		elaboration = checker.Elaboration
+	subChecker, err := v.checkContract(importedLocation)
+	if err != nil {
+		return nil, err
 	}
 
 	return sema.ElaborationImport{
-		Elaboration: elaboration,
+		Elaboration: subChecker.Elaboration,
 	}, nil
 }
 
-func (v *stagingValidator) loadSystemContracts() {
-	chainId, ok := chainIdMap[v.flow.Network().Name]
-	if !ok {
-		return
-	}
-
-	stagedSystemContracts := migrations.SystemContractChanges(chainId, migrations.SystemContractsMigrationOptions{
-		Burner: migrations.BurnerContractChangeUpdate, // needs to be update for now since BurnerChangeDeploy is a no-op in flow-go
-		EVM:    migrations.EVMContractChangeFull,
-	})
-	for _, stagedSystemContract := range stagedSystemContracts {
-		location := common.AddressLocation{
-			Address: stagedSystemContract.Address,
-			Name:    stagedSystemContract.Name,
-		}
-
-		v.contracts[location] = stagedSystemContract.Code
-		v.accountContractNames[stagedSystemContract.Address] = append(v.accountContractNames[stagedSystemContract.Address], stagedSystemContract.Name)
-	}
-}
-
-// This is a copy of the resolveLocation function from the linter/language server
-func (v *stagingValidator) resolveLocation(
+// This mostly is a copy of the resolveLocation function from the linter/language server
+func (v *stagingValidatorImpl) resolveLocation(
 	identifiers []ast.Identifier,
 	location common.Location,
 ) (
@@ -378,11 +516,22 @@ func (v *stagingValidator) resolveLocation(
 	resolvedLocations := make([]runtime.ResolvedLocation, len(identifiers))
 	for i := range resolvedLocations {
 		identifier := identifiers[i]
+
+		var resolvedLocation common.Location
+		resovledAddrLocation := common.AddressLocation{
+			Address: addressLocation.Address,
+			Name:    identifier.Identifier,
+		}
+
+		// If the contract one of our staged contract updates, use the source location
+		if stagedUpdate, ok := v.stagedContracts[resovledAddrLocation]; ok {
+			resolvedLocation = stagedUpdate.SourceLocation
+		} else {
+			resolvedLocation = resovledAddrLocation
+		}
+
 		resolvedLocations[i] = runtime.ResolvedLocation{
-			Location: common.AddressLocation{
-				Address: addressLocation.Address,
-				Name:    identifier.Identifier,
-			},
+			Location:    resolvedLocation,
 			Identifiers: []runtime.Identifier{identifier},
 		}
 	}
@@ -390,27 +539,49 @@ func (v *stagingValidator) resolveLocation(
 	return resolvedLocations, nil
 }
 
-func (v *stagingValidator) resolveAccountAccess(checker *sema.Checker, memberLocation common.Location) bool {
+func (v *stagingValidatorImpl) resolveAccountAccess(checker *sema.Checker, memberLocation common.Location) bool {
 	if checker == nil {
 		return false
 	}
 
-	checkerLocation, ok := checker.Location.(common.StringLocation)
-	if !ok {
-		return false
+	var memberAddress common.Address
+	if memberAddressLocation, ok := memberLocation.(common.AddressLocation); ok {
+		memberAddress = memberAddressLocation.Address
+	} else if memberStringLocation, ok := memberLocation.(common.StringLocation); ok {
+		found := false
+		for _, stagedContract := range v.stagedContracts {
+			if stagedContract.SourceLocation == memberStringLocation {
+				memberAddress = stagedContract.DeployLocation.Address
+				found = true
+				break
+			}
+		}
+		if !found {
+			return false
+		}
 	}
 
-	memberAddressLocation, ok := memberLocation.(common.AddressLocation)
-	if !ok {
-		return false
+	var checkerAddress common.Address
+	if checkerAddressLocation, ok := checker.Location.(common.AddressLocation); ok {
+		checkerAddress = checkerAddressLocation.Address
+	} else if checkerStringLocation, ok := checker.Location.(common.StringLocation); ok {
+		found := false
+		for _, stagedContract := range v.stagedContracts {
+			if stagedContract.SourceLocation == checkerStringLocation {
+				checkerAddress = stagedContract.DeployLocation.Address
+				found = true
+				break
+			}
+		}
+		if !found {
+			return false
+		}
 	}
 
-	// If the source code of the update is being checked, we should check account access based on the
-	// targeted network location of the contract & not the source code location
-	return checkerLocation == v.sourceCodeLocation && memberAddressLocation.Address == v.targetLocation.Address
+	return memberAddress == checkerAddress
 }
 
-func (v *stagingValidator) resolveAddressContractNames(address common.Address) ([]string, error) {
+func (v *stagingValidatorImpl) resolveAddressContractNames(address common.Address) ([]string, error) {
 	// Check if the contract names are already cached
 	if names, ok := v.accountContractNames[address]; ok {
 		return names, nil
@@ -452,11 +623,78 @@ func (v *stagingValidator) resolveAddressContractNames(address common.Address) (
 	return v.accountContractNames[address], nil
 }
 
+func (v *stagingValidatorImpl) loadSystemContracts() {
+	chainId, ok := chainIdMap[v.flow.Network().Name]
+	if !ok {
+		return
+	}
+
+	stagedSystemContracts := migrations.SystemContractChanges(chainId, migrations.SystemContractsMigrationOptions{
+		Burner: migrations.BurnerContractChangeUpdate, // needs to be update for now since BurnerChangeDeploy is a no-op in flow-go
+		EVM:    migrations.EVMContractChangeFull,
+	})
+	for _, stagedSystemContract := range stagedSystemContracts {
+		location := common.AddressLocation{
+			Address: stagedSystemContract.Address,
+			Name:    stagedSystemContract.Name,
+		}
+
+		v.contracts[location] = stagedSystemContract.Code
+		v.accountContractNames[stagedSystemContract.Address] = append(v.accountContractNames[stagedSystemContract.Address], stagedSystemContract.Name)
+	}
+}
+
+func (v *stagingValidatorImpl) elaborations() map[common.Location]*sema.Elaboration {
+	elaborations := make(map[common.Location]*sema.Elaboration)
+	for location, cacheItem := range v.checkingCache {
+		checker := cacheItem.checker
+		if checker == nil {
+			continue
+		}
+		elaborations[location] = checker.Elaboration
+	}
+	return elaborations
+}
+
+func (v *stagingValidatorImpl) addDependency(dependent common.Location, dependency common.Location) {
+	// Create the dependent node if it does not exist
+	if _, ok := v.graph[dependent]; !ok {
+		v.graph[dependent] = make(node)
+	}
+
+	// Create the dependency node if it does not exist
+	if _, ok := v.graph[dependency]; !ok {
+		v.graph[dependency] = make(node)
+	}
+
+	// Add the dependency
+	v.graph[dependent][dependency] = v.graph[dependency]
+}
+
+func (v *stagingValidatorImpl) forEachDependency(
+	contract stagedContractUpdate,
+	visitor func(dependency common.Location),
+) {
+	seen := make(map[common.Location]bool)
+	var traverse func(location common.Location)
+	traverse = func(location common.Location) {
+		seen[location] = true
+
+		for dep := range v.graph[location] {
+			if !seen[dep] {
+				visitor(dep)
+				traverse(dep)
+			}
+		}
+	}
+	traverse(contract.SourceLocation)
+}
+
 // Helper for pretty printing errors
 // While it is done by default in checker/parser errors, this has two purposes:
 // 1. Add color to the error message
 // 2. Use pretty printing on contract update errors which do not do this by default
-func (v *stagingValidator) prettyPrintError(err error, location common.Location) string {
+func (v *stagingValidatorImpl) PrettyPrintError(err error, location common.Location) string {
 	var sb strings.Builder
 	printErr := pretty.NewErrorPrettyPrinter(&sb, true).
 		PrettyPrintError(err, location, v.contracts)
@@ -473,4 +711,15 @@ func (a *accountContractNamesProviderImpl) GetAccountContractNames(
 	address common.Address,
 ) ([]string, error) {
 	return a.resolverFunc(address)
+}
+
+// util to sort address locations
+func sortAddressLocations(locations []common.AddressLocation) {
+	slices.SortFunc(locations, func(a common.AddressLocation, b common.AddressLocation) int {
+		addrCmp := bytes.Compare(a.Address.Bytes(), b.Address.Bytes())
+		if addrCmp != 0 {
+			return addrCmp
+		}
+		return strings.Compare(a.Name, b.Name)
+	})
 }

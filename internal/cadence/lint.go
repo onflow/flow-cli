@@ -32,6 +32,7 @@ import (
 	"github.com/onflow/flowkit/v2/output"
 
 	"github.com/onflow/flow-cli/internal/command"
+	"github.com/onflow/flow-cli/internal/util"
 )
 
 type lintFlagsCollection struct{}
@@ -202,7 +203,15 @@ func (r *lintResult) String() string {
 
 	total := numErrors + numWarnings
 	if total > 0 {
-		sb.WriteString(aurora.Colorize(fmt.Sprintf("%d %s (%d %s, %d %s)", total, pluralize("problem", total), numErrors, pluralize("error", numErrors), numWarnings, pluralize("warning", numWarnings)), color).String())
+		sb.WriteString(aurora.Colorize(fmt.Sprintf(
+			"%d %s (%d %s, %d %s)",
+			total,
+			util.Pluralize("problem", total),
+			numErrors,
+			util.Pluralize("error", numErrors),
+			numWarnings,
+			util.Pluralize("warning", numWarnings),
+		), color).String())
 	} else {
 		sb.WriteString(aurora.Green("Lint passed").String())
 	}
@@ -219,18 +228,11 @@ func (r *lintResult) Oneliner() string {
 	total := numErrors + numWarnings
 
 	if total > 0 {
-		return fmt.Sprintf("%d %s (%d %s, %d %s)", total, pluralize("problem", total), numErrors, pluralize("error", numErrors), numWarnings, pluralize("warning", numWarnings))
+		return fmt.Sprintf("%d %s (%d %s, %d %s)", total, util.Pluralize("problem", total), numErrors, util.Pluralize("error", numErrors), numWarnings, util.Pluralize("warning", numWarnings))
 	}
 	return "Lint passed"
 }
 
 func (r *lintResult) ExitCode() int {
 	return r.exitCode
-}
-
-func pluralize(word string, count int) string {
-	if count == 1 {
-		return word
-	}
-	return word + "s"
 }

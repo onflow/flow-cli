@@ -169,3 +169,10 @@ func CheckNetwork(network config.Network) error {
 func NormalizeLineEndings(s string) string {
 	return strings.ReplaceAll(s, "\r\n", "\n")
 }
+
+func Pluralize(word string, count int) string {
+	if count == 1 {
+		return word
+	}
+	return word + "s"
+}

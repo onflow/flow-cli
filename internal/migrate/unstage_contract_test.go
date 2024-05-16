@@ -101,7 +101,7 @@ func Test_UnstageContract(t *testing.T) {
 
 	t.Run("missing contract file", func(t *testing.T) {
 		srv, state, _ := util.TestMocks(t)
-		result, err := stageContract(
+		result, err := unstageContract(
 			[]string{testContract.Name},
 			command.GlobalFlags{
 				Network: "testnet",
