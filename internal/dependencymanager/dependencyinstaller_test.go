@@ -166,6 +166,7 @@ func TestDependencyInstallerAdd(t *testing.T) {
 			TargetDir:       "",
 			SkipDeployments: true,
 			SkipAlias:       true,
+			dependencies:    make(map[string]config.Dependency),
 		}
 
 		dep := config.Dependency{
@@ -237,6 +238,7 @@ func TestDependencyInstallerAddMany(t *testing.T) {
 			TargetDir:       "",
 			SkipDeployments: true,
 			SkipAlias:       true,
+			dependencies:    make(map[string]config.Dependency),
 		}
 
 		err := di.AddMany(dependencies)
