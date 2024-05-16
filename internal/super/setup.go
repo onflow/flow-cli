@@ -21,26 +21,22 @@ package super
 import (
 	"bytes"
 	"fmt"
+	"github.com/onflow/flow-cli/internal/dependencymanager"
+	"github.com/onflow/flow-cli/internal/util"
+	flowsdk "github.com/onflow/flow-go-sdk"
+	"github.com/onflow/flow-go/fvm/systemcontracts"
+	flowGo "github.com/onflow/flow-go/model/flow"
+	flowkitConfig "github.com/onflow/flowkit/config"
+	"golang.org/x/exp/slices"
 	"io"
 	"os"
 	"path/filepath"
 
 	"github.com/spf13/afero"
 
-	"github.com/onflow/flow-cli/internal/util"
-
-	flowsdk "github.com/onflow/flow-go-sdk"
-	"golang.org/x/exp/slices"
-
 	"github.com/onflow/flow-cli/internal/prompt"
 
-	"github.com/onflow/flow-go/fvm/systemcontracts"
-	flowGo "github.com/onflow/flow-go/model/flow"
-	flowkitConfig "github.com/onflow/flowkit/config"
-
 	"github.com/spf13/cobra"
-
-	"github.com/onflow/flow-cli/internal/dependencymanager"
 
 	"github.com/onflow/flowkit"
 	"github.com/onflow/flowkit/output"
@@ -184,6 +180,29 @@ func startInteractiveSetup(
 		return "", err
 	}
 
+	msg := "Would you like to install any core contracts and their dependencies?"
+	if prompt.GenericBoolPrompt(msg) {
+		err := installCoreContracts(logger, state, tempDir)
+		if err != nil {
+			return "", err
+		}
+	}
+
+	err = state.Save(filepath.Join(tempDir, "flow.json"))
+	if err != nil {
+		return "", err
+	}
+
+	// Move the temp directory to the target directory
+	err = os.Rename(tempDir, targetDir)
+	if err != nil {
+		return "", fmt.Errorf("failed to move temp directory to target directory: %w", err)
+	}
+
+	return targetDir, nil
+}
+
+func installCoreContracts(logger output.Logger, state *flowkit.State, tempDir string) error {
 	// Prompt to ask which core contracts should be installed
 	sc := systemcontracts.SystemContractsForChain(flowGo.Mainnet)
 	promptMessage := "Select any core contracts you would like to install or skip to continue."
@@ -196,7 +215,7 @@ func startInteractiveSetup(
 
 	selectedContractNames, err := prompt.RunSelectOptions(contractNames, promptMessage)
 	if err != nil {
-		return "", fmt.Errorf("error running dependency selection: %v\n", err)
+		return fmt.Errorf("error running dependency selection: %v\n", err)
 	}
 
 	var dependencies []flowkitConfig.Dependency
@@ -221,25 +240,14 @@ func startInteractiveSetup(
 	// Add the selected core contracts as dependencies
 	installer, err := dependencymanager.NewDependencyInstaller(logger, state, false, tempDir, dependencymanager.Flags{})
 	if err != nil {
-		return "", err
+		return err
 	}
 
 	if err := installer.AddMany(dependencies); err != nil {
-		return "", err
+		return err
 	}
 
-	err = state.Save(filepath.Join(tempDir, "flow.json"))
-	if err != nil {
-		return "", err
-	}
-
-	// Move the temp directory to the target directory
-	err = os.Rename(tempDir, targetDir)
-	if err != nil {
-		return "", fmt.Errorf("failed to move temp directory to target directory: %w", err)
-	}
-
-	return targetDir, nil
+	return nil
 }
 
 // getTargetDirectory checks if the specified directory path is suitable for use.
