@@ -32,6 +32,7 @@ import (
 
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/internal/scripts"
+	"github.com/onflow/flow-cli/internal/util"
 )
 
 var getStagedCodeflags struct{}
@@ -54,13 +55,13 @@ func getStagedCode(
 	flow flowkit.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
-	err := checkNetwork(flow.Network())
+	err := util.CheckNetwork(flow.Network())
 	if err != nil {
 		return nil, err
 	}
 
 	contractName := args[0]
-	addr, err := getAddressByContractName(state, contractName, flow.Network())
+	addr, err := util.GetAddressByContractName(state, contractName, flow.Network())
 	if err != nil {
 		return nil, fmt.Errorf("error getting address by contract name: %w", err)
 	}

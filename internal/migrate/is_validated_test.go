@@ -32,6 +32,8 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/onflow/flow-cli/internal/command"
+	"github.com/onflow/flow-cli/internal/migrate/validator"
+	"github.com/onflow/flow-cli/internal/migrate/validator/mocks"
 	"github.com/onflow/flow-cli/internal/util"
 )
 
@@ -45,8 +47,8 @@ func Test_IsValidated(t *testing.T) {
 
 	// Helper function to test the isValidated function
 	// with all of the necessary mocks
-	testIsValidatedWithStatuses := func(statuses []contractUpdateStatus) (command.Result, error) {
-		mockClient := newMockGitHubRepositoriesService(t)
+	testIsValidatedWithStatuses := func(statuses []validator.ContractUpdateStatus) (command.Result, error) {
+		mockClient := mocks.NewGitHubRepositoriesService(t)
 
 		// mock github file download
 		data, _ := json.Marshal(statuses)
@@ -99,18 +101,26 @@ func Test_IsValidated(t *testing.T) {
 		)
 
 		// call the isValidated function
-		validator := newValidator(mockClient, config.TestnetNetwork, state, util.NoLogger)
+		validator := validator.NewValidator(mockClient, config.TestnetNetwork, state, util.NoLogger)
 
-		res, err := validator.validate(
+		res, ts, err := validator.Validate(
 			testContract.Name,
 		)
 
+		if err != nil {
+			return validationResult{}, err
+		}
+
 		require.Equal(t, true, mockClient.AssertExpectations(t))
-		return res, err
+		return validationResult{
+			Status:    res,
+			Timestamp: *ts,
+			Network:   config.TestnetNetwork.Name,
+		}, nil
 	}
 
 	t.Run("isValidated gets status from latest report on github", func(t *testing.T) {
-		res, err := testIsValidatedWithStatuses([]contractUpdateStatus{
+		res, err := testIsValidatedWithStatuses([]validator.ContractUpdateStatus{
 			{
 				AccountAddress: "0x01",
 				ContractName:   "some-other-contract",
@@ -130,7 +140,7 @@ func Test_IsValidated(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, res.JSON(), validationResult{
 			Timestamp: expectedTime,
-			Status: contractUpdateStatus{
+			Status: validator.ContractUpdateStatus{
 				AccountAddress: emuAccount.Address.HexWithPrefix(),
 				ContractName:   testContract.Name,
 				Error:          "1234",
@@ -140,7 +150,7 @@ func Test_IsValidated(t *testing.T) {
 	})
 
 	t.Run("isValidated errors if contract was not in last migration", func(t *testing.T) {
-		_, err := testIsValidatedWithStatuses([]contractUpdateStatus{
+		_, err := testIsValidatedWithStatuses([]validator.ContractUpdateStatus{
 			{
 				AccountAddress: "0x01",
 				ContractName:   "some-other-contract",
@@ -148,6 +158,6 @@ func Test_IsValidated(t *testing.T) {
 			},
 		})
 
-		require.ErrorContains(t, err, "does not appear to have been a part of any emulated migrations yet")
+		require.ErrorContains(t, err, "do not appear to have been a part of any emulated migrations yet")
 	})
 }

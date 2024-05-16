@@ -38,6 +38,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
+	"github.com/onflow/flow-cli/internal/util"
 )
 
 var stateFlags struct {
@@ -143,7 +144,7 @@ func resolveStagedContracts(state *flowkit.State, contractNames []string) ([]mig
 
 		// If contract is not aliased, try to get address by deployment account
 		if address == flow.EmptyAddress {
-			address, err = getAddressByContractName(state, contractName, network)
+			address, err = util.GetAddressByContractName(state, contractName, network)
 			if err != nil {
 				return nil, fmt.Errorf("failed to get address by contract name: %w", err)
 			}

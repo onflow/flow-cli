@@ -36,6 +36,7 @@ import (
 
 	"github.com/dukex/mixpanel"
 	"github.com/getsentry/sentry-go"
+	"github.com/google/go-github/github"
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
 
@@ -45,6 +46,7 @@ import (
 	"github.com/onflow/flowkit/v2/output"
 
 	"github.com/onflow/flow-cli/build"
+	"github.com/onflow/flow-cli/internal/migrate/validator"
 	"github.com/onflow/flow-cli/internal/settings"
 	"github.com/onflow/flow-cli/internal/util"
 )
@@ -124,6 +126,11 @@ func (c Command) AddToParent(parent *cobra.Command) {
 		// skip version check if flag is set
 		if !Flags.SkipVersionCheck {
 			checkVersion(logger)
+		}
+
+		// check contract migrations if flag is set
+		if !Flags.SkipContractMigrationCheck {
+			checkContractMigrations(state, logger, flow)
 		}
 
 		// record command usage
@@ -424,14 +431,43 @@ func UsageMetrics(command *cobra.Command, wg *sync.WaitGroup) {
 
 // GlobalFlags contains all global flags definitions.
 type GlobalFlags struct {
-	Filter           string
-	Format           string
-	Save             string
-	Host             string
-	HostNetworkKey   string
-	Log              string
-	Network          string
-	Yes              bool
-	ConfigPaths      []string
-	SkipVersionCheck bool
+	Filter                     string
+	Format                     string
+	Save                       string
+	Host                       string
+	HostNetworkKey             string
+	Log                        string
+	Network                    string
+	Yes                        bool
+	ConfigPaths                []string
+	SkipVersionCheck           bool
+	SkipContractMigrationCheck bool
+}
+
+const migrationDataURL = "https://github.com/onflow/cadence/tree/master/migrations_data"
+
+func checkContractMigrations(state *flowkit.State, logger output.Logger, flow flowkit.Services) {
+	contractStatuses, err := validator.NewValidator(github.NewClient(nil).Repositories, flow.Network(), state, logger).GetContractStatuses()
+	if err != nil {
+		// if we can't get the contract statuses, we don't check them
+		return
+	}
+
+	var failedContracts []validator.ContractUpdateStatus
+
+	for _, contract := range contractStatuses {
+		if contract.IsFailure() {
+			failedContracts = append(failedContracts, contract)
+		}
+	}
+
+	if len(failedContracts) > 0 {
+		fmt.Fprintf(
+			os.Stderr, "\n%s Heads up: We ran a check in the background to verify that your contracts are still valid for the Cadence 1.0 migration. We found %d contract(s) that have failed to migrate. \n", output.ErrorEmoji(), len(failedContracts),
+		)
+		fmt.Fprintf(
+			os.Stderr, "\n Please visit %s for the latest migration snapshot and information about the failure. \n", migrationDataURL,
+		)
+	}
+	return
 }

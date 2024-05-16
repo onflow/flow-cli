@@ -19,49 +19,25 @@
 package migrate
 
 import (
-	"context"
-	"encoding/json"
-	"fmt"
-	"io"
-	"path"
-	"regexp"
 	"strings"
 	"time"
 
 	"github.com/google/go-github/github"
 	"github.com/logrusorgru/aurora/v4"
 	"github.com/onflow/flowkit/v2"
-	"github.com/onflow/flowkit/v2/config"
 	"github.com/onflow/flowkit/v2/output"
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
+	"github.com/onflow/flow-cli/internal/migrate/validator"
 	"github.com/onflow/flow-cli/internal/util"
 )
 
-//go:generate mockery --name gitHubRepositoriesService --inpackage --testonly --case underscore
-type gitHubRepositoriesService interface {
-	GetContents(ctx context.Context, owner string, repo string, path string, opt *github.RepositoryContentGetOptions) (fileContent *github.RepositoryContent, directoryContent []*github.RepositoryContent, resp *github.Response, err error)
-	DownloadContents(ctx context.Context, owner string, repo string, filepath string, opt *github.RepositoryContentGetOptions) (io.ReadCloser, error)
-}
-
-type validator struct {
-	repoService gitHubRepositoriesService
-	state       *flowkit.State
-	logger      output.Logger
-	network     config.Network
-}
-
-type contractUpdateStatus struct {
-	Kind           string `json:"kind,omitempty"`
-	AccountAddress string `json:"account_address"`
-	ContractName   string `json:"contract_name"`
-	Error          string `json:"error,omitempty"`
-}
+const moreInformationMessage = "For more information, please find the latest full migration report on GitHub (https://github.com/onflow/cadence/tree/master/migrations_data).\n\nNew reports are generated after each weekly emulated migration and your contract's status may change, so please actively monitor this status and stay tuned for the latest announcements until the migration deadline."
 
 type validationResult struct {
 	Timestamp time.Time
-	Status    contractUpdateStatus
+	Status    validator.ContractUpdateStatus
 	Network   string
 }
 
@@ -78,16 +54,6 @@ var IsValidatedCommand = &command.Command{
 	RunS:  isValidated,
 }
 
-const (
-	repoOwner = "onflow"
-	repoName  = "cadence"
-	repoPath  = "migrations_data"
-	repoRef   = "master"
-)
-
-const moreInformationMessage = "For more information, please find the latest full migration report on GitHub (https://github.com/onflow/cadence/tree/master/migrations_data).\n\nNew reports are generated after each weekly emulated migration and your contract's status may change, so please actively monitor this status and stay tuned for the latest announcements until the migration deadline."
-const contractUpdateFailureKind = "contract-update-failure"
-
 func isValidated(
 	args []string,
 	_ command.GlobalFlags,
@@ -96,205 +62,20 @@ func isValidated(
 	state *flowkit.State,
 ) (command.Result, error) {
 	repoService := github.NewClient(nil).Repositories
-	v := newValidator(repoService, flow.Network(), state, logger)
+	v := validator.NewValidator(repoService, flow.Network(), state, logger)
 
 	contractName := args[0]
-	return v.validate(contractName)
-}
-
-func newValidator(repoService gitHubRepositoriesService, network config.Network, state *flowkit.State, logger output.Logger) *validator {
-	return &validator{
-		repoService: repoService,
-		state:       state,
-		logger:      logger,
-		network:     network,
-	}
-}
-
-func (v *validator) validate(contractName string) (validationResult, error) {
-	err := checkNetwork(v.network)
+	s, ts, err := v.Validate(contractName)
 	if err != nil {
-		return validationResult{}, err
-	}
-
-	v.logger.StartProgress("Checking if contract has been validated")
-	defer v.logger.StopProgress()
-
-	addr, err := getAddressByContractName(v.state, contractName, v.network)
-	if err != nil {
-		return validationResult{}, err
-	}
-
-	status, timestamp, err := v.getContractValidationStatus(
-		v.network,
-		addr.HexWithPrefix(),
-		contractName,
-	)
-	if err != nil {
-		// Append more information message to the error
-		// this way we can ensure that if, for whatever reason, we fail to fetch the report
-		// the user will still understand that they can find the report on GitHub
-		return validationResult{}, fmt.Errorf("%w\n\n%s%s", err, moreInformationMessage, "\n")
+		return nil, err
 	}
 
 	return validationResult{
-		Timestamp: *timestamp,
-		Status:    status,
-		Network:   v.network.Name,
+		Status:    s,
+		Timestamp: *ts,
+		Network:   flow.Network().Name,
 	}, nil
-}
 
-func (v *validator) getContractValidationStatus(network config.Network, address string, contractName string) (contractUpdateStatus, *time.Time, error) {
-	// Get last migration report
-	report, timestamp, err := v.getLatestMigrationReport(network)
-	if err != nil {
-		return contractUpdateStatus{}, nil, err
-	}
-
-	// Get all the contract statuses from the report
-	statuses, err := v.fetchAndParseReport(report.GetPath())
-	if err != nil {
-		return contractUpdateStatus{}, nil, err
-	}
-
-	// Get the validation result related to the contract
-	var status *contractUpdateStatus
-	for _, s := range statuses {
-		if s.ContractName == contractName && s.AccountAddress == address {
-			status = &s
-			break
-		}
-	}
-
-	// Throw error if contract was not part of the last migration
-	if status == nil {
-		builder := strings.Builder{}
-		builder.WriteString("the contract does not appear to have been a part of any emulated migrations yet, please ensure that it has been staged & wait for the next emulated migration (last migration report was at ")
-		builder.WriteString(timestamp.Format(time.RFC3339))
-		builder.WriteString(")\n\n")
-
-		builder.WriteString(" - Account: ")
-		builder.WriteString(address)
-		builder.WriteString("\n - Contract: ")
-		builder.WriteString(contractName)
-		builder.WriteString("\n - Network: ")
-		builder.WriteString(network.Name)
-
-		return contractUpdateStatus{}, nil, fmt.Errorf(builder.String())
-	}
-
-	return *status, timestamp, nil
-}
-
-func (v *validator) getLatestMigrationReport(network config.Network) (*github.RepositoryContent, *time.Time, error) {
-	// Get the content of the migration reports folder
-	_, folderContent, _, err := v.repoService.GetContents(
-		context.Background(),
-		repoOwner,
-		repoName,
-		repoPath,
-		&github.RepositoryContentGetOptions{
-			Ref: repoRef,
-		},
-	)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	// Find the latest report file
-	var latestReport *github.RepositoryContent
-	var latestReportTime *time.Time
-	for _, content := range folderContent {
-		if content.Type != nil && *content.Type == "file" {
-			contentPath := content.GetPath()
-
-			// Try to extract the time from the filename
-			networkStr, t, err := extractInfoFromFilename(contentPath)
-			if err != nil {
-				// Ignore files that don't match the expected format
-				// Or have any another error while parsing
-				continue
-			}
-
-			// Ignore reports from other networks
-			if networkStr != strings.ToLower(network.Name) {
-				continue
-			}
-
-			// Check if this is the latest report
-			if latestReportTime == nil || t.After(*latestReportTime) {
-				latestReport = content
-				latestReportTime = t
-			}
-		}
-	}
-
-	if latestReport == nil {
-		return nil, nil, fmt.Errorf("no emulated migration reports found for network `%s` within the remote repository - have any migrations been run yet for this network?", network.Name)
-	}
-
-	return latestReport, latestReportTime, nil
-}
-
-func (v *validator) fetchAndParseReport(reportPath string) ([]contractUpdateStatus, error) {
-	// Get the content of the latest report
-	rc, err := v.repoService.DownloadContents(
-		context.Background(),
-		repoOwner,
-		repoName,
-		reportPath,
-		&github.RepositoryContentGetOptions{
-			Ref: repoRef,
-		},
-	)
-	if err != nil {
-		return nil, err
-	}
-	defer rc.Close()
-
-	// Read the report content
-	reportContent, err := io.ReadAll(rc)
-	if err != nil {
-		return nil, err
-	}
-
-	// Parse the report
-	var statuses []contractUpdateStatus
-	err = json.Unmarshal(reportContent, &statuses)
-	if err != nil {
-		return nil, err
-	}
-
-	return statuses, nil
-}
-
-func extractInfoFromFilename(filename string) (string, *time.Time, error) {
-	// Extracts the timestamp from the filename in the format: migrations_data/raw/XXXXXX-MM-DD-YYYY-<network>-XXXXXX.json
-	fileName := path.Base(filename)
-
-	expr := regexp.MustCompile(`^staged-contracts-report.*(\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}Z)-([a-z]+).json$`)
-	regexpMatches := expr.FindStringSubmatch(fileName)
-	if regexpMatches == nil {
-		return "", nil, fmt.Errorf("filename does not match the expected format")
-	}
-
-	// Extract the timestamp
-	timestampStr := regexpMatches[1]
-	timestamp, err := time.Parse("2006-01-02T15-04-05Z", timestampStr)
-	if err != nil {
-		return "", nil, fmt.Errorf("failed to parse timestamp from filename")
-	}
-
-	// Extract the network
-	network := regexpMatches[2]
-
-	return network, &timestamp, nil
-}
-
-func (s contractUpdateStatus) IsFailure() bool {
-	// Just in case there are failures without an error message in the future
-	// we will also check the kind of the status
-	return s.Error != "" || s.Kind == contractUpdateFailureKind
 }
 
 func (v validationResult) String() string {

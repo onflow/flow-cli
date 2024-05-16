@@ -24,8 +24,6 @@ import (
 	"github.com/onflow/cadence"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flowkit/v2"
-	"github.com/onflow/flowkit/v2/accounts"
-	"github.com/onflow/flowkit/v2/config"
 	"github.com/onflow/flowkit/v2/project"
 	"github.com/spf13/cobra"
 )
@@ -89,54 +87,4 @@ func replaceImportsIfExists(state *flowkit.State, flow flowkit.Services, locatio
 	}
 
 	return program.Code(), nil
-}
-
-func getAccountByContractName(state *flowkit.State, contractName string, network config.Network) (*accounts.Account, error) {
-	deployments := state.Deployments().ByNetwork(network.Name)
-	var accountName string
-	for _, d := range deployments {
-		for _, c := range d.Contracts {
-			if c.Name == contractName {
-				accountName = d.Account
-				break
-			}
-		}
-	}
-	if accountName == "" {
-		return nil, fmt.Errorf("contract not found in state")
-	}
-
-	accs := state.Accounts()
-	if accs == nil {
-		return nil, fmt.Errorf("no accounts found in state")
-	}
-
-	var account *accounts.Account
-	for _, a := range *accs {
-		if accountName == a.Name {
-			account = &a
-			break
-		}
-	}
-	if account == nil {
-		return nil, fmt.Errorf("account %s not found in state", accountName)
-	}
-
-	return account, nil
-}
-
-func getAddressByContractName(state *flowkit.State, contractName string, network config.Network) (flow.Address, error) {
-	account, err := getAccountByContractName(state, contractName, network)
-	if err != nil {
-		return flow.Address{}, err
-	}
-
-	return flow.HexToAddress(account.Address.Hex()), nil
-}
-
-func checkNetwork(network config.Network) error {
-	if network.Name != config.TestnetNetwork.Name && network.Name != config.MainnetNetwork.Name {
-		return fmt.Errorf("staging contracts is only supported on testnet & mainnet networks, see https://cadence-lang.org/docs/cadence-migration-guide for more information")
-	}
-	return nil
 }
