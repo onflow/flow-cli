@@ -107,8 +107,8 @@ type DependencyInstaller struct {
 	Gateways        map[string]gateway.Gateway
 	Logger          output.Logger
 	State           *flowkit.State
-	SaveState             bool
-	TargetDir             string
+	SaveState       bool
+	TargetDir       string
 	SkipDeployments bool
 	SkipAlias       bool
 	logs            categorizedLogs
@@ -142,8 +142,8 @@ func NewDependencyInstaller(logger output.Logger, state *flowkit.State, saveStat
 		Gateways:        gateways,
 		Logger:          logger,
 		State:           state,
-		SaveState:             saveState,
-		TargetDir:             targetDir,
+		SaveState:       saveState,
+		TargetDir:       targetDir,
 		SkipDeployments: flags.skipDeployments,
 		SkipAlias:       flags.skipAlias,
 		dependencies:    make(map[string]config.Dependency),
