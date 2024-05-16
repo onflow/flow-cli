@@ -104,16 +104,15 @@ func (f *Flags) AddToCommand(cmd *cobra.Command) {
 }
 
 type DependencyInstaller struct {
-	Gateways              map[string]gateway.Gateway
-	Logger                output.Logger
-	State                 *flowkit.State
+	Gateways        map[string]gateway.Gateway
+	Logger          output.Logger
+	State           *flowkit.State
 	SaveState             bool
 	TargetDir             string
-	SkipDeployments       bool
-	SkipAlias             bool
-	logs                  categorizedLogs
-	initialContractsState config.Contracts
-	dependencies          map[string]config.Dependency
+	SkipDeployments bool
+	SkipAlias       bool
+	logs            categorizedLogs
+	dependencies    map[string]config.Dependency
 }
 
 // NewDependencyInstaller creates a new instance of DependencyInstaller
@@ -140,15 +139,14 @@ func NewDependencyInstaller(logger output.Logger, state *flowkit.State, saveStat
 	}
 
 	return &DependencyInstaller{
-		Gateways:              gateways,
-		Logger:                logger,
-		State:                 state,
+		Gateways:        gateways,
+		Logger:          logger,
+		State:           state,
 		SaveState:             saveState,
 		TargetDir:             targetDir,
-		SkipDeployments:       flags.skipDeployments,
-		SkipAlias:             flags.skipAlias,
-		initialContractsState: *state.Contracts(), // Copy at this point in time
-		dependencies:          make(map[string]config.Dependency),
+		SkipDeployments: flags.skipDeployments,
+		SkipAlias:       flags.skipAlias,
+		dependencies:    make(map[string]config.Dependency),
 	}, nil
 }
 
@@ -253,25 +251,24 @@ func (di *DependencyInstaller) AddMany(dependencies []config.Dependency) error {
 }
 
 func (di *DependencyInstaller) addDependency(dep config.Dependency) error {
-	if _, exists := di.dependencies[dep.Source.Address.String()]; exists {
+	sourceString := fmt.Sprintf("%s://%s.%s", dep.Source.NetworkName, dep.Source.Address.String(), dep.Source.ContractName)
+
+	if _, exists := di.dependencies[sourceString]; exists {
 		return nil
 	}
 
-	di.dependencies[dep.Source.Address.String()] = dep
+	di.dependencies[sourceString] = dep
 
 	return nil
-
 }
 
 // checkForConflictingContracts checks if any of the dependencies conflict with contracts already in the state
 func (di *DependencyInstaller) checkForConflictingContracts() {
 	for _, dependency := range di.dependencies {
-		_, err := di.initialContractsState.ByName(dependency.Name)
-		if err != nil {
-			if !isCoreContract(dependency.Name) {
-				msg := util.MessageWithEmojiPrefix("❌", fmt.Sprintf("Contract named %s already exists in flow.json", dependency.Name))
-				di.logs.issues = append(di.logs.issues, msg)
-			}
+		foundContract, _ := di.State.Contracts().ByName(dependency.Name)
+		if foundContract != nil && !foundContract.IsDependency {
+			msg := util.MessageWithEmojiPrefix("❌", fmt.Sprintf("Contract named %s already exists in flow.json", dependency.Name))
+			di.logs.issues = append(di.logs.issues, msg)
 		}
 	}
 }
