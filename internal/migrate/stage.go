@@ -20,6 +20,7 @@ package migrate
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -152,6 +153,10 @@ func stageAll(
 
 	results, err := s.StageContracts(context.Background(), contracts)
 	if err != nil {
+		var fatalValidationErr *fatalValidationError
+		if errors.As(err, &fatalValidationErr) {
+			return nil, fmt.Errorf("a fatal error occurred during validation, you may use the --skip-validation flag to disable these checks: %w", fatalValidationErr.err)
+		}
 		return nil, err
 	}
 

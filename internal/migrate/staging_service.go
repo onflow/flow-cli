@@ -55,6 +55,16 @@ type stagingResult struct {
 
 var _ stagingService = &stagingServiceImpl{}
 
+type fatalValidationError struct {
+	err error
+}
+
+func (e *fatalValidationError) Error() string {
+	return e.err.Error()
+}
+
+var _ error = &fatalValidationError{}
+
 func newStagingService(
 	flow flowkit.Services,
 	state *flowkit.State,
@@ -109,7 +119,7 @@ func (s *stagingServiceImpl) validateAndStageContracts(ctx context.Context, cont
 
 	// We will handle validation errors separately per contract to allow for partial staging
 	if err != nil && !errors.As(err, &validatorError) {
-		return nil, fmt.Errorf("failed to validate contracts: %w", err)
+		return nil, &fatalValidationError{err: err}
 	}
 
 	// Collect all staging errors to report to the user
