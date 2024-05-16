@@ -463,7 +463,7 @@ func checkContractMigrations(state *flowkit.State, logger output.Logger, flow fl
 
 	if len(failedContracts) > 0 {
 		fmt.Fprintf(
-			os.Stderr, "\n%s Contract Migration Check: %d contract(s) failed to migrate\n", output.ErrorEmoji(), len(failedContracts),
+			os.Stderr, "\n%s Heads up: We ran a check in the background to verify that your contracts are still valid for the Cadence 1.0 migration. We found %d contract(s) that have failed to migrate. \n", output.ErrorEmoji(), len(failedContracts),
 		)
 		fmt.Fprintf(
 			os.Stderr, "\n Please visit %s for the latest migration snapshot and information about the failure. \n", migrationDataURL,
