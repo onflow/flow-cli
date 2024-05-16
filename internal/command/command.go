@@ -463,10 +463,10 @@ func checkContractMigrations(state *flowkit.State, logger output.Logger, flow fl
 
 	if len(failedContracts) > 0 {
 		fmt.Fprintf(
-			os.Stderr, "\n%s  Contract Migration Check: %d contract(s) failed to migrate\n", output.ErrorEmoji(), len(failedContracts),
+			os.Stderr, "\n%s Contract Migration Check: %d contract(s) failed to migrate\n", output.ErrorEmoji(), len(failedContracts),
 		)
 		fmt.Fprintf(
-			os.Stderr, "\n For more information, please visit %s for the latest migration snapshot and notes about the failure. \n", migrationDataURL,
+			os.Stderr, "\n Please visit %s for the latest migration snapshot and information about the failure. \n", migrationDataURL,
 		)
 	}
 	return
