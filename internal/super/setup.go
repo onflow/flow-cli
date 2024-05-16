@@ -21,16 +21,18 @@ package super
 import (
 	"bytes"
 	"fmt"
-	"github.com/onflow/flow-cli/internal/dependencymanager"
-	"github.com/onflow/flow-cli/internal/util"
+	"io"
+	"os"
+	"path/filepath"
+
 	flowsdk "github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go/fvm/systemcontracts"
 	flowGo "github.com/onflow/flow-go/model/flow"
 	flowkitConfig "github.com/onflow/flowkit/config"
 	"golang.org/x/exp/slices"
-	"io"
-	"os"
-	"path/filepath"
+
+	"github.com/onflow/flow-cli/internal/dependencymanager"
+	"github.com/onflow/flow-cli/internal/util"
 
 	"github.com/spf13/afero"
 
