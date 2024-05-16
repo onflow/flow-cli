@@ -289,7 +289,14 @@ func (v *stagingValidatorImpl) checkAllStaged() map[common.StringLocation]error 
 	return errors
 }
 
-func (v *stagingValidatorImpl) validateContractUpdate(contract stagedContractUpdate, checker *sema.Checker) error {
+func (v *stagingValidatorImpl) validateContractUpdate(contract stagedContractUpdate, checker *sema.Checker) (err error) {
+	// Gracefully recover from panics
+	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("panic during contract update validation: %v", r)
+		}
+	}()
+
 	// Get the account for the contract
 	address := flowsdk.Address(contract.DeployLocation.Address)
 	account, err := v.flow.GetAccount(context.Background(), address)
@@ -348,6 +355,13 @@ func (v *stagingValidatorImpl) checkContract(
 	if cacheItem, ok := v.checkingCache[importedLocation]; ok {
 		return cacheItem.checker, cacheItem.err
 	}
+
+	// Gracefully recover from panics
+	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("panic during contract checking: %v", r)
+		}
+	}()
 
 	// Cache the checking result
 	defer func() {
