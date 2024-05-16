@@ -93,15 +93,23 @@ func stageProject(
 	}
 	s := newStagingService(flow, state, logger, v, promptStagingUnvalidatedContracts(logger))
 
+	var result command.Result
 	if len(args) == 0 && len(stageProjectFlags.Accounts) == 0 {
-		return stageAll(s, state, flow)
+		result, err = stageAll(s, state, flow)
+	} else if len(stageProjectFlags.Accounts) > 0 {
+		result, err = stageByAccountNames(s, state, flow, stageProjectFlags.Accounts)
+	} else {
+		result, err = stageByContractNames(s, state, flow, args)
 	}
 
-	if len(stageProjectFlags.Accounts) > 0 {
-		return stageByAccountNames(s, state, flow, stageProjectFlags.Accounts)
+	if err != nil {
+		var fatalValidationErr *fatalValidationError
+		if errors.As(err, &fatalValidationErr) {
+			return nil, fmt.Errorf("a fatal error occurred during validation, you may use the --skip-validation flag to disable these checks: %w", fatalValidationErr.err)
+		}
+		return nil, err
 	}
-
-	return stageByContractNames(s, state, flow, args)
+	return result, nil
 }
 
 func promptStagingUnvalidatedContracts(logger output.Logger) func(validatorError *stagingValidatorError) bool {
@@ -153,10 +161,6 @@ func stageAll(
 
 	results, err := s.StageContracts(context.Background(), contracts)
 	if err != nil {
-		var fatalValidationErr *fatalValidationError
-		if errors.As(err, &fatalValidationErr) {
-			return nil, fmt.Errorf("a fatal error occurred during validation, you may use the --skip-validation flag to disable these checks: %w", fatalValidationErr.err)
-		}
 		return nil, err
 	}
 
