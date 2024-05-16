@@ -22,29 +22,13 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/onflow/flowkit"
+	"github.com/onflow/flowkit/accounts"
+
+	"github.com/onflow/flow-go-sdk/crypto"
+
 	"github.com/onflow/flowkit/config"
 )
-
-//type flagsInit struct {
-//	ServicePrivateKey  string `flag:"service-private-key" info:"Service account private key"`
-//	ServiceKeySigAlgo  string `default:"ECDSA_P256" flag:"service-sig-algo" info:"Service account key signature algorithm"`
-//	ServiceKeyHashAlgo string `default:"SHA3_256" flag:"service-hash-algo" info:"Service account key hash algorithm"`
-//	Reset              bool   `default:"false" flag:"reset" info:"Reset configuration file"`
-//	Global             bool   `default:"false" flag:"global" info:"Initialize global user configuration"`
-//}
-//
-//var InitFlag = flagsInit{}
-
-//var initCommand = &command.Command{
-//	Cmd: &cobra.Command{
-//		Use:   "init",
-//		Short: "Initialize a new configuration",
-//	},
-//	Flags: &InitFlag,
-//	Run:   Initialise,
-//}
 
 // InitConfigParameters holds all necessary parameters for initializing the configuration.
 type InitConfigParameters struct {
@@ -86,10 +70,17 @@ func InitializeConfiguration(params InitConfigParameters, readerWriter flowkit.R
 		return nil, fmt.Errorf("invalid hash algorithm: %s", params.ServiceKeyHashAlgo)
 	}
 
-	state, err := flowkit.Init(readerWriter, sigAlgo, hashAlgo, params.TargetDirectory)
+	state, err := flowkit.Init(readerWriter)
 	if err != nil {
 		return nil, err
 	}
+
+	emulatorAccount, err := accounts.NewEmulatorAccount(readerWriter, crypto.ECDSA_P256, crypto.SHA3_256, "")
+	if err != nil {
+		return nil, err
+	}
+
+	state.Accounts().AddOrUpdate(emulatorAccount)
 
 	if params.ServicePrivateKey != "" {
 		privateKey, err := crypto.DecodePrivateKeyHex(sigAlgo, params.ServicePrivateKey)
