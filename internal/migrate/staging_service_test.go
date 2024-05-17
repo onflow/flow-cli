@@ -21,6 +21,7 @@ package migrate
 import (
 	"context"
 	"errors"
+	"fmt"
 	"path/filepath"
 	"reflect"
 	"testing"
@@ -108,6 +109,7 @@ func Test_StagingService(t *testing.T) {
 	setupMocks := func(
 		accts []mockAccount,
 		mocksStagedContracts map[common.AddressLocation][]byte,
+		txResult *flow.TransactionResult,
 	) (*flowkitMocks.Services, *flowkit.State, []*project.Contract) {
 		srv := flowkitMocks.NewServices(t)
 		rw, _ := tests.ReaderWriter()
@@ -144,7 +146,7 @@ func Test_StagingService(t *testing.T) {
 
 			_, ok = script.Args[1].(cadence.String)
 			return ok
-		}), mock.Anything).Return(tests.NewTransaction(), nil, nil).Maybe()
+		}), mock.Anything).Return(tests.NewTransaction(), txResult, nil).Maybe()
 
 		// Mock staged contracts on network
 		for location, code := range mocksStagedContracts {
@@ -212,7 +214,7 @@ func Test_StagingService(t *testing.T) {
 				},
 			},
 		}
-		srv, state, deploymentContracts := setupMocks(mockAccount, nil)
+		srv, state, deploymentContracts := setupMocks(mockAccount, nil, tests.NewTransactionResult(nil))
 
 		v := newMockStagingValidator(t)
 		v.On("Validate", mock.MatchedBy(func(stagedContracts []stagedContractUpdate) bool {
@@ -275,7 +277,7 @@ func Test_StagingService(t *testing.T) {
 				},
 			},
 		}
-		srv, state, deploymentContracts := setupMocks(mockAccount, nil)
+		srv, state, deploymentContracts := setupMocks(mockAccount, nil, tests.NewTransactionResult(nil))
 
 		v := newMockStagingValidator(t)
 		v.On("Validate", mock.MatchedBy(func(stagedContracts []stagedContractUpdate) bool {
@@ -337,7 +339,7 @@ func Test_StagingService(t *testing.T) {
 				},
 			},
 		}
-		srv, state, deploymentContracts := setupMocks(mockAccount, nil)
+		srv, state, deploymentContracts := setupMocks(mockAccount, nil, tests.NewTransactionResult(nil))
 
 		s := newStagingService(
 			srv,
@@ -380,7 +382,7 @@ func Test_StagingService(t *testing.T) {
 				},
 			},
 		}
-		srv, state, deploymentContracts := setupMocks(mockAccount, nil)
+		srv, state, deploymentContracts := setupMocks(mockAccount, nil, tests.NewTransactionResult(nil))
 
 		v := newMockStagingValidator(t)
 		v.On("Validate", mock.MatchedBy(func(stagedContracts []stagedContractUpdate) bool {
@@ -449,7 +451,7 @@ func Test_StagingService(t *testing.T) {
 				},
 			},
 		}
-		srv, state, deploymentContracts := setupMocks(mockAccount, nil)
+		srv, state, deploymentContracts := setupMocks(mockAccount, nil, tests.NewTransactionResult(nil))
 
 		v := newMockStagingValidator(t)
 		v.On("Validate", mock.MatchedBy(func(stagedContracts []stagedContractUpdate) bool {
@@ -517,7 +519,7 @@ func Test_StagingService(t *testing.T) {
 		}
 		srv, state, deploymentContracts := setupMocks(mockAccount, map[common.AddressLocation][]byte{
 			simpleAddressLocation("0x01.Foo"): []byte("access(all) contract Foo {}"),
-		})
+		}, tests.NewTransactionResult(nil))
 
 		v := newMockStagingValidator(t)
 		v.On("Validate", mock.MatchedBy(func(stagedContracts []stagedContractUpdate) bool {
@@ -555,5 +557,62 @@ func Test_StagingService(t *testing.T) {
 		require.Equal(t, flow.Identifier{}, results[simpleAddressLocation("0x01.Foo")].TxId)
 
 		srv.AssertNumberOfCalls(t, "SendTransaction", 0)
+	})
+
+	t.Run("handles error transaction result", func(t *testing.T) {
+		mockAccount := []mockAccount{
+			{
+				name:    "some-account",
+				address: "0x01",
+				deployments: []mockDeployment{
+					{
+						name: "Foo",
+						code: "access(all) contract Foo {}",
+					},
+				},
+			},
+		}
+		srv, state, deploymentContracts := setupMocks(mockAccount, nil, &flow.TransactionResult{
+			Status:        flow.TransactionStatusSealed,
+			Error:         fmt.Errorf("i am a transaction error"),
+			TransactionID: flow.Identifier{0x99},
+		})
+
+		v := newMockStagingValidator(t)
+		v.On("Validate", mock.MatchedBy(func(stagedContracts []stagedContractUpdate) bool {
+			return reflect.DeepEqual(stagedContracts, []stagedContractUpdate{
+				{
+					DeployLocation: simpleAddressLocation("0x01.Foo"),
+					SourceLocation: common.StringLocation(filepath.FromSlash("0x01/Foo.cdc")),
+					Code:           []byte("access(all) contract Foo {}"),
+				},
+			})
+		})).Return(nil).Once()
+
+		s := newStagingService(
+			srv,
+			state,
+			util.NoLogger,
+			v,
+			func(sve *stagingValidatorError) bool {
+				return false
+			},
+		)
+
+		results, err := s.StageContracts(
+			context.Background(),
+			deploymentContracts,
+		)
+
+		require.NoError(t, err)
+		require.NotNil(t, results)
+
+		require.Equal(t, 1, len(results))
+		require.Contains(t, results, simpleAddressLocation("0x01.Foo"))
+		require.ErrorContains(t, results[simpleAddressLocation("0x01.Foo")].Err, "i am a transaction error")
+		require.Equal(t, results[simpleAddressLocation("0x01.Foo")].WasValidated, true)
+		require.Equal(t, flow.Identifier{0x99}, results[simpleAddressLocation("0x01.Foo")].TxId)
+
+		srv.AssertNumberOfCalls(t, "SendTransaction", 1)
 	})
 }
