@@ -75,7 +75,7 @@ func InitializeConfiguration(params InitConfigParameters, readerWriter flowkit.R
 		return nil, err
 	}
 
-	emulatorAccount, err := accounts.NewEmulatorAccount(readerWriter, crypto.ECDSA_P256, crypto.SHA3_256, "")
+	emulatorAccount, err := accounts.NewEmulatorAccount(readerWriter, crypto.ECDSA_P256, crypto.SHA3_256, params.TargetDirectory)
 	if err != nil {
 		return nil, err
 	}
