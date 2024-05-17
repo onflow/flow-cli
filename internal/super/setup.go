@@ -73,7 +73,7 @@ func create(
 	args []string,
 	_ command.GlobalFlags,
 	logger output.Logger,
-	_ flowkit.ReaderWriter,
+	readerWriter flowkit.ReaderWriter,
 	_ flowkit.Services,
 ) (command.Result, error) {
 	var targetDir string
@@ -89,6 +89,19 @@ func create(
 		if err != nil {
 			return nil, err
 		}
+	} else if setupFlags.ConfigOnly {
+		if len(args) > 0 {
+			return nil, fmt.Errorf("project name not required when using --config-only flag")
+		}
+
+		err = createConfigOnly("", readerWriter)
+		if err != nil {
+			return nil, err
+		}
+
+		logger.Info(util.MessageWithEmojiPrefix("🎉", "Configuration created successfully!"))
+
+		return nil, nil
 	} else {
 		targetDir, err = startInteractiveSetup(args, logger)
 		if err != nil {
@@ -97,6 +110,27 @@ func create(
 	}
 
 	return &setupResult{targetDir: targetDir}, nil
+}
+
+func createConfigOnly(targetDir string, readerWriter flowkit.ReaderWriter) error {
+	params := config.InitConfigParameters{
+		ServiceKeySigAlgo:  "ECDSA_P256",
+		ServiceKeyHashAlgo: "SHA3_256",
+		Reset:              false,
+		Global:             false,
+		TargetDirectory:    targetDir,
+	}
+	state, err := config.InitializeConfiguration(params, readerWriter)
+	if err != nil {
+		return err
+	}
+
+	err = state.SaveDefault()
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func startInteractiveSetup(
