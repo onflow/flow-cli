@@ -211,7 +211,7 @@ func (s *stagingServiceImpl) stageContract(ctx context.Context, contract stagedC
 		return flow.Identifier{}, fmt.Errorf("failed to get account for contract %s: %w", contract.DeployLocation.Name, err)
 	}
 
-	tx, _, err := s.flow.SendTransaction(
+	_, res, err := s.flow.SendTransaction(
 		context.Background(),
 		transactions.SingleAccountRole(*account),
 		flowkit.Script{
@@ -224,7 +224,11 @@ func (s *stagingServiceImpl) stageContract(ctx context.Context, contract stagedC
 		return flow.Identifier{}, err
 	}
 
-	return tx.ID(), nil
+	if res.Error != nil {
+		return res.TransactionID, fmt.Errorf("failed to stage contract: %w", res.Error)
+	}
+
+	return res.TransactionID, nil
 }
 
 func (s *stagingServiceImpl) hasStagedContractChanged(contract stagedContractUpdate) bool {
