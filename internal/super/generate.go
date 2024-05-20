@@ -123,7 +123,7 @@ func generateTransaction(
 	state *flowkit.State,
 ) (result command.Result, err error) {
 	generator := NewGenerator(DefaultCadenceDirectory, state, logger, false, true)
-	transaction := OtherTemplate{Name: args[0]}
+	transaction := ScriptTemplate{Name: args[0]}
 	err = generator.Create(TemplateMap{TransactionType: []TemplateItem{transaction}})
 	return nil, err
 }
@@ -136,7 +136,7 @@ func generateScript(
 	state *flowkit.State,
 ) (result command.Result, err error) {
 	generator := NewGenerator(DefaultCadenceDirectory, state, logger, false, true)
-	script := OtherTemplate{Name: args[0]}
+	script := ScriptTemplate{Name: args[0]}
 	err = generator.Create(TemplateMap{ScriptType: []TemplateItem{script}})
 	return nil, err
 }
@@ -144,13 +144,15 @@ func generateScript(
 // TemplateItem is an interface for different template types
 type TemplateItem interface {
 	GetName() string
+	GetTemplate() string
 	GetAccount() string
 }
 
 // Contract contains properties for contracts
 type Contract struct {
-	Name    string
-	Account string
+	Name     string
+	Template string
+	Account  string
 }
 
 // GetName returns the name of the contract
@@ -158,23 +160,67 @@ func (c Contract) GetName() string {
 	return c.Name
 }
 
+// GetTemplate returns the template of the contract
+func (c Contract) GetTemplate() string {
+	if c.Template == "" {
+		return "contract_init"
+	}
+
+	return c.Template
+}
+
 // GetAccount returns the account of the contract
 func (c Contract) GetAccount() string {
 	return c.Account
 }
 
-// OtherTemplate contains only a name property for scripts and transactions
-type OtherTemplate struct {
-	Name string
+// ScriptTemplate contains only a name property for scripts and transactions
+type ScriptTemplate struct {
+	Name     string
+	Template string
 }
 
 // GetName returns the name of the script or transaction
-func (o OtherTemplate) GetName() string {
+func (o ScriptTemplate) GetName() string {
 	return o.Name
 }
 
+// GetTemplate returns an empty string for scripts and transactions
+func (o ScriptTemplate) GetTemplate() string {
+	if o.Template == "" {
+		return "script_init"
+	}
+
+	return o.Template
+}
+
 // GetAccount returns an empty string for scripts and transactions
-func (o OtherTemplate) GetAccount() string {
+func (o ScriptTemplate) GetAccount() string {
+	return ""
+}
+
+// TransactionTemplate contains only a name property for scripts and transactions
+type TransactionTemplate struct {
+	Name     string
+	Template string
+}
+
+// GetName returns the name of the script or transaction
+func (o TransactionTemplate) GetName() string {
+	return o.Name
+}
+
+// GetTemplate returns an empty string for scripts and transactions
+func (o TransactionTemplate) GetTemplate() string {
+	if o.Template == "" {
+		return "transaction_init"
+	}
+
+	return o.Template
+}
+
+// GetAccount returns an empty string for scripts and transactions
+func (o TransactionTemplate) GetAccount() string {
 	return ""
 }
 
@@ -202,7 +248,7 @@ func NewGenerator(directory string, state *flowkit.State, logger output.Logger, 
 func (g *Generator) Create(typeNames TemplateMap) error {
 	for templateType, items := range typeNames {
 		for _, item := range items {
-			err := g.generate(templateType, item.GetName(), item.GetAccount())
+			err := g.generate(templateType, item.GetTemplate(), item.GetName(), item.GetAccount())
 			if err != nil {
 				return err
 			}
@@ -211,7 +257,7 @@ func (g *Generator) Create(typeNames TemplateMap) error {
 	return nil
 }
 
-func (g *Generator) generate(templateType, name, account string) error {
+func (g *Generator) generate(templateType, templateName, name, account string) error {
 
 	name = util.StripCDCExtension(name)
 	filename := util.AddCDCExtension(name)
@@ -227,28 +273,32 @@ func (g *Generator) generate(templateType, name, account string) error {
 		rootDir = g.directory
 	}
 
+	templatePath := fmt.Sprintf("templates/%s.cdc.tmpl", templateName)
+
 	switch templateType {
 	case ContractType:
 		basePath = "contracts"
-		nameData := map[string]interface{}{"Name": name}
-		fileToWrite, err = processTemplate("templates/contract_init.cdc.tmpl", nameData)
+		fileData := map[string]interface{}{"Name": name}
+		fileToWrite, err = processTemplate(templatePath, fileData)
 		if err != nil {
 			return fmt.Errorf("error generating contract template: %w", err)
 		}
 
-		testFileToWrite, err = processTemplate("templates/contract_init_test.cdc.tmpl", nameData)
+		testFileToWrite, err = processTemplate("templates/contract_init_test.cdc.tmpl", fileData)
 		if err != nil {
 			return fmt.Errorf("error generating contract test template: %w", err)
 		}
 	case ScriptType:
 		basePath = "scripts"
-		fileToWrite, err = processTemplate("templates/script_init.cdc.tmpl", nil)
+		fileData := map[string]interface{}{"Name": name}
+		fileToWrite, err = processTemplate(templatePath, fileData)
 		if err != nil {
 			return fmt.Errorf("error generating script template: %w", err)
 		}
 	case TransactionType:
 		basePath = "transactions"
-		fileToWrite, err = processTemplate("templates/transaction_init.cdc.tmpl", nil)
+		fileData := map[string]interface{}{"Name": name}
+		fileToWrite, err = processTemplate(templatePath, fileData)
 		if err != nil {
 			return fmt.Errorf("error generating transaction template: %w", err)
 		}

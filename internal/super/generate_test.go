@@ -181,7 +181,7 @@ func TestGenerateNewScript(t *testing.T) {
 	_, state, _ := util.TestMocks(t)
 
 	generator := NewGenerator("cadence", state, logger, false, true)
-	err := generator.Create(TemplateMap{"script": []TemplateItem{OtherTemplate{Name: "TestScript"}}})
+	err := generator.Create(TemplateMap{"script": []TemplateItem{ScriptTemplate{Name: "TestScript"}}})
 	assert.NoError(t, err, "Failed to generate contract")
 
 	content, err := state.ReaderWriter().ReadFile("cadence/scripts/TestScript.cdc")
@@ -200,7 +200,7 @@ func TestGenerateNewTransaction(t *testing.T) {
 	_, state, _ := util.TestMocks(t)
 
 	generator := NewGenerator("cadence", state, logger, false, true)
-	err := generator.Create(TemplateMap{"transaction": []TemplateItem{OtherTemplate{Name: "TestTransaction"}}})
+	err := generator.Create(TemplateMap{"transaction": []TemplateItem{TransactionTemplate{Name: "TestTransaction"}}})
 	assert.NoError(t, err, "Failed to generate contract")
 
 	content, err := state.ReaderWriter().ReadFile("cadence/transactions/TestTransaction.cdc")
