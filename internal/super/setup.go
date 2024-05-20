@@ -206,12 +206,14 @@ func startInteractiveSetup(
 			ScriptTemplate{
 				Name:     "GetCounter",
 				Template: "script_counter",
+				Data:     map[string]interface{}{"ContractName": "Counter"},
 			},
 		},
 		"transaction": []TemplateItem{
 			TransactionTemplate{
 				Name:     "IncrementCounter",
 				Template: "transaction_counter",
+				Data:     map[string]interface{}{"ContractName": "Counter"},
 			},
 		},
 	}

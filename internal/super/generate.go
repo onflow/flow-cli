@@ -146,6 +146,7 @@ type TemplateItem interface {
 	GetName() string
 	GetTemplate() string
 	GetAccount() string
+	GetData() map[string]interface{}
 }
 
 // Contract contains properties for contracts
@@ -153,6 +154,7 @@ type Contract struct {
 	Name     string
 	Template string
 	Account  string
+	Data     map[string]interface{}
 }
 
 // GetName returns the name of the contract
@@ -174,10 +176,16 @@ func (c Contract) GetAccount() string {
 	return c.Account
 }
 
+// GetData returns the data of the contract
+func (c Contract) GetData() map[string]interface{} {
+	return c.Data
+}
+
 // ScriptTemplate contains only a name property for scripts and transactions
 type ScriptTemplate struct {
 	Name     string
 	Template string
+	Data     map[string]interface{}
 }
 
 // GetName returns the name of the script or transaction
@@ -199,10 +207,16 @@ func (o ScriptTemplate) GetAccount() string {
 	return ""
 }
 
+// GetData returns the data of the script or transaction
+func (o ScriptTemplate) GetData() map[string]interface{} {
+	return o.Data
+}
+
 // TransactionTemplate contains only a name property for scripts and transactions
 type TransactionTemplate struct {
 	Name     string
 	Template string
+	Data     map[string]interface{}
 }
 
 // GetName returns the name of the script or transaction
@@ -222,6 +236,11 @@ func (o TransactionTemplate) GetTemplate() string {
 // GetAccount returns an empty string for scripts and transactions
 func (o TransactionTemplate) GetAccount() string {
 	return ""
+}
+
+// GetData returns the data of the script or transaction
+func (o TransactionTemplate) GetData() map[string]interface{} {
+	return o.Data
 }
 
 // TemplateMap holds all templates with flexibility
@@ -248,7 +267,7 @@ func NewGenerator(directory string, state *flowkit.State, logger output.Logger, 
 func (g *Generator) Create(typeNames TemplateMap) error {
 	for templateType, items := range typeNames {
 		for _, item := range items {
-			err := g.generate(templateType, item.GetTemplate(), item.GetName(), item.GetAccount())
+			err := g.generate(templateType, item.GetTemplate(), item.GetName(), item.GetAccount(), item.GetData())
 			if err != nil {
 				return err
 			}
@@ -257,7 +276,7 @@ func (g *Generator) Create(typeNames TemplateMap) error {
 	return nil
 }
 
-func (g *Generator) generate(templateType, templateName, name, account string) error {
+func (g *Generator) generate(templateType, templateName, name, account string, data map[string]interface{}) error {
 
 	name = util.StripCDCExtension(name)
 	filename := util.AddCDCExtension(name)
@@ -279,6 +298,9 @@ func (g *Generator) generate(templateType, templateName, name, account string) e
 	case ContractType:
 		basePath = "contracts"
 		fileData := map[string]interface{}{"Name": name}
+		for k, v := range data {
+			fileData[k] = v
+		}
 		fileToWrite, err = processTemplate(templatePath, fileData)
 		if err != nil {
 			return fmt.Errorf("error generating contract template: %w", err)
@@ -290,14 +312,20 @@ func (g *Generator) generate(templateType, templateName, name, account string) e
 		}
 	case ScriptType:
 		basePath = "scripts"
-		fileData := map[string]interface{}{"Name": name}
+		fileData := map[string]interface{}{}
+		for k, v := range data {
+			fileData[k] = v
+		}
 		fileToWrite, err = processTemplate(templatePath, fileData)
 		if err != nil {
 			return fmt.Errorf("error generating script template: %w", err)
 		}
 	case TransactionType:
 		basePath = "transactions"
-		fileData := map[string]interface{}{"Name": name}
+		fileData := map[string]interface{}{}
+		for k, v := range data {
+			fileData[k] = v
+		}
 		fileToWrite, err = processTemplate(templatePath, fileData)
 		if err != nil {
 			return fmt.Errorf("error generating transaction template: %w", err)
