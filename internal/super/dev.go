@@ -19,22 +19,14 @@
 package super
 
 import (
-	"context"
 	"errors"
 	"fmt"
-	"os"
-	"os/signal"
-	"strings"
-	"syscall"
-
-	flowGo "github.com/onflow/flow-go/model/flow"
-
 	"github.com/onflow/cadence/runtime/parser"
-	"github.com/onflow/flow-emulator/server"
 	"github.com/onflow/flowkit"
 	"github.com/onflow/flowkit/output"
-	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
+	"os"
+	"strings"
 
 	"github.com/onflow/flow-cli/internal/command"
 )
@@ -69,57 +61,16 @@ func dev(
 		return nil, err
 	}
 
+	err = flow.Ping()
+	if err != nil {
+		logger.Error("Error connecting to emulator. Make sure you started an emulator using 'flow emulator' command.")
+		logger.Info(fmt.Sprintf("%s This tool requires emulator to function. Emulator needs to be run inside the project root folder where the configuration file ('flow.json') exists.\n\n", output.TryEmoji()))
+		return nil, nil
+	}
+
 	serviceAccount, err := state.EmulatorServiceAccount()
 	if err != nil {
 		return nil, err
-	}
-
-	if devFlags.StartEmulator {
-		privateKey, err := serviceAccount.Key.PrivateKey()
-		if err != nil {
-			return nil, fmt.Errorf("failed to get private key: %s", err)
-		}
-
-		consoleWriter := zerolog.ConsoleWriter{Out: os.Stdout}
-		log := zerolog.New(consoleWriter).With().Timestamp().Logger()
-
-		emulatorServer := server.NewEmulatorServer(&log, &server.Config{
-			ChainID:                flowGo.Emulator,
-			ServicePublicKey:       (*privateKey).PublicKey(),
-			ServicePrivateKey:      *privateKey,
-			ServiceKeySigAlgo:      serviceAccount.Key.SigAlgo(),
-			ServiceKeyHashAlgo:     serviceAccount.Key.HashAlgo(),
-			ScriptGasLimit:         100000,
-			TransactionMaxGasLimit: 9999,
-		})
-
-		emuErr := emulatorServer.Listen()
-		if emuErr != nil {
-			return nil, fmt.Errorf("failed to prepare the emulator for connections: %s", emuErr)
-		}
-
-		c := make(chan os.Signal, 1)
-		signal.Notify(c, os.Interrupt, syscall.SIGTERM)
-		go func() {
-			emulatorServer.Start()
-			<-c
-			os.Exit(1)
-		}()
-
-		ctx := context.Background()
-		err = flow.WaitServer(ctx)
-		if err != nil {
-			logger.Error("Error connecting to emulator. Make sure you started an emulator using 'flow emulator' command.")
-			logger.Info(fmt.Sprintf("%s This tool requires emulator to function. Emulator needs to be run inside the project root folder where the configuration file ('flow.json') exists.\n\n", output.TryEmoji()))
-			return nil, err
-		}
-	} else {
-		err = flow.Ping()
-		if err != nil {
-			logger.Error("Error connecting to emulator. Make sure you started an emulator using 'flow emulator' command.")
-			logger.Info(fmt.Sprintf("%s This tool requires emulator to function. Emulator needs to be run inside the project root folder where the configuration file ('flow.json') exists.\n\n", output.TryEmoji()))
-			return nil, err
-		}
 	}
 
 	flow.SetLogger(output.NewStdoutLogger(output.NoneLog))
