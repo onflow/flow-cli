@@ -21,12 +21,13 @@ package super
 import (
 	"errors"
 	"fmt"
+	"os"
+	"strings"
+
 	"github.com/onflow/cadence/runtime/parser"
 	"github.com/onflow/flowkit"
 	"github.com/onflow/flowkit/output"
 	"github.com/spf13/cobra"
-	"os"
-	"strings"
 
 	"github.com/onflow/flow-cli/internal/command"
 )
