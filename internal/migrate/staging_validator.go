@@ -644,8 +644,11 @@ func (v *stagingValidatorImpl) loadSystemContracts() {
 	}
 
 	stagedSystemContracts := migrations.SystemContractChanges(chainId, migrations.SystemContractsMigrationOptions{
-		Burner: migrations.BurnerContractChangeUpdate, // needs to be update for now since BurnerChangeDeploy is a no-op in flow-go
-		EVM:    migrations.EVMContractChangeFull,
+		StagedContractsMigrationOptions: migrations.StagedContractsMigrationOptions{
+			ChainID: chainId,
+		},
+		Burner: migrations.BurnerContractChangeUpdate,
+		EVM:    migrations.EVMContractChangeUpdate,
 	})
 	for _, stagedSystemContract := range stagedSystemContracts {
 		location := common.AddressLocation{
