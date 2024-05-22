@@ -32,9 +32,7 @@ import (
 	"github.com/onflow/flow-cli/internal/command"
 )
 
-type flagsDev struct {
-	StartEmulator bool `default:"false" flag:"start-emulator" info:"Start emulator if not already running"`
-}
+type flagsDev struct{}
 
 var devFlags = flagsDev{}
 
