@@ -23,12 +23,12 @@ import (
 	"embed"
 	"fmt"
 	"path/filepath"
-	"strings"
 	"text/template"
 
 	flowsdk "github.com/onflow/flow-go-sdk"
-
 	"github.com/onflow/flowkit/config"
+
+	"github.com/onflow/flow-cli/internal/util"
 
 	"github.com/onflow/flowkit"
 
@@ -95,45 +95,327 @@ func init() {
 	GenerateScriptCommand.AddToParent(GenerateCommand)
 }
 
+const (
+	DefaultCadenceDirectory = "cadence"
+	ContractType            = "contract"
+	TransactionType         = "transaction"
+	ScriptType              = "script"
+)
+
 func generateContract(
 	args []string,
 	_ command.GlobalFlags,
 	logger output.Logger,
-	flow flowkit.Services,
+	_ flowkit.Services,
 	state *flowkit.State,
 ) (result command.Result, err error) {
-	return generateNew(args, "contract", logger, state)
+	generator := NewGenerator(DefaultCadenceDirectory, state, logger, false, true)
+	contract := Contract{Name: args[0], Account: args[1]}
+	err = generator.Create(TemplateMap{ContractType: []TemplateItem{contract}})
+	return nil, err
 }
 
 func generateTransaction(
 	args []string,
 	_ command.GlobalFlags,
 	logger output.Logger,
-	flow flowkit.Services,
+	_ flowkit.Services,
 	state *flowkit.State,
 ) (result command.Result, err error) {
-	return generateNew(args, "transaction", logger, state)
+	generator := NewGenerator(DefaultCadenceDirectory, state, logger, false, true)
+	transaction := ScriptTemplate{Name: args[0]}
+	err = generator.Create(TemplateMap{TransactionType: []TemplateItem{transaction}})
+	return nil, err
 }
 
 func generateScript(
 	args []string,
 	_ command.GlobalFlags,
 	logger output.Logger,
-	flow flowkit.Services,
+	_ flowkit.Services,
 	state *flowkit.State,
 ) (result command.Result, err error) {
-	return generateNew(args, "script", logger, state)
+	generator := NewGenerator(DefaultCadenceDirectory, state, logger, false, true)
+	script := ScriptTemplate{Name: args[0]}
+	err = generator.Create(TemplateMap{ScriptType: []TemplateItem{script}})
+	return nil, err
 }
 
-func addCDCExtension(name string) string {
-	if strings.HasSuffix(name, ".cdc") {
-		return name
+// TemplateItem is an interface for different template types
+type TemplateItem interface {
+	GetName() string
+	GetTemplate() string
+	GetAccount() string
+	GetData() map[string]interface{}
+}
+
+// Contract contains properties for contracts
+type Contract struct {
+	Name     string
+	Template string
+	Account  string
+	Data     map[string]interface{}
+}
+
+// GetName returns the name of the contract
+func (c Contract) GetName() string {
+	return c.Name
+}
+
+// GetTemplate returns the template of the contract
+func (c Contract) GetTemplate() string {
+	if c.Template == "" {
+		return "contract_init"
 	}
-	return fmt.Sprintf("%s.cdc", name)
+
+	return c.Template
 }
 
-func stripCDCExtension(name string) string {
-	return strings.TrimSuffix(name, filepath.Ext(name))
+// GetAccount returns the account of the contract
+func (c Contract) GetAccount() string {
+	return c.Account
+}
+
+// GetData returns the data of the contract
+func (c Contract) GetData() map[string]interface{} {
+	return c.Data
+}
+
+// ScriptTemplate contains only a name property for scripts and transactions
+type ScriptTemplate struct {
+	Name     string
+	Template string
+	Data     map[string]interface{}
+}
+
+// GetName returns the name of the script or transaction
+func (o ScriptTemplate) GetName() string {
+	return o.Name
+}
+
+// GetTemplate returns an empty string for scripts and transactions
+func (o ScriptTemplate) GetTemplate() string {
+	if o.Template == "" {
+		return "script_init"
+	}
+
+	return o.Template
+}
+
+// GetAccount returns an empty string for scripts and transactions
+func (o ScriptTemplate) GetAccount() string {
+	return ""
+}
+
+// GetData returns the data of the script or transaction
+func (o ScriptTemplate) GetData() map[string]interface{} {
+	return o.Data
+}
+
+// TransactionTemplate contains only a name property for scripts and transactions
+type TransactionTemplate struct {
+	Name     string
+	Template string
+	Data     map[string]interface{}
+}
+
+// GetName returns the name of the script or transaction
+func (o TransactionTemplate) GetName() string {
+	return o.Name
+}
+
+// GetTemplate returns an empty string for scripts and transactions
+func (o TransactionTemplate) GetTemplate() string {
+	if o.Template == "" {
+		return "transaction_init"
+	}
+
+	return o.Template
+}
+
+// GetAccount returns an empty string for scripts and transactions
+func (o TransactionTemplate) GetAccount() string {
+	return ""
+}
+
+// GetData returns the data of the script or transaction
+func (o TransactionTemplate) GetData() map[string]interface{} {
+	return o.Data
+}
+
+// TemplateMap holds all templates with flexibility
+type TemplateMap map[string][]TemplateItem
+
+type Generator struct {
+	directory   string
+	state       *flowkit.State
+	logger      output.Logger
+	disableLogs bool
+	saveState   bool
+}
+
+func NewGenerator(directory string, state *flowkit.State, logger output.Logger, disableLogs, saveState bool) *Generator {
+	return &Generator{
+		directory:   directory,
+		state:       state,
+		logger:      logger,
+		disableLogs: disableLogs,
+		saveState:   saveState,
+	}
+}
+
+func (g *Generator) Create(typeNames TemplateMap) error {
+	for templateType, items := range typeNames {
+		for _, item := range items {
+			err := g.generate(templateType, item.GetTemplate(), item.GetName(), item.GetAccount(), item.GetData())
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func (g *Generator) generate(templateType, templateName, name, account string, data map[string]interface{}) error {
+
+	name = util.StripCDCExtension(name)
+	filename := util.AddCDCExtension(name)
+
+	var fileToWrite string
+	var testFileToWrite string
+	var rootDir = DefaultCadenceDirectory
+	var basePath string
+	var testsBasePath = "tests"
+	var err error
+
+	if g.directory != "" {
+		rootDir = g.directory
+	}
+
+	templatePath := fmt.Sprintf("templates/%s.cdc.tmpl", templateName)
+
+	switch templateType {
+	case ContractType:
+		basePath = "contracts"
+		fileData := map[string]interface{}{"Name": name}
+		for k, v := range data {
+			fileData[k] = v
+		}
+		fileToWrite, err = processTemplate(templatePath, fileData)
+		if err != nil {
+			return fmt.Errorf("error generating contract template: %w", err)
+		}
+
+		testFileToWrite, err = processTemplate("templates/contract_init_test.cdc.tmpl", fileData)
+		if err != nil {
+			return fmt.Errorf("error generating contract test template: %w", err)
+		}
+	case ScriptType:
+		basePath = "scripts"
+		fileData := map[string]interface{}{}
+		for k, v := range data {
+			fileData[k] = v
+		}
+		fileToWrite, err = processTemplate(templatePath, fileData)
+		if err != nil {
+			return fmt.Errorf("error generating script template: %w", err)
+		}
+	case TransactionType:
+		basePath = "transactions"
+		fileData := map[string]interface{}{}
+		for k, v := range data {
+			fileData[k] = v
+		}
+		fileToWrite, err = processTemplate(templatePath, fileData)
+		if err != nil {
+			return fmt.Errorf("error generating transaction template: %w", err)
+		}
+	default:
+		return fmt.Errorf("invalid template type: %s", templateType)
+	}
+
+	directoryWithBasePath := filepath.Join(rootDir, basePath, account)
+	filenameWithBasePath := filepath.Join(rootDir, basePath, account, filename)
+	relativeFilenameWithBasePath := filepath.Join(basePath, account, filename)
+
+	// Check file existence
+	if _, err := g.state.ReaderWriter().ReadFile(filenameWithBasePath); err == nil {
+		return fmt.Errorf("file already exists: %s", filenameWithBasePath)
+	}
+
+	// Ensure the directory exists
+	if err := g.state.ReaderWriter().MkdirAll(directoryWithBasePath, 0755); err != nil {
+		return fmt.Errorf("error creating directories: %w", err)
+	}
+
+	// Write files
+	err = g.state.ReaderWriter().WriteFile(filenameWithBasePath, []byte(fileToWrite), 0644)
+	if err != nil {
+		return fmt.Errorf("error writing file: %w", err)
+	}
+
+	if !g.disableLogs {
+		g.logger.Info(fmt.Sprintf("Generated new %s: %s at %s", templateType, name, filenameWithBasePath))
+	}
+
+	if generateFlags.SkipTests != true && templateType == ContractType {
+		testDirectoryWithBasePath := filepath.Join(rootDir, testsBasePath)
+		testFilenameWithBasePath := filepath.Join(rootDir, testsBasePath, util.AddCDCExtension(fmt.Sprintf("%s_test", name)))
+
+		if _, err := g.state.ReaderWriter().ReadFile(testFilenameWithBasePath); err == nil {
+			return fmt.Errorf("file already exists: %s", testFilenameWithBasePath)
+		}
+
+		if err := g.state.ReaderWriter().MkdirAll(testDirectoryWithBasePath, 0755); err != nil {
+			return fmt.Errorf("error creating test directory: %w", err)
+		}
+
+		err := g.state.ReaderWriter().WriteFile(testFilenameWithBasePath, []byte(testFileToWrite), 0644)
+		if err != nil {
+			return fmt.Errorf("error writing test file: %w", err)
+		}
+
+		if !g.disableLogs {
+			g.logger.Info(fmt.Sprintf("Generated new test file: %s at %s", name, testFilenameWithBasePath))
+		}
+	}
+
+	if templateType == ContractType {
+		err := g.updateContractsState(name, relativeFilenameWithBasePath)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (g *Generator) updateContractsState(name, location string) error {
+	var aliases config.Aliases
+
+	if generateFlags.SkipTests != true {
+		aliases = config.Aliases{{
+			Network: config.TestingNetwork.Name,
+			Address: flowsdk.HexToAddress("0x0000000000000007"),
+		}}
+	}
+
+	contract := config.Contract{
+		Name:     name,
+		Location: location,
+		Aliases:  aliases,
+	}
+
+	g.state.Contracts().AddOrUpdate(contract)
+
+	if g.saveState {
+		err := g.state.SaveDefault() // TODO: Support adding a target project directory
+		if err != nil {
+			return fmt.Errorf("error saving to flow.json: %w", err)
+		}
+	}
+
+	return nil
 }
 
 // processTemplate reads a template file from the embedded filesystem and processes it with the provided data
@@ -156,127 +438,4 @@ func processTemplate(templatePath string, data map[string]interface{}) (string, 
 	}
 
 	return executedTemplate.String(), nil
-}
-
-func generateNew(
-	args []string,
-	templateType string,
-	logger output.Logger,
-	state *flowkit.State,
-) (result command.Result, err error) {
-	if len(args) < 1 {
-		return nil, fmt.Errorf("invalid number of arguments")
-	}
-
-	name := stripCDCExtension(args[0])
-	filename := addCDCExtension(name)
-
-	var fileToWrite string
-	var testFileToWrite string
-	var basePath string
-
-	if generateFlags.Directory != "" {
-		basePath = generateFlags.Directory
-	} else {
-		switch templateType {
-		case "contract":
-			basePath = "cadence/contracts"
-		case "script":
-			basePath = "cadence/scripts"
-		case "transaction":
-			basePath = "cadence/transactions"
-		default:
-			return nil, fmt.Errorf("invalid template type: %s", templateType)
-		}
-	}
-
-	switch templateType {
-	case "contract":
-		nameData := map[string]interface{}{"Name": name}
-		fileToWrite, err = processTemplate("templates/contract_init.cdc.tmpl", nameData)
-		if err != nil {
-			return nil, fmt.Errorf("error generating contract template: %w", err)
-		}
-
-		testFileToWrite, err = processTemplate("templates/contract_init_test.cdc.tmpl", nameData)
-		if err != nil {
-			return nil, fmt.Errorf("error generating contract test template: %w", err)
-		}
-	case "script":
-		fileToWrite, err = processTemplate("templates/script_init.cdc.tmpl", nil)
-		if err != nil {
-			return nil, fmt.Errorf("error generating script template: %w", err)
-		}
-	case "transaction":
-		fileToWrite, err = processTemplate("templates/transaction_init.cdc.tmpl", nil)
-		if err != nil {
-			return nil, fmt.Errorf("error generating transaction template: %w", err)
-		}
-	default:
-		return nil, fmt.Errorf("invalid template type: %s", templateType)
-	}
-
-	filenameWithBasePath := filepath.Join(basePath, filename)
-
-	// Check file existence
-	if _, err := state.ReaderWriter().ReadFile(filenameWithBasePath); err == nil {
-		return nil, fmt.Errorf("file already exists: %s", filenameWithBasePath)
-	}
-
-	// Ensure the directory exists
-	if err := state.ReaderWriter().MkdirAll(basePath, 0755); err != nil {
-		return nil, fmt.Errorf("error creating directories: %w", err)
-	}
-
-	// Write files
-	err = state.ReaderWriter().WriteFile(filenameWithBasePath, []byte(fileToWrite), 0644)
-	if err != nil {
-		return nil, fmt.Errorf("error writing file: %w", err)
-	}
-
-	logger.Info(fmt.Sprintf("Generated new %s: %s at %s", templateType, name, filenameWithBasePath))
-
-	if generateFlags.SkipTests != true && templateType == "contract" {
-		testsBasePath := "cadence/tests"
-		testFilenameWithBasePath := filepath.Join(testsBasePath, addCDCExtension(fmt.Sprintf("%s_test", name)))
-
-		if _, err := state.ReaderWriter().ReadFile(testFilenameWithBasePath); err == nil {
-			return nil, fmt.Errorf("file already exists: %s", testFilenameWithBasePath)
-		}
-
-		if err := state.ReaderWriter().MkdirAll(testsBasePath, 0755); err != nil {
-			return nil, fmt.Errorf("error creating test directory: %w", err)
-		}
-
-		err = state.ReaderWriter().WriteFile(testFilenameWithBasePath, []byte(testFileToWrite), 0644)
-		if err != nil {
-			return nil, fmt.Errorf("error writing test file: %w", err)
-		}
-
-		logger.Info(fmt.Sprintf("Generated new test file: %s at %s", name, testFilenameWithBasePath))
-	}
-
-	if templateType == "contract" {
-		var aliases config.Aliases
-
-		if generateFlags.SkipTests != true {
-			aliases = config.Aliases{{
-				Network: config.TestingNetwork.Name,
-				Address: flowsdk.HexToAddress("0x0000000000000007"),
-			}}
-		}
-
-		contract := config.Contract{
-			Name:     name,
-			Location: filenameWithBasePath,
-			Aliases:  aliases,
-		}
-		state.Contracts().AddOrUpdate(contract)
-		err = state.SaveDefault()
-		if err != nil {
-			return nil, fmt.Errorf("error saving to flow.json: %w", err)
-		}
-	}
-
-	return nil, err
 }

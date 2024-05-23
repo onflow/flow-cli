@@ -20,110 +20,284 @@ package super
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"io"
-	"net/http"
 	"os"
 	"path/filepath"
-	"time"
 
-	"github.com/go-git/go-git/v5"
-	"github.com/go-git/go-git/v5/plumbing"
+	flowsdk "github.com/onflow/flow-go-sdk"
+	"github.com/onflow/flow-go/fvm/systemcontracts"
+	flowGo "github.com/onflow/flow-go/model/flow"
+	flowkitConfig "github.com/onflow/flowkit/config"
+	"golang.org/x/exp/slices"
+
+	"github.com/onflow/flow-cli/internal/dependencymanager"
+	"github.com/onflow/flow-cli/internal/util"
+
+	"github.com/spf13/afero"
+
+	"github.com/onflow/flow-cli/internal/prompt"
+
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flowkit"
 	"github.com/onflow/flowkit/output"
 
+	"github.com/onflow/flow-cli/internal/config"
+
 	"github.com/onflow/flow-cli/internal/command"
-	"github.com/onflow/flow-cli/internal/util"
 )
 
 type flagsSetup struct {
+	ConfigOnly bool `default:"false" flag:"config-only" info:"Only create a flow.json default config"`
 	Scaffold   bool `default:"" flag:"scaffold" info:"Interactively select a provided scaffold for project creation"`
 	ScaffoldID int  `default:"" flag:"scaffold-id" info:"Use provided scaffold ID for project creation"`
 }
 
 var setupFlags = flagsSetup{}
 
+// TODO: Add --config-only flag
 var SetupCommand = &command.Command{
 	Cmd: &cobra.Command{
-		Use:     "setup <project name>",
+		Use:     "init <project name>",
 		Short:   "Start a new Flow project",
 		Example: "flow setup my-project",
-		Args:    cobra.ExactArgs(1),
+		Args:    cobra.MaximumNArgs(1),
 		GroupID: "super",
 	},
 	Flags: &setupFlags,
 	Run:   create,
 }
 
-const scaffoldListURL = "https://raw.githubusercontent.com/onflow/flow-cli/master/scaffolds.json"
-
-type scaffold struct {
-	Repo        string `json:"repo"`
-	Branch      string `json:"branch"`
-	Name        string `json:"name"`
-	Description string `json:"description"`
-	Commit      string `json:"commit"`
-	Folder      string `json:"folder"`
-	Type        string `json:"type"`
-}
-
 func create(
 	args []string,
 	_ command.GlobalFlags,
 	logger output.Logger,
-	_ flowkit.ReaderWriter,
+	readerWriter flowkit.ReaderWriter,
 	_ flowkit.Services,
 ) (command.Result, error) {
-	targetDir, err := getTargetDirectory(args[0])
-	if err != nil {
-		return nil, err
-	}
+	var targetDir string
+	var err error
 
-	scaffolds, err := getScaffolds()
-	if err != nil {
-		return nil, err
-	}
-
-	// default to first scaffold - basic scaffold
-	pickedScaffold := scaffolds[0]
-
-	if setupFlags.ScaffoldID != 0 {
-		if setupFlags.ScaffoldID > len(scaffolds) {
-			return nil, fmt.Errorf("scaffold with id %d does not exist", setupFlags.ScaffoldID)
-		}
-		pickedScaffold = scaffolds[setupFlags.ScaffoldID-1]
-	}
-
-	if setupFlags.Scaffold {
-		scaffoldItems := make([]util.ScaffoldItem, 0)
-		for i, s := range scaffolds {
-			scaffoldItems = append(
-				scaffoldItems,
-				util.ScaffoldItem{
-					Index:    i,
-					Title:    fmt.Sprintf("%s - %s", output.Bold(s.Name), s.Description),
-					Category: s.Type,
-				},
-			)
+	if setupFlags.Scaffold || setupFlags.ScaffoldID != 0 {
+		// Error if no project name is given
+		if len(args) < 1 || args[0] == "" {
+			return nil, fmt.Errorf("no project name provided")
 		}
 
-		selected := util.ScaffoldPrompt(logger, scaffoldItems)
-		pickedScaffold = scaffolds[selected]
-	}
+		targetDir, err = handleScaffold(args[0], logger)
+		if err != nil {
+			return nil, err
+		}
+	} else if setupFlags.ConfigOnly {
+		if len(args) > 0 {
+			return nil, fmt.Errorf("project name not required when using --config-only flag")
+		}
 
-	logger.StartProgress(fmt.Sprintf("Creating your project %s", targetDir))
-	defer logger.StopProgress()
-	err = cloneScaffold(targetDir, pickedScaffold)
-	if err != nil {
-		return nil, fmt.Errorf("failed creating scaffold %w", err)
+		err = createConfigOnly("", readerWriter)
+		if err != nil {
+			return nil, err
+		}
+
+		logger.Info(util.MessageWithEmojiPrefix("🎉", "Configuration created successfully!"))
+
+		return nil, nil
+	} else {
+		targetDir, err = startInteractiveSetup(args, logger)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return &setupResult{targetDir: targetDir}, nil
 }
 
+func createConfigOnly(targetDir string, readerWriter flowkit.ReaderWriter) error {
+	params := config.InitConfigParameters{
+		ServiceKeySigAlgo:  "ECDSA_P256",
+		ServiceKeyHashAlgo: "SHA3_256",
+		Reset:              false,
+		Global:             false,
+		TargetDirectory:    targetDir,
+	}
+	state, err := config.InitializeConfiguration(params, readerWriter)
+	if err != nil {
+		return err
+	}
+
+	err = state.SaveDefault()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func startInteractiveSetup(
+	args []string,
+	logger output.Logger,
+) (string, error) {
+	var targetDir string
+	var err error
+
+	rw := afero.Afero{
+		Fs: afero.NewOsFs(),
+	}
+
+	// Ask for project name if not given
+	if len(args) < 1 {
+		userInput, err := prompt.RunTextInput("Enter the name of your project", "Type your project name here...")
+		if err != nil {
+			return "", fmt.Errorf("error running project name: %v", err)
+		}
+
+		targetDir, err = getTargetDirectory(userInput)
+		if err != nil {
+			return "", err
+		}
+	} else {
+		targetDir, err = getTargetDirectory(args[0])
+		if err != nil {
+			return "", err
+		}
+	}
+
+	// Create a temp directory which will later be moved to the target directory if successful
+	tempDir, err := os.MkdirTemp("", "flow-cli-*")
+	if err != nil {
+		return "", fmt.Errorf("failed to create temp directory: %w", err)
+	}
+
+	defer func() {
+		if err := os.RemoveAll(tempDir); err != nil {
+			logger.Error(fmt.Sprintf("Failed to remove %s: %v", tempDir, err))
+		}
+	}()
+
+	params := config.InitConfigParameters{
+		ServiceKeySigAlgo:  "ECDSA_P256",
+		ServiceKeyHashAlgo: "SHA3_256",
+		Reset:              false,
+		Global:             false,
+		TargetDirectory:    tempDir,
+	}
+	state, err := config.InitializeConfiguration(params, rw)
+	if err != nil {
+		return "", fmt.Errorf("failed to initialize configuration: %w", err)
+	}
+
+	// Generate standard cadence files
+	// cadence/contracts/DefaultContract.cdc
+	// cadence/scripts/DefaultScript.cdc
+	// cadence/transactions/DefaultTransaction.cdc
+	// cadence/tests/DefaultContract_test.cdc
+
+	directoryPath := filepath.Join(tempDir, "cadence")
+
+	templates := TemplateMap{
+		"contract": []TemplateItem{
+			Contract{
+				Name:     "Counter",
+				Template: "contract_counter",
+				Account:  "",
+			},
+		},
+		"script": []TemplateItem{
+			ScriptTemplate{
+				Name:     "GetCounter",
+				Template: "script_counter",
+				Data:     map[string]interface{}{"ContractName": "Counter"},
+			},
+		},
+		"transaction": []TemplateItem{
+			TransactionTemplate{
+				Name:     "IncrementCounter",
+				Template: "transaction_counter",
+				Data:     map[string]interface{}{"ContractName": "Counter"},
+			},
+		},
+	}
+
+	generator := NewGenerator(directoryPath, state, logger, true, false)
+	err = generator.Create(templates)
+	if err != nil {
+		return "", err
+	}
+
+	msg := "Would you like to install any core contracts and their dependencies?"
+	if prompt.GenericBoolPrompt(msg) {
+		err := installCoreContracts(logger, state, tempDir)
+		if err != nil {
+			return "", err
+		}
+	}
+
+	err = state.Save(filepath.Join(tempDir, "flow.json"))
+	if err != nil {
+		return "", err
+	}
+
+	// Move the temp directory to the target directory
+	err = os.Rename(tempDir, targetDir)
+	if err != nil {
+		return "", fmt.Errorf("failed to move temp directory to target directory: %w", err)
+	}
+
+	return targetDir, nil
+}
+
+func installCoreContracts(logger output.Logger, state *flowkit.State, tempDir string) error {
+	// Prompt to ask which core contracts should be installed
+	sc := systemcontracts.SystemContractsForChain(flowGo.Mainnet)
+	promptMessage := "Select any core contracts you would like to install or skip to continue."
+
+	contractNames := make([]string, 0)
+
+	for _, contract := range sc.All() {
+		contractNames = append(contractNames, contract.Name)
+	}
+
+	selectedContractNames, err := prompt.RunSelectOptions(contractNames, promptMessage)
+	if err != nil {
+		return fmt.Errorf("error running dependency selection: %v\n", err)
+	}
+
+	var dependencies []flowkitConfig.Dependency
+
+	// Loop standard contracts and add them to the dependencies if selected
+	for _, contract := range sc.All() {
+		if slices.Contains(selectedContractNames, contract.Name) {
+			dependencies = append(dependencies, flowkitConfig.Dependency{
+				Name: contract.Name,
+				Source: flowkitConfig.Source{
+					NetworkName:  flowkitConfig.MainnetNetwork.Name,
+					Address:      flowsdk.HexToAddress(contract.Address.String()),
+					ContractName: contract.Name,
+				},
+			})
+		}
+	}
+
+	logger.Info("")
+	logger.Info(util.MessageWithEmojiPrefix("🔄", "Installing selected core contracts and dependencies..."))
+
+	// Add the selected core contracts as dependencies
+	installer, err := dependencymanager.NewDependencyInstaller(logger, state, false, tempDir, dependencymanager.Flags{})
+	if err != nil {
+		return err
+	}
+
+	if err := installer.AddMany(dependencies); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// getTargetDirectory checks if the specified directory path is suitable for use.
+// It verifies that the path points to an existing, empty directory.
+// If the directory does not exist, the function returns the path without error,
+// indicating that the path is available for use (assuming creation is handled elsewhere).
 func getTargetDirectory(directory string) (string, error) {
 	pwd, err := os.Getwd()
 	if err != nil {
@@ -151,84 +325,6 @@ func getTargetDirectory(directory string) (string, error) {
 	return target, nil
 }
 
-func getScaffolds() ([]scaffold, error) {
-	httpClient := http.Client{
-		Timeout: time.Second * 5,
-	}
-
-	req, err := http.NewRequest(http.MethodGet, scaffoldListURL, nil)
-	if err != nil {
-		return nil, fmt.Errorf("failed creating request for scaffold list: %w", err)
-	}
-
-	res, err := httpClient.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("failed requesting scaffold list: %w", err)
-	}
-	if res.Body != nil {
-		defer res.Body.Close()
-	}
-
-	body, err := io.ReadAll(res.Body)
-	if err != nil {
-		return nil, fmt.Errorf("failed reading scaffold list response: %w", err)
-	}
-
-	var all []scaffold
-	err = json.Unmarshal(body, &all)
-	if err != nil {
-		return nil, fmt.Errorf("failed parsing scaffold list response: %w", err)
-	}
-
-	valid := make([]scaffold, 0)
-	for _, s := range all {
-		if s.Repo != "" && s.Description != "" && s.Name != "" && s.Commit != "" {
-			valid = append(valid, s)
-		}
-	}
-
-	return valid, nil
-}
-
-func cloneScaffold(targetDir string, conf scaffold) error {
-	repo, err := git.PlainClone(targetDir, false, &git.CloneOptions{
-		URL: conf.Repo,
-	})
-	if err != nil {
-		return fmt.Errorf("could not download the scaffold: %w", err)
-	}
-
-	worktree, _ := repo.Worktree()
-	err = worktree.Checkout(&git.CheckoutOptions{
-		Hash:  plumbing.NewHash(conf.Commit),
-		Force: true,
-	})
-	if err != nil {
-		return fmt.Errorf("could not find the scaffold version")
-	}
-
-	// if we defined a folder remove everything else
-	if conf.Folder != "" {
-		err = os.Rename(
-			filepath.Join(targetDir, conf.Folder),
-			filepath.Join(targetDir, "../scaffold-temp"),
-		)
-		if err != nil {
-			return err
-		}
-
-		if err = os.RemoveAll(targetDir); err != nil {
-			return err
-		}
-
-		if err = os.Rename(filepath.Join(targetDir, "../scaffold-temp"), targetDir); err != nil {
-			return err
-		}
-	}
-
-	return os.RemoveAll(filepath.Join(targetDir, ".git"))
-}
-
 type setupResult struct {
 	targetDir string
 }
@@ -242,7 +338,8 @@ func (s *setupResult) String() string {
 	out.WriteString("Start development by following these steps:\n")
 	out.WriteString(fmt.Sprintf("1. '%s' to change to your new project,\n", output.Bold(fmt.Sprintf("cd %s", relDir))))
 	out.WriteString(fmt.Sprintf("2. '%s' or run Flowser to start the emulator,\n", output.Bold("flow emulator")))
-	out.WriteString(fmt.Sprintf("3. '%s' to start developing.\n\n", output.Bold("flow dev")))
+	out.WriteString(fmt.Sprintf("3. '%s' to start developing.\n", output.Bold("flow dev")))
+	out.WriteString(fmt.Sprintf("4. '%s' to test your project.\n\n", output.Bold("flow test")))
 	out.WriteString(fmt.Sprintf("You should also read README.md to learn more about the development process!\n"))
 
 	return out.String()

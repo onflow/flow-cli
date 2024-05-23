@@ -28,12 +28,13 @@ import (
 
 	"github.com/psiemens/sconfig"
 
+	"github.com/onflow/flow-cli/internal/prompt"
+	"github.com/onflow/flow-cli/internal/util"
+
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-go/fvm/systemcontracts"
 	flowGo "github.com/onflow/flow-go/model/flow"
-
-	"github.com/onflow/flow-cli/internal/util"
 
 	"github.com/onflow/flowkit/gateway"
 
@@ -86,12 +87,12 @@ func (cl *categorizedLogs) LogAll(logger output.Logger) {
 	}
 }
 
-type dependencyManagerFlagsCollection struct {
+type Flags struct {
 	skipDeployments bool `default:"false" flag:"skip-deployments" info:"Skip adding the dependency to deployments"`
 	skipAlias       bool `default:"false" flag:"skip-alias" info:"Skip prompting for an alias"`
 }
 
-func (f *dependencyManagerFlagsCollection) AddToCommand(cmd *cobra.Command) {
+func (f *Flags) AddToCommand(cmd *cobra.Command) {
 	err := sconfig.New(f).
 		FromEnvironment(util.EnvPrefix).
 		BindFlags(cmd.Flags()).
@@ -106,6 +107,8 @@ type DependencyInstaller struct {
 	Gateways        map[string]gateway.Gateway
 	Logger          output.Logger
 	State           *flowkit.State
+	SaveState       bool
+	TargetDir       string
 	SkipDeployments bool
 	SkipAlias       bool
 	logs            categorizedLogs
@@ -113,7 +116,7 @@ type DependencyInstaller struct {
 }
 
 // NewDependencyInstaller creates a new instance of DependencyInstaller
-func NewDependencyInstaller(logger output.Logger, state *flowkit.State, flags dependencyManagerFlagsCollection) (*DependencyInstaller, error) {
+func NewDependencyInstaller(logger output.Logger, state *flowkit.State, saveState bool, targetDir string, flags Flags) (*DependencyInstaller, error) {
 	emulatorGateway, err := gateway.NewGrpcGateway(config.EmulatorNetwork)
 	if err != nil {
 		return nil, fmt.Errorf("error creating emulator gateway: %v", err)
@@ -139,10 +142,23 @@ func NewDependencyInstaller(logger output.Logger, state *flowkit.State, flags de
 		Gateways:        gateways,
 		Logger:          logger,
 		State:           state,
+		SaveState:       saveState,
+		TargetDir:       targetDir,
 		SkipDeployments: flags.skipDeployments,
 		SkipAlias:       flags.skipAlias,
 		dependencies:    make(map[string]config.Dependency),
 	}, nil
+}
+
+// saveState checks the SaveState flag and saves the state if set to true.
+func (di *DependencyInstaller) saveState() error {
+	if di.SaveState {
+		statePath := filepath.Join(di.TargetDir, "flow.json")
+		if err := di.State.Save(statePath); err != nil {
+			return fmt.Errorf("error saving state: %w", err)
+		}
+	}
+	return nil
 }
 
 // Install processes all the dependencies in the state and installs them and any dependencies they have
@@ -156,8 +172,7 @@ func (di *DependencyInstaller) Install() error {
 
 	di.checkForConflictingContracts()
 
-	err := di.State.SaveDefault()
-	if err != nil {
+	if err := di.saveState(); err != nil {
 		return fmt.Errorf("error saving state: %w", err)
 	}
 
@@ -166,8 +181,8 @@ func (di *DependencyInstaller) Install() error {
 	return nil
 }
 
-// Add processes a single dependency and installs it and any dependencies it has, as well as adding it to the state
-func (di *DependencyInstaller) Add(depSource, customName string) error {
+// AddBySourceString processes a single dependency and installs it and any dependencies it has, as well as adding it to the state
+func (di *DependencyInstaller) AddBySourceString(depSource, customName string) error {
 	depNetwork, depAddress, depContractName, err := config.ParseSourceString(depSource)
 	if err != nil {
 		return fmt.Errorf("error parsing source: %w", err)
@@ -194,9 +209,40 @@ func (di *DependencyInstaller) Add(depSource, customName string) error {
 
 	di.checkForConflictingContracts()
 
-	err = di.State.SaveDefault()
-	if err != nil {
-		return fmt.Errorf("error saving state: %w", err)
+	if err := di.saveState(); err != nil {
+		return err
+	}
+
+	di.logs.LogAll(di.Logger)
+
+	return nil
+}
+
+// Add processes a single dependency and installs it and any dependencies it has, as well as adding it to the state
+func (di *DependencyInstaller) Add(dep config.Dependency) error {
+	if err := di.processDependency(dep); err != nil {
+		return fmt.Errorf("error processing dependency: %w", err)
+	}
+
+	if err := di.saveState(); err != nil {
+		return err
+	}
+
+	di.logs.LogAll(di.Logger)
+
+	return nil
+}
+
+// AddMany processes multiple dependencies and installs them as well as adding them to the state
+func (di *DependencyInstaller) AddMany(dependencies []config.Dependency) error {
+	for _, dep := range dependencies {
+		if err := di.processDependency(dep); err != nil {
+			return fmt.Errorf("error processing dependency: %w", err)
+		}
+	}
+
+	if err := di.saveState(); err != nil {
+		return err
 	}
 
 	di.logs.LogAll(di.Logger)
@@ -310,7 +356,7 @@ func (di *DependencyInstaller) contractFileExists(address, contractName string) 
 
 func (di *DependencyInstaller) createContractFile(address, contractName, data string) error {
 	fileName := fmt.Sprintf("%s.cdc", contractName)
-	path := filepath.Join("imports", address, fileName)
+	path := filepath.Join(di.TargetDir, "imports", address, fileName)
 	dir := filepath.Dir(path)
 
 	if err := di.State.ReaderWriter().MkdirAll(dir, 0755); err != nil {
@@ -370,7 +416,7 @@ func (di *DependencyInstaller) handleFoundContract(networkName, contractAddr, as
 	// If no hash, ignore
 	if dependency != nil && dependency.Hash != "" && dependency.Hash != originalContractDataHash {
 		msg := fmt.Sprintf("The latest version of %s is different from the one you have locally. Do you want to update it?", contractName)
-		if !util.GenericBoolPrompt(msg) {
+		if !prompt.GenericBoolPrompt(msg) {
 			return nil
 		}
 	}
@@ -429,7 +475,7 @@ func (di *DependencyInstaller) handleAdditionalDependencyTasks(networkName, cont
 func (di *DependencyInstaller) updateDependencyDeployment(contractName string) error {
 	// Add to deployments
 	// If a deployment already exists for that account, contract, and network, then ignore
-	raw := util.AddContractToDeploymentPrompt("emulator", *di.State.Accounts(), contractName)
+	raw := prompt.AddContractToDeploymentPrompt("emulator", *di.State.Accounts(), contractName)
 
 	if raw != nil {
 		deployment := di.State.Deployments().ByAccountAndNetwork(raw.Account, raw.Network)
@@ -459,7 +505,7 @@ func (di *DependencyInstaller) updateDependencyAlias(contractName, aliasNetwork 
 	}
 
 	label := fmt.Sprintf("Enter an alias address for %s on %s if you have one, otherwise leave blank", contractName, missingNetwork)
-	raw := util.AddressPromptOrEmpty(label, "Invalid alias address")
+	raw := prompt.AddressPromptOrEmpty(label, "Invalid alias address")
 
 	if raw != "" {
 		contract, err := di.State.Contracts().ByName(contractName)

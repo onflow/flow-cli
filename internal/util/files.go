@@ -16,24 +16,21 @@
  * limitations under the License.
  */
 
-package quick
+package util
 
 import (
-	"github.com/spf13/cobra"
-
-	"github.com/onflow/flow-cli/internal/command"
-	"github.com/onflow/flow-cli/internal/config"
+	"fmt"
+	"path/filepath"
+	"strings"
 )
 
-// TODO(sideninja) workaround - init needed to be copied in order to work else there is flag duplicate error
+func AddCDCExtension(name string) string {
+	if strings.HasSuffix(name, ".cdc") {
+		return name
+	}
+	return fmt.Sprintf("%s.cdc", name)
+}
 
-var InitCommand = &command.Command{
-	Cmd: &cobra.Command{
-		Use:     "init",
-		Short:   "Initialize a new configuration",
-		Example: "flow project init",
-		GroupID: "project",
-	},
-	Flags: &config.InitFlag,
-	Run:   config.Initialise, // TODO(sideninja) workaround - init needed to be copied in order to work else there is flag duplicate error
+func StripCDCExtension(name string) string {
+	return strings.TrimSuffix(name, filepath.Ext(name))
 }
