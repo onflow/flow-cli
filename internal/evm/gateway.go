@@ -129,10 +129,6 @@ var gatewayCommand = &command.Command{
 			return nil, fmt.Errorf("EVM network ID not supported")
 		}
 
-		if cfg.FlowNetworkID != "previewnet" && cfg.FlowNetworkID != "emulator" {
-			return nil, fmt.Errorf("flow network ID is invalid, only allowed to set 'emulator' and 'previewnet'")
-		}
-
 		ctx, cancel := context.WithCancel(context.Background())
 
 		err = bootstrap.Start(ctx, cfg)
