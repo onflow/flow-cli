@@ -292,7 +292,7 @@ func checkVersion(logger output.Logger) {
 		return
 	}
 
-	latestVersion := fmt.Sprintf("v%s", latestVersionRaw)
+	latestVersion := fmt.Sprintf("v%s", strings.TrimPrefix(latestVersionRaw, "v"))
 
 	currentVersion := build.Semver()
 	if isDevelopment() {
