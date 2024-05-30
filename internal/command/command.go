@@ -287,10 +287,12 @@ func checkVersion(logger output.Logger) {
 		return
 	}
 
-	latestVersion, ok := versions["stable"].(string)
+	latestVersionRaw, ok := versions["stable"].(string)
 	if !ok {
 		return
 	}
+
+	latestVersion := fmt.Sprintf("v%s", latestVersionRaw)
 
 	currentVersion := build.Semver()
 	if isDevelopment() {
@@ -299,7 +301,7 @@ func checkVersion(logger output.Logger) {
 
 	if currentVersion != latestVersion {
 		logger.Info(fmt.Sprintf(
-			"\n%s  Version warning: a new version of Flow CLI is available (v%s).\n"+
+			"\n%s  Version warning: a new version of Flow CLI is available (%s).\n"+
 				"   Read the installation guide for upgrade instructions: https://docs.onflow.org/flow-cli/install\n",
 			output.WarningEmoji(),
 			strings.ReplaceAll(latestVersion, "\n", ""),
