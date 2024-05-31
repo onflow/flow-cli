@@ -56,7 +56,7 @@ jobs:
         run: make generate
       - uses: golangci/golangci-lint-action@v6.0.1
         with:
-          version: v1.52.2
+          version: v1.59.0
           only-new-issues: true
           skip-pkg-cache: true
           args: --timeout=3m
