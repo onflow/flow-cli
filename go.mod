@@ -10,7 +10,7 @@ require (
 	github.com/gosuri/uilive v0.0.4
 	github.com/logrusorgru/aurora/v4 v4.0.0
 	github.com/manifoldco/promptui v0.9.0
-	github.com/onflow/cadence v1.0.0-preview.29
+	github.com/onflow/cadence v1.0.0-preview.30
 	github.com/onflow/cadence-tools/languageserver v1.0.0-preview.29
 	github.com/onflow/cadence-tools/lint v1.0.0-preview.29
 	github.com/onflow/cadence-tools/test v1.0.0-preview.29
@@ -18,10 +18,10 @@ require (
 	github.com/onflow/fcl-dev-wallet v0.8.0-stable-cadence.1
 	github.com/onflow/flixkit-go v1.2.1-cadence-v1-preview.15
 	github.com/onflow/flow-core-contracts/lib/go/templates v1.0.0
-	github.com/onflow/flow-emulator v1.0.0-preview.23
+	github.com/onflow/flow-emulator v1.0.0-preview.26
 	github.com/onflow/flow-evm-gateway v0.11.0
-	github.com/onflow/flow-go v0.35.5-0.20240517202625-55f862b45dfd
-	github.com/onflow/flow-go-sdk v1.0.0-preview.30
+	github.com/onflow/flow-go v0.35.10-crescendo-preview.25.0.20240530124823-b968034713f6
+	github.com/onflow/flow-go-sdk v1.0.0-preview.31
 	github.com/onflow/flowkit/v2 v2.0.0-stable-cadence-alpha.20
 	github.com/onflow/go-ethereum v1.13.4
 	github.com/onflowser/flowser/v3 v3.2.1-0.20240131200229-7d4d22715f48
@@ -191,7 +191,8 @@ require (
 	github.com/onflow/flow-ft/lib/go/templates v1.0.0 // indirect
 	github.com/onflow/flow-nft/lib/go/contracts v1.2.1 // indirect
 	github.com/onflow/flow-nft/lib/go/templates v1.2.0 // indirect
-	github.com/onflow/flow/protobuf/go/flow v0.4.3 // indirect
+	github.com/onflow/flow/protobuf/go/flow v0.4.4 // indirect
+	github.com/onflow/nft-storefront/lib/go/contracts v1.0.0 // indirect
 	github.com/onflow/sdks v0.5.1-0.20230912225508-b35402f12bba // indirect
 	github.com/onflow/wal v1.0.2 // indirect
 	github.com/pbnjay/memory v0.0.0-20210728143218-7b4eea64cf58 // indirect
