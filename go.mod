@@ -20,7 +20,7 @@ require (
 	github.com/onflow/fcl-dev-wallet v0.8.0-stable-cadence.1
 	github.com/onflow/flixkit-go v1.2.1-cadence-v1-preview.16
 	github.com/onflow/flow-core-contracts/lib/go/templates v1.0.0
-	github.com/onflow/flow-emulator v1.0.0-preview.26
+	github.com/onflow/flow-emulator v1.0.0-preview.25
 	github.com/onflow/flow-evm-gateway v0.14.0
 	github.com/onflow/flow-go v0.35.10-crescendo-preview.25.0.20240530124823-b968034713f6
 	github.com/onflow/flow-go-sdk v1.0.0-preview.31
