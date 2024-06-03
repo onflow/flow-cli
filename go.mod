@@ -21,7 +21,7 @@ require (
 	github.com/onflow/flow-emulator v0.62.1
 	github.com/onflow/flow-go v0.33.2-0.20240412174857-015156b297b5
 	github.com/onflow/flow-go-sdk v0.46.3
-	github.com/onflow/flowkit v1.18.0
+	github.com/onflow/flowkit v1.19.0
 	github.com/onflowser/flowser/v3 v3.1.3
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
 	github.com/pkg/errors v0.9.1
