@@ -51,18 +51,18 @@ func init() {
 }
 
 type gatewayFlag struct {
-	DatabaseDir        string `flag:"database-dir" default:"./db" info:"path to the directory for the database"`
-	RPCHost            string `flag:"rpc-host" default:"localhost" info:"host for the RPC API server"`
-	RPCPort            int    `flag:"rpc-port" default:"3000" info:"port for the RPC API server"`
-	AccessNodeGRPCHost string `flag:"access-node-grpc-host" default:"localhost:3569" info:"host to the flow access node gRPC API"`
-	InitCadenceHeight  uint64 `flag:"init-cadence-height" default:"0" info:"init cadence block height from where the event ingestion will start. WARNING: you should only provide this if there are no existing values in the database, otherwise an error will be thrown"`
-	EVMNetworkID       string `flag:"evm-network-id" default:"previewnet" info:"EVM network ID (testnet, mainnet, previewnet)"`
-	FlowNetworkID      string `flag:"flow-network-id" default:"emulator" info:"EVM network ID (emulator, previewnet)"`
-	Coinbase           string `flag:"coinbase" default:"" info:"coinbase address to use for fee collection"`
-	GasPrice           string `flag:"gas-price" default:"1" info:"static gas price used for EVM transactions"`
-	COAAddress         string `flag:"coa-address" default:"" info:"Flow address that holds COA account used for submitting transactions"`
-	COAKey             string `flag:"coa-key" default:"" info:"WARNING: do not use this flag in production! private key value for the COA address used for submitting transactions"`
-	CreateCOAResource  bool   `flag:"coa-resource-create" default:"false" info:"auto-create the COA resource in the Flow COA account provided if one doesn't exist"`
+	DatabaseDir       string `flag:"database-dir" default:"./db" info:"path to the directory for the database"`
+	RPCHost           string `flag:"rpc-host" default:"localhost" info:"host for the RPC API server"`
+	RPCPort           int    `flag:"rpc-port" default:"3000" info:"port for the RPC API server"`
+	AccessNodeHost    string `flag:"access-node-host" default:"localhost:3569" info:"host to the flow access node gRPC API"`
+	InitCadenceHeight uint64 `flag:"init-cadence-height" default:"0" info:"init cadence block height from where the event ingestion will start. WARNING: you should only provide this if there are no existing values in the database, otherwise an error will be thrown"`
+	EVMNetworkID      string `flag:"evm-network-id" default:"previewnet" info:"EVM network ID (testnet, mainnet, previewnet)"`
+	FlowNetworkID     string `flag:"flow-network-id" default:"emulator" info:"EVM network ID (emulator, previewnet)"`
+	Coinbase          string `flag:"coinbase" default:"" info:"coinbase address to use for fee collection"`
+	GasPrice          string `flag:"gas-price" default:"1" info:"static gas price used for EVM transactions"`
+	COAAddress        string `flag:"coa-address" default:"" info:"Flow address that holds COA account used for submitting transactions"`
+	COAKey            string `flag:"coa-key" default:"" info:"WARNING: do not use this flag in production! private key value for the COA address used for submitting transactions"`
+	CreateCOAResource bool   `flag:"coa-resource-create" default:"false" info:"auto-create the COA resource in the Flow COA account provided if one doesn't exist"`
 }
 
 var flagGateway = gatewayFlag{}
@@ -82,12 +82,12 @@ var gatewayCommand = &command.Command{
 		flow flowkit.Services,
 	) (command.Result, error) {
 		cfg := &config.Config{
-			DatabaseDir:        flagGateway.DatabaseDir,
-			AccessNodeGRPCHost: flagGateway.AccessNodeGRPCHost,
-			RPCPort:            flagGateway.RPCPort,
-			RPCHost:            flagGateway.RPCHost,
-			InitCadenceHeight:  flagGateway.InitCadenceHeight,
-			CreateCOAResource:  flagGateway.CreateCOAResource,
+			DatabaseDir:       flagGateway.DatabaseDir,
+			AccessNodeHost:    flagGateway.AccessNodeHost,
+			RPCPort:           flagGateway.RPCPort,
+			RPCHost:           flagGateway.RPCHost,
+			InitCadenceHeight: flagGateway.InitCadenceHeight,
+			CreateCOAResource: flagGateway.CreateCOAResource,
 		}
 
 		if flagGateway.Coinbase == "" {

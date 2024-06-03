@@ -17,7 +17,7 @@ jobs:
         continue-on-error: true
         uses: snyk/actions/golang@master
         with:
-          go-version: '1.20'
+          go-version: '1.22'
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
       - name: Setup Release Environment
@@ -27,7 +27,7 @@ jobs:
           echo 'APP_VERSION=$(basename ${GITHUB_REF})' >> .release-env
           echo 'BUILD_TIME=$(date --iso-8601=seconds)' >> .release-env
           echo 'VERSION=${{ github.ref_name }}' >> .release-env
-          echo 'COMMIT=${{ github.sha }}' >> .release-env 
+          echo 'COMMIT=${{ github.sha }}' >> .release-env
           echo 'GITHUB_TOKEN=${{ secrets.FLOW_CLI_RELEASE }}' >> .release-env
       - name: Build and Release
         run: make release

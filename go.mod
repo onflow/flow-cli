@@ -1,6 +1,8 @@
 module github.com/onflow/flow-cli
 
-go 1.20
+go 1.22
+
+toolchain go1.22.3
 
 require (
 	github.com/dukex/mixpanel v1.0.1
@@ -10,19 +12,19 @@ require (
 	github.com/gosuri/uilive v0.0.4
 	github.com/logrusorgru/aurora/v4 v4.0.0
 	github.com/manifoldco/promptui v0.9.0
-	github.com/onflow/cadence v1.0.0-preview.29
-	github.com/onflow/cadence-tools/languageserver v1.0.0-preview.29
-	github.com/onflow/cadence-tools/lint v1.0.0-preview.29
-	github.com/onflow/cadence-tools/test v1.0.0-preview.29
+	github.com/onflow/cadence v1.0.0-preview.30
+	github.com/onflow/cadence-tools/languageserver v1.0.0-preview.30
+	github.com/onflow/cadence-tools/lint v1.0.0-preview.30
+	github.com/onflow/cadence-tools/test v1.0.0-preview.30
 	github.com/onflow/contract-updater/lib/go/templates v1.0.1
 	github.com/onflow/fcl-dev-wallet v0.8.0-stable-cadence.1
-	github.com/onflow/flixkit-go v1.2.1-cadence-v1-preview.15
+	github.com/onflow/flixkit-go v1.2.1-cadence-v1-preview.16
 	github.com/onflow/flow-core-contracts/lib/go/templates v1.0.0
-	github.com/onflow/flow-emulator v1.0.0-preview.23
-	github.com/onflow/flow-evm-gateway v0.11.0
-	github.com/onflow/flow-go v0.35.5-0.20240517202625-55f862b45dfd
-	github.com/onflow/flow-go-sdk v1.0.0-preview.30
-	github.com/onflow/flowkit/v2 v2.0.0-stable-cadence-alpha.20
+	github.com/onflow/flow-emulator v1.0.0-preview.25
+	github.com/onflow/flow-evm-gateway v0.14.0
+	github.com/onflow/flow-go v0.35.10-crescendo-preview.25.0.20240530124823-b968034713f6
+	github.com/onflow/flow-go-sdk v1.0.0-preview.31
+	github.com/onflow/flowkit/v2 v2.0.0-stable-cadence-alpha.21
 	github.com/onflow/go-ethereum v1.13.4
 	github.com/onflowser/flowser/v3 v3.2.1-0.20240131200229-7d4d22715f48
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
@@ -152,6 +154,7 @@ require (
 	github.com/jbenet/goprocess v0.1.4 // indirect
 	github.com/joho/godotenv v1.4.0 // indirect
 	github.com/k0kubun/pp v3.0.1+incompatible // indirect
+	github.com/karalabe/usb v0.0.2 // indirect
 	github.com/kevinburke/go-bindata v3.24.0+incompatible // indirect
 	github.com/kevinburke/ssh_config v1.2.0 // indirect
 	github.com/klauspost/compress v1.17.4 // indirect
@@ -191,11 +194,13 @@ require (
 	github.com/onflow/flow-ft/lib/go/templates v1.0.0 // indirect
 	github.com/onflow/flow-nft/lib/go/contracts v1.2.1 // indirect
 	github.com/onflow/flow-nft/lib/go/templates v1.2.0 // indirect
-	github.com/onflow/flow/protobuf/go/flow v0.4.3 // indirect
+	github.com/onflow/flow/protobuf/go/flow v0.4.4 // indirect
+	github.com/onflow/nft-storefront/lib/go/contracts v1.0.0 // indirect
 	github.com/onflow/sdks v0.5.1-0.20230912225508-b35402f12bba // indirect
 	github.com/onflow/wal v1.0.2 // indirect
 	github.com/pbnjay/memory v0.0.0-20210728143218-7b4eea64cf58 // indirect
 	github.com/pelletier/go-toml/v2 v2.0.8 // indirect
+	github.com/peterh/liner v1.1.1-0.20190123174540-a2c9a5303de7 // indirect
 	github.com/pierrec/lz4 v2.6.1+incompatible // indirect
 	github.com/pjbgf/sha1cd v0.3.0 // indirect
 	github.com/pkg/term v1.2.0-beta.2 // indirect
@@ -210,6 +215,7 @@ require (
 	github.com/rogpeppe/go-internal v1.11.0 // indirect
 	github.com/rs/cors v1.8.0 // indirect
 	github.com/schollz/progressbar/v3 v3.13.1 // indirect
+	github.com/sethvargo/go-limiter v1.0.0 // indirect
 	github.com/sethvargo/go-retry v0.2.3 // indirect
 	github.com/shirou/gopsutil v3.21.4-0.20210419000835-c7a38de76ee5+incompatible // indirect
 	github.com/skeema/knownhosts v1.2.1 // indirect
