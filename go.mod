@@ -12,19 +12,19 @@ require (
 	github.com/gosuri/uilive v0.0.4
 	github.com/logrusorgru/aurora/v4 v4.0.0
 	github.com/manifoldco/promptui v0.9.0
-	github.com/onflow/cadence v1.0.0-preview.30
-	github.com/onflow/cadence-tools/languageserver v1.0.0-preview.30
-	github.com/onflow/cadence-tools/lint v1.0.0-preview.30
-	github.com/onflow/cadence-tools/test v1.0.0-preview.30
+	github.com/onflow/cadence v1.0.0-preview.32
+	github.com/onflow/cadence-tools/languageserver v1.0.0-preview.31
+	github.com/onflow/cadence-tools/lint v1.0.0-preview.31
+	github.com/onflow/cadence-tools/test v1.0.0-preview.31
 	github.com/onflow/contract-updater/lib/go/templates v1.0.1
 	github.com/onflow/fcl-dev-wallet v0.8.0-stable-cadence.1
-	github.com/onflow/flixkit-go v1.2.1-cadence-v1-preview.16
+	github.com/onflow/flixkit-go v1.2.1-cadence-v1-preview.17
 	github.com/onflow/flow-core-contracts/lib/go/templates v1.0.0
-	github.com/onflow/flow-emulator v1.0.0-preview.25
-	github.com/onflow/flow-evm-gateway v0.14.0
-	github.com/onflow/flow-go v0.35.10-crescendo-preview.25.0.20240530124823-b968034713f6
-	github.com/onflow/flow-go-sdk v1.0.0-preview.31
-	github.com/onflow/flowkit/v2 v2.0.0-stable-cadence-alpha.21
+	github.com/onflow/flow-emulator v1.0.0-preview.31
+	github.com/onflow/flow-evm-gateway v0.15.0
+	github.com/onflow/flow-go v0.35.10-crescendo-preview.25.0.20240604172940-c504b454e576
+	github.com/onflow/flow-go-sdk v1.0.0-preview.34
+	github.com/onflow/flowkit/v2 v2.0.0-stable-cadence-alpha.23
 	github.com/onflow/go-ethereum v1.13.4
 	github.com/onflowser/flowser/v3 v3.2.1-0.20240131200229-7d4d22715f48
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
