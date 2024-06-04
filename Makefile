@@ -2,10 +2,6 @@
 PACKAGE_NAME := github.com/onflow/flow-cli
 GOLANG_CROSS_VERSION ?= v1.20.0
 
-# The short Git commit hash
-SHORT_COMMIT := $(shell git rev-parse --short HEAD)
-# The Git commit hash
-COMMIT := $(shell git rev-parse HEAD)
 # The tag of the current commit, otherwise empty
 VERSION := $(shell git describe --tags --abbrev=0 --exact-match 2>/dev/null)
 # Name of the cover profile
@@ -63,7 +59,7 @@ $(BINARY):
 	GO111MODULE=on go build \
 		-trimpath \
 		-ldflags \
-		"-X github.com/onflow/flow-cli/build.commit=$(COMMIT) -X github.com/onflow/flow-cli/build.semver=$(VERSION) -X github.com/onflow/flow-cli/internal/accounts.accountToken=${ACCOUNT_TOKEN}"\
+		-X github.com/onflow/flow-cli/build.semver=$(VERSION) -X github.com/onflow/flow-cli/internal/accounts.accountToken=${ACCOUNT_TOKEN}"\
 		-o $(BINARY) ./cmd/flow
 
 .PHONY: versioned-binaries
