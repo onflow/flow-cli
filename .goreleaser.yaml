@@ -32,7 +32,7 @@ builds:
     flags:
       - -mod=readonly
     ldflags:
-      - -X github.com/onflow/flow-cli/build.commit={{ .Env.COMMIT }} -X github.com/onflow/flow-cli/build.semver={{ .Env.VERSION }} -X github.com/onflow/flow-cli/internal/command.mixpanelToken={{ .Env.MIXPANEL_PROJECT_TOKEN }} -X github.com/onflow/flow-cli/internal/accounts.accountToken={{ .Env.LILICO_TOKEN }}
+      - -X github.com/onflow/flow-cli/build.semver={{ .Env.VERSION }} -X github.com/onflow/flow-cli/internal/command.mixpanelToken={{ .Env.MIXPANEL_PROJECT_TOKEN }} -X github.com/onflow/flow-cli/internal/accounts.accountToken={{ .Env.LILICO_TOKEN }}
 
 archives:
   - id: golang-cross
