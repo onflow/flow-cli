@@ -312,11 +312,6 @@ func checkVersion(logger output.Logger) {
 
 	latestVersion := fmt.Sprintf("v%s", strings.TrimPrefix(latestVersionRaw, "v"))
 
-	currentVersion := build.Semver()
-	if isDevelopment() {
-		return // avoid warning in local development
-	}
-
 	if currentVersion != latestVersion {
 		logger.Info(fmt.Sprintf(
 			"\n%s  Version warning: a new version of Flow CLI is available (%s).\n"+
