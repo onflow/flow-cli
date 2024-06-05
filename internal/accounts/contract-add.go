@@ -22,7 +22,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/onflow/flow-cli/internal/util"
+	"github.com/onflow/flow-cli/internal/prompt"
 
 	"github.com/onflow/cadence"
 	flowsdk "github.com/onflow/flow-go-sdk"
@@ -88,7 +88,7 @@ func deployContract(update bool, flags *deployContractFlags) command.RunWithStat
 
 		deployFunc := flowkit.UpdateExistingContract(update)
 		if updateContractFlags.ShowDiff {
-			deployFunc = util.ShowContractDiffPrompt(logger)
+			deployFunc = prompt.ShowContractDiffPrompt(logger)
 		}
 
 		txID, _, err := flow.AddContract(

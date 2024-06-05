@@ -21,6 +21,8 @@ package config
 import (
 	"fmt"
 
+	"github.com/onflow/flow-cli/internal/prompt"
+
 	"github.com/onflow/flow-go-sdk"
 	"github.com/spf13/cobra"
 
@@ -29,7 +31,6 @@ import (
 	"github.com/onflow/flowkit/v2/output"
 
 	"github.com/onflow/flow-cli/internal/command"
-	"github.com/onflow/flow-cli/internal/util"
 )
 
 type flagsAddContract struct {
@@ -66,7 +67,7 @@ func addContract(
 	}
 
 	if !flagsProvided {
-		raw = util.NewContractPrompt()
+		raw = prompt.NewContractPrompt()
 	}
 
 	contract := config.Contract{
@@ -114,7 +115,7 @@ func addContract(
 	}, nil
 }
 
-func flagsToContractData(flags flagsAddContract) (*util.ContractData, bool, error) {
+func flagsToContractData(flags flagsAddContract) (*prompt.ContractData, bool, error) {
 	if flags.Name == "" && flags.Filename == "" {
 		return nil, false, nil
 	}
@@ -143,7 +144,7 @@ func flagsToContractData(flags flagsAddContract) (*util.ContractData, bool, erro
 		return nil, true, fmt.Errorf("invalid mainnnet alias address")
 	}
 
-	return &util.ContractData{
+	return &prompt.ContractData{
 		Name:     flags.Name,
 		Source:   flags.Filename,
 		Emulator: flags.EmulatorAlias,

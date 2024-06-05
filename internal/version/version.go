@@ -38,7 +38,6 @@ func init() {
 
 type versionCmd struct {
 	Version      string
-	Commit       string
 	Dependencies []debug.Module
 }
 
@@ -48,7 +47,6 @@ func (c versionCmd) Print(format string) error {
 	case command.FormatInline, command.FormatText:
 		var txtBuilder strings.Builder
 		txtBuilder.WriteString(fmt.Sprintf("Version: %s\n", c.Version))
-		txtBuilder.WriteString(fmt.Sprintf("Commit: %s\n", c.Commit))
 
 		if verboseFlag {
 			txtBuilder.WriteString("\nFlow Package Dependencies \n")
@@ -80,14 +78,12 @@ func (c versionCmd) Print(format string) error {
 func (c *versionCmd) MarshalJSON() ([]byte, error) {
 	js := struct {
 		Version      string `json:"version"`
-		Commit       string `json:"commit"`
 		Dependencies []struct {
 			Package string `json:"package"`
 			Version string `json:"version"`
 		} `json:"dependencies"`
 	}{
 		Version: c.Version,
-		Commit:  c.Commit,
 	}
 
 	for _, dep := range c.Dependencies {
@@ -105,14 +101,12 @@ func (c *versionCmd) MarshalJSON() ([]byte, error) {
 
 var Cmd = &cobra.Command{
 	Use:   "version",
-	Short: "View version and commit information",
+	Short: "View version information",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		semver := build.Semver()
-		commit := build.Commit()
 
 		v := &versionCmd{
 			Version: semver,
-			Commit:  commit,
 		}
 
 		bi, ok := debug.ReadBuildInfo()

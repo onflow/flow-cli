@@ -56,7 +56,6 @@ func main() {
 	}
 
 	// quick commands
-	quick.InitCommand.AddToParent(cmd)
 	quick.DeployCommand.AddToParent(cmd)
 	quick.RunCommand.AddToParent(cmd)
 

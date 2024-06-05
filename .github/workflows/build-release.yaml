@@ -26,8 +26,7 @@ jobs:
           echo 'LILICO_TOKEN=${{ secrets.LILICO_TOKEN }}' >> .release-env
           echo 'APP_VERSION=$(basename ${GITHUB_REF})' >> .release-env
           echo 'BUILD_TIME=$(date --iso-8601=seconds)' >> .release-env
-          echo 'VERSION=${{ github.ref_name }}' >> .release-env
-          echo 'COMMIT=${{ github.sha }}' >> .release-env
+          echo 'VERSION=${{ github.event.release.tag_name }}' >> .release-env
           echo 'GITHUB_TOKEN=${{ secrets.FLOW_CLI_RELEASE }}' >> .release-env
       - name: Build and Release
         run: make release
