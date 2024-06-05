@@ -222,8 +222,8 @@ func TestDependencyInstallerAddMany(t *testing.T) {
 			assert.Equal(t, addr.String(), serviceAddress)
 			acc := tests.NewAccountWithAddress(addr.String())
 			acc.Contracts = map[string][]byte{
-				"ContractOne": []byte("pub contract ContractOne {}"),
-				"ContractTwo": []byte("pub contract ContractTwo {}"),
+				"ContractOne": []byte("access(all) contract ContractOne {}"),
+				"ContractTwo": []byte("access(all) contract ContractTwo {}"),
 			}
 			gw.GetAccount.Return(acc, nil)
 		})
