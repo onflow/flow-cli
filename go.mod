@@ -21,7 +21,7 @@ require (
 	github.com/onflow/contract-updater/lib/go/templates v1.0.1
 	github.com/onflow/fcl-dev-wallet v0.8.0-stable-cadence.1
 	github.com/onflow/flixkit-go v1.2.1-cadence-v1-preview.17
-	github.com/onflow/flow-core-contracts/lib/go/templates v1.2.4-0.20231016154253-a00dbf7c061f
+	github.com/onflow/flow-core-contracts/lib/go/templates v1.0.0
 	github.com/onflow/flow-emulator v1.0.0-preview.31
 	github.com/onflow/flow-evm-gateway v0.15.0
 	github.com/onflow/flow-go v0.35.10-crescendo-preview.25.0.20240604172940-c504b454e576
@@ -203,7 +203,9 @@ require (
 	github.com/onflow/crypto v0.25.1 // indirect
 	github.com/onflow/flow-core-contracts/lib/go/contracts v1.2.4-0.20231016154253-a00dbf7c061f // indirect
 	github.com/onflow/flow-ft/lib/go/contracts v1.0.0 // indirect
+	github.com/onflow/flow-ft/lib/go/templates v1.0.0 // indirect
 	github.com/onflow/flow-nft/lib/go/contracts v1.2.1 // indirect
+	github.com/onflow/flow-nft/lib/go/templates v1.2.0 // indirect
 	github.com/onflow/flow/protobuf/go/flow v0.4.4 // indirect
 	github.com/onflow/nft-storefront/lib/go/contracts v1.0.0 // indirect
 	github.com/onflow/sdks v0.5.1-0.20230912225508-b35402f12bba // indirect
