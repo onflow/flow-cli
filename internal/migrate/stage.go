@@ -22,8 +22,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/onflow/flow-cli/internal/prompt"
 	"strings"
+
+	"github.com/onflow/flow-cli/internal/prompt"
 
 	"github.com/logrusorgru/aurora/v4"
 	"github.com/onflow/cadence/runtime/common"
