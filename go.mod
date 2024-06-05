@@ -26,7 +26,6 @@ require (
 	github.com/onflow/flow-evm-gateway v0.15.0
 	github.com/onflow/flow-go v0.35.10-crescendo-preview.25.0.20240604172940-c504b454e576
 	github.com/onflow/flow-go-sdk v1.0.0-preview.34
-	github.com/onflow/flowkit v1.19.0
 	github.com/onflow/flowkit/v2 v2.0.0-stable-cadence-alpha.23
 	github.com/onflow/go-ethereum v1.13.4
 	github.com/onflowser/flowser/v3 v3.2.1-0.20240131200229-7d4d22715f48
