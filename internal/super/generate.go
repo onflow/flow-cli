@@ -110,7 +110,7 @@ func generateContract(
 	state *flowkit.State,
 ) (result command.Result, err error) {
 	generator := NewGenerator(DefaultCadenceDirectory, state, logger, false, true)
-	contract := Contract{Name: args[0], Account: args[1]}
+	contract := Contract{Name: args[0], Account: args[0]}
 	err = generator.Create(TemplateMap{ContractType: []TemplateItem{contract}})
 	return nil, err
 }
