@@ -22,6 +22,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/onflow/flow-cli/internal/prompt"
 	"strings"
 
 	"github.com/logrusorgru/aurora/v4"
@@ -141,7 +142,7 @@ func promptStagingUnvalidatedContracts(logger output.Logger) func(validatorError
 		infoMessage.WriteString("\nYou may still stage your contract, however it will be unable to be migrated until the missing contracts are staged by their respective owners.  It is important to monitor the status of your contract using the `flow migrate is-validated` command\n")
 		logger.Error(infoMessage.String())
 
-		return util.GenericBoolPrompt("Do you wish to continue staging your contract?")
+		return prompt.GenericBoolPrompt("Do you wish to continue staging your contract?")
 	}
 }
 

@@ -28,10 +28,6 @@ import (
 
 	"github.com/onflow/flowkit/v2"
 	"github.com/onflow/flowkit/v2/config"
-	"github.com/onflow/flowkit/v2/output"
-
-	"github.com/onflow/flow-cli/internal/command"
-	"github.com/onflow/flow-cli/internal/util"
 )
 
 // InitConfigParameters holds all necessary parameters for initializing the configuration.
