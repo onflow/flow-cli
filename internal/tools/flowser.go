@@ -23,6 +23,8 @@ import (
 	"os"
 	"runtime"
 
+	"github.com/onflow/flow-cli/internal/prompt"
+
 	"github.com/onflowser/flowser/v3/pkg/flowser"
 	"github.com/spf13/cobra"
 
@@ -32,7 +34,6 @@ import (
 
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/internal/settings"
-	"github.com/onflow/flow-cli/internal/util"
 )
 
 type flagsFlowser struct{}
@@ -94,21 +95,21 @@ func runFlowser(
 
 func installFlowser(flowser *flowser.App, installPath string) (string, error) {
 	fmt.Println("It looks like Flowser is not yet installed on your system.")
-	installChoice := util.InstallPrompt()
-	if installChoice == util.CancelInstall {
+	installChoice := prompt.InstallPrompt()
+	if installChoice == prompt.CancelInstall {
 		return "", fmt.Errorf("user denied install")
 	}
 
 	// if user says it already installed it we only ask for path and return it
-	if installChoice == util.AlreadyInstalled {
-		installPath = util.InstallPathPrompt(installPath)
+	if installChoice == prompt.AlreadyInstalled {
+		installPath = prompt.InstallPathPrompt(installPath)
 		_ = settings.SetFlowserPath(installPath)
 		return installPath, nil
 	}
 
 	// MacOS apps must always be installed inside Application folder
 	if runtime.GOOS != settings.Darwin {
-		installPath = util.InstallPathPrompt(installPath)
+		installPath = prompt.InstallPathPrompt(installPath)
 		_ = settings.SetFlowserPath(installPath)
 	}
 

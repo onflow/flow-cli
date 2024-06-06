@@ -19,58 +19,55 @@
 package config
 
 import (
-	"bytes"
 	"fmt"
+	"os"
 
 	"github.com/onflow/flowkit/v2/accounts"
 
 	"github.com/onflow/flow-go-sdk/crypto"
-	"github.com/spf13/cobra"
 
 	"github.com/onflow/flowkit/v2"
 	"github.com/onflow/flowkit/v2/config"
-	"github.com/onflow/flowkit/v2/output"
-
-	"github.com/onflow/flow-cli/internal/command"
-	"github.com/onflow/flow-cli/internal/util"
 )
 
-type flagsInit struct {
-	ServicePrivateKey  string `flag:"service-private-key" info:"Service account private key"`
-	ServiceKeySigAlgo  string `default:"ECDSA_P256" flag:"service-sig-algo" info:"Service account key signature algorithm"`
-	ServiceKeyHashAlgo string `default:"SHA3_256" flag:"service-hash-algo" info:"Service account key hash algorithm"`
-	Reset              bool   `default:"false" flag:"reset" info:"Reset configuration file"`
-	Global             bool   `default:"false" flag:"global" info:"Initialize global user configuration"`
+// InitConfigParameters holds all necessary parameters for initializing the configuration.
+type InitConfigParameters struct {
+	ServicePrivateKey  string
+	ServiceKeySigAlgo  string
+	ServiceKeyHashAlgo string
+	Reset              bool
+	Global             bool
+	TargetDirectory    string
 }
 
-var InitFlag = flagsInit{}
+// InitializeConfiguration creates the Flow configuration json file based on the provided parameters.
+func InitializeConfiguration(params InitConfigParameters, readerWriter flowkit.ReaderWriter) (*flowkit.State, error) {
+	var path string
+	if params.TargetDirectory != "" {
+		path = fmt.Sprintf("%s/flow.json", params.TargetDirectory)
 
-var initCommand = &command.Command{
-	Cmd: &cobra.Command{
-		Use:   "init",
-		Short: "Initialize a new configuration",
-	},
-	Flags: &InitFlag,
-	Run:   Initialise,
-}
-
-func Initialise(
-	_ []string,
-	_ command.GlobalFlags,
-	logger output.Logger,
-	readerWriter flowkit.ReaderWriter,
-	_ flowkit.Services,
-) (command.Result, error) {
-	logger.Info("⚠️Notice: for starting a new project prefer using 'flow setup'.")
-
-	sigAlgo := crypto.StringToSignatureAlgorithm(InitFlag.ServiceKeySigAlgo)
-	if sigAlgo == crypto.UnknownSignatureAlgorithm {
-		return nil, fmt.Errorf("invalid signature algorithm: %s", InitFlag.ServiceKeySigAlgo)
+		// Create the directory if it doesn't exist
+		err := readerWriter.MkdirAll(params.TargetDirectory, os.ModePerm)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create target directory: %w", err)
+		}
+	} else {
+		// Otherwise, choose between the default and global paths
+		if params.Global {
+			path = config.GlobalPath()
+		} else {
+			path = config.DefaultPath
+		}
 	}
 
-	hashAlgo := crypto.StringToHashAlgorithm(InitFlag.ServiceKeyHashAlgo)
+	sigAlgo := crypto.StringToSignatureAlgorithm(params.ServiceKeySigAlgo)
+	if sigAlgo == crypto.UnknownSignatureAlgorithm {
+		return nil, fmt.Errorf("invalid signature algorithm: %s", params.ServiceKeySigAlgo)
+	}
+
+	hashAlgo := crypto.StringToHashAlgorithm(params.ServiceKeyHashAlgo)
 	if hashAlgo == crypto.UnknownHashAlgorithm {
-		return nil, fmt.Errorf("invalid hash algorithm: %s", InitFlag.ServiceKeyHashAlgo)
+		return nil, fmt.Errorf("invalid hash algorithm: %s", params.ServiceKeyHashAlgo)
 	}
 
 	state, err := flowkit.Init(readerWriter)
@@ -78,15 +75,15 @@ func Initialise(
 		return nil, err
 	}
 
-	emulatorAccount, err := accounts.NewEmulatorAccount(readerWriter, crypto.ECDSA_P256, crypto.SHA3_256, "")
+	emulatorAccount, err := accounts.NewEmulatorAccount(readerWriter, crypto.ECDSA_P256, crypto.SHA3_256, params.TargetDirectory)
 	if err != nil {
 		return nil, err
 	}
 
 	state.Accounts().AddOrUpdate(emulatorAccount)
 
-	if InitFlag.ServicePrivateKey != "" {
-		privateKey, err := crypto.DecodePrivateKeyHex(sigAlgo, InitFlag.ServicePrivateKey)
+	if params.ServicePrivateKey != "" {
+		privateKey, err := crypto.DecodePrivateKeyHex(sigAlgo, params.ServicePrivateKey)
 		if err != nil {
 			return nil, fmt.Errorf("invalid private key: %w", err)
 		}
@@ -94,51 +91,12 @@ func Initialise(
 		state.SetEmulatorKey(privateKey)
 	}
 
-	path := config.DefaultPath
-	if InitFlag.Global {
-		path = config.GlobalPath()
-	}
-
-	if config.Exists(path) && !InitFlag.Reset {
+	if config.Exists(path) && !params.Reset {
 		return nil, fmt.Errorf(
 			"configuration already exists at: %s, if you want to reset configuration use the reset flag",
 			path,
 		)
 	}
 
-	err = state.Save(path)
-	if err != nil {
-		return nil, err
-	}
-
-	return &initResult{State: state}, nil
-}
-
-type initResult struct {
-	*flowkit.State
-}
-
-func (r *initResult) JSON() any {
-	return r
-}
-
-func (r *initResult) String() string {
-	var b bytes.Buffer
-	writer := util.CreateTabWriter(&b)
-	account, _ := r.State.EmulatorServiceAccount()
-
-	_, _ = fmt.Fprintf(writer, "Configuration initialized\n")
-	_, _ = fmt.Fprintf(writer, "Service account: %s\n\n", output.Bold("0x"+account.Address.String()))
-	_, _ = fmt.Fprintf(writer,
-		"Start emulator by running: %s \nReset configuration using: %s\n",
-		output.Bold("'flow emulator'"),
-		output.Bold("'flow init --reset'"),
-	)
-
-	_ = writer.Flush()
-	return b.String()
-}
-
-func (r *initResult) Oneliner() string {
-	return ""
+	return state, nil
 }

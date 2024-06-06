@@ -34,6 +34,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/onflow/flow-cli/internal/prompt"
+
 	"github.com/dukex/mixpanel"
 	"github.com/getsentry/sentry-go"
 	"github.com/google/go-github/github"
@@ -303,14 +305,16 @@ func checkVersion(logger output.Logger) {
 		return
 	}
 
-	latestVersion, ok := versions["stable"].(string)
+	latestVersionRaw, ok := versions["stable"].(string)
 	if !ok {
 		return
 	}
 
+	latestVersion := fmt.Sprintf("v%s", strings.TrimPrefix(latestVersionRaw, "v"))
+
 	if currentVersion != latestVersion {
 		logger.Info(fmt.Sprintf(
-			"\n%s  Version warning: a new version of Flow CLI is available (v%s).\n"+
+			"\n%s  Version warning: a new version of Flow CLI is available (%s).\n"+
 				"   Read the installation guide for upgrade instructions: https://docs.onflow.org/flow-cli/install\n",
 			output.WarningEmoji(),
 			strings.ReplaceAll(latestVersion, "\n", ""),
@@ -385,7 +389,7 @@ func initCrashReporting() {
 			// ask for crash report permission
 			fmt.Printf("\n%s Crash detected! %s\n\n", output.ErrorEmoji(), event.Message)
 
-			if util.ReportCrash() {
+			if prompt.ReportCrash() {
 				return event
 			} else {
 				fmt.Printf("\nPlease help us improve the Flow CLI by opening an issue on https://github.com/onflow/flow-cli/issues, \nand pasting the output as well as a description of the actions you took that resulted in this crash.\n\n")

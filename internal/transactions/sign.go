@@ -27,6 +27,8 @@ import (
 	"net/http"
 	"sort"
 
+	"github.com/onflow/flow-cli/internal/prompt"
+
 	"github.com/onflow/flowkit/v2/transactions"
 
 	"github.com/onflow/flowkit/v2/accounts"
@@ -38,7 +40,6 @@ import (
 	"github.com/onflow/flowkit/v2/output"
 
 	"github.com/onflow/flow-cli/internal/command"
-	"github.com/onflow/flow-cli/internal/util"
 )
 
 type flagsSign struct {
@@ -115,7 +116,7 @@ func sign(
 	})
 
 	for _, signer := range signers {
-		if !globalFlags.Yes && !util.ApproveTransactionForSigningPrompt(tx.FlowTransaction()) {
+		if !globalFlags.Yes && !prompt.ApproveTransactionForSigningPrompt(tx.FlowTransaction()) {
 			return nil, fmt.Errorf("transaction was not approved for signing")
 		}
 

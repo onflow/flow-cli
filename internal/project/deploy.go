@@ -23,6 +23,8 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/onflow/flow-cli/internal/prompt"
+
 	"github.com/onflow/flow-go/fvm/systemcontracts"
 	flowGo "github.com/onflow/flow-go/model/flow"
 
@@ -36,7 +38,6 @@ import (
 	"github.com/onflow/flowkit/v2/project"
 
 	"github.com/onflow/flow-cli/internal/command"
-	"github.com/onflow/flow-cli/internal/util"
 )
 
 type flagsDeploy struct {
@@ -73,7 +74,7 @@ func deploy(
 
 	deployFunc := flowkit.UpdateExistingContract(deployFlags.Update)
 	if deployFlags.ShowDiff {
-		deployFunc = util.ShowContractDiffPrompt(logger)
+		deployFunc = prompt.ShowContractDiffPrompt(logger)
 	}
 
 	c, err := flow.DeployProject(context.Background(), deployFunc)
@@ -149,7 +150,7 @@ func checkForStandardContractUsageOnMainnet(state *flowkit.State, logger output.
 		logger.Info(fmt.Sprintf("It is a standard contract already deployed at address 0x%s \n", standardContract.address.String()))
 		logger.Info(fmt.Sprintf("You can read more about it here: %s \n", standardContract.infoLink))
 
-		if replace || util.WantToUseMainnetVersionPrompt() {
+		if replace || prompt.WantToUseMainnetVersionPrompt() {
 			err := replaceContractWithAlias(state, standardContract)
 			if err != nil {
 				return err

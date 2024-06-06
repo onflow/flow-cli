@@ -32,12 +32,12 @@ import (
 )
 
 type addFlagsCollection struct {
-	*dependencyManagerFlagsCollection
+	*Flags
 	name string
 }
 
 var addFlags = addFlagsCollection{
-	dependencyManagerFlagsCollection: &dependencyManagerFlagsCollection{},
+	Flags: &Flags{},
 }
 
 var addCommand = &command.Command{
@@ -53,7 +53,7 @@ var addCommand = &command.Command{
 
 func init() {
 	// Add common flags.
-	addFlags.dependencyManagerFlagsCollection.AddToCommand(addCommand.Cmd)
+	addFlags.Flags.AddToCommand(addCommand.Cmd)
 	// Add command-specific flags.
 	addCommand.Cmd.Flags().StringVar(&addFlags.name, "name", "", "Name of the dependency")
 }
@@ -69,13 +69,13 @@ func add(
 
 	dep := args[0]
 
-	installer, err := NewDependencyInstaller(logger, state, *addFlags.dependencyManagerFlagsCollection)
+	installer, err := NewDependencyInstaller(logger, state, true, "", *addFlags.Flags)
 	if err != nil {
 		logger.Error(fmt.Sprintf("Error: %v", err))
 		return nil, err
 	}
 
-	if err := installer.Add(dep, addFlags.name); err != nil {
+	if err := installer.AddBySourceString(dep, addFlags.name); err != nil {
 		logger.Error(fmt.Sprintf("Error: %v", err))
 		return nil, err
 	}
