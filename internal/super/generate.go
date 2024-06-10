@@ -338,8 +338,6 @@ func (g *Generator) generate(templateType, templateName, name, account string, d
 	filenameWithBasePath := filepath.Join(rootDir, basePath, account, filename)
 	relativeFilenameWithBasePath := filepath.Join(basePath, account, filename)
 
-	fmt.Println("relativeFilenameWithBasePath: ", relativeFilenameWithBasePath)
-
 	// Check file existence
 	if _, err := g.state.ReaderWriter().ReadFile(filenameWithBasePath); err == nil {
 		return fmt.Errorf("file already exists: %s", filenameWithBasePath)
