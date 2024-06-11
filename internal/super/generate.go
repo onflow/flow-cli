@@ -283,9 +283,9 @@ func (g *Generator) generate(templateType, templateName, name, account string, d
 
 	var fileToWrite string
 	var testFileToWrite string
-	var rootDir = DefaultCadenceDirectory
+	var rootDir string
 	var basePath string
-	var testsBasePath = "tests"
+	var testsBasePath = filepath.Join(DefaultCadenceDirectory, "tests")
 	var err error
 
 	if g.directory != "" {
@@ -296,7 +296,7 @@ func (g *Generator) generate(templateType, templateName, name, account string, d
 
 	switch templateType {
 	case ContractType:
-		basePath = "contracts"
+		basePath = filepath.Join(DefaultCadenceDirectory, "contracts")
 		fileData := map[string]interface{}{"Name": name}
 		for k, v := range data {
 			fileData[k] = v
@@ -311,7 +311,7 @@ func (g *Generator) generate(templateType, templateName, name, account string, d
 			return fmt.Errorf("error generating contract test template: %w", err)
 		}
 	case ScriptType:
-		basePath = "scripts"
+		basePath = filepath.Join(DefaultCadenceDirectory, "scripts")
 		fileData := map[string]interface{}{}
 		for k, v := range data {
 			fileData[k] = v
@@ -321,7 +321,7 @@ func (g *Generator) generate(templateType, templateName, name, account string, d
 			return fmt.Errorf("error generating script template: %w", err)
 		}
 	case TransactionType:
-		basePath = "transactions"
+		basePath = filepath.Join(DefaultCadenceDirectory, "transactions")
 		fileData := map[string]interface{}{}
 		for k, v := range data {
 			fileData[k] = v

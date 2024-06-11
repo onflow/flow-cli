@@ -192,8 +192,6 @@ func startInteractiveSetup(
 	// cadence/transactions/DefaultTransaction.cdc
 	// cadence/tests/DefaultContract_test.cdc
 
-	directoryPath := filepath.Join(tempDir, "cadence")
-
 	templates := TemplateMap{
 		"contract": []TemplateItem{
 			Contract{
@@ -218,7 +216,7 @@ func startInteractiveSetup(
 		},
 	}
 
-	generator := NewGenerator(directoryPath, state, logger, true, false)
+	generator := NewGenerator(tempDir, state, logger, true, false)
 	err = generator.Create(templates)
 	if err != nil {
 		return "", err
