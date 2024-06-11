@@ -109,8 +109,8 @@ func generateContract(
 	_ flowkit.Services,
 	state *flowkit.State,
 ) (result command.Result, err error) {
-	generator := NewGenerator(DefaultCadenceDirectory, state, logger, false, true)
-	contract := Contract{Name: args[0], Account: args[0]}
+	generator := NewGenerator("", state, logger, false, true)
+	contract := Contract{Name: args[0], Account: ""}
 	err = generator.Create(TemplateMap{ContractType: []TemplateItem{contract}})
 	return nil, err
 }
@@ -122,7 +122,7 @@ func generateTransaction(
 	_ flowkit.Services,
 	state *flowkit.State,
 ) (result command.Result, err error) {
-	generator := NewGenerator(DefaultCadenceDirectory, state, logger, false, true)
+	generator := NewGenerator("", state, logger, false, true)
 	transaction := ScriptTemplate{Name: args[0]}
 	err = generator.Create(TemplateMap{TransactionType: []TemplateItem{transaction}})
 	return nil, err
@@ -135,7 +135,7 @@ func generateScript(
 	_ flowkit.Services,
 	state *flowkit.State,
 ) (result command.Result, err error) {
-	generator := NewGenerator(DefaultCadenceDirectory, state, logger, false, true)
+	generator := NewGenerator("", state, logger, false, true)
 	script := ScriptTemplate{Name: args[0]}
 	err = generator.Create(TemplateMap{ScriptType: []TemplateItem{script}})
 	return nil, err
@@ -334,6 +334,8 @@ func (g *Generator) generate(templateType, templateName, name, account string, d
 		return fmt.Errorf("invalid template type: %s", templateType)
 	}
 
+	fmt.Println("account: ", account)
+
 	directoryWithBasePath := filepath.Join(rootDir, basePath, account)
 	filenameWithBasePath := filepath.Join(rootDir, basePath, account, filename)
 	relativeFilenameWithBasePath := filepath.Join(basePath, account, filename)
@@ -381,6 +383,9 @@ func (g *Generator) generate(templateType, templateName, name, account string, d
 	}
 
 	if templateType == ContractType {
+		fmt.Println("directoryWithBasePath: ", directoryWithBasePath)
+		fmt.Println("filenameWithBasePath: ", filenameWithBasePath)
+		fmt.Println("relativeFilenameWithBasePath: ", relativeFilenameWithBasePath)
 		err := g.updateContractsState(name, relativeFilenameWithBasePath)
 		if err != nil {
 			return err
