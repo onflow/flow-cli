@@ -109,7 +109,7 @@ func generateContract(
 	_ flowkit.Services,
 	state *flowkit.State,
 ) (result command.Result, err error) {
-	generator := NewGenerator(DefaultCadenceDirectory, state, logger, false, true)
+	generator := NewGenerator("", state, logger, false, true)
 	contract := Contract{Name: args[0], Account: args[0]}
 	err = generator.Create(TemplateMap{ContractType: []TemplateItem{contract}})
 	return nil, err
@@ -122,7 +122,7 @@ func generateTransaction(
 	_ flowkit.Services,
 	state *flowkit.State,
 ) (result command.Result, err error) {
-	generator := NewGenerator(DefaultCadenceDirectory, state, logger, false, true)
+	generator := NewGenerator("", state, logger, false, true)
 	transaction := ScriptTemplate{Name: args[0]}
 	err = generator.Create(TemplateMap{TransactionType: []TemplateItem{transaction}})
 	return nil, err
@@ -135,7 +135,7 @@ func generateScript(
 	_ flowkit.Services,
 	state *flowkit.State,
 ) (result command.Result, err error) {
-	generator := NewGenerator(DefaultCadenceDirectory, state, logger, false, true)
+	generator := NewGenerator("", state, logger, false, true)
 	script := ScriptTemplate{Name: args[0]}
 	err = generator.Create(TemplateMap{ScriptType: []TemplateItem{script}})
 	return nil, err
