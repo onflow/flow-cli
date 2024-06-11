@@ -112,6 +112,22 @@ func create(
 	return &setupResult{targetDir: targetDir}, nil
 }
 
+func updateGitignore(targetDir string) error {
+	gitignorePath := filepath.Join(targetDir, ".gitignore")
+	f, err := os.OpenFile(gitignorePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	_, err = f.WriteString("\n# flow\nemulator-account.pkey\nimports\n")
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func createConfigOnly(targetDir string, readerWriter flowkit.ReaderWriter) error {
 	params := config.InitConfigParameters{
 		ServiceKeySigAlgo:  "ECDSA_P256",
@@ -126,6 +142,11 @@ func createConfigOnly(targetDir string, readerWriter flowkit.ReaderWriter) error
 	}
 
 	err = state.SaveDefault()
+	if err != nil {
+		return err
+	}
+
+	err = updateGitignore(targetDir)
 	if err != nil {
 		return err
 	}
@@ -192,8 +213,6 @@ func startInteractiveSetup(
 	// cadence/transactions/DefaultTransaction.cdc
 	// cadence/tests/DefaultContract_test.cdc
 
-	directoryPath := filepath.Join(tempDir, "cadence")
-
 	templates := TemplateMap{
 		"contract": []TemplateItem{
 			Contract{
@@ -218,7 +237,7 @@ func startInteractiveSetup(
 		},
 	}
 
-	generator := NewGenerator(directoryPath, state, logger, true, false)
+	generator := NewGenerator(tempDir, state, logger, true, false)
 	err = generator.Create(templates)
 	if err != nil {
 		return "", err
@@ -233,6 +252,11 @@ func startInteractiveSetup(
 	}
 
 	err = state.Save(filepath.Join(tempDir, "flow.json"))
+	if err != nil {
+		return "", err
+	}
+
+	err = updateGitignore(tempDir)
 	if err != nil {
 		return "", err
 	}
