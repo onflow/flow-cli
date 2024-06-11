@@ -75,7 +75,7 @@ access(all) fun testContract() {
 	generatorTwo := NewGenerator("", state, logger, false, true)
 	err = generatorTwo.Create(TemplateMap{"contract": []TemplateItem{Contract{Name: "TestContract", Account: ""}}})
 	assert.Error(t, err)
-	expectedError := fmt.Sprintf("file already exists: %s", filepath.ToSlash("cadence/contracts/TestContract.cdc"))
+	expectedError := fmt.Sprintf("file already exists: %s", filepath.FromSlash("cadence/contracts/TestContract.cdc"))
 	assert.Equal(t, expectedError, err.Error())
 }
 
