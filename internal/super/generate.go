@@ -292,7 +292,7 @@ func (g *Generator) generate(templateType, templateName, name, account string, d
 		rootDir = g.directory
 	}
 
-	templatePath := filepath.Join("templates", fmt.Sprintf("%s.cdc.tmpl", templateName))
+	templatePath := fmt.Sprintf("templates/%s.cdc.tmpl", templateName)
 
 	switch templateType {
 	case ContractType:
