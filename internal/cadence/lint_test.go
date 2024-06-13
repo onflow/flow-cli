@@ -31,10 +31,12 @@ import (
 )
 
 func Test_Lint(t *testing.T) {
-	state := setupMockState(t)
+	t.Parallel()
 
-	// Test this to make sure that lintResult exit codes are actually propogated to CLI result
+	// Test this to make sure that lintResult exit codes are actually propagated to CLI result
 	t.Run("results.exitCode exported via result.ExitCode()", func(t *testing.T) {
+		t.Parallel()
+
 		results := lintResult{
 			exitCode: 999,
 		}
@@ -42,8 +44,12 @@ func Test_Lint(t *testing.T) {
 	})
 
 	t.Run("lints file with no issues", func(t *testing.T) {
-		results, error := lintFiles(state, "NoError.cdc")
-		require.NoError(t, error)
+		t.Parallel()
+
+		state := setupMockState(t)
+
+		results, err := lintFiles(state, "NoError.cdc")
+		require.NoError(t, err)
 
 		require.Equal(t, &lintResult{
 			Results: []fileResult{
@@ -57,8 +63,12 @@ func Test_Lint(t *testing.T) {
 	})
 
 	t.Run("lints file with import", func(t *testing.T) {
-		results, error := lintFiles(state, "foo/WithImports.cdc")
-		require.NoError(t, error)
+		t.Parallel()
+
+		state := setupMockState(t)
+
+		results, err := lintFiles(state, "foo/WithImports.cdc")
+		require.NoError(t, err)
 
 		// Should not have results for imported file, only for the file being linted
 		require.Equal(t, &lintResult{
@@ -73,8 +83,12 @@ func Test_Lint(t *testing.T) {
 	})
 
 	t.Run("lints multiple files", func(t *testing.T) {
-		results, error := lintFiles(state, "NoError.cdc", "foo/WithImports.cdc")
-		require.NoError(t, error)
+		t.Parallel()
+
+		state := setupMockState(t)
+
+		results, err := lintFiles(state, "NoError.cdc", "foo/WithImports.cdc")
+		require.NoError(t, err)
 
 		require.Equal(t, &lintResult{
 			Results: []fileResult{
@@ -92,8 +106,12 @@ func Test_Lint(t *testing.T) {
 	})
 
 	t.Run("lints file with warning", func(t *testing.T) {
-		results, error := lintFiles(state, "LintWarning.cdc")
-		require.NoError(t, error)
+		t.Parallel()
+
+		state := setupMockState(t)
+
+		results, err := lintFiles(state, "LintWarning.cdc")
+		require.NoError(t, err)
 
 		require.Equal(t, &lintResult{
 			Results: []fileResult{
@@ -117,8 +135,12 @@ func Test_Lint(t *testing.T) {
 	})
 
 	t.Run("lints file with error", func(t *testing.T) {
-		results, error := lintFiles(state, "LintError.cdc")
-		require.NoError(t, error)
+		t.Parallel()
+
+		state := setupMockState(t)
+
+		results, err := lintFiles(state, "LintError.cdc")
+		require.NoError(t, err)
 
 		require.Equal(t, &lintResult{
 			Results: []fileResult{
@@ -144,6 +166,15 @@ func Test_Lint(t *testing.T) {
 								EndPos:   ast.Position{Line: 5, Column: 5, Offset: 65},
 							},
 						},
+						{
+							Location: common.StringLocation("LintError.cdc"),
+							Category: "unused-result-hint",
+							Message:  "unused result",
+							Range: ast.Range{
+								StartPos: ast.Position{Offset: 63, Line: 5, Column: 3},
+								EndPos:   ast.Position{Offset: 65, Line: 5, Column: 5},
+							},
+						},
 					},
 				},
 			},
@@ -152,8 +183,12 @@ func Test_Lint(t *testing.T) {
 	})
 
 	t.Run("linter resolves imports from flowkit state", func(t *testing.T) {
-		results, error := lintFiles(state, "WithFlowkitImport.cdc")
-		require.NoError(t, error)
+		t.Parallel()
+
+		state := setupMockState(t)
+
+		results, err := lintFiles(state, "WithFlowkitImport.cdc")
+		require.NoError(t, err)
 
 		require.Equal(t, results, &lintResult{
 			Results: []fileResult{
@@ -167,8 +202,12 @@ func Test_Lint(t *testing.T) {
 	})
 
 	t.Run("resolves stdlib imports contracts", func(t *testing.T) {
-		results, error := lintFiles(state, "StdlibImportsContract.cdc")
-		require.NoError(t, error)
+		t.Parallel()
+
+		state := setupMockState(t)
+
+		results, err := lintFiles(state, "StdlibImportsContract.cdc")
+		require.NoError(t, err)
 
 		// Expects an error because getAuthAccount is only available in scripts
 		require.Equal(t, results, &lintResult{
@@ -194,8 +233,12 @@ func Test_Lint(t *testing.T) {
 	})
 
 	t.Run("resolves stdlib imports transactions", func(t *testing.T) {
-		results, error := lintFiles(state, "StdlibImportsTransaction.cdc")
-		require.NoError(t, error)
+		t.Parallel()
+
+		state := setupMockState(t)
+
+		results, err := lintFiles(state, "StdlibImportsTransaction.cdc")
+		require.NoError(t, err)
 
 		// Expects an error because getAuthAccount is only available in scripts
 		require.Equal(t, results, &lintResult{
@@ -221,8 +264,12 @@ func Test_Lint(t *testing.T) {
 	})
 
 	t.Run("resolves stdlib imports scripts", func(t *testing.T) {
-		results, error := lintFiles(state, "StdlibImportsScript.cdc")
-		require.NoError(t, error)
+		t.Parallel()
+
+		state := setupMockState(t)
+
+		results, err := lintFiles(state, "StdlibImportsScript.cdc")
+		require.NoError(t, err)
 
 		require.Equal(t, results, &lintResult{
 			Results: []fileResult{

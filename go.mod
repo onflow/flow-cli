@@ -14,19 +14,19 @@ require (
 	github.com/gosuri/uilive v0.0.4
 	github.com/logrusorgru/aurora/v4 v4.0.0
 	github.com/manifoldco/promptui v0.9.0
-	github.com/onflow/cadence v1.0.0-preview.32
-	github.com/onflow/cadence-tools/languageserver v1.0.0-preview.31
-	github.com/onflow/cadence-tools/lint v1.0.0-preview.31
-	github.com/onflow/cadence-tools/test v1.0.0-preview.31
+	github.com/onflow/cadence v1.0.0-preview.34
+	github.com/onflow/cadence-tools/languageserver v1.0.0-preview.32
+	github.com/onflow/cadence-tools/lint v1.0.0-preview.32
+	github.com/onflow/cadence-tools/test v1.0.0-preview.32
 	github.com/onflow/contract-updater/lib/go/templates v1.0.1
 	github.com/onflow/fcl-dev-wallet v0.8.0-stable-cadence.1
-	github.com/onflow/flixkit-go v1.2.1-cadence-v1-preview.17
+	github.com/onflow/flixkit-go v1.2.1-cadence-v1-preview.18
 	github.com/onflow/flow-core-contracts/lib/go/templates v1.0.0
-	github.com/onflow/flow-emulator v1.0.0-preview.31
-	github.com/onflow/flow-evm-gateway v0.15.0
-	github.com/onflow/flow-go v0.35.10-crescendo-preview.25.0.20240604172940-c504b454e576
-	github.com/onflow/flow-go-sdk v1.0.0-preview.34
-	github.com/onflow/flowkit/v2 v2.0.0-stable-cadence-alpha.23
+	github.com/onflow/flow-emulator v1.0.0-preview.32
+	github.com/onflow/flow-evm-gateway v0.19.0
+	github.com/onflow/flow-go v0.35.14-crescendo-preview.27
+	github.com/onflow/flow-go-sdk v1.0.0-preview.36
+	github.com/onflow/flowkit/v2 v2.0.0-stable-cadence-alpha.24
 	github.com/onflow/go-ethereum v1.13.4
 	github.com/onflowser/flowser/v3 v3.2.1-0.20240131200229-7d4d22715f48
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
@@ -44,10 +44,12 @@ require (
 )
 
 require (
+	cloud.google.com/go v0.112.1 // indirect
 	cloud.google.com/go/compute v1.25.1 // indirect
 	cloud.google.com/go/compute/metadata v0.2.3 // indirect
 	cloud.google.com/go/iam v1.1.6 // indirect
 	cloud.google.com/go/kms v1.15.7 // indirect
+	cloud.google.com/go/storage v1.38.0 // indirect
 	dario.cat/mergo v1.0.0 // indirect
 	github.com/DataDog/zstd v1.5.2 // indirect
 	github.com/FactomProject/basen v0.0.0-20150613233007-fe3947df716e // indirect
