@@ -38,15 +38,17 @@ import (
 
 	"github.com/dukex/mixpanel"
 	"github.com/getsentry/sentry-go"
+	"github.com/google/go-github/github"
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
 
-	"github.com/onflow/flowkit"
-	"github.com/onflow/flowkit/config"
-	"github.com/onflow/flowkit/gateway"
-	"github.com/onflow/flowkit/output"
+	"github.com/onflow/flowkit/v2"
+	"github.com/onflow/flowkit/v2/config"
+	"github.com/onflow/flowkit/v2/gateway"
+	"github.com/onflow/flowkit/v2/output"
 
 	"github.com/onflow/flow-cli/build"
+	"github.com/onflow/flow-cli/internal/migrate/validator"
 	"github.com/onflow/flow-cli/internal/settings"
 	"github.com/onflow/flow-cli/internal/util"
 )
@@ -126,6 +128,11 @@ func (c Command) AddToParent(parent *cobra.Command) {
 		// skip version check if flag is set
 		if !Flags.SkipVersionCheck {
 			checkVersion(logger)
+		}
+
+		// check contract migrations if flag is set
+		if !Flags.SkipContractMigrationCheck {
+			checkContractMigrations(state, logger, flow)
 		}
 
 		// record command usage
@@ -263,6 +270,17 @@ func createLogger(logFlag string, formatFlag string) output.Logger {
 
 // checkVersion fetches latest version and compares it to local.
 func checkVersion(logger output.Logger) {
+	currentVersion := build.Semver()
+	if isDevelopment() {
+		return // avoid warning in local development
+	}
+
+	// If using cadence-v1.0.0 pre-release, check for cadence-v1.0.0 releases instead
+	if strings.Contains(currentVersion, "cadence-v1.0.0") {
+		checkVersionCadence1(logger)
+		return
+	}
+
 	resp, err := http.Get("https://formulae.brew.sh/api/formula/flow-cli.json")
 	if err != nil || resp.StatusCode >= 400 {
 		return
@@ -294,15 +312,56 @@ func checkVersion(logger output.Logger) {
 
 	latestVersion := fmt.Sprintf("v%s", strings.TrimPrefix(latestVersionRaw, "v"))
 
-	currentVersion := build.Semver()
-	if isDevelopment() {
-		return // avoid warning in local development
-	}
-
 	if currentVersion != latestVersion {
 		logger.Info(fmt.Sprintf(
 			"\n%s  Version warning: a new version of Flow CLI is available (%s).\n"+
 				"   Read the installation guide for upgrade instructions: https://docs.onflow.org/flow-cli/install\n",
+			output.WarningEmoji(),
+			strings.ReplaceAll(latestVersion, "\n", ""),
+		))
+	}
+}
+
+// checkVersionCadence1 fetches latest version of cadence-v1.0.0 and compares it to local.
+// This is a special case for cadence-v1.0.0 pre-release & should be removed when cadence-v1.0.0 branch is merged.
+func checkVersionCadence1(logger output.Logger) {
+	resp, err := http.Get("https://api.github.com/repos/onflow/flow-cli/tags?per_page=100")
+	if err != nil || resp.StatusCode >= 400 {
+		return
+	}
+
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+			logger.Error("error closing request")
+		}
+	}(resp.Body)
+
+	body, _ := io.ReadAll(resp.Body)
+	var tags []map[string]interface{}
+	err = json.Unmarshal(body, &tags)
+	if err != nil {
+		return
+	}
+
+	var latestVersion string
+	for _, tag := range tags {
+		tagName, ok := tag["name"].(string)
+		if !ok {
+			continue
+		}
+
+		if strings.Contains(tagName, "cadence-v1.0.0") {
+			latestVersion = tagName
+			break
+		}
+	}
+
+	currentVersion := build.Semver()
+	if currentVersion != latestVersion && latestVersion != "" {
+		logger.Info(fmt.Sprintf(
+			"\n%s  Version warning: a new version of Flow CLI is available (%s).\n"+
+				"   Read the installation guide for upgrade instructions: https://cadence-lang.org/docs/cadence-migration-guide#install-cadence-10-cli\n",
 			output.WarningEmoji(),
 			strings.ReplaceAll(latestVersion, "\n", ""),
 		))
@@ -376,14 +435,43 @@ func UsageMetrics(command *cobra.Command, wg *sync.WaitGroup) {
 
 // GlobalFlags contains all global flags definitions.
 type GlobalFlags struct {
-	Filter           string
-	Format           string
-	Save             string
-	Host             string
-	HostNetworkKey   string
-	Log              string
-	Network          string
-	Yes              bool
-	ConfigPaths      []string
-	SkipVersionCheck bool
+	Filter                     string
+	Format                     string
+	Save                       string
+	Host                       string
+	HostNetworkKey             string
+	Log                        string
+	Network                    string
+	Yes                        bool
+	ConfigPaths                []string
+	SkipVersionCheck           bool
+	SkipContractMigrationCheck bool
+}
+
+const migrationDataURL = "https://github.com/onflow/cadence/tree/master/migrations_data"
+
+func checkContractMigrations(state *flowkit.State, logger output.Logger, flow flowkit.Services) {
+	contractStatuses, err := validator.NewValidator(github.NewClient(nil).Repositories, flow.Network(), state, logger).GetContractStatuses()
+	if err != nil {
+		// if we can't get the contract statuses, we don't check them
+		return
+	}
+
+	var failedContracts []validator.ContractUpdateStatus
+
+	for _, contract := range contractStatuses {
+		if contract.IsFailure() {
+			failedContracts = append(failedContracts, contract)
+		}
+	}
+
+	if len(failedContracts) > 0 {
+		fmt.Fprintf(
+			os.Stderr, "\n%s Heads up: We ran a check in the background to verify that your contracts are still valid for the Cadence 1.0 migration. We found %d contract(s) that have failed to migrate. \n", output.ErrorEmoji(), len(failedContracts),
+		)
+		fmt.Fprintf(
+			os.Stderr, "\n Please visit %s for the latest migration snapshot and information about the failure. \n", migrationDataURL,
+		)
+	}
+	return
 }

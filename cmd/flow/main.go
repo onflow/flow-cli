@@ -20,12 +20,6 @@
 package main
 
 import (
-	"fmt"
-	"os"
-	"strings"
-
-	"github.com/onflow/flow-cli/internal/dependencymanager"
-
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/accounts"
@@ -34,9 +28,12 @@ import (
 	"github.com/onflow/flow-cli/internal/collections"
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/internal/config"
+	"github.com/onflow/flow-cli/internal/dependencymanager"
 	"github.com/onflow/flow-cli/internal/emulator"
 	"github.com/onflow/flow-cli/internal/events"
+	evm "github.com/onflow/flow-cli/internal/evm"
 	"github.com/onflow/flow-cli/internal/keys"
+	"github.com/onflow/flow-cli/internal/migrate"
 	"github.com/onflow/flow-cli/internal/project"
 	"github.com/onflow/flow-cli/internal/quick"
 	"github.com/onflow/flow-cli/internal/scripts"
@@ -56,34 +53,6 @@ func main() {
 	var cmd = &cobra.Command{
 		Use:              "flow",
 		TraverseChildren: true,
-		// Messaging for Cadence 1.0 upgrade
-		PersistentPreRun: func(cmd *cobra.Command, args []string) {
-			outputFlag, _ := cmd.Flags().GetString("output")
-			// If output is set to json, do not append any message
-			if outputFlag != "json" {
-
-				width := 80
-				url := "https://cadence-lang.org/docs/cadence_migration_guide"
-
-				// Function to center text within a given width
-				centerText := func(text string, width int) string {
-					space := (width - len(text)) / 2
-					if space < 0 {
-						space = 0
-					}
-					return fmt.Sprintf("%s%s%s", strings.Repeat(" ", space), text, strings.Repeat(" ", space))
-				}
-
-				fmt.Fprintln(os.Stderr, strings.Repeat("+", width))
-				fmt.Fprintln(os.Stderr, centerText("⚠ Upgrade to Cadence 1.0", width))
-				fmt.Fprintln(os.Stderr, centerText("The Crescendo network upgrade, including Cadence 1.0, is coming soon.", width))
-				fmt.Fprintln(os.Stderr, centerText("You may need to update your existing contracts to support this change.", width))
-				fmt.Fprintln(os.Stderr, centerText("Please visit our migration guide here:", width))
-				fmt.Fprintln(os.Stderr, centerText(url, width))
-				fmt.Fprintln(os.Stderr, strings.Repeat("+", width))
-
-			}
-		},
 	}
 
 	// quick commands
@@ -119,6 +88,8 @@ func main() {
 	cmd.AddCommand(super.FlixCmd)
 	cmd.AddCommand(super.GenerateCommand)
 	cmd.AddCommand(dependencymanager.Cmd)
+	cmd.AddCommand(migrate.Cmd)
+	cmd.AddCommand(evm.Cmd)
 
 	command.InitFlags(cmd)
 	cmd.AddGroup(&cobra.Group{
@@ -148,6 +119,10 @@ func main() {
 	cmd.AddGroup(&cobra.Group{
 		ID:    "manager",
 		Title: "🔗 Dependency Manager",
+	})
+	cmd.AddGroup(&cobra.Group{
+		ID:    "migrate",
+		Title: "📦 Migration to 1.0",
 	})
 
 	cmd.SetUsageTemplate(command.UsageTemplate)

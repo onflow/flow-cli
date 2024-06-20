@@ -28,7 +28,7 @@ import (
 	flowsdk "github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go/fvm/systemcontracts"
 	flowGo "github.com/onflow/flow-go/model/flow"
-	flowkitConfig "github.com/onflow/flowkit/config"
+	flowkitConfig "github.com/onflow/flowkit/v2/config"
 	"golang.org/x/exp/slices"
 
 	"github.com/onflow/flow-cli/internal/dependencymanager"
@@ -40,8 +40,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/onflow/flowkit"
-	"github.com/onflow/flowkit/output"
+	"github.com/onflow/flowkit/v2"
+	"github.com/onflow/flowkit/v2/output"
 
 	"github.com/onflow/flow-cli/internal/config"
 

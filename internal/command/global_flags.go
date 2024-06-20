@@ -25,7 +25,7 @@ import (
 	"github.com/psiemens/sconfig"
 	"github.com/spf13/cobra"
 
-	"github.com/onflow/flowkit/config"
+	"github.com/onflow/flowkit/v2/config"
 
 	"github.com/onflow/flow-cli/internal/util"
 )

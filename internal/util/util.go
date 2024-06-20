@@ -27,10 +27,13 @@ import (
 	"strings"
 	"text/tabwriter"
 
+	"github.com/onflow/flow-go-sdk"
 	flowsdk "github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
 
-	"github.com/onflow/flowkit"
+	"github.com/onflow/flowkit/v2"
+	"github.com/onflow/flowkit/v2/accounts"
+	"github.com/onflow/flowkit/v2/config"
 )
 
 const EnvPrefix = "FLOW"
@@ -72,6 +75,7 @@ func GetAddressNetwork(address flowsdk.Address) (flowsdk.ChainID, error) {
 		flowsdk.Mainnet,
 		flowsdk.Testnet,
 		flowsdk.Emulator,
+		flowsdk.Previewnet,
 	}
 	for _, net := range networks {
 		if address.IsValid(net) {
@@ -112,6 +116,63 @@ func removeFromStringArray(s []string, el string) []string {
 	return s
 }
 
+func GetAccountByContractName(state *flowkit.State, contractName string, network config.Network) (*accounts.Account, error) {
+	deployments := state.Deployments().ByNetwork(network.Name)
+	var accountName string
+	for _, d := range deployments {
+		for _, c := range d.Contracts {
+			if c.Name == contractName {
+				accountName = d.Account
+				break
+			}
+		}
+	}
+	if accountName == "" {
+		return nil, fmt.Errorf("contract not found in state")
+	}
+
+	accs := state.Accounts()
+	if accs == nil {
+		return nil, fmt.Errorf("no accounts found in state")
+	}
+
+	var account *accounts.Account
+	for _, a := range *accs {
+		if accountName == a.Name {
+			account = &a
+			break
+		}
+	}
+	if account == nil {
+		return nil, fmt.Errorf("account %s not found in state", accountName)
+	}
+
+	return account, nil
+}
+
+func GetAddressByContractName(state *flowkit.State, contractName string, network config.Network) (flow.Address, error) {
+	account, err := GetAccountByContractName(state, contractName, network)
+	if err != nil {
+		return flow.Address{}, err
+	}
+
+	return flow.HexToAddress(account.Address.Hex()), nil
+}
+
+func CheckNetwork(network config.Network) error {
+	if network.Name != config.TestnetNetwork.Name && network.Name != config.MainnetNetwork.Name {
+		return fmt.Errorf("staging contracts is only supported on testnet & mainnet networks, see https://cadence-lang.org/docs/cadence-migration-guide for more information")
+	}
+	return nil
+}
+
 func NormalizeLineEndings(s string) string {
 	return strings.ReplaceAll(s, "\r\n", "\n")
+}
+
+func Pluralize(word string, count int) string {
+	if count == 1 {
+		return word
+	}
+	return word + "s"
 }

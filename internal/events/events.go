@@ -119,8 +119,10 @@ func eventString(writer io.Writer, event flow.Event) {
 	_, _ = fmt.Fprintf(writer, "    Tx ID\t%s\n", event.TransactionID)
 	_, _ = fmt.Fprintf(writer, "    Values\n")
 
-	for i, field := range event.Value.EventType.Fields {
-		value := event.Value.Fields[i]
+	fields := cadence.FieldsMappedByName(event.Value)
+
+	for _, field := range event.Value.EventType.Fields {
+		value := fields[field.Identifier]
 		printField(writer, field, value)
 	}
 }

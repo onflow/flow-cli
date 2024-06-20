@@ -22,12 +22,12 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/onflow/flowkit"
-	"github.com/onflow/flowkit/accounts"
+	"github.com/onflow/flowkit/v2/accounts"
 
 	"github.com/onflow/flow-go-sdk/crypto"
 
-	"github.com/onflow/flowkit/config"
+	"github.com/onflow/flowkit/v2"
+	"github.com/onflow/flowkit/v2/config"
 )
 
 // InitConfigParameters holds all necessary parameters for initializing the configuration.

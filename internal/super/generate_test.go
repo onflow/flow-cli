@@ -27,7 +27,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/onflow/flowkit/output"
+	"github.com/onflow/flowkit/v2/output"
 )
 
 func TestGenerateNewContract(t *testing.T) {
@@ -208,7 +208,7 @@ func TestGenerateNewTransaction(t *testing.T) {
 	assert.NotNil(t, content)
 
 	expectedContent := `transaction() {
-    prepare(account:AuthAccount) {}
+    prepare(account: &Account) {}
 
     execute {}
 }`

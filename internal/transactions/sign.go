@@ -29,15 +29,15 @@ import (
 
 	"github.com/onflow/flow-cli/internal/prompt"
 
-	"github.com/onflow/flowkit/transactions"
+	"github.com/onflow/flowkit/v2/transactions"
 
-	"github.com/onflow/flowkit/accounts"
+	"github.com/onflow/flowkit/v2/accounts"
 
 	flowsdk "github.com/onflow/flow-go-sdk"
 	"github.com/spf13/cobra"
 
-	"github.com/onflow/flowkit"
-	"github.com/onflow/flowkit/output"
+	"github.com/onflow/flowkit/v2"
+	"github.com/onflow/flowkit/v2/output"
 
 	"github.com/onflow/flow-cli/internal/command"
 )

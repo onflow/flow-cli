@@ -28,8 +28,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 
-	"github.com/onflow/flowkit"
-	"github.com/onflow/flowkit/tests"
+	"github.com/onflow/flowkit/v2"
+	"github.com/onflow/flowkit/v2/tests"
 
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/internal/util"
@@ -86,7 +86,7 @@ func Test_Result(t *testing.T) {
 				*tests.NewEvent(
 					0,
 					"A.foo",
-					[]cadence.Field{{Type: cadence.StringType{}, Identifier: "bar"}},
+					[]cadence.Field{{Type: cadence.StringType, Identifier: "bar"}},
 					[]cadence.Value{cadence.NewInt(1)},
 				),
 			},

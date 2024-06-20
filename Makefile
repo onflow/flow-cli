@@ -1,6 +1,6 @@
 # Configuration for goreleaser
 PACKAGE_NAME := github.com/onflow/flow-cli
-GOLANG_CROSS_VERSION ?= v1.20.0
+GOLANG_CROSS_VERSION ?= v1.22.0
 
 # The tag of the current commit, otherwise empty
 VERSION := $(shell git describe --tags --abbrev=0 --exact-match 2>/dev/null)
@@ -29,7 +29,7 @@ install-tools:
 	GO111MODULE=on go install github.com/axw/gocov/gocov@latest; \
 	GO111MODULE=on go install github.com/matm/gocov-html/cmd/gocov-html@latest; \
 	GO111MODULE=on go install github.com/sanderhahn/gozip/cmd/gozip@latest; \
-	GO111MODULE=on go install github.com/vektra/mockery/v2@v2.38.0;
+	GO111MODULE=on go install github.com/vektra/mockery/v2@v2.43.2;
 
 .PHONY: test
 test:

@@ -22,15 +22,15 @@ import (
 	"testing"
 
 	"github.com/onflow/flow-go-sdk/crypto"
-	"github.com/onflow/flowkit/accounts"
+	"github.com/onflow/flowkit/v2/accounts"
 
 	"github.com/onflow/flow-go-sdk"
 	"github.com/stretchr/testify/require"
 
-	"github.com/onflow/flowkit"
-	"github.com/onflow/flowkit/mocks"
-	"github.com/onflow/flowkit/output"
-	"github.com/onflow/flowkit/tests"
+	"github.com/onflow/flowkit/v2"
+	"github.com/onflow/flowkit/v2/mocks"
+	"github.com/onflow/flowkit/v2/output"
+	"github.com/onflow/flowkit/v2/tests"
 )
 
 var NoLogger = output.NewStdoutLogger(output.NoneLog)
