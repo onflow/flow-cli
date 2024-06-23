@@ -2208,6 +2208,7 @@ github.com/onflow/sdks v0.5.1-0.20230912225508-b35402f12bba h1:rIehuhO6bj4FkwE4V
 github.com/onflow/sdks v0.5.1-0.20230912225508-b35402f12bba/go.mod h1:F0dj0EyHC55kknLkeD10js4mo14yTdMotnWMslPirrU=
 github.com/onflow/wal v1.0.2 h1:5bgsJVf2O3cfMNK12fiiTyYZ8cOrUiELt3heBJfHOhc=
 github.com/onflow/wal v1.0.2/go.mod h1:iMC8gkLqu4nkbkAla5HkSBb+FGyQOZiWz3DYm2wSXCk=
+github.com/onflowser/flowkit/v2 v2.0.0-20240623105755-c0604188301b/go.mod h1:89ipBRMJE9nWRimoqaa02+l6kCQuBiVyzszI6N3a6Sk=
 github.com/onflowser/flowser/v3 v3.2.1-0.20240131200229-7d4d22715f48 h1:eBS8Rm1V9TTGpj9lcpoCi6MIwWgYQZ8crJ7cSrS39Y4=
 github.com/onflowser/flowser/v3 v3.2.1-0.20240131200229-7d4d22715f48/go.mod h1:Pvw+OkV3eqLGMpHWu38rJYE30N9G3VgQ2MRQQnRr4to=
 github.com/onsi/ginkgo v1.6.0/go.mod h1:lLunBs/Ym6LB5Z9jYTR76FiuTmxDTDusOGeTQH+WWjE=
