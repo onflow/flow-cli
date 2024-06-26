@@ -8,6 +8,8 @@
     The destination path to install to.
 .Parameter Version
     The version to install.
+.Parameter C1Version
+    The Cadence 1 version to install.
 .Parameter AddToPath
     Add the absolute destination path to the 'User' scope environment variable 'Path'.
 .Parameter GitHubToken
@@ -23,6 +25,7 @@
 #>
 param (
     [string] $version="",
+    [string] $c1Version="",
     [string] $directory = "$env:APPDATA\Flow",
     [bool] $addToPath = $true,
     [string] $githubToken = ""
@@ -36,13 +39,11 @@ Set-ItemProperty HKCU:\Console VirtualTerminalLevel -Type DWORD 1
 $ErrorActionPreference = "Stop"
 
 $repo = "onflow/flow-cli"
-$versionURL = "https://api.github.com/repos/$repo/releases/latest"
 $assetsURL = "https://github.com/$repo/releases/download"
-$stableVersion = "v1.20.5" # The specific stable version to download
 
 # Add the GitHub token to the web request headers if it was provided
 $webRequestOptions = if ($githubToken) {
-	@{ 'Headers' = @{ 'Authorization' = "Bearer $githubToken" } }
+    @{ 'Headers' = @{ 'Authorization' = "Bearer $githubToken" } }
 } else {
     @{}
 }
@@ -50,16 +51,15 @@ $webRequestOptions = if ($githubToken) {
 # Function to get the latest version
 function Get-Version {
     param (
-        [string]$repo,
         [string]$searchTerm,
-        [hashtable]$webRequestOptions
+        [bool]$prerelease
     )
 
     $page = 1
     $version = $null
 
     while (-not $version) {
-        $response = Invoke-WebRequest -Uri "https://api.github.com/repos/$repo/releases?per_page=100&page=$page" -UseBasicParsing @webRequestOptions -ErrorAction SilentlyContinue
+        $response = Invoke-WebRequest -Uri "https://api.github.com/repos/$repo/releases?per_page=10&page=$page" -UseBasicParsing @webRequestOptions -ErrorAction SilentlyContinue
         $status = $response.StatusCode
 
         if ($status -eq 403 -and $githubTokenHeader) {
@@ -76,7 +76,7 @@ function Get-Version {
         $jsonResponse = $response.Content | ConvertFrom-Json
 
         foreach ($release in $jsonResponse) {
-            if ($release.tag_name -like "*$searchTerm*") {
+            if (($release.prerelease -eq $prerelease) -and ($release.tag_name -like "*$searchTerm*")) {
                 $version = $release.tag_name
                 break
             }
@@ -86,10 +86,6 @@ function Get-Version {
     }
 
     return $version
-}
-
-if (-not $version) {
-    $version = Get-Version -repo $repo -searchTerm "cadence-v1.0.0" -webRequestOptions $webRequestOptions
 }
 
 function Install-FlowCLI {
@@ -117,8 +113,21 @@ function Install-FlowCLI {
     Move-Item -Path "$directory\flow-cli.exe" -Destination "$directory\$destinationFileName" -Force
 }
 
-Install-FlowCLI -version $version -destinationFileName "flow-c1.exe"
-Install-FlowCLI -version $stableVersion -destinationFileName "flow.exe"
+if (-not $version) {
+    Write-Output "Getting version of latest stable release ..."
+
+    $version = Get-Version -searchTerm '' -prerelease $false
+}
+
+Install-FlowCLI -version $version -destinationFileName "flow.exe"
+
+if (-not $c1version) {
+    Write-Output "Getting version of latest Cadence 1.0 preview release ..."
+
+    $c1version = Get-Version -searchTerm "cadence-v1.0.0" -prerelease $true
+}
+
+Install-FlowCLI -version $c1Version -destinationFileName "flow-c1.exe"
 
 # Check if the directory is already in the PATH
 $existingPaths = [Environment]::GetEnvironmentVariable("PATH", [System.EnvironmentVariableTarget]::User).Split(';')
@@ -132,9 +141,11 @@ if ($addToPath -and $existingPaths -notcontains $directory) {
 }
 
 Write-Output ""
-Write-Output "Successfully installed Flow CLI $version as flow-c1.exe"
-Write-Output "Successfully installed Flow CLI $stableVersion as flow.exe"
-Write-Output "PRE-RELEASE: Use the 'flow-c1' command to interact with this Cadence 1.0 CLI pre-release."
-Write-Output "STABLE RELEASE: Use the 'flow' command to interact with Flow CLI version $stableVersion."
+Write-Output "Successfully installed Flow CLI $version as 'flow'."
+Write-Output "Use the 'flow' command to interact with the Flow CLI compatible with versions of Cadence before 1.0 (only)."
+Write-Output ""
+Write-Output "Successfully installed Flow CLI $c1Version as 'flow-c1'."
+Write-Output "Use the 'flow-c1' command to interact with the Flow CLI preview compatible with Cadence 1.0 (only)."
+Write-Output ""
 
 Start-Sleep -Seconds 1
