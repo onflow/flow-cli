@@ -11,6 +11,8 @@ VERSION="$1"
 ARCH=""
 # The tag search term to use if no version is specified (first match is used)
 SEARCH_TERM="cadence-v1.0.0"
+# The specific version to download as "flow"
+FLOW_VERSION="v1.20.5"
 
 # Optional environment variable for Github API token
 # If GITHUB_TOKEN is set, use it in the curl requests to avoid rate limiting
@@ -98,18 +100,15 @@ get_version() {
   fi
 }
 
-# Determine the system architecure, download the appropriate binary, and
-# install it in `/usr/local/bin` on macOS and `~/.local/bin` on Linux
-# with executable permission.
-main() {
+# Function to download and install a specified version
+install_version() {
+  local version=$1
+  local target_name=$2
 
-  get_architecture || exit 1
-  get_version || exit 1
-
-  echo "Downloading version $VERSION ..."
+  echo "Downloading version $version ..."
 
   tmpfile=$(mktemp 2>/dev/null || mktemp -t flow)
-  url="$ASSETS_URL$VERSION/flow-cli-$VERSION-$ARCH.tar.gz"
+  url="$ASSETS_URL$version/flow-cli-$version-$ARCH.tar.gz"
   if [ -n "$github_token_header" ]
   then
     curl -H "$github_token_header" -L --progress-bar "$url" -o $tmpfile
@@ -120,22 +119,34 @@ main() {
   # Ensure we don't receive a not found error as response.
   if grep -q "Not Found" $tmpfile
   then
-    echo "Version $VERSION could not be found"
+    echo "Version $version could not be found"
     exit 1
   fi
 
   [ -d $TARGET_PATH ] || mkdir -p $TARGET_PATH
 
   tar -xf $tmpfile -C $TARGET_PATH
-  mv $TARGET_PATH/flow-cli $TARGET_PATH/flow-c1
-  chmod +x $TARGET_PATH/flow-c1
+  mv $TARGET_PATH/flow-cli $TARGET_PATH/$target_name
+  chmod +x $TARGET_PATH/$target_name
 
   echo ""
-  echo "Successfully installed Flow CLI $VERSION to $TARGET_PATH."
+  echo "Successfully installed Flow CLI $version to $TARGET_PATH/$target_name."
   echo "Make sure $TARGET_PATH is in your \$PATH environment variable."
   echo ""
+}
+
+# Determine the system architecture, download the appropriate binaries, and
+# install them in `/usr/local/bin` on macOS and `~/.local/bin` on Linux
+# with executable permissions.
+main() {
+  get_architecture || exit 1
+  get_version || exit 1
+
+  install_version "$VERSION" "flow-c1"
+  install_version "$FLOW_VERSION" "flow"
+
   echo "PRE-RELEASE: Use the 'flow-c1' command to interact with this Cadence 1.0 CLI pre-release."
-  echo ""
+  echo "RELEASE: Use the 'flow' command to interact with Flow CLI version $FLOW_VERSION."
 }
 
 main

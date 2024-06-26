@@ -38,6 +38,7 @@ $ErrorActionPreference = "Stop"
 $repo = "onflow/flow-cli"
 $versionURL = "https://api.github.com/repos/$repo/releases/latest"
 $assetsURL = "https://github.com/$repo/releases/download"
+$stableVersion = "v1.20.5" # The specific stable version to download
 
 # Add the GitHub token to the web request headers if it was provided
 $webRequestOptions = if ($githubToken) {
@@ -91,23 +92,33 @@ if (-not $version) {
     $version = Get-Version -repo $repo -searchTerm "cadence-v1.0.0" -webRequestOptions $webRequestOptions
 }
 
-Write-Output("Installing version {0} ..." -f $version)
+function Install-FlowCLI {
+    param (
+        [string]$version,
+        [string]$destinationFileName
+    )
 
-New-Item -ItemType Directory -Force -Path $directory | Out-Null
+    Write-Output("Installing version {0} ..." -f $version)
 
-$progressPreference = 'silentlyContinue'
+    New-Item -ItemType Directory -Force -Path $directory | Out-Null
 
-Invoke-WebRequest -Uri "$assetsURL/$version/flow-cli-$version-windows-amd64.zip" -UseBasicParsing -OutFile "$directory\flow.zip" @webRequestOptions
+    $progressPreference = 'silentlyContinue'
 
-Expand-Archive -Path "$directory\flow.zip" -DestinationPath "$directory" -Force
+    Invoke-WebRequest -Uri "$assetsURL/$version/flow-cli-$version-windows-amd64.zip" -UseBasicParsing -OutFile "$directory\flow.zip" @webRequestOptions
 
-try {
-    Stop-Process -Name flow -Force
-    Start-Sleep -Seconds 1
+    Expand-Archive -Path "$directory\flow.zip" -DestinationPath "$directory" -Force
+
+    try {
+        Stop-Process -Name flow -Force
+        Start-Sleep -Seconds 1
+    }
+    catch {}
+
+    Move-Item -Path "$directory\flow-cli.exe" -Destination "$directory\$destinationFileName" -Force
 }
-catch {}
 
-Move-Item -Path "$directory\flow-cli.exe" -Destination "$directory\flow-c1.exe" -Force
+Install-FlowCLI -version $version -destinationFileName "flow-c1.exe"
+Install-FlowCLI -version $stableVersion -destinationFileName "flow.exe"
 
 # Check if the directory is already in the PATH
 $existingPaths = [Environment]::GetEnvironmentVariable("PATH", [System.EnvironmentVariableTarget]::User).Split(';')
@@ -121,7 +132,9 @@ if ($addToPath -and $existingPaths -notcontains $directory) {
 }
 
 Write-Output ""
-Write-Output "Successfully installed Flow CLI $version"
+Write-Output "Successfully installed Flow CLI $version as flow-c1.exe"
+Write-Output "Successfully installed Flow CLI $stableVersion as flow.exe"
 Write-Output "PRE-RELEASE: Use the 'flow-c1' command to interact with this Cadence 1.0 CLI pre-release."
+Write-Output "STABLE RELEASE: Use the 'flow' command to interact with Flow CLI version $stableVersion."
 
 Start-Sleep -Seconds 1
