@@ -165,13 +165,14 @@ main() {
   install_version "$C1VERSION" "flow-c1"
 
   echo ""
-  echo "Successfully installed Flow CLI $VERSION as 'flow'."
+  echo "Successfully installed Flow CLI $VERSION as 'flow' in $TARGET_PATH."
   echo "Use the 'flow' command to interact with the Flow CLI compatible with versions of Cadence before 1.0 (only)."
   echo ""
-  echo "Successfully installed Flow CLI $C1VERSION as 'flow-c1'."
+  echo "Successfully installed Flow CLI $C1VERSION as 'flow-c1' in $TARGET_PATH."
   echo "Use the 'flow-c1' command to interact with the Flow CLI preview compatible with Cadence 1.0 (only)."
   echo ""
-
+  echo "Make sure $TARGET_PATH is in your \$PATH environment variable."
+  echo ""
 }
 
 main
