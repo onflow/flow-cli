@@ -8,7 +8,7 @@ require (
 	github.com/charmbracelet/bubbles v0.18.0
 	github.com/charmbracelet/bubbletea v0.25.0
 	github.com/dukex/mixpanel v1.0.1
-	github.com/getsentry/sentry-go v0.28.0
+	github.com/getsentry/sentry-go v0.28.1
 	github.com/go-git/go-git/v5 v5.11.0
 	github.com/google/go-github v17.0.0+incompatible
 	github.com/gosuri/uilive v0.0.4
