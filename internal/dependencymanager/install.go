@@ -20,12 +20,12 @@ package dependencymanager
 
 import (
 	"fmt"
-
 	"github.com/onflow/flow-cli/internal/util"
 
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flowkit/v2"
+	"github.com/onflow/flowkit/v2/deps"
 	"github.com/onflow/flowkit/v2/output"
 
 	"github.com/onflow/flow-cli/internal/command"
@@ -52,7 +52,12 @@ func install(
 ) (result command.Result, err error) {
 	logger.Info(util.MessageWithEmojiPrefix("🔄", "Installing dependencies from flow.json..."))
 
-	installer, err := NewDependencyInstaller(logger, state, true, "", installFlags)
+	options := []deps.Option{
+		deps.WithSaveState(),
+		deps.WithLogger(logger),
+	}
+
+	installer, err := NewCliDependencyInstaller(state, options...)
 	if err != nil {
 		logger.Error(fmt.Sprintf("Error: %v", err))
 		return nil, err

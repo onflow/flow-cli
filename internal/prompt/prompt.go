@@ -20,6 +20,7 @@ package prompt
 
 import (
 	"fmt"
+	"github.com/onflow/flowkit/v2/deps"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -425,18 +426,12 @@ func NewNetworkPrompt() map[string]string {
 	return networkData
 }
 
-type DeploymentData struct {
-	Network   string
-	Account   string
-	Contracts []string
-}
-
 func NewDeploymentPrompt(
 	networks config.Networks,
 	accounts config.Accounts,
 	contracts config.Contracts,
-) *DeploymentData {
-	deploymentData := &DeploymentData{}
+) *deps.DeploymentData {
+	deploymentData := &deps.DeploymentData{}
 	var err error
 
 	networkNames := make([]string, 0)
@@ -503,8 +498,8 @@ func removeFromStringArray(s []string, el string) []string {
 }
 
 // AddContractToDeploymentPrompt prompts a user to select an account to deploy a given contract on a given network
-func AddContractToDeploymentPrompt(networkName string, accounts accounts.Accounts, contractName string) *DeploymentData {
-	deploymentData := &DeploymentData{
+func AddContractToDeploymentPrompt(networkName string, accounts accounts.Accounts, contractName string) *deps.DeploymentData {
+	deploymentData := &deps.DeploymentData{
 		Network:   networkName,
 		Contracts: []string{contractName},
 	}
